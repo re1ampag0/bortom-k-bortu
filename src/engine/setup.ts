@@ -14,6 +14,8 @@ export interface GameOptions {
   /** Play with the sea deck and the Legends (docs/TZ.md, setup screen). «Первая партия» plays without both by default (RULES.md 20.1). */
   sea?: boolean;
   legends?: boolean;
+  /** Network games: open a Reaction window also when nobody can react (see GameState.pauseEmptyWindows). */
+  pauseEmptyWindows?: boolean;
 }
 
 export function createGame(data: GameData, options: GameOptions): { state: GameState; events: GameEvent[] } {
@@ -73,6 +75,7 @@ export function createGame(data: GameData, options: GameOptions): { state: GameS
     volley: null,
     card: null,
   };
+  if (options.pauseEmptyWindows) state.pauseEmptyWindows = true;
 
   const ctx: Ctx = { s: state, data, rng, events: [] };
   for (const code of Object.keys(ships)) drawUp(ctx, code);

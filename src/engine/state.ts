@@ -249,6 +249,8 @@ export interface SeaState {
   deck: string[];
   discard: string[];
   current: string | null;
+  /** «Тиа Дальма»: the top `n` cards of the sea deck are known to the seat that looked (docs/TZ.md, «Кто что видит»). */
+  peek?: { seat: string; n: number };
 }
 
 export interface GameState {
@@ -269,6 +271,11 @@ export interface GameState {
   pending: Pending | null;
   volley: VolleyState | null;
   card: CardResolution | null;
+  /**
+   * Network games: a Reaction window opens even when the defenders have no Reaction to play, so a pause does not
+   * give their hands away (`waiting` is empty; the server closes it with `closeWindow`).
+   */
+  pauseEmptyWindows?: boolean;
 }
 
 export type Action =
@@ -300,6 +307,8 @@ export type Action =
   | { type: 'endTurn'; side: Side; plans?: string[] }
   | { type: 'react'; seat: string; card: string }
   | { type: 'noReaction'; seat: string }
+  /** The Reaction window closes: every seat still deciding plays no Reaction (the server: an empty window, a timer). */
+  | { type: 'closeWindow' }
   | { type: 'jack'; play: boolean }
   /** «Тортуга»: how many cards each seat of the team takes (RULES.md 16.2). */
   | { type: 'tortuga'; side: Side; draws: Record<string, number> }
