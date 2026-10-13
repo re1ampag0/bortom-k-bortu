@@ -7,7 +7,9 @@ import {
   RuleError,
   cardByCode,
   getShip,
+  namedShip,
   oneEffect,
+  planFx,
   otherSide,
   pushSteps,
   requirePending,
@@ -54,7 +56,7 @@ function defendingSide(ctx: Ctx, window: ReactionWindow, subject: Subject): Side
   const { s } = ctx;
   if (subject === 'card') {
     const c = s.card;
-    if (!c || c.cancelled || window !== 'before') return null;
+    if (!c || c.cancelled || c.lost || window !== 'before') return null;
     return otherSide(getShip(s, c.ship).side);
   }
   const v = s.volley;
@@ -85,7 +87,8 @@ function reactionOptions(ctx: Ctx, seat: string, side: Side, window: ReactionWin
   const consider = (card: string, fromPlan: boolean) => {
     const c = cardByCode(ctx.data, card);
     if (c.type !== 'РЕАКЦИЯ' || !canPay(ctx, c, ship)) return;
-    if (!applies(ctx, reactionFx(c, fromPlan), ship, window, subject, fromPlan)) return;
+    const fx = reactionFx(c, fromPlan);
+    if (!applies(ctx, fx, cardShip(ctx, card, fx, ship), window, subject, fromPlan)) return;
     options.push({ card, fromPlan, ship: ship.code });
   };
   if (fromHand) for (const card of holder.hand) consider(card, false);
@@ -93,8 +96,16 @@ function reactionOptions(ctx: Ctx, seat: string, side: Side, window: ReactionWin
   return options;
 }
 
+/**
+ * The ship a Reaction acts for: a card that names a ship («Залп по «Жемчужине»…», fx.self_only) — that ship
+ * (namedShip, Q43); any other — the ship it is played for («ваш корабль»).
+ */
+function cardShip(ctx: Ctx, card: string, fx: Fx, ship: ShipState): ShipState {
+  return fx.self_only ? getShip(ctx.s, namedShip(ctx, card, ship.code)) : ship;
+}
+
 function reactionFx(c: CardInstance, fromPlan: boolean): Fx {
-  return fromPlan && c.fx.plan ? { ...c.fx, ...c.fx.plan } : c.fx;
+  return planFx(c.fx, fromPlan);
 }
 
 function canPay(ctx: Ctx, c: CardInstance, ship: ShipState): boolean {
@@ -108,6 +119,8 @@ function canPay(ctx: Ctx, c: CardInstance, ship: ShipState): boolean {
 
 /**
  * Whether a Reaction can do something now: the card may be played only if a part of it can be done (9.9).
+ * `ship` is the ship the card names («Залп по «Жемчужине»»), see namedShip (Q43); for cards without a name — the
+ * ship it is played for.
  * «… после Залпа» (counter) — only after the damage; the rest — only before it (12.2, 12.3).
  * Reactions on a Volley do not answer a card; «на Залп или карту» (fx.cards) do (9.6, 12.7).
  */
@@ -141,15 +154,17 @@ function applies(ctx: Ctx, fx: Fx, ship: ShipState, window: ReactionWindow, subj
 }
 
 function appliesToCard(fx: Fx, ship: ShipState, c: CardResolution): boolean {
+  // «Ловкость рук»: any card against the team except a Legend (15.1, 18.4); one thief is enough.
+  if (fx.r === 'steal') return !c.legend && !c.stolenBy;
   if (!fx.cards) return false;
   switch (fx.r) {
     case 'cancel':
+      if (c.cancelled) return false;
       if (fx.self_only && !c.targets.includes(ship.code)) return false;
       return !fx.vs || c.ship === fx.vs;
     case 'cancel_crew':
-      return c.crew && !c.crewCancelled;
+      return !c.cancelled && c.crew && !c.crewCancelled;
     default:
-      // «Ловкость рук» (steal) comes with the effects of ordinary cards in stage 5; Legends cannot be stolen (15.1).
       return false;
   }
 }
@@ -177,9 +192,10 @@ export function react(ctx: Ctx, seat: string, card: string): void {
   discard(ctx, card);
   ctx.events.push({ type: 'reaction', seat, ship: ship.code, card, fromPlan: option.fromPlan });
 
+  const fx = reactionFx(c, option.fromPlan);
   const steps = pending.subject === 'volley'
-    ? applyToVolley(ctx, reactionFx(c, option.fromPlan), c.name, ship, pending.window)
-    : applyToCard(reactionFx(c, option.fromPlan), s.card!);
+    ? applyToVolley(ctx, fx, c.name, cardShip(ctx, card, fx, ship), pending.window)
+    : applyToCard(ctx, fx, s.card!, seat, ship);
   s.pending = null;
   pushSteps(s, ...steps, { k: 'window', window: pending.window, subject: pending.subject });
 }
@@ -240,11 +256,21 @@ function applyToVolley(ctx: Ctx, fx: Fx, name: string, ship: ShipState, window: 
   return steps;
 }
 
-function applyToCard(fx: Fx, c: CardResolution): Step[] {
+function applyToCard(ctx: Ctx, fx: Fx, c: CardResolution, seat: string, ship: ShipState): Step[] {
   if (fx.r === 'cancel') c.cancelled = true;
-  if (fx.r === 'cancel_crew') c.crewCancelled = true;
+  if (fx.r === 'steal') c.stolenBy = seat;
+  if (fx.r !== 'cancel_crew') return [];
+  c.crewCancelled = true;
+  // «Морская пехота»: a boarding beaten off — the boarding ship loses 1 Crew (18.14).
+  if (fx.boarding && cardByCode(ctx.data, c.card).tags.includes(BOARDING)) {
+    const n = fx.boarding[1] === 'guns' ? ship.tracks.guns : fx.boarding[1];
+    return [{ k: 'damage', ship: c.ship, track: fx.boarding[0], n, src: ship.code }];
+  }
   return [];
 }
+
+/** The tag of boarding cards (18.14). */
+const BOARDING = 'абордаж';
 
 /** The seat plays no (more) Reactions in this window. The window closes when every waiting seat has declined. */
 export function noReaction(ctx: Ctx, seat: string): void {

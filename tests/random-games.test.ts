@@ -4,6 +4,7 @@
 // no card lost or doubled (counted by the deck that owns it).
 import { describe, expect, it } from 'vitest';
 import { TRACKS, deckCards, seaCards } from '../src/engine/data';
+import { choiceFor } from '../src/engine/cards';
 import { createGame } from '../src/engine/engine';
 import { createRng, type Rng } from '../src/engine/rng';
 import { RuleError, TRACK_MIN, type Action, type GameState } from '../src/engine/state';
@@ -11,9 +12,18 @@ import { act, cardsByOwner, data } from './helpers';
 
 const pick = <T>(rng: Rng, items: T[]): T | undefined => (items.length ? items[rng.int(items.length)] : undefined);
 
-/** An answer to the pending decision: a random Reaction or «no», Jack or not, random cards on «Тортуга». */
+/**
+ * An answer to the pending decision: a random Reaction or «no», Jack or not, random cards on «Тортуга»,
+ * random cards for a card choice (sometimes a wrong number of them).
+ */
 function randomAnswer(s: GameState, rng: Rng): Action {
   const p = s.pending!;
+  if (p.kind === 'choice') {
+    const seat = pick(rng, p.waiting)!;
+    const c = choiceFor(s, seat)!;
+    const count = rng.next() < 0.9 ? c.count : rng.int(3);
+    return { type: 'choose', seat, cards: rng.shuffle([...c.from]).slice(0, count) };
+  }
   if (p.kind === 'jack') return { type: 'jack', play: rng.next() < 0.7 };
   if (p.kind === 'tortuga') {
     const side = pick(rng, p.waiting)!;
@@ -37,7 +47,7 @@ function randomAction(s: GameState, rng: Rng, actionsThisTurn: number): Action {
     return { type: 'endTurn', side, plans };
   }
   const card = pick(rng, [...seat.hand, ...seat.plans]) ?? 'Ж-01';
-  switch (rng.int(10)) {
+  switch (rng.int(11)) {
     case 0:
     case 1: {
       const charger = pick(rng, own)!;
@@ -53,7 +63,20 @@ function randomAction(s: GameState, rng: Rng, actionsThisTurn: number): Action {
       };
     }
     case 2:
-      return { type: 'playCard', seat: seat.code, card };
+    case 10: {
+      const ally = own.find((x) => x.code !== seat.code)!;
+      const split = rng.int(3);
+      return {
+        type: 'playCard',
+        seat: seat.code,
+        card,
+        target: rng.next() < 0.9 ? pick(rng, enemies)!.code : undefined,
+        ship: rng.next() < 0.3 ? pick(rng, [seat, ally])!.code : undefined,
+        repair: rng.next() < 0.3 ? { [pick(rng, [...TRACKS])!]: split, hull: rng.int(3) } : undefined,
+        souls: rng.next() < 0.3 ? rng.int(4) : undefined,
+        regroup: rng.next() < 0.5,
+      };
+    }
     case 3:
       return { type: 'sell', seat: seat.code, card };
     case 4:

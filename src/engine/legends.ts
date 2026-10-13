@@ -7,16 +7,14 @@ import {
   aliveShips,
   cardByCode,
   getShip,
-  oneEffect,
   otherSide,
   pushSteps,
   requirePending,
   startValue,
   type Ctx,
-  type Step,
 } from './state';
+import { paidSteps } from './cards';
 import { payCardCost, requireSeat, useCardPlay } from './turn';
-import type { Op, Track } from './types';
 
 export function playLegend(ctx: Ctx, seat: string, target?: string): void {
   const { s, data } = ctx;
@@ -43,7 +41,7 @@ export function playLegend(ctx: Ctx, seat: string, target?: string): void {
     targets.push(...aliveShips(s, otherSide(ship.side)).filter((x) => !x.submerged).map((x) => x.code));
   }
 
-  useCardPlay(ctx, seat, seat);
+  const voodoo = useCardPlay(ctx, seat, seat);
   payCardCost(ctx, code, ship);
   ship.legend = false;
   ctx.events.push({ type: 'legendPlayed', seat, card: code, target: target ?? null });
@@ -52,45 +50,18 @@ export function playLegend(ctx: Ctx, seat: string, target?: string): void {
     seat,
     ship: seat,
     targets,
+    target: target ?? null,
     crew: ops.some((op) => op[0] === 'dmg' && op[2] === 'crew'),
     cancelled: false,
     crewCancelled: false,
+    legend: true,
+    fromPlan: false,
+    params: {},
+    stolenBy: null,
+    lost: false,
   };
-  pushSteps(s, { k: 'window', window: 'before', subject: 'card' }, { k: 'cardEffect' }, { k: 'cardEnd' });
-}
-
-export function legendStep(ctx: Ctx, step: Step): void {
-  const { s } = ctx;
-  const c = s.card;
-  if (!c) return;
-  if (step.k === 'cardEnd') {
-    s.card = null;
-    return;
-  }
-  if (c.cancelled) {
-    ctx.events.push({ type: 'cardCancelled', card: c.card });
-    return;
-  }
-  const steps: Step[] = [];
-  for (const op of cardByCode(ctx.data, c.card).fx.ops ?? []) steps.push(...opSteps(ctx, op, c.ship, c.targets[0]));
-  pushSteps(s, ...oneEffect(steps));
-}
-
-/** Steps of one operation of a Legend; the targets are taken as they are when the effect happens. */
-function opSteps(ctx: Ctx, op: Op, src: string, chosen: string | undefined): Step[] {
-  const { s } = ctx;
-  const c = s.card!;
-  if (op[0] === 'bottle') {
-    const t = chosen ? getShip(s, chosen) : null;
-    return t && !t.sunk && t.tracks.hull <= Number(op[1]) ? [{ k: 'sink', ship: t.code }] : [];
-  }
-  if (op[0] !== 'dmg') return [];
-  const [, scope, track, n] = op as [string, string, Track, number];
-  // «Зомби-офицеры», «Морская пехота»: all Crew damage of the card is cancelled (11.6).
-  if (track === 'crew' && c.crewCancelled) return [];
-  const enemies = aliveShips(s, otherSide(getShip(s, src).side)).filter((x) => !x.submerged);
-  const ships = scope === 'all' ? enemies.map((x) => x.code) : chosen ? [chosen] : [];
-  return ships.map((ship) => ({ k: 'damage', ship, track, n, src }) as Step);
+  // The effect is played by cards.ts, as for any card.
+  pushSteps(s, ...paidSteps(voodoo), { k: 'window', window: 'before', subject: 'card' }, { k: 'cardEffect' }, { k: 'cardEnd' });
 }
 
 /** «Джек ускользает»: the Pearl's Hull becomes 2 and the team swaps places for free (15.2, 16.1, Q22). */

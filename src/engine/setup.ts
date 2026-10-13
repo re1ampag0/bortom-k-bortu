@@ -49,6 +49,8 @@ export function createGame(data: GameData, options: GameOptions): { state: GameS
       lastDive: null,
       surfaced: false,
       blockaded: false,
+      parley: false,
+      voodoo: null,
     });
   }
 

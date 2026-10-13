@@ -11,6 +11,7 @@ export const OPS: Record<string, number[]> = {
   ally_draw: [1],
   ally_extra_plays: [1],
   bottle: [1],
+  compass: [1],
   dice: [0],
   discard_enemy_each: [1],
   dmg: [3],
@@ -29,12 +30,15 @@ export const OPS: Record<string, number[]> = {
   parley: [0],
   pass: [1],
   powder: [1],
+  regroup_free: [0],
   repair_ally: [1],
   repair_crew_both: [1],
+  repair_named: [2],
   repair_self: [1],
   repair_track: [2],
   repair_track_any: [2],
   rob: [1],
+  sea_look: [1],
   soul: [1],
   souls_repair: [0],
   steal_random: [0],
@@ -66,6 +70,7 @@ const FX_KEYS = new Set<string>([
   'track',
   'counter',
   'counter2',
+  'boarding',
   'plan',
   'vs',
 ]);
@@ -232,7 +237,7 @@ class Checker {
         }
       } else if (key === 'track') {
         if (!TRACKS.includes(value as (typeof TRACKS)[number])) this.fail(where, `неизвестная шкала ${show(value)} в fx.track`);
-      } else if (key === 'counter' || key === 'counter2') {
+      } else if (key === 'counter' || key === 'counter2' || key === 'boarding') {
         const ok =
           Array.isArray(value) &&
           value.length === 2 &&
