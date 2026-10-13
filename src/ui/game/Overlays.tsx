@@ -211,6 +211,8 @@ export function SettingsSheet({
   setSpeed,
   openHands,
   setOpenHands,
+  hints,
+  setHints,
   canConcede,
   onConcede,
   onNew,
@@ -222,6 +224,8 @@ export function SettingsSheet({
   setSpeed: (s: Speed) => void;
   openHands: boolean;
   setOpenHands: (v: boolean) => void;
+  hints: boolean;
+  setHints: (v: boolean) => void;
   canConcede: Side | null;
   onConcede: () => void;
   onNew: () => void;
@@ -244,6 +248,10 @@ export function SettingsSheet({
       <label className="row check">
         <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все руки
         видны, без заставок)
+      </label>
+      <label className="row check">
+        <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
+        целях, зелёный «Ход окончен», «Залп не дан…»)
       </label>
       <div className="row buttons">
         <button className="btn" onClick={onDownloadLog}>

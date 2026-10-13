@@ -76,6 +76,7 @@ export function plateLabel(p: VolleyPreview): { label: string; sub: string } {
 export function VolleyPanel({
   s,
   data,
+  hints,
   mode,
   setMode,
   onFire,
@@ -83,6 +84,8 @@ export function VolleyPanel({
 }: {
   s: GameState;
   data: GameData;
+  /** Off — «как за столом»: no damage of each Charge; on a laptop the Charge is chosen in the hand. */
+  hints: boolean;
   mode: AimMode;
   setMode: (m: AimMode) => void;
   onFire: (action: Action) => void;
@@ -90,7 +93,7 @@ export function VolleyPanel({
 }) {
   const p = mode.target ? previewVolley(s, data, volleyOrder(mode, mode.target)) : null;
   const cost = shipData(data, mode.shooter).volleyCost + (mode.charge ? cardByCode(data, mode.charge).cost : 0) + mode.paid;
-  const options = [{ card: null as string | null, from: mode.shooter }, ...chargeCandidates(s, data, mode.shooter)];
+  const charges = chargeCandidates(s, data, mode.shooter);
   const paidCharge = mode.charge && cardByCode(data, mode.charge).fx.paid;
   const title = !mode.target
     ? `${nick(data, mode.shooter)}: выберите цель на столе`
@@ -105,12 +108,24 @@ export function VolleyPanel({
       ? p.reason
       : mode.heart
         ? 'Сердце Дейви Джонса: дополнительный Залп, «Голландец» теряет Команду'
-        : 'Цели подсвечены плашками с уроном';
+        : hints
+          ? 'Цели подсвечены плашками с уроном'
+          : 'Цели подсвечены';
+  /** The Volley with this Charge (null — without): its preview when a target is chosen. */
+  const previewWith = (o: { card: string | null; from: string }) =>
+    mode.target ? previewVolley(s, data, volleyOrder({ ...mode, charge: o.card, chargeFrom: o.from, paid: 0 }, mode.target)) : null;
+  const damageLabel = (pv: ReturnType<typeof previewWith>) =>
+    pv?.ok ? `${pv.damage}${pv.track !== 'hull' ? ` по ${TRACK_DATIVE[pv.track]}` : ''}${pv.noReact ? ', без Реакций' : ''}` : pv ? '—' : undefined;
+  const choose = (o: { card: string | null; from: string }) => setMode({ ...mode, charge: o.card, chargeFrom: o.from, paid: 0 });
+  const none = { card: null as string | null, from: mode.shooter };
+  // Without hints a laptop shows only «Без Заряда» and the chosen Charge: the Charge is chosen in the hand or the Plans.
+  const chips = hints ? [none, ...charges] : [none, ...charges.filter((o) => o.card === mode.charge)];
+  const nonePv = previewWith(none);
   return (
     <Panel title={title} sub={sub} tone="volley" testid="volley-panel">
-      <div className="choices">
-        {options.map((o) => {
-          const pv = mode.target ? previewVolley(s, data, volleyOrder({ ...mode, charge: o.card, chargeFrom: o.from, paid: 0 }, mode.target)) : null;
+      <div className="choices wide-block">
+        {chips.map((o) => {
+          const pv = previewWith(o);
           const c = o.card ? cardByCode(data, o.card) : null;
           const fromPlan = o.card ? s.ships[o.from].plans.includes(o.card) : false;
           const on = mode.charge === o.card;
@@ -119,23 +134,37 @@ export function VolleyPanel({
               key={o.card ?? 'none'}
               className={`choice ${on ? 'on' : ''} ${pv && !pv.ok ? 'off' : ''}`}
               title={pv && !pv.ok ? pv.reason : undefined}
-              onClick={() => (pv && !pv.ok ? undefined : setMode({ ...mode, charge: o.card, chargeFrom: o.from, paid: 0 }))}
+              onClick={() => (pv && !pv.ok ? undefined : choose(o))}
             >
               <span>
                 {c ? c.name : 'Без Заряда'}
                 {fromPlan ? ' · План' : ''}
                 {c && c.cost > 0 ? ` · ${c.cost} П` : ''}
               </span>
-              <b>
-                {pv
-                  ? pv.ok
-                    ? `${pv.damage}${pv.track !== 'hull' ? ` по ${TRACK_DATIVE[pv.track]}` : ''}${pv.noReact ? ', без Реакций' : ''}`
-                    : '—'
-                  : c
-                    ? c.big
-                    : ''}
-              </b>
+              <b>{hints ? (damageLabel(pv) ?? (c ? c.big : '')) : c ? c.big : ''}</b>
             </button>
+          );
+        })}
+      </div>
+      {/* Phone: the sheet stands in place of the hand, so the Charges are mini cards, as in the hand. */}
+      <div className="choice-cards narrow-block">
+        <button className={`choice none-charge ${mode.charge === null ? 'on' : ''}`} onClick={() => choose(none)}>
+          <span>Без Заряда</span>
+          {hints && <b>{damageLabel(nonePv) ?? ''}</b>}
+        </button>
+        {charges.map((o) => {
+          const pv = previewWith(o);
+          return (
+            <HandCard
+              key={o.card}
+              data={data}
+              code={o.card!}
+              plan={s.ships[o.from].plans.includes(o.card!)}
+              off={pv && !pv.ok ? pv.reason : null}
+              chosen={mode.charge === o.card}
+              note={hints ? damageLabel(pv) : undefined}
+              onClick={() => (pv && !pv.ok ? undefined : choose(o))}
+            />
           );
         })}
       </div>

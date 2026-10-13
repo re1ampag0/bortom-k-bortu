@@ -83,6 +83,8 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
     storeSettings({ ...loadSettings(), speed: v });
   };
   const [openHands, setOpenHands] = useState(game.setup.openHands);
+  // «Подсказки» off — «как за столом»: no damage before choosing, no green «Ход окончен», no «Залп не дан…».
+  const [hints, setHints] = useState(game.setup.hints ?? false);
   const humans = SIDES.filter((side) => game.setup.players[side] === 'human');
   const d = game.decider();
 
@@ -204,7 +206,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version, seat, myDecision]);
-  const useful = useMemo(() => (myTurn ? hasUsefulMoves(s, data, bottom) : true), [version, myTurn, bottom]); // eslint-disable-line react-hooks/exhaustive-deps
+  const useful = useMemo(() => (myTurn && hints ? hasUsefulMoves(s, data, bottom) : true), [version, myTurn, bottom, hints]); // eslint-disable-line react-hooks/exhaustive-deps
   const aimTargets = useMemo<VolleyTarget[]>(() => {
     if (mode.k !== 'aim') return [];
     if (mode.heart) return heartTargets(s, data, mode.shooter);
@@ -293,7 +295,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   // ——— End of the turn: «Залп не дан…» → Plans of the Pearl → endTurn ———
   const endFlow = (step: 'start' | 'confirmed') => {
     if (!myTurn) return;
-    if (step === 'start') {
+    if (step === 'start' && hints) {
       const unfired = unfiredShips(s, data, bottom);
       if (unfired.length > 0) {
         setMode({ k: 'confirmEnd', text: `Залп не дан (${unfired.map(nick).join(', ')}), в Трюме ${s.teams[bottom].powder} Пороха. Закончить ход?` });
@@ -322,7 +324,8 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
     if (mode.k === 'aim') {
       const t = aimTargets.find((x) => x.target === code);
       if (!t) return null;
-      const l = plateLabel(t.preview);
+      // Without hints the targets are only lit, the damage shows in the panel after the choice.
+      const l = hints ? plateLabel(t.preview) : { label: 'Цель', sub: '' };
       return { ...l, chosen: mode.target === code, onClick: () => setMode({ ...mode, target: code }) };
     }
     if (mode.k === 'card') {
@@ -398,7 +401,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   } else if (myDecision && d!.kind === 'choice') {
     dock = <ChoicePanel key={`${version}`} s={s} data={data} seat={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myTurn) {
-    if (mode.k === 'aim') dock = <VolleyPanel s={s} data={data} mode={mode} setMode={setMode} onFire={(a) => act(a)} onCancel={cancel} />;
+    if (mode.k === 'aim') dock = <VolleyPanel s={s} data={data} hints={hints} mode={mode} setMode={setMode} onFire={(a) => act(a)} onCancel={cancel} />;
     else if (mode.k === 'card') dock = <CardParamsPanel s={s} data={data} mode={mode} setMode={setMode} onAct={(a) => act(a)} onCancel={cancel} />;
     else if (mode.k === 'legend') {
       const c = cardByCode(data, `${mode.seat}-Л`);
@@ -684,6 +687,8 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
           setSpeed={setSpeed}
           openHands={openHands}
           setOpenHands={setOpenHands}
+          hints={hints}
+          setHints={setHints}
           canConcede={!s.winner && humans.length > 0 ? (humans.includes(bottom) ? bottom : humans[0]) : null}
           onConcede={() => {
             setSheet(null);

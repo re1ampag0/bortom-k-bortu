@@ -42,6 +42,8 @@ export function Setup({
   const [sea, setSea] = useState(true);
   const [legends, setLegends] = useState(true);
   const [openHands, setOpenHands] = useState(false);
+  // «Подсказки» are off by default (as at the table); «?hints=1» in the address turns them on (for tests).
+  const [hints, setHints] = useState(() => new URLSearchParams(location.search).get('hints') === '1');
   // «?seed=N» in the address fixes the seed of the quick starts too (for tests and for repeating a game).
   const [seedText, setSeedText] = useState(() => new URLSearchParams(location.search).get('seed') ?? '');
   const [speed, setSpeed] = useState<Speed>(loadSettings().speed);
@@ -61,19 +63,19 @@ export function Setup({
       const human = coin as Side;
       const other: Side = human === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ';
       onStart({
-        setup: { game, players: { [human]: 'human', [other]: 'bot' } as Record<Side, Controller>, openHands: false },
+        setup: { game, players: { [human]: 'human', [other]: 'bot' } as Record<Side, Controller>, openHands: false, hints },
         note: `Жребий: вы играете за ${SIDE_LABEL[human].acc}. Первыми ходят Пираты.`,
       });
     } else if (kind === 'duo') {
       onStart({
-        setup: { game, players: { ПИРАТЫ: 'human', КОМПАНИЯ: 'human' }, openHands: false },
+        setup: { game, players: { ПИРАТЫ: 'human', КОМПАНИЯ: 'human' }, openHands: false, hints },
         note: `Жребий: кто нажал кнопку — за ${SIDE_LABEL[coin as Side].acc}, второй игрок — за ${SIDE_LABEL[coin === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ'].acc}. Первыми ходят Пираты.`,
       });
     } else {
-      onStart({ setup: { game, players: { ПИРАТЫ: 'bot', КОМПАНИЯ: 'bot' }, openHands: true }, note: '' });
+      onStart({ setup: { game, players: { ПИРАТЫ: 'bot', КОМПАНИЯ: 'bot' }, openHands: true, hints }, note: '' });
     }
   };
-  const custom = () => onStart({ setup: { game: { seed: seed(), variant, sea, legends }, players, openHands }, note: '' });
+  const custom = () => onStart({ setup: { game: { seed: seed(), variant, sea, legends }, players, openHands, hints }, note: '' });
   const load = async (f: File) => {
     try {
       onResume(parseRecord(JSON.parse(await f.text())));
@@ -172,6 +174,10 @@ export function Setup({
             <label className="row check">
               <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки
               (все руки видны, без заставок)
+            </label>
+            <label className="row check">
+              <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон каждого
+              Заряда и на целях, зелёный «Ход окончен», «Залп не дан…»); без них — как за столом
             </label>
             <label className="row">
               <span>Seed</span>
