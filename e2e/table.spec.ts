@@ -126,6 +126,8 @@ async function keyStates(page: Page, name: string) {
   await shot(page, name, '1-setup');
   // Two people on one screen, seed 1: the Pearl's Volley at the Endeavour opens a Reaction window.
   await page.getByTestId('quick-duo').click();
+  await shot(page, name, '1b-prep');
+  await page.getByTestId('prep-start').click();
   await shot(page, name, '2-placement');
   await page.getByTestId('placement-done').click();
   await page.getByTestId('curtain-ready').click();
@@ -173,6 +175,7 @@ async function keyStates(page: Page, name: string) {
 async function startDuo(page: Page, query: string) {
   await page.goto(query);
   await page.getByTestId('quick-duo').click();
+  await page.getByTestId('prep-start').click();
   await page.getByTestId('placement-done').click();
   await page.getByTestId('curtain-ready').click();
   await page.getByTestId('placement-done').click();
@@ -267,6 +270,7 @@ test.describe('whole games through the interface', () => {
   test('a person against bots plays to the end', async ({ page }) => {
     await page.goto('?seed=5&speed=instant');
     await page.getByTestId('quick-bots').click();
+    await page.getByTestId('prep-start').click();
     await page.getByTestId('placement-done').click();
     await playToEnd(page);
     await expect(page.getByTestId('end-screen')).toContainText(/Победа|Ничья/);
@@ -275,6 +279,7 @@ test.describe('whole games through the interface', () => {
   test('two people on one screen play to the end', async ({ page }) => {
     await page.goto('?seed=9&speed=instant');
     await page.getByTestId('quick-duo').click();
+    await page.getByTestId('prep-start').click();
     await page.getByTestId('placement-done').click();
     await page.getByTestId('curtain-ready').click();
     await page.getByTestId('placement-done').click();
@@ -286,6 +291,7 @@ test.describe('whole games through the interface', () => {
     await page.setViewportSize({ width: 390, height: 664 });
     await page.goto('?seed=11&speed=instant');
     await page.getByTestId('quick-bots').click();
+    await page.getByTestId('prep-start').click();
     await page.getByTestId('placement-done').click();
     await playToEnd(page);
     await expect(page.getByTestId('end-screen')).toContainText(/Победа|Ничья/);

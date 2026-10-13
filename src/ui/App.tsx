@@ -1,4 +1,4 @@
-// Screens: setup → secret placement → the table → the end of the game; the card catalog from the setup screen.
+// Screens: start → preparation → secret placement → the table → the end of the game; the card catalog from the start.
 import { useState } from 'react';
 import type { MatchRecord, MatchSetup } from '../engine/match';
 import type { Side } from '../engine/types';
@@ -7,12 +7,15 @@ import { Catalog } from './Catalog';
 import { loaded } from './data';
 import { Game } from './game/Game';
 import { Placement } from './game/Placement';
-import { Setup, type StartRequest } from './game/Setup';
 import { NetScreen, roomFromUrl } from './net/Lobby';
-import { storeSave } from './storage';
+import { seedFrom, urlSeedText } from './seed';
+import { Prep, type StartRequest } from './start/Prep';
+import { Start, type Mode } from './start/Start';
+import { loadSettings, storeSave } from './storage';
 
 type Screen =
   | { k: 'setup' }
+  | { k: 'prep'; mode: Mode }
   | { k: 'cards' }
   | { k: 'net' }
   | { k: 'placement'; setup: MatchSetup; note: string }
@@ -45,7 +48,21 @@ export function App() {
 
   switch (screen.k) {
     case 'setup':
-      return <Setup data={data} onStart={start} onResume={resume} onCards={() => setScreen({ k: 'cards' })} onNet={() => setScreen({ k: 'net' })} />;
+      return (
+        <Start
+          data={data}
+          onMode={(mode) => setScreen({ k: 'prep', mode })}
+          onMatch={() => {
+            const game = { seed: seedFrom(urlSeedText()), variant: 'standard' as const };
+            startGame({ game, players: { ПИРАТЫ: 'bot', КОМПАНИЯ: 'bot' }, openHands: true, hints: loadSettings().hints ?? false });
+          }}
+          onResume={resume}
+          onCards={() => setScreen({ k: 'cards' })}
+          onNet={() => setScreen({ k: 'net' })}
+        />
+      );
+    case 'prep':
+      return <Prep mode={screen.mode} onStart={start} onResume={resume} onBack={() => setScreen({ k: 'setup' })} />;
     case 'net':
       return (
         <NetScreen
