@@ -10,7 +10,9 @@
   --repair: #3f7f4a;
   --sea: #2c6a74;
   --legend: #b8902e;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-head: Alegreya, Georgia, 'Times New Roman', serif;
+  --font-text: 'Alegreya Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-text);
   color: var(--ink);
   background: var(--bg);
 }
@@ -220,4 +222,17 @@ h2 {
   .cards {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
+}
+
+/* Headings and the names of ships and cards — Alegreya (stage 7, second part). Small names on mini cards stay Alegreya Sans. */
+h1,
+h2,
+h3,
+.card-name,
+.ship-name,
+.plank-name,
+.team-name,
+.ro-name,
+.hcard-name {
+  font-family: var(--font-head);
 }

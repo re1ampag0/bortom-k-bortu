@@ -1,5 +1,6 @@
 // Rooms (docs/TZ.md, «Мультиплеер»): a code of 5 characters, players with tokens, seats (ships), bots, the coin,
 // the secret placement and the game. A room is saved after every change and removed after 24 hours without one.
+import type { MatchRecord } from '../src/engine/match';
 import type { GameOptions } from '../src/engine/engine';
 import { decider } from '../src/engine/hints';
 import type { Rng } from '../src/engine/rng';
@@ -53,6 +54,8 @@ export interface RoomRecord {
   placement: Partial<Record<Side, [string, string]>>;
   coin: string | null;
   game: TableRecord | null;
+  /** The number of the game in the room (absent in rooms saved before «Реванш»). */
+  match?: number;
 }
 
 /** What the room tells the server: something changed (save and send), a reminder for players. */
@@ -69,6 +72,12 @@ export class Room {
   coin: string | null = null;
   phase: Phase = 'lobby';
   table: Table | null = null;
+  /** The number of the game in the room: «Реванш» starts the next one. */
+  match = 1;
+  /** People who agreed to «Реванш» after the end of the game. */
+  private rematch = new Set<string>();
+  /** «Реванш»: a new seed even if the room fixed one. */
+  private freshSeed = false;
 
   constructor(
     readonly data: GameData,
@@ -101,6 +110,7 @@ export class Room {
       placement: this.placement,
       coin: this.coin,
       game: this.table?.record() ?? null,
+      match: this.match,
     };
   }
 
@@ -112,6 +122,7 @@ export class Room {
     room.placement = r.placement ?? {};
     room.coin = r.coin;
     room.phase = r.phase;
+    room.match = r.match ?? 1;
     if (r.game) room.table = room.newTable(r.game.options, r.game);
     return room;
   }
@@ -164,6 +175,8 @@ export class Room {
       you: { id: me.id, name: me.name, seats: this.seatsOf(playerId), creator: this.creator === playerId },
       coin: this.coin,
       placed: SIDES.filter((side) => this.placement[side]),
+      match: this.match,
+      rematch: this.rematchOpen() ? { agreed: this.rematchPeople().filter((p) => this.rematch.has(p)).length, need: this.rematchPeople().length, you: this.rematch.has(playerId) } : null,
     };
   }
 
@@ -256,6 +269,8 @@ export class Room {
         return this.remind(playerId);
       case 'replace':
         return this.replace(playerId, msg.seat);
+      case 'rematch':
+        return this.voteRematch(playerId, msg.on);
       default:
         return 'Неизвестная команда';
     }
@@ -304,7 +319,9 @@ export class Room {
 
   private startIfPlaced(): void {
     if (!SIDES.every((side) => this.placement[side] || !this.needsPlacement(side))) return;
-    const seed = this.settings.seed ?? this.rng.int(2 ** 31 - 1) + 1;
+    const random = this.rng.int(2 ** 31 - 1) + 1;
+    const seed = this.freshSeed ? random : (this.settings.seed ?? random);
+    this.freshSeed = false;
     const { variant, sea, legends } = this.settings;
     this.table = this.newTable({ seed, variant, sea, legends, positions: this.placement });
     this.phase = 'game';
@@ -323,6 +340,43 @@ export class Room {
     const why = refusal(s, this.data, seats, msg.action, done);
     if (why) return why;
     return t.act(msg.action);
+  }
+
+  // ——— «Реванш» ———
+
+  private rematchOpen(): boolean {
+    return this.phase === 'game' && !!this.table?.state.winner;
+  }
+
+  /** The people at the table: they all must agree to «Реванш» (bots stay, spectators do not vote). */
+  private rematchPeople(): string[] {
+    return [...new Set(Object.values(this.seats).filter((x) => x.player && !x.bot).map((x) => x.player!))];
+  }
+
+  private voteRematch(playerId: string, on: boolean): string | null {
+    if (!this.rematchOpen()) return 'Реванш — после конца партии';
+    const people = this.rematchPeople();
+    if (!people.includes(playerId)) return 'Реванш решают игроки за столом';
+    if (on) this.rematch.add(playerId);
+    else this.rematch.delete(playerId);
+    if (people.every((p) => this.rematch.has(p))) {
+      // The same room, seats and bots; a new seed; the secret placement again.
+      this.rematch.clear();
+      this.table?.dispose();
+      this.table = null;
+      this.match++;
+      this.freshSeed = true;
+      this.phase = 'placement';
+      this.placement = {};
+      this.startIfPlaced();
+    }
+    this.changed();
+    return null;
+  }
+
+  /** «Скачать партию»: the record after the end of the game, or the refusal. */
+  matchRecord(): MatchRecord | string {
+    return this.table && this.phase === 'game' ? this.table.matchRecord() : 'Партии ещё нет';
   }
 
   /** People the game waits for now (bots and the asker aside). */

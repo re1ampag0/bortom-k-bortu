@@ -10,6 +10,8 @@ import WebSocket from 'ws';
 import { choiceFor } from '../src/engine/cards';
 import { applyAction, createGame } from '../src/engine/engine';
 import { decider, playOptions, volleyTargets } from '../src/engine/hints';
+import type { MatchRecord } from '../src/engine/match';
+import { replay } from '../src/engine/match';
 import type { Action, GameState } from '../src/engine/state';
 import { HIDDEN } from '../src/engine/view';
 import type { ClientMsg, GameInfo, RoomInfo, RoomSettings, ServerMsg } from '../src/net/protocol';
@@ -83,6 +85,7 @@ class Client {
   refused: string[] = [];
   reminded: string[] = [];
   problems: string[] = [];
+  record: MatchRecord | null = null;
   messages = 0;
   private waiters: (() => void)[] = [];
   /** Plays by itself after every message (see autoplay). */
@@ -142,6 +145,9 @@ class Client {
         break;
       case 'reminded':
         this.reminded.push(msg.by);
+        break;
+      case 'record':
+        this.record = msg.record;
         break;
     }
     for (const w of this.waiters.splice(0)) w();
@@ -365,6 +371,57 @@ describe('game server', () => {
     b.send({ t: 'concede', on: true });
     await a.until(() => a.view.winner === 'КОМПАНИЯ', 'сдались');
     expect(a.log.some((l) => l.includes('сдаются') || l.includes('сдал'))).toBe(true);
+  });
+
+  it('«Реванш»: starts when every person at the table agreed; the same seats and bots, a new seed, the placement again', async () => {
+    const { srv } = await server();
+    // A fixed seed of the room: the rematch still gets a new one.
+    const { all } = await table(srv, { Аня: ['Ж', 'М'], Боря: ['И'] }, { seed: 7 });
+    const [a, b] = all;
+    const first = a.game!.view;
+    a.send({ t: 'rematch', on: true });
+    await a.until(() => a.errors.length > 0, 'отказ до конца партии');
+    expect(a.errors.at(-1)).toContain('после конца партии');
+    a.send({ t: 'concede', on: true });
+    await a.until(() => !!a.room!.rematch, 'голосование');
+    expect(a.room!.rematch).toEqual({ agreed: 0, need: 2, you: false });
+    a.send({ t: 'rematch', on: true });
+    await b.until(() => b.room!.rematch?.agreed === 1, 'один голос');
+    expect(a.room!.phase).toBe('game');
+    expect(b.room!.rematch).toEqual({ agreed: 1, need: 2, you: false });
+    b.send({ t: 'rematch', on: true });
+    await a.until(() => a.room!.match === 2, 'реванш');
+    expect(a.room!.phase).toBe('placement');
+    expect(a.room!.rematch).toBeNull();
+    expect(a.room!.seats.Г.bot).toBe(true);
+    expect(a.room!.you.seats).toEqual(['Ж', 'М']);
+    expect(b.room!.you.seats).toEqual(['И']);
+    a.game = null;
+    b.game = null;
+    a.send({ t: 'place', side: 'ПИРАТЫ', positions: ['Ж', 'М'] });
+    b.send({ t: 'place', side: 'КОМПАНИЯ', positions: ['И', 'Г'] });
+    for (const c of all) await c.until(() => !!c.game && !c.game.view.winner, 'новая партия');
+    expect(a.game!.actions).toBe(0);
+    expect(a.game!.bots).toEqual(['Г']);
+    // A new seed: the hands of the new game differ from the first one's.
+    expect(a.game!.view.ships.Ж.hand).not.toEqual(first.ships.Ж.hand);
+  });
+
+  it('«Скачать партию» by network: only after the end, and the record replays the game', async () => {
+    const { srv } = await server();
+    const { all } = await table(srv, { Аня: ['Ж', 'М'], Боря: ['И', 'Г'] });
+    const [a] = all;
+    a.send({ t: 'record' });
+    await a.until(() => a.errors.length > 0, 'отказ');
+    expect(a.errors.at(-1)).toContain('после её конца');
+    expect(a.record).toBeNull();
+    a.send({ t: 'concede', on: true });
+    await a.until(() => finished(a), 'конец');
+    a.send({ t: 'record' });
+    await a.until(() => !!a.record, 'запись');
+    const r = a.record!;
+    expect(r.format).toBe('bortom-k-bortu/match');
+    expect(replay(data, r.setup, r.actions).winner).toBe('КОМПАНИЯ');
   });
 
   it('after a restart of the server the game goes on; players come back by their tokens', async () => {

@@ -4,6 +4,7 @@
 // background, on `visibilitychange`, `pageshow` and `online` the client reconnects at once with the same token.
 import { decider, type Decider } from '../engine/hints';
 import type { LogLine } from '../engine/log';
+import type { MatchRecord } from '../engine/match';
 import type { MatchSetup, SideTotals } from '../engine/match';
 import type { Action, GameEvent, GameState } from '../engine/state';
 import type { GameData, Side } from '../engine/types';
@@ -197,6 +198,9 @@ export class NetClient {
     }
   }
 
+  /** Gets the record of «Скачать партию» (asked with { t: 'record' }). */
+  onRecord: ((record: MatchRecord) => void) | null = null;
+
   send(msg: ClientMsg): number {
     const id = this.nextId++;
     const m = { ...msg, id } as ClientMsg;
@@ -250,6 +254,14 @@ export class NetClient {
         break;
       }
       case 'room':
+        // «Реванш» began the next game of the room: a new table, its log from the start.
+        if (this.room && this.room.match !== msg.room.match) {
+          this.game = null;
+          if (this.saved) {
+            this.saved = { ...this.saved, seen: 0 };
+            storeNetSaved(this.saved);
+          }
+        }
         this.room = msg.room;
         if (this.saved) {
           this.saved = { ...this.saved, code: msg.room.code, name: msg.room.you.name };
@@ -261,6 +273,10 @@ export class NetClient {
         this.lostAt = null;
         if (!this.game || !this.room) this.game = new NetGame(this, this.data, msg.game, this.room!, this.saved?.seen ?? null);
         else this.game.update(msg.game);
+        break;
+      case 'record':
+        this.onRecord?.(msg.record);
+        this.onRecord = null;
         break;
       case 'left':
         this.forget();
@@ -287,6 +303,7 @@ export class NetGame {
   state: GameState;
   log: LogLine[] = [];
   last: { by: 'human' | 'bot'; events: GameEvent[]; action: Action } | null = null;
+  recent: GameInfo['recent'] = [];
   actions = 0;
   bots: Seat[] = [];
   ready: Seat[] = [];
@@ -342,6 +359,7 @@ export class NetGame {
     this.state = info.view;
     this.actions = info.actions;
     this.last = info.last;
+    this.recent = info.recent ?? [];
     this.bots = info.bots;
     this.ready = info.ready;
     this.concede = info.concede;
@@ -413,5 +431,16 @@ export class NetGame {
 
   replace(seat: Seat): void {
     this.client.send({ t: 'replace', seat });
+  }
+
+  /** «Реванш» after the end: this player agrees (or takes it back). */
+  voteRematch(on: boolean): void {
+    this.client.send({ t: 'rematch', on });
+  }
+
+  /** «Скачать партию»: the server sends the record after the end of the game. */
+  requestRecord(then: (record: MatchRecord) => void): void {
+    this.client.onRecord = then;
+    this.client.send({ t: 'record' });
   }
 }

@@ -16,7 +16,6 @@ import {
   volleyTargets,
   type VolleyTarget,
 } from '../../engine/hints';
-import { sideGenitive, turnSummary } from '../../engine/log';
 import { matchTotals, type MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
 import { ABILITY, cardByCode, hasAbility, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
@@ -43,6 +42,10 @@ import {
   type CardMode,
 } from './Panels';
 import { MissedSheet, NetBar, netDock } from './NetParts';
+import { BannerView, useBanners } from './Banners';
+import { ShowLayer, useShowQueue } from './Show';
+import { instantUrl } from '../start/motion';
+import { playTurnSound } from '../sound';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
 import { SIDE_LABEL, SPEEDS } from './text';
 
@@ -102,6 +105,11 @@ export function Game({
     setSpeedState(v);
     storeSettings({ ...loadSettings(), speed: v });
   };
+  const [sound, setSoundState] = useState(() => loadSettings().sound);
+  const setSound = (v: boolean) => {
+    setSoundState(v);
+    storeSettings({ ...loadSettings(), sound: v });
+  };
   const [openHands, setOpenHands] = useState(game.setup.openHands);
   // «Подсказки» off — «как за столом»: no damage before choosing, no green «Ход окончен», no «Залп не дан…».
   const [hintsChoice, setHintsState] = useState(net ? (loadSettings().hints ?? false) : (game.setup.hints ?? false));
@@ -156,7 +164,6 @@ export function Game({
   const [mode, setMode] = useState<Mode>({ k: 'idle' });
   const [sheet, setSheet] = useState<Sheet>(null);
   const [flash, setFlash] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const [fastTurn, setFastTurn] = useState<string | null>(null);
   const [endClosed, setEndClosed] = useState(false);
   const [freshFrom, setFreshFrom] = useState(0);
@@ -191,9 +198,35 @@ export function Game({
 
   // ——— Effects: bots, autosave, title, toast, wake lock ———
   const turnKey = `${s.round}:${s.active}`;
+  // Banners one after another: the sea card, «Ваш ход», the summary of the start of the turn (docs/TZ.md, п. 2).
+  const banner = useBanners({
+    recent: game.recent,
+    version,
+    data,
+    bottom,
+    mine: net ? mySeats.length > 0 : game.setup.players[bottom] === 'human',
+    enabled: speed !== 'instant' && !instantUrl(),
+    // A new game: the first sea card and the first turn too.
+    start: (net ? net.actions : local!.actions.length) === 0 && !s.winner ? { sea: s.sea?.current ?? null, active: s.active } : null,
+    paused: !!curtainSide,
+  });
+  const toast = banner?.k === 'summary' ? banner.text : null;
+  // The show of the enemy's and the bots' actions, one at a time; the bots wait for it.
+  const show = useShowQueue({
+    game,
+    version,
+    viewer,
+    mySeats,
+    bottom,
+    enabled: speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide,
+    speed,
+    myDecision,
+    paused: !!banner && banner.k !== 'summary',
+  });
   useEffect(() => {
     if (!local || curtainSide || s.winner || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
+    if ((show.busy || (banner && banner.k !== 'summary')) && !instant) return;
     const t = setTimeout(
       () => {
         let n = 0;
@@ -203,7 +236,7 @@ export function Game({
       instant ? 0 : SPEEDS[speed].ms,
     );
     return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner]);
+  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, banner?.k]);
 
   useEffect(() => {
     if (local) storeSave(s.winner ? null : local.record());
@@ -220,23 +253,18 @@ export function Game({
   }, [net, version]);
 
   useEffect(() => {
+    // The sound «ваш ход» (off by default): when the turn comes to this device.
+    if (sound && myTurn) playTurnSound();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myTurn]);
+
+  useEffect(() => {
     document.title = myDecision && (humans.length > 0 || !!net) ? '● Ваш ход — Бортом к борту' : 'Бортом к борту';
     return () => {
       document.title = 'Бортом к борту';
     };
   }, [myDecision, humans.length]);
 
-  useEffect(() => {
-    // The start of a turn of the team at the device: a short summary for 2 s (docs/TZ.md, «Детали», п. 3).
-    const last = game.last;
-    if (!last) return;
-    const sum = turnSummary(data, last.events);
-    if (sum && sum.side === bottom && sum.text) {
-      setToast(`Ход ${sideGenitive(sum.side)}: ${sum.text}`);
-      const t = setTimeout(() => setToast(null), 2000);
-      return () => clearTimeout(t);
-    }
-  }, [version, game, data, bottom]);
 
   useEffect(() => {
     // The lines of the newest action are highlighted in the log.
@@ -689,11 +717,27 @@ export function Game({
     onClick: () => endFlow('start'),
     testid: 'end-turn',
   };
-  const botBusy = !!local && !!d && local.isBot(d.side) && !s.winner;
+  // «Быстрее» and «До конца хода» while a bot moves or a move is shown; both skip the show.
+  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy;
   const botBtns: Btn[] = botBusy
     ? [
-        { key: 'faster', label: 'Быстрее', onClick: () => setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant') },
-        { key: 'skip', label: 'До конца хода', onClick: () => setFastTurn(turnKey), testid: 'skip-turn' },
+        {
+          key: 'faster',
+          label: 'Быстрее',
+          onClick: () => {
+            show.skip();
+            setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant');
+          },
+        },
+        {
+          key: 'skip',
+          label: 'До конца хода',
+          onClick: () => {
+            show.skip();
+            setFastTurn(turnKey);
+          },
+          testid: 'skip-turn',
+        },
       ]
     : [];
 
@@ -720,7 +764,14 @@ export function Game({
   }
   const fileName = net ? `bortom-k-bortu-${net.room.code}` : `bortom-k-bortu-${game.setup.game.seed}`;
   const downloadLog = () => download(`${fileName}.txt`, game.log.map((l) => (l.kind === 'round' ? `\n${l.text}` : l.text)).join('\n'));
-  const downloadGame = local ? () => download(`${fileName}.json`, JSON.stringify(local.record(), null, 1), 'application/json') : null;
+  // By network the record (every card) comes from the server, and only after the end of the game.
+  const downloadGame = local
+    ? () => download(`${fileName}.json`, JSON.stringify(local.record(), null, 1), 'application/json')
+    : net && s.winner
+      ? () => net.requestRecord((r) => download(`${fileName}.json`, JSON.stringify(r, null, 1), 'application/json'))
+      : null;
+  const vote = net?.room.rematch ?? null;
+  const rematchLabel = vote ? (vote.you ? `Отменить реванш (согласны ${vote.agreed} из ${vote.need})` : `Реванш (согласны ${vote.agreed} из ${vote.need})`) : undefined;
   const totalsOf = () => (net ? net.totals : local ? matchTotals(data, local.setup, local.actions) : null);
   const rematch = () => {
     const seed = createRng((Date.now() ^ game.setup.game.seed) >>> 0).int(2 ** 31 - 1) + 1;
@@ -751,6 +802,7 @@ export function Game({
       onSelect={() => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code)}
       onDetails={() => setSheet({ k: 'ship', code: x.code })}
       onLegend={() => legendClick(x.code)}
+      flashLegend={hints && x.side === bottom && mySeats.includes(x.code)}
     />
   );
 
@@ -759,6 +811,8 @@ export function Game({
       <StatusBar s={s} data={data} instruction={flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}
+      <ShowLayer data={data} step={show.step} />
+      <BannerView data={data} banner={banner} />
       <main className="board">
         <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
@@ -831,7 +885,7 @@ export function Game({
         <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
           Правила
         </button>
-        {net ? <Button b={remindBtn} /> : botBusy ? <Button b={botBtns[1]} /> : <Button b={undoBtn} className="undo" />}
+        {botBusy ? <Button b={botBtns[1]} /> : net ? <Button b={remindBtn} /> : <Button b={undoBtn} className="undo" />}
         <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       </nav>
 
@@ -887,8 +941,10 @@ export function Game({
       )}
       {sheet?.k === 'settings' && (
         <SettingsSheet
-          speed={net ? null : speed}
+          speed={speed}
           setSpeed={setSpeed}
+          sound={sound}
+          setSound={setSound}
           openHands={net ? null : openHands}
           setOpenHands={setOpenHands}
           hints={hintsAllowed ? hints : null}
@@ -912,7 +968,8 @@ export function Game({
         <EndScreen
           s={s}
           totals={totalsOf() ?? { ПИРАТЫ: { damage: 0, income: 0, spent: 0 }, КОМПАНИЯ: { damage: 0, income: 0, spent: 0 } }}
-          onRematch={net ? null : rematch}
+          onRematch={net ? (vote ? () => net.voteRematch(!vote.you) : null) : rematch}
+          rematchLabel={rematchLabel}
           onNew={onExit}
           newLabel={net ? 'Выйти из комнаты' : undefined}
           onDownloadLog={downloadLog}

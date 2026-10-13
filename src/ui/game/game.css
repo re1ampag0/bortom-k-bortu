@@ -103,7 +103,7 @@ button {
   min-height: 100dvh;
 }
 .setup h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-head);
   font-size: 2.2rem;
   margin: 0;
 }
@@ -230,7 +230,7 @@ button {
   opacity: 0.7;
 }
 .curtain h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-head);
   font-size: clamp(1.8rem, 5vw, 3rem);
   margin: 8px 0;
 }
@@ -265,6 +265,8 @@ button {
 /* ——— The table ——— */
 .game {
   position: fixed;
+  /* Numbers on the scales and counters line up (Alegreya Sans has old-style figures by default). */
+  font-variant-numeric: lining-nums;
   inset: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
@@ -1117,7 +1119,7 @@ button {
   text-align: center;
 }
 .end-screen h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-head);
   margin: 0;
 }
 .end-table {
@@ -1417,6 +1419,7 @@ button {
   }
   .hcard-name {
     font-size: 0.78rem;
+    font-family: var(--font-text);
   }
   .hcard-big {
     font-size: 0.72rem;
@@ -1702,5 +1705,214 @@ button {
   *::after {
     transition: none !important;
     animation: none !important;
+  }
+}
+
+/* ——— The show of actions one at a time (stage 7, second part) ——— */
+.show-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+}
+.show-card {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: show-card-in 0.25s ease-out;
+}
+.show-card .hcard {
+  width: 190px;
+  min-height: 250px;
+  height: auto;
+  font-size: 1.05rem;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+.show-card .hcard-name {
+  font-size: 1.25rem;
+}
+.show-card .hcard-text {
+  display: block;
+  -webkit-line-clamp: unset;
+  font-size: 0.85rem;
+}
+.show-card .hcard-big {
+  font-size: 0.95rem;
+}
+.show-caption {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.show-arrow {
+  position: absolute;
+  inset: 0;
+}
+.show-arrow line {
+  animation: show-arrow-in 0.35s ease-out;
+}
+.show-plate {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: #fffaf0;
+  border: 2px solid #b8322a;
+  border-radius: 10px;
+  padding: 6px 12px;
+  display: grid;
+  gap: 2px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  max-width: min(92vw, 420px);
+}
+.show-plate span {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.show-float {
+  position: absolute;
+  transform: translate(-50%, 0);
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--ink);
+  background: rgba(255, 250, 240, 0.92);
+  border-radius: 8px;
+  padding: 0 8px;
+  white-space: nowrap;
+  animation: show-float-up 1s ease-out forwards;
+}
+.show-float.bad {
+  color: #b8322a;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+@keyframes show-card-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.85);
+  }
+}
+@keyframes show-arrow-in {
+  from {
+    stroke-dashoffset: 120;
+    opacity: 0.2;
+  }
+}
+@keyframes show-float-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -10px);
+  }
+}
+@media (max-width: 700px) {
+  .show-card .hcard {
+    width: 150px;
+    min-height: 200px;
+    font-size: 0.95rem;
+  }
+  .show-card .hcard-name {
+    font-size: 1.1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .show-card,
+  .show-arrow line,
+  .show-float {
+    animation: none;
+  }
+}
+
+/* ——— Banners: the sea card, «Ваш ход» ——— */
+.banner {
+  position: fixed;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+  z-index: 16;
+  pointer-events: none;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+  padding: 14px 28px;
+  border-radius: 16px;
+  background: rgba(42, 36, 29, 0.92);
+  color: #fffaf0;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  max-width: min(92vw, 520px);
+  animation: banner-in 0.3s ease-out;
+}
+.banner.sea {
+  background: rgba(36, 70, 92, 0.95);
+}
+.banner.turn.mine {
+  background: rgba(46, 94, 58, 0.95);
+}
+.banner-kicker {
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+.banner-title {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+.banner-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.banner-when {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.96);
+  }
+}
+@media (max-width: 700px) {
+  .banner-title {
+    font-size: 1.6rem;
+  }
+}
+
+/* A Legend became available: one soft flash (with «Подсказки» only; docs/TZ.md, «Принципы стола», п. 9). */
+.legend-flash {
+  animation: legend-flash 1.4s ease-out 1;
+}
+@keyframes legend-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(184, 144, 46, 0.9);
+  }
+  40% {
+    box-shadow: 0 0 0 8px rgba(184, 144, 46, 0.45);
+    background: #fff1c4;
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(184, 144, 46, 0);
   }
 }

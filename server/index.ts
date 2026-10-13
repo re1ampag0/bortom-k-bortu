@@ -49,6 +49,8 @@ interface Conn {
   room: Room | null;
   /** Log lines already sent. */
   logSent: number;
+  /** The game of the room the log was sent for: «Реванш» starts the next one from its first line. */
+  match: number;
   tokens: number;
   refilled: number;
   alive: boolean;
@@ -94,6 +96,11 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
         if (c.room !== room || !c.player || !room.players.has(c.player.id)) continue;
         send(c, { t: 'room', room: room.info(c.player.id) });
         if (room.table) {
+          if (c.match !== room.match) {
+            c.match = room.match;
+            c.logSent = 0;
+    c.match = room.match;
+          }
           const info = room.table.infoFor(room.seatsOf(c.player.id), c.logSent);
           c.logSent = info.logFrom + info.log.length;
           send(c, { t: 'game', game: info });
@@ -211,6 +218,11 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
         c.player = null;
         return send(c, { t: 'left' });
       }
+      case 'record': {
+        if (!c.room || !c.player) return send(c, { t: 'error', id: msg.id, message: 'Сначала войдите в комнату' });
+        const r = c.room.matchRecord();
+        return send(c, typeof r === 'string' ? { t: 'error', id: msg.id, message: r } : { t: 'record', record: r });
+      }
       default: {
         if (!c.room || !c.player) return send(c, { t: 'error', id: msg.id, message: 'Сначала войдите в комнату' });
         const why = c.room.handle(c.player.id, msg);
@@ -262,7 +274,7 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
   });
 
   wss.on('connection', (ws: WebSocket) => {
-    const c: Conn = { ws, player: null, room: null, logSent: 0, tokens: rate.burst, refilled: Date.now(), alive: true };
+    const c: Conn = { ws, player: null, room: null, logSent: 0, match: 0, tokens: rate.burst, refilled: Date.now(), alive: true };
     conns.add(c);
     ws.on('pong', () => (c.alive = true));
     ws.on('message', (raw, isBinary) => {

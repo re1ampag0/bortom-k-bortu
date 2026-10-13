@@ -11,9 +11,11 @@ export interface Settings {
   speed: Speed;
   /** The last choice of «Подсказки»; null — not chosen yet (off, on for «Первая партия»). */
   hints: boolean | null;
+  /** The short sound «ваш ход» (off by default). */
+  sound: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal', hints: null };
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', hints: null, sound: false };
 
 function read(key: string): string | null {
   try {

@@ -63,7 +63,7 @@ function Connected({
   if (room?.phase === 'game' && client.game) {
     return (
       <Game
-        key={room.code}
+        key={`${room.code}-${room.match}`}
         game={client.game}
         onExit={() => client.leave()}
         onRestart={() => {}}
