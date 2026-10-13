@@ -105,6 +105,11 @@ export function Game({
     setSpeedState(v);
     storeSettings({ ...loadSettings(), speed: v });
   };
+  const [effects, setEffectsState] = useState(() => loadSettings().effects);
+  const setEffects = (v: 'rich' | 'simple') => {
+    setEffectsState(v);
+    storeSettings({ ...loadSettings(), effects: v });
+  };
   const [sound, setSoundState] = useState(() => loadSettings().sound);
   const setSound = (v: boolean) => {
     setSoundState(v);
@@ -943,6 +948,8 @@ export function Game({
         <SettingsSheet
           speed={speed}
           setSpeed={setSpeed}
+          effects={effects}
+          setEffects={setEffects}
           sound={sound}
           setSound={setSound}
           openHands={net ? null : openHands}

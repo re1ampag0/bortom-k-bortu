@@ -220,6 +220,8 @@ export function RulesSheet({ data, onClose }: { data: GameData; onClose: () => v
 export function SettingsSheet({
   speed,
   setSpeed,
+  effects,
+  setEffects,
   sound,
   setSound,
   openHands,
@@ -237,6 +239,8 @@ export function SettingsSheet({
   /** null — not shown (a network game: the server moves the bots). */
   speed: Speed | null;
   setSpeed: (s: Speed) => void;
+  effects: 'rich' | 'simple';
+  setEffects: (v: 'rich' | 'simple') => void;
   /** The short sound «ваш ход». */
   sound: boolean;
   setSound: (v: boolean) => void;
@@ -268,6 +272,13 @@ export function SettingsSheet({
           </select>
         </label>
       )}
+      <label className="row">
+        <span>Спецэффекты</span>
+        <select value={effects} onChange={(e) => setEffects(e.target.value as 'rich' | 'simple')}>
+          <option value="rich">Богатые</option>
+          <option value="simple">Простые</option>
+        </select>
+      </label>
       <label className="row check">
         <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} data-testid="sound" /> Звук «ваш ход»
       </label>

@@ -130,6 +130,8 @@ export function Start({
         <SettingsSheet
           speed={settings.speed}
           setSpeed={(speed) => change({ speed })}
+          effects={settings.effects}
+          setEffects={(effects) => change({ effects })}
           sound={settings.sound}
           setSound={(sound) => change({ sound })}
           openHands={null}
