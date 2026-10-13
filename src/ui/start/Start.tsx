@@ -123,7 +123,6 @@ export function Start({
               Настройки
             </button>
           </div>
-          <p className="start-fan">Учебный фанатский прототип по мотивам «Пиратов Карибского моря». Не для продажи.</p>
         </nav>
       </main>
       {sheet === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}

@@ -210,6 +210,7 @@ export function RulesSheet({ data, onClose }: { data: GameData; onClose: () => v
               ))}
             </section>
           ))}
+          <p className="muted">Учебный фанатский прототип по мотивам «Пиратов Карибского моря». Не для продажи.</p>
         </div>
       )}
     </Sheet>
