@@ -84,7 +84,29 @@ export function showSteps(events: GameEvent[], full: boolean): ShowStep[] {
         if (e.toHull > 0) add({ ship: e.ship, text: `−${e.toHull} Корпус`, bad: true });
         break;
       case 'fireDamage':
-        // The damage itself comes as a `damage` event; nothing extra here.
+        add({ ship: e.ship, text: `Пожар −${e.fires} Корпус`, bad: true });
+        break;
+      case 'fireAdded':
+        add({ ship: e.ship, text: `Пожар ${e.fires}`, bad: true });
+        break;
+      case 'fireOut':
+        add({ ship: e.seat, text: 'Пожар потушен', bad: false });
+        break;
+      case 'powderGained':
+        if (full) steps.push({ k: 'effect', effect: 'swap', ship: e.side === 'ПИРАТЫ' ? 'Ж' : 'И', label: `+${e.amount} Порох`, floats: [] });
+        break;
+      case 'powderSpent':
+      case 'powderLost':
+        if (full) steps.push({ k: 'effect', effect: 'swap', ship: e.side === 'ПИРАТЫ' ? 'Ж' : 'И', label: `−${e.amount} Порох`, floats: [] });
+        break;
+      case 'drew':
+        if (full) add({ ship: e.seat, text: `Добор +${e.count}`, bad: false });
+        break;
+      case 'passed':
+        if (full && e.card !== HIDDEN) add({ ship: e.to, text: 'Передача карты', bad: false });
+        break;
+      case 'stolen':
+        if (full && e.card !== HIDDEN) add({ ship: e.seat, text: 'Карта украдена', bad: true });
         break;
       case 'restored':
         if (e.amount > 0) add({ ship: e.ship, text: `+${e.amount} ${TRACK_NAME[e.track]}`, bad: false });
