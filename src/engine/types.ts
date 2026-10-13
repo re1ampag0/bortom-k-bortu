@@ -70,6 +70,10 @@ export interface Ship {
   code: string;
   name: string;
   short: string;
+  /** Short name for the table and the log: «Жемчужина», «Месть». */
+  nick: string;
+  /** «Залп по „Мести“». */
+  nickDative: string;
   captain: string;
   side: Side;
   color: string;
