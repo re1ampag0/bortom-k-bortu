@@ -160,6 +160,16 @@ async function keyStates(page: Page, name: string) {
   expect(errors).toEqual([]);
 }
 
+/** Two people on one screen: placement of both teams, then the Pirates at the table. */
+async function startDuo(page: Page, query: string) {
+  await page.goto(query);
+  await page.getByTestId('quick-duo').click();
+  await page.getByTestId('placement-done').click();
+  await page.getByTestId('curtain-ready').click();
+  await page.getByTestId('placement-done').click();
+  await page.getByTestId('curtain-ready').click();
+}
+
 for (const size of SIZES) {
   test.describe(`${size.name} ${size.width}×${size.height}`, () => {
     test.use({ viewport: { width: size.width, height: size.height } });
@@ -167,6 +177,45 @@ for (const size of SIZES) {
     test('key states fit the window', async ({ page }) => keyStates(page, size.name));
   });
 }
+
+test.describe('«Подсказки»', () => {
+  for (const size of [SIZES[0], SIZES[1]]) {
+    test(`${size.name}: off by default — no damage before the choice, the total before «Огонь», no «Залп не дан»`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await startDuo(page, '?seed=1&speed=instant');
+      await page.getByTestId('volley-М').click();
+      await expect(page.getByTestId('plate-Г')).toHaveText('Цель');
+      await page.getByTestId('plate-Г').click();
+      const panel = page.getByTestId('volley-panel');
+      await expect(panel.locator('.panel-head')).toContainText('по Корпусу «Голландец»');
+      if (size.name === 'laptop') await expect(panel.locator('.choices.wide-block .choice')).toHaveCount(1);
+      else {
+        await expect(panel.locator('.none-charge b')).toHaveCount(0);
+        // The Charges of «Месть» are mini cards, as in the hand, without their damage.
+        await expect(panel.locator('.choice-cards.narrow-block .hcard').first()).toBeVisible();
+      }
+      await shot(page, size.name, '10-volley-no-hints');
+      await panel.getByRole('button', { name: 'Отмена' }).click();
+      await page.locator('[data-testid="end-turn"]:visible').click();
+      await expect(page.getByTestId('confirm-end')).toHaveCount(0);
+    });
+
+    test(`${size.name}: on — damage on the targets and of each Charge, «Залп не дан»`, async ({ page }) => {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await startDuo(page, '?seed=1&speed=instant&hints=1');
+      await page.getByTestId('volley-М').click();
+      await expect(page.getByTestId('plate-Г')).toContainText(/\d напротив/);
+      await page.getByTestId('plate-Г').click();
+      const panel = page.getByTestId('volley-panel');
+      if (size.name === 'laptop') await expect(panel.locator('.choices.wide-block .choice b').first()).toHaveText(/^\d/);
+      else await expect(panel.locator('.none-charge b')).toHaveText(/^\d/);
+      await shot(page, size.name, '11-volley-hints');
+      await panel.getByRole('button', { name: 'Отмена' }).click();
+      await page.locator('[data-testid="end-turn"]:visible').click();
+      await expect(page.getByTestId('confirm-end')).toBeVisible();
+    });
+  }
+});
 
 test.describe('whole games through the interface', () => {
   test.use({ viewport: { width: 1366, height: 660 } });

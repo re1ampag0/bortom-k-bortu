@@ -91,6 +91,9 @@ button {
 .narrow {
   display: none;
 }
+.narrow-block {
+  display: none !important;
+}
 
 /* ——— Setup and placement ——— */
 .setup {
@@ -1152,6 +1155,23 @@ button {
   .narrow {
     display: inline;
   }
+  .narrow-block {
+    display: flex !important;
+  }
+  .wide-block {
+    display: none !important;
+  }
+  .choice-cards.narrow-block {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .none-charge {
+    flex: none;
+    width: 74px;
+    height: 100px;
+    justify-content: center;
+  }
   .quick {
     grid-template-columns: 1fr;
   }
@@ -1502,6 +1522,10 @@ button {
   }
   .hcard-head {
     font-size: 0.6rem;
+  }
+  .none-charge {
+    width: 96px;
+    height: 130px;
   }
 }
 

@@ -12,6 +12,11 @@ export interface MatchSetup {
   players: Record<Side, Controller>;
   /** «Открытые руки»: all hands are seen, no hand-over screens. */
   openHands: boolean;
+  /**
+   * «Подсказки»: damage of each Charge and on the targets, the green «Ход окончен», «Залп не дан…». Off — «как за
+   * столом», the default; records without the field play without hints.
+   */
+  hints?: boolean;
 }
 
 export interface MatchRecord {
