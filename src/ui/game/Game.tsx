@@ -727,9 +727,8 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   }
 }
 
-/** Why the device goes to the team: «ход Компании», «Реакция на Залп „Мести“», «Тортуга»… */
+/** Why the device goes to the team: «ход Компании», «Реакция на Залп по „Мести“», «Тортуга»… */
 function curtainReason(s: GameState, data: LocalGame['data'], kind: string): string {
-  const nick = (code: string) => `«${shipData(data, code).nick}»`;
   switch (kind) {
     case 'reactions':
       if (s.volley) return `Реакция на Залп по «${shipData(data, s.volley.target).nickDative}»`;
