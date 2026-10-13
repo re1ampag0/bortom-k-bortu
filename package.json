@@ -39,5 +39,8 @@
     "vite": "^6.0.7",
     "vite-node": "^3.0.5",
     "vitest": "^3.0.5"
+  },
+  "allowScripts": {
+    "esbuild@0.24.2": true
   }
 }
