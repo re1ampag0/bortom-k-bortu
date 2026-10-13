@@ -236,6 +236,7 @@ type StepKind =
   | { k: 'swap'; side: Side; reason: SwapReason }
   | { k: 'tortuga' }
   | { k: 'window'; window: ReactionWindow; subject: 'volley' | 'card' }
+  | { k: 'volleyPaid' }
   | { k: 'volleyHit' }
   | { k: 'volleyFire' }
   | { k: 'volleyEnd' }

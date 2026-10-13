@@ -144,6 +144,34 @@ describe('Orders of the Revenge', () => {
     expect(s.ships['Ж'].hand).toHaveLength(2);
   });
 
+  it('«Кукла вуду» sank the shooter for its Charge: the Volley is cancelled, nothing is returned (Q51)', () => {
+    let s = turnOf('КОМПАНИЯ', { И: ['Ядра'], Ж: ['Уйти по ветру'] });
+    s.ships['И'].voodoo = 'М';
+    s.ships['И'].tracks.crew = 1;
+    s.ships['И'].tracks.hull = 1;
+    const charge = cardIn(s, 'И', 'Ядра');
+    const r = act(s, { type: 'volley', ship: 'И', target: 'Ж', charge });
+    s = r.state;
+    expect(s.ships['И'].sunk).toBe(true);
+    // No Reaction window, no damage; 1 Powder for the Volley is not returned, the Charge is in its owner's discard.
+    expect(s.pending).toBeNull();
+    expect(s.ships['Ж'].tracks.hull).toBe(9);
+    expect(s.teams['КОМПАНИЯ'].powder).toBe(7);
+    expect(s.ships['И'].discard).toContain(charge);
+    expect(r.events).toContainEqual({ type: 'volleyCancelled', ship: 'И', target: 'Ж' });
+  });
+
+  it('«Кукла вуду» for a Charge and «Джек ускользает»: the Pearl escapes and fires with the Charge (Q51)', () => {
+    let s = turnOf('ПИРАТЫ', { Ж: ['Ядра'] });
+    s.ships['Ж'].voodoo = 'Г';
+    s.ships['Ж'].tracks.crew = 1;
+    s.ships['Ж'].tracks.hull = 1;
+    s = act(s, { type: 'volley', ship: 'Ж', target: 'И', charge: cardIn(s, 'Ж', 'Ядра') }).state;
+    expect(s.pending).toEqual({ kind: 'jack', ship: 'Ж' });
+    s = act(s, { type: 'jack', play: true }).state;
+    expect(s.ships['И'].tracks.hull).toBe(12 - 3);
+  });
+
   it('«Пленная русалка»: the enemy ship opposite loses 1 Crew; draw 1. Nobody opposite — only the draw (9.9)', () => {
     const s = turnOf('ПИРАТЫ', { М: ['Пленная русалка'] });
     const r = play(s, 'М', 'Пленная русалка').state;
