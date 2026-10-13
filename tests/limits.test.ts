@@ -1,6 +1,7 @@
 // Crew limit and paying for cards (RULES.md 6.4–6.5, 7, 9.1–9.4, 17.3).
 import { describe, expect, it } from 'vitest';
-import { act, give, newGame, passTo, run, setHand } from './helpers';
+import { actDeclining as act, give, newGame, passTo, run, setHand } from './helpers';
+// Stage 3 rules without Reactions: `act` here declines every Reaction window the action opens (helpers.actDeclining).
 
 const atCompany = () => passTo(newGame(), 'КОМПАНИЯ');
 
