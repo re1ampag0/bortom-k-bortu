@@ -184,6 +184,8 @@ export interface CardResolution {
   params: CardParams;
   /** «Ловкость рук»: after the card is played it goes to this seat's hand (18.4). */
   stolenBy: string | null;
+  /** «Кукла вуду» sank the ship when the card was played: no effect, the card goes to the discard (18.19, Q47). */
+  lost: boolean;
 }
 
 /**
@@ -239,6 +241,7 @@ type StepKind =
   | { k: 'volleyEnd' }
   | { k: 'cardEffect' }
   | { k: 'cardOp'; i: number }
+  | { k: 'cardPaid' }
   | { k: 'cardEnd' };
 
 export interface SeaState {
@@ -342,6 +345,7 @@ export type GameEvent =
   | { type: 'jackEscaped'; ship: string }
   | { type: 'legendPlayed'; seat: string; card: string; target: string | null }
   | { type: 'cardCancelled'; card: string }
+  | { type: 'cardLost'; card: string }
   | { type: 'planned'; seat: string; count: number }
   | { type: 'dived'; ship: string }
   | { type: 'surfaced'; ship: string }

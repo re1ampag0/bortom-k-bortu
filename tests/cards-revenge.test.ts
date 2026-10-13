@@ -116,6 +116,34 @@ describe('Orders of the Revenge', () => {
     expect(s.ships['Г'].tracks.crew).toBe(2);
   });
 
+  it('«Кукла вуду» sank the ship when the card was played: no effect, the card goes to its owner’s discard (Q47)', () => {
+    let s = turnOf('КОМПАНИЯ', { И: ['Ничего личного'] });
+    s.ships['И'].voodoo = 'М';
+    s.ships['И'].tracks.crew = 1;
+    s.ships['И'].tracks.hull = 1;
+    const card = cardIn(s, 'И', 'Ничего личного');
+    const r = act(s, { type: 'playCard', seat: 'И', card, target: 'М' });
+    s = r.state;
+    expect(s.ships['И'].sunk).toBe(true);
+    expect(s.ships['М'].tracks.hull).toBe(11);
+    expect(s.ships['И'].discard).toContain(card);
+    expect(r.events).toContainEqual({ type: 'cardLost', card });
+    // The cost is paid all the same.
+    expect(s.teams['КОМПАНИЯ'].powder).toBe(7);
+  });
+
+  it('«Кукла вуду» and «Джек ускользает»: the Pearl escapes, the card acts (Q47)', () => {
+    let s = turnOf('ПИРАТЫ', { Ж: ['Гиббс за штурвалом'] });
+    s.ships['Ж'].voodoo = 'Г';
+    s.ships['Ж'].tracks.crew = 1;
+    s.ships['Ж'].tracks.hull = 1;
+    s = play(s, 'Ж', 'Гиббс за штурвалом').state;
+    expect(s.pending).toEqual({ kind: 'jack', ship: 'Ж' });
+    s = act(s, { type: 'jack', play: true }).state;
+    expect(s.ships['Ж'].tracks.hull).toBe(2);
+    expect(s.ships['Ж'].hand).toHaveLength(2);
+  });
+
   it('«Пленная русалка»: the enemy ship opposite loses 1 Crew; draw 1. Nobody opposite — only the draw (9.9)', () => {
     const s = turnOf('ПИРАТЫ', { М: ['Пленная русалка'] });
     const r = play(s, 'М', 'Пленная русалка').state;

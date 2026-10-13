@@ -105,6 +105,7 @@ export function playCard(ctx: Ctx, seat: string, card: string, params: CardParam
     fromPlan,
     params,
     stolenBy: null,
+    lost: false,
   };
   // Limit and cost first; the action is undone as a whole if a later check fails (applyAction works on a copy).
   const voodoo = useCardPlay(ctx, seat, ship.code);
@@ -118,7 +119,15 @@ export function playCard(ctx: Ctx, seat: string, card: string, params: CardParam
   ctx.events.push({ type: 'cardPlayed', seat, ship: ship.code, card });
   s.card = res;
   const window: Step[] = against ? [{ k: 'window', window: 'before', subject: 'card' }] : [];
-  pushSteps(s, ...voodoo, ...window, { k: 'cardEffect' }, { k: 'cardEnd' });
+  pushSteps(s, ...paidSteps(voodoo), ...window, { k: 'cardEffect' }, { k: 'cardEnd' });
+}
+
+/**
+ * The damage of «Кукла вуду» is a payment for playing the card: if the ship did not survive it, the card has no
+ * effect (18.19, Q47, as Q33). When «Джек ускользает» saves the Pearl, the card acts.
+ */
+export function paidSteps(voodoo: Step[]): Step[] {
+  return voodoo.length > 0 ? [...voodoo, { k: 'cardPaid' }] : [];
 }
 
 /** The chosen enemy ship or seat; the ship opposite for «напротив» (10.4). Null when the card has nothing to choose. */
@@ -330,6 +339,14 @@ export function cardStep(ctx: Ctx, step: Step): void {
     endCard(ctx, c);
     return;
   }
+  if (step.k === 'cardPaid') {
+    if (getShip(s, c.ship).sunk) {
+      c.lost = true;
+      ctx.events.push({ type: 'cardLost', card: c.card });
+    }
+    return;
+  }
+  if (c.lost) return;
   if (step.k === 'cardEffect') {
     if (c.cancelled) {
       ctx.events.push({ type: 'cardCancelled', card: c.card });

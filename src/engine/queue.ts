@@ -54,6 +54,7 @@ function runStep(ctx: Ctx, step: Step): void {
       return volleyStep(ctx, step);
     case 'cardEffect':
     case 'cardOp':
+    case 'cardPaid':
     case 'cardEnd':
       return cardStep(ctx, step);
   }
