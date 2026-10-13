@@ -1,4 +1,5 @@
-// 200 games with random seeds and random actions. Forbidden actions (RuleError) are skipped.
+// 200 games with random seeds and random actions and answers to Reaction windows, «Джек ускользает» and «Тортуга».
+// Forbidden actions (RuleError) are skipped.
 // After every action: no other exceptions, Powder 0–8, tracks between the minimum and the start,
 // no card lost or doubled (counted by the deck that owns it).
 import { describe, expect, it } from 'vitest';
@@ -10,18 +11,37 @@ import { act, cardsByOwner, data } from './helpers';
 
 const pick = <T>(rng: Rng, items: T[]): T | undefined => (items.length ? items[rng.int(items.length)] : undefined);
 
+/** An answer to the pending decision: a random Reaction or «no», Jack or not, random cards on «Тортуга». */
+function randomAnswer(s: GameState, rng: Rng): Action {
+  const p = s.pending!;
+  if (p.kind === 'jack') return { type: 'jack', play: rng.next() < 0.7 };
+  if (p.kind === 'tortuga') {
+    const side = pick(rng, p.waiting)!;
+    const seats = Object.values(s.ships).filter((x) => x.side === side);
+    return { type: 'tortuga', side, draws: Object.fromEntries(seats.map((x) => [x.code, rng.int(3)])) };
+  }
+  const seat = s.ships[pick(rng, p.waiting)!];
+  const card = pick(rng, [...seat.hand, ...seat.plans]);
+  return rng.next() < 0.6 && card ? { type: 'react', seat: seat.code, card } : { type: 'noReaction', seat: seat.code };
+}
+
 function randomAction(s: GameState, rng: Rng, actionsThisTurn: number): Action {
+  if (s.pending) return randomAnswer(s, rng);
   const side = s.active;
-  if (actionsThisTurn > 40 || rng.next() < 0.12) return { type: 'endTurn', side };
   const own = Object.values(s.ships).filter((x) => x.side === side);
   const enemies = Object.values(s.ships).filter((x) => x.side !== side);
   const seat = pick(rng, own)!;
-  const card = pick(rng, seat.hand) ?? 'Ж-01';
-  switch (rng.int(7)) {
+  if (actionsThisTurn > 40 || rng.next() < 0.12) {
+    const pearl = s.ships['Ж'];
+    const plans = side === 'ПИРАТЫ' && rng.next() < 0.5 ? pearl.hand.slice(0, rng.int(3)) : undefined;
+    return { type: 'endTurn', side, plans };
+  }
+  const card = pick(rng, [...seat.hand, ...seat.plans]) ?? 'Ж-01';
+  switch (rng.int(10)) {
     case 0:
     case 1: {
       const charger = pick(rng, own)!;
-      const charge = rng.next() < 0.6 ? pick(rng, charger.hand) : undefined;
+      const charge = rng.next() < 0.6 ? pick(rng, [...charger.hand, ...charger.plans]) : undefined;
       return {
         type: 'volley',
         ship: pick(rng, own)!.code,
@@ -29,6 +49,7 @@ function randomAction(s: GameState, rng: Rng, actionsThisTurn: number): Action {
         charge,
         chargeFrom: charge && charger.code,
         paid: rng.next() < 0.2 ? rng.int(5) : undefined,
+        heart: rng.next() < 0.15,
       };
     }
     case 2:
@@ -39,8 +60,14 @@ function randomAction(s: GameState, rng: Rng, actionsThisTurn: number): Action {
       return { type: 'pass', seat: seat.code, card };
     case 5:
       return { type: 'regroup', side };
-    default:
+    case 6:
       return { type: 'extinguish', seat: seat.code, card };
+    case 7:
+      return { type: 'playLegend', seat: seat.code, target: pick(rng, enemies)!.code };
+    case 8:
+      return { type: (['dive', 'sword', 'treasury'] as const)[rng.int(3)], ship: seat.code };
+    default:
+      return { type: 'souls', ship: seat.code, track: rng.next() < 0.5 ? 'hull' : 'crew' };
   }
 }
 
@@ -62,9 +89,15 @@ function brokenInvariants(s: GameState): string[] {
       const v = x.tracks[track];
       check(v >= TRACK_MIN[track] && v <= ship[track], `${ship.code} ${track} ${v}`);
     }
-    check(x.sunk === (x.tracks.hull === 0), `${ship.code}: sunk ${x.sunk}, hull ${x.tracks.hull}`);
+    // Hull 0 afloat only while the Pirates decide about «Джек ускользает».
+    const jack = s.pending?.kind === 'jack' && s.pending.ship === ship.code;
+    check(x.sunk === (x.tracks.hull === 0) || (jack && !x.sunk), `${ship.code}: sunk ${x.sunk}, hull ${x.tracks.hull}`);
+    check(x.plans.length <= data.rules.plansMax, `${ship.code}: Планов ${x.plans.length}`);
     check(x.fires >= 0 && x.fires <= data.rules.maxFires, `${ship.code}: Пожаров ${x.fires}`);
     check(x.souls >= 0 && x.souls <= (ship.souls ?? 0), `${ship.code}: Душ ${x.souls}`);
+  }
+  if (!s.pending && !s.winner) {
+    check(s.queue.length === 0 && !s.volley && !s.card, 'движок остановился, не доделав шаги');
   }
   const byOwner = cardsByOwner(s);
   for (const code of Object.keys(decks)) {

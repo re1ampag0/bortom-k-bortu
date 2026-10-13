@@ -1,5 +1,6 @@
 // Round and turn order, drawing, card limits and free actions (RULES.md 4, 5, 7, 8).
-import { addPowder, checkGameOver, dealDamage, pay } from './damage';
+import { addPowder, dealDamage, pay } from './damage';
+import { seaAtOnce, swapPlaces } from './sea';
 import {
   ABILITY,
   RuleError,
@@ -11,6 +12,8 @@ import {
   isCaptain,
   newTurn,
   ownerOf,
+  pushSteps,
+  seaKey,
   seatShip,
   seatsOf,
   shipData,
@@ -19,6 +22,8 @@ import {
   teamShips,
   type Ctx,
   type ShipState,
+  type SpendReason,
+  type Step,
 } from './state';
 import type { Side } from './types';
 
@@ -32,10 +37,8 @@ export function startRound(ctx: Ctx): void {
   }
   s.round++;
   ctx.events.push({ type: 'roundStarted', round: s.round });
+  pushSteps(s, { k: 'startTurn', side: 'ПИРАТЫ' });
   if (s.sea) revealSea(ctx);
-  // Sea card effects come in stage 4; an "at once" card may end the game.
-  if (checkGameOver(ctx)) return;
-  startTurn(ctx, 'ПИРАТЫ');
 }
 
 /** The previous card goes to the discard; an empty deck is made again from all 17 cards (RULES.md 4.2, 4.3). */
@@ -49,10 +52,15 @@ function revealSea(ctx: Ctx): void {
     reshuffled = true;
   }
   sea.current = sea.deck.shift() ?? null;
-  if (sea.current) ctx.events.push({ type: 'seaRevealed', card: sea.current, reshuffled });
+  if (!sea.current) return;
+  ctx.events.push({ type: 'seaRevealed', card: sea.current, reshuffled });
+  seaAtOnce(ctx);
 }
 
-/** Start of a team's turn: Hold → Fires → draw → card limits (RULES.md 5.2–5.5, 7.3). */
+/**
+ * Start of a team's turn: Hold → Fires → surfacing of the Dutchman → «Девятый вал» → «Мальстрём» →
+ * draw → card limits (RULES.md 5.2–5.5, 7.3). Everything after the Hold is queued.
+ */
 export function startTurn(ctx: Ctx, side: Side): void {
   const { s, data } = ctx;
   s.active = side;
@@ -62,27 +70,49 @@ export function startTurn(ctx: Ctx, side: Side): void {
   const firstTurn = s.round === 1 && side === 'ПИРАТЫ';
   addPowder(ctx, side, firstTurn ? data.econ.first_income : data.econ.income, 'hold');
 
-  for (const ship of aliveShips(s, side)) {
-    if (ship.fires === 0) continue;
-    ctx.events.push({ type: 'fireDamage', ship: ship.code, fires: ship.fires });
-    dealDamage(ctx, ship.code, 'hull', ship.fires);
+  const ships = aliveShips(s, side);
+  const key = seaKey(ctx);
+  const steps: Step[] = ships.filter((x) => x.fires > 0).map((x) => ({ k: 'fire', ship: x.code }) as Step);
+  steps.push({ k: 'surface', side });
+  if (key === 'wave') {
+    for (const x of ships) steps.push({ k: 'damage', ship: x.code, track: 'sails', n: data.rules.seaWave, src: null });
   }
-  if (checkGameOver(ctx)) return;
-  // Surfacing of the Dutchman, «Девятый вал» and «Мальстрём» come here in stage 4 (RULES.md 5.4).
+  if (key === 'maelstrom') steps.push({ k: 'swap', side, reason: 'maelstrom' });
+  steps.push({ k: 'turnReady', side });
+  pushSteps(s, ...steps);
+}
 
+/** Fires: 1 damage to the Hull for each Fire, right after the Hold (RULES.md 5.3). */
+export function fireStep(ctx: Ctx, code: string): void {
+  const ship = getShip(ctx.s, code);
+  if (ship.sunk || ship.fires === 0) return;
+  ctx.events.push({ type: 'fireDamage', ship: code, fires: ship.fires });
+  dealDamage(ctx, code, 'hull', ship.fires);
+}
+
+/** Draw, then fix the card limits of the turn (RULES.md 5.5, 7.3); «Флот на горизонте» adds to them. */
+export function turnReady(ctx: Ctx, side: Side): void {
+  const { s } = ctx;
   for (const seat of seatsOf(s, side)) drawUp(ctx, seat.code);
+  const fleet = seaKey(ctx) === 'fleet' ? ctx.data.rules.seaFleet : 0;
   for (const ship of aliveShips(s, side)) {
-    s.turn.limit[ship.code] = ship.tracks.crew;
+    s.turn.limit[ship.code] = ship.tracks.crew + fleet;
     s.turn.played[ship.code] = 0;
     s.turn.volleys[ship.code] = 0;
   }
 }
 
-/** Draw up to the hand size; Plans count as cards in hand (RULES.md 5.5). An empty deck is made from the discard (9.3). */
+/** Draw up to the hand size; Plans count as cards in hand (RULES.md 5.5). */
 export function drawUp(ctx: Ctx, seat: string): void {
   const ship = getShip(ctx.s, seat);
+  drawCards(ctx, seat, ctx.data.rules.hand - ship.hand.length - ship.plans.length);
+}
+
+/** Draws n cards; an empty deck is made from the discard, both empty — no card (RULES.md 9.3). */
+export function drawCards(ctx: Ctx, seat: string, n: number): void {
+  const ship = getShip(ctx.s, seat);
   let count = 0;
-  while (ship.hand.length + ship.plans.length < ctx.data.rules.hand) {
+  while (count < n) {
     if (ship.deck.length === 0) {
       if (ship.discard.length === 0) break;
       ship.deck = ctx.rng.shuffle(ship.discard);
@@ -95,12 +125,25 @@ export function drawUp(ctx: Ctx, seat: string): void {
   if (count > 0) ctx.events.push({ type: 'drew', seat, count });
 }
 
-export function endTurn(ctx: Ctx, side: Side): void {
+/** «Ход окончен». The Black Pearl may put up to 2 cards from her hand into Plans first (RULES.md 5.7, 14.1). */
+export function endTurn(ctx: Ctx, side: Side, plans: string[] = []): void {
   requireActive(ctx, side);
-  // Plans of the Black Pearl and end-of-turn effects come here in stage 4 (RULES.md 5.7).
+  const { s, data } = ctx;
+  if (plans.length > 0) {
+    const pearl = teamShips(s, side).find((x) => hasAbility(data, x, ABILITY.madPlan));
+    if (!pearl) throw new RuleError('Планы кладёт только «Чёрная жемчужина» на плаву');
+    if (new Set(plans).size !== plans.length) throw new RuleError('Одна карта не может лечь в План дважды');
+    if (pearl.plans.length + plans.length > data.rules.plansMax) {
+      throw new RuleError(`Планов не больше ${data.rules.plansMax}`);
+    }
+    if (!plans.every((c) => pearl.hand.includes(c))) throw new RuleError('В План кладут карты с руки «Жемчужины»');
+    for (const card of plans) takeCard(pearl.hand, card, 'Этой карты нет на руке');
+    pearl.plans.push(...plans);
+    ctx.events.push({ type: 'planned', seat: pearl.code, count: plans.length });
+  }
+  for (const ship of teamShips(s, side)) ship.surfaced = false;
   ctx.events.push({ type: 'turnEnded', side });
-  if (side === 'ПИРАТЫ') startTurn(ctx, 'КОМПАНИЯ');
-  else startRound(ctx);
+  pushSteps(s, side === 'ПИРАТЫ' ? { k: 'startTurn', side: 'КОМПАНИЯ' } : { k: 'startRound' });
 }
 
 export function requireActive(ctx: Ctx, side: Side): void {
@@ -145,31 +188,42 @@ export function useCardPlay(ctx: Ctx, seat: string, forShip: string): void {
  * while it is afloat — whichever ship the card is played for (6.3, Q39). A team without the Dutchman afloat
  * cannot pay Souls.
  */
-export function payCardCost(ctx: Ctx, card: string, forShip: ShipState): void {
+export function payCardCost(ctx: Ctx, card: string, forShip: ShipState, reason: SpendReason = 'card'): void {
   const c = cardByCode(ctx.data, card);
   if (c.soul > 0) {
     const keeper = aliveShips(ctx.s, forShip.side).find((x) => shipData(ctx.data, x.code).souls !== undefined);
     if (!keeper) throw new RuleError('Заплатить Душами нельзя: в вашей команде нет «Летучего голландца» на плаву');
     if (c.soul > keeper.souls) throw new RuleError(`Не хватает Душ: нужно ${c.soul}, есть ${keeper.souls}`);
-    pay(ctx, forShip.side, c.cost, 'card');
+    pay(ctx, forShip.side, c.cost, reason);
     keeper.souls -= c.soul;
     ctx.events.push({ type: 'soulsSpent', ship: keeper.code, amount: c.soul });
     return;
   }
-  pay(ctx, forShip.side, c.cost, 'card');
+  pay(ctx, forShip.side, c.cost, reason);
 }
 
-/** Plays an Order or Repair from the hand. Card effects (fx) come in stage 5. */
+/**
+ * Where a seat holds a card: its hand or, for the Black Pearl afloat, its Plans (RULES.md 14.1).
+ * Throws a RuleError if the card is in neither.
+ */
+export function findCard(ctx: Ctx, seat: string, card: string): { list: string[]; fromPlan: boolean } {
+  const holder = getShip(ctx.s, seat);
+  if (holder.hand.includes(card)) return { list: holder.hand, fromPlan: false };
+  if (holder.plans.includes(card) && !holder.sunk) return { list: holder.plans, fromPlan: true };
+  throw new RuleError('Этой карты нет на руке');
+}
+
+/** Plays an Order or Repair from the hand or a Plan (7.4). Card effects (fx) come in stage 5. */
 export function playCard(ctx: Ctx, seat: string, card: string): void {
-  const holder = requireSeat(ctx, seat);
-  if (!holder.hand.includes(card)) throw new RuleError('Этой карты нет на руке');
+  requireSeat(ctx, seat);
+  const { list } = findCard(ctx, seat, card);
   const c = cardByCode(ctx.data, card);
   if (c.type === 'ЗАРЯД') throw new RuleError('Заряд играется только вместе с Залпом своего корабля');
   if (c.type === 'РЕАКЦИЯ') throw new RuleError('Реакцию можно сыграть только в ход противника');
   const ship = seatShip(ctx.s, seat)!;
   useCardPlay(ctx, seat, ship.code);
   payCardCost(ctx, card, ship);
-  takeCard(holder.hand, card, 'Этой карты нет на руке');
+  takeCard(list, card, 'Этой карты нет на руке');
   ctx.events.push({ type: 'cardPlayed', seat, ship: ship.code, card });
   discard(ctx, card);
 }
@@ -198,7 +252,8 @@ export function passCard(ctx: Ctx, seat: string, card: string): void {
 
 /**
  * Regroup: once a turn per team, swap the ships or move a lone ship to the empty place (RULES.md 8.3, 17.4).
- * Not when a ship has Sails 0. Free for the Pirates while the Black Pearl is afloat (14.2).
+ * Not when a ship has Sails 0, not in «Штиль», not with a ship under «Блокада» (18.10, Q20).
+ * Free for the Pirates while the Black Pearl is afloat (14.2) and for everyone in «Попутный ветер».
  */
 export function regroup(ctx: Ctx, side: Side): void {
   requireActive(ctx, side);
@@ -206,12 +261,14 @@ export function regroup(ctx: Ctx, side: Side): void {
   if (s.turn.regrouped) throw new RuleError('Перестроение — один раз за ход');
   const ships = aliveShips(s, side);
   if (ships.some((x) => x.tracks.sails === 0)) throw new RuleError('Перестроение невозможно: у корабля Паруса 0');
-  // «Штиль» and «Блокада» forbid it too — stage 4.
-  const free = teamShips(s, side).some((x) => hasAbility(data, x, ABILITY.fasterThanWind));
+  if (seaKey(ctx) === 'calm') throw new RuleError('Штиль: корабли не меняются местами');
+  if (ships.some((x) => x.blockaded)) throw new RuleError('Корабль под «Блокадой» не меняется местами');
+  const free =
+    seaKey(ctx) === 'wind' || teamShips(s, side).some((x) => hasAbility(data, x, ABILITY.fasterThanWind));
   if (!free) pay(ctx, side, data.rules.regroupCost, 'regroup');
-  for (const ship of ships) ship.pos = ship.pos === 0 ? 1 : 0;
   s.turn.regrouped = true;
   ctx.events.push({ type: 'regrouped', side, ships: ships.map((x) => x.code) });
+  swapPlaces(ctx, side, 'regroup');
 }
 
 /** Put out a Fire on your own ship by discarding a card, any number of times (RULES.md 8.4). */

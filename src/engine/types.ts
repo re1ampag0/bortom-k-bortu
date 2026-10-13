@@ -122,6 +122,37 @@ export interface Rules {
   firstGameSecondStart: number;
   /** Most Powder a "paid" Charge («Оплаченный залп») may take. */
   paidChargeMax: number;
+  /** Hull of the Black Pearl after «Джек ускользает». */
+  jackHull: number;
+  /** Plans of the Black Pearl at most. */
+  plansMax: number;
+  /** «Казна Компании»: Powder for extra card plays. */
+  treasuryCost: number;
+  treasuryPlays: number;
+  /** «Меч Тритона»: Powder. */
+  swordCost: number;
+  /** «Сердце Дейви Джонса»: Crew the Flying Dutchman loses. */
+  heartCrewLoss: number;
+  /** Extra damage of the Dutchman's first Volley after surfacing. */
+  surfaceBonus: number;
+  /** Souls for each enemy ship hit on the Crew by the Dutchman. */
+  soulsGain: number;
+  /** Sea cards. */
+  seaStorm: number;
+  seaClear: number;
+  seaWave: number;
+  seaMoon: number;
+  seaFleet: number;
+  seaReefs: number;
+  seaCaravan: number;
+  seaThunder: number;
+  seaTortuga: number;
+  /** «Русалки»: ships with at least this Crew lose seaMermaids Crew. */
+  seaMermaidsMin: number;
+  seaMermaids: number;
+  seaRum: number;
+  /** «Сырой порох»: a team loses powder / divisor, rounded down. */
+  seaWetDivisor: number;
 }
 
 export interface GameData {
