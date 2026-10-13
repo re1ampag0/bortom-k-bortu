@@ -1,0 +1,16 @@
+# Simple server (DEPLOY.md, «Свой сервер — простой вариант»): the site and the game at http://<IP>:8080,
+# no domain and no certificate. Starts again after a reboot of the server.
+#   docker compose up -d          — build and start
+#   git pull && docker compose up -d --build   — update
+services:
+  game:
+    build: .
+    image: bortom-k-bortu
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+    volumes:
+      # Rooms are saved here: games go on after a restart.
+      - ./server-data:/data
