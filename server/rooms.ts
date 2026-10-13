@@ -157,6 +157,7 @@ export class Room {
       code: this.code,
       phase: this.phase,
       creator: this.creator,
+      creatorOnline: (this.players.get(this.creator)?.conns ?? 0) > 0,
       settings: this.settings,
       seats,
       spectators: [...this.players.values()].filter((p) => !seated.has(p.id)).map((p) => p.name),

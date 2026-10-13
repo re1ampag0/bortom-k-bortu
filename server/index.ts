@@ -11,6 +11,7 @@ import { loadGameData } from '../src/engine/data';
 import { createRng } from '../src/engine/rng';
 import type { GameData } from '../src/engine/types';
 import { DEFAULT_ROOM_SETTINGS, normalizeCode, type ClientMsg, type ServerMsg } from '../src/net/protocol';
+import { lanAddresses } from './lan';
 import { ROOM_TTL_MS, Room, cleanSettings, newCode, type Player, type RoomHooks } from './rooms';
 import { RoomStore } from './store';
 import type { Delays } from './table';
@@ -221,11 +222,18 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
   // ——— HTTP: /health and the site ———
 
   const staticRoot = options.staticDir ? resolve(options.staticDir) : null;
+  let port = options.port;
   const http = createServer((req, res) => {
     const url = new URL(req.url ?? '/', 'http://x');
     if (url.pathname === '/health' || url.pathname === `${BASE}health`) {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': '*' });
       res.end(JSON.stringify({ ok: true, rooms: rooms.size, connections: conns.size, uptime: Math.round((Date.now() - started) / 1000) }));
+      return;
+    }
+    if (url.pathname === '/lan' || url.pathname === `${BASE}lan`) {
+      // Pages for other devices in the same network (for the room's link and QR code when the host is on localhost).
+      res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
+      res.end(JSON.stringify({ urls: lanAddresses().map((a) => `http://${a.address}:${port}${BASE}`) }));
       return;
     }
     if (url.pathname === '/' || url.pathname === BASE.slice(0, -1)) {
@@ -306,7 +314,7 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
     });
   });
   const address = http.address();
-  const port = typeof address === 'object' && address ? address.port : options.port;
+  port = typeof address === 'object' && address ? address.port : options.port;
 
   return {
     port,

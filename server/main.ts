@@ -1,9 +1,9 @@
 // Starts the game server: `npm run lan` (Wi-Fi, prints the addresses for other devices and a QR code) or
 // `npm run server` / Docker (a VPS). Settings: --port / PORT (8080), HOST (0.0.0.0), DATA_DIR (server-data),
 // STATIC_DIR (dist), ALLOWED_ORIGINS (comma-separated pages of other sites allowed to connect).
-import { networkInterfaces } from 'node:os';
 import QRCode from 'qrcode';
 import { BASE, startServer } from './index';
+import { lanAddresses } from './lan';
 
 const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(`--${name}`);
@@ -14,20 +14,6 @@ const value = (name: string) => {
 
 const port = Number(value('port') ?? process.env.PORT ?? 8080);
 const lan = flag('lan');
-
-/** IPv4 addresses of this computer in local networks, home Wi-Fi first; virtual adapters last. */
-function lanAddresses(): { name: string; address: string }[] {
-  const out: { name: string; address: string; rank: number }[] = [];
-  for (const [name, list] of Object.entries(networkInterfaces())) {
-    for (const a of list ?? []) {
-      if (a.family !== 'IPv4' || a.internal) continue;
-      const virtual = /vEthernet|VirtualBox|VMware|WSL|Hyper-V|docker|br-|veth|utun|tailscale|zerotier/i.test(name);
-      const home = /^192\.168\./.test(a.address) ? 0 : /^10\./.test(a.address) ? 1 : /^172\.(1[6-9]|2\d|3[01])\./.test(a.address) ? 2 : 3;
-      out.push({ name, address: a.address, rank: home + (virtual ? 10 : 0) });
-    }
-  }
-  return out.sort((a, b) => a.rank - b.rank);
-}
 
 try {
   const server = await startServer({

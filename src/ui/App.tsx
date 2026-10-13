@@ -8,16 +8,19 @@ import { loaded } from './data';
 import { Game } from './game/Game';
 import { Placement } from './game/Placement';
 import { Setup, type StartRequest } from './game/Setup';
+import { NetScreen, roomFromUrl } from './net/Lobby';
 import { storeSave } from './storage';
 
 type Screen =
   | { k: 'setup' }
   | { k: 'cards' }
+  | { k: 'net' }
   | { k: 'placement'; setup: MatchSetup; note: string }
   | { k: 'game'; game: LocalGame };
 
 export function App() {
-  const [screen, setScreen] = useState<Screen>({ k: 'setup' });
+  // A link to a room («…?room=ABCDE») opens the network screen at once.
+  const [screen, setScreen] = useState<Screen>(() => (roomFromUrl() ? { k: 'net' } : { k: 'setup' }));
   if (loaded.error !== null) {
     return (
       <main className="page">
@@ -42,7 +45,17 @@ export function App() {
 
   switch (screen.k) {
     case 'setup':
-      return <Setup data={data} onStart={start} onResume={resume} onCards={() => setScreen({ k: 'cards' })} />;
+      return <Setup data={data} onStart={start} onResume={resume} onCards={() => setScreen({ k: 'cards' })} onNet={() => setScreen({ k: 'net' })} />;
+    case 'net':
+      return (
+        <NetScreen
+          data={data}
+          onBack={() => {
+            if (roomFromUrl()) history.replaceState(null, '', location.pathname);
+            setScreen({ k: 'setup' });
+          }}
+        />
+      );
     case 'cards':
       return <Catalog data={data} onBack={() => setScreen({ k: 'setup' })} />;
     case 'placement':

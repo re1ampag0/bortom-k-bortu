@@ -92,3 +92,26 @@ export function revealsInfo(before: GameState, after: GameState, events: GameEve
   if (p?.kind === 'choice' && p.waiting.some((seat) => after.ships[seat].side !== side)) return 'выбирает противник';
   return null;
 }
+
+export interface SideTotals {
+  /** Damage dealt to the enemy's ships. */
+  damage: number;
+  income: number;
+  spent: number;
+}
+
+/** Damage and Powder of each team over the game, for the end screen. */
+export function matchTotals(data: GameData, setup: MatchSetup, actions: Action[]): Record<Side, SideTotals> {
+  const t: Record<Side, SideTotals> = { ПИРАТЫ: { damage: 0, income: 0, spent: 0 }, КОМПАНИЯ: { damage: 0, income: 0, spent: 0 } };
+  replay(data, setup, actions, ({ before, events }) => {
+    for (const e of events) {
+      if (e.type === 'damage') {
+        const hurt = before.ships[e.ship].side;
+        t[hurt === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ'].damage += e.amount + e.toHull;
+      }
+      if (e.type === 'powderGained') t[e.side].income += e.amount;
+      if (e.type === 'powderSpent') t[e.side].spent += e.amount;
+    }
+  });
+  return t;
+}

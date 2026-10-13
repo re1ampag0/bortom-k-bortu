@@ -26,6 +26,7 @@ export interface LastAction {
 const NOTHING_TO_UNDO = 'Нечего отменять: в этом ходу вы ещё ничего не сделали';
 
 export class LocalGame {
+  readonly kind = 'local' as const;
   state: GameState;
   readonly actions: Action[] = [];
   readonly log: LogLine[] = [];
