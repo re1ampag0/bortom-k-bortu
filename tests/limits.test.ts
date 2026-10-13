@@ -99,6 +99,35 @@ describe('playing cards', () => {
     expect(act(s, { type: 'playCard', seat: 'Г', card }).state.ships['Г'].souls).toBe(1);
   });
 
+  it('another Company ship pays Souls with the Dutchman’s Souls too (6.3, Q39)', () => {
+    const s = atCompany();
+    const card = give(s, 'И', 'Сто лет службы', 'Г');
+    s.ships['Г'].souls = 2;
+    const r = act(s, { type: 'playCard', seat: 'И', card });
+    expect(r.state.ships['Г'].souls).toBe(0);
+    expect(r.state.turn.played).toMatchObject({ И: 1, Г: 0 });
+    expect(r.events).toContainEqual({ type: 'soulsSpent', ship: 'Г', amount: 2 });
+  });
+
+  it('a Souls cost cannot be paid when the Dutchman sank (6.3, Q39)', () => {
+    const s = atCompany();
+    const card = give(s, 'И', 'Сто лет службы', 'Г');
+    s.ships['Г'].souls = 5;
+    s.ships['Г'].sunk = true;
+    s.ships['Г'].tracks.hull = 0;
+    expect(() => act(s, { type: 'playCard', seat: 'И', card })).toThrow('Заплатить Душами нельзя');
+    // Neither can the Dutchman's captain on the Endeavour's board.
+    const own = give(s, 'Г', 'Сто лет службы', 'Г');
+    expect(() => act(s, { type: 'playCard', seat: 'Г', card: own })).toThrow('Заплатить Душами нельзя');
+  });
+
+  it('a card with a Souls cost in an enemy hand cannot be played (6.3, Q39)', () => {
+    const s = newGame();
+    const card = give(s, 'Ж', 'Сто лет службы', 'Г');
+    s.ships['Г'].souls = 5;
+    expect(() => act(s, { type: 'playCard', seat: 'Ж', card })).toThrow('Заплатить Душами нельзя');
+  });
+
   it('a Reaction cannot be played in your own turn (9.1)', () => {
     const s = atCompany();
     const [card] = setHand(s, 'И', ['Двойная обшивка']);
