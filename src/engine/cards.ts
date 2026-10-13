@@ -578,6 +578,7 @@ function cardOp(ctx: Ctx, c: CardResolution, op: Op): void {
       const top = s.sea ? s.sea.deck.slice(0, n) : [];
       if (top.length === 0) break;
       ctx.events.push({ type: 'seaLooked', seat: c.seat });
+      s.sea!.peek = { seat: c.seat, n: top.length };
       if (top.length > 1) ask(ctx, c, 'tia', [c.seat], top);
       break;
     }

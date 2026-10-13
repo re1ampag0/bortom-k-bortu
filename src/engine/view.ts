@@ -1,6 +1,6 @@
 // What a player may see (docs/TZ.md, «Кто что видит»). The interface on one screen and the server use the same
 // function, so hidden cards are cut here and never reach the interface or the network.
-import type { GameEvent, GameState } from './state';
+import { seatsOf, type GameEvent, type GameState } from './state';
 
 /** A card the viewer may not see: it keeps its place, so counts stay right. */
 export const HIDDEN = '?';
@@ -40,8 +40,15 @@ export function viewFor(state: GameState, viewer: Viewer, options: ViewOptions =
     if (!seesHand(state, viewer, ship.code, options)) ship.hand = hide(ship.hand);
     if (!sides.has(ship.side)) ship.plans = hide(ship.plans);
   }
-  if (s.sea) s.sea.deck = hide(s.sea.deck);
+  if (s.sea) {
+    const peek = s.sea.peek;
+    const known = peek && viewer.includes(peek.seat) ? peek.n : 0;
+    s.sea.deck = s.sea.deck.map((c, i) => (i < known ? c : HIDDEN));
+    if (peek && !viewer.includes(peek.seat)) delete s.sea.peek;
+  }
   const p = s.pending;
+  // Who decides on a Reaction tells which ships hold one: the enemy sees the whole defending team deciding.
+  if (p?.kind === 'reactions' && !sides.has(p.side)) p.waiting = defenders(state, p.side);
   if (p?.kind === 'choice') {
     if (!viewer.includes(p.seat) && p.what !== 'bell' && p.what !== 'dice') p.options = hide(p.options);
     for (const seat of Object.keys(p.picks)) if (!viewer.includes(seat)) p.picks[seat] = HIDDEN;
@@ -49,8 +56,24 @@ export function viewFor(state: GameState, viewer: Viewer, options: ViewOptions =
   return s;
 }
 
+const defenders = (state: GameState, side: GameState['active']) => seatsOf(state, side).map((x) => x.code);
+
+const onSide = (state: GameState, viewer: Viewer, side: GameState['active']) =>
+  viewer === 'all' || viewer.some((v) => state.ships[v]?.side === side);
+
 /** An event as the viewer may see it: a card passed to an ally is hidden from the enemy. */
 export function eventFor(state: GameState, viewer: Viewer, event: GameEvent, options: ViewOptions = {}): GameEvent {
   if (event.type === 'passed' && !seesHand(state, viewer, event.to, options)) return { ...event, card: HIDDEN };
+  if (event.type === 'windowOpened' && !onSide(state, viewer, event.side)) return { ...event, seats: defenders(state, event.side) };
   return event;
+}
+
+/**
+ * Events as the viewer may see them (eventFor), without the enemy's «без Реакции»: it would tell which ships held
+ * a Reaction. `state` is the state the events happened in (after the action).
+ */
+export function eventsFor(state: GameState, viewer: Viewer, events: GameEvent[], options: ViewOptions = {}): GameEvent[] {
+  return events
+    .filter((e) => e.type !== 'noReaction' || onSide(state, viewer, state.ships[e.seat].side))
+    .map((e) => eventFor(state, viewer, e, options));
 }
