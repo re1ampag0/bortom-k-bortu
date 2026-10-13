@@ -287,6 +287,7 @@ export class NetGame {
   state: GameState;
   log: LogLine[] = [];
   last: { by: 'human' | 'bot'; events: GameEvent[]; action: Action } | null = null;
+  recent: GameInfo['recent'] = [];
   actions = 0;
   bots: Seat[] = [];
   ready: Seat[] = [];
@@ -342,6 +343,7 @@ export class NetGame {
     this.state = info.view;
     this.actions = info.actions;
     this.last = info.last;
+    this.recent = info.recent ?? [];
     this.bots = info.bots;
     this.ready = info.ready;
     this.concede = info.concede;

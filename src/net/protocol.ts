@@ -80,6 +80,8 @@ export interface GameInfo {
   logFrom: number;
   log: LogLine[];
   last: LastSeen | null;
+  /** The last few actions with their numbers (the table shows each one; a message may carry several). */
+  recent: (LastSeen & { n: number })[];
   /** Seats played by bots now. */
   bots: Seat[];
   /** Seats that pressed «Ход окончен» this turn. */

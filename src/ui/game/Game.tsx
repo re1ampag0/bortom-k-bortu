@@ -43,6 +43,7 @@ import {
   type CardMode,
 } from './Panels';
 import { MissedSheet, NetBar, netDock } from './NetParts';
+import { ShowLayer, useShowQueue } from './Show';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
 import { SIDE_LABEL, SPEEDS } from './text';
 
@@ -196,9 +197,21 @@ export function Game({
 
   // ——— Effects: bots, autosave, title, toast, wake lock ———
   const turnKey = `${s.round}:${s.active}`;
+  // The show of the enemy's and the bots' actions, one at a time; the bots wait for it.
+  const show = useShowQueue({
+    game,
+    version,
+    viewer,
+    mySeats,
+    bottom,
+    enabled: speed !== 'instant' && fastTurn !== turnKey && !curtainSide,
+    speed,
+    myDecision,
+  });
   useEffect(() => {
     if (!local || curtainSide || s.winner || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
+    if (show.busy && !instant) return;
     const t = setTimeout(
       () => {
         let n = 0;
@@ -208,7 +221,7 @@ export function Game({
       instant ? 0 : SPEEDS[speed].ms,
     );
     return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner]);
+  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy]);
 
   useEffect(() => {
     if (local) storeSave(s.winner ? null : local.record());
@@ -694,11 +707,27 @@ export function Game({
     onClick: () => endFlow('start'),
     testid: 'end-turn',
   };
-  const botBusy = !!local && !!d && local.isBot(d.side) && !s.winner;
+  // «Быстрее» and «До конца хода» while a bot moves or a move is shown; both skip the show.
+  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy;
   const botBtns: Btn[] = botBusy
     ? [
-        { key: 'faster', label: 'Быстрее', onClick: () => setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant') },
-        { key: 'skip', label: 'До конца хода', onClick: () => setFastTurn(turnKey), testid: 'skip-turn' },
+        {
+          key: 'faster',
+          label: 'Быстрее',
+          onClick: () => {
+            show.skip();
+            setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant');
+          },
+        },
+        {
+          key: 'skip',
+          label: 'До конца хода',
+          onClick: () => {
+            show.skip();
+            setFastTurn(turnKey);
+          },
+          testid: 'skip-turn',
+        },
       ]
     : [];
 
@@ -764,6 +793,7 @@ export function Game({
       <StatusBar s={s} data={data} instruction={flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}
+      <ShowLayer data={data} step={show.step} />
       <main className="board">
         <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
@@ -836,7 +866,7 @@ export function Game({
         <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
           Правила
         </button>
-        {net ? <Button b={remindBtn} /> : botBusy ? <Button b={botBtns[1]} /> : <Button b={undoBtn} className="undo" />}
+        {botBusy ? <Button b={botBtns[1]} /> : net ? <Button b={remindBtn} /> : <Button b={undoBtn} className="undo" />}
         <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       </nav>
 

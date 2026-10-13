@@ -39,6 +39,8 @@ export class Table {
   readonly actions: Action[] = [];
   readonly logs: Record<LogKey, LogLine[]> = { ПИРАТЫ: [], КОМПАНИЯ: [], spectator: [], all: [] };
   readonly last: Partial<Record<LogKey, LastSeen>> = {};
+  /** The last actions of each viewer, for the show of each one (a message may carry several). */
+  private readonly recent: Partial<Record<LogKey, (LastSeen & { n: number })[]>> = {};
   /** Seats played by bots now. */
   readonly bots = new Set<Seat>();
   /** Seats that pressed «Ход окончен» this turn. */
@@ -124,6 +126,7 @@ export class Table {
       logFrom: Math.min(logFrom, log.length),
       log: log.slice(logFrom),
       last: this.last[key] ?? null,
+      recent: this.recent[key] ?? [],
       bots: [...this.bots],
       ready: [...this.ready],
       concede: [...this.concede],
@@ -147,6 +150,7 @@ export class Table {
       const seen = redact(action, viewer, before);
       this.logs[key].push(...describe(this.data, before, seen, evs, index));
       this.last[key] = { action: seen, by, events: evs };
+      this.recent[key] = [...(this.recent[key] ?? []).slice(-9), { n: index, action: seen, by, events: evs }];
     }
     if (`${r.state.round}:${r.state.active}` !== turnBefore) {
       this.ready.clear();
