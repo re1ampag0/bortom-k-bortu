@@ -8,7 +8,9 @@ import type { GameData, Side } from '../../engine/types';
 import type { Recent } from './show';
 import { SIDE_LABEL } from './text';
 
-type Banner = { id: number; ms: number } & ({ k: 'sea'; card: string } | { k: 'turn'; text: string; mine: boolean } | { k: 'summary'; text: string });
+// The side is kept, not the words: in a game for two the team at the device changes behind the curtain, so «Ваш ход»
+// and whose summary it is are decided when the banner is shown.
+type Banner = { id: number; ms: number } & ({ k: 'sea'; card: string } | { k: 'turn'; side: Side } | { k: 'summary'; side: Side; text: string });
 
 export function useBanners({
   recent,
@@ -18,6 +20,7 @@ export function useBanners({
   mine,
   enabled,
   start,
+  paused,
 }: {
   recent: Recent[];
   version: number;
@@ -29,13 +32,12 @@ export function useBanners({
   enabled: boolean;
   /** A game without actions yet: its first sea card and first turn (read once, when the table opens). */
   start: { sea: string | null; active: Side } | null;
+  /** The curtain «Передайте устройство» is up: the banners wait until it is closed. */
+  paused: boolean;
 }) {
   const seen = useRef((recent.at(-1)?.n ?? -1) + 1);
   const ids = useRef(0);
-  const turnBanner = (side: Side): Banner => {
-    const own = mine && side === bottom;
-    return { id: ++ids.current, ms: 1000, k: 'turn', text: own ? 'Ваш ход' : `Ход ${SIDE_LABEL[side].gen}`, mine: own };
-  };
+  const turnBanner = (side: Side): Banner => ({ id: ++ids.current, ms: 1000, k: 'turn', side });
   const [queue, setQueue] = useState<Banner[]>(() =>
     start && enabled ? [...(start.sea ? [{ id: ++ids.current, ms: 2000, k: 'sea' as const, card: start.sea }] : []), turnBanner(start.active)] : [],
   );
@@ -52,22 +54,27 @@ export function useBanners({
         if (e.type === 'turnStarted') add.push(turnBanner(e.side));
       }
       const sum = turnSummary(data, r.events);
-      if (sum && sum.side === bottom && sum.text) add.push({ id: ++ids.current, ms: 2000, k: 'summary', text: `Ход ${sideGenitive(sum.side)}: ${sum.text}` });
+      if (sum && sum.text) add.push({ id: ++ids.current, ms: 2000, k: 'summary', side: sum.side, text: `Ход ${sideGenitive(sum.side)}: ${sum.text}` });
     }
     if (add.length > 0) setQueue((q) => [...q, ...add]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version]);
 
   const head = queue[0] ?? null;
+  // The summary of the start of the turn is for the team at the device only; another team's is dropped at once.
+  const skip = !!head && head.k === 'summary' && head.side !== bottom;
   useEffect(() => {
-    if (!head) return;
-    const t = setTimeout(() => setQueue((q) => (q[0]?.id === head.id ? q.slice(1) : q)), head.ms);
+    if (!head || paused) return;
+    const t = setTimeout(() => setQueue((q) => (q[0]?.id === head.id ? q.slice(1) : q)), skip ? 0 : head.ms);
     return () => clearTimeout(t);
-  }, [head]);
-  return head;
+  }, [head, paused, skip]);
+  if (paused || !head || skip) return null;
+  return head.k === 'turn' ? { ...head, text: mine && head.side === bottom ? 'Ваш ход' : `Ход ${SIDE_LABEL[head.side].gen}`, mine: mine && head.side === bottom } : head;
 }
 
-export function BannerView({ data, banner }: { data: GameData; banner: Banner | null }) {
+type Shown = Exclude<Banner, { k: 'turn' }> | (Extract<Banner, { k: 'turn' }> & { text: string; mine: boolean });
+
+export function BannerView({ data, banner }: { data: GameData; banner: Shown | null }) {
   if (!banner || banner.k === 'summary') return null;
   if (banner.k === 'sea') {
     const sea = seaCardByCode(data, banner.card);

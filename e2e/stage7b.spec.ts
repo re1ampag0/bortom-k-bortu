@@ -92,3 +92,23 @@ test.describe('prefers-reduced-motion', () => {
     expect(animation).toBe('none');
   });
 });
+
+test.describe('two people on one screen', () => {
+  test.use({ viewport: { width: 430, height: 740 } });
+
+  test('the banners wait until the curtain «Передайте устройство» is closed', async ({ page }) => {
+    await page.goto('?seed=3&speed=slow');
+    await page.getByTestId('quick-duo').click();
+    await page.getByTestId('prep-start').click();
+    await page.getByTestId('placement-done').click();
+    await page.getByTestId('curtain-ready').click();
+    await page.getByTestId('placement-done').click();
+    // The curtain before the Pirates' first turn: longer than any banner lasts.
+    await expect(page.getByTestId('curtain')).toBeVisible();
+    await page.waitForTimeout(3000);
+    await page.getByTestId('curtain-ready').click();
+    await expect(page.getByTestId('sea-banner')).toBeVisible();
+    await expect(page.getByTestId('turn-banner')).toHaveText('Ваш ход', { timeout: 5000 });
+    await expectNoScroll(page);
+  });
+});
