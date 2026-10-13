@@ -2,7 +2,8 @@
 // Placement: Ж opposite И on the left, М opposite Г on the right.
 import { describe, expect, it } from 'vitest';
 import type { GameState } from '../src/engine/state';
-import { act, newGame, passTo, setHand } from './helpers';
+import { actDeclining as act, newGame, passTo, setHand } from './helpers';
+// Stage 3 rules without Reactions: `act` here declines every Reaction window the action opens (helpers.actDeclining).
 
 /** The turn of `side` with 8 Powder and the Charge in the shooter's hand. */
 function prepare(side: GameState['active'], shooter: string, charge: string) {

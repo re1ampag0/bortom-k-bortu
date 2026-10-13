@@ -4,7 +4,7 @@ import { createGame } from '../src/engine/engine';
 import { data, newGame } from './helpers';
 
 describe('setup', () => {
-  const s = newGame();
+  const s = newGame({ sea: true });
 
   it('puts the track markers on the starting values; the Dutchman has 1 Soul (2.3, 3.1)', () => {
     expect(s.ships['Ж'].tracks).toEqual({ hull: 9, sails: 3, guns: 2, crew: 3 });
@@ -63,7 +63,7 @@ describe('setup', () => {
   });
 
   it('«Первая партия»: no sea deck and no Legends, the Company starts with 3 Powder (20.1)', () => {
-    const g = newGame({ variant: 'first' });
+    const g = newGame({ variant: 'first', sea: undefined }); // the variant decides about the sea
     expect(g.sea).toBeNull();
     for (const ship of Object.values(g.ships)) expect(ship.legend).toBe(false);
     expect(g.teams['КОМПАНИЯ'].powder).toBe(3);

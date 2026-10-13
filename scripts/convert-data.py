@@ -31,6 +31,29 @@ RULES = {
     "jointBonus": 1,
     "firstGameSecondStart": 3,
     "paidChargeMax": 3,
+    # Ship abilities and Legends (board texts, sim.py Cfg).
+    "jackHull": 2,
+    "plansMax": 2,
+    "treasuryCost": 2,
+    "treasuryPlays": 1,
+    "swordCost": 1,
+    "heartCrewLoss": 1,
+    "surfaceBonus": 1,
+    "soulsGain": 1,
+    # Sea cards (card texts).
+    "seaStorm": 1,
+    "seaClear": 1,
+    "seaWave": 1,
+    "seaMoon": 1,
+    "seaFleet": 1,
+    "seaReefs": 1,
+    "seaCaravan": 2,
+    "seaThunder": 2,
+    "seaTortuga": 2,
+    "seaMermaidsMin": 3,
+    "seaMermaids": 1,
+    "seaRum": 1,
+    "seaWetDivisor": 2,
 }
 
 
