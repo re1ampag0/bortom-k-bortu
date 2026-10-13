@@ -148,6 +148,22 @@ async function keyStates(page: Page, name: string) {
   await shot(page, name, '6-curtain-reaction');
   await page.getByTestId('curtain-ready').click();
   await expect(page.getByTestId('reaction-panel')).toBeVisible();
+  await expect(page.getByTestId('show-arrow')).toHaveCount(0);
+  await expect(page.getByTestId('show-plate')).toHaveCount(0);
+  const reactionCard = page.locator('.hand .hcard.reaction:not(.off)').first();
+  const clickable = await reactionCard.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    return hit === node || !!hit?.closest('.hcard');
+  });
+  expect(clickable).toBe(true);
+  const skip = page.locator('[data-testid="skip-reaction"]:visible').first();
+  const skipBox = await skip.boundingBox();
+  expect(skipBox).not.toBeNull();
+  if (skipBox) {
+    const skipHit = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('[data-testid="skip-reaction"]') !== null, { x: skipBox.x + skipBox.width / 2, y: skipBox.y + skipBox.height / 2 });
+    expect(skipHit).toBe(true);
+  }
   // «Подсказки» are off by default: the incoming damage is shown, «4 → 2» on the Reactions is not.
   await expect(page.getByTestId('reaction-panel').locator('.panel-head')).toContainText('по Корпусу');
   await expect(page.getByTestId('reaction-panel').locator('.ro-effect').first()).not.toContainText('→');
