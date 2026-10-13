@@ -299,7 +299,6 @@ export function Plank({
             </button>
           )}
           <span className="badge wide">Рука {ship.hand.length}</span>
-          {ship.plans.length > 0 && <span className="badge">Планы {ship.plans.length}</span>}
         </div>
       </div>
       {buttons.length > 0 && (

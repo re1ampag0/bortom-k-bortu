@@ -61,6 +61,8 @@ export function HandCard({
 export interface HandTab {
   seat: string;
   label: string;
+  /** «Подсказки»: this ship has a Reaction to play now. */
+  dot?: boolean;
 }
 
 export function Hand({
@@ -103,6 +105,7 @@ export function Hand({
                 onClick={() => onTab(t.seat)}
               >
                 {t.label}
+                {t.dot && <span className="tab-dot" title="Есть Реакция" aria-label="есть Реакция" />}
               </button>
             ))}
           </div>
