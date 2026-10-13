@@ -2,7 +2,8 @@
 
 Usage: python3 scripts/convert-data.py
 All fields are copied as is; tuples become arrays and tag sets become sorted arrays,
-so the JSON can be converted back without losses.
+so the JSON can be converted back without losses. The only changes are FX_OVERRIDES: cards that
+data3.py simplifies get the fx the app needs to play them by the text.
 """
 import importlib.util
 import json
@@ -57,6 +58,25 @@ RULES = {
 }
 
 
+# Cards that data3.py simplifies for sim.py; the app plays them exactly by the text (docs/TZ.md,
+# "Где sim.py упрощает"). Keys: (deck, card name); values replace or add fx keys. Ops in "plan" are added
+# to the card's ops when it is played from a Plan.
+FX_OVERRIDES = {
+    # Look at 3 top cards: one to the hand, one to a Plan, one to the discard (RULES.md 18.5).
+    ("Ж", "Компас Джека"): {"ops": [["compass", 3]]},
+    # Look at 3 top sea cards and put them back in any order, then draw 2 (RULES.md 16.3).
+    ("Ж", "Тиа Дальма"): {"ops": [["sea_look", 3], ["draw", 2]]},
+    # «План: и ещё 1 Корпус» (RULES.md 18.9).
+    ("Ж", "Латаем паруса"): {"plan": {"ops": [["repair_track", "hull", 1]]}},
+    # A free Regroup if the player wants it (RULES.md 18.16, Q46).
+    ("И", "Строй линии"): {"ops": [["regroup_free"], ["no_diag_turn"]]},
+    # «Если это был абордаж, нападавший корабль теряет 1 Команду» (RULES.md 18.14).
+    ("И", "Морская пехота"): {"boarding": ["crew", 1]},
+    # «„Голландец" восстанавливает 2 Команды» — the named ship, not the one that plays the card (Q43).
+    ("Г", "Сто лет службы"): {"ops": [["dmg", "any", "crew", 2], ["repair_named", "crew", 2]]},
+}
+
+
 def load_source():
     spec = importlib.util.spec_from_file_location("data3", SRC)
     module = importlib.util.module_from_spec(spec)
@@ -81,6 +101,13 @@ def card(c, copies=None):
     return out
 
 
+def override(deck, c):
+    fx = FX_OVERRIDES.get((deck, c["name"]))
+    if fx:
+        c["fx"] = {**c["fx"], **fx}
+    return c
+
+
 def ship(s):
     out = {k: plain(v) for k, v in s.items() if k != "abilities"}
     out["abilities"] = [{"name": n, "text": t} for n, t in s["abilities"]]
@@ -95,7 +122,7 @@ def main():
         "econ": dict(d.ECON),
         "rules": dict(RULES),
         "ships": [ship(s) for s in d.SHIPS],
-        "decks": {code: [card(c, n) for c, n in cards] for code, cards in d.DECKS.items()},
+        "decks": {code: [override(code, card(c, n)) for c, n in cards] for code, cards in d.DECKS.items()},
         "legends": {code: card(c) for code, c in d.LEGENDS.items()},
         "sea": [dict(name=n, when=w, big=b, text=t, flavor=f, key=k) for n, w, b, t, f, k in d.SEA],
     }

@@ -1,8 +1,8 @@
 // The step queue: rules that may wait for a decision (a Reaction window, «Джек ускользает», «Тортуга»)
 // are split into steps kept in the state, so the state stays plain JSON while the engine waits.
 import { abilityStep } from './abilities';
+import { cardStep } from './cards';
 import { addFire, checkGameOver, dealDamage, sinkOrJack } from './damage';
-import { legendStep } from './legends';
 import { openWindow } from './reactions';
 import { swapPlaces, tortugaStep } from './sea';
 import type { Ctx, Step } from './state';
@@ -48,12 +48,15 @@ function runStep(ctx: Ctx, step: Step): void {
       return tortugaStep(ctx);
     case 'window':
       return openWindow(ctx, step.window, step.subject);
+    case 'volleyPaid':
     case 'volleyHit':
     case 'volleyFire':
     case 'volleyEnd':
       return volleyStep(ctx, step);
     case 'cardEffect':
+    case 'cardOp':
+    case 'cardPaid':
     case 'cardEnd':
-      return legendStep(ctx, step);
+      return cardStep(ctx, step);
   }
 }

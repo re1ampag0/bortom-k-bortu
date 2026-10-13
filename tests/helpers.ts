@@ -1,6 +1,7 @@
 // Test helpers: a game with known placement and hands. Tests may change the state directly (it is plain JSON).
 import raw from '../data/game-data.json';
-import { deckCards, loadGameData, seaCards } from '../src/engine/data';
+import { deckCards, legendCards, loadGameData, seaCards } from '../src/engine/data';
+import { choiceFor } from '../src/engine/cards';
 import { applyAction, createGame, type GameOptions } from '../src/engine/engine';
 import type { Action, GameEvent, GameState } from '../src/engine/state';
 import type { GameData } from '../src/engine/types';
@@ -18,7 +19,10 @@ export function newGame(options: Partial<GameOptions> = {}): GameState {
   return createGame(data, { seed: 1, positions: POSITIONS, sea: false, ...options }).state;
 }
 
-/** Answers every pending decision with «no»: no Reactions, no «Джек ускользает», no cards on «Тортуга». */
+/**
+ * Answers every pending decision with «no»: no Reactions, no «Джек ускользает», no cards on «Тортуга».
+ * A card choice is answered with the first allowed cards.
+ */
 export function declineAll(state: GameState, gameData: GameData = data, events: GameEvent[] = []): GameState {
   while (state.pending && !state.winner) {
     const p = state.pending;
@@ -27,7 +31,9 @@ export function declineAll(state: GameState, gameData: GameData = data, events: 
         ? { type: 'noReaction', seat: p.waiting[0] }
         : p.kind === 'jack'
           ? { type: 'jack', play: false }
-          : { type: 'tortuga', side: p.waiting[0], draws: {} };
+          : p.kind === 'tortuga'
+            ? { type: 'tortuga', side: p.waiting[0], draws: {} }
+            : firstChoice(state, p.waiting[0]);
     const r = applyAction(state, answer, gameData);
     events.push(...r.events);
     state = r.state;
@@ -52,6 +58,12 @@ export function actDeclining(
   const r = applyAction(state, action, gameData);
   const events = [...r.events];
   return { state: declineAll(r.state, gameData, events), events };
+}
+
+/** The first allowed cards of a `choice` decision. */
+export function firstChoice(state: GameState, seat: string): Action {
+  const c = choiceFor(state, seat)!;
+  return { type: 'choose', seat, cards: c.from.slice(0, c.count) };
 }
 
 export function act(state: GameState, action: Action): { state: GameState; events: GameEvent[] } {
@@ -114,6 +126,8 @@ export function cardsByOwner(state: GameState): Record<string, string[]> {
       (out[code.split('-')[0]] ??= []).push(code);
     }
   }
+  // A card being played lies on the table until it is resolved.
+  if (state.card && !state.card.legend) (out[state.card.card.split('-')[0]] ??= []).push(state.card.card);
   return out;
 }
 
@@ -144,3 +158,35 @@ export function nextSea(state: GameState, key: string): GameState {
   state.sea.deck = [code, ...state.sea.deck.filter((c) => c !== code)];
   return state;
 }
+
+const SEATS: Record<GameState['active'], string[]> = { ПИРАТЫ: ['Ж', 'М'], КОМПАНИЯ: ['И', 'Г'] };
+
+/**
+ * The turn of `side` with 8 Powder in both Holds. Seats named in `hands` hold exactly those cards; the other team's
+ * seats hold nothing unless named, so no Reaction window opens by chance.
+ */
+export function turnOf(side: GameState['active'], hands: Record<string, string[]> = {}, options: Partial<GameOptions> = {}): GameState {
+  const s = passTo(newGame(options), side);
+  s.teams['ПИРАТЫ'].powder = 8;
+  s.teams['КОМПАНИЯ'].powder = 8;
+  const enemy = side === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ';
+  for (const seat of SEATS[enemy]) setHand(s, seat, []);
+  for (const [seat, names] of Object.entries(hands)) setHand(s, seat, names);
+  return s;
+}
+
+const cardNames = new Map([...deckCards(data), ...legendCards(data)].map((c) => [c.code, c.name]));
+
+/** Name of a card by its code. */
+export const nameOf = (code: string): string => cardNames.get(code)!;
+
+/** Code of the named card in the seat's hand or Plans. */
+export function cardIn(s: GameState, seat: string, name: string): string {
+  const ship = s.ships[seat];
+  const code = [...ship.hand, ...ship.plans].find((c) => nameOf(c) === name);
+  if (!code) throw new Error(`${seat} has no «${name}»`);
+  return code;
+}
+
+/** Names of the cards in a list of codes. */
+export const namesOf = (codes: string[]): string[] => codes.map(nameOf);
