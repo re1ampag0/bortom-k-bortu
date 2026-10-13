@@ -1,6 +1,6 @@
 // Test helpers: a game with known placement and hands. Tests may change the state directly (it is plain JSON).
 import raw from '../data/game-data.json';
-import { deckCards, loadGameData, seaCards } from '../src/engine/data';
+import { deckCards, legendCards, loadGameData, seaCards } from '../src/engine/data';
 import { choiceFor } from '../src/engine/cards';
 import { applyAction, createGame, type GameOptions } from '../src/engine/engine';
 import type { Action, GameEvent, GameState } from '../src/engine/state';
@@ -158,3 +158,35 @@ export function nextSea(state: GameState, key: string): GameState {
   state.sea.deck = [code, ...state.sea.deck.filter((c) => c !== code)];
   return state;
 }
+
+const SEATS: Record<GameState['active'], string[]> = { ПИРАТЫ: ['Ж', 'М'], КОМПАНИЯ: ['И', 'Г'] };
+
+/**
+ * The turn of `side` with 8 Powder in both Holds. Seats named in `hands` hold exactly those cards; the other team's
+ * seats hold nothing unless named, so no Reaction window opens by chance.
+ */
+export function turnOf(side: GameState['active'], hands: Record<string, string[]> = {}, options: Partial<GameOptions> = {}): GameState {
+  const s = passTo(newGame(options), side);
+  s.teams['ПИРАТЫ'].powder = 8;
+  s.teams['КОМПАНИЯ'].powder = 8;
+  const enemy = side === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ';
+  for (const seat of SEATS[enemy]) setHand(s, seat, []);
+  for (const [seat, names] of Object.entries(hands)) setHand(s, seat, names);
+  return s;
+}
+
+const cardNames = new Map([...deckCards(data), ...legendCards(data)].map((c) => [c.code, c.name]));
+
+/** Name of a card by its code. */
+export const nameOf = (code: string): string => cardNames.get(code)!;
+
+/** Code of the named card in the seat's hand or Plans. */
+export function cardIn(s: GameState, seat: string, name: string): string {
+  const ship = s.ships[seat];
+  const code = [...ship.hand, ...ship.plans].find((c) => nameOf(c) === name);
+  if (!code) throw new Error(`${seat} has no «${name}»`);
+  return code;
+}
+
+/** Names of the cards in a list of codes. */
+export const namesOf = (codes: string[]): string[] => codes.map(nameOf);
