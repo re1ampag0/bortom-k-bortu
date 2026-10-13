@@ -195,8 +195,12 @@ export function Plank({
 }) {
   const d = shipData(data, ship.code);
   const st = statuses(s, data, ship);
-  const legendName = cardByCode(data, `${ship.code}-Л`).name;
-  const legendState = ship.legend ? 'ready' : 'gone';
+  const legendCard = cardByCode(data, `${ship.code}-Л`);
+  const legendName = legendCard.name;
+  // Grey when the team lacks the Powder or the Souls for it (docs/TZ.md, «Принципы стола», п. 9).
+  const keeper = Object.values(s.ships).find((x) => x.side === ship.side && !x.sunk && shipData(data, x.code).souls !== undefined);
+  const affordable = s.teams[ship.side].powder >= legendCard.cost && (legendCard.soul === 0 || (keeper?.souls ?? 0) >= legendCard.soul);
+  const legendState = ship.legend ? (affordable ? 'ready' : 'poor') : 'gone';
   const handLabel = cardsWord(ship.hand.length);
   const cls = [
     'plank',
@@ -220,7 +224,11 @@ export function Plank({
         <b className="plank-name">
           <span className="wide">{d.name}</span>
           <span className="narrow">{d.nick}</span>
-          {ship.legend && <span className="star narrow" title={`Легенда: ${legendName}`}>★</span>}
+          {ship.legend && (
+            <span className={`star narrow ${affordable ? '' : 'poor'}`} title={`Легенда: ${legendName}${affordable ? '' : ' — не хватает Пороха или Душ'}`}>
+              ★
+            </span>
+          )}
         </b>
         <span className="captain wide">{d.captain}</span>
         <span className="plank-role">
@@ -280,7 +288,11 @@ export function Plank({
                 e.stopPropagation();
                 onLegend?.();
               }}
-              title={ship.legend ? `Легенда «${legendName}»: нажмите, чтобы прочитать` : 'Легенда сыграна'}
+              title={
+                ship.legend
+                  ? `Легенда «${legendName}»: ${affordable ? 'нажмите, чтобы прочитать' : 'не хватает Пороха или Душ'}`
+                  : 'Легенда сыграна'
+              }
             >
               <span className="wide">Легенда: </span>
               {legendName}

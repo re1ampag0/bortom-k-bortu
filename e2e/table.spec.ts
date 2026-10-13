@@ -119,50 +119,52 @@ async function playToEnd(page: Page) {
   throw new Error('the game did not end');
 }
 
+async function keyStates(page: Page, name: string) {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('?seed=1&speed=instant');
+  await shot(page, name, '1-setup');
+  // Two people on one screen, seed 1: the Pearl's Volley at the Endeavour opens a Reaction window.
+  await page.getByTestId('quick-duo').click();
+  await shot(page, name, '2-placement');
+  await page.getByTestId('placement-done').click();
+  await page.getByTestId('curtain-ready').click();
+  await page.getByTestId('placement-done').click();
+  await shot(page, name, '3-curtain');
+  await page.getByTestId('curtain-ready').click();
+  await expect(page.getByTestId('game')).toBeVisible();
+  await expectFits(page);
+  await shot(page, name, '4-turn');
+  await page.getByTestId('volley-Ж').click();
+  await page.getByTestId('plate-И').click();
+  await expect(page.getByTestId('volley-panel')).toBeVisible();
+  await expectFits(page);
+  await shot(page, name, '5-volley-preview');
+  await page.getByTestId('fire').click();
+  await expect(page.getByTestId('curtain')).toContainText('Реакция на Залп по «Индевору»');
+  await shot(page, name, '6-curtain-reaction');
+  await page.getByTestId('curtain-ready').click();
+  await expect(page.getByTestId('reaction-panel')).toBeVisible();
+  await expectFits(page);
+  await shot(page, name, '7-reaction');
+  // Four bots to the victory screen.
+  await page.goto('?speed=instant');
+  await page.getByTestId('quick-match').click();
+  await expect(page.getByTestId('game')).toBeVisible();
+  await expectFits(page);
+  await expect(page.getByTestId('end-screen')).toBeVisible({ timeout: 120_000 });
+  await shot(page, name, '8-end');
+  await page.getByRole('button', { name: 'Посмотреть стол' }).click();
+  await expectFits(page);
+  await shot(page, name, '9-table-after');
+  expect(errors).toEqual([]);
+}
+
 for (const size of SIZES) {
   test.describe(`${size.name} ${size.width}×${size.height}`, () => {
     test.use({ viewport: { width: size.width, height: size.height } });
 
-    test('key states fit the window', async ({ page }) => {
-      const errors: string[] = [];
-      page.on('pageerror', (e) => errors.push(e.message));
-      await page.goto('?seed=1&speed=instant');
-      await shot(page, size.name, '1-setup');
-      // Two people on one screen, seed 1: the Pearl's Volley at the Endeavour opens a Reaction window.
-      await page.getByTestId('quick-duo').click();
-      await shot(page, size.name, '2-placement');
-      await page.getByTestId('placement-done').click();
-      await page.getByTestId('curtain-ready').click();
-      await page.getByTestId('placement-done').click();
-      await shot(page, size.name, '3-curtain');
-      await page.getByTestId('curtain-ready').click();
-      await expect(page.getByTestId('game')).toBeVisible();
-      await expectFits(page);
-      await shot(page, size.name, '4-turn');
-      await page.getByTestId('volley-Ж').click();
-      await page.getByTestId('plate-И').click();
-      await expect(page.getByTestId('volley-panel')).toBeVisible();
-      await expectFits(page);
-      await shot(page, size.name, '5-volley-preview');
-      await page.getByTestId('fire').click();
-      await expect(page.getByTestId('curtain')).toContainText('Реакция на Залп по «Индевору»');
-      await shot(page, size.name, '6-curtain-reaction');
-      await page.getByTestId('curtain-ready').click();
-      await expect(page.getByTestId('reaction-panel')).toBeVisible();
-      await expectFits(page);
-      await shot(page, size.name, '7-reaction');
-      // Four bots to the victory screen.
-      await page.goto('?speed=instant');
-      await page.getByTestId('quick-match').click();
-      await expect(page.getByTestId('game')).toBeVisible();
-      await expectFits(page);
-      await expect(page.getByTestId('end-screen')).toBeVisible({ timeout: 120_000 });
-      await shot(page, size.name, '8-end');
-      await page.getByRole('button', { name: 'Посмотреть стол' }).click();
-      await expectFits(page);
-      await shot(page, size.name, '9-table-after');
-      expect(errors).toEqual([]);
-    });
+    test('key states fit the window', async ({ page }) => keyStates(page, size.name));
   });
 }
 
@@ -203,3 +205,6 @@ test.describe('whole games through the interface', () => {
     await expect(page.getByTestId('end-screen')).toContainText(/Победа|Ничья/);
   });
 });
+
+// Safari on an iPhone (WebKit with the iPhone 15 Pro Max profile): run by the e2e job on GitHub Actions.
+test('iPhone 15 Pro Max: key states fit the window @iphone', async ({ page }) => keyStates(page, 'iphone15promax'));
