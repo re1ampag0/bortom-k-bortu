@@ -36,4 +36,12 @@
 
 ## Команды
 
-(заполнить на этапе 2: установка, dev, test, typecheck, build, sim, lan)
+- `npm ci` — установка зависимостей (Node.js 22).
+- `npm run dev` — сайт локально с автообновлением.
+- `npm test` — тесты Vitest (`tests/**/*.test.ts`).
+- `npm run typecheck` — проверка типов TypeScript.
+- `npm run build` — сборка сайта в `dist/` (база `/bortom-k-bortu/` для GitHub Pages).
+- `npm run convert-data` — пересобрать `data/game-data.json` из `reference/data3.py` (нужен Python 3). Затирает ручные правки JSON.
+- `npm run sim` — консольный симулятор (появится на этапе 6).
+- `npm run lan` — сервер для игры в локальной сети (появится на этапе 8).
+- Публикация: `.github/workflows/pages.yml` — на каждый PR проверки (typecheck, test, build), после слияния в `main` ещё и выкладка на GitHub Pages.

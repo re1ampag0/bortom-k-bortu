@@ -1,0 +1,223 @@
+:root {
+  --bg: #f4efe4;
+  --ink: #2a241d;
+  --muted: #6f655a;
+  --paper: #fffaf0;
+  --line: #d8ccb6;
+  --charge: #b5542c;
+  --reaction: #2f6b8f;
+  --order: #6b4f8a;
+  --repair: #3f7f4a;
+  --sea: #2c6a74;
+  --legend: #b8902e;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+h1 {
+  margin: 0 0 4px;
+}
+
+h2 {
+  margin: 32px 0 12px;
+  font-size: 1.3rem;
+}
+
+.count {
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: var(--muted);
+}
+
+.summary {
+  margin: 0 0 12px;
+}
+
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.toc a {
+  color: var(--reaction);
+}
+
+.error {
+  white-space: pre-wrap;
+  background: #fde8e4;
+  border: 1px solid #c0392b;
+  padding: 12px;
+}
+
+/* Ship board */
+.ship {
+  border: 3px solid;
+  border-radius: 8px;
+  background: var(--paper);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.ship-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: #fff;
+  padding: 8px 12px;
+  font-weight: 700;
+}
+
+.ship-side {
+  font-weight: normal;
+  opacity: 0.85;
+}
+
+.ship-body {
+  padding: 8px 12px 12px;
+  font-size: 0.92rem;
+}
+
+.ship-body p {
+  margin: 6px 0;
+}
+
+.ship-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+
+.ship-stats li {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px 8px;
+  background: #fff;
+}
+
+/* Cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.card {
+  --accent: var(--muted);
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 6px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  min-height: 220px;
+}
+
+.card.charge {
+  --accent: var(--charge);
+}
+.card.reaction {
+  --accent: var(--reaction);
+}
+.card.order {
+  --accent: var(--order);
+}
+.card.repair {
+  --accent: var(--repair);
+}
+.card.sea {
+  --accent: var(--sea);
+}
+.card.legend {
+  border: 2px solid var(--legend);
+  border-top: 6px solid var(--accent);
+  box-shadow: 0 0 0 2px #f1dfa6 inset;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.card-cost span {
+  border-radius: 10px;
+  padding: 0 6px;
+  margin-left: 4px;
+  color: #fff;
+}
+
+.card-cost .powder {
+  background: #3b3b3b;
+}
+.card-cost .soul {
+  background: #2c6658;
+}
+.card-cost .free {
+  background: #b9ad99;
+}
+
+.card-name {
+  margin: 6px 0 2px;
+  font-size: 1rem;
+}
+
+.card-big {
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.card-text {
+  margin: 0 0 6px;
+  flex: 1;
+}
+
+.card-flavor {
+  margin: 0 0 6px;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.card-foot {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.72rem;
+  border-top: 1px dashed var(--line);
+  padding-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
