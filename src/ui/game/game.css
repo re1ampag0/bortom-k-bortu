@@ -103,7 +103,7 @@ button {
   min-height: 100dvh;
 }
 .setup h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-head);
   font-size: 2.2rem;
   margin: 0;
 }
@@ -230,7 +230,7 @@ button {
   opacity: 0.7;
 }
 .curtain h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-head);
   font-size: clamp(1.8rem, 5vw, 3rem);
   margin: 8px 0;
 }
@@ -265,6 +265,8 @@ button {
 /* ——— The table ——— */
 .game {
   position: fixed;
+  /* Numbers on the scales and counters line up (Alegreya Sans has old-style figures by default). */
+  font-variant-numeric: lining-nums;
   inset: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
@@ -1117,7 +1119,7 @@ button {
   text-align: center;
 }
 .end-screen h1 {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-head);
   margin: 0;
 }
 .end-table {
@@ -1417,6 +1419,7 @@ button {
   }
   .hcard-name {
     font-size: 0.78rem;
+    font-family: var(--font-text);
   }
   .hcard-big {
     font-size: 0.72rem;
