@@ -32,6 +32,7 @@ export function useShowQueue({
   enabled,
   speed,
   myDecision,
+  paused,
 }: {
   game: ShowSource;
   version: number;
@@ -43,6 +44,8 @@ export function useShowQueue({
   speed: Speed;
   /** The game waits for this device: only the step that caused it is left, the decision is not delayed. */
   myDecision: boolean;
+  /** A banner is up: the show waits for it (one thing at a time). */
+  paused: boolean;
 }) {
   const shown = useRef((game.recent.at(-1)?.n ?? -1) + 1);
   const [queue, setQueue] = useState<{ id: number; step: ShowStep }[]>([]);
@@ -73,15 +76,15 @@ export function useShowQueue({
 
   const head = queue[0] ?? null;
   useEffect(() => {
-    if (!head) return;
+    if (!head || paused) return;
     const full = SHOW_MS[speed] || 0;
     const ms = head.step.k === 'floats' ? Math.min(900, Math.max(500, full)) : full;
     const t = setTimeout(() => setQueue((q) => (q[0]?.id === head.id ? q.slice(1) : q)), ms);
     return () => clearTimeout(t);
-  }, [head, speed]);
+  }, [head, speed, paused]);
 
   const skip = useCallback(() => setQueue([]), []);
-  return { step: head, busy: queue.length > 0, skip };
+  return { step: paused ? null : head, busy: queue.length > 0, skip };
 }
 
 function isOthers(r: Recent, game: ShowSource, mySeats: string[], bottom: string): boolean {
@@ -128,7 +131,7 @@ export function ShowLayer({ data, step }: { data: GameData; step: { id: number; 
       {s.k === 'card' && (
         <div className="show-card" data-testid="show-card" style={{ left: middle.x, top: middle.y }}>
           <span className="show-caption">
-            {s.kind === 'reaction' ? `Реакция ${nick(s.ship)}` : s.kind === 'legend' ? `Легенда ${nick(s.ship)}` : `${nick(s.ship)} играет`}
+            {s.kind === 'reaction' ? `${nick(s.ship)}: Реакция` : s.kind === 'legend' ? `${nick(s.ship)}: Легенда` : `${nick(s.ship)} играет`}
             {s.target && data.ships.some((x) => x.code === s.target) ? ` → ${nick(s.target)}` : ''}
           </span>
           <HandCard data={data} code={s.card} off={null} />
@@ -159,7 +162,7 @@ export function ShowLayer({ data, step }: { data: GameData; step: { id: number; 
       )}
       {s.floats.map((f, i) =>
         boxes[f.ship] ? (
-          <span key={i} className={`show-float ${f.bad ? 'bad' : ''}`} data-testid="show-float" style={{ left: boxes[f.ship].x, top: boxes[f.ship].top + 18 + 22 * countBefore(s.floats, i) }}>
+          <span key={i} className={`show-float ${f.bad ? 'bad' : ''}`} data-testid="show-float" style={{ left: boxes[f.ship].x, top: boxes[f.ship].y - 14 + 26 * countBefore(s.floats, i) }}>
             {f.text}
           </span>
         ) : null,
