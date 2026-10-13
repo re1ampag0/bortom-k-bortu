@@ -31,7 +31,7 @@ export class LocalGame {
   readonly actions: Action[] = [];
   readonly log: LogLine[] = [];
   last: LastAction | null = null;
-  /** The last actions with their numbers, for the show of each one on the table (ui/game/show.ts). */
+  /** The last actions with their numbers, for the show of each one on the table (ui/game/showSteps.ts). */
   recent: { n: number; action: Action; by: 'human' | 'bot'; events: GameEvent[] }[] = [];
   /** Grows with every change: the interface re-renders by it. */
   version = 0;
