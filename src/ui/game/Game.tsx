@@ -45,6 +45,7 @@ import { MissedSheet, NetBar, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { ShowLayer, useShowQueue } from './Show';
 import { instantUrl } from '../start/motion';
+import { playTurnSound } from '../sound';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
 import { SIDE_LABEL, SPEEDS } from './text';
 
@@ -249,6 +250,12 @@ export function Game({
     // The log the player has seen: after a reload «Пока вас не было» shows only the rest.
     if (net && net.missed.length === 0) net.client.markSeen(net.log.length);
   }, [net, version]);
+
+  useEffect(() => {
+    // The sound «ваш ход» (off by default): when the turn comes to this device.
+    if (sound && myTurn) playTurnSound();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myTurn]);
 
   useEffect(() => {
     document.title = myDecision && (humans.length > 0 || !!net) ? '● Ваш ход — Бортом к борту' : 'Бортом к борту';
