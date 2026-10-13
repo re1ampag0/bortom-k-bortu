@@ -1,7 +1,7 @@
 // Messages between the browser and the game server (docs/TZ.md, «Мультиплеер»). JSON over a WebSocket at /ws.
 // Shared by the client (src/net/ws.ts) and the server (server/); no Node or browser API here.
 import type { LogLine } from '../engine/log';
-import type { SideTotals } from '../engine/match';
+import type { MatchRecord, SideTotals } from '../engine/match';
 import type { Action, GameEvent, GameState, Variant } from '../engine/state';
 import type { Side } from '../engine/types';
 
@@ -63,6 +63,10 @@ export interface RoomInfo {
   coin: string | null;
   /** Teams that finished the secret placement. */
   placed: Side[];
+  /** The number of the game in the room: «Реванш» starts the next one. */
+  match: number;
+  /** «Реванш» after the end of the game: how many people agreed of how many, and whether you did; null — no vote now. */
+  rematch: { agreed: number; need: number; you: boolean } | null;
 }
 
 /** The last action as the player may see it: for the toast «Ход Пиратов: …» and the highlights. */
@@ -109,6 +113,10 @@ export type ClientMsg = { id?: number } & (
   | { t: 'concede'; on: boolean }
   | { t: 'remind' }
   | { t: 'replace'; seat: Seat }
+  /** «Реванш» after the end: the same room, seats and bots, a new seed; starts when all the people agreed. */
+  | { t: 'rematch'; on: boolean }
+  /** «Скачать партию»: the record with every card — only after the end of the game. */
+  | { t: 'record' }
   | { t: 'leave' }
   | { t: 'ping' }
 );
@@ -119,6 +127,7 @@ export type ServerMsg =
   | { t: 'game'; game: GameInfo }
   | { t: 'refused'; id?: number; reason: string }
   | { t: 'reminded'; by: string }
+  | { t: 'record'; record: MatchRecord }
   | { t: 'left' }
   | { t: 'error'; id?: number; message: string }
   | { t: 'pong' };

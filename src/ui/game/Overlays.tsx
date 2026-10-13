@@ -316,6 +316,7 @@ export function EndScreen({
   s,
   totals,
   onRematch,
+  rematchLabel = 'Реванш',
   onNew,
   newLabel = 'Новая партия',
   onDownloadLog,
@@ -324,12 +325,12 @@ export function EndScreen({
 }: {
   s: GameState;
   totals: Record<Side, SideTotals>;
-  /** null — no rematch (a network game). */
   onRematch: (() => void) | null;
+  /** By network: «Реванш (согласны 1 из 2)», or «Отменить реванш» after agreeing. */
+  rematchLabel?: string;
   onNew: () => void;
   newLabel?: string;
   onDownloadLog: () => void;
-  /** null — the record is not available (a network game: hidden cards). */
   onDownloadGame: (() => void) | null;
   onClose: () => void;
 }) {
@@ -369,7 +370,7 @@ export function EndScreen({
         <div className="panel-actions wrap">
           {onRematch && (
             <button className="btn primary" onClick={onRematch} data-testid="rematch">
-              Реванш
+              {rematchLabel}
             </button>
           )}
           <button className={`btn ${onRematch ? '' : 'primary'}`} onClick={onNew}>

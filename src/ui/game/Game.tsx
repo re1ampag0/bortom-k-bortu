@@ -763,7 +763,14 @@ export function Game({
   }
   const fileName = net ? `bortom-k-bortu-${net.room.code}` : `bortom-k-bortu-${game.setup.game.seed}`;
   const downloadLog = () => download(`${fileName}.txt`, game.log.map((l) => (l.kind === 'round' ? `\n${l.text}` : l.text)).join('\n'));
-  const downloadGame = local ? () => download(`${fileName}.json`, JSON.stringify(local.record(), null, 1), 'application/json') : null;
+  // By network the record (every card) comes from the server, and only after the end of the game.
+  const downloadGame = local
+    ? () => download(`${fileName}.json`, JSON.stringify(local.record(), null, 1), 'application/json')
+    : net && s.winner
+      ? () => net.requestRecord((r) => download(`${fileName}.json`, JSON.stringify(r, null, 1), 'application/json'))
+      : null;
+  const vote = net?.room.rematch ?? null;
+  const rematchLabel = vote ? (vote.you ? `Отменить реванш (согласны ${vote.agreed} из ${vote.need})` : `Реванш (согласны ${vote.agreed} из ${vote.need})`) : undefined;
   const totalsOf = () => (net ? net.totals : local ? matchTotals(data, local.setup, local.actions) : null);
   const rematch = () => {
     const seed = createRng((Date.now() ^ game.setup.game.seed) >>> 0).int(2 ** 31 - 1) + 1;
@@ -960,7 +967,8 @@ export function Game({
         <EndScreen
           s={s}
           totals={totalsOf() ?? { ПИРАТЫ: { damage: 0, income: 0, spent: 0 }, КОМПАНИЯ: { damage: 0, income: 0, spent: 0 } }}
-          onRematch={net ? null : rematch}
+          onRematch={net ? (vote ? () => net.voteRematch(!vote.you) : null) : rematch}
+          rematchLabel={rematchLabel}
           onNew={onExit}
           newLabel={net ? 'Выйти из комнаты' : undefined}
           onDownloadLog={downloadLog}
