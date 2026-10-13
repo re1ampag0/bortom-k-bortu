@@ -4,7 +4,7 @@ import { botAnswer, botTurn, newBotMemory, type BotMemory } from '../src/engine/
 import { applyAction, createGame, type GameOptions } from '../src/engine/engine';
 import { decider } from '../src/engine/hints';
 import { describe, rewind, type LogLine } from '../src/engine/log';
-import { matchTotals, type SideTotals } from '../src/engine/match';
+import { makeRecord, matchTotals, type MatchRecord, type MatchSetup, type SideTotals } from '../src/engine/match';
 import { ABILITY, RuleError, hasAbility, seatsOf, type Action, type GameEvent, type GameState } from '../src/engine/state';
 import type { GameData, Side } from '../src/engine/types';
 import { HIDDEN, eventsFor, viewFor, type Viewer } from '../src/engine/view';
@@ -93,6 +93,17 @@ export class Table {
     };
   }
 
+  /** The game as a record that replays it on one screen (as «Скачать партию» of a local game). */
+  private matchSetup(): MatchSetup {
+    return { game: { ...this.options, pauseEmptyWindows: true }, players: { ПИРАТЫ: 'human', КОМПАНИЯ: 'human' }, openHands: false };
+  }
+
+  /** «Скачать партию»: every card is in the record, so only after the end of the game; otherwise the refusal. */
+  matchRecord(): MatchRecord | string {
+    if (!this.state.winner) return 'Скачать партию можно после её конца: в записи все карты';
+    return makeRecord(this.data, this.matchSetup(), this.actions);
+  }
+
   dispose(): void {
     this.disposed = true;
     if (this.timer) clearTimeout(this.timer);
@@ -130,7 +141,7 @@ export class Table {
       bots: [...this.bots],
       ready: [...this.ready],
       concede: [...this.concede],
-      totals: this.state.winner ? (this.totals ??= matchTotals(this.data, { game: { ...this.options, pauseEmptyWindows: true }, players: { ПИРАТЫ: 'human', КОМПАНИЯ: 'human' }, openHands: false }, this.actions)) : null,
+      totals: this.state.winner ? (this.totals ??= matchTotals(this.data, this.matchSetup(), this.actions)) : null,
     };
   }
 
