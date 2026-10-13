@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GameEvent } from '../src/engine/state';
 import { HIDDEN } from '../src/engine/view';
-import { showSteps } from '../src/ui/game/show';
+import { showSteps } from '../src/ui/game/showSteps';
 
 const volley: GameEvent = { type: 'volley', ship: 'М', target: 'И', charge: null, chargeFrom: null, diagonal: false, joint: false, damage: 3, track: 'hull' };
 const hit: GameEvent = { type: 'hit', ship: 'М', target: 'И', damage: 3, track: 'hull', terms: [{ what: 'Пушки', n: 3 }] };

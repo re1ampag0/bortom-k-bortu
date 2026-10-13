@@ -8,7 +8,7 @@ import type { GameData } from '../../engine/types';
 import { eventsFor, type Viewer } from '../../engine/view';
 import type { Speed } from '../storage';
 import { HandCard } from './Hand';
-import { actorOf, showSteps, type Recent, type ShowStep } from './show';
+import { actorOf, showSteps, type Recent, type ShowStep } from './showSteps';
 
 /** How long a card or a Volley stays on screen at each show speed. */
 export const SHOW_MS: Record<Speed, number> = { slow: 1500, normal: 1000, fast: 550, instant: 0 };
