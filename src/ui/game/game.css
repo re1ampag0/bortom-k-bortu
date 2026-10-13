@@ -1759,6 +1759,16 @@ button {
 .show-arrow line {
   animation: show-arrow-in 0.35s ease-out;
 }
+.show-projectile {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  margin: -6px;
+  border-radius: 50%;
+  background: #2a2521;
+  box-shadow: 0 0 0 2px rgba(255, 224, 138, 0.35);
+  animation: show-projectile-flight 0.42s cubic-bezier(.3,0,.8,1) both;
+}
 .show-plate {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -1810,6 +1820,19 @@ button {
     opacity: 0.2;
   }
 }
+@keyframes show-projectile-flight {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(.7);
+  }
+  85% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--to-x), var(--to-y)) scale(1);
+  }
+}
 @keyframes show-float-up {
   from {
     opacity: 0;
@@ -1837,6 +1860,7 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .show-card,
   .show-arrow line,
+  .show-projectile,
   .show-float {
     animation: none;
   }
