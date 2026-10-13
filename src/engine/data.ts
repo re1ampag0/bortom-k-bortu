@@ -296,6 +296,8 @@ class Checker {
     const at = isNonEmpty(s.name) ? `Корабль ${s.name}` : where;
     for (const key of ['code', 'name', 'short', 'captain', 'legend']) this.string(s, key, at, true);
     for (const key of ['color', 'motto']) this.string(s, key, at);
+    this.string(s, 'nick', at, true);
+    this.string(s, 'nickDative', at, true);
     this.oneOf(s, 'side', at, SIDES);
     for (const key of ['hull', 'sails', 'guns', 'crew']) this.int(s, key, at, 1);
     this.int(s, 'souls', at, 0, true);

@@ -22,6 +22,9 @@ VOLLEY_DEFAULTS = {
     "volleyModes": [],
 }
 
+# Short ship names for the table and the log, and their dative for «Залп по „Мести“» (the PDF calls the ships so).
+NICKS = {"Ж": ("Жемчужина", "Жемчужине"), "М": ("Месть", "Мести"), "И": ("Индевор", "Индевору"), "Г": ("Голландец", "Голландцу")}
+
 # Rule numbers of version 0.3 that data3.py keeps in code (sim.py Cfg and the rules text).
 RULES = {
     "hand": 5,
@@ -111,6 +114,7 @@ def override(deck, c):
 def ship(s):
     out = {k: plain(v) for k, v in s.items() if k != "abilities"}
     out["abilities"] = [{"name": n, "text": t} for n, t in s["abilities"]]
+    out["nick"], out["nickDative"] = NICKS[s["code"]]
     out.update(VOLLEY_DEFAULTS)
     return out
 
