@@ -273,6 +273,42 @@ export function describe(data: GameData, before: GameState, action: Action | nul
 }
 
 /**
+ * The state before the events, as far as the log needs it (the Hold, the tracks, the Souls): for the events of
+ * createGame, whose state before is not kept.
+ */
+export function rewind(after: GameState, events: GameEvent[]): GameState {
+  const s = structuredClone(after);
+  for (const e of [...events].reverse()) {
+    switch (e.type) {
+      case 'powderGained':
+        s.teams[e.side].powder -= e.amount;
+        break;
+      case 'powderSpent':
+      case 'powderLost':
+        s.teams[e.side].powder += e.amount;
+        break;
+      case 'damage':
+        s.ships[e.ship].tracks[e.track] += e.amount;
+        s.ships[e.ship].tracks.hull += e.toHull;
+        break;
+      case 'restored':
+        s.ships[e.ship].tracks[e.track] -= e.amount;
+        break;
+      case 'soulsGained':
+        s.ships[e.ship].souls -= e.amount;
+        break;
+      case 'soulsSpent':
+        s.ships[e.ship].souls += e.amount;
+        break;
+      case 'soulsUsed':
+        s.ships[e.ship].souls += 1;
+        break;
+    }
+  }
+  return s;
+}
+
+/**
  * The start of a turn in one line: «+3 Пороха, Пожар: −1 Корпус „Индевору“, добрано 2 карты»
  * (docs/TZ.md, «Детали», п. 3). Null when the events have no start of a turn.
  */

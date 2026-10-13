@@ -597,6 +597,9 @@ button {
   content: '';
 }
 .toast {
+  position: absolute;
+  top: 4px;
+  pointer-events: none;
   background: var(--ink);
   color: #fff;
   border-radius: 10px;
@@ -1374,7 +1377,7 @@ button {
 
   /* A panel replaces the hand: a bottom sheet in the hand's place. */
   .game.has-dock .hand {
-    display: none;
+    visibility: hidden;
   }
   .game.has-dock .middle {
     position: static;
@@ -1456,6 +1459,16 @@ button {
   }
   .slots {
     grid-template-columns: 1fr;
+  }
+  .end-screen {
+    padding: 14px;
+  }
+  .end-screen h1 {
+    font-size: 1.6rem;
+  }
+  .end-table td,
+  .end-table th {
+    padding: 2px 8px;
   }
 }
 

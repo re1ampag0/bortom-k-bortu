@@ -732,7 +732,7 @@ function curtainReason(s: GameState, data: LocalGame['data'], kind: string): str
   const nick = (code: string) => `«${shipData(data, code).nick}»`;
   switch (kind) {
     case 'reactions':
-      if (s.volley) return `Реакция на Залп ${nick(s.volley.shooter)}`;
+      if (s.volley) return `Реакция на Залп по «${shipData(data, s.volley.target).nickDative}»`;
       return s.card ? `Реакция на «${cardByCode(data, s.card.card).name}»` : 'Реакция';
     case 'jack':
       return 'Джек ускользает?';

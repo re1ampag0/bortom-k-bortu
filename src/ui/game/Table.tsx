@@ -139,7 +139,14 @@ export interface Status {
 /** Statuses of a ship with the moment they end (docs/TZ.md, «Принципы стола», п. 2). */
 export function statuses(s: GameState, data: GameData, ship: ShipState): Status[] {
   const out: Status[] = [];
-  if (ship.sunk) return [{ label: 'Утонул', hint: 'Капитан на борту союзника: 1 карта и 1 Реакция за ход за союзника' }];
+  if (ship.sunk) {
+    const ally = Object.values(s.ships).find((x) => x.side === ship.side && x.code !== ship.code);
+    return [
+      ally && !ally.sunk
+        ? { label: 'Утонул', hint: 'Капитан на борту союзника: 1 карта и 1 Реакция за ход за союзника' }
+        : { label: 'Утонул', hint: 'Корабль потоплен' },
+    ];
+  }
   if (ship.submerged) out.push({ label: 'Под водой', hint: 'До своего хода: нельзя выбрать целью, не играет Реакции' });
   if (ship.surfaced) out.push({ label: 'Всплыл', hint: 'Первый Залп в этот ход: +1 и без Реакций' });
   if (ship.blockaded) out.push({ label: 'Блокада', hint: 'До конца своего следующего хода: без Ремонта и смены мест' });

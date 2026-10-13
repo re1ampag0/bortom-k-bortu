@@ -35,6 +35,11 @@ describe('LocalGame', () => {
     }
   });
 
+  it('the log of the first round starts from the empty Hold of the Pirates', () => {
+    const g = new LocalGame(data, bots(1));
+    expect(g.log.map((l) => l.text)).toContain('Пираты: +2 Пороха (Трюм) → 2.');
+  });
+
   it('the record replays the game to the same state', () => {
     const g = new LocalGame(data, bots(7));
     playOut(g);
