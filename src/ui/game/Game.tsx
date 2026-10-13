@@ -16,7 +16,6 @@ import {
   volleyTargets,
   type VolleyTarget,
 } from '../../engine/hints';
-import { sideGenitive, turnSummary } from '../../engine/log';
 import { matchTotals, type MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
 import { ABILITY, cardByCode, hasAbility, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
@@ -43,7 +42,9 @@ import {
   type CardMode,
 } from './Panels';
 import { MissedSheet, NetBar, netDock } from './NetParts';
+import { BannerView, useBanners } from './Banners';
 import { ShowLayer, useShowQueue } from './Show';
+import { instantUrl } from '../start/motion';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
 import { SIDE_LABEL, SPEEDS } from './text';
 
@@ -162,7 +163,6 @@ export function Game({
   const [mode, setMode] = useState<Mode>({ k: 'idle' });
   const [sheet, setSheet] = useState<Sheet>(null);
   const [flash, setFlash] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const [fastTurn, setFastTurn] = useState<string | null>(null);
   const [endClosed, setEndClosed] = useState(false);
   const [freshFrom, setFreshFrom] = useState(0);
@@ -197,6 +197,18 @@ export function Game({
 
   // ——— Effects: bots, autosave, title, toast, wake lock ———
   const turnKey = `${s.round}:${s.active}`;
+  // Banners one after another: the sea card, «Ваш ход», the summary of the start of the turn (docs/TZ.md, п. 2).
+  const banner = useBanners({
+    recent: game.recent,
+    version,
+    data,
+    bottom,
+    mine: net ? mySeats.length > 0 : game.setup.players[bottom] === 'human',
+    enabled: speed !== 'instant' && !instantUrl(),
+    // A new game: the first sea card and the first turn too.
+    start: (net ? net.actions : local!.actions.length) === 0 && !s.winner ? { sea: s.sea?.current ?? null, active: s.active } : null,
+  });
+  const toast = banner?.k === 'summary' ? banner.text : null;
   // The show of the enemy's and the bots' actions, one at a time; the bots wait for it.
   const show = useShowQueue({
     game,
@@ -204,14 +216,15 @@ export function Game({
     viewer,
     mySeats,
     bottom,
-    enabled: speed !== 'instant' && fastTurn !== turnKey && !curtainSide,
+    enabled: speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide,
     speed,
     myDecision,
+    paused: !!banner && banner.k !== 'summary',
   });
   useEffect(() => {
     if (!local || curtainSide || s.winner || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
-    if (show.busy && !instant) return;
+    if ((show.busy || (banner && banner.k !== 'summary')) && !instant) return;
     const t = setTimeout(
       () => {
         let n = 0;
@@ -221,7 +234,7 @@ export function Game({
       instant ? 0 : SPEEDS[speed].ms,
     );
     return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy]);
+  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, banner?.k]);
 
   useEffect(() => {
     if (local) storeSave(s.winner ? null : local.record());
@@ -244,17 +257,6 @@ export function Game({
     };
   }, [myDecision, humans.length]);
 
-  useEffect(() => {
-    // The start of a turn of the team at the device: a short summary for 2 s (docs/TZ.md, «Детали», п. 3).
-    const last = game.last;
-    if (!last) return;
-    const sum = turnSummary(data, last.events);
-    if (sum && sum.side === bottom && sum.text) {
-      setToast(`Ход ${sideGenitive(sum.side)}: ${sum.text}`);
-      const t = setTimeout(() => setToast(null), 2000);
-      return () => clearTimeout(t);
-    }
-  }, [version, game, data, bottom]);
 
   useEffect(() => {
     // The lines of the newest action are highlighted in the log.
@@ -785,6 +787,7 @@ export function Game({
       onSelect={() => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code)}
       onDetails={() => setSheet({ k: 'ship', code: x.code })}
       onLegend={() => legendClick(x.code)}
+      flashLegend={hints && x.side === bottom && mySeats.includes(x.code)}
     />
   );
 
@@ -794,6 +797,7 @@ export function Game({
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}
       <ShowLayer data={data} step={show.step} />
+      <BannerView data={data} banner={banner} />
       <main className="board">
         <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>

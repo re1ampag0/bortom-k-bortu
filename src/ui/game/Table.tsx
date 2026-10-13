@@ -1,5 +1,5 @@
 // Presentational parts of the table: the status bar, a team row with its Hold, a ship board (plank).
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type ShipState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
@@ -177,11 +177,14 @@ export function Plank({
   onSelect,
   onDetails,
   onLegend,
+  flashLegend = false,
 }: {
   s: GameState;
   data: GameData;
   ship: ShipState;
   own: boolean;
+  /** «Подсказки» on: the Legend flashes once when it becomes available. */
+  flashLegend?: boolean;
   selected: boolean;
   awaiting: boolean;
   targeted: boolean;
@@ -201,6 +204,7 @@ export function Plank({
   const keeper = Object.values(s.ships).find((x) => x.side === ship.side && !x.sunk && shipData(data, x.code).souls !== undefined);
   const affordable = s.teams[ship.side].powder >= legendCard.cost && (legendCard.soul === 0 || (keeper?.souls ?? 0) >= legendCard.soul);
   const legendState = ship.legend ? (affordable ? 'ready' : 'poor') : 'gone';
+  const flash = useLegendFlash(legendState, flashLegend) ? 'legend-flash' : '';
   const handLabel = cardsWord(ship.hand.length);
   const cls = [
     'plank',
@@ -225,7 +229,7 @@ export function Plank({
           <span className="wide">{d.name}</span>
           <span className="narrow">{d.nick}</span>
           {ship.legend && (
-            <span className={`star narrow ${affordable ? '' : 'poor'}`} title={`Легенда: ${legendName}${affordable ? '' : ' — не хватает Пороха или Душ'}`}>
+            <span className={`star narrow ${affordable ? '' : 'poor'} ${flash}`} title={`Легенда: ${legendName}${affordable ? '' : ' — не хватает Пороха или Душ'}`}>
               ★
             </span>
           )}
@@ -283,7 +287,7 @@ export function Plank({
           )}
           {!ship.sunk && (
             <button
-              className={`badge legend ${legendState}`}
+              className={`badge legend ${legendState} ${flash}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onLegend?.();
@@ -322,4 +326,19 @@ export function Plank({
       )}
     </section>
   );
+}
+
+/** One flash when the Legend became available (not on the first render, not again until it was unavailable). */
+function useLegendFlash(state: string, on: boolean): boolean {
+  const prev = useRef(state);
+  const [flash, setFlash] = useState(false);
+  useEffect(() => {
+    const became = prev.current !== 'ready' && state === 'ready';
+    prev.current = state;
+    if (!became || !on) return;
+    setFlash(true);
+    const t = setTimeout(() => setFlash(false), 1500);
+    return () => clearTimeout(t);
+  }, [state, on]);
+  return flash;
 }
