@@ -104,9 +104,30 @@ export interface Econ {
   second_start: number;
 }
 
+/** Rule numbers of version 0.3 that data3.py keeps in code. */
+export interface Rules {
+  /** Players draw up to this many cards. */
+  hand: number;
+  /** After this many rounds without a winner the game is a draw. */
+  maxRounds: number;
+  /** Fires on one ship. */
+  maxFires: number;
+  /** Powder for selling a card. */
+  sellGain: number;
+  /** Powder for a regroup. */
+  regroupCost: number;
+  /** Extra damage of a joint volley. */
+  jointBonus: number;
+  /** Company's starting Powder in the "first game" variant. */
+  firstGameSecondStart: number;
+  /** Most Powder a "paid" Charge («Оплаченный залп») may take. */
+  paidChargeMax: number;
+}
+
 export interface GameData {
   version: string;
   econ: Econ;
+  rules: Rules;
   ships: Ship[];
   /** Deck of each ship by ship code. */
   decks: Record<string, DeckEntry[]>;

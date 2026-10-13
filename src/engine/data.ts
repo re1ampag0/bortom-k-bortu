@@ -1,5 +1,5 @@
 // Loading and validation of the game data. Pure functions: no React, no Node API.
-import type { Card, CardInstance, DeckEntry, GameData, SeaCard, SeaCardInstance, Ship } from './types';
+import type { Card, CardInstance, DeckEntry, GameData, Rules, SeaCard, SeaCardInstance, Ship } from './types';
 
 export const CARD_TYPES = ['ЗАРЯД', 'РЕАКЦИЯ', 'ПРИКАЗ', 'РЕМОНТ'] as const;
 export const SIDES = ['ПИРАТЫ', 'КОМПАНИЯ'] as const;
@@ -99,6 +99,29 @@ export const VOLLEY_DEFAULTS = {
   volleysPerTurn: 1,
   volleyModes: [],
 } as const;
+
+/** Rule numbers of version 0.3, used when the data has no "rules" section or misses a key. */
+export const RULES_DEFAULTS: Rules = {
+  hand: 5,
+  maxRounds: 30,
+  maxFires: 3,
+  sellGain: 1,
+  regroupCost: 1,
+  jointBonus: 1,
+  firstGameSecondStart: 3,
+  paidChargeMax: 3,
+};
+
+const RULES_MIN: Record<keyof Rules, number> = {
+  hand: 0,
+  maxRounds: 1,
+  maxFires: 0,
+  sellGain: 0,
+  regroupCost: 0,
+  jointBonus: 0,
+  firstGameSecondStart: 0,
+  paidChargeMax: 0,
+};
 
 export class DataError extends Error {
   constructor(readonly problems: string[]) {
@@ -278,6 +301,17 @@ export function loadGameData(raw: unknown): GameData {
   if (!isObj(raw.econ)) ch.fail('Экономика', 'нет раздела «econ»');
   else for (const key of ['income', 'first_income', 'cap', 'second_start']) ch.int(raw.econ, key, 'Экономика', 0);
 
+  let rules: Rules = RULES_DEFAULTS;
+  if (raw.rules !== undefined && !isObj(raw.rules)) ch.fail('Правила', 'раздел «rules» должен быть объектом');
+  else if (isObj(raw.rules)) {
+    for (const key of Object.keys(raw.rules)) {
+      if (!(key in RULES_DEFAULTS)) ch.fail('Правила', `неизвестное поле «${key}»`);
+    }
+    const merged: Obj = { ...RULES_DEFAULTS, ...raw.rules };
+    for (const key of Object.keys(RULES_DEFAULTS) as (keyof Rules)[]) ch.int(merged, key, 'Правила', RULES_MIN[key]);
+    rules = merged as unknown as Rules;
+  }
+
   const ships: Ship[] = [];
   if (!Array.isArray(raw.ships) || raw.ships.length === 0) {
     ch.fail('Корабли', 'нет списка «ships»');
@@ -357,7 +391,7 @@ export function loadGameData(raw: unknown): GameData {
   }
 
   if (ch.problems.length > 0) throw new DataError(ch.problems);
-  return { ...(raw as unknown as GameData), ships };
+  return { ...(raw as unknown as GameData), rules, ships };
 }
 
 /** Every physical deck card, one entry per copy. Codes as in data3.py: "Ж-01" … "Ж-24". */

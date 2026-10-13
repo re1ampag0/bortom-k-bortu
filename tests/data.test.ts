@@ -72,6 +72,28 @@ describe('game-data.json v0.3', () => {
     expect(loaded.ships[0].diagDamage).toEqual({ offset: -1 });
   });
 
+  it('has the rule numbers of v0.3', () => {
+    expect(data.rules).toEqual({
+      hand: 5,
+      maxRounds: 30,
+      maxFires: 3,
+      sellGain: 1,
+      regroupCost: 1,
+      jointBonus: 1,
+      firstGameSecondStart: 3,
+      paidChargeMax: 3,
+    });
+  });
+
+  it('fills missing rule numbers with the defaults', () => {
+    const d = clone();
+    delete d.rules;
+    expect(loadGameData(d).rules).toEqual(data.rules);
+    const partial = clone();
+    partial.rules = { hand: 6 };
+    expect(loadGameData(partial).rules).toEqual({ ...data.rules, hand: 6 });
+  });
+
   it('numbers cards like data3.py', () => {
     const deck = deckCards(data, 'Ж');
     expect(deck[0].code).toBe('Ж-01');
@@ -199,6 +221,16 @@ describe('loadGameData validation', () => {
     const problems = problemsOf(d);
     expect(problems).toHaveLength(3);
     expect(problems.every((p) => p.includes('Чёрная жемчужина'))).toBe(true);
+  });
+
+  it('rejects bad rule numbers', () => {
+    const d = clone();
+    d.rules.hand = -1;
+    d.rules.maxRounds = 0;
+    d.rules.handSize = 5;
+    const problems = problemsOf(d);
+    expect(problems).toHaveLength(3);
+    expect(problems.every((p) => p.startsWith('Правила'))).toBe(true);
   });
 
   it('collects all problems at once', () => {
