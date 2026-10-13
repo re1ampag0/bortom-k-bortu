@@ -13,6 +13,7 @@ import {
   ownerOf,
   seatShip,
   seatsOf,
+  shipData,
   shipName,
   takeCard,
   teamShips,
@@ -139,15 +140,23 @@ export function useCardPlay(ctx: Ctx, seat: string, forShip: string): void {
   turn.captainPlayed.push(seat);
 }
 
-/** Pays the card's cost: Powder from the Hold, Souls of the ship it is played for (RULES.md 9.2). */
+/**
+ * Pays the card's cost: Powder from the Hold (RULES.md 9.2), Souls always from the team's Flying Dutchman
+ * while it is afloat — whichever ship the card is played for (6.3, Q39). A team without the Dutchman afloat
+ * cannot pay Souls.
+ */
 export function payCardCost(ctx: Ctx, card: string, forShip: ShipState): void {
   const c = cardByCode(ctx.data, card);
-  if (c.soul > forShip.souls) throw new RuleError(`Не хватает Душ: нужно ${c.soul}, есть ${forShip.souls}`);
-  pay(ctx, forShip.side, c.cost, 'card');
   if (c.soul > 0) {
-    forShip.souls -= c.soul;
-    ctx.events.push({ type: 'soulsSpent', ship: forShip.code, amount: c.soul });
+    const keeper = aliveShips(ctx.s, forShip.side).find((x) => shipData(ctx.data, x.code).souls !== undefined);
+    if (!keeper) throw new RuleError('Заплатить Душами нельзя: в вашей команде нет «Летучего голландца» на плаву');
+    if (c.soul > keeper.souls) throw new RuleError(`Не хватает Душ: нужно ${c.soul}, есть ${keeper.souls}`);
+    pay(ctx, forShip.side, c.cost, 'card');
+    keeper.souls -= c.soul;
+    ctx.events.push({ type: 'soulsSpent', ship: keeper.code, amount: c.soul });
+    return;
   }
+  pay(ctx, forShip.side, c.cost, 'card');
 }
 
 /** Plays an Order or Repair from the hand. Card effects (fx) come in stage 5. */
