@@ -6,6 +6,16 @@
     "cap": 8,
     "second_start": 4
   },
+  "rules": {
+    "hand": 5,
+    "maxRounds": 30,
+    "maxFires": 3,
+    "sellGain": 1,
+    "regroupCost": 1,
+    "jointBonus": 1,
+    "firstGameSecondStart": 3,
+    "paidChargeMax": 3
+  },
   "ships": [
     {
       "code": "Ж",
