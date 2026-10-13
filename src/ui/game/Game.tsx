@@ -8,6 +8,8 @@ import {
   heartTargets,
   legendOptions,
   playOptions,
+  previewReaction,
+  previewVolley,
   refusal,
   tryAction,
   unfiredShips,
@@ -35,6 +37,7 @@ import {
   TortugaPanel,
   VolleyPanel,
   plateLabel,
+  volleyOrder,
   type AimMode,
   type CardMode,
 } from './Panels';
@@ -105,6 +108,13 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   const view = useMemo(() => viewFor(s, viewer), [version, bottom, openHands]);
   const myDecision = !!d && d.side === bottom && !game.isBot(bottom) && !curtainSide;
   const myTurn = myDecision && d!.kind === 'turn';
+  // The Reaction chosen in the hand while the window is open (phone: the panel has only «Пропустить» and «Сыграть»).
+  const [reactPickRaw, setReactPick] = useState<{ seat: string; card: string } | null>(null);
+  const reactPick =
+    reactPickRaw && myDecision && d!.kind === 'reactions' && d!.seats.includes(reactPickRaw.seat) &&
+    [...s.ships[reactPickRaw.seat].hand, ...s.ships[reactPickRaw.seat].plans].includes(reactPickRaw.card)
+      ? reactPickRaw
+      : null;
 
   // ——— Interface state ———
   const [mode, setMode] = useState<Mode>({ k: 'idle' });
@@ -406,15 +416,19 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
 
   // ——— The panel in the middle (laptop) or in place of the hand (phone) ———
   let dock: React.ReactNode = null;
+  // Card choices, «Тортуга» and the Plans are bottom sheets on a phone; the Volley and the Reactions stay in the middle.
+  let dockSheet = false;
   const cancel = () => setMode({ k: 'idle' });
   if (s.winner) dock = null;
   else if (myDecision && d!.kind === 'reactions') {
-    dock = <ReactionPanel s={s} data={data} hints={hints} seats={d!.seats} onAct={(a) => act(a)} />;
+    dock = <ReactionPanel s={s} data={data} hints={hints} seats={d!.seats} pick={reactPick} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'jack') {
     dock = <JackPanel s={s} data={data} ship={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'tortuga') {
+    dockSheet = true;
     dock = <TortugaPanel key={turnKey} s={s} data={data} side={d!.side} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'choice') {
+    dockSheet = true;
     dock = <ChoicePanel key={`${version}`} s={s} data={data} seat={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myTurn) {
     if (mode.k === 'aim') dock = <VolleyPanel s={s} data={data} hints={hints} mode={mode} setMode={setMode} onFire={(a) => act(a)} onCancel={cancel} />;
@@ -450,6 +464,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
         </section>
       );
     } else if (mode.k === 'plans') {
+      dockSheet = true;
       dock = <PlansPanel s={s} data={data} seat={mode.seat} onDone={(plans) => finishTurn({ type: 'endTurn', side: bottom, plans })} onCancel={cancel} />;
     }
   }
@@ -495,11 +510,18 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
       case 'choice':
         return `${nick(d.seats[0])}: сделайте выбор`;
     }
-    if (mode.k === 'aim') return mode.target ? `${nick(mode.shooter)}: проверьте Залп и нажмите «Огонь»` : `${nick(mode.shooter)}: выберите цель Залпа`;
+    if (mode.k === 'aim') {
+      if (!mode.target) return `${nick(mode.shooter)}: выберите цель Залпа`;
+      const to = `«${shipData(data, mode.target).nickDative}»`;
+      return mode.charge ? `Залп по ${to} — проверьте и нажмите «Огонь»` : `Залп по ${to} — Заряд картой из руки`;
+    }
     if (mode.k === 'card') return `${nick(mode.seat)}: «${cardByCode(data, mode.card).name}» — выберите параметры`;
     if (!useful) return 'Полезных действий не осталось — нажмите «Ход окончен»';
     return `${nick(seat)}: выберите карту или действие`;
   })();
+
+  // ——— The middle at rest: the last event ———
+  const lastEvent = [...game.log].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
 
   // ——— Hand ———
   const tabs: HandTab[] = allSeats
@@ -509,15 +531,42 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
       const own = ship?.code === x;
       const played = own ? (s.turn.played[x] ?? 0) : s.turn.captainPlayed.includes(x) ? 1 : 0;
       const limit = own ? (s.turn.limit[x] ?? s.ships[x].tracks.crew) : 1;
-      return { seat: x, label: `${shipData(data, x).nick}${s.active === bottom && x === seat ? ` · ${played} из ${limit}` : ''}` };
+      const dot =
+        hints && myDecision && d!.kind === 'reactions' && d!.seats.includes(x) && reactionsOf(x).some((c) => !playOptions(s, data, x, c).reason);
+      return { seat: x, label: `${shipData(data, x).nick}${s.active === bottom && x === seat ? ` · ${played} из ${limit}` : ''}`, dot };
     });
-  const offOf = (_holder: string, code: string): string | null => {
+  function reactionsOf(x: string): string[] {
+    return [...s.ships[x].hand, ...s.ships[x].plans].filter((c) => c !== '?' && cardByCode(data, c).type === 'РЕАКЦИЯ');
+  }
+  const offOf = (holder: string, code: string): string | null => {
     if (!myDecision) return s.winner ? 'Партия окончена' : 'Сейчас не ваше решение';
+    if (mode.k === 'aim') {
+      if (cardByCode(data, code).type !== 'ЗАРЯД' || seatShip(s, holder)?.code !== mode.shooter) return 'Во время Залпа — только Заряды';
+      if (mode.target) {
+        const p = previewVolley(s, data, volleyOrder({ ...mode, charge: code, chargeFrom: holder, paid: 0 }, mode.target));
+        return p.ok ? null : p.reason;
+      }
+      return null;
+    }
     if (d!.kind === 'reactions') return cardByCode(data, code).type === 'РЕАКЦИЯ' ? (cardHints.get(code)?.reason ?? null) : 'Сейчас — только Реакции';
     if (d!.kind !== 'turn') return 'Сначала закончите выбор';
     return cardHints.get(code)?.reason ?? null;
   };
-  const chosenCard = mode.k === 'aim' ? mode.charge : mode.k === 'card' ? mode.card : null;
+  const chosenCard = mode.k === 'aim' ? mode.charge : mode.k === 'card' ? mode.card : (reactPick?.card ?? null);
+  /** «Подсказки»: «→ итог 4» on the Charges while aiming, «4 → 2» on the Reactions in the window. */
+  const noteOf = (code: string): string | undefined => {
+    if (!hints || !myDecision || code === '?') return undefined;
+    const c = cardByCode(data, code);
+    if (mode.k === 'aim' && mode.target && c.type === 'ЗАРЯД' && seatShip(s, seat)?.code === mode.shooter) {
+      const p = previewVolley(s, data, volleyOrder({ ...mode, charge: code, chargeFrom: seat, paid: 0 }, mode.target));
+      return p.ok ? `${c.big.length <= 8 ? `${c.big} ` : ''}→ итог ${p.damage}` : undefined;
+    }
+    if (d!.kind === 'reactions' && c.type === 'РЕАКЦИЯ' && d!.seats.includes(seat)) {
+      const r = previewReaction(s, data, seat, code);
+      return r.ok ? r.label : undefined;
+    }
+    return undefined;
+  };
   const handLabel = `${seat ? `Рука · ${nick(seat)}` : 'Рука'}`;
 
   // ——— Bottom buttons ———
@@ -525,7 +574,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   const undoBtn: Btn = { key: 'undo', label: '↶', disabled: undoWhy, onClick: () => (game.undo(), setMode({ k: 'idle' })), testid: 'undo' };
   const endBtn: Btn = {
     key: 'end',
-    label: 'Ход окончен',
+    label: myTurn || s.winner || !d ? 'Ход окончен' : `Сейчас ход ${SIDE_LABEL[s.active].gen}`,
     primary: true,
     disabled: myTurn ? (mode.k === 'idle' ? null : 'Сначала закончите или отмените текущее действие') : 'Сейчас не ваш ход',
     onClick: () => endFlow('start'),
@@ -590,14 +639,21 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   );
 
   return (
-    <div className={`game ${dock ? 'has-dock' : ''} ${s.winner ? 'over' : ''}`} data-testid="game" data-bottom={bottom}>
+    <div className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''}`} data-testid="game" data-bottom={bottom}>
       <StatusBar s={s} data={data} instruction={flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       <main className="board">
         <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
         <div className="middle">
           {toast && <div className="toast">{toast}</div>}
-          {dock && <div className="dock">{dock}</div>}
+          {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
+          {!dock && !s.winner && (lastEvent || (myTurn && mode.k === 'idle')) && (
+            <p className="middle-info" data-testid="middle-info">
+              {lastEvent && <>Последнее: {lastEvent}</>}
+              {lastEvent && myTurn && mode.k === 'idle' && <br />}
+              {myTurn && mode.k === 'idle' && 'Нажмите карту или «Залп».'}
+            </p>
+          )}
         </div>
         <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
         <TeamRow side={bottom} s={view} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} />
@@ -611,10 +667,16 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
               onTab={setSeatPick}
               offOf={offOf}
               chosen={chosenCard}
-              noteOf={() => undefined}
+              noteOf={noteOf}
               onCard={(holder: string, code: string) => {
                 if (mode.k === 'aim' && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter) {
                   setMode({ ...mode, charge: mode.charge === code ? null : code, chargeFrom: holder, paid: 0 });
+                  return;
+                }
+                // In the Reaction window a Reaction in the hand is chosen (again — unchosen) instead of opening it.
+                if (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)) {
+                  if (offOf(holder, code)) setSheet({ k: 'card', seat: holder, code });
+                  else setReactPick(reactPick?.card === code ? null : { seat: holder, card: code });
                   return;
                 }
                 setSheet({ k: 'card', seat: holder, code });

@@ -120,7 +120,6 @@ export function VolleyPanel({
   const none = { card: null as string | null, from: mode.shooter };
   // Without hints a laptop shows only «Без Заряда» and the chosen Charge: the Charge is chosen in the hand or the Plans.
   const chips = hints ? [none, ...charges] : [none, ...charges.filter((o) => o.card === mode.charge)];
-  const nonePv = previewWith(none);
   return (
     <Panel title={title} sub={sub} tone="volley" testid="volley-panel">
       <div className="choices wide-block">
@@ -143,28 +142,6 @@ export function VolleyPanel({
               </span>
               <b>{hints ? (damageLabel(pv) ?? (c ? c.big : '')) : c ? c.big : ''}</b>
             </button>
-          );
-        })}
-      </div>
-      {/* Phone: the sheet stands in place of the hand, so the Charges are mini cards, as in the hand. */}
-      <div className="choice-cards narrow-block">
-        <button className={`choice none-charge ${mode.charge === null ? 'on' : ''}`} onClick={() => choose(none)}>
-          <span>Без Заряда</span>
-          {hints && <b>{damageLabel(nonePv) ?? ''}</b>}
-        </button>
-        {charges.map((o) => {
-          const pv = previewWith(o);
-          return (
-            <HandCard
-              key={o.card}
-              data={data}
-              code={o.card!}
-              plan={s.ships[o.from].plans.includes(o.card!)}
-              off={pv && !pv.ok ? pv.reason : null}
-              chosen={mode.charge === o.card}
-              note={hints ? damageLabel(pv) : undefined}
-              onClick={() => (pv && !pv.ok ? undefined : choose(o))}
-            />
           );
         })}
       </div>
@@ -204,6 +181,7 @@ export function ReactionPanel({
   data,
   hints,
   seats,
+  pick,
   onAct,
 }: {
   s: GameState;
@@ -211,9 +189,20 @@ export function ReactionPanel({
   /** Off: no «4 → 2» on the Reactions; the incoming damage and the reasons of grey cards are always shown. */
   hints: boolean;
   seats: string[];
+  /** The Reaction chosen in the hand (the phone chooses there). */
+  pick: { seat: string; card: string } | null;
   onAct: (actions: Action[]) => void;
 }) {
   const t = threat(s, data);
+  // How many more Reactions the team may play now (Sails; Plans and a captain's card are beyond it).
+  const left = Math.max(
+    0,
+    ...seats.map((seat) => {
+      const ship = seatShip(s, seat);
+      return ship ? ship.tracks.sails - (s.turn.reactions[ship.code] ?? 0) : 0;
+    }),
+  );
+  const skip = () => onAct(seats.map((seat) => ({ type: 'noReaction', seat })));
   const items: { seat: string; card: string; label: string | null; reason: string | null; plan: boolean }[] = [];
   for (const seat of seats) {
     const holder = s.ships[seat];
@@ -226,7 +215,25 @@ export function ReactionPanel({
   items.sort((a, b) => Number(!!a.reason) - Number(!!b.reason));
   return (
     <Panel title={t?.title ?? 'Ответить Реакцией?'} sub={t?.detail} tone="reaction" testid="reaction-panel">
-      <div className="reactions">
+      {/* Phone: the Reaction is chosen in the hand; the panel keeps only the two buttons. */}
+      <div className="react-phone narrow-block">
+        <span className="muted">Реакцию выберите в руке · можно {left}</span>
+        <div className="panel-actions">
+          <button className="btn" data-testid="skip-reaction" onClick={skip}>
+            Пропустить
+          </button>
+          <button
+            className="btn primary react-play"
+            data-testid="play-reaction"
+            aria-disabled={!pick}
+            title={pick ? undefined : 'Выберите Реакцию в руке'}
+            onClick={() => pick && onAct([{ type: 'react', seat: pick.seat, card: pick.card }])}
+          >
+            {pick ? `Сыграть «${cardByCode(data, pick.card).name}»` : 'Выберите Реакцию в руке'}
+          </button>
+        </div>
+      </div>
+      <div className="reactions wide-block">
         {items.map((it) => {
           const c = cardByCode(data, it.card);
           return (
@@ -245,11 +252,7 @@ export function ReactionPanel({
             </button>
           );
         })}
-        <button
-          className="reaction-skip"
-          data-testid="skip-reaction"
-          onClick={() => onAct(seats.map((seat) => ({ type: 'noReaction', seat })))}
-        >
+        <button className="reaction-skip" data-testid="skip-reaction" onClick={skip}>
           Пропустить
         </button>
       </div>

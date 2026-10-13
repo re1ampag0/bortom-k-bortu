@@ -1,12 +1,12 @@
 // The game through the interface (docs/TZ.md, stage 7): bots play a match to the victory screen, people play
-// against bots and against each other to the end; the table fits the window without page scrolling at the three
-// sizes of the task. Screenshots of the key states go to docs/screenshots/stage7/ (replaced on every run).
+// against bots and against each other to the end; the table fits the window without page scrolling on a laptop
+// (1366×660), the target phone iPhone 15 Pro Max (430×740) and a 390×664 phone; smaller phones may scroll. Screenshots of the key states go to docs/screenshots/stage7/ (replaced on every run).
 import { expect, test, type Page } from '@playwright/test';
 
 const SIZES = [
   { name: 'laptop', width: 1366, height: 660 },
+  { name: 'iphone', width: 430, height: 740 },
   { name: 'phone', width: 390, height: 664 },
-  { name: 'small', width: 375, height: 548 },
 ] as const;
 
 const SHOTS = 'docs/screenshots/stage7';
@@ -67,7 +67,7 @@ async function playToEnd(page: Page) {
       continue;
     }
     if (await visible(page, 'skip-reaction')) {
-      await page.getByTestId('skip-reaction').click();
+      await byId(page, 'skip-reaction').click();
       continue;
     }
     if (await visible(page, 'jack-panel')) {
@@ -133,6 +133,7 @@ async function keyStates(page: Page, name: string) {
   await shot(page, name, '3-curtain');
   await page.getByTestId('curtain-ready').click();
   await expect(page.getByTestId('game')).toBeVisible();
+  await expect(page.getByTestId('middle-info')).toContainText('Нажмите карту или «Залп»');
   await expectFits(page);
   await shot(page, name, '4-turn');
   await page.getByTestId('volley-Ж').click();
@@ -148,6 +149,11 @@ async function keyStates(page: Page, name: string) {
   // «Подсказки» are off by default: the incoming damage is shown, «4 → 2» on the Reactions is not.
   await expect(page.getByTestId('reaction-panel').locator('.panel-head')).toContainText('по Корпусу');
   await expect(page.getByTestId('reaction-panel').locator('.ro-effect').first()).not.toContainText('→');
+  if (name !== 'laptop') {
+    // Phone: the Reaction is chosen in the hand, the panel in the middle plays it.
+    await page.locator('.hand .hcard.reaction:not(.off)').first().click();
+    await expect(byId(page, 'play-reaction')).toContainText('Сыграть «');
+  }
   await expectFits(page);
   await shot(page, name, '7-reaction');
   // Four bots to the victory screen.
@@ -192,11 +198,12 @@ test.describe('«Подсказки»', () => {
       const panel = page.getByTestId('volley-panel');
       await expect(panel.locator('.panel-head')).toContainText('по Корпусу «Голландец»');
       if (size.name === 'laptop') await expect(panel.locator('.choices.wide-block .choice')).toHaveCount(1);
-      else {
-        await expect(panel.locator('.none-charge b')).toHaveCount(0);
-        // The Charges of «Месть» are mini cards, as in the hand, without their damage.
-        await expect(panel.locator('.choice-cards.narrow-block .hcard').first()).toBeVisible();
-      }
+      // The Charge is chosen in the hand; the other cards are pale; no damage on the Charges.
+      await expect(page.locator('.hand .hcard.order').first()).toHaveClass(/off/);
+      await page.locator('.hand .hcard.charge').first().click();
+      await expect(page.locator('.hand .hcard.charge').first()).toHaveClass(/chosen/);
+      await expect(page.locator('.hand .hcard.charge').first()).not.toContainText('итог');
+      await expectFits(page);
       await shot(page, size.name, '10-volley-no-hints');
       await panel.getByRole('button', { name: 'Отмена' }).click();
       await page.locator('[data-testid="end-turn"]:visible').click();
@@ -211,7 +218,7 @@ test.describe('«Подсказки»', () => {
       await page.getByTestId('plate-Г').click();
       const panel = page.getByTestId('volley-panel');
       if (size.name === 'laptop') await expect(panel.locator('.choices.wide-block .choice b').first()).toHaveText(/^\d/);
-      else await expect(panel.locator('.none-charge b')).toHaveText(/^\d/);
+      await expect(page.locator('.hand .hcard.charge').first()).toContainText('итог');
       await shot(page, size.name, '11-volley-hints');
       await panel.getByRole('button', { name: 'Отмена' }).click();
       await page.locator('[data-testid="end-turn"]:visible').click();
