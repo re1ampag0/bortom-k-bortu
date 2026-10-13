@@ -21,6 +21,18 @@ VOLLEY_DEFAULTS = {
     "volleyModes": [],
 }
 
+# Rule numbers of version 0.3 that data3.py keeps in code (sim.py Cfg and the rules text).
+RULES = {
+    "hand": 5,
+    "maxRounds": 30,
+    "maxFires": 3,
+    "sellGain": 1,
+    "regroupCost": 1,
+    "jointBonus": 1,
+    "firstGameSecondStart": 3,
+    "paidChargeMax": 3,
+}
+
 
 def load_source():
     spec = importlib.util.spec_from_file_location("data3", SRC)
@@ -58,6 +70,7 @@ def main():
     data = {
         "version": "0.3",
         "econ": dict(d.ECON),
+        "rules": dict(RULES),
         "ships": [ship(s) for s in d.SHIPS],
         "decks": {code: [card(c, n) for c, n in cards] for code, cards in d.DECKS.items()},
         "legends": {code: card(c) for code, c in d.LEGENDS.items()},
