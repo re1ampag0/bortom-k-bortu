@@ -1715,6 +1715,20 @@ button {
   z-index: 15;
   pointer-events: none;
 }
+.show-effect {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(42, 36, 29, 0.9);
+  color: #fffaf0;
+  font-weight: 800;
+  animation: show-effect-in 0.6s ease-out both;
+}
+.show-effect-dive { background: rgba(36, 70, 92, 0.92); }
+.show-effect-surface { background: rgba(47, 125, 74, 0.92); }
+.show-effect-sink { background: rgba(163, 52, 31, 0.92); animation-duration: 1.8s; }
+.show-effect-swap { background: rgba(184, 144, 46, 0.92); }
 .show-card {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -1808,6 +1822,11 @@ button {
   overflow: hidden;
   clip: rect(0 0 0 0);
 }
+@keyframes show-effect-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(.7); }
+  25% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  to { opacity: 0; transform: translate(-50%, -65%) scale(1); }
+}
 @keyframes show-card-in {
   from {
     opacity: 0;
@@ -1858,6 +1877,7 @@ button {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .show-effect,
   .show-card,
   .show-arrow line,
   .show-projectile,

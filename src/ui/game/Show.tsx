@@ -138,6 +138,11 @@ export function ShowLayer({ data, step }: { data: GameData; step: { id: number; 
           <span className="sr-only">{cardByCode(data, s.card).name}</span>
         </div>
       )}
+      {s.k === 'effect' && boxes[s.ship] && (
+        <div className={`show-effect show-effect-${s.effect}`} data-testid="show-effect" style={{ left: boxes[s.ship].x, top: boxes[s.ship].y }}>
+          {s.label}
+        </div>
+      )}
       {s.k === 'volley' && boxes[s.shooter] && boxes[s.target] && (
         <>
           <svg className="show-arrow" data-testid="show-arrow" width="100%" height="100%" aria-hidden="true">
@@ -174,7 +179,7 @@ export function ShowLayer({ data, step }: { data: GameData; step: { id: number; 
           </div>
         </>
       )}
-      {s.floats.map((f, i) =>
+      {s.k === 'floats' && s.floats.map((f, i) =>
         boxes[f.ship] ? (
           <span key={i} className={`show-float ${f.bad ? 'bad' : ''}`} data-testid="show-float" style={{ left: boxes[f.ship].x, top: boxes[f.ship].y - 14 + 26 * countBefore(s.floats, i) }}>
             {f.text}
