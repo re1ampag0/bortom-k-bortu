@@ -145,6 +145,9 @@ async function keyStates(page: Page, name: string) {
   await shot(page, name, '6-curtain-reaction');
   await page.getByTestId('curtain-ready').click();
   await expect(page.getByTestId('reaction-panel')).toBeVisible();
+  // «Подсказки» are off by default: the incoming damage is shown, «4 → 2» on the Reactions is not.
+  await expect(page.getByTestId('reaction-panel').locator('.panel-head')).toContainText('по Корпусу');
+  await expect(page.getByTestId('reaction-panel').locator('.ro-effect').first()).not.toContainText('→');
   await expectFits(page);
   await shot(page, name, '7-reaction');
   // Four bots to the victory screen.
@@ -215,6 +218,33 @@ test.describe('«Подсказки»', () => {
       await expect(page.getByTestId('confirm-end')).toBeVisible();
     });
   }
+});
+
+test.describe('«Ход окончен» in 3 s; «4 → 2» with «Подсказки»', () => {
+  test.use({ viewport: { width: 1366, height: 660 } });
+
+  test('«Отменить» keeps the turn; otherwise the device goes to the other team', async ({ page }) => {
+    await startDuo(page, '?seed=1&speed=normal');
+    await page.locator('[data-testid="end-turn"]:visible').click();
+    if (await page.getByTestId('plans-panel').isVisible()) await page.getByTestId('no-plans').click();
+    await expect(page.getByTestId('ending')).toBeVisible();
+    await page.getByTestId('ending-cancel').click();
+    await page.waitForTimeout(3500);
+    await expect(page.getByTestId('game')).toBeVisible();
+    await expect(page.getByTestId('status')).toContainText('Ход Пиратов');
+    await page.locator('[data-testid="end-turn"]:visible').click();
+    if (await page.getByTestId('plans-panel').isVisible()) await page.getByTestId('no-plans').click();
+    await expect(page.getByTestId('curtain')).toContainText('ход Компании', { timeout: 5000 });
+  });
+
+  test('with «Подсказки» a Reaction shows «4 → 2»', async ({ page }) => {
+    await startDuo(page, '?seed=1&speed=instant&hints=1');
+    await page.getByTestId('volley-Ж').click();
+    await page.getByTestId('plate-И').click();
+    await page.getByTestId('fire').click();
+    await page.getByTestId('curtain-ready').click();
+    await expect(page.getByTestId('reaction-panel').locator('.ro-effect').first()).toContainText('→');
+  });
 });
 
 test.describe('whole games through the interface', () => {

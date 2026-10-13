@@ -202,11 +202,14 @@ export function VolleyPanel({
 export function ReactionPanel({
   s,
   data,
+  hints,
   seats,
   onAct,
 }: {
   s: GameState;
   data: GameData;
+  /** Off: no «4 → 2» on the Reactions; the incoming damage and the reasons of grey cards are always shown. */
+  hints: boolean;
   seats: string[];
   onAct: (actions: Action[]) => void;
 }) {
@@ -237,7 +240,7 @@ export function ReactionPanel({
                 {c.name}
                 {it.plan ? ' · План' : ''} <CostBadge c={c} />
               </span>
-              <b className="ro-effect">{it.label ?? '—'}</b>
+              <b className="ro-effect">{it.reason ? '—' : hints ? it.label : c.big}</b>
               <span className="ro-sub">{it.reason ?? `${powderWord(c.cost)} · ${nick(data, it.seat)}`}</span>
             </button>
           );

@@ -49,7 +49,9 @@ type Mode =
   | { k: 'confirmEnd'; text: string }
   | { k: 'plans'; seat: string }
   | { k: 'concede'; side: Side }
-  | { k: 'leave' };
+  | { k: 'leave' }
+  /** «Ход окончен» pressed: the turn passes in 3 s unless cancelled. */
+  | { k: 'ending'; action: Action };
 
 type Sheet =
   | null
@@ -84,7 +86,11 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   };
   const [openHands, setOpenHands] = useState(game.setup.openHands);
   // «Подсказки» off — «как за столом»: no damage before choosing, no green «Ход окончен», no «Залп не дан…».
-  const [hints, setHints] = useState(game.setup.hints ?? false);
+  const [hints, setHintsState] = useState(game.setup.hints ?? false);
+  const setHints = (v: boolean) => {
+    setHintsState(v);
+    storeSettings({ ...loadSettings(), hints: v });
+  };
   const humans = SIDES.filter((side) => game.setup.players[side] === 'human');
   const d = game.decider();
 
@@ -190,6 +196,14 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
       lock?.release().catch(() => {});
     };
   }, []);
+
+  useEffect(() => {
+    // «Ход окончен · Отменить»: the turn passes after 3 s.
+    if (mode.k !== 'ending') return;
+    const t = setTimeout(() => act(mode.action), 3000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   useEffect(() => {
     if (!flash) return;
@@ -307,8 +321,10 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
       setMode({ k: 'plans', seat: pearl.code });
       return;
     }
-    act({ type: 'endTurn', side: bottom });
+    finishTurn({ type: 'endTurn', side: bottom });
   };
+  /** The turn passes in 3 s with «Отменить» (docs/TZ.md, «Детали», п. 10); at the test speed — at once. */
+  const finishTurn = (action: Action) => (speed === 'instant' ? act(action) : setMode({ k: 'ending', action }));
 
   // ——— Planks ———
   const columns = (side: Side) => {
@@ -393,7 +409,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   const cancel = () => setMode({ k: 'idle' });
   if (s.winner) dock = null;
   else if (myDecision && d!.kind === 'reactions') {
-    dock = <ReactionPanel s={s} data={data} seats={d!.seats} onAct={(a) => act(a)} />;
+    dock = <ReactionPanel s={s} data={data} hints={hints} seats={d!.seats} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'jack') {
     dock = <JackPanel s={s} data={data} ship={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'tortuga') {
@@ -421,8 +437,20 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
       );
     } else if (mode.k === 'confirmEnd') {
       dock = <ConfirmPanel title={mode.text} yes="Закончить ход" no="Вернуться" onYes={() => endFlow('confirmed')} onNo={cancel} testid="confirm-end" />;
+    } else if (mode.k === 'ending') {
+      dock = (
+        <section className="panel ending" data-testid="ending">
+          <div className="panel-head">
+            <b>Ход окончен</b>
+            <span className="panel-sub">ход перейдёт к {SIDE_LABEL[other(bottom)].dat} через 3 с</span>
+            <button className="btn" data-testid="ending-cancel" onClick={cancel}>
+              Отменить
+            </button>
+          </div>
+        </section>
+      );
     } else if (mode.k === 'plans') {
-      dock = <PlansPanel s={s} data={data} seat={mode.seat} onDone={(plans) => act({ type: 'endTurn', side: bottom, plans })} onCancel={cancel} />;
+      dock = <PlansPanel s={s} data={data} seat={mode.seat} onDone={(plans) => finishTurn({ type: 'endTurn', side: bottom, plans })} onCancel={cancel} />;
     }
   }
   if (mode.k === 'concede') {
