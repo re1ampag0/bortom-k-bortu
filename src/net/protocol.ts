@@ -1,6 +1,7 @@
 // Messages between the browser and the game server (docs/TZ.md, «Мультиплеер»). JSON over a WebSocket at /ws.
 // Shared by the client (src/net/ws.ts) and the server (server/); no Node or browser API here.
 import type { LogLine } from '../engine/log';
+import type { SideTotals } from '../engine/match';
 import type { Action, GameEvent, GameState, Variant } from '../engine/state';
 import type { Side } from '../engine/types';
 
@@ -52,6 +53,7 @@ export interface RoomInfo {
   code: string;
   phase: Phase;
   creator: string;
+  creatorOnline: boolean;
   settings: RoomSettings;
   seats: Record<Seat, SeatInfo>;
   /** Names of the players without a seat. */
@@ -84,6 +86,8 @@ export interface GameInfo {
   ready: Seat[];
   /** Seats whose players voted «Сдаться». */
   concede: Seat[];
+  /** Damage and Powder of each team, when the game is over. */
+  totals: Record<Side, SideTotals> | null;
 }
 
 export type ClientMsg = { id?: number } & (

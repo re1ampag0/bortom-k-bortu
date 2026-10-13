@@ -52,7 +52,9 @@ jobs:
         if: always()
         with:
           name: e2e-screenshots
-          path: docs/screenshots/stage7
+          path: |
+            docs/screenshots/stage7
+            docs/screenshots/stage8
 
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

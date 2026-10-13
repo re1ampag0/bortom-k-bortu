@@ -4,6 +4,7 @@ import { botAnswer, botTurn, newBotMemory, type BotMemory } from '../src/engine/
 import { applyAction, createGame, type GameOptions } from '../src/engine/engine';
 import { decider } from '../src/engine/hints';
 import { describe, rewind, type LogLine } from '../src/engine/log';
+import { matchTotals, type SideTotals } from '../src/engine/match';
 import { ABILITY, RuleError, hasAbility, seatsOf, type Action, type GameEvent, type GameState } from '../src/engine/state';
 import type { GameData, Side } from '../src/engine/types';
 import { HIDDEN, eventsFor, viewFor, type Viewer } from '../src/engine/view';
@@ -53,6 +54,7 @@ export class Table {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private windowDeadline: { key: number; at: number } | null = null;
   private disposed = false;
+  private totals: Record<Side, SideTotals> | null = null;
 
   constructor(
     readonly data: GameData,
@@ -125,6 +127,7 @@ export class Table {
       bots: [...this.bots],
       ready: [...this.ready],
       concede: [...this.concede],
+      totals: this.state.winner ? (this.totals ??= matchTotals(this.data, { game: { ...this.options, pauseEmptyWindows: true }, players: { ПИРАТЫ: 'human', КОМПАНИЯ: 'human' }, openHands: false }, this.actions)) : null,
     };
   }
 
