@@ -16,6 +16,8 @@ export interface Fx {
   n?: number;
   counter?: [Track, number | 'guns'];
   counter2?: [Track, number | 'guns'];
+  /** «Морская пехота»: what the boarding ship loses when its boarding is beaten off. */
+  boarding?: [Track, number | 'guns'];
   plan?: Fx;
   fire?: number;
   if_fire?: number;

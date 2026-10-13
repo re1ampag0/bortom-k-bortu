@@ -8,6 +8,7 @@ import {
   cardByCode,
   getShip,
   hasAbility,
+  planFx,
   pushSteps,
   seaKey,
   shipData,
@@ -30,6 +31,11 @@ export interface VolleyOrder {
   chargeFrom?: string;
   paid?: number;
   heart?: boolean;
+  /**
+   * An extra Volley given by a card («Зомби у пушек», «Всплытие»): no Powder, no Charge (10.2), not counted
+   * against the ship's Volleys; `bonus` is added damage, such a Volley with a bonus has no Reactions.
+   */
+  free?: { card: string; bonus: number; noReact: boolean };
 }
 
 /** Steps of one Volley (or one part of «Залп с обоих бортов») after it is declared. */
@@ -49,7 +55,11 @@ export function volley(ctx: Ctx, order: VolleyOrder): void {
   if (shooter.sunk) throw new RuleError(`${name} утонул и не стреляет`);
   if (shooter.submerged) throw new RuleError(`${name} под водой и не стреляет`);
   if (s.turn.dived.includes(shooter.code)) throw new RuleError(`${name} ушёл под воду вместо Залпа`);
-  if (order.heart) {
+  // «Право на переговоры» forbids every Volley, extra ones too (18.15, Q15).
+  if (shooter.parley) throw new RuleError(`${name} не может давать Залпы: «Право на переговоры»`);
+  if (order.free) {
+    if (order.charge) throw new RuleError('На дополнительный Залп от карты Заряд не играют');
+  } else if (order.heart) {
     // «Сердце Дейви Джонса»: the ally orders one more Volley, once a turn (14.6).
     const commander = teamShips(s, shooter.side).find((x) => x.code !== shooter.code && hasAbility(data, x, ABILITY.heart));
     if (!commander) throw new RuleError('Дополнительный Залп по «Сердцу Дейви Джонса» отдаёт «Индевор» на плаву');
@@ -72,7 +82,7 @@ export function volley(ctx: Ctx, order: VolleyOrder): void {
     fromPlan = found.fromPlan;
     chargeList = found.list;
     // The «План:» bonus works only for a card played from a Plan (9.5).
-    fx = fromPlan && card.fx.plan ? { ...card.fx, ...card.fx.plan } : card.fx;
+    fx = planFx(card.fx, fromPlan);
   }
 
   const targets = volleyTargets(ctx, shooter, order.target, fx);
@@ -83,7 +93,8 @@ export function volley(ctx: Ctx, order: VolleyOrder): void {
       throw new RuleError(`Доплатить можно от 0 до ${data.rules.paidChargeMax} Пороха`);
     }
   }
-  const need = params.volleyCost + (order.charge ? cardByCode(data, order.charge).cost : 0) + paid;
+  const volleyCost = order.free ? 0 : params.volleyCost;
+  const need = volleyCost + (order.charge ? cardByCode(data, order.charge).cost : 0) + paid;
   if (s.teams[shooter.side].powder < need) {
     throw new RuleError(`Не хватает Пороха: нужно ${need}, в Трюме ${s.teams[shooter.side].powder}`);
   }
@@ -94,12 +105,13 @@ export function volley(ctx: Ctx, order: VolleyOrder): void {
     ctx.events.push({ type: 'heart', ship: shooter.code });
     dealDamage(ctx, shooter.code, 'crew', data.rules.heartCrewLoss);
     if (shooter.sunk) return;
-  } else {
+  } else if (!order.free) {
     s.turn.volleys[shooter.code]++;
   }
-  pay(ctx, shooter.side, params.volleyCost, 'volley');
+  pay(ctx, shooter.side, volleyCost, 'volley');
+  let voodoo: Step[] = [];
   if (order.charge && chargeFrom && chargeList) {
-    useCardPlay(ctx, chargeFrom, shooter.code);
+    voodoo = useCardPlay(ctx, chargeFrom, shooter.code);
     payCardCost(ctx, order.charge, shooter);
     takeCard(chargeList, order.charge, 'Этой карты нет на руке');
     discard(ctx, order.charge);
@@ -132,14 +144,18 @@ export function volley(ctx: Ctx, order: VolleyOrder): void {
     ifDamaged: false,
     adjust: [],
     track: fx.track ?? params.defaultTrack,
-    noReact: !!fx.no_react || surfaced > 0,
+    noReact: !!fx.no_react || surfaced > 0 || !!order.free?.noReact,
     cancelled: false,
     crewCancelled: false,
     heart: !!order.heart,
+    bonus: 0,
+    mark: 0,
+    lineNoDiag: false,
+    extra: order.free?.bonus ? { what: cardByCode(data, order.free.card).name, n: order.free.bonus } : null,
   };
   s.volley = v;
   aim(ctx, v, targets[0]);
-  pushSteps(s, ...VOLLEY_STEPS);
+  pushSteps(s, ...voodoo, ...VOLLEY_STEPS);
 }
 
 /**
@@ -169,6 +185,9 @@ function aim(ctx: Ctx, v: VolleyState, code: string): void {
   v.target = code;
   v.diagonal = shooter.pos !== target.pos;
   v.seaNoDiag = key === 'maelstrom';
+  v.lineNoDiag = s.turn.noDiag;
+  v.bonus = s.turn.volleyBonus;
+  v.mark = s.turn.marks[code] ?? 0;
   v.storm = key === 'storm' ? data.rules.seaStorm : 0;
   v.clear = key === 'clear' && !v.diagonal ? data.rules.seaClear : 0;
   v.ifFire = target.fires > 0;
@@ -209,7 +228,7 @@ export function volleyTerms(ctx: Ctx, v: VolleyState): Term[] {
   const name = v.charge ? cardByCode(data, v.charge).name : '';
   const terms: Term[] = [{ what: 'Пушки', n: v.guns }];
   // Both sides of «Залп с обоих бортов» ignore the diagonal (18.11); some cards and «Мальстрём» remove the penalty (10.6).
-  if (v.diagonal && !v.both && !fx.no_diag && !v.seaNoDiag) {
+  if (v.diagonal && !v.both && !fx.no_diag && !v.seaNoDiag && !v.lineNoDiag) {
     const n = 'fixed' in params.diagDamage ? params.diagDamage.fixed - v.guns : params.diagDamage.offset;
     terms.push({ what: 'диагональ', n });
   }
@@ -221,6 +240,9 @@ export function volleyTerms(ctx: Ctx, v: VolleyState): Term[] {
   if (v.storm) terms.push({ what: 'Буря', n: -v.storm });
   if (v.clear) terms.push({ what: 'Ясное небо', n: v.clear });
   if (v.surfaced) terms.push({ what: 'всплытие', n: v.surfaced });
+  if (v.extra) terms.push(v.extra);
+  if (v.bonus) terms.push({ what: 'Поднять флаги!', n: v.bonus });
+  if (v.mark) terms.push({ what: 'Чёрная метка', n: v.mark });
   terms.push(...v.reduceAll, ...v.adjust);
   return terms;
 }

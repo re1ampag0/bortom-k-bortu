@@ -141,7 +141,13 @@ export function endTurn(ctx: Ctx, side: Side, plans: string[] = []): void {
     pearl.plans.push(...plans);
     ctx.events.push({ type: 'planned', seat: pearl.code, count: plans.length });
   }
-  for (const ship of teamShips(s, side)) ship.surfaced = false;
+  for (const ship of teamShips(s, side)) {
+    ship.surfaced = false;
+    // «Блокада», «Право на переговоры», «Кукла вуду» last until the end of the ship's next turn (18.10, 18.15, Q44).
+    ship.blockaded = false;
+    ship.parley = false;
+    ship.voodoo = null;
+  }
   ctx.events.push({ type: 'turnEnded', side });
   pushSteps(s, side === 'ПИРАТЫ' ? { k: 'startTurn', side: 'КОМПАНИЯ' } : { k: 'startRound' });
 }
@@ -165,22 +171,25 @@ export function discard(ctx: Ctx, card: string): void {
 
 /**
  * Uses one card play of `seat` for ship `forShip`: the ship's Crew limit, or the captain's one extra card
- * on the ally's board (RULES.md 7.1, 17.3).
+ * on the ally's board (RULES.md 7.1, 17.3). Returns the steps the play causes: under «Кукла вуду» the ship
+ * loses 1 Crew for each card played for it, before the card acts (Q44). The caller queues them first.
  */
-export function useCardPlay(ctx: Ctx, seat: string, forShip: string): void {
+export function useCardPlay(ctx: Ctx, seat: string, forShip: string): Step[] {
   const { turn } = ctx.s;
   if (seat === forShip) {
     if (turn.played[forShip] >= turn.limit[forShip]) {
       throw new RuleError(`${shipName(ctx.data, forShip)} уже разыграл ${turn.limit[forShip]} карт(ы) — это лимит Команды`);
     }
     turn.played[forShip]++;
-    return;
+  } else {
+    if (!isCaptain(ctx.s, seat) || allyOf(ctx.s, seat).code !== forShip) {
+      throw new RuleError('Играть карты за чужой корабль может только капитан утонувшего корабля');
+    }
+    if (turn.captainPlayed.includes(seat)) throw new RuleError('Капитан уже разыграл свою карту в этот ход');
+    turn.captainPlayed.push(seat);
   }
-  if (!isCaptain(ctx.s, seat) || allyOf(ctx.s, seat).code !== forShip) {
-    throw new RuleError('Играть карты за чужой корабль может только капитан утонувшего корабля');
-  }
-  if (turn.captainPlayed.includes(seat)) throw new RuleError('Капитан уже разыграл свою карту в этот ход');
-  turn.captainPlayed.push(seat);
+  const ship = getShip(ctx.s, forShip);
+  return ship.voodoo ? [{ k: 'damage', ship: forShip, track: 'crew', n: 1, src: ship.voodoo }] : [];
 }
 
 /**
@@ -213,21 +222,6 @@ export function findCard(ctx: Ctx, seat: string, card: string): { list: string[]
   throw new RuleError('Этой карты нет на руке');
 }
 
-/** Plays an Order or Repair from the hand or a Plan (7.4). Card effects (fx) come in stage 5. */
-export function playCard(ctx: Ctx, seat: string, card: string): void {
-  requireSeat(ctx, seat);
-  const { list } = findCard(ctx, seat, card);
-  const c = cardByCode(ctx.data, card);
-  if (c.type === 'ЗАРЯД') throw new RuleError('Заряд играется только вместе с Залпом своего корабля');
-  if (c.type === 'РЕАКЦИЯ') throw new RuleError('Реакцию можно сыграть только в ход противника');
-  const ship = seatShip(ctx.s, seat)!;
-  useCardPlay(ctx, seat, ship.code);
-  payCardCost(ctx, card, ship);
-  takeCard(list, card, 'Этой карты нет на руке');
-  ctx.events.push({ type: 'cardPlayed', seat, ship: ship.code, card });
-  discard(ctx, card);
-}
-
 /** Sell a card: once a turn per seat, +1 Powder (RULES.md 8.1). */
 export function sell(ctx: Ctx, seat: string, card: string): void {
   const holder = requireSeat(ctx, seat);
@@ -258,17 +252,26 @@ export function passCard(ctx: Ctx, seat: string, card: string): void {
 export function regroup(ctx: Ctx, side: Side): void {
   requireActive(ctx, side);
   const { s, data } = ctx;
-  if (s.turn.regrouped) throw new RuleError('Перестроение — один раз за ход');
+  const refusal = regroupRefusal(ctx, side);
+  if (refusal) throw new RuleError(refusal);
   const ships = aliveShips(s, side);
-  if (ships.some((x) => x.tracks.sails === 0)) throw new RuleError('Перестроение невозможно: у корабля Паруса 0');
-  if (seaKey(ctx) === 'calm') throw new RuleError('Штиль: корабли не меняются местами');
-  if (ships.some((x) => x.blockaded)) throw new RuleError('Корабль под «Блокадой» не меняется местами');
   const free =
     seaKey(ctx) === 'wind' || teamShips(s, side).some((x) => hasAbility(data, x, ABILITY.fasterThanWind));
   if (!free) pay(ctx, side, data.rules.regroupCost, 'regroup');
   s.turn.regrouped = true;
   ctx.events.push({ type: 'regrouped', side, ships: ships.map((x) => x.code) });
   swapPlaces(ctx, side, 'regroup');
+}
+
+/** Why the team cannot regroup now, or null (RULES.md 8.3, 16, 18.10, 18.16). */
+export function regroupRefusal(ctx: Ctx, side: Side): string | null {
+  const { s } = ctx;
+  if (s.turn.regrouped) return 'Перестроение — один раз за ход';
+  const ships = aliveShips(s, side);
+  if (ships.some((x) => x.tracks.sails === 0)) return 'Перестроение невозможно: у корабля Паруса 0';
+  if (seaKey(ctx) === 'calm') return 'Штиль: корабли не меняются местами';
+  if (ships.some((x) => x.blockaded)) return 'Корабль под «Блокадой» не меняется местами';
+  return null;
 }
 
 /** Put out a Fire on your own ship by discarding a card, any number of times (RULES.md 8.4). */

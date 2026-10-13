@@ -78,7 +78,7 @@ describe('playing cards', () => {
     const s = atCompany();
     const [card] = setHand(s, 'И', ['Сделка с Сяо Фэном']);
     const before = s.teams['КОМПАНИЯ'].powder;
-    const after = act(s, { type: 'playCard', seat: 'И', card }).state;
+    const after = act(s, { type: 'playCard', seat: 'И', card, target: 'Ж' }).state;
     expect(after.teams['КОМПАНИЯ'].powder).toBe(before - 2);
   });
 
@@ -95,16 +95,17 @@ describe('playing cards', () => {
     const s = atCompany();
     const [card] = setHand(s, 'Г', ['Сто лет службы']);
     expect(s.ships['Г'].souls).toBe(1);
-    expect(() => act(s, { type: 'playCard', seat: 'Г', card })).toThrow('Не хватает Душ');
+    expect(() => act(s, { type: 'playCard', seat: 'Г', card, target: 'Ж' })).toThrow('Не хватает Душ');
     s.ships['Г'].souls = 3;
-    expect(act(s, { type: 'playCard', seat: 'Г', card }).state.ships['Г'].souls).toBe(1);
+    // 3 − 2, and 1 Soul back for the Crew damage the card deals (14.7).
+    expect(act(s, { type: 'playCard', seat: 'Г', card, target: 'Ж' }).state.ships['Г'].souls).toBe(2);
   });
 
   it('another Company ship pays Souls with the Dutchman’s Souls too (6.3, Q39)', () => {
     const s = atCompany();
     const card = give(s, 'И', 'Сто лет службы', 'Г');
     s.ships['Г'].souls = 2;
-    const r = act(s, { type: 'playCard', seat: 'И', card });
+    const r = act(s, { type: 'playCard', seat: 'И', card, target: 'Ж' });
     expect(r.state.ships['Г'].souls).toBe(0);
     expect(r.state.turn.played).toMatchObject({ И: 1, Г: 0 });
     expect(r.events).toContainEqual({ type: 'soulsSpent', ship: 'Г', amount: 2 });
@@ -144,6 +145,7 @@ describe('playing cards', () => {
   it('a Repair is played in your own turn and counts toward the limit (9.1)', () => {
     const s = atCompany();
     const [card] = setHand(s, 'И', ['Плотник']);
+    s.ships['И'].tracks.hull -= 2;
     expect(act(s, { type: 'playCard', seat: 'И', card }).state.turn.played['И']).toBe(1);
   });
 
@@ -174,7 +176,7 @@ describe('captain of a sunk ship (17.3)', () => {
     const [captain, second] = setHand(s, 'И', ['Выгодная сделка', 'Каперский патент']);
     const after = run(
       s,
-      ...own.map((card) => ({ type: 'playCard' as const, seat: 'Г', card })),
+      ...own.map((card) => ({ type: 'playCard' as const, seat: 'Г', card, target: 'Ж' })),
       { type: 'playCard', seat: 'И', card: captain },
     );
     expect(after.turn.played['Г']).toBe(3);

@@ -398,12 +398,8 @@
         "fx": {
           "ops": [
             [
-              "draw",
-              1
-            ],
-            [
-              "draw_to_plan",
-              1
+              "compass",
+              3
             ]
           ]
         },
@@ -508,6 +504,10 @@
         "v": 2.8,
         "fx": {
           "ops": [
+            [
+              "sea_look",
+              3
+            ],
             [
               "draw",
               2
@@ -643,7 +643,16 @@
               "sails",
               2
             ]
-          ]
+          ],
+          "plan": {
+            "ops": [
+              [
+                "repair_track",
+                "hull",
+                1
+              ]
+            ]
+          }
         },
         "legend": false,
         "tags": [],
@@ -1323,6 +1332,9 @@
         "fx": {
           "ops": [
             [
+              "regroup_free"
+            ],
+            [
               "no_diag_turn"
             ]
           ]
@@ -1572,7 +1584,11 @@
         "v": 1.8,
         "fx": {
           "r": "cancel_crew",
-          "cards": true
+          "cards": true,
+          "boarding": [
+            "crew",
+            1
+          ]
         },
         "legend": false,
         "tags": [],
@@ -1778,7 +1794,7 @@
               2
             ],
             [
-              "repair_track",
+              "repair_named",
               "crew",
               2
             ]

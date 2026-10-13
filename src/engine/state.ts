@@ -48,8 +48,12 @@ export interface ShipState {
   lastDive: number | null;
   /** Surfaced this turn: the first Volley gets +1 and no Reactions (14.8). */
   surfaced: boolean;
-  /** Under «Блокада»: the ship does not change places at all (RULES.md 18.10, Q20). Set by the card in stage 5. */
+  /** Under «Блокада» until the end of its next turn: no Repair, no change of places (RULES.md 18.10, Q20, Q21). */
   blockaded: boolean;
+  /** «Право на переговоры»: no Volleys in its next turn (18.15). */
+  parley: boolean;
+  /** «Кукла вуду»: the ship that played it; in its next turn the ship loses 1 Crew for each card played (Q44). */
+  voodoo: string | null;
 }
 
 export interface TeamState {
@@ -77,9 +81,9 @@ export interface TurnState {
   reactions: Record<string, number>;
   /** Captains of sunk ships that already played their Reaction for the ally (17.3). */
   captainReacted: string[];
-  /** Ships that may not play Reactions this turn («Ужас Карибского моря», stage 5). */
+  /** Ships that may not play Reactions this turn («Ужас Карибского моря»). */
   noReact: string[];
-  /** The defending team may not play Reactions this turn («Подкуп», stage 5). */
+  /** The defending team may not play Reactions this turn («Подкуп»). */
   noReactTeam: boolean;
   /** «Водоворот»: every Volley this turn deals less (one term per card played). */
   reduceAll: Term[];
@@ -89,6 +93,12 @@ export interface TurnState {
   heartUsed: boolean;
   /** Ships that dived instead of their Volley this turn. */
   dived: string[];
+  /** «Поднять флаги!»: extra damage of the team's Volleys this turn. */
+  volleyBonus: number;
+  /** «Строй линии»: the team's Volleys have no diagonal penalty this turn. */
+  noDiag: boolean;
+  /** «Чёрная метка»: extra damage of each Volley at the ship this turn. */
+  marks: Record<string, number>;
 }
 
 /** One addend of a Volley's damage, e.g. { what: 'Пушки', n: 3 }. */
@@ -131,21 +141,57 @@ export interface VolleyState {
   cancelled: boolean;
   crewCancelled: boolean;
   heart: boolean;
+  /** «Поднять флаги!» and «Чёрная метка», fixed when the Volley is declared (18.1). */
+  bonus: number;
+  mark: number;
+  /** «Строй линии»: no diagonal penalty. */
+  lineNoDiag: boolean;
+  /** The bonus of an extra Volley given by a card («Всплытие»). */
+  extra: Term | null;
 }
 
-/** A card against a team being resolved; in stage 4 — a Legend (RULES.md 9.7, 12.2). */
+/** Choices a player makes when playing an Order or a Repair. */
+export interface CardParams {
+  /** An enemy ship, or an enemy seat for cards that take from a player («Обезьянка Джек», «Шпион Мерсер», «Игра в кости лжеца»). */
+  target?: string;
+  /** Own ship or the ally's: «Живые снасти», «Фонтан молодости», «Подкрепление флота». */
+  ship?: string;
+  /** How to split «N клеток на любых шкалах». Without it the cells go to the tracks in the order Пушки, Корпус, Команда, Паруса. */
+  repair?: Partial<Record<Track, number>>;
+  /** «Сердце бьётся»: Souls to spend. */
+  souls?: number;
+  /** «Строй линии»: make the free Regroup (Q46). */
+  regroup?: boolean;
+}
+
+/** An Order, a Repair or a Legend being resolved (RULES.md 9.7, 12.2). */
 export interface CardResolution {
   card: string;
   seat: string;
   /** The ship the card is played for. */
   ship: string;
-  /** Ships the card chose. */
+  /** Ships (seats) the card chose or affects, for Reactions against it. */
   targets: string[];
+  /** The ship or seat the card chose; for «Только по кораблю напротив» — the ship opposite. */
+  target: string | null;
   /** The card deals damage to the Crew. */
   crew: boolean;
   cancelled: boolean;
   crewCancelled: boolean;
+  /** The card goes from the table: a Legend leaves the game (15.1). */
+  legend: boolean;
+  fromPlan: boolean;
+  params: CardParams;
+  /** «Ловкость рук»: after the card is played it goes to this seat's hand (18.4). */
+  stolenBy: string | null;
 }
+
+/**
+ * What a player chooses after a card has shown something: «Компас Джека» (a card to the hand, a card to a Plan),
+ * «Безумный план» (a card to a Plan), «Анжелика» (a card to the ally), «Шпион Мерсер» (an enemy Reaction),
+ * «Тиа Дальма» (the order of the sea cards), «Колокол» (each enemy discards), «Игра в кости лжеца» (both pick a card).
+ */
+export type ChoiceWhat = 'compass' | 'toPlan' | 'pass' | 'spy' | 'tia' | 'bell' | 'dice';
 
 export type ReactionWindow = 'before' | 'after';
 
@@ -153,7 +199,19 @@ export type ReactionWindow = 'before' | 'after';
 export type Pending =
   | { kind: 'reactions'; window: ReactionWindow; subject: 'volley' | 'card'; side: Side; waiting: string[] }
   | { kind: 'jack'; ship: string }
-  | { kind: 'tortuga'; waiting: Side[] };
+  | { kind: 'tortuga'; waiting: Side[] }
+  | {
+      kind: 'choice';
+      what: ChoiceWhat;
+      /** The seat that played the card. */
+      seat: string;
+      /** Seats that still have to choose. */
+      waiting: string[];
+      /** Cards to choose from when they are not in the chooser's hand (top of a deck, the enemy's Reactions). */
+      options: string[];
+      /** «Игра в кости лжеца»: the cards picked so far, secret until both have picked. */
+      picks: Record<string, string>;
+    };
 
 export type SwapReason = 'regroup' | 'sword' | 'jack' | 'current' | 'maelstrom';
 
@@ -180,6 +238,7 @@ type StepKind =
   | { k: 'volleyFire' }
   | { k: 'volleyEnd' }
   | { k: 'cardEffect' }
+  | { k: 'cardOp'; i: number }
   | { k: 'cardEnd' };
 
 export interface SeaState {
@@ -221,7 +280,9 @@ export type Action =
       /** The extra Volley of the Flying Dutchman by «Сердце Дейви Джонса» (RULES.md 14.6). */
       heart?: boolean;
     }
-  | { type: 'playCard'; seat: string; card: string }
+  | ({ type: 'playCard'; seat: string; card: string } & CardParams)
+  /** An answer to a `choice` decision; see ChoiceWhat for what the cards mean. */
+  | { type: 'choose'; seat: string; cards: string[] }
   | { type: 'playLegend'; seat: string; target?: string }
   | { type: 'sell'; seat: string; card: string }
   | { type: 'pass'; seat: string; card: string }
@@ -239,7 +300,7 @@ export type Action =
   /** «Тортуга»: how many cards each seat of the team takes (RULES.md 16.2). */
   | { type: 'tortuga'; side: Side; draws: Record<string, number> };
 
-export type PowderReason = 'hold' | 'sell' | 'sea';
+export type PowderReason = 'hold' | 'sell' | 'sea' | 'card';
 export type SpendReason = 'volley' | 'card' | 'regroup' | 'reaction' | 'ability' | 'sea';
 
 export type GameEvent =
@@ -293,6 +354,15 @@ export type GameEvent =
   | { type: 'seaEffect'; key: string }
   | { type: 'powderLost'; side: Side; amount: number }
   | { type: 'restored'; ship: string; track: Track; amount: number }
+  | { type: 'cardResolved'; card: string; to: 'discard' | 'stolen' | 'gone'; seat: string | null }
+  | { type: 'stolen'; seat: string; from: string; card: string }
+  | { type: 'discarded'; seat: string; card: string }
+  | { type: 'shown'; seat: string; to: string }
+  | { type: 'seaLooked'; seat: string }
+  | { type: 'dice'; cards: Record<string, string>; winner: string | null }
+  | { type: 'flagSet'; ship: string; flag: 'parley' | 'voodoo' | 'blockade' | 'mark' | 'noReact' }
+  | { type: 'turnFlag'; side: Side; flag: 'volleyBonus' | 'noDiag' | 'noReactTeam'; n: number }
+  | { type: 'limitRaised'; ship: string; n: number }
   | { type: 'gameOver'; winner: Winner; reason: 'sunk' | 'rounds' };
 
 /** A move the rules forbid. The message is shown to the player. */
@@ -418,6 +488,9 @@ export function newTurn(): TurnState {
     treasuryUsed: false,
     heartUsed: false,
     dived: [],
+    volleyBonus: 0,
+    noDiag: false,
+    marks: {},
   };
 }
 
@@ -441,6 +514,26 @@ export function seaKey(ctx: Ctx): string | null {
 export function requirePending<K extends Pending['kind']>(s: GameState, kind: K): Extract<Pending, { kind: K }> {
   if (s.pending?.kind !== kind) throw new RuleError('Сейчас нечего решать');
   return s.pending as Extract<Pending, { kind: K }>;
+}
+
+/**
+ * The ship a card names («Залп по «Жемчужине»», «„Месть" даёт Залп», «Голландец»): the named ship while it is afloat;
+ * when it sank — the ship the card is played for, where the captain is (Q7, Q43). A card that names an enemy ship
+ * (stolen by «Ловкость рук» or «Обезьянка Джек») means the ship that plays it (Q43).
+ */
+export function namedShip(ctx: Ctx, card: string, ship: string): string {
+  const named = ctx.s.ships[cardByCode(ctx.data, card).deck];
+  if (!named || named.side !== getShip(ctx.s, ship).side || named.sunk) return ship;
+  return named.code;
+}
+
+/** The card's fx with its «План:» bonus when it is played from a Plan (9.5): numbers are replaced, ops are added. */
+export function planFx(fx: Fx, fromPlan: boolean): Fx {
+  if (!fromPlan || !fx.plan) return fx;
+  const { plan, ...rest } = fx;
+  const out: Fx = { ...rest, ...plan };
+  if (fx.ops || plan.ops) out.ops = [...(fx.ops ?? []), ...(plan.ops ?? [])];
+  return out;
 }
 
 /** Removes a card from a list or throws a RuleError with the given message. */
