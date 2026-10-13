@@ -9,9 +9,11 @@ export type Speed = 'slow' | 'normal' | 'fast' | 'instant';
 
 export interface Settings {
   speed: Speed;
+  /** The last choice of «Подсказки»; null — not chosen yet (off, on for «Первая партия»). */
+  hints: boolean | null;
 }
 
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal' };
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', hints: null };
 
 function read(key: string): string | null {
   try {

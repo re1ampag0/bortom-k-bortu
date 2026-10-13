@@ -251,7 +251,7 @@ export function SettingsSheet({
       </label>
       <label className="row check">
         <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
-        целях, зелёный «Ход окончен», «Залп не дан…»)
+        целях, «4 → 2» у Реакций, зелёный «Ход окончен», «Залп не дан…»)
       </label>
       <div className="row buttons">
         <button className="btn" onClick={onDownloadLog}>

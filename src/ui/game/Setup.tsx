@@ -39,11 +39,18 @@ export function Setup({
   const [more, setMore] = useState(false);
   const [players, setPlayers] = useState<Record<Side, Controller>>({ ПИРАТЫ: 'human', КОМПАНИЯ: 'bot' });
   const [variant, setVariant] = useState<Variant>('standard');
-  const [sea, setSea] = useState(true);
+  // «Подсказки»: off by default (as at the table), on for «Первая партия»; the choice is remembered in the browser.
+  // «?hints=1» / «?hints=0» in the address overrides it (for tests).
+  const urlHints = new URLSearchParams(location.search).get('hints');
+  const [hintsChoice, setHintsChoice] = useState<boolean | null>(() => (urlHints === null ? loadSettings().hints : urlHints === '1'));
+  const hints = hintsChoice ?? variant === 'first';
+  const setHints = (v: boolean) => {
+    setHintsChoice(v);
+    storeSettings({ ...loadSettings(), hints: v });
+  };  const [sea, setSea] = useState(true);
   const [legends, setLegends] = useState(true);
   const [openHands, setOpenHands] = useState(false);
-  // «Подсказки» are off by default (as at the table); «?hints=1» in the address turns them on (for tests).
-  const [hints, setHints] = useState(() => new URLSearchParams(location.search).get('hints') === '1');
+
   // «?seed=N» in the address fixes the seed of the quick starts too (for tests and for repeating a game).
   const [seedText, setSeedText] = useState(() => new URLSearchParams(location.search).get('seed') ?? '');
   const [speed, setSpeed] = useState<Speed>(loadSettings().speed);
@@ -155,6 +162,8 @@ export function Setup({
                 onChange={(e) => {
                   const v = e.target.value as Variant;
                   setVariant(v);
+                  // «Первая партия» turns the hints on by default; the box can turn them off.
+                  if (v === 'first') setHintsChoice(true);
                   // «Первая партия» plays without the sea and the Legends (RULES.md 20.1); the boxes can turn them back on.
                   setSea(v !== 'first');
                   setLegends(v !== 'first');
@@ -176,8 +185,8 @@ export function Setup({
               (все руки видны, без заставок)
             </label>
             <label className="row check">
-              <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон каждого
-              Заряда и на целях, зелёный «Ход окончен», «Залп не дан…»); без них — как за столом
+              <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
+              целях, «4 → 2» у Реакций, зелёный «Ход окончен», «Залп не дан…»); без них — как за столом
             </label>
             <label className="row">
               <span>Seed</span>

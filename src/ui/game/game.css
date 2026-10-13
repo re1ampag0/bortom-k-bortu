@@ -628,6 +628,27 @@ button {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
   overflow: hidden;
 }
+.panel.ending .panel-head {
+  align-items: center;
+}
+.panel.ending .btn {
+  margin-left: auto;
+}
+.panel.ending::after {
+  content: '';
+  display: block;
+  height: 4px;
+  background: var(--ink);
+  animation: ending 3s linear forwards;
+}
+@keyframes ending {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0;
+  }
+}
 .panel.reaction .panel-head {
   background: var(--red);
   color: #fff;
