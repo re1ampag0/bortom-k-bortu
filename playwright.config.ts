@@ -7,7 +7,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   reporter: [['list']],
-  use: { baseURL: 'http://localhost:4173/bortom-k-bortu/' },
+  use: { baseURL: 'http://127.0.0.1:4173/bortom-k-bortu/' },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' }, grepInvert: /@iphone/ },
     // WebKit is installed on GitHub Actions (E2E_WEBKIT=1); the cloud sessions have only Chromium.
@@ -15,8 +15,8 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'npm run build && npx vite preview --port 4173 --strictPort',
-      url: 'http://localhost:4173/bortom-k-bortu/',
+      command: 'node scripts/e2e-site.mjs',
+      url: 'http://127.0.0.1:4173/bortom-k-bortu/',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
