@@ -9,6 +9,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:server": "vite build --config vite.server.config.ts",
+    "server": "node dist-server/main.js",
+    "lan": "npm run build && npm run build:server && node dist-server/main.js --lan",
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
