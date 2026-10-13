@@ -70,3 +70,25 @@ for (const size of SIZES) {
     });
   });
 }
+
+test.describe('prefers-reduced-motion', () => {
+  test.use({ viewport: { width: 1366, height: 660 } });
+
+  test('the coin shows its side at once, the card of a move does not fly in', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('?seed=3&speed=slow');
+    await page.getByTestId('quick-bots').click();
+    await page.getByTestId('pick-coin').click();
+    await expect(page.getByTestId('coin-verdict')).toContainText('Жребий', { timeout: 300 });
+    await page.getByTestId('pick-company').click();
+    await page.getByTestId('prep-start').click();
+    await page.getByTestId('placement-done').click();
+    const shown = page.locator('[data-testid="show-card"], [data-testid="show-arrow"]').first();
+    await expect(shown).toBeVisible({ timeout: 60_000 });
+    const animation = await page.evaluate(() => {
+      const e = document.querySelector('.show-card, .show-arrow line');
+      return e ? getComputedStyle(e).animationName : 'none';
+    });
+    expect(animation).toBe('none');
+  });
+});
