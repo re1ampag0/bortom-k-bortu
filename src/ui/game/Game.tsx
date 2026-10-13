@@ -102,6 +102,11 @@ export function Game({
     setSpeedState(v);
     storeSettings({ ...loadSettings(), speed: v });
   };
+  const [sound, setSoundState] = useState(() => loadSettings().sound);
+  const setSound = (v: boolean) => {
+    setSoundState(v);
+    storeSettings({ ...loadSettings(), sound: v });
+  };
   const [openHands, setOpenHands] = useState(game.setup.openHands);
   // «Подсказки» off — «как за столом»: no damage before choosing, no green «Ход окончен», no «Залп не дан…».
   const [hintsChoice, setHintsState] = useState(net ? (loadSettings().hints ?? false) : (game.setup.hints ?? false));
@@ -887,8 +892,10 @@ export function Game({
       )}
       {sheet?.k === 'settings' && (
         <SettingsSheet
-          speed={net ? null : speed}
+          speed={speed}
           setSpeed={setSpeed}
+          sound={sound}
+          setSound={setSound}
           openHands={net ? null : openHands}
           setOpenHands={setOpenHands}
           hints={hintsAllowed ? hints : null}
