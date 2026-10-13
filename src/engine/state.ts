@@ -302,7 +302,9 @@ export type Action =
   | { type: 'noReaction'; seat: string }
   | { type: 'jack'; play: boolean }
   /** «Тортуга»: how many cards each seat of the team takes (RULES.md 16.2). */
-  | { type: 'tortuga'; side: Side; draws: Record<string, number> };
+  | { type: 'tortuga'; side: Side; draws: Record<string, number> }
+  /** The team gives up (docs/TZ.md, «Интерфейс → Детали», п. 4); allowed at any moment, also while the engine waits. */
+  | { type: 'concede'; side: Side };
 
 export type PowderReason = 'hold' | 'sell' | 'sea' | 'card';
 export type SpendReason = 'volley' | 'card' | 'regroup' | 'reaction' | 'ability' | 'sea';
@@ -368,7 +370,8 @@ export type GameEvent =
   | { type: 'flagSet'; ship: string; flag: 'parley' | 'voodoo' | 'blockade' | 'mark' | 'noReact' }
   | { type: 'turnFlag'; side: Side; flag: 'volleyBonus' | 'noDiag' | 'noReactTeam'; n: number }
   | { type: 'limitRaised'; ship: string; n: number }
-  | { type: 'gameOver'; winner: Winner; reason: 'sunk' | 'rounds' };
+  | { type: 'conceded'; side: Side }
+  | { type: 'gameOver'; winner: Winner; reason: 'sunk' | 'rounds' | 'concede' };
 
 /** A move the rules forbid. The message is shown to the player. */
 export class RuleError extends Error {

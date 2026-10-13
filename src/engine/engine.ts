@@ -8,9 +8,9 @@ import { runQueue } from './queue';
 import { noReaction, react } from './reactions';
 import { createRng } from './rng';
 import { tortuga } from './sea';
-import { RuleError, type Action, type Ctx, type GameEvent, type GameState, type Pending } from './state';
+import { RuleError, otherSide, type Action, type Ctx, type GameEvent, type GameState, type Pending } from './state';
 import { endTurn, extinguish, passCard, regroup, sell } from './turn';
-import type { GameData } from './types';
+import type { GameData, Side } from './types';
 import { volley } from './volley';
 
 export { createGame, type GameOptions } from './setup';
@@ -30,13 +30,24 @@ const WAITING_FOR: Record<Pending['kind'], string> = {
   choice: 'игрок выбирает карты',
 };
 
+/** The team gives up: the other team wins at once, whatever the engine was waiting for. */
+function concede(ctx: Ctx, side: Side): void {
+  if (side !== 'ПИРАТЫ' && side !== 'КОМПАНИЯ') throw new RuleError(`Нет команды «${side}»`);
+  const { s } = ctx;
+  s.winner = otherSide(side);
+  s.pending = null;
+  s.queue = [];
+  ctx.events.push({ type: 'conceded', side });
+  ctx.events.push({ type: 'gameOver', winner: s.winner, reason: 'concede' });
+}
+
 export function applyAction(
   state: GameState,
   action: Action,
   data: GameData,
 ): { state: GameState; events: GameEvent[] } {
   if (state.winner) throw new RuleError('Партия окончена');
-  if (state.pending && !ANSWERS[state.pending.kind].includes(action.type)) {
+  if (state.pending && action.type !== 'concede' && !ANSWERS[state.pending.kind].includes(action.type)) {
     throw new RuleError(`Ждём решения: ${WAITING_FOR[state.pending.kind]}`);
   }
   const s = structuredClone(state);
@@ -96,6 +107,9 @@ export function applyAction(
       break;
     case 'tortuga':
       tortuga(ctx, action.side, action.draws);
+      break;
+    case 'concede':
+      concede(ctx, action.side);
       break;
     default:
       throw new RuleError(`Неизвестное действие ${(action as { type: string }).type}`);
