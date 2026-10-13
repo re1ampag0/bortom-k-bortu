@@ -1,9 +1,9 @@
 // Test helpers: a game with known placement and hands. Tests may change the state directly (it is plain JSON).
 import raw from '../data/game-data.json';
-import { deckCards, legendCards, loadGameData, seaCards } from '../src/engine/data';
+import { TRACKS, deckCards, legendCards, loadGameData, seaCards } from '../src/engine/data';
 import { choiceFor } from '../src/engine/cards';
 import { applyAction, createGame, type GameOptions } from '../src/engine/engine';
-import type { Action, GameEvent, GameState } from '../src/engine/state';
+import { TRACK_MIN, type Action, type GameEvent, type GameState } from '../src/engine/state';
 import type { GameData } from '../src/engine/types';
 
 export const data = loadGameData(raw);
@@ -190,3 +190,45 @@ export function cardIn(s: GameState, seat: string, name: string): string {
 
 /** Names of the cards in a list of codes. */
 export const namesOf = (codes: string[]): string[] => codes.map(nameOf);
+
+const decks = Object.fromEntries(data.ships.map((x) => [x.code, deckCards(data, x.code).map((c) => c.code).sort()]));
+const seaAll = seaCards(data).map((c) => c.code).sort();
+
+/**
+ * Broken invariants of a state: Powder 0–8, tracks between the minimum and the start, no card lost or doubled
+ * (counted by the deck that owns it). Plain checks keep many games fast.
+ */
+export function brokenInvariants(s: GameState): string[] {
+  const out: string[] = [];
+  const check = (ok: boolean, what: string) => {
+    if (!ok) out.push(what);
+  };
+  for (const [side, team] of Object.entries(s.teams)) {
+    check(team.powder >= 0 && team.powder <= data.econ.cap, `${side}: Порох ${team.powder}`);
+  }
+  for (const ship of data.ships) {
+    const x = s.ships[ship.code];
+    for (const track of TRACKS) {
+      const v = x.tracks[track];
+      check(v >= TRACK_MIN[track] && v <= ship[track], `${ship.code} ${track} ${v}`);
+    }
+    // Hull 0 afloat only while the Pirates decide about «Джек ускользает».
+    const jack = s.pending?.kind === 'jack' && s.pending.ship === ship.code;
+    check(x.sunk === (x.tracks.hull === 0) || (jack && !x.sunk), `${ship.code}: sunk ${x.sunk}, hull ${x.tracks.hull}`);
+    check(x.plans.length <= data.rules.plansMax, `${ship.code}: Планов ${x.plans.length}`);
+    check(x.fires >= 0 && x.fires <= data.rules.maxFires, `${ship.code}: Пожаров ${x.fires}`);
+    check(x.souls >= 0 && x.souls <= (ship.souls ?? 0), `${ship.code}: Душ ${x.souls}`);
+  }
+  if (!s.pending && !s.winner) {
+    check(s.queue.length === 0 && !s.volley && !s.card, 'движок остановился, не доделав шаги');
+  }
+  const byOwner = cardsByOwner(s);
+  for (const code of Object.keys(decks)) {
+    check([...(byOwner[code] ?? [])].sort().join() === decks[code].join(), `колода ${code}: карты потеряны или повторяются`);
+  }
+  if (s.sea) {
+    const sea = [...s.sea.deck, ...s.sea.discard, ...(s.sea.current ? [s.sea.current] : [])];
+    check(sea.sort().join() === seaAll.join(), 'колода моря: карты потеряны или повторяются');
+  }
+  return out;
+}
