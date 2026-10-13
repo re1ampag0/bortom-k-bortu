@@ -208,6 +208,7 @@ export function Game({
     enabled: speed !== 'instant' && !instantUrl(),
     // A new game: the first sea card and the first turn too.
     start: (net ? net.actions : local!.actions.length) === 0 && !s.winner ? { sea: s.sea?.current ?? null, active: s.active } : null,
+    paused: !!curtainSide,
   });
   const toast = banner?.k === 'summary' ? banner.text : null;
   // The show of the enemy's and the bots' actions, one at a time; the bots wait for it.
