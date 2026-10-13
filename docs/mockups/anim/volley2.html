@@ -1,0 +1,88 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>
+@font-face{font-family:Alegreya;font-weight:800;src:url(fonts/alegreya-cyrillic-800-normal.woff2)}
+@font-face{font-family:Alegreya;font-weight:700;src:url(fonts/alegreya-cyrillic-700-normal.woff2)}
+@font-face{font-family:"Alegreya Sans";font-weight:500;src:url(fonts/alegreya-sans-cyrillic-500-normal.woff2)}
+@font-face{font-family:"Alegreya Sans";font-weight:500;src:url(fonts/alegreya-sans-latin-500-normal.woff2);unicode-range:U+0000-00FF}
+@font-face{font-family:"Alegreya Sans";font-weight:700;src:url(fonts/alegreya-sans-cyrillic-700-normal.woff2)}
+@font-face{font-family:"Alegreya Sans";font-weight:700;src:url(fonts/alegreya-sans-latin-700-normal.woff2);unicode-range:U+0000-00FF}
+body{margin:0;width:640px;height:420px;background:#F3EEE4;font-family:"Alegreya Sans";position:relative;overflow:hidden;color:#2A2521}
+.ship{position:absolute;left:250px;width:360px;background:#FBF8F1;border:1.5px solid #D9CFBF;border-radius:10px;overflow:hidden}
+.top{top:20px}.bot{top:252px}
+.sh{color:#fff;padding:6px 12px;font-family:Alegreya;font-weight:700;font-size:16px}
+.rows{padding:8px 12px;display:grid;grid-template-columns:70px 1fr 40px;gap:4px 8px;font-size:13px;align-items:center}
+.pips{display:flex;gap:2px}.pips i{width:11px;height:10px;border-radius:2px;background:#2A2521}.pips i.e{background:#E2D9CA}
+.v{text-align:right;font-weight:700}
+.hitpip{animation:hit .9s .8s both}
+.hitpip+.hitpip{animation-delay:.94s}
+@keyframes hit{0%{background:#2A2521}15%{background:#C0392B;box-shadow:0 0 0 2px #F6B4A8}60%{background:#C0392B}100%{background:#E2D9CA;box-shadow:none}}
+.target{animation:tgt 2.6s both}
+@keyframes tgt{0%,30%{box-shadow:none;transform:none}33%{transform:translate(-3px,1px)}36%{transform:translate(3px,-1px)}39%{transform:translate(-2px,0)}42%{transform:none;box-shadow:0 0 0 3px rgba(178,58,46,.35)}90%{box-shadow:0 0 0 3px rgba(178,58,46,.35)}100%{box-shadow:none}}
+.num{position:relative}
+.num .old{animation:old .01s 1s forwards}.num .new{position:absolute;right:0;opacity:0;animation:fadein .01s 1s forwards}
+@keyframes old{to{opacity:0}}@keyframes fadein{to{opacity:1}}
+.dmg{position:absolute;left:526px;top:283px;background:#B23A2E;color:#fff;font-weight:800;font-family:Alegreya;font-size:22px;padding:2px 12px;border-radius:20px;box-shadow:0 6px 14px rgba(178,58,46,.35);opacity:0;animation:pop 1.3s 1s both}
+@keyframes pop{0%{opacity:0;transform:scale(.4) translateY(10px)}20%{opacity:1;transform:scale(1.15)}35%{transform:none}80%{opacity:1;transform:translateY(-6px)}100%{opacity:0;transform:translateY(-16px)}}
+svg.path{position:absolute;inset:0;pointer-events:none}
+.trail{fill:none;stroke:#B23A2E;stroke-width:2.5;stroke-dasharray:3 7;stroke-linecap:round;opacity:0;animation:trail 2.2s .2s both}
+@keyframes trail{0%{opacity:0}10%{opacity:.9}75%{opacity:.9}100%{opacity:0}}
+.ball{offset-path:path('M430 132 C 380 180, 380 210, 430 258');offset-distance:0%;width:12px;height:12px;border-radius:50%;background:#2A2521;position:absolute;left:0;top:0;opacity:0;animation:fly .75s .4s cubic-bezier(.4,0,.6,1) both}
+@keyframes fly{0%{opacity:1;offset-distance:0%}95%{opacity:1}100%{offset-distance:100%;opacity:0}}
+.smoke{position:absolute;left:418px;top:118px;width:30px;height:30px;border-radius:50%;background:radial-gradient(#fff,#d8d2c6 60%,transparent 70%);opacity:0;animation:smoke .9s .35s both}
+@keyframes smoke{0%{opacity:0;transform:scale(.3)}20%{opacity:.9}100%{opacity:0;transform:scale(2.2) translate(8px,-6px)}}
+.boom{position:absolute;left:412px;top:240px;width:40px;height:40px;opacity:0;animation:boom .6s 1.13s both}
+@keyframes boom{0%{opacity:0;transform:scale(.2)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
+.panel{position:absolute;left:24px;top:148px;width:200px;background:#fff;border:1.5px solid #D9CFBF;border-left:5px solid #8A2E1C;border-radius:10px;padding:10px 12px;box-shadow:0 8px 20px rgba(0,0,0,.08);opacity:0;animation:panel 2.6s .25s both}
+@keyframes panel{0%{opacity:0;transform:translateX(-10px)}10%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+.panel .who{font-size:12.5px;color:#6B6157;font-weight:500}
+.panel .who b{color:#2A2521}
+.panel .big{font-family:Alegreya;font-weight:800;font-size:24px;margin:2px 0}
+.panel .f{font-size:12.5px;color:#6B6157;display:grid;grid-template-columns:1fr auto;gap:1px 8px}
+.panel .f span:nth-child(even){text-align:right;font-weight:700;color:#2A2521}
+.panel .f .neg{color:#24465C!important}
+
+.flashm{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:radial-gradient(#fff 0,#FFE08A 35%,#F2913D 60%,transparent 70%);opacity:0;animation:mz .35s both}
+@keyframes mz{0%{opacity:0;transform:scale(.3)}30%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(1.6)}}
+.puff{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:radial-gradient(rgba(255,255,255,.95),rgba(214,206,192,.7) 55%,transparent 72%);opacity:0;animation:pf 1.6s both}
+@keyframes pf{0%{opacity:0;transform:scale(.4)}15%{opacity:.95}100%{opacity:0;transform:scale(2.4) translate(-6px,-8px)}}
+.shot{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#1E1A17;box-shadow:0 -14px 0 -2px rgba(30,26,23,.25),0 -26px 0 -3px rgba(30,26,23,.12);opacity:0}
+.spl{position:absolute;width:44px;height:30px;margin:-22px 0 0 -22px;opacity:0;animation:spl .7s both}
+@keyframes spl{0%{opacity:0;transform:scale(.3)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.3) translateY(-6px)}}
+.chip{position:absolute;width:5px;height:3px;background:#7A5230;opacity:0}
+.tag{position:absolute;font-size:11px;font-weight:700;color:#24465C;background:#fff;border:1px solid #24465C;border-radius:10px;padding:0 6px;opacity:0;animation:tagf 1.2s both}
+@keyframes tagf{0%{opacity:0;transform:translateY(4px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+</style></head><body>
+<div class="ship top"><div class="sh" style="background:#8A2E1C">«Месть королевы Анны»</div>
+ <div class="rows"><span>Корпус</span><span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="v">11/11</span>
+ <span>Пушки</span><span class="pips"><i></i><i></i><i></i></span><span class="v">3/3</span></div></div>
+<div class="ship bot target"><div class="sh" style="background:#2C6658">«Летучий голландец»</div>
+ <div class="rows"><span>Корпус</span><span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="hitpip"></i><i class="hitpip"></i></span><span class="v num"><span class="old">11/11</span><span class="new">9/11</span></span>
+ <span>Пушки</span><span class="pips"><i></i><i></i></span><span class="v">2/2</span></div></div>
+<div id="fx"></div>
+<div class="dmg">−2</div>
+<div class="panel"><div class="who"><b>«Месть»</b> стреляет по <b>«Голландцу»</b></div>
+ <div class="big">2 по Корпусу</div>
+ <div class="f"><span>Пушки</span><span>3</span><span>Буря</span><span class="neg">−1</span></div></div>
+<script>
+const fx=document.getElementById('fx');
+const xs=[370,430,490]; const y0=124, y1=262, hitIdx=[0,1], miss=2;
+function el(cls,x,y,delay,extra){const d=document.createElement(cls==='spl'?'div':'div');d.className=cls;d.style.left=x+'px';d.style.top=y+'px';d.style.animationDelay=delay+'s';if(extra)Object.assign(d.style,extra);fx.appendChild(d);return d}
+xs.forEach((x,i)=>{
+  const t=0.35+i*0.14;
+  el('flashm',x,y0,t); el('puff',x,y0+4,t+0.02);
+  const b=el('shot',x,y0,0);
+  const endY = i===miss? 195 : y1;
+  b.animate([{opacity:1,transform:'translateY(0)'},{opacity:1,transform:`translateY(${endY-y0}px)`}],{duration:(i===miss?260:380),delay:t*1000+30,fill:'both',easing:'cubic-bezier(.3,0,.8,1)'});
+  b.animate([{opacity:1},{opacity:0}],{duration:1,delay:t*1000+30+(i===miss?260:380),fill:'forwards'});
+  if(i===miss){
+    const sp=el('spl',x,198,t+0.29);
+    sp.innerHTML='<svg viewBox="0 0 44 30" width="44" height="30"><g fill="#9CC3DA"><path d="M22 30 C18 18 14 10 10 4 C16 10 19 16 22 22 C25 16 28 10 34 4 C30 10 26 18 22 30Z"/><circle cx="8" cy="14" r="2.5"/><circle cx="36" cy="12" r="2.5"/><circle cx="22" cy="4" r="2"/></g><ellipse cx="22" cy="28" rx="18" ry="3" fill="none" stroke="#9CC3DA" stroke-width="1.5"/></svg>';
+    const tg=el('tag',x+16,180,t+0.35); tg.textContent='Буря −1';
+  } else {
+    const hitT=t+0.03+0.38;
+    const bm=el('boom',x-20,y1-20,0); bm.remove();
+    for(let k=0;k<7;k++){const c=el('chip',x,y1,0);const a=Math.PI*(1.1+Math.random()*0.8),r=18+Math.random()*22;
+      c.animate([{opacity:1,transform:'translate(0,0) rotate(0)'},{opacity:0,transform:`translate(${Math.cos(a)*r}px,${Math.sin(a)*r}px) rotate(${Math.random()*360}deg)`}],{duration:600,delay:hitT*1000,fill:'both',easing:'ease-out'})}
+    const f=el('flashm',x,y1,hitT,{width:'34px',height:'34px',margin:'-17px 0 0 -17px'});
+  }
+});
+</script></body></html>
