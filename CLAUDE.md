@@ -42,6 +42,6 @@
 - `npm run typecheck` — проверка типов TypeScript.
 - `npm run build` — сборка сайта в `dist/` (база `/bortom-k-bortu/` для GitHub Pages).
 - `npm run convert-data` — пересобрать `data/game-data.json` из `reference/data3.py` (нужен Python 3). Затирает ручные правки JSON.
-- `npm run sim` — консольный симулятор (появится на этапе 6).
+- `npm run sim -- --games 3000 --seed 1` — консольный симулятор: партии ботов против PDF, с. 26 (`--variant first` — «Первая партия»).
 - `npm run lan` — сервер для игры в локальной сети (появится на этапе 8).
 - Публикация: `.github/workflows/pages.yml` — на каждый PR проверки (typecheck, test, build), после слияния в `main` ещё и выкладка на GitHub Pages.
