@@ -3,12 +3,12 @@
 // After every action: no other exceptions, Powder 0–8, tracks between the minimum and the start,
 // no card lost or doubled (counted by the deck that owns it).
 import { describe, expect, it } from 'vitest';
-import { TRACKS, deckCards, seaCards } from '../src/engine/data';
+import { TRACKS } from '../src/engine/data';
 import { choiceFor } from '../src/engine/cards';
 import { createGame } from '../src/engine/engine';
 import { createRng, type Rng } from '../src/engine/rng';
-import { RuleError, TRACK_MIN, type Action, type GameState } from '../src/engine/state';
-import { act, cardsByOwner, data } from './helpers';
+import { RuleError, type Action, type GameState } from '../src/engine/state';
+import { act, brokenInvariants, data } from './helpers';
 
 const pick = <T>(rng: Rng, items: T[]): T | undefined => (items.length ? items[rng.int(items.length)] : undefined);
 
@@ -92,45 +92,6 @@ function randomAction(s: GameState, rng: Rng, actionsThisTurn: number): Action {
     default:
       return { type: 'souls', ship: seat.code, track: rng.next() < 0.5 ? 'hull' : 'crew' };
   }
-}
-
-const decks = Object.fromEntries(data.ships.map((x) => [x.code, deckCards(data, x.code).map((c) => c.code).sort()]));
-const seaAll = seaCards(data).map((c) => c.code).sort();
-
-/** Returns the broken invariants; plain checks keep 200 games fast. */
-function brokenInvariants(s: GameState): string[] {
-  const out: string[] = [];
-  const check = (ok: boolean, what: string) => {
-    if (!ok) out.push(what);
-  };
-  for (const [side, team] of Object.entries(s.teams)) {
-    check(team.powder >= 0 && team.powder <= data.econ.cap, `${side}: Порох ${team.powder}`);
-  }
-  for (const ship of data.ships) {
-    const x = s.ships[ship.code];
-    for (const track of TRACKS) {
-      const v = x.tracks[track];
-      check(v >= TRACK_MIN[track] && v <= ship[track], `${ship.code} ${track} ${v}`);
-    }
-    // Hull 0 afloat only while the Pirates decide about «Джек ускользает».
-    const jack = s.pending?.kind === 'jack' && s.pending.ship === ship.code;
-    check(x.sunk === (x.tracks.hull === 0) || (jack && !x.sunk), `${ship.code}: sunk ${x.sunk}, hull ${x.tracks.hull}`);
-    check(x.plans.length <= data.rules.plansMax, `${ship.code}: Планов ${x.plans.length}`);
-    check(x.fires >= 0 && x.fires <= data.rules.maxFires, `${ship.code}: Пожаров ${x.fires}`);
-    check(x.souls >= 0 && x.souls <= (ship.souls ?? 0), `${ship.code}: Душ ${x.souls}`);
-  }
-  if (!s.pending && !s.winner) {
-    check(s.queue.length === 0 && !s.volley && !s.card, 'движок остановился, не доделав шаги');
-  }
-  const byOwner = cardsByOwner(s);
-  for (const code of Object.keys(decks)) {
-    check([...(byOwner[code] ?? [])].sort().join() === decks[code].join(), `колода ${code}: карты потеряны или повторяются`);
-  }
-  if (s.sea) {
-    const sea = [...s.sea.deck, ...s.sea.discard, ...(s.sea.current ? [s.sea.current] : [])];
-    check(sea.sort().join() === seaAll.join(), 'колода моря: карты потеряны или повторяются');
-  }
-  return out;
 }
 
 describe('random games', () => {
