@@ -1,0 +1,76 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><style>
+@font-face{font-family:Alegreya;font-weight:800;src:url(fonts/alegreya-cyrillic-800-normal.woff2)}
+@font-face{font-family:Alegreya;font-weight:700;src:url(fonts/alegreya-cyrillic-700-normal.woff2)}
+@font-face{font-family:"Alegreya Sans";font-weight:500;src:url(fonts/alegreya-sans-cyrillic-500-normal.woff2)}
+@font-face{font-family:"Alegreya Sans";font-weight:500;src:url(fonts/alegreya-sans-latin-500-normal.woff2);unicode-range:U+0000-00FF}
+@font-face{font-family:"Alegreya Sans";font-weight:700;src:url(fonts/alegreya-sans-cyrillic-700-normal.woff2)}
+@font-face{font-family:"Alegreya Sans";font-weight:700;src:url(fonts/alegreya-sans-latin-700-normal.woff2);unicode-range:U+0000-00FF}
+body{margin:0;width:760px;height:430px;background:#F3EEE4;font-family:"Alegreya Sans";position:relative;overflow:hidden;color:#2A2521}
+.ship{position:absolute;width:300px;background:#FBF8F1;border:1.5px solid #D9CFBF;border-radius:10px;overflow:hidden}
+.sh{color:#fff;padding:6px 12px;font-family:Alegreya;font-weight:700;font-size:15px}
+.rows{padding:8px 12px;display:grid;grid-template-columns:64px 1fr 40px;gap:4px 8px;font-size:12.5px;align-items:center}
+.pips{display:flex;gap:2px}.pips i{width:10px;height:9px;border-radius:2px;background:#2A2521}.pips i.e{background:#E2D9CA}
+.v{text-align:right;font-weight:700}
+.lbl{position:absolute;font-size:11px;font-weight:700;color:#7A7066;letter-spacing:.04em}
+#fx div{position:absolute}
+.flashm{width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:radial-gradient(#fff 0,#FFE08A 35%,#F2913D 60%,transparent 70%);opacity:0}
+.puff{width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:50%;background:radial-gradient(rgba(255,255,255,.95),rgba(214,206,192,.7) 55%,transparent 72%);opacity:0}
+.shot{width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#1E1A17;opacity:0}
+.chip{width:5px;height:3px;background:#7A5230;opacity:0}
+.tag{font-size:11px;font-weight:700;color:#24465C;background:#fff;border:1px solid #24465C;border-radius:10px;padding:0 6px;opacity:0;white-space:nowrap}
+.splash{width:44px;height:30px;margin:-24px 0 0 -22px;opacity:0}
+.panel{position:absolute;left:530px;top:150px;width:170px;background:#fff;border:1.5px solid #D9CFBF;border-left:5px solid #26221F;border-radius:10px;padding:8px 11px;box-shadow:0 8px 20px rgba(0,0,0,.08);opacity:0}
+.panel .who{font-size:12px;color:#6B6157}.panel .who b{color:#2A2521}
+.panel .big{font-family:Alegreya;font-weight:800;font-size:22px;margin:1px 0}
+.panel .f{font-size:12px;color:#6B6157;display:grid;grid-template-columns:1fr auto;gap:1px 8px}
+.panel .f span:nth-child(even){text-align:right;font-weight:700;color:#2A2521}
+.dmg{position:absolute;left:660px;top:272px;background:#B23A2E;color:#fff;font-weight:800;font-family:Alegreya;font-size:20px;padding:1px 11px;border-radius:20px;opacity:0}
+.diagline{position:absolute;left:0;top:0}
+</style></head><body>
+<span class="lbl" style="left:20px;top:4px">ПИРАТЫ</span><span class="lbl" style="left:20px;top:410px">КОМПАНИЯ</span>
+<div class="ship" id="pearl" style="left:20px;top:22px"><div class="sh" style="background:#26221F">«Чёрная жемчужина»</div>
+ <div class="rows"><span>Корпус</span><span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="v">9/9</span><span>Пушки</span><span class="pips"><i></i><i></i></span><span class="v">2/2</span></div></div>
+<div class="ship" style="left:440px;top:22px"><div class="sh" style="background:#8A2E1C">«Месть королевы Анны»</div>
+ <div class="rows"><span>Корпус</span><span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="v">11/11</span><span>Пушки</span><span class="pips"><i></i><i></i><i></i></span><span class="v">3/3</span></div></div>
+<div class="ship" style="left:20px;top:270px"><div class="sh" style="background:#9C7A2C">«Индевор»</div>
+ <div class="rows"><span>Корпус</span><span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="v">12/12</span><span>Пушки</span><span class="pips"><i></i><i></i><i></i></span><span class="v">3/3</span></div></div>
+<div class="ship" id="tgt" style="left:440px;top:270px"><div class="sh" style="background:#2C6658">«Летучий голландец»</div>
+ <div class="rows"><span>Корпус</span><span class="pips" id="hp"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="v" id="hv" style="position:relative"><span id="hvA">11/11</span><span id="hvB" style="position:absolute;right:0;top:0;opacity:0">10/11</span></span><span>Пушки</span><span class="pips"><i></i><i></i></span><span class="v">2/2</span></div></div>
+<div class="panel" id="panel"><div class="who"><b>«Жемчужина»</b> → <b>«Голландец»</b>, по диагонали</div><div class="big">1 по Корпусу</div>
+ <div class="f"><span>Пушки</span><span>2</span><span>Диагональ</span><span style="color:#24465C">−1</span></div></div>
+<div class="dmg" id="dmg">−1</div>
+<div id="fx"></div>
+<script>
+const fx=document.getElementById('fx');
+function mk(c,x,y){const d=document.createElement('div');d.className=c;d.style.left=x+'px';d.style.top=y+'px';fx.appendChild(d);return d}
+const A=(e,k,o)=>e.animate(k,Object.assign({fill:'both'},o));
+A(document.getElementById('panel'),[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none',offset:.12},{opacity:1,offset:.85},{opacity:0}],{duration:2600,delay:150});
+// muzzles at Pearl bottom-right corner area, target Dutchman top-left area
+const src=[[290,118],[300,98]], dst=[[470,292],[490,300]];
+src.forEach(([x,y],i)=>{
+  const t=350+i*150;
+  const f=mk('flashm',x,y);A(f,[{opacity:0,transform:'scale(.3)'},{opacity:1,transform:'scale(1.2)',offset:.3},{opacity:0,transform:'scale(1.6)'}],{duration:350,delay:t});
+  const p=mk('puff',x,y);A(p,[{opacity:0,transform:'scale(.4)'},{opacity:.95,offset:.15},{opacity:0,transform:'scale(2.4) translate(-6px,-8px)'}],{duration:1600,delay:t+20});
+  const b=mk('shot',x,y);
+  if(i===1){ // diagonal penalty: veers and drops
+    const ex=395,ey=205;
+    A(b,[{opacity:1,transform:'translate(0,0)'},{opacity:1,transform:`translate(${ex-x}px,${ey-y-20}px)`,offset:.75},{opacity:1,transform:`translate(${ex-x+10}px,${ey-y+14}px)`}],{duration:360,delay:t+30,easing:'linear'});
+    A(b,[{opacity:1},{opacity:0}],{duration:1,delay:t+390,fill:'forwards'});
+    const s=mk('splash',ex+10,ey+18);s.innerHTML='<svg viewBox="0 0 44 30" width="44" height="30"><g fill="#9CC3DA"><path d="M22 30 C18 18 14 10 10 4 C16 10 19 16 22 22 C25 16 28 10 34 4 C30 10 26 18 22 30Z"/><circle cx="8" cy="14" r="2.5"/><circle cx="36" cy="12" r="2.5"/></g><ellipse cx="22" cy="28" rx="18" ry="3" fill="none" stroke="#9CC3DA" stroke-width="1.5"/></svg>';
+    A(s,[{opacity:0,transform:'scale(.3)'},{opacity:1,transform:'scale(1)',offset:.25},{opacity:0,transform:'scale(1.3) translateY(-6px)'}],{duration:700,delay:t+390});
+    const tg=mk('tag',ex+30,ey-4);tg.textContent='Диагональ −1';A(tg,[{opacity:0},{opacity:1,offset:.15},{opacity:1,offset:.8},{opacity:0}],{duration:1300,delay:t+400});
+  } else {
+    const [tx,ty]=dst[i];
+    A(b,[{opacity:1,transform:'translate(0,0)'},{opacity:1,transform:`translate(${tx-x}px,${ty-y}px)`}],{duration:420,delay:t+30,easing:'cubic-bezier(.3,0,.8,1)'});
+    A(b,[{opacity:1},{opacity:0}],{duration:1,delay:t+450,fill:'forwards'});
+    const hit=t+450;
+    const fl=mk('flashm',tx,ty);fl.style.width=fl.style.height='34px';fl.style.margin='-17px 0 0 -17px';A(fl,[{opacity:0,transform:'scale(.3)'},{opacity:1,transform:'scale(1.2)',offset:.3},{opacity:0,transform:'scale(1.6)'}],{duration:400,delay:hit});
+    for(let k=0;k<7;k++){const c=mk('chip',tx,ty);const a=Math.PI*(1.1+Math.random()*.8),r=18+Math.random()*22;A(c,[{opacity:1,transform:'translate(0,0)'},{opacity:0,transform:`translate(${Math.cos(a)*r}px,${Math.sin(a)*r}px) rotate(${Math.random()*360}deg)`}],{duration:600,delay:hit,easing:'ease-out'})}
+    A(document.getElementById('tgt'),[{transform:'none',boxShadow:'none'},{transform:'translate(-3px,1px)',offset:.05},{transform:'translate(3px,-1px)',offset:.1},{transform:'none',boxShadow:'0 0 0 3px rgba(178,58,46,.35)',offset:.15},{boxShadow:'0 0 0 3px rgba(178,58,46,.35)',offset:.8},{boxShadow:'none'}],{duration:1600,delay:hit});
+    const cell=document.querySelectorAll('#hp i')[10];A(cell,[{background:'#2A2521'},{background:'#C0392B',offset:.15},{background:'#C0392B',offset:.6},{background:'#E2D9CA'}],{duration:900,delay:hit});
+    A(document.getElementById('hvA'),[{opacity:1},{opacity:0}],{duration:1,delay:hit+250});A(document.getElementById('hvB'),[{opacity:0},{opacity:1}],{duration:1,delay:hit+250});
+    A(hv,[{color:'#2A2521'},{color:'#B23A2E',offset:.2},{color:'#2A2521'}],{duration:900,delay:hit});
+    A(document.getElementById('dmg'),[{opacity:0,transform:'scale(.4) translateY(10px)'},{opacity:1,transform:'scale(1.15)',offset:.2},{transform:'none',offset:.35},{opacity:1,transform:'translateY(-6px)',offset:.8},{opacity:0,transform:'translateY(-16px)'}],{duration:1300,delay:hit});
+  }
+});
+</script></body></html>

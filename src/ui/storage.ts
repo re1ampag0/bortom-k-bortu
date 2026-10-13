@@ -7,15 +7,18 @@ const SETTINGS = 'bortom-k-bortu.settings';
 
 export type Speed = 'slow' | 'normal' | 'fast' | 'instant';
 
+export type Effects = 'rich' | 'simple';
+
 export interface Settings {
   speed: Speed;
+  effects: Effects;
   /** The last choice of «Подсказки»; null — not chosen yet (off, on for «Первая партия»). */
   hints: boolean | null;
   /** The short sound «ваш ход» (off by default). */
   sound: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal', hints: null, sound: false };
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false };
 
 function read(key: string): string | null {
   try {

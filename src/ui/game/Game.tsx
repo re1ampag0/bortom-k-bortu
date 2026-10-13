@@ -105,6 +105,11 @@ export function Game({
     setSpeedState(v);
     storeSettings({ ...loadSettings(), speed: v });
   };
+  const [effects, setEffectsState] = useState(() => loadSettings().effects);
+  const setEffects = (v: 'rich' | 'simple') => {
+    setEffectsState(v);
+    storeSettings({ ...loadSettings(), effects: v });
+  };
   const [sound, setSoundState] = useState(() => loadSettings().sound);
   const setSound = (v: boolean) => {
     setSoundState(v);
@@ -811,7 +816,7 @@ export function Game({
       <StatusBar s={s} data={data} instruction={flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}
-      <ShowLayer data={data} step={show.step} />
+      <ShowLayer data={data} step={show.step} decisionOpen={!!d && (d.kind === 'reactions' || d.kind === 'choice' || d.kind === 'jack' || d.kind === 'tortuga')} />
       <BannerView data={data} banner={banner} />
       <main className="board">
         <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
@@ -943,6 +948,8 @@ export function Game({
         <SettingsSheet
           speed={speed}
           setSpeed={setSpeed}
+          effects={effects}
+          setEffects={setEffects}
           sound={sound}
           setSound={setSound}
           openHands={net ? null : openHands}
