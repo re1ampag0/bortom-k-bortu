@@ -48,6 +48,7 @@ function runStep(ctx: Ctx, step: Step): void {
       return tortugaStep(ctx);
     case 'window':
       return openWindow(ctx, step.window, step.subject);
+    case 'volleyPaid':
     case 'volleyHit':
     case 'volleyFire':
     case 'volleyEnd':

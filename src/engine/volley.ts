@@ -155,7 +155,9 @@ export function volley(ctx: Ctx, order: VolleyOrder): void {
   };
   s.volley = v;
   aim(ctx, v, targets[0]);
-  pushSteps(s, ...voodoo, ...VOLLEY_STEPS);
+  // «Кукла вуду» for the Charge is a payment: a shooter sunk by it does not fire (18.19, Q51, as Q33).
+  const paidStep: Step[] = voodoo.length > 0 ? [...voodoo, { k: 'volleyPaid' }] : [];
+  pushSteps(s, ...paidStep, ...VOLLEY_STEPS);
 }
 
 /**
@@ -271,6 +273,12 @@ export function volleyStep(ctx: Ctx, step: Step): void {
   const v = s.volley;
   if (!v) return;
   switch (step.k) {
+    case 'volleyPaid':
+      if (getShip(s, v.shooter).sunk) {
+        v.cancelled = true;
+        v.rest = [];
+      }
+      return;
     case 'volleyHit': {
       if (v.cancelled) {
         ctx.events.push({ type: 'volleyCancelled', ship: v.shooter, target: v.target });
