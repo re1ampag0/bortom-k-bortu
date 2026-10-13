@@ -48,9 +48,9 @@ const SEAT_TARGET = new Set(['steal_random', 'kill_reaction', 'dice']);
 /** Operations against the whole enemy team. */
 const TEAM_WIDE = new Set(['rob', 'no_react_team', 'discard_enemy_each']);
 
-type TargetKind = 'ship' | 'seat' | 'opposite' | null;
+export type TargetKind = 'ship' | 'seat' | 'opposite' | null;
 
-function targetKind(ops: Op[]): TargetKind {
+export function targetKind(ops: Op[]): TargetKind {
   for (const op of ops) {
     if ((op[0] === 'dmg' && op[1] === 'any') || SHIP_TARGET.has(op[0])) return 'ship';
     if (SEAT_TARGET.has(op[0])) return 'seat';
