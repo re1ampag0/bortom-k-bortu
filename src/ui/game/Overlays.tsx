@@ -138,6 +138,16 @@ export function SeaSheet({ s, data, onClose }: { s: GameState; data: GameData; o
       ) : (
         <p>Партия без колоды моря.</p>
       )}
+      {s.sea?.peek && s.sea.deck.slice(0, s.sea.peek.n).every((c) => c !== HIDDEN) && (
+        <p data-testid="sea-peek">
+          Следующие карты моря («Тиа Дальма», их знаете только вы):{' '}
+          {s.sea.deck
+            .slice(0, s.sea.peek.n)
+            .map((c) => `«${seaCardByCode(data, c).name}»`)
+            .join(', ')}
+          .
+        </p>
+      )}
       {s.sea && (
         <p className="muted">
           В колоде моря {s.sea.deck.length}, в сбросе {s.sea.discard.length}
