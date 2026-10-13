@@ -16,6 +16,7 @@ export interface Float {
 export type ShowStep =
   | { k: 'card'; card: string; ship: string; target: string | null; kind: 'card' | 'reaction' | 'legend'; floats: Float[] }
   | { k: 'volley'; shooter: string; target: string; damage: number; track: Track; terms: Term[] | null; diagonal: boolean; floats: Float[] }
+  | { k: 'effect'; effect: 'swap' | 'dive' | 'surface' | 'sink'; ship: string; label: string; floats: Float[] }
   /** Only numbers over the planks (a Fire, the sea, the result of a Volley resolved by someone's answer). */
   | { k: 'floats'; floats: Float[] };
 
@@ -90,12 +91,22 @@ export function showSteps(events: GameEvent[], full: boolean): ShowStep[] {
         break;
       case 'sunk':
         add({ ship: e.ship, text: 'Затонул', bad: true });
+        if (full) steps.push({ k: 'effect', effect: 'sink', ship: e.ship, label: 'Затонул', floats: [] });
         break;
       case 'volleyCancelled':
         add({ ship: e.target, text: 'Залп отменён', bad: false });
         break;
       case 'jackEscaped':
         add({ ship: e.ship, text: 'Джек ускользнул', bad: false });
+        break;
+      case 'dived':
+        if (full) steps.push({ k: 'effect', effect: 'dive', ship: e.ship, label: 'Погружение', floats: [] });
+        break;
+      case 'surfaced':
+        if (full) steps.push({ k: 'effect', effect: 'surface', ship: e.ship, label: 'Всплытие', floats: [] });
+        break;
+      case 'swapped':
+        if (full && e.ships[0]) steps.push({ k: 'effect', effect: 'swap', ship: e.ships[0], label: 'Смена мест', floats: [] });
         break;
       default:
         break;
