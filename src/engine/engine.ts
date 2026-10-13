@@ -1,6 +1,7 @@
 // The engine entry point: applyAction(state, action, data) → { state, events }.
 // Pure: the input state is not changed; randomness comes from the generator state stored in the game state.
 import { dive, sword, treasury, useSoul } from './abilities';
+import { choose, playCard } from './cards';
 import { checkGameOver } from './damage';
 import { jack, playLegend } from './legends';
 import { runQueue } from './queue';
@@ -8,7 +9,7 @@ import { noReaction, react } from './reactions';
 import { createRng } from './rng';
 import { tortuga } from './sea';
 import { RuleError, type Action, type Ctx, type GameEvent, type GameState, type Pending } from './state';
-import { endTurn, extinguish, passCard, playCard, regroup, sell } from './turn';
+import { endTurn, extinguish, passCard, regroup, sell } from './turn';
 import type { GameData } from './types';
 import { volley } from './volley';
 
@@ -19,12 +20,14 @@ const ANSWERS: Record<Pending['kind'], Action['type'][]> = {
   reactions: ['react', 'noReaction'],
   jack: ['jack'],
   tortuga: ['tortuga'],
+  choice: ['choose'],
 };
 
 const WAITING_FOR: Record<Pending['kind'], string> = {
   reactions: 'противник решает, играть ли Реакции',
   jack: 'Пираты решают, играть ли «Джек ускользает»',
   tortuga: 'команды решают, сколько карт взять на «Тортуге»',
+  choice: 'игрок выбирает карты',
 };
 
 export function applyAction(
@@ -44,8 +47,13 @@ export function applyAction(
     case 'volley':
       volley(ctx, action);
       break;
-    case 'playCard':
-      playCard(ctx, action.seat, action.card);
+    case 'playCard': {
+      const { type: _type, seat, card, ...params } = action;
+      playCard(ctx, seat, card, params);
+      break;
+    }
+    case 'choose':
+      choose(ctx, action.seat, action.cards);
       break;
     case 'playLegend':
       playLegend(ctx, action.seat, action.target);
