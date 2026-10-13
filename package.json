@@ -13,14 +13,15 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "convert-data": "python3 scripts/convert-data.py",
-    "sim": "vite-node scripts/sim.ts --"
+    "sim": "vite-node scripts/sim.ts --",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
+    "@playwright/test": "1.56.1",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

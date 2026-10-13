@@ -42,7 +42,8 @@ export function Setup({
   const [sea, setSea] = useState(true);
   const [legends, setLegends] = useState(true);
   const [openHands, setOpenHands] = useState(false);
-  const [seedText, setSeedText] = useState('');
+  // «?seed=N» in the address fixes the seed of the quick starts too (for tests and for repeating a game).
+  const [seedText, setSeedText] = useState(() => new URLSearchParams(location.search).get('seed') ?? '');
   const [speed, setSpeed] = useState<Speed>(loadSettings().speed);
   const [error, setError] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);

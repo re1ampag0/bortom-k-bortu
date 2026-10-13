@@ -4,7 +4,7 @@
 import { botAnswer, botTurn, newBotMemory, type BotMemory } from '../engine/ai/bot';
 import { applyAction, createGame } from '../engine/engine';
 import { decider, type Decider } from '../engine/hints';
-import { describe, type LogLine } from '../engine/log';
+import { describe, rewind, type LogLine } from '../engine/log';
 import { makeRecord, revealsInfo, type MatchRecord, type MatchSetup } from '../engine/match';
 import { RuleError, type Action, type GameEvent, type GameState } from '../engine/state';
 import type { GameData, Side } from '../engine/types';
@@ -50,7 +50,7 @@ export class LocalGame {
   ) {
     const created = createGame(data, setup.game);
     this.state = created.state;
-    this.log.push(...describe(data, created.state, null, created.events, -1));
+    this.log.push(...describe(data, rewind(created.state, created.events), null, created.events, -1));
     // The same bot memory as the simulator (sim.ts playGame): a bot match plays the same game as `npm run sim`.
     this.mem = newBotMemory(setup.game.seed ^ 0x2545f491);
     for (const action of actions) this.apply(action);
