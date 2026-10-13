@@ -148,6 +148,20 @@ export function ShowLayer({ data, step }: { data: GameData; step: { id: number; 
             </defs>
             <line x1={boxes[s.shooter].x} y1={boxes[s.shooter].y} x2={boxes[s.target].x} y2={boxes[s.target].y} stroke="#b8322a" strokeWidth="4" strokeDasharray="10 7" markerEnd="url(#show-head)" />
           </svg>
+          {Array.from({ length: Math.min(8, Math.max(0, s.damage)) }, (_, i) => (
+            <span
+              key={i}
+              className="show-projectile"
+              data-testid="show-projectile"
+              style={{
+                left: boxes[s.shooter].x,
+                top: boxes[s.shooter].y,
+                ['--to-x' as string]: `${boxes[s.target].x - boxes[s.shooter].x}px`,
+                ['--to-y' as string]: `${boxes[s.target].y - boxes[s.shooter].y}px`,
+                animationDelay: `${i * 0.14}s`,
+              }}
+            />
+          ))}
           <div
             className="show-plate"
             data-testid="show-plate"
