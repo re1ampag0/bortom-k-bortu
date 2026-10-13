@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
 import { choiceFor } from '../src/engine/cards';
+import { applyAction, createGame } from '../src/engine/engine';
 import { decider, playOptions, volleyTargets } from '../src/engine/hints';
 import type { Action, GameState } from '../src/engine/state';
 import { HIDDEN } from '../src/engine/view';
@@ -460,5 +461,55 @@ describe('game server', () => {
     const closed = new Promise<number>((ok) => c.ws.once('close', (code) => ok(code)));
     c.ws.send('x'.repeat(20_000));
     expect(await closed).toBe(1009);
+  });
+});
+
+/** A seed where the first Volley of «Жемчужина» at «Индевор» finds the Company with (or without) a Reaction. */
+function seedWhere(withReaction: boolean): number {
+  for (let seed = 1; seed < 3000; seed++) {
+    const s = createGame(data, { seed, positions: { ПИРАТЫ: ['Ж', 'М'], КОМПАНИЯ: ['И', 'Г'] }, pauseEmptyWindows: true }).state;
+    const r = applyAction(s, { type: 'volley', ship: 'Ж', target: 'И' }, data).state;
+    if (r.pending?.kind === 'reactions' && r.pending.waiting.length > 0 === withReaction) return seed;
+  }
+  throw new Error('no seed');
+}
+
+describe('game server: the Reaction window', () => {
+  it('no Reaction to play: the attackers wait the pause like a real window, the window closes by itself', async () => {
+    const { srv } = await server(undefined, { delays: { bot: [0, 0], pause: [300, 300] } });
+    const { all } = await table(srv, { Аня: ['Ж', 'М'], Боря: ['И', 'Г'] }, { seed: seedWhere(false) });
+    const [a, b] = all;
+    const start = Date.now();
+    a.act({ type: 'volley', ship: 'Ж', target: 'И' });
+    await a.until(() => a.view.pending?.kind === 'reactions', 'окно у нападающих');
+    // The attackers see the whole team deciding; the defenders know they have nothing.
+    expect(a.view.pending).toMatchObject({ waiting: ['И', 'Г'] });
+    await b.until(() => b.view.pending?.kind === 'reactions', 'окно у защищающихся');
+    expect(b.view.pending).toMatchObject({ waiting: [] });
+    // The window «до урона» closes by itself after the pause; then the Volley hits.
+    await a.until(() => a.log.some((l) => l.startsWith('Попадание')), 'попадание', 5000);
+    expect(Date.now() - start).toBeGreaterThanOrEqual(250);
+    expect(a.problems).toEqual([]);
+  }, 15_000);
+
+  it('against bots only there is no pause', async () => {
+    const { srv } = await server(undefined, { delays: { bot: [0, 0], pause: [5000, 5000] } });
+    const { all } = await table(srv, { Аня: ['Ж', 'М'] }, { seed: seedWhere(false) });
+    const [a] = all;
+    const start = Date.now();
+    a.act({ type: 'volley', ship: 'Ж', target: 'И' });
+    await a.until(() => a.log.some((l) => l.startsWith('Попадание')), 'попадание', 3000);
+    expect(Date.now() - start).toBeLessThan(2000);
+  });
+
+  it('the timer of the room closes a window nobody answers', async () => {
+    const { srv } = await server();
+    const { all } = await table(srv, { Аня: ['Ж', 'М'], Боря: ['И', 'Г'] }, { seed: seedWhere(true), reactionTimer: 1 });
+    const [a, b] = all;
+    a.act({ type: 'volley', ship: 'Ж', target: 'И' });
+    await b.until(() => b.view.pending?.kind === 'reactions' && b.view.pending.waiting.length > 0, 'окно');
+    const start = Date.now();
+    await a.until(() => a.log.some((l) => l.startsWith('Попадание')), 'окно закрылось по таймеру', 5000);
+    expect(Date.now() - start).toBeGreaterThanOrEqual(800);
   });
 });
