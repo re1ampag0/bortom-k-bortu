@@ -13,6 +13,7 @@ import {
   startValue,
   type Ctx,
 } from './state';
+import { paidSteps } from './cards';
 import { payCardCost, requireSeat, useCardPlay } from './turn';
 
 export function playLegend(ctx: Ctx, seat: string, target?: string): void {
@@ -57,9 +58,10 @@ export function playLegend(ctx: Ctx, seat: string, target?: string): void {
     fromPlan: false,
     params: {},
     stolenBy: null,
+    lost: false,
   };
   // The effect is played by cards.ts, as for any card.
-  pushSteps(s, ...voodoo, { k: 'window', window: 'before', subject: 'card' }, { k: 'cardEffect' }, { k: 'cardEnd' });
+  pushSteps(s, ...paidSteps(voodoo), { k: 'window', window: 'before', subject: 'card' }, { k: 'cardEffect' }, { k: 'cardEnd' });
 }
 
 /** «Джек ускользает»: the Pearl's Hull becomes 2 and the team swaps places for free (15.2, 16.1, Q22). */

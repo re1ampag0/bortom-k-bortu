@@ -56,7 +56,7 @@ function defendingSide(ctx: Ctx, window: ReactionWindow, subject: Subject): Side
   const { s } = ctx;
   if (subject === 'card') {
     const c = s.card;
-    if (!c || c.cancelled || window !== 'before') return null;
+    if (!c || c.cancelled || c.lost || window !== 'before') return null;
     return otherSide(getShip(s, c.ship).side);
   }
   const v = s.volley;
