@@ -31,6 +31,8 @@ export class LocalGame {
   readonly actions: Action[] = [];
   readonly log: LogLine[] = [];
   last: LastAction | null = null;
+  /** The last actions with their numbers, for the show of each one on the table (ui/game/show.ts). */
+  recent: { n: number; action: Action; by: 'human' | 'bot'; events: GameEvent[] }[] = [];
   /** Grows with every change: the interface re-renders by it. */
   version = 0;
   /** Why Undo is not possible now (when the stack is empty). */
@@ -90,13 +92,14 @@ export class LocalGame {
     return !!d && this.isBot(d.side);
   }
 
-  private apply(action: Action): GameEvent[] {
+  private apply(action: Action, by: 'human' | 'bot' = 'human'): GameEvent[] {
     const before = this.state;
     const r = applyAction(before, action, this.data);
     const index = this.actions.length;
     this.state = r.state;
     this.actions.push(action);
     this.log.push(...describe(this.data, before, action, r.events, index));
+    this.recent = [...this.recent.slice(-9), { n: index, action, by, events: r.events }];
     return r.events;
   }
 
@@ -144,6 +147,7 @@ export class LocalGame {
     this.actions.length = point.actions;
     this.log.length = point.log;
     this.last = null;
+    this.recent = this.recent.filter((x) => x.n < point.actions);
     if (this.undoStack.length === 0) this.undoReason = NOTHING_TO_UNDO;
     this.changed();
     return true;
@@ -162,7 +166,7 @@ export class LocalGame {
     const before = this.state;
     if (this.state.pending) {
       const action = botAnswer(this.state, this.data, this.mem);
-      const events = this.apply(action);
+      const events = this.apply(action, 'bot');
       this.last = { action, by: 'bot', events, before };
       this.changed();
       return true;
@@ -181,7 +185,7 @@ export class LocalGame {
     const action: Action = next.done ? { type: 'endTurn', side: this.state.active } : next.value;
     if (next.done) this.gen = null;
     try {
-      const events = this.apply(action);
+      const events = this.apply(action, 'bot');
       this.last = { action, by: 'bot', events, before };
     } catch (e) {
       if (!(e instanceof RuleError)) throw e;

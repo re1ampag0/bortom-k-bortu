@@ -219,39 +219,45 @@ export function RulesSheet({ data, onClose }: { data: GameData; onClose: () => v
 export function SettingsSheet({
   speed,
   setSpeed,
+  sound,
+  setSound,
   openHands,
   setOpenHands,
   hints,
   setHints,
-  canConcede,
+  canConcede = null,
   onConcede,
   newLabel = 'Новая партия',
   onNew,
   onDownloadLog,
-  onDownloadGame,
+  onDownloadGame = null,
   onClose,
 }: {
   /** null — not shown (a network game: the server moves the bots). */
   speed: Speed | null;
   setSpeed: (s: Speed) => void;
+  /** The short sound «ваш ход». */
+  sound: boolean;
+  setSound: (v: boolean) => void;
   openHands: boolean | null;
   setOpenHands: (v: boolean) => void;
   /** null — the room does not allow hints. */
   hints: boolean | null;
   setHints: (v: boolean) => void;
-  canConcede: Side | null;
-  onConcede: () => void;
+  canConcede?: Side | null;
+  onConcede?: () => void;
   newLabel?: string;
-  onNew: () => void;
-  onDownloadLog: () => void;
-  onDownloadGame: (() => void) | null;
+  /** Not given on the start screen (no game yet): the game buttons are not shown. */
+  onNew?: () => void;
+  onDownloadLog?: () => void;
+  onDownloadGame?: (() => void) | null;
   onClose: () => void;
 }) {
   return (
     <Sheet title="Настройки" onClose={onClose} testid="settings">
       {speed !== null && (
         <label className="row">
-          <span>Скорость показа ходов ботов</span>
+          <span>Скорость показа ходов</span>
           <select value={speed} onChange={(e) => setSpeed(e.target.value as Speed)}>
             {Object.entries(SPEEDS).map(([k, v]) => (
               <option key={k} value={k}>
@@ -261,6 +267,9 @@ export function SettingsSheet({
           </select>
         </label>
       )}
+      <label className="row check">
+        <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} data-testid="sound" /> Звук «ваш ход»
+      </label>
       {openHands !== null && (
         <label className="row check">
           <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все
@@ -275,26 +284,30 @@ export function SettingsSheet({
       ) : (
         <p className="row muted">Подсказки в этой комнате выключены.</p>
       )}
-      <div className="row buttons">
-        <button className="btn" onClick={onDownloadLog}>
-          Скачать журнал
-        </button>
-        {onDownloadGame && (
-          <button className="btn" onClick={onDownloadGame}>
-            Скачать партию
+      {onDownloadLog && (
+        <div className="row buttons">
+          <button className="btn" onClick={onDownloadLog}>
+            Скачать журнал
           </button>
-        )}
-      </div>
-      <div className="row buttons">
-        {canConcede && (
-          <button className="btn danger" onClick={onConcede}>
-            Сдаться ({SIDE_LABEL[canConcede].name})
+          {onDownloadGame && (
+            <button className="btn" onClick={onDownloadGame}>
+              Скачать партию
+            </button>
+          )}
+        </div>
+      )}
+      {onNew && (
+        <div className="row buttons">
+          {canConcede && onConcede && (
+            <button className="btn danger" onClick={onConcede}>
+              Сдаться ({SIDE_LABEL[canConcede].name})
+            </button>
+          )}
+          <button className="btn" onClick={onNew}>
+            {newLabel}
           </button>
-        )}
-        <button className="btn" onClick={onNew}>
-          {newLabel}
-        </button>
-      </div>
+        </div>
+      )}
     </Sheet>
   );
 }
@@ -303,6 +316,7 @@ export function EndScreen({
   s,
   totals,
   onRematch,
+  rematchLabel = 'Реванш',
   onNew,
   newLabel = 'Новая партия',
   onDownloadLog,
@@ -311,12 +325,12 @@ export function EndScreen({
 }: {
   s: GameState;
   totals: Record<Side, SideTotals>;
-  /** null — no rematch (a network game). */
   onRematch: (() => void) | null;
+  /** By network: «Реванш (согласны 1 из 2)», or «Отменить реванш» after agreeing. */
+  rematchLabel?: string;
   onNew: () => void;
   newLabel?: string;
   onDownloadLog: () => void;
-  /** null — the record is not available (a network game: hidden cards). */
   onDownloadGame: (() => void) | null;
   onClose: () => void;
 }) {
@@ -356,7 +370,7 @@ export function EndScreen({
         <div className="panel-actions wrap">
           {onRematch && (
             <button className="btn primary" onClick={onRematch} data-testid="rematch">
-              Реванш
+              {rematchLabel}
             </button>
           )}
           <button className={`btn ${onRematch ? '' : 'primary'}`} onClick={onNew}>
