@@ -1,0 +1,750 @@
+// The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
+// bots moving one action at a time. The engine answers every question about the rules (hints.ts).
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import {
+  abilityButtons,
+  cardNeeds,
+  hasUsefulMoves,
+  heartTargets,
+  legendOptions,
+  playOptions,
+  refusal,
+  tryAction,
+  unfiredShips,
+  volleyTargets,
+  type VolleyTarget,
+} from '../../engine/hints';
+import { sideGenitive, turnSummary } from '../../engine/log';
+import type { MatchSetup } from '../../engine/match';
+import { createRng } from '../../engine/rng';
+import { ABILITY, cardByCode, hasAbility, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
+import type { Side } from '../../engine/types';
+import { viewFor } from '../../engine/view';
+import type { LocalGame } from '../../net/local';
+import { download, loadSettings, storeSave, storeSettings, type Speed } from '../storage';
+import { Curtain } from './Curtain';
+import { Hand, type HandTab } from './Hand';
+import { CardDetail, DiscardSheet, EndScreen, LogList, RulesSheet, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
+import {
+  CardParamsPanel,
+  ChoicePanel,
+  ConfirmPanel,
+  JackPanel,
+  PlansPanel,
+  ReactionPanel,
+  TortugaPanel,
+  VolleyPanel,
+  plateLabel,
+  type AimMode,
+  type CardMode,
+} from './Panels';
+import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
+import { SIDE_LABEL, SPEEDS } from './text';
+
+type Mode =
+  | { k: 'idle' }
+  | AimMode
+  | CardMode
+  | { k: 'legend'; seat: string; target: string | null; confirmed: boolean }
+  | { k: 'confirmEnd'; text: string }
+  | { k: 'plans'; seat: string }
+  | { k: 'concede'; side: Side }
+  | { k: 'leave' };
+
+type Sheet =
+  | null
+  | { k: 'card'; seat: string; code: string }
+  | { k: 'ship'; code: string }
+  | { k: 'discard'; seat: string }
+  | { k: 'sea' }
+  | { k: 'log' }
+  | { k: 'rules' }
+  | { k: 'settings' };
+
+const SIDES: Side[] = ['ПИРАТЫ', 'КОМПАНИЯ'];
+const other = (side: Side): Side => (side === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ');
+
+/** «?speed=instant» in the address: bots without pauses (for the browser test). */
+function urlSpeed(): Speed | null {
+  const v = new URLSearchParams(location.search).get('speed');
+  return v === '0' || v === 'instant' ? 'instant' : v && v in SPEEDS ? (v as Speed) : null;
+}
+
+export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () => void; onRestart: (setup: MatchSetup) => void }) {
+  const version = useSyncExternalStore(
+    useCallback((cb) => game.subscribe(cb), [game]),
+    () => game.version,
+  );
+  const data = game.data;
+  const s = game.state;
+  const [speed, setSpeedState] = useState<Speed>(() => urlSpeed() ?? loadSettings().speed);
+  const setSpeed = (v: Speed) => {
+    setSpeedState(v);
+    storeSettings({ ...loadSettings(), speed: v });
+  };
+  const [openHands, setOpenHands] = useState(game.setup.openHands);
+  const humans = SIDES.filter((side) => game.setup.players[side] === 'human');
+  const d = game.decider();
+
+  // ——— Who sits at the device ———
+  const [device, setDevice] = useState<Side | null>(humans.length === 1 ? humans[0] : null);
+  const [seen, setSeen] = useState<Record<Side, number>>({ ПИРАТЫ: 0, КОМПАНИЯ: 0 });
+  const curtainSide = humans.length === 2 && !openHands && d && !s.winner && d.side !== device ? d.side : null;
+  const bottom: Side =
+    humans.length === 2 ? (openHands ? (d?.side ?? device ?? 'ПИРАТЫ') : (device ?? d?.side ?? 'ПИРАТЫ')) : (humans[0] ?? 'ПИРАТЫ');
+  const viewer = openHands || humans.length === 0 ? ('all' as const) : Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const view = useMemo(() => viewFor(s, viewer), [version, bottom, openHands]);
+  const myDecision = !!d && d.side === bottom && !game.isBot(bottom) && !curtainSide;
+  const myTurn = myDecision && d!.kind === 'turn';
+
+  // ——— Interface state ———
+  const [mode, setMode] = useState<Mode>({ k: 'idle' });
+  const [sheet, setSheet] = useState<Sheet>(null);
+  const [flash, setFlash] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [fastTurn, setFastTurn] = useState<string | null>(null);
+  const [endClosed, setEndClosed] = useState(false);
+  const [freshFrom, setFreshFrom] = useState(0);
+  const mySeats = seatsOf(s, bottom).map((x) => x.code);
+  const allSeats = Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
+  const [seatPick, setSeatPick] = useState<string | null>(null);
+  const seat = seatPick && allSeats.includes(seatPick) ? seatPick : (d && d.side === bottom ? d.seats.find((x) => mySeats.includes(x)) : null) ?? mySeats[0] ?? allSeats[0];
+
+  const act = (action: Action | Action[]): boolean => {
+    const list = Array.isArray(action) ? action : [action];
+    for (const a of list) {
+      const why = game.act(a);
+      if (why) {
+        // A later part of a multi-answer may become unneeded (the window closed): only the first refusal matters.
+        if (a === list[0]) {
+          setFlash(why);
+          return false;
+        }
+        break;
+      }
+    }
+    setFlash(null);
+    setMode({ k: 'idle' });
+    setSheet(null);
+    return true;
+  };
+
+  // ——— Effects: bots, autosave, title, toast, wake lock ———
+  const turnKey = `${s.round}:${s.active}`;
+  useEffect(() => {
+    if (curtainSide || s.winner || !game.botToMove()) return;
+    const instant = speed === 'instant' || fastTurn === turnKey;
+    const t = setTimeout(
+      () => {
+        let n = 0;
+        do game.botStep();
+        while (instant && ++n < 40 && game.botToMove() && (speed === 'instant' || `${game.state.round}:${game.state.active}` === fastTurn));
+      },
+      instant ? 0 : SPEEDS[speed].ms,
+    );
+    return () => clearTimeout(t);
+  }, [version, curtainSide, speed, fastTurn, turnKey, game, s.winner]);
+
+  useEffect(() => {
+    storeSave(s.winner ? null : game.record());
+  }, [version, game, s.winner]);
+
+  useEffect(() => {
+    document.title = myDecision && humans.length > 0 ? '● Ваш ход — Бортом к борту' : 'Бортом к борту';
+    return () => {
+      document.title = 'Бортом к борту';
+    };
+  }, [myDecision, humans.length]);
+
+  useEffect(() => {
+    // The start of a turn of the team at the device: a short summary for 2 s (docs/TZ.md, «Детали», п. 3).
+    const last = game.last;
+    if (!last) return;
+    const sum = turnSummary(data, last.events);
+    if (sum && sum.side === bottom && sum.text) {
+      setToast(`Ход ${sideGenitive(sum.side)}: ${sum.text}`);
+      const t = setTimeout(() => setToast(null), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [version, game, data, bottom]);
+
+  useEffect(() => {
+    // The lines of the newest action are highlighted in the log.
+    const last = game.log.at(-1);
+    if (last) setFreshFrom(last.action);
+  }, [version, game]);
+
+  useEffect(() => {
+    let lock: { release: () => Promise<void> } | null = null;
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<{ release: () => Promise<void> }> } };
+    const take = () => {
+      if (document.visibilityState === 'visible' && nav.wakeLock) nav.wakeLock.request('screen').then((l) => (lock = l)).catch(() => {});
+    };
+    take();
+    document.addEventListener('visibilitychange', take);
+    return () => {
+      document.removeEventListener('visibilitychange', take);
+      lock?.release().catch(() => {});
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(null), 5000);
+    return () => clearTimeout(t);
+  }, [flash]);
+
+  // ——— Hints for the team at the device (dry runs on the real state; only refusals and numbers are shown) ———
+  const cardHints = useMemo(() => {
+    const out = new Map<string, ReturnType<typeof playOptions>>();
+    if (!myDecision || !seat) return out;
+    const holder = s.ships[seat];
+    for (const card of [...holder.hand, ...holder.plans]) out.set(card, playOptions(s, data, seat, card));
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version, seat, myDecision]);
+  const useful = useMemo(() => (myTurn ? hasUsefulMoves(s, data, bottom) : true), [version, myTurn, bottom]); // eslint-disable-line react-hooks/exhaustive-deps
+  const aimTargets = useMemo<VolleyTarget[]>(() => {
+    if (mode.k !== 'aim') return [];
+    if (mode.heart) return heartTargets(s, data, mode.shooter);
+    const order = { ship: mode.shooter, ...(mode.charge ? { charge: mode.charge } : {}), ...(mode.chargeFrom && mode.chargeFrom !== mode.shooter ? { chargeFrom: mode.chargeFrom } : {}) };
+    return volleyTargets(s, data, order).targets;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version, mode]);
+
+  const nick = (code: string) => `«${shipData(data, code).nick}»`;
+
+  // ——— Curtain ———
+  if (curtainSide) {
+    const summary = game.log
+      .slice(seen[curtainSide])
+      .filter((l) => l.kind === 'action' || l.kind === 'damage' || l.kind === 'round')
+      .map((l) => l.text)
+      .slice(-8);
+    return (
+      <Curtain
+        side={curtainSide}
+        title={`Передайте устройство ${SIDE_LABEL[curtainSide].dat}`}
+        reason={curtainReason(s, data, d!.kind) + ` · раунд ${s.round}`}
+        summary={summary}
+        onReady={() => {
+          setSeen({ ...seen, [curtainSide]: game.log.length });
+          setDevice(curtainSide);
+          setMode({ k: 'idle' });
+          setSheet(null);
+          setSeatPick(null);
+        }}
+      />
+    );
+  }
+
+  // ——— Card flows ———
+  const startPlay = (holder: string, card: string) => {
+    const c = cardByCode(data, card);
+    const opts = playOptions(s, data, holder, card);
+    if (opts.actions.length === 0) {
+      setFlash(opts.reason);
+      return;
+    }
+    setSheet(null);
+    if (c.type === 'ЗАРЯД') {
+      const shooter = seatShip(s, holder)!.code;
+      setMode({ k: 'aim', shooter, charge: card, chargeFrom: holder, heart: false, target: null, paid: 0 });
+      return;
+    }
+    if (c.type === 'РЕАКЦИЯ') {
+      act(opts.actions[0]);
+      return;
+    }
+    const needs = cardNeeds(s, data, holder, card);
+    if (!needs.target && !needs.ship && !needs.cells && needs.souls === null && !needs.regroup) {
+      act(opts.actions[0]);
+      return;
+    }
+    setMode({ k: 'card', seat: holder, card, target: null, ship: null, repair: null, souls: null, regroup: false });
+  };
+
+  const cardButtons = (holder: string, code: string): Btn[] => {
+    if (!myTurn || !allSeats.includes(holder)) {
+      if (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ') {
+        const o = cardHints.get(code) ?? playOptions(s, data, holder, code);
+        return [{ key: 'play', label: 'Сыграть', primary: true, disabled: o.reason, onClick: () => startPlay(holder, code), testid: 'detail-play' }];
+      }
+      return [];
+    }
+    const ship = s.ships[holder];
+    const inHand = ship.hand.includes(code);
+    const o = cardHints.get(code) ?? playOptions(s, data, holder, code);
+    const btns: Btn[] = [{ key: 'play', label: 'Сыграть', primary: true, disabled: o.reason, onClick: () => startPlay(holder, code), testid: 'detail-play' }];
+    if (inHand) {
+      const sell = refusal(s, { type: 'sell', seat: holder, card: code }, data);
+      btns.push({ key: 'sell', label: `Продать · +${data.rules.sellGain} П`, disabled: sell, onClick: () => act({ type: 'sell', seat: holder, card: code }) });
+      const pass = refusal(s, { type: 'pass', seat: holder, card: code }, data);
+      btns.push({ key: 'pass', label: 'Передать союзнику', disabled: pass, onClick: () => act({ type: 'pass', seat: holder, card: code }) });
+      if (ship.fires > 0) {
+        const ext = refusal(s, { type: 'extinguish', seat: holder, card: code }, data);
+        btns.push({ key: 'ext', label: 'Потушить Пожар', disabled: ext, onClick: () => act({ type: 'extinguish', seat: holder, card: code }) });
+      }
+    }
+    return btns;
+  };
+
+  // ——— End of the turn: «Залп не дан…» → Plans of the Pearl → endTurn ———
+  const endFlow = (step: 'start' | 'confirmed') => {
+    if (!myTurn) return;
+    if (step === 'start') {
+      const unfired = unfiredShips(s, data, bottom);
+      if (unfired.length > 0) {
+        setMode({ k: 'confirmEnd', text: `Залп не дан (${unfired.map(nick).join(', ')}), в Трюме ${s.teams[bottom].powder} Пороха. Закончить ход?` });
+        return;
+      }
+    }
+    const pearl = Object.values(s.ships).find((x) => x.side === bottom && hasAbility(data, x, ABILITY.madPlan));
+    if (pearl && pearl.hand.length > 0 && pearl.plans.length < data.rules.plansMax) {
+      setMode({ k: 'plans', seat: pearl.code });
+      return;
+    }
+    act({ type: 'endTurn', side: bottom });
+  };
+
+  // ——— Planks ———
+  const columns = (side: Side) => {
+    const ships = Object.values(view.ships).filter((x) => x.side === side);
+    const alive = ships.filter((x) => !x.sunk);
+    const cols: (typeof ships[number] | null)[] = [null, null];
+    for (const x of alive) cols[x.pos] = x;
+    for (const x of ships.filter((y) => y.sunk)) cols[cols[x.pos] ? 1 - x.pos : x.pos] = x;
+    return cols.filter((x): x is NonNullable<typeof x> => !!x);
+  };
+
+  const plateFor = (code: string): Plate | null => {
+    if (mode.k === 'aim') {
+      const t = aimTargets.find((x) => x.target === code);
+      if (!t) return null;
+      const l = plateLabel(t.preview);
+      return { ...l, chosen: mode.target === code, onClick: () => setMode({ ...mode, target: code }) };
+    }
+    if (mode.k === 'card') {
+      const needs = cardNeeds(s, data, mode.seat, mode.card);
+      if (!needs.target) return null;
+      const ok = playOptions(s, data, mode.seat, mode.card).actions.some((a) => a.type === 'playCard' && a.target === code);
+      if (!ok) return null;
+      return { label: 'Цель', chosen: mode.target === code, onClick: () => setMode({ ...mode, target: code }) };
+    }
+    if (mode.k === 'legend' && mode.confirmed) {
+      const ok = legendOptions(s, data, mode.seat).actions.some((a) => a.type === 'playLegend' && a.target === code);
+      return ok ? { label: 'Цель', chosen: mode.target === code, onClick: () => act({ type: 'playLegend', seat: mode.seat, target: code }) } : null;
+    }
+    return null;
+  };
+
+  const plankButtons = (code: string): Btn[] => {
+    const ship = s.ships[code];
+    if (!myTurn || ship.sunk || ship.side !== bottom) return [];
+    const params = shipData(data, code);
+    const vt = volleyTargets(s, data, { ship: code });
+    const btns: Btn[] = [
+      {
+        key: 'volley',
+        label: `Залп · ${params.volleyCost} П`,
+        short: `Залп · ${params.volleyCost}`,
+        primary: mode.k === 'aim' && mode.shooter === code,
+        disabled: vt.reason,
+        onClick: () => {
+          setSeatPick(code);
+          setMode({ k: 'aim', shooter: code, charge: null, chargeFrom: null, heart: false, target: null, paid: 0 });
+        },
+        testid: `volley-${code}`,
+      },
+    ];
+    if (heartTargets(s, data, code).length > 0) {
+      btns.push({ key: 'heart', label: 'Сердце: Залп', short: 'Сердце', onClick: () => setMode({ k: 'aim', shooter: code, charge: null, chargeFrom: null, heart: true, target: null, paid: 0 }) });
+    }
+    for (const a of abilityButtons(s, data, code)) btns.push({ key: a.key, label: a.label, short: a.short, onClick: () => act(a.action) });
+    return btns;
+  };
+
+  const legendClick = (code: string) => {
+    if (!s.ships[code].legend) return;
+    setSheet({ k: 'card', seat: code, code: `${code}-Л` });
+  };
+
+  const regroupBtn = (side: Side): Btn | null => {
+    if (side !== bottom || !myTurn) return null;
+    const r = tryAction(s, { type: 'regroup', side }, data);
+    const cost = r.ok ? r.events.filter((e) => e.type === 'powderSpent').reduce((n, e) => n + (e.type === 'powderSpent' ? e.amount : 0), 0) : data.rules.regroupCost;
+    return { key: 'regroup', label: `Перестроение · ${cost}`, disabled: r.ok ? null : r.reason, onClick: () => act({ type: 'regroup', side }) };
+  };
+
+  const jointHint = (side: Side): string | null => {
+    const t = s.turn;
+    if (!myTurn || side !== bottom || !t.firstTarget || t.jointUsed || !t.firstShooter) return null;
+    const ally = Object.values(s.ships).find((x) => x.side === side && x.code !== t.firstShooter && !x.sunk);
+    if (!ally || (t.volleys[ally.code] ?? 0) > 0 || s.ships[t.firstTarget].sunk) return null;
+    return `совместный залп по «${shipData(data, t.firstTarget).nickDative}» даст ${nick(ally.code)} +${data.rules.jointBonus}`;
+  };
+
+  // ——— The panel in the middle (laptop) or in place of the hand (phone) ———
+  let dock: React.ReactNode = null;
+  const cancel = () => setMode({ k: 'idle' });
+  if (s.winner) dock = null;
+  else if (myDecision && d!.kind === 'reactions') {
+    dock = <ReactionPanel s={s} data={data} seats={d!.seats} onAct={(a) => act(a)} />;
+  } else if (myDecision && d!.kind === 'jack') {
+    dock = <JackPanel s={s} data={data} ship={d!.seats[0]} onAct={(a) => act(a)} />;
+  } else if (myDecision && d!.kind === 'tortuga') {
+    dock = <TortugaPanel key={turnKey} s={s} data={data} side={d!.side} onAct={(a) => act(a)} />;
+  } else if (myDecision && d!.kind === 'choice') {
+    dock = <ChoicePanel key={`${version}`} s={s} data={data} seat={d!.seats[0]} onAct={(a) => act(a)} />;
+  } else if (myTurn) {
+    if (mode.k === 'aim') dock = <VolleyPanel s={s} data={data} mode={mode} setMode={setMode} onFire={(a) => act(a)} onCancel={cancel} />;
+    else if (mode.k === 'card') dock = <CardParamsPanel s={s} data={data} mode={mode} setMode={setMode} onAct={(a) => act(a)} onCancel={cancel} />;
+    else if (mode.k === 'legend') {
+      const c = cardByCode(data, `${mode.seat}-Л`);
+      const opts = legendOptions(s, data, mode.seat);
+      const needsTarget = opts.actions.every((a) => a.type === 'playLegend' && a.target);
+      dock = !mode.confirmed ? (
+        <ConfirmPanel
+          title={`Разыграть Легенду «${c.name}»?`}
+          sub={`${c.big}. Легенда играется один раз за партию.`}
+          yes={`Сыграть · ${c.soul ? `${c.soul} Д` : `${c.cost} П`}`}
+          onYes={() => (needsTarget ? setMode({ ...mode, confirmed: true }) : act(opts.actions[0]))}
+          onNo={cancel}
+          testid="legend-confirm"
+        />
+      ) : (
+        <ConfirmPanel title={`«${c.name}»: выберите цель на столе`} sub={c.big} yes="Отмена" onYes={cancel} onNo={cancel} />
+      );
+    } else if (mode.k === 'confirmEnd') {
+      dock = <ConfirmPanel title={mode.text} yes="Закончить ход" no="Вернуться" onYes={() => endFlow('confirmed')} onNo={cancel} testid="confirm-end" />;
+    } else if (mode.k === 'plans') {
+      dock = <PlansPanel s={s} data={data} seat={mode.seat} onDone={(plans) => act({ type: 'endTurn', side: bottom, plans })} onCancel={cancel} />;
+    }
+  }
+  if (mode.k === 'concede') {
+    dock = (
+      <ConfirmPanel
+        title={`Сдаться за ${SIDE_LABEL[mode.side].acc}?`}
+        sub="Партия закончится победой противника."
+        yes="Сдаться"
+        onYes={() => act({ type: 'concede', side: mode.side })}
+        onNo={cancel}
+      />
+    );
+  } else if (mode.k === 'leave') {
+    dock = (
+      <ConfirmPanel
+        title="Начать новую партию?"
+        sub="Текущая партия останется в автосохранении, пока вы не начнёте новую."
+        yes="Новая партия"
+        onYes={onExit}
+        onNo={cancel}
+      />
+    );
+  }
+
+  // ——— The instruction in the status bar ———
+  const instruction = (() => {
+    if (s.winner) return s.winner === 'НИЧЬЯ' ? 'Партия окончена: ничья' : `Партия окончена: победа — ${SIDE_LABEL[s.winner].name}`;
+    if (!d) return '';
+    if (game.isBot(d.side)) {
+      if (d.kind === 'reactions') return `Ждём: бот ${nick(d.seats[0])} решает, ответить ли Реакцией…`;
+      if (d.kind === 'turn') return `Бот: ${SIDE_LABEL[d.side].name} думает…`;
+      return `Бот: ${SIDE_LABEL[d.side].name} решает…`;
+    }
+    if (!myDecision) return `Ждём: ${SIDE_LABEL[d.side].name} — ${curtainReason(s, data, d.kind)}`;
+    switch (d.kind) {
+      case 'reactions':
+        return `${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])}: ${s.volley ? 'Залп' : 'карта'} — ответите Реакцией?`;
+      case 'jack':
+        return `${nick(d.seats[0])} тонет — сыграть «Джек ускользает»?`;
+      case 'tortuga':
+        return 'Тортуга: сколько карт взять?';
+      case 'choice':
+        return `${nick(d.seats[0])}: сделайте выбор`;
+    }
+    if (mode.k === 'aim') return mode.target ? `${nick(mode.shooter)}: проверьте Залп и нажмите «Огонь»` : `${nick(mode.shooter)}: выберите цель Залпа`;
+    if (mode.k === 'card') return `${nick(mode.seat)}: «${cardByCode(data, mode.card).name}» — выберите параметры`;
+    if (!useful) return 'Полезных действий не осталось — нажмите «Ход окончен»';
+    return `${nick(seat)}: выберите карту или действие`;
+  })();
+
+  // ——— Hand ———
+  const tabs: HandTab[] = allSeats
+    .filter((x) => mySeats.includes(x))
+    .map((x) => {
+      const ship = seatShip(s, x);
+      const own = ship?.code === x;
+      const played = own ? (s.turn.played[x] ?? 0) : s.turn.captainPlayed.includes(x) ? 1 : 0;
+      const limit = own ? (s.turn.limit[x] ?? s.ships[x].tracks.crew) : 1;
+      return { seat: x, label: `${shipData(data, x).nick}${s.active === bottom && x === seat ? ` · ${played} из ${limit}` : ''}` };
+    });
+  const offOf = (_holder: string, code: string): string | null => {
+    if (!myDecision) return s.winner ? 'Партия окончена' : 'Сейчас не ваше решение';
+    if (d!.kind === 'reactions') return cardByCode(data, code).type === 'РЕАКЦИЯ' ? (cardHints.get(code)?.reason ?? null) : 'Сейчас — только Реакции';
+    if (d!.kind !== 'turn') return 'Сначала закончите выбор';
+    return cardHints.get(code)?.reason ?? null;
+  };
+  const chosenCard = mode.k === 'aim' ? mode.charge : mode.k === 'card' ? mode.card : null;
+  const handLabel = `${seat ? `Рука · ${nick(seat)}` : 'Рука'}`;
+
+  // ——— Bottom buttons ———
+  const undoWhy = myTurn ? game.undoRefusal(bottom) : 'Отменять можно только свои действия в свой ход';
+  const undoBtn: Btn = { key: 'undo', label: '↶', disabled: undoWhy, onClick: () => (game.undo(), setMode({ k: 'idle' })), testid: 'undo' };
+  const endBtn: Btn = {
+    key: 'end',
+    label: 'Ход окончен',
+    primary: true,
+    disabled: myTurn ? (mode.k === 'idle' ? null : 'Сначала закончите или отмените текущее действие') : 'Сейчас не ваш ход',
+    onClick: () => endFlow('start'),
+    testid: 'end-turn',
+  };
+  const botBusy = !!d && game.isBot(d.side) && !s.winner;
+  const botBtns: Btn[] = botBusy
+    ? [
+        { key: 'faster', label: 'Быстрее', onClick: () => setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant') },
+        { key: 'skip', label: 'До конца хода', onClick: () => setFastTurn(turnKey), testid: 'skip-turn' },
+      ]
+    : [];
+
+  const toolButtons = (
+    <>
+      <button className="btn small wide log-toggle" onClick={() => setSheet({ k: 'log' })}>
+        Журнал
+      </button>
+      <button className="btn small wide" onClick={() => setSheet({ k: 'rules' })}>
+        Правила
+      </button>
+      <button className="btn small icon" onClick={() => setSheet({ k: 'settings' })} aria-label="Настройки" data-testid="settings-btn">
+        ⚙
+      </button>
+    </>
+  );
+
+  const record = () => game.record();
+  const downloadLog = () =>
+    download(`bortom-k-bortu-${game.setup.game.seed}.txt`, game.log.map((l) => (l.kind === 'round' ? `\n${l.text}` : l.text)).join('\n'));
+  const downloadGame = () => download(`bortom-k-bortu-${game.setup.game.seed}.json`, JSON.stringify(record(), null, 1), 'application/json');
+  const rematch = () => {
+    const seed = createRng((Date.now() ^ game.setup.game.seed) >>> 0).int(2 ** 31 - 1) + 1;
+    const { positions: _positions, ...rest } = game.setup.game;
+    onRestart({ ...game.setup, game: { ...rest, seed } });
+  };
+
+  const top = other(bottom);
+  const handsOf = (side: Side) => Object.values(view.ships).filter((x) => x.side === side && seatShip(view, x.code)).map((x) => x.hand.length);
+  const decidingSeats = d && !s.winner ? d.seats : [];
+  const shooter = mode.k === 'aim' ? mode.shooter : (s.volley?.shooter ?? null);
+  const targeted = mode.k === 'aim' ? mode.target : mode.k === 'card' ? mode.target : (s.volley?.target ?? null);
+
+  const renderPlank = (x: (typeof view.ships)[string]) => (
+    <Plank
+      key={x.code}
+      s={view}
+      data={data}
+      ship={x}
+      own={x.side === bottom}
+      selected={x.side === bottom && x.code === seat && tabs.length > 1}
+      awaiting={decidingSeats.includes(x.code) && !game.isBot(x.side)}
+      targeted={targeted === x.code}
+      shooter={shooter === x.code}
+      plate={plateFor(x.code)}
+      buttons={plankButtons(x.code)}
+      role={null}
+      onSelect={() => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code)}
+      onDetails={() => setSheet({ k: 'ship', code: x.code })}
+      onLegend={() => legendClick(x.code)}
+    />
+  );
+
+  return (
+    <div className={`game ${dock ? 'has-dock' : ''} ${s.winner ? 'over' : ''}`} data-testid="game" data-bottom={bottom}>
+      <StatusBar s={s} data={data} instruction={flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
+      <main className="board">
+        <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
+        <div className="planks top">{columns(top).map(renderPlank)}</div>
+        <div className="middle">
+          {toast && <div className="toast">{toast}</div>}
+          {dock && <div className="dock">{dock}</div>}
+        </div>
+        <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
+        <TeamRow side={bottom} s={view} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} />
+        <div className="hand-row">
+          {seat && (
+            <Hand
+              s={view}
+              data={data}
+              seat={seat}
+              tabs={tabs}
+              onTab={setSeatPick}
+              offOf={offOf}
+              chosen={chosenCard}
+              noteOf={() => undefined}
+              onCard={(holder: string, code: string) => {
+                if (mode.k === 'aim' && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter) {
+                  setMode({ ...mode, charge: mode.charge === code ? null : code, chargeFrom: holder, paid: 0 });
+                  return;
+                }
+                setSheet({ k: 'card', seat: holder, code });
+              }}
+              onDiscard={(x) => setSheet({ k: 'discard', seat: x })}
+              label={handLabel}
+            />
+          )}
+          <div className="hand-actions">
+            {botBtns.map((b) => (
+              <Button key={b.key} b={b} className="small" />
+            ))}
+            <Button b={{ ...undoBtn, label: '↶ Отменить' }} className="undo wide" />
+            <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+          </div>
+        </div>
+      </main>
+      <aside className="log-col">
+        <h2>Журнал</h2>
+        <LogList log={game.log} fresh={freshFrom} />
+        <div className="log-actions">
+          <button className="btn small" onClick={() => setSheet({ k: 'log' })}>
+            Весь журнал
+          </button>
+          <button className="btn small" onClick={downloadLog}>
+            Скачать
+          </button>
+        </div>
+      </aside>
+      <nav className="bottom-bar">
+        <button className="btn" onClick={() => setSheet({ k: 'log' })}>
+          Журнал
+        </button>
+        <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
+          Правила
+        </button>
+        {botBusy ? (
+          <Button b={botBtns[1]} />
+        ) : (
+          <Button b={undoBtn} className="undo" />
+        )}
+        <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+      </nav>
+
+      {sheet?.k === 'card' && (
+        <CardDetail
+          data={data}
+          code={sheet.code}
+          status={cardStatus(sheet.seat, sheet.code)}
+          buttons={
+            sheet.code.endsWith('-Л')
+              ? myTurn && sheet.seat && s.ships[sheet.seat].side === bottom
+                ? [
+                    {
+                      key: 'legend',
+                      label: 'Разыграть Легенду',
+                      primary: true,
+                      disabled: legendOptions(s, data, sheet.seat).reason,
+                      onClick: () => {
+                        setSheet(null);
+                        setMode({ k: 'legend', seat: sheet.seat, target: null, confirmed: false });
+                      },
+                    },
+                  ]
+                : []
+              : cardButtons(sheet.seat, sheet.code)
+          }
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.k === 'ship' && <ShipSheet s={view} data={data} code={sheet.code} onClose={() => setSheet(null)} onDiscard={() => setSheet({ k: 'discard', seat: sheet.code })} />}
+      {sheet?.k === 'discard' && <DiscardSheet s={view} data={data} seat={sheet.seat} onClose={() => setSheet(null)} />}
+      {sheet?.k === 'sea' && <SeaSheet s={view} data={data} onClose={() => setSheet(null)} />}
+      {sheet?.k === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}
+      {sheet?.k === 'log' && (
+        <div className="sheet-backdrop" onClick={() => setSheet(null)}>
+          <section className="sheet wide" onClick={(e) => e.stopPropagation()} data-testid="log-sheet">
+            <header className="sheet-head">
+              <b>Журнал</b>
+              <span>
+                <button className="btn small" onClick={downloadLog}>
+                  Скачать
+                </button>{' '}
+                <button className="btn small close" onClick={() => setSheet(null)} aria-label="Закрыть">
+                  ✕
+                </button>
+              </span>
+            </header>
+            <div className="sheet-body">
+              <LogList log={game.log} fresh={freshFrom} />
+            </div>
+          </section>
+        </div>
+      )}
+      {sheet?.k === 'settings' && (
+        <SettingsSheet
+          speed={speed}
+          setSpeed={setSpeed}
+          openHands={openHands}
+          setOpenHands={setOpenHands}
+          canConcede={!s.winner && humans.length > 0 ? (humans.includes(bottom) ? bottom : humans[0]) : null}
+          onConcede={() => {
+            setSheet(null);
+            setMode({ k: 'concede', side: humans.includes(bottom) ? bottom : humans[0] });
+          }}
+          onNew={() => {
+            setSheet(null);
+            setMode({ k: 'leave' });
+          }}
+          onDownloadLog={downloadLog}
+          onDownloadGame={downloadGame}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {s.winner && !endClosed && (
+        <EndScreen
+          s={s}
+          data={data}
+          setup={game.setup}
+          actions={game.actions}
+          onRematch={rematch}
+          onNew={onExit}
+          onDownloadLog={downloadLog}
+          onDownloadGame={downloadGame}
+          onClose={() => setEndClosed(true)}
+        />
+      )}
+    </div>
+  );
+
+  function cardStatus(holder: string, code: string): string | null {
+    if (code.endsWith('-Л')) {
+      const o = legendOptions(s, data, holder);
+      const c = cardByCode(data, code);
+      if (c.type !== 'ПРИКАЗ') return `Сыграть: когда ${nick(holder)} должна утонуть. Порох: ${s.teams[s.ships[holder].side].powder} из ${c.cost}`;
+      return o.reason ? `Нельзя: ${o.reason}` : 'Можно сыграть сейчас';
+    }
+    if (!myDecision) return null;
+    const o = cardHints.get(code) ?? playOptions(s, data, holder, code);
+    return o.reason ? `Нельзя сыграть: ${o.reason}` : 'Можно сыграть сейчас';
+  }
+}
+
+/** Why the device goes to the team: «ход Компании», «Реакция на Залп „Мести“», «Тортуга»… */
+function curtainReason(s: GameState, data: LocalGame['data'], kind: string): string {
+  const nick = (code: string) => `«${shipData(data, code).nick}»`;
+  switch (kind) {
+    case 'reactions':
+      if (s.volley) return `Реакция на Залп ${nick(s.volley.shooter)}`;
+      return s.card ? `Реакция на «${cardByCode(data, s.card.card).name}»` : 'Реакция';
+    case 'jack':
+      return 'Джек ускользает?';
+    case 'tortuga':
+      return 'Тортуга';
+    case 'choice': {
+      const p = s.pending;
+      if (p?.kind === 'choice' && p.what === 'dice') return 'тайный выбор — Кости лжеца';
+      if (p?.kind === 'choice' && p.what === 'bell') return 'Колокол «Голландца»: сбросьте карту';
+      return 'выбор карты';
+    }
+    default:
+      return `ход ${SIDE_LABEL[s.active].gen}`;
+  }
+}

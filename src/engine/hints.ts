@@ -358,6 +358,8 @@ export function previewReaction(s: GameState, data: GameData, seat: string, card
 export interface AbilityButton {
   key: string;
   label: string;
+  /** A shorter label for narrow screens. */
+  short: string;
   action: Action;
 }
 
@@ -366,15 +368,15 @@ export function abilityButtons(s: GameState, data: GameData, code: string): Abil
   const ship = s.ships[code];
   const r = data.rules;
   const out: AbilityButton[] = [];
-  const add = (key: string, label: string, action: Action) => {
-    if (tryAction(s, action, data).ok) out.push({ key, label, action });
+  const add = (key: string, label: string, short: string, action: Action) => {
+    if (tryAction(s, action, data).ok) out.push({ key, label, short, action });
   };
-  if (hasAbility(data, ship, ABILITY.sword)) add('sword', `Меч Тритона · ${r.swordCost} П`, { type: 'sword', ship: code });
-  if (hasAbility(data, ship, ABILITY.treasury)) add('treasury', `Казна · ${r.treasuryCost} П`, { type: 'treasury', ship: code });
-  if (hasAbility(data, ship, ABILITY.dive)) add('dive', 'Погружение', { type: 'dive', ship: code });
+  if (hasAbility(data, ship, ABILITY.sword)) add('sword', `Меч Тритона · ${r.swordCost} П`, `Меч · ${r.swordCost}`, { type: 'sword', ship: code });
+  if (hasAbility(data, ship, ABILITY.treasury)) add('treasury', `Казна · ${r.treasuryCost} П`, `Казна · ${r.treasuryCost}`, { type: 'treasury', ship: code });
+  if (hasAbility(data, ship, ABILITY.dive)) add('dive', 'Погружение', 'Нырок', { type: 'dive', ship: code });
   if (hasAbility(data, ship, ABILITY.eternalService)) {
-    add('soulHull', 'Душа → +1 Корпус', { type: 'souls', ship: code, track: 'hull' });
-    add('soulCrew', 'Душа → +1 Команда', { type: 'souls', ship: code, track: 'crew' });
+    add('soulHull', 'Душа → +1 Корпус', 'Душа→Корп', { type: 'souls', ship: code, track: 'hull' });
+    add('soulCrew', 'Душа → +1 Команда', 'Душа→Ком', { type: 'souls', ship: code, track: 'crew' });
   }
   return out;
 }
