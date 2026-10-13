@@ -671,7 +671,7 @@ export function choose(ctx: Ctx, seat: string, cards: string[]): void {
   }
   p.waiting = p.waiting.filter((x) => x !== seat);
   if (p.waiting.length > 0) return;
-  if (p.what === 'dice') resolveDice(ctx, p.picks);
+  if (p.what === 'dice') resolveDice(ctx, [c.seat, c.target!], p.picks);
   s.pending = null;
 }
 
@@ -686,9 +686,8 @@ function toPlanOrHand(ctx: Ctx, c: CardResolution, card: string, holder: ShipSta
 }
 
 /** «Игра в кости лжеца»: the card dearer in Powder takes both; equal — both go to their owners' discards (18.8). */
-function resolveDice(ctx: Ctx, picks: Record<string, string>): void {
+function resolveDice(ctx: Ctx, [a, b]: string[], picks: Record<string, string>): void {
   const { s, data } = ctx;
-  const [a, b] = Object.keys(picks);
   for (const seat of [a, b]) takeCard(getShip(s, seat).hand, picks[seat], 'Этой карты нет на руке');
   const costA = cardByCode(data, picks[a]).cost;
   const costB = cardByCode(data, picks[b]).cost;
