@@ -9,6 +9,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:server": "vite build --config vite.server.config.ts",
+    "server": "node dist-server/main.js",
+    "lan": "npm run build && npm run build:server && node dist-server/main.js --lan",
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
@@ -17,14 +20,18 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
     "@types/node": "^22.10.2",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/ws": "^8.18.2",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.6.3",
     "vite": "^6.0.7",

@@ -5,7 +5,7 @@ import { choose, playCard } from './cards';
 import { checkGameOver } from './damage';
 import { jack, playLegend } from './legends';
 import { runQueue } from './queue';
-import { noReaction, react } from './reactions';
+import { closeWindow, noReaction, react } from './reactions';
 import { createRng } from './rng';
 import { tortuga } from './sea';
 import { RuleError, otherSide, type Action, type Ctx, type GameEvent, type GameState, type Pending } from './state';
@@ -17,7 +17,7 @@ export { createGame, type GameOptions } from './setup';
 
 /** Actions that answer each kind of pending decision; nothing else is allowed meanwhile. */
 const ANSWERS: Record<Pending['kind'], Action['type'][]> = {
-  reactions: ['react', 'noReaction'],
+  reactions: ['react', 'noReaction', 'closeWindow'],
   jack: ['jack'],
   tortuga: ['tortuga'],
   choice: ['choose'],
@@ -101,6 +101,9 @@ export function applyAction(
       break;
     case 'noReaction':
       noReaction(ctx, action.seat);
+      break;
+    case 'closeWindow':
+      closeWindow(ctx);
       break;
     case 'jack':
       jack(ctx, action.play);

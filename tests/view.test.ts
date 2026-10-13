@@ -3,9 +3,9 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction } from '../src/engine/engine';
 import type { Action, GameState } from '../src/engine/state';
-import { HIDDEN, eventFor, viewFor } from '../src/engine/view';
+import { HIDDEN, eventFor, eventsFor, viewFor } from '../src/engine/view';
 import { playGame } from '../src/engine/sim/sim';
-import { act, cardIn, data, turnOf } from './helpers';
+import { act, cardIn, data, passTo, turnOf } from './helpers';
 
 const play = (s: GameState, seat: string, name: string, extra: Partial<Extract<Action, { type: 'playCard' }>> = {}) =>
   act(s, { type: 'playCard', seat, card: cardIn(s, seat, name), ...extra });
@@ -133,5 +133,64 @@ describe('concede', () => {
     expect(r.state.winner).toBe('ПИРАТЫ');
     expect(r.state.pending).toBeNull();
     expect(() => applyAction(r.state, { type: 'concede', side: 'ПИРАТЫ' }, data)).toThrow('Партия окончена');
+  });
+});
+
+describe('network: the Reaction window does not give the hand away (docs/TZ.md, «Одновременные ходы»)', () => {
+  it('the attackers see the whole defending team deciding and not who declined', () => {
+    // Only the Endeavour holds a Reaction.
+    let s = turnOf('ПИРАТЫ', { И: ['Двойная обшивка'], Г: ['Ядра'] });
+    const r = act(s, { type: 'volley', ship: 'Ж', target: 'И' });
+    s = r.state;
+    expect(s.pending).toMatchObject({ kind: 'reactions', waiting: ['И'] });
+    expect(viewFor(s, PIRATES).pending).toMatchObject({ kind: 'reactions', waiting: ['И', 'Г'] });
+    expect(viewFor(s, COMPANY).pending).toMatchObject({ waiting: ['И'] });
+    const opened = r.events.find((e) => e.type === 'windowOpened')!;
+    expect(eventFor(s, PIRATES, opened)).toMatchObject({ seats: ['И', 'Г'] });
+    expect(eventFor(s, COMPANY, opened)).toMatchObject({ seats: ['И'] });
+    const declined = act(s, { type: 'noReaction', seat: 'И' });
+    expect(eventsFor(declined.state, PIRATES, declined.events).some((e) => e.type === 'noReaction')).toBe(false);
+    expect(eventsFor(declined.state, COMPANY, declined.events).some((e) => e.type === 'noReaction')).toBe(true);
+  });
+
+  it('with pauseEmptyWindows a window opens with nobody deciding; closeWindow goes on with the Volley', () => {
+    const s = turnOf('ПИРАТЫ', { И: ['Ядра'], Г: ['Ядра'] }, { pauseEmptyWindows: true });
+    const hull = s.ships['И'].tracks.hull;
+    const r = act(s, { type: 'volley', ship: 'Ж', target: 'И' });
+    expect(r.state.pending).toMatchObject({ kind: 'reactions', window: 'before', waiting: [] });
+    expect(viewFor(r.state, PIRATES).pending).toMatchObject({ waiting: ['И', 'Г'] });
+    expect(() => act(r.state, { type: 'noReaction', seat: 'И' })).toThrow();
+    const after = act(r.state, { type: 'closeWindow' }).state;
+    expect(after.pending).toMatchObject({ kind: 'reactions', window: 'after', waiting: [] });
+    const done = act(after, { type: 'closeWindow' }).state;
+    expect(done.pending).toBeNull();
+    expect(done.ships['И'].tracks.hull).toBeLessThan(hull);
+  });
+
+  it('without the option the engine skips an empty window as before', () => {
+    const s = turnOf('ПИРАТЫ', { И: ['Ядра'], Г: ['Ядра'] });
+    expect(act(s, { type: 'volley', ship: 'Ж', target: 'И' }).state.pending).toBeNull();
+  });
+
+  it('closeWindow: every seat still deciding plays no Reaction', () => {
+    let s = turnOf('ПИРАТЫ', { И: ['Двойная обшивка'] });
+    s = act(s, { type: 'volley', ship: 'Ж', target: 'И' }).state;
+    const r = act(s, { type: 'closeWindow' });
+    expect(r.events[0]).toEqual({ type: 'noReaction', seat: 'И' });
+    expect(r.state.pending).toBeNull();
+    expect(() => act(r.state, { type: 'closeWindow' })).toThrow();
+  });
+
+  it('«Тиа Дальма»: after the choice the player still sees the top of the sea deck, until the cards come out', () => {
+    let s = play(turnOf('ПИРАТЫ', { Ж: ['Тиа Дальма'] }, { sea: true }), 'Ж', 'Тиа Дальма').state;
+    const top = [...s.sea!.deck.slice(0, 3)].reverse();
+    s = act(s, { type: 'choose', seat: 'Ж', cards: top }).state;
+    expect(viewFor(s, ['Ж']).sea!.deck.slice(0, 4)).toEqual([...top, HIDDEN]);
+    expect(viewFor(s, ['М']).sea!.deck.slice(0, 3)).toEqual([HIDDEN, HIDDEN, HIDDEN]);
+    expect(viewFor(s, COMPANY).sea!.peek).toBeUndefined();
+    // The next round opens the first of them: two are still known.
+    s = passTo(passTo(s, 'КОМПАНИЯ'), 'ПИРАТЫ');
+    expect(s.sea!.current).toBe(top[0]);
+    expect(viewFor(s, ['Ж']).sea!.deck.slice(0, 3)).toEqual([top[1], top[2], HIDDEN]);
   });
 });
