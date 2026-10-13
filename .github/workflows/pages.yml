@@ -27,7 +27,12 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # The address of the game server for the site on GitHub Pages (DEPLOY.md): the repository variable
+      # VITE_SERVER_URL, e.g. wss://bortom.duckdns.org. Empty — the site asks for the address in «По сети».
       - run: npm run build
+        env:
+          VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
+      - run: npm run build:server
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'
         with:
@@ -52,7 +57,9 @@ jobs:
         if: always()
         with:
           name: e2e-screenshots
-          path: docs/screenshots/stage7
+          path: |
+            docs/screenshots/stage7
+            docs/screenshots/stage8
 
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

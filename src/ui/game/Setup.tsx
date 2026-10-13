@@ -4,6 +4,7 @@ import type { Variant } from '../../engine/state';
 import { parseRecord, replay, type Controller, type MatchRecord, type MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
 import type { GameData, Side } from '../../engine/types';
+import { loadNetSaved } from '../../net/ws';
 import { loadSave, loadSettings, storeSave, storeSettings, type Speed } from '../storage';
 import { SIDE_LABEL, SPEEDS } from './text';
 
@@ -20,12 +21,15 @@ export function Setup({
   onStart,
   onResume,
   onCards,
+  onNet,
 }: {
   data: GameData;
   onStart: (req: StartRequest) => void;
   onResume: (record: MatchRecord) => void;
   onCards: () => void;
+  onNet: () => void;
 }) {
+  const netSaved = loadNetSaved();
   const [save, setSave] = useState(() => {
     const record = loadSave();
     if (!record) return null;
@@ -122,6 +126,15 @@ export function Setup({
         </section>
       )}
 
+      {netSaved?.code && (
+        <section className="resume" data-testid="net-resume">
+          <span>Вы в комнате {netSaved.code} (игра по сети).</span>
+          <button className="btn primary" onClick={onNet}>
+            Вернуться в комнату
+          </button>
+        </section>
+      )}
+
       <section className="quick">
         <button className="quick-btn" data-testid="quick-bots" onClick={() => quick('bots')}>
           <b>Против ботов</b>
@@ -134,6 +147,10 @@ export function Setup({
         <button className="quick-btn" data-testid="quick-match" onClick={() => quick('match')}>
           <b>Матч ботов</b>
           <span>Четыре бота играют, вы смотрите. Руки открыты.</span>
+        </button>
+        <button className="quick-btn" data-testid="quick-net" onClick={onNet}>
+          <b>По сети</b>
+          <span>У каждого своё устройство: комната по коду, по Wi-Fi или через сервер.</span>
         </button>
       </section>
 

@@ -2,9 +2,9 @@
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
 import { useMemo, useState, type ReactNode } from 'react';
 import rulesText from '../../../RULES.md?raw';
-import { replay, type MatchSetup } from '../../engine/match';
+import type { SideTotals } from '../../engine/match';
 import type { LogLine } from '../../engine/log';
-import { cardByCode, seaCardByCode, shipData, type Action, type GameState } from '../../engine/state';
+import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
 import { HIDDEN } from '../../engine/view';
 import { RichText } from '../RichText';
@@ -138,6 +138,16 @@ export function SeaSheet({ s, data, onClose }: { s: GameState; data: GameData; o
       ) : (
         <p>Партия без колоды моря.</p>
       )}
+      {s.sea?.peek && s.sea.deck.slice(0, s.sea.peek.n).every((c) => c !== HIDDEN) && (
+        <p data-testid="sea-peek">
+          Следующие карты моря («Тиа Дальма», их знаете только вы):{' '}
+          {s.sea.deck
+            .slice(0, s.sea.peek.n)
+            .map((c) => `«${seaCardByCode(data, c).name}»`)
+            .join(', ')}
+          .
+        </p>
+      )}
       {s.sea && (
         <p className="muted">
           В колоде моря {s.sea.deck.length}, в сбросе {s.sea.discard.length}
@@ -215,51 +225,65 @@ export function SettingsSheet({
   setHints,
   canConcede,
   onConcede,
+  newLabel = 'Новая партия',
   onNew,
   onDownloadLog,
   onDownloadGame,
   onClose,
 }: {
-  speed: Speed;
+  /** null — not shown (a network game: the server moves the bots). */
+  speed: Speed | null;
   setSpeed: (s: Speed) => void;
-  openHands: boolean;
+  openHands: boolean | null;
   setOpenHands: (v: boolean) => void;
-  hints: boolean;
+  /** null — the room does not allow hints. */
+  hints: boolean | null;
   setHints: (v: boolean) => void;
   canConcede: Side | null;
   onConcede: () => void;
+  newLabel?: string;
   onNew: () => void;
   onDownloadLog: () => void;
-  onDownloadGame: () => void;
+  onDownloadGame: (() => void) | null;
   onClose: () => void;
 }) {
   return (
     <Sheet title="Настройки" onClose={onClose} testid="settings">
-      <label className="row">
-        <span>Скорость показа ходов ботов</span>
-        <select value={speed} onChange={(e) => setSpeed(e.target.value as Speed)}>
-          {Object.entries(SPEEDS).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="row check">
-        <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все руки
-        видны, без заставок)
-      </label>
-      <label className="row check">
-        <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
-        целях, «4 → 2» у Реакций, зелёный «Ход окончен», «Залп не дан…»)
-      </label>
+      {speed !== null && (
+        <label className="row">
+          <span>Скорость показа ходов ботов</span>
+          <select value={speed} onChange={(e) => setSpeed(e.target.value as Speed)}>
+            {Object.entries(SPEEDS).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {openHands !== null && (
+        <label className="row check">
+          <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все
+          руки видны, без заставок)
+        </label>
+      )}
+      {hints !== null ? (
+        <label className="row check">
+          <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
+          целях, «4 → 2» у Реакций, зелёный «Ход окончен», «Залп не дан…»)
+        </label>
+      ) : (
+        <p className="row muted">Подсказки в этой комнате выключены.</p>
+      )}
       <div className="row buttons">
         <button className="btn" onClick={onDownloadLog}>
           Скачать журнал
         </button>
-        <button className="btn" onClick={onDownloadGame}>
-          Скачать партию
-        </button>
+        {onDownloadGame && (
+          <button className="btn" onClick={onDownloadGame}>
+            Скачать партию
+          </button>
+        )}
       </div>
       <div className="row buttons">
         {canConcede && (
@@ -268,54 +292,34 @@ export function SettingsSheet({
           </button>
         )}
         <button className="btn" onClick={onNew}>
-          Новая партия
+          {newLabel}
         </button>
       </div>
     </Sheet>
   );
 }
 
-interface SideTotals {
-  damage: number;
-  income: number;
-  spent: number;
-}
-
 export function EndScreen({
   s,
-  data,
-  setup,
-  actions,
+  totals,
   onRematch,
   onNew,
+  newLabel = 'Новая партия',
   onDownloadLog,
   onDownloadGame,
   onClose,
 }: {
   s: GameState;
-  data: GameData;
-  setup: MatchSetup;
-  actions: Action[];
-  onRematch: () => void;
+  totals: Record<Side, SideTotals>;
+  /** null — no rematch (a network game). */
+  onRematch: (() => void) | null;
   onNew: () => void;
+  newLabel?: string;
   onDownloadLog: () => void;
-  onDownloadGame: () => void;
+  /** null — the record is not available (a network game: hidden cards). */
+  onDownloadGame: (() => void) | null;
   onClose: () => void;
 }) {
-  const totals = useMemo(() => {
-    const t: Record<Side, SideTotals> = { ПИРАТЫ: { damage: 0, income: 0, spent: 0 }, КОМПАНИЯ: { damage: 0, income: 0, spent: 0 } };
-    replay(data, setup, actions, ({ before, events }) => {
-      for (const e of events) {
-        if (e.type === 'damage') {
-          const hurt = before.ships[e.ship].side;
-          t[hurt === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ'].damage += e.amount + e.toHull;
-        }
-        if (e.type === 'powderGained') t[e.side].income += e.amount;
-        if (e.type === 'powderSpent') t[e.side].spent += e.amount;
-      }
-    });
-    return t;
-  }, [data, setup, actions]);
   const w = s.winner;
   const title = w === 'НИЧЬЯ' ? 'Ничья' : w ? `Победа: ${SIDE_LABEL[w].name}` : '';
   return (
@@ -350,18 +354,22 @@ export function EndScreen({
           </tbody>
         </table>
         <div className="panel-actions wrap">
-          <button className="btn primary" onClick={onRematch} data-testid="rematch">
-            Реванш
-          </button>
-          <button className="btn" onClick={onNew}>
-            Новая партия
+          {onRematch && (
+            <button className="btn primary" onClick={onRematch} data-testid="rematch">
+              Реванш
+            </button>
+          )}
+          <button className={`btn ${onRematch ? '' : 'primary'}`} onClick={onNew}>
+            {newLabel}
           </button>
           <button className="btn" onClick={onDownloadLog}>
             Скачать журнал
           </button>
-          <button className="btn" onClick={onDownloadGame}>
-            Скачать партию
-          </button>
+          {onDownloadGame && (
+            <button className="btn" onClick={onDownloadGame}>
+              Скачать партию
+            </button>
+          )}
           <button className="link" onClick={onClose}>
             Посмотреть стол
           </button>

@@ -31,12 +31,17 @@ import { volleyDamage, volleyTerms } from './volley';
 
 export type Tried = { ok: true; state: GameState; events: GameEvent[] } | { ok: false; reason: string };
 
-/** Applies the action to a copy: the new state, or the refusal of the rules. */
+/**
+ * Applies the action to a copy: the new state, or the refusal of the rules. On a player's view (viewFor: the seed
+ * is cut) the dry run may meet a hidden card ('?') after all the checks have passed: the action is then allowed,
+ * the server decides what happens, and the view stays as it is.
+ */
 export function tryAction(state: GameState, action: Action, data: GameData): Tried {
   try {
     return { ok: true, ...applyAction(state, action, data) };
   } catch (e) {
     if (e instanceof RuleError) return { ok: false, reason: e.message };
+    if (state.seed === 0) return { ok: true, state, events: [] };
     throw e;
   }
 }

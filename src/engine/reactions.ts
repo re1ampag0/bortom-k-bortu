@@ -25,6 +25,7 @@ import {
   type VolleyState,
 } from './state';
 import type { CardInstance, Fx, Side } from './types';
+import { HIDDEN } from './view';
 
 type Subject = 'volley' | 'card';
 
@@ -43,7 +44,7 @@ export function openWindow(ctx: Ctx, window: ReactionWindow, subject: Subject): 
   const seats = seatsOf(ctx.s, side)
     .map((x) => x.code)
     .filter((seat) => reactionOptions(ctx, seat, side, window, subject).length > 0);
-  if (seats.length === 0) return;
+  if (seats.length === 0 && !ctx.s.pauseEmptyWindows) return;
   ctx.s.pending = { kind: 'reactions', window, subject, side, waiting: seats };
   ctx.events.push({ type: 'windowOpened', window, side, seats });
 }
@@ -85,6 +86,8 @@ function reactionOptions(ctx: Ctx, seat: string, side: Side, window: ReactionWin
   const fromHand = captain ? !s.turn.captainReacted.includes(seat) : (s.turn.reactions[ship.code] ?? 0) < ship.tracks.sails;
   const options: ReactionOption[] = [];
   const consider = (card: string, fromPlan: boolean) => {
+    // A hidden card of a player's view (viewFor): the dry runs of the interface do not know it.
+    if (card === HIDDEN) return;
     const c = cardByCode(ctx.data, card);
     if (c.type !== 'РЕАКЦИЯ' || !canPay(ctx, c, ship)) return;
     const fx = reactionFx(c, fromPlan);
@@ -271,6 +274,13 @@ function applyToCard(ctx: Ctx, fx: Fx, c: CardResolution, seat: string, ship: Sh
 
 /** The tag of boarding cards (18.14). */
 const BOARDING = 'абордаж';
+
+/** The window closes: every seat still deciding plays no Reaction. */
+export function closeWindow(ctx: Ctx): void {
+  const pending = requirePending(ctx.s, 'reactions');
+  for (const seat of pending.waiting) ctx.events.push({ type: 'noReaction', seat });
+  ctx.s.pending = null;
+}
 
 /** The seat plays no (more) Reactions in this window. The window closes when every waiting seat has declined. */
 export function noReaction(ctx: Ctx, seat: string): void {

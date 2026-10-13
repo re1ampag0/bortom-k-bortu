@@ -1,0 +1,32 @@
+# Full server (DEPLOY.md, «Свой сервер — с доменом и HTTPS»): Caddy gets an HTTPS certificate for DOMAIN by itself;
+# the game is at https://<DOMAIN> and the site on GitHub Pages connects to wss://<DOMAIN>/ws.
+#   docker compose -f docker-compose.https.yml up -d
+services:
+  game:
+    build: .
+    image: bortom-k-bortu
+    restart: unless-stopped
+    environment:
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+    volumes:
+      - ./server-data:/data
+    expose:
+      - "8080"
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Впишите DOMAIN в файл .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - game
+volumes:
+  caddy_data:
+  caddy_config:

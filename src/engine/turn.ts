@@ -52,6 +52,11 @@ function revealSea(ctx: Ctx): void {
     reshuffled = true;
   }
   sea.current = sea.deck.shift() ?? null;
+  // «Тиа Дальма»: the looked-at cards come out one by one.
+  if (sea.peek) {
+    if (reshuffled || sea.peek.n <= 1) delete sea.peek;
+    else sea.peek.n--;
+  }
   if (!sea.current) return;
   ctx.events.push({ type: 'seaRevealed', card: sea.current, reshuffled });
   seaAtOnce(ctx);

@@ -17,12 +17,13 @@ import {
   type VolleyTarget,
 } from '../../engine/hints';
 import { sideGenitive, turnSummary } from '../../engine/log';
-import type { MatchSetup } from '../../engine/match';
+import { matchTotals, type MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
 import { ABILITY, cardByCode, hasAbility, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
 import type { Side } from '../../engine/types';
 import { viewFor } from '../../engine/view';
 import type { LocalGame } from '../../net/local';
+import type { NetGame } from '../../net/ws';
 import { download, loadSettings, storeSave, storeSettings, type Speed } from '../storage';
 import { Curtain } from './Curtain';
 import { Hand, type HandTab } from './Hand';
@@ -41,6 +42,7 @@ import {
   type AimMode,
   type CardMode,
 } from './Panels';
+import { MissedSheet, NetBar, netDock } from './NetParts';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
 import { SIDE_LABEL, SPEEDS } from './text';
 
@@ -52,6 +54,8 @@ type Mode =
   | { k: 'confirmEnd'; text: string }
   | { k: 'plans'; seat: string }
   | { k: 'concede'; side: Side }
+  /** By network: leave the room. */
+  | { k: 'exitRoom' }
   | { k: 'leave' }
   /** «Ход окончен» pressed: the turn passes in 3 s unless cancelled. */
   | { k: 'ending'; action: Action };
@@ -75,13 +79,24 @@ function urlSpeed(): Speed | null {
   return v === '0' || v === 'instant' ? 'instant' : v && v in SPEEDS ? (v as Speed) : null;
 }
 
-export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () => void; onRestart: (setup: MatchSetup) => void }) {
+export function Game({
+  game,
+  onExit,
+  onRestart,
+}: {
+  game: LocalGame | NetGame;
+  onExit: () => void;
+  onRestart: (setup: MatchSetup) => void;
+}) {
   const version = useSyncExternalStore(
     useCallback((cb) => game.subscribe(cb), [game]),
     () => game.version,
   );
   const data = game.data;
   const s = game.state;
+  // By network the state is already the player's view, the server plays the bots and keeps the game.
+  const net = game.kind === 'net' ? game : null;
+  const local = game.kind === 'local' ? game : null;
   const [speed, setSpeedState] = useState<Speed>(() => urlSpeed() ?? loadSettings().speed);
   const setSpeed = (v: Speed) => {
     setSpeedState(v);
@@ -89,25 +104,46 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   };
   const [openHands, setOpenHands] = useState(game.setup.openHands);
   // «Подсказки» off — «как за столом»: no damage before choosing, no green «Ход окончен», no «Залп не дан…».
-  const [hints, setHintsState] = useState(game.setup.hints ?? false);
+  const [hintsChoice, setHintsState] = useState(net ? (loadSettings().hints ?? false) : (game.setup.hints ?? false));
+  // «Подсказки» by network: each player's own setting, if the room allows them.
+  const hintsAllowed = !net || net.room.settings.hints;
+  const hints = hintsAllowed && hintsChoice;
   const setHints = (v: boolean) => {
     setHintsState(v);
     storeSettings({ ...loadSettings(), hints: v });
   };
   const humans = SIDES.filter((side) => game.setup.players[side] === 'human');
   const d = game.decider();
+  /** A bot plays the seat: on one screen a whole team, by network one ship. */
+  const botSeat = (seat: string) => (net ? net.isBotSeat(seat) : local!.isBot(s.ships[seat].side));
+  const botSide = (side: Side) => (net ? Object.values(s.ships).filter((x) => x.side === side).every((x) => net.isBotSeat(x.code)) : local!.isBot(side));
 
   // ——— Who sits at the device ———
   const [device, setDevice] = useState<Side | null>(humans.length === 1 ? humans[0] : null);
   const [seen, setSeen] = useState<Record<Side, number>>({ ПИРАТЫ: 0, КОМПАНИЯ: 0 });
-  const curtainSide = humans.length === 2 && !openHands && d && !s.winner && d.side !== device ? d.side : null;
-  const bottom: Side =
-    humans.length === 2 ? (openHands ? (d?.side ?? device ?? 'ПИРАТЫ') : (device ?? d?.side ?? 'ПИРАТЫ')) : (humans[0] ?? 'ПИРАТЫ');
+  const curtainSide = local && humans.length === 2 && !openHands && d && !s.winner && d.side !== device ? d.side : null;
+  const bottom: Side = net
+    ? (net.side ?? 'ПИРАТЫ')
+    : humans.length === 2
+      ? openHands
+        ? (d?.side ?? device ?? 'ПИРАТЫ')
+        : (device ?? d?.side ?? 'ПИРАТЫ')
+      : (humans[0] ?? 'ПИРАТЫ');
   const viewer = openHands || humans.length === 0 ? ('all' as const) : Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const view = useMemo(() => viewFor(s, viewer), [version, bottom, openHands]);
-  const myDecision = !!d && d.side === bottom && !game.isBot(bottom) && !curtainSide;
+  const view = useMemo(() => (net ? s : viewFor(s, viewer)), [version, bottom, openHands]);
+  /** Seats played from this device: on one screen the team at the device, by network the player's own ships. */
+  const mySeats = seatsOf(s, bottom)
+    .map((x) => x.code)
+    .filter((x) => !net || net.seats.includes(x));
+  /** By network each player ends the turn for their ships: then the turn waits for the ally. */
+  const iAmDone = !!net && mySeats.length > 0 && mySeats.every((x) => net.ready.includes(x));
+  const myDecision = net
+    ? !!d && !s.winner && (d.kind === 'turn' ? d.side === bottom && mySeats.length > 0 && !iAmDone : d.seats.some((x) => mySeats.includes(x)))
+    : !!d && d.side === bottom && !local!.isBot(bottom) && !curtainSide;
   const myTurn = myDecision && d!.kind === 'turn';
+  /** The seats whose decision the game waits for from this device. */
+  const myDeciding = d ? d.seats.filter((x) => mySeats.includes(x)) : [];
   // The Reaction chosen in the hand while the window is open (phone: the panel has only «Пропустить» and «Сыграть»).
   const [reactPickRaw, setReactPick] = useState<{ seat: string; card: string } | null>(null);
   const reactPick =
@@ -124,13 +160,18 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   const [fastTurn, setFastTurn] = useState<string | null>(null);
   const [endClosed, setEndClosed] = useState(false);
   const [freshFrom, setFreshFrom] = useState(0);
-  const mySeats = seatsOf(s, bottom).map((x) => x.code);
   const allSeats = Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
   const [seatPick, setSeatPick] = useState<string | null>(null);
   const seat = seatPick && allSeats.includes(seatPick) ? seatPick : (d && d.side === bottom ? d.seats.find((x) => mySeats.includes(x)) : null) ?? mySeats[0] ?? allSeats[0];
 
   const act = (action: Action | Action[]): boolean => {
     const list = Array.isArray(action) ? action : [action];
+    // By network «Ход окончен» of a player is a message: the turn ends when the ally pressed it too.
+    if (net && list[0].type === 'endTurn') {
+      net.setReady(true, list[0].plans);
+      setMode({ k: 'idle' });
+      return true;
+    }
     for (const a of list) {
       const why = game.act(a);
       if (why) {
@@ -151,25 +192,35 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   // ——— Effects: bots, autosave, title, toast, wake lock ———
   const turnKey = `${s.round}:${s.active}`;
   useEffect(() => {
-    if (curtainSide || s.winner || !game.botToMove()) return;
+    if (!local || curtainSide || s.winner || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
     const t = setTimeout(
       () => {
         let n = 0;
-        do game.botStep();
-        while (instant && ++n < 40 && game.botToMove() && (speed === 'instant' || `${game.state.round}:${game.state.active}` === fastTurn));
+        do local.botStep();
+        while (instant && ++n < 40 && local.botToMove() && (speed === 'instant' || `${local.state.round}:${local.state.active}` === fastTurn));
       },
       instant ? 0 : SPEEDS[speed].ms,
     );
     return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, game, s.winner]);
+  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner]);
 
   useEffect(() => {
-    storeSave(s.winner ? null : game.record());
-  }, [version, game, s.winner]);
+    if (local) storeSave(s.winner ? null : local.record());
+  }, [version, local, s.winner]);
 
   useEffect(() => {
-    document.title = myDecision && humans.length > 0 ? '● Ваш ход — Бортом к борту' : 'Бортом к борту';
+    // A refusal of the server comes after the action was sent: it is shown as the engine's refusal on one screen.
+    if (net?.refusal) setFlash(net.refusal.text);
+  }, [net, net?.refusal?.n]);
+
+  useEffect(() => {
+    // The log the player has seen: after a reload «Пока вас не было» shows only the rest.
+    if (net && net.missed.length === 0) net.client.markSeen(net.log.length);
+  }, [net, version]);
+
+  useEffect(() => {
+    document.title = myDecision && (humans.length > 0 || !!net) ? '● Ваш ход — Бортом к борту' : 'Бортом к борту';
     return () => {
       document.title = 'Бортом к борту';
     };
@@ -292,7 +343,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   };
 
   const cardButtons = (holder: string, code: string): Btn[] => {
-    if (!myTurn || !allSeats.includes(holder)) {
+    if (!myTurn || !mySeats.includes(holder)) {
       if (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ') {
         const o = cardHints.get(code) ?? playOptions(s, data, holder, code);
         return [{ key: 'play', label: 'Сыграть', primary: true, disabled: o.reason, onClick: () => startPlay(holder, code), testid: 'detail-play' }];
@@ -370,7 +421,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
 
   const plankButtons = (code: string): Btn[] => {
     const ship = s.ships[code];
-    if (!myTurn || ship.sunk || ship.side !== bottom) return [];
+    if (!myTurn || ship.sunk || ship.side !== bottom || !mySeats.includes(code)) return [];
     const params = shipData(data, code);
     const vt = volleyTargets(s, data, { ship: code });
     const btns: Btn[] = [
@@ -421,7 +472,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   const cancel = () => setMode({ k: 'idle' });
   if (s.winner) dock = null;
   else if (myDecision && d!.kind === 'reactions') {
-    dock = <ReactionPanel s={s} data={data} hints={hints} seats={d!.seats} pick={reactPick} onAct={(a) => act(a)} />;
+    dock = <ReactionPanel s={s} data={data} hints={hints} seats={myDeciding} pick={reactPick} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'jack') {
     dock = <JackPanel s={s} data={data} ship={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'tortuga') {
@@ -429,7 +480,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
     dock = <TortugaPanel key={turnKey} s={s} data={data} side={d!.side} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'choice') {
     dockSheet = true;
-    dock = <ChoicePanel key={`${version}`} s={s} data={data} seat={d!.seats[0]} onAct={(a) => act(a)} />;
+    dock = <ChoicePanel key={`${version}`} s={s} data={data} seat={myDeciding[0]} onAct={(a) => act(a)} />;
   } else if (myTurn) {
     if (mode.k === 'aim') dock = <VolleyPanel s={s} data={data} hints={hints} mode={mode} setMode={setMode} onFire={(a) => act(a)} onCancel={cancel} />;
     else if (mode.k === 'card') dock = <CardParamsPanel s={s} data={data} mode={mode} setMode={setMode} onAct={(a) => act(a)} onCancel={cancel} />;
@@ -467,14 +518,32 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
       dockSheet = true;
       dock = <PlansPanel s={s} data={data} seat={mode.seat} onDone={(plans) => finishTurn({ type: 'endTurn', side: bottom, plans })} onCancel={cancel} />;
     }
+  } else if (net && !s.winner) {
+    dock = netDock(net, mySeats, bottom, nick);
   }
   if (mode.k === 'concede') {
+    const allyPeople = net ? Object.values(s.ships).some((x) => x.side === mode.side && !mySeats.includes(x.code) && !net.isBotSeat(x.code)) : false;
     dock = (
       <ConfirmPanel
         title={`Сдаться за ${SIDE_LABEL[mode.side].acc}?`}
-        sub="Партия закончится победой противника."
+        sub={allyPeople ? 'Команда сдаётся, когда «Сдаться» нажмут оба игрока.' : 'Партия закончится победой противника.'}
         yes="Сдаться"
-        onYes={() => act({ type: 'concede', side: mode.side })}
+        onYes={() => {
+          if (net) {
+            net.voteConcede(true);
+            cancel();
+          } else act({ type: 'concede', side: mode.side });
+        }}
+        onNo={cancel}
+      />
+    );
+  } else if (mode.k === 'exitRoom') {
+    dock = (
+      <ConfirmPanel
+        title="Выйти из комнаты?"
+        sub={s.winner ? 'Партия окончена.' : 'Ваш корабль останется на месте: создатель комнаты сможет заменить вас ботом.'}
+        yes="Выйти"
+        onYes={onExit}
         onNo={cancel}
       />
     );
@@ -494,7 +563,8 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   const instruction = (() => {
     if (s.winner) return s.winner === 'НИЧЬЯ' ? 'Партия окончена: ничья' : `Партия окончена: победа — ${SIDE_LABEL[s.winner].name}`;
     if (!d) return '';
-    if (game.isBot(d.side)) {
+    if (net && !myDecision) return netWaiting();
+    if (botSide(d.side)) {
       if (d.kind === 'reactions') return `Ждём: бот ${nick(d.seats[0])} решает, ответить ли Реакцией…`;
       if (d.kind === 'turn') return `Бот: ${SIDE_LABEL[d.side].name} думает…`;
       return `Бот: ${SIDE_LABEL[d.side].name} решает…`;
@@ -520,6 +590,26 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
     return `${nick(seat)}: выберите карту или действие`;
   })();
 
+  /** By network: whom the game waits for, by name — or «Противник может ответить…» without telling who holds what. */
+  function netWaiting(): string {
+    const g = net!;
+    const who = (seats: string[]) => {
+      const people = [...new Set(seats.filter((x) => !g.isBotSeat(x)).map((x) => g.nameOf(x)).filter(Boolean))];
+      const bots = seats.filter((x) => g.isBotSeat(x)).map((x) => `бот ${nick(x)}`);
+      return [...people, ...bots].join(', ') || SIDE_LABEL[d!.side].name;
+    };
+    if (d!.kind === 'reactions') {
+      if (d!.side !== bottom) return 'Противник может ответить Реакцией…';
+      return d!.seats.length === 0 ? `${s.volley ? 'Залп' : 'Карта'} противника: Реакций нет` : `Ждём: ${who(d!.seats)} — Реакция…`;
+    }
+    if (d!.kind === 'turn') {
+      const left = d!.seats.filter((x) => !g.ready.includes(x));
+      if (d!.side === bottom) return `Ход окончен — ждём: ${who(left.length > 0 ? left : d!.seats)}`;
+      return `Ход ${SIDE_LABEL[d!.side].gen}: ${who(left.length > 0 ? left : d!.seats)}`;
+    }
+    return `Ждём: ${who(d!.seats)} — ${curtainReason(s, data, d!.kind)}`;
+  }
+
   // ——— The middle at rest: the last event ———
   const lastEvent = [...game.log].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
 
@@ -535,10 +625,17 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
         hints && myDecision && d!.kind === 'reactions' && d!.seats.includes(x) && reactionsOf(x).some((c) => !playOptions(s, data, x, c).reason);
       return { seat: x, label: `${shipData(data, x).nick}${s.active === bottom && x === seat ? ` · ${played} из ${limit}` : ''}`, dot };
     });
+  // By network the ally's hand is a tab to look at (docs/TZ.md, «Принципы стола», п. 5): another person or a bot plays it.
+  if (net) {
+    for (const x of allSeats.filter((y) => !mySeats.includes(y) && seatShip(s, y))) {
+      tabs.push({ seat: x, label: `${net.isBotSeat(x) ? 'Бот' : 'Союзник'} · ${shipData(data, x).nick}` });
+    }
+  }
   function reactionsOf(x: string): string[] {
     return [...s.ships[x].hand, ...s.ships[x].plans].filter((c) => c !== '?' && cardByCode(data, c).type === 'РЕАКЦИЯ');
   }
   const offOf = (holder: string, code: string): string | null => {
+    if (net && !mySeats.includes(holder)) return net.isBotSeat(holder) ? 'Этой рукой играет бот' : 'Это рука союзника: ею играет он';
     if (!myDecision) return s.winner ? 'Партия окончена' : 'Сейчас не ваше решение';
     if (mode.k === 'aim') {
       if (cardByCode(data, code).type !== 'ЗАРЯД' || seatShip(s, holder)?.code !== mode.shooter) return 'Во время Залпа — только Заряды';
@@ -570,8 +667,20 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   const handLabel = `${seat ? `Рука · ${nick(seat)}` : 'Рука'}`;
 
   // ——— Bottom buttons ———
-  const undoWhy = myTurn ? game.undoRefusal(bottom) : 'Отменять можно только свои действия в свой ход';
-  const undoBtn: Btn = { key: 'undo', label: '↶', disabled: undoWhy, onClick: () => (game.undo(), setMode({ k: 'idle' })), testid: 'undo' };
+  const undoWhy = myTurn && local ? local.undoRefusal(bottom) : 'Отменять можно только свои действия в свой ход';
+  const undoBtn: Btn = { key: 'undo', label: '↶', disabled: undoWhy, onClick: () => (local?.undo(), setMode({ k: 'idle' })), testid: 'undo' };
+  // By network instead of Undo: «Напомнить» those the game waits for.
+  const waitingPeople = !!net && !!d && !s.winner && !myDecision && (d.kind === 'turn' ? d.seats.filter((x) => !net.ready.includes(x)) : d.seats).some((x) => !net.isBotSeat(x) && !mySeats.includes(x));
+  const remindBtn: Btn = {
+    key: 'remind',
+    label: 'Напомнить',
+    disabled: waitingPeople ? null : myDecision ? 'Сейчас ждут вас' : 'Сейчас ждут не людей',
+    onClick: () => {
+      net?.remind();
+      setFlash('Напоминание отправлено');
+    },
+    testid: 'remind',
+  };
   const endBtn: Btn = {
     key: 'end',
     label: myTurn || s.winner || !d ? 'Ход окончен' : `Сейчас ход ${SIDE_LABEL[s.active].gen}`,
@@ -580,7 +689,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
     onClick: () => endFlow('start'),
     testid: 'end-turn',
   };
-  const botBusy = !!d && game.isBot(d.side) && !s.winner;
+  const botBusy = !!local && !!d && local.isBot(d.side) && !s.winner;
   const botBtns: Btn[] = botBusy
     ? [
         { key: 'faster', label: 'Быстрее', onClick: () => setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant') },
@@ -602,10 +711,17 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
     </>
   );
 
-  const record = () => game.record();
-  const downloadLog = () =>
-    download(`bortom-k-bortu-${game.setup.game.seed}.txt`, game.log.map((l) => (l.kind === 'round' ? `\n${l.text}` : l.text)).join('\n'));
-  const downloadGame = () => download(`bortom-k-bortu-${game.setup.game.seed}.json`, JSON.stringify(record(), null, 1), 'application/json');
+  /** By network: «Вы», the ally's name, «Бот» on the planks (docs/TZ.md, «Стол»). */
+  function netRole(code: string): string | null {
+    if (!net) return null;
+    if (net.isBotSeat(code)) return 'Бот';
+    if (mySeats.includes(code)) return 'Вы';
+    return net.nameOf(code);
+  }
+  const fileName = net ? `bortom-k-bortu-${net.room.code}` : `bortom-k-bortu-${game.setup.game.seed}`;
+  const downloadLog = () => download(`${fileName}.txt`, game.log.map((l) => (l.kind === 'round' ? `\n${l.text}` : l.text)).join('\n'));
+  const downloadGame = local ? () => download(`${fileName}.json`, JSON.stringify(local.record(), null, 1), 'application/json') : null;
+  const totalsOf = () => (net ? net.totals : local ? matchTotals(data, local.setup, local.actions) : null);
   const rematch = () => {
     const seed = createRng((Date.now() ^ game.setup.game.seed) >>> 0).int(2 ** 31 - 1) + 1;
     const { positions: _positions, ...rest } = game.setup.game;
@@ -626,12 +742,12 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
       ship={x}
       own={x.side === bottom}
       selected={x.side === bottom && x.code === seat && tabs.length > 1}
-      awaiting={decidingSeats.includes(x.code) && !game.isBot(x.side)}
+      awaiting={decidingSeats.includes(x.code) && !botSeat(x.code) && !(net && d?.kind === 'turn' && net.ready.includes(x.code))}
       targeted={targeted === x.code}
       shooter={shooter === x.code}
       plate={plateFor(x.code)}
       buttons={plankButtons(x.code)}
-      role={null}
+      role={net ? netRole(x.code) : null}
       onSelect={() => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code)}
       onDetails={() => setSheet({ k: 'ship', code: x.code })}
       onLegend={() => legendClick(x.code)}
@@ -641,6 +757,8 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
   return (
     <div className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''}`} data-testid="game" data-bottom={bottom}>
       <StatusBar s={s} data={data} instruction={flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
+      {net && <NetBar game={net} />}
+      {net && <MissedSheet game={net} />}
       <main className="board">
         <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
@@ -689,7 +807,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
             {botBtns.map((b) => (
               <Button key={b.key} b={b} className="small" />
             ))}
-            <Button b={{ ...undoBtn, label: '↶ Отменить' }} className="undo wide" />
+            {net ? <Button b={remindBtn} className="wide" /> : <Button b={{ ...undoBtn, label: '↶ Отменить' }} className="undo wide" />}
             <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
           </div>
         </div>
@@ -713,11 +831,7 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
         <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
           Правила
         </button>
-        {botBusy ? (
-          <Button b={botBtns[1]} />
-        ) : (
-          <Button b={undoBtn} className="undo" />
-        )}
+        {net ? <Button b={remindBtn} /> : botBusy ? <Button b={botBtns[1]} /> : <Button b={undoBtn} className="undo" />}
         <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       </nav>
 
@@ -773,20 +887,21 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
       )}
       {sheet?.k === 'settings' && (
         <SettingsSheet
-          speed={speed}
+          speed={net ? null : speed}
           setSpeed={setSpeed}
-          openHands={openHands}
+          openHands={net ? null : openHands}
           setOpenHands={setOpenHands}
-          hints={hints}
+          hints={hintsAllowed ? hints : null}
           setHints={setHints}
-          canConcede={!s.winner && humans.length > 0 ? (humans.includes(bottom) ? bottom : humans[0]) : null}
+          canConcede={!s.winner && (net ? mySeats.length > 0 : humans.length > 0) ? (net || humans.includes(bottom) ? bottom : humans[0]) : null}
           onConcede={() => {
             setSheet(null);
-            setMode({ k: 'concede', side: humans.includes(bottom) ? bottom : humans[0] });
+            setMode({ k: 'concede', side: net || humans.includes(bottom) ? bottom : humans[0] });
           }}
+          newLabel={net ? 'Выйти из комнаты' : 'Новая партия'}
           onNew={() => {
             setSheet(null);
-            setMode({ k: 'leave' });
+            setMode(net ? { k: 'exitRoom' } : { k: 'leave' });
           }}
           onDownloadLog={downloadLog}
           onDownloadGame={downloadGame}
@@ -796,11 +911,10 @@ export function Game({ game, onExit, onRestart }: { game: LocalGame; onExit: () 
       {s.winner && !endClosed && (
         <EndScreen
           s={s}
-          data={data}
-          setup={game.setup}
-          actions={game.actions}
-          onRematch={rematch}
+          totals={totalsOf() ?? { ПИРАТЫ: { damage: 0, income: 0, spent: 0 }, КОМПАНИЯ: { damage: 0, income: 0, spent: 0 } }}
+          onRematch={net ? null : rematch}
           onNew={onExit}
+          newLabel={net ? 'Выйти из комнаты' : undefined}
           onDownloadLog={downloadLog}
           onDownloadGame={downloadGame}
           onClose={() => setEndClosed(true)}

@@ -87,7 +87,7 @@ function simOps(ops: Op[]): Op[] {
 }
 
 /** The first item with the largest key, as Python's max(). */
-function maxBy<T>(items: T[], key: (x: T) => number): T | undefined {
+export function maxBy<T>(items: T[], key: (x: T) => number): T | undefined {
   let best: T | undefined;
   let bestKey = -Infinity;
   for (const x of items) {
@@ -100,10 +100,10 @@ function maxBy<T>(items: T[], key: (x: T) => number): T | undefined {
   return best;
 }
 
-const minBy = <T>(items: T[], key: (x: T) => number) => maxBy(items, (x) => -key(x));
+export const minBy = <T>(items: T[], key: (x: T) => number) => maxBy(items, (x) => -key(x));
 
 /** Read-only queries about a game state, shared by the turn and the answers. */
-class View {
+export class View {
   constructor(
     public s: GameState,
     public data: GameData,
@@ -193,7 +193,7 @@ class View {
 type Target = ShipState | null;
 
 /** One team's turn (sim.py class AI). */
-class TurnBot extends View {
+export class TurnBot extends View {
   readonly enemy: Side;
   /** Cards the engine refused this turn: the bot does not try them again. */
   readonly refused = new Set<string>();

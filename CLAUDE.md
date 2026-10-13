@@ -43,5 +43,6 @@
 - `npm run build` — сборка сайта в `dist/` (база `/bortom-k-bortu/` для GitHub Pages).
 - `npm run convert-data` — пересобрать `data/game-data.json` из `reference/data3.py` (нужен Python 3). Затирает ручные правки JSON.
 - `npm run sim -- --games 3000 --seed 1` — консольный симулятор: партии ботов против PDF, с. 26 (`--variant first` — «Первая партия»).
-- `npm run lan` — сервер для игры в локальной сети (появится на этапе 8).
+- `npm run lan` — собрать сайт и сервер и запустить игру по Wi-Fi (адреса и QR-код в консоли); `npm run server` — запустить собранный сервер (`npm run build:server`); развёртывание — `DEPLOY.md`.
+- `npm run e2e` — тесты в браузере (Playwright): стол и сеть (две вкладки против сервера на порту 8090).
 - Публикация: `.github/workflows/pages.yml` — на каждый PR проверки (typecheck, test, build), после слияния в `main` ещё и выкладка на GitHub Pages.
