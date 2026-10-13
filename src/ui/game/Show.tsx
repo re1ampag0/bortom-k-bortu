@@ -108,7 +108,7 @@ function plankBox(code: string): Box | null {
   return { x: b.left + b.width / 2, y: b.top + b.height / 2, top: b.top };
 }
 
-export function ShowLayer({ data, step }: { data: GameData; step: { id: number; step: ShowStep } | null }) {
+export function ShowLayer({ data, step, decisionOpen = false }: { data: GameData; step: { id: number; step: ShowStep } | null; decisionOpen?: boolean }) {
   const [boxes, setBoxes] = useState<Record<string, Box>>({});
   const [middle, setMiddle] = useState<{ x: number; y: number } | null>(null);
   useLayoutEffect(() => {
@@ -138,29 +138,38 @@ export function ShowLayer({ data, step }: { data: GameData; step: { id: number; 
           <span className="sr-only">{cardByCode(data, s.card).name}</span>
         </div>
       )}
+      {s.k === 'effect' && boxes[s.ship] && (
+        <div className={`show-effect show-effect-${s.effect}`} data-testid="show-effect" style={{ left: boxes[s.ship].x, top: boxes[s.ship].y }}>
+          {s.label}
+        </div>
+      )}
       {s.k === 'volley' && boxes[s.shooter] && boxes[s.target] && (
         <>
-          <svg className="show-arrow" data-testid="show-arrow" width="100%" height="100%" aria-hidden="true">
-            <defs>
-              <marker id="show-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M0 0L10 5L0 10Z" fill="#b8322a" />
-              </marker>
-            </defs>
-            <line x1={boxes[s.shooter].x} y1={boxes[s.shooter].y} x2={boxes[s.target].x} y2={boxes[s.target].y} stroke="#b8322a" strokeWidth="4" strokeDasharray="10 7" markerEnd="url(#show-head)" />
-          </svg>
-          <div
-            className="show-plate"
+          {!decisionOpen && Array.from({ length: Math.min(8, Math.max(0, s.damage)) }, (_, i) => (
+            <span
+              key={i}
+              className="show-projectile"
+              data-testid="show-projectile"
+              style={{
+                left: boxes[s.shooter].x,
+                top: boxes[s.shooter].y,
+                ['--to-x' as string]: `${boxes[s.target].x - boxes[s.shooter].x}px`,
+                ['--to-y' as string]: `${boxes[s.target].y - boxes[s.shooter].y}px`,
+                animationDelay: `${i * 0.14}s`,
+              }}
+            />
+          ))}
+          {!decisionOpen && <div
+            className="show-plate show-plate-side"
             data-testid="show-plate"
-            style={{ left: (boxes[s.shooter].x + boxes[s.target].x) / 2, top: (boxes[s.shooter].y + boxes[s.target].y) / 2 }}
+            style={{ left: Math.max(180, Math.min(innerWidth - 180, boxes[s.target].x + 150)), top: boxes[s.target].y }}
           >
-            <b>
-              {nick(s.shooter)} → {nick(s.target)}: {s.damage} по {TRACK_DATIVE[s.track]}
-            </b>
+            <b>{s.damage} по {TRACK_DATIVE[s.track]}</b>
             {s.terms && s.terms.length > 0 && <span>{formatTerms(s.terms)}</span>}
-          </div>
+          </div>}
         </>
       )}
-      {s.floats.map((f, i) =>
+      {s.k === 'floats' && s.floats.map((f, i) =>
         boxes[f.ship] ? (
           <span key={i} className={`show-float ${f.bad ? 'bad' : ''}`} data-testid="show-float" style={{ left: boxes[f.ship].x, top: boxes[f.ship].y - 14 + 26 * countBefore(s.floats, i) }}>
             {f.text}
