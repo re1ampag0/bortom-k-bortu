@@ -2,9 +2,10 @@
 import { describe, expect, it } from 'vitest';
 import raw from '../data/game-data.json';
 import { loadGameData } from '../src/engine/data';
-import { applyAction, createGame } from '../src/engine/engine';
+import { createGame } from '../src/engine/engine';
 import type { Action, GameState } from '../src/engine/state';
-import { POSITIONS, act, newGame, passTo, run } from './helpers';
+import { POSITIONS, actDeclining as act, newGame, passTo, run } from './helpers';
+// Stage 3 rules without Reactions: `act` here declines every Reaction window the action opens (helpers.actDeclining).
 
 const v = (ship: string, target: string): Action => ({ type: 'volley', ship, target });
 
@@ -104,11 +105,11 @@ describe('joint volley (10.7)', () => {
     for (const ship of custom.ships) ship.volleysPerTurn = 2;
     const data2 = loadGameData(custom);
     const play = (s: GameState, ...actions: Action[]) => {
-      for (const a of actions) s = applyAction(s, a, data2).state;
+      for (const a of actions) s = act(s, a, data2).state;
       return s;
     };
     const start = () => {
-      const s = createGame(data2, { seed: 1, positions: POSITIONS }).state;
+      const s = createGame(data2, { seed: 1, positions: POSITIONS, sea: false }).state;
       s.teams['ПИРАТЫ'].powder = 8;
       return s;
     };
@@ -140,9 +141,9 @@ describe('Volley parameters of a ship (docs/TZ.md, «Данные»)', () => {
     const custom = structuredClone(raw) as any;
     change(custom.ships.find((x: any) => x.code === 'Ж'));
     const data2 = loadGameData(custom);
-    const s = createGame(data2, { seed: 1, positions: POSITIONS }).state;
+    const s = createGame(data2, { seed: 1, positions: POSITIONS, sea: false }).state;
     s.teams['ПИРАТЫ'].powder = 8;
-    return (a: Action) => applyAction(s, a, data2).state;
+    return (a: Action) => act(s, a, data2).state;
   };
 
   it('volleyCost', () => {

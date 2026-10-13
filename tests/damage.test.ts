@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { addFire, checkGameOver, dealDamage, restore } from '../src/engine/damage';
 import { createRng } from '../src/engine/rng';
 import type { Ctx, GameState } from '../src/engine/state';
-import { act, data, newGame, passTo } from './helpers';
+import { actDeclining as act, data, newGame, passTo } from './helpers';
+// Stage 3 rules without Reactions: `act` here declines every Reaction window the action opens (helpers.actDeclining).
 
 const ctxOf = (s: GameState): Ctx => ({ s, data, rng: createRng(s.rng), events: [] });
 
@@ -31,6 +32,7 @@ describe('damage', () => {
 
   it('Hull 0 — the ship sinks: Fires and the Legend leave, the seat keeps hand and deck, Plans go to the hand (11.2, 17.1, 17.2, 17.5)', () => {
     const s = newGame();
+    s.teams['ПИРАТЫ'].powder = 0; // no Powder for «Джек ускользает»
     const ship = s.ships['Ж'];
     ship.fires = 2;
     const plan = ship.deck.shift()!;
@@ -115,6 +117,7 @@ describe('end of the game', () => {
     const s = newGame();
     s.ships['М'].sunk = true;
     s.ships['Г'].sunk = true;
+    s.teams['ПИРАТЫ'].powder = 0; // no Powder for «Джек ускользает»
     s.ships['Ж'].tracks.hull = 1;
     s.ships['И'].tracks.hull = 1;
     const ctx = ctxOf(s);
@@ -141,6 +144,7 @@ describe('end of the game', () => {
 
   it('«Быстрый бой»: ships of both teams sunk by one effect — a draw (20.2)', () => {
     const s = newGame({ variant: 'quick' });
+    s.teams['ПИРАТЫ'].powder = 0; // no Powder for «Джек ускользает»
     s.ships['Ж'].tracks.hull = 1;
     s.ships['Г'].tracks.hull = 1;
     const ctx = ctxOf(s);

@@ -2,7 +2,8 @@
 import { deckCards, seaCards } from './data';
 import { createRng } from './rng';
 import { newTurn, type Ctx, type GameEvent, type GameState, type Pos, type ShipState, type Variant } from './state';
-import { drawUp, startRound } from './turn';
+import { runQueue } from './queue';
+import { drawUp } from './turn';
 import type { GameData, Side } from './types';
 
 export interface GameOptions {
@@ -10,10 +11,15 @@ export interface GameOptions {
   variant?: Variant;
   /** Ship codes of each team from left to right. A team without it is placed at random, as bots do (RULES.md 2.2). */
   positions?: Partial<Record<Side, [string, string]>>;
+  /** Play with the sea deck and the Legends (docs/TZ.md, setup screen). «Первая партия» plays without both by default (RULES.md 20.1). */
+  sea?: boolean;
+  legends?: boolean;
 }
 
 export function createGame(data: GameData, options: GameOptions): { state: GameState; events: GameEvent[] } {
   const variant = options.variant ?? 'standard';
+  const withSea = options.sea ?? variant !== 'first';
+  const withLegends = options.legends ?? variant !== 'first';
   const rng = createRng(options.seed);
   const ships: Record<string, ShipState> = {};
 
@@ -35,11 +41,14 @@ export function createGame(data: GameData, options: GameOptions): { state: GameS
       fires: 0,
       sunk: false,
       submerged: false,
-      legend: variant !== 'first',
+      legend: withLegends,
       deck: rng.shuffle(deckCards(data, ship.code).map((c) => c.code)),
       hand: [],
       discard: [],
       plans: [],
+      lastDive: null,
+      surfaced: false,
+      blockaded: false,
     });
   }
 
@@ -54,14 +63,18 @@ export function createGame(data: GameData, options: GameOptions): { state: GameS
       ПИРАТЫ: { powder: 0 },
       КОМПАНИЯ: { powder: variant === 'first' ? data.rules.firstGameSecondStart : data.econ.second_start },
     },
-    sea: variant === 'first' ? null : { deck: rng.shuffle(seaCards(data).map((c) => c.code)), discard: [], current: null },
+    sea: !withSea ? null : { deck: rng.shuffle(seaCards(data).map((c) => c.code)), discard: [], current: null },
     turn: newTurn(),
     winner: null,
+    queue: [{ k: 'startRound' }],
+    pending: null,
+    volley: null,
+    card: null,
   };
 
   const ctx: Ctx = { s: state, data, rng, events: [] };
   for (const code of Object.keys(ships)) drawUp(ctx, code);
-  startRound(ctx);
+  runQueue(ctx);
   state.rng = rng.state;
   return { state, events: ctx.events };
 }

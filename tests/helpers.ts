@@ -1,25 +1,66 @@
 // Test helpers: a game with known placement and hands. Tests may change the state directly (it is plain JSON).
 import raw from '../data/game-data.json';
-import { deckCards, loadGameData } from '../src/engine/data';
+import { deckCards, loadGameData, seaCards } from '../src/engine/data';
 import { applyAction, createGame, type GameOptions } from '../src/engine/engine';
 import type { Action, GameEvent, GameState } from '../src/engine/state';
+import type { GameData } from '../src/engine/types';
 
 export const data = loadGameData(raw);
 
 /** Ж opposite И on the left, М opposite Г on the right. */
 export const POSITIONS: GameOptions['positions'] = { ПИРАТЫ: ['Ж', 'М'], КОМПАНИЯ: ['И', 'Г'] };
 
+/**
+ * A game with known placement. The sea deck is off unless asked for (`sea: true`): sea cards change Volleys,
+ * limits and Powder, and tests of other rules should not depend on which card comes first.
+ */
 export function newGame(options: Partial<GameOptions> = {}): GameState {
-  return createGame(data, { seed: 1, positions: POSITIONS, ...options }).state;
+  return createGame(data, { seed: 1, positions: POSITIONS, sea: false, ...options }).state;
+}
+
+/** Answers every pending decision with «no»: no Reactions, no «Джек ускользает», no cards on «Тортуга». */
+export function declineAll(state: GameState, gameData: GameData = data, events: GameEvent[] = []): GameState {
+  while (state.pending && !state.winner) {
+    const p = state.pending;
+    const answer: Action =
+      p.kind === 'reactions'
+        ? { type: 'noReaction', seat: p.waiting[0] }
+        : p.kind === 'jack'
+          ? { type: 'jack', play: false }
+          : { type: 'tortuga', side: p.waiting[0], draws: {} };
+    const r = applyAction(state, answer, gameData);
+    events.push(...r.events);
+    state = r.state;
+  }
+  return state;
+}
+
+/** Applies an action, then declines every Reaction window and decision it opened. */
+export function actDecline(state: GameState, action: Action): GameState {
+  return declineAll(act(state, action).state);
+}
+
+/**
+ * Like `act`, but the defending team plays no Reactions: every window the action opens is declined.
+ * For tests of rules without Reactions (stage 3). Events of the declined windows are included.
+ */
+export function actDeclining(
+  state: GameState,
+  action: Action,
+  gameData: GameData = data,
+): { state: GameState; events: GameEvent[] } {
+  const r = applyAction(state, action, gameData);
+  const events = [...r.events];
+  return { state: declineAll(r.state, gameData, events), events };
 }
 
 export function act(state: GameState, action: Action): { state: GameState; events: GameEvent[] } {
   return applyAction(state, action, data);
 }
 
-/** Applies actions one by one and returns the final state. */
+/** Applies actions one by one, declining every Reaction window and decision, and returns the final state. */
 export function run(state: GameState, ...actions: Action[]): GameState {
-  for (const action of actions) state = act(state, action).state;
+  for (const action of actions) state = actDeclining(state, action).state;
   return state;
 }
 
@@ -60,7 +101,8 @@ export function setHand(state: GameState, seat: string, names: string[]): string
 
 /** Ends turns until it is the given team's turn. */
 export function passTo(state: GameState, side: GameState['active']): GameState {
-  while (state.active !== side) state = act(state, { type: 'endTurn', side: state.active }).state;
+  state = declineAll(state);
+  while (state.active !== side) state = declineAll(act(state, { type: 'endTurn', side: state.active }).state);
   return state;
 }
 
@@ -73,4 +115,32 @@ export function cardsByOwner(state: GameState): Record<string, string[]> {
     }
   }
   return out;
+}
+
+/** Code of the sea card with the given key («storm», «calm» …). */
+export function seaCode(key: string): string {
+  const card = seaCards(data).find((c) => c.key === key);
+  if (!card) throw new Error(`No sea card «${key}»`);
+  return card.code;
+}
+
+/** Makes the sea card the current one (a «Весь раунд» card acts at once; a «Сразу» card does nothing now). */
+export function setSea(state: GameState, key: string): GameState {
+  state.sea ??= { deck: [], discard: [], current: null };
+  const code = seaCode(key);
+  state.sea.deck = state.sea.deck.filter((c) => c !== code);
+  state.sea.discard = state.sea.discard.filter((c) => c !== code);
+  if (state.sea.current && state.sea.current !== code) state.sea.discard.push(state.sea.current);
+  state.sea.current = code;
+  return state;
+}
+
+/** Puts the sea card on top of the sea deck: it is opened at the start of the next round. */
+export function nextSea(state: GameState, key: string): GameState {
+  state.sea ??= { deck: [], discard: [], current: null };
+  const code = seaCode(key);
+  if (state.sea.current === code) state.sea.current = null;
+  state.sea.discard = state.sea.discard.filter((c) => c !== code);
+  state.sea.deck = [code, ...state.sea.deck.filter((c) => c !== code)];
+  return state;
 }

@@ -1,7 +1,7 @@
 // Game state, actions and events. The state is plain JSON: cards are stored by their codes ("Ж-07", "С-03").
 import { deckCards, legendCards, seaCards } from './data';
 import type { Rng } from './rng';
-import type { CardInstance, GameData, SeaCardInstance, Ship, Side, Track } from './types';
+import type { CardInstance, Fx, GameData, SeaCardInstance, Ship, Side, Track } from './types';
 
 /** "first" — «Первая партия», "quick" — «Быстрый бой» (RULES.md 20). */
 export type Variant = 'standard' | 'first' | 'quick';
@@ -14,7 +14,13 @@ export const TRACK_MIN: Record<Track, number> = { hull: 0, sails: 0, guns: 0, cr
 
 /** Ship abilities the engine looks up by name. */
 export const ABILITY = {
+  madPlan: 'Безумный план',
   fasterThanWind: 'Быстрее ветра',
+  sword: 'Меч Тритона',
+  treasury: 'Казна Компании',
+  heart: 'Сердце Дейви Джонса',
+  eternalService: 'Вечная служба',
+  dive: 'Погружение',
 } as const;
 
 /**
@@ -36,8 +42,14 @@ export interface ShipState {
   deck: string[];
   hand: string[];
   discard: string[];
-  /** Plans of the Black Pearl (stage 4). */
+  /** Plans of the Black Pearl (RULES.md 14.1). */
   plans: string[];
+  /** Round of the last dive (RULES.md 14.8: not two own turns in a row). */
+  lastDive: number | null;
+  /** Surfaced this turn: the first Volley gets +1 and no Reactions (14.8). */
+  surfaced: boolean;
+  /** Under «Блокада»: the ship does not change places at all (RULES.md 18.10, Q20). Set by the card in stage 5. */
+  blockaded: boolean;
 }
 
 export interface TeamState {
@@ -61,7 +73,114 @@ export interface TurnState {
   jointUsed: boolean;
   /** Ships that took damage this turn. */
   damaged: string[];
+  /** Reactions played by each defending ship against the Sails limit (RULES.md 7.2). */
+  reactions: Record<string, number>;
+  /** Captains of sunk ships that already played their Reaction for the ally (17.3). */
+  captainReacted: string[];
+  /** Ships that may not play Reactions this turn («Ужас Карибского моря», stage 5). */
+  noReact: string[];
+  /** The defending team may not play Reactions this turn («Подкуп», stage 5). */
+  noReactTeam: boolean;
+  /** «Водоворот»: every Volley this turn deals less (one term per card played). */
+  reduceAll: Term[];
+  swordUsed: boolean;
+  treasuryUsed: boolean;
+  /** «Сердце Дейви Джонса» was ordered this turn. */
+  heartUsed: boolean;
+  /** Ships that dived instead of their Volley this turn. */
+  dived: string[];
 }
+
+/** One addend of a Volley's damage, e.g. { what: 'Пушки', n: 3 }. */
+export interface Term {
+  what: string;
+  n: number;
+}
+
+/** A Volley being resolved (RULES.md 10.1). */
+export interface VolleyState {
+  shooter: string;
+  /** Ship the Volley hits now (after «Прикрыть бортом» — the covering ship). */
+  target: string;
+  /** «Залп с обоих бортов»: targets still to hit. */
+  rest: string[];
+  both: boolean;
+  charge: string | null;
+  chargeFrom: string | null;
+  /** The Charge's fx with the «План:» bonus applied; {} when there is no Charge. */
+  fx: Fx;
+  fromPlan: boolean;
+  paid: number;
+  chargeCancelled: boolean;
+  /** Fixed when the Volley is declared and not recalculated later (RULES.md 18.1, Q40). */
+  guns: number;
+  diagonal: boolean;
+  /** «Мальстрём»: no diagonal penalty. */
+  seaNoDiag: boolean;
+  joint: boolean;
+  storm: number;
+  clear: number;
+  surfaced: number;
+  reduceAll: Term[];
+  ifFire: boolean;
+  ifDamaged: boolean;
+  /** Changes made by Reactions. */
+  adjust: Term[];
+  track: Track;
+  noReact: boolean;
+  cancelled: boolean;
+  crewCancelled: boolean;
+  heart: boolean;
+}
+
+/** A card against a team being resolved; in stage 4 — a Legend (RULES.md 9.7, 12.2). */
+export interface CardResolution {
+  card: string;
+  seat: string;
+  /** The ship the card is played for. */
+  ship: string;
+  /** Ships the card chose. */
+  targets: string[];
+  /** The card deals damage to the Crew. */
+  crew: boolean;
+  cancelled: boolean;
+  crewCancelled: boolean;
+}
+
+export type ReactionWindow = 'before' | 'after';
+
+/** A decision the engine waits for. Only answering actions are allowed meanwhile. */
+export type Pending =
+  | { kind: 'reactions'; window: ReactionWindow; subject: 'volley' | 'card'; side: Side; waiting: string[] }
+  | { kind: 'jack'; ship: string }
+  | { kind: 'tortuga'; waiting: Side[] };
+
+export type SwapReason = 'regroup' | 'sword' | 'jack' | 'current' | 'maelstrom';
+
+/**
+ * A piece of work left to do. A step deals damage at most once, as its last action, so «Джек ускользает» can pause
+ * after it. `same` marks a step of the same effect as the step before: the end of the game is checked after the
+ * whole effect, so the last ships of both teams sunk by one effect make a draw (RULES.md 19.2).
+ */
+export type Step = StepKind & { same?: boolean };
+
+type StepKind =
+  | { k: 'startRound' }
+  | { k: 'startTurn'; side: Side }
+  | { k: 'fire'; ship: string }
+  | { k: 'surface'; side: Side }
+  | { k: 'turnReady'; side: Side }
+  | { k: 'damage'; ship: string; track: Track; n: number; src: string | null }
+  | { k: 'addFire'; ship: string; n: number }
+  | { k: 'sink'; ship: string }
+  | { k: 'swap'; side: Side; reason: SwapReason }
+  | { k: 'tortuga' }
+  | { k: 'window'; window: ReactionWindow; subject: 'volley' | 'card' }
+  | { k: 'volleyHit' }
+  | { k: 'volleyFire' }
+  | { k: 'volleyEnd' }
+  | { k: 'cardEffect' }
+  | { k: 'cardEnd' };
 
 export interface SeaState {
   deck: string[];
@@ -82,6 +201,11 @@ export interface GameState {
   sea: SeaState | null;
   turn: TurnState;
   winner: Winner | null;
+  /** Work left to do, see queue.ts. */
+  queue: Step[];
+  pending: Pending | null;
+  volley: VolleyState | null;
+  card: CardResolution | null;
 }
 
 export type Action =
@@ -94,16 +218,29 @@ export type Action =
       chargeFrom?: string;
       /** Extra Powder for a paid Charge. */
       paid?: number;
+      /** The extra Volley of the Flying Dutchman by «Сердце Дейви Джонса» (RULES.md 14.6). */
+      heart?: boolean;
     }
   | { type: 'playCard'; seat: string; card: string }
+  | { type: 'playLegend'; seat: string; target?: string }
   | { type: 'sell'; seat: string; card: string }
   | { type: 'pass'; seat: string; card: string }
   | { type: 'regroup'; side: Side }
   | { type: 'extinguish'; seat: string; card: string }
-  | { type: 'endTurn'; side: Side };
+  | { type: 'dive'; ship: string }
+  | { type: 'sword'; ship: string }
+  | { type: 'treasury'; ship: string }
+  | { type: 'souls'; ship: string; track: Track }
+  /** At the end of the turn the Black Pearl may put cards from her hand into Plans (RULES.md 14.1). */
+  | { type: 'endTurn'; side: Side; plans?: string[] }
+  | { type: 'react'; seat: string; card: string }
+  | { type: 'noReaction'; seat: string }
+  | { type: 'jack'; play: boolean }
+  /** «Тортуга»: how many cards each seat of the team takes (RULES.md 16.2). */
+  | { type: 'tortuga'; side: Side; draws: Record<string, number> };
 
-export type PowderReason = 'hold' | 'sell';
-export type SpendReason = 'volley' | 'card' | 'regroup';
+export type PowderReason = 'hold' | 'sell' | 'sea';
+export type SpendReason = 'volley' | 'card' | 'regroup' | 'reaction' | 'ability' | 'sea';
 
 export type GameEvent =
   | { type: 'roundStarted'; round: number }
@@ -135,6 +272,27 @@ export type GameEvent =
   | { type: 'sold'; seat: string; card: string }
   | { type: 'passed'; seat: string; to: string; card: string }
   | { type: 'regrouped'; side: Side; ships: string[] }
+  | { type: 'swapped'; side: Side; reason: SwapReason; ships: string[] }
+  | { type: 'hit'; ship: string; target: string; damage: number; track: Track; terms: Term[] }
+  | { type: 'volleyCancelled'; ship: string; target: string }
+  | { type: 'windowOpened'; window: ReactionWindow; side: Side; seats: string[] }
+  | { type: 'reaction'; seat: string; ship: string; card: string; fromPlan: boolean }
+  | { type: 'noReaction'; seat: string }
+  | { type: 'jackEscaped'; ship: string }
+  | { type: 'legendPlayed'; seat: string; card: string; target: string | null }
+  | { type: 'cardCancelled'; card: string }
+  | { type: 'planned'; seat: string; count: number }
+  | { type: 'dived'; ship: string }
+  | { type: 'surfaced'; ship: string }
+  | { type: 'sword'; ship: string }
+  | { type: 'treasury'; ship: string }
+  | { type: 'heart'; ship: string }
+  | { type: 'jonesFree'; ship: string }
+  | { type: 'soulsGained'; ship: string; amount: number }
+  | { type: 'soulsUsed'; ship: string; track: Track }
+  | { type: 'seaEffect'; key: string }
+  | { type: 'powderLost'; side: Side; amount: number }
+  | { type: 'restored'; ship: string; track: Track; amount: number }
   | { type: 'gameOver'; winner: Winner; reason: 'sunk' | 'rounds' };
 
 /** A move the rules forbid. The message is shown to the player. */
@@ -251,7 +409,38 @@ export function newTurn(): TurnState {
     firstShooter: null,
     jointUsed: false,
     damaged: [],
+    reactions: {},
+    captainReacted: [],
+    noReact: [],
+    noReactTeam: false,
+    reduceAll: [],
+    swordUsed: false,
+    treasuryUsed: false,
+    heartUsed: false,
+    dived: [],
   };
+}
+
+/** Marks the steps as one effect (see Step.same). */
+export function oneEffect(steps: Step[]): Step[] {
+  return steps.map((step, i) => (i === 0 ? step : { ...step, same: true }));
+}
+
+/** Puts steps at the front of the queue, keeping their order: they run before the work already queued. */
+export function pushSteps(s: GameState, ...steps: Step[]): void {
+  s.queue.unshift(...steps);
+}
+
+/** Key of the current sea card («calm», «storm» …) or null. */
+export function seaKey(ctx: Ctx): string | null {
+  const current = ctx.s.sea?.current;
+  return current ? seaCardByCode(ctx.data, current).key : null;
+}
+
+/** The current pending decision or a RuleError if the engine waits for something else. */
+export function requirePending<K extends Pending['kind']>(s: GameState, kind: K): Extract<Pending, { kind: K }> {
+  if (s.pending?.kind !== kind) throw new RuleError('Сейчас нечего решать');
+  return s.pending as Extract<Pending, { kind: K }>;
 }
 
 /** Removes a card from a list or throws a RuleError with the given message. */

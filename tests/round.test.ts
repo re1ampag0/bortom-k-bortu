@@ -1,17 +1,19 @@
 // Round order, Hold, Fires at the start of a turn, drawing (RULES.md 4, 5, 6, 9.3, 13).
 import { describe, expect, it } from 'vitest';
 import { createGame } from '../src/engine/engine';
-import { act, data, newGame, passTo, setHand } from './helpers';
+import { act, data, declineAll, newGame, passTo, setHand } from './helpers';
 
 const types = (events: { type: string }[]) => events.map((e) => e.type);
 
 describe('round', () => {
   it('a round is: sea card → Pirates’ turn → Company’s turn (4.1)', () => {
-    const first = createGame(data, { seed: 1 }).events.filter((e) => e.type !== 'drew');
-    expect(types(first).slice(0, 3)).toEqual(['roundStarted', 'seaRevealed', 'turnStarted']);
+    // Effects of the sea card come between its reveal and the turn; here only the order of the three parts matters.
+    const order = ['roundStarted', 'seaRevealed', 'turnStarted'];
+    const first = createGame(data, { seed: 1 }).events.filter((e) => order.includes(e.type));
+    expect(types(first).slice(0, 3)).toEqual(order);
     expect(first[2]).toEqual({ type: 'turnStarted', side: 'ПИРАТЫ' });
 
-    let s = newGame();
+    let s = newGame({ sea: true });
     const pirates = act(s, { type: 'endTurn', side: 'ПИРАТЫ' });
     expect(pirates.state.round).toBe(1);
     expect(pirates.state.active).toBe('КОМПАНИЯ');
@@ -31,7 +33,7 @@ describe('round', () => {
   });
 
   it('the previous sea card goes to the sea discard (4.2)', () => {
-    const s = newGame();
+    const s = declineAll(newGame({ sea: true }));
     const first = s.sea!.current;
     const next = passTo(act(s, { type: 'endTurn', side: 'ПИРАТЫ' }).state, 'ПИРАТЫ');
     expect(next.sea!.discard).toEqual([first]);
@@ -40,12 +42,12 @@ describe('round', () => {
   });
 
   it('when the sea deck runs out, all 17 cards are shuffled into a new deck (4.3)', () => {
-    let s = newGame();
+    let s = declineAll(newGame({ sea: true }));
     for (let round = 1; round < 17; round++) s = passTo(act(s, { type: 'endTurn', side: 'ПИРАТЫ' }).state, 'ПИРАТЫ');
     expect(s.round).toBe(17);
     expect(s.sea!.deck).toHaveLength(0);
     const last = s.sea!.current;
-    const r = act(act(s, { type: 'endTurn', side: 'ПИРАТЫ' }).state, { type: 'endTurn', side: 'КОМПАНИЯ' });
+    const r = act(passTo(act(s, { type: 'endTurn', side: 'ПИРАТЫ' }).state, 'КОМПАНИЯ'), { type: 'endTurn', side: 'КОМПАНИЯ' });
     expect(r.events).toContainEqual(expect.objectContaining({ type: 'seaRevealed', reshuffled: true }));
     const sea = r.state.sea!;
     expect(sea.discard).toEqual([]);
@@ -112,7 +114,8 @@ describe('Fires at the start of a turn', () => {
   });
 
   it('Fires can sink the last ship: the team loses at once (13.2, 19.1)', () => {
-    let s = act(newGame(), { type: 'endTurn', side: 'ПИРАТЫ' }).state;
+    // Without Legends: «Джек ускользает» would save the Black Pearl.
+    let s = act(newGame({ legends: false }), { type: 'endTurn', side: 'ПИРАТЫ' }).state;
     s.ships['М'].sunk = true;
     s.ships['М'].tracks.hull = 0;
     s.ships['Ж'].tracks.hull = 1;
