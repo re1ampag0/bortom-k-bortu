@@ -170,6 +170,8 @@ button {
 .row input:not([type='checkbox']),
 .search {
   font: inherit;
+  /* Not below 16 px: Safari on an iPhone zooms the page into smaller fields. */
+  font-size: max(16px, 1rem);
   padding: 6px 8px;
   border-radius: 6px;
   border: 1px solid var(--line);
@@ -537,6 +539,14 @@ button {
   cursor: pointer;
   font: inherit;
   font-size: 0.82rem;
+}
+.badge.legend.poor {
+  border-color: var(--line);
+  background: #efe9de;
+  color: var(--muted);
+}
+.star.poor {
+  color: #b9ad99;
 }
 .badge.legend.gone {
   text-decoration: line-through;
@@ -1469,6 +1479,29 @@ button {
   .end-table td,
   .end-table th {
     padding: 2px 8px;
+  }
+}
+
+/* Tall phones: the free height goes to the hand, mini cards grow to read their texts. */
+@media (max-width: 700px) and (min-height: 720px) {
+  .hcard {
+    width: 96px;
+    height: 130px;
+    padding: 5px 7px;
+  }
+  .hcard-name {
+    font-size: 0.86rem;
+  }
+  .hcard-big {
+    font-size: 0.8rem;
+  }
+  .hcard-text {
+    display: block;
+    font-size: 0.66rem;
+    max-height: 3.6em;
+  }
+  .hcard-head {
+    font-size: 0.6rem;
   }
 }
 

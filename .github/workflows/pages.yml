@@ -44,8 +44,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: npm run e2e
+        env:
+          E2E_WEBKIT: '1'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
