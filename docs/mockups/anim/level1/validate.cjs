@@ -2,7 +2,9 @@
 // Запуск: node validate.cjs <games.json> <game-data.json>
 // games.json делает tools/dump-events.ts (партии ботов, события глазами каждой команды, состояние после действия).
 const fs = require('fs');
-const FX = require('./planfx.js');
+// planfx.js — скрипт для браузера; при "type": "module" Node грузит его как ESM, module.exports пуст — берём глобальный FX.
+require('./planfx.js');
+const FX = globalThis.FX;
 const games = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const D = JSON.parse(fs.readFileSync(process.argv[3], 'utf8'));
 const cards = {}, seaKeys = {};
