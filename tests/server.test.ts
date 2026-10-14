@@ -16,6 +16,7 @@ import { cardByCode, type Action, type GameState } from '../src/engine/state';
 import { HIDDEN } from '../src/engine/view';
 import type { ClientMsg, GameInfo, RoomInfo, RoomSettings, ServerMsg } from '../src/net/protocol';
 import { startServer, type GameServer } from '../server/index';
+import { liveOffers } from '../server/table';
 import { data } from './helpers';
 
 const DELAYS = { bot: [0, 0] as [number, number], pause: [5, 5] as [number, number] };
@@ -61,6 +62,8 @@ function checkView(info: GameInfo, room: RoomInfo, problems: string[]): void {
     const defenders = Object.values(v.ships).filter((x) => x.side === p.side).map((x) => x.code);
     if (p.waiting.length !== defenders.length) problems.push(`${where}: кто решает о Реакции`);
   }
+  // The captains' offers of a Charge: only the team sees them (P6).
+  for (const o of info.offers ?? []) if (!side || v.ships[o.from].side !== side) problems.push(`${where}: предложение Заряда`);
   const last = info.last;
   if (last && side) {
     const a = last.action;
@@ -583,24 +586,26 @@ describe('game server: the Reaction window', () => {
  * Makes `captain` a sunk ship whose captain plays on its ally's board (as the engine tests do: sunk, Hull 0), with a
  * Charge in the captain's hand; then a message of a player of that team makes the server send the new views.
  */
-async function captainize(srv: GameServer, code: string, captain: string, by: Client): Promise<string> {
+async function captainize(srv: GameServer, code: string, captain: string, by: Client, n = 1): Promise<string[]> {
   const t = srv.rooms.get(code)!.table!;
   const s = structuredClone(t.state);
   const ship = s.ships[captain];
   ship.sunk = true;
   ship.tracks.hull = 0;
   const isCharge = (c: string) => cardByCode(data, c).type === 'ЗАРЯД';
-  let card = ship.hand.find(isCharge);
-  if (!card) {
-    card = ship.deck.find(isCharge)!;
+  const cards = [...new Set(ship.hand.filter(isCharge))].slice(0, n);
+  for (const card of ship.deck) {
+    if (cards.length >= n) break;
+    if (!isCharge(card) || cards.includes(card)) continue;
     ship.deck.splice(ship.deck.indexOf(card), 1);
     ship.hand.push(card);
+    cards.push(card);
   }
   t.state = s;
   const before = by.messages;
   by.send({ t: 'unready' });
   await by.until(() => by.messages > before && !!by.game?.view.ships[captain].sunk, 'капитан');
-  return card;
+  return cards;
 }
 
 /** A Volley of the ally `ship` with the captain's Charge, at the first target it may have. */
@@ -614,7 +619,7 @@ describe('game server: the captain of a sunk ship (P6)', () => {
     const { srv } = await server();
     const { code, all } = await table(srv, { Аня: ['М'], Боря: ['Ж'], Вера: ['И', 'Г'] });
     const [a, b] = all;
-    const card = await captainize(srv, code, 'М', a);
+    const [card] = await captainize(srv, code, 'М', a);
     await b.until(() => !!b.view.ships['М'].sunk, 'капитан у союзника');
     a.act(captainVolley(a, 'Ж', 'М', card));
     await a.until(() => a.refused.length === 1, 'отказ капитану');
@@ -630,7 +635,7 @@ describe('game server: the captain of a sunk ship (P6)', () => {
     const { code, all } = await table(srv, { Аня: ['М'], Вера: ['И', 'Г'] });
     const [a] = all;
     expect(a.game!.bots).toEqual(['Ж']);
-    const card = await captainize(srv, code, 'М', a);
+    const [card] = await captainize(srv, code, 'М', a);
     a.act(captainVolley(a, 'Ж', 'М', card));
     await a.until(() => a.game!.actions > 0, 'Залп');
     expect(a.refused).toEqual([]);
@@ -638,14 +643,128 @@ describe('game server: the captain of a sunk ship (P6)', () => {
     expect(a.view.turn.captainPlayed).toEqual(['М']);
   });
 
+  it('the ally is a bot or the same person: nothing to offer', async () => {
+    const { srv } = await server();
+    const bot = await table(srv, { Аня: ['М'], Вера: ['И', 'Г'] });
+    const [card] = await captainize(srv, bot.code, 'М', bot.all[0]);
+    bot.all[0].send({ t: 'offer', seat: 'М', card });
+    await bot.all[0].until(() => bot.all[0].errors.length === 1, 'отказ: бот');
+    expect(bot.all[0].errors[0]).toBe('Союзным кораблём играет бот: добавьте Заряд в его Залп сами');
+    const one = await table(srv, { Аня: ['Ж', 'М'], Вера: ['И', 'Г'] });
+    const [card2] = await captainize(srv, one.code, 'М', one.all[0]);
+    one.all[0].send({ t: 'offer', seat: 'М', card: card2 });
+    await one.all[0].until(() => one.all[0].errors.length === 1, 'отказ: оба корабля');
+    expect(one.all[0].errors[0]).toBe('Оба корабля ваши: добавьте Заряд в Залп сами');
+  });
+
   it('one person plays both ships: the captain’s Charge goes into the Volley as before', async () => {
     const { srv } = await server();
     const { code, all } = await table(srv, { Аня: ['Ж', 'М'], Вера: ['И', 'Г'] });
     const [a] = all;
-    const card = await captainize(srv, code, 'М', a);
+    const [card] = await captainize(srv, code, 'М', a);
     a.act(captainVolley(a, 'Ж', 'М', card));
     await a.until(() => a.game!.actions > 0, 'Залп');
     expect(a.refused).toEqual([]);
     expect(a.view.ships['М'].discard).toContain(card);
+  });
+});
+
+describe('game server: the captain offers a Charge (P6)', () => {
+  it('the ally sees the offer, the enemy and a spectator get nothing; the ally fires with the offered Charge only', async () => {
+    const { srv } = await server();
+    const { code, all } = await table(srv, { Аня: ['М'], Боря: ['Ж'], Вера: ['И', 'Г'] });
+    const [a, b, v] = all;
+    const w = await enter(srv, 'Зритель', code);
+    await w.until(() => !!w.game, 'вид зрителя');
+    const [card, other] = await captainize(srv, code, 'М', a, 2);
+    expect(other).toBeDefined();
+    for (const c of [b, v, w]) await c.until(() => !!c.game?.view.ships['М'].sunk, 'капитан у всех');
+    const enemyBefore = JSON.stringify(v.game);
+    const watcherBefore = JSON.stringify(w.game);
+    const [vn, wn] = [v.messages, w.messages];
+    a.send({ t: 'offer', seat: 'М', card });
+    await b.until(() => b.game!.offers.length === 1, 'предложение у союзника');
+    expect(b.game!.offers).toEqual([{ from: 'М', to: 'Ж', card }]);
+    expect(a.game!.offers).toEqual([{ from: 'М', to: 'Ж', card }]);
+    // The enemy and the spectator got the new message too — and it is the same as before: no offer, no card.
+    await v.until(() => v.messages > vn, 'сообщение противнику');
+    await w.until(() => w.messages > wn, 'сообщение зрителю');
+    expect(JSON.stringify(v.game)).toBe(enemyBefore);
+    expect(JSON.stringify(w.game)).toBe(watcherBefore);
+    expect(v.game!.offers).toEqual([]);
+    // Another Charge of the captain was not offered.
+    b.act(captainVolley(b, 'Ж', 'М', other));
+    await b.until(() => b.refused.length === 1, 'отказ: не предложен');
+    expect(b.refused[0]).toBe('Заряд — только из своей руки');
+    b.act(captainVolley(b, 'Ж', 'М', card));
+    await b.until(() => b.view.ships['М'].discard.includes(card), 'Залп с Зарядом капитана');
+    expect(b.view.turn.captainPlayed).toEqual(['М']);
+    await a.until(() => a.game!.offers.length === 0, 'предложение исчезло у капитана');
+    expect(b.game!.offers).toEqual([]);
+    for (const c of [a, b, v, w]) expect(c.problems).toEqual([]);
+  });
+
+  it('withdraw; the offer goes when the card is sold and at the end of the turn; wrong offers are refused', async () => {
+    const { srv } = await server();
+    const { code, all } = await table(srv, { Аня: ['М'], Боря: ['Ж'], Вера: ['И', 'Г'] });
+    const [a, b, v] = all;
+    const [card, other] = await captainize(srv, code, 'М', a, 2);
+    await b.until(() => !!b.game?.view.ships['М'].sunk, 'капитан у союзника');
+    const nonCharge = a.view.ships['М'].hand.find((c) => cardByCode(data, c).type !== 'ЗАРЯД');
+    const refusals: [Client, ClientMsg, string][] = [
+      [b, { t: 'offer', seat: 'Ж', card: b.view.ships['Ж'].hand[0] }, 'Предложить Заряд может только капитан утонувшего корабля'],
+      [b, { t: 'offer', seat: 'М', card }, 'Это не ваш корабль'],
+      [a, { t: 'offer', seat: 'М', card: 'Ж-01' }, 'Этой карты нет у капитана'],
+      ...(nonCharge ? [[a, { t: 'offer', seat: 'М', card: nonCharge }, 'Предложить можно только Заряд'] as [Client, ClientMsg, string]] : []),
+    ];
+    for (const [c, msg, why] of refusals) {
+      const n = c.errors.length;
+      c.send(msg);
+      await c.until(() => c.errors.length > n, why);
+      expect(c.errors.at(-1)).toBe(why);
+    }
+    // Withdraw: the ally may not take the Charge any more.
+    a.send({ t: 'offer', seat: 'М', card });
+    await b.until(() => b.game!.offers.length === 1, 'предложение');
+    a.send({ t: 'unoffer', seat: 'М' });
+    await b.until(() => b.game!.offers.length === 0, 'отозвано');
+    b.act(captainVolley(b, 'Ж', 'М', card));
+    await b.until(() => b.refused.length === 1, 'отказ после отзыва');
+    // The captain sells the offered card: the offer is gone.
+    a.send({ t: 'offer', seat: 'М', card });
+    await b.until(() => b.game!.offers.length === 1, 'предложение снова');
+    a.act({ type: 'sell', seat: 'М', card });
+    await b.until(() => b.game!.offers.length === 0, 'карта продана');
+    // After «Ход окончен» the captain offers nothing; the offer made before goes at the end of the turn.
+    a.send({ t: 'offer', seat: 'М', card: other });
+    await b.until(() => b.game!.offers.length === 1, 'предложение другого Заряда');
+    a.send({ t: 'ready' });
+    await a.until(() => a.game!.ready.includes('М'), 'капитан готов');
+    const n = a.errors.length;
+    a.send({ t: 'offer', seat: 'М', card: other });
+    await a.until(() => a.errors.length > n, 'отказ после «Ход окончен»');
+    expect(a.errors.at(-1)).toContain('Вернуться к ходу');
+    expect(b.game!.offers).toEqual([{ from: 'М', to: 'Ж', card: other }]);
+    b.send({ t: 'ready' });
+    await b.until(() => b.view.active === 'КОМПАНИЯ', 'ход перешёл');
+    expect(b.game!.offers).toEqual([]);
+    for (const c of [a, b, v]) expect(c.problems).toEqual([]);
+  });
+
+  it('liveOffers: an offer lives while the card is there, the captain has not played and the ally is afloat and a person', () => {
+    const s = createGame(data, { seed: 3, positions: { ПИРАТЫ: ['Ж', 'М'], КОМПАНИЯ: ['И', 'Г'] } }).state;
+    s.ships['М'].sunk = true;
+    s.ships['М'].tracks.hull = 0;
+    const card = s.ships['М'].hand[0];
+    const offers = [{ from: 'М', to: 'Ж', card }];
+    expect(liveOffers(s, offers, new Set())).toEqual(offers);
+    expect(liveOffers(s, offers, new Set(['Ж']))).toEqual([]);
+    expect(liveOffers({ ...s, turn: { ...s.turn, captainPlayed: ['М'] } }, offers, new Set())).toEqual([]);
+    const gone = structuredClone(s);
+    gone.ships['М'].hand = gone.ships['М'].hand.slice(1).filter((c) => c !== card);
+    expect(liveOffers(gone, offers, new Set())).toEqual([]);
+    const sunk = structuredClone(s);
+    sunk.ships['Ж'].sunk = true;
+    expect(liveOffers(sunk, offers, new Set())).toEqual([]);
   });
 });
