@@ -210,7 +210,8 @@ describe('Repairs of the Black Pearl', () => {
     s.ships['Ж'].tracks = { hull: 5, sails: 1, guns: 2, crew: 3 };
     expect(() => play(s, 'Ж', 'Плотник', { repair: { hull: 2, sails: 1 } })).toThrow('не больше 2');
     expect(play(s, 'Ж', 'Плотник', { repair: { hull: 1, sails: 1 } }).state.ships['Ж'].tracks).toMatchObject({ hull: 6, sails: 2 });
-    expect(play(s, 'Ж', 'Плотник', { repair: { guns: 2 } }).state.ships['Ж'].tracks.guns).toBe(2);
+    // Guns are whole: the cells would be lost, so the split is refused (P1).
+    expect(() => play(s, 'Ж', 'Плотник', { repair: { guns: 2 } })).toThrow('на шкале «Пушки» можно восстановить не больше: 0');
     s.ships['Ж'].tracks = { hull: 9, sails: 3, guns: 2, crew: 3 };
     expect(() => play(s, 'Ж', 'Плотник')).toThrow('ничего не сделает');
   });
