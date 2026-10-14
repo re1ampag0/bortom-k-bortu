@@ -55,7 +55,7 @@ export function refusal(state: GameState, action: Action, data: GameData): strin
 
 const ctxOf = (s: GameState, data: GameData): Ctx => ({ s, data, rng: createRng(s.rng), events: [] });
 
-export const TRACK_NAME: Record<Track, string> = { hull: 'Корпус', sails: 'Паруса', guns: 'Пушки', crew: 'Команда' };
+export { TRACK_NAME } from './state';
 /** «4 по Корпусу». */
 export const TRACK_DATIVE: Record<Track, string> = { hull: 'Корпусу', sails: 'Парусам', guns: 'Пушкам', crew: 'Команде' };
 

@@ -8,6 +8,7 @@ import { swapPlaces } from './sea';
 import {
   ABILITY,
   RuleError,
+  TRACK_NAME,
   aliveShips,
   allyOf,
   cardByCode,
@@ -38,6 +39,8 @@ import type { GameData, Op, Track } from './types';
 import { volley } from './volley';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
+/** Operations whose cells the player splits over the tracks (`params.repair`). */
+const SPLIT_OPS = new Set(['repair_self', 'repair_ally', 'souls_repair']);
 /** Order of the tracks when a player does not split «N клеток на любых шкалах» himself (as sim.py repairs). */
 const REPAIR_ORDER: Track[] = ['guns', 'hull', 'crew', 'sails'];
 
@@ -194,6 +197,17 @@ function checkParams(ctx: Ctx, res: CardResolution, ops: Op[]): void {
       sum += n!;
     }
     if (sum > cells) throw new RuleError(`Восстановить можно не больше ${cells} клеток`);
+    // Per track: no more than the ship the split goes to misses there (a sunk ally — doable() refuses the card).
+    const target = repairShipOf(ctx, res, ops.filter((op) => SPLIT_OPS.has(op[0])));
+    if (target) {
+      for (const track of TRACKS) {
+        const n = params.repair[track] ?? 0;
+        const most = missing(ctx.data, target, track);
+        if (n > most) {
+          throw new RuleError(`«${shipData(ctx.data, target.code).nick}»: на шкале «${TRACK_NAME[track]}» можно восстановить не больше: ${most}`);
+        }
+      }
+    }
   }
 }
 
