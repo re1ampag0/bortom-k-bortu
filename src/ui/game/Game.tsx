@@ -67,6 +67,8 @@ type Mode =
 type Sheet =
   | null
   | { k: 'card'; seat: string; code: string }
+  /** A card opened to read (from the log): no status, no buttons. */
+  | { k: 'info'; code: string; back?: 'log' }
   | { k: 'ship'; code: string }
   | { k: 'discard'; seat: string }
   | { k: 'sea'; code?: string; back?: 'log' }
@@ -947,7 +949,7 @@ export function Game({
       </main>
       <aside className="log-col">
         <h2>Журнал</h2>
-        <LogList log={game.log} fresh={freshFrom} />
+        <LogList data={data} log={game.log} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />
         <div className="log-actions">
           <button className="btn small" onClick={() => setSheet({ k: 'log' })}>
             Весь журнал
@@ -994,6 +996,7 @@ export function Game({
           onClose={() => setSheet(null)}
         />
       )}
+      {sheet?.k === 'info' && <CardDetail data={data} code={sheet.code} status={null} buttons={[]} onClose={() => setSheet(sheet.back ? { k: sheet.back } : null)} />}
       {sheet?.k === 'ship' && <ShipSheet s={view} data={data} code={sheet.code} onClose={() => setSheet(null)} onDiscard={() => setSheet({ k: 'discard', seat: sheet.code })} />}
       {sheet?.k === 'discard' && <DiscardSheet s={view} data={data} seat={sheet.seat} onClose={() => setSheet(null)} />}
       {sheet?.k === 'sea' && <SeaSheet key={sheet.code ?? ''} s={view} data={data} code={sheet.code} onClose={() => setSheet(sheet.back ? { k: sheet.back } : null)} />}
@@ -1013,7 +1016,13 @@ export function Game({
               </span>
             </header>
             <div className="sheet-body">
-              <LogList log={game.log} fresh={freshFrom} />
+              <LogList
+                data={data}
+                log={game.log}
+                fresh={freshFrom}
+                onCard={(code) => setSheet({ k: 'info', code, back: 'log' })}
+                onSea={(code) => setSheet({ k: 'sea', code, back: 'log' })}
+              />
             </div>
           </section>
         </div>
