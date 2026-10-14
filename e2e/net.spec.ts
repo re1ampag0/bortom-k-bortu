@@ -29,14 +29,21 @@ function seedWithReaction(): number {
 
 /** The defender skips every Reaction window until the attacker no longer waits. */
 async function skipWindows(defender: Page, attacker: Page) {
+  let clearChecks = 0;
   for (let i = 0; i < 100; i++) {
     const skip = defender.locator('[data-testid="skip-reaction"]:visible');
-    if (await skip.isVisible().catch(() => false)) {
+    const hasSkip = await skip.isVisible().catch(() => false);
+    const hasWaitStatus = (await attacker.locator('.status').textContent())?.includes('Противник может ответить') ?? false;
+    if (hasSkip) {
       // The panel may close under the click (the window closed): then just look again.
+      clearChecks = 0;
       await skip.click({ timeout: 3000 }).catch(() => {});
-      continue;
+    } else if (hasWaitStatus) {
+      clearChecks = 0;
+    } else {
+      clearChecks++;
+      if (clearChecks >= 5) return;
     }
-    if (!(await attacker.locator('.status').textContent())?.includes('Противник может ответить')) return;
     await attacker.waitForTimeout(100);
   }
   throw new Error('the Reaction window did not close');
