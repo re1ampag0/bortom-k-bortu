@@ -72,6 +72,14 @@ function checkView(info: GameInfo, room: RoomInfo, problems: string[]): void {
       if (e.type === 'passed' && enemySeat(e.seat) && e.card !== HIDDEN) problems.push(`${where}: событие передачи`);
     }
   }
+  if (last) {
+    // Hands the client sees: its own seats and, by default, its allies' (spectators — none).
+    const sees = (seat: string) => mine.includes(seat) || (side !== null && v.ships[seat].side === side);
+    for (const e of last.events) {
+      if (e.type === 'drew' && e.cards && !sees(e.seat)) problems.push(`${where}: добранные карты ${e.seat}`);
+      if (e.type === 'stolen' && e.card !== HIDDEN && !sees(e.seat) && !sees(e.from)) problems.push(`${where}: украденная карта`);
+    }
+  }
 }
 
 /** A player in a browser, as a test sees it: messages, the room, the game and a simple way to play. */

@@ -81,6 +81,18 @@ describe('«Весь раунд» cards', () => {
     expect(after.ships['Ж'].tracks.sails).toBe(3);
   });
 
+  it('«Девятый вал» reports seaEffect wave right before its Sails damage, after the Fires', () => {
+    const s = setSea(turnOf('ПИРАТЫ'), 'wave');
+    s.ships['И'].fires = 1;
+    const types = act(s, { type: 'endTurn', side: 'ПИРАТЫ' }).events.map((e) => (e.type === 'seaEffect' ? `seaEffect:${e.key}` : e.type));
+    const wave = types.indexOf('seaEffect:wave');
+    expect(types.filter((t) => t === 'seaEffect:wave')).toHaveLength(1);
+    expect(wave).toBeGreaterThan(types.indexOf('fireDamage'));
+    expect(types.slice(wave + 1, wave + 3)).toEqual(['damage', 'damage']);
+    const calm = act(setSea(turnOf('ПИРАТЫ'), 'storm'), { type: 'endTurn', side: 'ПИРАТЫ' }).events;
+    expect(calm.some((e) => e.type === 'seaEffect')).toBe(false);
+  });
+
   it('«Мальстрём»: at the start of the turn the active team swaps for free; no diagonal penalty', () => {
     const s = setSea(turnOf('ПИРАТЫ'), 'maelstrom');
     const powder = s.teams['КОМПАНИЯ'].powder;
