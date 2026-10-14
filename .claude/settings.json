@@ -23,6 +23,13 @@
       "Bash(node docs/mockups/anim/level1/capture.mjs *)",
       "Bash(gh pr view *)",
       "Bash(gh pr diff *)"
+    ],
+    "deny": [
+      "Bash(git push origin main*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)"
     ]
   }
 }
