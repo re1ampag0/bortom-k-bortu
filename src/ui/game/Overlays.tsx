@@ -122,8 +122,11 @@ export function ShipSheet({ s, data, code, onClose, onDiscard }: { s: GameState;
   );
 }
 
-export function SeaSheet({ s, data, onClose }: { s: GameState; data: GameData; onClose: () => void }) {
-  const sea = s.sea?.current ? seaCardByCode(data, s.sea.current) : null;
+/** The sea: the current card or, by `code`, any sea card (from the log, from «Тиа Дальма»). */
+export function SeaSheet({ s, data, code, onClose }: { s: GameState; data: GameData; code?: string; onClose: () => void }) {
+  const current = s.sea?.current ?? null;
+  const [shown, setShown] = useState(code ?? current);
+  const sea = shown ? seaCardByCode(data, shown) : null;
   return (
     <Sheet title={sea ? `Море: ${sea.name}` : 'Море'} onClose={onClose}>
       {sea ? (
@@ -137,6 +140,15 @@ export function SeaSheet({ s, data, onClose }: { s: GameState; data: GameData; o
         </>
       ) : (
         <p>Партия без колоды моря.</p>
+      )}
+      {current && shown !== current && (
+        <p className="muted" data-testid="sea-current">
+          Сейчас в море:{' '}
+          <button className="cref" data-sea={current} onClick={() => setShown(current)}>
+            {seaCardByCode(data, current).name}
+          </button>
+          .
+        </p>
       )}
       {s.sea?.peek && s.sea.deck.slice(0, s.sea.peek.n).every((c) => c !== HIDDEN) && (
         <p data-testid="sea-peek">

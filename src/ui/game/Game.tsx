@@ -69,7 +69,7 @@ type Sheet =
   | { k: 'card'; seat: string; code: string }
   | { k: 'ship'; code: string }
   | { k: 'discard'; seat: string }
-  | { k: 'sea' }
+  | { k: 'sea'; code?: string; back?: 'log' }
   | { k: 'log' }
   | { k: 'rules' }
   | { k: 'settings' };
@@ -996,7 +996,7 @@ export function Game({
       )}
       {sheet?.k === 'ship' && <ShipSheet s={view} data={data} code={sheet.code} onClose={() => setSheet(null)} onDiscard={() => setSheet({ k: 'discard', seat: sheet.code })} />}
       {sheet?.k === 'discard' && <DiscardSheet s={view} data={data} seat={sheet.seat} onClose={() => setSheet(null)} />}
-      {sheet?.k === 'sea' && <SeaSheet s={view} data={data} onClose={() => setSheet(null)} />}
+      {sheet?.k === 'sea' && <SeaSheet key={sheet.code ?? ''} s={view} data={data} code={sheet.code} onClose={() => setSheet(sheet.back ? { k: sheet.back } : null)} />}
       {sheet?.k === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}
       {sheet?.k === 'log' && (
         <div className="sheet-backdrop" onClick={() => setSheet(null)}>
