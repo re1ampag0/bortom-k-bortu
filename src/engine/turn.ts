@@ -116,6 +116,7 @@ export function drawUp(ctx: Ctx, seat: string): void {
 /** Draws n cards; an empty deck is made from the discard, both empty — no card (RULES.md 9.3). */
 export function drawCards(ctx: Ctx, seat: string, n: number): void {
   const ship = getShip(ctx.s, seat);
+  const cards: string[] = [];
   let count = 0;
   while (count < n) {
     if (ship.deck.length === 0) {
@@ -124,10 +125,12 @@ export function drawCards(ctx: Ctx, seat: string, n: number): void {
       ship.discard = [];
       ctx.events.push({ type: 'deckReshuffled', seat });
     }
-    ship.hand.push(ship.deck.shift()!);
+    const card = ship.deck.shift()!;
+    ship.hand.push(card);
+    cards.push(card);
     count++;
   }
-  if (count > 0) ctx.events.push({ type: 'drew', seat, count });
+  if (count > 0) ctx.events.push({ type: 'drew', seat, count, cards });
 }
 
 /** «Ход окончен». The Black Pearl may put up to 2 cards from her hand into Plans first (RULES.md 5.7, 14.1). */

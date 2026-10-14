@@ -61,9 +61,16 @@ const defenders = (state: GameState, side: GameState['active']) => seatsOf(state
 const onSide = (state: GameState, viewer: Viewer, side: GameState['active']) =>
   viewer === 'all' || viewer.some((v) => state.ships[v]?.side === side);
 
-/** An event as the viewer may see it: a card passed to an ally is hidden from the enemy. */
+/**
+ * An event as the viewer may see it: a card passed to an ally is hidden from the enemy; the cards drawn — from
+ * everyone who does not see that hand.
+ */
 export function eventFor(state: GameState, viewer: Viewer, event: GameEvent, options: ViewOptions = {}): GameEvent {
   if (event.type === 'passed' && !seesHand(state, viewer, event.to, options)) return { ...event, card: HIDDEN };
+  if (event.type === 'drew' && event.cards && !seesHand(state, viewer, event.seat, options)) {
+    const { cards: _cards, ...rest } = event;
+    return rest;
+  }
   if (event.type === 'windowOpened' && !onSide(state, viewer, event.side)) return { ...event, seats: defenders(state, event.side) };
   return event;
 }
