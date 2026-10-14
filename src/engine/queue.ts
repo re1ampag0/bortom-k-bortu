@@ -44,6 +44,9 @@ function runStep(ctx: Ctx, step: Step): void {
     case 'swap':
       swapPlaces(ctx, step.side, step.reason);
       return;
+    case 'seaEffect':
+      ctx.events.push({ type: 'seaEffect', key: step.key });
+      return;
     case 'tortuga':
       return tortugaStep(ctx);
     case 'window':

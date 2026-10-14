@@ -252,6 +252,8 @@ type StepKind =
   | { k: 'sink'; ship: string }
   | { k: 'swap'; side: Side; reason: SwapReason }
   | { k: 'tortuga' }
+  /** Only reports a «весь раунд» sea effect as it acts («Девятый вал» before its damage). */
+  | { k: 'seaEffect'; key: string }
   | { k: 'window'; window: ReactionWindow; subject: 'volley' | 'card' }
   | { k: 'volleyPaid' }
   | { k: 'volleyHit' }
