@@ -447,7 +447,7 @@ export function CardParamsPanel({
       {needs.ship && ally && (
         <div className="choices">
           {[own, ally].map((x) => (
-            <button key={x.code} className={`choice ${(mode.ship ?? own.code) === x.code ? 'on' : ''}`} onClick={() => setMode({ ...mode, ship: x.code })}>
+            <button key={x.code} className={`choice ${needs.repairShip === x.code ? 'on' : ''}`} onClick={() => setMode({ ...mode, ship: x.code })}>
               <span>{x.code === own.code ? 'Свой корабль' : 'Союзник'}</span>
               <b>{nick(data, x.code)}</b>
             </button>
