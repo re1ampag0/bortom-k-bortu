@@ -6,6 +6,21 @@ import type { Side } from '../../engine/types';
 import { LOST_MS, type NetGame } from '../../net/ws';
 import { SIDE_LABEL } from './text';
 
+/** The captain offered a Charge for the ally's Volley (P6): the ally decides; «Отозвать». */
+export function OfferPanel({ title, onWithdraw }: { title: string; onWithdraw: () => void }) {
+  return (
+    <section className="panel" data-testid="offer-panel">
+      <div className="panel-head">
+        <b>{title}</b>
+        <span className="panel-sub">Залп даёт союзник — он решит, брать ли Заряд</span>
+        <button className="btn" data-testid="offer-cancel" onClick={onWithdraw}>
+          Отозвать
+        </button>
+      </div>
+    </section>
+  );
+}
+
 /** A thin bar over the table, only when there is something to say. */
 export function NetBar({ game }: { game: NetGame }) {
   const client = game.client;
