@@ -265,6 +265,13 @@ export function Game({
     return () => clearTimeout(t);
   }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, banner?.k, held]);
 
+  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy;
+  // The pause never keeps a decision of this device waiting: it ends as soon as the game asks the player.
+  const canHold = botBusy && !myDecision;
+  useEffect(() => {
+    if (held && !canHold) setHeld(false);
+  }, [held, canHold]);
+
   useEffect(() => {
     if (local) storeSave(s.winner ? null : local.record());
   }, [version, local, s.winner]);
@@ -795,12 +802,6 @@ export function Game({
     testid: 'end-turn',
   };
   // «Пауза», «Быстрее» and «До конца хода» while a bot moves or a move is shown; the last two skip the show.
-  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy;
-  // The pause never keeps a decision of this device waiting: it ends as soon as the game asks the player.
-  const canHold = botBusy && !myDecision;
-  useEffect(() => {
-    if (held && !canHold) setHeld(false);
-  }, [held, canHold]);
   const pauseBtn: Btn = {
     key: 'pause',
     label: held ? '▶ Дальше' : '⏸ Пауза',
