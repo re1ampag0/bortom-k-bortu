@@ -4,22 +4,13 @@
 // remembered between actions, because the declaration and the shot often come with different actions.
 // The engine's planFx (src/engine/state.ts) is a different thing: the effect of a card played from a Plan.
 import type { Card, Fx, Side, Track } from '../../../engine/types';
-import type { Action, GameEvent, ReactionWindow, SwapReason, Term } from '../../../engine/state';
+import type { Action, GameEvent, ReactionWindow, SwapReason, Term, TermSrc } from '../../../engine/state';
 
-/** Where an addend of a Volley's damage comes from (the engine sets it from A1; older events have none). */
-export type TermSrc =
-  | { kind: 'guns' }
-  | { kind: 'diag' }
-  | { kind: 'charge'; card: string | null }
-  | { kind: 'sea'; card?: string }
-  | { kind: 'reaction'; card: string }
-  | { kind: 'joint'; ally?: string }
-  | { kind: 'surface' }
-  | { kind: 'flags' }
-  | { kind: 'mark' }
-  | { kind: 'paid' }
-  | { kind: 'clear' }
-  | { kind: 'extra'; card?: string };
+/**
+ * Where an addend of a Volley's damage comes from: the engine's Term.src, or a guess by the text `what` for terms
+ * without it (events before A1, the reference scenes) — then card and ally may be unknown.
+ */
+export type FxTermSrc = TermSrc | { kind: TermSrc['kind']; card?: string | null; ally?: string };
 
 /** Cards by code: only the name and fx are needed. */
 export type FxCards = Record<string, Pick<Card, 'name' | 'fx'> | undefined>;
@@ -35,7 +26,7 @@ export interface Shot {
   units: number;
   to: 'track' | 'hull' | null;
   big?: boolean;
-  plus?: TermSrc['kind'];
+  plus?: FxTermSrc['kind'];
 }
 
 /** A Reaction played against the Volley being resolved. */
@@ -367,10 +358,10 @@ interface TermCtx {
   reactions: VolReaction[];
 }
 
-export function termSrc(t: Term & { src?: TermSrc }, ctx: TermCtx): TermSrc {
+export function termSrc(t: Term, ctx: TermCtx): FxTermSrc {
   if (t.src) return t.src;
   const k = SRC_BY_WHAT[t.what];
-  if (k) return { kind: k } as TermSrc;
+  if (k) return { kind: k };
   if (ctx.chargeName && t.what === ctx.chargeName) return { kind: 'charge', card: ctx.charge };
   const r = ctx.reactions.find((x) => ctx.cards[x.card] && ctx.cards[x.card]!.name === t.what);
   if (r) return { kind: 'reaction', card: r.card };
@@ -378,7 +369,7 @@ export function termSrc(t: Term & { src?: TermSrc }, ctx: TermCtx): TermSrc {
 }
 
 /** Kind of an extra ball by the source of the plus. */
-function plusKind(src: TermSrc, base: BallKind, chargeFx: Fx | null): BallKind {
+function plusKind(src: FxTermSrc, base: BallKind, chargeFx: Fx | null): BallKind {
   switch (src.kind) {
     case 'surface': return 'under';
     case 'paid': return 'keg';
@@ -399,11 +390,12 @@ function plusKind(src: TermSrc, base: BallKind, chargeFx: Fx | null): BallKind {
 }
 
 /** How a ball misses, by the source of the minus. */
-function minusOut(src: TermSrc, cards: FxCards): ShotOut {
+function minusOut(src: FxTermSrc, cards: FxCards): ShotOut {
   if (src.kind === 'diag') return 'water';
   if (src.kind === 'sea') return 'wind';
   if (src.kind === 'reaction') {
-    const r = cards[src.card] && cards[src.card]!.fx ? cards[src.card]!.fx.r : null;
+    const card = src.card as string;
+    const r = cards[card] && cards[card]!.fx ? cards[card]!.fx.r : null;
     if (r === 'redirect') return 'stick';
     if (r === 'reduce_all') return 'whirl';
     if (r === 'cancel_crew') return 'block';
@@ -600,11 +592,10 @@ export function createPlanner(opts: PlannerOptions) {
           const fx: Fx = e.charge && cards[e.charge] ? cards[e.charge]!.fx : {};
           const part2 = !!(prev && prev.part === 1 && prev.shooter === e.ship && e.charge && prev.charge === e.charge && fx.both);
           const cv = take('volley'), cc = part2 ? null : take('card');
-          const terms = (e as { terms?: Term[] }).terms;
           const clip = push({
             kind: 'announce', shooter: e.ship, target: e.target, track: e.track || 'hull', charge: e.charge, chargeFrom: e.chargeFrom,
             captain: !!(e.chargeFrom && e.chargeFrom !== e.ship), diagonal: e.diagonal, joint: e.joint, damage: e.damage,
-            terms: terms || null, part: part2 ? 2 : 1, heart: !!(last() && last()!.kind === 'heart'), byCard: st.card,
+            terms: e.terms || null, part: part2 ? 2 : 1, heart: !!(last() && last()!.kind === 'heart'), byCard: st.card,
             cost: { volley: cv ? cv.amount : 0, card: cc ? cc.amount : 0 },
             noReact: !!(fx.no_react || st.noReact[e.target] || st.noReactSide[ships[e.ship].side]),
             noDiagBy: e.diagonal && fx.no_diag ? e.charge : null,

@@ -197,7 +197,7 @@ export function react(ctx: Ctx, seat: string, card: string): void {
 
   const fx = reactionFx(c, option.fromPlan);
   const steps = pending.subject === 'volley'
-    ? applyToVolley(ctx, fx, c.name, cardShip(ctx, card, fx, ship), pending.window)
+    ? applyToVolley(ctx, fx, c.name, card, cardShip(ctx, card, fx, ship), pending.window)
     : applyToCard(ctx, fx, s.card!, seat, ship);
   s.pending = null;
   pushSteps(s, ...steps, { k: 'window', window: pending.window, subject: pending.subject });
@@ -214,9 +214,10 @@ function reactionRefusal(ctx: Ctx, seat: string, card: string): string {
   return 'Эту Реакцию сейчас сыграть нельзя: не то окно, не та цель, лимит Парусов или не хватает Пороха';
 }
 
-function applyToVolley(ctx: Ctx, fx: Fx, name: string, ship: ShipState, window: ReactionWindow): Step[] {
+function applyToVolley(ctx: Ctx, fx: Fx, name: string, card: string, ship: ShipState, window: ReactionWindow): Step[] {
   const v: VolleyState = ctx.s.volley!;
   const steps: Step[] = [];
+  const src = { kind: 'reaction', card } as const;
   const counter = (spec: Fx['counter']) => {
     if (!spec) return;
     const n = spec[1] === 'guns' ? ship.tracks.guns : spec[1];
@@ -231,12 +232,12 @@ function applyToVolley(ctx: Ctx, fx: Fx, name: string, ship: ShipState, window: 
   }
   switch (fx.r) {
     case 'reduce':
-      v.adjust.push({ what: name, n: -(fx.n ?? 0) });
+      v.adjust.push({ what: name, n: -(fx.n ?? 0), src });
       // «Тяжёлый борт»: the shooter takes its damage at once, before the Volley's damage (18.12, Q31).
       counter(fx.counter);
       break;
     case 'reduce_all': {
-      const term = { what: name, n: -(fx.n ?? 0) };
+      const term = { what: name, n: -(fx.n ?? 0), src };
       ctx.s.turn.reduceAll.push(term);
       v.adjust.push(term);
       break;
@@ -253,7 +254,7 @@ function applyToVolley(ctx: Ctx, fx: Fx, name: string, ship: ShipState, window: 
     case 'redirect':
       // «Прикрыть бортом»: the Volley hits the covering ship, −1; nothing else is recalculated (18.1, Q11, Q40).
       v.target = ship.code;
-      v.adjust.push({ what: name, n: -(fx.n ?? 0) });
+      v.adjust.push({ what: name, n: -(fx.n ?? 0), src });
       break;
   }
   return steps;

@@ -102,6 +102,9 @@ describe('animation planner on bot games', () => {
             }
           }
           for (const i of clips.quiet) seen[i]++;
+          for (const e of ev) {
+            if ((e.type === 'hit' || e.type === 'volley') && e.terms.some((t) => !t.src)) problems.push(`${where}: слагаемое ${e.type} без src`);
+          }
           if (seen.some((x) => x !== 1)) problems.push(`${where}: события в клипах ${ev.map((e, i) => `${e.type}×${seen[i]}`).join(', ')}`);
           for (const e of ev) applyVisible(d, e, rules);
           if (JSON.stringify(d) !== JSON.stringify(displayFrom(st.after))) {

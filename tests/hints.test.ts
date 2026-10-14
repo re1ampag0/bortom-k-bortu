@@ -36,7 +36,7 @@ describe('Volley preview', () => {
     const p = previewVolley(s, data, { ship: 'Ж', target: 'Г' });
     if (!p.ok) throw new Error(p.reason);
     const guns = s.ships['Ж'].tracks.guns;
-    expect(p.terms).toEqual([{ what: 'Пушки', n: guns }, { what: 'диагональ', n: -1 }]);
+    expect(p.terms).toEqual([{ what: 'Пушки', n: guns, src: { kind: 'guns' } }, { what: 'диагональ', n: -1, src: { kind: 'diag' } }]);
     expect(p.damage).toBe(guns - 1);
     expect(p.diagonal).toBe(true);
     expect(p.change).toMatchObject({ track: 'hull', from: 11, to: 11 - (guns - 1) });
