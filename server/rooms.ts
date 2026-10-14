@@ -15,7 +15,7 @@ import {
   type RoomSettings,
   type Seat,
 } from '../src/net/protocol';
-import { refusal } from './permissions';
+import { offerRefusal, refusal } from './permissions';
 import { Table, type Delays, type TableRecord } from './table';
 
 const SIDES: Side[] = ['ПИРАТЫ', 'КОМПАНИЯ'];
@@ -264,6 +264,8 @@ export class Room {
       case 'ready':
       case 'unready':
       case 'concede':
+      case 'offer':
+      case 'unoffer':
         return this.gameMessage(playerId, msg);
       case 'remind':
         return this.remind(playerId);
@@ -327,7 +329,7 @@ export class Room {
     this.phase = 'game';
   }
 
-  private gameMessage(playerId: string, msg: Extract<ClientMsg, { t: 'act' | 'ready' | 'unready' | 'concede' }>): string | null {
+  private gameMessage(playerId: string, msg: Extract<ClientMsg, { t: 'act' | 'ready' | 'unready' | 'concede' | 'offer' | 'unoffer' }>): string | null {
     const t = this.table;
     if (!t || this.phase !== 'game') return 'Партия ещё не началась';
     const seats = this.playing(playerId);
@@ -337,7 +339,10 @@ export class Room {
     const s = t.state;
     if (s.winner) return 'Партия окончена';
     const done = s.active === t.state.ships[seats[0]].side && seats.every((x) => t.ready.has(x));
-    const why = refusal(s, this.data, seats, msg.action, done);
+    const ctx = { bots: t.bots, offers: t.offers };
+    if (msg.t === 'unoffer') return seats.includes(msg.seat) ? t.setOffer(msg.seat, null) : 'Это не ваш корабль';
+    if (msg.t === 'offer') return offerRefusal(s, this.data, seats, msg.seat, msg.card, done, ctx) ?? t.setOffer(msg.seat, msg.card);
+    const why = refusal(s, this.data, seats, msg.action, done, ctx);
     if (why) return why;
     return t.act(msg.action);
   }

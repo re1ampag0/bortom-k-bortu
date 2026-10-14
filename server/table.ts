@@ -5,10 +5,10 @@ import { applyAction, createGame, type GameOptions } from '../src/engine/engine'
 import { decider } from '../src/engine/hints';
 import { describe, rewind, type LogLine } from '../src/engine/log';
 import { makeRecord, matchTotals, type MatchRecord, type MatchSetup, type SideTotals } from '../src/engine/match';
-import { ABILITY, RuleError, hasAbility, seatsOf, type Action, type GameEvent, type GameState } from '../src/engine/state';
+import { ABILITY, RuleError, hasAbility, seatShip, seatsOf, type Action, type GameEvent, type GameState } from '../src/engine/state';
 import type { GameData, Side } from '../src/engine/types';
 import { HIDDEN, eventsFor, viewFor, type Viewer } from '../src/engine/view';
-import type { GameInfo, LastSeen, RoomSettings, Seat } from '../src/net/protocol';
+import type { ChargeOffer, GameInfo, LastSeen, RoomSettings, Seat } from '../src/net/protocol';
 import { fallbackAnswer, refusedShipBot, seatAnswer, shipBotStep, type ShipBots } from '../src/engine/ai/shipBot';
 
 /** Who reads a log: a team, the spectators, or everybody («Всё открыто»). */
@@ -30,6 +30,8 @@ export interface TableRecord {
   ready: Seat[];
   plans: string[] | null;
   concede: Seat[];
+  /** Absent in games saved before the captains' offers. */
+  offers?: ChargeOffer[];
 }
 
 const randomIn = ([a, b]: [number, number]) => a + Math.random() * (b - a);
@@ -49,6 +51,8 @@ export class Table {
   plans: string[] | null = null;
   /** Seats whose players voted «Сдаться». */
   readonly concede = new Set<Seat>();
+  /** Charges the captains offer for their allies' Volleys (outside the engine; seen only by the team). */
+  offers: ChargeOffer[] = [];
 
   private mem: BotMemory;
   private teamGen: { key: string; gen: Generator<Action, void, { state: GameState; error?: string }>; error?: string } | null = null;
@@ -66,7 +70,7 @@ export class Table {
     readonly delays: Delays,
     /** Called after every change: the room sends the new views and saves the game. */
     private readonly onChange: () => void,
-    record?: Pick<TableRecord, 'actions' | 'ready' | 'plans' | 'concede'>,
+    record?: Pick<TableRecord, 'actions' | 'ready' | 'plans' | 'concede' | 'offers'>,
   ) {
     for (const seat of bots) this.bots.add(seat);
     const created = createGame(data, { ...options, pauseEmptyWindows: true });
@@ -80,6 +84,7 @@ export class Table {
     for (const seat of record?.ready ?? []) this.ready.add(seat);
     for (const seat of record?.concede ?? []) this.concede.add(seat);
     this.plans = record?.plans ?? null;
+    this.offers = liveOffers(this.state, record?.offers ?? [], this.bots);
   }
 
   record(): TableRecord {
@@ -90,6 +95,7 @@ export class Table {
       ready: [...this.ready],
       plans: this.plans,
       concede: [...this.concede],
+      offers: this.offers,
     };
   }
 
@@ -129,6 +135,7 @@ export class Table {
   /** What the player with `seats` gets: the view, the new log lines from `logFrom`, the last action. */
   infoFor(seats: readonly Seat[], logFrom: number): GameInfo {
     const key = this.keyOf(seats);
+    const side = seats.length > 0 ? this.state.ships[seats[0]].side : null;
     const viewer: Viewer = this.settings.allOpen ? 'all' : seats;
     const log = this.logs[key];
     return {
@@ -141,6 +148,8 @@ export class Table {
       bots: [...this.bots],
       ready: [...this.ready],
       concede: [...this.concede],
+      // The captains' offers: only the team, even with «Всё открыто».
+      offers: this.offers.filter((o) => this.state.ships[o.from].side === side),
       totals: this.state.winner ? (this.totals ??= matchTotals(this.data, this.matchSetup(), this.actions)) : null,
     };
   }
@@ -167,7 +176,11 @@ export class Table {
       this.ready.clear();
       this.plans = null;
       this.shipBots = {};
+      this.offers = [];
     }
+    // An offer is for one Volley of the ally: it goes after that ship fired.
+    if (action.type === 'volley') this.offers = this.offers.filter((o) => o.to !== action.ship);
+    this.offers = liveOffers(r.state, this.offers, this.bots);
     if (r.state.winner) this.concede.clear();
     return r.events;
   }
@@ -180,6 +193,15 @@ export class Table {
       if (e instanceof RuleError) return e.message;
       throw e;
     }
+    this.changed();
+    return null;
+  }
+
+  /** The captain of `seat` offers the Charge `card` for the ally's Volley (null — withdraws); checked by the room. */
+  setOffer(seat: Seat, card: string | null): string | null {
+    this.offers = this.offers.filter((o) => o.from !== seat);
+    const ally = seatShip(this.state, seat);
+    if (card && ally) this.offers.push({ from: seat, to: ally.code, card });
     this.changed();
     return null;
   }
@@ -223,6 +245,7 @@ export class Table {
     else this.bots.delete(seat);
     delete this.shipBots[seat];
     this.teamGen = null;
+    this.offers = liveOffers(this.state, this.offers, this.bots);
     this.changed();
   }
 
@@ -360,6 +383,18 @@ export class Table {
       gen.error = e.message;
     }
   }
+}
+
+/**
+ * The offers still valid: the card is in the captain's hand or Plans, the captain has not played a card this turn,
+ * the ally's ship is afloat and played by a person.
+ */
+export function liveOffers(s: GameState, offers: readonly ChargeOffer[], bots: ReadonlySet<Seat>): ChargeOffer[] {
+  return offers.filter((o) => {
+    const from = s.ships[o.from];
+    if (!from?.sunk || s.winner || seatShip(s, o.from)?.code !== o.to || bots.has(o.to)) return false;
+    return !s.turn.captainPlayed.includes(o.from) && [...from.hand, ...from.plans].includes(o.card);
+  });
 }
 
 /** The action as a viewer may see it: cards passed, chosen or put into Plans are hidden from the enemy. */

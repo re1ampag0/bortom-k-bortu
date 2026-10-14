@@ -77,6 +77,7 @@ export function Hand({
   onCard,
   onDiscard,
   label,
+  note,
 }: {
   s: GameState;
   data: GameData;
@@ -89,6 +90,8 @@ export function Hand({
   onCard: (seat: string, code: string) => void;
   onDiscard: (seat: string) => void;
   label: string;
+  /** A line under the head: «Вы капитан на борту…». */
+  note?: string;
 }) {
   const holder = s.ships[seat];
   return (
@@ -116,6 +119,11 @@ export function Hand({
           Колода {holder.deck.length} · Сброс {holder.discard.length}
         </button>
       </div>
+      {note && (
+        <p className="hand-note" data-testid="captain-note">
+          {note}
+        </p>
+      )}
       <div className="hand-cards">
         {holder.hand.map((code, i) => (
           <HandCard

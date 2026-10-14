@@ -46,9 +46,16 @@ export interface AimMode {
   paid: number;
 }
 
+/** A Charge for the Volley; `offered` — the captain (another person) offered it (P6). */
+export interface ChargeChoice {
+  card: string;
+  from: string;
+  offered?: boolean;
+}
+
 /** The Charges the shooter may add: its hand and Plans, and the hand of a captain on board (RULES.md 17.3). */
-export function chargeCandidates(s: GameState, data: GameData, shooter: string): { card: string; from: string }[] {
-  const out: { card: string; from: string }[] = [];
+export function chargeCandidates(s: GameState, data: GameData, shooter: string): ChargeChoice[] {
+  const out: ChargeChoice[] = [];
   for (const x of Object.values(s.ships)) {
     if (x.side !== s.ships[shooter].side || seatShip(s, x.code)?.code !== shooter) continue;
     for (const card of [...x.hand, ...x.plans]) {
@@ -78,6 +85,7 @@ export function VolleyPanel({
   data,
   hints,
   mode,
+  charges,
   setMode,
   onFire,
   onCancel,
@@ -86,6 +94,8 @@ export function VolleyPanel({
   data: GameData;
   /** Off — «как за столом»: no damage of each Charge; on a laptop the Charge is chosen in the hand. */
   hints: boolean;
+  /** The Charges allowed for this Volley (chargeCandidates, by network only the offered ones of another person). */
+  charges: ChargeChoice[];
   mode: AimMode;
   setMode: (m: AimMode) => void;
   onFire: (action: Action) => void;
@@ -93,7 +103,6 @@ export function VolleyPanel({
 }) {
   const p = mode.target ? previewVolley(s, data, volleyOrder(mode, mode.target)) : null;
   const cost = shipData(data, mode.shooter).volleyCost + (mode.charge ? cardByCode(data, mode.charge).cost : 0) + mode.paid;
-  const charges = chargeCandidates(s, data, mode.shooter);
   const paidCharge = mode.charge && cardByCode(data, mode.charge).fx.paid;
   const title = !mode.target
     ? `${nick(data, mode.shooter)}: выберите цель на столе`
@@ -117,9 +126,10 @@ export function VolleyPanel({
   const damageLabel = (pv: ReturnType<typeof previewWith>) =>
     pv?.ok ? `${pv.damage}${pv.track !== 'hull' ? ` по ${TRACK_DATIVE[pv.track]}` : ''}${pv.noReact ? ', без Реакций' : ''}` : pv ? '—' : undefined;
   const choose = (o: { card: string | null; from: string }) => setMode({ ...mode, charge: o.card, chargeFrom: o.from, paid: 0 });
-  const none = { card: null as string | null, from: mode.shooter };
-  // Without hints a laptop shows only «Без Заряда» and the chosen Charge: the Charge is chosen in the hand or the Plans.
-  const chips = hints ? [none, ...charges] : [none, ...charges.filter((o) => o.card === mode.charge)];
+  const none: { card: string | null; from: string; offered?: boolean } = { card: null, from: mode.shooter };
+  // Without hints a laptop shows only «Без Заряда», the chosen Charge and the captain's offer: the Charge is chosen
+  // in the hand or the Plans.
+  const chips = hints ? [none, ...charges] : [none, ...charges.filter((o) => o.card === mode.charge || o.offered)];
   return (
     <Panel title={title} sub={sub} tone="volley" testid="volley-panel">
       <div className="choices wide-block">
@@ -134,9 +144,10 @@ export function VolleyPanel({
               className={`choice ${on ? 'on' : ''} ${pv && !pv.ok ? 'off' : ''}`}
               title={pv && !pv.ok ? pv.reason : undefined}
               onClick={() => (pv && !pv.ok ? undefined : choose(o))}
+              data-testid={o.offered ? 'captain-charge' : undefined}
             >
               <span>
-                {c ? c.name : 'Без Заряда'}
+                {c ? `${o.offered ? 'Заряд капитана: ' : ''}${c.name}` : 'Без Заряда'}
                 {fromPlan ? ' · План' : ''}
                 {c && c.cost > 0 ? ` · ${c.cost} П` : ''}
               </span>
