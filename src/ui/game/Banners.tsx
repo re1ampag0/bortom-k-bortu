@@ -1,6 +1,6 @@
 // Banners one after another (docs/TZ.md, «Очередь хода и ожидание», п. 2): at the start of a round the new sea card with
-// its effect (~2 s), then «Ваш ход» / «Ход Компании» (~1 s), then the summary of the start of the turn (2 s, «Детали»,
-// п. 3). They never take input.
+// its effect (~2 s), then «Ваш ход» / «Ход Компании» (~1 s), then the summary of the start of the turn (4 s, «Детали»,
+// п. 3, with «Подробнее»). They never take input.
 import { useEffect, useRef, useState } from 'react';
 import { sideGenitive, turnSummary } from '../../engine/log';
 import { seaCardByCode } from '../../engine/state';
@@ -54,7 +54,7 @@ export function useBanners({
         if (e.type === 'turnStarted') add.push(turnBanner(e.side));
       }
       const sum = turnSummary(data, r.events);
-      if (sum && sum.text) add.push({ id: ++ids.current, ms: 2000, k: 'summary', side: sum.side, text: `Ход ${sideGenitive(sum.side)}: ${sum.text}` });
+      if (sum && sum.text) add.push({ id: ++ids.current, ms: 4000, k: 'summary', side: sum.side, text: `Ход ${sideGenitive(sum.side)}: ${sum.text}` });
     }
     if (add.length > 0) setQueue((q) => [...q, ...add]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
