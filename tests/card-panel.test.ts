@@ -7,7 +7,7 @@ import { cardNeeds } from '../src/engine/hints';
 import { startValue, type GameState } from '../src/engine/state';
 import type { Track } from '../src/engine/types';
 import { CardParamsPanel, type CardMode } from '../src/ui/game/Panels';
-import { cardIn, data, give, turnOf } from './helpers';
+import { act, cardIn, data, give, turnOf } from './helpers';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 
@@ -58,5 +58,17 @@ describe('Card panel: the repaired ship', () => {
     const html = panel(s, 'И', card);
     expect(html).toContain('Сердце бьётся → «Голландец»: восстановить 2 клетки');
     expect(rows(html)).toEqual(['crew Команда 1/3']);
+  });
+
+  it('«Живые снасти»: without a choice the panel marks the ship the engine repairs — the ally when own Sails are whole', () => {
+    const s = turnOf('ПИРАТЫ', { М: ['Живые снасти'] });
+    s.ships['Ж'].tracks.sails = 1;
+    const card = cardIn(s, 'М', 'Живые снасти');
+    expect(cardNeeds(s, data, 'М', card).repairShip).toBe('Ж');
+    const chosen = [...panel(s, 'М', card).matchAll(/class="choice on"><span>([^<]+)<\/span><b>([^<]+)<\/b>/g)].map((m) => `${m[1]} ${m[2]}`);
+    expect(chosen).toEqual(['Союзник «Жемчужина»']);
+    expect(act(s, { type: 'playCard', seat: 'М', card }).state.ships['Ж'].tracks.sails).toBe(3);
+    // The player's choice wins: the own ship.
+    expect(cardNeeds(s, data, 'М', card, { ship: 'М' }).repairShip).toBe('М');
   });
 });
