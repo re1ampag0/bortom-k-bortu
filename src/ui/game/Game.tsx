@@ -26,7 +26,7 @@ import type { NetGame } from '../../net/ws';
 import { download, loadSettings, storeSave, storeSettings, type Speed } from '../storage';
 import { Curtain } from './Curtain';
 import { Hand, type HandTab } from './Hand';
-import { CardDetail, DiscardSheet, EndScreen, LogList, RulesSheet, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
+import { CardDetail, DiscardSheet, EndScreen, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
 import {
   CardParamsPanel,
   ChoicePanel,
@@ -48,6 +48,7 @@ import { ShowLayer, useShowQueue } from './Show';
 import { instantUrl } from '../start/motion';
 import { playTurnSound } from '../sound';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
+import { enemyTurnLines } from './lastTurn';
 import { SIDE_LABEL, SPEEDS } from './text';
 
 type Mode =
@@ -68,11 +69,13 @@ type Sheet =
   | null
   | { k: 'card'; seat: string; code: string }
   /** A card opened to read (from the log): no status, no buttons. */
-  | { k: 'info'; code: string; back?: 'log' }
+  | { k: 'info'; code: string; back?: 'log' | 'lastTurn' }
   | { k: 'ship'; code: string }
   | { k: 'discard'; seat: string }
-  | { k: 'sea'; code?: string; back?: 'log' }
+  | { k: 'sea'; code?: string; back?: 'log' | 'lastTurn' }
   | { k: 'log' }
+  /** «Подробнее» of the turn summary: the log of the enemy's last turn. */
+  | { k: 'lastTurn' }
   | { k: 'rules' }
   | { k: 'settings' };
 
@@ -909,7 +912,14 @@ export function Game({
         <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
         <div className="middle">
-          {toast && <div className="toast">{toast}</div>}
+          {toast && (
+            <div className="toast" data-testid="turn-summary">
+              {toast}{' '}
+              <button className="toast-more" onClick={() => setSheet({ k: 'lastTurn' })} data-testid="summary-more">
+                Подробнее
+              </button>
+            </div>
+          )}
           {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
           {!dock && !s.winner && (lastEvent || (myTurn && mode.k === 'idle')) && (
             <p className="middle-info" data-testid="middle-info">
@@ -1045,6 +1055,17 @@ export function Game({
             </div>
           </section>
         </div>
+      )}
+      {sheet?.k === 'lastTurn' && (
+        <SheetBox title={`Что было за ход ${SIDE_LABEL[other(bottom)].gen}`} onClose={() => setSheet(null)} wide testid="last-turn">
+          <LogList
+            data={data}
+            log={enemyTurnLines(game.log, other(bottom))}
+            fresh={freshFrom}
+            onCard={(code) => setSheet({ k: 'info', code, back: 'lastTurn' })}
+            onSea={(code) => setSheet({ k: 'sea', code, back: 'lastTurn' })}
+          />
+        </SheetBox>
       )}
       {sheet?.k === 'settings' && (
         <SettingsSheet

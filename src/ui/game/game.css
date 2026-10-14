@@ -638,6 +638,16 @@ button {
   font-weight: 600;
   z-index: 6;
 }
+.toast .toast-more {
+  pointer-events: auto;
+  background: none;
+  border: 0;
+  color: #fff;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0 2px;
+}
 
 .panel {
   background: var(--panel);
