@@ -77,6 +77,7 @@ function checkView(info: GameInfo, room: RoomInfo, problems: string[]): void {
     const sees = (seat: string) => mine.includes(seat) || (side !== null && v.ships[seat].side === side);
     for (const e of last.events) {
       if (e.type === 'drew' && e.cards && !sees(e.seat)) problems.push(`${where}: добранные карты ${e.seat}`);
+      if (e.type === 'stolen' && e.card !== HIDDEN && !sees(e.seat) && !sees(e.from)) problems.push(`${where}: украденная карта`);
     }
   }
 }
