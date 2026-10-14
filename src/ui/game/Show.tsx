@@ -11,7 +11,7 @@ import { HandCard } from './Hand';
 import { actorOf, showSteps, type Recent, type ShowStep } from './showSteps';
 
 /** How long a card or a Volley stays on screen at each show speed. */
-export const SHOW_MS: Record<Speed, number> = { slow: 1500, normal: 1000, fast: 550, instant: 0 };
+export const SHOW_MS: Record<Speed, number> = { slow: 2600, normal: 1800, fast: 1000, instant: 0 };
 
 interface ShowSource {
   kind: 'local' | 'net';
