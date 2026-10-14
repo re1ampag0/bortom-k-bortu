@@ -1,11 +1,13 @@
 // What each player sees (docs/TZ.md, «Кто что видит», «Проверки»: the enemy never gets another team's hand, Plans
 // and the order of the decks) and giving up (docs/TZ.md, «Интерфейс → Детали», п. 4).
 import { describe, expect, it } from 'vitest';
-import { applyAction } from '../src/engine/engine';
-import type { Action, GameState } from '../src/engine/state';
-import { HIDDEN, eventFor, eventsFor, viewFor } from '../src/engine/view';
+import { applyAction, createGame } from '../src/engine/engine';
+import { describe as describeLog, rewind, type LogLine } from '../src/engine/log';
+import { cardByCode, type Action, type GameEvent, type GameState } from '../src/engine/state';
+import { HIDDEN, eventFor, eventsFor, viewFor, type Viewer, type ViewOptions } from '../src/engine/view';
 import { playGame } from '../src/engine/sim/sim';
-import { act, cardIn, data, passTo, turnOf } from './helpers';
+import { LocalGame } from '../src/net/local';
+import { act, cardIn, data, passTo, POSITIONS, turnOf } from './helpers';
 
 const play = (s: GameState, seat: string, name: string, extra: Partial<Extract<Action, { type: 'playCard' }>> = {}) =>
   act(s, { type: 'playCard', seat, card: cardIn(s, seat, name), ...extra });
@@ -220,5 +222,114 @@ describe('network: the Reaction window does not give the hand away (docs/TZ.md, 
     s = passTo(passTo(s, 'КОМПАНИЯ'), 'ПИРАТЫ');
     expect(s.sea!.current).toBe(top[0]);
     expect(viewFor(s, ['Ж']).sea!.deck.slice(0, 3)).toEqual([top[1], top[2], HIDDEN]);
+  });
+});
+
+/** The log a viewer reads of one action, made as the server makes it: the words of the events the viewer may see. */
+function logOf(r: { state: GameState; events: GameEvent[] }, before: GameState, action: Action | null, viewer: Viewer, options: ViewOptions = {}): LogLine[] {
+  return describeLog(data, before, action, eventsFor(r.state, viewer, r.events, options), 0);
+}
+const codesIn = (lines: LogLine[]) => lines.flatMap((l) => l.cards);
+
+/** Each listed card is named in the text, in the order of the list; no hidden card is listed. */
+function namedInOrder(line: LogLine): boolean {
+  let from = 0;
+  for (const code of line.cards) {
+    if (code === HIDDEN) return false;
+    const at = line.text.indexOf(`«${cardByCode(data, code).name}»`, from);
+    if (at < 0) return false;
+    from = at + 1;
+  }
+  return true;
+}
+
+describe('log lines name only the cards the reader sees', () => {
+  it('the enemy log lists no card put into Plans, even if the action with the Plans reaches the describer', () => {
+    const s = turnOf('ПИРАТЫ', { Ж: ['Ядра', 'Книппели'] });
+    const plans = [...s.ships['Ж'].hand];
+    const action: Action = { type: 'endTurn', side: 'ПИРАТЫ', plans };
+    const r = act(s, action);
+    for (const viewer of [COMPANY, [] as string[], PIRATES]) {
+      const lines = logOf(r, s, action, viewer);
+      expect(lines.some((l) => l.text.includes('откладывает в Планы'))).toBe(true);
+      expect(codesIn(lines).filter((c) => plans.includes(c))).toEqual([]);
+    }
+  });
+
+  it('a card passed to the ally is not in the enemy log', () => {
+    const s = turnOf('ПИРАТЫ', { Ж: ['Ядра'] });
+    const card = cardIn(s, 'Ж', 'Ядра');
+    const action: Action = { type: 'pass', seat: 'Ж', card };
+    const r = act(s, action);
+    const lines = logOf(r, s, { ...action, card: HIDDEN }, COMPANY);
+    expect(lines.some((l) => l.text.includes('передаёт карту союзнику'))).toBe(true);
+    expect(codesIn(lines)).not.toContain(card);
+  });
+
+  it('a stolen card is not in the log of those who do not see it; the card played is', () => {
+    const s = turnOf('ПИРАТЫ', { Ж: ['Обезьянка Джек'], И: ['Плотник'] });
+    const monkey = cardIn(s, 'Ж', 'Обезьянка Джек');
+    const stolen = cardIn(s, 'И', 'Плотник');
+    const action: Action = { type: 'playCard', seat: 'Ж', card: monkey, target: 'И' };
+    const r = act(s, action);
+    expect(r.events.some((e) => e.type === 'stolen')).toBe(true);
+    for (const [viewer, options] of [[['М'], { allyHands: false }], [['Г'], { allyHands: false }], [[], {}]] as [string[], ViewOptions][]) {
+      const codes = codesIn(logOf(r, s, action, viewer, options));
+      expect(codes).not.toContain(stolen);
+      expect(codes).toContain(monkey);
+    }
+  });
+
+  it('the cards drawn are not in the enemy log', () => {
+    const s = turnOf('КОМПАНИЯ', { Ж: ['Ядра', 'Книппели'] });
+    const action: Action = { type: 'endTurn', side: 'КОМПАНИЯ' };
+    const r = act(s, action);
+    const drawn = r.state.ships['Ж'].hand.slice(2);
+    expect(drawn.length).toBeGreaterThan(0);
+    const codes = codesIn(logOf(r, s, action, COMPANY));
+    expect(codes.filter((c) => drawn.includes(c))).toEqual([]);
+  });
+
+  it('a card played is listed; «Колокол «Голландца»» with its inner quotes too', () => {
+    const s = turnOf('КОМПАНИЯ', { Г: ['Колокол «Голландца»'], Ж: ['Ядра', 'Книппели'], М: ['Брандер'] });
+    const bell = cardIn(s, 'Г', 'Колокол «Голландца»');
+    const action: Action = { type: 'playCard', seat: 'Г', card: bell };
+    const r = act(s, action);
+    const line = logOf(r, s, action, PIRATES).find((l) => l.cards.includes(bell))!;
+    expect(line.text).toContain('«Колокол «Голландца»»');
+    expect(line.cards).toEqual([bell]);
+    expect(namedInOrder(line)).toBe(true);
+  });
+
+  it('the line of a sea card names it in `sea`', () => {
+    const created = createGame(data, { seed: 1, positions: POSITIONS, sea: true });
+    const lines = describeLog(data, rewind(created.state, created.events), null, created.events, -1);
+    const line = lines.find((l) => l.text.startsWith('Море:'))!;
+    expect(line.sea).toBe(created.state.sea!.current);
+    expect(lines.filter((l) => l.sea).length).toBe(1);
+  });
+
+  it('in 10 bot games every listed card is named in the text; a team log lists no card hidden in enemy hands', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const g = new LocalGame(data, { game: { seed }, players: { ПИРАТЫ: 'bot', КОМПАНИЯ: 'bot' }, openHands: true });
+      for (let i = 0; i < 20000 && !g.state.winner; i++) if (!g.botStep()) throw new Error('the game waits for nobody');
+      for (const line of g.log) if (!namedInOrder(line)) throw new Error(`seed ${seed}: ${line.text} — ${line.cards.join(', ')}`);
+      let s = createGame(data, g.setup.game).state;
+      for (const action of g.actions) {
+        const r = applyAction(s, action, data);
+        for (const [mine, theirs] of [[PIRATES, COMPANY], [COMPANY, PIRATES]]) {
+          const evs = eventsFor(r.state, mine, r.events);
+          const said = JSON.stringify(evs);
+          const hidden = new Set(theirs.flatMap((seat) => [...r.state.ships[seat].hand, ...r.state.ships[seat].plans]));
+          for (const line of describeLog(data, s, action, evs, 0)) {
+            if (!namedInOrder(line)) throw new Error(`seed ${seed}: ${line.text} — ${line.cards.join(', ')}`);
+            // A card in an enemy hand may be listed only if the events this team gets show it (played, then taken).
+            const leak = line.cards.filter((c) => hidden.has(c) && !said.includes(`"${c}"`));
+            if (leak.length > 0) throw new Error(`seed ${seed}: ${mine.join('')} reads ${leak.join(', ')} in «${line.text}»`);
+          }
+        }
+        s = r.state;
+      }
+    }
   });
 });
