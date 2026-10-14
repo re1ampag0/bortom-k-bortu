@@ -82,7 +82,7 @@ async function playToEnd(page: Page) {
       const panel = page.getByTestId('choice-panel');
       const done = panel.getByRole('button', { name: /Готово/ });
       const need = Number((await done.textContent())!.match(/из (\d+)/)![1]);
-      const options = panel.locator('.choice-cards > *');
+      const options = panel.locator('.choice-cards > *, .tia-opts > .sopt');
       for (let k = 0; k < need; k++) await options.nth(k).click();
       await done.click();
       continue;
