@@ -12,7 +12,7 @@ import { applyAction, createGame } from '../src/engine/engine';
 import { decider, playOptions, volleyTargets } from '../src/engine/hints';
 import type { MatchRecord } from '../src/engine/match';
 import { replay } from '../src/engine/match';
-import type { Action, GameState } from '../src/engine/state';
+import { cardByCode, type Action, type GameState } from '../src/engine/state';
 import { HIDDEN } from '../src/engine/view';
 import type { ClientMsg, GameInfo, RoomInfo, RoomSettings, ServerMsg } from '../src/net/protocol';
 import { startServer, type GameServer } from '../server/index';
@@ -576,5 +576,76 @@ describe('game server: the Reaction window', () => {
     const start = Date.now();
     await a.until(() => a.log.some((l) => l.startsWith('Попадание')), 'окно закрылось по таймеру', 5000);
     expect(Date.now() - start).toBeGreaterThanOrEqual(800);
+  });
+});
+
+/**
+ * Makes `captain` a sunk ship whose captain plays on its ally's board (as the engine tests do: sunk, Hull 0), with a
+ * Charge in the captain's hand; then a message of a player of that team makes the server send the new views.
+ */
+async function captainize(srv: GameServer, code: string, captain: string, by: Client): Promise<string> {
+  const t = srv.rooms.get(code)!.table!;
+  const s = structuredClone(t.state);
+  const ship = s.ships[captain];
+  ship.sunk = true;
+  ship.tracks.hull = 0;
+  const isCharge = (c: string) => cardByCode(data, c).type === 'ЗАРЯД';
+  let card = ship.hand.find(isCharge);
+  if (!card) {
+    card = ship.deck.find(isCharge)!;
+    ship.deck.splice(ship.deck.indexOf(card), 1);
+    ship.hand.push(card);
+  }
+  t.state = s;
+  const before = by.messages;
+  by.send({ t: 'unready' });
+  await by.until(() => by.messages > before && !!by.game?.view.ships[captain].sunk, 'капитан');
+  return card;
+}
+
+/** A Volley of the ally `ship` with the captain's Charge, at the first target it may have. */
+function captainVolley(c: Client, ship: string, captain: string, card: string): Action {
+  const target = volleyTargets(c.view, data, { ship, charge: card, chargeFrom: captain }).targets[0].target;
+  return { type: 'volley', ship, target, charge: card, chargeFrom: captain };
+}
+
+describe('game server: the captain of a sunk ship (P6)', () => {
+  it('the ally is another person: the captain may not fire the ally’s Volley, the ally may not take the Charge unoffered', async () => {
+    const { srv } = await server();
+    const { code, all } = await table(srv, { Аня: ['М'], Боря: ['Ж'], Вера: ['И', 'Г'] });
+    const [a, b] = all;
+    const card = await captainize(srv, code, 'М', a);
+    await b.until(() => !!b.view.ships['М'].sunk, 'капитан у союзника');
+    a.act(captainVolley(a, 'Ж', 'М', card));
+    await a.until(() => a.refused.length === 1, 'отказ капитану');
+    expect(a.refused[0]).toBe('Этим кораблём играет союзник: Залп даёт он, а вы можете предложить ему Заряд');
+    b.act(captainVolley(b, 'Ж', 'М', card));
+    await b.until(() => b.refused.length === 1, 'отказ союзнику');
+    expect(b.refused[0]).toBe('Заряд — только из своей руки');
+    expect(a.game!.actions).toBe(0);
+  });
+
+  it('the ally is a bot: the captain fires the Volley with the Charge as before', async () => {
+    const { srv } = await server();
+    const { code, all } = await table(srv, { Аня: ['М'], Вера: ['И', 'Г'] });
+    const [a] = all;
+    expect(a.game!.bots).toEqual(['Ж']);
+    const card = await captainize(srv, code, 'М', a);
+    a.act(captainVolley(a, 'Ж', 'М', card));
+    await a.until(() => a.game!.actions > 0, 'Залп');
+    expect(a.refused).toEqual([]);
+    expect(a.view.ships['М'].discard).toContain(card);
+    expect(a.view.turn.captainPlayed).toEqual(['М']);
+  });
+
+  it('one person plays both ships: the captain’s Charge goes into the Volley as before', async () => {
+    const { srv } = await server();
+    const { code, all } = await table(srv, { Аня: ['Ж', 'М'], Вера: ['И', 'Г'] });
+    const [a] = all;
+    const card = await captainize(srv, code, 'М', a);
+    a.act(captainVolley(a, 'Ж', 'М', card));
+    await a.until(() => a.game!.actions > 0, 'Залп');
+    expect(a.refused).toEqual([]);
+    expect(a.view.ships['М'].discard).toContain(card);
   });
 });

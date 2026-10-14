@@ -2,15 +2,21 @@
 // is allowed to). The engine checks the rules; this checks only whose decision it is.
 import { ABILITY, hasAbility, seatShip, type Action, type GameState } from '../src/engine/state';
 import type { GameData } from '../src/engine/types';
-import type { Seat } from '../src/net/protocol';
+import type { ChargeOffer, Seat } from '../src/net/protocol';
 
 const NOT_YOURS = 'Это не ваш корабль';
+
+/** What the server knows besides the game: who is a bot now, the captains' offers of a Charge. */
+export interface TableContext {
+  bots: ReadonlySet<Seat>;
+  offers: readonly ChargeOffer[];
+}
 
 /**
  * Why the player with `seats` (all of one team, played by the player now) may not send the action, or null.
  * `done` — the player pressed «Ход окончен»: only answers to decisions are allowed until «Вернуться к ходу».
  */
-export function refusal(state: GameState, data: GameData, seats: readonly Seat[], action: Action, done: boolean): string | null {
+export function refusal(state: GameState, data: GameData, seats: readonly Seat[], action: Action, done: boolean, ctx: TableContext): string | null {
   if (seats.length === 0) return 'Вы зритель: сядьте на свободный корабль до начала партии';
   const side = state.ships[seats[0]].side;
   const mine = (seat: string | undefined) => !!seat && seats.includes(seat);
@@ -43,7 +49,10 @@ export function refusal(state: GameState, data: GameData, seats: readonly Seat[]
       // «Сердце Дейви Джонса»: the Endeavour makes the Dutchman fire (RULES.md 14.6).
       const heart = action.heart && seats.some((x) => state.ships[x].side === ship.side && hasAbility(data, state.ships[x], ABILITY.heart));
       if (!mine(action.ship) && !captainCharge && !heart) return NOT_YOURS;
-      if (action.chargeFrom && !mine(action.chargeFrom) && action.chargeFrom !== action.ship) return 'Заряд — только из своей руки';
+      // The ally's ship is played by another person: they fire, the captain only offers the Charge (P6).
+      if (!mine(action.ship) && !heart && !ctx.bots.has(action.ship)) return 'Этим кораблём играет союзник: Залп даёт он, а вы можете предложить ему Заряд';
+      const offered = ctx.offers.some((o) => o.from === action.chargeFrom && o.to === action.ship && o.card === action.charge);
+      if (action.chargeFrom && !mine(action.chargeFrom) && action.chargeFrom !== action.ship && !offered) return 'Заряд — только из своей руки';
       return turnAction();
     }
     case 'regroup':
