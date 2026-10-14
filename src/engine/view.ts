@@ -63,13 +63,17 @@ const onSide = (state: GameState, viewer: Viewer, side: GameState['active']) =>
 
 /**
  * An event as the viewer may see it: a card passed to an ally is hidden from the enemy; the cards drawn — from
- * everyone who does not see that hand.
+ * everyone who does not see that hand; a stolen card — from everyone who sees neither the thief's hand nor the
+ * robbed one (that a card was stolen everyone sees).
  */
 export function eventFor(state: GameState, viewer: Viewer, event: GameEvent, options: ViewOptions = {}): GameEvent {
   if (event.type === 'passed' && !seesHand(state, viewer, event.to, options)) return { ...event, card: HIDDEN };
   if (event.type === 'drew' && event.cards && !seesHand(state, viewer, event.seat, options)) {
     const { cards: _cards, ...rest } = event;
     return rest;
+  }
+  if (event.type === 'stolen' && !seesHand(state, viewer, event.seat, options) && !seesHand(state, viewer, event.from, options)) {
+    return { ...event, card: HIDDEN };
   }
   if (event.type === 'windowOpened' && !onSide(state, viewer, event.side)) return { ...event, seats: defenders(state, event.side) };
   return event;

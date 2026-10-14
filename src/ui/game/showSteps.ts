@@ -106,7 +106,7 @@ export function showSteps(events: GameEvent[], full: boolean): ShowStep[] {
         if (full && e.card !== HIDDEN) add({ ship: e.to, text: 'Передача карты', bad: false });
         break;
       case 'stolen':
-        if (full && e.card !== HIDDEN) add({ ship: e.seat, text: 'Карта украдена', bad: true });
+        if (full) add({ ship: e.seat, text: 'Карта украдена', bad: true });
         break;
       case 'restored':
         if (e.amount > 0) add({ ship: e.ship, text: `+${e.amount} ${TRACK_NAME[e.track]}`, bad: false });
