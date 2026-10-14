@@ -37,7 +37,7 @@ for (const size of SIZES) {
       await page.evaluate(() =>
         localStorage.setItem('bortom-k-bortu.net', JSON.stringify({ url: 'ws://localhost:1/ws', token: 't', code: 'ABCDE', name: 'Аня', seen: 0 })),
       );
-      await page.goto('?seed=3&speed=slow');
+      await page.goto('?seed=3&speed=fast');
       await expect(page.getByTestId('resume')).toContainText('Раунд 1');
       await expect(page.getByTestId('net-resume')).toContainText('ABCDE');
       await page.waitForTimeout(300);
@@ -78,7 +78,7 @@ test.describe('prefers-reduced-motion', () => {
 
   test('the coin shows its side at once, the card of a move does not fly in', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('?seed=3&speed=slow');
+    await page.goto('?seed=3&speed=fast');
     await page.getByTestId('quick-bots').click();
     await page.getByTestId('pick-coin').click();
     await expect(page.getByTestId('coin-verdict')).toContainText('Жребий', { timeout: 300 });
@@ -99,7 +99,7 @@ test.describe('two people on one screen', () => {
   test.use({ viewport: { width: 430, height: 740 } });
 
   test('the banners wait until the curtain «Передайте устройство» is closed', async ({ page }) => {
-    await page.goto('?seed=3&speed=slow');
+    await page.goto('?seed=3&speed=fast');
     await page.getByTestId('quick-duo').click();
     await page.getByTestId('prep-start').click();
     await page.getByTestId('placement-done').click();

@@ -26,7 +26,7 @@ import type { NetGame } from '../../net/ws';
 import { download, loadSettings, storeSave, storeSettings, type Speed } from '../storage';
 import { Curtain } from './Curtain';
 import { Hand, type HandTab } from './Hand';
-import { CardDetail, DiscardSheet, EndScreen, LogList, RulesSheet, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
+import { CardDetail, DiscardSheet, EndScreen, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
 import {
   CardParamsPanel,
   ChoicePanel,
@@ -48,6 +48,7 @@ import { ShowLayer, useShowQueue } from './Show';
 import { instantUrl } from '../start/motion';
 import { playTurnSound } from '../sound';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
+import { enemyTurnLines } from './lastTurn';
 import { SIDE_LABEL, SPEEDS } from './text';
 
 type Mode =
@@ -68,11 +69,13 @@ type Sheet =
   | null
   | { k: 'card'; seat: string; code: string }
   /** A card opened to read (from the log): no status, no buttons. */
-  | { k: 'info'; code: string; back?: 'log' }
+  | { k: 'info'; code: string; back?: 'log' | 'lastTurn' }
   | { k: 'ship'; code: string }
   | { k: 'discard'; seat: string }
-  | { k: 'sea'; code?: string; back?: 'log' }
+  | { k: 'sea'; code?: string; back?: 'log' | 'lastTurn' }
   | { k: 'log' }
+  /** «Подробнее» of the turn summary: the log of the enemy's last turn. */
+  | { k: 'lastTurn' }
   | { k: 'rules' }
   | { k: 'settings' };
 
@@ -186,6 +189,8 @@ export function Game({
   const [sheet, setSheet] = useState<Sheet>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [fastTurn, setFastTurn] = useState<string | null>(null);
+  /** «Пауза»: the show on this device stops; on one screen the bots wait too (by network the server plays them). */
+  const [held, setHeld] = useState(false);
   const [endClosed, setEndClosed] = useState(false);
   const [freshFrom, setFreshFrom] = useState(0);
   const allSeats = Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
@@ -243,9 +248,10 @@ export function Game({
     speed,
     myDecision,
     paused: !!banner && banner.k !== 'summary',
+    hold: held,
   });
   useEffect(() => {
-    if (!local || curtainSide || s.winner || !local.botToMove()) return;
+    if (!local || curtainSide || s.winner || held || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
     if ((show.busy || (banner && banner.k !== 'summary')) && !instant) return;
     const t = setTimeout(
@@ -257,7 +263,14 @@ export function Game({
       instant ? 0 : SPEEDS[speed].ms,
     );
     return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, banner?.k]);
+  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, banner?.k, held]);
+
+  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy;
+  // The pause never keeps a decision of this device waiting: it ends as soon as the game asks the player.
+  const canHold = botBusy && !myDecision;
+  useEffect(() => {
+    if (held && !canHold) setHeld(false);
+  }, [held, canHold]);
 
   useEffect(() => {
     if (local) storeSave(s.winner ? null : local.record());
@@ -788,14 +801,21 @@ export function Game({
     onClick: () => endFlow('start'),
     testid: 'end-turn',
   };
-  // «Быстрее» and «До конца хода» while a bot moves or a move is shown; both skip the show.
-  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy;
+  // «Пауза», «Быстрее» and «До конца хода» while a bot moves or a move is shown; the last two skip the show.
+  const pauseBtn: Btn = {
+    key: 'pause',
+    label: held ? '▶ Дальше' : '⏸ Пауза',
+    short: held ? '▶' : '⏸',
+    onClick: () => setHeld(!held),
+    testid: 'pause-show',
+  };
   const botBtns: Btn[] = botBusy
     ? [
         {
           key: 'faster',
           label: 'Быстрее',
           onClick: () => {
+            setHeld(false);
             show.skip();
             setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant');
           },
@@ -804,11 +824,13 @@ export function Game({
           key: 'skip',
           label: 'До конца хода',
           onClick: () => {
+            setHeld(false);
             show.skip();
             setFastTurn(turnKey);
           },
           testid: 'skip-turn',
         },
+        ...(canHold ? [pauseBtn] : []),
       ]
     : [];
 
@@ -891,7 +913,14 @@ export function Game({
         <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
         <div className="middle">
-          {toast && <div className="toast">{toast}</div>}
+          {toast && (
+            <div className="toast" data-testid="turn-summary">
+              {toast}{' '}
+              <button className="toast-more" onClick={() => setSheet({ k: 'lastTurn' })} data-testid="summary-more">
+                Подробнее
+              </button>
+            </div>
+          )}
           {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
           {!dock && !s.winner && (lastEvent || (myTurn && mode.k === 'idle')) && (
             <p className="middle-info" data-testid="middle-info">
@@ -959,13 +988,14 @@ export function Game({
           </button>
         </div>
       </aside>
-      <nav className="bottom-bar">
+      <nav className={`bottom-bar ${canHold ? 'has-pause' : ''}`}>
         <button className="btn" onClick={() => setSheet({ k: 'log' })}>
           Журнал
         </button>
         <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
           Правила
         </button>
+        {canHold && <Button b={pauseBtn} className="pause" />}
         {botBusy ? <Button b={botBtns[1]} /> : net ? <Button b={remindBtn} /> : <Button b={undoBtn} className="undo" />}
         <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       </nav>
@@ -1026,6 +1056,17 @@ export function Game({
             </div>
           </section>
         </div>
+      )}
+      {sheet?.k === 'lastTurn' && (
+        <SheetBox title={`Что было за ход ${SIDE_LABEL[other(bottom)].gen}`} onClose={() => setSheet(null)} wide testid="last-turn">
+          <LogList
+            data={data}
+            log={enemyTurnLines(game.log, other(bottom))}
+            fresh={freshFrom}
+            onCard={(code) => setSheet({ k: 'info', code, back: 'lastTurn' })}
+            onSea={(code) => setSheet({ k: 'sea', code, back: 'lastTurn' })}
+          />
+        </SheetBox>
       )}
       {sheet?.k === 'settings' && (
         <SettingsSheet

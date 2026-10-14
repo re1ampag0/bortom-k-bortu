@@ -658,6 +658,16 @@ button.star::before {
   font-weight: 600;
   z-index: 6;
 }
+.toast .toast-more {
+  pointer-events: auto;
+  background: none;
+  border: 0;
+  color: #fff;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0 2px;
+}
 
 .panel {
   background: var(--panel);
@@ -1630,6 +1640,16 @@ button.star::before {
     padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
     background: var(--panel);
     border-top: 1px solid var(--line);
+  }
+  /* While the bots move «Ход окончен» is off anyway (the status bar says whose turn it is): «Пауза» takes its place. */
+  .bottom-bar.has-pause {
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+  }
+  .bottom-bar.has-pause .end-turn {
+    display: none;
+  }
+  .bottom-bar .btn.pause {
+    min-width: 48px;
   }
   .bottom-bar .btn {
     min-height: 48px;
