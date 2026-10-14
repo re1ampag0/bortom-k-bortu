@@ -85,6 +85,34 @@ function checkView(info: GameInfo, room: RoomInfo, problems: string[]): void {
   }
 }
 
+const CARD_CODE = /^[ЖМИГ]-(\d\d|Л)$/;
+
+/** Codes of the cards anywhere in a value (a view, the last actions with their events). */
+function cardCodes(value: unknown, out: Set<string>): void {
+  if (typeof value === 'string') {
+    if (CARD_CODE.test(value)) out.add(value);
+  } else if (Array.isArray(value)) {
+    for (const x of value) cardCodes(x, out);
+  } else if (value && typeof value === 'object') {
+    for (const x of Object.values(value)) cardCodes(x, out);
+  }
+}
+
+/**
+ * The log names no card the client has not got otherwise (P3): every code in a new line's `cards` came in the views
+ * and the last actions, which checkView checks — so the log tells nothing of enemy Plans, passed, stolen or drawn cards.
+ */
+function checkLog(info: GameInfo, known: Set<string>, who: string, problems: string[]): void {
+  const { log: _log, ...rest } = info;
+  cardCodes(rest, known);
+  for (const line of info.log) {
+    if (line.cards.includes(HIDDEN)) problems.push(`${who}, действие ${info.actions}: «?» в журнале — ${line.text}`);
+    if (info.logFrom === 0) continue;
+    const unknown = line.cards.filter((c) => !known.has(c));
+    if (unknown.length > 0) problems.push(`${who}, действие ${info.actions}: журнал называет ${unknown.join(', ')} — ${line.text}`);
+  }
+}
+
 /** A player in a browser, as a test sees it: messages, the room, the game and a simple way to play. */
 class Client {
   ws!: WebSocket;
@@ -92,6 +120,8 @@ class Client {
   room: RoomInfo | null = null;
   game: GameInfo | null = null;
   log: string[] = [];
+  /** Codes of the cards the client got outside the log (see checkLog). */
+  known = new Set<string>();
   errors: string[] = [];
   refused: string[] = [];
   reminded: string[] = [];
@@ -144,6 +174,7 @@ class Client {
         this.log.push(...msg.game.log.map((l) => l.text));
         this.game = msg.game;
         if (this.room) checkView(msg.game, this.room, this.problems);
+        checkLog(msg.game, this.known, this.name, this.problems);
         this.busy = false;
         break;
       case 'refused':
