@@ -1497,10 +1497,10 @@ button.star::before {
   .plank-buttons {
     padding: 2px 6px 6px;
     gap: 6px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
   .plank-buttons .btn {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 44px;
     padding: 4px 6px;
     font-size: 0.9rem;
