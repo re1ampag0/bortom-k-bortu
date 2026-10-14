@@ -153,10 +153,14 @@ export function SeaSheet({ s, data, code, onClose }: { s: GameState; data: GameD
       {s.sea?.peek && s.sea.deck.slice(0, s.sea.peek.n).every((c) => c !== HIDDEN) && (
         <p data-testid="sea-peek">
           Следующие карты моря («Тиа Дальма», их знаете только вы):{' '}
-          {s.sea.deck
-            .slice(0, s.sea.peek.n)
-            .map((c) => `«${seaCardByCode(data, c).name}»`)
-            .join(', ')}
+          {s.sea.deck.slice(0, s.sea.peek.n).map((c, i) => (
+            <span key={c}>
+              {i > 0 && ', '}
+              <button className="cref" data-sea={c} onClick={() => setShown(c)}>
+                «{seaCardByCode(data, c).name}»
+              </button>
+            </span>
+          ))}
           .
         </p>
       )}

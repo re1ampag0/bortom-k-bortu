@@ -6,6 +6,7 @@ import { applyAction } from '../src/engine/engine';
 import { describe as describeLog, type LogLine } from '../src/engine/log';
 import { cardByCode, seaCardByCode, type Action } from '../src/engine/state';
 import { LogList, logParts, SeaSheet } from '../src/ui/game/Overlays';
+import { ChoicePanel } from '../src/ui/game/Panels';
 import { cardIn, codesOf, data, newGame, turnOf } from './helpers';
 
 const line = (text: string, cards: string[], sea?: string): LogLine => ({ text, kind: 'action', round: 1, turn: 'ПИРАТЫ', action: 0, cards, ...(sea ? { sea } : {}) });
@@ -74,5 +75,31 @@ describe('the log: card names are links', () => {
   it('a legend is a link too', () => {
     const l = line(`«Жемчужина»: Легенда «${cardByCode(data, 'Ж-Л').name}».`, ['Ж-Л']);
     expect(list([l])).toContain('data-card="Ж-Л"');
+  });
+});
+
+describe('«Тиа Дальма»: sea mini cards with «i»', () => {
+  it('each of the three sea cards shows its name and effect, is pressed to order and has «i»', () => {
+    const s0 = turnOf('ПИРАТЫ', { Ж: ['Тиа Дальма'] }, { sea: true });
+    const s = applyAction(s0, { type: 'playCard', seat: 'Ж', card: cardIn(s0, 'Ж', 'Тиа Дальма') }, data).state;
+    const top = s.sea!.deck.slice(0, 3);
+    const html = renderToStaticMarkup(createElement(ChoicePanel, { s, data, seat: 'Ж', onAct: () => {}, onSea: () => {} }));
+    expect(html.match(/class="sopt /g)).toHaveLength(3);
+    for (const code of top) {
+      const sea = seaCardByCode(data, code);
+      expect(html).toContain(`data-opt="${code}"`);
+      expect(html).toContain(`<div class="n">${sea.name}</div>`);
+      expect(html).toContain(`<div class="e">${sea.big}</div>`);
+      expect(html).toContain(`<button class="info" data-sea="${code}" aria-label="Карта «${sea.name}» целиком">i</button>`);
+    }
+    expect(html).toContain('<svg');
+  });
+
+  it('the sea sheet links the next sea cards known after «Тиа Дальма»', () => {
+    const s = newGame({ sea: true });
+    const top = s.sea!.deck.slice(0, 2);
+    s.sea!.peek = { seat: 'Ж', n: 2 };
+    const html = renderToStaticMarkup(createElement(SeaSheet, { s, data, onClose: () => {} }));
+    for (const code of top) expect(html).toContain(`<button class="cref" data-sea="${code}">«${seaCardByCode(data, code).name}»</button>`);
   });
 });
