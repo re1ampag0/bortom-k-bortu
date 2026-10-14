@@ -15,6 +15,13 @@ export interface LogLine {
   turn: Side;
   /** Index of the action in the game record that caused the line (-1 — the start of the game). */
   action: number;
+  /**
+   * Codes of the cards the text names («Название»), in the order of the text. Only cards printed in the text: a card
+   * the reader may not see is «карту» there and is not listed, so the codes tell nothing beyond the text.
+   */
+  cards: string[];
+  /** The sea card the line reveals («Море: …»). */
+  sea?: string;
 }
 
 const SIDE_NAME: Record<Side, string> = { ПИРАТЫ: 'Пираты', КОМПАНИЯ: 'Компания' };
@@ -45,13 +52,25 @@ export function describe(data: GameData, before: GameState, action: Action | nul
   const out: LogLine[] = [];
   const name = (code: string) => `«${shipData(data, code).nick}»`;
   const to = (code: string) => `«${shipData(data, code).nickDative}»`;
-  const card = (code: string) => (code === HIDDEN ? 'карту' : `«${cardByCode(data, code).name}»`);
-  const push = (text: string, kind: LogKind = 'info') => out.push({ text, kind, round, turn, action: index });
+  /** Cards named by `card` for the line being made: the template literal names them left to right. */
+  let named: string[] = [];
+  const card = (code: string) => {
+    if (code === HIDDEN) return 'карту';
+    named.push(code);
+    return `«${cardByCode(data, code).name}»`;
+  };
+  const push = (text: string, kind: LogKind = 'info', sea?: string) => {
+    out.push({ text, kind, round, turn, action: index, cards: named, ...(sea ? { sea } : {}) });
+    named = [];
+  };
   /** Appends to the last line (a hit and its damage read as one sentence). */
   const append = (text: string) => {
     const last = out[out.length - 1];
-    if (last) last.text += text;
-    else push(text.trim(), 'damage');
+    if (last) {
+      last.text += text;
+      last.cards.push(...named);
+      named = [];
+    } else push(text.trim(), 'damage');
   };
   let lastHit: string | null = null;
 
@@ -64,7 +83,7 @@ export function describe(data: GameData, before: GameState, action: Action | nul
         break;
       case 'seaRevealed': {
         const sea = seaCardByCode(data, e.card);
-        push(`Море: ${sea.name} (${sea.when.toLowerCase()}) — ${sea.big}${e.reshuffled ? ' Колода моря перемешана.' : ''}`, 'round');
+        push(`Море: ${sea.name} (${sea.when.toLowerCase()}) — ${sea.big}${e.reshuffled ? ' Колода моря перемешана.' : ''}`, 'round', e.card);
         break;
       }
       case 'turnStarted':
