@@ -346,7 +346,8 @@ export type GameEvent =
   | { type: 'fireDamage'; ship: string; fires: number }
   | { type: 'fireAdded'; ship: string; fires: number }
   | { type: 'fireOut'; seat: string; card: string; fires: number }
-  | { type: 'drew'; seat: string; count: number }
+  /** `cards` — the cards drawn; eventFor leaves them only to those who see the hand. */
+  | { type: 'drew'; seat: string; count: number; cards?: string[] }
   | { type: 'deckReshuffled'; seat: string }
   | { type: 'damage'; ship: string; track: Track; amount: number; toHull: number }
   | { type: 'sunk'; ship: string }
