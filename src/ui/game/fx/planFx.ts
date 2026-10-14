@@ -4,7 +4,7 @@
 // remembered between actions, because the declaration and the shot often come with different actions.
 // The engine's planFx (src/engine/state.ts) is a different thing: the effect of a card played from a Plan.
 import type { Card, Fx, Side, Track } from '../../../engine/types';
-import type { GameEvent, ReactionWindow, SwapReason, Term } from '../../../engine/state';
+import type { Action, GameEvent, ReactionWindow, SwapReason, Term } from '../../../engine/state';
 
 /** Where an addend of a Volley's damage comes from (the engine sets it from A1; older events have none). */
 export type TermSrc =
@@ -538,8 +538,8 @@ export interface PlannerState {
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 type ClipInput = DistributiveOmit<FxClip, 'ev'>;
 type Cost = { reason: string; side?: Side; ship?: string; amount: number; i: number };
-/** Fields of the action the planner reads. */
-type ActionLike = { target?: string } | null | undefined;
+/** The action the events came from (the planner reads only its target). */
+type ActionLike = Action | null | undefined;
 
 export function createPlanner(opts: PlannerOptions) {
   const cards = opts.cards;
@@ -698,7 +698,7 @@ export function createPlanner(opts: PlannerOptions) {
         }
         case 'cardPlayed': {
           const cc = take('card');
-          const clip = push({ kind: 'card', seat: e.seat, ship: e.ship, card: e.card, target: action && action.target ? action.target : null, cost: cc ? cc.amount : 0, effects: [] }, i);
+          const clip = push({ kind: 'card', seat: e.seat, ship: e.ship, card: e.card, target: action && 'target' in action && action.target ? action.target : null, cost: cc ? cc.amount : 0, effects: [] }, i);
           if (cc) clip.ev.push(cc.i);
           st.card = e.card;
           return;
