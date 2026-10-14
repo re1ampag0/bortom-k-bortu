@@ -18,9 +18,9 @@ import {
 } from '../../engine/hints';
 import { matchTotals, type MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
-import { ABILITY, cardByCode, hasAbility, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
+import { ABILITY, cardByCode, hasAbility, isCaptain, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
 import type { Side } from '../../engine/types';
-import { viewFor } from '../../engine/view';
+import { HIDDEN, viewFor } from '../../engine/view';
 import type { LocalGame } from '../../net/local';
 import type { NetGame } from '../../net/ws';
 import { download, loadSettings, storeSave, storeSettings, type Speed } from '../storage';
@@ -36,12 +36,13 @@ import {
   ReactionPanel,
   TortugaPanel,
   VolleyPanel,
+  chargeCandidates,
   plateLabel,
   volleyOrder,
   type AimMode,
   type CardMode,
 } from './Panels';
-import { MissedSheet, NetBar, netDock } from './NetParts';
+import { MissedSheet, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { ShowLayer, useShowQueue } from './Show';
 import { instantUrl } from '../start/motion';
@@ -157,6 +158,19 @@ export function Game({
   const myTurn = myDecision && d!.kind === 'turn';
   /** The seats whose decision the game waits for from this device. */
   const myDeciding = d ? d.seats.filter((x) => mySeats.includes(x)) : [];
+
+  // ——— The captain of a sunk ship (RULES.md 17.3): by network the ally's person fires, the captain offers (P6) ———
+  const offers = net?.offers ?? [];
+  /** Another person plays the captain's ally ship: the captain offers the Charge instead of firing the Volley. */
+  const mustOffer = (x: string) => {
+    if (!net || !isCaptain(s, x)) return false;
+    const ally = seatShip(s, x)!.code;
+    return !mySeats.includes(ally) && !net.isBotSeat(ally);
+  };
+  const offerOf = (x: string) => offers.find((o) => o.from === x) ?? null;
+  /** A Charge of this hand may go into the shooter's Volley: an own hand, or offered by another person's captain. */
+  const chargeOk = (holder: string, card: string, shooter: string) =>
+    !net || mySeats.includes(holder) || offers.some((o) => o.from === holder && o.card === card && o.to === shooter);
   // The Reaction chosen in the hand while the window is open (phone: the panel has only «Пропустить» and «Сыграть»).
   const [reactPickRaw, setReactPick] = useState<{ seat: string; card: string } | null>(null);
   const reactPick =
@@ -315,11 +329,24 @@ export function Game({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version, seat, myDecision]);
   const useful = useMemo(() => (myTurn && hints ? hasUsefulMoves(s, data, bottom) : true), [version, myTurn, bottom, hints]); // eslint-disable-line react-hooks/exhaustive-deps
+  /** The view for the Volley previews: an offered card stands for a hidden card of the captain's hand (the server checked it is there). */
+  const sAim = useMemo(() => {
+    const hidden = offers.filter((o) => !mySeats.includes(o.from) && ![...s.ships[o.from].hand, ...s.ships[o.from].plans].includes(o.card));
+    if (hidden.length === 0) return s;
+    const v = structuredClone(s);
+    for (const o of hidden) {
+      const hand = v.ships[o.from].hand;
+      const i = hand.indexOf(HIDDEN);
+      if (i >= 0) hand[i] = o.card;
+    }
+    return v;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version]);
   const aimTargets = useMemo<VolleyTarget[]>(() => {
     if (mode.k !== 'aim') return [];
     if (mode.heart) return heartTargets(s, data, mode.shooter);
     const order = { ship: mode.shooter, ...(mode.charge ? { charge: mode.charge } : {}), ...(mode.chargeFrom && mode.chargeFrom !== mode.shooter ? { chargeFrom: mode.chargeFrom } : {}) };
-    return volleyTargets(s, data, order).targets;
+    return volleyTargets(sAim, data, order).targets;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version, mode]);
 
@@ -358,6 +385,10 @@ export function Game({
       return;
     }
     setSheet(null);
+    if (c.type === 'ЗАРЯД' && mustOffer(holder)) {
+      setFlash('Залп даёт союзник: предложите ему Заряд');
+      return;
+    }
     if (c.type === 'ЗАРЯД') {
       const shooter = seatShip(s, holder)!.code;
       setMode({ k: 'aim', shooter, charge: card, chargeFrom: holder, heart: false, target: null, paid: 0 });
@@ -387,6 +418,15 @@ export function Game({
     const inHand = ship.hand.includes(code);
     const o = cardHints.get(code) ?? playOptions(s, data, holder, code);
     const btns: Btn[] = [{ key: 'play', label: 'Сыграть', primary: true, disabled: o.reason, onClick: () => startPlay(holder, code), testid: 'detail-play' }];
+    if (cardByCode(data, code).type === 'ЗАРЯД' && isCaptain(s, holder)) {
+      const ally = nick(seatShip(s, holder)!.code);
+      if (!mustOffer(holder)) btns[0] = { ...btns[0], label: `Сыграть в Залп корабля ${ally}` };
+      else if (offerOf(holder)?.card === code) {
+        btns[0] = { key: 'unoffer', label: 'Отозвать предложение', onClick: () => (net!.unoffer(holder), setSheet(null)), testid: 'unoffer-charge' };
+      } else {
+        btns[0] = { key: 'offer', label: `Предложить в Залп корабля ${ally}`, primary: true, disabled: o.reason, onClick: () => (net!.offer(holder, code), setSheet(null)), testid: 'offer-charge' };
+      }
+    }
     if (inHand) {
       const sell = refusal(s, { type: 'sell', seat: holder, card: code }, data);
       btns.push({ key: 'sell', label: `Продать · +${data.rules.sellGain} П`, disabled: sell, onClick: () => act({ type: 'sell', seat: holder, card: code }) });
@@ -515,7 +555,12 @@ export function Game({
     dockSheet = true;
     dock = <ChoicePanel key={`${version}`} s={s} data={data} seat={myDeciding[0]} onAct={(a) => act(a)} />;
   } else if (myTurn) {
-    if (mode.k === 'aim') dock = <VolleyPanel s={s} data={data} hints={hints} mode={mode} setMode={setMode} onFire={(a) => act(a)} onCancel={cancel} />;
+    if (mode.k === 'aim') {
+      const charges = chargeCandidates(sAim, data, mode.shooter)
+        .filter((o) => chargeOk(o.from, o.card, mode.shooter))
+        .map((o) => ({ ...o, offered: !mySeats.includes(o.from) }));
+      dock = <VolleyPanel s={sAim} data={data} hints={hints} mode={mode} charges={charges} setMode={setMode} onFire={(a) => act(a)} onCancel={cancel} />;
+    }
     else if (mode.k === 'card') dock = <CardParamsPanel s={s} data={data} mode={mode} setMode={setMode} onAct={(a) => act(a)} onCancel={cancel} />;
     else if (mode.k === 'legend') {
       const c = cardByCode(data, `${mode.seat}-Л`);
@@ -550,6 +595,13 @@ export function Game({
     } else if (mode.k === 'plans') {
       dockSheet = true;
       dock = <PlansPanel s={s} data={data} seat={mode.seat} onDone={(plans) => finishTurn({ type: 'endTurn', side: bottom, plans })} onCancel={cancel} />;
+    } else if (mode.k === 'idle' && net) {
+      const mine = mySeats.map(offerOf).find((o) => !!o);
+      if (mine) {
+        dock = (
+          <OfferPanel title={`Предложено: «${cardByCode(data, mine.card).name}» для Залпа корабля ${nick(mine.to)}`} onWithdraw={() => net.unoffer(mine.from)} />
+        );
+      }
     }
   } else if (net && !s.winner) {
     dock = netDock(net, mySeats, bottom, nick);
@@ -645,6 +697,9 @@ export function Game({
 
   // ——— The middle at rest: the last event ———
   const lastEvent = [...game.log].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
+  /** The ally: «Капитан предлагает Заряд…» (P6). */
+  const offerToMe = myTurn && mode.k === 'idle' ? offers.find((o) => mySeats.includes(o.to) && !mySeats.includes(o.from)) : undefined;
+  const offerInfo = offerToMe ? `Капитан предлагает Заряд «${cardByCode(data, offerToMe.card).name}» — нажмите «Залп» ${nick(offerToMe.to)}` : null;
 
   // ——— Hand ———
   const tabs: HandTab[] = allSeats
@@ -668,12 +723,13 @@ export function Game({
     return [...s.ships[x].hand, ...s.ships[x].plans].filter((c) => c !== '?' && cardByCode(data, c).type === 'РЕАКЦИЯ');
   }
   const offOf = (holder: string, code: string): string | null => {
-    if (net && !mySeats.includes(holder)) return net.isBotSeat(holder) ? 'Этой рукой играет бот' : 'Это рука союзника: ею играет он';
+    const offered = mode.k === 'aim' && code !== HIDDEN && !mySeats.includes(holder) && chargeOk(holder, code, mode.shooter);
+    if (net && !mySeats.includes(holder) && !offered) return net.isBotSeat(holder) ? 'Этой рукой играет бот' : 'Это рука союзника: ею играет он';
     if (!myDecision) return s.winner ? 'Партия окончена' : 'Сейчас не ваше решение';
     if (mode.k === 'aim') {
       if (cardByCode(data, code).type !== 'ЗАРЯД' || seatShip(s, holder)?.code !== mode.shooter) return 'Во время Залпа — только Заряды';
       if (mode.target) {
-        const p = previewVolley(s, data, volleyOrder({ ...mode, charge: code, chargeFrom: holder, paid: 0 }, mode.target));
+        const p = previewVolley(sAim, data, volleyOrder({ ...mode, charge: code, chargeFrom: holder, paid: 0 }, mode.target));
         return p.ok ? null : p.reason;
       }
       return null;
@@ -685,10 +741,16 @@ export function Game({
   const chosenCard = mode.k === 'aim' ? mode.charge : mode.k === 'card' ? mode.card : (reactPick?.card ?? null);
   /** «Подсказки»: «→ итог 4» on the Charges while aiming, «4 → 2» on the Reactions in the window. */
   const noteOf = (code: string): string | undefined => {
-    if (!hints || !myDecision || code === '?') return undefined;
+    if (code === HIDDEN) return undefined;
     const c = cardByCode(data, code);
+    if (myTurn && mode.k !== 'aim' && c.type === 'ЗАРЯД' && mySeats.includes(seat) && isCaptain(s, seat)) {
+      const big = c.big.length <= 8 ? `${c.big} ` : '';
+      if (!mustOffer(seat)) return `${big}→ в Залп союзника`;
+      return offerOf(seat)?.card === code ? 'предложено союзнику' : `${big}→ предложить в Залп союзника`;
+    }
+    if (!hints || !myDecision) return undefined;
     if (mode.k === 'aim' && mode.target && c.type === 'ЗАРЯД' && seatShip(s, seat)?.code === mode.shooter) {
-      const p = previewVolley(s, data, volleyOrder({ ...mode, charge: code, chargeFrom: seat, paid: 0 }, mode.target));
+      const p = previewVolley(sAim, data, volleyOrder({ ...mode, charge: code, chargeFrom: seat, paid: 0 }, mode.target));
       return p.ok ? `${c.big.length <= 8 ? `${c.big} ` : ''}→ итог ${p.damage}` : undefined;
     }
     if (d!.kind === 'reactions' && c.type === 'РЕАКЦИЯ' && d!.seats.includes(seat)) {
@@ -698,6 +760,8 @@ export function Game({
     return undefined;
   };
   const handLabel = `${seat ? `Рука · ${nick(seat)}` : 'Рука'}`;
+  const captainNote =
+    seat && mySeats.includes(seat) && isCaptain(s, seat) ? `Вы капитан на борту корабля ${nick(seatShip(s, seat)!.code)}: 1 карта за ход за него, Порох — команды` : undefined;
 
   // ——— Bottom buttons ———
   const undoWhy = myTurn && local ? local.undoRefusal(bottom) : 'Отменять можно только свои действия в свой ход';
@@ -826,6 +890,12 @@ export function Game({
           {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
           {!dock && !s.winner && (lastEvent || (myTurn && mode.k === 'idle')) && (
             <p className="middle-info" data-testid="middle-info">
+              {offerInfo && (
+                <>
+                  <b data-testid="offer-info">{offerInfo}</b>
+                  <br />
+                </>
+              )}
               {lastEvent && <>Последнее: {lastEvent}</>}
               {lastEvent && myTurn && mode.k === 'idle' && <br />}
               {myTurn && mode.k === 'idle' && 'Нажмите карту или «Залп».'}
@@ -846,7 +916,7 @@ export function Game({
               chosen={chosenCard}
               noteOf={noteOf}
               onCard={(holder: string, code: string) => {
-                if (mode.k === 'aim' && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter) {
+                if (mode.k === 'aim' && code !== HIDDEN && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) {
                   setMode({ ...mode, charge: mode.charge === code ? null : code, chargeFrom: holder, paid: 0 });
                   return;
                 }
@@ -860,6 +930,7 @@ export function Game({
               }}
               onDiscard={(x) => setSheet({ k: 'discard', seat: x })}
               label={handLabel}
+              note={captainNote}
             />
           )}
           <div className="hand-actions">

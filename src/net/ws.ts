@@ -8,7 +8,7 @@ import type { MatchRecord } from '../engine/match';
 import type { MatchSetup, SideTotals } from '../engine/match';
 import type { Action, GameEvent, GameState } from '../engine/state';
 import type { GameData, Side } from '../engine/types';
-import type { ClientMsg, GameInfo, RoomInfo, RoomSettings, Seat, ServerMsg } from './protocol';
+import type { ChargeOffer, ClientMsg, GameInfo, RoomInfo, RoomSettings, Seat, ServerMsg } from './protocol';
 
 const KEY = 'bortom-k-bortu.net';
 /** Without a connection for this long the player is told the server is gone (a laptop asleep, another network). */
@@ -308,6 +308,8 @@ export class NetGame {
   bots: Seat[] = [];
   ready: Seat[] = [];
   concede: Seat[] = [];
+  /** The captains' offers of a Charge for the ally's Volley (only the player's team). */
+  offers: ChargeOffer[] = [];
   totals: Record<Side, SideTotals> | null = null;
   /** The last refusal of the server: the table shows it as the engine's refusal on one screen. */
   refusal: { n: number; text: string } | null = null;
@@ -363,6 +365,7 @@ export class NetGame {
     this.bots = info.bots;
     this.ready = info.ready;
     this.concede = info.concede;
+    this.offers = info.offers ?? [];
     this.totals = info.totals;
   }
 
@@ -423,6 +426,15 @@ export class NetGame {
 
   voteConcede(on: boolean): void {
     this.client.send({ t: 'concede', on });
+  }
+
+  /** The captain of `seat` offers the Charge `card` for the ally's Volley (the ally fires and decides). */
+  offer(seat: Seat, card: string): void {
+    this.client.send({ t: 'offer', seat, card });
+  }
+
+  unoffer(seat: Seat): void {
+    this.client.send({ t: 'unoffer', seat });
   }
 
   remind(): void {
