@@ -853,6 +853,8 @@ export function Game({
   const decidingSeats = d && !s.winner ? d.seats : [];
   const shooter = mode.k === 'aim' ? mode.shooter : (s.volley?.shooter ?? null);
   const targeted = mode.k === 'aim' ? mode.target : mode.k === 'card' ? mode.target : (s.volley?.target ?? null);
+  // The ship the card repairs, as the engine decides it: framed green while the card panel is open.
+  const repairing = mode.k === 'card' ? cardNeeds(s, data, mode.seat, mode.card, mode.ship ? { ship: mode.ship } : {}).repairShip : null;
 
   const renderPlank = (x: (typeof view.ships)[string]) => (
     <Plank
@@ -865,6 +867,7 @@ export function Game({
       awaiting={decidingSeats.includes(x.code) && !botSeat(x.code) && !(net && d?.kind === 'turn' && net.ready.includes(x.code))}
       targeted={targeted === x.code}
       shooter={shooter === x.code}
+      repairing={repairing === x.code}
       plate={plateFor(x.code)}
       buttons={plankButtons(x.code)}
       role={net ? netRole(x.code) : null}

@@ -21,6 +21,8 @@ import { CostBadge, HandCard } from './Hand';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const nick = (data: GameData, code: string) => `«${shipData(data, code).nick}»`;
+/** «восстановить 1 клетку / 2 клетки / 5 клеток». */
+const cellsWord = (n: number) => `${n} ${n === 1 ? 'клетку' : n < 5 ? 'клетки' : 'клеток'}`;
 
 function Panel({ title, sub, children, tone, testid }: { title: string; sub?: string; children: React.ReactNode; tone?: string; testid?: string }) {
   return (
@@ -426,22 +428,26 @@ export function CardParamsPanel({
   onCancel: () => void;
 }) {
   const c = cardByCode(data, mode.card);
-  const needs = cardNeeds(s, data, mode.seat, mode.card);
+  const needs = cardNeeds(s, data, mode.seat, mode.card, mode.ship ? { ship: mode.ship } : {});
   const action = cardAction(mode);
   const why = needs.target && !mode.target ? `Выберите ${needs.target === 'seat' ? 'игрока-противника' : 'вражеский корабль'} на столе` : refusal(s, action, data);
   const own = seatShip(s, mode.seat)!;
   const ally = Object.values(s.ships).find((x) => x.side === own.side && x.code !== own.code && !x.sunk);
-  const repairShip = mode.ship ? s.ships[mode.ship] : own;
+  // The ship the engine repairs (repairTarget): the ally's for «Норрингтон на борту», the Dutchman's for «Сердце бьётся».
+  const repairShip = needs.repairShip ? s.ships[needs.repairShip] : null;
   const cells = needs.souls !== null ? 2 * (mode.souls ?? needs.souls) : needs.cells;
+  const title = repairShip
+    ? `${c.name} → ${nick(data, repairShip.code)}${cells > 0 ? `: восстановить ${cellsWord(cells)}` : ''}`
+    : `${nick(data, mode.seat)}: «${c.name}»`;
   const split = mode.repair ?? {};
   const used = TRACKS.reduce((n, t) => n + (split[t] ?? 0), 0);
   const canRegroup = needs.regroup && refusal(s, { ...action, regroup: true }, data) === null;
   return (
-    <Panel title={`${nick(data, mode.seat)}: «${c.name}»`} sub={c.big} testid="card-panel">
+    <Panel title={title} sub={c.big} testid="card-panel">
       {needs.ship && ally && (
         <div className="choices">
           {[own, ally].map((x) => (
-            <button key={x.code} className={`choice ${(mode.ship ?? own.code) === x.code ? 'on' : ''}`} onClick={() => setMode({ ...mode, ship: x.code })}>
+            <button key={x.code} className={`choice ${needs.repairShip === x.code ? 'on' : ''}`} onClick={() => setMode({ ...mode, ship: x.code })}>
               <span>{x.code === own.code ? 'Свой корабль' : 'Союзник'}</span>
               <b>{nick(data, x.code)}</b>
             </button>
@@ -460,10 +466,10 @@ export function CardParamsPanel({
           </button>
         </div>
       )}
-      {cells > 0 && (
-        <div className="repair">
+      {cells > 0 && repairShip && (
+        <div className="repair" data-testid="repair-tracks">
           <span className="muted">
-            Восстановить {cells} {cells === 1 ? 'клетку' : cells < 5 ? 'клетки' : 'клеток'}
+            Восстановить {cellsWord(cells)}
             {mode.repair ? ` · распределено ${used}` : ' · по умолчанию: Пушки, Корпус, Команда, Паруса'}
           </span>
           {TRACKS.map((t) => {
@@ -471,7 +477,7 @@ export function CardParamsPanel({
             if (missing <= 0) return null;
             const n = split[t] ?? 0;
             return (
-              <div key={t} className="stepper">
+              <div key={t} className="stepper" data-track={t}>
                 <span>
                   {TRACK_NAME[t]} {repairShip.tracks[t]}/{startValue(data, repairShip.code, t)}
                 </span>

@@ -11,6 +11,8 @@ export type Pos = 0 | 1;
 
 /** Lowest value of each track (RULES.md 3.2–3.5). */
 export const TRACK_MIN: Record<Track, number> = { hull: 0, sails: 0, guns: 0, crew: 1 };
+/** Names of the tracks in the engine's messages and the interface. */
+export const TRACK_NAME: Record<Track, string> = { hull: 'Корпус', sails: 'Паруса', guns: 'Пушки', crew: 'Команда' };
 
 /** Ship abilities the engine looks up by name. */
 export const ABILITY = {
