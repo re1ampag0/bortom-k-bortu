@@ -1,7 +1,7 @@
 // Questions the interface asks the engine: may this be done and why not, what a card needs, what a Volley or a
 // Reaction will do. Every answer comes from a dry run of applyAction, so the rules exist in one place; the dry run
 // works on a copy and its result is never shown, only the numbers the player may know anyway.
-import { targetKind } from './cards';
+import { repairShipOf, targetKind } from './cards';
 import { applyAction } from './engine';
 import { createRng } from './rng';
 import {
@@ -18,6 +18,7 @@ import {
   shipData,
   teamShips,
   type Action,
+  type CardParams,
   type Ctx,
   type GameEvent,
   type GameState,
@@ -110,6 +111,8 @@ export interface CardNeeds {
   souls: number | null;
   /** «Строй линии»: the free Regroup by choice. */
   regroup: boolean;
+  /** The ship the card repairs (engine: repairTarget), with the player's choice of ship if given; null — no repair. */
+  repairShip: string | null;
 }
 
 export const isHidden = (card: string) => card === HIDDEN;
@@ -117,7 +120,7 @@ export const isHidden = (card: string) => card === HIDDEN;
 /** Where the seat holds the card: in a Plan of the Pearl or in the hand. */
 const fromPlan = (s: GameState, seat: string, card: string) => !s.ships[seat].hand.includes(card) && s.ships[seat].plans.includes(card);
 
-export function cardNeeds(s: GameState, data: GameData, seat: string, card: string): CardNeeds {
+export function cardNeeds(s: GameState, data: GameData, seat: string, card: string, params: CardParams = {}): CardNeeds {
   const c = cardByCode(data, card);
   const ops = planFx(c.fx, fromPlan(s, seat, card)).ops ?? [];
   const kind = targetKind(ops);
@@ -132,6 +135,7 @@ export function cardNeeds(s: GameState, data: GameData, seat: string, card: stri
     cells: souls !== null ? 2 * souls : cells,
     souls,
     regroup: ops.some((op) => op[0] === 'regroup_free'),
+    repairShip: ship ? (repairShipOf(ctxOf(s, data), { card, seat, ship: ship.code, params }, ops)?.code ?? null) : null,
   };
 }
 
