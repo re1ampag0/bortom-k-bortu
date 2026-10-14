@@ -469,7 +469,27 @@ button {
 }
 .star {
   color: #f3cd55;
-  margin-left: 4px;
+  margin-left: -4px;
+}
+button.star {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+/* The tap zone of the star is 44×44: down from the top of the plank, over the name and the tracks below. */
+button.star::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  width: 44px;
+  height: 44px;
+  transform: translateX(-50%);
 }
 .plank-statuses {
   display: flex;
@@ -1165,7 +1185,7 @@ button {
   flex-direction: column;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
 }
-.sheet.wide {
+.sheet.sheet-wide {
   width: min(900px, 100%);
 }
 .sheet-head {
@@ -1487,10 +1507,10 @@ button {
   .plank-buttons {
     padding: 2px 6px 6px;
     gap: 6px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
   .plank-buttons .btn {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 44px;
     padding: 4px 6px;
     font-size: 0.9rem;
@@ -1645,7 +1665,7 @@ button {
     padding: 0;
   }
   .sheet,
-  .sheet.wide {
+  .sheet.sheet-wide {
     width: 100%;
     border-radius: 18px 18px 0 0;
     max-height: 85dvh;
