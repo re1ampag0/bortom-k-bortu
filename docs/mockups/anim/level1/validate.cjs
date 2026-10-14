@@ -1,6 +1,6 @@
 // Проверка эталона planfx.js на событиях настоящего движка.
 // Запуск: node validate.cjs <games.json> <game-data.json>
-// games.json делает tools/dump-events.ts (партии ботов, события глазами каждой команды, состояние после действия).
+// games.json делает scripts/dump-fx-events.ts (партии ботов, события глазами каждой команды, состояние после действия).
 const fs = require('fs');
 // planfx.js — скрипт для браузера; при "type": "module" Node грузит его как ESM, module.exports пуст — берём глобальный FX.
 require('./planfx.js');
