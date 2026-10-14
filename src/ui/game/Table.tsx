@@ -171,6 +171,7 @@ export function Plank({
   awaiting,
   targeted,
   shooter,
+  repairing = false,
   plate,
   buttons,
   role,
@@ -189,6 +190,8 @@ export function Plank({
   awaiting: boolean;
   targeted: boolean;
   shooter: boolean;
+  /** The card being played repairs this ship (green frame while its panel is open). */
+  repairing?: boolean;
   plate: Plate | null;
   buttons: Btn[];
   role: string | null;
@@ -213,6 +216,7 @@ export function Plank({
     awaiting ? 'awaiting' : '',
     targeted ? 'targeted' : '',
     shooter ? 'shooter' : '',
+    repairing ? 'repairing' : '',
     ship.sunk ? 'sunk' : '',
   ].join(' ');
   return (
