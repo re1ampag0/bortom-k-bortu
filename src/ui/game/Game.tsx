@@ -1033,7 +1033,7 @@ export function Game({
       {sheet?.k === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}
       {sheet?.k === 'log' && (
         <div className="sheet-backdrop" onClick={() => setSheet(null)}>
-          <section className="sheet wide" onClick={(e) => e.stopPropagation()} data-testid="log-sheet">
+          <section className="sheet sheet-wide" onClick={(e) => e.stopPropagation()} data-testid="log-sheet">
             <header className="sheet-head">
               <b>Журнал</b>
               <span>

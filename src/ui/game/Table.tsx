@@ -232,12 +232,22 @@ export function Plank({
         <b className="plank-name">
           <span className="wide">{d.name}</span>
           <span className="narrow">{d.nick}</span>
-          {ship.legend && (
-            <span className={`star narrow ${affordable ? '' : 'poor'} ${flash}`} title={`Легенда: ${legendName}${affordable ? '' : ' — не хватает Пороха или Душ'}`}>
-              ★
-            </span>
-          )}
         </b>
+        {ship.legend && (
+          // On a phone the Legend badge is hidden: the star opens the same Legend card, not the ship card.
+          <button
+            className={`star narrow ${affordable ? '' : 'poor'} ${flash}`}
+            data-testid={`star-${ship.code}`}
+            aria-label={`Легенда «${legendName}»`}
+            title={`Легенда: ${legendName}${affordable ? '' : ' — не хватает Пороха или Душ'}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onLegend?.();
+            }}
+          >
+            ★
+          </button>
+        )}
         <span className="captain wide">{d.captain}</span>
         <span className="plank-role">
           {selected && <span className="tag">ВЫБРАН</span>}
