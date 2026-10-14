@@ -1155,7 +1155,7 @@ button {
   flex-direction: column;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
 }
-.sheet.wide {
+.sheet.sheet-wide {
   width: min(900px, 100%);
 }
 .sheet-head {
@@ -1625,7 +1625,7 @@ button {
     padding: 0;
   }
   .sheet,
-  .sheet.wide {
+  .sheet.sheet-wide {
     width: 100%;
     border-radius: 18px 18px 0 0;
     max-height: 85dvh;
