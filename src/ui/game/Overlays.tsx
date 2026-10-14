@@ -18,7 +18,7 @@ import { SIDE_LABEL, SPEEDS } from './text';
 export function Sheet({ title, onClose, children, wide, testid }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string }) {
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <section className={`sheet ${wide ? 'wide' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title} data-testid={testid}>
+      <section className={`sheet ${wide ? 'sheet-wide' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title} data-testid={testid}>
         <header className="sheet-head">
           <b>{title}</b>
           <button className="btn small close" onClick={onClose} aria-label="Закрыть">
@@ -177,7 +177,7 @@ export function SeaSheet({ s, data, code, onClose }: { s: GameState; data: GameD
 export function DiscardSheet({ s, data, seat, onClose }: { s: GameState; data: GameData; seat: string; onClose: () => void }) {
   const ship = s.ships[seat];
   return (
-    <Sheet title={`Сброс «${shipData(data, seat).nick}» · ${ship.discard.length}`} onClose={onClose} wide>
+    <Sheet title={`Сброс «${shipData(data, seat).nick}» · ${ship.discard.length}`} onClose={onClose} wide testid="discard">
       <div className="choice-cards">
         {ship.discard.length === 0 && <p className="muted">Сброс пуст.</p>}
         {[...ship.discard].reverse().map((code, i) => (
