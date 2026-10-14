@@ -17,6 +17,7 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "convert-data": "python3 scripts/convert-data.py",
     "sim": "vite-node scripts/sim.ts --",
+    "sim:check": "vite-node scripts/sim-check.ts",
     "e2e": "playwright test"
   },
   "dependencies": {

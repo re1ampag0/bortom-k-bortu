@@ -6,3 +6,4 @@ test-results/
 playwright-report/
 dist-server/
 server-data/
+tmp/

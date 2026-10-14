@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Эталон анимаций стола</title>
+<style>
+@font-face { font-family: Alegreya; font-weight: 500; font-display: swap; src: url(../fonts/alegreya-cyrillic-500-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: Alegreya; font-weight: 700; font-display: swap; src: url(../fonts/alegreya-cyrillic-700-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: Alegreya; font-weight: 800; font-display: swap; src: url(../fonts/alegreya-cyrillic-800-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: Alegreya; font-weight: 500; font-display: swap; src: url(../fonts/alegreya-latin-500-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: Alegreya; font-weight: 700; font-display: swap; src: url(../fonts/alegreya-latin-700-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: Alegreya; font-weight: 800; font-display: swap; src: url(../fonts/alegreya-latin-800-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: 'Alegreya Sans'; font-weight: 400; font-display: swap; src: url(../fonts/alegreya-sans-cyrillic-400-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Alegreya Sans'; font-weight: 500; font-display: swap; src: url(../fonts/alegreya-sans-cyrillic-500-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Alegreya Sans'; font-weight: 700; font-display: swap; src: url(../fonts/alegreya-sans-cyrillic-700-normal.woff2) format('woff2'); unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Alegreya Sans'; font-weight: 400; font-display: swap; src: url(../fonts/alegreya-sans-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: 'Alegreya Sans'; font-weight: 500; font-display: swap; src: url(../fonts/alegreya-sans-latin-500-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+@font-face { font-family: 'Alegreya Sans'; font-weight: 700; font-display: swap; src: url(../fonts/alegreya-sans-latin-700-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+2000-206F; }
+</style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <header class="page-top">
+    <h1>Анимации стола · эталон</h1>
+    <p>Эталон для Claude Code. Каждая сцена — <b>настоящие события движка</b> (партии ботов, как их видит игрок после <code>eventsFor</code>). Чистая функция <b>planfx</b> строит из них клипы, проигрыватель показывает. Ядро = 1 урон: попавших ядер ровно столько, сколько урона посчитал движок. Слой эффектов не ловит нажатия; нажатие по столу сразу показывает итог; карты в руке и журнале открываются всегда.</p>
+  </header>
+  <section class="controls" aria-label="Сцены и настройки">
+    <div class="scenes" id="scenes" role="group" aria-label="Сцены"></div>
+    <div class="bar2">
+      <button class="pbtn primary" id="play">▶ Показать снова</button>
+      <button class="pbtn" id="skip">Сразу итог</button>
+      <span class="lbl">Скорость</span>
+      <span class="seg" id="speed" role="group" aria-label="Скорость показа"><button data-v="1.6">медленно</button><button data-v="1" aria-pressed="true">обычно</button><button data-v="0.6">быстро</button><button data-v="0">мгновенно</button></span>
+      <span class="lbl">Спецэффекты</span>
+      <span class="seg" id="rich" role="group" aria-label="Спецэффекты"><button data-v="1" aria-pressed="true">богатые</button><button data-v="0">простые</button></span>
+      <span class="lbl" id="rm" hidden>Включено «уменьшение движения» — игра так и покажет: сразу итог. Выберите скорость, чтобы посмотреть анимацию.</span>
+    </div>
+    <p class="scene-desc" id="desc"></p>
+  </section>
+  <div class="work">
+    <div class="stage" id="stage">
+      <div class="game">
+        <div class="status" id="status"></div>
+        <div class="board" id="board"><div class="fx-weather" id="weather"></div><div class="fx-layer" id="fx" aria-hidden="true"></div></div>
+        <aside class="log-col"><h2>ЖУРНАЛ</h2><ol class="log-list" id="log"></ol></aside>
+      </div>
+      <div class="pop" id="pop" hidden></div>
+    </div>
+    <aside class="script" aria-label="Сценарий">
+      <h2>СОБЫТИЯ ДВИЖКА</h2>
+      <pre id="events"></pre>
+      <h2>КЛИПЫ (planfx)</h2>
+      <ol class="clips" id="clips"></ol>
+    </aside>
+  </div>
+</div>
+<script src="data.js"></script>
+<script src="scenes.js"></script>
+<script src="planfx.js"></script>
+<script src="board.js"></script>
+<script src="effects.js"></script>
+<script src="play-volley.js"></script>
+<script src="play-legends.js"></script>
+<script src="play-sea.js"></script>
+<script src="play-misc.js"></script>
+<script src="page.js"></script>
+</body>
+</html>
