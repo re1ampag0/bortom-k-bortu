@@ -200,6 +200,25 @@ describe('Repairs of the Dutchman', () => {
     expect(() => play(s, 'Г', 'Норрингтон на борту')).toThrow('ничего не сделает');
   });
 
+  it('«Норрингтон на борту»: the split goes to the ally’s tracks, not to the own damaged ship', () => {
+    const s = turnOf('КОМПАНИЯ', { Г: ['Норрингтон на борту'] });
+    s.ships['Г'].tracks.sails = 1;
+    s.ships['И'].tracks = { hull: 10, sails: 0, guns: 3, crew: 2 };
+    const r = play(s, 'Г', 'Норрингтон на борту', { repair: { hull: 1, sails: 1 } }).state;
+    expect(r.ships['И'].tracks).toEqual({ hull: 11, sails: 1, guns: 3, crew: 2 });
+    expect(r.ships['Г'].tracks.sails).toBe(1);
+  });
+
+  it('«Норрингтон на борту»: no more cells on a track than the ally’s ship misses there', () => {
+    const s = turnOf('КОМПАНИЯ', { Г: ['Норрингтон на борту'] });
+    // The own Dutchman misses Sails, the Endeavour does not.
+    s.ships['Г'].tracks.sails = 1;
+    s.ships['И'].tracks.hull = 10;
+    expect(() => play(s, 'Г', 'Норрингтон на борту', { repair: { hull: 1, sails: 1 } })).toThrow(
+      '«Индевор»: на шкале «Паруса» можно восстановить не больше',
+    );
+  });
+
   it('«Сердце бьётся»: spend any number of Souls, 2 cells of the Dutchman for each', () => {
     const s = turnOf('КОМПАНИЯ', { Г: ['Сердце бьётся'] });
     s.ships['Г'].souls = 3;
