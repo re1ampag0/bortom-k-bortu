@@ -138,8 +138,8 @@ describe('drawing', () => {
     const r = companyEnds(s);
     expect(r.state.ships['Ж'].hand).toHaveLength(5);
     expect(r.state.ships['М'].hand).toHaveLength(5);
-    expect(r.events).toContainEqual({ type: 'drew', seat: 'Ж', count: 3 });
-    expect(r.events).toContainEqual({ type: 'drew', seat: 'М', count: 5 });
+    expect(r.events).toContainEqual({ type: 'drew', seat: 'Ж', count: 3, cards: expect.any(Array) });
+    expect(r.events).toContainEqual({ type: 'drew', seat: 'М', count: 5, cards: expect.any(Array) });
   });
 
   it('a player with 5 or more cards neither draws nor discards (5.5)', () => {

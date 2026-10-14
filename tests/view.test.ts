@@ -93,6 +93,34 @@ describe('viewFor', () => {
     expect(eventFor(r.state, PIRATES, passed)).toMatchObject({ card });
   });
 
+  it('the cards drawn are seen by the owner of the hand and, if allies see hands, by the ally', () => {
+    const s = turnOf('КОМПАНИЯ', { Ж: ['Ядра', 'Книппели'] });
+    const r = act(s, { type: 'endTurn', side: 'КОМПАНИЯ' });
+    const drew = r.events.find((e) => e.type === 'drew' && e.seat === 'Ж')!;
+    const drawn = r.state.ships['Ж'].hand.slice(2);
+    expect(drew).toEqual({ type: 'drew', seat: 'Ж', count: 3, cards: drawn });
+    expect(eventFor(r.state, ['Ж'], drew)).toEqual(drew);
+    expect(eventFor(r.state, ['М'], drew)).toEqual(drew);
+    expect(eventFor(r.state, ['М'], drew, { allyHands: false })).toEqual({ type: 'drew', seat: 'Ж', count: 3 });
+    expect(eventFor(r.state, COMPANY, drew)).toEqual({ type: 'drew', seat: 'Ж', count: 3 });
+    expect(eventFor(r.state, [], drew)).toEqual({ type: 'drew', seat: 'Ж', count: 3 });
+    expect(eventsFor(r.state, COMPANY, r.events).filter((e) => e.type === 'drew').every((e) => !('cards' in e))).toBe(true);
+  });
+
+  it('a stolen card is seen by the thief and the robbed player and, if allies see hands, by their allies', () => {
+    const s = turnOf('ПИРАТЫ', { Ж: ['Обезьянка Джек'], И: ['Плотник'] });
+    const r = play(s, 'Ж', 'Обезьянка Джек', { target: 'И' });
+    const stolen = r.events.find((e) => e.type === 'stolen')!;
+    const card = cardIn(r.state, 'Ж', 'Плотник');
+    expect(stolen).toEqual({ type: 'stolen', seat: 'Ж', from: 'И', card });
+    for (const viewer of [['Ж'], ['И'], ['М'], ['Г'], PIRATES, COMPANY]) expect(eventFor(r.state, viewer, stolen)).toEqual(stolen);
+    expect(eventFor(r.state, ['Ж'], stolen, { allyHands: false })).toEqual(stolen);
+    expect(eventFor(r.state, ['И'], stolen, { allyHands: false })).toEqual(stolen);
+    expect(eventFor(r.state, ['М'], stolen, { allyHands: false })).toEqual({ ...stolen, card: HIDDEN });
+    expect(eventFor(r.state, ['Г'], stolen, { allyHands: false })).toEqual({ ...stolen, card: HIDDEN });
+    expect(eventFor(r.state, [], stolen)).toEqual({ ...stolen, card: HIDDEN });
+  });
+
   it('in 50 bot games no view of a team holds a card of the enemy hands, Plans or decks', () => {
     for (let seed = 1; seed <= 50; seed++) {
       playGame(data, seed, 'standard', (s) => {

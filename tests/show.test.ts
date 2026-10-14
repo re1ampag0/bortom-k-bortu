@@ -5,7 +5,7 @@ import type { GameEvent } from '../src/engine/state';
 import { HIDDEN } from '../src/engine/view';
 import { showSteps } from '../src/ui/game/showSteps';
 
-const volley: GameEvent = { type: 'volley', ship: 'М', target: 'И', charge: null, chargeFrom: null, diagonal: false, joint: false, damage: 3, track: 'hull' };
+const volley: GameEvent = { type: 'volley', ship: 'М', target: 'И', charge: null, chargeFrom: null, diagonal: false, joint: false, damage: 3, track: 'hull', terms: [{ what: 'Пушки', n: 3 }] };
 const hit: GameEvent = { type: 'hit', ship: 'М', target: 'И', damage: 3, track: 'hull', terms: [{ what: 'Пушки', n: 3 }] };
 const damage: GameEvent = { type: 'damage', ship: 'И', track: 'hull', amount: 3, toHull: 0 };
 

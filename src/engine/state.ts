@@ -101,11 +101,28 @@ export interface TurnState {
   marks: Record<string, number>;
 }
 
-/** One addend of a Volley's damage, e.g. { what: 'Пушки', n: 3 }. */
+/** One addend of a Volley's damage, e.g. { what: 'Пушки', n: 3, src: { kind: 'guns' } }. */
 export interface Term {
   what: string;
   n: number;
+  /** Where the addend comes from (for the animations); missing in terms saved before it was added. */
+  src?: TermSrc;
 }
+
+/** The source of a Volley's addend: `card` — card code, `ally` — the ship that fired first at the target. */
+export type TermSrc =
+  | { kind: 'guns' }
+  | { kind: 'diag' }
+  | { kind: 'charge'; card: string | null }
+  | { kind: 'sea'; card: string }
+  | { kind: 'reaction'; card: string }
+  | { kind: 'joint'; ally: string }
+  | { kind: 'surface' }
+  | { kind: 'flags' }
+  | { kind: 'mark' }
+  | { kind: 'paid' }
+  | { kind: 'clear' }
+  | { kind: 'extra'; card: string };
 
 /** A Volley being resolved (RULES.md 10.1). */
 export interface VolleyState {
@@ -235,6 +252,8 @@ type StepKind =
   | { k: 'sink'; ship: string }
   | { k: 'swap'; side: Side; reason: SwapReason }
   | { k: 'tortuga' }
+  /** Only reports a «весь раунд» sea effect as it acts («Девятый вал» before its damage). */
+  | { k: 'seaEffect'; key: string }
   | { k: 'window'; window: ReactionWindow; subject: 'volley' | 'card' }
   | { k: 'volleyPaid' }
   | { k: 'volleyHit' }
@@ -329,7 +348,8 @@ export type GameEvent =
   | { type: 'fireDamage'; ship: string; fires: number }
   | { type: 'fireAdded'; ship: string; fires: number }
   | { type: 'fireOut'; seat: string; card: string; fires: number }
-  | { type: 'drew'; seat: string; count: number }
+  /** `cards` — the cards drawn; eventFor leaves them only to those who see the hand. */
+  | { type: 'drew'; seat: string; count: number; cards?: string[] }
   | { type: 'deckReshuffled'; seat: string }
   | { type: 'damage'; ship: string; track: Track; amount: number; toHull: number }
   | { type: 'sunk'; ship: string }
@@ -343,6 +363,8 @@ export type GameEvent =
       joint: boolean;
       damage: number;
       track: Track;
+      /** The breakdown of `damage` when the Volley is declared, before Reactions. */
+      terms: Term[];
     }
   | { type: 'cardPlayed'; seat: string; ship: string; card: string }
   | { type: 'sold'; seat: string; card: string }
