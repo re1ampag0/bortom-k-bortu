@@ -27,6 +27,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - run: npm run sim:check
       # The address of the game server for the site on GitHub Pages (DEPLOY.md): the repository variable
       # VITE_SERVER_URL, e.g. wss://bortom.duckdns.org. Empty — the site asks for the address in «По сети».
       - run: npm run build
