@@ -184,13 +184,72 @@ export function DiscardSheet({ s, data, seat, onClose }: { s: GameState; data: G
   );
 }
 
-export function LogList({ log, fresh }: { log: LogLine[]; fresh: number }) {
+/** A piece of a log line: plain text, or the name of a card or a sea card that opens it. */
+export type LogPart = string | { card: string; text: string } | { sea: string; text: string };
+
+/**
+ * A log line cut into text and names. Each card of `line.cards` is found as «Название» by an exact search from the
+ * end of the previous one (names may hold quotes: «Колокол «Голландца»»); the sea card by its name. A name not found
+ * stays plain text.
+ */
+export function logParts(data: GameData, line: LogLine): LogPart[] {
+  const marks: { at: number; part: Exclude<LogPart, string> }[] = [];
+  let from = 0;
+  for (const code of line.cards) {
+    const text = `«${cardByCode(data, code).name}»`;
+    const at = line.text.indexOf(text, from);
+    if (at < 0) continue;
+    marks.push({ at, part: { card: code, text } });
+    from = at + text.length;
+  }
+  if (line.sea) {
+    const text = seaCardByCode(data, line.sea).name;
+    const at = line.text.indexOf(text);
+    if (at >= 0 && !marks.some((m) => at < m.at + m.part.text.length && m.at < at + text.length)) marks.push({ at, part: { sea: line.sea, text } });
+  }
+  marks.sort((a, b) => a.at - b.at);
+  const parts: LogPart[] = [];
+  let pos = 0;
+  for (const m of marks) {
+    if (m.at > pos) parts.push(line.text.slice(pos, m.at));
+    parts.push(m.part);
+    pos = m.at + m.part.text.length;
+  }
+  if (pos < line.text.length) parts.push(line.text.slice(pos));
+  return parts;
+}
+
+export function LogList({
+  data,
+  log,
+  fresh,
+  onCard,
+  onSea,
+}: {
+  data: GameData;
+  log: LogLine[];
+  fresh: number;
+  onCard: (code: string) => void;
+  onSea: (code: string) => void;
+}) {
   const lines = [...log].reverse();
   return (
     <ol className="log-list" data-testid="log">
       {lines.map((l, i) => (
         <li key={log.length - i} className={`log-${l.kind} ${l.action >= fresh ? 'fresh' : ''}`}>
-          {l.text}
+          {logParts(data, l).map((p, j) =>
+            typeof p === 'string' ? (
+              p
+            ) : 'card' in p ? (
+              <button key={j} className="cref" data-card={p.card} onClick={() => onCard(p.card)}>
+                {p.text}
+              </button>
+            ) : (
+              <button key={j} className="cref" data-sea={p.sea} onClick={() => onSea(p.sea)}>
+                {p.text}
+              </button>
+            ),
+          )}
         </li>
       ))}
     </ol>
