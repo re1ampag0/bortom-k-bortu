@@ -186,6 +186,8 @@ export function Game({
   const [sheet, setSheet] = useState<Sheet>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [fastTurn, setFastTurn] = useState<string | null>(null);
+  /** «Пауза»: the show on this device stops; on one screen the bots wait too (by network the server plays them). */
+  const [held, setHeld] = useState(false);
   const [endClosed, setEndClosed] = useState(false);
   const [freshFrom, setFreshFrom] = useState(0);
   const allSeats = Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
@@ -243,9 +245,10 @@ export function Game({
     speed,
     myDecision,
     paused: !!banner && banner.k !== 'summary',
+    hold: held,
   });
   useEffect(() => {
-    if (!local || curtainSide || s.winner || !local.botToMove()) return;
+    if (!local || curtainSide || s.winner || held || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
     if ((show.busy || (banner && banner.k !== 'summary')) && !instant) return;
     const t = setTimeout(
@@ -257,7 +260,7 @@ export function Game({
       instant ? 0 : SPEEDS[speed].ms,
     );
     return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, banner?.k]);
+  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, banner?.k, held]);
 
   useEffect(() => {
     if (local) storeSave(s.winner ? null : local.record());
@@ -788,14 +791,27 @@ export function Game({
     onClick: () => endFlow('start'),
     testid: 'end-turn',
   };
-  // «Быстрее» and «До конца хода» while a bot moves or a move is shown; both skip the show.
+  // «Пауза», «Быстрее» and «До конца хода» while a bot moves or a move is shown; the last two skip the show.
   const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy;
+  // The pause never keeps a decision of this device waiting: it ends as soon as the game asks the player.
+  const canHold = botBusy && !myDecision;
+  useEffect(() => {
+    if (held && !canHold) setHeld(false);
+  }, [held, canHold]);
+  const pauseBtn: Btn = {
+    key: 'pause',
+    label: held ? '▶ Дальше' : '⏸ Пауза',
+    short: held ? '▶' : '⏸',
+    onClick: () => setHeld(!held),
+    testid: 'pause-show',
+  };
   const botBtns: Btn[] = botBusy
     ? [
         {
           key: 'faster',
           label: 'Быстрее',
           onClick: () => {
+            setHeld(false);
             show.skip();
             setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant');
           },
@@ -804,11 +820,13 @@ export function Game({
           key: 'skip',
           label: 'До конца хода',
           onClick: () => {
+            setHeld(false);
             show.skip();
             setFastTurn(turnKey);
           },
           testid: 'skip-turn',
         },
+        ...(canHold ? [pauseBtn] : []),
       ]
     : [];
 
@@ -959,13 +977,14 @@ export function Game({
           </button>
         </div>
       </aside>
-      <nav className="bottom-bar">
+      <nav className={`bottom-bar ${canHold ? 'has-pause' : ''}`}>
         <button className="btn" onClick={() => setSheet({ k: 'log' })}>
           Журнал
         </button>
         <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
           Правила
         </button>
+        {canHold && <Button b={pauseBtn} className="pause" />}
         {botBusy ? <Button b={botBtns[1]} /> : net ? <Button b={remindBtn} /> : <Button b={undoBtn} className="undo" />}
         <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       </nav>
