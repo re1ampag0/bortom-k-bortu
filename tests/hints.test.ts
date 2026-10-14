@@ -110,6 +110,13 @@ describe('Cards', () => {
     expect(playOptions(s, data, 'Ж', card)).toMatchObject({ actions: [], reason: expect.stringContaining('ничего не сделает') });
   });
 
+  it('«Норрингтон на борту»: the engine names the ally’s ship as the one repaired', () => {
+    const s = turnOf('КОМПАНИЯ', { Г: ['Норрингтон на борту'] });
+    s.ships['И'].tracks.hull = 10;
+    const card = cardIn(s, 'Г', 'Норрингтон на борту');
+    expect(cardNeeds(s, data, 'Г', card)).toMatchObject({ cells: 2, repairShip: 'И' });
+  });
+
   it('a Charge is played with a Volley of its ship', () => {
     const s = turnOf('ПИРАТЫ', { Ж: ['Ядра'] });
     const card = cardIn(s, 'Ж', 'Ядра');

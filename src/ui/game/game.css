@@ -412,6 +412,10 @@ button {
 .plank.shooter {
   border-color: var(--ink);
 }
+.plank.repairing {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px var(--green-soft);
+}
 .plank.sunk {
   opacity: 0.55;
 }
