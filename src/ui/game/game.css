@@ -88,6 +88,18 @@ button {
 .muted {
   color: var(--muted);
 }
+/* A card or sea card named in a text (the log, the sea sheet): opens it in full. */
+.cref {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--reaction);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
 .narrow {
   display: none;
 }
@@ -726,6 +738,100 @@ button {
 }
 .choice b {
   font-size: 1.1rem;
+}
+/* «Тиа Дальма»: the sea cards in small (docs/mockups/anim/level1, scene «tia»); three in a row even on a phone. */
+.tia-opts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.sopt {
+  position: relative;
+  min-width: 0;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+.sopt .a {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sopt .a svg {
+  max-width: 100%;
+}
+.sopt .n {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1.1;
+  padding: 4px 8px 0;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+.sopt .e {
+  font-size: 11.5px;
+  color: var(--reaction);
+  font-weight: 700;
+  padding: 2px 8px 6px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+.sopt .ord {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sopt .info {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1.5px solid var(--reaction);
+  color: var(--reaction);
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.sopt.on {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+@media (max-width: 700px) {
+  .tia-opts {
+    gap: 6px;
+  }
+  .sopt .n {
+    font-size: 14px;
+    padding: 4px 6px 0;
+  }
+  .sopt .e {
+    font-size: 11px;
+    padding: 2px 6px 6px;
+  }
 }
 .stepper {
   display: flex;

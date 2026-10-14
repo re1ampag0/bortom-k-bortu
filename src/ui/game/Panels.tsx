@@ -17,6 +17,7 @@ import {
 import { powderWord } from '../../engine/log';
 import { cardByCode, seaCardByCode, seatShip, shipData, startValue, type Action, type GameState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
+import { SEA_BG, seaSvg } from './fx/seaArt';
 import { CostBadge, HandCard } from './Hand';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
@@ -334,12 +335,66 @@ const CHOICE_TEXT: Record<string, { title: string; sub: string }> = {
   toPlan: { title: 'Безумный план', sub: 'Выберите карту с руки в План.' },
   pass: { title: 'Анжелика', sub: 'Выберите карту, которую получит союзник.' },
   spy: { title: 'Шпион Мерсер', sub: 'Выберите Реакцию противника — он её сбросит.' },
-  tia: { title: 'Тиа Дальма', sub: 'Разложите карты моря: первая выбранная откроется первой.' },
+  tia: { title: 'Тиа Дальма', sub: 'Разложите карты моря: первая выбранная откроется первой. «i» — карта целиком.' },
   bell: { title: 'Колокол «Голландца»', sub: 'Выберите карту с руки и сбросьте её.' },
   dice: { title: 'Игра в кости лжеца', sub: 'Втайне выберите карту с руки. Дороже в Порохе — забирает обе.' },
 };
 
-export function ChoicePanel({ s, data, seat, onAct }: { s: GameState; data: GameData; seat: string; onAct: (a: Action) => void }) {
+/**
+ * A sea card of «Тиа Дальма» in small, as in the reference (docs/mockups/anim/level1, scene «tia»): the picture, the
+ * name, the effect, the place in the order. A press on the card puts it in order; «i» opens the card in full.
+ */
+function SeaMini({ data, code, order, onPick, onInfo }: { data: GameData; code: string; order: number | null; onPick: () => void; onInfo?: () => void }) {
+  const sea = code === '?' ? null : seaCardByCode(data, code);
+  return (
+    <div
+      className={`sopt ${order ? 'on' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-pressed={!!order}
+      data-opt={code}
+      onClick={onPick}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+        e.preventDefault();
+        onPick();
+      }}
+    >
+      <div className="a" style={sea ? { background: SEA_BG[sea.key] } : undefined} dangerouslySetInnerHTML={{ __html: sea ? seaSvg(sea.key, 70, 42) : '' }} />
+      <div className="n">{sea ? sea.name : 'Закрытая карта'}</div>
+      {sea && <div className="e">{sea.big}</div>}
+      {order && <span className="ord">{order}</span>}
+      {sea && onInfo && (
+        <button
+          className="info"
+          data-sea={code}
+          aria-label={`Карта «${sea.name}» целиком`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onInfo();
+          }}
+        >
+          i
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function ChoicePanel({
+  s,
+  data,
+  seat,
+  onAct,
+  onSea,
+}: {
+  s: GameState;
+  data: GameData;
+  seat: string;
+  onAct: (a: Action) => void;
+  /** Opens a sea card in full («i» of «Тиа Дальма»). */
+  onSea?: (code: string) => void;
+}) {
   const p = s.pending;
   const allowed = choiceFor(s, seat);
   const [picks, setPicks] = useState<string[]>([]);
@@ -352,24 +407,30 @@ export function ChoicePanel({ s, data, seat, onAct }: { s: GameState; data: Game
     const i = picks.indexOf(card);
     if (i < 0) return undefined;
     if (p.what === 'compass') return i === 0 ? 'в руку' : 'в План';
-    if (tia) return `${i + 1}-я`;
     return 'выбрана';
   };
-  const label = (card: string) => (card === '?' ? 'Закрытая карта' : seaCardByCode(data, card).name);
   return (
     <Panel title={`${nick(data, seat)}: ${text.title}`} sub={text.sub} testid="choice-panel">
-      <div className="choice-cards">
-        {allowed.from.map((card) =>
-          tia ? (
-            <button key={card} className={`choice ${picks.includes(card) ? 'on' : ''}`} onClick={() => toggle(card)}>
-              <span>{label(card)}</span>
-              <b>{note(card) ?? ''}</b>
-            </button>
-          ) : (
+      {tia ? (
+        <div className="tia-opts">
+          {allowed.from.map((card) => (
+            <SeaMini
+              key={card}
+              data={data}
+              code={card}
+              order={picks.includes(card) ? picks.indexOf(card) + 1 : null}
+              onPick={() => toggle(card)}
+              onInfo={onSea && (() => onSea(card))}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="choice-cards">
+          {allowed.from.map((card) => (
             <HandCard key={card} data={data} code={card} off={null} chosen={picks.includes(card)} note={note(card)} onClick={() => toggle(card)} />
-          ),
-        )}
-      </div>
+          ))}
+        </div>
+      )}
       <div className="panel-actions">
         <button className="btn" onClick={() => setPicks([])}>
           Сбросить выбор
