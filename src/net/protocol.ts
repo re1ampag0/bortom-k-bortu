@@ -69,6 +69,18 @@ export interface RoomInfo {
   rematch: { agreed: number; need: number; you: boolean } | null;
 }
 
+/**
+ * A Charge the captain of a sunk ship offers for the Volley of the ally's ship played by another person (RULES.md
+ * 17.3): the ally fires and decides whether to take it. Kept by the server outside the engine; seen only by the team.
+ */
+export interface ChargeOffer {
+  /** The captain's seat (the sunk ship). */
+  from: Seat;
+  /** The ally's ship that fires. */
+  to: Seat;
+  card: string;
+}
+
 /** The last action as the player may see it: for the toast «Ход Пиратов: …» and the highlights. */
 export interface LastSeen {
   action: Action;

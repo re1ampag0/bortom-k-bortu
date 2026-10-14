@@ -337,7 +337,7 @@ export class Room {
     const s = t.state;
     if (s.winner) return 'Партия окончена';
     const done = s.active === t.state.ships[seats[0]].side && seats.every((x) => t.ready.has(x));
-    const why = refusal(s, this.data, seats, msg.action, done);
+    const why = refusal(s, this.data, seats, msg.action, done, { bots: t.bots, offers: t.offers });
     if (why) return why;
     return t.act(msg.action);
   }

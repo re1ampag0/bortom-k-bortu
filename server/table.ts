@@ -8,7 +8,7 @@ import { makeRecord, matchTotals, type MatchRecord, type MatchSetup, type SideTo
 import { ABILITY, RuleError, hasAbility, seatsOf, type Action, type GameEvent, type GameState } from '../src/engine/state';
 import type { GameData, Side } from '../src/engine/types';
 import { HIDDEN, eventsFor, viewFor, type Viewer } from '../src/engine/view';
-import type { GameInfo, LastSeen, RoomSettings, Seat } from '../src/net/protocol';
+import type { ChargeOffer, GameInfo, LastSeen, RoomSettings, Seat } from '../src/net/protocol';
 import { fallbackAnswer, refusedShipBot, seatAnswer, shipBotStep, type ShipBots } from '../src/engine/ai/shipBot';
 
 /** Who reads a log: a team, the spectators, or everybody («Всё открыто»). */
@@ -49,6 +49,8 @@ export class Table {
   plans: string[] | null = null;
   /** Seats whose players voted «Сдаться». */
   readonly concede = new Set<Seat>();
+  /** Charges the captains offer for their allies' Volleys (outside the engine; seen only by the team). */
+  offers: ChargeOffer[] = [];
 
   private mem: BotMemory;
   private teamGen: { key: string; gen: Generator<Action, void, { state: GameState; error?: string }>; error?: string } | null = null;
