@@ -80,6 +80,7 @@ export function startTurn(ctx: Ctx, side: Side): void {
   const steps: Step[] = ships.filter((x) => x.fires > 0).map((x) => ({ k: 'fire', ship: x.code }) as Step);
   steps.push({ k: 'surface', side });
   if (key === 'wave') {
+    steps.push({ k: 'seaEffect', key });
     for (const x of ships) steps.push({ k: 'damage', ship: x.code, track: 'sails', n: data.rules.seaWave, src: null });
   }
   if (key === 'maelstrom') steps.push({ k: 'swap', side, reason: 'maelstrom' });
