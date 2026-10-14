@@ -269,20 +269,17 @@ function doable(ctx: Ctx, res: CardResolution, op: Op): boolean {
     case 'discard_enemy_each':
       return enemySeats.some((x) => x.hand.length > 0);
     case 'repair_self':
-      return missingAll(data, ship) > 0;
-    case 'repair_track':
-      return missing(data, ship, op[1] as Track) > 0;
-    case 'repair_named':
-      return missing(data, getShip(s, namedShip(ctx, res.card, ship.code)), op[1] as Track) > 0;
-    case 'repair_track_any':
-      return missing(data, repairChoice(ctx, res, op[1] as Track), op[1] as Track) > 0;
     case 'repair_ally':
-      return missingAll(data, allyShip(s, res.seat)) > 0;
+      return missingAll(data, repairTarget(ctx, res, op)) > 0;
+    case 'repair_track':
+    case 'repair_named':
+    case 'repair_track_any':
+      return missing(data, repairTarget(ctx, res, op), op[1] as Track) > 0;
     case 'repair_crew_both':
       return missing(data, ship, 'crew') + missing(data, allyShip(s, res.seat), 'crew') > 0;
     case 'souls_repair': {
       const keeper = soulKeeper(ctx, ship);
-      return !!keeper && keeper.souls > 0 && missingAll(data, getShip(s, namedShip(ctx, res.card, ship.code))) > 0;
+      return !!keeper && keeper.souls > 0 && missingAll(data, repairTarget(ctx, res, op)) > 0;
     }
     case 'extra_volley_free':
       return target !== null;
@@ -311,13 +308,43 @@ function againstTeam(ctx: Ctx, res: CardResolution, ops: Op[]): boolean {
   return false;
 }
 
-/** The ship «своему кораблю или кораблю союзника» repairs: the player's choice, by default the own ship. */
-function repairChoice(ctx: Ctx, res: CardResolution, track: Track): ShipState | null {
+/** What the ship a repair restores depends on: the card, who plays it and for which ship, the player's choices. */
+export type RepairOf = Pick<CardResolution, 'card' | 'seat' | 'ship' | 'params'>;
+
+/**
+ * The ship a repair operation of the card restores; null when it is not a repair of one ship. The resolution, the
+ * checks of the player's choices and the interface (cardNeeds) all ask here.
+ */
+export function repairTarget(ctx: Ctx, res: RepairOf, op: Op): ShipState | null {
   const { s, data } = ctx;
-  if (res.params.ship) return getShip(s, res.params.ship);
-  const own = getShip(s, res.ship);
-  const ally = allyShip(s, res.seat);
-  return missing(data, own, track) > 0 || !ally ? own : ally;
+  switch (op[0]) {
+    case 'repair_self':
+    case 'repair_track':
+      return getShip(s, res.ship);
+    case 'repair_ally':
+      return allyShip(s, res.seat);
+    case 'repair_named':
+    case 'souls_repair':
+      return getShip(s, namedShip(ctx, res.card, res.ship));
+    case 'repair_track_any': {
+      // «своему кораблю или кораблю союзника»: the player's choice, by default the own ship if the track misses cells.
+      if (res.params.ship) return getShip(s, res.params.ship);
+      const own = getShip(s, res.ship);
+      const ally = allyShip(s, res.seat);
+      return missing(data, own, op[1] as Track) > 0 || !ally ? own : ally;
+    }
+    default:
+      return null;
+  }
+}
+
+/** The ship the card repairs: the first of its operations that repairs one ship. */
+export function repairShipOf(ctx: Ctx, res: RepairOf, ops: Op[]): ShipState | null {
+  for (const op of ops) {
+    const x = repairTarget(ctx, res, op);
+    if (x) return x;
+  }
+  return null;
 }
 
 /** Restores n cells split by the player, or in REPAIR_ORDER (11.3, 11.4). */
@@ -489,19 +516,13 @@ function cardOp(ctx: Ctx, c: CardResolution, op: Op): void {
       later.push({ k: 'damage', ship: ship.code, track: 'crew', n, src: null, same: true });
       break;
     case 'repair_self':
-      repairCells(ctx, ship, n, c.params.repair);
-      break;
     case 'repair_ally':
-      repairCells(ctx, allyShip(s, c.seat), n, c.params.repair);
+      repairCells(ctx, repairTarget(ctx, c, op), n, c.params.repair);
       break;
     case 'repair_track':
-      restore(ctx, ship.code, op[1] as Track, n);
-      break;
     case 'repair_named':
-      restore(ctx, namedShip(ctx, c.card, ship.code), op[1] as Track, n);
-      break;
     case 'repair_track_any': {
-      const x = repairChoice(ctx, c, op[1] as Track);
+      const x = repairTarget(ctx, c, op);
       if (x) restore(ctx, x.code, op[1] as Track, n);
       break;
     }
@@ -511,8 +532,8 @@ function cardOp(ctx: Ctx, c: CardResolution, op: Op): void {
     case 'souls_repair': {
       // «Сердце бьётся»: 2 cells of the Dutchman for each Soul spent.
       const keeper = soulKeeper(ctx, ship);
-      const named = getShip(s, namedShip(ctx, c.card, ship.code));
-      if (!keeper) break;
+      const named = repairTarget(ctx, c, op);
+      if (!keeper || !named) break;
       const souls = c.params.souls ?? Math.min(keeper.souls, Math.ceil(missingAll(data, named) / 2));
       if (souls <= 0) break;
       keeper.souls -= souls;
