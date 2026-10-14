@@ -33,6 +33,7 @@ export function useShowQueue({
   speed,
   myDecision,
   paused,
+  hold = false,
 }: {
   game: ShowSource;
   version: number;
@@ -46,6 +47,8 @@ export function useShowQueue({
   myDecision: boolean;
   /** A banner is up: the show waits for it (one thing at a time). */
   paused: boolean;
+  /** «Пауза»: the step on screen stays until «Дальше». */
+  hold?: boolean;
 }) {
   const shown = useRef((game.recent.at(-1)?.n ?? -1) + 1);
   const [queue, setQueue] = useState<{ id: number; step: ShowStep }[]>([]);
@@ -76,12 +79,12 @@ export function useShowQueue({
 
   const head = queue[0] ?? null;
   useEffect(() => {
-    if (!head || paused) return;
+    if (!head || paused || hold) return;
     const full = SHOW_MS[speed] || 0;
     const ms = head.step.k === 'floats' ? Math.min(900, Math.max(500, full)) : full;
     const t = setTimeout(() => setQueue((q) => (q[0]?.id === head.id ? q.slice(1) : q)), ms);
     return () => clearTimeout(t);
-  }, [head, speed, paused]);
+  }, [head, speed, paused, hold]);
 
   const skip = useCallback(() => setQueue([]), []);
   return { step: paused ? null : head, busy: queue.length > 0, skip };
