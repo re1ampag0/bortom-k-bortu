@@ -151,7 +151,7 @@ export function volley(ctx: Ctx, order: VolleyOrder): void {
     bonus: 0,
     mark: 0,
     lineNoDiag: false,
-    extra: order.free?.bonus ? { what: cardByCode(data, order.free.card).name, n: order.free.bonus } : null,
+    extra: order.free?.bonus ? { what: cardByCode(data, order.free.card).name, n: order.free.bonus, src: { kind: 'extra', card: order.free.card } } : null,
   };
   s.volley = v;
   aim(ctx, v, targets[0]);
@@ -209,6 +209,7 @@ function aim(ctx: Ctx, v: VolleyState, code: string): void {
     joint: v.joint,
     damage: volleyDamage(ctx, v),
     track: v.track,
+    terms: volleyTerms(ctx, v),
   });
 }
 
@@ -228,23 +229,24 @@ export function volleyTerms(ctx: Ctx, v: VolleyState): Term[] {
   const params = shipData(data, v.shooter);
   const fx: Fx = v.chargeCancelled ? {} : v.fx;
   const name = v.charge ? cardByCode(data, v.charge).name : '';
-  const terms: Term[] = [{ what: 'Пушки', n: v.guns }];
+  const charge = { kind: 'charge', card: v.charge } as const;
+  const terms: Term[] = [{ what: 'Пушки', n: v.guns, src: { kind: 'guns' } }];
   // Both sides of «Залп с обоих бортов» ignore the diagonal (18.11); some cards and «Мальстрём» remove the penalty (10.6).
   if (v.diagonal && !v.both && !fx.no_diag && !v.seaNoDiag && !v.lineNoDiag) {
     const n = 'fixed' in params.diagDamage ? params.diagDamage.fixed - v.guns : params.diagDamage.offset;
-    terms.push({ what: 'диагональ', n });
+    terms.push({ what: 'диагональ', n, src: { kind: 'diag' } });
   }
-  if (fx.dmg) terms.push({ what: name, n: fx.dmg });
-  if (fx.paid && v.paid) terms.push({ what: 'доплата Порохом', n: v.paid });
-  if (fx.if_fire && v.ifFire) terms.push({ what: name, n: fx.if_fire });
-  if (fx.if_damaged && v.ifDamaged) terms.push({ what: name, n: fx.if_damaged });
-  if (v.joint) terms.push({ what: 'совместный залп', n: data.rules.jointBonus });
-  if (v.storm) terms.push({ what: 'Буря', n: -v.storm });
-  if (v.clear) terms.push({ what: 'Ясное небо', n: v.clear });
-  if (v.surfaced) terms.push({ what: 'всплытие', n: v.surfaced });
+  if (fx.dmg) terms.push({ what: name, n: fx.dmg, src: charge });
+  if (fx.paid && v.paid) terms.push({ what: 'доплата Порохом', n: v.paid, src: { kind: 'paid' } });
+  if (fx.if_fire && v.ifFire) terms.push({ what: name, n: fx.if_fire, src: charge });
+  if (fx.if_damaged && v.ifDamaged) terms.push({ what: name, n: fx.if_damaged, src: charge });
+  if (v.joint) terms.push({ what: 'совместный залп', n: data.rules.jointBonus, src: { kind: 'joint', ally: ctx.s.turn.firstShooter! } });
+  if (v.storm) terms.push({ what: 'Буря', n: -v.storm, src: { kind: 'sea', card: ctx.s.sea!.current! } });
+  if (v.clear) terms.push({ what: 'Ясное небо', n: v.clear, src: { kind: 'clear' } });
+  if (v.surfaced) terms.push({ what: 'всплытие', n: v.surfaced, src: { kind: 'surface' } });
   if (v.extra) terms.push(v.extra);
-  if (v.bonus) terms.push({ what: 'Поднять флаги!', n: v.bonus });
-  if (v.mark) terms.push({ what: 'Чёрная метка', n: v.mark });
+  if (v.bonus) terms.push({ what: 'Поднять флаги!', n: v.bonus, src: { kind: 'flags' } });
+  if (v.mark) terms.push({ what: 'Чёрная метка', n: v.mark, src: { kind: 'mark' } });
   terms.push(...v.reduceAll, ...v.adjust);
   return terms;
 }

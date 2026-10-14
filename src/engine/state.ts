@@ -101,11 +101,28 @@ export interface TurnState {
   marks: Record<string, number>;
 }
 
-/** One addend of a Volley's damage, e.g. { what: 'Пушки', n: 3 }. */
+/** One addend of a Volley's damage, e.g. { what: 'Пушки', n: 3, src: { kind: 'guns' } }. */
 export interface Term {
   what: string;
   n: number;
+  /** Where the addend comes from (for the animations); missing in terms saved before it was added. */
+  src?: TermSrc;
 }
+
+/** The source of a Volley's addend: `card` — card code, `ally` — the ship that fired first at the target. */
+export type TermSrc =
+  | { kind: 'guns' }
+  | { kind: 'diag' }
+  | { kind: 'charge'; card: string | null }
+  | { kind: 'sea'; card: string }
+  | { kind: 'reaction'; card: string }
+  | { kind: 'joint'; ally: string }
+  | { kind: 'surface' }
+  | { kind: 'flags' }
+  | { kind: 'mark' }
+  | { kind: 'paid' }
+  | { kind: 'clear' }
+  | { kind: 'extra'; card: string };
 
 /** A Volley being resolved (RULES.md 10.1). */
 export interface VolleyState {
@@ -343,6 +360,8 @@ export type GameEvent =
       joint: boolean;
       damage: number;
       track: Track;
+      /** The breakdown of `damage` when the Volley is declared, before Reactions. */
+      terms: Term[];
     }
   | { type: 'cardPlayed'; seat: string; ship: string; card: string }
   | { type: 'sold'; seat: string; card: string }
