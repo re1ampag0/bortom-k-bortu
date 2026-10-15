@@ -11,8 +11,8 @@
 import { shipData, type GameEvent } from '../../../engine/state';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer } from './FxLayer';
-import type { DiveClip, SurfaceClip, SwapClip } from './planFx';
-import { A, allPlanks, bubbles, bx, dirOf, facingY, gapBox, hint, mk, payKegs, plank, splash, steam, tag, wait, type FxCtx } from './primitives';
+import type { DiveClip, SinkClip, SurfaceClip, SwapClip } from './planFx';
+import { A, allPlanks, bubbles, bx, dirOf, facingY, gapBox, hint, mk, payKegs, plank, sideOf, splash, steam, tag, wait, whirlpool, type FxCtx } from './primitives';
 
 /** FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. */
 export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, filter: (e: GameEvent) => boolean = () => true): Promise<void> {
@@ -38,10 +38,12 @@ export function banner(ctx: FxCtx, text: string, cls = 'small', d = 1200, y?: nu
 }
 
 const nick = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nick}»`;
+const gen = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickGenitive}»`;
 
-export const PLAY_MISC: Record<'swap' | 'dive' | 'surface', ClipPlayer> = {} as never;
+export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface', ClipPlayer> = {} as never;
 const PLAY = PLAY_MISC as unknown as {
   swap: (c: SwapClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
+  sink: (c: SinkClip, ctx: FxCtx) => Promise<void>;
   dive: (c: DiveClip, ctx: FxCtx) => Promise<void>;
   surface: (c: SurfaceClip, ctx: FxCtx) => Promise<void>;
 };
@@ -54,6 +56,24 @@ PLAY.swap = async (c, ctx) => {
   await wait(ctx, 250);
   await flipTo(ctx, c.events, 650);
   await wait(ctx, 150);
+};
+
+/** Sinking: the plank heels over and goes down, water, a whirlpool, the stamp «Затонул»; the captain goes to the ally. */
+PLAY.sink = async (c, ctx) => {
+  const el = plank(ctx, c.ship), b = bx(ctx, el);
+  hint(ctx, `${nick(ctx, c.ship)} тонет`);
+  const fb = el.querySelector('[data-fx-fires]');
+  if (fb) { const sb = bx(ctx, fb); steam(ctx, sb.cx, sb.cy, 300); }
+  A(ctx, el, [{ transform: 'none', opacity: 1 }, { transform: 'rotate(-2.5deg) translateY(3px)', offset: 0.25 }, { transform: 'rotate(-3.5deg) translateY(30px)', opacity: 0.15 }], 1500, 0, 'ease-in', 'forwards');
+  const water = mk(ctx, 'tint', 0, 0); water.style.width = b.w + 'px'; water.style.height = b.h + 'px'; water.style.background = 'linear-gradient(rgba(36,70,92,0), rgba(36,70,92,.55))'; water.style.borderRadius = '12px';
+  A(ctx, water, [{ opacity: 0, transform: `translate(${b.x}px,${b.y + b.h * 0.6}px) scaleY(.2)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }], 1300, 200, 'ease-in', 'forwards');
+  bubbles(ctx, b.x + 10, b.b - 6, b.w - 20, 400, ctx.rich ? 22 : 0, 60);
+  whirlpool(ctx, b.cx, b.cy + 10, 500, Math.min(200, b.w * 0.7), 1400);
+  const st = mk(ctx, 'stamp-fx', b.cx, b.cy, 'Затонул');
+  A(ctx, st, [{ opacity: 0, scale: '1.8' }, { opacity: 1, scale: '1', offset: 0.3 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], 1400, 900, 'cubic-bezier(.3,1.6,.5,1)');
+  const ally = Object.keys(ctx.display.ships).find((x) => sideOf(ctx, x) === sideOf(ctx, c.ship) && x !== c.ship && !ctx.display.ships[x].sunk);
+  if (ally) { const ab = bx(ctx, plank(ctx, ally)); tag(ctx, ab.cx, ab.y - 12, `Капитан ${gen(ctx, c.ship)} — на борту ${gen(ctx, ally)}`, 1500, '', 1600); }
+  await wait(ctx, ally ? 2100 : 1700);
 };
 
 /** Diving: the water rises over the plank from below, bubbles, the Fires go out. */
