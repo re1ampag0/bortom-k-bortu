@@ -4,6 +4,8 @@
 /* game: the colours of the reference the table of the game has no names for. */
 .fx-layer, .fx-weather { --navy: #24465c; --seal: #9e2b25; --water: #9cc3da; }
 /* game: the frame of a hit comes from the reference table (style.css); .shooter and .targeted are in game.css. */
+/* game: «Под водой» — a class from the displayed state (reference table, style.css), not an animation with 'forwards'. */
+.plank.submerged { background: linear-gradient(rgba(156, 195, 218, 0.28), rgba(36, 70, 92, 0.32)), var(--panel); transform: translateY(5px) scale(0.99); }
 .plank.hitframe { border-color: var(--red); box-shadow: 0 0 0 3px rgba(163, 52, 31, 0.45), 0 0 0 7px rgba(163, 52, 31, 0.12); }
 /* game: the frames of the shooter and the target of the Volley scene: the look of .shooter / .targeted of game.css,
    another name — React owns those two classes (aiming of P2, a pending Volley). */
@@ -117,6 +119,7 @@
 .lg-bar { left: 0; height: 13%; background: linear-gradient(#1b1611, #2a221a); box-shadow: 0 0 0 1px rgba(201, 161, 59, 0.6); }
 .lg-bar::after { content: ''; position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #e0b44c, #fff0b8, #e0b44c, transparent); }
 .lg-bar.top::after { bottom: 0; } .lg-bar.bottom::after { top: 0; }
+.lg-aura { border-radius: 14px; box-shadow: 0 0 0 3px #e0b44c, 0 0 30px 10px rgba(255, 210, 110, 0.75); }
 .lg-veil { background: radial-gradient(ellipse at 50% 50%, rgba(20, 16, 12, 0.15), rgba(20, 16, 12, 0.72) 75%); }
 .lg-sun { width: 900px; height: 900px; margin: -450px 0 0 -450px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(255, 214, 110, 0.5) 0deg 5deg, rgba(255, 214, 110, 0) 5deg 15deg); -webkit-mask: radial-gradient(circle, #000 10%, rgba(0, 0, 0, 0.5) 30%, transparent 58%); mask: radial-gradient(circle, #000 10%, rgba(0, 0, 0, 0.5) 30%, transparent 58%); }
 .lg-glow { width: 420px; height: 420px; margin: -210px 0 0 -210px; border-radius: 50%; background: radial-gradient(rgba(255, 236, 170, 0.85), rgba(255, 196, 80, 0.35) 40%, transparent 70%); }

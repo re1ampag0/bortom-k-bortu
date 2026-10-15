@@ -228,6 +228,7 @@ export function Plank({
     shooter ? 'shooter' : '',
     repairing ? 'repairing' : '',
     ship.sunk ? 'sunk' : '',
+    ship.submerged ? 'submerged' : '',
     plate ? (plate.chosen ? 'chosen' : 'aimable') : '',
   ].join(' ');
   // While a target is chosen, a press anywhere on the target (the head too) chooses it; «i» opens the ship card,

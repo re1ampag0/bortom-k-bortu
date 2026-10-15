@@ -29,8 +29,9 @@ export function finalOf(id: string): Display {
   return d;
 }
 
-export async function open(page: Page, id: string, speed = 'normal') {
-  await page.goto(`?fxScene=${id}&speed=${speed}`);
+/** `extra` — more of the address, e.g. «&only=surfaced» (FxScene.tsx). */
+export async function open(page: Page, id: string, speed = 'normal', extra = '') {
+  await page.goto(`?fxScene=${id}&speed=${speed}${extra}`);
   await expect(page.locator(`[data-fx-scene="${id}"]`)).toBeVisible();
 }
 

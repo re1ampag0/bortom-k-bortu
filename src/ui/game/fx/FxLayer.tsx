@@ -4,13 +4,15 @@
 // checks always read the real state. The layer never takes input; a press on the table (not on the hand, not on the
 // decision panel) shows the result at once.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { flushSync } from 'react-dom';
 import type { GameState } from '../../../engine/state';
 import type { GameData, Side } from '../../../engine/types';
 import { eventsFor, type Viewer } from '../../../engine/view';
 import type { Speed } from '../../storage';
 import type { Recent } from '../showSteps';
 import { speedFactor } from '../text';
-import { displayFrom, displayRules, type Display } from './display';
+import { applyVisible, displayFrom, displayRules, type Display } from './display';
+import { PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
 import { applyAll, applyClip, applyQuiet, planItem, plannerFor, type PlayClip, type QueueItem } from './queue';
@@ -40,8 +42,8 @@ export interface FxScene {
 }
 export const SCENES: FxScene[] = [];
 
-// The clips ported so far: the Volley (A2).
-Object.assign(PLAY, PLAY_VOLLEY);
+// The clips ported so far: the Volley (A2), the ships in motion (A3).
+Object.assign(PLAY, PLAY_VOLLEY, PLAY_MISC);
 SCENES.push(VOLLEY_SCENE);
 
 interface Item extends QueueItem {
@@ -121,6 +123,8 @@ export function useFxQueue({
   const base = useRef<Display | null>(null);
   if (!base.current) base.current = displayFrom(view);
   const D = useRef<Display | null>(null);
+  /** renderWith of a clip: D with some events of the clip applied, drawn instead of D until the clip ends. */
+  const preview = useRef<Display | null>(null);
   const RUN = useRef(0);
   const running = useRef(false);
   const [gen, setGen] = useState(0);
@@ -154,6 +158,13 @@ export function useFxQueue({
       hint: (text) => {
         if (run === RUN.current) setHint(text);
       },
+      renderWith: (evs) => {
+        if (run !== RUN.current || !D.current) return;
+        const p = structuredClone(D.current);
+        for (const e of evs) applyVisible(p, e, rules);
+        preview.current = p;
+        flushSync(bump);
+      },
     };
   };
 
@@ -183,6 +194,22 @@ export function useFxQueue({
       p.classList.remove('hitframe');
       p.style.transform = '';
     });
+  };
+
+  /**
+   * After a clip: the finished animations of the planks (fill 'forwards' — the tilt of a sinking ship, a Fire badge
+   * fading out) are cancelled. The reference draws the table anew after each clip and they go with the old nodes; the
+   * steady look is the class of the plank from D (.sunk, .submerged). CSS animations (the pulse of P2) stay.
+   */
+  const settlePlanks = () => {
+    const board = layerRef.current?.parentElement;
+    if (!board) return;
+    for (const p of board.querySelectorAll('[data-fx-ship]')) {
+      for (const a of p.getAnimations({ subtree: true })) {
+        if (a instanceof CSSAnimation || a instanceof CSSTransition) continue;
+        if (a.playState === 'finished') a.cancel();
+      }
+    }
   };
 
   /** Waits while «Пауза» or a banner holds the show; a new run (skip) ends the wait. */
@@ -223,6 +250,7 @@ export function useFxQueue({
     RUN.current++;
     queue.current = [];
     D.current = null;
+    preview.current = null;
     base.current = displayFrom(live.current.view);
     running.current = false;
     resetFx();
@@ -242,6 +270,9 @@ export function useFxQueue({
     try {
       while (queue.current.length > 0) {
         await gate(run);
+        // The table from D before a clip reads it (shownTrack, the places): the render asked by bump() may not have
+        // come yet, and the table would still show the real state the new action brought (the reference draws at once).
+        flushSync(bump);
         const item = queue.current[0];
         if (item.route === 'show') {
           // The rest of a Volley is shown the old way (an action with a clip not ported yet): its scene goes.
@@ -265,9 +296,12 @@ export function useFxQueue({
             if (run !== RUN.current) throw ABORT;
             // The displayed state catches up with the real one: the events of the clip in their order.
             applyClip(D.current!, item, clip, rules);
+            preview.current = null;
             item.done++;
             clearFx();
-            bump();
+            // The table from D at once, then the planks lose what the clip left on them: the reference draws new nodes.
+            flushSync(bump);
+            settlePlanks();
           }
           applyQuiet(D.current!, item, rules);
           item.applied = true;
@@ -281,6 +315,7 @@ export function useFxQueue({
       // The queue is empty: D = the real state. The scene of an unfinished Volley stays (its shot comes later).
       base.current = displayFrom(live.current.view);
       D.current = null;
+      preview.current = null;
       running.current = false;
       setHint(null);
       setBusy(false);
@@ -331,6 +366,7 @@ export function useFxQueue({
       if (running.current) {
         RUN.current++;
         running.current = false;
+        preview.current = null;
         resetFx();
         wake();
       }
@@ -359,7 +395,7 @@ export function useFxQueue({
     if (running.current && queue.current[0]?.route === 'fx') finish();
   }, [finish]);
 
-  return { display: D.current, gen, hint: D.current ? hint : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current) };
+  return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current) };
 }
 
 /**
