@@ -81,3 +81,27 @@ describe('a card waiting (20 bot games, both sides)', () => {
     expect([...seen].sort()).toEqual(['choice', 'end', 'window']);
   });
 });
+
+describe('repairs', () => {
+  it('the clip is in PLAY', () => expect(typeof PLAY.repair).toBe('function'));
+
+  it('repair: «Норрингтон» of «Голландец» mends the ally — the frame and the cells are on «Индевор» (P1)', () => {
+    expect(route('repair')).toEqual(all('repair', 'fx'));
+    const [card] = clipsOf('repair');
+    expect(card).toMatchObject({ kind: 'card', ship: 'Г', resolvedTo: 'discard' });
+    // repairFx takes the ship of the event: the target, not the one who played the card
+    expect(card.kind === 'card' && card.effects).toEqual([{ type: 'restored', ship: 'И', track: 'hull', amount: 2 }]);
+  });
+
+  it('a repair outside a card (a Soul into the Hull) is the clip «repair» from the Souls (20 bot games)', () => {
+    let souls = 0;
+    for (let k = 0; k < 20; k++) {
+      const { start, steps } = playGame(5001 + k, k % 2 === 1);
+      const planner = plannerFor(data, SIDES.C, start.sea?.current ?? null);
+      for (const st of steps) {
+        for (const c of planItem(planner, st.n, st.events.C, st.action, (kind) => !!PLAY[kind]).clips) if (c.kind === 'repair' && c.cause === 'souls') souls++;
+      }
+    }
+    expect(souls).toBeGreaterThan(0);
+  });
+});

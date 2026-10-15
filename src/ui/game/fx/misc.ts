@@ -22,7 +22,7 @@ import { HIDDEN } from '../../../engine/view';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import {
-  KIND_BY_TRACK, type AbilityClip, type CardClip, type DiveClip, type DrawClip, type FireClip, type ImpactClip, type SinkClip, type SurfaceClip,
+  KIND_BY_TRACK, type AbilityClip, type CardClip, type DiveClip, type DrawClip, type FireClip, type ImpactClip, type RepairClip, type SinkClip, type SurfaceClip,
   type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
@@ -63,11 +63,12 @@ let CUR_CARD: { el: FlyCard; code: string } | null = null;
 /** For PLAY.cancel (volley.ts): the card cancelled crumbles. */
 export const curCard = () => CUR_CARD;
 
-export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'round' | 'sea' | 'card' | 'impact' | 'fire', ClipPlayer> = {} as never;
+export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'round' | 'sea' | 'card' | 'impact' | 'fire' | 'repair', ClipPlayer> = {} as never;
 const PLAY = PLAY_MISC as unknown as {
   card: (c: CardClip, ctx: FxCtx) => Promise<void>;
   impact: (c: ImpactClip, ctx: FxCtx) => Promise<void>;
   fire: (c: FireClip, ctx: FxCtx) => Promise<void>;
+  repair: (c: RepairClip, ctx: FxCtx) => Promise<void>;
   turn: (c: TurnClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   turnEnd: (c: TurnEndClip, ctx: FxCtx) => Promise<void>;
   draw: (c: DrawClip, ctx: FxCtx) => Promise<void>;
@@ -433,6 +434,15 @@ PLAY.fire = async (c, ctx) => {
   A(ctx, fl, [{ opacity: 0, transform: `translate(${hd.cx}px,${hd.cy + 20}px) scale(.4)` }, { opacity: 1, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1.3)` }, { opacity: 0, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1)` }], 900, 0, 'ease-in-out', 'forwards');
   tag(ctx, hd.cx, hd.b + 10, `Пожар ${c.fires}`, 300, 'plus', 1200);
   await wait(ctx, 1000);
+};
+
+/** A repair outside a card's effects: from the Souls (a wisp) or from the card at the middle — to the ship it mends. */
+PLAY.repair = async (c, ctx) => {
+  hint(ctx, `${nick(ctx, c.ship)}: ремонт +${c.amount} ${TRACK_NAME[c.track]}`);
+  let from: Pt | undefined;
+  if (c.cause === 'souls') { const sb = plank(ctx, c.ship).querySelector('[data-fx-souls]'); if (sb && visible(sb)) { const b = bx(ctx, sb); from = { x: b.cx, y: b.cy }; wisp(ctx, from, fxPoint(ctx, c.ship, c.track, shownTrack(ctx, c.ship, c.track)), 0); } }
+  else if (CUR_CARD && CUR_CARD.el.isConnected) from = cardFrom(ctx);
+  await wait(ctx, repairFx(ctx, c, 0, from) + 300);
 };
 
 /** The card at the middle for the queue: kept between clips (keepSet), dropped by «Сразу итог» (resetFx). */
