@@ -1,0 +1,62 @@
+{
+  "dbl": {
+    "scene": "dbl",
+    "ms": 3189
+  },
+  "wind": {
+    "scene": "wind",
+    "ms": 5375
+  },
+  "cover": {
+    "scene": "cover",
+    "ms": 3214
+  },
+  "whirl": {
+    "scene": "whirl",
+    "ms": 3318
+  },
+  "night": {
+    "scene": "night",
+    "ms": 3207
+  },
+  "deepcancel": {
+    "scene": "deepcancel",
+    "ms": 3427
+  },
+  "zombie": {
+    "scene": "zombie",
+    "ms": 5571
+  },
+  "heavy": {
+    "scene": "heavy",
+    "ms": 3950
+  },
+  "counter": {
+    "scene": "counter",
+    "ms": 8441
+  },
+  "firewall": {
+    "scene": "firewall",
+    "ms": 7338
+  },
+  "abyss": {
+    "scene": "abyss",
+    "ms": 6235
+  },
+  "both": {
+    "scene": "both",
+    "ms": 8232
+  },
+  "heart": {
+    "scene": "wind",
+    "ms": 1759
+  },
+  "deep": {
+    "scene": "deep",
+    "ms": 1104
+  },
+  "ghost": {
+    "scene": "ghost",
+    "ms": 1817
+  }
+}
