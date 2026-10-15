@@ -259,6 +259,8 @@ export function Game({
     enabled: speed !== 'instant' && !instantUrl(),
     // «Ваш ход» is drawn by the clip «turn» while the layer plays; the banner of its own — only without the layer.
     turnBanners: !fxEnabled,
+    // The sea card of a new round is shown by the clip «sea»; the banner — only without the layer (no two shows).
+    seaBanners: !fxEnabled,
     // A new game: the first sea card and the first turn too.
     start: (net ? net.actions : local!.actions.length) === 0 && !s.winner ? { sea: s.sea?.current ?? null, active: s.active } : null,
     paused: !!curtainSide,
