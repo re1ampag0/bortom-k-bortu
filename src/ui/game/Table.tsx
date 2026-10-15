@@ -380,6 +380,11 @@ export function Plank({
           ))}
         </div>
       )}
+      {plate?.tip && (
+        <span className="aim-tip" data-testid={`aim-tip-${ship.code}`} aria-hidden>
+          {plate.tip}
+        </span>
+      )}
       {plate?.chosen && (
         <svg className="reticle" viewBox="0 0 26 26" aria-hidden>
           <circle cx="13" cy="13" r="9" fill="none" stroke="#B23A2E" strokeWidth="2" />

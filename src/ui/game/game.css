@@ -665,6 +665,21 @@ button.star::before {
   height: 26px;
   pointer-events: none;
 }
+/* «Подсказки»: the damage of a target, a tag in the corner (not a button). */
+.aim-tip {
+  position: absolute;
+  right: 40px;
+  bottom: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+  background: #fff;
+  border: 1px solid var(--red);
+  border-radius: 8px;
+  padding: 0 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
 /* «i» in the head of a target: the ship card; a 44×44 touch area without a bigger circle. */
 .ship-info {
   position: relative;
