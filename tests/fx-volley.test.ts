@@ -66,12 +66,12 @@ describe('the clips of the Volley', () => {
   it('the breakdown plate: who → whom, the damage by the track, the terms, a target changed', () => {
     const ctx = ctxOf(null, null, []);
     const html = plateHTML(ctx, { shooter: 'И', target: 'М', track: 'hull', damage: 3, terms: [{ what: 'Пушки', n: 3 }, { what: 'Буря', n: -1 }] });
-    expect(html).toContain('<b>Индевор</b> → <b>Месть</b>');
+    expect(html).toContain('<b>«Индевор»</b> → <b>«Месть»</b>');
     expect(html).toContain('3 по Корпусу');
     expect(html).toContain('<span class="">Пушки</span><span class=" ">3</span>');
     expect(html).toContain('<span class="neg ">−1</span>');
     const moved = plateHTML(ctx, { shooter: 'Ж', declared: 'И', target: 'Г', track: 'sails', damage: 1, was: 2, terms: null });
-    expect(moved).toContain('<s>Индевор</s> <b>Голландец</b>');
+    expect(moved).toContain('<s>«Индевор»</s> <b>«Голландец»</b>');
     expect(moved).toContain('<s>2</s>1 по Парусам');
   });
 
