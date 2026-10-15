@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { loadGameData } from '../src/engine/data';
 import { applyAction, createGame } from '../src/engine/engine';
+import { createRng } from '../src/engine/rng';
 import { cardByCode } from '../src/engine/state';
 
 const SHOTS = 'docs/screenshots/p8';
@@ -167,5 +168,40 @@ test.describe('phone 430×932', () => {
     await page.getByTestId('curtain-ready').click();
     await page.getByRole('button', { name: 'Журнал', exact: true }).last().click();
     await expect(page.getByTestId('log-sheet')).toContainText(`«${name}»`);
+  });
+});
+
+test.describe('«Жребий» on the preparation screen', () => {
+  /** The verdicts of 20 tosses. */
+  async function tosses(page: Page, query: string): Promise<string[]> {
+    await page.goto(query);
+    await page.getByTestId('quick-bots').click();
+    const out: string[] = [];
+    for (let i = 0; i < 20; i++) {
+      await page.getByTestId('pick-coin').click();
+      out.push((await page.getByTestId('coin-verdict').textContent())!);
+    }
+    return out;
+  }
+
+  test('without a seed each toss is new: both sides come up in 20 tosses', async ({ page }) => {
+    const verdicts = await tosses(page, '?speed=instant');
+    expect(verdicts.some((v) => v.includes('Пираты'))).toBe(true);
+    expect(verdicts.some((v) => v.includes('Компания'))).toBe(true);
+    // The game starts on the side the coin showed last.
+    const last = verdicts.at(-1)!.includes('Пираты') ? 'Пиратов' : 'Компанию';
+    await page.getByTestId('prep-start').click();
+    await expect(page.getByTestId('placement')).toContainText(`Жребий: вы играете за ${last}`);
+    // …and with the seed the coin fell by (the autosave keeps it; the coin of a seed — coinOf in Prep.tsx).
+    await page.getByTestId('placement-done').click();
+    await expect(page.getByTestId('game')).toBeVisible();
+    const seed = await page.evaluate(() => JSON.parse(localStorage.getItem('bortom-k-bortu.save')!).setup.game.seed as number);
+    const coin = createRng(seed ^ 0x5bd1e995).int(2) === 0 ? 'Пиратов' : 'Компанию';
+    expect(coin).toBe(last);
+  });
+
+  test('with ?seed every toss is the same', async ({ page }) => {
+    const verdicts = await tosses(page, '?seed=1&speed=instant');
+    expect(new Set(verdicts).size).toBe(1);
   });
 });
