@@ -2,35 +2,10 @@
 // layer: every clip of every action has a player in PLAY, and the clips carry what the effects choose by (fx.r of the
 // Reaction, the second side, «Без Реакций», the kinds of the cannonballs, the Charge of the captain). The flights are
 // DOM: e2e/fx-reactions.spec.ts.
-import { readFileSync } from 'node:fs';
-import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
-import type { Action, GameEvent } from '../src/engine/state';
-import { PLAY } from '../src/ui/game/fx/FxLayer';
-import type { FxKind, Shot } from '../src/ui/game/fx/planFx';
-import { planItem, plannerFor, type PlayClip } from '../src/ui/game/fx/queue';
-import { data } from './helpers';
+import type { Shot } from '../src/ui/game/fx/planFx';
+import { clipsOf, play } from './fx-scenes';
 
-interface Scene {
-  id: string;
-  viewer: string[];
-  start?: { sea: string | null };
-  actions: { a: Action; ev: GameEvent[] }[];
-}
-const win: { SCENES?: Scene[] } = {};
-runInNewContext(readFileSync('docs/mockups/anim/level1/scenes.js', 'utf8'), { window: win });
-const SCENES = win.SCENES!;
-const sideOf = (code: string) => data.ships.find((s) => s.code === code)!.side;
-const has = (kind: FxKind) => !!PLAY[kind];
-
-/** The actions of a scene as the queue gets them: the route and the clips. */
-function play(id: string) {
-  const sc = SCENES.find((s) => s.id === id)!;
-  const start = sc.start ?? SCENES.find((s) => s.start && sideOf(s.viewer[0]) === sideOf(sc.viewer[0]))!.start!;
-  const planner = plannerFor(data, sc.viewer, start.sea);
-  return sc.actions.map((a, n) => planItem(planner, n, a.ev, a.a, has));
-}
-const clipsOf = (id: string): PlayClip[] => play(id).flatMap((x) => x.clips);
 const rs = (id: string) => clipsOf(id).filter((c) => c.kind === 'reaction').map((c) => (c as { r?: string }).r);
 const balls = (id: string) => new Set(clipsOf(id).flatMap((c) => ('shots' in c && c.shots ? (c.shots as Shot[]).map((b) => b.kind) : [])));
 
