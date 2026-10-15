@@ -56,10 +56,10 @@ for (const size of SIZES) {
       await expect(page.getByTestId('sea-banner')).toBeVisible();
       await page.waitForTimeout(500);
       await shot(page, size.name, '5-sea-banner');
-      // A Volley of the Pirates: cores fly after the Reaction window; the breakdown stays at the side.
-      await expect(page.getByTestId('show-projectile').first()).toBeVisible({ timeout: 60_000 });
+      // A Volley of the Pirates: the animation layer (A2) shows it — the breakdown plate, cores fly after the window.
+      await expect(page.locator('.fx-layer .plate')).toBeVisible({ timeout: 60_000 });
+      await expect(page.locator('.fx-layer .ball').first()).toBeVisible({ timeout: 60_000 });
       await expect(page.getByTestId('show-arrow')).toHaveCount(0);
-      await expect(page.getByTestId('show-plate')).toBeVisible();
       await page.waitForTimeout(400);
       await shot(page, size.name, '4-enemy-move');
 
