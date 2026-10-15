@@ -14,6 +14,7 @@ import { displayFrom, displayRules, type Display } from './display';
 import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
 import { applyAll, applyClip, applyQuiet, planItem, plannerFor, type PlayClip, type QueueItem } from './queue';
+import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
 import './fx.css';
 
 export type ClipPlayer = (c: PlayClip, ctx: FxCtx) => Promise<void>;
@@ -30,12 +31,18 @@ export interface FxScene {
   keep: () => Element[];
   /** After the table is drawn again: classes and leans of the Volley back on the planks (afterRender). */
   afterRender: (ctx: FxCtx) => void;
-  /** «Сразу итог»: everything kept is dropped (resetFx). */
-  reset: () => void;
+  /** «Сразу итог»: everything kept is dropped, the frames it put on the planks go (resetFx). */
+  reset: (board: HTMLElement | null) => void;
   /** A clip «turn» starts: the effects «till the end of the turn» go (the whirlpool of «Водоворот»). */
   onTurn: (ctx: FxCtx) => void;
+  /** The scene is on the table (a Volley declared, not shot yet). */
+  alive: () => boolean;
 }
 export const SCENES: FxScene[] = [];
+
+// The clips ported so far: the Volley (A2).
+Object.assign(PLAY, PLAY_VOLLEY);
+SCENES.push(VOLLEY_SCENE);
 
 interface Item extends QueueItem {
   recent: Recent;
@@ -159,8 +166,8 @@ export function useFxQueue({
   };
   /** resetFx: the layer is empty, the animations of the board are cancelled (the weather and CSS animations stay). */
   const resetFx = () => {
-    SCENES.forEach((x) => x.reset());
     const layer = layerRef.current;
+    SCENES.forEach((x) => x.reset(layer?.parentElement ?? null));
     if (!layer) return;
     layer.innerHTML = '';
     const board = layer.parentElement!;
@@ -180,6 +187,8 @@ export function useFxQueue({
 
   /** Waits while «Пауза» or a banner holds the show; a new run (skip) ends the wait. */
   const gate = async (run: number) => {
+    // Nothing plays while the show waits: the status bar gives the real line, not the hint of the clip before.
+    if (run === RUN.current && (live.current.hold || live.current.paused)) setHint(null);
     while (run === RUN.current && (live.current.hold || live.current.paused)) await new Promise<void>((res) => waiters.current.push(res));
     if (run !== RUN.current) throw ABORT;
   };
@@ -235,6 +244,8 @@ export function useFxQueue({
         await gate(run);
         const item = queue.current[0];
         if (item.route === 'show') {
+          // The rest of a Volley is shown the old way (an action with a clip not ported yet): its scene goes.
+          if (SCENES.some((x) => x.alive())) resetFx();
           if (item.clips.some((c) => c.kind === 'turn')) {
             const ctx = makeCtx(run);
             if (ctx) SCENES.forEach((x) => x.onTurn(ctx));
@@ -304,7 +315,9 @@ export function useFxQueue({
       applied: false,
     }));
     if (!running.current && items.every((i) => i.route === 'show')) {
-      // Nothing for the layer: ShowLayer shows them as before, the table is drawn from the real state.
+      // Nothing for the layer: ShowLayer shows them as before, the table is drawn from the real state. The scene of a
+      // Volley declared before goes: its shot is shown the old way.
+      if (SCENES.some((x) => x.alive())) resetFx();
       show.push(fresh);
       base.current = displayFrom(view);
       return;

@@ -4,10 +4,13 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: 'e2e',
   timeout: 180_000,
+  // A missing element fails in 20 s (expect) / 40 s (an action), not when the whole test times out. A step that
+  // rightly waits longer (bots playing, a whole turn shown) sets its own timeout there.
+  expect: { timeout: 20_000 },
   fullyParallel: false,
   workers: 1,
   reporter: [['list']],
-  use: { baseURL: 'http://127.0.0.1:4173/bortom-k-bortu/' },
+  use: { baseURL: 'http://127.0.0.1:4173/bortom-k-bortu/', actionTimeout: 40_000 },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' }, grepInvert: /@iphone/ },
     // WebKit is installed on GitHub Actions (E2E_WEBKIT=1); the cloud sessions have only Chromium.

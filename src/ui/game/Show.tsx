@@ -34,6 +34,7 @@ export function useShowQueue({
   myDecision,
   paused,
   hold = false,
+  external = false,
 }: {
   game: ShowSource;
   version: number;

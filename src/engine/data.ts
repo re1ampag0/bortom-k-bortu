@@ -298,6 +298,7 @@ class Checker {
     for (const key of ['color', 'motto']) this.string(s, key, at);
     this.string(s, 'nick', at, true);
     this.string(s, 'nickDative', at, true);
+    this.string(s, 'nickGenitive', at, true);
     this.oneOf(s, 'side', at, SIDES);
     for (const key of ['hull', 'sails', 'guns', 'crew']) this.int(s, key, at, 1);
     this.int(s, 'souls', at, 0, true);

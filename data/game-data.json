@@ -68,6 +68,7 @@
       ],
       "nick": "Жемчужина",
       "nickDative": "Жемчужине",
+      "nickGenitive": "Жемчужины",
       "volleyCost": 1,
       "diagDamage": {
         "offset": -1
@@ -106,6 +107,7 @@
       ],
       "nick": "Месть",
       "nickDative": "Мести",
+      "nickGenitive": "Мести",
       "volleyCost": 1,
       "diagDamage": {
         "offset": -1
@@ -144,6 +146,7 @@
       ],
       "nick": "Индевор",
       "nickDative": "Индевору",
+      "nickGenitive": "Индевора",
       "volleyCost": 1,
       "diagDamage": {
         "offset": -1
@@ -184,6 +187,7 @@
       ],
       "nick": "Голландец",
       "nickDative": "Голландцу",
+      "nickGenitive": "Голландца",
       "volleyCost": 1,
       "diagDamage": {
         "offset": -1
