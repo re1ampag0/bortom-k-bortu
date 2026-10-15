@@ -66,7 +66,11 @@ function fxCards(data: GameData): FxCards {
 }
 const cardName = (ctx: FxCtx, code: string) => fxCards(ctx.data)[code]?.name ?? code;
 const cardFx = (ctx: FxCtx, code: string) => fxCards(ctx.data)[code]?.fx ?? {};
-const nick = (ctx: FxCtx, code: string) => shipData(ctx.data, code).nick;
+/** The names of the reference (G.ships[x].nick / dat / gen): in quotes, as the game writes a ship; short — without. */
+const nick = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nick}»`;
+const dat = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickDative}»`;
+const gen = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickGenitive}»`;
+const short = (ctx: FxCtx, code: string) => shipData(ctx.data, code).nick;
 const ships = (ctx: FxCtx) => ctx.data.ships.map((s) => s.code);
 /** game: the frame classes of the scene (React owns shooter / targeted). */
 const SHOOTER = 'fx-shooter', TARGETED = 'fx-targeted';
@@ -149,7 +153,7 @@ PLAY.announce = async (c, ctx) => {
   if (!part2 || !VS) {
     VS = { shooter: c.shooter, target: c.target, declared: c.target, charge: c.charge, diagonal: c.diagonal, reactions: [], cards: [], extras: [], declDamage: c.damage, terms: c.terms };
   } else { Object.assign(VS, { target: c.target, declared: c.target, diagonal: c.diagonal, declDamage: c.damage, terms: c.terms, done: false, reactions: [] }); }
-  hint(ctx, `${nick(ctx, c.shooter)}: Залп по ${shipData(ctx.data, c.target).nickDative}${c.charge ? ` · Заряд «${cardName(ctx, c.charge)}»` : ''}`);
+  hint(ctx, `${nick(ctx, c.shooter)}: Залп по ${dat(ctx, c.target)}${c.charge ? ` · Заряд «${cardName(ctx, c.charge)}»` : ''}`);
   plank(ctx, c.shooter).classList.add(SHOOTER);
   ctx.board.querySelectorAll(`.plank.${TARGETED}`).forEach((p) => p.classList.remove(TARGETED));
   plank(ctx, c.target).classList.add(TARGETED);
@@ -168,7 +172,7 @@ PLAY.announce = async (c, ctx) => {
   fitPlate(ctx);
   if (c.charge && !part2) {
     const from = cardOrigin(ctx, c.charge, c.chargeFrom || c.shooter);
-    VS.cards.push(flyCard(ctx, c.charge, from, cardSlot(ctx, pp, 0), 150, 450, c.captain ? `капитан ${nick(ctx, c.chargeFrom!)}` : ''));
+    VS.cards.push(flyCard(ctx, c.charge, from, cardSlot(ctx, pp, 0), 150, 450, c.captain ? `капитан ${short(ctx, c.chargeFrom!)}` : ''));
   }
   if (part2) { const sb = bx(ctx, plank(ctx, c.shooter)); tag(ctx, sb.cx, facingY(ctx, c.shooter) + 16 * dirOf(ctx, c.shooter), 'второй борт', 100, 'plus', 1400); }
   await wait(ctx, c.charge && !part2 ? 820 : 620);
@@ -401,7 +405,7 @@ PLAY.cancel = async (c, ctx) => {
   }
   const shooter = c.shooter!, target = c.target!;
   if (!VS) VS = { shooter, target, declared: target, charge: null, cards: [], extras: [], reactions: [], declDamage: 0 };
-  hint(ctx, `Залп ${shipData(ctx.data, shooter).nickGenitive} отменён${c.by ? ` «${cardName(ctx, c.by)}»` : ''}`);
+  hint(ctx, `Залп ${gen(ctx, shooter)} отменён${c.by ? ` «${cardName(ctx, c.by)}»` : ''}`);
   if (VS.plate) { const st = document.createElement('span'); st.className = 'stamp'; st.textContent = 'Залп отменён'; VS.plate.appendChild(st); A(ctx, st, [{ opacity: 0, scale: '1.8' }, { opacity: 1, scale: '1' }], 260, 0, 'cubic-bezier(.3,1.6,.5,1)', 'both'); }
   VS.dust = !!c.by && cardName(ctx, c.by) === 'Банка с землёй';
   const n = Math.max(1, VS.declDamage || shownTrack(ctx, shooter, 'guns'));
@@ -444,7 +448,7 @@ PLAY.counter = async (c, ctx) => {
 PLAY.heart = async (c, ctx) => {
   const by = ships(ctx).find((x) => sideOf(ctx, x) === sideOf(ctx, c.ship) && x !== c.ship)!;
   const a = bx(ctx, plank(ctx, by)), b = bx(ctx, plank(ctx, c.ship));
-  hint(ctx, `${nick(ctx, by)}: Сердце Дейви Джонса — ещё один Залп ${shipData(ctx.data, c.ship).nickGenitive}`);
+  hint(ctx, `${nick(ctx, by)}: Сердце Дейви Джонса — ещё один Залп ${gen(ctx, c.ship)}`);
   const h = { x: a.x + a.w * 0.62, y: a.cy };
   const heart = mk(ctx, 'heart', 0, 0, '<svg viewBox="0 0 30 26" width="30" height="26"><path d="M15 25 C4 17 0 11 2 6 C4 1 11 0 15 6 C19 0 26 1 28 6 C30 11 26 17 15 25Z" fill="#B23A2E" stroke="#6E1A12" stroke-width="1.5"/></svg>');
   A(ctx, heart, [{ opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(.4)` }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.15 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.3 }, { transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.42 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.56 }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.7 }, { opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(1)` }], 2000, 0, 'ease-in-out');
