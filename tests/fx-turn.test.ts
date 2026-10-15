@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { displayFrom, displayRules } from '../src/ui/game/fx/display';
 import { PLAY } from '../src/ui/game/fx/FxLayer';
 import type { FxKind } from '../src/ui/game/fx/planFx';
-import { applyClip, applyQuiet, pendingFlags, planItem, plannerFor } from '../src/ui/game/fx/queue';
+import { applyClip, applyQuiet, logHiddenFrom, pendingFlags, planItem, plannerFor } from '../src/ui/game/fx/queue';
 import { contrast, inkOn } from '../src/ui/game/fx/primitives';
 import { playGame, SIDES } from './fx-games';
 import { clipsOf, play } from './fx-scenes';
@@ -172,5 +172,18 @@ describe('the strip of the ship under the flying card (game: instead of the ribb
     for (const [code, , , c] of out) expect(c as number, `${code}`).toBeGreaterThanOrEqual(4.5);
     // «Индевор» is gold: dark text on it, the others white
     expect(Object.fromEntries(out.map(([code, , ink]) => [code, ink]))).toEqual({ Ж: '#ffffff', М: '#ffffff', И: '#0f0d0b', Г: '#ffffff' });
+  });
+});
+
+describe('the log waits for the clips (logHiddenFrom)', () => {
+  it('the lines from the first action not played to its end wait; an empty or played queue hides nothing', () => {
+    const q = play('mark').map((x, i) => ({ ...x, n: 40 + i, done: 0, applied: false }));
+    expect(logHiddenFrom(q)).toBe(40);
+    q[0].applied = true;
+    expect(logHiddenFrom(q)).toBe(41);
+    q[1].applied = true;
+    expect(logHiddenFrom(q)).toBe(null);
+    // «Сразу итог», the layer off, Undo, a jump over many actions: the queue is emptied
+    expect(logHiddenFrom([])).toBe(null);
   });
 });

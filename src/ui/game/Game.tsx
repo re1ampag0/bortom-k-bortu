@@ -215,7 +215,6 @@ export function Game({
   /** «Пауза»: the show on this device stops; on one screen the bots wait too (by network the server plays them). */
   const [held, setHeld] = useState(false);
   const [endClosed, setEndClosed] = useState(false);
-  const [freshFrom, setFreshFrom] = useState(0);
   const allSeats = Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
   const [seatPick, setSeatPick] = useState<string | null>(null);
   const seat = seatPick && allSeats.includes(seatPick) ? seatPick : (d && d.side === bottom ? d.seats.find((x) => mySeats.includes(x)) : null) ?? mySeats[0] ?? allSeats[0];
@@ -300,6 +299,11 @@ export function Game({
   });
   /** The table as it is shown: the displayed fields from the queue's D, the rest from the real view. */
   const tableView = fx.display ? withDisplay(view, fx.display) : view;
+  // The log as it is shown (A4): the lines of an action appear when its clips are played; at the end of the game — all.
+  const logFrom = s.winner ? null : fx.logFrom;
+  const shownLog = logFrom == null ? game.log : game.log.filter((l) => l.action < logFrom);
+  // The lines of the newest action shown are highlighted.
+  const freshFrom = shownLog.at(-1)?.action ?? 0;
   useEffect(() => {
     if (!local || curtainSide || s.winner || held || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
@@ -350,11 +354,6 @@ export function Game({
   }, [myDecision, humans.length]);
 
 
-  useEffect(() => {
-    // The lines of the newest action are highlighted in the log.
-    const last = game.log.at(-1);
-    if (last) setFreshFrom(last.action);
-  }, [version, game]);
 
   useEffect(() => {
     let lock: { release: () => Promise<void> } | null = null;
@@ -782,7 +781,7 @@ export function Game({
   }
 
   // ——— The middle at rest: the last event ———
-  const lastEvent = [...game.log].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
+  const lastEvent = [...shownLog].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
   /** The ally: «Капитан предлагает Заряд…» (P6). */
   const offerToMe = myTurn && mode.k === 'idle' ? offers.find((o) => mySeats.includes(o.to) && !mySeats.includes(o.from)) : undefined;
   const offerInfo = offerToMe ? `Капитан предлагает Заряд «${cardByCode(data, offerToMe.card).name}» — нажмите «Залп» ${nick(offerToMe.to)}` : null;
@@ -1067,7 +1066,7 @@ export function Game({
       </main>
       <aside className="log-col">
         <h2>Журнал</h2>
-        <LogList data={data} log={game.log} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />
+        <LogList data={data} log={shownLog} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />
         <div className="log-actions">
           <button className="btn small" onClick={() => setSheet({ k: 'log' })}>
             Весь журнал
@@ -1137,7 +1136,7 @@ export function Game({
             <div className="sheet-body">
               <LogList
                 data={data}
-                log={game.log}
+                log={shownLog}
                 fresh={freshFrom}
                 onCard={(code) => setSheet({ k: 'info', code, back: 'log' })}
                 onSea={(code) => setSheet({ k: 'sea', code, back: 'log' })}
@@ -1150,7 +1149,7 @@ export function Game({
         <SheetBox title={`Что было за ход ${SIDE_LABEL[other(bottom)].gen}`} onClose={() => setSheet(null)} wide testid="last-turn">
           <LogList
             data={data}
-            log={enemyTurnLines(game.log, other(bottom))}
+            log={enemyTurnLines(shownLog, other(bottom))}
             fresh={freshFrom}
             onCard={(code) => setSheet({ k: 'info', code, back: 'lastTurn' })}
             onSea={(code) => setSheet({ k: 'sea', code, back: 'lastTurn' })}

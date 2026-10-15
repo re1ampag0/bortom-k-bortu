@@ -105,3 +105,13 @@ export function pendingFlags(items: readonly (QueueItem & { done: number; applie
   }
   return out;
 }
+
+/**
+ * The log shows the lines of an action once its clips are played (A4): the number of the first action of the queue not
+ * played to its end — its lines and the later ones wait; null — nothing waits (an empty queue: the end of the show,
+ * «Сразу итог», the layer off, Undo, a jump over many actions).
+ */
+export function logHiddenFrom(items: readonly (QueueItem & { applied: boolean })[]): number | null {
+  const waiting = items.filter((x) => !x.applied).map((x) => x.n);
+  return waiting.length > 0 ? Math.min(...waiting) : null;
+}
