@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type ShipState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
+import { deckCards } from '../../engine/data';
+import { InfoTip } from './InfoTip';
 import { SIDE_LABEL } from './text';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
@@ -142,6 +144,17 @@ export interface Status {
   mark?: boolean;
   /** The flag of the event that sets it (flagSet / surfaced): the chip waits hidden for its clip (A4). */
   flag?: string;
+  /** The window of the chip (S1), when it says more than `hint`: «Чёрная метка» — the text of its card. */
+  info?: string;
+}
+
+// The windows of the badges (S1): the rules of RULES.md 13.2–13.3 (Fires) and 3.6, 6.3, 14.7 (Souls).
+const FIRE_INFO = 'В начале хода своей команды: −1 Корпус за каждый Пожар. Потушить: сбросьте 1 карту с руки — снимите 1 Пожар (в свой ход, сколько угодно раз).';
+const SOULS_INFO = 'Только у «Голландца», не больше 5. +1 Душа за каждый вражеский корабль, получивший от «Голландца» урон по Команде. Тратятся на карты с бирюзовой ценой; в свой ход 1 Душа = +1 Корпус или +1 Команда «Голландца».';
+/** The text of the card «Чёрная метка» (the card with the operation «mark»), without its markup. */
+function markText(data: GameData): string {
+  const card = deckCards(data).find((c) => (c.fx.ops || []).some((o) => o[0] === 'mark'));
+  return card ? `Карта «${card.name}»: ${card.text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()}` : '';
 }
 
 /** The blot of «Чёрная метка» (MARK_SVG of the reference, board.js). */
@@ -172,7 +185,7 @@ export function statuses(s: GameState, data: GameData, ship: ShipState): Status[
     out.push({ label: 'Кукла вуду', hint: `В свой следующий ход теряет 1 Команду за каждую сыгранную карту (кукла «${shipData(data, ship.voodoo).nick}»)`, flag: 'voodoo' });
   }
   const mark = s.turn.marks[ship.code];
-  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее', mark: true, flag: 'mark' });
+  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее', info: markText(data), mark: true, flag: 'mark' });
   if (s.turn.noReact.includes(ship.code) || (s.turn.noReactTeam && ship.side !== s.active)) {
     out.push({ label: 'Без Реакций', hint: 'До конца этого хода не играет Реакции', flag: 'noReact' });
   }
@@ -347,18 +360,19 @@ export function Plank({
       {st.length > 0 && (
         <div className="plank-statuses" data-fx-statuses>
           {st.map((x) => (
-            <span
+            <InfoTip
               key={x.label}
               className={`status-chip${x.mark ? ' mark' : ''}`}
-              title={x.hint}
-              data-fx-status={x.label}
-              data-fx-mark={x.mark || undefined}
+              title={x.label}
+              text={x.info ?? x.hint}
+              off={!!plate}
+              data={{ 'data-fx-status': x.label, 'data-fx-mark': x.mark || undefined }}
               style={x.flag && fxHidden?.includes(x.flag) ? { visibility: 'hidden' } : undefined}
             >
               {x.mark && MARK_SVG}
               {x.label}
               <span className="wide"> · {x.hint.split(':')[0].toLowerCase()}</span>
-            </span>
+            </InfoTip>
           ))}
         </div>
       )}
@@ -387,14 +401,14 @@ export function Plank({
         </div>
         <div className="badges">
           {ship.fires > 0 && (
-            <span className="badge fire" data-fx-fires title="Пожар: в начале хода своей команды −1 Корпус за каждый. Потушить — сбросить карту">
+            <InfoTip className="badge fire" title={`Пожар ${ship.fires}`} text={FIRE_INFO} off={!!plate} data={{ 'data-fx-fires': true, 'data-testid': `fire-${ship.code}` }}>
               Пожар {ship.fires}
-            </span>
+            </InfoTip>
           )}
           {d.souls !== undefined && (
-            <span className="badge souls" data-fx-souls title="Души: платят за карты «Голландца»; +1 за урон по Команде врага">
+            <InfoTip className="badge souls" title={`Души ${ship.souls} / ${d.souls}`} text={SOULS_INFO} off={!!plate} data={{ 'data-fx-souls': true, 'data-testid': `souls-${ship.code}` }}>
               Души {ship.souls} / {d.souls}
-            </span>
+            </InfoTip>
           )}
           {!ship.sunk && (
             <button

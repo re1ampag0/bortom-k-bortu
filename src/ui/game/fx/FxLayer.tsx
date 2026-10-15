@@ -16,6 +16,7 @@ import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
+import { tookPress } from '../InfoTip';
 import { PLAY_SEA, renderWeather } from './sea';
 import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
 import './fx.css';
@@ -419,6 +420,8 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     const onPress = (e: PointerEvent) => {
       const t = e.target as Element | null;
       if (t?.closest('[data-fx-hand], .dock')) return;
+      // S1: a badge or a status chip that explains itself (and the press that closes its window) is not the table
+      if (tookPress(e)) return;
       press();
     };
     board.addEventListener('pointerdown', onPress);
