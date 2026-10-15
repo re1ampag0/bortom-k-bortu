@@ -1,0 +1,102 @@
+{
+  "sea-calm-1366x660": {
+    "scene": "sea-calm",
+    "ms": 4778,
+    "ref": 4702
+  },
+  "sea-wind-1366x660": {
+    "scene": "sea-wind",
+    "ms": 4759,
+    "ref": 4699
+  },
+  "sea-fog-1366x660": {
+    "scene": "sea-fog",
+    "ms": 4764,
+    "ref": 4710
+  },
+  "sea-storm-1366x660": {
+    "scene": "sea-storm",
+    "ms": 5004,
+    "ref": 4932
+  },
+  "sea-wave-1366x660": {
+    "scene": "sea-wave",
+    "ms": 4763,
+    "ref": 4691
+  },
+  "sea-maelstrom-1366x660": {
+    "scene": "sea-maelstrom",
+    "ms": 4762,
+    "ref": 4695
+  },
+  "sea-clear-1366x660": {
+    "scene": "sea-clear",
+    "ms": 4747,
+    "ref": 4693
+  },
+  "sea-mermaids-1366x660": {
+    "scene": "sea-mermaids",
+    "ms": 4774,
+    "ref": 4694
+  },
+  "sea-tortuga-1366x660": {
+    "scene": "sea-tortuga",
+    "ms": 4759,
+    "ref": 4696
+  },
+  "sea-rum-1366x660": {
+    "scene": "sea-rum",
+    "ms": 4765,
+    "ref": 4697
+  },
+  "sea-caravan-1366x660": {
+    "scene": "sea-caravan",
+    "ms": 4783,
+    "ref": 4695
+  },
+  "sea-wet-1366x660": {
+    "scene": "sea-wet",
+    "ms": 4748,
+    "ref": 4712
+  },
+  "sea-reefs-1366x660": {
+    "scene": "sea-reefs",
+    "ms": 4753,
+    "ref": 4710
+  },
+  "sea-thunder-1366x660": {
+    "scene": "sea-thunder",
+    "ms": 4777,
+    "ref": 4689
+  },
+  "sea-fleet-1366x660": {
+    "scene": "sea-fleet",
+    "ms": 4773,
+    "ref": 4690
+  },
+  "sea-moon-1366x660": {
+    "scene": "sea-moon",
+    "ms": 4759,
+    "ref": 4704
+  },
+  "sea-current-1366x660": {
+    "scene": "sea-current",
+    "ms": 4760,
+    "ref": 4696
+  },
+  "sea-storm-430x932": {
+    "scene": "sea-storm",
+    "ms": 4998,
+    "ref": 4931
+  },
+  "sea-moon-card-430x932": {
+    "scene": "sea-moon",
+    "ms": 2027,
+    "ref": 1961
+  },
+  "turn-fire-430x932": {
+    "scene": "turn",
+    "ms": 4729,
+    "ref": 4769
+  }
+}
