@@ -24,7 +24,7 @@ import { SIDE_LABEL } from '../text';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import {
   KIND_BY_TRACK, type AbilityClip, type CardClip, type DiceClip, type DiscardClip, type DiveClip, type DrawClip, type EndClip, type FallbackClip,
-  type FireClip, type FireOutClip, type ImpactClip, type JackClip, type LegendClip, type PassClip, type PeekClip, type PowderClip, type RepairClip,
+  type FireClip, type FireOutClip, type ImpactClip, type JackClip, type PassClip, type PeekClip, type PowderClip, type RepairClip,
   type SellClip, type SinkClip, type SoulsClip, type StatusClip, type StealClip, type SurfaceClip, type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
@@ -66,7 +66,7 @@ let CUR_CARD: { el: FlyCard; code: string } | null = null;
 export const curCard = () => CUR_CARD;
 
 export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'card' | 'impact' | 'fire' | 'repair'
-  | 'powder' | 'souls' | 'status' | 'sell' | 'pass' | 'steal' | 'discard' | 'peek' | 'dice' | 'fireOut' | 'end' | 'fallback' | 'legend' | 'jack', ClipPlayer> = {} as never;
+  | 'powder' | 'souls' | 'status' | 'sell' | 'pass' | 'steal' | 'discard' | 'peek' | 'dice' | 'fireOut' | 'end' | 'fallback' | 'jack', ClipPlayer> = {} as never;
 const PLAY = PLAY_MISC as unknown as {
   card: (c: CardClip, ctx: FxCtx) => Promise<void>;
   impact: (c: ImpactClip, ctx: FxCtx) => Promise<void>;
@@ -84,7 +84,6 @@ const PLAY = PLAY_MISC as unknown as {
   fireOut: (c: FireOutClip, ctx: FxCtx) => Promise<void>;
   end: (c: EndClip, ctx: FxCtx) => Promise<void>;
   fallback: (c: FallbackClip, ctx: FxCtx) => Promise<void>;
-  legend: (c: LegendClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   jack: (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   turn: (c: TurnClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   turnEnd: (c: TurnEndClip, ctx: FxCtx) => Promise<void>;
@@ -516,11 +515,7 @@ PLAY.end = async (c, ctx) => {
 };
 PLAY.fallback = async (c, ctx) => { const g = gapBox(ctx); tag(ctx, ctx.board.clientWidth / 2, g.cy, c.type || c.kind, 0, '', 800); await wait(ctx, 600); };
 
-// game, till L1 (the decision of the user): a Legend is shown by the clip of a card (the card at the middle, its effects
-// fly from it); «Джек ускользает» — a label and the change of places. L1 ports PLAY.legend / PLAY.jack.
-PLAY.legend = async (c, ctx) => {
-  await playCard({ kind: 'card', ev: c.ev, seat: c.seat, ship: c.seat, card: c.card, target: c.target, cost: c.cost, effects: c.effects, resolvedTo: c.resolvedTo }, ctx, true);
-};
+// game, till step 2 of L1: «Джек ускользает» — a label and the change of places. The Legends are in legends.ts.
 PLAY.jack = async (c, ctx) => {
   hint(ctx, `${nick(ctx, c.ship)}: Джек ускользает`);
   if (c.cost) payKegs(ctx, sideOf(ctx, c.ship), c.cost, 0);

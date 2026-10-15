@@ -332,7 +332,7 @@ export interface CardBy {
  * strip of the colour of the ship that played it, with the ship's name, and a frame of 2 px of that colour (a Legend
  * keeps its gold frame). The strip's text is never under 10 px on screen: its size is set against the card's scale.
  */
-function footHTML(data: GameData, by: CardBy, scale: number): string {
+export function footHTML(data: GameData, by: CardBy, scale: number): string {
   const sh = shipData(data, by.ship);
   const text = (by.legend ? `Легенда · ${sh.nick}` : sh.nick).toUpperCase();
   const font = Math.max(10.5, 10 / scale);
