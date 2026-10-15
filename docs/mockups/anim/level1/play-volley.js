@@ -228,7 +228,8 @@ PLAY.shot = async (c, run) => {
       const tr = b.to === 'hull' ? 'hull' : c.track;
       const k = b.to === 'hull' ? kHull : kTrack;
       const now = b.to === 'hull' ? cur.hull : cur.track;
-      const p1 = b.kind === 'mark' && tPl.querySelector('[data-fx-statuses]') ? (() => { const m = bx(tPl.querySelector('[data-fx-statuses]')); return { x: m.cx, y: m.cy }; })() : fxPoint(c.target, tr, now - 1 - k);
+      const markEl = b.kind === 'mark' && (tPl.querySelector('[data-fx-mark] svg') || tPl.querySelector('[data-fx-statuses]'));
+      const p1 = markEl ? (() => { const m = bx(markEl); return { x: m.cx, y: m.cy }; })() : fxPoint(c.target, tr, now - 1 - k); // «в метку» — ядро бьёт в кляксу на чипе
       if (b.to === 'hull') kHull += b.units; else kTrack += b.units;
       const pts = curve(p0, p1, (i % 2 ? 0.06 : -0.06) * down);
       fly(ball, pts, FLY, t0, { spin });
