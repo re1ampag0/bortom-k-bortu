@@ -1,9 +1,13 @@
 // P8 «понятно с первого раза»: the attacker's plate while the enemy decides on a Reaction, the Reaction window with
 // the full card text and «what happens now» without «Подсказки».
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { threatLine } from '../src/engine/hints';
+import { reactionNow, threatLine } from '../src/engine/hints';
+import { cardByCode } from '../src/engine/state';
 import { reactionWait } from '../src/ui/game/clarity';
-import { act, data, turnOf } from './helpers';
+import { ReactionPanel } from '../src/ui/game/Panels';
+import { act, cardIn, data, turnOf } from './helpers';
 
 describe('the attacker waits for a Reaction', () => {
   const fired = () => act(turnOf('ПИРАТЫ', { И: ['Двойная обшивка'] }), { type: 'volley', ship: 'Ж', target: 'И' }).state;
@@ -37,5 +41,33 @@ describe('the attacker waits for a Reaction', () => {
     expect(b.pending).toMatchObject({ waiting: ['Г'] });
     const bot = [{ bot: true, name: null }];
     expect(reactionWait(a, data, 'КОМПАНИЯ', bot)).toEqual(reactionWait(b, data, 'КОМПАНИЯ', bot));
+  });
+});
+
+describe('the Reaction window without «Подсказки»', () => {
+  const window = (memo: boolean) => {
+    const s = act(turnOf('ПИРАТЫ', { И: ['Двойная обшивка'] }), { type: 'volley', ship: 'Ж', target: 'И' }).state;
+    const card = cardIn(s, 'И', 'Двойная обшивка');
+    const html = renderToStaticMarkup(
+      createElement(ReactionPanel, { s, data, seats: ['И'], pick: null, memo, onAct: () => {}, onPick: () => {}, onInfo: () => {} }),
+    );
+    return { s, card, html };
+  };
+  const text = (html: string) => html.replace(/<[^>]+>/g, '');
+
+  it('each Reaction: the full text of the card, «what happens now» from the engine, «i»', () => {
+    const { s, card, html } = window(false);
+    const c = cardByCode(data, card);
+    expect(text(html)).toContain(text(c.text));
+    const now = reactionNow(s, data, 'И', card);
+    if (!now.ok) throw new Error(now.reason);
+    expect(now.text).toMatch(/^Залп \d+ → \d+$/);
+    expect(html).toContain(`<b class="ro-effect">${now.text}</b>`);
+    expect(html).toContain('data-testid="reaction-info"');
+    expect(html).not.toContain('reaction-memo');
+  });
+
+  it('the note on what a Reaction is, in the first window', () => {
+    expect(text(window(true).html)).toContain('Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
   });
 });

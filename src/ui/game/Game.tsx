@@ -185,6 +185,18 @@ export function Game({
     [...s.ships[reactPickRaw.seat].hand, ...s.ships[reactPickRaw.seat].plans].includes(reactPickRaw.card)
       ? reactPickRaw
       : null;
+  // The note «Реакция — карта…» in the first Reaction window of each team at the device; a window offered again
+  // after a Reaction (RULES.md 12.5) is the same one. Not saved: after a reload it shows once more.
+  const reactOpen = myDecision && d!.kind === 'reactions';
+  const [memoSeen, setMemoSeen] = useState<Side[]>([]);
+  const [memoSide, setMemoSide] = useState<Side | null>(null);
+  useEffect(() => {
+    if (reactOpen) setMemoSide(bottom);
+    else if (memoSide) {
+      setMemoSeen((seen) => (seen.includes(memoSide) ? seen : [...seen, memoSide]));
+      setMemoSide(null);
+    }
+  }, [reactOpen, bottom, memoSide]);
 
   // ——— Interface state ———
   const [mode, setMode] = useState<Mode>({ k: 'idle' });
@@ -565,7 +577,18 @@ export function Game({
     !s.winner && !!d && d.kind === 'reactions' && d.side !== bottom && !myDecision && (net ? mySeats.length > 0 : game.setup.players[bottom] === 'human');
   if (s.winner) dock = null;
   else if (myDecision && d!.kind === 'reactions') {
-    dock = <ReactionPanel s={s} data={data} hints={hints} seats={myDeciding} pick={reactPick} onAct={(a) => act(a)} />;
+    dock = (
+      <ReactionPanel
+        s={s}
+        data={data}
+        seats={myDeciding}
+        pick={reactPick}
+        memo={!memoSeen.includes(bottom)}
+        onAct={(a) => act(a)}
+        onPick={setReactPick}
+        onInfo={(holder, code) => setSheet({ k: 'card', seat: holder, code })}
+      />
+    );
   } else if (myDecision && d!.kind === 'jack') {
     dock = <JackPanel s={s} data={data} ship={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'tortuga') {
