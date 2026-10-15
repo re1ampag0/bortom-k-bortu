@@ -21,7 +21,33 @@
 
 ## Текущее состояние
 
-**Задача A2 (слой анимаций на столе и Залп), часть 1 из 2 — шаги 1–3 сделаны; шаги 4–6 — следующей сессией от свежего `main` после слияния PR части 1.** Правила, движок, боты, сервер и данные не менялись (`npm run sim:check` — 46,5 %). Видимое поведение игры не меняется: клипов ещё нет (`PLAY` пуст), поэтому все действия по-прежнему показывает старый `ShowLayer`.
+**Задача A2, часть 2 (шаги 4–6) — сделано: Залп показывает слой анимаций на столе.** Правила, движок, боты и сервер не менялись (`npm run sim:check` — 46,5 %). В данные добавлено только поле `nickGenitive` (4 строки).
+
+- **Шаг 4a.** `nickGenitive` («Жемчужины», «Мести», «Индевора», «Голландца») — через `scripts/convert-data.py`, проверка в `src/engine/data.ts`, тест в `tests/data.test.ts`. `git diff` по `data/game-data.json` — ровно 4 добавленные строки.
+- **Шаг 4b. Клипы Залпа** `src/ui/game/fx/volley.ts` — построчный перенос `play-volley.js`: `announce, window, reaction, shot, cancel, counter, heart`, сцена Залпа `VS`, `PERSIST` (воронка), `placePlate, cardSlot, termRows, plateHTML, fitPlate, clearVS, lean, unleanAll, soulsFly`. Зарегистрированы в `PLAY` / `SCENES` (`FxLayer.tsx`). Имена кораблей — в кавычках, как `nick/dat/gen` эталона («Индевор» → «Месть»). Отличия от эталона:
+  - рамки сцены — классы `fx-shooter` / `fx-targeted` (вид как у `.shooter` / `.targeted` игры): те два класса ставит React (прицеливание P2, объявленный Залп), класс, снятый мимо React, он бы не вернул. «Сразу итог» снимает только `fx-*` и `hitframe`;
+  - `window` не рисует окно эталона, если в `[data-fx-gap]` стоит панель игры (`.dock`) — окно Реакций, «Компания решает…», панель Залпа; подсказка в строке состояния и пауза клипа остаются (решение пользователя);
+  - `CUR_CARD` (клип `card`) — `null` до A3.
+  - **Очередь (две правки):** если действие с выстрелом уходит в `ShowLayer` (в нём есть ещё не перенесённый клип — потопление, карта, конец игры), сцена объявления снимается, иначе плашка висела бы; пока «Пауза» держит очередь между клипами, строка состояния показывает настоящую строку, а не подсказку прошлого клипа (поймал `clarity.spec`: тест ждал «Компания (бот) решает» — тест не менялся).
+  - На 20 партиях ботов (обе стороны) через слой идут 802 действия Залпа из 884; остальные 82 показывает `ShowLayer`: в них `sink` (30), `sink+end` (22), `card` (18), `card+sink(+end)` (8), `sink+ability` (2), `impact` (2).
+  - Свои Залпы тоже показывает слой (решение пользователя): числа своих планшетов отстают на время клипа, кнопки — по настоящему состоянию.
+  - `e2e/stage7b.spec.ts`: вместо `show-projectile` / `show-plate` — `.fx-layer .plate` и `.fx-layer .ball` видимы; `show-arrow` — 0 (по решению пользователя).
+- **Шаг 5. `?fxScene=<id>`** — `src/ui/game/fx/FxScene.tsx`: сцена эталона (`scenes.js?raw`) на столе игры через `useFxQueue` без движка: старт сцены, через 350 мс — её действия; `body[data-fx-start]`, `body[data-fx-done]`. Только в dev и e2e: `App.tsx` грузит его лениво под `import.meta.env.DEV || import.meta.env.MODE === 'e2e'`, `scripts/e2e-site.mjs` собирает `mode: 'e2e'`. Проверка: `npm run build` → `grep -rlE "fxScene|ядро на каждую Пушку" dist/` пусто; `vite build --mode e2e` — находит (`FxScene-*.js`). Руки — из итога сцены, как в игре (рука берётся из настоящего состояния), поэтому своя карта Заряда летит из-за края стола, а не из руки.
+- **Шаг 6. e2e** `e2e/fx-volley.spec.ts` (11 тестов): `plain`, `storm`, `joint`, `both` — во время показа `elementFromPoint` над планшетами и картами руки даёт сам элемент (проверено поломкой: с `pointer-events: auto` у слоя тест падает «plank Ж: fx-layer»), карта руки открывается во время показа и не останавливает его, после показа числа шкал = итог сцены (`vm` + `applyVisible`) и слой пуст; нажатие по столу — сразу итог; матч ботов — `.fx-layer` последний ребёнок `.board`, перед ним `.fx-weather`, `pointer-events: none`, есть `[data-fx-gap]` / `[data-fx-hand]`, Залп бота даёт `.fx-layer .plate`. Кадры парами: `docs/screenshots/a2/game-*.png` и `docs/screenshots/a2/ref/ref-*.png` (одни и те же мс от загрузки).
+- **Тесты** (528 в 40 файлах): новый `tests/fx-volley.test.ts` — все 7 клипов в `PLAY`; Залпы ботов идут через слой; плашка разбора; `window` при панели ничего не рисует; «Сразу итог» не снимает классы React.
+- **Время полного `npm run e2e`** (Chromium, в сессии): до — 29 тестов, 2,5 мин; после — 40 тестов, 3,4 мин (новые 11 — около 54 с).
+
+- **Safari (WebKit, `@iphone`)** падал при открытии стола: `ReferenceError: Can't find variable: external`. В `useShowQueue` (`Show.tsx`) параметр `external` был в типе, но не в деструктуризации, и `if (external)` читал глобал браузера `window.external`: в Chrome он есть (всегда «истина» — работала нужная ветка, случайно), в Safari его нет. Ошибка из части 1 (`3061420`): **CI PR #23 был красным, его влили так** — в `main` игра в Safari не открывается до слияния PR #24. Исправлено (`external = false`); новый тест `tests/no-implicit-globals.test.ts` через TypeScript ищет в `src/` обращения к глобалам `lib.dom` (`external, name, event, status, parent, top, length, closed, origin, self, opener, frames`) — до исправления падал на `Show.tsx:79`. CI: 42 из 42, обе iPhone-проверки зелёные.
+- **e2e:** `@iphone`-сценарии сразу печатают `[pageerror]` / `[console.error]` в лог; `actionTimeout` 40 с и `expect` 20 с (`playwright.config.ts`): пропавший элемент — падение за 40 с, а не через 3 мин. Полный e2e в Chromium: 40 из 40, 3,4 мин (до — 3,4 мин); в CI с WebKit — 3,7 мин.
+
+### Не сделано (A2, часть 2)
+
+- WebKit локально не запускается (прокси сессии не пускает к `cdn.playwright.dev`) — только в CI.
+- Тень `.plank.shooter` эталона не перенесена (как и в части 1): рамка стрелявшего в игре тоньше.
+- Окно Реакций эталона в игре почти не видно: на его месте стоит настоящая панель (так решено).
+- Ветка — `claude/wonderful-cerf-2ok64g` (задана сессией), не `a2-fx-volley`.
+
+**Задача A2, часть 1 (шаги 1–3) — в `main` (PR #23).** Правила, движок, боты, сервер и данные не менялись.
 
 - **Шаг 1. DOM-контракт** (PORTING, раздел 3): `data-fx-ship` у планшета, `data-fx-track` у шкалы, `data-fx-value` у числа, `data-fx-fires`, `data-fx-souls`, `data-fx-legend`, `data-fx-statuses` (`Table.tsx`); `data-fx-hold="<сторона>"` и `data-fx-keg` в `PowderDots`; `data-fx-instruction`, `data-fx-sea-chip` в `StatusBar`; `data-fx-card` (у закрытой — `"?"`), `data-fx-deck` (`Hand.tsx`); `data-fx-gap` у `.middle`, `data-fx-hand` у `.hand-row` (`Game.tsx`). `data-ship` и `plate-`/`plank-` из P2 на месте. Число шкалы теперь один текстовый узел `v/max` (так его читают и пишут эффекты); на экране то же самое. Атрибуты без значения React пишет как `="true"` — для поиска `[data-fx-…]` это не важно.
 - **Шаг 2. Примитивы** `src/ui/game/fx/primitives.ts` — перенос `effects.js` построчно: все 33 функции из задачи и помощники контракта (`plank`, `trackEl`, `valueEl`, `gapBox`, `holdEl`, `handCardEl`, `isTop`, `facingY`, `dirOf`). Глобальные `board / fx / D / SPEED / RICH / RUN / G` заменил контекст `FxCtx { board, layer, display, speed, rich, run, live(), data, bottom, hint() }`. Отличия от эталона, кроме поиска элементов:
@@ -51,38 +77,7 @@
 
 ### Не сделано (A2, часть 1)
 
-- Цикл очереди (`loop`, `fastForward`, обрезка при решении, ожидание ShowLayer) в браузере ещё ни разу не играл клип: `PLAY` пуст до шага 4. Его проверят e2e шага 6 и `stage7b`.
 - Ветка — `claude/dreamy-cerf-xwytua` (задана сессией), не `a2-fx-volley`. WebKit (`@iphone`) — в CI.
-
-### A2, часть 2: что осталось (шаги 4–6) — для новой сессии
-
-План целиком: файл плана сессии, кратко здесь. Начать от свежего `main` после слияния PR части 1.
-
-- **Шаг 4. Клипы Залпа** `src/ui/game/fx/volley.ts`: перенос `play-volley.js` построчно (`PLAY.announce, window, reaction, shot, cancel, counter, heart`, `VS`, `PERSIST`, `placePlate, cardSlot, termRows, plateHTML, fitPlate, clearVS, lean, unleanAll, soulsFly, FLAME_SVG`). Регистрация:
-  - `Object.assign(PLAY, …)` из `FxLayer.tsx`;
-  - `SCENES.push({ keep, afterRender, reset, onTurn })`: `keep` — `keepSet` эталона (`VS.plate`, `VS.cards`, `VS.extras`, `PERSIST.whirl`); `afterRender` — классы `.shooter`/`.targeted` и наклоны `VS.lean`; `reset` — `VS = null`, `PERSIST.whirl = null` и снять классы, добавленные `VS`; `onTurn` — гасит воронку «Водоворота», как строка `c.kind === 'turn'` в `play()`.
-  - Важно: `clearVS` эталона снимает `.shooter`/`.targeted` со **всех** планшетов. В игре те же классы ставит React (прицеливание P2): снимать только то, что поставил `VS`, иначе React их не вернёт (класс снимают мимо него).
-  - **Решения пользователя:**
-    - *Слой под панелью*: `.fx-layer` уже под `.dock`. `PLAY.window` не рисует «окно» эталона, если в `[data-fx-gap]` есть `.dock` (окно Реакций, «Компания решает…» P8, панель Залпа) — остаются `hint` и ожидание клипа. Без панели — как в эталоне.
-    - *Пауза между клипами*: уже сделано в очереди — код клипов не трогать.
-    - *Свои действия тоже показывает FxLayer* (как в эталоне, сцена `plain`): числа своих планшетов отстают на 2–3 с, кнопки — по настоящему состоянию.
-    - *`nickGenitive`* — добавить в `data/game-data.json` через `scripts/convert-data.py` рядом с `nick` и `nickDative` (родительный падеж для подсказок `cancel` / `heart`: «Залп «Жемчужины» отменён»). Правила и числа не трогать; в `tests/data.test.ts` — поле у всех 4 кораблей.
-  - Названия карт в `reaction` / `cancel` («Уйти по ветру», «Уйти на глубину», «Банка с землёй») — как в эталоне. В `fx.look` — только с согласия пользователя. `CUR_CARD` (клип `card` — A3) пока `null`.
-  - `G.ships[x].dat / gen / short / color` → `nickDative` / `nickGenitive` / `nick` / `color` из `shipData`; `TR_DAT` → `TRACK_DATIVE` из `hints.ts`; `FX.termSrc` / `FX.KIND_BY_TRACK` — из `planFx.ts`.
-  - **`e2e/stage7b.spec.ts`, строки 60–62** ждут `show-projectile` / `show-plate` от Залпа бота. После шага 4 этот Залп показывает FxLayer — проверка становится `.fx-layer .plate` и `.fx-layer .ball` видимы (`show-arrow` — 0). Пользователь предупреждён: тест меняется вместе с поведением из задачи. Тест reduced-motion в `stage7b` не меняется: при reduced-motion всё показывает ShowLayer.
-- **Шаг 5. `?fxScene=<id>`** — только dev и e2e:
-  - `src/ui/game/fx/FxScene.tsx`, ленивый импорт в `App.tsx` под `import.meta.env.DEV || import.meta.env.MODE === 'e2e'`; `scripts/e2e-site.mjs` → `build({ mode: 'e2e' })`. CI-выкладка собирает `npm run build` отдельно — без сцен.
-  - Сцены — `scenes.js?raw` → `new Function('window', src)`. Стартовый `GameState` — `createGame(data, { seed: 1 })` с полями из `scene.start`; «настоящее» — старт + `applyVisible` всех событий + руки.
-  - Стол — те же `StatusBar` / `TeamRow` / `Plank` / `Hand` / `.middle[data-fx-gap]` / `.hand-row[data-fx-hand]` / `FxLayer`; карта руки открывает `Sheet` + `CardDetail`.
-  - Старт через 350 мс, как в эталоне; `body.dataset.fxStart` / `fxDone` для e2e.
-  - Проверка, что сцен нет в сборке для Pages: `npm run build` → `grep -rlE "fxScene|<метка из scenes.js>" dist/` пусто; положительный контроль — `npx vite build --mode e2e --outDir <scratchpad>` находит метку.
-- **Шаг 6. e2e** `e2e/fx-volley.spec.ts` через `?fxScene=plain|storm|joint|both`:
-  - `elementFromPoint` над планшетами и картами руки во время показа даёт сам элемент;
-  - карта руки открывается во время показа;
-  - после показа числа `[data-fx-value]` = итог сцены (считать в Node: `vm` + `applyVisible`);
-  - матч ботов — `.fx-layer` последний в `.board`, `[data-fx-gap]` / `[data-fx-hand]` есть, Залп бота даёт `.fx-layer .plate`.
-  - **Скриншоты (решение пользователя — не больше):** пары «игра / эталон» только `plain`, `storm`, `joint`, `both` на 1366×660 по 2 момента и `plain` на 430×932 (2 момента) → `docs/screenshots/a2/` и `docs/screenshots/a2/ref/` (`capture.mjs`).
-- **Готово, когда (часть 2):** `typecheck`, `npm test`, `build` (+ grep `dist/`), `npm run e2e`, `sim:check` 46,5 %; пары кадров; таблица «сцена эталона → кадр игры → совпадает / чем отличается»; PR 2. Force push не делать.
 
 **Задача P2 (прицеливание без кнопки «Цель») — сделано; полный `npm run e2e` (WebKit) — в CI.** Правила выбора цели (`volleyTargets`, `playOptions`, `legendOptions`), панель Залпа («Без Заряда», «Огонь»), движок, сервер и данные не менялись.
 
@@ -518,6 +513,7 @@
 
 ## Идеи на потом
 
+- Журнал стола пишет итог Залпа сразу, до анимации (строка «Попадание … Корпус 11 → 9» видна, пока летят ядра) — можно показывать строку клипа после клипа, как журнал эталона.
 - Вариант «Своя колода» из PDF (с. 4): перед партией собрать колоду из 24 карт своей команды, не больше 2 одинаковых.
 - Этап 9: сравнить в лаборатории «Пираты первыми» и «Компания первой». Если разница в победах в пределах 3 п. п., монета-жребий решает и первый ход — сделать жребий так, чтобы это включалось одной настройкой.
 - ~~Этап 8: бот на одном корабле команды~~ — сделано на этапе 8 (`shipBot.ts`).

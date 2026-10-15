@@ -1,5 +1,5 @@
 // Screens: start → preparation → secret placement → the table → the end of the game; the card catalog from the start.
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import type { MatchRecord, MatchSetup } from '../engine/match';
 import type { Side } from '../engine/types';
 import { LocalGame } from '../net/local';
@@ -12,6 +12,13 @@ import { seedFrom, urlSeedText } from './seed';
 import { Prep, type StartRequest } from './start/Prep';
 import { Start, type Mode } from './start/Start';
 import { loadSettings, storeSave } from './storage';
+
+/**
+ * «?fxScene=<id>»: a scene of the animation reference on the table (FxScene.tsx), for checks. Only in the dev and e2e
+ * builds: in the build for GitHub Pages the condition is false and the module is not in it.
+ */
+const FxScene = import.meta.env.DEV || import.meta.env.MODE === 'e2e' ? lazy(() => import('./game/fx/FxScene')) : null;
+const fxSceneId = FxScene ? new URLSearchParams(location.search).get('fxScene') : null;
 
 type Screen =
   | { k: 'setup' }
@@ -33,6 +40,13 @@ export function App() {
     );
   }
   const data = loaded.data;
+  if (FxScene && fxSceneId) {
+    return (
+      <Suspense fallback={null}>
+        <FxScene id={fxSceneId} data={data} />
+      </Suspense>
+    );
+  }
 
   const startGame = (setup: MatchSetup) => {
     const game = new LocalGame(data, setup);
