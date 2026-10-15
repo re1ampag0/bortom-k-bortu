@@ -2,7 +2,7 @@
 // after eventsFor) played on the table of the game through useFxQueue, without the engine. Only in the dev build and
 // the e2e build (App.tsx): the site on GitHub Pages has none of it. The checks of A2 and the next tasks (A2b, A3, A4,
 // S1, L1) compare it with the reference frame by frame (capture.mjs).
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import scenesSrc from '../../../../docs/mockups/anim/level1/scenes.js?raw';
 import { createGame } from '../../../engine/setup';
 import type { Action, GameEvent, GameState } from '../../../engine/state';
@@ -154,6 +154,7 @@ function SceneTable({
   const bottom = data.ships.find((s) => s.code === scene.viewer[0])!.side;
   const top: Side = bottom === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ';
   const speed = urlSpeed();
+  const enabled = !reducedMotion();
   const fx = useFxQueue({
     game: { kind: 'net', recent: started ? setup.recent : [], state: view },
     version: started ? 1 : 0,
@@ -161,7 +162,7 @@ function SceneTable({
     viewer: scene.viewer,
     data,
     bottom,
-    enabled: !reducedMotion(),
+    enabled,
     speed,
     rich: new URLSearchParams(location.search).get('rich') !== '0',
     myDecision: false,
@@ -169,9 +170,12 @@ function SceneTable({
     hold: false,
     show: { push: () => 0, busy: false },
   });
+  // The show ended: it was busy and is not any more (or there is no show: reduced motion).
+  const seen = useRef(false);
   useEffect(() => {
-    if (started && !fx.busy) document.body.dataset.fxDone = '1';
-  }, [started, fx.busy]);
+    if (fx.busy) seen.current = true;
+    else if (started && (seen.current || !enabled)) document.body.dataset.fxDone = '1';
+  }, [started, fx.busy, enabled]);
   const tableView = fx.display ? withDisplay(view, fx.display) : view;
   const columns = (side: Side) => {
     const ships = Object.values(tableView.ships).filter((x) => x.side === side);
