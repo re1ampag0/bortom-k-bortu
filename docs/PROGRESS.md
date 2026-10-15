@@ -37,9 +37,12 @@
 - **Тесты** (528 в 40 файлах): новый `tests/fx-volley.test.ts` — все 7 клипов в `PLAY`; Залпы ботов идут через слой; плашка разбора; `window` при панели ничего не рисует; «Сразу итог» не снимает классы React.
 - **Время полного `npm run e2e`** (Chromium, в сессии): до — 29 тестов, 2,5 мин; после — 40 тестов, 3,4 мин (новые 11 — около 54 с).
 
+- **Safari (WebKit, `@iphone`)** падал при открытии стола: `ReferenceError: Can't find variable: external`. В `useShowQueue` (`Show.tsx`) параметр `external` был в типе, но не в деструктуризации, и `if (external)` читал глобал браузера `window.external`: в Chrome он есть (всегда «истина» — работала нужная ветка, случайно), в Safari его нет. Ошибка из части 1 (`3061420`): **CI PR #23 был красным, его влили так** — в `main` игра в Safari не открывается до слияния PR #24. Исправлено (`external = false`); новый тест `tests/no-implicit-globals.test.ts` через TypeScript ищет в `src/` обращения к глобалам `lib.dom` (`external, name, event, status, parent, top, length, closed, origin, self, opener, frames`) — до исправления падал на `Show.tsx:79`. CI: 42 из 42, обе iPhone-проверки зелёные.
+- **e2e:** `@iphone`-сценарии сразу печатают `[pageerror]` / `[console.error]` в лог; `actionTimeout` 40 с и `expect` 20 с (`playwright.config.ts`): пропавший элемент — падение за 40 с, а не через 3 мин. Полный e2e в Chromium: 40 из 40, 3,4 мин (до — 3,4 мин); в CI с WebKit — 3,7 мин.
+
 ### Не сделано (A2, часть 2)
 
-- WebKit (`@iphone`) — только в CI.
+- WebKit локально не запускается (прокси сессии не пускает к `cdn.playwright.dev`) — только в CI.
 - Тень `.plank.shooter` эталона не перенесена (как и в части 1): рамка стрелявшего в игре тоньше.
 - Окно Реакций эталона в игре почти не видно: на его месте стоит настоящая панель (так решено).
 - Ветка — `claude/wonderful-cerf-2ok64g` (задана сессией), не `a2-fx-volley`.
