@@ -10,7 +10,7 @@ import { data, turnOf } from './helpers';
 const rules = displayRules(data);
 const clip = (kind: FxKind) => ({ kind }) as FxClip;
 // The clips ported so far: the Volley (A2), the ships in motion (A3).
-const PORTED = new Set<FxKind>(['announce', 'window', 'reaction', 'shot', 'cancel', 'counter', 'heart', 'swap', 'sink', 'dive', 'surface']);
+const PORTED = new Set<FxKind>(['announce', 'window', 'reaction', 'shot', 'cancel', 'counter', 'heart', 'swap', 'sink', 'dive', 'surface', 'ability']);
 
 describe('the route of an action', () => {
   it('fx only when every clip has a player', () => {
