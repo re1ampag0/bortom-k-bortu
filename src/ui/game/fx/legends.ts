@@ -5,16 +5,22 @@
 // Timing at «обычно» (×1): the entrance 0–2.2 s → the effect 1.6–2.4 s → the leave 0.35 s; all × the speed factor.
 // Changes against the reference («game:»):
 //  - the card of the Legend has the bottom strip of the ship that played it («ЛЕГЕНДА · МЕСТЬ», footHTML — A4);
-//  - S1: no label explaining the effect lies on a plank longer than a flash: the Souls paid — a mark at the badge.
+//  - S1: no label explaining the effect lies on a plank longer than a flash: the damage and the repair — short marks
+//    «−N» / «+N» at the number of the track (trackMark), the Souls — a mark at the badge; «время замерло…» and «Джонс
+//    свободен» — in the middle of the table (ruleTag). The shouts of the effect («Бортовой залп!», «Чпок!»,
+//    «Ускользнул!»), the scroll and the seal stay as in the reference (the decision of the user), not longer than it;
+//  - «Кракен» takes its frame of the hit off the plank at its end (the plank keeps its node, React would not).
 import { legendCards } from '../../../engine/data';
-import { shipData, type GameEvent } from '../../../engine/state';
+import { shipData, startValue, type GameEvent } from '../../../engine/state';
 import type { CardInstance, GameData, Track } from '../../../engine/types';
 import type { ClipPlayer } from './FxLayer';
-import type { LegendClip } from './planFx';
+import { flipTo } from './misc';
+import { KIND_BY_TRACK, type JackClip, type LegendClip } from './planFx';
 import {
-  A, at, badgeMark, burst, bx, fxPoint, flash, footHTML, hint, mk, ms, overlayAt, payKegs, plank, ring, setTrack, shake, shownTrack, sideOf, trackMark, visible,
-  wait, wisp, type FxCtx, type Pt,
+  A, at, badgeMark, bubbles, burst, bx, clamp, curve, facingY, flash, fly, footHTML, fxPoint, gapBox, hint, isTop, mk, ms, overlayAt, payKegs, plank,
+  projectile, puff, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
 } from './primitives';
+import { ruleTag } from './sea';
 
 let LG_UID = 0;
 const LG_T = { bars: 120, card: 280, land: 780, seal: 820, title: 900, leave: 1900, effect: 2230 };
@@ -278,6 +284,180 @@ export function damageMarks(ctx: FxCtx, units: readonly { ship: string; track: T
   Object.entries(tot).forEach(([key, n], i) => { const [s, t] = key.split('|'); trackMark(ctx, s, t as Track, n, delay + i * 70); });
 }
 
+
+/**
+ * The effects of the Legends by the code of the card. The one exception to «the animation by the events and fx, not by
+ * the card»: the Legends have no common fx (each is its own op), so each Legend's own effect is chosen by its code; a
+ * Legend with no effect here plays legendGeneric (by its events).
+ */
+export const LG: Record<string, (c: LegendClip, ctx: FxCtx) => Promise<void>> = {};
+
+/** «Армада Компании»: galleons rise from the sea along the Company's edge, a broadside in a wave, hits on every enemy. */
+LG['И-Л'] = async (c, ctx) => {
+  const board = ctx.board, own = sideOf(ctx, c.seat), W = board.clientWidth, g = gapBox(ctx);
+  const topOwn = own !== ctx.bottom;
+  const n = W < 701 ? 4 : 6;
+  const s = clamp((g.h - 8) / 96, 0.5, 0.95);
+  const base = topOwn ? g.y + 96 * s + 2 : g.b - 2; // the waterline of the galleons
+  const units = damageUnits(ctx, c.effects || []);
+  const ships: { el: HTMLElement; x: number }[] = [];
+  for (let q = 0; q < n; q++) {
+    const x = W * (0.5 / n + q / n);
+    const gl = mk(ctx, 'galleon', 0, 0, galleonSVG());
+    const order = Math.abs(q - (n - 1) / 2);
+    A(ctx, gl, [{ opacity: 0, transform: `translate(${x}px,${base + 40 * s}px) scale(${s}) rotate(-6deg)` }, { opacity: 1, transform: `translate(${x}px,${base - 4}px) scale(${s}) rotate(2deg)`, offset: 0.7 }, { opacity: 1, transform: `translate(${x}px,${base}px) scale(${s}) rotate(0deg)` }], 520, order * 90, 'cubic-bezier(.2,.8,.3,1.2)');
+    splash(ctx, x, base - 4, order * 90 + 200);
+    ships.push({ el: gl, x });
+  }
+  tag(ctx, W / 2, topOwn ? base + 18 : base - 96 * s - 16, 'Бортовой залп!', 560, 'gold shout', 1400);
+  const FIRE0 = 700, STEP = 120, FLY = 520;
+  let lastHit = FIRE0;
+  const fired = new Set<{ el: HTMLElement; x: number }>();
+  units.forEach((u, i) => {
+    const sp = ships[i % ships.length], t0 = FIRE0 + i * STEP;
+    const muzzle = { x: sp.x + (i % 2 ? 12 : -12) * s, y: base - 16 * s };
+    flash(ctx, muzzle.x, muzzle.y, t0, 1.4); puff(ctx, muzzle.x, muzzle.y, t0 + 20); puff(ctx, muzzle.x + 8, muzzle.y - 6, t0 + 120);
+    burst(ctx, 'spark', muzzle.x, muzzle.y, t0, 6, 8, 26, 320, topOwn ? Math.PI / 2 : -Math.PI / 2, Math.PI * 0.8);
+    if (!fired.has(sp)) { fired.add(sp); A(ctx, sp.el, [{ transform: `translate(${sp.x}px,${base}px) scale(${s})` }, { transform: `translate(${sp.x}px,${base + (topOwn ? -5 : 5)}px) scale(${s}) rotate(${topOwn ? -2 : 2}deg)`, offset: 0.25 }, { transform: `translate(${sp.x}px,${base}px) scale(${s})` }], 420, t0, 'ease-out', 'none'); }
+    const p1 = fxPoint(ctx, u.ship, u.track, u.idx);
+    const ball = projectile(ctx, KIND_BY_TRACK[u.track], false);
+    fly(ctx, ball, curve(muzzle, p1, i % 2 ? 0.1 : -0.1), FLY, t0, { lift: 0.35, spin: u.track === 'sails' ? 720 : 0 });
+    const th = t0 + FLY;
+    at(ctx, th, () => setTrack(ctx, u.ship, u.track, u.v, '#c0392b'));
+    flash(ctx, p1.x, p1.y, th, 1.3); ring(ctx, p1.x, p1.y, th);
+    burst(ctx, u.track === 'sails' ? 'shred' : 'splinter', p1.x, p1.y, th, 10, 16, 44, 650);
+    shake(ctx, plank(ctx, u.ship), th, 3);
+    if (i === 2) at(ctx, th, () => shake(ctx, board, 0, 9, 320)); // a strong hit — one shake of the table for the series
+    lastHit = th;
+  });
+  damageMarks(ctx, units, lastHit + 80);
+  for (const sp of ships) {
+    A(ctx, sp.el, [{ opacity: 1, transform: `translate(${sp.x}px,${base}px) scale(${s})` }, { opacity: 0, transform: `translate(${sp.x}px,${base + 36 * s}px) scale(${s}) rotate(4deg)` }], 600, lastHit + 500, 'ease-in', 'forwards');
+    puff(ctx, sp.x, base - 30 * s, lastHit + 450);
+  }
+  await wait(ctx, lastHit + 1150);
+};
+
+/** «Кракен»: deep water, an eye opens, tentacles wind round the ship and squeeze it, the cells crack. */
+LG['Г-Л'] = async (c, ctx) => {
+  const tgt = c.target!, tp = plank(ctx, tgt), tb = bx(ctx, tp), g = gapBox(ctx), uid = ++LG_UID;
+  const top = isTop(ctx, tgt);
+  const edge = facingY(ctx, tgt); // the edge to the sea
+  const deep = mk(ctx, 'tint', 0, 0);
+  const dw = tb.w * 1.5, dh = tb.h + g.h + 80;
+  deep.style.width = dw + 'px'; deep.style.height = dh + 'px';
+  deep.style.background = `radial-gradient(ellipse closest-side at 50% ${top ? '62%' : '38%'}, rgba(10,30,36,.88), rgba(16,44,52,.55) 55%, rgba(16,44,52,0) 100%)`;
+  deep.style.transform = `translate(${tb.cx - dw / 2}px,${top ? tb.y - 40 : tb.y - g.h - 40}px)`;
+  A(ctx, deep, [{ opacity: 0 }, { opacity: 1 }], 600, 0, 'ease-in', 'forwards');
+  bubbles(ctx, tb.x + 10, edge + (top ? 30 : -6), tb.w - 20, 150, ctx.rich ? 20 : 0, 50);
+  // the eye in the deep
+  const eyeY = edge + (top ? 1 : -1) * Math.min(g.h * 0.55, 60);
+  const eye = mk(ctx, 'eye', 0, 0, eyeSVG(uid));
+  const es = clamp(tb.w / 320, 0.55, 1);
+  A(ctx, eye, [{ opacity: 0, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(.04)` }, { opacity: 1, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(1.1)`, offset: 0.7 }, { opacity: 1, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(1)` }], 380, 380, 'cubic-bezier(.2,.8,.3,1.2)', 'forwards');
+  A(ctx, eye.querySelector('.pupil')!, [{ transform: 'scaleX(1.6)' }, { transform: 'scaleX(.5)' }], 300, 820, 'ease-in', 'forwards');
+  if (ctx.rich) { const gl = mk(ctx, 'lg-glow', tb.cx, eyeY); A(ctx, gl, [{ opacity: 0, transform: 'scale(.15)' }, { opacity: 0.55, transform: 'scale(.35)' }, { opacity: 0, transform: 'scale(.3)' }], 1600, 420); }
+  // the tentacles
+  const L = tb.h * 1.3;
+  const spots: [number, number, number][] = [[tb.x + 4, -1, 30], [tb.x + tb.w * 0.32, -1, 14], [tb.x + tb.w * 0.68, 1, 14], [tb.r - 4, 1, 30]];
+  const tents = spots.map(([x, side, curl], q) => {
+    const t = mk(ctx, 'tentacle', 0, 0, tentacleSVG(L, side > 0, `${uid}${q}`));
+    t.dataset.side = String(side);
+    const w = L * 0.3;
+    const y0 = edge + (top ? 14 : -14);
+    const flipV = top ? '' : ' scaleY(-1)';
+    // a positive angle — the tip to the right (for the ones growing up and the ones hanging down): to the middle of the ship
+    const pose = (rot: number, sy: number, op = 1): Keyframe => ({ opacity: op, transform: `translate(${x - w / 2}px,${y0 - L}px)${flipV} rotate(${rot}deg) scaleY(${sy})` });
+    t.style.transformOrigin = `50% ${L}px`; // the base — at the sea
+    A(ctx, t, [pose(side * 35, 0.1, 0), pose(side * 18, 0.75), pose(-side * (curl + 10), 1.08), pose(-side * curl, 1)], 640, 640 + q * 90, 'cubic-bezier(.25,.8,.3,1.1)', 'forwards');
+    return { el: t, pose, curl, side };
+  });
+  // the squeeze
+  const SQ = 1300;
+  A(ctx, tp, [{ transform: 'none' }, { transform: 'scale(.955,1.035)', offset: 0.3 }, { transform: 'scale(.97,1.02) translateX(-3px)', offset: 0.55 }, { transform: 'scale(.96,1.03) translateX(3px)', offset: 0.75 }, { transform: 'none' }], 1100, SQ, 'ease-in-out', 'none');
+  at(ctx, SQ, () => tp.classList.add('hitframe'));
+  // the hits on the cells
+  const units = damageUnits(ctx, c.effects || []);
+  let last = SQ;
+  units.forEach((u, i) => {
+    const t0 = SQ + 120 + i * 120, p = fxPoint(ctx, u.ship, u.track, u.idx);
+    at(ctx, t0, () => setTrack(ctx, u.ship, u.track, u.v, '#7a1f12'));
+    flash(ctx, p.x, p.y, t0, 1.1); burst(ctx, u.track === 'crew' ? 'dust' : 'splinter', p.x, p.y, t0, 9, 12, 36, 600);
+    ring(ctx, p.x, p.y, t0, 1, '#2b3f3a');
+    last = t0;
+  });
+  at(ctx, SQ + 200, () => shake(ctx, ctx.board, 0, 8, 300));
+  damageMarks(ctx, units, last + 80);
+  if (c.souls) soulsFly(ctx, tgt, c.souls, last + 200, true);
+  // the leave
+  const OUT = last + 750;
+  tents.forEach((t, q) => A(ctx, t.el, [t.pose(-t.side * t.curl, 1), t.pose(t.side * 35, 0.1, 0)], 480, OUT + q * 60, 'cubic-bezier(.5,0,.8,.4)', 'forwards'));
+  for (let q = 0; q < 3; q++) splash(ctx, tb.x + tb.w * (0.2 + q * 0.3), edge + (top ? 10 : -10), OUT + 200 + q * 90);
+  A(ctx, eye, [{ opacity: 1, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(1)` }, { opacity: 0, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(.04)` }], 260, OUT + 100, 'ease-in', 'forwards');
+  A(ctx, deep, [{ opacity: 1 }, { opacity: 0 }], 500, OUT + 250, 'ease-out', 'forwards');
+  await wait(ctx, OUT + 800);
+  // game: the reference draws new planks after a clip; here the node stays, so the frame of the hit goes by hand
+  tp.classList.remove('hitframe');
+};
+
+/** «Корабль в бутылке»: a glass bottle over the ship, the ship shrinks into it, the cork, the bottle floats away. */
+LG['М-Л'] = async (c, ctx) => {
+  const tgt = c.target!, tp = plank(ctx, tgt), tb = bx(ctx, tp), W = ctx.board.clientWidth;
+  const h = clamp(tb.h * 1.45, 150, 250), w = h * 0.6;
+  const bc = { x: tb.cx, y: tb.cy };
+  const bottle = mk(ctx, 'bottle', 0, 0, bottleSVG());
+  bottle.style.width = w + 'px'; bottle.style.height = h + 'px'; bottle.style.margin = `${-h / 2}px 0 0 ${-w / 2}px`;
+  const mini = bottle.querySelector<SVGElement>('.mini')!, cork = bottle.querySelector<SVGElement>('.cork')!;
+  mini.style.opacity = '0'; cork.style.opacity = '0';
+  A(ctx, bottle, [{ opacity: 0, transform: `translate(${bc.x}px,${bc.y}px) scale(.4) rotate(-12deg)` }, { opacity: 1, transform: `translate(${bc.x}px,${bc.y}px) scale(1.06) rotate(3deg)`, offset: 0.7 }, { opacity: 1, transform: `translate(${bc.x}px,${bc.y}px) scale(1) rotate(0deg)` }], 520, 0, 'cubic-bezier(.2,.8,.3,1.2)');
+  if (ctx.rich) for (let q = 0; q < 6; q++) { const sp = mk(ctx, 'sparkle', 0, 0); const x = bc.x + (Math.random() - 0.5) * w, y = bc.y + (Math.random() - 0.5) * h; A(ctx, sp, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.4)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1.3)`, offset: 0.5 }, { opacity: 0, transform: `translate(${x}px,${y}px) scale(.4)` }], 600, 250 + q * 90); }
+  // the ship shrinks into the bottle, gold dust swirls around it
+  const inside = { x: bc.x, y: bc.y + h * 0.22 };
+  A(ctx, tp, [{ transform: 'none', opacity: 1 }, { transform: `translate(${inside.x - tb.cx}px,${inside.y - tb.cy}px) scale(.5) rotate(-6deg)`, opacity: 0.9, offset: 0.6 }, { transform: `translate(${inside.x - tb.cx}px,${inside.y - tb.cy}px) scale(.08) rotate(-14deg)`, opacity: 0 }], 750, 520, 'cubic-bezier(.6,0,.8,.6)', 'forwards');
+  if (ctx.rich) for (let q = 0; q < 18; q++) {
+    const d = mk(ctx, 'gold-dust', 0, 0), a0 = (q / 18) * Math.PI * 2;
+    const pts = Array.from({ length: 9 }, (_, j) => { const r = (1 - j / 8) * Math.max(tb.w, tb.h) * 0.55, a = a0 + j * 0.55; return { x: inside.x + Math.cos(a) * r, y: inside.y + Math.sin(a) * r * 0.6 }; });
+    A(ctx, d, pts.map((p, j) => ({ offset: j / 8, opacity: j === 8 ? 0 : 1, transform: `translate(${p.x}px,${p.y}px)` })), 700, 560 + q * 12, 'ease-in');
+  }
+  A(ctx, mini, [{ opacity: 0, transform: 'scale(.2)' }, { opacity: 1, transform: 'scale(1.1)', offset: 0.7 }, { opacity: 1, transform: 'scale(1)' }], 380, 1180, 'ease-out', 'forwards');
+  // the cork
+  A(ctx, cork, [{ opacity: 1, transform: 'translateY(-46px) rotate(-20deg)' }, { opacity: 1, transform: 'translateY(2px) rotate(0deg)', offset: 0.75 }, { opacity: 1, transform: 'translateY(0)' }], 300, 1420, 'cubic-bezier(.6,0,.9,.6)', 'forwards');
+  const neck = { x: bc.x, y: bc.y - h / 2 + h * 0.04 };
+  flash(ctx, neck.x, neck.y, 1650, 0.9); ring(ctx, neck.x, neck.y, 1650, 0.9, '#e0b44c');
+  tag(ctx, neck.x, neck.y - 22, 'Чпок!', 1650, 'gold shout', 900);
+  // the bottle lies on the water and floats away to the nearer edge
+  const dir = bc.x > W / 2 ? 1 : -1;
+  const g = gapBox(ctx);
+  const water = { x: bc.x + dir * 30, y: g.cy };
+  const endX = dir > 0 ? W + w : -w;
+  const path = Array.from({ length: 13 }, (_, j) => { const t = j / 12; return { x: water.x + (endX - water.x) * t * t, y: water.y + Math.sin(t * Math.PI * 3) * 6, r: dir * (80 + Math.sin(t * Math.PI * 3) * 8) }; });
+  A(ctx, bottle, [{ opacity: 1, transform: `translate(${bc.x}px,${bc.y}px) scale(1) rotate(0deg)` }, { opacity: 1, transform: `translate(${water.x}px,${water.y}px) scale(.7) rotate(${dir * 80}deg)` }], 520, 1900, 'cubic-bezier(.4,0,.3,1)', 'forwards');
+  A(ctx, bottle, path.map((p, j) => ({ offset: j / 12, opacity: j === 12 ? 0 : 1, transform: `translate(${p.x}px,${p.y}px) scale(.7) rotate(${p.r}deg)` })), 1500, 2420, 'ease-in', 'forwards');
+  splash(ctx, water.x, water.y + 10, 2380);
+  for (let q = 1; q < 5; q++) { const p = path[q * 3]; const r = mk(ctx, 'ripple', 0, 0); A(ctx, r, [{ opacity: 0.8, transform: `translate(${p.x}px,${p.y + 8}px) scale(.3)` }, { opacity: 0, transform: `translate(${p.x}px,${p.y + 8}px) scale(1.4)` }], 800, 2420 + q * 260); }
+  let tEnd = 3500;
+  // «Джонс свободен» and the repair of the Crew of «Голландец» — events of the same Legend
+  const jf = (c.effects || []).find((e) => e.type === 'jonesFree');
+  const rs = (c.effects || []).filter((e): e is Extract<GameEvent, { type: 'restored' }> => e.type === 'restored');
+  if (jf && jf.type === 'jonesFree') {
+    const jb = bx(ctx, plank(ctx, jf.ship));
+    // game (S1): the explanation is in the middle of the table, not over the plank
+    ruleTag(ctx, jb.cx, gapBox(ctx).cy, 'Джонс свободен', 2500, 'gold', 1700);
+    ring(ctx, jb.cx, jb.cy, 2500, 2.4, '#e0b44c');
+  }
+  rs.forEach((e) => {
+    const now = shownTrack(ctx, e.ship, e.track);
+    for (let j = 0; j < e.amount; j++) {
+      const t0 = 2700 + j * 180, p = fxPoint(ctx, e.ship, e.track, now + j);
+      at(ctx, t0, () => setTrack(ctx, e.ship, e.track, now + j + 1, '#2f7d4a'));
+      ring(ctx, p.x, p.y, t0, 0.8, '#2f7d4a'); burst(ctx, 'sparkle', p.x, p.y, t0, 5, 6, 18, 500);
+    }
+    trackMark(ctx, e.ship, e.track, e.amount, 2800 + e.amount * 180, true); // game (S1): a mark, not a pill
+    tEnd = Math.max(tEnd, 3400 + e.amount * 180);
+  });
+  await wait(ctx, tEnd);
+};
+
 /** The common effect of a Legend with no effect of its own: hits on the tracks by the events. */
 export async function legendGeneric(c: LegendClip, ctx: FxCtx): Promise<void> {
   const units = damageUnits(ctx, c.effects || []);
@@ -286,13 +466,68 @@ export async function legendGeneric(c: LegendClip, ctx: FxCtx): Promise<void> {
   await wait(ctx, units.length * 120 + 1000);
 }
 
-/** The effects of the Legends by the code of the card. */
-export const LG: Record<string, (c: LegendClip, ctx: FxCtx) => Promise<void>> = {};
-
 const playLegend = async (c: LegendClip, ctx: FxCtx) => {
   const outro = await legendIntro(ctx, c.card, c.seat, { cost: c.cost, soulCost: c.soulCost });
   await (LG[c.card] || legendGeneric)(c, ctx);
   await outro();
 };
 
-export const PLAY_LEGENDS = { legend: playLegend as unknown as ClipPlayer };
+/**
+ * «Джек ускользает» (a Legend that is a Reaction; the clip «jack» comes by the event jackEscaped): the ship starts to
+ * sink — time stops (the bubbles freeze, the table goes grey) — the entrance of the Legend — the compass rose spins —
+ * «Ускользнул!» — the Hull 2 in gold — the jump out of the water and the change of places.
+ */
+const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
+  const code = `${c.ship}-Л`, el = plank(ctx, c.ship), b = bx(ctx, el), W = ctx.board.clientWidth, H = ctx.board.clientHeight;
+  // it starts to sink
+  A(ctx, el, [{ transform: 'none', opacity: 1 }, { transform: 'rotate(-3deg) translateY(12px)', opacity: 0.8 }], 700, 0, 'ease-in', 'forwards');
+  const frozen: Animation[] = [];
+  for (let q = 0; q < (ctx.rich ? 16 : 4); q++) {
+    const bb = mk(ctx, 'bubble', 0, 0), x = b.x + 10 + Math.random() * (b.w - 20), y = b.b - 6;
+    frozen.push(A(ctx, bb, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.5)` }, { opacity: 1, offset: 0.2 }, { opacity: 0, transform: `translate(${x + (Math.random() - 0.5) * 16}px,${y - 50 - Math.random() * 40}px) scale(1.2)` }], 1400, q * 40, 'linear'));
+  }
+  const wp = whirlpool(ctx, b.cx, b.b - 10, 200, Math.min(180, b.w * 0.6), 0);
+  hint(ctx, `${nick(ctx, c.ship)} тонет…`);
+  await wait(ctx, 520);
+  // time stops
+  frozen.forEach((a) => a.pause());
+  wp.getAnimations({ subtree: true }).forEach((a) => a.pause());
+  const gray = mk(ctx, 'tint', 0, 0); gray.style.width = W + 'px'; gray.style.height = H + 'px'; gray.style.background = 'rgba(120,128,132,.38)';
+  A(ctx, gray, [{ opacity: 0 }, { opacity: 1 }], 160, 0, 'linear', 'forwards');
+  ring(ctx, b.cx, b.cy, 0, 3, '#e8eef2');
+  // game (S1): the explanation is in the middle of the table, not over the plank
+  ruleTag(ctx, b.cx, gapBox(ctx).cy, 'время замерло…', 60, '', 1100);
+  await wait(ctx, 220);
+  const outro = await legendIntro(ctx, code, c.ship, { cost: c.cost });
+  // the compass rose
+  const cs = clamp(Math.min(b.w, b.h * 1.6), 200, 300);
+  const rose = mk(ctx, 'compass', 0, 0, compassSVG());
+  rose.style.width = rose.style.height = cs + 'px'; rose.style.margin = `${-cs / 2}px 0 0 ${-cs / 2}px`;
+  A(ctx, rose, [{ opacity: 0, transform: `translate(${b.cx}px,${b.cy}px) scale(.3) rotate(-200deg)` }, { opacity: 1, transform: `translate(${b.cx}px,${b.cy}px) scale(1.05) rotate(540deg)`, offset: 0.8 }, { opacity: 1, transform: `translate(${b.cx}px,${b.cy}px) scale(1) rotate(720deg)` }], 1000, 0, 'cubic-bezier(.15,.7,.3,1)', 'forwards');
+  burst(ctx, 'gold-dust', b.cx, b.cy, 650, 22, 40, cs * 0.6, 800);
+  // «Ускользнул!»
+  const shout = mk(ctx, 'lg-shout', b.cx, b.cy, 'Ускользнул!');
+  const ks = Math.min(1, W / 600);
+  A(ctx, shout, [{ opacity: 0, transform: `translate(-50%,-50%) rotate(-4deg) scale(${2.2 * ks})` }, { opacity: 1, transform: `translate(-50%,-50%) rotate(-4deg) scale(${0.95 * ks})`, offset: 0.7 }, { opacity: 1, transform: `translate(-50%,-50%) rotate(-4deg) scale(${ks})` }], 280, 760, 'cubic-bezier(.6,0,.9,.6)');
+  at(ctx, 1000, () => shake(ctx, ctx.board, 0, 7, 260));
+  // the Hull 2 in gold
+  const hullNow = shownTrack(ctx, c.ship, 'hull'), hullNew = Math.min(ctx.data.rules.jackHull, startValue(ctx.data, c.ship, 'hull'));
+  for (let j = hullNow; j < hullNew; j++) { const p = fxPoint(ctx, c.ship, 'hull', j); burst(ctx, 'gold-dust', p.x, p.y, 1150 + j * 120, 8, 6, 24, 600); ring(ctx, p.x, p.y, 1150 + j * 120, 0.8, '#e0b44c'); }
+  at(ctx, 1150, () => setTrack(ctx, c.ship, 'hull', hullNew, '#e0b44c'));
+  trackMark(ctx, c.ship, 'hull', hullNew - hullNow, 1300, true); // game (S1): a mark, not a pill
+  await wait(ctx, 1500);
+  // time goes on: the bubbles burst, the jump out of the water, the change of places
+  frozen.forEach((a) => { a.playbackRate = 3; a.play(); });
+  wp.remove();
+  A(ctx, gray, [{ opacity: 1 }, { opacity: 0 }], 250, 0, 'ease-out', 'forwards');
+  A(ctx, shout, [{ opacity: 1 }, { opacity: 0, transform: 'translate(-50%,-50%) rotate(-4deg) scale(1.3)' }], 300, 0, 'ease-in', 'forwards');
+  A(ctx, rose, [{ opacity: 1, transform: `translate(${b.cx}px,${b.cy}px) scale(1) rotate(720deg)` }, { opacity: 0, transform: `translate(${b.cx}px,${b.cy}px) scale(1.4) rotate(760deg)` }], 400, 0, 'ease-in', 'forwards');
+  A(ctx, plank(ctx, c.ship), [{ transform: 'rotate(-3deg) translateY(12px)', opacity: 0.8 }, { transform: 'translateY(-22px) scale(1.04)', opacity: 1 }], 280, 0, 'cubic-bezier(.2,.8,.3,1)', 'forwards');
+  for (let q = 0; q < 3; q++) splash(ctx, b.x + b.w * (0.2 + 0.3 * q), b.b - 4, 80 + q * 60);
+  await wait(ctx, 300);
+  const swapEv = (c.events || []).filter((e) => e.type === 'swapped');
+  if (swapEv.length) await flipTo(ctx, c.events, 700); // all the events of the clip: the Hull 2, the Legend played, the change of places
+  await outro();
+};
+
+export const PLAY_LEGENDS = { legend: playLegend as unknown as ClipPlayer, jack: playJack as unknown as ClipPlayer };

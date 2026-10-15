@@ -415,8 +415,11 @@ function markAt(ctx: FxCtx, blink: Element, right: number, cy: number, text: str
   A(ctx, blink, [{ backgroundColor: 'transparent' }, { backgroundColor: c }, { backgroundColor: 'transparent' }, { backgroundColor: c }, { backgroundColor: 'transparent' }], MARK_MS, delay, 'linear', 'none');
   return m;
 }
-/** Souls: wisps from the enemy's Crew into the Souls of «Голландец» (play-volley.js; the card and the Souls clips use it too). */
-export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number) {
+/**
+ * Souls: wisps from the enemy's Crew into the Souls of «Голландец» (play-volley.js; the card and the Souls clips use it
+ * too). `mark` (L1, the rule of S1): a short mark «+N» at the badge instead of the label over the plank.
+ */
+export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number, mark = false) {
   const keeper = ctx.data.ships.map((s) => s.code).find((x) => shipData(ctx.data, x).souls != null && !ctx.display.ships[x].sunk);
   if (!keeper) return;
   const badge = plank(ctx, keeper).querySelector('[data-fx-souls]');
@@ -424,6 +427,7 @@ export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number)
   const from = fxPoint(ctx, fromShip, 'crew', 0);
   for (let k = 0; k < n; k++) wisp(ctx, from, to, delay + k * 160);
   setTimeout(() => { if (badge && ctx.run === ctx.live()) { A(ctx, badge, [{ transform: 'scale(1.3)', boxShadow: '0 0 12px #6fd3b4' }, { transform: 'scale(1)', boxShadow: 'none' }], 500, 0, 'ease-out', 'none'); } }, ms(ctx, delay + 800));
-  tag(ctx, to.x, to.y - 16, `+${n} ${n === 1 ? 'Душа' : 'Души'}`, delay + 700, 'good', 1200);
+  if (mark) { if (badge && visible(badge)) badgeMark(ctx, badge, `+${n}`, delay + 700, true); }
+  else tag(ctx, to.x, to.y - 16, `+${n} ${n === 1 ? 'Душа' : 'Души'}`, delay + 700, 'good', 1200);
 }
 export const FLAME_SVG = '<svg width="18" height="22" viewBox="0 0 14 17"><path d="M7 1 C9 5 13 7 12 11 C11.5 14.5 9 16 7 16 C4 16 2 14 2 11 C2 8.5 4 7.5 4.5 5 C5.5 7 6.5 7 7 6 C7.5 4.5 7 3 7 1Z" fill="#F2913D" stroke="#B23A2E" stroke-width="1"/><path d="M7 9 C8 10.5 9.5 11.5 9 13 C8.6 14.4 7.6 15 7 15 C5.8 15 5 14 5 12.8 C5 11.6 6.2 11 7 9Z" fill="#FFE08A"/></svg>';
