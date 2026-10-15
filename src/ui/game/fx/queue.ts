@@ -115,3 +115,13 @@ export function logHiddenFrom(items: readonly (QueueItem & { applied: boolean })
   const waiting = items.filter((x) => !x.applied).map((x) => x.n);
   return waiting.length > 0 ? Math.min(...waiting) : null;
 }
+
+/** So many actions coming at once are a jump (a return after a lost connection, a reload): not replayed. */
+export const JUMP = 4;
+/**
+ * Whether the queue skips all but its last action (they go into D at once): the game waits for this device, or the
+ * actions came as a jump.
+ */
+export function skipAhead(queued: number, myDecision: boolean, jump: boolean): boolean {
+  return queued > 1 && (myDecision || jump);
+}

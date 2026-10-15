@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { displayFrom, displayRules } from '../src/ui/game/fx/display';
 import { PLAY } from '../src/ui/game/fx/FxLayer';
 import type { FxKind } from '../src/ui/game/fx/planFx';
-import { applyClip, applyQuiet, logHiddenFrom, pendingFlags, planItem, plannerFor } from '../src/ui/game/fx/queue';
+import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead } from '../src/ui/game/fx/queue';
 import { contrast, inkOn } from '../src/ui/game/fx/primitives';
 import { playGame, SIDES } from './fx-games';
 import { clipsOf, play } from './fx-scenes';
@@ -185,5 +185,15 @@ describe('the log waits for the clips (logHiddenFrom)', () => {
     expect(logHiddenFrom(q)).toBe(null);
     // «Сразу итог», the layer off, Undo, a jump over many actions: the queue is emptied
     expect(logHiddenFrom([])).toBe(null);
+  });
+});
+
+describe('a jump over many actions (skipAhead)', () => {
+  it('only the last action is played when this device must decide or the actions came as a jump', () => {
+    expect(skipAhead(1, true, true)).toBe(false);
+    expect(skipAhead(3, false, false)).toBe(false);
+    expect(skipAhead(3, true, false)).toBe(true);
+    expect(skipAhead(3, false, true)).toBe(true);
+    expect(JUMP).toBeGreaterThan(3); // the longest scene of the reference (3 actions) is not a jump
   });
 });

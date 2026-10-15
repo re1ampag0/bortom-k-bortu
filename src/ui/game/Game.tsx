@@ -293,6 +293,8 @@ export function Game({
     speed,
     rich: effects === 'rich',
     myDecision,
+    // Back after a lost connection: «Пока вас не было» tells what happened, the table does not replay it.
+    jump: !!net && net.missed.length > 0,
     paused: !!banner && banner.k !== 'summary',
     hold: held,
     show,

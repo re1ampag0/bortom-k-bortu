@@ -211,3 +211,82 @@ test.describe('the log follows the clips (a game against the bots, 1366×660)', 
     expect(errors).toEqual([]);
   });
 });
+
+test('the result of a new action never flashes on the planks before its clips (card 1366×660)', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 660 });
+  // Every number each track shows, in order, from the load of the page (a flash of one frame included).
+  await page.addInitScript(() => {
+    const seen: Record<string, number[]> = {};
+    const read = () => {
+      for (const t of Array.from(document.querySelectorAll('[data-fx-ship] [data-fx-track]'))) {
+        const key = `${t.closest('[data-fx-ship]')!.getAttribute('data-fx-ship')} ${t.getAttribute('data-fx-track')}`;
+        const v = Number(t.querySelector('[data-fx-value]')!.textContent!.split('/')[0]);
+        const list = (seen[key] ??= []);
+        if (list.at(-1) !== v) list.push(v);
+      }
+    };
+    new MutationObserver(read).observe(document, { subtree: true, childList: true, characterData: true });
+    (window as unknown as { __seen: Record<string, number[]> }).__seen = seen;
+  });
+  await open(page, 'card');
+  await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
+  const seen = await page.evaluate(() => (window as unknown as { __seen: Record<string, number[]> }).__seen);
+  // «Жатва» only takes: every track goes down step by step, never to the result and back up
+  for (const [key, list] of Object.entries(seen)) {
+    for (let i = 1; i < list.length; i++) expect(list[i], `${key}: ${list.join(' → ')}`).toBeLessThanOrEqual(list[i - 1]);
+  }
+  expect(Object.values(seen).some((l) => l.length > 1)).toBe(true);
+});
+
+test.describe('«До конца хода» and «Пауза» with the layer (a game against the bots, 1366×660)', () => {
+  test.use({ viewport: { width: 1366, height: 660 } });
+
+  async function againstBots(page: Page) {
+    await page.goto('?seed=3&speed=normal');
+    await page.getByTestId('quick-bots').click();
+    await page.getByTestId('pick-company').click();
+    await page.getByTestId('prep-start').click();
+    await page.getByTestId('placement-done').click();
+    await expect(page.getByTestId('game')).toBeVisible();
+  }
+
+  test('«До конца хода»: the clip on screen goes at once, the rest of the bots\' turn shows no card and no Volley; the turn comes to the person', async ({ page }) => {
+    await againstBots(page);
+    // a clip of a card or a Volley of the bots is on screen
+    await page.waitForFunction(() => /^«[^»]+»: «|Залп/.test(document.querySelector('[data-fx-instruction]')?.textContent ?? ''), null, { timeout: 60_000, polling: 50 });
+    const before = await page.locator('[data-fx-instruction]').textContent();
+    await page.locator('[data-testid="skip-turn"]:visible').first().click();
+    // What the status bar says from now on, every 50 ms, until the person's turn: only the end of the bots' turn
+    // (their Plans) and the start of the person's turn may play — the action that passes the turn is a new turn.
+    const said = await page.evaluate(
+      () =>
+        new Promise<string[]>((done) => {
+          const out: string[] = [];
+          const t = setInterval(() => {
+            const text = document.querySelector('[data-fx-instruction]')?.textContent ?? '';
+            if (out.at(-1) !== text) out.push(text);
+            const b = document.querySelector('[data-testid="end-turn"]');
+            if (out.length > 200 || (b && b.textContent === 'Ход окончен' && b.getAttribute('aria-disabled') !== 'true')) { clearInterval(t); done(out); }
+          }, 50);
+        }),
+    );
+    expect(said.filter((x) => x !== before && /^«[^»]+»: «|Залп по/.test(x)), said.join(' / ')).toEqual([]);
+    await expect(page.locator('[data-testid="end-turn"]:visible').first()).toHaveText('Ход окончен', { timeout: 60_000 });
+    const hidden = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('[data-fx-status]')).filter((c) => getComputedStyle(c).visibility === 'hidden').length);
+    expect(hidden).toBe(0);
+  });
+
+  test('«Пауза» holds the layer between clips, «Дальше» lets it go on (P4)', async ({ page }) => {
+    await againstBots(page);
+    await expect(page.locator('.fx-layer > *').first()).toBeVisible({ timeout: 60_000 });
+    const pause = page.locator('[data-testid="pause-show"]:visible');
+    await pause.click();
+    await expect(pause.locator('.wide')).toHaveText('▶ Дальше');
+    // the clip on screen plays to its end, then nothing new comes into the layer
+    await expect(page.locator('.fx-layer > *')).toHaveCount(0, { timeout: 10_000 });
+    await page.waitForTimeout(3000);
+    expect(await page.locator('.fx-layer > *').count()).toBe(0);
+    await pause.click();
+    await expect(page.locator('.fx-layer > *').first()).toBeVisible({ timeout: 30_000 });
+  });
+});
