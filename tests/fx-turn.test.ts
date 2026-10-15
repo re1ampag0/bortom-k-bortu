@@ -5,6 +5,7 @@ import { displayFrom, displayRules } from '../src/ui/game/fx/display';
 import { PLAY } from '../src/ui/game/fx/FxLayer';
 import type { FxKind } from '../src/ui/game/fx/planFx';
 import { applyClip, applyQuiet, pendingFlags, planItem, plannerFor } from '../src/ui/game/fx/queue';
+import { contrast, inkOn } from '../src/ui/game/fx/primitives';
 import { playGame, SIDES } from './fx-games';
 import { clipsOf, play } from './fx-scenes';
 import { data } from './helpers';
@@ -162,5 +163,14 @@ describe('statuses wait for their clip (pendingFlags)', () => {
 
   it('surfacing at the start of a turn: «Всплыл» waits for the clip «turn»', () => {
     expect(pendingFlags(play('turn').map((x) => ({ ...x, done: 0, applied: false })))).toEqual({ Г: ['surfaced'] });
+  });
+});
+
+describe('the strip of the ship under the flying card (game: instead of the ribbon)', () => {
+  it('the text on the colour of each ship: white or dark, whichever contrasts more — at least 4.5:1 for all four', () => {
+    const out = data.ships.map((s) => [s.code, s.color, inkOn(s.color), contrast(s.color, inkOn(s.color))]);
+    for (const [code, , , c] of out) expect(c as number, `${code}`).toBeGreaterThanOrEqual(4.5);
+    // «Индевор» is gold: dark text on it, the others white
+    expect(Object.fromEntries(out.map(([code, , ink]) => [code, ink]))).toEqual({ Ж: '#ffffff', М: '#ffffff', И: '#0f0d0b', Г: '#ffffff' });
   });
 });

@@ -9,8 +9,8 @@
 //    its old node; in the game the node stays, so the queue cancels the finished animations of the planks after the
 //    clip (FxLayer.tsx). The steady look («Под водой», sunk) is the class of the plank from the displayed state;
 //  - the card: an own card is already out of the real hand, it flies from the hand row (cardOrigin); a card the viewer
-//    may not see (HIDDEN) flies face down; the ribbon under it names who played it («Месть», «Легенда «Месть»»), not
-//    the type of the card (the card shows it); statusFx uses the plank's own chips (React), see statusFx;
+//    may not see (HIDDEN) flies face down; no ribbon under it — the card has a bottom strip of the colour of the ship
+//    that played it with its name («ГОЛЛАНДЕЦ», «ЛЕГЕНДА · МЕСТЬ»), see flyCard; statusFx uses the plank's own chips (React), see statusFx;
 //  - the start of a turn: the hand is the real one, so the drawn cards are in it already: drawFx finds them by the codes
 //    of drew.cards; «Ваш ход» only when the bottom team is played from this device (ctx.own), not in a match of bots;
 //  - PLAY.ability: the branch «limitRaised» of the effects calls statusFx, ported in A4. The engine does not send it
@@ -400,14 +400,14 @@ function smallLabel(ctx: FxCtx, e: GameEvent): string {
 }
 
 /** The played card: it flies in (an own one — from the hand, another's — from beyond the edge), lies at the middle, then its effects. */
-PLAY.card = (c, ctx) => playCard(c, ctx, nick(ctx, c.ship));
-/** game: the ribbon under the card says who played it («Месть», «Легенда «Месть»»), not its type (it is on the card). */
-async function playCard(c: CardClip, ctx: FxCtx, ribbon: string): Promise<void> {
+PLAY.card = (c, ctx) => playCard(c, ctx, false);
+/** game: the bottom strip of the card says who played it («МЕСТЬ», «ЛЕГЕНДА · МЕСТЬ»), see flyCard. */
+async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void> {
   if (CUR_CARD && CUR_CARD.el.isConnected) A(ctx, CUR_CARD.el, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
   hint(ctx, `${nick(ctx, c.ship)}: ${cardName(ctx, c.card)}${c.target ? ` → ${nick(ctx, c.target)}` : ''}`);
   if (c.cost) payKegs(ctx, sideOf(ctx, c.ship), c.cost, 0);
   const spot = cardSpot(ctx);
-  const el = flyCard(ctx, c.card, cardOrigin(ctx, c.card, c.seat), spot, 0, 500, ribbon, '');
+  const el = flyCard(ctx, c.card, cardOrigin(ctx, c.card, c.seat), spot, 0, 500, { ship: c.ship, legend });
   CUR_CARD = { el, code: c.card };
   A(ctx, el.firstElementChild!, [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], 260, 500, 'ease-out', 'none');
   if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${spot.x + 55 * spot.s} ${spot.y + 64 * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
@@ -477,7 +477,7 @@ PLAY.souls = async (c, ctx) => {
 PLAY.status = async (c, ctx) => { await wait(ctx, statusFx(ctx, c, 0)); };
 PLAY.sell = async (c, ctx) => {
   const from = cardOrigin(ctx, c.card, c.seat), kb = bx(ctx, holdEl(ctx, sideOf(ctx, c.seat)));
-  const el = flyCard(ctx, c.card, from, { x: kb.x, y: kb.y - 60, s: 0.4 }, 0, 500, 'ПРОДАНО');
+  const el = flyCard(ctx, c.card, from, { x: kb.x, y: kb.y - 60, s: 0.4 }, 0, 500); // game: no ribbon «ПРОДАНО» (see flyCard)
   A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 250, 550, 'ease-in', 'forwards');
   const pg = (c.effects || []).find((e) => e.type === 'powderGained');
   if (pg && pg.type === 'powderGained') gainKegs(ctx, pg.side, pg.amount, { x: kb.x + 20, y: kb.y - 20 }, 600);
@@ -518,7 +518,7 @@ PLAY.fallback = async (c, ctx) => { const g = gapBox(ctx); tag(ctx, ctx.board.cl
 // game, till L1 (the decision of the user): a Legend is shown by the clip of a card (the card at the middle, its effects
 // fly from it); «Джек ускользает» — a label and the change of places. L1 ports PLAY.legend / PLAY.jack.
 PLAY.legend = async (c, ctx) => {
-  await playCard({ kind: 'card', ev: c.ev, seat: c.seat, ship: c.seat, card: c.card, target: c.target, cost: c.cost, effects: c.effects, resolvedTo: c.resolvedTo }, ctx, `Легенда ${nick(ctx, c.seat)}`);
+  await playCard({ kind: 'card', ev: c.ev, seat: c.seat, ship: c.seat, card: c.card, target: c.target, cost: c.cost, effects: c.effects, resolvedTo: c.resolvedTo }, ctx, true);
 };
 PLAY.jack = async (c, ctx) => {
   hint(ctx, `${nick(ctx, c.ship)}: Джек ускользает`);
