@@ -172,6 +172,7 @@ function SceneTable({
     viewer: scene.viewer,
     data,
     bottom,
+    own: true,
     enabled,
     speed,
     rich: new URLSearchParams(location.search).get('rich') !== '0',

@@ -31,6 +31,8 @@ export interface FxCtx {
   data: GameData;
   /** The side at the bottom of the screen (the viewer's). */
   bottom: Side;
+  /** The team at the bottom is played from this device: «Ваш ход» (a match of bots — «Ход Пиратов»). */
+  own: boolean;
   /** The line of the status bar while the clip plays (React state, not textContent of a node React owns). */
   hint: (text: string) => void;
   /**
