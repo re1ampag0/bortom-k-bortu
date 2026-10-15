@@ -138,7 +138,18 @@ export interface Plate {
 export interface Status {
   label: string;
   hint: string;
+  /** «Чёрная метка»: the chip carries the blot (the Volley's cannonballs «в метку» hit it). */
+  mark?: boolean;
 }
+
+/** The blot of «Чёрная метка» (MARK_SVG of the reference, board.js). */
+const MARK_SVG = (
+  <svg viewBox="0 0 30 26" width="16" height="14" aria-hidden="true">
+    <path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612" />
+    <circle cx="27" cy="22" r="2" fill="#1a1612" />
+    <circle cx="4" cy="5" r="1.4" fill="#1a1612" />
+  </svg>
+);
 
 /** Statuses of a ship with the moment they end (docs/TZ.md, «Принципы стола», п. 2). */
 export function statuses(s: GameState, data: GameData, ship: ShipState): Status[] {
@@ -159,7 +170,7 @@ export function statuses(s: GameState, data: GameData, ship: ShipState): Status[
     out.push({ label: 'Кукла вуду', hint: `В свой следующий ход теряет 1 Команду за каждую сыгранную карту (кукла «${shipData(data, ship.voodoo).nick}»)` });
   }
   const mark = s.turn.marks[ship.code];
-  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее' });
+  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее', mark: true });
   if (s.turn.noReact.includes(ship.code) || (s.turn.noReactTeam && ship.side !== s.active)) {
     out.push({ label: 'Без Реакций', hint: 'До конца этого хода не играет Реакции' });
   }
@@ -331,7 +342,14 @@ export function Plank({
       {st.length > 0 && (
         <div className="plank-statuses" data-fx-statuses>
           {st.map((x) => (
-            <span key={x.label} className="status-chip" title={x.hint}>
+            <span
+              key={x.label}
+              className={`status-chip${x.mark ? ' mark' : ''}`}
+              title={x.hint}
+              data-fx-status={x.label}
+              data-fx-mark={x.mark || undefined}
+            >
+              {x.mark && MARK_SVG}
               {x.label}
               <span className="wide"> · {x.hint.split(':')[0].toLowerCase()}</span>
             </span>

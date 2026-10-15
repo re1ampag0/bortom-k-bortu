@@ -20,6 +20,8 @@ export interface QueueItem {
   events: GameEvent[];
   clips: PlayClip[];
   quiet: number[];
+  /** A card is still being played after this action (planner.state.card: a Reaction window came between). */
+  cardOpen: boolean;
 }
 
 /** `fx` when every clip of the action has a player; an action without clips (only quiet events) stays `show`. */
@@ -45,7 +47,7 @@ export function planItem(
 ): QueueItem {
   const plan: FxPlan = planner.feed(events, action);
   const clips = plan.map((c) => ({ ...c, events: c.ev.map((i) => events[i]) })) as PlayClip[];
-  return { n, route: has ? routeAction(plan, has) : 'show', events, clips, quiet: plan.quiet };
+  return { n, route: has ? routeAction(plan, has) : 'show', events, clips, quiet: plan.quiet, cardOpen: planner.state.card != null };
 }
 
 /** The events of one clip in their order in the action: what D takes in after the clip played. */

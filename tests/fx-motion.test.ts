@@ -52,9 +52,9 @@ describe('the ships in motion', () => {
     expect(plankClass(withDisplay(real, displayFrom(s)), code)).not.toContain('submerged');
   });
 
-  it('sink: a ship sunk by a played card waits for the clip «card» (A4) and goes to ShowLayer', () => {
+  it('sink: a ship sunk by a played card — the clip «card» (A4), then the sinking, through the layer', () => {
     expect(play('sink')[0].clips.map((c) => c.kind)).toEqual(['card', 'sink']);
-    expect(route('sink')).toEqual(all('sink', 'show'));
+    expect(route('sink')).toEqual(all('sink', 'fx'));
   });
 
   it('sword: the stamp and the change of places of the enemy in one clip', () => {

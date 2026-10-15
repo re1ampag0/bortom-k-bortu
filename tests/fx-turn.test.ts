@@ -3,7 +3,10 @@
 import { describe, expect, it } from 'vitest';
 import { PLAY } from '../src/ui/game/fx/FxLayer';
 import type { FxKind } from '../src/ui/game/fx/planFx';
+import { planItem, plannerFor } from '../src/ui/game/fx/queue';
+import { playGame, SIDES } from './fx-games';
 import { clipsOf, play } from './fx-scenes';
+import { data } from './helpers';
 
 const route = (id: string) => play(id).map((x) => x.route);
 const all = (id: string, r: 'fx' | 'show') => play(id).map(() => r);
@@ -24,5 +27,57 @@ describe('the start and the end of a turn', () => {
     expect(turn.effects.map((e) => e.type)).toEqual(['powderGained', 'fireDamage', 'damage', 'surfaced', 'drew']);
     // the scene draws for «Голландец», the hand at the device is «Индевор»'s: the backs fly to the ship
     expect(turn.effects.at(-1)).toMatchObject({ type: 'drew', seat: 'Г', count: 2 });
+  });
+});
+
+describe('the played card', () => {
+  it('the clips are in PLAY', () => {
+    for (const k of ['card', 'impact', 'fire'] as FxKind[]) expect(typeof PLAY[k], k).toBe('function');
+  });
+
+  it('card: through the layer; the price, the damage from the card, resolved at once (to the discard)', () => {
+    expect(route('card')).toEqual(all('card', 'fx'));
+    const [card] = clipsOf('card');
+    if (card.kind !== 'card') throw new Error('card');
+    expect(card).toMatchObject({ cost: 1, resolvedTo: 'discard' });
+    expect(card.effects.map((e) => e.type)).toEqual(['damage', 'damage']);
+    expect(play('card')[0].cardOpen).toBe(false);
+  });
+
+  it('mark: «Чёрная метка» is an effect of the card, then the Volley «в метку»', () => {
+    expect(route('mark')).toEqual(all('mark', 'fx'));
+    const [card] = clipsOf('mark');
+    expect(card.kind === 'card' && card.effects).toEqual([expect.objectContaining({ type: 'flagSet', flag: 'mark' })]);
+  });
+});
+
+describe('a card waiting (20 bot games, both sides)', () => {
+  it('the action of the card ends with a window or a choice: the card stays at the middle until a later action resolves it', () => {
+    let waiting = 0;
+    const seen = new Set<string>();
+    for (let k = 0; k < 20; k++) {
+      const { start, steps } = playGame(4001 + k, k % 2 === 1);
+      for (const side of ['P', 'C'] as const) {
+        const planner = plannerFor(data, SIDES[side], start.sea?.current ?? null);
+        let open = false;
+        for (const st of steps) {
+          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => !!PLAY[kind]);
+          const card = item.clips.find((c) => c.kind === 'card');
+          if (card && item.cardOpen) {
+            waiting++;
+            expect(card.kind === 'card' && card.resolvedTo).toBeFalsy();
+            // it waits for a Reaction window, a choice of its player (pending «choice») or the game ends with it
+            const why = item.clips.some((c) => c.kind === 'window') ? 'window' : st.after.pending?.kind === 'choice' ? 'choice' : item.clips.some((c) => c.kind === 'end') ? 'end' : 'none';
+            expect(why, item.clips.map((c) => c.kind).join(',')).not.toBe('none');
+            seen.add(why);
+          }
+          // a card open after an action is resolved or cancelled by a later one, never left open at a new turn
+          if (open && item.clips.some((c) => c.kind === 'turn')) expect(item.events.some((e) => e.type === 'cardResolved' || e.type === 'cardCancelled' || e.type === 'cardLost')).toBe(true);
+          open = item.cardOpen;
+        }
+      }
+    }
+    expect(waiting).toBeGreaterThan(0);
+    expect([...seen].sort()).toEqual(['choice', 'end', 'window']);
   });
 });

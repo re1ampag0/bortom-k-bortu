@@ -12,7 +12,7 @@ import type { Speed } from '../../storage';
 import type { Recent } from '../showSteps';
 import { speedFactor } from '../text';
 import { applyVisible, displayFrom, displayRules, type Display } from './display';
-import { PLAY_MISC } from './misc';
+import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
 import { applyAll, applyClip, applyQuiet, planItem, plannerFor, type PlayClip, type QueueItem } from './queue';
@@ -39,12 +39,14 @@ export interface FxScene {
   onTurn: (ctx: FxCtx) => void;
   /** The scene is on the table (a Volley declared, not shot yet). */
   alive: () => boolean;
+  /** An action is played to its end (page.js: the card at the middle fades once it resolved). */
+  afterAction?: (ctx: FxCtx, item: { cardOpen: boolean }) => void;
 }
 export const SCENES: FxScene[] = [];
 
 // The clips ported so far: the Volley (A2), the ships in motion (A3).
 Object.assign(PLAY, PLAY_VOLLEY, PLAY_MISC);
-SCENES.push(VOLLEY_SCENE);
+SCENES.push(VOLLEY_SCENE, CARD_SCENE);
 
 interface Item extends QueueItem {
   recent: Recent;
@@ -309,6 +311,8 @@ export function useFxQueue({
           }
           applyQuiet(D.current!, item, rules);
           item.applied = true;
+          const ctx = makeCtx(run);
+          if (ctx) SCENES.forEach((x) => x.afterAction?.(ctx, item));
           bump();
         }
         queue.current.shift();
