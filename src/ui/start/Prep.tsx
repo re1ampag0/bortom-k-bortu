@@ -6,7 +6,7 @@ import type { Variant } from '../../engine/state';
 import type { Side } from '../../engine/types';
 import { SIDE_LABEL } from '../game/text';
 import { loadSettings, storeSettings } from '../storage';
-import { seedFrom, urlSeedText } from '../seed';
+import { seedFrom, tossSeed, urlSeedText } from '../seed';
 import { Coin } from './Coin';
 import { instantUrl, reducedMotion } from './motion';
 import { Rhumbs } from './Rhumbs';
@@ -37,10 +37,11 @@ export function Prep({
   onBack: () => void;
 }) {
   const [pick, setPick] = useState<Pick>('coin');
-  // The seed is fixed when the screen opens: the coin and the game use the same one.
+  // The coin and the game use the same seed. Without a seed in the field or the address each «Жребий» tosses a new
+  // one; a given seed stays (the same side, the game can be repeated).
   const [seedText, setSeedText] = useState(urlSeedText);
   const [seed, setSeed] = useState(() => seedFrom(urlSeedText()));
-  const [coin, setCoin] = useState<{ side: Side; spinning: boolean } | null>(null);
+  const [coin, setCoin] = useState<{ side: Side; seed: number; spinning: boolean } | null>(null);
   const [more, setMore] = useState(false);
   const [variant, setVariant] = useState<Variant>('standard');
   const urlHints = new URLSearchParams(location.search).get('hints');
@@ -64,22 +65,25 @@ export function Prep({
     setCoin(null);
   };
 
-  /** Throws the coin; `then` gets the side after the spin (at once without motion). */
-  const toss = (then?: (side: Side) => void) => {
-    const side = coinOf(seed);
+  /** Throws the coin; `then` gets the side and the seed after the spin (at once without motion). */
+  const toss = (then?: (side: Side, seed: number) => void) => {
+    const tossed = tossSeed(seedText, seed);
+    setSeed(tossed);
+    const side = coinOf(tossed);
     const still = instantUrl() || reducedMotion();
-    setCoin({ side, spinning: !still });
+    setCoin({ side, seed: tossed, spinning: !still });
     if (timer.current) clearTimeout(timer.current);
     const done = () => {
-      setCoin({ side, spinning: false });
-      then?.(side);
+      setCoin({ side, seed: tossed, spinning: false });
+      then?.(side, tossed);
     };
     if (still) done();
     else timer.current = setTimeout(done, COIN_MS);
   };
 
-  const start = (side: Side, byCoin: boolean) => {
-    const game = { seed, variant, sea, legends };
+  /** The game starts with the seed the coin fell by (or the screen's seed, when the side was picked). */
+  const start = (side: Side, byCoin: boolean, gameSeed: number) => {
+    const game = { seed: gameSeed, variant, sea, legends };
     const lead = byCoin ? 'Жребий: ' : '';
     if (mode === 'bots') {
       onStart({
@@ -95,9 +99,9 @@ export function Prep({
   };
   const begin = () => {
     if (coin?.spinning) return;
-    if (pick !== 'coin') start(pick, false);
-    else if (coin) start(coin.side, true);
-    else toss((side) => start(side, true));
+    if (pick !== 'coin') start(pick, false, seed);
+    else if (coin) start(coin.side, true, coin.seed);
+    else toss((side, tossed) => start(side, true, tossed));
   };
   const load = async (f: File) => {
     try {
@@ -188,7 +192,7 @@ export function Prep({
                 </label>
                 <label className="row check">
                   <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
-                  целях, «4 → 2» у Реакций, зелёный «Ход окончен», «Залп не дан…»); без них — как за столом
+                  целях, «4 → 2» на Реакциях в руке, зелёный «Ход окончен», «Залп не дан…»); без них — как за столом
                 </label>
                 <label className="row check">
                   <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все

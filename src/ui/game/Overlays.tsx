@@ -299,6 +299,8 @@ export function SettingsSheet({
   setEffects,
   sound,
   setSound,
+  fastEnd,
+  setFastEnd,
   openHands,
   setOpenHands,
   hints,
@@ -319,6 +321,9 @@ export function SettingsSheet({
   /** The short sound «ваш ход». */
   sound: boolean;
   setSound: (v: boolean) => void;
+  /** «Быстрый конец хода»: the countdown of «Ход окончен» is 1 s instead of 3 s. */
+  fastEnd: boolean;
+  setFastEnd: (v: boolean) => void;
   openHands: boolean | null;
   setOpenHands: (v: boolean) => void;
   /** null — the room does not allow hints. */
@@ -357,6 +362,10 @@ export function SettingsSheet({
       <label className="row check">
         <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} data-testid="sound" /> Звук «ваш ход»
       </label>
+      <label className="row check">
+        <input type="checkbox" checked={fastEnd} onChange={(e) => setFastEnd(e.target.checked)} data-testid="fast-end" /> Быстрый конец хода
+        («Ход окончен · Отменить» — 1 с вместо 3 с)
+      </label>
       {openHands !== null && (
         <label className="row check">
           <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все
@@ -366,7 +375,7 @@ export function SettingsSheet({
       {hints !== null ? (
         <label className="row check">
           <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
-          целях, «4 → 2» у Реакций, зелёный «Ход окончен», «Залп не дан…»)
+          целях, «4 → 2» на Реакциях в руке, зелёный «Ход окончен», «Залп не дан…»)
         </label>
       ) : (
         <p className="row muted">Подсказки в этой комнате выключены.</p>

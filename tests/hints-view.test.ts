@@ -9,6 +9,7 @@ import {
   legendOptions,
   playOptions,
   previewReaction,
+  reactionNow,
   unfiredShips,
   volleyTargets,
 } from '../src/engine/hints';
@@ -29,6 +30,8 @@ function hintsOf(s: GameState, seats: string[]) {
       if (d.kind === 'reactions') {
         const r = previewReaction(s, data, seat, card);
         out.push(r.ok ? r.label : r.reason);
+        const n = reactionNow(s, data, seat, card);
+        out.push(n.ok ? n.text : n.reason);
       }
     }
     out.push(volleyTargets(s, data, { ship: seat }).reason, abilityButtons(s, data, seat).map((b) => b.key), legendOptions(s, data, seat).reason);

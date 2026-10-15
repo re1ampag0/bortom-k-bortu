@@ -9,7 +9,9 @@ import {
   playOptions,
   previewReaction,
   previewVolley,
+  reactionNow,
   threat,
+  threatLine,
   volleyTargets,
 } from '../src/engine/hints';
 import { describe as describeLog, turnSummary } from '../src/engine/log';
@@ -85,6 +87,47 @@ describe('Reactions in the window', () => {
     const card = cardIn(s, 'И', 'Двойная обшивка');
     expect(previewReaction(s, data, 'И', card)).toEqual({ ok: true, label: `${guns} → ${Math.max(0, guns - 2)}` });
     expect(playOptions(s, data, 'И', card).actions).toEqual([{ type: 'react', seat: 'И', card }]);
+  });
+});
+
+describe('«What happens now» in the Reaction window (P8)', () => {
+  it('the attacker\'s line and the reducing Reaction use the numbers of threat and previewReaction', () => {
+    let s = turnOf('ПИРАТЫ', { И: ['Двойная обшивка'] });
+    s = act(s, { type: 'volley', ship: 'Ж', target: 'И' }).state;
+    const guns = s.ships['Ж'].tracks.guns;
+    expect(threatLine(s, data)).toBe(`Залп «Жемчужина» → «Индевор»: ${guns} по Корпусу`);
+    const card = cardIn(s, 'И', 'Двойная обшивка');
+    expect(reactionNow(s, data, 'И', card)).toEqual({ ok: true, text: `Залп ${guns} → ${Math.max(0, guns - 2)}` });
+  });
+
+  it('a cancelling Reaction: «Залп отменён»', () => {
+    let s = turnOf('ПИРАТЫ', { Г: ['Уйти на глубину'] });
+    s = act(s, { type: 'volley', ship: 'М', target: 'Г' }).state;
+    expect(reactionNow(s, data, 'Г', cardIn(s, 'Г', 'Уйти на глубину'))).toEqual({ ok: true, text: 'Залп отменён' });
+  });
+
+  it('a covering Reaction: the Volley goes to the ally, with its damage', () => {
+    let s = turnOf('ПИРАТЫ', { Г: ['Прикрыть бортом'] });
+    s = act(s, { type: 'volley', ship: 'Ж', target: 'И' }).state;
+    const card = cardIn(s, 'Г', 'Прикрыть бортом');
+    const label = previewReaction(s, data, 'Г', card);
+    if (!label.ok) throw new Error(label.reason);
+    const damage = label.label.split(' ')[0];
+    expect(reactionNow(s, data, 'Г', card)).toEqual({ ok: true, text: `Залп уйдёт в «Голландец»: ${damage} по Корпусу` });
+  });
+
+  it('a Reaction that cannot be played: the same reason as previewReaction', () => {
+    // «Уйти на глубину» cancels only a Volley at the Dutchman.
+    let s = turnOf('ПИРАТЫ', { И: ['Двойная обшивка'], Г: ['Уйти на глубину'] });
+    s = act(s, { type: 'volley', ship: 'Ж', target: 'И' }).state;
+    const card = cardIn(s, 'Г', 'Уйти на глубину');
+    const p = previewReaction(s, data, 'Г', card);
+    expect(p.ok).toBe(false);
+    expect(reactionNow(s, data, 'Г', card)).toEqual(p);
+  });
+
+  it('no window — no line', () => {
+    expect(threatLine(turnOf('ПИРАТЫ'), data)).toBeNull();
   });
 });
 

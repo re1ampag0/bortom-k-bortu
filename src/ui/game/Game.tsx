@@ -34,6 +34,7 @@ import {
   JackPanel,
   PlansPanel,
   ReactionPanel,
+  ReactionWaitPanel,
   TortugaPanel,
   VolleyPanel,
   chargeCandidates,
@@ -49,6 +50,7 @@ import { instantUrl } from '../start/motion';
 import { playTurnSound } from '../sound';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
 import { enemyTurnLines } from './lastTurn';
+import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
 
 type Mode =
@@ -121,6 +123,13 @@ export function Game({
     setSoundState(v);
     storeSettings({ ...loadSettings(), sound: v });
   };
+  const [fastEnd, setFastEndState] = useState(() => loadSettings().fastEnd);
+  const setFastEnd = (v: boolean) => {
+    setFastEndState(v);
+    storeSettings({ ...loadSettings(), fastEnd: v });
+  };
+  /** «Ход окончен · Отменить»: 3 s, or 1 s with «Быстрый конец хода». */
+  const endMs = fastEnd ? 1000 : 3000;
   const [openHands, setOpenHands] = useState(game.setup.openHands);
   // «Подсказки» off — «как за столом»: no damage before choosing, no green «Ход окончен», no «Залп не дан…».
   const [hintsChoice, setHintsState] = useState(net ? (loadSettings().hints ?? false) : (game.setup.hints ?? false));
@@ -183,6 +192,18 @@ export function Game({
     [...s.ships[reactPickRaw.seat].hand, ...s.ships[reactPickRaw.seat].plans].includes(reactPickRaw.card)
       ? reactPickRaw
       : null;
+  // The note «Реакция — карта…» in the first Reaction window of each team at the device; a window offered again
+  // after a Reaction (RULES.md 12.5) is the same one. Not saved: after a reload it shows once more.
+  const reactOpen = myDecision && d!.kind === 'reactions';
+  const [memoSeen, setMemoSeen] = useState<Side[]>([]);
+  const [memoSide, setMemoSide] = useState<Side | null>(null);
+  useEffect(() => {
+    if (reactOpen) setMemoSide(bottom);
+    else if (memoSide) {
+      setMemoSeen((seen) => (seen.includes(memoSide) ? seen : [...seen, memoSide]));
+      setMemoSide(null);
+    }
+  }, [reactOpen, bottom, memoSide]);
 
   // ——— Interface state ———
   const [mode, setMode] = useState<Mode>({ k: 'idle' });
@@ -321,9 +342,9 @@ export function Game({
   }, []);
 
   useEffect(() => {
-    // «Ход окончен · Отменить»: the turn passes after 3 s.
+    // «Ход окончен · Отменить»: the turn passes after 3 s (1 s with «Быстрый конец хода»).
     if (mode.k !== 'ending') return;
-    const t = setTimeout(() => act(mode.action), 3000);
+    const t = setTimeout(() => act(mode.action), endMs);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
@@ -472,7 +493,7 @@ export function Game({
     }
     finishTurn({ type: 'endTurn', side: bottom });
   };
-  /** The turn passes in 3 s with «Отменить» (docs/TZ.md, «Детали», п. 10); at the test speed — at once. */
+  /** The turn passes in 3 s (or 1 s) with «Отменить» (docs/TZ.md, «Детали», п. 10); at the test speed — at once. */
   const finishTurn = (action: Action) => (speed === 'instant' ? act(action) : setMode({ k: 'ending', action }));
 
   // ——— Planks ———
@@ -558,9 +579,23 @@ export function Game({
   // Card choices, «Тортуга» and the Plans are bottom sheets on a phone; the Volley and the Reactions stay in the middle.
   let dockSheet = false;
   const cancel = () => setMode({ k: 'idle' });
+  /** The enemy decides on a Reaction to this device's Volley or card (a person sits here). */
+  const waitReaction =
+    !s.winner && !!d && d.kind === 'reactions' && d.side !== bottom && !myDecision && (net ? mySeats.length > 0 : game.setup.players[bottom] === 'human');
   if (s.winner) dock = null;
   else if (myDecision && d!.kind === 'reactions') {
-    dock = <ReactionPanel s={s} data={data} hints={hints} seats={myDeciding} pick={reactPick} onAct={(a) => act(a)} />;
+    dock = (
+      <ReactionPanel
+        s={s}
+        data={data}
+        seats={myDeciding}
+        pick={reactPick}
+        memo={!memoSeen.includes(bottom)}
+        onAct={(a) => act(a)}
+        onPick={setReactPick}
+        onInfo={(holder, code) => setSheet({ k: 'card', seat: holder, code })}
+      />
+    );
   } else if (myDecision && d!.kind === 'jack') {
     dock = <JackPanel s={s} data={data} ship={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'tortuga') {
@@ -597,10 +632,12 @@ export function Game({
       dock = <ConfirmPanel title={mode.text} yes="Закончить ход" no="Вернуться" onYes={() => endFlow('confirmed')} onNo={cancel} testid="confirm-end" />;
     } else if (mode.k === 'ending') {
       dock = (
-        <section className="panel ending" data-testid="ending">
+        <section className="panel ending" data-testid="ending" style={{ ['--ending-ms' as string]: `${endMs}ms` }}>
           <div className="panel-head">
             <b>Ход окончен</b>
-            <span className="panel-sub">ход перейдёт к {SIDE_LABEL[other(bottom)].dat} через 3 с</span>
+            <span className="panel-sub">
+              ход перейдёт к {SIDE_LABEL[other(bottom)].dat} через {endMs / 1000} с
+            </span>
             <button className="btn" data-testid="ending-cancel" onClick={cancel}>
               Отменить
             </button>
@@ -618,6 +655,10 @@ export function Game({
         );
       }
     }
+  } else if (waitReaction) {
+    // The attacker sees what was fired and who decides; never which enemy ship holds a Reaction.
+    const w = reactionWait(s, data, d!.side, d!.seats.map((x) => ({ bot: botSeat(x), name: net ? net.nameOf(x) : null })));
+    dock = <ReactionWaitPanel line={w.line} who={w.who} />;
   } else if (net && !s.winner) {
     dock = netDock(net, mySeats, bottom, nick);
   }
@@ -665,7 +706,8 @@ export function Game({
     if (!d) return '';
     if (net && !myDecision) return netWaiting();
     if (botSide(d.side)) {
-      if (d.kind === 'reactions') return `Ждём: бот ${nick(d.seats[0])} решает, ответить ли Реакцией…`;
+      // The team, not the ship: the ship deciding would tell who holds a Reaction.
+      if (d.kind === 'reactions') return `Ждём: ${SIDE_LABEL[d.side].name} (бот) ${decideVerb(d.side)}, ответить ли Реакцией…`;
       if (d.kind === 'turn') return `Бот: ${SIDE_LABEL[d.side].name} думает…`;
       return `Бот: ${SIDE_LABEL[d.side].name} решает…`;
     }
@@ -880,6 +922,18 @@ export function Game({
   // The ship the card repairs, as the engine decides it: framed green while the card panel is open.
   const repairing = mode.k === 'card' ? cardNeeds(s, data, mode.seat, mode.card, mode.ship ? { ship: mode.ship } : {}).repairShip : null;
 
+  /**
+   * «✓ готов»: the player of the team whose turn it is pressed «Ход окончен». By network — the seats the server lists
+   * as ready (everyone gets them), and this device's seats during the countdown; on one screen — the seats at the
+   * device during the countdown.
+   */
+  const readyOf = (code: string) => {
+    const ship = s.ships[code];
+    if (s.winner || ship.sunk || ship.side !== s.active) return false;
+    if (mode.k === 'ending' && mySeats.includes(code)) return true;
+    return !!net && net.ready.includes(code);
+  };
+
   const renderPlank = (x: (typeof view.ships)[string]) => (
     <Plank
       key={x.code}
@@ -895,6 +949,7 @@ export function Game({
       plate={plateFor(x.code)}
       buttons={plankButtons(x.code)}
       role={net ? netRole(x.code) : null}
+      ready={readyOf(x.code)}
       onSelect={() => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code)}
       onDetails={() => setSheet({ k: 'ship', code: x.code })}
       onLegend={() => legendClick(x.code)}
@@ -1076,6 +1131,8 @@ export function Game({
           setEffects={setEffects}
           sound={sound}
           setSound={setSound}
+          fastEnd={fastEnd}
+          setFastEnd={setFastEnd}
           openHands={net ? null : openHands}
           setOpenHands={setOpenHands}
           hints={hintsAllowed ? hints : null}

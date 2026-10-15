@@ -164,9 +164,11 @@ async function keyStates(page: Page, name: string) {
     const skipHit = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('[data-testid="skip-reaction"]') !== null, { x: skipBox.x + skipBox.width / 2, y: skipBox.y + skipBox.height / 2 });
     expect(skipHit).toBe(true);
   }
-  // «Подсказки» are off by default: the incoming damage is shown, «4 → 2» on the Reactions is not.
+  // «Подсказки» are off by default: the incoming damage is shown, and (P8) the window still says what a Reaction
+  // does now and gives its full text.
   await expect(page.getByTestId('reaction-panel').locator('.panel-head')).toContainText('по Корпусу');
-  await expect(page.getByTestId('reaction-panel').locator('.ro-effect').first()).not.toContainText('→');
+  await expect(page.getByTestId('reaction-panel').locator('.ro-effect').first()).toContainText('Залп');
+  await expect(page.getByTestId('reaction-panel').locator('.ro-text').first()).not.toBeEmpty();
   if (name !== 'laptop') {
     // Phone: the Reaction is chosen in the hand, the panel in the middle plays it.
     await page.locator('.hand .hcard.reaction:not(.off)').first().click();
