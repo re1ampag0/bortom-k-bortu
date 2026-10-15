@@ -130,6 +130,21 @@ test.describe('the sea cards through ?fxScene', () => {
     }
   });
 
+  test('the weather of the round: drawn with rich effects, empty in simple ones, with reduced motion and at «мгновенно»', async ({ browser }) => {
+    const count = async (extra: string, opts: { reducedMotion?: 'reduce' } = {}, speed = 'normal') => {
+      const page = await browser.newPage({ viewport: { width: 1366, height: 660 }, ...opts });
+      await open(page, 'sea-fog', speed, extra);
+      await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
+      const n = await page.locator('.fx-weather > *').count();
+      await page.close();
+      return n;
+    };
+    expect(await count('')).toBeGreaterThan(0); // «Туман»: the haze and the diagonals
+    expect(await count('&rich=0')).toBe(0);
+    expect(await count('', { reducedMotion: 'reduce' })).toBe(0);
+    expect(await count('', {}, 'instant')).toBe(0);
+  });
+
   test('sea-storm: the darkening takes no press, the hand and the buttons are not under it; a card of the hand opens during the show', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 660 });
     await open(page, 'sea-storm');
