@@ -172,6 +172,7 @@ export function Plank({
   targeted,
   shooter,
   repairing = false,
+  ready = false,
   plate,
   buttons,
   role,
@@ -192,6 +193,8 @@ export function Plank({
   shooter: boolean;
   /** The card being played repairs this ship (green frame while its panel is open). */
   repairing?: boolean;
+  /** The player pressed «Ход окончен» this turn: «✓ готов» in the head, seen by everyone. */
+  ready?: boolean;
   plate: Plate | null;
   buttons: Btn[];
   role: string | null;
@@ -252,6 +255,11 @@ export function Plank({
         <span className="plank-role">
           {selected && <span className="tag">ВЫБРАН</span>}
           {role && <span className="tag">{role}</span>}
+          {ready && (
+            <span className="tag ready" data-testid={`ready-${ship.code}`}>
+              ✓ готов
+            </span>
+          )}
           <span className="narrow hand-count">{handLabel}</span>
         </span>
       </header>
