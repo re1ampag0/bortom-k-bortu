@@ -89,8 +89,9 @@ function powderFx(t: TableCtx, e: Keg, t0: number) {
   const kb = bx(ctx, kg); tag(ctx, kb.r + 36, kb.cy, `−${e.amount} Порох`, t0, '', 1300);
 }
 
-/** game (S1): a rule of the sea card in the middle of the table (class «rule»: e2e checks it never touches a plank). */
-function ruleTag(ctx: FxCtx, x: number, y: number, text: string, delay: number, cls = '', dur = 1500): HTMLElement {
+/** game (S1): a rule of the sea card in the middle of the table (class «rule»: e2e checks it never touches a plank). The
+ *  Legends (L1) put their explanations there too. */
+export function ruleTag(ctx: FxCtx, x: number, y: number, text: string, delay: number, cls = '', dur = 1500): HTMLElement {
   const el = tag(ctx, x, y, text, delay, cls, dur);
   el.classList.add('rule');
   return el;

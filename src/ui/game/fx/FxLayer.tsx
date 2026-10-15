@@ -17,6 +17,7 @@ import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
 import { tookPress } from '../InfoTip';
+import { PLAY_LEGENDS } from './legends';
 import { PLAY_SEA, renderWeather } from './sea';
 import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
 import './fx.css';
@@ -48,8 +49,9 @@ export interface FxScene {
 }
 export const SCENES: FxScene[] = [];
 
-// The clips ported: the Volley (A2), the ships in motion (A3), the turn, the cards, the statuses … (A4), the sea (S1).
-Object.assign(PLAY, PLAY_VOLLEY, PLAY_MISC, PLAY_SEA);
+// The clips ported: the Volley (A2), the ships in motion (A3), the turn, the cards, the statuses … (A4), the sea (S1),
+// the Legends (L1).
+Object.assign(PLAY, PLAY_VOLLEY, PLAY_MISC, PLAY_SEA, PLAY_LEGENDS);
 SCENES.push(VOLLEY_SCENE, CARD_SCENE);
 
 interface Item extends QueueItem {
