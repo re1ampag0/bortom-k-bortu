@@ -44,6 +44,15 @@ describe('game-data.json v0.3', () => {
     expect([dutchman.souls, dutchman.start_souls]).toEqual([5, 1]);
   });
 
+  it('names every ship in the dative and the genitive', () => {
+    expect(Object.fromEntries(data.ships.map((s) => [s.code, [s.nick, s.nickDative, s.nickGenitive]]))).toEqual({
+      Ж: ['Жемчужина', 'Жемчужине', 'Жемчужины'],
+      М: ['Месть', 'Мести', 'Мести'],
+      И: ['Индевор', 'Индевору', 'Индевора'],
+      Г: ['Голландец', 'Голландцу', 'Голландца'],
+    });
+  });
+
   it('has the economy of v0.3', () => {
     expect(data.econ).toEqual({ income: 3, first_income: 2, cap: 8, second_start: 4 });
   });
