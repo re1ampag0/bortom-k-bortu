@@ -68,12 +68,12 @@ export function StatusBar({
           Р{s.round} · {SIDE_LABEL[s.active].name}
         </span>
       </div>
-      <div className={`status-text ${waiting ? 'waiting' : ''}`} data-testid="instruction">
+      <div className={`status-text ${waiting ? 'waiting' : ''}`} data-testid="instruction" data-fx-instruction>
         {instruction}
       </div>
       <div className="status-tools">
         {sea && (
-          <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`}>
+          <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-fx-sea-chip>
             <span className="wide">
               <b>Море:</b> {sea.name} <span className="muted">· {sea.big}</span>
             </span>
@@ -86,11 +86,11 @@ export function StatusBar({
   );
 }
 
-export function PowderDots({ n, cap }: { n: number; cap: number }) {
+export function PowderDots({ n, cap, side }: { n: number; cap: number; side?: Side }) {
   return (
-    <span className="powder-dots" aria-label={`${n} Пороха`}>
+    <span className="powder-dots" aria-label={`${n} Пороха`} data-fx-hold={side}>
       {Array.from({ length: cap }, (_, i) => (
-        <i key={i} className={i < n ? 'on' : ''} />
+        <i key={i} className={i < n ? 'on' : ''} data-fx-keg />
       ))}
       <b>{n}</b>
     </span>
@@ -104,6 +104,7 @@ export function TeamRow({
   hands,
   regroup,
   hint,
+  fxGen = 0,
 }: {
   side: Side;
   s: GameState;
@@ -111,12 +112,14 @@ export function TeamRow({
   hands: number[] | null;
   regroup: Btn | null;
   hint: string | null;
+  /** The animation layer changed the displayed state: the kegs it touched are built again. */
+  fxGen?: number;
 }) {
   return (
     <div className="team-row" data-testid={`team-${side}`}>
       <b className="team-name">{SIDE_LABEL[side].upper}</b>
       <span className="muted hold-label">Трюм</span>
-      <PowderDots n={s.teams[side].powder} cap={data.econ.cap} />
+      <PowderDots key={fxGen} n={s.teams[side].powder} cap={data.econ.cap} side={side} />
       {hands && hands.length > 0 && <span className="muted wide">· в руках {hands.join(' и ')} {cardsWord(hands[hands.length - 1]).split(' ')[1]}</span>}
       {regroup && <Button b={regroup} className="small regroup" />}
       {hint && <span className="muted wide hint">· {hint}</span>}
@@ -181,6 +184,7 @@ export function Plank({
   onDetails,
   onLegend,
   flashLegend = false,
+  fxGen = 0,
 }: {
   s: GameState;
   data: GameData;
@@ -202,6 +206,8 @@ export function Plank({
   onSelect: () => void;
   onDetails: () => void;
   onLegend: (() => void) | null;
+  /** The animation layer changed the displayed state: the tracks it touched (setTrack) are built again. */
+  fxGen?: number;
 }) {
   const d = shipData(data, ship.code);
   const st = statuses(s, data, ship);
@@ -244,6 +250,7 @@ export function Plank({
       className={cls}
       data-testid={plate ? `plate-${ship.code}` : `plank-${ship.code}`}
       data-ship={ship.code}
+      data-fx-ship={ship.code}
       style={{ ['--ship' as string]: d.color }}
       onClick={plate ? plate.onClick : onSelect}
       {...aim}
@@ -321,7 +328,7 @@ export function Plank({
         )}
       </header>
       {st.length > 0 && (
-        <div className="plank-statuses">
+        <div className="plank-statuses" data-fx-statuses>
           {st.map((x) => (
             <span key={x.label} className="status-chip" title={x.hint}>
               {x.label}
@@ -331,12 +338,12 @@ export function Plank({
         </div>
       )}
       <div className="plank-body">
-        <div className="tracks">
+        <div className="tracks" key={fxGen}>
           {TRACKS.map((t) => {
             const max = startValue(data, ship.code, t);
             const v = ship.tracks[t];
             return (
-              <div key={t} className={`track t-${t}`}>
+              <div key={t} className={`track t-${t}`} data-fx-track={t}>
                 <span className="track-label">{TRACK_LABEL[t]}</span>
                 <span className="cells" aria-hidden>
                   {Array.from({ length: max }, (_, i) => (
@@ -346,8 +353,8 @@ export function Plank({
                 <span className="bar" aria-hidden>
                   <i style={{ width: `${(100 * v) / max}%` }} />
                 </span>
-                <b className={`track-num ${v <= (t === 'crew' ? 1 : 0) && t !== 'hull' ? 'low' : ''}`}>
-                  {v}/{max}
+                <b className={`track-num ${v <= (t === 'crew' ? 1 : 0) && t !== 'hull' ? 'low' : ''}`} data-fx-value>
+                  {`${v}/${max}`}
                 </b>
               </div>
             );
@@ -355,18 +362,19 @@ export function Plank({
         </div>
         <div className="badges">
           {ship.fires > 0 && (
-            <span className="badge fire" title="Пожар: в начале хода своей команды −1 Корпус за каждый. Потушить — сбросить карту">
+            <span className="badge fire" data-fx-fires title="Пожар: в начале хода своей команды −1 Корпус за каждый. Потушить — сбросить карту">
               Пожар {ship.fires}
             </span>
           )}
           {d.souls !== undefined && (
-            <span className="badge souls" title="Души: платят за карты «Голландца»; +1 за урон по Команде врага">
+            <span className="badge souls" data-fx-souls title="Души: платят за карты «Голландца»; +1 за урон по Команде врага">
               Души {ship.souls} / {d.souls}
             </span>
           )}
           {!ship.sunk && (
             <button
               className={`badge legend ${legendState} ${flash}`}
+              data-fx-legend
               tabIndex={plate ? -1 : undefined}
               onClick={(e) => {
                 if (plate) return;

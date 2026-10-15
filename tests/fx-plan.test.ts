@@ -3,13 +3,11 @@
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
-import { botAnswer, botTurn, newBotMemory, type BotFeedback } from '../src/engine/ai/bot';
 import { deckCards, legendCards, seaCards } from '../src/engine/data';
-import { applyAction, createGame } from '../src/engine/engine';
-import { RuleError, type Action, type GameEvent, type GameState } from '../src/engine/state';
-import { eventsFor } from '../src/engine/view';
+import type { Action, GameEvent } from '../src/engine/state';
 import { applyVisible, displayFrom, displayRules } from '../src/ui/game/fx/display';
 import { createPlanner, type FxCards, type FxClip } from '../src/ui/game/fx/planFx';
+import { playGame, SIDES } from './fx-games';
 import { data } from './helpers';
 
 const cards: FxCards = Object.fromEntries([...deckCards(data), ...legendCards(data)].map((c) => [c.code, c]));
@@ -17,52 +15,6 @@ const seaKeyOf = Object.fromEntries(seaCards(data).map((c) => [c.code, c.key]));
 const seaKey = (code: string) => seaKeyOf[code];
 const ships = Object.fromEntries(data.ships.map((s) => [s.code, { side: s.side }]));
 const rules = displayRules(data);
-const SIDES = { P: ['Ж', 'М'], C: ['И', 'Г'] } as const;
-
-interface Step {
-  n: number;
-  action: Action;
-  events: Record<'P' | 'C', GameEvent[]>;
-  after: GameState;
-}
-
-/** A bot game as scripts/dump-fx-events.ts plays it: every action with the events each team sees. */
-function playGame(seed: number, net: boolean): { start: GameState; steps: Step[] } {
-  const mem = newBotMemory(seed ^ 0x2545f491);
-  let state = createGame(data, { seed, variant: 'standard', ...(net ? { pauseEmptyWindows: true } : {}) } as never).state;
-  const start = state;
-  const steps: Step[] = [];
-  const apply = (action: Action) => {
-    const r = applyAction(state, action, data);
-    state = r.state;
-    steps.push({ n: steps.length + 1, action, events: { P: eventsFor(state, SIDES.P, r.events), C: eventsFor(state, SIDES.C, r.events) }, after: state });
-  };
-  const settle = () => {
-    while (state.pending && !state.winner) {
-      const p = state.pending as { kind: string; waiting?: string[] };
-      apply(p.kind === 'reactions' && p.waiting && p.waiting.length === 0 ? ({ type: 'closeWindow' } as Action) : botAnswer(state, data, mem));
-    }
-  };
-  settle();
-  for (let guard = 0; !state.winner && guard < 400; guard++) {
-    const turn = botTurn(state, data, mem.rng);
-    let next = turn.next();
-    while (!next.done && !state.winner) {
-      let fb: BotFeedback;
-      try {
-        apply(next.value);
-        fb = { state };
-      } catch (e) {
-        if (!(e instanceof RuleError)) throw e;
-        fb = { state, error: (e as Error).message };
-      }
-      settle();
-      fb.state = state;
-      next = turn.next(fb);
-    }
-  }
-  return { start, steps };
-}
 
 const units = (c: Extract<FxClip, { kind: 'shot' }>, f: (b: NonNullable<typeof c.shots>[number]) => boolean) =>
   (c.shots ?? []).filter(f).reduce((n, b) => n + b.units, 0);

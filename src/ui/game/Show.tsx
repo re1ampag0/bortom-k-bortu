@@ -49,27 +49,38 @@ export function useShowQueue({
   paused: boolean;
   /** «Пауза»: the step on screen stays until «Дальше». */
   hold?: boolean;
+  /** The actions come only through `push` (the queue of the animation layer hands over those it does not show). */
+  external?: boolean;
 }) {
   const shown = useRef((game.recent.at(-1)?.n ?? -1) + 1);
   const [queue, setQueue] = useState<{ id: number; step: ShowStep }[]>([]);
   const ids = useRef(0);
 
-  useEffect(() => {
-    const fresh = game.recent.filter((r) => r.n >= shown.current);
-    if (fresh.length === 0) return;
-    shown.current = fresh.at(-1)!.n + 1;
-    if (!enabled) return;
+  /** Adds the steps of these actions; returns how many. */
+  const add = (fresh: Recent[]): number => {
+    if (!enabled) return 0;
     const steps: ShowStep[] = [];
     for (const r of fresh) {
       // On one screen the game keeps every event: the viewer sees only what viewFor allows (the server cut them already).
       const events = game.kind === 'local' ? eventsFor(game.state as never, viewer, r.events) : r.events;
       steps.push(...showSteps(events, isOthers(r, game, mySeats, bottom)));
     }
-    if (steps.length === 0) return;
+    if (steps.length === 0) return 0;
     setQueue((q) => {
       const next = [...q, ...steps.map((step) => ({ id: ++ids.current, step }))];
       return myDecision ? next.slice(-1) : next;
     });
+    return steps.length;
+  };
+  const addRef = useRef(add);
+  addRef.current = add;
+
+  useEffect(() => {
+    if (external) return;
+    const fresh = game.recent.filter((r) => r.n >= shown.current);
+    if (fresh.length === 0) return;
+    shown.current = fresh.at(-1)!.n + 1;
+    add(fresh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version]);
 
@@ -87,7 +98,8 @@ export function useShowQueue({
   }, [head, speed, paused, hold]);
 
   const skip = useCallback(() => setQueue([]), []);
-  return { step: paused ? null : head, busy: queue.length > 0, skip };
+  const push = useCallback((fresh: Recent[]) => addRef.current(fresh), []);
+  return { step: paused ? null : head, busy: queue.length > 0, skip, push };
 }
 
 function isOthers(r: Recent, game: ShowSource, mySeats: string[], bottom: string): boolean {
