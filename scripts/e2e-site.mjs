@@ -1,6 +1,7 @@
 import { build, preview } from 'vite';
 
-await build();
+// The e2e build: mode «e2e» keeps «?fxScene» (FxScene.tsx), the build for GitHub Pages (`npm run build`) has none.
+await build({ mode: 'e2e' });
 const server = await preview({
   preview: { host: '127.0.0.1', port: 4173, strictPort: true },
 });
