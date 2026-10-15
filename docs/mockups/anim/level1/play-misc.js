@@ -228,25 +228,39 @@ function repairFx(e, t0, run, from) {
   tag(b.cx, b.y - 12, `${G.ships[e.ship].nick}: +${e.amount} ${TR[e.track]}`, t0 + 200, 'good', 1500);
   return t0 + 600 + e.amount * 180;
 }
-const FLAG_LABEL = { parley: 'Право на переговоры', voodoo: 'Кукла вуду', blockade: 'Блокада', mark: 'Чёрная метка', noReact: 'Без Реакций', limit: 'Карт сверх Команды', volleyBonus: 'Залпы +', noDiag: 'Диагональ без штрафа', noReactTeam: 'Противник без Реакций' };
+const MARK_N = (Object.values(G.cards).map((c) => ((c.fx && c.fx.ops) || []).find((o) => o[0] === 'mark')).find(Boolean) || [0, 0, 2])[2];
+const FLAG_LABEL = { parley: 'Право на переговоры', voodoo: 'Кукла вуду', blockade: 'Блокада', mark: `Чёрная метка +${MARK_N}`, noReact: 'Без Реакций', limit: 'Карт сверх Команды', volleyBonus: 'Залпы +', noDiag: 'Диагональ без штрафа', noReactTeam: 'Противник без Реакций' };
 const BLOT = '<svg viewBox="0 0 30 26" width="30" height="26"><path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612"/><circle cx="27" cy="22" r="2" fill="#1a1612"/><circle cx="4" cy="5" r="1.4" fill="#1a1612"/></svg>';
-function statusFx(e, t0, run) {
+/**
+ * Статус корабля: чип появляется в строке статусов под шапкой (ничего не закрывает) и остаётся, пока статус есть
+ * в состоянии. «Чёрная метка»: клякса слетает с карты и садится в свой чип; держится до конца хода.
+ * Подпись — в зазоре между рядами, а не поверх шкал.
+ */
+function statusFx(e, t0, run, from) {
   const label = e.flag === 'limitRaised' || e.flag === 'limit' ? `+${e.n} карт сверх Команды` : e.flag === 'volleyBonus' ? `Залпы +${e.n} в этот ход` : FLAG_LABEL[e.flag] || e.flag;
-  if (e.ship) {
-    const b = bx(plank(e.ship));
-    if (e.flag === 'mark') {
-      const spot = { x: b.x + b.w * 0.66, y: b.y + b.h * 0.58 };
-      const blot = mk('blot', 0, 0, BLOT);
-      A(blot, [{ opacity: 0, transform: `translate(${spot.x}px,${spot.y}px) scale(2.4) rotate(-20deg)` }, { opacity: 1, transform: `translate(${spot.x}px,${spot.y}px) scale(1) rotate(0)`, offset: 0.4 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], 1600, t0, 'cubic-bezier(.5,0,.8,1)');
-      at(t0 + 260, run, () => shake(plank(e.ship), 0, 2));
-      burst('dust', spot.x, spot.y, t0 + 260, 6, 8, 22, 500);
-    }
-    const st = mk('stamp-fx', b.cx, b.cy, label);
-    A(st, [{ opacity: 0, scale: '1.8' }, { opacity: 1, scale: '1', offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], 1500, t0 + 120, 'cubic-bezier(.3,1.6,.5,1)');
-  } else {
-    const g = gapBox(); tag(board.clientWidth / 2, g.cy, `${SIDE_LABEL[e.side].name}: ${label}`, t0, 'plus', 1500);
+  if (!e.ship) { const g = gapBox(); tag(board.clientWidth / 2, g.cy, `${SIDE_LABEL[e.side].name}: ${label}`, t0, 'plus', 1500); return t0 + 1300; }
+  const el = plank(e.ship), out = facingY(e.ship) + dirOf(e.ship) * 18;
+  // чип-заготовка: такой же, какой нарисует перерисовка после клипа (невидимый до приземления)
+  let row = el.querySelector('[data-fx-statuses]');
+  if (!row) { el.querySelector('.plank-head').insertAdjacentHTML('afterend', '<div class="plank-statuses" data-fx-statuses></div>'); row = el.querySelector('[data-fx-statuses]'); }
+  let chip = row.querySelector(`[data-fx-status="${label}"]`);
+  if (!chip) { row.insertAdjacentHTML('beforeend', statusChipHTML(label)); chip = row.lastElementChild; chip.style.visibility = 'hidden'; }
+  const cb = bx(chip);
+  let land = t0 + 150;
+  if (e.flag === 'mark') {
+    const ic = bx(chip.querySelector('svg') || chip), spot = { x: ic.cx, y: ic.cy };
+    const start = from || { x: spot.x + 40, y: spot.y - 90 * dirOf(e.ship) };
+    const mid = { x: (start.x + spot.x) / 2, y: Math.min(start.y, spot.y) - 40 };
+    const blot = mk('blot', 0, 0, BLOT);
+    A(blot, [{ opacity: 0, transform: `translate(${start.x}px,${start.y}px) scale(.6) rotate(30deg)` }, { opacity: 1, transform: `translate(${mid.x}px,${mid.y}px) scale(2.2) rotate(-15deg)`, offset: 0.55 }, { opacity: 1, transform: `translate(${spot.x}px,${spot.y}px) scale(.55) rotate(0)` }], 560, t0, 'cubic-bezier(.5,0,.8,1)', 'forwards');
+    land = t0 + 560;
+    at(land, run, () => { blot.remove(); shake(el, 0, 2); });
+    burst('dust', spot.x, spot.y, land, 6, 6, 18, 450);
+    ring(spot.x, spot.y, land, 0.6, '#1a1612');
   }
-  return t0 + 1300;
+  at(land, run, () => { chip.style.visibility = ''; A(chip, [{ transform: 'scale(1.6)', boxShadow: '0 0 0 3px rgba(139,107,181,.5)' }, { transform: 'scale(1)', boxShadow: 'none' }], 380, 0, 'cubic-bezier(.3,1.6,.5,1)', 'none'); });
+  tag(cb.cx, out, e.flag === 'mark' ? `${label} до конца хода` : label, land, 'plus', 1700);
+  return land + 1100;
 }
 
 /** Разыгранная карта: вылетает (своя — из руки, чужая — из-за края), ложится у центра, затем её эффекты. */
@@ -269,7 +283,7 @@ PLAY.card = async (c, run) => {
     else if (e.type === 'restored') { t = Math.max(t, repairFx(e, 0, run, from)); }
     else if (e.type === 'powderGained') { t = Math.max(t, gainKegs(e.side, e.amount, from, 0)); }
     else if (e.type === 'powderLost') { payKegs(e.side, e.amount, 0); t = Math.max(t, 900); }
-    else if (e.type === 'flagSet' || e.type === 'turnFlag' || e.type === 'limitRaised') { t = Math.max(t, statusFx(e.type === 'limitRaised' ? { ...e, flag: 'limitRaised' } : e, 0, run)); }
+    else if (e.type === 'flagSet' || e.type === 'turnFlag' || e.type === 'limitRaised') { t = Math.max(t, statusFx(e.type === 'limitRaised' ? { ...e, flag: 'limitRaised' } : e, 0, run, from)); }
     else if (e.type === 'fireAdded') { const hd = bx(plank(e.ship).querySelector('.plank-head')); fly(projectile('fire'), curve(from, { x: hd.r - 24, y: hd.cy }, 0.1), 500, 0); tag(hd.cx, hd.b + 10, 'Пожар', 500, 'plus', 1200); t = Math.max(t, 1100); }
     else if (e.type === 'soulsGained') { soulsFly(e.ship, e.amount, t * 0.5); t = Math.max(t, 1200); }
     else if (e.type === 'soulsSpent') { const sb = plank(e.ship).querySelector('[data-fx-souls]'); if (sb && visible(sb)) { const b = bx(sb); wisp({ x: b.cx, y: b.cy }, from, 0); } t = Math.max(t, 900); }
@@ -446,7 +460,7 @@ function applyExtra(d, e) {
   const sh = d.ships[e.ship || e.seat];
   switch (e.type) {
     case 'flagSet': if (sh) { sh.flags = [...(sh.flags || []).filter((f) => f !== FLAG_LABEL[e.flag]), FLAG_LABEL[e.flag]]; } break;
-    case 'turnStarted': for (const s of Object.values(d.ships)) s.flags = (s.flags || []).filter((f) => f !== 'Чёрная метка' && f !== 'Без Реакций'); break;
+    case 'turnStarted': for (const s of Object.values(d.ships)) s.flags = (s.flags || []).filter((f) => !f.startsWith('Чёрная метка') && f !== 'Без Реакций'); break; // «до конца хода»
     case 'drew': if (sh) { if (Array.isArray(sh.hand)) sh.hand = [...sh.hand, ...(e.cards || Array(e.count).fill('?'))]; else sh.hand += e.count; } break;
     case 'cardPlayed': case 'sold': case 'discarded': if (sh) { if (Array.isArray(sh.hand)) { const i = sh.hand.indexOf(e.card); if (i >= 0) sh.hand.splice(i, 1); else { const q = sh.hand.indexOf('?'); if (q >= 0) sh.hand.splice(q, 1); } } else sh.hand = Math.max(0, sh.hand - 1); } break;
     case 'reaction': { const s2 = d.ships[e.seat]; if (s2 && !e.fromPlan) { if (Array.isArray(s2.hand)) { const i = s2.hand.indexOf(e.card); if (i >= 0) s2.hand.splice(i, 1); } else s2.hand = Math.max(0, s2.hand - 1); } break; }
