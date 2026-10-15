@@ -195,9 +195,18 @@ export function splash(ctx: FxCtx, x: number, y: number, delay: number): void {
     A(ctx, r2, [{ opacity: 0.6, transform: `translate(${x}px,${y}px) scale(.2)` }, { opacity: 0, transform: `translate(${x}px,${y}px) scale(1.3)` }], 900, delay + 160);
   }
 }
+/** game: a label never goes past the edge of the table — it moves in, 8 px from it (the reference lets it go out). */
+const EDGE = 8;
+export function inside(v: number, size: number, max: number): number {
+  return Math.max(EDGE, Math.min(max - EDGE - size, v));
+}
 export function tag(ctx: FxCtx, x: number, y: number, text: string, delay: number, cls = '', dur = 1500): HTMLElement {
   const t = mk(ctx, 'tag ' + cls, x, y);
   t.textContent = text;
+  // .tag is centred on its point (translate(-50%, -50%)); it rises 4 px at the start
+  const w = t.offsetWidth, h = t.offsetHeight;
+  t.style.left = inside(x - w / 2, w, ctx.board.clientWidth) + w / 2 + 'px';
+  t.style.top = inside(y - h / 2, h + 4, ctx.board.clientHeight) + h / 2 + 'px';
   A(ctx, t, [{ opacity: 0, translate: '0 4px' }, { opacity: 1, translate: '0 0', offset: 0.12 }, { opacity: 1, offset: 0.82 }, { opacity: 0 }], dur, delay);
   return t;
 }
@@ -366,6 +375,10 @@ export function hint(ctx: FxCtx, text: string): void {
 }
 export function pill(ctx: FxCtx, x: number, y: number, text: string, delay: number, cls = ''): HTMLElement {
   const pl = mk(ctx, 'pill ' + cls, 0, 0, text);
+  // game: inside the table (see tag); it moves from +8 px to −12 px and grows to ×1.12
+  const w0 = pl.offsetWidth, h0 = pl.offsetHeight, gw = w0 * 0.06, gh = h0 * 0.06; // ×1.12 around its centre
+  x = inside(x - gw, w0 + 2 * gw, ctx.board.clientWidth) + gw;
+  y = Math.max(EDGE + 12 + gh, Math.min(ctx.board.clientHeight - EDGE - h0 - gh - 8, y));
   A(ctx, pl, [{ opacity: 0, transform: `translate(${x}px,${y + 8}px) scale(.4)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1.12)`, offset: 0.18 }, { transform: `translate(${x}px,${y + 2}px) scale(1)`, offset: 0.32 }, { opacity: 1, offset: 0.82 }, { opacity: 0, transform: `translate(${x}px,${y - 12}px) scale(1)` }], 1500, delay);
   return pl;
 }
