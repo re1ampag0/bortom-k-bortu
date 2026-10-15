@@ -46,7 +46,9 @@ import {
 import { MissedSheet, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { ShowLayer, useShowQueue } from './Show';
-import { instantUrl } from '../start/motion';
+import { instantUrl, reducedMotion } from '../start/motion';
+import { FxLayer, useFxQueue } from './fx/FxLayer';
+import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
 import { enemyTurnLines } from './lastTurn';
@@ -270,11 +272,31 @@ export function Game({
     myDecision,
     paused: !!banner && banner.k !== 'summary',
     hold: held,
+    // The actions come through the queue of the animation layer: it hands over those it does not show itself.
+    external: true,
   });
+  // The animation layer on the table (A2): the planks are drawn from the displayed state while its clips play.
+  const fx = useFxQueue({
+    game,
+    version,
+    view,
+    viewer,
+    data,
+    bottom,
+    enabled: speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide && !reducedMotion(),
+    speed,
+    rich: effects === 'rich',
+    myDecision,
+    paused: !!banner && banner.k !== 'summary',
+    hold: held,
+    show,
+  });
+  /** The table as it is shown: the displayed fields from the queue's D, the rest from the real view. */
+  const tableView = fx.display ? withDisplay(view, fx.display) : view;
   useEffect(() => {
     if (!local || curtainSide || s.winner || held || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
-    if ((show.busy || (banner && banner.k !== 'summary')) && !instant) return;
+    if ((show.busy || fx.busy || (banner && banner.k !== 'summary')) && !instant) return;
     const t = setTimeout(
       () => {
         let n = 0;
@@ -284,9 +306,9 @@ export function Game({
       instant ? 0 : SPEEDS[speed].ms,
     );
     return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, banner?.k, held]);
+  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, fx.busy, banner?.k, held]);
 
-  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy;
+  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy || fx.busy;
   // The pause never keeps a decision of this device waiting: it ends as soon as the game asks the player.
   const canHold = botBusy && !myDecision;
   useEffect(() => {
@@ -498,7 +520,7 @@ export function Game({
 
   // ——— Planks ———
   const columns = (side: Side) => {
-    const ships = Object.values(view.ships).filter((x) => x.side === side);
+    const ships = Object.values(tableView.ships).filter((x) => x.side === side);
     const alive = ships.filter((x) => !x.sunk);
     const cols: (typeof ships[number] | null)[] = [null, null];
     for (const x of alive) cols[x.pos] = x;
@@ -859,6 +881,7 @@ export function Game({
           onClick: () => {
             setHeld(false);
             show.skip();
+            fx.skip();
             setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant');
           },
         },
@@ -868,6 +891,7 @@ export function Game({
           onClick: () => {
             setHeld(false);
             show.skip();
+            fx.skip();
             setFastTurn(turnKey);
           },
           testid: 'skip-turn',
@@ -937,7 +961,8 @@ export function Game({
   const renderPlank = (x: (typeof view.ships)[string]) => (
     <Plank
       key={x.code}
-      s={view}
+      s={tableView}
+      fxGen={fx.gen}
       data={data}
       ship={x}
       own={x.side === bottom}
@@ -959,13 +984,13 @@ export function Game({
 
   return (
     <div className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''}`} data-testid="game" data-bottom={bottom}>
-      <StatusBar s={s} data={data} instruction={flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
+      <StatusBar s={fx.display ? withDisplay(s, fx.display) : s} data={data} instruction={fx.hint ?? flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}
       <ShowLayer data={data} step={show.step} decisionOpen={!!d && (d.kind === 'reactions' || d.kind === 'choice' || d.kind === 'jack' || d.kind === 'tortuga')} />
       <BannerView data={data} banner={banner} />
       <main className="board">
-        <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
+        <TeamRow side={top} s={tableView} data={data} hands={handsOf(top)} regroup={null} hint={null} fxGen={fx.gen} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
         <div className="middle" data-fx-gap>
           {toast && (
@@ -992,7 +1017,7 @@ export function Game({
           )}
         </div>
         <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
-        <TeamRow side={bottom} s={view} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} />
+        <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} fxGen={fx.gen} />
         <div className="hand-row" data-fx-hand>
           {seat && (
             <Hand
@@ -1030,6 +1055,7 @@ export function Game({
             <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
           </div>
         </div>
+        <FxLayer fx={fx} />
       </main>
       <aside className="log-col">
         <h2>Журнал</h2>
