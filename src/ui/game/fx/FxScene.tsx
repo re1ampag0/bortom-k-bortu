@@ -188,7 +188,8 @@ function SceneTable({
   const bottom = data.ships.find((s) => s.code === scene.viewer[0])!.side;
   const top: Side = bottom === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ';
   const speed = urlSpeed();
-  const enabled = !reducedMotion();
+  // «?speed=instant» (S1): the layer is off, as in the game at «мгновенно» — the table is at once the result.
+  const enabled = !reducedMotion() && new URLSearchParams(location.search).get('speed') !== 'instant';
   const fx = useFxQueue({
     game: { kind: 'net', recent: started ? setup.recent : [], state: view },
     version: started ? 1 : 0,
