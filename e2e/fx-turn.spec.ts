@@ -238,7 +238,7 @@ test('the result of a new action never flashes on the planks before its clips (c
   expect(Object.values(seen).some((l) => l.length > 1)).toBe(true);
 });
 
-test.describe('«До конца хода» and «Пауза» with the layer (a game against the bots, 1366×660)', () => {
+test.describe('the turn with the layer: «До конца хода», «Ход окончен», «Пауза» (a game against the bots, 1366×660)', () => {
   test.use({ viewport: { width: 1366, height: 660 } });
 
   async function againstBots(page: Page) {
@@ -274,6 +274,19 @@ test.describe('«До конца хода» and «Пауза» with the layer (a
     await expect(page.locator('[data-testid="end-turn"]:visible').first()).toHaveText('Ход окончен', { timeout: 60_000 });
     const hidden = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('[data-fx-status]')).filter((c) => getComputedStyle(c).visibility === 'hidden').length);
     expect(hidden).toBe(0);
+  });
+
+  test('«Ход окончен»: the end of the turn and the start of the bots\' turn are clips of the layer (the banner «Ход Пиратов»)', async ({ page }) => {
+    await againstBots(page);
+    const end = page.locator('[data-testid="end-turn"]:visible').first();
+    await expect(end).toHaveText('Ход окончен', { timeout: 90_000 });
+    await expect(end).not.toHaveAttribute('aria-disabled', 'true', { timeout: 60_000 });
+    await end.click();
+    // «Ход окончен · Отменить» passes the turn in 3 s; then the clip «turn» draws its banner in the layer
+    await expect(page.locator('.fx-layer .banner')).toHaveText('Ход Пиратов', { timeout: 15_000 });
+    await expect(page.locator('[data-fx-instruction]')).toHaveText('Ход Пиратов');
+    // the old banner of Banners.tsx is not drawn twice
+    await expect(page.getByTestId('turn-banner')).toHaveCount(0);
   });
 
   test('«Пауза» holds the layer between clips, «Дальше» lets it go on (P4)', async ({ page }) => {

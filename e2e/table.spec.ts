@@ -155,8 +155,9 @@ async function keyStates(page: Page, name: string) {
   await shot(page, name, '6-curtain-reaction');
   await page.getByTestId('curtain-ready').click();
   await expect(page.getByTestId('reaction-panel')).toBeVisible();
-  await expect(page.getByTestId('show-arrow')).toHaveCount(0);
-  await expect(page.getByTestId('show-plate')).toHaveCount(0);
+  // Behind the curtain the animation layer is off: no plate and no cannonball of the Volley over the Reaction window.
+  await expect(page.locator('.fx-layer .plate')).toHaveCount(0);
+  await expect(page.locator('.fx-layer .ball')).toHaveCount(0);
   const reactionCard = page.locator('.hand .hcard.reaction:not(.off)').first();
   const clickable = await reactionCard.evaluate((node) => {
     const box = node.getBoundingClientRect();

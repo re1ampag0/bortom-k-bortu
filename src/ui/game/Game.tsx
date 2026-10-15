@@ -45,7 +45,6 @@ import {
 } from './Panels';
 import { MissedSheet, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
-import { ShowLayer, useShowQueue } from './Show';
 import { instantUrl, reducedMotion } from '../start/motion';
 import { FxLayer, useFxQueue } from './fx/FxLayer';
 import { withDisplay } from './fx/queue';
@@ -265,22 +264,8 @@ export function Game({
     paused: !!curtainSide,
   });
   const toast = banner?.k === 'summary' ? banner.text : null;
-  // The show of the enemy's and the bots' actions, one at a time; the bots wait for it.
-  const show = useShowQueue({
-    game,
-    version,
-    viewer,
-    mySeats,
-    bottom,
-    enabled: speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide,
-    speed,
-    myDecision,
-    paused: !!banner && banner.k !== 'summary',
-    hold: held,
-    // The actions come through the queue of the animation layer: it hands over those it does not show itself.
-    external: true,
-  });
-  // The animation layer on the table (A2): the planks are drawn from the displayed state while its clips play.
+  // The animation layer on the table (A2–A4): every action is shown by its clips, the planks are drawn from the
+  // displayed state while they play; the bots wait for it.
   const fx = useFxQueue({
     game,
     version,
@@ -297,7 +282,6 @@ export function Game({
     jump: !!net && net.missed.length > 0,
     paused: !!banner && banner.k !== 'summary',
     hold: held,
-    show,
   });
   /** The table as it is shown: the displayed fields from the queue's D, the rest from the real view. */
   const tableView = fx.display ? withDisplay(view, fx.display) : view;
@@ -309,7 +293,7 @@ export function Game({
   useEffect(() => {
     if (!local || curtainSide || s.winner || held || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
-    if ((show.busy || fx.busy || (banner && banner.k !== 'summary')) && !instant) return;
+    if ((fx.busy || (banner && banner.k !== 'summary')) && !instant) return;
     const t = setTimeout(
       () => {
         let n = 0;
@@ -319,9 +303,9 @@ export function Game({
       instant ? 0 : SPEEDS[speed].ms,
     );
     return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, fx.busy, banner?.k, held]);
+  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, fx.busy, banner?.k, held]);
 
-  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy || fx.busy;
+  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || fx.busy;
   // The pause never keeps a decision of this device waiting: it ends as soon as the game asks the player.
   const canHold = botBusy && !myDecision;
   useEffect(() => {
@@ -873,7 +857,7 @@ export function Game({
     onClick: () => endFlow('start'),
     testid: 'end-turn',
   };
-  // «Пауза», «Быстрее» and «До конца хода» while a bot moves or a move is shown; the last two skip the show.
+  // «Пауза», «Быстрее» and «До конца хода» while a bot moves or a move is shown; the last two skip the clips.
   const pauseBtn: Btn = {
     key: 'pause',
     label: held ? '▶ Дальше' : '⏸ Пауза',
@@ -888,7 +872,6 @@ export function Game({
           label: 'Быстрее',
           onClick: () => {
             setHeld(false);
-            show.skip();
             fx.skip();
             setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant');
           },
@@ -898,7 +881,6 @@ export function Game({
           label: 'До конца хода',
           onClick: () => {
             setHeld(false);
-            show.skip();
             fx.skip();
             setFastTurn(turnKey);
           },
@@ -996,7 +978,6 @@ export function Game({
       <StatusBar s={fx.display ? withDisplay(s, fx.display) : s} data={data} instruction={fx.hint ?? flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}
-      <ShowLayer data={data} step={show.step} decisionOpen={!!d && (d.kind === 'reactions' || d.kind === 'choice' || d.kind === 'jack' || d.kind === 'tortuga')} />
       <BannerView data={data} banner={banner} />
       <main className="board">
         <TeamRow side={top} s={tableView} data={data} hands={handsOf(top)} regroup={null} hint={null} fxGen={fx.gen} />

@@ -25,14 +25,22 @@ export interface LastAction {
 
 const NOTHING_TO_UNDO = 'Нечего отменять: в этом ходу вы ещё ничего не сделали';
 
+/** An action with its number in the game record and the events it brought: what the table animates. */
+export interface Recent {
+  n: number;
+  action: Action;
+  by: 'human' | 'bot';
+  events: GameEvent[];
+}
+
 export class LocalGame {
   readonly kind = 'local' as const;
   state: GameState;
   readonly actions: Action[] = [];
   readonly log: LogLine[] = [];
   last: LastAction | null = null;
-  /** The last actions with their numbers, for the show of each one on the table (ui/game/showSteps.ts). */
-  recent: { n: number; action: Action; by: 'human' | 'bot'; events: GameEvent[] }[] = [];
+  /** The last actions with their numbers, for the animation layer on the table (ui/game/fx). */
+  recent: Recent[] = [];
   /** Grows with every change: the interface re-renders by it. */
   version = 0;
   /** Why Undo is not possible now (when the stack is empty). */

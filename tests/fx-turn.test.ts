@@ -7,11 +7,11 @@ import type { FxKind } from '../src/ui/game/fx/planFx';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead } from '../src/ui/game/fx/queue';
 import { contrast, inkOn } from '../src/ui/game/fx/primitives';
 import { playGame, SIDES } from './fx-games';
-import { clipsOf, play } from './fx-scenes';
+import { clipsOf, play, routeOf } from './fx-scenes';
 import { data } from './helpers';
 
 const route = (id: string) => play(id).map((x) => x.route);
-const all = (id: string, r: 'fx' | 'show') => play(id).map(() => r);
+const all = (id: string, r: 'fx') => play(id).map(() => r);
 
 describe('the start and the end of a turn', () => {
   it('the clips are in PLAY', () => {
@@ -63,7 +63,7 @@ describe('a card waiting (20 bot games, both sides)', () => {
         const planner = plannerFor(data, SIDES[side], start.sea?.current ?? null);
         let open = false;
         for (const st of steps) {
-          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => !!PLAY[kind]);
+          const item = planItem(planner, st.n, st.events[side], st.action);
           const card = item.clips.find((c) => c.kind === 'card');
           if (card && item.cardOpen) {
             waiting++;
@@ -101,7 +101,7 @@ describe('repairs', () => {
       const { start, steps } = playGame(5001 + k, k % 2 === 1);
       const planner = plannerFor(data, SIDES.C, start.sea?.current ?? null);
       for (const st of steps) {
-        for (const c of planItem(planner, st.n, st.events.C, st.action, (kind) => !!PLAY[kind]).clips) if (c.kind === 'repair' && c.cause === 'souls') souls++;
+        for (const c of planItem(planner, st.n, st.events.C, st.action).clips) if (c.kind === 'repair' && c.cause === 'souls') souls++;
       }
     }
     expect(souls).toBeGreaterThan(0);
@@ -115,7 +115,7 @@ describe('every action goes through the layer (A4)', () => {
     }
   });
 
-  it('24 bot games, both sides, with and without the pause of empty windows: no action goes to «show»; D = the real state after each', () => {
+  it('24 bot games, both sides, with and without the pause of empty windows: every clip of every action has its player (nothing for the old ShowLayer); D = the real state after each', () => {
     const rules = displayRules(data);
     const shows: string[] = [];
     const problems: string[] = [];
@@ -128,10 +128,10 @@ describe('every action goes through the layer (A4)', () => {
         const planner = plannerFor(data, SIDES[side], start.sea?.current ?? null);
         const d = displayFrom(start);
         for (const st of steps) {
-          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => !!PLAY[kind]);
+          const item = planItem(planner, st.n, st.events[side], st.action);
           actions++;
           item.clips.forEach((c) => kinds.add(c.kind));
-          if (item.route !== 'fx') shows.push(`seed ${seed} ${side} #${st.n}: ${item.clips.map((c) => c.kind).join(',')}`);
+          if (routeOf(item) !== 'fx') shows.push(`seed ${seed} ${side} #${st.n}: ${item.clips.map((c) => c.kind).join(',')}`);
           for (const c of item.clips) applyClip(d, item, c, rules);
           applyQuiet(d, item, rules);
           if (JSON.stringify(d) !== JSON.stringify(displayFrom(st.after))) problems.push(`seed ${seed} ${side} #${st.n}`);

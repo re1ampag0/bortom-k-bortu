@@ -26,7 +26,7 @@ function plankClass(s: GameState, code: string): string[] {
 }
 
 const route = (id: string) => play(id).map((x) => x.route);
-const all = (id: string, r: 'fx' | 'show') => play(id).map(() => r);
+const all = (id: string, r: 'fx') => play(id).map(() => r);
 
 describe('the ships in motion', () => {
   it('the clips of A3 are in PLAY', () => {
@@ -72,7 +72,7 @@ describe('the ships in motion', () => {
       for (const side of ['P', 'C'] as const) {
         const planner = plannerFor(data, SIDES[side], start.sea?.current ?? null);
         for (const st of steps) {
-          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => !!PLAY[kind]);
+          const item = planItem(planner, st.n, st.events[side], st.action);
           for (const c of item.clips) {
             if (c.kind !== 'ability') continue;
             n++;
