@@ -1,0 +1,30 @@
+{
+  "regroup-1366x660": {
+    "scene": "regroup",
+    "ms": 1048
+  },
+  "sword-1366x660": {
+    "scene": "sword",
+    "ms": 1688
+  },
+  "dive-1366x660": {
+    "scene": "dive",
+    "ms": 1115
+  },
+  "surface-1366x660": {
+    "scene": "surface",
+    "ms": 840
+  },
+  "sink-1366x660": {
+    "scene": "guns",
+    "ms": 4966
+  },
+  "heart-1366x660": {
+    "scene": "heart",
+    "ms": 1984
+  },
+  "sink-430x932": {
+    "scene": "guns",
+    "ms": 4963
+  }
+}

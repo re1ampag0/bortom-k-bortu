@@ -2,6 +2,10 @@
 // after eventsFor) played on the table of the game through useFxQueue, without the engine. Only in the dev build and
 // the e2e build (App.tsx): the site on GitHub Pages has none of it. The checks of A2 and the next tasks (A2b, A3, A4,
 // S1, L1) compare it with the reference frame by frame (capture.mjs).
+// «&only=<event types>» (A3): only the events of these types are shown; the others of the actions up to the last one
+// with such an event are in the table at the start, the later actions only in the result. So a clip the game cannot
+// play yet around it is left out: «surfaced» without «turnStarted» is a clip «surface» of its own (in the reference it
+// is a part of the clip «turn», A4). The route of the real game does not change.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import scenesSrc from '../../../../docs/mockups/anim/level1/scenes.js?raw';
 import { createGame } from '../../../engine/setup';
@@ -118,7 +122,13 @@ export default function FxScene({ id, data }: { id: string; data: GameData }) {
     // The real state: the start + every event of the scene (finalState of page.js).
     const end = structuredClone(start);
     for (const a of scene.actions) for (const e of a.ev) { applyVisible(end, e, rules); handsAfter(end, e); }
-    const recent: Recent[] = scene.actions.map((a, n) => ({ n, action: a.a, by: 'bot', events: a.ev }));
+    let recent: Recent[] = scene.actions.map((a, n) => ({ n, action: a.a, by: 'bot', events: a.ev }));
+    const only = new URLSearchParams(location.search).get('only')?.split(',').filter(Boolean);
+    if (only?.length) {
+      const last = Math.max(-1, ...recent.map((r, i) => (r.events.some((e) => only.includes(e.type)) ? i : -1)));
+      recent = recent.slice(0, last + 1).map((r) => ({ ...r, events: r.events.filter((e) => only.includes(e.type)) }));
+      for (const a of scene.actions.slice(0, last + 1)) for (const e of a.ev) if (!only.includes(e.type)) { applyVisible(start, e, rules); handsAfter(start, e); }
+    }
     return { start: stateOf(data, start), end: stateOf(data, end), recent, handSeat: start.handSeat ?? scene.viewer[0] };
   }, [scene, scenes, data]);
   // The show starts after 350 ms, as in the reference.
