@@ -967,7 +967,7 @@ export function Game({
       <main className="board">
         <TeamRow side={top} s={view} data={data} hands={handsOf(top)} regroup={null} hint={null} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
-        <div className="middle">
+        <div className="middle" data-fx-gap>
           {toast && (
             <div className="toast" data-testid="turn-summary">
               {toast}{' '}
@@ -993,7 +993,7 @@ export function Game({
         </div>
         <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
         <TeamRow side={bottom} s={view} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} />
-        <div className="hand-row">
+        <div className="hand-row" data-fx-hand>
           {seat && (
             <Hand
               s={view}
