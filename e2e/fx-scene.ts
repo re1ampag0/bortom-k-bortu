@@ -55,8 +55,10 @@ export async function clickMisses(page: Page) {
   });
 }
 
-/** After the show: the numbers of the tracks are the result of the scene, the layer is empty. */
-export async function expectResult(page: Page, id: string) {
+/** After the show: the numbers of the tracks are the result of the scene, the layer is empty. `keep` — what stays in the
+ *  layer by design: the whirlpool of «Водоворот» lives till the end of the turn (PERSIST.whirl; the reference clears it
+ *  only because its scene ends). */
+export async function expectResult(page: Page, id: string, keep?: string) {
   await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
   const want = finalOf(id);
   const shown = await page.evaluate(() =>
@@ -68,5 +70,6 @@ export async function expectResult(page: Page, id: string) {
   for (const { code, values } of shown) {
     for (const t of TRACKS) expect(`${code} ${t} ${values[t]}`).toBe(`${code} ${t} ${want.ships[code].tracks[t]}`);
   }
-  expect(await page.locator('.fx-layer > *').count()).toBe(0);
+  expect(await page.locator('.fx-layer > *').count()).toBe(keep ? 1 : 0);
+  if (keep) expect(await page.locator(`.fx-layer > ${keep}`).count()).toBe(1);
 }
