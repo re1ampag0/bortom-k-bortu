@@ -418,10 +418,12 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     const ctx = fx.ctx();
     if (ctx) SCENES.forEach((x) => x.afterRender(ctx));
   });
-  const { press, busy, layerRef } = fx;
+  const { press, layerRef } = fx;
   useEffect(() => {
+    // Always on: press() itself checks that a clip of the layer plays. Waiting for «busy» lost a press that came before
+    // React ran the effect (the layer may draw within the same task the queue starts in).
     const board = layerRef.current?.parentElement;
-    if (!board || !busy) return;
+    if (!board) return;
     const onPress = (e: PointerEvent) => {
       const t = e.target as Element | null;
       if (t?.closest('[data-fx-hand], .dock')) return;
@@ -429,7 +431,7 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     };
     board.addEventListener('pointerdown', onPress);
     return () => board.removeEventListener('pointerdown', onPress);
-  }, [busy, press, layerRef]);
+  }, [press, layerRef]);
   return (
     <>
       <div className="fx-weather" ref={fx.weatherRef} aria-hidden />
