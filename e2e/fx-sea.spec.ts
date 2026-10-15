@@ -179,3 +179,61 @@ test('the 17 sea cards play in Safari without errors @iphone', async ({ page }) 
   }
 });
 
+/** The show goes on: the scene has not ended and the layer draws. A press on the table would end it at once. */
+const showOn = (page: Page) => page.evaluate(() => !document.body.dataset.fxDone && document.querySelectorAll('.fx-layer > *').length > 0);
+
+test.describe('the badges explain themselves (phone 430×932)', () => {
+  test.use({ viewport: { width: 430, height: 932 }, hasTouch: true, isMobile: true });
+
+  test('a press on «Пожар» opens its rule during the show and does not end it; a press outside closes the window', async ({ page }) => {
+    await open(page, 'turn', 'slow');
+    await playing(page);
+    // the chip «Под водой» first («Голландец» surfaces later in the scene): its window, «×» closes it
+    await page.locator('[data-fx-ship="Г"] [data-fx-status="Под водой"]').tap();
+    await expect(page.getByTestId('info-pop')).toContainText('нельзя выбрать целью');
+    expect(await showOn(page)).toBe(true);
+    await page.getByTestId('info-close').tap();
+    await expect(page.getByTestId('info-pop')).toHaveCount(0);
+    expect(await showOn(page)).toBe(true);
+    const fire = page.getByTestId('fire-И');
+    // the zone of the press is at least 44 × 44 px: the points 21 px around the middle of the badge give the badge
+    const zone = await fire.evaluate((el) => {
+      const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const d = Math.max(21, r.width / 2 - 1), h = Math.max(21, r.height / 2 - 1);
+      return [[cx, cy - h], [cx, cy + h], [cx - d, cy], [cx + d, cy]].map(([x, y]) => document.elementFromPoint(x, y)?.closest('[data-info]') === el);
+    });
+    expect(zone).toEqual([true, true, true, true]);
+    await fire.tap();
+    await expect(page.getByTestId('info-pop')).toBeVisible();
+    await expect(page.getByTestId('info-pop')).toContainText('−1 Корпус за каждый Пожар');
+    expect(await showOn(page)).toBe(true);
+    // the window is inside the screen
+    const box = (await page.getByTestId('info-pop').boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(8);
+    expect(box.x + box.width).toBeLessThanOrEqual(430 - 8);
+    // a press outside closes the window and nothing else: the show goes on
+    await page.touchscreen.tap(215, 380);
+    await expect(page.getByTestId('info-pop')).toHaveCount(0);
+    expect(await showOn(page)).toBe(true);
+  });
+});
+
+test('on a laptop the window of a badge opens on hover (Souls, 1366×660)', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 660 });
+  await open(page, 'turn', 'slow');
+  await page.getByTestId('souls-Г').hover();
+  await expect(page.getByTestId('info-pop')).toContainText('Только у «Голландца»');
+  await page.mouse.move(5, 5);
+  await expect(page.getByTestId('info-pop')).toHaveCount(0);
+});
+
+test('a press on «Пожар» opens its rule in Safari and keeps the show @iphone', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await open(page, 'turn', 'slow');
+  await playing(page);
+  await page.getByTestId('fire-И').tap();
+  await expect(page.getByTestId('info-pop')).toBeVisible();
+  expect(await showOn(page)).toBe(true);
+  expect(errors).toEqual([]);
+});
