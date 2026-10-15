@@ -14,8 +14,8 @@ import type { Side } from '../../../engine/types';
 import { flipTo, weatherHit } from './misc';
 import type { RoundClip, SeaClip } from './planFx';
 import {
-  A, allPlanks, at, burst, bx, dirOf, facingY, flash, fxPoint, gainKegs, gapBox, hint, holdEl, isTop, mk, pillAt, plank, ring, setTrack, shake,
-  shownTrack, tag, trackEl, wait, whirlpool, type FxCtx,
+  A, allPlanks, at, burst, bx, dirOf, facingY, flash, fxPoint, gainKegs, gapBox, hint, holdEl, isTop, mk, plank, ring, setTrack, shake,
+  shownTrack, tag, trackEl, trackMark, badgeMark, visible, wait, whirlpool, type FxCtx,
 } from './primitives';
 import { SEA_BG, seaSvg } from './seaArt';
 import type { ClipPlayer } from './FxLayer';
@@ -38,7 +38,6 @@ export function seaPairs(ctx: Pick<FxCtx, 'display' | 'data' | 'bottom'>, kind: 
   }
   return out;
 }
-const aliveCodes = (ctx: FxCtx) => Object.keys(ctx.display.ships).filter((c) => !ctx.display.ships[c].sunk);
 const seaKeyOf = (ctx: Pick<FxCtx, 'data'>, code: string) => seaCardByCode(ctx.data, code).key;
 
 /* ——— the helpers of the weather ——— */
@@ -80,7 +79,7 @@ type Keg = { type: 'powderGained' | 'powderLost'; side: Side; amount: number };
 function weatherRestore(ctx: FxCtx, e: Fix, t0: number, color = '#2F7A4F') {
   const now = shownTrack(ctx, e.ship, e.track);
   for (let j = 0; j < e.amount; j++) { const p = fxPoint(ctx, e.ship, e.track, now + j), t = t0 + j * 140; at(ctx, t, () => setTrack(ctx, e.ship, e.track, now + j + 1, color)); ring(ctx, p.x, p.y, t, 0.8, color); }
-  pillAt(ctx, e.ship, e.track, e.amount, t0 + 100, true);
+  trackMark(ctx, e.ship, e.track, e.amount, t0 + 100, true);
 }
 function powderFx(t: TableCtx, e: Keg, t0: number) {
   const ctx = t.fx;
@@ -157,7 +156,7 @@ export const SEAFX: Record<string, SeaFx> = {
         const cur = shownTrack(ctx, e.ship, 'crew'), p = fxPoint(ctx, e.ship, 'crew', cur - 1);
         const ghost = mk(ctx, 'pipfloat', 0, 0);
         A(ctx, ghost, [{ opacity: 1, transform: `translate(${p.x}px,${p.y}px)` }, { opacity: 0, transform: `translate(${p.x + 18}px,${p.y + dirOf(ctx, e.ship) * 70}px) rotate(40deg)` }], 1100, tm, 'cubic-bezier(.4,0,.8,1)');
-        weatherHit(ctx, e as Hit, tm, '#5AA0A6', 'Русалки: −1 Команда');
+        weatherHit(ctx, e as Hit, tm, '#5AA0A6');
         tm += 240;
       });
       if (!tm) tag(ctx, t.W / 2, t.g.cy, 'Команда 3 и больше теряет 1 — таких нет', 100, '', 1500);
@@ -173,7 +172,7 @@ export const SEAFX: Record<string, SeaFx> = {
     apply(t, effects, used) {
       const ctx = t.fx;
       let tm = 0;
-      effects.forEach((e) => { if (e.type !== 'restored') return; used.add(e); weatherRestore(ctx, e, tm); const b = bx(ctx, plank(ctx, e.ship)); tag(ctx, b.cx, b.y - 12, 'Ром: +1 Команда', tm + 100, 'good', 1300); tm += 260; });
+      effects.forEach((e) => { if (e.type !== 'restored') return; used.add(e); weatherRestore(ctx, e, tm); tm += 260; });
       if (!tm) tag(ctx, t.W / 2, t.g.cy, 'Команды и так полные', 100, '', 1400);
       return tm + 1300;
     },
@@ -205,14 +204,15 @@ export const SEAFX: Record<string, SeaFx> = {
         A(ctx, bolt, [{ opacity: 0 }, { opacity: 1, offset: 0.08 }, { opacity: 0.3, offset: 0.25 }, { opacity: 1, offset: 0.35 }, { opacity: 0 }], 700, tm, 'linear');
         flash(ctx, sp.cx, sp.cy, tm + 60, 2); burst(ctx, 'spark', sp.cx, sp.cy, tm + 60, 12, 14, 40, 500); ring(ctx, sp.cx, sp.cy, tm + 60);
         shake(ctx, plank(ctx, e.ship), tm + 60, 4);
-        weatherHit(ctx, e as Hit, tm + 80, '#FFD84A', `Гроза: −${e.amount} Паруса`);
+        weatherHit(ctx, e as Hit, tm + 80, '#FFD84A');
       });
       return 250 + hits.length * 380 + 1300;
     },
   },
   fleet: {
     atmo(t) { for (let k = 0; k < 9; k++) { const s = mk(t.fx, 'sail small', 0, 0, '<svg viewBox="0 0 30 30" width="22" height="22"><path d="M14 26 V3 L27 24 Z" fill="#5E8FB0"/><path d="M12 26 V8 L3 24 Z" fill="#5E8FB0"/><path d="M2 26 H28" stroke="#5E8FB0" stroke-width="2"/></svg>'); const x = t.W * (0.06 + k * 0.11); A(t.fx, s, [{ opacity: 0, transform: `translate(${x}px,${t.g.y + 14}px) scale(.3)` }, { opacity: 0.85, transform: `translate(${x}px,${t.g.y + 4}px) scale(1)` }], 700, 400 + k * 120, 'ease-out', 'forwards'); } },
-    apply(t) { const ctx = t.fx; aliveCodes(ctx).forEach((code, i) => { const h = bx(ctx, plank(ctx, code).querySelector('.plank-head')!); const b = mk(ctx, 'tag plus', h.r - 40, h.cy, '+1 карта'); A(ctx, b, [{ opacity: 0, scale: '1.8' }, { opacity: 1, scale: '1', offset: 0.2 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], 1400, i * 130, 'cubic-bezier(.3,1.6,.5,1)'); }); return 1400; },
+    // game (S1): no «+1 карта» on the head of each plank — the rule is on the card in the middle.
+    apply() { return 1400; },
   },
   moon: {
     dim: 0.4,
@@ -236,10 +236,10 @@ function seaLeftovers(t: TableCtx, effects: GameEvent[], used: Set<GameEvent>, t
   let tm = t0;
   for (const e of effects) {
     if (used.has(e)) continue;
-    if (e.type === 'damage') { weatherHit(ctx, e as Hit, tm, '#24465C', 'Море'); tm += 300; }
+    if (e.type === 'damage') { weatherHit(ctx, e as Hit, tm, '#24465C'); tm += 300; }
     else if (e.type === 'restored') { weatherRestore(ctx, e, tm); tm += 300; }
     else if (e.type === 'powderGained' || e.type === 'powderLost') { powderFx(t, e, tm); tm += 380; }
-    else if (e.type === 'soulsGained') { tag(ctx, bx(ctx, plank(ctx, e.ship)).cx, bx(ctx, plank(ctx, e.ship)).y - 12, `+${e.amount} Душа`, tm, 'good', 1200); tm += 200; }
+    else if (e.type === 'soulsGained') { const badge = plank(ctx, e.ship).querySelector('[data-fx-souls]'); if (badge && visible(badge)) badgeMark(ctx, badge, `+${e.amount}`, tm, true); tm += 200; }
   }
   return tm - t0;
 }

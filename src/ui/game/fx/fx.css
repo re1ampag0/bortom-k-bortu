@@ -49,6 +49,9 @@
 .tag.gold { color: #7a5a00; border-color: var(--gold); background: var(--gold-soft); }
 .pill { font-family: var(--font-head); font-weight: 800; color: #fff; background: var(--red); font-size: 21px; line-height: 1; padding: 4px 11px 5px; border-radius: 20px; box-shadow: 0 6px 14px rgba(163, 52, 31, 0.35); white-space: nowrap; }
 .pill.good { background: var(--green); box-shadow: 0 6px 14px rgba(47, 125, 74, 0.3); }
+/* game (S1): the short mark at the number of a track in the clips of the start of a turn and of the sea (trackMark). */
+.tmark { font-weight: 800; font-size: 12px; line-height: 16px; color: #fff; background: var(--red); border-radius: 8px; padding: 0 5px; white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2; }
+.tmark.good { background: var(--green); }
 .pill.huge { font-size: 28px; padding: 5px 14px 6px; }
 .plate { background: #fff; border: 1.5px solid var(--line); border-left: 5px solid var(--pc, #8a2e1c); border-radius: 10px; padding: 8px 12px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); width: 212px; font-size: 12.5px; z-index: -1; }
 .plate .who { color: var(--muted); font-weight: 500; } .plate .who b { color: var(--ink); }

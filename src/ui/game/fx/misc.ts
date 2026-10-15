@@ -28,8 +28,8 @@ import {
   type SellClip, type SinkClip, type SoulsClip, type StatusClip, type StealClip, type SurfaceClip, type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
-  A, allPlanks, at, bubbles, burst, bx, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
-  isTop, mk, overlayAt, payKegs, pillAt, plank, projectile, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, steam, tag, visible, wait,
+  A, allPlanks, at, badgeMark, bubbles, burst, bx, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
+  isTop, mk, overlayAt, payKegs, pillAt, plank, projectile, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, steam, tag, trackMark, visible, wait,
   whirlpool, wisp, type FlyCard, type FxCtx, type Pt,
 } from './primitives';
 
@@ -156,21 +156,24 @@ function seaKey(ctx: FxCtx): string | null {
   return code ? seaCards(ctx.data).find((c) => c.code === code)?.key ?? null : null;
 }
 
-/** A hit of the weather on cells (no ball): a flash of its colour, the cells go out, a label. From play-sea.js (S1 takes it from here). */
-export function weatherHit(ctx: FxCtx, e: { ship: string; track: Track; amount: number; toHull: number }, t0: number, color: string, label: string): number {
+/**
+ * A hit of the weather on cells (no ball): a flash of its colour, the cells go out. From play-sea.js. game (S1): no label
+ * on the plank and no pill — a short mark at the number and a blink of the track (trackMark).
+ */
+export function weatherHit(ctx: FxCtx, e: { ship: string; track: Track; amount: number; toHull: number }, t0: number, color: string): number {
   let last = t0;
   for (const [tr, n] of [[e.track, e.amount], ['hull', e.toHull]] as [Track, number][]) {
     if (!n) continue;
     const now = shownTrack(ctx, e.ship, tr);
     for (let j = 0; j < n; j++) { const p = fxPoint(ctx, e.ship, tr, now - 1 - j), t = t0 + j * 110; flash(ctx, p.x, p.y, t, 1); ring(ctx, p.x, p.y, t, 0.9, color); last = t; }
     at(ctx, t0, () => setTrack(ctx, e.ship, tr, Math.max(0, now - n), color));
-    pillAt(ctx, e.ship, tr, n, t0 + 120);
+    trackMark(ctx, e.ship, tr, n, t0 + 120);
   }
-  if (label) { const b = bx(ctx, plank(ctx, e.ship)); tag(ctx, b.cx, b.y - 12, label, t0 + 100, '', 1300); }
   return last;
 }
 
-/** A Fire burns the Hull: the Fire badge flares, embers fly into the cells of the Hull. */
+/** A Fire burns the Hull: the Fire badge flares, embers fly into the cells of the Hull. game (S1): no label «Пожар жжёт
+ *  Корпус» over the badge and no pill — a short mark at the number of the Hull and a blink of it (trackMark). */
 export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): number {
   const el = plank(ctx, ship), fb = el.querySelector('[data-fx-fires]') || el.querySelector('.plank-head')!;
   const sb = bx(ctx, fb);
@@ -182,8 +185,7 @@ export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): numb
     flash(ctx, p.x, p.y, delay + 730 + k * 120, 0.8);
   }
   at(ctx, delay + 730, () => setTrack(ctx, ship, 'hull', Math.max(0, cur - n), '#F2913D'));
-  pillAt(ctx, ship, 'hull', n, delay + 760);
-  tag(ctx, sb.cx, sb.y - 10, 'Пожар жжёт Корпус', delay + 200, '', 1200);
+  trackMark(ctx, ship, 'hull', n, delay + 760);
   return delay + 1250;
 }
 
@@ -223,7 +225,8 @@ export async function drawFx(ctx: FxCtx, e: { seat: string; count: number; cards
   } else {
     const pb = bx(ctx, plank(ctx, e.seat));
     for (let k = 0; k < e.count; k++) { const back = mk(ctx, 'flyc', 0, 0, '<span class="hcard back"></span>'); A(ctx, back, [{ opacity: 1, transform: `translate(${deck.x}px,${deck.y}px) scale(.6)` }, { opacity: 0, transform: `translate(${pb.r - 70}px,${pb.cy - 50}px) scale(.35)` }], 500, k * 150, 'ease-in-out', 'forwards'); }
-    tag(ctx, pb.r - 40, pb.y - 10, `+${e.count} ${e.count === 1 ? 'карта' : e.count < 5 ? 'карты' : 'карт'}`, 300, 'plus', 1000);
+    // game (S1): the label is above the plank, not on its head
+    tag(ctx, pb.r - 40, pb.y - 14, `+${e.count} ${e.count === 1 ? 'карта' : e.count < 5 ? 'карты' : 'карт'}`, 300, 'plus', 1000);
     await wait(ctx, 500 + e.count * 150);
   }
 }
@@ -253,7 +256,7 @@ PLAY.turn = async (c, ctx) => {
       await wait(ctx, burnFx(ctx, e.ship, n, 0));
     } else if (e.type === 'damage') {
       const wave = seaKey(ctx) === 'wave';
-      const last = weatherHit(ctx, e, 0, '#5E9CC0', wave ? 'Девятый вал: −1 Паруса' : '');
+      const last = weatherHit(ctx, e, 0, '#5E9CC0');
       if (wave) { const b = bx(ctx, plank(ctx, e.ship)), fy = facingY(ctx, e.ship); const wv = mk(ctx, 'splash', 0, 0, '<svg viewBox="0 0 44 30" width="44" height="30"><g fill="#9CC3DA"><path d="M22 30 C18 18 14 10 10 4 C16 10 19 16 22 22 C25 16 28 10 34 4 C30 10 26 18 22 30Z"/></g></svg>'); A(ctx, wv, [{ opacity: 0, transform: `translate(${b.x}px,${fy}px) scale(.5)` }, { opacity: 1, transform: `translate(${b.cx}px,${fy}px) scale(1.4)`, offset: 0.5 }, { opacity: 0, transform: `translate(${b.r}px,${fy}px) scale(.8)` }], 900, 0); }
       await wait(ctx, last + 900);
     } else if (e.type === 'surfaced') {
@@ -265,7 +268,10 @@ PLAY.turn = async (c, ctx) => {
       ctx.renderWith(done);
       await drawFx(ctx, e);
     } else if (e.type === 'soulsGained') {
-      const b = bx(ctx, plank(ctx, e.ship)); tag(ctx, b.cx, b.y - 12, `+${e.amount} Души`, 0, 'good', 1000); await wait(ctx, 500);
+      // game (S1): a mark at the Souls badge, not a label over the plank
+      const badge = plank(ctx, e.ship).querySelector('[data-fx-souls]');
+      if (badge && visible(badge)) badgeMark(ctx, badge, `+${e.amount}`, 0, true);
+      await wait(ctx, 500);
     } else if (e.type === 'seaEffect') {
       if (e.key === 'wave') tag(ctx, ctx.board.clientWidth / 2, gapBox(ctx).cy, 'Девятый вал', 0, '', 1000);
     }
@@ -438,7 +444,7 @@ PLAY.impact = async (c, ctx) => {
   if (c.cause === 'fire') { await wait(ctx, burnFx(ctx, c.ship, c.amount + c.toHull || 1, 0)); return; }
   let last;
   if (CUR_CARD && CUR_CARD.el.isConnected && c.cause === CUR_CARD.code) last = cardDamage(ctx, c, cardFrom(ctx), 0);
-  else last = weatherHit(ctx, c, 0, '#c0392b', seaKey(ctx) === 'reefs' ? 'Рифы: −1 Корпус' : '');
+  else last = weatherHit(ctx, c, 0, '#c0392b');
   await wait(ctx, last + 900);
 };
 PLAY.fire = async (c, ctx) => {
