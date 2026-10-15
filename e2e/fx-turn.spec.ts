@@ -82,6 +82,16 @@ test.describe('the turn, the card, repairs and statuses through ?fxScene', () =>
       await page.waitForTimeout(f.after);
       const ms = await page.evaluate(() => Math.round(performance.now()));
       const during = await chips(page);
+      // the labels of the effects are inside the table, 8 px from its edge (a pill grows ×1.12, a tag rises 4 px)
+      const out = await page.evaluate(() => {
+        const b = document.querySelector('.board')!.getBoundingClientRect();
+        return Array.from(document.querySelectorAll<HTMLElement>('.fx-layer .tag, .fx-layer .pill'))
+          .filter((e) => Number(getComputedStyle(e).opacity) > 0.05)
+          .map((e) => ({ t: e.textContent, r: e.getBoundingClientRect() }))
+          .filter(({ r }) => r.left < b.left + 7 || r.right > b.right - 7 || r.top < b.top + 7 || r.bottom > b.bottom - 7)
+          .map(({ t, r }) => `${t}: ${Math.round(r.left - b.left)}…${Math.round(b.right - r.right)}`);
+      });
+      expect(out).toEqual([]);
       await page.screenshot({ path: `${SHOTS}/game-${f.name}-${width}x${height}.png` });
       saveTime(`${f.name}-${width}x${height}`, f.scene, ms);
 
