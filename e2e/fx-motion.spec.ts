@@ -141,13 +141,28 @@ test.describe('the ships in motion through ?fxScene', () => {
 test('the scenes of the ships in motion play in Safari without errors @iphone', async ({ page }) => {
   test.setTimeout(300_000);
   const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(e.message));
-  page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text()}`));
+  let scene = '';
+  const note = (text: string) => {
+    errors.push(text);
+    console.log(`[iphone ${scene}] ${text}`);
+  };
+  page.on('pageerror', (e) => note(`pageerror: ${e.message}\n${e.stack ?? ''}`));
+  page.on('console', (m) => m.type() === 'error' && note(`console: ${m.text()}`));
+  // The scenes of A3 are short (under a second at «fast»): whether the layer showed something is recorded from the
+  // load of the page, not caught by polling.
+  await page.addInitScript(() => {
+    const w = window as unknown as { __sawLayer: boolean };
+    w.__sawLayer = false;
+    new MutationObserver(() => {
+      if (document.querySelector('.fx-layer > *')) w.__sawLayer = true;
+    }).observe(document, { subtree: true, childList: true });
+  });
   for (const [id, extra] of [['regroup', ''], ['sword', ''], ['dive', ''], ['surface', '&only=surfaced'], ['guns', ''], ['heart', '']]) {
+    scene = id;
     await open(page, id, 'fast', extra);
-    await playing(page);
     await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
-    expect(await page.locator('.fx-layer > *').count(), id).toBe(0);
     expect(errors, id).toEqual([]);
+    expect(await page.evaluate(() => (window as unknown as { __sawLayer: boolean }).__sawLayer), `${id}: the layer showed the clips`).toBe(true);
+    expect(await page.locator('.fx-layer > *').count(), id).toBe(0);
   }
 });
