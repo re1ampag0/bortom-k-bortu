@@ -970,6 +970,7 @@ export function Game({
       key={x.code}
       s={tableView}
       fxGen={fx.gen}
+      fxHidden={fx.hidden[x.code]}
       data={data}
       ship={x}
       own={x.side === bottom}

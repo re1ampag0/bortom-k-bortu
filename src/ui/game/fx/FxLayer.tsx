@@ -15,7 +15,7 @@ import { applyVisible, displayFrom, displayRules, type Display } from './display
 import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
-import { applyAll, applyClip, applyQuiet, planItem, plannerFor, type PlayClip, type QueueItem } from './queue';
+import { applyAll, applyClip, applyQuiet, pendingFlags, planItem, plannerFor, type PlayClip, type QueueItem } from './queue';
 import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
 import './fx.css';
 
@@ -69,6 +69,8 @@ export interface FxQueue {
   gen: number;
   /** The line of the status bar while a clip plays. */
   hint: string | null;
+  /** Flags of statuses by ship whose clip has not played yet: the chips wait hidden (pendingFlags). */
+  hidden: Record<string, string[]>;
   busy: boolean;
   /** «Сразу итог»: D = the real state, the layer is cleared. */
   skip: () => void;
@@ -403,7 +405,7 @@ export function useFxQueue({
     if (running.current && queue.current[0]?.route === 'fx') finish();
   }, [finish]);
 
-  return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current) };
+  return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, hidden: D.current ? pendingFlags(queue.current) : {}, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current) };
 }
 
 /**

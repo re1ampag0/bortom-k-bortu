@@ -1,9 +1,10 @@
 // A4: the start and the end of a turn, the card, repairs, Powder, Souls, statuses, drawing (src/ui/game/fx/misc.ts).
 // The actions of the reference scenes go through the FX layer; the flights are DOM: e2e/fx-turn.spec.ts.
 import { describe, expect, it } from 'vitest';
+import { displayFrom, displayRules } from '../src/ui/game/fx/display';
 import { PLAY } from '../src/ui/game/fx/FxLayer';
 import type { FxKind } from '../src/ui/game/fx/planFx';
-import { planItem, plannerFor } from '../src/ui/game/fx/queue';
+import { applyClip, applyQuiet, pendingFlags, planItem, plannerFor } from '../src/ui/game/fx/queue';
 import { playGame, SIDES } from './fx-games';
 import { clipsOf, play } from './fx-scenes';
 import { data } from './helpers';
@@ -103,5 +104,63 @@ describe('repairs', () => {
       }
     }
     expect(souls).toBeGreaterThan(0);
+  });
+});
+
+describe('every action goes through the layer (A4)', () => {
+  it('the rest of the clips are in PLAY', () => {
+    for (const k of ['powder', 'souls', 'status', 'sell', 'pass', 'steal', 'discard', 'peek', 'dice', 'fireOut', 'end', 'fallback', 'legend', 'jack'] as FxKind[]) {
+      expect(typeof PLAY[k], k).toBe('function');
+    }
+  });
+
+  it('24 bot games, both sides, with and without the pause of empty windows: no action goes to «show»; D = the real state after each', () => {
+    const rules = displayRules(data);
+    const shows: string[] = [];
+    const problems: string[] = [];
+    const kinds = new Set<string>();
+    let actions = 0;
+    for (let k = 0; k < 24; k++) {
+      const seed = 6001 + k;
+      const { start, steps } = playGame(seed, k % 2 === 1);
+      for (const side of ['P', 'C'] as const) {
+        const planner = plannerFor(data, SIDES[side], start.sea?.current ?? null);
+        const d = displayFrom(start);
+        for (const st of steps) {
+          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => !!PLAY[kind]);
+          actions++;
+          item.clips.forEach((c) => kinds.add(c.kind));
+          if (item.route !== 'fx') shows.push(`seed ${seed} ${side} #${st.n}: ${item.clips.map((c) => c.kind).join(',')}`);
+          for (const c of item.clips) applyClip(d, item, c, rules);
+          applyQuiet(d, item, rules);
+          if (JSON.stringify(d) !== JSON.stringify(displayFrom(st.after))) problems.push(`seed ${seed} ${side} #${st.n}`);
+        }
+      }
+    }
+    expect(shows.slice(0, 5)).toEqual([]);
+    expect(problems.slice(0, 5)).toEqual([]);
+    expect(actions).toBeGreaterThan(3000);
+    // the clips of A4 really come in bot games
+    for (const k of ['turn', 'turnEnd', 'card', 'repair', 'powder', 'souls', 'status', 'sell', 'end', 'sea', 'legend']) expect(kinds.has(k), k).toBe(true);
+  });
+});
+
+describe('statuses wait for their clip (pendingFlags)', () => {
+  const items = () => play('mark').map((x) => ({ ...x, done: 0, applied: false }));
+
+  it('«Чёрная метка» is hidden on «Месть» until the clip of the card has played', () => {
+    const q = items();
+    expect(pendingFlags(q)).toEqual({ М: ['mark'] });
+    q[0].done = 1; // the clip «card» played
+    expect(pendingFlags(q)).toEqual({});
+  });
+
+  it('an empty queue hides nothing: «Сразу итог», the layer off, Undo, a jump over many actions empty it', () => {
+    expect(pendingFlags([])).toEqual({});
+    expect(pendingFlags(items().map((x) => ({ ...x, applied: true })))).toEqual({});
+  });
+
+  it('surfacing at the start of a turn: «Всплыл» waits for the clip «turn»', () => {
+    expect(pendingFlags(play('turn').map((x) => ({ ...x, done: 0, applied: false })))).toEqual({ Г: ['surfaced'] });
   });
 });

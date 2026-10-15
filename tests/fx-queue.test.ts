@@ -20,14 +20,17 @@ describe('the route of an action', () => {
     expect(routeAction([clip('card'), clip('announce'), clip('shot')], has)).toBe('show');
     expect(routeAction([clip('shot'), clip('sink')], has)).toBe('fx');
     expect(routeAction([clip('card'), clip('sink')], has)).toBe('show');
-    // Only quiet events: nothing to play.
-    expect(routeAction([], has)).toBe('show');
+    // Only quiet events: nothing to play, the layer takes them into D (A4).
+    expect(routeAction([], has)).toBe('fx');
   });
 
-  it('with no players (A2, part 1) every action goes to ShowLayer', () => {
+  it('with no players (A2, part 1) every action with a clip goes to ShowLayer', () => {
     const { start, steps } = playGame(1001, false);
     const planner = plannerFor(data, SIDES.P, start.sea?.current ?? null);
-    for (const st of steps) expect(planItem(planner, st.n, st.events.P, st.action, () => false).route).toBe('show');
+    for (const st of steps) {
+      const item = planItem(planner, st.n, st.events.P, st.action, () => false);
+      expect(item.route).toBe(item.clips.length > 0 ? 'show' : 'fx');
+    }
   });
 });
 
