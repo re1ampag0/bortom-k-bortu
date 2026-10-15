@@ -89,6 +89,13 @@ function powderFx(t: TableCtx, e: Keg, t0: number) {
   const kb = bx(ctx, kg); tag(ctx, kb.r + 36, kb.cy, `−${e.amount} Порох`, t0, '', 1300);
 }
 
+/** game (S1): a rule of the sea card in the middle of the table (class «rule»: e2e checks it never touches a plank). */
+function ruleTag(ctx: FxCtx, x: number, y: number, text: string, delay: number, cls = '', dur = 1500): HTMLElement {
+  const el = tag(ctx, x, y, text, delay, cls, dur);
+  el.classList.add('rule');
+  return el;
+}
+
 /**
  * The weather. atmo(t) — the weather while the card is in the middle; apply(t, effects, used) — the changes on the
  * planks by the events; returns its length. The events apply marks in used are not shown again.
@@ -104,15 +111,15 @@ export const SEAFX: Record<string, SeaFx> = {
   storm: { atmo(t) { rain(t, 80, 800, 2400); boardFlash(t, [950, 1560]); }, rule: 'Каждый Залп −1 урон' },
   calm: {
     atmo(t) { for (let k = 0; k < 3; k++) { const y = t.g.y + 24 + k * 28; const w = svgWide(t, `<path d="${wavyPath(t.W, 14, 9, 36)}" fill="none" stroke="#9CC3DA" stroke-width="2.5" stroke-linecap="round"/>`, 28); A(t.fx, w, [{ opacity: 0, transform: `translate(0px,${y - 14}px) scaleY(1)` }, { opacity: 0.95, offset: 0.2, transform: `translate(0px,${y - 14}px) scaleY(1)` }, { opacity: 0.95, offset: 0.75, transform: `translate(0px,${y - 14}px) scaleY(.06)` }, { opacity: 0.5, transform: `translate(0px,${y - 14}px) scaleY(.06)` }], 2400, 200 + k * 120); } },
-    apply(t) { t.fx.board.querySelectorAll('[data-fx-track="sails"]').forEach((el, i) => A(t.fx, el, [{ opacity: 1, transform: 'none' }, { opacity: 0.35, transform: 'translateY(2px)', offset: 0.5 }, { opacity: 1, transform: 'none' }], 1100, i * 60, 'ease-in-out', 'none')); tag(t.fx, t.W / 2, t.g.cy, 'Смена мест закрыта до конца раунда', 100, '', 1500); return 1300; },
+    apply(t) { t.fx.board.querySelectorAll('[data-fx-track="sails"]').forEach((el, i) => A(t.fx, el, [{ opacity: 1, transform: 'none' }, { opacity: 0.35, transform: 'translateY(2px)', offset: 0.5 }, { opacity: 1, transform: 'none' }], 1100, i * 60, 'ease-in-out', 'none')); ruleTag(t.fx, t.W / 2, t.g.cy, 'Смена мест закрыта до конца раунда', 100, '', 1500); return 1300; },
   },
   wind: {
     atmo(t) { for (let k = 0; k < (t.fx.rich ? 18 : 5); k++) { const st = mk(t.fx, 'streak', 0, 0); const y = 20 + Math.random() * (t.R - 40); const len = 80 + Math.random() * 140; st.style.width = len + 'px'; A(t.fx, st, [{ opacity: 0, transform: `translate(${-len}px,${y}px)` }, { opacity: 0.9, offset: 0.3 }, { opacity: 0, transform: `translate(${t.W}px,${y - 12}px)` }], 900 + Math.random() * 400, 250 + Math.random() * 1600, 'ease-in'); } },
-    apply(t) { allPlanks(t.fx).forEach((p, i) => A(t.fx, p, [{ transform: 'none' }, { transform: 'translateX(5px) rotate(.5deg)', offset: 0.4 }, { transform: 'none' }], 900, i * 90, 'ease-in-out', 'none')); tag(t.fx, t.W / 2, t.g.cy, 'Перестроение бесплатно для обеих команд', 100, 'plus', 1500); return 1200; },
+    apply(t) { allPlanks(t.fx).forEach((p, i) => A(t.fx, p, [{ transform: 'none' }, { transform: 'translateX(5px) rotate(.5deg)', offset: 0.4 }, { transform: 'none' }], 900, i * 90, 'ease-in-out', 'none')); ruleTag(t.fx, t.W / 2, t.g.cy, 'Перестроение бесплатно для обеих команд', 100, 'plus', 1500); return 1200; },
   },
   fog: {
     atmo(t) { for (let k = 0; k < (t.fx.rich ? 12 : 4); k++) { const f = mk(t.fx, 'fogblob', 0, 0); const left = k % 2 === 0; const sz = 180 + Math.random() * 160; f.style.width = f.style.height = sz + 'px'; f.style.margin = `-${sz / 2}px 0 0 -${sz / 2}px`; const y = Math.random() * t.R; const x0 = left ? -sz : t.W + sz, x1 = left ? Math.random() * t.W * 0.45 : t.W - Math.random() * t.W * 0.45; A(t.fx, f, [{ opacity: 0, transform: `translate(${x0}px,${y}px) scale(.7)` }, { opacity: 0.85, transform: `translate(${x1}px,${y}px) scale(1)`, offset: 0.6 }, { opacity: 0.25, transform: `translate(${(x0 + x1 * 3) / 4}px,${y}px) scale(1.1)` }], 2600, 100 + k * 90, 'ease-out'); } },
-    apply(t) { diagLines(t).forEach((el, k) => A(t.fx, el, [{ opacity: 0 }, { opacity: 1 }], 400, k * 200, 'ease-out', 'forwards')); tag(t.fx, t.W / 2, t.g.cy - 22, 'Залпы по диагонали невозможны', 300, '', 1600); return 1500; },
+    apply(t) { diagLines(t).forEach((el, k) => A(t.fx, el, [{ opacity: 0 }, { opacity: 1 }], 400, k * 200, 'ease-out', 'forwards')); ruleTag(t.fx, t.W / 2, t.g.cy - 22, 'Залпы по диагонали невозможны', 300, '', 1600); return 1500; },
   },
   wave: {
     dim: 0.15,
@@ -124,14 +131,14 @@ export const SEAFX: Record<string, SeaFx> = {
       A(ctx, wv, [{ opacity: 0, transform: `translate(${-w}px,${y}px)` }, { opacity: 1, offset: 0.12 }, { opacity: 1, offset: 0.85 }, { opacity: 0, transform: `translate(${t.W}px,${y}px)` }], dur, t0, 'cubic-bezier(.4,0,.6,1)');
       allPlanks(ctx).forEach((p) => { const b = bx(ctx, p); const tx = t0 + dur * ((b.cx + w * 0.35) / (t.W + w)); A(ctx, p, [{ transform: 'none' }, { transform: `translateY(${isTop(ctx, p.dataset.fxShip!) ? 6 : -6}px) rotate(-2deg)`, offset: 0.4 }, { transform: 'rotate(1deg)', offset: 0.7 }, { transform: 'none' }], 700, tx - 200, 'ease-in-out', 'none'); });
       if (ctx.rich) for (let k = 0; k < 18; k++) { const sp = mk(ctx, 'bubble', 0, 0); const x = (k / 18) * t.W; const tt = t0 + dur * ((x + w * 0.6) / (t.W + w)); A(ctx, sp, [{ opacity: 0.9, transform: `translate(${x}px,${t.g.cy - 10}px)` }, { opacity: 0, transform: `translate(${x + 20}px,${t.g.cy - 50 - Math.random() * 40}px)` }], 600, tt); }
-      tag(ctx, t.W / 2, t.g.cy, 'В начале каждого хода: −1 Паруса ходящей команде', t0 + dur, '', 1700);
+      ruleTag(ctx, t.W / 2, t.g.cy, 'В начале каждого хода: −1 Паруса ходящей команде', t0 + dur, '', 1700);
       return t0 + dur + 1500;
     },
     atmo(t) { if (t.fx.rich) for (let k = 0; k < 3; k++) { const y = t.g.y + 24 + k * 28; const w = svgWide(t, `<path d="${wavyPath(t.W, 14, 10, 40)}" fill="none" stroke="#5E9CC0" stroke-width="3" stroke-linecap="round"/>`, 28); A(t.fx, w, [{ opacity: 0, transform: `translate(-40px,${y - 14}px)` }, { opacity: 0.8, offset: 0.3 }, { opacity: 0, transform: `translate(40px,${y - 14}px)` }], 1800, 300 + k * 150); } },
   },
   maelstrom: {
     atmo(t) { whirlpool(t.fx, t.W / 2, t.g.cy, 300, Math.min(260, t.W * 0.5), 2600); allPlanks(t.fx).forEach((p) => { const b = bx(t.fx, p); const toward = b.cx < t.W / 2 ? 1 : -1; A(t.fx, p, [{ transform: 'none' }, { transform: `rotate(${toward * 1.6}deg) translateX(${toward * 4}px)`, offset: 0.5 }, { transform: 'none' }], 1600, 600, 'ease-in-out', 'none'); }); },
-    apply(t) { tag(t.fx, t.W / 2, t.g.cy - 30, 'В начале хода ходящие меняются местами · диагональ без штрафа', 100, '', 1800); return 1600; },
+    apply(t) { ruleTag(t.fx, t.W / 2, t.g.cy - 30, 'В начале хода ходящие меняются местами · диагональ без штрафа', 100, '', 1800); return 1600; },
   },
   clear: {
     atmo(t) {
@@ -142,7 +149,7 @@ export const SEAFX: Record<string, SeaFx> = {
     apply(t) {
       const ctx = t.fx;
       seaPairs(ctx, 'opposite').forEach(([a, b], k) => { const A0 = bx(ctx, plank(ctx, a)), B0 = bx(ctx, plank(ctx, b)); const ln = mk(ctx, 'svgabs', 0, 0, `<svg width="${t.W}" height="${t.R}"><path d="M${A0.cx} ${A0.b} L${B0.cx} ${B0.y}" stroke="#E0A800" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round"/></svg>`); A(ctx, ln, [{ opacity: 0 }, { opacity: 1, offset: 0.3 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], 1600, k * 200); });
-      tag(ctx, t.W / 2, t.g.cy, 'Залпы по кораблю напротив +1', 200, 'plus', 1600); return 1700;
+      ruleTag(ctx, t.W / 2, t.g.cy, 'Залпы по кораблю напротив +1', 200, 'plus', 1600); return 1700;
     },
   },
   mermaids: {
@@ -159,13 +166,13 @@ export const SEAFX: Record<string, SeaFx> = {
         weatherHit(ctx, e as Hit, tm, '#5AA0A6');
         tm += 240;
       });
-      if (!tm) tag(ctx, t.W / 2, t.g.cy, 'Команда 3 и больше теряет 1 — таких нет', 100, '', 1500);
+      if (!tm) ruleTag(ctx, t.W / 2, t.g.cy, 'Команда 3 и больше теряет 1 — таких нет', 100, '', 1500);
       return tm + 1300;
     },
   },
   tortuga: {
     atmo(t) { for (let k = 0; k < 7; k++) { const l = mk(t.fx, 'lantern', 0, 0); const x = t.W * (0.12 + k * 0.125), y = t.g.cy + (k % 2 ? 10 : -12); A(t.fx, l, [{ opacity: 0, transform: `translate(${x}px,${y + 20}px) scale(.4)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1)`, offset: 0.3 }, { opacity: 1, transform: `translate(${x}px,${y - 4}px) scale(1)`, offset: 0.7 }, { opacity: 0.0, transform: `translate(${x}px,${y}px) scale(.9)` }], 2400, 250 + k * 90, 'ease-in-out'); } },
-    apply(t) { tag(t.fx, t.W / 2, t.g.cy, 'Каждая команда: до 2 Пороха → столько же карт (выбор игроков)', 100, '', 1900); return 1800; },
+    apply(t) { ruleTag(t.fx, t.W / 2, t.g.cy, 'Каждая команда: до 2 Пороха → столько же карт (выбор игроков)', 100, '', 1900); return 1800; },
   },
   rum: {
     atmo(t) { const ctx = t.fx; allPlanks(ctx).forEach((p, i) => { const b = bx(ctx, p), fy = facingY(ctx, p.dataset.fxShip!), dir = dirOf(ctx, p.dataset.fxShip!); const br = mk(ctx, 'barrel', 0, 0, '<svg viewBox="0 0 20 24" width="20" height="24"><rect x="1" y="1" width="18" height="22" rx="7" fill="#8A5A32" stroke="#4a2f18" stroke-width="1.5"/><path d="M1 8 H19 M1 16 H19" stroke="#4a2f18" stroke-width="1.5"/></svg>'); const x = b.x + b.w * 0.7, y = fy + dir * 22; A(ctx, br, [{ opacity: 0, transform: `translate(${x}px,${y + dir * 16}px) rotate(-10deg)` }, { opacity: 1, transform: `translate(${x}px,${y}px) rotate(8deg)`, offset: 0.3 }, { transform: `translate(${x}px,${y + 4}px) rotate(-8deg)`, offset: 0.6 }, { opacity: 1, transform: `translate(${x}px,${y}px) rotate(6deg)`, offset: 0.85 }, { opacity: 0, transform: `translate(${x}px,${y - dir * 10}px)` }], 2200, 300 + i * 100, 'ease-in-out'); }); },
@@ -173,7 +180,7 @@ export const SEAFX: Record<string, SeaFx> = {
       const ctx = t.fx;
       let tm = 0;
       effects.forEach((e) => { if (e.type !== 'restored') return; used.add(e); weatherRestore(ctx, e, tm); tm += 260; });
-      if (!tm) tag(ctx, t.W / 2, t.g.cy, 'Команды и так полные', 100, '', 1400);
+      if (!tm) ruleTag(ctx, t.W / 2, t.g.cy, 'Команды и так полные', 100, '', 1400);
       return tm + 1300;
     },
   },
@@ -183,11 +190,11 @@ export const SEAFX: Record<string, SeaFx> = {
   },
   wet: {
     atmo(t) { for (const side of ['ПИРАТЫ', 'КОМПАНИЯ'] as Side[]) { const kg = bx(t.fx, holdEl(t.fx, side)); const wv = mk(t.fx, 'wetband', 0, 0); wv.style.width = kg.w + 60 + 'px'; wv.style.height = kg.h + 12 + 'px'; A(t.fx, wv, [{ opacity: 0, transform: `translate(${kg.x - 60}px,${kg.y - 6}px) scaleX(.2)` }, { opacity: 0.85, transform: `translate(${kg.x - 30}px,${kg.y - 6}px) scaleX(1)`, offset: 0.5 }, { opacity: 0, transform: `translate(${kg.x + 20}px,${kg.y - 6}px) scaleX(1)` }], 1600, 600 + (side === 'КОМПАНИЯ' ? 250 : 0), 'ease-in-out'); } },
-    apply(t, effects, used) { let tm = 0; effects.forEach((e) => { if (e.type !== 'powderLost') return; used.add(e); powderFx(t, e, tm); tm += 380; }); if (!tm) tag(t.fx, t.W / 2, t.g.cy, 'Порох отсырел — но терять нечего', 100, '', 1400); return tm + 1100; },
+    apply(t, effects, used) { let tm = 0; effects.forEach((e) => { if (e.type !== 'powderLost') return; used.add(e); powderFx(t, e, tm); tm += 380; }); if (!tm) ruleTag(t.fx, t.W / 2, t.g.cy, 'Порох отсырел — но терять нечего', 100, '', 1400); return tm + 1100; },
   },
   reefs: {
     atmo(t) { rocks(t).forEach((r, k) => A(t.fx, r, [{ opacity: 0, transform: r._t + ' translateY(26px) scale(.6)' }, { opacity: 1, transform: r._t }], 700, 500 + k * 140, 'cubic-bezier(.2,.8,.3,1.3)', 'forwards')); },
-    apply(t) { tag(t.fx, t.W / 2, t.g.cy, 'Смена мест: −1 Корпус тому, кто двигается', 100, '', 1700); return 1500; },
+    apply(t) { ruleTag(t.fx, t.W / 2, t.g.cy, 'Смена мест: −1 Корпус тому, кто двигается', 100, '', 1700); return 1500; },
   },
   thunder: {
     dim: 0.35,
@@ -195,7 +202,7 @@ export const SEAFX: Record<string, SeaFx> = {
     apply(t, effects, used) {
       const ctx = t.fx;
       const hits = effects.filter((e): e is Extract<GameEvent, { type: 'damage' }> => e.type === 'damage' && e.track === 'sails');
-      if (!hits.length) { tag(ctx, t.W / 2, t.g.cy, 'Парусов нет ни у кого — молния ушла в воду', 100, '', 1500); return 1500; }
+      if (!hits.length) { ruleTag(ctx, t.W / 2, t.g.cy, 'Парусов нет ни у кого — молния ушла в воду', 100, '', 1500); return 1500; }
       overlay(t, '#1d2a35', [{ opacity: 0 }, { opacity: 0.3, offset: 0.2 }, { opacity: 0.3, offset: 0.8 }, { opacity: 0 }], 1600, 0);
       hits.forEach((e, k) => {
         used.add(e);
@@ -217,13 +224,13 @@ export const SEAFX: Record<string, SeaFx> = {
   moon: {
     dim: 0.4,
     atmo(t) { const ctx = t.fx; const m = mk(ctx, 'moonorb', 0, 0); A(ctx, m, [{ opacity: 0, transform: `translate(${t.W * 0.82}px,${t.g.b}px)` }, { opacity: 1, transform: `translate(${t.W * 0.82}px,${t.g.y - 6}px)` }], 1900, 300, 'ease-out', 'forwards'); if (ctx.rich) for (let k = 0; k < 14; k++) { const s = mk(ctx, 'sparkle', 0, 0); const x = Math.random() * t.W, y = Math.random() * t.R; A(ctx, s, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.5)` }, { opacity: 0.9, offset: 0.5 }, { opacity: 0, transform: `translate(${x}px,${y}px) scale(1)` }], 900, 500 + Math.random() * 1500); } },
-    apply(t) { t.fx.board.querySelectorAll('[data-fx-track="crew"] .cells i.on').forEach((pip, k) => A(t.fx, pip, [{ background: '#2A2521' }, { background: '#E8EEF6', boxShadow: '0 0 6px #C9D8EA', offset: 0.5 }, { background: '#8FA3BC', boxShadow: 'none' }], 900, k * 40, 'ease-out', 'forwards')); tag(t.fx, t.W / 2, t.g.cy, 'Урон по Команде −1 (каждый)', 200, '', 1600); return 1500; },
+    apply(t) { t.fx.board.querySelectorAll('[data-fx-track="crew"] .cells i.on').forEach((pip, k) => A(t.fx, pip, [{ background: '#2A2521' }, { background: '#E8EEF6', boxShadow: '0 0 6px #C9D8EA', offset: 0.5 }, { background: '#8FA3BC', boxShadow: 'none' }], 900, k * 40, 'ease-out', 'forwards')); ruleTag(t.fx, t.W / 2, t.g.cy, 'Урон по Команде −1 (каждый)', 200, '', 1600); return 1500; },
   },
   current: {
     atmo(t) { for (let k = 0; k < (t.fx.rich ? 10 : 4); k++) { const ar = mk(t.fx, 'chevron', 0, 0, k % 2 ? '›' : '‹'); const y = t.g.y + 18 + (k % 3) * 26; const right = k % 2 === 1; A(t.fx, ar, [{ opacity: 0, transform: `translate(${right ? 20 : t.W - 40}px,${y}px)` }, { opacity: 0.9, offset: 0.2 }, { opacity: 0, transform: `translate(${right ? t.W - 40 : 20}px,${y}px)` }], 1500, 300 + k * 160, 'linear'); } },
     async applyAsync(t, effects, used, events) {
       const sw = effects.filter((e) => e.type === 'swapped'); sw.forEach((e) => used.add(e));
-      tag(t.fx, t.W / 2, t.g.cy, 'Обе команды меняются местами', 150, '', 1300);
+      ruleTag(t.fx, t.W / 2, t.g.cy, 'Обе команды меняются местами', 150, '', 1300);
       if (sw.length) await flipTo(t.fx, events, 700, (e) => e.type === 'swapped' || e.type === 'seaRevealed');
       return 600;
     },
@@ -294,7 +301,7 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
   let extra = 0;
   if (fxs.applyAsync) extra = await fxs.applyAsync(t, effects, used, c.events);
   else if (fxs.apply) extra = fxs.apply(t, effects, used);
-  else if (fxs.rule) { tag(ctx, W / 2, t.g.cy, fxs.rule, 100, '', 1500); extra = 1400; }
+  else if (fxs.rule) { ruleTag(ctx, W / 2, t.g.cy, fxs.rule, 100, '', 1500); extra = 1400; }
   const rest = seaLeftovers(t, effects, used, extra ? extra - 600 : 0);
   await wait(ctx, 250 + Math.max(extra, rest + 900));
 };

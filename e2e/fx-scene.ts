@@ -74,3 +74,41 @@ export async function expectResult(page: Page, id: string, keep?: string) {
   expect(await page.locator('.fx-layer > *').count()).toBe(keep ? 1 : 0);
   if (keep) expect(await page.locator(`.fx-layer > ${keep}`).count()).toBe(1);
 }
+
+/**
+ * S1: from now on the page measures, frame by frame, how long each label of the layer (.tag, .pill, .tmark) covers a
+ * part of a plank — its head (★, the name), the status chips, a track, a badge — and which rules of a sea card in the
+ * middle (.tag.rule) touch a plank at all. Read with readCover.
+ */
+export async function watchCover(page: Page) {
+  await page.evaluate(() => {
+    const cover: Record<string, number> = {};
+    const touch: string[] = [];
+    const since = new Map<Element, number>();
+    const parts = '.plank-head, [data-fx-statuses], [data-fx-track], .badges > *';
+    const meet = (a: DOMRect, b: DOMRect) => a.left < b.right - 0.5 && a.right > b.left + 0.5 && a.top < b.bottom - 0.5 && a.bottom > b.top + 0.5;
+    const name = (e: Element) => `${e.closest('[data-fx-ship]')?.getAttribute('data-fx-ship')} ${e.getAttribute('data-fx-track') ?? (e.matches('[data-fx-statuses]') ? 'statuses' : e.matches('.plank-head') ? 'head' : e.textContent)}`;
+    const tick = () => {
+      const now = performance.now();
+      const ps = Array.from(document.querySelectorAll(parts)).map((e) => ({ e, r: e.getBoundingClientRect() })).filter((x) => x.r.width > 0);
+      const planks = Array.from(document.querySelectorAll('.plank')).map((e) => e.getBoundingClientRect());
+      for (const el of Array.from(document.querySelectorAll('.fx-layer > .tag, .fx-layer > .pill, .fx-layer > .tmark'))) {
+        const on = Number(getComputedStyle(el).opacity) > 0.05;
+        const r = el.getBoundingClientRect();
+        const hit = on ? ps.find((x) => meet(r, x.r)) : undefined;
+        if (on && el.matches('.tag.rule') && planks.some((q) => meet(r, q)) && !touch.includes(el.textContent!)) touch.push(el.textContent!);
+        if (!hit) { since.delete(el); continue; }
+        if (!since.has(el)) since.set(el, now);
+        const key = `«${el.textContent}» over ${name(hit.e)}`;
+        cover[key] = Math.max(cover[key] ?? 0, Math.round(now - since.get(el)!));
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+    (window as unknown as { __cover: unknown }).__cover = { cover, touch };
+  });
+}
+/** What watchCover saw: the longest time each label covered a part of a plank (ms), the labels that touched a plank. */
+export async function readCover(page: Page): Promise<{ cover: Record<string, number>; touch: string[] }> {
+  return page.evaluate(() => (window as unknown as { __cover: { cover: Record<string, number>; touch: string[] } }).__cover);
+}
