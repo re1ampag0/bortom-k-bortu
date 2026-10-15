@@ -37,6 +37,34 @@ async function closeSheet(page: Page) {
 }
 
 /**
+ * P2: the whole plank is the target — big enough for a finger, and every point of it (the corners of the head, the
+ * star, the middle, the bottom corners) lands on the target, not on the star or the ship card.
+ */
+async function expectWholePlankTarget(page: Page, code: string) {
+  const target = page.getByTestId(`plate-${code}`);
+  await expect(target).toHaveClass(/aimable/);
+  const box = (await target.boundingBox())!;
+  expect(box.width).toBeGreaterThanOrEqual(150);
+  expect(box.height).toBeGreaterThanOrEqual(80);
+  const star = page.getByTestId(`star-${code}`);
+  const sb = (await star.count()) > 0 ? await star.boundingBox() : null;
+  const head = (await target.locator('.plank-head').boundingBox())!;
+  const points = [
+    [box.x + 6, head.y + 4],
+    [box.x + box.width / 2, head.y + head.height / 2],
+    [box.x + box.width / 2, box.y + box.height / 2],
+    [box.x + 6, box.y + box.height - 6],
+    [box.x + box.width - 6, box.y + box.height - 6],
+    ...(sb ? [[sb.x + sb.width / 2, sb.y + sb.height / 2]] : []),
+  ];
+  const hits = await page.evaluate(
+    ({ pts, id }) => pts.map(([x, y]) => document.elementFromPoint(x, y)?.closest('[data-testid]')?.getAttribute('data-testid') ?? null).map((t) => t === id),
+    { pts: points, id: `plate-${code}` },
+  );
+  expect(hits).toEqual(points.map(() => true));
+}
+
+/**
  * The Pearl or the Revenge fires at the Dutchman (so its Souls can restore the Hull: more buttons on its plank), the Company
  * skips the Reactions, the Pirates end their turn without plans; the device goes to the Company.
  */
@@ -47,7 +75,11 @@ async function toCompany(page: Page) {
     if ((await page.getByTestId('plate-Г').count()) > 0) break;
     await page.getByTestId('volley-panel').getByRole('button', { name: 'Отмена' }).click();
   }
-  await page.getByTestId('plate-Г').click({ timeout: 5000 });
+  await expectWholePlankTarget(page, 'Г');
+  // A tap on the head chooses the target, not the ship card.
+  await page.getByTestId('plate-Г').locator('.plank-head').click({ position: { x: 8, y: 8 }, timeout: 5000 });
+  await expect(page.getByTestId('plate-Г')).toHaveClass(/chosen/);
+  await expect(page.getByTestId('ship-sheet')).toHaveCount(0);
   await page.getByTestId('fire').click();
   for (let i = 0; i < 200; i++) {
     const skip = page.locator('[data-testid="skip-reaction"]:visible');
@@ -90,6 +122,13 @@ async function phone(page: Page, name: string) {
   await closeSheet(page);
 
   await toCompany(page);
+
+  // Outside aiming the own planks are as before (P7): a tap on a plank picks the ship, the head opens its card.
+  for (const code of ['И', 'Г']) {
+    await page.getByTestId(`plank-${code}`).locator('.tracks').click();
+    await expect(page.getByTestId(`plank-${code}`)).toHaveClass(/selected/);
+  }
+  await expect(page.getByTestId('ship-info-Г')).toHaveCount(0);
 
   // Every button of the Dutchman's plank is seen whole, inside the plank and the window, at least 44 px high.
   const dutchman = page.getByTestId('plank-Г');

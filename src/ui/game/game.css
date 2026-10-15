@@ -608,31 +608,115 @@ button.star::before {
   min-height: 36px;
   padding: 4px 12px;
 }
-.plate {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  background: var(--red);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: 6px 12px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-  z-index: 7;
+/* Aiming: the whole plank is the button (P2, as in docs/mockups/anim/level1/style.css). */
+.plank.aimable {
+  cursor: crosshair;
+  outline: 2px dashed rgba(163, 52, 31, 0.7);
+  outline-offset: 3px;
+  animation: aimpulse 1.4s ease-in-out infinite;
+  touch-action: manipulation;
 }
-.planks.top .plate {
-  top: 34px;
-  bottom: auto;
+.plank.aimable:focus-visible {
+  outline-style: solid;
+  box-shadow: 0 0 0 6px rgba(163, 52, 31, 0.12);
+  animation: none;
 }
-.plate b {
-  font-size: 1.3rem;
+/* Only where there is a mouse: after a tap on a phone the hover would stick. */
+@media (hover: hover) {
+  .plank.aimable:hover {
+    outline-style: solid;
+    box-shadow: 0 0 0 6px rgba(163, 52, 31, 0.12);
+    animation: none;
+  }
 }
-.plate:not(.chosen) {
+.plank.chosen {
+  cursor: crosshair;
+  outline: 3px solid var(--red);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 8px rgba(163, 52, 31, 0.14);
+  touch-action: manipulation;
+}
+@keyframes aimpulse {
+  50% {
+    outline-color: rgba(163, 52, 31, 0.25);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plank.aimable {
+    animation: none;
+  }
+}
+/* The star and the Legend badge are a part of the target while aiming. */
+.plank.aimable .star,
+.plank.chosen .star,
+.plank.aimable .badge.legend,
+.plank.chosen .badge.legend {
+  pointer-events: none;
+}
+.plank.aimable .plank-head,
+.plank.chosen .plank-head {
+  cursor: inherit;
+}
+/* The reticle of the chosen target: in the head on a laptop (a white disc, seen on any ship colour), in the corner
+   on a phone — as the tag above. */
+.reticle {
+  align-self: center;
+  margin-left: auto;
+  flex: none;
+  width: 20px;
+  height: 20px;
   background: #fff;
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* «Подсказки»: the damage of a target, a tag (not a button): in the head on a laptop — the Volley panel covers the
+   bottom of the top planks there; in the corner of the plank on a phone. */
+.aim-tip {
+  align-self: center;
+  margin-left: auto;
+  flex: none;
+  line-height: 1.35;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--red);
-  border: 2px solid var(--red);
+  background: #fff;
+  border: 1px solid var(--red);
+  border-radius: 8px;
+  padding: 0 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.aim-tip + .reticle,
+.aim-tip + .plank-role,
+.reticle + .plank-role {
+  margin-left: 0;
+}
+/* «i» in the head of a target: the ship card; a 44×44 touch area without a bigger circle. */
+.ship-info {
+  position: relative;
+  align-self: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+.ship-info::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
 }
 
 .middle {
@@ -1621,14 +1705,28 @@ button.star::before {
     padding: 4px 6px;
     font-size: 0.9rem;
   }
-  .plate {
-    right: 6px;
-    bottom: 6px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
+  .aim-tip {
+    position: absolute;
+    right: 40px;
+    bottom: 7px;
   }
-  .plate b {
-    font-size: 1.1rem;
+  .reticle {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    background: none;
+  }
+  .aim-tip + .plank-role,
+  .reticle + .plank-role {
+    margin-left: auto;
+  }
+  /* The frames of two neighbour targets (8 px apart) do not overlap and stay inside the board. */
+  .plank.aimable,
+  .plank.chosen {
+    outline-offset: 1px;
   }
 
   .hand-row {

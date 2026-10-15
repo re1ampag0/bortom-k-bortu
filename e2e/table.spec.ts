@@ -214,9 +214,24 @@ test.describe('«Подсказки»', () => {
       await page.setViewportSize({ width: size.width, height: size.height });
       await startDuo(page, '?seed=1&speed=instant');
       await page.getByTestId('volley-М').click();
-      await expect(page.getByTestId('plate-Г')).toHaveText('Цель');
-      await page.getByTestId('plate-Г').click();
+      // The whole plank is the target: a frame, no damage on it without «Подсказок».
+      const target = page.getByTestId('plate-Г');
+      await expect(target).toHaveClass(/aimable/);
+      await expect(target).toHaveAttribute('aria-label', 'Цель: «Голландец»');
+      await expect(page.getByTestId('aim-tip-Г')).toHaveCount(0);
+      // A press on the head chooses the target and does not open the ship card.
+      await target.locator('.plank-head').click({ position: { x: 8, y: 8 } });
+      await expect(target).toHaveClass(/chosen/);
+      await expect(target.locator('.reticle')).toBeVisible();
+      await expect(page.getByTestId('ship-sheet')).toHaveCount(0);
       const panel = page.getByTestId('volley-panel');
+      await expect(panel.locator('.panel-head')).toContainText('по Корпусу «Голландец»');
+      // «i» opens the ship card; closing it keeps the target and the Volley panel.
+      await page.getByTestId('ship-info-Г').click();
+      await expect(page.getByTestId('ship-sheet')).toBeVisible();
+      await page.locator('.sheet .close').first().click();
+      await expect(page.getByTestId('ship-sheet')).toHaveCount(0);
+      await expect(target).toHaveClass(/chosen/);
       await expect(panel.locator('.panel-head')).toContainText('по Корпусу «Голландец»');
       if (size.name === 'laptop') await expect(panel.locator('.choices.wide-block .choice')).toHaveCount(1);
       // The Charge is chosen in the hand; the other cards are pale; no damage on the Charges.
@@ -235,8 +250,9 @@ test.describe('«Подсказки»', () => {
       await page.setViewportSize({ width: size.width, height: size.height });
       await startDuo(page, '?seed=1&speed=instant&hints=1');
       await page.getByTestId('volley-М').click();
-      await expect(page.getByTestId('plate-Г')).toContainText(/\d напротив/);
+      await expect(page.getByTestId('aim-tip-Г')).toContainText(/\d напротив/);
       await page.getByTestId('plate-Г').click();
+      await expect(page.getByTestId('plate-Г')).toHaveClass(/chosen/);
       const panel = page.getByTestId('volley-panel');
       if (size.name === 'laptop') await expect(panel.locator('.choices.wide-block .choice b').first()).toHaveText(/^\d/);
       await expect(page.locator('.hand .hcard.charge').first()).toContainText('итог');
