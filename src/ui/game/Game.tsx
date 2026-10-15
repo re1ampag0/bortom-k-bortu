@@ -248,13 +248,19 @@ export function Game({
   // ——— Effects: bots, autosave, title, toast, wake lock ———
   const turnKey = `${s.round}:${s.active}`;
   // Banners one after another: the sea card, «Ваш ход», the summary of the start of the turn (docs/TZ.md, п. 2).
+  const mineBottom = net ? mySeats.length > 0 : game.setup.players[bottom] === 'human';
+  // The animation layer plays the actions (A2–A4): off at «мгновенно», after «До конца хода», behind the curtain and
+  // with prefers-reduced-motion — then the table is at once in the real state.
+  const fxEnabled = speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide && !reducedMotion();
   const banner = useBanners({
     recent: game.recent,
     version,
     data,
     bottom,
-    mine: net ? mySeats.length > 0 : game.setup.players[bottom] === 'human',
+    mine: mineBottom,
     enabled: speed !== 'instant' && !instantUrl(),
+    // «Ваш ход» is drawn by the clip «turn» while the layer plays; the banner of its own — only without the layer.
+    turnBanners: !fxEnabled,
     // A new game: the first sea card and the first turn too.
     start: (net ? net.actions : local!.actions.length) === 0 && !s.winner ? { sea: s.sea?.current ?? null, active: s.active } : null,
     paused: !!curtainSide,
@@ -283,7 +289,8 @@ export function Game({
     viewer,
     data,
     bottom,
-    enabled: speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide && !reducedMotion(),
+    own: mineBottom,
+    enabled: fxEnabled,
     speed,
     rich: effects === 'rich',
     myDecision,

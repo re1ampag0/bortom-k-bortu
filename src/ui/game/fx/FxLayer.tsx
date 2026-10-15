@@ -85,6 +85,7 @@ export function useFxQueue({
   viewer,
   data,
   bottom,
+  own,
   enabled,
   speed,
   rich,
@@ -100,6 +101,8 @@ export function useFxQueue({
   viewer: Viewer;
   data: GameData;
   bottom: Side;
+  /** The team at the bottom is played from this device (the banner «Ваш ход» of the clip «turn»). */
+  own: boolean;
   /** Off at «мгновенно», «?speed=instant», prefers-reduced-motion, behind the curtain and after «До конца хода». */
   enabled: boolean;
   speed: Speed;
@@ -134,8 +137,8 @@ export function useFxQueue({
   const weatherRef = useRef<HTMLDivElement>(null);
 
   // The latest values for the loop (it lives across renders).
-  const live = useRef({ view, speed, rich, data, bottom, hold, paused, showBusy: show.busy, push: show.push, myDecision });
-  live.current = { view, speed, rich, data, bottom, hold, paused, showBusy: show.busy, push: show.push, myDecision };
+  const live = useRef({ view, speed, rich, data, bottom, own, hold, paused, showBusy: show.busy, push: show.push, myDecision });
+  live.current = { view, speed, rich, data, bottom, own, hold, paused, showBusy: show.busy, push: show.push, myDecision };
   const waiters = useRef<(() => void)[]>([]);
   const wake = () => waiters.current.splice(0).forEach((w) => w());
   useEffect(wake, [hold, paused, show.busy]);
@@ -155,6 +158,7 @@ export function useFxQueue({
       live: () => RUN.current,
       data: live.current.data,
       bottom: live.current.bottom,
+      own: live.current.own,
       hint: (text) => {
         if (run === RUN.current) setHint(text);
       },

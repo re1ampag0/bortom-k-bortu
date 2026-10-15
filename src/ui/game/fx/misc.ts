@@ -1,24 +1,27 @@
 // The clips of the ships in motion: a change of places (FLIP), diving and surfacing, sinking, the abilities of the
 // ships. A port of docs/mockups/anim/level1/play-misc.js (see PORTING.md): the code is the reference's, what changed is
 // how an element is found (the data-fx-* DOM contract), the globals (the context `ctx`) and the types. The rest of
-// play-misc.js (the turn, the card, repairs, Powder, Souls, statuses …) comes in A4.
+// play-misc.js (the card, repairs, Powder, Souls, statuses …) comes in A4: the start and the end of a turn are here.
 // Changes against the reference («game:»):
 //  - renderWith draws the table through React (the queue keeps a preview of D and draws it at once); the planks keep
 //    their DOM nodes (key — the code of the ship), so the FLIP animates the same element from its old place;
 //  - the reference draws the table anew after each clip, so the animations of a plank with fill 'forwards' go with
 //    its old node; in the game the node stays, so the queue cancels the finished animations of the planks after the
 //    clip (FxLayer.tsx). The steady look («Под водой», sunk) is the class of the plank from the displayed state;
+//  - the start of a turn: the hand is the real one, so the drawn cards are in it already: drawFx finds them by the codes
+//    of drew.cards; «Ваш ход» only when the bottom team is played from this device (ctx.own), not in a match of bots;
 //  - PLAY.ability: the branch «limitRaised» of the effects calls statusFx, ported in A4. The engine does not send it
 //    inside an ability now («Казна» sends only «treasury»): tests/fx-motion.test.ts checks it on bot games. «restored»
 //    comes with «Джонс свободен» (a card sinks «Голландец»): repairFx is ported here.
+import { seaCards } from '../../../engine/data';
 import { shipData, TRACK_NAME, type GameEvent } from '../../../engine/state';
 import type { Track } from '../../../engine/types';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer } from './FxLayer';
-import type { AbilityClip, DiveClip, SinkClip, SurfaceClip, SwapClip } from './planFx';
+import type { AbilityClip, DiveClip, DrawClip, SinkClip, SurfaceClip, SwapClip, TurnClip, TurnEndClip } from './planFx';
 import {
-  A, allPlanks, at, bubbles, burst, bx, dirOf, facingY, fxPoint, gapBox, hint, mk, overlayAt, payKegs, pillAt, plank, ring, setTrack, shownTrack,
-  sideOf, splash, steam, tag, wait, whirlpool, type FxCtx, type Pt,
+  A, allPlanks, at, bubbles, burst, bx, curve, dirOf, facingY, flash, fly, fxPoint, gainKegs, gapBox, hint, holdEl, isTop, mk, overlayAt, payKegs,
+  pillAt, plank, ring, setTrack, shownTrack, sideOf, splash, steam, tag, wait, whirlpool, type FxCtx, type Pt,
 } from './primitives';
 
 /** FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. */
@@ -47,8 +50,11 @@ export function banner(ctx: FxCtx, text: string, cls = 'small', d = 1200, y?: nu
 const nick = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nick}»`;
 const gen = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickGenitive}»`;
 
-export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability', ClipPlayer> = {} as never;
+export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'round' | 'sea', ClipPlayer> = {} as never;
 const PLAY = PLAY_MISC as unknown as {
+  turn: (c: TurnClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
+  turnEnd: (c: TurnEndClip, ctx: FxCtx) => Promise<void>;
+  draw: (c: DrawClip, ctx: FxCtx) => Promise<void>;
   swap: (c: SwapClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   sink: (c: SinkClip, ctx: FxCtx) => Promise<void>;
   dive: (c: DiveClip, ctx: FxCtx) => Promise<void>;
@@ -109,6 +115,155 @@ export function surfaceFx(ctx: FxCtx, code: string, delay: number): number {
 }
 PLAY.dive = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} уходит под воду`); await wait(ctx, diveFx(ctx, c.ship, 0) + 100); };
 PLAY.surface = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} всплывает`); await wait(ctx, surfaceFx(ctx, c.ship, 0) + 100); };
+
+/** The key of the sea card on the table («wave», «reefs» …): seaKeyOf(D.sea) of the reference. */
+function seaKey(ctx: FxCtx): string | null {
+  const code = ctx.display.sea;
+  return code ? seaCards(ctx.data).find((c) => c.code === code)?.key ?? null : null;
+}
+
+/** A hit of the weather on cells (no ball): a flash of its colour, the cells go out, a label. From play-sea.js (S1 takes it from here). */
+export function weatherHit(ctx: FxCtx, e: { ship: string; track: Track; amount: number; toHull: number }, t0: number, color: string, label: string): number {
+  let last = t0;
+  for (const [tr, n] of [[e.track, e.amount], ['hull', e.toHull]] as [Track, number][]) {
+    if (!n) continue;
+    const now = shownTrack(ctx, e.ship, tr);
+    for (let j = 0; j < n; j++) { const p = fxPoint(ctx, e.ship, tr, now - 1 - j), t = t0 + j * 110; flash(ctx, p.x, p.y, t, 1); ring(ctx, p.x, p.y, t, 0.9, color); last = t; }
+    at(ctx, t0, () => setTrack(ctx, e.ship, tr, Math.max(0, now - n), color));
+    pillAt(ctx, e.ship, tr, n, t0 + 120);
+  }
+  if (label) { const b = bx(ctx, plank(ctx, e.ship)); tag(ctx, b.cx, b.y - 12, label, t0 + 100, '', 1300); }
+  return last;
+}
+
+/** A Fire burns the Hull: the Fire badge flares, embers fly into the cells of the Hull. */
+export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): number {
+  const el = plank(ctx, ship), fb = el.querySelector('[data-fx-fires]') || el.querySelector('.plank-head')!;
+  const sb = bx(ctx, fb);
+  A(ctx, fb, [{ transform: 'scale(1)' }, { transform: 'scale(1.5)' }, { transform: 'scale(1)' }], 400, delay, 'ease-in-out', 'none');
+  const cur = shownTrack(ctx, ship, 'hull');
+  for (let k = 0; k < n; k++) {
+    const p = fxPoint(ctx, ship, 'hull', cur - 1 - k);
+    for (let j = 0; j < (ctx.rich ? 6 : 1); j++) { const em = mk(ctx, 'ember', 0, 0); fly(ctx, em, curve({ x: sb.cx, y: sb.cy }, { x: p.x + (Math.random() - 0.5) * 8, y: p.y }, (Math.random() - 0.5) * 0.4, 10), 480, delay + 250 + j * 40 + k * 120, { lift: 0 }); }
+    flash(ctx, p.x, p.y, delay + 730 + k * 120, 0.8);
+  }
+  at(ctx, delay + 730, () => setTrack(ctx, ship, 'hull', Math.max(0, cur - n), '#F2913D'));
+  pillAt(ctx, ship, 'hull', n, delay + 760);
+  tag(ctx, sb.cx, sb.y - 10, 'Пожар жжёт Корпус', delay + 200, '', 1200);
+  return delay + 1250;
+}
+
+/** The deck in the hand row (the deck and the discard), or the middle of the gap. */
+function deckBox(ctx: FxCtx) {
+  const d = ctx.board.querySelector('[data-fx-deck]');
+  if (d) return bx(ctx, d);
+  const g = gapBox(ctx);
+  return { ...g, x: g.cx, y: g.cy };
+}
+
+/**
+ * Drawing: own cards — face down from the deck, in the hand they turn face up (the face only the owner sees); another's
+ * — to the ship. game: the hand is the real one, the drawn cards are already in it — they are found by their codes
+ * (drew.cards), hidden and turned when the back lands.
+ */
+export async function drawFx(ctx: FxCtx, e: { seat: string; count: number; cards?: string[] | null }): Promise<void> {
+  const deck = deckBox(ctx);
+  const used = new Set<Element>();
+  const slots: HTMLElement[] = [];
+  for (const code of e.cards || []) {
+    const found = [...ctx.board.querySelectorAll<HTMLElement>(`[data-fx-hand] .hand-cards [data-fx-card="${code}"]`)].reverse().find((x) => !used.has(x));
+    if (found) { used.add(found); slots.push(found); }
+  }
+  const mine = !!e.cards && e.cards.length > 0 && slots.length === e.cards.length;
+  if (mine) {
+    slots.reverse();
+    slots.forEach((s) => (s.style.visibility = 'hidden'));
+    slots.forEach((slot, k) => {
+      const sb = bx(ctx, slot);
+      const back = mk(ctx, 'flyc', 0, 0, '<span class="hcard back"></span>');
+      A(ctx, back, [{ opacity: 1, transform: `translate(${deck.x}px,${deck.y}px) scale(.6)` }, { opacity: 1, transform: `translate(${sb.x}px,${sb.y}px) scale(1)` }], 450, k * 160, 'cubic-bezier(.2,.8,.3,1)', 'forwards');
+      A(ctx, back, [{ opacity: 1, transform: `translate(${sb.x}px,${sb.y}px) scaleX(1)` }, { opacity: 1, transform: `translate(${sb.x}px,${sb.y}px) scaleX(0)` }], 150, 450 + k * 160, 'ease-in', 'forwards');
+      at(ctx, 600 + k * 160, () => { slot.style.visibility = ''; A(ctx, slot, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], 150, 0, 'ease-out', 'none'); });
+    });
+    await wait(ctx, 800 + e.count * 160);
+  } else {
+    const pb = bx(ctx, plank(ctx, e.seat));
+    for (let k = 0; k < e.count; k++) { const back = mk(ctx, 'flyc', 0, 0, '<span class="hcard back"></span>'); A(ctx, back, [{ opacity: 1, transform: `translate(${deck.x}px,${deck.y}px) scale(.6)` }, { opacity: 0, transform: `translate(${pb.r - 70}px,${pb.cy - 50}px) scale(.35)` }], 500, k * 150, 'ease-in-out', 'forwards'); }
+    tag(ctx, pb.r - 40, pb.y - 10, `+${e.count} ${e.count === 1 ? 'карта' : e.count < 5 ? 'карты' : 'карт'}`, 300, 'plus', 1000);
+    await wait(ctx, 500 + e.count * 150);
+  }
+}
+
+/** The start of a turn: the banner → income in kegs → Fire → «Девятый вал» → surfacing → «Мальстрём» → drawing. */
+PLAY.turn = async (c, ctx) => {
+  const own = c.mine && ctx.own; // game: a match of bots is not «Ваш ход»
+  const title = own ? 'Ваш ход' : `Ход ${SIDE_LABEL[c.side].gen}`;
+  hint(ctx, title);
+  const done: GameEvent[] = c.events.filter((e) => e.type === 'turnStarted');
+  ctx.renderWith(done);
+  banner(ctx, title, own ? 'own' : '', 1000);
+  await wait(ctx, own ? 950 : 800);
+  const effects = c.effects || [];
+  for (let i = 0; i < effects.length; i++) {
+    const e = effects[i];
+    if (e.type === 'powderGained') {
+      const g = gapBox(ctx);
+      const t = gainKegs(ctx, e.side, e.amount, { x: ctx.board.clientWidth / 2, y: g.cy }, 0);
+      if (e.burned) { const kb = bx(ctx, holdEl(ctx, e.side)); tag(ctx, kb.r + 36, kb.cy + 18, `${e.burned} сгорело: Трюм полон`, 400, '', 1400); }
+      await wait(ctx, t + 150);
+    } else if (e.type === 'fireDamage') {
+      const next = effects[i + 1];
+      const hit = next && next.type === 'damage' && next.ship === e.ship ? next : null;
+      const n = hit ? hit.amount + hit.toHull : e.fires;
+      if (hit) { i++; done.push(hit); }
+      await wait(ctx, burnFx(ctx, e.ship, n, 0));
+    } else if (e.type === 'damage') {
+      const wave = seaKey(ctx) === 'wave';
+      const last = weatherHit(ctx, e, 0, '#5E9CC0', wave ? 'Девятый вал: −1 Паруса' : '');
+      if (wave) { const b = bx(ctx, plank(ctx, e.ship)), fy = facingY(ctx, e.ship); const wv = mk(ctx, 'splash', 0, 0, '<svg viewBox="0 0 44 30" width="44" height="30"><g fill="#9CC3DA"><path d="M22 30 C18 18 14 10 10 4 C16 10 19 16 22 22 C25 16 28 10 34 4 C30 10 26 18 22 30Z"/></g></svg>'); A(ctx, wv, [{ opacity: 0, transform: `translate(${b.x}px,${fy}px) scale(.5)` }, { opacity: 1, transform: `translate(${b.cx}px,${fy}px) scale(1.4)`, offset: 0.5 }, { opacity: 0, transform: `translate(${b.r}px,${fy}px) scale(.8)` }], 900, 0); }
+      await wait(ctx, last + 900);
+    } else if (e.type === 'surfaced') {
+      await wait(ctx, surfaceFx(ctx, e.ship, 0));
+    } else if (e.type === 'swapped') {
+      tag(ctx, ctx.board.clientWidth / 2, gapBox(ctx).cy, SWAP_LABEL[e.reason] || 'Смена мест', 0, '', 1200);
+      await flipTo(ctx, done.concat(e), 650);
+    } else if (e.type === 'drew') {
+      ctx.renderWith(done);
+      await drawFx(ctx, e);
+    } else if (e.type === 'soulsGained') {
+      const b = bx(ctx, plank(ctx, e.ship)); tag(ctx, b.cx, b.y - 12, `+${e.amount} Души`, 0, 'good', 1000); await wait(ctx, 500);
+    } else if (e.type === 'seaEffect') {
+      if (e.key === 'wave') tag(ctx, ctx.board.clientWidth / 2, gapBox(ctx).cy, 'Девятый вал', 0, '', 1000);
+    }
+    done.push(e);
+  }
+  await wait(ctx, 200);
+};
+
+/** The end of a turn; with Plans — the cards go face down under the ship. */
+PLAY.turnEnd = async (c, ctx) => {
+  if (c.plans) {
+    const plans = c.plans;
+    const pb = bx(ctx, plank(ctx, plans.seat));
+    hint(ctx, `${nick(ctx, plans.seat)}: План — ${plans.count} рубашкой вниз`);
+    for (let k = 0; k < plans.count; k++) {
+      const from = sideOf(ctx, plans.seat) === ctx.bottom ? (() => { const h = ctx.board.querySelector('[data-fx-hand] .hand-cards'); const hb = h ? bx(ctx, h) : deckBox(ctx); return { x: hb.x + 20 + k * 30, y: hb.y }; })() : { x: pb.cx - 40, y: isTop(ctx, plans.seat) ? -140 : ctx.board.clientHeight };
+      const back = mk(ctx, 'flyc', 0, 0, '<span class="hcard back"></span><span class="rib plan">ПЛАН</span>');
+      A(ctx, back, [{ opacity: 1, transform: `translate(${from.x}px,${from.y}px) scale(1)` }, { opacity: 1, transform: `translate(${pb.r - 64 - k * 8}px,${pb.cy - 40}px) rotate(${-6 + k * 5}deg) scale(.45)`, offset: 0.7 }, { opacity: 0, transform: `translate(${pb.r - 64 - k * 8}px,${pb.cy - 40}px) rotate(${-6 + k * 5}deg) scale(.4)` }], 1100, k * 160, 'cubic-bezier(.2,.8,.3,1)');
+    }
+    tag(ctx, pb.r - 50, pb.y - 10, `План: ${plans.count}`, 500, 'plus', 1200);
+    await wait(ctx, 1200 + plans.count * 160);
+    return;
+  }
+  hint(ctx, `${SIDE_LABEL[c.side].name}: ход окончен`);
+  await wait(ctx, 350);
+};
+PLAY.draw = async (c, ctx) => { await drawFx(ctx, { seat: c.seat, count: c.count, cards: c.cards }); };
+
+// game, till S1 (the decision of the user): a new round and the sea card draw nothing in the layer — the card is shown
+// by the sea banner of Banners.tsx, its effects come to the planks after the clip. S1 ports PLAY.round / PLAY.sea.
+PLAY_MISC.round = async () => {};
+PLAY_MISC.sea = async () => {};
 
 /** A repair: a green frame on the ship, the cells go green one by one, a dashed line from where it came from. */
 export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: number }, t0: number, from?: Pt): number {

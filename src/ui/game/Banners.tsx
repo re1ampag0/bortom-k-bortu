@@ -19,6 +19,7 @@ export function useBanners({
   bottom,
   mine,
   enabled,
+  turnBanners = true,
   start,
   paused,
 }: {
@@ -30,6 +31,11 @@ export function useBanners({
   mine: boolean;
   /** Off at the instant speed and at «?speed=instant»: only the summary is left. */
   enabled: boolean;
+  /**
+   * «Ваш ход» / «Ход Компании» of its own (decided when the action comes): off while the animation layer plays the
+   * clip «turn», which draws the banner itself. Behind the curtain the layer is off: the banner waits for the curtain.
+   */
+  turnBanners?: boolean;
   /** A game without actions yet: its first sea card and first turn (read once, when the table opens). */
   start: { sea: string | null; active: Side } | null;
   /** The curtain «Передайте устройство» is up: the banners wait until it is closed. */
@@ -51,7 +57,7 @@ export function useBanners({
       for (const e of r.events) {
         if (!enabled) continue;
         if (e.type === 'seaRevealed') add.push({ id: ++ids.current, ms: 2000, k: 'sea', card: e.card });
-        if (e.type === 'turnStarted') add.push(turnBanner(e.side));
+        if (e.type === 'turnStarted' && turnBanners) add.push(turnBanner(e.side));
       }
       const sum = turnSummary(data, r.events);
       if (sum && sum.text) add.push({ id: ++ids.current, ms: 4000, k: 'summary', side: sum.side, text: `Ход ${sideGenitive(sum.side)}: ${sum.text}` });
