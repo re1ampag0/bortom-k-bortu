@@ -657,19 +657,25 @@ button.star::before {
 .plank.chosen .plank-head {
   cursor: inherit;
 }
+/* The reticle of the chosen target: in the head on a laptop (a white disc, seen on any ship colour), in the corner
+   on a phone — as the tag above. */
 .reticle {
-  position: absolute;
-  right: 8px;
-  bottom: 6px;
-  width: 26px;
-  height: 26px;
+  align-self: center;
+  margin-left: auto;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
   pointer-events: none;
 }
-/* «Подсказки»: the damage of a target, a tag in the corner (not a button). */
+/* «Подсказки»: the damage of a target, a tag (not a button): in the head on a laptop — the Volley panel covers the
+   bottom of the top planks there; in the corner of the plank on a phone. */
 .aim-tip {
-  position: absolute;
-  right: 40px;
-  bottom: 7px;
+  align-self: center;
+  margin-left: auto;
+  flex: none;
+  line-height: 1.35;
   font-size: 12px;
   font-weight: 700;
   color: var(--red);
@@ -679,6 +685,11 @@ button.star::before {
   padding: 0 6px;
   white-space: nowrap;
   pointer-events: none;
+}
+.aim-tip + .reticle,
+.aim-tip + .plank-role,
+.reticle + .plank-role {
+  margin-left: 0;
 }
 /* «i» in the head of a target: the ship card; a 44×44 touch area without a bigger circle. */
 .ship-info {
@@ -1693,6 +1704,24 @@ button.star::before {
     min-height: 44px;
     padding: 4px 6px;
     font-size: 0.9rem;
+  }
+  .aim-tip {
+    position: absolute;
+    right: 40px;
+    bottom: 7px;
+  }
+  .reticle {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    background: none;
+  }
+  .aim-tip + .plank-role,
+  .reticle + .plank-role {
+    margin-left: auto;
   }
   /* The frames of two neighbour targets (8 px apart) do not overlap and stay inside the board. */
   .plank.aimable,
