@@ -104,6 +104,7 @@ export function TeamRow({
   hands,
   regroup,
   hint,
+  fxGen = 0,
 }: {
   side: Side;
   s: GameState;
@@ -111,12 +112,14 @@ export function TeamRow({
   hands: number[] | null;
   regroup: Btn | null;
   hint: string | null;
+  /** The animation layer changed the displayed state: the kegs it touched are built again. */
+  fxGen?: number;
 }) {
   return (
     <div className="team-row" data-testid={`team-${side}`}>
       <b className="team-name">{SIDE_LABEL[side].upper}</b>
       <span className="muted hold-label">Трюм</span>
-      <PowderDots n={s.teams[side].powder} cap={data.econ.cap} side={side} />
+      <PowderDots key={fxGen} n={s.teams[side].powder} cap={data.econ.cap} side={side} />
       {hands && hands.length > 0 && <span className="muted wide">· в руках {hands.join(' и ')} {cardsWord(hands[hands.length - 1]).split(' ')[1]}</span>}
       {regroup && <Button b={regroup} className="small regroup" />}
       {hint && <span className="muted wide hint">· {hint}</span>}
@@ -181,6 +184,7 @@ export function Plank({
   onDetails,
   onLegend,
   flashLegend = false,
+  fxGen = 0,
 }: {
   s: GameState;
   data: GameData;
@@ -202,6 +206,8 @@ export function Plank({
   onSelect: () => void;
   onDetails: () => void;
   onLegend: (() => void) | null;
+  /** The animation layer changed the displayed state: the tracks it touched (setTrack) are built again. */
+  fxGen?: number;
 }) {
   const d = shipData(data, ship.code);
   const st = statuses(s, data, ship);
@@ -332,7 +338,7 @@ export function Plank({
         </div>
       )}
       <div className="plank-body">
-        <div className="tracks">
+        <div className="tracks" key={fxGen}>
           {TRACKS.map((t) => {
             const max = startValue(data, ship.code, t);
             const v = ship.tracks[t];
