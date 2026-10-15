@@ -7,12 +7,19 @@
 //    their DOM nodes (key — the code of the ship), so the FLIP animates the same element from its old place;
 //  - the reference draws the table anew after each clip, so the animations of a plank with fill 'forwards' go with
 //    its old node; in the game the node stays, so the queue cancels the finished animations of the planks after the
-//    clip (FxLayer.tsx). The steady look («Под водой», sunk) is the class of the plank from the displayed state.
-import { shipData, type GameEvent } from '../../../engine/state';
+//    clip (FxLayer.tsx). The steady look («Под водой», sunk) is the class of the plank from the displayed state;
+//  - PLAY.ability: the branch «limitRaised» of the effects calls statusFx, ported in A4. The engine does not send it
+//    inside an ability now («Казна» sends only «treasury»): tests/fx-motion.test.ts checks it on bot games. «restored»
+//    comes with «Джонс свободен» (a card sinks «Голландец»): repairFx is ported here.
+import { shipData, TRACK_NAME, type GameEvent } from '../../../engine/state';
+import type { Track } from '../../../engine/types';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer } from './FxLayer';
-import type { DiveClip, SinkClip, SurfaceClip, SwapClip } from './planFx';
-import { A, allPlanks, bubbles, bx, dirOf, facingY, gapBox, hint, mk, payKegs, plank, sideOf, splash, steam, tag, wait, whirlpool, type FxCtx } from './primitives';
+import type { AbilityClip, DiveClip, SinkClip, SurfaceClip, SwapClip } from './planFx';
+import {
+  A, allPlanks, at, bubbles, burst, bx, dirOf, facingY, fxPoint, gapBox, hint, mk, overlayAt, payKegs, pillAt, plank, ring, setTrack, shownTrack,
+  sideOf, splash, steam, tag, wait, whirlpool, type FxCtx, type Pt,
+} from './primitives';
 
 /** FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. */
 export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, filter: (e: GameEvent) => boolean = () => true): Promise<void> {
@@ -40,12 +47,13 @@ export function banner(ctx: FxCtx, text: string, cls = 'small', d = 1200, y?: nu
 const nick = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nick}»`;
 const gen = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickGenitive}»`;
 
-export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface', ClipPlayer> = {} as never;
+export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability', ClipPlayer> = {} as never;
 const PLAY = PLAY_MISC as unknown as {
   swap: (c: SwapClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   sink: (c: SinkClip, ctx: FxCtx) => Promise<void>;
   dive: (c: DiveClip, ctx: FxCtx) => Promise<void>;
   surface: (c: SurfaceClip, ctx: FxCtx) => Promise<void>;
+  ability: (c: AbilityClip, ctx: FxCtx) => Promise<void>;
 };
 
 PLAY.swap = async (c, ctx) => {
@@ -101,3 +109,38 @@ export function surfaceFx(ctx: FxCtx, code: string, delay: number): number {
 }
 PLAY.dive = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} уходит под воду`); await wait(ctx, diveFx(ctx, c.ship, 0) + 100); };
 PLAY.surface = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} всплывает`); await wait(ctx, surfaceFx(ctx, c.ship, 0) + 100); };
+
+/** A repair: a green frame on the ship, the cells go green one by one, a dashed line from where it came from. */
+export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: number }, t0: number, from?: Pt): number {
+  const now = shownTrack(ctx, e.ship, e.track);
+  const b = bx(ctx, plank(ctx, e.ship));
+  if (from) { const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${from.x} ${from.y} Q ${(from.x + b.cx) / 2} ${Math.min(from.y, b.cy) - 40} ${b.cx} ${b.cy}" fill="none" stroke="#2F7A4F" stroke-width="3" stroke-dasharray="7 7" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], 1400, t0); }
+  const fr = overlayAt(ctx, 'lg-aura', b, 4); fr.style.boxShadow = '0 0 0 3px #2F7A4F, 0 0 22px 6px rgba(47,125,74,.45)';
+  A(ctx, fr, [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], 1500, t0 + 100);
+  for (let j = 0; j < e.amount; j++) {
+    const t = t0 + 300 + j * 180, p = fxPoint(ctx, e.ship, e.track, now + j);
+    at(ctx, t, () => setTrack(ctx, e.ship, e.track, now + j + 1, '#2F7A4F'));
+    ring(ctx, p.x, p.y, t, 0.8, '#2F7A4F'); burst(ctx, 'sparkle', p.x, p.y, t, 5, 6, 18, 500);
+  }
+  pillAt(ctx, e.ship, e.track, e.amount, t0 + 360 + e.amount * 180, true);
+  tag(ctx, b.cx, b.y - 12, `${nick(ctx, e.ship)}: +${e.amount} ${TRACK_NAME[e.track]}`, t0 + 200, 'good', 1500);
+  return t0 + 600 + e.amount * 180;
+}
+
+/** An ability of a ship («Меч Тритона», «Казна»): a stamp on the plank, gold dust, then its effects by the events. */
+PLAY.ability = async (c, ctx) => {
+  const b = bx(ctx, plank(ctx, c.ship));
+  if (c.cost) payKegs(ctx, sideOf(ctx, c.ship), c.cost, 0);
+  const label = ({ sword: 'Меч Тритона', treasury: 'Казна', jonesFree: 'Джонс свободен' } as Record<string, string>)[c.what] || c.what;
+  const st = mk(ctx, 'stamp-fx', b.cx, b.cy, label);
+  A(ctx, st, [{ opacity: 0, scale: '1.8' }, { opacity: 1, scale: '1', offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], 1200, 0, 'cubic-bezier(.3,1.6,.5,1)');
+  burst(ctx, 'gold-dust', b.cx, b.cy, 150, 16, 20, 70, 700);
+  await wait(ctx, 900);
+  const done: GameEvent[] = [];
+  for (const e of c.effects || []) {
+    if (e.type === 'swapped') await flipTo(ctx, done.concat(e), 650);
+    else if (e.type === 'restored') await wait(ctx, repairFx(ctx, e, 0));
+    // game: «limitRaised» → statusFx comes with A4 (see the head of the file).
+    done.push(e);
+  }
+};
