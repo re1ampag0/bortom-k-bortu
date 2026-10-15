@@ -65,7 +65,7 @@ let CUR_CARD: { el: FlyCard; code: string } | null = null;
 /** For PLAY.cancel (volley.ts): the card cancelled crumbles. */
 export const curCard = () => CUR_CARD;
 
-export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'round' | 'sea' | 'card' | 'impact' | 'fire' | 'repair'
+export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'card' | 'impact' | 'fire' | 'repair'
   | 'powder' | 'souls' | 'status' | 'sell' | 'pass' | 'steal' | 'discard' | 'peek' | 'dice' | 'fireOut' | 'end' | 'fallback' | 'legend' | 'jack', ClipPlayer> = {} as never;
 const PLAY = PLAY_MISC as unknown as {
   card: (c: CardClip, ctx: FxCtx) => Promise<void>;
@@ -293,11 +293,6 @@ PLAY.turnEnd = async (c, ctx) => {
   await wait(ctx, 350);
 };
 PLAY.draw = async (c, ctx) => { await drawFx(ctx, { seat: c.seat, count: c.count, cards: c.cards }); };
-
-// game, till S1 (the decision of the user): a new round and the sea card draw nothing in the layer — the card is shown
-// by the sea banner of Banners.tsx, its effects come to the planks after the clip. S1 ports PLAY.round / PLAY.sea.
-PLAY_MISC.round = async () => {};
-PLAY_MISC.sea = async () => {};
 
 /** A repair: a green frame on the ship, the cells go green one by one, a dashed line from where it came from. */
 export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: number }, t0: number, from?: Pt): number {
