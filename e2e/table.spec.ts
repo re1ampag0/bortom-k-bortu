@@ -121,7 +121,14 @@ async function playToEnd(page: Page) {
 
 async function keyStates(page: Page, name: string) {
   const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(e.message));
+  // Printed at once: a test that times out never reaches its final check, and CI shows the cause in the log.
+  page.on('pageerror', (e) => {
+    errors.push(e.message);
+    console.log(`[pageerror] ${name}: ${e.message}\n${e.stack ?? ''}`);
+  });
+  page.on('console', (m) => {
+    if (m.type() === 'error') console.log(`[console.error] ${name}: ${m.text()}`);
+  });
   await page.goto('?seed=1&speed=instant');
   await shot(page, name, '1-setup');
   // Two people on one screen, seed 1: the Pearl's Volley at the Endeavour opens a Reaction window.
