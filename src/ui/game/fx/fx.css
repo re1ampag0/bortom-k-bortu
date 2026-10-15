@@ -5,6 +5,10 @@
 .fx-layer, .fx-weather { --navy: #24465c; --seal: #9e2b25; --water: #9cc3da; }
 /* game: the frame of a hit comes from the reference table (style.css); .shooter and .targeted are in game.css. */
 .plank.hitframe { border-color: var(--red); box-shadow: 0 0 0 3px rgba(163, 52, 31, 0.45), 0 0 0 7px rgba(163, 52, 31, 0.12); }
+/* game: the frames of the shooter and the target of the Volley scene: the look of .shooter / .targeted of game.css,
+   another name — React owns those two classes (aiming of P2, a pending Volley). */
+.plank.fx-targeted { border-color: var(--red); box-shadow: 0 0 0 4px var(--red-soft); }
+.plank.fx-shooter { border-color: var(--ink); }
 
 .fx-layer, .fx-weather { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .fx-weather { z-index: 1; }
