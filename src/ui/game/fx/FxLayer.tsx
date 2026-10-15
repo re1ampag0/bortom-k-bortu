@@ -43,6 +43,8 @@ export interface FxScene {
   alive: () => boolean;
   /** An action is played to its end (page.js: the card at the middle fades once it resolved). */
   afterAction?: (ctx: FxCtx, item: { cardOpen: boolean }) => void;
+  /** What still leaves the layer on its own (the card fading out): the show is over when it has gone. */
+  settled?: () => Promise<void>;
 }
 export const SCENES: FxScene[] = [];
 
@@ -297,6 +299,8 @@ export function useFxQueue({
       }
       const ctx = makeCtx(run);
       if (ctx) await wait(ctx, 300);
+      // the card at the middle fades for as long (300 ms): the show is over when it has left the layer
+      await Promise.all(SCENES.map((x) => x.settled?.()));
       if (run !== RUN.current) return;
       // The queue is empty: D = the real state. The scene of an unfinished Volley stays (its shot comes later).
       base.current = displayFrom(live.current.view);

@@ -543,11 +543,14 @@ export const CARD_SCENE: FxScene = {
     if (CUR_CARD && !item.cardOpen) {
       const el = CUR_CARD.el;
       // game: the queue may end here, with no clip to clear the layer after it — the card leaves the layer when faded.
-      A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards').finished.then(() => el.remove(), () => {});
+      FADING = A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards').finished.then(() => el.remove(), () => {});
       CUR_CARD = null;
     }
   },
+  settled: () => FADING,
 };
+/** The card at the middle fading out after its action (afterAction); «Сразу итог» cancels it (the promise settles then too). */
+let FADING: Promise<void> = Promise.resolve();
 
 /** An ability of a ship («Меч Тритона», «Казна»): a stamp on the plank, gold dust, then its effects by the events. */
 PLAY.ability = async (c, ctx) => {
