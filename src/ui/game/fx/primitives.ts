@@ -303,9 +303,38 @@ export function cardHTML(data: GameData, code: string): string {
   const cost = c.soul > 0 ? `${c.soul} Д` : `${c.cost}`;
   return `<button class="hcard ${cardClass(c)}" tabindex="-1" data-fx-card="${esc(code)}"><span class="hcard-head"><span class="hcard-type">${esc(c.type)}</span><span class="cost">${esc(cost)}</span></span><span class="hcard-name">${esc(c.name)}</span><span class="hcard-big">${esc(c.big)}</span><span class="hcard-text">${esc(c.text.replace(/<[^>]+>/g, ' '))}</span></button>`;
 }
-/** A card flies (from the hand, from beyond the edge of the table, from the deck). */
-export function flyCard(ctx: FxCtx, code: string, from: CardPos, to: CardPos, delay: number, d = 450, ribbon = '', ribbonCls = ''): FlyCard {
-  const el: FlyCard = mk(ctx, 'flyc', 0, 0, `<div style="position:relative">${cardHTML(ctx.data, code)}${ribbon ? `<span class="rib ${ribbonCls}">${ribbon}</span>` : ''}</div>`);
+/** The relative luminance of a colour «#rrggbb» (WCAG). */
+function luminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+export const contrast = (a: string, b: string) => { const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+export const INK_DARK = '#0f0d0b';
+/** White or dark text on a colour: the one with the higher contrast. */
+export const inkOn = (color: string) => (contrast(color, '#ffffff') >= contrast(color, INK_DARK) ? '#ffffff' : INK_DARK);
+
+/** Who played the card: the bottom strip of the flying card («ГОЛЛАНДЕЦ», «ЛЕГЕНДА · МЕСТЬ»). */
+export interface CardBy {
+  ship: string;
+  legend?: boolean;
+}
+/**
+ * game: instead of the reference's ribbon under the card (its type — the card shows it already) the card has a bottom
+ * strip of the colour of the ship that played it, with the ship's name, and a frame of 2 px of that colour (a Legend
+ * keeps its gold frame). The strip's text is never under 10 px on screen: its size is set against the card's scale.
+ */
+function footHTML(data: GameData, by: CardBy, scale: number): string {
+  const sh = shipData(data, by.ship);
+  const text = (by.legend ? `Легенда · ${sh.nick}` : sh.nick).toUpperCase();
+  const font = Math.max(10.5, 10 / scale);
+  return `<span class="fcard-foot" style="background:${sh.color};color:${inkOn(sh.color)};font-size:${(Math.ceil(font * 10) / 10).toFixed(1)}px">${esc(text)}</span>`;
+}
+/** A card flies (from the hand, from beyond the edge of the table, from the deck); `by` — the strip of who played it. */
+export function flyCard(ctx: FxCtx, code: string, from: CardPos, to: CardPos, delay: number, d = 450, by?: CardBy): FlyCard {
+  const inner = by
+    ? `<div class="fcard${by.legend ? ' legend' : ''}" style="--by:${shipData(ctx.data, by.ship).color}">${cardHTML(ctx.data, code)}${footHTML(ctx.data, by, to.s || 0.72)}</div>`
+    : `<div style="position:relative">${cardHTML(ctx.data, code)}</div>`;
+  const el: FlyCard = mk(ctx, 'flyc', 0, 0, inner);
   A(ctx, el, [{ opacity: 1, transform: `translate(${from.x}px,${from.y}px) rotate(${from.r || 0}deg) scale(${from.s || 1})` }, { opacity: 1, transform: `translate(${to.x}px,${to.y}px) rotate(${to.r || 0}deg) scale(${to.s || 0.72})` }], d, delay, 'cubic-bezier(.2,.8,.3,1.1)', 'forwards');
   el._pos = to;
   return el;

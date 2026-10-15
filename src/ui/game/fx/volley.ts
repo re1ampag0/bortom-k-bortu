@@ -9,6 +9,7 @@
 //    the plank (aiming of P2, a pending Volley), a class taken off past React would not come back;
 //  - window does not draw the reference's «window» when a panel of the game (.dock) is in the middle: the real panel
 //    (Reactions, «Компания решает…» of P8, the Volley panel) is there;
+//  - the cards at the plate (a Charge, a Reaction) have no ribbon: the strip of the ship that played them (flyCard);
 //  - CUR_CARD lives in misc.ts (the clip «card»): curCard().
 import { deckCards, legendCards } from '../../../engine/data';
 import { TRACK_DATIVE } from '../../../engine/hints';
@@ -71,7 +72,6 @@ const cardFx = (ctx: FxCtx, code: string) => fxCards(ctx.data)[code]?.fx ?? {};
 const nick = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nick}»`;
 const dat = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickDative}»`;
 const gen = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickGenitive}»`;
-const short = (ctx: FxCtx, code: string) => shipData(ctx.data, code).nick;
 const ships = (ctx: FxCtx) => ctx.data.ships.map((s) => s.code);
 /** game: the frame classes of the scene (React owns shooter / targeted). */
 const SHOOTER = 'fx-shooter', TARGETED = 'fx-targeted';
@@ -173,7 +173,7 @@ PLAY.announce = async (c, ctx) => {
   fitPlate(ctx);
   if (c.charge && !part2) {
     const from = cardOrigin(ctx, c.charge, c.chargeFrom || c.shooter);
-    VS.cards.push(flyCard(ctx, c.charge, from, cardSlot(ctx, pp, 0), 150, 450, c.captain ? `капитан ${short(ctx, c.chargeFrom!)}` : ''));
+    VS.cards.push(flyCard(ctx, c.charge, from, cardSlot(ctx, pp, 0), 150, 450, { ship: c.chargeFrom || c.shooter }));
   }
   if (part2) { const sb = bx(ctx, plank(ctx, c.shooter)); tag(ctx, sb.cx, facingY(ctx, c.shooter) + 16 * dirOf(ctx, c.shooter), 'второй борт', 100, 'plus', 1400); }
   await wait(ctx, c.charge && !part2 ? 820 : 620);
@@ -207,7 +207,7 @@ PLAY.reaction = async (c, ctx) => {
   let to;
   if (VS && VS.plate && VS.plateBox && c.phase === 'before') to = cardSlot(ctx, VS.plateBox, VS.cards.length);
   else { const s = bx(ctx, plank(ctx, c.ship)); to = { x: s.cx - 40, y: isTop(ctx, c.ship) ? s.b + 6 : s.y - 110, r: 3, s: 0.72 }; }
-  const card = flyCard(ctx, c.card, from, to, 0, 500, c.fromPlan ? 'ПЛАН!' : c.phase === 'after' ? 'ОТВЕТ' : 'РЕАКЦИЯ', c.fromPlan ? 'plan' : '');
+  const card = flyCard(ctx, c.card, from, to, 0, 500, { ship: c.seat });
   if (VS) { VS.cards.push(card); VS.reactions.push({ card: c.card, ship: c.ship, r: c.r }); } else setTimeout(() => A(ctx, card, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards'), ms(ctx, 1400));
   if (c.fromPlan) A(ctx, card.firstElementChild!, [{ transform: 'rotateY(90deg)' }, { transform: 'none' }], 300, 300, 'ease-out', 'backwards');
   await wait(ctx, 520);
