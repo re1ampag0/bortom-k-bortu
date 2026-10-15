@@ -336,30 +336,118 @@ export function threat(s: GameState, data: GameData): { title: string; detail: s
   return null;
 }
 
-/** What a Reaction would change: «4 → 2», «4 → 0 · отмена», «удар примет „Голландец“», «ответ: −2 Корпус „Мести“». */
-export function previewReaction(s: GameState, data: GameData, seat: string, card: string): { ok: true; label: string } | { ok: false; reason: string } {
-  const r = tryAction(s, { type: 'react', seat, card }, data);
-  if (!r.ok) return r;
+/** The Volley the defending team answers, nominative: «Залп «Месть» → «Индевор»: 4 по Корпусу» (seen by everyone). */
+export function threatLine(s: GameState, data: GameData): string | null {
+  const p = s.pending;
+  if (p?.kind !== 'reactions') return null;
   const name = (code: string) => `«${shipData(data, code).nick}»`;
+  if (p.subject === 'volley' && s.volley) {
+    const v = s.volley;
+    if (p.window === 'after') return `Залп ${name(v.shooter)} → ${name(v.target)} нанесён`;
+    return `Залп ${name(v.shooter)} → ${name(v.target)}: ${volleyDamage(ctxOf(s, data), v)} по ${TRACK_DATIVE[v.track]}`;
+  }
+  if (s.card) {
+    const c = cardByCode(data, s.card.card);
+    const target = s.card.target && s.ships[s.card.target] ? ` → ${name(s.card.target)}` : '';
+    return `${name(s.card.ship)}: «${c.name}»${target}`;
+  }
+  return null;
+}
+
+/** What a Reaction does to the Volley or the card, from one dry run (previewReaction and reactionNow word it). */
+type Outcome =
+  | { k: 'refused'; reason: string }
+  | { k: 'answer'; total: number; shooter: string }
+  | { k: 'cancel'; before: Strike }
+  | { k: 'redirect'; before: Strike; after: Strike }
+  | { k: 'track'; before: Strike; after: Strike }
+  | { k: 'damage'; before: Strike; after: Strike }
+  | { k: 'cardCancelled' }
+  | { k: 'stolen' }
+  | { k: 'noCrew' }
+  | { k: 'unknown' };
+
+function reactionOutcome(s: GameState, data: GameData, seat: string, card: string): Outcome {
+  const r = tryAction(s, { type: 'react', seat, card }, data);
+  if (!r.ok) return { k: 'refused', reason: r.reason };
   const p = s.pending;
   if (p?.kind === 'reactions' && p.subject === 'volley' && s.volley) {
     const before = strikeOf(s, data, s.volley);
     if (p.window === 'after') {
       const hits = r.events.filter((e) => e.type === 'damage' && e.ship === s.volley!.shooter);
       const total = hits.reduce((n, e) => n + (e.type === 'damage' ? e.amount + e.toHull : 0), 0);
-      return { ok: true, label: total > 0 ? `ответ: −${total} ${name(s.volley.shooter)}` : 'ответ' };
+      return { k: 'answer', total, shooter: s.volley.shooter };
     }
     const after = strikeAfter(r, data, s.volley);
-    if (!after) return { ok: true, label: 'сыграть' };
-    if (after.cancelled) return { ok: true, label: `${before.damage} → 0 · отмена` };
-    if (after.target !== before.target) return { ok: true, label: `${after.damage} → ${name(after.target)}` };
-    if (after.track !== before.track) return { ok: true, label: `${before.damage} → ${after.damage} по ${TRACK_DATIVE[after.track]}` };
-    return { ok: true, label: `${before.damage} → ${after.damage}` };
+    if (!after) return { k: 'unknown' };
+    if (after.cancelled) return { k: 'cancel', before };
+    if (after.target !== before.target) return { k: 'redirect', before, after };
+    if (after.track !== before.track) return { k: 'track', before, after };
+    return { k: 'damage', before, after };
   }
-  if (r.events.some((e) => e.type === 'cardCancelled') || r.state.card?.cancelled) return { ok: true, label: 'карта отменена' };
-  if (r.state.card?.stolenBy === seat) return { ok: true, label: 'карта уйдёт к вам' };
-  if (r.state.card?.crewCancelled) return { ok: true, label: 'без урона Команде' };
-  return { ok: true, label: 'сыграть' };
+  if (r.events.some((e) => e.type === 'cardCancelled') || r.state.card?.cancelled) return { k: 'cardCancelled' };
+  if (r.state.card?.stolenBy === seat) return { k: 'stolen' };
+  if (r.state.card?.crewCancelled) return { k: 'noCrew' };
+  return { k: 'unknown' };
+}
+
+/** What a Reaction would change: «4 → 2», «4 → 0 · отмена», «удар примет „Голландец“», «ответ: −2 Корпус „Мести“». */
+export function previewReaction(s: GameState, data: GameData, seat: string, card: string): { ok: true; label: string } | { ok: false; reason: string } {
+  const o = reactionOutcome(s, data, seat, card);
+  const name = (code: string) => `«${shipData(data, code).nick}»`;
+  switch (o.k) {
+    case 'refused':
+      return { ok: false, reason: o.reason };
+    case 'answer':
+      return { ok: true, label: o.total > 0 ? `ответ: −${o.total} ${name(o.shooter)}` : 'ответ' };
+    case 'cancel':
+      return { ok: true, label: `${o.before.damage} → 0 · отмена` };
+    case 'redirect':
+      return { ok: true, label: `${o.after.damage} → ${name(o.after.target)}` };
+    case 'track':
+      return { ok: true, label: `${o.before.damage} → ${o.after.damage} по ${TRACK_DATIVE[o.after.track]}` };
+    case 'damage':
+      return { ok: true, label: `${o.before.damage} → ${o.after.damage}` };
+    case 'cardCancelled':
+      return { ok: true, label: 'карта отменена' };
+    case 'stolen':
+      return { ok: true, label: 'карта уйдёт к вам' };
+    case 'noCrew':
+      return { ok: true, label: 'без урона Команде' };
+    case 'unknown':
+      return { ok: true, label: 'сыграть' };
+  }
+}
+
+/**
+ * «What happens now» in the Reaction window, in a sentence, shown without «Подсказки» too: «Залп 4 → 2»,
+ * «Залп уйдёт в «Голландец»: 4 по Корпусу», «Залп отменён». The numbers are those of previewReaction.
+ */
+export function reactionNow(s: GameState, data: GameData, seat: string, card: string): { ok: true; text: string } | { ok: false; reason: string } {
+  const o = reactionOutcome(s, data, seat, card);
+  const name = (code: string) => `«${shipData(data, code).nick}»`;
+  switch (o.k) {
+    case 'refused':
+      return { ok: false, reason: o.reason };
+    case 'answer':
+      return { ok: true, text: o.total > 0 ? `Ответ: −${o.total} ${name(o.shooter)}` : 'Ответ после Залпа — по тексту карты' };
+    case 'cancel':
+      return { ok: true, text: 'Залп отменён' };
+    case 'redirect':
+      return { ok: true, text: `Залп уйдёт в ${name(o.after.target)}: ${o.after.damage} по ${TRACK_DATIVE[o.after.track]}` };
+    case 'track':
+      return { ok: true, text: `Залп ${o.before.damage} → ${o.after.damage} по ${TRACK_DATIVE[o.after.track]}` };
+    case 'damage':
+      return { ok: true, text: `Залп ${o.before.damage} → ${o.after.damage}` };
+    case 'cardCancelled':
+      return { ok: true, text: 'Карта отменена' };
+    case 'stolen':
+      return { ok: true, text: 'Карта уйдёт к вам' };
+    case 'noCrew':
+      return { ok: true, text: 'Без урона Команде' };
+    case 'unknown':
+      return { ok: true, text: 'Эффект — по тексту карты' };
+  }
 }
 
 // ——— Abilities, Legends, the end of the turn ———
