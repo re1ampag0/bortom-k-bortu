@@ -387,6 +387,34 @@ export function pillAt(ctx: FxCtx, code: string, t: Track, n: number, delay: num
   const vb = bx(ctx, valueEl(ctx, code, t));
   return pill(ctx, Math.max(4, vb.x - 58), vb.cy - 20, `${good ? '+' : '−'}${n}`, delay, (good ? 'good' : '') + (n >= 4 ? ' huge' : ''));
 }
+/**
+ * game (S1): a short mark at the number of a track («−1», «+2») and a blink of the track — instead of a label on or above
+ * the plank in the clips of the start of a turn and of the sea. Short (0.7 s): it covers nothing for longer than a flash.
+ */
+export const MARK_MS = 700;
+export function trackMark(ctx: FxCtx, code: string, t: Track, n: number, delay: number, good = false): HTMLElement {
+  const num = valueEl(ctx, code, t);
+  // the text of the number (the cell of the number is wider and its text is on the right)
+  const range = document.createRange();
+  range.selectNodeContents(num);
+  const rr = range.getBoundingClientRect(), b = ctx.board.getBoundingClientRect();
+  const tx = rr.width > 0 ? rr.left - b.left : bx(ctx, num).x, ty = rr.height > 0 ? rr.top - b.top + rr.height / 2 : bx(ctx, num).cy;
+  return markAt(ctx, trackEl(ctx, code, t), tx, ty, `${good ? '+' : '−'}${n}`, delay, good);
+}
+/** The same mark at a badge (Souls): on its left. */
+export function badgeMark(ctx: FxCtx, badge: Element, text: string, delay: number, good = false): HTMLElement {
+  const bb = bx(ctx, badge);
+  return markAt(ctx, badge, bb.x, bb.cy, text, delay, good);
+}
+function markAt(ctx: FxCtx, blink: Element, right: number, cy: number, text: string, delay: number, good: boolean): HTMLElement {
+  const m = mk(ctx, 'tmark' + (good ? ' good' : ''), 0, 0, text);
+  const w = m.offsetWidth, h = m.offsetHeight;
+  const x = Math.max(EDGE, right - w - 3), y = cy - h / 2;
+  A(ctx, m, [{ opacity: 0, transform: `translate(${x}px,${y + 4}px)` }, { opacity: 1, transform: `translate(${x}px,${y}px)`, offset: 0.15 }, { opacity: 1, offset: 0.8 }, { opacity: 0, transform: `translate(${x}px,${y - 4}px)` }], MARK_MS, delay);
+  const c = good ? 'rgba(47, 125, 74, 0.22)' : 'rgba(163, 52, 31, 0.2)';
+  A(ctx, blink, [{ backgroundColor: 'transparent' }, { backgroundColor: c }, { backgroundColor: 'transparent' }, { backgroundColor: c }, { backgroundColor: 'transparent' }], MARK_MS, delay, 'linear', 'none');
+  return m;
+}
 /** Souls: wisps from the enemy's Crew into the Souls of «Голландец» (play-volley.js; the card and the Souls clips use it too). */
 export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number) {
   const keeper = ctx.data.ships.map((s) => s.code).find((x) => shipData(ctx.data, x).souls != null && !ctx.display.ships[x].sunk);
