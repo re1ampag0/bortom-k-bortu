@@ -1,5 +1,5 @@
 // Presentational parts of the table: the status bar, a team row with its Hold, a ship board (plank).
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type ShipState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
@@ -124,11 +124,12 @@ export function TeamRow({
   );
 }
 
+/** The plank is a target to choose (a Volley, a card or a Legend with a target): the whole plank is the button. */
 export interface Plate {
-  label: string;
-  sub?: string;
+  /** «Подсказки»: the damage, as a small tag in the corner (not a button). */
+  tip: string | null;
   onClick: () => void;
-  chosen?: boolean;
+  chosen: boolean;
 }
 
 export interface Status {
@@ -221,16 +222,43 @@ export function Plank({
     shooter ? 'shooter' : '',
     repairing ? 'repairing' : '',
     ship.sunk ? 'sunk' : '',
+    plate ? (plate.chosen ? 'chosen' : 'aimable') : '',
   ].join(' ');
+  // While a target is chosen, a press anywhere on the target (the head too) chooses it; «i» opens the ship card,
+  // the star and the Legend badge are a part of the target.
+  const aim = plate
+    ? {
+        role: 'button',
+        tabIndex: 0,
+        'aria-label': `Цель: «${d.nick}»${plate.tip ? `, ${plate.tip}` : ''}`,
+        'aria-pressed': plate.chosen,
+        onKeyDown: (e: KeyboardEvent) => {
+          if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+          e.preventDefault();
+          plate.onClick();
+        },
+      }
+    : {};
   return (
-    <section className={cls} data-testid={`plank-${ship.code}`} style={{ ['--ship' as string]: d.color }} onClick={onSelect}>
+    <section
+      className={cls}
+      data-testid={plate ? `plate-${ship.code}` : `plank-${ship.code}`}
+      data-ship={ship.code}
+      style={{ ['--ship' as string]: d.color }}
+      onClick={plate ? plate.onClick : onSelect}
+      {...aim}
+    >
       <header
         className="plank-head"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDetails();
-        }}
-        title="Подробнее о корабле"
+        onClick={
+          plate
+            ? undefined
+            : (e) => {
+                e.stopPropagation();
+                onDetails();
+              }
+        }
+        title={plate ? undefined : 'Подробнее о корабле'}
       >
         <b className="plank-name">
           <span className="wide">{d.name}</span>
@@ -243,7 +271,9 @@ export function Plank({
             data-testid={`star-${ship.code}`}
             aria-label={`Легенда «${legendName}»`}
             title={`Легенда: ${legendName}${affordable ? '' : ' — не хватает Пороха или Душ'}`}
+            tabIndex={plate ? -1 : undefined}
             onClick={(e) => {
+              if (plate) return;
               e.stopPropagation();
               onLegend?.();
             }}
@@ -262,6 +292,20 @@ export function Plank({
           )}
           <span className="narrow hand-count">{handLabel}</span>
         </span>
+        {plate && (
+          <button
+            className="ship-info"
+            data-testid={`ship-info-${ship.code}`}
+            aria-label={`Корабль «${d.nick}» — подробнее`}
+            title="Подробнее о корабле"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDetails();
+            }}
+          >
+            i
+          </button>
+        )}
       </header>
       {st.length > 0 && (
         <div className="plank-statuses">
@@ -310,7 +354,9 @@ export function Plank({
           {!ship.sunk && (
             <button
               className={`badge legend ${legendState} ${flash}`}
+              tabIndex={plate ? -1 : undefined}
               onClick={(e) => {
+                if (plate) return;
                 e.stopPropagation();
                 onLegend?.();
               }}
@@ -333,18 +379,6 @@ export function Plank({
             <Button key={b.key} b={b} />
           ))}
         </div>
-      )}
-      {plate && (
-        <button
-          className={`plate ${plate.chosen ? 'chosen' : ''}`}
-          data-testid={`plate-${ship.code}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            plate.onClick();
-          }}
-        >
-          <b>{plate.label}</b> {plate.sub && <span>{plate.sub}</span>}
-        </button>
       )}
     </section>
   );

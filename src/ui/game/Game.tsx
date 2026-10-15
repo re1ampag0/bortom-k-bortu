@@ -510,20 +510,20 @@ export function Game({
     if (mode.k === 'aim') {
       const t = aimTargets.find((x) => x.target === code);
       if (!t) return null;
-      // Without hints the targets are only lit, the damage shows in the panel after the choice.
-      const l = hints ? plateLabel(t.preview) : { label: 'Цель', sub: '' };
-      return { ...l, chosen: mode.target === code, onClick: () => setMode({ ...mode, target: code }) };
+      // Without hints the targets are only framed, the damage shows in the panel after the choice.
+      const l = plateLabel(t.preview);
+      return { tip: hints ? `${l.label} ${l.sub}` : null, chosen: mode.target === code, onClick: () => setMode({ ...mode, target: code }) };
     }
     if (mode.k === 'card') {
       const needs = cardNeeds(s, data, mode.seat, mode.card);
       if (!needs.target) return null;
       const ok = playOptions(s, data, mode.seat, mode.card).actions.some((a) => a.type === 'playCard' && a.target === code);
       if (!ok) return null;
-      return { label: 'Цель', chosen: mode.target === code, onClick: () => setMode({ ...mode, target: code }) };
+      return { tip: null, chosen: mode.target === code, onClick: () => setMode({ ...mode, target: code }) };
     }
     if (mode.k === 'legend' && mode.confirmed) {
       const ok = legendOptions(s, data, mode.seat).actions.some((a) => a.type === 'playLegend' && a.target === code);
-      return ok ? { label: 'Цель', chosen: mode.target === code, onClick: () => act({ type: 'playLegend', seat: mode.seat, target: code }) } : null;
+      return ok ? { tip: null, chosen: mode.target === code, onClick: () => act({ type: 'playLegend', seat: mode.seat, target: code }) } : null;
     }
     return null;
   };
