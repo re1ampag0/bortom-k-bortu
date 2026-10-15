@@ -59,7 +59,6 @@ for (const size of SIZES) {
       // A Volley of the Pirates: the animation layer (A2) shows it — the breakdown plate, cores fly after the window.
       await expect(page.locator('.fx-layer .plate')).toBeVisible({ timeout: 60_000 });
       await expect(page.locator('.fx-layer .ball').first()).toBeVisible({ timeout: 60_000 });
-      await expect(page.getByTestId('show-arrow')).toHaveCount(0);
       await page.waitForTimeout(400);
       await shot(page, size.name, '4-enemy-move');
 
@@ -76,8 +75,16 @@ for (const size of SIZES) {
 test.describe('prefers-reduced-motion', () => {
   test.use({ viewport: { width: 1366, height: 660 } });
 
-  test('the coin shows its side at once, the card of a move does not fly in', async ({ page }) => {
+  test('the coin shows its side at once; the moves of the bots fly in nothing, the table is at once in the real state', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
+    // Whether the animation layer ever showed something is recorded from the load of the page.
+    await page.addInitScript(() => {
+      const w = window as unknown as { __sawLayer: boolean };
+      w.__sawLayer = false;
+      new MutationObserver(() => {
+        if (document.querySelector('.fx-layer > *')) w.__sawLayer = true;
+      }).observe(document, { subtree: true, childList: true });
+    });
     await page.goto('?seed=3&speed=fast');
     await page.getByTestId('quick-bots').click();
     await page.getByTestId('pick-coin').click();
@@ -85,13 +92,13 @@ test.describe('prefers-reduced-motion', () => {
     await page.getByTestId('pick-company').click();
     await page.getByTestId('prep-start').click();
     await page.getByTestId('placement-done').click();
-    const shown = page.locator('[data-testid="show-card"], [data-testid="show-arrow"]').first();
-    await expect(shown).toBeVisible({ timeout: 60_000 });
-    const animation = await page.evaluate(() => {
-      const e = document.querySelector('.show-card, .show-arrow line');
-      return e ? getComputedStyle(e).animationName : 'none';
-    });
-    expect(animation).toBe('none');
+    // The Pirate bots move (the log grows); nothing flies, no number waits for a clip, no status chip is hidden.
+    const lines = page.locator('.log-col [data-testid="log"] li');
+    const start = await lines.count();
+    await expect.poll(() => lines.count(), { timeout: 60_000 }).toBeGreaterThan(start + 3);
+    expect(await page.evaluate(() => (window as unknown as { __sawLayer: boolean }).__sawLayer)).toBe(false);
+    const hidden = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('[data-fx-status]')).filter((c) => getComputedStyle(c).visibility === 'hidden').length);
+    expect(hidden).toBe(0);
   });
 });
 

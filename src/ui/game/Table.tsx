@@ -138,7 +138,20 @@ export interface Plate {
 export interface Status {
   label: string;
   hint: string;
+  /** «Чёрная метка»: the chip carries the blot (the Volley's cannonballs «в метку» hit it). */
+  mark?: boolean;
+  /** The flag of the event that sets it (flagSet / surfaced): the chip waits hidden for its clip (A4). */
+  flag?: string;
 }
+
+/** The blot of «Чёрная метка» (MARK_SVG of the reference, board.js). */
+const MARK_SVG = (
+  <svg viewBox="0 0 30 26" width="16" height="14" aria-hidden="true">
+    <path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612" />
+    <circle cx="27" cy="22" r="2" fill="#1a1612" />
+    <circle cx="4" cy="5" r="1.4" fill="#1a1612" />
+  </svg>
+);
 
 /** Statuses of a ship with the moment they end (docs/TZ.md, «Принципы стола», п. 2). */
 export function statuses(s: GameState, data: GameData, ship: ShipState): Status[] {
@@ -152,16 +165,16 @@ export function statuses(s: GameState, data: GameData, ship: ShipState): Status[
     ];
   }
   if (ship.submerged) out.push({ label: 'Под водой', hint: 'До своего хода: нельзя выбрать целью, не играет Реакции' });
-  if (ship.surfaced) out.push({ label: 'Всплыл', hint: 'Первый Залп в этот ход: +1 и без Реакций' });
-  if (ship.blockaded) out.push({ label: 'Блокада', hint: 'До конца своего следующего хода: без Ремонта и смены мест' });
-  if (ship.parley) out.push({ label: 'Переговоры', hint: 'В свой следующий ход не даёт Залпы' });
+  if (ship.surfaced) out.push({ label: 'Всплыл', hint: 'Первый Залп в этот ход: +1 и без Реакций', flag: 'surfaced' });
+  if (ship.blockaded) out.push({ label: 'Блокада', hint: 'До конца своего следующего хода: без Ремонта и смены мест', flag: 'blockade' });
+  if (ship.parley) out.push({ label: 'Переговоры', hint: 'В свой следующий ход не даёт Залпы', flag: 'parley' });
   if (ship.voodoo) {
-    out.push({ label: 'Кукла вуду', hint: `В свой следующий ход теряет 1 Команду за каждую сыгранную карту (кукла «${shipData(data, ship.voodoo).nick}»)` });
+    out.push({ label: 'Кукла вуду', hint: `В свой следующий ход теряет 1 Команду за каждую сыгранную карту (кукла «${shipData(data, ship.voodoo).nick}»)`, flag: 'voodoo' });
   }
   const mark = s.turn.marks[ship.code];
-  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее' });
+  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее', mark: true, flag: 'mark' });
   if (s.turn.noReact.includes(ship.code) || (s.turn.noReactTeam && ship.side !== s.active)) {
-    out.push({ label: 'Без Реакций', hint: 'До конца этого хода не играет Реакции' });
+    out.push({ label: 'Без Реакций', hint: 'До конца этого хода не играет Реакции', flag: 'noReact' });
   }
   return out;
 }
@@ -185,6 +198,7 @@ export function Plank({
   onLegend,
   flashLegend = false,
   fxGen = 0,
+  fxHidden,
 }: {
   s: GameState;
   data: GameData;
@@ -208,6 +222,8 @@ export function Plank({
   onLegend: (() => void) | null;
   /** The animation layer changed the displayed state: the tracks it touched (setTrack) are built again. */
   fxGen?: number;
+  /** Flags of statuses whose clip has not played yet: their chips are there, hidden (statusFx shows them as it lands). */
+  fxHidden?: readonly string[];
 }) {
   const d = shipData(data, ship.code);
   const st = statuses(s, data, ship);
@@ -331,7 +347,15 @@ export function Plank({
       {st.length > 0 && (
         <div className="plank-statuses" data-fx-statuses>
           {st.map((x) => (
-            <span key={x.label} className="status-chip" title={x.hint}>
+            <span
+              key={x.label}
+              className={`status-chip${x.mark ? ' mark' : ''}`}
+              title={x.hint}
+              data-fx-status={x.label}
+              data-fx-mark={x.mark || undefined}
+              style={x.flag && fxHidden?.includes(x.flag) ? { visibility: 'hidden' } : undefined}
+            >
+              {x.mark && MARK_SVG}
               {x.label}
               <span className="wide"> · {x.hint.split(':')[0].toLowerCase()}</span>
             </span>

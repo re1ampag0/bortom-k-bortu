@@ -45,7 +45,6 @@ import {
 } from './Panels';
 import { MissedSheet, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
-import { ShowLayer, useShowQueue } from './Show';
 import { instantUrl, reducedMotion } from '../start/motion';
 import { FxLayer, useFxQueue } from './fx/FxLayer';
 import { withDisplay } from './fx/queue';
@@ -215,7 +214,6 @@ export function Game({
   /** «Пауза»: the show on this device stops; on one screen the bots wait too (by network the server plays them). */
   const [held, setHeld] = useState(false);
   const [endClosed, setEndClosed] = useState(false);
-  const [freshFrom, setFreshFrom] = useState(0);
   const allSeats = Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
   const [seatPick, setSeatPick] = useState<string | null>(null);
   const seat = seatPick && allSeats.includes(seatPick) ? seatPick : (d && d.side === bottom ? d.seats.find((x) => mySeats.includes(x)) : null) ?? mySeats[0] ?? allSeats[0];
@@ -248,34 +246,26 @@ export function Game({
   // ——— Effects: bots, autosave, title, toast, wake lock ———
   const turnKey = `${s.round}:${s.active}`;
   // Banners one after another: the sea card, «Ваш ход», the summary of the start of the turn (docs/TZ.md, п. 2).
+  const mineBottom = net ? mySeats.length > 0 : game.setup.players[bottom] === 'human';
+  // The animation layer plays the actions (A2–A4): off at «мгновенно», after «До конца хода», behind the curtain and
+  // with prefers-reduced-motion — then the table is at once in the real state.
+  const fxEnabled = speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide && !reducedMotion();
   const banner = useBanners({
     recent: game.recent,
     version,
     data,
     bottom,
-    mine: net ? mySeats.length > 0 : game.setup.players[bottom] === 'human',
+    mine: mineBottom,
     enabled: speed !== 'instant' && !instantUrl(),
+    // «Ваш ход» is drawn by the clip «turn» while the layer plays; the banner of its own — only without the layer.
+    turnBanners: !fxEnabled,
     // A new game: the first sea card and the first turn too.
     start: (net ? net.actions : local!.actions.length) === 0 && !s.winner ? { sea: s.sea?.current ?? null, active: s.active } : null,
     paused: !!curtainSide,
   });
   const toast = banner?.k === 'summary' ? banner.text : null;
-  // The show of the enemy's and the bots' actions, one at a time; the bots wait for it.
-  const show = useShowQueue({
-    game,
-    version,
-    viewer,
-    mySeats,
-    bottom,
-    enabled: speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide,
-    speed,
-    myDecision,
-    paused: !!banner && banner.k !== 'summary',
-    hold: held,
-    // The actions come through the queue of the animation layer: it hands over those it does not show itself.
-    external: true,
-  });
-  // The animation layer on the table (A2): the planks are drawn from the displayed state while its clips play.
+  // The animation layer on the table (A2–A4): every action is shown by its clips, the planks are drawn from the
+  // displayed state while they play; the bots wait for it.
   const fx = useFxQueue({
     game,
     version,
@@ -283,20 +273,27 @@ export function Game({
     viewer,
     data,
     bottom,
-    enabled: speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide && !reducedMotion(),
+    own: mineBottom,
+    enabled: fxEnabled,
     speed,
     rich: effects === 'rich',
     myDecision,
+    // Back after a lost connection: «Пока вас не было» tells what happened, the table does not replay it.
+    jump: !!net && net.missed.length > 0,
     paused: !!banner && banner.k !== 'summary',
     hold: held,
-    show,
   });
   /** The table as it is shown: the displayed fields from the queue's D, the rest from the real view. */
   const tableView = fx.display ? withDisplay(view, fx.display) : view;
+  // The log as it is shown (A4): the lines of an action appear when its clips are played; at the end of the game — all.
+  const logFrom = s.winner ? null : fx.logFrom;
+  const shownLog = logFrom == null ? game.log : game.log.filter((l) => l.action < logFrom);
+  // The lines of the newest action shown are highlighted.
+  const freshFrom = shownLog.at(-1)?.action ?? 0;
   useEffect(() => {
     if (!local || curtainSide || s.winner || held || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
-    if ((show.busy || fx.busy || (banner && banner.k !== 'summary')) && !instant) return;
+    if ((fx.busy || (banner && banner.k !== 'summary')) && !instant) return;
     const t = setTimeout(
       () => {
         let n = 0;
@@ -306,9 +303,9 @@ export function Game({
       instant ? 0 : SPEEDS[speed].ms,
     );
     return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, show.busy, fx.busy, banner?.k, held]);
+  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, fx.busy, banner?.k, held]);
 
-  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || show.busy || fx.busy;
+  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || fx.busy;
   // The pause never keeps a decision of this device waiting: it ends as soon as the game asks the player.
   const canHold = botBusy && !myDecision;
   useEffect(() => {
@@ -343,11 +340,6 @@ export function Game({
   }, [myDecision, humans.length]);
 
 
-  useEffect(() => {
-    // The lines of the newest action are highlighted in the log.
-    const last = game.log.at(-1);
-    if (last) setFreshFrom(last.action);
-  }, [version, game]);
 
   useEffect(() => {
     let lock: { release: () => Promise<void> } | null = null;
@@ -775,7 +767,7 @@ export function Game({
   }
 
   // ——— The middle at rest: the last event ———
-  const lastEvent = [...game.log].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
+  const lastEvent = [...shownLog].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
   /** The ally: «Капитан предлагает Заряд…» (P6). */
   const offerToMe = myTurn && mode.k === 'idle' ? offers.find((o) => mySeats.includes(o.to) && !mySeats.includes(o.from)) : undefined;
   const offerInfo = offerToMe ? `Капитан предлагает Заряд «${cardByCode(data, offerToMe.card).name}» — нажмите «Залп» ${nick(offerToMe.to)}` : null;
@@ -865,7 +857,7 @@ export function Game({
     onClick: () => endFlow('start'),
     testid: 'end-turn',
   };
-  // «Пауза», «Быстрее» and «До конца хода» while a bot moves or a move is shown; the last two skip the show.
+  // «Пауза», «Быстрее» and «До конца хода» while a bot moves or a move is shown; the last two skip the clips.
   const pauseBtn: Btn = {
     key: 'pause',
     label: held ? '▶ Дальше' : '⏸ Пауза',
@@ -880,7 +872,6 @@ export function Game({
           label: 'Быстрее',
           onClick: () => {
             setHeld(false);
-            show.skip();
             fx.skip();
             setSpeed(speed === 'slow' ? 'normal' : speed === 'normal' ? 'fast' : 'instant');
           },
@@ -890,7 +881,6 @@ export function Game({
           label: 'До конца хода',
           onClick: () => {
             setHeld(false);
-            show.skip();
             fx.skip();
             setFastTurn(turnKey);
           },
@@ -963,6 +953,7 @@ export function Game({
       key={x.code}
       s={tableView}
       fxGen={fx.gen}
+      fxHidden={fx.hidden[x.code]}
       data={data}
       ship={x}
       own={x.side === bottom}
@@ -987,7 +978,6 @@ export function Game({
       <StatusBar s={fx.display ? withDisplay(s, fx.display) : s} data={data} instruction={fx.hint ?? flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}
-      <ShowLayer data={data} step={show.step} decisionOpen={!!d && (d.kind === 'reactions' || d.kind === 'choice' || d.kind === 'jack' || d.kind === 'tortuga')} />
       <BannerView data={data} banner={banner} />
       <main className="board">
         <TeamRow side={top} s={tableView} data={data} hands={handsOf(top)} regroup={null} hint={null} fxGen={fx.gen} />
@@ -1059,7 +1049,7 @@ export function Game({
       </main>
       <aside className="log-col">
         <h2>Журнал</h2>
-        <LogList data={data} log={game.log} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />
+        <LogList data={data} log={shownLog} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />
         <div className="log-actions">
           <button className="btn small" onClick={() => setSheet({ k: 'log' })}>
             Весь журнал
@@ -1129,7 +1119,7 @@ export function Game({
             <div className="sheet-body">
               <LogList
                 data={data}
-                log={game.log}
+                log={shownLog}
                 fresh={freshFrom}
                 onCard={(code) => setSheet({ k: 'info', code, back: 'log' })}
                 onSea={(code) => setSheet({ k: 'sea', code, back: 'log' })}
@@ -1142,7 +1132,7 @@ export function Game({
         <SheetBox title={`Что было за ход ${SIDE_LABEL[other(bottom)].gen}`} onClose={() => setSheet(null)} wide testid="last-turn">
           <LogList
             data={data}
-            log={enemyTurnLines(game.log, other(bottom))}
+            log={enemyTurnLines(shownLog, other(bottom))}
             fresh={freshFrom}
             onCard={(code) => setSheet({ k: 'info', code, back: 'lastTurn' })}
             onSea={(code) => setSheet({ k: 'sea', code, back: 'lastTurn' })}
