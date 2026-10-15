@@ -16,6 +16,8 @@ import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
+import { tookPress } from '../InfoTip';
+import { PLAY_SEA, renderWeather } from './sea';
 import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
 import './fx.css';
 
@@ -41,11 +43,13 @@ export interface FxScene {
   alive: () => boolean;
   /** An action is played to its end (page.js: the card at the middle fades once it resolved). */
   afterAction?: (ctx: FxCtx, item: { cardOpen: boolean }) => void;
+  /** What still leaves the layer on its own (the card fading out): the show is over when it has gone. */
+  settled?: () => Promise<void>;
 }
 export const SCENES: FxScene[] = [];
 
-// The clips ported: the Volley (A2), the ships in motion (A3), the turn, the cards, the statuses … (A4).
-Object.assign(PLAY, PLAY_VOLLEY, PLAY_MISC);
+// The clips ported: the Volley (A2), the ships in motion (A3), the turn, the cards, the statuses … (A4), the sea (S1).
+Object.assign(PLAY, PLAY_VOLLEY, PLAY_MISC, PLAY_SEA);
 SCENES.push(VOLLEY_SCENE, CARD_SCENE);
 
 interface Item extends QueueItem {
@@ -76,6 +80,8 @@ export interface FxQueue {
   weatherRef: RefObject<HTMLDivElement>;
   /** A context for the current run (afterRender). */
   ctx: () => FxCtx | null;
+  /** The quiet weather of the round (S1): the sea card of the table as it is drawn now, and whether it is drawn at all. */
+  weather: () => { ctx: FxCtx | null; on: boolean };
 }
 
 export function useFxQueue({
@@ -141,21 +147,21 @@ export function useFxQueue({
   const weatherRef = useRef<HTMLDivElement>(null);
 
   // The latest values for the loop (it lives across renders).
-  const live = useRef({ view, speed, rich, data, bottom, own, hold, paused, myDecision });
-  live.current = { view, speed, rich, data, bottom, own, hold, paused, myDecision };
+  const live = useRef({ view, speed, rich, data, bottom, own, hold, paused, myDecision, enabled });
+  live.current = { view, speed, rich, data, bottom, own, hold, paused, myDecision, enabled };
   const waiters = useRef<(() => void)[]>([]);
   const wake = () => waiters.current.splice(0).forEach((w) => w());
   useEffect(wake, [hold, paused]);
 
   const bump = () => setGen((g) => g + 1);
-  const makeCtx = (run: number): FxCtx | null => {
+  const makeCtx = (run: number, display?: Display): FxCtx | null => {
     const layer = layerRef.current;
     const board = layer?.parentElement;
     if (!layer || !board) return null;
     return {
       board,
       layer,
-      display: D.current ?? base.current!,
+      display: display ?? D.current ?? base.current!,
       speed: speedFactor(live.current.speed),
       rich: live.current.rich,
       run,
@@ -293,6 +299,8 @@ export function useFxQueue({
       }
       const ctx = makeCtx(run);
       if (ctx) await wait(ctx, 300);
+      // the card at the middle fades for as long (300 ms): the show is over when it has left the layer
+      await Promise.all(SCENES.map((x) => x.settled?.()));
       if (run !== RUN.current) return;
       // The queue is empty: D = the real state. The scene of an unfinished Volley stays (its shot comes later).
       base.current = displayFrom(live.current.view);
@@ -376,7 +384,9 @@ export function useFxQueue({
     if (running.current) finish();
   }, [finish]);
 
-  return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, hidden: D.current ? pendingFlags(queue.current) : {}, logFrom: D.current ? logHiddenFrom(queue.current) : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current) };
+  return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, hidden: D.current ? pendingFlags(queue.current) : {}, logFrom: D.current ? logHiddenFrom(queue.current) : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current),
+    // game: the weather is off (empty) in «простые спецэффекты», with prefers-reduced-motion and at «мгновенно».
+    weather: () => ({ ctx: makeCtx(RUN.current, preview.current ?? D.current ?? displayFrom(live.current.view)), on: live.current.enabled && live.current.rich }) };
 }
 
 /**
@@ -389,7 +399,23 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     const ctx = fx.ctx();
     if (ctx) SCENES.forEach((x) => x.afterRender(ctx));
   });
-  const { press, layerRef } = fx;
+  const { press, layerRef, weatherRef } = fx;
+  const drawWeather = () => {
+    const w = fx.weather();
+    if (w.ctx && weatherRef.current) renderWeather(w.ctx, weatherRef.current, w.on);
+  };
+  // The weather follows the table drawn (the sea card, the places of the ships): it is drawn again only when they change.
+  useLayoutEffect(drawWeather);
+  const redraw = useRef(drawWeather);
+  redraw.current = drawWeather;
+  useEffect(() => {
+    // … and the size of the board.
+    const board = layerRef.current?.parentElement;
+    if (!board || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => redraw.current());
+    ro.observe(board);
+    return () => ro.disconnect();
+  }, [layerRef]);
   useEffect(() => {
     // Always on: press() itself checks that a clip of the layer plays. Waiting for «busy» lost a press that came before
     // React ran the effect (the layer may draw within the same task the queue starts in).
@@ -398,6 +424,8 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     const onPress = (e: PointerEvent) => {
       const t = e.target as Element | null;
       if (t?.closest('[data-fx-hand], .dock')) return;
+      // S1: a badge or a status chip that explains itself (and the press that closes its window) is not the table
+      if (tookPress(e)) return;
       press();
     };
     board.addEventListener('pointerdown', onPress);
