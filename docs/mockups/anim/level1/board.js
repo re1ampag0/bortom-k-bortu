@@ -45,6 +45,7 @@ function plankHTML(code) {
   if (s.submerged) st.push('Под водой');
   if (s.mark) st.push('Чёрная метка');
   if (s.flags) for (const f of s.flags) st.push(f);
+  // Статусы — чипы под шапкой; они ничего не закрывают и живут, пока статус есть в состоянии («Чёрная метка» — до конца хода).
   const badges = [
     s.fires > 0 ? `<span class="badge fire" data-fx-fires>Пожар ${s.fires}</span>` : '',
     d.souls != null ? `<span class="badge souls" data-fx-souls>Души ${s.souls} / ${d.souls}</span>` : '',
@@ -55,8 +56,13 @@ function plankHTML(code) {
   return `<section class="${cls}" data-fx-ship="${code}" style="--ship:${d.color}">` +
     `<header class="plank-head"><b class="plank-name"><span class="wide">${esc(d.name)}</span><span class="narrow">${esc(d.short)}</span><span class="star narrow ${s.legend ? '' : 'gone'}">★</span></b>` +
     `<span class="captain wide">${esc(d.captain)}</span><span class="plank-role">${s.sunk ? '<span class="tag">ЗАТОНУЛ</span>' : ''}<span class="narrow hand-count">${handCount(code)} карт</span></span></header>` +
-    (st.length ? `<div class="plank-statuses" data-fx-statuses>${st.map((x) => `<span class="status-chip">${x}</span>`).join('')}</div>` : '') +
+    (st.length ? `<div class="plank-statuses" data-fx-statuses>${st.map(statusChipHTML).join('')}</div>` : '') +
     `<div class="plank-body"><div class="tracks">${rows}</div><div class="badges">${badges}</div></div></section>`;
+}
+const MARK_SVG = '<svg viewBox="0 0 30 26" width="16" height="14" aria-hidden="true"><path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612"/><circle cx="27" cy="22" r="2" fill="#1a1612"/><circle cx="4" cy="5" r="1.4" fill="#1a1612"/></svg>';
+function statusChipHTML(label) {
+  const mark = label.startsWith('Чёрная метка');
+  return `<span class="status-chip${mark ? ' mark' : ''}" data-fx-status="${esc(label)}"${mark ? ' data-fx-mark title="До конца этого хода каждый Залп по кораблю сильнее"' : ''}>${mark ? MARK_SVG : ''}${esc(label)}</span>`;
 }
 function handCount(code) { const h = D.ships[code].hand; return Array.isArray(h) ? h.length : h; }
 

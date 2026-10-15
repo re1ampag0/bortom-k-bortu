@@ -97,7 +97,8 @@ button { font: inherit; color: inherit; }
 .star { color: #f3cd55; margin-left: 4px; }
 .star.gone { color: rgba(255, 255, 255, 0.35); }
 .plank-statuses { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 12px 0; }
-.status-chip { border: 1.5px dashed #8b6bb5; color: #5a3f86; background: #f1ebfa; border-radius: 6px; padding: 0 6px; font-size: 0.8rem; }
+.status-chip { border: 1.5px dashed #8b6bb5; color: #5a3f86; background: #f1ebfa; border-radius: 6px; padding: 0 6px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px; }
+.status-chip.mark { border-style: solid; border-color: #1a1612; color: #1a1612; background: #f4ead6; font-weight: 700; }
 .plank-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 4px 12px 6px; flex: 1; }
 .tracks { display: grid; gap: 1px; }
 .track { display: grid; grid-template-columns: 70px minmax(0, 1fr) 44px; align-items: center; gap: 6px; font-size: 0.9rem; line-height: 1.25; }
