@@ -16,9 +16,11 @@ export interface Settings {
   hints: boolean | null;
   /** The short sound «ваш ход» (off by default). */
   sound: boolean;
+  /** «Быстрый конец хода»: «Ход окончен · Отменить» lasts 1 s instead of 3 s (off by default). */
+  fastEnd: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false };
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false };
 
 function read(key: string): string | null {
   try {
