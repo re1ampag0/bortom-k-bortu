@@ -21,6 +21,69 @@
 
 ## Текущее состояние
 
+**Задача A2 (слой анимаций на столе и Залп), часть 1 из 2 — шаги 1–3 сделаны; шаги 4–6 — следующей сессией от свежего `main` после слияния PR части 1.** Правила, движок, боты, сервер и данные не менялись (`npm run sim:check` — 46,5 %). Видимое поведение игры не меняется: клипов ещё нет (`PLAY` пуст), поэтому все действия по-прежнему показывает старый `ShowLayer`.
+
+- **Шаг 1. DOM-контракт** (PORTING, раздел 3): `data-fx-ship` у планшета, `data-fx-track` у шкалы, `data-fx-value` у числа, `data-fx-fires`, `data-fx-souls`, `data-fx-legend`, `data-fx-statuses` (`Table.tsx`); `data-fx-hold="<сторона>"` и `data-fx-keg` в `PowderDots`; `data-fx-instruction`, `data-fx-sea-chip` в `StatusBar`; `data-fx-card` (у закрытой — `"?"`), `data-fx-deck` (`Hand.tsx`); `data-fx-gap` у `.middle`, `data-fx-hand` у `.hand-row` (`Game.tsx`). `data-ship` и `plate-`/`plank-` из P2 на месте. Число шкалы теперь один текстовый узел `v/max` (так его читают и пишут эффекты); на экране то же самое. Атрибуты без значения React пишет как `="true"` — для поиска `[data-fx-…]` это не важно.
+- **Шаг 2. Примитивы** `src/ui/game/fx/primitives.ts` — перенос `effects.js` построчно: все 33 функции из задачи и помощники контракта (`plank`, `trackEl`, `valueEl`, `gapBox`, `holdEl`, `handCardEl`, `isTop`, `facingY`, `dirOf`). Глобальные `board / fx / D / SPEED / RICH / RUN / G` заменил контекст `FxCtx { board, layer, display, speed, rich, run, live(), data, bottom, hint() }`. Отличия от эталона, кроме поиска элементов:
+  - `max` шкалы — `startValue`;
+  - летящая карта — разметка `HandCard` игры (`cardHTML`), а не стола эталона; кнопка с `tabindex="-1"`;
+  - `hint` пишет в строку состояния через состояние React, а не через `textContent`: иначе React потерял бы свой текстовый узел.
+  - **CSS** `src/ui/game/fx/fx.css` — разделы «ЭФФЕКТЫ» и «ЛЕГЕНДЫ» эталона без изменений. Отличия:
+    - z-index `.fx-layer` — 4, под `.dock` (5);
+    - переменные `--navy`, `--seal`, `--water` заданы на слое (в игре их нет);
+    - `.plank.hitframe` взят из стола эталона.
+    - Не перенесены: тень `.plank.shooter` из эталона (поменяла бы вид прицеливания P2), режим съёмки, карточка страницы эталона, макеты P2/P3 (они уже в игре).
+- **Шаг 3. Очередь** `src/ui/game/fx/FxLayer.tsx` (`useFxQueue`, `FxLayer`, реестры `PLAY` и `SCENES`) и чистая часть `src/ui/game/fx/queue.ts` (`routeAction`, `planItem`, `plannerFor`, `applyClip`/`applyQuiet`/`applyAll`, `withDisplay`):
+  - `.fx-weather` и `.fx-layer` — последние дети `.board`, `pointer-events: none`;
+  - **каждое действие** из `game.recent` идёт в планировщик, всегда, даже без показа — чтобы помнить незаконченный Залп. Если показ включён и у **всех** клипов действия есть проигрыватель в `PLAY`, его играет FxLayer, иначе всё действие уходит в `ShowLayer`. `useShowQueue` теперь получает действия только от этой очереди (`external`, `push`), поэтому два слоя идут строго по порядку номеров действий и никогда не играют одно действие вдвоём;
+  - **D** — `displayFrom` до новых действий, догоняет настоящее по событиям клипа (`applyVisible`); действие ShowLayer применяется к D целиком. Пока очередь играет, `Plank`, `TeamRow`, `StatusBar` и места (`columns`) рисуются из `withDisplay(view, D)`. Кнопки, цели, рука, Реакции и все проверки «можно ли» — из настоящего состояния. После каждого клипа `key` у `.tracks` планшета и у `PowderDots` меняется (`fx.gen`): React строит заново узлы, которые трогали `setTrack`, `payKegs`, `gainKegs`;
+  - **«Сразу итог»** (`finish` эталона): «Быстрее», «До конца хода», нажатие по `.board` вне `[data-fx-hand]` и `.dock` (только пока играет клип FxLayer — показ ShowLayer нажатие не трогает), выключение показа, Undo, смена устройства (вдвоём). Отмена анимаций доски не трогает CSS-анимации (пульс прицела P2, точки P8) и погоду;
+  - **показ выключен** при «мгновенно», `?speed=instant`, `prefers-reduced-motion`, шторке «Передайте устройство» и после «До конца хода»: тогда всё показывает ShowLayer, как раньше (без анимации при reduced-motion);
+  - **решение устройства**: остаётся только действие, которое его вызвало, остальное сразу в D;
+  - **«⏸ Пауза»**: следующий клип ждёт «Дальше»; баннеры тоже держат очередь. Боты ждут и ShowLayer, и FxLayer (`botBusy`).
+  - Мелкое отличие от прежнего ShowLayer: после Undo на одном экране он больше не пропускает показ следующих действий (раньше их номера совпадали с уже показанными и не показывались).
+- **Тесты** (522 в 39 файлах):
+  - `fx-dom` — у 4 планшетов (и как у цели) `data-fx-ship`, 4 `data-fx-track` с числом `v/max`; Трюм — `cap` бочонков; рука; строка состояния;
+  - `fx-primitives` — `curve`, `ms` × множитель P4, `wait` и `ABORT`, разметка летящей карты;
+  - `fx-queue` — маршрут действия; с пустым `PLAY` всё идёт в ShowLayer; на 20 партиях ботов (обе стороны, с паузой пустых окон и без) D после каждого действия = `displayFrom(after)` при Залпах через FxLayer и остальном через ShowLayer. Проверено поломкой: без событий действий ShowLayer тест падает; `withDisplay`.
+  - Партии ботов вынесены из `fx-plan.test.ts` в `tests/fx-games.ts`.
+- **e2e:** `npm run e2e` (Chromium) — 29 из 29 за 2,4 мин, без правок тестов; `@iphone` (WebKit) — в CI. Отдельно скриптом на собранном сайте: `.fx-weather`, `.fx-layer` — последние дети `.board`, `pointer-events: none`, z-index 4; 4 `data-fx-ship`, 16 `data-fx-track`, 16 бочонков, 5 карт руки, `[data-fx-gap]`, `[data-fx-hand]`; нажатие в центр планшета попадает в планшет; ошибок страницы нет.
+
+### Не сделано (A2, часть 1)
+
+- Цикл очереди (`loop`, `fastForward`, обрезка при решении, ожидание ShowLayer) в браузере ещё ни разу не играл клип: `PLAY` пуст до шага 4. Его проверят e2e шага 6 и `stage7b`.
+- Ветка — `claude/dreamy-cerf-xwytua` (задана сессией), не `a2-fx-volley`. WebKit (`@iphone`) — в CI.
+
+### A2, часть 2: что осталось (шаги 4–6) — для новой сессии
+
+План целиком: файл плана сессии, кратко здесь. Начать от свежего `main` после слияния PR части 1.
+
+- **Шаг 4. Клипы Залпа** `src/ui/game/fx/volley.ts`: перенос `play-volley.js` построчно (`PLAY.announce, window, reaction, shot, cancel, counter, heart`, `VS`, `PERSIST`, `placePlate, cardSlot, termRows, plateHTML, fitPlate, clearVS, lean, unleanAll, soulsFly, FLAME_SVG`). Регистрация:
+  - `Object.assign(PLAY, …)` из `FxLayer.tsx`;
+  - `SCENES.push({ keep, afterRender, reset, onTurn })`: `keep` — `keepSet` эталона (`VS.plate`, `VS.cards`, `VS.extras`, `PERSIST.whirl`); `afterRender` — классы `.shooter`/`.targeted` и наклоны `VS.lean`; `reset` — `VS = null`, `PERSIST.whirl = null` и снять классы, добавленные `VS`; `onTurn` — гасит воронку «Водоворота», как строка `c.kind === 'turn'` в `play()`.
+  - Важно: `clearVS` эталона снимает `.shooter`/`.targeted` со **всех** планшетов. В игре те же классы ставит React (прицеливание P2): снимать только то, что поставил `VS`, иначе React их не вернёт (класс снимают мимо него).
+  - **Решения пользователя:**
+    - *Слой под панелью*: `.fx-layer` уже под `.dock`. `PLAY.window` не рисует «окно» эталона, если в `[data-fx-gap]` есть `.dock` (окно Реакций, «Компания решает…» P8, панель Залпа) — остаются `hint` и ожидание клипа. Без панели — как в эталоне.
+    - *Пауза между клипами*: уже сделано в очереди — код клипов не трогать.
+    - *Свои действия тоже показывает FxLayer* (как в эталоне, сцена `plain`): числа своих планшетов отстают на 2–3 с, кнопки — по настоящему состоянию.
+    - *`nickGenitive`* — добавить в `data/game-data.json` через `scripts/convert-data.py` рядом с `nick` и `nickDative` (родительный падеж для подсказок `cancel` / `heart`: «Залп «Жемчужины» отменён»). Правила и числа не трогать; в `tests/data.test.ts` — поле у всех 4 кораблей.
+  - Названия карт в `reaction` / `cancel` («Уйти по ветру», «Уйти на глубину», «Банка с землёй») — как в эталоне. В `fx.look` — только с согласия пользователя. `CUR_CARD` (клип `card` — A3) пока `null`.
+  - `G.ships[x].dat / gen / short / color` → `nickDative` / `nickGenitive` / `nick` / `color` из `shipData`; `TR_DAT` → `TRACK_DATIVE` из `hints.ts`; `FX.termSrc` / `FX.KIND_BY_TRACK` — из `planFx.ts`.
+  - **`e2e/stage7b.spec.ts`, строки 60–62** ждут `show-projectile` / `show-plate` от Залпа бота. После шага 4 этот Залп показывает FxLayer — проверка становится `.fx-layer .plate` и `.fx-layer .ball` видимы (`show-arrow` — 0). Пользователь предупреждён: тест меняется вместе с поведением из задачи. Тест reduced-motion в `stage7b` не меняется: при reduced-motion всё показывает ShowLayer.
+- **Шаг 5. `?fxScene=<id>`** — только dev и e2e:
+  - `src/ui/game/fx/FxScene.tsx`, ленивый импорт в `App.tsx` под `import.meta.env.DEV || import.meta.env.MODE === 'e2e'`; `scripts/e2e-site.mjs` → `build({ mode: 'e2e' })`. CI-выкладка собирает `npm run build` отдельно — без сцен.
+  - Сцены — `scenes.js?raw` → `new Function('window', src)`. Стартовый `GameState` — `createGame(data, { seed: 1 })` с полями из `scene.start`; «настоящее» — старт + `applyVisible` всех событий + руки.
+  - Стол — те же `StatusBar` / `TeamRow` / `Plank` / `Hand` / `.middle[data-fx-gap]` / `.hand-row[data-fx-hand]` / `FxLayer`; карта руки открывает `Sheet` + `CardDetail`.
+  - Старт через 350 мс, как в эталоне; `body.dataset.fxStart` / `fxDone` для e2e.
+  - Проверка, что сцен нет в сборке для Pages: `npm run build` → `grep -rlE "fxScene|<метка из scenes.js>" dist/` пусто; положительный контроль — `npx vite build --mode e2e --outDir <scratchpad>` находит метку.
+- **Шаг 6. e2e** `e2e/fx-volley.spec.ts` через `?fxScene=plain|storm|joint|both`:
+  - `elementFromPoint` над планшетами и картами руки во время показа даёт сам элемент;
+  - карта руки открывается во время показа;
+  - после показа числа `[data-fx-value]` = итог сцены (считать в Node: `vm` + `applyVisible`);
+  - матч ботов — `.fx-layer` последний в `.board`, `[data-fx-gap]` / `[data-fx-hand]` есть, Залп бота даёт `.fx-layer .plate`.
+  - **Скриншоты (решение пользователя — не больше):** пары «игра / эталон» только `plain`, `storm`, `joint`, `both` на 1366×660 по 2 момента и `plain` на 430×932 (2 момента) → `docs/screenshots/a2/` и `docs/screenshots/a2/ref/` (`capture.mjs`).
+- **Готово, когда (часть 2):** `typecheck`, `npm test`, `build` (+ grep `dist/`), `npm run e2e`, `sim:check` 46,5 %; пары кадров; таблица «сцена эталона → кадр игры → совпадает / чем отличается»; PR 2. Force push не делать.
+
 **Задача P2 (прицеливание без кнопки «Цель») — сделано; полный `npm run e2e` (WebKit) — в CI.** Правила выбора цели (`volleyTargets`, `playOptions`, `legendOptions`), панель Залпа («Без Заряда», «Огонь»), движок, сервер и данные не менялись.
 
 - **Цель — весь планшет** (`Plank` в `src/ui/game/Table.tsx`, `plateFor` в `Game.tsx`): при Залпе, карте с целью и Легенде с целью у планшета-цели классы `aimable` / `chosen`, `role="button"`, `tabIndex=0`, Enter/Space, `aria-label` «Цель: «Голландец»» (с «Подсказками» — «…, 2 напротив»). Нажатие в любом месте, включая шапку, выбирает цель (Легенда, как и раньше, сразу играется). Кнопка `.plate` «Цель» удалена.
