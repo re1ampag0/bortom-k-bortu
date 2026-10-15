@@ -467,6 +467,11 @@ button {
   padding: 1px 6px;
   letter-spacing: 0.05em;
 }
+/* «✓ готов»: the player pressed «Ход окончен» (green — ready). */
+.tag.ready {
+  background: var(--green);
+  color: #fff;
+}
 .star {
   color: #f3cd55;
   margin-left: -4px;
@@ -687,7 +692,7 @@ button.star::before {
   display: block;
   height: 4px;
   background: var(--ink);
-  animation: ending 3s linear forwards;
+  animation: ending var(--ending-ms, 3s) linear forwards;
 }
 @keyframes ending {
   from {

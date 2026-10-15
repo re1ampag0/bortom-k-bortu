@@ -2,11 +2,12 @@
 // the full card text and «what happens now» without «Подсказки».
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { reactionNow, threatLine } from '../src/engine/hints';
 import { cardByCode } from '../src/engine/state';
 import { reactionWait } from '../src/ui/game/clarity';
 import { ReactionPanel } from '../src/ui/game/Panels';
+import { loadSettings, storeSettings } from '../src/ui/storage';
 import { act, cardIn, data, turnOf } from './helpers';
 
 describe('the attacker waits for a Reaction', () => {
@@ -69,5 +70,32 @@ describe('the Reaction window without «Подсказки»', () => {
 
   it('the note on what a Reaction is, in the first window', () => {
     expect(text(window(true).html)).toContain('Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
+  });
+});
+
+describe('«Быстрый конец хода» in the settings', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const storageWith = (text: string | null) => {
+    const box = { text };
+    vi.stubGlobal('localStorage', {
+      getItem: () => box.text,
+      setItem: (_: string, v: string) => (box.text = v),
+      removeItem: () => (box.text = null),
+    });
+    return box;
+  };
+
+  it('off by default; an old record without it is read with it off', () => {
+    storageWith(null);
+    expect(loadSettings().fastEnd).toBe(false);
+    storageWith(JSON.stringify({ speed: 'slow', effects: 'simple', hints: true, sound: true }));
+    expect(loadSettings()).toEqual({ speed: 'slow', effects: 'simple', hints: true, sound: true, fastEnd: false });
+  });
+
+  it('is kept like the other settings', () => {
+    const box = storageWith(JSON.stringify({ speed: 'fast' }));
+    storeSettings({ ...loadSettings(), fastEnd: true });
+    expect(JSON.parse(box.text!)).toMatchObject({ speed: 'fast', fastEnd: true });
+    expect(loadSettings().fastEnd).toBe(true);
   });
 });

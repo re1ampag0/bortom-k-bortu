@@ -123,6 +123,13 @@ export function Game({
     setSoundState(v);
     storeSettings({ ...loadSettings(), sound: v });
   };
+  const [fastEnd, setFastEndState] = useState(() => loadSettings().fastEnd);
+  const setFastEnd = (v: boolean) => {
+    setFastEndState(v);
+    storeSettings({ ...loadSettings(), fastEnd: v });
+  };
+  /** «Ход окончен · Отменить»: 3 s, or 1 s with «Быстрый конец хода». */
+  const endMs = fastEnd ? 1000 : 3000;
   const [openHands, setOpenHands] = useState(game.setup.openHands);
   // «Подсказки» off — «как за столом»: no damage before choosing, no green «Ход окончен», no «Залп не дан…».
   const [hintsChoice, setHintsState] = useState(net ? (loadSettings().hints ?? false) : (game.setup.hints ?? false));
@@ -335,9 +342,9 @@ export function Game({
   }, []);
 
   useEffect(() => {
-    // «Ход окончен · Отменить»: the turn passes after 3 s.
+    // «Ход окончен · Отменить»: the turn passes after 3 s (1 s with «Быстрый конец хода»).
     if (mode.k !== 'ending') return;
-    const t = setTimeout(() => act(mode.action), 3000);
+    const t = setTimeout(() => act(mode.action), endMs);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
@@ -486,7 +493,7 @@ export function Game({
     }
     finishTurn({ type: 'endTurn', side: bottom });
   };
-  /** The turn passes in 3 s with «Отменить» (docs/TZ.md, «Детали», п. 10); at the test speed — at once. */
+  /** The turn passes in 3 s (or 1 s) with «Отменить» (docs/TZ.md, «Детали», п. 10); at the test speed — at once. */
   const finishTurn = (action: Action) => (speed === 'instant' ? act(action) : setMode({ k: 'ending', action }));
 
   // ——— Planks ———
@@ -625,10 +632,12 @@ export function Game({
       dock = <ConfirmPanel title={mode.text} yes="Закончить ход" no="Вернуться" onYes={() => endFlow('confirmed')} onNo={cancel} testid="confirm-end" />;
     } else if (mode.k === 'ending') {
       dock = (
-        <section className="panel ending" data-testid="ending">
+        <section className="panel ending" data-testid="ending" style={{ ['--ending-ms' as string]: `${endMs}ms` }}>
           <div className="panel-head">
             <b>Ход окончен</b>
-            <span className="panel-sub">ход перейдёт к {SIDE_LABEL[other(bottom)].dat} через 3 с</span>
+            <span className="panel-sub">
+              ход перейдёт к {SIDE_LABEL[other(bottom)].dat} через {endMs / 1000} с
+            </span>
             <button className="btn" data-testid="ending-cancel" onClick={cancel}>
               Отменить
             </button>
@@ -913,6 +922,18 @@ export function Game({
   // The ship the card repairs, as the engine decides it: framed green while the card panel is open.
   const repairing = mode.k === 'card' ? cardNeeds(s, data, mode.seat, mode.card, mode.ship ? { ship: mode.ship } : {}).repairShip : null;
 
+  /**
+   * «✓ готов»: the player of the team whose turn it is pressed «Ход окончен». By network — the seats the server lists
+   * as ready (everyone gets them), and this device's seats during the countdown; on one screen — the seats at the
+   * device during the countdown.
+   */
+  const readyOf = (code: string) => {
+    const ship = s.ships[code];
+    if (s.winner || ship.sunk || ship.side !== s.active) return false;
+    if (mode.k === 'ending' && mySeats.includes(code)) return true;
+    return !!net && net.ready.includes(code);
+  };
+
   const renderPlank = (x: (typeof view.ships)[string]) => (
     <Plank
       key={x.code}
@@ -928,6 +949,7 @@ export function Game({
       plate={plateFor(x.code)}
       buttons={plankButtons(x.code)}
       role={net ? netRole(x.code) : null}
+      ready={readyOf(x.code)}
       onSelect={() => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code)}
       onDetails={() => setSheet({ k: 'ship', code: x.code })}
       onLegend={() => legendClick(x.code)}
@@ -1109,6 +1131,8 @@ export function Game({
           setEffects={setEffects}
           sound={sound}
           setSound={setSound}
+          fastEnd={fastEnd}
+          setFastEnd={setFastEnd}
           openHands={net ? null : openHands}
           setOpenHands={setOpenHands}
           hints={hintsAllowed ? hints : null}

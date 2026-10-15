@@ -134,6 +134,8 @@ export function Start({
           setEffects={(effects) => change({ effects })}
           sound={settings.sound}
           setSound={(sound) => change({ sound })}
+          fastEnd={settings.fastEnd}
+          setFastEnd={(fastEnd) => change({ fastEnd })}
           openHands={null}
           setOpenHands={() => {}}
           hints={settings.hints ?? false}
