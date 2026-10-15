@@ -60,8 +60,10 @@ describe('Plank as a target', () => {
     expect(html).not.toContain('class="reticle"');
   });
 
-  it('the chosen target: «chosen» instead of «aimable»', () => {
-    const section = tag(plank({ tip: null, chosen: true, onClick: () => {} }), 'data-ship="Г"');
+  it('the chosen target: «chosen» instead of «aimable», the reticle', () => {
+    const html = plank({ tip: null, chosen: true, onClick: () => {} });
+    expect(html).toContain('class="reticle"');
+    const section = tag(html, 'data-ship="Г"');
     expect(section).toMatch(/class="plank [^"]*chosen/);
     expect(section).not.toContain('aimable');
     expect(section).toContain('aria-pressed="true"');

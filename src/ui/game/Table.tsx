@@ -380,6 +380,13 @@ export function Plank({
           ))}
         </div>
       )}
+      {plate?.chosen && (
+        <svg className="reticle" viewBox="0 0 26 26" aria-hidden>
+          <circle cx="13" cy="13" r="9" fill="none" stroke="#B23A2E" strokeWidth="2" />
+          <circle cx="13" cy="13" r="2.2" fill="#B23A2E" />
+          <path d="M13 1v6M13 19v6M1 13h6M19 13h6" stroke="#B23A2E" strokeWidth="2" />
+        </svg>
+      )}
     </section>
   );
 }
