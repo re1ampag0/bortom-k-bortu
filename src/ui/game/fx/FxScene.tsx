@@ -201,6 +201,7 @@ function SceneTable({
     speed,
     rich: new URLSearchParams(location.search).get('rich') !== '0',
     myDecision: false,
+    jumpAt: Infinity,
     paused: false,
     hold: false,
     show: { push: () => 0, busy: false },

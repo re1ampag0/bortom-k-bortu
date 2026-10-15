@@ -15,7 +15,7 @@ import { applyVisible, displayFrom, displayRules, type Display } from './display
 import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
-import { applyAll, applyClip, applyQuiet, logHiddenFrom, pendingFlags, planItem, plannerFor, type PlayClip, type QueueItem } from './queue';
+import { applyAll, applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
 import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
 import './fx.css';
 
@@ -96,6 +96,8 @@ export function useFxQueue({
   speed,
   rich,
   myDecision,
+  jump = false,
+  jumpAt = JUMP,
   paused,
   hold,
   show,
@@ -115,6 +117,10 @@ export function useFxQueue({
   rich: boolean;
   /** The game waits for this device: only the action that caused it is left. */
   myDecision: boolean;
+  /** Back after a lost connection («Пока вас не было»): the actions that came are not replayed, only the last one. */
+  jump?: boolean;
+  /** So many actions at once are a jump too (JUMP); ?fxScene plays all the actions of its scene. */
+  jumpAt?: number;
   /** A banner is up: the show waits for it. */
   paused: boolean;
   /** «Пауза» of P4: the clip on screen plays to its end, the next one waits for «Дальше». */
@@ -340,8 +346,9 @@ export function useFxQueue({
     }
   };
 
-  // New actions: each is fed to the planner and routed (FxLayer or ShowLayer).
-  useEffect(() => {
+  // New actions: each is fed to the planner and routed (FxLayer or ShowLayer). A layout effect: D is set before the
+  // browser paints, so the result the new action brought never flashes on the planks for a frame.
+  useLayoutEffect(() => {
     const fresh = game.recent.filter((r) => r.n >= shown.current);
     if (fresh.length === 0) {
       const last = game.recent.at(-1)?.n ?? -1;
@@ -354,13 +361,19 @@ export function useFxQueue({
       return;
     }
     shown.current = fresh.at(-1)!.n + 1;
-    const has = enabled ? (kind: FxKind) => !!PLAY[kind] : null;
+    const has = (kind: FxKind) => !!PLAY[kind];
     const items: Item[] = fresh.map((r) => ({
       ...planItem(planner.current!.p, r.n, game.kind === 'local' ? eventsFor(game.state, viewer, r.events) : r.events, r.action, has),
       recent: r,
       done: 0,
       applied: false,
     }));
+    if (!enabled) {
+      // No animations (prefers-reduced-motion, «мгновенно», the curtain, «До конца хода»): the planner has seen the
+      // actions (a Volley declared now is known at its shot), the table is at once in the real state.
+      base.current = displayFrom(view);
+      return;
+    }
     if (!running.current && items.every((i) => i.route === 'show')) {
       // Nothing for the layer: ShowLayer shows them as before, the table is drawn from the real state. The scene of a
       // Volley declared before goes: its shot is shown the old way.
@@ -370,8 +383,9 @@ export function useFxQueue({
       return;
     }
     queue.current.push(...items);
-    if (myDecision && queue.current.length > 1) {
-      // The decision of this device is not delayed: only the action that caused it is left, the rest goes into D.
+    if (skipAhead(queue.current.length, myDecision, jump || fresh.length >= jumpAt)) {
+      // The decision of this device is not delayed, a return after a lost connection is not replayed: only the last
+      // action is left, the rest goes into D (its log lines and statuses are shown at once).
       if (!D.current) D.current = structuredClone(base.current!);
       fastForward(queue.current.slice(0, -1));
       queue.current = queue.current.slice(-1);
