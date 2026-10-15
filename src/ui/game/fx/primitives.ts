@@ -315,13 +315,19 @@ export function moveTo(ctx: FxCtx, el: FlyCard, to: CardPos, d = 400): void {
   A(ctx, el, [{ transform: `translate(${f.x}px,${f.y}px) rotate(${f.r || 0}deg) scale(${f.s || 0.72})` }, { transform: `translate(${to.x}px,${to.y}px) rotate(${to.r || 0}deg) scale(${to.s || 0.72})` }], d, 0, 'cubic-bezier(.3,0,.2,1)', 'forwards');
   el._pos = to;
 }
-/** Where a card flies from: an own one — from the hand (the card in the hand hides), another's — from beyond the top edge over its ship. */
+/** Where a card flies from: an own one — from the hand (the card in the hand hides), another's — from beyond the edge over its ship. */
 export function cardOrigin(ctx: FxCtx, code: string, ship: string): CardPos {
   const h = handCardEl(ctx, code);
   if (h && sideOf(ctx, ship) === ctx.bottom) {
     const b = bx(ctx, h);
     h.style.visibility = 'hidden';
     return { x: b.x, y: b.y, s: 1 };
+  }
+  // game: the hand is the real one — an own card just played is out of it already: it flies from the hand row.
+  const row = ctx.board.querySelector('[data-fx-hand] .hand-cards');
+  if (sideOf(ctx, ship) === ctx.bottom && visible(row)) {
+    const b = bx(ctx, row);
+    return { x: b.cx - 55, y: b.y, s: 1 };
   }
   const s = bx(ctx, plank(ctx, ship));
   return isTop(ctx, ship) ? { x: s.cx - 55, y: -150, r: -8, s: 1 } : { x: s.cx - 55, y: ctx.board.clientHeight + 20, r: 8, s: 1 };
@@ -339,3 +345,15 @@ export function pillAt(ctx: FxCtx, code: string, t: Track, n: number, delay: num
   const vb = bx(ctx, valueEl(ctx, code, t));
   return pill(ctx, Math.max(4, vb.x - 58), vb.cy - 20, `${good ? '+' : '−'}${n}`, delay, (good ? 'good' : '') + (n >= 4 ? ' huge' : ''));
 }
+/** Souls: wisps from the enemy's Crew into the Souls of «Голландец» (play-volley.js; the card and the Souls clips use it too). */
+export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number) {
+  const keeper = ctx.data.ships.map((s) => s.code).find((x) => shipData(ctx.data, x).souls != null && !ctx.display.ships[x].sunk);
+  if (!keeper) return;
+  const badge = plank(ctx, keeper).querySelector('[data-fx-souls]');
+  const to = badge && visible(badge) ? (() => { const b = bx(ctx, badge); return { x: b.cx, y: b.cy }; })() : (() => { const b = bx(ctx, plank(ctx, keeper)); return { x: b.r - 30, y: b.y + 30 }; })();
+  const from = fxPoint(ctx, fromShip, 'crew', 0);
+  for (let k = 0; k < n; k++) wisp(ctx, from, to, delay + k * 160);
+  setTimeout(() => { if (badge && ctx.run === ctx.live()) { A(ctx, badge, [{ transform: 'scale(1.3)', boxShadow: '0 0 12px #6fd3b4' }, { transform: 'scale(1)', boxShadow: 'none' }], 500, 0, 'ease-out', 'none'); } }, ms(ctx, delay + 800));
+  tag(ctx, to.x, to.y - 16, `+${n} ${n === 1 ? 'Душа' : 'Души'}`, delay + 700, 'good', 1200);
+}
+export const FLAME_SVG = '<svg width="18" height="22" viewBox="0 0 14 17"><path d="M7 1 C9 5 13 7 12 11 C11.5 14.5 9 16 7 16 C4 16 2 14 2 11 C2 8.5 4 7.5 4.5 5 C5.5 7 6.5 7 7 6 C7.5 4.5 7 3 7 1Z" fill="#F2913D" stroke="#B23A2E" stroke-width="1"/><path d="M7 9 C8 10.5 9.5 11.5 9 13 C8.6 14.4 7.6 15 7 15 C5.8 15 5 14 5 12.8 C5 11.6 6.2 11 7 9Z" fill="#FFE08A"/></svg>';

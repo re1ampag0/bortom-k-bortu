@@ -510,6 +510,17 @@ button.star::before {
   padding: 0 6px;
   font-size: 0.8rem;
   cursor: help;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+/* «Чёрная метка»: the blot of the reference (board.js, style.css) — the cannonballs «в метку» hit it. */
+.status-chip.mark {
+  border-style: solid;
+  border-color: #1a1612;
+  color: #1a1612;
+  background: #f4ead6;
+  font-weight: 700;
 }
 .plank-body {
   display: grid;

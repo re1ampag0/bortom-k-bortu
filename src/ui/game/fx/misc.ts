@@ -8,20 +8,27 @@
 //  - the reference draws the table anew after each clip, so the animations of a plank with fill 'forwards' go with
 //    its old node; in the game the node stays, so the queue cancels the finished animations of the planks after the
 //    clip (FxLayer.tsx). The steady look («Под водой», sunk) is the class of the plank from the displayed state;
+//  - the card: an own card is already out of the real hand, it flies from the hand row (cardOrigin); a card the viewer
+//    may not see (HIDDEN) flies face down, without its type; statusFx uses the plank's own chips (React), see statusFx;
 //  - the start of a turn: the hand is the real one, so the drawn cards are in it already: drawFx finds them by the codes
 //    of drew.cards; «Ваш ход» only when the bottom team is played from this device (ctx.own), not in a match of bots;
 //  - PLAY.ability: the branch «limitRaised» of the effects calls statusFx, ported in A4. The engine does not send it
 //    inside an ability now («Казна» sends only «treasury»): tests/fx-motion.test.ts checks it on bot games. «restored»
 //    comes with «Джонс свободен» (a card sinks «Голландец»): repairFx is ported here.
-import { seaCards } from '../../../engine/data';
-import { shipData, TRACK_NAME, type GameEvent } from '../../../engine/state';
-import type { Track } from '../../../engine/types';
+import { deckCards, seaCards } from '../../../engine/data';
+import { cardByCode, shipData, TRACK_NAME, type GameEvent } from '../../../engine/state';
+import type { Side, Track } from '../../../engine/types';
+import { HIDDEN } from '../../../engine/view';
 import { SIDE_LABEL } from '../text';
-import type { ClipPlayer } from './FxLayer';
-import type { AbilityClip, DiveClip, DrawClip, SinkClip, SurfaceClip, SwapClip, TurnClip, TurnEndClip } from './planFx';
+import type { ClipPlayer, FxScene } from './FxLayer';
 import {
-  A, allPlanks, at, bubbles, burst, bx, curve, dirOf, facingY, flash, fly, fxPoint, gainKegs, gapBox, hint, holdEl, isTop, mk, overlayAt, payKegs,
-  pillAt, plank, ring, setTrack, shownTrack, sideOf, splash, steam, tag, wait, whirlpool, type FxCtx, type Pt,
+  KIND_BY_TRACK, type AbilityClip, type CardClip, type DiveClip, type DrawClip, type FireClip, type ImpactClip, type SinkClip, type SurfaceClip,
+  type SwapClip, type TurnClip, type TurnEndClip,
+} from './planFx';
+import {
+  A, allPlanks, at, bubbles, burst, bx, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
+  isTop, mk, overlayAt, payKegs, pillAt, plank, projectile, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, steam, tag, visible, wait,
+  whirlpool, wisp, type FlyCard, type FxCtx, type Pt,
 } from './primitives';
 
 /** FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. */
@@ -49,9 +56,18 @@ export function banner(ctx: FxCtx, text: string, cls = 'small', d = 1200, y?: nu
 
 const nick = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nick}»`;
 const gen = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickGenitive}»`;
+const dat = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickDative}»`;
 
-export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'round' | 'sea', ClipPlayer> = {} as never;
+/** The card being played: it lies at the middle of the table until it resolves (a Reaction window may come between). */
+let CUR_CARD: { el: FlyCard; code: string } | null = null;
+/** For PLAY.cancel (volley.ts): the card cancelled crumbles. */
+export const curCard = () => CUR_CARD;
+
+export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'round' | 'sea' | 'card' | 'impact' | 'fire', ClipPlayer> = {} as never;
 const PLAY = PLAY_MISC as unknown as {
+  card: (c: CardClip, ctx: FxCtx) => Promise<void>;
+  impact: (c: ImpactClip, ctx: FxCtx) => Promise<void>;
+  fire: (c: FireClip, ctx: FxCtx) => Promise<void>;
   turn: (c: TurnClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   turnEnd: (c: TurnEndClip, ctx: FxCtx) => Promise<void>;
   draw: (c: DrawClip, ctx: FxCtx) => Promise<void>;
@@ -281,6 +297,163 @@ export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: nu
   tag(ctx, b.cx, b.y - 12, `${nick(ctx, e.ship)}: +${e.amount} ${TRACK_NAME[e.track]}`, t0 + 200, 'good', 1500);
   return t0 + 600 + e.amount * 180;
 }
+
+/** Where the played card lies: at the edge of the gap on the player's side, so it does not cover the planks. */
+function cardSpot(ctx: FxCtx) {
+  const g = gapBox(ctx), W = ctx.board.clientWidth, sc = W < 701 ? 0.7 : 0.9;
+  return { x: W / 2 - 55 * sc, y: g.cy - 64 * sc, s: sc, r: 0 };
+}
+/** The point the effects of the card fly from. */
+function cardFrom(ctx: FxCtx): Pt {
+  const s = cardSpot(ctx);
+  return { x: s.x + 55 * s.s, y: s.y + 64 * s.s };
+}
+/** An effect of a card: a projectile from the card into the cells (damage). */
+function cardDamage(ctx: FxCtx, e: { ship: string; track: Track; amount: number; toHull: number }, from: Pt, t0: number): number {
+  let n = 0, last = t0;
+  for (const [tr, units] of [[e.track, e.amount], ['hull', e.toHull]] as [Track, number][]) {
+    const now = shownTrack(ctx, e.ship, tr);
+    for (let j = 0; j < units; j++, n++) {
+      const t = t0 + n * 130, p = fxPoint(ctx, e.ship, tr, now - 1 - j);
+      fly(ctx, projectile(ctx, KIND_BY_TRACK[tr]), curve(from, p, 0.08), 420, t, { spin: tr === 'sails' ? 720 : 0 });
+      flash(ctx, p.x, p.y, t + 420, 1.1); burst(ctx, tr === 'sails' ? 'shred' : tr === 'crew' ? 'dust' : 'splinter', p.x, p.y, t + 420, 7, 12, 32, 600);
+      if (n === 0) shake(ctx, plank(ctx, e.ship), t + 420, 3);
+      last = t + 420;
+    }
+    if (units) { at(ctx, t0 + 420, () => setTrack(ctx, e.ship, tr, Math.max(0, now - units), '#c0392b')); pillAt(ctx, e.ship, tr, units, last + 60); }
+  }
+  return last;
+}
+
+/** «Чёрная метка +N»: N from the data (the op «mark» of the card), as MARK_N of the reference. */
+const markN = (ctx: FxCtx) => (deckCards(ctx.data).map((c) => (c.fx.ops || []).find((o) => o[0] === 'mark')).find(Boolean) || [0, 0, 2])[2] as number;
+const FLAG_LABEL = (ctx: FxCtx): Record<string, string> => ({ parley: 'Право на переговоры', voodoo: 'Кукла вуду', blockade: 'Блокада', mark: `Чёрная метка +${markN(ctx)}`, noReact: 'Без Реакций', limit: 'Карт сверх Команды', volleyBonus: 'Залпы +', noDiag: 'Диагональ без штрафа', noReactTeam: 'Противник без Реакций' });
+/** game: the chip of the status as the plank of the game draws it (statuses() in Table.tsx); null — the plank has none. */
+const CHIP_OF: Record<string, string | null> = { parley: 'Переговоры', voodoo: 'Кукла вуду', blockade: 'Блокада', noReact: 'Без Реакций' };
+const BLOT = '<svg viewBox="0 0 30 26" width="30" height="26"><path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612"/><circle cx="27" cy="22" r="2" fill="#1a1612"/><circle cx="4" cy="5" r="1.4" fill="#1a1612"/></svg>';
+export interface StatusEv {
+  ship?: string;
+  side?: Side;
+  flag: string;
+  n?: number;
+}
+/**
+ * A status of a ship: the chip appears in the row of statuses under the head (it covers nothing) and stays while the
+ * status is in the state. «Чёрная метка»: the blot flies off the card and lands in its chip; it stays till the end of
+ * the turn. The label — in the gap between the rows, not over the tracks.
+ * game: the chip is the plank's own (React draws it from the state; until the clip it is hidden — FxLayer.tsx); a
+ * status the plank does not show («+N карт сверх Команды») gets only the label.
+ */
+export function statusFx(ctx: FxCtx, e: StatusEv, t0: number, from?: Pt): number {
+  const label = e.flag === 'limitRaised' || e.flag === 'limit' ? `+${e.n} карт сверх Команды` : e.flag === 'volleyBonus' ? `Залпы +${e.n} в этот ход` : FLAG_LABEL(ctx)[e.flag] || e.flag;
+  if (!e.ship) { const g = gapBox(ctx); tag(ctx, ctx.board.clientWidth / 2, g.cy, `${SIDE_LABEL[e.side!].name}: ${label}`, t0, 'plus', 1500); return t0 + 1300; }
+  const el = plank(ctx, e.ship), out = facingY(ctx, e.ship) + dirOf(ctx, e.ship) * 18;
+  const row = el.querySelector('[data-fx-statuses]');
+  const chip = e.flag === 'mark' ? row?.querySelector<HTMLElement>('[data-fx-mark]') : CHIP_OF[e.flag] ? row?.querySelector<HTMLElement>(`[data-fx-status="${CHIP_OF[e.flag]}"]`) : null;
+  const cb = bx(ctx, chip || row || el.querySelector('.plank-head')!);
+  let land = t0 + 150;
+  if (e.flag === 'mark') {
+    const ic = bx(ctx, chip?.querySelector('svg') || chip || el.querySelector('.plank-head')!), spot = { x: ic.cx, y: ic.cy };
+    const start = from || { x: spot.x + 40, y: spot.y - 90 * dirOf(ctx, e.ship) };
+    const mid = { x: (start.x + spot.x) / 2, y: Math.min(start.y, spot.y) - 40 };
+    const blot = mk(ctx, 'blot', 0, 0, BLOT);
+    A(ctx, blot, [{ opacity: 0, transform: `translate(${start.x}px,${start.y}px) scale(.6) rotate(30deg)` }, { opacity: 1, transform: `translate(${mid.x}px,${mid.y}px) scale(2.2) rotate(-15deg)`, offset: 0.55 }, { opacity: 1, transform: `translate(${spot.x}px,${spot.y}px) scale(.55) rotate(0)` }], 560, t0, 'cubic-bezier(.5,0,.8,1)', 'forwards');
+    land = t0 + 560;
+    at(ctx, land, () => { blot.remove(); shake(ctx, el, 0, 2); });
+    burst(ctx, 'dust', spot.x, spot.y, land, 6, 6, 18, 450);
+    ring(ctx, spot.x, spot.y, land, 0.6, '#1a1612');
+  }
+  if (chip) at(ctx, land, () => { chip.style.visibility = ''; A(ctx, chip, [{ transform: 'scale(1.6)', boxShadow: '0 0 0 3px rgba(139,107,181,.5)' }, { transform: 'scale(1)', boxShadow: 'none' }], 380, 0, 'cubic-bezier(.3,1.6,.5,1)', 'none'); });
+  tag(ctx, cb.cx, out, e.flag === 'mark' ? `${label} до конца хода` : label, land, 'plus', 1700);
+  return land + 1100;
+}
+
+const cardName = (ctx: FxCtx, code: string) => (code === HIDDEN ? 'карту' : `«${cardByCode(ctx.data, code).name}»`);
+function smallLabel(ctx: FxCtx, e: GameEvent): string {
+  switch (e.type) {
+    case 'stolen': return `${nick(ctx, e.seat)} крадёт карту у ${gen(ctx, e.from)}`;
+    case 'passed': return `${nick(ctx, e.seat)} передаёт карту ${dat(ctx, e.to)}`;
+    case 'discarded': return `${nick(ctx, e.seat)} сбрасывает карту`;
+    case 'shown': return `${nick(ctx, e.seat)} показывает руку`;
+    case 'seaLooked': return `${nick(ctx, e.seat)} смотрит карты моря`;
+    case 'dice': return 'Кости лжеца';
+    default: return e.type;
+  }
+}
+
+/** The played card: it flies in (an own one — from the hand, another's — from beyond the edge), lies at the middle, then its effects. */
+PLAY.card = async (c, ctx) => {
+  if (CUR_CARD && CUR_CARD.el.isConnected) A(ctx, CUR_CARD.el, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
+  const hidden = c.card === HIDDEN;
+  hint(ctx, `${nick(ctx, c.ship)}: ${cardName(ctx, c.card)}${c.target ? ` → ${nick(ctx, c.target)}` : ''}`);
+  if (c.cost) payKegs(ctx, sideOf(ctx, c.ship), c.cost, 0);
+  const spot = cardSpot(ctx);
+  const el = flyCard(ctx, c.card, cardOrigin(ctx, c.card, c.seat), spot, 0, 500, hidden ? '' : cardByCode(ctx.data, c.card).type, '');
+  CUR_CARD = { el, code: c.card };
+  A(ctx, el.firstElementChild!, [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], 260, 500, 'ease-out', 'none');
+  if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${spot.x + 55 * spot.s} ${spot.y + 64 * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
+  await wait(ctx, 900); // time to read the card
+  const from = { x: spot.x + 55 * spot.s, y: spot.y + 64 * spot.s };
+  const done: GameEvent[] = [];
+  let t = 0;
+  for (const e of c.effects || []) {
+    if (e.type === 'damage') { t = Math.max(t, cardDamage(ctx, e, from, done.filter((x) => x.type === 'damage').length * 260)); }
+    else if (e.type === 'restored') { t = Math.max(t, repairFx(ctx, e, 0, from)); }
+    else if (e.type === 'powderGained') { t = Math.max(t, gainKegs(ctx, e.side, e.amount, from, 0)); }
+    else if (e.type === 'powderLost') { payKegs(ctx, e.side, e.amount, 0); t = Math.max(t, 900); }
+    else if (e.type === 'flagSet' || e.type === 'turnFlag' || e.type === 'limitRaised') { t = Math.max(t, statusFx(ctx, e.type === 'limitRaised' ? { ...e, flag: 'limitRaised' } : e, 0, from)); }
+    else if (e.type === 'fireAdded') { const hd = bx(ctx, plank(ctx, e.ship).querySelector('.plank-head')!); fly(ctx, projectile(ctx, 'fire'), curve(from, { x: hd.r - 24, y: hd.cy }, 0.1), 500, 0); tag(ctx, hd.cx, hd.b + 10, 'Пожар', 500, 'plus', 1200); t = Math.max(t, 1100); }
+    else if (e.type === 'soulsGained') { soulsFly(ctx, e.ship, e.amount, t * 0.5); t = Math.max(t, 1200); }
+    else if (e.type === 'soulsSpent') { const sb = plank(ctx, e.ship).querySelector('[data-fx-souls]'); if (sb && visible(sb)) { const b = bx(ctx, sb); wisp(ctx, { x: b.cx, y: b.cy }, from, 0); } t = Math.max(t, 900); }
+    else if (e.type === 'drew') { await wait(ctx, t); t = 0; ctx.renderWith(done); await drawFx(ctx, e); }
+    else if (e.type === 'swapped') { await wait(ctx, t); t = 0; await flipTo(ctx, done.concat(e), 650); }
+    else if (e.type === 'stolen' || e.type === 'passed' || e.type === 'discarded' || e.type === 'shown' || e.type === 'seaLooked' || e.type === 'dice') { const g = gapBox(ctx); tag(ctx, ctx.board.clientWidth / 2, g.cy + 50, smallLabel(ctx, e), t, '', 1300); t = Math.max(t, 1000); }
+    done.push(e);
+  }
+  await wait(ctx, t + 700);
+  if (c.resolvedTo) { // resolved at once — the card goes to the discard (or is gone for good)
+    const db = deckBox(ctx);
+    A(ctx, el, [{ opacity: 1, transform: `translate(${spot.x}px,${spot.y}px) scale(${spot.s})` }, { opacity: 0, transform: `translate(${db.x}px,${db.y - 20}px) scale(.3)` }], 450, 0, 'ease-in', 'forwards');
+    CUR_CARD = null;
+    await wait(ctx, 350);
+  }
+};
+
+/** Damage without a Volley (outside a card): from the card, if it still lies there; from a Fire; from the Reefs. */
+PLAY.impact = async (c, ctx) => {
+  if (c.cause === 'fire') { await wait(ctx, burnFx(ctx, c.ship, c.amount + c.toHull || 1, 0)); return; }
+  let last;
+  if (CUR_CARD && CUR_CARD.el.isConnected && c.cause === CUR_CARD.code) last = cardDamage(ctx, c, cardFrom(ctx), 0);
+  else last = weatherHit(ctx, c, 0, '#c0392b', seaKey(ctx) === 'reefs' ? 'Рифы: −1 Корпус' : '');
+  await wait(ctx, last + 900);
+};
+PLAY.fire = async (c, ctx) => {
+  const hd = bx(ctx, plank(ctx, c.ship).querySelector('.plank-head')!);
+  const fl = mk(ctx, 'flame', 0, 0, FLAME_SVG);
+  A(ctx, fl, [{ opacity: 0, transform: `translate(${hd.cx}px,${hd.cy + 20}px) scale(.4)` }, { opacity: 1, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1.3)` }, { opacity: 0, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1)` }], 900, 0, 'ease-in-out', 'forwards');
+  tag(ctx, hd.cx, hd.b + 10, `Пожар ${c.fires}`, 300, 'plus', 1200);
+  await wait(ctx, 1000);
+};
+
+/** The card at the middle for the queue: kept between clips (keepSet), dropped by «Сразу итог» (resetFx). */
+export const CARD_SCENE: FxScene = {
+  keep: () => (CUR_CARD ? [CUR_CARD.el] : []),
+  afterRender: () => {},
+  reset: () => {
+    CUR_CARD = null;
+  },
+  onTurn: () => {},
+  alive: () => false,
+  // page.js: the action is over and its card resolved — the card at the middle fades.
+  afterAction: (ctx, item) => {
+    if (CUR_CARD && !item.cardOpen) {
+      const el = CUR_CARD.el;
+      // game: the queue may end here, with no clip to clear the layer after it — the card leaves the layer when faded.
+      A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards').finished.then(() => el.remove(), () => {});
+      CUR_CARD = null;
+    }
+  },
+};
 
 /** An ability of a ship («Меч Тритона», «Казна»): a stamp on the plank, gold dust, then its effects by the events. */
 PLAY.ability = async (c, ctx) => {

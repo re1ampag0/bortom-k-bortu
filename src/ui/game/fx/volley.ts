@@ -9,16 +9,17 @@
 //    the plank (aiming of P2, a pending Volley), a class taken off past React would not come back;
 //  - window does not draw the reference's «window» when a panel of the game (.dock) is in the middle: the real panel
 //    (Reactions, «Компания решает…» of P8, the Volley panel) is there;
-//  - CUR_CARD (the clip «card», A3) is not here yet.
+//  - CUR_CARD lives in misc.ts (the clip «card»): curCard().
 import { deckCards, legendCards } from '../../../engine/data';
 import { TRACK_DATIVE } from '../../../engine/hints';
 import { shipData, type Term } from '../../../engine/state';
 import type { GameData, Track } from '../../../engine/types';
 import type { ClipPlayer, FxScene } from './FxLayer';
+import { curCard } from './misc';
 import {
-  A, at, bubbles, burst, bx, cardOrigin, curve, dirOf, facingY, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
-  mk, moveTo, ms, overlayAt, payKegs, pillAt, plank, projectile, puff, ring, setTrack, shake, shownTrack, sideOf, splash,
-  tag, trackEl, visible, wait, whirlpool, wisp, type FlyCard, type FxCtx,
+  A, at, bubbles, burst, bx, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
+  mk, moveTo, ms, overlayAt, payKegs, pillAt, plank, projectile, puff, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
+  tag, trackEl, wait, whirlpool, type FlyCard, type FxCtx,
 } from './primitives';
 import {
   KIND_BY_TRACK, termSrc, type AnnounceClip, type CancelClip, type CounterClip, type FxCards, type HeartClip,
@@ -394,7 +395,8 @@ PLAY.shot = async (c, ctx) => {
 
 PLAY.cancel = async (c, ctx) => {
   if (c.card && !c.shooter) { // a card is cancelled (not a Volley)
-    const el: HTMLElement | null = null; // game: CUR_CARD && CUR_CARD.el — the clip «card» comes with A3
+    const cur = curCard();
+    const el = cur && cur.el;
     const g = gapBox(ctx);
     const st = mk(ctx, 'stamp-fx', ctx.board.clientWidth / 2, g.cy, c.lost ? 'Карта пропала' : 'Отменено');
     A(ctx, st, [{ opacity: 0, scale: '1.8' }, { opacity: 1, scale: '1' }], 260, 0, 'cubic-bezier(.3,1.6,.5,1)', 'forwards');
@@ -463,19 +465,6 @@ PLAY.heart = async (c, ctx) => {
   }
   await wait(ctx, 2200);
 };
-
-/** Souls: wisps from the enemy's Crew into the Souls of «Голландец». */
-function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number) {
-  const keeper = ships(ctx).find((x) => shipData(ctx.data, x).souls != null && !ctx.display.ships[x].sunk);
-  if (!keeper) return;
-  const badge = plank(ctx, keeper).querySelector('[data-fx-souls]');
-  const to = badge && visible(badge) ? (() => { const b = bx(ctx, badge); return { x: b.cx, y: b.cy }; })() : (() => { const b = bx(ctx, plank(ctx, keeper)); return { x: b.r - 30, y: b.y + 30 }; })();
-  const from = fxPoint(ctx, fromShip, 'crew', 0);
-  for (let k = 0; k < n; k++) wisp(ctx, from, to, delay + k * 160);
-  setTimeout(() => { if (badge && ctx.run === ctx.live()) { A(ctx, badge, [{ transform: 'scale(1.3)', boxShadow: '0 0 12px #6fd3b4' }, { transform: 'scale(1)', boxShadow: 'none' }], 500, 0, 'ease-out', 'none'); } }, ms(ctx, delay + 800));
-  tag(ctx, to.x, to.y - 16, `+${n} ${n === 1 ? 'Душа' : 'Души'}`, delay + 700, 'good', 1200);
-}
-const FLAME_SVG = '<svg width="18" height="22" viewBox="0 0 14 17"><path d="M7 1 C9 5 13 7 12 11 C11.5 14.5 9 16 7 16 C4 16 2 14 2 11 C2 8.5 4 7.5 4.5 5 C5.5 7 6.5 7 7 6 C7.5 4.5 7 3 7 1Z" fill="#F2913D" stroke="#B23A2E" stroke-width="1"/><path d="M7 9 C8 10.5 9.5 11.5 9 13 C8.6 14.4 7.6 15 7 15 C5.8 15 5 14 5 12.8 C5 11.6 6.2 11 7 9Z" fill="#FFE08A"/></svg>';
 
 /** The scene of the Volley for the queue: keepSet, afterRender, resetFx of page.js, the whirlpool at a «turn». */
 export const VOLLEY_SCENE: FxScene = {
