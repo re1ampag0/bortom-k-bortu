@@ -34,6 +34,7 @@ import {
   JackPanel,
   PlansPanel,
   ReactionPanel,
+  ReactionWaitPanel,
   TortugaPanel,
   VolleyPanel,
   chargeCandidates,
@@ -49,6 +50,7 @@ import { instantUrl } from '../start/motion';
 import { playTurnSound } from '../sound';
 import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
 import { enemyTurnLines } from './lastTurn';
+import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
 
 type Mode =
@@ -558,6 +560,9 @@ export function Game({
   // Card choices, «Тортуга» and the Plans are bottom sheets on a phone; the Volley and the Reactions stay in the middle.
   let dockSheet = false;
   const cancel = () => setMode({ k: 'idle' });
+  /** The enemy decides on a Reaction to this device's Volley or card (a person sits here). */
+  const waitReaction =
+    !s.winner && !!d && d.kind === 'reactions' && d.side !== bottom && !myDecision && (net ? mySeats.length > 0 : game.setup.players[bottom] === 'human');
   if (s.winner) dock = null;
   else if (myDecision && d!.kind === 'reactions') {
     dock = <ReactionPanel s={s} data={data} hints={hints} seats={myDeciding} pick={reactPick} onAct={(a) => act(a)} />;
@@ -618,6 +623,10 @@ export function Game({
         );
       }
     }
+  } else if (waitReaction) {
+    // The attacker sees what was fired and who decides; never which enemy ship holds a Reaction.
+    const w = reactionWait(s, data, d!.side, d!.seats.map((x) => ({ bot: botSeat(x), name: net ? net.nameOf(x) : null })));
+    dock = <ReactionWaitPanel line={w.line} who={w.who} />;
   } else if (net && !s.winner) {
     dock = netDock(net, mySeats, bottom, nick);
   }
@@ -665,7 +674,8 @@ export function Game({
     if (!d) return '';
     if (net && !myDecision) return netWaiting();
     if (botSide(d.side)) {
-      if (d.kind === 'reactions') return `Ждём: бот ${nick(d.seats[0])} решает, ответить ли Реакцией…`;
+      // The team, not the ship: the ship deciding would tell who holds a Reaction.
+      if (d.kind === 'reactions') return `Ждём: ${SIDE_LABEL[d.side].name} (бот) ${decideVerb(d.side)}, ответить ли Реакцией…`;
       if (d.kind === 'turn') return `Бот: ${SIDE_LABEL[d.side].name} думает…`;
       return `Бот: ${SIDE_LABEL[d.side].name} решает…`;
     }

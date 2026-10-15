@@ -274,6 +274,25 @@ export function ReactionPanel({
   );
 }
 
+/** The attacker while the enemy decides on a Reaction (P8): what was fired, who decides, a calm waiting sign. */
+export function ReactionWaitPanel({ line, who }: { line: string; who: string }) {
+  return (
+    <section className="panel reaction-wait" data-testid="reaction-wait" aria-live="polite">
+      <div className="panel-head">
+        <b>{line}</b>
+        <span className="wait-who">
+          <span className="wait-dots" aria-hidden>
+            <i />
+            <i />
+            <i />
+          </span>
+          {who}
+        </span>
+      </div>
+    </section>
+  );
+}
+
 // ——— «Джек ускользает», «Тортуга» ———
 
 export function JackPanel({ s, data, ship, onAct }: { s: GameState; data: GameData; ship: string; onAct: (a: Action) => void }) {
