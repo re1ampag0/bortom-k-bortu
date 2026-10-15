@@ -36,7 +36,7 @@ export function HandCard({
   note?: string;
 }) {
   if (code === HIDDEN) {
-    return <div className={`hcard back ${plan ? 'plan' : ''}`} aria-label="Закрытая карта" />;
+    return <div className={`hcard back ${plan ? 'plan' : ''}`} aria-label="Закрытая карта" data-fx-card={HIDDEN} />;
   }
   const c = cardByCode(data, code);
   return (
@@ -46,6 +46,7 @@ export function HandCard({
       title={off ?? `${c.name}: ${c.big}`}
       data-testid="hand-card"
       data-card={code}
+      data-fx-card={code}
     >
       <span className="hcard-head">
         <span className="hcard-type">{plan ? 'План' : c.type}</span>
@@ -115,7 +116,7 @@ export function Hand({
         ) : (
           <span className="hand-label">{label}</span>
         )}
-        <button className="link deck-info" onClick={() => onDiscard(seat)} title="Открыть сброс">
+        <button className="link deck-info" onClick={() => onDiscard(seat)} title="Открыть сброс" data-fx-deck>
           Колода {holder.deck.length} · Сброс {holder.discard.length}
         </button>
       </div>
