@@ -20,6 +20,7 @@ import type { Recent } from '../showSteps';
 import { Plank, StatusBar, TeamRow } from '../Table';
 import { applyVisible, displayRules, type Display } from './display';
 import { FxLayer, useFxQueue } from './FxLayer';
+import { markN } from './misc';
 import { withDisplay } from './queue';
 
 interface SceneShip {
@@ -107,6 +108,27 @@ function stateOf(data: GameData, st: SceneStart): GameState {
   return s;
 }
 
+/**
+ * The statuses of the turn as applyExtra of the reference keeps them (its flags); the game reads them from the state:
+ * «Чёрная метка», «Без Реакций», «Переговоры», «Блокада», «Кукла вуду», «Всплыл». A new turn ends the first two.
+ */
+function statusesAfter(data: GameData, s: GameState, events: GameEvent[]) {
+  let by: string | null = null;
+  for (const e of events) {
+    if (e.type === 'cardPlayed') by = e.ship;
+    else if (e.type === 'turnStarted') { s.turn.marks = {}; s.turn.noReact = []; }
+    else if (e.type === 'surfaced') s.ships[e.ship].surfaced = true;
+    else if (e.type === 'flagSet') {
+      const ship = s.ships[e.ship];
+      if (e.flag === 'mark') s.turn.marks[e.ship] = (s.turn.marks[e.ship] ?? 0) + markN({ data });
+      else if (e.flag === 'noReact') s.turn.noReact.push(e.ship);
+      else if (e.flag === 'parley') ship.parley = true;
+      else if (e.flag === 'blockade') ship.blockaded = true;
+      else if (e.flag === 'voodoo') ship.voodoo = by ?? e.ship;
+    }
+  }
+}
+
 function urlSpeed(): Speed {
   const v = new URLSearchParams(location.search).get('speed');
   return v === 'slow' || v === 'fast' ? v : 'normal';
@@ -129,7 +151,9 @@ export default function FxScene({ id, data }: { id: string; data: GameData }) {
       recent = recent.slice(0, last + 1).map((r) => ({ ...r, events: r.events.filter((e) => only.includes(e.type)) }));
       for (const a of scene.actions.slice(0, last + 1)) for (const e of a.ev) if (!only.includes(e.type)) { applyVisible(start, e, rules); handsAfter(start, e); }
     }
-    return { start: stateOf(data, start), end: stateOf(data, end), recent, handSeat: start.handSeat ?? scene.viewer[0] };
+    const endState = stateOf(data, end);
+    statusesAfter(data, endState, scene.actions.flatMap((a) => a.ev));
+    return { start: stateOf(data, start), end: endState, recent, handSeat: start.handSeat ?? scene.viewer[0] };
   }, [scene, scenes, data]);
   // The show starts after 350 ms, as in the reference.
   const [started, setStarted] = useState(false);
@@ -200,6 +224,7 @@ function SceneTable({
       key={x.code}
       s={tableView}
       fxGen={fx.gen}
+      fxHidden={fx.hidden[x.code]}
       data={data}
       ship={x}
       own={x.side === bottom}

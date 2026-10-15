@@ -24,9 +24,10 @@ export interface QueueItem {
   cardOpen: boolean;
 }
 
-/** `fx` when every clip of the action has a player; an action without clips (only quiet events) stays `show`. */
+/** `fx` when every clip of the action has a player; an action without clips (only quiet events) — `fx` too (A4): the
+ *  layer takes its events into D, there is nothing to play. */
 export function routeAction(clips: readonly FxClip[], has: (kind: FxKind) => boolean): 'fx' | 'show' {
-  return clips.length > 0 && clips.every((c) => has(c.kind)) ? 'fx' : 'show';
+  return clips.every((c) => has(c.kind)) ? 'fx' : 'show';
 }
 
 /** The planner's options from the game data: the same as the test of A1 and scripts/dump-fx-events.ts. */
@@ -84,4 +85,23 @@ export function withDisplay(s: GameState, d: Display): GameState {
       }),
     ),
   };
+}
+
+/**
+ * The statuses the table keeps hidden until their clip plays (A4): flags set by the events of clips not played yet
+ * (flagSet, surfaced), by ship. Only the queue of the layer gives them: when it is empty — «Сразу итог», the layer off,
+ * Undo, a jump over many actions — nothing is hidden.
+ */
+export function pendingFlags(items: readonly (QueueItem & { done: number; applied: boolean })[]): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const it of items) {
+    if (it.applied) continue;
+    for (const c of it.clips.slice(it.done)) {
+      for (const e of c.events) {
+        if (e.type === 'flagSet') (out[e.ship] ??= []).push(e.flag);
+        else if (e.type === 'surfaced') (out[e.ship] ??= []).push('surfaced');
+      }
+    }
+  }
+  return out;
 }

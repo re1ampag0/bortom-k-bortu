@@ -1,7 +1,7 @@
 // The clips of the ships in motion: a change of places (FLIP), diving and surfacing, sinking, the abilities of the
 // ships. A port of docs/mockups/anim/level1/play-misc.js (see PORTING.md): the code is the reference's, what changed is
 // how an element is found (the data-fx-* DOM contract), the globals (the context `ctx`) and the types. The rest of
-// play-misc.js (the card, repairs, Powder, Souls, statuses …) comes in A4: the start and the end of a turn are here.
+// play-misc.js — the start and the end of a turn, the card, repairs, Powder, Souls, statuses, drawing, the end (A4).
 // Changes against the reference («game:»):
 //  - renderWith draws the table through React (the queue keeps a preview of D and draws it at once); the planks keep
 //    their DOM nodes (key — the code of the ship), so the FLIP animates the same element from its old place;
@@ -23,8 +23,9 @@ import { HIDDEN } from '../../../engine/view';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import {
-  KIND_BY_TRACK, type AbilityClip, type CardClip, type DiveClip, type DrawClip, type FireClip, type ImpactClip, type RepairClip, type SinkClip, type SurfaceClip,
-  type SwapClip, type TurnClip, type TurnEndClip,
+  KIND_BY_TRACK, type AbilityClip, type CardClip, type DiceClip, type DiscardClip, type DiveClip, type DrawClip, type EndClip, type FallbackClip,
+  type FireClip, type FireOutClip, type ImpactClip, type JackClip, type LegendClip, type PassClip, type PeekClip, type PowderClip, type RepairClip,
+  type SellClip, type SinkClip, type SoulsClip, type StatusClip, type StealClip, type SurfaceClip, type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
   A, allPlanks, at, bubbles, burst, bx, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
@@ -64,12 +65,27 @@ let CUR_CARD: { el: FlyCard; code: string } | null = null;
 /** For PLAY.cancel (volley.ts): the card cancelled crumbles. */
 export const curCard = () => CUR_CARD;
 
-export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'round' | 'sea' | 'card' | 'impact' | 'fire' | 'repair', ClipPlayer> = {} as never;
+export const PLAY_MISC: Record<'swap' | 'sink' | 'dive' | 'surface' | 'ability' | 'turn' | 'turnEnd' | 'draw' | 'round' | 'sea' | 'card' | 'impact' | 'fire' | 'repair'
+  | 'powder' | 'souls' | 'status' | 'sell' | 'pass' | 'steal' | 'discard' | 'peek' | 'dice' | 'fireOut' | 'end' | 'fallback' | 'legend' | 'jack', ClipPlayer> = {} as never;
 const PLAY = PLAY_MISC as unknown as {
   card: (c: CardClip, ctx: FxCtx) => Promise<void>;
   impact: (c: ImpactClip, ctx: FxCtx) => Promise<void>;
   fire: (c: FireClip, ctx: FxCtx) => Promise<void>;
   repair: (c: RepairClip, ctx: FxCtx) => Promise<void>;
+  powder: (c: PowderClip, ctx: FxCtx) => Promise<void>;
+  souls: (c: SoulsClip, ctx: FxCtx) => Promise<void>;
+  status: (c: StatusClip, ctx: FxCtx) => Promise<void>;
+  sell: (c: SellClip, ctx: FxCtx) => Promise<void>;
+  pass: (c: PassClip, ctx: FxCtx) => Promise<void>;
+  steal: (c: StealClip, ctx: FxCtx) => Promise<void>;
+  discard: (c: DiscardClip, ctx: FxCtx) => Promise<void>;
+  peek: (c: PeekClip, ctx: FxCtx) => Promise<void>;
+  dice: (c: DiceClip, ctx: FxCtx) => Promise<void>;
+  fireOut: (c: FireOutClip, ctx: FxCtx) => Promise<void>;
+  end: (c: EndClip, ctx: FxCtx) => Promise<void>;
+  fallback: (c: FallbackClip, ctx: FxCtx) => Promise<void>;
+  legend: (c: LegendClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
+  jack: (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   turn: (c: TurnClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   turnEnd: (c: TurnEndClip, ctx: FxCtx) => Promise<void>;
   draw: (c: DrawClip, ctx: FxCtx) => Promise<void>;
@@ -328,7 +344,7 @@ function cardDamage(ctx: FxCtx, e: { ship: string; track: Track; amount: number;
 }
 
 /** «Чёрная метка +N»: N from the data (the op «mark» of the card), as MARK_N of the reference. */
-const markN = (ctx: FxCtx) => (deckCards(ctx.data).map((c) => (c.fx.ops || []).find((o) => o[0] === 'mark')).find(Boolean) || [0, 0, 2])[2] as number;
+export const markN = (ctx: Pick<FxCtx, 'data'>) => (deckCards(ctx.data).map((c) => (c.fx.ops || []).find((o) => o[0] === 'mark')).find(Boolean) || [0, 0, 2])[2] as number;
 const FLAG_LABEL = (ctx: FxCtx): Record<string, string> => ({ parley: 'Право на переговоры', voodoo: 'Кукла вуду', blockade: 'Блокада', mark: `Чёрная метка +${markN(ctx)}`, noReact: 'Без Реакций', limit: 'Карт сверх Команды', volleyBonus: 'Залпы +', noDiag: 'Диагональ без штрафа', noReactTeam: 'Противник без Реакций' });
 /** game: the chip of the status as the plank of the game draws it (statuses() in Table.tsx); null — the plank has none. */
 const CHIP_OF: Record<string, string | null> = { parley: 'Переговоры', voodoo: 'Кукла вуду', blockade: 'Блокада', noReact: 'Без Реакций' };
@@ -447,6 +463,71 @@ PLAY.repair = async (c, ctx) => {
   await wait(ctx, repairFx(ctx, c, 0, from) + 300);
 };
 
+PLAY.powder = async (c, ctx) => {
+  if (c.n > 0) { const g = gapBox(ctx); await wait(ctx, gainKegs(ctx, c.side!, c.n, { x: ctx.board.clientWidth / 2, y: g.cy }, 0) + 200); }
+  else { payKegs(ctx, c.side || sideOf(ctx, c.ship!), -c.n, 0); await wait(ctx, 700); }
+};
+PLAY.souls = async (c, ctx) => {
+  const ship = c.ship!;
+  const b = bx(ctx, plank(ctx, ship));
+  if (c.n > 0) soulsFly(ctx, Object.keys(ctx.display.ships).find((x) => sideOf(ctx, x) !== sideOf(ctx, ship)) || ship, c.n, 0);
+  else tag(ctx, b.cx, b.y - 12, `${c.n} Души`, 0, '', 1100);
+  await wait(ctx, 1100);
+};
+PLAY.status = async (c, ctx) => { await wait(ctx, statusFx(ctx, c, 0)); };
+PLAY.sell = async (c, ctx) => {
+  const from = cardOrigin(ctx, c.card, c.seat), kb = bx(ctx, holdEl(ctx, sideOf(ctx, c.seat)));
+  const el = flyCard(ctx, c.card, from, { x: kb.x, y: kb.y - 60, s: 0.4 }, 0, 500, 'ПРОДАНО');
+  A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 250, 550, 'ease-in', 'forwards');
+  const pg = (c.effects || []).find((e) => e.type === 'powderGained');
+  if (pg && pg.type === 'powderGained') gainKegs(ctx, pg.side, pg.amount, { x: kb.x + 20, y: kb.y - 20 }, 600);
+  await wait(ctx, 1400);
+};
+const BACK = '<span class="hcard back"></span>';
+PLAY.pass = async (c, ctx) => { const a = bx(ctx, plank(ctx, c.seat)), b = bx(ctx, plank(ctx, c.to)); const back = mk(ctx, 'flyc', 0, 0, BACK); A(ctx, back, [{ opacity: 1, transform: `translate(${a.cx - 30}px,${a.cy - 40}px) scale(.5)` }, { opacity: 0, transform: `translate(${b.cx - 30}px,${b.cy - 40}px) scale(.5)` }], 700, 0, 'ease-in-out', 'forwards'); tag(ctx, b.cx, b.y - 10, smallLabel(ctx, { type: 'passed', seat: c.seat, to: c.to, card: c.card }), 300, '', 1200); await wait(ctx, 1100); };
+PLAY.steal = async (c, ctx) => {
+  // game: «cardResolved → stolen» may come without the seat that took it — the label is in the gap then.
+  if (c.from && c.seat) { const a = bx(ctx, plank(ctx, c.from)), b = bx(ctx, plank(ctx, c.seat)); const back = mk(ctx, 'flyc', 0, 0, BACK); A(ctx, back, [{ opacity: 1, transform: `translate(${a.cx - 30}px,${a.cy - 40}px) scale(.5)` }, { opacity: 0, transform: `translate(${b.cx - 30}px,${b.cy - 40}px) scale(.5) rotate(20deg)` }], 700, 0, 'ease-in-out', 'forwards'); burst(ctx, 'gold-dust', a.cx, a.cy, 0, 10, 10, 30, 500); }
+  const at0 = c.seat ? bx(ctx, plank(ctx, c.seat)) : null;
+  const text = c.from && c.seat ? smallLabel(ctx, { type: 'stolen', seat: c.seat, from: c.from, card: c.card }) : c.seat ? `${nick(ctx, c.seat)} забирает карту` : 'Карту забирают';
+  if (at0) tag(ctx, at0.cx, at0.y - 10, text, 300, '', 1200); else tag(ctx, ctx.board.clientWidth / 2, gapBox(ctx).cy, text, 300, '', 1200);
+  await wait(ctx, 1100);
+};
+PLAY.discard = async (c, ctx) => { const db = deckBox(ctx); const el = flyCard(ctx, c.card || HIDDEN, cardOrigin(ctx, c.card, c.seat), { x: db.x, y: db.y - 30, s: 0.4 }, 0, 500); A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 250, 550, 'ease-in', 'forwards'); await wait(ctx, 900); };
+PLAY.peek = async (c, ctx) => { const b = bx(ctx, plank(ctx, c.seat)); tag(ctx, b.cx, b.y - 10, c.sea ? 'Смотрит карты моря' : 'Подсмотрел руку', 0, '', 1300); await wait(ctx, 900); };
+PLAY.dice = async (c, ctx) => {
+  const g = gapBox(ctx), W = ctx.board.clientWidth, seats = Object.keys(c.cards || {});
+  seats.forEach((s, k) => { const el = flyCard(ctx, c.cards[s], cardOrigin(ctx, c.cards[s], s), { x: W / 2 - 120 + k * 130, y: g.cy - 60, s: 0.8 }, k * 150, 450); if (c.winner === s) { A(ctx, el, [{ scale: '1' }, { scale: '1.08' }, { scale: '1' }], 400, 900, 'ease-out', 'none'); burst(ctx, 'gold-dust', W / 2 - 75 + k * 130, g.cy, 900, 14, 20, 60, 700); } A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 300, 1900, 'ease-in', 'forwards'); });
+  tag(ctx, W / 2, g.cy + 60, c.winner ? `Обе карты забирает ${nick(ctx, c.winner)}` : 'Ничья — обе в сброс', 800, 'plus', 1300);
+  await wait(ctx, 2300);
+};
+PLAY.fireOut = async (c, ctx) => { const fb = plank(ctx, c.seat).querySelector('[data-fx-fires]') || plank(ctx, c.seat).querySelector('.plank-head')!; const b = bx(ctx, fb); splash(ctx, b.cx, b.cy, 0); steam(ctx, b.cx, b.cy - 6, 200); tag(ctx, b.cx, b.y - 10, c.fires ? `Пожар −1 (осталось ${c.fires})` : 'Пожар потушен', 250, 'good', 1200); await wait(ctx, 1100); };
+/** The end of the game. game: «Победа!» only for the team played from this device; a draw is «Ничья». */
+PLAY.end = async (c, ctx) => {
+  const won = c.winner && c.winner !== 'НИЧЬЯ' ? (c.winner as Side) : null;
+  const mine = !!won && won === ctx.bottom && ctx.own;
+  const text = c.reason === 'concede' && c.side ? `${SIDE_LABEL[c.side].name} сдаются` : mine ? 'Победа!' : won ? `Победа ${SIDE_LABEL[won].gen}` : c.winner === 'НИЧЬЯ' ? 'Ничья' : 'Конец игры';
+  const g = gapBox(ctx);
+  const bn = mk(ctx, 'banner' + (mine ? ' own' : ''), ctx.board.clientWidth / 2, g.cy, text);
+  A(ctx, bn, [{ opacity: 0, scale: '0.6' }, { opacity: 1, scale: '1.08', offset: 0.5 }, { opacity: 1, scale: '1' }], 600, 0, 'cubic-bezier(.3,1.6,.5,1)', 'forwards');
+  if (mine && ctx.rich) for (let k = 0; k < 3; k++) burst(ctx, 'gold-dust', ctx.board.clientWidth * (0.25 + k * 0.25), g.cy, 300 + k * 200, 24, 30, 120, 1100);
+  await wait(ctx, 1800);
+};
+PLAY.fallback = async (c, ctx) => { const g = gapBox(ctx); tag(ctx, ctx.board.clientWidth / 2, g.cy, c.type || c.kind, 0, '', 800); await wait(ctx, 600); };
+
+// game, till L1 (the decision of the user): a Legend is shown by the clip of a card (the card at the middle, its effects
+// fly from it); «Джек ускользает» — a label and the change of places. L1 ports PLAY.legend / PLAY.jack.
+PLAY.legend = async (c, ctx) => {
+  await playCard({ kind: 'card', ev: c.ev, seat: c.seat, ship: c.seat, card: c.card, target: c.target, cost: c.cost, effects: c.effects, resolvedTo: c.resolvedTo }, ctx, `Легенда ${nick(ctx, c.seat)}`);
+};
+PLAY.jack = async (c, ctx) => {
+  hint(ctx, `${nick(ctx, c.ship)}: Джек ускользает`);
+  if (c.cost) payKegs(ctx, sideOf(ctx, c.ship), c.cost, 0);
+  tag(ctx, ctx.board.clientWidth / 2, gapBox(ctx).cy, SWAP_LABEL.jack, 0, '', 1200);
+  await flipTo(ctx, c.events, 650);
+  await wait(ctx, 150);
+};
+
 /** The card at the middle for the queue: kept between clips (keepSet), dropped by «Сразу итог» (resetFx). */
 export const CARD_SCENE: FxScene = {
   keep: () => (CUR_CARD ? [CUR_CARD.el] : []),
@@ -480,7 +561,7 @@ PLAY.ability = async (c, ctx) => {
   for (const e of c.effects || []) {
     if (e.type === 'swapped') await flipTo(ctx, done.concat(e), 650);
     else if (e.type === 'restored') await wait(ctx, repairFx(ctx, e, 0));
-    // game: «limitRaised» → statusFx comes with A4 (see the head of the file).
+    else if (e.type === 'limitRaised') await wait(ctx, statusFx(ctx, { ...e, flag: 'limitRaised' }, 0));
     done.push(e);
   }
 };
