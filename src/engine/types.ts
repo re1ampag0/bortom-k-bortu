@@ -74,6 +74,8 @@ export interface Ship {
   nick: string;
   /** «Залп по „Мести“». */
   nickDative: string;
+  /** «Залп „Жемчужины“ отменён». */
+  nickGenitive: string;
   captain: string;
   side: Side;
   color: string;
