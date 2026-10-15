@@ -188,7 +188,7 @@ export function Prep({
                 </label>
                 <label className="row check">
                   <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
-                  целях, «4 → 2» у Реакций, зелёный «Ход окончен», «Залп не дан…»); без них — как за столом
+                  целях, «4 → 2» на Реакциях в руке, зелёный «Ход окончен», «Залп не дан…»); без них — как за столом
                 </label>
                 <label className="row check">
                   <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все

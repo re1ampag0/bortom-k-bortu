@@ -366,7 +366,7 @@ export function SettingsSheet({
       {hints !== null ? (
         <label className="row check">
           <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
-          целях, «4 → 2» у Реакций, зелёный «Ход окончен», «Залп не дан…»)
+          целях, «4 → 2» на Реакциях в руке, зелёный «Ход окончен», «Залп не дан…»)
         </label>
       ) : (
         <p className="row muted">Подсказки в этой комнате выключены.</p>
