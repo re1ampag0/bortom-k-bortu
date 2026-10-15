@@ -69,8 +69,10 @@ describe('Plank as a target', () => {
     expect(section).toContain('aria-pressed="true"');
   });
 
-  it('«Подсказки»: the damage is in the name of the target', () => {
-    const section = tag(plank({ tip: '2 напротив', chosen: false, onClick: () => {} }), 'data-ship="Г"');
-    expect(section).toContain('aria-label="Цель: «Голландец», 2 напротив"');
+  it('«Подсказки»: the damage as a tag in the corner and in the name of the target; without — only the frame', () => {
+    const html = plank({ tip: '2 напротив', chosen: false, onClick: () => {} });
+    expect(html).toMatch(/<span class="aim-tip" data-testid="aim-tip-Г"[^>]*>2 напротив<\/span>/);
+    expect(tag(html, 'data-ship="Г"')).toContain('aria-label="Цель: «Голландец», 2 напротив"');
+    expect(plank({ tip: null, chosen: false, onClick: () => {} })).not.toContain('aim-tip');
   });
 });
