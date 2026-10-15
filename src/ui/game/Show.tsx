@@ -105,7 +105,7 @@ interface Box {
 }
 
 function plankBox(code: string): Box | null {
-  const e = document.querySelector(`[data-testid="plank-${code}"]`);
+  const e = document.querySelector(`[data-ship="${code}"]`);
   if (!e) return null;
   const b = e.getBoundingClientRect();
   return { x: b.left + b.width / 2, y: b.top + b.height / 2, top: b.top };
