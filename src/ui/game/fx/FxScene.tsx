@@ -16,7 +16,7 @@ import { reducedMotion } from '../../start/motion';
 import type { Speed } from '../../storage';
 import { Hand, seatLabel } from '../Hand';
 import { CardDetail } from '../Overlays';
-import type { Recent } from '../showSteps';
+import type { Recent } from '../../../net/local';
 import { Plank, StatusBar, TeamRow } from '../Table';
 import { applyVisible, displayRules, type Display } from './display';
 import { FxLayer, useFxQueue } from './FxLayer';
@@ -204,7 +204,6 @@ function SceneTable({
     jumpAt: Infinity,
     paused: false,
     hold: false,
-    show: { push: () => 0, busy: false },
   });
   // The show ended: it was busy and is not any more (or there is no show: reduced motion).
   const seen = useRef(false);

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { sideGenitive, turnSummary } from '../../engine/log';
 import { seaCardByCode } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
-import type { Recent } from './showSteps';
+import type { Recent } from '../../net/local';
 import { SIDE_LABEL } from './text';
 
 // The side is kept, not the words: in a game for two the team at the device changes behind the curtain, so «Ваш ход»
