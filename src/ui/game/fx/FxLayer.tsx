@@ -270,6 +270,9 @@ export function useFxQueue({
     try {
       while (queue.current.length > 0) {
         await gate(run);
+        // The table from D before a clip reads it (shownTrack, the places): the render asked by bump() may not have
+        // come yet, and the table would still show the real state the new action brought (the reference draws at once).
+        flushSync(bump);
         const item = queue.current[0];
         if (item.route === 'show') {
           // The rest of a Volley is shown the old way (an action with a clip not ported yet): its scene goes.
