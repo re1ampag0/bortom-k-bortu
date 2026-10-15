@@ -58,9 +58,11 @@ describe('the clips of the Volley', () => {
         }
       }
     }
-    // The rest goes to ShowLayer until A3/A4 port its clips (a sinking, a Pass of the turn …).
+    // The rest goes to ShowLayer until A4 ports its clips (a card, the end of the game …); a sinking goes through the
+    // layer since A3.
     expect(fx).toBeGreaterThan(show);
     expect(left.every((k) => !VOLLEY_KINDS.includes(k as FxKind))).toBe(true);
+    expect(left).not.toContain('sink');
   });
 
   it('the breakdown plate: who → whom, the damage by the track, the terms, a target changed', () => {

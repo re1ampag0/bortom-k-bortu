@@ -5,7 +5,7 @@
 // Rules: only transform and opacity move (WAAPI element.animate); positions come from the real elements of the table
 // (getBoundingClientRect relative to the board); every duration × the speed factor. Effects live in .fx-layer
 // (pointer-events: none) and never stop a press on a card or a button.
-import { cardByCode, shipData, startValue } from '../../../engine/state';
+import { cardByCode, shipData, startValue, type GameEvent } from '../../../engine/state';
 import type { GameData, Side, Track } from '../../../engine/types';
 import { HIDDEN } from '../../../engine/view';
 import { cardClass } from '../Hand';
@@ -33,6 +33,11 @@ export interface FxCtx {
   bottom: Side;
   /** The line of the status bar while the clip plays (React state, not textContent of a node React owns). */
   hint: (text: string) => void;
+  /**
+   * renderWith of the reference: the table is drawn at once as if these events were applied to D (D itself does not
+   * change; after the clip D takes them in anyway). The FLIP of the planks measures before and after it.
+   */
+  renderWith: (evs: readonly GameEvent[]) => void;
 }
 
 export interface Pt {
@@ -88,6 +93,7 @@ export const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b
 /* ——— DOM contract: how to find the elements of the table ——— */
 export const sideOf = (ctx: FxCtx, code: string): Side => shipData(ctx.data, code).side;
 export const plank = (ctx: FxCtx, code: string) => ctx.board.querySelector<HTMLElement>(`[data-fx-ship="${code}"]`)!;
+export const allPlanks = (ctx: FxCtx) => [...ctx.board.querySelectorAll<HTMLElement>('[data-fx-ship]')];
 export const trackEl = (ctx: FxCtx, code: string, t: Track) => plank(ctx, code).querySelector<HTMLElement>(`[data-fx-track="${t}"]`)!;
 export const valueEl = (ctx: FxCtx, code: string, t: Track) => trackEl(ctx, code, t).querySelector<HTMLElement>('[data-fx-value]')!;
 export const gapBox = (ctx: FxCtx) => bx(ctx, ctx.board.querySelector('[data-fx-gap]')!);
