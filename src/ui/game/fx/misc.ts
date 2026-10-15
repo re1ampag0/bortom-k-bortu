@@ -4,12 +4,15 @@
 // play-misc.js (the turn, the card, repairs, Powder, Souls, statuses …) comes in A4.
 // Changes against the reference («game:»):
 //  - renderWith draws the table through React (the queue keeps a preview of D and draws it at once); the planks keep
-//    their DOM nodes (key — the code of the ship), so the FLIP animates the same element from its old place.
-import type { GameEvent } from '../../../engine/state';
+//    their DOM nodes (key — the code of the ship), so the FLIP animates the same element from its old place;
+//  - the reference draws the table anew after each clip, so the animations of a plank with fill 'forwards' go with
+//    its old node; in the game the node stays, so the queue cancels the finished animations of the planks after the
+//    clip (FxLayer.tsx). The steady look («Под водой», sunk) is the class of the plank from the displayed state.
+import { shipData, type GameEvent } from '../../../engine/state';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer } from './FxLayer';
-import type { SwapClip } from './planFx';
-import { A, allPlanks, bx, dirOf, facingY, gapBox, hint, mk, payKegs, plank, splash, wait, type FxCtx } from './primitives';
+import type { DiveClip, SurfaceClip, SwapClip } from './planFx';
+import { A, allPlanks, bubbles, bx, dirOf, facingY, gapBox, hint, mk, payKegs, plank, splash, steam, tag, wait, type FxCtx } from './primitives';
 
 /** FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. */
 export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, filter: (e: GameEvent) => boolean = () => true): Promise<void> {
@@ -34,9 +37,13 @@ export function banner(ctx: FxCtx, text: string, cls = 'small', d = 1200, y?: nu
   return bn;
 }
 
-export const PLAY_MISC: Record<'swap', ClipPlayer> = {} as never;
+const nick = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nick}»`;
+
+export const PLAY_MISC: Record<'swap' | 'dive' | 'surface', ClipPlayer> = {} as never;
 const PLAY = PLAY_MISC as unknown as {
   swap: (c: SwapClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
+  dive: (c: DiveClip, ctx: FxCtx) => Promise<void>;
+  surface: (c: SurfaceClip, ctx: FxCtx) => Promise<void>;
 };
 
 PLAY.swap = async (c, ctx) => {
@@ -48,3 +55,29 @@ PLAY.swap = async (c, ctx) => {
   await flipTo(ctx, c.events, 650);
   await wait(ctx, 150);
 };
+
+/** Diving: the water rises over the plank from below, bubbles, the Fires go out. */
+export function diveFx(ctx: FxCtx, code: string, delay: number): number {
+  const el = plank(ctx, code), b = bx(ctx, el);
+  const w = mk(ctx, 'underwater', 0, 0); w.style.width = b.w + 'px'; w.style.height = b.h + 'px'; w.style.transformOrigin = '50% 100%';
+  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }], 700, delay, 'ease-in-out', 'forwards');
+  A(ctx, el, [{ transform: 'none' }, { transform: 'translateY(6px) scale(.985)' }, { transform: 'none' }], 1300, delay, 'ease-in-out', 'none');
+  bubbles(ctx, b.x + 8, b.b - 4, b.w - 16, delay + 100, 16, 60);
+  const fb = el.querySelector('[data-fx-fires]');
+  if (fb) { const sb = bx(ctx, fb); steam(ctx, sb.cx, sb.cy, delay + 450); A(ctx, fb, [{ opacity: 1 }, { opacity: 0 }], 300, delay + 500, 'ease-in', 'forwards'); tag(ctx, sb.cx, sb.y - 10, 'Пожары гаснут', delay + 550, 'good', 1200); }
+  tag(ctx, b.cx, b.y - 12, 'Под водой', delay + 500, '', 1400);
+  return delay + 1400;
+}
+/** Surfacing: the water goes down, splashes along the top edge. */
+export function surfaceFx(ctx: FxCtx, code: string, delay: number): number {
+  const el = plank(ctx, code), b = bx(ctx, el);
+  const w = mk(ctx, 'underwater', 0, 0); w.style.width = b.w + 'px'; w.style.height = b.h + 'px'; w.style.transformOrigin = '50% 100%';
+  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }], 600, delay, 'ease-in', 'forwards');
+  A(ctx, el, [{ transform: 'translateY(6px) scale(.985)' }, { transform: 'translateY(-3px)', offset: 0.7 }, { transform: 'none' }], 700, delay, 'ease-out', 'none');
+  for (let k = 0; k < 3; k++) splash(ctx, b.x + b.w * (0.2 + 0.3 * k), b.y + 2, delay + 380 + k * 90);
+  if (ctx.rich) for (let k = 0; k < 10; k++) { const d = mk(ctx, 'bubble', 0, 0); const x0 = b.x + Math.random() * b.w; A(ctx, d, [{ opacity: 1, transform: `translate(${x0}px,${b.y}px) scale(.6)` }, { opacity: 0, transform: `translate(${x0 + (Math.random() - 0.5) * 30}px,${b.y - 20 - Math.random() * 25}px) scale(.9)` }], 600, delay + 400 + Math.random() * 200); }
+  tag(ctx, b.cx, b.y - 14, 'Всплытие: первый Залп +1 и без Реакций', delay + 500, 'plus', 1600);
+  return delay + 1400;
+}
+PLAY.dive = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} уходит под воду`); await wait(ctx, diveFx(ctx, c.ship, 0) + 100); };
+PLAY.surface = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} всплывает`); await wait(ctx, surfaceFx(ctx, c.ship, 0) + 100); };

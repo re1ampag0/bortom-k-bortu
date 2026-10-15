@@ -4,6 +4,8 @@
 /* game: the colours of the reference the table of the game has no names for. */
 .fx-layer, .fx-weather { --navy: #24465c; --seal: #9e2b25; --water: #9cc3da; }
 /* game: the frame of a hit comes from the reference table (style.css); .shooter and .targeted are in game.css. */
+/* game: «Под водой» — a class from the displayed state (reference table, style.css), not an animation with 'forwards'. */
+.plank.submerged { background: linear-gradient(rgba(156, 195, 218, 0.28), rgba(36, 70, 92, 0.32)), var(--panel); transform: translateY(5px) scale(0.99); }
 .plank.hitframe { border-color: var(--red); box-shadow: 0 0 0 3px rgba(163, 52, 31, 0.45), 0 0 0 7px rgba(163, 52, 31, 0.12); }
 /* game: the frames of the shooter and the target of the Volley scene: the look of .shooter / .targeted of game.css,
    another name — React owns those two classes (aiming of P2, a pending Volley). */

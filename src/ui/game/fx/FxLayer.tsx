@@ -196,6 +196,22 @@ export function useFxQueue({
     });
   };
 
+  /**
+   * After a clip: the finished animations of the planks (fill 'forwards' — the tilt of a sinking ship, a Fire badge
+   * fading out) are cancelled. The reference draws the table anew after each clip and they go with the old nodes; the
+   * steady look is the class of the plank from D (.sunk, .submerged). CSS animations (the pulse of P2) stay.
+   */
+  const settlePlanks = () => {
+    const board = layerRef.current?.parentElement;
+    if (!board) return;
+    for (const p of board.querySelectorAll('[data-fx-ship]')) {
+      for (const a of p.getAnimations({ subtree: true })) {
+        if (a instanceof CSSAnimation || a instanceof CSSTransition) continue;
+        if (a.playState === 'finished') a.cancel();
+      }
+    }
+  };
+
   /** Waits while «Пауза» or a banner holds the show; a new run (skip) ends the wait. */
   const gate = async (run: number) => {
     // Nothing plays while the show waits: the status bar gives the real line, not the hint of the clip before.
@@ -280,7 +296,9 @@ export function useFxQueue({
             preview.current = null;
             item.done++;
             clearFx();
-            bump();
+            // The table from D at once, then the planks lose what the clip left on them: the reference draws new nodes.
+            flushSync(bump);
+            settlePlanks();
           }
           applyQuiet(D.current!, item, rules);
           item.applied = true;
