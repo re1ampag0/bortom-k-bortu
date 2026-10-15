@@ -6,9 +6,11 @@
 // Changes against the reference («game:»):
 //  - the card of the Legend has the bottom strip of the ship that played it («ЛЕГЕНДА · МЕСТЬ», footHTML — A4);
 //  - S1: no label explaining the effect lies on a plank longer than a flash: the damage and the repair — short marks
-//    «−N» / «+N» at the number of the track (trackMark), the Souls — a mark at the badge; «время замерло…» and «Джонс
+//    «−N» / «+N» at the number of the track (trackMark), the Souls — a mark at the badge, the
+//    Powder paid — a mark at the Hold; «время замерло…» and «Джонс
 //    свободен» — in the middle of the table (ruleTag). The shouts of the effect («Бортовой залп!», «Чпок!»,
 //    «Ускользнул!»), the scroll and the seal stay as in the reference (the decision of the user), not longer than it;
+//  - the thin top bar of the effect ends above the top row of planks (on a phone the reference's lay 2 px on the heads);
 //  - «Кракен» takes its frame of the hit off the plank at its end (the plank keeps its node, React would not).
 import { legendCards } from '../../../engine/data';
 import { shipData, startValue, type GameEvent } from '../../../engine/state';
@@ -17,7 +19,7 @@ import type { ClipPlayer } from './FxLayer';
 import { flipTo } from './misc';
 import { KIND_BY_TRACK, type JackClip, type LegendClip } from './planFx';
 import {
-  A, at, badgeMark, bubbles, burst, bx, clamp, curve, facingY, flash, fly, footHTML, fxPoint, gapBox, hint, isTop, mk, ms, overlayAt, payKegs, plank,
+  A, at, badgeMark, bubbles, burst, bx, clamp, curve, facingY, flash, fly, footHTML, fxPoint, gapBox, hint, holdEl, isTop, mk, ms, overlayAt, payKegs, plank,
   projectile, puff, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
 } from './primitives';
 import { ruleTag } from './sea';
@@ -150,8 +152,9 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   const c = legendCard(ctx.data, code), sh = shipData(ctx.data, owner);
   const cx = W / 2, cy = H * 0.42;
   hint(ctx, `${nick(ctx, owner)}: ЛЕГЕНДА «${c.name}»`);
-  // the price
-  if (cost) payKegs(ctx, sideOf(ctx, owner), cost, 0);
+  // the price. game (S1): a short mark «−N» at the Hold, not the label «−N Порох» (the plank of «Джек ускользает»
+  // sinks over the Hold and the label lay on its Crew)
+  if (cost) { payKegs(ctx, sideOf(ctx, owner), cost, 0, false); badgeMark(ctx, holdEl(ctx, sideOf(ctx, owner)), `−${cost}`, 0); }
   // the glow around the owner
   const ob = bx(ctx, plank(ctx, owner));
   const aura = overlayAt(ctx, 'lg-aura', ob, 6);
@@ -247,13 +250,16 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   if (sun) A(ctx, sun, [{ opacity: 1, transform: 'scale(1.05) rotate(60deg)' }, { opacity: 0, transform: 'scale(1.2) rotate(75deg)' }], 380, LG_T.leave, 'ease-in', 'forwards');
   // the bars thinner, the caption in the top bar
   const thin = 0.55;
-  A(ctx, top, [{ transform: 'none' }, { transform: `scaleY(${thin})` }], 300, LG_T.leave + 150, 'ease-in-out', 'forwards');
+  // game: the thin top bar ends 2 px above the top row of planks (on a phone 0.55 of it lay on their heads)
+  const row = board.querySelector('.planks');
+  const thinTop = row ? clamp((bx(ctx, row).y - 2) / barH, 0.3, thin) : thin;
+  A(ctx, top, [{ transform: 'none' }, { transform: `scaleY(${thinTop})` }], 300, LG_T.leave + 150, 'ease-in-out', 'forwards');
   A(ctx, bot, [{ transform: 'none' }, { transform: `scaleY(${thin})` }], 300, LG_T.leave + 150, 'ease-in-out', 'forwards');
-  const cap = mk(ctx, 'lg-cap', cx, (barH * thin) / 2, `<span>ЛЕГЕНДА</span> <b>${esc(c.name)}</b>`);
+  const cap = mk(ctx, 'lg-cap', cx, (barH * thinTop) / 2, `<span>ЛЕГЕНДА</span> <b>${esc(c.name)}</b>`);
   A(ctx, cap, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.7)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], 300, LG_T.leave + 260, 'ease-out');
   await wait(ctx, LG_T.effect);
   return async () => {
-    A(ctx, top, [{ transform: `scaleY(${thin})` }, { transform: 'translateY(-100%)' }], 320, 0, 'ease-in', 'forwards');
+    A(ctx, top, [{ transform: `scaleY(${thinTop})` }, { transform: 'translateY(-100%)' }], 320, 0, 'ease-in', 'forwards');
     A(ctx, bot, [{ transform: `scaleY(${thin})` }, { transform: 'translateY(100%)' }], 320, 0, 'ease-in', 'forwards');
     A(ctx, cap, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
     await wait(ctx, 340);
