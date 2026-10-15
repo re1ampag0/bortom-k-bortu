@@ -3,7 +3,7 @@
 // п. 3, with «Подробнее»). They never take input.
 import { useEffect, useRef, useState } from 'react';
 import { sideGenitive, turnSummary } from '../../engine/log';
-import { seaCardByCode } from '../../engine/state';
+import { seaCardByCode, type GameEvent } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
 import type { Recent } from '../../net/local';
 import { SIDE_LABEL } from './text';
@@ -11,6 +11,20 @@ import { SIDE_LABEL } from './text';
 // The side is kept, not the words: in a game for two the team at the device changes behind the curtain, so «Ваш ход»
 // and whose summary it is are decided when the banner is shown.
 type Banner = { id: number; ms: number } & ({ k: 'sea'; card: string } | { k: 'turn'; side: Side } | { k: 'summary'; side: Side; text: string });
+
+/** The banners of the events of one action: the sea card of a new round, the turn (each only when it is on). */
+export function bannersOf(
+  events: readonly GameEvent[],
+  on: { enabled: boolean; turnBanners: boolean; seaBanners: boolean },
+): ({ k: 'sea'; card: string } | { k: 'turn'; side: Side })[] {
+  if (!on.enabled) return [];
+  const out: ({ k: 'sea'; card: string } | { k: 'turn'; side: Side })[] = [];
+  for (const e of events) {
+    if (e.type === 'seaRevealed' && on.seaBanners) out.push({ k: 'sea', card: e.card });
+    if (e.type === 'turnStarted' && on.turnBanners) out.push({ k: 'turn', side: e.side });
+  }
+  return out;
+}
 
 export function useBanners({
   recent,
@@ -20,6 +34,7 @@ export function useBanners({
   mine,
   enabled,
   turnBanners = true,
+  seaBanners = true,
   start,
   paused,
 }: {
@@ -36,6 +51,11 @@ export function useBanners({
    * clip «turn», which draws the banner itself. Behind the curtain the layer is off: the banner waits for the curtain.
    */
   turnBanners?: boolean;
+  /**
+   * The new sea card of a round (S1): off while the animation layer plays the clip «sea», which shows the card itself.
+   * The first sea card of a new game has no action — its banner is shown anyway.
+   */
+  seaBanners?: boolean;
   /** A game without actions yet: its first sea card and first turn (read once, when the table opens). */
   start: { sea: string | null; active: Side } | null;
   /** The curtain «Передайте устройство» is up: the banners wait until it is closed. */
@@ -54,10 +74,8 @@ export function useBanners({
     seen.current = fresh.at(-1)!.n + 1;
     const add: Banner[] = [];
     for (const r of fresh) {
-      for (const e of r.events) {
-        if (!enabled) continue;
-        if (e.type === 'seaRevealed') add.push({ id: ++ids.current, ms: 2000, k: 'sea', card: e.card });
-        if (e.type === 'turnStarted' && turnBanners) add.push(turnBanner(e.side));
+      for (const b of bannersOf(r.events, { enabled, turnBanners, seaBanners })) {
+        add.push(b.k === 'sea' ? { id: ++ids.current, ms: 2000, k: 'sea', card: b.card } : turnBanner(b.side));
       }
       const sum = turnSummary(data, r.events);
       if (sum && sum.text) add.push({ id: ++ids.current, ms: 4000, k: 'summary', side: sum.side, text: `Ход ${sideGenitive(sum.side)}: ${sum.text}` });
