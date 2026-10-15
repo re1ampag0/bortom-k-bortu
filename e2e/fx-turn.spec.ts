@@ -171,3 +171,43 @@ test('the scenes of A4 play in Safari without errors @iphone', async ({ page }) 
     expect(await page.locator('.fx-layer > *').count(), id).toBe(0);
   }
 });
+
+test.describe('the log follows the clips (a game against the bots, 1366×660)', () => {
+  test.use({ viewport: { width: 1366, height: 660 } });
+
+  test('the lines of the action playing wait for its clips; a press on the table shows them and every status chip at once; a card in the log opens during the show', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('?seed=3&speed=normal');
+    await page.getByTestId('quick-bots').click();
+    await page.getByTestId('pick-company').click();
+    await page.getByTestId('prep-start').click();
+    await page.getByTestId('placement-done').click();
+    await expect(page.getByTestId('game')).toBeVisible();
+    const lines = page.locator('.log-col [data-testid="log"] li');
+
+    // A Volley of the Pirates is on the table: its lines are not in the log yet.
+    await expect(page.locator('.fx-layer .plate')).toBeVisible({ timeout: 60_000 });
+    const during = await lines.allTextContents();
+    expect(during.some((t) => /Залп по/.test(t) && /Корпус \d+ → \d+|Паруса \d+ → \d+|Пушки \d+ → \d+|Команда \d+ → \d+/.test(t))).toBe(false);
+
+    // A card named in the log opens while the show goes on (P3).
+    const cref = page.locator('.log-col .cref[data-card]').first();
+    if ((await cref.count()) > 0) {
+      await cref.click();
+      await expect(page.getByTestId('card-detail')).toBeVisible();
+      await page.getByTestId('card-detail').getByRole('button', { name: 'Закрыть' }).first().click();
+    }
+
+    // «Сразу итог»: a press on the table — the rest of the action in the log at once, no chip waits hidden.
+    await page.mouse.click(5, 300);
+    await expect.poll(async () => (await lines.allTextContents()).length).toBeGreaterThan(during.length);
+    const after = await lines.allTextContents();
+    expect(after.some((t) => /Залп по/.test(t))).toBe(true);
+    const hidden = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('[data-fx-status]')).filter((c) => getComputedStyle(c).visibility === 'hidden').length);
+    expect(hidden).toBe(0);
+    // the newest lines are highlighted
+    await expect(page.locator('.log-col [data-testid="log"] li.fresh').first()).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+});
