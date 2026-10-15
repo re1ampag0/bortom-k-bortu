@@ -26,7 +26,7 @@ function plankClass(s: GameState, code: string): string[] {
 }
 
 const route = (id: string) => play(id).map((x) => x.route);
-const all = (id: string, r: 'fx' | 'show') => play(id).map(() => r);
+const all = (id: string, r: 'fx') => play(id).map(() => r);
 
 describe('the ships in motion', () => {
   it('the clips of A3 are in PLAY', () => {
@@ -52,9 +52,9 @@ describe('the ships in motion', () => {
     expect(plankClass(withDisplay(real, displayFrom(s)), code)).not.toContain('submerged');
   });
 
-  it('sink: a ship sunk by a played card waits for the clip «card» (A4) and goes to ShowLayer', () => {
+  it('sink: a ship sunk by a played card — the clip «card» (A4), then the sinking, through the layer', () => {
     expect(play('sink')[0].clips.map((c) => c.kind)).toEqual(['card', 'sink']);
-    expect(route('sink')).toEqual(all('sink', 'show'));
+    expect(route('sink')).toEqual(all('sink', 'fx'));
   });
 
   it('sword: the stamp and the change of places of the enemy in one clip', () => {
@@ -72,7 +72,7 @@ describe('the ships in motion', () => {
       for (const side of ['P', 'C'] as const) {
         const planner = plannerFor(data, SIDES[side], start.sea?.current ?? null);
         for (const st of steps) {
-          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => !!PLAY[kind]);
+          const item = planItem(planner, st.n, st.events[side], st.action);
           for (const c of item.clips) {
             if (c.kind !== 'ability') continue;
             n++;

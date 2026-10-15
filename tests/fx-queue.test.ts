@@ -1,38 +1,30 @@
-// A2: the pure part of the show queue — which layer shows an action, the displayed state D catching up with it, the
-// table drawn from D (src/ui/game/fx/queue.ts).
+// A2, A4: the pure part of the show queue — the actions as the queue gets them, the displayed state D catching up with
+// them, the table drawn from D (src/ui/game/fx/queue.ts).
 import { describe, expect, it } from 'vitest';
 import { displayFrom, displayRules } from '../src/ui/game/fx/display';
-import type { FxClip, FxKind } from '../src/ui/game/fx/planFx';
-import { applyAll, applyClip, applyQuiet, planItem, plannerFor, routeAction, withDisplay } from '../src/ui/game/fx/queue';
+import { PLAY } from '../src/ui/game/fx/FxLayer';
+import { applyClip, applyQuiet, planItem, plannerFor, withDisplay } from '../src/ui/game/fx/queue';
 import { playGame, SIDES } from './fx-games';
 import { data, turnOf } from './helpers';
 
 const rules = displayRules(data);
-const clip = (kind: FxKind) => ({ kind }) as FxClip;
-// The clips ported so far: the Volley (A2), the ships in motion (A3).
-const PORTED = new Set<FxKind>(['announce', 'window', 'reaction', 'shot', 'cancel', 'counter', 'heart', 'swap', 'sink', 'dive', 'surface', 'ability']);
 
-describe('the route of an action', () => {
-  it('fx only when every clip has a player', () => {
-    const has = (k: FxKind) => PORTED.has(k);
-    expect(routeAction([clip('announce'), clip('window')], has)).toBe('fx');
-    expect(routeAction([clip('reaction'), clip('shot')], has)).toBe('fx');
-    expect(routeAction([clip('card'), clip('announce'), clip('shot')], has)).toBe('show');
-    expect(routeAction([clip('shot'), clip('sink')], has)).toBe('fx');
-    expect(routeAction([clip('card'), clip('sink')], has)).toBe('show');
-    // Only quiet events: nothing to play.
-    expect(routeAction([], has)).toBe('show');
-  });
-
-  it('with no players (A2, part 1) every action goes to ShowLayer', () => {
+describe('the actions in the queue', () => {
+  it('a clip with no player of its own plays PLAY.fallback (page.js); every event of an action is in one clip or quiet', () => {
+    expect(typeof PLAY.fallback).toBe('function');
     const { start, steps } = playGame(1001, false);
     const planner = plannerFor(data, SIDES.P, start.sea?.current ?? null);
-    for (const st of steps) expect(planItem(planner, st.n, st.events.P, st.action, () => false).route).toBe('show');
+    for (const st of steps) {
+      const item = planItem(planner, st.n, st.events.P, st.action);
+      // every event of the action is in one clip or in quiet
+      const seen = [...item.clips.flatMap((c) => c.ev), ...item.quiet].sort((x, y) => x - y);
+      expect(seen).toEqual(item.events.map((_, i) => i));
+    }
   });
 });
 
 describe('the displayed state in the queue', () => {
-  it('D = the real state after every action, whichever layer shows it (20 bot games, both sides)', () => {
+  it('D = the real state after every action, its clips and its quiet events applied (20 bot games, both sides)', () => {
     const problems: string[] = [];
     for (let k = 0; k < 20; k++) {
       const { start, steps } = playGame(3001 + k, k % 2 === 1);
@@ -40,15 +32,11 @@ describe('the displayed state in the queue', () => {
         const planner = plannerFor(data, SIDES[side], start.sea?.current ?? null);
         const d = displayFrom(start);
         for (const st of steps) {
-          // Volley actions are «fx», the rest «show» — as in the transition.
-          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => PORTED.has(kind));
-          if (item.route === 'show') applyAll(d, item, rules);
-          else {
-            for (const c of item.clips) applyClip(d, item, c, rules);
-            applyQuiet(d, item, rules);
-          }
+          const item = planItem(planner, st.n, st.events[side], st.action);
+          for (const c of item.clips) applyClip(d, item, c, rules);
+          applyQuiet(d, item, rules);
           const want = displayFrom(st.after);
-          if (JSON.stringify(d) !== JSON.stringify(want)) problems.push(`seed ${3001 + k} ${side} #${st.n} ${item.route}`);
+          if (JSON.stringify(d) !== JSON.stringify(want)) problems.push(`seed ${3001 + k} ${side} #${st.n}`);
         }
       }
     }

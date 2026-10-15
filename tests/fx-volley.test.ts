@@ -48,9 +48,9 @@ describe('the clips of the Volley', () => {
       for (const side of ['P', 'C'] as const) {
         const planner = plannerFor(data, SIDES[side], start.sea?.current ?? null);
         for (const st of steps) {
-          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => !!PLAY[kind]);
+          const item = planItem(planner, st.n, st.events[side], st.action);
           if (!item.clips.some((c) => c.kind === 'announce' || c.kind === 'shot')) continue;
-          if (item.route === 'fx') fx++;
+          if (item.clips.every((c) => !!PLAY[c.kind])) fx++;
           else {
             show++;
             for (const c of item.clips) if (!PLAY[c.kind] && !left.includes(c.kind)) left.push(c.kind);
@@ -58,11 +58,10 @@ describe('the clips of the Volley', () => {
         }
       }
     }
-    // The rest goes to ShowLayer until A4 ports its clips (a card, the end of the game …); a sinking goes through the
-    // layer since A3.
-    expect(fx).toBeGreaterThan(show);
-    expect(left.every((k) => !VOLLEY_KINDS.includes(k as FxKind))).toBe(true);
-    expect(left).not.toContain('sink');
+    // A4: every clip of every Volley action has its player (ShowLayer is gone).
+    expect(fx).toBeGreaterThan(500);
+    expect(show).toBe(0);
+    expect(left).toEqual([]);
   });
 
   it('the breakdown plate: who → whom, the damage by the track, the terms, a target changed', () => {

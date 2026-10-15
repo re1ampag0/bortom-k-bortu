@@ -1,0 +1,42 @@
+{
+  "turn-fire-1366x660": {
+    "scene": "turn",
+    "ms": 4131
+  },
+  "turn-draw-1366x660": {
+    "scene": "turn",
+    "ms": 6697
+  },
+  "card-1366x660": {
+    "scene": "card",
+    "ms": 1239
+  },
+  "card-hit-1366x660": {
+    "scene": "card",
+    "ms": 1523
+  },
+  "repair-1366x660": {
+    "scene": "repair",
+    "ms": 1896
+  },
+  "mark-1366x660": {
+    "scene": "mark",
+    "ms": 1663
+  },
+  "mark-volley-1366x660": {
+    "scene": "mark",
+    "ms": 5487
+  },
+  "sink-1366x660": {
+    "scene": "sink",
+    "ms": 3968
+  },
+  "turn-fire-430x932": {
+    "scene": "turn",
+    "ms": 4184
+  },
+  "card-430x932": {
+    "scene": "card",
+    "ms": 1231
+  }
+}

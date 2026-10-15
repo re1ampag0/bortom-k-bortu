@@ -31,6 +31,8 @@ export interface FxCtx {
   data: GameData;
   /** The side at the bottom of the screen (the viewer's). */
   bottom: Side;
+  /** The team at the bottom is played from this device: «Ваш ход» (a match of bots — «Ход Пиратов»). */
+  own: boolean;
   /** The line of the status bar while the clip plays (React state, not textContent of a node React owns). */
   hint: (text: string) => void;
   /**
@@ -193,9 +195,18 @@ export function splash(ctx: FxCtx, x: number, y: number, delay: number): void {
     A(ctx, r2, [{ opacity: 0.6, transform: `translate(${x}px,${y}px) scale(.2)` }, { opacity: 0, transform: `translate(${x}px,${y}px) scale(1.3)` }], 900, delay + 160);
   }
 }
+/** game: a label never goes past the edge of the table — it moves in, 8 px from it (the reference lets it go out). */
+const EDGE = 8;
+export function inside(v: number, size: number, max: number): number {
+  return Math.max(EDGE, Math.min(max - EDGE - size, v));
+}
 export function tag(ctx: FxCtx, x: number, y: number, text: string, delay: number, cls = '', dur = 1500): HTMLElement {
   const t = mk(ctx, 'tag ' + cls, x, y);
   t.textContent = text;
+  // .tag is centred on its point (translate(-50%, -50%)); it rises 4 px at the start
+  const w = t.offsetWidth, h = t.offsetHeight;
+  t.style.left = inside(x - w / 2, w, ctx.board.clientWidth) + w / 2 + 'px';
+  t.style.top = inside(y - h / 2, h + 4, ctx.board.clientHeight) + h / 2 + 'px';
   A(ctx, t, [{ opacity: 0, translate: '0 4px' }, { opacity: 1, translate: '0 0', offset: 0.12 }, { opacity: 1, offset: 0.82 }, { opacity: 0 }], dur, delay);
   return t;
 }
@@ -301,9 +312,38 @@ export function cardHTML(data: GameData, code: string): string {
   const cost = c.soul > 0 ? `${c.soul} Д` : `${c.cost}`;
   return `<button class="hcard ${cardClass(c)}" tabindex="-1" data-fx-card="${esc(code)}"><span class="hcard-head"><span class="hcard-type">${esc(c.type)}</span><span class="cost">${esc(cost)}</span></span><span class="hcard-name">${esc(c.name)}</span><span class="hcard-big">${esc(c.big)}</span><span class="hcard-text">${esc(c.text.replace(/<[^>]+>/g, ' '))}</span></button>`;
 }
-/** A card flies (from the hand, from beyond the edge of the table, from the deck). */
-export function flyCard(ctx: FxCtx, code: string, from: CardPos, to: CardPos, delay: number, d = 450, ribbon = '', ribbonCls = ''): FlyCard {
-  const el: FlyCard = mk(ctx, 'flyc', 0, 0, `<div style="position:relative">${cardHTML(ctx.data, code)}${ribbon ? `<span class="rib ${ribbonCls}">${ribbon}</span>` : ''}</div>`);
+/** The relative luminance of a colour «#rrggbb» (WCAG). */
+function luminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+export const contrast = (a: string, b: string) => { const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+export const INK_DARK = '#0f0d0b';
+/** White or dark text on a colour: the one with the higher contrast. */
+export const inkOn = (color: string) => (contrast(color, '#ffffff') >= contrast(color, INK_DARK) ? '#ffffff' : INK_DARK);
+
+/** Who played the card: the bottom strip of the flying card («ГОЛЛАНДЕЦ», «ЛЕГЕНДА · МЕСТЬ»). */
+export interface CardBy {
+  ship: string;
+  legend?: boolean;
+}
+/**
+ * game: instead of the reference's ribbon under the card (its type — the card shows it already) the card has a bottom
+ * strip of the colour of the ship that played it, with the ship's name, and a frame of 2 px of that colour (a Legend
+ * keeps its gold frame). The strip's text is never under 10 px on screen: its size is set against the card's scale.
+ */
+function footHTML(data: GameData, by: CardBy, scale: number): string {
+  const sh = shipData(data, by.ship);
+  const text = (by.legend ? `Легенда · ${sh.nick}` : sh.nick).toUpperCase();
+  const font = Math.max(10.5, 10 / scale);
+  return `<span class="fcard-foot" style="background:${sh.color};color:${inkOn(sh.color)};font-size:${(Math.ceil(font * 10) / 10).toFixed(1)}px">${esc(text)}</span>`;
+}
+/** A card flies (from the hand, from beyond the edge of the table, from the deck); `by` — the strip of who played it. */
+export function flyCard(ctx: FxCtx, code: string, from: CardPos, to: CardPos, delay: number, d = 450, by?: CardBy): FlyCard {
+  const inner = by
+    ? `<div class="fcard${by.legend ? ' legend' : ''}" style="--by:${shipData(ctx.data, by.ship).color}">${cardHTML(ctx.data, code)}${footHTML(ctx.data, by, to.s || 0.72)}</div>`
+    : `<div style="position:relative">${cardHTML(ctx.data, code)}</div>`;
+  const el: FlyCard = mk(ctx, 'flyc', 0, 0, inner);
   A(ctx, el, [{ opacity: 1, transform: `translate(${from.x}px,${from.y}px) rotate(${from.r || 0}deg) scale(${from.s || 1})` }, { opacity: 1, transform: `translate(${to.x}px,${to.y}px) rotate(${to.r || 0}deg) scale(${to.s || 0.72})` }], d, delay, 'cubic-bezier(.2,.8,.3,1.1)', 'forwards');
   el._pos = to;
   return el;
@@ -313,13 +353,19 @@ export function moveTo(ctx: FxCtx, el: FlyCard, to: CardPos, d = 400): void {
   A(ctx, el, [{ transform: `translate(${f.x}px,${f.y}px) rotate(${f.r || 0}deg) scale(${f.s || 0.72})` }, { transform: `translate(${to.x}px,${to.y}px) rotate(${to.r || 0}deg) scale(${to.s || 0.72})` }], d, 0, 'cubic-bezier(.3,0,.2,1)', 'forwards');
   el._pos = to;
 }
-/** Where a card flies from: an own one — from the hand (the card in the hand hides), another's — from beyond the top edge over its ship. */
+/** Where a card flies from: an own one — from the hand (the card in the hand hides), another's — from beyond the edge over its ship. */
 export function cardOrigin(ctx: FxCtx, code: string, ship: string): CardPos {
   const h = handCardEl(ctx, code);
   if (h && sideOf(ctx, ship) === ctx.bottom) {
     const b = bx(ctx, h);
     h.style.visibility = 'hidden';
     return { x: b.x, y: b.y, s: 1 };
+  }
+  // game: the hand is the real one — an own card just played is out of it already: it flies from the hand row.
+  const row = ctx.board.querySelector('[data-fx-hand] .hand-cards');
+  if (sideOf(ctx, ship) === ctx.bottom && visible(row)) {
+    const b = bx(ctx, row);
+    return { x: b.cx - 55, y: b.y, s: 1 };
   }
   const s = bx(ctx, plank(ctx, ship));
   return isTop(ctx, ship) ? { x: s.cx - 55, y: -150, r: -8, s: 1 } : { x: s.cx - 55, y: ctx.board.clientHeight + 20, r: 8, s: 1 };
@@ -329,6 +375,10 @@ export function hint(ctx: FxCtx, text: string): void {
 }
 export function pill(ctx: FxCtx, x: number, y: number, text: string, delay: number, cls = ''): HTMLElement {
   const pl = mk(ctx, 'pill ' + cls, 0, 0, text);
+  // game: inside the table (see tag); it moves from +8 px to −12 px and grows to ×1.12
+  const w0 = pl.offsetWidth, h0 = pl.offsetHeight, gw = w0 * 0.06, gh = h0 * 0.06; // ×1.12 around its centre
+  x = inside(x - gw, w0 + 2 * gw, ctx.board.clientWidth) + gw;
+  y = Math.max(EDGE + 12 + gh, Math.min(ctx.board.clientHeight - EDGE - h0 - gh - 8, y));
   A(ctx, pl, [{ opacity: 0, transform: `translate(${x}px,${y + 8}px) scale(.4)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1.12)`, offset: 0.18 }, { transform: `translate(${x}px,${y + 2}px) scale(1)`, offset: 0.32 }, { opacity: 1, offset: 0.82 }, { opacity: 0, transform: `translate(${x}px,${y - 12}px) scale(1)` }], 1500, delay);
   return pl;
 }
@@ -337,3 +387,15 @@ export function pillAt(ctx: FxCtx, code: string, t: Track, n: number, delay: num
   const vb = bx(ctx, valueEl(ctx, code, t));
   return pill(ctx, Math.max(4, vb.x - 58), vb.cy - 20, `${good ? '+' : '−'}${n}`, delay, (good ? 'good' : '') + (n >= 4 ? ' huge' : ''));
 }
+/** Souls: wisps from the enemy's Crew into the Souls of «Голландец» (play-volley.js; the card and the Souls clips use it too). */
+export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number) {
+  const keeper = ctx.data.ships.map((s) => s.code).find((x) => shipData(ctx.data, x).souls != null && !ctx.display.ships[x].sunk);
+  if (!keeper) return;
+  const badge = plank(ctx, keeper).querySelector('[data-fx-souls]');
+  const to = badge && visible(badge) ? (() => { const b = bx(ctx, badge); return { x: b.cx, y: b.cy }; })() : (() => { const b = bx(ctx, plank(ctx, keeper)); return { x: b.r - 30, y: b.y + 30 }; })();
+  const from = fxPoint(ctx, fromShip, 'crew', 0);
+  for (let k = 0; k < n; k++) wisp(ctx, from, to, delay + k * 160);
+  setTimeout(() => { if (badge && ctx.run === ctx.live()) { A(ctx, badge, [{ transform: 'scale(1.3)', boxShadow: '0 0 12px #6fd3b4' }, { transform: 'scale(1)', boxShadow: 'none' }], 500, 0, 'ease-out', 'none'); } }, ms(ctx, delay + 800));
+  tag(ctx, to.x, to.y - 16, `+${n} ${n === 1 ? 'Душа' : 'Души'}`, delay + 700, 'good', 1200);
+}
+export const FLAME_SVG = '<svg width="18" height="22" viewBox="0 0 14 17"><path d="M7 1 C9 5 13 7 12 11 C11.5 14.5 9 16 7 16 C4 16 2 14 2 11 C2 8.5 4 7.5 4.5 5 C5.5 7 6.5 7 7 6 C7.5 4.5 7 3 7 1Z" fill="#F2913D" stroke="#B23A2E" stroke-width="1"/><path d="M7 9 C8 10.5 9.5 11.5 9 13 C8.6 14.4 7.6 15 7 15 C5.8 15 5 14 5 12.8 C5 11.6 6.2 11 7 9Z" fill="#FFE08A"/></svg>';

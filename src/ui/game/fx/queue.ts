@@ -4,27 +4,19 @@ import { deckCards, legendCards, seaCards } from '../../../engine/data';
 import type { Action, GameEvent, GameState, ShipState } from '../../../engine/state';
 import type { GameData } from '../../../engine/types';
 import { applyVisible, type Display, type DisplayRules } from './display';
-import { createPlanner, type FxCards, type FxClip, type FxKind, type FxPlan } from './planFx';
+import { createPlanner, type FxCards, type FxClip, type FxPlan } from './planFx';
 
 /** A clip with its events (clip.ev → the events of the action), as page.js of the reference passes it to PLAY. */
 export type PlayClip = FxClip & { events: GameEvent[] };
 
-/**
- * One action in the queue. `fx` — the animation layer plays its clips; `show` — the whole action goes to the old
- * ShowLayer (the transition: until A4 moves every clip, an action with a clip not yet ported is shown the old way, so
- * the two layers never play one action together).
- */
+/** One action in the queue: the animation layer plays its clips (A4: every action, ShowLayer is gone). */
 export interface QueueItem {
   n: number;
-  route: 'fx' | 'show';
   events: GameEvent[];
   clips: PlayClip[];
   quiet: number[];
-}
-
-/** `fx` when every clip of the action has a player; an action without clips (only quiet events) stays `show`. */
-export function routeAction(clips: readonly FxClip[], has: (kind: FxKind) => boolean): 'fx' | 'show' {
-  return clips.length > 0 && clips.every((c) => has(c.kind)) ? 'fx' : 'show';
+  /** A card is still being played after this action (planner.state.card: a Reaction window came between). */
+  cardOpen: boolean;
 }
 
 /** The planner's options from the game data: the same as the test of A1 and scripts/dump-fx-events.ts. */
@@ -35,17 +27,11 @@ export function plannerFor(data: GameData, viewer: readonly string[], sea: strin
   return createPlanner({ cards, ships, viewer, sea, seaKey: (code) => seaKeyOf[code] });
 }
 
-/** Feeds one action to the planner (always, so a Volley declared in one action is known at its shot) and routes it. */
-export function planItem(
-  planner: ReturnType<typeof createPlanner>,
-  n: number,
-  events: GameEvent[],
-  action: Action | null,
-  has: ((kind: FxKind) => boolean) | null,
-): QueueItem {
+/** Feeds one action to the planner (always, so a Volley declared in one action is known at its shot). */
+export function planItem(planner: ReturnType<typeof createPlanner>, n: number, events: GameEvent[], action: Action | null): QueueItem {
   const plan: FxPlan = planner.feed(events, action);
   const clips = plan.map((c) => ({ ...c, events: c.ev.map((i) => events[i]) })) as PlayClip[];
-  return { n, route: has ? routeAction(plan, has) : 'show', events, clips, quiet: plan.quiet };
+  return { n, events, clips, quiet: plan.quiet, cardOpen: planner.state.card != null };
 }
 
 /** The events of one clip in their order in the action: what D takes in after the clip played. */
@@ -56,11 +42,6 @@ export function applyClip(d: Display, item: QueueItem, clip: PlayClip, rules: Di
 /** The quiet events of an action (no clip of their own): after its clips. */
 export function applyQuiet(d: Display, item: QueueItem, rules: DisplayRules): void {
   for (const i of item.quiet) applyVisible(d, item.events[i], rules);
-}
-
-/** An action shown by ShowLayer: D takes in all its events at once (the planks show its result, ShowLayer the numbers). */
-export function applyAll(d: Display, item: QueueItem, rules: DisplayRules): void {
-  for (const e of item.events) applyVisible(d, e, rules);
 }
 
 /**
@@ -82,4 +63,43 @@ export function withDisplay(s: GameState, d: Display): GameState {
       }),
     ),
   };
+}
+
+/**
+ * The statuses the table keeps hidden until their clip plays (A4): flags set by the events of clips not played yet
+ * (flagSet, surfaced), by ship. Only the queue of the layer gives them: when it is empty — «Сразу итог», the layer off,
+ * Undo, a jump over many actions — nothing is hidden.
+ */
+export function pendingFlags(items: readonly (QueueItem & { done: number; applied: boolean })[]): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const it of items) {
+    if (it.applied) continue;
+    for (const c of it.clips.slice(it.done)) {
+      for (const e of c.events) {
+        if (e.type === 'flagSet') (out[e.ship] ??= []).push(e.flag);
+        else if (e.type === 'surfaced') (out[e.ship] ??= []).push('surfaced');
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * The log shows the lines of an action once its clips are played (A4): the number of the first action of the queue not
+ * played to its end — its lines and the later ones wait; null — nothing waits (an empty queue: the end of the show,
+ * «Сразу итог», the layer off, Undo, a jump over many actions).
+ */
+export function logHiddenFrom(items: readonly (QueueItem & { applied: boolean })[]): number | null {
+  const waiting = items.filter((x) => !x.applied).map((x) => x.n);
+  return waiting.length > 0 ? Math.min(...waiting) : null;
+}
+
+/** So many actions coming at once are a jump (a return after a lost connection, a reload): not replayed. */
+export const JUMP = 4;
+/**
+ * Whether the queue skips all but its last action (they go into D at once): the game waits for this device, or the
+ * actions came as a jump.
+ */
+export function skipAhead(queued: number, myDecision: boolean, jump: boolean): boolean {
+  return queued > 1 && (myDecision || jump);
 }

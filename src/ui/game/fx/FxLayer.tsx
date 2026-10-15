@@ -9,13 +9,13 @@ import type { GameState } from '../../../engine/state';
 import type { GameData, Side } from '../../../engine/types';
 import { eventsFor, type Viewer } from '../../../engine/view';
 import type { Speed } from '../../storage';
-import type { Recent } from '../showSteps';
+import type { Recent } from '../../../net/local';
 import { speedFactor } from '../text';
 import { applyVisible, displayFrom, displayRules, type Display } from './display';
-import { PLAY_MISC } from './misc';
+import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
-import { applyAll, applyClip, applyQuiet, planItem, plannerFor, type PlayClip, type QueueItem } from './queue';
+import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
 import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
 import './fx.css';
 
@@ -23,7 +23,7 @@ export type ClipPlayer = (c: PlayClip, ctx: FxCtx) => Promise<void>;
 
 /**
  * The players of clips by kind (PLAY of the reference). The modules ported from the reference fill it: volley.ts
- * (A2), misc.ts, sea.ts, legends.ts (A3, S1, L1). An action with a clip not here is shown by the old ShowLayer.
+ * (A2), misc.ts (A3, A4), sea.ts, legends.ts (S1, L1). A clip with no player here plays PLAY.fallback (page.js).
  */
 export const PLAY: Partial<Record<FxKind, ClipPlayer>> = {};
 
@@ -39,12 +39,14 @@ export interface FxScene {
   onTurn: (ctx: FxCtx) => void;
   /** The scene is on the table (a Volley declared, not shot yet). */
   alive: () => boolean;
+  /** An action is played to its end (page.js: the card at the middle fades once it resolved). */
+  afterAction?: (ctx: FxCtx, item: { cardOpen: boolean }) => void;
 }
 export const SCENES: FxScene[] = [];
 
-// The clips ported so far: the Volley (A2), the ships in motion (A3).
+// The clips ported: the Volley (A2), the ships in motion (A3), the turn, the cards, the statuses … (A4).
 Object.assign(PLAY, PLAY_VOLLEY, PLAY_MISC);
-SCENES.push(VOLLEY_SCENE);
+SCENES.push(VOLLEY_SCENE, CARD_SCENE);
 
 interface Item extends QueueItem {
   recent: Recent;
@@ -54,12 +56,6 @@ interface Item extends QueueItem {
   applied: boolean;
 }
 
-interface ShowFeed {
-  /** Hands an action to ShowLayer; the number of steps it shows (0 — nothing to wait for). */
-  push: (fresh: Recent[]) => number;
-  busy: boolean;
-}
-
 export interface FxQueue {
   /** D while the queue plays; null — the table is drawn from the real state. */
   display: Display | null;
@@ -67,10 +63,14 @@ export interface FxQueue {
   gen: number;
   /** The line of the status bar while a clip plays. */
   hint: string | null;
+  /** Flags of statuses by ship whose clip has not played yet: the chips wait hidden (pendingFlags). */
+  hidden: Record<string, string[]>;
+  /** The log lines of this action and the later ones wait for their clips (logHiddenFrom); null — none waits. */
+  logFrom: number | null;
   busy: boolean;
   /** «Сразу итог»: D = the real state, the layer is cleared. */
   skip: () => void;
-  /** A press on the table: the result at once, if a clip of this layer plays (ShowLayer is not touched). */
+  /** A press on the table: the result at once, if a clip plays. */
   press: () => void;
   layerRef: RefObject<HTMLDivElement>;
   weatherRef: RefObject<HTMLDivElement>;
@@ -85,13 +85,15 @@ export function useFxQueue({
   viewer,
   data,
   bottom,
+  own,
   enabled,
   speed,
   rich,
   myDecision,
+  jump = false,
+  jumpAt = JUMP,
   paused,
   hold,
-  show,
 }: {
   game: { kind: 'local' | 'net'; recent: Recent[]; state: GameState };
   version: number;
@@ -100,17 +102,22 @@ export function useFxQueue({
   viewer: Viewer;
   data: GameData;
   bottom: Side;
+  /** The team at the bottom is played from this device (the banner «Ваш ход» of the clip «turn»). */
+  own: boolean;
   /** Off at «мгновенно», «?speed=instant», prefers-reduced-motion, behind the curtain and after «До конца хода». */
   enabled: boolean;
   speed: Speed;
   rich: boolean;
   /** The game waits for this device: only the action that caused it is left. */
   myDecision: boolean;
+  /** Back after a lost connection («Пока вас не было»): the actions that came are not replayed, only the last one. */
+  jump?: boolean;
+  /** So many actions at once are a jump too (JUMP); ?fxScene plays all the actions of its scene. */
+  jumpAt?: number;
   /** A banner is up: the show waits for it. */
   paused: boolean;
   /** «Пауза» of P4: the clip on screen plays to its end, the next one waits for «Дальше». */
   hold: boolean;
-  show: ShowFeed;
 }): FxQueue {
   const [rules] = useState(() => displayRules(data));
   const seats = viewer === 'all' ? data.ships.filter((x) => x.side === bottom).map((x) => x.code) : viewer;
@@ -134,11 +141,11 @@ export function useFxQueue({
   const weatherRef = useRef<HTMLDivElement>(null);
 
   // The latest values for the loop (it lives across renders).
-  const live = useRef({ view, speed, rich, data, bottom, hold, paused, showBusy: show.busy, push: show.push, myDecision });
-  live.current = { view, speed, rich, data, bottom, hold, paused, showBusy: show.busy, push: show.push, myDecision };
+  const live = useRef({ view, speed, rich, data, bottom, own, hold, paused, myDecision });
+  live.current = { view, speed, rich, data, bottom, own, hold, paused, myDecision };
   const waiters = useRef<(() => void)[]>([]);
   const wake = () => waiters.current.splice(0).forEach((w) => w());
-  useEffect(wake, [hold, paused, show.busy]);
+  useEffect(wake, [hold, paused]);
 
   const bump = () => setGen((g) => g + 1);
   const makeCtx = (run: number): FxCtx | null => {
@@ -155,6 +162,7 @@ export function useFxQueue({
       live: () => RUN.current,
       data: live.current.data,
       bottom: live.current.bottom,
+      own: live.current.own,
       hint: (text) => {
         if (run === RUN.current) setHint(text);
       },
@@ -219,28 +227,13 @@ export function useFxQueue({
     while (run === RUN.current && (live.current.hold || live.current.paused)) await new Promise<void>((res) => waiters.current.push(res));
     if (run !== RUN.current) throw ABORT;
   };
-  /** Waits until ShowLayer has shown the steps just handed to it. */
-  const showDone = async (run: number, steps: number) => {
-    if (steps === 0) return;
-    let seen = false;
-    for (;;) {
-      if (run !== RUN.current) throw ABORT;
-      if (live.current.showBusy) seen = true;
-      else if (seen) return;
-      await new Promise<void>((res) => waiters.current.push(res));
-    }
-  };
-
   /** Everything still in the queue goes into D at once (its clips are not played). */
   const fastForward = (items: Item[]) => {
     if (!D.current) return;
     for (const it of items) {
       if (it.applied) continue;
-      if (it.route === 'show') applyAll(D.current, it, rules);
-      else {
-        for (const c of it.clips.slice(it.done)) applyClip(D.current, it, c, rules);
-        applyQuiet(D.current, it, rules);
-      }
+      for (const c of it.clips.slice(it.done)) applyClip(D.current, it, c, rules);
+      applyQuiet(D.current, it, rules);
       it.applied = true;
     }
   };
@@ -274,39 +267,28 @@ export function useFxQueue({
         // come yet, and the table would still show the real state the new action brought (the reference draws at once).
         flushSync(bump);
         const item = queue.current[0];
-        if (item.route === 'show') {
-          // The rest of a Volley is shown the old way (an action with a clip not ported yet): its scene goes.
-          if (SCENES.some((x) => x.alive())) resetFx();
-          if (item.clips.some((c) => c.kind === 'turn')) {
-            const ctx = makeCtx(run);
-            if (ctx) SCENES.forEach((x) => x.onTurn(ctx));
-          }
-          applyAll(D.current!, item, rules);
-          item.applied = true;
-          bump();
-          await showDone(run, live.current.push([item.recent]));
-        } else {
-          while (item.done < item.clips.length) {
-            await gate(run);
-            const clip = item.clips[item.done];
-            const ctx = makeCtx(run);
-            if (!ctx) throw ABORT;
-            if (clip.kind === 'turn') SCENES.forEach((x) => x.onTurn(ctx));
-            await PLAY[clip.kind]!(clip, ctx);
-            if (run !== RUN.current) throw ABORT;
-            // The displayed state catches up with the real one: the events of the clip in their order.
-            applyClip(D.current!, item, clip, rules);
-            preview.current = null;
-            item.done++;
-            clearFx();
-            // The table from D at once, then the planks lose what the clip left on them: the reference draws new nodes.
-            flushSync(bump);
-            settlePlanks();
-          }
-          applyQuiet(D.current!, item, rules);
-          item.applied = true;
-          bump();
+        while (item.done < item.clips.length) {
+          await gate(run);
+          const clip = item.clips[item.done];
+          const ctx = makeCtx(run);
+          if (!ctx) throw ABORT;
+          if (clip.kind === 'turn') SCENES.forEach((x) => x.onTurn(ctx));
+          await (PLAY[clip.kind] ?? PLAY.fallback)!(clip, ctx);
+          if (run !== RUN.current) throw ABORT;
+          // The displayed state catches up with the real one: the events of the clip in their order.
+          applyClip(D.current!, item, clip, rules);
+          preview.current = null;
+          item.done++;
+          clearFx();
+          // The table from D at once, then the planks lose what the clip left on them: the reference draws new nodes.
+          flushSync(bump);
+          settlePlanks();
         }
+        applyQuiet(D.current!, item, rules);
+        item.applied = true;
+        const ctx = makeCtx(run);
+        if (ctx) SCENES.forEach((x) => x.afterAction?.(ctx, item));
+        bump();
         queue.current.shift();
       }
       const ctx = makeCtx(run);
@@ -328,8 +310,9 @@ export function useFxQueue({
     }
   };
 
-  // New actions: each is fed to the planner and routed (FxLayer or ShowLayer).
-  useEffect(() => {
+  // New actions: each is fed to the planner and queued. A layout effect: D is set before the
+  // browser paints, so the result the new action brought never flashes on the planks for a frame.
+  useLayoutEffect(() => {
     const fresh = game.recent.filter((r) => r.n >= shown.current);
     if (fresh.length === 0) {
       const last = game.recent.at(-1)?.n ?? -1;
@@ -342,24 +325,22 @@ export function useFxQueue({
       return;
     }
     shown.current = fresh.at(-1)!.n + 1;
-    const has = enabled ? (kind: FxKind) => !!PLAY[kind] : null;
     const items: Item[] = fresh.map((r) => ({
-      ...planItem(planner.current!.p, r.n, game.kind === 'local' ? eventsFor(game.state, viewer, r.events) : r.events, r.action, has),
+      ...planItem(planner.current!.p, r.n, game.kind === 'local' ? eventsFor(game.state, viewer, r.events) : r.events, r.action),
       recent: r,
       done: 0,
       applied: false,
     }));
-    if (!running.current && items.every((i) => i.route === 'show')) {
-      // Nothing for the layer: ShowLayer shows them as before, the table is drawn from the real state. The scene of a
-      // Volley declared before goes: its shot is shown the old way.
-      if (SCENES.some((x) => x.alive())) resetFx();
-      show.push(fresh);
+    if (!enabled) {
+      // No animations (prefers-reduced-motion, «мгновенно», the curtain, «До конца хода»): the planner has seen the
+      // actions (a Volley declared now is known at its shot), the table is at once in the real state.
       base.current = displayFrom(view);
       return;
     }
     queue.current.push(...items);
-    if (myDecision && queue.current.length > 1) {
-      // The decision of this device is not delayed: only the action that caused it is left, the rest goes into D.
+    if (skipAhead(queue.current.length, myDecision, jump || fresh.length >= jumpAt)) {
+      // The decision of this device is not delayed, a return after a lost connection is not replayed: only the last
+      // action is left, the rest goes into D (its log lines and statuses are shown at once).
       if (!D.current) D.current = structuredClone(base.current!);
       fastForward(queue.current.slice(0, -1));
       queue.current = queue.current.slice(-1);
@@ -392,10 +373,10 @@ export function useFxQueue({
   }, [finish]);
 
   const press = useCallback(() => {
-    if (running.current && queue.current[0]?.route === 'fx') finish();
+    if (running.current) finish();
   }, [finish]);
 
-  return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current) };
+  return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, hidden: D.current ? pendingFlags(queue.current) : {}, logFrom: D.current ? logHiddenFrom(queue.current) : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current) };
 }
 
 /**
@@ -408,10 +389,12 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     const ctx = fx.ctx();
     if (ctx) SCENES.forEach((x) => x.afterRender(ctx));
   });
-  const { press, busy, layerRef } = fx;
+  const { press, layerRef } = fx;
   useEffect(() => {
+    // Always on: press() itself checks that a clip of the layer plays. Waiting for «busy» lost a press that came before
+    // React ran the effect (the layer may draw within the same task the queue starts in).
     const board = layerRef.current?.parentElement;
-    if (!board || !busy) return;
+    if (!board) return;
     const onPress = (e: PointerEvent) => {
       const t = e.target as Element | null;
       if (t?.closest('[data-fx-hand], .dock')) return;
@@ -419,7 +402,7 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     };
     board.addEventListener('pointerdown', onPress);
     return () => board.removeEventListener('pointerdown', onPress);
-  }, [busy, press, layerRef]);
+  }, [press, layerRef]);
   return (
     <>
       <div className="fx-weather" ref={fx.weatherRef} aria-hidden />
