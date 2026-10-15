@@ -48,9 +48,14 @@ describe('the Reactions and the special Volleys of the reference', () => {
     expect(play('wind')[0].clips.map((c) => c.kind)).toEqual(['heart', 'announce', 'window']);
   });
 
-  it('«heart» goes to ShowLayer while the clip «sink» is not ported (A3)', () => {
-    const first = play('heart')[0];
-    expect(first.clips.map((c) => c.kind)).toContain('sink');
-    expect(first.route).toBe('show');
+  // A3 ported the clip «sink»: the Volleys that sink a ship go through the layer too.
+  for (const id of ['heart', 'diag', 'kartech', 'guns']) {
+    it(`${id}: the Volley that sinks a ship goes through the layer`, () => {
+      expect(play(id).map((x) => x.route)).toEqual(play(id).map(() => 'fx'));
+      expect(clipsOf(id).at(-1)!.kind).toBe('sink');
+    });
+  }
+  it('«heart»: the heart, the Volley and the sinking in one action', () => {
+    expect(play('heart')[0].clips.map((c) => c.kind)).toEqual(['heart', 'announce', 'shot', 'sink']);
   });
 });

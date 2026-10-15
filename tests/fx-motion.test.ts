@@ -29,7 +29,7 @@ const all = (id: string, r: 'fx' | 'show') => play(id).map(() => r);
 
 describe('the ships in motion', () => {
   it('the clips of A3 are in PLAY', () => {
-    for (const k of ['swap', 'dive', 'surface'] as FxKind[]) expect(typeof PLAY[k], k).toBe('function');
+    for (const k of ['swap', 'sink', 'dive', 'surface'] as FxKind[]) expect(typeof PLAY[k], k).toBe('function');
   });
 
   it('regroup: the change of places goes through the layer, with its price', () => {
@@ -49,5 +49,10 @@ describe('the ships in motion', () => {
     const real: GameState = { ...s, ships: { ...s.ships, [code]: { ...s.ships[code], submerged: true } } };
     expect(plankClass(real, code)).toContain('submerged');
     expect(plankClass(withDisplay(real, displayFrom(s)), code)).not.toContain('submerged');
+  });
+
+  it('sink: a ship sunk by a played card waits for the clip «card» (A4) and goes to ShowLayer', () => {
+    expect(play('sink')[0].clips.map((c) => c.kind)).toEqual(['card', 'sink']);
+    expect(route('sink')).toEqual(all('sink', 'show'));
   });
 });

@@ -9,15 +9,17 @@ import { data, turnOf } from './helpers';
 
 const rules = displayRules(data);
 const clip = (kind: FxKind) => ({ kind }) as FxClip;
-const VOLLEY = new Set<FxKind>(['announce', 'window', 'reaction', 'shot', 'cancel', 'counter', 'heart']);
+// The clips ported so far: the Volley (A2), the ships in motion (A3).
+const PORTED = new Set<FxKind>(['announce', 'window', 'reaction', 'shot', 'cancel', 'counter', 'heart', 'swap', 'sink', 'dive', 'surface']);
 
 describe('the route of an action', () => {
   it('fx only when every clip has a player', () => {
-    const has = (k: FxKind) => VOLLEY.has(k);
+    const has = (k: FxKind) => PORTED.has(k);
     expect(routeAction([clip('announce'), clip('window')], has)).toBe('fx');
     expect(routeAction([clip('reaction'), clip('shot')], has)).toBe('fx');
     expect(routeAction([clip('card'), clip('announce'), clip('shot')], has)).toBe('show');
-    expect(routeAction([clip('shot'), clip('sink')], has)).toBe('show');
+    expect(routeAction([clip('shot'), clip('sink')], has)).toBe('fx');
+    expect(routeAction([clip('card'), clip('sink')], has)).toBe('show');
     // Only quiet events: nothing to play.
     expect(routeAction([], has)).toBe('show');
   });
@@ -39,7 +41,7 @@ describe('the displayed state in the queue', () => {
         const d = displayFrom(start);
         for (const st of steps) {
           // Volley actions are «fx», the rest «show» — as in the transition.
-          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => VOLLEY.has(kind));
+          const item = planItem(planner, st.n, st.events[side], st.action, (kind) => PORTED.has(kind));
           if (item.route === 'show') applyAll(d, item, rules);
           else {
             for (const c of item.clips) applyClip(d, item, c, rules);
