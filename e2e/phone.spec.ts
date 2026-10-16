@@ -137,24 +137,61 @@ async function phone(page: Page, name: string) {
   }
   await expect(page.getByTestId('ship-info-Г')).toHaveCount(0);
 
-  // Every button of the Dutchman's plank is seen whole, inside the plank and the window, at least 44 px high.
+  // The buttons of the Dutchman's plank (U3): one row, each at least 44 px high and its text whole; when the row is
+  // wider than the plank the arrow «›» shows and scrolls it; after it the last button is whole inside the plank and the
+  // window and works. The page itself never scrolls sideways.
   const dutchman = page.getByTestId('plank-Г');
   const row = dutchman.locator('.plank-buttons');
   const buttons = row.locator('.btn');
   expect(await buttons.count()).toBeGreaterThanOrEqual(4);
   const plankBox = (await dutchman.boundingBox())!;
   const win = page.viewportSize()!;
+  const tops = new Set<number>();
   for (const b of await buttons.all()) {
-    await expect(b).toBeVisible();
     const box = (await b.boundingBox())!;
     expect(box.height).toBeGreaterThanOrEqual(44);
-    expect(box.x).toBeGreaterThanOrEqual(plankBox.x - 1);
-    expect(box.x + box.width).toBeLessThanOrEqual(Math.min(plankBox.x + plankBox.width, win.width) + 1);
     expect(box.y + box.height).toBeLessThanOrEqual(Math.min(plankBox.y + plankBox.height, win.height) + 1);
     expect(await b.evaluate((e) => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+    tops.add(Math.round(box.y));
   }
-  expect(await row.evaluate((e) => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+  expect(tops.size, 'all the buttons in one row').toBe(1);
+  const first = buttons.first();
+  await expect(first).toBeVisible();
+  const fb = (await first.boundingBox())!;
+  expect(fb.x).toBeGreaterThanOrEqual(plankBox.x - 1);
+  const more = dutchman.locator('.buttons-more');
+  const overflows = await row.evaluate((e) => e.scrollWidth > e.clientWidth + 1);
+  if (overflows) {
+    await expect(more).toBeVisible();
+    for (let i = 0; i < 6 && (await more.isVisible()); i++) {
+      await more.click();
+      await page.waitForTimeout(400);
+    }
+    await expect(more).toBeHidden();
+  } else {
+    await expect(more).toBeHidden();
+  }
+  const last = buttons.last();
+  await expect(last).toHaveText(/Душа/);
+  const lb = (await last.boundingBox())!;
+  expect(lb.x).toBeGreaterThanOrEqual(plankBox.x - 1);
+  expect(lb.x + lb.width).toBeLessThanOrEqual(Math.min(plankBox.x + plankBox.width, win.width) + 1);
+  expect(await page.evaluate(() => [document.scrollingElement!.scrollLeft, document.scrollingElement!.scrollWidth <= innerWidth])).toEqual([0, true]);
+  // every button, scrolled to, is whole inside the plank and the window
+  for (const b of await buttons.all()) {
+    await b.scrollIntoViewIfNeeded();
+    await expect(b).toBeVisible();
+    const box = (await b.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(plankBox.x - 1);
+    expect(box.x + box.width).toBeLessThanOrEqual(Math.min(plankBox.x + plankBox.width, win.width) + 1);
+  }
+  expect(await page.evaluate(() => document.scrollingElement!.scrollLeft)).toBe(0);
   await dutchman.screenshot({ path: `${SHOTS}/${name}-4-dutchman.png` });
+  // the last button, scrolled into sight, works: a Soul goes to the Hull
+  const souls = page.getByTestId('souls-Г');
+  const before = await souls.textContent();
+  await last.click();
+  await expect(souls).not.toHaveText(before!, { timeout: 15_000 });
 
   // The star is a 44×44 tap zone of its own: its corners hit the star, not the ship card.
   const star = page.getByTestId('star-И');
