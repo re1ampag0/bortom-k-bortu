@@ -141,6 +141,22 @@ for (const size of SIZES) {
       expect(Math.abs(rest.group! - rest.gap), '«Последнее» and the hint at the centre of the gap').toBeLessThanOrEqual(TOL);
       await expectHeads(page);
       await expectColumns(page, laptop);
+      if (!laptop) {
+        // a phone: the buttons of a plank in one row; the planks of a row each of its own height, aligned at the top
+        const rows = await page.evaluate(() => ({
+          tops: Array.from(document.querySelectorAll('[data-testid="plank-Г"] .plank-buttons .btn')).map((b) => Math.round(b.getBoundingClientRect().top)),
+          planks: Array.from(document.querySelectorAll('.planks.bottom > .plank')).map((p) => { const r = p.getBoundingClientRect(); return { top: Math.round(r.top), h: Math.round(r.height), buttons: p.querySelectorAll('.plank-buttons .btn').length }; }),
+        }));
+        expect(new Set(rows.tops).size, 'the buttons of «Голландец» in one row').toBe(1);
+        expect(spread(rows.planks.map((p) => p.top)), 'the planks of a row aligned at the top').toBeLessThanOrEqual(1);
+        const heights = rows.planks.map((p) => p.h);
+        expect(heights.length).toBe(2);
+        // no plank is stretched to its neighbour: each is as tall as its own content
+        const natural = await page.evaluate(() =>
+          Array.from(document.querySelectorAll<HTMLElement>('.planks.bottom > .plank')).map((p) => Math.round(Array.from(p.children).reduce((h, c) => h + (c as HTMLElement).getBoundingClientRect().height, 0) + 3)),
+        );
+        heights.forEach((h, i) => expect(Math.abs(h - natural[i]), `plank ${i}: its own height`).toBeLessThanOrEqual(TOL));
+      }
       await shot(page, 'own-turn', size.width);
 
       // The Volley: the panel at the centre of the gap.
