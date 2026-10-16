@@ -153,6 +153,20 @@ for (const size of SIZES) {
           }),
         }));
         expect(new Set(rows.tops).size, 'the buttons of «Голландец» in one row').toBe(1);
+        // every button of every plank of one size (two in sight), its text whole
+        const btns = await page.evaluate(() =>
+          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons .btn')).map((b) => ({ w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, whole: b.scrollWidth <= b.clientWidth + 1 })),
+        );
+        expect(btns.length).toBeGreaterThanOrEqual(6);
+        expect(spread(btns.map((b) => b.w)), 'the buttons of one width').toBeLessThanOrEqual(1);
+        expect(spread(btns.map((b) => b.h)), 'the buttons of one height').toBeLessThanOrEqual(1);
+        expect(btns.every((b) => b.whole), 'no text cut').toBe(true);
+        const sight = await page.evaluate(() => {
+          const row = document.querySelector<HTMLElement>('[data-testid="plank-Г"] .plank-buttons')!;
+          const r = row.getBoundingClientRect();
+          return Array.from(row.querySelectorAll('.btn')).filter((b) => { const x = b.getBoundingClientRect(); return x.left >= r.left - 1 && x.right <= r.right + 1; }).length;
+        });
+        expect(sight, 'two buttons of «Голландец» in sight').toBe(2);
         expect(rows.planks.length).toBe(2);
         expect(spread(rows.planks.map((p) => p.h)), 'the planks of a row of one height').toBeLessThanOrEqual(1);
         const rowBottoms = rows.planks.map((p) => p.rowBottom).filter((b): b is number => b !== null);
