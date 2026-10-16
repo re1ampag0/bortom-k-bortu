@@ -155,18 +155,40 @@ for (const size of SIZES) {
         expect(new Set(rows.tops).size, 'the buttons of «Голландец» in one row').toBe(1);
         // every button of every plank of one size (two in sight), its text whole
         const btns = await page.evaluate(() =>
-          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons .btn')).map((b) => ({ w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, whole: b.scrollWidth <= b.clientWidth + 1 })),
+          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons .btn')).map((b) => ({ w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, whole: ((e) => { const r = document.createRange(); r.selectNodeContents(e); const t = r.getBoundingClientRect(), b = e.getBoundingClientRect(); return t.left >= b.left && t.right <= b.right && t.top >= b.top && t.bottom <= b.bottom; })(b) })),
         );
         expect(btns.length).toBeGreaterThanOrEqual(6);
         expect(spread(btns.map((b) => b.w)), 'the buttons of one width').toBeLessThanOrEqual(1);
         expect(spread(btns.map((b) => b.h)), 'the buttons of one height').toBeLessThanOrEqual(1);
+        expect(Math.abs(btns[0].h - 34), 'seen 34 px high').toBeLessThanOrEqual(TOL);
         expect(btns.every((b) => b.whole), 'no text cut').toBe(true);
         const sight = await page.evaluate(() => {
           const row = document.querySelector<HTMLElement>('[data-testid="plank-Г"] .plank-buttons')!;
           const r = row.getBoundingClientRect();
           return Array.from(row.querySelectorAll('.btn')).filter((b) => { const x = b.getBoundingClientRect(); return x.left >= r.left - 1 && x.right <= r.right + 1; }).length;
         });
-        expect(sight, 'two buttons of «Голландец» in sight').toBe(2);
+        expect(sight, 'three buttons of «Голландец» in sight').toBe(3);
+        // the press zone: 44 px high (21.5 px above and below the centre), and the gap between neighbours presses one
+        // of them — no miss
+        const zones = await page.evaluate(() => {
+          const out: string[] = [];
+          for (const row of Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons'))) {
+            const r = row.getBoundingClientRect();
+            const bs = Array.from(row.querySelectorAll<HTMLElement>('.btn')).filter((b) => { const x = b.getBoundingClientRect(); return x.left >= r.left - 1 && x.right <= r.right + 1; });
+            bs.forEach((b, i) => {
+              const x = b.getBoundingClientRect(), cx = x.left + x.width / 2, cy = x.top + x.height / 2;
+              for (const y of [cy - 21.5, cy + 21.5]) if (document.elementFromPoint(cx, y)?.closest('.btn') !== b) out.push(`${b.textContent} at ${Math.round(y - cy)}`);
+              const next = bs[i + 1];
+              if (next) {
+                const gx = (x.right + next.getBoundingClientRect().left) / 2;
+                const hit = document.elementFromPoint(gx, cy)?.closest('.btn');
+                if (hit !== b && hit !== next) out.push(`the gap after ${b.textContent}`);
+              }
+            });
+          }
+          return out;
+        });
+        expect(zones, 'every button pressed in its 44 px zone, no gap missed').toEqual([]);
         expect(rows.planks.length).toBe(2);
         expect(spread(rows.planks.map((p) => p.h)), 'the planks of a row of one height').toBeLessThanOrEqual(1);
         const rowBottoms = rows.planks.map((p) => p.rowBottom).filter((b): b is number => b !== null);
