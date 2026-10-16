@@ -1,7 +1,7 @@
 // U3: the table is tidy — the tags of the plank head stand centred with the name, the summary of the turn never
 // covers the banner «Ваш ход» nor «Последнее: …», the middle of the table (banners, the summary, the hint, the panels)
-// stands at the centre of the gap between the rows, the badges are a column of one width, the numbers of the tracks
-// one column, «Чёрная метка» stays on the marked plank as a faint blot. Chromium only. Screenshots of the same states
+// stands at the centre of the gap between the rows, the badges are a column at one right edge, the numbers of the
+// tracks one column, «Чёрная метка» stays on the marked plank as a small stamp that covers nothing. Chromium only. Screenshots of the same states
 // as docs/screenshots/u3/before/ go to docs/screenshots/u3/after/ (replaced on every run).
 import { expect, test, type Page } from '@playwright/test';
 
@@ -55,9 +55,8 @@ async function columns(page: Page) {
       const nums = Array.from(p.querySelectorAll('.track-num')).map((e) => e.getBoundingClientRect());
       return {
         ship: p.dataset.ship,
-        widths: badges.map((b) => b.width),
         heights: badges.map((b) => b.height),
-        lefts: badges.map((b) => b.left),
+        badgeRights: badges.map((b) => b.right),
         rights: nums.map((b) => b.right),
       };
     }),
@@ -78,8 +77,7 @@ async function expectColumns(page: Page, laptop: boolean) {
   for (const p of await columns(page)) {
     expect(spread(p.heights), `${p.ship}: the badges of one height`).toBeLessThanOrEqual(1);
     if (!laptop) continue;
-    expect(spread(p.widths), `${p.ship}: the badges of one width`).toBeLessThanOrEqual(1);
-    expect(spread(p.lefts), `${p.ship}: the badges in one column`).toBeLessThanOrEqual(1);
+    expect(spread(p.badgeRights), `${p.ship}: the badges at one right edge`).toBeLessThanOrEqual(1);
     expect(spread(p.rights), `${p.ship}: the numbers of the tracks in one column`).toBeLessThanOrEqual(1);
   }
 }
@@ -168,43 +166,64 @@ for (const size of SIZES) {
       await shot(page, 'turn-ending', size.width);
     });
 
-    test('«Чёрная метка»: the blot stays on the marked plank, faint, behind the readable numbers', async ({ page }) => {
+    test('«Чёрная метка»: a small sharp stamp stays on the marked plank and covers nothing', async ({ page }) => {
       await page.goto('?fxScene=mark&speed=normal');
       await page.waitForFunction(() => !!document.querySelector('.fx-layer .blot'), null, { timeout: 30_000, polling: 20 });
-      // the blot of the clip still flies: the watermark waits hidden, as the chip does
-      expect(await page.evaluate(() => getComputedStyle(document.querySelector('[data-fx-mark-wm]')!).visibility)).toBe('hidden');
+      // the blot of the clip still flies: the stamp waits hidden, as the chip does
+      expect(await page.evaluate(() => Array.from(document.querySelectorAll('[data-fx-mark-stamp]')).map((e) => getComputedStyle(e).visibility))).toEqual(['hidden', 'hidden']);
       await shot(page, 'mark-flight', size.width);
       await page.waitForFunction(() => {
         const c = document.querySelector('[data-fx-mark]');
         return !!c && getComputedStyle(c).visibility !== 'hidden' && !document.querySelector('.fx-layer .blot');
       }, null, { timeout: 30_000, polling: 20 });
       await page.waitForTimeout(700);
-      const wm = await page.evaluate(() => {
-        const el = document.querySelector<HTMLElement>('[data-fx-mark-wm]')!;
+      const st = await page.evaluate(() => {
+        const el = Array.from(document.querySelectorAll<HTMLElement>('[data-fx-mark-stamp]')).find((e) => e.offsetWidth > 0)!;
         const plank = el.closest<HTMLElement>('[data-fx-ship]')!;
+        const svg = el.querySelector('svg')!;
+        const r = el.getBoundingClientRect(), s = svg.getBoundingClientRect();
+        const meet = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+        const parts = Array.from(plank.querySelectorAll('.track-num, .cells i, .bar, .track-label, .badges > *, .plank-buttons .btn, .status-chip, .plank-head'))
+          .filter((e) => (e as HTMLElement).offsetWidth > 0);
+        const nums = Array.from(plank.querySelectorAll('.track-num')).map((e) => e.getBoundingClientRect());
+        const badges = Array.from(plank.querySelectorAll<HTMLElement>('.badges > *')).filter((e) => e.offsetWidth > 0).map((e) => e.getBoundingClientRect());
         const body = plank.querySelector('.plank-body')!.getBoundingClientRect();
-        const b = el.querySelector('svg')!.getBoundingClientRect();
-        // the numbers of the tracks are on top: a press at their centre finds them, not the blot
-        const readable = Array.from(plank.querySelectorAll('.track-num')).every((n) => {
-          const r = n.getBoundingClientRect();
-          return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('.track-num') === n;
-        });
         return {
           ship: plank.dataset.fxShip,
+          inStatuses: !!el.closest('.plank-statuses'),
           visibility: getComputedStyle(el).visibility,
-          opacity: Number(getComputedStyle(el.querySelector('svg')!).opacity),
-          big: b.height / body.height,
-          readable,
+          opacity: Number(getComputedStyle(svg).opacity),
+          rotated: getComputedStyle(svg).transform !== 'none',
+          width: r.width,
+          covers: parts.filter((p) => meet(s, p.getBoundingClientRect())).map((p) => `${p.className}: ${p.textContent}`),
+          numsRight: Math.max(...nums.map((n) => n.right)),
+          badgesLeft: badges.length ? Math.min(...badges.map((b) => b.left)) : null,
+          left: s.left,
+          right: s.right,
+          top: r.top,
+          bodyTop: body.top,
+          plankRight: plank.getBoundingClientRect().right,
           chip: plank.querySelector('[data-fx-mark]')?.textContent ?? '',
         };
       });
-      expect(wm.ship).toBe('М');
-      expect(wm.visibility).toBe('visible');
-      expect(wm.opacity).toBeGreaterThanOrEqual(0.15);
-      expect(wm.opacity).toBeLessThanOrEqual(0.2);
-      expect(wm.big, 'a large blot: most of the height of the body').toBeGreaterThan(0.7);
-      expect(wm.readable).toBe(true);
-      expect(wm.chip).toContain('Чёрная метка +2');
+      expect(st.ship).toBe('М');
+      expect(st.visibility).toBe('visible');
+      expect(st.opacity).toBeGreaterThanOrEqual(0.85);
+      expect(st.opacity).toBeLessThanOrEqual(0.95);
+      expect(st.rotated, 'set at a slant, as a stamp').toBe(true);
+      expect(st.covers, 'the stamp covers no number, scale, badge, button, chip or head').toEqual([]);
+      if (laptop) {
+        expect(st.inStatuses).toBe(false);
+        expect(Math.abs(st.width - 40), 'about 40 px').toBeLessThanOrEqual(TOL);
+        expect(st.left, 'right of the numbers of the tracks').toBeGreaterThanOrEqual(st.numsRight);
+        if (st.badgesLeft !== null) expect(st.right, 'left of the badges').toBeLessThanOrEqual(st.badgesLeft);
+      } else {
+        expect(st.inStatuses, 'on a phone: in the row of statuses').toBe(true);
+        expect(Math.abs(st.width - 28), 'about 28 px').toBeLessThanOrEqual(TOL);
+        expect(st.plankRight - st.right, 'at the right edge of the plank').toBeLessThanOrEqual(12);
+        expect(st.top, 'above the body (the top right corner under the head)').toBeLessThan(st.bodyTop);
+      }
+      expect(st.chip).toContain('Чёрная метка +2');
       await shot(page, 'mark-landed', size.width);
     });
 
