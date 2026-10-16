@@ -35,12 +35,28 @@ export function Button({ b, className = '' }: { b: Btn; className?: string }) {
       {b.short ? (
         <>
           <span className="wide">{b.label}</span>
-          <span className="narrow">{b.short}</span>
+          <span className="narrow">{breakAfterArrow(b.short)}</span>
         </>
       ) : (
-        b.label
+        breakAfterArrow(b.label)
       )}
     </button>
+  );
+}
+
+/**
+ * «Душа→Корп»: a label may go to a second line after «→» (<wbr>) — on a phone the buttons of a plank are a third of the
+ * row; where the text does not wrap (white-space: nowrap) the break is ignored.
+ */
+function breakAfterArrow(text: string): ReactNode {
+  const i = text.indexOf('→');
+  if (i < 0 || i === text.length - 1) return text;
+  return (
+    <>
+      {text.slice(0, i + 1)}
+      <wbr />
+      {text.slice(i + 1)}
+    </>
   );
 }
 
