@@ -13,13 +13,14 @@ const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const noop = () => {};
 const s = turnOf('ПИРАТЫ');
 
-function plank(code: string, plate: Plate | null = null): string {
+function plank(code: string, plate: Plate | null = null, state = s, fxHidden?: string[]): string {
   return renderToStaticMarkup(
     createElement(Plank, {
-      s,
+      s: state,
+      fxHidden,
       data,
-      ship: s.ships[code],
-      own: s.ships[code].side === 'ПИРАТЫ',
+      ship: state.ships[code],
+      own: state.ships[code].side === 'ПИРАТЫ',
       selected: false,
       awaiting: false,
       targeted: false,
@@ -88,5 +89,28 @@ describe('data-fx-* DOM contract', () => {
     const html = renderToStaticMarkup(createElement(StatusBar, { s, data, instruction: 'x', waiting: false, onSea: noop, extra: null }));
     expect(html).toContain('data-fx-instruction');
     if (s.sea?.current) expect(html).toContain('data-fx-sea-chip');
+  });
+});
+
+describe('«Чёрная метка» on the plank (U3)', () => {
+  const marked = structuredClone(s);
+  marked.turn.marks = { И: 2 };
+  it('the marked ship has the large faint blot behind its body, with the chip «Чёрная метка +2» kept', () => {
+    const html = plank('И', null, marked);
+    expect(count(html, /data-fx-mark-wm/g)).toBe(1);
+    expect(html).toMatch(/<div class="plank-body"><div class="mark-wm" data-fx-mark-wm="true"[^>]*><svg/);
+    expect(html).toContain('data-fx-mark="true"');
+    expect(html).toContain('Чёрная метка +2');
+  });
+  it('waits hidden while the clip of the mark has not played, as the chip does', () => {
+    const html = plank('И', null, marked, ['mark']);
+    expect(html).toMatch(/class="mark-wm" data-fx-mark-wm="true" aria-hidden="true" style="visibility:hidden"/);
+  });
+  it('no mark — no blot; a sunk ship has none either', () => {
+    expect(plank('И')).not.toContain('data-fx-mark-wm');
+    expect(plank('Г', null, marked)).not.toContain('data-fx-mark-wm');
+    const sunk = structuredClone(marked);
+    sunk.ships['И'].sunk = true;
+    expect(plank('И', null, sunk)).not.toContain('data-fx-mark-wm');
   });
 });

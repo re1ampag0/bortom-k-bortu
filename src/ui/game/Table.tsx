@@ -166,6 +166,18 @@ const MARK_SVG = (
   </svg>
 );
 
+/**
+ * «Чёрная метка» on the plank of the marked ship (U3): the same blot, large and faint, behind the tracks and the text
+ * until the end of the turn. It appears when the blot of the clip lands (statusFx) and goes with the status.
+ */
+const MARK_WATERMARK = (
+  <svg viewBox="0 0 30 26" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+    <path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612" />
+    <circle cx="27" cy="22" r="2" fill="#1a1612" />
+    <circle cx="4" cy="5" r="1.4" fill="#1a1612" />
+  </svg>
+);
+
 /** Statuses of a ship with the moment they end (docs/TZ.md, «Принципы стола», п. 2). */
 export function statuses(s: GameState, data: GameData, ship: ShipState): Status[] {
   const out: Status[] = [];
@@ -378,6 +390,11 @@ export function Plank({
         </div>
       )}
       <div className="plank-body">
+        {st.some((x) => x.mark) && (
+          <div className="mark-wm" data-fx-mark-wm aria-hidden style={fxHidden?.includes('mark') ? { visibility: 'hidden' } : undefined}>
+            {MARK_WATERMARK}
+          </div>
+        )}
         <div className="tracks" key={fxGen}>
           {TRACKS.map((t) => {
             const max = startValue(data, ship.code, t);
