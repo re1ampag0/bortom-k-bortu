@@ -1864,22 +1864,32 @@ button.star::before {
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 6px;
   }
   .plank-buttons::-webkit-scrollbar {
     display: none;
   }
+  /* the fade and the arrow are narrow, at the very edge: the text of the second button stays clear */
   .plank-buttons-wrap[data-more] .plank-buttons {
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
   }
   .plank-buttons-wrap[data-more] .buttons-more {
     display: flex;
+    right: 0;
+    width: 22px;
+    height: 22px;
+    font-size: 1rem;
   }
+  /* every button of every plank is of one size: half of the row (two in sight), 44 px high; more — by scrolling */
   .plank-buttons .btn {
-    flex: 1 0 auto;
+    flex: 0 0 calc((100% - 6px) / 2);
+    min-width: 0;
     min-height: 44px;
-    padding: 4px 6px;
+    padding: 4px 4px;
     font-size: 0.9rem;
+    scroll-snap-align: start;
   }
   .aim-tip {
     position: absolute;

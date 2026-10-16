@@ -471,7 +471,7 @@ export function Plank({
             tabIndex={-1}
             onClick={() => {
               const row = buttonsRef.current;
-              if (row) row.scrollBy({ left: Math.max(40, row.clientWidth - 40), behavior: reducedMotion() ? 'auto' : 'smooth' });
+              if (row) row.scrollBy({ left: row.clientWidth, behavior: reducedMotion() ? 'auto' : 'smooth' });
             }}
           >
             ›
