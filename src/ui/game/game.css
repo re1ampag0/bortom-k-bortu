@@ -2116,11 +2116,12 @@ button.star::before {
   }
 }
 
-/* ——— Banners: the sea card, «Ваш ход» ——— */
-.banner {
-  position: fixed;
+/* ——— Banners without the animation layer (Banners.tsx): the sea card, «Ваш ход» — at the centre of the gap between
+   the rows. «.banner» is the banner of the layer (fx.css, placed by the clips at the gap). ——— */
+.table-banner {
+  position: absolute;
   left: 50%;
-  top: 38%;
+  top: 50%;
   transform: translate(-50%, -50%);
   z-index: 16;
   pointer-events: none;
@@ -2133,32 +2134,33 @@ button.star::before {
   background: rgba(42, 36, 29, 0.92);
   color: #fffaf0;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  width: max-content;
   max-width: min(92vw, 520px);
   animation: banner-in 0.3s ease-out;
 }
-.banner.sea {
+.table-banner.sea {
   background: rgba(36, 70, 92, 0.95);
 }
-.banner.turn.mine {
+.table-banner.turn.mine {
   background: rgba(46, 94, 58, 0.95);
 }
-.banner-kicker {
+.table-banner-kicker {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   font-size: 0.8rem;
   opacity: 0.75;
 }
-.banner-title {
+.table-banner-title {
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 2rem;
   line-height: 1.1;
 }
-.banner-text {
+.table-banner-text {
   font-size: 1.05rem;
   font-weight: 600;
 }
-.banner-when {
+.table-banner-when {
   font-size: 0.9rem;
   opacity: 0.8;
 }
@@ -2169,9 +2171,19 @@ button.star::before {
   }
 }
 @media (max-width: 700px) {
-  .banner-title {
+  .table-banner-title {
     font-size: 1.6rem;
   }
+}
+/* The banners of the animation layer have had this look of the table since A2 (game.css comes after fx.css); kept as it
+   was, with the specificity of a single class, so «.banner.own», «.banner.small» of fx.css still win. Their place is
+   the clips' (left/top in the layer), not a fixed one. */
+:where(.fx-layer) .banner {
+  padding: 14px 28px;
+  border-radius: 16px;
+  background: rgba(42, 36, 29, 0.92);
+  color: #fffaf0;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
 /* A Legend became available: one soft flash (with «Подсказки» only; docs/TZ.md, «Принципы стола», п. 9). */

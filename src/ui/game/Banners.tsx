@@ -103,17 +103,17 @@ export function BannerView({ data, banner }: { data: GameData; banner: Shown | n
   if (banner.k === 'sea') {
     const sea = seaCardByCode(data, banner.card);
     return (
-      <div className="banner sea" data-testid="sea-banner" key={banner.id} role="status">
-        <span className="banner-kicker">Море</span>
-        <b className="banner-title">{sea.name}</b>
-        <span className="banner-text">{sea.big}</span>
-        {sea.when && <span className="banner-when">{sea.when}</span>}
+      <div className="table-banner sea" data-testid="sea-banner" key={banner.id} role="status">
+        <span className="table-banner-kicker">Море</span>
+        <b className="table-banner-title">{sea.name}</b>
+        <span className="table-banner-text">{sea.big}</span>
+        {sea.when && <span className="table-banner-when">{sea.when}</span>}
       </div>
     );
   }
   return (
-    <div className={`banner turn ${banner.mine ? 'mine' : ''}`} data-testid="turn-banner" key={banner.id} role="status">
-      <b className="banner-title">{banner.text}</b>
+    <div className={`table-banner turn ${banner.mine ? 'mine' : ''}`} data-testid="turn-banner" key={banner.id} role="status">
+      <b className="table-banner-title">{banner.text}</b>
     </div>
   );
 }
