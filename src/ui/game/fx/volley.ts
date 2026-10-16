@@ -80,7 +80,8 @@ function placePlate(ctx: FxCtx, shooter: string, target: string): PlateBox {
   const g = gapBox(ctx), W = ctx.board.clientWidth;
   const s = bx(ctx, plank(ctx, shooter)), t = bx(ctx, plank(ctx, target));
   const lo = Math.min(s.cx, t.cx), hi = Math.max(s.cx, t.cx);
-  const pw = W < 701 ? 176 : 212;
+  // game: wider than the reference (176 / 212) — the breakdown is set larger to be read at a glance.
+  const pw = W < 701 ? 204 : 262;
   const x = W - hi > lo ? W - pw - 12 : 12;
   return { x, y: g.y + 4, w: pw };
 }
