@@ -142,20 +142,23 @@ for (const size of SIZES) {
       await expectHeads(page);
       await expectColumns(page, laptop);
       if (!laptop) {
-        // a phone: the buttons of a plank in one row; the planks of a row each of its own height, aligned at the top
+        // a phone: the buttons of a plank in one row; the planks of a row of one height, their rows of buttons at the
+        // bottom, on one line
         const rows = await page.evaluate(() => ({
           tops: Array.from(document.querySelectorAll('[data-testid="plank-Г"] .plank-buttons .btn')).map((b) => Math.round(b.getBoundingClientRect().top)),
-          planks: Array.from(document.querySelectorAll('.planks.bottom > .plank')).map((p) => { const r = p.getBoundingClientRect(); return { top: Math.round(r.top), h: Math.round(r.height), buttons: p.querySelectorAll('.plank-buttons .btn').length }; }),
+          planks: Array.from(document.querySelectorAll('.planks.bottom > .plank')).map((p) => {
+            const r = p.getBoundingClientRect();
+            const row = p.querySelector('.plank-buttons')?.getBoundingClientRect();
+            return { h: r.height, bottom: r.bottom, rowBottom: row ? row.bottom : null };
+          }),
         }));
         expect(new Set(rows.tops).size, 'the buttons of «Голландец» in one row').toBe(1);
-        expect(spread(rows.planks.map((p) => p.top)), 'the planks of a row aligned at the top').toBeLessThanOrEqual(1);
-        const heights = rows.planks.map((p) => p.h);
-        expect(heights.length).toBe(2);
-        // no plank is stretched to its neighbour: each is as tall as its own content
-        const natural = await page.evaluate(() =>
-          Array.from(document.querySelectorAll<HTMLElement>('.planks.bottom > .plank')).map((p) => Math.round(Array.from(p.children).reduce((h, c) => h + (c as HTMLElement).getBoundingClientRect().height, 0) + 3)),
-        );
-        heights.forEach((h, i) => expect(Math.abs(h - natural[i]), `plank ${i}: its own height`).toBeLessThanOrEqual(TOL));
+        expect(rows.planks.length).toBe(2);
+        expect(spread(rows.planks.map((p) => p.h)), 'the planks of a row of one height').toBeLessThanOrEqual(1);
+        const rowBottoms = rows.planks.map((p) => p.rowBottom).filter((b): b is number => b !== null);
+        expect(rowBottoms.length, 'both ships have buttons').toBe(2);
+        expect(spread(rowBottoms), 'the rows of buttons on one line').toBeLessThanOrEqual(1);
+        rows.planks.forEach((p, i) => expect(p.bottom - p.rowBottom!, `plank ${i}: the buttons at its bottom`).toBeLessThanOrEqual(10));
       }
       await shot(page, 'own-turn', size.width);
 
