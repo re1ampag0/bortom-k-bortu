@@ -1858,8 +1858,9 @@ button.star::before {
      while there is more (data-more, Table.tsx); the scroll does not move the table. A button never shrinks below its
      text; a short row still fills the plank. */
   .plank-buttons {
-    padding: 2px 6px 6px;
-    gap: 6px;
+    /* 5 px above and below: the press zone of a button (44 px, ::before) stays inside the row, which clips */
+    padding: 5px 6px;
+    gap: 4px;
     flex-wrap: nowrap;
     overflow-x: auto;
     overscroll-behavior-x: contain;
@@ -1877,19 +1878,39 @@ button.star::before {
   }
   .plank-buttons-wrap[data-more] .buttons-more {
     display: flex;
-    right: 0;
-    width: 22px;
-    height: 22px;
-    font-size: 1rem;
+    /* small, over the padding of the row: it does not cover the text of the last button in sight */
+    right: -1px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    padding: 0 0 1px;
+    font-size: 0.85rem;
+    border-width: 1px;
   }
-  /* every button of every plank is of one size: half of the row (two in sight), 44 px high; more — by scrolling */
+  /* every button of every plank is of one size: a third of the row (three in sight), 34 px high, 13 px text; more — by
+     scrolling. The press zone is 44 px high (::before, 5 px above and below) and reaches half the gap to each side, so
+     neighbours are pressed without a miss. */
   .plank-buttons .btn {
-    flex: 0 0 calc((100% - 6px) / 2);
+    position: relative;
+    flex: 0 0 calc((100% - 8px) / 3);
     min-width: 0;
-    min-height: 44px;
-    padding: 4px 4px;
-    font-size: 0.9rem;
+    height: 34px;
+    min-height: 0;
+    padding: 0 2px;
+    font-size: 13px;
+    line-height: 1.1;
+    /* «Душа→Корп» goes to a second line after «→» (Button in Table.tsx) */
+    white-space: normal;
+    border-radius: 7px;
     scroll-snap-align: start;
+  }
+  .plank-buttons .btn::before {
+    content: '';
+    position: absolute;
+    top: -6.5px;
+    bottom: -6.5px;
+    left: -3.5px;
+    right: -3.5px;
   }
   .aim-tip {
     position: absolute;
