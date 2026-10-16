@@ -1743,8 +1743,11 @@ button.star::before {
   }
   .planks {
     gap: 8px;
-    /* each plank of its own height, the row aligned at the top (U3) */
-    align-items: start;
+  }
+  /* The planks of a row are of one height; the body takes the room left, so the rows of buttons stand at the bottom,
+     on one line for both ships (U3). */
+  .plank > .plank-buttons-wrap {
+    margin-top: auto;
   }
   .plank-head {
     padding: 3px 8px;
