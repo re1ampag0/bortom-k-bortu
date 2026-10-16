@@ -980,11 +980,11 @@ export function Game({
       <StatusBar s={fx.display ? withDisplay(s, fx.display) : s} data={data} instruction={fx.hint ?? flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}
-      <BannerView data={data} banner={banner} />
       <main className="board">
         <TeamRow side={top} s={tableView} data={data} hands={handsOf(top)} regroup={null} hint={null} fxGen={fx.gen} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
         <div className="middle" data-fx-gap>
+          <BannerView data={data} banner={banner} />
           {toast && (
             <div className="toast" data-testid="turn-summary">
               {toast}{' '}
