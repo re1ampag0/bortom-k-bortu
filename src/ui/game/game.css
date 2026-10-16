@@ -700,6 +700,42 @@ button.star::before {
   min-height: 36px;
   padding: 4px 12px;
 }
+/* The buttons of a plank: on a phone a row that scrolls with the arrow «›» at its right edge (U3); on a laptop the
+   arrow is never there. */
+.plank-buttons-wrap {
+  position: relative;
+}
+.buttons-more {
+  display: none;
+  position: absolute;
+  right: 4px;
+  top: calc(50% - 4px);
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 2px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(42, 36, 29, 0.2);
+}
+.buttons-more::after {
+  /* a 44 × 44 press zone without a bigger circle */
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
 /* Aiming: the whole plank is the button (P2, as in docs/mockups/anim/level1/style.css). */
 .plank.aimable {
   cursor: crosshair;
@@ -1707,6 +1743,8 @@ button.star::before {
   }
   .planks {
     gap: 8px;
+    /* each plank of its own height, the row aligned at the top (U3) */
+    align-items: start;
   }
   .plank-head {
     padding: 3px 8px;
@@ -1813,13 +1851,29 @@ button.star::before {
   .badge.legend {
     display: none;
   }
+  /* The buttons of a plank: one row that scrolls sideways with a finger (U3) — no scrollbar, the right edge fades
+     while there is more (data-more, Table.tsx); the scroll does not move the table. A button never shrinks below its
+     text; a short row still fills the plank. */
   .plank-buttons {
     padding: 2px 6px 6px;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .plank-buttons::-webkit-scrollbar {
+    display: none;
+  }
+  .plank-buttons-wrap[data-more] .plank-buttons {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent);
+  }
+  .plank-buttons-wrap[data-more] .buttons-more {
+    display: flex;
   }
   .plank-buttons .btn {
-    flex: 1 1 auto;
+    flex: 1 0 auto;
     min-height: 44px;
     padding: 4px 6px;
     font-size: 0.9rem;
