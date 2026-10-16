@@ -6,6 +6,7 @@ import { cardsWord } from '../../engine/log';
 import { deckCards } from '../../engine/data';
 import { InfoTip } from './InfoTip';
 import { SIDE_LABEL } from './text';
+import { reducedMotion } from '../start/motion';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const TRACK_LABEL: Record<Track, string> = { hull: 'Корпус', sails: 'Паруса', guns: 'Пушки', crew: 'Команда' };
@@ -256,6 +257,7 @@ export function Plank({
   fxHidden?: readonly string[];
 }) {
   const d = shipData(data, ship.code);
+  const buttonsRef = useMoreRight<HTMLDivElement>();
   const st = statuses(s, data, ship);
   const marked = st.some((x) => x.mark);
   const markHidden = !!fxHidden?.includes('mark');
@@ -456,14 +458,50 @@ export function Plank({
         </div>
       </div>
       {buttons.length > 0 && (
-        <div className="plank-buttons" onClick={(e) => e.stopPropagation()}>
-          {buttons.map((b) => (
-            <Button key={b.key} b={b} />
-          ))}
+        <div className="plank-buttons-wrap" onClick={(e) => e.stopPropagation()}>
+          <div className="plank-buttons" ref={buttonsRef}>
+            {buttons.map((b) => (
+              <Button key={b.key} b={b} />
+            ))}
+          </div>
+          {/* On a phone, while more buttons are to the right: a press scrolls the row (U3). */}
+          <button
+            className="buttons-more"
+            aria-label="Ещё кнопки"
+            tabIndex={-1}
+            onClick={() => {
+              const row = buttonsRef.current;
+              if (row) row.scrollBy({ left: Math.max(40, row.clientWidth - 40), behavior: reducedMotion() ? 'auto' : 'smooth' });
+            }}
+          >
+            ›
+          </button>
         </div>
       )}
     </section>
   );
+}
+
+/**
+ * A row that scrolls sideways (the buttons of a plank on a phone, U3): «data-more» on its wrapper while there is more
+ * of it to the right — the right edge fades and the arrow «›» shows then.
+ */
+function useMoreRight<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // on the wrapper of the row: the fade and the arrow «›» stand there; the last 8 px are the padding of the row
+    const check = () => el.parentElement?.toggleAttribute('data-more', el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    check();
+    el.addEventListener('scroll', check, { passive: true });
+    addEventListener('resize', check);
+    return () => {
+      el.removeEventListener('scroll', check);
+      removeEventListener('resize', check);
+    };
+  });
+  return ref;
 }
 
 /** One flash when the Legend became available (not on the first render, not again until it was unavailable). */
