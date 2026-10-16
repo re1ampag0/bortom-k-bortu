@@ -530,6 +530,28 @@ button.star::before {
   align-items: center;
   gap: 4px;
 }
+/* «Чёрная метка» on the plank (U3): a large faint blot behind the tracks and the text of the body, till the end of the
+   turn; the numbers stay readable over it. The body is its own stacking context, so z-index −1 is still above the
+   plank's background. */
+.plank-body {
+  position: relative;
+  isolation: isolate;
+}
+.mark-wm {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.mark-wm svg {
+  height: 92%;
+  width: auto;
+  max-width: 100%;
+  opacity: 0.17;
+}
 /* «Чёрная метка»: the blot of the reference (board.js, style.css) — the cannonballs «в метку» hit it. */
 .status-chip.mark {
   border-style: solid;

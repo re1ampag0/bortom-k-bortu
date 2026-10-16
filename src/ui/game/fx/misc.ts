@@ -381,6 +381,9 @@ export function statusFx(ctx: FxCtx, e: StatusEv, t0: number, from?: Pt): number
     ring(ctx, spot.x, spot.y, land, 0.6, '#1a1612');
   }
   if (chip) at(ctx, land, () => { chip.style.visibility = ''; A(ctx, chip, [{ transform: 'scale(1.6)', boxShadow: '0 0 0 3px rgba(139,107,181,.5)' }, { transform: 'scale(1)', boxShadow: 'none' }], 380, 0, 'cubic-bezier(.3,1.6,.5,1)', 'none'); });
+  // game (U3): «Чёрная метка» stays on the plank as a large faint blot (Table.tsx, .mark-wm), shown when the blot lands.
+  const wm = e.flag === 'mark' ? el.querySelector<HTMLElement>('[data-fx-mark-wm]') : null;
+  if (wm) at(ctx, land, () => { wm.style.visibility = ''; A(ctx, wm, [{ opacity: 0, transform: 'scale(1.35)' }, { opacity: 1, transform: 'scale(1)' }], 420, 0, 'cubic-bezier(.3,1.4,.5,1)', 'none'); });
   tag(ctx, cb.cx, out, e.flag === 'mark' ? `${label} до конца хода` : label, land, 'plus', 1700);
   return land + 1100;
 }
