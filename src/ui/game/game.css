@@ -454,11 +454,32 @@ button {
 }
 .plank-role {
   margin-left: auto;
+  align-self: center;
   display: flex;
   gap: 6px;
   align-items: center;
 }
-.tag {
+/* «ВЫБРАН», the role by network, «✓ готов» in the head of a plank: a class of their own — «.tag» is the label of the
+   animation layer (fx.css, translate(-50%, -50%)). */
+.head-tag {
+  background: #fff;
+  color: var(--ink);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.35;
+  padding: 1px 6px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+/* «✓ готов»: the player pressed «Ход окончен» (green — ready). */
+.head-tag.ready {
+  background: var(--green);
+  color: #fff;
+}
+/* The labels of the animation layer have had this look of the table since A2 (game.css comes after fx.css); kept as it
+   was, with the specificity of a single class, so «.tag.plus», «.tag.good» of fx.css still win. */
+:where(.fx-layer) .tag {
   background: #fff;
   color: var(--ink);
   border-radius: 4px;
@@ -466,11 +487,6 @@ button {
   font-weight: 800;
   padding: 1px 6px;
   letter-spacing: 0.05em;
-}
-/* «✓ готов»: the player pressed «Ход окончен» (green — ready). */
-.tag.ready {
-  background: var(--green);
-  color: #fff;
 }
 .star {
   color: #f3cd55;
@@ -514,6 +530,27 @@ button.star::before {
   align-items: center;
   gap: 4px;
 }
+/* «Чёрная метка» on the plank (U3): a small sharp blot set like a stamp — on a laptop in the free field between the
+   numbers of the tracks and the badges (the middle column of .plank-body), on a phone at the right end of the row of
+   statuses (the corner of the Hull's number is taken). It covers nothing. */
+.mark-stamp {
+  pointer-events: none;
+  flex: none;
+}
+.mark-stamp svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0.9;
+  transform: rotate(-12deg);
+}
+.plank-body > .mark-stamp {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  width: min(40px, 100%);
+}
 /* «Чёрная метка»: the blot of the reference (board.js, style.css) — the cannonballs «в метку» hit it. */
 .status-chip.mark {
   border-style: solid;
@@ -523,6 +560,8 @@ button.star::before {
   font-weight: 700;
 }
 .plank-body {
+  /* The height of a row of the tracks; the badges on the right keep its step. */
+  --track-row: 18px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
@@ -540,6 +579,47 @@ button.star::before {
   gap: 6px;
   font-size: 0.9rem;
   line-height: 1.25;
+}
+/* Laptop (U3): the tracks are a compact block — the cells of all four in one column, the numbers in one column right
+   after the longest scale; the badges are a column of one width on the right, one badge per row of the tracks. */
+@media (min-width: 701px) {
+  .plank-body {
+    /* the tracks, the free field (the stamp of «Чёрная метка»), the badges */
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr) 10.5rem;
+  }
+  .plank-body > .tracks {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .plank-body > .badges {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .tracks {
+    justify-self: start;
+    min-width: 0;
+    grid-template-columns: max-content minmax(0, max-content) max-content;
+    grid-auto-rows: var(--track-row);
+    align-content: start;
+    column-gap: 6px;
+  }
+  .track {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  .plank-body .badges {
+    align-items: flex-end;
+    gap: 2px;
+  }
+  /* as wide as the text, one height, all at one right edge; a longer Legend is cut with «…» */
+  .plank-body .badges > .badge {
+    display: block;
+    max-width: 100%;
+    height: calc(var(--track-row) - 1px);
+    line-height: calc(var(--track-row) - 3px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 .cells {
   display: flex;
@@ -562,6 +642,7 @@ button.star::before {
 }
 .track-num {
   text-align: right;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 .track-num.low {
   color: var(--red);
@@ -618,6 +699,42 @@ button.star::before {
 .plank-buttons .btn {
   min-height: 36px;
   padding: 4px 12px;
+}
+/* The buttons of a plank: on a phone a row that scrolls with the arrow «›» at its right edge (U3); on a laptop the
+   arrow is never there. */
+.plank-buttons-wrap {
+  position: relative;
+}
+.buttons-more {
+  display: none;
+  position: absolute;
+  right: 4px;
+  top: calc(50% - 4px);
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 2px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(42, 36, 29, 0.2);
+}
+.buttons-more::after {
+  /* a 44 × 44 press zone without a bigger circle */
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
 }
 /* Aiming: the whole plank is the button (P2, as in docs/mockups/anim/level1/style.css). */
 .plank.aimable {
@@ -730,11 +847,16 @@ button.star::before {
   transform: translate(-50%, -50%);
 }
 
+/* The middle of the table: the summary of the turn above «Последнее: …» and the hint, as one group at the centre of
+   the gap; the panels (.dock) and the banners stand over it, at the same centre. */
 .middle {
   position: relative;
   min-height: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 .dock {
   position: absolute;
@@ -747,26 +869,28 @@ button.star::before {
 .game.has-dock .middle::before {
   content: '';
 }
+/* The summary of the start of the turn: a note in the colours of the table; «Подробнее» is a button. */
 .toast {
-  position: absolute;
-  top: 4px;
-  pointer-events: none;
-  background: var(--ink);
-  color: #fff;
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-weight: 600;
+  position: relative;
   z-index: 6;
+  pointer-events: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  max-width: min(100%, 640px);
+  background: var(--panel);
+  color: var(--ink);
+  border: 1.5px solid var(--gold);
+  border-radius: 10px;
+  padding: 3px 4px 3px 14px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(42, 36, 29, 0.12);
 }
-.toast .toast-more {
+.toast .btn {
   pointer-events: auto;
-  background: none;
-  border: 0;
-  color: #fff;
-  font: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 0 2px;
 }
 
 .panel {
@@ -1289,6 +1413,11 @@ button.star::before {
   font-size: 0.72rem;
   line-height: 1.2;
   overflow: hidden;
+  /* the rest of the card's height; Hand.tsx sets how many whole lines fit in it (line-clamp, «…» at the end) */
+  flex: 1 1 0;
+  min-height: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
 }
 .hand-actions {
   display: flex;
@@ -1508,6 +1637,12 @@ button.star::before {
     font-size: 0.85rem;
     line-height: 1.15;
   }
+  .plank-body {
+    --track-row: 16px;
+  }
+  .plank-body .badges > .badge {
+    font-size: 0.78rem;
+  }
   .plank-head {
     padding: 3px 12px;
   }
@@ -1609,6 +1744,11 @@ button.star::before {
   .planks {
     gap: 8px;
   }
+  /* The planks of a row are of one height; the body takes the room left, so the rows of buttons stand at the bottom,
+     on one line for both ships (U3). */
+  .plank > .plank-buttons-wrap {
+    margin-top: auto;
+  }
   .plank-head {
     padding: 3px 8px;
     font-size: 0.95rem;
@@ -1624,11 +1764,18 @@ button.star::before {
   .plank.selected .hand-count {
     display: none;
   }
-  .plank-head .tag {
+  .plank-head .head-tag {
     font-size: 0.62rem;
   }
   .plank-statuses {
     padding: 2px 6px 0;
+  }
+  .plank-statuses > .mark-stamp.narrow {
+    display: block;
+    width: 28px;
+    /* the slant makes it ~3 px taller than its box: it stays off the head */
+    margin: 3px 0 3px auto;
+    align-self: center;
   }
   .status-chip {
     font-size: 0.72rem;
@@ -1701,20 +1848,69 @@ button.star::before {
   .badge {
     font-size: 0.72rem;
     padding: 0 5px;
+    height: 18px;
+    line-height: 16px;
   }
   .badge.legend {
     display: none;
   }
+  /* The buttons of a plank: one row that scrolls sideways with a finger (U3) — no scrollbar, the right edge fades
+     while there is more (data-more, Table.tsx); the scroll does not move the table. A button never shrinks below its
+     text; a short row still fills the plank. */
   .plank-buttons {
-    padding: 2px 6px 6px;
-    gap: 6px;
-    flex-wrap: wrap;
+    /* 5 px above and below: the press zone of a button (44 px, ::before) stays inside the row, which clips */
+    padding: 5px 6px;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 6px;
   }
+  .plank-buttons::-webkit-scrollbar {
+    display: none;
+  }
+  /* the fade and the arrow are narrow, at the very edge: the text of the second button stays clear */
+  .plank-buttons-wrap[data-more] .plank-buttons {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
+  }
+  .plank-buttons-wrap[data-more] .buttons-more {
+    display: flex;
+    /* small, over the padding of the row: it does not cover the text of the last button in sight */
+    right: -1px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    padding: 0 0 1px;
+    font-size: 0.85rem;
+    border-width: 1px;
+  }
+  /* every button of every plank is of one size: a third of the row (three in sight), 34 px high, 13 px text; more — by
+     scrolling. The press zone is 44 px high (::before, 5 px above and below) and reaches half the gap to each side, so
+     neighbours are pressed without a miss. */
   .plank-buttons .btn {
-    flex: 1 1 auto;
-    min-height: 44px;
-    padding: 4px 6px;
-    font-size: 0.9rem;
+    position: relative;
+    flex: 0 0 calc((100% - 8px) / 3);
+    min-width: 0;
+    height: 34px;
+    min-height: 0;
+    padding: 0 2px;
+    font-size: 13px;
+    line-height: 1.1;
+    /* «Душа→Корп» goes to a second line after «→» (Button in Table.tsx) */
+    white-space: normal;
+    border-radius: 7px;
+    scroll-snap-align: start;
+  }
+  .plank-buttons .btn::before {
+    content: '';
+    position: absolute;
+    top: -6.5px;
+    bottom: -6.5px;
+    left: -3.5px;
+    right: -3.5px;
   }
   .aim-tip {
     position: absolute;
@@ -1770,9 +1966,8 @@ button.star::before {
   }
   .hcard-text {
     font-size: 0.62rem;
-    display: -webkit-box;
+    flex: none;
     -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
   }
   .hcard.chosen {
     transform: translateY(-6px);
@@ -2100,11 +2295,12 @@ button.star::before {
   }
 }
 
-/* ——— Banners: the sea card, «Ваш ход» ——— */
-.banner {
-  position: fixed;
+/* ——— Banners without the animation layer (Banners.tsx): the sea card, «Ваш ход» — at the centre of the gap between
+   the rows. «.banner» is the banner of the layer (fx.css, placed by the clips at the gap). ——— */
+.table-banner {
+  position: absolute;
   left: 50%;
-  top: 38%;
+  top: 50%;
   transform: translate(-50%, -50%);
   z-index: 16;
   pointer-events: none;
@@ -2117,32 +2313,33 @@ button.star::before {
   background: rgba(42, 36, 29, 0.92);
   color: #fffaf0;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  width: max-content;
   max-width: min(92vw, 520px);
   animation: banner-in 0.3s ease-out;
 }
-.banner.sea {
+.table-banner.sea {
   background: rgba(36, 70, 92, 0.95);
 }
-.banner.turn.mine {
+.table-banner.turn.mine {
   background: rgba(46, 94, 58, 0.95);
 }
-.banner-kicker {
+.table-banner-kicker {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   font-size: 0.8rem;
   opacity: 0.75;
 }
-.banner-title {
+.table-banner-title {
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 2rem;
   line-height: 1.1;
 }
-.banner-text {
+.table-banner-text {
   font-size: 1.05rem;
   font-weight: 600;
 }
-.banner-when {
+.table-banner-when {
   font-size: 0.9rem;
   opacity: 0.8;
 }
@@ -2153,9 +2350,19 @@ button.star::before {
   }
 }
 @media (max-width: 700px) {
-  .banner-title {
+  .table-banner-title {
     font-size: 1.6rem;
   }
+}
+/* The banners of the animation layer have had this look of the table since A2 (game.css comes after fx.css); kept as it
+   was, with the specificity of a single class, so «.banner.own», «.banner.small» of fx.css still win. Their place is
+   the clips' (left/top in the layer), not a fixed one. */
+:where(.fx-layer) .banner {
+  padding: 14px 28px;
+  border-radius: 16px;
+  background: rgba(42, 36, 29, 0.92);
+  color: #fffaf0;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
 /* A Legend became available: one soft flash (with «Подсказки» only; docs/TZ.md, «Принципы стола», п. 9). */
