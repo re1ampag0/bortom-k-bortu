@@ -539,6 +539,8 @@ button.star::before {
   font-weight: 700;
 }
 .plank-body {
+  /* The height of a row of the tracks; the badges on the right keep its step. */
+  --track-row: 18px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
@@ -556,6 +558,37 @@ button.star::before {
   gap: 6px;
   font-size: 0.9rem;
   line-height: 1.25;
+}
+/* Laptop (U3): the tracks are a compact block — the cells of all four in one column, the numbers in one column right
+   after the longest scale; the badges are a column of one width on the right, one badge per row of the tracks. */
+@media (min-width: 701px) {
+  .plank-body {
+    grid-template-columns: minmax(0, 1fr) 10.5rem;
+  }
+  .tracks {
+    justify-self: start;
+    min-width: 0;
+    grid-template-columns: max-content minmax(0, max-content) max-content;
+    grid-auto-rows: var(--track-row);
+    align-content: start;
+    column-gap: 6px;
+  }
+  .track {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  .plank-body .badges {
+    align-items: stretch;
+    gap: 2px;
+  }
+  .plank-body .badges > .badge {
+    display: block;
+    height: calc(var(--track-row) - 1px);
+    line-height: calc(var(--track-row) - 3px);
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 .cells {
   display: flex;
@@ -578,6 +611,7 @@ button.star::before {
 }
 .track-num {
   text-align: right;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 .track-num.low {
   color: var(--red);
@@ -1531,6 +1565,12 @@ button.star::before {
     font-size: 0.85rem;
     line-height: 1.15;
   }
+  .plank-body {
+    --track-row: 16px;
+  }
+  .plank-body .badges > .badge {
+    font-size: 0.78rem;
+  }
   .plank-head {
     padding: 3px 12px;
   }
@@ -1724,6 +1764,8 @@ button.star::before {
   .badge {
     font-size: 0.72rem;
     padding: 0 5px;
+    height: 18px;
+    line-height: 16px;
   }
   .badge.legend {
     display: none;

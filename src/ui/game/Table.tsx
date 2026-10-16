@@ -424,7 +424,7 @@ export function Plank({
               title={
                 ship.legend
                   ? `Легенда «${legendName}»: ${affordable ? 'нажмите, чтобы прочитать' : 'не хватает Пороха или Душ'}`
-                  : 'Легенда сыграна'
+                  : `Легенда «${legendName}» сыграна`
               }
             >
               <span className="wide">Легенда: </span>
