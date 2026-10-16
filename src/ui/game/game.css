@@ -1346,6 +1346,11 @@ button.star::before {
   font-size: 0.72rem;
   line-height: 1.2;
   overflow: hidden;
+  /* the rest of the card's height; Hand.tsx sets how many whole lines fit in it (line-clamp, «…» at the end) */
+  flex: 1 1 0;
+  min-height: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
 }
 .hand-actions {
   display: flex;
@@ -1835,9 +1840,8 @@ button.star::before {
   }
   .hcard-text {
     font-size: 0.62rem;
-    display: -webkit-box;
+    flex: none;
     -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
   }
   .hcard.chosen {
     transform: translateY(-6px);
