@@ -454,11 +454,32 @@ button {
 }
 .plank-role {
   margin-left: auto;
+  align-self: center;
   display: flex;
   gap: 6px;
   align-items: center;
 }
-.tag {
+/* «ВЫБРАН», the role by network, «✓ готов» in the head of a plank: a class of their own — «.tag» is the label of the
+   animation layer (fx.css, translate(-50%, -50%)). */
+.head-tag {
+  background: #fff;
+  color: var(--ink);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.35;
+  padding: 1px 6px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+/* «✓ готов»: the player pressed «Ход окончен» (green — ready). */
+.head-tag.ready {
+  background: var(--green);
+  color: #fff;
+}
+/* The labels of the animation layer have had this look of the table since A2 (game.css comes after fx.css); kept as it
+   was, with the specificity of a single class, so «.tag.plus», «.tag.good» of fx.css still win. */
+:where(.fx-layer) .tag {
   background: #fff;
   color: var(--ink);
   border-radius: 4px;
@@ -466,11 +487,6 @@ button {
   font-weight: 800;
   padding: 1px 6px;
   letter-spacing: 0.05em;
-}
-/* «✓ готов»: the player pressed «Ход окончен» (green — ready). */
-.tag.ready {
-  background: var(--green);
-  color: #fff;
 }
 .star {
   color: #f3cd55;
@@ -1624,7 +1640,7 @@ button.star::before {
   .plank.selected .hand-count {
     display: none;
   }
-  .plank-head .tag {
+  .plank-head .head-tag {
     font-size: 0.62rem;
   }
   .plank-statuses {

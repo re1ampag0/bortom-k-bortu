@@ -333,11 +333,12 @@ export function Plank({
           </svg>
         )}
         <span className="plank-role">
-          {selected && <span className="tag">ВЫБРАН</span>}
-          {role && <span className="tag">{role}</span>}
+          {selected && <span className="head-tag">ВЫБРАН</span>}
+          {role && <span className="head-tag">{role}</span>}
           {ready && (
-            <span className="tag ready" data-testid={`ready-${ship.code}`}>
-              ✓ готов
+            // On a phone only «✓»: with «ВЫБРАН» next to it the name of the ship stays whole.
+            <span className="head-tag ready" data-testid={`ready-${ship.code}`} title="Готов: ход окончен">
+              ✓<span className="wide"> готов</span>
             </span>
           )}
           <span className="narrow hand-count">{handLabel}</span>
