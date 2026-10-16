@@ -6,6 +6,7 @@ import { cardsWord } from '../../engine/log';
 import { deckCards } from '../../engine/data';
 import { InfoTip } from './InfoTip';
 import { SIDE_LABEL } from './text';
+import { reducedMotion } from '../start/motion';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const TRACK_LABEL: Record<Track, string> = { hull: 'Корпус', sails: 'Паруса', guns: 'Пушки', crew: 'Команда' };
@@ -34,12 +35,28 @@ export function Button({ b, className = '' }: { b: Btn; className?: string }) {
       {b.short ? (
         <>
           <span className="wide">{b.label}</span>
-          <span className="narrow">{b.short}</span>
+          <span className="narrow">{breakAfterArrow(b.short)}</span>
         </>
       ) : (
-        b.label
+        breakAfterArrow(b.label)
       )}
     </button>
+  );
+}
+
+/**
+ * «Душа→Корп»: a label may go to a second line after «→» (<wbr>) — on a phone the buttons of a plank are a third of the
+ * row; where the text does not wrap (white-space: nowrap) the break is ignored.
+ */
+function breakAfterArrow(text: string): ReactNode {
+  const i = text.indexOf('→');
+  if (i < 0 || i === text.length - 1) return text;
+  return (
+    <>
+      {text.slice(0, i + 1)}
+      <wbr />
+      {text.slice(i + 1)}
+    </>
   );
 }
 
@@ -166,6 +183,23 @@ const MARK_SVG = (
   </svg>
 );
 
+/**
+ * «Чёрная метка» on the plank of the marked ship (U3): the same blot, small and sharp, set like a stamp — on a laptop in
+ * the free field between the numbers of the tracks and the badges, on a phone at the right end of the row of statuses.
+ * It appears when the blot of the clip lands (statusFx) and goes with the status.
+ */
+function MarkStamp({ cls, hidden }: { cls: string; hidden: boolean }) {
+  return (
+    <span className={`mark-stamp ${cls}`} data-fx-mark-stamp aria-hidden style={hidden ? { visibility: 'hidden' } : undefined}>
+      <svg viewBox="0 0 30 26" aria-hidden="true">
+        <path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612" />
+        <circle cx="27" cy="22" r="2" fill="#1a1612" />
+        <circle cx="4" cy="5" r="1.4" fill="#1a1612" />
+      </svg>
+    </span>
+  );
+}
+
 /** Statuses of a ship with the moment they end (docs/TZ.md, «Принципы стола», п. 2). */
 export function statuses(s: GameState, data: GameData, ship: ShipState): Status[] {
   const out: Status[] = [];
@@ -239,7 +273,10 @@ export function Plank({
   fxHidden?: readonly string[];
 }) {
   const d = shipData(data, ship.code);
+  const buttonsRef = useMoreRight<HTMLDivElement>();
   const st = statuses(s, data, ship);
+  const marked = st.some((x) => x.mark);
+  const markHidden = !!fxHidden?.includes('mark');
   const legendCard = cardByCode(data, `${ship.code}-Л`);
   const legendName = legendCard.name;
   // Grey when the team lacks the Powder or the Souls for it (docs/TZ.md, «Принципы стола», п. 9).
@@ -333,11 +370,12 @@ export function Plank({
           </svg>
         )}
         <span className="plank-role">
-          {selected && <span className="tag">ВЫБРАН</span>}
-          {role && <span className="tag">{role}</span>}
+          {selected && <span className="head-tag">ВЫБРАН</span>}
+          {role && <span className="head-tag">{role}</span>}
           {ready && (
-            <span className="tag ready" data-testid={`ready-${ship.code}`}>
-              ✓ готов
+            // On a phone only «✓»: with «ВЫБРАН» next to it the name of the ship stays whole.
+            <span className="head-tag ready" data-testid={`ready-${ship.code}`} title="Готов: ход окончен">
+              ✓<span className="wide"> готов</span>
             </span>
           )}
           <span className="narrow hand-count">{handLabel}</span>
@@ -374,9 +412,11 @@ export function Plank({
               <span className="wide"> · {x.hint.split(':')[0].toLowerCase()}</span>
             </InfoTip>
           ))}
+          {marked && <MarkStamp cls="narrow" hidden={markHidden} />}
         </div>
       )}
       <div className="plank-body">
+        {marked && <MarkStamp cls="wide" hidden={markHidden} />}
         <div className="tracks" key={fxGen}>
           {TRACKS.map((t) => {
             const max = startValue(data, ship.code, t);
@@ -423,7 +463,7 @@ export function Plank({
               title={
                 ship.legend
                   ? `Легенда «${legendName}»: ${affordable ? 'нажмите, чтобы прочитать' : 'не хватает Пороха или Душ'}`
-                  : 'Легенда сыграна'
+                  : `Легенда «${legendName}» сыграна`
               }
             >
               <span className="wide">Легенда: </span>
@@ -434,14 +474,50 @@ export function Plank({
         </div>
       </div>
       {buttons.length > 0 && (
-        <div className="plank-buttons" onClick={(e) => e.stopPropagation()}>
-          {buttons.map((b) => (
-            <Button key={b.key} b={b} />
-          ))}
+        <div className="plank-buttons-wrap" onClick={(e) => e.stopPropagation()}>
+          <div className="plank-buttons" ref={buttonsRef}>
+            {buttons.map((b) => (
+              <Button key={b.key} b={b} />
+            ))}
+          </div>
+          {/* On a phone, while more buttons are to the right: a press scrolls the row (U3). */}
+          <button
+            className="buttons-more"
+            aria-label="Ещё кнопки"
+            tabIndex={-1}
+            onClick={() => {
+              const row = buttonsRef.current;
+              if (row) row.scrollBy({ left: row.clientWidth, behavior: reducedMotion() ? 'auto' : 'smooth' });
+            }}
+          >
+            ›
+          </button>
         </div>
       )}
     </section>
   );
+}
+
+/**
+ * A row that scrolls sideways (the buttons of a plank on a phone, U3): «data-more» on its wrapper while there is more
+ * of it to the right — the right edge fades and the arrow «›» shows then.
+ */
+function useMoreRight<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // on the wrapper of the row: the fade and the arrow «›» stand there; the last 8 px are the padding of the row
+    const check = () => el.parentElement?.toggleAttribute('data-more', el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    check();
+    el.addEventListener('scroll', check, { passive: true });
+    addEventListener('resize', check);
+    return () => {
+      el.removeEventListener('scroll', check);
+      removeEventListener('resize', check);
+    };
+  });
+  return ref;
 }
 
 /** One flash when the Legend became available (not on the first render, not again until it was unavailable). */

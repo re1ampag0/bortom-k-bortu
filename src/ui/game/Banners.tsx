@@ -37,6 +37,7 @@ export function useBanners({
   seaBanners = true,
   start,
   paused,
+  holdSummary = false,
 }: {
   recent: Recent[];
   version: number;
@@ -60,6 +61,11 @@ export function useBanners({
   start: { sea: string | null; active: Side } | null;
   /** The curtain «Передайте устройство» is up: the banners wait until it is closed. */
   paused: boolean;
+  /**
+   * The summary of the start of the turn waits — not shown, its 4 s do not run — while the animation layer plays (its
+   * banner «Ваш ход» and the summary never stand on the table together) and while a panel is open in the middle.
+   */
+  holdSummary?: boolean;
 }) {
   const seen = useRef((recent.at(-1)?.n ?? -1) + 1);
   const ids = useRef(0);
@@ -87,12 +93,13 @@ export function useBanners({
   const head = queue[0] ?? null;
   // The summary of the start of the turn is for the team at the device only; another team's is dropped at once.
   const skip = !!head && head.k === 'summary' && head.side !== bottom;
+  const held = !!head && head.k === 'summary' && !skip && holdSummary;
   useEffect(() => {
-    if (!head || paused) return;
+    if (!head || paused || held) return;
     const t = setTimeout(() => setQueue((q) => (q[0]?.id === head.id ? q.slice(1) : q)), skip ? 0 : head.ms);
     return () => clearTimeout(t);
-  }, [head, paused, skip]);
-  if (paused || !head || skip) return null;
+  }, [head, paused, skip, held]);
+  if (paused || !head || skip || held) return null;
   return head.k === 'turn' ? { ...head, text: mine && head.side === bottom ? 'Ваш ход' : `Ход ${SIDE_LABEL[head.side].gen}`, mine: mine && head.side === bottom } : head;
 }
 
@@ -103,17 +110,17 @@ export function BannerView({ data, banner }: { data: GameData; banner: Shown | n
   if (banner.k === 'sea') {
     const sea = seaCardByCode(data, banner.card);
     return (
-      <div className="banner sea" data-testid="sea-banner" key={banner.id} role="status">
-        <span className="banner-kicker">Море</span>
-        <b className="banner-title">{sea.name}</b>
-        <span className="banner-text">{sea.big}</span>
-        {sea.when && <span className="banner-when">{sea.when}</span>}
+      <div className="table-banner sea" data-testid="sea-banner" key={banner.id} role="status">
+        <span className="table-banner-kicker">Море</span>
+        <b className="table-banner-title">{sea.name}</b>
+        <span className="table-banner-text">{sea.big}</span>
+        {sea.when && <span className="table-banner-when">{sea.when}</span>}
       </div>
     );
   }
   return (
-    <div className={`banner turn ${banner.mine ? 'mine' : ''}`} data-testid="turn-banner" key={banner.id} role="status">
-      <b className="banner-title">{banner.text}</b>
+    <div className={`table-banner turn ${banner.mine ? 'mine' : ''}`} data-testid="turn-banner" key={banner.id} role="status">
+      <b className="table-banner-title">{banner.text}</b>
     </div>
   );
 }

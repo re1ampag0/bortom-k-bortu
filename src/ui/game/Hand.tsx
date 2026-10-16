@@ -1,8 +1,38 @@
 // The hand strip: tabs of the ships one person leads, «Колода 14 · Сброс 6», the cards and, after a divider,
 // the Plans of the Pearl. Only the hand scrolls, sideways.
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { cardByCode, shipData, type GameState } from '../../engine/state';
 import type { CardInstance, GameData } from '../../engine/types';
 import { HIDDEN } from '../../engine/view';
+
+// Before the paint in the browser; the tests render the cards to markup, where only useEffect is quiet.
+const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
+/**
+ * The text of a card is cut by whole lines with «…» (U3): as many lines as the height left under the name and the
+ * effect holds — a name of one or two lines leaves a different room, so the number is measured, not fixed in CSS.
+ */
+function useWholeLines() {
+  const ref = useRef<HTMLSpanElement>(null);
+  useBeforePaint(() => {
+    const fit = () => {
+      const el = ref.current;
+      if (!el) return;
+      el.style.removeProperty('-webkit-line-clamp');
+      el.style.removeProperty('max-height');
+      const line = parseFloat(getComputedStyle(el).lineHeight);
+      if (!(line > 0)) return;
+      const n = Math.max(1, Math.floor((el.clientHeight + 1) / line));
+      el.style.setProperty('-webkit-line-clamp', String(n));
+      // no part of the next line under the last one
+      el.style.setProperty('max-height', `${n * line}px`);
+    };
+    fit();
+    addEventListener('resize', fit);
+    return () => removeEventListener('resize', fit);
+  });
+  return ref;
+}
 
 const TYPE_CLASS: Record<string, string> = { ЗАРЯД: 'charge', РЕАКЦИЯ: 'reaction', ПРИКАЗ: 'order', РЕМОНТ: 'repair' };
 
@@ -35,6 +65,7 @@ export function HandCard({
   onClick?: () => void;
   note?: string;
 }) {
+  const textRef = useWholeLines();
   if (code === HIDDEN) {
     return <div className={`hcard back ${plan ? 'plan' : ''}`} aria-label="Закрытая карта" data-fx-card={HIDDEN} />;
   }
@@ -54,7 +85,7 @@ export function HandCard({
       </span>
       <span className="hcard-name">{c.name}</span>
       <span className="hcard-big">{note ?? c.big}</span>
-      <span className="hcard-text">{c.text.replace(/<[^>]+>/g, ' ')}</span>
+      <span className="hcard-text" ref={textRef}>{c.text.replace(/<[^>]+>/g, ' ')}</span>
     </button>
   );
 }

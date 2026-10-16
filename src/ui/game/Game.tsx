@@ -1,6 +1,6 @@
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   abilityButtons,
   cardNeeds,
@@ -250,6 +250,11 @@ export function Game({
   // The animation layer plays the actions (A2–A4): off at «мгновенно», after «До конца хода», behind the curtain and
   // with prefers-reduced-motion — then the table is at once in the real state.
   const fxEnabled = speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide && !reducedMotion();
+  // The summary of the start of the turn waits while the layer plays and while a panel is open in the middle (U3): it
+  // never covers «Ваш ход» of the layer nor a panel, and its «Подробнее» is not lost. Both are known after the render
+  // (the layer's queue comes after the banners, the panel is decided below), so they come to the banners by an effect.
+  const [summaryHold, setSummaryHold] = useState(false);
+  const dockOpen = useRef(false);
   const banner = useBanners({
     recent: game.recent,
     version,
@@ -264,6 +269,7 @@ export function Game({
     // A new game: the first sea card and the first turn too.
     start: (net ? net.actions : local!.actions.length) === 0 && !s.winner ? { sea: s.sea?.current ?? null, active: s.active } : null,
     paused: !!curtainSide,
+    holdSummary: summaryHold,
   });
   const toast = banner?.k === 'summary' ? banner.text : null;
   // The animation layer on the table (A2–A4): every action is shown by its clips, the planks are drawn from the
@@ -285,6 +291,7 @@ export function Game({
     paused: !!banner && banner.k !== 'summary',
     hold: held,
   });
+  useEffect(() => setSummaryHold(fx.busy || dockOpen.current));
   /** The table as it is shown: the displayed fields from the queue's D, the rest from the real view. */
   const tableView = fx.display ? withDisplay(view, fx.display) : view;
   // The log as it is shown (A4): the lines of an action appear when its clips are played; at the end of the game — all.
@@ -716,6 +723,8 @@ export function Game({
     );
   }
 
+  dockOpen.current = !!dock;
+
   // ——— The instruction in the status bar ———
   const instruction = (() => {
     if (s.winner) return s.winner === 'НИЧЬЯ' ? 'Партия окончена: ничья' : `Партия окончена: победа — ${SIDE_LABEL[s.winner].name}`;
@@ -980,17 +989,15 @@ export function Game({
       <StatusBar s={fx.display ? withDisplay(s, fx.display) : s} data={data} instruction={fx.hint ?? flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}
-      <BannerView data={data} banner={banner} />
       <main className="board">
         <TeamRow side={top} s={tableView} data={data} hands={handsOf(top)} regroup={null} hint={null} fxGen={fx.gen} />
         <div className="planks top">{columns(top).map(renderPlank)}</div>
         <div className="middle" data-fx-gap>
+          <BannerView data={data} banner={banner} />
           {toast && (
-            <div className="toast" data-testid="turn-summary">
-              {toast}{' '}
-              <button className="toast-more" onClick={() => setSheet({ k: 'lastTurn' })} data-testid="summary-more">
-                Подробнее
-              </button>
+            <div className="toast" data-testid="turn-summary" role="status">
+              <span>{toast}</span>
+              <Button b={{ key: 'more', label: 'Подробнее', onClick: () => setSheet({ k: 'lastTurn' }), testid: 'summary-more' }} className="small" />
             </div>
           )}
           {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
