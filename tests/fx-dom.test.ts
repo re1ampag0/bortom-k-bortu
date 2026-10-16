@@ -95,22 +95,23 @@ describe('data-fx-* DOM contract', () => {
 describe('«Чёрная метка» on the plank (U3)', () => {
   const marked = structuredClone(s);
   marked.turn.marks = { И: 2 };
-  it('the marked ship has the large faint blot behind its body, with the chip «Чёрная метка +2» kept', () => {
+  it('the marked ship has the stamp: in the body (laptop) and in the row of statuses (phone), the chip «Чёрная метка +2» kept', () => {
     const html = plank('И', null, marked);
-    expect(count(html, /data-fx-mark-wm/g)).toBe(1);
-    expect(html).toMatch(/<div class="plank-body"><div class="mark-wm" data-fx-mark-wm="true"[^>]*><svg/);
+    expect(count(html, /data-fx-mark-stamp/g)).toBe(2);
+    expect(html).toMatch(/<div class="plank-body"><span class="mark-stamp wide" data-fx-mark-stamp="true"[^>]*><svg/);
+    expect(html).toMatch(/<div class="plank-statuses" data-fx-statuses="true">.*<span class="mark-stamp narrow" data-fx-mark-stamp="true"/);
     expect(html).toContain('data-fx-mark="true"');
     expect(html).toContain('Чёрная метка +2');
   });
   it('waits hidden while the clip of the mark has not played, as the chip does', () => {
     const html = plank('И', null, marked, ['mark']);
-    expect(html).toMatch(/class="mark-wm" data-fx-mark-wm="true" aria-hidden="true" style="visibility:hidden"/);
+    expect(count(html, /class="mark-stamp (wide|narrow)" data-fx-mark-stamp="true" aria-hidden="true" style="visibility:hidden"/g)).toBe(2);
   });
-  it('no mark — no blot; a sunk ship has none either', () => {
-    expect(plank('И')).not.toContain('data-fx-mark-wm');
-    expect(plank('Г', null, marked)).not.toContain('data-fx-mark-wm');
+  it('no mark — no stamp; a sunk ship has none either', () => {
+    expect(plank('И')).not.toContain('data-fx-mark-stamp');
+    expect(plank('Г', null, marked)).not.toContain('data-fx-mark-stamp');
     const sunk = structuredClone(marked);
     sunk.ships['И'].sunk = true;
-    expect(plank('И', null, sunk)).not.toContain('data-fx-mark-wm');
+    expect(plank('И', null, sunk)).not.toContain('data-fx-mark-stamp');
   });
 });

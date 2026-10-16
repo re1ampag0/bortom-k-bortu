@@ -530,27 +530,26 @@ button.star::before {
   align-items: center;
   gap: 4px;
 }
-/* «Чёрная метка» on the plank (U3): a large faint blot behind the tracks and the text of the body, till the end of the
-   turn; the numbers stay readable over it. The body is its own stacking context, so z-index −1 is still above the
-   plank's background. */
-.plank-body {
-  position: relative;
-  isolation: isolate;
-}
-.mark-wm {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* «Чёрная метка» on the plank (U3): a small sharp blot set like a stamp — on a laptop in the free field between the
+   numbers of the tracks and the badges (the middle column of .plank-body), on a phone at the right end of the row of
+   statuses (the corner of the Hull's number is taken). It covers nothing. */
+.mark-stamp {
   pointer-events: none;
+  flex: none;
 }
-.mark-wm svg {
-  height: 92%;
-  width: auto;
-  max-width: 100%;
-  opacity: 0.17;
+.mark-stamp svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0.9;
+  transform: rotate(-12deg);
+}
+.plank-body > .mark-stamp {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  width: min(40px, 100%);
 }
 /* «Чёрная метка»: the blot of the reference (board.js, style.css) — the cannonballs «в метку» hit it. */
 .status-chip.mark {
@@ -585,7 +584,16 @@ button.star::before {
    after the longest scale; the badges are a column of one width on the right, one badge per row of the tracks. */
 @media (min-width: 701px) {
   .plank-body {
-    grid-template-columns: minmax(0, 1fr) 10.5rem;
+    /* the tracks, the free field (the stamp of «Чёрная метка»), the badges */
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr) 10.5rem;
+  }
+  .plank-body > .tracks {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .plank-body > .badges {
+    grid-column: 3;
+    grid-row: 1;
   }
   .tracks {
     justify-self: start;
@@ -600,14 +608,15 @@ button.star::before {
     grid-template-columns: subgrid;
   }
   .plank-body .badges {
-    align-items: stretch;
+    align-items: flex-end;
     gap: 2px;
   }
+  /* as wide as the text, one height, all at one right edge; a longer Legend is cut with «…» */
   .plank-body .badges > .badge {
     display: block;
+    max-width: 100%;
     height: calc(var(--track-row) - 1px);
     line-height: calc(var(--track-row) - 3px);
-    text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -1719,6 +1728,13 @@ button.star::before {
   }
   .plank-statuses {
     padding: 2px 6px 0;
+  }
+  .plank-statuses > .mark-stamp.narrow {
+    display: block;
+    width: 28px;
+    /* the slant makes it ~3 px taller than its box: it stays off the head */
+    margin: 3px 0 3px auto;
+    align-self: center;
   }
   .status-chip {
     font-size: 0.72rem;
