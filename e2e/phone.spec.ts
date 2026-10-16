@@ -137,7 +137,8 @@ async function phone(page: Page, name: string) {
   }
   await expect(page.getByTestId('ship-info-Г')).toHaveCount(0);
 
-  // The buttons of the Dutchman's plank (U3): one row, each at least 44 px high and its text whole; when the row is
+  // The buttons of the Dutchman's plank (U3): one row, each 34 px high to the eye with a press zone of at least 44 px,
+  // its text whole; when the row is
   // wider than the plank the arrow «›» shows and scrolls it; after it the last button is whole inside the plank and the
   // window and works. The page itself never scrolls sideways.
   const dutchman = page.getByTestId('plank-Г');
@@ -149,9 +150,10 @@ async function phone(page: Page, name: string) {
   const tops = new Set<number>();
   for (const b of await buttons.all()) {
     const box = (await b.boundingBox())!;
-    expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(Math.abs(box.height - 34), 'seen 34 px high').toBeLessThanOrEqual(3);
     expect(box.y + box.height).toBeLessThanOrEqual(Math.min(plankBox.y + plankBox.height, win.height) + 1);
-    expect(await b.evaluate((e) => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+    // the text is whole inside the button (scrollWidth would count the invisible press zone ::before)
+    expect(await b.evaluate((e) => { const r = document.createRange(); r.selectNodeContents(e); const t = r.getBoundingClientRect(), b = e.getBoundingClientRect(); return t.left >= b.left && t.right <= b.right && t.top >= b.top && t.bottom <= b.bottom; }), 'the text is whole').toBe(true);
     tops.add(Math.round(box.y));
   }
   expect(tops.size, 'all the buttons in one row').toBe(1);
@@ -177,13 +179,19 @@ async function phone(page: Page, name: string) {
   expect(lb.x).toBeGreaterThanOrEqual(plankBox.x - 1);
   expect(lb.x + lb.width).toBeLessThanOrEqual(Math.min(plankBox.x + plankBox.width, win.width) + 1);
   expect(await page.evaluate(() => [document.scrollingElement!.scrollLeft, document.scrollingElement!.scrollWidth <= innerWidth])).toEqual([0, true]);
-  // every button, scrolled to, is whole inside the plank and the window
+  // every button, scrolled to, is whole inside the plank and the window, and its press zone is at least 44 px high:
+  // 21 px above and below its centre still press it
   for (const b of await buttons.all()) {
     await b.scrollIntoViewIfNeeded();
     await expect(b).toBeVisible();
     const box = (await b.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(plankBox.x - 1);
     expect(box.x + box.width).toBeLessThanOrEqual(Math.min(plankBox.x + plankBox.width, win.width) + 1);
+    const zone = await b.evaluate((el) => {
+      const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      return [cy - 21.5, cy + 21.5].map((y) => document.elementFromPoint(cx, y)?.closest('.btn') === el);
+    });
+    expect(zone, 'a press zone of 44 px').toEqual([true, true]);
   }
   expect(await page.evaluate(() => document.scrollingElement!.scrollLeft)).toBe(0);
   await dutchman.screenshot({ path: `${SHOTS}/${name}-4-dutchman.png` });
