@@ -373,20 +373,28 @@ export function useFxQueue({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version]);
 
-  // game (U1): the start of a new game, read once when the table opens. A planner of its own, so the real one does
-  // not take in a sea card or a turn twice; n beyond any action, so no log line waits for it.
-  const started = useRef(false);
+  // game (U1): the start of a new game, read when the table opens. A planner of its own, so the real one does not take
+  // in a sea card or a turn twice; n beyond any action, so no log line waits for it. The cleanup takes the item back
+  // and stops its run: StrictMode (dev, e2e) mounts the table twice, and a run left behind would keep the queue busy.
   useLayoutEffect(() => {
-    if (started.current) return;
-    started.current = true;
     if (!start || !start.sea || !enabled) return;
     const events: GameEvent[] = [
       { type: 'roundStarted', round: start.round },
       { type: 'seaRevealed', card: start.sea, reshuffled: false },
       { type: 'turnStarted', side: start.active },
     ];
-    queue.current.push({ ...planItem(plannerFor(data, seats, null), Number.MAX_SAFE_INTEGER, events, null), done: 0, applied: false });
+    const item: Item = { ...planItem(plannerFor(data, seats, null), Number.MAX_SAFE_INTEGER, events, null), done: 0, applied: false };
+    queue.current.push(item);
     if (!running.current) void loop();
+    return () => {
+      if (!queue.current.includes(item)) return;
+      queue.current = queue.current.filter((x) => x !== item);
+      RUN.current++;
+      running.current = false;
+      D.current = null;
+      preview.current = null;
+      wake();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
