@@ -53,7 +53,9 @@ for (const size of SIZES) {
       await page.getByTestId('pick-company').click();
       await page.getByTestId('prep-start').click();
       await page.getByTestId('placement-done').click();
-      await expect(page.getByTestId('sea-banner')).toBeVisible();
+      // U1: the first sea card of a new game is a clip of the layer (the card with its weather), not a banner.
+      await expect(page.locator('.fx-layer > .seacard')).toBeVisible();
+      await expect(page.getByTestId('sea-banner')).toHaveCount(0);
       await page.waitForTimeout(500);
       await shot(page, size.name, '5-sea-banner');
       // A Volley of the Pirates: the animation layer (A2) shows it — the breakdown plate, cores fly after the window.

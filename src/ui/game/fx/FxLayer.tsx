@@ -5,7 +5,7 @@
 // decision panel) shows the result at once.
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
-import type { GameState } from '../../../engine/state';
+import type { GameEvent, GameState } from '../../../engine/state';
 import type { GameData, Side } from '../../../engine/types';
 import { eventsFor, type Viewer } from '../../../engine/view';
 import type { Speed } from '../../storage';
@@ -55,7 +55,8 @@ Object.assign(PLAY, PLAY_VOLLEY, PLAY_MISC, PLAY_SEA, PLAY_LEGENDS);
 SCENES.push(VOLLEY_SCENE, CARD_SCENE);
 
 interface Item extends QueueItem {
-  recent: Recent;
+  /** The action shown; none for the start of a new game (U1), which has no action. */
+  recent?: Recent;
   /** Clips already applied to D. */
   done: number;
   /** All the events of the action are in D. */
@@ -102,6 +103,7 @@ export function useFxQueue({
   jumpAt = JUMP,
   paused,
   hold,
+  start = null,
 }: {
   game: { kind: 'local' | 'net'; recent: Recent[]; state: GameState };
   version: number;
@@ -126,6 +128,11 @@ export function useFxQueue({
   paused: boolean;
   /** «Пауза» of P4: the clip on screen plays to its end, the next one waits for «Дальше». */
   hold: boolean;
+  /**
+   * game (U1): a new game without actions — its first round, sea card and turn. They have no action of their own, so
+   * the layer plays them as one when the table opens (the sea card with its weather, then the turn), not banners.
+   */
+  start?: { round: number; sea: string | null; active: Side } | null;
 }): FxQueue {
   const [rules] = useState(() => displayRules(data));
   const seats = viewer === 'all' ? data.ships.filter((x) => x.side === bottom).map((x) => x.code) : viewer;
@@ -365,6 +372,23 @@ export function useFxQueue({
     if (!running.current) void loop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version]);
+
+  // game (U1): the start of a new game, read once when the table opens. A planner of its own, so the real one does
+  // not take in a sea card or a turn twice; n beyond any action, so no log line waits for it.
+  const started = useRef(false);
+  useLayoutEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    if (!start || !start.sea || !enabled) return;
+    const events: GameEvent[] = [
+      { type: 'roundStarted', round: start.round },
+      { type: 'seaRevealed', card: start.sea, reshuffled: false },
+      { type: 'turnStarted', side: start.active },
+    ];
+    queue.current.push({ ...planItem(plannerFor(data, seats, null), Number.MAX_SAFE_INTEGER, events, null), done: 0, applied: false });
+    if (!running.current) void loop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!enabled && (running.current || D.current)) finish();
