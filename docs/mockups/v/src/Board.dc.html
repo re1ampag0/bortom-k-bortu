@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Настольная: телефон</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700;800&amp;family=Alegreya+SC:wght@500;700&amp;family=Alegreya+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7a2a1d}a:hover{color:#4e1a12}
+</style>
+</helmet>
+<div style="position:relative;width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#3a281b;font-family:'Alegreya Sans',sans-serif;color:#1f1a14;overflow:hidden">
+  <!-- walnut grain -->
+  <svg aria-hidden="true" width="390" height="844" viewBox="0 0 390 844" style="position:absolute;inset:0;opacity:.22">
+    <g fill="none" stroke="#1e140c" stroke-width="1.2">
+      <path d="M0 40 C120 30 260 52 390 38"></path><path d="M0 96 C140 108 250 84 390 100"></path><path d="M0 700 C110 690 280 716 390 702"></path><path d="M0 760 C150 772 240 748 390 764"></path><path d="M0 818 C130 808 270 828 390 814"></path>
+    </g>
+  </svg>
+
+  <!-- status: side, round, the sea card as a small printed card -->
+  <div style="position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px 6px;color:#efe4cc">
+    <span style="font-family:'Alegreya SC',serif;font-weight:700;font-size:15px;letter-spacing:.08em">Пираты · раунд 2</span>
+    <span style="flex:1"></span>
+    <button type="button" aria-label="Карта моря: Буря" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:center;width:86px;height:40px;padding:0 8px;border-radius:3px;border:1px solid #c7b48a;background:#e8dcc0;color:#1f1a14;box-shadow:0 2px 0 #1e140c;font:inherit">
+      <span style="font-family:'Alegreya SC',serif;font-size:10px;letter-spacing:.1em;color:#3d5a6b">море</span>
+      <b style="font-family:Alegreya,serif;font-size:14px;line-height:1">Буря</b>
+    </button>
+    <button type="button" aria-label="Настройки" style="width:40px;height:40px;border-radius:3px;border:1px solid #c7b48a;background:transparent;display:grid;place-items:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg>
+    </button>
+  </div>
+  <!-- the line of what to do: a printed ribbon -->
+  <div style="position:relative;margin:2px 10px 8px;padding:6px 14px;background:#efe4cc;border:1px solid #1f1a14;outline:1px solid #efe4cc;outline-offset:2px;text-align:center;font-family:Alegreya,serif;font-weight:700;font-size:16px">«Жемчужина»: сыграйте карту или дайте Залп</div>
+
+  <!-- the game board: a printed sea chart -->
+  <div style="position:relative;flex:1;margin:0 8px;background:#e6dbc1;border:1px solid #1f1a14;box-shadow:0 0 0 3px #e6dbc1,0 0 0 4px #1f1a14,0 6px 0 4px #1e140c;overflow:hidden">
+    <svg aria-hidden="true" width="374" height="100%" viewBox="0 0 374 470" preserveAspectRatio="none" style="position:absolute;inset:0">
+      <rect x="0" y="0" width="374" height="470" fill="#d7dccf" opacity=".55"></rect>
+      <g stroke="#6f7f86" stroke-width=".6" opacity=".55">
+        <path d="M187 235 L0 0M187 235 L374 0M187 235 L0 470M187 235 L374 470M187 235 L187 0M187 235 L187 470M187 235 L0 235M187 235 L374 235M187 235 L0 118M187 235 L374 118M187 235 L0 352M187 235 L374 352"></path>
+      </g>
+      <g stroke="#6f7f86" stroke-width=".4" opacity=".35"><path d="M0 60h374M0 140h374M0 330h374M0 410h374M60 0v470M314 0v470"></path></g>
+      <g transform="translate(187 235)" fill="none" stroke="#3d5a6b" stroke-width="1">
+        <circle r="26"></circle><circle r="20" stroke-dasharray="2 3"></circle>
+        <path d="M0 -34 L6 0 L0 34 L-6 0 Z" fill="#3d5a6b" opacity=".85"></path>
+        <path d="M-34 0 L0 5 L34 0 L0 -5 Z" fill="#e6dbc1"></path>
+      </g>
+      <text x="187" y="196" text-anchor="middle" font-family="Alegreya SC, serif" font-size="10" fill="#3d5a6b" letter-spacing="2">N</text>
+    </svg>
+
+    <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:8px;box-sizing:border-box">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        <sc-for list="{{enemy}}" as="p" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="display:flex;justify-content:center;height:20px;align-items:flex-end" aria-label="В руке {{p.hand}} карт">
+              <sc-for list="{{p.backs}}" as="b" hint-placeholder-count="5"><div style="{{b.style}}"></div></sc-for>
+            </div>
+            <div style="background:#f5eedc;border:1px solid #1f1a14;box-shadow:inset 0 0 0 2px #f5eedc,inset 0 0 0 3px #1f1a14,0 2px 0 rgba(30,20,12,.35)">
+              <div style="margin:3px 3px 0;padding:3px 6px;background:{{p.color}};color:#f5eedc;font-family:'Alegreya SC',serif;font-weight:700;font-size:14px;letter-spacing:.04em">{{p.name}}</div>
+              <div style="display:flex;flex-direction:column;gap:3px;padding:5px 7px 7px">
+                <sc-for list="{{p.tracks}}" as="tr" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <span style="width:46px;font-family:'Alegreya SC',serif;font-size:10px;letter-spacing:.04em;color:#3a3229">{{tr.label}}</span>
+                    <span style="display:flex;gap:2px">
+                      <sc-for list="{{tr.slots}}" as="s" hint-placeholder-count="6"><span style="{{s}}"></span></sc-for>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="text-align:center;font-family:Alegreya,serif;font-style:italic;font-size:13px;color:#3d5a6b;padding:0 30px;margin-top:62px">Последнее: «Месть» продаёт «Картечь», +1 Порох</div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        <sc-for list="{{own}}" as="p" hint-placeholder-count="2">
+          <div style="background:#f5eedc;border:1px solid #1f1a14;box-shadow:inset 0 0 0 2px #f5eedc,inset 0 0 0 3px #1f1a14,0 2px 0 rgba(30,20,12,.35){{p.frame}}">
+            <div style="margin:3px 3px 0;padding:3px 6px;background:{{p.color}};color:#f5eedc;font-family:'Alegreya SC',serif;font-weight:700;font-size:14px;letter-spacing:.04em">{{p.name}}</div>
+            <div style="display:flex;flex-direction:column;gap:3px;padding:5px 7px 4px">
+              <sc-for list="{{p.tracks}}" as="tr" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:4px">
+                  <span style="width:46px;font-family:'Alegreya SC',serif;font-size:10px;letter-spacing:.04em;color:#3a3229">{{tr.label}}</span>
+                  <span style="display:flex;gap:2px">
+                    <sc-for list="{{tr.slots}}" as="s" hint-placeholder-count="6"><span style="{{s}}"></span></sc-for>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:5px;padding:2px 7px 8px">
+              <sc-for list="{{p.buttons}}" as="btn" hint-placeholder-count="1">
+                <button type="button" style="flex:1;min-height:34px;border-radius:2px;border:1px solid #1f1a14;background:#efe4cc;font-family:'Alegreya SC',serif;font-weight:700;font-size:13px;letter-spacing:.05em;color:#1f1a14">{{btn}}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- the powder of the team: kegs on the table -->
+  <div style="position:relative;display:flex;align-items:center;gap:6px;padding:8px 12px 0;color:#efe4cc">
+    <span style="font-family:'Alegreya SC',serif;font-size:12px;letter-spacing:.08em">Трюм</span>
+    <sc-for list="{{kegs}}" as="k" hint-placeholder-count="8">
+      <svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><path d="M2 2h10c1 4 1 8 0 12H2C1 10 1 6 2 2z" fill="{{k.fill}}" stroke="#c7b48a" stroke-width="1"></path><path d="M1.6 5h10.8M1.6 11h10.8" stroke="#c7b48a" stroke-width="1"></path></svg>
+    </sc-for>
+    <span style="font-weight:700;font-size:13px">2</span>
+    <span style="flex:1"></span>
+    <span style="font-size:12px;color:#c7b48a">Колода 19 · Сброс 0</span>
+  </div>
+
+  <!-- the hand on the table: printed cards -->
+  <div style="position:relative;height:128px">
+    <div style="position:absolute;left:0;right:0;top:8px;display:flex;justify-content:center">
+      <sc-for list="{{hand}}" as="c" hint-placeholder-count="5">
+        <div style="{{c.style}}">
+          <div style="position:absolute;inset:3px;border:1px solid {{c.color}};pointer-events:none"></div>
+          <div style="position:relative;padding:6px 7px;display:flex;flex-direction:column;gap:3px">
+            <span style="font-family:'Alegreya SC',serif;font-size:10px;letter-spacing:.08em;color:{{c.color}}">{{c.type}}</span>
+            <b style="font-family:Alegreya,serif;font-size:13px;line-height:1.1">{{c.name}}</b>
+            <span style="font-size:12px;font-weight:700;color:{{c.color}}">{{c.big}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- the bar: plain outlined icons and one engraved plate for the turn -->
+  <div style="position:relative;display:flex;gap:8px;padding:8px 10px 12px;background:#2c1f15;border-top:1px solid #c7b48a">
+    <button type="button" aria-label="Журнал" style="width:50px;height:50px;border-radius:3px;border:1px solid #c7b48a;background:transparent;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 3h11a2 2 0 012 2v14a2 2 0 01-2 2H6z"></path><path d="M9 8h6M9 12h6M9 16h4"></path></svg></button>
+    <button type="button" aria-label="Правила" style="width:50px;height:50px;border-radius:3px;border:1px solid #c7b48a;background:transparent;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z"></path><path d="M12 6v14"></path></svg></button>
+    <button type="button" aria-label="Отменить" style="width:50px;height:50px;border-radius:3px;border:1px solid #c7b48a;background:transparent;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 010 12h-3"></path></svg></button>
+    <button type="button" style="flex:1;height:50px;border-radius:2px;border:1px solid #c7b48a;outline:1px solid #7a2a1d;outline-offset:-5px;background:#7a2a1d;color:#efe4cc;font-family:'Alegreya SC',serif;font-weight:700;font-size:18px;letter-spacing:.08em">Ход окончен</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cube = (color) => 'width:8px;height:8px;border-radius:1px;background:' + color + ';box-shadow:inset -1px -1px 0 rgba(0,0,0,.35),inset 1px 1px 0 rgba(255,255,255,.25)';
+    const slot = 'width:8px;height:8px;box-sizing:border-box;border:1px solid #9c8f78';
+    const lost = 'width:8px;height:8px;box-sizing:border-box;border:1px solid #9c8f78;background:repeating-linear-gradient(45deg,#c9bda4 0 1px,transparent 1px 3px)';
+    const track = (label, n, max, color) => ({ label, slots: Array.from({ length: max }, (_, i) => (i < n ? cube(color) : lost)) });
+    const mat = (name, color, hull, hullMax, sails, sMax, guns, gMax, crew, cMax) => ({
+      name, color,
+      tracks: [track('корпус', hull, hullMax, color), track('паруса', sails, sMax, color), track('пушки', guns, gMax, color), track('команда', crew, cMax, color)],
+    });
+    const backs = (n) => Array.from({ length: n }, (_, i) => ({ style: 'width:15px;height:21px;margin:0 -3px;border-radius:1px;background:#2b2118;border:1px solid #a8843a;box-shadow:inset 0 0 0 2px #2b2118,inset 0 0 0 3px #a8843a;transform-origin:50% 120%;transform:rotate(' + (i - (n - 1) / 2) * 7 + 'deg)' }));
+    const enemy = [
+      { ...mat('Индевор', '#7d6327', 12, 12, 1, 1, 3, 3, 2, 2), hand: 5, backs: backs(5) },
+      { ...mat('Голландец', '#2b5a4e', 8, 11, 3, 3, 2, 2, 3, 3), hand: 4, backs: backs(4) },
+    ];
+    const own = [
+      { ...mat('Жемчужина', '#2b2620', 9, 9, 3, 3, 2, 2, 3, 3), frame: ';outline:2px solid #a8843a;outline-offset:2px', buttons: ['Залп · 1'] },
+      { ...mat('Месть', '#7a2a1d', 9, 11, 2, 2, 3, 3, 2, 3), frame: '', buttons: ['Залп · 1', 'Меч · 1'] },
+    ];
+    const kegs = Array.from({ length: 8 }, (_, i) => ({ fill: i < 2 ? '#a8843a' : 'transparent' }));
+    const raw = [
+      { type: 'заряд', name: 'Ядра', big: '+1 урон', color: '#7a2a1d', ok: true },
+      { type: 'приказ', name: 'Безумный план', big: '+2 карты', color: '#4e3b63', ok: true },
+      { type: 'реакция', name: 'Банка с землёй', big: 'Залп −2', color: '#3d5a6b', ok: false },
+      { type: 'ремонт', name: 'Латаем паруса', big: '+2 Паруса', color: '#4f6b47', ok: true },
+      { type: 'приказ', name: 'Обезьянка Джек', big: 'кража', color: '#4e3b63', ok: false },
+    ];
+    const hand = raw.map((c, i) => ({ ...c, style: 'position:relative;width:76px;height:106px;margin:0 -3px;border-radius:4px;background:#f5eedc;box-shadow:0 3px 0 rgba(0,0,0,.35);transform:rotate(' + (i - 2) * 3 + 'deg) translateY(' + Math.abs(i - 2) * 3 + 'px);' + (c.ok ? 'outline:2px solid #a8843a;outline-offset:1px' : 'filter:saturate(.3) brightness(.82)') }));
+    return { enemy, own, kegs, hand };
+  }
+}
+</script>
+</body>
+</html>

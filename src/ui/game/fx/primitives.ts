@@ -200,9 +200,11 @@ const EDGE = 8;
 export function inside(v: number, size: number, max: number): number {
   return Math.max(EDGE, Math.min(max - EDGE - size, v));
 }
+/** «диагональ −1» → «Диагональ −1»: the terms of the engine are lower-case, the marks on the table start with a capital. */
+export const capFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 export function tag(ctx: FxCtx, x: number, y: number, text: string, delay: number, cls = '', dur = 1500): HTMLElement {
   const t = mk(ctx, 'tag ' + cls, x, y);
-  t.textContent = text;
+  t.textContent = capFirst(text);
   // .tag is centred on its point (translate(-50%, -50%)); it rises 4 px at the start
   const w = t.offsetWidth, h = t.offsetHeight;
   t.style.left = inside(x - w / 2, w, ctx.board.clientWidth) + w / 2 + 'px';
@@ -281,7 +283,8 @@ export function payKegs(ctx: FxCtx, side: Side, n: number, delay: number, label 
   }
   if (label) {
     const kb = bx(ctx, kg);
-    tag(ctx, kb.r + 34, kb.cy, `−${n} Порох`, delay, '', 1000);
+    // Above the kegs: to the right of them is the text «· в руках …», the mark covered it.
+    tag(ctx, kb.cx, kb.y - 12, `−${n} Порох`, delay, '', 1000);
   }
 }
 /** Kegs fly into the Hold. */
@@ -299,7 +302,7 @@ export function gainKegs(ctx: FxCtx, side: Side, n: number, from: Pt, delay: num
   }
   if (label && n) {
     const kb = bx(ctx, kg);
-    tag(ctx, kb.r + 36, kb.cy, `+${n} Пороха`, delay + 300, 'plus', 1300);
+    tag(ctx, kb.cx, kb.y - 12, `+${n} Пороха`, delay + 300, 'plus', 1300);
   }
   return delay + 520 + n * 130;
 }
