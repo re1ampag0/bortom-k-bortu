@@ -402,8 +402,12 @@ export function useFxQueue({
     if (!enabled && (running.current || D.current)) finish();
   }, [enabled, finish]);
 
+  // A new device at the table (two people on one screen): another bottom, another planner. Only on a change of the
+  // bottom — not when the table opens, or it would drop the show of the start of a new game at once (U1).
+  const lastBottom = useRef(bottom);
   useEffect(() => {
-    // A new device at the table (two people on one screen): another bottom, another planner.
+    if (lastBottom.current === bottom) return;
+    lastBottom.current = bottom;
     if (running.current || D.current) finish();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bottom]);
