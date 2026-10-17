@@ -89,7 +89,7 @@ describe('«Быстрый конец хода» in the settings', () => {
     storageWith(null);
     expect(loadSettings().fastEnd).toBe(false);
     storageWith(JSON.stringify({ speed: 'slow', effects: 'simple', hints: true, sound: true }));
-    expect(loadSettings()).toEqual({ speed: 'slow', effects: 'simple', hints: true, sound: true, fastEnd: false });
+    expect(loadSettings()).toEqual({ speed: 'slow', effects: 'simple', hints: true, sound: true, fastEnd: false, tapSkip: false });
   });
 
   it('is kept like the other settings', () => {

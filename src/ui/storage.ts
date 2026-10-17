@@ -18,9 +18,11 @@ export interface Settings {
   sound: boolean;
   /** «Быстрый конец хода»: «Ход окончен · Отменить» lasts 1 s instead of 3 s (off by default). */
   fastEnd: boolean;
+  /** A tap of a finger on the table skips the show to its result (off by default: a finger touches the screen often). */
+  tapSkip: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false };
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false, tapSkip: false };
 
 function read(key: string): string | null {
   try {

@@ -189,10 +189,11 @@ describe('the log waits for the clips (logHiddenFrom)', () => {
 });
 
 describe('a jump over many actions (skipAhead)', () => {
-  it('only the last action is played when this device must decide or the actions came as a jump', () => {
+  // game: a decision of this device no longer drops the clips before it (they catch up, twice as fast) — only a jump does.
+  it('only the last action is played when the actions came as a jump; a decision of this device does not skip', () => {
     expect(skipAhead(1, true, true)).toBe(false);
     expect(skipAhead(3, false, false)).toBe(false);
-    expect(skipAhead(3, true, false)).toBe(true);
+    expect(skipAhead(3, true, false)).toBe(false);
     expect(skipAhead(3, false, true)).toBe(true);
     expect(JUMP).toBeGreaterThan(3); // the longest scene of the reference (3 actions) is not a jump
   });
