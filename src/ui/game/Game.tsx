@@ -254,6 +254,8 @@ export function Game({
   // never covers «Ваш ход» of the layer nor a panel, and its «Подробнее» is not lost. Both are known after the render
   // (the layer's queue comes after the banners, the panel is decided below), so they come to the banners by an effect.
   const [summaryHold, setSummaryHold] = useState(false);
+  /** A game without actions yet: its first sea card and first turn are shown when the table opens (read once). */
+  const newGame = (net ? net.actions : local!.actions.length) === 0 && !s.winner;
   const dockOpen = useRef(false);
   const banner = useBanners({
     recent: game.recent,
@@ -266,8 +268,9 @@ export function Game({
     turnBanners: !fxEnabled,
     // The sea card of a new round is shown by the clip «sea»; the banner — only without the layer (no two shows).
     seaBanners: !fxEnabled,
-    // A new game: the first sea card and the first turn too.
-    start: (net ? net.actions : local!.actions.length) === 0 && !s.winner ? { sea: s.sea?.current ?? null, active: s.active } : null,
+    // A new game: the first sea card and the first turn too — as banners only without the layer (U1: the layer plays
+    // them as clips, see fx below).
+    start: newGame && !fxEnabled ? { sea: s.sea?.current ?? null, active: s.active } : null,
     paused: !!curtainSide,
     holdSummary: summaryHold,
   });
@@ -290,6 +293,7 @@ export function Game({
     jump: !!net && net.missed.length > 0,
     paused: !!banner && banner.k !== 'summary',
     hold: held,
+    start: newGame ? { round: s.round, sea: s.sea?.current ?? null, active: s.active } : null,
   });
   useEffect(() => setSummaryHold(fx.busy || dockOpen.current));
   /** The table as it is shown: the displayed fields from the queue's D, the rest from the real view. */
