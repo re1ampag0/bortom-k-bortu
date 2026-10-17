@@ -2032,9 +2032,7 @@ button.star::before {
     min-width: 0;
     flex: 2;
   }
-  /* The Reactions in a column, each text folded to 2 lines with «Ещё»; the list scrolls inside, so the hand and
-     «Пропустить» stay pressable. */
-  /* A compact Reaction window. A flex column, not a grid: iPhone Safari squeezed the grid rows, so a folded text was
+  /* A compact Reaction window; the list scrolls inside, so the hand and «Пропустить» stay pressable. A flex column, not a grid: iPhone Safari squeezed the grid rows, so a folded text was
      cut through a line and an open one spilled over the next Reaction. A row: the name, then «what happens now» and
      «Ещё» on one line; the card text only after «Ещё» (or «i»). */
   .reactions {
@@ -2106,9 +2104,6 @@ button.star::before {
   }
   .panel.reaction .panel-sub {
     font-size: 0.78rem;
-  }
-  .react-phone {
-    gap: 6px;
   }
   .react-phone > .muted {
     font-size: 0.76rem;
