@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Экран победы</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700;800&amp;family=Alegreya+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#8A2E1C}a:hover{color:#5c1e12}
+@keyframes fall{0%{transform:translateY(-60px) rotate(0)}100%{transform:translateY(900px) rotate(540deg)}}
+@keyframes stamp{0%{transform:scale(2.2) rotate(-8deg);opacity:0}60%{transform:scale(.94) rotate(-4deg);opacity:1}100%{transform:scale(1) rotate(-4deg)}}
+@keyframes wave{0%,100%{transform:skewY(0)}50%{transform:skewY(-4deg)}}
+.c1{animation:fall 4.2s linear infinite}.c2{animation:fall 5s linear .7s infinite}.c3{animation:fall 4.6s linear 1.4s infinite}.c4{animation:fall 5.4s linear 2.1s infinite}.c5{animation:fall 4.8s linear 2.8s infinite}.c6{animation:fall 5.2s linear .3s infinite}
+.stamp{animation:stamp .7s cubic-bezier(.2,.9,.3,1.2) both}
+.flag{animation:wave 1.8s ease-in-out infinite;transform-origin:0 50%}
+@media (prefers-reduced-motion:reduce){.c1,.c2,.c3,.c4,.c5,.c6,.stamp,.flag{animation:none}}
+</style>
+</helmet>
+<div style="position:relative;width:390px;height:844px;overflow:hidden;background:#1a2f3d;font-family:'Alegreya Sans',sans-serif;color:#f5ecd9">
+  <!-- gold doubloons falling -->
+  <svg aria-hidden="true" width="390" height="844" viewBox="0 0 390 844" style="position:absolute;inset:0">
+    <g fill="#f2c14e" stroke="#b8902e" stroke-width="2">
+      <circle class="c1" cx="40" cy="0" r="9"></circle><circle class="c2" cx="110" cy="0" r="7"></circle><circle class="c3" cx="190" cy="0" r="10"></circle>
+      <circle class="c4" cx="260" cy="0" r="8"></circle><circle class="c5" cx="330" cy="0" r="9"></circle><circle class="c6" cx="370" cy="0" r="6"></circle>
+    </g>
+  </svg>
+
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;padding:56px 18px 0;gap:6px">
+    <svg class="flag" aria-hidden="true" width="120" height="70" viewBox="0 0 120 70"><path d="M6 4v62" stroke="#f5ecd9" stroke-width="4"></path><path d="M8 6h96l-14 18 14 18H8z" fill="#26221F" stroke="#f5ecd9" stroke-width="2"></path><circle cx="50" cy="22" r="8" fill="#f5ecd9"></circle><path d="M40 34l20 -6M40 28l20 6" stroke="#f5ecd9" stroke-width="3"></path></svg>
+    <div class="stamp" style="font-family:Alegreya,serif;font-weight:800;font-size:56px;line-height:1;color:#f2c14e">Победа!</div>
+    <div style="font-size:18px">Пираты взяли верх · раунд 5</div>
+    <div style="font-size:14px;color:#b9c9cf">«Индевор» затонул, «Голландец» без Команды</div>
+  </div>
+
+  <!-- the short stats -->
+  <div style="position:relative;margin:24px 16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+    <div style="padding:12px 8px;border-radius:14px;background:#24404f;text-align:center"><div style="font-size:28px;font-weight:700;color:#ff8f7d">27</div><div style="font-size:13px;color:#b9c9cf">урона нанесено</div></div>
+    <div style="padding:12px 8px;border-radius:14px;background:#24404f;text-align:center"><div style="font-size:28px;font-weight:700;color:#f2c14e">2</div><div style="font-size:13px;color:#b9c9cf">Легенды</div></div>
+    <div style="padding:12px 8px;border-radius:14px;background:#24404f;text-align:center"><div style="font-size:28px;font-weight:700;color:#9fd0e6">11</div><div style="font-size:13px;color:#b9c9cf">Залпов</div></div>
+  </div>
+
+  <!-- the ship of the match -->
+  <div style="position:relative;margin:16px 16px 0;padding:14px;border-radius:16px;background:#fffaf2;color:#2a241d;display:flex;gap:12px;align-items:center">
+    <div style="width:64px;height:64px;border-radius:14px;background:#26221F;display:grid;place-items:center">
+      <svg width="44" height="30" viewBox="0 0 26 16" fill="#fff" aria-hidden="true"><path d="M2 11h22l-3 4H5z"></path><path d="M8 2v9M14 0v11M20 3v8" stroke="#fff" stroke-width="1.2"></path><path d="M8.6 3l5 3-5 2zM14.6 1l6 4-6 3zM20.6 4l3.5 2.5-3.5 2z"></path></svg>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#b8902e">КОРАБЛЬ ПАРТИИ</span>
+      <b style="font-family:Alegreya,serif;font-size:22px">«Чёрная жемчужина»</b>
+      <span style="font-size:14px;color:#6b6157">16 урона · Легенда «Джек ускользает»</span>
+    </div>
+  </div>
+
+  <div style="position:absolute;left:16px;right:16px;bottom:28px;display:flex;flex-direction:column;gap:10px">
+    <button type="button" style="height:56px;border-radius:16px;border:0;background:#f2c14e;color:#2a241d;font-family:Alegreya,serif;font-weight:800;font-size:20px">Реванш</button>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      <button type="button" style="height:48px;border-radius:14px;border:2px solid #f5ecd9;background:transparent;color:#f5ecd9;font:inherit;font-weight:700;font-size:16px">Посмотреть стол</button>
+      <button type="button" style="height:48px;border-radius:14px;border:2px solid #f5ecd9;background:transparent;color:#f5ecd9;font:inherit;font-weight:700;font-size:16px">В меню</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

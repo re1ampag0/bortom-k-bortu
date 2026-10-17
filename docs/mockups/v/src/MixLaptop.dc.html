@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Итог: ноутбук</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,500;0,700;0,800;1,500&amp;family=Alegreya+SC:wght@500;700&amp;family=Alegreya+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7a2a1d}a:hover{color:#4e1a12}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes rain{from{transform:translate(0,-30px)}to{transform:translate(-8px,30px)}}
+@keyframes flicker{0%,100%{opacity:.55}40%{opacity:.7}60%{opacity:.5}80%{opacity:.65}}
+@keyframes sail{0%,100%{transform:translateY(0) rotate(-.4deg)}50%{transform:translateY(-2px) rotate(.4deg)}}
+.waves{animation:drift 34s linear infinite}
+.rain{animation:rain .7s linear infinite}
+.lamp{animation:flicker 4s ease-in-out infinite}
+.sail{animation:sail 5s ease-in-out infinite;transform-origin:50% 90%}
+.hc{transition:transform .18s ease-out}
+.hc:hover{transform:translateY(-30px) scale(1.16)!important;z-index:5}
+@media (prefers-reduced-motion:reduce){.waves,.rain,.lamp,.sail{animation:none}}
+</style>
+</helmet>
+<div style="position:relative;width:1366px;height:768px;display:flex;flex-direction:column;background:#3a281b;font-family:'Alegreya Sans',sans-serif;color:#1f1a14;overflow:hidden">
+  <!-- the table: planks, a lamp, a spyglass, coins and a coil of rope -->
+  <svg aria-hidden="true" width="1366" height="768" viewBox="0 0 1366 768" style="position:absolute;inset:0">
+    <g stroke="#24170e" stroke-width="2"><path d="M0 64h1366M0 584h1366M0 700h1366"></path></g>
+    <g fill="none" stroke="#24170e" stroke-width="1.2" opacity=".45"><path d="M0 30 C400 18 900 44 1366 26"></path><path d="M0 640 C380 656 980 626 1366 646"></path><path d="M0 740 C420 752 960 730 1366 744"></path></g>
+    <g transform="translate(1250 708) rotate(-12)"><rect x="0" y="0" width="96" height="14" rx="3" fill="#a8843a" stroke="#6e5420"></rect><rect x="-26" y="1" width="30" height="12" rx="3" fill="#c9a65a" stroke="#6e5420"></rect><rect x="-46" y="2" width="22" height="10" rx="3" fill="#a8843a" stroke="#6e5420"></rect><path d="M24 0v14M60 0v14" stroke="#6e5420"></path></g>
+    <g stroke="#6e5420" stroke-width="1.5"><ellipse cx="1300" cy="652" rx="13" ry="8" fill="#c9a65a"></ellipse><ellipse cx="1318" cy="644" rx="13" ry="8" fill="#d9b765"></ellipse><ellipse cx="1336" cy="656" rx="13" ry="8" fill="#c9a65a"></ellipse></g>
+    <g fill="none" stroke="#8a6a44" stroke-width="5" opacity=".9"><circle cx="40" cy="738" r="28"></circle><circle cx="40" cy="738" r="18"></circle><circle cx="40" cy="738" r="8"></circle></g>
+  </svg>
+  <div class="lamp" aria-hidden="true" style="position:absolute;left:-200px;top:-260px;width:760px;height:760px;border-radius:50%;background:radial-gradient(circle,rgba(255,196,110,.32),rgba(255,196,110,0) 70%);pointer-events:none"></div>
+
+  <div style="position:relative;display:flex;align-items:center;gap:16px;height:64px;padding:0 18px;color:#efe4cc">
+    <svg width="34" height="22" viewBox="0 0 26 16" fill="#efe4cc" aria-hidden="true"><path d="M2 11h22l-3 4H5z"></path><path d="M8 2v9M14 0v11M20 3v8" stroke="#efe4cc" stroke-width="1.2"></path><path d="M8.6 3l5 3-5 2zM14.6 1l6 4-6 3zM20.6 4l3.5 2.5-3.5 2z"></path></svg>
+    <span style="font-family:'Alegreya SC',serif;font-weight:700;font-size:18px;letter-spacing:.08em;width:200px">Пираты · раунд 2</span>
+    <div style="flex:1;display:flex;justify-content:center">
+      <div style="padding:7px 28px;background:#efe4cc;color:#1f1a14;border:1px solid #1f1a14;outline:1px solid #efe4cc;outline-offset:2px;border-radius:2px;box-shadow:0 3px 0 rgba(0,0,0,.3);font-family:Alegreya,serif;font-weight:800;font-size:20px">«Жемчужина»: сыграйте карту или дайте Залп</div>
+    </div>
+    <button type="button" aria-label="Карта моря: Буря" style="display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border-radius:5px;border:1px solid #c7b48a;background:#e8dcc0;color:#1f1a14;box-shadow:0 2px 0 #1e140c;font:inherit">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3d5a6b" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 15c3-3 5 3 8 0s5 3 8 0 3-1 4 0"></path><path d="M2 19c3-3 5 3 8 0s5 3 8 0 3-1 4 0"></path><path d="M8 4l2 5M14 3l1 5M19 5l-1 4"></path></svg>
+      <span style="display:flex;flex-direction:column;align-items:flex-start"><span style="font-family:'Alegreya SC',serif;font-size:11px;letter-spacing:.1em;color:#3d5a6b">море · весь раунд</span><b style="font-family:Alegreya,serif;font-size:16px;line-height:1">Буря · Залпы −1</b></span>
+    </button>
+    <button type="button" aria-label="Правила" style="width:44px;height:44px;border-radius:5px;border:1px solid #c7b48a;background:rgba(0,0,0,.15);display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z"></path><path d="M12 6v14"></path></svg></button>
+    <button type="button" aria-label="Настройки" style="width:44px;height:44px;border-radius:5px;border:1px solid #c7b48a;background:rgba(0,0,0,.15);display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg></button>
+  </div>
+
+  <div style="position:relative;flex:1;display:flex;gap:14px;padding:0 14px;min-height:0">
+    <!-- the board: a chart with a living sea -->
+    <div style="position:relative;flex:1;background:#e6dbc1;border:1px solid #1f1a14;box-shadow:0 0 0 3px #e6dbc1,0 0 0 4px #1f1a14,0 7px 0 4px #1e140c;overflow:hidden">
+      <div style="position:absolute;inset:12px;background:#bccfcd;border:1px solid #6f7f86;overflow:hidden">
+        <svg class="waves" aria-hidden="true" width="2000" height="100%" viewBox="0 0 2000 460" preserveAspectRatio="none" style="position:absolute;left:0;top:0">
+          <g fill="none" stroke="#3d5a6b" stroke-width="1.2" stroke-linecap="round" opacity=".5">
+            <path d="M20 40 q10-7 20 0 t20 0M160 90 q10-7 20 0 t20 0M330 40 q10-7 20 0 t20 0M470 120 q10-7 20 0 t20 0M620 60 q10-7 20 0 t20 0M780 100 q10-7 20 0 t20 0M900 50 q10-7 20 0 t20 0M60 200 q10-7 20 0 t20 0M240 240 q10-7 20 0 t20 0M400 190 q10-7 20 0 t20 0M560 250 q10-7 20 0 t20 0M720 210 q10-7 20 0 t20 0M880 260 q10-7 20 0 t20 0M100 350 q10-7 20 0 t20 0M280 400 q10-7 20 0 t20 0M450 340 q10-7 20 0 t20 0M610 410 q10-7 20 0 t20 0M770 360 q10-7 20 0 t20 0M930 420 q10-7 20 0 t20 0"></path>
+            <path transform="translate(1000 0)" d="M20 40 q10-7 20 0 t20 0M160 90 q10-7 20 0 t20 0M330 40 q10-7 20 0 t20 0M470 120 q10-7 20 0 t20 0M620 60 q10-7 20 0 t20 0M780 100 q10-7 20 0 t20 0M900 50 q10-7 20 0 t20 0M60 200 q10-7 20 0 t20 0M240 240 q10-7 20 0 t20 0M400 190 q10-7 20 0 t20 0M560 250 q10-7 20 0 t20 0M720 210 q10-7 20 0 t20 0M880 260 q10-7 20 0 t20 0M100 350 q10-7 20 0 t20 0M280 400 q10-7 20 0 t20 0M450 340 q10-7 20 0 t20 0M610 410 q10-7 20 0 t20 0M770 360 q10-7 20 0 t20 0M930 420 q10-7 20 0 t20 0"></path>
+          </g>
+        </svg>
+        <svg aria-hidden="true" width="100%" height="100%" viewBox="0 0 1000 460" preserveAspectRatio="none" style="position:absolute;inset:0">
+          <g stroke="#6f7f86" stroke-width=".7" opacity=".5"><path d="M500 230 L0 0M500 230 L1000 0M500 230 L0 460M500 230 L1000 460M500 230 L500 0M500 230 L500 460M500 230 L0 230M500 230 L1000 230M500 230 L250 0M500 230 L750 0M500 230 L250 460M500 230 L750 460"></path></g>
+        </svg>
+        <svg class="rain" aria-hidden="true" width="100%" height="100%" viewBox="0 0 1000 460" preserveAspectRatio="none" style="position:absolute;inset:-30px 0 0 0">
+          <g stroke="#2a3f49" stroke-width="1.1" stroke-linecap="round" opacity=".4"><path d="M40 0l-8 20M140 50l-8 20M240 10l-8 20M340 70l-8 20M440 20l-8 20M540 60l-8 20M640 5l-8 20M740 55l-8 20M840 15l-8 20M940 65l-8 20M90 160l-8 20M190 210l-8 20M290 150l-8 20M390 200l-8 20M490 170l-8 20M590 220l-8 20M690 160l-8 20M790 205l-8 20M890 175l-8 20M40 310l-8 20M140 360l-8 20M240 300l-8 20M340 350l-8 20M440 320l-8 20M540 370l-8 20M640 305l-8 20M740 345l-8 20M840 315l-8 20M940 365l-8 20M90 430l-8 20M290 440l-8 20M490 425l-8 20M690 445l-8 20M890 430l-8 20"></path></g>
+        </svg>
+        <svg aria-hidden="true" width="90" height="90" viewBox="-45 -45 90 90" style="position:absolute;left:50%;top:50%;margin:-4px 0 0 -45px;opacity:.85">
+          <g fill="none" stroke="#3d5a6b" stroke-width="1.2"><circle r="34"></circle><circle r="27" stroke-dasharray="2 3"></circle><path d="M0 -42 L7 0 L0 42 L-7 0 Z" fill="#3d5a6b"></path><path d="M-42 0 L0 6 L42 0 L0 -6 Z" fill="#e6dbc1"></path></g>
+        </svg>
+      </div>
+      <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:14px 20px;box-sizing:border-box">
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+          <sc-for list="{{enemy}}" as="p" hint-placeholder-count="2">
+            <div class="sail" style="position:relative;background:#f5eedc;border:1px solid #1f1a14;border-radius:3px;box-shadow:inset 0 0 0 3px #f5eedc,inset 0 0 0 4px #1f1a14,0 4px 0 rgba(30,20,12,.4)">
+              <div style="position:absolute;right:70px;top:-15px;display:flex" aria-label="В руке {{p.hand}} карт"><sc-for list="{{p.backs}}" as="b" hint-placeholder-count="5"><div style="{{b.style}}"></div></sc-for></div>
+              <div style="margin:4px 4px 0;padding:4px 6px 4px 10px;background:{{p.color}};color:#f5eedc;display:flex;align-items:center;gap:10px">
+                <svg width="30" height="19" viewBox="0 0 26 16" fill="#f5eedc" aria-hidden="true"><path d="M2 11h22l-3 4H5z"></path><path d="M8 2v9M14 0v11M20 3v8" stroke="#f5eedc" stroke-width="1.2"></path><path d="M8.6 3l5 3-5 2zM14.6 1l6 4-6 3zM20.6 4l3.5 2.5-3.5 2z"></path></svg>
+                <b style="font-family:'Alegreya SC',serif;font-size:19px;letter-spacing:.03em">{{p.name}}</b><span style="flex:1;font-family:Alegreya,serif;font-style:italic;font-size:14px;opacity:.85">{{p.captain}}</span>
+                <span style="position:relative;width:38px;height:42px;display:grid;place-items:center" aria-label="Корпус {{p.hull}}"><svg width="38" height="42" viewBox="0 0 40 44" aria-hidden="true" style="position:absolute;inset:0"><path d="M20 2l16 6v12c0 11-7 18-16 22C11 38 4 31 4 20V8z" fill="#a3341f" stroke="#f5eedc" stroke-width="2"></path></svg><span style="position:relative;color:#fff;font-weight:700;font-size:18px">{{p.hull}}</span></span>
+              </div>
+              <div style="display:flex;gap:14px;padding:8px 12px 10px">
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <sc-for list="{{p.tracks}}" as="tr" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="width:66px;font-family:'Alegreya SC',serif;font-size:13px;letter-spacing:.04em;color:{{tr.ink}}">{{tr.label}}</span>
+                      <span style="display:flex;gap:3px"><sc-for list="{{tr.slots}}" as="s" hint-placeholder-count="6"><span style="{{s}}"></span></sc-for></span>
+                      <span style="font-weight:700;font-size:13px;color:#3a3229">{{tr.num}}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-left:auto;display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <span style="width:46px;height:46px;border-radius:50%;background:#a8843a;border:2px solid #6e5420;box-shadow:inset 0 0 0 3px #c9a65a;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1f1a14" stroke-width="1.8" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 6L12 16.5 6.6 19.4l1.2-6L3.4 9.3l6-.7z"></path></svg></span>
+                  <span style="font-size:12px;color:#3a3229;text-align:center;width:110px">{{p.legend}}</span>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="align-self:center;margin-bottom:90px;padding:6px 16px;background:#f5eedc;border:1px solid #1f1a14;box-shadow:inset 0 0 0 2px #f5eedc,inset 0 0 0 3px #a8843a;border-radius:2px;font-family:Alegreya,serif;font-size:15px;color:#1f1a14"><span style="font-family:'Alegreya SC',serif;letter-spacing:.06em;color:#7a2a1d">последнее</span> · «Месть» продаёт «Картечь», +1 Порох</div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+          <sc-for list="{{own}}" as="p" hint-placeholder-count="2">
+            <div class="sail" style="background:#f5eedc;border:1px solid #1f1a14;border-radius:3px;box-shadow:inset 0 0 0 3px #f5eedc,inset 0 0 0 4px #1f1a14,0 4px 0 rgba(30,20,12,.4){{p.frame}}">
+              <div style="margin:4px 4px 0;padding:4px 6px 4px 10px;background:{{p.color}};color:#f5eedc;display:flex;align-items:center;gap:10px">
+                <svg width="30" height="19" viewBox="0 0 26 16" fill="#f5eedc" aria-hidden="true"><path d="M2 11h22l-3 4H5z"></path><path d="M8 2v9M14 0v11M20 3v8" stroke="#f5eedc" stroke-width="1.2"></path><path d="M8.6 3l5 3-5 2zM14.6 1l6 4-6 3zM20.6 4l3.5 2.5-3.5 2z"></path></svg>
+                <b style="font-family:'Alegreya SC',serif;font-size:19px;letter-spacing:.03em">{{p.name}}</b><span style="flex:1;font-family:Alegreya,serif;font-style:italic;font-size:14px;opacity:.85">{{p.captain}}</span>
+                <span style="position:relative;width:38px;height:42px;display:grid;place-items:center" aria-label="Корпус {{p.hull}}"><svg width="38" height="42" viewBox="0 0 40 44" aria-hidden="true" style="position:absolute;inset:0"><path d="M20 2l16 6v12c0 11-7 18-16 22C11 38 4 31 4 20V8z" fill="#a3341f" stroke="#f5eedc" stroke-width="2"></path></svg><span style="position:relative;color:#fff;font-weight:700;font-size:18px">{{p.hull}}</span></span>
+              </div>
+              <div style="display:flex;gap:14px;padding:8px 12px 4px">
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <sc-for list="{{p.tracks}}" as="tr" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="width:66px;font-family:'Alegreya SC',serif;font-size:13px;letter-spacing:.04em;color:{{tr.ink}}">{{tr.label}}</span>
+                      <span style="display:flex;gap:3px"><sc-for list="{{tr.slots}}" as="s" hint-placeholder-count="6"><span style="{{s}}"></span></sc-for></span>
+                      <span style="font-weight:700;font-size:13px;color:#3a3229">{{tr.num}}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-left:auto;display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <span style="width:46px;height:46px;border-radius:50%;background:#a8843a;border:2px solid #6e5420;box-shadow:inset 0 0 0 3px #c9a65a;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1f1a14" stroke-width="1.8" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 6L12 16.5 6.6 19.4l1.2-6L3.4 9.3l6-.7z"></path></svg></span>
+                  <span style="font-size:12px;color:#3a3229;text-align:center;width:110px">{{p.legend}}</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;padding:2px 12px 10px">
+                <sc-for list="{{p.buttons}}" as="btn" hint-placeholder-count="1">
+                  <button type="button" style="min-height:40px;padding:0 16px;border-radius:4px;border:1px solid #1f1a14;background:#efe4cc;box-shadow:0 2px 0 #1f1a14;font-family:'Alegreya SC',serif;font-weight:700;font-size:15px;letter-spacing:.05em;color:#1f1a14">{{btn}}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- the ship's log, a ledger page that folds to a strip -->
+    <div style="width:{{logW}};background:#efe4cc;border:1px solid #1f1a14;border-radius:2px;box-shadow:0 7px 0 #1e140c;display:flex;flex-direction:column;overflow:hidden;transition:width .25s">
+      <button type="button" onClick="{{toggleLog}}" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border:0;border-bottom:2px solid #7a2a1d;background:transparent;font-family:'Alegreya SC',serif;font-weight:700;font-size:16px;letter-spacing:.06em;color:#1f1a14;white-space:nowrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f1a14" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 3h11a2 2 0 012 2v14a2 2 0 01-2 2H6z"></path><path d="M9 8h6M9 12h6M9 16h4"></path></svg>
+        <sc-if value="{{logOpen}}" hint-placeholder-val="{{true}}"><span>Судовой журнал</span></sc-if>
+      </button>
+      <sc-for list="{{log}}" as="l" hint-placeholder-count="7">
+        <div style="display:flex;gap:8px;padding:6px 12px;border-bottom:1px solid #c9bda4;font-family:Alegreya,serif;font-size:14px;line-height:1.25">
+          <span style="flex:none;width:20px;font-family:'Alegreya SC',serif;font-weight:700;color:{{l.c}}">{{l.mark}}</span>
+          <sc-if value="{{logOpen}}" hint-placeholder-val="{{true}}"><span>{{l.text}}</span></sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="position:relative;height:184px;display:flex;gap:16px;padding:12px 14px 0">
+    <div style="width:130px;display:flex;flex-direction:column;gap:6px;color:#efe4cc;padding-top:4px">
+      <span style="font-family:'Alegreya SC',serif;font-size:14px;letter-spacing:.08em">Трюм пиратов</span>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        <sc-for list="{{kegs}}" as="k" hint-placeholder-count="8"><svg width="20" height="22" viewBox="0 0 14 16" aria-hidden="true"><path d="M2 2h10c1 4 1 8 0 12H2C1 10 1 6 2 2z" fill="{{k.fill}}" stroke="#c7b48a" stroke-width="1"></path><path d="M1.6 5h10.8M1.6 11h10.8" stroke="#c7b48a" stroke-width="1"></path></svg></sc-for>
+      </div>
+      <span style="font-size:13px;color:#c7b48a">Колода 19 · Сброс 0</span>
+    </div>
+    <div style="flex:1;display:flex;align-items:flex-start;padding-top:4px">
+      <sc-for list="{{hand}}" as="c" hint-placeholder-count="5">
+        <div class="hc" style="{{c.style}}">
+          <div style="position:absolute;inset:4px;border:1px solid {{c.color}};border-radius:3px;pointer-events:none"></div>
+          <div style="position:relative;padding:9px 10px;display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:'Alegreya SC',serif;font-size:11px;letter-spacing:.08em;color:{{c.color}}">{{c.type}}</span>
+            <b style="font-family:Alegreya,serif;font-size:16px;line-height:1.1">{{c.name}}</b>
+            <span style="font-size:13px;font-weight:700;color:{{c.color}}">{{c.big}}</span>
+            <span style="font-size:12px;line-height:1.25;color:#3a3229">{{c.text}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="width:230px;display:flex;flex-direction:column;gap:10px;padding-top:10px">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" aria-label="Быстрее" title="Быстрее" style="width:44px;height:44px;border-radius:5px;border:1px solid #c7b48a;background:rgba(0,0,0,.15);display:grid;place-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="#efe4cc" aria-hidden="true"><path d="M3 6l9 6-9 6zM12 6l9 6-9 6z"></path></svg></button>
+        <button type="button" aria-label="До конца хода" title="До конца хода" style="width:44px;height:44px;border-radius:5px;border:1px solid #c7b48a;background:rgba(0,0,0,.15);display:grid;place-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="#efe4cc" aria-hidden="true"><path d="M4 6l9 6-9 6z"></path><rect x="15" y="6" width="3" height="12"></rect></svg></button>
+        <button type="button" aria-label="Пауза" title="Пауза" style="width:44px;height:44px;border-radius:5px;border:1px solid #c7b48a;background:rgba(0,0,0,.15);display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="#efe4cc" aria-hidden="true"><rect x="6" y="5" width="4" height="14"></rect><rect x="14" y="5" width="4" height="14"></rect></svg></button>
+        <button type="button" aria-label="Отменить" title="Отменить" style="width:44px;height:44px;border-radius:5px;border:1px solid #c7b48a;background:rgba(0,0,0,.15);display:grid;place-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 010 12h-3"></path></svg></button>
+      </div>
+      <button type="button" style="height:58px;border-radius:4px;border:0;box-shadow:0 0 0 1px #c9a65a,0 3px 0 #1e140c;outline:1px solid rgba(239,228,204,.5);outline-offset:-6px;background:#7a2a1d;color:#efe4cc;font-family:'Alegreya SC',serif;font-weight:700;font-size:21px;letter-spacing:.08em">Ход окончен</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1366,"height":768}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { logOpen: true }; }
+  renderVals() {
+    const cube = (color) => 'width:12px;height:12px;border-radius:2px;background:' + color + ';box-shadow:inset -1.5px -1.5px 0 rgba(0,0,0,.35),inset 1.5px 1.5px 0 rgba(255,255,255,.3)';
+    const lost = 'width:12px;height:12px;box-sizing:border-box;border:1px solid #9c8f78;border-radius:2px';
+    const INK = { 'корпус': '#a3341f', 'паруса': '#2f5f8f', 'пушки': '#33302c', 'команда': '#2f7d4a' };
+    const track = (label, n, max, color) => ({ label, ink: INK[label], num: n + '/' + max, slots: Array.from({ length: max }, (_, i) => (i < n ? cube(color) : lost)) });
+    const mat = (name, captain, color, legend, t) => ({ name, captain, color, legend, hull: t[0], tracks: [track('корпус', t[0], t[1], color), track('паруса', t[2], t[3], color), track('пушки', t[4], t[5], color), track('команда', t[6], t[7], color)] });
+    const backs = (n) => Array.from({ length: n }, (_, i) => ({ style: 'width:22px;height:31px;margin:0 -5px;border-radius:2px;background:#2b2118;border:1px solid #a8843a;box-shadow:inset 0 0 0 2px #2b2118,inset 0 0 0 3px #a8843a;transform-origin:50% 130%;transform:rotate(' + (i - (n - 1) / 2) * 8 + 'deg)' }));
+    const enemy = [
+      { ...mat('Индевор', 'лорд Катлер Беккет', '#7d6327', 'Армада Компании', [12, 12, 1, 1, 3, 3, 2, 2]), hand: 5, backs: backs(5) },
+      { ...mat('Летучий голландец', 'Дейви Джонс', '#2b5a4e', 'Кракен', [8, 11, 3, 3, 2, 2, 3, 3]), hand: 4, backs: backs(4) },
+    ];
+    const own = [
+      { ...mat('Чёрная жемчужина', 'капитан Джек Воробей', '#2b2620', 'Джек ускользает', [9, 9, 3, 3, 2, 2, 3, 3]), frame: ';outline:2px solid #c9a65a;outline-offset:3px', buttons: ['Залп · 1 Порох'] },
+      { ...mat('Месть королевы Анны', 'Чёрная Борода', '#7a2a1d', 'Корабль в бутылке', [9, 11, 2, 2, 3, 3, 2, 3]), frame: '', buttons: ['Залп · 1 Порох', 'Меч Тритона · 1'] },
+    ];
+    const kegs = Array.from({ length: 8 }, (_, i) => ({ fill: i < 2 ? '#a8843a' : 'transparent' }));
+    const raw = [
+      { type: 'заряд', name: 'Ядра', big: '+1 урон', text: 'Этот Залп наносит +1 урон.', color: '#7a2a1d', ok: true },
+      { type: 'заряд', name: 'Книппели', big: 'по Парусам', text: 'Залп бьёт по Парусам цели.', color: '#7a2a1d', ok: true },
+      { type: 'приказ', name: 'Безумный план', big: '+2 карты, 1 в План', text: 'Возьмите 2 карты, затем положите 1 в План.', color: '#4e3b63', ok: true },
+      { type: 'реакция', name: 'Банка с землёй', big: 'Залп −2', text: 'Только в ход противника.', color: '#3d5a6b', ok: false },
+      { type: 'ремонт', name: 'Латаем паруса', big: '+2 Паруса', text: 'Восстановите 2 клетки Парусов.', color: '#4f6b47', ok: true },
+    ];
+    const hand = raw.map((c, i) => ({ ...c, style: 'position:relative;width:122px;height:164px;margin-right:-10px;border-radius:6px;background:#f5eedc;transform-origin:50% 150%;transform:rotate(' + (i - 2) * 3.5 + 'deg) translateY(' + Math.abs(i - 2) * 5 + 'px);' + (c.ok ? 'box-shadow:0 0 0 2px #c9a65a,0 0 14px 3px rgba(242,193,78,.3),0 4px 0 rgba(0,0,0,.4)' : 'box-shadow:0 4px 0 rgba(0,0,0,.4);filter:saturate(.3) brightness(.8)') }));
+    const log = [
+      { mark: 'зп', c: '#7a2a1d', text: '«Индевор»: Залп по «Жемчужине» — 2 по Корпусу' },
+      { mark: 'пр', c: '#4e3b63', text: '«Голландец»: «Указ о казнях», −1 Команда всем' },
+      { mark: 'п', c: '#a8843a', text: 'Компания: +3 Пороха в Трюм' },
+      { mark: 'рк', c: '#3d5a6b', text: '«Месть»: Реакция «Прикрыть бортом»' },
+      { mark: 'м', c: '#3d5a6b', text: 'Море: «Буря», Залпы −1' },
+      { mark: 'II', c: '#3a3229', text: 'Раунд второй' },
+      { mark: 'зп', c: '#7a2a1d', text: '«Жемчужина»: Залп по «Голландцу» — 1 по Корпусу' },
+    ];
+    return { enemy, own, kegs, hand, log, logOpen: this.state.logOpen, logW: this.state.logOpen ? '250px' : '52px', toggleLog: () => this.setState({ logOpen: !this.state.logOpen }) };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Итог: телефон</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,500;0,700;0,800;1,500&amp;family=Alegreya+SC:wght@500;700&amp;family=Alegreya+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#7a2a1d}a:hover{color:#4e1a12}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes rain{from{transform:translate(0,-30px)}to{transform:translate(-8px,30px)}}
+@keyframes flicker{0%,100%{opacity:.55}40%{opacity:.7}60%{opacity:.5}80%{opacity:.65}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 1px #c9a65a,0 0 0 0 rgba(242,193,78,.6)}50%{box-shadow:0 0 0 1px #c9a65a,0 0 14px 4px rgba(242,193,78,.55)}}
+@keyframes sail{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-2px) rotate(1deg)}}
+.waves{animation:drift 26s linear infinite}
+.waves2{animation:drift 40s linear infinite reverse}
+.rain{animation:rain .7s linear infinite}
+.lamp{animation:flicker 4s ease-in-out infinite}
+.ready{animation:glow 1.8s ease-in-out infinite}
+.sail{animation:sail 4s ease-in-out infinite;transform-origin:50% 90%}
+.hc{transition:transform .18s ease-out}
+.hc:hover{transform:translateY(-16px) scale(1.06)!important;z-index:5}
+@media (prefers-reduced-motion:reduce){.waves,.waves2,.rain,.lamp,.ready,.sail{animation:none}}
+</style>
+</helmet>
+<div style="position:relative;width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#3a281b;font-family:'Alegreya Sans',sans-serif;color:#1f1a14;overflow:hidden">
+  <!-- the table: walnut planks, a lamp's warm light, a few things lying about -->
+  <svg aria-hidden="true" width="390" height="844" viewBox="0 0 390 844" style="position:absolute;inset:0">
+    <g stroke="#24170e" stroke-width="2"><path d="M0 120h390M0 300h390M0 520h390M0 690h390"></path></g>
+    <g fill="none" stroke="#24170e" stroke-width="1" opacity=".45"><path d="M0 40 C120 30 260 52 390 38"></path><path d="M0 200 C140 212 250 188 390 204"></path><path d="M0 610 C110 600 280 626 390 612"></path><path d="M0 760 C150 772 240 748 390 764"></path></g>
+    <g fill="#24170e"><circle cx="60" cy="120" r="2"></circle><circle cx="330" cy="120" r="2"></circle><circle cx="60" cy="690" r="2"></circle><circle cx="330" cy="690" r="2"></circle></g>
+  </svg>
+  <div class="lamp" aria-hidden="true" style="position:absolute;left:-120px;top:-140px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(255,196,110,.38),rgba(255,196,110,0) 70%);pointer-events:none"></div>
+  <svg aria-hidden="true" width="120" height="40" viewBox="0 0 120 40" style="position:absolute;right:6px;top:690px;opacity:.9">
+    <g stroke="#6e5420" stroke-width="1.5"><ellipse cx="20" cy="22" rx="11" ry="7" fill="#c9a65a"></ellipse><ellipse cx="34" cy="16" rx="11" ry="7" fill="#d9b765"></ellipse><ellipse cx="52" cy="24" rx="11" ry="7" fill="#c9a65a"></ellipse></g>
+  </svg>
+
+  <!-- status -->
+  <div style="position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px 6px;color:#efe4cc">
+    <svg width="26" height="18" viewBox="0 0 26 16" fill="#efe4cc" aria-hidden="true"><path d="M2 11h22l-3 4H5z"></path><path d="M8 2v9M14 0v11M20 3v8" stroke="#efe4cc" stroke-width="1.2"></path><path d="M8.6 3l5 3-5 2zM14.6 1l6 4-6 3zM20.6 4l3.5 2.5-3.5 2z"></path></svg>
+    <span style="font-family:'Alegreya SC',serif;font-weight:700;font-size:16px;letter-spacing:.08em">Пираты · раунд 2</span>
+    <span style="flex:1"></span>
+    <button type="button" aria-label="Карта моря: {{weather}}" style="display:flex;align-items:center;gap:6px;height:40px;padding:0 10px;border-radius:5px;border:1px solid #c7b48a;background:#e8dcc0;color:#1f1a14;box-shadow:0 2px 0 #1e140c;font:inherit">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3d5a6b" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 15c3-3 5 3 8 0s5 3 8 0 3-1 4 0"></path><path d="M2 19c3-3 5 3 8 0s5 3 8 0 3-1 4 0"></path><path d="M8 4l2 5M14 3l1 5M19 5l-1 4"></path></svg>
+      <b style="font-family:Alegreya,serif;font-size:15px">{{weather}}</b>
+    </button>
+    <button type="button" aria-label="Настройки" style="width:40px;height:40px;border-radius:5px;border:1px solid #c7b48a;background:rgba(0,0,0,.15);display:grid;place-items:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg>
+    </button>
+  </div>
+  <!-- the ONE line of what to do -->
+  <div style="position:relative;margin:2px 10px 8px;padding:6px 14px;background:#efe4cc;border:1px solid #1f1a14;outline:1px solid #efe4cc;outline-offset:2px;border-radius:2px;text-align:center;font-family:Alegreya,serif;font-weight:800;font-size:16px;box-shadow:0 3px 0 rgba(0,0,0,.3)">«Жемчужина»: сыграйте карту или дайте Залп</div>
+
+  <!-- the board: a sea chart whose sea lives -->
+  <div style="position:relative;flex:1;margin:0 10px;background:#e6dbc1;border:1px solid #1f1a14;box-shadow:0 0 0 3px #e6dbc1,0 0 0 4px #1f1a14,0 6px 0 4px #1e140c;overflow:hidden">
+    <div style="position:absolute;inset:10px;background:#bccfcd;border:1px solid #6f7f86;overflow:hidden">
+      <svg class="waves" aria-hidden="true" width="740" height="100%" viewBox="0 0 740 440" preserveAspectRatio="none" style="position:absolute;left:0;top:0">
+        <g fill="none" stroke="#3d5a6b" stroke-width="1.1" stroke-linecap="round" opacity=".55">
+          <path d="M10 40 q8-6 16 0 t16 0M90 70 q8-6 16 0 t16 0M200 30 q8-6 16 0 t16 0M290 90 q8-6 16 0 t16 0M40 150 q8-6 16 0 t16 0M150 120 q8-6 16 0 t16 0M260 170 q8-6 16 0 t16 0M330 140 q8-6 16 0 t16 0M20 270 q8-6 16 0 t16 0M120 300 q8-6 16 0 t16 0M220 260 q8-6 16 0 t16 0M310 320 q8-6 16 0 t16 0M60 390 q8-6 16 0 t16 0M180 410 q8-6 16 0 t16 0M280 380 q8-6 16 0 t16 0"></path>
+          <path transform="translate(370 0)" d="M10 40 q8-6 16 0 t16 0M90 70 q8-6 16 0 t16 0M200 30 q8-6 16 0 t16 0M290 90 q8-6 16 0 t16 0M40 150 q8-6 16 0 t16 0M150 120 q8-6 16 0 t16 0M260 170 q8-6 16 0 t16 0M330 140 q8-6 16 0 t16 0M20 270 q8-6 16 0 t16 0M120 300 q8-6 16 0 t16 0M220 260 q8-6 16 0 t16 0M310 320 q8-6 16 0 t16 0M60 390 q8-6 16 0 t16 0M180 410 q8-6 16 0 t16 0M280 380 q8-6 16 0 t16 0"></path>
+        </g>
+      </svg>
+      <svg class="waves2" aria-hidden="true" width="740" height="100%" viewBox="0 0 740 440" preserveAspectRatio="none" style="position:absolute;left:0;top:0">
+        <g stroke="#6f7f86" stroke-width=".6" opacity=".5"><path d="M0 110h740M0 220h740M0 330h740M90 0v440M185 0v440M280 0v440M460 0v440M555 0v440M650 0v440"></path></g>
+      </svg>
+      <sc-if value="{{storm}}" hint-placeholder-val="{{true}}">
+        <svg class="rain" aria-hidden="true" width="100%" height="100%" viewBox="0 0 350 440" preserveAspectRatio="none" style="position:absolute;inset:-30px 0 0 0">
+          <g stroke="#2a3f49" stroke-width="1" stroke-linecap="round" opacity=".45"><path d="M20 0l-6 16M60 40l-6 16M100 10l-6 16M140 60l-6 16M180 20l-6 16M220 50l-6 16M260 5l-6 16M300 45l-6 16M340 15l-6 16M40 130l-6 16M80 170l-6 16M120 120l-6 16M160 180l-6 16M200 140l-6 16M240 175l-6 16M280 125l-6 16M320 165l-6 16M20 260l-6 16M60 300l-6 16M100 250l-6 16M140 310l-6 16M180 270l-6 16M220 305l-6 16M260 255l-6 16M300 295l-6 16M340 265l-6 16M40 390l-6 16M80 420l-6 16M120 380l-6 16M160 410l-6 16M200 385l-6 16M240 425l-6 16M280 395l-6 16M320 415l-6 16"></path></g>
+        </svg>
+      </sc-if>
+      <svg aria-hidden="true" width="64" height="64" viewBox="-32 -32 64 64" style="position:absolute;left:50%;top:50%;margin:-6px 0 0 -32px;opacity:.85">
+        <g fill="none" stroke="#3d5a6b" stroke-width="1"><circle r="24"></circle><circle r="18" stroke-dasharray="2 3"></circle><path d="M0 -30 L5 0 L0 30 L-5 0 Z" fill="#3d5a6b"></path><path d="M-30 0 L0 4 L30 0 L0 -4 Z" fill="#e6dbc1"></path></g>
+      </svg>
+    </div>
+
+    <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:6px;box-sizing:border-box">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        <sc-for list="{{enemy}}" as="p" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="display:flex;justify-content:center;height:20px;align-items:flex-end" aria-label="В руке {{p.hand}} карт">
+              <sc-for list="{{p.backs}}" as="b" hint-placeholder-count="5"><div style="{{b.style}}"></div></sc-for>
+            </div>
+            <div class="sail" style="background:#f5eedc;border:1px solid #1f1a14;border-radius:3px;box-shadow:inset 0 0 0 2px #f5eedc,inset 0 0 0 3px #1f1a14,0 3px 0 rgba(30,20,12,.4)">
+              <div style="margin:3px 3px 0;padding:3px 4px 3px 6px;background:{{p.color}};color:#f5eedc;display:flex;align-items:center;gap:5px">
+                <svg width="20" height="13" viewBox="0 0 26 16" fill="#f5eedc" aria-hidden="true"><path d="M2 11h22l-3 4H5z"></path><path d="M8 2v9M14 0v11M20 3v8" stroke="#f5eedc" stroke-width="1.2"></path><path d="M8.6 3l5 3-5 2zM14.6 1l6 4-6 3zM20.6 4l3.5 2.5-3.5 2z"></path></svg>
+                <b style="flex:1;font-family:'Alegreya SC',serif;font-size:14px;letter-spacing:.03em">{{p.name}}</b>
+                <span style="position:relative;width:26px;height:28px;display:grid;place-items:center" aria-label="Корпус {{p.hull}}"><svg width="26" height="28" viewBox="0 0 40 44" aria-hidden="true" style="position:absolute;inset:0"><path d="M20 2l16 6v12c0 11-7 18-16 22C11 38 4 31 4 20V8z" fill="#a3341f" stroke="#f5eedc" stroke-width="2"></path></svg><span style="position:relative;color:#fff;font-weight:700;font-size:13px">{{p.hull}}</span></span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;padding:5px 7px 7px">
+                <sc-for list="{{p.tracks}}" as="tr" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <span style="width:46px;font-family:'Alegreya SC',serif;font-size:10px;letter-spacing:.04em;color:{{tr.ink}}">{{tr.label}}</span>
+                    <span style="display:flex;gap:2px"><sc-for list="{{tr.slots}}" as="s" hint-placeholder-count="6"><span style="{{s}}"></span></sc-for></span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- «Последнее» on a cartouche — readable on the chart -->
+      <div style="align-self:center;margin-bottom:58px;max-width:300px;padding:5px 12px;background:#f5eedc;border:1px solid #1f1a14;box-shadow:inset 0 0 0 2px #f5eedc,inset 0 0 0 3px #a8843a;border-radius:2px;text-align:center;font-family:Alegreya,serif;font-size:13px;line-height:1.25;color:#1f1a14"><span style="font-family:'Alegreya SC',serif;letter-spacing:.06em;color:#7a2a1d">последнее</span> · «Месть» продаёт «Картечь», +1 Порох</div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        <sc-for list="{{own}}" as="p" hint-placeholder-count="2">
+          <div class="sail" style="background:#f5eedc;border:1px solid #1f1a14;border-radius:3px;box-shadow:inset 0 0 0 2px #f5eedc,inset 0 0 0 3px #1f1a14,0 3px 0 rgba(30,20,12,.4){{p.frame}}">
+            <div style="margin:3px 3px 0;padding:3px 4px 3px 6px;background:{{p.color}};color:#f5eedc;display:flex;align-items:center;gap:5px">
+              <svg width="20" height="13" viewBox="0 0 26 16" fill="#f5eedc" aria-hidden="true"><path d="M2 11h22l-3 4H5z"></path><path d="M8 2v9M14 0v11M20 3v8" stroke="#f5eedc" stroke-width="1.2"></path><path d="M8.6 3l5 3-5 2zM14.6 1l6 4-6 3zM20.6 4l3.5 2.5-3.5 2z"></path></svg>
+              <b style="flex:1;font-family:'Alegreya SC',serif;font-size:14px;letter-spacing:.03em">{{p.name}}</b>
+              <span style="position:relative;width:26px;height:28px;display:grid;place-items:center" aria-label="Корпус {{p.hull}}"><svg width="26" height="28" viewBox="0 0 40 44" aria-hidden="true" style="position:absolute;inset:0"><path d="M20 2l16 6v12c0 11-7 18-16 22C11 38 4 31 4 20V8z" fill="#a3341f" stroke="#f5eedc" stroke-width="2"></path></svg><span style="position:relative;color:#fff;font-weight:700;font-size:13px">{{p.hull}}</span></span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;padding:5px 7px 4px">
+              <sc-for list="{{p.tracks}}" as="tr" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:4px">
+                  <span style="width:46px;font-family:'Alegreya SC',serif;font-size:10px;letter-spacing:.04em;color:{{tr.ink}}">{{tr.label}}</span>
+                  <span style="display:flex;gap:2px"><sc-for list="{{tr.slots}}" as="s" hint-placeholder-count="6"><span style="{{s}}"></span></sc-for></span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:5px;padding:2px 7px 8px">
+              <sc-for list="{{p.buttons}}" as="btn" hint-placeholder-count="1">
+                <button type="button" style="flex:1;min-height:36px;border-radius:4px;border:1px solid #1f1a14;background:#efe4cc;box-shadow:0 2px 0 #1f1a14;font-family:'Alegreya SC',serif;font-weight:700;font-size:13px;letter-spacing:.05em;color:#1f1a14">{{btn}}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- powder kegs and the deck -->
+  <div style="position:relative;display:flex;align-items:center;gap:6px;padding:9px 14px 0;color:#efe4cc">
+    <span style="font-family:'Alegreya SC',serif;font-size:12px;letter-spacing:.08em">Трюм</span>
+    <sc-for list="{{kegs}}" as="k" hint-placeholder-count="8">
+      <svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><path d="M2 2h10c1 4 1 8 0 12H2C1 10 1 6 2 2z" fill="{{k.fill}}" stroke="#c7b48a" stroke-width="1"></path><path d="M1.6 5h10.8M1.6 11h10.8" stroke="#c7b48a" stroke-width="1"></path></svg>
+    </sc-for>
+    <b style="font-size:13px">2</b>
+    <span style="flex:1"></span>
+    <span style="font-size:12px;color:#c7b48a">Колода 19 · Сброс 0</span>
+  </div>
+
+  <!-- the hand: printed cards in a fan; the ones playable now in brass with a warm light -->
+  <div style="position:relative;height:128px">
+    <div style="position:absolute;left:0;right:0;top:10px;display:flex;justify-content:center">
+      <sc-for list="{{hand}}" as="c" hint-placeholder-count="5">
+        <div class="hc" style="{{c.style}}">
+          <div style="position:absolute;inset:3px;border:1px solid {{c.color}};border-radius:2px;pointer-events:none"></div>
+          <div style="position:relative;padding:6px 7px;display:flex;flex-direction:column;gap:3px">
+            <span style="font-family:'Alegreya SC',serif;font-size:10px;letter-spacing:.08em;color:{{c.color}}">{{c.type}}</span>
+            <b style="font-family:Alegreya,serif;font-size:13px;line-height:1.1">{{c.name}}</b>
+            <span style="font-size:12px;font-weight:700;color:{{c.color}}">{{c.big}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="position:relative;display:flex;gap:8px;padding:8px 10px 12px;background:#2c1f15;border-top:1px solid #c7b48a">
+    <button type="button" aria-label="Журнал" style="width:50px;height:50px;border-radius:5px;border:1px solid #c7b48a;background:transparent;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 3h11a2 2 0 012 2v14a2 2 0 01-2 2H6z"></path><path d="M9 8h6M9 12h6M9 16h4"></path></svg></button>
+    <button type="button" aria-label="Правила" style="width:50px;height:50px;border-radius:5px;border:1px solid #c7b48a;background:transparent;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z"></path><path d="M12 6v14"></path></svg></button>
+    <button type="button" aria-label="Отменить" style="width:50px;height:50px;border-radius:5px;border:1px solid #c7b48a;background:transparent;display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#efe4cc" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10a6 6 0 010 12h-3"></path></svg></button>
+    <button type="button" class="{{endClass}}" style="flex:1;height:50px;border-radius:4px;border:0;box-shadow:0 0 0 1px #c9a65a;outline:1px solid rgba(239,228,204,.5);outline-offset:-5px;background:#7a2a1d;color:#efe4cc;font-family:'Alegreya SC',serif;font-weight:700;font-size:18px;letter-spacing:.08em">Ход окончен</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"weather":{"editor":"enum","options":["Буря","Штиль"],"default":"Буря"},"nothingLeft":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const weather = this.props.weather ?? 'Буря';
+    const cube = (color) => 'width:8px;height:8px;border-radius:1.5px;background:' + color + ';box-shadow:inset -1px -1px 0 rgba(0,0,0,.35),inset 1px 1px 0 rgba(255,255,255,.3)';
+    const lost = 'width:8px;height:8px;box-sizing:border-box;border:1px solid #9c8f78;border-radius:1px';
+    const INK = { 'корпус': '#a3341f', 'паруса': '#2f5f8f', 'пушки': '#33302c', 'команда': '#2f7d4a' };
+    const track = (label, n, max, color) => ({ label, ink: INK[label], slots: Array.from({ length: max }, (_, i) => (i < n ? cube(color) : lost)) });
+    const mat = (name, color, t) => ({ name, color, hull: t[0], tracks: [track('корпус', t[0], t[1], color), track('паруса', t[2], t[3], color), track('пушки', t[4], t[5], color), track('команда', t[6], t[7], color)] });
+    const backs = (n) => Array.from({ length: n }, (_, i) => ({ style: 'width:15px;height:21px;margin:0 -3px;border-radius:2px;background:#2b2118;border:1px solid #a8843a;box-shadow:inset 0 0 0 2px #2b2118,inset 0 0 0 3px #a8843a;transform-origin:50% 120%;transform:rotate(' + (i - (n - 1) / 2) * 8 + 'deg)' }));
+    const enemy = [
+      { ...mat('Индевор', '#7d6327', [12, 12, 1, 1, 3, 3, 2, 2]), hand: 5, backs: backs(5) },
+      { ...mat('Голландец', '#2b5a4e', [8, 11, 3, 3, 2, 2, 3, 3]), hand: 4, backs: backs(4) },
+    ];
+    const own = [
+      { ...mat('Жемчужина', '#2b2620', [9, 9, 3, 3, 2, 2, 3, 3]), frame: ';outline:2px solid #c9a65a;outline-offset:2px', buttons: ['Залп · 1'] },
+      { ...mat('Месть', '#7a2a1d', [9, 11, 2, 2, 3, 3, 2, 3]), frame: '', buttons: ['Залп · 1', 'Меч · 1'] },
+    ];
+    const kegs = Array.from({ length: 8 }, (_, i) => ({ fill: i < 2 ? '#a8843a' : 'transparent' }));
+    const raw = [
+      { type: 'заряд', name: 'Ядра', big: '+1 урон', color: '#7a2a1d', ok: true },
+      { type: 'приказ', name: 'Безумный план', big: '+2 карты', color: '#4e3b63', ok: true },
+      { type: 'реакция', name: 'Банка с землёй', big: 'Залп −2', color: '#3d5a6b', ok: false },
+      { type: 'ремонт', name: 'Латаем паруса', big: '+2 Паруса', color: '#4f6b47', ok: true },
+      { type: 'приказ', name: 'Обезьянка Джек', big: 'кража', color: '#4e3b63', ok: false },
+    ];
+    const hand = raw.map((c, i) => ({ ...c, style: 'position:relative;width:76px;height:106px;margin:0 -4px;border-radius:5px;background:#f5eedc;transform-origin:50% 140%;transform:translateY(' + Math.abs(i - 2) * 5 + 'px) rotate(' + (i - 2) * 5 + 'deg);' + (c.ok ? 'box-shadow:0 0 0 2px #c9a65a,0 0 12px 2px rgba(242,193,78,.35),0 4px 0 rgba(0,0,0,.35)' : 'box-shadow:0 3px 0 rgba(0,0,0,.35);filter:saturate(.3) brightness(.8)') }));
+    return { weather, storm: weather === 'Буря', enemy, own, kegs, hand, endClass: this.props.nothingLeft ? 'ready' : '' };
+  }
+}
+</script>
+</body>
+</html>

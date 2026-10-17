@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Тревога: окно Реакций</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700;800&amp;family=Alegreya+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#8A2E1C}a:hover{color:#5c1e12}
+@keyframes alarm{0%,100%{box-shadow:inset 0 0 0 0 rgba(200,40,30,0)}50%{box-shadow:inset 0 0 38px 6px rgba(200,40,30,.55)}}
+@keyframes slidein{from{transform:translateY(-30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes dash{to{stroke-dashoffset:-24}}
+@keyframes fuse{from{stroke-dashoffset:0}to{stroke-dashoffset:176}}
+@keyframes spark{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.5)}}
+@keyframes sway{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1.2deg)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.alarm{animation:alarm 1.4s ease-in-out infinite}
+.slidein{animation:slidein .35s cubic-bezier(.2,.9,.3,1.2) both}
+.dash{animation:dash .8s linear infinite}
+.fuse{animation:fuse 20s linear forwards}
+.spark{animation:spark .3s ease-in-out infinite;transform-origin:center}
+.sway{animation:sway 1.2s ease-in-out infinite;transform-origin:50% 100%}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+.rcard{transition:transform .18s ease-out}
+@media (prefers-reduced-motion:reduce){.alarm,.slidein,.dash,.fuse,.spark,.sway,.pulse{animation:none}}
+</style>
+</helmet>
+<div style="position:relative;width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#f2ece1;font-family:'Alegreya Sans',sans-serif;color:#2a241d;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 12px 4px">
+    <span style="width:10px;height:10px;border-radius:50%;background:#9C7A2C"></span>
+    <span style="font-weight:700;font-size:15px">Ход Компании · раунд 2</span>
+  </div>
+  <div style="padding:2px 12px 8px;font-family:Alegreya,serif;font-weight:800;font-size:18px">Ответите Реакцией?</div>
+
+  <!-- the sea, dimmed; only the shooter and the target stay bright -->
+  <div class="alarm" style="position:relative;flex:1;background:#203f4a;border-top:3px solid #6b4a2f;border-bottom:3px solid #6b4a2f">
+    <!-- the alarm banner -->
+    <sc-if value="{{open}}" hint-placeholder-val="{{true}}">
+      <div class="slidein" style="position:absolute;left:10px;right:10px;top:8px;z-index:4;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#a3241a;color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.35)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="5" r="2"></circle><path d="M12 7v14M5 13H3a9 9 0 0018 0h-2M8 10h8"></path></svg>
+        <div style="flex:1;display:flex;flex-direction:column">
+          <b style="font-family:Alegreya,serif;font-size:19px;letter-spacing:.03em">ТРЕВОГА!</b>
+          <span style="font-size:14px">«Индевор» бьёт «Жемчужину» · <b>3 по Корпусу</b></span>
+        </div>
+        <button type="button" aria-label="Что такое Реакция" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #fff;background:transparent;color:#fff;font:inherit;font-weight:700">?</button>
+        <button type="button" aria-label="Свернуть" onClick="{{toggle}}" style="width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.18);display:grid;place-items:center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg>
+        </button>
+      </div>
+    </sc-if>
+    <sc-if value="{{closed}}" hint-placeholder-val="{{false}}">
+      <button type="button" class="pulse" onClick="{{toggle}}" style="position:absolute;left:50%;top:10px;margin-left:-110px;width:220px;z-index:4;height:40px;border-radius:20px;border:0;background:#a3241a;color:#fff;font:inherit;font-weight:700;font-size:14px;box-shadow:0 6px 14px rgba(0,0,0,.3)">Вас атакуют · Реакция?</button>
+    </sc-if>
+
+    <!-- the line of fire -->
+    <svg aria-hidden="true" width="390" height="100%" viewBox="0 0 390 560" preserveAspectRatio="none" style="position:absolute;inset:0;z-index:2">
+      <path class="dash" d="M98 150 C 140 290, 120 330, 98 420" fill="none" stroke="#ffd36b" stroke-width="3" stroke-dasharray="10 14" stroke-linecap="round"></path>
+    </svg>
+
+    <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:84px 8px 10px;box-sizing:border-box">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        <div style="background:#fffaf2;border-radius:12px;overflow:hidden;box-shadow:0 0 0 3px #ffd36b">
+          <div style="padding:5px 8px;background:#9C7A2C;color:#fff;font-family:Alegreya,serif;font-weight:700;font-size:16px">Индевор</div>
+          <div style="padding:6px 8px;font-size:13px;font-weight:700">3 Пушки · Залп</div>
+        </div>
+        <div style="background:#fffaf2;border-radius:12px;overflow:hidden;opacity:.35">
+          <div style="padding:5px 8px;background:#2C6658;color:#fff;font-family:Alegreya,serif;font-weight:700;font-size:16px">Голландец</div>
+          <div style="padding:6px 8px;font-size:13px">—</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        <div class="sway" style="position:relative;background:#fffaf2;border-radius:12px;overflow:visible;box-shadow:0 0 0 3px #e0473a">
+          <div style="padding:5px 8px;background:#26221F;color:#fff;font-family:Alegreya,serif;font-weight:700;font-size:16px;border-radius:12px 12px 0 0">Жемчужина</div>
+          <div style="padding:6px 8px;font-size:13px;font-weight:700">Корпус 9 → <span style="color:#a3241a">{{after}}</span></div>
+          <span style="position:absolute;right:-6px;top:-12px;padding:3px 8px;border-radius:10px;background:#a3241a;color:#fff;font-weight:800;font-size:15px">{{hit}}</span>
+        </div>
+        <div style="background:#fffaf2;border-radius:12px;overflow:hidden;opacity:.35">
+          <div style="padding:5px 8px;background:#8A2E1C;color:#fff;font-family:Alegreya,serif;font-weight:700;font-size:16px">Месть</div>
+          <div style="padding:6px 8px;font-size:13px">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- the Reactions rise from the hand, each with a ribbon «what happens now» -->
+  <div style="position:relative;height:178px;background:#f2ece1">
+    <div style="position:absolute;left:12px;right:12px;top:6px;font-size:12px;color:#6b6157;font-weight:700">Реакции в руке — нажмите, чтобы выбрать</div>
+    <div style="position:absolute;left:0;right:0;top:26px;display:flex;justify-content:center;gap:10px">
+      <sc-for list="{{cards}}" as="c" hint-placeholder-count="3">
+        <button type="button" class="rcard" onClick="{{c.pick}}" style="{{c.style}}">
+          <span style="display:block;padding:3px 4px;background:{{c.ribbon}};color:#fff;font-weight:800;font-size:12px;text-align:center">{{c.now}}</span>
+          <span style="display:block;height:5px;background:#2d5d7b"></span>
+          <span style="display:flex;flex-direction:column;gap:3px;padding:5px 6px;text-align:left">
+            <span style="font-size:9px;font-weight:700;letter-spacing:.06em;color:#2d5d7b">РЕАКЦИЯ</span>
+            <b style="font-family:Alegreya,serif;font-size:13px;line-height:1.1;color:#2a241d">{{c.name}}</b>
+            <span style="font-size:11px;color:#6b6157">{{c.why}}</span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- skip with a burning fuse, play -->
+  <div style="display:flex;gap:8px;padding:8px 10px 12px;background:#fffaf2;border-top:1px solid #d9cfbf">
+    <button type="button" style="position:relative;width:132px;height:52px;border-radius:14px;border:1.5px solid #2a241d;background:#fff;font:inherit;font-weight:700;font-size:16px;overflow:visible">
+      <svg aria-hidden="true" width="132" height="52" viewBox="0 0 132 52" style="position:absolute;inset:-1.5px">
+        <rect class="fuse" x="2" y="2" width="128" height="48" rx="13" fill="none" stroke="#e0782a" stroke-width="3" stroke-dasharray="176 400" pathLength="176"></rect>
+      </svg>
+      Пропустить
+    </button>
+    <button type="button" style="flex:1;height:52px;border-radius:14px;border:0;background:{{playBg}};color:#fff;font-family:Alegreya,serif;font-weight:800;font-size:17px;line-height:1.1">{{playLabel}}</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { open: true, picked: 0 }; }
+  renderVals() {
+    const list = [
+      { name: 'Банка с землёй', now: 'Залп 3 → 1', why: '−2 урона', ok: true, hit: '−1', after: 8 },
+      { name: 'Уйти по ветру', now: 'Залп 3 → 2', why: '−1 урон', ok: true, hit: '−2', after: 7 },
+      { name: 'Всё по плану', now: 'нельзя', why: 'не то окно', ok: false, hit: '−3', after: 6 },
+    ];
+    const picked = this.state.picked;
+    const cards = list.map((c, i) => {
+      const on = picked === i && c.ok;
+      const base = 'width:104px;padding:0;border-radius:10px;background:#fffaf2;overflow:hidden;font:inherit;cursor:pointer;';
+      const look = !c.ok ? 'border:1px solid #d9cfbf;opacity:.45;transform:translateY(16px)' : on ? 'border:2px solid #2d5d7b;transform:translateY(-12px);box-shadow:0 0 0 3px #9fd0e6,0 10px 18px rgba(0,0,0,.2)' : 'border:2px solid #2d5d7b;box-shadow:0 0 0 2px #f2c14e';
+      return { ...c, ribbon: c.ok ? '#1f6f45' : '#8d857a', style: base + look, pick: () => c.ok && this.setState({ picked: i }) };
+    });
+    const cur = list[picked];
+    return {
+      open: this.state.open,
+      closed: !this.state.open,
+      toggle: () => this.setState({ open: !this.state.open }),
+      cards,
+      hit: cur.hit,
+      after: cur.after,
+      playLabel: 'Сыграть «' + cur.name + '»',
+      playBg: '#2d5d7b',
+    };
+  }
+}
+</script>
+</body>
+</html>
