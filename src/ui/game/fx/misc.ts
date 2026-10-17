@@ -413,7 +413,9 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
   CUR_CARD = { el, code: c.card };
   A(ctx, el.firstElementChild!, [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], 260, 500, 'ease-out', 'none');
   if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${spot.x + 55 * spot.s} ${spot.y + 64 * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
-  await wait(ctx, 900); // time to read the card
+  // game: shorter than the reference (900 / 700 ms): players found the card at the middle hung too long. The full text
+  // stays a press away (the Journal, «Сразу итог»).
+  await wait(ctx, 550); // time to read the card
   const from = { x: spot.x + 55 * spot.s, y: spot.y + 64 * spot.s };
   const done: GameEvent[] = [];
   let t = 0;
@@ -431,7 +433,7 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
     else if (e.type === 'stolen' || e.type === 'passed' || e.type === 'discarded' || e.type === 'shown' || e.type === 'seaLooked' || e.type === 'dice') { const g = gapBox(ctx); tag(ctx, ctx.board.clientWidth / 2, g.cy + 50, smallLabel(ctx, e), t, '', 1300); t = Math.max(t, 1000); }
     done.push(e);
   }
-  await wait(ctx, t + 700);
+  await wait(ctx, t + 350);
   if (c.resolvedTo) { // resolved at once — the card goes to the discard (or is gone for good)
     const db = deckBox(ctx);
     A(ctx, el, [{ opacity: 1, transform: `translate(${spot.x}px,${spot.y}px) scale(${spot.s})` }, { opacity: 0, transform: `translate(${db.x}px,${db.y - 20}px) scale(.3)` }], 450, 0, 'ease-in', 'forwards');
