@@ -43,7 +43,7 @@ export interface FxScene {
   /** The scene is on the table (a Volley declared, not shot yet). */
   alive: () => boolean;
   /** An action is played to its end (page.js: the card at the middle fades once it resolved). */
-  afterAction?: (ctx: FxCtx, item: { cardOpen: boolean }) => void;
+  afterAction?: (ctx: FxCtx, item: { cardOpen: boolean; clips: readonly { kind: string }[] }) => void;
   /** What still leaves the layer on its own (the card fading out): the show is over when it has gone. */
   settled?: () => Promise<void>;
 }
