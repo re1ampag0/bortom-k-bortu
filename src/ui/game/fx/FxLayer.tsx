@@ -8,7 +8,7 @@ import { flushSync } from 'react-dom';
 import type { GameEvent, GameState } from '../../../engine/state';
 import type { GameData, Side } from '../../../engine/types';
 import { eventsFor, type Viewer } from '../../../engine/view';
-import type { Speed } from '../../storage';
+import { saveFxError, type Speed } from '../../storage';
 import type { Recent } from '../../../net/local';
 import { speedFactor } from '../text';
 import { applyVisible, displayFrom, displayRules, type Display } from './display';
@@ -17,6 +17,8 @@ import type { FxKind } from './planFx';
 import { ABORT, wait, type FxCtx } from './primitives';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
 import { tookPress } from '../InfoTip';
+import { trace } from './trace';
+import { loadSettings } from '../../storage';
 import { PLAY_LEGENDS } from './legends';
 import { PLAY_SEA, renderWeather } from './sea';
 import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
@@ -149,6 +151,8 @@ export function useFxQueue({
   const preview = useRef<Display | null>(null);
   const RUN = useRef(0);
   const running = useRef(false);
+  /** The clip on screen, for the journal of the layer (⚙ → «Журнал анимаций»). */
+  const playing = useRef<string | null>(null);
   const [gen, setGen] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -171,7 +175,9 @@ export function useFxQueue({
       board,
       layer,
       display: display ?? D.current ?? base.current!,
-      speed: speedFactor(live.current.speed),
+      // game: behind the game (more actions queued than the one on screen) the show catches up — twice as fast — instead
+      // of dropping the clips (see skipAhead).
+      speed: speedFactor(live.current.speed) * (queue.current.length > 1 ? 0.5 : 1),
       rich: live.current.rich,
       run,
       live: () => RUN.current,
@@ -254,7 +260,9 @@ export function useFxQueue({
   };
 
   /** finish of the reference: the table from the real state, the queue and the layer empty. */
-  const finish = useCallback(() => {
+  const finish = useCallback((why: string) => {
+    if (running.current) trace(`⏹ показ прерван: ${why}${playing.current ? ` (шёл «${playing.current}»)` : ''}, в очереди ${queue.current.length}`);
+    playing.current = null;
     RUN.current++;
     queue.current = [];
     D.current = null;
@@ -288,7 +296,20 @@ export function useFxQueue({
           const ctx = makeCtx(run);
           if (!ctx) throw ABORT;
           if (clip.kind === 'turn') SCENES.forEach((x) => x.onTurn(ctx));
-          await (PLAY[clip.kind] ?? PLAY.fallback)!(clip, ctx);
+          playing.current = clip.kind;
+          const t0 = performance.now();
+          trace(`▶ ${clip.kind}${queue.current.length > 1 ? ` (догоняет, в очереди ${queue.current.length})` : ''}`);
+          try {
+            await (PLAY[clip.kind] ?? PLAY.fallback)!(clip, ctx);
+            trace(`✓ ${clip.kind} ${((performance.now() - t0) / 1000).toFixed(1)} с`);
+          } catch (err) {
+            // game: a clip that breaks (an element missing on a phone, …) is skipped, not the whole show: its events
+            // still go into D below, the next clips play. The error is kept for ⚙ → «Ошибки анимаций».
+            if (err === ABORT) throw err;
+            console.error(err);
+            trace(`✗ ${clip.kind}: ${err instanceof Error ? err.message : String(err)}`);
+            saveFxError({ at: new Date().toISOString(), clip: clip.kind, text: err instanceof Error ? `${err.message}\n${(err.stack ?? '').split('\n').slice(0, 3).join('\n')}` : String(err), width: ctx.board.clientWidth });
+          }
           if (run !== RUN.current) throw ABORT;
           // The displayed state catches up with the real one: the events of the clip in their order.
           applyClip(D.current!, item, clip, rules);
@@ -316,13 +337,15 @@ export function useFxQueue({
       D.current = null;
       preview.current = null;
       running.current = false;
+      playing.current = null;
       setHint(null);
       setBusy(false);
       bump();
     } catch (e) {
       if (e !== ABORT) {
         console.error(e);
-        if (run === RUN.current) finish();
+        trace(`✗ очередь: ${e instanceof Error ? e.message : String(e)}`);
+        if (run === RUN.current) finish('ошибка очереди');
       }
     }
   };
@@ -336,7 +359,7 @@ export function useFxQueue({
       if (last + 1 < shown.current) {
         // Undo: the actions shown are gone.
         shown.current = last + 1;
-        if (running.current || D.current) finish();
+        if (running.current || D.current) finish('отмена хода');
       }
       if (!running.current) base.current = displayFrom(view);
       return;
@@ -356,6 +379,7 @@ export function useFxQueue({
     }
     queue.current.push(...items);
     if (skipAhead(queue.current.length, myDecision, jump || fresh.length >= jumpAt)) {
+      trace(`⏭ пропущено действий: ${queue.current.length - 1} (${jump ? 'возврат после потери связи' : `пришло сразу ${fresh.length}`})${playing.current ? `, оборван «${playing.current}»` : ''}`);
       // The decision of this device is not delayed, a return after a lost connection is not replayed: only the last
       // action is left, the rest goes into D (its log lines and statuses are shown at once).
       if (!D.current) D.current = structuredClone(base.current!);
@@ -399,7 +423,7 @@ export function useFxQueue({
   }, []);
 
   useEffect(() => {
-    if (!enabled && (running.current || D.current)) finish();
+    if (!enabled && (running.current || D.current)) finish('анимации выключены (скорость, «До конца хода», шторка)');
   }, [enabled, finish]);
 
   // A new device at the table (two people on one screen): another bottom, another planner. Only on a change of the
@@ -408,18 +432,18 @@ export function useFxQueue({
   useEffect(() => {
     if (lastBottom.current === bottom) return;
     lastBottom.current = bottom;
-    if (running.current || D.current) finish();
+    if (running.current || D.current) finish('за устройство сел другой игрок');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bottom]);
 
   useEffect(() => () => void RUN.current++, []);
 
   const skip = useCallback(() => {
-    if (running.current || D.current) finish();
+    if (running.current || D.current) finish('кнопка «Быстрее» / «До конца хода»');
   }, [finish]);
 
   const press = useCallback(() => {
-    if (running.current) finish();
+    if (running.current) finish('нажатие по столу');
   }, [finish]);
 
   return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, hidden: D.current ? pendingFlags(queue.current) : {}, logFrom: D.current ? logHiddenFrom(queue.current) : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current),
@@ -459,15 +483,34 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     // React ran the effect (the layer may draw within the same task the queue starts in).
     const board = layerRef.current?.parentElement;
     if (!board) return;
-    const onPress = (e: PointerEvent) => {
+    // game: a tap — a press let go where it began, soon — not any touch: on a phone a finger that scrolls the table or
+    // the hand, or rests on the screen, ended the show at once and the clips seemed to break off.
+    let down: { id: number; x: number; y: number; at: number } | null = null;
+    const onDown = (e: PointerEvent) => {
       const t = e.target as Element | null;
-      if (t?.closest('[data-fx-hand], .dock')) return;
       // S1: a badge or a status chip that explains itself (and the press that closes its window) is not the table
-      if (tookPress(e)) return;
+      down = t?.closest('[data-fx-hand], .dock') || tookPress(e) ? null : { id: e.pointerId, x: e.clientX, y: e.clientY, at: e.timeStamp };
+    };
+    const onUp = (e: PointerEvent) => {
+      const d = down;
+      down = null;
+      if (!d || d.id !== e.pointerId) return;
+      if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12 || e.timeStamp - d.at > 700) return;
+      // a finger skips the show only with ⚙ → «Пропуск анимации касанием» (off by default); a mouse click always does
+      if (e.pointerType === 'touch' && !loadSettings().tapSkip) return;
       press();
     };
-    board.addEventListener('pointerdown', onPress);
-    return () => board.removeEventListener('pointerdown', onPress);
+    const onCancel = () => {
+      down = null;
+    };
+    board.addEventListener('pointerdown', onDown);
+    board.addEventListener('pointerup', onUp);
+    board.addEventListener('pointercancel', onCancel);
+    return () => {
+      board.removeEventListener('pointerdown', onDown);
+      board.removeEventListener('pointerup', onUp);
+      board.removeEventListener('pointercancel', onCancel);
+    };
   }, [press, layerRef]);
   return (
     <>

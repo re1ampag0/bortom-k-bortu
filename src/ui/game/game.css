@@ -192,6 +192,25 @@ button {
   border: 1px solid var(--line);
   min-height: 36px;
 }
+.row.fx-errors {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.row.fx-errors ol {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.78rem;
+  max-height: 30dvh;
+  overflow: auto;
+}
+.row.fx-errors code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.row.fx-errors .btn {
+  align-self: flex-start;
+}
 .row.buttons {
   margin-top: 6px;
 }

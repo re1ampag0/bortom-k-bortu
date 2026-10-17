@@ -97,9 +97,12 @@ export function logHiddenFrom(items: readonly (QueueItem & { applied: boolean })
 /** So many actions coming at once are a jump (a return after a lost connection, a reload): not replayed. */
 export const JUMP = 4;
 /**
- * Whether the queue skips all but its last action (they go into D at once): the game waits for this device, or the
- * actions came as a jump.
+ * Whether the queue skips all but its last action (they go into D at once): only when the actions came as a jump (a
+ * return after a lost connection, JUMP at once). game: a decision of this device no longer drops the clips before it
+ * — the buttons read the real state anyway, and a show cut off midway looked broken (a Reaction played right after
+ * another, a Volley the bots fired by network while the clips were still playing). The queue catches up instead: its
+ * clips play twice as fast while more than one action waits (FxLayer, makeCtx).
  */
-export function skipAhead(queued: number, myDecision: boolean, jump: boolean): boolean {
-  return queued > 1 && (myDecision || jump);
+export function skipAhead(queued: number, _myDecision: boolean, jump: boolean): boolean {
+  return queued > 1 && jump;
 }
