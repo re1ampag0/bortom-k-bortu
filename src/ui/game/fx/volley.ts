@@ -18,7 +18,7 @@ import type { GameData, Track } from '../../../engine/types';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
 import {
-  A, at, bubbles, burst, bx, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
+  A, at, bubbles, burst, bx, capFirst, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
   mk, moveTo, ms, overlayAt, payKegs, pillAt, plank, projectile, puff, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
   tag, trackEl, wait, whirlpool, type FlyCard, type FxCtx,
 } from './primitives';
@@ -76,13 +76,14 @@ const ships = (ctx: FxCtx) => ctx.data.ships.map((s) => s.code);
 /** game: the frame classes of the scene (React owns shooter / targeted). */
 const SHOOTER = 'fx-shooter', TARGETED = 'fx-targeted';
 
-function placePlate(ctx: FxCtx, shooter: string, target: string): PlateBox {
+function placePlate(ctx: FxCtx, shooter: string): PlateBox {
   const g = gapBox(ctx), W = ctx.board.clientWidth;
-  const s = bx(ctx, plank(ctx, shooter)), t = bx(ctx, plank(ctx, target));
-  const lo = Math.min(s.cx, t.cx), hi = Math.max(s.cx, t.cx);
+  const s = bx(ctx, plank(ctx, shooter));
   // game: wider than the reference (176 / 212) — the breakdown is set larger to be read at a glance.
   const pw = W < 701 ? 204 : 262;
-  const x = W - hi > lo ? W - pw - 12 : 12;
+  // The plate stands in the column the shooter is not in: over the gap, and if it is taller than the gap — over the
+  // shooter's ally (fitPlate), never over the target, where the cannonballs land.
+  const x = s.cx < W / 2 ? W - pw - 12 : 12;
   return { x, y: g.y + 4, w: pw };
 }
 function cardSlot(ctx: FxCtx, p: PlateBox, idx: number) {
@@ -101,7 +102,7 @@ export function termRows(ctx: FxCtx, terms: Term[] | null | undefined, cls: Reco
     const src = termSrc(t, { cards: fxCards(ctx.data), charge: VS && VS.charge, chargeName: VS && VS.charge ? cardName(ctx, VS.charge) : null, reactions: (VS && VS.reactions) || [] });
     const pos = t.n > 0 && src.kind !== 'guns';
     const c = cls[t.what] || '';
-    return `<span class="${c}">${esc(t.what)}</span><span class="${t.n < 0 ? 'neg' : pos ? 'pos' : ''} ${c}">${pos ? '+' : ''}${t.n < 0 ? '−' + -t.n : t.n}</span>`;
+    return `<span class="${c}">${esc(capFirst(t.what))}</span><span class="${t.n < 0 ? 'neg' : pos ? 'pos' : ''} ${c}">${pos ? '+' : ''}${t.n < 0 ? '−' + -t.n : t.n}</span>`;
   }).join('');
 }
 export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage, was, terms, cls, extra = '' }: { shooter: string; declared?: string; target: string; track: Track; damage: number; was?: number | null; terms?: Term[] | null; cls?: Record<string, string>; extra?: string }): string {
@@ -113,7 +114,7 @@ export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage
 function fitPlate(ctx: FxCtx) {
   if (!VS || !VS.plate) return;
   const g = gapBox(ctx), h = VS.plate.offsetHeight;
-  const y = h <= g.h - 6 ? g.cy - h / 2 : isTop(ctx, VS.shooter) ? g.y + 2 : g.b - h - 2;
+  const y = h <= g.h - 6 ? g.cy - h / 2 : isTop(ctx, VS.shooter) ? g.b - h - 2 : g.y + 2;
   VS.plate.style.top = y + 'px';
   if (VS.plateBox) VS.plateBox.y = y;
 }
@@ -166,7 +167,7 @@ PLAY.announce = async (c, ctx) => {
   ctx.board.querySelectorAll(`.plank.${TARGETED}`).forEach((p) => p.classList.remove(TARGETED));
   plank(ctx, c.target).classList.add(TARGETED);
   payKegs(ctx, side, (c.cost.volley || 0) + (c.cost.card || 0), 0);
-  const pp = placePlate(ctx, c.shooter, c.target);
+  const pp = placePlate(ctx, c.shooter);
   const extra = (c.noDiagBy ? `<div class="nodiag">по диагонали без штрафа: «${esc(cardName(ctx, c.noDiagBy))}»</div>` : '') +
     (c.noReact ? '<span class="stamp">Без Реакций</span>' : '') + (part2 ? '<span class="stamp" style="color:#24465c;border-color:#24465c">второй борт</span>' : '');
   if (!VS.plate || !VS.plate.isConnected) {
@@ -238,7 +239,7 @@ PLAY.reaction = async (c, ctx) => {
       lean(ctx, c.ship, `translate(${(d0.cx - c0.cx) * 0.05}px,${dirOf(ctx, c.ship) * 6}px)`, 450, 'cubic-bezier(.2,.8,.3,1.2)');
       cov.classList.add(TARGETED);
       vs.target = c.ship;
-      const np = placePlate(ctx, vs.shooter, c.ship), op = vs.plateBox!;
+      const np = placePlate(ctx, vs.shooter), op = vs.plateBox!;
       if (Math.abs(np.x - op.x) > 4) {
         A(ctx, vs.plate!, [{ translate: '0 0' }, { translate: `${np.x - op.x}px 0` }], 450, 120, 'cubic-bezier(.3,0,.2,1)', 'forwards');
         vs.plateBox = { ...op, x: np.x };
@@ -288,7 +289,7 @@ PLAY.shot = async (c, ctx) => {
   const shooterEl = plank(ctx, c.shooter), tPl = plank(ctx, c.target);
   hint(ctx, `${nick(ctx, c.shooter)} → ${nick(ctx, c.target)}: ${c.damage} по ${TRACK_DATIVE[c.track]}`);
   // the plate: the final breakdown, the new lines of Reactions highlighted, a cancelled Charge struck out
-  if (!vs.plate || !vs.plate.isConnected) { const pp = placePlate(ctx, c.shooter, c.target); vs.plate = mk(ctx, 'plate', pp.x, pp.y); vs.plate.style.width = pp.w + 'px'; vs.plate.style.setProperty('--pc', shipData(ctx.data, c.shooter).color); vs.plateBox = pp; A(ctx, vs.plate, [{ opacity: 0 }, { opacity: 1 }], 200, 0, 'ease-out', 'forwards'); }
+  if (!vs.plate || !vs.plate.isConnected) { const pp = placePlate(ctx, c.shooter); vs.plate = mk(ctx, 'plate', pp.x, pp.y); vs.plate.style.width = pp.w + 'px'; vs.plate.style.setProperty('--pc', shipData(ctx.data, c.shooter).color); vs.plateBox = pp; A(ctx, vs.plate, [{ opacity: 0 }, { opacity: 1 }], 200, 0, 'ease-out', 'forwards'); }
   const cls: Record<string, string> = {};
   for (const r of c.reactions) cls[cardName(ctx, r.card)] = 'new';
   const blocked = c.shots.filter((b) => b.out === 'block').reduce((n, b) => n + b.units, 0);
