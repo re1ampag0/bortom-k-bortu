@@ -8,7 +8,8 @@ import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engin
 import type { GameData, Side } from '../../engine/types';
 import { HIDDEN } from '../../engine/view';
 import { RichText } from '../RichText';
-import type { Speed } from '../storage';
+import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type Speed } from '../storage';
+import { clearTrace, loadTrace } from './fx/trace';
 import { cardClass, CostBadge, HandCard } from './Hand';
 import { memo } from './memo';
 import { statuses, type Btn } from './Table';
@@ -338,6 +339,15 @@ export function SettingsSheet({
   onDownloadGame?: (() => void) | null;
   onClose: () => void;
 }) {
+  // The errors of the animation layer on this device: a player sends a screenshot of them (the show skips a broken clip).
+  const [fxErrors, setFxErrors] = useState(loadFxErrors);
+  const [fxTrace, setFxTrace] = useState(loadTrace);
+  // A finger on the table skips the show only when asked for (a mouse click always does); kept with the settings.
+  const [tapSkip, setTapSkipState] = useState(() => loadSettings().tapSkip);
+  const setTapSkip = (v: boolean) => {
+    setTapSkipState(v);
+    storeSettings({ ...loadSettings(), tapSkip: v });
+  };
   return (
     <Sheet title="Настройки" onClose={onClose} testid="settings">
       {speed !== null && (
@@ -379,6 +389,56 @@ export function SettingsSheet({
         </label>
       ) : (
         <p className="row muted">Подсказки в этой комнате выключены.</p>
+      )}
+      <label className="row check">
+        <input type="checkbox" checked={tapSkip} onChange={(e) => setTapSkip(e.target.checked)} data-testid="tap-skip" /> Пропуск
+        анимации касанием стола (телефон)
+      </label>
+      {fxErrors.length > 0 && (
+        <div className="row fx-errors" data-testid="fx-errors">
+          <b>Ошибки анимаций ({fxErrors.length})</b>
+          <span className="muted">Анимация пропустила эти показы. Пришлите скриншот разработчику.</span>
+          <ol>
+            {fxErrors.map((x, i) => (
+              <li key={i}>
+                <code>
+                  {x.at.slice(5, 16).replace('T', ' ')} · {x.clip} · {x.width}px — {x.text}
+                </code>
+              </li>
+            ))}
+          </ol>
+          <button
+            className="btn small"
+            onClick={() => {
+              clearFxErrors();
+              setFxErrors([]);
+            }}
+          >
+            Очистить
+          </button>
+        </div>
+      )}
+      {fxTrace.length > 0 && (
+        <details className="row fx-errors" data-testid="fx-trace">
+          <summary>Журнал анимаций (для разработчика)</summary>
+          <span className="muted">Если анимация оборвалась или не показалась — сразу откройте и пришлите скриншот.</span>
+          <ol>
+            {fxTrace.map((x, i) => (
+              <li key={i}>
+                <code>{x}</code>
+              </li>
+            ))}
+          </ol>
+          <button
+            className="btn small"
+            onClick={() => {
+              clearTrace();
+              setFxTrace([]);
+            }}
+          >
+            Очистить
+          </button>
+        </details>
       )}
       {onDownloadLog && (
         <div className="row buttons">

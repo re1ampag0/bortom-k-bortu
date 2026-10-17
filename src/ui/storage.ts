@@ -18,9 +18,11 @@ export interface Settings {
   sound: boolean;
   /** «Быстрый конец хода»: «Ход окончен · Отменить» lasts 1 s instead of 3 s (off by default). */
   fastEnd: boolean;
+  /** A tap of a finger on the table skips the show to its result (off by default: a finger touches the screen often). */
+  tapSkip: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false };
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false, tapSkip: false };
 
 function read(key: string): string | null {
   try {
@@ -37,6 +39,33 @@ function write(key: string, value: string | null): void {
   } catch {
     // Storage is a convenience: the game goes on without it.
   }
+}
+
+/** An error of a clip of the animation layer, kept so a player can show it (⚙ → «Ошибки анимаций»). */
+export interface FxError {
+  at: string;
+  clip: string;
+  text: string;
+  width: number;
+}
+const FX_ERRORS = 'bortom-fx-errors';
+
+/** The last errors of the animation layer on this device, the newest first (at most 5). */
+export function loadFxErrors(): FxError[] {
+  try {
+    const list = JSON.parse(read(FX_ERRORS) ?? '[]') as FxError[];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveFxError(e: FxError): void {
+  write(FX_ERRORS, JSON.stringify([e, ...loadFxErrors()].slice(0, 5)));
+}
+
+export function clearFxErrors(): void {
+  write(FX_ERRORS, null);
 }
 
 export function loadSave(): MatchRecord | null {

@@ -86,9 +86,15 @@ function placePlate(ctx: FxCtx, shooter: string, target: string): PlateBox {
   return { x, y: g.y + 4, w: pw };
 }
 function cardSlot(ctx: FxCtx, p: PlateBox, idx: number) {
-  const cw = ctx.board.clientWidth < 701 ? 64 : 82;
-  const left = p.x > ctx.board.clientWidth / 2;
-  return { x: left ? p.x - (cw + 8) * (idx + 1) : p.x + p.w + 8 + (cw + 8) * idx, y: p.y - 6 + idx * 6, r: idx ? 4 : -4, s: ctx.board.clientWidth < 701 ? 0.62 : 0.72 };
+  const W = ctx.board.clientWidth;
+  const cw = W < 701 ? 64 : 82;
+  const left = p.x > W / 2;
+  const x = left ? p.x - (cw + 8) * (idx + 1) : p.x + p.w + 8 + (cw + 8) * idx;
+  // game: the cards stay on the table. A Charge and two Reactions ran off the edge of a phone (the plate is 204 px of
+  // 430): a card that does not fit stops at the edge and goes a step down, a pile beside the plate.
+  const min = 8, max = W - cw - 8;
+  const over = x > max ? Math.ceil((x - max) / (cw + 8)) : x < min ? Math.ceil((min - x) / (cw + 8)) : 0;
+  return { x: Math.min(Math.max(x, min), max), y: p.y - 6 + idx * 6 + over * 26, r: idx ? 4 : -4, s: W < 701 ? 0.62 : 0.72 };
 }
 export function termRows(ctx: FxCtx, terms: Term[] | null | undefined, cls: Record<string, string> = {}): string {
   return (terms || []).map((t) => {
