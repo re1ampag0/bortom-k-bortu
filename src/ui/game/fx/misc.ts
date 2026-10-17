@@ -529,8 +529,11 @@ export const CARD_SCENE: FxScene = {
   onTurn: () => {},
   alive: () => false,
   // page.js: the action is over and its card resolved — the card at the middle fades.
+  // game: a card waiting for a choice («Безумный план»: which card goes to the Plan; «Игра в кости»: the bets) fades
+  // too — the choice may take a bot's pause or a person's thought, and the card hung over the table all that time.
+  // Only a card waiting for a Reaction window stays: its effect comes right after the window.
   afterAction: (ctx, item) => {
-    if (CUR_CARD && !item.cardOpen) {
+    if (CUR_CARD && (!item.cardOpen || !item.clips.some((c) => c.kind === 'window'))) {
       const el = CUR_CARD.el;
       // game: the queue may end here, with no clip to clear the layer after it — the card leaves the layer when faded.
       FADING = A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards').finished.then(() => el.remove(), () => {});

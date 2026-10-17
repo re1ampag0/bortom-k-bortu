@@ -4,9 +4,9 @@ import { ms, type FxCtx } from '../src/ui/game/fx/primitives';
 import { SPEEDS, speedFactor } from '../src/ui/game/text';
 
 describe('tempo', () => {
-  it('a played card lies at the middle 0.9 s × the speed factor (PLAY.card): 1.44 / 0.9 / 0.54 s (A4: ShowLayer is gone)', () => {
-    const at = (speed: 'slow' | 'normal' | 'fast' | 'instant') => ms({ speed: speedFactor(speed) } as FxCtx, 900);
-    expect([at('slow'), at('normal'), at('fast'), at('instant')]).toEqual([1440, 900, 540, 0]);
+  it('a played card is read 0.55 s × the speed factor (PLAY.card; shorter than the reference 0.9 s): 0.88 / 0.55 / 0.33 s', () => {
+    const at = (speed: 'slow' | 'normal' | 'fast' | 'instant') => ms({ speed: speedFactor(speed) } as FxCtx, 550);
+    expect([at('slow'), at('normal'), at('fast'), at('instant')]).toEqual([880, 550, 330, 0]);
   });
 
   it('a bot waits 2 / 1.2 / 0.5 s before a move, and the settings say so', () => {
