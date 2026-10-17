@@ -293,6 +293,12 @@ export function RulesSheet({ data, onClose }: { data: GameData; onClose: () => v
   );
 }
 
+/** «Версия: 1a2b3c4 · сборка 17.10, 23:40» — at once visible whether the site or the server is updated. */
+function appVersion(): string {
+  const built = new Date(__APP_BUILT__).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return __APP_COMMIT__ ? `${__APP_COMMIT__} · сборка ${built}` : `сборка ${built}`;
+}
+
 export function SettingsSheet({
   speed,
   setSpeed,
@@ -464,6 +470,9 @@ export function SettingsSheet({
           </button>
         </div>
       )}
+      <p className="row muted" data-testid="app-version">
+        Версия: {appVersion()}
+      </p>
     </Sheet>
   );
 }
