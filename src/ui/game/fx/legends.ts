@@ -397,14 +397,14 @@ LG['Г-Л'] = async (c, ctx) => {
   });
   at(ctx, SQ + 200, () => shake(ctx, ctx.board, 0, 8, 300));
   damageMarks(ctx, units, last + 80);
-  if (c.souls) soulsFly(ctx, tgt, c.souls, last + 200, true);
+  const soulsEnd = c.souls ? soulsFly(ctx, tgt, c.souls, last + 200, true) : 0;
   // the leave
   const OUT = last + 750;
   tents.forEach((t, q) => A(ctx, t.el, [t.pose(-t.side * t.curl, 1), t.pose(t.side * 35, 0.1, 0)], 480, OUT + q * 60, 'cubic-bezier(.5,0,.8,.4)', 'forwards'));
   for (let q = 0; q < 3; q++) splash(ctx, tb.x + tb.w * (0.2 + q * 0.3), edge + (top ? 10 : -10), OUT + 200 + q * 90);
   A(ctx, eye, [{ opacity: 1, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(1)` }, { opacity: 0, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(.04)` }], 260, OUT + 100, 'ease-in', 'forwards');
   A(ctx, deep, [{ opacity: 1 }, { opacity: 0 }], 500, OUT + 250, 'ease-out', 'forwards');
-  await wait(ctx, OUT + 800);
+  await wait(ctx, Math.max(OUT + 800, soulsEnd + 100));
   // game: the reference draws new planks after a clip; here the node stays, so the frame of the hit goes by hand
   tp.classList.remove('hitframe');
 };

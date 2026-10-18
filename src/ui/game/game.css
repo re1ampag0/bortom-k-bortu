@@ -2258,6 +2258,10 @@ button.star::before {
     top: -6px;
     transform-origin: 16px 15px;
   }
+  /* the tail of package 1: the ribbons are short on a phone — the number of the Hull right under the head stays free */
+  .target-seal .tails {
+    scale: 1 0.26;
+  }
   /* The frames of two neighbour targets (8 px apart) do not overlap and stay inside the board. */
   .plank.aimable,
   .plank.chosen {
@@ -3977,4 +3981,20 @@ button.star::before {
   pointer-events: none;
   z-index: 8;
   overflow: visible;
+}
+/* the hourglass beside the tray of the bottom Hold (the tail of package 1: clear of the caption at any width) */
+.hold-glass {
+  display: none;
+}
+@media (min-width: 701px) {
+  .board > .team-row .hold-glass {
+    display: block;
+    position: absolute;
+    left: 184px;
+    top: 22px;
+    line-height: 0;
+    opacity: 0.62;
+    pointer-events: none;
+    filter: drop-shadow(4px 5px 3px rgba(0, 0, 0, 0.5));
+  }
 }

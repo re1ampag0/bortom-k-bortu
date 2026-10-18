@@ -13,6 +13,7 @@ import type { BallKind } from './planFx';
 import type { Display } from './display';
 import { scar } from './scars';
 import { FLAME } from '../art/fire';
+import { T } from './timing';
 
 /** Everything an effect needs: the reference's globals, for one run of the queue. */
 export interface FxCtx {
@@ -299,11 +300,23 @@ export function holdTag(ctx: FxCtx, kg: Element, text: string, delay: number, cl
   // A5 (V1c): the caption «Трюм … · N из 8» stands over the tray of kegs — the mark lies on the caption (tag keeps it inside)
   if (visible(label) && bx(ctx, label).b <= kb.y + 2) {
     const lb = bx(ctx, label);
-    return tag(ctx, lb.cx, lb.cy, text, delay, cls, dur);
+    return clearOfRound(ctx, tag(ctx, lb.cx, lb.cy, text, delay, cls, dur));
   }
   const t = tag(ctx, label ? bx(ctx, label).cx : kb.x - 30, kb.cy, text, delay, cls, dur);
   const w = t.offsetWidth;
   t.style.left = Math.max(w / 2, Math.min(parseFloat(t.style.left), kb.x - 4 - w / 2)) + 'px';
+  return clearOfRound(ctx, t);
+}
+/**
+ * The tail of package 1: a mark of the top Hold never lies on the brass plate «Пираты · раунд» (on a phone the Hold is a
+ * small keg right by it) — it moves to the right of the plate. `.tag` is centred on its left/top.
+ */
+function clearOfRound(ctx: FxCtx, t: HTMLElement): HTMLElement {
+  const plate = ctx.board.querySelector('.status-turn');
+  if (!visible(plate)) return t;
+  const pb = bx(ctx, plate), w = t.offsetWidth, h = t.offsetHeight, x = parseFloat(t.style.left), y = parseFloat(t.style.top);
+  const meets = y - h / 2 < pb.b && y + h / 2 > pb.y && x - w / 2 < pb.r + 4 && x + w / 2 > pb.x;
+  if (meets) t.style.left = Math.min(ctx.board.clientWidth - 8 - w / 2, pb.r + 6 + w / 2) + 'px';
   return t;
 }
 /** Kegs fly into the Hold. */
@@ -444,19 +457,37 @@ function markAt(ctx: FxCtx, blink: Element, right: number, cy: number, text: str
   return m;
 }
 /**
- * Souls: wisps from the enemy's Crew into the Souls of «Голландец» (play-volley.js; the card and the Souls clips use it
- * too). `mark` (L1, the rule of S1): a short mark «+N» at the badge instead of the label over the plank.
+ * Souls: a soul leaves the sailor of the enemy's Crew as a green wisp with a tail of sparks, curls over the sea and goes
+ * into the skull of «Голландец»: a ring, sparks, the skull glows (the «souls» branch of runFx, template.html; T.soul). The
+ * card and the Souls clips use it too. `mark` (L1, the rule of S1): a short mark «+N» at the badge instead of the label
+ * over the plank. Gives the time it is over (the callers wait for it: the clip must not end with a soul in the air).
  */
-export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number, mark = false) {
+export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number, mark = false): number {
   const keeper = ctx.data.ships.map((s) => s.code).find((x) => shipData(ctx.data, x).souls != null && !ctx.display.ships[x].sunk);
-  if (!keeper) return;
-  const badge = plank(ctx, keeper).querySelector('[data-fx-souls]');
+  if (!keeper) return delay;
+  const badge = plank(ctx, keeper).querySelector<HTMLElement>('[data-fx-souls]');
   const to = badge && visible(badge) ? (() => { const b = bx(ctx, badge); return { x: b.cx, y: b.cy }; })() : (() => { const b = bx(ctx, plank(ctx, keeper)); return { x: b.r - 30, y: b.y + 30 }; })();
-  const from = fxPoint(ctx, fromShip, 'crew', 0);
-  for (let k = 0; k < n; k++) wisp(ctx, from, to, delay + k * 160);
-  setTimeout(() => { if (badge && ctx.run === ctx.live()) { A(ctx, badge, [{ transform: 'scale(1.3)', boxShadow: '0 0 12px #6fd3b4' }, { transform: 'scale(1)', boxShadow: 'none' }], 500, 0, 'ease-out', 'none'); } }, ms(ctx, delay + 800));
-  if (mark) { if (badge && visible(badge)) badgeMark(ctx, badge, `+${n}`, delay + 700, true); }
-  else tag(ctx, to.x, to.y - 16, `+${n} ${n === 1 ? 'Душа' : 'Души'}`, delay + 700, 'good', 1200);
+  const from = fxPoint(ctx, fromShip, 'crew', 0), F = T.soul, svg = fxSvg(ctx);
+  const cells = trackEl(ctx, fromShip, 'crew').querySelector('.cells'), cell = visible(cells) ? cells.children[Math.max(0, shownTrack(ctx, fromShip, 'crew') - 1)] : null;
+  if (cell) A(ctx, cell, [{ filter: 'none' }, { filter: 'drop-shadow(0 0 6px #7ff0b0) brightness(1.5)', offset: 0.3 }, { filter: 'none' }], 900, delay, 'ease-out', 'none');
+  const swing = Math.min(160, ctx.board.clientWidth * 0.14) * (from.x < to.x ? 1 : -1);
+  const N = 40, path = qpts(from.x, from.y, (from.x + to.x) / 2 - swing, Math.min(from.y, to.y) + 60, to.x, to.y, N);
+  for (let k = 0; k < n; k++) {
+    const d0 = delay + k * 200;
+    const glow = sv(svg, '<g><circle r="18" fill="#7ff0b0" opacity=".22"/><circle r="9" fill="#a8ffcc" opacity=".6"/><circle r="4.4" fill="#effff4"/><circle cx="-3" cy="-2" r="1.2" fill="#0f3a24"/><circle cx="3" cy="-2" r="1.2" fill="#0f3a24"/></g>');
+    A(ctx, glow, path.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: i === N ? 0 : 1 })), F.fly, d0, 'ease-in-out');
+    for (let q = 1, m = room(ctx, 8); q <= m; q++) {
+      const t = sv(svg, `<circle r="${R1(4 - q * 0.35)}" fill="#a8ffcc"/>`);
+      A(ctx, t, path.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: i === N ? 0 : R1(0.8 - q * 0.08) })), F.fly, d0 + q * 45, 'ease-in-out');
+    }
+  }
+  const t1 = delay + (n - 1) * 200 + F.fly;
+  ringSvg(ctx, svg, to.x, to.y, 3, 30, '#7ff0b0', 700, t1, 2.4);
+  sparksSvg(ctx, svg, to.x, to.y, 14, t1, ['#effff4', '#a8ffcc', '#7ff0b0']);
+  if (badge && visible(badge)) A(ctx, badge, [{ transform: 'scale(1)', filter: 'none' }, { transform: 'scale(1.5)', filter: 'drop-shadow(0 0 8px #7ff0b0) brightness(1.4)', offset: 0.4 }, { transform: 'scale(1)', filter: 'none' }], F.arrive, t1, 'ease-out', 'none');
+  if (mark) { if (badge && visible(badge)) badgeMark(ctx, badge, `+${n}`, t1 - 100, true); }
+  else tag(ctx, to.x, to.y - 16, `+${n} ${n === 1 ? 'Душа' : 'Души'}`, t1 - 100, 'good', 1200);
+  return t1 + F.arrive;
 }
 export const FLAME_SVG = '<svg width="18" height="22" viewBox="0 0 14 17"><path d="M7 1 C9 5 13 7 12 11 C11.5 14.5 9 16 7 16 C4 16 2 14 2 11 C2 8.5 4 7.5 4.5 5 C5.5 7 6.5 7 7 6 C7.5 4.5 7 3 7 1Z" fill="#F2913D" stroke="#B23A2E" stroke-width="1"/><path d="M7 9 C8 10.5 9.5 11.5 9 13 C8.6 14.4 7.6 15 7 15 C5.8 15 5 14 5 12.8 C5 11.6 6.2 11 7 9Z" fill="#FFE08A"/></svg>';
 
