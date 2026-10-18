@@ -40,4 +40,24 @@ export const T = {
     /** the plate and the frames fade */
     fade: 450,
   }),
+  /** A Fire burns the Hull at the start of a turn (fxFire of fx3.js): the fire runs along the plank, the boards of the
+   *  Hull glow and char one by one, the flames die down; a Fire set by a shot or a card flares up for `ignite`. */
+  fire: scaled(FIRE_K, {
+    /** the fire runs along the plank before the Hull chars */
+    spread: 1200,
+    /** between two spots of fire over the plank */
+    spot: 110,
+    /** a board of the Hull glows red, chars black */
+    cell: 900,
+    /** between two boards */
+    cellStep: 450,
+    /** the fire holds after the last board */
+    hold: 1300,
+    /** the flames die down */
+    out: 520,
+    /** the glow of the fire on the plank */
+    glow: 3600,
+    /** a Fire is set: the flame flares up at the head */
+    ignite: 900,
+  }),
 } as const;
