@@ -28,7 +28,7 @@ import {
   type SellClip, type SinkClip, type SoulsClip, type StatusClip, type StealClip, type SurfaceClip, type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
-  A, allPlanks, at, badgeMark, bubbles, burst, bx, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
+  A, allPlanks, at, badgeMark, bubbles, burst, bx, cardOrigin, handCardPos, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
   isTop, mk, overlayAt, payKegs, pillAt, plank, projectile, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, steam, tag, trackMark, visible, wait,
   whirlpool, wisp, type FlyCard, type FxCtx, type Pt,
 } from './primitives';
@@ -213,10 +213,11 @@ export async function drawFx(ctx: FxCtx, e: { seat: string; count: number; cards
     slots.reverse();
     slots.forEach((s) => (s.style.visibility = 'hidden'));
     slots.forEach((slot, k) => {
-      const sb = bx(ctx, slot);
+      // V2: the back lands as its card lies in the fan (tilted)
+      const sb = handCardPos(ctx, slot), at0 = `translate(${sb.x}px,${sb.y}px) rotate(${sb.r || 0}deg)`;
       const back = mk(ctx, 'flyc', 0, 0, '<span class="hcard back"></span>');
-      A(ctx, back, [{ opacity: 1, transform: `translate(${deck.x}px,${deck.y}px) scale(.6)` }, { opacity: 1, transform: `translate(${sb.x}px,${sb.y}px) scale(1)` }], 450, k * 160, 'cubic-bezier(.2,.8,.3,1)', 'forwards');
-      A(ctx, back, [{ opacity: 1, transform: `translate(${sb.x}px,${sb.y}px) scaleX(1)` }, { opacity: 1, transform: `translate(${sb.x}px,${sb.y}px) scaleX(0)` }], 150, 450 + k * 160, 'ease-in', 'forwards');
+      A(ctx, back, [{ opacity: 1, transform: `translate(${deck.x}px,${deck.y}px) scale(.6)` }, { opacity: 1, transform: `${at0} scale(${sb.s || 1})` }], 450, k * 160, 'cubic-bezier(.2,.8,.3,1)', 'forwards');
+      A(ctx, back, [{ opacity: 1, transform: `${at0} scaleX(1)` }, { opacity: 1, transform: `${at0} scaleX(0)` }], 150, 450 + k * 160, 'ease-in', 'forwards');
       at(ctx, 600 + k * 160, () => { slot.style.visibility = ''; A(ctx, slot, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], 150, 0, 'ease-out', 'none'); });
     });
     await wait(ctx, 800 + e.count * 160);

@@ -365,13 +365,22 @@ export function moveTo(ctx: FxCtx, el: FlyCard, to: CardPos, d = 400): void {
   A(ctx, el, [{ transform: `translate(${f.x}px,${f.y}px) rotate(${f.r || 0}deg) scale(${f.s || 0.72})` }, { transform: `translate(${to.x}px,${to.y}px) rotate(${to.r || 0}deg) scale(${to.s || 0.72})` }], d, 0, 'cubic-bezier(.3,0,.2,1)', 'forwards');
   el._pos = to;
 }
+/**
+ * V2: how a card lies in the fan of the hand — its unturned top left corner, its tilt and its scale — so a flying copy
+ * starts (or lands) exactly as the card lies: the centre is the centre of its box, the size its own (offsetWidth/Height).
+ */
+export function handCardPos(ctx: FxCtx, el: HTMLElement): CardPos {
+  const b = bx(ctx, el), cs = getComputedStyle(el);
+  const r = parseFloat(cs.rotate) || 0, s = parseFloat(cs.scale) || 1;
+  return { x: b.cx - el.offsetWidth / 2, y: b.cy - el.offsetHeight / 2, r, s };
+}
 /** Where a card flies from: an own one — from the hand (the card in the hand hides), another's — from beyond the edge over its ship. */
 export function cardOrigin(ctx: FxCtx, code: string, ship: string): CardPos {
   const h = handCardEl(ctx, code);
   if (h && sideOf(ctx, ship) === ctx.bottom) {
-    const b = bx(ctx, h);
+    const pos = handCardPos(ctx, h);
     h.style.visibility = 'hidden';
-    return { x: b.x, y: b.y, s: 1 };
+    return pos;
   }
   // game: the hand is the real one — an own card just played is out of it already: it flies from the hand row.
   const row = ctx.board.querySelector('[data-fx-hand] .hand-cards');
