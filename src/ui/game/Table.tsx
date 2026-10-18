@@ -1,5 +1,5 @@
 // Presentational parts of the table: the status bar, a team row with its Hold, a ship board (plank).
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
 import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type ShipState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
@@ -7,9 +7,22 @@ import { deckCards } from '../../engine/data';
 import { InfoTip } from './InfoTip';
 import { SIDE_LABEL } from './text';
 import { reducedMotion } from '../start/motion';
+import { cellUrl, CELLS, type CellIcon } from './art/cells';
+import { shipSvg } from './art/ships';
+import { legendMedal } from './art/medals';
+import { fanSvg } from './art/fan';
+import { TARGET_SEAL } from './art/seal';
+import { SEA_BG, seaSvg } from './fx/seaArt';
+import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, TRIDENT_SVG, statusSvg, type StatusIcon } from './art/status';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const TRACK_LABEL: Record<Track, string> = { hull: 'Корпус', sails: 'Паруса', guns: 'Пушки', crew: 'Команда' };
+/** The icons of a track (A5, art/cells2.json): a cell that is there and a lost one. */
+const TRACK_ICON: Record<Track, [CellIcon, CellIcon]> = { hull: ['HULL', 'HULL_X'], sails: ['SAIL', 'SAIL_X'], guns: ['GUN', 'GUN_X'], crew: ['CREW', 'CREW_X'] };
+const TRACK_ICON_STYLE = Object.fromEntries(
+  TRACKS.map((t) => [t, { ['--on' as string]: cellUrl(TRACK_ICON[t][0]), ['--off' as string]: cellUrl(TRACK_ICON[t][1]) }]),
+) as Record<Track, Record<string, string>>;
+const svg = (html: string) => ({ __html: html });
 
 export interface Btn {
   key: string;
@@ -60,6 +73,31 @@ function breakAfterArrow(text: string): ReactNode {
   );
 }
 
+/** I, II, III … — the round on the brass plate (A5: «Пираты · раунд II»). */
+export function roman(n: number): string {
+  const R: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+  let out = '';
+  for (const [v, l] of R) while (n >= v) (out += l), (n -= v);
+  return out;
+}
+
+/**
+ * ≥ 1280 px: the log is on the screen and the tools of the top row (the sea plaque, «Правила», «Настройки») stand over it,
+ * in line with the row; narrower — in the row itself. One plaque of the sea in the page at any time (data-fx-sea-chip).
+ */
+const WIDE_LOG = '(min-width: 1280px)';
+export function useWideLog(): boolean {
+  return useSyncExternalStore(
+    (on) => {
+      const m = typeof matchMedia === 'function' ? matchMedia(WIDE_LOG) : null;
+      m?.addEventListener('change', on);
+      return () => m?.removeEventListener('change', on);
+    },
+    () => (typeof matchMedia === 'function' ? matchMedia(WIDE_LOG).matches : false),
+    () => false,
+  );
+}
+
 export function StatusBar({
   s,
   data,
@@ -67,41 +105,110 @@ export function StatusBar({
   waiting,
   onSea,
   extra,
+  chip = true,
+  hold,
 }: {
   s: GameState;
   data: GameData;
   instruction: string;
   waiting: boolean;
   onSea: () => void;
+  /** The buttons of the row («Журнал», «Правила», «Настройки») when they stand in it, not over the log. */
   extra: ReactNode;
+  /** The sea plaque stands in this row (false: over the log, see useWideLog). */
+  chip?: boolean;
+  /** The Hold of the top team (V1c): in the row, after the plate. */
+  hold?: ReactNode;
 }) {
-  const sea = s.sea?.current ? seaCardByCode(data, s.sea.current) : null;
   return (
     <header className="status" data-testid="status">
       <div className="status-turn">
         <span className={`dot ${s.active === 'ПИРАТЫ' ? 'pirates' : 'company'}`} aria-hidden />
-        <span className="wide">
-          Раунд {s.round} · Ход {SIDE_LABEL[s.active].gen}
+        {/* the brass plate of A5; for a screen reader (and the words of the old bar) — «Раунд 2 · Ход Пиратов» */}
+        <span className="wide turn-plate">
+          <span aria-hidden>
+            {SIDE_LABEL[s.active].name} · раунд {roman(s.round)}
+          </span>
+          <span className="sr-only">
+            Раунд {s.round} · Ход {SIDE_LABEL[s.active].gen}
+          </span>
         </span>
         <span className="narrow">
           Р{s.round} · {SIDE_LABEL[s.active].name}
         </span>
       </div>
+      {hold}
       <div className={`status-text ${waiting ? 'waiting' : ''}`} data-testid="instruction" data-fx-instruction>
         {instruction}
       </div>
-      <div className="status-tools">
-        {sea && (
-          <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-fx-sea-chip>
-            <span className="wide">
-              <b>Море:</b> {sea.name} <span className="muted">· {sea.big}</span>
-            </span>
-            <span className="narrow">{sea.name} ⓘ</span>
-          </button>
-        )}
-        {extra}
-      </div>
+      {(chip || extra) && (
+        <div className="status-tools">
+          {chip && <SeaChip s={s} data={data} onSea={onSea} />}
+          {extra}
+        </div>
+      )}
     </header>
+  );
+}
+
+/**
+ * The plaque of the sea: the picture of the card (still, no animation inside), «Море · весь раунд» and the card with its
+ * effect; a press opens the sea card.
+ */
+export function SeaChip({ s, data, onSea }: { s: GameState; data: GameData; onSea: () => void }) {
+  const sea = s.sea?.current ? seaCardByCode(data, s.sea.current) : null;
+  if (!sea) return null;
+  return (
+    <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-fx-sea-chip>
+      <span className="sea-icon wide" style={{ background: SEA_BG[sea.key] }} dangerouslySetInnerHTML={svg(seaSvg(sea.key, 36, 22))} />
+      <span className="wide sea-words">
+        <span className="sea-cap">Море · весь раунд</span>
+        <span className="sea-name">
+          {sea.name}: {sea.big}
+        </span>
+      </span>
+      <span className="narrow">{sea.name} ⓘ</span>
+    </button>
+  );
+}
+
+/** The icons of the round brass buttons (A5): the rules, the settings, the log, the tempo of the show, «Отменить». */
+export const ROUND_ICON: Record<string, string> = {
+  rules:
+    '<svg width="20" height="18" viewBox="0 0 20 18" aria-hidden="true"><path d="M10 3.4 C7.6 1.8 4.6 1.6 1.6 2.4 V15.6 C4.6 14.8 7.6 15 10 16.6 C12.4 15 15.4 14.8 18.4 15.6 V2.4 C15.4 1.6 12.4 1.8 10 3.4 Z" fill="#f4ead6" stroke="#2a1a0c" stroke-width="1.2" stroke-linejoin="round"/><path d="M10 3.4 V16.6" stroke="#2a1a0c" stroke-width="1.1"/><path d="M3.6 5.4 Q6 5 8.2 5.8 M3.6 8.2 Q6 7.8 8.2 8.6 M11.8 5.8 Q14 5 16.4 5.4 M11.8 8.6 Q14 7.8 16.4 8.2" stroke="#8a7550" stroke-width=".8" fill="none"/></svg>',
+  settings:
+    '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M8.6 1.6 H11.4 L11.9 4.1 L13.6 4.8 L15.7 3.4 L17.6 5.3 L16.2 7.4 L16.9 9.1 L19.4 9.6 V12.4 L16.9 12.9 L16.2 14.6 L17.6 16.7 L15.7 18.6 L13.6 17.2 L11.9 17.9 L11.4 20.4 H8.6 L8.1 17.9 L6.4 17.2 L4.3 18.6 L2.4 16.7 L3.8 14.6 L3.1 12.9 L.6 12.4 V9.6 L3.1 9.1 L3.8 7.4 L2.4 5.3 L4.3 3.4 L6.4 4.8 L8.1 4.1 Z" transform="translate(0 -1) scale(1 .96)" fill="#2a1a0c"/><circle cx="10" cy="10" r="3.2" fill="#e0bd62" stroke="#2a1a0c" stroke-width="1"/></svg>',
+  log: '<svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true"><path d="M3 1.5 H13.5 Q15.5 1.5 15.5 3.5 V18.5 H4.5 Q2.5 18.5 2.5 16.5 V2 Z" fill="#f4ead6" stroke="#2a1a0c" stroke-width="1.2"/><path d="M5.5 6 H12.5 M5.5 9 H12.5 M5.5 12 H10.5" stroke="#8e2b22" stroke-width="1"/></svg>',
+  faster: '<svg width="20" height="16" viewBox="0 0 20 16" aria-hidden="true"><path d="M2 2 L10 8 L2 14 Z M10 2 L18 8 L10 14 Z" fill="#2a1a0c"/></svg>',
+  skip: '<svg width="20" height="16" viewBox="0 0 20 16" aria-hidden="true"><path d="M1.5 2 L8.5 8 L1.5 14 Z M8.5 2 L15.5 8 L8.5 14 Z" fill="#2a1a0c"/><rect x="15.6" y="2" width="2.6" height="12" fill="#2a1a0c"/></svg>',
+  pause: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.6" height="12" rx=".6" fill="#2a1a0c"/><rect x="9.4" y="2" width="3.6" height="12" rx=".6" fill="#2a1a0c"/></svg>',
+  play: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2 L13.5 8 L4 14 Z" fill="#2a1a0c"/></svg>',
+  undo: '<svg width="20" height="18" viewBox="0 0 20 18" aria-hidden="true"><path d="M7 3 L2.5 7 L7 11" fill="none" stroke="#2a1a0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 7 H12 Q17.5 7 17.5 11.5 Q17.5 16 12 16 H8" fill="none" stroke="#2a1a0c" stroke-width="2" stroke-linecap="round"/></svg>',
+};
+
+/**
+ * A round brass button with a caption under it (A5, the bottom right and the icons of the top row). The label of the
+ * button stays its accessible name and its text (`.wide`, hidden from sight); the caption is the label without its
+ * leading symbol («⏸ Пауза» → «Пауза»).
+ */
+export function RoundButton({ b, icon, className = '' }: { b: Btn; icon: string; className?: string }) {
+  const caption = b.label.replace(/^[^\p{L}]+/u, '');
+  return (
+    <button
+      className={`btn round ${b.primary ? 'primary' : ''} ${className}`}
+      onClick={b.disabled ? undefined : b.onClick}
+      aria-disabled={!!b.disabled}
+      aria-label={caption}
+      title={b.disabled ?? caption}
+      data-testid={b.testid}
+    >
+      <span className="round-disc" dangerouslySetInnerHTML={svg(ROUND_ICON[icon] ?? '')} />
+      <span className="round-cap" aria-hidden>
+        {caption}
+      </span>
+      <span className="wide sr-only">{b.label}</span>
+      {b.short && <span className="narrow sr-only">{b.short}</span>}
+    </button>
   );
 }
 
@@ -113,6 +220,29 @@ export function PowderDots({ n, cap, side }: { n: number; cap: number; side?: Si
       ))}
       <b>{n}</b>
     </span>
+  );
+}
+
+/**
+ * The Hold of the top team in the top row (V1c, A5 «Трюм Компании · 5 из 8»): the caption over a brass tray of kegs; on a
+ * phone a keg and «5/8» (the kegs of the animations lie over that keg, unseen). The Powder clips fly here (data-fx-hold).
+ */
+export function TopHold({ side, s, data, fxGen = 0 }: { side: Side; s: GameState; data: GameData; fxGen?: number }) {
+  const n = s.teams[side].powder,
+    cap = data.econ.cap;
+  return (
+    <div className="top-hold" data-testid={`team-${side}`} title={`Трюм ${SIDE_LABEL[side].gen}: ${n} Пороха из ${cap}`}>
+      <span className="hold-label">
+        <span className="wide">
+          Трюм {SIDE_LABEL[side].gen} · {n} из {cap}
+        </span>
+        <span className="narrow hold-mini">
+          <span className="hold-keg" aria-hidden dangerouslySetInnerHTML={svg(CELLS.KEG_S)} />
+          {n}/{cap}
+        </span>
+      </span>
+      <PowderDots key={fxGen} n={n} cap={cap} side={side} />
+    </div>
   );
 }
 
@@ -134,13 +264,20 @@ export function TeamRow({
   /** The animation layer changed the displayed state: the kegs it touched are built again. */
   fxGen?: number;
 }) {
+  const n = s.teams[side].powder;
   return (
     <div className="team-row" data-testid={`team-${side}`}>
       <b className="team-name">{SIDE_LABEL[side].upper}</b>
-      <span className="muted hold-label">Трюм</span>
-      <PowderDots key={fxGen} n={s.teams[side].powder} cap={data.econ.cap} side={side} />
+      {/* laptop (A5): «Трюм пиратов · 2 из 8» over the kegs; phone: «Трюм» in the row, as before */}
+      <span className="muted hold-label">
+        <span className="wide">
+          Трюм {SIDE_LABEL[side].gen} · {n} из {data.econ.cap}
+        </span>
+        <span className="narrow">Трюм</span>
+      </span>
+      <PowderDots key={fxGen} n={n} cap={data.econ.cap} side={side} />
       {hands && hands.length > 0 && <span className="muted wide">· в руках {hands.join(' и ')} {cardsWord(hands[hands.length - 1]).split(' ')[1]}</span>}
-      {regroup && <Button b={regroup} className="small regroup" />}
+      {regroup && <PlankButton b={regroup} className="small regroup" />}
       {hint && <span className="muted wide hint">· {hint}</span>}
     </div>
   );
@@ -163,6 +300,8 @@ export interface Status {
   flag?: string;
   /** The window of the chip (S1), when it says more than `hint`: «Чёрная метка» — the text of its card. */
   info?: string;
+  /** The icon of the chip (A5, art/status.ts). */
+  icon?: StatusIcon;
 }
 
 // The windows of the badges (S1): the rules of RULES.md 13.2–13.3 (Fires) and 3.6, 6.3, 14.7 (Souls).
@@ -174,30 +313,13 @@ function markText(data: GameData): string {
   return card ? `Карта «${card.name}»: ${card.text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()}` : '';
 }
 
-/** The blot of «Чёрная метка» (MARK_SVG of the reference, board.js). */
-const MARK_SVG = (
-  <svg viewBox="0 0 30 26" width="16" height="14" aria-hidden="true">
-    <path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612" />
-    <circle cx="27" cy="22" r="2" fill="#1a1612" />
-    <circle cx="4" cy="5" r="1.4" fill="#1a1612" />
-  </svg>
-);
-
 /**
- * «Чёрная метка» on the plank of the marked ship (U3): the same blot, small and sharp, set like a stamp — on a laptop in
- * the free field between the numbers of the tracks and the badges, on a phone at the right end of the row of statuses.
- * It appears when the blot of the clip lands (statusFx) and goes with the status.
+ * «Чёрная метка» on the plank of the marked ship: the torn leaf blackened with soot, pinned with a dagger (A5, MARK_PIN) —
+ * on a laptop on the drawing of the ship in the head, on a phone at the right end of the row of statuses. It appears when
+ * the blot of the clip lands (statusFx) and goes with the status.
  */
 function MarkStamp({ cls, hidden }: { cls: string; hidden: boolean }) {
-  return (
-    <span className={`mark-stamp ${cls}`} data-fx-mark-stamp aria-hidden style={hidden ? { visibility: 'hidden' } : undefined}>
-      <svg viewBox="0 0 30 26" aria-hidden="true">
-        <path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612" />
-        <circle cx="27" cy="22" r="2" fill="#1a1612" />
-        <circle cx="4" cy="5" r="1.4" fill="#1a1612" />
-      </svg>
-    </span>
-  );
+  return <span className={`mark-stamp ${cls}`} data-fx-mark-stamp aria-hidden style={hidden ? { visibility: 'hidden' } : undefined} dangerouslySetInnerHTML={svg(MARK_PIN_SVG)} />;
 }
 
 /** Statuses of a ship with the moment they end (docs/TZ.md, «Принципы стола», п. 2). */
@@ -207,21 +329,21 @@ export function statuses(s: GameState, data: GameData, ship: ShipState): Status[
     const ally = Object.values(s.ships).find((x) => x.side === ship.side && x.code !== ship.code);
     return [
       ally && !ally.sunk
-        ? { label: 'Утонул', hint: 'Капитан на борту союзника: 1 карта и 1 Реакция за ход за союзника' }
-        : { label: 'Утонул', hint: 'Корабль потоплен' },
+        ? { label: 'Утонул', hint: 'Капитан на борту союзника: 1 карта и 1 Реакция за ход за союзника', icon: 'sunk' }
+        : { label: 'Утонул', hint: 'Корабль потоплен', icon: 'sunk' },
     ];
   }
-  if (ship.submerged) out.push({ label: 'Под водой', hint: 'До своего хода: нельзя выбрать целью, не играет Реакции' });
-  if (ship.surfaced) out.push({ label: 'Всплыл', hint: 'Первый Залп в этот ход: +1 и без Реакций', flag: 'surfaced' });
-  if (ship.blockaded) out.push({ label: 'Блокада', hint: 'До конца своего следующего хода: без Ремонта и смены мест', flag: 'blockade' });
-  if (ship.parley) out.push({ label: 'Переговоры', hint: 'В свой следующий ход не даёт Залпы', flag: 'parley' });
+  if (ship.submerged) out.push({ label: 'Под водой', hint: 'До своего хода: нельзя выбрать целью, не играет Реакции', icon: 'under' });
+  if (ship.surfaced) out.push({ label: 'Всплыл', hint: 'Первый Залп в этот ход: +1 и без Реакций', flag: 'surfaced', icon: 'surfaced' });
+  if (ship.blockaded) out.push({ label: 'Блокада', hint: 'До конца своего следующего хода: без Ремонта и смены мест', flag: 'blockade', icon: 'blockade' });
+  if (ship.parley) out.push({ label: 'Переговоры', hint: 'В свой следующий ход не даёт Залпы', flag: 'parley', icon: 'parley' });
   if (ship.voodoo) {
-    out.push({ label: 'Кукла вуду', hint: `В свой следующий ход теряет 1 Команду за каждую сыгранную карту (кукла «${shipData(data, ship.voodoo).nick}»)`, flag: 'voodoo' });
+    out.push({ label: 'Кукла вуду', hint: `В свой следующий ход теряет 1 Команду за каждую сыгранную карту (кукла «${shipData(data, ship.voodoo).nick}»)`, flag: 'voodoo', icon: 'voodoo' });
   }
   const mark = s.turn.marks[ship.code];
-  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее', info: markText(data), mark: true, flag: 'mark' });
+  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее', info: markText(data), mark: true, flag: 'mark', icon: 'mark' });
   if (s.turn.noReact.includes(ship.code) || (s.turn.noReactTeam && ship.side !== s.active)) {
-    out.push({ label: 'Без Реакций', hint: 'До конца этого хода не играет Реакции', flag: 'noReact' });
+    out.push({ label: 'Без Реакций', hint: 'До конца этого хода не играет Реакции', flag: 'noReact', icon: 'noReact' });
   }
   return out;
 }
@@ -312,6 +434,11 @@ export function Plank({
         },
       }
     : {};
+  const fireLabel = `Пожар ${ship.fires}`;
+  const soulsLabel = `Души ${ship.souls}/${d.souls}`;
+  const legendTitle = ship.legend
+    ? `Легенда «${legendName}»: ${affordable ? 'нажмите, чтобы прочитать' : 'не хватает Пороха или Душ'}`
+    : `Легенда «${legendName}» сыграна`;
   return (
     <section
       className={cls}
@@ -334,12 +461,16 @@ export function Plank({
         }
         title={plate ? undefined : 'Подробнее о корабле'}
       >
+        <span className="ship-art wide">
+          <span className="ship-pic" dangerouslySetInnerHTML={svg(shipSvg(ship.code))} />
+          {marked && <MarkStamp cls="wide" hidden={markHidden} />}
+        </span>
         <b className="plank-name">
           <span className="wide">{d.name}</span>
           <span className="narrow">{d.nick}</span>
         </b>
         {ship.legend && (
-          // On a phone the Legend badge is hidden: the star opens the same Legend card, not the ship card.
+          // On a phone the medallion of the head is hidden: the star opens the same Legend card, not the ship card.
           <button
             className={`star narrow ${affordable ? '' : 'poor'} ${flash}`}
             data-testid={`star-${ship.code}`}
@@ -351,9 +482,8 @@ export function Plank({
               e.stopPropagation();
               onLegend?.();
             }}
-          >
-            ★
-          </button>
+            dangerouslySetInnerHTML={svg(legendMedal(legendName, `md-${ship.code}-n`))}
+          />
         )}
         <span className="captain wide">{d.captain}</span>
         {plate?.tip && (
@@ -362,23 +492,36 @@ export function Plank({
             {plate.tip}
           </span>
         )}
-        {plate?.chosen && (
-          <svg className="reticle" viewBox="0 0 26 26" aria-hidden>
-            <circle cx="13" cy="13" r="9" fill="none" stroke="#B23A2E" strokeWidth="2" />
-            <circle cx="13" cy="13" r="2.2" fill="#B23A2E" />
-            <path d="M13 1v6M13 19v6M1 13h6M19 13h6" stroke="#B23A2E" strokeWidth="2" />
-          </svg>
-        )}
         <span className="plank-role">
-          {selected && <span className="head-tag">ВЫБРАН</span>}
-          {role && <span className="head-tag">{role}</span>}
+          {(targeted || plate?.chosen) && (
+            // «Под огнём»: the wax seal of the target, pressed into the head (A5, TARGET_SEAL); it lives in the plank.
+            <span className="target-seal" data-testid={`target-seal-${ship.code}`} title="Под огнём" dangerouslySetInnerHTML={svg(TARGET_SEAL)} />
+          )}
+          {selected && <span className="head-tag mine">ВЫБРАН</span>}
+          {role && <span className="head-tag mine">{role}</span>}
           {ready && (
             // On a phone only «✓»: with «ВЫБРАН» next to it the name of the ship stays whole.
             <span className="head-tag ready" data-testid={`ready-${ship.code}`} title="Готов: ход окончен">
-              ✓<span className="wide"> готов</span>
+              <span className="tick" dangerouslySetInnerHTML={svg(READY_SVG)} />
+              <span className="wide">готов</span>
             </span>
           )}
-          <span className="narrow hand-count">{handLabel}</span>
+          <span className="hand-count" title={`Карт в руке: ${ship.hand.length}`} aria-label={handLabel} dangerouslySetInnerHTML={svg(fanSvg(ship.hand.length))} />
+          {!ship.sunk && (
+            <button
+              className={`legend-medal wide ${legendState} ${flash}`}
+              data-fx-legend
+              aria-label={legendTitle}
+              tabIndex={plate ? -1 : undefined}
+              onClick={(e) => {
+                if (plate) return;
+                e.stopPropagation();
+                onLegend?.();
+              }}
+              title={legendTitle}
+              dangerouslySetInnerHTML={svg(legendMedal(legendName, `md-${ship.code}-w`, (['Ж', 'М', 'И', 'Г'].indexOf(ship.code) * 1.7).toFixed(1)))}
+            />
+          )}
         </span>
         {plate && (
           <button
@@ -407,77 +550,38 @@ export function Plank({
               data={{ 'data-fx-status': x.label, 'data-fx-mark': x.mark || undefined }}
               style={x.flag && fxHidden?.includes(x.flag) ? { visibility: 'hidden' } : undefined}
             >
-              {x.mark && MARK_SVG}
+              {x.icon && <span className="chip-icon" dangerouslySetInnerHTML={svg(statusSvg(x.icon))} />}
               {x.label}
-              <span className="wide"> · {x.hint.split(':')[0].toLowerCase()}</span>
             </InfoTip>
           ))}
           {marked && <MarkStamp cls="narrow" hidden={markHidden} />}
         </div>
       )}
       <div className="plank-body">
-        {marked && <MarkStamp cls="wide" hidden={markHidden} />}
         <div className="tracks" key={fxGen}>
-          {TRACKS.map((t) => {
-            const max = startValue(data, ship.code, t);
-            const v = ship.tracks[t];
-            return (
-              <div key={t} className={`track t-${t}`} data-fx-track={t}>
-                <span className="track-label">{TRACK_LABEL[t]}</span>
-                <span className="cells" aria-hidden>
-                  {Array.from({ length: max }, (_, i) => (
-                    <i key={i} className={i < v ? 'on' : ''} />
-                  ))}
-                </span>
-                <span className="bar" aria-hidden>
-                  <i style={{ width: `${(100 * v) / max}%` }} />
-                </span>
-                <b className={`track-num ${v <= (t === 'crew' ? 1 : 0) && t !== 'hull' ? 'low' : ''}`} data-fx-value>
-                  {`${v}/${max}`}
-                </b>
-              </div>
-            );
-          })}
+          {trackEl('hull')}
+          <div className="track-row2">{(['sails', 'guns', 'crew'] as const).map(trackEl)}</div>
         </div>
         <div className="badges">
           {ship.fires > 0 && (
-            <InfoTip className="badge fire" title={`Пожар ${ship.fires}`} text={FIRE_INFO} off={!!plate} data={{ 'data-fx-fires': true, 'data-testid': `fire-${ship.code}` }}>
-              Пожар {ship.fires}
+            <InfoTip className="badge fire" title={fireLabel} text={FIRE_INFO} off={!!plate} data={{ 'data-fx-fires': true, 'data-testid': `fire-${ship.code}` }}>
+              <span className="chip-icon" dangerouslySetInnerHTML={svg(statusSvg('fire'))} />
+              {fireLabel}
             </InfoTip>
           )}
           {d.souls !== undefined && (
-            <InfoTip className="badge souls" title={`Души ${ship.souls} / ${d.souls}`} text={SOULS_INFO} off={!!plate} data={{ 'data-fx-souls': true, 'data-testid': `souls-${ship.code}` }}>
-              Души {ship.souls} / {d.souls}
+            <InfoTip className="badge souls" title={soulsLabel} text={SOULS_INFO} off={!!plate} data={{ 'data-fx-souls': true, 'data-testid': `souls-${ship.code}` }}>
+              <span className="chip-icon" dangerouslySetInnerHTML={svg(SOULS_SVG)} />
+              {soulsLabel}
             </InfoTip>
           )}
-          {!ship.sunk && (
-            <button
-              className={`badge legend ${legendState} ${flash}`}
-              data-fx-legend
-              tabIndex={plate ? -1 : undefined}
-              onClick={(e) => {
-                if (plate) return;
-                e.stopPropagation();
-                onLegend?.();
-              }}
-              title={
-                ship.legend
-                  ? `Легенда «${legendName}»: ${affordable ? 'нажмите, чтобы прочитать' : 'не хватает Пороха или Душ'}`
-                  : `Легенда «${legendName}» сыграна`
-              }
-            >
-              <span className="wide">Легенда: </span>
-              {legendName}
-            </button>
-          )}
-          <span className="badge wide">Рука {ship.hand.length}</span>
         </div>
       </div>
       {buttons.length > 0 && (
         <div className="plank-buttons-wrap" onClick={(e) => e.stopPropagation()}>
           <div className="plank-buttons" ref={buttonsRef}>
             {buttons.map((b) => (
-              <Button key={b.key} b={b} />
+              <PlankButton key={b.key} b={b} />
             ))}
           </div>
           {/* On a phone, while more buttons are to the right: a press scrolls the row (U3). */}
@@ -495,6 +599,73 @@ export function Plank({
         </div>
       )}
     </section>
+  );
+
+  /** A track: the label, the icons (.cells > i.on — the contract of the animations), the bar of a phone, «9/11». */
+  function trackEl(t: Track) {
+    const max = startValue(data, ship.code, t);
+    const v = ship.tracks[t];
+    return (
+      <div key={t} className={`track t-${t}`} data-fx-track={t} style={TRACK_ICON_STYLE[t]}>
+        <span className="track-label">{TRACK_LABEL[t]}</span>
+        <span className="cells" aria-hidden>
+          {Array.from({ length: max }, (_, i) => (
+            <i key={i} className={i < v ? 'on' : ''} />
+          ))}
+        </span>
+        <span className="bar" aria-hidden>
+          <i style={{ width: `${(100 * v) / max}%` }} />
+        </span>
+        <b className={`track-num ${v <= (t === 'crew' ? 1 : 0) && t !== 'hull' ? 'low' : ''}`} data-fx-value>
+          {`${v}/${max}`}
+        </b>
+      </div>
+    );
+  }
+}
+
+/** The icons of the buttons of a plank (A5: an icon, the name | the price with a keg). */
+const CMD_ICON: Record<string, string> = {
+  volley: CELLS.GUN,
+  sword: TRIDENT_SVG,
+  heart: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14 C3 10.4 1.2 7.8 1.2 5.4 C1.2 3.2 2.9 1.6 4.9 1.6 C6.2 1.6 7.3 2.3 8 3.4 C8.7 2.3 9.8 1.6 11.1 1.6 C13.1 1.6 14.8 3.2 14.8 5.4 C14.8 7.8 13 10.4 8 14 Z" fill="#a3271d" stroke="#3a0f0a" stroke-width=".8"/><path d="M4 4 Q5 3 6.2 3.4" stroke="#f3b1a4" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>',
+  treasury: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="12" rx="6" ry="2.2" fill="#a87c22" stroke="#4a340c" stroke-width=".7"/><ellipse cx="8" cy="9" rx="6" ry="2.2" fill="#c99a3a" stroke="#4a340c" stroke-width=".7"/><ellipse cx="8" cy="6" rx="6" ry="2.2" fill="#e2bf62" stroke="#4a340c" stroke-width=".7"/><path d="M5 5.6 Q8 4.4 11 5.6" stroke="#fff3c4" stroke-width=".6" fill="none"/></svg>',
+  dive: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 5 q1.75 -1.6 3.5 0 t3.5 0 t3.5 0 t3.5 0" fill="none" stroke="#2f5f74" stroke-width="1.4" stroke-linecap="round"/><path d="M8 6.6 V14 M5.2 11.2 L8 14 L10.8 11.2" fill="none" stroke="#22384c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  soulHull: SOULS_SVG,
+  soulCrew: SOULS_SVG,
+  regroup: '<svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true"><path d="M2 4 H13 M10 1 L13 4 L10 7 M14 10 H3 M6 7 L3 10 L6 13" fill="none" stroke="#2a2521" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+/** «Залп · 1 П»: the name and the price in Powder. */
+const PRICED = /^(.*?) · (\d+) П$/;
+/** «Перестроение · бесплатно»: free while «Жемчужина» of the Pirates is afloat. */
+const FREE = /^(.*?) · (бесплатно)$/;
+/** The keg of a price (KEG_S of art/cells2.json). */
+const KEG_SMALL = CELLS.KEG_S;
+
+/** A button of a plank: on a laptop the icon, the name and the price with a keg; on a phone the short label (U3). */
+export function PlankButton({ b, className = '' }: { b: Btn; className?: string }) {
+  const m = PRICED.exec(b.label) ?? FREE.exec(b.label);
+  const icon = CMD_ICON[b.key];
+  return (
+    <button
+      className={`btn cmd ${b.primary ? 'primary' : ''} ${className}`}
+      onClick={b.disabled ? undefined : b.onClick}
+      aria-disabled={!!b.disabled}
+      title={b.disabled ?? undefined}
+      data-testid={b.testid}
+    >
+      <span className="wide cmd-in">
+        {icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />}
+        <span className="cmd-name">{m ? m[1] : b.label}</span>
+        {m && (
+          <span className={`cost ${m[2] === 'бесплатно' ? 'free' : ''}`} aria-label={m[2] === 'бесплатно' ? 'бесплатно' : `${m[2]} Пороха`}>
+            {m[2]}
+            {m[2] !== 'бесплатно' && <span className="cost-keg" dangerouslySetInnerHTML={svg(KEG_SMALL)} />}
+          </span>
+        )}
+      </span>
+      <span className="narrow">{breakAfterArrow(b.short ?? b.label)}</span>
+    </button>
   );
 }
 
