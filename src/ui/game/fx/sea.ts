@@ -14,7 +14,7 @@ import type { Side } from '../../../engine/types';
 import { flipTo, weatherHit } from './misc';
 import type { RoundClip, SeaClip } from './planFx';
 import {
-  A, allPlanks, at, burst, bx, dirOf, facingY, flash, fxPoint, gainKegs, gapBox, hint, holdEl, isTop, mk, plank, ring, setTrack, shake,
+  A, allPlanks, at, burst, bx, dirOf, facingY, flash, fxPoint, gainKegs, gapBox, hint, holdEl, holdTag, isTop, mk, plank, ring, setTrack, shake,
   shownTrack, tag, trackEl, trackMark, badgeMark, visible, wait, whirlpool, type FxCtx,
 } from './primitives';
 import { SEA_BG, seaSvg } from './seaArt';
@@ -86,7 +86,7 @@ function powderFx(t: TableCtx, e: Keg, t0: number) {
   if (e.type === 'powderGained') { gainKegs(ctx, e.side, e.amount, { x: t.W / 2, y: t.g.cy }, t0); return; }
   const kg = holdEl(ctx, e.side), kids = kg.querySelectorAll('[data-fx-keg]'), n = ctx.display.powder[e.side];
   for (let k = 0; k < e.amount; k++) { const keg = kids[n - 1 - k]; if (!keg) continue; A(ctx, keg, [{ background: '#2A2521', transform: 'scale(1)' }, { background: '#5E86A0', transform: 'scale(1.3) translateY(2px)', offset: 0.4 }, { background: 'rgba(0,0,0,0)', transform: 'scale(.8) translateY(4px)' }], 700, t0 + k * 120, 'ease-in', 'forwards'); const kb = bx(ctx, keg); const dr = mk(ctx, 'bubble', 0, 0); A(ctx, dr, [{ opacity: 1, transform: `translate(${kb.cx}px,${kb.cy}px)` }, { opacity: 0, transform: `translate(${kb.cx}px,${kb.cy + 16}px)` }], 600, t0 + k * 120 + 200); }
-  const kb = bx(ctx, kg); tag(ctx, kb.r + 36, kb.cy, `−${e.amount} Порох`, t0, '', 1300);
+  holdTag(ctx, kg, `−${e.amount} Порох`, t0, '', 1300);
 }
 
 /** game (S1): a rule of the sea card in the middle of the table (class «rule»: e2e checks it never touches a plank). The
