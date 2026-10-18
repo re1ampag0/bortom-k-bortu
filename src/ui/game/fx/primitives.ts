@@ -281,11 +281,18 @@ export function payKegs(ctx: FxCtx, side: Side, n: number, delay: number, label 
     const keg = kids[have - 1 - k];
     if (keg) A(ctx, keg, [{ transform: 'scale(1)', background: '#2a241d' }, { transform: 'scale(1.5)', background: '#F2913D', offset: 0.35 }, { transform: 'scale(1)', background: 'rgba(0,0,0,0)' }], 450, delay + 80 * k, 'ease-in', 'forwards');
   }
-  if (label) {
-    const kb = bx(ctx, kg);
-    // Above the kegs: to the right of them is the text «· в руках …», the mark covered it.
-    tag(ctx, kb.cx, kb.y - 12, `−${n} Порох`, delay, '', 1000);
-  }
+  if (label) holdTag(ctx, kg, `−${n} Порох`, delay, '', 1000);
+}
+/**
+ * The mark of the Powder in the row of the team, to the LEFT of the kegs (on the label «Трюм»): above them it lay on
+ * the planks of the bottom team, to the right of them is the text «· в руках …». Its right edge never reaches the kegs.
+ */
+export function holdTag(ctx: FxCtx, kg: Element, text: string, delay: number, cls = '', dur = 1500): HTMLElement {
+  const kb = bx(ctx, kg), label = kg.parentElement?.querySelector('.hold-label');
+  const t = tag(ctx, label ? bx(ctx, label).cx : kb.x - 30, kb.cy, text, delay, cls, dur);
+  const w = t.offsetWidth;
+  t.style.left = Math.max(w / 2, Math.min(parseFloat(t.style.left), kb.x - 4 - w / 2)) + 'px';
+  return t;
 }
 /** Kegs fly into the Hold. */
 export function gainKegs(ctx: FxCtx, side: Side, n: number, from: Pt, delay: number, label = true): number {
@@ -300,10 +307,7 @@ export function gainKegs(ctx: FxCtx, side: Side, n: number, from: Pt, delay: num
       A(ctx, slot, [{ transform: 'scale(1.5)' }, { transform: 'scale(1)' }], 250, 0);
     }, ms(ctx, delay + 520 + k * 130));
   }
-  if (label && n) {
-    const kb = bx(ctx, kg);
-    tag(ctx, kb.cx, kb.y - 12, `+${n} Пороха`, delay + 300, 'plus', 1300);
-  }
+  if (label && n) holdTag(ctx, kg, `+${n} Пороха`, delay + 300, 'plus', 1300);
   return delay + 520 + n * 130;
 }
 
