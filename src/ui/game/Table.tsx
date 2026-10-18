@@ -598,6 +598,9 @@ export function Plank({
           </button>
         </div>
       )}
+      {/* FX-A: the traces the effects leave on this ship (fx/scars.ts). React never fills it, so they live through the
+          renders and ride with the ship when it changes places (the planks are keyed by the ship). */}
+      <div className="plank-scars" aria-hidden />
     </section>
   );
 

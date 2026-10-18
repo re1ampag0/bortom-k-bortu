@@ -22,6 +22,7 @@ import type { Side, Track } from '../../../engine/types';
 import { HIDDEN } from '../../../engine/view';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer, FxScene } from './FxLayer';
+import { clearScars } from './scars';
 import {
   KIND_BY_TRACK, type AbilityClip, type CardClip, type DiceClip, type DiscardClip, type DiveClip, type DrawClip, type EndClip, type FallbackClip,
   type FireClip, type FireOutClip, type ImpactClip, type PassClip, type PeekClip, type PowderClip, type RepairClip,
@@ -304,6 +305,8 @@ export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: nu
   const now = shownTrack(ctx, e.ship, e.track);
   const b = bx(ctx, plank(ctx, e.ship));
   if (from) { const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${from.x} ${from.y} Q ${(from.x + b.cx) / 2} ${Math.min(from.y, b.cy) - 40} ${b.cx} ${b.cy}" fill="none" stroke="#2F7A4F" stroke-width="3" stroke-dasharray="7 7" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], 1400, t0); }
+  // FX-A: a repair of the Hull takes the traces of its ship away (ANIMATIONS.md, §2)
+  if (e.track === 'hull') at(ctx, t0 + 300, () => clearScars(e.ship));
   const fr = overlayAt(ctx, 'lg-aura', b, 4); fr.style.boxShadow = '0 0 0 3px #2F7A4F, 0 0 22px 6px rgba(47,125,74,.45)';
   A(ctx, fr, [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], 1500, t0 + 100);
   for (let j = 0; j < e.amount; j++) {

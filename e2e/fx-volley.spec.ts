@@ -63,7 +63,10 @@ test.describe('a bot match (1366×660)', () => {
       const last = board.lastElementChild!;
       return { last: last.className, before: last.previousElementSibling?.className, gap: !!board.querySelector('[data-fx-gap]'), hand: !!board.querySelector('[data-fx-hand]'), events: getComputedStyle(last).pointerEvents };
     });
-    expect(dom).toEqual({ last: 'fx-layer', before: 'fx-weather', gap: true, hand: true, events: 'none' });
+    // FX-A: the traces of the effects (.fx-scars) lie between the weather and the layer (ANIMATIONS.md §1)
+    expect(dom).toEqual({ last: 'fx-layer', before: 'fx-scars', gap: true, hand: true, events: 'none' });
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector('.board > .fx-scars')!.previousElementSibling!).zIndex + ' ' + document.querySelector('.board > .fx-scars')!.previousElementSibling!.className)).toBe('1 fx-weather');
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector('.board > .fx-scars')!).pointerEvents)).toBe('none');
     await expect(page.locator('.fx-layer .plate')).toBeVisible({ timeout: 60_000 });
     expect(errors).toEqual([]);
   });

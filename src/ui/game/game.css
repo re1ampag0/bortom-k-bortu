@@ -587,17 +587,6 @@ button {
 .hand-count svg {
   display: block;
 }
-/* The labels of the animation layer have had this look of the table since A2 (game.css comes after fx.css); kept as it
-   was, with the specificity of a single class, so «.tag.plus», «.tag.good» of fx.css still win. */
-:where(.fx-layer) .tag {
-  background: #fff;
-  color: var(--ink);
-  border-radius: 4px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 1px 6px;
-  letter-spacing: 0.05em;
-}
 /* The medallion of the Legend: a gold coin of 28 px (art/medals.ts), a glint runs over it now and then. */
 .legend-medal,
 .star {
@@ -792,10 +781,12 @@ button.star::before {
   gap: 1px;
   flex-wrap: nowrap;
   overflow: hidden;
+  /* FX-A: an icon that flashes (setTrack: ×1.6 and a glow) may stand out of the row a little */
+  overflow: clip;
+  overflow-clip-margin: 8px;
 }
-/* A cell is its icon (art/cells.ts through --on/--off of the track). The background is !important: the flashes of the
-   animations (setTrack, the Ninth wave) animate «background», which would paint the icon over; the ring (box-shadow)
-   of the flash stays. */
+/* A cell is its icon (art/cells.ts through --on/--off of the track). The background is !important: an animation of
+   «background» would paint the icon over (the flash of FX-A swells and lights the icon instead). */
 .cells i {
   flex: none;
   width: 12px;
@@ -2753,16 +2744,6 @@ button.star::before {
     font-size: 1.6rem;
   }
 }
-/* The banners of the animation layer have had this look of the table since A2 (game.css comes after fx.css); kept as it
-   was, with the specificity of a single class, so «.banner.own», «.banner.small» of fx.css still win. Their place is
-   the clips' (left/top in the layer), not a fixed one. */
-:where(.fx-layer) .banner {
-  padding: 14px 28px;
-  border-radius: 16px;
-  background: rgba(42, 36, 29, 0.92);
-  color: #fffaf0;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
-}
 
 /* A Legend became available: one soft flash (with «Подсказки» only; docs/TZ.md, «Принципы стола», п. 9). */
 .legend-flash {
@@ -3852,4 +3833,36 @@ button.star::before {
     scale: none;
     transition: none;
   }
+}
+
+/* ═══════════ FX-A — the traces of the effects (fx/scars.ts; ANIMATIONS.md §1–2): on the sea over the weather of the round
+   and under the planks, on a ship inside its plank. They take no press. ═══════════ */
+.board > .fx-scars {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  clip-path: inset(calc(var(--sea-t, 0px) + 7px) calc(var(--sea-r, 0px) + 7px) calc(var(--sea-b, 0px) + 7px) calc(var(--sea-l, 0px) + 7px));
+}
+.fx-scars > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.plank-scars {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.plank-scars > * {
+  position: absolute;
+  pointer-events: none;
+}
+/* the soot where a ball struck (pg-hitmark of the prototype) */
+.fx-hitmark {
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(20, 10, 4, 0.75), rgba(60, 26, 8, 0.35) 45%, transparent 70%);
+  mix-blend-mode: multiply;
 }

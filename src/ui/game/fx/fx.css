@@ -3,6 +3,12 @@
 
 /* game: the colours of the reference the table of the game has no names for. */
 .fx-layer, .fx-weather { --navy: #24465c; --seal: #9e2b25; --water: #9cc3da; }
+/* FX-A: the A5 palette of the layer (paper and ink, as the planks): the labels, the plate, the banners, the windows. */
+.fx-layer {
+  --fx-paper: #f8f0de; --fx-paper-lo: #efe2c6; --fx-edge: #b59a68; --fx-ink: #2a2521; --fx-ink-soft: #5d5248;
+  --fx-brass: #c9a048; --fx-bordo: #8e2b22; --fx-bad: #a3271d; --fx-bad-lo: #7e2219; --fx-good: #2f7d4a; --fx-good-lo: #22603a;
+  --fx-ribbon-ink: #f6e7c6; --fx-font: 'Old Standard TT', Georgia, serif;
+}
 /* game: the frame of a hit comes from the reference table (style.css); .shooter and .targeted are in game.css. */
 /* game: «Под водой» — a class from the displayed state (reference table, style.css), not an animation with 'forwards'. */
 .plank.submerged { background: linear-gradient(rgba(156, 195, 218, 0.28), rgba(36, 70, 92, 0.32)), var(--panel); transform: translateY(5px) scale(0.99); }
@@ -43,24 +49,24 @@
 .ripple { width: 40px; height: 10px; margin: -5px 0 0 -20px; border-radius: 50%; border: 1.5px solid var(--water); }
 .ring { width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; border: 2px solid rgba(255, 224, 138, 0.95); }
 .gust { width: 220px; height: 40px; margin: -20px 0 0 -110px; }
-.tag { font-size: 11.5px; font-weight: 700; color: var(--navy); background: #fff; border: 1px solid var(--navy); border-radius: 10px; padding: 0 7px; white-space: nowrap; transform: translate(-50%, -50%); letter-spacing: 0; }
-.tag.plus { color: var(--red); border-color: var(--red); }
-.tag.good { color: var(--green); border-color: var(--green); }
+.tag { font-size: 0.72rem; font-weight: 800; color: var(--fx-ink); background: var(--fx-paper); border: 1px solid var(--fx-edge); border-radius: 4px; padding: 1px 6px; white-space: nowrap; transform: translate(-50%, -50%); letter-spacing: 0.05em; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35); }
+.tag.plus { color: var(--fx-bordo); border-color: var(--fx-bordo); }
+.tag.good { color: var(--fx-good); border-color: var(--fx-good); }
 .tag.gold { color: #7a5a00; border-color: var(--gold); background: var(--gold-soft); }
-.pill { font-family: var(--font-head); font-weight: 800; color: #fff; background: var(--red); font-size: 21px; line-height: 1; padding: 4px 11px 5px; border-radius: 20px; box-shadow: 0 6px 14px rgba(163, 52, 31, 0.35); white-space: nowrap; }
-.pill.good { background: var(--green); box-shadow: 0 6px 14px rgba(47, 125, 74, 0.3); }
+.pill { font-family: var(--fx-font); font-weight: 700; color: #fff; background: linear-gradient(var(--fx-bad), var(--fx-bad-lo)); font-size: 21px; line-height: 1; padding: 4px 11px 5px; border-radius: 20px; box-shadow: inset 0 0 0 1px rgba(255, 220, 160, 0.35), 0 2px 6px rgba(0, 0, 0, 0.45); white-space: nowrap; }
+.pill.good { background: linear-gradient(var(--fx-good), var(--fx-good-lo)); }
 /* game (S1): the short mark at the number of a track in the clips of the start of a turn and of the sea (trackMark). */
-.tmark { font-weight: 800; font-size: 12px; line-height: 16px; color: #fff; background: var(--red); border-radius: 8px; padding: 0 5px; white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2; }
-.tmark.good { background: var(--green); }
+.tmark { font-family: var(--fx-font); font-weight: 700; font-size: 12px; line-height: 16px; color: #fff; background: var(--fx-bad); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 0 5px; white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2; }
+.tmark.good { background: var(--fx-good); }
 .pill.huge { font-size: 28px; padding: 5px 14px 6px; }
-.plate { background: #fff; border: 1.5px solid var(--line); border-left: 5px solid var(--pc, #8a2e1c); border-radius: 10px; padding: 9px 14px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); width: 262px; font-size: 15px; line-height: 1.35; z-index: -1; }
-.plate .who { color: var(--muted); font-weight: 500; font-size: 14px; } .plate .who b { color: var(--ink); }
-.plate .big { font-family: var(--font-head); font-weight: 800; font-size: 23px; line-height: 1.1; margin: 2px 0; }
+.plate { color: var(--fx-ink); background: linear-gradient(var(--fx-paper), var(--fx-paper-lo)); border: 1.5px solid var(--fx-edge); border-left: 5px solid var(--pc, #8a2e1c); border-radius: 6px; padding: 9px 14px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); width: 262px; font-size: 15px; line-height: 1.35; z-index: -1; }
+.plate .who { color: var(--fx-ink-soft); font-weight: 500; font-size: 14px; } .plate .who b { color: var(--ink); }
+.plate .big { font-family: var(--fx-font); font-weight: 800; font-size: 23px; line-height: 1.1; margin: 2px 0; }
 .plate .big s { color: #9a8f82; font-size: 17px; margin-right: 4px; }
 .plate .terms { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; color: #3d342b; margin-top: 2px; }
 .plate .terms span:nth-child(even) { text-align: right; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
 .plate .terms .neg { color: var(--navy) !important; } .plate .terms .pos { color: var(--red) !important; }
-.plate .terms .new { background: #f6ebd0; } .plate .terms .struck { text-decoration: line-through; color: #9a8f82 !important; }
+.plate .terms .new { background: rgba(201, 160, 72, 0.25); } .plate .terms .struck { text-decoration: line-through; color: #9a8f82 !important; }
 .plate .stamp { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: var(--seal); border: 1.5px solid var(--seal); border-radius: 4px; padding: 0 5px; transform: rotate(-3deg); }
 .plate .nodiag { margin-top: 3px; font-size: 11px; font-weight: 700; color: var(--green); }
 /* game: the breakdown is larger than in the reference (12.5 px) — it is read from a distance; a phone keeps it to 13 px. */
@@ -77,14 +83,15 @@
 /* (was overflow-wrap: anywhere — on a phone «ЖЕМЧУЖИНА» broke into «ЖЕМЧУЖИН / А») */
 .ink { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .ink path { fill: none; stroke: #1d2a46; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 110; stroke-dashoffset: 110; }
-.window { background: var(--panel); border: 1.5px solid var(--navy); border-radius: 12px; padding: 6px 14px; text-align: center; box-shadow: 0 8px 22px rgba(36, 70, 92, 0.18); transform: translate(-50%, -50%); white-space: nowrap; }
+.window { color: var(--fx-ink); background: linear-gradient(var(--fx-paper), var(--fx-paper-lo)); border: 1.5px solid var(--fx-brass); border-radius: 6px; padding: 6px 14px; text-align: center; box-shadow: 0 8px 22px rgba(36, 70, 92, 0.18); transform: translate(-50%, -50%); white-space: nowrap; }
 .window b { display: block; font-size: 13.5px; } .window span { font-size: 12.5px; color: var(--muted); }
-.window.mine { border-color: var(--red); } .window.mine b { color: var(--red); }
+.window.mine { border-color: var(--fx-bordo); } .window.mine b { color: var(--fx-bordo); }
 .window i { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--muted); margin-left: 3px; animation: dot 1s infinite; }
 .window i:nth-child(2) { animation-delay: 0.15s; } .window i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes dot { 50% { opacity: 0.2; } }
-.banner { transform: translate(-50%, -50%); font-family: var(--font-head); font-weight: 800; font-size: 30px; color: #fff; background: var(--ink); padding: 8px 22px 10px; border-radius: 14px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25); white-space: nowrap; }
-.banner.own { background: var(--green); } .banner.small { font-size: 18px; padding: 5px 14px 7px; border-radius: 10px; }
+/* FX-A: a ribbon of A5 (pg-banner of the prototype): bordo cloth with cut ends, light letters of Old Standard TT */
+.banner { transform: translate(-50%, -50%); font-family: var(--fx-font); font-weight: 700; font-size: 30px; letter-spacing: 0.08em; color: var(--fx-ribbon-ink); background: linear-gradient(#a8382c, var(--fx-bad-lo)); padding: 8px 46px 10px; clip-path: polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%, 5% 50%); filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45)); white-space: nowrap; }
+.banner.own { background: linear-gradient(#3a8a5c, var(--fx-good-lo)); } .banner.small { font-size: 18px; padding: 5px 30px 7px; }
 .flame { width: 18px; height: 22px; margin: -11px 0 0 -9px; }
 .armor { border: 3px solid #8fb0c4; border-radius: 13px; box-shadow: 0 0 12px rgba(94, 134, 160, 0.55), inset 0 0 10px rgba(94, 134, 160, 0.35); }
 .night { border-radius: 10px; background: linear-gradient(rgba(14, 22, 40, 0.74), rgba(30, 40, 70, 0.62)); box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.45); }
@@ -93,7 +100,7 @@
 .whirl { width: 90px; height: 50px; }
 .heart { width: 30px; height: 26px; margin: -13px 0 0 -15px; z-index: 3; }
 .blot { width: 30px; height: 26px; margin: -13px 0 0 -15px; }
-.stamp-fx { transform: translate(-50%, -50%) rotate(-6deg); font-family: var(--font-head); font-weight: 800; color: var(--seal); border: 2.5px solid var(--seal); border-radius: 6px; padding: 1px 8px; background: rgba(255, 250, 240, 0.92); white-space: nowrap; font-size: 15px; }
+.stamp-fx { transform: translate(-50%, -50%) rotate(-6deg); font-family: var(--fx-font); font-weight: 800; color: var(--seal); border: 2.5px solid var(--seal); border-radius: 6px; padding: 1px 8px; background: rgba(255, 250, 240, 0.92); white-space: nowrap; font-size: 15px; }
 .cursor { width: 22px; height: 26px; margin: -2px 0 0 -3px; z-index: 9; }
 .dim { background: #1d2a35; }
 .tint { }

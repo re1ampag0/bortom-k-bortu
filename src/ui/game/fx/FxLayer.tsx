@@ -20,6 +20,7 @@ import { tookPress } from '../InfoTip';
 import { trace } from './trace';
 import { loadSettings } from '../../storage';
 import { PLAY_LEGENDS } from './legends';
+import { setScarClock } from './scars';
 import { PLAY_SEA, renderWeather } from './sea';
 import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
 import './fx.css';
@@ -162,6 +163,8 @@ export function useFxQueue({
   // The latest values for the loop (it lives across renders).
   const live = useRef({ view, speed, rich, data, bottom, own, hold, paused, myDecision, enabled });
   live.current = { view, speed, rich, data, bottom, own, hold, paused, myDecision, enabled };
+  // FX-A: the traces dissolve by the clock of the show (its speed, «Пауза», a banner; half as long when «простые»)
+  useEffect(() => setScarClock(() => ({ rate: 1 / speedFactor(live.current.speed), paused: live.current.hold || live.current.paused, rich: live.current.rich })), []);
   const waiters = useRef<(() => void)[]>([]);
   const wake = () => waiters.current.splice(0).forEach((w) => w());
   useEffect(wake, [hold, paused]);
@@ -452,7 +455,7 @@ export function useFxQueue({
 }
 
 /**
- * The layer: .fx-weather and .fx-layer, the last children of the board (.board, position: relative). Neither takes a
+ * The layer: .fx-weather, .fx-scars and .fx-layer, the last children of the board (.board, position: relative). Neither takes a
  * press. A press on the table while a clip plays shows the result at once (not on the hand, not on a decision panel).
  */
 export function FxLayer({ fx }: { fx: FxQueue }) {
@@ -515,6 +518,8 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
   return (
     <>
       <div className="fx-weather" ref={fx.weatherRef} aria-hidden />
+      {/* FX-A: the traces on the sea (fx/scars.ts) — over the weather, under the planks; the layer never clears it */}
+      <div className="fx-scars" aria-hidden />
       <div className="fx-layer" ref={fx.layerRef} aria-hidden />
     </>
   );
