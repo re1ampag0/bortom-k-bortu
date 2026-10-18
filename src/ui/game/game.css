@@ -743,7 +743,8 @@ button.star::before {
 }
 .ship-art > .mark-stamp {
   position: absolute;
-  right: -12px;
+  /* over the right edge of the drawing, not over the name (8 px further) */
+  right: -6px;
   top: 0;
   width: 30px;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45));
