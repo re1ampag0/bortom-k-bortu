@@ -106,6 +106,7 @@ export function StatusBar({
   onSea,
   extra,
   chip = true,
+  hold,
 }: {
   s: GameState;
   data: GameData;
@@ -116,6 +117,8 @@ export function StatusBar({
   extra: ReactNode;
   /** The sea plaque stands in this row (false: over the log, see useWideLog). */
   chip?: boolean;
+  /** The Hold of the top team (V1c): in the row, after the plate. */
+  hold?: ReactNode;
 }) {
   return (
     <header className="status" data-testid="status">
@@ -134,6 +137,7 @@ export function StatusBar({
           Р{s.round} · {SIDE_LABEL[s.active].name}
         </span>
       </div>
+      {hold}
       <div className={`status-text ${waiting ? 'waiting' : ''}`} data-testid="instruction" data-fx-instruction>
         {instruction}
       </div>
@@ -219,6 +223,29 @@ export function PowderDots({ n, cap, side }: { n: number; cap: number; side?: Si
   );
 }
 
+/**
+ * The Hold of the top team in the top row (V1c, A5 «Трюм Компании · 5 из 8»): the caption over a brass tray of kegs; on a
+ * phone a keg and «5/8» (the kegs of the animations lie over that keg, unseen). The Powder clips fly here (data-fx-hold).
+ */
+export function TopHold({ side, s, data, fxGen = 0 }: { side: Side; s: GameState; data: GameData; fxGen?: number }) {
+  const n = s.teams[side].powder,
+    cap = data.econ.cap;
+  return (
+    <div className="top-hold" data-testid={`team-${side}`} title={`Трюм ${SIDE_LABEL[side].gen}: ${n} Пороха из ${cap}`}>
+      <span className="hold-label">
+        <span className="wide">
+          Трюм {SIDE_LABEL[side].gen} · {n} из {cap}
+        </span>
+        <span className="narrow hold-mini">
+          <span className="hold-keg" aria-hidden dangerouslySetInnerHTML={svg(CELLS.KEG_S)} />
+          {n}/{cap}
+        </span>
+      </span>
+      <PowderDots key={fxGen} n={n} cap={cap} side={side} />
+    </div>
+  );
+}
+
 export function TeamRow({
   side,
   s,
@@ -237,13 +264,20 @@ export function TeamRow({
   /** The animation layer changed the displayed state: the kegs it touched are built again. */
   fxGen?: number;
 }) {
+  const n = s.teams[side].powder;
   return (
     <div className="team-row" data-testid={`team-${side}`}>
       <b className="team-name">{SIDE_LABEL[side].upper}</b>
-      <span className="muted hold-label">Трюм</span>
-      <PowderDots key={fxGen} n={s.teams[side].powder} cap={data.econ.cap} side={side} />
+      {/* laptop (A5): «Трюм пиратов · 2 из 8» over the kegs; phone: «Трюм» in the row, as before */}
+      <span className="muted hold-label">
+        <span className="wide">
+          Трюм {SIDE_LABEL[side].gen} · {n} из {data.econ.cap}
+        </span>
+        <span className="narrow">Трюм</span>
+      </span>
+      <PowderDots key={fxGen} n={n} cap={data.econ.cap} side={side} />
       {hands && hands.length > 0 && <span className="muted wide">· в руках {hands.join(' и ')} {cardsWord(hands[hands.length - 1]).split(' ')[1]}</span>}
-      {regroup && <Button b={regroup} className="small regroup" />}
+      {regroup && <PlankButton b={regroup} className="small regroup" />}
       {hint && <span className="muted wide hint">· {hint}</span>}
     </div>
   );
@@ -599,19 +633,22 @@ const CMD_ICON: Record<string, string> = {
   dive: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 5 q1.75 -1.6 3.5 0 t3.5 0 t3.5 0 t3.5 0" fill="none" stroke="#2f5f74" stroke-width="1.4" stroke-linecap="round"/><path d="M8 6.6 V14 M5.2 11.2 L8 14 L10.8 11.2" fill="none" stroke="#22384c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   soulHull: SOULS_SVG,
   soulCrew: SOULS_SVG,
+  regroup: '<svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true"><path d="M2 4 H13 M10 1 L13 4 L10 7 M14 10 H3 M6 7 L3 10 L6 13" fill="none" stroke="#2a2521" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 /** «Залп · 1 П»: the name and the price in Powder. */
 const PRICED = /^(.*?) · (\d+) П$/;
+/** «Перестроение · бесплатно»: free while «Жемчужина» of the Pirates is afloat. */
+const FREE = /^(.*?) · (бесплатно)$/;
 /** The keg of a price (KEG_S of art/cells2.json). */
 const KEG_SMALL = CELLS.KEG_S;
 
 /** A button of a plank: on a laptop the icon, the name and the price with a keg; on a phone the short label (U3). */
-function PlankButton({ b }: { b: Btn }) {
-  const m = PRICED.exec(b.label);
+export function PlankButton({ b, className = '' }: { b: Btn; className?: string }) {
+  const m = PRICED.exec(b.label) ?? FREE.exec(b.label);
   const icon = CMD_ICON[b.key];
   return (
     <button
-      className={`btn cmd ${b.primary ? 'primary' : ''}`}
+      className={`btn cmd ${b.primary ? 'primary' : ''} ${className}`}
       onClick={b.disabled ? undefined : b.onClick}
       aria-disabled={!!b.disabled}
       title={b.disabled ?? undefined}
@@ -621,9 +658,9 @@ function PlankButton({ b }: { b: Btn }) {
         {icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />}
         <span className="cmd-name">{m ? m[1] : b.label}</span>
         {m && (
-          <span className="cost" aria-label={`${m[2]} Пороха`}>
+          <span className={`cost ${m[2] === 'бесплатно' ? 'free' : ''}`} aria-label={m[2] === 'бесплатно' ? 'бесплатно' : `${m[2]} Пороха`}>
             {m[2]}
-            <span className="cost-keg" dangerouslySetInnerHTML={svg(KEG_SMALL)} />
+            {m[2] !== 'бесплатно' && <span className="cost-keg" dangerouslySetInnerHTML={svg(KEG_SMALL)} />}
           </span>
         )}
       </span>

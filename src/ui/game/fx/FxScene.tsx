@@ -17,7 +17,7 @@ import type { Speed } from '../../storage';
 import { Hand, seatLabel } from '../Hand';
 import { CardDetail } from '../Overlays';
 import type { Recent } from '../../../net/local';
-import { Plank, SeaChip, StatusBar, TeamRow, useWideLog } from '../Table';
+import { Plank, SeaChip, StatusBar, TeamRow, TopHold, useWideLog } from '../Table';
 import { TableThings, useSeaClip } from '../TableThings';
 import { applyVisible, displayRules, type Display } from './display';
 import { FxLayer, useFxQueue } from './FxLayer';
@@ -244,15 +244,13 @@ function SceneTable({
       onLegend={null}
     />
   );
-  const handsOf = (side: Side) => Object.values(view.ships).filter((x) => x.side === side).map((x) => x.hand.length);
   const seat = setup.handSeat;
   const shown = fx.display ? withDisplay(view, fx.display) : view;
   return (
     <div className="game" data-testid="game" data-bottom={bottom} data-fx-scene={scene.id}>
       <TableThings />
       <main className="board" ref={boardRef}>
-        <StatusBar s={shown} data={data} instruction={fx.hint ?? scene.title} waiting={false} onSea={() => {}} extra={null} chip={!wideLog} />
-        <TeamRow side={top} s={tableView} data={data} hands={handsOf(top)} regroup={null} hint={null} fxGen={fx.gen} />
+        <StatusBar s={shown} data={data} instruction={fx.hint ?? scene.title} waiting={false} onSea={() => {}} extra={null} chip={!wideLog} hold={<TopHold side={top} s={tableView} data={data} fxGen={fx.gen} />} />
         <div className="sea-table" ref={seaRef}>
           <div className="sea-water" aria-hidden />
           <div className="planks top">{columns(top).map(renderPlank)}</div>

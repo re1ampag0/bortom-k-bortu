@@ -49,7 +49,7 @@ import { instantUrl, reducedMotion } from '../start/motion';
 import { FxLayer, useFxQueue } from './fx/FxLayer';
 import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
-import { Button, Plank, RoundButton, SeaChip, StatusBar, TeamRow, useWideLog, type Btn, type Plate } from './Table';
+import { Button, Plank, RoundButton, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
 import { TableThings, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
@@ -120,6 +120,7 @@ export function Game({
     setEffectsState(v);
     storeSettings({ ...loadSettings(), effects: v });
   };
+  const [seaFrame, setSeaFrame] = useState(() => loadSettings().seaFrame);
   const [sound, setSoundState] = useState(() => loadSettings().sound);
   const setSound = (v: boolean) => {
     setSoundState(v);
@@ -595,7 +596,8 @@ export function Game({
     if (side !== bottom || !myTurn) return null;
     const r = tryAction(s, { type: 'regroup', side }, data);
     const cost = r.ok ? r.events.filter((e) => e.type === 'powderSpent').reduce((n, e) => n + (e.type === 'powderSpent' ? e.amount : 0), 0) : data.rules.regroupCost;
-    return { key: 'regroup', label: `Перестроение · ${cost}`, disabled: r.ok ? null : r.reason, onClick: () => act({ type: 'regroup', side }) };
+    // A5: «Перестроение · бесплатно» while it costs nothing, else the price with a keg; the phone keeps «· N»
+    return { key: 'regroup', label: cost ? `Перестроение · ${cost} П` : 'Перестроение · бесплатно', short: `Перестроение · ${cost}`, disabled: r.ok ? null : r.reason, onClick: () => act({ type: 'regroup', side }) };
   };
 
   const jointHint = (side: Side): string | null => {
@@ -944,7 +946,6 @@ export function Game({
   };
 
   const top = other(bottom);
-  const handsOf = (side: Side) => Object.values(view.ships).filter((x) => x.side === side && seatShip(view, x.code)).map((x) => x.hand.length);
   const decidingSeats = d && !s.winner ? d.seats : [];
   const shooter = mode.k === 'aim' ? mode.shooter : (s.volley?.shooter ?? null);
   const targeted = mode.k === 'aim' ? mode.target : mode.k === 'card' ? mode.target : (s.volley?.target ?? null);
@@ -994,7 +995,7 @@ export function Game({
 
   return (
     <div
-      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${effects === 'simple' ? 'fx-simple' : ''}`}
+      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${seaFrame === 'wood' ? 'frame-wood' : ''}`}
       data-testid="game"
       data-bottom={bottom}
     >
@@ -1008,9 +1009,9 @@ export function Game({
           onSea={() => setSheet({ k: 'sea' })}
           extra={wideLog ? null : toolButtons}
           chip={!wideLog}
+          hold={<TopHold side={top} s={tableView} data={data} fxGen={fx.gen} />}
         />
         {net && <NetBar game={net} />}
-        <TeamRow side={top} s={tableView} data={data} hands={handsOf(top)} regroup={null} hint={null} fxGen={fx.gen} />
         <div className="sea-table" ref={seaRef}>
           <div className="sea-water" aria-hidden />
           <div className="planks top">{columns(top).map(renderPlank)}</div>
@@ -1213,6 +1214,7 @@ export function Game({
             setMode(net ? { k: 'exitRoom' } : { k: 'leave' });
           }}
           onDownloadLog={downloadLog}
+          onSeaFrame={setSeaFrame}
           onDownloadGame={downloadGame}
           onClose={() => setSheet(null)}
         />

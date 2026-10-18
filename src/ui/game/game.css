@@ -3499,3 +3499,179 @@ button.star::before {
     letter-spacing: 0.06em;
   }
 }
+
+/* ═══════════ V1c: the Holds — the top team's in the top row, the bottom team's at the bottom left with «Перестроение» ═══════════ */
+.powder-dots i {
+  position: relative;
+}
+/* a keg of A5 (KEG / KEG_E of art/cells2.json): the dashed empty keg is always under it — the Powder clips animate the
+   background of the keg itself (payKegs empties it, gainKegs fills it), so the empty outline shows through */
+.top-hold .powder-dots i {
+  border: 0;
+  border-radius: 3px;
+  background: none;
+}
+.top-hold .powder-dots i::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2228%22%20viewBox%3D%220%200%2022%2028%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%203.2%20C1.6%209%201.6%2019%204%2024.8%20C8.6%2026.4%2013.4%2026.4%2018%2024.8%20C20.4%2019%2020.4%209%2018%203.2%20C13.4%201.6%208.6%201.6%204%203.2%20Z%22%20fill%3D%22none%22%20stroke%3D%22%238a6a44%22%20stroke-width%3D%221%22%20stroke-dasharray%3D%222%201.6%22%20opacity%3D%22.8%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+}
+.top-hold .powder-dots i.on {
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2228%22%20viewBox%3D%220%200%2022%2028%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%203.2%20C1.6%209%201.6%2019%204%2024.8%20C8.6%2026.4%2013.4%2026.4%2018%2024.8%20C20.4%2019%2020.4%209%2018%203.2%20C13.4%201.6%208.6%201.6%204%203.2%20Z%22%20fill%3D%22%239a6232%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.9%22%2F%3E%3Cpath%20d%3D%22M7.4%202.4%20C6%209%206%2019%207.4%2025.6%20M11%202.2%20V25.8%20M14.6%202.4%20C16%209%2016%2019%2014.6%2025.6%22%20stroke%3D%22%236e431e%22%20stroke-width%3D%22.6%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M4.6%204.6%20C4%209.6%204%2018.4%204.6%2023.4%22%20stroke%3D%22%23c08a52%22%20stroke-width%3D%221%22%20fill%3D%22none%22%20opacity%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M2.6%208.4%20C8.4%209.8%2013.6%209.8%2019.4%208.4%20M2.6%2019.6%20C8.4%2018.2%2013.6%2018.2%2019.4%2019.6%22%20stroke%3D%22%232c2a28%22%20stroke-width%3D%221.7%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M2.8%207.7%20C8.4%209%2013.6%209%2019.2%207.7%20M2.8%2018.9%20C8.4%2017.6%2013.6%2017.6%2019.2%2018.9%22%20stroke%3D%22%238a857e%22%20stroke-width%3D%22.45%22%20fill%3D%22none%22%2F%3E%3Cellipse%20cx%3D%2211%22%20cy%3D%223%22%20rx%3D%227%22%20ry%3D%221.3%22%20fill%3D%22%237a4b22%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.6%22%2F%3E%3Crect%20x%3D%229.4%22%20y%3D%2212.6%22%20width%3D%223.2%22%20height%3D%222.4%22%20rx%3D%22.6%22%20fill%3D%22%235a3818%22%20stroke%3D%22%232c1a0a%22%20stroke-width%3D%22.4%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+}
+.top-hold .powder-dots b {
+  display: none;
+}
+.top-hold {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  color: var(--paper-hi);
+}
+.top-hold .hold-label {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.top-hold .powder-dots {
+  gap: 3px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #3f2a1a;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(224, 189, 98, 0.35);
+}
+.top-hold .powder-dots i {
+  width: 14px;
+  height: 18px;
+}
+@media (min-width: 701px) {
+  .status {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+  /* the Hold of the bottom team: at the bottom left, by the hand (A5 «Трюм пиратов · 2 из 8», kegs 4 × 2, «Перестроение») */
+  .board > .team-row {
+    position: absolute;
+    left: 12px;
+    bottom: 8px;
+    width: 218px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    white-space: normal;
+    overflow: visible;
+    z-index: 2;
+  }
+  .board > .team-row .team-name {
+    display: none;
+  }
+  .board > .team-row .hold-label {
+    font-family: var(--font-num);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: #efe3c8;
+  }
+  .board > .team-row .powder-dots {
+    display: grid;
+    grid-template-columns: repeat(4, 32px);
+    gap: 4px 10px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #3f2a1a;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+  }
+  .board > .team-row .powder-dots i {
+    width: 22px;
+    height: 28px;
+    justify-self: center;
+  }
+  .board > .team-row .btn.regroup {
+    min-width: 194px;
+    justify-content: flex-start;
+  }
+  .board > .team-row .btn.regroup .cost.free {
+    margin-left: auto;
+    font-family: var(--font-text);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--ok-a5);
+  }
+  .board > .team-row .hint {
+    font-size: 11.5px;
+    white-space: normal;
+  }
+  .board > .team-row .powder-dots i {
+    border: 0;
+    border-radius: 3px;
+    background: none;
+  }
+  .board > .team-row .powder-dots i::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2228%22%20viewBox%3D%220%200%2022%2028%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%203.2%20C1.6%209%201.6%2019%204%2024.8%20C8.6%2026.4%2013.4%2026.4%2018%2024.8%20C20.4%2019%2020.4%209%2018%203.2%20C13.4%201.6%208.6%201.6%204%203.2%20Z%22%20fill%3D%22none%22%20stroke%3D%22%238a6a44%22%20stroke-width%3D%221%22%20stroke-dasharray%3D%222%201.6%22%20opacity%3D%22.8%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  }
+  .board > .team-row .powder-dots i.on {
+    background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2228%22%20viewBox%3D%220%200%2022%2028%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%203.2%20C1.6%209%201.6%2019%204%2024.8%20C8.6%2026.4%2013.4%2026.4%2018%2024.8%20C20.4%2019%2020.4%209%2018%203.2%20C13.4%201.6%208.6%201.6%204%203.2%20Z%22%20fill%3D%22%239a6232%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.9%22%2F%3E%3Cpath%20d%3D%22M7.4%202.4%20C6%209%206%2019%207.4%2025.6%20M11%202.2%20V25.8%20M14.6%202.4%20C16%209%2016%2019%2014.6%2025.6%22%20stroke%3D%22%236e431e%22%20stroke-width%3D%22.6%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M4.6%204.6%20C4%209.6%204%2018.4%204.6%2023.4%22%20stroke%3D%22%23c08a52%22%20stroke-width%3D%221%22%20fill%3D%22none%22%20opacity%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M2.6%208.4%20C8.4%209.8%2013.6%209.8%2019.4%208.4%20M2.6%2019.6%20C8.4%2018.2%2013.6%2018.2%2019.4%2019.6%22%20stroke%3D%22%232c2a28%22%20stroke-width%3D%221.7%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M2.8%207.7%20C8.4%209%2013.6%209%2019.2%207.7%20M2.8%2018.9%20C8.4%2017.6%2013.6%2017.6%2019.2%2018.9%22%20stroke%3D%22%238a857e%22%20stroke-width%3D%22.45%22%20fill%3D%22none%22%2F%3E%3Cellipse%20cx%3D%2211%22%20cy%3D%223%22%20rx%3D%227%22%20ry%3D%221.3%22%20fill%3D%22%237a4b22%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.6%22%2F%3E%3Crect%20x%3D%229.4%22%20y%3D%2212.6%22%20width%3D%223.2%22%20height%3D%222.4%22%20rx%3D%22.6%22%20fill%3D%22%235a3818%22%20stroke%3D%22%232c1a0a%22%20stroke-width%3D%22.4%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+  }
+  .board > .team-row .powder-dots b {
+    display: none;
+  }
+  /* the hand makes room for the Hold */
+  .board > .hand-row {
+    margin-left: 228px;
+  }
+}
+@media (max-width: 700px) {
+  .status {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'turn hold tools'
+      'text text text';
+  }
+  /* the phone: a keg and «5/8»; the kegs of the animations lie over that keg, unseen */
+  .top-hold {
+    grid-area: hold;
+    position: relative;
+    justify-self: start;
+  }
+  .hold-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+  .hold-keg,
+  .hold-keg svg {
+    display: block;
+  }
+  .top-hold .powder-dots {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 10px;
+    height: 13px;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .top-hold .powder-dots i {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+  }
+}

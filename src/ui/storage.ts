@@ -20,9 +20,13 @@ export interface Settings {
   fastEnd: boolean;
   /** A tap of a finger on the table skips the show to its result (off by default: a finger touches the screen often). */
   tapSkip: boolean;
+  /** The frame of the sea on the table (A5): brass (by default) or wood. */
+  seaFrame: SeaFrame;
 }
 
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false, tapSkip: false };
+export type SeaFrame = 'brass' | 'wood';
+
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false, tapSkip: false, seaFrame: 'brass' };
 
 function read(key: string): string | null {
   try {

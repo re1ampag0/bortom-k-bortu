@@ -6,7 +6,7 @@ import { startValue } from '../src/engine/state';
 import type { Track } from '../src/engine/types';
 import { HIDDEN } from '../src/engine/view';
 import { Hand } from '../src/ui/game/Hand';
-import { Plank, StatusBar, TeamRow, type Plate } from '../src/ui/game/Table';
+import { Plank, StatusBar, TeamRow, TopHold, type Plate } from '../src/ui/game/Table';
 import { data, turnOf } from './helpers';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
@@ -59,6 +59,14 @@ describe('data-fx-* DOM contract', () => {
     const html = renderToStaticMarkup(createElement(TeamRow, { side: 'КОМПАНИЯ', s, data, hands: null, regroup: null, hint: null }));
     expect(html).toContain('data-fx-hold="КОМПАНИЯ"');
     expect(count(html, /data-fx-keg/g)).toBe(data.econ.cap);
+  });
+
+  it('the Hold of the top team in the top row (V1c): data-fx-hold, a keg per cell, the label the Powder marks look for', () => {
+    const html = renderToStaticMarkup(createElement(TopHold, { side: 'КОМПАНИЯ', s, data }));
+    expect(html).toContain('data-fx-hold="КОМПАНИЯ"');
+    expect(count(html, /data-fx-keg/g)).toBe(data.econ.cap);
+    expect(html).toContain('class="hold-label"');
+    expect(html).toContain(`Трюм Компании · ${s.teams['КОМПАНИЯ'].powder} из ${data.econ.cap}`);
   });
 
   it('the hand: data-fx-card on every card (a hidden one too) and data-fx-deck', () => {
