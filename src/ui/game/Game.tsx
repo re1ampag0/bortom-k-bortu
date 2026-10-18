@@ -989,7 +989,7 @@ export function Game({
   );
 
   return (
-    <div className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''}`} data-testid="game" data-bottom={bottom}>
+    <div className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${effects === 'simple' ? 'fx-simple' : ''}`} data-testid="game" data-bottom={bottom}>
       <StatusBar s={fx.display ? withDisplay(s, fx.display) : s} data={data} instruction={fx.hint ?? flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
       {net && <NetBar game={net} />}
       {net && <MissedSheet game={net} />}

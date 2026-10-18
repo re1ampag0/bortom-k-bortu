@@ -16,6 +16,22 @@
   --chip: #ece3d3;
   --radius: 10px;
   --art-table: none;
+  /* A5 (docs/mockups/a5/README.md): paper, ink, brass, bordo, green «готово», red «под огнём» */
+  --paper: #efe2c6;
+  --paper-hi: #f8f0de;
+  --ink-a5: #2a2521;
+  --ink-soft-a5: #4a4036;
+  --head-ink: #f6efe0;
+  --brass: #c9a048;
+  --brass-hi: #e0bd62;
+  --brass-dark: #8a6a24;
+  --brass-text: #ead07c;
+  --bordo: #8e2b22;
+  --ok-a5: #3a8a5c;
+  --fire-a5: #a81f17;
+  --souls-a5: #24584b;
+  --font-sc: 'Alegreya SC', Alegreya, Georgia, serif;
+  --font-num: 'Old Standard TT', Georgia, serif;
 }
 
 html,
@@ -417,84 +433,161 @@ button {
   gap: 10px;
 }
 
+/* ——— The planks of the ships (A5, docs/mockups/a5/A5Table.html): paper, the head in the colour of the ship with its
+   drawing, the tracks as icons (.cells > i.on — the contract of the animations), the tags by the Hull. ——— */
 .plank {
   position: relative;
-  background: var(--panel);
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius);
+  background: radial-gradient(ellipse at 30% 20%, var(--paper-hi), var(--paper) 85%);
+  border: 1.5px solid transparent;
+  border-radius: 5px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  color: var(--ink-a5);
+  box-shadow:
+    0 1px 0 #c9b48c,
+    0 3px 0 #a68f66,
+    0 10px 18px rgba(0, 0, 0, 0.35);
   transition:
     box-shadow 0.2s,
     border-color 0.2s;
 }
+/* the thin inner frame of the paper, under the head */
+.plank::after {
+  content: '';
+  position: absolute;
+  inset: 34px 4px 4px;
+  border: 1px solid rgba(90, 70, 40, 0.35);
+  border-radius: 3px;
+  pointer-events: none;
+}
 .plank.selected {
-  border: 2.5px solid var(--ink);
+  border-color: var(--brass-dark);
 }
+/* the player decides now («ваш ход»): a brass glow round the plank */
 .plank.awaiting {
-  box-shadow: 0 0 0 3px var(--ink);
+  box-shadow:
+    0 0 0 2.5px var(--brass-hi),
+    0 0 18px rgba(255, 196, 120, 0.6),
+    0 10px 18px rgba(0, 0, 0, 0.35);
 }
+/* «Под огнём»: the red frame of the target (the seal is in the head) */
 .plank.targeted {
-  border-color: var(--red);
-  box-shadow: 0 0 0 4px var(--red-soft);
+  border-color: var(--fire-a5);
+  box-shadow:
+    0 0 0 2.5px var(--fire-a5),
+    0 0 16px rgba(168, 31, 23, 0.45),
+    0 10px 18px rgba(0, 0, 0, 0.35);
 }
 .plank.shooter {
-  border-color: var(--ink);
+  border-color: var(--ink-a5);
 }
 .plank.repairing {
-  border-color: var(--green);
-  box-shadow: 0 0 0 4px var(--green-soft);
+  border-color: var(--ok-a5);
+  box-shadow:
+    0 0 0 2.5px var(--ok-a5),
+    0 10px 18px rgba(0, 0, 0, 0.35);
 }
 .plank.sunk {
-  opacity: 0.55;
+  filter: grayscale(0.85) brightness(0.85);
+  opacity: 0.8;
 }
 .plank-head {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  background: var(--ship);
-  color: #fff;
-  padding: 5px 12px;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  background: linear-gradient(color-mix(in srgb, var(--ship) 82%, #fff), color-mix(in srgb, var(--ship) 82%, #000));
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+  color: var(--head-ink);
+  padding: 2px 6px;
   cursor: pointer;
   min-width: 0;
-  background-image: var(--art-ship, none);
+}
+/* the drawing of the ship on a light field (art/ships.ts, 120×78) */
+.ship-art {
+  position: relative;
+  flex: 0 0 66px;
+  height: 30px;
+  border-radius: 5px;
+  background: var(--paper);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 2.5px var(--paper),
+    inset 0 0 0 3.2px rgba(0, 0, 0, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ship-pic,
+.ship-pic svg {
+  display: block;
+}
+.plank.sunk .ship-pic svg {
+  transform: translateY(6px) rotate(16deg);
 }
 .plank-name {
+  font-family: var(--font-sc);
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
   white-space: nowrap;
 }
 .captain {
-  opacity: 0.8;
-  font-size: 0.88rem;
+  font-family: var(--font-head);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 12.5px;
+  opacity: 0.85;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 .plank-role {
   margin-left: auto;
   align-self: center;
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
+  flex: none;
 }
 /* «ВЫБРАН», the role by network, «✓ готов» in the head of a plank: a class of their own — «.tag» is the label of the
    animation layer (fx.css, translate(-50%, -50%)). */
 .head-tag {
-  background: #fff;
-  color: var(--ink);
-  border-radius: 4px;
-  font-size: 0.72rem;
+  font-size: 12px;
   font-weight: 800;
   line-height: 1.35;
-  padding: 1px 6px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
 }
-/* «✓ готов»: the player pressed «Ход окончен» (green — ready). */
+/* «ВЫБРАН», the role: brass letters on the head, as «ваш ход» of A5 */
+.head-tag.mine {
+  color: var(--brass-text);
+}
+/* «✓ готов»: a green plate in the head (the player pressed «Ход окончен») */
 .head-tag.ready {
-  background: var(--green);
-  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 3px;
+  border-radius: 10px;
+  background: var(--ok-a5);
+  color: #f2fbf4;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.head-tag.ready .tick,
+.head-tag.ready .tick svg {
+  display: block;
+}
+/* the number of cards in hand: three backs and the count (art/fan.ts) */
+.hand-count,
+.hand-count svg {
+  display: block;
 }
 /* The labels of the animation layer have had this look of the table since A2 (game.css comes after fx.css); kept as it
    was, with the specificity of a single class, so «.tag.plus», «.tag.good» of fx.css still win. */
@@ -507,19 +600,61 @@ button {
   padding: 1px 6px;
   letter-spacing: 0.05em;
 }
+/* The medallion of the Legend: a gold coin of 28 px (art/medals.ts), a glint runs over it now and then. */
+.legend-medal,
 .star {
-  color: #f3cd55;
-  margin-left: -4px;
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  line-height: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  filter: drop-shadow(0 1px 1.6px rgba(0, 0, 0, 0.55));
+}
+.legend-medal svg,
+.star svg {
+  display: block;
+}
+.legend-medal .gl,
+.star .gl {
+  animation: medal-glint 6s ease-in-out infinite;
+}
+@keyframes medal-glint {
+  0%,
+  72% {
+    transform: translateX(-24px) skewX(-22deg);
+  }
+  88%,
+  100% {
+    transform: translateX(24px) skewX(-22deg);
+  }
+}
+.fx-simple .legend-medal .gl,
+.fx-simple .star .gl {
+  animation: none;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .legend-medal .gl,
+  .star .gl {
+    animation: none;
+    opacity: 0;
+  }
+}
+/* not enough Powder or Souls: a dull coin; played: the coin is out */
+.legend-medal.poor,
+.star.poor {
+  filter: saturate(0.35) brightness(0.92) drop-shadow(0 1px 1.6px rgba(0, 0, 0, 0.55));
+}
+.legend-medal.gone {
+  filter: grayscale(1) brightness(0.7);
+  opacity: 0.55;
 }
 button.star {
   position: relative;
   z-index: 1;
-  border: 0;
-  background: none;
-  padding: 0;
-  font: inherit;
-  line-height: 1;
-  cursor: pointer;
+  margin-left: -4px;
 }
 /* The tap zone of the star is 44×44: down from the top of the plank, over the name and the tracks below. */
 button.star::before {
@@ -531,27 +666,72 @@ button.star::before {
   height: 44px;
   transform: translateX(-50%);
 }
+/* The statuses and the badges (Пожар, Души): tags by the Hull (the variant «Ярлыки у Корпуса» of the prototype). */
 .plank-statuses {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   padding: 4px 12px 0;
 }
-.status-chip {
-  border: 1.5px dashed #8b6bb5;
-  color: #5a3f86;
-  background: #f1ebfa;
-  border-radius: 6px;
-  padding: 0 6px;
-  font-size: 0.8rem;
-  cursor: help;
+.status-chip,
+.badge.fire {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  height: 20px;
+  padding: 0 8px 0 3px;
+  border: 0;
+  border-radius: 2px 9px 9px 2px;
+  background: #fbf5e7;
+  box-shadow: inset 0 0 0 1px #8a7550;
+  color: #3d342b;
+  font-family: var(--font-text);
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: help;
 }
-/* «Чёрная метка» on the plank (U3): a small sharp blot set like a stamp — on a laptop in the free field between the
-   numbers of the tracks and the badges (the middle column of .plank-body), on a phone at the right end of the row of
-   statuses (the corner of the Hull's number is taken). It covers nothing. */
+.chip-icon,
+.chip-icon svg {
+  display: block;
+  flex: none;
+}
+.badge.fire .chip-icon svg {
+  animation: fire-flick 1.1s ease-in-out infinite alternate;
+  transform-origin: 50% 90%;
+}
+@keyframes fire-flick {
+  to {
+    transform: scale(1.08, 0.94) rotate(-3deg);
+  }
+}
+.fx-simple .badge.fire .chip-icon svg {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge.fire .chip-icon svg {
+    animation: none;
+  }
+}
+/* the Souls: the greenish skull with glowing eye sockets and «Души 1/5», no frame (A5Table.html) */
+.badge.souls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--souls-a5);
+  font-family: var(--font-text);
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+/* «Чёрная метка»: the torn leaf blackened with soot, pinned with a dagger (art/status.ts, MARK_PIN) — on a laptop on the
+   drawing of the ship in the head, on a phone at the right end of the row of statuses. It covers nothing it explains. */
 .mark-stamp {
   pointer-events: none;
   flex: none;
@@ -561,163 +741,214 @@ button.star::before {
   width: 100%;
   height: auto;
   opacity: 0.9;
-  transform: rotate(-12deg);
+  transform: rotate(-8deg);
 }
-.plank-body > .mark-stamp {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: center;
-  justify-self: center;
-  width: min(40px, 100%);
-}
-/* «Чёрная метка»: the blot of the reference (board.js, style.css) — the cannonballs «в метку» hit it. */
-.status-chip.mark {
-  border-style: solid;
-  border-color: #1a1612;
-  color: #1a1612;
-  background: #f4ead6;
-  font-weight: 700;
+.ship-art > .mark-stamp {
+  position: absolute;
+  right: -12px;
+  top: 0;
+  width: 30px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45));
+  z-index: 3;
 }
 .plank-body {
-  /* The height of a row of the tracks; the badges on the right keep its step. */
-  --track-row: 18px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
   padding: 4px 12px;
   flex: 1;
 }
 .tracks {
-  display: grid;
-  gap: 1px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .track {
-  display: grid;
-  grid-template-columns: 70px minmax(0, 1fr) 44px;
+  display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.9rem;
-  line-height: 1.25;
+  font-size: 12.5px;
+  line-height: 1.2;
+  color: var(--ink-soft-a5);
 }
-/* Laptop (U3): the tracks are a compact block — the cells of all four in one column, the numbers in one column right
-   after the longest scale; the badges are a column of one width on the right, one badge per row of the tracks. */
-@media (min-width: 701px) {
-  .plank-body {
-    /* the tracks, the free field (the stamp of «Чёрная метка»), the badges */
-    grid-template-columns: minmax(0, max-content) minmax(0, 1fr) 10.5rem;
-  }
-  .plank-body > .tracks {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .plank-body > .badges {
-    grid-column: 3;
-    grid-row: 1;
-  }
-  .tracks {
-    justify-self: start;
-    min-width: 0;
-    grid-template-columns: max-content minmax(0, max-content) max-content;
-    grid-auto-rows: var(--track-row);
-    align-content: start;
-    column-gap: 6px;
-  }
-  .track {
-    grid-column: 1 / -1;
-    grid-template-columns: subgrid;
-  }
-  .plank-body .badges {
-    align-items: flex-end;
-    gap: 2px;
-  }
-  /* as wide as the text, one height, all at one right edge; a longer Legend is cut with «…» */
-  .plank-body .badges > .badge {
-    display: block;
-    max-width: 100%;
-    height: calc(var(--track-row) - 1px);
-    line-height: calc(var(--track-row) - 3px);
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.track-label {
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+.track.t-hull .track-label {
+  width: 58px;
+  flex: none;
+}
+.track-row2 {
+  display: flex;
+  align-items: center;
+}
+.track-row2 > .track + .track {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(90, 70, 40, 0.3);
 }
 .cells {
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: 1px;
   flex-wrap: nowrap;
   overflow: hidden;
 }
+/* A cell is its icon (art/cells.ts through --on/--off of the track). The background is !important: the flashes of the
+   animations (setTrack, the Ninth wave) animate «background», which would paint the icon over; the ring (box-shadow)
+   of the flash stays. */
 .cells i {
-  width: 11px;
-  height: 11px;
-  border-radius: 2px;
-  background: #e2d8c7;
   flex: none;
+  width: 12px;
+  height: 16px;
+  background: var(--off) center / contain no-repeat !important;
 }
 .cells i.on {
-  background: var(--ink);
+  background-image: var(--on) !important;
+}
+.t-hull .cells {
+  gap: 1.5px;
+}
+.t-sails .cells i {
+  width: 15px;
+  height: 17px;
+}
+.t-guns .cells i {
+  width: 22px;
+  height: 14px;
+}
+.t-crew .cells i {
+  width: 14px;
+  height: 17px;
 }
 .bar {
   display: none;
 }
 .track-num {
-  text-align: right;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink-a5);
+  white-space: nowrap;
   font-variant-numeric: lining-nums tabular-nums;
 }
 .track-num.low {
-  color: var(--red);
+  color: var(--fire-a5);
 }
 .badges {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
+  align-items: center;
+  gap: 4px;
 }
-.badge {
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: #fff;
-  padding: 0 8px;
-  font-size: 0.82rem;
-  white-space: nowrap;
-}
-.badge.fire {
-  border-color: var(--red);
-  color: var(--red);
-  background: var(--red-soft);
-}
-.badge.souls {
-  border-color: #2c6658;
-  color: #2c6658;
-  background: #e1efea;
-}
-.badge.legend {
-  border-color: var(--gold);
-  background: var(--gold-soft);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.82rem;
-}
-.badge.legend.poor {
-  border-color: var(--line);
-  background: #efe9de;
-  color: var(--muted);
-}
-.star.poor {
-  color: #b9ad99;
-}
-.badge.legend.gone {
-  text-decoration: line-through;
-  opacity: 0.6;
+/* Laptop: the grid of the plank — the Hull with its tags (the badges, the statuses) in the first row, Паруса / Пушки /
+   Команда in the second (docs/mockups/a5/README.md, «Шкалы»). */
+@media (min-width: 701px) {
+  .plank {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr) minmax(0, max-content);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'head head head'
+      'hull badges stat'
+      'row2 row2 row2'
+      '. . .'
+      'btns btns btns';
+  }
+  .plank-head {
+    grid-area: head;
+  }
+  .plank-body,
+  .plank-body > .tracks {
+    display: contents;
+  }
+  .track.t-hull {
+    grid-area: hull;
+    margin: 8px 0 0 12px;
+    min-height: 20px;
+  }
+  .plank-body > .badges {
+    grid-area: badges;
+    justify-self: end;
+    margin: 8px 0 0 10px;
+  }
+  .plank-body > .badges:empty {
+    display: none;
+  }
+  .plank-statuses {
+    grid-area: stat;
+    justify-content: flex-end;
+    align-self: center;
+    padding: 8px 12px 0 6px;
+  }
+  .track-row2 {
+    grid-area: row2;
+    margin: 6px 12px 9px;
+  }
+  .plank-buttons-wrap {
+    grid-area: btns;
+  }
 }
 .plank-buttons {
   display: flex;
   gap: 8px;
-  padding: 2px 12px 8px;
+  padding: 0 12px 10px;
   flex-wrap: wrap;
 }
-.plank-buttons .btn {
-  min-height: 36px;
-  padding: 4px 12px;
+/* A button of a plank (A5 «cmd»): the icon, the name | the price with a keg. */
+.btn.cmd {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  background: linear-gradient(#fbf5e7, #efe2c6);
+  color: var(--ink-a5);
+  border: 1.5px solid var(--ink-a5);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 0 2px #fbf5e7,
+    inset 0 0 0 3px #6b5a40,
+    0 2px 0 #a68f66;
+  font-family: var(--font-sc);
+  font-weight: 800;
+  font-size: 14.5px;
+}
+.btn.cmd.primary {
+  background: linear-gradient(#3a3430, #1e1b18);
+  color: var(--paper-hi);
+  box-shadow:
+    inset 0 0 0 2px #3a3430,
+    inset 0 0 0 3px var(--brass),
+    0 2px 0 #a68f66;
+}
+.btn.cmd[aria-disabled='true'] {
+  opacity: 0.5;
+  border-color: var(--ink-a5);
+}
+.cmd-in {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.cmd-icon,
+.cmd-icon svg,
+.cost-keg,
+.cost-keg svg {
+  display: block;
+  flex: none;
+}
+.btn.cmd .cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  color: inherit;
+  border-radius: 0;
+  font-size: inherit;
+  font-family: var(--font-num);
+  font-weight: 700;
+  min-width: 0;
+  padding: 0 0 0 8px;
+  border-left: 1px solid #b9a27a;
 }
 /* The buttons of a plank: on a phone a row that scrolls with the arrow «›» at its right edge (U3); on a laptop the
    arrow is never there. */
@@ -778,9 +1009,8 @@ button.star::before {
 }
 .plank.chosen {
   cursor: crosshair;
-  outline: 3px solid var(--red);
+  outline: 3px solid var(--fire-a5);
   outline-offset: 3px;
-  box-shadow: 0 0 0 8px rgba(163, 52, 31, 0.14);
   touch-action: manipulation;
 }
 @keyframes aimpulse {
@@ -793,28 +1023,80 @@ button.star::before {
     animation: none;
   }
 }
-/* The star and the Legend badge are a part of the target while aiming. */
+/* The star and the Legend medallion are a part of the target while aiming. */
 .plank.aimable .star,
 .plank.chosen .star,
-.plank.aimable .badge.legend,
-.plank.chosen .badge.legend {
+.plank.aimable .legend-medal,
+.plank.chosen .legend-medal {
   pointer-events: none;
 }
 .plank.aimable .plank-head,
 .plank.chosen .plank-head {
   cursor: inherit;
 }
-/* The reticle of the chosen target: in the head on a laptop (a white disc, seen on any ship colour), in the corner
-   on a phone — as the tag above. */
-.reticle {
-  align-self: center;
-  margin-left: auto;
+/* «Под огнём»: the red wax seal of the target pressed into the head (art/seal.ts): the blob runs over the edge of the
+   head, the ribbons hang onto the paper; it lives in the plank (moves and shakes with it) and comes down as a stamp. */
+.target-seal {
+  position: relative;
+  display: inline-block;
   flex: none;
-  width: 20px;
-  height: 20px;
-  background: #fff;
-  border-radius: 50%;
+  width: 30px;
+  height: 24px;
+  margin-right: 4px;
+  z-index: 6;
   pointer-events: none;
+}
+.target-seal svg {
+  position: absolute;
+  left: -7px;
+  top: -8px;
+  transform-origin: 22px 20px;
+  filter: drop-shadow(0 1.5px 1.2px rgba(0, 0, 0, 0.45));
+  overflow: visible;
+  animation: seal-stamp 0.42s cubic-bezier(0.5, 0, 0.8, 0.4);
+}
+.target-seal .tails {
+  transform-origin: 0 4px;
+  animation: seal-tails 0.7s ease-out;
+}
+@keyframes seal-stamp {
+  0% {
+    transform: scale(2.6) rotate(-30deg);
+    opacity: 0;
+  }
+  62% {
+    transform: scale(0.86, 0.8) rotate(4deg);
+    opacity: 1;
+  }
+  82% {
+    transform: scale(1.05, 1.02) rotate(-1deg);
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes seal-tails {
+  0%,
+  55% {
+    transform: scaleY(0);
+  }
+  85% {
+    transform: scaleY(1.06);
+  }
+  100% {
+    transform: none;
+  }
+}
+.fx-simple .target-seal svg,
+.fx-simple .target-seal .tails {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .target-seal svg,
+  .target-seal .tails {
+    animation: none;
+  }
 }
 /* «Подсказки»: the damage of a target, a tag (not a button): in the head on a laptop — the Volley panel covers the
    bottom of the top planks there; in the corner of the plank on a phone. */
@@ -825,17 +1107,15 @@ button.star::before {
   line-height: 1.35;
   font-size: 12px;
   font-weight: 700;
-  color: var(--red);
-  background: #fff;
-  border: 1px solid var(--red);
+  color: var(--fire-a5);
+  background: #fbf5e7;
+  border: 1px solid var(--fire-a5);
   border-radius: 8px;
   padding: 0 6px;
   white-space: nowrap;
   pointer-events: none;
 }
-.aim-tip + .reticle,
-.aim-tip + .plank-role,
-.reticle + .plank-role {
+.aim-tip + .plank-role {
   margin-left: 0;
 }
 /* «i» in the head of a target: the ship card; a 44×44 touch area without a bigger circle. */
@@ -846,9 +1126,9 @@ button.star::before {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 1.5px solid #fff;
+  border: 1.5px solid var(--head-ink);
   background: rgba(255, 255, 255, 0.18);
-  color: #fff;
+  color: var(--head-ink);
   font: inherit;
   font-weight: 800;
   font-size: 12px;
@@ -1652,18 +1932,18 @@ button.star::before {
   .hcard {
     height: 132px;
   }
-  .track {
-    font-size: 0.85rem;
-    line-height: 1.15;
+  /* a low window: the rows of the plank a little closer */
+  .track.t-hull {
+    margin-top: 6px;
   }
-  .plank-body {
-    --track-row: 16px;
+  .plank-body > .badges {
+    margin-top: 6px;
   }
-  .plank-body .badges > .badge {
-    font-size: 0.78rem;
+  .plank-statuses {
+    padding-top: 6px;
   }
-  .plank-head {
-    padding: 3px 12px;
+  .track-row2 {
+    margin: 4px 12px 7px;
   }
   .end-turn {
     min-height: 46px;
@@ -1769,22 +2049,33 @@ button.star::before {
     margin-top: auto;
   }
   .plank-head {
-    padding: 3px 8px;
-    font-size: 0.95rem;
+    min-height: 30px;
+    padding: 2px 6px;
+    gap: 6px;
   }
   .plank-name {
+    font-size: 14px;
     overflow: hidden;
   }
-  .hand-count {
-    font-size: 0.78rem;
-    opacity: 0.9;
-    white-space: nowrap;
-  }
-  .plank.selected .hand-count {
+  /* the narrow head keeps the name whole: no fan on the chosen plank and on the target (the seal stands there) */
+  .plank.selected .hand-count,
+  .plank.targeted .hand-count,
+  .plank.chosen .hand-count {
     display: none;
   }
+  .hand-count svg {
+    width: 30px;
+    height: auto;
+  }
   .plank-head .head-tag {
-    font-size: 0.62rem;
+    font-size: 10px;
+  }
+  .head-tag.ready {
+    padding: 1px;
+  }
+  .star svg {
+    width: 22px;
+    height: 22px;
   }
   .plank-statuses {
     padding: 2px 6px 0;
@@ -1796,25 +2087,40 @@ button.star::before {
     margin: 3px 0 3px auto;
     align-self: center;
   }
-  .status-chip {
-    font-size: 0.72rem;
+  .status-chip,
+  .badge.fire {
+    height: 18px;
+    font-size: 10.5px;
+  }
+  .chip-icon svg {
+    width: 14px;
+    height: 14px;
   }
   .plank-body {
     display: block;
     padding: 3px 6px;
   }
   .tracks {
+    display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 3px;
+  }
+  .track-row2 {
+    display: contents;
+  }
+  .track-row2 > .track + .track {
+    margin: 0;
+    padding: 1px 0;
+    border-left: 1px solid rgba(90, 70, 40, 0.3);
   }
   .track {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    background: #fff;
+    border: 1px solid rgba(90, 70, 40, 0.3);
+    border-radius: 4px;
+    background: #fbf5e7;
     padding: 1px 0;
     font-size: 0.8rem;
   }
@@ -1822,10 +2128,17 @@ button.star::before {
     display: none;
   }
   .track-label {
-    font-size: 0.62rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--muted);
+    font-size: 0.7rem;
+  }
+  /* one icon of the track before its number (the cells are hidden on a phone) */
+  .track:not(.t-hull) .track-num::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 13px;
+    margin-right: 3px;
+    vertical-align: -2px;
+    background: var(--on) center / contain no-repeat;
   }
   .track.t-hull {
     grid-column: 1 / -1;
@@ -1836,42 +2149,38 @@ button.star::before {
     padding: 0;
   }
   .track.t-hull .track-label {
+    width: auto;
     font-size: 0.8rem;
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--ink);
   }
+  /* the Hull: a strip of planks (the lost ones pale and broken) */
   .track.t-hull .bar {
     display: block;
     flex: 1;
-    height: 8px;
-    background: #e2d8c7;
-    border-radius: 4px;
+    height: 10px;
+    background: repeating-linear-gradient(90deg, #e2d3b3 0 9px, #b9a27a 9px 10px);
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px #b9a27a;
     overflow: hidden;
   }
   .track.t-hull .bar i {
     display: block;
     height: 100%;
-    background: var(--ink);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0 35%, transparent 35% 60%, rgba(0, 0, 0, 0.15) 60%),
+      repeating-linear-gradient(90deg, #a8703a 0 9px, #4a2c12 9px 10px);
+    box-shadow: inset 0 0 0 1px #4a2c12;
   }
   .badges {
-    flex-direction: row;
     flex-wrap: wrap;
     gap: 3px;
     margin-top: 3px;
-    align-items: center;
   }
   .badges:empty {
     display: none;
   }
-  .badge {
-    font-size: 0.72rem;
-    padding: 0 5px;
+  .badge.souls {
     height: 18px;
-    line-height: 16px;
-  }
-  .badge.legend {
-    display: none;
+    font-size: 11px;
   }
   /* The buttons of a plank: one row that scrolls sideways with a finger (U3) — no scrollbar, the right edge fades
      while there is more (data-more, Table.tsx); the scroll does not move the table. A button never shrinks below its
@@ -1923,6 +2232,17 @@ button.star::before {
     border-radius: 7px;
     scroll-snap-align: start;
   }
+  .plank-buttons .btn.cmd {
+    justify-content: center;
+    text-align: center;
+    font-family: var(--font-text);
+    font-weight: 700;
+    font-size: 13px;
+    box-shadow:
+      inset 0 0 0 1.5px #fbf5e7,
+      inset 0 0 0 2px #6b5a40,
+      0 1.5px 0 #a68f66;
+  }
   .plank-buttons .btn::before {
     content: '';
     position: absolute;
@@ -1933,21 +2253,24 @@ button.star::before {
   }
   .aim-tip {
     position: absolute;
-    right: 40px;
+    right: 8px;
     bottom: 7px;
   }
-  .reticle {
-    position: absolute;
-    right: 8px;
-    bottom: 6px;
-    width: 26px;
-    height: 26px;
-    margin: 0;
-    background: none;
-  }
-  .aim-tip + .plank-role,
-  .reticle + .plank-role {
+  .aim-tip + .plank-role {
     margin-left: auto;
+  }
+  /* the seal is smaller in the narrow head of a phone */
+  .target-seal {
+    width: 22px;
+    height: 20px;
+    margin-right: 0;
+  }
+  .target-seal svg {
+    width: 33px;
+    height: 46px;
+    left: -6px;
+    top: -6px;
+    transform-origin: 16px 15px;
   }
   /* The frames of two neighbour targets (8 px apart) do not overlap and stay inside the board. */
   .plank.aimable,
