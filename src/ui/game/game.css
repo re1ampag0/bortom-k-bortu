@@ -317,17 +317,15 @@ button {
   inset: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
-  grid-template-rows: auto minmax(0, 1fr);
-  grid-template-areas:
-    'status status'
-    'board log';
+  grid-template-rows: minmax(0, 1fr);
+  /* the row of the status is the first row of the board (V1b: the Hold of the top team stands in it, FX reach it) */
+  grid-template-areas: 'board log';
   background: var(--table) var(--art-table) center / cover;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
   overflow: hidden;
 }
 
 .status {
-  grid-area: status;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -385,9 +383,9 @@ button {
 
 .board {
   grid-area: board;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+  /* the status, the team rows, the sea (it takes the room left), the hand; FX find all of them in it */
+  display: flex;
+  flex-direction: column;
   gap: 4px;
   padding: 6px 12px 8px;
   min-height: 0;
@@ -1913,9 +1911,7 @@ button.star::before {
 @media (max-width: 1279px) {
   .game {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'status'
-      'board';
+    grid-template-areas: 'board';
   }
   .log-col {
     display: none;
@@ -1977,9 +1973,8 @@ button.star::before {
   }
   .game {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
     grid-template-areas:
-      'status'
       'board'
       'bottom';
   }
@@ -2021,9 +2016,8 @@ button.star::before {
     min-width: 40px;
   }
   .board {
-    padding: 4px 8px 0;
+    padding: 0 8px;
     gap: 3px;
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
   }
   .team-row {
     min-height: 26px;
@@ -2862,5 +2856,646 @@ button.star::before {
   .info-close {
     width: 44px;
     height: 44px;
+  }
+}
+
+/* ═══════════ The table of A5 (V1b, docs/mockups/a5/README.md): dark oak with things in the shade, the painted sea in a
+   brass frame, a brass plate and paper plaques in the top row, «Судовой журнал», paper cards, brass round buttons. ═══════════ */
+.game {
+  background:
+    radial-gradient(ellipse 70% 60% at 45% 40%, rgba(255, 214, 150, 0.22), rgba(0, 0, 0, 0) 70%),
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.05) 0 2px, rgba(0, 0, 0, 0) 2px 9px),
+    repeating-linear-gradient(90deg, #5b3d26 0 220px, #553823 220px 222px, #5e4029 222px 450px, #573a24 450px 452px),
+    #5b3d26;
+  color: var(--ink-a5);
+}
+.table-things {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.game > .board,
+.game > .log-col {
+  position: relative;
+}
+/* the spyglass lay where the Hold of the top team now stands (V1c) */
+.table-things g[data-thing='spyglass'] {
+  display: none;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ——— the top row: the brass plate, the paper plaque of the hint, the tools ——— */
+.status {
+  background: none;
+  border: 0;
+  min-height: 40px;
+  padding: 0;
+  gap: 14px;
+}
+.status-turn .dot {
+  display: none;
+}
+.turn-plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  min-width: 200px;
+  padding: 0 14px;
+  border-radius: 4px;
+  background: linear-gradient(#e0bd62, #8f6b20);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(0, 0, 0, 0.35),
+    0 2px 4px rgba(0, 0, 0, 0.4);
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #22180c;
+}
+.status-text {
+  justify-self: center;
+  max-width: 100%;
+  height: 38px;
+  line-height: 38px;
+  padding: 0 18px;
+  background: var(--paper-hi);
+  border-radius: 2px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--ink-a5);
+}
+.status-text.waiting {
+  color: #5d5248;
+}
+.status-tools,
+.log-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* ≥ 1280 px the tools stand over the log, in one line with the top row of the table: the same top, height and plaques */
+.log-tools {
+  flex: none;
+  min-height: 40px;
+  margin-bottom: 4px;
+  justify-content: flex-end;
+}
+/* the plaque of the sea: a still picture of the card, «Море · весь раунд», the card and its effect */
+.chip.sea {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  min-height: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 2px;
+  background: #efe3c8;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  color: var(--ink-a5);
+  text-align: left;
+}
+.log-tools .chip.sea {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sea-icon {
+  flex: none;
+  width: 36px;
+  height: 22px;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.sea-icon svg {
+  display: block;
+}
+.sea-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.1;
+}
+.sea-cap {
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  font-size: 12px;
+  color: #5d5248;
+}
+.sea-name {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* round brass buttons (the book, the gear, the tempo of the show, «Отменить») */
+.btn.round {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--paper-hi);
+}
+.round-disc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fbe6a2, #d6a845 45%, #a5772a 80%, #6e4c14);
+  box-shadow:
+    inset 0 0 0 1.5px #4a3208,
+    inset 0 0 0 3px rgba(255, 240, 196, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.45);
+}
+.round-disc svg {
+  display: block;
+}
+.round-cap {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+/* the tools of the top row are icons only (the name is in the title and the label) */
+.btn.round.tool .round-cap {
+  display: none;
+}
+.btn.round[aria-disabled='true'] {
+  opacity: 0.5;
+}
+.btn.round.primary .round-disc {
+  box-shadow:
+    inset 0 0 0 1.5px #4a3208,
+    0 0 0 2.5px var(--paper-hi),
+    0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* ——— the sea in its brass frame ——— */
+.sea-table {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, rgba(255, 246, 214, 0.55) 0 1px, rgba(0, 0, 0, 0) 1px calc(100% - 1px), rgba(60, 40, 8, 0.6) calc(100% - 1px)),
+    linear-gradient(135deg, #f6dd95 0%, #c69a3c 18%, #a77a26 34%, #e9c773 50%, #b5872f 66%, #8a6420 82%, #d9b562 100%);
+  box-shadow:
+    inset 0 0 0 1px #4a3208,
+    inset 0 0 0 2px rgba(255, 240, 196, 0.45),
+    inset 0 0 0 5.5px rgba(0, 0, 0, 0),
+    inset 0 0 0 6.5px rgba(74, 50, 8, 0.55),
+    0 14px 26px rgba(0, 0, 0, 0.55);
+}
+/* the corner plates with screws */
+.sea-table::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2236%22%20height%3D%2236%22%20viewBox%3D%220%200%2036%2036%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22p%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fbe5a0%22%2F%3E%3Cstop%20offset%3D%22.4%22%20stop-color%3D%22%23d1a445%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%238a6420%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22s%22%20cx%3D%22.35%22%20cy%3D%22.3%22%20r%3D%22.8%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff2c0%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23d0a24a%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236e4c14%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cg%20transform%3D%22%22%3E%3Cpath%20d%3D%22M0%200%20H34%20Q36%200%2036%202%20V6%20Q36%209%2033%209%20H9%20V33%20Q9%2036%206%2036%20H2%20Q0%2036%200%2034%20Z%22%20fill%3D%22url%28%23p%29%22%20stroke%3D%22%234a3208%22%20stroke-width%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M2%202%20H33%20M2%202%20V33%22%20stroke%3D%22rgba%28255%2C244%2C200%2C.6%29%22%20stroke-width%3D%22.8%22%2F%3E%3Ccircle%20cx%3D%224.6%22%20cy%3D%224.6%22%20r%3D%222.6%22%20fill%3D%22url%28%23s%29%22%2F%3E%3Cpath%20d%3D%22M2.6%204.6%20H6.6%22%20stroke%3D%22%234a3208%22%20stroke-width%3D%22.9%22%20transform%3D%22rotate%2830%204.6%204.6%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") left top / 36px 36px no-repeat,
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2236%22%20height%3D%2236%22%20viewBox%3D%220%200%2036%2036%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22p%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fbe5a0%22%2F%3E%3Cstop%20offset%3D%22.4%22%20stop-color%3D%22%23d1a445%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%238a6420%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22s%22%20cx%3D%22.35%22%20cy%3D%22.3%22%20r%3D%22.8%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff2c0%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23d0a24a%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236e4c14%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cg%20transform%3D%22translate%2836%200%29%20scale%28-1%201%29%22%3E%3Cpath%20d%3D%22M0%200%20H34%20Q36%200%2036%202%20V6%20Q36%209%2033%209%20H9%20V33%20Q9%2036%206%2036%20H2%20Q0%2036%200%2034%20Z%22%20fill%3D%22url%28%23p%29%22%20stroke%3D%22%234a3208%22%20stroke-width%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M2%202%20H33%20M2%202%20V33%22%20stroke%3D%22rgba%28255%2C244%2C200%2C.6%29%22%20stroke-width%3D%22.8%22%2F%3E%3Ccircle%20cx%3D%224.6%22%20cy%3D%224.6%22%20r%3D%222.6%22%20fill%3D%22url%28%23s%29%22%2F%3E%3Cpath%20d%3D%22M2.6%204.6%20H6.6%22%20stroke%3D%22%234a3208%22%20stroke-width%3D%22.9%22%20transform%3D%22rotate%2830%204.6%204.6%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") right top / 36px 36px no-repeat,
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2236%22%20height%3D%2236%22%20viewBox%3D%220%200%2036%2036%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22p%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fbe5a0%22%2F%3E%3Cstop%20offset%3D%22.4%22%20stop-color%3D%22%23d1a445%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%238a6420%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22s%22%20cx%3D%22.35%22%20cy%3D%22.3%22%20r%3D%22.8%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff2c0%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23d0a24a%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236e4c14%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cg%20transform%3D%22translate%280%2036%29%20scale%281%20-1%29%22%3E%3Cpath%20d%3D%22M0%200%20H34%20Q36%200%2036%202%20V6%20Q36%209%2033%209%20H9%20V33%20Q9%2036%206%2036%20H2%20Q0%2036%200%2034%20Z%22%20fill%3D%22url%28%23p%29%22%20stroke%3D%22%234a3208%22%20stroke-width%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M2%202%20H33%20M2%202%20V33%22%20stroke%3D%22rgba%28255%2C244%2C200%2C.6%29%22%20stroke-width%3D%22.8%22%2F%3E%3Ccircle%20cx%3D%224.6%22%20cy%3D%224.6%22%20r%3D%222.6%22%20fill%3D%22url%28%23s%29%22%2F%3E%3Cpath%20d%3D%22M2.6%204.6%20H6.6%22%20stroke%3D%22%234a3208%22%20stroke-width%3D%22.9%22%20transform%3D%22rotate%2830%204.6%204.6%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") left bottom / 36px 36px no-repeat,
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2236%22%20height%3D%2236%22%20viewBox%3D%220%200%2036%2036%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22p%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fbe5a0%22%2F%3E%3Cstop%20offset%3D%22.4%22%20stop-color%3D%22%23d1a445%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%238a6420%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22s%22%20cx%3D%22.35%22%20cy%3D%22.3%22%20r%3D%22.8%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff2c0%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23d0a24a%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236e4c14%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cg%20transform%3D%22translate%2836%2036%29%20scale%28-1%20-1%29%22%3E%3Cpath%20d%3D%22M0%200%20H34%20Q36%200%2036%202%20V6%20Q36%209%2033%209%20H9%20V33%20Q9%2036%206%2036%20H2%20Q0%2036%200%2034%20Z%22%20fill%3D%22url%28%23p%29%22%20stroke%3D%22%234a3208%22%20stroke-width%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M2%202%20H33%20M2%202%20V33%22%20stroke%3D%22rgba%28255%2C244%2C200%2C.6%29%22%20stroke-width%3D%22.8%22%2F%3E%3Ccircle%20cx%3D%224.6%22%20cy%3D%224.6%22%20r%3D%222.6%22%20fill%3D%22url%28%23s%29%22%2F%3E%3Cpath%20d%3D%22M2.6%204.6%20H6.6%22%20stroke%3D%22%234a3208%22%20stroke-width%3D%22.9%22%20transform%3D%22rotate%2830%204.6%204.6%29%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") right bottom / 36px 36px no-repeat;
+}
+/* the water: the A5 sea; its crests drift slowly (transform), still with reduced motion and «простые спецэффекты» */
+.sea-water {
+  position: absolute;
+  inset: 7px;
+  overflow: hidden;
+  background: radial-gradient(ellipse 60% 70% at 50% 50%, #4f8391, #326170 60%, #24495a 100%);
+  box-shadow:
+    inset 0 0 0 1px #3a2606,
+    inset 0 3px 7px rgba(0, 0, 0, 0.5),
+    inset 0 0 40px rgba(0, 20, 30, 0.45);
+  pointer-events: none;
+}
+.sea-water::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: -120px;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22120%22%20height%3D%2264%22%20viewBox%3D%220%200%20120%2064%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23e8f1f4%22%20stroke-linecap%3D%22round%22%20stroke-width%3D%221.6%22%20opacity%3D%22.5%22%3E%3Cpath%20d%3D%22M8%2014%20q7%20-6%2014%200%22%2F%3E%3Cpath%20d%3D%22M70%2030%20q8%20-7%2016%200%22%2F%3E%3Cpath%20d%3D%22M30%2050%20q7%20-6%2014%200%22%2F%3E%3Cpath%20d%3D%22M96%2056%20q6%20-5%2012%200%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%231d3d4a%22%20stroke-linecap%3D%22round%22%20stroke-width%3D%221.4%22%20opacity%3D%22.4%22%3E%3Cpath%20d%3D%22M44%2022%20q6%20-5%2012%200%22%2F%3E%3Cpath%20d%3D%22M100%2010%20q6%20-5%2012%200%22%2F%3E%3Cpath%20d%3D%22M6%2040%20q6%20-5%2012%200%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") 0 0 / 120px 64px repeat;
+  animation: sea-drift 40s linear infinite;
+}
+@keyframes sea-drift {
+  to {
+    transform: translateX(-120px);
+  }
+}
+.fx-simple .sea-water::before {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sea-water::before {
+    animation: none;
+  }
+}
+/* the wooden frame (⚙ «Рамка моря: дерево», V1c) */
+.game.frame-wood .sea-table {
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 1px, rgba(0, 0, 0, 0) 1px 7px),
+    linear-gradient(#6e4729, #3e2716);
+  box-shadow:
+    inset 0 0 0 1px #24160a,
+    inset 0 1px 0 rgba(255, 220, 170, 0.25),
+    0 14px 26px rgba(0, 0, 0, 0.55);
+}
+.game.frame-wood .sea-table::after {
+  display: none;
+}
+.game.frame-wood .sea-water {
+  box-shadow:
+    inset 0 0 0 1.5px var(--brass),
+    inset 0 0 40px rgba(0, 20, 30, 0.45);
+}
+/* the planks over the weather of the round (FX: the sea → the weather → the planks → the top layer) */
+.sea-table > .planks {
+  position: relative;
+  z-index: 2;
+}
+.sea-table > .middle {
+  z-index: 3;
+}
+/* the weather of the round lies on the water only (--sea-* are set by useSeaClip, TableThings.tsx) */
+.board > .fx-weather {
+  clip-path: inset(calc(var(--sea-t, 0px) + 7px) calc(var(--sea-r, 0px) + 7px) calc(var(--sea-b, 0px) + 7px) calc(var(--sea-l, 0px) + 7px));
+}
+/* «Последнее: …»: a paper ribbon in the middle of the sea */
+.middle-info {
+  padding: 5px 30px;
+  max-width: min(100%, 560px);
+  background: #efe3c8;
+  clip-path: polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%, 4% 50%);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+  font-family: var(--font-head);
+  font-style: italic;
+  font-size: 13.5px;
+  color: #3d342b;
+}
+.middle-info b {
+  font-style: normal;
+}
+.toast {
+  background: #efe3c8;
+  border-color: var(--brass-dark);
+}
+
+/* ——— the team rows and the hand on the wood ——— */
+.team-row {
+  color: var(--paper-hi);
+}
+.team-row .muted {
+  color: #d8c9a8;
+}
+.team-row .btn.regroup {
+  background: linear-gradient(#fbf5e7, #e9dbbd);
+  color: var(--ink-a5);
+  border: 0;
+  box-shadow:
+    inset 0 0 0 1.5px var(--ink-a5),
+    inset 0 0 0 3px #fbf5e7,
+    0 2px 0 #a68f66;
+}
+.team-row .btn.regroup[aria-disabled='true'] {
+  opacity: 0.6;
+}
+.team-name {
+  font-family: var(--font-num);
+  letter-spacing: 0.12em;
+}
+.powder-dots i {
+  border-color: #efe3c8;
+}
+.powder-dots i.on {
+  background: #efe3c8;
+}
+.hand-row {
+  border-top: 0;
+}
+.hand-label,
+.deck-info,
+.plans-label,
+.hand-note {
+  color: #d8c9a8;
+}
+.tab {
+  background: #efe3c8;
+  border-color: #8a7550;
+  color: #5d5248;
+}
+.tab.on {
+  background: var(--paper-hi);
+  border-color: var(--brass);
+  color: var(--ink-a5);
+  box-shadow: 0 0 0 1.5px var(--brass);
+}
+
+/* ——— the cards in hand (only the look; the fan is V2): paper, the coloured stripe of the type with the price, the name in
+   Old Standard TT, the effect in colour; not playable now — grey ——— */
+.hcard {
+  padding: 0;
+  gap: 3px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(#fdf9f0, #f3ead6);
+  box-shadow:
+    0 1px 0 #d6c8ab,
+    0 6px 12px rgba(0, 0, 0, 0.45);
+  color: var(--ink-a5);
+}
+.hcard > span:not(.hcard-head) {
+  padding-left: 9px;
+  padding-right: 9px;
+}
+.hcard-head {
+  flex: none;
+  height: 20px;
+  padding: 0 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+}
+.hcard-head .cost {
+  background: none;
+  color: #fff;
+  padding: 0;
+  min-width: 0;
+  font-family: var(--font-num);
+  font-size: 12px;
+}
+.hcard-name {
+  margin-top: 4px;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.12;
+}
+.hcard-big {
+  font-weight: 800;
+  font-size: 12.5px;
+}
+.hcard-text {
+  font-family: var(--font-num);
+  font-size: 11.5px;
+  line-height: 1.25;
+  color: #5d5248;
+}
+.hcard.off {
+  opacity: 0.62;
+  filter: grayscale(0.9);
+}
+.hcard.chosen {
+  box-shadow:
+    0 0 0 2.5px var(--fire-a5),
+    0 6px 12px rgba(0, 0, 0, 0.45);
+}
+.hcard.back {
+  background: repeating-linear-gradient(45deg, #2c4458, #2c4458 6px, #22384c 6px, #22384c 12px);
+  box-shadow:
+    inset 0 0 0 2px #e6ecf0,
+    0 6px 12px rgba(0, 0, 0, 0.45);
+}
+.hcard.plan {
+  outline: 1.5px dashed #8a7550;
+  outline-offset: -4px;
+}
+
+/* ——— the bottom right: the round buttons, «Ход окончен» as a bordo sign, the line of the ally ——— */
+.hand-actions {
+  align-items: stretch;
+  gap: 6px;
+}
+.round-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.end-turn {
+  min-height: 56px;
+  min-width: 260px;
+  background: linear-gradient(#b8382b, #8e2b22) !important;
+  color: #f8ecd4 !important;
+  border: 0 !important;
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 2px #e0bd62,
+    inset 0 0 0 4px #8e2b22,
+    inset 0 0 0 5px rgba(255, 220, 160, 0.5),
+    0 4px 10px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.end-turn.ready {
+  background: linear-gradient(#c8402f, #a3271d) !important;
+  box-shadow:
+    inset 0 0 0 2px #f6dd95,
+    inset 0 0 0 4px #a3271d,
+    0 0 16px rgba(255, 200, 120, 0.55),
+    0 4px 10px rgba(0, 0, 0, 0.5);
+}
+.end-turn[aria-disabled='true'] {
+  opacity: 0.6;
+}
+.ally-ready {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #efe3c8;
+  text-align: right;
+}
+
+/* ——— «Судовой журнал»: a paper column with the icons of the lines, «— РАУНД II —» ——— */
+.log-col {
+  background: none;
+  border: 0;
+  padding: 6px 12px calc(8px + env(safe-area-inset-bottom)) 0;
+}
+.log-paper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(90deg, #d9c7a0, #efe3c8 6%, #f3e8cf);
+  border-radius: 2px 6px 6px 2px;
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.log-paper h2 {
+  margin: 0;
+  padding: 0 12px 0 18px;
+  height: 38px;
+  line-height: 38px;
+  flex: none;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-a5);
+  border-bottom: 2px solid var(--bordo);
+}
+.log-paper .log-actions {
+  padding: 8px 12px;
+}
+.log-list li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 2px 8px;
+  padding: 6px 12px 6px 14px;
+  border-bottom: 1px solid #d6c6a3;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #3d342b;
+}
+.log-ico {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1px;
+}
+.log-ico svg {
+  display: block;
+}
+.log-list li.log-sep {
+  display: block;
+  text-align: center;
+  font-weight: 400;
+}
+.log-round-line {
+  font-family: var(--font-num);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.log-list li.fresh {
+  background: rgba(224, 189, 98, 0.28);
+}
+/* the names of the cards stand out (A5) */
+.log-list .cref {
+  color: var(--bordo);
+  text-decoration-color: rgba(142, 43, 34, 0.55);
+}
+
+/* ——— the windows: paper and brass ——— */
+.sheet {
+  background: linear-gradient(#f8f0de, #efe3c8);
+  box-shadow:
+    inset 0 0 0 2px var(--brass),
+    inset 0 0 0 4px #f8f0de,
+    inset 0 0 0 5px rgba(90, 70, 40, 0.35),
+    0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.sheet-head {
+  border-bottom: 2px solid var(--bordo);
+  font-family: var(--font-num);
+}
+.sheet-backdrop {
+  background: rgba(20, 12, 6, 0.5);
+}
+
+/* ——— below 1280 px and on a phone: what stays as it was ——— */
+@media (max-width: 1279px) {
+  .status-tools .btn.round.tool.wide {
+    display: inline-flex;
+  }
+}
+@media (max-width: 700px) {
+  .table-things {
+    display: none;
+  }
+  .status-turn {
+    color: var(--paper-hi);
+  }
+  .hcard-head {
+    height: 16px;
+    padding: 0 5px;
+    font-size: 8.5px;
+    letter-spacing: 0.06em;
+  }
+  .hcard > span:not(.hcard-head) {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  .hcard-name {
+    margin-top: 2px;
+    font-size: 12px;
+  }
+  .hcard-big {
+    font-size: 10.5px;
+  }
+  .hcard-text {
+    font-size: 9.5px;
+  }
+  .status {
+    margin: 0 -8px;
+    padding: 2px 8px 4px;
+    gap: 0 8px;
+    min-height: 0;
+  }
+  .status-text {
+    justify-self: stretch;
+    height: auto;
+    line-height: 1.2;
+    padding: 3px 8px;
+    font-size: 0.88rem;
+  }
+  .round-disc {
+    width: 36px;
+    height: 36px;
+  }
+  .chip.sea {
+    height: 36px;
+  }
+  .sea-table {
+    padding: 10px;
+  }
+  .sea-water {
+    inset: 5px;
+  }
+  .sea-table::after {
+    background-size: 26px 26px;
+  }
+  .end-turn {
+    min-width: 0;
+    font-size: 1rem;
+    letter-spacing: 0.06em;
   }
 }

@@ -12,7 +12,8 @@ import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type Speed } 
 import { clearTrace, loadTrace } from './fx/trace';
 import { cardClass, CostBadge, HandCard } from './Hand';
 import { memo } from './memo';
-import { statuses, type Btn } from './Table';
+import { roman, statuses, type Btn } from './Table';
+import { CELLS } from './art/cells';
 import { SIDE_LABEL, SPEEDS } from './text';
 
 /** A window over the table: on a laptop in the middle, on a phone a bottom sheet. Closed by the cross or outside. */
@@ -224,6 +225,32 @@ export function logParts(data: GameData, line: LogLine): LogPart[] {
   return parts;
 }
 
+/** The icons of the lines of «Судовой журнал» (A5, LOGICON of docs/mockups/a5/fx/src/template.html). */
+const LOG_ICON = {
+  volley: ['Залп', CELLS.GUN.replace('width="22" height="14"', 'width="20" height="13"')],
+  card: ['Сыгранная карта', '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5 H11.5 Q13 2.5 13 4 V12 Q13 13.5 11.5 13.5 H4.5 Q3 13.5 3 12 Z" fill="#efe3c8" stroke="#8e2b22" stroke-width="1"/><path d="M5 5.5 H11 M5 7.8 H11 M5 10.1 H9" stroke="#8e2b22" stroke-width=".9"/><path d="M2 3.5 Q2 2 3.5 2 H5 V4 H2 Z" fill="#8e2b22"/></svg>'],
+  powder: ['Порох', CELLS.KEG.replace('width="22" height="28"', 'width="12" height="15"')],
+  reaction: ['Реакция', '<svg width="15" height="16" viewBox="0 0 15 16" aria-hidden="true"><path d="M7.5 1.2 L13.4 3.2 V7.6 Q13.4 12.2 7.5 14.8 Q1.6 12.2 1.6 7.6 V3.2 Z" fill="#efe3c8" stroke="#8e2b22" stroke-width="1.1"/><path d="M7.5 3.6 V12.4 M3.8 6.6 H11.2" stroke="#8e2b22" stroke-width="1"/></svg>'],
+  sea: ['Море', '<svg width="18" height="14" viewBox="0 0 18 14" aria-hidden="true"><path d="M5 6.5 Q2.4 6.5 2.4 4.6 Q2.4 2.8 4.6 2.9 Q5.3 .9 7.8 1 Q10.1 1.1 10.7 3 Q13.6 2.8 13.8 4.9 Q14 6.5 12 6.5 Z" fill="#4a4d52" stroke="#1f2226" stroke-width=".6"/><path d="M1 10 Q3 8.4 5 10 T9 10 T13 10 T17 10 M1 13 Q3 11.4 5 13 T9 13 T13 13 T17 13" fill="none" stroke="#2f4f66" stroke-width="1.2" stroke-linecap="round"/></svg>'],
+  legend: ['Легенда', '<svg width="17" height="15" viewBox="0 0 17 15" aria-hidden="true"><path d="M1.6 4.4 L5 8 L8.5 1.6 L12 8 L15.4 4.4 L14 12 H3 Z" fill="#e0bd62" stroke="#6e4c14" stroke-width=".9" stroke-linejoin="round"/><path d="M3 12 H14 V13.8 H3 Z" fill="#c9a048" stroke="#6e4c14" stroke-width=".8"/><circle cx="8.5" cy="1.6" r="1.1" fill="#a3271d"/><circle cx="1.6" cy="4.4" r=".9" fill="#a3271d"/><circle cx="15.4" cy="4.4" r=".9" fill="#a3271d"/></svg>'],
+  other: ['Запись', '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1 L9 5 L5 9 L1 5 Z" fill="#b9a27a" stroke="#6b5a40" stroke-width=".8"/></svg>'],
+} as const;
+export type LogIcon = keyof typeof LOG_ICON;
+
+/**
+ * The icon of a line of the log, by what the log already tells apart: the sea card of the line, a Legend or a Reaction
+ * among its cards, any other card, a Volley or a hit (the words the log itself writes), Powder; the rest — neutral.
+ */
+export function logIcon(data: GameData, line: LogLine): LogIcon {
+  if (line.sea) return 'sea';
+  if (/(^|: )Залп |^Попадание |^Залп /.test(line.text)) return 'volley';
+  if (line.cards.some((c) => c.endsWith('-Л'))) return 'legend';
+  if (line.cards.some((c) => cardByCode(data, c).type === 'РЕАКЦИЯ')) return 'reaction';
+  if (line.cards.length) return 'card';
+  if (/Порох/.test(line.text)) return 'powder';
+  return 'other';
+}
+
 export function LogList({
   data,
   log,
@@ -241,7 +268,13 @@ export function LogList({
   return (
     <ol className="log-list" data-testid="log">
       {lines.map((l, i) => (
-        <li key={log.length - i} className={`log-${l.kind} ${l.action >= fresh ? 'fresh' : ''}`}>
+        <li key={log.length - i} className={`log-${l.kind} ${l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? 'log-sep' : ''} ${l.action >= fresh ? 'fresh' : ''}`}>
+          {l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? (
+            <span className="log-round-line">— {l.text.replace(/\.$/, '').replace(/\d+/, (n) => roman(Number(n)))} —</span>
+          ) : (
+            <>
+              <i className="log-ico" title={LOG_ICON[logIcon(data, l)][0]} aria-label={LOG_ICON[logIcon(data, l)][0]} dangerouslySetInnerHTML={{ __html: LOG_ICON[logIcon(data, l)][1] }} />
+              <span className="log-text">
           {logParts(data, l).map((p, j) =>
             typeof p === 'string' ? (
               p
@@ -254,6 +287,9 @@ export function LogList({
                 {p.text}
               </button>
             ),
+          )}
+              </span>
+            </>
           )}
         </li>
       ))}

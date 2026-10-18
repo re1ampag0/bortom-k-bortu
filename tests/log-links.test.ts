@@ -5,8 +5,9 @@ import { describe, expect, it } from 'vitest';
 import { applyAction } from '../src/engine/engine';
 import { describe as describeLog, type LogLine } from '../src/engine/log';
 import { cardByCode, seaCardByCode, type Action } from '../src/engine/state';
-import { LogList, logParts, SeaSheet } from '../src/ui/game/Overlays';
+import { LogList, logIcon, logParts, SeaSheet } from '../src/ui/game/Overlays';
 import { ChoicePanel } from '../src/ui/game/Panels';
+import { deckCards } from '../src/engine/data';
 import { cardIn, codesOf, data, newGame, turnOf } from './helpers';
 
 const line = (text: string, cards: string[], sea?: string): LogLine => ({ text, kind: 'action', round: 1, turn: 'ПИРАТЫ', action: 0, cards, ...(sea ? { sea } : {}) });
@@ -101,5 +102,29 @@ describe('«Тиа Дальма»: sea mini cards with «i»', () => {
     s.sea!.peek = { seat: 'Ж', n: 2 };
     const html = renderToStaticMarkup(createElement(SeaSheet, { s, data, onClose: () => {} }));
     for (const code of top) expect(html).toContain(`<button class="cref" data-sea="${code}">«${seaCardByCode(data, code).name}»</button>`);
+  });
+});
+
+describe('«Судовой журнал» (A5): the icon of a line, «— Раунд II —»', () => {
+  it('the icon goes by what the line is: a Volley, a Reaction, a Legend, another card, the sea, Powder, the rest', () => {
+    const s = turnOf('ПИРАТЫ', { Ж: ['Ядра'] });
+    const card = cardIn(s, 'Ж', 'Ядра');
+    expect(logIcon(data, line('«Жемчужина»: Залп по «Голландцу» — 2 по Корпусу.', []))).toBe('volley');
+    expect(logIcon(data, line('Попадание по «Голландцу»: 2 = 2 по Корпусу.', []))).toBe('volley');
+    expect(logIcon(data, line('«Жемчужина»: «Ядра».', [card]))).toBe('card');
+    expect(logIcon(data, line('«Жемчужина»: Легенда «Джек ускользает».', ['Ж-Л']))).toBe('legend');
+    const s2 = newGame({ sea: true });
+    expect(logIcon(data, line('Море: x', [], s2.sea!.current!))).toBe('sea');
+    expect(logIcon(data, line('Пираты: +2 Пороха (Трюм) → 2.', []))).toBe('powder');
+    expect(logIcon(data, line('«Месть» добирает 5 карт.', []))).toBe('other');
+  });
+  it('a Reaction card gets the shield', () => {
+    const code = deckCards(data, 'М').find((c) => c.type === 'РЕАКЦИЯ')!.code;
+    expect(logIcon(data, line(`«Месть»: Реакция «${cardByCode(data, code).name}».`, [code]))).toBe('reaction');
+  });
+  it('the line of a new round is a separator with the roman number; the text of other lines stays', () => {
+    const html = list([{ text: 'Раунд 2.', kind: 'round', round: 2, turn: 'ПИРАТЫ', action: 0, cards: [] }]);
+    expect(html).toContain('log-sep');
+    expect(plain(html)).toBe('— Раунд II —');
   });
 });

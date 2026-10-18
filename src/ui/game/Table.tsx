@@ -1,5 +1,5 @@
 // Presentational parts of the table: the status bar, a team row with its Hold, a ship board (plank).
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
 import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type ShipState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
@@ -12,6 +12,7 @@ import { shipSvg } from './art/ships';
 import { legendMedal } from './art/medals';
 import { fanSvg } from './art/fan';
 import { TARGET_SEAL } from './art/seal';
+import { SEA_BG, seaSvg } from './fx/seaArt';
 import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, TRIDENT_SVG, statusSvg, type StatusIcon } from './art/status';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
@@ -72,6 +73,31 @@ function breakAfterArrow(text: string): ReactNode {
   );
 }
 
+/** I, II, III … — the round on the brass plate (A5: «Пираты · раунд II»). */
+export function roman(n: number): string {
+  const R: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+  let out = '';
+  for (const [v, l] of R) while (n >= v) (out += l), (n -= v);
+  return out;
+}
+
+/**
+ * ≥ 1280 px: the log is on the screen and the tools of the top row (the sea plaque, «Правила», «Настройки») stand over it,
+ * in line with the row; narrower — in the row itself. One plaque of the sea in the page at any time (data-fx-sea-chip).
+ */
+const WIDE_LOG = '(min-width: 1280px)';
+export function useWideLog(): boolean {
+  return useSyncExternalStore(
+    (on) => {
+      const m = typeof matchMedia === 'function' ? matchMedia(WIDE_LOG) : null;
+      m?.addEventListener('change', on);
+      return () => m?.removeEventListener('change', on);
+    },
+    () => (typeof matchMedia === 'function' ? matchMedia(WIDE_LOG).matches : false),
+    () => false,
+  );
+}
+
 export function StatusBar({
   s,
   data,
@@ -79,21 +105,30 @@ export function StatusBar({
   waiting,
   onSea,
   extra,
+  chip = true,
 }: {
   s: GameState;
   data: GameData;
   instruction: string;
   waiting: boolean;
   onSea: () => void;
+  /** The buttons of the row («Журнал», «Правила», «Настройки») when they stand in it, not over the log. */
   extra: ReactNode;
+  /** The sea plaque stands in this row (false: over the log, see useWideLog). */
+  chip?: boolean;
 }) {
-  const sea = s.sea?.current ? seaCardByCode(data, s.sea.current) : null;
   return (
     <header className="status" data-testid="status">
       <div className="status-turn">
         <span className={`dot ${s.active === 'ПИРАТЫ' ? 'pirates' : 'company'}`} aria-hidden />
-        <span className="wide">
-          Раунд {s.round} · Ход {SIDE_LABEL[s.active].gen}
+        {/* the brass plate of A5; for a screen reader (and the words of the old bar) — «Раунд 2 · Ход Пиратов» */}
+        <span className="wide turn-plate">
+          <span aria-hidden>
+            {SIDE_LABEL[s.active].name} · раунд {roman(s.round)}
+          </span>
+          <span className="sr-only">
+            Раунд {s.round} · Ход {SIDE_LABEL[s.active].gen}
+          </span>
         </span>
         <span className="narrow">
           Р{s.round} · {SIDE_LABEL[s.active].name}
@@ -102,18 +137,74 @@ export function StatusBar({
       <div className={`status-text ${waiting ? 'waiting' : ''}`} data-testid="instruction" data-fx-instruction>
         {instruction}
       </div>
-      <div className="status-tools">
-        {sea && (
-          <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-fx-sea-chip>
-            <span className="wide">
-              <b>Море:</b> {sea.name} <span className="muted">· {sea.big}</span>
-            </span>
-            <span className="narrow">{sea.name} ⓘ</span>
-          </button>
-        )}
-        {extra}
-      </div>
+      {(chip || extra) && (
+        <div className="status-tools">
+          {chip && <SeaChip s={s} data={data} onSea={onSea} />}
+          {extra}
+        </div>
+      )}
     </header>
+  );
+}
+
+/**
+ * The plaque of the sea: the picture of the card (still, no animation inside), «Море · весь раунд» and the card with its
+ * effect; a press opens the sea card.
+ */
+export function SeaChip({ s, data, onSea }: { s: GameState; data: GameData; onSea: () => void }) {
+  const sea = s.sea?.current ? seaCardByCode(data, s.sea.current) : null;
+  if (!sea) return null;
+  return (
+    <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-fx-sea-chip>
+      <span className="sea-icon wide" style={{ background: SEA_BG[sea.key] }} dangerouslySetInnerHTML={svg(seaSvg(sea.key, 36, 22))} />
+      <span className="wide sea-words">
+        <span className="sea-cap">Море · весь раунд</span>
+        <span className="sea-name">
+          {sea.name}: {sea.big}
+        </span>
+      </span>
+      <span className="narrow">{sea.name} ⓘ</span>
+    </button>
+  );
+}
+
+/** The icons of the round brass buttons (A5): the rules, the settings, the log, the tempo of the show, «Отменить». */
+export const ROUND_ICON: Record<string, string> = {
+  rules:
+    '<svg width="20" height="18" viewBox="0 0 20 18" aria-hidden="true"><path d="M10 3.4 C7.6 1.8 4.6 1.6 1.6 2.4 V15.6 C4.6 14.8 7.6 15 10 16.6 C12.4 15 15.4 14.8 18.4 15.6 V2.4 C15.4 1.6 12.4 1.8 10 3.4 Z" fill="#f4ead6" stroke="#2a1a0c" stroke-width="1.2" stroke-linejoin="round"/><path d="M10 3.4 V16.6" stroke="#2a1a0c" stroke-width="1.1"/><path d="M3.6 5.4 Q6 5 8.2 5.8 M3.6 8.2 Q6 7.8 8.2 8.6 M11.8 5.8 Q14 5 16.4 5.4 M11.8 8.6 Q14 7.8 16.4 8.2" stroke="#8a7550" stroke-width=".8" fill="none"/></svg>',
+  settings:
+    '<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M8.6 1.6 H11.4 L11.9 4.1 L13.6 4.8 L15.7 3.4 L17.6 5.3 L16.2 7.4 L16.9 9.1 L19.4 9.6 V12.4 L16.9 12.9 L16.2 14.6 L17.6 16.7 L15.7 18.6 L13.6 17.2 L11.9 17.9 L11.4 20.4 H8.6 L8.1 17.9 L6.4 17.2 L4.3 18.6 L2.4 16.7 L3.8 14.6 L3.1 12.9 L.6 12.4 V9.6 L3.1 9.1 L3.8 7.4 L2.4 5.3 L4.3 3.4 L6.4 4.8 L8.1 4.1 Z" transform="translate(0 -1) scale(1 .96)" fill="#2a1a0c"/><circle cx="10" cy="10" r="3.2" fill="#e0bd62" stroke="#2a1a0c" stroke-width="1"/></svg>',
+  log: '<svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true"><path d="M3 1.5 H13.5 Q15.5 1.5 15.5 3.5 V18.5 H4.5 Q2.5 18.5 2.5 16.5 V2 Z" fill="#f4ead6" stroke="#2a1a0c" stroke-width="1.2"/><path d="M5.5 6 H12.5 M5.5 9 H12.5 M5.5 12 H10.5" stroke="#8e2b22" stroke-width="1"/></svg>',
+  faster: '<svg width="20" height="16" viewBox="0 0 20 16" aria-hidden="true"><path d="M2 2 L10 8 L2 14 Z M10 2 L18 8 L10 14 Z" fill="#2a1a0c"/></svg>',
+  skip: '<svg width="20" height="16" viewBox="0 0 20 16" aria-hidden="true"><path d="M1.5 2 L8.5 8 L1.5 14 Z M8.5 2 L15.5 8 L8.5 14 Z" fill="#2a1a0c"/><rect x="15.6" y="2" width="2.6" height="12" fill="#2a1a0c"/></svg>',
+  pause: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.6" height="12" rx=".6" fill="#2a1a0c"/><rect x="9.4" y="2" width="3.6" height="12" rx=".6" fill="#2a1a0c"/></svg>',
+  play: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2 L13.5 8 L4 14 Z" fill="#2a1a0c"/></svg>',
+  undo: '<svg width="20" height="18" viewBox="0 0 20 18" aria-hidden="true"><path d="M7 3 L2.5 7 L7 11" fill="none" stroke="#2a1a0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 7 H12 Q17.5 7 17.5 11.5 Q17.5 16 12 16 H8" fill="none" stroke="#2a1a0c" stroke-width="2" stroke-linecap="round"/></svg>',
+};
+
+/**
+ * A round brass button with a caption under it (A5, the bottom right and the icons of the top row). The label of the
+ * button stays its accessible name and its text (`.wide`, hidden from sight); the caption is the label without its
+ * leading symbol («⏸ Пауза» → «Пауза»).
+ */
+export function RoundButton({ b, icon, className = '' }: { b: Btn; icon: string; className?: string }) {
+  const caption = b.label.replace(/^[^\p{L}]+/u, '');
+  return (
+    <button
+      className={`btn round ${b.primary ? 'primary' : ''} ${className}`}
+      onClick={b.disabled ? undefined : b.onClick}
+      aria-disabled={!!b.disabled}
+      aria-label={caption}
+      title={b.disabled ?? caption}
+      data-testid={b.testid}
+    >
+      <span className="round-disc" dangerouslySetInnerHTML={svg(ROUND_ICON[icon] ?? '')} />
+      <span className="round-cap" aria-hidden>
+        {caption}
+      </span>
+      <span className="wide sr-only">{b.label}</span>
+      {b.short && <span className="narrow sr-only">{b.short}</span>}
+    </button>
   );
 }
 
