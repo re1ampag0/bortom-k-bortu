@@ -53,11 +53,18 @@ async function columns(page: Page) {
     Array.from(document.querySelectorAll<HTMLElement>('.plank')).map((p) => {
       const badges = Array.from(p.querySelectorAll<HTMLElement>('.badges > *')).filter((e) => e.offsetWidth > 0).map((e) => e.getBoundingClientRect());
       const nums = Array.from(p.querySelectorAll('.track-num')).map((e) => e.getBoundingClientRect());
+      // A5: every number stands right after the icons of its own track (the gap), and no number meets another part
+      const tracks = Array.from(p.querySelectorAll<HTMLElement>('[data-fx-track]')).map((t) => ({
+        cells: t.querySelector('.cells')!.getBoundingClientRect(),
+        num: t.querySelector('.track-num')!.getBoundingClientRect(),
+      }));
+      const meet = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+      const others = Array.from(p.querySelectorAll('.cells, .track-label, .badges > *, .status-chip')).map((e) => e.getBoundingClientRect());
       return {
         ship: p.dataset.ship,
         heights: badges.map((b) => b.height),
-        badgeRights: badges.map((b) => b.right),
-        rights: nums.map((b) => b.right),
+        gaps: tracks.map((t) => t.num.left - t.cells.right),
+        numsMeet: nums.filter((n) => others.some((o) => o.width > 0 && meet(n, o))).length,
       };
     }),
   );
@@ -77,8 +84,11 @@ async function expectColumns(page: Page, laptop: boolean) {
   for (const p of await columns(page)) {
     expect(spread(p.heights), `${p.ship}: the badges of one height`).toBeLessThanOrEqual(1);
     if (!laptop) continue;
-    expect(spread(p.badgeRights), `${p.ship}: the badges at one right edge`).toBeLessThanOrEqual(1);
-    expect(spread(p.rights), `${p.ship}: the numbers of the tracks in one column`).toBeLessThanOrEqual(1);
+    // A5 (V1a): the Hull is the first row, Паруса / Пушки / Команда the second — the numbers no longer stand in one
+    // column; each stands right after the icons of its track and covers nothing
+    for (const g of p.gaps) expect(g, `${p.ship}: the number right after its icons`).toBeGreaterThanOrEqual(0);
+    for (const g of p.gaps) expect(g, `${p.ship}: the number right after its icons`).toBeLessThanOrEqual(12);
+    expect(p.numsMeet, `${p.ship}: a number meets no icon, label, badge or chip`).toBe(0);
   }
 }
 
@@ -238,14 +248,18 @@ for (const size of SIZES) {
         const svg = el.querySelector('svg')!;
         const r = el.getBoundingClientRect(), s = svg.getBoundingClientRect();
         const meet = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
-        const parts = Array.from(plank.querySelectorAll('.track-num, .cells i, .bar, .track-label, .badges > *, .plank-buttons .btn, .status-chip, .plank-head'))
-          .filter((e) => (e as HTMLElement).offsetWidth > 0);
+        // A5 (V1a): on a laptop the stamp lies on the drawing of the ship in the head — the head itself is its place, the
+        // name, the tags and the coin of the head must stay clear
+        const parts = Array.from(
+          plank.querySelectorAll('.track-num, .cells i, .bar, .track-label, .badges > *, .plank-buttons .btn, .status-chip, .plank-name, .plank-role > *, .captain' + (el.closest('.plank-head') ? '' : ', .plank-head')),
+        ).filter((e) => (e as HTMLElement).offsetWidth > 0);
         const nums = Array.from(plank.querySelectorAll('.track-num')).map((e) => e.getBoundingClientRect());
         const badges = Array.from(plank.querySelectorAll<HTMLElement>('.badges > *')).filter((e) => e.offsetWidth > 0).map((e) => e.getBoundingClientRect());
         const body = plank.querySelector('.plank-body')!.getBoundingClientRect();
         return {
           ship: plank.dataset.fxShip,
           inStatuses: !!el.closest('.plank-statuses'),
+          onShip: !!el.closest('.ship-art'),
           visibility: getComputedStyle(el).visibility,
           opacity: Number(getComputedStyle(svg).opacity),
           rotated: getComputedStyle(svg).transform !== 'none',
@@ -268,10 +282,11 @@ for (const size of SIZES) {
       expect(st.rotated, 'set at a slant, as a stamp').toBe(true);
       expect(st.covers, 'the stamp covers no number, scale, badge, button, chip or head').toEqual([]);
       if (laptop) {
+        // A5: the torn leaf pinned with a dagger, on the drawing of the ship in the head (was: 40 px between the numbers
+        // and the badges of the body)
         expect(st.inStatuses).toBe(false);
-        expect(Math.abs(st.width - 40), 'about 40 px').toBeLessThanOrEqual(TOL);
-        expect(st.left, 'right of the numbers of the tracks').toBeGreaterThanOrEqual(st.numsRight);
-        if (st.badgesLeft !== null) expect(st.right, 'left of the badges').toBeLessThanOrEqual(st.badgesLeft);
+        expect(st.onShip, 'on the drawing of the ship').toBe(true);
+        expect(Math.abs(st.width - 30), 'about 30 px').toBeLessThanOrEqual(TOL);
       } else {
         expect(st.inStatuses, 'on a phone: in the row of statuses').toBe(true);
         expect(Math.abs(st.width - 28), 'about 28 px').toBeLessThanOrEqual(TOL);
