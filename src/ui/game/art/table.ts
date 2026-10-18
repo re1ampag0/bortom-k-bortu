@@ -74,6 +74,6 @@ export function tableThings(): string {
   // the compass: the jewel of the table, in the free corner between the hand and «Ход окончен»
   // the game: a little left and lower than in the prototype (950, 566) — the round «Отменить» stays off its rim; ≈ 82 %
   defs += shadowFilter('pgshC', 905, 600, 10);
-  body += `<g transform="translate(905 600) rotate(-8)" filter="url(#pgshC)" opacity=".82">${compassHero(70)}</g>`;
+  body += `<g transform="translate(905 600) rotate(-8)" filter="url(#pgshC)" opacity=".82" style="opacity:.82">${compassHero(70)}</g>`;
   return defs + '</defs>' + body;
 }

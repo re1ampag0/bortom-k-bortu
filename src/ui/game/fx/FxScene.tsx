@@ -258,6 +258,9 @@ function SceneTable({
           <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
         </div>
         <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={null} hint={null} fxGen={fx.gen} />
+        {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
+            Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
+        <div className="team-row table-edge" aria-hidden />
         <div className="hand-row" data-fx-hand>
           <Hand
             s={view}

@@ -289,6 +289,11 @@ export function payKegs(ctx: FxCtx, side: Side, n: number, delay: number, label 
  */
 export function holdTag(ctx: FxCtx, kg: Element, text: string, delay: number, cls = '', dur = 1500): HTMLElement {
   const kb = bx(ctx, kg), label = kg.parentElement?.querySelector('.hold-label');
+  // A5 (V1c): the caption «Трюм … · N из 8» stands over the tray of kegs — the mark lies on the caption (tag keeps it inside)
+  if (visible(label) && bx(ctx, label).b <= kb.y + 2) {
+    const lb = bx(ctx, label);
+    return tag(ctx, lb.cx, lb.cy, text, delay, cls, dur);
+  }
   const t = tag(ctx, label ? bx(ctx, label).cx : kb.x - 30, kb.cy, text, delay, cls, dur);
   const w = t.offsetWidth;
   t.style.left = Math.max(w / 2, Math.min(parseFloat(t.style.left), kb.x - 4 - w / 2)) + 'px';
