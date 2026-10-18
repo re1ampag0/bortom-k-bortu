@@ -993,6 +993,26 @@ export function Game({
   const allyReady = net && myTurn ? Object.values(s.ships).find((x) => x.side === bottom && !x.sunk && !mySeats.includes(x.code) && net.ready.includes(x.code)) : undefined;
   const botIcon: Record<string, string> = { faster: 'faster', skip: 'skip', pause: held ? 'play' : 'pause' };
 
+  // «Быстрее · До конца · Пауза · Отменить» and «Ход окончен»: under the log ≥ 1280 px (A5: the hand gets the whole width
+  // of the table), at the end of the hand row narrower.
+  const handActions = (
+    <div className="hand-actions">
+      {/* A5: «Быстрее · До конца · Пауза» (while a bot moves or a move is shown) and «Отменить» — round brass buttons */}
+      <div className="round-row">
+        {botBtns.map((b) => (
+          <RoundButton key={b.key} b={b} icon={botIcon[b.key]} />
+        ))}
+        {net ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" />}
+      </div>
+      <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+      {allyReady && (
+        <p className="ally-ready" data-testid="ally-ready">
+          «{shipData(data, allyReady.code).nick}»: готово — ход закончится, когда нажмёте вы
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <div
       className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${seaFrame === 'wood' ? 'frame-wood' : ''}`}
@@ -1041,6 +1061,9 @@ export function Game({
           <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
         </div>
         <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} fxGen={fx.gen} />
+        {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
+            Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
+        <div className="team-row table-edge" aria-hidden />
         <div className="hand-row" data-fx-hand>
           {seat && (
             <Hand
@@ -1070,21 +1093,7 @@ export function Game({
               note={captainNote}
             />
           )}
-          <div className="hand-actions">
-            {/* A5: «Быстрее · До конца · Пауза» (while a bot moves or a move is shown) and «Отменить» — round brass buttons */}
-            <div className="round-row">
-              {botBtns.map((b) => (
-                <RoundButton key={b.key} b={b} icon={botIcon[b.key]} />
-              ))}
-              {net ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" />}
-            </div>
-            <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
-            {allyReady && (
-              <p className="ally-ready" data-testid="ally-ready">
-                «{shipData(data, allyReady.code).nick}»: готово — ход закончится, когда нажмёте вы
-              </p>
-            )}
-          </div>
+          {!wideLog && handActions}
         </div>
         <FxLayer fx={fx} />
       </main>
@@ -1107,6 +1116,7 @@ export function Game({
             </button>
           </div>
         </div>
+        {wideLog && handActions}
       </aside>
       <nav className={`bottom-bar ${canHold ? 'has-pause' : ''}`}>
         <button className="btn" onClick={() => setSheet({ k: 'log' })}>
