@@ -22,6 +22,7 @@ import { TableThings, useSeaClip } from '../TableThings';
 import { applyVisible, displayRules, type Display } from './display';
 import { FxLayer, useFxQueue } from './FxLayer';
 import { markN } from './misc';
+import { clearScars, scar, setScarTestRate, type ScarLife } from './scars';
 import { withDisplay } from './queue';
 
 interface SceneShip {
@@ -209,6 +210,35 @@ function SceneTable({
     paused: false,
     hold: false,
   });
+  // FX-A (e2e): «&scarRate=20» runs the clock of the traces faster; window.__fxScars lets a test lay traces of its own.
+  useEffect(() => {
+    setScarTestRate(Number(new URLSearchParams(location.search).get('scarRate')) || 1);
+    (window as unknown as { __fxScars: unknown }).__fxScars = {
+      lay: (n: number, life: ScarLife = 'short') => {
+        const host = document.querySelector('.fx-scars')!;
+        for (let k = 0; k < n; k++) {
+          const el = document.createElement('i');
+          el.className = 'fx-hitmark';
+          el.dataset.test = String(k);
+          Object.assign(el.style, { left: `${40 + k * 40}px`, top: '200px', width: '32px', height: '24px' });
+          host.appendChild(el);
+          scar(el, life);
+        }
+      },
+      /** A soot spot in the middle of the plank of this ship: it must ride with the ship when the places change. */
+      layOn: (code: string, life: ScarLife = 'medium') => {
+        const host = document.querySelector(`[data-fx-ship="${code}"] > .plank-scars`)!;
+        const el = document.createElement('i');
+        el.className = 'fx-hitmark';
+        el.dataset.test = code;
+        Object.assign(el.style, { left: 'calc(50% - 16px)', top: 'calc(50% - 12px)', width: '32px', height: '24px' });
+        host.appendChild(el);
+        scar(el, life, code);
+      },
+      clear: clearScars,
+    };
+    return () => setScarTestRate(1);
+  }, []);
   // The show ended: it was busy and is not any more (or there is no show: reduced motion).
   const seen = useRef(false);
   useEffect(() => {

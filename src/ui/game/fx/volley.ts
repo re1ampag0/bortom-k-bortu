@@ -15,6 +15,7 @@ import { deckCards, legendCards } from '../../../engine/data';
 import { TRACK_DATIVE } from '../../../engine/hints';
 import { shipData, type Term } from '../../../engine/state';
 import type { GameData, Track } from '../../../engine/types';
+import { hitMark } from './scars';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
 import {
@@ -332,6 +333,8 @@ PLAY.shot = async (c, ctx) => {
       const newV = Math.max(0, now - k - b.units);
       at(ctx, th, () => setTrack(ctx, c.target, tr, newV, '#c0392b'));
       flash(ctx, p1.x, p1.y, th, 1.25); ring(ctx, p1.x, p1.y, th);
+      // FX-A: the soot of the hit stays on the plank for a while (a short trace, fx/scars.ts)
+      if (!markEl) at(ctx, th, () => hitMark(ctx, c.target, p1.x, p1.y));
       if (b.kind === 'chain') burst(ctx, 'shred', p1.x, p1.y, th, 8, 14, 32, 650);
       else if (b.kind === 'grape') burst(ctx, 'dust', p1.x, p1.y, th, 5, 6, 20, 700);
       else burst(ctx, 'splinter', p1.x, p1.y, th, 8, 16, 40, 600);

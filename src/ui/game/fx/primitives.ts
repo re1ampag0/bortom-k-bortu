@@ -136,7 +136,12 @@ export function setTrack(ctx: FxCtx, code: string, t: Track, v: number, flashCol
   [...cells.children].forEach((c, i) => {
     const on = i < v, was = c.classList.contains('on');
     c.classList.toggle('on', on);
-    if (flashColor && on !== was) A(ctx, c, [{ background: flashColor, boxShadow: `0 0 0 2px ${flashColor}55` }, { background: on ? '#2a241d' : '#e2d8c7', boxShadow: 'none' }], 900, 0, 'linear', 'none');
+    // FX-A: the icon itself flashes (swapIcon of fx3.js): it swells and glows in the colour, then settles; a mended
+    // one glows longer and golden. (The background of the A5 icons is the picture: a coloured background is gone.)
+    if (flashColor && on !== was) {
+      if (on) A(ctx, c, [{ transform: 'scale(1.6)', filter: `brightness(1.8) drop-shadow(0 0 5px #ffd27a) drop-shadow(0 0 3px ${flashColor})` }, { transform: 'scale(1)', filter: 'none' }], 1100, 0, 'ease-out', 'none');
+      else A(ctx, c, [{ transform: 'scale(1.6)', filter: `brightness(1.6) drop-shadow(0 0 4px ${flashColor})` }, { transform: 'scale(1)', filter: 'none' }], 420, 0, 'ease-out', 'none');
+    }
   });
   const bar = tr.querySelector<HTMLElement>('.bar i');
   if (bar) bar.style.width = `${(100 * v) / max}%`;
