@@ -31,13 +31,24 @@ import {
   type SellClip, type SinkClip, type SoulsClip, type StatusClip, type StealClip, type SurfaceClip, type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
-  A, allPlanks, at, badgeMark, bubbles, burst, bx, cardOrigin, clamp, fireGroup, fireWall, filters, flameEl, flashBoard, hitBlast, qpts, ringSvg, room, splintersSvg, sv, waterColumn, boom, type Box, fxSvg, handCardPos, isPhone, rnd, smokeColumn, smolderEl, sparksSvg, trackEl, curve, dirOf, facingY, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
+  A, allPlanks, at, badgeMark, burst, bx, cardOrigin, clamp, fireGroup, fireWall, filters, flameEl, flashBoard, hitBlast, qpts, ringSvg, room, splintersSvg, sv, waterColumn, boom, type Box, fxSvg, handCardPos, isPhone, rnd, smokeColumn, smolderEl, sparksSvg, trackEl, curve, dirOf, facingY, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
   isTop, mk, overlayAt, payKegs, pillAt, plank, projectile, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, steam, tag, trackMark, visible, wait,
   wisp, type FlyCard, type FxCtx, type Pt,
 } from './primitives';
 
 /** FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. */
-export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, filter: (e: GameEvent) => boolean = () => true): Promise<void> {
+export interface FlipMove {
+  code: string;
+  from: Box;
+  to: Box;
+}
+/**
+ * FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. FX-D: `delay` —
+ * the planks wait at their old places (the course of «Перестроение» is plotted first); `arc` — how far the k-th moving
+ * plank swings toward the gap (negative — outward); `onMoves` — the moves, measured before they start.
+ */
+export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, filter: (e: GameEvent) => boolean = () => true, opt: { delay?: number; arc?: (code: string, k: number) => number; onMoves?: (moves: FlipMove[]) => void } = {}): Promise<void> {
+  const delay = opt.delay ?? 0, moves: FlipMove[] = [];
   const before: Record<string, ReturnType<typeof bx>> = {};
   for (const el of allPlanks(ctx)) before[el.dataset.fxShip!] = bx(ctx, el);
   ctx.renderWith(evs.filter(filter));
@@ -46,10 +57,13 @@ export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, fil
     const b1 = bx(ctx, el), dx = b0.x - b1.x, dy = b0.y - b1.y;
     if (Math.abs(dx) < 2 && Math.abs(dy) < 2) continue;
     const lift = dx > 0 ? 1 : -1;
-    A(ctx, el, [{ transform: `translate(${dx}px,${dy}px)` }, { transform: `translate(${dx / 2}px,${dy / 2 + dirOf(ctx, code) * -16 * lift}px) rotate(${lift * 1.5}deg)`, offset: 0.5 }, { transform: 'none' }], d, 0, 'cubic-bezier(.45,0,.3,1)', 'none');
-    if (ctx.rich) { const m = bx(ctx, el); for (let q = 0; q < 3; q++) splash(ctx, m.x + m.w * (0.25 + q * 0.25), facingY(ctx, code), d * 0.85 + q * 60); }
+    const midY = opt.arc ? dy / 2 + dirOf(ctx, code) * opt.arc(code, moves.length) : dy / 2 + dirOf(ctx, code) * -16 * lift;
+    moves.push({ code, from: b0, to: b1 });
+    A(ctx, el, [{ transform: `translate(${dx}px,${dy}px)` }, { transform: `translate(${dx / 2}px,${midY}px) rotate(${lift * 1.5}deg)`, offset: 0.5 }, { transform: 'none' }], d, delay, 'cubic-bezier(.45,0,.3,1)', delay ? 'backwards' : 'none');
+    if (ctx.rich) { const m = bx(ctx, el); for (let q = 0; q < 3; q++) splash(ctx, m.x + m.w * (0.25 + q * 0.25), facingY(ctx, code), delay + d * 0.85 + q * 60); }
   }
-  await wait(ctx, d + 80);
+  opt.onMoves?.(moves);
+  await wait(ctx, delay + d + 80);
 }
 export const SWAP_LABEL: Record<string, string> = { regroup: 'Перестроение', maelstrom: 'Мальстрём', current: 'Течение', jack: 'Джек ускользает', sword: 'Меч Тритона', card: 'Смена мест', sink: 'Капитан уходит к союзнику' };
 export function banner(ctx: FxCtx, text: string, cls = 'small', d = 1200, y?: number): HTMLElement {
@@ -102,9 +116,45 @@ PLAY.swap = async (c, ctx) => {
   if (c.cost) payKegs(ctx, c.side, c.cost, 0);
   const a = plank(ctx, c.ships[0]);
   banner(ctx, SWAP_LABEL[c.reason] || 'Смена мест', 'small', 1200, (bx(ctx, a).y + bx(ctx, a).b) / 2);
-  await wait(ctx, 250);
-  await flipTo(ctx, c.events, 650);
-  await wait(ctx, 150);
+  // FX-D (fxSwap of fx3.js; T.swap): the course is plotted in ink with a compass stamp (on the sea, under the planks), one
+  // ship goes through the gap, the other a little outward, each leaves a wake; they settle with a bob and rings
+  const S = T.swap, sea = seaScars(ctx), ink = sea ? scar(fxSvg(ctx, sea), 'short') : fxSvg(ctx);
+  let moved: FlipMove[] = [];
+  await flipTo(ctx, c.events, S.sail, undefined, {
+    delay: S.plot,
+    arc: (_code, k) => (k === 0 ? 88 : -24),
+    onMoves: (moves) => {
+      moved = moves;
+      moves.forEach((m, k) => {
+        const toGap = dirOf(ctx, m.code), edge = (b: Box) => (toGap > 0 ? b.b : b.y);
+        const x0 = m.from.cx, y0 = edge(m.from), x1 = m.to.cx, y1 = edge(m.to), cy = Math.max(y0, y1) * (toGap > 0 ? 1 : 0) + Math.min(y0, y1) * (toGap > 0 ? 0 : 1) + toGap * (k === 0 ? 88 : -24) * 1.6;
+        const dd = `M${x0.toFixed(1)} ${y0.toFixed(1)} Q${((x0 + x1) / 2).toFixed(1)} ${cy.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+        const course = sv(ink, `<path d="${dd}" fill="none" stroke="#1f1a14" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>`) as SVGPathElement;
+        const L = course.getTotalLength();
+        course.style.strokeDasharray = `${L}`;
+        A(ctx, course, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], S.course, k * 200, 'ease-in-out', 'both');
+        const head = sv(ink, '<path d="M-7 -5 L2 0 L-7 5" fill="none" stroke="#1f1a14" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>');
+        const ang = (Math.atan2(y1 - cy, x1 - (x0 + x1) / 2) * 180) / Math.PI;
+        A(ctx, head, [{ transform: `translate(${x1}px,${y1}px) rotate(${ang}deg)`, opacity: 0 }, { transform: `translate(${x1}px,${y1}px) rotate(${ang}deg)`, opacity: 0.85 }], 200, k * 200 + S.course);
+        const wake = sv(ink, `<path d="${dd}" fill="none" stroke="#eef6f8" stroke-width="3" stroke-linecap="round" opacity=".8"/>`) as SVGPathElement;
+        wake.style.strokeDasharray = `${L}`;
+        A(ctx, wake, [{ strokeDashoffset: L, opacity: 0.8 }, { strokeDashoffset: 0, opacity: 0.8, offset: 0.85 }, { strokeDashoffset: 0, opacity: 0 }], S.sail + S.fade, S.plot, 'ease-in-out', 'both');
+        if (k === 0) {
+          const st = sv(ink, '<g><circle r="16" fill="#efe3c8" stroke="#1f1a14" stroke-width="1.4"/><path d="M0 -13 L3 0 L0 13 L-3 0 Z" fill="#1f1a14"/><path d="M-13 0 L0 -3 L13 0 L0 3 Z" fill="#8e2b22"/></g>');
+          const mx = (x0 + x1) / 2, my = (y0 + cy) / 2;
+          A(ctx, st, [{ transform: `translate(${mx}px,${my}px) scale(2.4)`, opacity: 0 }, { transform: `translate(${mx}px,${my}px) scale(1)`, opacity: 1 }], S.stamp, S.course, 'cubic-bezier(.6,0,.9,.5)');
+        }
+      });
+    },
+  });
+  // they settle with a bob; rings run out on the water; the course fades
+  for (const m of moved) {
+    const el = plank(ctx, m.code), toGap = dirOf(ctx, m.code);
+    A(ctx, el, [{ translate: '0 0' }, { translate: `0 ${toGap * 4}px` }, { translate: `0 ${-toGap * 1.5}px` }, { translate: '0 0' }], S.settle, 0, 'ease-out', 'none');
+    for (let i = 0; i < 2; i++) ringSvg(ctx, fxSvg(ctx), m.to.cx, facingY(ctx, m.code) + toGap * 10, 20, Math.min(200, m.to.w * 0.4) - i * 50, '#eef6f8', 1000, i * 200, 1.6);
+  }
+  A(ctx, ink, [{ opacity: 1 }, { opacity: 0 }], S.fade, 0, 'ease-out', 'forwards');
+  await wait(ctx, S.settle + 150);
 };
 
 /** The captain of A5: the icon of the Crew in a red coat and a cocked hat (fxSink of fx3.js). */
@@ -258,28 +308,43 @@ PLAY.sink = async (c, ctx) => {
   await wait(ctx, end);
 };
 
-/** Diving: the water rises over the plank from below, bubbles, the Fires go out. */
+/**
+ * Diving (the «dive» branch of runFx; T.dive): the plank rocks, rings run out on the water, «Толща воды» rises over the
+ * plank from below (.underwater), bubbles go up, the Fires go out.
+ */
 export function diveFx(ctx: FxCtx, code: string, delay: number): number {
-  const el = plank(ctx, code), b = bx(ctx, el);
+  const D = T.dive, el = plank(ctx, code), b = bx(ctx, el), fy = facingY(ctx, code), toGap = dirOf(ctx, code), svg = fxSvg(ctx);
   const w = mk(ctx, 'underwater', 0, 0); w.style.width = b.w + 'px'; w.style.height = b.h + 'px'; w.style.transformOrigin = '50% 100%';
-  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }], 700, delay, 'ease-in-out', 'forwards');
-  A(ctx, el, [{ transform: 'none' }, { transform: 'translateY(6px) scale(.985)' }, { transform: 'none' }], 1300, delay, 'ease-in-out', 'none');
-  bubbles(ctx, b.x + 8, b.b - 4, b.w - 16, delay + 100, 16, 60);
+  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }], D.down, delay + 200, 'ease-in', 'forwards');
+  A(ctx, el, [{ transform: 'none' }, { transform: 'rotate(.25deg) translateY(2px) rotate(1.4deg)', offset: 0.3 }, { transform: 'translateY(6px) scale(.985)', offset: 0.7 }, { transform: 'none' }], D.down, delay, 'ease-in-out', 'none');
+  for (let i = 0; i < 3; i++) ringSvg(ctx, svg, b.cx, fy + toGap * 18, 20, Math.min(220, b.w * 0.45) - i * 30, '#cfe8ef', D.down, delay + i * 250, 2.2);
+  for (let i = 0, m = room(ctx, 16); i < m; i++) {
+    const x = b.x + rnd(20, b.w - 20), c = sv(svg, `<circle r="${rnd(2, 5).toFixed(1)}" fill="rgba(220,244,248,.2)" stroke="#dff4f8" stroke-width="1"/>`);
+    A(ctx, c, [{ transform: `translate(${x.toFixed(1)}px,${b.b}px)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${(x + rnd(-10, 10)).toFixed(1)}px,${(b.y - rnd(10, 40)).toFixed(1)}px)`, opacity: 0 }], rnd(1000, 1700), delay + rnd(200, D.down));
+  }
   const fb = el.querySelector('[data-fx-fires]');
   if (fb) { const sb = bx(ctx, fb); steam(ctx, sb.cx, sb.cy, delay + 450); A(ctx, fb, [{ opacity: 1 }, { opacity: 0 }], 300, delay + 500, 'ease-in', 'forwards'); tag(ctx, sb.cx, sb.y - 10, 'Пожары гаснут', delay + 550, 'good', 1200); }
   tag(ctx, b.cx, b.y - 12, 'Под водой', delay + 500, '', 1400);
-  return delay + 1400;
+  return delay + D.hold;
 }
-/** Surfacing: the water goes down, splashes along the top edge. */
+/**
+ * Surfacing (the «surface» branch of runFx): the water runs off the plank in streams, the plank bobs up, two spouts at
+ * its edge, then a green frame (T.dive).
+ */
 export function surfaceFx(ctx: FxCtx, code: string, delay: number): number {
-  const el = plank(ctx, code), b = bx(ctx, el);
+  const D = T.dive, el = plank(ctx, code), b = bx(ctx, el), fy = facingY(ctx, code), toGap = dirOf(ctx, code), svg = fxSvg(ctx);
   const w = mk(ctx, 'underwater', 0, 0); w.style.width = b.w + 'px'; w.style.height = b.h + 'px'; w.style.transformOrigin = '50% 100%';
-  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }], 600, delay, 'ease-in', 'forwards');
-  A(ctx, el, [{ transform: 'translateY(6px) scale(.985)' }, { transform: 'translateY(-3px)', offset: 0.7 }, { transform: 'none' }], 700, delay, 'ease-out', 'none');
-  for (let k = 0; k < 3; k++) splash(ctx, b.x + b.w * (0.2 + 0.3 * k), b.y + 2, delay + 380 + k * 90);
-  if (ctx.rich) for (let k = 0; k < 10; k++) { const d = mk(ctx, 'bubble', 0, 0); const x0 = b.x + Math.random() * b.w; A(ctx, d, [{ opacity: 1, transform: `translate(${x0}px,${b.y}px) scale(.6)` }, { opacity: 0, transform: `translate(${x0 + (Math.random() - 0.5) * 30}px,${b.y - 20 - Math.random() * 25}px) scale(.9)` }], 600, delay + 400 + Math.random() * 200); }
+  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }], D.up, delay + 300, 'ease-in', 'forwards');
+  A(ctx, el, [{ transform: 'translateY(6px) scale(.985)' }, { transform: 'rotate(.25deg) translateY(-8px)', offset: 0.5 }, { transform: 'none' }], D.rise, delay + 300, 'cubic-bezier(.2,.8,.3,1.2)', 'none');
+  for (let i = 0, m = room(ctx, 24); i < m; i++) {
+    const x = b.x + rnd(10, b.w - 10), c = sv(svg, `<path d="M0 0 v${rnd(6, 14).toFixed(1)}" stroke="#bfe0ea" stroke-width="1.4" stroke-linecap="round"/>`);
+    A(ctx, c, [{ transform: `translate(${x.toFixed(1)}px,${(b.y + rnd(0, 20)).toFixed(1)}px)`, opacity: 1 }, { transform: `translate(${x.toFixed(1)}px,${(b.b + rnd(10, 30)).toFixed(1)}px)`, opacity: 0 }], rnd(600, 1000), delay + rnd(300, 900), 'ease-in');
+  }
+  waterColumn(ctx, svg, b.x + Math.min(40, b.w * 0.15), fy + toGap * 10, 40, delay + 300);
+  waterColumn(ctx, svg, b.r - Math.min(40, b.w * 0.15), fy + toGap * 10, 34, delay + 380);
+  A(ctx, el, [{ boxShadow: '0 0 0 3px #7fd59a, 0 0 24px rgba(127,213,154,.8)' }, { boxShadow: '0 0 0 0 rgba(0,0,0,0)' }], D.glow, delay + 1300, 'ease-out', 'none');
   tag(ctx, b.cx, b.y - 14, 'Всплытие: первый Залп +1 и без Реакций', delay + 500, 'plus', 1600);
-  return delay + 1400;
+  return delay + 1300 + D.glow;
 }
 PLAY.dive = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} уходит под воду`); await wait(ctx, diveFx(ctx, c.ship, 0) + 100); };
 PLAY.surface = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} всплывает`); await wait(ctx, surfaceFx(ctx, c.ship, 0) + 100); };
@@ -505,15 +570,24 @@ export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: nu
   // FX-A: a repair of the Hull takes the traces of its ship away (ANIMATIONS.md, §2)
   if (e.track === 'hull') at(ctx, t0 + 300, () => clearScars(e.ship));
   const fr = overlayAt(ctx, 'lg-aura', b, 4); fr.style.boxShadow = '0 0 0 3px #2F7A4F, 0 0 22px 6px rgba(47,125,74,.45)';
-  A(ctx, fr, [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], 1500, t0 + 100);
+  A(ctx, fr, [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], Math.max(T.repair.aura, 300 + e.amount * T.repair.unit), t0 + 100);
+  // FX-D (the «repair» branch of runFx): for each board a new one drops into its place and the hammer nails it — two
+  // blows, gold sparks — then the cell comes back (T.repair)
+  const R = T.repair, svg = fxSvg(ctx);
   for (let j = 0; j < e.amount; j++) {
-    const t = t0 + 300 + j * 180, p = fxPoint(ctx, e.ship, e.track, now + j);
-    at(ctx, t, () => setTrack(ctx, e.ship, e.track, now + j + 1, '#2F7A4F'));
-    ring(ctx, p.x, p.y, t, 0.8, '#2F7A4F'); burst(ctx, 'sparkle', p.x, p.y, t, 5, 6, 18, 500);
+    const t = t0 + 300 + j * R.unit, p = fxPoint(ctx, e.ship, e.track, now + j);
+    const bd = sv(svg, '<g><rect x="-6" y="-8" width="12" height="16" rx="1.6" fill="#a8703a" stroke="#3a2412" stroke-width=".8"/><path d="M-6 -2.6 H6 M-6 2.6 H6" stroke="#6b4422" stroke-width=".6"/></g>');
+    A(ctx, bd, [{ transform: `translate(${p.x}px,${p.y - 30}px) rotate(-30deg)`, opacity: 0 }, { transform: `translate(${p.x}px,${p.y}px) rotate(0deg)`, opacity: 1, offset: 0.9 }, { transform: `translate(${p.x}px,${p.y}px) rotate(0deg)`, opacity: 0 }], R.drop + 2 * R.strike, t, 'cubic-bezier(.3,1.4,.6,1)');
+    const ham = sv(svg, '<g><rect x="-2" y="0" width="4" height="22" rx="1.4" fill="#8a5a32" stroke="#22190f" stroke-width=".7"/><rect x="-9" y="-5" width="18" height="7" rx="1.4" fill="#6f6a66" stroke="#22190f" stroke-width=".8"/><path d="M-8 -4 H8" stroke="#b9b3ad" stroke-width="1"/></g>');
+    const up = `translate(${p.x + 14}px,${p.y - 18}px) rotate(40deg)`, down = `translate(${p.x + 8}px,${p.y - 6}px) rotate(-30deg)`;
+    A(ctx, ham, [{ transform: up, opacity: 0 }, { transform: up, opacity: 1, offset: 0.1 }, { transform: down, offset: 0.3 }, { transform: up, offset: 0.55 }, { transform: down, offset: 0.8 }, { transform: up, opacity: 0 }], 2 * R.strike + 150, t + R.drop - 60, 'ease-in-out');
+    sparksSvg(ctx, svg, p.x, p.y - 4, 6, t + R.drop + R.strike * 0.35, ['#fff3c4', '#e0bd62']);
+    sparksSvg(ctx, svg, p.x, p.y, 6, t + R.drop + R.strike * 1.35, ['#fff3c4', '#e0bd62']);
+    at(ctx, t + R.drop + 2 * R.strike, () => setTrack(ctx, e.ship, e.track, now + j + 1, '#2F7A4F'));
   }
-  pillAt(ctx, e.ship, e.track, e.amount, t0 + 360 + e.amount * 180, true);
+  pillAt(ctx, e.ship, e.track, e.amount, t0 + 300 + (e.amount - 1) * R.unit + R.drop + 2 * R.strike, true);
   tag(ctx, b.cx, b.y - 12, `${nick(ctx, e.ship)}: +${e.amount} ${TRACK_NAME[e.track]}`, t0 + 200, 'good', 1500);
-  return t0 + 600 + e.amount * 180;
+  return t0 + 600 + e.amount * T.repair.unit;
 }
 
 /** Where the played card lies: at the edge of the gap on the player's side, so it does not cover the planks. */
@@ -627,7 +701,7 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
     else if (e.type === 'powderLost') { payKegs(ctx, e.side, e.amount, 0); t = Math.max(t, 900); }
     else if (e.type === 'flagSet' || e.type === 'turnFlag' || e.type === 'limitRaised') { t = Math.max(t, statusFx(ctx, e.type === 'limitRaised' ? { ...e, flag: 'limitRaised' } : e, 0, from)); }
     else if (e.type === 'fireAdded') { const hd = bx(ctx, plank(ctx, e.ship).querySelector('.plank-head')!); fly(ctx, projectile(ctx, 'fire'), curve(from, { x: hd.r - 24, y: hd.cy }, 0.1), 500, 0); tag(ctx, hd.cx, hd.b + 10, 'Пожар', 500, 'plus', 1200); t = Math.max(t, 1100); }
-    else if (e.type === 'soulsGained') { soulsFly(ctx, e.ship, e.amount, t * 0.5); t = Math.max(t, 1200); }
+    else if (e.type === 'soulsGained') { t = Math.max(t, 1200, soulsFly(ctx, e.ship, e.amount, t * 0.5)); }
     else if (e.type === 'soulsSpent') { const sb = plank(ctx, e.ship).querySelector('[data-fx-souls]'); if (sb && visible(sb)) { const b = bx(ctx, sb); wisp(ctx, { x: b.cx, y: b.cy }, from, 0); } t = Math.max(t, 900); }
     else if (e.type === 'drew') { await wait(ctx, t); t = 0; ctx.renderWith(done); await drawFx(ctx, e); }
     else if (e.type === 'swapped') { await wait(ctx, t); t = 0; await flipTo(ctx, done.concat(e), 650); }
@@ -687,9 +761,10 @@ PLAY.powder = async (c, ctx) => {
 PLAY.souls = async (c, ctx) => {
   const ship = c.ship!;
   const b = bx(ctx, plank(ctx, ship));
-  if (c.n > 0) soulsFly(ctx, Object.keys(ctx.display.ships).find((x) => sideOf(ctx, x) !== sideOf(ctx, ship)) || ship, c.n, 0);
+  let end = 1100;
+  if (c.n > 0) end = Math.max(end, soulsFly(ctx, Object.keys(ctx.display.ships).find((x) => sideOf(ctx, x) !== sideOf(ctx, ship)) || ship, c.n, 0) + 100);
   else tag(ctx, b.cx, b.y - 12, `${c.n} Души`, 0, '', 1100);
-  await wait(ctx, 1100);
+  await wait(ctx, end);
 };
 PLAY.status = async (c, ctx) => { await wait(ctx, statusFx(ctx, c, 0)); };
 PLAY.sell = async (c, ctx) => {

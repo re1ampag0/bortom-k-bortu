@@ -426,8 +426,8 @@ PLAY.shot = async (c, ctx) => {
     burst(ctx, 'ember', hd.r - 24, hd.cy, lastHit + 800, 8, 6, 18, 500);
     tag(ctx, hd.cx, hd.b + 10, 'Пожар', lastHit + 600, 'plus', 1200);
   }
-  if (c.souls) soulsFly(ctx, c.target, c.souls, lastHit + 300);
-  await wait(ctx, Math.max(endShots, lastHit) + (c.fire ? Math.max(1100, T.volley.linger) : T.volley.linger));
+  const soulsEnd = c.souls ? soulsFly(ctx, c.target, c.souls, lastHit + 300) : 0;
+  await wait(ctx, Math.max(Math.max(endShots, lastHit) + (c.fire ? Math.max(1100, T.volley.linger) : T.volley.linger), soulsEnd + 100));
   unleanAll(ctx);
   vs.done = true;
   clearVS(ctx, true);
@@ -486,8 +486,8 @@ PLAY.counter = async (c, ctx) => {
     }
   }
   if (c.fire) { const hd = bx(ctx, plank(ctx, c.to).querySelector('.plank-head')!); const fl = mk(ctx, 'flame', 0, 0, FLAME_SVG); A(ctx, fl, [{ opacity: 0, transform: `translate(${hd.cx}px,${hd.cy + 20}px) scale(.4)` }, { opacity: 1, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1.3)` }, { opacity: 0, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1)` }], 900, lastHit + 200, 'ease-in-out', 'forwards'); tag(ctx, hd.cx, hd.b + 10, 'Пожар', lastHit + 400, 'plus', 1200); }
-  if (c.souls) soulsFly(ctx, c.to, c.souls, lastHit + 300);
-  await wait(ctx, lastHit + 1000);
+  const soulsEnd = c.souls ? soulsFly(ctx, c.to, c.souls, lastHit + 300) : 0;
+  await wait(ctx, Math.max(lastHit + 1000, soulsEnd + 100));
 };
 
 /** «Сердце Дейви Джонса»: the heart on «Индевор» beats twice, a thread to «Голландец», its Crew goes out. */

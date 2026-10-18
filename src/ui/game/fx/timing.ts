@@ -88,4 +88,50 @@ export const T = {
     /** the end: the boat fades, the table is still a moment */
     end: 600,
   }),
+  /** A change of places (fxSwap of fx3.js): the course is plotted in ink with a compass stamp, the ships lift and sail
+   *  along it leaving wakes, settle with a bob and rings; the course fades. */
+  swap: scaled(SWAP_K, {
+    /** a course drawn with the pen */
+    course: 700,
+    /** the compass stamp falls on it */
+    stamp: 300,
+    /** the ships start when the course is plotted */
+    plot: 1200,
+    /** they sail */
+    sail: 1700,
+    /** they settle: a bob, rings */
+    settle: 700,
+    /** the course fades */
+    fade: 900,
+  }),
+  /** A repair (the «repair» branch of runFx, template.html): for each board a new one drops in and the hammer nails it. */
+  repair: scaled(REPAIR_K, {
+    /** the green frame of the mended ship */
+    aura: 1500,
+    /** a new board drops into its place */
+    drop: 300,
+    /** one blow of the hammer (two blows a board) */
+    strike: 300,
+    /** a board after another */
+    unit: 1050,
+  }),
+  /** A soul (the «souls» branch of runFx): a green wisp with a tail leaves the sailor, curls over the sea, enters the skull. */
+  soul: scaled(SOUL_K, {
+    fly: 1700,
+    /** the skull takes it in: a ring, sparks, a glow */
+    arrive: 900,
+  }),
+  /** Under the water and up (the «dive» / «surface» branches of runFx). */
+  dive: scaled(DIVE_K, {
+    /** the water rises over the plank («Толща воды») */
+    down: 1300,
+    /** the whole dive: rings, bubbles */
+    hold: 1800,
+    /** the water runs off the plank */
+    up: 1000,
+    /** the plank bobs up */
+    rise: 1200,
+    /** the green frame of a ship surfaced */
+    glow: 1200,
+  }),
 } as const;

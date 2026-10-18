@@ -49,7 +49,6 @@ const THINGS: Record<string, () => string> = {
 // [thing, x, y, scale, rotation, opacity, shadow length]
 const TABLE: [string, number, number, number, number, number, number][] = [
   ['wheel', 128, 662, 1.1, 14, .5, 9],
-  ['hourglass', 230, 548, .95, -4, .62, 6],
   ['anchor', 560, 612, 1.15, -14, .45, 8],
   ['spyglass', 242, 29, .98, -5, .62, 5],
   ['dividers', 925, 27, .95, 4, .62, 5],
@@ -76,4 +75,13 @@ export function tableThings(): string {
   defs += shadowFilter('pgshC', 905, 600, 10);
   body += `<g transform="translate(905 600) rotate(-8)" filter="url(#pgshC)" opacity=".82" style="opacity:.82">${compassHero(70)}</g>`;
   return defs + '</defs>' + body;
+}
+
+/**
+ * The hourglass «за Трюмом пиратов» (the tail of package 1): not a part of the picture of the table any more — that picture
+ * is scaled to the window and put the glass under the caption of the Hold at 1280 and 1920 px — but a small picture of its
+ * own beside the tray of kegs (TeamRow, game.css .hold-glass), so it keeps clear of the caption at any width.
+ */
+export function hourglassSvg(): string {
+  return `<svg width="38" height="70" viewBox="-19 -35 38 70" aria-hidden="true"><defs><linearGradient id="hgWood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a6a3a"/><stop offset="1" stop-color="#5a3a1c"/></linearGradient></defs><g transform="rotate(-4)">${THINGS.hourglass().replace(/pgWood/g, 'hgWood')}</g></svg>`;
 }
