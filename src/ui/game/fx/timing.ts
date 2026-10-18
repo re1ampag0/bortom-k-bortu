@@ -60,4 +60,32 @@ export const T = {
     /** a Fire is set: the flame flares up at the head */
     ignite: 900,
   }),
+  /** A ship goes down (fxSink of fx3.js): the last hits, the fire, the powder room goes up, the hull breaks in two and
+   *  sinks, the plank comes back grey with the stamp, the wreck stays (a trace), the captain rows to the ally. */
+  sink: scaled(SINK_K, {
+    /** between the three last hits along the plank */
+    hit: 280,
+    /** the fire takes hold */
+    take: 1000,
+    /** the powder room goes up: the fireball, the shockwaves, the wreckage flying */
+    blast: 600,
+    /** a piece of wreckage flies into the sea */
+    debris: 1100,
+    /** the two halves go down */
+    split: 2600,
+    /** the water closes */
+    settle: 200,
+    /** the plank comes back grey */
+    back: 700,
+    /** the stamp falls */
+    stamp: 380,
+    /** the longboat: it pushes off, rows across, one stroke of the oars */
+    boatIn: 300,
+    boat: 3200,
+    stroke: 640,
+    /** the ally takes the captain aboard: a gold glow of its plank */
+    glow: 1400,
+    /** the end: the boat fades, the table is still a moment */
+    end: 600,
+  }),
 } as const;
