@@ -230,7 +230,8 @@ test.describe('«Подсказки»', () => {
       // A press on the head chooses the target and does not open the ship card.
       await target.locator('.plank-head').click({ position: { x: 8, y: 8 } });
       await expect(target).toHaveClass(/chosen/);
-      await expect(target.locator('.reticle')).toBeVisible();
+      // A5: the wax seal «Под огнём» in the head of the target (in place of the reticle)
+      await expect(page.getByTestId('target-seal-Г')).toBeVisible();
       await expect(page.getByTestId('ship-sheet')).toHaveCount(0);
       const panel = page.getByTestId('volley-panel');
       await expect(panel.locator('.panel-head')).toContainText('по Корпусу «Голландец»');
