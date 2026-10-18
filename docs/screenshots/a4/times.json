@@ -1,42 +1,42 @@
 {
   "turn-fire-1366x660": {
     "scene": "turn",
-    "ms": 4131
+    "ms": 4246
   },
   "turn-draw-1366x660": {
     "scene": "turn",
-    "ms": 6925
+    "ms": 6829
   },
   "card-1366x660": {
     "scene": "card",
-    "ms": 1346
+    "ms": 1332
   },
   "card-hit-1366x660": {
     "scene": "card",
-    "ms": 1260
+    "ms": 1269
   },
   "repair-1366x660": {
     "scene": "repair",
-    "ms": 1661
+    "ms": 1726
   },
   "mark-1366x660": {
     "scene": "mark",
-    "ms": 1156
+    "ms": 1162
   },
   "mark-volley-1366x660": {
     "scene": "mark",
-    "ms": 3479
+    "ms": 3467
   },
   "sink-1366x660": {
     "scene": "sink",
-    "ms": 3393
+    "ms": 3376
   },
   "turn-fire-430x932": {
     "scene": "turn",
-    "ms": 4281
+    "ms": 4239
   },
   "card-430x932": {
     "scene": "card",
-    "ms": 1336
+    "ms": 1335
   }
 }
