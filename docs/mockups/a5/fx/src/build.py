@@ -1,0 +1,15 @@
+# Builds ../prototype.html from template.html + fx3.js + data/*. Run from this folder: python3 build.py
+import json, os
+H = os.path.dirname(os.path.abspath(__file__)); D = os.path.join(H, '..', 'data')
+rd = lambda p: open(p, encoding='utf-8').read()
+t = rd(os.path.join(H, 'template.html'))
+fx3 = rd(os.path.join(H, 'fx3.js')).replace('__BIG__', rd(os.path.join(D, 'bigships.json')))
+sc = json.load(open(os.path.join(D, 'scenes.json'), encoding='utf-8'))
+out = (t.replace('__FONTS__', rd(os.path.join(D, 'fonts.css')))
+        .replace('__KEGS__', rd(os.path.join(D, 'kegs.json')))
+        .replace('__CANNON__', rd(os.path.join(D, 'cannon.json')))
+        .replace('__CELLS2__', rd(os.path.join(D, 'cells2.json')))
+        .replace('/*__FX3__*/', fx3)
+        .replace('__SCENES__', json.dumps(sc, ensure_ascii=False).replace('</', '<\\/')))
+open(os.path.join(H, '..', 'prototype.html'), 'w', encoding='utf-8').write(out)
+print(len(out) // 1024, 'KB')
