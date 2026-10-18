@@ -8,7 +8,7 @@ import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engin
 import type { GameData, Side } from '../../engine/types';
 import { HIDDEN } from '../../engine/view';
 import { RichText } from '../RichText';
-import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type Speed } from '../storage';
+import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type SeaFrame, type Speed } from '../storage';
 import { clearTrace, loadTrace } from './fx/trace';
 import { cardClass, CostBadge, HandCard } from './Hand';
 import { memo } from './memo';
@@ -354,6 +354,7 @@ export function SettingsSheet({
   onNew,
   onDownloadLog,
   onDownloadGame = null,
+  onSeaFrame,
   onClose,
 }: {
   /** null — not shown (a network game: the server moves the bots). */
@@ -379,8 +380,16 @@ export function SettingsSheet({
   onNew?: () => void;
   onDownloadLog?: () => void;
   onDownloadGame?: (() => void) | null;
+  /** The table shows the new frame of the sea at once (the choice is kept with the settings here). */
+  onSeaFrame?: (v: SeaFrame) => void;
   onClose: () => void;
 }) {
+  const [seaFrame, setSeaFrameState] = useState(() => loadSettings().seaFrame);
+  const setSeaFrame = (v: SeaFrame) => {
+    setSeaFrameState(v);
+    storeSettings({ ...loadSettings(), seaFrame: v });
+    onSeaFrame?.(v);
+  };
   // The errors of the animation layer on this device: a player sends a screenshot of them (the show skips a broken clip).
   const [fxErrors, setFxErrors] = useState(loadFxErrors);
   const [fxTrace, setFxTrace] = useState(loadTrace);
@@ -409,6 +418,13 @@ export function SettingsSheet({
         <select value={effects} onChange={(e) => setEffects(e.target.value as 'rich' | 'simple')}>
           <option value="rich">Богатые</option>
           <option value="simple">Простые</option>
+        </select>
+      </label>
+      <label className="row">
+        <span>Рамка моря</span>
+        <select value={seaFrame} onChange={(e) => setSeaFrame(e.target.value as SeaFrame)} data-testid="sea-frame">
+          <option value="brass">латунь</option>
+          <option value="wood">дерево</option>
         </select>
       </label>
       <label className="row check">
