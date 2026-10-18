@@ -587,17 +587,6 @@ button {
 .hand-count svg {
   display: block;
 }
-/* The labels of the animation layer have had this look of the table since A2 (game.css comes after fx.css); kept as it
-   was, with the specificity of a single class, so «.tag.plus», «.tag.good» of fx.css still win. */
-:where(.fx-layer) .tag {
-  background: #fff;
-  color: var(--ink);
-  border-radius: 4px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 1px 6px;
-  letter-spacing: 0.05em;
-}
 /* The medallion of the Legend: a gold coin of 28 px (art/medals.ts), a glint runs over it now and then. */
 .legend-medal,
 .star {
@@ -792,10 +781,12 @@ button.star::before {
   gap: 1px;
   flex-wrap: nowrap;
   overflow: hidden;
+  /* FX-A: an icon that flashes (setTrack: ×1.6 and a glow) may stand out of the row a little */
+  overflow: clip;
+  overflow-clip-margin: 8px;
 }
-/* A cell is its icon (art/cells.ts through --on/--off of the track). The background is !important: the flashes of the
-   animations (setTrack, the Ninth wave) animate «background», which would paint the icon over; the ring (box-shadow)
-   of the flash stays. */
+/* A cell is its icon (art/cells.ts through --on/--off of the track). The background is !important: an animation of
+   «background» would paint the icon over (the flash of FX-A swells and lights the icon instead). */
 .cells i {
   flex: none;
   width: 12px;
@@ -2267,6 +2258,10 @@ button.star::before {
     top: -6px;
     transform-origin: 16px 15px;
   }
+  /* the tail of package 1: the ribbons are short on a phone — the number of the Hull right under the head stays free */
+  .target-seal .tails {
+    scale: 1 0.26;
+  }
   /* The frames of two neighbour targets (8 px apart) do not overlap and stay inside the board. */
   .plank.aimable,
   .plank.chosen {
@@ -2752,16 +2747,6 @@ button.star::before {
   .table-banner-title {
     font-size: 1.6rem;
   }
-}
-/* The banners of the animation layer have had this look of the table since A2 (game.css comes after fx.css); kept as it
-   was, with the specificity of a single class, so «.banner.own», «.banner.small» of fx.css still win. Their place is
-   the clips' (left/top in the layer), not a fixed one. */
-:where(.fx-layer) .banner {
-  padding: 14px 28px;
-  border-radius: 16px;
-  background: rgba(42, 36, 29, 0.92);
-  color: #fffaf0;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
 }
 
 /* A Legend became available: one soft flash (with «Подсказки» only; docs/TZ.md, «Принципы стола», п. 9). */
@@ -3687,35 +3672,6 @@ button.star::before {
   width: 100%;
   min-width: 0;
 }
-.hand-cards {
-  container-type: inline-size;
-}
-/* the overlap only where the cards do not fit side by side: six in a narrow hand, seven and more always */
-@container (max-width: 770px) {
-  .hand-cards:has(> .hcard:nth-child(6)) > .hcard + .hcard {
-    margin-left: -16px;
-  }
-}
-.hand-cards:has(> .hcard:nth-child(7)) > .hcard + .hcard {
-  margin-left: -26px;
-}
-.hand-cards > .hcard {
-  position: relative;
-}
-/* a card under the pointer or chosen comes over its neighbour, whole */
-.hand-cards > .hcard:hover,
-.hand-cards > .hcard:focus-visible,
-.hand-cards > .hcard.chosen {
-  z-index: 2;
-}
-@media (max-width: 700px) {
-  .hand-cards {
-    container-type: normal;
-  }
-  .hand-cards:has(> .hcard:nth-child(7)) > .hcard + .hcard {
-    margin-left: 0;
-  }
-}
 /* not playable now: grey, but not see-through (the things of the table must not show through a card) */
 .hcard.off {
   opacity: 1;
@@ -3742,5 +3698,303 @@ button.star::before {
   .board > .team-row.table-edge {
     position: static;
     width: auto;
+  }
+}
+
+/* ═══════════ V2 — the hand as a fan (A5Table.html; docs/mockups/a5/README.md, «Рука»). Only transform moves: the tilt and
+   the place of a card (--r, --dy of Hand.tsx fanOf) are the separate properties rotate/translate/scale, so the WAAPI
+   «transform» of the clips (the draw of a card, a shake) adds to them. ═══════════ */
+.hand-cards > .hcard {
+  position: relative;
+  transform-origin: 50% 100%;
+  rotate: var(--r, 0deg);
+  translate: 0 var(--dy, 0px);
+  /* the old lift of :hover / .chosen (transform) gives way to translate; transform stays the clips' */
+  transform: none;
+  transition:
+    rotate 0.18s ease-out,
+    translate 0.18s ease-out,
+    scale 0.18s ease-out,
+    box-shadow 0.18s,
+    filter 0.18s;
+}
+/* playable now: a warm glow (.glow of A5Table.html); not playable — grey (.hcard.off) */
+.hand-cards > .hcard:not(.off):not(.back) {
+  box-shadow:
+    0 0 0 2px var(--brass-hi),
+    0 0 16px rgba(255, 196, 120, 0.6),
+    0 6px 12px rgba(0, 0, 0, 0.45);
+}
+.hand-cards > .hcard.chosen {
+  box-shadow:
+    0 0 0 2.5px var(--fire-a5),
+    0 0 18px rgba(233, 180, 76, 0.7),
+    0 6px 12px rgba(0, 0, 0, 0.45);
+}
+@media (min-width: 701px) {
+  /* the laptop: the whole hand fits (Hand.tsx useFanFit gives the overlap the width needs), so it does not scroll and
+     a card that rises is never cut off */
+  .hand-cards {
+    overflow: visible;
+    padding-top: 6px;
+  }
+  .hand-cards > .hcard + .hcard {
+    margin-left: calc(-1 * var(--ov, 0px));
+  }
+  /* the pointer or the keyboard on a card: it straightens, rises and grows; the neighbours step aside */
+  .hand-cards > .hcard:hover,
+  .hand-cards > .hcard:focus-visible {
+    z-index: 3;
+    rotate: 0deg;
+    translate: 0 -26px;
+    scale: 1.12;
+  }
+  .hand-cards > .hcard:has(+ .hcard:hover),
+  .hand-cards > .hcard:has(+ .hcard:focus-visible) {
+    translate: -14px var(--dy, 0px);
+  }
+  .hand-cards > .hcard:hover + .hcard,
+  .hand-cards > .hcard:focus-visible + .hcard {
+    translate: 14px var(--dy, 0px);
+  }
+  .hand-cards > .hcard:has(+ .hcard + .hcard:hover),
+  .hand-cards > .hcard:has(+ .hcard + .hcard:focus-visible) {
+    translate: -6px var(--dy, 0px);
+  }
+  .hand-cards > .hcard:hover + .hcard + .hcard,
+  .hand-cards > .hcard:focus-visible + .hcard + .hcard {
+    translate: 6px var(--dy, 0px);
+  }
+  .hand-cards > .hcard.chosen {
+    z-index: 2;
+  }
+}
+@media (max-width: 700px) {
+  /* the phone: the fan scrolls with the finger and snaps to a card; the edges fade and tilt more (--pr, --pf of
+     usePhoneFan), the card in the middle is straight. Room above the cards for a lifted one (the strip keeps its place:
+     the margin takes the padding back) — the strip itself lets presses through to the tabs under that room. */
+  .hand-cards {
+    scroll-snap-type: x mandatory;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    padding: 34px 34px 6px;
+    margin-top: -30px;
+    scroll-padding: 0 34px;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+  }
+  .hand-cards > * {
+    pointer-events: auto;
+  }
+  .hand-cards > .hcard {
+    scroll-snap-align: center;
+    rotate: var(--pr, 0deg);
+    translate: none;
+    opacity: var(--pf, 1);
+    transition:
+      rotate 0.12s linear,
+      translate 0.18s ease-out,
+      scale 0.18s ease-out,
+      opacity 0.12s linear;
+  }
+  /* a tap lifts the card over the hand (up — the bottom bar with «Ход окончен» stays free); the second tap opens it */
+  .hand-cards > .hcard.lifted {
+    z-index: 3;
+    rotate: 0deg;
+    translate: 0 -14px;
+    scale: 1.15;
+    opacity: 1;
+  }
+  .hand-cards > .hcard.chosen {
+    translate: 0 -6px;
+    opacity: 1;
+  }
+}
+/* prefers-reduced-motion and «простые спецэффекты»: no tilt and no movement — only the frame of the chosen card */
+.fx-simple .hand-cards > .hcard,
+.fx-simple .hand-cards > .hcard:hover,
+.fx-simple .hand-cards > .hcard:focus-visible,
+.fx-simple .hand-cards > .hcard.lifted,
+.fx-simple .hand-cards > .hcard.chosen,
+.fx-simple .hand-cards > .hcard:has(+ .hcard:hover),
+.fx-simple .hand-cards > .hcard:hover + .hcard {
+  rotate: none;
+  translate: none;
+  scale: none;
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hand-cards > .hcard,
+  .hand-cards > .hcard:hover,
+  .hand-cards > .hcard:focus-visible,
+  .hand-cards > .hcard.lifted,
+  .hand-cards > .hcard.chosen,
+  .hand-cards > .hcard:has(+ .hcard:hover),
+  .hand-cards > .hcard:hover + .hcard {
+    rotate: none;
+    translate: none;
+    scale: none;
+    transition: none;
+  }
+}
+
+/* ═══════════ FX-A — the traces of the effects (fx/scars.ts; ANIMATIONS.md §1–2): on the sea over the weather of the round
+   and under the planks, on a ship inside its plank. They take no press. ═══════════ */
+.board > .fx-scars {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  clip-path: inset(calc(var(--sea-t, 0px) + 7px) calc(var(--sea-r, 0px) + 7px) calc(var(--sea-b, 0px) + 7px) calc(var(--sea-l, 0px) + 7px));
+}
+.fx-scars > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.plank-scars {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.plank-scars > * {
+  position: absolute;
+  pointer-events: none;
+}
+/* the soot where a ball struck (pg-hitmark of the prototype) */
+.fx-hitmark {
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(20, 10, 4, 0.75), rgba(60, 26, 8, 0.35) 45%, transparent 70%);
+  mix-blend-mode: multiply;
+}
+/* FX-D: the fire of A5 (fxFire of the prototype): flames, the glow on the plank, and the burn marks that stay a while
+   (a medium trace inside the plank: the charred bottom, scorch marks, a flame and smoke on the picture of the ship) */
+.fx-flame {
+  position: absolute;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  line-height: 0;
+  filter: drop-shadow(0 0 5px rgba(255, 140, 40, 0.55));
+}
+.fx-flame svg {
+  animation: fx-flame 0.35s ease-in-out infinite alternate;
+  transform-origin: 50% 100%;
+}
+@keyframes fx-flame {
+  from {
+    transform: scale(1, 1) skewX(-2deg);
+  }
+  to {
+    transform: scale(1.05, 0.95) skewX(2deg);
+  }
+}
+.fx-layer > .fx-fireglow {
+  border-radius: 6px;
+  background: radial-gradient(ellipse 70% 90% at 50% 100%, rgba(255, 120, 40, 0.5), rgba(255, 80, 20, 0.15) 60%, transparent 80%);
+  mix-blend-mode: screen;
+}
+.fx-burnmarks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.fx-burnmarks > *,
+.plank-scars > .fx-scorch {
+  position: absolute;
+  pointer-events: none;
+}
+.fx-char {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 62%;
+  background: linear-gradient(to bottom, rgba(40, 16, 4, 0), rgba(60, 24, 6, 0.28) 45%, rgba(26, 10, 2, 0.62));
+  mix-blend-mode: multiply;
+}
+.fx-scorch {
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(18, 10, 4, 0.62), rgba(40, 20, 8, 0.3) 45%, transparent 70%);
+  mix-blend-mode: multiply;
+}
+.fx-smolder {
+  width: 0;
+  height: 0;
+}
+.fx-smolder i {
+  position: absolute;
+  left: -12px;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(70, 66, 62, 0.9), rgba(70, 66, 62, 0) 70%);
+  animation: fx-smolder 2.7s ease-out infinite;
+  opacity: 0;
+}
+@keyframes fx-smolder {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(18px, -56px) scale(2.4);
+    opacity: 0;
+  }
+}
+/* «простые спецэффекты» and reduced motion: still flames, no smoke loops */
+.fx-simple .fx-flame svg,
+.fx-simple .fx-smolder i {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-flame svg,
+  .fx-smolder i {
+    animation: none;
+  }
+}
+.fx-layer > .fx-fire-group {
+  width: 0;
+  height: 0;
+}
+/* FX-D: the break of a sinking plank — the two halves (copies of the plank in the layer), the water closing over them */
+.fx-half .fx-sinkwater {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background: linear-gradient(to bottom, rgba(10, 40, 52, 0) 0%, rgba(14, 52, 66, 0.55) 45%, rgba(6, 24, 32, 0.9) 100%);
+  background-size: 100% 220%;
+  border-radius: 6px;
+  opacity: 0;
+}
+.fx-half .fx-breakedge {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 8;
+  overflow: visible;
+}
+/* the hourglass beside the tray of the bottom Hold (the tail of package 1: clear of the caption at any width) */
+.hold-glass {
+  display: none;
+}
+@media (min-width: 701px) {
+  .board > .team-row .hold-glass {
+    display: block;
+    position: absolute;
+    left: 184px;
+    top: 22px;
+    line-height: 0;
+    opacity: 0.62;
+    pointer-events: none;
+    filter: drop-shadow(4px 5px 3px rgba(0, 0, 0, 0.5));
   }
 }

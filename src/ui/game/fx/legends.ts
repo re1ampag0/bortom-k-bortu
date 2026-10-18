@@ -19,10 +19,12 @@ import type { ClipPlayer } from './FxLayer';
 import { flipTo } from './misc';
 import { KIND_BY_TRACK, type JackClip, type LegendClip } from './planFx';
 import {
-  A, at, badgeMark, bubbles, burst, bx, clamp, curve, facingY, flash, fly, footHTML, fxPoint, gapBox, hint, holdEl, isTop, mk, ms, overlayAt, payKegs, plank,
+  A, at, badgeMark, fxSvg, gunFire, hitBlast, bubbles, burst, bx, clamp, curve, facingY, flash, fly, footHTML, fxPoint, gapBox, hint, holdEl, isTop, mk, ms, overlayAt, payKegs, plank,
   projectile, puff, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
 } from './primitives';
 import { ruleTag } from './sea';
+import { scar, seaScars } from './scars';
+import { SMOKE_LIFE } from './timing';
 
 let LG_UID = 0;
 const LG_T = { bars: 120, card: 280, land: 780, seal: 820, title: 900, leave: 1900, effect: 2230 };
@@ -319,19 +321,20 @@ LG['И-Л'] = async (c, ctx) => {
   const FIRE0 = 700, STEP = 120, FLY = 520;
   let lastHit = FIRE0;
   const fired = new Set<{ el: HTMLElement; x: number }>();
+  // FX-D: the galleons fire with the guns of the Volley (×0.6), their smoke lies over the sea a while (a short trace)
+  const svg = fxSvg(ctx), sea = seaScars(ctx), smoke = ctx.rich && sea ? scar(fxSvg(ctx, sea), 'short') : null;
   units.forEach((u, i) => {
     const sp = ships[i % ships.length], t0 = FIRE0 + i * STEP;
     const muzzle = { x: sp.x + (i % 2 ? 12 : -12) * s, y: base - 16 * s };
-    flash(ctx, muzzle.x, muzzle.y, t0, 1.4); puff(ctx, muzzle.x, muzzle.y, t0 + 20); puff(ctx, muzzle.x + 8, muzzle.y - 6, t0 + 120);
-    burst(ctx, 'spark', muzzle.x, muzzle.y, t0, 6, 8, 26, 320, topOwn ? Math.PI / 2 : -Math.PI / 2, Math.PI * 0.8);
-    if (!fired.has(sp)) { fired.add(sp); A(ctx, sp.el, [{ transform: `translate(${sp.x}px,${base}px) scale(${s})` }, { transform: `translate(${sp.x}px,${base + (topOwn ? -5 : 5)}px) scale(${s}) rotate(${topOwn ? -2 : 2}deg)`, offset: 0.25 }, { transform: `translate(${sp.x}px,${base}px) scale(${s})` }], 420, t0, 'ease-out', 'none'); }
     const p1 = fxPoint(ctx, u.ship, u.track, u.idx);
+    gunFire(ctx, svg, i < 6 ? smoke : null, muzzle.x, muzzle.y, Math.atan2(p1.y - muzzle.y, p1.x - muzzle.x), 0.6, t0, { grains: 4, puffs: 5, wads: 1, life: SMOKE_LIFE });
+    if (!fired.has(sp)) { fired.add(sp); A(ctx, sp.el, [{ transform: `translate(${sp.x}px,${base}px) scale(${s})` }, { transform: `translate(${sp.x}px,${base + (topOwn ? -5 : 5)}px) scale(${s}) rotate(${topOwn ? -2 : 2}deg)`, offset: 0.25 }, { transform: `translate(${sp.x}px,${base}px) scale(${s})` }], 420, t0, 'ease-out', 'none'); }
     const ball = projectile(ctx, KIND_BY_TRACK[u.track], false);
     fly(ctx, ball, curve(muzzle, p1, i % 2 ? 0.1 : -0.1), FLY, t0, { lift: 0.35, spin: u.track === 'sails' ? 720 : 0 });
     const th = t0 + FLY;
     at(ctx, th, () => setTrack(ctx, u.ship, u.track, u.v, '#c0392b'));
-    flash(ctx, p1.x, p1.y, th, 1.3); ring(ctx, p1.x, p1.y, th);
-    burst(ctx, u.track === 'sails' ? 'shred' : 'splinter', p1.x, p1.y, th, 10, 16, 44, 650);
+    hitBlast(ctx, svg, p1.x, p1.y, 0.6, th, 520, i > 0);
+    if (u.track === 'sails') burst(ctx, 'shred', p1.x, p1.y, th, 10, 16, 44, 650);
     shake(ctx, plank(ctx, u.ship), th, 3);
     if (i === 2) at(ctx, th, () => shake(ctx, board, 0, 9, 320)); // a strong hit — one shake of the table for the series
     lastHit = th;
@@ -394,14 +397,14 @@ LG['Г-Л'] = async (c, ctx) => {
   });
   at(ctx, SQ + 200, () => shake(ctx, ctx.board, 0, 8, 300));
   damageMarks(ctx, units, last + 80);
-  if (c.souls) soulsFly(ctx, tgt, c.souls, last + 200, true);
+  const soulsEnd = c.souls ? soulsFly(ctx, tgt, c.souls, last + 200, true) : 0;
   // the leave
   const OUT = last + 750;
   tents.forEach((t, q) => A(ctx, t.el, [t.pose(-t.side * t.curl, 1), t.pose(t.side * 35, 0.1, 0)], 480, OUT + q * 60, 'cubic-bezier(.5,0,.8,.4)', 'forwards'));
   for (let q = 0; q < 3; q++) splash(ctx, tb.x + tb.w * (0.2 + q * 0.3), edge + (top ? 10 : -10), OUT + 200 + q * 90);
   A(ctx, eye, [{ opacity: 1, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(1)` }, { opacity: 0, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(.04)` }], 260, OUT + 100, 'ease-in', 'forwards');
   A(ctx, deep, [{ opacity: 1 }, { opacity: 0 }], 500, OUT + 250, 'ease-out', 'forwards');
-  await wait(ctx, OUT + 800);
+  await wait(ctx, Math.max(OUT + 800, soulsEnd + 100));
   // game: the reference draws new planks after a clip; here the node stays, so the frame of the hit goes by hand
   tp.classList.remove('hitframe');
 };

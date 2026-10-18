@@ -1,0 +1,137 @@
+// FX-D: the durations of the A5 clips in one table (ms at the normal speed; the queue multiplies them by its speed —
+// «Быстрее», the catch-up ×2 — and «Пауза» / «До конца хода» stop or end them, as for every clip). The numbers are the
+// prototype's (docs/mockups/a5/fx/src/fx3.js, template.html; ANIMATIONS.md §3.6–3.9, the user's call: as long as there).
+// Each clip has its own factor: to make a clip shorter, change its K — every stage of the clip is counted from these
+// numbers, the choreography stays. The traces (smoke, wreckage) live by their own clock (scars.ts), not by K.
+
+export const VOLLEY_K = 1;
+export const FIRE_K = 1;
+export const SINK_K = 1;
+export const SWAP_K = 1;
+export const REPAIR_K = 1;
+export const SOUL_K = 1;
+export const DIVE_K = 1;
+
+const scaled = <T extends Record<string, number>>(k: number, o: T): T => Object.fromEntries(Object.entries(o).map(([n, v]) => [n, v * k])) as T;
+
+/** How long the smoke of a shot drifts (a trace: not scaled by VOLLEY_K). */
+export const SMOKE_LIFE = 5600;
+
+export const T = {
+  /** A shot of the Volley (the volley() of template.html): the fuses, the guns one after another, the balls, the hits. */
+  volley: scaled(VOLLEY_K, {
+    /** the fuses spit sparks before the first gun */
+    fuse: 420,
+    /** between two guns of one broadside */
+    gunStep: 150,
+    /** the flash of a gun (the cone of fire) */
+    flash: 420,
+    /** the flight of a ball (with its lift); a ball that hits flies a little longer */
+    fly: 700,
+    flyHit: 820,
+    /** a hit: the fireball and the shockwave */
+    blast: 520,
+    /** a board of the Hull falls off into the sea */
+    fall: 1000,
+    /** a spout of water of a miss */
+    splash: 1700,
+    /** after the last ball: the smoke rolls, the marks stay a while */
+    linger: 1500,
+    /** the plate and the frames fade */
+    fade: 450,
+  }),
+  /** A Fire burns the Hull at the start of a turn (fxFire of fx3.js): the fire runs along the plank, the boards of the
+   *  Hull glow and char one by one, the flames die down; a Fire set by a shot or a card flares up for `ignite`. */
+  fire: scaled(FIRE_K, {
+    /** the fire runs along the plank before the Hull chars */
+    spread: 1200,
+    /** between two spots of fire over the plank */
+    spot: 110,
+    /** a board of the Hull glows red, chars black */
+    cell: 900,
+    /** between two boards */
+    cellStep: 450,
+    /** the fire holds after the last board */
+    hold: 1300,
+    /** the flames die down */
+    out: 520,
+    /** the glow of the fire on the plank */
+    glow: 3600,
+    /** a Fire is set: the flame flares up at the head */
+    ignite: 900,
+  }),
+  /** A ship goes down (fxSink of fx3.js): the last hits, the fire, the powder room goes up, the hull breaks in two and
+   *  sinks, the plank comes back grey with the stamp, the wreck stays (a trace), the captain rows to the ally. */
+  sink: scaled(SINK_K, {
+    /** between the three last hits along the plank */
+    hit: 280,
+    /** the fire takes hold */
+    take: 1000,
+    /** the powder room goes up: the fireball, the shockwaves, the wreckage flying */
+    blast: 600,
+    /** a piece of wreckage flies into the sea */
+    debris: 1100,
+    /** the two halves go down */
+    split: 2600,
+    /** the water closes */
+    settle: 200,
+    /** the plank comes back grey */
+    back: 700,
+    /** the stamp falls */
+    stamp: 380,
+    /** the longboat: it pushes off, rows across, one stroke of the oars */
+    boatIn: 300,
+    boat: 3200,
+    stroke: 640,
+    /** the ally takes the captain aboard: a gold glow of its plank */
+    glow: 1400,
+    /** the end: the boat fades, the table is still a moment */
+    end: 600,
+  }),
+  /** A change of places (fxSwap of fx3.js): the course is plotted in ink with a compass stamp, the ships lift and sail
+   *  along it leaving wakes, settle with a bob and rings; the course fades. */
+  swap: scaled(SWAP_K, {
+    /** a course drawn with the pen */
+    course: 700,
+    /** the compass stamp falls on it */
+    stamp: 300,
+    /** the ships start when the course is plotted */
+    plot: 1200,
+    /** they sail */
+    sail: 1700,
+    /** they settle: a bob, rings */
+    settle: 700,
+    /** the course fades */
+    fade: 900,
+  }),
+  /** A repair (the «repair» branch of runFx, template.html): for each board a new one drops in and the hammer nails it. */
+  repair: scaled(REPAIR_K, {
+    /** the green frame of the mended ship */
+    aura: 1500,
+    /** a new board drops into its place */
+    drop: 300,
+    /** one blow of the hammer (two blows a board) */
+    strike: 300,
+    /** a board after another */
+    unit: 1050,
+  }),
+  /** A soul (the «souls» branch of runFx): a green wisp with a tail leaves the sailor, curls over the sea, enters the skull. */
+  soul: scaled(SOUL_K, {
+    fly: 1700,
+    /** the skull takes it in: a ring, sparks, a glow */
+    arrive: 900,
+  }),
+  /** Under the water and up (the «dive» / «surface» branches of runFx). */
+  dive: scaled(DIVE_K, {
+    /** the water rises over the plank («Толща воды») */
+    down: 1300,
+    /** the whole dive: rings, bubbles */
+    hold: 1800,
+    /** the water runs off the plank */
+    up: 1000,
+    /** the plank bobs up */
+    rise: 1200,
+    /** the green frame of a ship surfaced */
+    glow: 1200,
+  }),
+} as const;

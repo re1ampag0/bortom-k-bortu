@@ -37,6 +37,30 @@ test.describe('the Volley on the table through ?fxScene (1366×660)', () => {
     });
   }
 
+  // FX-D: the A5 broadside (gunFire, ballFly, hitBlast, missSplash) keeps to the budget of the layer: at most ~200
+  // animations at once (TASKS.md, «Как переносить из прототипа», 5), in the heaviest scene — two broadsides.
+  test('both: the A5 shots keep to the budget of the layer, no error', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await open(page, 'both');
+    await page.evaluate(() => {
+      const w = window as unknown as { __peak: number };
+      w.__peak = 0;
+      const tick = () => {
+        const run = (q: string) => document.querySelector(q)?.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length ?? 0;
+        const n = run('.fx-layer') + run('.fx-scars');
+        w.__peak = Math.max(w.__peak, n);
+        if (!document.body.dataset.fxDone) requestAnimationFrame(tick);
+      };
+      tick();
+    });
+    await expectResult(page, 'both');
+    const peak = await page.evaluate(() => (window as unknown as { __peak: number }).__peak);
+    expect(peak).toBeGreaterThan(20);
+    expect(peak).toBeLessThanOrEqual(210);
+    expect(errors).toEqual([]);
+  });
+
   test('a press on the table shows the result at once', async ({ page }) => {
     await open(page, 'storm');
     await playing(page);
@@ -63,7 +87,10 @@ test.describe('a bot match (1366×660)', () => {
       const last = board.lastElementChild!;
       return { last: last.className, before: last.previousElementSibling?.className, gap: !!board.querySelector('[data-fx-gap]'), hand: !!board.querySelector('[data-fx-hand]'), events: getComputedStyle(last).pointerEvents };
     });
-    expect(dom).toEqual({ last: 'fx-layer', before: 'fx-weather', gap: true, hand: true, events: 'none' });
+    // FX-A: the traces of the effects (.fx-scars) lie between the weather and the layer (ANIMATIONS.md §1)
+    expect(dom).toEqual({ last: 'fx-layer', before: 'fx-scars', gap: true, hand: true, events: 'none' });
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector('.board > .fx-scars')!.previousElementSibling!).zIndex + ' ' + document.querySelector('.board > .fx-scars')!.previousElementSibling!.className)).toBe('1 fx-weather');
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector('.board > .fx-scars')!).pointerEvents)).toBe('none');
     await expect(page.locator('.fx-layer .plate')).toBeVisible({ timeout: 60_000 });
     expect(errors).toEqual([]);
   });

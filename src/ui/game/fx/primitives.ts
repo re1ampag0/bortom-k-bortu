@@ -11,6 +11,9 @@ import { HIDDEN } from '../../../engine/view';
 import { cardClass } from '../Hand';
 import type { BallKind } from './planFx';
 import type { Display } from './display';
+import { scar } from './scars';
+import { FLAME } from '../art/fire';
+import { T } from './timing';
 
 /** Everything an effect needs: the reference's globals, for one run of the queue. */
 export interface FxCtx {
@@ -136,7 +139,12 @@ export function setTrack(ctx: FxCtx, code: string, t: Track, v: number, flashCol
   [...cells.children].forEach((c, i) => {
     const on = i < v, was = c.classList.contains('on');
     c.classList.toggle('on', on);
-    if (flashColor && on !== was) A(ctx, c, [{ background: flashColor, boxShadow: `0 0 0 2px ${flashColor}55` }, { background: on ? '#2a241d' : '#e2d8c7', boxShadow: 'none' }], 900, 0, 'linear', 'none');
+    // FX-A: the icon itself flashes (swapIcon of fx3.js): it swells and glows in the colour, then settles; a mended
+    // one glows longer and golden. (The background of the A5 icons is the picture: a coloured background is gone.)
+    if (flashColor && on !== was) {
+      if (on) A(ctx, c, [{ transform: 'scale(1.6)', filter: `brightness(1.8) drop-shadow(0 0 5px #ffd27a) drop-shadow(0 0 3px ${flashColor})` }, { transform: 'scale(1)', filter: 'none' }], 1100, 0, 'ease-out', 'none');
+      else A(ctx, c, [{ transform: 'scale(1.6)', filter: `brightness(1.6) drop-shadow(0 0 4px ${flashColor})` }, { transform: 'scale(1)', filter: 'none' }], 420, 0, 'ease-out', 'none');
+    }
   });
   const bar = tr.querySelector<HTMLElement>('.bar i');
   if (bar) bar.style.width = `${(100 * v) / max}%`;
@@ -292,11 +300,23 @@ export function holdTag(ctx: FxCtx, kg: Element, text: string, delay: number, cl
   // A5 (V1c): the caption «Трюм … · N из 8» stands over the tray of kegs — the mark lies on the caption (tag keeps it inside)
   if (visible(label) && bx(ctx, label).b <= kb.y + 2) {
     const lb = bx(ctx, label);
-    return tag(ctx, lb.cx, lb.cy, text, delay, cls, dur);
+    return clearOfRound(ctx, tag(ctx, lb.cx, lb.cy, text, delay, cls, dur));
   }
   const t = tag(ctx, label ? bx(ctx, label).cx : kb.x - 30, kb.cy, text, delay, cls, dur);
   const w = t.offsetWidth;
   t.style.left = Math.max(w / 2, Math.min(parseFloat(t.style.left), kb.x - 4 - w / 2)) + 'px';
+  return clearOfRound(ctx, t);
+}
+/**
+ * The tail of package 1: a mark of the top Hold never lies on the brass plate «Пираты · раунд» (on a phone the Hold is a
+ * small keg right by it) — it moves to the right of the plate. `.tag` is centred on its left/top.
+ */
+function clearOfRound(ctx: FxCtx, t: HTMLElement): HTMLElement {
+  const plate = ctx.board.querySelector('.status-turn');
+  if (!visible(plate)) return t;
+  const pb = bx(ctx, plate), w = t.offsetWidth, h = t.offsetHeight, x = parseFloat(t.style.left), y = parseFloat(t.style.top);
+  const meets = y - h / 2 < pb.b && y + h / 2 > pb.y && x - w / 2 < pb.r + 4 && x + w / 2 > pb.x;
+  if (meets) t.style.left = Math.min(ctx.board.clientWidth - 8 - w / 2, pb.r + 6 + w / 2) + 'px';
   return t;
 }
 /** Kegs fly into the Hold. */
@@ -365,13 +385,22 @@ export function moveTo(ctx: FxCtx, el: FlyCard, to: CardPos, d = 400): void {
   A(ctx, el, [{ transform: `translate(${f.x}px,${f.y}px) rotate(${f.r || 0}deg) scale(${f.s || 0.72})` }, { transform: `translate(${to.x}px,${to.y}px) rotate(${to.r || 0}deg) scale(${to.s || 0.72})` }], d, 0, 'cubic-bezier(.3,0,.2,1)', 'forwards');
   el._pos = to;
 }
+/**
+ * V2: how a card lies in the fan of the hand — its unturned top left corner, its tilt and its scale — so a flying copy
+ * starts (or lands) exactly as the card lies: the centre is the centre of its box, the size its own (offsetWidth/Height).
+ */
+export function handCardPos(ctx: FxCtx, el: HTMLElement): CardPos {
+  const b = bx(ctx, el), cs = getComputedStyle(el);
+  const r = parseFloat(cs.rotate) || 0, s = parseFloat(cs.scale) || 1;
+  return { x: b.cx - el.offsetWidth / 2, y: b.cy - el.offsetHeight / 2, r, s };
+}
 /** Where a card flies from: an own one — from the hand (the card in the hand hides), another's — from beyond the edge over its ship. */
 export function cardOrigin(ctx: FxCtx, code: string, ship: string): CardPos {
   const h = handCardEl(ctx, code);
   if (h && sideOf(ctx, ship) === ctx.bottom) {
-    const b = bx(ctx, h);
+    const pos = handCardPos(ctx, h);
     h.style.visibility = 'hidden';
-    return { x: b.x, y: b.y, s: 1 };
+    return pos;
   }
   // game: the hand is the real one — an own card just played is out of it already: it flies from the hand row.
   const row = ctx.board.querySelector('[data-fx-hand] .hand-cards');
@@ -428,18 +457,343 @@ function markAt(ctx: FxCtx, blink: Element, right: number, cy: number, text: str
   return m;
 }
 /**
- * Souls: wisps from the enemy's Crew into the Souls of «Голландец» (play-volley.js; the card and the Souls clips use it
- * too). `mark` (L1, the rule of S1): a short mark «+N» at the badge instead of the label over the plank.
+ * Souls: a soul leaves the sailor of the enemy's Crew as a green wisp with a tail of sparks, curls over the sea and goes
+ * into the skull of «Голландец»: a ring, sparks, the skull glows (the «souls» branch of runFx, template.html; T.soul). The
+ * card and the Souls clips use it too. `mark` (L1, the rule of S1): a short mark «+N» at the badge instead of the label
+ * over the plank. Gives the time it is over (the callers wait for it: the clip must not end with a soul in the air).
  */
-export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number, mark = false) {
+export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number, mark = false): number {
   const keeper = ctx.data.ships.map((s) => s.code).find((x) => shipData(ctx.data, x).souls != null && !ctx.display.ships[x].sunk);
-  if (!keeper) return;
-  const badge = plank(ctx, keeper).querySelector('[data-fx-souls]');
+  if (!keeper) return delay;
+  const badge = plank(ctx, keeper).querySelector<HTMLElement>('[data-fx-souls]');
   const to = badge && visible(badge) ? (() => { const b = bx(ctx, badge); return { x: b.cx, y: b.cy }; })() : (() => { const b = bx(ctx, plank(ctx, keeper)); return { x: b.r - 30, y: b.y + 30 }; })();
-  const from = fxPoint(ctx, fromShip, 'crew', 0);
-  for (let k = 0; k < n; k++) wisp(ctx, from, to, delay + k * 160);
-  setTimeout(() => { if (badge && ctx.run === ctx.live()) { A(ctx, badge, [{ transform: 'scale(1.3)', boxShadow: '0 0 12px #6fd3b4' }, { transform: 'scale(1)', boxShadow: 'none' }], 500, 0, 'ease-out', 'none'); } }, ms(ctx, delay + 800));
-  if (mark) { if (badge && visible(badge)) badgeMark(ctx, badge, `+${n}`, delay + 700, true); }
-  else tag(ctx, to.x, to.y - 16, `+${n} ${n === 1 ? 'Душа' : 'Души'}`, delay + 700, 'good', 1200);
+  const from = fxPoint(ctx, fromShip, 'crew', 0), F = T.soul, svg = fxSvg(ctx);
+  const cells = trackEl(ctx, fromShip, 'crew').querySelector('.cells'), cell = visible(cells) ? cells.children[Math.max(0, shownTrack(ctx, fromShip, 'crew') - 1)] : null;
+  if (cell) A(ctx, cell, [{ filter: 'none' }, { filter: 'drop-shadow(0 0 6px #7ff0b0) brightness(1.5)', offset: 0.3 }, { filter: 'none' }], 900, delay, 'ease-out', 'none');
+  const swing = Math.min(160, ctx.board.clientWidth * 0.14) * (from.x < to.x ? 1 : -1);
+  const N = 40, path = qpts(from.x, from.y, (from.x + to.x) / 2 - swing, Math.min(from.y, to.y) + 60, to.x, to.y, N);
+  for (let k = 0; k < n; k++) {
+    const d0 = delay + k * 200;
+    const glow = sv(svg, '<g><circle r="18" fill="#7ff0b0" opacity=".22"/><circle r="9" fill="#a8ffcc" opacity=".6"/><circle r="4.4" fill="#effff4"/><circle cx="-3" cy="-2" r="1.2" fill="#0f3a24"/><circle cx="3" cy="-2" r="1.2" fill="#0f3a24"/></g>');
+    A(ctx, glow, path.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: i === N ? 0 : 1 })), F.fly, d0, 'ease-in-out');
+    for (let q = 1, m = room(ctx, 8); q <= m; q++) {
+      const t = sv(svg, `<circle r="${R1(4 - q * 0.35)}" fill="#a8ffcc"/>`);
+      A(ctx, t, path.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: i === N ? 0 : R1(0.8 - q * 0.08) })), F.fly, d0 + q * 45, 'ease-in-out');
+    }
+  }
+  const t1 = delay + (n - 1) * 200 + F.fly;
+  ringSvg(ctx, svg, to.x, to.y, 3, 30, '#7ff0b0', 700, t1, 2.4);
+  sparksSvg(ctx, svg, to.x, to.y, 14, t1, ['#effff4', '#a8ffcc', '#7ff0b0']);
+  if (badge && visible(badge)) A(ctx, badge, [{ transform: 'scale(1)', filter: 'none' }, { transform: 'scale(1.5)', filter: 'drop-shadow(0 0 8px #7ff0b0) brightness(1.4)', offset: 0.4 }, { transform: 'scale(1)', filter: 'none' }], F.arrive, t1, 'ease-out', 'none');
+  if (mark) { if (badge && visible(badge)) badgeMark(ctx, badge, `+${n}`, t1 - 100, true); }
+  else tag(ctx, to.x, to.y - 16, `+${n} ${n === 1 ? 'Душа' : 'Души'}`, t1 - 100, 'good', 1200);
+  return t1 + F.arrive;
 }
 export const FLAME_SVG = '<svg width="18" height="22" viewBox="0 0 14 17"><path d="M7 1 C9 5 13 7 12 11 C11.5 14.5 9 16 7 16 C4 16 2 14 2 11 C2 8.5 4 7.5 4.5 5 C5.5 7 6.5 7 7 6 C7.5 4.5 7 3 7 1Z" fill="#F2913D" stroke="#B23A2E" stroke-width="1"/><path d="M7 9 C8 10.5 9.5 11.5 9 13 C8.6 14.4 7.6 15 7 15 C5.8 15 5 14 5 12.8 C5 11.6 6.2 11 7 9Z" fill="#FFE08A"/></svg>';
+
+/* ——— FX-D: the shot of A5 (ANIMATIONS.md §3.9; gunFire, smokeJet, ballFly, hitBlast, missSplash, waterColumn of
+   docs/mockups/a5/fx/src/fx3.js and template.html). The pictures and the timings are the prototype's; what changed: they
+   draw into an svg of the layer (the coordinates of the board), every time goes through A/at (the speed of the show,
+   «Пауза», «До конца хода»), the particles are counted against the budget of the layer (room), «простые спецэффекты» draw
+   no particles and no smoke, a phone (≤ 700 px) gets no filters and fewer particles. ——— */
+const NS = 'http://www.w3.org/2000/svg';
+export const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+const R1 = (v: number) => Math.round(v * 10) / 10;
+/** A phone: no feTurbulence, no blur, no SMIL loops (the rule of TASKS.md «Как переносить»). */
+export const isPhone = (ctx: FxCtx) => ctx.board.clientWidth <= 700;
+/** The filters (feTurbulence, blur) are drawn: «богатые» and not a phone. */
+export const filters = (ctx: FxCtx) => ctx.rich && !isPhone(ctx);
+
+/** At most so many animations at once in the layer and the traces of the sea (TASKS.md: ~200; a margin for the ones
+ *  every effect draws whatever the budget — a flash, a ball). */
+export const FX_BUDGET = 190;
+/** How many of `want` particles still fit into the budget (none with «простые спецэффекты»). */
+export function room(ctx: FxCtx, want: number): number {
+  if (!ctx.rich) return 0;
+  const scars = ctx.board.querySelector('.fx-scars');
+  // the animations that run (or wait for their delay): a finished one only holds its last frame
+  const running = (el: Element) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length;
+  const busy = running(ctx.layer) + (scars ? running(scars) : 0);
+  const n = Math.max(0, Math.min(want, FX_BUDGET - busy));
+  return isPhone(ctx) ? Math.ceil(n / 2) : n;
+}
+
+const DEFS = (rich: boolean) => `<defs>
+<radialGradient id="fxSmk" cx=".42" cy=".38" r=".62"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#e9e5dc" stop-opacity=".92"/><stop offset=".8" stop-color="#c8c1b4" stop-opacity=".55"/><stop offset="1" stop-color="#a59d90" stop-opacity="0"/></radialGradient>
+<radialGradient id="fxSmkD" cx=".42" cy=".38" r=".62"><stop offset="0" stop-color="#8a847a"/><stop offset=".55" stop-color="#5e5850" stop-opacity=".85"/><stop offset="1" stop-color="#36322c" stop-opacity="0"/></radialGradient>
+<radialGradient id="fxFire" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffffff"/><stop offset=".25" stop-color="#fff2b0"/><stop offset=".55" stop-color="#ffb347"/><stop offset=".8" stop-color="#e2561e" stop-opacity=".7"/><stop offset="1" stop-color="#8a2a0c" stop-opacity="0"/></radialGradient>
+<linearGradient id="fxCone" x1="0" x2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".25" stop-color="#fff0a8"/><stop offset=".6" stop-color="#ffa53c" stop-opacity=".85"/><stop offset="1" stop-color="#d9481a" stop-opacity="0"/></linearGradient>
+<radialGradient id="fxGlow"><stop offset="0" stop-color="#ffc66a" stop-opacity=".6"/><stop offset="1" stop-color="#ffc66a" stop-opacity="0"/></radialGradient>
+${rich ? '<filter id="fxSmkF" x="-40%" y="-40%" width="180%" height="180%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="9"/><feDisplacementMap in="SourceGraphic" scale="22" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation="2.8"/></filter>' : ''}</defs>`;
+
+/** An svg over the whole board (its coordinates) in the layer — or in another host (the traces of the sea, .fx-scars). */
+export function fxSvg(ctx: FxCtx, host: Element = ctx.layer): SVGSVGElement {
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('width', String(ctx.board.clientWidth));
+  s.setAttribute('height', String(ctx.board.clientHeight));
+  s.setAttribute('class', 'fx-svg');
+  s.setAttribute('aria-hidden', 'true');
+  s.style.cssText = 'position:absolute;left:0;top:0;overflow:visible;pointer-events:none;opacity:1';
+  s.innerHTML = DEFS(filters(ctx));
+  host.appendChild(s);
+  return s;
+}
+/** Adds svg markup to a parent and gives its first element. */
+export function sv(parent: Element, markup: string): SVGElement {
+  const g = document.createElementNS(NS, 'g');
+  g.innerHTML = markup;
+  parent.appendChild(g);
+  return (g.firstElementChild as SVGElement | null) ?? g;
+}
+/** The points of a quadratic curve (qpts of the prototype). */
+export function qpts(x0: number, y0: number, cx: number, cy: number, x1: number, y1: number, n = 24): Pt[] {
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const t = i / n, u = 1 - t;
+    return { x: u * u * x0 + 2 * u * t * cx + t * t * x1, y: u * u * y0 + 2 * u * t * cy + t * t * y1 };
+  });
+}
+
+/** A ring on the water that spreads and fades. */
+export function ringSvg(ctx: FxCtx, svg: Element, x: number, y: number, r0: number, r1: number, color = '#eef6f8', d = 700, delay = 0, w = 2): SVGElement {
+  const g = sv(svg, `<g><ellipse cx="0" cy="0" rx="${R1(r1)}" ry="${R1(r1 * 0.4)}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/></g>`);
+  A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d, delay, 'ease-out');
+  return g;
+}
+export function sparksSvg(ctx: FxCtx, svg: Element, x: number, y: number, n = 12, delay = 0, colors = ['#fff3c4', '#ffd27a', '#ff9a3c']): void {
+  for (let i = 0, m = room(ctx, n); i < m; i++) {
+    const a = rnd(0, Math.PI * 2), r = rnd(14, 38);
+    const c = sv(svg, `<circle r="${R1(rnd(1, 2.2))}" fill="${colors[i % colors.length]}"/>`);
+    A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * r)}px,${R1(y + Math.sin(a) * r + 10)}px)`, opacity: 0 }], rnd(380, 700), delay, 'cubic-bezier(.2,.7,.4,1)');
+  }
+}
+export function splintersSvg(ctx: FxCtx, svg: Element, x: number, y: number, n = 8, delay = 0): void {
+  for (let i = 0, m = room(ctx, n); i < m; i++) {
+    const a = rnd(-Math.PI, 0), r = rnd(18, 46), rot = rnd(-400, 400);
+    const c = sv(svg, `<rect x="-3.4" y="-1.1" width="${R1(rnd(4, 8))}" height="2.2" rx=".6" fill="${i % 2 ? '#a8703a' : '#7a4f24'}" stroke="#3a2412" stroke-width=".4"/>`);
+    A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * r)}px,${R1(y + Math.sin(a) * r)}px) rotate(${R1(rot * 0.5)}deg)`, opacity: 1, offset: 0.4 }, { transform: `translate(${R1(x + Math.cos(a) * r * 1.3)}px,${R1(y + 60)}px) rotate(${R1(rot)}deg)`, opacity: 0 }], rnd(800, 1200), delay, 'cubic-bezier(.3,.1,.7,1)');
+  }
+}
+
+/** A jet of powder smoke: puffs fly out along the shot, slow down, grow and drift downwind (smokeJet). */
+export function smokeJet(ctx: FxCtx, svg: Element, x: number, y: number, ang: number, k = 1, n = 9, life = 5600, delay = 0, darkAll = false): void {
+  const m = room(ctx, n);
+  if (!m) return;
+  const wind = [26, -10], host = sv(svg, '<g/>');
+  if (filters(ctx)) host.setAttribute('filter', 'url(#fxSmkF)');
+  for (let i = 0; i < m; i++) {
+    const t = i / m, dist = (18 + t * 70) * k, a = ang + rnd(-0.35, 0.35), r0 = (5 + t * 4) * k, r1 = (16 + t * 22 + rnd(0, 10)) * k;
+    const ex = x + Math.cos(a) * dist, ey = y + Math.sin(a) * dist, dark = darkAll ? i % 3 !== 2 : i % 4 === 3;
+    const c = sv(host, `<circle r="${R1(r1)}" fill="url(#${dark ? 'fxSmkD' : 'fxSmk'})"/>`);
+    A(ctx, c, [
+      { transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 0 },
+      { transform: `translate(${R1(x + (ex - x) * 0.7)}px,${R1(y + (ey - y) * 0.7)}px) scale(.7)`, opacity: dark ? 0.5 : 0.85, offset: 0.04 },
+      { transform: `translate(${R1(ex)}px,${R1(ey)}px) scale(1)`, opacity: dark ? 0.5 : 0.9, offset: 0.14 },
+      { transform: `translate(${R1(ex + wind[0] * 0.5 * k)}px,${R1(ey + wind[1] * 0.5 * k)}px) scale(1.25)`, opacity: dark ? 0.35 : 0.7, offset: 0.5 },
+      { transform: `translate(${R1(ex + wind[0] * 1.6 * k)}px,${R1(ey + wind[1] * 1.6 * k)}px) scale(1.7)`, opacity: 0 },
+    ], life * rnd(0.8, 1.15), delay + 90 + i * 18, 'cubic-bezier(.1,.8,.3,1)');
+  }
+}
+
+/**
+ * The flash of a gun: the light on the sea, a cone of fire with a white core and side tongues, a shockwave, burning grains,
+ * a jet of powder smoke (into `smoke` — a trace of the sea, it outlives the clip), the ripple under the muzzle, scraps of
+ * wadding; a beat later a second, smaller puff. `ang` — the direction of the shot (radians); `flash` — its length.
+ */
+export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: number, y: number, ang: number, k = 1, delay = 0, opt: { grains?: number; puffs?: number; wads?: number; life?: number; flash?: number } = {}): void {
+  const deg = (ang * 180) / Math.PI, K = (n: number) => R1(n * k), fl = opt.flash ?? 420;
+  const glow = sv(svg, `<circle r="${R1(90 * k)}" fill="url(#fxGlow)"/>`);
+  A(ctx, glow, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2)`, opacity: 0 }], fl * 1.25, delay);
+  const cone = sv(svg, `<g class="gun-fire"><ellipse cx="${K(44)}" cy="0" rx="${K(60)}" ry="${K(26)}" fill="url(#fxGlow)"/>
+<path d="M0 -${K(7)} C${K(20)} -${K(26)} ${K(62)} -${K(20)} ${K(92)} 0 C${K(62)} ${K(20)} ${K(20)} ${K(26)} 0 ${K(7)} Z" fill="url(#fxCone)"/>
+<path d="M0 -${K(4)} C${K(16)} -${K(12)} ${K(40)} -${K(8)} ${K(60)} 0 C${K(40)} ${K(8)} ${K(16)} ${K(12)} 0 ${K(4)} Z" fill="#fff6d0"/>
+<path d="M2 0 L${K(22)} -${K(26)} L${K(16)} -${K(7)} Z M2 0 L${K(22)} ${K(26)} L${K(16)} ${K(7)} Z M2 0 L-${K(8)} -${K(14)} L${K(4)} -${K(4)} Z M2 0 L-${K(8)} ${K(14)} L${K(4)} ${K(4)} Z" fill="#ffc35a"/>
+<circle r="${K(22)}" fill="url(#fxFire)"/><circle r="${K(8)}" fill="#fff"/></g>`);
+  const at0 = `translate(${R1(x)}px,${R1(y)}px) rotate(${R1(deg)}deg)`;
+  A(ctx, cone, [{ transform: `${at0} scale(.15,.4)`, opacity: 1 }, { transform: `${at0} scale(1.15,1)`, opacity: 1, offset: 0.22 }, { transform: `${at0} scale(1.3,.7)`, opacity: 0.6, offset: 0.5 }, { transform: `${at0} scale(1.4,.3)`, opacity: 0 }], fl, delay, 'cubic-bezier(.1,.9,.3,1)');
+  const sw = sv(svg, `<circle r="${R1(60 * k)}" fill="none" stroke="#fff6e0" stroke-width="${R1(2.4 * k)}"/>`);
+  A(ctx, sw, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.05)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], fl * 0.86, delay, 'cubic-bezier(.1,.8,.3,1)');
+  for (let i = 0, m = room(ctx, opt.grains ?? 9); i < m; i++) {
+    const a = ang + rnd(-0.5, 0.5), v = rnd(30, 80) * k;
+    const g = sv(svg, `<circle r="${R1(rnd(0.8, 1.8) * k)}" fill="${['#fff3c4', '#ffd27a', '#ff9a3c'][i % 3]}"/>`);
+    A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * v * 0.6)}px,${R1(y + Math.sin(a) * v * 0.6)}px)`, opacity: 1, offset: 0.5 }, { transform: `translate(${R1(x + Math.cos(a) * v)}px,${R1(y + Math.sin(a) * v + 14 * k)}px)`, opacity: 0 }], rnd(400, 700), delay, 'ease-out');
+  }
+  if (smoke) {
+    smokeJet(ctx, smoke, x, y, ang, k, opt.puffs ?? 9, opt.life ?? 5600, delay);
+    smokeJet(ctx, smoke, x, y, ang, k * 0.6, 3, (opt.life ?? 5600) * 0.8, delay + 260);
+  }
+  const rp = sv(svg, `<ellipse rx="${R1(40 * k)}" ry="${R1(12 * k)}" fill="none" stroke="#eef6f8" stroke-width="${R1(1.6 * k)}"/>`);
+  A(ctx, rp, [{ transform: `translate(${R1(x)}px,${R1(y + 6 * k)}px) scale(.1)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y + 6 * k)}px) scale(1)`, opacity: 0 }], 700, delay + 40, 'cubic-bezier(.1,.8,.3,1)');
+  for (let i = 0, m = room(ctx, opt.wads ?? 4); i < m; i++) {
+    const a = ang + rnd(-0.4, 0.4), v = rnd(24, 60) * k;
+    const wd = sv(svg, '<path d="M-1.4 -1 L1.6 -.6 L1 1.2 L-1.2 .8 Z" fill="#ffb347" stroke="#7a2a0c" stroke-width=".3"/>');
+    A(ctx, wd, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg)`, opacity: 1, fill: '#ffe08a' }, { transform: `translate(${R1(x + Math.cos(a) * v)}px,${R1(y + Math.sin(a) * v)}px) rotate(${R1(rnd(-200, 200))}deg)`, opacity: 1, fill: '#ff8a2a', offset: 0.4 }, { transform: `translate(${R1(x + Math.cos(a) * v * 1.2 + rnd(-10, 10))}px,${R1(y + Math.sin(a) * v + 26 * k)}px) rotate(${R1(rnd(-500, 500))}deg)`, opacity: 0, fill: '#3a2a1c' }], rnd(1400, 2200), delay + 60, 'ease-out');
+  }
+}
+
+/** The fuses: sparks spit at each gun a moment before the broadside. */
+export function fuseSparks(ctx: FxCtx, svg: Element, x: number, y: number, up: number, delay = 0, d = 260): void {
+  for (let k = 0, m = room(ctx, 5); k < m; k++) {
+    const sp = sv(svg, '<circle r="1.3" fill="#ffe08a"/>');
+    A(ctx, sp, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + rnd(-8, 8))}px,${R1(y + up * rnd(6, 14))}px)`, opacity: 0 }], d, delay + k * 50);
+  }
+}
+
+/**
+ * The cannonball: a dark iron ball with a highlight, a thin smoke trail, its shadow on the sea; it flies almost straight
+ * (a light arc, `lift` px up on the screen). It goes out at the end. The ball is `.ball` (e2e waits for one in the layer).
+ */
+export function ballFly(ctx: FxCtx, svg: Element, p0: Pt, p1: Pt, d = 700, delay = 0, lift = 20): void {
+  const N = 28, pts = qpts(p0.x, p0.y, (p0.x + p1.x) / 2, Math.min(p0.y, p1.y) - lift, p1.x, p1.y, N);
+  const path = (sc: (i: number) => string) => pts.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)${sc(i)}`, opacity: i === N ? 0 : 1 }));
+  for (let i = 1, m = room(ctx, 7); i <= m; i++) {
+    const t = sv(svg, `<circle r="${R1(3.6 - i * 0.35)}" fill="#cfc8bc" opacity="${R1(0.5 - i * 0.06)}"/>`);
+    A(ctx, t, path(() => ''), d, delay + i * 22, 'linear');
+  }
+  const shadow = sv(svg, '<ellipse rx="5" ry="2" fill="#000" opacity=".3"/>');
+  A(ctx, shadow, pts.map((_, i) => { const t = i / N; return { transform: `translate(${R1(p0.x + (p1.x - p0.x) * t)}px,${R1(p0.y + (p1.y - p0.y) * t + 8)}px) scale(${R1(1 - Math.sin(Math.PI * t) * 0.5)})`, opacity: i === N ? 0 : 1 }; }), d, delay, 'linear');
+  const ball = sv(svg, '<g class="ball-svg"><circle r="5" fill="#1a1714"/><circle cx="-1.4" cy="-1.6" r="1.7" fill="#9a948b"/></g>');
+  ball.classList.add('ball');
+  A(ctx, ball, path((i) => ` scale(${R1(1 + Math.sin((Math.PI * i) / N) * 0.15)})`), d, delay, 'linear');
+}
+
+/** A real splash: a hole in the water, a heavy column with a torn top, a crown of jets with drops, mist, foam, rings. */
+export function waterColumn(ctx: FxCtx, svg: Element, x: number, y: number, h = 46, delay = 0, d = 1700): void {
+  const k = h / 46, root = sv(svg, '<g/>'), P = (a: number, b: number) => `${R1(a)} ${R1(b)}`, X = R1(x), Y = R1(y);
+  const hole = sv(root, `<ellipse rx="${R1(12 * k)}" ry="${R1(3.6 * k)}" fill="#0c2a36" opacity=".55"/>`);
+  A(ctx, hole, [{ transform: `translate(${X}px,${Y}px) scale(.2)`, opacity: 0.6 }, { transform: `translate(${X}px,${Y}px) scale(1.2)`, opacity: 0.4, offset: 0.3 }, { transform: `translate(${X}px,${Y}px) scale(1.6)`, opacity: 0 }], d * 0.76, delay);
+  const bw = 9 * k, bh = h * 0.7;
+  const body = sv(root, `<g><path d="M${P(-bw, 0)} C${P(-bw * 1.1, -bh * 0.5)} ${P(-bw * 0.7, -bh * 0.9)} ${P(-bw * 0.3, -bh)} Q${P(-bw * 0.1, -bh * 1.08)} ${P(0, -bh * 0.98)} Q${P(bw * 0.2, -bh * 1.1)} ${P(bw * 0.4, -bh * 0.96)} C${P(bw * 0.8, -bh * 0.85)} ${P(bw * 1.1, -bh * 0.5)} ${P(bw, 0)} Z" fill="#d6ebf0"/><path d="M${P(-bw * 0.5, -2)} C${P(-bw * 0.6, -bh * 0.4)} ${P(-bw * 0.4, -bh * 0.7)} ${P(-bw * 0.2, -bh * 0.9)}" fill="none" stroke="#fff" stroke-width="${R1(1.6 * k)}" stroke-linecap="round" opacity=".9"/></g>`);
+  A(ctx, body, [{ transform: `translate(${X}px,${Y}px) scale(.5,.05)`, opacity: 1 }, { transform: `translate(${X}px,${Y}px) scale(1,1)`, opacity: 1, offset: 0.25 }, { transform: `translate(${X}px,${Y}px) scale(1.1,.95)`, opacity: 0.95, offset: 0.5 }, { transform: `translate(${X}px,${R1(y + 2)}px) scale(1.5,.05)`, opacity: 0 }], d, delay, 'cubic-bezier(.15,.7,.4,1)');
+  // the crown: the middle jets tall, the outer ones low and wide (9 in the prototype; fewer when the budget is short)
+  const JETS: [number, number, number][] = [[0, 1, 6.4], [-0.14, 0.88, 5.2], [0.14, 0.92, 5.2], [-0.36, 0.62, 4.6], [0.36, 0.64, 4.6], [-0.68, 0.4, 3.8], [0.68, 0.42, 3.8], [-1, 0.24, 3], [1, 0.26, 3]];
+  const nj = ctx.rich ? Math.max(3, room(ctx, isPhone(ctx) ? 5 : 9)) : 0;
+  JETS.slice(0, nj).forEach(([a, hh, w], i) => {
+    const L = h * hh * rnd(0.85, 1.1), tx = Math.sin(a) * L, ty = -Math.cos(a) * L, ww = w * k, bend = rnd(-3, 3) * k;
+    const dd = `M${P(-ww, 0)} C${P(-ww * 0.8 + tx * 0.3 + bend, ty * 0.35)} ${P(tx * 0.8 - ww * 0.3, ty * 0.8)} ${P(tx, ty)} C${P(tx * 0.8 + ww * 0.3, ty * 0.8)} ${P(ww * 0.8 + tx * 0.3 + bend, ty * 0.35)} ${P(ww, 0)} Z`;
+    const j = sv(root, `<g><path d="${dd}" fill="#e8f4f6" opacity=".92"/><path d="${dd}" fill="none" stroke="#9cc4cc" stroke-width=".7" opacity=".7"/><circle cx="${R1(tx)}" cy="${R1(ty - ww * 0.6)}" r="${R1(0.3 * ww)}" fill="#eef7f9"/></g>`);
+    A(ctx, j, [{ transform: `translate(${X}px,${Y}px) scale(.6,.05)`, opacity: 1 }, { transform: `translate(${X}px,${Y}px) scale(1,1.05)`, opacity: 1, offset: 0.24 }, { transform: `translate(${X}px,${Y}px) scale(1.08,1)`, opacity: 0.95, offset: 0.48 }, { transform: `translate(${X}px,${Y}px) scale(1.25,.55)`, opacity: 0.8, offset: 0.75 }, { transform: `translate(${X}px,${R1(y + 2)}px) scale(1.45,.06)`, opacity: 0 }], d * 0.97 + i * 30, delay + i * 18, 'cubic-bezier(.15,.7,.4,1)');
+    // the tip breaks into a drop that arcs out and falls back with a ring
+    if (room(ctx, 1)) {
+      const dx = tx * rnd(1, 1.6) + rnd(-6, 6) * k, peak = y + ty * rnd(1.02, 1.2), r = R1(rnd(1, 2.2) * k), ex = x + dx * 1.5;
+      const dr = sv(root, `<ellipse rx="${r}" ry="${R1(r * 1.3)}" fill="#eef6f8" stroke="#9cc4cc" stroke-width=".3"/>`);
+      A(ctx, dr, [{ transform: `translate(${R1(x + tx * 0.9)}px,${R1(y + ty * 0.9)}px)`, opacity: 0 }, { transform: `translate(${R1(x + dx)}px,${R1(peak)}px)`, opacity: 1, offset: 0.35 }, { transform: `translate(${R1(ex)}px,${R1(y + 2)}px)`, opacity: 0.9, offset: 0.97 }, { transform: `translate(${R1(ex)}px,${R1(y + 2)}px)`, opacity: 0 }], rnd(900, 1250), delay + 260 + i * 20, 'cubic-bezier(.3,0,.7,1)');
+      ringSvg(ctx, root, ex, y + 3, 1, 7 * k, '#eef6f8', 500, delay + 1150 + i * 20, 0.8);
+    }
+  });
+  // mist hangs over the column and drifts (blurred only where the filters are)
+  for (let i = 0, m = room(ctx, 4); i < m; i++) {
+    const mm = sv(root, `<circle r="${R1(rnd(8, 13) * k)}" fill="#f4fafb" opacity=".5"${filters(ctx) ? ` style="filter:blur(${R1(3 * k)}px)"` : ''}/>`);
+    A(ctx, mm, [{ transform: `translate(${X}px,${R1(y - h * 0.6)}px) scale(.3)`, opacity: 0 }, { transform: `translate(${R1(x + rnd(-8, 8) * k)}px,${R1(y - h * rnd(0.75, 1))}px) scale(1)`, opacity: 0.55, offset: 0.3 }, { transform: `translate(${R1(x + rnd(10, 22) * k)}px,${R1(y - h * rnd(0.6, 0.9))}px) scale(1.5)`, opacity: 0 }], d, delay + 200 + i * 60, 'ease-out');
+  }
+  const foam = sv(root, `<g><ellipse rx="${R1(16 * k)}" ry="${R1(4.4 * k)}" fill="#f4fafb" opacity=".85"/><ellipse rx="${R1(22 * k)}" ry="${R1(6 * k)}" fill="none" stroke="#f4fafb" stroke-width="${R1(1.2 * k)}" stroke-dasharray="${R1(3 * k)} ${R1(2 * k)}" opacity=".8"/></g>`);
+  A(ctx, foam, [{ transform: `translate(${X}px,${R1(y + 1)}px) scale(.2)`, opacity: 0.9 }, { transform: `translate(${X}px,${R1(y + 1)}px) scale(1)`, opacity: 0.9, offset: 0.35 }, { transform: `translate(${X}px,${R1(y + 1)}px) scale(1.35)`, opacity: 0 }], d * 1.3, delay + 120, 'ease-out');
+  ringSvg(ctx, svg, x, y + 2, 4, 30 * k, '#eef6f8', 900, delay + 120, 1.6);
+  ringSvg(ctx, svg, x, y + 2, 4, 52 * k, '#cfe4ea', 1400, delay + 380, 1);
+}
+/** The miss: two spouts of water and a ring of foam. */
+export function missSplash(ctx: FxCtx, svg: Element, x: number, y: number, k = 1, delay = 0, d = 1700): void {
+  waterColumn(ctx, svg, x, y, 70 * k, delay, d);
+  if (ctx.rich) waterColumn(ctx, svg, x + 9 * k, y + 2, 40 * k, delay, d);
+  const f = sv(svg, `<ellipse rx="${R1(24 * k)}" ry="${R1(7 * k)}" fill="#f4f9fa" opacity=".85"/>`);
+  A(ctx, f, [{ transform: `translate(${R1(x)}px,${R1(y + 2)}px) scale(.2)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y + 2)}px) scale(1.4)`, opacity: 0 }], d * 0.82, delay + 100, 'ease-out');
+}
+/** The hit: a fireball, a shockwave, splinters and sparks, black smoke rolling up (a lighter one for the later hits). */
+export function hitBlast(ctx: FxCtx, svg: Element, x: number, y: number, k = 1, delay = 0, d = 520, light = false): void {
+  const fb = sv(svg, `<circle r="${R1(26 * k)}" fill="url(#fxFire)"/>`);
+  A(ctx, fb, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.1)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 1, offset: 0.25 }, { transform: `translate(${R1(x)}px,${R1(y - 6 * k)}px) scale(1.25)`, opacity: 0 }], d, delay, 'cubic-bezier(.1,.8,.3,1)');
+  const sw = sv(svg, `<circle r="${R1(56 * k)}" fill="none" stroke="#ffe7a4" stroke-width="${R1(3 * k)}"/>`);
+  A(ctx, sw, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.05)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d * 0.8, delay, 'cubic-bezier(.1,.8,.3,1)');
+  splintersSvg(ctx, svg, x, y, Math.round((light ? 5 : 12) * k), delay);
+  sparksSvg(ctx, svg, x, y, Math.round((light ? 6 : 16) * k), delay);
+  for (let i = 0, m = room(ctx, light ? 2 : 6); i < m; i++) {
+    const c = sv(svg, `<circle r="${R1(rnd(10, 18) * k)}" fill="url(#fxSmkD)"/>`), dx = rnd(-14, 14) * k;
+    A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.2)`, opacity: 0 }, { transform: `translate(${R1(x + dx)}px,${R1(y - 10 * k)}px) scale(1)`, opacity: 0.8, offset: 0.15 }, { transform: `translate(${R1(x + dx + 24 * k)}px,${R1(y - rnd(50, 80) * k)}px) scale(1.8)`, opacity: 0 }], rnd(2400, 3400), delay + 120 + i * 60, 'ease-out');
+  }
+}
+/** The whole table feels the broadside: the sea in its frame shakes (the hand and the log stay still). */
+export function boom(ctx: FxCtx, amp = 4, d = 320, delay = 0): void {
+  const el = ctx.board.querySelector('.sea-table') ?? ctx.board;
+  A(ctx, el, [{ translate: '0 0' }, { translate: `${-amp}px ${amp * 0.4}px` }, { translate: `${amp}px ${-amp * 0.3}px` }, { translate: `${-amp * 0.6}px 0` }, { translate: `${amp * 0.4}px ${amp * 0.2}px` }, { translate: '0 0' }], d, delay, 'linear', 'none');
+}
+/** A flash of the whole table (warm after a gun, white after a hit). */
+export function flashBoard(ctx: FxCtx, color = '#fff', peak = 0.55, d = 520, delay = 0): void {
+  const f = mk(ctx, 'fx-flash-board', 0, 0);
+  f.style.cssText += `;width:100%;height:100%;background:${color}`;
+  A(ctx, f, [{ opacity: 0 }, { opacity: peak, offset: 0.08 }, { opacity: 0, offset: 0.3 }, { opacity: peak * 0.6, offset: 0.42 }, { opacity: 0 }], d, delay, 'linear');
+}
+/**
+ * A board of the Hull broken off by a hit falls into the sea by the target (on the side of the gap), splashes and stays
+ * afloat a while, rocking (a long trace of the sea; it rocks — SMIL — only where the filters are).
+ */
+export function fallBoard(ctx: FxCtx, svg: Element, code: string, p: Pt, delay = 0, d = 1000): void {
+  const to = { x: clamp(p.x + 40, 20, ctx.board.clientWidth - 20), y: clamp(facingY(ctx, code) + dirOf(ctx, code) * 34, 20, ctx.board.clientHeight - 20) };
+  const bd = sv(svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>');
+  A(ctx, bd, [{ transform: `translate(${R1(p.x)}px,${R1(p.y)}px) rotate(0deg)` }, { transform: `translate(${R1(p.x + 12)}px,${R1(p.y - 16)}px) rotate(40deg)`, offset: 0.2 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 1, offset: 0.98 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 0 }], d, delay, 'cubic-bezier(.3,.1,.7,1)');
+  at(ctx, delay + d, () => {
+    waterColumn(ctx, svg, to.x, to.y, 22);
+    const host = ctx.board.querySelector('.fx-scars');
+    if (!host) return;
+    const deb = fxSvg(ctx, host);
+    const rock = filters(ctx) ? '<animateTransform attributeName="transform" type="rotate" values="-8;8;-8" dur="3.2s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 2;0 0" dur="2.4s" additive="sum" repeatCount="indefinite"/>' : '';
+    sv(deb, `<g transform="translate(${R1(to.x)} ${R1(to.y)}) scale(1.4)"><g>${rock}<ellipse cx="0" cy="3" rx="13" ry="3" fill="none" stroke="#e6f2f4" stroke-width="1" opacity=".7"/><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/><path d="M9 -2.6 l2 1 l-2 1.2 l2 1.4" fill="none" stroke="#3a2412" stroke-width=".6"/></g></g>`);
+    scar(deb, 'long', code);
+  });
+}
+
+/* ——— FX-D: the fire of A5 (fireWall, flameAt, smokeColumn of the prototype; ANIMATIONS.md §3.6, §4) ——— */
+/** A flame element `h` px tall standing at (x, y) of its host (the layer, or a trace inside a plank). */
+export function flameEl(ctx: FxCtx, x: number, y: number, h = 22, cls = 'fx-flame'): HTMLElement {
+  const f = document.createElement('div');
+  f.className = cls;
+  f.style.left = `${R1(x - h * 0.35)}px`;
+  f.style.top = `${R1(y - h)}px`;
+  f.innerHTML = FLAME(h, filters(ctx));
+  return f;
+}
+/**
+ * A wall of fire along a line: a bed of embers that breathes, clumps of strong flames with lower ones between them, low
+ * tongues in the gaps, embers flying up (`.ember`). «Простые»: the clumps only, no gaps, no embers. Gives the flames.
+ */
+export function fireWall(ctx: FxCtx, svg: Element, x0: number, x1: number, y: number, h = 34, opt: { delay?: number; spread?: number; clump?: number; embers?: number; life?: number; host?: Element } = {}): HTMLElement[] {
+  const out: HTMLElement[] = [], delay = opt.delay ?? 0, spread = opt.spread ?? 40, life = opt.life ?? 3000;
+  const bed = sv(svg, `<g><ellipse cx="${R1((x0 + x1) / 2)}" cy="${R1(y)}" rx="${R1((x1 - x0) / 2 + 10)}" ry="${R1(h * 0.32)}" fill="url(#fxGlow)"/><path d="M${R1(x0)} ${R1(y + 1)} H${R1(x1)}" stroke="#ffb347" stroke-width="${R1(h * 0.1)}" stroke-linecap="round" opacity=".55"${filters(ctx) ? ' style="filter:blur(2px)"' : ''}/></g>`);
+  A(ctx, bed, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.75, offset: 0.45 }, { opacity: 1, offset: 0.7 }, { opacity: 0.85 }], life, delay);
+  const span = Math.max(1, x1 - x0), nC = Math.max(1, Math.round(span / (opt.clump ?? 70)));
+  const add = (x: number, yy: number, hh: number, op: number, tilt: number, at0: number) => {
+    const fl = flameEl(ctx, x, yy, hh);
+    fl.style.rotate = `${R1(tilt)}deg`;
+    (opt.host ?? ctx.layer).appendChild(fl);
+    A(ctx, fl, [{ transform: 'scaleY(.05)', opacity: 0 }, { transform: 'scaleY(1.2)', opacity: op, offset: 0.35 }, { transform: 'scaleY(1)', opacity: op }], 420, at0);
+    out.push(fl);
+  };
+  for (let c = 0; c < nC; c++) {
+    const cx = x0 + (span * (c + 0.5)) / nC + rnd(-10, 10), big = rnd(0.85, 1.25);
+    const parts: [number, number, number][] = [[0, 2.1 * big, 0.78], [-9, 1.4 * big, 0.85], [9, 1.5 * big, 0.85], [-17, 0.8, 0.9], [17, 0.9, 0.9], [-4, 0.7, 1], [5, 0.6, 1]];
+    parts.slice(0, ctx.rich ? 1 + Math.floor(room(ctx, 12) / 2) : 3).forEach(([dx, hk, op], k) => add(cx + dx + rnd(-3, 3), y + 2 + (k > 4 ? 1 : 0), h * hk * rnd(0.85, 1.1), op, rnd(4, 11), delay + c * spread * 2 + k * 30));
+  }
+  if (ctx.rich) for (let x = x0; x <= x1; x += 9) { if (Math.random() < 0.4 || room(ctx, 2) < 2) continue; add(x, y + 3, h * rnd(0.3, 0.55), 0.9, rnd(6, 14), delay + ((x - x0) / span) * spread * nC * 2); }
+  for (let i = 0, m = room(ctx, opt.embers ?? 30); i < m; i++) {
+    const e = sv(svg, `<circle class="ember" r="${R1(rnd(0.8, 1.9))}" fill="${['#fff3c4', '#ffd27a', '#ff8a2a'][i % 3]}"/>`), x = rnd(x0, x1);
+    A(ctx, e, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 0 }, { opacity: 1, offset: 0.1 }, { transform: `translate(${R1(x + rnd(5, 30))}px,${R1(y - h * rnd(1.4, 3))}px)`, opacity: 1, offset: 0.6 }, { transform: `translate(${R1(x + rnd(20, 60))}px,${R1(y - h * rnd(2.6, 4.4))}px)`, opacity: 0 }], rnd(1200, 2400), delay + rnd(0, life * 0.8));
+  }
+  return out;
+}
+/** A group of flames in the layer: they die down together with one animation (the budget of the layer). */
+export function fireGroup(ctx: FxCtx): HTMLElement {
+  const g = mk(ctx, 'fx-fire-group', 0, 0);
+  g.style.opacity = '1';
+  return g;
+}
+/** A column of thick smoke over a fire: dark clouds keep rising and leaning downwind. */
+export function smokeColumn(ctx: FxCtx, svg: Element, x: number, y: number, k = 1, waves = 4, every = 700, delay = 0): void {
+  for (let w = 0; w < waves; w++) smokeJet(ctx, svg, x + rnd(-8, 8) * k, y, -Math.PI / 2 - 0.25, k, 5, 5200, delay + w * every, true);
+}
+/** A soft column of smoke over something smouldering (a trace on a plank): CSS puffs, still with «простые». */
+export function smolderEl(x: number, y: number, n = 3): HTMLElement {
+  const s = document.createElement('div');
+  s.className = 'fx-smolder';
+  s.style.left = `${R1(x)}px`;
+  s.style.top = `${R1(y)}px`;
+  s.innerHTML = Array.from({ length: n }, (_, i) => `<i style="animation-delay:${(i * 0.9).toFixed(1)}s"></i>`).join('');
+  return s;
+}
