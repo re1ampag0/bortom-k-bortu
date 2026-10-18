@@ -15,12 +15,13 @@ import { deckCards, legendCards } from '../../../engine/data';
 import { TRACK_DATIVE } from '../../../engine/hints';
 import { shipData, type Term } from '../../../engine/state';
 import type { GameData, Track } from '../../../engine/types';
-import { hitMark } from './scars';
+import { hitMark, scar, seaScars } from './scars';
+import { SMOKE_LIFE, T } from './timing';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
 import {
-  A, at, bubbles, burst, bx, capFirst, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
-  mk, moveTo, ms, overlayAt, payKegs, pillAt, plank, projectile, puff, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
+  A, at, ballFly, boom, bubbles, burst, bx, capFirst, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
+  mk, moveTo, ms, overlayAt, payKegs, pillAt, plank, projectile, puff, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
   tag, trackEl, wait, whirlpool, type FlyCard, type FxCtx,
 } from './primitives';
 import {
@@ -303,18 +304,45 @@ PLAY.shot = async (c, ctx) => {
   const s = bx(ctx, shooterEl), sy = facingY(ctx, c.shooter), down = dirOf(ctx, c.shooter);
   const muzzle = c.shots.filter((b) => !['under', 'keg', 'joint'].includes(b.kind));
   const sp = Math.min(30, (s.w * 0.55) / Math.max(1, muzzle.length));
-  const STEP = 140, FLY = 420;
+  // FX-D (A5 §3.9): the broadside of the prototype — the fuses, the guns one after another (a cone of fire, a shockwave,
+  // grains, a jet of powder smoke that stays on the sea a while as a trace), the planks kick back, the table shakes; an
+  // iron ball with its trail and shadow; a hit — a fireball, splinters, black smoke, a board falls into the sea; a miss —
+  // spouts of water. The timings are fx/timing.ts (VOLLEY_K).
+  const FUSE = T.volley.fuse, STEP = T.volley.gunStep, FLY = T.volley.fly, FLY_HIT = T.volley.flyHit;
+  const svg = fxSvg(ctx);
+  const sea = seaScars(ctx);
+  const smoke = ctx.rich && sea ? scar(fxSvg(ctx, sea), 'short', c.shooter) : null;
+  const tb0 = bx(ctx, tPl), aimAt = { x: tb0.cx, y: facingY(ctx, c.target) };
+  const gunScale = Math.min(1.05, Math.max(0.6, ctx.board.clientWidth / 1300));
+  let fallen = false, hits = 0;
   let mi = 0, kTrack = 0, kHull = 0, lastHit = 0, firstHit = true, kegI = 0;
   const cur = { track: shownTrack(ctx, c.target, c.track), hull: shownTrack(ctx, c.target, 'hull') };
   const labelled = new Set<string>();
   c.shots.forEach((b, i) => {
-    const t0 = 60 + i * STEP;
+    const t0 = FUSE + i * STEP;
     let p0;
     if (b.kind === 'under') { p0 = { x: s.cx + s.w * 0.32, y: sy + down * 22 }; bubbles(ctx, p0.x - 10, p0.y + 6, 20, t0 - 260, 8, 18); splash(ctx, p0.x, p0.y, t0 - 40); }
     else if (b.kind === 'keg') { const kids = holdEl(ctx, sideOf(ctx, c.shooter)).querySelectorAll('[data-fx-keg]'); const kb = bx(ctx, kids[Math.max(0, ctx.display.powder[sideOf(ctx, c.shooter)] + kegI++)] || kids[0]); p0 = { x: kb.cx, y: kb.cy }; flash(ctx, p0.x, p0.y, t0, 0.8); }
     else if (b.kind === 'joint') { const ally = ships(ctx).find((x) => sideOf(ctx, x) === sideOf(ctx, c.shooter) && x !== c.shooter)!; const ab = bx(ctx, plank(ctx, ally)); p0 = { x: ab.cx, y: facingY(ctx, ally) }; flash(ctx, p0.x, p0.y, t0, 1.2); puff(ctx, p0.x, p0.y + down * 4, t0 + 20); if (b.label) tag(ctx, p0.x, p0.y + down * 18, b.label, t0, 'plus', 1500); }
-    else { p0 = { x: s.cx - (sp * (muzzle.length - 1)) / 2 + sp * mi++, y: sy }; flash(ctx, p0.x, p0.y, t0, 1.3); puff(ctx, p0.x, p0.y + down * 4, t0 + 20); puff(ctx, p0.x + (i % 2 ? 6 : -6), p0.y + down * 10, t0 + 120); burst(ctx, 'spark', p0.x, p0.y, t0, 4, 8, 22, 300, down > 0 ? Math.PI / 2 : -Math.PI / 2, Math.PI * 0.9); }
-    const ball = projectile(ctx, b.kind, b.big);
+    else {
+      const g = mi++;
+      p0 = { x: s.cx - (sp * (muzzle.length - 1)) / 2 + sp * g, y: sy };
+      // the fuse spits sparks, then the gun goes off; after the third gun the shots are lighter (the budget of the layer)
+      fuseSparks(ctx, svg, p0.x, p0.y, -down, Math.max(0, t0 - FUSE) * 0.3, FUSE * 0.62);
+      const full = g < 3;
+      gunFire(ctx, svg, full ? smoke : null, p0.x, p0.y + down * 4, Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale, t0, { grains: full ? 9 : 3, puffs: full ? 11 : 4, wads: full ? 4 : 0, life: SMOKE_LIFE, flash: T.volley.flash });
+      A(ctx, shooterEl, [{ translate: '0 0' }, { translate: `0 ${-down * 6}px`, offset: 0.15 }, { translate: '0 0' }], T.volley.flash, t0, 'ease-out', 'none');
+      boom(ctx, Math.max(1, 4 - g), 260, t0);
+      if (g === 0) flashBoard(ctx, '#ffcf8a', 0.12, 200, t0);
+    }
+    // an iron ball of the A5 look (ballFly) where it only flies; the projectiles of the other kinds and the balls that
+    // bounce, stick or circle keep their element
+    let ballEl: HTMLElement | null = null;
+    const ball = () => (ballEl ??= projectile(ctx, b.kind, b.big));
+    const flyBall = (pts: Pt[], d: number, delay: number, opt: Parameters<typeof fly>[5] = {}) => {
+      if (b.kind === 'core') ballFly(ctx, svg, pts[0], pts[pts.length - 1], d, delay, 18);
+      else fly(ctx, ball(), pts, d, delay, opt);
+    };
     const spin = b.kind === 'chain' ? 720 : 0;
     const tb = bx(ctx, tPl);
     if (b.out === 'hit') {
@@ -325,24 +353,26 @@ PLAY.shot = async (c, ctx) => {
       const p1 = markEl ? (() => { const m = bx(ctx, markEl); return { x: m.cx, y: m.cy }; })() : fxPoint(ctx, c.target, tr, now - 1 - k); // «в метку» — the ball hits the blot on the chip
       if (b.to === 'hull') kHull += b.units; else kTrack += b.units;
       const pts = curve(p0, p1, (i % 2 ? 0.06 : -0.06) * down);
-      fly(ctx, ball, pts, FLY, t0, { spin });
-      if (ctx.rich && ['core', 'under', 'joint', 'gold', 'ghost'].includes(b.kind)) for (const [q, op] of [[1, 0.35], [2, 0.18]]) { const gh = mk(ctx, 'ball trail', 0, 0); A(ctx, gh, pts.map((p, j) => ({ offset: j / (pts.length - 1), opacity: j === pts.length - 1 ? 0 : op, transform: `translate(${p.x}px,${p.y}px) scale(${0.8 - q * 0.15})` })), FLY, t0 + q * 28, 'cubic-bezier(.3,0,.75,1)', 'forwards'); }
-      if (b.kind === 'fire' && ctx.rich) for (let q = 0; q < 8; q++) { const em = mk(ctx, 'ember', 0, 0); const j = Math.floor((q / 8) * (pts.length - 2)) + 1; const p = pts[j]; A(ctx, em, [{ opacity: 1, transform: `translate(${p.x}px,${p.y}px)` }, { opacity: 0, transform: `translate(${p.x + (Math.random() - 0.5) * 14}px,${p.y - 10 - Math.random() * 10}px)` }], 500, t0 + (FLY * j) / (pts.length - 1)); }
-      const th = t0 + FLY;
+      flyBall(pts, FLY_HIT, t0, { spin });
+      if (ctx.rich && ['core', 'under', 'joint', 'gold', 'ghost'].includes(b.kind)) for (const [q, op] of [[1, 0.35], [2, 0.18]]) { const gh = mk(ctx, 'ball trail', 0, 0); A(ctx, gh, pts.map((p, j) => ({ offset: j / (pts.length - 1), opacity: j === pts.length - 1 ? 0 : op, transform: `translate(${p.x}px,${p.y}px) scale(${0.8 - q * 0.15})` })), FLY_HIT, t0 + q * 28, 'cubic-bezier(.3,0,.75,1)', 'forwards'); }
+      if (b.kind === 'fire' && ctx.rich) for (let q = 0; q < 8; q++) { const em = mk(ctx, 'ember', 0, 0); const j = Math.floor((q / 8) * (pts.length - 2)) + 1; const p = pts[j]; A(ctx, em, [{ opacity: 1, transform: `translate(${p.x}px,${p.y}px)` }, { opacity: 0, transform: `translate(${p.x + (Math.random() - 0.5) * 14}px,${p.y - 10 - Math.random() * 10}px)` }], 500, t0 + (FLY_HIT * j) / (pts.length - 1)); }
+      const th = t0 + FLY_HIT;
       lastHit = Math.max(lastHit, th);
       const newV = Math.max(0, now - k - b.units);
       at(ctx, th, () => setTrack(ctx, c.target, tr, newV, '#c0392b'));
-      flash(ctx, p1.x, p1.y, th, 1.25); ring(ctx, p1.x, p1.y, th);
+      hitBlast(ctx, svg, p1.x, p1.y, 1.1 * gunScale, th, T.volley.blast, hits++ > 0);
+      if (hits === 1) { flashBoard(ctx, '#fff6d8', 0.38, 240, th); boom(ctx, 6, 420, th); }
+      // the first board of the Hull broken off falls into the sea and stays afloat a while (a long trace)
+      if (tr === 'hull' && !fallen && !markEl) { fallen = true; fallBoard(ctx, svg, c.target, p1, th); }
       // FX-A: the soot of the hit stays on the plank for a while (a short trace, fx/scars.ts)
       if (!markEl) at(ctx, th, () => hitMark(ctx, c.target, p1.x, p1.y));
       if (b.kind === 'chain') burst(ctx, 'shred', p1.x, p1.y, th, 8, 14, 32, 650);
       else if (b.kind === 'grape') burst(ctx, 'dust', p1.x, p1.y, th, 5, 6, 20, 700);
-      else burst(ctx, 'splinter', p1.x, p1.y, th, 8, 16, 40, 600);
       if (b.label && !labelled.has(b.label) && b.kind !== 'joint') { labelled.add(b.label); tag(ctx, p1.x, facingY(ctx, c.target) - 14 * down, b.label, th - 120, 'plus', 1500); }
       if (firstHit) { firstHit = false; at(ctx, th, () => tPl.classList.add('hitframe')); shake(ctx, tPl, th, 3); }
     } else if (b.out === 'overkill' || b.out === 'moon') {
       const p1 = b.out === 'moon' ? fxPoint(ctx, c.target, 'crew', 0) : { x: tb.x + tb.w * (0.3 + 0.4 * Math.random()), y: tb.cy };
-      fly(ctx, ball, curve(p0, p1, 0.05 * down), FLY, t0);
+      flyBall(curve(p0, p1, 0.05 * down), FLY, t0);
       if (b.out === 'moon') { burst(ctx, 'sparkle', p1.x, p1.y, t0 + FLY, 6, 6, 18, 600); tag(ctx, p1.x, p1.y - 16 * down, b.label || 'Лунный свет −1', t0 + FLY, '', 1500); }
       else { flash(ctx, p1.x, p1.y, t0 + FLY, 1.4); burst(ctx, 'dust', p1.x, p1.y, t0 + FLY, 6, 8, 24, 700); }
       lastHit = Math.max(lastHit, t0 + FLY);
@@ -356,36 +386,36 @@ PLAY.shot = async (c, ctx) => {
       else if (b.out === 'past') { end = { x: tb.x + (i % 2 ? tb.w * 0.95 : tb.w * 0.05), y: facingY(ctx, c.target) - down * 18 }; pts = curve(p0, end, (i % 2 ? -0.1 : 0.1) * down); d = FLY; }
       else { end = { x: mid.x + 78 * narrow, y: g2.cy + 14 }; d = FLY * 1.25; pts = [...curve(p0, mid, 0, 8), ...curve(mid, end, -0.35 * down, 10).slice(1)];
         if (ctx.rich) { const gu = mk(ctx, 'gust', 0, 0, '<svg viewBox="0 0 220 40" width="220" height="40"><g fill="none" stroke="#9FB6C6" stroke-width="2" stroke-linecap="round"><path d="M2 14 C60 4 120 26 218 12"/><path d="M20 30 C80 22 140 38 200 26" opacity=".7"/></g></svg>'); A(ctx, gu, [{ opacity: 0, transform: `translate(${mid.x - 40}px,${mid.y + 6}px) scaleX(.4)` }, { opacity: 0.9, offset: 0.3 }, { opacity: 0, transform: `translate(${mid.x + 90}px,${mid.y + 10}px) scaleX(1)` }], 650, t0 + FLY * 0.35); } }
-      fly(ctx, ball, pts, d, t0, { lift: 0.15 });
-      if (VS && VS.dust) { burst(ctx, 'dust', end.x, end.y, t0 + d * 0.6, 8, 6, 22, 700); } else splash(ctx, end.x, end.y, t0 + d);
+      flyBall(pts, d, t0, { lift: 0.15 });
+      if (VS && VS.dust) { burst(ctx, 'dust', end.x, end.y, t0 + d * 0.6, 8, 6, 22, 700); } else if (b.out === 'past') splash(ctx, end.x, end.y, t0 + d); else missSplash(ctx, svg, end.x, end.y, 0.85 * gunScale, t0 + d, T.volley.splash);
       if (b.label) tag(ctx, end.x + (end.x > ctx.board.clientWidth / 2 ? -10 : 10), end.y - 26 * down, b.label, t0 + d + 40, '', 1700);
     } else if (b.out === 'bounce') {
       const edge = { x: tb.x + tb.w * (0.25 + 0.18 * (i % 3)), y: facingY(ctx, c.target) - down * 6 };
-      fly(ctx, ball, curve(p0, edge, 0.04 * down), FLY * 0.9, t0, { fadeEnd: false });
+      fly(ctx, ball(), curve(p0, edge, 0.04 * down), FLY * 0.9, t0, { fadeEnd: false });
       const t2 = t0 + FLY * 0.9;
       burst(ctx, 'spark', edge.x, edge.y, t2, 9, 12, 28, 420, down > 0 ? -Math.PI / 2 : Math.PI / 2, Math.PI * 1.3);
       const back = { x: edge.x + (i % 2 ? 34 : -34), y: edge.y - down * 46 };
-      A(ctx, ball, [{ transform: `translate(${edge.x}px,${edge.y}px)`, opacity: 1 }, { transform: `translate(${back.x}px,${back.y}px) scale(.8)`, opacity: 0 }], 420, t2, 'cubic-bezier(.1,.6,.4,1)', 'forwards');
+      A(ctx, ball(), [{ transform: `translate(${edge.x}px,${edge.y}px)`, opacity: 1 }, { transform: `translate(${back.x}px,${back.y}px) scale(.8)`, opacity: 0 }], 420, t2, 'cubic-bezier(.1,.6,.4,1)', 'forwards');
       if (b.label) tag(ctx, edge.x, edge.y - down * 30, b.label, t2, '', 1700);
     } else if (b.out === 'stick') {
       const edge = { x: tb.x + tb.w * 0.82, y: facingY(ctx, c.target) + down * 3 };
-      fly(ctx, ball, curve(p0, edge, 0.05 * down), FLY, t0, { fadeEnd: false });
+      fly(ctx, ball(), curve(p0, edge, 0.05 * down), FLY, t0, { fadeEnd: false });
       burst(ctx, 'splinter', edge.x, edge.y, t0 + FLY, 5, 8, 18, 500); flash(ctx, edge.x, edge.y, t0 + FLY, 0.7);
       if (b.label) tag(ctx, edge.x, edge.y - down * 26, b.label, t0 + FLY, '', 1900);
     } else if (b.out === 'whirl') {
       const g = gapBox(ctx), cx = ctx.board.clientWidth / 2, cy = g.cy, R0 = Math.min(60, ctx.board.clientWidth * 0.12);
       const spiral = Array.from({ length: 14 }, (_, j) => { const a = (j / 13) * Math.PI * 3, rr = R0 * (1 - j / 13); return { x: cx + Math.cos(a) * rr, y: cy + Math.sin(a) * rr * 0.55 }; });
-      fly(ctx, ball, [...curve(p0, { x: cx + R0, y: cy - 6 }, 0.1, 8), ...spiral.slice(1)], FLY * 1.6, t0, { lift: 0.05 });
+      fly(ctx, ball(), [...curve(p0, { x: cx + R0, y: cy - 6 }, 0.1, 8), ...spiral.slice(1)], FLY * 1.6, t0, { lift: 0.05 });
       if (b.label) tag(ctx, cx, cy - 34, b.label, t0 + FLY, '', 1800);
     } else if (b.out === 'block') {
       const tr = bx(ctx, trackEl(ctx, c.target, 'crew'));
       const end = { x: tr.x + 10 + (i % 3) * 12, y: tr.cy };
-      fly(ctx, ball, curve(p0, end, 0.05 * down), FLY, t0, { fadeEnd: false });
+      fly(ctx, ball(), curve(p0, end, 0.05 * down), FLY, t0, { fadeEnd: false });
       burst(ctx, 'dust', end.x, end.y, t0 + FLY, 5, 6, 18, 600);
       if (b.label && !labelled.has(b.label)) { labelled.add(b.label); tag(ctx, tr.cx, tr.y - 12, b.label, t0 + FLY, '', 1800); }
     }
   });
-  const endShots = 60 + c.shots.length * STEP + FLY * 1.6;
+  const endShots = FUSE + c.shots.length * STEP + FLY_HIT * 1.2;
   if (c.damage >= 4) at(ctx, lastHit, () => shake(ctx, ctx.board, 0, c.damage >= 6 ? 8 : 4, 320));
   if (c.amount > 0) pillAt(ctx, c.target, c.track, c.amount, lastHit + 60);
   if (c.toHull > 0) pillAt(ctx, c.target, 'hull', c.toHull, lastHit + 160);
@@ -397,7 +427,7 @@ PLAY.shot = async (c, ctx) => {
     tag(ctx, hd.cx, hd.b + 10, 'Пожар', lastHit + 600, 'plus', 1200);
   }
   if (c.souls) soulsFly(ctx, c.target, c.souls, lastHit + 300);
-  await wait(ctx, Math.max(endShots, lastHit) + (c.fire ? 1100 : 850));
+  await wait(ctx, Math.max(endShots, lastHit) + (c.fire ? Math.max(1100, T.volley.linger) : T.volley.linger));
   unleanAll(ctx);
   vs.done = true;
   clearVS(ctx, true);
@@ -433,19 +463,22 @@ PLAY.counter = async (c, ctx) => {
   tag(ctx, fb.cx, fy + down * 18, `Ответ: ${cardName(ctx, c.card)}`, 0, 'plus', 1600);
   let n = 0, lastHit = 0;
   const fireCard = cardFx(ctx, c.card).fire;
+  // FX-D: the answer fires with the same guns and hits as the Volley (smaller, no smoke left behind)
+  const svg = fxSvg(ctx), tb = bx(ctx, plank(ctx, c.to));
   for (const h of c.hits) {
     for (const [tr, units] of [[h.track, h.amount], ['hull', h.toHull]] as [Track, number][]) {
       const now = shownTrack(ctx, c.to, tr);
       for (let j = 0; j < units; j++, n++) {
         const t0 = 120 + n * 170;
         const p0 = { x: fb.cx + ((n % 3) - 1) * 22, y: fy };
-        flash(ctx, p0.x, p0.y, t0, 1.2); puff(ctx, p0.x, p0.y + down * 4, t0 + 20);
+        gunFire(ctx, svg, null, p0.x, p0.y + down * 4, Math.atan2(tb.cy - p0.y, tb.cx - p0.x), 0.7, t0, { grains: 4, wads: 0, flash: T.volley.flash });
         const p1 = fxPoint(ctx, c.to, tr, now - 1 - j);
         const kind = fireCard ? 'fire' : KIND_BY_TRACK[tr];
         fly(ctx, projectile(ctx, kind), curve(p0, p1, 0.08), 440, t0, { spin: tr === 'sails' ? 720 : 0 });
         const v = Math.max(0, now - 1 - j);
         at(ctx, t0 + 440, () => setTrack(ctx, c.to, tr, v, '#c0392b'));
-        flash(ctx, p1.x, p1.y, t0 + 440, 1.1); burst(ctx, tr === 'sails' ? 'shred' : tr === 'crew' ? 'dust' : 'splinter', p1.x, p1.y, t0 + 440, 7, 14, 32, 600);
+        hitBlast(ctx, svg, p1.x, p1.y, 0.8, t0 + 440, T.volley.blast, n > 0);
+        if (tr !== 'hull') burst(ctx, tr === 'sails' ? 'shred' : 'dust', p1.x, p1.y, t0 + 440, 7, 14, 32, 600);
         if (n === 0) shake(ctx, plank(ctx, c.to), t0 + 440, 3);
         lastHit = t0 + 440;
       }

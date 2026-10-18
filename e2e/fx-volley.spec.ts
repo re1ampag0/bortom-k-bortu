@@ -37,6 +37,29 @@ test.describe('the Volley on the table through ?fxScene (1366×660)', () => {
     });
   }
 
+  // FX-D: the A5 broadside (gunFire, ballFly, hitBlast, missSplash) keeps to the budget of the layer: at most ~200
+  // animations at once (TASKS.md, «Как переносить из прототипа», 5), in the heaviest scene — two broadsides.
+  test('both: the A5 shots keep to the budget of the layer, no error', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await open(page, 'both');
+    await page.evaluate(() => {
+      const w = window as unknown as { __peak: number };
+      w.__peak = 0;
+      const tick = () => {
+        const n = document.querySelector('.fx-layer')!.getAnimations({ subtree: true }).length + (document.querySelector('.fx-scars')?.getAnimations({ subtree: true }).length ?? 0);
+        w.__peak = Math.max(w.__peak, n);
+        if (!document.body.dataset.fxDone) requestAnimationFrame(tick);
+      };
+      tick();
+    });
+    await expectResult(page, 'both');
+    const peak = await page.evaluate(() => (window as unknown as { __peak: number }).__peak);
+    expect(peak).toBeGreaterThan(20);
+    expect(peak).toBeLessThanOrEqual(210);
+    expect(errors).toEqual([]);
+  });
+
   test('a press on the table shows the result at once', async ({ page }) => {
     await open(page, 'storm');
     await playing(page);
