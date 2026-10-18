@@ -95,11 +95,11 @@ describe('data-fx-* DOM contract', () => {
 describe('«Чёрная метка» on the plank (U3)', () => {
   const marked = structuredClone(s);
   marked.turn.marks = { И: 2 };
-  it('the marked ship has the stamp: in the body (laptop) and in the row of statuses (phone), the chip «Чёрная метка +2» kept', () => {
+  it('the marked ship has the stamp: on the drawing of the ship in the head (laptop, A5) and in the row of statuses (phone), the chip «Чёрная метка +2» kept', () => {
     const html = plank('И', null, marked);
     expect(count(html, /data-fx-mark-stamp/g)).toBe(2);
-    expect(html).toMatch(/<div class="plank-body"><span class="mark-stamp wide" data-fx-mark-stamp="true"[^>]*><svg/);
-    expect(html).toMatch(/<div class="plank-statuses" data-fx-statuses="true">.*<span class="mark-stamp narrow" data-fx-mark-stamp="true"/);
+    expect(html).toMatch(/<span class="ship-art wide"><span class="ship-pic">.*?<\/span><span class="mark-stamp wide" data-fx-mark-stamp="true"[^>]*><svg/s);
+    expect(html).toMatch(/<div class="plank-statuses" data-fx-statuses="true">.*<span class="mark-stamp narrow" data-fx-mark-stamp="true"/s);
     expect(html).toContain('data-fx-mark="true"');
     expect(html).toContain('Чёрная метка +2');
   });

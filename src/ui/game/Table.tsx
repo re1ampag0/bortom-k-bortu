@@ -7,9 +7,21 @@ import { deckCards } from '../../engine/data';
 import { InfoTip } from './InfoTip';
 import { SIDE_LABEL } from './text';
 import { reducedMotion } from '../start/motion';
+import { cellUrl, CELLS, type CellIcon } from './art/cells';
+import { shipSvg } from './art/ships';
+import { legendMedal } from './art/medals';
+import { fanSvg } from './art/fan';
+import { TARGET_SEAL } from './art/seal';
+import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, TRIDENT_SVG, statusSvg, type StatusIcon } from './art/status';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const TRACK_LABEL: Record<Track, string> = { hull: 'Корпус', sails: 'Паруса', guns: 'Пушки', crew: 'Команда' };
+/** The icons of a track (A5, art/cells2.json): a cell that is there and a lost one. */
+const TRACK_ICON: Record<Track, [CellIcon, CellIcon]> = { hull: ['HULL', 'HULL_X'], sails: ['SAIL', 'SAIL_X'], guns: ['GUN', 'GUN_X'], crew: ['CREW', 'CREW_X'] };
+const TRACK_ICON_STYLE = Object.fromEntries(
+  TRACKS.map((t) => [t, { ['--on' as string]: cellUrl(TRACK_ICON[t][0]), ['--off' as string]: cellUrl(TRACK_ICON[t][1]) }]),
+) as Record<Track, Record<string, string>>;
+const svg = (html: string) => ({ __html: html });
 
 export interface Btn {
   key: string;
@@ -163,6 +175,8 @@ export interface Status {
   flag?: string;
   /** The window of the chip (S1), when it says more than `hint`: «Чёрная метка» — the text of its card. */
   info?: string;
+  /** The icon of the chip (A5, art/status.ts). */
+  icon?: StatusIcon;
 }
 
 // The windows of the badges (S1): the rules of RULES.md 13.2–13.3 (Fires) and 3.6, 6.3, 14.7 (Souls).
@@ -174,30 +188,13 @@ function markText(data: GameData): string {
   return card ? `Карта «${card.name}»: ${card.text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()}` : '';
 }
 
-/** The blot of «Чёрная метка» (MARK_SVG of the reference, board.js). */
-const MARK_SVG = (
-  <svg viewBox="0 0 30 26" width="16" height="14" aria-hidden="true">
-    <path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612" />
-    <circle cx="27" cy="22" r="2" fill="#1a1612" />
-    <circle cx="4" cy="5" r="1.4" fill="#1a1612" />
-  </svg>
-);
-
 /**
- * «Чёрная метка» on the plank of the marked ship (U3): the same blot, small and sharp, set like a stamp — on a laptop in
- * the free field between the numbers of the tracks and the badges, on a phone at the right end of the row of statuses.
- * It appears when the blot of the clip lands (statusFx) and goes with the status.
+ * «Чёрная метка» on the plank of the marked ship: the torn leaf blackened with soot, pinned with a dagger (A5, MARK_PIN) —
+ * on a laptop on the drawing of the ship in the head, on a phone at the right end of the row of statuses. It appears when
+ * the blot of the clip lands (statusFx) and goes with the status.
  */
 function MarkStamp({ cls, hidden }: { cls: string; hidden: boolean }) {
-  return (
-    <span className={`mark-stamp ${cls}`} data-fx-mark-stamp aria-hidden style={hidden ? { visibility: 'hidden' } : undefined}>
-      <svg viewBox="0 0 30 26" aria-hidden="true">
-        <path d="M15 2 C21 1 27 5 28 11 C29 17 25 23 18 24 C12 25 5 23 3 17 C1 11 4 5 9 3 C11 2 13 2 15 2Z" fill="#1a1612" />
-        <circle cx="27" cy="22" r="2" fill="#1a1612" />
-        <circle cx="4" cy="5" r="1.4" fill="#1a1612" />
-      </svg>
-    </span>
-  );
+  return <span className={`mark-stamp ${cls}`} data-fx-mark-stamp aria-hidden style={hidden ? { visibility: 'hidden' } : undefined} dangerouslySetInnerHTML={svg(MARK_PIN_SVG)} />;
 }
 
 /** Statuses of a ship with the moment they end (docs/TZ.md, «Принципы стола», п. 2). */
@@ -207,21 +204,21 @@ export function statuses(s: GameState, data: GameData, ship: ShipState): Status[
     const ally = Object.values(s.ships).find((x) => x.side === ship.side && x.code !== ship.code);
     return [
       ally && !ally.sunk
-        ? { label: 'Утонул', hint: 'Капитан на борту союзника: 1 карта и 1 Реакция за ход за союзника' }
-        : { label: 'Утонул', hint: 'Корабль потоплен' },
+        ? { label: 'Утонул', hint: 'Капитан на борту союзника: 1 карта и 1 Реакция за ход за союзника', icon: 'sunk' }
+        : { label: 'Утонул', hint: 'Корабль потоплен', icon: 'sunk' },
     ];
   }
-  if (ship.submerged) out.push({ label: 'Под водой', hint: 'До своего хода: нельзя выбрать целью, не играет Реакции' });
-  if (ship.surfaced) out.push({ label: 'Всплыл', hint: 'Первый Залп в этот ход: +1 и без Реакций', flag: 'surfaced' });
-  if (ship.blockaded) out.push({ label: 'Блокада', hint: 'До конца своего следующего хода: без Ремонта и смены мест', flag: 'blockade' });
-  if (ship.parley) out.push({ label: 'Переговоры', hint: 'В свой следующий ход не даёт Залпы', flag: 'parley' });
+  if (ship.submerged) out.push({ label: 'Под водой', hint: 'До своего хода: нельзя выбрать целью, не играет Реакции', icon: 'under' });
+  if (ship.surfaced) out.push({ label: 'Всплыл', hint: 'Первый Залп в этот ход: +1 и без Реакций', flag: 'surfaced', icon: 'surfaced' });
+  if (ship.blockaded) out.push({ label: 'Блокада', hint: 'До конца своего следующего хода: без Ремонта и смены мест', flag: 'blockade', icon: 'blockade' });
+  if (ship.parley) out.push({ label: 'Переговоры', hint: 'В свой следующий ход не даёт Залпы', flag: 'parley', icon: 'parley' });
   if (ship.voodoo) {
-    out.push({ label: 'Кукла вуду', hint: `В свой следующий ход теряет 1 Команду за каждую сыгранную карту (кукла «${shipData(data, ship.voodoo).nick}»)`, flag: 'voodoo' });
+    out.push({ label: 'Кукла вуду', hint: `В свой следующий ход теряет 1 Команду за каждую сыгранную карту (кукла «${shipData(data, ship.voodoo).nick}»)`, flag: 'voodoo', icon: 'voodoo' });
   }
   const mark = s.turn.marks[ship.code];
-  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее', info: markText(data), mark: true, flag: 'mark' });
+  if (mark) out.push({ label: `Чёрная метка +${mark}`, hint: 'До конца этого хода: каждый Залп по кораблю сильнее', info: markText(data), mark: true, flag: 'mark', icon: 'mark' });
   if (s.turn.noReact.includes(ship.code) || (s.turn.noReactTeam && ship.side !== s.active)) {
-    out.push({ label: 'Без Реакций', hint: 'До конца этого хода не играет Реакции', flag: 'noReact' });
+    out.push({ label: 'Без Реакций', hint: 'До конца этого хода не играет Реакции', flag: 'noReact', icon: 'noReact' });
   }
   return out;
 }
@@ -312,6 +309,11 @@ export function Plank({
         },
       }
     : {};
+  const fireLabel = `Пожар ${ship.fires}`;
+  const soulsLabel = `Души ${ship.souls}/${d.souls}`;
+  const legendTitle = ship.legend
+    ? `Легенда «${legendName}»: ${affordable ? 'нажмите, чтобы прочитать' : 'не хватает Пороха или Душ'}`
+    : `Легенда «${legendName}» сыграна`;
   return (
     <section
       className={cls}
@@ -334,12 +336,16 @@ export function Plank({
         }
         title={plate ? undefined : 'Подробнее о корабле'}
       >
+        <span className="ship-art wide">
+          <span className="ship-pic" dangerouslySetInnerHTML={svg(shipSvg(ship.code))} />
+          {marked && <MarkStamp cls="wide" hidden={markHidden} />}
+        </span>
         <b className="plank-name">
           <span className="wide">{d.name}</span>
           <span className="narrow">{d.nick}</span>
         </b>
         {ship.legend && (
-          // On a phone the Legend badge is hidden: the star opens the same Legend card, not the ship card.
+          // On a phone the medallion of the head is hidden: the star opens the same Legend card, not the ship card.
           <button
             className={`star narrow ${affordable ? '' : 'poor'} ${flash}`}
             data-testid={`star-${ship.code}`}
@@ -351,9 +357,8 @@ export function Plank({
               e.stopPropagation();
               onLegend?.();
             }}
-          >
-            ★
-          </button>
+            dangerouslySetInnerHTML={svg(legendMedal(legendName, `md-${ship.code}-n`))}
+          />
         )}
         <span className="captain wide">{d.captain}</span>
         {plate?.tip && (
@@ -362,23 +367,36 @@ export function Plank({
             {plate.tip}
           </span>
         )}
-        {plate?.chosen && (
-          <svg className="reticle" viewBox="0 0 26 26" aria-hidden>
-            <circle cx="13" cy="13" r="9" fill="none" stroke="#B23A2E" strokeWidth="2" />
-            <circle cx="13" cy="13" r="2.2" fill="#B23A2E" />
-            <path d="M13 1v6M13 19v6M1 13h6M19 13h6" stroke="#B23A2E" strokeWidth="2" />
-          </svg>
-        )}
         <span className="plank-role">
-          {selected && <span className="head-tag">ВЫБРАН</span>}
-          {role && <span className="head-tag">{role}</span>}
+          {(targeted || plate?.chosen) && (
+            // «Под огнём»: the wax seal of the target, pressed into the head (A5, TARGET_SEAL); it lives in the plank.
+            <span className="target-seal" data-testid={`target-seal-${ship.code}`} title="Под огнём" dangerouslySetInnerHTML={svg(TARGET_SEAL)} />
+          )}
+          {selected && <span className="head-tag mine">ВЫБРАН</span>}
+          {role && <span className="head-tag mine">{role}</span>}
           {ready && (
             // On a phone only «✓»: with «ВЫБРАН» next to it the name of the ship stays whole.
             <span className="head-tag ready" data-testid={`ready-${ship.code}`} title="Готов: ход окончен">
-              ✓<span className="wide"> готов</span>
+              <span className="tick" dangerouslySetInnerHTML={svg(READY_SVG)} />
+              <span className="wide">готов</span>
             </span>
           )}
-          <span className="narrow hand-count">{handLabel}</span>
+          <span className="hand-count" title={`Карт в руке: ${ship.hand.length}`} aria-label={handLabel} dangerouslySetInnerHTML={svg(fanSvg(ship.hand.length))} />
+          {!ship.sunk && (
+            <button
+              className={`legend-medal wide ${legendState} ${flash}`}
+              data-fx-legend
+              aria-label={legendTitle}
+              tabIndex={plate ? -1 : undefined}
+              onClick={(e) => {
+                if (plate) return;
+                e.stopPropagation();
+                onLegend?.();
+              }}
+              title={legendTitle}
+              dangerouslySetInnerHTML={svg(legendMedal(legendName, `md-${ship.code}-w`, (['Ж', 'М', 'И', 'Г'].indexOf(ship.code) * 1.7).toFixed(1)))}
+            />
+          )}
         </span>
         {plate && (
           <button
@@ -407,77 +425,38 @@ export function Plank({
               data={{ 'data-fx-status': x.label, 'data-fx-mark': x.mark || undefined }}
               style={x.flag && fxHidden?.includes(x.flag) ? { visibility: 'hidden' } : undefined}
             >
-              {x.mark && MARK_SVG}
+              {x.icon && <span className="chip-icon" dangerouslySetInnerHTML={svg(statusSvg(x.icon))} />}
               {x.label}
-              <span className="wide"> · {x.hint.split(':')[0].toLowerCase()}</span>
             </InfoTip>
           ))}
           {marked && <MarkStamp cls="narrow" hidden={markHidden} />}
         </div>
       )}
       <div className="plank-body">
-        {marked && <MarkStamp cls="wide" hidden={markHidden} />}
         <div className="tracks" key={fxGen}>
-          {TRACKS.map((t) => {
-            const max = startValue(data, ship.code, t);
-            const v = ship.tracks[t];
-            return (
-              <div key={t} className={`track t-${t}`} data-fx-track={t}>
-                <span className="track-label">{TRACK_LABEL[t]}</span>
-                <span className="cells" aria-hidden>
-                  {Array.from({ length: max }, (_, i) => (
-                    <i key={i} className={i < v ? 'on' : ''} />
-                  ))}
-                </span>
-                <span className="bar" aria-hidden>
-                  <i style={{ width: `${(100 * v) / max}%` }} />
-                </span>
-                <b className={`track-num ${v <= (t === 'crew' ? 1 : 0) && t !== 'hull' ? 'low' : ''}`} data-fx-value>
-                  {`${v}/${max}`}
-                </b>
-              </div>
-            );
-          })}
+          {trackEl('hull')}
+          <div className="track-row2">{(['sails', 'guns', 'crew'] as const).map(trackEl)}</div>
         </div>
         <div className="badges">
           {ship.fires > 0 && (
-            <InfoTip className="badge fire" title={`Пожар ${ship.fires}`} text={FIRE_INFO} off={!!plate} data={{ 'data-fx-fires': true, 'data-testid': `fire-${ship.code}` }}>
-              Пожар {ship.fires}
+            <InfoTip className="badge fire" title={fireLabel} text={FIRE_INFO} off={!!plate} data={{ 'data-fx-fires': true, 'data-testid': `fire-${ship.code}` }}>
+              <span className="chip-icon" dangerouslySetInnerHTML={svg(statusSvg('fire'))} />
+              {fireLabel}
             </InfoTip>
           )}
           {d.souls !== undefined && (
-            <InfoTip className="badge souls" title={`Души ${ship.souls} / ${d.souls}`} text={SOULS_INFO} off={!!plate} data={{ 'data-fx-souls': true, 'data-testid': `souls-${ship.code}` }}>
-              Души {ship.souls} / {d.souls}
+            <InfoTip className="badge souls" title={soulsLabel} text={SOULS_INFO} off={!!plate} data={{ 'data-fx-souls': true, 'data-testid': `souls-${ship.code}` }}>
+              <span className="chip-icon" dangerouslySetInnerHTML={svg(SOULS_SVG)} />
+              {soulsLabel}
             </InfoTip>
           )}
-          {!ship.sunk && (
-            <button
-              className={`badge legend ${legendState} ${flash}`}
-              data-fx-legend
-              tabIndex={plate ? -1 : undefined}
-              onClick={(e) => {
-                if (plate) return;
-                e.stopPropagation();
-                onLegend?.();
-              }}
-              title={
-                ship.legend
-                  ? `Легенда «${legendName}»: ${affordable ? 'нажмите, чтобы прочитать' : 'не хватает Пороха или Душ'}`
-                  : `Легенда «${legendName}» сыграна`
-              }
-            >
-              <span className="wide">Легенда: </span>
-              {legendName}
-            </button>
-          )}
-          <span className="badge wide">Рука {ship.hand.length}</span>
         </div>
       </div>
       {buttons.length > 0 && (
         <div className="plank-buttons-wrap" onClick={(e) => e.stopPropagation()}>
           <div className="plank-buttons" ref={buttonsRef}>
             {buttons.map((b) => (
-              <Button key={b.key} b={b} />
+              <PlankButton key={b.key} b={b} />
             ))}
           </div>
           {/* On a phone, while more buttons are to the right: a press scrolls the row (U3). */}
@@ -495,6 +474,70 @@ export function Plank({
         </div>
       )}
     </section>
+  );
+
+  /** A track: the label, the icons (.cells > i.on — the contract of the animations), the bar of a phone, «9/11». */
+  function trackEl(t: Track) {
+    const max = startValue(data, ship.code, t);
+    const v = ship.tracks[t];
+    return (
+      <div key={t} className={`track t-${t}`} data-fx-track={t} style={TRACK_ICON_STYLE[t]}>
+        <span className="track-label">{TRACK_LABEL[t]}</span>
+        <span className="cells" aria-hidden>
+          {Array.from({ length: max }, (_, i) => (
+            <i key={i} className={i < v ? 'on' : ''} />
+          ))}
+        </span>
+        <span className="bar" aria-hidden>
+          <i style={{ width: `${(100 * v) / max}%` }} />
+        </span>
+        <b className={`track-num ${v <= (t === 'crew' ? 1 : 0) && t !== 'hull' ? 'low' : ''}`} data-fx-value>
+          {`${v}/${max}`}
+        </b>
+      </div>
+    );
+  }
+}
+
+/** The icons of the buttons of a plank (A5: an icon, the name | the price with a keg). */
+const CMD_ICON: Record<string, string> = {
+  volley: CELLS.GUN,
+  sword: TRIDENT_SVG,
+  heart: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14 C3 10.4 1.2 7.8 1.2 5.4 C1.2 3.2 2.9 1.6 4.9 1.6 C6.2 1.6 7.3 2.3 8 3.4 C8.7 2.3 9.8 1.6 11.1 1.6 C13.1 1.6 14.8 3.2 14.8 5.4 C14.8 7.8 13 10.4 8 14 Z" fill="#a3271d" stroke="#3a0f0a" stroke-width=".8"/><path d="M4 4 Q5 3 6.2 3.4" stroke="#f3b1a4" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>',
+  treasury: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="12" rx="6" ry="2.2" fill="#a87c22" stroke="#4a340c" stroke-width=".7"/><ellipse cx="8" cy="9" rx="6" ry="2.2" fill="#c99a3a" stroke="#4a340c" stroke-width=".7"/><ellipse cx="8" cy="6" rx="6" ry="2.2" fill="#e2bf62" stroke="#4a340c" stroke-width=".7"/><path d="M5 5.6 Q8 4.4 11 5.6" stroke="#fff3c4" stroke-width=".6" fill="none"/></svg>',
+  dive: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 5 q1.75 -1.6 3.5 0 t3.5 0 t3.5 0 t3.5 0" fill="none" stroke="#2f5f74" stroke-width="1.4" stroke-linecap="round"/><path d="M8 6.6 V14 M5.2 11.2 L8 14 L10.8 11.2" fill="none" stroke="#22384c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  soulHull: SOULS_SVG,
+  soulCrew: SOULS_SVG,
+};
+/** «Залп · 1 П»: the name and the price in Powder. */
+const PRICED = /^(.*?) · (\d+) П$/;
+/** The keg of a price (KEG_S of art/cells2.json). */
+const KEG_SMALL = CELLS.KEG_S;
+
+/** A button of a plank: on a laptop the icon, the name and the price with a keg; on a phone the short label (U3). */
+function PlankButton({ b }: { b: Btn }) {
+  const m = PRICED.exec(b.label);
+  const icon = CMD_ICON[b.key];
+  return (
+    <button
+      className={`btn cmd ${b.primary ? 'primary' : ''}`}
+      onClick={b.disabled ? undefined : b.onClick}
+      aria-disabled={!!b.disabled}
+      title={b.disabled ?? undefined}
+      data-testid={b.testid}
+    >
+      <span className="wide cmd-in">
+        {icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />}
+        <span className="cmd-name">{m ? m[1] : b.label}</span>
+        {m && (
+          <span className="cost" aria-label={`${m[2]} Пороха`}>
+            {m[2]}
+            <span className="cost-keg" dangerouslySetInnerHTML={svg(KEG_SMALL)} />
+          </span>
+        )}
+      </span>
+      <span className="narrow">{breakAfterArrow(b.short ?? b.label)}</span>
+    </button>
   );
 }
 

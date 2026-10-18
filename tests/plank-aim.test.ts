@@ -56,13 +56,15 @@ describe('Plank as a target', () => {
     expect(section).toMatch(/class="plank [^"]*aimable/);
     expect(html).toMatch(/<header class="plank-head">.*data-testid="ship-info-Г".*<\/header>/s);
     expect(tag(html, 'data-testid="star-Г"')).toContain('tabindex="-1"');
-    expect(tag(html, 'class="badge legend')).toContain('tabindex="-1"');
-    expect(html).not.toContain('class="reticle"');
+    expect(tag(html, 'class="legend-medal')).toContain('tabindex="-1"');
+    // not chosen yet: no seal «Под огнём»
+    expect(html).not.toContain('class="target-seal"');
   });
 
-  it('the chosen target: «chosen» instead of «aimable», the reticle', () => {
+  it('the chosen target: «chosen» instead of «aimable», the seal «Под огнём» in the head (A5, in place of the reticle)', () => {
     const html = plank({ tip: null, chosen: true, onClick: () => {} });
-    expect(html).toContain('class="reticle"');
+    expect(html).toMatch(/<header class="plank-head">.*<span class="target-seal" data-testid="target-seal-Г" title="Под огнём"><svg.*<\/header>/s);
+    expect(html).not.toContain('reticle');
     const section = tag(html, 'data-ship="Г"');
     expect(section).toMatch(/class="plank [^"]*chosen/);
     expect(section).not.toContain('aimable');
