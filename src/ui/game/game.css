@@ -3958,3 +3958,23 @@ button.star::before {
   width: 0;
   height: 0;
 }
+/* FX-D: the break of a sinking plank — the two halves (copies of the plank in the layer), the water closing over them */
+.fx-half .fx-sinkwater {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background: linear-gradient(to bottom, rgba(10, 40, 52, 0) 0%, rgba(14, 52, 66, 0.55) 45%, rgba(6, 24, 32, 0.9) 100%);
+  background-size: 100% 220%;
+  border-radius: 6px;
+  opacity: 0;
+}
+.fx-half .fx-breakedge {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 8;
+  overflow: visible;
+}
