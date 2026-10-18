@@ -47,7 +47,8 @@ test.describe('the Volley on the table through ?fxScene (1366×660)', () => {
       const w = window as unknown as { __peak: number };
       w.__peak = 0;
       const tick = () => {
-        const n = document.querySelector('.fx-layer')!.getAnimations({ subtree: true }).length + (document.querySelector('.fx-scars')?.getAnimations({ subtree: true }).length ?? 0);
+        const run = (q: string) => document.querySelector(q)?.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length ?? 0;
+        const n = run('.fx-layer') + run('.fx-scars');
         w.__peak = Math.max(w.__peak, n);
         if (!document.body.dataset.fxDone) requestAnimationFrame(tick);
       };

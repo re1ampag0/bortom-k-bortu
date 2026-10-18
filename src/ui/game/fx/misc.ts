@@ -22,14 +22,15 @@ import type { Side, Track } from '../../../engine/types';
 import { HIDDEN } from '../../../engine/view';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer, FxScene } from './FxLayer';
-import { clearScars } from './scars';
+import { clearScars, plankScars, scar } from './scars';
+import { T } from './timing';
 import {
   KIND_BY_TRACK, type AbilityClip, type CardClip, type DiceClip, type DiscardClip, type DiveClip, type DrawClip, type EndClip, type FallbackClip,
   type FireClip, type FireOutClip, type ImpactClip, type PassClip, type PeekClip, type PowderClip, type RepairClip,
   type SellClip, type SinkClip, type SoulsClip, type StatusClip, type StealClip, type SurfaceClip, type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
-  A, allPlanks, at, badgeMark, bubbles, burst, bx, cardOrigin, handCardPos, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
+  A, allPlanks, at, badgeMark, bubbles, burst, bx, cardOrigin, fireGroup, fireWall, flameEl, fxSvg, handCardPos, isPhone, rnd, smokeColumn, smolderEl, sparksSvg, trackEl, curve, dirOf, facingY, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
   isTop, mk, overlayAt, payKegs, pillAt, plank, projectile, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, steam, tag, trackMark, visible, wait,
   whirlpool, wisp, type FlyCard, type FxCtx, type Pt,
 } from './primitives';
@@ -171,21 +172,71 @@ export function weatherHit(ctx: FxCtx, e: { ship: string; track: Track; amount: 
   return last;
 }
 
-/** A Fire burns the Hull: the Fire badge flares, embers fly into the cells of the Hull. game (S1): no label «Пожар жжёт
- *  Корпус» over the badge and no pill — a short mark at the number of the Hull and a blink of it (trackMark). */
+/**
+ * A Fire burns the Hull (fxFire of fx3.js, ANIMATIONS.md §3.6): the fire starts at the picture of the ship and runs along
+ * the bottom edge of the plank, spots of fire over the head, the glow of the fire on the plank, two columns of smoke,
+ * embers; the boards of the Hull glow red, char and break one by one — the number and a short mark at it (S1). What
+ * stays a while (a medium trace of the ship): the charred bottom, the scorch marks, a flame and smoke on the picture.
+ * The timings — T.fire (fx/timing.ts). game: the air does not shimmer over the plank itself (a filter on the plank would
+ * blur its text and outlive a show cut short) — the flames carry their own torn edge.
+ */
 export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): number {
-  const el = plank(ctx, ship), fb = el.querySelector('[data-fx-fires]') || el.querySelector('.plank-head')!;
-  const sb = bx(ctx, fb);
-  A(ctx, fb, [{ transform: 'scale(1)' }, { transform: 'scale(1.5)' }, { transform: 'scale(1)' }], 400, delay, 'ease-in-out', 'none');
-  const cur = shownTrack(ctx, ship, 'hull');
+  const F = T.fire, el = plank(ctx, ship), b = bx(ctx, el), head = el.querySelector('.plank-head');
+  const hb = head ? bx(ctx, head) : b;
+  const art = el.querySelector('.ship-art');
+  const pb = visible(art) ? bx(ctx, art) : { x: hb.x + 6, y: hb.y, w: 40, h: hb.h, cx: hb.x + 26, cy: hb.cy, r: hb.x + 46, b: hb.b };
+  const svg = fxSvg(ctx), small = isPhone(ctx), group = fireGroup(ctx);
+  const glow = overlayAt(ctx, 'fx-fireglow', b);
+  A(ctx, glow, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.8, offset: 0.5 }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], F.glow, delay);
+  const flames = fireWall(ctx, svg, b.x + 6, b.r - 6, b.b + 2, small ? 20 : 30, { delay, spread: 26, life: F.glow, embers: small ? 12 : 30, host: group });
+  // spots of fire: the picture, then along the head and the bottom edge (fractions of the plank, not the prototype's px)
+  const spots: Pt[] = [{ x: pb.cx, y: pb.b }, ...[0.31, 0.48, 0.62, 0.75, 0.87, 0.19, 0.95].map((f, i) => ({ x: b.x + b.w * f, y: i % 2 ? b.b : hb.b }))];
+  const marks = document.createElement('div');
+  marks.className = 'fx-burnmarks';
+  at(ctx, delay, () => {
+    const host = plankScars(ctx, ship);
+    if (!host) return;
+    marks.innerHTML = '<i class="fx-char"></i>';
+    host.appendChild(marks);
+    A(ctx, marks.firstElementChild!, [{ opacity: 0 }, { opacity: 1 }], 1800, 200);
+    scar(marks, 'medium', ship);
+  });
+  spots.slice(0, small ? 4 : spots.length).forEach((p, i) => {
+    const t = delay + 150 + i * F.spot;
+    flames.push(...fireWall(ctx, svg, p.x - 14, p.x + 14, p.y + 2, small ? 16 : 22, { delay: t, spread: 30, embers: 6, life: F.glow - 150 - i * F.spot, host: group }));
+    at(ctx, t, () => {
+      if (!marks.isConnected) return;
+      const sc = document.createElement('i'), r = rnd(30, 50), pl = bx(ctx, el);
+      sc.className = 'fx-scorch';
+      Object.assign(sc.style, { left: `${p.x - pl.x - r / 2}px`, top: `${p.y - pl.y - r * 0.7}px`, width: `${r}px`, height: `${r * 0.8}px` });
+      marks.appendChild(sc);
+      A(ctx, sc, [{ opacity: 0 }, { opacity: 1 }], 900);
+    });
+  });
+  smokeColumn(ctx, svg, b.cx - b.w * 0.25, b.y + 10, small ? 0.8 : 1.2, 5, 600, delay);
+  smokeColumn(ctx, svg, b.cx + b.w * 0.23, b.y + 10, small ? 0.7 : 1.1, 5, 650, delay);
+  // the boards of the Hull glow red-hot, char black and break, one after another
+  const cur = shownTrack(ctx, ship, 'hull'), cells = trackEl(ctx, ship, 'hull').querySelector('.cells');
   for (let k = 0; k < n; k++) {
+    const t = delay + F.spread + k * F.cellStep, cell = visible(cells) ? cells.children[cur - 1 - k] : null;
+    if (cell) A(ctx, cell, [{ filter: 'none' }, { filter: 'sepia(1) saturate(4) hue-rotate(-20deg) brightness(1.4) drop-shadow(0 0 5px #ff7a2a)', offset: 0.4 }, { filter: 'brightness(.25)' }], F.cell, t, 'ease-in', 'none');
     const p = fxPoint(ctx, ship, 'hull', cur - 1 - k);
-    for (let j = 0; j < (ctx.rich ? 6 : 1); j++) { const em = mk(ctx, 'ember', 0, 0); fly(ctx, em, curve({ x: sb.cx, y: sb.cy }, { x: p.x + (Math.random() - 0.5) * 8, y: p.y }, (Math.random() - 0.5) * 0.4, 10), 480, delay + 250 + j * 40 + k * 120, { lift: 0 }); }
-    flash(ctx, p.x, p.y, delay + 730 + k * 120, 0.8);
+    sparksSvg(ctx, svg, p.x, p.y, 6, t + F.cell * 0.6, ['#ffd27a', '#ff8a2a', '#3a2412']);
   }
-  at(ctx, delay + 730, () => setTrack(ctx, ship, 'hull', Math.max(0, cur - n), '#F2913D'));
-  trackMark(ctx, ship, 'hull', n, delay + 760);
-  return delay + 1250;
+  const burnt = delay + F.spread + Math.max(0, n - 1) * F.cellStep + F.cell * 0.8;
+  at(ctx, burnt, () => setTrack(ctx, ship, 'hull', Math.max(0, cur - n), '#F2913D'));
+  trackMark(ctx, ship, 'hull', n, burnt + 30);
+  // the flames die down; a flame and smoke stay on the picture of the ship (in the trace)
+  const end = burnt + F.hold;
+  A(ctx, group, [{ opacity: 1 }, { opacity: 0 }], F.out, end, 'ease-in', 'forwards');
+  at(ctx, end, () => {
+    if (!marks.isConnected) return;
+    const pl = bx(ctx, el);
+    marks.appendChild(flameEl(ctx, pb.x + pb.w * 0.36 - pl.x, pb.b + 2 - pl.y, small ? 16 : 22, 'fx-flame fx-burn'));
+    marks.appendChild(flameEl(ctx, pb.x + pb.w * 0.66 - pl.x, pb.b + 4 - pl.y, small ? 13 : 18, 'fx-flame fx-burn'));
+    marks.appendChild(smolderEl(pb.cx - pl.x, pb.y - pl.y, ctx.rich ? 4 : 0));
+  });
+  return end + F.out;
 }
 
 /** The deck in the hand row (the deck and the discard), or the middle of the gap. */
@@ -249,11 +300,23 @@ PLAY.turn = async (c, ctx) => {
       if (e.burned) { const kb = bx(ctx, holdEl(ctx, e.side)); tag(ctx, kb.r + 36, kb.cy + 18, `${e.burned} сгорело: Трюм полон`, 400, '', 1400); }
       await wait(ctx, t + 150);
     } else if (e.type === 'fireDamage') {
-      const next = effects[i + 1];
-      const hit = next && next.type === 'damage' && next.ship === e.ship ? next : null;
-      const n = hit ? hit.amount + hit.toHull : e.fires;
-      if (hit) { i++; done.push(hit); }
-      await wait(ctx, burnFx(ctx, e.ship, n, 0));
+      // FX-D (the user's call): the Fires of several ships at the start of a turn burn at once, not one after another
+      let end = 0, f = e;
+      for (;;) {
+        const next = effects[i + 1];
+        const hit = next && next.type === 'damage' && next.ship === f.ship ? next : null;
+        const n = hit ? hit.amount + hit.toHull : f.fires;
+        if (hit) { i++; done.push(hit); }
+        end = Math.max(end, burnFx(ctx, f.ship, n, 0));
+        const after = effects[i + 1];
+        if (after?.type !== 'fireDamage') break;
+        done.push(f);
+        f = after;
+        i++;
+      }
+      await wait(ctx, end);
+      done.push(f);
+      continue;
     } else if (e.type === 'damage') {
       const wave = seaKey(ctx) === 'wave';
       const last = weatherHit(ctx, e, 0, '#5E9CC0');
@@ -454,12 +517,24 @@ PLAY.impact = async (c, ctx) => {
   else last = weatherHit(ctx, c, 0, '#c0392b');
   await wait(ctx, last + 900);
 };
+/** A Fire is set: the fire flares up at the picture of the ship and leaves a scorch mark (a medium trace). */
 PLAY.fire = async (c, ctx) => {
-  const hd = bx(ctx, plank(ctx, c.ship).querySelector('.plank-head')!);
-  const fl = mk(ctx, 'flame', 0, 0, FLAME_SVG);
-  A(ctx, fl, [{ opacity: 0, transform: `translate(${hd.cx}px,${hd.cy + 20}px) scale(.4)` }, { opacity: 1, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1.3)` }, { opacity: 0, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1)` }], 900, 0, 'ease-in-out', 'forwards');
+  const el = plank(ctx, c.ship), hd = bx(ctx, el.querySelector('.plank-head')!), art = el.querySelector('.ship-art');
+  const pb = visible(art) ? bx(ctx, art) : hd;
+  const svg = fxSvg(ctx), group = fireGroup(ctx);
+  fireWall(ctx, svg, pb.x + 4, pb.r - 4, pb.b, isPhone(ctx) ? 16 : 22, { spread: 20, embers: 10, life: T.fire.ignite, host: group });
+  A(ctx, group, [{ opacity: 1 }, { opacity: 0 }], 300, T.fire.ignite, 'ease-in', 'forwards');
+  at(ctx, 200, () => {
+    const host = plankScars(ctx, c.ship);
+    if (!host) return;
+    const pl = bx(ctx, el), sc = document.createElement('i');
+    sc.className = 'fx-scorch';
+    Object.assign(sc.style, { left: `${pb.cx - pl.x - 20}px`, top: `${pb.b - pl.y - 26}px`, width: '40px', height: '32px' });
+    host.appendChild(sc);
+    scar(sc, 'medium', c.ship);
+  });
   tag(ctx, hd.cx, hd.b + 10, `Пожар ${c.fires}`, 300, 'plus', 1200);
-  await wait(ctx, 1000);
+  await wait(ctx, T.fire.ignite + 300);
 };
 
 /** A repair outside a card's effects: from the Souls (a wisp) or from the card at the middle — to the ship it mends. */

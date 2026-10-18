@@ -3866,3 +3866,95 @@ button.star::before {
   background: radial-gradient(ellipse, rgba(20, 10, 4, 0.75), rgba(60, 26, 8, 0.35) 45%, transparent 70%);
   mix-blend-mode: multiply;
 }
+/* FX-D: the fire of A5 (fxFire of the prototype): flames, the glow on the plank, and the burn marks that stay a while
+   (a medium trace inside the plank: the charred bottom, scorch marks, a flame and smoke on the picture of the ship) */
+.fx-flame {
+  position: absolute;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  line-height: 0;
+  filter: drop-shadow(0 0 5px rgba(255, 140, 40, 0.55));
+}
+.fx-flame svg {
+  animation: fx-flame 0.35s ease-in-out infinite alternate;
+  transform-origin: 50% 100%;
+}
+@keyframes fx-flame {
+  from {
+    transform: scale(1, 1) skewX(-2deg);
+  }
+  to {
+    transform: scale(1.05, 0.95) skewX(2deg);
+  }
+}
+.fx-layer > .fx-fireglow {
+  border-radius: 6px;
+  background: radial-gradient(ellipse 70% 90% at 50% 100%, rgba(255, 120, 40, 0.5), rgba(255, 80, 20, 0.15) 60%, transparent 80%);
+  mix-blend-mode: screen;
+}
+.fx-burnmarks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.fx-burnmarks > *,
+.plank-scars > .fx-scorch {
+  position: absolute;
+  pointer-events: none;
+}
+.fx-char {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 62%;
+  background: linear-gradient(to bottom, rgba(40, 16, 4, 0), rgba(60, 24, 6, 0.28) 45%, rgba(26, 10, 2, 0.62));
+  mix-blend-mode: multiply;
+}
+.fx-scorch {
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(18, 10, 4, 0.62), rgba(40, 20, 8, 0.3) 45%, transparent 70%);
+  mix-blend-mode: multiply;
+}
+.fx-smolder {
+  width: 0;
+  height: 0;
+}
+.fx-smolder i {
+  position: absolute;
+  left: -12px;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(70, 66, 62, 0.9), rgba(70, 66, 62, 0) 70%);
+  animation: fx-smolder 2.7s ease-out infinite;
+  opacity: 0;
+}
+@keyframes fx-smolder {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(18px, -56px) scale(2.4);
+    opacity: 0;
+  }
+}
+/* «простые спецэффекты» and reduced motion: still flames, no smoke loops */
+.fx-simple .fx-flame svg,
+.fx-simple .fx-smolder i {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-flame svg,
+  .fx-smolder i {
+    animation: none;
+  }
+}
+.fx-layer > .fx-fire-group {
+  width: 0;
+  height: 0;
+}

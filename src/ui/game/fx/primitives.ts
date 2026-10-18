@@ -12,6 +12,7 @@ import { cardClass } from '../Hand';
 import type { BallKind } from './planFx';
 import type { Display } from './display';
 import { scar } from './scars';
+import { FLAME } from '../art/fire';
 
 /** Everything an effect needs: the reference's globals, for one run of the queue. */
 export interface FxCtx {
@@ -479,7 +480,9 @@ export const FX_BUDGET = 190;
 export function room(ctx: FxCtx, want: number): number {
   if (!ctx.rich) return 0;
   const scars = ctx.board.querySelector('.fx-scars');
-  const busy = ctx.layer.getAnimations({ subtree: true }).length + (scars ? scars.getAnimations({ subtree: true }).length : 0);
+  // the animations that run (or wait for their delay): a finished one only holds its last frame
+  const running = (el: Element) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length;
+  const busy = running(ctx.layer) + (scars ? running(scars) : 0);
   const n = Math.max(0, Math.min(want, FX_BUDGET - busy));
   return isPhone(ctx) ? Math.ceil(n / 2) : n;
 }
@@ -704,4 +707,62 @@ export function fallBoard(ctx: FxCtx, svg: Element, code: string, p: Pt, delay =
     sv(deb, `<g transform="translate(${R1(to.x)} ${R1(to.y)}) scale(1.4)"><g>${rock}<ellipse cx="0" cy="3" rx="13" ry="3" fill="none" stroke="#e6f2f4" stroke-width="1" opacity=".7"/><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/><path d="M9 -2.6 l2 1 l-2 1.2 l2 1.4" fill="none" stroke="#3a2412" stroke-width=".6"/></g></g>`);
     scar(deb, 'long', code);
   });
+}
+
+/* ——— FX-D: the fire of A5 (fireWall, flameAt, smokeColumn of the prototype; ANIMATIONS.md §3.6, §4) ——— */
+/** A flame element `h` px tall standing at (x, y) of its host (the layer, or a trace inside a plank). */
+export function flameEl(ctx: FxCtx, x: number, y: number, h = 22, cls = 'fx-flame'): HTMLElement {
+  const f = document.createElement('div');
+  f.className = cls;
+  f.style.left = `${R1(x - h * 0.35)}px`;
+  f.style.top = `${R1(y - h)}px`;
+  f.innerHTML = FLAME(h, filters(ctx));
+  return f;
+}
+/**
+ * A wall of fire along a line: a bed of embers that breathes, clumps of strong flames with lower ones between them, low
+ * tongues in the gaps, embers flying up (`.ember`). «Простые»: the clumps only, no gaps, no embers. Gives the flames.
+ */
+export function fireWall(ctx: FxCtx, svg: Element, x0: number, x1: number, y: number, h = 34, opt: { delay?: number; spread?: number; clump?: number; embers?: number; life?: number; host?: Element } = {}): HTMLElement[] {
+  const out: HTMLElement[] = [], delay = opt.delay ?? 0, spread = opt.spread ?? 40, life = opt.life ?? 3000;
+  const bed = sv(svg, `<g><ellipse cx="${R1((x0 + x1) / 2)}" cy="${R1(y)}" rx="${R1((x1 - x0) / 2 + 10)}" ry="${R1(h * 0.32)}" fill="url(#fxGlow)"/><path d="M${R1(x0)} ${R1(y + 1)} H${R1(x1)}" stroke="#ffb347" stroke-width="${R1(h * 0.1)}" stroke-linecap="round" opacity=".55"${filters(ctx) ? ' style="filter:blur(2px)"' : ''}/></g>`);
+  A(ctx, bed, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.75, offset: 0.45 }, { opacity: 1, offset: 0.7 }, { opacity: 0.85 }], life, delay);
+  const span = Math.max(1, x1 - x0), nC = Math.max(1, Math.round(span / (opt.clump ?? 70)));
+  const add = (x: number, yy: number, hh: number, op: number, tilt: number, at0: number) => {
+    const fl = flameEl(ctx, x, yy, hh);
+    fl.style.rotate = `${R1(tilt)}deg`;
+    (opt.host ?? ctx.layer).appendChild(fl);
+    A(ctx, fl, [{ transform: 'scaleY(.05)', opacity: 0 }, { transform: 'scaleY(1.2)', opacity: op, offset: 0.35 }, { transform: 'scaleY(1)', opacity: op }], 420, at0);
+    out.push(fl);
+  };
+  for (let c = 0; c < nC; c++) {
+    const cx = x0 + (span * (c + 0.5)) / nC + rnd(-10, 10), big = rnd(0.85, 1.25);
+    const parts: [number, number, number][] = [[0, 2.1 * big, 0.78], [-9, 1.4 * big, 0.85], [9, 1.5 * big, 0.85], [-17, 0.8, 0.9], [17, 0.9, 0.9], [-4, 0.7, 1], [5, 0.6, 1]];
+    parts.slice(0, ctx.rich ? 1 + Math.floor(room(ctx, 12) / 2) : 3).forEach(([dx, hk, op], k) => add(cx + dx + rnd(-3, 3), y + 2 + (k > 4 ? 1 : 0), h * hk * rnd(0.85, 1.1), op, rnd(4, 11), delay + c * spread * 2 + k * 30));
+  }
+  if (ctx.rich) for (let x = x0; x <= x1; x += 9) { if (Math.random() < 0.4 || room(ctx, 2) < 2) continue; add(x, y + 3, h * rnd(0.3, 0.55), 0.9, rnd(6, 14), delay + ((x - x0) / span) * spread * nC * 2); }
+  for (let i = 0, m = room(ctx, opt.embers ?? 30); i < m; i++) {
+    const e = sv(svg, `<circle class="ember" r="${R1(rnd(0.8, 1.9))}" fill="${['#fff3c4', '#ffd27a', '#ff8a2a'][i % 3]}"/>`), x = rnd(x0, x1);
+    A(ctx, e, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 0 }, { opacity: 1, offset: 0.1 }, { transform: `translate(${R1(x + rnd(5, 30))}px,${R1(y - h * rnd(1.4, 3))}px)`, opacity: 1, offset: 0.6 }, { transform: `translate(${R1(x + rnd(20, 60))}px,${R1(y - h * rnd(2.6, 4.4))}px)`, opacity: 0 }], rnd(1200, 2400), delay + rnd(0, life * 0.8));
+  }
+  return out;
+}
+/** A group of flames in the layer: they die down together with one animation (the budget of the layer). */
+export function fireGroup(ctx: FxCtx): HTMLElement {
+  const g = mk(ctx, 'fx-fire-group', 0, 0);
+  g.style.opacity = '1';
+  return g;
+}
+/** A column of thick smoke over a fire: dark clouds keep rising and leaning downwind. */
+export function smokeColumn(ctx: FxCtx, svg: Element, x: number, y: number, k = 1, waves = 4, every = 700, delay = 0): void {
+  for (let w = 0; w < waves; w++) smokeJet(ctx, svg, x + rnd(-8, 8) * k, y, -Math.PI / 2 - 0.25, k, 5, 5200, delay + w * every, true);
+}
+/** A soft column of smoke over something smouldering (a trace on a plank): CSS puffs, still with «простые». */
+export function smolderEl(x: number, y: number, n = 3): HTMLElement {
+  const s = document.createElement('div');
+  s.className = 'fx-smolder';
+  s.style.left = `${R1(x)}px`;
+  s.style.top = `${R1(y)}px`;
+  s.innerHTML = Array.from({ length: n }, (_, i) => `<i style="animation-delay:${(i * 0.9).toFixed(1)}s"></i>`).join('');
+  return s;
 }
