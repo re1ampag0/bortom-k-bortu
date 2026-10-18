@@ -49,7 +49,8 @@ import { instantUrl, reducedMotion } from '../start/motion';
 import { FxLayer, useFxQueue } from './fx/FxLayer';
 import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
-import { Button, Plank, StatusBar, TeamRow, type Btn, type Plate } from './Table';
+import { Button, Plank, RoundButton, SeaChip, StatusBar, TeamRow, useWideLog, type Btn, type Plate } from './Table';
+import { TableThings, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
@@ -414,6 +415,10 @@ export function Game({
   }, [version, mode]);
 
   const nick = (code: string) => `«${shipData(data, code).nick}»`;
+
+  // the layout of the table (V1b): where the tools stand, the measure of the water for the weather
+  const wideLog = useWideLog();
+  const [boardRef, seaRef] = useSeaClip();
 
   // ——— Curtain ———
   if (curtainSide) {
@@ -905,17 +910,12 @@ export function Game({
       ]
     : [];
 
+  // The round brass buttons of the top row (A5): «Журнал» while the log is off the screen, «Правила», «Настройки».
   const toolButtons = (
     <>
-      <button className="btn small wide log-toggle" onClick={() => setSheet({ k: 'log' })}>
-        Журнал
-      </button>
-      <button className="btn small wide" onClick={() => setSheet({ k: 'rules' })}>
-        Правила
-      </button>
-      <button className="btn small icon" onClick={() => setSheet({ k: 'settings' })} aria-label="Настройки" data-testid="settings-btn">
-        ⚙
-      </button>
+      {!wideLog && <RoundButton b={{ key: 'log', label: 'Журнал', onClick: () => setSheet({ k: 'log' }) }} icon="log" className="tool log-toggle wide" />}
+      <RoundButton b={{ key: 'rules', label: 'Правила', onClick: () => setSheet({ k: 'rules' }) }} icon="rules" className="tool wide" />
+      <RoundButton b={{ key: 'settings', label: 'Настройки', onClick: () => setSheet({ k: 'settings' }), testid: 'settings-btn' }} icon="settings" className="tool" />
     </>
   );
 
@@ -988,38 +988,57 @@ export function Game({
     />
   );
 
+  // «‹Союзник› готов — ход закончится, когда нажмёте вы»: by network, an ally of this device already pressed «Ход окончен».
+  const allyReady = net && myTurn ? Object.values(s.ships).find((x) => x.side === bottom && !x.sunk && !mySeats.includes(x.code) && net.ready.includes(x.code)) : undefined;
+  const botIcon: Record<string, string> = { faster: 'faster', skip: 'skip', pause: held ? 'play' : 'pause' };
+
   return (
-    <div className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${effects === 'simple' ? 'fx-simple' : ''}`} data-testid="game" data-bottom={bottom}>
-      <StatusBar s={fx.display ? withDisplay(s, fx.display) : s} data={data} instruction={fx.hint ?? flash ?? instruction} waiting={!myDecision || !!flash} onSea={() => setSheet({ k: 'sea' })} extra={toolButtons} />
-      {net && <NetBar game={net} />}
-      {net && <MissedSheet game={net} />}
-      <main className="board">
+    <div
+      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${effects === 'simple' ? 'fx-simple' : ''}`}
+      data-testid="game"
+      data-bottom={bottom}
+    >
+      <TableThings />
+      <main className="board" ref={boardRef}>
+        <StatusBar
+          s={fx.display ? withDisplay(s, fx.display) : s}
+          data={data}
+          instruction={fx.hint ?? flash ?? instruction}
+          waiting={!myDecision || !!flash}
+          onSea={() => setSheet({ k: 'sea' })}
+          extra={wideLog ? null : toolButtons}
+          chip={!wideLog}
+        />
+        {net && <NetBar game={net} />}
         <TeamRow side={top} s={tableView} data={data} hands={handsOf(top)} regroup={null} hint={null} fxGen={fx.gen} />
-        <div className="planks top">{columns(top).map(renderPlank)}</div>
-        <div className="middle" data-fx-gap>
-          <BannerView data={data} banner={banner} />
-          {toast && (
-            <div className="toast" data-testid="turn-summary" role="status">
-              <span>{toast}</span>
-              <Button b={{ key: 'more', label: 'Подробнее', onClick: () => setSheet({ k: 'lastTurn' }), testid: 'summary-more' }} className="small" />
-            </div>
-          )}
-          {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
-          {!dock && !s.winner && (lastEvent || (myTurn && mode.k === 'idle')) && (
-            <p className="middle-info" data-testid="middle-info">
-              {offerInfo && (
-                <>
-                  <b data-testid="offer-info">{offerInfo}</b>
-                  <br />
-                </>
-              )}
-              {lastEvent && <>Последнее: {lastEvent}</>}
-              {lastEvent && myTurn && mode.k === 'idle' && <br />}
-              {myTurn && mode.k === 'idle' && 'Нажмите карту или «Залп».'}
-            </p>
-          )}
+        <div className="sea-table" ref={seaRef}>
+          <div className="sea-water" aria-hidden />
+          <div className="planks top">{columns(top).map(renderPlank)}</div>
+          <div className="middle" data-fx-gap>
+            <BannerView data={data} banner={banner} />
+            {toast && (
+              <div className="toast" data-testid="turn-summary" role="status">
+                <span>{toast}</span>
+                <Button b={{ key: 'more', label: 'Подробнее', onClick: () => setSheet({ k: 'lastTurn' }), testid: 'summary-more' }} className="small" />
+              </div>
+            )}
+            {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
+            {!dock && !s.winner && (lastEvent || (myTurn && mode.k === 'idle')) && (
+              <p className="middle-info" data-testid="middle-info">
+                {offerInfo && (
+                  <>
+                    <b data-testid="offer-info">{offerInfo}</b>
+                    <br />
+                  </>
+                )}
+                {lastEvent && <>Последнее: {lastEvent}</>}
+                {lastEvent && myTurn && mode.k === 'idle' && <br />}
+                {myTurn && mode.k === 'idle' && 'Нажмите карту или «Залп».'}
+              </p>
+            )}
+          </div>
+          <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
         </div>
-        <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
         <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} fxGen={fx.gen} />
         <div className="hand-row" data-fx-hand>
           {seat && (
@@ -1051,25 +1070,41 @@ export function Game({
             />
           )}
           <div className="hand-actions">
-            {botBtns.map((b) => (
-              <Button key={b.key} b={b} className="small" />
-            ))}
-            {net ? <Button b={remindBtn} className="wide" /> : <Button b={{ ...undoBtn, label: '↶ Отменить' }} className="undo wide" />}
+            {/* A5: «Быстрее · До конца · Пауза» (while a bot moves or a move is shown) and «Отменить» — round brass buttons */}
+            <div className="round-row">
+              {botBtns.map((b) => (
+                <RoundButton key={b.key} b={b} icon={botIcon[b.key]} />
+              ))}
+              {net ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" />}
+            </div>
             <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+            {allyReady && (
+              <p className="ally-ready" data-testid="ally-ready">
+                «{shipData(data, allyReady.code).nick}»: готово — ход закончится, когда нажмёте вы
+              </p>
+            )}
           </div>
         </div>
         <FxLayer fx={fx} />
       </main>
       <aside className="log-col">
-        <h2>Журнал</h2>
-        <LogList data={data} log={shownLog} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />
-        <div className="log-actions">
-          <button className="btn small" onClick={() => setSheet({ k: 'log' })}>
-            Весь журнал
-          </button>
-          <button className="btn small" onClick={downloadLog}>
-            Скачать
-          </button>
+        {wideLog && (
+          <div className="log-tools">
+            <SeaChip s={fx.display ? withDisplay(s, fx.display) : s} data={data} onSea={() => setSheet({ k: 'sea' })} />
+            {toolButtons}
+          </div>
+        )}
+        <div className="log-paper">
+          <h2>Судовой журнал</h2>
+          <LogList data={data} log={shownLog} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />
+          <div className="log-actions">
+            <button className="btn small" onClick={() => setSheet({ k: 'log' })}>
+              Весь журнал
+            </button>
+            <button className="btn small" onClick={downloadLog}>
+              Скачать
+            </button>
+          </div>
         </div>
       </aside>
       <nav className={`bottom-bar ${canHold ? 'has-pause' : ''}`}>
@@ -1083,6 +1118,7 @@ export function Game({
         {botBusy ? <Button b={botBtns[1]} /> : net ? <Button b={remindBtn} /> : <Button b={undoBtn} className="undo" />}
         <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       </nav>
+      {net && <MissedSheet game={net} />}
 
       {sheet?.k === 'card' && (
         <CardDetail
