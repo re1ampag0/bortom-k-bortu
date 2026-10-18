@@ -1088,6 +1088,12 @@ export function Game({
                 }
                 setSheet({ k: 'card', seat: holder, code });
               }}
+              // V2: on a phone the first tap lifts a card, but the two choices above take it at once (the user's call)
+              direct={(holder: string, code: string) =>
+                code !== HIDDEN &&
+                ((mode.k === 'aim' && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) ||
+                  (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)))
+              }
               onDiscard={(x) => setSheet({ k: 'discard', seat: x })}
               label={handLabel}
               note={captainNote}

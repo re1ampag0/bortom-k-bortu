@@ -3687,35 +3687,6 @@ button.star::before {
   width: 100%;
   min-width: 0;
 }
-.hand-cards {
-  container-type: inline-size;
-}
-/* the overlap only where the cards do not fit side by side: six in a narrow hand, seven and more always */
-@container (max-width: 770px) {
-  .hand-cards:has(> .hcard:nth-child(6)) > .hcard + .hcard {
-    margin-left: -16px;
-  }
-}
-.hand-cards:has(> .hcard:nth-child(7)) > .hcard + .hcard {
-  margin-left: -26px;
-}
-.hand-cards > .hcard {
-  position: relative;
-}
-/* a card under the pointer or chosen comes over its neighbour, whole */
-.hand-cards > .hcard:hover,
-.hand-cards > .hcard:focus-visible,
-.hand-cards > .hcard.chosen {
-  z-index: 2;
-}
-@media (max-width: 700px) {
-  .hand-cards {
-    container-type: normal;
-  }
-  .hand-cards:has(> .hcard:nth-child(7)) > .hcard + .hcard {
-    margin-left: 0;
-  }
-}
 /* not playable now: grey, but not see-through (the things of the table must not show through a card) */
 .hcard.off {
   opacity: 1;
@@ -3742,5 +3713,143 @@ button.star::before {
   .board > .team-row.table-edge {
     position: static;
     width: auto;
+  }
+}
+
+/* ═══════════ V2 — the hand as a fan (A5Table.html; docs/mockups/a5/README.md, «Рука»). Only transform moves: the tilt and
+   the place of a card (--r, --dy of Hand.tsx fanOf) are the separate properties rotate/translate/scale, so the WAAPI
+   «transform» of the clips (the draw of a card, a shake) adds to them. ═══════════ */
+.hand-cards > .hcard {
+  position: relative;
+  transform-origin: 50% 100%;
+  rotate: var(--r, 0deg);
+  translate: 0 var(--dy, 0px);
+  /* the old lift of :hover / .chosen (transform) gives way to translate; transform stays the clips' */
+  transform: none;
+  transition:
+    rotate 0.18s ease-out,
+    translate 0.18s ease-out,
+    scale 0.18s ease-out,
+    box-shadow 0.18s,
+    filter 0.18s;
+}
+/* playable now: a warm glow (.glow of A5Table.html); not playable — grey (.hcard.off) */
+.hand-cards > .hcard:not(.off):not(.back) {
+  box-shadow:
+    0 0 0 2px var(--brass-hi),
+    0 0 16px rgba(255, 196, 120, 0.6),
+    0 6px 12px rgba(0, 0, 0, 0.45);
+}
+.hand-cards > .hcard.chosen {
+  box-shadow:
+    0 0 0 2.5px var(--fire-a5),
+    0 0 18px rgba(233, 180, 76, 0.7),
+    0 6px 12px rgba(0, 0, 0, 0.45);
+}
+@media (min-width: 701px) {
+  /* the laptop: the whole hand fits (Hand.tsx useFanFit gives the overlap the width needs), so it does not scroll and
+     a card that rises is never cut off */
+  .hand-cards {
+    overflow: visible;
+    padding-top: 6px;
+  }
+  .hand-cards > .hcard + .hcard {
+    margin-left: calc(-1 * var(--ov, 0px));
+  }
+  /* the pointer or the keyboard on a card: it straightens, rises and grows; the neighbours step aside */
+  .hand-cards > .hcard:hover,
+  .hand-cards > .hcard:focus-visible {
+    z-index: 3;
+    rotate: 0deg;
+    translate: 0 -26px;
+    scale: 1.12;
+  }
+  .hand-cards > .hcard:has(+ .hcard:hover),
+  .hand-cards > .hcard:has(+ .hcard:focus-visible) {
+    translate: -14px var(--dy, 0px);
+  }
+  .hand-cards > .hcard:hover + .hcard,
+  .hand-cards > .hcard:focus-visible + .hcard {
+    translate: 14px var(--dy, 0px);
+  }
+  .hand-cards > .hcard:has(+ .hcard + .hcard:hover),
+  .hand-cards > .hcard:has(+ .hcard + .hcard:focus-visible) {
+    translate: -6px var(--dy, 0px);
+  }
+  .hand-cards > .hcard:hover + .hcard + .hcard,
+  .hand-cards > .hcard:focus-visible + .hcard + .hcard {
+    translate: 6px var(--dy, 0px);
+  }
+  .hand-cards > .hcard.chosen {
+    z-index: 2;
+  }
+}
+@media (max-width: 700px) {
+  /* the phone: the fan scrolls with the finger and snaps to a card; the edges fade and tilt more (--pr, --pf of
+     usePhoneFan), the card in the middle is straight. Room above the cards for a lifted one (the strip keeps its place:
+     the margin takes the padding back) — the strip itself lets presses through to the tabs under that room. */
+  .hand-cards {
+    scroll-snap-type: x mandatory;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    padding: 34px 34px 6px;
+    margin-top: -30px;
+    scroll-padding: 0 34px;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+  }
+  .hand-cards > * {
+    pointer-events: auto;
+  }
+  .hand-cards > .hcard {
+    scroll-snap-align: center;
+    rotate: var(--pr, 0deg);
+    translate: none;
+    opacity: var(--pf, 1);
+    transition:
+      rotate 0.12s linear,
+      translate 0.18s ease-out,
+      scale 0.18s ease-out,
+      opacity 0.12s linear;
+  }
+  /* a tap lifts the card over the hand (up — the bottom bar with «Ход окончен» stays free); the second tap opens it */
+  .hand-cards > .hcard.lifted {
+    z-index: 3;
+    rotate: 0deg;
+    translate: 0 -14px;
+    scale: 1.15;
+    opacity: 1;
+  }
+  .hand-cards > .hcard.chosen {
+    translate: 0 -6px;
+    opacity: 1;
+  }
+}
+/* prefers-reduced-motion and «простые спецэффекты»: no tilt and no movement — only the frame of the chosen card */
+.fx-simple .hand-cards > .hcard,
+.fx-simple .hand-cards > .hcard:hover,
+.fx-simple .hand-cards > .hcard:focus-visible,
+.fx-simple .hand-cards > .hcard.lifted,
+.fx-simple .hand-cards > .hcard.chosen,
+.fx-simple .hand-cards > .hcard:has(+ .hcard:hover),
+.fx-simple .hand-cards > .hcard:hover + .hcard {
+  rotate: none;
+  translate: none;
+  scale: none;
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hand-cards > .hcard,
+  .hand-cards > .hcard:hover,
+  .hand-cards > .hcard:focus-visible,
+  .hand-cards > .hcard.lifted,
+  .hand-cards > .hcard.chosen,
+  .hand-cards > .hcard:has(+ .hcard:hover),
+  .hand-cards > .hcard:hover + .hcard {
+    rotate: none;
+    translate: none;
+    scale: none;
+    transition: none;
   }
 }
