@@ -6,7 +6,7 @@ import { startValue } from '../src/engine/state';
 import type { Track } from '../src/engine/types';
 import { HIDDEN } from '../src/engine/view';
 import { Hand } from '../src/ui/game/Hand';
-import { Plank, StatusBar, TeamRow, type Plate } from '../src/ui/game/Table';
+import { Plank, StatusBar, TeamRow, TopHold, type Plate } from '../src/ui/game/Table';
 import { data, turnOf } from './helpers';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
@@ -61,6 +61,14 @@ describe('data-fx-* DOM contract', () => {
     expect(count(html, /data-fx-keg/g)).toBe(data.econ.cap);
   });
 
+  it('the Hold of the top team in the top row (V1c): data-fx-hold, a keg per cell, the label the Powder marks look for', () => {
+    const html = renderToStaticMarkup(createElement(TopHold, { side: 'КОМПАНИЯ', s, data }));
+    expect(html).toContain('data-fx-hold="КОМПАНИЯ"');
+    expect(count(html, /data-fx-keg/g)).toBe(data.econ.cap);
+    expect(html).toContain('class="hold-label"');
+    expect(html).toContain(`Трюм Компании · ${s.teams['КОМПАНИЯ'].powder} из ${data.econ.cap}`);
+  });
+
   it('the hand: data-fx-card on every card (a hidden one too) and data-fx-deck', () => {
     const seat = 'Ж';
     const ship = s.ships[seat];
@@ -95,11 +103,11 @@ describe('data-fx-* DOM contract', () => {
 describe('«Чёрная метка» on the plank (U3)', () => {
   const marked = structuredClone(s);
   marked.turn.marks = { И: 2 };
-  it('the marked ship has the stamp: in the body (laptop) and in the row of statuses (phone), the chip «Чёрная метка +2» kept', () => {
+  it('the marked ship has the stamp: on the drawing of the ship in the head (laptop, A5) and in the row of statuses (phone), the chip «Чёрная метка +2» kept', () => {
     const html = plank('И', null, marked);
     expect(count(html, /data-fx-mark-stamp/g)).toBe(2);
-    expect(html).toMatch(/<div class="plank-body"><span class="mark-stamp wide" data-fx-mark-stamp="true"[^>]*><svg/);
-    expect(html).toMatch(/<div class="plank-statuses" data-fx-statuses="true">.*<span class="mark-stamp narrow" data-fx-mark-stamp="true"/);
+    expect(html).toMatch(/<span class="ship-art wide"><span class="ship-pic">.*?<\/span><span class="mark-stamp wide" data-fx-mark-stamp="true"[^>]*><svg/s);
+    expect(html).toMatch(/<div class="plank-statuses" data-fx-statuses="true">.*<span class="mark-stamp narrow" data-fx-mark-stamp="true"/s);
     expect(html).toContain('data-fx-mark="true"');
     expect(html).toContain('Чёрная метка +2');
   });

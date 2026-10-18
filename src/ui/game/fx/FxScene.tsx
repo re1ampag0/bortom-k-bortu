@@ -17,7 +17,8 @@ import type { Speed } from '../../storage';
 import { Hand, seatLabel } from '../Hand';
 import { CardDetail } from '../Overlays';
 import type { Recent } from '../../../net/local';
-import { Plank, StatusBar, TeamRow } from '../Table';
+import { Plank, SeaChip, StatusBar, TeamRow, TopHold, useWideLog } from '../Table';
+import { TableThings, useSeaClip } from '../TableThings';
 import { applyVisible, displayRules, type Display } from './display';
 import { FxLayer, useFxQueue } from './FxLayer';
 import { markN } from './misc';
@@ -190,6 +191,8 @@ function SceneTable({
   const speed = urlSpeed();
   // «?speed=instant» (S1): the layer is off, as in the game at «мгновенно» — the table is at once the result.
   const enabled = !reducedMotion() && new URLSearchParams(location.search).get('speed') !== 'instant';
+  const wideLog = useWideLog();
+  const [boardRef, seaRef] = useSeaClip();
   const fx = useFxQueue({
     game: { kind: 'net', recent: started ? setup.recent : [], state: view },
     version: started ? 1 : 0,
@@ -241,17 +244,23 @@ function SceneTable({
       onLegend={null}
     />
   );
-  const handsOf = (side: Side) => Object.values(view.ships).filter((x) => x.side === side).map((x) => x.hand.length);
   const seat = setup.handSeat;
+  const shown = fx.display ? withDisplay(view, fx.display) : view;
   return (
     <div className="game" data-testid="game" data-bottom={bottom} data-fx-scene={scene.id}>
-      <StatusBar s={fx.display ? withDisplay(view, fx.display) : view} data={data} instruction={fx.hint ?? scene.title} waiting={false} onSea={() => {}} extra={null} />
-      <main className="board">
-        <TeamRow side={top} s={tableView} data={data} hands={handsOf(top)} regroup={null} hint={null} fxGen={fx.gen} />
-        <div className="planks top">{columns(top).map(renderPlank)}</div>
-        <div className="middle" data-fx-gap />
-        <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
+      <TableThings />
+      <main className="board" ref={boardRef}>
+        <StatusBar s={shown} data={data} instruction={fx.hint ?? scene.title} waiting={false} onSea={() => {}} extra={null} chip={!wideLog} hold={<TopHold side={top} s={tableView} data={data} fxGen={fx.gen} />} />
+        <div className="sea-table" ref={seaRef}>
+          <div className="sea-water" aria-hidden />
+          <div className="planks top">{columns(top).map(renderPlank)}</div>
+          <div className="middle" data-fx-gap />
+          <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
+        </div>
         <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={null} hint={null} fxGen={fx.gen} />
+        {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
+            Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
+        <div className="team-row table-edge" aria-hidden />
         <div className="hand-row" data-fx-hand>
           <Hand
             s={view}
@@ -270,7 +279,14 @@ function SceneTable({
         <FxLayer fx={fx} />
       </main>
       <aside className="log-col">
-        <h2>Журнал</h2>
+        {wideLog && (
+          <div className="log-tools">
+            <SeaChip s={shown} data={data} onSea={() => {}} />
+          </div>
+        )}
+        <div className="log-paper">
+          <h2>Судовой журнал</h2>
+        </div>
       </aside>
       {card && <CardDetail data={data} code={card} status={null} buttons={[]} onClose={() => setCard(null)} />}
     </div>
