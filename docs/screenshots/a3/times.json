@@ -1,30 +1,30 @@
 {
   "regroup-1366x660": {
     "scene": "regroup",
-    "ms": 1048
+    "ms": 978
   },
   "sword-1366x660": {
     "scene": "sword",
-    "ms": 1688
+    "ms": 1888
   },
   "dive-1366x660": {
     "scene": "dive",
-    "ms": 1115
+    "ms": 1247
   },
   "surface-1366x660": {
     "scene": "surface",
-    "ms": 840
+    "ms": 982
   },
   "sink-1366x660": {
     "scene": "guns",
-    "ms": 4966
+    "ms": 11839
   },
   "heart-1366x660": {
     "scene": "heart",
-    "ms": 1984
+    "ms": 2195
   },
   "sink-430x932": {
     "scene": "guns",
-    "ms": 4963
+    "ms": 11760
   }
 }

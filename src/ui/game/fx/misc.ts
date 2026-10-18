@@ -22,19 +22,33 @@ import type { Side, Track } from '../../../engine/types';
 import { HIDDEN } from '../../../engine/view';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer, FxScene } from './FxLayer';
+import { clearScars, plankScars, scar, seaScars } from './scars';
+import { CELLS } from '../art/cells';
+import { T } from './timing';
 import {
   KIND_BY_TRACK, type AbilityClip, type CardClip, type DiceClip, type DiscardClip, type DiveClip, type DrawClip, type EndClip, type FallbackClip,
   type FireClip, type FireOutClip, type ImpactClip, type PassClip, type PeekClip, type PowderClip, type RepairClip,
   type SellClip, type SinkClip, type SoulsClip, type StatusClip, type StealClip, type SurfaceClip, type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
-  A, allPlanks, at, badgeMark, bubbles, burst, bx, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
+  A, allPlanks, at, badgeMark, burst, bx, cardOrigin, clamp, fireGroup, fireWall, filters, flameEl, flashBoard, hitBlast, qpts, ringSvg, room, splintersSvg, sv, waterColumn, boom, type Box, fxSvg, handCardPos, isPhone, rnd, smokeColumn, smolderEl, sparksSvg, trackEl, curve, dirOf, facingY, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
   isTop, mk, overlayAt, payKegs, pillAt, plank, projectile, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, steam, tag, trackMark, visible, wait,
-  whirlpool, wisp, type FlyCard, type FxCtx, type Pt,
+  wisp, type FlyCard, type FxCtx, type Pt,
 } from './primitives';
 
 /** FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. */
-export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, filter: (e: GameEvent) => boolean = () => true): Promise<void> {
+export interface FlipMove {
+  code: string;
+  from: Box;
+  to: Box;
+}
+/**
+ * FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. FX-D: `delay` —
+ * the planks wait at their old places (the course of «Перестроение» is plotted first); `arc` — how far the k-th moving
+ * plank swings toward the gap (negative — outward); `onMoves` — the moves, measured before they start.
+ */
+export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, filter: (e: GameEvent) => boolean = () => true, opt: { delay?: number; arc?: (code: string, k: number) => number; onMoves?: (moves: FlipMove[]) => void } = {}): Promise<void> {
+  const delay = opt.delay ?? 0, moves: FlipMove[] = [];
   const before: Record<string, ReturnType<typeof bx>> = {};
   for (const el of allPlanks(ctx)) before[el.dataset.fxShip!] = bx(ctx, el);
   ctx.renderWith(evs.filter(filter));
@@ -43,10 +57,13 @@ export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, fil
     const b1 = bx(ctx, el), dx = b0.x - b1.x, dy = b0.y - b1.y;
     if (Math.abs(dx) < 2 && Math.abs(dy) < 2) continue;
     const lift = dx > 0 ? 1 : -1;
-    A(ctx, el, [{ transform: `translate(${dx}px,${dy}px)` }, { transform: `translate(${dx / 2}px,${dy / 2 + dirOf(ctx, code) * -16 * lift}px) rotate(${lift * 1.5}deg)`, offset: 0.5 }, { transform: 'none' }], d, 0, 'cubic-bezier(.45,0,.3,1)', 'none');
-    if (ctx.rich) { const m = bx(ctx, el); for (let q = 0; q < 3; q++) splash(ctx, m.x + m.w * (0.25 + q * 0.25), facingY(ctx, code), d * 0.85 + q * 60); }
+    const midY = opt.arc ? dy / 2 + dirOf(ctx, code) * opt.arc(code, moves.length) : dy / 2 + dirOf(ctx, code) * -16 * lift;
+    moves.push({ code, from: b0, to: b1 });
+    A(ctx, el, [{ transform: `translate(${dx}px,${dy}px)` }, { transform: `translate(${dx / 2}px,${midY}px) rotate(${lift * 1.5}deg)`, offset: 0.5 }, { transform: 'none' }], d, delay, 'cubic-bezier(.45,0,.3,1)', delay ? 'backwards' : 'none');
+    if (ctx.rich) { const m = bx(ctx, el); for (let q = 0; q < 3; q++) splash(ctx, m.x + m.w * (0.25 + q * 0.25), facingY(ctx, code), delay + d * 0.85 + q * 60); }
   }
-  await wait(ctx, d + 80);
+  opt.onMoves?.(moves);
+  await wait(ctx, delay + d + 80);
 }
 export const SWAP_LABEL: Record<string, string> = { regroup: 'Перестроение', maelstrom: 'Мальстрём', current: 'Течение', jack: 'Джек ускользает', sword: 'Меч Тритона', card: 'Смена мест', sink: 'Капитан уходит к союзнику' };
 export function banner(ctx: FxCtx, text: string, cls = 'small', d = 1200, y?: number): HTMLElement {
@@ -88,7 +105,7 @@ const PLAY = PLAY_MISC as unknown as {
   turnEnd: (c: TurnEndClip, ctx: FxCtx) => Promise<void>;
   draw: (c: DrawClip, ctx: FxCtx) => Promise<void>;
   swap: (c: SwapClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
-  sink: (c: SinkClip, ctx: FxCtx) => Promise<void>;
+  sink: (c: SinkClip & { events: GameEvent[] }, ctx: FxCtx) => Promise<void>;
   dive: (c: DiveClip, ctx: FxCtx) => Promise<void>;
   surface: (c: SurfaceClip, ctx: FxCtx) => Promise<void>;
   ability: (c: AbilityClip, ctx: FxCtx) => Promise<void>;
@@ -99,51 +116,235 @@ PLAY.swap = async (c, ctx) => {
   if (c.cost) payKegs(ctx, c.side, c.cost, 0);
   const a = plank(ctx, c.ships[0]);
   banner(ctx, SWAP_LABEL[c.reason] || 'Смена мест', 'small', 1200, (bx(ctx, a).y + bx(ctx, a).b) / 2);
-  await wait(ctx, 250);
-  await flipTo(ctx, c.events, 650);
-  await wait(ctx, 150);
+  // FX-D (fxSwap of fx3.js; T.swap): the course is plotted in ink with a compass stamp (on the sea, under the planks), one
+  // ship goes through the gap, the other a little outward, each leaves a wake; they settle with a bob and rings
+  const S = T.swap, sea = seaScars(ctx), ink = sea ? scar(fxSvg(ctx, sea), 'short') : fxSvg(ctx);
+  let moved: FlipMove[] = [];
+  await flipTo(ctx, c.events, S.sail, undefined, {
+    delay: S.plot,
+    arc: (_code, k) => (k === 0 ? 88 : -24),
+    onMoves: (moves) => {
+      moved = moves;
+      moves.forEach((m, k) => {
+        const toGap = dirOf(ctx, m.code), edge = (b: Box) => (toGap > 0 ? b.b : b.y);
+        const x0 = m.from.cx, y0 = edge(m.from), x1 = m.to.cx, y1 = edge(m.to), cy = Math.max(y0, y1) * (toGap > 0 ? 1 : 0) + Math.min(y0, y1) * (toGap > 0 ? 0 : 1) + toGap * (k === 0 ? 88 : -24) * 1.6;
+        const dd = `M${x0.toFixed(1)} ${y0.toFixed(1)} Q${((x0 + x1) / 2).toFixed(1)} ${cy.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+        const course = sv(ink, `<path d="${dd}" fill="none" stroke="#1f1a14" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>`) as SVGPathElement;
+        const L = course.getTotalLength();
+        course.style.strokeDasharray = `${L}`;
+        A(ctx, course, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], S.course, k * 200, 'ease-in-out', 'both');
+        const head = sv(ink, '<path d="M-7 -5 L2 0 L-7 5" fill="none" stroke="#1f1a14" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>');
+        const ang = (Math.atan2(y1 - cy, x1 - (x0 + x1) / 2) * 180) / Math.PI;
+        A(ctx, head, [{ transform: `translate(${x1}px,${y1}px) rotate(${ang}deg)`, opacity: 0 }, { transform: `translate(${x1}px,${y1}px) rotate(${ang}deg)`, opacity: 0.85 }], 200, k * 200 + S.course);
+        const wake = sv(ink, `<path d="${dd}" fill="none" stroke="#eef6f8" stroke-width="3" stroke-linecap="round" opacity=".8"/>`) as SVGPathElement;
+        wake.style.strokeDasharray = `${L}`;
+        A(ctx, wake, [{ strokeDashoffset: L, opacity: 0.8 }, { strokeDashoffset: 0, opacity: 0.8, offset: 0.85 }, { strokeDashoffset: 0, opacity: 0 }], S.sail + S.fade, S.plot, 'ease-in-out', 'both');
+        if (k === 0) {
+          const st = sv(ink, '<g><circle r="16" fill="#efe3c8" stroke="#1f1a14" stroke-width="1.4"/><path d="M0 -13 L3 0 L0 13 L-3 0 Z" fill="#1f1a14"/><path d="M-13 0 L0 -3 L13 0 L0 3 Z" fill="#8e2b22"/></g>');
+          const mx = (x0 + x1) / 2, my = (y0 + cy) / 2;
+          A(ctx, st, [{ transform: `translate(${mx}px,${my}px) scale(2.4)`, opacity: 0 }, { transform: `translate(${mx}px,${my}px) scale(1)`, opacity: 1 }], S.stamp, S.course, 'cubic-bezier(.6,0,.9,.5)');
+        }
+      });
+    },
+  });
+  // they settle with a bob; rings run out on the water; the course fades
+  for (const m of moved) {
+    const el = plank(ctx, m.code), toGap = dirOf(ctx, m.code);
+    A(ctx, el, [{ translate: '0 0' }, { translate: `0 ${toGap * 4}px` }, { translate: `0 ${-toGap * 1.5}px` }, { translate: '0 0' }], S.settle, 0, 'ease-out', 'none');
+    for (let i = 0; i < 2; i++) ringSvg(ctx, fxSvg(ctx), m.to.cx, facingY(ctx, m.code) + toGap * 10, 20, Math.min(200, m.to.w * 0.4) - i * 50, '#eef6f8', 1000, i * 200, 1.6);
+  }
+  A(ctx, ink, [{ opacity: 1 }, { opacity: 0 }], S.fade, 0, 'ease-out', 'forwards');
+  await wait(ctx, S.settle + 150);
 };
 
-/** Sinking: the plank heels over and goes down, water, a whirlpool, the stamp «Затонул»; the captain goes to the ally. */
+/** The captain of A5: the icon of the Crew in a red coat and a cocked hat (fxSink of fx3.js). */
+const SAILOR = CELLS.CREW.replace(/<svg[^>]*>/, '').replace('</svg>', '');
+const CAPTAIN = SAILOR.replace('fill="#ece4d0"', 'fill="#8a1c14"').replace(/fill="#3a2a22"/g, 'fill="#5a1410"').replace('fill="#9b2a1f"', 'fill="#1c1814"').replace('fill="#7e1f16"', 'fill="none"').replace('stroke="#4e120c" stroke-width=".25"', 'stroke="none"')
+  + '<path d="M1.2 4.8 Q7 -1.8 12.8 4.8 Q10.2 3.4 7 4.2 Q3.8 3.4 1.2 4.8 Z" fill="#1c1814" stroke="#e0bd62" stroke-width=".45"/><path d="M6.4 2.2 L7 1.4 L7.6 2.2 Z" fill="#e0bd62"/>';
+const OAR = '<g class="oar"><path d="M0 0 L22 9" stroke="#6b4422" stroke-width="1.6" stroke-linecap="round"/><path d="M19 7.6 L27 11.4 L26 13.4 L18.4 9.6 Z" fill="#8a5a32" stroke="#2a1a0c" stroke-width=".5"/></g>';
+const DEBRIS = [
+  '<rect x="-9" y="-2.4" width="18" height="4.8" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/>',
+  '<g><ellipse rx="6" ry="7.4" fill="#8a5a32" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.4 H6 M-6 2.4 H6" stroke="#3a3530" stroke-width="1.1"/></g>',
+  '<rect x="-16" y="-1.6" width="32" height="3.2" rx="1" fill="#6b4422" stroke="#22190f" stroke-width=".6"/>',
+  '<path d="M-6 -5 L6 -3 L4 5 L-5 4 Z" fill="#e8dcc0" stroke="#22190f" stroke-width=".6"/>',
+];
+/** A half of the plank for the break: a copy of the plank in the layer (no data-fx-*, no test ids — it is not a ship). */
+function planHalf(ctx: FxCtx, el: HTMLElement, b: Box, clip: string, origin: string, jag: string): HTMLElement {
+  const c = el.cloneNode(true) as HTMLElement;
+  for (const n of [c, ...c.querySelectorAll<HTMLElement>('*')]) for (const a of [...n.attributes]) if (/^data-(fx|testid|ship)|^id$|^tabindex$/.test(a.name)) n.removeAttribute(a.name);
+  c.classList.add('fx-half');
+  Object.assign(c.style, { position: 'absolute', left: `${b.x}px`, top: `${b.y}px`, width: `${b.w}px`, height: `${b.h}px`, margin: '0', boxSizing: 'border-box', clipPath: clip, transformOrigin: origin, opacity: '1', pointerEvents: 'none' });
+  c.insertAdjacentHTML('beforeend', `<div class="fx-sinkwater"></div><svg class="fx-breakedge" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${jag}" fill="none" stroke="#1c0c04" stroke-width="7" vector-effect="non-scaling-stroke" stroke-linejoin="round"/><polyline points="${jag}" fill="none" stroke="#ff8a2a" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" opacity=".9"/></svg>`);
+  ctx.layer.appendChild(c);
+  return c;
+}
+
+/**
+ * A ship goes down (fxSink of fx3.js, ANIMATIONS.md §3.8): three last hits along the plank → the fire takes hold, black
+ * smoke → the powder room goes up (a fireball, two shockwaves, a hard shake, wreckage flying in arcs into the sea) → the
+ * hull breaks in two along a torn line, the halves tilt into a V and go under, the water closes over them, bubbles, a
+ * swirl → the plank comes back grey (the table is drawn with the clip's events) and the stamp «Затонул» falls with dust →
+ * the wreck stays on the water (a long trace) → the captain rows to the ally in a longboat (when the ally is afloat, as
+ * before). The timings — T.sink (fx/timing.ts).
+ */
 PLAY.sink = async (c, ctx) => {
-  const el = plank(ctx, c.ship), b = bx(ctx, el);
+  const S = T.sink, el = plank(ctx, c.ship), b = bx(ctx, el), up = isTop(ctx, c.ship) ? false : true; // up: the gap is above (a bottom-row ship)
+  const fy = facingY(ctx, c.ship), toGap = up ? -1 : 1, small = isPhone(ctx);
   hint(ctx, `${nick(ctx, c.ship)} тонет`);
-  const fb = el.querySelector('[data-fx-fires]');
-  if (fb) { const sb = bx(ctx, fb); steam(ctx, sb.cx, sb.cy, 300); }
-  A(ctx, el, [{ transform: 'none', opacity: 1 }, { transform: 'rotate(-2.5deg) translateY(3px)', offset: 0.25 }, { transform: 'rotate(-3.5deg) translateY(30px)', opacity: 0.15 }], 1500, 0, 'ease-in', 'forwards');
-  const water = mk(ctx, 'tint', 0, 0); water.style.width = b.w + 'px'; water.style.height = b.h + 'px'; water.style.background = 'linear-gradient(rgba(36,70,92,0), rgba(36,70,92,.55))'; water.style.borderRadius = '12px';
-  A(ctx, water, [{ opacity: 0, transform: `translate(${b.x}px,${b.y + b.h * 0.6}px) scaleY(.2)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }], 1300, 200, 'ease-in', 'forwards');
-  bubbles(ctx, b.x + 10, b.b - 6, b.w - 20, 400, ctx.rich ? 22 : 0, 60);
-  whirlpool(ctx, b.cx, b.cy + 10, 500, Math.min(200, b.w * 0.7), 1400);
-  const st = mk(ctx, 'stamp-fx', b.cx, b.cy, 'Затонул');
-  A(ctx, st, [{ opacity: 0, scale: '1.8' }, { opacity: 1, scale: '1', offset: 0.3 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], 1400, 900, 'cubic-bezier(.3,1.6,.5,1)');
+  const svg = fxSvg(ctx), group = fireGroup(ctx);
+  // 1. the last hits run along the plank
+  for (let i = 0; i < 3; i++) {
+    const t = i * S.hit, x = b.x + b.w * (0.22 + i * 0.28), y = b.y + rnd(Math.min(24, b.h / 3), Math.max(b.h / 3 + 1, b.h - 18));
+    hitBlast(ctx, svg, x, y, small ? 0.7 : 0.95, t, 520, i > 0);
+    boom(ctx, 5, 300, t);
+    flashBoard(ctx, '#fff2d0', 0.18, 220, t);
+    A(ctx, el, [{ scale: '1' }, { scale: '1.02 .98', offset: 0.2 }, { scale: '1' }], 300, t, 'ease-out', 'none');
+  }
+  // the fire takes hold, black smoke goes up, the plank browns
+  const tFire = 3 * S.hit;
+  fireWall(ctx, svg, b.x + 8, b.r - 8, b.b + 2, small ? 20 : 30, { delay: tFire, spread: 22, embers: 16, life: S.take + S.blast + 900, host: group });
+  smokeColumn(ctx, svg, b.cx - b.w * 0.2, b.y + 8, small ? 0.8 : 1.3, 6, 600, tFire);
+  smokeColumn(ctx, svg, b.cx + b.w * 0.18, b.y + 8, small ? 0.8 : 1.2, 6, 650, tFire);
+  const browning = A(ctx, el, [{ filter: 'none' }, { filter: 'sepia(.6) saturate(1.6) brightness(1.05)' }], 900, tFire, 'ease-out', 'forwards');
+  let hidden: Animation | null = null;
+  // 2. the powder room goes up: a fireball, two shockwaves, a white flash; wreckage flies into the sea
+  const tBlast = tFire + S.take, cx = b.cx, cy = b.cy;
+  flashBoard(ctx, '#ffe0b0', 0.6, 520, tBlast);
+  boom(ctx, small ? 6 : 11, 650, tBlast);
+  hitBlast(ctx, svg, cx, cy, small ? 1.6 : 2.6, tBlast, 700);
+  for (const [r0, r1, color, d, dl, w] of [[20, 260, '#fff2c8', 700, 0, 5], [10, 380, '#ffd27a', 1000, 120, 2]] as const) {
+    const ring = sv(svg, `<circle r="${r1}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`);
+    A(ctx, ring, [{ transform: `translate(${cx}px,${cy}px) scale(${r0 / r1})`, opacity: 1 }, { transform: `translate(${cx}px,${cy}px) scale(${small ? 0.5 : 1})`, opacity: 0 }], d, tBlast + dl, 'cubic-bezier(.1,.8,.3,1)');
+  }
+  const W = ctx.board.clientWidth, H = ctx.board.clientHeight;
+  for (let i = 0, m = Math.max(4, room(ctx, small ? 6 : 12)); i < (ctx.rich ? m : 0); i++) {
+    const ex = clamp(cx + rnd(-260, 260) * (small ? 0.5 : 1), 12, W - 12), ey = clamp(fy + toGap * rnd(14, 90), 12, H - 12);
+    const g = sv(svg, DEBRIS[i % 4]), d = S.debris * rnd(0.82, 1.18), rot = rnd(-720, 720);
+    const pts = qpts(cx + rnd(-30, 30), cy, (cx + ex) / 2, Math.min(cy, ey) - rnd(80, 170), ex, ey, 18);
+    A(ctx, g, pts.map((p, k) => ({ transform: `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px) rotate(${((rot * k) / 18).toFixed(0)}deg)`, opacity: k === 18 ? 0 : 1 })), d, tBlast, 'cubic-bezier(.3,.1,.7,1)');
+    at(ctx, tBlast + d, () => waterColumn(ctx, svg, ex, ey, 24));
+  }
+  // 3. the hull breaks in two along a jagged line; the halves tilt into a V and sink, darkening under the water
+  const tSplit = tBlast + S.blast;
+  A(ctx, group, [{ opacity: 1 }, { opacity: 0 }], 900, tSplit, 'ease-in', 'forwards');
+  const jag = '50% 0, 46% 16%, 53% 33%, 46% 50%, 54% 67%, 47% 84%, 52% 100%', jagPts = jag.replace(/%/g, '').split(', ').map((p) => p.replace(' ', ',')).join(' ');
+  const sy = up ? -1 : 1, D = S.split;
+  at(ctx, tSplit, () => {
+    const bb = bx(ctx, el);
+    const L = planHalf(ctx, el, bb, `polygon(0 0, ${jag}, 0 100%)`, '0% 50%', jagPts), R = planHalf(ctx, el, bb, `polygon(${jag}, 100% 100%, 100% 0)`, '100% 50%', jagPts);
+    hidden = A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 60, 0, 'linear', 'forwards');
+    for (const [h, dx] of [[L, -1], [R, 1]] as const) {
+      A(ctx, h, [{ translate: '0 0', rotate: '0deg', scale: '1', filter: 'sepia(.6) brightness(1)' }, { translate: `${12 * dx}px 0`, rotate: `${-8 * sy * dx}deg`, scale: '1', offset: 0.25, filter: 'sepia(.4) brightness(.9)' }, { translate: `${20 * dx}px ${10 * -toGap}px`, rotate: `${-14 * sy * dx}deg`, scale: '.9', filter: 'grayscale(.6) brightness(.55)', opacity: 0 }], D, 0, 'cubic-bezier(.5,0,.7,1)', 'forwards');
+      A(ctx, h.querySelector('.fx-sinkwater')!, [{ opacity: 0, backgroundPosition: '0 100%' }, { opacity: 0, offset: 0.2 }, { opacity: 0.9, backgroundPosition: '0 0' }], D, dx > 0 ? 120 : 0, 'ease-in', 'forwards');
+    }
+  });
+  splintersSvg(ctx, svg, cx, cy, 16, tSplit);
+  sparksSvg(ctx, svg, cx, cy, 14, tSplit);
+  boom(ctx, 6, 400, tSplit);
+  // the water boils and closes: bubbles, a swirl, rings
+  const sw = sv(svg, `<g>${[0, 1, 2, 3].map((i) => `<ellipse rx="${(small ? 70 : 140) - i * 26}" ry="${((small ? 70 : 140) - i * 26) * 0.34}" fill="none" stroke="#e6f2f4" stroke-width="${2 - i * 0.3}" stroke-dasharray="14 10" opacity="${0.8 - i * 0.12}"/>`).join('')}</g>`);
+  A(ctx, sw, [{ transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(0deg)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.75 }, { transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(-200deg)`, opacity: 0 }], D + 1400, tSplit, 'linear');
+  for (let i = 0, m = room(ctx, small ? 16 : 40); i < m; i++) {
+    const x = b.x + rnd(10, b.w - 10), bub = sv(svg, `<circle r="${rnd(1.6, 4.4).toFixed(1)}" fill="rgba(220,244,248,.18)" stroke="#dff4f8" stroke-width="1"/>`);
+    A(ctx, bub, [{ transform: `translate(${x.toFixed(1)}px,${(b.y + rnd(10, b.h)).toFixed(1)}px)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${(x + rnd(-8, 8)).toFixed(1)}px,${(b.y + rnd(-30, 20)).toFixed(1)}px)`, opacity: 0 }], rnd(900, 1500), tSplit + rnd(400, D));
+  }
+  for (let i = 0; i < 4; i++) ringSvg(ctx, svg, cx, fy + toGap * 8, 30, (small ? 150 : 300) - i * 40, '#cfe8ef', 1600, tSplit + 700 + i * 380, 2);
+  // 4. the plank comes back as a grey record of the loss (the table drawn with the events of the clip); the stamp falls
+  const tBack = tSplit + D + S.settle;
+  at(ctx, tBack, () => {
+    ctx.renderWith(c.events);
+    // the plank's own look of a sunk ship (its class) comes back: the browning and the hiding of the clip go
+    browning.cancel();
+    hidden?.cancel();
+    A(ctx, el, [{ opacity: 0 }, { opacity: 1 }], S.back, 0, 'ease-out', 'none');
+  });
+  const st = mk(ctx, 'stamp-fx sunk', b.cx, b.cy, 'Затонул');
+  A(ctx, st, [{ opacity: 0, transform: 'translate(-50%,-50%) rotate(-7deg) scale(2.8)' }, { opacity: 1, transform: 'translate(-50%,-50%) rotate(-7deg) scale(.94)', offset: 0.7 }, { opacity: 1, transform: 'translate(-50%,-50%) rotate(-7deg) scale(1)' }], S.stamp, tBack + 500, 'cubic-bezier(.5,0,.8,.4)');
+  at(ctx, tBack + 500 + S.stamp, () => {
+    for (let i = 0, m = room(ctx, 7); i < m; i++) {
+      const p = sv(svg, `<circle r="${rnd(6, 12).toFixed(1)}" fill="#d9c9a4" opacity=".7"/>`), dx = rnd(-30, 30);
+      A(ctx, p, [{ transform: `translate(${b.cx + dx * 0.3}px,${b.cy + 10}px) scale(.2)`, opacity: 0 }, { transform: `translate(${b.cx + dx}px,${b.cy + 6}px) scale(1)`, opacity: 0.7, offset: 0.2 }, { transform: `translate(${b.cx + dx}px,${b.cy - 4}px) scale(1.6)`, opacity: 0 }], 1000, i * 40);
+    }
+    boom(ctx, 3, 200);
+  });
+  // the wreck stays afloat a while: a broken mast with a scrap of sail, a barrel, planks (a long trace of the sea)
+  at(ctx, tBack, () => {
+    const host = seaScars(ctx);
+    if (!host) return;
+    const deb = fxSvg(ctx, host), wx = b.cx - (small ? 30 : 60), wy = fy + toGap * 34, rock = filters(ctx);
+    sv(deb, `<g transform="translate(${wx.toFixed(1)} ${wy.toFixed(1)}) scale(${small ? 1 : 1.5})">${([[0, 0, 'mast', 3.6], [70, 6, 'barrel', 2.8], [-60, 10, 'plank', 3], [130, -4, 'plank', 3.4], [40, -12, 'plank', 2.6]] as const).map(([x, y, k, d2]) => `<g transform="translate(${x} ${y})"><g>${rock ? `<animateTransform attributeName="transform" type="rotate" values="-6;6;-6" dur="${d2}s" repeatCount="indefinite"/>` : ''}<ellipse cx="0" cy="4" rx="16" ry="3.4" fill="none" stroke="#e6f2f4" stroke-width="1" opacity=".6"/>${k === 'mast' ? '<rect x="-24" y="-2" width="48" height="4" rx="1.4" fill="#6b4422" stroke="#22190f" stroke-width=".8"/><path d="M-8 -2 L4 -16 L14 -2 Z" fill="#e8dcc0" stroke="#22190f" stroke-width=".7"/>' : k === 'barrel' ? '<ellipse rx="8" ry="6.4" fill="#8a5a32" stroke="#22190f" stroke-width=".8"/><path d="M-3 -6 V6 M3 -6 V6" stroke="#3a3530" stroke-width="1.2"/>' : '<rect x="-11" y="-2.6" width="22" height="5.2" rx="1" fill="#a8703a" stroke="#22190f" stroke-width=".7"/>'}</g></g>`).join('')}</g>`);
+    A(ctx, deb, [{ opacity: 0 }, { opacity: 1 }], 900);
+    scar(deb, 'long', c.ship);
+  });
+  // 5. the captain rows across to the ally in a longboat: two sailors at the oars, the captain in the stern in a red coat
+  //    and a cocked hat, a lantern on the bow, the pennant at the stern; every stroke leaves rings, a wake behind
   const ally = Object.keys(ctx.display.ships).find((x) => sideOf(ctx, x) === sideOf(ctx, c.ship) && x !== c.ship && !ctx.display.ships[x].sunk);
-  if (ally) { const ab = bx(ctx, plank(ctx, ally)); tag(ctx, ab.cx, ab.y - 12, `Капитан ${gen(ctx, c.ship)} — на борту ${gen(ctx, ally)}`, 1500, '', 1600); }
-  await wait(ctx, ally ? 2100 : 1700);
+  let end = tBack + 500 + S.stamp + S.end;
+  if (ally) {
+    const ab = bx(ctx, plank(ctx, ally)), fa = facingY(ctx, ally);
+    const x0 = b.cx, y0 = fy + toGap * 30, x1 = ab.cx, y1 = fa + toGap * 30, flip = x1 < x0 ? -1 : 1, k = small ? 1.1 : 1.7;
+    const man = (x: number, kk: number, body: string) => `<g transform="translate(${(x - 7 * kk).toFixed(1)} ${(-0.6 - 16.8 * kk).toFixed(1)}) scale(${kk})">${body}</g>`;
+    const live = filters(ctx);
+    const t0 = tBack + S.back, D2 = S.boat, N = 24;
+    const boat = sv(svg, `<g><g><path d="M-30 6 Q-2 10 30 4" fill="none" stroke="#eef6f8" stroke-width="2" opacity=".7"/>
+<g transform="translate(-9 1)">${OAR}</g><g transform="translate(5 1)">${OAR}</g>${man(-9, 0.82, SAILOR)}${man(5, 0.82, SAILOR)}${man(-21, 0.98, CAPTAIN)}
+<path d="M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z" fill="#7a4a26" stroke="#2a1a0c" stroke-width="1"/>
+<path d="M-26 1 Q0 5 29 -1 M-22 5 Q0 8 22 4" fill="none" stroke="#4a2a12" stroke-width=".7"/><path d="M-28 -3 Q12 -1 31 -5" fill="none" stroke="#c99a64" stroke-width="1.2"/>
+<path d="M-29 -2 V-22" stroke="#4a2a12" stroke-width="1"/><path d="M-29 -22 L-17 -19 L-29 -16 Z" fill="${shipData(ctx.data, c.ship).color}">${live ? '<animateTransform attributeName="transform" type="skewY" values="0;-8;0;6;0" dur="1.2s" repeatCount="indefinite"/>' : ''}</path>
+<path d="M28 -5 L33 -14" stroke="#4a2a12" stroke-width="1"/><g transform="translate(33 -15)"><circle r="6" fill="#ffd27a" opacity=".35">${live ? '<animate attributeName="opacity" values=".35;.2;.4;.25;.35" dur=".9s" repeatCount="indefinite"/>' : ''}</circle><rect x="-1.8" y="-2.6" width="3.6" height="4.6" rx=".8" fill="#ffe7a0" stroke="#3a2412" stroke-width=".6"/><path d="M-1.8 -2.6 H1.8 M0 -2.6 V-4" stroke="#3a2412" stroke-width=".6"/></g></g></g>`);
+    const pts = qpts(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2 + toGap * 26, x1, y1, N);
+    A(ctx, boat, [...pts.map((p, i) => ({ transform: `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px) scale(${flip * k},${k})`, opacity: i === 0 ? 0 : 1, offset: (i / N) * 0.9 })), { transform: `translate(${x1.toFixed(1)}px,${y1.toFixed(1)}px) scale(${flip * k},${k})`, opacity: 0, offset: 1 }], D2 + 400, t0, 'ease-in-out');
+    const strokes = Math.max(1, Math.round(D2 / S.stroke));
+    boat.querySelectorAll('.oar').forEach((o) => A(ctx, o, Array.from({ length: strokes * 2 + 1 }, (_, q) => ({ transform: `rotate(${q % 2 ? 26 : -34}deg)` })), strokes * S.stroke, t0, 'ease-in-out', 'none'));
+    for (let q = 0; q < strokes; q++) {
+      const p = pts[Math.min(N, Math.round(((q + 0.5) / strokes) * N * 0.9))];
+      ringSvg(ctx, svg, p.x - flip * 6 * k, p.y + 7 * k, 3, 22, '#eef6f8', 900, t0 + q * S.stroke + S.stroke / 2, 1.2);
+    }
+    at(ctx, t0 + D2 + 400, () => A(ctx, plank(ctx, ally), [{ boxShadow: '0 0 0 3px #e0bd62, 0 0 22px rgba(224,189,98,.7)' }, { boxShadow: '0 0 0 0 rgba(0,0,0,0)' }], S.glow, 0, 'ease-out', 'none'));
+    tag(ctx, ab.cx, ab.y - 12, `Капитан ${gen(ctx, c.ship)} — на борту ${gen(ctx, ally)}`, t0 + D2, 'good', 1600);
+    // the glow of the ally ends inside the clip (the queue takes only the finished animations off the planks)
+    end = Math.max(end, t0 + D2 + 400 + Math.max(S.end, S.glow + 100));
+  }
+  await wait(ctx, end);
 };
 
-/** Diving: the water rises over the plank from below, bubbles, the Fires go out. */
+/**
+ * Diving (the «dive» branch of runFx; T.dive): the plank rocks, rings run out on the water, «Толща воды» rises over the
+ * plank from below (.underwater), bubbles go up, the Fires go out.
+ */
 export function diveFx(ctx: FxCtx, code: string, delay: number): number {
-  const el = plank(ctx, code), b = bx(ctx, el);
+  const D = T.dive, el = plank(ctx, code), b = bx(ctx, el), fy = facingY(ctx, code), toGap = dirOf(ctx, code), svg = fxSvg(ctx);
   const w = mk(ctx, 'underwater', 0, 0); w.style.width = b.w + 'px'; w.style.height = b.h + 'px'; w.style.transformOrigin = '50% 100%';
-  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }], 700, delay, 'ease-in-out', 'forwards');
-  A(ctx, el, [{ transform: 'none' }, { transform: 'translateY(6px) scale(.985)' }, { transform: 'none' }], 1300, delay, 'ease-in-out', 'none');
-  bubbles(ctx, b.x + 8, b.b - 4, b.w - 16, delay + 100, 16, 60);
+  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }], D.down, delay + 200, 'ease-in', 'forwards');
+  A(ctx, el, [{ transform: 'none' }, { transform: 'rotate(.25deg) translateY(2px) rotate(1.4deg)', offset: 0.3 }, { transform: 'translateY(6px) scale(.985)', offset: 0.7 }, { transform: 'none' }], D.down, delay, 'ease-in-out', 'none');
+  for (let i = 0; i < 3; i++) ringSvg(ctx, svg, b.cx, fy + toGap * 18, 20, Math.min(220, b.w * 0.45) - i * 30, '#cfe8ef', D.down, delay + i * 250, 2.2);
+  for (let i = 0, m = room(ctx, 16); i < m; i++) {
+    const x = b.x + rnd(20, b.w - 20), c = sv(svg, `<circle r="${rnd(2, 5).toFixed(1)}" fill="rgba(220,244,248,.2)" stroke="#dff4f8" stroke-width="1"/>`);
+    A(ctx, c, [{ transform: `translate(${x.toFixed(1)}px,${b.b}px)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${(x + rnd(-10, 10)).toFixed(1)}px,${(b.y - rnd(10, 40)).toFixed(1)}px)`, opacity: 0 }], rnd(1000, 1700), delay + rnd(200, D.down));
+  }
   const fb = el.querySelector('[data-fx-fires]');
   if (fb) { const sb = bx(ctx, fb); steam(ctx, sb.cx, sb.cy, delay + 450); A(ctx, fb, [{ opacity: 1 }, { opacity: 0 }], 300, delay + 500, 'ease-in', 'forwards'); tag(ctx, sb.cx, sb.y - 10, 'Пожары гаснут', delay + 550, 'good', 1200); }
   tag(ctx, b.cx, b.y - 12, 'Под водой', delay + 500, '', 1400);
-  return delay + 1400;
+  return delay + D.hold;
 }
-/** Surfacing: the water goes down, splashes along the top edge. */
+/**
+ * Surfacing (the «surface» branch of runFx): the water runs off the plank in streams, the plank bobs up, two spouts at
+ * its edge, then a green frame (T.dive).
+ */
 export function surfaceFx(ctx: FxCtx, code: string, delay: number): number {
-  const el = plank(ctx, code), b = bx(ctx, el);
+  const D = T.dive, el = plank(ctx, code), b = bx(ctx, el), fy = facingY(ctx, code), toGap = dirOf(ctx, code), svg = fxSvg(ctx);
   const w = mk(ctx, 'underwater', 0, 0); w.style.width = b.w + 'px'; w.style.height = b.h + 'px'; w.style.transformOrigin = '50% 100%';
-  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }], 600, delay, 'ease-in', 'forwards');
-  A(ctx, el, [{ transform: 'translateY(6px) scale(.985)' }, { transform: 'translateY(-3px)', offset: 0.7 }, { transform: 'none' }], 700, delay, 'ease-out', 'none');
-  for (let k = 0; k < 3; k++) splash(ctx, b.x + b.w * (0.2 + 0.3 * k), b.y + 2, delay + 380 + k * 90);
-  if (ctx.rich) for (let k = 0; k < 10; k++) { const d = mk(ctx, 'bubble', 0, 0); const x0 = b.x + Math.random() * b.w; A(ctx, d, [{ opacity: 1, transform: `translate(${x0}px,${b.y}px) scale(.6)` }, { opacity: 0, transform: `translate(${x0 + (Math.random() - 0.5) * 30}px,${b.y - 20 - Math.random() * 25}px) scale(.9)` }], 600, delay + 400 + Math.random() * 200); }
+  A(ctx, w, [{ opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(1)` }, { opacity: 1, transform: `translate(${b.x}px,${b.y}px) scaleY(0)` }], D.up, delay + 300, 'ease-in', 'forwards');
+  A(ctx, el, [{ transform: 'translateY(6px) scale(.985)' }, { transform: 'rotate(.25deg) translateY(-8px)', offset: 0.5 }, { transform: 'none' }], D.rise, delay + 300, 'cubic-bezier(.2,.8,.3,1.2)', 'none');
+  for (let i = 0, m = room(ctx, 24); i < m; i++) {
+    const x = b.x + rnd(10, b.w - 10), c = sv(svg, `<path d="M0 0 v${rnd(6, 14).toFixed(1)}" stroke="#bfe0ea" stroke-width="1.4" stroke-linecap="round"/>`);
+    A(ctx, c, [{ transform: `translate(${x.toFixed(1)}px,${(b.y + rnd(0, 20)).toFixed(1)}px)`, opacity: 1 }, { transform: `translate(${x.toFixed(1)}px,${(b.b + rnd(10, 30)).toFixed(1)}px)`, opacity: 0 }], rnd(600, 1000), delay + rnd(300, 900), 'ease-in');
+  }
+  waterColumn(ctx, svg, b.x + Math.min(40, b.w * 0.15), fy + toGap * 10, 40, delay + 300);
+  waterColumn(ctx, svg, b.r - Math.min(40, b.w * 0.15), fy + toGap * 10, 34, delay + 380);
+  A(ctx, el, [{ boxShadow: '0 0 0 3px #7fd59a, 0 0 24px rgba(127,213,154,.8)' }, { boxShadow: '0 0 0 0 rgba(0,0,0,0)' }], D.glow, delay + 1300, 'ease-out', 'none');
   tag(ctx, b.cx, b.y - 14, 'Всплытие: первый Залп +1 и без Реакций', delay + 500, 'plus', 1600);
-  return delay + 1400;
+  return delay + 1300 + D.glow;
 }
 PLAY.dive = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} уходит под воду`); await wait(ctx, diveFx(ctx, c.ship, 0) + 100); };
 PLAY.surface = async (c, ctx) => { hint(ctx, `${nick(ctx, c.ship)} всплывает`); await wait(ctx, surfaceFx(ctx, c.ship, 0) + 100); };
@@ -170,21 +371,71 @@ export function weatherHit(ctx: FxCtx, e: { ship: string; track: Track; amount: 
   return last;
 }
 
-/** A Fire burns the Hull: the Fire badge flares, embers fly into the cells of the Hull. game (S1): no label «Пожар жжёт
- *  Корпус» over the badge and no pill — a short mark at the number of the Hull and a blink of it (trackMark). */
+/**
+ * A Fire burns the Hull (fxFire of fx3.js, ANIMATIONS.md §3.6): the fire starts at the picture of the ship and runs along
+ * the bottom edge of the plank, spots of fire over the head, the glow of the fire on the plank, two columns of smoke,
+ * embers; the boards of the Hull glow red, char and break one by one — the number and a short mark at it (S1). What
+ * stays a while (a medium trace of the ship): the charred bottom, the scorch marks, a flame and smoke on the picture.
+ * The timings — T.fire (fx/timing.ts). game: the air does not shimmer over the plank itself (a filter on the plank would
+ * blur its text and outlive a show cut short) — the flames carry their own torn edge.
+ */
 export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): number {
-  const el = plank(ctx, ship), fb = el.querySelector('[data-fx-fires]') || el.querySelector('.plank-head')!;
-  const sb = bx(ctx, fb);
-  A(ctx, fb, [{ transform: 'scale(1)' }, { transform: 'scale(1.5)' }, { transform: 'scale(1)' }], 400, delay, 'ease-in-out', 'none');
-  const cur = shownTrack(ctx, ship, 'hull');
+  const F = T.fire, el = plank(ctx, ship), b = bx(ctx, el), head = el.querySelector('.plank-head');
+  const hb = head ? bx(ctx, head) : b;
+  const art = el.querySelector('.ship-art');
+  const pb = visible(art) ? bx(ctx, art) : { x: hb.x + 6, y: hb.y, w: 40, h: hb.h, cx: hb.x + 26, cy: hb.cy, r: hb.x + 46, b: hb.b };
+  const svg = fxSvg(ctx), small = isPhone(ctx), group = fireGroup(ctx);
+  const glow = overlayAt(ctx, 'fx-fireglow', b);
+  A(ctx, glow, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.8, offset: 0.5 }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], F.glow, delay);
+  const flames = fireWall(ctx, svg, b.x + 6, b.r - 6, b.b + 2, small ? 20 : 30, { delay, spread: 26, life: F.glow, embers: small ? 12 : 30, host: group });
+  // spots of fire: the picture, then along the head and the bottom edge (fractions of the plank, not the prototype's px)
+  const spots: Pt[] = [{ x: pb.cx, y: pb.b }, ...[0.31, 0.48, 0.62, 0.75, 0.87, 0.19, 0.95].map((f, i) => ({ x: b.x + b.w * f, y: i % 2 ? b.b : hb.b }))];
+  const marks = document.createElement('div');
+  marks.className = 'fx-burnmarks';
+  at(ctx, delay, () => {
+    const host = plankScars(ctx, ship);
+    if (!host) return;
+    marks.innerHTML = '<i class="fx-char"></i>';
+    host.appendChild(marks);
+    A(ctx, marks.firstElementChild!, [{ opacity: 0 }, { opacity: 1 }], 1800, 200);
+    scar(marks, 'medium', ship);
+  });
+  spots.slice(0, small ? 4 : spots.length).forEach((p, i) => {
+    const t = delay + 150 + i * F.spot;
+    flames.push(...fireWall(ctx, svg, p.x - 14, p.x + 14, p.y + 2, small ? 16 : 22, { delay: t, spread: 30, embers: 6, life: F.glow - 150 - i * F.spot, host: group }));
+    at(ctx, t, () => {
+      if (!marks.isConnected) return;
+      const sc = document.createElement('i'), r = rnd(30, 50), pl = bx(ctx, el);
+      sc.className = 'fx-scorch';
+      Object.assign(sc.style, { left: `${p.x - pl.x - r / 2}px`, top: `${p.y - pl.y - r * 0.7}px`, width: `${r}px`, height: `${r * 0.8}px` });
+      marks.appendChild(sc);
+      A(ctx, sc, [{ opacity: 0 }, { opacity: 1 }], 900);
+    });
+  });
+  smokeColumn(ctx, svg, b.cx - b.w * 0.25, b.y + 10, small ? 0.8 : 1.2, 5, 600, delay);
+  smokeColumn(ctx, svg, b.cx + b.w * 0.23, b.y + 10, small ? 0.7 : 1.1, 5, 650, delay);
+  // the boards of the Hull glow red-hot, char black and break, one after another
+  const cur = shownTrack(ctx, ship, 'hull'), cells = trackEl(ctx, ship, 'hull').querySelector('.cells');
   for (let k = 0; k < n; k++) {
+    const t = delay + F.spread + k * F.cellStep, cell = visible(cells) ? cells.children[cur - 1 - k] : null;
+    if (cell) A(ctx, cell, [{ filter: 'none' }, { filter: 'sepia(1) saturate(4) hue-rotate(-20deg) brightness(1.4) drop-shadow(0 0 5px #ff7a2a)', offset: 0.4 }, { filter: 'brightness(.25)' }], F.cell, t, 'ease-in', 'none');
     const p = fxPoint(ctx, ship, 'hull', cur - 1 - k);
-    for (let j = 0; j < (ctx.rich ? 6 : 1); j++) { const em = mk(ctx, 'ember', 0, 0); fly(ctx, em, curve({ x: sb.cx, y: sb.cy }, { x: p.x + (Math.random() - 0.5) * 8, y: p.y }, (Math.random() - 0.5) * 0.4, 10), 480, delay + 250 + j * 40 + k * 120, { lift: 0 }); }
-    flash(ctx, p.x, p.y, delay + 730 + k * 120, 0.8);
+    sparksSvg(ctx, svg, p.x, p.y, 6, t + F.cell * 0.6, ['#ffd27a', '#ff8a2a', '#3a2412']);
   }
-  at(ctx, delay + 730, () => setTrack(ctx, ship, 'hull', Math.max(0, cur - n), '#F2913D'));
-  trackMark(ctx, ship, 'hull', n, delay + 760);
-  return delay + 1250;
+  const burnt = delay + F.spread + Math.max(0, n - 1) * F.cellStep + F.cell * 0.8;
+  at(ctx, burnt, () => setTrack(ctx, ship, 'hull', Math.max(0, cur - n), '#F2913D'));
+  trackMark(ctx, ship, 'hull', n, burnt + 30);
+  // the flames die down; a flame and smoke stay on the picture of the ship (in the trace)
+  const end = burnt + F.hold;
+  A(ctx, group, [{ opacity: 1 }, { opacity: 0 }], F.out, end, 'ease-in', 'forwards');
+  at(ctx, end, () => {
+    if (!marks.isConnected) return;
+    const pl = bx(ctx, el);
+    marks.appendChild(flameEl(ctx, pb.x + pb.w * 0.36 - pl.x, pb.b + 2 - pl.y, small ? 16 : 22, 'fx-flame fx-burn'));
+    marks.appendChild(flameEl(ctx, pb.x + pb.w * 0.66 - pl.x, pb.b + 4 - pl.y, small ? 13 : 18, 'fx-flame fx-burn'));
+    marks.appendChild(smolderEl(pb.cx - pl.x, pb.y - pl.y, ctx.rich ? 4 : 0));
+  });
+  return end + F.out;
 }
 
 /** The deck in the hand row (the deck and the discard), or the middle of the gap. */
@@ -213,10 +464,11 @@ export async function drawFx(ctx: FxCtx, e: { seat: string; count: number; cards
     slots.reverse();
     slots.forEach((s) => (s.style.visibility = 'hidden'));
     slots.forEach((slot, k) => {
-      const sb = bx(ctx, slot);
+      // V2: the back lands as its card lies in the fan (tilted)
+      const sb = handCardPos(ctx, slot), at0 = `translate(${sb.x}px,${sb.y}px) rotate(${sb.r || 0}deg)`;
       const back = mk(ctx, 'flyc', 0, 0, '<span class="hcard back"></span>');
-      A(ctx, back, [{ opacity: 1, transform: `translate(${deck.x}px,${deck.y}px) scale(.6)` }, { opacity: 1, transform: `translate(${sb.x}px,${sb.y}px) scale(1)` }], 450, k * 160, 'cubic-bezier(.2,.8,.3,1)', 'forwards');
-      A(ctx, back, [{ opacity: 1, transform: `translate(${sb.x}px,${sb.y}px) scaleX(1)` }, { opacity: 1, transform: `translate(${sb.x}px,${sb.y}px) scaleX(0)` }], 150, 450 + k * 160, 'ease-in', 'forwards');
+      A(ctx, back, [{ opacity: 1, transform: `translate(${deck.x}px,${deck.y}px) scale(.6)` }, { opacity: 1, transform: `${at0} scale(${sb.s || 1})` }], 450, k * 160, 'cubic-bezier(.2,.8,.3,1)', 'forwards');
+      A(ctx, back, [{ opacity: 1, transform: `${at0} scaleX(1)` }, { opacity: 1, transform: `${at0} scaleX(0)` }], 150, 450 + k * 160, 'ease-in', 'forwards');
       at(ctx, 600 + k * 160, () => { slot.style.visibility = ''; A(ctx, slot, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], 150, 0, 'ease-out', 'none'); });
     });
     await wait(ctx, 800 + e.count * 160);
@@ -247,11 +499,23 @@ PLAY.turn = async (c, ctx) => {
       if (e.burned) { const kb = bx(ctx, holdEl(ctx, e.side)); tag(ctx, kb.r + 36, kb.cy + 18, `${e.burned} сгорело: Трюм полон`, 400, '', 1400); }
       await wait(ctx, t + 150);
     } else if (e.type === 'fireDamage') {
-      const next = effects[i + 1];
-      const hit = next && next.type === 'damage' && next.ship === e.ship ? next : null;
-      const n = hit ? hit.amount + hit.toHull : e.fires;
-      if (hit) { i++; done.push(hit); }
-      await wait(ctx, burnFx(ctx, e.ship, n, 0));
+      // FX-D (the user's call): the Fires of several ships at the start of a turn burn at once, not one after another
+      let end = 0, f = e;
+      for (;;) {
+        const next = effects[i + 1];
+        const hit = next && next.type === 'damage' && next.ship === f.ship ? next : null;
+        const n = hit ? hit.amount + hit.toHull : f.fires;
+        if (hit) { i++; done.push(hit); }
+        end = Math.max(end, burnFx(ctx, f.ship, n, 0));
+        const after = effects[i + 1];
+        if (after?.type !== 'fireDamage') break;
+        done.push(f);
+        f = after;
+        i++;
+      }
+      await wait(ctx, end);
+      done.push(f);
+      continue;
     } else if (e.type === 'damage') {
       const wave = seaKey(ctx) === 'wave';
       const last = weatherHit(ctx, e, 0, '#5E9CC0');
@@ -303,16 +567,27 @@ export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: nu
   const now = shownTrack(ctx, e.ship, e.track);
   const b = bx(ctx, plank(ctx, e.ship));
   if (from) { const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${from.x} ${from.y} Q ${(from.x + b.cx) / 2} ${Math.min(from.y, b.cy) - 40} ${b.cx} ${b.cy}" fill="none" stroke="#2F7A4F" stroke-width="3" stroke-dasharray="7 7" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], 1400, t0); }
+  // FX-A: a repair of the Hull takes the traces of its ship away (ANIMATIONS.md, §2)
+  if (e.track === 'hull') at(ctx, t0 + 300, () => clearScars(e.ship));
   const fr = overlayAt(ctx, 'lg-aura', b, 4); fr.style.boxShadow = '0 0 0 3px #2F7A4F, 0 0 22px 6px rgba(47,125,74,.45)';
-  A(ctx, fr, [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], 1500, t0 + 100);
+  A(ctx, fr, [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }], Math.max(T.repair.aura, 300 + e.amount * T.repair.unit), t0 + 100);
+  // FX-D (the «repair» branch of runFx): for each board a new one drops into its place and the hammer nails it — two
+  // blows, gold sparks — then the cell comes back (T.repair)
+  const R = T.repair, svg = fxSvg(ctx);
   for (let j = 0; j < e.amount; j++) {
-    const t = t0 + 300 + j * 180, p = fxPoint(ctx, e.ship, e.track, now + j);
-    at(ctx, t, () => setTrack(ctx, e.ship, e.track, now + j + 1, '#2F7A4F'));
-    ring(ctx, p.x, p.y, t, 0.8, '#2F7A4F'); burst(ctx, 'sparkle', p.x, p.y, t, 5, 6, 18, 500);
+    const t = t0 + 300 + j * R.unit, p = fxPoint(ctx, e.ship, e.track, now + j);
+    const bd = sv(svg, '<g><rect x="-6" y="-8" width="12" height="16" rx="1.6" fill="#a8703a" stroke="#3a2412" stroke-width=".8"/><path d="M-6 -2.6 H6 M-6 2.6 H6" stroke="#6b4422" stroke-width=".6"/></g>');
+    A(ctx, bd, [{ transform: `translate(${p.x}px,${p.y - 30}px) rotate(-30deg)`, opacity: 0 }, { transform: `translate(${p.x}px,${p.y}px) rotate(0deg)`, opacity: 1, offset: 0.9 }, { transform: `translate(${p.x}px,${p.y}px) rotate(0deg)`, opacity: 0 }], R.drop + 2 * R.strike, t, 'cubic-bezier(.3,1.4,.6,1)');
+    const ham = sv(svg, '<g><rect x="-2" y="0" width="4" height="22" rx="1.4" fill="#8a5a32" stroke="#22190f" stroke-width=".7"/><rect x="-9" y="-5" width="18" height="7" rx="1.4" fill="#6f6a66" stroke="#22190f" stroke-width=".8"/><path d="M-8 -4 H8" stroke="#b9b3ad" stroke-width="1"/></g>');
+    const up = `translate(${p.x + 14}px,${p.y - 18}px) rotate(40deg)`, down = `translate(${p.x + 8}px,${p.y - 6}px) rotate(-30deg)`;
+    A(ctx, ham, [{ transform: up, opacity: 0 }, { transform: up, opacity: 1, offset: 0.1 }, { transform: down, offset: 0.3 }, { transform: up, offset: 0.55 }, { transform: down, offset: 0.8 }, { transform: up, opacity: 0 }], 2 * R.strike + 150, t + R.drop - 60, 'ease-in-out');
+    sparksSvg(ctx, svg, p.x, p.y - 4, 6, t + R.drop + R.strike * 0.35, ['#fff3c4', '#e0bd62']);
+    sparksSvg(ctx, svg, p.x, p.y, 6, t + R.drop + R.strike * 1.35, ['#fff3c4', '#e0bd62']);
+    at(ctx, t + R.drop + 2 * R.strike, () => setTrack(ctx, e.ship, e.track, now + j + 1, '#2F7A4F'));
   }
-  pillAt(ctx, e.ship, e.track, e.amount, t0 + 360 + e.amount * 180, true);
+  pillAt(ctx, e.ship, e.track, e.amount, t0 + 300 + (e.amount - 1) * R.unit + R.drop + 2 * R.strike, true);
   tag(ctx, b.cx, b.y - 12, `${nick(ctx, e.ship)}: +${e.amount} ${TRACK_NAME[e.track]}`, t0 + 200, 'good', 1500);
-  return t0 + 600 + e.amount * 180;
+  return t0 + 600 + e.amount * T.repair.unit;
 }
 
 /** Where the played card lies: at the edge of the gap on the player's side, so it does not cover the planks. */
@@ -426,7 +701,7 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
     else if (e.type === 'powderLost') { payKegs(ctx, e.side, e.amount, 0); t = Math.max(t, 900); }
     else if (e.type === 'flagSet' || e.type === 'turnFlag' || e.type === 'limitRaised') { t = Math.max(t, statusFx(ctx, e.type === 'limitRaised' ? { ...e, flag: 'limitRaised' } : e, 0, from)); }
     else if (e.type === 'fireAdded') { const hd = bx(ctx, plank(ctx, e.ship).querySelector('.plank-head')!); fly(ctx, projectile(ctx, 'fire'), curve(from, { x: hd.r - 24, y: hd.cy }, 0.1), 500, 0); tag(ctx, hd.cx, hd.b + 10, 'Пожар', 500, 'plus', 1200); t = Math.max(t, 1100); }
-    else if (e.type === 'soulsGained') { soulsFly(ctx, e.ship, e.amount, t * 0.5); t = Math.max(t, 1200); }
+    else if (e.type === 'soulsGained') { t = Math.max(t, 1200, soulsFly(ctx, e.ship, e.amount, t * 0.5)); }
     else if (e.type === 'soulsSpent') { const sb = plank(ctx, e.ship).querySelector('[data-fx-souls]'); if (sb && visible(sb)) { const b = bx(ctx, sb); wisp(ctx, { x: b.cx, y: b.cy }, from, 0); } t = Math.max(t, 900); }
     else if (e.type === 'drew') { await wait(ctx, t); t = 0; ctx.renderWith(done); await drawFx(ctx, e); }
     else if (e.type === 'swapped') { await wait(ctx, t); t = 0; await flipTo(ctx, done.concat(e), 650); }
@@ -450,12 +725,24 @@ PLAY.impact = async (c, ctx) => {
   else last = weatherHit(ctx, c, 0, '#c0392b');
   await wait(ctx, last + 900);
 };
+/** A Fire is set: the fire flares up at the picture of the ship and leaves a scorch mark (a medium trace). */
 PLAY.fire = async (c, ctx) => {
-  const hd = bx(ctx, plank(ctx, c.ship).querySelector('.plank-head')!);
-  const fl = mk(ctx, 'flame', 0, 0, FLAME_SVG);
-  A(ctx, fl, [{ opacity: 0, transform: `translate(${hd.cx}px,${hd.cy + 20}px) scale(.4)` }, { opacity: 1, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1.3)` }, { opacity: 0, transform: `translate(${hd.r - 24}px,${hd.cy}px) scale(1)` }], 900, 0, 'ease-in-out', 'forwards');
+  const el = plank(ctx, c.ship), hd = bx(ctx, el.querySelector('.plank-head')!), art = el.querySelector('.ship-art');
+  const pb = visible(art) ? bx(ctx, art) : hd;
+  const svg = fxSvg(ctx), group = fireGroup(ctx);
+  fireWall(ctx, svg, pb.x + 4, pb.r - 4, pb.b, isPhone(ctx) ? 16 : 22, { spread: 20, embers: 10, life: T.fire.ignite, host: group });
+  A(ctx, group, [{ opacity: 1 }, { opacity: 0 }], 300, T.fire.ignite, 'ease-in', 'forwards');
+  at(ctx, 200, () => {
+    const host = plankScars(ctx, c.ship);
+    if (!host) return;
+    const pl = bx(ctx, el), sc = document.createElement('i');
+    sc.className = 'fx-scorch';
+    Object.assign(sc.style, { left: `${pb.cx - pl.x - 20}px`, top: `${pb.b - pl.y - 26}px`, width: '40px', height: '32px' });
+    host.appendChild(sc);
+    scar(sc, 'medium', c.ship);
+  });
   tag(ctx, hd.cx, hd.b + 10, `Пожар ${c.fires}`, 300, 'plus', 1200);
-  await wait(ctx, 1000);
+  await wait(ctx, T.fire.ignite + 300);
 };
 
 /** A repair outside a card's effects: from the Souls (a wisp) or from the card at the middle — to the ship it mends. */
@@ -474,9 +761,10 @@ PLAY.powder = async (c, ctx) => {
 PLAY.souls = async (c, ctx) => {
   const ship = c.ship!;
   const b = bx(ctx, plank(ctx, ship));
-  if (c.n > 0) soulsFly(ctx, Object.keys(ctx.display.ships).find((x) => sideOf(ctx, x) !== sideOf(ctx, ship)) || ship, c.n, 0);
+  let end = 1100;
+  if (c.n > 0) end = Math.max(end, soulsFly(ctx, Object.keys(ctx.display.ships).find((x) => sideOf(ctx, x) !== sideOf(ctx, ship)) || ship, c.n, 0) + 100);
   else tag(ctx, b.cx, b.y - 12, `${c.n} Души`, 0, '', 1100);
-  await wait(ctx, 1100);
+  await wait(ctx, end);
 };
 PLAY.status = async (c, ctx) => { await wait(ctx, statusFx(ctx, c, 0)); };
 PLAY.sell = async (c, ctx) => {

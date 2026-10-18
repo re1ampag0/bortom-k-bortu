@@ -12,6 +12,7 @@ import { shipSvg } from './art/ships';
 import { legendMedal } from './art/medals';
 import { fanSvg } from './art/fan';
 import { TARGET_SEAL } from './art/seal';
+import { hourglassSvg } from './art/table';
 import { SEA_BG, seaSvg } from './fx/seaArt';
 import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, TRIDENT_SVG, statusSvg, type StatusIcon } from './art/status';
 
@@ -23,6 +24,7 @@ const TRACK_ICON_STYLE = Object.fromEntries(
   TRACKS.map((t) => [t, { ['--on' as string]: cellUrl(TRACK_ICON[t][0]), ['--off' as string]: cellUrl(TRACK_ICON[t][1]) }]),
 ) as Record<Track, Record<string, string>>;
 const svg = (html: string) => ({ __html: html });
+const HOURGLASS = hourglassSvg();
 
 export interface Btn {
   key: string;
@@ -276,6 +278,8 @@ export function TeamRow({
         <span className="narrow">Трюм</span>
       </span>
       <PowderDots key={fxGen} n={n} cap={data.econ.cap} side={side} />
+      {/* A5: the hourglass beside the tray of the bottom Hold (laptop only, game.css) */}
+      <span className="hold-glass" aria-hidden dangerouslySetInnerHTML={svg(HOURGLASS)} />
       {hands && hands.length > 0 && <span className="muted wide">· в руках {hands.join(' и ')} {cardsWord(hands[hands.length - 1]).split(' ')[1]}</span>}
       {regroup && <PlankButton b={regroup} className="small regroup" />}
       {hint && <span className="muted wide hint">· {hint}</span>}
@@ -598,6 +602,9 @@ export function Plank({
           </button>
         </div>
       )}
+      {/* FX-A: the traces the effects leave on this ship (fx/scars.ts). React never fills it, so they live through the
+          renders and ride with the ship when it changes places (the planks are keyed by the ship). */}
+      <div className="plank-scars" aria-hidden />
     </section>
   );
 

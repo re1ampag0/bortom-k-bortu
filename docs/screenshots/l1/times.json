@@ -1,82 +1,82 @@
 {
   "armada-seal-1366x660": {
     "scene": "armada",
-    "ms": 1812,
-    "ref": 1762
+    "ms": 2357,
+    "ref": 1967
   },
   "armada-effect-1366x660": {
     "scene": "armada",
-    "ms": 3660,
-    "ref": 3629
+    "ms": 4259,
+    "ref": 3859
   },
   "armada-seal-430x932": {
     "scene": "armada",
-    "ms": 1792,
-    "ref": 1766
+    "ms": 2042,
+    "ref": 1827
   },
   "armada-effect-430x932": {
     "scene": "armada",
-    "ms": 3676,
-    "ref": 3646
+    "ms": 3919,
+    "ref": 3701
   },
   "kraken-seal-1366x660": {
     "scene": "kraken",
-    "ms": 1860,
-    "ref": 1751
+    "ms": 2008,
+    "ref": 1836
   },
   "kraken-effect-1366x660": {
     "scene": "kraken",
-    "ms": 4186,
-    "ref": 4101
+    "ms": 4344,
+    "ref": 4185
   },
   "kraken-seal-430x932": {
     "scene": "kraken",
-    "ms": 1815,
-    "ref": 1760
+    "ms": 1957,
+    "ref": 1802
   },
   "kraken-effect-430x932": {
     "scene": "kraken",
-    "ms": 4164,
-    "ref": 4113
+    "ms": 4301,
+    "ref": 4156
   },
   "bottle-seal-1366x660": {
     "scene": "bottle",
-    "ms": 1815,
-    "ref": 1767
+    "ms": 2004,
+    "ref": 1856
   },
   "bottle-effect-1366x660": {
     "scene": "bottle",
-    "ms": 4312,
-    "ref": 4251
+    "ms": 4475,
+    "ref": 4302
   },
   "bottle-seal-430x932": {
     "scene": "bottle",
-    "ms": 1845,
-    "ref": 1766
+    "ms": 1970,
+    "ref": 1777
   },
   "bottle-effect-430x932": {
     "scene": "bottle",
-    "ms": 4345,
-    "ref": 4230
+    "ms": 4431,
+    "ref": 4264
   },
   "jack-seal-1366x660": {
     "scene": "jack",
-    "ms": 5596,
-    "ref": 5532
+    "ms": 5069,
+    "ref": 5535
   },
   "jack-effect-1366x660": {
     "scene": "jack",
-    "ms": 7718,
-    "ref": 7626
+    "ms": 7158,
+    "ref": 7702
   },
   "jack-seal-430x932": {
     "scene": "jack",
-    "ms": 5596,
-    "ref": 5522
+    "ms": 4967,
+    "ref": 5610
   },
   "jack-effect-430x932": {
     "scene": "jack",
-    "ms": 7713,
-    "ref": 7639
+    "ms": 7092,
+    "ref": 7708
   }
 }
