@@ -282,7 +282,7 @@ function titleList(data: GameData, m: MatchStats): { key: string; name: string; 
   ];
 }
 
-/** One title for each ship: the first of the list it alone holds; else «Флагман» (the winners) or «Бился до конца». */
+/** One title for each ship: the first of the list it alone holds; else «Флагман» (the winners afloat) or «Бился до конца». */
 export function awardTitles(data: GameData, m: MatchStats, winner: Winner | null): Record<string, Title> {
   const list = titleList(data, m);
   const out: Record<string, Title> = {};
@@ -292,7 +292,7 @@ export function awardTitles(data: GameData, m: MatchStats, winner: Winner | null
     const dmg = `${s.dmgOut} урона по врагу`;
     out[code] = t
       ? { key: t.key, name: t.name, fact: t.fact(code) }
-      : s.side === winner
+      : s.side === winner && !s.sunk
         ? { key: 'flagship', name: 'Флагман', fact: dmg }
         : { key: 'tothend', name: 'Бился до конца', fact: dmg };
   }

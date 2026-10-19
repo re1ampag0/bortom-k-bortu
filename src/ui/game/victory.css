@@ -1,0 +1,670 @@
+/* ═══════════ V7 — the victory sheet (Victory.tsx; A5Victory.html, A5Phone.html frame 7). A laptop: the paper sheet over
+   the darkened table; a phone: the whole screen, a paper sheet on dark oak, the buttons pinned below. The durations are
+   custom properties from fx/timing.ts (T.ui); «простые спецэффекты» and reduced motion — no movement. ═══════════ */
+:root {
+  --v-ink: #2a2521;
+  --v-soft: #5d5248;
+  --v-muted: #6b6157;
+  --v-line: #d6c6a3;
+  --v-wine: #a8382c;
+  --v-wine-dark: #7e2219;
+  --v-cream: #f6e7c6;
+  --v-gold: #8a6a24;
+  --v-gone: #8a8076;
+}
+
+.victory-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(18, 10, 4, 0.62);
+  animation: v-fade var(--v-in, 400ms) ease-out both;
+}
+.victory {
+  position: relative;
+  box-sizing: border-box;
+  width: min(840px, 100%);
+  max-height: min(618px, 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 34px 10px;
+  color: var(--v-ink);
+  font-family: var(--font-text);
+  background: radial-gradient(ellipse at 50% 30%, #fbf3df, #ecdcb8 90%);
+  box-shadow:
+    inset 0 0 0 2px var(--v-ink),
+    inset 0 0 0 7px #fbf3df,
+    inset 0 0 0 8px #8a7550,
+    0 20px 40px rgba(0, 0, 0, 0.6);
+  animation: v-in var(--v-in, 400ms) ease-out both;
+}
+.v-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.v-over {
+  font-family: var(--font-num);
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #8a7550;
+}
+.v-ribbon {
+  margin: 5px 0 0;
+  padding: 6px 58px;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  text-transform: uppercase;
+  color: var(--v-cream);
+  background: linear-gradient(var(--v-wine), var(--v-wine-dark));
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.35);
+  clip-path: polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%, 4% 50%);
+  animation: v-ribbon var(--v-ribbon, 500ms) cubic-bezier(0.2, 0.8, 0.3, 1) var(--v-in, 400ms) both;
+}
+.v-sub {
+  margin: 5px 0 0;
+  text-align: center;
+  font-family: var(--font-head);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--v-soft);
+}
+.v-pano {
+  position: relative;
+  flex: none;
+  width: 100%;
+  height: 170px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 3px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+}
+.v-pano::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1.5px var(--v-ink);
+  pointer-events: none;
+}
+.pano-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* the panorama moves a little: the winners heave, the smoke drifts */
+.pano-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: v-sway 6s ease-in-out infinite;
+}
+.pano-smoke {
+  animation: v-smoke 9s ease-in-out infinite alternate;
+}
+
+.v-body {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  margin-top: 12px;
+  align-items: flex-start;
+}
+/* «Лучший капитан» */
+.v-best {
+  flex: 0 0 268px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 10px;
+  align-items: start;
+  padding: 10px 12px;
+  background: linear-gradient(#fff8e6, #f1e3bf);
+  box-shadow:
+    inset 0 0 0 1.5px var(--v-gold),
+    inset 0 0 0 4px #fff8e6,
+    inset 0 0 0 5px #c9a24a,
+    0 4px 10px rgba(0, 0, 0, 0.2);
+}
+.v-medal {
+  display: flex;
+  margin-top: -4px;
+}
+.v-best-head {
+  line-height: 1.15;
+  min-width: 0;
+}
+.v-k {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v-gold);
+}
+.v-cap {
+  margin-top: 2px;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 21px;
+}
+.v-ship {
+  font-family: var(--font-head);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--v-soft);
+}
+.v-three {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+  text-align: center;
+}
+.v-three > div {
+  padding: 4px 2px;
+  border-radius: 3px;
+  background: rgba(138, 106, 36, 0.12);
+  font-size: 11px;
+  line-height: 1.1;
+  color: var(--v-soft);
+}
+.v-three b {
+  display: block;
+  margin-bottom: 2px;
+  font-family: var(--font-num);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--v-ink);
+}
+/* «Вклад в партию» */
+.v-rows {
+  flex: 1;
+  min-width: 0;
+}
+.v-rows-head {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--v-muted);
+}
+.v-row {
+  padding: 3px 0 4px;
+  border-top: 1px solid var(--v-line);
+}
+.v-a {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) minmax(60px, 200px) 28px;
+  align-items: center;
+  gap: 7px;
+}
+.v-sq {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--c);
+}
+.v-nm {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.v-nm b {
+  font-family: var(--font-num);
+  font-size: 14px;
+}
+.v-af {
+  margin-left: 6px;
+  font-size: 11.5px;
+  color: var(--v-muted);
+}
+.v-bar {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(90, 70, 40, 0.1);
+}
+.v-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--c);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  transform-origin: left;
+  animation: v-bar var(--v-bar, 600ms) cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--v-in, 400ms) + var(--v-ribbon, 500ms) + var(--i, 0) * var(--v-step, 180ms)) both;
+}
+.v-v {
+  font-family: var(--font-num);
+  font-size: 14px;
+  text-align: right;
+}
+.v-b {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin-top: 2px;
+  padding-left: 16px;
+}
+.v-ttl {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 19px;
+  padding: 0 8px;
+  border-radius: 3px;
+  background: var(--v-ink);
+  color: #f3e6c6;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-indent: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  animation: v-stamp var(--v-stamp, 280ms) cubic-bezier(0.3, 1.6, 0.5, 1) calc(var(--v-in, 400ms) + var(--v-ribbon, 500ms) + var(--v-bar, 600ms) + var(--i, 0) * var(--v-step, 180ms)) both;
+}
+.v-fct {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12.5px;
+  color: var(--ink-soft-a5);
+}
+/* the sunk ships: all of it muted */
+.v-row.gone .v-nm b,
+.v-row.gone .v-v,
+.v-row.gone .v-fct {
+  color: var(--v-gone);
+}
+.v-row.gone .v-sq,
+.v-row.gone .v-bar i {
+  opacity: 0.55;
+}
+.v-row.gone .v-ttl {
+  background: #a59a8a;
+  color: #f6efe0;
+}
+
+/* the buttons pinned to the foot: «Реванш» — the oak board with the wine panel and the anchor (A5Rig «Ход окончен»),
+   the paper buttons with icons; «Скачать журнал» — a small link under them */
+.v-btns {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 10px;
+}
+.v-btn-row {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+}
+.v-rematch {
+  flex: 0 0 auto;
+  min-width: 250px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px 5px 6px;
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+  background:
+    repeating-linear-gradient(178deg, rgba(0, 0, 0, 0.09) 0 1px, rgba(0, 0, 0, 0) 1px 5px),
+    linear-gradient(#634128, #3e2716);
+  box-shadow:
+    inset 0 0 0 1px #1e1008,
+    inset 0 1px 0 2px rgba(255, 220, 170, 0.1),
+    0 5px 12px rgba(0, 0, 0, 0.55);
+}
+.v-med {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #e2bf62 35%, #8f6b20 80%, #5e4210);
+  box-shadow:
+    inset 0 0 0 1px #4a3208,
+    0 2px 3px rgba(0, 0, 0, 0.5);
+}
+.v-med i {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #2a1a0e;
+  box-shadow:
+    inset 0 0 0 1px #4a3208,
+    inset 0 0 0 2.5px rgba(226, 191, 98, 0.45);
+}
+.v-pan {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0 10px;
+  border-radius: 2px;
+  background: linear-gradient(#6e2219, #4a130d);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(224, 189, 98, 0.7),
+    0 0 0 2.5px rgba(30, 16, 8, 0.8);
+}
+.v-pan b {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 16.5px;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: transparent;
+  background: linear-gradient(#fffbe6, #fbe7a6 40%, #d9ae52 62%, #fff0b8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
+}
+.v-pan small {
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #f2d9b0;
+}
+.v-rematch:hover .v-pan,
+.v-rematch:focus-visible .v-pan {
+  background: linear-gradient(#80281d, #561710);
+}
+.v-row3 {
+  display: flex;
+  gap: 10px;
+}
+.v-paper {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 52px;
+  padding: 0 14px;
+  border: 1.5px solid var(--v-ink);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--v-ink);
+  font-family: var(--font-sc);
+  font-weight: 800;
+  font-size: 14.5px;
+  background: linear-gradient(#fbf5e7, #efe2c6);
+  box-shadow:
+    inset 0 0 0 2px #fbf5e7,
+    inset 0 0 0 3px #6b5a40,
+    0 2px 0 #a68f66;
+}
+.v-paper:hover,
+.v-paper:focus-visible {
+  background: linear-gradient(#fffaf0, #f4e9d1);
+}
+.v-paper > span:first-child {
+  display: flex;
+}
+.v-short {
+  display: none;
+}
+.v-log.link {
+  padding: 2px 6px;
+  font-size: 12.5px;
+  color: #8e2b22;
+}
+
+@keyframes v-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes v-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+@keyframes v-ribbon {
+  from {
+    clip-path: polygon(47% 0, 53% 0, 53% 50%, 53% 100%, 47% 100%, 47% 50%);
+  }
+}
+@keyframes v-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes v-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.8) rotate(-6deg);
+  }
+}
+@keyframes v-sway {
+  50% {
+    transform: translateY(1.5px) rotate(0.4deg);
+  }
+}
+@keyframes v-smoke {
+  to {
+    transform: translateX(-6px);
+  }
+}
+
+/* ——— a phone: the whole screen, a paper sheet on oak (A5Phone.html frame 7) ——— */
+@media (max-width: 700px) {
+  .victory-backdrop {
+    align-items: stretch;
+    padding: 0;
+    background:
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.38) 0 1.5px, rgba(0, 0, 0, 0) 1.5px 26px),
+      radial-gradient(ellipse 90% 50% at 50% 10%, rgba(255, 200, 140, 0.12), rgba(0, 0, 0, 0) 70%),
+      linear-gradient(#4e331c, #2c1a0c);
+  }
+  .victory {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .v-scroll {
+    position: relative;
+    margin: 12px 10px 0;
+    padding: 12px 12px 8px;
+    align-items: stretch;
+    border-radius: 4px;
+    background: radial-gradient(ellipse at 50% 30%, #f8efd8, #ead9b2 92%);
+    box-shadow:
+      inset 0 0 18px rgba(120, 80, 30, 0.3),
+      0 6px 16px rgba(0, 0, 0, 0.55);
+  }
+  .v-over {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-align: center;
+  }
+  .v-ribbon {
+    align-self: center;
+    box-sizing: border-box;
+    width: min(330px, 100%);
+    min-height: 46px;
+    margin: 6px auto 4px;
+    padding: 6px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    font-size: 20px;
+    letter-spacing: 0.12em;
+    text-indent: 0.12em;
+    background: linear-gradient(#8e2a20, #5e140e);
+    clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%);
+  }
+  .v-sub {
+    margin: 0 0 9px;
+    font-size: 13.5px;
+  }
+  .v-pano {
+    height: auto;
+    aspect-ratio: 400 / 150;
+    margin-top: 0;
+    border-radius: 4px;
+  }
+  .v-body {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .v-best {
+    flex: none;
+    width: 100%;
+    grid-template-columns: 60px minmax(0, 1fr);
+    align-items: center;
+    padding: 10px;
+    background: #fbf6ea;
+    box-shadow:
+      inset 0 0 0 1.5px #b9a27a,
+      inset 0 0 0 4px #fbf6ea,
+      inset 0 0 0 5px var(--v-line);
+  }
+  .v-medal {
+    grid-row: 1 / span 2;
+    justify-content: center;
+    margin-top: 0;
+  }
+  .v-three {
+    grid-column: 2;
+    gap: 5px;
+    margin-top: 6px;
+  }
+  .v-three > div {
+    font-size: 10.5px;
+  }
+  .v-three b {
+    font-size: 18px;
+  }
+  .v-cap {
+    font-size: 20px;
+  }
+  .v-rows {
+    width: 100%;
+  }
+  .v-row {
+    padding: 7px 0 8px;
+  }
+  .v-b {
+    margin-top: 4px;
+  }
+  .v-a {
+    grid-template-columns: 9px minmax(0, 1fr) minmax(50px, 118px) 26px;
+  }
+  .v-nm b {
+    font-size: 15px;
+  }
+  .v-btns {
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 14px 16px;
+  }
+  .v-btn-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .v-rematch {
+    width: 100%;
+    min-width: 0;
+    height: 58px;
+  }
+  .v-row3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .v-paper {
+    justify-content: center;
+    gap: 6px;
+    height: 44px;
+    padding: 0 4px;
+    border: 0;
+    white-space: normal;
+    line-height: 1.1;
+    text-align: left;
+    color: #f3e6c6;
+    font-family: var(--font-text);
+    font-size: 12.5px;
+    background: linear-gradient(#5a3a22, #3a2414);
+    box-shadow:
+      inset 0 0 0 1px #1e1008,
+      inset 0 1px 0 1.5px rgba(255, 220, 170, 0.1),
+      0 2px 4px rgba(0, 0, 0, 0.45);
+  }
+  .v-paper:hover,
+  .v-paper:focus-visible {
+    background: linear-gradient(#6a4528, #452b17);
+  }
+  .v-long {
+    display: none;
+  }
+  .v-short {
+    display: inline;
+  }
+  .v-log.link {
+    align-self: center;
+    color: #e8d3a8;
+  }
+}
+
+/* no movement: the sheet is there at once */
+.fx-simple .victory-backdrop,
+.fx-simple .victory,
+.fx-simple .v-ribbon,
+.fx-simple .v-bar i,
+.fx-simple .v-ttl,
+.fx-simple .pano-sway,
+.fx-simple .pano-smoke {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .victory-backdrop,
+  .victory,
+  .v-ribbon,
+  .v-bar i,
+  .v-ttl,
+  .pano-sway,
+  .pano-smoke {
+    animation: none !important;
+  }
+}

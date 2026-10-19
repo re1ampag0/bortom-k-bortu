@@ -91,7 +91,10 @@ describe('matchStats over 20 bot games', () => {
       for (const c of m.order) {
         expect(t[c].name.length).toBeGreaterThan(0);
         expect(t[c].fact).not.toMatch(/undefined|NaN/);
-        if (t[c].key === 'flagship') expect(m.ships[c].side).toBe(g.end.winner);
+        if (t[c].key === 'flagship') {
+          expect(m.ships[c].side).toBe(g.end.winner);
+          expect(m.ships[c].sunk).toBe(false);
+        }
       }
       const best = bestCaptain(m, g.end.winner)!;
       if (g.end.winner !== 'НИЧЬЯ') expect(m.ships[best.code].side).toBe(g.end.winner);
@@ -186,6 +189,11 @@ describe('awardTitles: the order of the list and the ties', () => {
     expect(t['Ж'].name).toBe('Козырь');
     expect(t['Ж'].fact).toMatch(/^«.+» в раунде III$/);
     expect(t['М']).toEqual({ key: 'flagship', name: 'Флагман', fact: '2 урона по врагу' });
+  });
+
+  it('a sunk ship of the winners with nothing of its own: «Бился до конца», not «Флагман»', () => {
+    const m = stats(ship('Ж', 'ПИРАТЫ', { dmgOut: 2, sunk: true }), ship('М', 'ПИРАТЫ', { dmgOut: 9, hullDmg: 9 }), ship('И', 'КОМПАНИЯ', { sunk: true }), ship('Г', 'КОМПАНИЯ', { sunk: true }));
+    expect(awardTitles(data, m, 'ПИРАТЫ')['Ж']).toEqual({ key: 'tothend', name: 'Бился до конца', fact: '2 урона по врагу' });
   });
 });
 
