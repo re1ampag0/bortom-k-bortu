@@ -1,0 +1,747 @@
+<title>Оснастка стола</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Alegreya+SC:wght@700;800&family=Alegreya:ital,wght@0,700;0,800;1,500&family=Alegreya+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* one deliberate look: the dark wood of the game table, in both themes */
+:root{--page:#2b1d12;--ink:#efe3c8;--ink2:#cbb894;--paper:#efe3c8;--bordo:#8e2219;--brass:#c99a3a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:'Alegreya Sans',sans-serif}
+.page{max-width:1600px;margin:0 auto;padding-block:22px 70px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-family:'Old Standard TT',serif;font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:22px;margin:0 0 6px}
+h2{font-family:'Old Standard TT',serif;font-weight:700;font-size:19px;letter-spacing:.06em;margin:38px 0 4px;text-wrap:balance}
+.lead,.why{color:var(--ink2);font-size:15px;max-width:900px;line-height:1.45;margin:0 0 14px}
+.row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+.v{min-width:0;max-width:100%}
+.vl{font-family:'Old Standard TT',serif;font-weight:700;font-size:15px;margin:0 0 6px}
+.vl b{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--paper);color:#2a2521;margin-right:7px;font-size:13px}
+.vl span{color:var(--ink2);font-weight:400;font-size:13px;margin-left:4px}
+.wrap{position:relative;max-width:100%}
+.wrap>.stage{position:absolute;left:0;top:0;transform-origin:0 0}
+.stage{position:relative;overflow:hidden;border-radius:6px;color:#2a2521;
+  background:radial-gradient(ellipse 70% 60% at 45% 40%,rgba(255,214,150,.2),rgba(0,0,0,0) 70%),repeating-linear-gradient(92deg,rgba(0,0,0,.05) 0 2px,rgba(0,0,0,0) 2px 9px),repeating-linear-gradient(90deg,#5b3d26 0 220px,#553823 220px 222px,#5e4029 222px 450px,#573a24 450px 452px),#5b3d26;box-shadow:0 0 0 1px rgba(239,227,200,.12)}
+.note{color:var(--ink2);font-size:13px;line-height:1.4;margin:7px 0 0;max-width:520px}
+
+/* pieces of the game, as in A5 */
+.sea{position:absolute;overflow:hidden;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='26'%3E%3Cpath d='M4 16 q7 -7 14 0' fill='none' stroke='%23a9cbd2' stroke-opacity='.45' stroke-width='1.4'/%3E%3Cpath d='M27 5 q6 -6 12 0' fill='none' stroke='%23a9cbd2' stroke-opacity='.3' stroke-width='1.2'/%3E%3C/svg%3E"),radial-gradient(ellipse 60% 70% at 50% 50%,#4f8391,#326170 60%,#24495a 100%);box-shadow:inset 0 0 30px rgba(0,20,30,.45)}
+.mat{position:absolute;width:478px;background:radial-gradient(ellipse at 30% 20%,#f8f0de,#efe2c6 85%);border-radius:5px;box-shadow:0 1px 0 #c9b48c,0 3px 0 #a68f66,0 12px 20px rgba(0,0,0,.45)}
+.mh{position:relative;height:34px;display:flex;align-items:center;gap:8px;padding:0 6px 0 10px;color:#f6efe0;font-family:'Alegreya SC',serif;font-weight:800;font-size:17px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25);border-radius:5px 5px 0 0}
+.mh small{font-family:'Alegreya',serif;font-style:italic;font-weight:500;font-size:12.5px;opacity:.85}
+.pic{flex:0 0 66px;height:30px;border-radius:5px;background:#f4ead6;box-shadow:inset 0 0 0 1px rgba(0,0,0,.35),inset 0 0 0 2.5px #f4ead6,inset 0 0 0 3.2px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center}
+.pic svg{width:58px;height:28px}
+.body{padding:8px 12px 9px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:#4a4036}
+.r1{display:flex;align-items:center;gap:8px}
+.lbl{font-variant:small-caps;letter-spacing:.06em;font-weight:700}
+.cells{display:flex;gap:1.5px}
+.num{font-family:'Old Standard TT',serif;font-weight:700;color:#2a2521;font-size:13px}
+.act{display:flex;gap:8px;padding:0 12px 10px}
+.cmd{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;background:linear-gradient(#fbf5e7,#efe2c6);color:#2a2521;border:1.5px solid #2a2521;border-radius:4px;box-shadow:inset 0 0 0 2px #fbf5e7,inset 0 0 0 3px #6b5a40,0 2px 0 #a68f66;font-family:'Alegreya SC',serif;font-weight:800;font-size:14.5px;position:relative;white-space:nowrap}
+.cmd .cost{display:flex;align-items:center;gap:3px;font-family:'Old Standard TT',serif;font-weight:700;padding-left:8px;border-left:1px solid #b9a27a}
+.ib{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ead07c,#8f6b20 80%);box-shadow:inset 0 0 0 2px rgba(0,0,0,.3),inset 0 0 0 4px rgba(255,240,200,.25),0 3px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#22180c}
+.endb{width:300px;height:64px;border-radius:4px;background:linear-gradient(#a8382c,#7e2219);box-shadow:inset 0 0 0 2px #e0bd62,inset 0 0 0 5px #7e2219,inset 0 0 0 6px #e0bd62,0 6px 12px rgba(0,0,0,.5);font-family:'Old Standard TT',serif;font-weight:700;font-size:20px;letter-spacing:.16em;text-transform:uppercase;color:#f6e7c6;display:flex;align-items:center;justify-content:center;position:absolute}
+.card{position:absolute;width:118px;height:150px;background:linear-gradient(#fdf9f0,#f3ead6);border-radius:8px;box-shadow:0 1px 0 #d6c8ab,0 8px 14px rgba(0,0,0,.5);overflow:hidden;font-family:'Alegreya Sans',sans-serif;color:#2a2521}
+.card .t{height:20px;color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;padding:0 8px}
+.card .n{font-family:'Old Standard TT',serif;font-weight:700;font-size:15px;line-height:1.12;padding:8px 9px 0}
+.card .e{font-weight:800;font-size:13px;padding:4px 9px 0}
+.card .x{font-size:11px;color:#5d5248;padding:4px 9px 0;line-height:1.25}
+.abs{position:absolute}
+.gild{background:linear-gradient(#fff3c4,#e6c46a 45%,#a77a22 55%,#f2d88a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.65))}
+.carve{color:#2a1a0c;text-shadow:0 1px 0 rgba(255,230,180,.35),0 -1px 0 rgba(0,0,0,.6)}
+@keyframes flick{0%,100%{opacity:.94}30%{opacity:1}55%{opacity:.88}80%{opacity:.97}}
+@keyframes needle{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(6deg)}}
+.cmpg .nd{animation:needle 6s ease-in-out infinite;transform-origin:0 0}
+.dsw{display:inline-flex;gap:0;margin:0 0 12px;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px rgba(239,227,200,.35)}
+.dsw button{font:700 14px 'Alegreya Sans',sans-serif;padding:8px 16px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.dsw button[aria-pressed="true"]{background:var(--paper);color:#2a2521}
+.dsw button:focus-visible{outline:2px solid #e0bd62;outline-offset:-2px}
+.g-even{display:none}
+[data-mode="deck"] .m-table,[data-mode="table"] .m-deck{display:none}
+.flick{animation:flick 1.3s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.loop *,.flick{animation:none!important}}
+</style>
+
+<div class="page">
+<h1>Оснастка стола</h1>
+<p class="lead">Варианты, как добавить на стол настоящую корабельную оснастку: канаты и узлы, пушечные порты, латунь, вывески, палубу. Всё нарисовано своим SVG по мотивам линейных кораблей XVIII века и пиратских судов — без чужих картинок. Вторая версия — доработано по твоим замечаниям.</p>
+<div id="secs"></div>
+</div>
+<svg id="meas" width="0" height="0" style="position:absolute"></svg>
+
+<script>
+const SHIPS = __SHIPS__;
+const CELLS = __CELLS__;
+const IC = __ICONS__;
+const NS = 'http://www.w3.org/2000/svg';
+const R1 = n => Math.round(n * 10) / 10;
+let uid = 0; const U = p => p + (uid++);
+
+/* ================= rope: strands laid along any path ================= */
+const meas = document.getElementById('meas');
+function pathLen(d){ const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); meas.appendChild(p); return p; }
+function rope(d, w, o = {}){ // returns svg markup of a twisted three-strand rope along d
+  const p = pathLen(d), L = p.getTotalLength(), step = w * (o.lay || .58), g = U('rg');
+  const c = o.c || ['#ecd59c', '#c29a56', '#7a5524'], dark = o.dark || '#4a3214';
+  let s = `<defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset=".55" stop-color="${c[1]}"/><stop offset="1" stop-color="${c[2]}"/></linearGradient></defs>`;
+  s += `<path d="${d}" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="${w + 2}" stroke-linecap="round" transform="translate(${w * .18} ${w * .3})"/>`;
+  s += `<path d="${d}" fill="none" stroke="${dark}" stroke-width="${w + .8}" stroke-linecap="round"/>`;
+  for(let t = step / 2; t < L; t += step){ const a = p.getPointAtLength(t), b = p.getPointAtLength(Math.min(L, t + .5)), q = p.getPointAtLength(Math.max(0, t - .5));
+    const ang = Math.atan2(b.y - q.y, b.x - q.x) * 180 / Math.PI;
+    s += `<ellipse cx="0" cy="0" rx="${R1(w * .56)}" ry="${R1(w * .3)}" transform="translate(${R1(a.x)} ${R1(a.y)}) rotate(${R1(ang + (o.left ? -58 : 58))})" fill="url(#${g})" stroke="${dark}" stroke-width="${R1(Math.max(.35, w * .05))}"/>`; }
+  p.remove(); return s; }
+function lashing(x, y, w, n = 5, ang = 45){ let s = ''; for(let i = 0; i < n; i++){ const o = (i - (n - 1) / 2) * w * .42; s += `<ellipse cx="0" cy="${R1(o)}" rx="${R1(w * 1.05)}" ry="${R1(w * .2)}" transform="translate(${x} ${y}) rotate(${ang})" fill="#b78f52" stroke="#4a3214" stroke-width=".5"/>`; } return s; }
+function monkeyFist(x, y, r){ const g = U('mf'), cl = U('mc'); let s = `<defs><radialGradient id="${g}" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#f0dca6"/><stop offset=".6" stop-color="#b48a4a"/><stop offset="1" stop-color="#5a3e18"/></radialGradient><clipPath id="${cl}"><circle cx="${x}" cy="${y}" r="${r}"/></clipPath></defs><circle cx="${x}" cy="${y}" r="${r}" fill="url(#${g})" stroke="#4a3214" stroke-width=".8"/><g clip-path="url(#${cl})" fill="none" stroke="#5a3e18" stroke-width=".7" opacity=".85">`;
+  for(let i = -2; i <= 2; i++) s += `<path d="M${x - r} ${y + i * r * .34} Q${x} ${y + i * r * .34 - r * .25} ${x + r} ${y + i * r * .34}"/>`;
+  for(let i = -1; i <= 1; i++) s += `<path d="M${x + i * r * .36} ${y - r} Q${x + i * r * .36 + r * .3} ${y} ${x + i * r * .36} ${y + r}" stroke="#f3e2b0" stroke-width="1"/>`;
+  return s + `</g><circle cx="${x - r * .35}" cy="${y - r * .38}" r="${r * .22}" fill="#fff6d8" opacity=".35"/>`; }
+
+/* ================= iron, brass, wood ================= */
+function gradDefs(){ return `<defs>
+  <linearGradient id="gIron" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d858a"/><stop offset=".3" stop-color="#3c4246"/><stop offset=".75" stop-color="#1b1e20"/><stop offset="1" stop-color="#2c3134"/></linearGradient>
+  <linearGradient id="gBrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset=".35" stop-color="#e2bf62"/><stop offset=".7" stop-color="#9a7020"/><stop offset="1" stop-color="#d8b05a"/></linearGradient>
+  <radialGradient id="gBrassR" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#e2bf62"/><stop offset=".8" stop-color="#8f6b20"/><stop offset="1" stop-color="#5e4210"/></radialGradient>
+  <linearGradient id="gWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b07a44"/><stop offset=".5" stop-color="#8a5a2c"/><stop offset="1" stop-color="#5e3a18"/></linearGradient>
+  <linearGradient id="gWoodD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e4a2a"/><stop offset=".5" stop-color="#4e321a"/><stop offset="1" stop-color="#2e1c0c"/></linearGradient>
+  <linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b3352a"/><stop offset="1" stop-color="#6e1610"/></linearGradient>
+  <radialGradient id="gBall" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#8a9296"/><stop offset=".5" stop-color="#2e3336"/><stop offset="1" stop-color="#121416"/></radialGradient>
+  <radialGradient id="gFlash" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fffbe6"/><stop offset=".35" stop-color="#ffd25a"/><stop offset=".7" stop-color="#ff7a1e" stop-opacity=".7"/><stop offset="1" stop-color="#ff5a10" stop-opacity="0"/></radialGradient>
+  <radialGradient id="gSmoke" cx=".45" cy=".4" r=".6"><stop offset="0" stop-color="#fbf8f2"/><stop offset=".7" stop-color="#d9d3c8"/><stop offset="1" stop-color="#b8b0a4" stop-opacity="0"/></radialGradient>
+  </defs>`; }
+
+/* a naval gun on its truck carriage, side view, muzzle to the right; box 0..124 × 0..62 */
+function cannon(o = {}){ const rings = [16, 23, 50, 54, 92, 112].map(x => `<path d="M${x} ${23 - (x < 52 ? 8.6 : 6.6) + (x - 10) * .012} V${25 + (x < 52 ? 8.6 : 6.6) - (x - 10) * .012}" stroke="#8b9397" stroke-width="1.6" opacity=".7"/>`).join('');
+  return `<g>
+  <ellipse cx="60" cy="59.5" rx="52" ry="2.6" fill="#000" opacity=".3"/>
+  <path d="M18 49 V41 H33 V35 H49 V29 H86 L90 34 V49 Z" fill="url(#gWood)" stroke="#3a2412" stroke-width="1"/>
+  <path d="M18 41 H33 M33 35 H49 M49 29 H86" stroke="#d8a868" stroke-width=".8" opacity=".6"/>
+  <path d="M22 47 H86" stroke="#3a2412" stroke-width=".6" opacity=".5"/>
+  ${[[26, 45], [42, 39], [58, 33], [80, 33], [80, 46], [40, 48]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.4" fill="#2b2f31" stroke="#9aa2a6" stroke-width=".4"/>`).join('')}
+  <path d="M20 35 L36 35 L36 38 L20 41 Z" fill="#a8743e" stroke="#3a2412" stroke-width=".7"/>
+  <path d="M8 24 Q8 15.4 14 15.2 L52 16.4 L52 15.8 L56 15.8 L56 17 L104 18.6 Q110 17.6 114 17.4 L119 17.2 V30.8 L114 30.6 Q110 30.4 104 29.4 L56 31 L56 32.2 L52 32.2 L52 31.6 L14 32.8 Q8 32.6 8 24 Z" fill="url(#gIron)" stroke="#0d0f10" stroke-width="1"/>
+  ${rings}
+  <path d="M14 17.6 Q40 17.4 104 20" stroke="#c9d1d4" stroke-width="1" fill="none" opacity=".5"/>
+  <ellipse cx="119" cy="24" rx="2" ry="6.8" fill="#121416" stroke="#0d0f10"/><ellipse cx="119.4" cy="24" rx="1" ry="3.6" fill="#000"/>
+  <circle cx="3.6" cy="24" r="3.6" fill="url(#gIron)" stroke="#0d0f10" stroke-width=".8"/><path d="M6 22.6 H9 V25.4 H6 Z" fill="#2c3134"/>
+  <circle cx="62" cy="27" r="3.4" fill="#3c4246" stroke="#0d0f10" stroke-width=".8"/><path d="M57.4 25 Q62 21.6 66.6 25 L66.6 27.6 L57.4 27.6 Z" fill="#2c3134" stroke="#0d0f10" stroke-width=".6"/>
+  <rect x="22" y="49" width="20" height="4" fill="#3a2412"/><rect x="68" y="49" width="20" height="4" fill="#3a2412"/>${[[31, 54], [77, 53.4]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i ? 6.6 : 6}" fill="url(#gWoodD)" stroke="#2a180a" stroke-width="1"/><circle cx="${x}" cy="${y}" r="${i ? 4.6 : 4.2}" fill="none" stroke="#a8743e" stroke-width=".8" opacity=".6"/><circle cx="${x}" cy="${y}" r="2.2" fill="#2b2f31" stroke="#9aa2a6" stroke-width=".5"/>`).join('')}
+  ${o.rope === false ? '' : rope('M26 41 C14 40 2 34 3.6 27.6 C4.6 22 10 26 12 30 C16 38 30 42 40 41', 2.4)}
+  </g>`; }
+
+/* a gun port seen from the side of the hull: frame, red inside, the lid up on hinges, the muzzle */
+function port(x, y, s, open = true, o = {}){ const k = s / 20;
+  return `<g transform="translate(${x} ${y}) scale(${R1(k * 100) / 100})">
+  ${open ? `<path d="M-1 -2 L21 -2 L19.6 -8.6 L.4 -8.6 Z" fill="url(#gRed)" stroke="#2a0a06" stroke-width=".8"/><path d="M3 -2 L2.6 -8 M17 -2 L17.4 -8" stroke="#1a1c1e" stroke-width="1.3"/>` : ''}
+  <rect x="-1.5" y="-1.5" width="23" height="23" rx="1" fill="#2a1d10"/>
+  ${open ? `<rect x="1" y="1" width="18" height="18" fill="#7e1d14"/><rect x="1" y="1" width="18" height="4" fill="#4a0e09"/>
+    ${o.gun === false ? '' : `<circle cx="10" cy="11" r="6.4" fill="url(#gIron)" stroke="#0d0f10" stroke-width=".8"/><circle cx="10" cy="11" r="4.6" fill="none" stroke="#8b9397" stroke-width=".7" opacity=".7"/><circle cx="10" cy="11" r="3" fill="#050505"/>`}`
+   : `<rect x="1" y="1" width="18" height="18" fill="${o.lid || '#1d1b19'}" stroke="#000" stroke-width=".6"/><path d="M1 5 H19 M1 15 H19" stroke="#55504a" stroke-width="1.2"/><circle cx="3.4" cy="5" r=".9" fill="#88807a"/><circle cx="3.4" cy="15" r=".9" fill="#88807a"/>`}
+  </g>`; }
+
+/*__ST3__*/
+/* ================= more metal and wood ================= */
+function defs2(){ return `<defs>
+  <linearGradient id="gIron2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d6569"/><stop offset=".14" stop-color="#a7b0b4"/><stop offset=".24" stop-color="#5a6266"/><stop offset=".6" stop-color="#23272a"/><stop offset=".86" stop-color="#121416"/><stop offset="1" stop-color="#2f3539"/></linearGradient>
+  <linearGradient id="gRing" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6c7478"/><stop offset=".12" stop-color="#c4cccf"/><stop offset=".3" stop-color="#5d6569"/><stop offset=".7" stop-color="#1d2123"/><stop offset="1" stop-color="#3a4044"/></linearGradient>
+  <linearGradient id="gOak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a87444"/><stop offset=".08" stop-color="#c79260"/><stop offset=".2" stop-color="#94623a"/><stop offset=".8" stop-color="#6e4526"/><stop offset="1" stop-color="#4a2c14"/></linearGradient>
+  <radialGradient id="gTruck" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#9a6a3e"/><stop offset=".7" stop-color="#5e3a1c"/><stop offset="1" stop-color="#3a2210"/></radialGradient>
+  <radialGradient id="gAO" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gSpec" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <linearGradient id="gWine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e2a22"/><stop offset=".5" stop-color="#561a14"/><stop offset="1" stop-color="#3e110c"/></linearGradient>
+  <linearGradient id="gHull" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a1c"/><stop offset="1" stop-color="#1e140c"/></linearGradient>
+  <linearGradient id="gPortIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3e0b07"/><stop offset=".35" stop-color="#7e1d14"/><stop offset="1" stop-color="#9a2a1e"/></linearGradient>
+  </defs>`; }
+
+/* a realistic naval gun on its truck carriage — the same shape, more metal, more wood, more shadow; box 0..124 × 0..62 */
+function cannon2(o = {}){ const id = U('cn');
+  const ringR = (x, w, r, cy = 24) => `<rect x="${x}" y="${R1(cy - r)}" width="${w}" height="${R1(r * 2)}" rx=".6" fill="url(#gRing)" stroke="#0b0c0d" stroke-width=".55"/><path d="M${x + .4} ${R1(cy - r + .7)} H${x + w - .4}" stroke="#e6ecee" stroke-width=".5" opacity=".7"/>`;
+  const grain = Array.from({length: 7}, (_, i) => `<path d="M18 ${R1(31 + i * 2.6)} C40 ${R1(30 + i * 2.6 + (i % 2 ? 1.4 : -1))} 60 ${R1(32 + i * 2.6)} 90 ${R1(31 + i * 2.6 + (i % 3) * .6)}" stroke="${i % 2 ? '#5a3618' : '#d8a46c'}" stroke-width=".45" fill="none" opacity="${i % 2 ? .55 : .35}"/>`).join('');
+  const bolt = (x, y) => `<circle cx="${x}" cy="${y}" r="1.9" fill="#1a1d1f" opacity=".6"/><circle cx="${x}" cy="${y}" r="1.45" fill="url(#gRing)" stroke="#0b0c0d" stroke-width=".4"/><circle cx="${x - .45}" cy="${y - .45}" r=".4" fill="#eef2f3" opacity=".8"/>`;
+  const truck = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#gTruck)" stroke="#24140a" stroke-width="1"/>${[.78, .56].map(k => `<circle cx="${x}" cy="${y}" r="${R1(r * k)}" fill="none" stroke="#3a2210" stroke-width=".5" opacity=".6"/>`).join('')}<path d="M${R1(x - r * .7)} ${R1(y - r * .5)} A${r} ${r} 0 0 1 ${R1(x + r * .4)} ${R1(y - r * .85)}" stroke="#d8a46c" stroke-width=".9" fill="none" opacity=".55"/><circle cx="${x}" cy="${y}" r="2.6" fill="url(#gRing)" stroke="#0b0c0d" stroke-width=".5"/><circle cx="${x}" cy="${y}" r=".9" fill="#0b0c0d"/>`;
+  return `<g>
+  <ellipse cx="58" cy="60.4" rx="56" ry="3.2" fill="url(#gAO)"/>
+  <defs><clipPath id="${id}"><path d="M18 49 V41 H33 V35 H49 V29 H86 L90 34 V49 Z"/></clipPath></defs>
+  <rect x="21" y="48" width="22" height="4.4" rx=".8" fill="#3a2212" stroke="#1e1008" stroke-width=".6"/><rect x="66" y="48" width="23" height="4.4" rx=".8" fill="#3a2212" stroke="#1e1008" stroke-width=".6"/>
+  <path d="M18 49 V41 H33 V35 H49 V29 H86 L90 34 V49 Z" fill="url(#gOak)" stroke="#2a180a" stroke-width="1"/>
+  <g clip-path="url(#${id})">${grain}<path d="M18 41 H33 V35 H49 V29 H86" stroke="#f0c68c" stroke-width="1" fill="none" opacity=".55"/><path d="M18 48.4 H90" stroke="#24140a" stroke-width="1.6" opacity=".55"/>
+    <ellipse cx="62" cy="31" rx="40" ry="4.2" fill="#000" opacity=".28"/></g>
+  ${[[24, 44.6], [40, 38.6], [55, 33], [70, 33], [83, 33], [83, 44.5], [44, 45.5], [64, 45.5]].map(([x, y]) => bolt(x, y)).join('')}
+  <g><circle cx="88.6" cy="39" r="2.4" fill="none" stroke="url(#gRing)" stroke-width="1.2"/><circle cx="20.4" cy="45" r="2.2" fill="none" stroke="url(#gRing)" stroke-width="1.1"/></g>
+  <path d="M19.5 34.6 L37 34.6 L37 37.6 L19.5 40.6 Z" fill="url(#gOak)" stroke="#2a180a" stroke-width=".7"/><path d="M19.5 37.6 L15.6 37.6" stroke="#4a2c14" stroke-width="1.6" stroke-linecap="round"/><circle cx="15" cy="37.6" r="1.4" fill="#6e4526" stroke="#2a180a" stroke-width=".4"/>
+  <path d="M8 24 Q8 15.4 14 15.2 L52 16.4 L52 15.8 L56 15.8 L56 17 L104 18.6 Q110 17.6 114 17.4 L119 17.2 V30.8 L114 30.6 Q110 30.4 104 29.4 L56 31 L56 32.2 L52 32.2 L52 31.6 L14 32.8 Q8 32.6 8 24 Z" fill="url(#gIron2)" stroke="#0a0b0c" stroke-width="1"/>
+  ${ringR(12.4, 3.4, 9.2)}${ringR(28, 1.6, 8.5)}${ringR(50.6, 2.2, 8.6)}${ringR(55.2, 1.2, 7.4)}${ringR(91, 1.4, 6.3)}${ringR(108.6, 1.6, 6.9)}${ringR(116.4, 2.8, 7.1)}
+  <path d="M16 17.4 Q50 16.8 104 19.6 L114 18.6" stroke="#eef2f3" stroke-width=".9" fill="none" opacity=".55"/>
+  <path d="M16 30.4 Q50 31.4 104 28.4" stroke="#000" stroke-width="1.2" fill="none" opacity=".35"/>
+  <path d="M10.4 30.6 Q40 32.6 104 29.2 L114 30" stroke="#9fb6c0" stroke-width=".6" fill="none" opacity=".45"/>
+  <path d="M15 18.6 Q34 17.4 50 17.8 L50 21.4 Q34 21 15 22.4 Z" fill="url(#gSpec)" opacity=".55"/><path d="M58 18.6 Q80 18.8 103 20.4 L103 22.6 Q80 21.6 58 21.6 Z" fill="url(#gSpec)" opacity=".4"/>
+  ${[15.8, 29.6, 52.8, 56.4, 92.4, 110.2].map(x => `<path d="M${x + .4} ${x < 52 ? 16.2 : 18.2} V${x < 52 ? 31.8 : 29.8}" stroke="#000" stroke-width=".9" opacity=".32"/>`).join('')}
+  ${[[24, 22], [33, 27], [41, 20.4], [47, 28.6], [68, 22.4], [77, 26.6], [86, 21.6], [97, 25.2], [101, 22]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".38" fill="#000" opacity=".35"/>`).join('')}
+  <rect x="18" y="14.6" width="7" height="1.6" rx=".5" fill="url(#gRing)" stroke="#0b0c0d" stroke-width=".4"/><circle cx="21.5" cy="15.2" r=".7" fill="#000"/>
+  <ellipse cx="119.4" cy="24" rx="2.2" ry="7" fill="#1a1d1f" stroke="#0a0b0c"/><ellipse cx="119.9" cy="24" rx="1.4" ry="4.2" fill="#000"/><path d="M118.6 17.6 Q120.8 20 120.8 24" stroke="#c4cccf" stroke-width=".5" fill="none" opacity=".7"/>
+  <path d="M5.6 21.6 H9 V26.4 H5.6 Z" fill="url(#gIron2)" stroke="#0a0b0c" stroke-width=".5"/><circle cx="3.4" cy="24" r="3.4" fill="url(#gIron2)" stroke="#0a0b0c" stroke-width=".7"/><circle cx="2.4" cy="22.8" r=".9" fill="#eef2f3" opacity=".6"/>
+  <circle cx="62" cy="27.4" r="3.6" fill="url(#gIron2)" stroke="#0a0b0c" stroke-width=".7"/><circle cx="62" cy="27.4" r="1.4" fill="#2f3539"/>
+  <path d="M56.8 26.4 Q62 21 67.2 26.4 L67.2 28.4 L56.8 28.4 Z" fill="url(#gRing)" stroke="#0b0c0d" stroke-width=".6"/>${bolt(57.8, 29.4)}${bolt(66.2, 29.4)}
+  <ellipse cx="31" cy="60.6" rx="7.4" ry="1.5" fill="#000" opacity=".5"/><ellipse cx="77" cy="60.6" rx="8" ry="1.6" fill="#000" opacity=".5"/>
+  ${truck(31, 54.2, 6.2)}${truck(77, 53.6, 6.8)}
+  <path d="M25.6 57.4 A6.2 6.2 0 0 0 36.4 57.4" stroke="#000" stroke-width="1.2" fill="none" opacity=".35"/><path d="M71.2 57 A6.8 6.8 0 0 0 83 57" stroke="#000" stroke-width="1.2" fill="none" opacity=".35"/>
+  <path d="M33 41 H18.6 M49 35 H33.6 M86 29 H49.6" stroke="#000" stroke-width="1.4" opacity=".2" transform="translate(0 1.4)"/>
+  <path d="M90 34 V49" stroke="#000" stroke-width="2" opacity=".25"/>
+  ${o.rope === false ? '' : rope('M20.4 45 C12 44 1.2 37 2 29.4 C2.6 22.6 9.6 24 11 29 C13.2 37 26 40.6 44 39.6 C62 38.6 80 39 88.6 39', 2.6, {c: ['#d9bd84', '#a07a44', '#5e4220']})}
+  </g>`; }
+
+/* a gun port in the side of the hull: the planking, the sill, the red inside, the lid raised on its hinges with a tackle, the muzzle */
+function port2(x, y, s, open = true){ const k = s / 24;
+  return `<g transform="translate(${x} ${y}) scale(${R1(k * 100) / 100})">
+  ${open ? `<path d="M-1.6 -1.6 L25.6 -1.6 L24 -11 L0 -11 Z" fill="url(#gHull)" stroke="#0e0905" stroke-width=".7"/><path d="M0.6 -4 H23.4 M0.3 -7.4 H23.7" stroke="#5a4430" stroke-width=".6"/><path d="M-1.4 -1.8 L-0.2 -10.6 L1.6 -10.6 M25.4 -1.8 L24.2 -10.6 L22.4 -10.6" fill="none" stroke="#7d858a" stroke-width="1.1"/><circle cx="12" cy="-11" r="1" fill="#7d858a"/><path d="M12 -11 L12 -16" stroke="#c29a56" stroke-width=".9"/>` : ''}
+  <rect x="-2" y="-2" width="28" height="28" rx="1.2" fill="#140d07"/><rect x="-2" y="-2" width="28" height="2.2" fill="#6e5236" opacity=".9"/><rect x="-2" y="23.8" width="28" height="2.2" fill="#8a6a46"/>
+  ${open ? `<rect x="0.6" y="0.6" width="22.8" height="22.8" fill="url(#gPortIn)"/><rect x="0.6" y="0.6" width="22.8" height="5" fill="#000" opacity=".45"/>
+    <g class="gmz" style="transform-box:fill-box;transform-origin:50% 50%"><circle cx="12" cy="13.6" r="8.4" fill="#000" opacity=".35"/><circle cx="12" cy="13" r="7.8" fill="url(#gIron2)" stroke="#0a0b0c" stroke-width=".8"/><circle cx="12" cy="13" r="6.1" fill="none" stroke="#c4cccf" stroke-width=".7" opacity=".55"/><circle cx="12" cy="13" r="3.9" fill="#050505"/><path d="M6.6 9.6 A6.6 6.6 0 0 1 12 6.6" stroke="#eef2f3" stroke-width=".9" fill="none" opacity=".75"/></g>`
+   : `<rect x="0.6" y="0.6" width="22.8" height="22.8" fill="url(#gHull)" stroke="#000" stroke-width=".5"/><path d="M0.6 8 H23.4 M0.6 16 H23.4" stroke="#5a4430" stroke-width=".6"/><path d="M0.6 5 H17 M0.6 19 H17" stroke="#7d858a" stroke-width="1.6"/><circle cx="3.6" cy="5" r="1" fill="#c4cccf"/><circle cx="3.6" cy="19" r="1" fill="#c4cccf"/><circle cx="20.6" cy="12" r="1.3" fill="none" stroke="#7d858a" stroke-width=".8"/>`}
+  </g>`; }
+
+/* an admiralty anchor: ring, stock, shank, arms and flukes — box 0..20 × 0..30 */
+const ANCHOR = `<g transform="translate(-3 0)"><circle cx="13" cy="3.2" r="2.7" fill="none" stroke="#4a3208" stroke-width="2.6"/><circle cx="13" cy="3.2" r="2.7" fill="none" stroke="url(#gBrass)" stroke-width="1.6"/>
+  <path d="M2.6 7.2 Q13 6.4 23.4 7.2 L23.4 9.4 Q13 8.6 2.6 9.4 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".55"/><circle cx="2.4" cy="8.3" r="1.6" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".45"/><circle cx="23.6" cy="8.3" r="1.6" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".45"/>
+  <path d="M11.5 5.6 H14.5 L15.1 24.6 H10.9 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".6"/><path d="M12.2 6.2 L11.8 24" stroke="#fff3c4" stroke-width=".6" opacity=".8"/>
+  <path d="M1.4 16.8 Q1.6 26.4 13 28.8 Q24.4 26.4 24.6 16.8 L21.8 19 Q21 24.8 13 26 Q5 24.8 4.2 19 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".6"/>
+  <path d="M1.4 16.8 L-1.8 18.6 Q-1.4 21.8 0.8 23.8 L4.6 20.4 Z M24.6 16.8 L27.8 18.6 Q27.4 21.8 25.2 23.8 L21.4 20.4 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".55"/>
+  <path d="M-.6 19.2 Q0 21.4 1.2 22.6 M26.6 19.2 Q26 21.4 24.8 22.6" stroke="#fff3c4" stroke-width=".5" fill="none" opacity=".7"/>
+  <circle cx="13" cy="27.8" r="1.6" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".45"/><path d="M3.6 20 Q5.6 25.6 13 27" stroke="#fff3c4" stroke-width=".55" fill="none" opacity=".6"/>
+  ${rope('M13 5.6 C19 8.6 18 11.4 13 12.6 C8 13.8 8 16.6 13 17.8 C18 19 18 21.4 13 22.8 C9.6 23.8 9 25.8 11 27', 1.25, {c: ['#e3c88e', '#a8824a', '#5e4220']})}</g>`;
+
+/* a Turk's head: three strands woven over and under around a ring; each strand is cut where it turns, the "under" pieces go first */
+function turksHead(cx, cy, r, A, B, w, o = {}){ const N = 720, c = o.c || ['#3e2a10', '#b8935a', '#f2dfae']; const under = [], over = [];
+  for(let s = 0; s < 3; s++){ const ph = s * Math.PI * 2 / 3; let cur = null, sign = 0;
+    for(let i = 0; i <= N; i++){ const t = i / N * Math.PI * 2, th = B * t + ph, rr = r + A * Math.sin(th), x = R1(cx + Math.cos(t) * rr), y = R1(cy + Math.sin(t) * rr), sg = Math.cos(th) >= 0 ? 1 : -1;
+      if(sg !== sign){ if(cur){ cur.pts.push([x, y]); (sign > 0 ? over : under).push(cur); } cur = {pts: [[x, y]]}; sign = sg; } else cur.pts.push([x, y]); }
+    if(cur) (sign > 0 ? over : under).push(cur); }
+  const draw = pc => { const d = 'M' + pc.pts.map(p => p.join(' ')).join(' L');
+    return `<path d="${d}" fill="none" stroke="${c[0]}" stroke-width="${w + 1.6}" stroke-linecap="butt" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${c[1]}" stroke-width="${w}" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${c[2]}" stroke-width="${R1(w * .3)}" stroke-linejoin="round" opacity=".75" transform="translate(-.25 -.35)"/>`; };
+  return under.map(draw).join('') + over.map(draw).join(''); }
+
+/* ================= planks ================= */
+const SHD = {
+  P: {k: 'pearl', name: 'Чёрная жемчужина', capt: 'капитан Джек Воробей', c: ['#3a3430', '#1e1b18'], hull: [9, 9], s: [3, 3], g: [2, 2], cr: [3, 3]},
+  R: {k: 'revenge', name: 'Месть королевы Анны', capt: 'Чёрная Борода', c: ['#9e3a26', '#7a2516'], hull: [9, 11], s: [2, 2], g: [2, 3], cr: [2, 3]},
+};
+const icons = (on, off, v) => Array.from({length: v[1]}, (_, i) => i < v[0] ? on : off).join('');
+function plank(id, x, y, o = {}){ const s = SHD[id];
+  const W = s.g[1] * 30 + 8;
+  const guns = o.ports ? `<span class="lbl">пушки</span><svg class="ports" width="${W}" height="34" viewBox="0 0 ${W} 34" style="margin:-9px 0 -3px">${gradDefs()}${defs2()}
+      <rect x="0" y="10" width="${W}" height="24" rx="2" fill="url(#gHull)"/><path d="M0 14 H${W} M0 30 H${W}" stroke="#4e3a26" stroke-width=".6"/><rect x="0" y="9" width="${W}" height="3" fill="#c49a52"/><rect x="0" y="9" width="${W}" height="1" fill="#f2d48c"/>
+      ${Array.from({length: s.g[1]}, (_, i) => port2(6 + i * 30, 13.4, 18.4, i < s.g[0])).join('')}</svg><span class="num">${s.g[0]}/${s.g[1]}</span>`
+    : `<span class="lbl">пушки</span><span class="cells">${icons(CELLS.GUN, CELLS.GUN_X, s.g)}</span><span class="num">${s.g[0]}</span>`;
+  return `<div class="mat" style="left:${x}px;top:${y}px;${o.style || ''}"><div class="mh" style="background:linear-gradient(${s.c[0]},${s.c[1]})"><span class="pic"><svg viewBox="-2 -1 124 80">${SHIPS[s.k]}</svg></span>${s.name} <small>${s.capt}</small></div>
+   <div class="body"><div class="r1"><span class="lbl" style="width:58px">корпус</span><span class="cells">${icons(CELLS.HULL, CELLS.HULL_X, s.hull)}</span><span class="num">${s.hull[0]}/${s.hull[1]}</span></div>
+   <div class="r1"><span class="lbl">паруса</span><span class="cells">${icons(CELLS.SAIL, CELLS.SAIL_X, s.s)}</span><span class="num">${s.s[0]}</span><span style="width:12px"></span>${guns}<span style="width:12px"></span><span class="lbl">команда</span><span class="cells">${icons(CELLS.CREW, CELLS.CREW_X, s.cr)}</span><span class="num">${s.cr[0]}</span></div></div>
+   ${o.act || ''}</div>`; }
+const kegS = CELLS.KEG_S;
+const smallGun = (w = 30, h = 16) => `<svg width="${w}" height="${h}" viewBox="0 -2 124 64">${gradDefs()}${defs2()}${cannon2({rope: false})}</svg>`;
+const cmdPlain = (t = 'Залп', ic = IC.volley) => `<span class="cmd">${ic}${t}<span class="cost">1${kegS}</span></span>`;
+const TRIDENT = '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1 V15 M4 3 V6 Q4 8 8 8 Q12 8 12 6 V3" fill="none" stroke="#2a2521" stroke-width="1.6"/></svg>';
+function stage(w, h, inner, after){ return {w, h, inner, after}; }
+
+/* brass frame of the sea, as in the game now */
+function brassFrame(x, y, W, H){ const screw = (sx, sy, r = 2.6, a = 30) => `<g transform="translate(${sx} ${sy}) rotate(${a})"><circle r="${r + .6}" fill="#4a3208" opacity=".5"/><circle r="${r}" fill="url(#gBrassR)"/><path d="M${-r * .75} 0 H${r * .75}" stroke="#4a3208" stroke-width=".9"/></g>`;
+  const corner = (cx, cy, sx, sy) => `<g transform="translate(${cx} ${cy}) scale(${sx} ${sy})"><path d="M0 0 H34 Q36 0 36 2 V6 Q36 9 33 9 H9 V33 Q9 36 6 36 H2 Q0 36 0 34 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".8"/>${screw(28, 4.5, 2.3, 20)}${screw(4.5, 28, 2.3, 70)}${screw(5, 5, 2.6, 45)}</g>`;
+  return `<div class="abs" style="left:${x}px;top:${y}px;width:${W}px;height:${H}px;padding:7px;background:linear-gradient(180deg,rgba(255,246,214,.55) 0 1px,rgba(0,0,0,0) 1px calc(100% - 1px),rgba(60,40,8,.6) calc(100% - 1px)),linear-gradient(135deg,#f6dd95 0%,#c69a3c 18%,#a77a26 34%,#e9c773 50%,#b5872f 66%,#8a6420 82%,#d9b562 100%);box-shadow:inset 0 0 0 1px #4a3208,inset 0 0 0 2px rgba(255,240,196,.45),inset 0 0 0 6.5px rgba(74,50,8,.55),0 14px 26px rgba(0,0,0,.55)"><div class="sea" style="inset:7px;box-shadow:inset 0 0 0 1px #3a2606,inset 0 3px 7px rgba(0,0,0,.5),inset 0 0 40px rgba(0,20,30,.45)"></div></div>
+    <svg class="abs" style="left:${x}px;top:${y}px;overflow:visible" width="${W}" height="${H}">${gradDefs()}${corner(-2, -2, 1, 1)}${screw(140, 3.5, 2)}${screw(3.5, 120, 2)}${screw(300, 3.5, 2, 70)}</svg>`; }
+
+function compassArt(uid, r = 74, o = {}){
+  const id = k => `pgC${uid}${k}`, P = a => [Math.cos(a), Math.sin(a)], f = n => R1(n * 100) / 100;
+  const ticks = Array.from({length: 120}, (_, i) => { const a = i * 3 * Math.PI / 180 - Math.PI / 2, big = i % 30 === 0, mid = i % 10 === 0, half = i % 5 === 0;
+    const r0 = r * .855, l = r * (big ? .1 : mid ? .072 : half ? .05 : .03), [c, sn] = P(a);
+    return `<path d="M${f(c * r0)} ${f(sn * r0)} L${f(c * (r0 - l))} ${f(sn * (r0 - l))}" stroke="#2a2018" stroke-width="${f(r * (big ? .02 : mid ? .013 : .008))}"/>`; }).join('');
+  const point = (deg, len, wid, light, dark) => { const a = deg * Math.PI / 180 - Math.PI / 2, [c, sn] = P(a), [lc, ls] = P(a - Math.PI / 2);
+    return `<path d="M0 0 L${f(lc * wid)} ${f(ls * wid)} L${f(c * len)} ${f(sn * len)} Z" fill="${light}"/><path d="M0 0 L${f(c * len)} ${f(sn * len)} L${f(-lc * wid)} ${f(-ls * wid)} Z" fill="${dark}"/>`; };
+  const mute = o.needle !== false;   // with a needle on top the rose steps back, so the needle reads at once
+  const minor = Array.from({length: 8}, (_, i) => point(22.5 + i * 45, r * .36, r * .045, mute ? '#e6d8b2' : '#d9c38e', mute ? '#c4aa6c' : '#a8873e')).join('');
+  const inter = [45, 135, 225, 315].map(d => point(d, r * .5, r * .085, mute ? '#f2e8cc' : '#efe2bf', mute ? '#bfa266' : '#8f6e2c')).join('');
+  const card = [[0, mute ? '#eab4a6' : '#e0503a', mute ? '#c98a7a' : '#9c2216'], ...[90, 180, 270].map(d => [d, mute ? '#faf5ea' : '#f7f1e3', mute ? '#a8957a' : '#2c241c'])].map(([d, l, dk]) => point(d, r * .6, r * .115, l, dk)).join('');
+  const letters = [['С', 0, '#b8281c'], ['В', 90, '#2a2018'], ['Ю', 180, '#2a2018'], ['З', 270, '#2a2018']].map(([t, d, c]) => { const [x, y] = P(d * Math.PI / 180 - Math.PI / 2); return `<text x="${f(x * r * .69)}" y="${f(y * r * .69 + r * .05)}" font-family="'Old Standard TT',Georgia,serif" font-weight="700" font-size="${f(r * .14)}" text-anchor="middle" fill="${c}">${t}</text>`; }).join('');
+  const nl = r * .8, nw = r * .062;
+  const needle = `<g class="nd"><path d="M${f(r * .03)} ${f(-nl + r * .04)} L${f(nw + r * .03)} ${f(r * .04)} L${f(r * .03)} ${f(nl + r * .04)} L${f(-nw + r * .03)} ${f(r * .04)} Z" fill="#000" opacity=".28"/>
+    <path d="M0 ${f(-nl)} L${f(nw)} 0 L0 ${f(nl)} L${f(-nw)} 0 Z" fill="url(#${id('st')})" stroke="#0b1016" stroke-width="${f(r * .006)}"/><path d="M0 ${f(-nl)} L${f(nw)} 0 L${f(-nw)} 0 Z" fill="url(#${id('rd')})" stroke="#5a0c08" stroke-width="${f(r * .006)}"/>
+    <circle cy="${f(nl * .78)}" r="${f(r * .045)}" fill="none" stroke="#1f2a34" stroke-width="${f(r * .018)}"/><path d="M0 ${f(-r * .7)} L0 ${f(r * .7)}" stroke="#fff" stroke-width="${f(r * .008)}" opacity=".35"/></g>`;
+  return `<g><defs>
+      <linearGradient id="${id('bz')}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe7a6"/><stop offset=".35" stop-color="#d7ac52"/><stop offset=".6" stop-color="#8a6420"/><stop offset=".85" stop-color="#e6c06a"/><stop offset="1" stop-color="#6e4c14"/></linearGradient>
+      <radialGradient id="${id('dl')}" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#fbf5e6"/><stop offset=".8" stop-color="#efe3c6"/><stop offset="1" stop-color="#dcc9a0"/></radialGradient>
+      <linearGradient id="${id('st')}" x1="0" x2="1"><stop offset="0" stop-color="#5b6a78"/><stop offset=".5" stop-color="#1f2a34"/><stop offset="1" stop-color="#0e151c"/></linearGradient>
+      <linearGradient id="${id('rd')}" x1="0" x2="1"><stop offset="0" stop-color="#ef6a52"/><stop offset=".5" stop-color="#c0291c"/><stop offset="1" stop-color="#7e150c"/></linearGradient>
+      <radialGradient id="${id('cp')}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff2c2"/><stop offset=".5" stop-color="#d1a24a"/><stop offset="1" stop-color="#6e4c14"/></radialGradient></defs>
+    ${o.shadow !== false ? `<ellipse cx="${f(r * .06)}" cy="${f(r * .1)}" rx="${f(r * 1.02)}" ry="${f(r * 1.02)}" fill="#000" opacity=".28"/>` : ''}
+    <circle r="${f(r)}" fill="url(#${id('bz')})"/><circle r="${f(r * .97)}" fill="none" stroke="#fff3c8" stroke-width="${f(r * .012)}" opacity=".7"/>
+    <circle r="${f(r * .9)}" fill="#5a3e10"/><circle r="${f(r * .885)}" fill="url(#${id('dl')})"/>
+    <circle r="${f(r * .855)}" fill="none" stroke="#2a2018" stroke-width="${f(r * .01)}"/><circle r="${f(r * .755)}" fill="none" stroke="#2a2018" stroke-width="${f(r * .006)}"/>
+    ${ticks}${letters}
+    <circle r="${f(r * .44)}" fill="none" stroke="#a8873e" stroke-width="${f(r * .008)}"/><circle r="${f(r * .41)}" fill="none" stroke="#a8873e" stroke-width="${f(r * .004)}" stroke-dasharray="${f(r * .02)} ${f(r * .02)}"/>
+    ${minor}${inter}${card}
+    ${o.needle !== false ? needle : ''}
+    <circle r="${f(r * .07)}" fill="url(#${id('cp')})" stroke="#5a3e10" stroke-width="${f(r * .01)}"/><circle cx="${f(-r * .02)}" cy="${f(-r * .02)}" r="${f(r * .022)}" fill="#fff8de" opacity=".8"/>
+    <path d="M${f(-r * .7)} ${f(-r * .3)} A${f(r * .78)} ${f(r * .78)} 0 0 1 ${f(r * .3)} ${f(-r * .72)}" fill="none" stroke="#fff" stroke-width="${f(r * .06)}" stroke-linecap="round" opacity=".22"/>
+    <path d="M${f(-r * .5)} ${f(-r * .62)} A${f(r * .8)} ${f(r * .8)} 0 0 1 ${f(-r * .1)} ${f(-r * .8)}" fill="none" stroke="#fff" stroke-width="${f(r * .025)}" stroke-linecap="round" opacity=".5"/></g>`;
+}
+
+/* ===== v3 pieces ===== */
+const TRIDENT_D = (s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"><defs>
+  <linearGradient id="trG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a6420"/><stop offset=".35" stop-color="#fff0b8"/><stop offset=".6" stop-color="#d9ae52"/><stop offset="1" stop-color="#7a5414"/></linearGradient>
+  <linearGradient id="trS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5e3a18"/><stop offset=".4" stop-color="#b07a44"/><stop offset="1" stop-color="#4a2c14"/></linearGradient></defs>
+  <g stroke="#3a2406" stroke-width=".45" stroke-linejoin="round">
+  <path d="M11.2 10.6 H12.8 L13 22.6 Q12 23.6 11 22.6 Z" fill="url(#trS)"/>
+  <path d="M11.1 14.4 L12.9 13.6 M11.1 15.6 L12.9 14.8 M11.1 16.8 L12.9 16 M11.1 18 L12.9 17.2" stroke="#e2bf62" stroke-width=".55"/>
+  <path d="M10.8 21.4 H13.2 L13.6 23 H10.4 Z" fill="url(#trG)"/>
+  <path d="M5.4 4.6 Q5.2 9 8.4 10 Q10.4 10.6 12 10.6 Q13.6 10.6 15.6 10 Q18.8 9 18.6 4.6 L17.3 5.2 Q17.4 8 15.2 8.7 Q13.6 9.2 12 9.2 Q10.4 9.2 8.8 8.7 Q6.6 8 6.7 5.2 Z" fill="url(#trG)"/>
+  <path d="M6 1.4 L7.8 5.4 L6.6 5 L6.8 6.6 L5.4 6.2 L5.1 4.8 L4.2 5.2 Z" fill="url(#trG)"/>
+  <path d="M18 1.4 L16.2 5.4 L17.4 5 L17.2 6.6 L18.6 6.2 L18.9 4.8 L19.8 5.2 Z" fill="url(#trG)"/>
+  <path d="M12 0.4 L13.9 4.6 L12.8 4.3 L12.8 9.4 H11.2 V4.3 L10.1 4.6 Z" fill="url(#trG)"/>
+  <path d="M11.2 6.4 L10.2 7.2 M12.8 6.4 L13.8 7.2" stroke="#3a2406" stroke-width=".6"/>
+  <ellipse cx="12" cy="10.7" rx="2.6" ry="1.2" fill="url(#trG)"/><circle cx="12" cy="12.3" r=".9" fill="#2f7a8a" stroke="#0e2a30" stroke-width=".4"/></g>
+  <path d="M12 1.6 L12 8.6 M6.2 3 L6.6 5.6" stroke="#fffbe6" stroke-width=".4" opacity=".8"/>
+  <path d="M7.4 21.6 Q9 20.6 10.4 21.4 M13.6 21.4 Q15 20.6 16.6 21.6" fill="none" stroke="#2f7a8a" stroke-width=".9" stroke-linecap="round"/></svg>`;
+
+
+/* a compass in its wooden box, lid open, seen from above */
+function boxedCompass(id, x, y, r, rot = 0){ const B = r * 2.7, L = B * .5, g = id + 'bx';
+  const hinge = hx => `<rect x="${R1(hx - r * .22)}" y="${R1(-B / 2 - r * .1)}" width="${R1(r * .44)}" height="${R1(r * .2)}" rx="${R1(r * .04)}" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".6"/><path d="M${R1(hx - r * .22)} ${R1(-B / 2)} H${R1(hx + r * .22)}" stroke="#4a3208" stroke-width=".6"/>`;
+  return `<g class="g-compass"><g transform="translate(${x} ${y}) rotate(${rot})">
+    <defs><linearGradient id="${g}l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2212"/><stop offset="1" stop-color="#5e3a1e"/></linearGradient>
+      <radialGradient id="${g}v" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="#4a1410"/><stop offset="1" stop-color="#220806"/></radialGradient></defs>
+    <rect x="${R1(-B / 2 + 6)}" y="${R1(-B / 2 - L + 8)}" width="${B}" height="${R1(B + L)}" rx="6" fill="#000" opacity=".45"/>
+    <path d="M${R1(-B / 2 + 4)} ${R1(-B / 2)} L${R1(-B / 2 - 2)} ${R1(-B / 2 - L)} H${R1(B / 2 + 2)} L${R1(B / 2 - 4)} ${R1(-B / 2)} Z" fill="url(#${g}l)" stroke="#1e1008" stroke-width="1"/>
+    <path d="M${R1(-B / 2 + 8)} ${R1(-B / 2 - 3)} L${R1(-B / 2 + 4)} ${R1(-B / 2 - L + 5)} H${R1(B / 2 - 4)} L${R1(B / 2 - 8)} ${R1(-B / 2 - 3)} Z" fill="url(#${g}v)"/>
+    <rect x="${R1(-r * .55)}" y="${R1(-B / 2 - L * .62)}" width="${R1(r * 1.1)}" height="${R1(L * .3)}" rx="2" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".6"/>
+    <text x="0" y="${R1(-B / 2 - L * .62 + L * .2)}" text-anchor="middle" font-family="Old Standard TT,serif" font-weight="700" font-size="${R1(L * .17)}" fill="#3a2406" textLength="${R1(r * .92)}" lengthAdjust="spacingAndGlyphs">ВЕРНЫЙ КУРС</text>
+    <rect x="${-B / 2}" y="${-B / 2}" width="${B}" height="${B}" rx="5" fill="url(#gOak)" stroke="#1e1008" stroke-width="1.2"/>
+    ${Array.from({length: 6}, (_, i) => `<path d="M${R1(-B / 2 + 2)} ${R1(-B / 2 + 6 + i * B / 6.4)} Q0 ${R1(-B / 2 + 4 + i * B / 6.4 + (i % 2 ? 2 : -1))} ${R1(B / 2 - 2)} ${R1(-B / 2 + 6 + i * B / 6.4)}" stroke="${i % 2 ? '#4a2c14' : '#c79260'}" stroke-width=".7" fill="none" opacity=".45"/>`).join('')}
+    <rect x="${R1(-B / 2 + 5)}" y="${R1(-B / 2 + 5)}" width="${R1(B - 10)}" height="${R1(B - 10)}" rx="3" fill="none" stroke="#2a180a" stroke-width="1.2" opacity=".6"/>
+    <circle r="${R1(r * 1.12)}" fill="url(#${g}v)" stroke="#1e1008" stroke-width="1"/><circle r="${R1(r * 1.12)}" fill="none" stroke="#000" stroke-width="3" opacity=".35"/>
+    ${[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => `<path d="M${R1(a * B / 2)} ${R1(b * (B / 2 - r * .5))} V${R1(b * B / 2)} H${R1(a * (B / 2 - r * .5))}" fill="none" stroke="url(#gBrass)" stroke-width="3"/><circle cx="${R1(a * (B / 2 - 4))}" cy="${R1(b * (B / 2 - 4))}" r="1.4" fill="url(#gBrassR)"/>`).join('')}
+    ${hinge(-B * .28)}${hinge(B * .28)}
+    <rect x="${R1(-r * .2)}" y="${R1(B / 2 - 2)}" width="${R1(r * .4)}" height="${R1(r * .24)}" rx="2" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".6"/>
+    <g class="cmpg">${compassArt(id, r, {shadow: false})}</g></g></g>`; }
+
+/* deck lights: the lantern pool (warm) and an even light for the compass-only look */
+function deckScene3(W, H, L){ const id = U('dk');
+  const cmp = L.compass ? boxedCompass(id, ...L.compass) : '';
+  return `<svg class="abs" style="left:0;top:0" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${gradDefs()}${defs2()}
+    <defs><radialGradient id="${id}l" cx="${L.lx / W}" cy="${L.ly / H}" r="${L.r / W}" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#ffb24a" stop-opacity=".5"/><stop offset=".45" stop-color="#ff9a30" stop-opacity=".16"/><stop offset="1" stop-color="#ff8a20" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${id}d" cx="${L.lx / W}" cy="${L.ly / H}" r="${(L.r * 1.6) / W}" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity=".62"/></radialGradient>
+      <radialGradient id="${id}e" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".6" stop-color="#000" stop-opacity=".22"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs>
+    <g>${deck(W, H).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>
+    ${L.grate ? `<g transform="translate(${L.grate[0]} ${L.grate[1]})">${grating(L.grate[2], L.grate[3])}</g>` : ''}
+    ${L.cannon ? `<g transform="translate(${L.cannon[0]} ${L.cannon[1]}) scale(${L.cannon[2]})">${cannon2()}</g>` : ''}
+    ${L.keg ? `<g transform="translate(${L.keg[0]} ${L.keg[1]}) scale(${L.keg[2]})">${KEG}</g>` : ''}
+    ${L.balls ? balls(...L.balls) : ''}${L.coil ? coil(...L.coil) : ''}${cmp}
+    <g class="g-lantern"><rect width="${W}" height="${H}" fill="url(#${id}d)"/><rect width="${W}" height="${H}" fill="url(#${id}l)" style="mix-blend-mode:screen"/>
+      <ellipse cx="${L.lx}" cy="${L.ly + 30 * L.ls}" rx="${22 * L.ls}" ry="${5 * L.ls}" fill="#000" opacity=".45"/>
+      <g transform="translate(${L.lx - 15 * L.ls} ${L.ly - 18 * L.ls}) scale(${L.ls})">${LANTERN(id)}</g>
+      <circle cx="${L.lx}" cy="${L.ly}" r="${46 * L.ls}" fill="url(#gFlash)" opacity=".16" class="flick"/></g>
+    <rect class="g-even" width="${W}" height="${H}" fill="url(#${id}e)"/></svg>`; }
+
+/* ===== the volleys from a port: three looks ===== */
+function hullStrip(W, H, ports, o = {}){ let s = `<rect width="${W}" height="${H}" fill="url(#gHull)"/>`;
+  for(let y = 8; y < H; y += 12) s += `<path d="M0 ${y} H${W}" stroke="#4e3a26" stroke-width=".8"/><path d="M0 ${y + 1} H${W}" stroke="#000" stroke-width=".5" opacity=".4"/>`;
+  for(let x = 30, i = 0; x < W; x += 70 + (i++ % 3) * 14) s += `<circle cx="${x}" cy="${12 + (i % 4) * 12}" r=".9" fill="#140c06"/>`;
+  s += `<rect x="0" y="${o.wale || 4}" width="${W}" height="7" fill="#c49a52"/><rect x="0" y="${o.wale || 4}" width="${W}" height="1.4" fill="#f2d48c"/><rect x="0" y="${(o.wale || 4) + 6}" width="${W}" height="1.2" fill="#4a3208"/>`;
+  if(o.sea) s += `<rect x="0" y="${H - o.sea}" width="${W}" height="${o.sea}" fill="#2b5664"/><path d="M0 ${H - o.sea} ${Array.from({length: Math.ceil(W / 20)}, () => 'q5 -3 10 0 t10 0').join(' ')}" fill="none" stroke="#cfe3e6" stroke-width="1.2" opacity=".7"/>`;
+  return s + ports; }
+const flashBurst = (cls, x, y, k = 1) => `<g class="${cls}" style="opacity:0;transform-origin:${x}px ${y}px"><circle cx="${x}" cy="${y}" r="${30 * k}" fill="url(#gFlash)"/>${Array.from({length: 10}, (_, i) => { const a = i / 10 * Math.PI * 2, l = (i % 2 ? 22 : 34) * k; return `<path d="M${x} ${y} L${R1(x + Math.cos(a - .09) * 6 * k)} ${R1(y + Math.sin(a - .09) * 6 * k)} L${R1(x + Math.cos(a) * l)} ${R1(y + Math.sin(a) * l)} L${R1(x + Math.cos(a + .09) * 6 * k)} ${R1(y + Math.sin(a + .09) * 6 * k)} Z" fill="${i % 2 ? '#ffd25a' : '#fff6d0'}" opacity=".9"/>`; }).join('')}<circle cx="${x}" cy="${y}" r="${7 * k}" fill="#fffbe6"/></g>`;
+const smokeSet = (cls, x, y, n = 6, k = 1) => Array.from({length: n}, (_, i) => `<circle class="${cls}" data-i="${i}" cx="${x}" cy="${y}" r="${R1((9 + i * 2.6) * k)}" fill="url(#gSmoke)" style="opacity:0;transform-origin:${x}px ${y}px"/>`).join('');
+const sparks = (cls, x, y, n = 9) => Array.from({length: n}, (_, i) => `<circle class="${cls}" data-i="${i}" cx="${x}" cy="${y}" r="${i % 3 ? .9 : 1.4}" fill="${i % 2 ? '#ffd27a' : '#fff6d0'}" style="opacity:0"/>`).join('');
+
+const VOLLEYS = {
+  run(st){ // one port, close: the lid swings up, the gun runs out, the fuse spits, the shot, the recoil, the lid shuts
+    const svg = `<svg class="abs" style="left:0;top:0" width="360" height="200" viewBox="0 0 180 100">${gradDefs()}${defs2()}
+      ${hullStrip(180, 100, '', {wale: 10, sea: 14})}
+      <g transform="translate(70 26)"><rect x="-3" y="-3" width="46" height="46" rx="2" fill="#140d07"/><rect x="-3" y="-3" width="46" height="3" fill="#6e5236"/><rect x="-3" y="40" width="46" height="3.4" fill="#8a6a46"/>
+        <rect x="0" y="0" width="40" height="40" fill="url(#gPortIn)"/><rect x="0" y="0" width="40" height="9" fill="#000" opacity=".45"/></g>
+      <g class="mz" style="transform-box:fill-box;transform-origin:50% 50%"><circle cx="90" cy="49" r="15" fill="#000" opacity=".35"/><circle cx="90" cy="48" r="13.6" fill="url(#gIron2)" stroke="#0a0b0c" stroke-width="1"/><circle cx="90" cy="48" r="11" fill="none" stroke="#c4cccf" stroke-width="1" opacity=".5"/><circle cx="90" cy="48" r="7.4" fill="#050505"/><path d="M80.4 42 A11.6 11.6 0 0 1 90 36.6" stroke="#eef2f3" stroke-width="1.4" fill="none" opacity=".75"/></g>
+      <g class="lid" style="transform-box:fill-box;transform-origin:50% 0"><rect x="69" y="25" width="42" height="42" fill="url(#gHull)" stroke="#000" stroke-width=".6"/><path d="M69 39 H111 M69 53 H111" stroke="#5a4430" stroke-width=".8"/><path d="M69 32 H102 M69 60 H102" stroke="#7d858a" stroke-width="2.2"/><circle cx="73" cy="32" r="1.4" fill="#c4cccf"/><circle cx="73" cy="60" r="1.4" fill="#c4cccf"/><rect x="70" y="26" width="40" height="40" fill="url(#gRed)" class="lidin" style="opacity:0"/></g>
+      ${sparks('spk', 72, 30)}
+      ${smokeSet('sm', 90, 48, 7, .8)}
+      ${flashBurst('fl', 90, 48, 1.1)}</svg>`;
+    st.insertAdjacentHTML('beforeend', svg);
+    const q = s => st.querySelector(s), D = 4200, it = {duration: D, iterations: Infinity};
+    q('.lid').animate([{transform: 'scaleY(1)'}, {transform: 'scaleY(1)', offset: .06}, {transform: 'scaleY(-.62)', offset: .18}, {transform: 'scaleY(-.62)', offset: .84}, {transform: 'scaleY(1)', offset: .94}, {transform: 'scaleY(1)'}], {...it, easing: 'ease-in-out'});
+    q('.lidin').animate([{opacity: 0}, {opacity: 0, offset: .11}, {opacity: 1, offset: .12}, {opacity: 1, offset: .89}, {opacity: 0, offset: .9}, {opacity: 0}], it);
+    q('.mz').animate([{transform: 'scale(.55)'}, {transform: 'scale(.55)', offset: .2}, {transform: 'scale(1.12)', offset: .32}, {transform: 'scale(1.12)', offset: .44}, {transform: 'scale(.72)', offset: .47}, {transform: 'scale(.9)', offset: .6}, {transform: 'scale(1)', offset: .74}, {transform: 'scale(.55)', offset: .84}, {transform: 'scale(.55)'}], it);
+    st.querySelectorAll('.spk').forEach((e, i) => { const a = -Math.PI / 2 + (i - 4) * .35, l = 8 + (i % 3) * 5;
+      e.animate([{transform: 'translate(0,0)', opacity: 0}, {transform: 'translate(0,0)', opacity: 0, offset: .34}, {transform: 'translate(0,0)', opacity: 1, offset: .35}, {transform: `translate(${R1(Math.cos(a) * l)}px,${R1(Math.sin(a) * l + 6)}px)`, opacity: 0, offset: .43}, {opacity: 0}], it); });
+    q('.fl').animate([{opacity: 0, transform: 'scale(.3)'}, {opacity: 0, transform: 'scale(.3)', offset: .44}, {opacity: 1, transform: 'scale(1.25)', offset: .455}, {opacity: .6, transform: 'scale(.9)', offset: .48}, {opacity: 0, transform: 'scale(.6)', offset: .53}, {opacity: 0}], it);
+    st.querySelectorAll('.sm').forEach((e, i) => e.animate([{opacity: 0, transform: 'translate(0,0) scale(.2)'}, {opacity: 0, transform: 'translate(0,0) scale(.2)', offset: .45}, {opacity: .95, transform: `translate(${-4 + i * 6}px,${-2 - i * 3}px) scale(1)`, offset: .52}, {opacity: .7, transform: `translate(${10 + i * 12}px,${-12 - i * 6}px) scale(1.5)`, offset: .7}, {opacity: 0, transform: `translate(${30 + i * 18}px,${-26 - i * 8}px) scale(2.1)`, offset: .95}, {opacity: 0}], {...it, easing: 'ease-out'}));
+    st.firstElementChild.animate([{translate: '0 0'}, {translate: '0 0', offset: .45}, {translate: '1.5px 1px', offset: .46}, {translate: '-1px 0', offset: .48}, {translate: '0 0', offset: .52}, {translate: '0 0'}], it); },
+
+  broadside(st){ // a whole side: six ports fire one after another, the smoke joins into one bank
+    const N = 6, W = 520, ports = Array.from({length: N}, (_, i) => `<g transform="translate(${40 + i * 78} 34)">${port2(0, 0, 30, true).replace(/^<g transform="translate\(0 0\) scale\([^)]*\)">/, '<g transform="scale(1.25)">')}</g>`).join('');
+    let fx = ''; for(let i = 0; i < N; i++){ const x = 40 + i * 78 + 15, y = 34 + 16; fx += sparks('spk' + i, x - 12, y - 18, 6) + smokeSet('sm' + i, x, y, 5, 1.1) + flashBurst('fl' + i, x, y, 1); }
+    st.insertAdjacentHTML('beforeend', `<svg class="abs" style="left:0;top:0" width="${W}" height="150" viewBox="0 0 ${W} 150">${gradDefs()}${defs2()}${hullStrip(W, 150, ports, {wale: 18, sea: 34})}${fx}</svg>`);
+    const D = 5200, it = {duration: D, iterations: Infinity};
+    for(let i = 0; i < N; i++){ const t0 = .14 + i * .07;
+      st.querySelector('.fl' + i).animate([{opacity: 0, transform: 'scale(.3)'}, {opacity: 0, transform: 'scale(.3)', offset: t0}, {opacity: 1, transform: 'scale(1.2)', offset: t0 + .012}, {opacity: 0, transform: 'scale(.6)', offset: t0 + .07}, {opacity: 0}], it);
+      st.querySelectorAll('.spk' + i).forEach((e, j) => { const a = -Math.PI / 2 + (j - 3) * .4; e.animate([{transform: 'translate(0,0)', opacity: 0}, {opacity: 0, offset: t0 - .05}, {transform: 'translate(0,0)', opacity: 1, offset: t0 - .045}, {transform: `translate(${R1(Math.cos(a) * 9)}px,${R1(Math.sin(a) * 9 + 5)}px)`, opacity: 0, offset: t0}, {opacity: 0}], it); });
+      st.querySelectorAll('.sm' + i).forEach((e, j) => e.animate([{opacity: 0, transform: 'translate(0,0) scale(.2)'}, {opacity: 0, transform: 'translate(0,0) scale(.2)', offset: t0}, {opacity: .9, transform: `translate(${j * 7}px,${-6 - j * 5}px) scale(1.1)`, offset: t0 + .08}, {opacity: .75, transform: `translate(${30 + j * 14}px,${-30 - j * 7}px) scale(1.9)`, offset: Math.min(.9, t0 + .35)}, {opacity: 0, transform: `translate(${70 + j * 20}px,${-50 - j * 9}px) scale(2.6)`, offset: .97}, {opacity: 0}], {...it, easing: 'ease-out'})); }
+    st.firstElementChild.animate([{translate: '0 0'}, ...Array.from({length: N}, (_, i) => [{translate: '0 0', offset: .14 + i * .07}, {translate: '1px 1.5px', offset: .146 + i * .07}]).flat(), {translate: '0 0', offset: .6}, {translate: '0 0'}], it); },
+
+  deck(st){ // the gun deck, inside: the gun runs out to the port, fires, flies back on the breeching rope
+    const W = 400, H = 190;
+    st.insertAdjacentHTML('beforeend', `<svg class="abs" style="left:0;top:0" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${gradDefs()}${defs2()}
+      <defs><linearGradient id="gdIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1a0e"/><stop offset="1" stop-color="#140c06"/></linearGradient><linearGradient id="gdSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc0cc"/><stop offset=".6" stop-color="#d8e6e8"/><stop offset="1" stop-color="#3e7584"/></linearGradient></defs>
+      <rect width="${W}" height="${H}" fill="url(#gdIn)"/>${Array.from({length: 7}, (_, i) => `<path d="M0 ${18 + i * 18} H${W}" stroke="#3a2614" stroke-width="1"/>`).join('')}
+      ${[60, 190].map(x => `<rect x="${x}" y="0" width="16" height="150" fill="#3e2716" stroke="#140a04"/><path d="M${x + 3} 0 V150" stroke="#6e4a2a" stroke-width="1" opacity=".6"/>`).join('')}
+      <rect x="318" y="72" width="58" height="52" fill="url(#gdSky)"/><path d="M318 110 Q332 106 346 110 T376 110" stroke="#eaf4f6" stroke-width="1.2" fill="none"/><rect x="314" y="68" width="66" height="60" fill="none" stroke="#140a04" stroke-width="5"/><rect x="314" y="124" width="66" height="5" fill="#8a6a46"/>
+      <rect x="0" y="150" width="${W}" height="40" fill="#4e331c"/>${Array.from({length: 3}, (_, i) => `<path d="M0 ${156 + i * 12} H${W}" stroke="#2a180a" stroke-width="1.2"/>`).join('')}
+      <circle cx="320" cy="97" r="70" fill="url(#gFlash)" opacity=".08"/>
+      <g class="gun"><g transform="translate(150 62) scale(1.45)">${cannon2()}</g></g>
+      ${flashBurst('fl', 384, 97, 1.3)}${smokeSet('smo', 372, 97, 6, 1.2)}${smokeSet('smi', 330, 104, 4, 1)}
+      <rect class="lit" width="${W}" height="${H}" fill="#ffb24a" style="opacity:0;mix-blend-mode:screen"/></svg>`);
+    const q = s => st.querySelector(s), D = 4400, it = {duration: D, iterations: Infinity};
+    q('.gun').animate([{transform: 'translateX(-46px)'}, {transform: 'translateX(-46px)', offset: .08}, {transform: 'translateX(0)', offset: .3}, {transform: 'translateX(0)', offset: .4}, {transform: 'translateX(-72px)', offset: .46}, {transform: 'translateX(-60px)', offset: .52}, {transform: 'translateX(-64px)', offset: .58}, {transform: 'translateX(-46px)', offset: .9}, {transform: 'translateX(-46px)'}], {...it, easing: 'ease-in-out'});
+    q('.fl').animate([{opacity: 0, transform: 'scale(.3)'}, {opacity: 0, transform: 'scale(.3)', offset: .4}, {opacity: 1, transform: 'scale(1.3)', offset: .41}, {opacity: 0, transform: 'scale(.7)', offset: .48}, {opacity: 0}], it);
+    q('.lit').animate([{opacity: 0}, {opacity: 0, offset: .4}, {opacity: .16, offset: .41}, {opacity: 0, offset: .5}, {opacity: 0}], it);
+    st.querySelectorAll('.smo').forEach((e, i) => e.animate([{opacity: 0, transform: 'translate(0,0) scale(.3)'}, {opacity: 0, offset: .41}, {opacity: .9, transform: `translate(${10 + i * 6}px,${-8 - i * 4}px) scale(1.2)`, offset: .5}, {opacity: 0, transform: `translate(${40 + i * 12}px,${-40 - i * 8}px) scale(2.2)`, offset: .9}, {opacity: 0}], {...it, easing: 'ease-out'}));
+    st.querySelectorAll('.smi').forEach((e, i) => e.animate([{opacity: 0, transform: 'translate(0,0) scale(.3)'}, {opacity: 0, offset: .42}, {opacity: .55, transform: `translate(${-20 - i * 14}px,${-14 - i * 6}px) scale(1.4)`, offset: .56}, {opacity: 0, transform: `translate(${-60 - i * 20}px,${-34 - i * 8}px) scale(2.4)`, offset: .92}, {opacity: 0}], {...it, easing: 'ease-out'}));
+    st.firstElementChild.animate([{translate: '0 0'}, {translate: '0 0', offset: .4}, {translate: '2px 1px', offset: .41}, {translate: '-2px 0', offset: .43}, {translate: '0 0', offset: .48}, {translate: '0 0'}], it); },
+};
+
+/* ===== the volley on the plank itself ===== */
+function plankFire(st, mode){ const k = () => st.getBoundingClientRect().width / +st.style.width.replace('px', '');
+  const W = +st.style.width.replace('px', ''), H = +st.style.height.replace('px', '');
+  const sr = st.getBoundingClientRect(), kk = sr.width / W, rel = r => ({x: (r.left - sr.left) / kk, y: (r.top - sr.top) / kk, w: r.width / kk, h: r.height / kk});
+  const mat = st.querySelector('.mat'); let guns = [];
+  if(mode === 'ports'){ const p = rel(st.querySelector('svg.ports').getBoundingClientRect()); const n = +st.dataset.g, live = +st.dataset.l;
+    for(let i = 0; i < live; i++) guns.push({x: p.x + 6 + i * 30 + 9.2, y: p.y + 13.4 + 10, port: true}); }
+  else { const row = mat.querySelectorAll('.r1')[1], cells = row.querySelectorAll('.cells')[1]; [...cells.children].forEach(c => { if((c.getAttribute('style') || '').includes('opacity')) return; const r = rel(c.getBoundingClientRect()); guns.push({x: r.x + r.w - 1, y: r.y + r.h * .34, el: c}); }); }
+  let fx = `<svg class="abs" style="left:0;top:0;overflow:visible;pointer-events:none" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${gradDefs()}${defs2()}`;
+  guns.forEach((g, i) => { if(!g.port) fx += `<path class="cone${i}" d="M${r1(g.x)} ${r1(g.y)} L${r1(g.x + 20)} ${r1(g.y - 5.5)} Q${r1(g.x + 25)} ${r1(g.y)} ${r1(g.x + 20)} ${r1(g.y + 5.5)} Z" fill="url(#gFlash)" style="opacity:0;transform-origin:${r1(g.x)}px ${r1(g.y)}px"/><circle class="ring${i}" cx="${r1(g.x + 3)}" cy="${r1(g.y)}" r="5" fill="none" stroke="#fff6d0" stroke-width="1.1" style="opacity:0;transform-origin:${r1(g.x + 3)}px ${r1(g.y)}px"/>`;
+    fx += `<circle class="glow${i}" cx="${R1(g.x)}" cy="${R1(g.y)}" r="${g.port ? 9 : 5}" fill="#ff9a3a" style="opacity:0;mix-blend-mode:screen"/>` + sparks('spk' + i, g.x - (g.port ? 7 : 12), g.y - (g.port ? 10 : 3), 7) + smokeSet('sm' + i, g.x, g.y - (g.port ? 4 : 0), g.port ? 5 : 4, g.port ? .55 : .45) + flashBurst('fl' + i, g.x + (g.port ? 0 : 3), g.y, g.port ? .75 : .42); });
+  fx += `<g class="ball" style="opacity:0"><circle cx="0" cy="0" r="3.2" fill="url(#gBall)" stroke="#0d0f10" stroke-width=".5"/></g></svg>`;
+  st.insertAdjacentHTML('beforeend', fx);
+  const D = 4600, it = {duration: D, iterations: Infinity}, t = i => .16 + i * .1;
+  guns.forEach((g, i) => { const t0 = t(i);
+    st.querySelectorAll('.spk' + i).forEach((e, j) => { const a = -Math.PI / 2 + (j - 3) * .45; e.animate([{transform: 'translate(0,0)', opacity: 0}, {opacity: 0, offset: t0 - .06}, {transform: 'translate(0,0)', opacity: 1, offset: t0 - .055}, {transform: `translate(${R1(Math.cos(a) * 8)}px,${R1(Math.sin(a) * 8 + 4)}px)`, opacity: 0, offset: t0}, {opacity: 0}], it); });
+    st.querySelector('.fl' + i).animate([{opacity: 0, transform: 'scale(.3)'}, {opacity: 0, transform: 'scale(.3)', offset: t0}, {opacity: 1, transform: 'scale(1.25)', offset: t0 + .01}, {opacity: .5, transform: 'scale(.9)', offset: t0 + .03}, {opacity: 0, transform: 'scale(.6)', offset: t0 + .06}, {opacity: 0}], it);
+    st.querySelector('.glow' + i).animate([{opacity: 0}, {opacity: 0, offset: t0}, {opacity: .9, offset: t0 + .01}, {opacity: .3, offset: t0 + .12}, {opacity: 0, offset: t0 + .3}, {opacity: 0}], it);
+    st.querySelectorAll('.sm' + i).forEach((e, j) => e.animate([{opacity: 0, transform: 'translate(0,0) scale(.2)'}, {opacity: 0, transform: 'translate(0,0) scale(.2)', offset: t0}, {opacity: .9, transform: `translate(${4 + j * 5}px,${-6 - j * 5}px) scale(1)`, offset: t0 + .06}, {opacity: .7, transform: `translate(${20 + j * 12}px,${-26 - j * 9}px) scale(1.7)`, offset: Math.min(.92, t0 + .32)}, {opacity: 0, transform: `translate(${44 + j * 16}px,${-48 - j * 12}px) scale(2.4)`, offset: Math.min(.97, t0 + .5)}, {opacity: 0}], {...it, easing: 'ease-out'}));
+    if(!g.port){ st.querySelector('.cone' + i).animate([{opacity: 0, transform: 'scale(.2)'}, {opacity: 0, transform: 'scale(.2)', offset: t0}, {opacity: 1, transform: 'scale(1.15)', offset: t0 + .012}, {opacity: .4, transform: 'scale(.9)', offset: t0 + .035}, {opacity: 0, transform: 'scale(.6)', offset: t0 + .06}, {opacity: 0}], it);
+      st.querySelector('.ring' + i).animate([{opacity: 0, transform: 'scale(.3)'}, {opacity: 0, transform: 'scale(.3)', offset: t0}, {opacity: .9, transform: 'scale(.8)', offset: t0 + .01}, {opacity: 0, transform: 'scale(2.6)', offset: t0 + .07}, {opacity: 0}], it);
+      g.el.animate([{filter: 'none'}, {filter: 'none', offset: t0}, {filter: 'drop-shadow(0 0 3px #ff8a2a) brightness(1.45)', offset: t0 + .015}, {filter: 'drop-shadow(0 0 2px #ff6a1a) brightness(1.15)', offset: t0 + .12}, {filter: 'none', offset: t0 + .3}, {filter: 'none'}], it); }
+    if(g.el){ g.el.style.display = 'inline-block'; g.el.style.transformOrigin = '30% 70%'; g.el.animate([{transform: 'translateX(0)'}, {transform: 'translateX(0)', offset: t0}, {transform: 'translateX(-3px) rotate(-6deg)', offset: t0 + .015}, {transform: 'translateX(-1px)', offset: t0 + .08}, {transform: 'translateX(0)', offset: t0 + .2}, {transform: 'translateX(0)'}], it); }
+  });
+  if(mode === 'ports') st.querySelectorAll('svg.ports .gmz').forEach((m, i) => { const t0 = t(i); m.animate([{transform: 'scale(1)'}, {transform: 'scale(1)', offset: t0}, {transform: 'scale(.66)', offset: t0 + .012}, {transform: 'scale(.8)', offset: t0 + .1}, {transform: 'scale(1.06)', offset: t0 + .26}, {transform: 'scale(1)', offset: t0 + .3}, {transform: 'scale(1)'}], it); });
+  mat.animate([{translate: '0 0'}, ...guns.map((_, i) => [{translate: '0 0', offset: t(i)}, {translate: '1.5px 1px', offset: t(i) + .008}, {translate: '-1px 0', offset: t(i) + .03}]).flat(), {translate: '0 0', offset: Math.min(.96, t(guns.length - 1) + .08)}, {translate: '0 0'}], it);
+  // the shot flies off to the target (top right)
+  const g0 = guns[0]; if(g0) st.querySelector('.ball').animate(guns.map((g, i) => [{transform: `translate(${R1(g.x)}px,${R1(g.y)}px)`, opacity: 0, offset: t(i)}, {transform: `translate(${R1(g.x)}px,${R1(g.y)}px)`, opacity: 1, offset: t(i) + .002}, {transform: `translate(${R1(g.x + 260)}px,${R1(g.y - 90)}px)`, opacity: 0, offset: t(i) + .07}]).flat().concat([{opacity: 0, offset: .99}]).reduce((a, f) => (a.length && f.offset <= a[a.length - 1].offset ? a : [...a, f]), [{opacity: 0, offset: 0}]), it);
+}
+
+/* ===== v5 shared art: ships, hull plank icons, the captain's medal, the captain's table ===== */
+let v5n = 0; const V5 = p => p + 'v5' + (v5n++);
+const r1 = n => Math.round(n * 10) / 10;
+
+/* ---- ships, 120×78, bow to the left, waterline 72 (generic historical types, own drawing) ---- */
+const SHIPKIND = {
+  pearl:     {hull: ['#2a2622', '#0c0b0a'], band: '#1a1816', trim: '#b8954a', port: '#3a0c08', decks: 1, sail: ['#3a3633', '#1e1c1a'], sailLine: '#0c0b0a', rag: .9, holes: 2, flag: 'skull', win: '#ffcf6a', masts: 3},
+  revenge:   {hull: ['#4a2e1a', '#22140a'], band: '#8e2a1c', trim: '#d9b562', port: '#1a0806', decks: 1, sail: ['#efe4cc', '#c7b48e'], sailLine: '#6b5a40', rag: .35, holes: 0, flag: 'bones', win: '#ffcf6a', masts: 3},
+  endeavour: {hull: ['#2a2420', '#110e0c'], band: '#d6a646', trim: '#f2d48c', port: '#121010', decks: 2, chequer: true, sail: ['#fbf8ee', '#d9d2bc'], sailLine: '#8a7c62', rag: 0, holes: 0, flag: 'stripes', win: '#ffd98a', masts: 3},
+  dutch:     {hull: ['#3e4a44', '#16201c'], band: '#2a3632', trim: '#7fa79a', port: '#0c1a16', decks: 1, sail: ['#8a9a92', '#56645e'], sailLine: '#2a3632', rag: 1.4, holes: 4, flag: 'none', win: '#8affc8', masts: 3, broken: true, barn: true},
+};
+const SH_K = [[10, 55], [24, 57.4], [50, 59.6], [76, 57], [92, 52.6], [100, 48.4], [107, 44]];
+const sheer = x => { for(let i = 1; i < SH_K.length; i++){ if(x <= SH_K[i][0]){ const [a, b] = [SH_K[i - 1], SH_K[i]], t = (x - a[0]) / (b[0] - a[0]); return a[1] + (b[1] - a[1]) * t; } } return 44; };
+function shipArt(kind){ const K = SHIPKIND[kind], id = V5('sh'); let s = '';
+  const g = `<defs><linearGradient id="${id}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${K.hull[0]}"/><stop offset="1" stop-color="${K.hull[1]}"/></linearGradient>
+    <linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${K.sail[0]}"/><stop offset=".7" stop-color="${K.sail[0]}"/><stop offset="1" stop-color="${K.sail[1]}"/></linearGradient>
+    <clipPath id="${id}c"><path d="M10 55 Q14 56.4 18 56.8 L${SH_K.slice(2).map(p => p.join(' ')).join(' L')} L110 44 L108.6 56 Q107 66 101 72 L20 72 Q13.6 66 10 55 Z"/></clipPath></defs>`;
+  // bowsprit and jibs (behind)
+  s += `<path d="M14 54.6 L-1 44.6" stroke="#2a1a0c" stroke-width="1.5" stroke-linecap="round"/><path d="M-1 44.6 L2 44.2" stroke="#2a1a0c" stroke-width=".8"/>`;
+  const mx = [32, 56, 82], top = K.broken ? [12, 6, 26] : [10, 3.6, 16];
+  // the jibs from the foremast to the bowsprit
+  const jib = (yTop, xEnd, yEnd) => `<path d="M${mx[0] - 1} ${yTop} L${xEnd} ${yEnd} Q${(mx[0] + xEnd) / 2 - 2} ${(yTop + yEnd) / 2 + 6} ${mx[0] - 1} ${yTop + 22} Z" fill="url(#${id}s)" stroke="${K.sailLine}" stroke-width=".35" opacity=".96"/>`;
+  s += jib(14, 0, 45) + jib(20, 6, 49.4);
+  // masts
+  const mastSail = (x, i) => { let m = ''; const base = sheer(x), t = top[i], H = base - t;
+    m += `<path d="M${x} ${base} L${x} ${t}" stroke="#2a1a0c" stroke-width="${i === 1 ? 1.6 : 1.3}"/>`;
+    if(K.broken && i === 0) m += `<path d="M${x} ${t} L${x + 3} ${t - 6}" stroke="#2a1a0c" stroke-width="1.1"/>`;
+    // tops (platforms)
+    m += `<path d="M${x - 3} ${r1(base - H * .52)} H${x + 3}" stroke="#2a1a0c" stroke-width="1.1"/><path d="M${x - 2} ${r1(base - H * .82)} H${x + 2}" stroke="#2a1a0c" stroke-width=".8"/>`;
+    // square sails: course, topsail, topgallant (mizzen: gaff + topsail)
+    const tiers = i === 2 ? [[.52, .8, 8]] : [[.12, .48, 13 - i * .4], [.52, .78, 10.4], [.82, .96, 7.2]];
+    tiers.forEach(([a, b, w], j) => { const y1 = r1(base - H * b), y2 = r1(base - H * a - 1.4), bel = (y2 - y1) * .16;
+      let bottom = `Q${x} ${r1(y2 + bel * 1.4)} ${x - w + .6} ${y2}`;
+      if(K.rag){ let d = ''; const n = 6; for(let q = n; q >= 0; q--){ const xx = x - w + .6 + (2 * w - 1.2) * q / n, yy = y2 + Math.sin(q / n * Math.PI) * bel * 1.4 - (q % 2 ? K.rag * (1 + (j + q) % 3) : 0); d += ` L${r1(xx)} ${r1(yy)}`; } bottom = d.slice(1); }
+      m += `<path d="M${x - w} ${y1} L${x + w} ${y1} Q${r1(x + w + 1.4)} ${r1((y1 + y2) / 2)} ${r1(x + w - .6)} ${y2} ${K.rag ? bottom.trim() : bottom} Q${r1(x - w - 1.4)} ${r1((y1 + y2) / 2)} ${x - w} ${y1} Z" fill="url(#${id}s)" stroke="${K.sailLine}" stroke-width=".35"/>`;
+      m += `<path d="M${x - w + 1} ${r1(y1 + (y2 - y1) * .5)} Q${x} ${r1(y1 + (y2 - y1) * .62)} ${x + w - 1} ${r1(y1 + (y2 - y1) * .5)}" stroke="${K.sailLine}" stroke-width=".3" fill="none" opacity=".45"/>`;
+      if(K.holes && (j + i) % 2 === 0) for(let h = 0; h < K.holes / 2; h++) m += `<ellipse cx="${r1(x - w / 2 + h * w * .9)}" cy="${r1(y1 + (y2 - y1) * (.4 + h * .2))}" rx="${r1(1 + h * .4)}" ry="${r1(.8 + h * .3)}" fill="${kind === 'dutch' ? '#cfe3e0' : '#efe3c8'}" opacity="${kind === 'dutch' ? .5 : .85}"/>`;
+      m += `<path d="M${x - w - 1} ${y1} H${x + w + 1}" stroke="#2a1a0c" stroke-width=".9" stroke-linecap="round"/>`; });
+    if(i === 2){ const y1 = r1(base - H * .5), y2 = r1(base - 2); m += `<path d="M${x} ${y1} L${x + 14} ${r1(y1 + 3)} L${x + 16} ${y2} L${x} ${y2} Z" fill="url(#${id}s)" stroke="${K.sailLine}" stroke-width=".35"/><path d="M${x} ${y1} L${x + 15} ${r1(y1 + 3)}" stroke="#2a1a0c" stroke-width=".8"/>`; }
+    // shrouds
+    m += `<g stroke="#2a2014" stroke-width=".28" opacity=".75">${[-5, -3, -1, 1, 3].map(d => `<path d="M${x} ${r1(base - H * .52)} L${x + d} ${r1(sheer(x + d) + .4)}"/>`).join('')}</g>`;
+    return m; };
+  // stays
+  s += `<g stroke="#2a2014" stroke-width=".3" fill="none" opacity=".7"><path d="M${mx[1]} ${top[1] + 1} L${mx[0]} ${top[0] + 6} M${mx[2]} ${top[2] + 1} L${mx[1]} ${top[1] + 14} M${mx[0]} ${top[0] + 1} L-1 44.6 M${mx[2]} ${top[2] + 2} L110 44"/></g>`;
+  mx.forEach((x, i) => s += mastSail(x, i));
+  // hull
+  s += `<path d="M10 55 Q14 56.4 18 56.8 L${SH_K.slice(2).map(p => p.join(' ')).join(' L')} L110 44 L108.6 56 Q107 66 101 72 L20 72 Q13.6 66 10 55 Z" fill="url(#${id}h)" stroke="#050403" stroke-width=".6"/>`;
+  s += `<g clip-path="url(#${id}c)">`;
+  // planking lines
+  for(let k = 0; k < 6; k++) s += `<path d="M10 ${r1(59 + k * 2.4)} ${Array.from({length: 13}, (_, q) => { const x = 14 + q * 8; return `L${x} ${r1(sheer(x) + 3 + k * 2.6 + (x > 98 ? (x - 98) * .2 * k : 0))}`; }).join(' ')}" stroke="#000" stroke-width=".25" fill="none" opacity=".45"/>`;
+  // wales with gunports
+  const band = (o1, o2, col, portY) => { let up = '', dn = ''; for(let x = 12; x <= 108; x += 2){ up += `${up ? 'L' : 'M'}${x} ${r1(sheer(x) + o1)} `; dn = `L${x} ${r1(sheer(x) + o2)} ` + dn; }
+    let r = `<path d="${up}${dn}Z" fill="${col}"/><path d="${up}" stroke="${K.trim}" stroke-width=".45" fill="none" opacity=".85"/>`;
+    for(let x = 22; x <= 96; x += 7.2){ const y = sheer(x) + portY; r += K.chequer ? `<rect x="${r1(x - 1.6)}" y="${r1(y - 1.5)}" width="3.2" height="3" fill="${K.port}"/>` : `<rect x="${r1(x - 1.5)}" y="${r1(y - 1.4)}" width="3" height="2.8" fill="${K.port}" stroke="#000" stroke-width=".2"/><rect x="${r1(x - 1.5)}" y="${r1(y - 2.8)}" width="3" height="1.2" fill="${K.hull[0]}" opacity=".9"/>`; }
+    return r; };
+  s += band(2.6, 6.8, K.band, 4.7);
+  if(K.decks === 2) s += band(9.2, 13.4, K.band, 11.3);
+  s += `<path d="M12 ${r1(sheer(12) + .6)} ${Array.from({length: 49}, (_, q) => `L${12 + q * 2} ${r1(sheer(12 + q * 2) + .6)}`).join(' ')}" stroke="${K.trim}" stroke-width=".6" fill="none"/>`;
+  if(K.barn) for(let q = 0; q < 26; q++){ const x = 18 + (q * 37) % 84, y = 64 + (q * 13) % 8; s += `<circle cx="${x}" cy="${y}" r="${.5 + (q % 3) * .25}" fill="#c9d6cf" opacity=".55"/>`; }
+  s += `</g>`;
+  // stern: gallery windows, lantern, rudder
+  s += `<path d="M101 46.6 L108.4 45 L108 53 L101.6 54.4 Z" fill="${K.hull[0]}" stroke="${K.trim}" stroke-width=".4"/>${[0, 1, 2].map(q => `<rect x="${r1(102.2 + q * 2)}" y="${r1(47.6 - q * .3)}" width="1.4" height="2.2" fill="${K.win}"/><rect x="${r1(102.2 + q * 2)}" y="${r1(51 - q * .3)}" width="1.4" height="1.8" fill="${K.win}" opacity=".8"/>`).join('')}
+    <path d="M100.6 55 H109" stroke="${K.trim}" stroke-width=".5"/><path d="M108.4 44.6 V41.6" stroke="#2a1a0c" stroke-width=".6"/><path d="M107.4 39.6 h2 l-.3 2 h-1.4 z" fill="${K.win}" stroke="#2a1a0c" stroke-width=".3"/>`;
+  // figurehead and headrail
+  s += `<path d="M10 55 Q7 53 6.4 50.4 Q8.6 51.2 10.6 53.4" fill="${K.trim}" stroke="#2a1a0c" stroke-width=".3"/>`;
+  // flags
+  const fl = (x, y, w, h, body) => `<path d="M${x} ${y} V${y - h - 3}" stroke="#2a1a0c" stroke-width=".6"/><g transform="translate(${x} ${y - h - 3})">${body(w, h)}</g>`;
+  if(K.flag === 'skull' || K.flag === 'bones') s += fl(110, 40, 9, 6, (w, h) => `<path d="M0 0 Q${w / 2} -1 ${w} .6 Q${w - 1} ${h / 2} ${w} ${h} Q${w / 2} ${h - .8} 0 ${h} Z" fill="#141210"/><circle cx="${w / 2}" cy="${h / 2 - .6}" r="1.3" fill="#efe3c8"/><path d="M${w / 2 - 2} ${h / 2 + 1.6} L${w / 2 + 2} ${h / 2 + .2} M${w / 2 - 2} ${h / 2 + .2} L${w / 2 + 2} ${h / 2 + 1.6}" stroke="#efe3c8" stroke-width=".6"/>`);
+  if(K.flag === 'stripes') s += fl(110, 40, 10, 6.4, (w, h) => `${[0, 1, 2, 3, 4].map(q => `<rect y="${r1(q * h / 5)}" width="${w}" height="${r1(h / 5)}" fill="${q % 2 ? '#efe3c8' : '#b3352a'}"/>`).join('')}<rect width="${w * .4}" height="${h * .5}" fill="#efe3c8"/><path d="M${w * .2} 0 V${h * .5} M0 ${h * .25} H${w * .4}" stroke="#b3352a" stroke-width=".7"/>`) + `<path d="M${mx[1]} ${top[1]} L${mx[1] + 12} ${top[1] + 1.2} L${mx[1]} ${top[1] + 2}" fill="#b3352a"/>`;
+  if(K.flag !== 'stripes' && K.flag !== 'none') s += `<path d="M${mx[1]} ${top[1]} L${mx[1] + 8} ${top[1] + 1} L${mx[1]} ${top[1] + 2}" fill="#141210"/>`;
+  // the sea at the hull
+  s += `<path d="M8 72.2 Q30 70.6 60 72.2 T112 72" stroke="#eaf4f6" stroke-width=".9" fill="none" opacity=".75"/><path d="M14 72 q-3 1 -6 .2" stroke="#eaf4f6" stroke-width=".7" fill="none" opacity=".7"/>`;
+  return g + s; }
+
+/* ---- hull plank icon, 12×16: a whole oak plank, and a broken one ---- */
+const HULL2 = `<svg width="12" height="16" viewBox="0 0 12 16" aria-hidden="true">
+  <rect x=".6" y=".6" width="10.8" height="14.8" rx="1.2" fill="#a86c36" stroke="#3a2210" stroke-width=".7"/>
+  <rect x="1" y="1" width="2.2" height="14" fill="#c88a4e" opacity=".55"/><rect x="8.8" y="1" width="2.2" height="14" fill="#6a3e1a" opacity=".5"/>
+  <path d="M3.4 .9 C2.8 5 4.2 9 3.4 15.2 M7.6 .9 C8.2 4 7 8.6 8 15.2 M5.6 3 C5.2 6 6.2 8 5.6 12" stroke="#5a3418" stroke-width=".45" fill="none" opacity=".75"/>
+  <ellipse cx="8.4" cy="9.6" rx=".9" ry="1.4" fill="none" stroke="#5a3418" stroke-width=".4"/>
+  <rect x=".6" y="2.2" width="10.8" height="1.2" fill="#2b2f31"/><rect x=".6" y="12.6" width="10.8" height="1.2" fill="#2b2f31"/>
+  <circle cx="2.4" cy="2.8" r=".55" fill="#9aa2a6"/><circle cx="9.6" cy="2.8" r=".55" fill="#9aa2a6"/><circle cx="2.4" cy="13.2" r=".55" fill="#9aa2a6"/><circle cx="9.6" cy="13.2" r=".55" fill="#9aa2a6"/>
+  <path d="M1.4 1.4 V14.6" stroke="#f0c68c" stroke-width=".6" opacity=".6"/></svg>`;
+const HULL2_X = `<svg width="12" height="16" viewBox="0 0 12 16" aria-hidden="true"><rect x=".6" y=".6" width="10.8" height="14.8" rx="1.2" fill="#9c8a72" stroke="#4a3a28" stroke-width=".7"/>
+  <path d="M1.4 1.4 V14.6" stroke="#c9b89c" stroke-width=".6" opacity=".7"/><path d="M10.6 1.4 V14.6" stroke="#5e4c38" stroke-width=".6" opacity=".7"/>
+  <path d="M3.4 .9 C2.8 4 3.4 6 3.2 7 M8 10.8 C8.4 13 7.8 14 8 15.2" stroke="#6e5c46" stroke-width=".45" fill="none"/>
+  <rect x=".6" y="2.2" width="10.8" height="1.2" fill="#3a3e40"/><rect x=".6" y="12.6" width="10.8" height="1.2" fill="#3a3e40"/>
+  <circle cx="2.4" cy="2.8" r=".55" fill="#8a9296"/><circle cx="9.6" cy="2.8" r=".55" fill="#8a9296"/><circle cx="2.4" cy="13.2" r=".55" fill="#8a9296"/><circle cx="9.6" cy="13.2" r=".55" fill="#8a9296"/>
+  <path d="M2.6 5.6 L4.2 4.6 L5 5.8 L6.6 4.2 L7.4 5.4 L9.2 5 L8.6 6.8 L10 8 L8.8 9 L9.4 10.8 L7.6 10.4 L6.6 11.6 L5.6 10.4 L3.8 11.2 L4 9.6 L2.2 8.8 L3.4 7.6 Z" fill="#c9b89c" stroke="#3a2a18" stroke-width=".35" stroke-linejoin="round"/>
+  <path d="M3.6 6.2 L4.6 5.6 L5.2 6.4 L6.6 5.2 L7.2 6.2 L8.2 6 L7.8 7.2 L8.8 8 L7.8 8.6 L8.2 9.8 L7 9.6 L6.4 10.4 L5.6 9.6 L4.4 10 L4.6 9 L3.4 8.4 L4.2 7.6 Z" fill="#140c06"/></svg>`;
+
+/* ---- the medal of the best captain: ribbon, milled rim, laurel, crossed sabres under a star ---- */
+function medal2(S = 64){ const id = V5('md');
+  const leaf = (a, r, k) => { const x = Math.cos(a) * r, y = Math.sin(a) * r, d = a * 180 / Math.PI + 90 + k * 28; return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="1.3" ry="3" transform="rotate(${r1(d)} ${r1(x)} ${r1(y)})" fill="url(#${id}g)" stroke="#5e4210" stroke-width=".35"/>`; };
+  let laurel = ''; for(let i = 0; i < 9; i++){ const a1 = Math.PI * (.62 + i * .085), a2 = Math.PI * (.38 - i * .085); laurel += leaf(a1, 13.6, 1) + leaf(a1 + .04, 11.6, -1) + leaf(a2, 13.6, -1) + leaf(a2 - .04, 11.6, 1); }
+  const teeth = Array.from({length: 80}, (_, i) => { const a = i / 80 * Math.PI * 2, r = i % 2 ? 19 : 18.4; return (i ? 'L' : 'M') + r1(Math.cos(a) * r) + ' ' + r1(Math.sin(a) * r); }).join(' ') + 'Z';
+  return `<svg width="${S}" height="${r1(S * 1.3)}" viewBox="-24 -32 48 62" aria-hidden="true"><defs>
+    <linearGradient id="${id}r" x1="0" x2="1"><stop offset="0" stop-color="#4a0e09"/><stop offset=".2" stop-color="#8e2219"/><stop offset=".5" stop-color="#b3352a"/><stop offset=".8" stop-color="#8e2219"/><stop offset="1" stop-color="#4a0e09"/></linearGradient>
+    <radialGradient id="${id}f" cx=".36" cy=".3" r=".85"><stop offset="0" stop-color="#fff6c8"/><stop offset=".3" stop-color="#e6c46a"/><stop offset=".7" stop-color="#a77a26"/><stop offset="1" stop-color="#5e4210"/></radialGradient>
+    <linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe7a6"/><stop offset=".5" stop-color="#c99a3a"/><stop offset="1" stop-color="#7a5414"/></linearGradient>
+    <linearGradient id="${id}s" x1="0" x2="1"><stop offset="0" stop-color="#6c7478"/><stop offset=".5" stop-color="#eef2f3"/><stop offset="1" stop-color="#5d6569"/></linearGradient></defs>
+    <path d="M-10 -32 H-1 L1 -12 L-6 -8 Z" fill="url(#${id}r)" stroke="#2a0604" stroke-width=".5"/><path d="M10 -32 H1 L-1 -12 L6 -8 Z" fill="url(#${id}r)" stroke="#2a0604" stroke-width=".5"/>
+    <path d="M-7.6 -32 L-3.6 -11 M7.6 -32 L3.6 -11" stroke="#e2bf62" stroke-width=".7" opacity=".8"/><path d="M-4 -32 L-1.4 -14 M4 -32 L1.4 -14" stroke="#e2bf62" stroke-width=".4" opacity=".6"/>
+    <rect x="-7" y="-14" width="14" height="4" rx="1" fill="url(#${id}g)" stroke="#5e4210" stroke-width=".5"/><path d="M-6 -13 H6" stroke="#fff6d8" stroke-width=".5" opacity=".7"/>
+    <ellipse cx="1.4" cy="3" rx="19.6" ry="19.6" fill="#000" opacity=".35"/>
+    <path d="${teeth}" fill="url(#${id}g)" stroke="#4a3208" stroke-width=".4"/>
+    <circle r="17.4" fill="url(#${id}f)" stroke="#4a3208" stroke-width=".6"/><circle r="15.6" fill="none" stroke="#7a5a1a" stroke-width=".5"/>
+    ${laurel}
+    <g transform="rotate(-38)"><path d="M0 -11 L.7 9 L0 10.4 L-.7 9 Z" fill="url(#${id}s)" stroke="#2f3539" stroke-width=".3"/><path d="M-2.4 8.6 H2.4" stroke="#5e4210" stroke-width="1.2"/></g>
+    <g transform="rotate(38)"><path d="M0 -11 L.7 9 L0 10.4 L-.7 9 Z" fill="url(#${id}s)" stroke="#2f3539" stroke-width=".3"/><path d="M-2.4 8.6 H2.4" stroke="#5e4210" stroke-width="1.2"/></g>
+    <circle r="7.6" fill="#7e1d14" stroke="#4a3208" stroke-width=".6"/><circle r="6.6" fill="none" stroke="#e2bf62" stroke-width=".4"/>
+    <path d="M0 -5.6 L1.5 -1.8 L5.4 -1.6 L2.4 .9 L3.4 4.8 L0 2.6 L-3.4 4.8 L-2.4 .9 L-5.4 -1.6 L-1.5 -1.8 Z" fill="url(#${id}g)" stroke="#4a3208" stroke-width=".4"/>
+    <path d="M-13 -9 A16 16 0 0 1 2 -16.4" stroke="#fffbe6" stroke-width="1.6" fill="none" opacity=".55" stroke-linecap="round"/><circle cx="-8" cy="-12" r="1.2" fill="#fff" opacity=".8"/></svg>`; }
+
+/* ---- the captain's table: chart, dividers, the compass in its box, quill and ink, candle, spyglass, hourglass, coins ---- */
+function chartSheet(w, h){ const id = V5('ch'); let s = `<defs><radialGradient id="${id}p" cx=".5" cy=".5" r=".7"><stop offset="0" stop-color="#f2e2b8"/><stop offset=".8" stop-color="#dcc690"/><stop offset="1" stop-color="#b89a5e"/></radialGradient></defs>`;
+  s += `<path d="M0 3 Q${w * .3} 0 ${w * .6} 2 T${w} 1 L${w - 2} ${h - 2} Q${w * .5} ${h + 2} 2 ${h - 1} Z" fill="url(#${id}p)" stroke="#8a6a3a" stroke-width=".8"/>`;
+  for(let i = 0; i < 16; i++){ const a = i * Math.PI / 8; s += `<path d="M${w * .62} ${h * .48} L${r1(w * .62 + Math.cos(a) * w)} ${r1(h * .48 + Math.sin(a) * w)}" stroke="#8a6a3a" stroke-width=".35" opacity=".45"/>`; }
+  s += `<path d="M${w * .05} ${h * .7} Q${w * .15} ${h * .5} ${w * .28} ${h * .62} T${w * .42} ${h * .42} Q${w * .5} ${h * .3} ${w * .46} ${h * .14} L${w * .3} ${h * .08} Q${w * .12} ${h * .2} ${w * .05} ${h * .7} Z" fill="#cdb27a" stroke="#6b4a24" stroke-width=".7" opacity=".85"/>`;
+  s += `<path d="M${w * .74} ${h * .8} q${w * .06} -${h * .12} ${w * .14} -${h * .06} q${w * .02} ${h * .1} -${w * .1} ${h * .14} z" fill="#cdb27a" stroke="#6b4a24" stroke-width=".6"/>`;
+  s += `<g transform="translate(${w * .62} ${h * .48})" opacity=".7">${Array.from({length: 8}, (_, i) => { const a = i * Math.PI / 4 - Math.PI / 2, r = i % 2 ? 9 : 16; return `<path d="M0 0 L${r1(Math.cos(a - .3) * 3)} ${r1(Math.sin(a - .3) * 3)} L${r1(Math.cos(a) * r)} ${r1(Math.sin(a) * r)} Z" fill="${i ? '#6b4a24' : '#8e2219'}"/>`; }).join('')}</g>`;
+  s += `<path d="M${w * .2} ${h * .86} C${w * .34} ${h * .7} ${w * .48} ${h * .78} ${w * .6} ${h * .58}" stroke="#8e2219" stroke-width=".8" stroke-dasharray="2 2" fill="none"/><path d="M${w * .58} ${h * .62} l3 -1 l-1 3" stroke="#8e2219" stroke-width=".8" fill="none"/>`;
+  return s; }
+const DIVIDERS = `<g><path d="M0 0 L-6 46 L-4.6 46.4 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><path d="M0 0 L9 45 L10.4 44.6 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><path d="M-5.4 44 L-5.6 49 M9.6 43 L10.4 48" stroke="#9aa2a6" stroke-width="1.1"/><circle r="3.4" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".6"/><circle r="1" fill="#4a3208"/></g>`;
+function inkwell(){ return `<g><ellipse cx="0" cy="13" rx="12" ry="3" fill="#000" opacity=".45"/><path d="M-9 2 Q-10 12 -8 13 H8 Q10 12 9 2 Z" fill="#1a2430" stroke="#05080c" stroke-width=".6"/><ellipse cx="0" cy="2" rx="9" ry="2.6" fill="#24303c" stroke="#05080c" stroke-width=".5"/><ellipse cx="0" cy="1.6" rx="4.6" ry="1.4" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".4"/><path d="M-6 4 Q-7 9 -5.4 12" stroke="#7fa0b8" stroke-width=".8" fill="none" opacity=".6"/>
+  <path d="M1 1 L22 -40" stroke="#3a2a1a" stroke-width=".8"/><path d="M4 -6 Q14 -26 24 -44 Q26 -34 18 -20 Q12 -10 5 -4 Z" fill="#efe8d8" stroke="#8a7c62" stroke-width=".4"/><path d="M5 -5 Q14 -24 23 -42" stroke="#8a7c62" stroke-width=".4" fill="none"/>${Array.from({length: 7}, (_, i) => `<path d="M${r1(7 + i * 2.4)} ${r1(-9 - i * 4.4)} l4 1" stroke="#c9bfa8" stroke-width=".35"/>`).join('')}</g>`; }
+function candle(id){ return `<g><ellipse cx="0" cy="18" rx="14" ry="3.4" fill="#000" opacity=".45"/><ellipse cx="0" cy="16" rx="12" ry="3.4" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".6"/><path d="M-12 16 Q-13 18 -10 19 H10 Q13 18 12 16" fill="#8f6b20"/><path d="M12 15 q6 0 6 4 q0 3 -4 3" fill="none" stroke="url(#gBrass)" stroke-width="1.6"/>
+  <rect x="-4.6" y="-14" width="9.2" height="30" rx="1.4" fill="#efe6d0" stroke="#a89c80" stroke-width=".5"/><path d="M-4.6 -12 q2 4 1 8 q-.6 3 .4 5" stroke="#d9cfb4" stroke-width="1.2" fill="none"/><path d="M-3 -14 V12" stroke="#fff" stroke-width="1" opacity=".5"/>
+  <path d="M0 -14 V-17" stroke="#2a2020" stroke-width=".8"/><g class="flick"><path d="M0 -33 C3 -27 4.4 -22 2.6 -18.6 C1.6 -17 -1.6 -17 -2.6 -18.6 C-4.4 -22 -3 -27 0 -33 Z" fill="#ffc14a"/><path d="M0 -28 C1.4 -25 2 -22 1 -19.6 C.4 -18.8 -.4 -18.8 -1 -19.6 C-2 -22 -1.4 -25 0 -28 Z" fill="#fff6d0"/></g></g>`; }
+const SPYGLASS = `<g><ellipse cx="44" cy="7" rx="48" ry="3" fill="#000" opacity=".4"/><rect x="0" y="-3.4" width="30" height="6.8" rx="1" fill="url(#gWoodD)" stroke="#1e1008" stroke-width=".5"/><rect x="28" y="-4.2" width="5" height="8.4" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><rect x="33" y="-3" width="26" height="6" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><rect x="58" y="-3.6" width="3" height="7.2" rx=".6" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><rect x="61" y="-2.4" width="22" height="4.8" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><rect x="82" y="-3.2" width="5" height="6.4" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><path d="M2 -2 H28 M34 -1.8 H58 M62 -1.4 H82" stroke="#fff6d8" stroke-width=".7" opacity=".6"/><ellipse cx="0" cy="0" rx="1.4" ry="3.4" fill="#1a2a34"/></g>`;
+const HOURGLASS = `<g><ellipse cx="0" cy="25" rx="14" ry="3" fill="#000" opacity=".45"/><rect x="-12" y="-24" width="24" height="4" rx="1" fill="url(#gWoodD)" stroke="#1e1008" stroke-width=".5"/><rect x="-12" y="20" width="24" height="4" rx="1" fill="url(#gWoodD)" stroke="#1e1008" stroke-width=".5"/>${[-10, 10].map(x => `<path d="M${x} -20 V20" stroke="url(#gBrass)" stroke-width="1.6"/>`).join('')}<path d="M-7 -20 Q-7 -6 0 0 Q-7 6 -7 20 H7 Q7 6 0 0 Q7 -6 7 -20 Z" fill="rgba(220,236,240,.35)" stroke="#a9cbd2" stroke-width=".5"/><path d="M-4.6 -12 Q0 -10 4.6 -12 Q3 -4 0 -1 Q-3 -4 -4.6 -12 Z M0 0 V12 M-6 20 Q0 11 6 20 Z" fill="#d9b562" stroke="#d9b562" stroke-width=".4"/><path d="M-5 -18 Q-5 -10 -2 -4" stroke="#fff" stroke-width=".8" fill="none" opacity=".6"/></g>`;
+const coins = (n = 5) => Array.from({length: n}, (_, i) => { const x = (i * 9) % 28 - 8, y = (i * 5) % 12; return `<ellipse cx="${x + 1}" cy="${y + 1.6}" rx="6" ry="3" fill="#000" opacity=".35"/><ellipse cx="${x}" cy="${y}" rx="6" ry="3" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".5"/><ellipse cx="${x}" cy="${y}" rx="3.6" ry="1.7" fill="none" stroke="#7a5414" stroke-width=".4"/>`; }).join('');
+
+/* the gimbal compass in its box, for the captain's table */
+function gimbalBox(id, x, y, r, rot = 0){ return boxedCompass(id, x, y, r, rot).replace('<g class="cmpg">', `<circle r="${r1(r * 1.08)}" fill="none" stroke="url(#gBrass)" stroke-width="${r1(r * .09)}"/><circle r="${r1(r * 1.08)}" fill="none" stroke="#4a3208" stroke-width=".5"/>${[0, 180].map(d => `<g transform="rotate(${d})"><rect x="${r1(-r * .08)}" y="${r1(-r * 1.2)}" width="${r1(r * .16)}" height="${r1(r * .2)}" rx="1" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".4"/></g>`).join('')}<g class="cmpg">`); }
+function captainTable(W, H, L){ const id = V5('ct');
+  let s = `<svg class="abs" style="left:0;top:0" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${gradDefs()}${defs2()}
+  <defs><radialGradient id="${id}l" cx="${L.lx / W}" cy="${L.ly / H}" r="${L.r / W}" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#ffbe5a" stop-opacity=".42"/><stop offset=".5" stop-color="#ff9a30" stop-opacity=".12"/><stop offset="1" stop-color="#ff8a20" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${id}d" cx="${L.lx / W}" cy="${L.ly / H}" r="${(L.r * 1.7) / W}" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".6" stop-color="#000" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></radialGradient></defs>
+  <rect width="${W}" height="${H}" fill="#4a2a16"/>${Array.from({length: Math.ceil(H / 46)}, (_, i) => `<rect y="${i * 46}" width="${W}" height="46" fill="hsl(${18 + (i % 3) * 3} 42% ${15 + (i % 2) * 2}%)"/><path d="M0 ${i * 46 + 46} H${W}" stroke="#140a04" stroke-width="1.6"/>${Array.from({length: 5}, (_, k) => `<path d="M0 ${i * 46 + 8 + k * 8} Q${W / 3} ${i * 46 + 6 + k * 8 + (k % 2 ? 3 : -2)} ${W} ${i * 46 + 9 + k * 8}" stroke="#000" stroke-opacity=".1" stroke-width=".8" fill="none"/>`).join('')}`).join('')}
+  <g transform="translate(${L.chart[0]} ${L.chart[1]}) rotate(${L.chart[4] || 0})"><rect x="4" y="6" width="${L.chart[2]}" height="${L.chart[3]}" fill="#000" opacity=".35"/>${chartSheet(L.chart[2], L.chart[3])}</g>
+  ${L.div ? `<g transform="translate(${L.div[0]} ${L.div[1]}) rotate(${L.div[2]})">${DIVIDERS}</g>` : ''}
+  ${L.coins ? `<g transform="translate(${L.coins[0]} ${L.coins[1]})">${coins(L.coins[2])}</g>` : ''}
+  ${L.spy ? `<g transform="translate(${L.spy[0]} ${L.spy[1]}) rotate(${L.spy[2]}) scale(${L.spy[3] || 1})">${SPYGLASS}</g>` : ''}
+  ${L.hour ? `<g transform="translate(${L.hour[0]} ${L.hour[1]}) scale(${L.hour[2] || 1})">${HOURGLASS}</g>` : ''}
+  ${L.ink ? `<g transform="translate(${L.ink[0]} ${L.ink[1]}) scale(${L.ink[2] || 1})">${inkwell()}</g>` : ''}
+  ${gimbalBox(id, ...L.compass)}
+  <rect width="${W}" height="${H}" fill="url(#${id}d)"/><rect width="${W}" height="${H}" fill="url(#${id}l)" style="mix-blend-mode:screen"/>
+  <g transform="translate(${L.lx} ${L.ly + 26}) scale(${L.ls})">${candle(id)}</g><circle cx="${L.lx}" cy="${L.ly}" r="${40 * L.ls}" fill="url(#gFlash)" opacity=".14" class="flick"/></svg>`;
+  return s.replace(/<g class="g-compass">/, '<g>'); }
+
+const OLDHULL = CELLS.HULL, OLDHULLX = CELLS.HULL_X;
+const SHIPS3 = __SHIPS3__;
+['pearl', 'revenge', 'endeavour', 'dutch'].forEach(k => SHIPS[k] = SHIPS3[k + '_s']);
+CELLS.HULL = HULL2; CELLS.HULL_X = HULL2_X;
+/* ================= the sections ================= */
+const SEC = [];
+
+SEC.push({h: 'Корабли', why: 'Третья версия, на основе прежних больших кораблей: обшивка со стыками досок, пояса и брусья, открытые порты с откинутыми крышками и дулами, абордажные сетки вдоль борта, руслени с юферсами и вант-путенсами, гальюн с поручнями, двухъярусная кормовая галерея с огнями, фонари со свечением, руль; бушприт с утлегарем, блиндом, ватер-штагами; марсы, бугели на мачтах, перты под реями, брасы; паруса с градиентом, швами, двумя рядами риф-сезней, заплатами и дырами. На шапке планшета — облегчённая версия. «Жемчужина» — чёрный корпус и чёрные рваные паруса; «Месть» — красный пояс и выцветшие паруса; «Индевор» — линейный корабль в два ряда портов с шахматными поясами и полным белым парусным вооружением; «Голландец» — облезлый зелёно-серый корпус в ракушках, сломанная фор-стеньга, паруса в дырах, зелёный свет в окнах.', vs: [
+  {k: '', t: 'Крупно', sub: '×3', st: stage(1000, 200, `<div class="abs" style="left:10px;top:10px;display:flex;gap:10px">${['pearl', 'revenge', 'endeavour', 'dutch'].map(k => `<div style="width:235px;height:155px;border-radius:6px;background:#f4ead6;display:flex;align-items:center;justify-content:center"><svg width="226" height="146" viewBox="0 0 120 78">${SHIPS3[k]}</svg></div>`).join('')}</div><div class="abs" style="left:10px;top:172px;color:#efe3c8;font-size:12px;display:flex;gap:10px">${['Чёрная жемчужина', 'Месть королевы Анны', 'Индевор', 'Летучий голландец'].map(n => `<span style="width:235px;text-align:center">${n}</span>`).join('')}</div>`)},
+  {k: '', t: 'В шапке планшета', sub: 'как в игре', st: stage(520, 200, `${plank('P', 21, 14)}`)},
+]});
+SEC.push({h: 'Значок Корпуса', why: 'Доска обшивки: дубовая планка с волокнами и сучком, две железные скобы с заклёпками, светлая кромка. Потерянная — расколотая доска: нижняя половина с щепками, верх пунктиром, красная трещина.', vs: [
+  {k: '', t: 'Крупно', sub: '×4', st: stage(260, 110, `<div class="abs" style="left:24px;top:18px;display:flex;gap:16px">${['HULL', 'HULL_X'].map(k => CELLS[k].replace('width="12" height="16"', 'width="54" height="72"')).join('')}</div>`)},
+  {k: '', t: 'Было / стало', sub: 'на шкале', st: stage(330, 110, `<div class="abs" style="left:16px;top:22px;display:flex;flex-direction:column;gap:12px;padding:10px 12px;background:#f4ead6;border-radius:4px"><span class="cells">${OLDHULL.repeat(7)}${OLDHULLX.repeat(2)}</span><span class="cells">${HULL2.repeat(7)}${HULL2_X.repeat(2)}</span></div>`)},
+]});
+SEC.push({h: 'Медаль лучшего капитана', why: 'Лента с золотыми полосками в складку, латунная скоба, медаль с насечкой по ребру, лавровый венок, скрещённые сабли, красная эмаль со звездой; блик и тень.', vs: [
+  {k: '', t: 'Крупно', sub: '', st: stage(200, 220, `<div class="abs" style="left:46px;top:10px">${medal2(108)}</div>`)},
+  {k: '', t: 'Как на экране Победы', sub: '', st: stage(420, 220, `<div class="abs" style="left:16px;top:40px;right:16px;display:flex;gap:12px;align-items:center;padding:12px;border-radius:4px;background:#fbf6ea;box-shadow:inset 0 0 0 1.5px #b9a27a">${medal2(62)}<div><div style="font-size:10.5px;font-weight:800;letter-spacing:.14em;color:#8a6a24">ЛУЧШИЙ КАПИТАН</div><div style="font-family:'Old Standard TT',serif;font-weight:700;font-size:21px">Чёрная Борода</div><div style="font-family:'Alegreya',serif;font-style:italic;font-size:13px;color:#5d5248">«Месть королевы Анны»</div></div></div>`)},
+]});
+SEC.push({h: 'Настройки (⚙)', why: 'Всё, что можно переключать, — в одном месте.', vs: [
+  {k: '', t: 'Раздел «Вид стола»', sub: '', st: stage(420, 200, `<div class="abs" style="left:16px;top:14px;right:16px;bottom:14px;border-radius:6px;background:#efe3c8;box-shadow:inset 0 0 0 1px #b9a27a;padding:10px 14px;color:#2a2521;font-size:13.5px">${[['Залп на планшете', 'Значки', 'Порты'], ['Фон под рукой', 'Палуба', 'Стол капитана'], ['Рамка моря', 'Фальшборт', 'Латунь']].map(([n, a, b]) => `<div style="display:flex;align-items:center;justify-content:space-between;height:52px;border-bottom:1px solid #d6c6a3"><b style="font-family:'Old Standard TT',serif">${n}</b><span style="display:inline-flex;border-radius:5px;overflow:hidden;box-shadow:0 0 0 1px #8a7550"><span style="padding:6px 12px;background:#3e2716;color:#f3e6c6;font-weight:700">${a}</span><span style="padding:6px 12px;font-weight:700">${b}</span></span></div>`).join('')}</div>`)},
+]});
+
+SEC.push({h: 'Рамка моря', why: 'Сейчас в игре — латунная рамка с уголками и винтами. Второй вариант — фальшборт: доски обшивки, нагели, латунный уголок.', vs: [
+  {k: 'А', t: 'Как сейчас', sub: 'латунь', st: stage(560, 300, `${brassFrame(24, 24, 620, 340)}${plank('P', 46, 140, {act: `<div class="act">${cmdPlain()}</div>`})}`)},
+  {k: 'Б', t: 'Фальшборт', sub: 'доски, нагели, латунные уголки', st: stage(560, 300, `<div class="abs" style="left:14px;top:14px;width:660px;height:380px;border-radius:3px;background:repeating-linear-gradient(0deg,#6b4526 0 13px,#5a391e 13px 14px),#6b4526;box-shadow:inset 0 0 0 2px #2e1c0c,inset 0 2px 0 6px rgba(255,220,170,.12),0 14px 26px rgba(0,0,0,.55)"></div>
+     <div class="sea" style="left:30px;top:30px;width:620px;height:340px;box-shadow:inset 0 0 0 2px #2e1c0c,inset 0 0 40px rgba(0,20,30,.5)"></div>${plank('P', 46, 140, {act: `<div class="act">${cmdPlain()}</div>`})}`, () => `<svg class="abs" style="left:0;top:0" width="560" height="300" viewBox="0 0 560 300">${gradDefs()}
+       <path d="M12 12 H68 L62 19 H19 V62 L12 68 Z" fill="url(#gBrass)" stroke="#5e4210" stroke-width="1"/>${[[17, 17], [56, 16], [16, 56]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="2" fill="url(#gBrassR)" stroke="#5e4210" stroke-width=".5"/>`).join('')}
+       ${Array.from({length: 9}, (_, i) => `<circle cx="${70 + i * 56}" cy="22" r="1.6" fill="#2e1c0c"/>`).join('')}${Array.from({length: 5}, (_, i) => `<circle cx="22" cy="${70 + i * 56}" r="1.6" fill="#2e1c0c"/>`).join('')}</svg>`)},
+]});
+
+SEC.push({h: 'Борт планшета: пушечные порты (доработано)', why: 'Шкала «пушки» как кусок борта: тёмная обшивка с досками, охряный пояс-брус сверху, порты с порогом и рамой. Целая пушка — крышка поднята на петлях, на снасти, внутри красное нутро и дуло с бликом. Потерянная — порт закрыт крышкой с железными петлями.', vs: [
+  {k: 'А', t: 'Как сейчас', sub: 'значки пушек', st: stage(500, 140, plank('R', 11, 14, {act: `<div class="act">${cmdPlain()}</div>`}))},
+  {k: 'Б', t: 'Порты', sub: '2 из 3: два открыты, один закрыт', st: stage(500, 150, plank('R', 11, 14, {ports: true, act: `<div class="act">${cmdPlain()}</div>`}))},
+  {k: '', t: 'Порт крупно', sub: 'открыт / закрыт, ×4', st: stage(300, 150, `<svg class="abs" style="left:20px;top:10px" width="260" height="130" viewBox="-4 -18 66 34">${gradDefs()}${defs2()}<rect x="-4" y="-2" width="66" height="30" fill="url(#gHull)"/><rect x="-4" y="-3" width="66" height="2" fill="#c49a52"/>${port2(0, 1, 24, true)}${port2(34, 1, 24, false)}</svg>`)},
+]});
+
+/* «Ход окончен» */
+const END_W = 380, END_H = 186;
+const endPlate = (w, h, fs, med) => `<div class="abs" style="left:0;top:0;width:${w}px;height:${h}px;border-radius:5px;background:repeating-linear-gradient(178deg,rgba(0,0,0,.09) 0 1px,rgba(0,0,0,0) 1px 5px),linear-gradient(#634128,#3e2716);box-shadow:inset 0 0 0 1px #1e1008,inset 0 1px 0 2px rgba(255,220,170,.1),0 8px 16px rgba(0,0,0,.55)">
+     <svg class="abs" style="left:${R1((h - med) / 2)}px;top:${R1((h - med) / 2)}px;overflow:visible" width="${med}" height="${med}" viewBox="0 0 54 54">${gradDefs()}<circle cx="28" cy="29" r="27" fill="#000" opacity=".35"/><circle cx="27" cy="27" r="27" fill="url(#gBrassR)" stroke="#4a3208" stroke-width="1"/><circle cx="27" cy="27" r="23" fill="#2a1a0e" stroke="#4a3208" stroke-width=".8"/><circle cx="27" cy="27" r="21.4" fill="none" stroke="url(#gBrass)" stroke-width=".8" stroke-dasharray="1.2 1.4"/><path d="M8 18 A20 20 0 0 1 21 6" stroke="#fff6d8" stroke-width="1.6" fill="none" opacity=".35" stroke-linecap="round"/><g transform="translate(14.6 10.4) scale(1.12)">${ANCHOR}</g></svg>
+     <div class="abs" style="left:${R1(h - 2 + med * .12)}px;right:${R1(h * .2)}px;top:${R1(h * .2)}px;bottom:${R1(h * .2)}px;border-radius:2px;background:linear-gradient(#6e2219,#4a130d);box-shadow:inset 0 1px 3px rgba(0,0,0,.55),0 0 0 1px rgba(224,189,98,.7),0 0 0 2.5px rgba(30,16,8,.8);display:flex;align-items:center;justify-content:center"><span style="font-family:'Old Standard TT',serif;font-weight:700;font-size:${fs}px;letter-spacing:.18em;background:linear-gradient(#fffbe6,#fbe7a6 40%,#d9ae52 62%,#fff0b8);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.6));white-space:nowrap">ХОД ОКОНЧЕН</span></div></div>`;
+SEC.push({h: '«Ход окончен» — итог', why: 'Без каната: дубовая доска, винная вставка с золотыми буквами, латунный медальон с якорем (якорь обвит тонким канатом). На ноутбуке 300×66, на телефоне — в нижней панели.', vs: [
+  {k: '', t: 'Ноутбук', sub: '300×66', st: stage(380, 130, `<div class="abs" style="left:40px;top:32px;width:300px;height:66px">${endPlate(300, 66, 18.5, 54)}</div>`)},
+  {k: '', t: 'Телефон', sub: 'в нижней панели, 260×56', st: stage(320, 130, `<div class="abs" style="left:30px;top:37px;width:260px;height:56px">${endPlate(260, 56, 15.5, 44)}</div>`)},
+]});
+
+SEC.push({h: 'Кнопки на планшете', why: 'Остаются бумажными, как сейчас. «Меч Тритона» получает новый знак: золотой трезубец с зазубренными остриями, литой муфтой и бирюзовым камнем, древко в оплётке, у основания — гребешок волны.', vs: [
+  {k: '', t: 'На планшете', sub: 'в натуральную величину', st: stage(380, 96, `<div class="abs" style="inset:10px;border-radius:5px;background:radial-gradient(ellipse at 30% 20%,#f8f0de,#efe2c6 85%)"></div><div class="abs" style="left:26px;top:31px;display:flex;gap:10px">${cmdPlain()}${cmdPlain('Меч Тритона', TRIDENT_D(22))}</div>`)},
+  {k: '', t: 'Трезубец крупно', sub: '×6', st: stage(200, 170, `<div class="abs" style="left:28px;top:13px">${TRIDENT_D(144)}</div>`)},
+]});
+
+/* round buttons with a Turk's head */
+const ringBtn = (k, big = 1) => { const S = 64 * big; return `<span style="position:relative;width:${S}px;height:${S}px;display:inline-block"><svg class="abs" style="left:0;top:0" width="${S}" height="${S}" viewBox="0 0 64 64"><circle cx="32" cy="33.6" r="29" fill="#000" opacity=".28"/>${turksHead(32, 32, 26, 2.6, 7, 3.4)}</svg>
+   <span class="ib abs" style="left:${11 * big}px;top:${11 * big}px;width:${42 * big}px;height:${42 * big}px;background:radial-gradient(circle at 35% 30%,#f2d98a,#c99a3a 45%,#8f6b20 80%);box-shadow:inset 0 0 0 1.5px #4a3208,inset 0 0 0 3px rgba(255,240,200,.35),inset 0 -3px 6px rgba(0,0,0,.25),0 2px 4px rgba(0,0,0,.45)">${big > 1 ? IC[k].replace(/width="\d+" height="\d+"/, 'width="40" height="40"') : IC[k]}</span></span>`; };
+SEC.push({h: 'Круглые кнопки: латунь в «турецком узле» (доработано)', why: 'Настоящий турецкий узел: три пряди переплетены «над-под» по кругу, как оплётка штурвала или колокольного шнура. Латунь внутри — с ободком и мягким бликом.', vs: [
+  {k: '', t: 'В игре', sub: '64 px', st: stage(280, 104, `<div class="abs" style="left:18px;top:20px;display:flex;gap:22px">${['gear', 'book', 'undo'].map(k => ringBtn(k)).join('')}</div>`)},
+  {k: '', t: 'Крупно', sub: '×3, чтобы видеть плетение', st: stage(240, 220, `<div class="abs" style="left:24px;top:14px">${ringBtn('gear', 3)}</div>`)},
+]});
+
+/* statuses */
+const STK = ['fire', 'mark', 'blockade', 'parley', 'voodoo', 'noReact', 'surfaced', 'under'];
+const chipH = (k, n = 1) => `<span style="height:26px;display:inline-flex;align-items:center;gap:5px;padding:0 10px 0 2px;border-radius:13px;background:linear-gradient(${ST3[k].bg[0]},${ST3[k].bg[1]});box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 1px 2px rgba(0,0,0,.35);color:#fbf3e2;font-size:12.5px;font-weight:800;white-space:nowrap">${stBadge(k, 22)}${ST3[k].lbl(n)}</span>`;
+SEC.push({h: 'Значки статусов', why: 'Как медальоны Легенд: круглая эмалевая бляха в тонкой латунной оправе, знак — гравировкой. Пожар — живое пламя с угольками; Чёрная метка — рваный клочок бумаги с кляксой; Блокада — цепь с замком; Переговоры — белый флаг на древке; Кукла вуду — тряпичная кукла с иглами; Без Реакций — щит, перечёркнутый красным; Всплыл — нос корабля выходит из воды; Под водой — мачты уходят вниз, пузыри.', vs: [
+  {k: '', t: 'Крупно', sub: '×3', st: stage(620, 214, `<div class="abs" style="left:18px;top:16px;display:grid;grid-template-columns:repeat(4,140px);gap:12px 10px">${STK.map(k => `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#efe3c8;font-size:12px;font-weight:700">${stBadge(k, 66)}<span>${ST3[k].lbl(1).replace(' ×1', '').replace(' +1', '')}</span></div>`).join('')}</div>`)},
+  {k: '', t: 'На планшете', sub: 'ярлыки в натуральную величину', st: stage(420, 214, `<div class="abs" style="left:16px;top:18px;right:16px;display:flex;flex-wrap:wrap;gap:8px">${STK.map((k, i) => chipH(k, i ? 1 : 2)).join('')}</div>
+     <div class="abs" style="left:16px;bottom:16px;display:flex;gap:5px;align-items:center;color:#efe3c8;font-size:12px">три и больше — только бляхи:${['mark', 'blockade', 'noReact'].map(k => stBadge(k, 24)).join('')}</div>`)},
+]});
+
+/* the gun */
+SEC.push({h: 'Пушка (доработано)', why: 'Та же форма, больше железа и дерева: блики и выпуклые кольца ствола, запальное отверстие, цапфа под накладкой на болтах, дубовый станок с волокнами и тенью от ствола, рымы для талей, клин с рукоятью, оси и траки с кольцами годовых слоёв, брюк-канат через винград, мягкая тень под орудием.', vs: [
+  {k: '', t: 'Орудие', sub: 'для анимации, 1:3', st: stage(440, 210, `<svg class="abs" style="left:16px;top:8px" width="408" height="200" viewBox="0 -2 124 66">${gradDefs()}${defs2()}${cannon2()}</svg>`)},
+  {k: '', t: 'Было', sub: 'для сравнения', st: stage(300, 210, `<svg class="abs" style="left:14px;top:40px" width="272" height="136" viewBox="0 -2 124 64">${gradDefs()}${cannon()}</svg>`)},
+  {k: '', t: 'Значки', sub: 'кнопка «Залп», шкала «пушки»', st: stage(300, 210, `<div class="abs" style="left:20px;top:40px">${cmdPlain('Залп', smallGun(36, 19))}</div>
+     <div class="abs" style="left:20px;top:110px;display:flex;align-items:center;gap:6px;padding:8px 10px;background:#f4ead6;border-radius:4px"><span class="lbl" style="font-size:12.5px;color:#4a4036">пушки</span>${[1, 1, 0].map(a => `<span style="${a ? '' : 'opacity:.28;filter:grayscale(1)'}">${smallGun(32, 17)}</span>`).join('')}<span class="num">2</span></div>`)},
+]});
+
+/* volley from a port */
+SEC.push({h: 'Залп прямо с планшета', why: 'Основной — Б (значки пушек), А (порты) — по переключателю в настройках. Как это встроено: стреляет сам планшет того, кто даёт Залп, прежде чем ядро полетит через море. А — если шкала «пушки» станет бортом с портами: живые пушки бьют по очереди, дуло дёргается назад, внутри порта вспыхивает отсвет, дым уходит к цели, планшет вздрагивает. Б — то же, но со значками пушек, как сейчас: каждая пушка отскакивает с искрами и клубом дыма. Число выстрелов = число живых пушек. Дальше ядро летит к цели уже обычной анимацией Залпа.', vs: [
+  {k: 'А', t: 'Порты на планшете', sub: '«Месть», 2 пушки из 3', st: stage(520, 200, `<div class="sea" style="left:0;top:0;width:520px;height:110px"></div>${plank('R', 21, 52, {ports: true})}`, 'fire:ports')},
+  {k: 'Б', t: 'Значки пушек — основной', sub: 'конус пламени, кольцо, отдача, раскалённый ствол, дым, ядро', st: stage(520, 190, `<div class="sea" style="left:0;top:0;width:520px;height:110px"></div>${plank('R', 21, 52)}`, 'fire:icons')},
+]});
+
+SEC.push({h: 'Залп из порта — три анимации (наброски)', why: 'В игре стол виден сверху, поэтому борт корабля с портами там не виден. Эти анимации годятся, только если шкала «пушки» на планшете станет полосой борта с портами (раздел выше): тогда при Залпе стреляют именно эти порты (Б — по очереди, по числу пушек). А и В — сцены «сбоку» для стола не подходят; их можно оставить для заставки или экрана правил.', vs: [
+  {k: 'А', t: 'Порт крупно', sub: 'крышка на петлях, выкат, фитиль, вспышка, дым, отдача', st: stage(360, 200, '', 'anim:run')},
+  {k: 'Б', t: 'Бортовой залп', sub: 'шесть портов по очереди, дым сливается в стену', st: stage(520, 150, '', 'anim:broadside')},
+  {k: 'В', t: 'Орудийная палуба', sub: 'изнутри: выкат к порту, выстрел, откат на брюке', st: stage(400, 190, '', 'anim:deck')},
+]});
+
+/* the deck */
+function deck(W, H, seed = 7){ let r = seed; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280; const ph = 21; let s = '';
+  for(let y = 0, row = 0; y < H; y += ph, row++){ let x = -rnd() * 160; while(x < W){ const len = 150 + rnd() * 140, tone = 36 + rnd() * 14, hue = 26 + rnd() * 6;
+      s += `<rect x="${R1(x)}" y="${y}" width="${R1(len)}" height="${ph}" fill="hsl(${R1(hue)} 38% ${R1(tone * .62)}%)"/>`;
+      s += `<path d="M${R1(x)} ${y + 3} q${R1(len / 2)} ${R1(rnd() * 2 - 1)} ${R1(len)} 0 M${R1(x)} ${y + 9} q${R1(len / 2)} ${R1(rnd() * 2 - 1)} ${R1(len)} 0 M${R1(x)} ${y + 15} q${R1(len / 2)} ${R1(rnd() * 2 - 1)} ${R1(len)} 0" stroke="#000" stroke-opacity=".12" stroke-width=".6" fill="none"/>`;
+      s += `<rect x="${R1(x)}" y="${y}" width="${R1(len)}" height="1.2" fill="#fff" opacity=".05"/><rect x="${R1(x + len - 1.4)}" y="${y}" width="1.4" height="${ph}" fill="#0d0703"/>`;
+      s += [[4, 6], [4, 15], [len - 6, 6], [len - 6, 15]].map(([dx, dy]) => `<circle cx="${R1(x + dx)}" cy="${y + dy}" r="1.25" fill="#1a0f06"/><circle cx="${R1(x + dx - .3)}" cy="${y + dy - .3}" r=".5" fill="#8a6a46" opacity=".5"/>`).join('');
+      x += len; }
+    s += `<rect x="0" y="${y + ph - 1.6}" width="${W}" height="1.6" fill="#0a0603"/>`; }
+  return `<svg class="abs" style="left:0;top:0" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${s}<rect width="${W}" height="${H}" fill="url(#gVig)"/><defs><radialGradient id="gVig" cx=".5" cy=".4" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs></svg>`; }
+function handCards(){ const C = [['#8a2e1c', 'заряд', 'Ядра', '+1 урон', 'Этот Залп наносит +1 урон.'], ['#5b4a7a', 'приказ', 'Безумный план', '+2 карты, 1 в План', 'Возьмите 2 карты, затем 1 положите в План.'], ['#3e6b45', 'ремонт', 'Латаем паруса', '+2 Паруса', 'План: и ещё 1 Корпус.']];
+  return C.map((c, i) => `<div class="card" style="left:${170 + i * 112}px;top:${30 + Math.abs(i - 1) * 8}px;transform:rotate(${(i - 1) * 4}deg);box-shadow:0 0 0 2px #e0bd62,0 0 14px rgba(255,196,120,.5),0 8px 14px rgba(0,0,0,.5)"><div class="t" style="background:${c[0]}">${c[1]}<span>0</span></div><div class="n">${c[2]}</div><div class="e" style="color:${c[0]}">${c[3]}</div><div class="x">${c[4]}</div></div>`).join(''); }
+/* deck objects */
+const LANTERN = (id) => `<g>
+  <path d="M15 0 Q22 0 22 6" fill="none" stroke="#4a3208" stroke-width="1.6"/><path d="M15 0 Q22 0 22 6" fill="none" stroke="url(#gBrass)" stroke-width=".9"/>
+  <path d="M6 13 L15 4 L24 13 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".7"/><path d="M9 11 H21 M11 8.6 H19" stroke="#4a3208" stroke-width=".6"/><circle cx="15" cy="4" r="1.6" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".4"/>
+  <rect x="5" y="13" width="20" height="3" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".6"/>
+  <rect x="6.4" y="16" width="17.2" height="24" fill="url(#${id}g)"/><ellipse cx="15" cy="29" rx="7" ry="9" fill="url(#${id}f)" class="flick"/>
+  <path d="M15 22 C17 25 17.4 28 15.8 31 C15 32.2 14 32 13.6 30.8 C12.8 28.6 14 26.4 15 22 Z" fill="#fff4c2"/><path d="M15 26 C15.8 27.6 15.8 29.4 15 30.6 C14.4 29.6 14.4 27.8 15 26 Z" fill="#fff"/>
+  ${[6.4, 11, 15, 19, 23.6].map(x => `<path d="M${x} 16 V40" stroke="#4a3208" stroke-width="1.3"/><path d="M${x} 16 V40" stroke="url(#gBrass)" stroke-width=".6"/>`).join('')}
+  <path d="M6.4 24 H23.6 M6.4 32 H23.6" stroke="#4a3208" stroke-width=".8"/>
+  <path d="M8 18 V38" stroke="#fff" stroke-width="1.2" opacity=".35"/>
+  <path d="M4 40 H26 L24.4 45 H5.6 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".7"/><rect x="3" y="45" width="24" height="2.6" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".6"/>
+  <defs><linearGradient id="${id}g" x1="0" x2="1"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset=".5" stop-color="#fff0c0" stop-opacity=".75"/><stop offset="1" stop-color="#e8a040" stop-opacity=".55"/></linearGradient>
+    <radialGradient id="${id}f"><stop offset="0" stop-color="#fff6d0"/><stop offset=".5" stop-color="#ffc45a" stop-opacity=".8"/><stop offset="1" stop-color="#ff9a2e" stop-opacity="0"/></radialGradient></defs></g>`;
+const KEG = `<g><ellipse cx="14" cy="35.4" rx="12.4" ry="2.4" fill="#000" opacity=".4"/>
+  <path d="M3.4 6 Q1.2 19 3.4 32 Q14 35.4 24.6 32 Q26.8 19 24.6 6 Q14 3 3.4 6 Z" fill="url(#gOak)" stroke="#24140a" stroke-width=".8"/>
+  ${[7, 10.6, 14, 17.4, 21].map(x => `<path d="M${x} 4.6 Q${x + (x - 14) * .25} 19 ${x} 33.6" stroke="#3a2210" stroke-width=".6" fill="none" opacity=".7"/>`).join('')}
+  ${[9.4, 28.6].map(y => `<path d="M2.6 ${y} Q14 ${y + 2.8} 25.4 ${y}" stroke="#2b2f31" stroke-width="2.2" fill="none"/><path d="M2.8 ${y - .6} Q14 ${y + 2.2} 25.2 ${y - .6}" stroke="#9aa2a6" stroke-width=".5" fill="none" opacity=".7"/>`).join('')}
+  <ellipse cx="14" cy="5.6" rx="10.6" ry="2.4" fill="#7a4f28" stroke="#24140a" stroke-width=".6"/><circle cx="18" cy="5.4" r=".9" fill="#24140a"/>
+  <path d="M5 8 Q4 19 5 30" stroke="#f0c68c" stroke-width="1" fill="none" opacity=".35"/></g>`;
+function grating(w, h){ let s = `<rect x="-4" y="-4" width="${w + 8}" height="${h + 8}" rx="2" fill="#3a2414" stroke="#140a04" stroke-width="1"/><rect x="-4" y="-4" width="${w + 8}" height="2" fill="#7a5530" opacity=".7"/><rect width="${w}" height="${h}" fill="#0a0603"/>`;
+  for(let x = 0; x < w; x += 9) s += `<rect x="${x}" y="0" width="3.6" height="${h}" fill="#5e3e22"/><rect x="${x}" y="0" width="1" height="${h}" fill="#8a6038" opacity=".6"/>`;
+  for(let y = 0; y < h; y += 9) s += `<rect x="0" y="${y}" width="${w}" height="3.6" fill="#6a4628"/><rect x="0" y="${y}" width="${w}" height="1" fill="#9a7044" opacity=".55"/>`;
+  return s; }
+function coil(cx, cy, turns = 4.4, k = 1.5, w = 5.2){ let sp = ''; for(let a = 0; a < Math.PI * 2 * turns; a += .16){ const rr = 6 + a * k; sp += (sp ? 'L' : 'M') + R1(cx + Math.cos(a) * rr) + ' ' + R1(cy + Math.sin(a) * rr * .6); }
+  return `<ellipse cx="${cx - 6}" cy="${cy + 6}" rx="${R1(6 + turns * Math.PI * 2 * k + 6)}" ry="${R1((6 + turns * Math.PI * 2 * k) * .6 + 4)}" fill="#000" opacity=".38"/>${rope(sp, w, {c: ['#cdb07a', '#94703e', '#4e361a']})}`; }
+const balls = (x, y, r = 9) => `<ellipse cx="${x + 18 - 8}" cy="${y + 10}" rx="${r * 4.2}" ry="${r * .9}" fill="#000" opacity=".42"/>${[[0, 0], [2 * r, 0], [4 * r, 0], [r, -1.6 * r], [3 * r, -1.6 * r], [2 * r, -3.2 * r]].map(([dx, dy]) => `<circle cx="${x + dx}" cy="${y + dy}" r="${r}" fill="url(#gBall)" stroke="#0d0f10" stroke-width=".6"/><circle cx="${x + dx + r * .3}" cy="${y + dy - r * .35}" r="${r * .26}" fill="#ffd9a0" opacity=".45"/>`).join('')}`;
+function deckScene(W, H, L){ const id = U('dk');
+  return `<svg class="abs" style="left:0;top:0" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${gradDefs()}${defs2()}
+    <defs><radialGradient id="${id}l" cx="${L.lx / W}" cy="${L.ly / H}" r="${L.r / W}" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#ffb24a" stop-opacity=".55"/><stop offset=".45" stop-color="#ff9a30" stop-opacity=".18"/><stop offset="1" stop-color="#ff8a20" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${id}d" cx="${L.lx / W}" cy="${L.ly / H}" r="${(L.r * 1.6) / W}" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity=".62"/></radialGradient></defs>
+    <g>${deck(W, H).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>
+    ${L.grate ? `<g transform="translate(${L.grate[0]} ${L.grate[1]})">${grating(L.grate[2], L.grate[3])}</g>` : ''}
+    ${L.cannon ? `<g transform="translate(${L.cannon[0]} ${L.cannon[1]}) scale(${L.cannon[2]})">${cannon2()}</g>` : ''}
+    ${L.keg ? `<g transform="translate(${L.keg[0]} ${L.keg[1]}) scale(${L.keg[2]})">${KEG}</g>` : ''}
+    ${L.balls ? balls(...L.balls) : ''}
+    ${L.coil ? coil(...L.coil) : ''}
+    <rect width="${W}" height="${H}" fill="url(#${id}d)"/><rect width="${W}" height="${H}" fill="url(#${id}l)" style="mix-blend-mode:screen"/>
+    <ellipse cx="${L.lx}" cy="${L.ly + 30 * L.ls}" rx="${22 * L.ls}" ry="${5 * L.ls}" fill="#000" opacity=".45"/>
+    <g transform="translate(${L.lx - 15 * L.ls} ${L.ly - 18 * L.ls}) scale(${L.ls})">${LANTERN(id)}</g>
+    <circle cx="${L.lx}" cy="${L.ly}" r="${46 * L.ls}" fill="url(#gFlash)" opacity=".18" class="flick"/></svg>`; }
+const phoneCards = () => { const C = [['#5b4a7a', 'приказ', 'Ограбление банка', 'Порох врага — ваш', 'Заберите 1 Порох из Трюма противника.'], ['#5b4a7a', 'приказ', 'Безумный план', '+2 карты, 1 в План', 'Возьмите 2 карты, затем 1 положите в План.'], ['#8a2e1c', 'заряд', 'Ядра', '+1 урон', 'Этот Залп наносит +1 урон.']];
+  return C.map((c, i) => `<div class="card" style="width:112px;height:160px;left:${215 - 56 + (i - 1) * 84}px;top:${44 + Math.abs(i - 1) * 6}px;transform:rotate(${(i - 1) * 5}deg);z-index:${3 - Math.abs(i - 1)};box-shadow:0 0 0 2px #e0bd62,0 0 14px rgba(255,196,120,.5),0 8px 14px rgba(0,0,0,.6)"><div class="t" style="background:${c[0]}">${c[1]}<span>0</span></div><div class="n">${c[2]}</div><div class="e" style="color:${c[0]}">${c[3]}</div><div class="x">${c[4]}</div></div>`).join(''); };
+SEC.push({h: 'Фон под рукой: палуба или стол капитана', ctl: true, why: 'Переключатель (в игре — в ⚙). Палуба — без компаса, со светом фонаря. Стол капитана — наш прежний фон, теперь при свече: морская карта с проложенным курсом, циркуль, компас на кардане в шкатулке, чернильница с пером, подзорная труба, песочные часы, монеты.', vs: [
+  {k: 'А', t: 'Ноутбук', sub: 'полоса под рукой', st: stage(720, 230, `<div class="m-deck">${deckScene3(720, 230, {lx: 640, ly: 92, ls: 1.25, r: 260, cannon: [-14, 112, 1.25], balls: [150, 200, 8], keg: [586, 150, 1.15], coil: [690, 206, 2.8, 1.3, 4.4], grate: [250, -30, 220, 60]})}</div><div class="m-table">${captainTable(720, 230, {lx: 650, ly: 70, ls: 1.2, r: 280, chart: [8, 20, 230, 150, -4], div: [150, 60, 28], compass: [84, 152, 26, -6], ink: [610, 176, 1], spy: [440, 206, -4, 1.1], hour: [690, 168, .9], coins: [560, 70, 6]})}</div>` + handCards().replace(/left:(\d+)px/g, (m, x) => `left:${+x + 60}px`))},
+  {k: 'Б', t: 'Телефон', sub: '430 px, фон под рукой', st: stage(430, 260, `<div class="m-deck">${deckScene3(430, 260, {lx: 382, ly: 64, ls: 1, r: 220, cannon: [-56, 168, .95], balls: [14, 236, 7], keg: [372, 178, 1], coil: [86, 30, 3, 1.3, 4.2], grate: [150, -30, 140, 46]})}</div><div class="m-table">${captainTable(430, 260, {lx: 392, ly: 52, ls: 1, r: 220, chart: [-6, 6, 190, 130, -6], div: [70, 40, 20], compass: [40, 200, 20, 6], ink: [392, 214, .9], spy: [190, 246, -2, .9], coins: [330, 40, 4]})}</div>` + phoneCards())},
+]});
+
+
+/* ================= render ================= */
+const host = document.getElementById('secs');
+host.innerHTML = SEC.map((s, si) => `<h2>${s.h}</h2><p class="why">${s.why}</p>${s.ctl ? '<div class="dsw" role="group" aria-label="Фон под рукой"><button data-m="deck" aria-pressed="true">Палуба</button><button data-m="table" aria-pressed="false">Стол капитана</button></div>' : ''}<div class="row" ${s.ctl ? 'data-mode="deck"' : ''}>${s.vs.map((v, vi) => `<div class="v" data-sec="${si}" data-v="${vi}" style="width:${v.st.w}px"><div class="vl">${v.k ? `<b>${v.k}</b>` : ''}${v.t}<span>${v.sub}</span></div><div class="wrap" data-w="${v.st.w}" data-h="${v.st.h}"><div class="stage" style="width:${v.st.w}px;height:${v.st.h}px">${v.st.inner}</div></div></div>`).join('')}</div>`).join('');
+SEC.forEach((s, si) => s.vs.forEach((v, vi) => { const st = host.querySelector(`[data-sec="${si}"][data-v="${vi}"] .stage`); if(typeof v.st.after === 'function') st.insertAdjacentHTML('beforeend', v.st.after()); }));
+
+/* the live volleys */
+SEC.forEach((s, si) => s.vs.forEach((v, vi) => { if(typeof v.st.after === 'string' && v.st.after.startsWith('anim:')){ const st = host.querySelector(`[data-sec="${si}"][data-v="${vi}"] .stage`); VOLLEYS[v.st.after.slice(5)](st); }
+  if(typeof v.st.after === 'string' && v.st.after.startsWith('fire:')){ const st = host.querySelector(`[data-sec="${si}"][data-v="${vi}"] .stage`); st.dataset.g = 3; st.dataset.l = 2; requestAnimationFrame(() => plankFire(st, v.st.after.slice(5))); } }));
+/* the deck switch */
+document.querySelectorAll('.dsw button').forEach(b => b.addEventListener('click', () => { const row = b.closest('.dsw').nextElementSibling; row.dataset.mode = b.dataset.m; b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); }));
+
+function fit(){ document.querySelectorAll('.wrap').forEach(w => { const W = +w.dataset.w, k = Math.min(1, w.parentElement.parentElement.clientWidth / W); const st = w.firstElementChild; st.style.transform = k < 1 ? `scale(${k})` : ''; w.style.width = (W * k) + 'px'; w.style.height = (+w.dataset.h * k) + 'px'; w.parentElement.style.width = (W * k) + 'px'; }); }
+fit(); addEventListener('resize', fit);
+</script>
