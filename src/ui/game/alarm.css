@@ -114,10 +114,13 @@
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
 }
 
-/* the hand: the Reactions that can be played stand up with a gold frame, the others lie lower and duller */
+/* the hand: the Reactions that can be played stand up with a gold frame, the others lie lower, faded into the table
+   (A5Alarm.html: opacity .55, saturate(.4), ≈ 50 px under the Reactions); a pointer on them does not lift them */
 .hand.alarm .hand-cards > .hcard.al-dim {
-  filter: grayscale(0.55) brightness(0.82);
-  translate: 0 calc(var(--dy, 0px) + 16px);
+  opacity: 0.55;
+  filter: saturate(0.4);
+  translate: 0 calc(var(--dy, 0px) + 40px);
+  scale: 1;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
 }
 .hand.alarm .hand-cards > .hcard.al-ok {

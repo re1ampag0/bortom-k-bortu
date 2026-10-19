@@ -103,6 +103,35 @@ test.describe('V5: the plate on a phone (390×844)', () => {
   });
 });
 
+// V5: a ball the modifier took falls short; at its splash — the pill of that modifier. Frames go to
+// docs/screenshots/a5-windows/ (b-volley-miss-*), next to b-volley-ref-*.
+for (const { width, height } of [
+  { width: 1366, height: 660 },
+  { width: 390, height: 844 },
+]) {
+  test.describe(`V5: the pill of a miss (${width}×${height})`, () => {
+    test.use({ viewport: { width, height } });
+    for (const [id, text] of [
+      ['storm', 'Буря −1'],
+      ['diag', 'Диагональ −1'],
+    ]) {
+      test(`${id}: «${text}» at the splash`, async ({ page }) => {
+        await open(page, id);
+        const pill = page.locator('.fx-layer > .tag.mod', { hasText: text });
+        await expect(pill).toHaveCount(1, { timeout: 15_000 });
+        await page.waitForFunction((t) => Array.from(document.querySelectorAll('.fx-layer > .tag.mod')).some((e) => e.textContent === t && Number(getComputedStyle(e).opacity) > 0.95), text);
+        const box = (await pill.boundingBox())!;
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(width);
+        // beside the plate, not over it
+        const plate = (await page.locator('.fx-layer > .plate').boundingBox())!;
+        expect(box.x + box.width <= plate.x || box.x >= plate.x + plate.width || box.y + box.height <= plate.y || box.y >= plate.y + plate.height).toBe(true);
+        await page.screenshot({ path: `docs/screenshots/a5-windows/b-volley-miss-${id}-${width}x${height}.png` });
+      });
+    }
+  });
+}
+
 test.describe('a bot match (1366×660)', () => {
   test.use({ viewport: { width: 1366, height: 660 } });
 
