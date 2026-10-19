@@ -78,7 +78,10 @@ test.describe('laptop 1366×660', () => {
     await page.getByTestId('fire').click();
     const plate = page.getByTestId('reaction-wait');
     await expect(plate).toBeVisible();
-    // «Пауза» holds the bot: the plate stays for the check and the screenshot.
+    // The clip of the Volley is on screen first, and the status bar describes the clip; «Пауза» stops a clip in the
+    // middle. So the clip goes by (the bar then names the team that decides), and only then «Пауза» holds the bot: the
+    // plate stays for the check and the screenshot.
+    await expect(page.getByTestId('instruction')).toContainText('Компания (бот) решает', { timeout: 30_000 });
     await page.locator('[data-testid="pause-show"]:visible').click();
     const nick = data.ships.find((x) => x.code === target)!.nick;
     await expect(plate).toContainText(new RegExp(`Залп «Жемчужина» → «${nick}»: \\d+ по Корпусу\\. Компания решает, ответить ли Реакцией…`));
@@ -91,15 +94,37 @@ test.describe('laptop 1366×660', () => {
     await expect(plate).toBeHidden({ timeout: 30_000 });
   });
 
-  test('without «Подсказки» the Reaction window gives the full text, «what happens now» and the note', async ({ page }) => {
+  test('without «Подсказки» the Reaction window: «Тревога!», the Reaction chosen in the hand says what happens now, «i» gives the full card', async ({ page }) => {
     await duoReactionWindow(page);
     const panel = page.getByTestId('reaction-panel');
+    await expect(page.getByTestId('alarm')).toContainText('ТРЕВОГА!');
+    await expect(page.getByTestId('alarm')).toContainText('даёт Залп по «Индевору» — ответите Реакцией?');
     await expect(panel.getByTestId('reaction-memo')).toContainText('Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
-    const row = panel.locator('.reaction-opt').first();
-    const code = (await row.getAttribute('data-card'))!;
-    await expect(row.locator('.ro-text')).toHaveText(plain(cardByCode(data, code).text));
-    await expect(row.locator('.ro-effect')).toHaveText(/^Залп \d+ → \d+$/);
+    // The arrow and the pill are on the table; the strip of the outcome is under «Подсказки» only.
+    await expect(page.getByTestId('alarm-pill')).toContainText('по Корпусу');
+    await expect(page.locator('.hcard-strip.ok')).toHaveCount(0);
+    const card = page.locator('.hand .hcard.al-ok').first();
+    const code = (await card.getAttribute('data-card'))!;
+    await card.click();
+    await expect(panel.getByTestId('reaction-now')).toHaveText(/^Залп \d+ → \d+$/);
+    await expect(panel.getByTestId('play-reaction')).toHaveText(`Сыграть «${cardByCode(data, code).name}»`);
     await page.screenshot({ path: `${SHOTS}/laptop-reaction-window.png` });
+    await panel.getByTestId('reaction-info').click();
+    await expect(page.getByTestId('card-detail')).toContainText(plain(cardByCode(data, code).text));
+    await page.getByTestId('card-detail').getByRole('button', { name: 'Закрыть' }).click();
+  });
+
+  test('«Свернуть, посмотреть стол» lowers the hand and hides «Пропустить»; «Тревога!», the arrow and the frame stay; «Вернуться» brings them back', async ({ page }) => {
+    await duoReactionWindow(page);
+    await expect(page.getByTestId('skip-reaction')).toBeVisible();
+    await page.getByTestId('alarm-collapse').click();
+    await expect(page.getByTestId('skip-reaction')).toHaveCount(0);
+    await expect(page.getByTestId('alarm')).toBeVisible();
+    await expect(page.getByTestId('alarm-arrow')).toBeVisible();
+    await expect(page.getByTestId('alarm-sabres-И')).toBeVisible();
+    await page.getByTestId('alarm-expand').click();
+    await expect(page.getByTestId('skip-reaction')).toBeVisible();
+    await expect(page.getByTestId('alarm-collapse')).toBeVisible();
   });
 
   test('«✓ готов» after «Ход окончен»; «Быстрый конец хода» makes the countdown 1 s', async ({ page }) => {
@@ -135,21 +160,17 @@ test.describe('laptop 1366×660', () => {
 test.describe('phone 430×932', () => {
   test.use({ viewport: { width: 430, height: 932 } });
 
-  test('the Reaction window: text folded to 2 lines with «Ещё», «i» opens the card and keeps the choice, «Сыграть» from it plays', async ({ page }) => {
+  test('the Reaction window: a sheet with the Reactions as cards, a press chooses, «i» opens the card and keeps the choice, «Сыграть» from it plays', async ({ page }) => {
     await duoReactionWindow(page);
     const panel = page.getByTestId('reaction-panel');
+    await expect(page.getByTestId('alarm')).toContainText('ТРЕВОГА!');
     await expect(panel.getByTestId('reaction-memo')).toBeVisible();
-    const row = panel.locator('.reaction-opt').first();
+    const row = panel.locator('.as-card').first();
     const code = (await row.getAttribute('data-card'))!;
     const name = cardByCode(data, code).name;
     await expect(row.locator('.ro-effect')).toContainText('Залп');
-    // «Ещё» unfolds the text, «Свернуть» folds it back.
-    await row.locator('.ro-more').click();
-    await expect(row).toHaveClass(/open/);
-    await row.locator('.ro-more').click();
-    await expect(row).not.toHaveClass(/open/);
-    // A press on the row chooses the Reaction.
-    await row.click();
+    // A press on the card chooses the Reaction.
+    await row.locator('.hcard').click();
     await expect(page.locator('[data-testid="play-reaction"]:visible')).toHaveText(`Сыграть «${name}»`);
     await page.screenshot({ path: `${SHOTS}/phone-reaction-window.png` });
     // «i» — the card in full; closing it brings back the window with the choice kept.
@@ -162,7 +183,7 @@ test.describe('phone 430×932', () => {
     // «Сыграть» in the card plays the Reaction, as the button of the window does.
     await row.getByTestId('reaction-info').click();
     await page.getByTestId('detail-play').click();
-    await expect(page.locator(`.reaction-opt[data-card="${code}"]`)).toHaveCount(0);
+    await expect(page.locator(`.as-card[data-card="${code}"]`)).toHaveCount(0);
     // Seed 1: the window «после Залпа» opens next (another Reaction) — still the first window: the note stays.
     if (await page.getByTestId('reaction-panel').isVisible()) {
       await expect(page.getByTestId('reaction-memo')).toBeVisible();
@@ -172,6 +193,18 @@ test.describe('phone 430×932', () => {
     await page.getByTestId('curtain-ready').click();
     await page.getByRole('button', { name: 'Журнал', exact: true }).last().click();
     await expect(page.getByTestId('log-sheet')).toContainText(`«${name}»`);
+  });
+
+  test('the sheet goes down by «Свернуть» (the table is whole, no sideways scroll) and comes back', async ({ page }) => {
+    await duoReactionWindow(page);
+    const wide = () => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    expect(await wide()).toBe(false);
+    await page.getByTestId('alarm-collapse').click();
+    await expect(page.getByTestId('skip-reaction')).toHaveCount(0);
+    await expect(page.getByTestId('alarm-expand')).toBeVisible();
+    expect(await wide()).toBe(false);
+    await page.getByTestId('alarm-expand').click();
+    await expect(page.getByTestId('skip-reaction')).toBeVisible();
   });
 });
 

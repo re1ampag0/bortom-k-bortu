@@ -5,7 +5,8 @@ import { displayFrom } from '../src/ui/game/fx/display';
 import type { FxKind } from '../src/ui/game/fx/planFx';
 import type { FxCtx } from '../src/ui/game/fx/primitives';
 import { planItem, plannerFor } from '../src/ui/game/fx/queue';
-import { plateHTML, VOLLEY_SCENE } from '../src/ui/game/fx/volley';
+import { dropPlates, scar, scarSpan } from '../src/ui/game/fx/scars';
+import { plateHTML, termRows, VOLLEY_SCENE } from '../src/ui/game/fx/volley';
 import { playGame, SIDES } from './fx-games';
 import { data, turnOf } from './helpers';
 
@@ -74,6 +75,34 @@ describe('the clips of the Volley', () => {
     const moved = plateHTML(ctx, { shooter: 'Ж', declared: 'И', target: 'Г', track: 'sails', damage: 1, was: 2, terms: null });
     expect(moved).toContain('<s>«Индевор»</s> <b>«Голландец»</b>');
     expect(moved).toContain('<s>2</s>1 по Парусам');
+  });
+
+  it('V5: the line says «напротив» or «по диагонали»; the pluses and the minuses carry their own classes, the Guns are a plain number', () => {
+    const ctx = ctxOf(null, null, []);
+    const base = { shooter: 'Ж', target: 'Г', track: 'hull' as const, damage: 1 };
+    expect(plateHTML(ctx, { ...base, diagonal: false })).toContain(', напротив');
+    expect(plateHTML(ctx, { ...base, diagonal: true })).toContain(', по диагонали');
+    const rows = termRows(ctx, [
+      { what: 'Пушки', n: 2, src: { kind: 'guns' } },
+      { what: 'Ядра', n: 1, src: { kind: 'charge', card: null } },
+      { what: 'диагональ', n: -1, src: { kind: 'diag' } },
+      { what: 'Буря', n: -1, src: { kind: 'sea', card: 'x' } },
+    ]);
+    expect(rows).toContain('<span class=" ">2</span>');
+    expect(rows).toContain('<span class="pos ">+1</span>');
+    expect(rows).toContain('<span class="">Диагональ</span><span class="neg ">−1</span>');
+    expect(rows).toContain('<span class="">Буря</span><span class="neg ">−1</span>');
+  });
+
+  it('V5: the plate stays ≈ 2 s after the clip (half of it in «простые»), a press drops it at once, and it is not a trace of the six', () => {
+    expect(scarSpan('plate', true)).toEqual([2000, 450]);
+    expect(scarSpan('plate', false)).toEqual([1000, 225]);
+    const plates = Array.from({ length: 8 }, () => ({ dataset: {} as Record<string, string>, style: {} as Record<string, string>, isConnected: true, removed: false, remove() { this.removed = true; } }));
+    for (const p of plates) scar(p as never, 'plate');
+    // eight plates do not push each other out (SCAR_MAX is for the traces)
+    expect(plates.every((p) => !p.dataset.gone)).toBe(true);
+    dropPlates();
+    expect(plates.every((p) => p.removed)).toBe(true);
   });
 
   it('window: with a panel of the game in the middle the window of the reference is not drawn, the hint stays', async () => {

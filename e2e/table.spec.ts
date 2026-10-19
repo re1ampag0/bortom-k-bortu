@@ -158,7 +158,7 @@ async function keyStates(page: Page, name: string) {
   // Behind the curtain the animation layer is off: no plate and no cannonball of the Volley over the Reaction window.
   await expect(page.locator('.fx-layer .plate')).toHaveCount(0);
   await expect(page.locator('.fx-layer .ball')).toHaveCount(0);
-  const reactionCard = page.locator('.hand .hcard.reaction:not(.off)').first();
+  const reactionCard = name === 'laptop' ? page.locator('.hand .hcard.reaction:not(.off)').first() : page.locator('.as-card .hcard:not(.off)').first();
   const clickable = await reactionCard.evaluate((node) => {
     const box = node.getBoundingClientRect();
     const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
@@ -174,12 +174,16 @@ async function keyStates(page: Page, name: string) {
   }
   // «Подсказки» are off by default: the incoming damage is shown, and (P8) the window still says what a Reaction
   // does now and gives its full text.
-  await expect(page.getByTestId('reaction-panel').locator('.panel-head')).toContainText('по Корпусу');
-  await expect(page.getByTestId('reaction-panel').locator('.ro-effect').first()).toContainText('Залп');
-  await expect(page.getByTestId('reaction-panel').locator('.ro-text').first()).not.toBeEmpty();
-  if (name !== 'laptop') {
-    // Phone: the Reaction is chosen in the hand, the panel in the middle plays it.
-    await page.locator('.hand .hcard.reaction:not(.off)').first().click();
+  await expect(page.getByTestId('alarm-pill')).toContainText('по Корпусу');
+  if (name === 'laptop') {
+    // The Reaction is chosen in the hand, the buttons under the log play it and say what happens now.
+    await reactionCard.click();
+    await expect(page.getByTestId('reaction-now')).toContainText('Залп');
+    await expect(byId(page, 'play-reaction')).toContainText('Сыграть «');
+  } else {
+    // Phone: the Reactions are the cards of the sheet; a press chooses, the button of the sheet plays.
+    await expect(page.locator('.as-card .ro-effect').first()).toContainText('Залп');
+    await reactionCard.click();
     await expect(byId(page, 'play-reaction')).toContainText('Сыграть «');
   }
   await expectFits(page);
@@ -296,7 +300,7 @@ test.describe('«Ход окончен» in 3 s; «4 → 2» with «Подска
     await page.getByTestId('plate-И').click();
     await page.getByTestId('fire').click();
     await page.getByTestId('curtain-ready').click();
-    await expect(page.getByTestId('reaction-panel').locator('.ro-effect').first()).toContainText('→');
+    await expect(page.locator('.hcard-strip.ok').first()).toContainText('→');
   });
 });
 

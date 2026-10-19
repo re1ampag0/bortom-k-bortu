@@ -132,6 +132,14 @@ export function CostBadge({ c }: { c: CardInstance }) {
   );
 }
 
+/** «Тревога!» (U2): a Reaction that can be played now (`ok`, with the green strip only under «Подсказки»), one that cannot
+ *  (`why`: the reason on the grey strip), the other cards are dimmed (`dim`). */
+export interface AlarmCard {
+  kind: 'ok' | 'no' | 'dim';
+  strip?: { top: string; bottom: string };
+  why?: string;
+}
+
 export function HandCard({
   data,
   code,
@@ -143,6 +151,7 @@ export function HandCard({
   style,
   lifted,
   liftKey,
+  alarm,
 }: {
   data: GameData;
   code: string;
@@ -156,6 +165,7 @@ export function HandCard({
   /** A phone: the card is lifted by the first tap. */
   lifted?: boolean;
   liftKey?: string;
+  alarm?: AlarmCard;
 }) {
   const textRef = useWholeLines();
   if (code === HIDDEN) {
@@ -164,7 +174,7 @@ export function HandCard({
   const c = cardByCode(data, code);
   return (
     <button
-      className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''}`}
+      className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''} ${alarm ? `al-${alarm.kind}` : ''}`}
       style={style}
       data-lift={liftKey}
       onClick={onClick}
@@ -180,6 +190,18 @@ export function HandCard({
       <span className="hcard-name">{c.name}</span>
       <span className="hcard-big">{note ?? c.big}</span>
       <span className="hcard-text" ref={textRef}>{c.text.replace(/<[^>]+>/g, ' ')}</span>
+      {alarm?.kind === 'ok' && alarm.strip && (
+        <span className="hcard-strip ok" data-testid="hcard-strip">
+          <b>{alarm.strip.top}</b>
+          {alarm.strip.bottom && <i>{alarm.strip.bottom}</i>}
+        </span>
+      )}
+      {alarm?.kind === 'no' && (
+        <span className="hcard-strip no" data-testid="hcard-strip">
+          <b>нельзя</b>
+          <i>{alarm.why}</i>
+        </span>
+      )}
     </button>
   );
 }
@@ -205,6 +227,8 @@ export function Hand({
   onDiscard,
   label,
   note,
+  alarmOf,
+  folded = false,
 }: {
   s: GameState;
   data: GameData;
@@ -221,6 +245,10 @@ export function Hand({
   label: string;
   /** A line under the head: «Вы капитан на борту…». */
   note?: string;
+  /** «Тревога!»: how each card looks while the Reaction window is open (null — the window is closed). */
+  alarmOf?: ((seat: string, code: string) => AlarmCard | null) | null;
+  /** «Свернуть, посмотреть стол»: the hand goes down. */
+  folded?: boolean;
 }) {
   const holder = s.ships[seat];
   const n = holder.hand.length + holder.plans.length;
@@ -256,6 +284,7 @@ export function Hand({
         code={code}
         plan={plan}
         off={offOf(seat, code)}
+        alarm={alarmOf?.(seat, code) ?? undefined}
         chosen={chosen === code}
         note={noteOf(code)}
         onClick={press}
@@ -266,7 +295,7 @@ export function Hand({
     );
   };
   return (
-    <div className="hand" data-testid="hand">
+    <div className={`hand ${alarmOf ? 'alarm' : ''} ${alarmOf && folded ? 'folded' : ''}`} data-testid="hand">
       <div className="hand-head">
         {tabs.length > 1 ? (
           <div className="tabs" role="tablist">

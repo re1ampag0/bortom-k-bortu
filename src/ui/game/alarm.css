@@ -1,0 +1,617 @@
+/* ═══════════ U2 — «Тревога!» (docs/mockups/a5/A5Alarm.html, A5Phone.html frame 4). The Reaction window: the bar at the top, the
+   arrow and the pill over the sea, the cards of the hand (the Reactions up, the rest down), «ПРОПУСТИТЬ» in the place of
+   «Ход окончен»; a phone: a sheet from below. Durations come from fx/timing.ts (T.ui) through --alarm-in and --bell. ═══════════ */
+
+/* the bar: a bordeaux plate with a brass rim; it stands over the top edge of the sea like in the mockup */
+.game.alarm-open .status {
+  position: relative;
+  z-index: 8;
+}
+.status-text.alarm {
+  position: relative;
+  width: min(540px, 100%);
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.alarm-bar {
+  position: absolute;
+  inset: -4px 0 auto 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+  padding: 7px 16px;
+  text-align: left;
+  background: linear-gradient(#a8382c, #7e2219);
+  box-shadow:
+    inset 0 0 0 2px #e0bd62,
+    inset 0 0 0 4px #7e2219,
+    inset 0 0 0 5px #e0bd62,
+    0 8px 18px rgba(0, 0, 0, 0.55);
+  color: #f6e7c6;
+  animation: alarm-in var(--alarm-in, 250ms) ease-out both;
+}
+.alarm-bell {
+  flex: none;
+  display: inline-flex;
+  transform-origin: 50% 12%;
+  animation: alarm-bell var(--bell, 600ms) ease-in-out var(--alarm-in, 250ms) both;
+}
+.alarm-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+.alarm-title {
+  font-family: var(--font-num);
+  font-size: 22px;
+  letter-spacing: 0.18em;
+}
+.alarm-line {
+  font-family: var(--font-ui, 'Alegreya Sans', 'Alegreya Sans', sans-serif);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.2;
+}
+@keyframes alarm-in {
+  from {
+    transform: translateY(-120%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes alarm-bell {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  20% {
+    rotate: 18deg;
+  }
+  40% {
+    rotate: -15deg;
+  }
+  60% {
+    rotate: 10deg;
+  }
+  80% {
+    rotate: -5deg;
+  }
+}
+
+/* the arrow from the attacker to the target, the pill with the damage */
+.alarm-arrow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* the target: «−4» at the track, the cells that go are ringed (only under «Подсказки») */
+.track .al-loss {
+  flex: none;
+  margin-left: 6px;
+  padding: 0 8px;
+  border-radius: 11px;
+  background: #a3271d;
+  border: 1.5px solid #f4ead6;
+  color: #fff;
+  font-family: var(--font-num);
+  font-size: 13px;
+  line-height: 18px;
+}
+.cells i.doomed {
+  outline: 2px solid #e0392b;
+  outline-offset: -1px;
+  border-radius: 2px;
+}
+.plank.alarmed .target-seal {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+
+/* the hand: the Reactions that can be played stand up with a gold frame, the others lie lower and duller */
+.hand.alarm .hand-cards > .hcard.al-dim {
+  filter: grayscale(0.55) brightness(0.82);
+  translate: 0 calc(var(--dy, 0px) + 16px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+}
+.hand.alarm .hand-cards > .hcard.al-ok {
+  z-index: 2;
+  translate: 0 calc(var(--dy, 0px) - 22px);
+  box-shadow:
+    0 0 0 2.5px #e9b44c,
+    0 0 18px rgba(233, 180, 76, 0.6),
+    0 12px 18px rgba(0, 0, 0, 0.6);
+}
+.hand.alarm .hand-cards > .hcard.al-no {
+  z-index: 1;
+  translate: 0 calc(var(--dy, 0px) - 10px);
+}
+.hand.alarm .hand-cards > .hcard.al-ok:hover,
+.hand.alarm .hand-cards > .hcard.al-ok:focus-visible {
+  translate: 0 -40px;
+}
+.hand.alarm .hand-cards > .hcard.al-ok.chosen {
+  box-shadow:
+    0 0 0 3px #ffd36b,
+    0 0 24px rgba(255, 211, 107, 0.85),
+    0 12px 18px rgba(0, 0, 0, 0.6);
+}
+.hcard-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  padding: 3px 6px 4px;
+  line-height: 1.05;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+.hcard-strip.ok {
+  background: #2f6b4f;
+}
+.hcard-strip.no {
+  background: #6b6157;
+}
+.hcard-strip b {
+  display: block;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 15px;
+}
+.hcard-strip i {
+  display: block;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 11px;
+  opacity: 0.92;
+}
+/* «Свернуть, посмотреть стол»: the hand goes down */
+.hand.alarm .hand-cards {
+  transition: translate 0.25s ease-in;
+}
+.hand.alarm.folded .hand-cards {
+  translate: 0 230px;
+}
+.hand.alarm.folded .hand-cards > .hcard {
+  pointer-events: none;
+}
+
+/* the buttons in the place of «Ход окончен»: the one who plays, the fuse, «ПРОПУСТИТЬ», «Свернуть» */
+.alarm-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  animation: alarm-up var(--alarm-in, 250ms) ease-out both;
+}
+@keyframes alarm-up {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+  to {
+    opacity: 1;
+    translate: none;
+  }
+}
+.alarm-actions .reaction-memo {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 2px;
+  background: #efe3c8;
+  border-left: 4px solid var(--reaction);
+  font-size: 12.5px;
+  line-height: 1.25;
+  color: #3d342b;
+}
+.alarm-pick {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  align-items: center;
+}
+.alarm-play,
+.alarm-skip,
+.alarm-back {
+  border: 0;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-family: var(--font-num);
+  font-weight: 700;
+}
+.alarm-play {
+  min-height: 48px;
+  border-radius: 3px;
+  background: linear-gradient(#c8402f, #a3271d);
+  color: #f8ecd4;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  box-shadow:
+    inset 0 0 0 2px #e0bd62,
+    inset 0 0 0 4px #8e2b22,
+    0 4px 10px rgba(0, 0, 0, 0.5);
+}
+.alarm-play:hover {
+  filter: brightness(1.08);
+}
+.alarm-info {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid #e0bd62;
+  background: #efe3c8;
+  color: #3d342b;
+  font-family: var(--font-num);
+  font-weight: 700;
+  cursor: pointer;
+}
+.alarm-now {
+  grid-column: 1 / -1;
+  font-size: 12.5px;
+  color: #efe3c8;
+  text-align: right;
+}
+.alarm-skip {
+  min-height: 62px;
+  border-radius: 4px;
+  background: linear-gradient(#fbf5e7, #e9dbbd);
+  color: #2a2521;
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  box-shadow:
+    inset 0 0 0 2px #8f6b20,
+    inset 0 0 0 5px #fbf5e7,
+    inset 0 0 0 6px #b5872f,
+    0 6px 12px rgba(0, 0, 0, 0.5);
+}
+.alarm-skip:hover {
+  filter: brightness(1.04);
+}
+.alarm-back {
+  min-height: 48px;
+  border-radius: 4px;
+  background: linear-gradient(#fbf5e7, #e9dbbd);
+  color: #2a2521;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  box-shadow:
+    inset 0 0 0 2px #8f6b20,
+    inset 0 0 0 4px #fbf5e7,
+    0 4px 10px rgba(0, 0, 0, 0.5);
+}
+.alarm-fold {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 15px;
+  background: rgba(244, 234, 214, 0.92);
+  font-family: var(--font-ui, 'Alegreya Sans', 'Alegreya Sans', sans-serif);
+  font-weight: 800;
+  font-size: 13px;
+  color: #2a2521;
+  cursor: pointer;
+}
+.hand-actions.alarm-mode .ally-ready {
+  display: none;
+}
+
+/* the fuse over «ПРОПУСТИТЬ»: a real timer only; the length is the time left */
+.alarm-fuse {
+  position: relative;
+  height: 18px;
+}
+.alarm-fuse .wick,
+.alarm-fuse .burnt {
+  position: absolute;
+  top: 7px;
+  height: 3px;
+  border-radius: 2px;
+}
+.alarm-fuse .wick {
+  left: 0;
+  width: calc(var(--left, 1) * 100%);
+  background: repeating-linear-gradient(90deg, #c9a77a 0 3px, transparent 3px 6px);
+}
+.alarm-fuse .burnt {
+  right: 0;
+  width: calc((1 - var(--left, 1)) * 100%);
+  background: #3a2a1a;
+  opacity: 0.35;
+}
+.alarm-fuse .spark {
+  position: absolute;
+  top: 0;
+  left: calc(var(--left, 1) * 100% - 9px);
+  animation: alarm-spark 0.5s ease-in-out infinite alternate;
+}
+@keyframes alarm-spark {
+  from {
+    scale: 0.85;
+    opacity: 0.8;
+  }
+  to {
+    scale: 1.1;
+    opacity: 1;
+  }
+}
+
+/* a phone: the bar replaces the top line, the sheet is an oak deck with a brass edge, with the Reactions only */
+@media (max-width: 700px) {
+  .status-text.alarm {
+    width: auto;
+    justify-self: stretch;
+  }
+  .alarm-bar {
+    position: static;
+    padding: 5px 10px;
+    gap: 10px;
+  }
+  .alarm-title {
+    font-size: 18px;
+  }
+  .alarm-line {
+    font-size: 12.5px;
+  }
+  /* the sheet sits in the place of the hand and the bottom bar; the table above shrinks to stay whole (the hand row
+     keeps the room, the sea gives way) */
+  .game.alarm-open:not(.alarm-folded) {
+    --alarm-h: clamp(236px, 36vh, 340px);
+  }
+  .game.alarm-open:not(.alarm-folded) .hand-row {
+    min-height: calc(var(--alarm-h) - 61px);
+  }
+  .dock.sheet-dock:has(> .alarm-sheet) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: auto;
+    z-index: 30;
+  }
+  .game.alarm-open:not(.alarm-folded) .dock.sheet-dock:has(> .alarm-sheet) {
+    height: var(--alarm-h);
+  }
+  .dock.sheet-dock .panel.alarm-sheet {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+    border: 0;
+    border-top: 3px solid #c69a3c;
+    border-radius: 14px 14px 0 0;
+    background:
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0 1px, transparent 1px 22px),
+      linear-gradient(#4a3524, #3a2a1c);
+    color: #efe3c8;
+    box-shadow:
+      0 -10px 24px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 230, 170, 0.35);
+    animation: alarm-up var(--alarm-in, 250ms) ease-out both;
+  }
+  .alarm-sheet.folded {
+    padding-top: 6px;
+  }
+  .as-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-num);
+    font-weight: 700;
+  }
+  .as-title {
+    padding: 4px 12px;
+    border-radius: 3px;
+    background: linear-gradient(#e0bd62, #8f6b20);
+    color: #22180c;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .as-count {
+    font-family: var(--font-ui, 'Alegreya Sans', 'Alegreya Sans', sans-serif);
+    font-size: 12px;
+    color: #d8c9a8;
+  }
+  .as-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.28);
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .as-powder {
+    color: #e0bd62;
+  }
+  .alarm-sheet .reaction-memo {
+    margin: 0;
+    padding: 5px 8px;
+    border-radius: 2px;
+    background: #efe3c8;
+    border-left: 4px solid var(--reaction);
+    font-size: 12px;
+    color: #3d342b;
+  }
+  .as-cards {
+    flex: none;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    padding: 10px 4px 2px;
+    overflow: visible;
+  }
+  .as-card {
+    position: relative;
+    flex: none;
+    width: 86px;
+  }
+  .as-card .hcard {
+    width: 86px;
+    height: 110px;
+    rotate: none;
+    translate: none;
+  }
+  .as-card .hcard:not(.off) {
+    box-shadow:
+      0 0 0 2px #e0bd62,
+      0 6px 12px rgba(0, 0, 0, 0.45);
+  }
+  .as-card.on .hcard {
+    box-shadow:
+      0 0 0 3px #ffd36b,
+      0 0 20px rgba(255, 211, 107, 0.8),
+      0 8px 14px rgba(0, 0, 0, 0.5);
+    translate: 0 -6px;
+  }
+  .as-card .hcard .hcard-text {
+    display: none;
+  }
+  .as-card .info {
+    position: absolute;
+    top: 20px;
+    right: -9px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    font-size: 12px;
+    z-index: 2;
+    border-radius: 50%;
+    border: 1.5px solid #e0bd62;
+    background: #efe3c8;
+    color: #3d342b;
+    font-family: var(--font-num);
+    font-weight: 700;
+  }
+  .as-now {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    text-align: center;
+    color: #efe3c8;
+  }
+  .alarm-sheet .alarm-skip {
+    flex: none;
+    min-height: 52px;
+  }
+  .alarm-sheet .as-head,
+  .alarm-sheet .reaction-memo,
+  .alarm-sheet .alarm-play,
+  .alarm-sheet .alarm-fold,
+  .alarm-sheet .alarm-fuse {
+    flex: none;
+  }
+  .as-card .hcard-strip {
+    bottom: 6px;
+    padding: 2px 3px 3px;
+  }
+  .as-card .hcard-strip b {
+    font-size: 13px;
+  }
+  .as-card .hcard-strip i {
+    font-size: 9.5px;
+  }
+  .alarm-sheet .alarm-fold {
+    align-self: center;
+    background: none;
+    color: #efe3c8;
+  }
+}
+
+/* «простые спецэффекты» and reduced motion: the bar and the buttons are just there, the bell stands still */
+.fx-simple .alarm-bar,
+.fx-simple .alarm-bell,
+.fx-simple .alarm-actions,
+.fx-simple .alarm-sheet,
+.fx-simple .alarm-fuse .spark,
+.fx-simple .hand.alarm .hand-cards {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .alarm-bar,
+  .alarm-bell,
+  .alarm-actions,
+  .alarm-sheet,
+  .alarm-fuse .spark,
+  .hand.alarm .hand-cards {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* the strip lies over the foot of the card: the text of the card keeps above it */
+.hcard:has(.hcard-strip) .hcard-text {
+  margin-bottom: 44px;
+}
+@media (max-width: 700px) {
+  .as-card .hcard:has(.hcard-strip) .hcard-big {
+    display: none;
+  }
+}
+
+/* a phone: the middle (the note, the cards) scrolls, the buttons never leave the sheet */
+@media (max-width: 700px) {
+  .as-mid {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-top: 8px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .as-btns {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .as-btns .alarm-play {
+    min-height: 44px;
+  }
+}
+/* a low screen: the head goes, «Сыграть» and «Пропустить» stand side by side */
+@media (max-width: 700px) and (max-height: 760px) {
+  .alarm-sheet .as-head {
+    display: none;
+  }
+  .as-btns {
+    flex-direction: row;
+  }
+  .alarm-sheet .as-btns > * {
+    flex: 1 1 0;
+  }
+  .as-btns .alarm-play {
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    padding: 0 6px;
+  }
+  .as-btns .alarm-skip {
+    font-size: 16px;
+    letter-spacing: 0.08em;
+  }
+}
+@media (max-width: 700px) and (max-height: 700px) {
+  .alarm-sheet .reaction-memo {
+    display: none;
+  }
+}
