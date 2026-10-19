@@ -108,8 +108,12 @@ test.describe('laptop 1366×660', () => {
     await endTurn(page);
     const ending = page.getByTestId('ending');
     await expect(ending).toContainText('через 3 с');
-    await expect(page.getByTestId('ready-Ж')).toHaveText('✓ готов');
-    await expect(page.getByTestId('ready-М')).toHaveText('✓ готов');
+    // «✓ готов»: the tick is an SVG icon now (A5), the word stays text.
+    for (const code of ['Ж', 'М']) {
+      const ready = page.getByTestId(`ready-${code}`);
+      await expect(ready).toHaveText('готов');
+      await expect(ready.locator('.tick svg')).toBeVisible();
+    }
     await expect(page.locator('[data-testid^="ready-"]')).toHaveCount(2);
     await page.screenshot({ path: `${SHOTS}/laptop-ready.png` });
     await page.getByTestId('ending-cancel').click();
