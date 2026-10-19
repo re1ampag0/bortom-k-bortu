@@ -45,6 +45,8 @@ export const T = {
     splash: 1700,
     /** the first ball that falls short skips off the water: the hop to the second splash */
     skip: 380,
+    /** the breath of powder smoke over the planks: gone at once, so it covers a plank no longer than the e2e allows (800 ms) */
+    smokeOver: 700,
     /** after the last ball: the smoke rolls, the marks stay a while */
     linger: 1500,
     /** the plate and the frames fade */
