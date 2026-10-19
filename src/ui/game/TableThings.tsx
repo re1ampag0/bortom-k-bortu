@@ -8,10 +8,11 @@ import lanternArt from './art/rig/deck-lantern.svg';
 import coilArt from './art/rig/deck-coil.svg';
 import ink from './art/rig/prop-ink.svg';
 import candle from './art/rig/prop-candle.svg';
-import { tableThings } from './art/table';
+import { tableThings, wheelSvg } from './art/table';
 import { stageK } from '../stage';
 
 const THINGS = tableThings();
+const WHEEL = wheelSvg();
 
 /** «Вещи на столе»: one picture of 1366×660 behind the table, scaled to the window (cut at the edges, never squeezed). */
 export function TableThings() {
@@ -239,6 +240,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [placed, setPlaced] = useState<Placed[]>([]);
   const [deck, setDeck] = useState<DeckPlace | null>(null);
+  const [wheel, setWheel] = useState<{ x: number; y: number } | null>(null);
   const watched = useRef<{ game: HTMLElement; ro: ResizeObserver; mo: MutationObserver; off: () => void } | null>(null);
   useLayoutEffect(() => {
     const game = wrap.current?.parentElement ?? null;
@@ -266,6 +268,10 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         setPlaced([]);
         return;
       }
+      // the wheel (rig, е): under «Перестроение», its lower half past the edge of the window
+      const g = game.getBoundingClientRect();
+      const rg = rect(visible(game, '.board-bottom .regroup'), g);
+      setWheel(rg && g.width / stageK() > 700 ? { x: rg.l + rg.w / 2, y: rg.t + rg.h + 6 } : null);
       const R = freeRight(game);
       const next = R ? [fit('candle', R, [0.55, 0.02, 0.45, 0.5]), fit('ink', R, [0.55, 0.55, 0.45, 0.42])].filter((x): x is Placed => !!x) : [];
       setPlaced((old) => (old.length === next.length && old.every((o, i) => o.key === next[i].key && Math.abs(o.l - next[i].l) < 1 && Math.abs(o.t - next[i].t) < 1) ? old : next));
@@ -318,7 +324,10 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
             ))}
         </>
       ) : (
-        <TableThings />
+        <>
+          <TableThings />
+          {wheel && <i className="table-wheel" data-testid="table-wheel" style={{ left: wheel.x - 60, top: wheel.y }} dangerouslySetInnerHTML={{ __html: WHEEL }} />}
+        </>
       )}
       {placed.map((p) => (
         <img key={p.key} className="prop" data-prop={p.key} src={PROPS[p.key].src} alt="" draggable={false} style={{ left: p.l, top: p.t, width: p.w, height: p.h }} />
