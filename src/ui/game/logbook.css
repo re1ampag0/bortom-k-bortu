@@ -1,0 +1,203 @@
+/* «Судовой журнал» — the ship's book (PH, part 5; docs/mockups/a5/phone/src/phone_tpl.html: .lpage, .le, .lround, .brs).
+   A page of old paper with blue ruling and red margins, the lines in ink (italic), on the margin the icon of the line and
+   «раунд·ход», the cards underlined in bordeaux, a vignette between the rounds, the lines shown now under a yellow marker.
+   The column of a laptop is one page; «Весь журнал» is the whole book (LogBook.tsx). */
+:root {
+  --log-paper:
+    linear-gradient(90deg, rgba(90, 60, 20, 0.28), rgba(0, 0, 0, 0) 4%, rgba(0, 0, 0, 0) 96%, rgba(90, 60, 20, 0.18)),
+    radial-gradient(ellipse at 50% 40%, #f6ecd2, #e8d8b0 90%);
+  --log-ink: #2b2230;
+  --log-ink-soft: #5d4a36;
+  --log-rule: rgba(70, 110, 150, 0.3);
+  --log-margin: rgba(170, 40, 30, 0.55);
+  --log-red: #8e2219;
+  --log-mark-w: 46px;
+}
+
+.log-col {
+  background: none;
+  border: 0;
+  padding: 6px 12px calc(8px + env(safe-area-inset-bottom)) 0;
+}
+.log-paper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--log-paper);
+  border-radius: 3px 6px 6px 3px;
+  box-shadow:
+    inset 0 0 18px rgba(120, 80, 30, 0.35),
+    2px 0 0 #d8c69e,
+    4px 0 0 #c9b48c,
+    6px 1px 0 #b9a27a,
+    0 14px 24px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.log-paper h2 {
+  position: relative;
+  margin: 0;
+  padding: 0 12px;
+  height: 40px;
+  line-height: 40px;
+  flex: none;
+  text-align: center;
+  text-indent: 0.2em;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #2b2420;
+  border-bottom: 1.5px solid rgba(60, 40, 20, 0.5);
+  background: var(--log-paper);
+}
+.log-paper .log-actions {
+  position: relative;
+  flex: none;
+  display: flex;
+  gap: 10px;
+  padding: 8px 10px 10px;
+  border-top: 1.5px solid rgba(60, 40, 20, 0.4);
+}
+
+/* the red margin: two lines down the page, right of the icons and «раунд·ход» */
+.log-list {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+  background:
+    linear-gradient(90deg, transparent calc(var(--log-mark-w) + 9px), var(--log-margin) calc(var(--log-mark-w) + 9px), var(--log-margin) calc(var(--log-mark-w) + 10px), transparent calc(var(--log-mark-w) + 10px), transparent calc(var(--log-mark-w) + 13px), rgba(170, 40, 30, 0.35) calc(var(--log-mark-w) + 13px), rgba(170, 40, 30, 0.35) calc(var(--log-mark-w) + 14px), transparent calc(var(--log-mark-w) + 14px)) local;
+}
+.log-list li {
+  display: grid;
+  grid-template-columns: var(--log-mark-w) minmax(0, 1fr);
+  gap: 0 18px;
+  align-items: center;
+  padding: 6px 10px 6px 6px;
+  border-bottom: 1px solid var(--log-rule);
+  font-family: Alegreya, Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 13.5px;
+  line-height: 1.3;
+  color: var(--log-ink);
+}
+.log-mark {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  font-family: var(--font-num);
+  font-style: normal;
+  font-size: 11px;
+  color: var(--log-ink-soft);
+  white-space: nowrap;
+}
+.log-ico {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+}
+.log-ico svg {
+  display: block;
+  filter: sepia(0.6) saturate(0.7) brightness(0.8);
+}
+.log-list li.log-turn {
+  font-weight: 700;
+}
+.log-list li.log-info {
+  color: #4a3e36;
+}
+.log-list li.log-end {
+  font-weight: 700;
+  color: #2f6a3a;
+}
+/* the lines shown now: a yellow marker across the line */
+.log-list li.fresh {
+  background: linear-gradient(90deg, rgba(255, 214, 90, 0), rgba(255, 214, 90, 0.38) 18%, rgba(255, 214, 90, 0.38) 82%, rgba(255, 214, 90, 0));
+}
+/* the names of the cards: underlined in bordeaux ink, a press opens the card */
+.log-list .cref {
+  font: inherit;
+  font-weight: 700;
+  color: var(--log-red);
+  text-decoration: underline solid rgba(142, 34, 25, 0.75);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+/* «— РАУНД II —»: a vignette over the margin, the line ruled below */
+.log-list li.log-sep {
+  display: block;
+  padding: 0;
+  border-bottom: 0;
+}
+.log-round-line {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-num);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  text-transform: uppercase;
+  color: #6b2a1e;
+}
+.lr-dash {
+  display: none;
+}
+.lr-orn {
+  flex: none;
+  width: 56px;
+  height: 8px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='8' viewBox='0 0 70 8'%3E%3Cpath d='M1 4 H30 M40 4 H69 M35 1 L38 4 L35 7 L32 4 Z' stroke='%236b2a1e' stroke-width='1' fill='%236b2a1e'/%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+}
+.lr-orn.flip {
+  transform: scaleX(-1);
+}
+
+/* the brass plates «Весь журнал», «Скачать» (.brs of the mockup) */
+.brs-btn {
+  flex: 1;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  background: linear-gradient(#fbf5e7, #e9dbbd);
+  box-shadow:
+    inset 0 0 0 1.5px #2a2521,
+    inset 0 0 0 3.5px #fbf5e7,
+    inset 0 0 0 4.5px #8a7550,
+    0 3px 6px rgba(0, 0, 0, 0.4);
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-indent: 0.14em;
+  text-transform: uppercase;
+  color: #2a2521;
+  white-space: nowrap;
+}
+.brs-btn:hover {
+  filter: brightness(1.04);
+}
+.brs-btn:focus-visible {
+  outline: 2px solid #e0bd62;
+  outline-offset: 2px;
+}
