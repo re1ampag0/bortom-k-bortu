@@ -2,7 +2,7 @@
 // the tentacle TENT, the compass compassArt, the pictures of the Legend cards EMBLEM with ART_FRAME and RAYS, the price
 // icons, the wax seal «ЛЕГЕНДА», the crack in the wood crackArt, the bottle on its side bottleArt. Own SVG only.
 // What changed: the types, `export`, and the seal and the bottle take a uid for their ids (several on one page).
-import { bigShip } from './bigShips';
+import { bigShip, type BigShipKind } from './bigShips';
 
 const R1 = (n: number) => Math.round(n * 10) / 10;
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
@@ -179,10 +179,11 @@ export function crackArt(uid: string | number, x0: number, y0: number, len: numb
 export const BOTTLE_PATH = 'M-82 -44 H40 C62 -44 72 -30 80 -15 H103 V-19 H112 V19 H103 V15 H80 C72 30 62 44 40 44 H-82 C-96 44 -100 36 -100 22 V-22 C-100 -36 -96 -44 -82 -44 Z';
 export const BOTTLE_SEA = 'M-104 26' + ' q9 -5 18 0 t18 0'.repeat(1) + ' t18 0'.repeat(11) + ' V60 H-104 Z';
 export const CORK = `<g><rect x="-11" y="-13" width="22" height="26" rx="3.5" fill="#c9a06a" stroke="#5a3a1c" stroke-width="1.6"/><path d="M-5 -10 v20 M2 -11 v22" stroke="#9a7444" stroke-width="1"/><path d="M-8 -8 h3 M3 5 h3" stroke="#ead0a4" stroke-width="1"/></g>`;
-export function bottleArt(o: { ship?: boolean; cork?: boolean } = {}): string {
+/** `kind`: the ship inside — the target's own in the clip and in the bottle left afloat; the card shows the neutral merchantman. */
+export function bottleArt(o: { ship?: boolean; cork?: boolean; kind?: BigShipKind } = {}): string {
   return `<defs><clipPath id="pgBotClip"><path d="${BOTTLE_PATH}"/></clipPath><linearGradient id="pgBotG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0fbf6" stop-opacity=".6"/><stop offset=".45" stop-color="#bfe3d6" stop-opacity=".2"/><stop offset="1" stop-color="#6fae98" stop-opacity=".45"/></linearGradient></defs>
     <path class="gfill" d="${BOTTLE_PATH}" fill="url(#pgBotG)"/>
-    <g clip-path="url(#pgBotClip)">${o.ship ? bigShip('company', -24, 28, .62) : ''}<path class="bsea" d="${BOTTLE_SEA}" fill="#4f88a0" opacity=".62"/><path d="M-104 26 q9 -5 18 0${' t18 0'.repeat(12)}" fill="none" stroke="#dff1f4" stroke-width="1.4" opacity=".8"/></g>
+    <g clip-path="url(#pgBotClip)">${o.ship ? bigShip(o.kind || 'merchant', -24, 28, .62, false, `data-kind="${o.kind || 'merchant'}"`) : ''}<path class="bsea" d="${BOTTLE_SEA}" fill="#4f88a0" opacity=".62"/><path d="M-104 26 q9 -5 18 0${' t18 0'.repeat(12)}" fill="none" stroke="#dff1f4" stroke-width="1.4" opacity=".8"/></g>
     <path class="glass" d="${BOTTLE_PATH}" fill="none" stroke="#e8f7f0" stroke-width="3" stroke-linejoin="round"/>
     <path d="${BOTTLE_PATH}" fill="none" stroke="#2f5a4a" stroke-width=".8" opacity=".55" transform="translate(0 1.4)"/>
     <ellipse cx="-95" cy="0" rx="4" ry="26" fill="none" stroke="#ffffff" stroke-width="1.6" opacity=".35"/>

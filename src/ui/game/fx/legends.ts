@@ -473,8 +473,8 @@ LG['Г-Л'] = async (c, ctx) => {
 };
 
 
-/** The detailed ship of A5 of a code (bigships.json has the pirates' own). */
-const bigKind = (code: string): BigShipKind => (code === 'Ж' ? 'pearl' : code === 'М' ? 'revenge' : 'company');
+/** The detailed ship of A5 of a code (SHIP_KIND of fx3.js): the target of «Корабль в бутылке» sits in the bottle as itself. */
+const bigKind = (code: string): BigShipKind => (code === 'Ж' ? 'pearl' : code === 'М' ? 'revenge' : code === 'И' ? 'endeavour' : code === 'Г' ? 'dutch' : 'company');
 
 /**
  * «Корабль в бутылке» (fxBottle of fx3.js, ANIMATIONS.md §3.4; T.bottle). «Корпус N — можно»; the target glows green,
@@ -518,7 +518,7 @@ LG['М-Л'] = async (c, ctx) => {
   }
   await wait(ctx, K.miniAt);
   // 4. inside: a tiny ship rocks on the painted waves
-  const mini = sv(top, `<g><g class="lg-rock">${bigShip(bigKind(tgt), 0, 0, 0.62)}</g></g>`);
+  const mini = sv(top, `<g><g class="lg-rock">${bigShip(bigKind(tgt), 0, 0, 0.62, false, `data-kind="${bigKind(tgt)}"`)}</g></g>`);
   A(ctx, mini, [{ transform: `translate(${R1(mouth.x)}px,${R1(mouth.y)}px) scale(.05)`, opacity: 0 }, { transform: `translate(${R1(bx0 - 24 * BS)}px,${R1(by0 + 27 * BS)}px) scale(${BS})`, opacity: 1 }], K.mini, 0, 'cubic-bezier(.3,1.2,.6,1)');
   if (ctx.rich) A(ctx, mini.querySelector('.lg-rock')!, Array.from({ length: 9 }, (_, j) => ({ transform: `rotate(${j % 2 ? 3 : -3}deg)` })), 4 * 1400, 0, 'ease-in-out', 'none');
   goldBurst(ctx, top, mouth.x, mouth.y, 24, 10, 70); circRing(ctx, top, mouth.x, mouth.y, 4, 40, '#bfffd8', 500, 0, 2);
@@ -552,7 +552,7 @@ LG['М-Л'] = async (c, ctx) => {
   const host = seaScars(ctx);
   if (host) {
     const keep = scar(fxSvg(ctx, host), 'long', tgt), rock = filters(ctx), k2 = R1(BS * 0.72 * 100) / 100;
-    keep.innerHTML += `<g transform="translate(${R1(bx0)} ${R1(by0 + 4)})"><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(110 * k2)}" ry="7" fill="#0b2a36" opacity=".28"/><g>${rock ? '<animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.6s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 3;0 0" dur="2.6s" additive="sum" repeatCount="indefinite"/>' : ''}<g transform="scale(${k2})">${bottleArt({ ship: true, cork: true })}</g></g><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(120 * k2)}" ry="6" fill="none" stroke="#e6f2f4" stroke-width="1.4" opacity=".7">${rock ? `<animate attributeName="rx" values="${R1(110 * k2)};${R1(140 * k2)};${R1(110 * k2)}" dur="2.6s" repeatCount="indefinite"/>` : ''}</ellipse></g>`;
+    keep.innerHTML += `<g transform="translate(${R1(bx0)} ${R1(by0 + 4)})"><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(110 * k2)}" ry="7" fill="#0b2a36" opacity=".28"/><g>${rock ? '<animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.6s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 3;0 0" dur="2.6s" additive="sum" repeatCount="indefinite"/>' : ''}<g transform="scale(${k2})">${bottleArt({ ship: true, cork: true, kind: bigKind(tgt) })}</g></g><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(120 * k2)}" ry="6" fill="none" stroke="#e6f2f4" stroke-width="1.4" opacity=".7">${rock ? `<animate attributeName="rx" values="${R1(110 * k2)};${R1(140 * k2)};${R1(110 * k2)}" dur="2.6s" repeatCount="indefinite"/>` : ''}</ellipse></g>`;
     A(ctx, keep, [{ opacity: 0 }, { opacity: 1 }], 300, 0, 'ease-out', 'none');
   }
   A(ctx, all, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-out', 'forwards');
