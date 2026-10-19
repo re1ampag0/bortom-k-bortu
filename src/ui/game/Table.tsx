@@ -467,7 +467,7 @@ export function Plank({
         title={plate ? undefined : 'Подробнее о корабле'}
       >
         <span className="ship-art wide">
-          <span className="ship-pic" dangerouslySetInnerHTML={svg(shipSvg(ship.code))} />
+          <span className="ship-pic" dangerouslySetInnerHTML={svg(shipSvg(ship.code, 58, 28, `plank-${ship.code}`))} />
           {marked && <MarkStamp cls="wide" hidden={markHidden} />}
         </span>
         <b className="plank-name">
