@@ -120,6 +120,16 @@ function fitPlate(ctx: FxCtx) {
   VS.plate.style.top = y + 'px';
   if (VS.plateBox) VS.plateBox.y = y;
 }
+/** V5: the pill of a miss beside the plate, not over it (a phone: the splash lies at the edge of the plate) — left, else right, else above. */
+function besidePlate(ctx: FxCtx, t: HTMLElement) {
+  const pl = VS?.plate;
+  if (!pl || !pl.isConnected) return;
+  const a = bx(ctx, t), p = bx(ctx, pl), W = ctx.board.clientWidth;
+  if (a.r <= p.x || a.x >= p.r || a.b <= p.y || a.y >= p.b) return;
+  if (p.x - 6 - a.w >= 8) t.style.left = p.x - 6 - a.w / 2 + 'px';
+  else if (p.r + 6 + a.w <= W - 8) t.style.left = p.r + 6 + a.w / 2 + 'px';
+  else t.style.top = p.y - 6 - a.h / 2 + 'px';
+}
 /**
  * V5: the plate is not taken away with the clip: it passes to the traces (fx/scars.ts, 'plate') — stays ≈ 2 s more, fades,
  * and a press on the table drops it at once. The layer is empty when the show ends (the e2e of the layer count on it).
@@ -407,7 +417,7 @@ PLAY.shot = async (c, ctx) => {
         if (ctx.rich) { const gu = mk(ctx, 'gust', 0, 0, '<svg viewBox="0 0 220 40" width="220" height="40"><g fill="none" stroke="#9FB6C6" stroke-width="2" stroke-linecap="round"><path d="M2 14 C60 4 120 26 218 12"/><path d="M20 30 C80 22 140 38 200 26" opacity=".7"/></g></svg>'); A(ctx, gu, [{ opacity: 0, transform: `translate(${mid.x - 40}px,${mid.y + 6}px) scaleX(.4)` }, { opacity: 0.9, offset: 0.3 }, { opacity: 0, transform: `translate(${mid.x + 90}px,${mid.y + 10}px) scaleX(1)` }], 650, t0 + FLY * 0.35); } }
       flyBall(pts, d, t0, { lift: 0.15 });
       if (VS && VS.dust) { burst(ctx, 'dust', end.x, end.y, t0 + d * 0.6, 8, 6, 22, 700); } else if (b.out === 'past') splash(ctx, end.x, end.y, t0 + d); else missSplash(ctx, svg, end.x, end.y, 0.85 * gunScale, t0 + d, T.volley.splash);
-      if (b.label) tag(ctx, end.x + (end.x > ctx.board.clientWidth / 2 ? -10 : 10), end.y - 26 * down, b.label, t0 + d + 40, 'mod', 1700);
+      if (b.label) besidePlate(ctx, tag(ctx, end.x + (end.x > ctx.board.clientWidth / 2 ? -10 : 10), end.y - 26 * down, b.label, t0 + d + 40, 'mod', 1700));
     } else if (b.out === 'bounce') {
       const edge = { x: tb.x + tb.w * (0.25 + 0.18 * (i % 3)), y: facingY(ctx, c.target) - down * 6 };
       fly(ctx, ball(), curve(p0, edge, 0.04 * down), FLY * 0.9, t0, { fadeEnd: false });

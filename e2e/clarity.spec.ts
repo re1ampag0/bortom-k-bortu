@@ -103,6 +103,10 @@ test.describe('laptop 1366×660', () => {
     // The arrow and the pill are on the table; the strip of the outcome is under «Подсказки» only.
     await expect(page.getByTestId('alarm-pill')).toContainText('по Корпусу');
     await expect(page.locator('.hcard-strip.ok')).toHaveCount(0);
+    // The cards that are not Reactions are faded and lowered (A5Alarm.png).
+    const dim = page.locator('.hand .hcard.al-dim');
+    expect(await dim.count()).toBeGreaterThan(0);
+    expect(Number(await dim.first().evaluate((e) => getComputedStyle(e).opacity))).toBeLessThan(0.7);
     const card = page.locator('.hand .hcard.al-ok').first();
     const code = (await card.getAttribute('data-card'))!;
     await card.click();

@@ -1,6 +1,6 @@
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   abilityButtons,
   cardNeeds,
@@ -17,7 +17,7 @@ import {
   volleyTargets,
   type VolleyTarget,
 } from '../../engine/hints';
-import { matchTotals, type MatchSetup } from '../../engine/match';
+import type { MatchRecord, MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
 import { ABILITY, cardByCode, hasAbility, isCaptain, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
 import type { Side } from '../../engine/types';
@@ -29,7 +29,7 @@ import { Curtain } from './Curtain';
 import { AlarmActions, AlarmArrow, AlarmBar, ReactionSheet, usePhoneLayout } from './Alarm';
 import { alarmInfo, lossOf, reactionStrip } from './alarm';
 import { Hand, type AlarmCard, type HandTab } from './Hand';
-import { CardDetail, DiscardSheet, EndScreen, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
+import { CardDetail, DiscardSheet, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
 import {
   CardParamsPanel,
   ChoicePanel,
@@ -57,6 +57,10 @@ import { TableThings, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
+import { usePlayClock } from './playClock';
+
+/** V7: the victory sheet is a chunk of its own (the big ships of its panorama). */
+const Victory = lazy(() => import('./Victory').then((m) => ({ default: m.Victory })));
 
 type Mode =
   | { k: 'idle' }
@@ -225,6 +229,24 @@ export function Game({
   /** «Пауза»: the show on this device stops; on one screen the bots wait too (by network the server plays them). */
   const [held, setHeld] = useState(false);
   const [endClosed, setEndClosed] = useState(false);
+  // V7: the minutes of the game (this device counts them) and the record for the numbers of the victory sheet
+  const clockId = `${net ? `net:${net.room.code}` : 'local'}:${game.setup.game.seed}`;
+  // a game that starts now (not one loaded half-way): its clock starts at 0
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const freshGame = useMemo(() => (local ? local.actions.length === 0 : s.round === 1), [clockId]);
+  const playMs = usePlayClock(clockId, freshGame, !s.winner);
+  const [netRecord, setNetRecord] = useState<MatchRecord | null>(null);
+  useEffect(() => {
+    if (net && s.winner) net.requestRecord(setNetRecord);
+    else setNetRecord(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [net, !!s.winner, game.setup.game.seed]);
+  const actionsAtEnd = local?.actions.length ?? 0;
+  const endRecord = useMemo(
+    () => (s.winner ? (local ? { setup: local.setup, actions: local.actions.slice() } : netRecord) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [!!s.winner, actionsAtEnd, netRecord, local],
+  );
   const allSeats = Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
   const [seatPick, setSeatPick] = useState<string | null>(null);
   const seat = seatPick && allSeats.includes(seatPick) ? seatPick : (d && d.side === bottom ? d.seats.find((x) => mySeats.includes(x)) : null) ?? mySeats[0] ?? allSeats[0];
@@ -967,11 +989,19 @@ export function Game({
   const downloadGame = local
     ? () => download(`${fileName}.json`, JSON.stringify(local.record(), null, 1), 'application/json')
     : net && s.winner
-      ? () => net.requestRecord((r) => download(`${fileName}.json`, JSON.stringify(r, null, 1), 'application/json'))
+      ? () => {
+          const save = (r: MatchRecord) => download(`${fileName}.json`, JSON.stringify(r, null, 1), 'application/json');
+          if (netRecord) save(netRecord);
+          else
+            net.requestRecord((r) => {
+              setNetRecord(r);
+              save(r);
+            });
+        }
       : null;
   const vote = net?.room.rematch ?? null;
-  const rematchLabel = vote ? (vote.you ? `Отменить реванш (согласны ${vote.agreed} из ${vote.need})` : `Реванш (согласны ${vote.agreed} из ${vote.need})`) : undefined;
-  const totalsOf = () => (net ? net.totals : local ? matchTotals(data, local.setup, local.actions) : null);
+  const rematchLabel = vote?.you ? 'Отменить реванш' : 'Реванш';
+  const rematchNote = vote ? `согласны ${vote.agreed} из ${vote.need}` : undefined;
   const rematch = () => {
     const seed = createRng((Date.now() ^ game.setup.game.seed) >>> 0).int(2 ** 31 - 1) + 1;
     const { positions: _positions, ...rest } = game.setup.game;
@@ -1289,17 +1319,22 @@ export function Game({
         />
       )}
       {s.winner && !endClosed && (
-        <EndScreen
-          s={s}
-          totals={totalsOf() ?? { ПИРАТЫ: { damage: 0, income: 0, spent: 0 }, КОМПАНИЯ: { damage: 0, income: 0, spent: 0 } }}
-          onRematch={net ? (vote ? () => net.voteRematch(!vote.you) : null) : rematch}
-          rematchLabel={rematchLabel}
-          onNew={onExit}
-          newLabel={net ? 'Выйти из комнаты' : undefined}
-          onDownloadLog={downloadLog}
-          onDownloadGame={downloadGame}
-          onClose={() => setEndClosed(true)}
-        />
+        <Suspense fallback={null}>
+          <Victory
+            s={s}
+            data={data}
+            record={endRecord}
+            playMs={playMs()}
+            onRematch={net ? (vote ? () => net.voteRematch(!vote.you) : null) : rematch}
+            rematchLabel={rematchLabel}
+            rematchNote={rematchNote}
+            onNew={onExit}
+            newLabel={net ? 'Выйти из комнаты' : undefined}
+            onDownloadLog={downloadLog}
+            onDownloadGame={downloadGame}
+            onClose={() => setEndClosed(true)}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -2,7 +2,6 @@
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
 import { useMemo, useState, type ReactNode } from 'react';
 import rulesText from '../../../RULES.md?raw';
-import type { SideTotals } from '../../engine/match';
 import type { LogLine } from '../../engine/log';
 import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
@@ -12,9 +11,9 @@ import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type SeaFrame
 import { clearTrace, loadTrace } from './fx/trace';
 import { cardClass, CostBadge, HandCard } from './Hand';
 import { memo } from './memo';
-import { roman, statuses, type Btn } from './Table';
+import { statuses, type Btn } from './Table';
 import { CELLS } from './art/cells';
-import { SIDE_LABEL, SPEEDS } from './text';
+import { roman, SIDE_LABEL, SPEEDS } from './text';
 
 /** A window over the table: on a laptop in the middle, on a phone a bottom sheet. Closed by the cross or outside. */
 export function Sheet({ title, onClose, children, wide, testid }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string }) {
@@ -526,86 +525,5 @@ export function SettingsSheet({
         Версия: {appVersion()}
       </p>
     </Sheet>
-  );
-}
-
-export function EndScreen({
-  s,
-  totals,
-  onRematch,
-  rematchLabel = 'Реванш',
-  onNew,
-  newLabel = 'Новая партия',
-  onDownloadLog,
-  onDownloadGame,
-  onClose,
-}: {
-  s: GameState;
-  totals: Record<Side, SideTotals>;
-  onRematch: (() => void) | null;
-  /** By network: «Реванш (согласны 1 из 2)», or «Отменить реванш» after agreeing. */
-  rematchLabel?: string;
-  onNew: () => void;
-  newLabel?: string;
-  onDownloadLog: () => void;
-  onDownloadGame: (() => void) | null;
-  onClose: () => void;
-}) {
-  const w = s.winner;
-  const title = w === 'НИЧЬЯ' ? 'Ничья' : w ? `Победа: ${SIDE_LABEL[w].name}` : '';
-  return (
-    <div className="sheet-backdrop end">
-      <section className="sheet end-screen" data-testid="end-screen">
-        <h1>{title}</h1>
-        <p className="muted">Раундов: {s.round}</p>
-        <table className="end-table">
-          <thead>
-            <tr>
-              <th />
-              <th>Пираты</th>
-              <th>Компания</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Нанесено урона</td>
-              <td>{totals.ПИРАТЫ.damage}</td>
-              <td>{totals.КОМПАНИЯ.damage}</td>
-            </tr>
-            <tr>
-              <td>Получено Пороха</td>
-              <td>{totals.ПИРАТЫ.income}</td>
-              <td>{totals.КОМПАНИЯ.income}</td>
-            </tr>
-            <tr>
-              <td>Потрачено Пороха</td>
-              <td>{totals.ПИРАТЫ.spent}</td>
-              <td>{totals.КОМПАНИЯ.spent}</td>
-            </tr>
-          </tbody>
-        </table>
-        <div className="panel-actions wrap">
-          {onRematch && (
-            <button className="btn primary" onClick={onRematch} data-testid="rematch">
-              {rematchLabel}
-            </button>
-          )}
-          <button className={`btn ${onRematch ? '' : 'primary'}`} onClick={onNew}>
-            {newLabel}
-          </button>
-          <button className="btn" onClick={onDownloadLog}>
-            Скачать журнал
-          </button>
-          {onDownloadGame && (
-            <button className="btn" onClick={onDownloadGame}>
-              Скачать партию
-            </button>
-          )}
-          <button className="link" onClick={onClose}>
-            Посмотреть стол
-          </button>
-        </div>
-      </section>
-    </div>
   );
 }

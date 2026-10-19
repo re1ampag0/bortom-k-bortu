@@ -396,5 +396,11 @@ export const T = {
     /** «Тревога!» rides in from the top / the bell swings */
     alarmIn: 250,
     bell: 600,
+    /** V7: the victory sheet shows up; the ribbon unrolls; the bars of the ships grow one after another; the titles stamp */
+    victoryIn: 400,
+    ribbon: 500,
+    bar: 600,
+    barStep: 180,
+    stamp: 280,
   },
 } as const;
