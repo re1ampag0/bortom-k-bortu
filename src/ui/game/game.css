@@ -1877,24 +1877,6 @@ button.star::before {
   border-bottom: 1px dashed var(--line);
   padding: 6px 0;
 }
-.end-screen {
-  padding: 20px;
-  gap: 10px;
-  text-align: center;
-}
-.end-screen h1 {
-  font-family: var(--font-head);
-  margin: 0;
-}
-.end-table {
-  margin: 8px auto 14px;
-  border-collapse: collapse;
-}
-.end-table td,
-.end-table th {
-  padding: 4px 14px;
-  border-bottom: 1px solid var(--line);
-}
 .panel-actions.wrap {
   justify-content: center;
 }
@@ -2498,16 +2480,6 @@ button.star::before {
   }
   .slots {
     grid-template-columns: 1fr;
-  }
-  .end-screen {
-    padding: 14px;
-  }
-  .end-screen h1 {
-    font-size: 1.6rem;
-  }
-  .end-table td,
-  .end-table th {
-    padding: 2px 8px;
   }
 }
 

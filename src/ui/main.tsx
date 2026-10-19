@@ -6,6 +6,7 @@ import './fonts';
 import './styles.css';
 import './game/game.css';
 import './game/alarm.css';
+import './game/victory.css';
 import './start/start.css';
 
 // The sound «ваш ход» needs a first touch of the page (iPhone): listen for it from the start.
