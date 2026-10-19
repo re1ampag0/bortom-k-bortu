@@ -4200,23 +4200,58 @@ button.star::before {
   color: #f3e6c6;
 }
 
-/* «Фон под рукой: Палуба» (rig, г): the planks of a deck in the lantern light under the hand; «Вещи на столе» lie over it */
-.hand-deck {
+/* «Фон под рукой» (rig, г): the background of the whole table; the props lie in the free places by the edges */
+.backdrop {
   position: absolute;
+  inset: 0;
   pointer-events: none;
-  background: url('./art/rig/deck-laptop.svg') center / cover no-repeat;
-  border-radius: 5px 5px 0 0;
-  box-shadow:
-    inset 0 0 0 1px rgba(20, 10, 4, 0.8),
-    inset 0 6px 10px rgba(0, 0, 0, 0.45);
 }
-.hand-deck.phone {
-  background-image: url('./art/rig/deck-phone.svg');
-  border-radius: 0;
+.deck-bg {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  background-size: 720px 210px;
 }
-/* on a phone the deck is the background of the whole bottom panel: the bar stands over it without a ground of its own */
-.game.view-hand-deck .bottom-bar {
-  position: relative;
-  background: transparent;
-  border-top-color: transparent;
+/* the vignette of the deck: the edges of the window darker, the middle as it is */
+.deck-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 75% 70% at 50% 45%, rgba(0, 0, 0, 0.08) 45%, rgba(0, 0, 0, 0.62)),
+    rgba(0, 0, 0, 0.16);
+}
+.prop {
+  position: absolute;
+  max-width: none;
+}
+/* the warm light of the lantern (the candle) breathes over the planks; still with «простые спецэффекты» */
+.prop-glow {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 190, 90, 0.5), rgba(255, 150, 40, 0.16) 45%, rgba(255, 140, 30, 0) 70%);
+  mix-blend-mode: screen;
+  animation: prop-flick 1.3s ease-in-out infinite;
+}
+@keyframes prop-flick {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  35% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.82;
+  }
+}
+.fx-simple .prop-glow {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .prop-glow {
+    animation: none;
+  }
 }
