@@ -82,84 +82,100 @@ export function plateLabel(p: VolleyPreview): { label: string; sub: string } {
   return { label: String(p.damage), sub: p.diagonal ? `диагональ${diag ? ` ${diag.n < 0 ? '−' : '+'}${Math.abs(diag.n)}` : ''}` : 'напротив' };
 }
 
-export function VolleyPanel({
+/** The Volley as it would go now: its preview (a target chosen), the Powder, the line under «Огонь!». */
+export function volleyNow(s: GameState, data: GameData, mode: AimMode) {
+  const p = mode.target ? previewVolley(s, data, volleyOrder(mode, mode.target)) : null;
+  const cost = shipData(data, mode.shooter).volleyCost + (mode.charge ? cardByCode(data, mode.charge).cost : 0) + mode.paid;
+  // the short result always (the user's call), the sum of the terms only with «Подсказки» (the slip)
+  const sub = !mode.target
+    ? 'выберите цель на столе'
+    : p?.ok
+      ? `по «${shipData(data, p.target).nickDative}» · ${p.damage} по ${TRACK_DATIVE[p.track]} · ${powderWord(cost)}`
+      : 'Залп невозможен';
+  return { p, cost, sub };
+}
+
+/** The wax seal with a tick on the chosen Charge (phone_tpl.html, card(…, {chk})). */
+const CHECK_SEAL = `<svg viewBox="-15 -15 30 30" aria-hidden="true"><path d="${Array.from({ length: 22 }, (_, i) => {
+  const a = (i / 22) * Math.PI * 2, r = 13 + Math.sin(i * 2.7) * 0.9;
+  return (i ? 'L' : 'M') + (Math.round(Math.cos(a) * r * 10) / 10) + ' ' + (Math.round(Math.sin(a) * r * 10) / 10);
+}).join(' ')} Z" fill="#9a1f16" stroke="#4a0a06" stroke-width=".6"/><circle r="9.6" fill="#7e1a12"/><circle r="9.6" fill="none" stroke="#c94a3a" stroke-width=".6" opacity=".7"/><path d="M-5 0.4 L-1.4 4 L5.4 -3.6" fill="none" stroke="#f6dccb" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/**
+ * PH 4: the sheet «Заряд» — an oak deck with a brass edge in the place of the hand (a phone: from below). Only the Charges
+ * of this Volley; the chosen one lifted with a wax seal, a press again — without a Charge; too dear or not allowed — grey
+ * with the reason; the sum of the terms on a slip of paper only with «Подсказки». A laptop puts «Отмена» and «Огонь!» in
+ * the place of «Ход окончен» (ChargeButtons), a phone at the foot of the sheet.
+ */
+export function ChargeSheet({
   s,
   data,
   hints,
   mode,
   charges,
+  buttons,
   setMode,
-  onFire,
-  onCancel,
+  onInfo,
 }: {
   s: GameState;
   data: GameData;
-  /** Off — «как за столом»: no damage of each Charge; on a laptop the Charge is chosen in the hand. */
   hints: boolean;
   /** The Charges allowed for this Volley (chargeCandidates, by network only the offered ones of another person). */
   charges: ChargeChoice[];
   mode: AimMode;
+  /** A phone: «Отмена» and «Огонь!» at the foot of the sheet. */
+  buttons: React.ReactNode;
   setMode: (m: AimMode) => void;
-  onFire: (action: Action) => void;
-  onCancel: () => void;
+  onInfo: (holder: string, code: string) => void;
 }) {
-  const p = mode.target ? previewVolley(s, data, volleyOrder(mode, mode.target)) : null;
-  const cost = shipData(data, mode.shooter).volleyCost + (mode.charge ? cardByCode(data, mode.charge).cost : 0) + mode.paid;
+  const { p } = volleyNow(s, data, mode);
   const paidCharge = mode.charge && cardByCode(data, mode.charge).fx.paid;
-  const title = !mode.target
-    ? `${nick(data, mode.shooter)}: выберите цель на столе`
-    : p?.ok
-      ? `${p.damage} по ${TRACK_DATIVE[p.track]} ${nick(data, p.target)}`
-      : `Залп невозможен`;
-  const sub = p?.ok
-    ? `${formatTerms(p.terms)} · ${TRACK_NAME[p.change.track]} ${p.change.from} → ${p.change.to}${
-        p.change.track !== 'hull' && p.change.hullTo !== p.change.hullFrom ? `, Корпус ${p.change.hullFrom} → ${p.change.hullTo}` : ''
-      }${p.noReact ? ' · без Реакций' : ''}`
-    : p && !p.ok
-      ? p.reason
-      : mode.heart
-        ? 'Сердце Дейви Джонса: дополнительный Залп, «Голландец» теряет Команду'
-        : hints
-          ? 'Цели подсвечены плашками с уроном'
-          : 'Цели подсвечены';
-  /** The Volley with this Charge (null — without): its preview when a target is chosen. */
-  const previewWith = (o: { card: string | null; from: string }) =>
+  /** The Volley with this Charge: its preview when a target is chosen. */
+  const previewWith = (o: ChargeChoice) =>
     mode.target ? previewVolley(s, data, volleyOrder({ ...mode, charge: o.card, chargeFrom: o.from, paid: 0 }, mode.target)) : null;
-  const damageLabel = (pv: ReturnType<typeof previewWith>) =>
-    pv?.ok ? `${pv.damage}${pv.track !== 'hull' ? ` по ${TRACK_DATIVE[pv.track]}` : ''}${pv.noReact ? ', без Реакций' : ''}` : pv ? '—' : undefined;
-  const choose = (o: { card: string | null; from: string }) => setMode({ ...mode, charge: o.card, chargeFrom: o.from, paid: 0 });
-  const none: { card: string | null; from: string; offered?: boolean } = { card: null, from: mode.shooter };
-  // Without hints a laptop shows only «Без Заряда», the chosen Charge and the captain's offer: the Charge is chosen
-  // in the hand or the Plans.
-  const chips = hints ? [none, ...charges] : [none, ...charges.filter((o) => o.card === mode.charge || o.offered)];
+  const note = mode.heart
+    ? 'Сердце Дейви Джонса: дополнительный Залп'
+    : !mode.target
+      ? 'выберите цель на столе'
+      : charges.length
+        ? 'можно без Заряда'
+        : 'Зарядов нет — Залп без Заряда';
   return (
-    <Panel title={title} sub={sub} tone="volley" testid="volley-panel">
-      <div className="choices wide-block">
-        {chips.map((o) => {
+    <section className="panel charge-sheet oak-sheet" data-testid="volley-panel">
+      <div className="cs-head">
+        <span className="cs-title">Заряд</span>
+        <span className="cs-note">{note}</span>
+      </div>
+      <div className="cs-cards">
+        {charges.map((o) => {
           const pv = previewWith(o);
-          const c = o.card ? cardByCode(data, o.card) : null;
-          const fromPlan = o.card ? s.ships[o.from].plans.includes(o.card) : false;
+          const c = cardByCode(data, o.card);
           const on = mode.charge === o.card;
+          const why = pv && !pv.ok ? pv.reason : null;
+          const plan = s.ships[o.from].plans.includes(o.card);
+          const big = c.big.length <= 8 ? `${c.big} ` : '';
           return (
-            <button
-              key={o.card ?? 'none'}
-              className={`choice ${on ? 'on' : ''} ${pv && !pv.ok ? 'off' : ''}`}
-              title={pv && !pv.ok ? pv.reason : undefined}
-              onClick={() => (pv && !pv.ok ? undefined : choose(o))}
-              data-testid={o.offered ? 'captain-charge' : undefined}
-            >
-              <span>
-                {c ? `${o.offered ? 'Заряд капитана: ' : ''}${c.name}` : 'Без Заряда'}
-                {fromPlan ? ' · План' : ''}
-                {c && c.cost > 0 ? ` · ${c.cost} П` : ''}
-              </span>
-              <b>{hints ? (damageLabel(pv) ?? (c ? c.big : '')) : c ? c.big : ''}</b>
-            </button>
+            <div key={`${o.from}-${o.card}`} className={`cs-card ${on ? 'on' : ''} ${why ? 'off' : ''}`} data-testid={o.offered ? 'captain-charge' : undefined}>
+              {o.offered && <span className="cs-tag">Заряд капитана</span>}
+              <HandCard
+                data={data}
+                code={o.card}
+                plan={plan}
+                off={why}
+                chosen={on}
+                note={hints && pv?.ok ? `${big}→ итог ${pv.damage}` : undefined}
+                onClick={() => !why && setMode({ ...mode, charge: on ? null : o.card, chargeFrom: on ? null : o.from, paid: 0 })}
+              />
+              {on && <i className="cs-seal" title="Заряжено" aria-hidden dangerouslySetInnerHTML={{ __html: CHECK_SEAL }} />}
+              <button className="info" aria-label={`Карта «${c.name}» целиком`} onClick={() => onInfo(o.from, o.card)}>
+                i
+              </button>
+            </div>
           );
         })}
       </div>
       {paidCharge && (
-        <div className="stepper">
+        <div className="stepper cs-paid">
           <span>Доплатить Порохом (+1 урон за каждый)</span>
           <button className="btn small" onClick={() => setMode({ ...mode, paid: Math.max(0, mode.paid - 1) })}>
             −
@@ -170,25 +186,63 @@ export function VolleyPanel({
           </button>
         </div>
       )}
-      <div className="panel-actions">
-        <button className="btn" onClick={onCancel}>
-          Отмена
-        </button>
-        <OakButton
-          b={{
-            key: 'fire',
-            label: 'Огонь!',
-            primary: true,
-            disabled: !p ? 'Выберите цель' : p.ok ? null : p.reason,
-            onClick: () => mode.target && onFire({ type: 'volley', ...volleyOrder(mode, mode.target) }),
-            testid: 'fire',
-          }}
-          sign="muzzle"
-          className="fire-btn"
-          sub={powderWord(cost)}
-        />
-      </div>
-    </Panel>
+      {p && !p.ok ? (
+        <div className="slipw">
+          <p className="slip no" data-testid="volley-reason">
+            {p.reason}
+          </p>
+        </div>
+      ) : (
+        hints &&
+        p?.ok && (
+          <div className="slipw">
+            <p className="slip" data-testid="volley-slip">
+              {formatTerms(p.terms)} = <b>{p.damage} по {TRACK_DATIVE[p.track]}</b>
+              {p.change.track !== 'hull' && p.change.hullTo !== p.change.hullFrom ? ` · Корпус ${p.change.hullFrom} → ${p.change.hullTo}` : ''}
+              {p.noReact ? ' · без Реакций' : ''}
+            </p>
+          </div>
+        )
+      )}
+      {buttons}
+    </section>
+  );
+}
+
+/** «Отмена» — a brass plate, «Огонь!» — the oak board with the muzzle of a gun (A5Rig «Ход окончен»). */
+export function ChargeButtons({
+  s,
+  data,
+  mode,
+  onFire,
+  onCancel,
+}: {
+  s: GameState;
+  data: GameData;
+  mode: AimMode;
+  onFire: (action: Action) => void;
+  onCancel: () => void;
+}) {
+  const { p, sub } = volleyNow(s, data, mode);
+  return (
+    <div className="charge-btns">
+      <button className="brs-btn cs-cancel" data-testid="cancel-volley" onClick={onCancel}>
+        Отмена
+      </button>
+      <OakButton
+        b={{
+          key: 'fire',
+          label: 'Огонь!',
+          primary: true,
+          disabled: !p ? 'Выберите цель' : p.ok ? null : p.reason,
+          onClick: () => mode.target && onFire({ type: 'volley', ...volleyOrder(mode, mode.target) }),
+          testid: 'fire',
+        }}
+        sign="muzzle"
+        className="fire-btn"
+        sub={sub}
+      />
+    </div>
   );
 }
 
