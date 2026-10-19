@@ -11,7 +11,8 @@ import { cellUrl, CELLS, type CellIcon } from './art/cells';
 import { shipSvg } from './art/ships';
 import { legendMedal } from './art/medals';
 import { fanSvg } from './art/fan';
-import { TARGET_SEAL } from './art/seal';
+import { ALARM_SEAL, TARGET_SEAL } from './art/seal';
+import type { Loss } from './alarm';
 import { hourglassSvg } from './art/table';
 import { SEA_BG, seaSvg } from './fx/seaArt';
 import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, TRIDENT_SVG, statusSvg, type StatusIcon } from './art/status';
@@ -109,6 +110,7 @@ export function StatusBar({
   extra,
   chip = true,
   hold,
+  alarm,
 }: {
   s: GameState;
   data: GameData;
@@ -121,6 +123,8 @@ export function StatusBar({
   chip?: boolean;
   /** The Hold of the top team (V1c): in the row, after the plate. */
   hold?: ReactNode;
+  /** «Тревога!» (U2): the bar in place of the line of the status (the line stays in it for the reader and the tests). */
+  alarm?: ReactNode;
 }) {
   return (
     <header className="status" data-testid="status">
@@ -140,8 +144,8 @@ export function StatusBar({
         </span>
       </div>
       {hold}
-      <div className={`status-text ${waiting ? 'waiting' : ''}`} data-testid="instruction" data-fx-instruction>
-        {instruction}
+      <div className={`status-text ${waiting ? 'waiting' : ''} ${alarm ? 'alarm' : ''}`} data-testid="instruction" data-fx-instruction>
+        {alarm ?? instruction}
       </div>
       {(chip || extra) && (
         <div className="status-tools">
@@ -361,6 +365,7 @@ export function Plank({
   awaiting,
   targeted,
   shooter,
+  alarm = null,
   repairing = false,
   ready = false,
   plate,
@@ -383,6 +388,8 @@ export function Plank({
   awaiting: boolean;
   targeted: boolean;
   shooter: boolean;
+  /** «Тревога!»: this ship is the target of the Volley the team answers; `loss` — what it loses (only under «Подсказки»). */
+  alarm?: { loss: Loss[] | null } | null;
   /** The card being played repairs this ship (green frame while its panel is open). */
   repairing?: boolean;
   /** The player pressed «Ход окончен» this turn: «✓ готов» in the head, seen by everyone. */
@@ -417,6 +424,7 @@ export function Plank({
     selected ? 'selected' : '',
     awaiting ? 'awaiting' : '',
     targeted ? 'targeted' : '',
+    alarm ? 'alarmed' : '',
     shooter ? 'shooter' : '',
     repairing ? 'repairing' : '',
     ship.sunk ? 'sunk' : '',
@@ -499,7 +507,12 @@ export function Plank({
         <span className="plank-role">
           {(targeted || plate?.chosen) && (
             // «Под огнём»: the wax seal of the target, pressed into the head (A5, TARGET_SEAL); it lives in the plank.
-            <span className="target-seal" data-testid={`target-seal-${ship.code}`} title="Под огнём" dangerouslySetInnerHTML={svg(TARGET_SEAL)} />
+            <span
+              className="target-seal"
+              data-testid={alarm ? `alarm-sabres-${ship.code}` : `target-seal-${ship.code}`}
+              title={alarm ? 'Тревога: по кораблю дают Залп' : 'Под огнём'}
+              dangerouslySetInnerHTML={svg(alarm ? ALARM_SEAL : TARGET_SEAL)}
+            />
           )}
           {selected && <span className="head-tag mine">ВЫБРАН</span>}
           {role && <span className="head-tag mine">{role}</span>}
@@ -612,12 +625,13 @@ export function Plank({
   function trackEl(t: Track) {
     const max = startValue(data, ship.code, t);
     const v = ship.tracks[t];
+    const loss = alarm?.loss?.find((x) => x.track === t);
     return (
       <div key={t} className={`track t-${t}`} data-fx-track={t} style={TRACK_ICON_STYLE[t]}>
         <span className="track-label">{TRACK_LABEL[t]}</span>
         <span className="cells" aria-hidden>
           {Array.from({ length: max }, (_, i) => (
-            <i key={i} className={i < v ? 'on' : ''} />
+            <i key={i} className={`${i < v ? 'on' : ''}${loss && i >= loss.to && i < loss.from ? ' doomed' : ''}`} />
           ))}
         </span>
         <span className="bar" aria-hidden>
@@ -626,6 +640,11 @@ export function Plank({
         <b className={`track-num ${v <= (t === 'crew' ? 1 : 0) && t !== 'hull' ? 'low' : ''}`} data-fx-value>
           {`${v}/${max}`}
         </b>
+        {loss && (
+          <b className="al-loss" data-testid={`alarm-loss-${ship.code}-${t}`}>
+            −{loss.n}
+          </b>
+        )}
       </div>
     );
   }

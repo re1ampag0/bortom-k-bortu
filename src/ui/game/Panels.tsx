@@ -9,17 +9,14 @@ import {
   formatTerms,
   playOptions,
   previewVolley,
-  reactionNow,
   refusal,
-  threat,
   type VolleyPreview,
 } from '../../engine/hints';
 import { powderWord } from '../../engine/log';
 import { cardByCode, seaCardByCode, seatShip, shipData, startValue, type Action, type GameState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
-import { RichText } from '../RichText';
 import { SEA_BG, seaSvg } from './fx/seaArt';
-import { CostBadge, HandCard } from './Hand';
+import { HandCard } from './Hand';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const nick = (data: GameData, code: string) => `«${shipData(data, code).nick}»`;
@@ -189,171 +186,7 @@ export function VolleyPanel({
   );
 }
 
-// ——— Reactions ———
-
-/** A Reaction in the window: its name, what happens now, the full text of the card. */
-interface ReactionItem {
-  seat: string;
-  card: string;
-  now: string | null;
-  reason: string | null;
-  plan: boolean;
-}
-
-/** On a phone a press on a Reaction chooses it (then «Сыграть»); on a laptop it plays at once, as before. */
-const phoneWidth = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches;
-
-function ReactionRow({
-  data,
-  it,
-  picked,
-  onPress,
-  onInfo,
-}: {
-  data: GameData;
-  it: ReactionItem;
-  picked: boolean;
-  onPress: () => void;
-  onInfo: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const c = cardByCode(data, it.card);
-  return (
-    <div
-      className={`reaction-opt ${it.reason ? 'off' : ''} ${picked ? 'on' : ''} ${open ? 'open' : ''}`}
-      role="button"
-      tabIndex={0}
-      aria-disabled={!!it.reason}
-      aria-pressed={picked}
-      title={it.reason ?? undefined}
-      data-card={it.card}
-      onClick={() => !it.reason && onPress()}
-      onKeyDown={(e) => {
-        if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
-        e.preventDefault();
-        if (!it.reason) onPress();
-      }}
-    >
-      <span className="ro-name">
-        {c.name}
-        {it.plan ? ' · План' : ''} <CostBadge c={c} />
-      </span>
-      {/* «What happens now» is always shown here, «Подсказки» or not: the numbers come from the engine. */}
-      <b className="ro-effect">{it.reason ? '—' : it.now}</b>
-      <span className="ro-text">
-        <RichText html={c.text} />
-      </span>
-      <button
-        className="ro-more narrow"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen(!open);
-        }}
-      >
-        {open ? 'Свернуть' : 'Ещё'}
-      </button>
-      <span className="ro-sub">{it.reason ?? `${powderWord(c.cost)} · ${nick(data, it.seat)}`}</span>
-      <button
-        className="info"
-        data-testid="reaction-info"
-        aria-label={`Карта «${c.name}» целиком`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onInfo();
-        }}
-      >
-        i
-      </button>
-    </div>
-  );
-}
-
-export function ReactionPanel({
-  s,
-  data,
-  seats,
-  pick,
-  memo,
-  onAct,
-  onPick,
-  onInfo,
-}: {
-  s: GameState;
-  data: GameData;
-  seats: string[];
-  /** The Reaction chosen in the hand or in the list (the phone chooses, then «Сыграть»). */
-  pick: { seat: string; card: string } | null;
-  /** The first Reaction window of this player in the game: a short note on what a Reaction is. */
-  memo: boolean;
-  onAct: (actions: Action[]) => void;
-  onPick: (pick: { seat: string; card: string } | null) => void;
-  /** «i»: the card in full (CardDetail, with «Сыграть»). */
-  onInfo: (seat: string, card: string) => void;
-}) {
-  const t = threat(s, data);
-  // How many more Reactions the team may play now (Sails; Plans and a captain's card are beyond it).
-  const left = Math.max(
-    0,
-    ...seats.map((seat) => {
-      const ship = seatShip(s, seat);
-      return ship ? ship.tracks.sails - (s.turn.reactions[ship.code] ?? 0) : 0;
-    }),
-  );
-  const skip = () => onAct(seats.map((seat) => ({ type: 'noReaction', seat })));
-  const items: ReactionItem[] = [];
-  for (const seat of seats) {
-    const holder = s.ships[seat];
-    for (const card of [...holder.hand, ...holder.plans]) {
-      if (card === '?' || cardByCode(data, card).type !== 'РЕАКЦИЯ') continue;
-      const r = reactionNow(s, data, seat, card);
-      items.push({ seat, card, now: r.ok ? r.text : null, reason: r.ok ? null : r.reason, plan: holder.plans.includes(card) });
-    }
-  }
-  items.sort((a, b) => Number(!!a.reason) - Number(!!b.reason));
-  const isPicked = (it: ReactionItem) => pick?.seat === it.seat && pick.card === it.card;
-  return (
-    <Panel title={t?.title ?? 'Ответить Реакцией?'} sub={t?.detail} tone="reaction" testid="reaction-panel">
-      {memo && (
-        <p className="reaction-memo" data-testid="reaction-memo">
-          Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.
-        </p>
-      )}
-      <div className="reactions">
-        {items.map((it) => (
-          <ReactionRow
-            key={`${it.seat}-${it.card}`}
-            data={data}
-            it={it}
-            picked={isPicked(it)}
-            onPress={() => (phoneWidth() ? onPick(isPicked(it) ? null : { seat: it.seat, card: it.card }) : onAct([{ type: 'react', seat: it.seat, card: it.card }]))}
-            onInfo={() => onInfo(it.seat, it.card)}
-          />
-        ))}
-        <button className="reaction-skip wide-block" data-testid="skip-reaction" onClick={skip}>
-          Пропустить
-        </button>
-      </div>
-      {/* Phone: the Reaction is chosen in the list or in the hand, then played by the button. */}
-      <div className="react-phone narrow-block">
-        <span className="muted">Реакцию выберите здесь или в руке · можно {left}</span>
-        <div className="panel-actions">
-          <button className="btn" data-testid="skip-reaction" onClick={skip}>
-            Пропустить
-          </button>
-          <button
-            className="btn primary react-play"
-            data-testid="play-reaction"
-            aria-disabled={!pick}
-            title={pick ? undefined : 'Выберите Реакцию'}
-            onClick={() => pick && onAct([{ type: 'react', seat: pick.seat, card: pick.card }])}
-          >
-            {pick ? `Сыграть «${cardByCode(data, pick.card).name}»` : 'Выберите Реакцию'}
-          </button>
-        </div>
-      </div>
-    </Panel>
-  );
-}
+// ——— Reactions: the window is «Тревога!» (Alarm.tsx) ———
 
 /** The attacker while the enemy decides on a Reaction (P8): what was fired, who decides, a calm waiting sign. */
 export function ReactionWaitPanel({ line, who }: { line: string; who: string }) {
