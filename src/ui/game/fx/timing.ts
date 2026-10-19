@@ -13,6 +13,7 @@ export const SOUL_K = 1;
 export const DIVE_K = 1;
 /** FX-B, FX-C (package 3): the Legends and the sea. */
 export const LEGEND_K = 1;
+export const KRAKEN_K = 1;
 
 const scaled = <T extends Record<string, number>>(k: number, o: T): T => Object.fromEntries(Object.entries(o).map(([n, v]) => [n, v * k])) as T;
 
@@ -178,5 +179,45 @@ export const T = {
     orbEnd: 580,
     /** the simple effects (ctx.rich = false): the card in the middle for… */
     simple: 1000,
+  }),
+  /** «Кракен» (fxKraken of fx3.js, §3.2): the sea darkens, the shadow of the beast, the eye; six arms, three fall across
+   *  the plank and squeeze it — the wood cracks under each; the boards and the sailors of the events go; the ink stays. */
+  kraken: scaled(KRAKEN_K, {
+    /** the dark of the deep comes / the shadow glides under the target */
+    deep: 900,
+    glide: 1500,
+    /** the eye opens at… and lives (opens, looks, blinks, closes) */
+    eyeAt: 1300,
+    eye: 5200,
+    /** the arms burst out of the water after the eye opened */
+    armsAt: 800,
+    rise: 700,
+    riseStep: 160,
+    /** the three arms at the edge of the target come a little later */
+    gripAt: 350,
+    gripStep: 180,
+    /** the arms sway before they fall */
+    sway: 1500,
+    /** the three arms fall across the plank, one after another */
+    fall: 420,
+    fallStep: 110,
+    land: 560,
+    /** a squeeze: the crack opens under the arm, the plank is pressed */
+    crack: 520,
+    squeeze: 440,
+    squeezeStep: 480,
+    /** a board of the Hull breaks off / a sailor is dragged to the sea */
+    board: 900,
+    boardStep: 170,
+    drag: 900,
+    dragStep: 220,
+    /** the marks of the damage stay a while */
+    after: 800,
+    /** the ink bursts; the arms slide down into it */
+    ink: 900,
+    sink: 700,
+    sinkStep: 90,
+    release: 800,
+    end: 1600,
   }),
 } as const;

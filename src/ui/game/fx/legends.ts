@@ -19,12 +19,13 @@ import type { ClipPlayer } from './FxLayer';
 import { flipTo } from './misc';
 import { KIND_BY_TRACK, type JackClip, type LegendClip } from './planFx';
 import {
-  A, at, badgeMark, boom, flashBoard, fxSvg, gunFire, hitBlast, bubbles, burst, bx, clamp, curve, facingY, flash, fly, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
-  projectile, puff, qpts, ring, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, splash, sv, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx,
+  A, at, badgeMark, boom, filters, flashBoard, fxSvg, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, curve, flash, fly, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
+  projectile, puff, qpts, ring, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, splash, sv, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
 } from './primitives';
-import { ART_FRAME, COST_ICON, COST_WORD, EMBLEM, SEAL_HTML } from '../art/legendArt';
+import { CELLS } from '../art/cells';
+import { ART_FRAME, COST_ICON, COST_WORD, crackArt, EMBLEM, SEAL_HTML, TENT } from '../art/legendArt';
 import { ruleTag } from './sea';
-import { scar, seaScars } from './scars';
+import { plankScars, scar, seaScars } from './scars';
 import { SMOKE_LIFE, T } from './timing';
 
 let LG_UID = 0;
@@ -355,67 +356,137 @@ LG['И-Л'] = async (c, ctx) => {
   await wait(ctx, lastHit + 1150);
 };
 
-/** «Кракен»: deep water, an eye opens, tentacles wind round the ship and squeeze it, the cells crack. */
+/** A piece flying off a plank: a cell of a track (its A5 icon) in the layer. */
+function cellFly(ctx: FxCtx, icon: string, p: Pt): HTMLElement {
+  const el = mk(ctx, 'lg-fly', 0, 0, icon);
+  el.style.transform = `translate(${R1(p.x)}px,${R1(p.y)}px)`;
+  return el;
+}
+
+/**
+ * «Кракен» (fxKraken of fx3.js, ANIMATIONS.md §3.2; T.kraken). The sea around the target turns dark, the shadow of the
+ * beast glides under it, bubbles boil; the eye opens in the water by it, looks, blinks; six arms burst out of the
+ * water with spouts — three around it and three at its edge in 30/55/78 % of its width; those three fall across the
+ * plank and squeeze it in turn, and right under each the wood splits (crackArt, a medium trace on the plank), with the
+ * sucker rings along the cracks (short); the boards of the Hull break off and the sailors are dragged into the sea by
+ * the side arms — as many as the events of the clip say; the ink cloud stays on the sea (short), the arms slide down.
+ * game: the target may be in the top row — then the arms hang from its lower edge (the picture mirrored).
+ */
 LG['Г-Л'] = async (c, ctx) => {
-  const tgt = c.target!, tp = plank(ctx, tgt), tb = bx(ctx, tp), g = gapBox(ctx), uid = ++LG_UID;
-  const top = isTop(ctx, tgt);
-  const edge = facingY(ctx, tgt); // the edge to the sea
-  const deep = mk(ctx, 'tint', 0, 0);
-  const dw = tb.w * 1.5, dh = tb.h + g.h + 80;
-  deep.style.width = dw + 'px'; deep.style.height = dh + 'px';
-  deep.style.background = `radial-gradient(ellipse closest-side at 50% ${top ? '62%' : '38%'}, rgba(10,30,36,.88), rgba(16,44,52,.55) 55%, rgba(16,44,52,0) 100%)`;
-  deep.style.transform = `translate(${tb.cx - dw / 2}px,${top ? tb.y - 40 : tb.y - g.h - 40}px)`;
-  A(ctx, deep, [{ opacity: 0 }, { opacity: 1 }], 600, 0, 'ease-in', 'forwards');
-  bubbles(ctx, tb.x + 10, edge + (top ? 30 : -6), tb.w - 20, 150, ctx.rich ? 20 : 0, 50);
-  // the eye in the deep
-  const eyeY = edge + (top ? 1 : -1) * Math.min(g.h * 0.55, 60);
-  const eye = mk(ctx, 'eye', 0, 0, eyeSVG(uid));
-  const es = clamp(tb.w / 320, 0.55, 1);
-  A(ctx, eye, [{ opacity: 0, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(.04)` }, { opacity: 1, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(1.1)`, offset: 0.7 }, { opacity: 1, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(1)` }], 380, 380, 'cubic-bezier(.2,.8,.3,1.2)', 'forwards');
-  A(ctx, eye.querySelector('.pupil')!, [{ transform: 'scaleX(1.6)' }, { transform: 'scaleX(.5)' }], 300, 820, 'ease-in', 'forwards');
-  if (ctx.rich) { const gl = mk(ctx, 'lg-glow', tb.cx, eyeY); A(ctx, gl, [{ opacity: 0, transform: 'scale(.15)' }, { opacity: 0.55, transform: 'scale(.35)' }, { opacity: 0, transform: 'scale(.3)' }], 1600, 420); }
-  // the tentacles
-  const L = tb.h * 1.3;
-  const spots: [number, number, number][] = [[tb.x + 4, -1, 30], [tb.x + tb.w * 0.32, -1, 14], [tb.x + tb.w * 0.68, 1, 14], [tb.r - 4, 1, 30]];
-  const tents = spots.map(([x, side, curl], q) => {
-    const t = mk(ctx, 'tentacle', 0, 0, tentacleSVG(L, side > 0, `${uid}${q}`));
-    t.dataset.side = String(side);
-    const w = L * 0.3;
-    const y0 = edge + (top ? 14 : -14);
-    const flipV = top ? '' : ' scaleY(-1)';
-    // a positive angle — the tip to the right (for the ones growing up and the ones hanging down): to the middle of the ship
-    const pose = (rot: number, sy: number, op = 1): Keyframe => ({ opacity: op, transform: `translate(${x - w / 2}px,${y0 - L}px)${flipV} rotate(${rot}deg) scaleY(${sy})` });
-    t.style.transformOrigin = `50% ${L}px`; // the base — at the sea
-    A(ctx, t, [pose(side * 35, 0.1, 0), pose(side * 18, 0.75), pose(-side * (curl + 10), 1.08), pose(-side * curl, 1)], 640, 640 + q * 90, 'cubic-bezier(.25,.8,.3,1.1)', 'forwards');
-    return { el: t, pose, curl, side };
+  const K = T.kraken, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = ctx.board.clientWidth, uid = ++LG_UID;
+  const v = isTop(ctx, tgt) ? -1 : 1; // 1 — the arms grow up from the top edge (a ship of the bottom row)
+  const edge = v > 0 ? b.y : b.b;     // the edge of the target to the sea
+  const rich = filters(ctx);
+  // 1. the sea around the target turns dark and green; the shadow of the beast glides under it; bubbles boil
+  const sea = seaScars(ctx), deep = fxSvg(ctx, sea || ctx.layer), top = fxSvg(ctx);
+  sv(deep, `<defs><radialGradient id="lgKrDeep${uid}"><stop offset="0" stop-color="#05140f" stop-opacity=".85"/><stop offset=".6" stop-color="#0c2a22" stop-opacity=".55"/><stop offset="1" stop-color="#0c2a22" stop-opacity="0"/></radialGradient>${rich ? `<filter id="lgKrBlur${uid}"><feGaussianBlur stdDeviation="8"/></filter>` : ''}</defs>`);
+  const dark = sv(deep, `<ellipse cx="${R1(b.cx)}" cy="${R1(edge - v * 30)}" rx="${R1(Math.min(330, b.w * 0.75))}" ry="110" fill="url(#lgKrDeep${uid})"/>`);
+  A(ctx, dark, [{ opacity: 0 }, { opacity: 1 }], K.deep);
+  const shadow = sv(deep, `<g ${rich ? `filter="url(#lgKrBlur${uid})"` : ''} opacity=".75"><ellipse cx="0" cy="0" rx="130" ry="42" fill="#020806"/>${[-1, 1].map((s) => [0, 1, 2].map((i) => `<path d="M${s * 90} ${-10 + i * 12} q${s * 60} ${-20 + i * 20} ${s * 120} ${10 + i * 6}" stroke="#020806" stroke-width="${14 - i * 3}" fill="none" stroke-linecap="round"/>`).join('')).join('')}</g>`);
+  const ks = clamp(b.w / 480, 0.5, 1);
+  A(ctx, shadow, [{ transform: `translate(${R1(b.cx - 520 * ks)}px,${R1(edge - v * 40)}px) scale(${R1(0.8 * ks * 100) / 100})` }, { transform: `translate(${R1(b.cx)}px,${R1(edge - v * 30)}px) scale(${R1(1.1 * ks * 100) / 100})` }], K.glide, 0, 'cubic-bezier(.3,.1,.3,1)');
+  for (let i = 0, n = room(ctx, 46); i < n; i++) {
+    const x = b.cx + rnd(-0.55, 0.55) * b.w, y = edge - v * rnd(4, 80);
+    const o = sv(deep, `<circle r="${R1(rnd(1.4, 4.6))}" fill="rgba(210,240,236,.15)" stroke="#d9f2ec" stroke-width=".9"/>`);
+    A(ctx, o, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${R1(x + rnd(-6, 6))}px,${R1(y - rnd(14, 34))}px) scale(1.1)`, opacity: 0 }], rnd(700, 1300), rnd(400, 2600));
+  }
+  await wait(ctx, K.eyeAt);
+  // 2. the eye opens in the water by the target, looks, blinks
+  const eye = sv(deep, '<g><ellipse rx="40" ry="20" fill="#06100c" opacity=".8"/><ellipse rx="34" ry="16" fill="#0a1a14"/><ellipse rx="26" ry="11" fill="#f2c94c" stroke="#3a2a0c" stroke-width="1.4"/><ellipse rx="3.4" ry="10" fill="#060606"/><circle cx="-8" cy="-4" r="2.4" fill="#fff" opacity=".8"/></g>');
+  const ex = b.cx + 40 * ks, ey = edge - v * 56, et = (sy: number) => `translate(${R1(ex)}px,${R1(ey)}px) scale(${ks},${sy * ks})`;
+  A(ctx, eye, [{ transform: et(0) }, { transform: et(1), offset: 0.2 }, { transform: et(1), offset: 0.45 }, { transform: et(0.08), offset: 0.5 }, { transform: et(1), offset: 0.56 }, { transform: et(1), offset: 0.92 }, { transform: et(0) }], K.eye);
+  await wait(ctx, K.armsAt);
+  // 3. the arms burst out of the water: three around the target, three right at its edge — those will grip
+  const right = b.cx > W / 2; // the side arm goes into the gap between the columns
+  const flip = (k: number) => `scale(1,${R1(k * v * 1000) / 1000})`;
+  const spots: [number, number, boolean, number, number][] = [[b.x + 40, edge + v * 8, false, 1.3, -14], [b.r - 36, edge + v * 8, true, 1.3, 14], [right ? b.x - 18 : b.r + 18, b.cy + v * b.h * 0.05, !right, 1.15, right ? -26 : 26]];
+  const arms = spots.map(([x, y, fl, k, rot], i) => {
+    waterColumn(ctx, top, x, y, 44, i * 160);
+    const g = sv(top, `<g><g transform="scale(${fl ? -1 : 1} 1)">${TENT(`a${uid}${i}`, k * ks, 1.5)}</g></g>`);
+    const r = rot * v;
+    A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${r}deg) ${flip(0)}` }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${r}deg) ${flip(1.15)}`, offset: 0.6 }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${r}deg) ${flip(1)}` }], K.rise, i * K.riseStep, 'cubic-bezier(.2,1.3,.5,1)');
+    return { g, x, y, r };
   });
-  // the squeeze
-  const SQ = 1300;
-  A(ctx, tp, [{ transform: 'none' }, { transform: 'scale(.955,1.035)', offset: 0.3 }, { transform: 'scale(.97,1.02) translateX(-3px)', offset: 0.55 }, { transform: 'scale(.96,1.03) translateX(3px)', offset: 0.75 }, { transform: 'none' }], 1100, SQ, 'ease-in-out', 'none');
-  at(ctx, SQ, () => tp.classList.add('hitframe'));
-  // the hits on the cells
+  const gripX = [0.3, 0.55, 0.78].map((f) => b.w * f); // where the arms grip — and where the plank splits
+  const grips = gripX.map((x0, i) => {
+    const x = b.x + x0, y = edge + v * 3;
+    waterColumn(ctx, top, x, y - v * 2, 50, K.gripAt + i * K.gripStep);
+    const g = sv(top, `<g><g class="gin">${TENT(`g${uid}${i}`, 0.92, 1.35 * Math.max(0.6, ks))}</g></g>`);
+    A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg) ${flip(0)}` }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${i % 2 ? 6 : -6}deg) ${flip(1.15)}`, offset: 0.6 }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg) ${flip(1)}` }], K.rise, K.gripAt + i * K.gripStep, 'cubic-bezier(.2,1.3,.5,1)');
+    g.dataset.grip = String(i);
+    return { g, x, y, s: i % 2 ? 1 : -1 };
+  });
+  await wait(ctx, K.sway);
+  // 4. the three arms fall over the plank and lie across it (the length — the height of the plank); each squeezes in
+  //    turn — and right under it the wood splits
+  const kY = R1(((b.h - 6) / 146 / 0.92) * 100) / 100;
+  grips.forEach((a, i) => A(ctx, a.g, [{ transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(0deg) ${flip(1)}` }, { transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 95}deg) ${flip(0.9)}`, offset: 0.55 }, { transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 180}deg) ${flip(kY)}` }], K.fall, i * K.fallStep, 'cubic-bezier(.6,0,.9,.5)'));
+  await wait(ctx, K.land);
+  grips.forEach((a) => { splintersSvg(ctx, top, a.x, edge + v * 6, 5); sparksSvg(ctx, top, a.x, edge + v * 4, 4, 0, ['#e9d29a', '#a8703a', '#fff']); });
+  const host = plankScars(ctx, tgt);
+  const local = (cls: string, life: 'short' | 'medium', blend = '') => {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('width', String(R1(b.w))); s.setAttribute('height', String(R1(b.h))); s.setAttribute('class', cls);
+    s.setAttribute('style', `position:absolute;left:0;top:0;overflow:visible;pointer-events:none${blend}`);
+    (host || tp).appendChild(s);
+    return scar(s, life, tgt);
+  };
+  const cracks = local('fx-cracks', 'medium'), marks = local('fx-suckers', 'short', ';mix-blend-mode:multiply');
+  const y0 = v > 0 ? 0 : b.h;
+  for (let k = 0; k < 3; k++) {
+    const a = grips[k], x0 = gripX[k];
+    const g = sv(cracks, crackArt(`k${uid}${k}`, x0, y0, b.h * rnd(0.82, 0.98), (v * Math.PI) / 2 + rnd(-0.14, 0.14), rnd(2.8, 3.6)));
+    A(ctx, g.querySelector('.rv')!, [{ transform: `translate(${R1(x0)}px,${R1(y0)}px) scale(0)` }, { transform: `translate(${R1(x0)}px,${R1(y0)}px) scale(1)` }], K.crack, 60, 'cubic-bezier(.2,.9,.3,1)');
+    A(ctx, a.g.querySelector('.gin')!, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.22,.96)', offset: 0.4 }, { transform: 'scale(1.08,1)' }], K.squeeze, 0, 'ease-in-out');
+    A(ctx, tp, [{ scale: '1 1' }, { scale: '.97 .92', offset: 0.4 }, { scale: '1 1' }], K.squeeze, 0, 'ease-in-out', 'none');
+    boom(ctx, 4, 300); flashBoard(ctx, '#0b1f18', 0.16, 300);
+    splintersSvg(ctx, top, a.x, b.cy, 4);
+    await wait(ctx, K.squeezeStep);
+  }
+  // the sucker rings stay along each crack where the arm lay
+  sv(marks, `<g>${gripX.map((x0) => Array.from({ length: Math.max(0, Math.floor((b.h - 14) / 11)) }, (_, k) => `<ellipse cx="${R1(x0 + (k % 2 ? 6 : -6))}" cy="${R1(v > 0 ? 10 + k * 11 : b.h - 10 - k * 11)}" rx="${R1(Math.max(1.2, 4.2 - k * 0.3))}" ry="${R1(Math.max(1, 3.6 - k * 0.26))}" fill="rgba(120,40,56,.14)" stroke="#6e2a34" stroke-width="1" opacity=".6"/>`).join('')).join('')}</g>`);
+  // 5. the boards of the Hull break off, the sailors are dragged into the sea — by the events of the clip
   const units = damageUnits(ctx, c.effects || []);
-  let last = SQ;
-  units.forEach((u, i) => {
-    const t0 = SQ + 120 + i * 120, p = fxPoint(ctx, u.ship, u.track, u.idx);
-    at(ctx, t0, () => setTrack(ctx, u.ship, u.track, u.v, '#7a1f12'));
-    flash(ctx, p.x, p.y, t0, 1.1); burst(ctx, u.track === 'crew' ? 'dust' : 'splinter', p.x, p.y, t0, 9, 12, 36, 600);
-    ring(ctx, p.x, p.y, t0, 1, '#2b3f3a');
-    last = t0;
+  let t = 0, crew = 0;
+  for (const u of units) {
+    const p = fxPoint(ctx, u.ship, u.track, u.idx);
+    if (u.track === 'crew') {
+      const a = arms[crew++ % arms.length], fl = cellFly(ctx, CELLS.CREW.replace('width="14" height="17"', 'width="20" height="24"'), p);
+      A(ctx, fl, [{ opacity: 1, transform: `translate(${R1(p.x - 10)}px,${R1(p.y - 12)}px) rotate(0deg)` }, { opacity: 1, transform: `translate(${R1(a.x)}px,${R1(a.y - v * 120)}px) rotate(-200deg)`, offset: 0.6 }, { opacity: 0, transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(-360deg) scale(.5)` }], K.drag, t, 'cubic-bezier(.4,0,.6,1)');
+      waterColumn(ctx, top, a.x, a.y, 36, t + K.drag);
+      at(ctx, t, () => setTrack(ctx, u.ship, u.track, u.v, '#7a1f12'));
+      t += K.dragStep;
+    } else {
+      const fl = cellFly(ctx, u.track === 'hull' ? CELLS.HULL : CELLS.SAIL, p);
+      splintersSvg(ctx, top, p.x, p.y, 6, t);
+      A(ctx, fl, [{ opacity: 1, transform: `translate(${R1(p.x - 6)}px,${R1(p.y - 8)}px) rotate(0deg)` }, { opacity: 1, transform: `translate(${R1(p.x + rnd(-60, 60))}px,${R1(p.y - 70)}px) rotate(${R1(rnd(-300, 300))}deg)`, offset: 0.45 }, { opacity: 0, transform: `translate(${R1(p.x + rnd(-90, 90))}px,${R1(edge - v * 20)}px) rotate(${R1(rnd(-600, 600))}deg)` }], K.board, t, 'cubic-bezier(.3,.1,.7,1)');
+      at(ctx, t, () => setTrack(ctx, u.ship, u.track, u.v, '#7a1f12'));
+      t += K.boardStep;
+    }
+  }
+  damageMarks(ctx, units, t + 80);
+  const soulsEnd = c.souls ? soulsFly(ctx, tgt, c.souls, t + 200, true) : 0;
+  await wait(ctx, t + K.after);
+  // 6. the beast lets go: an ink cloud bursts and stays on the sea (short), the arms slide down into it
+  const ink = sea ? scar(fxSvg(ctx, sea), 'short') : fxSvg(ctx);
+  const ty = edge - v * 28;
+  ink.innerHTML += `${rich ? `<defs><filter id="lgInk${uid}" x="-50%" y="-50%" width="200%" height="200%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="26"/><feGaussianBlur stdDeviation="2"/></filter></defs>` : ''}<g class="lg-ink" ${rich ? `filter="url(#lgInk${uid})"` : ''}>${Array.from({ length: 7 }, (_, i) => `<ellipse cx="${R1(b.cx + (i - 3) * 62 * ks)}" cy="${R1(ty + (i % 2) * 14 * v)}" rx="${R1(rnd(46, 70) * ks)}" ry="${R1(rnd(18, 28))}" fill="#08100e" opacity=".7"/>`).join('')}</g>`;
+  const blot = ink.querySelector('.lg-ink')!;
+  (blot as SVGElement).style.transformOrigin = `${R1(b.cx)}px ${R1(ty)}px`;
+  A(ctx, blot, [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1)' }], K.ink, 0, 'cubic-bezier(.2,.8,.3,1)');
+  arms.forEach((a, i) => {
+    A(ctx, a.g, [{ opacity: 1, transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.r}deg) ${flip(1)}` }, { opacity: 0, transform: `translate(${R1(a.x)}px,${R1(a.y + v * 30)}px) rotate(${a.r}deg) ${flip(0)}` }], K.sink, i * K.sinkStep, 'ease-in');
+    waterColumn(ctx, top, a.x, a.y, 28, 500 + i * K.sinkStep);
   });
-  at(ctx, SQ + 200, () => shake(ctx, ctx.board, 0, 8, 300));
-  damageMarks(ctx, units, last + 80);
-  const soulsEnd = c.souls ? soulsFly(ctx, tgt, c.souls, last + 200, true) : 0;
-  // the leave
-  const OUT = last + 750;
-  tents.forEach((t, q) => A(ctx, t.el, [t.pose(-t.side * t.curl, 1), t.pose(t.side * 35, 0.1, 0)], 480, OUT + q * 60, 'cubic-bezier(.5,0,.8,.4)', 'forwards'));
-  for (let q = 0; q < 3; q++) splash(ctx, tb.x + tb.w * (0.2 + q * 0.3), edge + (top ? 10 : -10), OUT + 200 + q * 90);
-  A(ctx, eye, [{ opacity: 1, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(1)` }, { opacity: 0, transform: `translate(${tb.cx}px,${eyeY}px) scale(${es}) scaleY(.04)` }], 260, OUT + 100, 'ease-in', 'forwards');
-  A(ctx, deep, [{ opacity: 1 }, { opacity: 0 }], 500, OUT + 250, 'ease-out', 'forwards');
-  await wait(ctx, Math.max(OUT + 800, soulsEnd + 100));
-  // game: the reference draws new planks after a clip; here the node stays, so the frame of the hit goes by hand
-  tp.classList.remove('hitframe');
+  grips.forEach((a, i) => {
+    A(ctx, a.g, [{ transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 180}deg) ${flip(kY)}` }, { transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 20}deg) ${flip(0.9)}`, offset: 0.5 }, { transform: `translate(${R1(a.x)}px,${R1(a.y + v * 20)}px) rotate(0deg) ${flip(0)}`, opacity: 0.6 }], K.release, 150 + i * 100, 'ease-in-out');
+    waterColumn(ctx, top, a.x, a.y, 32, 700 + i * 100);
+  });
+  A(ctx, eye, [{ opacity: 1 }, { opacity: 0 }], 400, 0, 'ease-in', 'forwards');
+  if (sea) scar(deep, 'short'); // the dark of the deep stays a while and dissolves
+  await wait(ctx, Math.max(K.end, soulsEnd - (t + K.after) + 100));
 };
+
 
 /** «Корабль в бутылке»: a glass bottle over the ship, the ship shrinks into it, the cork, the bottle floats away. */
 LG['М-Л'] = async (c, ctx) => {
