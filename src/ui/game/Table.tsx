@@ -15,6 +15,7 @@ import { ALARM_SEAL, TARGET_SEAL } from './art/seal';
 import type { Loss } from './alarm';
 import { hourglassSvg } from './art/table';
 import { wxSvg } from './art/wx';
+import { KNOT_SVG } from './art/knot';
 import { oakMedal, type OakSign } from './art/oak';
 import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, TRIDENT_SVG, statusSvg, type StatusIcon } from './art/status';
 
@@ -229,7 +230,11 @@ export function RoundButton({ b, icon, className = '' }: { b: Btn; icon: string;
       title={b.disabled ?? caption}
       data-testid={b.testid}
     >
-      <span className="round-disc" dangerouslySetInnerHTML={svg(ROUND_ICON[icon] ?? '')} />
+      {/* A5Rig «турецкий узел»: the woven ring (art/knot.ts) round the brass disc with the icon */}
+      <span className="round-disc" aria-hidden>
+        <span className="round-knot" dangerouslySetInnerHTML={svg(KNOT_SVG)} />
+        <span className="round-core" dangerouslySetInnerHTML={svg(ROUND_ICON[icon] ?? '')} />
+      </span>
       <span className="round-cap" aria-hidden>
         {caption}
       </span>

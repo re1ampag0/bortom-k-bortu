@@ -1211,8 +1211,8 @@ export function Game({
         <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
           Правила
         </button>
-        {canHold && <Button b={pauseBtn} className="pause" />}
-        {botBusy ? <Button b={botBtns[1]} /> : net ? <Button b={remindBtn} /> : <Button b={undoBtn} className="undo" />}
+        {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" />}
+        {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" /> : net ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
         <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       </nav>
       {net && <MissedSheet game={net} />}
