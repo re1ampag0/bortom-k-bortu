@@ -5,6 +5,7 @@ import grate from './art/rig/deck-grate.svg';
 import cannon from './art/rig/deck-cannon.svg';
 import ballsArt from './art/rig/deck-balls.svg';
 import lanternArt from './art/rig/deck-lantern.svg';
+import coilArt from './art/rig/deck-coil.svg';
 import ink from './art/rig/prop-ink.svg';
 import candle from './art/rig/prop-candle.svg';
 import { tableThings } from './art/table';
@@ -50,6 +51,7 @@ const PIECES = {
   cannon: { src: cannon, vb: [-3, 11, 128, 56] },
   balls: { src: ballsArt, vb: [-25, -35, 69, 55] },
   lantern: { src: lanternArt, vb: [-10, -3, 50, 59] },
+  coil: { src: coilArt, vb: [-41, -18, 70, 46] },
 } as const;
 type PieceKey = keyof typeof PIECES;
 /** The light of the lantern reaches R (the values of the user for the whole table). */
@@ -134,6 +136,10 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
   const mid = (stripL + stripR) / 2;
   // the grating — thin, 340×24 — over the middle of the hand
   const grateP = pieceAt('grate', mid - 170, hand.t - 6, 1);
+  // the coil (coil(…, 2.6, 1.2, 4.2) of the reference) in the bottom left corner: right of the Hold, «Перестроение» and
+  // «Колода · Сброс», its bottom at the edge of the window; the cards of the hand may lie over it a little
+  const holdR = L - 24;
+  const coilP = pieceAt('coil', holdR + 4 + 41, H - 2 - 28, 1);
   // every card whole in the window: the lowest point of the fan ≥ 4 px above the edge (the padding under the cards)
   const lowest = cards.length ? Math.max(...cards.map((c) => c.t + c.h)) : 0;
   const curLift = (parseFloat(game.style.getPropertyValue('--deck-lift')) || 0) * f;
@@ -143,7 +149,7 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     phone: false,
     W,
     H,
-    pieces: [grateP, gun, balls, lantern],
+    pieces: [grateP, coilP, gun, balls, lantern],
     lx,
     ly,
     ls: lsc,

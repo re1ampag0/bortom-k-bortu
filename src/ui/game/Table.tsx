@@ -18,6 +18,7 @@ import { wxSvg } from './art/wx';
 import { KNOT_SVG, KNOT_THIN_SVG } from './art/knot';
 import { oakMedal, type OakSign } from './art/oak';
 import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, tridentSvg, statusSvg, type StatusIcon } from './art/status';
+import { stBadge } from './art/status3';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const TRACK_LABEL: Record<Track, string> = { hull: 'Корпус', sails: 'Паруса', guns: 'Пушки', crew: 'Команда' };
@@ -593,7 +594,7 @@ export function Plank({
               data={{ 'data-fx-status': x.label, 'data-fx-mark': x.mark || undefined }}
               style={x.flag && fxHidden?.includes(x.flag) ? { visibility: 'hidden' } : undefined}
             >
-              {x.icon && <span className="chip-icon" dangerouslySetInnerHTML={svg(statusSvg(x.icon))} />}
+              {x.icon && <span className="chip-icon" dangerouslySetInnerHTML={svg(stBadge(x.icon, 18) || statusSvg(x.icon))} />}
               {x.label}
             </InfoTip>
           ))}
@@ -608,7 +609,7 @@ export function Plank({
         <div className="badges">
           {ship.fires > 0 && (
             <InfoTip className="badge fire" title={fireLabel} text={FIRE_INFO} off={!!plate} data={{ 'data-fx-fires': true, 'data-testid': `fire-${ship.code}` }}>
-              <span className="chip-icon" dangerouslySetInnerHTML={svg(statusSvg('fire'))} />
+              <span className="chip-icon" dangerouslySetInnerHTML={svg(stBadge('fire', 18))} />
               {fireLabel}
             </InfoTip>
           )}
