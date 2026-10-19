@@ -597,6 +597,7 @@ export function Game({
     if (!myTurn || ship.sunk || ship.side !== bottom || !mySeats.includes(code)) return [];
     const params = shipData(data, code);
     const vt = volleyTargets(s, data, { ship: code });
+    const joint = jointAlly();
     const btns: Btn[] = [
       {
         key: 'volley',
@@ -609,6 +610,8 @@ export function Game({
           setMode({ k: 'aim', shooter: code, charge: null, chargeFrom: null, heart: false, target: null, paid: 0 });
         },
         testid: `volley-${code}`,
+        // «+1 совместно» on the button, the full text as its pop (instead of a line under the Hold)
+        ...(joint?.code === code ? { tag: `+${data.rules.jointBonus} совместно`, tip: joint.text } : {}),
       },
     ];
     if (heartTargets(s, data, code).length > 0) {
@@ -635,12 +638,13 @@ export function Game({
     return { key: 'regroup', label: cost ? `Перестроение · ${cost} П` : 'Перестроение · бесплатно', short: `Перестроение · ${cost}`, disabled: r.ok ? null : r.reason, onClick: () => act({ type: 'regroup', side }) };
   };
 
-  const jointHint = (side: Side): string | null => {
+  /** «Совместный залп»: the ally whose Volley at the first target gets +N this turn, and the full text of it (on its «Залп»). */
+  const jointAlly = (): { code: string; text: string } | null => {
     const t = s.turn;
-    if (!myTurn || side !== bottom || !t.firstTarget || t.jointUsed || !t.firstShooter) return null;
-    const ally = Object.values(s.ships).find((x) => x.side === side && x.code !== t.firstShooter && !x.sunk);
+    if (!myTurn || !t.firstTarget || t.jointUsed || !t.firstShooter) return null;
+    const ally = Object.values(s.ships).find((x) => x.side === bottom && x.code !== t.firstShooter && !x.sunk);
     if (!ally || (t.volleys[ally.code] ?? 0) > 0 || s.ships[t.firstTarget].sunk) return null;
-    return `совместный залп по «${shipData(data, t.firstTarget).nickDative}» даст ${nick(ally.code)} +${data.rules.jointBonus}`;
+    return { code: ally.code, text: `Совместный залп по «${shipData(data, t.firstTarget).nickDative}» даст ${nick(ally.code)} +${data.rules.jointBonus}` };
   };
 
   // ——— «Тревога!»: the Reaction window is the bar, the arrow, the hand and the buttons; on a phone — a sheet ———
@@ -1151,7 +1155,7 @@ export function Game({
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
         <div className="board-bottom">
-          <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} fxGen={fx.gen} />
+          <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={fx.gen} />
           <div className="hand-row" data-fx-hand>
             {seat && (
               <Hand
