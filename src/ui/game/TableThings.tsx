@@ -137,15 +137,13 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
   const mid = (stripL + stripR) / 2;
   // the grating — thin, 340×24 — over the middle of the hand
   const grateP = pieceAt('grate', mid - 170, hand.t - 6, 1);
-  // the coil (coil(…, 2.6, 1.2, 4.2) of the reference) in the bottom left corner, seen at least ¾: right of «Колода · Сброс», under
-  // «Перестроение», left of the first card (not under the cards or the Hold); smaller when the room is small (2.0–1.6 of the
-  // reference's 2.6), its bottom may go past the edge of the window
+  // the coil (coil(…, 2.6, 1.2, 4.2) of the reference) in the bottom left corner — the same place and size in any turn: under
+  // «Перестроение», 186 px right of its left edge (right of the longest «Колода · Сброс · сыграно»), 1.8 of the reference's 2.6,
+  // one scale for x and y; the first card may lie over its right edge a little, its bottom may go past the edge of the window
   const regroupEl = rect(visible(game, '.board-bottom .regroup'), g);
-  const deckLine = rect(visible(game, '[data-fx-deck]'), g);
-  const firstCard = cards.length ? Math.min(...cards.map((c) => c.l)) : stripL;
-  const coilL = (deckLine ? deckLine.l + deckLine.w : 12) + 6;
+  const coilL = (regroupEl ? regroupEl.l : 12) + 186;
   const coilTop = (regroupEl ? regroupEl.t + regroupEl.h : H - 40) + 4;
-  const cs = Math.max(1.6 / 2.6, Math.min(2.0 / 2.6, (firstCard - 4 - coilL) / PIECES.coil.vb[2]));
+  const cs = 1.8 / 2.6;
   const coilP = pieceAt('coil', coilL + 41 * cs, coilTop + 18 * cs, cs);
   // every card whole in the window: the lowest point of the fan ≥ 4 px above the edge (the padding under the cards)
   const lowest = cards.length ? Math.max(...cards.map((c) => c.t + c.h)) : 0;
