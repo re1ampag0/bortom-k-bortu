@@ -1,6 +1,6 @@
 // A2: the pure parts of the effect primitives (the rest is DOM: e2e).
-import { describe, expect, it } from 'vitest';
-import { ABORT, cardHTML, curve, ms, wait, type FxCtx } from '../src/ui/game/fx/primitives';
+import { describe, expect, it, vi } from 'vitest';
+import { ABORT, at, cardHTML, curve, flushClock, ms, pauseClock, resumeClock, wait, type FxCtx } from '../src/ui/game/fx/primitives';
 import { speedFactor } from '../src/ui/game/text';
 import { data } from './helpers';
 
@@ -28,6 +28,36 @@ describe('effect primitives', () => {
   it('wait resolves in its run and rejects with ABORT when the run changed', async () => {
     await expect(wait(ctx(0.01), 10)).resolves.toBeUndefined();
     await expect(wait(ctx(0.01, 1, () => 2), 10)).rejects.toBe(ABORT);
+  });
+
+  it('«Пауза» stops the clock of a clip in the middle, «Дальше» goes on with the time left; a cut-off run ends at once', async () => {
+    vi.useFakeTimers();
+    try {
+      const fired: number[] = [];
+      at(ctx(1), 1000, () => fired.push(1));
+      vi.advanceTimersByTime(600);
+      pauseClock();
+      vi.advanceTimersByTime(5000);
+      expect(fired, 'nothing fires while paused').toEqual([]);
+      resumeClock();
+      vi.advanceTimersByTime(399);
+      expect(fired).toEqual([]);
+      vi.advanceTimersByTime(1);
+      expect(fired, 'the 400 ms left').toEqual([1]);
+      // «До конца хода» while paused: the old run's wait ends with ABORT now, its at() does nothing
+      let run = 1;
+      const old = ctx(1, 1, () => run);
+      pauseClock();
+      const w = wait(old, 1000);
+      at(old, 500, () => fired.push(2));
+      run = 2;
+      flushClock();
+      await expect(w).rejects.toBe(ABORT);
+      expect(fired).toEqual([1]);
+      resumeClock();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('a flying card has the markup of a card in the hand', () => {

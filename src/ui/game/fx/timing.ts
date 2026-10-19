@@ -11,6 +11,14 @@ export const SWAP_K = 1;
 export const REPAIR_K = 1;
 export const SOUL_K = 1;
 export const DIVE_K = 1;
+/** FX-B, FX-C (package 3): the Legends and the sea. */
+export const LEGEND_K = 1;
+export const KRAKEN_K = 1;
+export const ARMADA_K = 1;
+export const BOTTLE_K = 1;
+export const JACK_K = 1;
+export const ROUND_K = 1;
+export const SEA_K = 1;
 
 const scaled = <T extends Record<string, number>>(k: number, o: T): T => Object.fromEntries(Object.entries(o).map(([n, v]) => [n, v * k])) as T;
 
@@ -133,5 +141,252 @@ export const T = {
     rise: 1200,
     /** the green frame of a ship surfaced */
     glow: 1200,
+  }),
+  /** The entrance of a Legend (legendIntro of fx3.js, ANIMATIONS.md §3.1, ≈ 4.6 s): the medallion calls, the stage dims
+   *  between the cinema bars, the card bursts out and turns over, lands, the wax seal stamps it, the name unfurls; the
+   *  card collapses into a golden orb that flies to the target. */
+  legend: scaled(LEGEND_K, {
+    /** the medallion flares (×2.2) with its rings */
+    medal: 900,
+    /** the dim and the vignette come at… / take */
+    backAt: 200,
+    back: 500,
+    /** the cinema bars slide in at… / take */
+    barsAt: 250,
+    bars: 450,
+    /** the rays behind the middle come at… / take */
+    raysAt: 500,
+    rays: 900,
+    /** the card bursts out of the medallion at… / flies along its arc */
+    cardAt: 350,
+    fly: 760,
+    /** the card turns over (back → face) while it flies */
+    flip: 1150,
+    /** from the start of the flight to the landing */
+    land: 780,
+    /** the landing: the shockwave, the burst, the shake — then the seal comes */
+    hit: 420,
+    /** the seal falls (×3.2 → ×1) */
+    seal: 360,
+    /** the seal hits: the card quivers, the name unfurls */
+    sealHit: 300,
+    /** the ribbon with the name unrolls; a letter after a letter */
+    ribbon: 520,
+    letter: 40,
+    /** the card is held, the shine runs over it */
+    hold: 1700,
+    /** the ribbon and the seal fade, the card collapses into the orb */
+    fade: 300,
+    collapse: 520,
+    orbAt: 470,
+    /** the golden orb flies to the target; the dim and the bars go */
+    orb: 560,
+    orbEnd: 580,
+    /** the simple effects (ctx.rich = false): the card in the middle for… */
+    simple: 1000,
+  }),
+  /** «Кракен» (fxKraken of fx3.js, §3.2): the sea darkens, the shadow of the beast, the eye; six arms, three fall across
+   *  the plank and squeeze it — the wood cracks under each; the boards and the sailors of the events go; the ink stays. */
+  kraken: scaled(KRAKEN_K, {
+    /** the dark of the deep comes / the shadow glides under the target */
+    deep: 900,
+    glide: 1500,
+    /** the eye opens at… and lives (opens, looks, blinks, closes) */
+    eyeAt: 1300,
+    eye: 5200,
+    /** the arms burst out of the water after the eye opened */
+    armsAt: 800,
+    rise: 700,
+    riseStep: 160,
+    /** the three arms at the edge of the target come a little later */
+    gripAt: 350,
+    gripStep: 180,
+    /** the arms sway before they fall */
+    sway: 1500,
+    /** the three arms fall across the plank, one after another */
+    fall: 420,
+    fallStep: 110,
+    land: 560,
+    /** a squeeze: the crack opens under the arm, the plank is pressed */
+    crack: 520,
+    squeeze: 440,
+    squeezeStep: 480,
+    /** a board of the Hull breaks off / a sailor is dragged to the sea */
+    board: 900,
+    boardStep: 170,
+    drag: 900,
+    dragStep: 220,
+    /** the marks of the damage stay a while */
+    after: 800,
+    /** the ink bursts; the arms slide down into it */
+    ink: 900,
+    sink: 700,
+    sinkStep: 90,
+    release: 800,
+    end: 1600,
+  }),
+  /** «Армада Компании» (fxArmada of fx3.js, §3.3): the line of battle comes in along the gap, a broadside ripples down
+   *  it at each target, the hits of the events, the smoke stays (a short trace), the fleet sails away into it. */
+  armada: scaled(ARMADA_K, {
+    /** the haze of the horizon */
+    haze: 3600,
+    /** a ship of the line comes in; the next one after… */
+    enter: 2200,
+    enterStep: 160,
+    /** the line is in place: the broadside begins */
+    line: 3000,
+    /** a ship of the line after the one before it; its three guns after one another */
+    ship: 70,
+    gun: 40,
+    /** a ball flies */
+    fly: 420,
+    /** after the broadside at a target: the flash, the shake, the boards break */
+    land: 500,
+    /** before the next target */
+    next: 700,
+    /** the smoke comes / the fleet sails away into it */
+    smoke: 1200,
+    leave: 3200,
+    leaveStep: 120,
+    end: 2400,
+  }),
+  /** «Корабль в бутылке» (fxBottle of fx3.js, §3.4): the target glows, a bottle on its side draws itself in the gap,
+   *  the plank spirals into its mouth, the little ship inside, the cork flies from the owner — «чпок!», the bottle drops
+   *  onto the sea and stays afloat (a long trace); the plank comes back grey with the stamp. */
+  bottle: scaled(BOTTLE_K, {
+    /** the target glows / sparks orbit it (one after another) */
+    glow: 900,
+    orbit: 2200,
+    orbitStep: 30,
+    /** the glass draws itself at… for… / the light and the painted sea come at… for… */
+    glassAt: 300,
+    glass: 1000,
+    fillAt: 1150,
+    fill: 500,
+    /** the glints */
+    glintAt: 1100,
+    glint: 600,
+    glintStep: 70,
+    /** the vortex begins / the plank spirals into the mouth */
+    vortexAt: 1600,
+    vortex: 1500,
+    /** the little ship appears inside, at… for… */
+    miniAt: 1480,
+    mini: 600,
+    /** the cork comes after… and flies from the owner */
+    corkAt: 650,
+    cork: 800,
+    /** it pops in */
+    pop: 220,
+    popAt: 160,
+    /** «чпок!» */
+    word: 1100,
+    /** the bottle lifts and drops onto the sea */
+    dropAt: 900,
+    drop: 900,
+    splashAt: 880,
+    /** the plank comes back grey, the stamp falls */
+    back: 600,
+    stamp: 380,
+    end: 900,
+  }),
+  /** «Джек ускользает» (fxJack of fx3.js, §3.5): she should sink — the water rises, she lists; time freezes (the world
+   *  grey, she in colour); the entrance; the compass spins and points to the ally, the golden course; the colour comes
+   *  back, she slips along the course with ghosts, the ally the other way; the Hull 2 shines, coins scatter. */
+  jack: scaled(JACK_K, {
+    /** a board after another breaks (the last ones) */
+    board: 160,
+    /** the water rises over the plank, she lists, bubbles */
+    sink: 1300,
+    /** time freezes: the world goes grey */
+    freeze: 300,
+    /** the rings of the stopped time */
+    ring: 1200,
+    ringStep: 260,
+    /** the compass appears / its needle spins at… for… */
+    compass: 600,
+    needleAt: 300,
+    needle: 2000,
+    /** the needle has pointed: the course is drawn */
+    point: 2100,
+    course: 300,
+    /** before she goes */
+    go: 400,
+    /** the water runs off / the colour comes back / the compass fades */
+    drain: 500,
+    unfreeze: 500,
+    /** she slips along the course with the ghosts; a ghost after a ghost */
+    slip: 800,
+    ghost: 60,
+    /** the Hull 2 shines, the coins */
+    shine: 1100,
+    end: 1300,
+  }),
+  /** The start of a round (playRound of template.html, §3.12): the banner, the sea card comes up on its back, turns over,
+   *  is shown, flies into the plaque of the sea; the plaque flashes; then what the card does. */
+  round: scaled(ROUND_K, {
+    /** the banner «— Раунд N —» unrolls and goes; the card comes after… */
+    banner: 1500,
+    bannerWait: 1300,
+    /** the card comes up on its back; it turns over after… */
+    cardIn: 380,
+    cardWait: 520,
+    flip: 560,
+    /** the card is shown */
+    show: 2200,
+    /** it flies into the plaque of the sea */
+    fly: 620,
+    flyWait: 600,
+    /** the plaque takes it with a flash; the effect after… */
+    plaque: 1100,
+    after: 300,
+    /** a weather of the round rolls in over the sea, then stays */
+    roll: 1200,
+    rollEnd: 1600,
+  }),
+  /** The sea cards «сразу» (seaEffect2 of template.html, caravan3 and current3 of fx3.js, §3.11). */
+  sea: scaled(SEA_K, {
+    /** Гроза: the sky goes black; two far flashes; the bolt into the sails; the sails smoulder */
+    thunderDim: 4200,
+    flash1: 500,
+    flash2: 700,
+    boltAt: 600,
+    bolt: 900,
+    burn: 700,
+    thunderNext: 500,
+    /** Русалки: the tail rises, the song; the sailor is drawn into the sea */
+    tail: 2800,
+    drawAt: 900,
+    draw: 900,
+    mermaidNext: 500,
+    /** Ром в волнах: the bottle bobs up to the plank, the cork pops, the sailor is back */
+    bottle: 1500,
+    popAt: 1150,
+    cork: 800,
+    rumNext: 700,
+    /** Торговый караван: the merchantman crosses the sea; it throws the barrels at 40 % of its way */
+    caravan: 5200,
+    keg: 900,
+    kegStep: 200,
+    /** Сырой порох: the raincloud over each Hold, the barrels soak */
+    cloud: 3000,
+    soakAt: 900,
+    soak: 900,
+    soakStep: 180,
+    wetEnd: 1300,
+    /** Тортуга: the lanterns of the haven, the Holds glow */
+    lantern: 3200,
+    lanternStep: 90,
+    glowAt: 600,
+    glow: 2400,
+    tortugaEnd: 3400,
+    /** Течение: the gyres; the ships ride the arcs, pair after pair; the rings */
+    gyre: 4200,
+    rideAt: 900,
+    ride: 1600,
+    rings: 900,
+    currentEnd: 1800,
+    /** the end of a card: what is left on the table settles */
+    end: 900,
   }),
 } as const;

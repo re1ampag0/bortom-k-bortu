@@ -68,11 +68,60 @@ export type FlyCard = HTMLElement & { _pos?: CardPos };
 export const ABORT = Symbol('abort');
 
 export const ms = (ctx: FxCtx, t: number) => t * ctx.speed;
+
+/**
+ * The clock of the clips: every at() and wait() goes through it, so «Пауза» stops a clip in the middle — the timers
+ * stand still with the animations of the layer (pauseClock) and go on from where they were (resumeClock).
+ */
+interface Timer {
+  fn: () => void;
+  left: number;
+  start: number;
+  id: ReturnType<typeof setTimeout> | null;
+}
+const timers = new Set<Timer>();
+let clockPaused = false;
+function arm(tm: Timer): void {
+  tm.start = performance.now();
+  tm.id = setTimeout(() => {
+    timers.delete(tm);
+    tm.fn();
+  }, tm.left);
+}
+function later(fn: () => void, delay: number): void {
+  const tm: Timer = { fn, left: delay, start: 0, id: null };
+  timers.add(tm);
+  if (!clockPaused) arm(tm);
+}
+export function pauseClock(): void {
+  if (clockPaused) return;
+  clockPaused = true;
+  for (const tm of timers) {
+    if (tm.id === null) continue;
+    clearTimeout(tm.id);
+    tm.id = null;
+    tm.left = Math.max(0, tm.left - (performance.now() - tm.start));
+  }
+}
+export function resumeClock(): void {
+  if (!clockPaused) return;
+  clockPaused = false;
+  for (const tm of timers) arm(tm);
+}
+/** The run was cut off: every timer fires now — at() of the old run does nothing, its wait() ends with ABORT. */
+export function flushClock(): void {
+  for (const tm of [...timers]) {
+    if (tm.id !== null) clearTimeout(tm.id);
+    timers.delete(tm);
+    tm.fn();
+  }
+}
+
 export function wait(ctx: FxCtx, t: number): Promise<void> {
-  return new Promise((res, rej) => setTimeout(() => (ctx.run === ctx.live() ? res() : rej(ABORT)), ms(ctx, t)));
+  return new Promise((res, rej) => later(() => (ctx.run === ctx.live() ? res() : rej(ABORT)), ms(ctx, t)));
 }
 export function at(ctx: FxCtx, t: number, fn: () => void): void {
-  setTimeout(() => {
+  later(() => {
     if (ctx.run === ctx.live()) fn();
   }, ms(ctx, t));
 }
@@ -327,10 +376,10 @@ export function gainKegs(ctx: FxCtx, side: Side, n: number, from: Pt, delay: num
     const slot = kids[Math.min(kids.length - 1, have + k)], sb = bx(ctx, slot);
     const keg = mk(ctx, 'keg', 0, 0);
     fly(ctx, keg, curve({ x: from.x + (k - (n - 1) / 2) * 18, y: from.y }, { x: sb.cx, y: sb.cy }, 0.12), 520, delay + k * 130, { lift: 0.25 });
-    setTimeout(() => {
+    at(ctx, delay + 520 + k * 130, () => {
       slot.classList.add('on');
       A(ctx, slot, [{ transform: 'scale(1.5)' }, { transform: 'scale(1)' }], 250, 0);
-    }, ms(ctx, delay + 520 + k * 130));
+    });
   }
   if (label && n) holdTag(ctx, kg, `+${n} Пороха`, delay + 300, 'plus', 1300);
   return delay + 520 + n * 130;
@@ -538,6 +587,14 @@ export function fxSvg(ctx: FxCtx, host: Element = ctx.layer): SVGSVGElement {
   host.appendChild(s);
   return s;
 }
+/** FX-B: an svg on the sea under the planks (in .fx-scars) for the time of a clip — the line of the Armada, the dark of
+ *  the deep. Not a trace: the layer takes it away at the end of the clip and on «Сразу итог» (FxLayer.tsx); a clip
+ *  that wants it to stay as a trace takes the class off and calls scar(). */
+export function seaTemp(ctx: FxCtx): SVGSVGElement {
+  const s = fxSvg(ctx, ctx.board.querySelector('.fx-scars') ?? ctx.layer);
+  s.classList.add('fx-temp');
+  return s;
+}
 /** Adds svg markup to a parent and gives its first element. */
 export function sv(parent: Element, markup: string): SVGElement {
   const g = document.createElementNS(NS, 'g');
@@ -555,6 +612,8 @@ export function qpts(x0: number, y0: number, cx: number, cy: number, x1: number,
 
 /** A ring on the water that spreads and fades. */
 export function ringSvg(ctx: FxCtx, svg: Element, x: number, y: number, r0: number, r1: number, color = '#eef6f8', d = 700, delay = 0, w = 2): SVGElement {
+  // a size, never a direction: a radius computed as «base − i·step» on a narrow plank must not go negative
+  r1 = Math.max(1, Math.abs(r1));
   const g = sv(svg, `<g><ellipse cx="0" cy="0" rx="${R1(r1)}" ry="${R1(r1 * 0.4)}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/></g>`);
   A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d, delay, 'ease-out');
   return g;

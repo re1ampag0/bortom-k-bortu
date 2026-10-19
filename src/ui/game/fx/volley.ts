@@ -21,7 +21,7 @@ import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
 import {
   A, at, ballFly, boom, bubbles, burst, bx, capFirst, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
-  mk, moveTo, ms, overlayAt, payKegs, pillAt, plank, projectile, puff, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
+  mk, moveTo, overlayAt, payKegs, pillAt, plank, projectile, puff, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
   tag, trackEl, wait, whirlpool, type FlyCard, type FxCtx,
 } from './primitives';
 import {
@@ -218,7 +218,7 @@ PLAY.reaction = async (c, ctx) => {
   if (VS && VS.plate && VS.plateBox && c.phase === 'before') to = cardSlot(ctx, VS.plateBox, VS.cards.length);
   else { const s = bx(ctx, plank(ctx, c.ship)); to = { x: s.cx - 40, y: isTop(ctx, c.ship) ? s.b + 6 : s.y - 110, r: 3, s: 0.72 }; }
   const card = flyCard(ctx, c.card, from, to, 0, 500, { ship: c.seat });
-  if (VS) { VS.cards.push(card); VS.reactions.push({ card: c.card, ship: c.ship, r: c.r }); } else setTimeout(() => A(ctx, card, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards'), ms(ctx, 1400));
+  if (VS) { VS.cards.push(card); VS.reactions.push({ card: c.card, ship: c.ship, r: c.r }); } else at(ctx, 1400, () => A(ctx, card, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards'));
   if (c.fromPlan) A(ctx, card.firstElementChild!, [{ transform: 'rotateY(90deg)' }, { transform: 'none' }], 300, 300, 'ease-out', 'backwards');
   await wait(ctx, 520);
   const tgt = VS ? VS.target : null;
@@ -245,7 +245,7 @@ PLAY.reaction = async (c, ctx) => {
       if (Math.abs(np.x - op.x) > 4) {
         A(ctx, vs.plate!, [{ translate: '0 0' }, { translate: `${np.x - op.x}px 0` }], 450, 120, 'cubic-bezier(.3,0,.2,1)', 'forwards');
         vs.plateBox = { ...op, x: np.x };
-        vs.cards.forEach((el, k) => setTimeout(() => { if (ctx.run === ctx.live()) moveTo(ctx, el, cardSlot(ctx, vs.plateBox!, k), 450); }, ms(ctx, 120)));
+        vs.cards.forEach((el, k) => at(ctx, 120, () => moveTo(ctx, el, cardSlot(ctx, vs.plateBox!, k), 450)));
       }
     }
     if (c.r === 'reduce_all') { const g = gapBox(ctx); if (PERSIST.whirl) PERSIST.whirl.remove(); PERSIST.whirl = whirlpool(ctx, ctx.board.clientWidth / 2, g.cy, 0, Math.min(170, ctx.board.clientWidth * 0.35), 6000); }
@@ -340,7 +340,8 @@ PLAY.shot = async (c, ctx) => {
     let ballEl: HTMLElement | null = null;
     const ball = () => (ballEl ??= projectile(ctx, b.kind, b.big));
     const flyBall = (pts: Pt[], d: number, delay: number, opt: Parameters<typeof fly>[5] = {}) => {
-      if (b.kind === 'core') ballFly(ctx, svg, pts[0], pts[pts.length - 1], d, delay, 18);
+      // drawn when its shot comes, as in the Armada: ballFly fills backwards, a delayed ball would wait at the muzzle, seen
+      if (b.kind === 'core') at(ctx, delay, () => ballFly(ctx, svg, pts[0], pts[pts.length - 1], d, 0, 18));
       else fly(ctx, ball(), pts, d, delay, opt);
     };
     const spin = b.kind === 'chain' ? 720 : 0;

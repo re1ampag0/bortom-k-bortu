@@ -19,4 +19,11 @@ describe('the timings of the A5 clips', () => {
     expect(v.fuse).toBe(420);
     expect(v.flyHit).toBeGreaterThan(v.fly);
   });
+
+  it('the entrance of a Legend of the prototype: ≈ 4.6 s from the medallion to the orb at the target', () => {
+    const l = timing.T.legend;
+    const total = l.cardAt + l.land + l.hit + l.sealHit + l.hold + l.orbAt + l.orbEnd;
+    expect(total).toBe(4600);
+    expect(l.flip).toBeGreaterThan(l.fly);
+  });
 });

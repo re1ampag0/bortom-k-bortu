@@ -1,26 +1,21 @@
-// L1: the Legends through «?fxScene=<id>» — «Армада Компании», «Кракен», «Корабль в бутылке», «Джек ускользает»
-// (the scenes armada, kraken, bottle, jack of the reference). For each Legend two frames of the game — «the seal»
-// (the seal has landed on the card) and «the effect» (the galleons fire / the tentacles hold the ship / the little ship
-// is in the bottle / the compass rose and «Ускользнул!») — at 1366×660 and 430×932 go to docs/screenshots/l1/, the
-// frames of the reference (docs/mockups/anim/level1/anim-demo.html) at the same moments of its clips to
-// docs/screenshots/l1/ref/: a moment is found by the same condition on both pages (the milliseconds from the load are in
-// docs/screenshots/l1/times.json, for capture.mjs).
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { expect, test, type Browser, type Page } from '@playwright/test';
+// L1, FX-B: the Legends through «?fxScene=<id>» — «Армада Компании», «Кракен», «Корабль в бутылке», «Джек ускользает»
+// (the scenes armada, kraken, bottle, jack). The look is the A5 prototype's (docs/mockups/a5/fx/prototype.html,
+// ANIMATIONS.md §3.1–3.5): for each Legend two frames of the game — «the seal» (the wax seal has landed on the card) and
+// «the effect» (the broadside flies / the arms lie across the plank and it cracks / the little ship is in the bottle /
+// the compass points) — at 1366×660 and 430×932 go to docs/screenshots/a5-legends-sea/ (e2e-*). The frames of the
+// prototype next to them are taken by hand at each stage (docs/progress/a5-legends-sea.md), not here.
+import { mkdirSync, readFileSync } from 'node:fs';
+import { expect, test, type Page } from '@playwright/test';
 import { clickMisses, expectResult, open, playing, readCover, watchCover } from './fx-scene';
 
-const SHOTS = 'docs/screenshots/l1';
-const TIMES = `${SHOTS}/times.json`;
-const REF = pathToFileURL(resolve('docs/mockups/anim/level1/anim-demo.html')).href;
+const SHOTS = 'docs/screenshots/a5-legends-sea';
 /** The longest a label may cover a part of a plank: the short mark at a number lasts 700 ms (MARK_MS). */
 const FLASH_MS = 800;
 /** The shouts of the effects stay as in the reference (the decision of the user): not explanations. */
 const SHOUTS = ['Бортовой залп!', 'Чпок!'];
 
 const shown = (sel: string, op = 0.98) => `Array.from(document.querySelectorAll('.fx-layer ${sel}')).some((e) => Number(getComputedStyle(e).opacity) > ${op})`;
-/** The seal has landed on the card (its fall lasts 260 ms; at 80 % it is opaque). */
+/** The seal has landed on the card (its fall lasts 360 ms; at 70 % it is opaque). */
 const SEAL = shown('> .lg-seal');
 interface Legend {
   scene: string;
@@ -34,38 +29,21 @@ interface Legend {
   from?: string;
 }
 const LEGENDS: Legend[] = [
-  // the galleons have risen, the first broadside flies
-  { scene: 'armada', owner: 'И', effect: shown('> .galleon'), after: 700 },
-  // the fourth tentacle holds the ship, the squeeze, the cells crack
-  { scene: 'kraken', owner: 'Г', effect: `Array.from(document.querySelectorAll('.fx-layer > .tentacle')).filter((e) => Number(getComputedStyle(e).opacity) > 0.98).length === 4`, after: 400 },
+  // the line of the Company fires: a flash of a gun
+  { scene: 'armada', owner: 'И', effect: `!!document.querySelector('.fx-layer .gun-fire')`, after: 300 },
+  // the three arms lie across «Месть» and the wood has cracked under each
+  { scene: 'kraken', owner: 'Г', effect: `document.querySelectorAll('[data-fx-ship="М"] .fx-cracks .rv').length === 3`, after: 700 },
   // the little ship is in the bottle, the cork comes
-  { scene: 'bottle', owner: 'М', effect: shown('> .bottle .mini'), after: 150 },
-  // the compass rose and «Ускользнул!»
-  { scene: 'jack', owner: 'Ж', effect: shown('> .lg-shout'), after: 150, from: `!!document.querySelector('[data-fx-instruction]')?.textContent?.includes('тонет')` },
+  { scene: 'bottle', owner: 'М', effect: `!!document.querySelector('.fx-layer .lg-rock')`, after: 300 },
+  // the compass over «Жемчужина», its needle spins
+  { scene: 'jack', owner: 'Ж', effect: `!!document.querySelector('.fx-layer svg .nd')`, after: 600, from: `!!document.querySelector('[data-fx-instruction]')?.textContent?.includes('тонет')` },
 ];
 const SIZES: [number, number][] = [[1366, 660], [430, 932]];
 
-function saveTime(key: string, scene: string, ms: number, ref: number) {
-  const all: Record<string, { scene: string; ms: number; ref: number }> = existsSync(TIMES) ? JSON.parse(readFileSync(TIMES, 'utf8')) : {};
-  all[key] = { scene, ms, ref };
-  writeFileSync(TIMES, JSON.stringify(all, null, 2) + '\n');
-}
-async function shot(page: Page, ready: string, after: number, file: string): Promise<number> {
+async function shot(page: Page, ready: string, after: number, file: string): Promise<void> {
   await page.waitForFunction(ready, null, { timeout: 30_000, polling: 'raf' });
   if (after) await page.waitForTimeout(after);
-  const ms = await page.evaluate(() => Math.round(performance.now()));
   await page.screenshot({ path: file });
-  return ms;
-}
-/** The frames of the reference at the same moments of its clips: anim-demo.html?cap=<scene>, the same conditions. */
-async function refFrames(browser: Browser, l: Legend, width: number, height: number): Promise<number[]> {
-  const page = await browser.newPage({ viewport: { width, height } });
-  await page.goto(`${REF}?cap=${l.scene}&speed=1`);
-  const size = `${width}x${height}`;
-  const a = await shot(page, SEAL, 200, `${SHOTS}/ref/ref-${l.scene}-seal-${size}.png`);
-  const b = await shot(page, l.effect, l.after, `${SHOTS}/ref/ref-${l.scene}-effect-${size}.png`);
-  await page.close();
-  return [a, b];
 }
 
 /**
@@ -100,11 +78,11 @@ const WATCH = () => {
 };
 
 test.describe('the Legends through ?fxScene', () => {
-  test.beforeAll(() => mkdirSync(`${SHOTS}/ref`, { recursive: true }));
+  test.beforeAll(() => mkdirSync(SHOTS, { recursive: true }));
 
   for (const l of LEGENDS) {
     for (const [width, height] of SIZES) {
-      test(`${l.scene} ${width}×${height}: the seal and the effect next to the reference, the card, no label over the planks, the result`, async ({ browser }) => {
+      test(`${l.scene} ${width}×${height}: the seal, the card, the effect, no label over the planks, the result`, async ({ browser }) => {
         const page = await browser.newPage({ viewport: { width, height } });
         const errors: string[] = [];
         page.on('pageerror', (e) => errors.push(e.message));
@@ -113,58 +91,54 @@ test.describe('the Legends through ?fxScene', () => {
         if (l.from) await page.waitForFunction(l.from, null, { timeout: 30_000, polling: 'raf' });
         await watchCover(page);
         const size = `${width}x${height}`;
-        const seal = await shot(page, SEAL, 200, `${SHOTS}/game-${l.scene}-seal-${size}.png`);
+        await shot(page, SEAL, 200, `${SHOTS}/e2e-${l.scene}-seal-${size}.png`);
 
-        // The seal: «ЛЕГЕНДА • ЛЕГЕНДА •» around the circle, the letters do not run into each other and the end does not
-        // meet the start (the angle along the arc from its top, clockwise, as the path goes).
+        // The seal (SEAL_HTML of the prototype): «ЛЕГЕНДА» once along its upper arc (r 26.5 around 0,0, from −105° to
+        // 105° clockwise from the top); the letters do not run into each other and stay on the arc.
         const ring = await page.evaluate(() => {
-          const tp = document.querySelector<SVGTextContentElement>('.fx-layer > .lg-seal text')!;
-          const ang = (p: DOMPoint) => { const a = Math.atan2(p.x - 46, -(p.y - 46)); return a < -1e-6 ? a + 2 * Math.PI : a; };
+          const texts = document.querySelectorAll<SVGTextContentElement>('.fx-layer > .lg-seal text');
+          const tp = texts[texts.length - 1];
+          const ang = (p: DOMPoint) => Math.atan2(p.x, -p.y);
           const n = tp.getNumberOfChars();
           const chars = Array.from({ length: n }, (_, i) => ({ s: ang(tp.getStartPositionOfChar(i)), e: ang(tp.getEndPositionOfChar(i)) }));
           let overlap = 0;
           for (let i = 0; i + 1 < n; i++) overlap = Math.max(overlap, chars[i].e - chars[i + 1].s);
-          // the gap from the end of the last «•» to the start of the first «Л», in user units along the arc (r = 27)
-          const wrap = (2 * Math.PI - chars[n - 1].e + chars[0].s) * 27;
-          return { text: tp.textContent, n, length: Math.round(tp.getComputedTextLength()), overlap: overlap * 27, wrap };
+          const lim = (105 * Math.PI) / 180;
+          return { text: tp.textContent, overlap: overlap * 26.5, onArc: chars[0].s >= -lim && chars[n - 1].e <= lim };
         });
-        expect(ring.text).toBe('ЛЕГЕНДА • ЛЕГЕНДА •');
+        expect(ring.text).toBe('ЛЕГЕНДА');
         expect(ring.overlap, 'the letters of the seal overlap').toBeLessThanOrEqual(0.05);
-        expect(ring.wrap, 'the end of the seal meets its start').toBeGreaterThanOrEqual(2);
+        expect(ring.onArc, 'the word stays on the arc').toBe(true);
 
-        // The card: the strip «ЛЕГЕНДА · <ship>» of the colour of its ship, its text not under 10 px on screen.
+        // The card: the bottom strip — only the name of its ship, in the colour of its ship, not under 10 px on screen.
         const foot = await page.evaluate(() => {
-          const card = document.querySelector<HTMLElement>('.fx-layer > .lg-card')!, f = card.querySelector<HTMLElement>('.fcard-foot')!;
+          const card = document.querySelector<HTMLElement>('.fx-layer > .lg-card')!, f = card.querySelector<HTMLElement>('.lc-foot')!;
           const scale = card.getBoundingClientRect().width / card.offsetWidth;
           return { text: f.textContent, bg: getComputedStyle(f).backgroundColor, px: parseFloat(getComputedStyle(f).fontSize) * scale };
         });
         const ships: Record<string, { nick: string; color: string }> = JSON.parse(readFileSync('data/game-data.json', 'utf8')).ships.reduce((m: Record<string, unknown>, s: { code: string }) => ({ ...m, [s.code]: s }), {});
         const hex = ships[l.owner].color;
         const rgb = `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
-        expect(foot.text).toBe(`ЛЕГЕНДА · ${ships[l.owner].nick.toUpperCase()}`);
+        expect(foot.text).toBe(ships[l.owner].nick);
         expect(foot.bg).toBe(rgb);
         expect(foot.px).toBeGreaterThanOrEqual(10);
 
-        const effect = await shot(page, l.effect, l.after, `${SHOTS}/game-${l.scene}-effect-${size}.png`);
+        await shot(page, l.effect, l.after, `${SHOTS}/e2e-${l.scene}-effect-${size}.png`);
         if (l.scene === 'kraken') {
-          // The tentacles hold «Месть»: the hooked tip of each is turned to the middle of the plank (from its base).
-          const tips = await page.evaluate(() => {
+          // Three arms lie across «Месть»: the base of each at the edge of the target at 30/55/78 % of its width, and
+          // the crack of the wood was born right under it (its circle of reveal starts there).
+          const grip = await page.evaluate(() => {
             const lay = document.querySelector('.fx-layer')!.getBoundingClientRect();
-            const pr = document.querySelector('[data-fx-ship="М"]')!.getBoundingClientRect(), mid = pr.left + pr.width / 2;
-            return Array.from(document.querySelectorAll<HTMLElement>('.fx-layer > .tentacle')).map((t) => {
-              const side = Number(t.dataset.side), w = t.offsetWidth, L = t.offsetHeight;
-              const m = new DOMMatrix().translate(w / 2, L).multiply(new DOMMatrix(getComputedStyle(t).transform)).translate(-w / 2, -L);
-              // the hook of the picture: (48, 12) of 60×200, mirrored for the tentacles of the right side
-              const tip = m.transformPoint(new DOMPoint(((side > 0 ? 12 : 48) / 60) * w, (12 / 200) * L));
-              const base = m.transformPoint(new DOMPoint(w / 2, L));
-              return { side, toMiddle: Math.sign(tip.x - base.x) === Math.sign(mid - (base.x + lay.left)) };
-            });
+            const pr = document.querySelector('[data-fx-ship="М"]')!.getBoundingClientRect();
+            const bases = Array.from(document.querySelectorAll<SVGGElement>('.fx-layer [data-grip]')).map((g) => { const m = new DOMMatrix(getComputedStyle(g).transform); return { x: m.e + lay.left, y: m.f + lay.top }; });
+            const cracks = Array.from(document.querySelectorAll<SVGElement>('[data-fx-ship="М"] .fx-cracks .rv')).map((c) => new DOMMatrix(getComputedStyle(c).transform).e + pr.left);
+            return { at: bases.map((b) => Math.round(((b.x - pr.left) / pr.width) * 100) / 100), edge: bases.map((b) => Math.abs(b.y - pr.top)), under: bases.map((b, i) => Math.abs(b.x - cracks[i])) };
           });
-          expect(tips.map((x) => x.toMiddle)).toEqual([true, true, true, true]);
+          expect(grip.at.length).toBe(3);
+          grip.at.forEach((f, i) => expect(Math.abs(f - [0.3, 0.55, 0.78][i]), `arm ${i} at ${f}`).toBeLessThanOrEqual(0.02));
+          for (const d of grip.edge) expect(d, 'the base of an arm at the edge of the target').toBeLessThanOrEqual(6);
+          for (const d of grip.under) expect(d, 'the crack under its arm').toBeLessThanOrEqual(2);
         }
-        const refs = await refFrames(browser, l, width, height);
-        saveTime(`${l.scene}-seal-${size}`, l.scene, seal, refs[0]);
-        saveTime(`${l.scene}-effect-${size}`, l.scene, effect, refs[1]);
 
         await expectResult(page, l.scene);
         const seen = await readCover(page);
@@ -196,7 +170,7 @@ test.describe('the Legends through ?fxScene', () => {
     await page.addInitScript(() => {
       const w = window as unknown as { __rich: string[] };
       w.__rich = [];
-      const RICH = ['lg-sun', 'lg-orbit', 'gold-dust', 'sparkle', 'spark', 'splinter', 'shred', 'dust', 'ring', 'puff'];
+      const RICH = ['lg-sun', 'lg-mote', 'gold-dust', 'sparkle', 'spark', 'splinter', 'shred', 'dust', 'ring', 'puff'];
       new MutationObserver((ms) => {
         for (const m of ms) for (const n of Array.from(m.addedNodes)) if (n instanceof HTMLElement && n.parentElement?.matches('.fx-layer')) for (const c of RICH) if (n.classList.contains(c) && !w.__rich.includes(c)) w.__rich.push(c);
       }).observe(document, { subtree: true, childList: true });

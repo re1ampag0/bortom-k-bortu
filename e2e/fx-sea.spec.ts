@@ -130,19 +130,38 @@ test.describe('the sea cards through ?fxScene', () => {
     }
   });
 
-  test('the weather of the round: drawn with rich effects, empty in simple ones, with reduced motion and at «мгновенно»', async ({ browser }) => {
-    const count = async (extra: string, opts: { reducedMotion?: 'reduce' } = {}, speed = 'normal') => {
+  test('the weather of the round: drawn with rich effects, standing still in simple ones, empty with reduced motion and at «мгновенно»', async ({ browser }) => {
+    // FX-C (TASKS.md: «простые спецэффекты» — неподвижная погода): the picture is there, nothing in it moves
+    const look = async (extra: string, opts: { reducedMotion?: 'reduce' } = {}, speed = 'normal') => {
       const page = await browser.newPage({ viewport: { width: 1366, height: 660 }, ...opts });
       await open(page, 'sea-fog', speed, extra);
       await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
-      const n = await page.locator('.fx-weather > *').count();
+      const r = await page.evaluate(() => ({ n: document.querySelectorAll('.fx-weather > *').length, moving: document.querySelector('.fx-weather')!.getAnimations({ subtree: true }).length }));
       await page.close();
-      return n;
+      return r;
     };
-    expect(await count('')).toBeGreaterThan(0); // «Туман»: the haze and the diagonals
-    expect(await count('&rich=0')).toBe(0);
-    expect(await count('', { reducedMotion: 'reduce' })).toBe(0);
-    expect(await count('', {}, 'instant')).toBe(0);
+    const rich = await look('');
+    expect(rich.n).toBeGreaterThan(0); // «Туман»: the fog banks and the crossed diagonals
+    expect(rich.moving).toBeGreaterThan(0);
+    const simple = await look('&rich=0');
+    expect(simple.n).toBeGreaterThan(0);
+    expect(simple.moving, 'the weather stands still in simple effects').toBe(0);
+    expect((await look('', { reducedMotion: 'reduce' })).n).toBe(0);
+    expect((await look('', {}, 'instant')).n).toBe(0);
+  });
+
+  test('the planks pitch in «Буря» and stand still in simple effects and with «&wxStill=1»', async ({ browser }) => {
+    const pitch = async (extra: string) => {
+      const page = await browser.newPage({ viewport: { width: 1366, height: 660 } });
+      await open(page, 'sea-storm', 'normal', extra);
+      await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
+      const r = await page.evaluate(() => Array.from(document.querySelectorAll('.planks > .plank')).map((p) => getComputedStyle(p).animationName));
+      await page.close();
+      return r;
+    };
+    expect(await pitch('')).toEqual(['wx-pitch', 'wx-pitch', 'wx-pitch', 'wx-pitch']);
+    expect(await pitch('&rich=0'), 'simple effects').toEqual(['none', 'none', 'none', 'none']);
+    expect(await pitch('&wxStill=1'), 'the switch of the tests').toEqual(['none', 'none', 'none', 'none']);
   });
 
   test('sea-storm: the darkening takes no press, the hand and the buttons are not under it; a card of the hand opens during the show', async ({ page }) => {
