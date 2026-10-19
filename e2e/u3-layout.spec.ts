@@ -98,7 +98,9 @@ for (const size of SIZES) {
     test.use({ viewport: { width: size.width, height: size.height } });
 
     test('a game against the bots: the summary waits for «Ваш ход», the middle at the centre of the gap, the heads and the columns', async ({ page }) => {
-      await page.goto('?seed=3&speed=normal');
+      // seed 3 has «Буря» in the first round: «&wxStill=1» keeps the planks from pitching while they are measured and
+      // their buttons pressed (the pitch itself — e2e/fx-sea.spec.ts)
+      await page.goto('?seed=3&speed=normal&wxStill=1');
       await page.getByTestId('quick-bots').click();
       await page.getByTestId('pick-company').click();
       await page.getByTestId('prep-start').click();

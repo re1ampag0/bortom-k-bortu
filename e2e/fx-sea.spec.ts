@@ -150,6 +150,20 @@ test.describe('the sea cards through ?fxScene', () => {
     expect((await look('', {}, 'instant')).n).toBe(0);
   });
 
+  test('the planks pitch in «Буря» and stand still in simple effects and with «&wxStill=1»', async ({ browser }) => {
+    const pitch = async (extra: string) => {
+      const page = await browser.newPage({ viewport: { width: 1366, height: 660 } });
+      await open(page, 'sea-storm', 'normal', extra);
+      await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
+      const r = await page.evaluate(() => Array.from(document.querySelectorAll('.planks > .plank')).map((p) => getComputedStyle(p).animationName));
+      await page.close();
+      return r;
+    };
+    expect(await pitch('')).toEqual(['wx-pitch', 'wx-pitch', 'wx-pitch', 'wx-pitch']);
+    expect(await pitch('&rich=0'), 'simple effects').toEqual(['none', 'none', 'none', 'none']);
+    expect(await pitch('&wxStill=1'), 'the switch of the tests').toEqual(['none', 'none', 'none', 'none']);
+  });
+
   test('sea-storm: the darkening takes no press, the hand and the buttons are not under it; a card of the hand opens during the show', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 660 });
     await open(page, 'sea-storm');
