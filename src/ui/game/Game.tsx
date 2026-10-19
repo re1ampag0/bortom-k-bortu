@@ -127,7 +127,7 @@ export function Game({
     setEffectsState(v);
     storeSettings({ ...loadSettings(), effects: v });
   };
-  const [seaFrame, setSeaFrame] = useState(() => loadSettings().seaFrame);
+  const [look, setLook] = useState(() => loadSettings().view);
   const [sound, setSoundState] = useState(() => loadSettings().sound);
   const setSound = (v: boolean) => {
     setSoundState(v);
@@ -1094,7 +1094,7 @@ export function Game({
 
   return (
     <div
-      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${seaFrame === 'wood' ? 'frame-wood' : ''}`}
+      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand}`}
       data-testid="game"
       data-bottom={bottom}
     >
@@ -1310,7 +1310,7 @@ export function Game({
             setMode(net ? { k: 'exitRoom' } : { k: 'leave' });
           }}
           onDownloadLog={downloadLog}
-          onSeaFrame={setSeaFrame}
+          onView={setLook}
           onDownloadGame={downloadGame}
           onClose={() => setSheet(null)}
         />
