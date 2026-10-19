@@ -166,3 +166,28 @@ test('the scenes of the ships in motion play in Safari without errors @iphone', 
     expect(await page.locator('.fx-layer > *').count(), id).toBe(0);
   }
 });
+
+// A5 (A8): the captain's longboat of «Гибель» is the new clinker-built one — a shadow and a reflection on the water, the planking in
+// strakes (a clip path of its own), the oars on oarlocks; its ids are its own (no id twice in the document).
+test('sink: the captain rows across in the new clinker longboat', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 660 });
+  await open(page, 'sink');
+  await page.waitForFunction(() => !!document.querySelector('.fx-layer .oar'), null, { timeout: 40_000, polling: 'raf' });
+  await page.waitForTimeout(600);
+  const r = await page.evaluate(() => {
+    const boat = document.querySelector('.fx-layer .oar')!.closest('svg > g')!;
+    const ids = Array.from(document.querySelectorAll('[id]')).map((e) => e.id);
+    return {
+      oars: boat.querySelectorAll('.oar').length,
+      clip: boat.querySelectorAll('clipPath').length,
+      reflection: boat.querySelectorAll('g[transform^="matrix(1 0 0 -.35"]').length,
+      strakes: boat.querySelectorAll('g[clip-path] path').length,
+      dup: ids.filter((id, i) => ids.indexOf(id) !== i),
+    };
+  });
+  expect(r.oars).toBe(2);
+  expect(r.clip, 'the planking clip').toBe(1);
+  expect(r.reflection, 'the reflection').toBe(1);
+  expect(r.strakes, 'the strakes').toBeGreaterThanOrEqual(3);
+  expect(r.dup, 'ids twice').toEqual([]);
+});
