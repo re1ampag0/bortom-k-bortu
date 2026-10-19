@@ -624,9 +624,13 @@ export function Game({
   };
 
   const regroupBtn = (side: Side): Btn | null => {
-    if (side !== bottom || !myTurn) return null;
-    const r = tryAction(s, { type: 'regroup', side }, data);
-    const cost = r.ok ? r.events.filter((e) => e.type === 'powderSpent').reduce((n, e) => n + (e.type === 'powderSpent' ? e.amount : 0), 0) : data.rules.regroupCost;
+    if (side !== bottom) return null;
+    // always in its place under the Hold; out of one's turn dimmed, not active, «Только в свой ход», the price still shown
+    // (free while a ship of the team is «Быстрее ветра»; the sea «Попутный ветер» is known only by the engine in one's turn)
+    const r = myTurn ? tryAction(s, { type: 'regroup', side }, data) : null;
+    const freeShip = Object.values(s.ships).some((x) => x.side === side && hasAbility(data, x, ABILITY.fasterThanWind));
+    const cost = r?.ok ? r.events.filter((e) => e.type === 'powderSpent').reduce((n, e) => n + (e.type === 'powderSpent' ? e.amount : 0), 0) : freeShip ? 0 : data.rules.regroupCost;
+    if (!r) return { key: 'regroup', label: cost ? `Перестроение · ${cost} П` : 'Перестроение · бесплатно', short: `Перестроение · ${cost}`, disabled: 'Только в свой ход', onClick: () => {} };
     // A5: «Перестроение · бесплатно» while it costs nothing, else the price with a keg; the phone keeps «· N»
     return { key: 'regroup', label: cost ? `Перестроение · ${cost} П` : 'Перестроение · бесплатно', short: `Перестроение · ${cost}`, disabled: r.ok ? null : r.reason, onClick: () => act({ type: 'regroup', side }) };
   };
@@ -928,7 +932,7 @@ export function Game({
   };
   const endBtn: Btn = {
     key: 'end',
-    label: myTurn || s.winner || !d ? 'Ход окончен' : `Сейчас ход ${SIDE_LABEL[s.active].gen}`,
+    label: myTurn || s.winner || !d ? 'Ход окончен' : `${/ы$/.test(SIDE_LABEL[s.active].name) ? 'Ходят' : 'Ходит'} ${SIDE_LABEL[s.active].name}`,
     primary: true,
     disabled: myTurn ? (mode.k === 'idle' ? null : 'Сначала закончите или отмените текущее действие') : 'Сейчас не ваш ход',
     onClick: () => endFlow('start'),

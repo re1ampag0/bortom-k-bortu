@@ -4152,7 +4152,9 @@ button.star::before {
   font-size: max(11px, min(var(--oak-fs), calc((100cqw - 70px) / 9.6)));
 }
 .oak-btn.oak-long .oak-pan b {
-  font-size: max(10px, min(calc(var(--oak-fs) * 0.84), calc((100cqw - 80px) / 15)));
+  /* «Ходит Компания» / «Ходят Пираты» whole: smaller, not below 14 px */
+  font-size: max(14px, min(calc(var(--oak-fs) * 0.84), calc((100cqw - 80px) / 13)));
+  text-overflow: clip;
 }
 @container (max-width: 240px) {
   .oak-med {
@@ -4441,4 +4443,10 @@ button.star::before {
 }
 .game.view-guns-ports .t-guns .cells i.on {
   background-image: url('./art/rig/port-open.svg') !important;
+}
+
+/* «Перестроение» out of one's turn: dimmed as a card that cannot be played (grey, no glow), the price still shown */
+.regroup[aria-disabled='true'] {
+  filter: grayscale(0.9) brightness(0.9) contrast(0.85);
+  box-shadow: none;
 }
