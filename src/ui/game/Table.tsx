@@ -73,7 +73,7 @@ export function OakButton({ b, className = '', sign = 'anchor', sub }: { b: Btn;
   medal.current ??= oakMedal(sign);
   return (
     <button
-      className={`btn oak-btn ${b.label.length > 13 ? 'oak-long' : ''} ${className}`}
+      className={`btn oak-btn ${b.label.length > 11 ? 'oak-long' : ''} ${className}`}
       onClick={b.disabled ? undefined : b.onClick}
       aria-disabled={!!b.disabled}
       title={b.disabled ?? undefined}
