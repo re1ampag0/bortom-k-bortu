@@ -32,8 +32,9 @@ async function expectInWindow(page: Page, el: Locator) {
 }
 
 async function closeSheet(page: Page) {
-  await page.locator('.sheet .close').first().click();
-  await expect(page.locator('.sheet')).toHaveCount(0);
+  // a5-log: «Журнал» is the ship's book (.lbook), the other windows are sheets
+  await page.locator('.sheet .close, .lbook .close').first().click();
+  await expect(page.locator('.sheet, .lbook')).toHaveCount(0);
 }
 
 /**
@@ -244,14 +245,15 @@ test('iPhone 15 Pro Max: the log, the rules, a discard, a Legend by the star, th
 test('laptop 1366×660: the log, the rules and a discard stay wide', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 660 });
   await startDuo(page);
-  const wide = async (sheet: Locator, shot: string) => {
+  // a5-log: «Весь журнал» is the ship's book, 760 px wide; the other windows stay 900
+  const wide = async (sheet: Locator, shot: string, width = 900) => {
     const box = await expectInWindow(page, sheet);
-    expect(Math.round(box.width)).toBe(900);
+    expect(Math.round(box.width)).toBe(width);
     await page.screenshot({ path: `${SHOTS}/laptop-${shot}.png` });
     await closeSheet(page);
   };
   await page.locator('.log-actions').getByRole('button', { name: 'Весь журнал' }).click();
-  await wide(page.getByTestId('log-sheet'), '1-log');
+  await wide(page.getByTestId('log-sheet'), '1-log', 760);
   await page.getByRole('button', { name: 'Правила' }).first().click();
   await wide(page.getByTestId('rules'), '2-rules');
   await page.getByTestId('plank-Ж').locator('.plank-head').click({ position: { x: 8, y: 8 } });

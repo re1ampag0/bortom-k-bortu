@@ -29,6 +29,7 @@ import { Curtain } from './Curtain';
 import { AlarmActions, AlarmArrow, AlarmBar, ReactionSheet, usePhoneLayout } from './Alarm';
 import { alarmInfo, lossOf, reactionStrip } from './alarm';
 import { Hand, type AlarmCard, type HandTab } from './Hand';
+import { LogBook } from './LogBook';
 import { CardDetail, DiscardSheet, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
 import {
   CardParamsPanel,
@@ -991,6 +992,8 @@ export function Game({
     if (mySeats.includes(code)) return 'Вы';
     return net.nameOf(code);
   }
+  // «Весь журнал»: the book of the ship whose hand is open; a spectator — of the first ship of the bottom team
+  const bookShip = seat ?? Object.values(s.ships).find((x) => x.side === bottom)?.code ?? 'Ж';
   const fileName = net ? `bortom-k-bortu-${net.room.code}` : `bortom-k-bortu-${game.setup.game.seed}`;
   const downloadLog = () => download(`${fileName}.txt`, game.log.map((l) => (l.kind === 'round' ? `\n${l.text}` : l.text)).join('\n'));
   // By network the record (every card) comes from the server, and only after the end of the game.
@@ -1109,7 +1112,7 @@ export function Game({
 
   return (
     <div
-      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand}`}
+      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''}`}
       data-testid="game"
       data-bottom={bottom}
     >
@@ -1264,30 +1267,16 @@ export function Game({
       {sheet?.k === 'sea' && <SeaSheet key={sheet.code ?? ''} s={view} data={data} code={sheet.code} onClose={() => setSheet(sheet.back ? { k: sheet.back } : null)} />}
       {sheet?.k === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}
       {sheet?.k === 'log' && (
-        <div className="sheet-backdrop" onClick={() => setSheet(null)}>
-          <section className="sheet sheet-wide" onClick={(e) => e.stopPropagation()} data-testid="log-sheet">
-            <header className="sheet-head">
-              <b>Журнал</b>
-              <span>
-                <button className="btn small" onClick={downloadLog}>
-                  Скачать
-                </button>{' '}
-                <button className="btn small close" onClick={() => setSheet(null)} aria-label="Закрыть">
-                  ✕
-                </button>
-              </span>
-            </header>
-            <div className="sheet-body">
-              <LogList
-                data={data}
-                log={shownLog}
-                fresh={freshFrom}
-                onCard={(code) => setSheet({ k: 'info', code, back: 'log' })}
-                onSea={(code) => setSheet({ k: 'sea', code, back: 'log' })}
-              />
-            </div>
-          </section>
-        </div>
+        <LogBook
+          data={data}
+          log={shownLog}
+          fresh={freshFrom}
+          ship={bookShip}
+          onCard={(code) => setSheet({ k: 'info', code, back: 'log' })}
+          onSea={(code) => setSheet({ k: 'sea', code, back: 'log' })}
+          onDownload={downloadLog}
+          onClose={() => setSheet(null)}
+        />
       )}
       {sheet?.k === 'lastTurn' && (
         <SheetBox title={`Что было за ход ${SIDE_LABEL[other(bottom)].gen}`} onClose={() => setSheet(null)} wide testid="last-turn">
