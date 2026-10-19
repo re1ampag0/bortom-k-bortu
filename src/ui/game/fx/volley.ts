@@ -340,7 +340,8 @@ PLAY.shot = async (c, ctx) => {
     let ballEl: HTMLElement | null = null;
     const ball = () => (ballEl ??= projectile(ctx, b.kind, b.big));
     const flyBall = (pts: Pt[], d: number, delay: number, opt: Parameters<typeof fly>[5] = {}) => {
-      if (b.kind === 'core') ballFly(ctx, svg, pts[0], pts[pts.length - 1], d, delay, 18);
+      // drawn when its shot comes, as in the Armada: ballFly fills backwards, a delayed ball would wait at the muzzle, seen
+      if (b.kind === 'core') at(ctx, delay, () => ballFly(ctx, svg, pts[0], pts[pts.length - 1], d, 0, 18));
       else fly(ctx, ball(), pts, d, delay, opt);
     };
     const spin = b.kind === 'chain' ? 720 : 0;
