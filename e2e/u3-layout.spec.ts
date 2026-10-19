@@ -221,16 +221,18 @@ for (const size of SIZES) {
       }
       await shot(page, 'own-turn', size.width);
 
-      // The Volley: the panel at the centre of the gap.
+      // The Volley: a5-log — the sheet «Заряд» stands in the place of the hand, the sea stays open (no panel in the gap).
       await page.locator('[data-testid^="volley-"]:visible:not([aria-disabled="true"])').first().click();
-      await expect(page.locator('.dock')).toBeVisible();
+      await expect(page.getByTestId('volley-panel')).toBeVisible();
+      await expect(page.locator('.dock')).toHaveCount(0);
       await shot(page, 'volley-aim', size.width);
       await page.locator('[data-testid^="plate-"]').first().click();
-      const aim = await middle(page);
-      expect(Math.abs(aim.dock! - aim.gap), 'the Volley panel at the centre of the gap').toBeLessThanOrEqual(TOL);
+      const sheet = (await page.getByTestId('volley-panel').boundingBox())!;
+      const gapBox = (await page.locator('[data-fx-gap]').boundingBox())!;
+      expect(sheet.y, 'the sheet «Заряд» lies below the sea').toBeGreaterThanOrEqual(gapBox.y + gapBox.height - 1);
       await expectHeads(page);
       await shot(page, 'volley-target', size.width);
-      await page.locator('.dock button', { hasText: 'Отмена' }).first().click();
+      await page.getByTestId('cancel-volley').click();
 
       // «Ход окончен»: «✓ готов» in the heads, the panel at the centre.
       await page.locator('[data-testid="end-turn"]:visible').first().click();

@@ -1,6 +1,6 @@
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   abilityButtons,
   cardNeeds,
@@ -39,7 +39,8 @@ import {
   PlansPanel,
   ReactionWaitPanel,
   TortugaPanel,
-  VolleyPanel,
+  ChargeButtons,
+  ChargeSheet,
   chargeCandidates,
   plateLabel,
   volleyOrder,
@@ -667,6 +668,9 @@ export function Game({
   let dock: React.ReactNode = null;
   // Card choices, «Тортуга» and the Plans are bottom sheets on a phone; the Volley and the Reactions stay in the middle.
   let dockSheet = false;
+  /** The sheet «Заряд» while aiming (in the place of the hand) and, on a laptop, its buttons in the place of «Ход окончен». */
+  let chargeSheet: ReactNode = null;
+  let chargeBtns: ReactNode = null;
   const cancel = () => setMode({ k: 'idle' });
   /** The enemy decides on a Reaction to this device's Volley or card (a person sits here). */
   const waitReaction =
@@ -704,12 +708,25 @@ export function Game({
     dock = <ChoicePanel key={`${version}`} s={s} data={data} seat={myDeciding[0]} onAct={(a) => act(a)} onSea={(code) => setSheet({ k: 'sea', code })} />;
   } else if (myTurn) {
     if (mode.k === 'aim') {
+      // PH 4: the sheet «Заряд» stands in the place of the hand (chargeSheet below), not in the sea
       const charges = chargeCandidates(sAim, data, mode.shooter)
         .filter((o) => chargeOk(o.from, o.card, mode.shooter))
         .map((o) => ({ ...o, offered: !mySeats.includes(o.from) }));
-      dock = <VolleyPanel s={sAim} data={data} hints={hints} mode={mode} charges={charges} setMode={setMode} onFire={(a) => act(a)} onCancel={cancel} />;
-    }
-    else if (mode.k === 'card') dock = <CardParamsPanel s={s} data={data} mode={mode} setMode={setMode} onAct={(a) => act(a)} onCancel={cancel} />;
+      const btns = <ChargeButtons s={sAim} data={data} mode={mode} onFire={(a) => act(a)} onCancel={cancel} />;
+      chargeBtns = phone ? null : btns;
+      chargeSheet = (
+        <ChargeSheet
+          s={sAim}
+          data={data}
+          hints={hints}
+          mode={mode}
+          charges={charges}
+          buttons={phone ? btns : null}
+          setMode={setMode}
+          onInfo={(holder, code) => setSheet({ k: 'card', seat: holder, code })}
+        />
+      );
+    } else if (mode.k === 'card') dock = <CardParamsPanel s={s} data={data} mode={mode} setMode={setMode} onAct={(a) => act(a)} onCancel={cancel} />;
     else if (mode.k === 'legend') {
       const c = cardByCode(data, `${mode.seat}-Л`);
       const opts = legendOptions(s, data, mode.seat);
@@ -798,7 +815,7 @@ export function Game({
     );
   }
 
-  dockOpen.current = !!dock;
+  dockOpen.current = !!dock || !!chargeSheet;
 
   // ——— The instruction in the status bar ———
   const instruction = (() => {
@@ -1073,7 +1090,9 @@ export function Game({
   // «Быстрее · До конца · Пауза · Отменить» and «Ход окончен»: under the log ≥ 1280 px (A5: the hand gets the whole width
   // of the table), at the end of the hand row narrower.
   const pickNow = reactPick ? reactionNow(s, data, reactPick.seat, reactPick.card) : null;
-  const handActions = alarmOn && !phone ? (
+  const handActions = chargeBtns ? (
+    <div className="hand-actions charge-mode">{chargeBtns}</div>
+  ) : alarmOn && !phone ? (
     <div className="hand-actions alarm-mode" style={{ ['--alarm-in' as string]: `${T.ui.alarmIn}ms` }}>
       <AlarmActions
         memo={!memoSeen.includes(bottom)}
@@ -1112,7 +1131,7 @@ export function Game({
 
   return (
     <div
-      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''}`}
+      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
       data-testid="game"
       data-bottom={bottom}
     >
@@ -1196,6 +1215,7 @@ export function Game({
                 folded={alarmFolded}
               />
             )}
+            {chargeSheet}
             {!wideLog && handActions}
           </div>
         </div>

@@ -74,7 +74,7 @@ async function toCompany(page: Page) {
     await page.getByTestId(`volley-${shooter}`).click();
     await expect(page.getByTestId('volley-panel')).toBeVisible();
     if ((await page.getByTestId('plate-Г').count()) > 0) break;
-    await page.getByTestId('volley-panel').getByRole('button', { name: 'Отмена' }).click();
+    await page.getByTestId('cancel-volley').click();
   }
   await expectWholePlankTarget(page, 'Г');
   // A tap on the head chooses the target, not the ship card.
