@@ -286,7 +286,7 @@ LG['И-Л'] = async (c, ctx) => {
   const total = K.line + 4 * K.next + 2 * n * K.ship + K.leave + 1000;
   const ships = xs.map((x, i) => {
     const yy = y - (i % 2) * 6 * k;
-    const g0 = sv(sea, `<g><g class="lg-pitch"><path d="M${R1(40 * k)} 2 C${R1(70 * k)} 4 ${R1(110 * k)} 10 ${R1(160 * k)} 6 M${R1(40 * k)} 6 C${R1(70 * k)} 10 ${R1(110 * k)} 18 ${R1(160 * k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46 * k)} 1 q-8 2 -12 6 M${R1(-46 * k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>${bigShip('company', 0, 0, k)}</g></g>`);
+    const g0 = sv(sea, `<g><g class="lg-pitch"><path d="M${R1(40 * k)} 2 C${R1(70 * k)} 4 ${R1(110 * k)} 10 ${R1(160 * k)} 6 M${R1(40 * k)} 6 C${R1(70 * k)} 10 ${R1(110 * k)} 18 ${R1(160 * k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46 * k)} 1 q-8 2 -12 6 M${R1(-46 * k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/><g class="lg-recoil">${bigShip('company', 0, 0, k)}</g></g></g>`);
     A(ctx, g0, [{ transform: `translate(${R1(W + 100 + i * 90)}px,${R1(yy)}px)`, opacity: 0 }, { opacity: 1, offset: 0.15 }, { transform: `translate(${R1(x)}px,${R1(yy)}px)`, opacity: 1 }], K.enter, i * K.enterStep, 'cubic-bezier(.2,.6,.3,1)');
     if (ctx.rich) { const p = g0.querySelector('.lg-pitch')!; const m = Math.ceil(total / 1600); A(ctx, p, Array.from({ length: m * 2 + 1 }, (_, j) => ({ transform: `rotate(${j % 2 ? 1.6 : -1.2}deg)` })), m * 1600, i * 310, 'ease-in-out', 'none'); }
     return { g: g0, x, y: yy };
@@ -304,6 +304,13 @@ LG['И-Л'] = async (c, ctx) => {
     const hitAt = new Map(hits.map((u, j) => [Math.round(((j + 0.5) * shots) / hits.length - 0.5), u]));
     for (let j = 0; j < n; j++) {
       const sp = ships[j], t0 = j * K.ship;
+      // A7: the ship heels from the recoil (away from the target), her side lit by the flashes, and a ring of smoke rolls off the
+      // water (the lean of the prototype: bottom-row target → −1)
+      at(ctx, t0, () => {
+        const rc = sp.g.querySelector('.lg-recoil'), rd = -dir;
+        if (rc) A(ctx, rc, [{ transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)' }, { transform: `rotate(${rd * 2.6}deg) translate(${-rd * 3}px,0)`, filter: 'brightness(1.45) saturate(1.2)', offset: 0.12 }, { transform: `rotate(${-rd * 0.8}deg) translate(0,0)`, filter: 'brightness(1)', offset: 0.55 }, { transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)' }], K.recoil, 0, 'ease-out', 'none');
+        circRing(ctx, sea, sp.x, sp.y + 2, 20 * (k / 0.86), 70 * (k / 0.86), '#eef3f4', K.ring, 60, 1.6);
+      });
       for (let q = 0; q < 3; q++) {
         const shot = j * 3 + q, u = hitAt.get(shot), px = sp.x + (-26 + q * 22) * k, gy = sp.y - dir * 16 * k, t = t0 + q * K.gun;
         const p = u ? fxPoint(ctx, u.ship, u.track, u.idx) : { x: tb.x + rnd(30, tb.w - 30) + rnd(-30, 30), y: edge - dir * rnd(14, 34) };
