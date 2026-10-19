@@ -17,6 +17,8 @@ export const KRAKEN_K = 1;
 export const ARMADA_K = 1;
 export const BOTTLE_K = 1;
 export const JACK_K = 1;
+export const ROUND_K = 1;
+export const SEA_K = 1;
 
 const scaled = <T extends Record<string, number>>(k: number, o: T): T => Object.fromEntries(Object.entries(o).map(([n, v]) => [n, v * k])) as T;
 
@@ -319,5 +321,72 @@ export const T = {
     /** the Hull 2 shines, the coins */
     shine: 1100,
     end: 1300,
+  }),
+  /** The start of a round (playRound of template.html, §3.12): the banner, the sea card comes up on its back, turns over,
+   *  is shown, flies into the plaque of the sea; the plaque flashes; then what the card does. */
+  round: scaled(ROUND_K, {
+    /** the banner «— Раунд N —» unrolls and goes; the card comes after… */
+    banner: 1500,
+    bannerWait: 1300,
+    /** the card comes up on its back; it turns over after… */
+    cardIn: 380,
+    cardWait: 520,
+    flip: 560,
+    /** the card is shown */
+    show: 2200,
+    /** it flies into the plaque of the sea */
+    fly: 620,
+    flyWait: 600,
+    /** the plaque takes it with a flash; the effect after… */
+    plaque: 1100,
+    after: 300,
+    /** a weather of the round rolls in over the sea, then stays */
+    roll: 1200,
+    rollEnd: 1600,
+  }),
+  /** The sea cards «сразу» (seaEffect2 of template.html, caravan3 and current3 of fx3.js, §3.11). */
+  sea: scaled(SEA_K, {
+    /** Гроза: the sky goes black; two far flashes; the bolt into the sails; the sails smoulder */
+    thunderDim: 4200,
+    flash1: 500,
+    flash2: 700,
+    boltAt: 600,
+    bolt: 900,
+    burn: 700,
+    thunderNext: 500,
+    /** Русалки: the tail rises, the song; the sailor is drawn into the sea */
+    tail: 2800,
+    drawAt: 900,
+    draw: 900,
+    mermaidNext: 500,
+    /** Ром в волнах: the bottle bobs up to the plank, the cork pops, the sailor is back */
+    bottle: 1500,
+    popAt: 1150,
+    cork: 800,
+    rumNext: 700,
+    /** Торговый караван: the merchantman crosses the sea; it throws the barrels at 40 % of its way */
+    caravan: 5200,
+    keg: 900,
+    kegStep: 200,
+    /** Сырой порох: the raincloud over each Hold, the barrels soak */
+    cloud: 3000,
+    soakAt: 900,
+    soak: 900,
+    soakStep: 180,
+    wetEnd: 1300,
+    /** Тортуга: the lanterns of the haven, the Holds glow */
+    lantern: 3200,
+    lanternStep: 90,
+    glowAt: 600,
+    glow: 2400,
+    tortugaEnd: 3400,
+    /** Течение: the gyres; the ships ride the arcs, pair after pair; the rings */
+    gyre: 4200,
+    rideAt: 900,
+    ride: 1600,
+    rings: 900,
+    currentEnd: 1800,
+    /** the end of a card: what is left on the table settles */
+    end: 900,
   }),
 } as const;
