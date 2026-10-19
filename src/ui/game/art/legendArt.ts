@@ -15,39 +15,57 @@ export const TENT = (uid: string | number, k = 1, kx = 1): string => `<g transfo
 /* ----- the compass: a brass bezel, a cream dial with a fine tick ring, an eight-point faceted rose, the letters С В Ю З,
    a blued-steel needle with a red north, a brass cap, the glass glint. Simple shapes, careful proportions. ----- */
 
-export function compassArt(uid: string | number, r = 74, o: { needle?: boolean; shadow?: boolean } = {}): string {
-  const id = (k: string) => `pgC${uid}${k}`, P = (a: number) => [Math.cos(a), Math.sin(a)], f = (n: number) => R1(n * 100) / 100;
-  const ticks = Array.from({length: 120}, (_, i) => { const a = i * 3 * Math.PI / 180 - Math.PI / 2, big = i % 30 === 0, mid = i % 10 === 0, half = i % 5 === 0;
-    const r0 = r * .855, l = r * (big ? .1 : mid ? .072 : half ? .05 : .03), [c, sn] = P(a);
-    return `<path d="M${f(c * r0)} ${f(sn * r0)} L${f(c * (r0 - l))} ${f(sn * (r0 - l))}" stroke="#2a2018" stroke-width="${f(r * (big ? .02 : mid ? .013 : .008))}"/>`; }).join('');
+export function compassArt(uid: string | number, r = 74, o: { needle?: boolean; shadow?: boolean; bow?: boolean } = {}): string {
+  const id = (k: string) => `pgC${uid}${k}`, P = (a: number): [number, number] => [Math.cos(a), Math.sin(a)], f = (n: number) => R1(n * 100) / 100, big = r >= 24;
+  const ticks = Array.from({length: 120}, (_, i) => { const a = i * 3 * Math.PI / 180 - Math.PI / 2, bg = i % 30 === 0, mid = i % 10 === 0, half = i % 5 === 0;
+    if(!big && !half) return '';
+    const r0 = r * .855, l = r * (bg ? .1 : mid ? .072 : half ? .05 : .03), [c, sn] = P(a);
+    return `<path d="M${f(c * r0)} ${f(sn * r0)} L${f(c * (r0 - l))} ${f(sn * (r0 - l))}" stroke="#2a2018" stroke-width="${f(r * (bg ? .02 : mid ? .013 : .008))}"/>`; }).join('');
+  const knurl = big ? Array.from({length: 96}, (_, i) => { const [c, sn] = P(i * Math.PI / 48); return `<path d="M${f(c * r * .995)} ${f(sn * r * .995)} L${f(c * r * .952)} ${f(sn * r * .952)}" stroke="#5e400e" stroke-width="${f(r * .011)}" opacity=".7"/>`; }).join('') : '';
+  const nums = big ? [30, 60, 120, 150, 210, 240, 300, 330].map((d) => { const [x, y] = P(d * Math.PI / 180 - Math.PI / 2), X = f(x * r * .69), Y = f(y * r * .69);
+    return `<text x="${X}" y="${f(Y + r * .028)}" font-family="'Old Standard TT',Georgia,serif" font-size="${f(r * .075)}" text-anchor="middle" fill="#4a3a20" transform="rotate(${d} ${X} ${Y})">${d}</text>`; }).join('') : '';
   const point = (deg: number, len: number, wid: number, light: string, dark: string) => { const a = deg * Math.PI / 180 - Math.PI / 2, [c, sn] = P(a), [lc, ls] = P(a - Math.PI / 2);
     return `<path d="M0 0 L${f(lc * wid)} ${f(ls * wid)} L${f(c * len)} ${f(sn * len)} Z" fill="${light}"/><path d="M0 0 L${f(c * len)} ${f(sn * len)} L${f(-lc * wid)} ${f(-ls * wid)} Z" fill="${dark}"/>`; };
   const mute = o.needle !== false;   // with a needle on top the rose steps back, so the needle reads at once
+  const fine = big ? Array.from({length: 16}, (_, i) => point(11.25 + i * 22.5, r * .27, r * .028, mute ? '#ede2c4' : '#e2d0a2', mute ? '#cdb784' : '#b29554')).join('') : '';
   const minor = Array.from({length: 8}, (_, i) => point(22.5 + i * 45, r * .36, r * .045, mute ? '#e6d8b2' : '#d9c38e', mute ? '#c4aa6c' : '#a8873e')).join('');
-  const inter = [45, 135, 225, 315].map(d => point(d, r * .5, r * .085, mute ? '#f2e8cc' : '#efe2bf', mute ? '#bfa266' : '#8f6e2c')).join('');
-  const card = ([[0, mute ? '#eab4a6' : '#e0503a', mute ? '#c98a7a' : '#9c2216'], ...[90, 180, 270].map(d => [d, mute ? '#faf5ea' : '#f7f1e3', mute ? '#a8957a' : '#2c241c'])] as [number, string, string][]).map(([d, l, dk]) => point(d, r * .6, r * .115, l, dk)).join('');
+  const inter = [45, 135, 225, 315].map((d) => point(d, r * .5, r * .085, mute ? '#f2e8cc' : '#efe2bf', mute ? '#bfa266' : '#8f6e2c')).join('');
+  const card = ([[0, mute ? '#eab4a6' : '#e0503a', mute ? '#c98a7a' : '#9c2216'], ...[90, 180, 270].map((d) => [d, mute ? '#faf5ea' : '#f7f1e3', mute ? '#a8957a' : '#2c241c'])] as [number, string, string][]).map(([d, l, dk]) => point(d, r * .6, r * .115, l, dk)).join('');
   const letters = ([['С', 0, '#b8281c'], ['В', 90, '#2a2018'], ['Ю', 180, '#2a2018'], ['З', 270, '#2a2018']] as [string, number, string][]).map(([t, d, c]) => { const [x, y] = P(d * Math.PI / 180 - Math.PI / 2); return `<text x="${f(x * r * .69)}" y="${f(y * r * .69 + r * .05)}" font-family="'Old Standard TT',Georgia,serif" font-weight="700" font-size="${f(r * .14)}" text-anchor="middle" fill="${c}">${t}</text>`; }).join('');
   const nl = r * .8, nw = r * .062;
   const needle = `<g class="nd"><path d="M${f(r * .03)} ${f(-nl + r * .04)} L${f(nw + r * .03)} ${f(r * .04)} L${f(r * .03)} ${f(nl + r * .04)} L${f(-nw + r * .03)} ${f(r * .04)} Z" fill="#000" opacity=".28"/>
     <path d="M0 ${f(-nl)} L${f(nw)} 0 L0 ${f(nl)} L${f(-nw)} 0 Z" fill="url(#${id('st')})" stroke="#0b1016" stroke-width="${f(r * .006)}"/><path d="M0 ${f(-nl)} L${f(nw)} 0 L${f(-nw)} 0 Z" fill="url(#${id('rd')})" stroke="#5a0c08" stroke-width="${f(r * .006)}"/>
+    <path d="M0 ${f(-nl)} L${f(-nw)} 0 L0 0 Z" fill="#fff" opacity=".18"/>
     <circle cy="${f(nl * .78)}" r="${f(r * .045)}" fill="none" stroke="#1f2a34" stroke-width="${f(r * .018)}"/><path d="M0 ${f(-r * .7)} L0 ${f(r * .7)}" stroke="#fff" stroke-width="${f(r * .008)}" opacity=".35"/></g>`;
+  const bow = big && o.bow !== false ? `<ellipse cy="${f(-r * 1.17)}" rx="${f(r * .13)}" ry="${f(r * .14)}" fill="none" stroke="#3a2606" stroke-width="${f(r * .075)}"/>
+    <ellipse cy="${f(-r * 1.17)}" rx="${f(r * .13)}" ry="${f(r * .14)}" fill="none" stroke="url(#${id('bz')})" stroke-width="${f(r * .05)}"/>
+    <rect x="${f(-r * .07)}" y="${f(-r * 1.06)}" width="${f(r * .14)}" height="${f(r * .1)}" rx="${f(r * .02)}" fill="url(#${id('bz')})" stroke="#3a2606" stroke-width="${f(r * .01)}"/>
+    <rect x="${f(-r * .11)}" y="${f(-r * 1.1)}" width="${f(r * .22)}" height="${f(r * .07)}" rx="${f(r * .03)}" fill="url(#${id('bz')})" stroke="#3a2606" stroke-width="${f(r * .01)}"/>` : '';
   return `<g><defs>
       <linearGradient id="${id('bz')}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe7a6"/><stop offset=".35" stop-color="#d7ac52"/><stop offset=".6" stop-color="#8a6420"/><stop offset=".85" stop-color="#e6c06a"/><stop offset="1" stop-color="#6e4c14"/></linearGradient>
+      <linearGradient id="${id('bv')}" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#f4d68a"/><stop offset=".45" stop-color="#b8892e"/><stop offset="1" stop-color="#5a3c0c"/></linearGradient>
       <radialGradient id="${id('dl')}" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#fbf5e6"/><stop offset=".8" stop-color="#efe3c6"/><stop offset="1" stop-color="#dcc9a0"/></radialGradient>
+      <radialGradient id="${id('lp')}" r=".5"><stop offset=".84" stop-color="#2a1c06" stop-opacity="0"/><stop offset="1" stop-color="#2a1c06" stop-opacity=".5"/></radialGradient>
       <linearGradient id="${id('st')}" x1="0" x2="1"><stop offset="0" stop-color="#5b6a78"/><stop offset=".5" stop-color="#1f2a34"/><stop offset="1" stop-color="#0e151c"/></linearGradient>
       <linearGradient id="${id('rd')}" x1="0" x2="1"><stop offset="0" stop-color="#ef6a52"/><stop offset=".5" stop-color="#c0291c"/><stop offset="1" stop-color="#7e150c"/></linearGradient>
-      <radialGradient id="${id('cp')}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff2c2"/><stop offset=".5" stop-color="#d1a24a"/><stop offset="1" stop-color="#6e4c14"/></radialGradient></defs>
+      <radialGradient id="${id('cp')}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff2c2"/><stop offset=".5" stop-color="#d1a24a"/><stop offset="1" stop-color="#6e4c14"/></radialGradient>
+      <radialGradient id="${id('jw')}" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#ff8a74"/><stop offset=".5" stop-color="#a3201a"/><stop offset="1" stop-color="#4a0a06"/></radialGradient></defs>
     ${o.shadow !== false ? `<ellipse cx="${f(r * .06)}" cy="${f(r * .1)}" rx="${f(r * 1.02)}" ry="${f(r * 1.02)}" fill="#000" opacity=".28"/>` : ''}
-    <circle r="${f(r)}" fill="url(#${id('bz')})"/><circle r="${f(r * .97)}" fill="none" stroke="#fff3c8" stroke-width="${f(r * .012)}" opacity=".7"/>
-    <circle r="${f(r * .9)}" fill="#5a3e10"/><circle r="${f(r * .885)}" fill="url(#${id('dl')})"/>
+    ${bow}
+    <circle r="${f(r * 1.015)}" fill="#2e1e06"/><circle r="${f(r)}" fill="url(#${id('bz')})"/>${knurl}
+    <circle r="${f(r * .945)}" fill="url(#${id('bv')})"/><circle r="${f(r * .93)}" fill="url(#${id('bz')})"/>
+    <path d="M${f(-r * .78)} ${f(-r * .52)} A${f(r * .935)} ${f(r * .935)} 0 0 1 ${f(r * .2)} ${f(-r * .91)}" fill="none" stroke="#fff6d2" stroke-width="${f(r * .018)}" stroke-linecap="round" opacity=".8"/>
+    <circle r="${f(r * .9)}" fill="#3a2808"/><circle r="${f(r * .885)}" fill="url(#${id('dl')})"/>
     <circle r="${f(r * .855)}" fill="none" stroke="#2a2018" stroke-width="${f(r * .01)}"/><circle r="${f(r * .755)}" fill="none" stroke="#2a2018" stroke-width="${f(r * .006)}"/>
-    ${ticks}${letters}
+    ${ticks}${nums}${letters}
     <circle r="${f(r * .44)}" fill="none" stroke="#a8873e" stroke-width="${f(r * .008)}"/><circle r="${f(r * .41)}" fill="none" stroke="#a8873e" stroke-width="${f(r * .004)}" stroke-dasharray="${f(r * .02)} ${f(r * .02)}"/>
-    ${minor}${inter}${card}
+    ${fine}${minor}${inter}${card}
     ${o.needle !== false ? needle : ''}
-    <circle r="${f(r * .07)}" fill="url(#${id('cp')})" stroke="#5a3e10" stroke-width="${f(r * .01)}"/><circle cx="${f(-r * .02)}" cy="${f(-r * .02)}" r="${f(r * .022)}" fill="#fff8de" opacity=".8"/>
+    <circle r="${f(r * .075)}" fill="url(#${id('cp')})" stroke="#5a3e10" stroke-width="${f(r * .01)}"/>${big ? `<circle r="${f(r * .036)}" fill="url(#${id('jw')})"/>` : ''}<circle cx="${f(-r * .02)}" cy="${f(-r * .02)}" r="${f(r * .018)}" fill="#fff8de" opacity=".85"/>
+    <circle r="${f(r * .885)}" fill="url(#${id('lp')})"/>
     <path d="M${f(-r * .7)} ${f(-r * .3)} A${f(r * .78)} ${f(r * .78)} 0 0 1 ${f(r * .3)} ${f(-r * .72)}" fill="none" stroke="#fff" stroke-width="${f(r * .06)}" stroke-linecap="round" opacity=".22"/>
-    <path d="M${f(-r * .5)} ${f(-r * .62)} A${f(r * .8)} ${f(r * .8)} 0 0 1 ${f(-r * .1)} ${f(-r * .8)}" fill="none" stroke="#fff" stroke-width="${f(r * .025)}" stroke-linecap="round" opacity=".5"/></g>`;
+    <path d="M${f(-r * .5)} ${f(-r * .62)} A${f(r * .8)} ${f(r * .8)} 0 0 1 ${f(-r * .1)} ${f(-r * .8)}" fill="none" stroke="#fff" stroke-width="${f(r * .025)}" stroke-linecap="round" opacity=".5"/>
+    ${big ? `<path d="M${f(r * .58)} ${f(r * .5)} A${f(r * .77)} ${f(r * .77)} 0 0 1 ${f(r * .2)} ${f(r * .74)}" fill="none" stroke="#fff" stroke-width="${f(r * .014)}" stroke-linecap="round" opacity=".3"/>` : ''}</g>`;
 }
 
 

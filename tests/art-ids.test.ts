@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { bigShip, type BigShipKind } from '../src/ui/game/art/bigShips';
 import { shipSvg } from '../src/ui/game/art/ships';
 import { CELLS, cellUrl } from '../src/ui/game/art/cells';
-import { bottleArt } from '../src/ui/game/art/legendArt';
+import { bottleArt, compassArt } from '../src/ui/game/art/legendArt';
 
 const ids = (svg: string) => [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
 const refs = (svg: string) => [...svg.matchAll(/url\(#([^)]+)\)/g)].map((m) => m[1]);
@@ -51,5 +51,20 @@ describe('the ship in the bottle (A5)', () => {
     const own = (['pearl', 'revenge', 'endeavour', 'dutch'] as const).map((kind) => bottleArt({ ship: true, cork: true, kind }));
     own.forEach((svg, i) => expect(svg).toContain(`data-kind="${['pearl', 'revenge', 'endeavour', 'dutch'][i]}"`));
     expect(new Set(own).size).toBe(4);
+  });
+});
+
+describe('the compass of v3 (A10)', () => {
+  it('big: the bow ring, the knurled bezel, the degrees, the needle with its own ids; small (< 24): none of them', () => {
+    const big = compassArt('t1', 80), small = compassArt('t2', 10, { needle: false, shadow: false });
+    expect((big.match(/<ellipse cy="-93\.6"/g) || []).length).toBe(2); // the bow
+    expect((big.match(/stroke="#5e400e"/g) || []).length).toBe(96);
+    expect((big.match(/<text /g) || []).length).toBe(8 + 4);
+    expect(big).toContain('class="nd"');
+    expect((small.match(/<text /g) || []).length).toBe(4); // only С В Ю З, no degrees
+    expect(small).not.toContain('#5e400e');
+    expect(small).not.toContain('class="nd"');
+    expect(ids(big).every((i) => i.startsWith('pgCt1'))).toBe(true);
+    expect(refs(big).every((u) => ids(big).includes(u))).toBe(true);
   });
 });
