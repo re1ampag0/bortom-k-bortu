@@ -142,7 +142,9 @@ async function keyStates(page: Page, name: string) {
   await shot(page, name, '3-curtain');
   await page.getByTestId('curtain-ready').click();
   await expect(page.getByTestId('game')).toBeVisible();
-  await expect(page.getByTestId('middle-info')).toContainText('Нажмите карту или «Залп»');
+  // Б1: the hint is in the top plaque; the line along the bottom of the sea has «Последнее» only (nothing played yet — no line)
+  await expect(page.locator('[data-fx-instruction]')).toContainText('выберите карту или действие');
+  await expect(page.getByTestId('middle-info')).toHaveCount(0);
   await expectFits(page);
   await shot(page, name, '4-turn');
   await page.getByTestId('volley-Ж').click();
@@ -435,3 +437,74 @@ test.describe('V7: reduced motion', () => {
 
 // Safari on an iPhone (WebKit with the iPhone 15 Pro Max profile): run by the e2e job on GitHub Actions.
 test('iPhone 15 Pro Max: key states fit the window @iphone', async ({ page }) => keyStates(page, 'iphone15promax'));
+
+// Б6 (a5-art3): the line «Последнее», the played card, «Колода · Сброс», the Hold, the hourglass and the cards of the hand
+// do not run into each other (getBoundingClientRect), at three sizes. The scene «card» plays a card of «Голландец»; «&strip=1»
+// puts the line of the game on its table.
+for (const v of [
+  { w: 1366, h: 660 },
+  { w: 1920, h: 1080 },
+  { w: 430, h: 932 },
+]) {
+  test(`${v.w}×${v.h}: the line «Последнее», the played card, the deck, the Hold, the hourglass and the hand do not overlap`, async ({ page }) => {
+    await page.setViewportSize({ width: v.w, height: v.h });
+    await page.goto('?fxScene=card&speed=normal&strip=1');
+    await page.waitForFunction(() => !!document.querySelector('.fx-layer .fcard'), null, { timeout: 40_000, polling: 'raf' });
+    await page.waitForTimeout(900); // the card has landed
+    const r = await page.evaluate(() => {
+      const box = (e: Element) => {
+        const b = e.getBoundingClientRect();
+        return { l: b.left, r: b.right, t: b.top, b: b.bottom };
+      };
+      const one = (q: string) => {
+        const e = document.querySelector(q);
+        return e && getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0 ? box(e) : null;
+      };
+      const many = (q: string) => Array.from(document.querySelectorAll(q)).map(box);
+      return {
+        info: one('[data-testid="middle-info"]'),
+        card: one('.fx-layer .flyc'),
+        deck: one('[data-fx-deck]'),
+        hold: one('.board-bottom > .team-row:not(.table-edge)'),
+        label: one('.board-bottom > .team-row:not(.table-edge) .hold-label .wide'),
+        glass: one('.board-bottom > .team-row .hold-glass'),
+        kegs: one('.board-bottom > .team-row .powder-dots'),
+        cards: many('.hand-cards .hcard'),
+        handRow: one('.hand-row'),
+        sea: one('.sea-table'),
+        wheel: one('[data-thing="wheel"]'),
+      };
+    });
+    type R = { l: number; r: number; t: number; b: number };
+    const meet = (a: R, b: R, m = 0) => a.l < b.r + m && b.l < a.r + m && a.t < b.b + m && b.t < a.b + m;
+    const named: [string, R | null][] = [['«Последнее»', r.info], ['the played card', r.card], ['the deck line', r.deck], ['the Hold', r.hold], ['the hourglass', r.glass], ...r.cards.map((c, i): [string, R] => [`hand card ${i}`, c])];
+    expect(r.info, 'the line «Последнее»').not.toBeNull();
+    expect(r.card, 'the played card').not.toBeNull();
+    expect(r.deck, 'the deck line').not.toBeNull();
+    expect(r.hold, 'the Hold').not.toBeNull();
+    const bad: string[] = [];
+    for (let i = 0; i < named.length; i++)
+      for (let j = i + 1; j < named.length; j++) {
+        const [na, a] = named[i], [nb, b] = named[j];
+        if (a && b && !(na.startsWith('hand card') && nb.startsWith('hand card')) && !(na === 'the Hold' && nb === 'the hourglass') && meet(a, b)) bad.push(`${na} ∩ ${nb}`);
+      }
+    expect(bad).toEqual([]);
+    if (r.wheel) {
+      // «Вещи на столе»: the wheel (bottom left) keeps clear of the Hold and of «Перестроение», which sits right under the Hold
+      // (a 194 × 34 plank, 7 px below; the scene has no button, so its place is reckoned from the Hold)
+      const zone = { l: r.hold!.l, r: r.hold!.l + 194, t: r.hold!.b + 7, b: r.hold!.b + 41 };
+      expect(meet(r.wheel, r.hold!), 'the wheel and the Hold').toBe(false);
+      expect(meet(r.wheel, zone), 'the wheel and «Перестроение»').toBe(false);
+    }
+    if (r.glass) {
+      expect(r.glass.l, 'the hourglass stands right of the kegs').toBeGreaterThanOrEqual(r.kegs!.r - 1);
+      // the hourglass is to the right of the kegs and keeps ≥ 12 px clear of every card of the hand
+      for (const c of r.cards) if (c.t < r.glass.b && c.b > r.glass.t) expect(c.l - r.glass.r, 'the hourglass and the first cards').toBeGreaterThanOrEqual(12);
+    }
+    if (v.w > 700) {
+      // Б4: the caption of the Hold is right under the frame of the sea, level with the row of the hand
+      expect(r.label!.t - r.sea!.b, 'the caption right under the sea').toBeLessThanOrEqual(24);
+      expect(Math.abs(r.label!.t - r.handRow!.t), 'the caption level with the row of the hand').toBeLessThanOrEqual(16);
+    }
+  });
+}

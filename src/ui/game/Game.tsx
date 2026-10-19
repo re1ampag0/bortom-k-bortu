@@ -1124,65 +1124,62 @@ export function Game({
               </div>
             )}
             {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
-            {!dock && !s.winner && !alarmOn && (lastEvent || (myTurn && mode.k === 'idle')) && (
-              <p className="middle-info" data-testid="middle-info">
-                {offerInfo && (
-                  <>
-                    <b data-testid="offer-info">{offerInfo}</b>
-                    <br />
-                  </>
-                )}
+            {/* Б1: a translucent line along the bottom of the open sea; the hint «выберите карту или действие» is in the top plaque already */}
+            {!dock && !s.winner && !alarmOn && (lastEvent || offerInfo) && (
+              <p className="middle-info" data-testid="middle-info" title={lastEvent ?? undefined}>
+                {offerInfo && <b data-testid="offer-info">{offerInfo}</b>}
+                {offerInfo && lastEvent && ' · '}
                 {lastEvent && <>Последнее: {lastEvent}</>}
-                {lastEvent && myTurn && mode.k === 'idle' && <br />}
-                {myTurn && mode.k === 'idle' && 'Нажмите карту или «Залп».'}
               </p>
             )}
           </div>
           <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
           {alarm?.kind === 'volley' && alarm.shooter && alarm.target && <AlarmArrow box={seaRef} from={alarm.shooter} to={alarm.target} label={alarm.hit?.pill ?? null} />}
         </div>
-        <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} fxGen={fx.gen} />
         {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
-        <div className="hand-row" data-fx-hand>
-          {seat && (
-            <Hand
-              s={view}
-              data={data}
-              seat={seat}
-              tabs={tabs}
-              onTab={setSeatPick}
-              offOf={offOf}
-              chosen={chosenCard}
-              noteOf={noteOf}
-              onCard={(holder: string, code: string) => {
-                if (mode.k === 'aim' && code !== HIDDEN && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) {
-                  setMode({ ...mode, charge: mode.charge === code ? null : code, chargeFrom: holder, paid: 0 });
-                  return;
+        <div className="board-bottom">
+          <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} fxGen={fx.gen} />
+          <div className="hand-row" data-fx-hand>
+            {seat && (
+              <Hand
+                s={view}
+                data={data}
+                seat={seat}
+                tabs={tabs}
+                onTab={setSeatPick}
+                offOf={offOf}
+                chosen={chosenCard}
+                noteOf={noteOf}
+                onCard={(holder: string, code: string) => {
+                  if (mode.k === 'aim' && code !== HIDDEN && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) {
+                    setMode({ ...mode, charge: mode.charge === code ? null : code, chargeFrom: holder, paid: 0 });
+                    return;
+                  }
+                  // In the Reaction window a Reaction in the hand is chosen (again — unchosen) instead of opening it.
+                  if (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)) {
+                    if (offOf(holder, code)) setSheet({ k: 'card', seat: holder, code });
+                    else setReactPick(reactPick?.card === code ? null : { seat: holder, card: code });
+                    return;
+                  }
+                  setSheet({ k: 'card', seat: holder, code });
+                }}
+                // V2: on a phone the first tap lifts a card, but the two choices above take it at once (the user's call)
+                direct={(holder: string, code: string) =>
+                  code !== HIDDEN &&
+                  ((mode.k === 'aim' && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) ||
+                    (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)))
                 }
-                // In the Reaction window a Reaction in the hand is chosen (again — unchosen) instead of opening it.
-                if (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)) {
-                  if (offOf(holder, code)) setSheet({ k: 'card', seat: holder, code });
-                  else setReactPick(reactPick?.card === code ? null : { seat: holder, card: code });
-                  return;
-                }
-                setSheet({ k: 'card', seat: holder, code });
-              }}
-              // V2: on a phone the first tap lifts a card, but the two choices above take it at once (the user's call)
-              direct={(holder: string, code: string) =>
-                code !== HIDDEN &&
-                ((mode.k === 'aim' && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) ||
-                  (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)))
-              }
-              onDiscard={(x) => setSheet({ k: 'discard', seat: x })}
-              label={handLabel}
-              note={captainNote}
-              alarmOf={alarmOn ? alarmOf : null}
-              folded={alarmFolded}
-            />
-          )}
-          {!wideLog && handActions}
+                onDiscard={(x) => setSheet({ k: 'discard', seat: x })}
+                label={handLabel}
+                note={captainNote}
+                alarmOf={alarmOn ? alarmOf : null}
+                folded={alarmFolded}
+              />
+            )}
+            {!wideLog && handActions}
+          </div>
         </div>
         <FxLayer fx={fx} />
       </main>

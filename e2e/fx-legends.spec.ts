@@ -124,6 +124,43 @@ test.describe('the Legends through ?fxScene', () => {
         expect(foot.px).toBeGreaterThanOrEqual(10);
 
         await shot(page, l.effect, l.after, `${SHOTS}/e2e-${l.scene}-effect-${size}.png`);
+        if (l.scene === 'jack') {
+          // A10: the compass of «Джек ускользает» — knurled bezel (96 notches), the degrees (8 numbers), the golden glow with 12 soft rays
+          await page.waitForFunction(() => document.querySelectorAll('.fx-layer svg .ry path').length > 0, null, { timeout: 40_000, polling: 'raf' });
+          await page.waitForTimeout(300);
+          const j = await page.evaluate(() => ({
+            knurl: document.querySelectorAll('.fx-layer svg path[stroke="#5e400e"]').length,
+            rays: document.querySelectorAll('.fx-layer svg .ry path').length,
+            nums: Array.from(document.querySelectorAll('.fx-layer svg text')).filter((t) => /^\d+$/.test(t.textContent || '')).length,
+            needle: document.querySelectorAll('.fx-layer svg .nd').length,
+          }));
+          // (the small compass of the card, while it is still there, has its own bezel and degrees: whole multiples)
+          expect(j.rays).toBe(12);
+          expect(j.knurl % 96, 'knurled bezel').toBe(0);
+          expect(j.knurl).toBeGreaterThanOrEqual(96);
+          expect(j.nums % 8, 'degrees').toBe(0);
+          expect(j.nums).toBeGreaterThanOrEqual(8);
+          expect(j.needle).toBeGreaterThanOrEqual(1);
+        }
+        if (l.scene === 'armada') {
+          // A7: the ships of the line heel from the recoil when they fire (a running animation on .lg-recoil with a turn)
+          const heel = await page.evaluate(async () => {
+            const rcs = Array.from(document.querySelectorAll('.lg-recoil'));
+            let best = 0;
+            for (let i = 0; i < 40 && best < 1; i++) {
+              for (const r of rcs) { const m = new DOMMatrix(getComputedStyle(r).transform); best = Math.max(best, Math.abs(m.b)); }
+              await new Promise((r) => setTimeout(r, 25));
+            }
+            return { ships: rcs.length, turn: best };
+          });
+          expect(heel.ships, 'ships of the line').toBeGreaterThanOrEqual(4);
+          expect(heel.turn, 'a ship heels from the recoil').toBeGreaterThan(0.005);
+        }
+        if (l.scene === 'bottle') {
+          // A5: the ship in the bottle is the target's own («Индевор»), not the neutral merchantman of the card
+          const kind = await page.evaluate(() => document.querySelector('.fx-layer .lg-rock > g[data-kind]')?.getAttribute('data-kind'));
+          expect(kind, 'the ship in the bottle').toBe('endeavour');
+        }
         if (l.scene === 'kraken') {
           // Three arms lie across «Месть»: the base of each at the edge of the target at 30/55/78 % of its width, and
           // the crack of the wood was born right under it (its circle of reveal starts there).

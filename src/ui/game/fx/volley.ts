@@ -20,7 +20,7 @@ import { SMOKE_LIFE, T } from './timing';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
 import {
-  A, at, ballFly, boom, bubbles, burst, bx, capFirst, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
+  A, at, ballFly, boom, bubbles, burst, bx, capFirst, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, smokeJet, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
   mk, moveTo, overlayAt, payKegs, pillAt, plank, projectile, puff, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
   tag, trackEl, wait, whirlpool, type FlyCard, type FxCtx,
 } from './primitives';
@@ -342,7 +342,7 @@ PLAY.shot = async (c, ctx) => {
   const smoke = ctx.rich && sea ? scar(fxSvg(ctx, sea), 'short', c.shooter) : null;
   const tb0 = bx(ctx, tPl), aimAt = { x: tb0.cx, y: facingY(ctx, c.target) };
   const gunScale = Math.min(1.05, Math.max(0.6, ctx.board.clientWidth / 1300));
-  let fallen = false, hits = 0;
+  let fallen = false, hits = 0, skipped = false;
   let mi = 0, kTrack = 0, kHull = 0, lastHit = 0, firstHit = true, kegI = 0;
   const cur = { track: shownTrack(ctx, c.target, c.track), hull: shownTrack(ctx, c.target, 'hull') };
   const labelled = new Set<string>();
@@ -359,6 +359,9 @@ PLAY.shot = async (c, ctx) => {
       fuseSparks(ctx, svg, p0.x, p0.y, -down, Math.max(0, t0 - FUSE) * 0.3, FUSE * 0.62);
       const full = g < 3;
       gunFire(ctx, svg, full ? smoke : null, p0.x, p0.y + down * 4, Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale, t0, { grains: full ? 9 : 3, puffs: full ? 11 : 4, wads: full ? 4 : 0, life: SMOKE_LIFE, flash: T.volley.flash });
+      // A11 (c): a short breath of powder smoke over the planks (in the top layer), gone within T.volley.smokeOver ≤ 800 ms; the long
+      // smoke of the Volley lies under the planks (the trace of the sea)
+      if (full && g < 2) smokeJet(ctx, svg, p0.x, p0.y + down * 4, Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale * 0.8, 5, T.volley.smokeOver, t0);
       A(ctx, shooterEl, [{ translate: '0 0' }, { translate: `0 ${-down * 6}px`, offset: 0.15 }, { translate: '0 0' }], T.volley.flash, t0, 'ease-out', 'none');
       boom(ctx, Math.max(1, 4 - g), 260, t0);
       if (g === 0) flashBoard(ctx, '#ffcf8a', 0.12, 200, t0);
@@ -416,6 +419,13 @@ PLAY.shot = async (c, ctx) => {
       else { end = { x: mid.x + 78 * narrow, y: g2.cy + 14 }; d = FLY * 1.25; pts = [...curve(p0, mid, 0, 8), ...curve(mid, end, -0.35 * down, 10).slice(1)];
         if (ctx.rich) { const gu = mk(ctx, 'gust', 0, 0, '<svg viewBox="0 0 220 40" width="220" height="40"><g fill="none" stroke="#9FB6C6" stroke-width="2" stroke-linecap="round"><path d="M2 14 C60 4 120 26 218 12"/><path d="M20 30 C80 22 140 38 200 26" opacity=".7"/></g></svg>'); A(ctx, gu, [{ opacity: 0, transform: `translate(${mid.x - 40}px,${mid.y + 6}px) scaleX(.4)` }, { opacity: 0.9, offset: 0.3 }, { opacity: 0, transform: `translate(${mid.x + 90}px,${mid.y + 10}px) scaleX(1)` }], 650, t0 + FLY * 0.35); } }
       flyBall(pts, d, t0, { lift: 0.15 });
+      // A11 (a): the first iron ball of the Volley that falls short skips off the water — a small hop on, a second, lesser splash
+      if (b.out === 'water' && b.kind === 'core' && !skipped && !(VS && VS.dust)) {
+        skipped = true;
+        const hop = { x: end.x + (end.x - p0.x) * 0.16, y: end.y + down * 20 };
+        at(ctx, t0 + d, () => ballFly(ctx, svg, end, hop, T.volley.skip, 0, 16));
+        missSplash(ctx, svg, hop.x, hop.y, 0.45 * gunScale, t0 + d + T.volley.skip, T.volley.splash * 0.7);
+      }
       if (VS && VS.dust) { burst(ctx, 'dust', end.x, end.y, t0 + d * 0.6, 8, 6, 22, 700); } else if (b.out === 'past') splash(ctx, end.x, end.y, t0 + d); else missSplash(ctx, svg, end.x, end.y, 0.85 * gunScale, t0 + d, T.volley.splash);
       if (b.label) besidePlate(ctx, tag(ctx, end.x + (end.x > ctx.board.clientWidth / 2 ? -10 : 10), end.y - 26 * down, b.label, t0 + d + 40, 'mod', 1700));
     } else if (b.out === 'bounce') {

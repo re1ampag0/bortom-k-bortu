@@ -138,7 +138,19 @@ function urlSpeed(): Speed {
 
 export default function FxScene({ id, data }: { id: string; data: GameData }) {
   const scenes = useMemo(() => refScenes(), []);
-  const scene = scenes.find((x) => x.id === id) ?? null;
+  const found = scenes.find((x) => x.id === id) ?? null;
+  // «&diag=1» (checks of A11): the Volley of the scene is weakened by «Диагональ −1», so one ball falls short into the water
+  const diag = new URLSearchParams(location.search).get('diag') === '1';
+  const scene = useMemo(() => {
+    if (!found || !diag) return found;
+    const c = structuredClone(found);
+    for (const a of c.actions) for (const e of a.ev) {
+      if (e.type === 'hit') { e.damage -= 1; e.terms = [...e.terms, { what: 'Диагональ', n: -1 }]; }
+      else if (e.type === 'volley') { e.damage -= 1; e.diagonal = true; }
+      else if (e.type === 'damage') { e.amount -= 1; }
+    }
+    return c;
+  }, [found, diag]);
   const setup = useMemo(() => {
     if (!scene) return null;
     const start = startOf(scenes, scene, data);
@@ -286,27 +298,32 @@ function SceneTable({
         <div className="sea-table" ref={seaRef}>
           <div className="sea-water" aria-hidden />
           <div className="planks top">{columns(top).map(renderPlank)}</div>
-          <div className="middle" data-fx-gap />
+          <div className="middle" data-fx-gap>
+            {/* «&strip=1»: the line «Последнее» of the game (e2e: nothing lies over it) */}
+            {new URLSearchParams(location.search).get('strip') === '1' && <p className="middle-info" data-testid="middle-info">Последнее: «Жемчужина» откладывает в Планы: 2 карты — а вот это очень длинная запись журнала, которую строка обрежет многоточием.</p>}
+          </div>
           <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
         </div>
-        <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={null} hint={null} fxGen={fx.gen} />
         {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
-        <div className="hand-row" data-fx-hand>
-          <Hand
-            s={view}
-            data={data}
-            seat={seat}
-            tabs={[]}
-            onTab={() => {}}
-            offOf={() => null}
-            chosen={null}
-            noteOf={() => undefined}
-            onCard={(_holder, code) => setCard(code)}
-            onDiscard={() => {}}
-            label={`Рука «${seatLabel(data, seat)}»`}
-          />
+        <div className="board-bottom">
+          <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={null} hint={null} fxGen={fx.gen} />
+          <div className="hand-row" data-fx-hand>
+            <Hand
+              s={view}
+              data={data}
+              seat={seat}
+              tabs={[]}
+              onTab={() => {}}
+              offOf={() => null}
+              chosen={null}
+              noteOf={() => undefined}
+              onCard={(_holder, code) => setCard(code)}
+              onDiscard={() => {}}
+              label={`Рука «${seatLabel(data, seat)}»`}
+            />
+          </div>
         </div>
         <FxLayer fx={fx} />
       </main>

@@ -14,7 +14,7 @@ import { fanSvg } from './art/fan';
 import { ALARM_SEAL, TARGET_SEAL } from './art/seal';
 import type { Loss } from './alarm';
 import { hourglassSvg } from './art/table';
-import { SEA_BG, seaSvg } from './fx/seaArt';
+import { wxSvg } from './art/wx';
 import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, TRIDENT_SVG, statusSvg, type StatusIcon } from './art/status';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
@@ -159,7 +159,7 @@ export function SeaChip({ s, data, onSea }: { s: GameState; data: GameData; onSe
   if (!sea) return null;
   return (
     <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-fx-sea-chip>
-      <span className="sea-icon wide" style={{ background: SEA_BG[sea.key] }} dangerouslySetInnerHTML={svg(seaSvg(sea.key, 36, 22))} />
+      <span className="sea-icon wide" dangerouslySetInnerHTML={svg(wxSvg(sea.key, 40, 34))} />
       <span className="wide sea-words">
         <span className="sea-cap">Море · весь раунд</span>
         <span className="sea-name">
@@ -467,7 +467,7 @@ export function Plank({
         title={plate ? undefined : 'Подробнее о корабле'}
       >
         <span className="ship-art wide">
-          <span className="ship-pic" dangerouslySetInnerHTML={svg(shipSvg(ship.code))} />
+          <span className="ship-pic" dangerouslySetInnerHTML={svg(shipSvg(ship.code, 58, 28, `plank-${ship.code}`))} />
           {marked && <MarkStamp cls="wide" hidden={markHidden} />}
         </span>
         <b className="plank-name">

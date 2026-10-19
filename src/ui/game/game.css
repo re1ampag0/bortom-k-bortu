@@ -2935,11 +2935,9 @@ button.star::before {
 }
 .sea-icon {
   flex: none;
-  width: 36px;
-  height: 22px;
-  border-radius: 3px;
-  overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  width: 40px;
+  height: 34px;
+  line-height: 0;
 }
 .sea-icon svg {
   display: block;
@@ -3113,17 +3111,28 @@ button.star::before {
 .board > .fx-weather {
   clip-path: inset(calc(var(--sea-t, 0px) + 7px) calc(var(--sea-r, 0px) + 7px) calc(var(--sea-b, 0px) + 7px) calc(var(--sea-l, 0px) + 7px));
 }
-/* «Последнее: …»: a paper ribbon in the middle of the sea */
+/* «Последнее: …» (Б1): a translucent line along the bottom of the open sea, the width of the water, over the top edge of the
+   bottom planks; the effects, the cards and the plates of FX are drawn over it. One line, cut with «…» (the whole text — the Journal). */
 .middle-info {
-  padding: 5px 30px;
-  max-width: min(100%, 560px);
-  background: #efe3c8;
-  clip-path: polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%, 4% 50%);
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+  position: absolute;
+  left: -7px;
+  right: -7px;
+  bottom: 0;
+  height: 22px;
+  margin: 0;
+  padding: 0 12px;
+  box-sizing: border-box;
+  background: rgba(20, 30, 36, 0.45);
   font-family: var(--font-head);
   font-style: italic;
-  font-size: 13.5px;
-  color: #3d342b;
+  font-size: 12.5px;
+  line-height: 22px;
+  color: #e9f0f2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  pointer-events: none;
 }
 .middle-info b {
   font-style: normal;
@@ -3514,10 +3523,10 @@ button.star::before {
     grid-template-columns: auto auto minmax(0, 1fr) auto;
   }
   /* the Hold of the bottom team: at the bottom left, by the hand (A5 «Трюм пиратов · 2 из 8», kegs 4 × 2, «Перестроение») */
-  .board > .team-row {
-    position: absolute;
-    left: 12px;
-    bottom: 8px;
+  .board-bottom > .team-row {
+    position: relative;
+    align-self: start;
+    padding-top: 6px;
     width: 218px;
     display: flex;
     flex-direction: column;
@@ -3527,10 +3536,10 @@ button.star::before {
     overflow: visible;
     z-index: 2;
   }
-  .board > .team-row .team-name {
+  .board-bottom > .team-row .team-name {
     display: none;
   }
-  .board > .team-row .hold-label {
+  .board-bottom > .team-row .hold-label {
     font-family: var(--font-num);
     font-weight: 700;
     font-size: 13px;
@@ -3539,7 +3548,7 @@ button.star::before {
     text-transform: uppercase;
     color: #efe3c8;
   }
-  .board > .team-row .powder-dots {
+  .board-bottom > .team-row .powder-dots {
     display: grid;
     grid-template-columns: repeat(4, 32px);
     gap: 4px 10px;
@@ -3548,46 +3557,46 @@ button.star::before {
     background: #3f2a1a;
     box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
   }
-  .board > .team-row .powder-dots i {
+  .board-bottom > .team-row .powder-dots i {
     width: 22px;
     height: 28px;
     justify-self: center;
   }
-  .board > .team-row .btn.regroup {
+  .board-bottom > .team-row .btn.regroup {
     min-width: 194px;
     justify-content: flex-start;
   }
-  .board > .team-row .btn.regroup .cost.free {
+  .board-bottom > .team-row .btn.regroup .cost.free {
     margin-left: auto;
     font-family: var(--font-text);
     font-size: 11px;
     font-weight: 800;
     color: var(--ok-a5);
   }
-  .board > .team-row .hint {
+  .board-bottom > .team-row .hint {
     font-size: 11.5px;
     white-space: normal;
   }
-  .board > .team-row .powder-dots i {
+  .board-bottom > .team-row .powder-dots i {
     border: 0;
     border-radius: 3px;
     background: none;
   }
-  .board > .team-row .powder-dots i::before {
+  .board-bottom > .team-row .powder-dots i::before {
     content: '';
     position: absolute;
     inset: 0;
     background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2228%22%20viewBox%3D%220%200%2022%2028%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%203.2%20C1.6%209%201.6%2019%204%2024.8%20C8.6%2026.4%2013.4%2026.4%2018%2024.8%20C20.4%2019%2020.4%209%2018%203.2%20C13.4%201.6%208.6%201.6%204%203.2%20Z%22%20fill%3D%22none%22%20stroke%3D%22%238a6a44%22%20stroke-width%3D%221%22%20stroke-dasharray%3D%222%201.6%22%20opacity%3D%22.8%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
   }
-  .board > .team-row .powder-dots i.on {
+  .board-bottom > .team-row .powder-dots i.on {
     background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2228%22%20viewBox%3D%220%200%2022%2028%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%203.2%20C1.6%209%201.6%2019%204%2024.8%20C8.6%2026.4%2013.4%2026.4%2018%2024.8%20C20.4%2019%2020.4%209%2018%203.2%20C13.4%201.6%208.6%201.6%204%203.2%20Z%22%20fill%3D%22%239a6232%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.9%22%2F%3E%3Cpath%20d%3D%22M7.4%202.4%20C6%209%206%2019%207.4%2025.6%20M11%202.2%20V25.8%20M14.6%202.4%20C16%209%2016%2019%2014.6%2025.6%22%20stroke%3D%22%236e431e%22%20stroke-width%3D%22.6%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M4.6%204.6%20C4%209.6%204%2018.4%204.6%2023.4%22%20stroke%3D%22%23c08a52%22%20stroke-width%3D%221%22%20fill%3D%22none%22%20opacity%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M2.6%208.4%20C8.4%209.8%2013.6%209.8%2019.4%208.4%20M2.6%2019.6%20C8.4%2018.2%2013.6%2018.2%2019.4%2019.6%22%20stroke%3D%22%232c2a28%22%20stroke-width%3D%221.7%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M2.8%207.7%20C8.4%209%2013.6%209%2019.2%207.7%20M2.8%2018.9%20C8.4%2017.6%2013.6%2017.6%2019.2%2018.9%22%20stroke%3D%22%238a857e%22%20stroke-width%3D%22.45%22%20fill%3D%22none%22%2F%3E%3Cellipse%20cx%3D%2211%22%20cy%3D%223%22%20rx%3D%227%22%20ry%3D%221.3%22%20fill%3D%22%237a4b22%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.6%22%2F%3E%3Crect%20x%3D%229.4%22%20y%3D%2212.6%22%20width%3D%223.2%22%20height%3D%222.4%22%20rx%3D%22.6%22%20fill%3D%22%235a3818%22%20stroke%3D%22%232c1a0a%22%20stroke-width%3D%22.4%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
   }
-  .board > .team-row .powder-dots b {
+  .board-bottom > .team-row .powder-dots b {
     display: none;
   }
   /* the hand makes room for the Hold */
-  .board > .hand-row {
-    margin-left: 228px;
+  .board-bottom > .hand-row {
+    margin-left: 0;
   }
 }
 @media (max-width: 700px) {
@@ -3959,7 +3968,7 @@ button.star::before {
   display: none;
 }
 @media (min-width: 701px) {
-  .board > .team-row .hold-glass {
+  .board-bottom > .team-row .hold-glass {
     display: block;
     position: absolute;
     left: 184px;
@@ -3969,4 +3978,39 @@ button.star::before {
     pointer-events: none;
     filter: drop-shadow(4px 5px 3px rgba(0, 0, 0, 0.5));
   }
+}
+
+/* Б4: the Hold of the bottom team and the hand stand in one band — the caption of the Hold is level with the row of the hand
+   (the tabs, «Колода · Сброс»), right under the frame of the sea; the hourglass keeps ≥ 12 px clear of the first card. On a
+   phone the band disappears (display: contents): the Hold row and the hand row are the flex items of the board, as before. */
+.board-bottom {
+  display: contents;
+}
+@media (min-width: 701px) {
+  .board-bottom {
+    --hold-w: 244px;
+    display: grid;
+    grid-template-columns: var(--hold-w) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+@media (max-width: 700px) {
+  /* the old order of the rows on a phone: the sea, the Hold row, the empty edge (FX measure the table by it), the hand */
+  .board-bottom > .team-row {
+    order: 1;
+  }
+  .board > .team-row.table-edge {
+    order: 2;
+  }
+  .board-bottom > .hand-row {
+    order: 3;
+  }
+}
+
+/* Б3: «Колода N · Сброс M» — a small line over the hand on the right; it covers nothing (it is in the row of the tabs) */
+.hand-head .deck-info {
+  font-size: 11px;
+  line-height: 1.2;
+  padding: 0;
+  white-space: nowrap;
 }

@@ -1,9 +1,10 @@
 // V7: the panorama of the victory sheet — a port of docs/mockups/a5/art/pano.py. The low sun behind the ships, clouds,
 // rays, an island with palms, gulls, the sun path; the winners under sail with a warm rim of light (vlit) and a blurred
 // reflection; the sunk ships as dark silhouettes against the sun (vback), heeling, half in the water, burning, the smoke
-// going left; planks, a barrel, a longboat. Who is where comes from the end of the game (panoShips): the places of the
+// going left; planks, a barrel, a longboat. Who is where comes from the end of the game (bigships.json): the places of the
 // winners hold the ships afloat, the places of the sinking — the ships sunk. The ids are unique for each picture.
-import SHIPS from './panoShips.json';
+import SHIPS from './bigships.json';
+import { uidSvg } from './bigShips';
 import { createRng } from '../../../engine/rng';
 
 type Kind = keyof typeof SHIPS;
@@ -12,15 +13,8 @@ const KIND: Record<string, Kind> = { Ж: 'pearl', М: 'revenge', И: 'endeavour'
 const f1 = (n: number) => String(Math.round(n * 10) / 10);
 const f2 = (n: number) => String(Math.round(n * 100) / 100);
 
-let uid = 0;
-/** Unique ids (and the url(#…) to them) inside one piece of SVG: fx3.js uidSvg. */
-function uniq(svg: string, tag: string): string {
-  const sfx = `${tag}${++uid}`;
-  return svg.replace(/id="([^"]+)"/g, (_, a) => `id="${a}_${sfx}"`).replace(/url\(#([^)]+)\)/g, (_, a) => `url(#${a}_${sfx})`);
-}
-
 function ship(kind: Kind, x: number, y: number, s: number, rot = 0): string {
-  return `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${rot}) scale(${f2(s)})"><g transform="translate(-60 -71)">${uniq(SHIPS[kind], 'p')}</g></g>`;
+  return `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${rot}) scale(${f2(s)})"><g transform="translate(-60 -71)">${uidSvg(SHIPS[kind], 'p')}</g></g>`;
 }
 
 function cloud(x: number, y: number, w: number): string {
@@ -269,5 +263,5 @@ export function panoSvg(L: PanoLayout, cast: PanoCast): string {
   d.push(`<path d="M0 ${H - 6} q${f1(W / 16)} -5 ${f1(W / 8)} 0 ${Array.from({ length: 7 }, () => `t${f1(W / 8)} 0`).join(' ')} V${H} H0 Z" fill="#183a48" opacity=".55"/>`);
   d.push(`<rect width="${W}" height="${H}" fill="url(#vvig)"/>`);
   d.push('</svg>');
-  return uniq(d.join(''), 'v');
+  return uidSvg(d.join(''), 'v');
 }

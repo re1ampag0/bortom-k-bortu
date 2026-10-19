@@ -24,6 +24,7 @@ import { SIDE_LABEL } from '../text';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { clearScars, plankScars, scar, seaScars } from './scars';
 import { CELLS } from '../art/cells';
+import { uidSvg } from '../art/bigShips';
 import { T } from './timing';
 import {
   KIND_BY_TRACK, type AbilityClip, type CardClip, type DiceClip, type DiscardClip, type DiveClip, type DrawClip, type EndClip, type FallbackClip,
@@ -290,12 +291,29 @@ PLAY.sink = async (c, ctx) => {
     const man = (x: number, kk: number, body: string) => `<g transform="translate(${(x - 7 * kk).toFixed(1)} ${(-0.6 - 16.8 * kk).toFixed(1)}) scale(${kk})">${body}</g>`;
     const live = filters(ctx);
     const t0 = tBack + S.back, D2 = S.boat, N = 24;
-    const boat = sv(svg, `<g><g><path d="M-30 6 Q-2 10 30 4" fill="none" stroke="#eef6f8" stroke-width="2" opacity=".7"/>
+    // A5 (A8): the new clinker-built boat of fxSink — a shadow and a reflection on the water, the planking in strakes with rivets,
+    // the gunwale and the stem, the oarlocks; ids unique for each boat (uidSvg)
+    const HULL_B = 'M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z';
+    const boat = sv(svg, uidSvg(`<g><g><path d="M-30 6 Q-2 10 30 4" fill="none" stroke="#eef6f8" stroke-width="2" opacity=".7"/>
 <g transform="translate(-9 1)">${OAR}</g><g transform="translate(5 1)">${OAR}</g>${man(-9, 0.82, SAILOR)}${man(5, 0.82, SAILOR)}${man(-21, 0.98, CAPTAIN)}
-<path d="M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z" fill="#7a4a26" stroke="#2a1a0c" stroke-width="1"/>
-<path d="M-26 1 Q0 5 29 -1 M-22 5 Q0 8 22 4" fill="none" stroke="#4a2a12" stroke-width=".7"/><path d="M-28 -3 Q12 -1 31 -5" fill="none" stroke="#c99a64" stroke-width="1.2"/>
+<ellipse cx="2" cy="11" rx="32" ry="3" fill="#0b2430" opacity=".35"/>
+<g opacity=".22" transform="matrix(1 0 0 -.35 0 12.2)"><path d="M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z" fill="#5a3418"/></g>
+<defs><linearGradient id="pgBoatH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a06a3a"/><stop offset=".5" stop-color="#7a4a26"/><stop offset="1" stop-color="#4a2a12"/></linearGradient>
+<linearGradient id="pgBoatL" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient>
+<clipPath id="pgBoatC"><path d="${HULL_B}"/></clipPath></defs>
+<path d="${HULL_B}" fill="url(#pgBoatH)" stroke="#2a1a0c" stroke-width="1"/>
+<g clip-path="url(#pgBoatC)">
+<path d="M-27.4 -.6 Q2 2.6 30.2 -2.6 M-26.4 2.4 Q2 5.8 28.6 .6 M-24.6 5.4 Q0 8.4 25.4 3.8" fill="none" stroke="#2a1a0c" stroke-width=".8"/>
+<path d="M-27.4 0 Q2 3.2 30 -2 M-26.2 3 Q2 6.4 28.2 1.2 M-24.2 6 Q0 9 25 4.4" fill="none" stroke="#d9a46c" stroke-width=".45" opacity=".7"/>
+${[-20, -12, -4, 4, 12, 20].map((x) => `<circle cx="${x}" cy="${(0.6 + Math.abs(x) * 0.02).toFixed(1)}" r=".45" fill="#e0c08a"/><circle cx="${x + 2}" cy="${(3.7 + Math.abs(x) * 0.02).toFixed(1)}" r=".45" fill="#e0c08a"/>`).join('')}
+<path d="${HULL_B}" fill="url(#pgBoatL)"/></g>
+<path d="M-28.6 -3.4 Q12 -1.4 31.4 -5.6" fill="none" stroke="#3a2210" stroke-width="2.4" stroke-linecap="round"/><path d="M-28 -3.8 Q12 -1.8 31 -6" fill="none" stroke="#e0b07a" stroke-width="1" stroke-linecap="round"/>
+<path d="M-28.4 -3.6 Q-27.6 3 -25 7.2" fill="none" stroke="#3a2210" stroke-width="1.6"/><path d="M31.2 -5.6 Q32.6 -7.6 32 -9.4" fill="none" stroke="#3a2210" stroke-width="1.8" stroke-linecap="round"/>
+<path d="M-10 9.4 L14 9.4" stroke="#2a1a0c" stroke-width="1.4" stroke-linecap="round"/>
+${[-9, 5].map((x) => `<path d="M${x - 1} ${(-2.6 - (x + 28) * 0.006).toFixed(1)} v-1.6 M${x + 1} ${(-2.8 - (x + 28) * 0.006).toFixed(1)} v-1.6" stroke="#2b2f31" stroke-width=".6"/>`).join('')}
+<path d="M-2 9 q-.6 .8 0 1.6 M20 7.4 q.6 .8 0 1.6" stroke="#eef6f8" stroke-width=".6" fill="none" opacity=".6"/>
 <path d="M-29 -2 V-22" stroke="#4a2a12" stroke-width="1"/><path d="M-29 -22 L-17 -19 L-29 -16 Z" fill="${shipData(ctx.data, c.ship).color}">${live ? '<animateTransform attributeName="transform" type="skewY" values="0;-8;0;6;0" dur="1.2s" repeatCount="indefinite"/>' : ''}</path>
-<path d="M28 -5 L33 -14" stroke="#4a2a12" stroke-width="1"/><g transform="translate(33 -15)"><circle r="6" fill="#ffd27a" opacity=".35">${live ? '<animate attributeName="opacity" values=".35;.2;.4;.25;.35" dur=".9s" repeatCount="indefinite"/>' : ''}</circle><rect x="-1.8" y="-2.6" width="3.6" height="4.6" rx=".8" fill="#ffe7a0" stroke="#3a2412" stroke-width=".6"/><path d="M-1.8 -2.6 H1.8 M0 -2.6 V-4" stroke="#3a2412" stroke-width=".6"/></g></g></g>`);
+<path d="M28 -5 L33 -14" stroke="#4a2a12" stroke-width="1"/><g transform="translate(33 -15)"><circle r="6" fill="#ffd27a" opacity=".35">${live ? '<animate attributeName="opacity" values=".35;.2;.4;.25;.35" dur=".9s" repeatCount="indefinite"/>' : ''}</circle><rect x="-1.8" y="-2.6" width="3.6" height="4.6" rx=".8" fill="#ffe7a0" stroke="#3a2412" stroke-width=".6"/><path d="M-1.8 -2.6 H1.8 M0 -2.6 V-4" stroke="#3a2412" stroke-width=".6"/></g></g></g>`, 'boat'));
     const pts = qpts(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2 + toGap * 26, x1, y1, N);
     A(ctx, boat, [...pts.map((p, i) => ({ transform: `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px) scale(${flip * k},${k})`, opacity: i === 0 ? 0 : 1, offset: (i / N) * 0.9 })), { transform: `translate(${x1.toFixed(1)}px,${y1.toFixed(1)}px) scale(${flip * k},${k})`, opacity: 0, offset: 1 }], D2 + 400, t0, 'ease-in-out');
     const strokes = Math.max(1, Math.round(D2 / S.stroke));
@@ -303,6 +321,12 @@ PLAY.sink = async (c, ctx) => {
     for (let q = 0; q < strokes; q++) {
       const p = pts[Math.min(N, Math.round(((q + 0.5) / strokes) * N * 0.9))];
       ringSvg(ctx, svg, p.x - flip * 6 * k, p.y + 7 * k, 3, 22, '#eef6f8', 900, t0 + q * S.stroke + S.stroke / 2, 1.2);
+      ringSvg(ctx, svg, p.x - flip * 14 * k, p.y + 8 * k, 3, 18, '#eef6f8', 800, t0 + q * S.stroke + S.stroke / 2 + 80, 1);
+    }
+    // the wake spreads behind the boat (eight traces one after another)
+    for (let i = 0; i < 8; i++) {
+      const w = sv(svg, '<path d="M0 0 q-10 3 -22 1 M0 4 q-10 4 -24 6" fill="none" stroke="#eef6f8" stroke-width="1.2" stroke-linecap="round"/>');
+      A(ctx, w, [...pts.map((p, q) => ({ transform: `translate(${(p.x - flip * 36 * (k / 1.7)).toFixed(1)}px,${(p.y + 6 * (k / 1.7)).toFixed(1)}px) scale(${flip},1)`, opacity: Number((0.7 - i * 0.08).toFixed(2)), offset: (q / N) * 0.9 })), { transform: `translate(${(x1 - flip * 36 * (k / 1.7)).toFixed(1)}px,${(y1 + 6 * (k / 1.7)).toFixed(1)}px) scale(${flip},1)`, opacity: 0, offset: 1 }], D2 + 400, t0 + i * 90, 'ease-in-out');
     }
     at(ctx, t0 + D2 + 400, () => A(ctx, plank(ctx, ally), [{ boxShadow: '0 0 0 3px #e0bd62, 0 0 22px rgba(224,189,98,.7)' }, { boxShadow: '0 0 0 0 rgba(0,0,0,0)' }], S.glow, 0, 'ease-out', 'none'));
     tag(ctx, ab.cx, ab.y - 12, `Капитан ${gen(ctx, c.ship)} — на борту ${gen(ctx, ally)}`, t0 + D2, 'good', 1600);
@@ -389,6 +413,15 @@ export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): numb
   const art = el.querySelector('.ship-art');
   const pb = visible(art) ? bx(ctx, art) : { x: hb.x + 6, y: hb.y, w: 40, h: hb.h, cx: hb.x + 26, cy: hb.cy, r: hb.x + 46, b: hb.b };
   const svg = fxSvg(ctx), small = isPhone(ctx), group = fireGroup(ctx);
+  // A11 (b): the air shimmers over the plank — pale wavy bands in the layer above it swing sideways and breathe (drawn first: the flames take the rest of the budget of the layer); the plank itself is
+  // not touched (a filter on it would blur its text), so nothing of it is distorted
+  for (let i = 0, m = room(ctx, 6); i < m; i++) {
+    const y = b.y + b.h * (0.12 + (0.78 * i) / Math.max(1, m - 1)), n = Math.max(3, Math.round(b.w / 44));
+    const d = `M${R1(b.x)} ${R1(y)} q22 ${i % 2 ? -5 : 5} 44 0${' t44 0'.repeat(n - 1)}`;
+    const band = sv(svg, `<path d="${d}" fill="none" stroke="#fff3d6" stroke-width="${R1(5 + (i % 3) * 2)}" stroke-linecap="round"/>`);
+    const swing = Array.from({ length: 9 }, (_, q) => ({ transform: `translate(${q % 2 ? 9 : -9}px,${q % 3 === 0 ? -2 : 2}px)`, opacity: q === 0 || q === 8 ? 0 : 0.1 + (q % 2) * 0.1 }));
+    A(ctx, band, swing, F.glow, delay + i * 120, 'ease-in-out', 'both');
+  }
   const glow = overlayAt(ctx, 'fx-fireglow', b);
   A(ctx, glow, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.8, offset: 0.5 }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], F.glow, delay);
   const flames = fireWall(ctx, svg, b.x + 6, b.r - 6, b.b + 2, small ? 20 : 30, { delay, spread: 26, life: F.glow, embers: small ? 12 : 30, host: group });
@@ -594,15 +627,26 @@ export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: nu
   return t0 + 600 + e.amount * T.repair.unit;
 }
 
-/** Where the played card lies: at the edge of the gap on the player's side, so it does not cover the planks. */
-function cardSpot(ctx: FxCtx) {
-  const g = gapBox(ctx), W = ctx.board.clientWidth, sc = W < 701 ? 0.7 : 0.9;
-  return { x: W / 2 - 55 * sc, y: g.cy - 64 * sc, s: sc, r: 0 };
+/**
+ * Where the played card lies (Б2): at the plank of the ship that played it, on the side of the sea — under a top plank, over
+ * the line «Последнее» above a bottom one — in the column of that plank, so the middle of the gap (the labels of the effects)
+ * stays free and no plank scale is covered. The card is 110×128; it shrinks when the gap is low.
+ */
+const CARD_W = 110, CARD_H = 128, LAST_H = 22;
+function cardSpot(ctx: FxCtx, ship?: string) {
+  const g = gapBox(ctx), W = ctx.board.clientWidth, base = W < 701 ? 0.7 : 0.9;
+  const sc = Math.min(base, Math.max(0.5, (g.h - LAST_H - 12) / CARD_H));
+  const w = CARD_W * sc, h = CARD_H * sc;
+  const pb = ship ? bx(ctx, plank(ctx, ship)) : null;
+  const x = Math.min(Math.max(pb ? pb.cx - w / 2 : W / 2 - w / 2, 8), W - w - 8);
+  const y = !pb ? g.cy - h / 2 : isTop(ctx, ship!) ? g.y + 4 : g.y + g.h - LAST_H - 4 - h;
+  return { x, y, s: sc, r: 0 };
 }
-/** The point the effects of the card fly from. */
+/** The point the effects of the card fly from: the middle of the card where it lies. */
 function cardFrom(ctx: FxCtx): Pt {
-  const s = cardSpot(ctx);
-  return { x: s.x + 55 * s.s, y: s.y + 64 * s.s };
+  const s = (CUR_CARD && CUR_CARD.el._pos) || cardSpot(ctx);
+  const sc = s.s ?? 0.9;
+  return { x: s.x + (CARD_W / 2) * sc, y: s.y + (CARD_H / 2) * sc };
 }
 /** An effect of a card: a projectile from the card into the cells (damage). */
 function cardDamage(ctx: FxCtx, e: { ship: string; track: Track; amount: number; toHull: number }, from: Pt, t0: number): number {
@@ -687,15 +731,15 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
   if (CUR_CARD && CUR_CARD.el.isConnected) A(ctx, CUR_CARD.el, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
   hint(ctx, `${nick(ctx, c.ship)}: ${cardName(ctx, c.card)}${c.target ? ` → ${nick(ctx, c.target)}` : ''}`);
   if (c.cost) payKegs(ctx, sideOf(ctx, c.ship), c.cost, 0);
-  const spot = cardSpot(ctx);
+  const spot = cardSpot(ctx, c.ship);
   const el = flyCard(ctx, c.card, cardOrigin(ctx, c.card, c.seat), spot, 0, 500, { ship: c.ship, legend });
   CUR_CARD = { el, code: c.card };
   A(ctx, el.firstElementChild!, [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], 260, 500, 'ease-out', 'none');
-  if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${spot.x + 55 * spot.s} ${spot.y + 64 * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
+  if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${spot.x + (CARD_W / 2) * spot.s} ${spot.y + (CARD_H / 2) * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
   // game: shorter than the reference (900 / 700 ms): players found the card at the middle hung too long. The full text
   // stays a press away (the Journal, «Сразу итог»).
   await wait(ctx, 550); // time to read the card
-  const from = { x: spot.x + 55 * spot.s, y: spot.y + 64 * spot.s };
+  const from = { x: spot.x + (CARD_W / 2) * spot.s, y: spot.y + (CARD_H / 2) * spot.s };
   const done: GameEvent[] = [];
   let t = 0;
   for (const e of c.effects || []) {
