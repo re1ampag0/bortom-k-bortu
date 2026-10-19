@@ -532,11 +532,13 @@ for (const look of ['deck', 'table'] as const) {
       await expect(page.getByTestId('game')).toBeVisible();
       await expect(page.getByTestId('backdrop')).toHaveClass(new RegExp(`look-${look}`));
       if (look === 'deck') {
-        // no «Вещи на столе» (compass, coins, wheel…) on the deck; the planks are a repeating tile, not one stretched picture
+        // no «Вещи на столе» (compass, coins, wheel…) on the deck; the planks are a repeating tile, not one stretched picture;
+        // the scene of A5Rig lies under the hand, its lantern flare is drawn
         await expect(page.locator('[data-thing]')).toHaveCount(0);
-        const bg = await page.locator('.deck-bg').evaluate((e) => getComputedStyle(e).backgroundRepeat + ' ' + getComputedStyle(e).backgroundSize);
+        const bg = await page.locator('.deck-bg').evaluate((e) => getComputedStyle(e).backgroundRepeat);
         expect(bg).toContain('repeat');
-        expect(bg).toContain('720px');
+        await expect(page.getByTestId('deck-scene')).toBeVisible();
+        await expect(page.getByTestId('lantern-light')).toHaveCount(1);
       } else {
         await expect(page.locator('.table-things')).toHaveCount(1);
       }
@@ -551,15 +553,16 @@ for (const look of ['deck', 'table'] as const) {
             const b = e.getBoundingClientRect();
             if (b.width > 0 && b.height > 0 && getComputedStyle(e).display !== 'contents') panels.push([q, box(e)]);
           });
-        const props = Array.from(document.querySelectorAll('.prop')).map((e) => [e.getAttribute('data-prop')!, box(e)] as const);
+        const props = Array.from(document.querySelectorAll('.prop, .deck-scene')).map((e) => [e.getAttribute('data-prop'), box(e)] as const);
         return { panels, props, iw: innerWidth, ih: innerHeight };
       });
-      expect(r.props.length, 'some props found a free place').toBeGreaterThan(1);
+      expect(r.props.length, 'the scene or the props found a free place').toBeGreaterThan(0);
       const meet = (a: { l: number; r: number; t: number; b: number }, b: { l: number; r: number; t: number; b: number }) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
       const bad: string[] = [];
       for (const [name, p] of r.props) {
         if (p.l < 0 || p.t < 0 || p.r > r.iw || p.b > r.ih) bad.push(`${name} outside the window`);
-        for (const [q, b] of r.panels) if (meet(p, b)) bad.push(`${name} ∩ ${q}`);
+        // the scene lies under the cards of the hand (they are on it, as in the reference); nothing lies under the rest
+        for (const [q, b] of r.panels) if (meet(p, b) && !(name === null && q === '.hand-cards .hcard')) bad.push(`${name} ∩ ${q}`);
       }
       expect(bad).toEqual([]);
       await page.screenshot({ path: `docs/screenshots/rig/g-e2e-${look}-${v.w}x${v.h}.png` });
