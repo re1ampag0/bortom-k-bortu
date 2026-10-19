@@ -169,7 +169,7 @@ export function Game({
       : (humans[0] ?? 'ПИРАТЫ');
   const viewer = openHands || humans.length === 0 ? ('all' as const) : Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const view = useMemo(() => (net ? s : viewFor(s, viewer)), [version, bottom, openHands]);
+  const view = useMemo(() => e2eHand(net ? s : viewFor(s, viewer)), [version, bottom, openHands]);
   /** Seats played from this device: on one screen the team at the device, by network the player's own ships. */
   const mySeats = seatsOf(s, bottom)
     .map((x) => x.code)
@@ -859,7 +859,7 @@ export function Game({
       const limit = own ? (s.turn.limit[x] ?? s.ships[x].tracks.crew) : 1;
       const dot =
         hints && myDecision && d!.kind === 'reactions' && d!.seats.includes(x) && reactionsOf(x).some((c) => !playOptions(s, data, x, c).reason);
-      return { seat: x, label: `${shipData(data, x).nick}${s.active === bottom && x === seat ? ` · ${played} из ${limit}` : ''}`, dot };
+      return { seat: x, label: `${shipData(data, x).nick}${s.active === bottom && x === seat ? ` · ${played} из ${limit}` : ''}`, dot, played: s.active === bottom ? `${played} из ${limit}` : undefined };
     });
   // By network the ally's hand is a tab to look at (docs/TZ.md, «Принципы стола», п. 5): another person or a bot plays it.
   if (net) {
@@ -1054,7 +1054,9 @@ export function Game({
   );
 
   // «‹Союзник› готов — ход закончится, когда нажмёте вы»: by network, an ally of this device already pressed «Ход окончен».
-  const allyReady = net && myTurn ? Object.values(s.ships).find((x) => x.side === bottom && !x.sunk && !mySeats.includes(x.code) && net.ready.includes(x.code)) : undefined;
+  const allyReady =
+    (net && myTurn ? Object.values(s.ships).find((x) => x.side === bottom && !x.sunk && !mySeats.includes(x.code) && net.ready.includes(x.code)) : undefined) ??
+    e2eReady(s, bottom, seat);
   const botIcon: Record<string, string> = { faster: 'faster', skip: 'skip', pause: held ? 'play' : 'pause' };
 
   // «Быстрее · До конца · Пауза · Отменить» and «Ход окончен»: under the log ≥ 1280 px (A5: the hand gets the whole width
@@ -1081,7 +1083,7 @@ export function Game({
         {botBtns.map((b) => (
           <RoundButton key={b.key} b={b} icon={botIcon[b.key]} />
         ))}
-        {net ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" />}
+        {net ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" thin />}
       </div>
       <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       {allyReady && (
@@ -1368,4 +1370,27 @@ function curtainReason(s: GameState, data: LocalGame['data'], kind: string): str
     default:
       return `ход ${SIDE_LABEL[s.active].gen}`;
   }
+}
+
+/**
+ * The e2e build only (vite mode «e2e», as «?fxScene»): «&hand=N» shows N cards in every hand of the bottom team's ships that
+ * has cards — taken from its deck, for the layout tests of the hand (3, 5, 8 cards); the game itself does not change.
+ */
+function e2eHand(v: GameState): GameState {
+  if (import.meta.env.MODE !== 'e2e') return v;
+  const n = Number(new URLSearchParams(location.search).get('hand'));
+  if (!n) return v;
+  const out = structuredClone(v);
+  for (const ship of Object.values(out.ships)) {
+    if (!ship.hand.length || ship.hand.every((c) => c === HIDDEN)) continue;
+    const pool = [...ship.hand, ...ship.deck.filter((c) => c !== HIDDEN), ...ship.discard];
+    ship.hand = Array.from({ length: n }, (_, i) => pool[i % pool.length]);
+  }
+  return out;
+}
+
+/** The e2e build only: «&ready=1» shows the line «‹Союзник› готов» under «Ход окончен» (the other ship of the bottom team). */
+function e2eReady(s: GameState, side: string, seat: string | null) {
+  if (import.meta.env.MODE !== 'e2e' || !new URLSearchParams(location.search).get('ready')) return undefined;
+  return Object.values(s.ships).find((x) => x.side === side && !x.sunk && x.code !== seat);
 }

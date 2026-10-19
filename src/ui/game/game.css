@@ -3622,7 +3622,29 @@ button.star::before {
    (A5), the hand takes the width of the table; six cards and more lie with a light overlap (the fan is V2) ═══════════ */
 .log-col > .hand-actions {
   flex: none;
-  padding: 10px 0 0;
+  position: relative;
+  /* room under «Ход окончен» for the line «‹Союзник› готов — ход закончится, когда нажмёте вы» */
+  padding: 10px 0 20px;
+}
+.log-col > .hand-actions .ally-ready {
+  position: absolute;
+  right: 2px;
+  bottom: 3px;
+  max-width: 100%;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #f3e6c6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+/* «Ход окончен» under the log: a thin brass rim #e0bd62 round the oak and a soft warm glow (the prototype) */
+.log-col .oak-btn.end-turn {
+  outline: 1.5px solid #e0bd62;
+  outline-offset: 1px;
+  filter: drop-shadow(0 0 8px rgba(255, 196, 120, 0.45));
 }
 /* not playable now: grey, but not see-through (the things of the table must not show through a card) */
 .hcard.off {
@@ -4212,6 +4234,73 @@ button.star::before {
   inset: 0;
   background-repeat: repeat;
 }
+/* the vignette of deck() (gVig: cx .5, cy .4, r .75 of the box; 0 till .55, #000 .55 at the edge) */
+.deck-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(75% 75% at 50% 40%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55));
+}
+.deck-piece {
+  position: absolute;
+  max-width: none;
+}
+/* the gun of a phone is turned: its breech to the left (TableThings.tsx) */
+.deck-piece.flip {
+  transform: scaleX(-1);
+}
+/* «Палуба» on a laptop: the hand stands in the middle of its strip (--deck-pl/pr/lift/tabs, TableThings.tsx; Hand.tsx useFanFit
+   reads the paddings, it centres the hand in its strip); «Колода · Сброс · сыграно» is a small light line in the bottom left corner, under «Перестроение» */
+.deck-played {
+  display: none;
+}
+@media (min-width: 701px) {
+  .game.view-hand-deck .hand-cards {
+    justify-content: center;
+    padding-left: var(--deck-pl, 0px);
+    padding-right: var(--deck-pr, 0px);
+    padding-bottom: var(--deck-lift, 0px);
+  }
+  .game.view-hand-deck .hand .tabs {
+    margin-left: calc(var(--deck-tabs, 0px) / var(--deck-zoom, 1));
+  }
+  /* a window taller than 900 px: the cards and the tabs are 1.2 times larger (TableThings.tsx) */
+  .game.view-hand-deck.deck-big {
+    --deck-zoom: 1.2;
+  }
+  .game.view-hand-deck.deck-big .hand-cards,
+  .game.view-hand-deck.deck-big .hand .tabs {
+    zoom: 1.2;
+  }
+  .game.view-hand-deck .board-bottom {
+    position: relative;
+  }
+  .game.view-hand-deck .deck-info {
+    position: absolute;
+    left: 14px;
+    bottom: 4px;
+    margin: 0;
+    font-size: 11px;
+    color: #f3e6c6;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  }
+  .game.view-hand-deck .deck-played {
+    display: inline;
+  }
+}
+/* a wide window (1600 px and more): the fan of «Палуба» tilts ±3–8° and arcs (Hand.tsx fanOf), its step is at most .62 of a
+   card (Hand.tsx useFanFit) — the cards always overlap a little, as on 1366 */
+@media (min-width: 1600px) {
+  .game.view-hand-deck .hand-cards {
+    --fan-wide: 1;
+    --fan-max-step: 0.62;
+  }
+}
+/* the bar of a phone stands over the background of the table */
+.game > .bottom-bar {
+  position: relative;
+}
 /* the darkness, the light and the flare of the lantern (TableThings.tsx DeckLight): over the planks and the scene, under the board */
 .deck-dark,
 .deck-light {
@@ -4219,6 +4308,17 @@ button.star::before {
   inset: 0;
 }
 .deck-light {
+  mix-blend-mode: screen;
+}
+.deck-wash {
+  background: rgba(255, 217, 160, 0.05);
+}
+/* a circle of gFlash at .2 round the lantern (screen) */
+.deck-glow {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side, #fffbe6, #ffd25a 35%, rgba(255, 122, 30, 0.7) 70%, rgba(255, 90, 16, 0));
+  opacity: 0.2;
   mix-blend-mode: screen;
 }
 .deck-flare {
@@ -4243,6 +4343,26 @@ button.star::before {
   }
   80% {
     opacity: 0.97;
+  }
+}
+.deck-flare.table {
+  opacity: 0.53;
+  animation-name: flick-table;
+}
+/* the flare of the whole table flickers within .44–.62 */
+@keyframes flick-table {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  30% {
+    opacity: 0.62;
+  }
+  55% {
+    opacity: 0.44;
+  }
+  80% {
+    opacity: 0.58;
   }
 }
 .fx-simple .deck-flare {
