@@ -16,6 +16,7 @@ export const LEGEND_K = 1;
 export const KRAKEN_K = 1;
 export const ARMADA_K = 1;
 export const BOTTLE_K = 1;
+export const JACK_K = 1;
 
 const scaled = <T extends Record<string, number>>(k: number, o: T): T => Object.fromEntries(Object.entries(o).map(([n, v]) => [n, v * k])) as T;
 
@@ -286,5 +287,37 @@ export const T = {
     back: 600,
     stamp: 380,
     end: 900,
+  }),
+  /** «Джек ускользает» (fxJack of fx3.js, §3.5): she should sink — the water rises, she lists; time freezes (the world
+   *  grey, she in colour); the entrance; the compass spins and points to the ally, the golden course; the colour comes
+   *  back, she slips along the course with ghosts, the ally the other way; the Hull 2 shines, coins scatter. */
+  jack: scaled(JACK_K, {
+    /** a board after another breaks (the last ones) */
+    board: 160,
+    /** the water rises over the plank, she lists, bubbles */
+    sink: 1300,
+    /** time freezes: the world goes grey */
+    freeze: 300,
+    /** the rings of the stopped time */
+    ring: 1200,
+    ringStep: 260,
+    /** the compass appears / its needle spins at… for… */
+    compass: 600,
+    needleAt: 300,
+    needle: 2000,
+    /** the needle has pointed: the course is drawn */
+    point: 2100,
+    course: 300,
+    /** before she goes */
+    go: 400,
+    /** the water runs off / the colour comes back / the compass fades */
+    drain: 500,
+    unfreeze: 500,
+    /** she slips along the course with the ghosts; a ghost after a ghost */
+    slip: 800,
+    ghost: 60,
+    /** the Hull 2 shines, the coins */
+    shine: 1100,
+    end: 1300,
   }),
 } as const;
