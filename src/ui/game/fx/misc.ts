@@ -36,6 +36,8 @@ import {
   wisp, type FlyCard, type FxCtx, type Pt,
 } from './primitives';
 
+const R1 = (n: number) => Math.round(n * 10) / 10;
+
 /** FLIP: remember where the planks stood, draw the table with the events and carry them over with an arc. */
 export interface FlipMove {
   code: string;
@@ -242,7 +244,9 @@ PLAY.sink = async (c, ctx) => {
   sparksSvg(ctx, svg, cx, cy, 14, tSplit);
   boom(ctx, 6, 400, tSplit);
   // the water boils and closes: bubbles, a swirl, rings
-  const sw = sv(svg, `<g>${[0, 1, 2, 3].map((i) => `<ellipse rx="${(small ? 70 : 140) - i * 26}" ry="${((small ? 70 : 140) - i * 26) * 0.34}" fill="none" stroke="#e6f2f4" stroke-width="${2 - i * 0.3}" stroke-dasharray="14 10" opacity="${0.8 - i * 0.12}"/>`).join('')}</g>`);
+  // the rings narrow by the same share on a phone (70 − 3·26 was a negative radius)
+  const swR = (i: number) => R1((small ? 70 : 140) * (1 - (i * 26) / 140));
+  const sw = sv(svg, `<g>${[0, 1, 2, 3].map((i) => `<ellipse rx="${swR(i)}" ry="${R1(swR(i) * 0.34)}" fill="none" stroke="#e6f2f4" stroke-width="${2 - i * 0.3}" stroke-dasharray="14 10" opacity="${0.8 - i * 0.12}"/>`).join('')}</g>`);
   A(ctx, sw, [{ transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(0deg)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.75 }, { transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(-200deg)`, opacity: 0 }], D + 1400, tSplit, 'linear');
   for (let i = 0, m = room(ctx, small ? 16 : 40); i < m; i++) {
     const x = b.x + rnd(10, b.w - 10), bub = sv(svg, `<circle r="${rnd(1.6, 4.4).toFixed(1)}" fill="rgba(220,244,248,.18)" stroke="#dff4f8" stroke-width="1"/>`);

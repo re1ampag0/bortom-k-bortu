@@ -563,6 +563,8 @@ export function qpts(x0: number, y0: number, cx: number, cy: number, x1: number,
 
 /** A ring on the water that spreads and fades. */
 export function ringSvg(ctx: FxCtx, svg: Element, x: number, y: number, r0: number, r1: number, color = '#eef6f8', d = 700, delay = 0, w = 2): SVGElement {
+  // a size, never a direction: a radius computed as «base − i·step» on a narrow plank must not go negative
+  r1 = Math.max(1, Math.abs(r1));
   const g = sv(svg, `<g><ellipse cx="0" cy="0" rx="${R1(r1)}" ry="${R1(r1 * 0.4)}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/></g>`);
   A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d, delay, 'ease-out');
   return g;
