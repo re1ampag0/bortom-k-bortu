@@ -40,6 +40,10 @@ export interface Btn {
   testid?: string;
   /** A shorter label for the phone. */
   short?: string;
+  /** A small green tag on a plank button («+1 совместно»). */
+  tag?: string;
+  /** The full text of the tag: a paper pop on hover (a tap on a phone). */
+  tip?: string;
 }
 
 export function Button({ b, className = '' }: { b: Btn; className?: string }) {
@@ -707,7 +711,13 @@ export function PlankButton({ b, className = '' }: { b: Btn; className?: string 
       aria-disabled={!!b.disabled}
       title={b.disabled ?? undefined}
       data-testid={b.testid}
+      data-tip={b.tip}
     >
+      {b.tag && (
+        <span className="cmd-tag" data-testid={b.testid ? `${b.testid}-tag` : undefined}>
+          {b.tag}
+        </span>
+      )}
       <span className="wide cmd-in">
         {icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />}
         <span className="cmd-name">{m ? m[1] : b.label}</span>
