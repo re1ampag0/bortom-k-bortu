@@ -14,7 +14,7 @@ import type { Side } from '../../../engine/types';
 import { flipTo, weatherHit } from './misc';
 import type { RoundClip, SeaClip } from './planFx';
 import {
-  A, at, badgeMark, bx, capFirst, ring, filters, flashBoard, fxPoint, fxSvg, gainKegs, gapBox, hint, holdEl, holdTag, isPhone, isTop, mk, plank, ringSvg, rnd, room,
+  A, at, badgeMark, bx, capFirst, ring, filters, flashBoard, fxPoint, fxSvg, gainKegs, gapBox, hint, holdEl, holdTag, isTop, mk, plank, ringSvg, rnd, room,
   seaTemp, setTrack, shake, shownTrack, sparksSvg, sv, tag, trackEl, trackMark, visible, wait, waterColumn, flameEl, smolderEl, type FxCtx,
 } from './primitives';
 import { CELLS } from '../art/cells';
@@ -252,7 +252,7 @@ export const SEAFX: Record<string, SeaFx> = {
   /** Тортуга: the lanterns of the haven over the sea; the Holds glow — each team may change up to 2 Powder for cards. */
   tortuga: {
     apply(t) {
-      const ctx = t.fx, S = T.sea, hi = sv2(ctx), n = isPhone(ctx) ? 8 : 14;
+      const ctx = t.fx, S = T.sea, hi = sv2(ctx), n = 14;
       for (let i = 0; i < n; i++) {
         const x = 40 + (i * (t.W - 80)) / (n - 1), y = t.g.cy + (i % 2 ? 14 : -14);
         const l = sv(hi, '<g><circle r="14" fill="#ffcf6a" opacity=".25"/><rect x="-4" y="-6" width="8" height="10" rx="2" fill="#f6c95a" stroke="#5a3a1c" stroke-width="1"/><path d="M-4 -6 H4 M0 -6 V-10" stroke="#5a3a1c" stroke-width="1"/></g>');
