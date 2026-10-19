@@ -310,6 +310,8 @@ export const T = {
     ringStep: 260,
     /** the compass appears / its needle spins at… for… */
     compass: 600,
+    /** the soft rays behind the compass turn */
+    rays: 3000,
     needleAt: 300,
     needle: 2000,
     /** the needle has pointed: the course is drawn */

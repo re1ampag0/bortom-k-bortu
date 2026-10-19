@@ -657,6 +657,14 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
     const ally = sw ? sw.ships.find((s) => s !== c.ship) ?? Object.keys(ctx.display.ships).find((s) => s !== c.ship && sideOf(ctx, s) === sideOf(ctx, c.ship)) : undefined;
     ob = ally ? bx(ctx, plank(ctx, ally)) : null;
     const r = R1(clamp(Math.min(b.h * 0.9, b.w * 0.35), 56, 80));
+    // A10: a golden glow with slowly turning soft rays behind the compass (pgJkA, pgJkR of fx3.js), s — the size of this compass to the prototype's
+    const gs = r / 80;
+    const aura = sv(hi, `<g><defs><radialGradient id="lgJkA${uid}"><stop offset="0" stop-color="#ffe7a4" stop-opacity=".75"/><stop offset=".55" stop-color="#ffd27a" stop-opacity=".25"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+      <radialGradient id="lgJkR${uid}"><stop offset=".35" stop-color="#fff2c8" stop-opacity=".5"/><stop offset="1" stop-color="#fff2c8" stop-opacity="0"/></radialGradient></defs><circle r="${R1(150 * gs)}" fill="url(#lgJkA${uid})"/><g class="ry" fill="url(#lgJkR${uid})">${Array.from({ length: 12 }, (_, i) => { const a1 = (i * Math.PI) / 6, a2 = a1 + 0.09; return `<path d="M0 0 L${R1(Math.cos(a1) * 170 * gs)} ${R1(Math.sin(a1) * 170 * gs)} L${R1(Math.cos(a2) * 170 * gs)} ${R1(Math.sin(a2) * 170 * gs)} Z"/>`; }).join('')}</g></g>`);
+    A(ctx, aura, [{ transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(.2)`, opacity: 0 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1)`, opacity: 1 }], K.compass, 0, 'ease-out', 'forwards');
+    const ry = aura.querySelector<SVGGElement>('.ry')!;
+    ry.style.transformBox = 'view-box'; ry.style.transformOrigin = '0 0';
+    A(ctx, ry, [{ transform: 'rotate(0deg)' }, { transform: 'rotate(60deg)' }], K.rays, 0, 'linear', 'forwards');
     const comp = sv(hi, compassArt(`jk${uid}`, r));
     A(ctx, comp, [{ transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(.1) rotate(-90deg)`, opacity: 0 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.1) rotate(8deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1) rotate(0deg)`, opacity: 1 }], K.compass, 0, 'cubic-bezier(.3,1.3,.6,1)');
     const nd = comp.querySelector<SVGGElement>('.nd')!;
@@ -665,6 +673,8 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
     const end = 1080 + ((toAlly % 360) + 360) % 360;
     A(ctx, nd, [{ transform: 'rotate(0deg)' }, { transform: `rotate(${R1(end - 270)}deg)`, offset: 0.55 }, { transform: `rotate(${R1(end - 20)}deg)`, offset: 0.8 }, { transform: `rotate(${R1(end)}deg)` }], K.needle, K.needleAt, 'cubic-bezier(.2,.6,.3,1)');
     await wait(ctx, K.point);
+    // the needle has stopped: a golden ring and sparks over the north
+    circRing(ctx, hi, b.cx, b.cy, 70 * gs, 150 * gs, '#ffe7a4', 700, 0, 3); goldBurst(ctx, hi, b.cx, b.cy - 64 * gs, 14, 8, 40);
     if (ob) {
       const ey = isTop(ctx, c.ship) ? b.b + 6 : b.y - 6, oy = isTop(ctx, ally!) ? ob.b + 6 : ob.y - 6, lift = isTop(ctx, c.ship) ? 90 : -90;
       const course = sv(hi, `<path d="M${R1(b.cx)} ${R1(ey)} C${R1(b.cx + Math.sign(ob.cx - b.cx) * 120)} ${R1(ey + lift)} ${R1(ob.cx - Math.sign(ob.cx - b.cx) * 120)} ${R1(oy + lift)} ${R1(ob.cx)} ${R1(oy)}" fill="none" stroke="#ffd27a" stroke-width="3" stroke-dasharray="10 8"/>`);
@@ -676,6 +686,7 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
     //    other way (the change of places of the events)
     A(ctx, water, [{ height: '72%' }, { height: '0%' }], K.drain, 0, 'ease-out', 'forwards');
     A(ctx, comp, [{ opacity: 1, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1)` }, { opacity: 0, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.4)` }], 400, 0, 'ease-in', 'forwards');
+    A(ctx, aura, [{ opacity: 1 }, { opacity: 0 }], 400, 0, 'ease-in', 'forwards');
     A(ctx, drops, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'linear', 'forwards');
     frozen.forEach((x) => A(ctx, x, [{ filter: FZ }, { filter: 'none' }], K.unfreeze, 0, 'linear', 'none'));
     flashBoard(ctx, '#ffe7a4', 0.4, 400);
