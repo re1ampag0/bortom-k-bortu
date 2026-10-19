@@ -1,62 +1,62 @@
 {
   "dbl": {
     "scene": "dbl",
-    "ms": 2451
+    "ms": 2457
   },
   "wind": {
     "scene": "wind",
-    "ms": 3544
+    "ms": 3580
   },
   "cover": {
     "scene": "cover",
-    "ms": 2542
+    "ms": 2603
   },
   "whirl": {
     "scene": "whirl",
-    "ms": 2554
+    "ms": 2565
   },
   "night": {
     "scene": "night",
-    "ms": 2566
+    "ms": 2609
   },
   "deepcancel": {
     "scene": "deepcancel",
-    "ms": 2699
+    "ms": 2677
   },
   "zombie": {
     "scene": "zombie",
-    "ms": 3734
+    "ms": 3693
   },
   "heavy": {
     "scene": "heavy",
-    "ms": 3396
+    "ms": 3293
   },
   "counter": {
     "scene": "counter",
-    "ms": 6226
+    "ms": 6106
   },
   "firewall": {
     "scene": "firewall",
-    "ms": 5775
+    "ms": 5669
   },
   "abyss": {
     "scene": "abyss",
-    "ms": 5063
+    "ms": 5073
   },
   "both": {
     "scene": "both",
-    "ms": 5536
+    "ms": 5579
   },
   "heart": {
     "scene": "wind",
-    "ms": 1924
+    "ms": 1945
   },
   "deep": {
     "scene": "deep",
-    "ms": 1238
+    "ms": 1254
   },
   "ghost": {
     "scene": "ghost",
-    "ms": 2018
+    "ms": 1990
   }
 }
