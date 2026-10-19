@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Телефон A5</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Alegreya+SC:wght@700;800&family=Alegreya:ital,wght@0,700;0,800;1,500&family=Alegreya+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* one deliberate look: the dark wood of the game table in both themes */
+:root{--page:#2b1d12;--ink:#efe3c8;--ink2:#cbb894;--paper:#efe3c8;--line:rgba(239,227,200,.18);color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:'Alegreya Sans',sans-serif}
+.page{max-width:1880px;margin:0 auto;padding-block:22px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page h1{font-family:'Old Standard TT',serif;font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:22px;margin:0 0 6px}
+.page .lead{color:var(--ink2);font-size:15px;max-width:860px;line-height:1.45;margin:0 0 22px}
+.gal{display:flex;flex-wrap:wrap;gap:34px 26px;align-items:flex-start}
+.item{width:430px;max-width:100%}
+.cap{font-family:'Old Standard TT',serif;font-weight:700;font-size:16px;letter-spacing:.04em;margin:0 0 8px}
+.cap span{color:var(--ink2);font-weight:400;font-size:13px;margin-left:6px}
+.wrap{width:100%;position:relative}
+.wrap>.ph{position:absolute;left:0;top:0;transform-origin:0 0}
+.notes{margin:10px 0 0;padding-left:18px;color:var(--ink2);font-size:13.5px;line-height:1.4}
+.notes li{margin:3px 0}
+
+/* ---------- the phone ---------- */
+.ph{width:430px;position:relative;overflow:hidden;border-radius:30px;box-shadow:0 0 0 2px #120c07,0 0 0 9px #3b3a3c,0 0 0 10px #555,0 20px 40px rgba(0,0,0,.6);
+  color:#2a2521;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse 80% 50% at 50% 35%,rgba(255,214,150,.18),rgba(0,0,0,0) 70%),repeating-linear-gradient(92deg,rgba(0,0,0,.05) 0 2px,rgba(0,0,0,0) 2px 9px),repeating-linear-gradient(90deg,#5b3d26 0 120px,#553823 120px 122px,#5e4029 122px 260px,#573a24 260px 262px),#5b3d26}
+.sys{height:44px;flex:0 0 44px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;color:#f6efe0;font:600 15px -apple-system,'Alegreya Sans',sans-serif}
+.sys .isl{width:118px;height:32px;border-radius:18px;background:#000}
+.sys .bat{display:flex;gap:5px;align-items:center}
+.sys .bat i{display:inline-block;width:24px;height:11px;border:1.4px solid #f6efe0;border-radius:3px;position:relative}
+.sys .bat i::after{content:"";position:absolute;inset:1.5px 6px 1.5px 1.5px;background:#f6efe0;border-radius:1px}
+.ph.web .sys{display:none}
+.url{display:none}
+.ph.web .url{display:flex;height:44px;flex:0 0 44px;align-items:center;justify-content:center;background:#1c1c1e;color:#ddd;font:13px -apple-system,sans-serif}
+
+/* top bar */
+.tb{flex:0 0 46px;display:flex;align-items:center;gap:7px;padding:0 10px}
+.plq{height:30px;display:flex;align-items:center;padding:0 10px;border-radius:4px;background:linear-gradient(#e0bd62,#8f6b20);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.35),0 2px 4px rgba(0,0,0,.4);font-family:'Old Standard TT',serif;font-weight:700;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:#22180c;white-space:nowrap}
+.wx{flex:1;min-width:0;height:34px;display:flex;align-items:center;gap:6px;padding:0 8px;background:#efe3c8;border-radius:2px;box-shadow:0 2px 6px rgba(0,0,0,.45);overflow:hidden}
+.wx svg{flex:0 0 auto;width:30px;height:26px}
+.wx .t1{font-variant:small-caps;letter-spacing:.1em;font-weight:700;font-size:10.5px;color:#5d5248;line-height:1}
+.wx .t2{font-family:'Old Standard TT',serif;font-weight:700;font-size:13.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ead07c,#8f6b20 80%);border:0;box-shadow:inset 0 0 0 2px rgba(0,0,0,.3),inset 0 0 0 4px rgba(255,240,200,.25),0 3px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#22180c;padding:0}
+.ib.big{width:44px;height:44px}
+.pr{flex:0 0 32px;margin:0 10px 6px;display:flex;align-items:center;justify-content:center;background:#efe3c8;border-radius:2px;box-shadow:0 3px 8px rgba(0,0,0,.45);font-family:'Old Standard TT',serif;font-weight:700;font-size:13.5px;text-align:center;padding:0 8px;line-height:1.1}
+.pr.dim{background:#d9cba9;color:#4a4036}
+.pr .dots{display:inline-flex;gap:3px;margin-left:6px}.pr .dots i{width:4px;height:4px;border-radius:50%;background:#6b5a40}
+
+/* rows of the Holds */
+.hrow{display:flex;align-items:center;gap:7px;padding:0 12px;color:#efe3c8}
+.hrow.top{flex:0 0 24px}
+.hrow.bot{flex:0 0 46px}
+.hl{font-family:'Old Standard TT',serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.kg{display:flex;gap:2px;padding:2px 5px;background:#3f2a1a;border-radius:4px;box-shadow:inset 0 1px 4px rgba(0,0,0,.6)}
+.kg svg{width:11px;height:14px}
+.hn{font-family:'Old Standard TT',serif;font-weight:700;font-size:12.5px}
+.deck{margin-left:auto;font-size:11.5px;opacity:.8;white-space:nowrap}
+.rg{margin-left:auto;display:flex;align-items:center;gap:7px;height:38px;padding:0 11px 0 4px;border-radius:5px;background:repeating-linear-gradient(178deg,rgba(0,0,0,.09) 0 1px,rgba(0,0,0,0) 1px 5px),linear-gradient(#634128,#3e2716);box-shadow:inset 0 0 0 1px #1e1008,inset 0 1px 0 2px rgba(255,220,170,.1),0 3px 6px rgba(0,0,0,.5);font-family:'Old Standard TT',serif;font-weight:700;font-size:13.5px;color:#f3e6c6}
+.rg .rgi{width:30px;height:30px;border-radius:50%;background:#2a1a0e;box-shadow:inset 0 0 0 1.5px #8a6a46,0 1px 2px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;color:#efe3c8}
+.rg small{display:block;font-family:'Alegreya Sans',sans-serif;font-size:10.5px;font-weight:800;color:#9fd8a8;line-height:1}
+.rg span{line-height:1.05}
+
+/* the board */
+.bd{flex:1 1 auto;min-height:0;margin:0 6px;padding:7px;position:relative;border-radius:3px;background:repeating-linear-gradient(0deg,#3a2414 0 1.2px,rgba(0,0,0,0) 1.2px 11px),repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 1px,rgba(0,0,0,0) 1px 6px),linear-gradient(#a06c3c,#7a4e2a);box-shadow:inset 0 0 0 1.5px #2a180a,inset 0 2px 0 3px rgba(255,220,170,.18),0 10px 20px rgba(0,0,0,.6)}
+.bd::before,.bd::after{content:"";position:absolute;width:20px;height:20px;top:-1px;z-index:2;background:linear-gradient(135deg,#e6c46a,#a77a26 60%,#7a5414);clip-path:polygon(0 0,100% 0,100% 30%,30% 30%,30% 100%,0 100%);filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+.bd::before{left:-1px}.bd::after{right:-1px;transform:scaleX(-1)}
+.bd .nails{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,#1e1008 0 1.3px,rgba(0,0,0,0) 1.6px);background-size:44px 11px;background-position:20px 5px;-webkit-mask:linear-gradient(#000,#000) top/100% 7px no-repeat,linear-gradient(#000,#000) bottom/100% 7px no-repeat,linear-gradient(#000,#000) left/7px 100% no-repeat,linear-gradient(#000,#000) right/7px 100% no-repeat;mask:linear-gradient(#000,#000) top/100% 7px no-repeat,linear-gradient(#000,#000) bottom/100% 7px no-repeat,linear-gradient(#000,#000) left/7px 100% no-repeat,linear-gradient(#000,#000) right/7px 100% no-repeat}
+.sea{position:relative;width:100%;height:100%;overflow:hidden;box-shadow:inset 0 0 0 1.5px #efe3c8,inset 0 0 30px rgba(0,20,30,.45);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='26'%3E%3Cpath d='M4 16 q7 -7 14 0' fill='none' stroke='%23a9cbd2' stroke-opacity='.45' stroke-width='1.4'/%3E%3Cpath d='M27 5 q6 -6 12 0' fill='none' stroke='%23a9cbd2' stroke-opacity='.3' stroke-width='1.2'/%3E%3C/svg%3E"),radial-gradient(ellipse 60% 70% at 50% 50%,#4f8391,#326170 60%,#24495a 100%)}
+.sea.storm{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M30 0 L22 40' stroke='%23d8e6ea' stroke-opacity='.16' stroke-width='1'/%3E%3Cpath d='M12 4 L6 34' stroke='%23d8e6ea' stroke-opacity='.12' stroke-width='1'/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='26'%3E%3Cpath d='M4 16 q7 -8 14 0' fill='none' stroke='%23c4dade' stroke-opacity='.5' stroke-width='1.5'/%3E%3Cpath d='M27 5 q6 -7 12 0' fill='none' stroke='%23c4dade' stroke-opacity='.35' stroke-width='1.2'/%3E%3C/svg%3E"),radial-gradient(ellipse 60% 70% at 50% 50%,#46707c,#2b5260 60%,#1d3d4b 100%)}
+.ov{position:absolute;inset:0;pointer-events:none}
+
+/* planks */
+.mat{position:absolute;width:calc(50% - 7.5px);background:radial-gradient(ellipse at 30% 20%,#f8f0de,#efe2c6 85%);border-radius:5px;box-shadow:0 1px 0 #c9b48c,0 3px 0 #a68f66,0 10px 16px rgba(0,0,0,.45)}
+.mat.tl{left:5px;top:5px}.mat.tr{right:5px;top:5px}.mat.bl{left:5px;bottom:5px}.mat.br{right:5px;bottom:5px}
+.mat.turn{box-shadow:0 0 0 2.5px #e0bd62,0 0 16px rgba(255,196,120,.6),0 10px 16px rgba(0,0,0,.45)}
+.mat.target{box-shadow:0 0 0 2.5px #c23b2b,0 0 18px rgba(220,70,50,.55),0 10px 16px rgba(0,0,0,.45)}
+.mat.cand{outline:2px dashed #f2d27e;outline-offset:3px}
+.mat.dim{filter:saturate(.35) brightness(.78)}
+.mat.sunk{filter:grayscale(.85) brightness(.85)}
+.mh{position:relative;height:28px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:5px 5px 0 0;color:#f6efe0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+.pic{flex:0 0 32px;height:20px;border-radius:4px;background:#f4ead6;box-shadow:inset 0 0 0 1px rgba(0,0,0,.35),inset 0 0 0 2px #f4ead6,inset 0 0 0 2.6px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center}
+.pic svg{width:29px;height:16px}
+.nm{flex:1 1 auto;min-width:0;font-family:'Alegreya SC',serif;font-weight:800;font-size:13px;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mh .r{flex:0 0 auto;display:flex;align-items:center;gap:3px}
+.fan svg{width:30px;height:18px;display:block}
+.medal svg{width:22px;height:22px;display:block}
+.okc{width:17px;height:17px;border-radius:50%;background:linear-gradient(#3d8562,#2a5f45);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),0 1px 2px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
+.okc svg{width:13px;height:13px}
+.sab{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#d4473a,#8e1d14);box-shadow:inset 0 0 0 1px #4a0a06,0 0 6px rgba(255,90,60,.7);display:flex;align-items:center;justify-content:center}
+.tseal{position:relative;width:30px;height:18px;z-index:3}
+.tseal svg{position:absolute;left:-1px;top:-9px;width:32px;height:45px;clip-path:inset(0 0 13px 0);filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.bdy{position:relative;padding:5px 7px 6px;display:flex;flex-direction:column;gap:4px}
+.hull{display:flex;align-items:center;gap:1px}
+.hull svg{width:9.8px;height:13.5px;flex:0 0 auto}
+.hull .num{font-size:17px;line-height:1}
+.hull .num small{font-size:11.5px}
+.hull .lose{outline:1.5px solid #c23b2b;outline-offset:0;border-radius:2px;background:rgba(194,59,43,.18)}
+.num{font-family:'Old Standard TT',serif;font-weight:700;font-size:13.5px;color:#2a2521;white-space:nowrap}
+.num small{font-size:10.5px;color:#7a6c5a}
+.num.red,.num.red small{color:#a3271d}
+.hull .num{margin-left:auto;padding-left:4px}
+.minus{flex:0 0 auto;margin-left:4px;box-shadow:0 1px 2px rgba(0,0,0,.3);height:18px;padding:0 6px;border-radius:9px;background:#a3271d;color:#fff3e6;font-family:'Old Standard TT',serif;font-weight:700;font-size:12px;display:inline-flex;align-items:center}
+.st{display:flex;align-items:center;justify-content:space-between}
+.g{display:flex;align-items:center;gap:3px}
+.g svg{height:15px;width:auto}
+.g + .g{padding-left:7px;border-left:1px solid rgba(90,70,40,.3)}
+.g.soul .num{color:#24584b}
+.chips{display:flex;gap:4px;flex-wrap:nowrap;overflow:hidden}
+.chip{height:21px;display:inline-flex;align-items:center;gap:3px;padding:0 7px 0 4px;border-radius:11px;color:#fbf3e2;font-size:11.5px;font-weight:800;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.3)}
+.chip svg{width:14px;height:14px;flex:0 0 auto}
+.chip.ic{width:23px;padding:0;justify-content:center}
+.chip.light{color:#2a2521;box-shadow:inset 0 0 0 1px #b9a27a}
+.act{display:flex;gap:5px;padding:0 6px 7px}
+.cmd{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;gap:5px;height:34px;padding:0 6px;background:linear-gradient(#fbf5e7,#efe2c6);color:#2a2521;border:1.5px solid #2a2521;border-radius:4px;box-shadow:inset 0 0 0 1.5px #fbf5e7,inset 0 0 0 2.5px #6b5a40,0 2px 0 #a68f66;font-family:'Alegreya SC',serif;font-weight:800;font-size:13px;white-space:nowrap}
+.cmd svg.ic{width:18px;height:12px;flex:0 0 auto}
+.act.two .cmd{font-size:12.5px;gap:4px}
+.act.two svg.ic{display:none}
+.act.two .cmd > svg{flex:0 0 auto;width:15px;height:15px}
+.act.two .cmd{font-size:11.5px;letter-spacing:-.01em;gap:3px;padding:0 4px;overflow:hidden}
+.act.two{gap:4px;padding:0 5px 7px}
+.act.two .cmd .cost{padding-left:4px}
+.act.two .cmd:first-child{flex:0 0 auto;padding:0 7px}
+.cmd .cost{display:flex;align-items:center;gap:2px;font-family:'Old Standard TT',serif;font-weight:700;padding-left:5px;border-left:1px solid #b9a27a}
+.cmd .cost svg{width:9px;height:12px}
+.cmd.on{background:linear-gradient(#a8382c,#7e2219);color:#f6e7c6;border-color:#4a0a06;box-shadow:inset 0 0 0 1.5px #e0bd62,0 2px 0 #4a0a06}
+.cmd.on .cost{border-color:#e0bd62}
+.tagl{position:absolute;left:50%;transform:translateX(-50%);height:20px;padding:0 9px;border-radius:10px;background:#f2d27e;color:#3a2a0c;font-weight:800;font-size:11.5px;display:flex;align-items:center;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,.4);z-index:4}
+
+/* the middle of the sea */
+.rib{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:300px;height:28px;padding:0 22px;display:flex;align-items:center;justify-content:center;font-family:'Alegreya',serif;font-style:italic;font-size:13.5px;color:#3d342b;background:#efe3c8;clip-path:polygon(0 0,100% 0,95% 50%,100% 100%,0 100%,5% 50%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));white-space:nowrap}
+.pill{position:absolute;transform:translate(-50%,-50%);height:30px;padding:0 14px;border-radius:15px;background:linear-gradient(#b83a2c,#8e2219);color:#fff3e6;font-family:'Old Standard TT',serif;font-weight:700;font-size:15px;display:flex;align-items:center;box-shadow:inset 0 0 0 1.5px rgba(255,230,200,.35),0 3px 6px rgba(0,0,0,.45);white-space:nowrap;z-index:5}
+.wpill{position:absolute;transform:translate(-50%,-50%);height:22px;padding:0 9px;border-radius:11px;background:#f4ead6;color:#3d342b;font-family:'Old Standard TT',serif;font-weight:700;font-size:12px;display:flex;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.4);white-space:nowrap;z-index:5}
+.plate{position:absolute;z-index:6;width:236px;padding:8px 11px 9px;background:#f6efdc;border-radius:3px;box-shadow:0 0 0 1px #b9a27a,0 6px 14px rgba(0,0,0,.5);font-size:12.5px;color:#3d342b}
+.plate::before{content:"";position:absolute;inset:3px;border:1px solid rgba(90,70,40,.35);pointer-events:none}
+.plate .w{font-size:12px;color:#5d5248}.plate .w b{color:#2a2521}
+.plate .big{font-family:'Old Standard TT',serif;font-weight:700;font-size:21px;margin:2px 0 4px;color:#2a2521}
+.plate .gr{display:grid;grid-template-columns:1fr auto 1fr auto;gap:2px 8px;font-size:12px}
+.plate .p{color:#2f6b4f;font-weight:800}.plate .m{color:#a3271d;font-weight:800}
+
+/* the hand */
+.hand{flex:0 0 auto;position:relative;overflow:hidden}
+.hlab{position:absolute;left:12px;top:4px;right:12px;display:flex;justify-content:space-between;color:#efe3c8;font-family:'Old Standard TT',serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.hlab span:last-child{font-family:'Alegreya Sans',sans-serif;letter-spacing:0;text-transform:none;font-weight:700;opacity:.85}
+.card{position:absolute;width:112px;height:160px;background:linear-gradient(#fdf9f0,#f3ead6);border-radius:8px;box-shadow:0 1px 0 #d6c8ab,0 8px 14px rgba(0,0,0,.5);overflow:hidden;font-family:'Alegreya Sans',sans-serif;color:#2a2521;transform-origin:50% 120%}
+.card::after{content:"";position:absolute;inset:22px 4px 4px 4px;border:1px solid rgba(90,70,40,.25);border-radius:4px;pointer-events:none}
+.card .t{height:20px;color:#fff;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;padding:0 8px}
+.card .n{font-family:'Old Standard TT',serif;font-weight:700;font-size:14.5px;line-height:1.1;padding:7px 9px 0}
+.card .e{font-weight:800;font-size:12px;padding:4px 9px 0;line-height:1.15}
+.card .x{font-size:11px;color:#5d5248;padding:4px 9px 0;line-height:1.25}
+.card.glow{box-shadow:0 0 0 2px #e0bd62,0 0 14px rgba(255,196,120,.6),0 8px 14px rgba(0,0,0,.5)}
+.card.off{filter:saturate(.25) brightness(.92);opacity:.85}
+.card.lift{box-shadow:0 0 0 2.5px #e0bd62,0 0 22px rgba(255,196,120,.75),0 14px 22px rgba(0,0,0,.55)}
+.card .foot{position:absolute;left:0;right:0;bottom:0;height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f2fbf4;background:linear-gradient(#3d8562,#2a5f45);font-family:'Old Standard TT',serif;font-weight:700;font-size:16px;line-height:1.05;z-index:2}
+.card .foot small{font-family:'Alegreya Sans',sans-serif;font-size:10.5px;font-weight:700;opacity:.92}
+.card .foot.no{background:#7c7468;font-size:13.5px}
+.card .chk{position:absolute;right:3px;top:22px;width:30px;height:30px;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+.card .chk svg{width:30px;height:30px}
+.fadeL{position:absolute;top:0;bottom:0;left:0;width:26px;background:linear-gradient(90deg,rgba(60,40,24,.85),rgba(60,40,24,0));z-index:9}
+.fadeR{position:absolute;top:0;bottom:0;right:0;width:26px;background:linear-gradient(270deg,rgba(60,40,24,.85),rgba(60,40,24,0));z-index:9}
+.dotsr{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);display:flex;gap:5px}.dotsr i{width:5px;height:5px;border-radius:50%;background:rgba(239,227,200,.35)}.dotsr i.on{background:#efe3c8}
+
+/* the bottom bar */
+.bb{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 10px 26px;background:linear-gradient(#3a2716,#2a1c10);box-shadow:inset 0 1px 0 rgba(224,189,98,.45),0 -4px 10px rgba(0,0,0,.35)}
+.ph.web .bb{padding-bottom:8px}
+.bbt{flex:0 0 auto;width:54px;display:flex;flex-direction:column;align-items:center;gap:2px;color:#efe3c8;font-size:10.5px;font-weight:700;background:none;border:0;padding:0}
+.bbt .ic{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(239,227,200,.08);box-shadow:inset 0 0 0 1px rgba(239,227,200,.22)}
+.bbt.on .ic{background:#efe3c8;color:#2a2521}
+.end{flex:1 1 auto;height:52px;border-radius:4px;border:0;background:linear-gradient(#a8382c,#7e2219);box-shadow:inset 0 0 0 2px #e0bd62,inset 0 0 0 4px #7e2219,inset 0 0 0 5px #e0bd62,0 4px 10px rgba(0,0,0,.5);color:#f6e7c6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.end b{font-family:'Old Standard TT',serif;font-weight:700;font-size:16px;letter-spacing:.16em;text-transform:uppercase}
+.end small{font-size:10.5px;font-weight:700;color:#f2d9b0;display:flex;align-items:center;gap:4px}
+.ctl{display:flex;flex-direction:column;align-items:center;gap:3px;color:#efe3c8;font-size:10.5px;font-weight:700;flex:1}
+
+/* sheets and layers over the table */
+.shade{position:absolute;inset:0;background:rgba(18,10,4,.62);z-index:20}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:linear-gradient(#f8f1df,#efe3c8);border-radius:16px 16px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.55);display:flex;flex-direction:column}
+.sheet .grip{width:42px;height:5px;border-radius:3px;background:#b9a27a;margin:7px auto 2px}
+.sh-h{display:flex;align-items:center;gap:8px;padding:4px 14px 8px;border-bottom:2px solid #8e2b22;font-family:'Old Standard TT',serif;font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase}
+.sh-h .x{margin-left:auto;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(90,70,40,.12);font-family:'Alegreya Sans';letter-spacing:0;font-size:18px}
+.lg{display:grid;grid-template-columns:26px 1fr;gap:2px 8px;padding:8px 14px;border-bottom:1px solid #d6c6a3;font-size:14px;line-height:1.3;color:#3d342b;align-items:start}
+.lg .li{width:22px;height:22px;border-radius:5px;background:rgba(90,70,40,.1);display:flex;align-items:center;justify-content:center;margin-top:1px}
+.lg em{font-style:normal;color:#8e2b22;font-weight:800;border-bottom:1px dotted #8e2b22}
+.lg.rd{grid-template-columns:1fr;text-align:center;font-family:'Old Standard TT',serif;letter-spacing:.14em;color:#5d5248}
+.lg.new{background:rgba(224,189,98,.18)}
+.sbtn{height:44px;padding:0 16px;border-radius:6px;border:0;background:#fbf7ec;box-shadow:inset 0 0 0 1.5px #2a2521,0 2px 0 #a68f66;font-weight:800;font-size:14px;color:#2a2521}
+.alarm{flex:0 0 auto;margin:4px 8px 6px;padding:8px 12px 9px;display:flex;gap:10px;align-items:center;background:linear-gradient(#a8382c,#7e2219);box-shadow:inset 0 0 0 1.5px #e0bd62,inset 0 0 0 3.5px #7e2219,inset 0 0 0 4.5px #e0bd62,0 6px 14px rgba(0,0,0,.55);color:#f6e7c6;border-radius:3px}
+.alarm b{display:block;font-family:'Old Standard TT',serif;font-weight:700;font-size:20px;letter-spacing:.22em}
+.alarm span{display:block;font-size:13px;line-height:1.25;font-weight:600}
+.skip{height:54px;width:100%;border-radius:4px;border:0;background:linear-gradient(#fbf5e7,#e9dbbd);box-shadow:inset 0 0 0 2px #2a2521,inset 0 0 0 4.5px #fbf5e7,inset 0 0 0 5.5px #8a7550,0 3px 8px rgba(0,0,0,.35);font-family:'Old Standard TT',serif;font-weight:700;font-size:18px;letter-spacing:.2em;color:#2a2521}
+.fuse{position:relative;height:10px;margin:0 2px 6px}
+.fuse::before{content:"";position:absolute;left:0;right:22%;top:4px;height:2px;background:repeating-linear-gradient(90deg,#8a6a3a 0 4px,#c9a86a 4px 7px);border-radius:1px}
+.fuse::after{content:"";position:absolute;left:78%;top:0;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle,#fff6c8 0 25%,#ffb02e 45%,rgba(255,90,20,0) 72%);box-shadow:0 0 8px #ff9a2e}
+.link{display:flex;align-items:center;justify-content:center;gap:6px;height:36px;font-weight:800;font-size:13.5px;color:#3d342b}
+.zoom{position:absolute;z-index:21;left:50%;transform:translateX(-50%);width:300px;height:372px;background:linear-gradient(#fdf9f0,#f3ead6);border-radius:14px;box-shadow:0 0 0 2px #e0bd62,0 20px 40px rgba(0,0,0,.7);overflow:hidden}
+.zoom::after{content:"";position:absolute;inset:40px 8px 8px 8px;border:1px solid rgba(90,70,40,.25);border-radius:8px;pointer-events:none}
+.zoom .t{height:36px;color:#fff;font-size:14px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.zoom .n{font-family:'Old Standard TT',serif;font-weight:700;font-size:28px;line-height:1.08;padding:18px 20px 0}
+.zoom .e{font-weight:800;font-size:18px;padding:8px 20px 0}
+.zoom .x{font-size:16.5px;color:#4a4036;padding:12px 20px 0;line-height:1.4}
+.zoom .when{position:absolute;left:20px;right:20px;bottom:22px;font-size:13px;color:#7a6c5a;border-top:1px solid rgba(90,70,40,.25);padding-top:9px;line-height:1.35}
+.zbtns{position:absolute;z-index:21;left:20px;right:20px;display:flex;gap:10px}
+.zbtns .sbtn{flex:1;height:50px;font-size:15px}
+.zbtns .play{background:linear-gradient(#a8382c,#7e2219);color:#f6e7c6;box-shadow:inset 0 0 0 1.5px #e0bd62,0 3px 0 #4a0a06;font-family:'Old Standard TT',serif;letter-spacing:.14em;text-transform:uppercase}
+
+/* victory */
+.vic{position:absolute;inset:44px 0 0 0;z-index:21;background:linear-gradient(#f8f1df,#efe3c8);overflow:hidden;display:flex;flex-direction:column}
+.vic .sc{flex:1;overflow:hidden;padding:12px 14px 0}
+.vic .over{text-align:center;font-family:'Old Standard TT',serif;letter-spacing:.2em;font-size:12px;color:#7a6c5a;text-transform:uppercase}
+.ribbon{position:relative;margin:6px auto 4px;width:330px;height:46px;display:flex;align-items:center;justify-content:center;background:linear-gradient(#b83a2c,#8e2219);color:#fbecd0;font-family:'Old Standard TT',serif;font-weight:700;font-size:23px;letter-spacing:.16em;clip-path:polygon(0 0,100% 0,94% 50%,100% 100%,0 100%,6% 50%)}
+.vic .sub{text-align:center;font-family:'Alegreya',serif;font-style:italic;font-size:13.5px;color:#5d5248;margin-bottom:9px}
+.pano{border-radius:4px;overflow:hidden;box-shadow:0 0 0 1px #b9a27a,0 3px 8px rgba(0,0,0,.3)}
+.best{display:flex;gap:10px;align-items:center;margin:12px 0 10px;padding:10px;border-radius:4px;background:#fbf6ea;box-shadow:inset 0 0 0 1.5px #b9a27a,inset 0 0 0 4px #fbf6ea,inset 0 0 0 5px #d6c6a3}
+.best .k{font-size:10.5px;font-weight:800;letter-spacing:.14em;color:#8a6a24;text-transform:uppercase}
+.best .nm2{font-family:'Old Standard TT',serif;font-weight:700;font-size:20px;line-height:1.1}
+.best .sh{font-family:'Alegreya',serif;font-style:italic;font-size:12.5px;color:#5d5248}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:6px}
+.three div{background:rgba(90,70,40,.08);border-radius:3px;text-align:center;padding:4px 2px;font-size:10.5px;line-height:1.15;color:#5d5248}
+.three b{display:block;font-family:'Old Standard TT',serif;font-size:18px;color:#2a2521}
+.ctb{display:flex;justify-content:space-between;font-size:10.5px;font-weight:800;letter-spacing:.14em;color:#5d5248;text-transform:uppercase;border-bottom:1px solid #d6c6a3;padding-bottom:4px}
+.crow{padding:7px 0 8px;border-bottom:1px solid #e0d2b2}
+.crow .a{display:grid;grid-template-columns:9px 1fr 118px 26px;align-items:center;gap:7px}
+.crow .nmw{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow .sq{width:9px;height:9px;border-radius:2px;flex:0 0 auto}
+.crow .sn{font-family:'Old Standard TT',serif;font-weight:700;font-size:15px;flex:0 0 auto}
+.crow .af{font-size:11px;color:#7a6c5a;margin-left:2px}
+.crow .bar{height:9px;border-radius:2px}
+.crow .v{font-family:'Old Standard TT',serif;font-weight:700;font-size:15px;width:24px;text-align:right}
+.crow .b2{display:flex;align-items:center;gap:7px;margin-top:4px;padding-left:16px}
+.ttl{height:20px;padding:0 8px;border-radius:3px;background:#2a2521;color:#f3e6c6;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;display:inline-flex;align-items:center;white-space:nowrap}
+.ttl.gone{background:#a59a8a;color:#f6efe0}
+.crow .fct{font-size:12.5px;color:#4a4036}
+.crow.gone .sn{color:#8a8076}
+.vbtns{flex:0 0 auto;padding:10px 14px 26px;background:linear-gradient(rgba(239,227,200,0),#efe3c8 22%);display:flex;flex-direction:column;gap:8px;margin-top:-18px;position:relative}
+.vbtns .rv{height:52px;border-radius:4px;border:0;background:linear-gradient(#a8382c,#7e2219);box-shadow:inset 0 0 0 2px #e0bd62,0 3px 0 #4a0a06;color:#f6e7c6;font-family:'Old Standard TT',serif;font-weight:700;font-size:18px;letter-spacing:.2em;text-transform:uppercase}
+.vbtns .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.vbtns .sbtn{height:44px;font-size:13px;padding:0 4px}
+
+/* ---------- v2: oak, brass and wine for every sheet and button ---------- */
+.osheet{position:absolute;left:0;right:0;bottom:0;z-index:21;border-radius:16px 16px 0 0;display:flex;flex-direction:column;--sh1:#5a2a1c;--sh2:#33140c;--edge:#8a4a30;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 1.5px,rgba(0,0,0,0) 1.5px 26px),repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 1px,rgba(0,0,0,0) 1px 7px),radial-gradient(ellipse 90% 60% at 50% 20%,rgba(255,200,150,.1),rgba(0,0,0,0) 70%),linear-gradient(var(--sh1),var(--sh2));
+  box-shadow:inset 0 2px 0 var(--edge),inset 0 3px 0 rgba(0,0,0,.5),0 -10px 24px rgba(0,0,0,.6)}
+.osheet.react{--sh1:#34434e;--sh2:#1a242c;--edge:#6e8494;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 1.5px,rgba(0,0,0,0) 1.5px 26px),radial-gradient(ellipse 90% 60% at 50% 20%,rgba(200,220,240,.1),rgba(0,0,0,0) 70%),linear-gradient(var(--sh1),var(--sh2))}
+.osheet .grip2{width:46px;height:5px;border-radius:3px;margin:10px auto 4px;background:rgba(239,227,200,.45)}
+.shrow{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 0;gap:8px}
+.plq2{position:relative;display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:3px;background:rgba(0,0,0,.28);box-shadow:inset 0 0 0 1px rgba(239,227,200,.28);font-family:'Old Standard TT',serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#efe3c8}
+
+.shnote{color:#e8d6b0;font-size:12.5px;font-weight:700;opacity:.9}
+.oak{position:relative;display:flex;align-items:center;gap:8px;padding:6px 8px 6px 6px;border-radius:5px;background:repeating-linear-gradient(178deg,rgba(0,0,0,.09) 0 1px,rgba(0,0,0,0) 1px 5px),linear-gradient(#634128,#3e2716);box-shadow:inset 0 0 0 1px #1e1008,inset 0 1px 0 2px rgba(255,220,170,.1),0 5px 12px rgba(0,0,0,.55)}
+.oak .med{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3c4,#e2bf62 35%,#8f6b20 80%,#5e4210);box-shadow:inset 0 0 0 1px #4a3208,0 2px 3px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+.oak .med i{width:32px;height:32px;border-radius:50%;background:#2a1a0e;box-shadow:inset 0 0 0 1px #4a3208,inset 0 0 0 2.5px rgba(226,191,98,.45);display:flex;align-items:center;justify-content:center}
+.oak .pan{flex:1;min-width:0;align-self:stretch;border-radius:2px;background:linear-gradient(#6e2219,#4a130d);box-shadow:inset 0 1px 3px rgba(0,0,0,.55),0 0 0 1px rgba(224,189,98,.7),0 0 0 2.5px rgba(30,16,8,.8);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0 6px}
+.oak .pan b{font-family:'Old Standard TT',serif;font-weight:700;font-size:16.5px;letter-spacing:.16em;text-transform:uppercase;background:linear-gradient(#fffbe6,#fbe7a6 40%,#d9ae52 62%,#fff0b8);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.6));white-space:nowrap}
+.oak .pan small{font-size:10.5px;font-weight:700;color:#f2d9b0;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.brs{position:relative;display:flex;align-items:center;justify-content:center;height:46px;border-radius:4px;background:linear-gradient(#fbf5e7,#e9dbbd);box-shadow:inset 0 0 0 1.5px #2a2521,inset 0 0 0 3.5px #fbf5e7,inset 0 0 0 4.5px #8a7550,0 3px 6px rgba(0,0,0,.4);font-family:'Old Standard TT',serif;font-weight:700;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#2a2521}
+
+.slip{position:relative;margin:0 auto;padding:7px 16px;max-width:370px;background:radial-gradient(ellipse at 50% 40%,#f6ecd2,#e2cfa4 95%);color:#2e261e;font-size:12.5px;text-align:center;text-shadow:0 .5px 0 rgba(255,250,235,.7);clip-path:polygon(0 8%,3% 0,20% 6%,40% 0,62% 5%,80% 0,97% 6%,100% 0,99% 92%,82% 100%,60% 94%,38% 100%,18% 95%,2% 100%)}
+.slipw{filter:drop-shadow(0 3px 3px rgba(0,0,0,.55)) drop-shadow(0 1px 1px rgba(0,0,0,.4));transform:rotate(-.6deg)}
+.fuse2{position:relative;height:16px;margin:2px 4px 8px}
+.ember{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle,#fff8d0 0 18%,#ffbe3c 38%,rgba(255,110,20,.6) 58%,rgba(255,80,10,0) 72%);box-shadow:0 0 10px 3px rgba(255,150,40,.55)}
+.lbook{position:absolute;left:8px;right:8px;z-index:21;border-radius:10px;padding:10px 10px 10px 16px;background:radial-gradient(ellipse at 30% 20%,#6a3e22,#3e2112 80%);box-shadow:inset 0 0 0 2px #2a140a,inset 0 0 0 5px rgba(255,210,160,.06),0 12px 28px rgba(0,0,0,.65)}
+.lbook::before{content:"";position:absolute;inset:5px;border:1.5px dashed rgba(230,190,140,.4);border-radius:7px;pointer-events:none}
+.lpage{position:relative;height:100%;border-radius:3px 6px 6px 3px;overflow:hidden;display:flex;flex-direction:column;
+  background:linear-gradient(90deg,rgba(90,60,20,.28),rgba(0,0,0,0) 4%,rgba(0,0,0,0) 96%,rgba(90,60,20,.18)),radial-gradient(ellipse at 50% 40%,#f6ecd2,#e8d8b0 90%);box-shadow:inset 0 0 18px rgba(120,80,30,.35),2px 0 0 #d8c69e,4px 0 0 #c9b48c,6px 1px 0 #b9a27a}
+.lrule{}
+.lmargin{position:absolute;top:0;bottom:0;left:55px;width:4px;border-left:1px solid rgba(170,40,30,.55);border-right:1px solid rgba(170,40,30,.35);pointer-events:none}
+.lhead{text-align:center;padding:12px 8px 6px;border-bottom:1.5px solid rgba(60,40,20,.5)}
+.lhead b{display:block;font-family:'Old Standard TT',serif;font-weight:700;font-size:18px;letter-spacing:.2em;color:#2b2420}
+.lhead span{font-family:'Alegreya',serif;font-style:italic;font-size:13px;color:#5d4a36}
+.le{display:grid;grid-template-columns:44px 1fr;gap:0 14px;align-items:center;padding:7px 12px 7px 8px;border-bottom:1px solid rgba(70,110,150,.3);font-family:'Alegreya Sans',sans-serif;font-weight:500;font-size:14.5px;line-height:1.3;color:#1f1b18}
+.le .t{display:flex;align-items:center;justify-content:space-between;font-family:'Old Standard TT',serif;font-size:11.5px;color:#5d4a36}
+.le .t svg{filter:sepia(.6) saturate(.7) brightness(.8)}
+.le em{font-style:normal;font-weight:700;color:#8e2219}
+.le b{font-weight:800;color:#1f1b18}
+.le.now{background:linear-gradient(90deg,rgba(255,214,90,0),rgba(255,214,90,.35) 20%,rgba(255,214,90,.35) 80%,rgba(255,214,90,0))}
+.lround{height:32px;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Old Standard TT',serif;font-weight:700;font-size:13px;letter-spacing:.24em;color:#6b2a1e}
+.lround i{width:70px;height:8px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='8'%3E%3Cpath d='M1 4 H30 M40 4 H69 M35 1 L38 4 L35 7 L32 4 Z' stroke='%236b2a1e' stroke-width='1' fill='%236b2a1e'/%3E%3C/svg%3E")}
+.ribbon2{position:absolute;right:30px;top:-4px;width:16px;height:64px;background:linear-gradient(90deg,#7e1d14,#b3352a 50%,#7e1d14);clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%);box-shadow:0 2px 3px rgba(0,0,0,.4);z-index:3}
+.bx{position:absolute;right:-6px;top:-10px;z-index:4;width:34px;height:34px;border-radius:50%;background:#3e2716;box-shadow:inset 0 0 0 1.5px #1e1008,inset 0 0 0 3px rgba(239,227,200,.25),0 3px 6px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#efe3c8}
+.bigcard{position:absolute;z-index:22;width:196px;height:280px;border-radius:12px;background:linear-gradient(#fdf9f0,#f3ead6);overflow:hidden;box-shadow:0 0 0 2.5px #e0bd62,0 0 26px rgba(255,196,120,.6),0 18px 30px rgba(0,0,0,.65)}
+.bigcard::after{content:"";position:absolute;inset:30px 6px 6px 6px;border:1px solid rgba(90,70,40,.25);border-radius:6px;pointer-events:none}
+.bigcard .t{height:28px;color:#fff;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+.bigcard .n{font-family:'Old Standard TT',serif;font-weight:700;font-size:21px;line-height:1.08;padding:12px 14px 0}
+.bigcard .e{font-weight:800;font-size:14.5px;padding:6px 14px 0}
+.bigcard .x{font-size:13.5px;color:#4a4036;padding:8px 14px 0;line-height:1.35}
+.bigcard .w{position:absolute;left:14px;right:14px;bottom:14px;font-size:11.5px;color:#7a6c5a;border-top:1px solid rgba(90,70,40,.25);padding-top:6px;line-height:1.3}
+.arr{position:absolute;z-index:22;width:34px;height:34px;border-radius:50%;background:rgba(20,12,6,.7);color:#efe3c8;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;box-shadow:inset 0 0 0 1px rgba(239,227,200,.3)}
+
+.tbtn{position:relative;flex:0 0 auto;display:inline-block}
+.tbtn .tring{position:absolute;left:0;top:0}
+.tbtn .tcore{position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f2d98a,#c99a3a 45%,#8f6b20 80%);box-shadow:inset 0 0 0 1.5px #4a3208,inset 0 0 0 3px rgba(255,240,200,.35),inset 0 -3px 6px rgba(0,0,0,.25),0 2px 4px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#22180c}
+.tbtn .tcore svg{width:55%;height:55%}
+/* reactions sheet: iron corner brackets, an engraved line */
+.osheet.react::before{content:"";position:absolute;inset:8px 8px 0;border:1px solid rgba(200,220,235,.18);border-bottom:0;border-radius:10px 10px 0 0;pointer-events:none}
+.icorner{position:absolute;top:2px;width:30px;height:30px;pointer-events:none}
+.incoming{display:flex;align-items:center;gap:8px;margin:8px 12px 0;padding:6px 10px;border-radius:4px;background:rgba(0,0,0,.28);box-shadow:inset 0 0 0 1px rgba(200,220,235,.18);color:#e6edf2;font-size:12.5px}
+.incoming .pics{display:flex;align-items:center;gap:4px}
+.incoming .pics span{width:34px;height:20px;border-radius:3px;background:#f4ead6;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.incoming .pics svg{width:30px;height:16px}
+.incoming b{color:#fff;font-family:'Old Standard TT',serif;font-size:14px}
+.incoming .hold{margin-left:auto;display:flex;align-items:center;gap:2px;white-space:nowrap}
+.incoming .hold svg{width:10px;height:13px}
+/* log: stitched spine, leather corners, watermark, seal, signature */
+.lbook::after{content:"";position:absolute;top:14px;bottom:14px;left:4px;width:2px;background:repeating-linear-gradient(180deg,#e6c79a 0 6px,rgba(0,0,0,0) 6px 11px);opacity:.7}
+.lcorn{position:absolute;width:26px;height:26px;background:linear-gradient(135deg,#24120a 50%,rgba(0,0,0,0) 50%);z-index:2}
+.lwm{position:absolute;right:-30px;top:120px;width:260px;height:260px;opacity:.07;pointer-events:none}
+.lsign{display:flex;align-items:flex-end;justify-content:space-between;padding:6px 14px 2px 64px;font-family:'Alegreya',serif;font-style:italic;font-size:13px;color:#3a3048}
+.lsign .sig{font-size:19px;color:#1f2a48;transform:rotate(-4deg);margin-left:6px}
+.lpageno{position:absolute;left:12px;top:10px;font-family:'Old Standard TT',serif;font-size:11px;color:#8a7458}
+/* victory: an oak sheet with a paper page */
+.vic{background:repeating-linear-gradient(0deg,rgba(0,0,0,.38) 0 1.5px,rgba(0,0,0,0) 1.5px 26px),radial-gradient(ellipse 90% 50% at 50% 10%,rgba(255,200,140,.12),rgba(0,0,0,0) 70%),linear-gradient(#4e331c,#2c1a0c)!important}
+.vic .sc{margin:12px 10px 0;padding:12px 12px 0!important;border-radius:4px;background:radial-gradient(ellipse at 50% 30%,#f8efd8,#ead9b2 92%);box-shadow:inset 0 0 18px rgba(120,80,30,.3),0 6px 16px rgba(0,0,0,.55);position:relative}
+.vic .sc::before{content:"";position:absolute;inset:5px;border:1px solid rgba(90,60,30,.35);border-radius:2px;pointer-events:none}
+.ribbon{background:linear-gradient(#8e2a20,#5e140e)!important;color:#f6e7c6!important}
+.vbtns{background:none!important;margin-top:0!important;padding-top:12px!important}
+
+.lb-D{background:radial-gradient(ellipse at 30% 20%,#2e4a3c,#152a20 80%)!important}
+.lb-D .lpage{background:linear-gradient(90deg,rgba(40,70,50,.3),rgba(0,0,0,0) 4%,rgba(0,0,0,0) 96%,rgba(40,70,50,.2)),radial-gradient(ellipse at 50% 40%,#e6e6cf,#cdd2b4 90%)!important}
+.lb-D .ribbon2{background:linear-gradient(90deg,#1e4a3c,#2e6a5a 50%,#1e4a3c)}
+.lb-E{background:repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 2px,rgba(0,0,0,0) 2px 5px),radial-gradient(ellipse at 30% 20%,#2e3e5e,#16203a 80%)!important}
+.lb-E::before{border:1.5px solid rgba(160,180,210,.35)!important;border-style:solid!important}
+.lb-E .lcorn{background:linear-gradient(135deg,#8a96a2 50%,rgba(0,0,0,0) 50%)!important}
+.lb-E .lpage{background:linear-gradient(90deg,rgba(60,70,90,.18),rgba(0,0,0,0) 4%,rgba(0,0,0,0) 96%,rgba(60,70,90,.12)),radial-gradient(ellipse at 50% 40%,#fbf8ee,#ece6d4 90%)!important}
+.lb-E .ribbon2{background:linear-gradient(90deg,#1e2e52,#3a5488 50%,#1e2e52)}
+.lb-R{background:radial-gradient(ellipse at 30% 20%,#5e1e16,#2a0a06 80%)!important}
+.lb-R .lpage{box-shadow:inset 0 0 26px 6px rgba(60,20,4,.55),2px 0 0 #3a2410,4px 0 0 #2a180a!important}
+.lb-R .ribbon2{background:linear-gradient(90deg,#1a1614,#3a3430 50%,#1a1614)}
+.barn{position:absolute;z-index:3;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 45% 40%,#f2efe2 0 25%,#b9b6a6 30% 60%,#6e6c62 70%);box-shadow:0 1px 2px rgba(0,0,0,.6)}
+.tide{position:absolute;left:8px;right:8px;bottom:6px;height:16px;z-index:3;pointer-events:none;background:radial-gradient(ellipse 8px 5px at 10% 30%,rgba(230,240,232,.55),rgba(0,0,0,0) 70%),radial-gradient(ellipse 12px 6px at 35% 50%,rgba(230,240,232,.45),rgba(0,0,0,0) 70%),radial-gradient(ellipse 9px 5px at 62% 30%,rgba(230,240,232,.5),rgba(0,0,0,0) 70%),radial-gradient(ellipse 14px 6px at 88% 60%,rgba(230,240,232,.4),rgba(0,0,0,0) 70%)}
+.lb-D{box-shadow:inset 0 0 0 2px #0a1612,0 0 18px rgba(120,255,200,.18),0 12px 28px rgba(0,0,0,.65)!important}
+.lb-D .lpage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;background:linear-gradient(rgba(70,100,80,0),rgba(70,100,80,.16));border-top:1.5px solid rgba(80,110,90,.35);pointer-events:none}
+.vtab{height:44px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:4px;background:linear-gradient(#5a3a22,#3a2414);box-shadow:inset 0 0 0 1px #1e1008,inset 0 1px 0 1.5px rgba(255,220,170,.1),0 2px 4px rgba(0,0,0,.45);color:#f3e6c6;font-weight:800;font-size:12.5px}
+.stain{position:absolute;border-radius:50%;background:radial-gradient(ellipse,rgba(90,110,80,.0) 40%,rgba(90,110,80,.22) 62%,rgba(90,110,80,0) 72%);pointer-events:none}
+.burn{position:absolute;width:30px;height:24px;border-radius:46% 54% 50% 50%;background:radial-gradient(ellipse,#1a0e06 0 30%,#5a3010 45%,rgba(140,80,30,.5) 60%,rgba(0,0,0,0) 72%);pointer-events:none}
+
+/* optical centring: letter-spaced caps carry their spacing after the last letter */
+.plq{padding-left:calc(10px + .12em)!important}
+.plq2{padding-left:calc(12px + .16em)!important}
+.oak .pan b{text-indent:.16em}
+.brs{text-indent:.14em}
+.lhead b{text-indent:.2em}
+.lround{text-indent:.24em}
+.ribbon{text-indent:.16em}
+.alarm b{text-indent:.22em}
+.ttl{text-indent:.12em}
+</style>
+</head>
+<body>
+<div class="page">
+<h1>A5 · Телефон</h1>
+<p class="lead">Образец для переноса на телефон (задача V-телефон). Экран 430×932 (iPhone в полноэкранном режиме) и 430×740 (Safari с панелями). Те же планшеты, море, рука и кнопки, что на ноутбуке, только плотнее. Стол сохраняет расположение кораблей (напротив и по диагонали), потому что от него зависят правила.</p>
+<div class="gal" id="gal"></div>
+</div>
+<script>
+const SHIPS = __SHIPS__;
+const CELLS = __CELLS__;
+const KEGS = __KEGS__;
+const BIG = __BIG__;
+const IC = __ICONS__;
+const R1 = n => Math.round(n * 10) / 10;
+/*__ST__*/
+/*__ST3__*/
+/*__FX__*/
+
+/* ---------- small art ---------- */
+const shipPic = k => `<svg viewBox="-2 -1 124 80" aria-hidden="true">${SHIPS[k]}</svg>`;
+function medal(name, n){ const m = MEDAL[name], u = 'md' + n + Math.random().toString(36).slice(2, 6);
+  const teeth = Array.from({length: 72}, (_, i) => { const a = i / 72 * Math.PI * 2, r = i % 2 ? 13.5 : 13; return (i ? 'L' : 'M') + R1(Math.cos(a) * r) + ' ' + R1(Math.sin(a) * r); }).join(' ') + ' Z';
+  return `<svg viewBox="-14 -14 28 28" aria-hidden="true"><defs><radialGradient id="${u}f" cx=".34" cy=".28" r=".8"><stop offset="0" stop-color="#fff6c8"/><stop offset=".3" stop-color="#ecc86a"/><stop offset=".7" stop-color="#b08428"/><stop offset="1" stop-color="#6e4e12"/></radialGradient><linearGradient id="${u}r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe7a6"/><stop offset=".45" stop-color="#c99a3a"/><stop offset=".7" stop-color="#7a5414"/><stop offset="1" stop-color="#d8b05a"/></linearGradient></defs>
+    <path d="${teeth}" fill="url(#${u}r)" stroke="#4a340c" stroke-width=".45"/><circle r="12.1" fill="url(#${u}r)" stroke="#4a340c" stroke-width=".5"/><circle r="10.6" fill="url(#${u}f)" stroke="#4a340c" stroke-width=".6"/><circle r="9.3" fill="none" stroke="#7a5a1a" stroke-width=".45" stroke-dasharray=".6 .9" opacity=".8"/>
+    <g transform="translate(-8.6 -8.6) scale(1.08)"><g transform="translate(.45 .55)" fill="#fff3c4" stroke="#fff3c4" opacity=".65">${m}</g><g fill="#3a2a0c" stroke="#3a2a0c">${m}</g></g>
+    <path d="M-8.6 -4 A9.6 9.6 0 0 1 2 -9.4" fill="none" stroke="#fff8d8" stroke-width="1" stroke-linecap="round" opacity=".7"/></svg>`; }
+const SKULL = `<svg width="14" height="15" viewBox="0 0 14 15" aria-hidden="true"><path d="M7 1 C3.4 1 1.4 3.4 1.4 6.4 C1.4 8.4 2.4 9.6 3.4 10.2 V12.6 H10.6 V10.2 C11.6 9.6 12.6 8.4 12.6 6.4 C12.6 3.4 10.6 1 7 1 Z" fill="#cfe3d6" stroke="#24584b" stroke-width=".9"/><circle cx="4.9" cy="7" r="1.6" fill="#24584b"/><circle cx="9.1" cy="7" r="1.6" fill="#24584b"/><circle cx="4.9" cy="7" r=".6" fill="#9dfcc4"/><circle cx="9.1" cy="7" r=".6" fill="#9dfcc4"/><path d="M5 12.6 V11 M7 12.6 V11 M9 12.6 V11" stroke="#24584b" stroke-width=".7"/></svg>`;
+const SABRES = `<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2 Q7 5 11.6 11.6 M12 2 Q7 5 2.4 11.6" fill="none" stroke="#fff1e6" stroke-width="1.6" stroke-linecap="round"/><path d="M9.6 10.6 L12.6 9.6 M4.4 10.6 L1.4 9.6" stroke="#fff1e6" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+const BELL = `<svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="17" fill="#f2d27e" stroke="#4a0a06" stroke-width="1"/><path d="M18 7 C13 7 11 10.6 11 15 V20 L8.6 24 H27.4 L25 20 V15 C25 10.6 23 7 18 7 Z" fill="#8e5a12" stroke="#3a2406" stroke-width="1"/><path d="M13.4 12.4 Q14.6 9.4 17.4 9" fill="none" stroke="#ffe7a6" stroke-width="1.2" stroke-linecap="round"/><circle cx="18" cy="26.4" r="2.3" fill="#3a2406"/><path d="M18 4.6 V7" stroke="#3a2406" stroke-width="1.6"/><path d="M5.4 12 Q4 15 5 18 M30.6 12 Q32 15 31 18" fill="none" stroke="#7e2219" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+const CHECK = '<svg width="13" height="13" viewBox="0 0 16 16"><path d="M3.6 8.4 L6.8 11.4 L12.4 5" fill="none" stroke="#f2fbf4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const LOGI = { // the small icons of the log lines
+  volley: `<svg width="18" height="12" viewBox="0 0 22 14">${IC.volley.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`,
+  card: '<svg width="13" height="16" viewBox="0 0 13 16"><rect x="1" y="1" width="11" height="14" rx="1.6" fill="#fdf9f0" stroke="#5b4a7a" stroke-width="1.2"/><rect x="1" y="1" width="11" height="4" rx="1.4" fill="#5b4a7a"/><path d="M3.4 8.4 H9.6 M3.4 10.8 H8" stroke="#8a7c6a" stroke-width="1"/></svg>',
+  keg: CELLS.KEG_S,
+  react: '<svg width="14" height="16" viewBox="0 0 14 16"><path d="M7 1 L12.6 3 V7.6 Q12.6 12.4 7 15 Q1.4 12.4 1.4 7.6 V3 Z" fill="#44525e" stroke="#2a3238" stroke-width="1"/><path d="M4.4 8 L6.4 10 L9.8 5.8" fill="none" stroke="#e6ecf0" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  sea: '<svg width="18" height="12" viewBox="0 0 18 12"><path d="M1 5 Q3.5 2 6 5 T11 5 T17 5 M1 9.4 Q3.5 6.4 6 9.4 T11 9.4 T17 9.4" fill="none" stroke="#326170" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  repair: '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 14 L9 7" stroke="#6b4a24" stroke-width="2.4" stroke-linecap="round"/><path d="M8 3.6 L12.4 2 L14 6.4 L11.4 7.4 Z" fill="#555" stroke="#2a2521" stroke-width=".8"/></svg>',
+};
+const playIcon = d => `<svg width="20" height="16" viewBox="0 0 20 16" aria-hidden="true">${d}</svg>`;
+const I_FAST = playIcon('<path d="M2 2 L9 8 L2 14 Z M10 2 L17 8 L10 14 Z" fill="currentColor"/>');
+const I_END = playIcon('<path d="M2 2 L9 8 L2 14 Z M9 2 L16 8 L9 14 Z" fill="currentColor"/><rect x="16" y="2" width="2.4" height="12" fill="currentColor"/>');
+const I_PAUSE = playIcon('<rect x="4" y="2" width="4" height="12" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="12" rx="1" fill="currentColor"/>');
+const I_LOG = '<svg width="20" height="20" viewBox="0 0 20 20"><rect x="3.4" y="2" width="13.2" height="16" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.4 6.4 H13.6 M6.4 10 H13.6 M6.4 13.6 H11" stroke="currentColor" stroke-width="1.4"/></svg>';
+
+/* ---------- the data of the table ---------- */
+const SH = {
+  E: {k: 'endeavour', name: 'Индевор', c: ['#a8873a', '#8a6a24'], leg: 'Армада Компании', hull: [12, 12], s: [1, 1], g: [3, 3], cr: [2, 2], fan: 5},
+  D: {k: 'dutch', name: 'Голландец', c: ['#357869', '#24584b'], leg: 'Кракен', hull: [8, 11], s: [3, 3], g: [2, 2], cr: [3, 3], fan: 5, souls: [1, 5]},
+  P: {k: 'pearl', name: 'Жемчужина', c: ['#3a3430', '#1e1b18'], leg: 'Джек ускользает', hull: [9, 9], s: [3, 3], g: [2, 2], cr: [3, 3], fan: 5},
+  R: {k: 'revenge', name: 'Месть', c: ['#9e3a26', '#7a2516'], leg: 'Корабль в бутылке', hull: [9, 11], s: [2, 2], g: [3, 3], cr: [2, 3], fan: 5},
+};
+let mn = 0;
+function plank(id, pos, o = {}){ const s = Object.assign({}, SH[id], o.ov || {}); const lose = o.lose || 0;
+  let cells = ''; for(let i = 0; i < s.hull[1]; i++){ const alive = i < s.hull[0], doomed = alive && i >= s.hull[0] - lose; cells += `<span class="${doomed ? 'lose' : ''}" style="display:flex">${alive ? CELLS.HULL : CELLS.HULL_X}</span>`; }
+  const grp = (on, off, v) => `<span class="g">${v[0] ? on : off}<span class="num ${v[0] ? '' : 'red'}">${v[0]}<small>/${v[1]}</small></span></span>`;
+  const right = (o.ready ? `<span class="okc" title="Готов">${CHECK}</span>` : '') + (o.seal ? `<span class="tseal" title="Под огнём">${TARGET_SEAL}</span>` : `<span class="fan" title="Карт в руке">${FAN_SVG(s.fan)}</span>`) +
+    (o.sabres ? `<span class="sab" title="Под Залпом">${SABRES}</span>` : `<span class="medal" title="Легенда: ${s.leg}">${medal(s.leg, mn++)}</span>`);
+  const act = o.act ? `<div class="act ${o.act.length > 1 ? 'two' : ''}">${o.act.map(b => `<span class="cmd ${b.on ? 'on' : ''}">${b.svg || `<svg class="ic" viewBox="0 0 22 14">${b.ic || IC.volley.replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`}${b.t}<span class="cost">${b.c}${CELLS.KEG_S}</span></span>`).join('')}</div>` : '';
+  return `<div class="mat ${pos} ${o.cls || ''}" ${o.style ? `style="${o.style}"` : ''}>
+    <div class="mh" style="background:linear-gradient(${s.c[0]},${s.c[1]})"><span class="pic">${shipPic(s.k)}</span><span class="nm">${s.name}</span><span class="r">${right}</span></div>
+    <div class="bdy"><div class="hull">${cells}${o.minus ? `<span class="num">${s.hull[0]}</span><span class="minus">${o.minus}</span>` : `<span class="num">${s.hull[0]}<small>/${s.hull[1]}</small></span>`}</div>
+    <div class="st">${grp(CELLS.SAIL, CELLS.SAIL_X, s.s)}${grp(CELLS.GUN, CELLS.GUN_X, s.g)}${grp(CELLS.CREW, CELLS.CREW_X, s.cr)}${s.souls ? `<span class="g soul">${SKULL}<span class="num">${s.souls[0]}<small>/${s.souls[1]}</small></span></span>` : ''}</div>${o.st ? chips(o.st) : ''}</div>${act}${o.tag ? `<span class="tagl" style="top:-12px">${o.tag}</span>` : ''}</div>`; }
+
+const SHORT = {fire: n => `Пожар ×${n}`, mark: n => `Метка +${n}`, blockade: () => 'Блокада', parley: () => 'Переговоры', voodoo: () => 'Кукла вуду', noReact: () => 'Без Реакций', surfaced: () => 'Всплыл', under: () => 'Под водой'};
+function chips(list){ const many = list.length > 2; return `<div class="chips">${list.map(([k, n]) => { const t = ST[k], b = ST3[k].bg; return many ? `<span title="${t.lbl(n)} — ${t.hint}" style="display:flex">${stBadge(k, 23)}</span>` : `<span class="chip" style="background:linear-gradient(${b[0]},${b[1]});padding-left:3px;gap:5px" title="${t.lbl(n)} — ${t.hint}">${stBadge(k, 19)}${SHORT[k](n)}</span>`; }).join('')}</div>`; }
+const T = {ch: '#8a2e1c', or: '#5b4a7a', re: '#44525e', rp: '#3e6b45'};
+function card(c, x, y, rot, cls = ''){ return `<div class="card ${cls}" style="left:${x}px;top:${y}px;transform:rotate(${rot}deg)${c.z ? ';z-index:' + c.z : ''}"><div class="t" style="background:${T[c.ty]}">${{ch: 'заряд', or: 'приказ', re: 'реакция', rp: 'ремонт'}[c.ty]}<span>${c.cost}</span></div><div class="n">${c.n}</div><div class="e" style="color:${T[c.ty]}">${c.e}</div><div class="x">${c.x}</div>${c.foot || ''}${c.chk ? `<span class="chk" title="Заряжено"><svg viewBox="-15 -15 30 30"><path d="${Array.from({length: 22}, (_, i) => { const a = i / 22 * Math.PI * 2, r = 13 + Math.sin(i * 2.7) * .9; return (i ? 'L' : 'M') + R1(Math.cos(a) * r) + ' ' + R1(Math.sin(a) * r); }).join(' ')} Z" fill="#9a1f16" stroke="#4a0a06" stroke-width=".6"/><circle r="9.6" fill="#7e1a12"/><circle r="9.6" fill="none" stroke="#c94a3a" stroke-width=".6" opacity=".7"/><circle cx="0" cy="0" r="5.2" fill="#2f3539" stroke="#0a0b0c" stroke-width=".6"/><circle cx="-1.8" cy="-1.8" r="1.6" fill="#c4cccf" opacity=".7"/><path d="M-8 -6 A10 10 0 0 1 3 -10" stroke="#ff9a88" stroke-width="1.2" fill="none" opacity=".55" stroke-linecap="round"/></svg></span>` : ''}</div>`; }
+const HAND = [
+  {ty: 're', cost: 0, n: 'Ловкость рук', e: 'чужая карта — ваша', x: 'Сыграйте, когда противник разыграл карту.'},
+  {ty: 'or', cost: 0, n: 'Ограбление банка', e: 'Порох врага — ваш', x: 'Заберите 1 Порох из Трюма противника.'},
+  {ty: 'or', cost: 0, n: 'Безумный план', e: '+2 карты, 1 в План', x: 'Возьмите 2 карты, затем 1 положите в План.'},
+  {ty: 'ch', cost: 1, n: 'Ядра', e: '+1 урон', x: 'Этот Залп наносит +1 урон.'},
+  {ty: 'rp', cost: 0, n: 'Латаем паруса', e: '+2 Паруса', x: 'План: и ещё 1 Корпус.'},
+];
+function fanHand(h, cards, opt = {}){ // a fan of cards that scrolls sideways; the middle card is straight
+  const W = opt.w || 112, step = opt.step || 78, mid = opt.mid ?? 2, top = opt.top ?? 30; let s = '';
+  cards.forEach((c, i) => { const d = i - mid, x = 215 - W / 2 + d * step, rot = d * 5, y = top + Math.abs(d) * Math.abs(d) * 4 - (c.up ? 16 : 0);
+    s += card(Object.assign({z: 10 - Math.abs(d) + (c.up ? 5 : 0)}, c), x, y, rot, c.cls || ''); });
+  return s + '<span class="fadeL"></span><span class="fadeR"></span>' + `<span class="dotsr">${cards.map((_, i) => `<i class="${i === mid ? 'on' : ''}"></i>`).join('')}</span>`; }
+
+
+/* a Turk's head: three strands woven over and under around a ring; each strand is cut where it turns, the "under" pieces go first */
+function turksHead(cx, cy, r, A, B, w, o = {}){ const N = 720, c = o.c || ['#3e2a10', '#b8935a', '#f2dfae']; const under = [], over = [];
+  for(let s = 0; s < 3; s++){ const ph = s * Math.PI * 2 / 3; let cur = null, sign = 0;
+    for(let i = 0; i <= N; i++){ const t = i / N * Math.PI * 2, th = B * t + ph, rr = r + A * Math.sin(th), x = R1(cx + Math.cos(t) * rr), y = R1(cy + Math.sin(t) * rr), sg = Math.cos(th) >= 0 ? 1 : -1;
+      if(sg !== sign){ if(cur){ cur.pts.push([x, y]); (sign > 0 ? over : under).push(cur); } cur = {pts: [[x, y]]}; sign = sg; } else cur.pts.push([x, y]); }
+    if(cur) (sign > 0 ? over : under).push(cur); }
+  const draw = pc => { const d = 'M' + pc.pts.map(p => p.join(' ')).join(' L');
+    return `<path d="${d}" fill="none" stroke="${c[0]}" stroke-width="${w + 1.6}" stroke-linecap="butt" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${c[1]}" stroke-width="${w}" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${c[2]}" stroke-width="${R1(w * .3)}" stroke-linejoin="round" opacity=".75" transform="translate(-.25 -.35)"/>`; };
+  return under.map(draw).join('') + over.map(draw).join(''); }
+
+const TRIDENT_D = (s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"><defs>
+  <linearGradient id="trG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a6420"/><stop offset=".35" stop-color="#fff0b8"/><stop offset=".6" stop-color="#d9ae52"/><stop offset="1" stop-color="#7a5414"/></linearGradient>
+  <linearGradient id="trS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5e3a18"/><stop offset=".4" stop-color="#b07a44"/><stop offset="1" stop-color="#4a2c14"/></linearGradient></defs>
+  <g stroke="#3a2406" stroke-width=".45" stroke-linejoin="round">
+  <path d="M11.2 10.6 H12.8 L13 22.6 Q12 23.6 11 22.6 Z" fill="url(#trS)"/>
+  <path d="M11.1 14.4 L12.9 13.6 M11.1 15.6 L12.9 14.8 M11.1 16.8 L12.9 16 M11.1 18 L12.9 17.2" stroke="#e2bf62" stroke-width=".55"/>
+  <path d="M10.8 21.4 H13.2 L13.6 23 H10.4 Z" fill="url(#trG)"/>
+  <path d="M5.4 4.6 Q5.2 9 8.4 10 Q10.4 10.6 12 10.6 Q13.6 10.6 15.6 10 Q18.8 9 18.6 4.6 L17.3 5.2 Q17.4 8 15.2 8.7 Q13.6 9.2 12 9.2 Q10.4 9.2 8.8 8.7 Q6.6 8 6.7 5.2 Z" fill="url(#trG)"/>
+  <path d="M6 1.4 L7.8 5.4 L6.6 5 L6.8 6.6 L5.4 6.2 L5.1 4.8 L4.2 5.2 Z" fill="url(#trG)"/>
+  <path d="M18 1.4 L16.2 5.4 L17.4 5 L17.2 6.6 L18.6 6.2 L18.9 4.8 L19.8 5.2 Z" fill="url(#trG)"/>
+  <path d="M12 0.4 L13.9 4.6 L12.8 4.3 L12.8 9.4 H11.2 V4.3 L10.1 4.6 Z" fill="url(#trG)"/>
+  <path d="M11.2 6.4 L10.2 7.2 M12.8 6.4 L13.8 7.2" stroke="#3a2406" stroke-width=".6"/>
+  <ellipse cx="12" cy="10.7" rx="2.6" ry="1.2" fill="url(#trG)"/><circle cx="12" cy="12.3" r=".9" fill="#2f7a8a" stroke="#0e2a30" stroke-width=".4"/></g>
+  <path d="M12 1.6 L12 8.6 M6.2 3 L6.6 5.6" stroke="#fffbe6" stroke-width=".4" opacity=".8"/>
+  <path d="M7.4 21.6 Q9 20.6 10.4 21.4 M13.6 21.4 Q15 20.6 16.6 21.6" fill="none" stroke="#2f7a8a" stroke-width=".9" stroke-linecap="round"/></svg>`;
+
+
+const tbtn = (icon, S = 46, lbl = '') => `<span class="tbtn" style="width:${S}px;height:${S}px" ${lbl ? `aria-label="${lbl}"` : ''}><svg class="tring" width="${S}" height="${S}" viewBox="0 0 64 64"><circle cx="32" cy="33.6" r="29" fill="#000" opacity=".3"/>${turksHead(32, 32, 26, 2.6, 7, 3.4)}</svg><span class="tcore" style="inset:${R1(S * .17)}px">${icon}</span></span>`;
+
+/* ===== v5 shared art: ships, hull plank icons, the captain's medal, the captain's table ===== */
+let v5n = 0; const V5 = p => p + 'v5' + (v5n++);
+const r1 = n => Math.round(n * 10) / 10;
+
+/* ---- ships, 120×78, bow to the left, waterline 72 (generic historical types, own drawing) ---- */
+const SHIPKIND = {
+  pearl:     {hull: ['#2a2622', '#0c0b0a'], band: '#1a1816', trim: '#b8954a', port: '#3a0c08', decks: 1, sail: ['#3a3633', '#1e1c1a'], sailLine: '#0c0b0a', rag: .9, holes: 2, flag: 'skull', win: '#ffcf6a', masts: 3},
+  revenge:   {hull: ['#4a2e1a', '#22140a'], band: '#8e2a1c', trim: '#d9b562', port: '#1a0806', decks: 1, sail: ['#efe4cc', '#c7b48e'], sailLine: '#6b5a40', rag: .35, holes: 0, flag: 'bones', win: '#ffcf6a', masts: 3},
+  endeavour: {hull: ['#2a2420', '#110e0c'], band: '#d6a646', trim: '#f2d48c', port: '#121010', decks: 2, chequer: true, sail: ['#fbf8ee', '#d9d2bc'], sailLine: '#8a7c62', rag: 0, holes: 0, flag: 'stripes', win: '#ffd98a', masts: 3},
+  dutch:     {hull: ['#3e4a44', '#16201c'], band: '#2a3632', trim: '#7fa79a', port: '#0c1a16', decks: 1, sail: ['#8a9a92', '#56645e'], sailLine: '#2a3632', rag: 1.4, holes: 4, flag: 'none', win: '#8affc8', masts: 3, broken: true, barn: true},
+};
+const SH_K = [[10, 55], [24, 57.4], [50, 59.6], [76, 57], [92, 52.6], [100, 48.4], [107, 44]];
+const sheer = x => { for(let i = 1; i < SH_K.length; i++){ if(x <= SH_K[i][0]){ const [a, b] = [SH_K[i - 1], SH_K[i]], t = (x - a[0]) / (b[0] - a[0]); return a[1] + (b[1] - a[1]) * t; } } return 44; };
+function shipArt(kind){ const K = SHIPKIND[kind], id = V5('sh'); let s = '';
+  const g = `<defs><linearGradient id="${id}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${K.hull[0]}"/><stop offset="1" stop-color="${K.hull[1]}"/></linearGradient>
+    <linearGradient id="${id}s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${K.sail[0]}"/><stop offset=".7" stop-color="${K.sail[0]}"/><stop offset="1" stop-color="${K.sail[1]}"/></linearGradient>
+    <clipPath id="${id}c"><path d="M10 55 Q14 56.4 18 56.8 L${SH_K.slice(2).map(p => p.join(' ')).join(' L')} L110 44 L108.6 56 Q107 66 101 72 L20 72 Q13.6 66 10 55 Z"/></clipPath></defs>`;
+  // bowsprit and jibs (behind)
+  s += `<path d="M14 54.6 L-1 44.6" stroke="#2a1a0c" stroke-width="1.5" stroke-linecap="round"/><path d="M-1 44.6 L2 44.2" stroke="#2a1a0c" stroke-width=".8"/>`;
+  const mx = [32, 56, 82], top = K.broken ? [12, 6, 26] : [10, 3.6, 16];
+  // the jibs from the foremast to the bowsprit
+  const jib = (yTop, xEnd, yEnd) => `<path d="M${mx[0] - 1} ${yTop} L${xEnd} ${yEnd} Q${(mx[0] + xEnd) / 2 - 2} ${(yTop + yEnd) / 2 + 6} ${mx[0] - 1} ${yTop + 22} Z" fill="url(#${id}s)" stroke="${K.sailLine}" stroke-width=".35" opacity=".96"/>`;
+  s += jib(14, 0, 45) + jib(20, 6, 49.4);
+  // masts
+  const mastSail = (x, i) => { let m = ''; const base = sheer(x), t = top[i], H = base - t;
+    m += `<path d="M${x} ${base} L${x} ${t}" stroke="#2a1a0c" stroke-width="${i === 1 ? 1.6 : 1.3}"/>`;
+    if(K.broken && i === 0) m += `<path d="M${x} ${t} L${x + 3} ${t - 6}" stroke="#2a1a0c" stroke-width="1.1"/>`;
+    // tops (platforms)
+    m += `<path d="M${x - 3} ${r1(base - H * .52)} H${x + 3}" stroke="#2a1a0c" stroke-width="1.1"/><path d="M${x - 2} ${r1(base - H * .82)} H${x + 2}" stroke="#2a1a0c" stroke-width=".8"/>`;
+    // square sails: course, topsail, topgallant (mizzen: gaff + topsail)
+    const tiers = i === 2 ? [[.52, .8, 8]] : [[.12, .48, 13 - i * .4], [.52, .78, 10.4], [.82, .96, 7.2]];
+    tiers.forEach(([a, b, w], j) => { const y1 = r1(base - H * b), y2 = r1(base - H * a - 1.4), bel = (y2 - y1) * .16;
+      let bottom = `Q${x} ${r1(y2 + bel * 1.4)} ${x - w + .6} ${y2}`;
+      if(K.rag){ let d = ''; const n = 6; for(let q = n; q >= 0; q--){ const xx = x - w + .6 + (2 * w - 1.2) * q / n, yy = y2 + Math.sin(q / n * Math.PI) * bel * 1.4 - (q % 2 ? K.rag * (1 + (j + q) % 3) : 0); d += ` L${r1(xx)} ${r1(yy)}`; } bottom = d.slice(1); }
+      m += `<path d="M${x - w} ${y1} L${x + w} ${y1} Q${r1(x + w + 1.4)} ${r1((y1 + y2) / 2)} ${r1(x + w - .6)} ${y2} ${K.rag ? bottom.trim() : bottom} Q${r1(x - w - 1.4)} ${r1((y1 + y2) / 2)} ${x - w} ${y1} Z" fill="url(#${id}s)" stroke="${K.sailLine}" stroke-width=".35"/>`;
+      m += `<path d="M${x - w + 1} ${r1(y1 + (y2 - y1) * .5)} Q${x} ${r1(y1 + (y2 - y1) * .62)} ${x + w - 1} ${r1(y1 + (y2 - y1) * .5)}" stroke="${K.sailLine}" stroke-width=".3" fill="none" opacity=".45"/>`;
+      if(K.holes && (j + i) % 2 === 0) for(let h = 0; h < K.holes / 2; h++) m += `<ellipse cx="${r1(x - w / 2 + h * w * .9)}" cy="${r1(y1 + (y2 - y1) * (.4 + h * .2))}" rx="${r1(1 + h * .4)}" ry="${r1(.8 + h * .3)}" fill="${kind === 'dutch' ? '#cfe3e0' : '#efe3c8'}" opacity="${kind === 'dutch' ? .5 : .85}"/>`;
+      m += `<path d="M${x - w - 1} ${y1} H${x + w + 1}" stroke="#2a1a0c" stroke-width=".9" stroke-linecap="round"/>`; });
+    if(i === 2){ const y1 = r1(base - H * .5), y2 = r1(base - 2); m += `<path d="M${x} ${y1} L${x + 14} ${r1(y1 + 3)} L${x + 16} ${y2} L${x} ${y2} Z" fill="url(#${id}s)" stroke="${K.sailLine}" stroke-width=".35"/><path d="M${x} ${y1} L${x + 15} ${r1(y1 + 3)}" stroke="#2a1a0c" stroke-width=".8"/>`; }
+    // shrouds
+    m += `<g stroke="#2a2014" stroke-width=".28" opacity=".75">${[-5, -3, -1, 1, 3].map(d => `<path d="M${x} ${r1(base - H * .52)} L${x + d} ${r1(sheer(x + d) + .4)}"/>`).join('')}</g>`;
+    return m; };
+  // stays
+  s += `<g stroke="#2a2014" stroke-width=".3" fill="none" opacity=".7"><path d="M${mx[1]} ${top[1] + 1} L${mx[0]} ${top[0] + 6} M${mx[2]} ${top[2] + 1} L${mx[1]} ${top[1] + 14} M${mx[0]} ${top[0] + 1} L-1 44.6 M${mx[2]} ${top[2] + 2} L110 44"/></g>`;
+  mx.forEach((x, i) => s += mastSail(x, i));
+  // hull
+  s += `<path d="M10 55 Q14 56.4 18 56.8 L${SH_K.slice(2).map(p => p.join(' ')).join(' L')} L110 44 L108.6 56 Q107 66 101 72 L20 72 Q13.6 66 10 55 Z" fill="url(#${id}h)" stroke="#050403" stroke-width=".6"/>`;
+  s += `<g clip-path="url(#${id}c)">`;
+  // planking lines
+  for(let k = 0; k < 6; k++) s += `<path d="M10 ${r1(59 + k * 2.4)} ${Array.from({length: 13}, (_, q) => { const x = 14 + q * 8; return `L${x} ${r1(sheer(x) + 3 + k * 2.6 + (x > 98 ? (x - 98) * .2 * k : 0))}`; }).join(' ')}" stroke="#000" stroke-width=".25" fill="none" opacity=".45"/>`;
+  // wales with gunports
+  const band = (o1, o2, col, portY) => { let up = '', dn = ''; for(let x = 12; x <= 108; x += 2){ up += `${up ? 'L' : 'M'}${x} ${r1(sheer(x) + o1)} `; dn = `L${x} ${r1(sheer(x) + o2)} ` + dn; }
+    let r = `<path d="${up}${dn}Z" fill="${col}"/><path d="${up}" stroke="${K.trim}" stroke-width=".45" fill="none" opacity=".85"/>`;
+    for(let x = 22; x <= 96; x += 7.2){ const y = sheer(x) + portY; r += K.chequer ? `<rect x="${r1(x - 1.6)}" y="${r1(y - 1.5)}" width="3.2" height="3" fill="${K.port}"/>` : `<rect x="${r1(x - 1.5)}" y="${r1(y - 1.4)}" width="3" height="2.8" fill="${K.port}" stroke="#000" stroke-width=".2"/><rect x="${r1(x - 1.5)}" y="${r1(y - 2.8)}" width="3" height="1.2" fill="${K.hull[0]}" opacity=".9"/>`; }
+    return r; };
+  s += band(2.6, 6.8, K.band, 4.7);
+  if(K.decks === 2) s += band(9.2, 13.4, K.band, 11.3);
+  s += `<path d="M12 ${r1(sheer(12) + .6)} ${Array.from({length: 49}, (_, q) => `L${12 + q * 2} ${r1(sheer(12 + q * 2) + .6)}`).join(' ')}" stroke="${K.trim}" stroke-width=".6" fill="none"/>`;
+  if(K.barn) for(let q = 0; q < 26; q++){ const x = 18 + (q * 37) % 84, y = 64 + (q * 13) % 8; s += `<circle cx="${x}" cy="${y}" r="${.5 + (q % 3) * .25}" fill="#c9d6cf" opacity=".55"/>`; }
+  s += `</g>`;
+  // stern: gallery windows, lantern, rudder
+  s += `<path d="M101 46.6 L108.4 45 L108 53 L101.6 54.4 Z" fill="${K.hull[0]}" stroke="${K.trim}" stroke-width=".4"/>${[0, 1, 2].map(q => `<rect x="${r1(102.2 + q * 2)}" y="${r1(47.6 - q * .3)}" width="1.4" height="2.2" fill="${K.win}"/><rect x="${r1(102.2 + q * 2)}" y="${r1(51 - q * .3)}" width="1.4" height="1.8" fill="${K.win}" opacity=".8"/>`).join('')}
+    <path d="M100.6 55 H109" stroke="${K.trim}" stroke-width=".5"/><path d="M108.4 44.6 V41.6" stroke="#2a1a0c" stroke-width=".6"/><path d="M107.4 39.6 h2 l-.3 2 h-1.4 z" fill="${K.win}" stroke="#2a1a0c" stroke-width=".3"/>`;
+  // figurehead and headrail
+  s += `<path d="M10 55 Q7 53 6.4 50.4 Q8.6 51.2 10.6 53.4" fill="${K.trim}" stroke="#2a1a0c" stroke-width=".3"/>`;
+  // flags
+  const fl = (x, y, w, h, body) => `<path d="M${x} ${y} V${y - h - 3}" stroke="#2a1a0c" stroke-width=".6"/><g transform="translate(${x} ${y - h - 3})">${body(w, h)}</g>`;
+  if(K.flag === 'skull' || K.flag === 'bones') s += fl(110, 40, 9, 6, (w, h) => `<path d="M0 0 Q${w / 2} -1 ${w} .6 Q${w - 1} ${h / 2} ${w} ${h} Q${w / 2} ${h - .8} 0 ${h} Z" fill="#141210"/><circle cx="${w / 2}" cy="${h / 2 - .6}" r="1.3" fill="#efe3c8"/><path d="M${w / 2 - 2} ${h / 2 + 1.6} L${w / 2 + 2} ${h / 2 + .2} M${w / 2 - 2} ${h / 2 + .2} L${w / 2 + 2} ${h / 2 + 1.6}" stroke="#efe3c8" stroke-width=".6"/>`);
+  if(K.flag === 'stripes') s += fl(110, 40, 10, 6.4, (w, h) => `${[0, 1, 2, 3, 4].map(q => `<rect y="${r1(q * h / 5)}" width="${w}" height="${r1(h / 5)}" fill="${q % 2 ? '#efe3c8' : '#b3352a'}"/>`).join('')}<rect width="${w * .4}" height="${h * .5}" fill="#efe3c8"/><path d="M${w * .2} 0 V${h * .5} M0 ${h * .25} H${w * .4}" stroke="#b3352a" stroke-width=".7"/>`) + `<path d="M${mx[1]} ${top[1]} L${mx[1] + 12} ${top[1] + 1.2} L${mx[1]} ${top[1] + 2}" fill="#b3352a"/>`;
+  if(K.flag !== 'stripes' && K.flag !== 'none') s += `<path d="M${mx[1]} ${top[1]} L${mx[1] + 8} ${top[1] + 1} L${mx[1]} ${top[1] + 2}" fill="#141210"/>`;
+  // the sea at the hull
+  s += `<path d="M8 72.2 Q30 70.6 60 72.2 T112 72" stroke="#eaf4f6" stroke-width=".9" fill="none" opacity=".75"/><path d="M14 72 q-3 1 -6 .2" stroke="#eaf4f6" stroke-width=".7" fill="none" opacity=".7"/>`;
+  return g + s; }
+
+/* ---- hull plank icon, 12×16: a whole oak plank, and a broken one ---- */
+const HULL2 = `<svg width="12" height="16" viewBox="0 0 12 16" aria-hidden="true">
+  <rect x=".6" y=".6" width="10.8" height="14.8" rx="1.2" fill="#a86c36" stroke="#3a2210" stroke-width=".7"/>
+  <rect x="1" y="1" width="2.2" height="14" fill="#c88a4e" opacity=".55"/><rect x="8.8" y="1" width="2.2" height="14" fill="#6a3e1a" opacity=".5"/>
+  <path d="M3.4 .9 C2.8 5 4.2 9 3.4 15.2 M7.6 .9 C8.2 4 7 8.6 8 15.2 M5.6 3 C5.2 6 6.2 8 5.6 12" stroke="#5a3418" stroke-width=".45" fill="none" opacity=".75"/>
+  <ellipse cx="8.4" cy="9.6" rx=".9" ry="1.4" fill="none" stroke="#5a3418" stroke-width=".4"/>
+  <rect x=".6" y="2.2" width="10.8" height="1.2" fill="#2b2f31"/><rect x=".6" y="12.6" width="10.8" height="1.2" fill="#2b2f31"/>
+  <circle cx="2.4" cy="2.8" r=".55" fill="#9aa2a6"/><circle cx="9.6" cy="2.8" r=".55" fill="#9aa2a6"/><circle cx="2.4" cy="13.2" r=".55" fill="#9aa2a6"/><circle cx="9.6" cy="13.2" r=".55" fill="#9aa2a6"/>
+  <path d="M1.4 1.4 V14.6" stroke="#f0c68c" stroke-width=".6" opacity=".6"/></svg>`;
+const HULL2_X = `<svg width="12" height="16" viewBox="0 0 12 16" aria-hidden="true"><rect x=".6" y=".6" width="10.8" height="14.8" rx="1.2" fill="#9c8a72" stroke="#4a3a28" stroke-width=".7"/>
+  <path d="M1.4 1.4 V14.6" stroke="#c9b89c" stroke-width=".6" opacity=".7"/><path d="M10.6 1.4 V14.6" stroke="#5e4c38" stroke-width=".6" opacity=".7"/>
+  <path d="M3.4 .9 C2.8 4 3.4 6 3.2 7 M8 10.8 C8.4 13 7.8 14 8 15.2" stroke="#6e5c46" stroke-width=".45" fill="none"/>
+  <rect x=".6" y="2.2" width="10.8" height="1.2" fill="#3a3e40"/><rect x=".6" y="12.6" width="10.8" height="1.2" fill="#3a3e40"/>
+  <circle cx="2.4" cy="2.8" r=".55" fill="#8a9296"/><circle cx="9.6" cy="2.8" r=".55" fill="#8a9296"/><circle cx="2.4" cy="13.2" r=".55" fill="#8a9296"/><circle cx="9.6" cy="13.2" r=".55" fill="#8a9296"/>
+  <path d="M2.6 5.6 L4.2 4.6 L5 5.8 L6.6 4.2 L7.4 5.4 L9.2 5 L8.6 6.8 L10 8 L8.8 9 L9.4 10.8 L7.6 10.4 L6.6 11.6 L5.6 10.4 L3.8 11.2 L4 9.6 L2.2 8.8 L3.4 7.6 Z" fill="#c9b89c" stroke="#3a2a18" stroke-width=".35" stroke-linejoin="round"/>
+  <path d="M3.6 6.2 L4.6 5.6 L5.2 6.4 L6.6 5.2 L7.2 6.2 L8.2 6 L7.8 7.2 L8.8 8 L7.8 8.6 L8.2 9.8 L7 9.6 L6.4 10.4 L5.6 9.6 L4.4 10 L4.6 9 L3.4 8.4 L4.2 7.6 Z" fill="#140c06"/></svg>`;
+
+/* ---- the medal of the best captain: ribbon, milled rim, laurel, crossed sabres under a star ---- */
+function medal2(S = 64){ const id = V5('md');
+  const leaf = (a, r, k) => { const x = Math.cos(a) * r, y = Math.sin(a) * r, d = a * 180 / Math.PI + 90 + k * 28; return `<ellipse cx="${r1(x)}" cy="${r1(y)}" rx="1.3" ry="3" transform="rotate(${r1(d)} ${r1(x)} ${r1(y)})" fill="url(#${id}g)" stroke="#5e4210" stroke-width=".35"/>`; };
+  let laurel = ''; for(let i = 0; i < 9; i++){ const a1 = Math.PI * (.62 + i * .085), a2 = Math.PI * (.38 - i * .085); laurel += leaf(a1, 13.6, 1) + leaf(a1 + .04, 11.6, -1) + leaf(a2, 13.6, -1) + leaf(a2 - .04, 11.6, 1); }
+  const teeth = Array.from({length: 80}, (_, i) => { const a = i / 80 * Math.PI * 2, r = i % 2 ? 19 : 18.4; return (i ? 'L' : 'M') + r1(Math.cos(a) * r) + ' ' + r1(Math.sin(a) * r); }).join(' ') + 'Z';
+  return `<svg width="${S}" height="${r1(S * 1.3)}" viewBox="-24 -32 48 62" aria-hidden="true"><defs>
+    <linearGradient id="${id}r" x1="0" x2="1"><stop offset="0" stop-color="#4a0e09"/><stop offset=".2" stop-color="#8e2219"/><stop offset=".5" stop-color="#b3352a"/><stop offset=".8" stop-color="#8e2219"/><stop offset="1" stop-color="#4a0e09"/></linearGradient>
+    <radialGradient id="${id}f" cx=".36" cy=".3" r=".85"><stop offset="0" stop-color="#fff6c8"/><stop offset=".3" stop-color="#e6c46a"/><stop offset=".7" stop-color="#a77a26"/><stop offset="1" stop-color="#5e4210"/></radialGradient>
+    <linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe7a6"/><stop offset=".5" stop-color="#c99a3a"/><stop offset="1" stop-color="#7a5414"/></linearGradient>
+    <linearGradient id="${id}s" x1="0" x2="1"><stop offset="0" stop-color="#6c7478"/><stop offset=".5" stop-color="#eef2f3"/><stop offset="1" stop-color="#5d6569"/></linearGradient></defs>
+    <path d="M-10 -32 H-1 L1 -12 L-6 -8 Z" fill="url(#${id}r)" stroke="#2a0604" stroke-width=".5"/><path d="M10 -32 H1 L-1 -12 L6 -8 Z" fill="url(#${id}r)" stroke="#2a0604" stroke-width=".5"/>
+    <path d="M-7.6 -32 L-3.6 -11 M7.6 -32 L3.6 -11" stroke="#e2bf62" stroke-width=".7" opacity=".8"/><path d="M-4 -32 L-1.4 -14 M4 -32 L1.4 -14" stroke="#e2bf62" stroke-width=".4" opacity=".6"/>
+    <rect x="-7" y="-14" width="14" height="4" rx="1" fill="url(#${id}g)" stroke="#5e4210" stroke-width=".5"/><path d="M-6 -13 H6" stroke="#fff6d8" stroke-width=".5" opacity=".7"/>
+    <ellipse cx="1.4" cy="3" rx="19.6" ry="19.6" fill="#000" opacity=".35"/>
+    <path d="${teeth}" fill="url(#${id}g)" stroke="#4a3208" stroke-width=".4"/>
+    <circle r="17.4" fill="url(#${id}f)" stroke="#4a3208" stroke-width=".6"/><circle r="15.6" fill="none" stroke="#7a5a1a" stroke-width=".5"/>
+    ${laurel}
+    <g transform="rotate(-38)"><path d="M0 -11 L.7 9 L0 10.4 L-.7 9 Z" fill="url(#${id}s)" stroke="#2f3539" stroke-width=".3"/><path d="M-2.4 8.6 H2.4" stroke="#5e4210" stroke-width="1.2"/></g>
+    <g transform="rotate(38)"><path d="M0 -11 L.7 9 L0 10.4 L-.7 9 Z" fill="url(#${id}s)" stroke="#2f3539" stroke-width=".3"/><path d="M-2.4 8.6 H2.4" stroke="#5e4210" stroke-width="1.2"/></g>
+    <circle r="7.6" fill="#7e1d14" stroke="#4a3208" stroke-width=".6"/><circle r="6.6" fill="none" stroke="#e2bf62" stroke-width=".4"/>
+    <path d="M0 -5.6 L1.5 -1.8 L5.4 -1.6 L2.4 .9 L3.4 4.8 L0 2.6 L-3.4 4.8 L-2.4 .9 L-5.4 -1.6 L-1.5 -1.8 Z" fill="url(#${id}g)" stroke="#4a3208" stroke-width=".4"/>
+    <path d="M-13 -9 A16 16 0 0 1 2 -16.4" stroke="#fffbe6" stroke-width="1.6" fill="none" opacity=".55" stroke-linecap="round"/><circle cx="-8" cy="-12" r="1.2" fill="#fff" opacity=".8"/></svg>`; }
+
+/* ---- the captain's table: chart, dividers, the compass in its box, quill and ink, candle, spyglass, hourglass, coins ---- */
+function chartSheet(w, h){ const id = V5('ch'); let s = `<defs><radialGradient id="${id}p" cx=".5" cy=".5" r=".7"><stop offset="0" stop-color="#f2e2b8"/><stop offset=".8" stop-color="#dcc690"/><stop offset="1" stop-color="#b89a5e"/></radialGradient></defs>`;
+  s += `<path d="M0 3 Q${w * .3} 0 ${w * .6} 2 T${w} 1 L${w - 2} ${h - 2} Q${w * .5} ${h + 2} 2 ${h - 1} Z" fill="url(#${id}p)" stroke="#8a6a3a" stroke-width=".8"/>`;
+  for(let i = 0; i < 16; i++){ const a = i * Math.PI / 8; s += `<path d="M${w * .62} ${h * .48} L${r1(w * .62 + Math.cos(a) * w)} ${r1(h * .48 + Math.sin(a) * w)}" stroke="#8a6a3a" stroke-width=".35" opacity=".45"/>`; }
+  s += `<path d="M${w * .05} ${h * .7} Q${w * .15} ${h * .5} ${w * .28} ${h * .62} T${w * .42} ${h * .42} Q${w * .5} ${h * .3} ${w * .46} ${h * .14} L${w * .3} ${h * .08} Q${w * .12} ${h * .2} ${w * .05} ${h * .7} Z" fill="#cdb27a" stroke="#6b4a24" stroke-width=".7" opacity=".85"/>`;
+  s += `<path d="M${w * .74} ${h * .8} q${w * .06} -${h * .12} ${w * .14} -${h * .06} q${w * .02} ${h * .1} -${w * .1} ${h * .14} z" fill="#cdb27a" stroke="#6b4a24" stroke-width=".6"/>`;
+  s += `<g transform="translate(${w * .62} ${h * .48})" opacity=".7">${Array.from({length: 8}, (_, i) => { const a = i * Math.PI / 4 - Math.PI / 2, r = i % 2 ? 9 : 16; return `<path d="M0 0 L${r1(Math.cos(a - .3) * 3)} ${r1(Math.sin(a - .3) * 3)} L${r1(Math.cos(a) * r)} ${r1(Math.sin(a) * r)} Z" fill="${i ? '#6b4a24' : '#8e2219'}"/>`; }).join('')}</g>`;
+  s += `<path d="M${w * .2} ${h * .86} C${w * .34} ${h * .7} ${w * .48} ${h * .78} ${w * .6} ${h * .58}" stroke="#8e2219" stroke-width=".8" stroke-dasharray="2 2" fill="none"/><path d="M${w * .58} ${h * .62} l3 -1 l-1 3" stroke="#8e2219" stroke-width=".8" fill="none"/>`;
+  return s; }
+const DIVIDERS = `<g><path d="M0 0 L-6 46 L-4.6 46.4 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><path d="M0 0 L9 45 L10.4 44.6 Z" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><path d="M-5.4 44 L-5.6 49 M9.6 43 L10.4 48" stroke="#9aa2a6" stroke-width="1.1"/><circle r="3.4" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".6"/><circle r="1" fill="#4a3208"/></g>`;
+function inkwell(){ return `<g><ellipse cx="0" cy="13" rx="12" ry="3" fill="#000" opacity=".45"/><path d="M-9 2 Q-10 12 -8 13 H8 Q10 12 9 2 Z" fill="#1a2430" stroke="#05080c" stroke-width=".6"/><ellipse cx="0" cy="2" rx="9" ry="2.6" fill="#24303c" stroke="#05080c" stroke-width=".5"/><ellipse cx="0" cy="1.6" rx="4.6" ry="1.4" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".4"/><path d="M-6 4 Q-7 9 -5.4 12" stroke="#7fa0b8" stroke-width=".8" fill="none" opacity=".6"/>
+  <path d="M1 1 L22 -40" stroke="#3a2a1a" stroke-width=".8"/><path d="M4 -6 Q14 -26 24 -44 Q26 -34 18 -20 Q12 -10 5 -4 Z" fill="#efe8d8" stroke="#8a7c62" stroke-width=".4"/><path d="M5 -5 Q14 -24 23 -42" stroke="#8a7c62" stroke-width=".4" fill="none"/>${Array.from({length: 7}, (_, i) => `<path d="M${r1(7 + i * 2.4)} ${r1(-9 - i * 4.4)} l4 1" stroke="#c9bfa8" stroke-width=".35"/>`).join('')}</g>`; }
+function candle(id){ return `<g><ellipse cx="0" cy="18" rx="14" ry="3.4" fill="#000" opacity=".45"/><ellipse cx="0" cy="16" rx="12" ry="3.4" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".6"/><path d="M-12 16 Q-13 18 -10 19 H10 Q13 18 12 16" fill="#8f6b20"/><path d="M12 15 q6 0 6 4 q0 3 -4 3" fill="none" stroke="url(#gBrass)" stroke-width="1.6"/>
+  <rect x="-4.6" y="-14" width="9.2" height="30" rx="1.4" fill="#efe6d0" stroke="#a89c80" stroke-width=".5"/><path d="M-4.6 -12 q2 4 1 8 q-.6 3 .4 5" stroke="#d9cfb4" stroke-width="1.2" fill="none"/><path d="M-3 -14 V12" stroke="#fff" stroke-width="1" opacity=".5"/>
+  <path d="M0 -14 V-17" stroke="#2a2020" stroke-width=".8"/><g class="flick"><path d="M0 -33 C3 -27 4.4 -22 2.6 -18.6 C1.6 -17 -1.6 -17 -2.6 -18.6 C-4.4 -22 -3 -27 0 -33 Z" fill="#ffc14a"/><path d="M0 -28 C1.4 -25 2 -22 1 -19.6 C.4 -18.8 -.4 -18.8 -1 -19.6 C-2 -22 -1.4 -25 0 -28 Z" fill="#fff6d0"/></g></g>`; }
+const SPYGLASS = `<g><ellipse cx="44" cy="7" rx="48" ry="3" fill="#000" opacity=".4"/><rect x="0" y="-3.4" width="30" height="6.8" rx="1" fill="url(#gWoodD)" stroke="#1e1008" stroke-width=".5"/><rect x="28" y="-4.2" width="5" height="8.4" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><rect x="33" y="-3" width="26" height="6" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><rect x="58" y="-3.6" width="3" height="7.2" rx=".6" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><rect x="61" y="-2.4" width="22" height="4.8" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><rect x="82" y="-3.2" width="5" height="6.4" rx="1" fill="url(#gBrass)" stroke="#4a3208" stroke-width=".5"/><path d="M2 -2 H28 M34 -1.8 H58 M62 -1.4 H82" stroke="#fff6d8" stroke-width=".7" opacity=".6"/><ellipse cx="0" cy="0" rx="1.4" ry="3.4" fill="#1a2a34"/></g>`;
+const HOURGLASS = `<g><ellipse cx="0" cy="25" rx="14" ry="3" fill="#000" opacity=".45"/><rect x="-12" y="-24" width="24" height="4" rx="1" fill="url(#gWoodD)" stroke="#1e1008" stroke-width=".5"/><rect x="-12" y="20" width="24" height="4" rx="1" fill="url(#gWoodD)" stroke="#1e1008" stroke-width=".5"/>${[-10, 10].map(x => `<path d="M${x} -20 V20" stroke="url(#gBrass)" stroke-width="1.6"/>`).join('')}<path d="M-7 -20 Q-7 -6 0 0 Q-7 6 -7 20 H7 Q7 6 0 0 Q7 -6 7 -20 Z" fill="rgba(220,236,240,.35)" stroke="#a9cbd2" stroke-width=".5"/><path d="M-4.6 -12 Q0 -10 4.6 -12 Q3 -4 0 -1 Q-3 -4 -4.6 -12 Z M0 0 V12 M-6 20 Q0 11 6 20 Z" fill="#d9b562" stroke="#d9b562" stroke-width=".4"/><path d="M-5 -18 Q-5 -10 -2 -4" stroke="#fff" stroke-width=".8" fill="none" opacity=".6"/></g>`;
+const coins = (n = 5) => Array.from({length: n}, (_, i) => { const x = (i * 9) % 28 - 8, y = (i * 5) % 12; return `<ellipse cx="${x + 1}" cy="${y + 1.6}" rx="6" ry="3" fill="#000" opacity=".35"/><ellipse cx="${x}" cy="${y}" rx="6" ry="3" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".5"/><ellipse cx="${x}" cy="${y}" rx="3.6" ry="1.7" fill="none" stroke="#7a5414" stroke-width=".4"/>`; }).join('');
+
+/* the gimbal compass in its box, for the captain's table */
+function gimbalBox(id, x, y, r, rot = 0){ return boxedCompass(id, x, y, r, rot).replace('<g class="cmpg">', `<circle r="${r1(r * 1.08)}" fill="none" stroke="url(#gBrass)" stroke-width="${r1(r * .09)}"/><circle r="${r1(r * 1.08)}" fill="none" stroke="#4a3208" stroke-width=".5"/>${[0, 180].map(d => `<g transform="rotate(${d})"><rect x="${r1(-r * .08)}" y="${r1(-r * 1.2)}" width="${r1(r * .16)}" height="${r1(r * .2)}" rx="1" fill="url(#gBrassR)" stroke="#4a3208" stroke-width=".4"/></g>`).join('')}<g class="cmpg">`); }
+function captainTable(W, H, L){ const id = V5('ct');
+  let s = `<svg class="abs" style="left:0;top:0" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${gradDefs()}${defs2()}
+  <defs><radialGradient id="${id}l" cx="${L.lx / W}" cy="${L.ly / H}" r="${L.r / W}" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#ffbe5a" stop-opacity=".42"/><stop offset=".5" stop-color="#ff9a30" stop-opacity=".12"/><stop offset="1" stop-color="#ff8a20" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${id}d" cx="${L.lx / W}" cy="${L.ly / H}" r="${(L.r * 1.7) / W}" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".6" stop-color="#000" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></radialGradient></defs>
+  <rect width="${W}" height="${H}" fill="#4a2a16"/>${Array.from({length: Math.ceil(H / 46)}, (_, i) => `<rect y="${i * 46}" width="${W}" height="46" fill="hsl(${18 + (i % 3) * 3} 42% ${15 + (i % 2) * 2}%)"/><path d="M0 ${i * 46 + 46} H${W}" stroke="#140a04" stroke-width="1.6"/>${Array.from({length: 5}, (_, k) => `<path d="M0 ${i * 46 + 8 + k * 8} Q${W / 3} ${i * 46 + 6 + k * 8 + (k % 2 ? 3 : -2)} ${W} ${i * 46 + 9 + k * 8}" stroke="#000" stroke-opacity=".1" stroke-width=".8" fill="none"/>`).join('')}`).join('')}
+  <g transform="translate(${L.chart[0]} ${L.chart[1]}) rotate(${L.chart[4] || 0})"><rect x="4" y="6" width="${L.chart[2]}" height="${L.chart[3]}" fill="#000" opacity=".35"/>${chartSheet(L.chart[2], L.chart[3])}</g>
+  ${L.div ? `<g transform="translate(${L.div[0]} ${L.div[1]}) rotate(${L.div[2]})">${DIVIDERS}</g>` : ''}
+  ${L.coins ? `<g transform="translate(${L.coins[0]} ${L.coins[1]})">${coins(L.coins[2])}</g>` : ''}
+  ${L.spy ? `<g transform="translate(${L.spy[0]} ${L.spy[1]}) rotate(${L.spy[2]}) scale(${L.spy[3] || 1})">${SPYGLASS}</g>` : ''}
+  ${L.hour ? `<g transform="translate(${L.hour[0]} ${L.hour[1]}) scale(${L.hour[2] || 1})">${HOURGLASS}</g>` : ''}
+  ${L.ink ? `<g transform="translate(${L.ink[0]} ${L.ink[1]}) scale(${L.ink[2] || 1})">${inkwell()}</g>` : ''}
+  ${gimbalBox(id, ...L.compass)}
+  <rect width="${W}" height="${H}" fill="url(#${id}d)"/><rect width="${W}" height="${H}" fill="url(#${id}l)" style="mix-blend-mode:screen"/>
+  <g transform="translate(${L.lx} ${L.ly + 26}) scale(${L.ls})">${candle(id)}</g><circle cx="${L.lx}" cy="${L.ly}" r="${40 * L.ls}" fill="url(#gFlash)" opacity=".14" class="flick"/></svg>`;
+  return s.replace(/<g class="g-compass">/, '<g>'); }
+
+const SHIPS3 = __SHIPS3__;
+['pearl', 'revenge', 'endeavour', 'dutch'].forEach(k => SHIPS[k] = SHIPS3[k + '_s']);
+BIG.pearl = SHIPS3.pearl; BIG.revenge = SHIPS3.revenge; BIG.company = SHIPS3.endeavour; BIG.merchant = SHIPS3.dutch;
+CELLS.HULL = HULL2; CELLS.HULL_X = HULL2_X;
+function medalClean(S = 60){ const id = V5('mc');
+  const teeth = Array.from({length: 72}, (_, i) => { const a = i / 72 * Math.PI * 2, r = i % 2 ? 18.6 : 18; return (i ? 'L' : 'M') + r1(Math.cos(a) * r) + ' ' + r1(Math.sin(a) * r); }).join(' ') + 'Z';
+  return `<svg width="${S}" height="${r1(S * 1.3)}" viewBox="-24 -32 48 62" aria-hidden="true"><defs>
+    <linearGradient id="${id}r" x1="0" x2="1"><stop offset="0" stop-color="#4a0e09"/><stop offset=".35" stop-color="#9e2a1e"/><stop offset=".65" stop-color="#9e2a1e"/><stop offset="1" stop-color="#4a0e09"/></linearGradient>
+    <radialGradient id="${id}f" cx=".36" cy=".3" r=".9"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#e2bf62"/><stop offset=".75" stop-color="#a77a26"/><stop offset="1" stop-color="#6e4c14"/></radialGradient>
+    <linearGradient id="${id}e" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe7a6"/><stop offset=".5" stop-color="#b8892e"/><stop offset="1" stop-color="#6e4c14"/></linearGradient></defs>
+    <path d="M-9 -32 H-1 L1 -13 L-5 -9 Z" fill="url(#${id}r)"/><path d="M9 -32 H1 L-1 -13 L5 -9 Z" fill="url(#${id}r)"/><path d="M-5 -32 L-2 -14 M5 -32 L2 -14" stroke="#e2bf62" stroke-width=".8" opacity=".7"/>
+    <rect x="-6" y="-14.4" width="12" height="3.6" rx="1.4" fill="url(#${id}e)" stroke="#5e4210" stroke-width=".4"/>
+    <circle cx="1" cy="3.4" r="19" fill="#000" opacity=".35"/>
+    <path d="${teeth}" fill="url(#${id}e)" stroke="#4a3208" stroke-width=".4"/><circle r="16.6" fill="url(#${id}f)" stroke="#5e4210" stroke-width=".5"/>
+    <circle r="13.6" fill="none" stroke="#7a5a1a" stroke-width=".5" opacity=".7"/><circle r="13" fill="none" stroke="#fff3c4" stroke-width=".4" opacity=".6"/>
+    <g transform="translate(.5 .7)"><path d="M0 -8.6 L2.4 -2.8 L8.4 -2.6 L3.8 1.2 L5.4 7.2 L0 3.8 L-5.4 7.2 L-3.8 1.2 L-8.4 -2.6 L-2.4 -2.8 Z" fill="#6e4c14" opacity=".55"/></g>
+    <path d="M0 -8.6 L2.4 -2.8 L8.4 -2.6 L3.8 1.2 L5.4 7.2 L0 3.8 L-5.4 7.2 L-3.8 1.2 L-8.4 -2.6 L-2.4 -2.8 Z" fill="url(#${id}e)" stroke="#7a5a1a" stroke-width=".4"/>
+    <path d="M-12 -8 A15 15 0 0 1 1 -15" stroke="#fffbe6" stroke-width="1.8" fill="none" opacity=".55" stroke-linecap="round"/></svg>`; }
+/* v2 controls */
+const ANCHOR_S = `<svg width="24" height="26" viewBox="-3 -1 32 32"><defs><linearGradient id="anB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset=".35" stop-color="#e2bf62"/><stop offset=".7" stop-color="#9a7020"/><stop offset="1" stop-color="#d8b05a"/></linearGradient></defs><g fill="url(#anB)" stroke="#4a3208" stroke-width=".7"><circle cx="13" cy="3.2" r="2.6" fill="none" stroke="url(#anB)" stroke-width="1.8"/><path d="M2.6 7.2 Q13 6.4 23.4 7.2 L23.4 9.4 Q13 8.6 2.6 9.4 Z"/><path d="M11.5 5.6 H14.5 L15.1 24.6 H10.9 Z"/><path d="M1.4 16.8 Q1.6 26.4 13 28.8 Q24.4 26.4 24.6 16.8 L21.8 19 Q21 24.8 13 26 Q5 24.8 4.2 19 Z"/><path d="M1.4 16.8 L-1.8 18.6 Q-1.4 21.8 0.8 23.8 L4.6 20.4 Z M24.6 16.8 L27.8 18.6 Q27.4 21.8 25.2 23.8 L21.4 20.4 Z"/></g></svg>`;
+const MUZZLE_S = `<svg width="30" height="30" viewBox="-15 -15 30 30"><defs><radialGradient id="mzI" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#a7b0b4"/><stop offset=".35" stop-color="#4a5256"/><stop offset=".8" stop-color="#1a1d1f"/><stop offset="1" stop-color="#0a0b0c"/></radialGradient><linearGradient id="mzP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3e0b07"/><stop offset=".4" stop-color="#7e1d14"/><stop offset="1" stop-color="#9a2a1e"/></linearGradient></defs>
+  <rect x="-13" y="-13" width="26" height="26" rx="2" fill="#140d07"/><rect x="-11" y="-11" width="22" height="22" fill="url(#mzP)"/><rect x="-11" y="-11" width="22" height="5" fill="#000" opacity=".45"/><rect x="-13" y="10.6" width="26" height="2.4" fill="#8a6a46"/>
+  <circle cx=".6" cy="1.2" r="9" fill="#000" opacity=".4"/><circle r="8.6" fill="url(#mzI)" stroke="#050505" stroke-width=".6"/><circle r="7.2" fill="none" stroke="#c4cccf" stroke-width=".7" opacity=".55"/><circle r="6" fill="none" stroke="#0a0b0c" stroke-width=".6"/><circle r="4.4" fill="#050505"/><circle r="4.4" fill="none" stroke="#3a4044" stroke-width=".5"/>
+  <path d="M-6.4 -3.6 A7.4 7.4 0 0 1 -1.4 -7.2" stroke="#eef2f3" stroke-width="1.1" fill="none" opacity=".85" stroke-linecap="round"/><circle cx="2.2" cy="2.2" r=".9" fill="#ff8a3a" opacity=".5"/></svg>`;
+const PLAY_S = `<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 4 L19 12 L6 20 Z" fill="#e2bf62" stroke="#4a3208" stroke-width=".8"/></svg>`;
+const oakBtn = (title, sub = '', icon = ANCHOR_S, st = '') => `<span class="oak" style="${st}"><span class="med"><i>${icon}</i></span><span class="pan"><b>${title}</b>${sub ? `<small>${sub}</small>` : ''}</span></span>`;
+const SHIELD_S = `<svg width="14" height="16" viewBox="0 0 14 16" style="margin-right:7px"><path d="M7 1 L12.6 3 V7.6 Q12.6 12.4 7 15 Q1.4 12.4 1.4 7.6 V3 Z" fill="#6e8494" stroke="#e6edf2" stroke-width="1"/><path d="M4.4 8 L6.4 10 L9.8 5.8" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+const VI_NEW = '<svg width="18" height="18" viewBox="0 0 18 18"><path d="M4 16 V2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.6 2.6 H14 L12 5.6 L14 8.6 H4.6" fill="currentColor"/></svg>';
+const VI_DL = '<svg width="18" height="18" viewBox="0 0 18 18"><path d="M4 2 H11 L14 5 V16 H4 Z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9 7 V13 M6.4 10.6 L9 13.2 L11.6 10.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+const VI_EYE = '<svg width="18" height="18" viewBox="0 0 18 18"><path d="M1.6 9 Q9 1.6 16.4 9 Q9 16.4 1.6 9 Z" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="9" cy="9" r="2.6" fill="currentColor"/></svg>';
+const vtab = (t, ic) => `<span class="vtab">${ic}<span>${t}</span></span>`;
+const brsBtn = (t, st = '') => `<span class="brs" style="${st}">${t}</span>`;
+
+/* ---------- the common parts ---------- */
+const sysbar = () => `<div class="sys"><span>9:41</span><span class="isl"></span><span class="bat"><svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx=".6" fill="#f6efe0"/><rect x="4.6" y="5" width="3" height="6" rx=".6" fill="#f6efe0"/><rect x="9.2" y="2.6" width="3" height="8.4" rx=".6" fill="#f6efe0"/><rect x="13.8" y="0" width="3" height="11" rx=".6" fill="#f6efe0"/></svg><i></i></span></div><div class="url">bortom-k-bortu · игра</div>`;
+const topbar = (plq = 'Пираты · II') => `<div class="tb"><span class="plq">${plq}</span><span class="wx">${IC.storm}<span style="min-width:0"><div class="t1">море · весь раунд</div><div class="t2">Буря: Залпы −1</div></span></span>${tbtn(IC.gear, 44, "Настройки")}</div>`;
+const kegs = (n, of = 8) => Array.from({length: of}, (_, i) => i < n ? CELLS.KEG_S : CELLS.KEG_E.replace('width="22" height="28"', 'width="10" height="13"')).join('');
+const holdTop = (deck = true) => `<div class="hrow top"><span class="hl">Трюм Компании</span><span class="kg">${kegs(5)}</span><span class="hn">5/8</span>${deck ? '<span class="deck">Колода 19 · Сброс 0</span>' : ''}</div>`;
+const holdBot = (rg = true) => `<div class="hrow bot"><span class="hl">Трюм пиратов</span><span class="kg">${kegs(2)}</span><span class="hn">2/8</span>${rg ? `<span class="rg"><span class="rgi">${IC.regroup}</span><span>Перестроение<small>бесплатно</small></span></span>` : ''}</div>`;
+const bbar = (inner) => `<div class="bb">${inner}</div>`;
+const bbStd = (o = {}) => bbar(`<span class="bbt ${o.log ? 'on' : ''}"><span class="ic">${I_LOG}</span>Журнал</span><span class="bbt"><span class="ic">${IC.book}</span>Правила</span>${tbtn(IC.undo, 52, "Отменить")}${oakBtn('Ход окончен', `<span class="okc" style="width:12px;height:12px">${CHECK.replace(/13/g, '9')}</span>«Месть» готова — ждёт вас`, ANCHOR_S, 'flex:1;height:56px;padding:5px 6px 5px 5px')}`);
+const bbShow = (o = {}) => bbar(`<span class="bbt ${o.log ? 'on' : ''}"><span class="ic">${I_LOG}</span>Журнал</span><span class="bbt"><span class="ic">${IC.book}</span>Правила</span><span class="ctl">${tbtn(I_FAST, 50)}Быстрее</span><span class="ctl">${tbtn(I_END, 50)}До конца хода</span><span class="ctl">${tbtn(I_PAUSE, 50)}Пауза</span>`);
+
+function phone(H, inner, web = false){ return `<div class="ph ${web ? 'web' : ''}" style="height:${H}px">${sysbar()}${inner}</div>`; }
+function board(inner, cls = ''){ return `<div class="bd"><span class="nails"></span><div class="sea storm ${cls}">${inner}</div></div>`; }
+
+/* ---------- the frames ---------- */
+const F = [];
+
+// 1. own turn
+const own = (H, web) => { const small = H < 800; const hh = small ? 168 : 214;
+  return phone(H, topbar() + `<div class="pr">«Жемчужина»: сыграйте карту или дайте Залп</div>` + holdTop() +
+  board(plank('E', 'tl', {st: [['voodoo'], ['fire', 1]]}) + plank('D', 'tr', {st: [['parley']]}) + `<div class="rib">Нажмите карту или «Залп»</div>` +
+    plank('P', 'bl turn', {act: [{t: 'Залп', c: 1}]}) + plank('R', 'br', {ready: true, act: [{t: 'Залп', c: 1}, {t: 'Меч Тритона', c: 1, svg: TRIDENT_D(17)}]})) +
+  holdBot() + `<div class="hand" style="height:${hh}px"><div class="hlab"><span>Рука «Жемчужины»</span><span>сыграно 0 из 3</span></div>${fanHand(0, HAND.map((c, i) => Object.assign({}, c, {cls: i === 0 ? 'off' : 'glow'})), {top: small ? 24 : 30, step: small ? 74 : 80})}</div>` + bbStd(), web); };
+F.push({cap: '1 · Свой ход', sub: '430×932', H: 932, html: own(932), notes: [
+  'Планшеты стоят как на столе: два сверху, два снизу, море между ними. «Напротив» и «по диагонали» видно сразу.',
+  'Планшет: картинка корабля, короткое имя («Месть», «Голландец»), справа — ✓ готов, веер с числом карт и медальон Легенды. Капитана на телефоне нет.',
+  'Корпус — доски во всю ширину и крупное число (17 px) справа: его видно с первого взгляда. Паруса, Пушки, Команда — один значок и «2/3»; ноль — красным и перечёркнутым значком. Подписи «корпус/паруса» убраны — нажатие на значок открывает правило.',
+  'Кнопки своего корабля — на его планшете («Залп · 1 бочонок»). Трюм противника — над морем, свой Трюм и «Перестроение» — под ним.',
+  'Рука — веер, листается пальцем; средняя карта прямая, края затухают; точки снизу — где вы в руке. Несыгрываемые — серые.',
+  'Снизу: Журнал, Правила, «Отменить» и «Ход окончен»; под надписью — кто уже готов.',
+  'Статусы (Переговоры, Кукла вуду, Пожар, Блокада, Чёрная метка…) — строка цветных ярлыков под шкалами: значок + короткое название. Если статусов три и больше — только значки-кружки. Нажатие на ярлык открывает правило. Чёрная метка ещё и кляксой на картинке корабля, Пожар — огоньки на шапке планшета.',
+  'Где эффекты: главная сцена — море между планшетами (выстрелы, всплески, корабли Армады, бутылка, водоворот, табличка Залпа). На самих планшетах — трещины, огонь, печати, вспышки клеток. Крупные (карта Легенды, «Тревога!», «Раунд II») — поверх всего экрана на 1–2 с. Рука и нижняя панель эффектами не закрываются.']});
+F.push({cap: '1б · Свой ход в Safari', sub: '430×740, с панелями браузера', H: 740, html: own(740, true), notes: [
+  'Высота меньше на 190 px: сжимаются море между планшетами и рука (карты ниже поднимаются из-за края). Планшеты, кнопки и «Ход окончен» — того же размера.',
+  'Если и так не влезает (390×664) — море может стать уже, но не меньше 64 px: в нём показываются эффекты и подсказки.']});
+
+// 2. aiming the Volley
+F.push({cap: '2 · Залп: цель и Заряд', sub: '430×932', H: 932, html: phone(932, topbar() + `<div class="pr">Залп «Жемчужины»: выберите цель и Заряд</div>` + holdTop() +
+  board(plank('E', 'tl cand') + plank('D', 'tr target', {seal: true, lose: 2, minus: '−2'}) +
+    `<svg class="ov" viewBox="0 0 408 458" preserveAspectRatio="none"><path d="M110 345 Q200 230 300 120" fill="none" stroke="#f2d27e" stroke-width="2.4" stroke-dasharray="7 6"/><path d="M300 120 l-12 3 m12 -3 l-3 12" stroke="#f2d27e" stroke-width="2.4" fill="none"/></svg>` +
+    `<span class="pill" style="left:52%;top:47%">2 по Корпусу</span>` +
+    plank('P', 'bl turn', {act: [{t: 'Залп', c: 1, on: true}]}) + plank('R', 'br dim', {ready: true, act: [{t: 'Залп', c: 1}]})) +
+  `<div class="hand" style="height:338px;margin-top:6px"><div class="osheet charge" style="top:0"><div class="grip2"></div>
+     <div class="shrow"><span class="plq2">Заряд</span><span class="shnote">можно без Заряда</span></div>
+     <div style="position:relative;flex:0 0 184px">
+       ${card(Object.assign({}, HAND[3], {chk: true}), 96, 8, -3, 'lift')}${card({ty: 'ch', cost: 2, n: 'Залп всей батареей', e: '+3 урона', x: 'Этот Залп наносит +3 урона. Нужно 2 Пороха.'}, 224, 14, 3, 'off')}
+     </div>
+     <div class="slipw" style="margin:auto auto 8px"><div class="slip">Пушки 2 · Ядра +1 · Диагональ −1 · Буря −1 = <b>1 по Корпусу</b></div></div>
+     <div style="display:flex;gap:10px;padding:0 12px 12px">${brsBtn('Отмена', 'flex:0 0 118px;height:56px')}${oakBtn('Огонь!', 'по «Голландцу» · 1 бочонок', MUZZLE_S, 'flex:1;height:56px;padding:5px 6px 5px 5px')}</div></div></div>`), notes: [
+  'После «Залп» цели обведены пунктиром; кого нельзя — приглушён. Выбранная цель — красная рамка, восковая печать с пушкой и скрещённые сабли.',
+  'Рука уступает место листу «Заряд» — дубовая палуба с латунной кромкой, заголовок на латунной табличке. Только карты Заряда; выбранная поднята и отмечена галочкой, дорогая или запрещённая — серая. Расчёт — на клочке бумаги (только с «Подсказками»).',
+  'Пунктир от своего корабля к цели и красная пилюля урона в море. Прогноз по Корпусу (клетки обведены, «−2») и строка расчёта — только с «Подсказками», как сейчас.',
+  'Внизу: «Отмена» — латунная табличка, «Огонь!» — дубовая доска с винной вставкой и медальоном с дулом пушки (тот же вид, что у «Ход окончен»).']});
+
+// 3. the plate of the Volley
+F.push({cap: '3 · Разбор Залпа', sub: '430×932, табличка V5', H: 932, html: phone(932, topbar() + `<div class="pr">«Жемчужина»: Залп по «Голландцу» · Заряд «Ядра»</div>` + holdTop() +
+  board(plank('E', 'tl') + plank('D', 'tr target', {ov: {hull: [7, 11]}, minus: '−1'}) +
+    `<svg class="ov" viewBox="0 0 408 424" preserveAspectRatio="none"><path d="M110 296 Q190 170 310 84" fill="none" stroke="#2a2521" stroke-width="1.2" stroke-dasharray="2 4" opacity=".55"/>
+      <g opacity=".92"><circle cx="112" cy="286" r="20" fill="#e9e4da"/><circle cx="92" cy="278" r="15" fill="#d9d3c8"/><circle cx="134" cy="278" r="14" fill="#f1ede6"/><circle cx="114" cy="266" r="12" fill="#fbf8f2"/><circle cx="76" cy="266" r="10" fill="#e3ded5" opacity=".8"/><circle cx="112" cy="292" r="6" fill="#ffb84a" opacity=".85"/></g>
+      <g transform="translate(160 232)"><path d="M-9 4 Q-6 -10 -2 -2 Q0 -16 3 -3 Q7 -11 9 4 Z" fill="#e8f2f4" stroke="#a9cbd2" stroke-width=".8"/><ellipse cy="5" rx="12" ry="3" fill="none" stroke="#e8f2f4" stroke-width="1.2"/></g>
+      <g transform="translate(262 150)"><path d="M-8 4 Q-5 -9 -2 -2 Q0 -13 3 -3 Q6 -9 8 4 Z" fill="#e8f2f4" stroke="#a9cbd2" stroke-width=".8"/><ellipse cy="5" rx="11" ry="3" fill="none" stroke="#e8f2f4" stroke-width="1.2"/></g></svg>` +
+    `<span class="wpill" style="left:160px;top:254px">Буря −1</span><span class="wpill" style="left:300px;top:176px">Диагональ −1</span>` +
+    `<div class="plate" style="left:8px;top:96px;width:214px"><div class="w"><b>«Жемчужина» → «Голландец»</b>, по диагонали</div><div class="big">1 по Корпусу</div><div class="gr"><span>Пушки</span><b>2</b><span>Ядра</span><span class="p">+1</span><span>Диагональ</span><span class="m">−1</span><span>Буря</span><span class="m">−1</span></div></div>` +
+    plank('P', 'bl turn', {ov: {}, act: [{t: 'Залп', c: 1}]}) + plank('R', 'br', {ready: true, st: [['mark', 1], ['blockade'], ['noReact']], act: [{t: 'Залп', c: 1}]})) +
+  holdBot() + `<div class="hand" style="height:214px"><div class="hlab"><span>Рука «Жемчужины»</span><span>сыграно 1 из 3</span></div>${fanHand(0, HAND.filter((_, i) => i !== 3).map((c, i) => Object.assign({}, c, {cls: i === 0 ? 'off' : 'glow'})), {mid: 1.5, top: 30, step: 84})}</div>` + bbStd()), notes: [
+  'Табличка-разбор появляется у цели, в море, и не закрывает планшеты: кто → кого и как (напротив/по диагонали), крупно итог, ниже слагаемые (плюсы зелёным, минусы красным).',
+  'У всплесков на воде — пилюли того, что ослабило Залп («Буря −1», «Диагональ −1»). У Корпуса цели — «−1».',
+  'Табличка живёт до конца клипа и ещё ≈ 2 с, нажатие по столу убирает её сразу. На 390 px — та же, но шириной 220.']});
+
+// 4. alarm
+F.push({cap: '4 · «Тревога!»', sub: '430×932, окно Реакции U2', H: 932, html: phone(932, `<div class="alarm">${BELL}<div><b>ТРЕВОГА!</b><span>«Индевор» даёт Залп по «Жемчужине» — ответите Реакцией?</span></div></div>` +
+  `<div class="bd" style="flex:0 0 380px"><div class="sea storm">` + plank('E', 'tl', {}) + plank('D', 'tr dim') +
+    `<svg class="ov" viewBox="0 0 410 370" preserveAspectRatio="none"><path d="M100 96 V262" fill="none" stroke="#f2d27e" stroke-width="2.4" stroke-dasharray="7 6"/><path d="M90 250 L100 264 L110 250" fill="none" stroke="#f2d27e" stroke-width="2.4"/></svg>` +
+    `<span class="pill" style="left:46%;top:47%">4 по Корпусу</span>` +
+    plank('P', 'bl target', {sabres: true, lose: 4, minus: '−4', act: [{t: 'Залп', c: 1}]}) + plank('R', 'br dim', {act: [{t: 'Залп', c: 1}]}) + `</div></div>` +
+  `<div class="osheet react" style="height:452px"><svg class="icorner" style="left:2px" viewBox="0 0 30 30"><path d="M2 28 V8 Q2 2 8 2 H28 V8 H10 Q8 8 8 10 V28 Z" fill="#2c353c" stroke="#0e1418" stroke-width=".8"/><circle cx="5" cy="22" r="1.4" fill="#8a98a2"/><circle cx="22" cy="5" r="1.4" fill="#8a98a2"/><circle cx="5.4" cy="5.4" r="1.6" fill="#8a98a2"/></svg><svg class="icorner" style="right:2px;transform:scaleX(-1)" viewBox="0 0 30 30"><path d="M2 28 V8 Q2 2 8 2 H28 V8 H10 Q8 8 8 10 V28 Z" fill="#2c353c" stroke="#0e1418" stroke-width=".8"/><circle cx="5" cy="22" r="1.4" fill="#8a98a2"/><circle cx="22" cy="5" r="1.4" fill="#8a98a2"/><circle cx="5.4" cy="5.4" r="1.6" fill="#8a98a2"/></svg><div class="grip2"></div>
+     <div class="shrow"><span class="plq2">${SHIELD_S}Ответить Реакцией</span><span class="shnote">в руке 3 Реакции</span></div>
+     <div class="incoming"><span class="pics"><span>${shipPic('endeavour')}</span><svg width="14" height="10" viewBox="0 0 14 10"><path d="M1 5 H11 M8 2 L11 5 L8 8" fill="none" stroke="#e6edf2" stroke-width="1.4"/></svg><span>${shipPic('pearl')}</span></span><span>Залп: <b>4 по Корпусу</b></span><span class="hold">Порох ${CELLS.KEG_S}${CELLS.KEG_S}<span style="opacity:.6;margin-left:2px">2</span></span></div>
+     <div style="position:relative;height:206px">
+       ${card({ty: 're', cost: 1, n: 'Уйти по ветру', e: '−3 урона', x: '', foot: '<div class="foot">4 → 1<small>по Корпусу</small></div>'}, 22, 22, -4, 'lift')}
+       ${card({ty: 're', cost: 0, n: 'Всё по плану', e: 'отмена Заряда', x: '', foot: '<div class="foot">4 → 2<small>Заряд отменён</small></div>'}, 159, 16, 0, 'glow')}
+       ${card({ty: 're', cost: 0, n: 'Чёрные паруса в ночи', e: 'отмена Залпа', x: '', foot: '<div class="foot no">нельзя<small>нужна диагональ</small></div>'}, 296, 22, 4, 'off')}
+     </div>
+     <div style="padding:0 14px">
+       <div class="fuse2"><svg width="100%" height="16" viewBox="0 0 400 16" preserveAspectRatio="none" style="position:absolute;left:0;top:0"><path d="M2 9 Q100 5 200 9 T300 8" fill="none" stroke="#2a1a0c" stroke-width="4" stroke-linecap="round"/><path d="M2 9 Q100 5 200 9 T300 8" fill="none" stroke="#a8824a" stroke-width="2.4" stroke-dasharray="3 2.2"/><path d="M300 8 Q350 10 398 9" fill="none" stroke="#2a1a0c" stroke-width="2" opacity=".55"/><path d="M300 8 Q350 10 398 9" fill="none" stroke="#6b5a40" stroke-width="1" stroke-dasharray="1 3" opacity=".7"/></svg>
+         <span class="ember" style="left:calc(75% - 8px);top:0"></span><svg width="40" height="30" viewBox="0 0 40 30" style="position:absolute;left:calc(75% - 6px);top:-22px"><path d="M6 26 Q2 18 8 14 Q14 10 10 2" fill="none" stroke="#d9d3c8" stroke-width="1.6" opacity=".55" stroke-linecap="round"/><circle cx="16" cy="18" r="1" fill="#ffd27a"/><circle cx="20" cy="24" r=".8" fill="#ffb84a"/><circle cx="4" cy="20" r=".8" fill="#ffd27a"/></svg></div>
+       ${brsBtn('Пропустить', 'height:56px;font-size:18px;letter-spacing:.22em')}
+       <div class="link" style="color:#e8d6b0"><svg width="14" height="10" viewBox="0 0 14 10"><path d="M2 2 L7 7 L12 2" fill="none" stroke="#e8d6b0" stroke-width="2"/></svg>Свернуть, посмотреть стол</div></div></div>`), notes: [
+  'Плашка «Тревога!» заменяет верхнюю строку: колокол, кто по кому стреляет. Стол виден: пунктир от атакующего к цели, пилюля урона, у цели красная рамка, сабли, «−4» и обведённые клетки.',
+  'Снизу лист: только Реакции. Можно сыграть — приподняты, с зелёной полосой исхода («4 → 1») — полоса только с «Подсказками»; нельзя — серые, с причиной. Касание карты сразу выбирает её (окно Реакции).',
+  'Лист — дубовая палуба, как у «Заряда». «Пропустить» — латунная табличка; над ней тлеет настоящий фитиль с искрами и дымком — только если у окна есть таймер (сетевая игра). «Свернуть» опускает лист, чтобы посмотреть стол целиком; плашка «Тревога!» остаётся.']});
+
+// 5. the log during the bots' turn
+const logBook = o => `<div class="lbook lb-${o.k}" style="bottom:104px;height:640px">${o.cover || ''}<span class="lcorn" style="left:0;top:0;border-radius:10px 0 0 0"></span><span class="lcorn" style="right:0;top:0;transform:scaleX(-1);border-radius:10px 0 0 0"></span><span class="lcorn" style="left:0;bottom:0;transform:scaleY(-1);border-radius:10px 0 0 0"></span><span class="lcorn" style="right:0;bottom:0;transform:scale(-1);border-radius:10px 0 0 0"></span><span class="ribbon2"></span><span class="bx">×</span>
+    <div class="lpage"><span class="lmargin"></span><svg class="lwm" viewBox="-50 -50 100 100">${Array.from({length: 16}, (_, i) => { const a = i * Math.PI / 8, r = i % 2 ? 26 : 46, w = i % 2 ? 3 : 6; return `<path d="M0 0 L${R1(Math.cos(a - Math.PI / 2 - .5) * w)} ${R1(Math.sin(a - Math.PI / 2 - .5) * w)} L${R1(Math.cos(a - Math.PI / 2) * r)} ${R1(Math.sin(a - Math.PI / 2) * r)} Z" fill="#3a2a1a"/>`; }).join('')}<circle r="48" fill="none" stroke="#3a2a1a" stroke-width="1"/><circle r="40" fill="none" stroke="#3a2a1a" stroke-width=".6"/></svg><span class="lpageno">${o.page}</span>${o.deco || ''}
+      <div class="lhead"><svg width="58" height="28" viewBox="-2 -1 124 80" style="opacity:.75;filter:sepia(1) saturate(.6) brightness(.7)">${SHIPS[o.ship]}</svg><b>${o.title}</b><span>${o.sub}</span></div>
+      <div class="lrule" style="flex:1;overflow:hidden;padding-top:4px">
+        <div class="lround"><i></i>РАУНД I<i style="transform:scaleX(-1)"></i></div>
+        <div class="le"><span class="t">${LOGI.volley}<span>I·2</span></span><span>«Индевор» дал Залп по «Жемчужине» — <b>2 по Корпусу</b></span></div>
+        <div class="le"><span class="t">${LOGI.card}<span>I·2</span></span><span>«Голландец» сыграл <em>«Указ о казнях»</em>: −1 Команда всем</span></div>
+        <div class="le"><span class="t">${LOGI.keg}<span>I·3</span></span><span>Компания: +3 Пороха в Трюм</span></div>
+        <div class="le"><span class="t">${LOGI.react}<span>I·3</span></span><span>«Месть» ответила Реакцией <em>«Прикрыть бортом»</em></span></div>
+        <div class="le"><span class="t">${LOGI.sea}<span>II</span></span><span>Море: <em>«Буря»</em> — Залпы −1 весь раунд</span></div>
+        <div class="lround"><i></i>РАУНД II<i style="transform:scaleX(-1)"></i></div>
+        <div class="le"><span class="t">${LOGI.volley}<span>II·1</span></span><span>«Жемчужина» дала Залп по «Голландцу» — <b>1 по Корпусу</b></span></div>
+        <div class="le"><span class="t">${LOGI.repair}<span>II·1</span></span><span>«Голландец» сыграл <em>«Норрингтон на борту»</em>: +2 Корпус</span></div>
+        <div class="le now"><span class="t">${LOGI.volley}<span>II·2</span></span><span>«Индевор» даёт Залп по «Мести»…</span></div>
+        <div class="lsign"><span>${o.who}<span class="sig">${o.sig}</span></span><svg width="42" height="42" viewBox="-21 -21 42 42"><path d="${Array.from({length: 24}, (_, i) => { const a = i / 24 * Math.PI * 2, r = 17 + Math.sin(i * 2.3) * 1.2; return (i ? 'L' : 'M') + R1(Math.cos(a) * r) + ' ' + R1(Math.sin(a) * r); }).join(' ')} Z" fill="${o.seal[0]}" stroke="${o.seal[2]}" stroke-width=".6"/><circle r="12" fill="${o.seal[1]}"/><g transform="translate(-10 -12) scale(.8)" fill="${o.seal[2]}">${ANCHOR_S.replace(/^<svg[^>]*>|<\/svg>$/g, '').replace(/url\(#anB\)/g, o.seal[2])}</g></svg></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:10px 12px 12px;border-top:1.5px solid rgba(60,40,20,.4)">${brsBtn('Весь журнал', 'flex:1;height:42px;font-size:12.5px')}${brsBtn('Скачать', 'flex:1;height:42px;font-size:12.5px')}</div>
+    </div></div>`;
+
+const LB = {
+  P: {k: 'P', ship: 'pearl', title: 'СУДОВОЙ ЖУРНАЛ', sub: '«Чёрная жемчужина» · партия против Компании', who: 'Записал штурман', sig: 'Гиббс', seal: ['#8e2219', '#7a1810', '#3a0805'], page: 'лист 3'},
+  D: {k: 'D', ship: 'dutch', title: 'ЖУРНАЛ ГЛУБИН', sub: '«Летучий голландец» · сто лет без берега', who: 'Скрепил капитан', sig: 'Д. Джонс', seal: ['#2c6a5a', '#1e5446', '#0c2a22'], page: 'лист ∞',
+    cover: `${[[10, 26], [22, 16], [16, 40], [30, 30]].map(([x, y], q) => `<span class="barn" style="left:${x}px;top:${y}px;transform:scale(${[1, .7, .8, .55][q]})"></span>`).join('')}${[[18, 22], [30, 12], [12, 32]].map(([x, y], q) => `<span class="barn" style="right:${x}px;bottom:${y}px;transform:scale(${[.9, .6, .7][q]})"></span>`).join('')}<span class="tide"></span>`,
+    deco: `<span class="stain" style="left:200px;top:170px;width:160px;height:110px"></span><span class="stain" style="left:70px;top:430px;width:120px;height:80px"></span>`},
+  E: {k: 'E', ship: 'endeavour', title: 'ВАХТЕННЫЙ ЖУРНАЛ', sub: '«Индевор» · флот Торговой Компании', who: 'Утвердил', sig: 'лорд Беккет', seal: ['#2e4a78', '#243c64', '#0e1a30'], page: '№ 0417 · лист 3'},
+  R: {k: 'R', ship: 'revenge', title: 'КАПИТАНСКИЙ ЖУРНАЛ', sub: '«Месть королевы Анны» · что сгорело — то записано', who: 'Записал капитан', sig: 'Ч. Борода', seal: ['#2a2420', '#1a1614', '#000'], page: 'лист 3 (уцелевший)',
+    deco: `<span class="burn" style="left:330px;top:300px"></span><span class="burn" style="left:40px;top:520px;transform:scale(.7)"></span>`},
+};
+F.push({cap: '5 · Журнал', sub: '430×932, ход ботов', H: 932, html: phone(932, topbar('Компания · II') + `<div class="pr dim">Ход Компании: «Индевор» думает<span class="dots"><i></i><i></i><i></i></span></div>` + holdTop() +
+  board(plank('E', 'tl turn') + plank('D', 'tr') + plank('P', 'bl') + plank('R', 'br', {})) + `<div style="height:200px"></div>` + bbShow({log: true}) +
+  `<div class="shade" style="bottom:96px"></div>${logBook(LB.P)}`), notes: [
+  'Журнал — настоящая судовая книга: кожаный переплёт со строчкой, страница из старой бумаги с линовкой и красными полями, закладка-ленточка, записи «чернилами» (курсив), слева — номер раунда и хода. Стол под книгой затемнён, показ ходов не останавливается. Закрыть — латунная «×», смахнуть вниз или нажать на затемнение.',
+  'На полях — значок записи (пушка — Залп, карта — Приказ, бочонок — Порох, щит — Реакция, волны — море) и «раунд·ход». Названия карт подчёркнуты бордовыми чернилами — нажатие открывает карту. Раунды разделены виньеткой.',
+  'То, что показывается сейчас, выделено жёлтым, как маркером. Пока ходят боты, внизу — «Быстрее», «До конца хода», «Пауза» (вместо «Отменить» и «Ход окончен»).']});
+
+
+const logFrame = (id, cap, plq, pr) => F.push({cap, sub: '430×932', H: 932, html: phone(932, topbar(plq) + `<div class="pr dim">${pr}</div>` + holdTop() +
+  board(plank('E', 'tl') + plank('D', 'tr') + plank('P', 'bl') + plank('R', 'br', {})) + `<div style="height:200px"></div>` + bbShow({log: true}) + `<div class="shade" style="bottom:96px"></div>${logBook(LB[id])}`), notes: LOGNOTE[id]});
+const LOGNOTE = {
+  D: ['«Голландец»: тёмная мокрая кожа, по углам наросли ракушки, снизу — соляная корка от прилива, книга слабо светится зелёным; страница сырая, зеленоватая, нижняя треть потемнела от воды, разводы. Заголовок — «Журнал глубин», подпись Дейви Джонса, зелёная печать.'],
+  E: ['«Индевор» (Компания): казённая книга в синем сукне с тиснёной рамкой и стальными уголками, страница ровная и светлая, номер журнала, синяя печать — «Утвердил лорд Беккет».'],
+  R: ['«Месть»: кожа цвета запёкшейся крови, края страницы обуглены, прожжённые дыры; чёрная печать, «лист 3 (уцелевший)».'],
+};
+logFrame('D', '5б · Журнал «Голландца»', 'Компания · II', 'Ход Компании: «Индевор» думает');
+logFrame('E', '5в · Журнал «Индевора»', 'Компания · II', 'Ход Компании: «Индевор» думает');
+logFrame('R', '5г · Журнал «Мести»', 'Компания · II', 'Ход Компании: «Индевор» думает');
+
+// 6. a card opened
+F.push({cap: '6 · Карта в руке', sub: '430×932, касание карты', H: 932, html: phone(932, topbar() + `<div class="pr">«Жемчужина»: сыграйте карту или дайте Залп</div>` + holdTop() +
+  board(plank('E', 'tl') + plank('D', 'tr') + plank('P', 'bl turn', {act: [{t: 'Залп', c: 1}]}) + plank('R', 'br', {ready: true, act: [{t: 'Залп', c: 1}]})) +
+  holdBot() + `<div class="hand" style="height:214px;overflow:visible;z-index:5">${fanHand(0, HAND.filter((_, i) => i !== 2).map((c, i) => Object.assign({}, c, {cls: i === 0 ? 'off' : 'glow'})), {top: 34, step: 96, mid: 1.5})}
+     <div class="card lift" style="width:150px;height:224px;left:140px;top:-34px;z-index:20;transform:none"><div class="t" style="background:#5b4a7a">приказ<span>0</span></div><div class="n" style="font-size:17px">Безумный план</div><div class="e" style="color:#5b4a7a;font-size:13px">+2 карты, 1 в План</div><div class="x" style="font-size:12px">Возьмите 2 карты, затем 1 из руки положите в План: она сыграется в начале вашего следующего хода.</div><div class="foot" style="background:linear-gradient(#8e2a20,#5e140e);font-size:15px;letter-spacing:.14em;text-transform:uppercase;height:36px">Сыграть</div></div></div>` + bbStd()), notes: [
+  'Без отдельного окна: касание поднимает карту из веера, она чуть увеличивается (×1,3) и показывает весь текст; соседи расходятся. Стол и кнопки не закрываются.',
+  'Снизу у поднятой карты — полоса «Сыграть». Касание мимо или другой карты — опустить. Если карту сейчас нельзя сыграть — вместо «Сыграть» серая полоса с причиной.']});
+
+// 7. victory
+const PANO = __PANO__; /* the victory panorama: built by gen/pano.py (winners lit from behind, losers burning by the sun path) */
+const pano = () => PANO;
+const crow = (sq, nm, af, v, max, ttl, fct, gone) => `<div class="crow ${gone ? 'gone' : ''}"><div class="a"><span class="sq" style="background:${sq}"></span><span class="nmw"><span class="sn">${nm}</span><span class="af">${af}</span></span><span class="bar" style="background:linear-gradient(90deg,${sq} ${v / max * 100}%,rgba(90,70,40,.1) ${v / max * 100}%)"></span><span class="v">${v}</span></div><div class="b2"><span class="ttl ${gone ? 'gone' : ''}">${ttl}</span><span class="fct">${fct}</span></div></div>`;
+F.push({cap: '7 · Победа', sub: '430×932, V7', H: 932, html: phone(932, `<div style="flex:1"></div><div class="vic"><div class="sc">
+   <div class="over">— Конец партии · Раунд VI —</div><div class="ribbon">ПОБЕДА ПИРАТОВ</div><div class="sub">«Индевор» и «Голландец» пошли ко дну · 58 минут · 31 ход</div>
+   <div class="pano">${pano()}</div>
+   <div class="best"><span style="flex:0 0 60px;display:flex;justify-content:center">${medalClean(60)}</span>
+     <div style="flex:1;min-width:0"><div class="k">Лучший капитан</div><div class="nm2">Чёрная Борода</div><div class="sh">«Месть королевы Анны»</div>
+     <div class="three"><div><b>26</b>урона — больше всех</div><div><b>60 %</b>урона Пиратов</div><div><b>IV</b>раунд, добил «Индевор»</div></div></div></div>
+   <div class="ctb"><span>Вклад в партию</span><span>Урон по врагу</span></div>
+   ${crow('#9e3a26', 'Месть королевы Анны', 'на плаву', 26, 26, 'Решающий залп', 'добила «Индевор» Залпом на 6')}
+   ${crow('#2a2521', 'Чёрная жемчужина', 'на плаву', 17, 26, 'Мастер манёвра', 'отменила 3 Залпа Реакциями')}
+   ${crow('#7fa79a', 'Летучий голландец', 'затонул', 19, 26, 'Собиратель душ', '5 Душ за партию', true)}
+   ${crow('#cdb47a', 'Индевор', 'затонул', 14, 26, 'Казначей', '+9 Пороха в Трюм', true)}
+   </div><div class="vbtns">${oakBtn('Реванш', 'те же корабли, новая партия', ANCHOR_S, 'height:58px')}<div class="row3">${vtab('Новая партия', VI_NEW)}${vtab('Скачать', VI_DL)}${vtab('Стол', VI_EYE)}</div></div></div>`), notes: [
+  'Лист на весь экран: лента «Победа …», кто пошёл ко дну, сколько длилась партия; панорама — победители под парусами, побеждённые тонут в дыму.',
+  '«Лучший капитан» — медаль и три числа. «Вклад в партию» — полоса урона цветом корабля, звание и факт (у затонувших — серым). Длинный список прокручивается внутри листа.',
+  'Кнопки прибиты к низу: «Реванш» во всю ширину, под ней «Новая партия», «Скачать партию», «Посмотреть стол».']});
+
+/* ---------- the gallery ---------- */
+const gal = document.getElementById('gal');
+gal.innerHTML = F.map((f, i) => `<div class="item"><div class="cap">${f.cap}<span>${f.sub}</span></div><div class="wrap" data-h="${f.H}">${f.html}</div><ul class="notes">${f.notes.map(n => `<li>${n}</li>`).join('')}</ul></div>`).join('');
+function fit(){ document.querySelectorAll('.wrap').forEach(w => { const k = Math.min(1, w.clientWidth / 430); const ph = w.firstElementChild; ph.style.transform = k < 1 ? `scale(${k})` : ''; w.style.height = (+w.dataset.h * k) + 'px'; }); }
+fit(); addEventListener('resize', fit);
+</script>
+</body>
+</html>
