@@ -241,6 +241,16 @@ test.describe('«Подсказки»', () => {
       await expect(page.getByTestId('ship-sheet')).toHaveCount(0);
       const panel = page.getByTestId('volley-panel');
       await expect(panel.locator('.panel-head')).toContainText('по Корпусу «Голландец»');
+      // rig (а): «Огонь!» is the whole oak board (≥ 260 × 56) with its word and the price readable, not a square with a medallion
+      const fire = page.getByTestId('fire');
+      await expect(fire).toContainText('Огонь');
+      await expect(fire.locator('.oak-pan b')).toBeVisible();
+      const fb = (await fire.boundingBox())!;
+      expect(fb.width).toBeGreaterThanOrEqual(size.name === 'laptop' ? 259 : 150);
+      expect(fb.height).toBeGreaterThanOrEqual(55);
+      const wb = (await fire.locator('.oak-pan b').evaluate((e) => ({ w: e.getBoundingClientRect().width, sw: e.scrollWidth, cw: e.clientWidth })));
+      expect(wb.w).toBeGreaterThan(40);
+      expect(wb.sw).toBeLessThanOrEqual(wb.cw + 1); // the word is not cut with «…»
       // «i» opens the ship card; closing it keeps the target and the Volley panel.
       await page.getByTestId('ship-info-Г').click();
       await expect(page.getByTestId('ship-sheet')).toBeVisible();
