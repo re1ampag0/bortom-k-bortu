@@ -22,13 +22,26 @@ export interface Settings {
   fastEnd: boolean;
   /** A tap of a finger on the table skips the show to its result (off by default: a finger touches the screen often). */
   tapSkip: boolean;
-  /** The frame of the sea on the table (A5): brass (by default) or wood. */
-  seaFrame: SeaFrame;
+  /** ⚙ «Вид стола» (rig, г): the first variant of each switch is the default. */
+  view: TableView;
 }
 
-export type SeaFrame = 'brass' | 'wood';
+/** «Залп на планшете»: the Guns track as icons (default) or as the gun ports of a ship's side. */
+export type GunsView = 'icons' | 'ports';
+/** «Фон под рукой»: the deck under the cards of the hand (default) or the captain's table around it. */
+export type HandBg = 'deck' | 'table';
+/** «Рамка моря»: the bulwark of planks (default) or the brass frame of before. */
+export type SeaFrame = 'bulwark' | 'brass';
 
-export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false, tapSkip: false, seaFrame: 'brass' };
+export interface TableView {
+  guns: GunsView;
+  hand: HandBg;
+  frame: SeaFrame;
+}
+
+export const DEFAULT_VIEW: TableView = { guns: 'icons', hand: 'deck', frame: 'bulwark' };
+
+export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false, tapSkip: false, view: DEFAULT_VIEW };
 
 function read(key: string): string | null {
   try {
@@ -101,9 +114,22 @@ export function storeClock(c: { id: string; ms: number }): void {
   write(CLOCK, JSON.stringify(c));
 }
 
+/** A stored view: what is not one of the known variants (the old «brass|wood» frame included) is read as the default. */
+function readView(v: unknown): TableView {
+  const o = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
+  const pick = <T extends string>(x: unknown, ok: readonly T[], d: T): T => (ok.includes(x as T) ? (x as T) : d);
+  return {
+    guns: pick(o.guns, ['icons', 'ports'], DEFAULT_VIEW.guns),
+    hand: pick(o.hand, ['deck', 'table'], DEFAULT_VIEW.hand),
+    frame: pick(o.frame, ['bulwark', 'brass'], DEFAULT_VIEW.frame),
+  };
+}
+
 export function loadSettings(): Settings {
   try {
-    return { ...DEFAULT_SETTINGS, ...(JSON.parse(read(SETTINGS) ?? '{}') as Partial<Settings>) };
+    const { seaFrame: _old, ...stored } = JSON.parse(read(SETTINGS) ?? '{}') as Partial<Settings> & { seaFrame?: unknown };
+    void _old;
+    return { ...DEFAULT_SETTINGS, ...stored, view: readView(stored.view) };
   } catch {
     return DEFAULT_SETTINGS;
   }

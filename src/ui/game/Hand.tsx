@@ -43,8 +43,14 @@ const isPhone = () => typeof matchMedia !== 'undefined' && matchMedia(PHONE).mat
  * The place of card k of n in the fan (A5Table.html: −7°, −3°, 0, 3°, 7°; the edges lower than the middle): the tilt
  * and the lift. The middle rises, the edges stay at the line of the hand — the fan never goes below it.
  */
-export function fanOf(k: number, n: number): { r: number; dy: number } {
+export function fanOf(k: number, n: number, wide = false): { r: number; dy: number } {
   const o = k - (n - 1) / 2, m = (n - 1) / 2;
+  if (wide && m > 0) {
+    // «Палуба» on a wide window (1600–1920): a real fan — the edges tilt ±3° (up to ±8° with 8 cards) through 0° in the middle
+    // and lie 12 px lower than the middle (an arc)
+    const edge = n <= 5 ? 3 : Math.min(8, 3 + ((n - 5) * 5) / 3);
+    return { r: Math.round((o / m) * edge * 10) / 10, dy: Math.round((o / m) ** 2 * 12 * 10) / 10 };
+  }
   const step = n > 1 ? Math.min(3.5, 14 / (n - 1)) : 0;
   const lift = Math.min(2.5, 10 / Math.max(1, m * m));
   return { r: Math.round(o * step * 10) / 10, dy: Math.round((o * o - m * m) * lift * 10) / 10 };
@@ -56,11 +62,14 @@ export function fanOf(k: number, n: number): { r: number; dy: number } {
  */
 function useFanFit(n: number) {
   const ref = useRef<HTMLDivElement>(null);
+  // the fan of a wide window (game.css --fan-wide: «Палуба», 1600 px and wider)
+  const [wide, setWide] = useState(false);
   useBeforePaint(() => {
     const row = ref.current;
     if (!row) return;
     const fit = () => {
       if (isPhone()) return void row.style.removeProperty('--ov');
+      setWide(getComputedStyle(row).getPropertyValue('--fan-wide').trim() === '1');
       const kids = [...row.children] as HTMLElement[];
       const cards = kids.filter((x) => x.classList.contains('hcard'));
       if (cards.length < 2) return void row.style.removeProperty('--ov');
@@ -68,7 +77,11 @@ function useFanFit(n: number) {
       const gap = parseFloat(cs.columnGap) || 0;
       const room = row.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
       const natural = kids.reduce((w, x) => w + x.offsetWidth, 0) + gap * (kids.length - 1);
-      const ov = Math.max(0, Math.ceil((natural - room) / (cards.length - 1)));
+      // --fan-max-step (game.css, «Палуба»): the step of the fan is at most that part of a card — the cards always overlap a little
+      const maxStep = parseFloat(cs.getPropertyValue('--fan-max-step'));
+      const w = cards[0].offsetWidth;
+      const capped = maxStep > 0 ? Math.ceil(w + gap - maxStep * w) : 0;
+      const ov = Math.max(0, capped, Math.ceil((natural - room) / (cards.length - 1)));
       row.style.setProperty('--ov', `${ov}px`);
     };
     fit();
@@ -76,7 +89,7 @@ function useFanFit(n: number) {
     ro?.observe(row);
     return () => ro?.disconnect();
   }, [n]);
-  return ref;
+  return [ref, wide] as const;
 }
 
 /**
@@ -211,6 +224,8 @@ export interface HandTab {
   label: string;
   /** «Подсказки»: this ship has a Reaction to play now. */
   dot?: boolean;
+  /** «0 из 3»: the cards played this turn of the limit (the line «Колода · Сброс · сыграно» of «Палуба» on a laptop). */
+  played?: string;
 }
 
 export function Hand({
@@ -252,7 +267,7 @@ export function Hand({
 }) {
   const holder = s.ships[seat];
   const n = holder.hand.length + holder.plans.length;
-  const rowRef = useFanFit(n);
+  const [rowRef, wideFan] = useFanFit(n);
   usePhoneFan(rowRef, n);
   // The phone: the lifted card (its key in the strip); a tap beside it, another ship's tab or a new hand drops it.
   const [lifted, setLifted] = useState<string | null>(null);
@@ -267,7 +282,7 @@ export function Hand({
     return () => removeEventListener('pointerdown', drop, true);
   }, [lifted]);
   const card = (code: string, k: number, key: string, plan = false) => {
-    const f = fanOf(k, n);
+    const f = fanOf(k, n, wideFan);
     const press = () => {
       if (!isPhone() || lifted === key || code === HIDDEN || direct?.(seat, code)) {
         setLifted(null);
@@ -317,6 +332,7 @@ export function Hand({
         )}
         <button className="link deck-info" onClick={() => onDiscard(seat)} title="Открыть сброс" data-fx-deck>
           Колода {holder.deck.length} · Сброс {holder.discard.length}
+          {tabs.find((t) => t.seat === seat)?.played && <span className="deck-played"> · сыграно {tabs.find((t) => t.seat === seat)!.played}</span>}
         </button>
       </div>
       {note && (

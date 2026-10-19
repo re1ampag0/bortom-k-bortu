@@ -24,4 +24,14 @@ describe('the fan of the hand', () => {
     }
     expect(fanOf(0, 1)).toEqual({ r: 0, dy: 0 });
   });
+
+  it('«Палуба» on a wide window: a real fan — ±3° at the edges (±8° with 8 cards), 0° in the middle, the edges 12 px lower', () => {
+    const five = Array.from({ length: 5 }, (_, k) => fanOf(k, 5, true));
+    expect(five.map((f) => f.r)).toEqual([-3, -1.5, 0, 1.5, 3]);
+    expect(five.map((f) => f.dy)).toEqual([12, 3, 0, 3, 12]);
+    const eight = Array.from({ length: 8 }, (_, k) => fanOf(k, 8, true));
+    expect(eight[0].r).toBe(-8);
+    expect(eight[7].r).toBe(8);
+    expect(eight[0].dy).toBe(12);
+  });
 });
