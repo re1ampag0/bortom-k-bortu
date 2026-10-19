@@ -239,6 +239,9 @@ export const T = {
     line: 3000,
     /** a ship of the line after the one before it; its three guns after one another */
     ship: 70,
+    /** the recoil of a ship that fires (A7) and the ring of smoke that rolls off the water */
+    recoil: 900,
+    ring: 900,
     gun: 40,
     /** a ball flies */
     fly: 420,

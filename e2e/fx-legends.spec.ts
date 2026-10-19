@@ -124,6 +124,20 @@ test.describe('the Legends through ?fxScene', () => {
         expect(foot.px).toBeGreaterThanOrEqual(10);
 
         await shot(page, l.effect, l.after, `${SHOTS}/e2e-${l.scene}-effect-${size}.png`);
+        if (l.scene === 'armada') {
+          // A7: the ships of the line heel from the recoil when they fire (a running animation on .lg-recoil with a turn)
+          const heel = await page.evaluate(async () => {
+            const rcs = Array.from(document.querySelectorAll('.lg-recoil'));
+            let best = 0;
+            for (let i = 0; i < 40 && best < 1; i++) {
+              for (const r of rcs) { const m = new DOMMatrix(getComputedStyle(r).transform); best = Math.max(best, Math.abs(m.b)); }
+              await new Promise((r) => setTimeout(r, 25));
+            }
+            return { ships: rcs.length, turn: best };
+          });
+          expect(heel.ships, 'ships of the line').toBeGreaterThanOrEqual(4);
+          expect(heel.turn, 'a ship heels from the recoil').toBeGreaterThan(0.005);
+        }
         if (l.scene === 'bottle') {
           // A5: the ship in the bottle is the target's own («Индевор»), not the neutral merchantman of the card
           const kind = await page.evaluate(() => document.querySelector('.fx-layer .lg-rock > g[data-kind]')?.getAttribute('data-kind'));
