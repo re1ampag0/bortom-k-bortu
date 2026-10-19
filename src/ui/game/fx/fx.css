@@ -183,3 +183,21 @@
 .lg-pop { z-index: 3; white-space: nowrap; font: italic 700 22px/1 var(--fx-font); color: #fff6d8; text-shadow: 0 0 6px #b8862a, 0 2px 0 #5a3a1c, 0 0 14px rgba(255, 214, 120, 0.8); }
 .lg-jack-water { left: 0; right: 0; bottom: 0; height: 0; z-index: 6; background: linear-gradient(rgba(70, 130, 160, 0.4), rgba(18, 58, 78, 0.75)); border-top: 2px solid rgba(230, 246, 250, 0.85); border-radius: 0 0 6px 6px; }
 .lg-ghost { border-radius: 6px; background: rgba(255, 226, 150, 0.22); border: 2px solid rgba(255, 214, 120, 0.7); box-shadow: 0 0 18px rgba(255, 214, 120, 0.5); }
+
+/* ——— FX-C: the weather of the round (fx/weather.ts, ANIMATIONS.md §3.10) ——— */
+.fx-weather > svg.wx { position: absolute; }
+/* the storm: no flat dimming — the filter only on the picture of the sea */
+.board[data-wx='storm'] .sea-water { filter: saturate(0.5) brightness(0.8) hue-rotate(-12deg) contrast(1.08); }
+/* calm: the waves of the sea stand still; wind: they run faster */
+.board[data-wx='calm'] .sea-water::before { animation-play-state: paused; }
+.board[data-wx='wind'] .sea-water::before { animation-duration: 12s; }
+/* the storm: the planks pitch (pgpitch of the prototype), each in its own phase */
+.board[data-wx-move='storm'] .planks > .plank { animation: wx-pitch 3.6s ease-in-out infinite; }
+.board[data-wx-move='storm'] .planks.top > .plank:nth-child(2) { animation-delay: -0.9s; }
+.board[data-wx-move='storm'] .planks.bottom > .plank:nth-child(1) { animation-delay: -1.8s; }
+.board[data-wx-move='storm'] .planks.bottom > .plank:nth-child(2) { animation-delay: -2.7s; }
+@keyframes wx-pitch { 0%, 100% { translate: 0 0; rotate: -0.35deg; } 50% { translate: 0 3px; rotate: 0.45deg; } }
+/* the Ninth wave: the planks ride up and down as the crest passes their middle (pgheave; the delay — by the place) */
+.board[data-wx-move='wave'] .planks > .plank { animation: wx-heave 8s ease-in-out var(--wx-heave, 0s) infinite; }
+@keyframes wx-heave { 0%, 16%, 100% { translate: 0 0; rotate: 0deg; } 3% { translate: 0 -4px; rotate: -0.6deg; } 6% { translate: 0 -11px; rotate: -1.2deg; } 9% { translate: 0 -6px; rotate: 1.1deg; } 12% { translate: 0 4px; rotate: 0.6deg; } }
+@media (prefers-reduced-motion: reduce) { .board[data-wx-move] .planks > .plank { animation: none; } }

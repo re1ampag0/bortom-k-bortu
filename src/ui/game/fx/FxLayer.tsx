@@ -452,8 +452,9 @@ export function useFxQueue({
   }, [finish]);
 
   return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, hidden: D.current ? pendingFlags(queue.current) : {}, logFrom: D.current ? logHiddenFrom(queue.current) : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current),
-    // game: the weather is off (empty) in «простые спецэффекты», with prefers-reduced-motion and at «мгновенно».
-    weather: () => ({ ctx: makeCtx(RUN.current, preview.current ?? D.current ?? displayFrom(live.current.view)), on: live.current.enabled && live.current.rich }) };
+    // game: the weather is off (empty) with prefers-reduced-motion and at «мгновенно»; FX-C: in «простые спецэффекты»
+    // it stands still (ctx.rich = false).
+    weather: () => ({ ctx: makeCtx(RUN.current, preview.current ?? D.current ?? displayFrom(live.current.view)), on: live.current.enabled }) };
 }
 
 /**

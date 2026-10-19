@@ -18,6 +18,7 @@ import {
   shownTrack, tag, trackEl, trackMark, badgeMark, visible, wait, whirlpool, type FxCtx,
 } from './primitives';
 import { SEA_BG, seaSvg } from './seaArt';
+import { drawWeather } from './weather';
 import type { ClipPlayer } from './FxLayer';
 
 const esc = (s: string) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
@@ -317,28 +318,16 @@ const playRound = async (c: RoundClip, ctx: FxCtx) => {
 export const PLAY_SEA = { sea: playSea as unknown as ClipPlayer, round: playRound as unknown as ClipPlayer };
 
 /**
- * The quiet weather of the round by the sea card on the displayed table. game: drawn only where the layer plays with
- * rich effects (FxLayer.tsx), so it always moves; `on: false` empties it. Drawn again only when the card, the size of
- * the board or the places of the ships change.
+ * The weather of the round by the sea card on the displayed table (FX-C, ANIMATIONS.md §3.10: fx/weather.ts). Drawn
+ * where the layer plays (FxLayer.tsx); with «простые спецэффекты» it stands still; `on: false` empties it. Drawn again
+ * only when the card, the size of the board, the places of the ships or the richness change.
  */
 export function renderWeather(ctx: FxCtx, weather: HTMLElement, on: boolean): void {
   const code = on ? ctx.display.sea : null;
   const key = code ? seaKeyOf(ctx, code) : null;
   const D = ctx.display;
-  const k2 = `${key}|${ctx.board.clientWidth}|${ctx.board.clientHeight}|${Object.keys(D.ships).map((c) => D.ships[c].pos + (D.ships[c].sunk ? 's' : '')).join('')}`;
+  const k2 = `${key}|${ctx.rich}|${ctx.board.clientWidth}|${ctx.board.clientHeight}|${Object.keys(D.ships).map((c) => D.ships[c].pos + (D.ships[c].sunk ? 's' : '')).join('')}`;
   if (k2 === weather.dataset.key) return;
   weather.dataset.key = k2;
-  weather.innerHTML = '';
-  if (!key || !ctx.board.querySelector('[data-fx-gap]')) return;
-  const t = tableCtx(ctx);
-  const add = (cls: string, style: Partial<CSSStyleDeclaration> = {}) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, style); weather.appendChild(d); return d; };
-  if (key === 'storm') for (let i = 0; i < 14; i++) { const d = add('drop'); const x = Math.random() * (t.W + 80), y = Math.random() * t.R; d.animate([{ transform: `translate(${x}px,${y - 40}px) rotate(22deg)`, opacity: 0 }, { opacity: 0.45, offset: 0.2 }, { transform: `translate(${x - 40}px,${y + 70}px) rotate(22deg)`, opacity: 0 }], { duration: 1500 + Math.random() * 900, delay: -Math.random() * 2000, iterations: Infinity }); }
-  if (key === 'fog') { for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) add('haze', { left: x ? 'auto' : '-80px', right: x ? '-80px' : 'auto', top: y ? 'auto' : '-60px', bottom: y ? '-60px' : 'auto' }); diagLines(t, weather); }
-  if (key === 'calm') { const d = document.createElement('div'); d.className = 'svgabs'; d.style.opacity = '1'; d.innerHTML = `<svg width="${t.W}" height="${t.R}"><g stroke="#9CC3DA" stroke-width="2" opacity=".6"><path d="M20 ${t.g.cy - 14} H${t.W - 20}"/><path d="M60 ${t.g.cy + 12} H${t.W - 60}"/></g></svg>`; weather.appendChild(d); }
-  if (key === 'wind') for (let k = 0; k < 3; k++) { const s = add('streak'); s.style.width = '120px'; const y = 30 + k * (t.R / 3); s.animate([{ transform: `translate(-140px,${y}px)`, opacity: 0 }, { opacity: 0.5, offset: 0.4 }, { transform: `translate(${t.W}px,${y - 10}px)`, opacity: 0 }], { duration: 1600, delay: k * 1300, iterations: Infinity, easing: 'ease-in' }); }
-  if (key === 'maelstrom') { const w = add('whirl bg'); w.innerHTML = '<svg viewBox="-50 -50 100 100" width="160" height="88"><g fill="none" stroke="#BFDCE8" stroke-width="2.5" stroke-linecap="round" opacity=".45"><path d="M0 0 m-4 0 a4 4 0 1 1 8 0 a10 10 0 1 1 -20 0 a16 16 0 1 1 32 0 a22 22 0 1 1 -44 0 a28 28 0 1 1 56 0"/></g></svg>'; Object.assign(w.style, { left: t.W / 2 - 80 + 'px', top: t.g.cy - 44 + 'px', opacity: '1' }); w.firstElementChild!.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-360deg)' }], { duration: 12000, iterations: Infinity }); }
-  if (key === 'clear') add('tint', { width: t.W + 'px', height: t.R + 'px', background: 'radial-gradient(ellipse at 50% 0%, rgba(255,214,120,.22), transparent 60%)', opacity: '1' });
-  if (key === 'reefs') rocks(t, weather);
-  if (key === 'moon') add('tint', { width: t.W + 'px', height: t.R + 'px', background: 'rgba(31,42,68,.12)', opacity: '1' });
-  if (key === 'wave') for (let k = 0; k < 2; k++) { const w = document.createElement('div'); w.className = 'svgabs'; w.innerHTML = `<svg width="${t.W}" height="20"><path d="${wavyPath(t.W, 10, 6, 40)}" fill="none" stroke="#CFE6EF" stroke-width="2" opacity=".5"/></svg>`; weather.appendChild(w); w.animate([{ transform: `translate(-40px,${t.g.cy - 16 + k * 22}px)`, opacity: 0.6 }, { transform: `translate(0px,${t.g.cy - 16 + k * 22}px)`, opacity: 0.6 }], { duration: 2600, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out', delay: k * 600 }); }
+  drawWeather(ctx, weather, key && ctx.board.querySelector('[data-fx-gap]') ? key : null, ctx.rich);
 }
