@@ -220,7 +220,7 @@ PLAY.sink = async (c, ctx) => {
     A(ctx, ring, [{ transform: `translate(${cx}px,${cy}px) scale(${r0 / r1})`, opacity: 1 }, { transform: `translate(${cx}px,${cy}px) scale(${small ? 0.5 : 1})`, opacity: 0 }], d, tBlast + dl, 'cubic-bezier(.1,.8,.3,1)');
   }
   const W = ctx.board.clientWidth, H = ctx.board.clientHeight;
-  for (let i = 0, m = Math.max(4, room(ctx, small ? 6 : 12)); i < (ctx.rich ? m : 0); i++) {
+  for (let i = 0, m = Math.max(4, room(ctx, 12)); i < (ctx.rich ? m : 0); i++) {
     const ex = clamp(cx + rnd(-260, 260) * (small ? 0.5 : 1), 12, W - 12), ey = clamp(fy + toGap * rnd(14, 90), 12, H - 12);
     const g = sv(svg, DEBRIS[i % 4]), d = S.debris * rnd(0.82, 1.18), rot = rnd(-720, 720);
     const pts = qpts(cx + rnd(-30, 30), cy, (cx + ex) / 2, Math.min(cy, ey) - rnd(80, 170), ex, ey, 18);
@@ -249,7 +249,7 @@ PLAY.sink = async (c, ctx) => {
   const swR = (i: number) => R1((small ? 70 : 140) * (1 - (i * 26) / 140));
   const sw = sv(svg, `<g>${[0, 1, 2, 3].map((i) => `<ellipse rx="${swR(i)}" ry="${R1(swR(i) * 0.34)}" fill="none" stroke="#e6f2f4" stroke-width="${2 - i * 0.3}" stroke-dasharray="14 10" opacity="${0.8 - i * 0.12}"/>`).join('')}</g>`);
   A(ctx, sw, [{ transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(0deg)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.75 }, { transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(-200deg)`, opacity: 0 }], D + 1400, tSplit, 'linear');
-  for (let i = 0, m = room(ctx, small ? 16 : 40); i < m; i++) {
+  for (let i = 0, m = room(ctx, 40); i < m; i++) {
     const x = b.x + rnd(10, b.w - 10), bub = sv(svg, `<circle r="${rnd(1.6, 4.4).toFixed(1)}" fill="rgba(220,244,248,.18)" stroke="#dff4f8" stroke-width="1"/>`);
     A(ctx, bub, [{ transform: `translate(${x.toFixed(1)}px,${(b.y + rnd(10, b.h)).toFixed(1)}px)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${(x + rnd(-8, 8)).toFixed(1)}px,${(b.y + rnd(-30, 20)).toFixed(1)}px)`, opacity: 0 }], rnd(900, 1500), tSplit + rnd(400, D));
   }
@@ -424,7 +424,7 @@ export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): numb
   }
   const glow = overlayAt(ctx, 'fx-fireglow', b);
   A(ctx, glow, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.8, offset: 0.5 }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], F.glow, delay);
-  const flames = fireWall(ctx, svg, b.x + 6, b.r - 6, b.b + 2, small ? 20 : 30, { delay, spread: 26, life: F.glow, embers: small ? 12 : 30, host: group });
+  const flames = fireWall(ctx, svg, b.x + 6, b.r - 6, b.b + 2, small ? 20 : 30, { delay, spread: 26, life: F.glow, embers: 30, host: group });
   // spots of fire: the picture, then along the head and the bottom edge (fractions of the plank, not the prototype's px)
   const spots: Pt[] = [{ x: pb.cx, y: pb.b }, ...[0.31, 0.48, 0.62, 0.75, 0.87, 0.19, 0.95].map((f, i) => ({ x: b.x + b.w * f, y: i % 2 ? b.b : hb.b }))];
   const marks = document.createElement('div');
@@ -437,7 +437,7 @@ export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): numb
     A(ctx, marks.firstElementChild!, [{ opacity: 0 }, { opacity: 1 }], 1800, 200);
     scar(marks, 'medium', ship);
   });
-  spots.slice(0, small ? 4 : spots.length).forEach((p, i) => {
+  spots.forEach((p, i) => {
     const t = delay + 150 + i * F.spot;
     flames.push(...fireWall(ctx, svg, p.x - 14, p.x + 14, p.y + 2, small ? 16 : 22, { delay: t, spread: 30, embers: 6, life: F.glow - 150 - i * F.spot, host: group }));
     at(ctx, t, () => {
