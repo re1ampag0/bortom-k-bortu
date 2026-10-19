@@ -191,3 +191,23 @@ test('sink: the captain rows across in the new clinker longboat', async ({ page 
   expect(r.strakes, 'the strakes').toBeGreaterThanOrEqual(3);
   expect(r.dup, 'ids twice').toEqual([]);
 });
+
+// A11 (b): the air shimmers over the burning plank — pale bands in the layer above it — while the plank itself keeps no filter
+// (its text stays sharp).
+test('fire: the air shimmers over the plank, the plank has no filter', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 660 });
+  await open(page, 'turn');
+  await page.waitForFunction(() => document.querySelectorAll('.fx-layer svg path[stroke="#fff3d6"]').length >= 3, null, { timeout: 40_000, polling: 'raf' });
+  await page.waitForTimeout(500);
+  const r = await page.evaluate(() => {
+    const bands = Array.from(document.querySelectorAll('.fx-layer svg path[stroke="#fff3d6"]'));
+    return {
+      bands: bands.length,
+      moving: bands.some((b) => b.getAnimations().some((a) => a.playState === 'running')),
+      filters: Array.from(document.querySelectorAll('[data-fx-ship]')).map((p) => getComputedStyle(p).filter).filter((f) => f !== 'none'),
+    };
+  });
+  expect(r.bands).toBeGreaterThanOrEqual(3);
+  expect(r.moving, 'the bands are moving').toBe(true);
+  expect(r.filters, 'no plank has a filter').toEqual([]);
+});
