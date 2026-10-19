@@ -14,6 +14,7 @@ export const DIVE_K = 1;
 /** FX-B, FX-C (package 3): the Legends and the sea. */
 export const LEGEND_K = 1;
 export const KRAKEN_K = 1;
+export const ARMADA_K = 1;
 
 const scaled = <T extends Record<string, number>>(k: number, o: T): T => Object.fromEntries(Object.entries(o).map(([n, v]) => [n, v * k])) as T;
 
@@ -219,5 +220,30 @@ export const T = {
     sinkStep: 90,
     release: 800,
     end: 1600,
+  }),
+  /** «Армада Компании» (fxArmada of fx3.js, §3.3): the line of battle comes in along the gap, a broadside ripples down
+   *  it at each target, the hits of the events, the smoke stays (a short trace), the fleet sails away into it. */
+  armada: scaled(ARMADA_K, {
+    /** the haze of the horizon */
+    haze: 3600,
+    /** a ship of the line comes in; the next one after… */
+    enter: 2200,
+    enterStep: 160,
+    /** the line is in place: the broadside begins */
+    line: 3000,
+    /** a ship of the line after the one before it; its three guns after one another */
+    ship: 70,
+    gun: 40,
+    /** a ball flies */
+    fly: 420,
+    /** after the broadside at a target: the flash, the shake, the boards break */
+    land: 500,
+    /** before the next target */
+    next: 700,
+    /** the smoke comes / the fleet sails away into it */
+    smoke: 1200,
+    leave: 3200,
+    leaveStep: 120,
+    end: 2400,
   }),
 } as const;

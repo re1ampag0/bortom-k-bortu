@@ -538,6 +538,14 @@ export function fxSvg(ctx: FxCtx, host: Element = ctx.layer): SVGSVGElement {
   host.appendChild(s);
   return s;
 }
+/** FX-B: an svg on the sea under the planks (in .fx-scars) for the time of a clip — the line of the Armada, the dark of
+ *  the deep. Not a trace: the layer takes it away at the end of the clip and on «Сразу итог» (FxLayer.tsx); a clip
+ *  that wants it to stay as a trace takes the class off and calls scar(). */
+export function seaTemp(ctx: FxCtx): SVGSVGElement {
+  const s = fxSvg(ctx, ctx.board.querySelector('.fx-scars') ?? ctx.layer);
+  s.classList.add('fx-temp');
+  return s;
+}
 /** Adds svg markup to a parent and gives its first element. */
 export function sv(parent: Element, markup: string): SVGElement {
   const g = document.createElementNS(NS, 'g');
