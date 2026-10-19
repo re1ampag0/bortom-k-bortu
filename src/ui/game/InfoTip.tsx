@@ -3,6 +3,7 @@
 // A press on them is not a press on the table: the show of the animation layer goes on (FxLayer.tsx asks tookPress).
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { stageK } from '../stage';
 
 /** The window open now: one at a time. */
 let closeOpen: (() => void) | null = null;
@@ -63,10 +64,15 @@ export function InfoTip({
       return;
     }
     // Under the badge if it fits, else above it; never past the edges of the screen (8 px).
-    const a = anchor.current.getBoundingClientRect(), p = pop.current.getBoundingClientRect();
-    const left = Math.max(8, Math.min(window.innerWidth - p.width - 8, a.left + a.width / 2 - p.width / 2));
+    // in the px of the stage (stage.ts): the pop lives in #stage
+    const sk = stageK();
+    const a0 = anchor.current.getBoundingClientRect(), p0 = pop.current.getBoundingClientRect();
+    const a = { left: a0.left / sk, top: a0.top / sk, bottom: a0.bottom / sk, width: a0.width / sk };
+    const p = { width: p0.width / sk, height: p0.height / sk };
+    const W = window.innerWidth / sk, Hh = window.innerHeight / sk;
+    const left = Math.max(8, Math.min(W - p.width - 8, a.left + a.width / 2 - p.width / 2));
     const below = a.bottom + 6;
-    const top = below + p.height <= window.innerHeight - 8 ? below : Math.max(8, a.top - 6 - p.height);
+    const top = below + p.height <= Hh - 8 ? below : Math.max(8, a.top - 6 - p.height);
     setPos({ left, top });
   }, [open]);
 
@@ -139,7 +145,7 @@ export function InfoTip({
               ×
             </button>
           </div>,
-          document.body,
+          document.getElementById('stage') ?? document.body,
         )}
     </>
   );

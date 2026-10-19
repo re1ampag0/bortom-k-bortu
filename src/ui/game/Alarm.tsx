@@ -7,6 +7,7 @@ import type { GameData } from '../../engine/types';
 import { fuseLeft, type AlarmInfo } from './alarm';
 import { HandCard, type AlarmCard } from './Hand';
 import { T } from './fx/timing';
+import { stageK } from '../stage';
 
 const BELL = `<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 4 C10 4 8 10 8 16 V22 L5 26 H29 L26 22 V16 C26 10 24 4 17 4 Z" fill="#e0bd62" stroke="#3a2412" stroke-width="1"/><path d="M13 27 Q17 32 21 27" fill="#e0bd62" stroke="#3a2412" stroke-width="1"/><path d="M17 1 V4" stroke="#3a2412" stroke-width="2"/><path d="M3 12 Q1 17 3 22 M31 12 Q33 17 31 22" stroke="#e0bd62" stroke-width="1.6" fill="none"/></svg>`;
 
@@ -56,9 +57,14 @@ export function AlarmArrow({ box, from, to, label }: { box: RefObject<HTMLElemen
     const el = box.current;
     if (!el) return;
     const measure = () => {
-      const b = el.getBoundingClientRect();
-      const a = el.querySelector(`[data-ship="${from}"]`)?.getBoundingClientRect();
-      const t = el.querySelector(`[data-ship="${to}"]`)?.getBoundingClientRect();
+      // in the px of the stage (stage.ts)
+      const sk = stageK();
+      const inStage = (r: DOMRect) => ({ left: r.left / sk, top: r.top / sk, right: r.right / sk, bottom: r.bottom / sk, width: r.width / sk, height: r.height / sk });
+      const b = inStage(el.getBoundingClientRect());
+      const a0 = el.querySelector(`[data-ship="${from}"]`)?.getBoundingClientRect();
+      const t0 = el.querySelector(`[data-ship="${to}"]`)?.getBoundingClientRect();
+      const a = a0 && inStage(a0),
+        t = t0 && inStage(t0);
       if (!a || !t) return;
       const down = a.top < t.top;
       const next: Geo = {

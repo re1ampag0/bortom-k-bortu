@@ -128,7 +128,7 @@ button {
   max-width: 900px;
   margin: 0 auto;
   padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
-  min-height: 100dvh;
+  min-height: var(--app-h, 100dvh);
 }
 .setup h1 {
   font-family: var(--font-head);
@@ -217,7 +217,7 @@ button {
   margin: 0;
   padding-left: 18px;
   font-size: 0.78rem;
-  max-height: 30dvh;
+  max-height: calc(var(--app-h, 100dvh) * 0.30);
   overflow: auto;
 }
 .row.fx-errors code {
@@ -1236,7 +1236,7 @@ button.star::before {
   padding: 8px 16px 12px;
   display: grid;
   gap: 8px;
-  max-height: 46dvh;
+  max-height: calc(var(--app-h, 100dvh) * 0.46);
   overflow: auto;
 }
 .panel.volley .panel-body {
@@ -1782,7 +1782,7 @@ button.star::before {
   background: var(--panel);
   border-radius: 14px;
   width: min(560px, 100%);
-  max-height: calc(100dvh - 32px);
+  max-height: calc(var(--app-h, 100dvh) - 32px);
   display: flex;
   flex-direction: column;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
@@ -2313,7 +2313,7 @@ button.star::before {
   }
   .panel-body {
     padding: 6px 12px 10px;
-    max-height: 52dvh;
+    max-height: calc(var(--app-h, 100dvh) * 0.52);
   }
   .panel.volley .panel-body {
     grid-template-columns: minmax(0, 1fr);
@@ -2333,7 +2333,7 @@ button.star::before {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    max-height: 30dvh;
+    max-height: calc(var(--app-h, 100dvh) * 0.30);
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -2449,7 +2449,7 @@ button.star::before {
   .sheet.sheet-wide {
     width: 100%;
     border-radius: 18px 18px 0 0;
-    max-height: 85dvh;
+    max-height: calc(var(--app-h, 100dvh) * 0.85);
   }
   .slots {
     grid-template-columns: 1fr;
@@ -3631,14 +3631,20 @@ button.star::before {
   right: 2px;
   bottom: 3px;
   max-width: 100%;
-  font-size: 11.5px;
-  font-weight: 600;
-  line-height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-family: 'Alegreya Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 15px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: #f3e6c6;
+  color: #efe3c8;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+.log-col > .hand-actions .ally-ready svg {
+  flex: none;
 }
 /* «Ход окончен» under the log: a thin brass rim #e0bd62 round the oak and a soft warm glow (the prototype) */
 .log-col .oak-btn.end-turn {
@@ -4262,15 +4268,7 @@ button.star::before {
     padding-bottom: var(--deck-lift, 0px);
   }
   .game.view-hand-deck .hand .tabs {
-    margin-left: calc(var(--deck-tabs, 0px) / var(--deck-zoom, 1));
-  }
-  /* a window taller than 900 px: the cards and the tabs are 1.2 times larger (TableThings.tsx) */
-  .game.view-hand-deck.deck-big {
-    --deck-zoom: 1.2;
-  }
-  .game.view-hand-deck.deck-big .hand-cards,
-  .game.view-hand-deck.deck-big .hand .tabs {
-    zoom: 1.2;
+    margin-left: var(--deck-tabs, 0px);
   }
   .game.view-hand-deck .board-bottom {
     position: relative;

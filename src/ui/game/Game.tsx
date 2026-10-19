@@ -1088,7 +1088,12 @@ export function Game({
       <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       {allyReady && (
         <p className="ally-ready" data-testid="ally-ready">
-          «{shipData(data, allyReady.code).nick}»: готово — ход закончится, когда нажмёте вы
+          {/* A5Table.html: a green ring with a white tick, «„Месть“ готова — …» (the gender of the ship's name) */}
+          <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="7" fill="#3d8562" />
+            <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} — ход закончится, когда нажмёте вы
         </p>
       )}
     </div>
