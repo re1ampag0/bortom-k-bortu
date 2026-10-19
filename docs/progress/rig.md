@@ -20,7 +20,7 @@
 
 - [x] (а) «Ход окончен» / «Огонь!» / «Реванш» — дубовая доска
 - [x] (б) круглые кнопки — турецкий узел
-- [ ] (в) трезубец, пушка `cannon2` на шкале «Пушки»
+- [x] (в) трезубец, пушка `cannon2` на шкале «Пушки»
 - [ ] (г) ⚙ «Вид стола»: Залп на планшете / Фон под рукой / Рамка моря
 - [ ] (д) значки статусов ST3
 - [ ] (е) штурвал «Вещей на столе»
@@ -51,3 +51,27 @@
   «Правила» там остались бумажными (в эталоне телефона они плоские, не кольца).
 - Кадры: `b-knot-table-{1366x660,430x932,390x844}.png`, `b-knot-zoom-1366x660.png`, эталон `b-ref-A5Rig-knot.png`.
 - Проверено: typecheck, e2e phone, tempo, u3-layout, table (key states, «Подсказки») — зелёные.
+
+- (а), по замечаниям пользователя: якорь — точный `ANCHOR` из эталона вместе с тонким канатом (`rope()` прогнан в Chromium, разметка
+  зашита в `art/oak.ts`, id градиента уникален на экземпляр); медальон один и тот же у «Ход окончен» и «Реванш», у «Огонь!» —
+  тот же с дулом пушки. «Огонь!» в окне Заряда на ноутбуке — доска 260×58 с надписью и ценой («1 Порох»); e2e `table` («off by default»)
+  проверяет, что у `fire` виден текст «Огонь», размер ≥ 260×55 (ноутбук) и что слово не обрезано «…». Кадры `a-fire-window-*`.
+
+### (в) Трезубец и пушка
+
+- `art/status.ts`: `tridentSvg()` вместо `TRIDENT_SVG` (новый трезубец из `TRIDENT_D`, id уникальны на экземпляр; `PlankButton` держит
+  одну копию через `useMemo`). `art/cannon.ts` (сгенерирован из `cannon2` эталона без каната, `scripts` не нужны) → `CELLS.CANNON/CANNON_X`;
+  шкала «Пушки» (`TRACK_ICON.guns`) рисует их фоном ячеек 22×14. Значок `CELLS.GUN` оставлен для кнопки «Залп» и окна правил.
+- Кадры: `c-gun-trident-{table,fire}-{1366x660,430x932,390x844}.png`, `c-gun-zoom-1366x660.png`, эталоны `c-ref-A5Rig-{buttons,cannon}.png`.
+- Проверено: typecheck, vitest 673/673, e2e u3-layout, phone, table (key states, «Подсказки») — зелёные.
+
+## С чего продолжать (новая сессия)
+
+Этапы (г), (д), (е) — см. план в начале файла и «Правку к (г)». Состояние: ветка `claude/dreamy-tesla-tzugzv`, PR #47 (черновик).
+Сервер для кадров: `node scripts/e2e-site.mjs` в фоне через `setsid` (пересобирать после правок; не `pkill -f` — убивает свою оболочку:
+искать pid через `ps -eo pid,args | grep '[s]cripts/e2e-site'`). Вход в стол: quick-bots → prep-start → placement-done. Скрипты кадров
+лежали в scratchpad (не в репозитории): `?seed=5&speed=instant`. e2e в конце: table, u3-layout, phone, clarity, fx-volley, tempo (и
+`npx playwright test` запись скриншотов переписывает `docs/screenshots/stage7,p7,p8,a5-windows` — откатывать `git checkout`).
+Заметки для (г): сегодняшний `seaFrame` — `brass|wood` (`storage.ts`, `Overlays.tsx`, `Game.tsx`, `game.css .frame-wood`, тест
+`clarity.test.ts:110`); залп уже стреляет с края планшета (`fx/volley.ts PLAY.shot`: `gunFire`, `fuseSparks`, `smokeJet`); пушка-ячейка —
+`.t-guns .cells i`; на телефоне ячеек нет (`.bar`). Штурвал (е): `art/table.ts TABLE`, `wheel` (128, 712) — почти за краем.

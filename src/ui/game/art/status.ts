@@ -74,5 +74,26 @@ export const MARK_PIN_SVG = `<svg width="30" height="30" viewBox="-1 -2.5 29 29"
 export const SOULS_SVG = '<svg width="15" height="17" viewBox="0 0 15 17" aria-hidden="true" style="filter:drop-shadow(0 0 2px rgba(70,190,140,.55))"><path d="M7.5 1 C11.2 1 13.4 3.6 13.4 6.8 C13.4 8.8 12.4 10 11.4 10.6 V12.4 H3.6 V10.6 C2.6 10 1.6 8.8 1.6 6.8 C1.6 3.6 3.8 1 7.5 1 Z" fill="#b9c9ad" stroke="#3a4a3c" stroke-width=".6"/><path d="M9.6 1.6 C12 2.6 13.4 4.6 13.4 6.8 C13.4 8.8 12.4 10 11.4 10.6 V12.4 H8.6 C10.8 10 11.6 5.2 9.6 1.6 Z" fill="#6f8a70" opacity=".6"/><path d="M3.2 4.6 C3.8 2.8 5.4 1.8 7 1.7" stroke="#eef5e6" stroke-width=".7" fill="none" stroke-linecap="round"/><path d="M3.4 6.8 C3.6 5.4 5.6 5.2 6.4 6.4 C6.8 7.6 5.8 8.8 4.6 8.6 C3.8 8.4 3.3 7.8 3.4 6.8 Z M11.6 6.8 C11.4 5.4 9.4 5.2 8.6 6.4 C8.2 7.6 9.2 8.8 10.4 8.6 C11.2 8.4 11.7 7.8 11.6 6.8 Z" fill="#17221b"/><circle cx="4.9" cy="7.1" r=".75" fill="#8dffc4"/><circle cx="10.1" cy="7.1" r=".75" fill="#8dffc4"/><path d="M7.5 8.6 L8.3 10 H6.7 Z" fill="#17221b"/><path d="M3.6 12.4 H11.4 L10.8 15 Q7.5 16.2 4.2 15 Z" fill="#a3b597" stroke="#3a4a3c" stroke-width=".55"/><path d="M5.4 12.4 V14.8 M6.8 12.4 V15.2 M8.2 12.4 V15.2 M9.6 12.4 V14.8" stroke="#3a4a3c" stroke-width=".45"/></svg>';
 /** «готов»: the tick in a white disc (A5Table.html). */
 export const READY_SVG = '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#f2fbf4"/><path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#2a5f45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-/** The trident of «Меч Тритона» (A5Table.html). */
-export const TRIDENT_SVG = '<svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><path d="M8 17 V3 M3 3 V8 Q3 10 8 10 Q13 10 13 8 V3 M8 1 V3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+let tridentN = 0;
+/**
+ * The trident of «Меч Тритона» (A5Rig «Кнопки на планшете», TRIDENT_D): a gold trident with jagged tips, a cast socket and a
+ * turquoise stone, the shaft wound with brass, a wave comb at the foot. The ids are unique for each picture.
+ */
+export function tridentSvg(size = 20): string {
+  const g = `trG${++tridentN}`, w = `trS${tridentN}`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><defs>
+  <linearGradient id="${g}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a6420"/><stop offset=".35" stop-color="#fff0b8"/><stop offset=".6" stop-color="#d9ae52"/><stop offset="1" stop-color="#7a5414"/></linearGradient>
+  <linearGradient id="${w}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5e3a18"/><stop offset=".4" stop-color="#b07a44"/><stop offset="1" stop-color="#4a2c14"/></linearGradient></defs>
+  <g stroke="#3a2406" stroke-width=".45" stroke-linejoin="round">
+  <path d="M11.2 10.6 H12.8 L13 22.6 Q12 23.6 11 22.6 Z" fill="url(#${w})"/>
+  <path d="M11.1 14.4 L12.9 13.6 M11.1 15.6 L12.9 14.8 M11.1 16.8 L12.9 16 M11.1 18 L12.9 17.2" stroke="#e2bf62" stroke-width=".55"/>
+  <path d="M10.8 21.4 H13.2 L13.6 23 H10.4 Z" fill="url(#${g})"/>
+  <path d="M5.4 4.6 Q5.2 9 8.4 10 Q10.4 10.6 12 10.6 Q13.6 10.6 15.6 10 Q18.8 9 18.6 4.6 L17.3 5.2 Q17.4 8 15.2 8.7 Q13.6 9.2 12 9.2 Q10.4 9.2 8.8 8.7 Q6.6 8 6.7 5.2 Z" fill="url(#${g})"/>
+  <path d="M6 1.4 L7.8 5.4 L6.6 5 L6.8 6.6 L5.4 6.2 L5.1 4.8 L4.2 5.2 Z" fill="url(#${g})"/>
+  <path d="M18 1.4 L16.2 5.4 L17.4 5 L17.2 6.6 L18.6 6.2 L18.9 4.8 L19.8 5.2 Z" fill="url(#${g})"/>
+  <path d="M12 0.4 L13.9 4.6 L12.8 4.3 L12.8 9.4 H11.2 V4.3 L10.1 4.6 Z" fill="url(#${g})"/>
+  <path d="M11.2 6.4 L10.2 7.2 M12.8 6.4 L13.8 7.2" stroke="#3a2406" stroke-width=".6"/>
+  <ellipse cx="12" cy="10.7" rx="2.6" ry="1.2" fill="url(#${g})"/><circle cx="12" cy="12.3" r=".9" fill="#2f7a8a" stroke="#0e2a30" stroke-width=".4"/></g>
+  <path d="M12 1.6 L12 8.6 M6.2 3 L6.6 5.6" stroke="#fffbe6" stroke-width=".4" opacity=".8"/>
+  <path d="M7.4 21.6 Q9 20.6 10.4 21.4 M13.6 21.4 Q15 20.6 16.6 21.6" fill="none" stroke="#2f7a8a" stroke-width=".9" stroke-linecap="round"/></svg>`;
+}
