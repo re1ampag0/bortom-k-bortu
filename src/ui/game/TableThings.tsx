@@ -34,11 +34,13 @@ interface Placed extends Box {
 
 /**
  * The deck scene of A5Rig, «Фон под рукой» (deckScene3 with the parameters of the reference, the very SVG — art/rig/deck-scene-*.svg):
- * A — a laptop, 720×230, Б — a phone, 430×260; where its lantern burns and how far its light reaches (viewBox px).
+ * A — a laptop, 720×230, Б — a phone, 430×260; where its lantern burns, how far its light reaches (R) and the scale of the lantern (ls),
+ * all in viewBox px. The darkness and the light of the lantern and the flare at its glass are not in the picture: they are the
+ * layers .deck-dark / .deck-light / .deck-flare over the planks and the props (under the cards), with the values of the reference.
  */
 const SCENE = {
-  laptop: { src: sceneLaptop, w: 720, h: 230, lx: 640, ly: 92, r: 260 },
-  phone: { src: scenePhone, w: 430, h: 260, lx: 382, ly: 64, r: 220 },
+  laptop: { src: sceneLaptop, w: 720, h: 230, lx: 640, ly: 92, r: 260, ls: 1.25 },
+  phone: { src: scenePhone, w: 430, h: 260, lx: 382, ly: 64, r: 220, ls: 1 },
 } as const;
 /** The card of the hand in the reference is 150 px high: the scene is scaled as the cards of the game are. */
 const REF_CARD_H = 150;
@@ -99,6 +101,27 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
   const k = Math.min(card.getBoundingClientRect().height / REF_CARD_H, (g.height - (sea.t + sea.h)) / SCENE.laptop.h, room / SCENE.laptop.w);
   if (k <= 0.3) return null;
   return { kind: 'laptop', k, l: Math.max(holdRight + 8, log.l - 8 - SCENE.laptop.w * k), t: g.height - SCENE.laptop.h * k };
+}
+
+/**
+ * The light of the lantern of the deck scene (deckScene3): its gradients are objectBoundingBox ones on the scene's W×H rect, so their
+ * circles are ellipses squeezed by H/W — the same here, and they go on past the scene over the planks of the whole window.
+ * «…d»: #000 0 → .3 at .55 → .62 at the edge, radius 1.6R, a normal layer; «…l»: #ffb24a .5 → #ff9a30 .16 at .45 → #ff8a20 0,
+ * radius R, screen; the flare: r = 46·ls with gFlash, opacity .16, flickering (.flick).
+ */
+function DeckLight({ d, sc }: { d: DeckPlace; sc: (typeof SCENE)[keyof typeof SCENE] }) {
+  const x = d.l + sc.lx * d.k,
+    y = d.t + sc.ly * d.k,
+    sq = sc.h / sc.w;
+  const at = (r: number) => `${r * d.k}px ${r * d.k * sq}px at ${x}px ${y}px`;
+  const fr = 46 * sc.ls * d.k;
+  return (
+    <>
+      <i className="deck-dark" style={{ background: `radial-gradient(${at(1.6 * sc.r)}, rgba(0,0,0,0), rgba(0,0,0,.3) 55%, rgba(0,0,0,.62))` }} />
+      <i className="deck-light" style={{ background: `radial-gradient(${at(sc.r)}, rgba(255,178,74,.5), rgba(255,154,48,.16) 45%, rgba(255,138,32,0))` }} />
+      <i className="deck-flare" data-testid="lantern-light" style={{ left: x - fr, top: y - fr, width: 2 * fr, height: 2 * fr }} />
+    </>
+  );
 }
 
 /** R — right of the cards of the hand up to the log column (a laptop): the inkwell and the candle of the captain's table. */
@@ -193,9 +216,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
       {placed.map((p) => (
         <img key={p.key} className="prop" data-prop={p.key} src={PROPS[p.key].src} alt="" draggable={false} style={{ left: p.l, top: p.t, width: p.w, height: p.h }} />
       ))}
-      {deck && sc && look === 'deck' && (
-        <i className="lantern-light" data-testid="lantern-light" style={{ left: deck.l + sc.lx * deck.k, top: deck.t + sc.ly * deck.k, width: 2 * sc.r * deck.k, height: 2 * sc.r * deck.k }} />
-      )}
+      {deck && sc && look === 'deck' && <DeckLight d={deck} sc={sc} />}
       {candlePlace && look === 'table' && <i className="lantern-light candle" style={{ left: candlePlace.l + candlePlace.w / 2, top: candlePlace.t + candlePlace.h * 0.25, width: 260, height: 260 }} />}
     </div>
   );
