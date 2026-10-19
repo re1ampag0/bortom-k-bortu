@@ -472,6 +472,7 @@ for (const v of [
         cards: many('.hand-cards .hcard'),
         handRow: one('.hand-row'),
         sea: one('.sea-table'),
+        wheel: one('[data-thing="wheel"]'),
       };
     });
     type R = { l: number; r: number; t: number; b: number };
@@ -488,6 +489,13 @@ for (const v of [
         if (a && b && !(na.startsWith('hand card') && nb.startsWith('hand card')) && !(na === 'the Hold' && nb === 'the hourglass') && meet(a, b)) bad.push(`${na} ∩ ${nb}`);
       }
     expect(bad).toEqual([]);
+    if (r.wheel) {
+      // «Вещи на столе»: the wheel (bottom left) keeps clear of the Hold and of «Перестроение», which sits right under the Hold
+      // (a 194 × 34 plank, 7 px below; the scene has no button, so its place is reckoned from the Hold)
+      const zone = { l: r.hold!.l, r: r.hold!.l + 194, t: r.hold!.b + 7, b: r.hold!.b + 41 };
+      expect(meet(r.wheel, r.hold!), 'the wheel and the Hold').toBe(false);
+      expect(meet(r.wheel, zone), 'the wheel and «Перестроение»').toBe(false);
+    }
     if (r.glass) {
       expect(r.glass.l, 'the hourglass stands right of the kegs').toBeGreaterThanOrEqual(r.kegs!.r - 1);
       // the hourglass is to the right of the kegs and keeps ≥ 12 px clear of every card of the hand
