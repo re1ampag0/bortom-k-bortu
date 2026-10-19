@@ -1,5 +1,5 @@
 // Presentational parts of the table: the status bar, a team row with its Hold, a ship board (plank).
-import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
 import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type ShipState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
@@ -15,12 +15,15 @@ import { ALARM_SEAL, TARGET_SEAL } from './art/seal';
 import type { Loss } from './alarm';
 import { hourglassSvg } from './art/table';
 import { wxSvg } from './art/wx';
-import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, TRIDENT_SVG, statusSvg, type StatusIcon } from './art/status';
+import { KNOT_SVG, KNOT_THIN_SVG } from './art/knot';
+import { oakMedal, type OakSign } from './art/oak';
+import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, tridentSvg, statusSvg, type StatusIcon } from './art/status';
+import { stBadge } from './art/status3';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const TRACK_LABEL: Record<Track, string> = { hull: 'Корпус', sails: 'Паруса', guns: 'Пушки', crew: 'Команда' };
 /** The icons of a track (A5, art/cells2.json): a cell that is there and a lost one. */
-const TRACK_ICON: Record<Track, [CellIcon, CellIcon]> = { hull: ['HULL', 'HULL_X'], sails: ['SAIL', 'SAIL_X'], guns: ['GUN', 'GUN_X'], crew: ['CREW', 'CREW_X'] };
+const TRACK_ICON: Record<Track, [CellIcon, CellIcon]> = { hull: ['HULL', 'HULL_X'], sails: ['SAIL', 'SAIL_X'], guns: ['CANNON', 'CANNON_X'], crew: ['CREW', 'CREW_X'] };
 const TRACK_ICON_STYLE = Object.fromEntries(
   TRACKS.map((t) => [t, { ['--on' as string]: cellUrl(TRACK_ICON[t][0]), ['--off' as string]: cellUrl(TRACK_ICON[t][1]) }]),
 ) as Record<Track, Record<string, string>>;
@@ -37,6 +40,10 @@ export interface Btn {
   testid?: string;
   /** A shorter label for the phone. */
   short?: string;
+  /** A small green tag on a plank button («+1 совместно»). */
+  tag?: string;
+  /** The full text of the tag: a paper pop on hover (a tap on a phone). */
+  tip?: string;
 }
 
 export function Button({ b, className = '' }: { b: Btn; className?: string }) {
@@ -56,6 +63,33 @@ export function Button({ b, className = '' }: { b: Btn; className?: string }) {
       ) : (
         breakAfterArrow(b.label)
       )}
+    </button>
+  );
+}
+
+/**
+ * The oak board with the wine panel and the brass medallion (A5Rig «Ход окончен»): «Ход окончен», «Огонь!» and «Реванш».
+ * The label is the text of the button (the sign is a picture; CSS sets the capitals), `sub` — a small line under it.
+ */
+export function OakButton({ b, className = '', sign = 'anchor', sub }: { b: Btn; className?: string; sign?: OakSign; sub?: ReactNode }) {
+  // each button gets its own copy of the picture: the ids inside are unique to it
+  const medal = useRef<string>();
+  medal.current ??= oakMedal(sign);
+  return (
+    <button
+      className={`btn oak-btn ${b.label.length > 11 ? 'oak-long' : ''} ${className}`}
+      onClick={b.disabled ? undefined : b.onClick}
+      aria-disabled={!!b.disabled}
+      title={b.disabled ?? undefined}
+      data-testid={b.testid}
+    >
+      <span className="oak-in">
+        <span className="oak-med" aria-hidden dangerouslySetInnerHTML={svg(medal.current)} />
+        <span className="oak-pan">
+          <b>{b.label}</b>
+          {sub && <small>{sub}</small>}
+        </span>
+      </span>
     </button>
   );
 }
@@ -190,7 +224,7 @@ export const ROUND_ICON: Record<string, string> = {
  * button stays its accessible name and its text (`.wide`, hidden from sight); the caption is the label without its
  * leading symbol («⏸ Пауза» → «Пауза»).
  */
-export function RoundButton({ b, icon, className = '' }: { b: Btn; icon: string; className?: string }) {
+export function RoundButton({ b, icon, className = '', thin = false }: { b: Btn; icon: string; className?: string; thin?: boolean }) {
   const caption = b.label.replace(/^[^\p{L}]+/u, '');
   return (
     <button
@@ -201,7 +235,11 @@ export function RoundButton({ b, icon, className = '' }: { b: Btn; icon: string;
       title={b.disabled ?? caption}
       data-testid={b.testid}
     >
-      <span className="round-disc" dangerouslySetInnerHTML={svg(ROUND_ICON[icon] ?? '')} />
+      {/* A5Rig «турецкий узел»: the woven ring (art/knot.ts) round the brass disc with the icon */}
+      <span className="round-disc" aria-hidden>
+        <span className="round-knot" dangerouslySetInnerHTML={svg(thin ? KNOT_THIN_SVG : KNOT_SVG)} />
+        <span className="round-core" dangerouslySetInnerHTML={svg(ROUND_ICON[icon] ?? '')} />
+      </span>
       <span className="round-cap" aria-hidden>
         {caption}
       </span>
@@ -560,7 +598,7 @@ export function Plank({
               data={{ 'data-fx-status': x.label, 'data-fx-mark': x.mark || undefined }}
               style={x.flag && fxHidden?.includes(x.flag) ? { visibility: 'hidden' } : undefined}
             >
-              {x.icon && <span className="chip-icon" dangerouslySetInnerHTML={svg(statusSvg(x.icon))} />}
+              {x.icon && <span className="chip-icon" dangerouslySetInnerHTML={svg(stBadge(x.icon, 18) || statusSvg(x.icon))} />}
               {x.label}
             </InfoTip>
           ))}
@@ -575,7 +613,7 @@ export function Plank({
         <div className="badges">
           {ship.fires > 0 && (
             <InfoTip className="badge fire" title={fireLabel} text={FIRE_INFO} off={!!plate} data={{ 'data-fx-fires': true, 'data-testid': `fire-${ship.code}` }}>
-              <span className="chip-icon" dangerouslySetInnerHTML={svg(statusSvg('fire'))} />
+              <span className="chip-icon" dangerouslySetInnerHTML={svg(stBadge('fire', 18))} />
               {fireLabel}
             </InfoTip>
           )}
@@ -646,7 +684,6 @@ export function Plank({
 /** The icons of the buttons of a plank (A5: an icon, the name | the price with a keg). */
 const CMD_ICON: Record<string, string> = {
   volley: CELLS.GUN,
-  sword: TRIDENT_SVG,
   heart: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14 C3 10.4 1.2 7.8 1.2 5.4 C1.2 3.2 2.9 1.6 4.9 1.6 C6.2 1.6 7.3 2.3 8 3.4 C8.7 2.3 9.8 1.6 11.1 1.6 C13.1 1.6 14.8 3.2 14.8 5.4 C14.8 7.8 13 10.4 8 14 Z" fill="#a3271d" stroke="#3a0f0a" stroke-width=".8"/><path d="M4 4 Q5 3 6.2 3.4" stroke="#f3b1a4" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>',
   treasury: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="12" rx="6" ry="2.2" fill="#a87c22" stroke="#4a340c" stroke-width=".7"/><ellipse cx="8" cy="9" rx="6" ry="2.2" fill="#c99a3a" stroke="#4a340c" stroke-width=".7"/><ellipse cx="8" cy="6" rx="6" ry="2.2" fill="#e2bf62" stroke="#4a340c" stroke-width=".7"/><path d="M5 5.6 Q8 4.4 11 5.6" stroke="#fff3c4" stroke-width=".6" fill="none"/></svg>',
   dive: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 5 q1.75 -1.6 3.5 0 t3.5 0 t3.5 0 t3.5 0" fill="none" stroke="#2f5f74" stroke-width="1.4" stroke-linecap="round"/><path d="M8 6.6 V14 M5.2 11.2 L8 14 L10.8 11.2" fill="none" stroke="#22384c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -664,7 +701,9 @@ const KEG_SMALL = CELLS.KEG_S;
 /** A button of a plank: on a laptop the icon, the name and the price with a keg; on a phone the short label (U3). */
 export function PlankButton({ b, className = '' }: { b: Btn; className?: string }) {
   const m = PRICED.exec(b.label) ?? FREE.exec(b.label);
-  const icon = CMD_ICON[b.key];
+  // the trident has gradients of its own: one copy for the life of the button, so the picture is not set again on a render
+  const trident = useMemo(() => (b.key === 'sword' ? tridentSvg(20) : null), [b.key]);
+  const icon = trident ?? CMD_ICON[b.key];
   return (
     <button
       className={`btn cmd ${b.primary ? 'primary' : ''} ${className}`}
@@ -672,7 +711,13 @@ export function PlankButton({ b, className = '' }: { b: Btn; className?: string 
       aria-disabled={!!b.disabled}
       title={b.disabled ?? undefined}
       data-testid={b.testid}
+      data-tip={b.tip}
     >
+      {b.tag && (
+        <span className="cmd-tag" data-testid={b.testid ? `${b.testid}-tag` : undefined}>
+          {b.tag}
+        </span>
+      )}
       <span className="wide cmd-in">
         {icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />}
         <span className="cmd-name">{m ? m[1] : b.label}</span>

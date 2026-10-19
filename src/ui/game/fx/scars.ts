@@ -9,6 +9,7 @@
 // (.plank-scars inside its plank — it moves and shakes with the plank). Nothing of them takes a press.
 import type { FxCtx } from './primitives';
 import { T } from './timing';
+import { stageK } from '../../stage';
 
 export type ScarLife = 'short' | 'medium' | 'long';
 /** [holds, fades] in ms: short — smoke, ink, marks of a hit; medium — cracks, scorch; long — a wreck, the bottle. */
@@ -126,11 +127,11 @@ export const plankScars = (ctx: FxCtx, code: string) => ctx.board.querySelector<
 export function hitMark(ctx: FxCtx, code: string, x: number, y: number, k = 1): void {
   const host = plankScars(ctx, code);
   if (!host) return;
-  const hb = host.getBoundingClientRect(), b = ctx.board.getBoundingClientRect();
+  const hb = host.getBoundingClientRect(), b = ctx.board.getBoundingClientRect(), sk = stageK();
   const m = document.createElement('i');
   m.className = 'fx-hitmark';
   const w = 32 * k, h = 24 * k;
-  Object.assign(m.style, { left: `${x - (hb.left - b.left) - w / 2}px`, top: `${y - (hb.top - b.top) - h / 2}px`, width: `${w}px`, height: `${h}px` });
+  Object.assign(m.style, { left: `${x - (hb.left - b.left) / sk - w / 2}px`, top: `${y - (hb.top - b.top) / sk - h / 2}px`, width: `${w}px`, height: `${h}px` });
   host.appendChild(m);
   scar(m, 'short', code);
 }

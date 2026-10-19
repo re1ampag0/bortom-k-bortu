@@ -311,6 +311,14 @@ PLAY.reaction = async (c, ctx) => {
   await wait(ctx, c.phase === 'before' ? 620 : 380);
 };
 
+/** A live gun of the Guns track of a plank (the cell .on): the shots go from the guns in turn; none when the plank shows no cells (a phone). */
+function gunCell(ctx: FxCtx, plankEl: Element, i: number): (ReturnType<typeof bx> & { el: Element }) | null {
+  const cells = Array.from(plankEl.querySelectorAll('.t-guns .cells i.on')).filter((e) => e.getBoundingClientRect().width > 0);
+  if (!cells.length) return null;
+  const el = cells[i % cells.length];
+  return { ...bx(ctx, el), el };
+}
+
 /** The shot: a cannonball = 1 damage; where each one flies — from the layout of planFx (to: track | hull). */
 PLAY.shot = async (c, ctx) => {
   if (!VS) VS = { shooter: c.shooter, target: c.target, declared: c.declared, charge: c.charge, reactions: c.reactions, cards: [], extras: [], declDamage: c.damage };
@@ -354,7 +362,13 @@ PLAY.shot = async (c, ctx) => {
     else if (b.kind === 'joint') { const ally = ships(ctx).find((x) => sideOf(ctx, x) === sideOf(ctx, c.shooter) && x !== c.shooter)!; const ab = bx(ctx, plank(ctx, ally)); p0 = { x: ab.cx, y: facingY(ctx, ally) }; flash(ctx, p0.x, p0.y, t0, 1.2); puff(ctx, p0.x, p0.y + down * 4, t0 + 20); if (b.label) tag(ctx, p0.x, p0.y + down * 18, b.label, t0, 'plus', 1500); }
     else {
       const g = mi++;
-      p0 = { x: s.cx - (sp * (muzzle.length - 1)) / 2 + sp * g, y: sy };
+      // rig, г: a «Залп с планшета» — the shot leaves a gun of the Guns track of the plank (an icon or an open port; the live guns
+      // fire in turn); a plank without cells (a phone) keeps the muzzles along its edge
+      const cell = gunCell(ctx, shooterEl, g);
+      p0 = cell ? { x: cell.cx, y: cell.cy } : { x: s.cx - (sp * (muzzle.length - 1)) / 2 + sp * g, y: sy };
+      if (cell) {
+        A(ctx, cell.el, [{ transform: 'none', filter: 'none' }, { transform: 'translateX(-3px) rotate(-6deg)', filter: 'drop-shadow(0 0 3px #ff8a2a) brightness(1.45)', offset: 0.15 }, { transform: 'none', filter: 'none' }], 380, t0, 'ease-out', 'none');
+      }
       // the fuse spits sparks, then the gun goes off; after the third gun the shots are lighter (the budget of the layer)
       fuseSparks(ctx, svg, p0.x, p0.y, -down, Math.max(0, t0 - FUSE) * 0.3, FUSE * 0.62);
       const full = g < 3;

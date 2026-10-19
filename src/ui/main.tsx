@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { useStage } from './stage';
 import { armSound } from './sound';
 import './fonts';
 import './styles.css';
@@ -12,8 +13,18 @@ import './start/start.css';
 // The sound «ваш ход» needs a first touch of the page (iPhone): listen for it from the start.
 armSound();
 
+/** The one root container of the screen: scaled as a whole on a large laptop window (stage.ts). */
+function Stage() {
+  const style = useStage();
+  return (
+    <div id="stage" style={style ?? undefined}>
+      <App />
+    </div>
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <Stage />
   </StrictMode>,
 );

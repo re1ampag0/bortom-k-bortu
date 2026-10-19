@@ -52,8 +52,8 @@ import { FxLayer, useFxQueue } from './fx/FxLayer';
 import { T } from './fx/timing';
 import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
-import { Button, Plank, RoundButton, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
-import { TableThings, useSeaClip } from './TableThings';
+import { Button, OakButton, Plank, RoundButton, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
+import { TableBackdrop, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
@@ -127,7 +127,7 @@ export function Game({
     setEffectsState(v);
     storeSettings({ ...loadSettings(), effects: v });
   };
-  const [seaFrame, setSeaFrame] = useState(() => loadSettings().seaFrame);
+  const [look, setLook] = useState(() => loadSettings().view);
   const [sound, setSoundState] = useState(() => loadSettings().sound);
   const setSound = (v: boolean) => {
     setSoundState(v);
@@ -169,7 +169,7 @@ export function Game({
       : (humans[0] ?? 'ПИРАТЫ');
   const viewer = openHands || humans.length === 0 ? ('all' as const) : Object.values(s.ships).filter((x) => x.side === bottom).map((x) => x.code);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const view = useMemo(() => (net ? s : viewFor(s, viewer)), [version, bottom, openHands]);
+  const view = useMemo(() => e2eHand(net ? s : viewFor(s, viewer)), [version, bottom, openHands]);
   /** Seats played from this device: on one screen the team at the device, by network the player's own ships. */
   const mySeats = seatsOf(s, bottom)
     .map((x) => x.code)
@@ -597,6 +597,7 @@ export function Game({
     if (!myTurn || ship.sunk || ship.side !== bottom || !mySeats.includes(code)) return [];
     const params = shipData(data, code);
     const vt = volleyTargets(s, data, { ship: code });
+    const joint = jointAlly();
     const btns: Btn[] = [
       {
         key: 'volley',
@@ -609,6 +610,8 @@ export function Game({
           setMode({ k: 'aim', shooter: code, charge: null, chargeFrom: null, heart: false, target: null, paid: 0 });
         },
         testid: `volley-${code}`,
+        // «+1 совместно» on the button, the full text as its pop (instead of a line under the Hold)
+        ...(joint?.code === code ? { tag: `+${data.rules.jointBonus} совместно`, tip: joint.text } : {}),
       },
     ];
     if (heartTargets(s, data, code).length > 0) {
@@ -624,19 +627,24 @@ export function Game({
   };
 
   const regroupBtn = (side: Side): Btn | null => {
-    if (side !== bottom || !myTurn) return null;
-    const r = tryAction(s, { type: 'regroup', side }, data);
-    const cost = r.ok ? r.events.filter((e) => e.type === 'powderSpent').reduce((n, e) => n + (e.type === 'powderSpent' ? e.amount : 0), 0) : data.rules.regroupCost;
+    if (side !== bottom) return null;
+    // always in its place under the Hold; out of one's turn dimmed, not active, «Только в свой ход», the price still shown
+    // (free while a ship of the team is «Быстрее ветра»; the sea «Попутный ветер» is known only by the engine in one's turn)
+    const r = myTurn ? tryAction(s, { type: 'regroup', side }, data) : null;
+    const freeShip = Object.values(s.ships).some((x) => x.side === side && hasAbility(data, x, ABILITY.fasterThanWind));
+    const cost = r?.ok ? r.events.filter((e) => e.type === 'powderSpent').reduce((n, e) => n + (e.type === 'powderSpent' ? e.amount : 0), 0) : freeShip ? 0 : data.rules.regroupCost;
+    if (!r) return { key: 'regroup', label: cost ? `Перестроение · ${cost} П` : 'Перестроение · бесплатно', short: `Перестроение · ${cost}`, disabled: 'Только в свой ход', onClick: () => {} };
     // A5: «Перестроение · бесплатно» while it costs nothing, else the price with a keg; the phone keeps «· N»
     return { key: 'regroup', label: cost ? `Перестроение · ${cost} П` : 'Перестроение · бесплатно', short: `Перестроение · ${cost}`, disabled: r.ok ? null : r.reason, onClick: () => act({ type: 'regroup', side }) };
   };
 
-  const jointHint = (side: Side): string | null => {
+  /** «Совместный залп»: the ally whose Volley at the first target gets +N this turn, and the full text of it (on its «Залп»). */
+  const jointAlly = (): { code: string; text: string } | null => {
     const t = s.turn;
-    if (!myTurn || side !== bottom || !t.firstTarget || t.jointUsed || !t.firstShooter) return null;
-    const ally = Object.values(s.ships).find((x) => x.side === side && x.code !== t.firstShooter && !x.sunk);
+    if (!myTurn || !t.firstTarget || t.jointUsed || !t.firstShooter) return null;
+    const ally = Object.values(s.ships).find((x) => x.side === bottom && x.code !== t.firstShooter && !x.sunk);
     if (!ally || (t.volleys[ally.code] ?? 0) > 0 || s.ships[t.firstTarget].sunk) return null;
-    return `совместный залп по «${shipData(data, t.firstTarget).nickDative}» даст ${nick(ally.code)} +${data.rules.jointBonus}`;
+    return { code: ally.code, text: `Совместный залп по «${shipData(data, t.firstTarget).nickDative}» даст ${nick(ally.code)} +${data.rules.jointBonus}` };
   };
 
   // ——— «Тревога!»: the Reaction window is the bar, the arrow, the hand and the buttons; on a phone — a sheet ———
@@ -859,7 +867,7 @@ export function Game({
       const limit = own ? (s.turn.limit[x] ?? s.ships[x].tracks.crew) : 1;
       const dot =
         hints && myDecision && d!.kind === 'reactions' && d!.seats.includes(x) && reactionsOf(x).some((c) => !playOptions(s, data, x, c).reason);
-      return { seat: x, label: `${shipData(data, x).nick}${s.active === bottom && x === seat ? ` · ${played} из ${limit}` : ''}`, dot };
+      return { seat: x, label: `${shipData(data, x).nick}${s.active === bottom && x === seat ? ` · ${played} из ${limit}` : ''}`, dot, played: s.active === bottom ? `${played} из ${limit}` : undefined };
     });
   // By network the ally's hand is a tab to look at (docs/TZ.md, «Принципы стола», п. 5): another person or a bot plays it.
   if (net) {
@@ -928,7 +936,7 @@ export function Game({
   };
   const endBtn: Btn = {
     key: 'end',
-    label: myTurn || s.winner || !d ? 'Ход окончен' : `Сейчас ход ${SIDE_LABEL[s.active].gen}`,
+    label: myTurn || s.winner || !d ? 'Ход окончен' : `${/ы$/.test(SIDE_LABEL[s.active].name) ? 'Ходят' : 'Ходит'} ${SIDE_LABEL[s.active].name}`,
     primary: true,
     disabled: myTurn ? (mode.k === 'idle' ? null : 'Сначала закончите или отмените текущее действие') : 'Сейчас не ваш ход',
     onClick: () => endFlow('start'),
@@ -1054,7 +1062,9 @@ export function Game({
   );
 
   // «‹Союзник› готов — ход закончится, когда нажмёте вы»: by network, an ally of this device already pressed «Ход окончен».
-  const allyReady = net && myTurn ? Object.values(s.ships).find((x) => x.side === bottom && !x.sunk && !mySeats.includes(x.code) && net.ready.includes(x.code)) : undefined;
+  const allyReady =
+    (net && myTurn ? Object.values(s.ships).find((x) => x.side === bottom && !x.sunk && !mySeats.includes(x.code) && net.ready.includes(x.code)) : undefined) ??
+    e2eReady(s, bottom, seat);
   const botIcon: Record<string, string> = { faster: 'faster', skip: 'skip', pause: held ? 'play' : 'pause' };
 
   // «Быстрее · До конца · Пауза · Отменить» and «Ход окончен»: under the log ≥ 1280 px (A5: the hand gets the whole width
@@ -1081,12 +1091,17 @@ export function Game({
         {botBtns.map((b) => (
           <RoundButton key={b.key} b={b} icon={botIcon[b.key]} />
         ))}
-        {net ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" />}
+        {net ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" thin />}
       </div>
-      <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+      <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       {allyReady && (
         <p className="ally-ready" data-testid="ally-ready">
-          «{shipData(data, allyReady.code).nick}»: готово — ход закончится, когда нажмёте вы
+          {/* A5Table.html: a green ring with a white tick, «„Месть“ готова — …» (the gender of the ship's name) */}
+          <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="8" r="7" fill="#3d8562" />
+            <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} — ход закончится, когда нажмёте вы
         </p>
       )}
     </div>
@@ -1094,11 +1109,11 @@ export function Game({
 
   return (
     <div
-      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${seaFrame === 'wood' ? 'frame-wood' : ''}`}
+      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand}`}
       data-testid="game"
       data-bottom={bottom}
     >
-      <TableThings />
+      <TableBackdrop look={look.hand} />
       <main className="board" ref={boardRef}>
         <StatusBar
           s={fx.display ? withDisplay(s, fx.display) : s}
@@ -1140,7 +1155,7 @@ export function Game({
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
         <div className="board-bottom">
-          <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} fxGen={fx.gen} />
+          <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={fx.gen} />
           <div className="hand-row" data-fx-hand>
             {seat && (
               <Hand
@@ -1211,9 +1226,9 @@ export function Game({
         <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
           Правила
         </button>
-        {canHold && <Button b={pauseBtn} className="pause" />}
-        {botBusy ? <Button b={botBtns[1]} /> : net ? <Button b={remindBtn} /> : <Button b={undoBtn} className="undo" />}
-        <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+        {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" />}
+        {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" /> : net ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
+        <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       </nav>
       {net && <MissedSheet game={net} />}
 
@@ -1310,7 +1325,7 @@ export function Game({
             setMode(net ? { k: 'exitRoom' } : { k: 'leave' });
           }}
           onDownloadLog={downloadLog}
-          onSeaFrame={setSeaFrame}
+          onView={setLook}
           onDownloadGame={downloadGame}
           onClose={() => setSheet(null)}
         />
@@ -1368,4 +1383,27 @@ function curtainReason(s: GameState, data: LocalGame['data'], kind: string): str
     default:
       return `ход ${SIDE_LABEL[s.active].gen}`;
   }
+}
+
+/**
+ * The e2e build only (vite mode «e2e», as «?fxScene»): «&hand=N» shows N cards in every hand of the bottom team's ships that
+ * has cards — taken from its deck, for the layout tests of the hand (3, 5, 8 cards); the game itself does not change.
+ */
+function e2eHand(v: GameState): GameState {
+  if (import.meta.env.MODE !== 'e2e') return v;
+  const n = Number(new URLSearchParams(location.search).get('hand'));
+  if (!n) return v;
+  const out = structuredClone(v);
+  for (const ship of Object.values(out.ships)) {
+    if (!ship.hand.length || ship.hand.every((c) => c === HIDDEN)) continue;
+    const pool = [...ship.hand, ...ship.deck.filter((c) => c !== HIDDEN), ...ship.discard];
+    ship.hand = Array.from({ length: n }, (_, i) => pool[i % pool.length]);
+  }
+  return out;
+}
+
+/** The e2e build only: «&ready=1» shows the line «‹Союзник› готов» under «Ход окончен» (the other ship of the bottom team). */
+function e2eReady(s: GameState, side: string, seat: string | null) {
+  if (import.meta.env.MODE !== 'e2e' || !new URLSearchParams(location.search).get('ready')) return undefined;
+  return Object.values(s.ships).find((x) => x.side === side && !x.sunk && x.code !== seat);
 }

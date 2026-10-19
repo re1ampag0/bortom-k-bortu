@@ -241,6 +241,16 @@ test.describe('«Подсказки»', () => {
       await expect(page.getByTestId('ship-sheet')).toHaveCount(0);
       const panel = page.getByTestId('volley-panel');
       await expect(panel.locator('.panel-head')).toContainText('по Корпусу «Голландец»');
+      // rig (а): «Огонь!» is the whole oak board (≥ 260 × 56) with its word and the price readable, not a square with a medallion
+      const fire = page.getByTestId('fire');
+      await expect(fire).toContainText('Огонь');
+      await expect(fire.locator('.oak-pan b')).toBeVisible();
+      const fb = (await fire.boundingBox())!;
+      expect(fb.width).toBeGreaterThanOrEqual(size.name === 'laptop' ? 259 : 150);
+      expect(fb.height).toBeGreaterThanOrEqual(55);
+      const wb = (await fire.locator('.oak-pan b').evaluate((e) => ({ w: e.getBoundingClientRect().width, sw: e.scrollWidth, cw: e.clientWidth })));
+      expect(wb.w).toBeGreaterThan(40);
+      expect(wb.sw).toBeLessThanOrEqual(wb.cw + 1); // the word is not cut with «…»
       // «i» opens the ship card; closing it keeps the target and the Volley panel.
       await page.getByTestId('ship-info-Г').click();
       await expect(page.getByTestId('ship-sheet')).toBeVisible();
@@ -478,6 +488,7 @@ for (const v of [
     type R = { l: number; r: number; t: number; b: number };
     const meet = (a: R, b: R, m = 0) => a.l < b.r + m && b.l < a.r + m && a.t < b.b + m && b.t < a.b + m;
     const named: [string, R | null][] = [['«Последнее»', r.info], ['the played card', r.card], ['the deck line', r.deck], ['the Hold', r.hold], ['the hourglass', r.glass], ...r.cards.map((c, i): [string, R] => [`hand card ${i}`, c])];
+
     expect(r.info, 'the line «Последнее»').not.toBeNull();
     expect(r.card, 'the played card').not.toBeNull();
     expect(r.deck, 'the deck line').not.toBeNull();
@@ -507,4 +518,149 @@ for (const v of [
       expect(Math.abs(r.label!.t - r.handRow!.t), 'the caption level with the row of the hand').toBeLessThanOrEqual(16);
     }
   });
+}
+
+// rig, г: «Фон под рукой» — the deck (or the captain's table) fills the whole window. Б6 on the game table: the gun, its balls, the
+// lantern, «Колода · Сброс», the cards of the hand, the Hold, the hourglass, «Ход окончен» and «Отменить» do not run into each other;
+// the gun is at least 2.5 times as wide as the lantern; no «Вещи на столе» on the deck. On a phone the barrel of the gun goes under the
+// cards on purpose (its breech and wheel are left of them).
+for (const look of ['deck', 'table'] as const) {
+  for (const v of [
+    { w: 1366, h: 660 },
+    { w: 1920, h: 1080 },
+    { w: 430, h: 932 },
+  ]) {
+    test(`Б6 · the background «${look}» on ${v.w}×${v.h}: the deck, the hand, the Hold and the buttons keep clear of each other`, async ({ page }) => {
+      await page.addInitScript((l) => localStorage.setItem('bortom-k-bortu.settings', JSON.stringify({ view: { hand: l } })), look);
+      await page.setViewportSize({ width: v.w, height: v.h });
+      await page.goto('?seed=5&speed=instant');
+      await page.getByTestId('quick-bots').click();
+      await page.getByTestId('prep-start').click();
+      await page.getByTestId('placement-done').click();
+      await expect(page.getByTestId('game')).toBeVisible();
+      await expect(page.getByTestId('backdrop')).toHaveClass(new RegExp(`look-${look}`));
+      await page.waitForTimeout(300);
+      if (look === 'deck') {
+        await expect(page.locator('[data-thing]')).toHaveCount(0);
+        expect(await page.locator('.deck-bg').evaluate((e) => getComputedStyle(e).backgroundRepeat)).toContain('repeat');
+        await expect(page.getByTestId('lantern-light')).toHaveCount(1);
+      } else await expect(page.locator('.table-things')).toHaveCount(1);
+      const r = await page.evaluate(() => {
+        const box = (e: Element | null) => {
+          if (!e) return null;
+          const b = e.getBoundingClientRect();
+          return b.width > 0 && b.height > 0 ? { l: b.left, r: b.right, t: b.top, b: b.bottom } : null;
+        };
+        const vis = (q: string) => Array.from(document.querySelectorAll(q)).map(box).filter((b) => !!b);
+        return {
+          gun: box(document.querySelector('.deck-piece[data-piece="cannon"]')),
+          balls: box(document.querySelector('.deck-piece[data-piece="balls"]')),
+          lantern: box(document.querySelector('.deck-piece[data-piece="lantern"]')),
+          props: vis('.prop'),
+          deck: vis('[data-fx-deck]')[0] ?? null,
+          cards: vis('.hand-cards .hcard'),
+          hold: box(document.querySelector('.board-bottom > .team-row:not(.table-edge)')),
+          glass: vis('.hold-glass')[0] ?? null,
+          end: vis('[data-testid="end-turn"]')[0] ?? null,
+          undo: vis('.undo')[0] ?? null,
+          iw: innerWidth,
+          ih: innerHeight,
+        };
+      });
+      type R = { l: number; r: number; t: number; b: number };
+      const meet = (a: R, b: R) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+      const phone = v.w < 701;
+      const named: [string, R | null][] = [
+        ['the gun', r.gun],
+        ['the balls', r.balls],
+        ['the lantern', r.lantern],
+        ...r.props.map((p, i): [string, R] => [`prop ${i}`, p]),
+        ['«Колода»', r.deck],
+        ['the Hold', r.hold],
+        ['the hourglass', r.glass],
+        ['«Ход окончен»', r.end],
+        ['«Отменить»', r.undo],
+        ...r.cards.map((c, i): [string, R] => [`hand card ${i}`, c]),
+      ];
+      const art = (n: string) => ['the gun', 'the balls', 'the lantern'].includes(n) || n.startsWith('prop');
+      const bad: string[] = [];
+      for (let i = 0; i < named.length; i++)
+        for (let j = i + 1; j < named.length; j++) {
+          const [na, a] = named[i],
+            [nb, b] = named[j];
+          if (!a || !b || !(art(na) || art(nb))) continue; // the panels of the table are checked by the tests above
+          if (art(na) && art(nb) && !na.startsWith('prop')) continue; // the balls lie before the gun, the lantern stands on it
+          if (phone && (na === 'the gun' || na === 'the balls') && nb.startsWith('hand card')) continue; // the barrel goes under the cards
+          if (meet(a, b)) bad.push(`${na} ∩ ${nb}`);
+        }
+      for (const [n, p] of named) if (p && art(n) && (p.l < -1 || p.t < -1 || p.r > r.iw + 1 || p.b > r.ih + 1)) bad.push(`${n} outside the window`);
+      // «Колода · Сброс» does not run into the Hold or «Перестроение» either (on «Палуба» it is in the corner under them)
+      if (r.deck && r.hold && meet(r.deck, r.hold)) bad.push('«Колода» ∩ the Hold');
+      expect(bad).toEqual([]);
+      if (look === 'deck') {
+        expect(r.gun && r.lantern, 'the gun and the lantern').toBeTruthy();
+        expect(r.gun!.r - r.gun!.l, 'the gun is at least 2.5 times as wide as the lantern').toBeGreaterThanOrEqual(2.5 * (r.lantern!.r - r.lantern!.l));
+      }
+      await page.screenshot({ path: `docs/screenshots/rig/g-e2e-${look}-${v.w}x${v.h}.png` });
+    });
+  }
+}
+
+// rig, г: «Палуба» on a laptop — the hand stands in the middle of its strip (from 24 px right of the Hold, the hourglass and
+// «Перестроение» to 16 px left of the gun; the gun ends 16 px before «Ход окончен» + «Отменить»), every card whole in the window
+// (the lowest point ≥ 4 px above the edge), the tabs begin over the first card; 3, 5 and 8 cards («&hand=N» of the e2e build).
+for (const v of [
+  { w: 1280, h: 720 },
+  { w: 1366, h: 660 },
+  { w: 1600, h: 900 },
+  { w: 1920, h: 1080 },
+]) {
+  for (const n of [3, 5, 8]) {
+    test(`«Палуба» ${v.w}×${v.h}, ${n} cards: the hand in the middle of its strip, whole in the window`, async ({ page }) => {
+      await page.setViewportSize({ width: v.w, height: v.h });
+      await page.goto(`?seed=5&speed=instant&hand=${n}`);
+      await page.getByTestId('quick-bots').click();
+      await page.getByTestId('prep-start').click();
+      await page.getByTestId('placement-done').click();
+      await expect(page.locator('.hand-cards .hcard')).toHaveCount(n);
+      await page.mouse.move(2, 2);
+      await page.waitForTimeout(400);
+      const r = await page.evaluate(() => {
+        const rightOf = (e: Element | null) => {
+          let x = 0;
+          for (const q of e ? [e, ...Array.from(e.querySelectorAll('*'))] : []) {
+            const b = q.getBoundingClientRect();
+            if (b.width > 0 && b.height > 0) x = Math.max(x, b.right);
+          }
+          return x;
+        };
+        const vis = (q: string) => Array.from(document.querySelectorAll(q)).map((e) => e.getBoundingClientRect()).find((b) => b.width > 0)!;
+        const cards = Array.from(document.querySelectorAll('.hand-cards .hcard')).map((e) => e.getBoundingClientRect());
+        const gun = vis('.deck-piece[data-piece="cannon"]'),
+          end = vis('[data-testid="end-turn"]'),
+          undo = vis('.log-col .undo'),
+          tabs = vis('.hand .tabs');
+        return {
+          L: rightOf(document.querySelector('.board-bottom > .team-row:not(.table-edge)')) + 24,
+          R: Math.min(end.left, undo.left) - 16,
+          gunL: gun.left,
+          gunR: gun.right,
+          left: Math.min(...cards.map((c) => c.left)),
+          right: Math.max(...cards.map((c) => c.right)),
+          top: Math.min(...cards.map((c) => c.top)),
+          bottom: Math.max(...cards.map((c) => c.bottom)),
+          tabsL: tabs.left,
+          ih: innerHeight,
+        };
+      });
+      expect(Math.abs(r.gunR - r.R), 'the gun ends at R').toBeLessThanOrEqual(2);
+      const mid = (r.L + r.gunL - 16) / 2;
+      expect(Math.abs((r.left + r.right) / 2 - mid), 'the middle of the hand is the middle of its strip').toBeLessThanOrEqual(8);
+      expect(r.left, 'the hand begins at the strip').toBeGreaterThanOrEqual(r.L - 12);
+      expect(r.gunL - r.right, 'the last card keeps ≥ 24 px from the gun').toBeGreaterThanOrEqual(24);
+      expect(r.bottom, 'every card whole in the window').toBeLessThanOrEqual(r.ih - 4 + 1);
+      expect(Math.abs(r.tabsL - r.left), 'the tabs begin over the first card').toBeLessThanOrEqual(4);
+      if (n === 5 || n === 8) await page.screenshot({ path: `docs/screenshots/rig/g-center-${n}cards-${v.w}x${v.h}.png` });
+    });
+  }
 }
