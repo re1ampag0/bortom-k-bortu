@@ -1715,23 +1715,6 @@ button.star::before {
   align-items: stretch;
   padding-bottom: 6px;
 }
-.end-turn {
-  min-height: 52px;
-  min-width: 180px;
-  font-size: 1.1rem;
-  background: #fff !important;
-  color: var(--ink) !important;
-  border: 3px solid var(--ink) !important;
-}
-.end-turn.ready {
-  background: var(--green) !important;
-  border-color: var(--green) !important;
-  color: #fff !important;
-}
-.end-turn[aria-disabled='true'] {
-  opacity: 0.45;
-}
-
 /* ——— Log ——— */
 .log-col {
   grid-area: log;
@@ -1914,9 +1897,6 @@ button.star::before {
   }
   .track-row2 {
     margin: 4px 12px 7px;
-  }
-  .end-turn {
-    min-height: 46px;
   }
 }
 
@@ -2460,13 +2440,6 @@ button.star::before {
     min-height: 48px;
     padding: 4px 10px;
     font-size: 0.92rem;
-  }
-  .bottom-bar .end-turn {
-    min-width: 0;
-    font-size: 1rem;
-    /* «Сейчас ход Компании» next to three buttons: cut with «…» instead of running out of the button. */
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .sheet-backdrop {
     place-items: end stretch;
@@ -3263,7 +3236,7 @@ button.star::before {
   outline-offset: -4px;
 }
 
-/* ——— the bottom right: the round buttons, «Ход окончен» as a bordo sign, the line of the ally ——— */
+/* ——— the bottom right: the round buttons, «Ход окончен» as an oak board (.oak-btn, the end of this file), the line of the ally ——— */
 .hand-actions {
   align-items: stretch;
   gap: 6px;
@@ -3272,35 +3245,6 @@ button.star::before {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
-.end-turn {
-  min-height: 56px;
-  min-width: 260px;
-  background: linear-gradient(#b8382b, #8e2b22) !important;
-  color: #f8ecd4 !important;
-  border: 0 !important;
-  border-radius: 3px;
-  box-shadow:
-    inset 0 0 0 2px #e0bd62,
-    inset 0 0 0 4px #8e2b22,
-    inset 0 0 0 5px rgba(255, 220, 160, 0.5),
-    0 4px 10px rgba(0, 0, 0, 0.5);
-  font-family: var(--font-num);
-  font-weight: 700;
-  font-size: 22px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-.end-turn.ready {
-  background: linear-gradient(#c8402f, #a3271d) !important;
-  box-shadow:
-    inset 0 0 0 2px #f6dd95,
-    inset 0 0 0 4px #a3271d,
-    0 0 16px rgba(255, 200, 120, 0.55),
-    0 4px 10px rgba(0, 0, 0, 0.5);
-}
-.end-turn[aria-disabled='true'] {
-  opacity: 0.6;
 }
 .ally-ready {
   margin: 0;
@@ -3459,11 +3403,6 @@ button.star::before {
   }
   .sea-table::after {
     background-size: 26px 26px;
-  }
-  .end-turn {
-    min-width: 0;
-    font-size: 1rem;
-    letter-spacing: 0.06em;
   }
 }
 
@@ -3649,23 +3588,11 @@ button.star::before {
   flex: none;
   padding: 10px 0 0;
 }
-.log-col > .hand-actions .end-turn {
-  width: 100%;
-  min-width: 0;
-}
 /* not playable now: grey, but not see-through (the things of the table must not show through a card) */
 .hcard.off {
   opacity: 1;
   filter: grayscale(0.9) brightness(0.9) contrast(0.85);
 }
-.log-col > .hand-actions .end-turn {
-  font-size: 20px;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* the empty last row of the board: the edge of the table above the hand for sea.ts tableCtx (V1c) */
 .board > .team-row.table-edge {
   position: static;
@@ -4013,4 +3940,192 @@ button.star::before {
   line-height: 1.2;
   padding: 0;
   white-space: nowrap;
+}
+
+/* ═══════════ rig (а): «Ход окончен», «Огонь!», «Реванш» — the oak board with the wine panel and the brass medallion
+   (A5Rig «Ход окончен — итог»; a laptop 300 × 66, a phone 260 × 56). The medallion is a picture (art/oak.ts), the label is
+   the text of the button, CSS sets the capitals. ═══════════ */
+.oak-btn {
+  --oak-w: 300px;
+  --oak-h: 66px;
+  --oak-med: 54px;
+  --oak-fs: 18.5px;
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--oak-w);
+  height: var(--oak-h);
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 5px;
+  background:
+    repeating-linear-gradient(178deg, rgba(0, 0, 0, 0.09) 0 1px, rgba(0, 0, 0, 0) 1px 5px),
+    linear-gradient(#634128, #3e2716) !important;
+  box-shadow:
+    inset 0 0 0 1px #1e1008,
+    inset 0 1px 0 2px rgba(255, 220, 170, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.55);
+  color: #f3e6c6;
+  text-align: left;
+  white-space: normal;
+  cursor: pointer;
+}
+.oak-med {
+  position: absolute;
+  left: calc((var(--oak-h) - var(--oak-med)) / 2);
+  top: calc((var(--oak-h) - var(--oak-med)) / 2);
+  width: var(--oak-med);
+  height: var(--oak-med);
+  pointer-events: none;
+}
+.oak-med svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.oak-pan {
+  position: absolute;
+  left: calc(var(--oak-h) - 2px + var(--oak-med) * 0.12);
+  right: calc(var(--oak-h) * 0.2);
+  top: calc(var(--oak-h) * 0.2);
+  bottom: calc(var(--oak-h) * 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  padding: 0 6px;
+  border-radius: 2px;
+  background: linear-gradient(#6e2219, #4a130d);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(224, 189, 98, 0.7),
+    0 0 0 2.5px rgba(30, 16, 8, 0.8);
+  overflow: hidden;
+}
+.oak-pan b {
+  max-width: 100%;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: var(--oak-fs);
+  line-height: 1.15;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: transparent;
+  background: linear-gradient(#fffbe6, #fbe7a6 40%, #d9ae52 62%, #fff0b8);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+/* a long label («Сейчас ход Компании») goes tighter instead of being cut at once */
+.oak-btn.oak-long .oak-pan b {
+  letter-spacing: 0.05em;
+  text-indent: 0.05em;
+}
+.oak-pan small {
+  max-width: 100%;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #f2d9b0;
+}
+.oak-btn:hover .oak-pan,
+.oak-btn:focus-visible .oak-pan {
+  background: linear-gradient(#80281d, #561710);
+}
+.oak-btn:focus-visible {
+  outline: 2px solid #f6dd95;
+  outline-offset: 2px;
+}
+.oak-btn:active {
+  transform: translateY(1px);
+}
+.oak-btn.ready {
+  box-shadow:
+    inset 0 0 0 1px #1e1008,
+    inset 0 1px 0 2px rgba(255, 220, 170, 0.1),
+    0 0 16px rgba(255, 200, 120, 0.55),
+    0 8px 16px rgba(0, 0, 0, 0.55);
+}
+.oak-btn.ready .oak-pan {
+  background: linear-gradient(#8a2a1e, #5e1810);
+}
+.oak-btn[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.oak-btn[aria-disabled='true']:hover .oak-pan {
+  background: linear-gradient(#6e2219, #4a130d);
+}
+/* the Volley panel: «Огонь!» stands next to «Отмена» */
+.panel-actions .oak-btn {
+  --oak-w: 260px;
+  --oak-h: 58px;
+  --oak-med: 46px;
+  --oak-fs: 17px;
+  flex: 0 0 auto;
+  width: var(--oak-w);
+}
+/* the text of the board fits its panel: a narrow board (a phone beside three buttons) gets a smaller medallion and type */
+.oak-in {
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+}
+.oak-pan b {
+  font-size: max(11px, min(var(--oak-fs), calc((100cqw - 70px) / 9.6)));
+}
+.oak-btn.oak-long .oak-pan b {
+  font-size: max(10px, min(calc(var(--oak-fs) * 0.84), calc((100cqw - 80px) / 15)));
+}
+@container (max-width: 240px) {
+  .oak-med {
+    left: 7px;
+    top: calc((var(--oak-h) - 38px) / 2);
+    width: 38px;
+    height: 38px;
+  }
+  .oak-pan {
+    left: 52px;
+    right: 9px;
+  }
+  .oak-pan {
+    padding: 0 3px;
+  }
+  .oak-pan b {
+    letter-spacing: 0.08em;
+    text-indent: 0.08em;
+    font-size: max(10px, min(var(--oak-fs), calc((100cqw - 70px) / 9.9)));
+  }
+}
+@media (max-width: 700px) {
+  .oak-btn {
+    --oak-w: 260px;
+    --oak-h: 56px;
+    --oak-med: 44px;
+    --oak-fs: 15.5px;
+  }
+  .panel-actions .oak-btn {
+    --oak-h: 56px;
+    width: auto;
+    flex: 2;
+  }
+  .bottom-bar .oak-btn {
+    min-width: 0;
+  }
+  /* «Журнал» and «Правила» give the board the width it has in the mock-up (a phone: 260 where it fits) */
+  .bottom-bar .btn:not(.oak-btn) {
+    padding-inline: 8px;
+  }
 }

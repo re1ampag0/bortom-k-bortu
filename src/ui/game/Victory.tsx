@@ -8,10 +8,11 @@ import type { MatchSetup } from '../../engine/match';
 import { shipData, type Action, type GameState } from '../../engine/state';
 import type { GameData } from '../../engine/types';
 import { usePhoneLayout } from './Alarm';
-import { anchorSvg, ICON_DOWNLOAD, ICON_EYE, ICON_NEW, medalSvg } from './art/medal';
+import { ICON_DOWNLOAD, ICON_EYE, ICON_NEW, medalSvg } from './art/medal';
 import { panoCast, panoSvg, PHONE, WIDE } from './art/pano';
 import { T } from './fx/timing';
 import { formatPlayTime } from './playClock';
+import { OakButton } from './Table';
 import { roman, SIDE_LABEL } from './text';
 import { awardTitles, bestCaptain, matchStats, plural, type MatchStats } from './victoryStats';
 
@@ -85,7 +86,6 @@ export function Victory({
   const ribbon = w === 'НИЧЬЯ' ? 'Ничья' : w ? `Победа ${SIDE_LABEL[w].gen}` : '';
   const line = victoryLine(data, s, stats, playMs);
   const medal = useMemo(() => medalSvg(phone ? 54 : 52), [phone]);
-  const anchor = useMemo(() => anchorSvg(), []);
 
   return (
     <div className="victory-backdrop" style={victoryVars}>
@@ -171,15 +171,11 @@ export function Victory({
         <div className="v-btns">
           <div className="v-btn-row">
             {onRematch && (
-              <button className="v-rematch" onClick={onRematch} data-testid="rematch">
-                <span className="v-med">
-                  <i dangerouslySetInnerHTML={{ __html: anchor }} />
-                </span>
-                <span className="v-pan">
-                  <b>{rematchLabel}</b>
-                  <small>{rematchNote ?? 'те же корабли, новая партия'}</small>
-                </span>
-              </button>
+              <OakButton
+                b={{ key: 'rematch', label: rematchLabel, onClick: onRematch, primary: true, testid: 'rematch' }}
+                className="v-rematch"
+                sub={rematchNote ?? 'те же корабли, новая партия'}
+              />
             )}
             <div className="v-row3">
               <button className="v-paper" onClick={onNew}>

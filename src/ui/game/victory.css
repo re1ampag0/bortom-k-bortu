@@ -303,7 +303,8 @@
   color: #f6efe0;
 }
 
-/* the buttons pinned to the foot: «Реванш» — the oak board with the wine panel and the anchor (A5Rig «Ход окончен»),
+/* the buttons pinned to the foot: «Реванш» — the oak board with the wine panel and the anchor (A5Rig «Ход окончен»; it is
+   OakButton, .oak-btn in game.css),
    the paper buttons with icons; «Скачать журнал» — a small link under them */
 .v-btns {
   flex: none;
@@ -322,88 +323,6 @@
 }
 .v-rematch {
   flex: 0 0 auto;
-  min-width: 250px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 8px 5px 6px;
-  border: 0;
-  border-radius: 5px;
-  cursor: pointer;
-  background:
-    repeating-linear-gradient(178deg, rgba(0, 0, 0, 0.09) 0 1px, rgba(0, 0, 0, 0) 1px 5px),
-    linear-gradient(#634128, #3e2716);
-  box-shadow:
-    inset 0 0 0 1px #1e1008,
-    inset 0 1px 0 2px rgba(255, 220, 170, 0.1),
-    0 5px 12px rgba(0, 0, 0, 0.55);
-}
-.v-med {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff3c4, #e2bf62 35%, #8f6b20 80%, #5e4210);
-  box-shadow:
-    inset 0 0 0 1px #4a3208,
-    0 2px 3px rgba(0, 0, 0, 0.5);
-}
-.v-med i {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #2a1a0e;
-  box-shadow:
-    inset 0 0 0 1px #4a3208,
-    inset 0 0 0 2.5px rgba(226, 191, 98, 0.45);
-}
-.v-pan {
-  flex: 1;
-  min-width: 0;
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  padding: 0 10px;
-  border-radius: 2px;
-  background: linear-gradient(#6e2219, #4a130d);
-  box-shadow:
-    inset 0 1px 3px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(224, 189, 98, 0.7),
-    0 0 0 2.5px rgba(30, 16, 8, 0.8);
-}
-.v-pan b {
-  font-family: var(--font-num);
-  font-weight: 700;
-  font-size: 16.5px;
-  letter-spacing: 0.16em;
-  text-indent: 0.16em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: transparent;
-  background: linear-gradient(#fffbe6, #fbe7a6 40%, #d9ae52 62%, #fff0b8);
-  -webkit-background-clip: text;
-  background-clip: text;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
-}
-.v-pan small {
-  font-size: 10.5px;
-  font-weight: 700;
-  white-space: nowrap;
-  color: #f2d9b0;
-}
-.v-rematch:hover .v-pan,
-.v-rematch:focus-visible .v-pan {
-  background: linear-gradient(#80281d, #561710);
 }
 .v-row3 {
   display: flex;
@@ -604,9 +523,7 @@
     gap: 8px;
   }
   .v-rematch {
-    width: 100%;
-    min-width: 0;
-    height: 58px;
+    max-width: none;
   }
   .v-row3 {
     display: grid;

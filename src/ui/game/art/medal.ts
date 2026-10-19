@@ -1,5 +1,5 @@
 // V7: the drawings of the victory sheet from docs/mockups/a5/phone/src/phone_tpl.html — the medal of the best captain
-// (medalClean: a ribbon, a gold disc with a milled edge, a star), the anchor of the «Реванш» medallion (ANCHOR_S) and the
+// (medalClean: a ribbon, a gold disc with a milled edge, a star), the
 // icons of the paper buttons (VI_NEW, VI_DL, VI_EYE). The ids are unique for each drawing.
 let n = 0;
 const r1 = (v: number) => Math.round(v * 10) / 10;
@@ -23,12 +23,6 @@ export function medalSvg(size = 60): string {
     <g transform="translate(.5 .7)"><path d="M0 -8.6 L2.4 -2.8 L8.4 -2.6 L3.8 1.2 L5.4 7.2 L0 3.8 L-5.4 7.2 L-3.8 1.2 L-8.4 -2.6 L-2.4 -2.8 Z" fill="#6e4c14" opacity=".55"/></g>
     <path d="M0 -8.6 L2.4 -2.8 L8.4 -2.6 L3.8 1.2 L5.4 7.2 L0 3.8 L-5.4 7.2 L-3.8 1.2 L-8.4 -2.6 L-2.4 -2.8 Z" fill="url(#${id}e)" stroke="#7a5a1a" stroke-width=".4"/>
     <path d="M-12 -8 A15 15 0 0 1 1 -15" stroke="#fffbe6" stroke-width="1.8" fill="none" opacity=".55" stroke-linecap="round"/></svg>`;
-}
-
-/** The gold anchor of the medallion of «Реванш». */
-export function anchorSvg(): string {
-  const id = `anB${++n}`;
-  return `<svg width="24" height="26" viewBox="-3 -1 32 32" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset=".35" stop-color="#e2bf62"/><stop offset=".7" stop-color="#9a7020"/><stop offset="1" stop-color="#d8b05a"/></linearGradient></defs><g fill="url(#${id})" stroke="#4a3208" stroke-width=".7"><circle cx="13" cy="3.2" r="2.6" fill="none" stroke="url(#${id})" stroke-width="1.8"/><path d="M2.6 7.2 Q13 6.4 23.4 7.2 L23.4 9.4 Q13 8.6 2.6 9.4 Z"/><path d="M11.5 5.6 H14.5 L15.1 24.6 H10.9 Z"/><path d="M1.4 16.8 Q1.6 26.4 13 28.8 Q24.4 26.4 24.6 16.8 L21.8 19 Q21 24.8 13 26 Q5 24.8 4.2 19 Z"/><path d="M1.4 16.8 L-1.8 18.6 Q-1.4 21.8 0.8 23.8 L4.6 20.4 Z M24.6 16.8 L27.8 18.6 Q27.4 21.8 25.2 23.8 L21.4 20.4 Z"/></g></svg>`;
 }
 
 /** «Новая партия» — a flag. */
