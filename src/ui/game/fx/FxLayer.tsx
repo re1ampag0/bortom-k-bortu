@@ -14,7 +14,7 @@ import { speedFactor } from '../text';
 import { applyVisible, displayFrom, displayRules, type Display } from './display';
 import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
-import { ABORT, wait, type FxCtx } from './primitives';
+import { ABORT, flushClock, pauseClock, resumeClock, wait, type FxCtx } from './primitives';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
 import { tookPress } from '../InfoTip';
 import { trace } from './trace';
@@ -129,7 +129,7 @@ export function useFxQueue({
   jumpAt?: number;
   /** A banner is up: the show waits for it. */
   paused: boolean;
-  /** «Пауза» of P4: the clip on screen plays to its end, the next one waits for «Дальше». */
+  /** «Пауза» of P4: the clip on screen stops where it is, it and the next ones wait for «Дальше». */
   hold: boolean;
   /**
    * game (U1): a new game without actions — its first round, sea card and turn. They have no action of their own, so
@@ -168,6 +168,26 @@ export function useFxQueue({
   const waiters = useRef<(() => void)[]>([]);
   const wake = () => waiters.current.splice(0).forEach((w) => w());
   useEffect(wake, [hold, paused]);
+  // «Пауза» of P4 stops the clip in the middle: its timers (at, wait) and its animations on the board stand still (the
+  // weather and the CSS animations go on); «Дальше» goes on from there. The traces wait by the scar clock above.
+  const frozen = useRef<Animation[]>([]);
+  useEffect(() => {
+    if (!hold) {
+      frozen.current.splice(0).forEach((a) => a.playState === 'paused' && a.play());
+      resumeClock();
+      return;
+    }
+    pauseClock();
+    const board = layerRef.current?.parentElement, weather = weatherRef.current;
+    if (!board) return;
+    for (const a of board.getAnimations({ subtree: true })) {
+      if (a instanceof CSSAnimation || a instanceof CSSTransition || a.playState !== 'running') continue;
+      const target = (a.effect as KeyframeEffect | null)?.target;
+      if (weather && target && weather.contains(target)) continue;
+      a.pause();
+      frozen.current.push(a);
+    }
+  }, [hold]);
 
   const bump = () => setGen((g) => g + 1);
   const makeCtx = (run: number, display?: Display): FxCtx | null => {
@@ -269,6 +289,8 @@ export function useFxQueue({
     if (running.current) trace(`⏹ показ прерван: ${why}${playing.current ? ` (шёл «${playing.current}»)` : ''}, в очереди ${queue.current.length}`);
     playing.current = null;
     RUN.current++;
+    // the timers of the cut-off run end now (its wait() with ABORT), not when «Пауза» is lifted
+    flushClock();
     queue.current = [];
     D.current = null;
     preview.current = null;

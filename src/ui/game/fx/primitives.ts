@@ -68,11 +68,60 @@ export type FlyCard = HTMLElement & { _pos?: CardPos };
 export const ABORT = Symbol('abort');
 
 export const ms = (ctx: FxCtx, t: number) => t * ctx.speed;
+
+/**
+ * The clock of the clips: every at() and wait() goes through it, so «Пауза» stops a clip in the middle — the timers
+ * stand still with the animations of the layer (pauseClock) and go on from where they were (resumeClock).
+ */
+interface Timer {
+  fn: () => void;
+  left: number;
+  start: number;
+  id: ReturnType<typeof setTimeout> | null;
+}
+const timers = new Set<Timer>();
+let clockPaused = false;
+function arm(tm: Timer): void {
+  tm.start = performance.now();
+  tm.id = setTimeout(() => {
+    timers.delete(tm);
+    tm.fn();
+  }, tm.left);
+}
+function later(fn: () => void, delay: number): void {
+  const tm: Timer = { fn, left: delay, start: 0, id: null };
+  timers.add(tm);
+  if (!clockPaused) arm(tm);
+}
+export function pauseClock(): void {
+  if (clockPaused) return;
+  clockPaused = true;
+  for (const tm of timers) {
+    if (tm.id === null) continue;
+    clearTimeout(tm.id);
+    tm.id = null;
+    tm.left = Math.max(0, tm.left - (performance.now() - tm.start));
+  }
+}
+export function resumeClock(): void {
+  if (!clockPaused) return;
+  clockPaused = false;
+  for (const tm of timers) arm(tm);
+}
+/** The run was cut off: every timer fires now — at() of the old run does nothing, its wait() ends with ABORT. */
+export function flushClock(): void {
+  for (const tm of [...timers]) {
+    if (tm.id !== null) clearTimeout(tm.id);
+    timers.delete(tm);
+    tm.fn();
+  }
+}
+
 export function wait(ctx: FxCtx, t: number): Promise<void> {
-  return new Promise((res, rej) => setTimeout(() => (ctx.run === ctx.live() ? res() : rej(ABORT)), ms(ctx, t)));
+  return new Promise((res, rej) => later(() => (ctx.run === ctx.live() ? res() : rej(ABORT)), ms(ctx, t)));
 }
 export function at(ctx: FxCtx, t: number, fn: () => void): void {
-  setTimeout(() => {
+  later(() => {
     if (ctx.run === ctx.live()) fn();
   }, ms(ctx, t));
 }
@@ -327,10 +376,10 @@ export function gainKegs(ctx: FxCtx, side: Side, n: number, from: Pt, delay: num
     const slot = kids[Math.min(kids.length - 1, have + k)], sb = bx(ctx, slot);
     const keg = mk(ctx, 'keg', 0, 0);
     fly(ctx, keg, curve({ x: from.x + (k - (n - 1) / 2) * 18, y: from.y }, { x: sb.cx, y: sb.cy }, 0.12), 520, delay + k * 130, { lift: 0.25 });
-    setTimeout(() => {
+    at(ctx, delay + 520 + k * 130, () => {
       slot.classList.add('on');
       A(ctx, slot, [{ transform: 'scale(1.5)' }, { transform: 'scale(1)' }], 250, 0);
-    }, ms(ctx, delay + 520 + k * 130));
+    });
   }
   if (label && n) holdTag(ctx, kg, `+${n} Пороха`, delay + 300, 'plus', 1300);
   return delay + 520 + n * 130;

@@ -299,17 +299,37 @@ test.describe('the turn with the layer: «До конца хода», «Ход �
     await expect(page.getByTestId('turn-banner')).toHaveCount(0);
   });
 
-  test('«Пауза» holds the layer between clips, «Дальше» lets it go on (P4)', async ({ page }) => {
+  test('«Пауза» stops the clip on screen in the middle, «Дальше» goes on from where it stood (P4)', async ({ page }) => {
     await againstBots(page);
-    await expect(page.locator('.fx-layer > *').first()).toBeVisible({ timeout: 60_000 });
     const pause = page.locator('[data-testid="pause-show"]:visible');
-    await pause.click();
-    await expect(pause.locator('.wide')).toHaveText('▶ Дальше');
-    // the clip on screen plays to its end, then nothing new comes into the layer
-    await expect(page.locator('.fx-layer > *')).toHaveCount(0, { timeout: 10_000 });
+    /** The animations of the layer: how many go, how many stand, where each stands. */
+    const look = () =>
+      page.evaluate(() => {
+        const as = document.querySelector('.fx-layer')!.getAnimations({ subtree: true });
+        return {
+          running: as.filter((a) => a.playState === 'running').length,
+          paused: as.filter((a) => a.playState === 'paused').length,
+          times: as.map((a) => Math.round(Number(a.currentTime))),
+          hint: document.querySelector('[data-fx-instruction]')?.textContent ?? '',
+        };
+      });
+    // «Пауза» pressed while a clip plays (a press that came between two clips is let go and tried again)
+    let held = { running: 0, paused: 0, times: [] as number[], hint: '' };
+    for (let k = 0; k < 5 && held.paused === 0; k++) {
+      await page.waitForFunction(() => document.querySelector('.fx-layer')!.getAnimations({ subtree: true }).some((a) => a.playState === 'running'), null, { timeout: 60_000, polling: 20 });
+      await pause.click();
+      await expect(pause.locator('.wide')).toHaveText('▶ Дальше');
+      held = await look();
+      if (held.paused === 0) await pause.click();
+    }
+    expect(held.paused, 'the clip stopped in the middle').toBeGreaterThan(0);
+    expect(held.running, 'nothing of the clip goes on').toBe(0);
     await page.waitForTimeout(3000);
-    expect(await page.locator('.fx-layer > *').count()).toBe(0);
+    expect(await look(), 'the frame stands still').toEqual(held);
+    // «Дальше»: the same animations go on from where they stood, then the show goes on
     await pause.click();
-    await expect(page.locator('.fx-layer > *').first()).toBeVisible({ timeout: 30_000 });
+    await expect(pause.locator('.wide')).toHaveText('⏸ Пауза');
+    expect((await look()).paused, 'nothing stays paused').toBe(0);
+    await expect.poll(async () => (await look()).times.join(), { timeout: 10_000 }).not.toBe(held.times.join());
   });
 });
