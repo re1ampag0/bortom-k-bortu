@@ -8,6 +8,7 @@ import lanternArt from './art/rig/deck-lantern.svg';
 import ink from './art/rig/prop-ink.svg';
 import candle from './art/rig/prop-candle.svg';
 import { tableThings } from './art/table';
+import { stageK } from '../stage';
 
 const THINGS = tableThings();
 
@@ -71,7 +72,7 @@ interface DeckPlace {
   ls: number;
   /** A laptop: the paddings that put the hand in the middle of its strip (in the px of the zoomed row), the room under the
    *  cards, the indent of the tabs (the left of the first card) and the larger hand of a tall window. */
-  hand?: { pl: number; pr: number; lift: number; tabs: number; big: boolean };
+  hand?: { pl: number; pr: number; lift: number; tabs: number };
 }
 
 const visible = (game: HTMLElement, q: string) => Array.from(game.querySelectorAll(q)).find((e) => e.getBoundingClientRect().width > 0) ?? null;
@@ -84,19 +85,17 @@ const pieceAt = (key: PieceKey, x: number, y: number, s: number): PieceBox => {
 /** The lantern with its centre (the flame) at (lx, ly): deckScene3 puts LANTERN at (lx − 15·ls, ly − 18·ls). */
 const lanternAt = (lx: number, ly: number, ls: number) => pieceAt('lantern', lx - 15 * ls, ly - 18 * ls, ls);
 
-/** The height of the window where the larger hand ran onto the planks of the sea: there it stays of the usual size. */
-let bigBlockedAt = -1;
-
 /** Where the pieces of the deck stand on this window. */
 function deckPlace(game: HTMLElement): DeckPlace | null {
   const g = game.getBoundingClientRect();
-  const H = g.height;
+  const H = g.height / stageK(),
+    W = g.width / stageK();
   const hand = rect(game.querySelector('.hand-row > .hand'), g);
   const tabs = rect(game.querySelector('.hand .tabs'), g);
   const cardsBox = rect(game.querySelector('.hand-cards'), g);
   const cards = Array.from(game.querySelectorAll('.hand-cards .hcard')).map((c) => rect(c, g)).filter((c): c is Box => !!c);
   if (!hand) return null;
-  if (g.width < 701) {
+  if (W < 701) {
     // the gun turned (the breech to the left), left of the first card, its barrel under the cards
     const c0 = cards[0];
     const gs = 1;
@@ -105,23 +104,20 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     const balls = pieceAt('balls', 25 * 0.7, gunBottom - 2 - 20 * 0.7, 0.7);
     const deckInfo = rect(visible(game, '[data-fx-deck]'), g);
     const ls = 0.7;
-    const right = deckInfo ? deckInfo.l - 8 : g.width - 60;
+    const right = deckInfo ? deckInfo.l - 8 : W - 60;
     const ly = (tabs ? tabs.t : hand.t) + 21 * ls - 6;
     const lantern = lanternAt(right - 25 * ls, ly, ls);
     const grateP = pieceAt('grate', tabs ? tabs.l + tabs.w - 170 * 0.7 : 40, hand.t - 4, 0.7);
-    return { phone: true, W: g.width, H, pieces: [grateP, gun, balls, lantern], lx: right - 25 * ls, ly, ls };
+    return { phone: true, W, H, pieces: [grateP, gun, balls, lantern], lx: right - 25 * ls, ly, ls };
   }
   const end = rect(visible(game, '[data-testid="end-turn"]'), g);
   const undo = rect(visible(game, '.log-col .undo'), g);
-  const sea = rect(game.querySelector('.sea-table'), g);
   if (!end || !cardsBox) return null;
   // L — right of «Трюм + часы + Перестроение» + 24; R — left of «Ход окончен» + «Отменить» − 16
   const L = rightOf(game.querySelector('.board-bottom > .team-row:not(.table-edge)'), g) + 24;
   const R = Math.min(end.l, undo ? undo.l : end.l) - 16;
-  // a tall window (> 900 px): the cards, the tabs and the gun are 1.2 times larger, unless the hand would run onto the planks
-  if (game.classList.contains('deck-big') && sea && cards.length && Math.min(...cards.map((c) => c.t)) < sea.t + sea.h) bigBlockedAt = H;
-  const big = H > 900 && bigBlockedAt !== H;
-  const f = big ? 1.2 : 1;
+  // (a large window is the whole screen scaled, stage.ts: here the table is always of the laptop's size)
+  const f = 1;
   const gs = GUN_S * f;
   // the gun at R, on the bottom of the table
   const gun = pieceAt('cannon', R - 125 * gs, H - 4 - 67 * gs, gs);
@@ -145,14 +141,14 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
   const first = cards.length ? Math.min(...cards.map((c) => c.l)) : stripL;
   return {
     phone: false,
-    W: g.width,
+    W,
     H,
     pieces: [grateP, gun, balls, lantern],
     lx,
     ly,
     ls: lsc,
     // (26 px in from each end: a tilted card of the fan reaches past its own box, and the last card keeps ≥ 24 px from the gun)
-    hand: { pl: (stripL + 26 - cardsBox.l) / f, pr: (cardsBox.l + cardsBox.w - stripR + 26) / f, lift: lift / f, tabs: first - hand.l, big },
+    hand: { pl: (stripL + 26 - cardsBox.l) / f, pr: (cardsBox.l + cardsBox.w - stripR + 26) / f, lift: lift / f, tabs: first - hand.l },
   };
 }
 
@@ -188,10 +184,12 @@ function fit(key: PropKey, reg: Box, f: [number, number, number, number]): Place
   return { key, l: reg.l + reg.w * f[0] + (bw - w) / 2, t: reg.t + reg.h * f[1] + (bh - h) / 2, w, h };
 }
 
+/** The box of an element in the px of the stage (stage.ts), from the corner of the game. */
 const rect = (e: Element | null, g: DOMRect): Box | null => {
   if (!e) return null;
-  const b = e.getBoundingClientRect();
-  return b.width > 0 && b.height > 0 ? { l: b.left - g.left, t: b.top - g.top, w: b.width, h: b.height } : null;
+  const b = e.getBoundingClientRect(),
+    k = stageK();
+  return b.width > 0 && b.height > 0 ? { l: (b.left - g.left) / k, t: (b.top - g.top) / k, w: b.width / k, h: b.height / k } : null;
 };
 
 /** The right edge of an element and of everything in it (the Hold has the hourglass and «Перестроение»). */
@@ -202,18 +200,18 @@ function rightOf(e: Element | null, g: DOMRect): number {
     const b = x.getBoundingClientRect();
     if (b.width > 0 && b.height > 0) r = Math.max(r, b.right - g.left);
   }
-  return r;
+  return r / stageK();
 }
 
 /** R — right of the cards of the hand up to the log column (a laptop): the inkwell and the candle of the captain's table. */
 function freeRight(game: HTMLElement): Box | null {
   const g = game.getBoundingClientRect();
-  if (g.width < 701) return null;
+  if (g.width / stageK() < 701) return null;
   const hand = rect(game.querySelector('.hand-row > .hand'), g);
   const log = rect(game.querySelector('.log-col'), g);
   let cardsRight = 0;
-  game.querySelectorAll('.hand-cards .hcard').forEach((c) => (cardsRight = Math.max(cardsRight, c.getBoundingClientRect().right - g.left)));
-  const R = hand && log && cardsRight ? { l: cardsRight + 10, t: hand.t + 36, w: log.l - 10 - (cardsRight + 10), h: g.height - 6 - (hand.t + 36) } : null;
+  game.querySelectorAll('.hand-cards .hcard').forEach((c) => (cardsRight = Math.max(cardsRight, (c.getBoundingClientRect().right - g.left) / stageK())));
+  const R = hand && log && cardsRight ? { l: cardsRight + 10, t: hand.t + 36, w: log.l - 10 - (cardsRight + 10), h: g.height / stageK() - 6 - (hand.t + 36) } : null;
   return R && R.w > 60 && R.h > 80 ? R : null;
 }
 
@@ -253,12 +251,6 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         put('--deck-pr', hd ? Math.max(0, Math.round(hd.pr)) : 0);
         put('--deck-lift', hd ? Math.round(hd.lift) : 0);
         put('--deck-tabs', hd ? Math.round(hd.tabs) : 0);
-        // the larger hand (zoom) moves the cards without a change of a size or a style the observers see: look again next frame
-        if (game.classList.contains('deck-big') !== !!hd?.big) {
-          game.classList.toggle('deck-big', !!hd?.big);
-          requestAnimationFrame(measure);
-          window.setTimeout(measure, 260);
-        }
         setPlaced([]);
         return;
       }
@@ -344,10 +336,11 @@ export function useSeaClip() {
     const measure = () => {
       const b = board.getBoundingClientRect(),
         r = sea.getBoundingClientRect();
-      board.style.setProperty('--sea-t', `${Math.round(r.top - b.top)}px`);
-      board.style.setProperty('--sea-l', `${Math.round(r.left - b.left)}px`);
-      board.style.setProperty('--sea-r', `${Math.round(b.right - r.right)}px`);
-      board.style.setProperty('--sea-b', `${Math.round(b.bottom - r.bottom)}px`);
+      const k = stageK();
+      board.style.setProperty('--sea-t', `${Math.round((r.top - b.top) / k)}px`);
+      board.style.setProperty('--sea-l', `${Math.round((r.left - b.left) / k)}px`);
+      board.style.setProperty('--sea-r', `${Math.round((b.right - r.right) / k)}px`);
+      board.style.setProperty('--sea-b', `${Math.round((b.bottom - r.bottom) / k)}px`);
     };
     measure();
     const ro = new ResizeObserver(measure);

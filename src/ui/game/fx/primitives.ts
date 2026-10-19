@@ -14,6 +14,7 @@ import type { Display } from './display';
 import { scar } from './scars';
 import { FLAME } from '../art/fire';
 import { T } from './timing';
+import { stageK } from '../../stage';
 
 /** Everything an effect needs: the reference's globals, for one run of the queue. */
 export interface FxCtx {
@@ -129,8 +130,9 @@ export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0,
   return el.animate(kf, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
 }
 export function bx(ctx: FxCtx, el: Element): Box {
-  const r = el.getBoundingClientRect(), b = ctx.board.getBoundingClientRect();
-  return { x: r.left - b.left, y: r.top - b.top, w: r.width, h: r.height, cx: r.left - b.left + r.width / 2, cy: r.top - b.top + r.height / 2, r: r.right - b.left, b: r.bottom - b.top };
+  // in the px of the stage (stage.ts): the effects are put inside the scaled screen
+  const r = el.getBoundingClientRect(), b = ctx.board.getBoundingClientRect(), k = stageK();
+  return { x: (r.left - b.left) / k, y: (r.top - b.top) / k, w: r.width / k, h: r.height / k, cx: (r.left - b.left + r.width / 2) / k, cy: (r.top - b.top + r.height / 2) / k, r: (r.right - b.left) / k, b: (r.bottom - b.top) / k };
 }
 export function mk(ctx: FxCtx, cls: string, x: number, y: number, html = ''): HTMLElement {
   const d = document.createElement('div');
@@ -487,8 +489,8 @@ export function trackMark(ctx: FxCtx, code: string, t: Track, n: number, delay: 
   // the text of the number (the cell of the number is wider and its text is on the right)
   const range = document.createRange();
   range.selectNodeContents(num);
-  const rr = range.getBoundingClientRect(), b = ctx.board.getBoundingClientRect();
-  const tx = rr.width > 0 ? rr.left - b.left : bx(ctx, num).x, ty = rr.height > 0 ? rr.top - b.top + rr.height / 2 : bx(ctx, num).cy;
+  const rr = range.getBoundingClientRect(), b = ctx.board.getBoundingClientRect(), k = stageK();
+  const tx = rr.width > 0 ? (rr.left - b.left) / k : bx(ctx, num).x, ty = rr.height > 0 ? (rr.top - b.top + rr.height / 2) / k : bx(ctx, num).cy;
   return markAt(ctx, trackEl(ctx, code, t), tx, ty, `${good ? '+' : '−'}${n}`, delay, good);
 }
 /** The same mark at a badge (Souls): on its left. */

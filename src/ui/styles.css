@@ -236,3 +236,14 @@ h3,
 .hcard-name {
   font-family: var(--font-head);
 }
+
+/* the scaled stage of a large laptop window (stage.ts): fixed at the corner, the page does not scroll */
+body.staged {
+  overflow: hidden;
+}
+body.staged #stage {
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+}
