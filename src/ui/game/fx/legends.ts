@@ -286,7 +286,7 @@ LG['И-Л'] = async (c, ctx) => {
   const total = K.line + 4 * K.next + 2 * n * K.ship + K.leave + 1000;
   const ships = xs.map((x, i) => {
     const yy = y - (i % 2) * 6 * k;
-    const g0 = sv(sea, `<g><g class="lg-pitch"><path d="M${R1(40 * k)} 2 C${R1(70 * k)} 4 ${R1(110 * k)} 10 ${R1(160 * k)} 6 M${R1(40 * k)} 6 C${R1(70 * k)} 10 ${R1(110 * k)} 18 ${R1(160 * k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46 * k)} 1 q-8 2 -12 6 M${R1(-46 * k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>${bigShip('company', 0, 0, k)}</g></g>`);
+    const g0 = sv(sea, `<g><g class="lg-pitch"><path d="M${R1(40 * k)} 2 C${R1(70 * k)} 4 ${R1(110 * k)} 10 ${R1(160 * k)} 6 M${R1(40 * k)} 6 C${R1(70 * k)} 10 ${R1(110 * k)} 18 ${R1(160 * k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46 * k)} 1 q-8 2 -12 6 M${R1(-46 * k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/><g class="lg-recoil">${bigShip('company', 0, 0, k)}</g></g></g>`);
     A(ctx, g0, [{ transform: `translate(${R1(W + 100 + i * 90)}px,${R1(yy)}px)`, opacity: 0 }, { opacity: 1, offset: 0.15 }, { transform: `translate(${R1(x)}px,${R1(yy)}px)`, opacity: 1 }], K.enter, i * K.enterStep, 'cubic-bezier(.2,.6,.3,1)');
     if (ctx.rich) { const p = g0.querySelector('.lg-pitch')!; const m = Math.ceil(total / 1600); A(ctx, p, Array.from({ length: m * 2 + 1 }, (_, j) => ({ transform: `rotate(${j % 2 ? 1.6 : -1.2}deg)` })), m * 1600, i * 310, 'ease-in-out', 'none'); }
     return { g: g0, x, y: yy };
@@ -304,6 +304,13 @@ LG['И-Л'] = async (c, ctx) => {
     const hitAt = new Map(hits.map((u, j) => [Math.round(((j + 0.5) * shots) / hits.length - 0.5), u]));
     for (let j = 0; j < n; j++) {
       const sp = ships[j], t0 = j * K.ship;
+      // A7: the ship heels from the recoil (away from the target), her side lit by the flashes, and a ring of smoke rolls off the
+      // water (the lean of the prototype: bottom-row target → −1)
+      at(ctx, t0, () => {
+        const rc = sp.g.querySelector('.lg-recoil'), rd = -dir;
+        if (rc) A(ctx, rc, [{ transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)' }, { transform: `rotate(${rd * 2.6}deg) translate(${-rd * 3}px,0)`, filter: 'brightness(1.45) saturate(1.2)', offset: 0.12 }, { transform: `rotate(${-rd * 0.8}deg) translate(0,0)`, filter: 'brightness(1)', offset: 0.55 }, { transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)' }], K.recoil, 0, 'ease-out', 'none');
+        circRing(ctx, sea, sp.x, sp.y + 2, 20 * (k / 0.86), 70 * (k / 0.86), '#eef3f4', K.ring, 60, 1.6);
+      });
       for (let q = 0; q < 3; q++) {
         const shot = j * 3 + q, u = hitAt.get(shot), px = sp.x + (-26 + q * 22) * k, gy = sp.y - dir * 16 * k, t = t0 + q * K.gun;
         const p = u ? fxPoint(ctx, u.ship, u.track, u.idx) : { x: tb.x + rnd(30, tb.w - 30) + rnd(-30, 30), y: edge - dir * rnd(14, 34) };
@@ -473,8 +480,8 @@ LG['Г-Л'] = async (c, ctx) => {
 };
 
 
-/** The detailed ship of A5 of a code (bigships.json has the pirates' own). */
-const bigKind = (code: string): BigShipKind => (code === 'Ж' ? 'pearl' : code === 'М' ? 'revenge' : 'company');
+/** The detailed ship of A5 of a code (SHIP_KIND of fx3.js): the target of «Корабль в бутылке» sits in the bottle as itself. */
+const bigKind = (code: string): BigShipKind => (code === 'Ж' ? 'pearl' : code === 'М' ? 'revenge' : code === 'И' ? 'endeavour' : code === 'Г' ? 'dutch' : 'company');
 
 /**
  * «Корабль в бутылке» (fxBottle of fx3.js, ANIMATIONS.md §3.4; T.bottle). «Корпус N — можно»; the target glows green,
@@ -518,7 +525,7 @@ LG['М-Л'] = async (c, ctx) => {
   }
   await wait(ctx, K.miniAt);
   // 4. inside: a tiny ship rocks on the painted waves
-  const mini = sv(top, `<g><g class="lg-rock">${bigShip(bigKind(tgt), 0, 0, 0.62)}</g></g>`);
+  const mini = sv(top, `<g><g class="lg-rock">${bigShip(bigKind(tgt), 0, 0, 0.62, false, `data-kind="${bigKind(tgt)}"`)}</g></g>`);
   A(ctx, mini, [{ transform: `translate(${R1(mouth.x)}px,${R1(mouth.y)}px) scale(.05)`, opacity: 0 }, { transform: `translate(${R1(bx0 - 24 * BS)}px,${R1(by0 + 27 * BS)}px) scale(${BS})`, opacity: 1 }], K.mini, 0, 'cubic-bezier(.3,1.2,.6,1)');
   if (ctx.rich) A(ctx, mini.querySelector('.lg-rock')!, Array.from({ length: 9 }, (_, j) => ({ transform: `rotate(${j % 2 ? 3 : -3}deg)` })), 4 * 1400, 0, 'ease-in-out', 'none');
   goldBurst(ctx, top, mouth.x, mouth.y, 24, 10, 70); circRing(ctx, top, mouth.x, mouth.y, 4, 40, '#bfffd8', 500, 0, 2);
@@ -552,7 +559,7 @@ LG['М-Л'] = async (c, ctx) => {
   const host = seaScars(ctx);
   if (host) {
     const keep = scar(fxSvg(ctx, host), 'long', tgt), rock = filters(ctx), k2 = R1(BS * 0.72 * 100) / 100;
-    keep.innerHTML += `<g transform="translate(${R1(bx0)} ${R1(by0 + 4)})"><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(110 * k2)}" ry="7" fill="#0b2a36" opacity=".28"/><g>${rock ? '<animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.6s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 3;0 0" dur="2.6s" additive="sum" repeatCount="indefinite"/>' : ''}<g transform="scale(${k2})">${bottleArt({ ship: true, cork: true })}</g></g><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(120 * k2)}" ry="6" fill="none" stroke="#e6f2f4" stroke-width="1.4" opacity=".7">${rock ? `<animate attributeName="rx" values="${R1(110 * k2)};${R1(140 * k2)};${R1(110 * k2)}" dur="2.6s" repeatCount="indefinite"/>` : ''}</ellipse></g>`;
+    keep.innerHTML += `<g transform="translate(${R1(bx0)} ${R1(by0 + 4)})"><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(110 * k2)}" ry="7" fill="#0b2a36" opacity=".28"/><g>${rock ? '<animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.6s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 3;0 0" dur="2.6s" additive="sum" repeatCount="indefinite"/>' : ''}<g transform="scale(${k2})">${bottleArt({ ship: true, cork: true, kind: bigKind(tgt) })}</g></g><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(120 * k2)}" ry="6" fill="none" stroke="#e6f2f4" stroke-width="1.4" opacity=".7">${rock ? `<animate attributeName="rx" values="${R1(110 * k2)};${R1(140 * k2)};${R1(110 * k2)}" dur="2.6s" repeatCount="indefinite"/>` : ''}</ellipse></g>`;
     A(ctx, keep, [{ opacity: 0 }, { opacity: 1 }], 300, 0, 'ease-out', 'none');
   }
   A(ctx, all, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-out', 'forwards');
@@ -650,6 +657,14 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
     const ally = sw ? sw.ships.find((s) => s !== c.ship) ?? Object.keys(ctx.display.ships).find((s) => s !== c.ship && sideOf(ctx, s) === sideOf(ctx, c.ship)) : undefined;
     ob = ally ? bx(ctx, plank(ctx, ally)) : null;
     const r = R1(clamp(Math.min(b.h * 0.9, b.w * 0.35), 56, 80));
+    // A10: a golden glow with slowly turning soft rays behind the compass (pgJkA, pgJkR of fx3.js), s — the size of this compass to the prototype's
+    const gs = r / 80;
+    const aura = sv(hi, `<g><defs><radialGradient id="lgJkA${uid}"><stop offset="0" stop-color="#ffe7a4" stop-opacity=".75"/><stop offset=".55" stop-color="#ffd27a" stop-opacity=".25"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
+      <radialGradient id="lgJkR${uid}"><stop offset=".35" stop-color="#fff2c8" stop-opacity=".5"/><stop offset="1" stop-color="#fff2c8" stop-opacity="0"/></radialGradient></defs><circle r="${R1(150 * gs)}" fill="url(#lgJkA${uid})"/><g class="ry" fill="url(#lgJkR${uid})">${Array.from({ length: 12 }, (_, i) => { const a1 = (i * Math.PI) / 6, a2 = a1 + 0.09; return `<path d="M0 0 L${R1(Math.cos(a1) * 170 * gs)} ${R1(Math.sin(a1) * 170 * gs)} L${R1(Math.cos(a2) * 170 * gs)} ${R1(Math.sin(a2) * 170 * gs)} Z"/>`; }).join('')}</g></g>`);
+    A(ctx, aura, [{ transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(.2)`, opacity: 0 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1)`, opacity: 1 }], K.compass, 0, 'ease-out', 'forwards');
+    const ry = aura.querySelector<SVGGElement>('.ry')!;
+    ry.style.transformBox = 'view-box'; ry.style.transformOrigin = '0 0';
+    A(ctx, ry, [{ transform: 'rotate(0deg)' }, { transform: 'rotate(60deg)' }], K.rays, 0, 'linear', 'forwards');
     const comp = sv(hi, compassArt(`jk${uid}`, r));
     A(ctx, comp, [{ transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(.1) rotate(-90deg)`, opacity: 0 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.1) rotate(8deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1) rotate(0deg)`, opacity: 1 }], K.compass, 0, 'cubic-bezier(.3,1.3,.6,1)');
     const nd = comp.querySelector<SVGGElement>('.nd')!;
@@ -658,6 +673,8 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
     const end = 1080 + ((toAlly % 360) + 360) % 360;
     A(ctx, nd, [{ transform: 'rotate(0deg)' }, { transform: `rotate(${R1(end - 270)}deg)`, offset: 0.55 }, { transform: `rotate(${R1(end - 20)}deg)`, offset: 0.8 }, { transform: `rotate(${R1(end)}deg)` }], K.needle, K.needleAt, 'cubic-bezier(.2,.6,.3,1)');
     await wait(ctx, K.point);
+    // the needle has stopped: a golden ring and sparks over the north
+    circRing(ctx, hi, b.cx, b.cy, 70 * gs, 150 * gs, '#ffe7a4', 700, 0, 3); goldBurst(ctx, hi, b.cx, b.cy - 64 * gs, 14, 8, 40);
     if (ob) {
       const ey = isTop(ctx, c.ship) ? b.b + 6 : b.y - 6, oy = isTop(ctx, ally!) ? ob.b + 6 : ob.y - 6, lift = isTop(ctx, c.ship) ? 90 : -90;
       const course = sv(hi, `<path d="M${R1(b.cx)} ${R1(ey)} C${R1(b.cx + Math.sign(ob.cx - b.cx) * 120)} ${R1(ey + lift)} ${R1(ob.cx - Math.sign(ob.cx - b.cx) * 120)} ${R1(oy + lift)} ${R1(ob.cx)} ${R1(oy)}" fill="none" stroke="#ffd27a" stroke-width="3" stroke-dasharray="10 8"/>`);
@@ -669,6 +686,7 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
     //    other way (the change of places of the events)
     A(ctx, water, [{ height: '72%' }, { height: '0%' }], K.drain, 0, 'ease-out', 'forwards');
     A(ctx, comp, [{ opacity: 1, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1)` }, { opacity: 0, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.4)` }], 400, 0, 'ease-in', 'forwards');
+    A(ctx, aura, [{ opacity: 1 }, { opacity: 0 }], 400, 0, 'ease-in', 'forwards');
     A(ctx, drops, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'linear', 'forwards');
     frozen.forEach((x) => A(ctx, x, [{ filter: FZ }, { filter: 'none' }], K.unfreeze, 0, 'linear', 'none'));
     flashBoard(ctx, '#ffe7a4', 0.4, 400);

@@ -1,102 +1,102 @@
 {
   "sea-calm-1366x660": {
     "scene": "sea-calm",
-    "ms": 4999,
-    "ref": 4733
+    "ms": 6383,
+    "ref": 4785
   },
   "sea-wind-1366x660": {
     "scene": "sea-wind",
-    "ms": 4901,
-    "ref": 4709
+    "ms": 6247,
+    "ref": 4736
   },
   "sea-fog-1366x660": {
     "scene": "sea-fog",
-    "ms": 4912,
-    "ref": 4701
+    "ms": 6286,
+    "ref": 4699
   },
   "sea-storm-1366x660": {
     "scene": "sea-storm",
-    "ms": 5112,
-    "ref": 4939
+    "ms": 6275,
+    "ref": 4941
   },
   "sea-wave-1366x660": {
     "scene": "sea-wave",
-    "ms": 4892,
-    "ref": 4703
+    "ms": 6327,
+    "ref": 4728
   },
   "sea-maelstrom-1366x660": {
     "scene": "sea-maelstrom",
-    "ms": 4955,
-    "ref": 4692
+    "ms": 6286,
+    "ref": 4735
   },
   "sea-clear-1366x660": {
     "scene": "sea-clear",
-    "ms": 4891,
-    "ref": 4708
+    "ms": 6285,
+    "ref": 4734
   },
   "sea-mermaids-1366x660": {
     "scene": "sea-mermaids",
-    "ms": 4906,
-    "ref": 4747
+    "ms": 6307,
+    "ref": 4746
   },
   "sea-tortuga-1366x660": {
     "scene": "sea-tortuga",
-    "ms": 4891,
-    "ref": 4708
+    "ms": 6304,
+    "ref": 4736
   },
   "sea-rum-1366x660": {
     "scene": "sea-rum",
-    "ms": 4906,
-    "ref": 4705
+    "ms": 6283,
+    "ref": 4700
   },
   "sea-caravan-1366x660": {
     "scene": "sea-caravan",
-    "ms": 4840,
-    "ref": 4688
+    "ms": 6294,
+    "ref": 4704
   },
   "sea-wet-1366x660": {
     "scene": "sea-wet",
-    "ms": 4880,
-    "ref": 4738
+    "ms": 6268,
+    "ref": 4717
   },
   "sea-reefs-1366x660": {
     "scene": "sea-reefs",
-    "ms": 4845,
-    "ref": 4726
+    "ms": 6297,
+    "ref": 4712
   },
   "sea-thunder-1366x660": {
     "scene": "sea-thunder",
-    "ms": 4884,
-    "ref": 4713
+    "ms": 6267,
+    "ref": 4722
   },
   "sea-fleet-1366x660": {
     "scene": "sea-fleet",
-    "ms": 4867,
-    "ref": 4748
+    "ms": 6305,
+    "ref": 4728
   },
   "sea-moon-1366x660": {
     "scene": "sea-moon",
-    "ms": 4993,
-    "ref": 4727
+    "ms": 6287,
+    "ref": 4718
   },
   "sea-current-1366x660": {
     "scene": "sea-current",
-    "ms": 4933,
-    "ref": 4723
+    "ms": 6298,
+    "ref": 4736
   },
   "sea-storm-430x932": {
     "scene": "sea-storm",
-    "ms": 5205,
-    "ref": 4963
+    "ms": 6249,
+    "ref": 4956
   },
   "sea-moon-card-430x932": {
     "scene": "sea-moon",
-    "ms": 2088,
-    "ref": 1994
+    "ms": 2806,
+    "ref": 2002
   },
   "turn-fire-430x932": {
     "scene": "turn",
-    "ms": 4824,
-    "ref": 4784
+    "ms": 6151,
+    "ref": 4783
   }
 }
