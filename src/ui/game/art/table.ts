@@ -83,8 +83,7 @@ const TABLE: [string, number, number, number, number, number, number][] = [
   ['dividers', 925, 27, .95, 4, .62, 5],
   ['coins', 1110, 522, .95, 0, .7, 4],
 ];
-export function tableThings(): string {
-  let defs = `<defs>
+const BASE_DEFS = `<defs>
     <linearGradient id="pgBrass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe6a2"/><stop offset=".35" stop-color="#d6a845"/><stop offset=".7" stop-color="#a5772a"/><stop offset="1" stop-color="#6e4c14"/></linearGradient>
     <linearGradient id="pgBrassH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6dc90"/><stop offset=".45" stop-color="#c8963a"/><stop offset="1" stop-color="#6e4c14"/></linearGradient>
     <radialGradient id="pgBrassIn" cx=".5" cy=".5" r=".5"><stop offset=".86" stop-color="#7a561a"/><stop offset="1" stop-color="#c9a048"/></radialGradient>
@@ -94,6 +93,9 @@ export function tableThings(): string {
     <linearGradient id="pgIron" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6a6a68"/><stop offset="1" stop-color="#2a2a2a"/></linearGradient>
     <linearGradient id="pgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe9a0"/><stop offset=".5" stop-color="#d8a83e"/><stop offset="1" stop-color="#9a7020"/></linearGradient>
     <linearGradient id="pgGlassG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3f6a50"/><stop offset=".5" stop-color="#2a4a38"/><stop offset="1" stop-color="#1a3024"/></linearGradient>`;
+
+export function tableThings(): string {
+  let defs = BASE_DEFS;
   let body = '';
   TABLE.forEach(([k, x, y, sc, rot, op, far], i) => {
     defs += shadowFilter('pgsh' + i, x, y, far);
@@ -113,4 +115,13 @@ export function tableThings(): string {
  */
 export function hourglassSvg(): string {
   return `<svg width="38" height="70" viewBox="-19 -35 38 70" aria-hidden="true"><defs><linearGradient id="hgWood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a6a3a"/><stop offset="1" stop-color="#5a3a1c"/></linearGradient></defs><g transform="rotate(-4)">${THINGS.hourglass().replace(/pgWood/g, 'hgWood')}</g></svg>`;
+}
+
+/**
+ * The wheel of «Вещи на столе» as an element of its own (rig, е): not a part of the picture of the table, which is scaled to the
+ * window and cut at its edges, but a picture put by the layout (TableThings.tsx TableBackdrop, «Стол капитана») — in the bottom
+ * left corner under «Перестроение», its lower half past the edge of the window as before.
+ */
+export function wheelSvg(): string {
+  return `<svg viewBox="-62 -62 124 124" aria-hidden="true">${BASE_DEFS}</defs><g transform="rotate(14)">${THINGS.wheel()}</g></svg>`;
 }
