@@ -206,6 +206,7 @@ export function useFxQueue({
     if (!layer) return;
     const keep = new Set(SCENES.flatMap((x) => x.keep()));
     for (const el of [...layer.children]) if (!keep.has(el)) el.remove();
+    layer.parentElement?.querySelectorAll(':scope > .fx-scars > .fx-temp').forEach((el) => el.remove());
   };
   /** resetFx: the layer is empty, the animations of the board are cancelled (the weather and CSS animations stay). */
   const resetFx = () => {
@@ -214,6 +215,7 @@ export function useFxQueue({
     if (!layer) return;
     layer.innerHTML = '';
     const board = layer.parentElement!;
+    board.querySelectorAll(':scope > .fx-scars > .fx-temp').forEach((el) => el.remove());
     const weather = weatherRef.current;
     for (const a of board.getAnimations({ subtree: true })) {
       if (a instanceof CSSAnimation || a instanceof CSSTransition) continue;

@@ -173,11 +173,8 @@
 .lg-cap { white-space: nowrap; font-family: var(--fx-font); font-weight: 700; font-size: 17px; color: #fff0b8; letter-spacing: 0.04em; }
 .lg-cap span { font-size: 11px; letter-spacing: 0.22em; color: #e0b44c; margin-right: 6px; vertical-align: 2px; }
 .lg-cap b { font-weight: 700; }
-.galleon { width: 120px; height: 96px; margin: -96px 0 0 -60px; transform-origin: 50% 100%; }
-.tentacle { transform-origin: 50% 100%; }
 .compass { width: 300px; height: 300px; margin: -150px 0 0 -150px; }
 .bottle { transform-origin: 50% 50%; }
-.eye { width: 160px; height: 70px; margin: -35px 0 0 -80px; }
 
 @media (prefers-reduced-motion: reduce) { .window i { animation: none; } }
 

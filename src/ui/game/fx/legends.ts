@@ -1,8 +1,7 @@
-// The Legends: the common grand entrance of a Legend and the effect of each. A port of
-// docs/mockups/anim/level1/play-legends.js (see PORTING.md): the code is the reference's, what changed is how an
-// element is found (the data-fx-* DOM contract), the globals (the context `ctx`) and the types. The pictures (a galleon,
-// a tentacle, an eye, a bottle, a compass rose, a seal) are our own SVG, as in the reference.
-// Timing at «обычно» (×1): the entrance 0–2.2 s → the effect 1.6–2.4 s → the leave 0.35 s; all × the speed factor.
+// The Legends: the common grand entrance of a Legend and the effect of each. FX-B (package 3): the look and the timings
+// of the A5 prototype (docs/mockups/a5/fx/src/fx3.js, ANIMATIONS.md §3.1–3.5) on the primitives of the game; the
+// pictures are in ../art/legendArt.ts and ../art/bigShips.ts, the durations in timing.ts (T.legend, T.kraken, …).
+// Earlier (L1) a port of docs/mockups/anim/level1/play-legends.js: the element is found by the data-fx-* DOM contract.
 // Changes against the reference («game:»):
 //  - the card of the Legend has the bottom strip of the ship that played it («ЛЕГЕНДА · МЕСТЬ», footHTML — A4);
 //  - S1: no label explaining the effect lies on a plank longer than a flash: the damage and the repair — short marks
@@ -17,16 +16,17 @@ import { shipData, startValue, type GameEvent } from '../../../engine/state';
 import type { CardInstance, GameData, Track } from '../../../engine/types';
 import type { ClipPlayer } from './FxLayer';
 import { flipTo } from './misc';
-import { KIND_BY_TRACK, type JackClip, type LegendClip } from './planFx';
+import type { JackClip, LegendClip } from './planFx';
 import {
-  A, at, badgeMark, boom, filters, flashBoard, fxSvg, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, curve, flash, fly, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
-  projectile, puff, qpts, ring, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, splash, sv, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
+  A, at, badgeMark, ballFly, boom, facingY, filters, flashBoard, fxSvg, missSplash, seaTemp, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, flash, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
+  qpts, ring, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, splash, sv, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
 } from './primitives';
 import { CELLS } from '../art/cells';
 import { ART_FRAME, COST_ICON, COST_WORD, crackArt, EMBLEM, SEAL_HTML, TENT } from '../art/legendArt';
 import { ruleTag } from './sea';
 import { plankScars, scar, seaScars } from './scars';
-import { SMOKE_LIFE, T } from './timing';
+import { T } from './timing';
+import { bigShip } from '../art/bigShips';
 
 let LG_UID = 0;
 const R1 = (n: number) => Math.round(n * 10) / 10;
@@ -41,33 +41,6 @@ function legendCard(data: GameData, code: string): CardInstance {
 }
 
 /* ——— our own pictures (no frames or images from the films) ——— */
-export function galleonSVG(flag = '#9C7A2C'): string {
-  return `<svg viewBox="0 0 120 96" width="120" height="96"><g stroke="#3d2614" stroke-width="2">
-<path d="M34 22 V70 M60 6 V70 M86 18 V70" stroke="#4a3220" stroke-width="2.6"/>
-<path d="M22 22 Q34 18 46 22 Q48 36 46 48 Q34 45 22 48 Q20 36 22 22Z" fill="#fff6e0" stroke="#c9b48c"/>
-<path d="M44 12 Q60 8 76 12 Q79 30 76 46 Q60 42 44 46 Q41 30 44 12Z" fill="#fffaf0" stroke="#c9b48c"/>
-<path d="M74 20 Q86 16 98 20 Q100 34 98 46 Q86 43 74 46 Q72 34 74 20Z" fill="#fff6e0" stroke="#c9b48c"/>
-<path d="M44 50 Q60 47 76 50 Q77 58 76 64 Q60 62 44 64 Q43 58 44 50Z" fill="#fff6e0" stroke="#c9b48c"/>
-<path d="M60 6 l16 4 l-16 4z M34 22 l11 3 l-11 3z M86 18 l11 3 l-11 3z" fill="${flag}" stroke="none"/>
-<path d="M6 64 H114 L104 86 Q60 96 16 86 Z" fill="#6b4423"/></g>
-<path d="M10 71 H110" stroke="#d8b25a" stroke-width="2.4"/>
-<g fill="#1e1a17">${[22, 36, 50, 64, 78, 92].map((x) => `<rect x="${x}" y="75" width="7" height="6" rx="1.5"/>`).join('')}</g></svg>`;
-}
-export function tentacleInner(uid: string | number): string {
-  return `<defs><linearGradient id="tg${uid}" x1="0" x2="1"><stop offset="0" stop-color="#2b3f3a"/><stop offset=".55" stop-color="#4f6e62"/><stop offset="1" stop-color="#22322e"/></linearGradient></defs>
-<path d="M14 200 C6 150 36 128 30 92 C25 62 6 48 16 24 C22 8 40 2 48 12 C54 20 46 30 38 26 C34 34 42 44 40 60 C38 86 52 108 48 142 C45 172 52 188 50 200Z" fill="url(#tg${uid})" stroke="#16211e" stroke-width="2"/>
-<g fill="#cfe3d8" opacity=".9">${[[42, 150, 4], [41, 128, 3.6], [40, 106, 3.2], [36, 84, 2.8], [33, 64, 2.4], [32, 46, 2], [36, 32, 1.6]].map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * 0.8}"/>`).join('')}</g>`;
-}
-export function tentacleSVG(h: number, flip: boolean, uid: string | number): string {
-  const w = Math.round(h * 0.3);
-  return `<svg viewBox="0 0 60 200" width="${w}" height="${h}" preserveAspectRatio="none" style="display:block"><g ${flip ? 'transform="translate(60 0) scale(-1 1)"' : ''}>${tentacleInner(uid)}</g></svg>`;
-}
-export function eyeSVG(uid: string | number): string {
-  return `<svg viewBox="0 0 160 70" width="160" height="70"><defs><radialGradient id="iris${uid}"><stop offset="0" stop-color="#fff2a8"/><stop offset=".55" stop-color="#e8b830"/><stop offset="1" stop-color="#7a4a08"/></radialGradient></defs>
-<path d="M4 35 Q80 -16 156 35 Q80 86 4 35Z" fill="#14201c" stroke="#0a110f" stroke-width="3"/>
-<ellipse cx="80" cy="35" rx="25" ry="25" fill="url(#iris${uid})"/><ellipse class="pupil" cx="80" cy="35" rx="5" ry="21" fill="#0b0a08" style="transform-box:fill-box;transform-origin:center"/>
-<circle cx="71" cy="26" r="4" fill="#fff" opacity=".85"/></svg>`;
-}
 export function bottleSVG(): string {
   return `<svg viewBox="0 0 120 200" width="100%" height="100%">
 <path d="M46 12 h28 v36 q0 10 14 22 q22 18 22 46 v66 q0 12 -12 12 h-76 q-12 0 -12 -12 v-66 q0 -28 22 -46 q14 -12 14 -22z" fill="rgba(150,210,180,.22)" stroke="#5d8a74" stroke-width="3"/>
@@ -309,52 +282,83 @@ export function damageMarks(ctx: FxCtx, units: readonly { ship: string; track: T
  */
 export const LG: Record<string, (c: LegendClip, ctx: FxCtx) => Promise<void>> = {};
 
-/** «Армада Компании»: galleons rise from the sea along the Company's edge, a broadside in a wave, hits on every enemy. */
+/**
+ * «Армада Компании» (fxArmada of fx3.js, ANIMATIONS.md §3.3; T.armada). The haze of the horizon on the right; a line of
+ * six detailed ships of the Company (bigShip, ×0.86) comes in from the right along the middle of the gap, under the
+ * planks, rocking, with wakes and bow waves; a broadside ripples down the line at each target — three guns a ship
+ * (gunFire ×0.62, ballFly), the balls of the events hit the cells they break, the rest fall short with spouts; a flash,
+ * the target shakes, the boards break, «−N»; the smoke of the broadside stays over the sea (short), the fleet sails
+ * away to the left into it. game: the targets, the hits and the marks are those of the events of the clip
+ * (damageUnits/damageMarks); on a phone four ships.
+ */
 LG['И-Л'] = async (c, ctx) => {
-  const board = ctx.board, own = sideOf(ctx, c.seat), W = board.clientWidth, g = gapBox(ctx);
-  const topOwn = own !== ctx.bottom;
-  const n = W < 701 ? 4 : 6;
-  const s = clamp((g.h - 8) / 96, 0.5, 0.95);
-  const base = topOwn ? g.y + 96 * s + 2 : g.b - 2; // the waterline of the galleons
-  const units = damageUnits(ctx, c.effects || []);
-  const ships: { el: HTMLElement; x: number }[] = [];
-  for (let q = 0; q < n; q++) {
-    const x = W * (0.5 / n + q / n);
-    const gl = mk(ctx, 'galleon', 0, 0, galleonSVG());
-    const order = Math.abs(q - (n - 1) / 2);
-    A(ctx, gl, [{ opacity: 0, transform: `translate(${x}px,${base + 40 * s}px) scale(${s}) rotate(-6deg)` }, { opacity: 1, transform: `translate(${x}px,${base - 4}px) scale(${s}) rotate(2deg)`, offset: 0.7 }, { opacity: 1, transform: `translate(${x}px,${base}px) scale(${s}) rotate(0deg)` }], 520, order * 90, 'cubic-bezier(.2,.8,.3,1.2)');
-    splash(ctx, x, base - 4, order * 90 + 200);
-    ships.push({ el: gl, x });
-  }
-  tag(ctx, W / 2, topOwn ? base + 18 : base - 96 * s - 16, 'Бортовой залп!', 560, 'gold shout', 1400);
-  const FIRE0 = 700, STEP = 120, FLY = 520;
-  let lastHit = FIRE0;
-  const fired = new Set<{ el: HTMLElement; x: number }>();
-  // FX-D: the galleons fire with the guns of the Volley (×0.6), their smoke lies over the sea a while (a short trace)
-  const svg = fxSvg(ctx), sea = seaScars(ctx), smoke = ctx.rich && sea ? scar(fxSvg(ctx, sea), 'short') : null;
-  units.forEach((u, i) => {
-    const sp = ships[i % ships.length], t0 = FIRE0 + i * STEP;
-    const muzzle = { x: sp.x + (i % 2 ? 12 : -12) * s, y: base - 16 * s };
-    const p1 = fxPoint(ctx, u.ship, u.track, u.idx);
-    gunFire(ctx, svg, i < 6 ? smoke : null, muzzle.x, muzzle.y, Math.atan2(p1.y - muzzle.y, p1.x - muzzle.x), 0.6, t0, { grains: 4, puffs: 5, wads: 1, life: SMOKE_LIFE });
-    if (!fired.has(sp)) { fired.add(sp); A(ctx, sp.el, [{ transform: `translate(${sp.x}px,${base}px) scale(${s})` }, { transform: `translate(${sp.x}px,${base + (topOwn ? -5 : 5)}px) scale(${s}) rotate(${topOwn ? -2 : 2}deg)`, offset: 0.25 }, { transform: `translate(${sp.x}px,${base}px) scale(${s})` }], 420, t0, 'ease-out', 'none'); }
-    const ball = projectile(ctx, KIND_BY_TRACK[u.track], false);
-    fly(ctx, ball, curve(muzzle, p1, i % 2 ? 0.1 : -0.1), FLY, t0, { lift: 0.35, spin: u.track === 'sails' ? 720 : 0 });
-    const th = t0 + FLY;
-    at(ctx, th, () => setTrack(ctx, u.ship, u.track, u.v, '#c0392b'));
-    hitBlast(ctx, svg, p1.x, p1.y, 0.6, th, 520, i > 0);
-    if (u.track === 'sails') burst(ctx, 'shred', p1.x, p1.y, th, 10, 16, 44, 650);
-    shake(ctx, plank(ctx, u.ship), th, 3);
-    if (i === 2) at(ctx, th, () => shake(ctx, board, 0, 9, 320)); // a strong hit — one shake of the table for the series
-    lastHit = th;
+  const K = T.armada, W = ctx.board.clientWidth, g = gapBox(ctx), phone = isPhone(ctx);
+  const n = phone ? 4 : 6;
+  const k = R1(Math.min(0.86, (W / (n * 1.4)) / 120, (g.h * 0.5) / 78) * 100) / 100;
+  const y = g.cy + g.h * 0.08;
+  const xs = Array.from({ length: n }, (_, i) => W * (0.117 + (i * 0.76) / (n - 1)));
+  const sea = seaTemp(ctx), top = fxSvg(ctx);
+  // the haze of the horizon on the right
+  const haze = sv(sea, `<g><ellipse cx="${R1(W - 22)}" cy="${R1(y - 10)}" rx="160" ry="70" fill="#e6eaec" opacity=".7"/><ellipse cx="${R1(W - 62)}" cy="${R1(y + 20)}" rx="120" ry="40" fill="#f2f4f5" opacity=".6"/></g>`);
+  A(ctx, haze, [{ opacity: 0 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], K.haze);
+  // the line comes in, each ship with its wake and bow wave, rocking
+  const total = K.line + 4 * K.next + 2 * n * K.ship + K.leave + 1000;
+  const ships = xs.map((x, i) => {
+    const yy = y - (i % 2) * 6 * k;
+    const g0 = sv(sea, `<g><g class="lg-pitch"><path d="M${R1(40 * k)} 2 C${R1(70 * k)} 4 ${R1(110 * k)} 10 ${R1(160 * k)} 6 M${R1(40 * k)} 6 C${R1(70 * k)} 10 ${R1(110 * k)} 18 ${R1(160 * k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46 * k)} 1 q-8 2 -12 6 M${R1(-46 * k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>${bigShip('company', 0, 0, k)}</g></g>`);
+    A(ctx, g0, [{ transform: `translate(${R1(W + 100 + i * 90)}px,${R1(yy)}px)`, opacity: 0 }, { opacity: 1, offset: 0.15 }, { transform: `translate(${R1(x)}px,${R1(yy)}px)`, opacity: 1 }], K.enter, i * K.enterStep, 'cubic-bezier(.2,.6,.3,1)');
+    if (ctx.rich) { const p = g0.querySelector('.lg-pitch')!; const m = Math.ceil(total / 1600); A(ctx, p, Array.from({ length: m * 2 + 1 }, (_, j) => ({ transform: `rotate(${j % 2 ? 1.6 : -1.2}deg)` })), m * 1600, i * 310, 'ease-in-out', 'none'); }
+    return { g: g0, x, y: yy };
   });
-  damageMarks(ctx, units, lastHit + 80);
-  for (const sp of ships) {
-    A(ctx, sp.el, [{ opacity: 1, transform: `translate(${sp.x}px,${base}px) scale(${s})` }, { opacity: 0, transform: `translate(${sp.x}px,${base + 36 * s}px) scale(${s}) rotate(4deg)` }], 600, lastHit + 500, 'ease-in', 'forwards');
-    puff(ctx, sp.x, base - 30 * s, lastHit + 450);
+  await wait(ctx, K.line);
+  // the broadside ripples down the line at each target; the balls of the events hit their cells
+  const units = damageUnits(ctx, c.effects || []);
+  const targets = [...new Set(units.map((u) => u.ship))];
+  const smoke = ctx.rich ? scar(fxSvg(ctx, seaScars(ctx) ?? ctx.layer), 'short') : null;
+  let fired = 0;
+  for (const tgt of targets) {
+    const tb = bx(ctx, plank(ctx, tgt)), edge = facingY(ctx, tgt), dir = isTop(ctx, tgt) ? -1 : 1; // 1 — the target is below
+    const hits = units.filter((u) => u.ship === tgt), shots = n * 3;
+    // the hits go to shots spread along the line; the other shots fall short into the water
+    const hitAt = new Map(hits.map((u, j) => [Math.round(((j + 0.5) * shots) / hits.length - 0.5), u]));
+    for (let j = 0; j < n; j++) {
+      const sp = ships[j], t0 = j * K.ship;
+      for (let q = 0; q < 3; q++) {
+        const shot = j * 3 + q, u = hitAt.get(shot), px = sp.x + (-26 + q * 22) * k, gy = sp.y - dir * 16 * k, t = t0 + q * K.gun;
+        const p = u ? fxPoint(ctx, u.ship, u.track, u.idx) : { x: tb.x + rnd(30, tb.w - 30) + rnd(-30, 30), y: edge - dir * rnd(14, 34) };
+        const sm = q === 0 && fired++ < 8 ? smoke : null;
+        // each shot is drawn when its time comes (a delayed ball would wait at the muzzle, seen)
+        at(ctx, t, () => {
+          gunFire(ctx, top, sm, px, gy, Math.atan2(p.y - gy, p.x - px), 0.62, 0, { grains: 5, puffs: 5, wads: 1, life: 4800 });
+          if (q === 1) boom(ctx, 2.4, 220);
+          ballFly(ctx, top, { x: px, y: gy }, p, K.fly, 0, 12);
+          at(ctx, K.fly, () => {
+            if (u) hitBlast(ctx, top, p.x, p.y, 0.55, 0, 520, true);
+            else if (shot % 3 === 0) missSplash(ctx, top, p.x, p.y, 0.8);
+            else waterColumn(ctx, top, p.x, p.y, 30, 0, 1200);
+          });
+        });
+      }
+    }
+    await wait(ctx, n * K.ship + 2 * K.gun + K.fly + K.land);
+    // the flash, the target shakes, the boards break
+    flashBoard(ctx, '#fff6d8', 0.22, 300);
+    shake(ctx, plank(ctx, tgt), 0, 7, 520);
+    hits.forEach((u) => { const p = fxPoint(ctx, u.ship, u.track, u.idx); if (u.track === 'sails') sparksSvg(ctx, top, p.x, p.y, 10); else splintersSvg(ctx, top, p.x, p.y, 5); setTrack(ctx, u.ship, u.track, u.v, '#c0392b'); });
+    damageMarks(ctx, hits, 80);
+    await wait(ctx, K.next);
   }
-  await wait(ctx, lastHit + 1150);
+  // the smoke of the broadside stays over the sea and drifts; the fleet sails away into it
+  const host = seaScars(ctx);
+  if (host) {
+    const sm = scar(fxSvg(ctx, host), 'short'), drift = filters(ctx);
+    sm.innerHTML += `<defs><radialGradient id="lgArmS"><stop offset="0" stop-color="#eeebe4" stop-opacity=".8"/><stop offset="1" stop-color="#eeebe4" stop-opacity="0"/></radialGradient></defs>${Array.from({ length: phone ? 7 : 14 }, (_, i) => { const cx = R1(W * (0.1 + (i * 0.85) / (phone ? 6 : 13))); return `<ellipse cx="${cx}" cy="${R1(y + rnd(-26, 26))}" rx="${R1(rnd(50, 80) * Math.max(0.6, k))}" ry="${R1(rnd(20, 32))}" fill="url(#lgArmS)">${drift ? `<animate attributeName="cx" values="${cx};${R1(cx + 60)}" dur="22s" fill="freeze"/>` : ''}</ellipse>`; }).join('')}`;
+    A(ctx, sm, [{ opacity: 0 }, { opacity: 1 }], K.smoke, 0, 'ease-out', 'none');
+  }
+  ships.forEach((s, i) => A(ctx, s.g, [{ transform: `translate(${R1(s.x)}px,${R1(s.y)}px)`, opacity: 1 }, { transform: `translate(${R1(s.x - 1000)}px,${R1(s.y)}px)`, opacity: 0 }], K.leave, i * K.leaveStep, 'cubic-bezier(.5,0,.8,.6)'));
+  await wait(ctx, K.end);
 };
+
 
 /** A piece flying off a plank: a cell of a track (its A5 icon) in the layer. */
 function cellFly(ctx: FxCtx, icon: string, p: Pt): HTMLElement {
@@ -378,7 +382,7 @@ LG['Г-Л'] = async (c, ctx) => {
   const edge = v > 0 ? b.y : b.b;     // the edge of the target to the sea
   const rich = filters(ctx);
   // 1. the sea around the target turns dark and green; the shadow of the beast glides under it; bubbles boil
-  const sea = seaScars(ctx), deep = fxSvg(ctx, sea || ctx.layer), top = fxSvg(ctx);
+  const sea = seaScars(ctx), deep = seaTemp(ctx), top = fxSvg(ctx);
   sv(deep, `<defs><radialGradient id="lgKrDeep${uid}"><stop offset="0" stop-color="#05140f" stop-opacity=".85"/><stop offset=".6" stop-color="#0c2a22" stop-opacity=".55"/><stop offset="1" stop-color="#0c2a22" stop-opacity="0"/></radialGradient>${rich ? `<filter id="lgKrBlur${uid}"><feGaussianBlur stdDeviation="8"/></filter>` : ''}</defs>`);
   const dark = sv(deep, `<ellipse cx="${R1(b.cx)}" cy="${R1(edge - v * 30)}" rx="${R1(Math.min(330, b.w * 0.75))}" ry="110" fill="url(#lgKrDeep${uid})"/>`);
   A(ctx, dark, [{ opacity: 0 }, { opacity: 1 }], K.deep);
@@ -483,7 +487,7 @@ LG['Г-Л'] = async (c, ctx) => {
     waterColumn(ctx, top, a.x, a.y, 32, 700 + i * 100);
   });
   A(ctx, eye, [{ opacity: 1 }, { opacity: 0 }], 400, 0, 'ease-in', 'forwards');
-  if (sea) scar(deep, 'short'); // the dark of the deep stays a while and dissolves
+  if (sea) { deep.classList.remove('fx-temp'); scar(deep, 'short'); } // the dark of the deep stays a while and dissolves
   await wait(ctx, Math.max(K.end, soulsEnd - (t + K.after) + 100));
 };
 
