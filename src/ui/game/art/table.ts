@@ -48,7 +48,8 @@ const THINGS: Record<string, () => string> = {
 };
 // [thing, x, y, scale, rotation, opacity, shadow length]
 const TABLE: [string, number, number, number, number, number, number][] = [
-  ['wheel', 128, 662, 1.1, 14, .5, 9],
+  // lowered so only its upper rim peeks over the bottom edge: clear of the Hold and of «Перестроение» under it (e2e table, Б6)
+  ['wheel', 128, 712, 1.1, 14, .5, 9],
   ['anchor', 560, 612, 1.15, -14, .45, 8],
   ['spyglass', 242, 29, .98, -5, .62, 5],
   ['dividers', 925, 27, .95, 4, .62, 5],
