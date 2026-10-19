@@ -107,7 +107,17 @@ describe('«Быстрый конец хода» in the settings', () => {
     storageWith(null);
     expect(loadSettings().fastEnd).toBe(false);
     storageWith(JSON.stringify({ speed: 'slow', effects: 'simple', hints: true, sound: true }));
-    expect(loadSettings()).toEqual({ speed: 'slow', effects: 'simple', hints: true, sound: true, fastEnd: false, tapSkip: false, seaFrame: 'brass' });
+    expect(loadSettings()).toEqual({ speed: 'slow', effects: 'simple', hints: true, sound: true, fastEnd: false, tapSkip: false, view: { guns: 'icons', hand: 'deck', frame: 'bulwark' } });
+  });
+
+  it('«Вид стола»: the first variant of each switch by default; the old «brass|wood» frame is read as the default', () => {
+    storageWith(JSON.stringify({ seaFrame: 'wood' }));
+    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark' });
+    storageWith(JSON.stringify({ seaFrame: 'brass', view: { guns: 'ports', hand: 'table', frame: 'brass' } }));
+    expect(loadSettings().view).toEqual({ guns: 'ports', hand: 'table', frame: 'brass' });
+    expect(loadSettings()).not.toHaveProperty('seaFrame');
+    storageWith(JSON.stringify({ view: { guns: 'x', frame: 5 } }));
+    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark' });
   });
 
   it('is kept like the other settings', () => {

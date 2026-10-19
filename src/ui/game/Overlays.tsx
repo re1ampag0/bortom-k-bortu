@@ -7,7 +7,7 @@ import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engin
 import type { GameData, Side } from '../../engine/types';
 import { HIDDEN } from '../../engine/view';
 import { RichText } from '../RichText';
-import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type SeaFrame, type Speed } from '../storage';
+import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type TableView, type Speed } from '../storage';
 import { clearTrace, loadTrace } from './fx/trace';
 import { cardClass, CostBadge, HandCard } from './Hand';
 import { memo } from './memo';
@@ -334,6 +334,22 @@ function appVersion(): string {
   return __APP_COMMIT__ ? `${__APP_COMMIT__} · сборка ${built}` : `сборка ${built}`;
 }
 
+/** A two-way switch of ⚙ «Вид стола» (A5Rig: a pill, the chosen half is dark oak). */
+function Switch3<T extends string>({ label, id, value, onChange, options }: { label: string; id: string; value: T; onChange: (v: T) => void; options: [T, string][] }) {
+  return (
+    <div className="row view-row">
+      <b>{label}</b>
+      <span className="view-switch" role="group" aria-label={label}>
+        {options.map(([k, name]) => (
+          <button key={k} type="button" aria-pressed={value === k} data-testid={`view-${id}-${k}`} onClick={() => onChange(k)}>
+            {name}
+          </button>
+        ))}
+      </span>
+    </div>
+  );
+}
+
 export function SettingsSheet({
   speed,
   setSpeed,
@@ -353,7 +369,7 @@ export function SettingsSheet({
   onNew,
   onDownloadLog,
   onDownloadGame = null,
-  onSeaFrame,
+  onView,
   onClose,
 }: {
   /** null — not shown (a network game: the server moves the bots). */
@@ -379,15 +395,15 @@ export function SettingsSheet({
   onNew?: () => void;
   onDownloadLog?: () => void;
   onDownloadGame?: (() => void) | null;
-  /** The table shows the new frame of the sea at once (the choice is kept with the settings here). */
-  onSeaFrame?: (v: SeaFrame) => void;
+  /** The table shows the new «Вид стола» at once (the choice is kept with the settings here). */
+  onView?: (v: TableView) => void;
   onClose: () => void;
 }) {
-  const [seaFrame, setSeaFrameState] = useState(() => loadSettings().seaFrame);
-  const setSeaFrame = (v: SeaFrame) => {
-    setSeaFrameState(v);
-    storeSettings({ ...loadSettings(), seaFrame: v });
-    onSeaFrame?.(v);
+  const [view, setViewState] = useState(() => loadSettings().view);
+  const setView = (v: TableView) => {
+    setViewState(v);
+    storeSettings({ ...loadSettings(), view: v });
+    onView?.(v);
   };
   // The errors of the animation layer on this device: a player sends a screenshot of them (the show skips a broken clip).
   const [fxErrors, setFxErrors] = useState(loadFxErrors);
@@ -419,13 +435,12 @@ export function SettingsSheet({
           <option value="simple">Простые</option>
         </select>
       </label>
-      <label className="row">
-        <span>Рамка моря</span>
-        <select value={seaFrame} onChange={(e) => setSeaFrame(e.target.value as SeaFrame)} data-testid="sea-frame">
-          <option value="brass">латунь</option>
-          <option value="wood">дерево</option>
-        </select>
-      </label>
+      <section className="view-switches" data-testid="table-view" aria-label="Вид стола">
+        <h3>Вид стола</h3>
+        <Switch3 label="Залп на планшете" id="guns" value={view.guns} onChange={(guns) => setView({ ...view, guns })} options={[['icons', 'Значки'], ['ports', 'Порты']]} />
+        <Switch3 label="Фон под рукой" id="hand" value={view.hand} onChange={(hand) => setView({ ...view, hand })} options={[['deck', 'Палуба'], ['table', 'Стол капитана']]} />
+        <Switch3 label="Рамка моря" id="frame" value={view.frame} onChange={(frame) => setView({ ...view, frame })} options={[['bulwark', 'Фальшборт'], ['brass', 'Латунь']]} />
+      </section>
       <label className="row check">
         <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} data-testid="sound" /> Звук «ваш ход»
       </label>
