@@ -19,14 +19,14 @@ import { flipTo } from './misc';
 import type { JackClip, LegendClip } from './planFx';
 import {
   A, at, badgeMark, ballFly, boom, facingY, filters, flashBoard, fxSvg, missSplash, seaTemp, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, flash, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
-  qpts, ring, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, splash, sv, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
+  qpts, ring, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, splash, sv, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
 } from './primitives';
 import { CELLS } from '../art/cells';
-import { ART_FRAME, COST_ICON, COST_WORD, crackArt, EMBLEM, SEAL_HTML, TENT } from '../art/legendArt';
+import { ART_FRAME, bottleArt, CORK, COST_ICON, COST_WORD, crackArt, EMBLEM, SEAL_HTML, TENT } from '../art/legendArt';
 import { ruleTag } from './sea';
 import { plankScars, scar, seaScars } from './scars';
 import { T } from './timing';
-import { bigShip } from '../art/bigShips';
+import { bigShip, type BigShipKind } from '../art/bigShips';
 
 let LG_UID = 0;
 const R1 = (n: number) => Math.round(n * 10) / 10;
@@ -41,15 +41,6 @@ function legendCard(data: GameData, code: string): CardInstance {
 }
 
 /* ——— our own pictures (no frames or images from the films) ——— */
-export function bottleSVG(): string {
-  return `<svg viewBox="0 0 120 200" width="100%" height="100%">
-<path d="M46 12 h28 v36 q0 10 14 22 q22 18 22 46 v66 q0 12 -12 12 h-76 q-12 0 -12 -12 v-66 q0 -28 22 -46 q14 -12 14 -22z" fill="rgba(150,210,180,.22)" stroke="#5d8a74" stroke-width="3"/>
-<path d="M10 160 q25 -8 50 0 t50 0 v22 q0 12 -12 12 h-76 q-12 0 -12 -12z" fill="#5e9cc0" opacity=".5"/>
-<g class="mini" style="transform-box:fill-box;transform-origin:50% 100%"><path d="M34 158 h52 l-8 11 h-36z" fill="#3a2a1e"/><path d="M60 156 v-42 l19 36z" fill="#fff6e0" stroke="#c9b48c"/><path d="M57 156 v-32 l-15 28z" fill="#fff6e0" stroke="#c9b48c"/><path d="M60 114 l9 3 l-9 3z" fill="#2c6658"/></g>
-<path d="M22 100 q0 -18 12 -28" stroke="#fff" stroke-width="5" opacity=".55" fill="none" stroke-linecap="round"/>
-<path d="M98 120 v40" stroke="#fff" stroke-width="3" opacity=".35" fill="none" stroke-linecap="round"/>
-<g class="cork" style="transform-box:fill-box;transform-origin:center"><path d="M47 0 h26 l-2 16 h-22z" fill="#9a6a3a" stroke="#5a3a1c" stroke-width="2"/><path d="M50 6 h20" stroke="#5a3a1c" stroke-width="1.5"/></g></svg>`;
-}
 export function compassSVG(): string {
   const pts: string[] = [];
   for (let k = 0; k < 16; k++) {
@@ -492,63 +483,113 @@ LG['Г-Л'] = async (c, ctx) => {
 };
 
 
-/** «Корабль в бутылке»: a glass bottle over the ship, the ship shrinks into it, the cork, the bottle floats away. */
+/** The detailed ship of A5 of a code (bigships.json has the pirates' own). */
+const bigKind = (code: string): BigShipKind => (code === 'Ж' ? 'pearl' : code === 'М' ? 'revenge' : 'company');
+
+/**
+ * «Корабль в бутылке» (fxBottle of fx3.js, ANIMATIONS.md §3.4; T.bottle). «Корпус N — можно»; the target glows green,
+ * sparks orbit it; a bottle on its side (bottleArt, the neck to the right) draws itself in glass in the gap, fills with
+ * light and its painted sea, glints; a vortex — the plank spirals and shrinks into the mouth with a funnel of sparks;
+ * a tiny ship rocks inside; the cork flies spinning from the medallion of the owner and pops into the neck — «чпок!»,
+ * a ring, a flash; the bottle lifts and drops onto the sea (spouts, rings) and stays afloat with the ship inside (a long
+ * trace); the plank comes back grey (the table drawn with the events of the clip) and the stamp «Затонул» falls.
+ * «Джонс свободен» and the repair of the Crew of «Голландец» — events of the same Legend — come after.
+ */
 LG['М-Л'] = async (c, ctx) => {
-  const tgt = c.target!, tp = plank(ctx, tgt), tb = bx(ctx, tp), W = ctx.board.clientWidth;
-  const h = clamp(tb.h * 1.45, 150, 250), w = h * 0.6;
-  const bc = { x: tb.cx, y: tb.cy };
-  const bottle = mk(ctx, 'bottle', 0, 0, bottleSVG());
-  bottle.style.width = w + 'px'; bottle.style.height = h + 'px'; bottle.style.margin = `${-h / 2}px 0 0 ${-w / 2}px`;
-  const mini = bottle.querySelector<SVGElement>('.mini')!, cork = bottle.querySelector<SVGElement>('.cork')!;
-  mini.style.opacity = '0'; cork.style.opacity = '0';
-  A(ctx, bottle, [{ opacity: 0, transform: `translate(${bc.x}px,${bc.y}px) scale(.4) rotate(-12deg)` }, { opacity: 1, transform: `translate(${bc.x}px,${bc.y}px) scale(1.06) rotate(3deg)`, offset: 0.7 }, { opacity: 1, transform: `translate(${bc.x}px,${bc.y}px) scale(1) rotate(0deg)` }], 520, 0, 'cubic-bezier(.2,.8,.3,1.2)');
-  if (ctx.rich) for (let q = 0; q < 6; q++) { const sp = mk(ctx, 'sparkle', 0, 0); const x = bc.x + (Math.random() - 0.5) * w, y = bc.y + (Math.random() - 0.5) * h; A(ctx, sp, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.4)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1.3)`, offset: 0.5 }, { opacity: 0, transform: `translate(${x}px,${y}px) scale(.4)` }], 600, 250 + q * 90); }
-  // the ship shrinks into the bottle, gold dust swirls around it
-  const inside = { x: bc.x, y: bc.y + h * 0.22 };
-  A(ctx, tp, [{ transform: 'none', opacity: 1 }, { transform: `translate(${inside.x - tb.cx}px,${inside.y - tb.cy}px) scale(.5) rotate(-6deg)`, opacity: 0.9, offset: 0.6 }, { transform: `translate(${inside.x - tb.cx}px,${inside.y - tb.cy}px) scale(.08) rotate(-14deg)`, opacity: 0 }], 750, 520, 'cubic-bezier(.6,0,.8,.6)', 'forwards');
-  if (ctx.rich) for (let q = 0; q < 18; q++) {
-    const d = mk(ctx, 'gold-dust', 0, 0), a0 = (q / 18) * Math.PI * 2;
-    const pts = Array.from({ length: 9 }, (_, j) => { const r = (1 - j / 8) * Math.max(tb.w, tb.h) * 0.55, a = a0 + j * 0.55; return { x: inside.x + Math.cos(a) * r, y: inside.y + Math.sin(a) * r * 0.6 }; });
-    A(ctx, d, pts.map((p, j) => ({ offset: j / 8, opacity: j === 8 ? 0 : 1, transform: `translate(${p.x}px,${p.y}px)` })), 700, 560 + q * 12, 'ease-in');
+  const K = T.bottle, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = ctx.board.clientWidth, g = gapBox(ctx);
+  const events = (c as LegendClip & { events?: GameEvent[] }).events ?? c.effects ?? [];
+  const top = fxSvg(ctx), BS = R1(Math.min(0.82, (W - 24) / 236, g.h / 110) * 100) / 100;
+  const bx0 = clamp(b.cx - 10, 100 * BS + 8, W - 130 * BS - 8), by0 = g.cy;
+  const mouth = { x: bx0 + 112 * BS, y: by0 };
+  ruleTag(ctx, W / 2, g.cy - 60 * BS, `Корпус ${shownTrack(ctx, tgt, 'hull')} — можно`, 0, 'plus', 1200);
+  // 1. the target glows; sparks orbit it
+  A(ctx, tp, [{ boxShadow: '0 0 0 0 rgba(127,240,176,0)' }, { boxShadow: '0 0 0 3px rgba(127,240,176,.9), 0 0 30px rgba(127,240,176,.7)', offset: 0.5 }, { boxShadow: '0 0 0 2px rgba(127,240,176,.6), 0 0 18px rgba(127,240,176,.5)' }], K.glow, 0, 'ease-out', 'none');
+  for (let i = 0, m = room(ctx, 24); i < m; i++) {
+    const s = sv(top, `<path d="M0 -3 L.8 -.8 L3 0 L.8 .8 L0 3 L-.8 .8 L-3 0 L-.8 -.8 Z" fill="${i % 2 ? '#bfffd8' : '#ffe7a4'}"/>`);
+    A(ctx, s, Array.from({ length: 13 }, (_, k) => { const a = (k / 12 + i / 24) * Math.PI * 2; return { transform: `translate(${R1(b.cx + Math.cos(a) * (b.w * 0.58))}px,${R1(b.cy + Math.sin(a) * (b.h * 0.7))}px)`, opacity: k === 12 ? 0 : 1 }; }), K.orbit, i * K.orbitStep, 'linear');
   }
-  A(ctx, mini, [{ opacity: 0, transform: 'scale(.2)' }, { opacity: 1, transform: 'scale(1.1)', offset: 0.7 }, { opacity: 1, transform: 'scale(1)' }], 380, 1180, 'ease-out', 'forwards');
-  // the cork
-  A(ctx, cork, [{ opacity: 1, transform: 'translateY(-46px) rotate(-20deg)' }, { opacity: 1, transform: 'translateY(2px) rotate(0deg)', offset: 0.75 }, { opacity: 1, transform: 'translateY(0)' }], 300, 1420, 'cubic-bezier(.6,0,.9,.6)', 'forwards');
-  const neck = { x: bc.x, y: bc.y - h / 2 + h * 0.04 };
-  flash(ctx, neck.x, neck.y, 1650, 0.9); ring(ctx, neck.x, neck.y, 1650, 0.9, '#e0b44c');
-  tag(ctx, neck.x, neck.y - 22, 'Чпок!', 1650, 'gold shout', 900);
-  // the bottle lies on the water and floats away to the nearer edge
-  const dir = bc.x > W / 2 ? 1 : -1;
-  const g = gapBox(ctx);
-  const water = { x: bc.x + dir * 30, y: g.cy };
-  const endX = dir > 0 ? W + w : -w;
-  const path = Array.from({ length: 13 }, (_, j) => { const t = j / 12; return { x: water.x + (endX - water.x) * t * t, y: water.y + Math.sin(t * Math.PI * 3) * 6, r: dir * (80 + Math.sin(t * Math.PI * 3) * 8) }; });
-  A(ctx, bottle, [{ opacity: 1, transform: `translate(${bc.x}px,${bc.y}px) scale(1) rotate(0deg)` }, { opacity: 1, transform: `translate(${water.x}px,${water.y}px) scale(.7) rotate(${dir * 80}deg)` }], 520, 1900, 'cubic-bezier(.4,0,.3,1)', 'forwards');
-  A(ctx, bottle, path.map((p, j) => ({ offset: j / 12, opacity: j === 12 ? 0 : 1, transform: `translate(${p.x}px,${p.y}px) scale(.7) rotate(${p.r}deg)` })), 1500, 2420, 'ease-in', 'forwards');
-  splash(ctx, water.x, water.y + 10, 2380);
-  for (let q = 1; q < 5; q++) { const p = path[q * 3]; const r = mk(ctx, 'ripple', 0, 0); A(ctx, r, [{ opacity: 0.8, transform: `translate(${p.x}px,${p.y + 8}px) scale(.3)` }, { opacity: 0, transform: `translate(${p.x}px,${p.y + 8}px) scale(1.4)` }], 800, 2420 + q * 260); }
-  let tEnd = 3500;
+  // 2. the bottle draws itself in glass, then fills with light, the painted sea, the glints
+  const bot = sv(top, `<g transform="translate(${R1(bx0)} ${R1(by0)}) scale(${BS})">${bottleArt()}</g>`);
+  const glass = bot.querySelector<SVGPathElement>('.glass')!, L = R1(glass.getTotalLength());
+  glass.style.strokeDasharray = String(L);
+  A(ctx, glass, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], K.glass, K.glassAt, 'ease-in-out');
+  [bot.querySelector('.gfill'), bot.querySelector('.hl'), ...bot.querySelectorAll('g[clip-path], ellipse')].forEach((e) => e && A(ctx, e, [{ opacity: 0 }, { opacity: 1 }], K.fill, K.fillAt));
+  for (let i = 0, m = room(ctx, 10); i < m; i++) {
+    const gl = sv(top, '<path d="M0 -5 L1.3 -1.3 L5 0 L1.3 1.3 L0 5 L-1.3 1.3 L-5 0 L-1.3 -1.3 Z" fill="#fff"/>'), x = bx0 + rnd(-90, 100) * BS, y = by0 + rnd(-44, 44) * BS;
+    A(ctx, gl, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(0)` }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2) rotate(45deg)`, offset: 0.5 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(0) rotate(90deg)` }], K.glint, K.glintAt + i * K.glintStep);
+  }
+  await wait(ctx, K.vortexAt);
+  // 3. the vortex: the plank spirals and shrinks into the mouth; a funnel of sparks goes with it
+  const dx = mouth.x - b.cx, dy = mouth.y - b.cy;
+  const sucked = A(ctx, tp, Array.from({ length: 21 }, (_, k) => { const t = k / 20, sw = (1 - t) * 60 * Math.sin(t * Math.PI * 3); return { transform: `translate(${R1(dx * t + sw)}px,${R1(dy * t - sw * 0.4)}px) rotate(${R1(t * 540)}deg) scale(${R1((1 - 0.97 * Math.pow(t, 0.8)) * 1000) / 1000})`, opacity: k === 20 ? 0 : 1 }; }), K.vortex, 0, 'cubic-bezier(.5,0,.6,1)', 'forwards');
+  for (let i = 0, m = room(ctx, 46); i < m; i++) {
+    const s = sv(top, `<circle r="${R1(rnd(1.2, 2.8))}" fill="${i % 2 ? '#bfffd8' : '#ffe7a4'}"/>`), r0 = rnd(80, 210), a0 = rnd(0, 6.28);
+    A(ctx, s, Array.from({ length: 11 }, (_, k) => { const t = k / 10, a = a0 + t * 9, r = r0 * (1 - t); return { transform: `translate(${R1(mouth.x + 40 * (1 - t) + Math.cos(a) * r)}px,${R1(mouth.y + Math.sin(a) * r * 0.6)}px)`, opacity: t < 0.9 ? 1 : 0 }; }), 1300, rnd(0, 400), 'ease-in');
+  }
+  await wait(ctx, K.miniAt);
+  // 4. inside: a tiny ship rocks on the painted waves
+  const mini = sv(top, `<g><g class="lg-rock">${bigShip(bigKind(tgt), 0, 0, 0.62)}</g></g>`);
+  A(ctx, mini, [{ transform: `translate(${R1(mouth.x)}px,${R1(mouth.y)}px) scale(.05)`, opacity: 0 }, { transform: `translate(${R1(bx0 - 24 * BS)}px,${R1(by0 + 27 * BS)}px) scale(${BS})`, opacity: 1 }], K.mini, 0, 'cubic-bezier(.3,1.2,.6,1)');
+  if (ctx.rich) A(ctx, mini.querySelector('.lg-rock')!, Array.from({ length: 9 }, (_, j) => ({ transform: `rotate(${j % 2 ? 3 : -3}deg)` })), 4 * 1400, 0, 'ease-in-out', 'none');
+  goldBurst(ctx, top, mouth.x, mouth.y, 24, 10, 70); circRing(ctx, top, mouth.x, mouth.y, 4, 40, '#bfffd8', 500, 0, 2);
+  await wait(ctx, K.corkAt);
+  // 5. the cork flies from the medallion of the owner, spinning, and pops into the mouth
+  const rb = bx(ctx, legendMedal(ctx, c.seat)), cx = bx0 + 118 * BS;
+  const cork = sv(top, CORK);
+  A(ctx, cork, qpts(rb.cx, rb.cy, (rb.cx + cx) / 2 + 60, Math.min(rb.cy, by0) - 150, cx + 14, by0, 20).map((p, k) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px) rotate(${k * 36}deg) scale(${R1(BS * (0.6 + k / 50) * 100) / 100})` })), K.cork, 0, 'cubic-bezier(.4,0,.7,1)');
+  await wait(ctx, K.cork);
+  A(ctx, cork, [{ transform: `translate(${R1(cx + 14)}px,${R1(by0)}px) scale(${BS})` }, { transform: `translate(${R1(cx - 3)}px,${R1(by0)}px) scale(${R1(BS * 1.08 * 100) / 100},${R1(BS * 0.9 * 100) / 100})`, offset: 0.5 }, { transform: `translate(${R1(cx)}px,${R1(by0)}px) scale(${BS})` }], K.pop, 0, 'cubic-bezier(.6,0,.4,1)');
+  await wait(ctx, K.popAt);
+  const pop = mk(ctx, 'lg-pop', cx + 30, by0 - 54, 'чпок!');
+  A(ctx, pop, [{ transform: 'scale(.3) rotate(-14deg)', opacity: 0 }, { transform: 'scale(1.15) rotate(-8deg)', opacity: 1, offset: 0.25 }, { transform: 'scale(1) rotate(-8deg)', opacity: 1, offset: 0.8 }, { transform: 'translateY(-14px) scale(1) rotate(-8deg)', opacity: 0 }], K.word);
+  circRing(ctx, top, cx, by0, 6, 80, '#fff6d8', 500, 0, 4); goldBurst(ctx, top, cx, by0, 30, 10, 90); flashBoard(ctx, '#ffffff', 0.18, 260);
+  await wait(ctx, K.dropAt);
+  // 6. the bottle lifts a little and drops onto the sea with a splash
+  const all = sv(top, '<g/>');
+  [bot, mini, cork].forEach((e) => all.appendChild(e));
+  (all as SVGElement).style.transformOrigin = `${R1(bx0)}px ${R1(by0)}px`;
+  A(ctx, all, [{ transform: 'translate(0,0) rotate(0) scale(1)' }, { transform: 'translate(0,-34px) rotate(-6deg) scale(1.04)', offset: 0.45 }, { transform: 'translate(0,6px) rotate(3deg) scale(.72)' }], K.drop, 0, 'cubic-bezier(.4,0,.6,1)');
+  await wait(ctx, K.splashAt);
+  waterColumn(ctx, top, bx0 - 50 * BS, by0 + 30 * BS, 40); waterColumn(ctx, top, bx0 + 50 * BS, by0 + 30 * BS, 34);
+  for (let i = 0; i < 3; i++) circRing(ctx, top, bx0, by0 + 24 * BS, 10, (120 - i * 26) * BS, '#eef6f8', 1000, i * 150, 2);
+  // 7. the plank comes back sunk (the table drawn with the events of the clip), the stamp falls; the bottle stays
+  //    afloat with the ship inside — a long trace of the sea
+  ctx.renderWith(events.filter((e) => e.type === 'legendPlayed' || e.type === 'powderSpent' || e.type === 'sunk'));
+  sucked.cancel();
+  A(ctx, tp, [{ opacity: 0 }, { opacity: 1 }], K.back, 0, 'ease-out', 'none');
+  const st = mk(ctx, 'stamp-fx sunk', b.cx, b.cy, 'Затонул');
+  A(ctx, st, [{ opacity: 0, transform: 'translate(-50%,-50%) rotate(-7deg) scale(2.8)' }, { opacity: 1, transform: 'translate(-50%,-50%) rotate(-7deg) scale(.94)', offset: 0.7 }, { opacity: 1, transform: 'translate(-50%,-50%) rotate(-7deg) scale(1)' }], K.stamp, K.back * 0.5, 'cubic-bezier(.5,0,.8,.4)');
+  const host = seaScars(ctx);
+  if (host) {
+    const keep = scar(fxSvg(ctx, host), 'long', tgt), rock = filters(ctx), k2 = R1(BS * 0.72 * 100) / 100;
+    keep.innerHTML += `<g transform="translate(${R1(bx0)} ${R1(by0 + 4)})"><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(110 * k2)}" ry="7" fill="#0b2a36" opacity=".28"/><g>${rock ? '<animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.6s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 3;0 0" dur="2.6s" additive="sum" repeatCount="indefinite"/>' : ''}<g transform="scale(${k2})">${bottleArt({ ship: true, cork: true })}</g></g><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(120 * k2)}" ry="6" fill="none" stroke="#e6f2f4" stroke-width="1.4" opacity=".7">${rock ? `<animate attributeName="rx" values="${R1(110 * k2)};${R1(140 * k2)};${R1(110 * k2)}" dur="2.6s" repeatCount="indefinite"/>` : ''}</ellipse></g>`;
+    A(ctx, keep, [{ opacity: 0 }, { opacity: 1 }], 300, 0, 'ease-out', 'none');
+  }
+  A(ctx, all, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-out', 'forwards');
+  let tEnd = K.end;
   // «Джонс свободен» and the repair of the Crew of «Голландец» — events of the same Legend
   const jf = (c.effects || []).find((e) => e.type === 'jonesFree');
   const rs = (c.effects || []).filter((e): e is Extract<GameEvent, { type: 'restored' }> => e.type === 'restored');
   if (jf && jf.type === 'jonesFree') {
     const jb = bx(ctx, plank(ctx, jf.ship));
     // game (S1): the explanation is in the middle of the table, not over the plank
-    ruleTag(ctx, jb.cx, gapBox(ctx).cy, 'Джонс свободен', 2500, 'gold', 1700);
-    ring(ctx, jb.cx, jb.cy, 2500, 2.4, '#e0b44c');
+    ruleTag(ctx, jb.cx, g.cy, 'Джонс свободен', 600, 'gold', 1700);
+    circRing(ctx, top, jb.cx, jb.cy, 10, Math.max(jb.w, jb.h) * 0.6, '#e0b44c', 800, 600, 3);
+    tEnd = Math.max(tEnd, 2300);
   }
   rs.forEach((e) => {
     const now = shownTrack(ctx, e.ship, e.track);
     for (let j = 0; j < e.amount; j++) {
-      const t0 = 2700 + j * 180, p = fxPoint(ctx, e.ship, e.track, now + j);
+      const t0 = 800 + j * 180, p = fxPoint(ctx, e.ship, e.track, now + j);
       at(ctx, t0, () => setTrack(ctx, e.ship, e.track, now + j + 1, '#2f7d4a'));
-      ring(ctx, p.x, p.y, t0, 0.8, '#2f7d4a'); burst(ctx, 'sparkle', p.x, p.y, t0, 5, 6, 18, 500);
+      circRing(ctx, top, p.x, p.y, 4, 22, '#2f7d4a', 500, t0, 2); at(ctx, t0, () => goldBurst(ctx, top, p.x, p.y, 6, 6, 18));
     }
-    trackMark(ctx, e.ship, e.track, e.amount, 2800 + e.amount * 180, true); // game (S1): a mark, not a pill
-    tEnd = Math.max(tEnd, 3400 + e.amount * 180);
+    trackMark(ctx, e.ship, e.track, e.amount, 900 + e.amount * 180, true); // game (S1): a mark, not a pill
+    tEnd = Math.max(tEnd, 1500 + e.amount * 180);
   });
   await wait(ctx, tEnd);
 };
+
 
 /** The common effect of a Legend with no effect of its own: hits on the tracks by the events. */
 export async function legendGeneric(c: LegendClip, ctx: FxCtx): Promise<void> {
