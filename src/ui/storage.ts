@@ -4,6 +4,8 @@ import { parseRecord, type MatchRecord } from '../engine/match';
 
 const SAVE = 'bortom-k-bortu.save';
 const SETTINGS = 'bortom-k-bortu.settings';
+/** V7: the minutes of the game in progress (playClock.ts), next to the autosave. */
+const CLOCK = 'bortom-k-bortu.clock';
 
 export type Speed = 'slow' | 'normal' | 'fast' | 'instant';
 
@@ -84,6 +86,19 @@ export function loadSave(): MatchRecord | null {
 
 export function storeSave(record: MatchRecord | null): void {
   write(SAVE, record ? JSON.stringify(record) : null);
+}
+
+export function loadClock(): { id: string; ms: number } | null {
+  try {
+    const c = JSON.parse(read(CLOCK) ?? 'null') as { id?: unknown; ms?: unknown } | null;
+    return c && typeof c.id === 'string' && typeof c.ms === 'number' && c.ms >= 0 ? { id: c.id, ms: c.ms } : null;
+  } catch {
+    return null;
+  }
+}
+
+export function storeClock(c: { id: string; ms: number }): void {
+  write(CLOCK, JSON.stringify(c));
 }
 
 export function loadSettings(): Settings {

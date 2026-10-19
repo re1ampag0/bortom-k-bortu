@@ -5,7 +5,7 @@ import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
 import { deckCards } from '../../engine/data';
 import { InfoTip } from './InfoTip';
-import { SIDE_LABEL } from './text';
+import { roman, SIDE_LABEL } from './text';
 import { reducedMotion } from '../start/motion';
 import { cellUrl, CELLS, type CellIcon } from './art/cells';
 import { shipSvg } from './art/ships';
@@ -76,13 +76,6 @@ function breakAfterArrow(text: string): ReactNode {
   );
 }
 
-/** I, II, III … — the round on the brass plate (A5: «Пираты · раунд II»). */
-export function roman(n: number): string {
-  const R: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
-  let out = '';
-  for (const [v, l] of R) while (n >= v) (out += l), (n -= v);
-  return out;
-}
 
 /**
  * ≥ 1280 px: the log is on the screen and the tools of the top row (the sea plaque, «Правила», «Настройки») stand over it,
