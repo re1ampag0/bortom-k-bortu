@@ -124,6 +124,11 @@ test.describe('the Legends through ?fxScene', () => {
         expect(foot.px).toBeGreaterThanOrEqual(10);
 
         await shot(page, l.effect, l.after, `${SHOTS}/e2e-${l.scene}-effect-${size}.png`);
+        if (l.scene === 'bottle') {
+          // A5: the ship in the bottle is the target's own («Индевор»), not the neutral merchantman of the card
+          const kind = await page.evaluate(() => document.querySelector('.fx-layer .lg-rock > g[data-kind]')?.getAttribute('data-kind'));
+          expect(kind, 'the ship in the bottle').toBe('endeavour');
+        }
         if (l.scene === 'kraken') {
           // Three arms lie across «Месть»: the base of each at the edge of the target at 30/55/78 % of its width, and
           // the crack of the wood was born right under it (its circle of reveal starts there).

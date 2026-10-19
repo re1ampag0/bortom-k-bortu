@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { bigShip, type BigShipKind } from '../src/ui/game/art/bigShips';
 import { shipSvg } from '../src/ui/game/art/ships';
 import { CELLS, cellUrl } from '../src/ui/game/art/cells';
+import { bottleArt } from '../src/ui/game/art/legendArt';
 
 const ids = (svg: string) => [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
 const refs = (svg: string) => [...svg.matchAll(/url\(#([^)]+)\)/g)].map((m) => m[1]);
@@ -40,5 +41,15 @@ describe('the Hull icons of v3', () => {
     expect(CELLS.HULL).not.toContain('Gradient');
     expect(CELLS.HULL_X).not.toBe(CELLS.HULL);
     expect(cellUrl('HULL')).toMatch(/^url\("data:image\/svg\+xml,/);
+  });
+});
+
+describe('the ship in the bottle (A5)', () => {
+  it('is the merchantman by default (the card) and the target\'s own ship when told', () => {
+    expect(bottleArt({ ship: true })).toContain('data-kind="merchant"');
+    expect(bottleArt()).not.toContain('data-kind');
+    const own = (['pearl', 'revenge', 'endeavour', 'dutch'] as const).map((kind) => bottleArt({ ship: true, cork: true, kind }));
+    own.forEach((svg, i) => expect(svg).toContain(`data-kind="${['pearl', 'revenge', 'endeavour', 'dutch'][i]}"`));
+    expect(new Set(own).size).toBe(4);
   });
 });
