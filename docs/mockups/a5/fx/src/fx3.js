@@ -4,7 +4,7 @@
    ===================================================================================================================== */
 const BIG = __BIG__;
 /* a detailed ship of the A5 manner (viewBox 120×78, bow to the left, waterline ~71); origin — the middle of the waterline */
-const bigShip = (kind, x, y, k = 1, flip = false, extra = '') => `<g transform="translate(${R1(x)} ${R1(y)}) scale(${flip ? -k : k} ${k})" ${extra}><g transform="translate(-60 -71)">${BIG[kind]}</g></g>`;
+let UID3 = 0; const uidSvg = (s) => { const n = ++UID3; return s.replace(/id="([^"]+)"/g, (m, a) => `id="${a}_u${n}"`).replace(/url\(#([^)]+)\)/g, (m, a) => `url(#${a}_u${n})`); }; const bigShip = (kind, x, y, k = 1, flip = false, extra = '') => `<g transform="translate(${R1(x)} ${R1(y)}) scale(${flip ? -k : k} ${k})" ${extra}><g transform="translate(-60 -71)">${uidSvg(BIG[kind])}</g></g>`;
 function circRing(svg, x, y, r0, r1, color, d, delay = 0, w = 2){ const c = sv(svg, `<circle cx="0" cy="0" r="${r1}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`).firstChild;
   A(c, [{transform: `translate(${x}px,${y}px) scale(${R1(r0 / r1 * 100) / 100})`, opacity: 1}, {transform: `translate(${x}px,${y}px) scale(1)`, opacity: 0}], d, delay, 'cubic-bezier(.2,.7,.3,1)'); return c; }
 function motes(root, n, x0, x1, y0, y1, colors = ['#ffe9a8', '#ffd27a', '#fff6d8'], z = 34){ for(let i = 0; i < n; i++){ const m = document.createElement('i'); m.className = 'pg-mote'; m.style.zIndex = z; const s = rnd(2, 5); m.style.width = m.style.height = s + 'px'; m.style.background = colors[i % colors.length]; root.appendChild(m);
@@ -266,8 +266,22 @@ async function fxSink(root, code = 'М', ally = 'Ж'){
       <path d="M-30 6 Q-2 10 30 4" fill="none" stroke="#eef6f8" stroke-width="2" opacity=".7"/>
       <g transform="translate(-9 1)">${OAR}</g><g transform="translate(5 1)">${OAR}</g>
       ${man(-9, .82, CREW)}${man(5, .82, CREW)}${man(-21, .98, CAPT)}
-      <path d="M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z" fill="#7a4a26" stroke="#2a1a0c" stroke-width="1"/>
-      <path d="M-26 1 Q0 5 29 -1 M-22 5 Q0 8 22 4" fill="none" stroke="#4a2a12" stroke-width=".7"/><path d="M-28 -3 Q12 -1 31 -5" fill="none" stroke="#c99a64" stroke-width="1.2"/>
+      <ellipse cx="2" cy="11" rx="32" ry="3" fill="#0b2430" opacity=".35"/>
+      <g opacity=".22" transform="matrix(1 0 0 -.35 0 12.2)"><path d="M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z" fill="#5a3418"/></g>
+      <defs><linearGradient id="pgBoatH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a06a3a"/><stop offset=".5" stop-color="#7a4a26"/><stop offset="1" stop-color="#4a2a12"/></linearGradient>
+        <linearGradient id="pgBoatL" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient>
+        <clipPath id="pgBoatC"><path d="M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z"/></clipPath></defs>
+      <path d="M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z" fill="url(#pgBoatH)" stroke="#2a1a0c" stroke-width="1"/>
+      <g clip-path="url(#pgBoatC)">
+        <path d="M-27.4 -.6 Q2 2.6 30.2 -2.6 M-26.4 2.4 Q2 5.8 28.6 .6 M-24.6 5.4 Q0 8.4 25.4 3.8" fill="none" stroke="#2a1a0c" stroke-width=".8"/>
+        <path d="M-27.4 0 Q2 3.2 30 -2 M-26.2 3 Q2 6.4 28.2 1.2 M-24.2 6 Q0 9 25 4.4" fill="none" stroke="#d9a46c" stroke-width=".45" opacity=".7"/>
+        ${[-20, -12, -4, 4, 12, 20].map(x => `<circle cx="${x}" cy="${R1(.6 + Math.abs(x) * .02)}" r=".45" fill="#e0c08a"/><circle cx="${x + 2}" cy="${R1(3.7 + Math.abs(x) * .02)}" r=".45" fill="#e0c08a"/>`).join('')}
+        <path d="M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z" fill="url(#pgBoatL)"/></g>
+      <path d="M-28.6 -3.4 Q12 -1.4 31.4 -5.6" fill="none" stroke="#3a2210" stroke-width="2.4" stroke-linecap="round"/><path d="M-28 -3.8 Q12 -1.8 31 -6" fill="none" stroke="#e0b07a" stroke-width="1" stroke-linecap="round"/>
+      <path d="M-28.4 -3.6 Q-27.6 3 -25 7.2" fill="none" stroke="#3a2210" stroke-width="1.6"/><path d="M31.2 -5.6 Q32.6 -7.6 32 -9.4" fill="none" stroke="#3a2210" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M-10 9.4 L14 9.4" stroke="#2a1a0c" stroke-width="1.4" stroke-linecap="round"/>
+      ${[-9, 5].map(x => `<path d="M${x - 1} ${R1(-2.6 - (x + 28) * .006)} v-1.6 M${x + 1} ${R1(-2.8 - (x + 28) * .006)} v-1.6" stroke="#2b2f31" stroke-width=".6"/>`).join('')}
+      <path d="M-2 9 q-.6 .8 0 1.6 M20 7.4 q.6 .8 0 1.6" stroke="#eef6f8" stroke-width=".6" fill="none" opacity=".6"/>
       <path d="M-29 -2 V-22" stroke="#4a2a12" stroke-width="1"/><path d="M-29 -22 L-17 -19 L-29 -16 Z" fill="#8a2e1c"><animateTransform attributeName="transform" type="skewY" values="0;-8;0;6;0" dur="1.2s" repeatCount="indefinite"/></path>
       <path d="M28 -5 L33 -14" stroke="#4a2a12" stroke-width="1"/><g transform="translate(33 -15)"><circle r="6" fill="#ffd27a" opacity=".35"><animate attributeName="opacity" values=".35;.2;.4;.25;.35" dur=".9s" repeatCount="indefinite"/></circle><rect x="-1.8" y="-2.6" width="3.6" height="4.6" rx=".8" fill="#ffe7a0" stroke="#3a2412" stroke-width=".6"/><path d="M-1.8 -2.6 H1.8 M0 -2.6 V-4" stroke="#3a2412" stroke-width=".6"/></g>
       </g></g>`).firstChild;
@@ -320,16 +334,22 @@ const TENT = (uid, k = 1, kx = 1) => `<g transform="scale(${R1(k * kx * 100) / 1
   <path d="M8 -4 C2 -34 12 -60 6 -100" fill="none" stroke="#c9a6d6" stroke-width="5" opacity=".35" stroke-linecap="round"/>
   ${[[9, -12, 4], [10, -28, 3.7], [9, -44, 3.4], [8, -60, 3], [8, -76, 2.7], [8, -92, 2.3], [9, -106, 2], [14, -118, 1.6]].map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${R1(r * .8)}" fill="#e9c9d6" stroke="#6a4a6e" stroke-width=".7"/><ellipse cx="${x}" cy="${y}" rx="${R1(r * .45)}" ry="${R1(r * .35)}" fill="#a0708a"/>`).join('')}</g>`;
 
-/* ----- the compass: a brass bezel, a cream dial with a fine tick ring, an eight-point faceted rose, the letters С В Ю З,
-   a blued-steel needle with a red north, a brass cap, the glass glint. Simple shapes, careful proportions. ----- */
+/* ----- the compass: a pendant bow, a knurled and bevelled brass bezel, a cream card with degrees, a 16-point faceted
+   rose, the letters С В Ю З, a blued-steel needle with a red north on a jewelled pivot, the shadow of the glass lip,
+   glints. Small sizes (medallion) drop the bow, the numbers and the finest ticks. ----- */
 function compassArt(uid, r = 74, o = {}){
-  const id = k => `pgC${uid}${k}`, P = a => [Math.cos(a), Math.sin(a)], f = n => R1(n * 100) / 100;
-  const ticks = Array.from({length: 120}, (_, i) => { const a = i * 3 * Math.PI / 180 - Math.PI / 2, big = i % 30 === 0, mid = i % 10 === 0, half = i % 5 === 0;
-    const r0 = r * .855, l = r * (big ? .1 : mid ? .072 : half ? .05 : .03), [c, sn] = P(a);
-    return `<path d="M${f(c * r0)} ${f(sn * r0)} L${f(c * (r0 - l))} ${f(sn * (r0 - l))}" stroke="#2a2018" stroke-width="${f(r * (big ? .02 : mid ? .013 : .008))}"/>`; }).join('');
+  const id = k => `pgC${uid}${k}`, P = a => [Math.cos(a), Math.sin(a)], f = n => R1(n * 100) / 100, big = r >= 24;
+  const ticks = Array.from({length: 120}, (_, i) => { const a = i * 3 * Math.PI / 180 - Math.PI / 2, bg = i % 30 === 0, mid = i % 10 === 0, half = i % 5 === 0;
+    if(!big && !half) return '';
+    const r0 = r * .855, l = r * (bg ? .1 : mid ? .072 : half ? .05 : .03), [c, sn] = P(a);
+    return `<path d="M${f(c * r0)} ${f(sn * r0)} L${f(c * (r0 - l))} ${f(sn * (r0 - l))}" stroke="#2a2018" stroke-width="${f(r * (bg ? .02 : mid ? .013 : .008))}"/>`; }).join('');
+  const knurl = big ? Array.from({length: 96}, (_, i) => { const [c, sn] = P(i * Math.PI / 48); return `<path d="M${f(c * r * .995)} ${f(sn * r * .995)} L${f(c * r * .952)} ${f(sn * r * .952)}" stroke="#5e400e" stroke-width="${f(r * .011)}" opacity=".7"/>`; }).join('') : '';
+  const nums = big ? [30, 60, 120, 150, 210, 240, 300, 330].map(d => { const [x, y] = P(d * Math.PI / 180 - Math.PI / 2), X = f(x * r * .69), Y = f(y * r * .69);
+    return `<text x="${X}" y="${f(+Y + r * .028)}" font-family="'Old Standard TT',Georgia,serif" font-size="${f(r * .075)}" text-anchor="middle" fill="#4a3a20" transform="rotate(${d} ${X} ${Y})">${d}</text>`; }).join('') : '';
   const point = (deg, len, wid, light, dark) => { const a = deg * Math.PI / 180 - Math.PI / 2, [c, sn] = P(a), [lc, ls] = P(a - Math.PI / 2);
     return `<path d="M0 0 L${f(lc * wid)} ${f(ls * wid)} L${f(c * len)} ${f(sn * len)} Z" fill="${light}"/><path d="M0 0 L${f(c * len)} ${f(sn * len)} L${f(-lc * wid)} ${f(-ls * wid)} Z" fill="${dark}"/>`; };
   const mute = o.needle !== false;   // with a needle on top the rose steps back, so the needle reads at once
+  const fine = big ? Array.from({length: 16}, (_, i) => point(11.25 + i * 22.5, r * .27, r * .028, mute ? '#ede2c4' : '#e2d0a2', mute ? '#cdb784' : '#b29554')).join('') : '';
   const minor = Array.from({length: 8}, (_, i) => point(22.5 + i * 45, r * .36, r * .045, mute ? '#e6d8b2' : '#d9c38e', mute ? '#c4aa6c' : '#a8873e')).join('');
   const inter = [45, 135, 225, 315].map(d => point(d, r * .5, r * .085, mute ? '#f2e8cc' : '#efe2bf', mute ? '#bfa266' : '#8f6e2c')).join('');
   const card = [[0, mute ? '#eab4a6' : '#e0503a', mute ? '#c98a7a' : '#9c2216'], ...[90, 180, 270].map(d => [d, mute ? '#faf5ea' : '#f7f1e3', mute ? '#a8957a' : '#2c241c'])].map(([d, l, dk]) => point(d, r * .6, r * .115, l, dk)).join('');
@@ -337,24 +357,37 @@ function compassArt(uid, r = 74, o = {}){
   const nl = r * .8, nw = r * .062;
   const needle = `<g class="nd"><path d="M${f(r * .03)} ${f(-nl + r * .04)} L${f(nw + r * .03)} ${f(r * .04)} L${f(r * .03)} ${f(nl + r * .04)} L${f(-nw + r * .03)} ${f(r * .04)} Z" fill="#000" opacity=".28"/>
     <path d="M0 ${f(-nl)} L${f(nw)} 0 L0 ${f(nl)} L${f(-nw)} 0 Z" fill="url(#${id('st')})" stroke="#0b1016" stroke-width="${f(r * .006)}"/><path d="M0 ${f(-nl)} L${f(nw)} 0 L${f(-nw)} 0 Z" fill="url(#${id('rd')})" stroke="#5a0c08" stroke-width="${f(r * .006)}"/>
+    <path d="M0 ${f(-nl)} L${f(-nw)} 0 L0 0 Z" fill="#fff" opacity=".18"/>
     <circle cy="${f(nl * .78)}" r="${f(r * .045)}" fill="none" stroke="#1f2a34" stroke-width="${f(r * .018)}"/><path d="M0 ${f(-r * .7)} L0 ${f(r * .7)}" stroke="#fff" stroke-width="${f(r * .008)}" opacity=".35"/></g>`;
+  const bow = big && o.bow !== false ? `<ellipse cy="${f(-r * 1.17)}" rx="${f(r * .13)}" ry="${f(r * .14)}" fill="none" stroke="#3a2606" stroke-width="${f(r * .075)}"/>
+    <ellipse cy="${f(-r * 1.17)}" rx="${f(r * .13)}" ry="${f(r * .14)}" fill="none" stroke="url(#${id('bz')})" stroke-width="${f(r * .05)}"/>
+    <rect x="${f(-r * .07)}" y="${f(-r * 1.06)}" width="${f(r * .14)}" height="${f(r * .1)}" rx="${f(r * .02)}" fill="url(#${id('bz')})" stroke="#3a2606" stroke-width="${f(r * .01)}"/>
+    <rect x="${f(-r * .11)}" y="${f(-r * 1.1)}" width="${f(r * .22)}" height="${f(r * .07)}" rx="${f(r * .03)}" fill="url(#${id('bz')})" stroke="#3a2606" stroke-width="${f(r * .01)}"/>` : '';
   return `<g><defs>
       <linearGradient id="${id('bz')}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe7a6"/><stop offset=".35" stop-color="#d7ac52"/><stop offset=".6" stop-color="#8a6420"/><stop offset=".85" stop-color="#e6c06a"/><stop offset="1" stop-color="#6e4c14"/></linearGradient>
+      <linearGradient id="${id('bv')}" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#f4d68a"/><stop offset=".45" stop-color="#b8892e"/><stop offset="1" stop-color="#5a3c0c"/></linearGradient>
       <radialGradient id="${id('dl')}" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#fbf5e6"/><stop offset=".8" stop-color="#efe3c6"/><stop offset="1" stop-color="#dcc9a0"/></radialGradient>
+      <radialGradient id="${id('lp')}" r=".5"><stop offset=".84" stop-color="#2a1c06" stop-opacity="0"/><stop offset="1" stop-color="#2a1c06" stop-opacity=".5"/></radialGradient>
       <linearGradient id="${id('st')}" x1="0" x2="1"><stop offset="0" stop-color="#5b6a78"/><stop offset=".5" stop-color="#1f2a34"/><stop offset="1" stop-color="#0e151c"/></linearGradient>
       <linearGradient id="${id('rd')}" x1="0" x2="1"><stop offset="0" stop-color="#ef6a52"/><stop offset=".5" stop-color="#c0291c"/><stop offset="1" stop-color="#7e150c"/></linearGradient>
-      <radialGradient id="${id('cp')}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff2c2"/><stop offset=".5" stop-color="#d1a24a"/><stop offset="1" stop-color="#6e4c14"/></radialGradient></defs>
+      <radialGradient id="${id('cp')}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff2c2"/><stop offset=".5" stop-color="#d1a24a"/><stop offset="1" stop-color="#6e4c14"/></radialGradient>
+      <radialGradient id="${id('jw')}" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#ff8a74"/><stop offset=".5" stop-color="#a3201a"/><stop offset="1" stop-color="#4a0a06"/></radialGradient></defs>
     ${o.shadow !== false ? `<ellipse cx="${f(r * .06)}" cy="${f(r * .1)}" rx="${f(r * 1.02)}" ry="${f(r * 1.02)}" fill="#000" opacity=".28"/>` : ''}
-    <circle r="${f(r)}" fill="url(#${id('bz')})"/><circle r="${f(r * .97)}" fill="none" stroke="#fff3c8" stroke-width="${f(r * .012)}" opacity=".7"/>
-    <circle r="${f(r * .9)}" fill="#5a3e10"/><circle r="${f(r * .885)}" fill="url(#${id('dl')})"/>
+    ${bow}
+    <circle r="${f(r * 1.015)}" fill="#2e1e06"/><circle r="${f(r)}" fill="url(#${id('bz')})"/>${knurl}
+    <circle r="${f(r * .945)}" fill="url(#${id('bv')})"/><circle r="${f(r * .93)}" fill="url(#${id('bz')})"/>
+    <path d="M${f(-r * .78)} ${f(-r * .52)} A${f(r * .935)} ${f(r * .935)} 0 0 1 ${f(r * .2)} ${f(-r * .91)}" fill="none" stroke="#fff6d2" stroke-width="${f(r * .018)}" stroke-linecap="round" opacity=".8"/>
+    <circle r="${f(r * .9)}" fill="#3a2808"/><circle r="${f(r * .885)}" fill="url(#${id('dl')})"/>
     <circle r="${f(r * .855)}" fill="none" stroke="#2a2018" stroke-width="${f(r * .01)}"/><circle r="${f(r * .755)}" fill="none" stroke="#2a2018" stroke-width="${f(r * .006)}"/>
-    ${ticks}${letters}
+    ${ticks}${nums}${letters}
     <circle r="${f(r * .44)}" fill="none" stroke="#a8873e" stroke-width="${f(r * .008)}"/><circle r="${f(r * .41)}" fill="none" stroke="#a8873e" stroke-width="${f(r * .004)}" stroke-dasharray="${f(r * .02)} ${f(r * .02)}"/>
-    ${minor}${inter}${card}
+    ${fine}${minor}${inter}${card}
     ${o.needle !== false ? needle : ''}
-    <circle r="${f(r * .07)}" fill="url(#${id('cp')})" stroke="#5a3e10" stroke-width="${f(r * .01)}"/><circle cx="${f(-r * .02)}" cy="${f(-r * .02)}" r="${f(r * .022)}" fill="#fff8de" opacity=".8"/>
+    <circle r="${f(r * .075)}" fill="url(#${id('cp')})" stroke="#5a3e10" stroke-width="${f(r * .01)}"/>${big ? `<circle r="${f(r * .036)}" fill="url(#${id('jw')})"/>` : ''}<circle cx="${f(-r * .02)}" cy="${f(-r * .02)}" r="${f(r * .018)}" fill="#fff8de" opacity=".85"/>
+    <circle r="${f(r * .885)}" fill="url(#${id('lp')})"/>
     <path d="M${f(-r * .7)} ${f(-r * .3)} A${f(r * .78)} ${f(r * .78)} 0 0 1 ${f(r * .3)} ${f(-r * .72)}" fill="none" stroke="#fff" stroke-width="${f(r * .06)}" stroke-linecap="round" opacity=".22"/>
-    <path d="M${f(-r * .5)} ${f(-r * .62)} A${f(r * .8)} ${f(r * .8)} 0 0 1 ${f(-r * .1)} ${f(-r * .8)}" fill="none" stroke="#fff" stroke-width="${f(r * .025)}" stroke-linecap="round" opacity=".5"/></g>`;
+    <path d="M${f(-r * .5)} ${f(-r * .62)} A${f(r * .8)} ${f(r * .8)} 0 0 1 ${f(-r * .1)} ${f(-r * .8)}" fill="none" stroke="#fff" stroke-width="${f(r * .025)}" stroke-linecap="round" opacity=".5"/>
+    ${big ? `<path d="M${f(r * .58)} ${f(r * .5)} A${f(r * .77)} ${f(r * .77)} 0 0 1 ${f(r * .2)} ${f(r * .74)}" fill="none" stroke="#fff" stroke-width="${f(r * .014)}" stroke-linecap="round" opacity=".3"/>` : ''}</g>`;
 }
 
 /* the pictures on the Legend cards: 150×99, many small careful details */
@@ -657,7 +690,7 @@ async function fxArmada(root){
   const ships = xs.map((x, i) => { const g = sv(sea, `<g><g class="pg-pitch" style="animation-delay:${(i * .31).toFixed(2)}s">
       <path d="M40 2 C70 4 110 10 160 6 M40 6 C70 10 110 18 160 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/>
       <path d="M-46 1 q-8 2 -12 6 M-46 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-      ${bigShip('company', 0, 0, .86)}</g></g>`).firstChild;
+      <g class="pg-recoil">${bigShip('company', 0, 0, .86)}</g></g></g>`).firstChild;
     A(g, [{transform: `translate(${1120 + i * 90}px,${y - (i % 2) * 6}px)`, opacity: 0}, {opacity: 1, offset: .15}, {transform: `translate(${x}px,${y - (i % 2) * 6}px)`, opacity: 1}], 2200, i * 160, 'cubic-bezier(.2,.6,.3,1)'); return [g, x, y - (i % 2) * 6]; });
   await vwait(3000);
   // a signal flag goes up on the flagship, then the broadside ripples down the line
@@ -666,6 +699,10 @@ async function fxArmada(root){
     for(const [j, [g, x, yy]] of ships.entries()){
       await vwait(70);
       const gx = ib.x + x, gy = ib.y + yy - 16;
+      // the ship heels from the recoil, her side lit by the flashes; a ring of smoke rolls off the water
+      const rc = g.querySelector('.pg-recoil'), dir = ti ? 1 : -1;
+      if(rc) A(rc, [{transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)'}, {transform: `rotate(${dir * 2.6}deg) translate(${-dir * 3}px,0)`, filter: 'brightness(1.45) saturate(1.2)', offset: .12}, {transform: `rotate(${-dir * .8}deg) translate(0,0)`, filter: 'brightness(1)', offset: .55}, {transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)'}], 900, 0, 'ease-out');
+      circRing(sea, x, yy + 2, 20, 70, '#eef3f4', 900, 60, 1.6);
       for(let k = 0; k < 3; k++){ const px = gx - 26 + k * 22, hx = tb.x + rnd(30, tb.w - 30), hy = tf.y + rnd(4, 16), miss = Math.random() < .35;
         const ex = miss ? hx + rnd(-30, 30) : hx, ey = miss ? tf.y - rnd(14, 34) : hy, ang = Math.atan2(ey - gy, ex - px);
         setTimeout(() => { gunFire(top, px, gy, ang, .62, {puffs: 5, grains: 5, life: 4800}); if(k === 1) boom(root, 2.4, 220);
@@ -701,7 +738,7 @@ const CORK = `<g><rect x="-11" y="-13" width="22" height="26" rx="3.5" fill="#c9
 function bottleArt(o = {}){
   return `<defs><clipPath id="pgBotClip"><path d="${BOTTLE_PATH}"/></clipPath><linearGradient id="pgBotG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0fbf6" stop-opacity=".6"/><stop offset=".45" stop-color="#bfe3d6" stop-opacity=".2"/><stop offset="1" stop-color="#6fae98" stop-opacity=".45"/></linearGradient></defs>
     <path class="gfill" d="${BOTTLE_PATH}" fill="url(#pgBotG)"/>
-    <g clip-path="url(#pgBotClip)">${o.ship ? bigShip('company', -24, 28, .62) : ''}<path class="bsea" d="${BOTTLE_SEA}" fill="#4f88a0" opacity=".62"/><path d="M-104 26 q9 -5 18 0${' t18 0'.repeat(12)}" fill="none" stroke="#dff1f4" stroke-width="1.4" opacity=".8"/></g>
+    <g clip-path="url(#pgBotClip)">${o.ship ? bigShip(o.kind || 'merchant', -24, 28, .62) : ''}<path class="bsea" d="${BOTTLE_SEA}" fill="#4f88a0" opacity=".62"/><path d="M-104 26 q9 -5 18 0${' t18 0'.repeat(12)}" fill="none" stroke="#dff1f4" stroke-width="1.4" opacity=".8"/></g>
     <path class="glass" d="${BOTTLE_PATH}" fill="none" stroke="#e8f7f0" stroke-width="3" stroke-linejoin="round"/>
     <path d="${BOTTLE_PATH}" fill="none" stroke="#2f5a4a" stroke-width=".8" opacity=".55" transform="translate(0 1.4)"/>
     <ellipse cx="-95" cy="0" rx="4" ry="26" fill="none" stroke="#ffffff" stroke-width="1.6" opacity=".35"/>
@@ -711,9 +748,11 @@ function bottleArt(o = {}){
 
 /* ----- Корабль в бутылке: a glass bottle draws itself on its side, a vortex of sparks pulls «Индевор» in through the neck, the cork
    flies in from «Месть» — «чпок», the bottle drops onto the sea and floats there ----- */
-async function fxBottle(root){
-  const m = matOf(root, NAMES['И']), rv = matOf(root, NAMES['М']), inner = seaInnerOf(root);
-  const hn = numOf(m, 'корпус'), hc = cellsOf(m, 'корпус'); hc.slice(3).forEach(c => swapIcon(c, CELLS2.HULL_X)); hn.textContent = '3/12';
+const SHIP_KIND = {'Ж': 'pearl', 'М': 'revenge', 'И': 'endeavour', 'Г': 'dutch'};
+async function fxBottle(root, tgt = 'И', by = 'М'){
+  const m = matOf(root, NAMES[tgt]), rv = matOf(root, NAMES[by]), inner = seaInnerOf(root), kind = SHIP_KIND[tgt];
+  const hn = numOf(m, 'корпус'), hc = cellsOf(m, 'корпус'), hmax = (hn.textContent.split('/')[1] || hc.length);
+  hc.slice(3).forEach(c => swapIcon(c, CELLS2.HULL_X)); hn.textContent = '3/' + hmax;
   const b = rootBox(root, m);
   markAt(root, rootBox(root, hn).x + 24, rootBox(root, hn).y - 13, 'Корпус 3 — можно');
   await legendIntro(root, 'bottle', {x: b.cx, y: b.cy});
@@ -739,7 +778,7 @@ async function fxBottle(root){
     A(s, Array.from({length: 11}, (_, k) => { const t = k / 10, a = a0 + t * 9, r = r0 * (1 - t); return {transform: `translate(${R1(mouth.x + 40 * (1 - t) + Math.cos(a) * r)}px,${R1(mouth.y + Math.sin(a) * r * .6)}px)`, opacity: t < .9 ? 1 : 0}; }), 1300, rnd(0, 400), 'ease-in'); }
   await vwait(1480); m.style.opacity = '0';
   // 4. inside: a tiny «Индевор» rocks on the painted waves
-  const mini = sv(top, `<g><g class="pg-rock">${bigShip('company', 0, 0, .62)}</g></g>`).firstChild;
+  const mini = sv(top, `<g><g class="pg-rock">${bigShip(kind, 0, 0, .62)}</g></g>`).firstChild;
   A(mini, [{transform: `translate(${R1(mouth.x)}px,${R1(mouth.y)}px) scale(.05)`, opacity: 0}, {transform: `translate(${R1(bx0 - 24 * BS)}px,${R1(by0 + 27 * BS)}px) scale(${BS})`, opacity: 1}], 600, 0, 'cubic-bezier(.3,1.2,.6,1)');
   goldBurst(top, mouth.x, mouth.y, 24, 10, 70); circRing(top, mouth.x, mouth.y, 4, 40, '#bfffd8', 500, 0, 2);
   await vwait(650);
@@ -763,10 +802,10 @@ async function fxBottle(root){
   m.getAnimations().filter(q => !(q instanceof CSSAnimation)).forEach(a => a.cancel()); m.style.opacity = ''; m.style.transformOrigin = ''; m.style.zIndex = ''; m.classList.add('pg-sunk'); m.querySelectorAll('.row b').forEach(x => { x.textContent = x.textContent.replace(/^\d+/, '0'); });
   if(!m.querySelector('.pg-stamp')) m.insertAdjacentHTML('beforeend', '<div class="pg-stamp">Потоплен</div>'); A(m, [{opacity: 0}, {opacity: 1}], 600);
   const [sx, sy] = toSea(root, bx0, by0 + 4);
-  const keep = scar(seaSvg(inner, false, 'pg-debris'), 'sunk', 'И');
+  const keep = scar(seaSvg(inner, false, 'pg-debris'), 'sunk', tgt);
   keep.innerHTML = `<g transform="translate(${R1(sx)} ${R1(sy)})"><ellipse cx="0" cy="${R1(40 * BS * .72)}" rx="${R1(110 * BS * .72)}" ry="7" fill="#0b2a36" opacity=".28"/>
     <g><animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.6s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 3;0 0" dur="2.6s" additive="sum" repeatCount="indefinite"/>
-      <g transform="scale(${R1(BS * .72 * 100) / 100})">${bottleArt({ship: true, cork: true})}</g></g>
+      <g transform="scale(${R1(BS * .72 * 100) / 100})">${bottleArt({ship: true, cork: true, kind})}</g></g>
     <ellipse cx="0" cy="${R1(40 * BS * .72)}" rx="${R1(120 * BS * .72)}" ry="6" fill="none" stroke="#e6f2f4" stroke-width="1.4" opacity=".7"><animate attributeName="rx" values="${R1(110 * BS * .72)};${R1(140 * BS * .72)};${R1(110 * BS * .72)}" dur="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".7;.25;.7" dur="2.6s" repeatCount="indefinite"/></ellipse></g>`;
   A(keep, [{opacity: 0}, {opacity: 1}], 300);
   A(all, [{opacity: 1}, {opacity: 0}], 300);
@@ -799,16 +838,21 @@ async function fxJack(root){
   const back = await legendIntro(root, 'jack', {x: b.cx, y: b.cy});
   // 3. the great compass over her: the needle spins wildly, then points to the place of the ally; a golden course is drawn
   const ob = rootBox(root, o);
+  const aura = sv(hi, `<g><defs><radialGradient id="pgJkA"><stop offset="0" stop-color="#ffe7a4" stop-opacity=".75"/><stop offset=".55" stop-color="#ffd27a" stop-opacity=".25"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient></defs>
+    <radialGradient id="pgJkR"><stop offset=".35" stop-color="#fff2c8" stop-opacity=".5"/><stop offset="1" stop-color="#fff2c8" stop-opacity="0"/></radialGradient><circle r="150" fill="url(#pgJkA)"/><g class="ry" fill="url(#pgJkR)">${Array.from({length: 12}, (_, i) => { const a1 = i * Math.PI / 6, a2 = a1 + .09; return `<path d="M0 0 L${R1(Math.cos(a1) * 170)} ${R1(Math.sin(a1) * 170)} L${R1(Math.cos(a2) * 170)} ${R1(Math.sin(a2) * 170)} Z"/>`; }).join('')}</g></g>`).firstChild;
+  A(aura, [{transform: `translate(${b.cx}px,${b.cy}px) scale(.2)`, opacity: 0}, {transform: `translate(${b.cx}px,${b.cy}px) scale(1)`, opacity: 1}], 600, 0, 'ease-out');
+  const ry = aura.querySelector('.ry'); ry.style.transformBox = 'view-box'; ry.style.transformOrigin = '0 0'; A(ry, [{transform: 'rotate(0)'}, {transform: 'rotate(60deg)'}], 3000, 0, 'linear');
   const comp = sv(hi, compassArt('jk', 80)).firstChild;
   A(comp, [{transform: `translate(${b.cx}px,${b.cy}px) scale(.1) rotate(-90deg)`, opacity: 0}, {transform: `translate(${b.cx}px,${b.cy}px) scale(1.1) rotate(8deg)`, opacity: 1, offset: .7}, {transform: `translate(${b.cx}px,${b.cy}px) scale(1) rotate(0)`, opacity: 1}], 600, 0, 'cubic-bezier(.3,1.3,.6,1)');
   const nd = comp.querySelector('.nd'); nd.style.transformBox = 'view-box'; nd.style.transformOrigin = '0 0';
   A(nd, [{transform: 'rotate(0)'}, {transform: 'rotate(900deg)', offset: .55}, {transform: 'rotate(1150deg)', offset: .8}, {transform: 'rotate(1170deg)'}], 2000, 300, 'cubic-bezier(.2,.6,.3,1)');
   await vwait(2100);
+  circRing(hi, b.cx, b.cy, 70, 150, '#ffe7a4', 700, 0, 3); goldBurst(hi, b.cx, b.cy - 64, 14, 8, 40);
   const course = sv(hi, `<path d="M${b.cx} ${b.y - 6} C${b.cx + 120} ${b.y - 90} ${ob.cx - 120} ${ob.y - 90} ${ob.cx} ${ob.y - 6}" fill="none" stroke="#ffd27a" stroke-width="3" stroke-dasharray="10 8"/>`).firstChild;
   A(course, [{opacity: 0}, {opacity: 1}], 300); goldBurst(hi, ob.cx, ob.y, 20, 10, 60);
   await vwait(400);
   // 4. the water runs off, colour comes back with a flash, she slips along the course leaving afterimages; the ally goes the other way
-  A(water, [{height: '72%'}, {height: '0%'}], 500, 0, 'ease-out'); A(comp, [{opacity: 1}, {opacity: 0, transform: `translate(${b.cx}px,${b.cy}px) scale(1.4)`}], 400);
+  A(water, [{height: '72%'}, {height: '0%'}], 500, 0, 'ease-out'); A(comp, [{opacity: 1}, {opacity: 0, transform: `translate(${b.cx}px,${b.cy}px) scale(1.4)`}], 400); A(aura, [{opacity: 1}, {opacity: 0}], 400);
   frozen.forEach(x => A(x, [{filter: FZ}, {filter: 'none'}], 500)); flashRoot(root, '#ffe7a4', .4, 400);
   const ghosts = [1, 2, 3, 4].map(i => { const g = document.createElement('div'); g.className = 'pg-ghost'; g.style.cssText = `left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px`; root.appendChild(g); return g; });
   const dxm = parseFloat(o.style.left) - parseFloat(m.style.left);
@@ -947,7 +991,7 @@ function waveLayer(root, inner, s){
 /* ----- Торговый караван: a real merchantman crosses the sea, pitching, with a bow wave and a wake, and throws barrels ----- */
 async function caravan3(root, svg, ib, pkegs, ckegs, capP, capC, fullOf){
   const inner = seaInnerOf(root), seaL = seaSvg(inner, false, 'pg-tmp'), g0 = sv(seaL, ''); g0.setAttribute('transform', `translate(${R1(-ib.x)} ${R1(-ib.y)})`);
-  const y = ib.y + 252, k = 1.25, x0 = ib.x - 140, x1 = ib.x + ib.w + 140, D = 5200;
+  const y = ib.y + 224, k = 1.1, x0 = ib.x - 140, x1 = ib.x + ib.w + 140, D = 5200;
   const ship = sv(g0, `<g><g class="pg-pitch">${bigShip('merchant', 0, 0, k, true)}</g></g>`).firstChild;
   const wake = sv(g0, `<g fill="none" stroke-linecap="round"><path class="a" stroke="#eef6f8" stroke-width="3" opacity=".85"/><path class="b" stroke="#cfe4ea" stroke-width="1.6" opacity=".7"/><path class="c" stroke="#fff" stroke-width="2"/></g>`).firstChild;
   g0.insertBefore(wake.parentNode, ship.parentNode);
