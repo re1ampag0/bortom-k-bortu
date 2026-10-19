@@ -4199,3 +4199,24 @@ button.star::before {
   background: #3e2716;
   color: #f3e6c6;
 }
+
+/* «Фон под рукой: Палуба» (rig, г): the planks of a deck in the lantern light under the hand; «Вещи на столе» lie over it */
+.hand-deck {
+  position: absolute;
+  pointer-events: none;
+  background: url('./art/rig/deck-laptop.svg') center / cover no-repeat;
+  border-radius: 5px 5px 0 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(20, 10, 4, 0.8),
+    inset 0 6px 10px rgba(0, 0, 0, 0.45);
+}
+.hand-deck.phone {
+  background-image: url('./art/rig/deck-phone.svg');
+  border-radius: 0;
+}
+/* on a phone the deck is the background of the whole bottom panel: the bar stands over it without a ground of its own */
+.game.view-hand-deck .bottom-bar {
+  position: relative;
+  background: transparent;
+  border-top-color: transparent;
+}
