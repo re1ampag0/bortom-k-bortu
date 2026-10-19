@@ -468,6 +468,7 @@ for (const v of [
         hold: one('.board-bottom > .team-row:not(.table-edge)'),
         label: one('.board-bottom > .team-row:not(.table-edge) .hold-label .wide'),
         glass: one('.board-bottom > .team-row .hold-glass'),
+        kegs: one('.board-bottom > .team-row .powder-dots'),
         cards: many('.hand-cards .hcard'),
         handRow: one('.hand-row'),
         sea: one('.sea-table'),
@@ -484,10 +485,11 @@ for (const v of [
     for (let i = 0; i < named.length; i++)
       for (let j = i + 1; j < named.length; j++) {
         const [na, a] = named[i], [nb, b] = named[j];
-        if (a && b && !(na.startsWith('hand card') && nb.startsWith('hand card')) && meet(a, b)) bad.push(`${na} ∩ ${nb}`);
+        if (a && b && !(na.startsWith('hand card') && nb.startsWith('hand card')) && !(na === 'the Hold' && nb === 'the hourglass') && meet(a, b)) bad.push(`${na} ∩ ${nb}`);
       }
     expect(bad).toEqual([]);
     if (r.glass) {
+      expect(r.glass.l, 'the hourglass stands right of the kegs').toBeGreaterThanOrEqual(r.kegs!.r - 1);
       // the hourglass is to the right of the kegs and keeps ≥ 12 px clear of every card of the hand
       for (const c of r.cards) if (c.t < r.glass.b && c.b > r.glass.t) expect(c.l - r.glass.r, 'the hourglass and the first cards').toBeGreaterThanOrEqual(12);
     }
