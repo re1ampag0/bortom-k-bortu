@@ -1,6 +1,6 @@
 // «Вещи на столе» (docs/mockups/a5/fx/src/template.html, tableThings, THINGS, compassHero): the things in the shade by
 // the edges of the table — a wheel, an hourglass, an anchor, a spyglass, dividers, coins — and the brass compass in the
-// free corner (≈ 82 %). Drawn for a table of 1366×660; the game scales the picture to its window (slice).
+// free corner. Drawn for a table of 1366×660; the game scales the picture to its window (slice).
 
 const R = (n: number) => Math.round(n * 10) / 10;
 
@@ -12,26 +12,54 @@ function shadowFilter(id: string, x: number, y: number, far: number): string {
     <feDropShadow in="a" dx="${R(dx*k)}" dy="${R(dy*k+2)}" stdDeviation="${R(far*.55)}" flood-color="#0a0502" flood-opacity=".55"/></filter>`;
 }
 function compassHero(Rr: number): string {
-  const f = Rr - 9; let g = '';
-  g += `<path d="M-7 ${-Rr-2} h14 v-8 a7 7 0 0 0 -14 0 Z" fill="url(#pgBrass)" stroke="#5a3e10" stroke-width=".8"/><circle cx="0" cy="${-Rr-12}" r="6.5" fill="none" stroke="url(#pgBrass)" stroke-width="3"/>`;
-  g += `<circle r="${Rr}" fill="url(#pgBrass)" stroke="#4a3208" stroke-width="1"/>`;
-  for(let k = 0; k < 144; k++){ const a = k * Math.PI / 72; g += `<path d="M${R(Math.cos(a)*(Rr-.6))} ${R(Math.sin(a)*(Rr-.6))} L${R(Math.cos(a)*(Rr-3.4))} ${R(Math.sin(a)*(Rr-3.4))}" stroke="#6b4a14" stroke-width=".8" opacity=".7"/>`; }
-  g += `<circle r="${Rr-5}" fill="url(#pgBrassIn)" stroke="#5a3e10" stroke-width=".8"/>`;
-  g += `<circle r="${f}" fill="url(#pgPaper)" stroke="#3a2a10" stroke-width="1"/><circle r="${f-13}" fill="none" stroke="#6b5430" stroke-width=".6"/>`;
-  for(let d = 0; d < 360; d += 5){ const a = (d - 90) * Math.PI / 180, L = d % 30 === 0 ? 7 : d % 10 === 0 ? 4.5 : 2.6;
-    g += `<path d="M${R(Math.cos(a)*(f-1))} ${R(Math.sin(a)*(f-1))} L${R(Math.cos(a)*(f-1-L))} ${R(Math.sin(a)*(f-1-L))}" stroke="#2e2210" stroke-width="${d % 30 === 0 ? 1.1 : .6}"/>`; }
-  [['С',0,'#9a2318'],['В',90,'#2a1e10'],['Ю',180,'#2a1e10'],['З',270,'#2a1e10']].forEach(([t, d, c]: (string | number)[]) => { const a = ((d as number) - 90) * Math.PI / 180, r = f - 17.5;
-    g += `<text x="${R(Math.cos(a)*r)}" y="${R(Math.sin(a)*r+4)}" text-anchor="middle" font-family="'Old Standard TT',Georgia,serif" font-weight="700" font-size="12" fill="${c}">${t}</text>`; });
-  const ray = (deg: number, len: number, w: number, dark: string, light: string) => { const a = (deg - 90) * Math.PI / 180, n = a + Math.PI / 2, tx = Math.cos(a)*len, ty = Math.sin(a)*len, bx = Math.cos(n)*w, by = Math.sin(n)*w;
-    return `<path d="M0 0 L${R(tx)} ${R(ty)} L${R(bx)} ${R(by)} Z" fill="${dark}"/><path d="M0 0 L${R(tx)} ${R(ty)} L${R(-bx)} ${R(-by)} Z" fill="${light}" stroke="#3a2a10" stroke-width=".4"/>`; };
-  const rr = f - 26;
-  for(let d = 22.5; d < 360; d += 45) g += ray(d, rr * .42, 3, '#7a5a26', '#e9d6a2');
-  for(let d = 45; d < 360; d += 90) g += ray(d, rr * .7, 5, '#8a6a2c', '#f2e4bc');
-  for(let d = 0; d < 360; d += 90) g += ray(d, rr, 7, d === 0 ? '#9a2318' : '#2a2018', d === 0 ? '#d4523e' : '#efe2c4');
-  g += `<circle r="5.5" fill="none" stroke="#3a2a10" stroke-width=".7"/>`;
-  g += `<g class="pg-needle"><path d="M0 ${-rr+4} L3.2 0 L0 ${rr*.55} L-3.2 0 Z" fill="#1c1a18" opacity=".9"/><path d="M0 ${-rr+4} L3.2 0 L-3.2 0 Z" fill="#b8281c"/></g>`;
-  g += `<circle r="3.4" fill="url(#pgBrass)" stroke="#4a3208" stroke-width=".6"/>`;
-  g += `<circle r="${f}" fill="url(#pgGlass)"/><path d="M${R(-f*.72)} ${R(-f*.38)} A${f*.86} ${f*.86} 0 0 1 ${R(f*.3)} ${R(-f*.8)}" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".35"/>`;
+  /* a brass pocket compass: pendant bow, knurled and bevelled bezel, an aged card with degrees, a 16-point rose,
+     a blued-steel needle on a jewel with its shadow on the card, a domed glass with reflections */
+  const f = Rr - 10, P = (a: number, r: number): [number, number] => [R(Math.cos(a) * r), R(Math.sin(a) * r)]; let g = '';
+  g += `<defs><linearGradient id="cpBez" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1bf"/><stop offset=".3" stop-color="#d9ac4a"/><stop offset=".62" stop-color="#9a6c22"/><stop offset="1" stop-color="#5a3c0c"/></linearGradient>
+    <linearGradient id="cpBez2" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#f4d68a"/><stop offset=".4" stop-color="#b8892e"/><stop offset="1" stop-color="#5a3c0c"/></linearGradient>
+    <radialGradient id="cpFace" cx=".44" cy=".4" r=".66"><stop offset="0" stop-color="#fbf3df"/><stop offset=".7" stop-color="#ecdcb6"/><stop offset="1" stop-color="#cdb27c"/></radialGradient>
+    <radialGradient id="cpLip" r=".5"><stop offset=".86" stop-color="#2a1c06" stop-opacity="0"/><stop offset="1" stop-color="#2a1c06" stop-opacity=".55"/></radialGradient>
+    <radialGradient id="cpJewel" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#ff8a74"/><stop offset=".5" stop-color="#a3201a"/><stop offset="1" stop-color="#4a0a06"/></radialGradient></defs>`;
+  // pendant: stem, knurled crown, bow ring
+  g += `<ellipse cx="0" cy="${-Rr-21}" rx="9.5" ry="10" fill="none" stroke="#3a2606" stroke-width="5"/><ellipse cx="0" cy="${-Rr-21}" rx="9.5" ry="10" fill="none" stroke="url(#pgBrassH)" stroke-width="3.2"/>
+    <path d="M${-7} ${-Rr-25} A9.5 10 0 0 1 3 ${-Rr-30.6}" fill="none" stroke="#fff4c8" stroke-width="1" opacity=".75" stroke-linecap="round"/>
+    <rect x="-4.5" y="${-Rr-8}" width="9" height="9.5" rx="1.5" fill="url(#pgBrassH)" stroke="#3a2606" stroke-width=".7"/>
+    <rect x="-7.5" y="${-Rr-13.5}" width="15" height="6.2" rx="2.4" fill="url(#pgBrass)" stroke="#3a2606" stroke-width=".7"/>`;
+  for(let x = -6; x <= 6; x += 1.5) g += `<path d="M${x} ${-Rr-13} v5.2" stroke="#5a3c0c" stroke-width=".45" opacity=".7"/>`;
+  // bezel: dark outer edge, knurled band, bevelled polished ring, inner lip
+  g += `<circle r="${Rr + 1.4}" fill="#2e1e06"/><circle r="${Rr}" fill="url(#pgBrass)"/>`;
+  for(let k = 0; k < 160; k++){ const a = k * Math.PI / 80, [x1, y1] = P(a, Rr - .4), [x2, y2] = P(a, Rr - 3.8); g += `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#5e400e" stroke-width=".75" opacity=".75"/>`; }
+  g += `<circle r="${Rr - 4.2}" fill="url(#cpBez)" stroke="#4a3208" stroke-width=".6"/><circle r="${Rr - 7.4}" fill="url(#cpBez2)"/>`;
+  g += `<path d="M${R(-(Rr - 5.8) * .82)} ${R(-(Rr - 5.8) * .57)} A${Rr - 5.8} ${Rr - 5.8} 0 0 1 ${R((Rr - 5.8) * .2)} ${R(-(Rr - 5.8) * .98)}" fill="none" stroke="#fff6d2" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>`;
+  g += `<circle r="${f + 1}" fill="#2a1c06"/>`;
+  // the card
+  g += `<circle r="${f}" fill="url(#cpFace)"/><circle r="${f - .8}" fill="none" stroke="#3a2a10" stroke-width=".7"/>`;
+  for(let d = 0; d < 360; d += 2.5){ const a = (d - 90) * Math.PI / 180, L = d % 30 === 0 ? 6.5 : d % 10 === 0 ? 4.4 : d % 5 === 0 ? 3 : 1.8, [x1, y1] = P(a, f - 1.6), [x2, y2] = P(a, f - 1.6 - L);
+    g += `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="#2e2210" stroke-width="${d % 30 === 0 ? 1.1 : d % 10 === 0 ? .7 : .45}"/>`; }
+  for(let d = 30; d < 360; d += 30){ if(d % 90 === 0) continue; const a = (d - 90) * Math.PI / 180, [x, y] = P(a, f - 11.6);
+    g += `<text x="${x}" y="${R(y + 2)}" text-anchor="middle" font-family="'Old Standard TT',Georgia,serif" font-size="5.6" fill="#4a3a20" transform="rotate(${d} ${x} ${y})">${d}</text>`; }
+  g += `<circle r="${f - 15.6}" fill="none" stroke="#3a2a10" stroke-width=".8"/><circle r="${f - 17.4}" fill="none" stroke="#3a2a10" stroke-width=".4"/>`;
+  ([['С', 0, '#9a2318'], ['В', 90, '#2a1e10'], ['Ю', 180, '#2a1e10'], ['З', 270, '#2a1e10']] as [string, number, string][]).forEach(([t, d, c]) => { const a = (d - 90) * Math.PI / 180, [x, y] = P(a, f - 11.2);
+    g += `<text x="${x}" y="${R(y + 4.2)}" text-anchor="middle" font-family="'Old Standard TT',Georgia,serif" font-weight="700" font-size="11.5" fill="${c}">${t}</text>`; });
+  // the rose: 16 points, each split light/dark as if lit from the upper left
+  const ray = (deg: number, len: number, w: number, dark: string, light: string) => { const a = (deg - 90) * Math.PI / 180, n = a + Math.PI / 2, [tx, ty] = P(a, len), bx = R(Math.cos(n) * w), by = R(Math.sin(n) * w);
+    return `<path d="M0 0 L${tx} ${ty} L${bx} ${by} Z" fill="${dark}"/><path d="M0 0 L${tx} ${ty} L${-bx} ${-by} Z" fill="${light}"/><path d="M${bx} ${by} L${tx} ${ty} L${-bx} ${-by}" fill="none" stroke="#3a2a10" stroke-width=".35"/>`; };
+  const rr = f - 19;
+  g += `<circle r="${R(rr * .5)}" fill="none" stroke="#7a5a26" stroke-width="2.2" opacity=".35"/><circle r="${R(rr * .5)}" fill="none" stroke="#3a2a10" stroke-width=".4"/>`;
+  for(let d = 11.25; d < 360; d += 22.5) g += ray(d, rr * .4, 1.8, '#8a7040', '#efe2bc');
+  for(let d = 22.5; d < 360; d += 45) g += ray(d, rr * .58, 2.8, '#6e5226', '#e9d6a2');
+  for(let d = 45; d < 360; d += 90) g += ray(d, rr * .78, 4.4, '#8a6a2c', '#f6eac6');
+  for(let d = 0; d < 360; d += 90) g += ray(d, rr, 6.4, d === 0 ? '#8e1e14' : '#241a12', d === 0 ? '#d4523e' : '#f2e6c8');
+  // the needle: its shadow on the card, then blued steel and a red north half, on a jewelled pivot
+  const nd = (fillN: string, fillS: string, hiN: string, hiS: string) => `<path d="M0 ${-rr + 3} L3.4 0 L-3.4 0 Z" fill="${fillN}"/><path d="M0 ${-rr + 3} L0 0 L-3.4 0 Z" fill="${hiN}"/>
+    <path d="M0 ${R(rr * .62)} L3.4 0 L-3.4 0 Z" fill="${fillS}"/><path d="M0 ${R(rr * .62)} L0 0 L-3.4 0 Z" fill="${hiS}"/><circle cy="${R(rr * .5)}" r="2.2" fill="${fillS}"/>`;
+  g += `<g class="pg-needle"><g transform="translate(1.8 2.6)" opacity=".22">${nd('#000', '#000', '#000', '#000')}</g>${nd('#a3201a', '#1d2a33', '#d8483a', '#3e5664')}</g>`;
+  g += `<circle r="4.4" fill="url(#pgBrass)" stroke="#3a2606" stroke-width=".6"/><circle r="2" fill="url(#cpJewel)"/><circle cx="-.7" cy="-.7" r=".55" fill="#fff" opacity=".85"/>`;
+  // glass: the lip's shadow, a broad soft reflection, a sharp window glint, a faint rim highlight
+  g += `<circle r="${f}" fill="url(#cpLip)"/><circle r="${f}" fill="url(#pgGlass)"/>`;
+  g += `<path d="M${R(-f * .74)} ${R(-f * .4)} A${R(f * .86)} ${R(f * .86)} 0 0 1 ${R(f * .28)} ${R(-f * .82)}" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".32"/>`;
+  g += `<path d="M${R(-f * .5)} ${R(-f * .5)} l${R(f * .12)} ${R(-f * .1)} l${R(f * .06)} ${R(f * .08)} l${R(-f * .12)} ${R(f * .1)} Z" fill="#fff" opacity=".45"/>`;
+  g += `<path d="M${R(f * .62)} ${R(f * .56)} A${R(f * .84)} ${R(f * .84)} 0 0 1 ${R(f * .2)} ${R(f * .82)}" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity=".25"/>`;
   return g;
 }
 const THINGS: Record<string, () => string> = {
@@ -71,10 +99,10 @@ export function tableThings(): string {
     defs += shadowFilter('pgsh' + i, x, y, far);
     body += `<g data-thing="${k}" transform="translate(${x} ${y}) rotate(${rot}) scale(${sc})" opacity="${op}" filter="url(#pgsh${i})">${THINGS[k]()}</g>`;
   });
-  // the compass: the jewel of the table, in the free corner between the hand and «Ход окончен»
-  // the game: a little left and lower than in the prototype (950, 566) — the round «Отменить» stays off its rim; ≈ 82 %
+  // the compass: the jewel of the table, in the free corner between the hand and «Ход окончен», fully opaque (A9)
+  // the game: a little left and lower than in the prototype (950, 566) — the round «Отменить» stays off its rim
   defs += shadowFilter('pgshC', 905, 600, 10);
-  body += `<g transform="translate(905 600) rotate(-8)" filter="url(#pgshC)" opacity=".82" style="opacity:.82">${compassHero(70)}</g>`;
+  body += `<g transform="translate(905 600) rotate(-8)" filter="url(#pgshC)">${compassHero(70)}</g>`;
   return defs + '</defs>' + body;
 }
 
