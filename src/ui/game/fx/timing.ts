@@ -11,6 +11,8 @@ export const SWAP_K = 1;
 export const REPAIR_K = 1;
 export const SOUL_K = 1;
 export const DIVE_K = 1;
+/** FX-B, FX-C (package 3): the Legends and the sea. */
+export const LEGEND_K = 1;
 
 const scaled = <T extends Record<string, number>>(k: number, o: T): T => Object.fromEntries(Object.entries(o).map(([n, v]) => [n, v * k])) as T;
 
@@ -133,5 +135,48 @@ export const T = {
     rise: 1200,
     /** the green frame of a ship surfaced */
     glow: 1200,
+  }),
+  /** The entrance of a Legend (legendIntro of fx3.js, ANIMATIONS.md §3.1, ≈ 4.6 s): the medallion calls, the stage dims
+   *  between the cinema bars, the card bursts out and turns over, lands, the wax seal stamps it, the name unfurls; the
+   *  card collapses into a golden orb that flies to the target. */
+  legend: scaled(LEGEND_K, {
+    /** the medallion flares (×2.2) with its rings */
+    medal: 900,
+    /** the dim and the vignette come at… / take */
+    backAt: 200,
+    back: 500,
+    /** the cinema bars slide in at… / take */
+    barsAt: 250,
+    bars: 450,
+    /** the rays behind the middle come at… / take */
+    raysAt: 500,
+    rays: 900,
+    /** the card bursts out of the medallion at… / flies along its arc */
+    cardAt: 350,
+    fly: 760,
+    /** the card turns over (back → face) while it flies */
+    flip: 1150,
+    /** from the start of the flight to the landing */
+    land: 780,
+    /** the landing: the shockwave, the burst, the shake — then the seal comes */
+    hit: 420,
+    /** the seal falls (×3.2 → ×1) */
+    seal: 360,
+    /** the seal hits: the card quivers, the name unfurls */
+    sealHit: 300,
+    /** the ribbon with the name unrolls; a letter after a letter */
+    ribbon: 520,
+    letter: 40,
+    /** the card is held, the shine runs over it */
+    hold: 1700,
+    /** the ribbon and the seal fade, the card collapses into the orb */
+    fade: 300,
+    collapse: 520,
+    orbAt: 470,
+    /** the golden orb flies to the target; the dim and the bars go */
+    orb: 560,
+    orbEnd: 580,
+    /** the simple effects (ctx.rich = false): the card in the middle for… */
+    simple: 1000,
   }),
 } as const;

@@ -19,15 +19,16 @@ import type { ClipPlayer } from './FxLayer';
 import { flipTo } from './misc';
 import { KIND_BY_TRACK, type JackClip, type LegendClip } from './planFx';
 import {
-  A, at, badgeMark, fxSvg, gunFire, hitBlast, bubbles, burst, bx, clamp, curve, facingY, flash, fly, footHTML, fxPoint, gapBox, hint, holdEl, isTop, mk, ms, overlayAt, payKegs, plank,
-  projectile, puff, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
+  A, at, badgeMark, boom, flashBoard, fxSvg, gunFire, hitBlast, bubbles, burst, bx, clamp, curve, facingY, flash, fly, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
+  projectile, puff, qpts, ring, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, splash, sv, tag, trackMark, visible, wait, whirlpool, wisp, type FxCtx,
 } from './primitives';
+import { ART_FRAME, COST_ICON, COST_WORD, EMBLEM, SEAL_HTML } from '../art/legendArt';
 import { ruleTag } from './sea';
 import { scar, seaScars } from './scars';
-import { SMOKE_LIFE } from './timing';
+import { SMOKE_LIFE, T } from './timing';
 
 let LG_UID = 0;
-const LG_T = { bars: 120, card: 280, land: 780, seal: 820, title: 900, leave: 1900, effect: 2230 };
+const R1 = (n: number) => Math.round(n * 10) / 10;
 
 const esc = (s: string) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
 const nick = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nick}»`;
@@ -37,7 +38,6 @@ function legendCard(data: GameData, code: string): CardInstance {
   if (!m) legendsOf.set(data, (m = Object.fromEntries(legendCards(data).map((c) => [c.code, c]))));
   return m[code];
 }
-const inner = (svg: string) => svg.replace(/^<svg[^>]*>|<\/svg>$/g, '');
 
 /* ——— our own pictures (no frames or images from the films) ——— */
 export function galleonSVG(flag = '#9C7A2C'): string {
@@ -86,187 +86,195 @@ export function compassSVG(): string {
   const letters = ([['С', 0], ['В', 90], ['Ю', 180], ['З', 270]] as [string, number][]).map(([t, d]) => { const a = (d * Math.PI) / 180; return `<text x="${Math.sin(a) * 112}" y="${-Math.cos(a) * 112 + 6}" text-anchor="middle" font-family="Alegreya, Georgia, serif" font-weight="800" font-size="18" fill="#fff3c4">${t}</text>`; }).join('');
   return `<svg viewBox="-150 -150 300 300" width="100%" height="100%"><circle r="143" fill="rgba(20,16,12,.35)" stroke="#e0b44c" stroke-width="3"/><circle r="128" fill="none" stroke="#e0b44c" stroke-width="1.2" stroke-dasharray="2 7"/><circle r="100" fill="none" stroke="#e0b44c" stroke-width="1" opacity=".6"/>${pts.reverse().join('')}${letters}<circle r="9" fill="#2a1c0e" stroke="#e0b44c" stroke-width="2"/></svg>`;
 }
-/** The wax seal: «ЛЕГЕНДА • ЛЕГЕНДА •» around it — two words with dots, stretched over the circle (textLength 162). */
-export function sealSVG(uid: string | number): string {
-  return `<svg viewBox="0 0 92 92" width="92" height="92"><defs><path id="arc${uid}" d="M46 19 a27 27 0 1 1 0 54 a27 27 0 1 1 0 -54"/></defs>
-<path d="M46 3 C58 2 66 9 75 12 C84 18 86 28 89 38 C92 50 86 58 84 68 C78 80 68 84 56 88 C44 92 34 88 24 84 C12 78 8 68 4 58 C0 46 4 36 8 26 C14 14 24 8 34 5 C38 4 42 3 46 3Z" fill="#9e2b25"/>
-<circle cx="46" cy="46" r="36" fill="none" stroke="#6e1a12" stroke-width="2"/><circle cx="46" cy="46" r="19" fill="#b23a2e" stroke="#6e1a12" stroke-width="1.5"/>
-<text font-size="9.4" font-weight="800" fill="#ffe0c8" font-family="Alegreya Sans, system-ui, sans-serif"><textPath href="#arc${uid}" textLength="162" lengthAdjust="spacing">ЛЕГЕНДА • ЛЕГЕНДА •</textPath></text>
-<path d="M46 32 l4 9.5 10 .8 -7.6 6.6 2.4 9.8 -8.8 -5.4 -8.8 5.4 2.4 -9.8 -7.6 -6.6 10 -.8z" fill="#ffe0c8"/></svg>`;
-}
-/** The pictures of the Legend cards and «out of the frame» (an element over the top edge of the card). */
-const LG_ART: Record<string, { bg: string; svg: string; pop: string }> = {
-  'Ж-Л': {
-    bg: 'linear-gradient(#1b2b3a, #3b6280 62%, #8fb7cc)',
-    svg: `<svg viewBox="0 0 188 128" width="188" height="128"><g opacity=".35" transform="translate(94 64) scale(.42)">${inner(compassSVG())}</g><path d="M0 108 Q30 94 60 106 T120 104 T188 100 V128 H0Z" fill="#24465c"/><g transform="translate(70 52) rotate(-12)"><path d="M0 40 h56 l-9 11 h-38z" fill="#1e1a17"/><path d="M28 38 v-36 l17 31z" fill="#2a241d"/><path d="M25 38 v-28 l-14 25z" fill="#2a241d"/><path d="M28 2 l10 3 l-10 3z" fill="#a3341f"/></g><path d="M40 112 q14 -18 30 -8" stroke="#fff" stroke-width="3" fill="none" opacity=".7" stroke-linecap="round"/></svg>`,
-    pop: `<svg viewBox="-30 -30 60 60" width="62" height="62"><polygon points="0,-28 6,-6 0,0" fill="#f6d77a"/><polygon points="0,-28 -6,-6 0,0" fill="#a27419"/><polygon points="28,0 6,6 0,0" fill="#f6d77a"/><polygon points="28,0 6,-6 0,0" fill="#a27419"/><polygon points="0,28 -6,6 0,0" fill="#f6d77a"/><polygon points="0,28 6,6 0,0" fill="#a27419"/><polygon points="-28,0 -6,-6 0,0" fill="#f6d77a"/><polygon points="-28,0 -6,6 0,0" fill="#a27419"/><circle r="4" fill="#2a1c0e" stroke="#e0b44c"/></svg>`,
-  },
-  'М-Л': {
-    bg: 'linear-gradient(#20312a, #3e6152 60%, #7fa99a)',
-    svg: `<svg viewBox="0 0 188 128" width="188" height="128"><g transform="translate(94 66) rotate(-68) translate(-34 -56) scale(.56)">${inner(bottleSVG())}</g><path d="M0 112 Q40 102 94 110 T188 106 V128 H0Z" fill="#24465c" opacity=".8"/></svg>`,
-    pop: `<svg viewBox="0 0 40 40" width="40" height="40"><path d="M10 4 h20 l-3 22 h-14z" fill="#9a6a3a" stroke="#5a3a1c" stroke-width="2"/><path d="M13 10 h14" stroke="#5a3a1c" stroke-width="1.5"/><circle cx="34" cy="8" r="2" fill="#fff3c4"/><circle cx="6" cy="14" r="1.6" fill="#fff3c4"/></svg>`,
-  },
-  'И-Л': {
-    bg: 'linear-gradient(#3a2a12, #8a6a2a 55%, #d8b25a)',
-    svg: `<svg viewBox="0 0 188 128" width="188" height="128"><g transform="translate(-6 40) scale(.62)">${inner(galleonSVG())}</g><g transform="translate(56 26) scale(.8)">${inner(galleonSVG())}</g><g transform="translate(120 40) scale(.62)">${inner(galleonSVG())}</g><path d="M0 110 Q47 100 94 108 T188 104 V128 H0Z" fill="#24465c"/></svg>`,
-    pop: `<svg viewBox="0 0 60 40" width="60" height="40"><path d="M8 38 V4" stroke="#4a3220" stroke-width="3"/><path d="M8 4 l44 6 l-10 7 l10 7 l-44 -4z" fill="#9C7A2C" stroke="#5a4210" stroke-width="1.5"/><path d="M16 12 h20" stroke="#fff3c4" stroke-width="2"/></svg>`,
-  },
-  'Г-Л': {
-    bg: 'linear-gradient(#0e1c1c, #1f3c3a 55%, #3d6a62)',
-    svg: `<svg viewBox="0 0 188 128" width="188" height="128"><g transform="translate(64 20) scale(.38)">${inner(eyeSVG('a')).replace(/iris\w+/g, 'irisArt')}</g><g transform="translate(12 18) scale(.56)">${tentacleInner('a1')}</g><g transform="translate(176 26) scale(-.5 .5)">${tentacleInner('a2')}</g><path d="M0 108 Q47 96 94 106 T188 100 V128 H0Z" fill="#0b1a1a"/></svg>`,
-    pop: `<svg viewBox="0 0 60 70" width="54" height="64"><path d="M14 70 C6 52 30 40 28 26 C26 14 14 12 18 6 C22 0 36 2 38 12 C40 20 32 22 30 18 C34 30 46 38 44 54 C43 62 46 66 46 70Z" fill="#3d5a50" stroke="#16211e" stroke-width="2"/><g fill="#cfe3d8"><circle cx="36" cy="52" r="2.6"/><circle cx="34" cy="40" r="2.2"/><circle cx="31" cy="30" r="1.8"/></g></svg>`,
-  },
-};
+/** The pictures of the Legend cards by the code of the card (EMBLEM of the prototype). */
+const EMBLEM_OF: Record<string, keyof typeof EMBLEM> = { 'Г-Л': 'kraken', 'И-Л': 'armada', 'М-Л': 'bottle', 'Ж-Л': 'jack' };
+/** Russian typesetting (legendCardHTML of fx3.js): a number stays with its word, a short word stays with the next one. */
+export const nbspText = (t: string) => t.replace(/ (<b>)?(\d)/g, '&nbsp;$1$2').replace(/(\d) /g, '$1&nbsp;').replace(/(^|[\s>(«])(и|в|с|к|о|а|по|не|Не|на|за|из|её|их|это|Это) /g, '$1$2&nbsp;');
 
-/** The card of the Legend: the back, the face with its picture, the shine and the element «out of the frame».
- *  game: the bottom strip of the ship that played it («ЛЕГЕНДА · МЕСТЬ»), its text never under 10 px at the scale `s`. */
+/**
+ * The card of a Legend 248×372 (legendCardHTML of fx3.js): the back (a compass rose, «Легенда») and the face — the price
+ * «digit + icon» in one line (the full «3 Пороха» in title/aria-label), «Легенда · приказ», the picture, the name, the
+ * main thing, the text of the rule, the bottom strip with the name of the ship that played it in the colour of the ship.
+ * game: the texts are of data/game-data.json; the strip is never under 10 px on screen at the scale `s`.
+ */
 export function lgCardHTML(data: GameData, code: string, owner: string, s = 1): string {
-  const c = legendCard(data, code), art = LG_ART[code] || { bg: 'linear-gradient(#3a2a12,#d8b25a)', svg: '', pop: '' };
-  const cost = [c.cost ? `${c.cost} П` : '', c.soul ? `${c.soul} Д` : ''].filter(Boolean).join(' + ');
-  return `<div class="back"><svg viewBox="-30 -30 60 60" width="70" height="70"><circle r="26" fill="none" stroke="#e0b44c" stroke-width="2"/><path d="M0 -20 v34 M-12 -8 h24 M-16 6 q16 18 32 0" stroke="#e0b44c" stroke-width="3" fill="none" stroke-linecap="round"/><circle cy="-22" r="4" fill="none" stroke="#e0b44c" stroke-width="2"/></svg></div>` +
-    `<div class="frame"><div class="inner"><div class="art" style="background:${art.bg}">${art.svg}<span class="kind">ЛЕГЕНДА · ${esc(c.type)}</span>${cost ? `<span class="cost">${cost}</span>` : ''}</div>` +
-    `<div class="body"><div class="name">${esc(c.name)}</div><div class="big">${esc(c.big)}</div></div>${footHTML(data, { ship: owner, legend: true }, s)}<div class="shine"></div></div><div class="lg-pop">${art.pop}</div></div>`;
+  const c = legendCard(data, code), sh = shipData(data, owner), key = EMBLEM_OF[code];
+  const kind = c.soul ? 'souls' : 'powder', n = c.soul || c.cost;
+  const word = COST_WORD(n, kind);
+  const foot = Math.max(11, Math.ceil((10 / s) * 10) / 10);
+  const rose = Array.from({ length: 16 }, (_, i) => { const a = (i * Math.PI) / 8 - Math.PI / 2, r = i % 4 === 0 ? 17 : i % 2 === 0 ? 11 : 6; return `<path d="M0 0 L${R1(Math.cos(a - 0.14) * 3)} ${R1(Math.sin(a - 0.14) * 3)} L${R1(Math.cos(a) * r)} ${R1(Math.sin(a) * r)} Z" fill="${i % 2 ? '#c9a048' : '#f2d98a'}"/>`; }).join('');
+  return `<div class="lc-back"><svg width="130" height="130" viewBox="-20 -20 40 40" aria-hidden="true">${rose}<circle r="18.6" fill="none" stroke="#c9a048" stroke-width=".6"/></svg><b>Легенда</b></div>` +
+    `<div class="lc-face"><div class="lc-top">${n ? `<span class="lc-cost lc-${kind}" title="Цена: ${word}" aria-label="Цена: ${word}"><b>${n}</b>${COST_ICON[kind]}</span>` : '<span></span>'}<span class="lc-type">Легенда · ${esc(c.type.toLowerCase())}</span></div>` +
+    `<div class="lc-art"><svg width="212" height="140" viewBox="0 0 150 99" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${key ? EMBLEM[key]() : ''}${ART_FRAME()}</svg></div>` +
+    `<div class="lc-name">${esc(c.name)}</div><div class="lc-big">${esc(c.big)}</div><div class="lc-text"><p>${nbspText(c.text)}</p></div>` +
+    `<div class="lc-foot" style="background:${sh.color};color:${inkOn(sh.color)};font-size:${foot}px"><span>${esc(sh.nick)}</span></div>` +
+    `<i class="lc-shine"></i><svg class="lc-glint" width="248" height="372" viewBox="0 0 248 372" aria-hidden="true"><rect x="3" y="3" width="242" height="366" rx="12" fill="none" stroke="#fff6d8" stroke-width="3" stroke-dasharray="80 1136" stroke-linecap="round"/></svg></div>`;
 }
 
-/** Where the Legend comes from: the badge «Легенда» on the plank of the owner (on a phone — the star in the head). */
-function legendOrigin(ctx: FxCtx, ship: string): Pt {
+/** game: a long rule (the data may be longer than the prototype's) — the text gets smaller, 0.5 px a step down to 11 px,
+ *  until it fits between the main thing and the strip (never over them). */
+export function fitCardText(card: Element): void {
+  const box = card.querySelector<HTMLElement>('.lc-text'), p = card.querySelector<HTMLElement>('.lc-text p');
+  if (!box || !p) return;
+  for (let f = 13; f > 11 && p.offsetHeight > box.clientHeight - 12; f -= 0.5) p.style.fontSize = f - 0.5 + 'px';
+}
+
+/** Where the Legend comes from: the medallion «Легенда» on the plank of the owner (on a phone — the star in the head). */
+function legendMedal(ctx: FxCtx, ship: string): Element {
   const p = plank(ctx, ship);
-  const el = [p.querySelector('[data-fx-legend]'), p.querySelector('.star'), p.querySelector('.plank-head')].find(visible);
-  const b = bx(ctx, el || p);
-  return { x: b.cx, y: b.cy };
+  return [p.querySelector('[data-fx-legend]'), p.querySelector('.star'), p.querySelector('.plank-head')].find(visible) || p;
+}
+
+/** A gold ring that spreads and fades (circRing of fx3.js). */
+function circRing(ctx: FxCtx, svg: Element, x: number, y: number, r0: number, r1: number, color: string, d: number, delay = 0, w = 2): void {
+  // drawn when its time comes (a delayed ring would show its first frame before it)
+  if (delay > 0) { at(ctx, delay, () => circRing(ctx, svg, x, y, r0, r1, color, d, 0, w)); return; }
+  const c = sv(svg, `<circle cx="0" cy="0" r="${R1(r1)}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`);
+  A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d, delay, 'cubic-bezier(.2,.7,.3,1)');
+}
+/** Gold dust and four-point sparks from a point (goldBurst of fx3.js), within the budget of the layer. */
+export function goldBurst(ctx: FxCtx, svg: Element, x: number, y: number, n = 40, r0 = 30, r1 = 140, delay = 0): void {
+  const m = room(ctx, n);
+  for (let i = 0; i < m; i++) {
+    const a = (i / m) * Math.PI * 2 + rnd(-0.1, 0.1), r = rnd(r0, r1);
+    const p = sv(svg, i % 3 ? `<circle r="${R1(rnd(1.2, 2.8))}" fill="${['#fff6d8', '#ffd27a', '#e0bd62'][i % 3]}"/>` : '<path d="M0 -4 L1 -1 L4 0 L1 1 L0 4 L-1 1 L-4 0 L-1 -1 Z" fill="#fff6d8"/>');
+    A(ctx, p, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * r)}px,${R1(y + Math.sin(a) * r)}px) scale(.4)`, opacity: 0 }], rnd(700, 1300), delay, 'cubic-bezier(.1,.8,.3,1)');
+  }
+}
+/** Gold motes rising from below (motes of fx3.js). */
+function motes(ctx: FxCtx, n: number, x0: number, x1: number, y0: number, y1: number, delay = 0): void {
+  const colors = ['#ffe9a8', '#ffd27a', '#fff6d8'], m = room(ctx, n);
+  for (let i = 0; i < m; i++) {
+    const el = mk(ctx, 'lg-mote', 0, 0), s = rnd(2, 5);
+    el.style.width = el.style.height = s + 'px'; el.style.background = colors[i % 3];
+    const x = rnd(x0, x1), y = rnd(y0, y1);
+    A(ctx, el, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${R1(x + rnd(-30, 30))}px,${R1(y - rnd(60, 160))}px)`, opacity: 0 }], rnd(1600, 3000), delay + rnd(0, 1600));
+  }
 }
 
 /**
- * The common entrance of a Legend. Returns the function of the leave (takes the bars and the caption away).
- * 0       — the price: kegs / Souls; a gold glow around the owner;
- * 120     — the film bars at the top and the bottom with a gold edge, the table darkens;
- * 280–780 — the card flies out of the badge «Легенда», turns (back → face), grows past its size;
- * 780     — the hit: a freeze of 80 ms, a flash, gold dust (26 bits), a ring, the table shakes 6 px;
- * 820     — the wax seal «ЛЕГЕНДА» falls on the card, the card quivers; the character goes «out of the frame»;
- * 900     — a shine runs over the card; two sparks circle its frame; gold motes rise from below;
- * 900     — the scroll unrolls: the name and the captain;
- * 1900    — the card, the seal and the scroll fly into the top bar and turn into the caption «ЛЕГЕНДА · …»,
- *           the bars get thinner, the darkening goes — the effect plays on the open table.
+ * The common entrance of a Legend (legendIntro of fx3.js, ANIMATIONS.md §3.1; T.legend). Returns the function of the
+ * leave (takes the thin top bar and its caption away).
+ * 1. the medallion of the Legend on the plank of the owner flares (×2.2, glow), three rings, gold sparks; the price;
+ * 2. the table dims (a vignette), the cinema bars with a gold line slide in, gold rays turn behind the middle, motes rise;
+ * 3. the card flies out of the medallion along an arc with a gold tail, grows and turns over (back → face);
+ * 4. it lands in the middle of the sea: a shockwave, gold sparks, a soft gold flash, the table shakes;
+ * 5. the wax seal «ЛЕГЕНДА» stamps its bottom right corner (×3.2 → ×1), a ring, sparks, the card quivers;
+ * 6. under the card the red ribbon with the name unrolls letter by letter, a shine and a spark run over the card;
+ * 7. the card collapses into a golden orb that flies with a tail to the target; the dim, the rays and the bottom bar go.
+ * game: the top bar stays thin over the top row with the caption «ЛЕГЕНДА · …» while the effect plays (it ends above
+ * the planks); «простые спецэффекты» — only the card in the middle for 1 s, no particles.
  */
-export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cost = 0, soulCost = 0 }: { cost?: number; soulCost?: number } = {}): Promise<() => Promise<void>> {
-  const board = ctx.board;
-  const W = board.clientWidth, H = board.clientHeight, k = Math.min(1, W / 640), uid = ++LG_UID;
-  const c = legendCard(ctx.data, code), sh = shipData(ctx.data, owner);
-  const cx = W / 2, cy = H * 0.42;
+export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cost = 0, soulCost = 0, target = null }: { cost?: number; soulCost?: number; target?: string | null } = {}): Promise<() => Promise<void>> {
+  const board = ctx.board, L = T.legend;
+  const W = board.clientWidth, H = board.clientHeight;
+  const c = legendCard(ctx.data, code);
+  // the middle of the sea between the rows of planks; the card, the seal and the ribbon fit into the board
+  const rows = board.querySelectorAll(':scope .planks');
+  const g = gapBox(ctx);
+  const S = Math.min(1, (W - 24) / 248, (H - 16) / 470);
+  const cx = W / 2, cy = clamp(g.cy, 186 * S + 8, H - 270 * S - 8);
   hint(ctx, `${nick(ctx, owner)}: ЛЕГЕНДА «${c.name}»`);
-  // the price. game (S1): a short mark «−N» at the Hold, not the label «−N Порох» (the plank of «Джек ускользает»
-  // sinks over the Hold and the label lay on its Crew)
+  // the price. game (S1): a short mark «−N» at the Hold / at the badge of the Souls, not a label over a plank
   if (cost) { payKegs(ctx, sideOf(ctx, owner), cost, 0, false); badgeMark(ctx, holdEl(ctx, sideOf(ctx, owner)), `−${cost}`, 0); }
-  // the glow around the owner
-  const ob = bx(ctx, plank(ctx, owner));
-  const aura = overlayAt(ctx, 'lg-aura', ob, 6);
-  A(ctx, aura, [{ opacity: 0 }, { opacity: 1, offset: 0.3 }, { opacity: 0.8, offset: 0.7 }, { opacity: 0 }], 900, 0, 'ease-in-out');
-  // the bars and the darkening
-  const barH = Math.round(H * (W < 701 ? 0.075 : 0.11));
-  const top = mk(ctx, 'lg-bar top', 0, 0), bot = mk(ctx, 'lg-bar bottom', 0, H - barH);
-  for (const b of [top, bot]) { b.style.width = W + 'px'; b.style.height = barH + 'px'; }
-  A(ctx, top, [{ opacity: 1, transform: 'translateY(-100%)' }, { opacity: 1, transform: 'none' }], 300, LG_T.bars, 'cubic-bezier(.2,.8,.3,1)');
-  A(ctx, bot, [{ opacity: 1, transform: 'translateY(100%)' }, { opacity: 1, transform: 'none' }], 300, LG_T.bars, 'cubic-bezier(.2,.8,.3,1)');
-  const veil = mk(ctx, 'lg-veil', 0, 0); veil.style.width = W + 'px'; veil.style.height = H + 'px';
-  A(ctx, veil, [{ opacity: 0 }, { opacity: 1 }], 350, LG_T.bars);
-  // the rays and the glow behind the card
-  let sun: HTMLElement | null = null;
-  if (ctx.rich) {
-    sun = mk(ctx, 'lg-sun', cx, cy);
-    A(ctx, sun, [{ opacity: 0, transform: 'scale(.5) rotate(0deg)' }, { opacity: 1, transform: 'scale(1) rotate(25deg)', offset: 0.25 }, { opacity: 1, transform: 'scale(1.05) rotate(60deg)' }], 1700, LG_T.card + 200, 'linear');
-  }
-  const glow = mk(ctx, 'lg-glow', cx, cy);
-  A(ctx, glow, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1.15)', offset: 0.45 }, { opacity: 0.85, transform: 'scale(1)' }], 900, LG_T.land - 250, 'ease-out');
-  // the card
-  const from = legendOrigin(ctx, owner);
-  const S = W >= 900 ? 1.3 : W >= 640 ? 1.1 : Math.max(0.82, k);
+  const medal = legendMedal(ctx, owner), mb = bx(ctx, medal);
   const card = mk(ctx, 'lg-card', 0, 0, lgCardHTML(ctx.data, code, owner, S));
-  const pose = (x: number, y: number, ry: number, s: number, r = 0) => `translate(${x}px,${y}px) translate(-50%,-50%) perspective(900px) rotateY(${ry}deg) rotate(${r}deg) scale(${s})`;
-  const flight = A(ctx, card, [
-    { opacity: 0, transform: pose(from.x, from.y, 180, 0.12, -10) },
-    { opacity: 1, transform: pose(from.x, from.y, 180, 0.2, -10), offset: 0.08 },
-    { opacity: 1, transform: pose((from.x + cx) / 2, Math.min(from.y, cy) - 60, 90, S * 0.75, -4), offset: 0.55 },
-    { opacity: 1, transform: pose(cx, cy, 0, S * 1.12, 0), offset: 0.86 },
-    { opacity: 1, transform: pose(cx, cy, 0, S, 0) },
-  ], LG_T.land - LG_T.card + 80, LG_T.card, 'cubic-bezier(.3,0,.25,1)');
-  // the hit: a freeze — the card stops in its overshoot for 80 ms («hit-stop»), a flash, dust, a ring, a shake
-  at(ctx, LG_T.land, () => { flight.pause(); setTimeout(() => flight.play(), ms(ctx, 80)); });
-  flash(ctx, cx, cy, LG_T.land, 3.2);
-  ring(ctx, cx, cy, LG_T.land, 3, '#e0b44c');
-  ring(ctx, cx, cy, LG_T.land + 120, 4.2, '#fff0b8');
-  burst(ctx, 'gold-dust', cx, cy, LG_T.land, 26, 70 * k, 190 * k, 900);
-  at(ctx, LG_T.land, () => shake(ctx, board, 0, 6, 200));
-  // «the character goes out of the frame»
-  const popEl = card.querySelector('.lg-pop')!;
-  A(ctx, popEl, [{ opacity: 0, transform: 'translateY(26px) scale(.6)' }, { opacity: 1, transform: 'translateY(-4px) scale(1.12)', offset: 0.7 }, { opacity: 1, transform: 'translateY(0) scale(1)' }], 420, LG_T.land + 60, 'cubic-bezier(.2,.8,.3,1.3)');
-  // the seal
-  const cardH = 230 * S;
-  const sealPos = { x: cx + 100 * S, y: cy - cardH / 2 + 92 * S }; // the right edge, at the picture — it does not cover the name
-  const seal = mk(ctx, 'lg-seal', 0, 0, sealSVG(uid));
-  A(ctx, seal, [{ opacity: 0, transform: `translate(${sealPos.x}px,${sealPos.y}px) scale(${2.8 * S}) rotate(-35deg)` }, { opacity: 1, transform: `translate(${sealPos.x}px,${sealPos.y}px) scale(${0.82 * S}) rotate(-10deg)`, offset: 0.8 }, { opacity: 1, transform: `translate(${sealPos.x}px,${sealPos.y}px) scale(${0.9 * S}) rotate(-12deg)` }], 260, LG_T.seal, 'cubic-bezier(.6,0,.9,.6)');
-  burst(ctx, 'dust', sealPos.x, sealPos.y, LG_T.seal + 210, 10, 14 * k, 40 * k, 500);
-  at(ctx, LG_T.seal + 210, () => A(ctx, card, [{ translate: '0 0' }, { translate: '-3px 2px' }, { translate: '3px -1px' }, { translate: '0 0' }], 160, 0, 'linear', 'none'));
-  // the shine, the sparks over the frame, the motes
-  const shine = card.querySelector('.shine')!;
-  A(ctx, shine, [{ transform: 'translateX(-60%)' }, { transform: 'translateX(60%)' }], 650, LG_T.seal - 40, 'ease-in-out', 'forwards');
-  A(ctx, shine, [{ transform: 'translateX(-60%)' }, { transform: 'translateX(60%)' }], 650, LG_T.leave - 450, 'ease-in-out', 'forwards');
-  if (ctx.rich) {
-    const hw = 103 * S, hh = cardH / 2;
-    const corners: [number, number][] = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh], [-hw, -hh]];
-    for (const [ph, d] of [[0, 1], [2, -1]]) {
-      const sp = mk(ctx, 'sparkle lg-orbit', 0, 0);
-      const seq = [...corners.slice(ph), ...corners.slice(1, ph + 1)];
-      if (d < 0) seq.reverse();
-      A(ctx, sp, seq.map(([x, y], i) => ({ offset: i / (seq.length - 1), opacity: 1, transform: `translate(${cx + x}px,${cy + y}px) scale(1.4)` })), 1100, LG_T.land + 100, 'linear');
-      A(ctx, sp, seq.map(([x, y], i) => ({ offset: i / (seq.length - 1), opacity: i === seq.length - 1 ? 0 : 1, transform: `translate(${cx + x}px,${cy + y}px) scale(1.4)` })), 1100, LG_T.land + 1200, 'linear', 'forwards');
-    }
-    for (let q = 0; q < 16; q++) {
-      const m = mk(ctx, 'gold-dust', 0, 0);
-      const x = cx + (Math.random() - 0.5) * 300 * k, y = cy + cardH / 2 + 20;
-      A(ctx, m, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.6)` }, { opacity: 1, offset: 0.25 }, { opacity: 0, transform: `translate(${x + (Math.random() - 0.5) * 40}px,${y - 140 - Math.random() * 90}px) scale(1.2)` }], 1300 + Math.random() * 500, LG_T.land + q * 55, 'ease-out');
-    }
-  }
-  // the scroll with the name
-  const ty = Math.min(H - barH - 34, cy + cardH / 2 + 30);
-  const title = mk(ctx, 'lg-title', cx, ty, `<div class="scroll"><div class="t">${esc(c.name)}</div><div class="s">${esc(sh.name)} · ${esc(sh.captain)}</div></div>`);
-  title.style.transform = `translate(-50%,-50%) scale(${k < 0.8 ? 0.82 : 1})`;
-  A(ctx, title, [{ opacity: 0 }, { opacity: 1 }], 150, LG_T.title);
-  A(ctx, title.querySelector('.scroll')!, [{ transform: 'scaleX(0.04)' }, { transform: 'scaleX(1.04)', offset: 0.8 }, { transform: 'scaleX(1)' }], 380, LG_T.title, 'cubic-bezier(.2,.8,.3,1)');
-  A(ctx, title.querySelector('.t')!, [{ opacity: 0, transform: 'scale(1.25)' }, { opacity: 1, transform: 'scale(1)' }], 300, LG_T.title + 150, 'ease-out');
-  A(ctx, title.querySelector('.s')!, [{ opacity: 0 }, { opacity: 1 }], 250, LG_T.title + 300);
-  // the Souls of «Кракен» feed the card
+  card.style.zIndex = '39';
+  fitCardText(card);
+  const pose = (x: number, y: number, s: number, r = 0) => `translate(${R1(x - 124)}px,${R1(y - 186)}px) scale(${R1(s * 1000) / 1000}) rotate(${R1(r)}deg)`;
   if (soulCost) {
     const badge = plank(ctx, owner).querySelector('[data-fx-souls]');
-    const sb = badge && visible(badge) ? bx(ctx, badge) : ob;
-    for (let q = 0; q < soulCost; q++) wisp(ctx, { x: sb.cx, y: sb.cy }, { x: cx, y: cy }, LG_T.card + q * 140, 700);
-    // game (S1): a short mark at the badge, not the label «−N Души» over the plank
-    if (badge && visible(badge)) badgeMark(ctx, badge, `−${soulCost}`, LG_T.card);
+    if (badge && visible(badge)) { const sb = bx(ctx, badge); for (let q = 0; q < soulCost; q++) wisp(ctx, { x: sb.cx, y: sb.cy }, { x: cx, y: cy }, q * 140, 700); badgeMark(ctx, badge, `−${soulCost}`, 0); }
   }
-  // the leave into the top bar
-  const capY = barH / 2;
-  A(ctx, card, [{ opacity: 1, transform: pose(cx, cy, 0, S) }, { opacity: 0, transform: pose(cx, capY, 0, 0.16) }], 380, LG_T.leave, 'cubic-bezier(.5,0,.75,0)', 'forwards');
-  A(ctx, seal, [{ opacity: 1, transform: `translate(${sealPos.x}px,${sealPos.y}px) scale(${0.9 * S}) rotate(-12deg)` }, { opacity: 0, transform: `translate(${cx + 20}px,${capY}px) scale(.2) rotate(-12deg)` }], 380, LG_T.leave, 'cubic-bezier(.5,0,.75,0)', 'forwards');
-  A(ctx, title, [{ opacity: 1, transform: `translate(-50%,-50%) scale(${k < 0.8 ? 0.82 : 1})` }, { opacity: 0, transform: `translate(-50%,-50%) translateY(${capY - ty}px) scale(.3)` }], 380, LG_T.leave, 'cubic-bezier(.5,0,.75,0)', 'forwards');
-  A(ctx, veil, [{ opacity: 1 }, { opacity: 0 }], 350, LG_T.leave + 80, 'ease-in', 'forwards');
-  A(ctx, glow, [{ opacity: 0.85 }, { opacity: 0 }], 350, LG_T.leave, 'ease-in', 'forwards');
-  if (sun) A(ctx, sun, [{ opacity: 1, transform: 'scale(1.05) rotate(60deg)' }, { opacity: 0, transform: 'scale(1.2) rotate(75deg)' }], 380, LG_T.leave, 'ease-in', 'forwards');
-  // the bars thinner, the caption in the top bar
-  const thin = 0.55;
-  // game: the thin top bar ends 2 px above the top row of planks (on a phone 0.55 of it lay on their heads)
-  const row = board.querySelector('.planks');
-  const thinTop = row ? clamp((bx(ctx, row).y - 2) / barH, 0.3, thin) : thin;
-  A(ctx, top, [{ transform: 'none' }, { transform: `scaleY(${thinTop})` }], 300, LG_T.leave + 150, 'ease-in-out', 'forwards');
-  A(ctx, bot, [{ transform: 'none' }, { transform: `scaleY(${thin})` }], 300, LG_T.leave + 150, 'ease-in-out', 'forwards');
-  const cap = mk(ctx, 'lg-cap', cx, (barH * thinTop) / 2, `<span>ЛЕГЕНДА</span> <b>${esc(c.name)}</b>`);
-  A(ctx, cap, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.7)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], 300, LG_T.leave + 260, 'ease-out');
-  await wait(ctx, LG_T.effect);
+  if (!ctx.rich) {
+    // «простые спецэффекты»: the card of the Legend in the middle for 1 s, then the result
+    A(ctx, card, [{ opacity: 0, transform: pose(cx, cy, S) }, { opacity: 1, transform: pose(cx, cy, S), offset: 0.15 }, { opacity: 1, transform: pose(cx, cy, S), offset: 0.85 }, { opacity: 0, transform: pose(cx, cy, S) }], L.simple, 0, 'linear');
+    await wait(ctx, L.simple);
+    return async () => {};
+  }
+  const hi = fxSvg(ctx); hi.style.zIndex = '38';
+  // 1. the medallion flares and calls
+  A(ctx, medal, [{ transform: 'scale(1)', filter: 'none' }, { transform: 'scale(2.2)', filter: 'drop-shadow(0 0 12px #ffd27a) brightness(1.8)', offset: 0.45 }, { transform: 'scale(1.3)', filter: 'drop-shadow(0 0 6px #ffd27a) brightness(1.3)', offset: 0.9 }, { transform: 'scale(1)', filter: 'none' }], L.medal, 0, 'ease-out', 'none');
+  for (let i = 0; i < 3; i++) circRing(ctx, hi, mb.cx, mb.cy, 4, 70, '#ffd27a', L.medal, i * 160, 3 - i);
+  goldBurst(ctx, hi, mb.cx, mb.cy, 24, 10, 60);
+  // 2. the stage: the dim with a vignette, the cinema bars with gold lines, slow rays behind the middle, motes
+  const back = mk(ctx, 'lg-veil', 0, 0);
+  Object.assign(back.style, { width: W + 'px', height: H + 'px', zIndex: '33', background: `radial-gradient(ellipse ${R1(W * 0.6)}px ${R1(H * 0.7)}px at ${R1(cx)}px ${R1(cy)}px, rgba(30,20,8,.35), rgba(6,8,12,.82) 70%), radial-gradient(circle at ${R1(cx)}px ${R1(cy)}px, transparent ${R1(H * 0.36)}px, rgba(201,160,72,.25) ${R1(H * 0.37)}px, transparent ${R1(H * 0.46)}px)` });
+  A(ctx, back, [{ opacity: 0 }, { opacity: 1 }], L.back, L.backAt);
+  const barH = 46;
+  const top = mk(ctx, 'lg-bar top', 0, 0), bot = mk(ctx, 'lg-bar bottom', 0, H - barH);
+  for (const b of [top, bot]) Object.assign(b.style, { width: W + 'px', height: barH + 'px', zIndex: '37' });
+  A(ctx, top, [{ opacity: 1, transform: 'translateY(-100%)' }, { opacity: 1, transform: 'none' }], L.bars, L.barsAt, 'cubic-bezier(.2,.8,.3,1)');
+  A(ctx, bot, [{ opacity: 1, transform: 'translateY(100%)' }, { opacity: 1, transform: 'none' }], L.bars, L.barsAt, 'cubic-bezier(.2,.8,.3,1)');
+  const D = Math.round(Math.max(W, H) * 0.95);
+  const rays = mk(ctx, 'lg-sun', cx, cy); Object.assign(rays.style, { width: D + 'px', height: D + 'px', margin: `${-D / 2}px 0 0 ${-D / 2}px`, zIndex: '34' });
+  // the rays turn 18 s a turn (the CSS loop of the prototype, here by the clock of the show)
+  const tOut = L.cardAt + L.land + L.hit + L.sealHit + L.hold, tOrb = tOut + L.orbAt;
+  A(ctx, rays, [{ opacity: 0, transform: 'scale(.6) rotate(0deg)' }, { opacity: 1, transform: 'scale(1) rotate(18deg)', offset: L.rays / (tOrb + 600 - L.raysAt) }, { opacity: 1, transform: `scale(1) rotate(${R1(((tOrb - L.raysAt) / 18000) * 360)}deg)`, offset: (tOrb - L.raysAt) / (tOrb + 600 - L.raysAt) }, { opacity: 0, transform: `scale(1) rotate(${R1(((tOrb + 600 - L.raysAt) / 18000) * 360)}deg)` }], tOrb + 600 - L.raysAt, L.raysAt, 'linear', 'forwards');
+  motes(ctx, isPhone(ctx) ? 24 : 46, W * 0.1, W * 0.9, H * 0.62, H * 0.92);
+  // 3. the card bursts out of the medallion along an arc, grows, turns over
+  const path = qpts(mb.cx, mb.cy, (mb.cx + cx) / 2 + (mb.cx < cx ? -60 : 60), Math.max(Math.min(190, cy), Math.min(mb.cy, cy) - 140), cx, cy, 24);
+  A(ctx, card, path.map((p, i) => ({ opacity: i ? 1 : 0, transform: pose(p.x, p.y, (0.08 + 0.92 * Math.pow(i / 24, 1.6)) * S, (1 - i / 24) * -24) })), L.fly, L.cardAt, 'cubic-bezier(.3,.1,.2,1)');
+  for (let i = 0; i < 6; i++) {
+    const t = sv(hi, `<circle r="${R1(6 - i * 0.8)}" fill="#ffd27a" opacity="${R1(0.7 - i * 0.1)}"/>`);
+    A(ctx, t, [...path.map((p) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: 1 })), { transform: `translate(${R1(cx)}px,${R1(cy)}px)`, opacity: 0 }], L.fly, L.cardAt + i * 40, 'cubic-bezier(.3,.1,.2,1)');
+  }
+  A(ctx, card.querySelector('.lc-back')!, [{ transform: 'rotateY(0)' }, { transform: 'rotateY(0)', offset: 0.6 }, { transform: 'rotateY(180deg)' }], L.flip, L.cardAt, 'ease-in-out');
+  A(ctx, card.querySelector('.lc-face')!, [{ transform: 'rotateY(-180deg)' }, { transform: 'rotateY(-180deg)', offset: 0.6 }, { transform: 'rotateY(0)' }], L.flip, L.cardAt, 'ease-in-out');
+  // 4. the landing: a shockwave, a gold burst, the table shakes, a soft gold flash
+  const tLand = L.cardAt + L.land;
+  flashBoard(ctx, '#ffe7a4', 0.28, 380, tLand);
+  boom(ctx, 5, 420, tLand);
+  circRing(ctx, hi, cx, cy, 40, 420 * S, '#ffe7a4', 900, tLand, 5); circRing(ctx, hi, cx, cy, 30, 300 * S, '#fff6d8', 700, tLand + 120, 2);
+  at(ctx, tLand, () => goldBurst(ctx, hi, cx, cy, 60, 120 * S, 320 * S));
+  // 5. the wax seal «ЛЕГЕНДА» stamps the card in its bottom right corner
+  const tSeal = tLand + L.hit, sp = { x: cx + 110 * S, y: cy + 172 * S };
+  const seal = mk(ctx, 'lg-seal', sp.x, sp.y, SEAL_HTML); seal.style.zIndex = '40';
+  A(ctx, seal, [{ transform: `translate(-50%,-50%) scale(${R1(3.2 * S * 100) / 100}) rotate(-40deg)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${R1(0.86 * S * 100) / 100}) rotate(6deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(-50%,-50%) scale(${R1(S * 100) / 100}) rotate(0deg)`, opacity: 1 }], L.seal, tSeal, 'cubic-bezier(.6,0,.9,.5)');
+  const tHit = tSeal + L.sealHit;
+  A(ctx, card, [{ translate: '0 0' }, { translate: '-6px 2.4px' }, { translate: '6px -1.8px' }, { translate: '-3.6px 0' }, { translate: '2.4px 1.2px' }, { translate: '0 0' }], 300, tHit, 'linear', 'none');
+  circRing(ctx, hi, sp.x, sp.y, 10, 90 * S, '#f6d9c8', 600, tHit, 3);
+  at(ctx, tHit, () => goldBurst(ctx, hi, sp.x, sp.y, 20, 20 * S, 80 * S));
+  // 6. the name unfurls under the card, letter by letter; the shine and the spark run over the card
+  const ban = mk(ctx, 'lg-title', cx, Math.min(cy + 224 * S, H - 30), [...c.name.toUpperCase()].map((ch) => `<span>${ch === ' ' ? '&nbsp;' : esc(ch)}</span>`).join(''));
+  ban.style.zIndex = '40';
+  const bs = Math.min(S, (W - 16) / Math.max(1, ban.offsetWidth));
+  A(ctx, ban, [{ transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(.1)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(1.04)`, opacity: 1, offset: 0.6 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100})`, opacity: 1 }], L.ribbon, tHit, 'cubic-bezier(.2,.8,.3,1)');
+  ban.querySelectorAll('span').forEach((s, i) => A(ctx, s, [{ opacity: 0, transform: 'translateY(12px) scale(1.6)' }, { opacity: 1, transform: 'none' }], 400, tHit + i * L.letter, 'cubic-bezier(.2,1.4,.5,1)'));
+  const shine = card.querySelector('.lc-shine')!, glint = card.querySelector('.lc-glint rect')!;
+  for (let k = 0; k * 1600 < L.hold; k++) A(ctx, shine, [{ transform: 'translateX(-120%)' }, { transform: 'translateX(120%)' }], 960, tHit + 100 + k * 1600, 'ease-in-out', 'none');
+  A(ctx, glint, [{ strokeDashoffset: 0, opacity: 1 }, { strokeDashoffset: -1216 * (L.hold / 2200), opacity: 1 }], L.hold, tHit, 'linear', 'none');
+  // 7. the card collapses into a golden orb that flies to the target
+  A(ctx, ban, [{ opacity: 1 }, { opacity: 0 }], L.fade, tOut, 'ease-in', 'forwards');
+  A(ctx, seal, [{ opacity: 1, transform: `translate(-50%,-50%) scale(${R1(S * 100) / 100})` }, { opacity: 0, transform: `translate(-50%,-50%) scale(${R1(0.4 * S * 100) / 100})` }], L.fade, tOut, 'ease-in', 'forwards');
+  A(ctx, card, [{ opacity: 1, transform: pose(cx, cy, S), filter: 'brightness(1)' }, { opacity: 1, transform: pose(cx, cy, S * 1.06), filter: 'brightness(1.4)', offset: 0.3 }, { opacity: 0, transform: pose(cx, cy, S * 0.04, 25), filter: 'brightness(3)' }], L.collapse, tOut, 'cubic-bezier(.6,0,.9,.4)', 'forwards');
+  const tb = target ? bx(ctx, plank(ctx, target)) : g;
+  const to = { x: tb.cx, y: tb.cy };
+  const op = qpts(cx, cy, (cx + to.x) / 2, Math.min(cy, to.y) - 80, to.x, to.y, 20);
+  for (let i = 0; i <= 6; i++) {
+    const o = sv(hi, i ? `<circle r="${R1(8 - i)}" fill="#ffd27a" opacity="${R1(0.6 - i * 0.08)}"/>` : '<g><circle r="22" fill="#ffd27a" opacity=".35"/><circle r="11" fill="#fff1c0"/><circle r="5" fill="#fff"/></g>');
+    A(ctx, o, [{ transform: `translate(${R1(cx)}px,${R1(cy)}px)`, opacity: 0 }, ...op.map((p) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: 1 })), { transform: `translate(${R1(to.x)}px,${R1(to.y)}px)`, opacity: 0 }], L.orb, tOrb + i * 30, 'cubic-bezier(.5,0,.7,1)');
+  }
+  A(ctx, back, [{ opacity: 1 }, { opacity: 0 }], 700, tOrb, 'linear', 'forwards');
+  A(ctx, bot, [{ transform: 'none' }, { transform: 'translateY(100%)' }], 500, tOrb + 300, 'ease-in', 'forwards');
+  // game: the top bar stays, thin — it ends 2 px above the top row of planks — with the caption of the Legend
+  const row = rows[0];
+  const thin = row ? clamp((bx(ctx, row).y - 2) / barH, 0, 1) : 0.6;
+  A(ctx, top, [{ transform: 'none' }, { transform: `scaleY(${R1(thin * 100) / 100})` }], 300, tOrb + 300, 'ease-in-out', 'forwards');
+  const cap = mk(ctx, 'lg-cap', cx, Math.max(9, (barH * thin) / 2), `<span>ЛЕГЕНДА</span> <b>${esc(c.name)}</b>`); cap.style.zIndex = '41';
+  if (barH * thin < 14) cap.style.display = 'none';
+  A(ctx, cap, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.7)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], 300, tOrb + 400, 'ease-out');
+  const tEnd = tOrb + L.orbEnd;
+  circRing(ctx, hi, to.x, to.y, 8, 120, '#ffe7a4', 700, tEnd, 4);
+  at(ctx, tEnd, () => goldBurst(ctx, hi, to.x, to.y, 30, 20, 110));
+  await wait(ctx, tEnd);
   return async () => {
-    A(ctx, top, [{ transform: `scaleY(${thinTop})` }, { transform: 'translateY(-100%)' }], 320, 0, 'ease-in', 'forwards');
-    A(ctx, bot, [{ transform: `scaleY(${thin})` }, { transform: 'translateY(100%)' }], 320, 0, 'ease-in', 'forwards');
+    A(ctx, top, [{ transform: `scaleY(${R1(thin * 100) / 100})` }, { transform: 'translateY(-100%)' }], 320, 0, 'ease-in', 'forwards');
     A(ctx, cap, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
     await wait(ctx, 340);
   };
 }
+
 
 /** The units of damage by the events damage: each is a projectile / a hit into its own cell (as the balls of a Volley). */
 export function damageUnits(ctx: FxCtx, effects: readonly GameEvent[]): { ship: string; track: Track; idx: number; v: number }[] {
@@ -476,7 +484,7 @@ export async function legendGeneric(c: LegendClip, ctx: FxCtx): Promise<void> {
 }
 
 const playLegend = async (c: LegendClip, ctx: FxCtx) => {
-  const outro = await legendIntro(ctx, c.card, c.seat, { cost: c.cost, soulCost: c.soulCost });
+  const outro = await legendIntro(ctx, c.card, c.seat, { cost: c.cost, soulCost: c.soulCost, target: c.target });
   await (LG[c.card] || legendGeneric)(c, ctx);
   await outro();
 };
@@ -507,7 +515,7 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
   // game (S1): the explanation is in the middle of the table, not over the plank
   ruleTag(ctx, b.cx, gapBox(ctx).cy, 'время замерло…', 60, '', 1100);
   await wait(ctx, 220);
-  const outro = await legendIntro(ctx, code, c.ship, { cost: c.cost });
+  const outro = await legendIntro(ctx, code, c.ship, { cost: c.cost, target: c.ship });
   // the compass rose
   const cs = clamp(Math.min(b.w, b.h * 1.6), 200, 300);
   const rose = mk(ctx, 'compass', 0, 0, compassSVG());
