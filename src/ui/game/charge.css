@@ -219,10 +219,7 @@
     left: -12px;
     right: 0;
     z-index: 8;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 8px 16px 8px;
+    padding: 8px 16px;
   }
   .game.charge-open .hand-row > .hand {
     visibility: hidden;
@@ -232,18 +229,38 @@
     position: relative;
     z-index: 9;
   }
-  .charge-sheet .cs-cards {
-    flex: 1;
-    min-height: 0;
-    align-items: center;
-    padding-top: 4px;
+  /* the cards in the middle of the whole sheet, whole in it (a card of the hand fits at 1366 × 660 with ≥ 8 px to the
+     edges, the lift included); the plate, the note and the Hold over its corners; the slip under the plate on the left */
+  .charge-sheet .cs-head {
+    position: absolute;
+    top: 8px;
+    left: 16px;
+    right: 16px;
+    pointer-events: none;
   }
-  .charge-sheet .cs-paid,
+  .charge-sheet .cs-cards {
+    height: 100%;
+    align-items: center;
+  }
+  .charge-sheet .cs-card.on .hcard {
+    transform: translateY(-8px);
+  }
   .charge-sheet .slipw {
-    flex: none;
+    position: absolute;
+    left: 16px;
+    top: 44px;
+    max-width: 300px;
+    transform-origin: left top;
+  }
+  .charge-sheet .slip {
+    max-width: 300px;
+    margin: 0;
+    text-align: left;
   }
   .charge-sheet .cs-paid {
-    align-self: center;
+    position: absolute;
+    left: 16px;
+    bottom: 8px;
   }
   /* the buttons in the place of «Ход окончен»: «Отмена» over «Огонь!» (300 × 66) */
   .hand-actions.charge-mode .charge-btns {
