@@ -167,11 +167,28 @@ function wind(w: Wx, host: HTMLElement): void {
   const s = seaSvg(w, host, 'wx-wind', Array.from({ length: w.phone ? 7 : 12 }, (_, i) => { const y = R1(20 + (i * (H - 40)) / (w.phone ? 7 : 12) + rnd(-8, 8)), len = R1(rnd(70, 160) * Math.max(0.6, kx)); return `<path class="gu" d="M0 ${y} q${R1(len / 2)} -6 ${len} 0 q${R1(len * 0.15)} 3 ${R1(len * 0.3)} -4" fill="none" stroke="#eef6f8" stroke-width="${i % 3 ? 1.4 : 2.2}" stroke-linecap="round" opacity=".75" ${w.moving ? '' : `transform="translate(${R1(rnd(0, W - len))} 0)"`}/>`; }).join(''));
   s.querySelectorAll('.gu').forEach((e) => loop(w, e, [{ transform: `translateX(${R1(-200 * kx)}px)` }, { transform: `translateX(${R1(W + 40)}px)` }], rnd(1.4, 2.4) * 1000, -rnd(0, 2000)));
 }
-/** Clear sky: a patch of sun, sparkles on the water. */
+/**
+ * Clear sky (B5; seaEffect2 → key === 'clear' and .pg-lightfx.clear of the prototype): a warm soft glow of the sun on the water —
+ * a radial gradient #ffe7a4 (.7 → 0), its centre at the top right of the sea (.62, .2, r .7), no disc, no rings — and 34 four-pointed
+ * glints (#fff8de, 4–8 px), each flashing and fading on its own round. Only over the water: the glow is masked by the planks and
+ * the glints keep clear of them. It comes in a little stronger and settles (1 → .8). Standing still (simple effects, reduced
+ * motion): the glow alone, no glints.
+ */
 function clear(w: Wx, host: HTMLElement): void {
   const { W, H } = w;
-  const s = seaSvg(w, host, 'wx-clear', `<defs><radialGradient id="wxSun" cx=".62" cy=".2" r=".7"><stop offset="0" stop-color="#ffe7a4" stop-opacity=".7"/><stop offset="1" stop-color="#ffe7a4" stop-opacity="0"/></radialGradient></defs><rect width="${R1(W)}" height="${R1(H)}" fill="url(#wxSun)"/>
-${Array.from({ length: w.phone ? 16 : 34 }, () => { const x = R1(rnd(20, W - 20)), y = R1(rnd(20, H - 20)), r = R1(rnd(4, 8)); return `<path class="sk" d="M${x} ${R1(y - r)} L${R1(x + r * 0.25)} ${R1(y - r * 0.25)} L${R1(x + r)} ${y} L${R1(x + r * 0.25)} ${R1(y + r * 0.25)} L${x} ${R1(y + r)} L${R1(x - r * 0.25)} ${R1(y + r * 0.25)} L${R1(x - r)} ${y} L${R1(x - r * 0.25)} ${R1(y - r * 0.25)} Z" fill="#fff8de" opacity="${w.moving ? 0 : 0.5}"/>`; }).join('')}`);
+  const planks = Array.from(w.ctx.board.querySelectorAll('[data-fx-ship]')).map((p) => inSea(w, bx(w.ctx, p)));
+  const hit = (x: number, y: number, r: number) => planks.some((b) => x + r > b.x && x - r < b.r && y + r > b.y && y - r < b.b);
+  const glints = Array.from({ length: 34 }, () => {
+    let x = 0, y = 0, r = 0, n = 0;
+    do { x = R1(rnd(20, W - 20)); y = R1(rnd(20, H - 20)); r = R1(rnd(4, 8)); } while (hit(x, y, r + 2) && ++n < 40);
+    return n >= 40 ? '' : `<path class="sk" d="M${x} ${R1(y - r)} L${R1(x + r * 0.25)} ${R1(y - r * 0.25)} L${R1(x + r)} ${y} L${R1(x + r * 0.25)} ${R1(y + r * 0.25)} L${x} ${R1(y + r)} L${R1(x - r * 0.25)} ${R1(y + r * 0.25)} L${R1(x - r)} ${y} L${R1(x - r * 0.25)} ${R1(y - r * 0.25)} Z" fill="#fff8de" opacity="0"/>`;
+  }).join('');
+  const s = seaSvg(w, host, 'wx-clear', `<defs><radialGradient id="wxSun" cx=".62" cy=".2" r=".7"><stop offset="0" stop-color="#ffe7a4" stop-opacity=".7"/><stop offset="1" stop-color="#ffe7a4" stop-opacity="0"/></radialGradient>
+<mask id="wxSunM"><rect width="${R1(W)}" height="${R1(H)}" fill="#fff"/>${planks.map((b) => `<rect x="${R1(b.x)}" y="${R1(b.y)}" width="${R1(b.w)}" height="${R1(b.h)}" fill="#000"/>`).join('')}</mask></defs><rect width="${R1(W)}" height="${R1(H)}" fill="url(#wxSun)" mask="url(#wxSunM)"/>
+${w.moving ? glints : ''}`);
+  // it comes in a little stronger and settles
+  if (w.moving) s.animate([{ opacity: 1 }, { opacity: 0.8 }], { duration: 2200, fill: 'forwards', easing: 'ease-out' });
+  else s.style.opacity = '0.8';
   s.querySelectorAll('.sk').forEach((e) => loop(w, e, [{ opacity: 0 }, { opacity: 1 }, { opacity: 0 }], rnd(1.6, 3) * 1000, -rnd(0, 3000)));
 }
 /** Moon: the night, the moon road on the water, stars. */

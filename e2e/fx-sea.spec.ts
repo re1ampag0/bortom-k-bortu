@@ -169,6 +169,48 @@ test.describe('the sea cards through ?fxScene', () => {
     expect((await look('', {}, 'instant')).n).toBe(0);
   });
 
+  // A5 (B5): «Ясное небо» — a warm glow (a radial gradient, no disc, no rings) and 34 glints, only over the water: no glint and none of the
+  // glow (a mask) lies on a plank; in simple effects the glow stands alone and still.
+  for (const [width, height] of [[1366, 660], [430, 932]] as const) {
+    test(`sea-clear ${width}×${height}: the glow and 34 glints over the water only; still glow in simple effects`, async ({ browser }) => {
+      const look = async (extra: string) => {
+        const page = await browser.newPage({ viewport: { width, height } });
+        await open(page, 'sea-clear', 'normal', extra);
+        await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 40_000 });
+        await page.waitForTimeout(2400); // the glow has settled (1 → .8)
+        const r = await page.evaluate(() => {
+          const svg = document.querySelector('.fx-weather svg.wx-clear')!;
+          const planks = Array.from(document.querySelectorAll('[data-fx-ship]')).map((p) => p.getBoundingClientRect());
+          const glints = Array.from(svg.querySelectorAll('.sk')).map((g) => g.getBoundingClientRect());
+          const mask = svg.querySelector('mask')!;
+          return {
+            glints: glints.length,
+            onPlanks: glints.filter((g) => planks.some((p) => g.left < p.right && g.right > p.left && g.top < p.bottom && g.bottom > p.top)).length,
+            masked: mask.querySelectorAll('rect[fill="#000"]').length,
+            discs: svg.querySelectorAll('circle, ellipse').length,
+            sun: !!svg.querySelector('radialGradient#wxSun'),
+            opacity: Number(getComputedStyle(svg).opacity),
+            moving: svg.getAnimations({ subtree: true }).length,
+          };
+        });
+        await page.close();
+        return r;
+      };
+      const rich = await look('');
+      expect(rich.glints).toBeGreaterThanOrEqual(30);
+      expect(rich.onPlanks, 'glints on a plank').toBe(0);
+      expect(rich.masked, 'the planks are cut out of the glow').toBe(4);
+      expect(rich.discs, 'no disc, no rings').toBe(0);
+      expect(rich.sun).toBe(true);
+      expect(rich.opacity, 'settled').toBeCloseTo(0.8, 1);
+      expect(rich.moving).toBeGreaterThan(0);
+      const simple = await look('&rich=0');
+      expect(simple.glints, 'no glints standing still').toBe(0);
+      expect(simple.moving).toBe(0);
+      expect(simple.opacity).toBeCloseTo(0.8, 1);
+    });
+  }
+
   test('the planks pitch in «Буря» and stand still in simple effects and with «&wxStill=1»', async ({ browser }) => {
     const pitch = async (extra: string) => {
       const page = await browser.newPage({ viewport: { width: 1366, height: 660 } });
