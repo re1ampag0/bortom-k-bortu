@@ -174,7 +174,6 @@
 .lg-cap span { font-size: 11px; letter-spacing: 0.22em; color: #e0b44c; margin-right: 6px; vertical-align: 2px; }
 .lg-cap b { font-weight: 700; }
 .compass { width: 300px; height: 300px; margin: -150px 0 0 -150px; }
-.bottle { transform-origin: 50% 50%; }
 
 @media (prefers-reduced-motion: reduce) { .window i { animation: none; } }
 
@@ -185,3 +184,4 @@
 .stamp-fx.sunk { padding: 2px 14px; border: 3px double var(--fx-bordo); border-radius: 4px; color: var(--fx-bordo); background: rgba(248, 240, 222, 0.55); font-family: var(--fx-font); font-weight: 700; font-size: 22px; line-height: 1.1; letter-spacing: 0.22em; text-transform: uppercase; }
 @media (max-width: 700px) { .stamp-fx.sunk { font-size: 16px; letter-spacing: 0.14em; padding: 1px 9px; } }
 .lg-fly { line-height: 0; z-index: 3; }
+.lg-pop { z-index: 3; white-space: nowrap; font: italic 700 22px/1 var(--fx-font); color: #fff6d8; text-shadow: 0 0 6px #b8862a, 0 2px 0 #5a3a1c, 0 0 14px rgba(255, 214, 120, 0.8); }

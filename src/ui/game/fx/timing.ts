@@ -15,6 +15,7 @@ export const DIVE_K = 1;
 export const LEGEND_K = 1;
 export const KRAKEN_K = 1;
 export const ARMADA_K = 1;
+export const BOTTLE_K = 1;
 
 const scaled = <T extends Record<string, number>>(k: number, o: T): T => Object.fromEntries(Object.entries(o).map(([n, v]) => [n, v * k])) as T;
 
@@ -245,5 +246,45 @@ export const T = {
     leave: 3200,
     leaveStep: 120,
     end: 2400,
+  }),
+  /** «Корабль в бутылке» (fxBottle of fx3.js, §3.4): the target glows, a bottle on its side draws itself in the gap,
+   *  the plank spirals into its mouth, the little ship inside, the cork flies from the owner — «чпок!», the bottle drops
+   *  onto the sea and stays afloat (a long trace); the plank comes back grey with the stamp. */
+  bottle: scaled(BOTTLE_K, {
+    /** the target glows / sparks orbit it (one after another) */
+    glow: 900,
+    orbit: 2200,
+    orbitStep: 30,
+    /** the glass draws itself at… for… / the light and the painted sea come at… for… */
+    glassAt: 300,
+    glass: 1000,
+    fillAt: 1150,
+    fill: 500,
+    /** the glints */
+    glintAt: 1100,
+    glint: 600,
+    glintStep: 70,
+    /** the vortex begins / the plank spirals into the mouth */
+    vortexAt: 1600,
+    vortex: 1500,
+    /** the little ship appears inside, at… for… */
+    miniAt: 1480,
+    mini: 600,
+    /** the cork comes after… and flies from the owner */
+    corkAt: 650,
+    cork: 800,
+    /** it pops in */
+    pop: 220,
+    popAt: 160,
+    /** «чпок!» */
+    word: 1100,
+    /** the bottle lifts and drops onto the sea */
+    dropAt: 900,
+    drop: 900,
+    splashAt: 880,
+    /** the plank comes back grey, the stamp falls */
+    back: 600,
+    stamp: 380,
+    end: 900,
   }),
 } as const;
