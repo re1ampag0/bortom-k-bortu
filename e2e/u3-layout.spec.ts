@@ -21,11 +21,15 @@ async function middle(page: Page) {
   return page.evaluate(() => {
     const r = (q: string) => document.querySelector(q)?.getBoundingClientRect() ?? null;
     const top = r('.planks.top')!, bottom = r('.planks.bottom')!;
-    const items = ['[data-testid="turn-summary"]', '[data-testid="middle-info"]'].map(r).filter((b): b is DOMRect => !!b);
+    const sum = r('[data-testid="turn-summary"]');
+    const info = r('[data-testid="middle-info"]');
+    const water = r('.sea-water');
     const dock = r('.dock');
     return {
       gap: (top.bottom + bottom.top) / 2,
-      group: items.length ? (Math.min(...items.map((b) => b.top)) + Math.max(...items.map((b) => b.bottom))) / 2 : null,
+      // the summary stands at the centre of the gap; «Последнее» (Б1) is a line along the bottom of the open sea
+      group: sum ? (sum.top + sum.bottom) / 2 : null,
+      info: info && water ? { height: info.height, toPlanks: bottom.top - info.bottom, left: info.left - water.left, right: water.right - info.right } : null,
       dock: dock ? (dock.top + dock.bottom) / 2 : null,
     };
   });
@@ -141,16 +145,23 @@ for (const size of SIZES) {
       await expect(page.getByTestId('summary-more')).toHaveClass(/btn/);
       await shot(page, 'summary', size.width);
       const withSummary = await middle(page);
-      expect(Math.abs(withSummary.group! - withSummary.gap), 'the summary and «Последнее» at the centre of the gap').toBeLessThanOrEqual(TOL);
+      expect(Math.abs(withSummary.group! - withSummary.gap), 'the summary at the centre of the gap').toBeLessThanOrEqual(TOL);
+      // Б1: «Последнее» — a line of ≈ 22 px along the bottom of the gap, the width of the water, never over a plank
+      expect(withSummary.info, '«Последнее» is on the table').not.toBeNull();
+      expect(Math.abs(withSummary.info!.height - 22)).toBeLessThanOrEqual(2);
+      expect(withSummary.info!.toPlanks).toBeGreaterThanOrEqual(-1);
+      expect(withSummary.info!.toPlanks).toBeLessThanOrEqual(8);
+      expect(Math.abs(withSummary.info!.left) + Math.abs(withSummary.info!.right)).toBeLessThanOrEqual(2 * 8);
       await expect(page.getByTestId('turn-summary')).toHaveCount(0, { timeout: 10_000 });
       const u3 = await page.evaluate(() => (window as unknown as { u3: { frames: number; summary: number; bad: string[] } }).u3);
       expect(u3.summary, 'the summary was seen').toBeGreaterThan(0);
       expect(u3.bad).toEqual([]);
 
       // The own turn at rest.
-      await expect(page.getByTestId('middle-info')).toContainText('Нажмите карту или «Залп»');
-      const rest = await middle(page);
-      expect(Math.abs(rest.group! - rest.gap), '«Последнее» and the hint at the centre of the gap').toBeLessThanOrEqual(TOL);
+      // the hint «выберите карту или действие» is in the top plaque; the line at the bottom holds «Последнее» only
+      await expect(page.locator('[data-fx-instruction]')).toContainText('выберите карту или действие');
+      await expect(page.getByTestId('middle-info')).toContainText('Последнее:');
+      await expect(page.getByTestId('middle-info')).not.toContainText('Нажмите карту');
       await expectHeads(page);
       await expectColumns(page, laptop);
       if (!laptop) {

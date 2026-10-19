@@ -286,27 +286,32 @@ function SceneTable({
         <div className="sea-table" ref={seaRef}>
           <div className="sea-water" aria-hidden />
           <div className="planks top">{columns(top).map(renderPlank)}</div>
-          <div className="middle" data-fx-gap />
+          <div className="middle" data-fx-gap>
+            {/* «&strip=1»: the line «Последнее» of the game (e2e: nothing lies over it) */}
+            {new URLSearchParams(location.search).get('strip') === '1' && <p className="middle-info" data-testid="middle-info">Последнее: «Жемчужина» откладывает в Планы: 2 карты — а вот это очень длинная запись журнала, которую строка обрежет многоточием.</p>}
+          </div>
           <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
         </div>
-        <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={null} hint={null} fxGen={fx.gen} />
         {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
-        <div className="hand-row" data-fx-hand>
-          <Hand
-            s={view}
-            data={data}
-            seat={seat}
-            tabs={[]}
-            onTab={() => {}}
-            offOf={() => null}
-            chosen={null}
-            noteOf={() => undefined}
-            onCard={(_holder, code) => setCard(code)}
-            onDiscard={() => {}}
-            label={`Рука «${seatLabel(data, seat)}»`}
-          />
+        <div className="board-bottom">
+          <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={null} hint={null} fxGen={fx.gen} />
+          <div className="hand-row" data-fx-hand>
+            <Hand
+              s={view}
+              data={data}
+              seat={seat}
+              tabs={[]}
+              onTab={() => {}}
+              offOf={() => null}
+              chosen={null}
+              noteOf={() => undefined}
+              onCard={(_holder, code) => setCard(code)}
+              onDiscard={() => {}}
+              label={`Рука «${seatLabel(data, seat)}»`}
+            />
+          </div>
         </div>
         <FxLayer fx={fx} />
       </main>

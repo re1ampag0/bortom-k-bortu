@@ -594,15 +594,26 @@ export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: nu
   return t0 + 600 + e.amount * T.repair.unit;
 }
 
-/** Where the played card lies: at the edge of the gap on the player's side, so it does not cover the planks. */
-function cardSpot(ctx: FxCtx) {
-  const g = gapBox(ctx), W = ctx.board.clientWidth, sc = W < 701 ? 0.7 : 0.9;
-  return { x: W / 2 - 55 * sc, y: g.cy - 64 * sc, s: sc, r: 0 };
+/**
+ * Where the played card lies (Б2): at the plank of the ship that played it, on the side of the sea — under a top plank, over
+ * the line «Последнее» above a bottom one — in the column of that plank, so the middle of the gap (the labels of the effects)
+ * stays free and no plank scale is covered. The card is 110×128; it shrinks when the gap is low.
+ */
+const CARD_W = 110, CARD_H = 128, LAST_H = 22;
+function cardSpot(ctx: FxCtx, ship?: string) {
+  const g = gapBox(ctx), W = ctx.board.clientWidth, base = W < 701 ? 0.7 : 0.9;
+  const sc = Math.min(base, Math.max(0.5, (g.h - LAST_H - 12) / CARD_H));
+  const w = CARD_W * sc, h = CARD_H * sc;
+  const pb = ship ? bx(ctx, plank(ctx, ship)) : null;
+  const x = Math.min(Math.max(pb ? pb.cx - w / 2 : W / 2 - w / 2, 8), W - w - 8);
+  const y = !pb ? g.cy - h / 2 : isTop(ctx, ship!) ? g.y + 4 : g.y + g.h - LAST_H - 4 - h;
+  return { x, y, s: sc, r: 0 };
 }
-/** The point the effects of the card fly from. */
+/** The point the effects of the card fly from: the middle of the card where it lies. */
 function cardFrom(ctx: FxCtx): Pt {
-  const s = cardSpot(ctx);
-  return { x: s.x + 55 * s.s, y: s.y + 64 * s.s };
+  const s = (CUR_CARD && CUR_CARD.el._pos) || cardSpot(ctx);
+  const sc = s.s ?? 0.9;
+  return { x: s.x + (CARD_W / 2) * sc, y: s.y + (CARD_H / 2) * sc };
 }
 /** An effect of a card: a projectile from the card into the cells (damage). */
 function cardDamage(ctx: FxCtx, e: { ship: string; track: Track; amount: number; toHull: number }, from: Pt, t0: number): number {
@@ -687,15 +698,15 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
   if (CUR_CARD && CUR_CARD.el.isConnected) A(ctx, CUR_CARD.el, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
   hint(ctx, `${nick(ctx, c.ship)}: ${cardName(ctx, c.card)}${c.target ? ` → ${nick(ctx, c.target)}` : ''}`);
   if (c.cost) payKegs(ctx, sideOf(ctx, c.ship), c.cost, 0);
-  const spot = cardSpot(ctx);
+  const spot = cardSpot(ctx, c.ship);
   const el = flyCard(ctx, c.card, cardOrigin(ctx, c.card, c.seat), spot, 0, 500, { ship: c.ship, legend });
   CUR_CARD = { el, code: c.card };
   A(ctx, el.firstElementChild!, [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], 260, 500, 'ease-out', 'none');
-  if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${spot.x + 55 * spot.s} ${spot.y + 64 * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
+  if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${spot.x + (CARD_W / 2) * spot.s} ${spot.y + (CARD_H / 2) * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
   // game: shorter than the reference (900 / 700 ms): players found the card at the middle hung too long. The full text
   // stays a press away (the Journal, «Сразу итог»).
   await wait(ctx, 550); // time to read the card
-  const from = { x: spot.x + 55 * spot.s, y: spot.y + 64 * spot.s };
+  const from = { x: spot.x + (CARD_W / 2) * spot.s, y: spot.y + (CARD_H / 2) * spot.s };
   const done: GameEvent[] = [];
   let t = 0;
   for (const e of c.effects || []) {
