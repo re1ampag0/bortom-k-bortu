@@ -78,7 +78,10 @@ test.describe('laptop 1366×660', () => {
     await page.getByTestId('fire').click();
     const plate = page.getByTestId('reaction-wait');
     await expect(plate).toBeVisible();
-    // «Пауза» holds the bot: the plate stays for the check and the screenshot.
+    // The clip of the Volley is on screen first, and the status bar describes the clip; «Пауза» stops a clip in the
+    // middle. So the clip goes by (the bar then names the team that decides), and only then «Пауза» holds the bot: the
+    // plate stays for the check and the screenshot.
+    await expect(page.getByTestId('instruction')).toContainText('Компания (бот) решает', { timeout: 30_000 });
     await page.locator('[data-testid="pause-show"]:visible').click();
     const nick = data.ships.find((x) => x.code === target)!.nick;
     await expect(plate).toContainText(new RegExp(`Залп «Жемчужина» → «${nick}»: \\d+ по Корпусу\\. Компания решает, ответить ли Реакцией…`));
