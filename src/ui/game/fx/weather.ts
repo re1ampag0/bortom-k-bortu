@@ -198,6 +198,12 @@ function fleet(w: Wx, host: HTMLElement): void {
 }
 
 /**
+ * e2e and scenes only: «&wxStill=1» keeps the planks still in the storm and the Ninth wave (the weather itself is drawn
+ * and moves as usual) — the checks of the layout measure the planks and press their buttons without the pitch.
+ */
+const planksStillForTest = () => typeof location !== 'undefined' && new URLSearchParams(location.search).get('wxStill') === '1';
+
+/**
  * Draws the weather of the round `key` into `host` (emptied before). `moving` — false with «простые спецэффекты»: the
  * same picture standing still. Sets the board's data-wx (the tint of the sea picture) and data-wx-move (the planks
  * pitch / heave) — game.css; both go when there is no weather.
@@ -209,7 +215,7 @@ export function drawWeather(ctx: FxCtx, host: HTMLElement, key: string | null, m
   const water = board.querySelector('.sea-water');
   if (!key || !ROUND_LONG.includes(key) || !water) { delete board.dataset.wx; delete board.dataset.wxMove; return; }
   board.dataset.wx = key;
-  if (moving && (key === 'storm' || key === 'wave')) board.dataset.wxMove = key;
+  if (moving && (key === 'storm' || key === 'wave') && !planksStillForTest()) board.dataset.wxMove = key;
   else delete board.dataset.wxMove;
   const sea = bx(ctx, water);
   const w: Wx = { ctx, sea, W: sea.w, H: sea.h, kx: sea.w / 1022, ky: sea.h / 404, moving, phone: isPhone(ctx), soft: moving && filters(ctx) };
