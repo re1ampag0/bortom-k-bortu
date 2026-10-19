@@ -4425,3 +4425,20 @@ button.star::before {
     animation: none;
   }
 }
+/* ⚙ «Залп на планшете: Порты» (rig, г): the Guns track is a piece of a ship's side: a live gun — an open port with the muzzle in
+   it, a lost one — a port shut with its lid (A5Rig, «Борт планшета»). The cells stay the contract of the animations. */
+.game.view-guns-ports .t-guns .cells {
+  gap: 3px;
+  padding: 0 2px;
+  background: linear-gradient(#5a4430, #3a2a1c 12%, #2a2018);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px #140c06;
+}
+.game.view-guns-ports .t-guns .cells i {
+  width: 17px;
+  height: 25px;
+  background: url('./art/rig/port-closed.svg') center / contain no-repeat !important;
+}
+.game.view-guns-ports .t-guns .cells i.on {
+  background-image: url('./art/rig/port-open.svg') !important;
+}
