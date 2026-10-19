@@ -52,11 +52,61 @@
   color: #22180c;
 }
 .cs-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 12.5px;
   font-weight: 700;
   color: #e8d6b0;
-  opacity: 0.9;
   text-align: right;
+}
+/* the Powder of the team: the Hold lies under the sheet while aiming */
+.cs-hold {
+  padding: 2px 9px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(239, 227, 200, 0.28);
+  color: #f6dd95;
+  font-family: var(--font-num);
+  white-space: nowrap;
+}
+/* the whole card: the pointer held 0.4 s on it (a laptop), a long press (a phone) — over the sheet, in the middle */
+.cs-peek {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 20px);
+  z-index: 6;
+  translate: -50% 0;
+  pointer-events: none;
+  animation: cs-peek 0.15s ease-out both;
+}
+@keyframes cs-peek {
+  from {
+    opacity: 0;
+    scale: 0.92;
+  }
+}
+.cs-peek .hcard {
+  width: 210px;
+  height: 270px;
+  rotate: none;
+  translate: none;
+  box-shadow:
+    0 0 0 2.5px #e0bd62,
+    0 18px 36px rgba(0, 0, 0, 0.65);
+}
+.cs-peek .hcard-head {
+  height: 26px;
+  font-size: 12.5px;
+}
+.cs-peek .hcard-name {
+  font-size: 21px;
+}
+.cs-peek .hcard-big {
+  font-size: 15px;
+}
+.cs-peek .hcard-text {
+  font-size: 14px;
 }
 .cs-cards {
   display: flex;
@@ -68,6 +118,8 @@
 .cs-card {
   position: relative;
   flex: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 .cs-card .hcard {
   rotate: none;
@@ -89,8 +141,8 @@
 }
 .cs-seal {
   position: absolute;
-  right: -10px;
-  top: -18px;
+  right: -21px;
+  top: -22px;
   z-index: 2;
   width: 30px;
   height: 30px;
@@ -101,26 +153,6 @@
   display: block;
   width: 30px;
   height: 30px;
-}
-.cs-card .info {
-  position: absolute;
-  bottom: 8px;
-  right: -9px;
-  z-index: 3;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1.5px solid #e0bd62;
-  background: #efe3c8;
-  color: #3d342b;
-  font-family: var(--font-num);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.cs-card.on .info {
-  bottom: 18px;
 }
 .cs-tag {
   position: absolute;
@@ -173,52 +205,45 @@
   flex: 1;
 }
 
-/* ——— a laptop: the sheet lies over the hand (the hand stays in place, unseen), the buttons where «Ход окончен» stands ——— */
+/* ——— a laptop: the sheet over the whole bottom of the table — the Hold, «Перестроение» and the hand under it — up to
+   «Отмена» and «Огонь!» in the place of «Ход окончен»; the laying out of frame 2 ——— */
 @media (min-width: 701px) {
+  .game.charge-open .board-bottom {
+    position: relative;
+  }
+  .game.charge-open .board-bottom > .charge-sheet {
+    position: absolute;
+    top: 0;
+    /* to the left edge and the foot of the window (the padding of the board: 12 px aside, 8 px below) */
+    bottom: -8px;
+    left: -12px;
+    right: 0;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 16px 8px;
+  }
   .game.charge-open .hand-row > .hand {
-    grid-column: 1;
-    grid-row: 1;
     visibility: hidden;
   }
-  .game.charge-open .hand-row > .charge-sheet {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: stretch;
-    z-index: 4;
-    display: grid;
-    grid-template-columns: minmax(180px, 250px) minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    gap: 6px 18px;
-    padding: 10px 16px 8px;
-    min-height: 170px;
-  }
+  /* below 1280 px the buttons stand in the row of the hand: the sheet stops at them */
   .game.charge-open .hand-row > .hand-actions {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  .charge-sheet .cs-head {
-    grid-column: 1;
-    grid-row: 1;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-  .charge-sheet .cs-note {
-    text-align: left;
+    position: relative;
+    z-index: 9;
   }
   .charge-sheet .cs-cards {
-    grid-column: 2;
-    grid-row: 1 / -1;
-    justify-content: flex-start;
-    padding-top: 14px;
+    flex: 1;
+    min-height: 0;
+    align-items: center;
+    padding-top: 4px;
   }
   .charge-sheet .cs-paid,
   .charge-sheet .slipw {
-    grid-column: 1;
-    align-self: end;
+    flex: none;
   }
-  .charge-sheet .slip {
-    max-width: 250px;
+  .charge-sheet .cs-paid {
+    align-self: center;
   }
   /* the buttons in the place of «Ход окончен»: «Отмена» over «Огонь!» (300 × 66) */
   .hand-actions.charge-mode .charge-btns {
@@ -237,6 +262,11 @@
     width: 300px;
   }
 }
+@media (min-width: 701px) and (max-width: 1279px) {
+  .game.charge-open .board-bottom > .charge-sheet {
+    right: 324px;
+  }
+}
 
 /* ——— a phone: from below, in the place of the hand and the bottom panel (frame 2) ——— */
 @media (max-width: 700px) {
@@ -246,7 +276,7 @@
   .game.charge-open .hand-row {
     min-height: calc(var(--charge-h) - 61px);
   }
-  .game.charge-open .hand-row > .charge-sheet {
+  .game.charge-open .board-bottom > .charge-sheet {
     position: fixed;
     left: 0;
     right: 0;
@@ -257,9 +287,9 @@
     flex-direction: column;
     gap: 6px;
     padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
-    overflow: hidden;
+    overflow: visible;
   }
-  .game.charge-open .hand-row > .charge-sheet::before {
+  .game.charge-open .charge-sheet::before {
     content: '';
     flex: none;
     width: 46px;
@@ -297,14 +327,6 @@
     min-height: 0;
     font-size: 10.5px;
   }
-  .cs-card .info,
-  .cs-card.on .info {
-    right: 4px;
-    bottom: 4px;
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
-  }
   .charge-sheet .slip {
     font-size: 12px;
     padding: 5px 12px;
@@ -321,7 +343,7 @@
 }
 @media (max-width: 700px) {
   /* a window opened from the sheet («i» of a card or of a ship) lies over it */
-  .game.charge-open:has(.sheet-backdrop) .hand-row > .charge-sheet {
+  .game.charge-open:has(.sheet-backdrop) .board-bottom > .charge-sheet {
     z-index: 1;
   }
 }

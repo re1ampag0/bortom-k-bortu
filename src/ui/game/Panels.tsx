@@ -1,6 +1,6 @@
 // Panels of decisions: on a laptop in the middle of the table, on a phone as a bottom sheet in place of the hand.
 // Every number in them comes from the engine (hints.ts); a choice the rules refuse is grey with the reason.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { choiceFor } from '../../engine/cards';
 import {
   TRACK_DATIVE,
@@ -102,10 +102,11 @@ const CHECK_SEAL = `<svg viewBox="-15 -15 30 30" aria-hidden="true"><path d="${A
 }).join(' ')} Z" fill="#9a1f16" stroke="#4a0a06" stroke-width=".6"/><circle r="9.6" fill="#7e1a12"/><circle r="9.6" fill="none" stroke="#c94a3a" stroke-width=".6" opacity=".7"/><path d="M-5 0.4 L-1.4 4 L5.4 -3.6" fill="none" stroke="#f6dccb" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 /**
- * PH 4: the sheet «Заряд» — an oak deck with a brass edge in the place of the hand (a phone: from below). Only the Charges
- * of this Volley; the chosen one lifted with a wax seal, a press again — without a Charge; too dear or not allowed — grey
- * with the reason; the sum of the terms on a slip of paper only with «Подсказки». A laptop puts «Отмена» and «Огонь!» in
- * the place of «Ход окончен» (ChargeButtons), a phone at the foot of the sheet.
+ * PH 4: the sheet «Заряд» — an oak deck with a brass edge over the whole bottom of the table (a phone: from below), as
+ * frame 2: the plate «Заряд» and the Hold at the top, only the Charges of this Volley in the middle, the chosen one lifted
+ * under a wax seal, a press again — without a Charge; too dear or not allowed — grey; the sum on a slip of paper under the
+ * cards only with «Подсказки». The whole card: a laptop — the pointer held on it 0.4 s, a phone — a long press. A laptop
+ * puts «Отмена» and «Огонь!» in the place of «Ход окончен» (ChargeButtons), a phone at the foot of the sheet.
  */
 export function ChargeSheet({
   s,
@@ -115,7 +116,6 @@ export function ChargeSheet({
   charges,
   buttons,
   setMode,
-  onInfo,
 }: {
   s: GameState;
   data: GameData;
@@ -126,10 +126,27 @@ export function ChargeSheet({
   /** A phone: «Отмена» and «Огонь!» at the foot of the sheet. */
   buttons: React.ReactNode;
   setMode: (m: AimMode) => void;
-  onInfo: (holder: string, code: string) => void;
 }) {
   const { p } = volleyNow(s, data, mode);
   const paidCharge = mode.charge && cardByCode(data, mode.charge).fx.paid;
+  const side = s.ships[mode.shooter].side;
+  // the whole card under the pointer (0.4 s) or the finger (a long press); a long press does not choose the card
+  const [peek, setPeek] = useState<{ card: string; from: string } | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPress = useRef(false);
+  useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
+  const later = (o: ChargeChoice, ms: number, long: boolean) => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      setPeek({ card: o.card, from: o.from });
+      if (long) longPress.current = true;
+    }, ms);
+  };
+  const stop = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    setPeek(null);
+  };
   /** The Volley with this Charge: its preview when a target is chosen. */
   const previewWith = (o: ChargeChoice) =>
     mode.target ? previewVolley(s, data, volleyOrder({ ...mode, charge: o.card, chargeFrom: o.from, paid: 0 }, mode.target)) : null;
@@ -144,7 +161,12 @@ export function ChargeSheet({
     <section className="panel charge-sheet oak-sheet" data-testid="volley-panel">
       <div className="cs-head">
         <span className="cs-title">Заряд</span>
-        <span className="cs-note">{note}</span>
+        <span className="cs-note">
+          {note}
+          <span className="cs-hold" data-testid="charge-hold">
+            Трюм {s.teams[side].powder} из {data.econ.cap}
+          </span>
+        </span>
       </div>
       <div className="cs-cards">
         {charges.map((o) => {
@@ -155,7 +177,20 @@ export function ChargeSheet({
           const plan = s.ships[o.from].plans.includes(o.card);
           const big = c.big.length <= 8 ? `${c.big} ` : '';
           return (
-            <div key={`${o.from}-${o.card}`} className={`cs-card ${on ? 'on' : ''} ${why ? 'off' : ''}`} data-testid={o.offered ? 'captain-charge' : undefined}>
+            <div
+              key={`${o.from}-${o.card}`}
+              className={`cs-card ${on ? 'on' : ''} ${why ? 'off' : ''}`}
+              data-testid={o.offered ? 'captain-charge' : undefined}
+              onPointerEnter={(e) => e.pointerType === 'mouse' && later(o, 400, false)}
+              onPointerLeave={(e) => e.pointerType === 'mouse' && stop()}
+              onPointerDown={(e) => {
+                longPress.current = false;
+                if (e.pointerType !== 'mouse') later(o, 450, true);
+              }}
+              onPointerUp={(e) => e.pointerType !== 'mouse' && stop()}
+              onPointerCancel={stop}
+              onContextMenu={(e) => e.preventDefault()}
+            >
               {o.offered && <span className="cs-tag">Заряд капитана</span>}
               <HandCard
                 data={data}
@@ -164,16 +199,21 @@ export function ChargeSheet({
                 off={why}
                 chosen={on}
                 note={hints && pv?.ok ? `${big}→ итог ${pv.damage}` : undefined}
-                onClick={() => !why && setMode({ ...mode, charge: on ? null : o.card, chargeFrom: on ? null : o.from, paid: 0 })}
+                onClick={() => {
+                  if (longPress.current) return void (longPress.current = false);
+                  if (!why) setMode({ ...mode, charge: on ? null : o.card, chargeFrom: on ? null : o.from, paid: 0 });
+                }}
               />
               {on && <i className="cs-seal" title="Заряжено" aria-hidden dangerouslySetInnerHTML={{ __html: CHECK_SEAL }} />}
-              <button className="info" aria-label={`Карта «${c.name}» целиком`} onClick={() => onInfo(o.from, o.card)}>
-                i
-              </button>
             </div>
           );
         })}
       </div>
+      {peek && (
+        <div className="cs-peek" data-testid="charge-peek" aria-hidden>
+          <HandCard data={data} code={peek.card} plan={s.ships[peek.from].plans.includes(peek.card)} off={null} />
+        </div>
+      )}
       {paidCharge && (
         <div className="stepper cs-paid">
           <span>Доплатить Порохом (+1 урон за каждый)</span>

@@ -723,7 +723,6 @@ export function Game({
           charges={charges}
           buttons={phone ? btns : null}
           setMode={setMode}
-          onInfo={(holder, code) => setSheet({ k: 'card', seat: holder, code })}
         />
       );
     } else if (mode.k === 'card') dock = <CardParamsPanel s={s} data={data} mode={mode} setMode={setMode} onAct={(a) => act(a)} onCancel={cancel} />;
@@ -1177,6 +1176,7 @@ export function Game({
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
         <div className="board-bottom">
+          {chargeSheet}
           <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={fx.gen} />
           <div className="hand-row" data-fx-hand>
             {seat && (
@@ -1215,7 +1215,6 @@ export function Game({
                 folded={alarmFolded}
               />
             )}
-            {chargeSheet}
             {!wideLog && handActions}
           </div>
         </div>
