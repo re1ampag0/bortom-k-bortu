@@ -1209,10 +1209,10 @@ export function Game({
           <h2>Судовой журнал</h2>
           <LogList data={data} log={shownLog} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />
           <div className="log-actions">
-            <button className="btn small" onClick={() => setSheet({ k: 'log' })}>
+            <button className="brs-btn" onClick={() => setSheet({ k: 'log' })}>
               Весь журнал
             </button>
-            <button className="btn small" onClick={downloadLog}>
+            <button className="brs-btn" onClick={downloadLog}>
               Скачать
             </button>
           </div>
@@ -1294,6 +1294,7 @@ export function Game({
           <LogList
             data={data}
             log={enemyTurnLines(shownLog, other(bottom))}
+            full={shownLog}
             fresh={freshFrom}
             onCard={(code) => setSheet({ k: 'info', code, back: 'lastTurn' })}
             onSea={(code) => setSheet({ k: 'sea', code, back: 'lastTurn' })}
