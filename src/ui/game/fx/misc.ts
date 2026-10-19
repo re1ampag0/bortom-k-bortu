@@ -413,6 +413,15 @@ export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): numb
   const art = el.querySelector('.ship-art');
   const pb = visible(art) ? bx(ctx, art) : { x: hb.x + 6, y: hb.y, w: 40, h: hb.h, cx: hb.x + 26, cy: hb.cy, r: hb.x + 46, b: hb.b };
   const svg = fxSvg(ctx), small = isPhone(ctx), group = fireGroup(ctx);
+  // A11 (b): the air shimmers over the plank — pale wavy bands in the layer above it swing sideways and breathe (drawn first: the flames take the rest of the budget of the layer); the plank itself is
+  // not touched (a filter on it would blur its text), so nothing of it is distorted
+  for (let i = 0, m = room(ctx, 6); i < m; i++) {
+    const y = b.y + b.h * (0.12 + (0.78 * i) / Math.max(1, m - 1)), n = Math.max(3, Math.round(b.w / 44));
+    const d = `M${R1(b.x)} ${R1(y)} q22 ${i % 2 ? -5 : 5} 44 0${' t44 0'.repeat(n - 1)}`;
+    const band = sv(svg, `<path d="${d}" fill="none" stroke="#fff3d6" stroke-width="${R1(5 + (i % 3) * 2)}" stroke-linecap="round"/>`);
+    const swing = Array.from({ length: 9 }, (_, q) => ({ transform: `translate(${q % 2 ? 9 : -9}px,${q % 3 === 0 ? -2 : 2}px)`, opacity: q === 0 || q === 8 ? 0 : 0.1 + (q % 2) * 0.1 }));
+    A(ctx, band, swing, F.glow, delay + i * 120, 'ease-in-out', 'both');
+  }
   const glow = overlayAt(ctx, 'fx-fireglow', b);
   A(ctx, glow, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.8, offset: 0.5 }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], F.glow, delay);
   const flames = fireWall(ctx, svg, b.x + 6, b.r - 6, b.b + 2, small ? 20 : 30, { delay, spread: 26, life: F.glow, embers: small ? 12 : 30, host: group });
