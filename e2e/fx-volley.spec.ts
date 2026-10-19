@@ -181,3 +181,23 @@ test.describe('frames for the comparison with the reference', () => {
     });
   }
 });
+
+// A11 (a): the first iron ball that falls short skips off the water — one more ball (the hop) than the Volley has shots. The scene
+// «plain» has 3 balls; with «&diag=1» (Диагональ −1) it has 2 hits and 1 ball into the water, which skips: 4 balls.
+for (const [q, balls] of [['', 3], ['&diag=1', 4]] as const) {
+  test(`ricochet: «plain${q}» draws ${balls} iron balls`, async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 660 });
+    await page.addInitScript(() => {
+      const w = window as unknown as { __n: number };
+      w.__n = 0;
+      const tick = () => {
+        document.querySelectorAll<SVGGElement & { __id?: number }>('.fx-layer svg g.ball').forEach((g) => { if (!g.__id) g.__id = ++w.__n; });
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await page.goto(`?fxScene=plain&speed=normal${q}`);
+    await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 60_000 });
+    expect(await page.evaluate(() => (window as unknown as { __n: number }).__n)).toBe(balls);
+  });
+}

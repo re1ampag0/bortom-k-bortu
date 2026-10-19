@@ -43,6 +43,8 @@ export const T = {
     fall: 1000,
     /** a spout of water of a miss */
     splash: 1700,
+    /** the first ball that falls short skips off the water: the hop to the second splash */
+    skip: 380,
     /** after the last ball: the smoke rolls, the marks stay a while */
     linger: 1500,
     /** the plate and the frames fade */
