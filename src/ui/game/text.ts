@@ -7,6 +7,14 @@ export const SIDE_LABEL: Record<Side, { name: string; gen: string; acc: string; 
   КОМПАНИЯ: { name: 'Компания', gen: 'Компании', acc: 'Компанию', dat: 'Компании', upper: 'КОМПАНИЯ' },
 };
 
+/** I, II, III … — the round on the brass plate (A5: «Пираты · раунд II»). */
+export function roman(n: number): string {
+  const R: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+  let out = '';
+  for (const [v, l] of R) while (n >= v) (out += l), (n -= v);
+  return out;
+}
+
 /** Pause before each bot move. «Мгновенно» is for tests: no pause at all. */
 export const SPEEDS: Record<Speed, { label: string; ms: number }> = {
   slow: { label: 'медленно (2 с)', ms: 2000 },

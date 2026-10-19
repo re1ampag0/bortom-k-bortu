@@ -12,9 +12,9 @@ import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type SeaFrame
 import { clearTrace, loadTrace } from './fx/trace';
 import { cardClass, CostBadge, HandCard } from './Hand';
 import { memo } from './memo';
-import { roman, statuses, type Btn } from './Table';
+import { statuses, type Btn } from './Table';
 import { CELLS } from './art/cells';
-import { SIDE_LABEL, SPEEDS } from './text';
+import { roman, SIDE_LABEL, SPEEDS } from './text';
 
 /** A window over the table: on a laptop in the middle, on a phone a bottom sheet. Closed by the cross or outside. */
 export function Sheet({ title, onClose, children, wide, testid }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string }) {
