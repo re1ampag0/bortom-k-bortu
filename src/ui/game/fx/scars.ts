@@ -8,17 +8,20 @@
 // Where they live: on the sea (.fx-scars — over the weather of the round, under the planks) or on a ship
 // (.plank-scars inside its plank — it moves and shakes with the plank). Nothing of them takes a press.
 import type { FxCtx } from './primitives';
+import { T } from './timing';
 
 export type ScarLife = 'short' | 'medium' | 'long';
 /** [holds, fades] in ms: short — smoke, ink, marks of a hit; medium — cracks, scorch; long — a wreck, the bottle. */
 export const SCAR_LIFE: Record<ScarLife, [number, number]> = { short: [3000, 9000], medium: [9000, 12000], long: [14000, 14000] };
+/** V5: the breakdown plate of a Volley stays for a little after its clip, then fades (it is not counted in SCAR_MAX). */
+export const PLATE_LIFE: [number, number] = [T.volley.plateLinger, T.volley.fade];
 export const SCAR_MAX = 6;
 /** The quick fade of a trace pushed out by a newer one, or taken away by a repair. */
 export const SCAR_GONE = 2000;
 
 /** How long a trace holds and fades: half as long with «простые спецэффекты». */
-export function scarSpan(life: ScarLife, rich: boolean): [number, number] {
-  const [hold, fade] = SCAR_LIFE[life];
+export function scarSpan(life: ScarLife | 'plate', rich: boolean): [number, number] {
+  const [hold, fade] = life === 'plate' ? PLATE_LIFE : SCAR_LIFE[life];
   return rich ? [hold, fade] : [hold / 2, fade / 2];
 }
 /** The opacity of a trace of this age: 1 while it holds, then down to 0 over its fade; null — it is over. */
@@ -95,13 +98,13 @@ function fadeOut(s: Scar): void {
 }
 
 /** Marks an element as a trace: it holds, dissolves and goes. `owner` — the ship it belongs to (a repair takes it away). */
-export function scar<T extends HTMLElement | SVGElement>(el: T, life: ScarLife = 'short', owner = ''): T {
+export function scar<T extends HTMLElement | SVGElement>(el: T, life: ScarLife | 'plate' = 'short', owner = ''): T {
   const [hold, fade] = scarSpan(life, clock().rich);
   el.dataset.scar = life;
   if (owner) el.dataset.owner = owner;
   el.style.pointerEvents = 'none';
   scars.push({ el, owner, age: 0, hold, fade, gone: null });
-  overflowScars(scars.filter((s) => !s.gone)).forEach(fadeOut);
+  overflowScars(scars.filter((s) => !s.gone && s.el.dataset.scar !== 'plate')).forEach(fadeOut);
   run();
   return el;
 }
@@ -130,4 +133,13 @@ export function hitMark(ctx: FxCtx, code: string, x: number, y: number, k = 1): 
   Object.assign(m.style, { left: `${x - (hb.left - b.left) - w / 2}px`, top: `${y - (hb.top - b.top) - h / 2}px`, width: `${w}px`, height: `${h}px` });
   host.appendChild(m);
   scar(m, 'short', code);
+}
+
+/** V5: the plate of the Volley stays on the table for a little after the clip; a press on the table (or the next Volley) takes it away at once. */
+export function dropPlates(): void {
+  scars = scars.filter((s) => {
+    if (s.el.dataset.scar !== 'plate') return true;
+    s.el.remove();
+    return false;
+  });
 }

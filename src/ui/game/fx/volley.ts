@@ -15,7 +15,7 @@ import { deckCards, legendCards } from '../../../engine/data';
 import { TRACK_DATIVE } from '../../../engine/hints';
 import { shipData, type Term } from '../../../engine/state';
 import type { GameData, Track } from '../../../engine/types';
-import { hitMark, scar, seaScars } from './scars';
+import { dropPlates, hitMark, scar, seaScars } from './scars';
 import { SMOKE_LIFE, T } from './timing';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
@@ -81,8 +81,8 @@ const SHOOTER = 'fx-shooter', TARGETED = 'fx-targeted';
 function placePlate(ctx: FxCtx, shooter: string): PlateBox {
   const g = gapBox(ctx), W = ctx.board.clientWidth;
   const s = bx(ctx, plank(ctx, shooter));
-  // game: wider than the reference (176 / 212) — the breakdown is set larger to be read at a glance.
-  const pw = W < 701 ? 204 : 262;
+  // V5: A5Volley.html — 300 px on a laptop, 220 on a phone (390 px too).
+  const pw = W < 701 ? 220 : 300;
   // The plate stands in the column the shooter is not in: over the gap, and if it is taller than the gap — over the
   // shooter's ally (fitPlate), never over the target, where the cannonballs land.
   const x = s.cx < W / 2 ? W - pw - 12 : 12;
@@ -107,8 +107,8 @@ export function termRows(ctx: FxCtx, terms: Term[] | null | undefined, cls: Reco
     return `<span class="${c}">${esc(capFirst(t.what))}</span><span class="${t.n < 0 ? 'neg' : pos ? 'pos' : ''} ${c}">${pos ? '+' : ''}${t.n < 0 ? '−' + -t.n : t.n}</span>`;
   }).join('');
 }
-export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage, was, terms, cls, extra = '' }: { shooter: string; declared?: string; target: string; track: Track; damage: number; was?: number | null; terms?: Term[] | null; cls?: Record<string, string>; extra?: string }): string {
-  const who = `<b>${esc(nick(ctx, shooter))}</b> → ${declared && declared !== target ? `<s>${esc(nick(ctx, declared))}</s> ` : ''}<b>${esc(nick(ctx, target))}</b>${VS && VS.diagonal ? ', по диагонали' : ''}`;
+export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage, was, terms, cls, extra = '', diagonal }: { shooter: string; declared?: string; target: string; track: Track; damage: number; was?: number | null; terms?: Term[] | null; cls?: Record<string, string>; extra?: string; diagonal?: boolean }): string {
+  const who = `<b>${esc(nick(ctx, shooter))}</b> → ${declared && declared !== target ? `<s>${esc(nick(ctx, declared))}</s> ` : ''}<b>${esc(nick(ctx, target))}</b>${(diagonal ?? !!(VS && VS.diagonal)) ? ', по диагонали' : ', напротив'}`;
   return `<div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
     (terms ? `<div class="terms">${termRows(ctx, terms, cls)}</div>` : '') + extra;
 }
@@ -119,6 +119,23 @@ function fitPlate(ctx: FxCtx) {
   const y = h <= g.h - 6 ? g.cy - h / 2 : isTop(ctx, VS.shooter) ? g.b - h - 2 : g.y + 2;
   VS.plate.style.top = y + 'px';
   if (VS.plateBox) VS.plateBox.y = y;
+}
+/**
+ * V5: the plate is not taken away with the clip: it passes to the traces (fx/scars.ts, 'plate') — stays ≈ 2 s more, fades,
+ * and a press on the table drops it at once. The layer is empty when the show ends (the e2e of the layer count on it).
+ */
+function holdPlate(vs: NonNullable<typeof VS>) {
+  const el = vs.plate;
+  const host = el && el.isConnected ? el.closest('.board')?.querySelector<HTMLElement>(':scope > .fx-scars') : null;
+  if (!el || !host) return;
+  for (const a of el.getAnimations()) {
+    try { a.commitStyles(); } catch { /* an animation without a target style */ }
+    a.cancel();
+  }
+  el.style.opacity = '1';
+  host.appendChild(el);
+  scar(el, 'plate');
+  vs.plate = undefined;
 }
 function clearVS(ctx: FxCtx, fade = true) {
   if (!VS) return;
@@ -158,6 +175,7 @@ const PLAY = PLAY_VOLLEY as unknown as {
 };
 
 PLAY.announce = async (c, ctx) => {
+  dropPlates();
   if (VS && VS.done) clearVS(ctx, false);
   const side = sideOf(ctx, c.shooter);
   const part2 = c.part === 2;
@@ -374,7 +392,7 @@ PLAY.shot = async (c, ctx) => {
     } else if (b.out === 'overkill' || b.out === 'moon') {
       const p1 = b.out === 'moon' ? fxPoint(ctx, c.target, 'crew', 0) : { x: tb.x + tb.w * (0.3 + 0.4 * Math.random()), y: tb.cy };
       flyBall(curve(p0, p1, 0.05 * down), FLY, t0);
-      if (b.out === 'moon') { burst(ctx, 'sparkle', p1.x, p1.y, t0 + FLY, 6, 6, 18, 600); tag(ctx, p1.x, p1.y - 16 * down, b.label || 'Лунный свет −1', t0 + FLY, '', 1500); }
+      if (b.out === 'moon') { burst(ctx, 'sparkle', p1.x, p1.y, t0 + FLY, 6, 6, 18, 600); tag(ctx, p1.x, p1.y - 16 * down, b.label || 'Лунный свет −1', t0 + FLY, 'mod', 1500); }
       else { flash(ctx, p1.x, p1.y, t0 + FLY, 1.4); burst(ctx, 'dust', p1.x, p1.y, t0 + FLY, 6, 8, 24, 700); }
       lastHit = Math.max(lastHit, t0 + FLY);
     } else if (b.out === 'water' || b.out === 'wind' || b.out === 'past') {
@@ -389,7 +407,7 @@ PLAY.shot = async (c, ctx) => {
         if (ctx.rich) { const gu = mk(ctx, 'gust', 0, 0, '<svg viewBox="0 0 220 40" width="220" height="40"><g fill="none" stroke="#9FB6C6" stroke-width="2" stroke-linecap="round"><path d="M2 14 C60 4 120 26 218 12"/><path d="M20 30 C80 22 140 38 200 26" opacity=".7"/></g></svg>'); A(ctx, gu, [{ opacity: 0, transform: `translate(${mid.x - 40}px,${mid.y + 6}px) scaleX(.4)` }, { opacity: 0.9, offset: 0.3 }, { opacity: 0, transform: `translate(${mid.x + 90}px,${mid.y + 10}px) scaleX(1)` }], 650, t0 + FLY * 0.35); } }
       flyBall(pts, d, t0, { lift: 0.15 });
       if (VS && VS.dust) { burst(ctx, 'dust', end.x, end.y, t0 + d * 0.6, 8, 6, 22, 700); } else if (b.out === 'past') splash(ctx, end.x, end.y, t0 + d); else missSplash(ctx, svg, end.x, end.y, 0.85 * gunScale, t0 + d, T.volley.splash);
-      if (b.label) tag(ctx, end.x + (end.x > ctx.board.clientWidth / 2 ? -10 : 10), end.y - 26 * down, b.label, t0 + d + 40, '', 1700);
+      if (b.label) tag(ctx, end.x + (end.x > ctx.board.clientWidth / 2 ? -10 : 10), end.y - 26 * down, b.label, t0 + d + 40, 'mod', 1700);
     } else if (b.out === 'bounce') {
       const edge = { x: tb.x + tb.w * (0.25 + 0.18 * (i % 3)), y: facingY(ctx, c.target) - down * 6 };
       fly(ctx, ball(), curve(p0, edge, 0.04 * down), FLY * 0.9, t0, { fadeEnd: false });
@@ -397,23 +415,23 @@ PLAY.shot = async (c, ctx) => {
       burst(ctx, 'spark', edge.x, edge.y, t2, 9, 12, 28, 420, down > 0 ? -Math.PI / 2 : Math.PI / 2, Math.PI * 1.3);
       const back = { x: edge.x + (i % 2 ? 34 : -34), y: edge.y - down * 46 };
       A(ctx, ball(), [{ transform: `translate(${edge.x}px,${edge.y}px)`, opacity: 1 }, { transform: `translate(${back.x}px,${back.y}px) scale(.8)`, opacity: 0 }], 420, t2, 'cubic-bezier(.1,.6,.4,1)', 'forwards');
-      if (b.label) tag(ctx, edge.x, edge.y - down * 30, b.label, t2, '', 1700);
+      if (b.label) tag(ctx, edge.x, edge.y - down * 30, b.label, t2, 'mod', 1700);
     } else if (b.out === 'stick') {
       const edge = { x: tb.x + tb.w * 0.82, y: facingY(ctx, c.target) + down * 3 };
       fly(ctx, ball(), curve(p0, edge, 0.05 * down), FLY, t0, { fadeEnd: false });
       burst(ctx, 'splinter', edge.x, edge.y, t0 + FLY, 5, 8, 18, 500); flash(ctx, edge.x, edge.y, t0 + FLY, 0.7);
-      if (b.label) tag(ctx, edge.x, edge.y - down * 26, b.label, t0 + FLY, '', 1900);
+      if (b.label) tag(ctx, edge.x, edge.y - down * 26, b.label, t0 + FLY, 'mod', 1900);
     } else if (b.out === 'whirl') {
       const g = gapBox(ctx), cx = ctx.board.clientWidth / 2, cy = g.cy, R0 = Math.min(60, ctx.board.clientWidth * 0.12);
       const spiral = Array.from({ length: 14 }, (_, j) => { const a = (j / 13) * Math.PI * 3, rr = R0 * (1 - j / 13); return { x: cx + Math.cos(a) * rr, y: cy + Math.sin(a) * rr * 0.55 }; });
       fly(ctx, ball(), [...curve(p0, { x: cx + R0, y: cy - 6 }, 0.1, 8), ...spiral.slice(1)], FLY * 1.6, t0, { lift: 0.05 });
-      if (b.label) tag(ctx, cx, cy - 34, b.label, t0 + FLY, '', 1800);
+      if (b.label) tag(ctx, cx, cy - 34, b.label, t0 + FLY, 'mod', 1800);
     } else if (b.out === 'block') {
       const tr = bx(ctx, trackEl(ctx, c.target, 'crew'));
       const end = { x: tr.x + 10 + (i % 3) * 12, y: tr.cy };
       fly(ctx, ball(), curve(p0, end, 0.05 * down), FLY, t0, { fadeEnd: false });
       burst(ctx, 'dust', end.x, end.y, t0 + FLY, 5, 6, 18, 600);
-      if (b.label && !labelled.has(b.label)) { labelled.add(b.label); tag(ctx, tr.cx, tr.y - 12, b.label, t0 + FLY, '', 1800); }
+      if (b.label && !labelled.has(b.label)) { labelled.add(b.label); tag(ctx, tr.cx, tr.y - 12, b.label, t0 + FLY, 'mod', 1800); }
     }
   });
   const endShots = FUSE + c.shots.length * STEP + FLY_HIT * 1.2;
@@ -431,6 +449,7 @@ PLAY.shot = async (c, ctx) => {
   await wait(ctx, Math.max(Math.max(endShots, lastHit) + (c.fire ? Math.max(1100, T.volley.linger) : T.volley.linger), soulsEnd + 100));
   unleanAll(ctx);
   vs.done = true;
+  holdPlate(vs);
   clearVS(ctx, true);
   await wait(ctx, 260);
 };

@@ -20,7 +20,7 @@ import { tookPress } from '../InfoTip';
 import { trace } from './trace';
 import { loadSettings } from '../../storage';
 import { PLAY_LEGENDS } from './legends';
-import { setScarClock } from './scars';
+import { dropPlates, setScarClock } from './scars';
 import { PLAY_SEA, renderWeather } from './sea';
 import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
 import './fx.css';
@@ -234,6 +234,7 @@ export function useFxQueue({
     SCENES.forEach((x) => x.reset(layer?.parentElement ?? null));
     if (!layer) return;
     layer.innerHTML = '';
+    dropPlates();
     const board = layer.parentElement!;
     board.querySelectorAll(':scope > .fx-scars > .fx-temp').forEach((el) => el.remove());
     const weather = weatherRef.current;
@@ -470,6 +471,7 @@ export function useFxQueue({
   }, [finish]);
 
   const press = useCallback(() => {
+    dropPlates();
     if (running.current) finish('нажатие по столу');
   }, [finish]);
 

@@ -70,6 +70,39 @@ test.describe('the Volley on the table through ?fxScene (1366×660)', () => {
   });
 });
 
+test.describe('V5: the breakdown plate (1366×660)', () => {
+  test.use({ viewport: { width: 1366, height: 660 } });
+
+  test('it stays ≈ 2 s after the clip, then goes by itself; the layer is empty meanwhile', async ({ page }) => {
+    await open(page, 'storm');
+    await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
+    expect(await page.locator('.fx-layer > *').count()).toBe(0);
+    await expect(page.locator('.fx-scars > .plate')).toHaveCount(1);
+    await expect(page.locator('.fx-scars > .plate')).toHaveCount(0, { timeout: 8000 });
+  });
+
+  test('a press on the table takes it away at once', async ({ page }) => {
+    await open(page, 'storm');
+    await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
+    await expect(page.locator('.fx-scars > .plate')).toHaveCount(1);
+    await page.mouse.click(5, 300);
+    await expect(page.locator('.fx-scars > .plate')).toHaveCount(0, { timeout: 500 });
+  });
+});
+
+test.describe('V5: the plate on a phone (390×844)', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('the same plate, 220 px wide, inside the table', async ({ page }) => {
+    await open(page, 'plain');
+    await page.waitForFunction(() => !!document.querySelector('.fx-layer > .plate'));
+    const box = await page.locator('.fx-layer > .plate').first().boundingBox();
+    expect(Math.round(box!.width)).toBe(220);
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+  });
+});
+
 test.describe('a bot match (1366×660)', () => {
   test.use({ viewport: { width: 1366, height: 660 } });
 
