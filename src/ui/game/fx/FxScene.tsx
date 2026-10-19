@@ -187,7 +187,9 @@ function SceneTable({
   setCard: (code: string | null) => void;
 }) {
   const view = started ? setup.end : setup.start;
-  const bottom = data.ships.find((s) => s.code === scene.viewer[0])!.side;
+  // «&viewer=<ship>» (FX-B): the table as that ship's team sees it (e.g. «Кракен» on a target of the top row)
+  const viewer = new URLSearchParams(location.search).get('viewer') ?? scene.viewer[0];
+  const bottom = (data.ships.find((s) => s.code === viewer) ?? data.ships.find((s) => s.code === scene.viewer[0])!).side;
   const top: Side = bottom === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ';
   const speed = urlSpeed();
   // «?speed=instant» (S1): the layer is off, as in the game at «мгновенно» — the table is at once the result.
