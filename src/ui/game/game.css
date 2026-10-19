@@ -4051,6 +4051,7 @@ button.star::before {
   background: linear-gradient(#fffbe6, #fbe7a6 40%, #d9ae52 62%, #fff0b8);
   -webkit-background-clip: text;
   background-clip: text;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
 }
 /* a long label («Сейчас ход Компании») goes tighter instead of being cut at once */
 .oak-btn.oak-long .oak-pan b {
