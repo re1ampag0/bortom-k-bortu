@@ -52,7 +52,7 @@ import { FxLayer, useFxQueue } from './fx/FxLayer';
 import { T } from './fx/timing';
 import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
-import { Button, Plank, RoundButton, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
+import { Button, OakButton, Plank, RoundButton, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
 import { TableThings, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
@@ -1083,7 +1083,7 @@ export function Game({
         ))}
         {net ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" />}
       </div>
-      <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+      <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       {allyReady && (
         <p className="ally-ready" data-testid="ally-ready">
           «{shipData(data, allyReady.code).nick}»: готово — ход закончится, когда нажмёте вы
@@ -1213,7 +1213,7 @@ export function Game({
         </button>
         {canHold && <Button b={pauseBtn} className="pause" />}
         {botBusy ? <Button b={botBtns[1]} /> : net ? <Button b={remindBtn} /> : <Button b={undoBtn} className="undo" />}
-        <Button b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+        <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       </nav>
       {net && <MissedSheet game={net} />}
 

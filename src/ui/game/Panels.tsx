@@ -17,6 +17,7 @@ import { cardByCode, seaCardByCode, seatShip, shipData, startValue, type Action,
 import type { GameData, Side, Track } from '../../engine/types';
 import { wxSvg } from './art/wx';
 import { HandCard } from './Hand';
+import { OakButton } from './Table';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const nick = (data: GameData, code: string) => `«${shipData(data, code).nick}»`;
@@ -173,14 +174,19 @@ export function VolleyPanel({
         <button className="btn" onClick={onCancel}>
           Отмена
         </button>
-        <button
-          className="btn primary"
-          data-testid="fire"
-          aria-disabled={!p?.ok}
-          onClick={() => p?.ok && mode.target && onFire({ type: 'volley', ...volleyOrder(mode, mode.target) })}
-        >
-          Огонь · {powderWord(cost)}
-        </button>
+        <OakButton
+          b={{
+            key: 'fire',
+            label: 'Огонь!',
+            primary: true,
+            disabled: !p ? 'Выберите цель' : p.ok ? null : p.reason,
+            onClick: () => mode.target && onFire({ type: 'volley', ...volleyOrder(mode, mode.target) }),
+            testid: 'fire',
+          }}
+          sign="muzzle"
+          className="fire-btn"
+          sub={powderWord(cost)}
+        />
       </div>
     </Panel>
   );

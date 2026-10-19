@@ -15,6 +15,7 @@ import { ALARM_SEAL, TARGET_SEAL } from './art/seal';
 import type { Loss } from './alarm';
 import { hourglassSvg } from './art/table';
 import { wxSvg } from './art/wx';
+import { oakMedal, type OakSign } from './art/oak';
 import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, TRIDENT_SVG, statusSvg, type StatusIcon } from './art/status';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
@@ -56,6 +57,33 @@ export function Button({ b, className = '' }: { b: Btn; className?: string }) {
       ) : (
         breakAfterArrow(b.label)
       )}
+    </button>
+  );
+}
+
+/**
+ * The oak board with the wine panel and the brass medallion (A5Rig «Ход окончен»): «Ход окончен», «Огонь!» and «Реванш».
+ * The label is the text of the button (the sign is a picture; CSS sets the capitals), `sub` — a small line under it.
+ */
+export function OakButton({ b, className = '', sign = 'anchor', sub }: { b: Btn; className?: string; sign?: OakSign; sub?: ReactNode }) {
+  // each button gets its own copy of the picture: the ids inside are unique to it
+  const medal = useRef<string>();
+  medal.current ??= oakMedal(sign);
+  return (
+    <button
+      className={`btn oak-btn ${b.label.length > 13 ? 'oak-long' : ''} ${className}`}
+      onClick={b.disabled ? undefined : b.onClick}
+      aria-disabled={!!b.disabled}
+      title={b.disabled ?? undefined}
+      data-testid={b.testid}
+    >
+      <span className="oak-in">
+        <span className="oak-med" aria-hidden dangerouslySetInnerHTML={svg(medal.current)} />
+        <span className="oak-pan">
+          <b>{b.label}</b>
+          {sub && <small>{sub}</small>}
+        </span>
+      </span>
     </button>
   );
 }
