@@ -257,6 +257,7 @@ export function LogList({
   data,
   log,
   full,
+  chrono,
   fresh,
   onCard,
   onSea,
@@ -265,6 +266,8 @@ export function LogList({
   log: LogLine[];
   /** The whole log the lines come from (a part of it, «Что было за ход»): the turns of «раунд·ход» are counted on it. */
   full?: LogLine[];
+  /** The book (LogBook): the oldest line first, as written; otherwise the newest first. */
+  chrono?: boolean;
   fresh: number;
   onCard: (code: string) => void;
   onSea: (code: string) => void;
@@ -275,13 +278,13 @@ export function LogList({
     const m = logMarks(all);
     return new Map(all.map((l, i) => [l, m[i]]));
   }, [all, all.length]);
-  const lines = [...log].reverse();
+  const lines = chrono ? log : [...log].reverse();
   // PH 5: a page of the ship's book — on the margin the icon of the line and «раунд·ход», the line in ink, the cards
   // underlined in bordeaux, a vignette between the rounds, the lines shown now under a yellow marker
   return (
     <ol className="log-list" data-testid="log">
       {lines.map((l, i) => (
-        <li key={log.length - i} className={`log-${l.kind} ${l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? 'log-sep' : ''} ${l.action >= fresh ? 'fresh' : ''}`}>
+        <li key={chrono ? i : log.length - i} className={`log-${l.kind} ${l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? 'log-sep' : ''} ${l.action >= fresh ? 'fresh' : ''}`}>
           {l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? (
             <span className="log-round-line">
               <i className="lr-orn" aria-hidden />
