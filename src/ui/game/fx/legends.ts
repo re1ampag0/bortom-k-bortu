@@ -166,7 +166,7 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   // the rays turn 18 s a turn (the CSS loop of the prototype, here by the clock of the show)
   const tOut = L.cardAt + L.land + L.hit + L.sealHit + L.hold, tOrb = tOut + L.orbAt;
   A(ctx, rays, [{ opacity: 0, transform: 'scale(.6) rotate(0deg)' }, { opacity: 1, transform: 'scale(1) rotate(18deg)', offset: L.rays / (tOrb + 600 - L.raysAt) }, { opacity: 1, transform: `scale(1) rotate(${R1(((tOrb - L.raysAt) / 18000) * 360)}deg)`, offset: (tOrb - L.raysAt) / (tOrb + 600 - L.raysAt) }, { opacity: 0, transform: `scale(1) rotate(${R1(((tOrb + 600 - L.raysAt) / 18000) * 360)}deg)` }], tOrb + 600 - L.raysAt, L.raysAt, 'linear', 'forwards');
-  motes(ctx, isPhone(ctx) ? 24 : 46, W * 0.1, W * 0.9, H * 0.62, H * 0.92);
+  motes(ctx, 46, W * 0.1, W * 0.9, H * 0.62, H * 0.92);
   // 3. the card bursts out of the medallion along an arc, grows, turns over
   const path = qpts(mb.cx, mb.cy, (mb.cx + cx) / 2 + (mb.cx < cx ? -60 : 60), Math.max(Math.min(190, cy), Math.min(mb.cy, cy) - 140), cx, cy, 24);
   A(ctx, card, path.map((p, i) => ({ opacity: i ? 1 : 0, transform: pose(p.x, p.y, (0.08 + 0.92 * Math.pow(i / 24, 1.6)) * S, (1 - i / 24) * -24) })), L.fly, L.cardAt, 'cubic-bezier(.3,.1,.2,1)');

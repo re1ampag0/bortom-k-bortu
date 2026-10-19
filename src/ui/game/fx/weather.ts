@@ -3,11 +3,11 @@
 // layer of the weather (.fx-weather, clipped to the water): under the traces and under the planks.
 // game: drawn in the coordinates of the real sea (.sea-water), the prototype's numbers of its 1022×404 sea scale with it;
 // the loops are endless Web Animations of the weather layer (no SMIL: the layer keeps them, «Сразу итог» leaves them);
-// on a phone the weather is lighter (fewer drops, no blurred clouds); «простые спецэффекты» — the weather stands still
+// a phone has the same weather as a laptop (PH 7: all the drops, the blurred clouds); «простые спецэффекты» — the weather stands still
 // (the same picture, nothing moves, no filters). The planks pitch (storm) or heave (the Ninth wave) by CSS (game.css,
 // .board[data-wx-move]), the sea picture is tinted by CSS (.board[data-wx]).
 import { bigShip } from '../art/bigShips';
-import { bx, filters, isPhone, plank, type Box, type FxCtx } from './primitives';
+import { bx, filters, plank, type Box, type FxCtx } from './primitives';
 
 const NS = 'http://www.w3.org/2000/svg';
 const R1 = (n: number) => Math.round(n * 10) / 10;
@@ -26,7 +26,6 @@ interface Wx {
   kx: number;
   ky: number;
   moving: boolean;
-  phone: boolean;
   /** blur, turbulence */
   soft: boolean;
 }
@@ -53,15 +52,15 @@ const inSea = (w: Wx, b: Box) => ({ x: b.x - w.sea.x, y: b.y - w.sea.y, w: b.w, 
 /** The storm: no flat dimming — the sea turns grey-green (CSS on the sea picture), cloud shadows sweep, curtains of rain,
  *  sheets of rain, whitecaps flash; far lightning at the edge; the planks pitch (CSS). */
 function storm(w: Wx, host: HTMLElement): void {
-  const { W, H, kx, ky, phone } = w;
+  const { W, H, kx, ky } = w;
   const clouds = w.soft ? [[0, 120, 260, 22], [1, 300, 200, 30], [2, 40, 300, 26]] : [];
   const s = seaSvg(w, host, 'wx-storm', `<defs>${w.soft ? '<filter id="wxCloudB" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter>' : ''}
 <linearGradient id="wxCurtain" x1="0" x2="1"><stop offset="0" stop-color="#cfdde2" stop-opacity="0"/><stop offset=".5" stop-color="#cfdde2" stop-opacity=".22"/><stop offset="1" stop-color="#cfdde2" stop-opacity="0"/></linearGradient>
 <radialGradient id="wxStormV" cx=".5" cy=".5" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#05090c" stop-opacity=".45"/></radialGradient></defs>
 ${clouds.map(([, y, rx]) => `<ellipse class="cl" cx="0" cy="${R1(y * ky)}" rx="${R1(rx * kx)}" ry="${R1(rx * kx * 0.45)}" fill="#0a141a" opacity=".42" filter="url(#wxCloudB)"/>`).join('')}
-${[0, 1].map(() => `<g class="cu"><rect x="0" y="0" width="${R1(220 * kx)}" height="${R1(H)}" fill="url(#wxCurtain)"/>${Array.from({ length: phone ? 14 : 40 }, () => `<path d="M${R1(rnd(10, 210) * kx)} ${R1(rnd(-20, H))} l-7 26" stroke="#e6f0f3" stroke-width="1.2" opacity=".6"/>`).join('')}</g>`).join('')}
-${[0, 1].map((k) => `<g opacity="${k ? 0.4 : 0.62}"><g class="sh">${Array.from({ length: phone ? 26 : 80 }, () => `<path d="M${R1(rnd(-40, W + 60))} ${R1(rnd(-60, H))} l-6 ${k ? 16 : 22}" stroke="#d9e8ee" stroke-width="${k ? 0.8 : 1.1}" stroke-linecap="round"/>`).join('')}</g></g>`).join('')}
-${Array.from({ length: phone ? 12 : 34 }, () => { const x = R1(rnd(20, W - 40)), y = R1(rnd(20, H - 10)), ww = R1(rnd(10, 24) * Math.max(0.7, kx)); return `<path class="wc" d="M${x} ${y} q${R1(ww / 2)} -5 ${ww} 0 q-${R1(ww * 0.3)} 2 -${R1(ww * 0.6)} 1" fill="#f2f7f8" stroke="#f2f7f8" stroke-width="1" opacity="${w.moving ? 0 : 0.45}"/>`; }).join('')}
+${[0, 1].map(() => `<g class="cu"><rect x="0" y="0" width="${R1(220 * kx)}" height="${R1(H)}" fill="url(#wxCurtain)"/>${Array.from({ length: 40 }, () => `<path d="M${R1(rnd(10, 210) * kx)} ${R1(rnd(-20, H))} l-7 26" stroke="#e6f0f3" stroke-width="1.2" opacity=".6"/>`).join('')}</g>`).join('')}
+${[0, 1].map((k) => `<g opacity="${k ? 0.4 : 0.62}"><g class="sh">${Array.from({ length: 80 }, () => `<path d="M${R1(rnd(-40, W + 60))} ${R1(rnd(-60, H))} l-6 ${k ? 16 : 22}" stroke="#d9e8ee" stroke-width="${k ? 0.8 : 1.1}" stroke-linecap="round"/>`).join('')}</g></g>`).join('')}
+${Array.from({ length: 34 }, () => { const x = R1(rnd(20, W - 40)), y = R1(rnd(20, H - 10)), ww = R1(rnd(10, 24) * Math.max(0.7, kx)); return `<path class="wc" d="M${x} ${y} q${R1(ww / 2)} -5 ${ww} 0 q-${R1(ww * 0.3)} 2 -${R1(ww * 0.6)} 1" fill="#f2f7f8" stroke="#f2f7f8" stroke-width="1" opacity="${w.moving ? 0 : 0.45}"/>`; }).join('')}
 <rect width="${R1(W)}" height="${R1(H)}" fill="url(#wxStormV)"/>
 ${[[120, 7], [880, 9.5], [520, 12]].map(([x]) => `<g class="bo" opacity="0"><ellipse cx="${R1(x * kx)}" cy="0" rx="160" ry="70" fill="#f4f8ff" opacity=".35"/><path d="M${R1(x * kx)} -4 l-8 18 l10 2 l-14 26 l6 -18 l-10 -2 Z" fill="#fff8d8"/></g>`).join('')}`);
   s.querySelectorAll('.cl').forEach((c, i) => { const [, , rx, d] = clouds[i]; loop(w, c, [{ transform: `translateX(${R1((-rx - i * 300) * kx)}px)` }, { transform: `translateX(${R1(W + rx * kx)}px)` }], d * 1000, -i * 8000); });
@@ -74,13 +73,13 @@ ${[[120, 7], [880, 9.5], [520, 12]].map(([x]) => `<g class="bo" opacity="0"><ell
 /** The Ninth wave: a real swell — a lifted back, a dark front, a torn foam crest throwing spray back, every 8 s; the
  *  planks ride up and down as it passes under their middle (CSS, a delay by the place of each). */
 function wave(w: Wx, host: HTMLElement): void {
-  const { W, H, kx, phone } = w, P = 8000, run = 0.62;
+  const { W, H, kx } = w, P = 8000, run = 0.62;
   const off = (y: number) => 52 * kx * Math.sin((Math.PI * (y + 30)) / (H + 60)); // the crest bows forward in the middle
   const line = (dx: number, step = 12, jit = 5) => { const pts: string[] = []; for (let y = -30; y < H + 40; y += step) pts.push(`${R1(off(y) + dx + rnd(-jit, jit))} ${y}`); return 'M' + pts.join(' L'); };
   const crestD = line(0);
-  const blobs = Array.from({ length: phone ? 40 : 90 }, () => { const y = rnd(-10, H + 10); return `<ellipse cx="${R1(off(y) + rnd(-10, 8))}" cy="${R1(y)}" rx="${R1(rnd(4, 12))}" ry="${R1(rnd(3, 7))}" fill="#f4f9fa" opacity="${R1(rnd(0.6, 1))}"/>`; }).join('');
-  const lace = Array.from({ length: phone ? 6 : 12 }, (_, i) => `<path d="${line((-22 - i * 16 - rnd(0, 8)) * Math.max(0.6, kx), 16, 8)}" fill="none" stroke="#e8f4f7" stroke-width="${R1(2.2 - i * 0.14)}" stroke-dasharray="${R1(rnd(10, 30))} ${R1(rnd(8, 26))}" opacity="${R1(0.75 - i * 0.05)}" stroke-linecap="round"/>`).join('');
-  const spray = Array.from({ length: phone ? 12 : 34 }, () => { const y = rnd(0, H); return `<circle class="sp" cx="${R1(off(y))}" cy="${R1(y)}" r="${R1(rnd(1.2, 2.8))}" fill="#f4f9fa"/>`; }).join('');
+  const blobs = Array.from({ length: 90 }, () => { const y = rnd(-10, H + 10); return `<ellipse cx="${R1(off(y) + rnd(-10, 8))}" cy="${R1(y)}" rx="${R1(rnd(4, 12))}" ry="${R1(rnd(3, 7))}" fill="#f4f9fa" opacity="${R1(rnd(0.6, 1))}"/>`; }).join('');
+  const lace = Array.from({ length: 12 }, (_, i) => `<path d="${line((-22 - i * 16 - rnd(0, 8)) * Math.max(0.6, kx), 16, 8)}" fill="none" stroke="#e8f4f7" stroke-width="${R1(2.2 - i * 0.14)}" stroke-dasharray="${R1(rnd(10, 30))} ${R1(rnd(8, 26))}" opacity="${R1(0.75 - i * 0.05)}" stroke-linecap="round"/>`).join('');
+  const spray = Array.from({ length: 34 }, () => { const y = rnd(0, H); return `<circle class="sp" cx="${R1(off(y))}" cy="${R1(y)}" r="${R1(rnd(1.2, 2.8))}" fill="#f4f9fa"/>`; }).join('');
   const band = (dx: number, sw: number, c: string, o: number) => `<path d="${line(dx * kx, 20, 0)}" fill="none" stroke="${c}" stroke-width="${R1(sw * kx)}" opacity="${o}"/>`;
   const s = seaSvg(w, host, 'wx-wave', `<defs>${w.soft ? '<filter id="wxFoam" x="-30%" y="-5%" width="160%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".09" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="10"/></filter><filter id="wxSoft" x="-50%" y="-5%" width="200%" height="110%"><feGaussianBlur stdDeviation="14 2"/></filter>' : ''}</defs>
 <g class="crest"><g ${w.soft ? 'filter="url(#wxSoft)"' : ''}>${band(-260, 160, '#2a5e72', 0.35)}${band(-120, 120, '#4c8ca2', 0.45)}${band(-34, 60, '#86c0d2', 0.55)}${band(50, 70, '#04141b', 0.6)}${band(110, 60, '#04141b', 0.25)}</g>
@@ -101,7 +100,7 @@ ${lace}<g ${w.soft ? 'filter="url(#wxFoam)"' : ''}><path d="${crestD}" fill="non
 
 /** The maelstrom that draws in: the foam runs down the spiral arms into the eye, the eye breathes, wreckage goes down. */
 function maelstrom(w: Wx, host: HTMLElement): void {
-  const { W, H, phone } = w, cx = W / 2, cy = (H * 196) / 404, R = Math.min(250 * w.kx, W * 0.42, (H * 0.48) / 0.36), sq = 0.36;
+  const { W, H } = w, cx = W / 2, cy = (H * 196) / 404, R = Math.min(250 * w.kx, W * 0.42, (H * 0.48) / 0.36), sq = 0.36;
   const spiral = (r0: number, r1: number, turns: number, a0: number, n = 140) => { const pts: [number, number][] = []; for (let i = 0; i <= n; i++) { const t = i / n, r = r0 * Math.pow(r1 / r0, t), a = a0 + t * turns * Math.PI * 2; pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r * sq]); } return pts; };
   const arms = [0, 1.05, 2.1, 3.15, 4.2, 5.25].map((a0) => spiral(R * 0.84, 7, 2.2, a0));
   const d = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${R1(x)} ${R1(y)}`).join(' ');
@@ -109,8 +108,8 @@ function maelstrom(w: Wx, host: HTMLElement): void {
 <ellipse cx="${R1(cx)}" cy="${R1(cy)}" rx="${R1(R)}" ry="${R1(R * sq)}" fill="url(#wxMael)"/>
 ${Array.from({ length: 7 }, (_, i) => { const k = 1 - i / 7.5; return `<ellipse cx="${R1(cx)}" cy="${R1(cy + i * 3.2)}" rx="${R1(R * 0.8 * k)}" ry="${R1(R * 0.29 * k)}" fill="#0a1e27" opacity="${R1(0.1 + i * 0.06)}" stroke="#7fb2c4" stroke-width=".6" stroke-opacity="${R1(0.5 - i * 0.05)}"/>`; }).join('')}
 <ellipse class="rim" cx="${R1(cx)}" cy="${R1(cy)}" rx="${R1(R * 0.86)}" ry="${R1(R * 0.31)}" fill="none" stroke="#eef6f8" stroke-width="2.6" stroke-dasharray="4 7 14 9" opacity=".75"/>
-${Array.from({ length: phone ? 8 : 14 }, (_, i) => { const t = (i / (phone ? 8 : 14)) * Math.PI * 2; return `<circle class="fd" cx="${R1(cx + Math.cos(t) * R * 0.86)}" cy="${R1(cy + Math.sin(t) * R * 0.31)}" r="1.6" fill="#eef6f8" opacity="${w.moving ? 0 : 0.6}"/>`; }).join('')}
-${arms.map((pts, i) => `<path class="arm" d="${d(pts)}" fill="none" stroke="#cfe8ef" stroke-width="${i % 2 ? 1.4 : 2.4}" stroke-linecap="round" stroke-dasharray="26 18" opacity="${i % 2 ? 0.55 : 0.85}"/>${phone ? '' : `<path class="arm2" d="${d(pts)}" fill="none" stroke="#8fc0cf" stroke-width="1" stroke-dasharray="8 12" opacity=".7"/>`}`).join('')}
+${Array.from({ length: 14 }, (_, i) => { const t = (i / (14)) * Math.PI * 2; return `<circle class="fd" cx="${R1(cx + Math.cos(t) * R * 0.86)}" cy="${R1(cy + Math.sin(t) * R * 0.31)}" r="1.6" fill="#eef6f8" opacity="${w.moving ? 0 : 0.6}"/>`; }).join('')}
+${arms.map((pts, i) => `<path class="arm" d="${d(pts)}" fill="none" stroke="#cfe8ef" stroke-width="${i % 2 ? 1.4 : 2.4}" stroke-linecap="round" stroke-dasharray="26 18" opacity="${i % 2 ? 0.55 : 0.85}"/><path class="arm2" d="${d(pts)}" fill="none" stroke="#8fc0cf" stroke-width="1" stroke-dasharray="8 12" opacity=".7"/>`).join('')}
 <ellipse class="eye" cx="${R1(cx)}" cy="${R1(cy)}" rx="16" ry="6" fill="#030a0d" style="transform-box:fill-box;transform-origin:center"/>
 ${w.moving ? (['plank', 'barrel', 'plank', 'plank', 'barrel'] as const).map((k) => `<g class="db">${k === 'plank' ? '<rect x="-9" y="-2.4" width="18" height="4.8" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.4 V2.4 M2 -2.4 V2.4" stroke="#6b4422" stroke-width=".6"/>' : '<ellipse rx="6" ry="7.4" fill="#8a5a32" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.4 H6 M-6 2.4 H6" stroke="#3a3530" stroke-width="1.1"/>'}</g>`).join('') : ''}`);
   const rim = s.querySelector('.rim');
@@ -164,7 +163,7 @@ function calm(w: Wx, host: HTMLElement): void {
 /** Wind: the crests run faster (CSS), gusts sweep over the sea. */
 function wind(w: Wx, host: HTMLElement): void {
   const { W, H, kx } = w;
-  const s = seaSvg(w, host, 'wx-wind', Array.from({ length: w.phone ? 7 : 12 }, (_, i) => { const y = R1(20 + (i * (H - 40)) / (w.phone ? 7 : 12) + rnd(-8, 8)), len = R1(rnd(70, 160) * Math.max(0.6, kx)); return `<path class="gu" d="M0 ${y} q${R1(len / 2)} -6 ${len} 0 q${R1(len * 0.15)} 3 ${R1(len * 0.3)} -4" fill="none" stroke="#eef6f8" stroke-width="${i % 3 ? 1.4 : 2.2}" stroke-linecap="round" opacity=".75" ${w.moving ? '' : `transform="translate(${R1(rnd(0, W - len))} 0)"`}/>`; }).join(''));
+  const s = seaSvg(w, host, 'wx-wind', Array.from({ length: 12 }, (_, i) => { const y = R1(20 + (i * (H - 40)) / (12) + rnd(-8, 8)), len = R1(rnd(70, 160) * Math.max(0.6, kx)); return `<path class="gu" d="M0 ${y} q${R1(len / 2)} -6 ${len} 0 q${R1(len * 0.15)} 3 ${R1(len * 0.3)} -4" fill="none" stroke="#eef6f8" stroke-width="${i % 3 ? 1.4 : 2.2}" stroke-linecap="round" opacity=".75" ${w.moving ? '' : `transform="translate(${R1(rnd(0, W - len))} 0)"`}/>`; }).join(''));
   s.querySelectorAll('.gu').forEach((e) => loop(w, e, [{ transform: `translateX(${R1(-200 * kx)}px)` }, { transform: `translateX(${R1(W + 40)}px)` }], rnd(1.4, 2.4) * 1000, -rnd(0, 2000)));
 }
 /**
@@ -196,7 +195,7 @@ function moon(w: Wx, host: HTMLElement): void {
   const { W, H, kx, ky } = w, mx = W / 2;
   const s = seaSvg(w, host, 'wx-moon', `<rect width="${R1(W)}" height="${R1(H)}" fill="#0a1430" opacity=".45"/><ellipse cx="${R1(mx)}" cy="-30" rx="${R1(120 * kx)}" ry="60" fill="#f3e6b0" opacity=".12"/>
 ${Array.from({ length: 18 }, (_, i) => { const y = R1((12 + i * 22) * ky), ww = R1((26 + i * 7) * Math.max(0.6, kx)); return `<path class="rd" d="M${R1(mx - ww / 2 + rnd(-12, 12))} ${y} h${ww}" stroke="#f3e6b0" stroke-opacity="${R1(0.95 - i * 0.04)}" stroke-width="${R1(3 - i * 0.08)}" stroke-linecap="round" opacity=".7"/>`; }).join('')}
-${Array.from({ length: w.phone ? 8 : 16 }, () => `<circle class="st" cx="${R1(rnd(20, W - 20))}" cy="${R1(rnd(10, H - 10))}" r="${R1(rnd(0.8, 1.6))}" fill="#f3e6b0" opacity="${w.moving ? 0 : 0.6}"/>`).join('')}`);
+${Array.from({ length: 16 }, () => `<circle class="st" cx="${R1(rnd(20, W - 20))}" cy="${R1(rnd(10, H - 10))}" r="${R1(rnd(0.8, 1.6))}" fill="#f3e6b0" opacity="${w.moving ? 0 : 0.6}"/>`).join('')}`);
   s.querySelectorAll('.rd').forEach((e) => loop(w, e, [{ opacity: 0.35 }, { opacity: 1 }, { opacity: 0.35 }], rnd(1.5, 2.6) * 1000, -rnd(0, 2000)));
   s.querySelectorAll('.st').forEach((e) => loop(w, e, [{ opacity: 0 }, { opacity: 0.9 }, { opacity: 0 }], rnd(2, 4) * 1000, -rnd(0, 4000)));
 }
@@ -235,7 +234,7 @@ export function drawWeather(ctx: FxCtx, host: HTMLElement, key: string | null, m
   if (moving && (key === 'storm' || key === 'wave') && !planksStillForTest()) board.dataset.wxMove = key;
   else delete board.dataset.wxMove;
   const sea = bx(ctx, water);
-  const w: Wx = { ctx, sea, W: sea.w, H: sea.h, kx: sea.w / 1022, ky: sea.h / 404, moving, phone: isPhone(ctx), soft: moving && filters(ctx) };
+  const w: Wx = { ctx, sea, W: sea.w, H: sea.h, kx: sea.w / 1022, ky: sea.h / 404, moving, soft: moving && filters(ctx) };
   if (key === 'storm') storm(w, host);
   else if (key === 'wave') wave(w, host);
   else if (key === 'maelstrom') maelstrom(w, host);

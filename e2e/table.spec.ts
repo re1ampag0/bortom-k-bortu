@@ -98,7 +98,7 @@ async function playToEnd(page: Page) {
     if (await visible(page, 'volley-panel')) {
       const fire = page.getByTestId('fire');
       if ((await fire.getAttribute('aria-disabled')) !== 'true') await fire.click();
-      else await page.getByTestId('volley-panel').getByRole('button', { name: 'Отмена' }).click();
+      else await page.getByTestId('cancel-volley').click();
       continue;
     }
     if (await enabled(page, 'end-turn')) {
@@ -240,7 +240,8 @@ test.describe('«Подсказки»', () => {
       await expect(page.getByTestId('target-seal-Г')).toBeVisible();
       await expect(page.getByTestId('ship-sheet')).toHaveCount(0);
       const panel = page.getByTestId('volley-panel');
-      await expect(panel.locator('.panel-head')).toContainText('по Корпусу «Голландец»');
+      // a5-log: the short result is always under «Огонь!» (the white window with its title is gone)
+      await expect(page.getByTestId('fire')).toContainText(/по «Голландцу» · \d+ по Корпусу/);
       // rig (а): «Огонь!» is the whole oak board (≥ 260 × 56) with its word and the price readable, not a square with a medallion
       const fire = page.getByTestId('fire');
       await expect(fire).toContainText('Огонь');
@@ -257,16 +258,19 @@ test.describe('«Подсказки»', () => {
       await page.locator('.sheet .close').first().click();
       await expect(page.getByTestId('ship-sheet')).toHaveCount(0);
       await expect(target).toHaveClass(/chosen/);
-      await expect(panel.locator('.panel-head')).toContainText('по Корпусу «Голландец»');
-      if (size.name === 'laptop') await expect(panel.locator('.choices.wide-block .choice')).toHaveCount(1);
-      // The Charge is chosen in the hand; the other cards are pale; no damage on the Charges.
+      await expect(page.getByTestId('fire')).toContainText(/по «Голландцу» · \d+ по Корпусу/);
+      // a5-log: without «Подсказки» no slip with the sum of the terms
+      await expect(panel.getByTestId('volley-slip')).toHaveCount(0);
+      // The Charge is chosen in the sheet «Заряд» (only Charges there); the other cards of the hand are pale; no damage on the Charges.
       await expect(page.locator('.hand .hcard.order').first()).toHaveClass(/off/);
-      await page.locator('.hand .hcard.charge').first().click();
-      await expect(page.locator('.hand .hcard.charge').first()).toHaveClass(/chosen/);
-      await expect(page.locator('.hand .hcard.charge').first()).not.toContainText('итог');
+      await expect(panel.locator('.hcard:not(.charge)')).toHaveCount(0);
+      await panel.locator('.hcard.charge').first().click();
+      await expect(panel.locator('.hcard.charge').first()).toHaveClass(/chosen/);
+      await expect(panel.locator('.cs-card.on .cs-seal')).toBeVisible();
+      await expect(panel.locator('.hcard.charge').first()).not.toContainText('итог');
       await expectFits(page);
       await shot(page, size.name, '10-volley-no-hints');
-      await panel.getByRole('button', { name: 'Отмена' }).click();
+      await page.getByTestId('cancel-volley').click();
       await page.locator('[data-testid="end-turn"]:visible').click();
       await expect(page.getByTestId('confirm-end')).toHaveCount(0);
     });
@@ -279,10 +283,11 @@ test.describe('«Подсказки»', () => {
       await page.getByTestId('plate-Г').click();
       await expect(page.getByTestId('plate-Г')).toHaveClass(/chosen/);
       const panel = page.getByTestId('volley-panel');
-      if (size.name === 'laptop') await expect(panel.locator('.choices.wide-block .choice b').first()).toHaveText(/^\d/);
-      await expect(page.locator('.hand .hcard.charge').first()).toContainText('итог');
+      // a5-log: with «Подсказки» the slip with the sum and «→ итог» on each Charge
+      await expect(panel.getByTestId('volley-slip')).toContainText(/= \d+ по/);
+      await expect(panel.locator('.hcard.charge').first()).toContainText('итог');
       await shot(page, size.name, '11-volley-hints');
-      await panel.getByRole('button', { name: 'Отмена' }).click();
+      await page.getByTestId('cancel-volley').click();
       await page.locator('[data-testid="end-turn"]:visible').click();
       await expect(page.getByTestId('confirm-end')).toBeVisible();
     });
