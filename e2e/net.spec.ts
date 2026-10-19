@@ -110,7 +110,7 @@ test('two tabs: a room by its code, a Volley and a Reaction, a reload brings the
   await expect(b.getByTestId('reaction-panel')).toBeVisible();
   await expect(b).toHaveTitle(/● Ваш ход/);
   await b.screenshot({ path: `${SHOTS}/iphone-2-reaction.png` });
-  await b.locator('.hand .hcard.reaction:not(.off)').first().click();
+  await b.locator('.as-card .hcard:not(.off)').first().click();
   await b.locator('[data-testid="play-reaction"]:visible').click();
   await expect(a.locator('.log-col')).toContainText('Реакция');
   // The window is offered again after a Reaction (RULES.md 12.5): Боря has nothing more to play.

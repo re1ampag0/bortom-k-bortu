@@ -4,9 +4,9 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { reactionNow, threatLine } from '../src/engine/hints';
-import { cardByCode } from '../src/engine/state';
 import { reactionWait } from '../src/ui/game/clarity';
-import { ReactionPanel } from '../src/ui/game/Panels';
+import { alarmInfo } from '../src/ui/game/alarm';
+import { ReactionSheet } from '../src/ui/game/Alarm';
 import { loadSettings, storeSettings } from '../src/ui/storage';
 import { act, cardIn, data, turnOf } from './helpers';
 
@@ -46,26 +46,44 @@ describe('the attacker waits for a Reaction', () => {
 });
 
 describe('the Reaction window without «Подсказки»', () => {
-  const window = (memo: boolean) => {
+  // The sheet of a phone: the Reactions as cards. «What happens now» comes from the engine under the card, «i» opens the card.
+  const window = (memo: boolean, hints = false) => {
     const s = act(turnOf('ПИРАТЫ', { И: ['Двойная обшивка'] }), { type: 'volley', ship: 'Ж', target: 'И' }).state;
     const card = cardIn(s, 'И', 'Двойная обшивка');
+    const info = alarmInfo(s, data)!;
     const html = renderToStaticMarkup(
-      createElement(ReactionPanel, { s, data, seats: ['И'], pick: null, memo, onAct: () => {}, onPick: () => {}, onInfo: () => {} }),
+      createElement(ReactionSheet, {
+        s,
+        data,
+        seats: ['И'],
+        hints,
+        memo,
+        pick: null,
+        folded: false,
+        fuse: null,
+        alarmOf: (seat: string, code: string) => (code === card ? { kind: 'ok' as const } : seat ? { kind: 'dim' as const } : null),
+        onPick: () => {},
+        onAct: () => {},
+        onInfo: () => {},
+        onFold: () => {},
+      }),
     );
-    return { s, card, html };
+    return { s, card, html, info };
   };
   const text = (html: string) => html.replace(/<[^>]+>/g, '');
 
-  it('each Reaction: the full text of the card, «what happens now» from the engine, «i»', () => {
+  it('each Reaction: «what happens now» from the engine, «i»', () => {
     const { s, card, html } = window(false);
-    const c = cardByCode(data, card);
-    expect(text(html)).toContain(text(c.text));
     const now = reactionNow(s, data, 'И', card);
     if (!now.ok) throw new Error(now.reason);
     expect(now.text).toMatch(/^Залп \d+ → \d+$/);
-    expect(html).toContain(`<b class="ro-effect">${now.text}</b>`);
+    expect(html).toContain(`<b class="ro-effect as-now">${now.text}</b>`);
     expect(html).toContain('data-testid="reaction-info"');
     expect(html).not.toContain('reaction-memo');
+  });
+
+  it('under «Подсказки» the strip of the card says it, the line under the card does not repeat it', () => {
+    expect(window(false, true).html).not.toContain('as-now');
   });
 
   it('the note on what a Reaction is, in the first window', () => {

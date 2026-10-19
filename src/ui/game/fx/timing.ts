@@ -47,6 +47,8 @@ export const T = {
     linger: 1500,
     /** the plate and the frames fade */
     fade: 450,
+    /** the breakdown plate stays after the clip (V5) */
+    plateLinger: 2000,
   }),
   /** A Fire burns the Hull at the start of a turn (fxFire of fx3.js): the fire runs along the plank, the boards of the
    *  Hull glow and char one by one, the flames die down; a Fire set by a shot or a card flares up for `ignite`. */
@@ -389,4 +391,10 @@ export const T = {
     /** the end of a card: what is left on the table settles */
     end: 900,
   }),
+  /** The windows of the interface (the CSS reads them through custom properties, see Alarm.tsx). */
+  ui: {
+    /** «Тревога!» rides in from the top / the bell swings */
+    alarmIn: 250,
+    bell: 600,
+  },
 } as const;
