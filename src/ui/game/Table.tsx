@@ -15,7 +15,7 @@ import { ALARM_SEAL, TARGET_SEAL } from './art/seal';
 import type { Loss } from './alarm';
 import { hourglassSvg } from './art/table';
 import { wxSvg } from './art/wx';
-import { KNOT_SVG } from './art/knot';
+import { KNOT_SVG, KNOT_THIN_SVG } from './art/knot';
 import { oakMedal, type OakSign } from './art/oak';
 import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, tridentSvg, statusSvg, type StatusIcon } from './art/status';
 
@@ -219,7 +219,7 @@ export const ROUND_ICON: Record<string, string> = {
  * button stays its accessible name and its text (`.wide`, hidden from sight); the caption is the label without its
  * leading symbol («⏸ Пауза» → «Пауза»).
  */
-export function RoundButton({ b, icon, className = '' }: { b: Btn; icon: string; className?: string }) {
+export function RoundButton({ b, icon, className = '', thin = false }: { b: Btn; icon: string; className?: string; thin?: boolean }) {
   const caption = b.label.replace(/^[^\p{L}]+/u, '');
   return (
     <button
@@ -232,7 +232,7 @@ export function RoundButton({ b, icon, className = '' }: { b: Btn; icon: string;
     >
       {/* A5Rig «турецкий узел»: the woven ring (art/knot.ts) round the brass disc with the icon */}
       <span className="round-disc" aria-hidden>
-        <span className="round-knot" dangerouslySetInnerHTML={svg(KNOT_SVG)} />
+        <span className="round-knot" dangerouslySetInnerHTML={svg(thin ? KNOT_THIN_SVG : KNOT_SVG)} />
         <span className="round-core" dangerouslySetInnerHTML={svg(ROUND_ICON[icon] ?? '')} />
       </span>
       <span className="round-cap" aria-hidden>

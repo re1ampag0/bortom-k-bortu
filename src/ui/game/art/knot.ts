@@ -48,3 +48,8 @@ function turksHead(cx: number, cy: number, r: number, A: number, B: number, w: n
 export const KNOT_SVG =
   `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><circle cx="32" cy="33.6" r="29" fill="#000" opacity=".28"/>` +
   `${turksHead(32, 32, 26, 2.6, 7, 3.4)}</svg>`;
+
+/** The same knot with strands half as thick, hugging the disc of the same size («Отменить» under the log, A5Rig). */
+export const KNOT_THIN_SVG =
+  `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><circle cx="32" cy="33.2" r="27" fill="#000" opacity=".24"/>` +
+  `${turksHead(32, 32, 24.4, 1.7, 7, 1.7)}</svg>`;
