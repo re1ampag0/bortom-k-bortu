@@ -20,7 +20,7 @@ import { SMOKE_LIFE, T } from './timing';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
 import {
-  A, at, ballFly, boom, bubbles, burst, bx, capFirst, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
+  A, at, ballFly, boom, bubbles, burst, bx, capFirst, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, smokeJet, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
   mk, moveTo, overlayAt, payKegs, pillAt, plank, projectile, puff, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
   tag, trackEl, wait, whirlpool, type FlyCard, type FxCtx,
 } from './primitives';
@@ -359,6 +359,9 @@ PLAY.shot = async (c, ctx) => {
       fuseSparks(ctx, svg, p0.x, p0.y, -down, Math.max(0, t0 - FUSE) * 0.3, FUSE * 0.62);
       const full = g < 3;
       gunFire(ctx, svg, full ? smoke : null, p0.x, p0.y + down * 4, Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale, t0, { grains: full ? 9 : 3, puffs: full ? 11 : 4, wads: full ? 4 : 0, life: SMOKE_LIFE, flash: T.volley.flash });
+      // A11 (c): a short breath of powder smoke over the planks (in the top layer), gone within T.volley.smokeOver ≤ 800 ms; the long
+      // smoke of the Volley lies under the planks (the trace of the sea)
+      if (full && g < 2) smokeJet(ctx, svg, p0.x, p0.y + down * 4, Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale * 0.8, 5, T.volley.smokeOver, t0);
       A(ctx, shooterEl, [{ translate: '0 0' }, { translate: `0 ${-down * 6}px`, offset: 0.15 }, { translate: '0 0' }], T.volley.flash, t0, 'ease-out', 'none');
       boom(ctx, Math.max(1, 4 - g), 260, t0);
       if (g === 0) flashBoard(ctx, '#ffcf8a', 0.12, 200, t0);

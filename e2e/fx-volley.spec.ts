@@ -201,3 +201,32 @@ for (const [q, balls] of [['', 3], ['&diag=1', 4]] as const) {
     expect(await page.evaluate(() => (window as unknown as { __n: number }).__n)).toBe(balls);
   });
 }
+
+// A11 (c): the powder smoke the guns breathe out is drawn in the top layer, over the planks' edge, and is gone within 800 ms
+// (the long smoke of the Volley lies under the planks). The puffs of a gun sit in a host group of several wrapped circles; the black smoke
+// of a hit sits straight in the layer svg and is not this one.
+test('powder smoke in the top layer is seen and lives at most 800 ms', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 660 });
+  await page.addInitScript(() => {
+    const w = window as unknown as { __smoke: { max: number; seen: number } };
+    w.__smoke = { max: 0, seen: 0 };
+    const since = new Map<Element, number>();
+    const tick = () => {
+      const now = performance.now();
+      document.querySelectorAll('.fx-layer svg circle[fill^="url(#fxSmk"]').forEach((c) => {
+        const host = c.parentElement!.parentElement!;
+        if (host.tagName !== 'g' || host.childElementCount < 3) return;
+        if (Number(getComputedStyle(c).opacity) <= 0.05) { since.delete(c); return; }
+        if (!since.has(c)) { since.set(c, now); w.__smoke.seen++; }
+        w.__smoke.max = Math.max(w.__smoke.max, now - since.get(c)!);
+      });
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  await page.goto('?fxScene=plain&speed=normal');
+  await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 60_000 });
+  const r = await page.evaluate(() => (window as unknown as { __smoke: { max: number; seen: number } }).__smoke);
+  expect(r.seen, 'puffs of powder smoke in the top layer').toBeGreaterThan(0);
+  expect(r.max, 'the longest a puff stays visible there, ms').toBeLessThanOrEqual(850);
+});
