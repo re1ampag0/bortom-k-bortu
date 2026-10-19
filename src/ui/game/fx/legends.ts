@@ -19,10 +19,10 @@ import { flipTo } from './misc';
 import type { JackClip, LegendClip } from './planFx';
 import {
   A, at, badgeMark, ballFly, boom, facingY, filters, flashBoard, fxSvg, missSplash, seaTemp, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, flash, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
-  qpts, ring, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, splash, sv, trackMark, visible, wait, whirlpool, wisp, type FxCtx, type Pt,
+  qpts, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, sv, trackMark, visible, wait, wisp, type FxCtx, type Pt,
 } from './primitives';
 import { CELLS } from '../art/cells';
-import { ART_FRAME, bottleArt, CORK, COST_ICON, COST_WORD, crackArt, EMBLEM, SEAL_HTML, TENT } from '../art/legendArt';
+import { ART_FRAME, bottleArt, compassArt, CORK, COST_ICON, COST_WORD, crackArt, EMBLEM, SEAL_HTML, TENT } from '../art/legendArt';
 import { ruleTag } from './sea';
 import { plankScars, scar, seaScars } from './scars';
 import { T } from './timing';
@@ -41,16 +41,6 @@ function legendCard(data: GameData, code: string): CardInstance {
 }
 
 /* ——— our own pictures (no frames or images from the films) ——— */
-export function compassSVG(): string {
-  const pts: string[] = [];
-  for (let k = 0; k < 16; k++) {
-    const a = (k * Math.PI) / 8, len = k % 4 === 0 ? 132 : k % 2 === 0 ? 92 : 62, wd = k % 4 === 0 ? 14 : 9;
-    const tip = [Math.sin(a) * len, -Math.cos(a) * len], l = [Math.sin(a - Math.PI / 2) * wd, -Math.cos(a - Math.PI / 2) * wd], r = [-l[0], -l[1]];
-    pts.push(`<polygon points="${tip} ${l} 0,0" fill="${k % 4 === 0 ? '#f6d77a' : '#e0c27a'}"/><polygon points="${tip} ${r} 0,0" fill="${k % 4 === 0 ? '#a27419' : '#8a6416'}"/>`);
-  }
-  const letters = ([['С', 0], ['В', 90], ['Ю', 180], ['З', 270]] as [string, number][]).map(([t, d]) => { const a = (d * Math.PI) / 180; return `<text x="${Math.sin(a) * 112}" y="${-Math.cos(a) * 112 + 6}" text-anchor="middle" font-family="Alegreya, Georgia, serif" font-weight="800" font-size="18" fill="#fff3c4">${t}</text>`; }).join('');
-  return `<svg viewBox="-150 -150 300 300" width="100%" height="100%"><circle r="143" fill="rgba(20,16,12,.35)" stroke="#e0b44c" stroke-width="3"/><circle r="128" fill="none" stroke="#e0b44c" stroke-width="1.2" stroke-dasharray="2 7"/><circle r="100" fill="none" stroke="#e0b44c" stroke-width="1" opacity=".6"/>${pts.reverse().join('')}${letters}<circle r="9" fill="#2a1c0e" stroke="#e0b44c" stroke-width="2"/></svg>`;
-}
 /** The pictures of the Legend cards by the code of the card (EMBLEM of the prototype). */
 const EMBLEM_OF: Record<string, keyof typeof EMBLEM> = { 'Г-Л': 'kraken', 'И-Л': 'armada', 'М-Л': 'bottle', 'Ж-Л': 'jack' };
 /** Russian typesetting (legendCardHTML of fx3.js): a number stays with its word, a short word stays with the next one. */
@@ -606,60 +596,106 @@ const playLegend = async (c: LegendClip, ctx: FxCtx) => {
 };
 
 /**
- * «Джек ускользает» (a Legend that is a Reaction; the clip «jack» comes by the event jackEscaped): the ship starts to
- * sink — time stops (the bubbles freeze, the table goes grey) — the entrance of the Legend — the compass rose spins —
- * «Ускользнул!» — the Hull 2 in gold — the jump out of the water and the change of places.
+ * «Джек ускользает» (fxJack of fx3.js, ANIMATIONS.md §3.5; T.jack; a Legend that is a Reaction — the clip «jack» comes by
+ * the event jackEscaped). She should sink: the last boards break, the water rises over the plank, she lists, bubbles;
+ * time freezes — everything around goes grey (a filter on her neighbours in the DOM, not on her plank), she keeps her
+ * colour and glows, rings of stopped time, droplets hang; the entrance of the Legend; a great compass (compassArt) over
+ * her — the needle spins wildly and points to the ally, a golden course is drawn; the water runs off, the colour comes
+ * back with a gold flash, she slips along the course with golden ghosts, the ally the other way (the change of places
+ * of the events); the Hull 2 shines, coins scatter. game: the Hull and the places are those of the events of the clip.
  */
 const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
-  const code = `${c.ship}-Л`, el = plank(ctx, c.ship), b = bx(ctx, el), W = ctx.board.clientWidth, H = ctx.board.clientHeight;
-  // it starts to sink
-  A(ctx, el, [{ transform: 'none', opacity: 1 }, { transform: 'rotate(-3deg) translateY(12px)', opacity: 0.8 }], 700, 0, 'ease-in', 'forwards');
-  const frozen: Animation[] = [];
-  for (let q = 0; q < (ctx.rich ? 16 : 4); q++) {
-    const bb = mk(ctx, 'bubble', 0, 0), x = b.x + 10 + Math.random() * (b.w - 20), y = b.b - 6;
-    frozen.push(A(ctx, bb, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.5)` }, { opacity: 1, offset: 0.2 }, { opacity: 0, transform: `translate(${x + (Math.random() - 0.5) * 16}px,${y - 50 - Math.random() * 40}px) scale(1.2)` }], 1400, q * 40, 'linear'));
+  const K = T.jack, code = `${c.ship}-Л`, el = plank(ctx, c.ship), b = bx(ctx, el), uid = ++LG_UID;
+  const hi = fxSvg(ctx);
+  // 1. she should sink: the last boards break, the water rises over the plank, she lists
+  const h0 = shownTrack(ctx, c.ship, 'hull');
+  for (let i = h0 - 1, t = 0; i >= 0; i--, t += K.board) {
+    const p = fxPoint(ctx, c.ship, 'hull', i);
+    if (i >= h0 - 3) { splintersSvg(ctx, hi, p.x, p.y, 5, t); sparksSvg(ctx, hi, p.x, p.y, 6, t); }
+    at(ctx, t, () => setTrack(ctx, c.ship, 'hull', i, '#7a1f12'));
   }
-  const wp = whirlpool(ctx, b.cx, b.b - 10, 200, Math.min(180, b.w * 0.6), 0);
+  if (h0) await wait(ctx, Math.min(3, h0) * K.board);
+  shake(ctx, el, 0, 6, 500);
+  const host = plankScars(ctx, c.ship) || el;
+  const water = document.createElement('div'); water.className = 'lg-jack-water'; host.appendChild(water);
+  A(ctx, water, [{ height: '0%' }, { height: '72%' }], K.sink, 0, 'ease-in', 'forwards');
+  const list = A(ctx, el, [{ translate: '0 0', rotate: '0deg' }, { translate: '0 8px', rotate: '1.8deg' }], K.sink, 0, 'ease-in', 'forwards');
+  for (let i = 0, m = room(ctx, 18); i < m; i++) {
+    const x = b.x + rnd(10, b.w - 10), o = sv(hi, `<circle r="${R1(rnd(2, 4))}" fill="none" stroke="#dff4f8" stroke-width="1"/>`);
+    A(ctx, o, [{ transform: `translate(${R1(x)}px,${R1(b.b)}px)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${R1(x)}px,${R1(b.y + rnd(0, 40))}px)`, opacity: 0 }], rnd(800, 1300), rnd(0, 1100));
+  }
   hint(ctx, `${nick(ctx, c.ship)} тонет…`);
-  await wait(ctx, 520);
-  // time stops
-  frozen.forEach((a) => a.pause());
-  wp.getAnimations({ subtree: true }).forEach((a) => a.pause());
-  const gray = mk(ctx, 'tint', 0, 0); gray.style.width = W + 'px'; gray.style.height = H + 'px'; gray.style.background = 'rgba(120,128,132,.38)';
-  A(ctx, gray, [{ opacity: 0 }, { opacity: 1 }], 160, 0, 'linear', 'forwards');
-  ring(ctx, b.cx, b.cy, 0, 3, '#e8eef2');
-  // game (S1): the explanation is in the middle of the table, not over the plank
-  ruleTag(ctx, b.cx, gapBox(ctx).cy, 'время замерло…', 60, '', 1100);
-  await wait(ctx, 220);
-  const outro = await legendIntro(ctx, code, c.ship, { cost: c.cost, target: c.ship });
-  // the compass rose
-  const cs = clamp(Math.min(b.w, b.h * 1.6), 200, 300);
-  const rose = mk(ctx, 'compass', 0, 0, compassSVG());
-  rose.style.width = rose.style.height = cs + 'px'; rose.style.margin = `${-cs / 2}px 0 0 ${-cs / 2}px`;
-  A(ctx, rose, [{ opacity: 0, transform: `translate(${b.cx}px,${b.cy}px) scale(.3) rotate(-200deg)` }, { opacity: 1, transform: `translate(${b.cx}px,${b.cy}px) scale(1.05) rotate(540deg)`, offset: 0.8 }, { opacity: 1, transform: `translate(${b.cx}px,${b.cy}px) scale(1) rotate(720deg)` }], 1000, 0, 'cubic-bezier(.15,.7,.3,1)', 'forwards');
-  burst(ctx, 'gold-dust', b.cx, b.cy, 650, 22, 40, cs * 0.6, 800);
-  // «Ускользнул!»
-  const shout = mk(ctx, 'lg-shout', b.cx, b.cy, 'Ускользнул!');
-  const ks = Math.min(1, W / 600);
-  A(ctx, shout, [{ opacity: 0, transform: `translate(-50%,-50%) rotate(-4deg) scale(${2.2 * ks})` }, { opacity: 1, transform: `translate(-50%,-50%) rotate(-4deg) scale(${0.95 * ks})`, offset: 0.7 }, { opacity: 1, transform: `translate(-50%,-50%) rotate(-4deg) scale(${ks})` }], 280, 760, 'cubic-bezier(.6,0,.9,.6)');
-  at(ctx, 1000, () => shake(ctx, ctx.board, 0, 7, 260));
-  // the Hull 2 in gold
-  const hullNow = shownTrack(ctx, c.ship, 'hull'), hullNew = Math.min(ctx.data.rules.jackHull, startValue(ctx.data, c.ship, 'hull'));
-  for (let j = hullNow; j < hullNew; j++) { const p = fxPoint(ctx, c.ship, 'hull', j); burst(ctx, 'gold-dust', p.x, p.y, 1150 + j * 120, 8, 6, 24, 600); ring(ctx, p.x, p.y, 1150 + j * 120, 0.8, '#e0b44c'); }
-  at(ctx, 1150, () => setTrack(ctx, c.ship, 'hull', hullNew, '#e0b44c'));
-  trackMark(ctx, c.ship, 'hull', hullNew - hullNow, 1300, true); // game (S1): a mark, not a pill
-  await wait(ctx, 1500);
-  // time goes on: the bubbles burst, the jump out of the water, the change of places
-  frozen.forEach((a) => { a.playbackRate = 3; a.play(); });
-  wp.remove();
-  A(ctx, gray, [{ opacity: 1 }, { opacity: 0 }], 250, 0, 'ease-out', 'forwards');
-  A(ctx, shout, [{ opacity: 1 }, { opacity: 0, transform: 'translate(-50%,-50%) rotate(-4deg) scale(1.3)' }], 300, 0, 'ease-in', 'forwards');
-  A(ctx, rose, [{ opacity: 1, transform: `translate(${b.cx}px,${b.cy}px) scale(1) rotate(720deg)` }, { opacity: 0, transform: `translate(${b.cx}px,${b.cy}px) scale(1.4) rotate(760deg)` }], 400, 0, 'ease-in', 'forwards');
-  A(ctx, plank(ctx, c.ship), [{ transform: 'rotate(-3deg) translateY(12px)', opacity: 0.8 }, { transform: 'translateY(-22px) scale(1.04)', opacity: 1 }], 280, 0, 'cubic-bezier(.2,.8,.3,1)', 'forwards');
-  for (let q = 0; q < 3; q++) splash(ctx, b.x + b.w * (0.2 + 0.3 * q), b.b - 4, 80 + q * 60);
-  await wait(ctx, 300);
-  const swapEv = (c.events || []).filter((e) => e.type === 'swapped');
-  if (swapEv.length) await flipTo(ctx, c.events, 700); // all the events of the clip: the Hull 2, the Legend played, the change of places
+  await wait(ctx, K.sink);
+  // 2. time freezes: the world goes grey, only she keeps her colour
+  const frozen: Element[] = [];
+  for (let e: Element | null = el; e && e !== ctx.board && e.parentElement; e = e.parentElement) for (const x of e.parentElement.children) if (x !== e && !x.matches('.fx-layer, style, script')) frozen.push(x);
+  const FZ = 'grayscale(1) brightness(.82) contrast(1.15)';
+  const frz = frozen.map((x) => A(ctx, x, [{ filter: 'none' }, { filter: FZ }], K.freeze, 0, 'linear', 'forwards'));
+  frz.push(A(ctx, el, [{ filter: 'none' }, { filter: 'saturate(1.3) drop-shadow(0 0 10px rgba(255,214,120,.7))' }], K.freeze, 0, 'linear', 'forwards'));
+  // the world gets its colour back however the clip ends (an abort included)
+  const thaw = () => frz.forEach((a) => a.cancel());
+  let outro: () => Promise<void> = async () => {};
+  let sw: Extract<GameEvent, { type: 'swapped' }> | undefined, ob: ReturnType<typeof bx> | null = null;
+  try {
+    for (let i = 0; i < 3; i++) circRing(ctx, hi, b.cx, b.cy, 20, 360, '#e6dcc4', K.ring, i * K.ringStep, 2);
+    const drops = sv(hi, `<g>${Array.from({ length: 14 }, () => `<ellipse cx="${R1(b.x + rnd(0, b.w))}" cy="${R1(b.y - rnd(4, 40))}" rx="1.6" ry="2.6" fill="#dff4f8" opacity=".9"/>`).join('')}</g>`);
+    A(ctx, drops, [{ opacity: 0 }, { opacity: 1 }], 200, 0, 'linear', 'forwards');
+    // game (S1): the explanation is in the middle of the table, not over the plank
+    ruleTag(ctx, b.cx, gapBox(ctx).cy, 'время замерло…', 60, '', 1100);
+    await wait(ctx, K.freeze);
+    outro = await legendIntro(ctx, code, c.ship, { cost: c.cost, target: c.ship });
+    // 3. the great compass over her: the needle spins wildly, then points to the ally; a golden course is drawn
+    sw = (c.events || []).find((e): e is Extract<GameEvent, { type: 'swapped' }> => e.type === 'swapped');
+    // the ally — the other ship of her team on the table (the event names only the ships that move: a sunk ally stays)
+    const ally = sw ? sw.ships.find((s) => s !== c.ship) ?? Object.keys(ctx.display.ships).find((s) => s !== c.ship && sideOf(ctx, s) === sideOf(ctx, c.ship)) : undefined;
+    ob = ally ? bx(ctx, plank(ctx, ally)) : null;
+    const r = R1(clamp(Math.min(b.h * 0.9, b.w * 0.35), 56, 80));
+    const comp = sv(hi, compassArt(`jk${uid}`, r));
+    A(ctx, comp, [{ transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(.1) rotate(-90deg)`, opacity: 0 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.1) rotate(8deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1) rotate(0deg)`, opacity: 1 }], K.compass, 0, 'cubic-bezier(.3,1.3,.6,1)');
+    const nd = comp.querySelector<SVGGElement>('.nd')!;
+    nd.style.transformBox = 'view-box'; nd.style.transformOrigin = '0 0';
+    const toAlly = ob ? (Math.atan2(ob.cy - b.cy, ob.cx - b.cx) * 180) / Math.PI + 90 : 90;
+    const end = 1080 + ((toAlly % 360) + 360) % 360;
+    A(ctx, nd, [{ transform: 'rotate(0deg)' }, { transform: `rotate(${R1(end - 270)}deg)`, offset: 0.55 }, { transform: `rotate(${R1(end - 20)}deg)`, offset: 0.8 }, { transform: `rotate(${R1(end)}deg)` }], K.needle, K.needleAt, 'cubic-bezier(.2,.6,.3,1)');
+    await wait(ctx, K.point);
+    if (ob) {
+      const ey = isTop(ctx, c.ship) ? b.b + 6 : b.y - 6, oy = isTop(ctx, ally!) ? ob.b + 6 : ob.y - 6, lift = isTop(ctx, c.ship) ? 90 : -90;
+      const course = sv(hi, `<path d="M${R1(b.cx)} ${R1(ey)} C${R1(b.cx + Math.sign(ob.cx - b.cx) * 120)} ${R1(ey + lift)} ${R1(ob.cx - Math.sign(ob.cx - b.cx) * 120)} ${R1(oy + lift)} ${R1(ob.cx)} ${R1(oy)}" fill="none" stroke="#ffd27a" stroke-width="3" stroke-dasharray="10 8"/>`);
+      A(ctx, course, [{ opacity: 0 }, { opacity: 1 }], K.course, 0, 'linear', 'forwards');
+      goldBurst(ctx, hi, ob.cx, oy, 20, 10, 60);
+    }
+    await wait(ctx, K.go);
+    // 4. the water runs off, the colour comes back with a flash, she slips along the course with ghosts; the ally the
+    //    other way (the change of places of the events)
+    A(ctx, water, [{ height: '72%' }, { height: '0%' }], K.drain, 0, 'ease-out', 'forwards');
+    A(ctx, comp, [{ opacity: 1, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1)` }, { opacity: 0, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.4)` }], 400, 0, 'ease-in', 'forwards');
+    A(ctx, drops, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'linear', 'forwards');
+    frozen.forEach((x) => A(ctx, x, [{ filter: FZ }, { filter: 'none' }], K.unfreeze, 0, 'linear', 'none'));
+    flashBoard(ctx, '#ffe7a4', 0.4, 400);
+    await wait(ctx, K.drain);
+  } finally { thaw(); }
+  list.cancel(); water.remove();
+  if (sw && ob) {
+    const dx = ob.cx - b.cx;
+    for (let i = 0; i < 4; i++) {
+      const gh = mk(ctx, 'lg-ghost', b.x, b.y);
+      gh.style.width = b.w + 'px'; gh.style.height = b.h + 'px';
+      A(ctx, gh, [{ transform: 'translate(0,0)', opacity: 0 }, { opacity: 0.5 - i * 0.1, offset: 0.2 }, { transform: `translate(${R1(dx * (0.5 - i * 0.1))}px,${isTop(ctx, c.ship) ? 60 : -60}px)`, opacity: 0 }], K.slip, i * K.ghost, 'cubic-bezier(.6,0,.3,1)');
+    }
+    // all the events of the clip: the display moves the ships only with jackEscaped (the Hull 2) applied
+    await flipTo(ctx, c.events, K.slip, () => true, { arc: (s) => (s === c.ship ? 70 : -30) });
+  }
+  // 5. the Hull becomes 2 with a shine; gold coins scatter
+  const nb = bx(ctx, plank(ctx, c.ship));
+  const hullNew = Math.min(ctx.data.rules.jackHull, startValue(ctx.data, c.ship, 'hull'));
+  setTrack(ctx, c.ship, 'hull', 0); // the table may already show the Hull 2 (drawn with the events): it lights up anew
+  setTrack(ctx, c.ship, 'hull', hullNew, '#e0b44c');
+  for (let i = 0, m = room(ctx, 18); i < m; i++) {
+    const coin = sv(hi, '<g><ellipse rx="5" ry="2.2" fill="#9a7020"/><ellipse rx="5" ry="2.2" cy="-1" fill="#f2c94c" stroke="#8a6420" stroke-width=".5"/></g>'), a = rnd(-Math.PI, 0), rr = rnd(40, 120);
+    A(ctx, coin, [{ transform: `translate(${R1(nb.cx)}px,${R1(nb.y)}px) rotate(0deg)` }, { transform: `translate(${R1(nb.cx + Math.cos(a) * rr)}px,${R1(nb.y + Math.sin(a) * rr)}px) rotate(${R1(rnd(-400, 400))}deg)`, offset: 0.5 }, { transform: `translate(${R1(nb.cx + Math.cos(a) * rr * 1.3)}px,${R1(nb.y + 30)}px) rotate(${R1(rnd(-800, 800))}deg)`, opacity: 0 }], rnd(900, 1300), 0, 'cubic-bezier(.2,.6,.6,1)');
+  }
+  trackMark(ctx, c.ship, 'hull', hullNew, 200, true); // game (S1): a mark, not a pill
+  await wait(ctx, K.end);
   await outro();
 };
 
