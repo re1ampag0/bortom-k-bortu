@@ -10,6 +10,7 @@ import {
   playOptions,
   previewReaction,
   previewVolley,
+  reactionNow,
   refusal,
   tryAction,
   unfiredShips,
@@ -25,7 +26,9 @@ import type { LocalGame } from '../../net/local';
 import type { NetGame } from '../../net/ws';
 import { download, loadSettings, storeSave, storeSettings, type Speed } from '../storage';
 import { Curtain } from './Curtain';
-import { Hand, type HandTab } from './Hand';
+import { AlarmActions, AlarmArrow, AlarmBar, ReactionSheet, usePhoneLayout } from './Alarm';
+import { alarmInfo, lossOf, reactionStrip } from './alarm';
+import { Hand, type AlarmCard, type HandTab } from './Hand';
 import { CardDetail, DiscardSheet, EndScreen, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
 import {
   CardParamsPanel,
@@ -33,7 +36,6 @@ import {
   ConfirmPanel,
   JackPanel,
   PlansPanel,
-  ReactionPanel,
   ReactionWaitPanel,
   TortugaPanel,
   VolleyPanel,
@@ -47,6 +49,7 @@ import { MissedSheet, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { instantUrl, reducedMotion } from '../start/motion';
 import { FxLayer, useFxQueue } from './fx/FxLayer';
+import { T } from './fx/timing';
 import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
 import { Button, Plank, RoundButton, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
@@ -198,6 +201,12 @@ export function Game({
   // The note «Реакция — карта…» in the first Reaction window of each team at the device; a window offered again
   // after a Reaction (RULES.md 12.5) is the same one. Not saved: after a reload it shows once more.
   const reactOpen = myDecision && d!.kind === 'reactions';
+  // «Тревога!»: «Свернуть, посмотреть стол» lowers the hand and hides the buttons; it opens again with the next window.
+  const [alarmFolded, setAlarmFolded] = useState(false);
+  useEffect(() => {
+    if (!reactOpen) setAlarmFolded(false);
+  }, [reactOpen]);
+  const phone = usePhoneLayout();
   const [memoSeen, setMemoSeen] = useState<Side[]>([]);
   const [memoSide, setMemoSide] = useState<Side | null>(null);
   useEffect(() => {
@@ -608,6 +617,21 @@ export function Game({
     return `совместный залп по «${shipData(data, t.firstTarget).nickDative}» даст ${nick(ally.code)} +${data.rules.jointBonus}`;
   };
 
+  // ——— «Тревога!»: the Reaction window is the bar, the arrow, the hand and the buttons; on a phone — a sheet ———
+  const alarm = reactOpen ? alarmInfo(s, data) : null;
+  const alarmOn = !!alarm;
+  const reactionTimer = net && alarmOn ? Number(net.room.settings.reactionTimer) || 0 : 0;
+  const fuse = reactionTimer > 0 ? { seconds: reactionTimer, k: String(version) } : null;
+  /** How a card of the hand looks while the window is open: playable (the strip — only under «Подсказки»), not playable, dimmed. */
+  function alarmOf(holder: string, code: string): AlarmCard | null {
+    if (!alarmOn || code === HIDDEN) return null;
+    if (cardByCode(data, code).type !== 'РЕАКЦИЯ' || !d!.seats.includes(holder)) return { kind: 'dim' };
+    const why = offOf(holder, code);
+    if (why) return { kind: 'no', why };
+    return { kind: 'ok', strip: hints ? (reactionStrip(s, data, holder, code) ?? undefined) : undefined };
+  }
+  const skipReaction = () => act(myDeciding.map((x) => ({ type: 'noReaction', seat: x }) as Action));
+
   // ——— The panel in the middle (laptop) or in place of the hand (phone) ———
   let dock: React.ReactNode = null;
   // Card choices, «Тортуга» and the Plans are bottom sheets on a phone; the Volley and the Reactions stay in the middle.
@@ -618,18 +642,27 @@ export function Game({
     !s.winner && !!d && d.kind === 'reactions' && d.side !== bottom && !myDecision && (net ? mySeats.length > 0 : game.setup.players[bottom] === 'human');
   if (s.winner) dock = null;
   else if (myDecision && d!.kind === 'reactions') {
-    dock = (
-      <ReactionPanel
-        s={s}
-        data={data}
-        seats={myDeciding}
-        pick={reactPick}
-        memo={!memoSeen.includes(bottom)}
-        onAct={(a) => act(a)}
-        onPick={setReactPick}
-        onInfo={(holder, code) => setSheet({ k: 'card', seat: holder, code })}
-      />
-    );
+    // A laptop has no panel: the buttons stand where «Ход окончен» does (handActions).
+    if (phone && alarm) {
+      dockSheet = true;
+      dock = (
+        <ReactionSheet
+          s={s}
+          data={data}
+          seats={myDeciding}
+          hints={hints}
+          memo={!memoSeen.includes(bottom)}
+          pick={reactPick}
+          folded={alarmFolded}
+          fuse={fuse}
+          alarmOf={alarmOf}
+          onPick={setReactPick}
+          onAct={(a) => act(a)}
+          onInfo={(holder, code) => setSheet({ k: 'card', seat: holder, code })}
+          onFold={setAlarmFolded}
+        />
+      );
+    }
   } else if (myDecision && d!.kind === 'jack') {
     dock = <JackPanel s={s} data={data} ship={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'tortuga') {
@@ -846,7 +879,7 @@ export function Game({
       const p = previewVolley(sAim, data, volleyOrder({ ...mode, charge: code, chargeFrom: seat, paid: 0 }, mode.target));
       return p.ok ? `${c.big.length <= 8 ? `${c.big} ` : ''}→ итог ${p.damage}` : undefined;
     }
-    if (d!.kind === 'reactions' && c.type === 'РЕАКЦИЯ' && d!.seats.includes(seat)) {
+    if (d!.kind === 'reactions' && c.type === 'РЕАКЦИЯ' && d!.seats.includes(seat) && !alarmOn) {
       const r = previewReaction(s, data, seat, code);
       return r.ok ? r.label : undefined;
     }
@@ -977,6 +1010,7 @@ export function Game({
       awaiting={decidingSeats.includes(x.code) && !botSeat(x.code) && !(net && d?.kind === 'turn' && net.ready.includes(x.code))}
       targeted={targeted === x.code}
       shooter={shooter === x.code}
+      alarm={alarm?.kind === 'volley' && alarm.target === x.code ? { loss: hints && alarm.hit ? lossOf(s, x.code, alarm.hit) : null } : null}
       repairing={repairing === x.code}
       plate={plateFor(x.code)}
       buttons={plankButtons(x.code)}
@@ -995,7 +1029,22 @@ export function Game({
 
   // «Быстрее · До конца · Пауза · Отменить» and «Ход окончен»: under the log ≥ 1280 px (A5: the hand gets the whole width
   // of the table), at the end of the hand row narrower.
-  const handActions = (
+  const pickNow = reactPick ? reactionNow(s, data, reactPick.seat, reactPick.card) : null;
+  const handActions = alarmOn && !phone ? (
+    <div className="hand-actions alarm-mode" style={{ ['--alarm-in' as string]: `${T.ui.alarmIn}ms` }}>
+      <AlarmActions
+        memo={!memoSeen.includes(bottom)}
+        pickName={reactPick ? cardByCode(data, reactPick.card).name : null}
+        now={pickNow?.ok ? pickNow.text : null}
+        folded={alarmFolded}
+        fuse={fuse}
+        onSkip={skipReaction}
+        onPlay={() => reactPick && act([{ type: 'react', seat: reactPick.seat, card: reactPick.card }])}
+        onInfo={() => reactPick && setSheet({ k: 'card', seat: reactPick.seat, code: reactPick.card })}
+        onFold={setAlarmFolded}
+      />
+    </div>
+  ) : (
     <div className="hand-actions">
       {/* A5: «Быстрее · До конца · Пауза» (while a bot moves or a move is shown) and «Отменить» — round brass buttons */}
       <div className="round-row">
@@ -1015,7 +1064,7 @@ export function Game({
 
   return (
     <div
-      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${seaFrame === 'wood' ? 'frame-wood' : ''}`}
+      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${seaFrame === 'wood' ? 'frame-wood' : ''}`}
       data-testid="game"
       data-bottom={bottom}
     >
@@ -1030,6 +1079,7 @@ export function Game({
           extra={wideLog ? null : toolButtons}
           chip={!wideLog}
           hold={<TopHold side={top} s={tableView} data={data} fxGen={fx.gen} />}
+          alarm={alarmOn && !fx.hint && !flash ? <AlarmBar info={alarm!} /> : undefined}
         />
         {net && <NetBar game={net} />}
         <div className="sea-table" ref={seaRef}>
@@ -1044,7 +1094,7 @@ export function Game({
               </div>
             )}
             {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
-            {!dock && !s.winner && (lastEvent || (myTurn && mode.k === 'idle')) && (
+            {!dock && !s.winner && !alarmOn && (lastEvent || (myTurn && mode.k === 'idle')) && (
               <p className="middle-info" data-testid="middle-info">
                 {offerInfo && (
                   <>
@@ -1059,6 +1109,7 @@ export function Game({
             )}
           </div>
           <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
+          {alarm?.kind === 'volley' && alarm.shooter && alarm.target && <AlarmArrow box={seaRef} from={alarm.shooter} to={alarm.target} label={alarm.hit?.pill ?? null} />}
         </div>
         <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={jointHint(bottom)} fxGen={fx.gen} />
         {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
@@ -1097,6 +1148,8 @@ export function Game({
               onDiscard={(x) => setSheet({ k: 'discard', seat: x })}
               label={handLabel}
               note={captainNote}
+              alarmOf={alarmOn ? alarmOf : null}
+              folded={alarmFolded}
             />
           )}
           {!wideLog && handActions}
