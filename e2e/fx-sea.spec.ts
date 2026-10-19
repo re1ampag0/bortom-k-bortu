@@ -130,6 +130,25 @@ test.describe('the sea cards through ?fxScene', () => {
     }
   });
 
+  // A5 (A6): the merchantman of «Торговый караван» sails along the middle of the gap between the two rows of the planks (the real ones),
+  // not along the lower planks, and touches no plank on its way.
+  for (const [width, height] of [[1366, 660], [1920, 1080], [430, 932]] as const) {
+    test(`sea-caravan ${width}×${height}: the merchantman sails along the middle of the gap`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await open(page, 'sea-caravan');
+      await page.waitForFunction(() => { const s = document.querySelector('.lg-pitch'); return !!s && s.getBoundingClientRect().right > 0 && s.getBoundingClientRect().left < innerWidth; }, null, { timeout: 40_000, polling: 'raf' });
+      await page.waitForTimeout(800);
+      const r = await page.evaluate(() => {
+        const box = (e: Element) => { const b = e.getBoundingClientRect(); return { l: b.left, r: b.right, t: b.top, b: b.bottom }; };
+        const ship = box(document.querySelector('.lg-pitch')!), gap = box(document.querySelector('[data-fx-gap]')!);
+        return { ship, gap, planks: Array.from(document.querySelectorAll('[data-fx-ship]')).map(box) };
+      });
+      const cy = (r.ship.t + r.ship.b) / 2, gy = (r.gap.t + r.gap.b) / 2;
+      expect(Math.abs(cy - gy), 'the ship at the middle of the gap').toBeLessThanOrEqual(r.gap.b - r.gap.t > 0 ? (r.gap.b - r.gap.t) * 0.15 : 20);
+      for (const p of r.planks) expect(r.ship.t >= p.b || r.ship.b <= p.t || r.ship.r <= p.l || r.ship.l >= p.r, 'the ship touches a plank').toBe(true);
+    });
+  }
+
   test('the weather of the round: drawn with rich effects, standing still in simple ones, empty with reduced motion and at «мгновенно»', async ({ browser }) => {
     // FX-C (TASKS.md: «простые спецэффекты» — неподвижная погода): the picture is there, nothing in it moves
     const look = async (extra: string, opts: { reducedMotion?: 'reduce' } = {}, speed = 'normal') => {
