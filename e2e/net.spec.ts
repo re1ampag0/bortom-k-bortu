@@ -151,4 +151,28 @@ test('two tabs: a room by its code, a Volley and a Reaction, a reload brings the
   await expect(a.locator('.status')).toContainText('Раунд 2', { timeout: 15_000 });
   await expect(a).toHaveTitle(/● Ваш ход/);
   await a.screenshot({ path: `${SHOTS}/laptop-6-round-2.png` });
+
+  // V7: Аня gives up — both see the victory sheet of the Company with the same numbers and titles (from the record the
+  // server sends after the end); «Реванш» counts the votes under its name.
+  await a.locator('[data-testid="settings-btn"]:visible').click();
+  await a.getByRole('button', { name: 'Сдаться (Пираты)' }).click();
+  await a.getByRole('button', { name: 'Сдаться', exact: true }).click();
+  for (const p of [a, b]) {
+    await expect(p.getByTestId('end-screen')).toBeVisible({ timeout: 15_000 });
+    await expect(p.getByTestId('victory-ribbon')).toHaveText('Победа Компании');
+    await expect(p.getByTestId('victory-title')).toHaveCount(4, { timeout: 15_000 });
+  }
+  const rows = (p: Page) => p.getByTestId('victory-row').evaluateAll((els) => els.map((e) => `${e.getAttribute('data-ship')}: ${e.textContent}`).sort());
+  expect(await rows(a)).toEqual(await rows(b));
+  await expect(a.getByTestId('rematch')).toContainText('согласны 0 из 2');
+  await a.getByTestId('rematch').click();
+  await expect(b.getByTestId('rematch')).toContainText('согласны 1 из 2');
+  await expect(a.getByTestId('rematch')).toContainText('Отменить реванш');
+  await b.waitForFunction(() =>
+    document
+      .querySelector('.victory-backdrop')!
+      .getAnimations({ subtree: true })
+      .every((x) => x.playState !== 'running' || x.effect?.getComputedTiming().iterations === Infinity),
+  );
+  await b.screenshot({ path: `${SHOTS}/iphone-7-victory.png` });
 });

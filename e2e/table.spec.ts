@@ -345,5 +345,93 @@ test.describe('whole games through the interface', () => {
   });
 });
 
+// V7: the victory sheet. Four bots play to the end (the seeds give a victory of the Pirates and of the Company); frames at
+// 1366×660 and 430×932 go to docs/screenshots/a5-windows/ next to the reference (c-victory-ref-*).
+const VICTORIES = [
+  { seed: 4, who: 'pirates', ribbon: 'Победа Пиратов', side: 'ПИРАТЫ' },
+  { seed: 6, who: 'company', ribbon: 'Победа Компании', side: 'КОМПАНИЯ' },
+] as const;
+
+async function toVictory(page: Page, seed: number) {
+  await page.goto(`?seed=${seed}&speed=instant`);
+  await page.getByTestId('quick-match').click();
+  await expect(page.getByTestId('end-screen')).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByTestId('victory-title')).toHaveCount(4, { timeout: 10_000 });
+}
+
+/** The sheet has shown itself: no animation of it runs but the endless ones (the panorama). */
+async function settled(page: Page) {
+  await page.waitForFunction(() =>
+    document
+      .querySelector('.victory-backdrop')!
+      .getAnimations({ subtree: true })
+      .every((a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity),
+  );
+}
+
+for (const size of [
+  { width: 1366, height: 660 },
+  { width: 430, height: 932 },
+]) {
+  test.describe(`V7: the victory sheet ${size.width}×${size.height}`, () => {
+    test.use({ viewport: size });
+    for (const v of VICTORIES) {
+      test(`${v.who}: the ribbon, the panorama of this end, the best captain, a title for each ship, the buttons`, async ({ page }) => {
+        const errors: string[] = [];
+        page.on('pageerror', (e) => errors.push(e.message));
+        await toVictory(page, v.seed);
+        const sheet = page.getByTestId('end-screen');
+        await expect(page.getByTestId('victory-ribbon')).toHaveText(v.ribbon);
+        await expect(page.getByTestId('victory-line')).toContainText(/На дне: «.+»/);
+        await expect(page.getByTestId('victory-line')).toContainText(/\d+ ход/);
+        // the panorama: the ships afloat of the winners, every sunk ship at the places of the sinking
+        const cast = await page.getByTestId('victory-pano').evaluate((el) => ({
+          afloat: Array.from(el.querySelectorAll('[data-pano-afloat]')).map((e) => e.getAttribute('data-pano-afloat')!),
+          sunk: Array.from(el.querySelectorAll('[data-pano-sunk]')).map((e) => e.getAttribute('data-pano-sunk')!),
+        }));
+        const rows = page.getByTestId('victory-row');
+        const gone = await rows.evaluateAll((els) => els.filter((e) => e.classList.contains('gone')).map((e) => e.getAttribute('data-ship')!));
+        expect(cast.sunk.slice().sort()).toEqual(gone.slice().sort());
+        expect(cast.afloat.length).toBeGreaterThan(0);
+        const pirates = ['Ж', 'М'];
+        for (const c of cast.afloat) expect(pirates.includes(c)).toBe(v.side === 'ПИРАТЫ');
+        await expect(page.getByTestId('best-captain')).toContainText('Лучший капитан');
+        await expect(rows).toHaveCount(4);
+        for (const b of ['Новая партия', 'Скачать партию', 'Посмотреть стол', 'Скачать журнал']) await expect(sheet.getByRole('button', { name: b, exact: true })).toBeInViewport();
+        await expect(page.getByTestId('rematch')).toContainText('те же корабли, новая партия');
+        await expect(page.getByTestId('rematch')).toBeInViewport();
+        await expectFits(page);
+        await settled(page);
+        await page.screenshot({ path: `docs/screenshots/a5-windows/c-victory-${v.who}-${size.width}x${size.height}.png` });
+        await sheet.getByRole('button', { name: 'Посмотреть стол' }).click();
+        await expect(sheet).toHaveCount(0);
+        expect(errors).toEqual([]);
+      });
+    }
+  });
+}
+
+test.describe('V7: a small phone 390×664', () => {
+  test.use({ viewport: { width: 390, height: 664 } });
+  test('the list scrolls inside the sheet; the buttons stay at its foot', async ({ page }) => {
+    await toVictory(page, 4);
+    await expectFits(page);
+    const scroll = await page.locator('.v-scroll').evaluate((e) => ({ sh: e.scrollHeight, ch: e.clientHeight }));
+    expect(scroll.sh).toBeGreaterThan(scroll.ch);
+    await expect(page.getByTestId('rematch')).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'Посмотреть стол' })).toBeInViewport();
+  });
+});
+
+test.describe('V7: reduced motion', () => {
+  test.use({ viewport: { width: 1366, height: 660 } });
+  test('the sheet is there at once: nothing of it moves', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await toVictory(page, 6);
+    const running = await page.evaluate(() => document.querySelector('.victory-backdrop')!.getAnimations({ subtree: true }).length);
+    expect(running).toBe(0);
+  });
+});
+
 // Safari on an iPhone (WebKit with the iPhone 15 Pro Max profile): run by the e2e job on GitHub Actions.
 test('iPhone 15 Pro Max: key states fit the window @iphone', async ({ page }) => keyStates(page, 'iphone15promax'));
