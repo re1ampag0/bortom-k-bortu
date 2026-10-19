@@ -12,6 +12,48 @@ export function TableThings() {
 }
 
 /**
+ * «Фон под рукой: Палуба» (rig, г): a strip of the deck under the hand — the cards and their tabs on a laptop, the whole bottom
+ * panel on a phone. It lies under «Вещи на столе» (they and the compass stay over it) and under the board; its place is
+ * measured from the hand, so it follows the layout at any width. `look` is false for «Стол капитана»: nothing is drawn.
+ */
+export function HandDeck({ look }: { look: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const watched = useRef<{ game: HTMLElement; hand: HTMLElement; ro: ResizeObserver } | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const game = el?.parentElement ?? null;
+    const hand = game?.querySelector<HTMLElement>('.hand-row > .hand') ?? null;
+    const w = watched.current;
+    if (w && w.game === game && w.hand === hand) return;
+    w?.ro.disconnect();
+    watched.current = null;
+    if (!el || !game || !hand || typeof ResizeObserver === 'undefined') {
+      if (el) el.style.display = 'none';
+      return;
+    }
+    const measure = () => {
+      const g = game.getBoundingClientRect(),
+        h = hand.getBoundingClientRect();
+      const phone = getComputedStyle(game).getPropertyValue('--phone').trim() === '1' || g.width < 701;
+      el.style.display = '';
+      el.classList.toggle('phone', phone);
+      // a phone: the whole bottom panel, edge to edge; a laptop: the hand (the tabs and the cards) with a margin, down to the edge
+      el.style.left = `${phone ? 0 : Math.max(0, h.left - g.left - 8)}px`;
+      el.style.width = `${phone ? g.width : h.width + 16}px`;
+      el.style.top = `${Math.max(0, h.top - g.top - 6)}px`;
+      el.style.height = `${Math.max(0, g.bottom - h.top + 6)}px`;
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(game);
+    ro.observe(hand);
+    watched.current = { game, hand, ro };
+  });
+  useLayoutEffect(() => () => watched.current?.ro.disconnect(), []);
+  return look ? <div className="hand-deck" ref={ref} aria-hidden="true" data-testid="hand-deck" /> : null;
+}
+
+/**
  * The weather of the round lies on the water only: the board gets the insets of the sea (--sea-t/r/b/l), .fx-weather
  * is cut by them (game.css). Measured again whenever the board or the sea changes size.
  */

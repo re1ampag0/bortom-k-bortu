@@ -53,7 +53,7 @@ import { T } from './fx/timing';
 import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
 import { Button, OakButton, Plank, RoundButton, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
-import { TableThings, useSeaClip } from './TableThings';
+import { HandDeck, TableThings, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
@@ -1098,6 +1098,7 @@ export function Game({
       data-testid="game"
       data-bottom={bottom}
     >
+      <HandDeck look={look.hand === 'deck'} />
       <TableThings />
       <main className="board" ref={boardRef}>
         <StatusBar
