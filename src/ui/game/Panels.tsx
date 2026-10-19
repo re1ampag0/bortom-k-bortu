@@ -15,7 +15,7 @@ import {
 import { powderWord } from '../../engine/log';
 import { cardByCode, seaCardByCode, seatShip, shipData, startValue, type Action, type GameState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
-import { SEA_BG, seaSvg } from './fx/seaArt';
+import { wxSvg } from './art/wx';
 import { HandCard } from './Hand';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
@@ -293,7 +293,7 @@ function SeaMini({ data, code, order, onPick, onInfo }: { data: GameData; code: 
         onPick();
       }}
     >
-      <div className="a" style={sea ? { background: SEA_BG[sea.key] } : undefined} dangerouslySetInnerHTML={{ __html: sea ? seaSvg(sea.key, 70, 42) : '' }} />
+      <div className="a" dangerouslySetInnerHTML={{ __html: sea ? wxSvg(sea.key, 54, 46) : '' }} />
       <div className="n">{sea ? sea.name : 'Закрытая карта'}</div>
       {sea && <div className="e">{sea.big}</div>}
       {order && <span className="ord">{order}</span>}

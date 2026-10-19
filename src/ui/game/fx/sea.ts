@@ -22,7 +22,7 @@ import { bigShip } from '../art/bigShips';
 import { plankScars, scar } from './scars';
 import { T } from './timing';
 import { ROUND_LONG } from './weather';
-import { SEA_BG, seaSvg } from './seaArt';
+import { wxSvg } from '../art/wx';
 import { drawWeather } from './weather';
 
 const R1 = (n: number) => Math.round(n * 10) / 10;
@@ -341,15 +341,10 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
   const dim = mk(ctx, 'dim', 0, 0); dim.style.width = W + 'px'; dim.style.height = Rb + 'px';
   const dk = fxs.dim ?? 0.22, upFor = R.cardWait + R.show + R.fly;
   A(ctx, dim, [{ opacity: 0 }, { opacity: dk, offset: 0.12 }, { opacity: dk, offset: 0.85 }, { opacity: 0 }], upFor, 0);
-  const storm = key === 'storm';
-  const face = `<div class="art" style="background:${SEA_BG[key]}"><span class="kind">Море · ${S.when.toLowerCase()}</span>
-      ${storm ? `<svg class="c3" style="position:absolute;left:60px;top:-4px;opacity:.75" width="150" height="56" viewBox="0 0 150 56"><g fill="#6B7A88"><ellipse cx="60" cy="28" rx="44" ry="22"/><ellipse cx="104" cy="30" rx="34" ry="18"/></g></svg>
-      <svg class="c1" style="position:absolute;left:6px;top:14px" width="130" height="66" viewBox="0 0 130 66"><g fill="#C9D0D6"><ellipse cx="56" cy="30" rx="36" ry="22"/><ellipse cx="30" cy="40" rx="24" ry="15"/><rect x="18" y="34" width="96" height="22" rx="11"/></g><g fill="#E6EAEE"><ellipse cx="52" cy="24" rx="26" ry="14"/></g><rect x="18" y="46" width="96" height="10" rx="5" fill="#9AA6B0"/></svg>
-      <svg class="c2" style="position:absolute;left:112px;top:10px" width="140" height="66" viewBox="0 0 140 66"><g fill="#C9D0D6"><ellipse cx="66" cy="28" rx="34" ry="24"/><ellipse cx="100" cy="40" rx="26" ry="15"/><rect x="14" y="34" width="110" height="22" rx="11"/></g><g fill="#E6EAEE"><ellipse cx="62" cy="20" rx="24" ry="13"/></g><rect x="14" y="46" width="110" height="10" rx="5" fill="#9AA6B0"/></svg>
-      <svg class="bolt" style="position:absolute;inset:0;z-index:3" viewBox="0 0 260 124"><path class="b1" d="M132 58 L118 80 L130 82 L114 112 L122 96" fill="none" stroke="#FFE58A" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" style="filter:drop-shadow(0 0 6px #FFD84A)" stroke-dasharray="160" stroke-dashoffset="160"/><path class="b2" d="M200 54 L192 72 L200 74 L188 98" fill="none" stroke="#FFE58A" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="filter:drop-shadow(0 0 6px #FFD84A)" stroke-dasharray="120" stroke-dashoffset="120"/></svg>` : `<div class="artmain">${seaSvg(key)}</div>`}
-      <div class="fl"></div></div>
+  // A3: the drawing of the card is the weather icon of the prototype (art/wx.ts) on the paper of the card; its parts move (.wx-live) with the rich effects
+  const face = `<div class="art"><span class="kind">Море · ${S.when.toLowerCase()}</span><div class="artmain">${wxSvg(key, 150, 128)}</div><div class="fl"></div></div>
       <div class="body"><div class="t">${esc(S.name)}</div><div class="fxl">${esc(S.big)}</div><span class="dur">${S.when === 'Сразу' ? 'действует сразу' : 'до следующей карты моря'}</span></div>`;
-  const card = mk(ctx, 'seacard', W / 2, Rb / 2 - 8, `<div class="sc-face">${face}</div><div class="sc-back">${SEA_BACK}</div>`);
+  const card = mk(ctx, 'seacard', W / 2, Rb / 2 - 8, `<div class="sc-face${ctx.rich ? ' wx-live' : ''}" data-k="${key}">${face}</div><div class="sc-back">${SEA_BACK}</div>`);
   const sc = Math.min(1, (W - 32) / 250);
   // the card comes up on its back
   A(ctx, card, [{ opacity: 0, transform: `translate(-50%,-30%) scale(${R1(0.6 * sc * 100) / 100})` }, { opacity: 1, transform: `translate(-50%,-50%) scale(${sc})` }], R.cardIn, 0, 'cubic-bezier(.2,.8,.3,1.1)', 'forwards');
@@ -361,17 +356,7 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
   hint(ctx, `Море: «${S.name}» — ${strip(S.text)}`);
   // the drawing comes alive
   const d0 = R.flip * 0.6;
-  if (storm) {
-    A(ctx, card.querySelector('.c1')!, [{ transform: 'translateX(-140px)' }, { transform: 'none' }], 750, d0 + 100, 'cubic-bezier(.2,.8,.3,1)');
-    A(ctx, card.querySelector('.c2')!, [{ transform: 'translateX(140px)' }, { transform: 'none' }], 750, d0 + 150, 'cubic-bezier(.2,.8,.3,1)');
-    A(ctx, card.querySelector('.c3')!, [{ transform: 'translateY(-60px)', opacity: 0 }, { transform: 'none', opacity: 0.75 }], 800, d0 + 50, 'cubic-bezier(.2,.8,.3,1)');
-    A(ctx, card.querySelector('.b1')!, [{ strokeDashoffset: 160, opacity: 1 }, { strokeDashoffset: 0, opacity: 1, offset: 0.2 }, { opacity: 0.25, offset: 0.45 }, { opacity: 1, offset: 0.6 }, { strokeDashoffset: 0, opacity: 0 }], 1100, d0 + 950);
-    A(ctx, card.querySelector('.b2')!, [{ strokeDashoffset: 120, opacity: 1 }, { strokeDashoffset: 0, opacity: 1, offset: 0.2 }, { strokeDashoffset: 0, opacity: 0 }], 850, d0 + 1550);
-    A(ctx, card.querySelector('.fl')!, [{ opacity: 0 }, { opacity: 0.9, offset: 0.06 }, { opacity: 0, offset: 0.18 }, { opacity: 0.45, offset: 0.28 }, { opacity: 0, offset: 0.36 }, { opacity: 0, offset: 0.6 }, { opacity: 0.6, offset: 0.64 }, { opacity: 0, offset: 0.72 }, { opacity: 0 }], 1000, d0 + 950, 'linear');
-    at(ctx, d0 + 950, () => shake(ctx, card.querySelector('.art')!, 0, 4));
-  } else {
-    A(ctx, card.querySelector('.artmain')!, [{ transform: 'scale(.6) translateY(10px)', opacity: 0 }, { transform: 'scale(1.08)', opacity: 1, offset: 0.6 }, { transform: 'scale(1)', opacity: 1 }], 700, d0, 'cubic-bezier(.2,.8,.3,1.2)');
-  }
+  A(ctx, card.querySelector('.artmain')!, [{ transform: 'scale(.6) translateY(10px)', opacity: 0 }, { transform: 'scale(1.08)', opacity: 1, offset: 0.6 }, { transform: 'scale(1)', opacity: 1 }], 700, d0, 'cubic-bezier(.2,.8,.3,1.2)');
   await wait(ctx, R.show);
   // it flies into the plaque of the sea (the chip is outside the board — the card goes over its top edge)
   const chip = document.querySelector('[data-fx-sea-chip]');
@@ -391,7 +376,7 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
     // the weather rolls in over the sea, then stays for the round
     const wx = ctx.board.querySelector<HTMLElement>('.fx-weather');
     if (wx) A(ctx, wx, [{ opacity: 0 }, { opacity: 1 }], R.roll, 0, 'ease-out', 'none');
-    if (storm) flashBoard(ctx, '#eef4ff', 0.16, 700, 200);
+    if (key === 'storm') flashBoard(ctx, '#eef4ff', 0.16, 700, 200);
     if (key === 'maelstrom') { const hi = fxSvg(ctx), w0 = bx(ctx, ctx.board.querySelector('.sea-water') ?? ctx.board); for (let i = 0; i < 4; i++) ringSvg(ctx, hi, w0.cx, w0.y + (w0.h * 196) / 404, Math.max(10, 260 - i * 50) * 0.04, Math.max(40, (260 - i * 50) * Math.min(1, w0.w / 1022)), '#cfe8ef', 1400, i * 220, 2); }
     ruleTag(ctx, W / 2, t.g.cy, fxs.rule ?? capFirst(S.big), 300, fxs.good ? 'plus' : '', 1500);
     extra = R.rollEnd;
