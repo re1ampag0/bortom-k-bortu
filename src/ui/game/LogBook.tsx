@@ -9,7 +9,7 @@ import type { GameData } from '../../engine/types';
 import { stageK } from '../stage';
 import { shipSvg } from './art/ships';
 import { BOOK_COVER, BOOK_ROSE, bookSeal } from './logBook';
-import { LogList } from './Overlays';
+import { LogList, useEscape } from './Overlays';
 
 /** «Голландец»: barnacles on the corners and the salt of the tide (no weed); «Месть»: burnt holes on the page. */
 function CoverDeco({ k }: { k: string }) {
@@ -69,6 +69,7 @@ export function LogBook({
   onDownload: () => void;
   onClose: () => void;
 }) {
+  useEscape(onClose);
   const cover = BOOK_COVER[ship] ?? BOOK_COVER['Ж'];
   const scroll = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState(0);

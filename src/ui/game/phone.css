@@ -265,18 +265,21 @@
   .plank.aimable .hand-count {
     display: none;
   }
-  .plank.selected {
+  /* fix-ui: the chosen ship stands out at once — a thick bright gold frame and a strong glow; another ship that waits for the player
+     (awaiting) — only a thin dim brass edge */
+  .plank.selected,
+  .plank.selected.awaiting {
     border-color: transparent;
     box-shadow:
-      0 0 0 2.5px #e0bd62,
-      0 0 16px rgba(255, 196, 120, 0.6),
+      0 0 0 3.5px #ffd36b,
+      0 0 0 5px rgba(60, 36, 8, 0.55),
+      0 0 22px rgba(255, 200, 110, 0.85),
       0 10px 16px rgba(0, 0, 0, 0.45);
   }
-  .plank.selected.awaiting {
+  .plank.awaiting:not(.selected) {
     box-shadow:
-      0 0 0 2.5px #e0bd62,
-      0 0 20px rgba(255, 196, 120, 0.75),
-      0 10px 16px rgba(0, 0, 0, 0.45);
+      0 0 0 1.5px rgba(201, 160, 72, 0.6),
+      0 10px 16px rgba(0, 0, 0, 0.4);
   }
 
   /* ——— the body: the Hull — its planks the whole width and a big number; Паруса · Пушки · Команда (· Души) — an icon
@@ -633,19 +636,30 @@
   }
   .hand-head .deck-info {
     font-size: 11px;
-    color: #d8c9a8;
+    /* fix-ui: lighter */
+    color: #f3e8cf;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   }
   .hand-head .deck-played {
     display: inline;
   }
-  /* room above the cards for a lifted one (up to 110 px; the strip lets the presses through to what is under that room) */
+  /* fix-ui: the strip takes the finger itself (pointer-events: none on a scrolling strip — the likely cause why an iPhone did not
+     scroll the fan): a little room above the tilted cards only; the room for a lifted card (up to 110 px, the presses go through
+     it to what is under it) — only while a card is lifted */
   .hand-cards {
     flex: 0 1 auto;
     min-height: 0;
     align-items: flex-start;
-    padding: 110px 40px 4px;
-    margin-top: -106px;
+    padding: 14px 40px 4px;
+    margin-top: -10px;
     scroll-padding: 0 40px;
+    pointer-events: auto;
+    touch-action: pan-x;
+  }
+  .hand-cards:has(> .hcard.lifted) {
+    padding-top: 110px;
+    margin-top: -106px;
+    pointer-events: none;
   }
   .hand-cards > .hcard {
     width: 112px;
@@ -845,13 +859,25 @@
 @media (max-width: 700px) {
   /* «Палуба»: the warm light of the lantern falls on the fan too — a faint layer over the hand from the flame (--lamp-x/y) */
   .game.view-hand-deck::after {
+    --lx: var(--lamp-x, 430px);
+    --ly: var(--lamp-y, 650px);
     content: '';
     position: absolute;
-    inset: 0;
+    /* fix-ui (5а): only the box of the light (the gradient is clear past its ellipse 240 × 200), not the whole screen — the same
+       picture, but a blend over the whole screen is mixed again on every frame of every effect under it (iPhone) */
+    left: max(0px, calc(var(--lx) - 240px));
+    right: max(0px, calc(100% - var(--lx) - 240px));
+    top: max(0px, calc(var(--ly) - 200px));
+    bottom: max(0px, calc(100% - var(--ly) - 200px));
     z-index: 5;
     pointer-events: none;
     mix-blend-mode: soft-light;
-    background: radial-gradient(240px 200px at var(--lamp-x, 100%) var(--lamp-y, 70%), rgba(255, 196, 110, 0.5), rgba(255, 160, 60, 0.18) 50%, rgba(255, 160, 60, 0) 100%);
+    background: radial-gradient(
+      240px 200px at calc(var(--lx) - max(0px, calc(var(--lx) - 240px))) calc(var(--ly) - max(0px, calc(var(--ly) - 200px))),
+      rgba(255, 196, 110, 0.5),
+      rgba(255, 160, 60, 0.18) 50%,
+      rgba(255, 160, 60, 0) 100%
+    );
   }
 }
 @media (max-width: 400px) {
@@ -886,5 +912,75 @@
 @media (max-width: 700px) and (prefers-reduced-motion: reduce) {
   .hand-cards > .hcard.lift-open {
     animation: none;
+  }
+}
+
+/* fix-ui: a narrow phone (390 × 844) — the planks of the Hull shrink to leave «12/12» whole, the icons and the numbers of the other
+   tracks do not run into each other, the short name of the ship whole («Жемчужина») */
+@media (max-width: 400px) {
+  .track.t-hull .cells {
+    flex: 1 1 auto;
+  }
+  .t-hull .cells i {
+    flex: 0 1 9.8px;
+    width: auto;
+    min-width: 4px;
+  }
+  .track.t-hull .track-num {
+    flex: none;
+    font-size: 16px;
+  }
+  .track-row2 > .track {
+    flex: 0 0 auto;
+    gap: 2px;
+  }
+  .track-row2 > .track + .track {
+    padding-left: 3px;
+  }
+  .track-row2 .track-num,
+  .plank-body > .badges .badge.souls {
+    font-size: 12px;
+  }
+  .plank-body > .badges .badge.souls .chip-icon svg {
+    width: 13px;
+    height: 13px;
+  }
+  .track-icon {
+    width: 13px;
+    height: 13px;
+  }
+  .t-guns .track-icon {
+    width: 17px;
+    height: 11px;
+  }
+  .plank-body > .badges .badge.souls {
+    padding-left: 4px;
+  }
+  .plank-head {
+    gap: 4px;
+  }
+  .plank-head .ship-art {
+    flex-basis: 24px;
+  }
+  .plank-head .ship-pic svg {
+    width: 22px;
+    height: 13px;
+  }
+  .hand-count svg {
+    width: 24px;
+    height: 15px;
+  }
+  .plank-name {
+    font-size: 12.5px;
+  }
+  .plank-body > .badges {
+    margin-left: 5px;
+  }
+}
+
+/* fix-ui: «Палуба» on a phone — the caption of the hand a little lower, under the rope of the gun (it ran through «РУКА «…»») */
+@media (max-width: 700px) {
+  .game.view-hand-deck .hand-head {
+    margin-top: 10px;
   }
 }

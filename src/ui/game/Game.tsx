@@ -213,6 +213,18 @@ export function Game({
     if (!reactOpen) setAlarmFolded(false);
   }, [reactOpen]);
   const phone = usePhoneLayout();
+  // fix-ui: a phone — the height of the bottom bar (--bar-h): the sheet of «Тревога!» stands over it, not under it
+  useEffect(() => {
+    if (!phone) return;
+    const bar = document.querySelector<HTMLElement>('.game > .bottom-bar');
+    const game = bar?.parentElement;
+    if (!bar || !game || typeof ResizeObserver === 'undefined') return;
+    const put = () => game.style.setProperty('--bar-h', `${bar.offsetHeight}px`);
+    put();
+    const ro = new ResizeObserver(put);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, [phone, reactOpen]);
   const [memoSeen, setMemoSeen] = useState<Side[]>([]);
   const [memoSide, setMemoSide] = useState<Side | null>(null);
   useEffect(() => {
@@ -1053,6 +1065,8 @@ export function Game({
   const targeted = mode.k === 'aim' ? mode.target : mode.k === 'card' ? mode.target : (s.volley?.target ?? null);
   // The ship the card repairs, as the engine decides it: framed green while the card panel is open.
   const repairing = mode.k === 'card' ? cardNeeds(s, data, mode.seat, mode.card, mode.ship ? { ship: mode.ship } : {}).repairShip : null;
+  // fix-ui (TASKS-2 PH 4): while a target is chosen the targets are framed with a dashed line and the other ships are dimmed
+  const choosingTarget = mode.k === 'aim' || (mode.k === 'card' && !!cardNeeds(s, data, mode.seat, mode.card).target) || (mode.k === 'legend' && mode.confirmed);
 
   /**
    * «✓ готов»: the player of the team whose turn it is pressed «Ход окончен». By network — the seats the server lists
@@ -1082,6 +1096,7 @@ export function Game({
       alarm={alarm?.kind === 'volley' && alarm.target === x.code ? { loss: hints && alarm.hit ? lossOf(s, x.code, alarm.hit) : null } : null}
       repairing={repairing === x.code}
       plate={plateFor(x.code)}
+      aimOff={choosingTarget && x.code !== shooter && !plateFor(x.code)}
       buttons={plankButtons(x.code)}
       role={net ? netRole(x.code) : null}
       ready={readyOf(x.code)}
@@ -1142,7 +1157,7 @@ export function Game({
 
   return (
     <div
-      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
+      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${fx.busy ? 'fx-busy' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
       data-testid="game"
       data-bottom={bottom}
     >
@@ -1264,8 +1279,8 @@ export function Game({
           <span className="tile-ic" aria-hidden dangerouslySetInnerHTML={{ __html: ROUND_ICON.rules }} />
           Правила
         </button>
-        {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" />}
-        {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" /> : net ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
+        {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" capNarrow={held ? 'Дальше' : 'Пауза'} />}
+        {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" capNarrow="До конца" /> : net ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
         <OakButton
           b={endBtn}
           className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`}

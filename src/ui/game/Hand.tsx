@@ -8,6 +8,7 @@ import type { CardInstance, GameData } from '../../engine/types';
 import { HIDDEN } from '../../engine/view';
 import type { Btn } from './Table';
 import { reducedMotion } from '../start/motion';
+import { plainText } from './text';
 
 // Before the paint in the browser; the tests render the cards to markup, where only useEffect is quiet.
 const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -16,8 +17,10 @@ const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffe
  * The text of a card is cut by whole lines with «…» (U3): as many lines as the height left under the name and the
  * effect holds — a name of one or two lines leaves a different room, so the number is measured, not fixed in CSS.
  */
-function useWholeLines() {
+function useWholeLines(key: string) {
   const ref = useRef<HTMLSpanElement>(null);
+  // fix-ui (5а): measured when the card (its text, its look) changes and on resize — not on every render of the hand: each fit
+  // writes the style and reads the layout, and the hand renders many times a second while the clips run
   useBeforePaint(() => {
     const fit = () => {
       const el = ref.current;
@@ -32,9 +35,15 @@ function useWholeLines() {
       el.style.setProperty('max-height', `${n * line}px`);
     };
     fit();
+    // the fonts of the cards may come after the first fit (their lines are of another height)
+    let live = true;
+    document.fonts?.ready.then(() => live && fit());
     addEventListener('resize', fit);
-    return () => removeEventListener('resize', fit);
-  });
+    return () => {
+      live = false;
+      removeEventListener('resize', fit);
+    };
+  }, [key]);
   return ref;
 }
 
@@ -159,6 +168,13 @@ function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number): number
   return middle;
 }
 
+/** Scrolls the strip of the hand (and nothing round it) so that the card stands in its middle. */
+function centre(row: HTMLElement, card: Element, behavior: ScrollBehavior) {
+  const r = row.getBoundingClientRect(),
+    c = card.getBoundingClientRect();
+  row.scrollTo({ left: row.scrollLeft + (c.left + c.width / 2) - (r.left + r.width / 2), behavior });
+}
+
 const TYPE_CLASS: Record<string, string> = { ЗАРЯД: 'charge', РЕАКЦИЯ: 'reaction', ПРИКАЗ: 'order', РЕМОНТ: 'repair' };
 
 export function cardClass(c: CardInstance): string {
@@ -224,7 +240,7 @@ export function HandCard({
   /** The lifted card goes back into the fan (a press on its strip). */
   onDrop?: () => void;
 }) {
-  const textRef = useWholeLines();
+  const textRef = useWholeLines(`${code}|${note ?? ''}|${plan ? 1 : 0}|${lifted ? 1 : 0}|${alarm?.kind ?? ''}|${alarm?.why ?? ''}|${alarm?.strip?.top ?? ''}`);
   const liftRef = useLiftMargin(!!lifted && actions !== undefined);
   if (code === HIDDEN) {
     return <div className={`hcard back ${plan ? 'plan' : ''}`} style={style} data-lift={liftKey} aria-label="Закрытая карта" data-fx-card={HIDDEN} />;
@@ -258,7 +274,7 @@ export function HandCard({
         </span>
         <span className="hcard-name">{c.name}</span>
         <span className="hcard-big">{note ?? c.big}</span>
-        <span className="hcard-text">{c.text.replace(/<[^>]+>/g, ' ')}</span>
+        <span className="hcard-text">{plainText(c.text)}</span>
         {play &&
           (play.disabled ? (
             <span className="lift-strip no" data-testid="lift-why">
@@ -298,7 +314,7 @@ export function HandCard({
       </span>
       <span className="hcard-name">{c.name}</span>
       <span className="hcard-big">{note ?? c.big}</span>
-      <span className="hcard-text" ref={textRef}>{c.text.replace(/<[^>]+>/g, ' ')}</span>
+      <span className="hcard-text" ref={textRef}>{plainText(c.text)}</span>
       {alarm?.kind === 'ok' && alarm.strip && (
         <span className="hcard-strip ok" data-testid="hcard-strip">
           <b>{alarm.strip.top}</b>
@@ -371,11 +387,23 @@ export function Hand({
   // The phone: the lifted card (its key in the strip); a tap beside it, another ship's tab or a new hand drops it.
   const [lifted, setLifted] = useState<string | null>(null);
   useEffect(() => setLifted(null), [seat, n]);
-  // the lifted card to the middle of the strip (after it has grown: its neighbours stepped aside)
+  // the lifted card to the middle of the strip (after it has grown: its neighbours stepped aside) — only the strip scrolls, not the
+  // table round it (fix-ui: scrollIntoView moved the whole table when the last card was lifted)
   useEffect(() => {
     if (!lifted) return;
-    [...(rowRef.current?.children ?? [])].find((x) => x.getAttribute('data-lift') === lifted)?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
+    const row = rowRef.current;
+    const card = [...(row?.children ?? [])].find((x) => x.getAttribute('data-lift') === lifted);
+    if (row && card) centre(row, card, reducedMotion() ? 'auto' : 'smooth');
   }, [lifted, rowRef]);
+  // a phone: the fan opens on the first card that can be played (a new hand, another ship)
+  const firstOk = holder.hand.findIndex((code) => offOf(seat, code) === null);
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row || !isPhone() || firstOk < 0) return;
+    const card = row.querySelectorAll(':scope > .hcard')[firstOk];
+    if (card) centre(row, card, 'auto');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seat, n]);
   useEffect(() => {
     if (!lifted) return;
     const drop = (e: Event) => {

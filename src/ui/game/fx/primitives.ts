@@ -15,6 +15,7 @@ import { scar } from './scars';
 import { FLAME } from '../art/fire';
 import { T } from './timing';
 import { stageK } from '../../stage';
+import { plainText } from '../text';
 
 /** Everything an effect needs: the reference's globals, for one run of the queue. */
 export interface FxCtx {
@@ -393,7 +394,7 @@ export function cardHTML(data: GameData, code: string): string {
   if (!code || code === HIDDEN) return `<div class="hcard back" data-fx-card="${HIDDEN}"></div>`;
   const c = cardByCode(data, code);
   const cost = c.soul > 0 ? `${c.soul} Д` : `${c.cost}`;
-  return `<button class="hcard ${cardClass(c)}" tabindex="-1" data-fx-card="${esc(code)}"><span class="hcard-head"><span class="hcard-type">${esc(c.type)}</span><span class="cost">${esc(cost)}</span></span><span class="hcard-name">${esc(c.name)}</span><span class="hcard-big">${esc(c.big)}</span><span class="hcard-text">${esc(c.text.replace(/<[^>]+>/g, ' '))}</span></button>`;
+  return `<button class="hcard ${cardClass(c)}" tabindex="-1" data-fx-card="${esc(code)}"><span class="hcard-head"><span class="hcard-type">${esc(c.type)}</span><span class="cost">${esc(cost)}</span></span><span class="hcard-name">${esc(c.name)}</span><span class="hcard-big">${esc(c.big)}</span><span class="hcard-text">${esc(plainText(c.text))}</span></button>`;
 }
 /** The relative luminance of a colour «#rrggbb» (WCAG). */
 function luminance(hex: string): number {

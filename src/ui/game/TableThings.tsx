@@ -122,22 +122,24 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     const balls = pieceAt('balls', Math.max(4, gun.l + 6 * gs) + 25 * bs, gun.t + gun.h - 2 - 20 * bs, bs);
     // the lantern hangs on the bottom right corner of the frame of the sea, a little over the frame, over all of the table: right of the
     // plank «Месть» and above «Перестроение», as large as that corner allows (its box 50·ls × 59·ls round the flame at (lx, ly − 3·ls))
-    const sea = rect(game.querySelector('.sea-table'), g);
+    // fix-ui (the user's choice: as large as fits without covering anything): the lantern hangs on the bottom right corner of the
+    // frame of the sea, in the strip right of «Месть» (its drawing is 30 of the 50 units of its box wide), over the frame, its foot
+    // just above «Перестроение»; whole in the window. The buttons of «Месть» and «Перестроение» stay clear.
     const plank = rect(game.querySelector('.planks.bottom > .plank:last-child'), g);
-    const right = Math.min(W - 1, sea ? sea.l + sea.w + 6 : W - 1);
-    const left = plank ? plank.l + plank.w + 1 : right - 20;
-    const top = plank ? plank.t + plank.h - 4 : (sea ? sea.t + sea.h - 22 : hand.t - 40);
-    const bottom = regroup ? regroup.t - 1 : top + 26;
-    const ls = Math.max(0.24, Math.min((right - left) / 50, (bottom - top) / 59, gun.w / 2.6 / 50));
-    const lx = (left + right) / 2,
-      ly = bottom - 38 * ls;
+    const stripL = plank ? plank.l + plank.w + 1 : W - 20;
+    const ls = Math.max(0.3, Math.min(0.62, (W - 1 - stripL) / 30));
+    const lx = (stripL + W - 1) / 2;
+    const foot = regroup ? regroup.t - 1 : (plank ? plank.t + plank.h + 18 : hand.t - 20);
+    const at0 = lanternAt(0, 0, ls);
+    const ly = foot - (at0.t + at0.h);
     const lantern = lanternAt(lx, ly, ls);
     const hook = { l: lx - 4, t: lantern.t - 9, w: 8, h: 11 };
     // the warm glint on the top of the barrel, towards the muzzle (the lantern is to the right)
     const glint = { l: gun.l + 66 * gs, t: gun.t + 3 * gs, w: 54 * gs, h: 7 * gs };
     return { phone: true, W, H, pieces: [gun, balls, lantern], lx, ly, ls, hook, glint };
   }
-  const end = rect(visible(game, '[data-testid="end-turn"]'), g);
+  // «Ход окончен»; in «Тревога!» its place holds «Пропустить» — then the column of the log it stands in (fix-ui)
+  const end = rect(visible(game, '[data-testid="end-turn"]'), g) ?? rect(visible(game, '.log-col .alarm-actions'), g) ?? rect(game.querySelector('.log-col'), g);
   const undo = rect(visible(game, '.log-col .undo'), g);
   if (!end || !cardsBox) return null;
   // L — right of «Трюм + часы + Перестроение» + 24; R — left of «Ход окончен» + «Отменить» − 16
@@ -263,23 +265,25 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
   const [placed, setPlaced] = useState<Placed[]>([]);
   const [deck, setDeck] = useState<DeckPlace | null>(null);
   const [wheel, setWheel] = useState<{ x: number; y: number } | null>(null);
-  const watched = useRef<{ game: HTMLElement; ro: ResizeObserver; mo: MutationObserver; off: () => void } | null>(null);
+  // fix-ui: subscribed again when the look changes (a measure of the old look on the new one ran away: «Стол капитана» does not
+  // use --deck-lift, so every measure of «Палуба» added to it, the style changed, the observer fired again — the page hung)
   useLayoutEffect(() => {
     const game = wrap.current?.parentElement ?? null;
-    const w = watched.current;
-    if (w && w.game === game) return;
-    w?.ro.disconnect();
-    w?.mo.disconnect();
-    w?.off();
-    watched.current = null;
     if (!game || typeof ResizeObserver === 'undefined') return;
     const measure = () => {
       if (look === 'deck') {
+        // a laptop: a card under the pointer rises, grows and moves its neighbours — the fan is measured at rest only (the
+        // transitions of the cards bring the measure back when the pointer has gone)
+        if (game.querySelector('.hand-cards > .hcard:hover, .hand-cards > .hcard:focus-visible') && !matchMedia('(max-width: 700px)').matches) return;
+        // «Свернуть, посмотреть стол»: the hand went down on purpose — not lifted back
+        if (game.querySelector('.hand.folded')) return;
         const d = deckPlace(game);
-        setDeck((old) => (old && d && JSON.stringify(old) === JSON.stringify(d) ? old : d));
+        // nothing to measure by (in «Тревога!» there is no «Ход окончен»): the gun and the lantern stay where they were
+        if (!d) return;
+        setDeck((old) => (old && JSON.stringify(old) === JSON.stringify(d) ? old : d));
         // the hand in the middle of its strip (paddings of .hand-cards, read by useFanFit), whole in the window, its tabs over it
         const hd = d?.hand;
-        // set only what changed: the observer below watches the style attributes too
+        // set only what changed
         const put = (k: string, v: number) => {
           if (game.style.getPropertyValue(k) !== `${v}px`) game.style.setProperty(k, `${v}px`);
         };
@@ -290,45 +294,69 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         // a phone: the warm light of the lantern over the fan (phone.css)
         put('--lamp-x', d ? Math.round(d.lx) : 0);
         put('--lamp-y', d ? Math.round(d.ly) : 0);
-        setPlaced([]);
+        setPlaced((old) => (old.length ? [] : old));
         return;
       }
       // the wheel (rig, е): under «Перестроение», its lower half past the edge of the window
       const g = game.getBoundingClientRect();
       const rg = rect(visible(game, '.board-bottom .regroup'), g);
-      setWheel(rg && g.width / stageK() > 700 ? { x: rg.l + rg.w / 2, y: rg.t + rg.h + 6 } : null);
+      const nw = rg && g.width / stageK() > 700 ? { x: rg.l + rg.w / 2, y: rg.t + rg.h + 6 } : null;
+      setWheel((old) => (old && nw && Math.abs(old.x - nw.x) < 1 && Math.abs(old.y - nw.y) < 1 ? old : nw));
       const R = freeRight(game);
       const next = R ? [fit('candle', R, [0.55, 0.02, 0.45, 0.5]), fit('ink', R, [0.55, 0.55, 0.45, 0.42])].filter((x): x is Placed => !!x) : [];
       setPlaced((old) => (old.length === next.length && old.every((o, i) => o.key === next[i].key && Math.abs(o.l - next[i].l) < 1 && Math.abs(o.t - next[i].t) < 1) ? old : next));
     };
+    // at most once a frame (fix-ui, 5а: the clips add and take away dozens of elements a second)
+    let raf = 0,
+      again = 0;
+    const ask = () => {
+      if (!raf) raf = requestAnimationFrame(() => ((raf = 0), measure()));
+    };
     measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(game);
-    game.querySelectorAll('.hand-cards, .log-col, .team-row, .sea-table').forEach((e) => ro.observe(e));
+    const ro = new ResizeObserver(ask);
+    const watch = () => {
+      ro.observe(game);
+      game.querySelectorAll('.hand-cards, .log-col, .team-row, .sea-table').forEach((e) => ro.observe(e));
+    };
+    watch();
     // the hand grows and shrinks card by card, the fan tilts its cards (their inline --r/--dy): look again when they change
-    // (and once more when the cards have moved: they glide to their places in .18 s, game.css .hcard transition)
-    let again = 0;
-    const mo = new MutationObserver(() => {
-      measure();
+    // (and once more when the cards have moved: they glide to their places in .18 s, game.css .hcard transition). Not the layers
+    // of the effects, the traces, the background itself, nor the style of the game (this measure writes it).
+    const QUIET = '.fx-layer, .fx-weather, .fx-scars, .plank-scars, .backdrop';
+    const mo = new MutationObserver((recs) => {
+      const hit = recs.some((r) => {
+        const t = r.target as Element;
+        if (r.type === 'attributes') return t !== game && !!t.classList?.contains('hcard');
+        return !t.closest?.(QUIET);
+      });
+      if (!hit) return;
+      watch();
+      ask();
       clearTimeout(again);
-      again = window.setTimeout(measure, 260);
+      again = window.setTimeout(ask, 260);
     });
     mo.observe(game, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
     // a card that glided to its place in the fan (the transitions of .hcard) — measure the fan where it came to rest
     const settled = (e: TransitionEvent) => {
-      if ((e.target as Element).classList?.contains('hcard')) measure();
+      if ((e.target as Element).classList?.contains('hcard')) ask();
     };
     game.addEventListener('transitionend', settled);
-    watched.current = { game, ro, mo, off: () => game.removeEventListener('transitionend', settled) };
-  });
-  useLayoutEffect(
-    () => () => {
-      watched.current?.ro.disconnect();
-      watched.current?.mo.disconnect();
-      watched.current?.off();
-    },
-    [],
-  );
+    // the fonts change the width of the words («Отменить», «Ход окончен») without a mutation or a resize of the watched boxes
+    let live = true;
+    document.fonts?.ready.then(() => live && ask());
+    document.fonts?.addEventListener?.('loadingdone', ask);
+    addEventListener('resize', ask);
+    return () => {
+      live = false;
+      document.fonts?.removeEventListener?.('loadingdone', ask);
+      removeEventListener('resize', ask);
+      ro.disconnect();
+      mo.disconnect();
+      game.removeEventListener('transitionend', settled);
+      cancelAnimationFrame(raf);
+      clearTimeout(again);
+    };
+  }, [look]);
   const candlePlace = placed.find((x) => x.key === 'candle');
   return (
     <div ref={wrap} className={`backdrop look-${look}`} aria-hidden="true" data-testid="backdrop">

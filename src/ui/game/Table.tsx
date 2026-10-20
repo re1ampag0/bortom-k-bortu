@@ -5,7 +5,7 @@ import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
 import { deckCards } from '../../engine/data';
 import { InfoTip } from './InfoTip';
-import { roman, SIDE_LABEL } from './text';
+import { plainText, roman, SIDE_LABEL } from './text';
 import { reducedMotion } from '../start/motion';
 import { cellUrl, CELLS, type CellIcon } from './art/cells';
 import { shipSvg } from './art/ships';
@@ -223,7 +223,7 @@ export const ROUND_ICON: Record<string, string> = {
  * button stays its accessible name and its text (`.wide`, hidden from sight); the caption is the label without its
  * leading symbol («⏸ Пауза» → «Пауза»).
  */
-export function RoundButton({ b, icon, className = '', thin = false }: { b: Btn; icon: string; className?: string; thin?: boolean }) {
+export function RoundButton({ b, icon, className = '', thin = false, capNarrow }: { b: Btn; icon: string; className?: string; thin?: boolean; capNarrow?: string }) {
   const caption = b.label.replace(/^[^\p{L}]+/u, '');
   return (
     <button
@@ -239,9 +239,15 @@ export function RoundButton({ b, icon, className = '', thin = false }: { b: Btn;
         <span className="round-knot" dangerouslySetInnerHTML={svg(thin ? KNOT_THIN_SVG : KNOT_SVG)} />
         <span className="round-core" dangerouslySetInnerHTML={svg(ROUND_ICON[icon] ?? '')} />
       </span>
-      <span className="round-cap" aria-hidden>
+      <span className={`round-cap ${capNarrow ? 'wide' : ''}`} aria-hidden>
         {caption}
       </span>
+      {/* fix-ui: a phone, the bottom bar — a shorter caption («До конца») */}
+      {capNarrow && (
+        <span className="round-cap cap-short" aria-hidden>
+          {capNarrow}
+        </span>
+      )}
       <span className="wide sr-only">{b.label}</span>
       {b.short && <span className="narrow sr-only">{b.short}</span>}
     </button>
@@ -351,7 +357,7 @@ const SOULS_INFO = 'Только у «Голландца», не больше 5.
 /** The text of the card «Чёрная метка» (the card with the operation «mark»), without its markup. */
 function markText(data: GameData): string {
   const card = deckCards(data).find((c) => (c.fx.ops || []).some((o) => o[0] === 'mark'));
-  return card ? `Карта «${card.name}»: ${card.text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()}` : '';
+  return card ? `Карта «${card.name}»: ${plainText(card.text)}` : '';
 }
 
 /**
@@ -412,6 +418,7 @@ export function Plank({
   shooter,
   alarm = null,
   repairing = false,
+  aimOff = false,
   ready = false,
   plate,
   buttons,
@@ -437,6 +444,8 @@ export function Plank({
   alarm?: { loss: Loss[] | null } | null;
   /** The card being played repairs this ship (green frame while its panel is open). */
   repairing?: boolean;
+  /** fix-ui: a target is being chosen and this ship is not one — dimmed. */
+  aimOff?: boolean;
   /** The player pressed «Ход окончен» this turn: «✓ готов» in the head, seen by everyone. */
   ready?: boolean;
   plate: Plate | null;
@@ -476,6 +485,7 @@ export function Plank({
     ship.sunk ? 'sunk' : '',
     ship.submerged ? 'submerged' : '',
     plate ? (plate.chosen ? 'chosen' : 'aimable') : '',
+    aimOff ? 'aim-off' : '',
   ].join(' ');
   // While a target is chosen, a press anywhere on the target (the head too) chooses it; «i» opens the ship card,
   // the star and the Legend badge are a part of the target.
@@ -663,9 +673,10 @@ export function Plank({
       {phone && statusRow}
       {buttons.length > 0 && (
         <div className="plank-buttons-wrap" onClick={(e) => e.stopPropagation()}>
-          <div className="plank-buttons" ref={buttonsRef}>
+          {/* fix-ui: four buttons and more — one row of «icon · price» on a laptop, the name in a paper pop */}
+          <div className={`plank-buttons ${buttons.length >= 4 ? 'many' : ''}`} ref={buttonsRef}>
             {buttons.map((b) => (
-              <PlankButton key={b.key} b={b} />
+              <PlankButton key={b.key} b={b} compact={buttons.length >= 4} />
             ))}
           </div>
           {/* On a phone, while more buttons are to the right: a press scrolls the row (U3). */}
@@ -745,19 +756,24 @@ const FREE = /^(.*?) · (бесплатно)$/;
 const KEG_SMALL = CELLS.KEG_S;
 
 /** A button of a plank: on a laptop the icon, the name and the price with a keg; on a phone the short label (U3). */
-export function PlankButton({ b, className = '' }: { b: Btn; className?: string }) {
+export function PlankButton({ b, className = '', compact = false }: { b: Btn; className?: string; compact?: boolean }) {
   const m = PRICED.exec(b.label) ?? FREE.exec(b.label);
   // the trident has gradients of its own: one copy for the life of the button, so the picture is not set again on a render
   const trident = useMemo(() => (b.key === 'sword' ? tridentSvg(20) : null), [b.key]);
   const icon = trident ?? CMD_ICON[b.key];
+  const name = m ? m[1] : b.label;
+  // compact (a laptop, four buttons and more): the name and, if it cannot be pressed, the reason — in the paper pop of the game
+  // (the same as «+1 совместно»), not in the title of the browser; a button without an icon keeps its short name
+  const pop = compact && icon ? [name, b.tip, b.disabled].filter(Boolean).join(' — ') : b.tip;
   return (
     <button
-      className={`btn cmd ${b.primary ? 'primary' : ''} ${className}`}
+      className={`btn cmd ${b.primary ? 'primary' : ''} ${compact && icon ? 'compact' : ''} ${className}`}
       onClick={b.disabled ? undefined : b.onClick}
       aria-disabled={!!b.disabled}
-      title={b.disabled ?? undefined}
+      aria-label={compact && icon ? name : undefined}
+      title={compact && icon ? undefined : b.disabled ?? undefined}
       data-testid={b.testid}
-      data-tip={b.tip}
+      data-tip={pop}
     >
       {b.tag && (
         <span className="cmd-tag" data-testid={b.testid ? `${b.testid}-tag` : undefined}>
@@ -767,7 +783,7 @@ export function PlankButton({ b, className = '' }: { b: Btn; className?: string 
       {/* a laptop always; a phone while a plank has one or two buttons (game.css) — else the short label */}
       <span className="cmd-in">
         {icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />}
-        <span className="cmd-name">{m ? m[1] : b.label}</span>
+        <span className="cmd-name">{name}</span>
         {m && (
           <span className={`cost ${m[2] === 'бесплатно' ? 'free' : ''}`} aria-label={m[2] === 'бесплатно' ? 'бесплатно' : `${m[2]} Пороха`}>
             {m[2]}
