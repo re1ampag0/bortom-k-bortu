@@ -44,8 +44,9 @@ interface Placed extends Box {
  * R — 16 px before «Ход окончен» + «Отменить», its balls at the wheel, the lantern (1.3) over the breech; the hand stands in the
  * middle of the strip from L (24 px right of the Hold, the hourglass and «Перестроение») to the gun − 16 (Hand.tsx useFanFit
  * reads the paddings of .hand-cards and closes the step of the fan when the cards do not fit), whole in the window; its tabs
- * begin over its first card, the grating lies over its middle. A phone: the gun (1.0, turned, its breech and wheel left of the cards, the barrel under them) at the
- * bottom left of the hand, the lantern (0.7) at the top right of the hand between the tabs and «Колода · Сброс».
+ * begin over its first card, the grating lies over its middle. A phone (a5-phone): the gun (turned, its breech to the left) at the
+ * bottom left under the hand, in the strip of the dots under the cards, its balls beside it; the lantern at the top right of the
+ * hand, in the row of «Рука «…»» between it and «Колода · Сброс» — neither meets the caption, the cards or the bottom bar.
  */
 const PIECES = {
   grate: { src: grate, vb: [-7, -7, 354, 38] },
@@ -94,24 +95,33 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
   const H = g.height / stageK(),
     W = g.width / stageK();
   const hand = rect(game.querySelector('.hand-row > .hand'), g);
-  const tabs = rect(game.querySelector('.hand .tabs'), g);
   const cardsBox = rect(game.querySelector('.hand-cards'), g);
   const cards = Array.from(game.querySelectorAll('.hand-cards .hcard')).map((c) => rect(c, g)).filter((c): c is Box => !!c);
   if (!hand) return null;
   if (W < 701) {
-    // the gun turned (the breech to the left), left of the first card, its barrel under the cards
-    const c0 = cards[0];
-    const gs = 1;
-    const gunBottom = c0 ? c0.t + c0.h - 2 : H - 70;
-    const gun = { ...pieceAt('cannon', 3 * gs, gunBottom - 67 * gs, gs), flip: true };
-    const balls = pieceAt('balls', 25 * 0.7, gunBottom - 2 - 20 * 0.7, 0.7);
+    // the strip under the cards (the dots): from the lowest bottom of a card in the fan to the bottom of the hand
+    // (a low window cuts the cards by the bottom of their strip: the edge of what is seen counts)
+    const fan = cards.filter((c) => c.h < 200);
+    const seen = cardsBox ? cardsBox.t + cardsBox.h : Infinity;
+    const top = Math.min(seen, fan.length ? Math.max(...fan.map((c) => c.t + c.h)) : hand.t + hand.h - 30) + 2;
+    const bottom = Math.max(top + 12, hand.t + hand.h - 1);
+    // the gun turned (the breech to the left), as tall as the strip; its box: (x − 3·gs, y + 11·gs, 128·gs, 56·gs)
+    const gs = Math.min(0.5, (bottom - top) / 56);
+    const gun = { ...pieceAt('cannon', 6 + 3 * gs, top - 11 * gs, gs), flip: true };
+    const bs = gs * 0.9;
+    const balls = pieceAt('balls', gun.l + gun.w + 4 + 25 * bs, bottom - 20 * bs, bs);
+    // the lantern in the row of the caption: its box is 50·ls × 59·ls round the flame at (lx, ly − 3·ls)
+    const head = rect(game.querySelector('.hand .hand-head'), g) ?? { l: 0, t: hand.t, w: W, h: 30 };
+    const label = rect(visible(game, '.phone-hand-label'), g);
     const deckInfo = rect(visible(game, '[data-fx-deck]'), g);
-    const ls = 0.7;
-    const right = deckInfo ? deckInfo.l - 8 : W - 60;
-    const ly = (tabs ? tabs.t : hand.t) + 21 * ls - 6;
-    const lantern = lanternAt(right - 25 * ls, ly, ls);
-    const grateP = pieceAt('grate', tabs ? tabs.l + tabs.w - 170 * 0.7 : 40, hand.t - 4, 0.7);
-    return { phone: true, W, H, pieces: [grateP, gun, balls, lantern], lx: right - 25 * ls, ly, ls };
+    const ls = Math.min(0.5, (head.h - 2) / 59);
+    const from = label ? label.l + label.w : head.l + W / 2 - 40;
+    const to = deckInfo ? deckInfo.l : head.l + head.w;
+    const lx = (from + to) / 2,
+      ly = head.t + 1 + 21 * ls;
+    const lantern = lanternAt(lx, ly, ls);
+    const grateP = pieceAt('grate', 40, hand.t - 4, 0.7);
+    return { phone: true, W, H, pieces: [grateP, gun, balls, lantern], lx, ly, ls };
   }
   const end = rect(visible(game, '[data-testid="end-turn"]'), g);
   const undo = rect(visible(game, '.log-col .undo'), g);

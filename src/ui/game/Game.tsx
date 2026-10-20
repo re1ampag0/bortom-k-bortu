@@ -28,7 +28,7 @@ import { download, loadSettings, storeSave, storeSettings, type Speed } from '..
 import { Curtain } from './Curtain';
 import { AlarmActions, AlarmArrow, AlarmBar, ReactionSheet, usePhoneLayout } from './Alarm';
 import { alarmInfo, lossOf, reactionStrip } from './alarm';
-import { Hand, type AlarmCard, type HandTab } from './Hand';
+import { Hand, type AlarmCard, type HandTab, type LiftActions } from './Hand';
 import { LogBook } from './LogBook';
 import { CardDetail, DiscardSheet, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
 import {
@@ -540,6 +540,18 @@ export function Game({
       }
     }
     return btns;
+  };
+
+  /**
+   * A phone (a5-phone, A5Phone frame 6): the lifted card in the hand plays itself — the buttons of the window of the card:
+   * «Сыграть» (grey with the reason when it cannot), under it only the other actions that can be pressed now.
+   */
+  const LIFT_SHORT: Record<string, string> = { sell: `Продать +${data.rules.sellGain}\u00a0П`, pass: 'Передать', ext: 'Потушить' };
+  const liftActions = (holder: string, code: string): LiftActions | null => {
+    if (code === HIDDEN || code.endsWith('-Л')) return null;
+    const btns = cardButtons(holder, code);
+    if (btns.length === 0) return null;
+    return { play: btns[0], more: btns.slice(1).filter((b) => !b.disabled).map((b) => ({ ...b, label: LIFT_SHORT[b.key] ?? b.label })) };
   };
 
   // ——— End of the turn: «Залп не дан…» → Plans of the Pearl → endTurn ———
@@ -1213,6 +1225,7 @@ export function Game({
                 note={captainNote}
                 alarmOf={alarmOn ? alarmOf : null}
                 folded={alarmFolded}
+                actionsOf={liftActions}
               />
             )}
             {!wideLog && handActions}
