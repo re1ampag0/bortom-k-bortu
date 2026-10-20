@@ -820,6 +820,28 @@
   display: block;
   filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.5));
 }
+/* the warm glint of the lantern on the barrel of the gun of «Палуба» (a phone only draws it) */
+.deck-glint {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 226, 160, 0.85), rgba(255, 180, 90, 0.35) 60%, rgba(255, 160, 60, 0));
+  mix-blend-mode: screen;
+}
+@media (max-width: 700px) {
+  /* «Палуба»: the big gun lighter (the lantern is near), its balls dimmed under «Колода · Сброс»; the lantern and its hook hang
+     over the frame of the sea (over the table, not under it) */
+  .backdrop .deck-piece[data-piece='cannon'] {
+    filter: brightness(1.35) saturate(1.1);
+  }
+  .backdrop .deck-piece[data-piece='balls'] {
+    opacity: 0.5;
+  }
+  .backdrop .deck-piece[data-piece='lantern'],
+  .backdrop .deck-hook {
+    z-index: 4;
+  }
+}
 @media (max-width: 700px) {
   /* «Палуба»: the warm light of the lantern falls on the fan too — a faint layer over the hand from the flame (--lamp-x/y) */
   .game.view-hand-deck::after {
