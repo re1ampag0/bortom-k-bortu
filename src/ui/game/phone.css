@@ -977,3 +977,10 @@
     margin-left: 5px;
   }
 }
+
+/* fix-ui: «Палуба» on a phone — the caption of the hand a little lower, under the rope of the gun (it ran through «РУКА «…»») */
+@media (max-width: 700px) {
+  .game.view-hand-deck .hand-head {
+    margin-top: 10px;
+  }
+}
