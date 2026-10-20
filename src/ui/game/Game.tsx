@@ -1065,6 +1065,8 @@ export function Game({
   const targeted = mode.k === 'aim' ? mode.target : mode.k === 'card' ? mode.target : (s.volley?.target ?? null);
   // The ship the card repairs, as the engine decides it: framed green while the card panel is open.
   const repairing = mode.k === 'card' ? cardNeeds(s, data, mode.seat, mode.card, mode.ship ? { ship: mode.ship } : {}).repairShip : null;
+  // fix-ui (TASKS-2 PH 4): while a target is chosen the targets are framed with a dashed line and the other ships are dimmed
+  const choosingTarget = mode.k === 'aim' || (mode.k === 'card' && !!cardNeeds(s, data, mode.seat, mode.card).target) || (mode.k === 'legend' && mode.confirmed);
 
   /**
    * «✓ готов»: the player of the team whose turn it is pressed «Ход окончен». By network — the seats the server lists
@@ -1094,6 +1096,7 @@ export function Game({
       alarm={alarm?.kind === 'volley' && alarm.target === x.code ? { loss: hints && alarm.hit ? lossOf(s, x.code, alarm.hit) : null } : null}
       repairing={repairing === x.code}
       plate={plateFor(x.code)}
+      aimOff={choosingTarget && x.code !== shooter && !plateFor(x.code)}
       buttons={plankButtons(x.code)}
       role={net ? netRole(x.code) : null}
       ready={readyOf(x.code)}

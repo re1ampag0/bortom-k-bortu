@@ -418,6 +418,7 @@ export function Plank({
   shooter,
   alarm = null,
   repairing = false,
+  aimOff = false,
   ready = false,
   plate,
   buttons,
@@ -443,6 +444,8 @@ export function Plank({
   alarm?: { loss: Loss[] | null } | null;
   /** The card being played repairs this ship (green frame while its panel is open). */
   repairing?: boolean;
+  /** fix-ui: a target is being chosen and this ship is not one — dimmed. */
+  aimOff?: boolean;
   /** The player pressed «Ход окончен» this turn: «✓ готов» in the head, seen by everyone. */
   ready?: boolean;
   plate: Plate | null;
@@ -482,6 +485,7 @@ export function Plank({
     ship.sunk ? 'sunk' : '',
     ship.submerged ? 'submerged' : '',
     plate ? (plate.chosen ? 'chosen' : 'aimable') : '',
+    aimOff ? 'aim-off' : '',
   ].join(' ');
   // While a target is chosen, a press anywhere on the target (the head too) chooses it; «i» opens the ship card,
   // the star and the Legend badge are a part of the target.
