@@ -184,8 +184,8 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     lx,
     ly,
     ls: lsc,
-    // (26 px in from each end: a tilted card of the fan reaches past its own box, and the last card keeps ≥ 24 px from the gun)
-    hand: { pl: (stripL + 26 - cardsBox.l) / f, pr: (cardsBox.l + cardsBox.w - stripR + 26) / f, lift: lift / f, tabs: first - hand.l },
+    // (28 px in from each end: a tilted card of the fan reaches past its own box, and the last card keeps ≥ 24 px from the gun)
+    hand: { pl: (stripL + 28 - cardsBox.l) / f, pr: (cardsBox.l + cardsBox.w - stripR + 28) / f, lift: lift / f, tabs: first - hand.l },
   };
 }
 

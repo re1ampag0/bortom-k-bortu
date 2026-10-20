@@ -19,7 +19,12 @@ const shot = (page: Page, name: string, width: number) => page.screenshot({ path
 /** The vertical centre of the gap between the rows of planks and of the middle group (the summary, the hint). */
 async function middle(page: Page) {
   return page.evaluate(() => {
-    const r = (q: string) => document.querySelector(q)?.getBoundingClientRect() ?? null;
+    const stage = document.getElementById('stage')!;
+    const k = stage.getBoundingClientRect().width / stage.offsetWidth;
+    const r = (q: string) => {
+      const b = document.querySelector(q)?.getBoundingClientRect();
+      return b ? { top: b.top / k, bottom: b.bottom / k, left: b.left / k, right: b.right / k, height: b.height / k } : null;
+    };
     const top = r('.planks.top')!, bottom = r('.planks.bottom')!;
     const sum = r('[data-testid="turn-summary"]');
     const info = r('[data-testid="middle-info"]');
@@ -66,8 +71,8 @@ async function columns(page: Page) {
       const others = Array.from(p.querySelectorAll('.cells, .track-label, .badges > *, .status-chip')).map((e) => e.getBoundingClientRect());
       return {
         ship: p.dataset.ship,
-        heights: badges.map((b) => b.height),
-        gaps: tracks.map((t) => t.num.left - t.cells.right),
+        heights: badges.map((b) => b.height / (document.getElementById('stage')!.getBoundingClientRect().width / document.getElementById('stage')!.offsetWidth)),
+        gaps: tracks.map((t) => (t.num.left - t.cells.right) / (document.getElementById('stage')!.getBoundingClientRect().width / document.getElementById('stage')!.offsetWidth)),
         numsMeet: nums.filter((n) => others.some((o) => o.width > 0 && meet(n, o))).length,
       };
     }),
@@ -293,7 +298,8 @@ for (const size of SIZES) {
           visibility: getComputedStyle(el).visibility,
           opacity: Number(getComputedStyle(svg).opacity),
           rotated: getComputedStyle(svg).transform !== 'none',
-          width: r.width,
+          // The stamp is 30 table px, including when #stage is scaled.
+          width: r.width / (document.getElementById('stage')!.getBoundingClientRect().width / document.getElementById('stage')!.offsetWidth),
           covers: parts.filter((p) => meet(s, p.getBoundingClientRect())).map((p) => `${p.className}: ${p.textContent}`),
           numsRight: Math.max(...nums.map((n) => n.right)),
           badgesLeft: badges.length ? Math.min(...badges.map((b) => b.left)) : null,
