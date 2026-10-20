@@ -914,3 +914,66 @@
     animation: none;
   }
 }
+
+/* fix-ui: a narrow phone (390 × 844) — the planks of the Hull shrink to leave «12/12» whole, the icons and the numbers of the other
+   tracks do not run into each other, the short name of the ship whole («Жемчужина») */
+@media (max-width: 400px) {
+  .track.t-hull .cells {
+    flex: 1 1 auto;
+  }
+  .t-hull .cells i {
+    flex: 0 1 9.8px;
+    width: auto;
+    min-width: 4px;
+  }
+  .track.t-hull .track-num {
+    flex: none;
+    font-size: 16px;
+  }
+  .track-row2 > .track {
+    flex: 0 0 auto;
+    gap: 2px;
+  }
+  .track-row2 > .track + .track {
+    padding-left: 3px;
+  }
+  .track-row2 .track-num,
+  .plank-body > .badges .badge.souls {
+    font-size: 12px;
+  }
+  .plank-body > .badges .badge.souls .chip-icon svg {
+    width: 13px;
+    height: 13px;
+  }
+  .track-icon {
+    width: 13px;
+    height: 13px;
+  }
+  .t-guns .track-icon {
+    width: 17px;
+    height: 11px;
+  }
+  .plank-body > .badges .badge.souls {
+    padding-left: 4px;
+  }
+  .plank-head {
+    gap: 4px;
+  }
+  .plank-head .ship-art {
+    flex-basis: 24px;
+  }
+  .plank-head .ship-pic svg {
+    width: 22px;
+    height: 13px;
+  }
+  .hand-count svg {
+    width: 24px;
+    height: 15px;
+  }
+  .plank-name {
+    font-size: 12.5px;
+  }
+  .plank-body > .badges {
+    margin-left: 5px;
+  }
+}
