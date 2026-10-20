@@ -4145,6 +4145,15 @@ button.star::before {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* fix-ui (5а): the screen and multiply of the light mix inside the background only (the planks cover all under it — the same
+     picture); nothing that moves over the table is mixed with them */
+  isolation: isolate;
+}
+/* fix-ui (5а): while a clip plays the flame of the lantern and the candle stops flickering (a blended layer that changes on every
+   frame); it flickers again when the clip ends */
+.game.fx-busy .deck-flare,
+.game.fx-busy .lantern-light {
+  animation-play-state: paused;
 }
 .deck-bg {
   position: absolute;

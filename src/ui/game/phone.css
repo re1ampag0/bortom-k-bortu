@@ -854,13 +854,25 @@
 @media (max-width: 700px) {
   /* «Палуба»: the warm light of the lantern falls on the fan too — a faint layer over the hand from the flame (--lamp-x/y) */
   .game.view-hand-deck::after {
+    --lx: var(--lamp-x, 430px);
+    --ly: var(--lamp-y, 650px);
     content: '';
     position: absolute;
-    inset: 0;
+    /* fix-ui (5а): only the box of the light (the gradient is clear past its ellipse 240 × 200), not the whole screen — the same
+       picture, but a blend over the whole screen is mixed again on every frame of every effect under it (iPhone) */
+    left: max(0px, calc(var(--lx) - 240px));
+    right: max(0px, calc(100% - var(--lx) - 240px));
+    top: max(0px, calc(var(--ly) - 200px));
+    bottom: max(0px, calc(100% - var(--ly) - 200px));
     z-index: 5;
     pointer-events: none;
     mix-blend-mode: soft-light;
-    background: radial-gradient(240px 200px at var(--lamp-x, 100%) var(--lamp-y, 70%), rgba(255, 196, 110, 0.5), rgba(255, 160, 60, 0.18) 50%, rgba(255, 160, 60, 0) 100%);
+    background: radial-gradient(
+      240px 200px at calc(var(--lx) - max(0px, calc(var(--lx) - 240px))) calc(var(--ly) - max(0px, calc(var(--ly) - 200px))),
+      rgba(255, 196, 110, 0.5),
+      rgba(255, 160, 60, 0.18) 50%,
+      rgba(255, 160, 60, 0) 100%
+    );
   }
 }
 @media (max-width: 400px) {
