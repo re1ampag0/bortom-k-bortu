@@ -213,6 +213,18 @@ export function Game({
     if (!reactOpen) setAlarmFolded(false);
   }, [reactOpen]);
   const phone = usePhoneLayout();
+  // fix-ui: a phone — the height of the bottom bar (--bar-h): the sheet of «Тревога!» stands over it, not under it
+  useEffect(() => {
+    if (!phone) return;
+    const bar = document.querySelector<HTMLElement>('.game > .bottom-bar');
+    const game = bar?.parentElement;
+    if (!bar || !game || typeof ResizeObserver === 'undefined') return;
+    const put = () => game.style.setProperty('--bar-h', `${bar.offsetHeight}px`);
+    put();
+    const ro = new ResizeObserver(put);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, [phone, reactOpen]);
   const [memoSeen, setMemoSeen] = useState<Side[]>([]);
   const [memoSide, setMemoSide] = useState<Side | null>(null);
   useEffect(() => {
