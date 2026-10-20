@@ -29,3 +29,16 @@ const FACTOR: Record<Speed, number> = { slow: 1.6, normal: 1, fast: 0.6, instant
 export function speedFactor(speed: Speed): number {
   return FACTOR[speed];
 }
+
+/**
+ * The text of a card without its marks (<b>…</b>, <br/>): «на <b>3 урона меньше</b>.» → «на 3 урона меньше.» — the tags go without
+ * a gap (a gap before «.» and a double one were left), a line break is a space.
+ */
+export function plainText(h: string): string {
+  return String(h)
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/ ([.,:;!?])/g, '$1')
+    .trim();
+}

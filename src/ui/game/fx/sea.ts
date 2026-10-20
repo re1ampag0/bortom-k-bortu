@@ -27,9 +27,10 @@ import { drawWeather } from './weather';
 
 const R1 = (n: number) => Math.round(n * 10) / 10;
 import type { ClipPlayer } from './FxLayer';
+import { plainText } from '../text';
 
 const esc = (s: string) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
-const strip = (h: string) => String(h).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').replace(/ ([.,:;!?])/g, '$1').trim();
+const strip = plainText;
 const other = (side: Side): Side => (side === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ');
 
 /** The ship of a side at a place (pos) on the displayed table: the pairs «opposite» and «diagonal» go by places, not by codes. */
