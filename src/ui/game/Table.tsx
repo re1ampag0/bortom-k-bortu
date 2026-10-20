@@ -244,7 +244,7 @@ export function RoundButton({ b, icon, className = '', thin = false, capNarrow }
       </span>
       {/* fix-ui: a phone, the bottom bar — a shorter caption («До конца») */}
       {capNarrow && (
-        <span className="round-cap narrow" aria-hidden>
+        <span className="round-cap cap-short" aria-hidden>
           {capNarrow}
         </span>
       )}

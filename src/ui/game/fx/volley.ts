@@ -112,7 +112,7 @@ export function termRows(ctx: FxCtx, terms: Term[] | null | undefined, cls: Reco
     const pos = t.n > 0 && src.kind !== 'guns';
     const c = cls[t.what] || '';
     // fix-ui: the line of a card (a Charge, a Reaction) — the card itself went into it; a pointer (a tap) shows it whole
-    const card = 'card' in src && src.card ? ` data-card="${esc(src.card)}"` : '';
+    const card = (src.kind === 'charge' || src.kind === 'reaction') && src.card ? ` data-card="${esc(src.card)}"` : '';
     return `<span class="${c}"${card}>${esc(capFirst(t.what))}</span><span class="${t.n < 0 ? 'neg' : pos ? 'pos' : ''} ${c}"${card}>${pos ? '+' : ''}${t.n < 0 ? '−' + -t.n : t.n}</span>`;
   }).join('');
 }
