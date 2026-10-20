@@ -206,10 +206,10 @@ function reefs(w: Wx, host: HTMLElement): void {
   const s = seaSvg(w, host, 'wx-reefs', rock(120, 200, 1) + rock(511, 192, 1.2) + rock(890, 206, 0.9) + rock(300, 380, 0.7) + rock(740, 30, 0.7));
   s.querySelectorAll('.sf').forEach((e) => loop(w, e, [{ transform: 'scaleX(.87)', opacity: 0.9 }, { transform: 'scaleX(1.2)', opacity: 0.3 }, { transform: 'scaleX(.87)', opacity: 0.9 }], 2400));
 }
-/** The fleet on the horizon: ships pass along the middle of the sea. */
+/** The fleet on the horizon: ships pass along the middle of the sea, bow first (to the right: flipped, as the caravan). */
 function fleet(w: Wx, host: HTMLElement): void {
   const { W, ky, kx } = w, y = 214 * ky, k = Math.max(0.3, 0.42 * Math.min(1, kx));
-  const s = seaSvg(w, host, 'wx-fleet', `<path d="M0 ${R1(y)} H${R1(W)}" stroke="#eef6f8" stroke-width="1" opacity=".25" stroke-dasharray="2 6"/>${[0, 1, 2, 3].map((i) => `<g class="fl" opacity="${R1(0.8 - i * 0.1)}" ${w.moving ? '' : `transform="translate(${R1(W * (0.15 + i * 0.22))} ${R1(y + (i % 2) * 8)})"`}>${bigShip('merchant', 0, 0, R1((k - i * 0.03) * 100) / 100)}</g>`).join('')}`);
+  const s = seaSvg(w, host, 'wx-fleet', `<path d="M0 ${R1(y)} H${R1(W)}" stroke="#eef6f8" stroke-width="1" opacity=".25" stroke-dasharray="2 6"/>${[0, 1, 2, 3].map((i) => `<g class="fl" opacity="${R1(0.8 - i * 0.1)}" ${w.moving ? '' : `transform="translate(${R1(W * (0.15 + i * 0.22))} ${R1(y + (i % 2) * 8)})"`}>${bigShip('merchant', 0, 0, R1((k - i * 0.03) * 100) / 100, true)}</g>`).join('')}`);
   s.querySelectorAll('.fl').forEach((e, i) => loop(w, e, [{ transform: `translate(${R1(-140 * kx)}px,${R1(y + (i % 2) * 8)}px)` }, { transform: `translate(${R1(W + 140 * kx)}px,${R1(y + (i % 2) * 8)}px)` }], 40000, -i * 10000));
 }
 
