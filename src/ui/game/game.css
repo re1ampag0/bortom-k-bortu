@@ -1024,6 +1024,12 @@ button.star::before {
   outline-offset: 3px;
   touch-action: manipulation;
 }
+/* fix-ui (TASKS-2 PH 4): a ship that cannot be chosen while a target is chosen — dimmed */
+.plank.aim-off {
+  opacity: 0.55;
+  filter: saturate(0.45);
+  transition: opacity 0.15s, filter 0.15s;
+}
 @keyframes aimpulse {
   50% {
     outline-color: rgba(163, 52, 31, 0.25);
