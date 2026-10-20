@@ -20,6 +20,10 @@ async function startDuo(page: Page) {
 /** The element is shown and lies inside the window. */
 async function expectInWindow(page: Page, el: Locator) {
   await expect(el).toBeVisible();
+  // The book slides in by 30 px (PH5). Measure its resting bounds, not a random opening frame.
+  await el.evaluate(async (node) => {
+    await Promise.all(node.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished.catch(() => undefined)));
+  });
   const box = (await el.boundingBox())!;
   const win = page.viewportSize()!;
   expect(box.width).toBeGreaterThan(100);
@@ -203,7 +207,7 @@ async function phone(page: Page, name: string) {
   await last.click();
   await expect(souls).not.toHaveText(before!, { timeout: 15_000 });
 
-  // The star is a 44×44 tap zone of its own: its corners hit the star, not the ship card.
+  // The star is a centred 44×44 tap zone inside the head: its corners hit the star, never the Hull below it.
   const star = page.getByTestId('star-И');
   await expect(star).toBeVisible();
   const sb = (await star.boundingBox())!;
@@ -211,11 +215,11 @@ async function phone(page: Page, name: string) {
   const hits = await page.evaluate(
     ({ x, y }) =>
       [
-        [x - 21, y + 0],
-        [x + 21, y + 0],
-        [x, y - 4],
-        [x - 21, y + 30],
-        [x + 21, y + 30],
+        [x - 21, y - 21],
+        [x + 21, y - 21],
+        [x, y],
+        [x - 21, y + 21],
+        [x + 21, y + 21],
       ].map(([px, py]) => document.elementFromPoint(px, py)?.closest('[data-testid="star-И"]') !== null),
     { x: cx, y: sb.y + sb.height / 2 },
   );

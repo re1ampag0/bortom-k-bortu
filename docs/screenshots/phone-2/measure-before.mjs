@@ -1,3 +1,5 @@
+// Archived recorder used on main before the scope was narrowed. Do not rerun as-is:
+// future measurements must retain only the volley scenario and one run.
 import { chromium } from '@playwright/test';
 import { writeFile, mkdir } from 'node:fs/promises';
 const browser = await chromium.launch({ executablePath: '/usr/bin/chromium' });
