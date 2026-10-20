@@ -2482,12 +2482,38 @@ button.star::before {
     background: var(--panel);
     border-top: 1px solid var(--line);
   }
-  /* While the bots move «Ход окончен» is off anyway (the status bar says whose turn it is): «Пауза» takes its place. */
+  /* While the bots move: «Пауза» and «До конца» with their captions, and the oak board says who moves («Ходит Компания») —
+     fix-ui: it was hidden, two round buttons stood without a word */
   .bottom-bar.has-pause {
-    grid-template-columns: auto auto auto minmax(0, 1fr);
+    grid-template-columns: auto auto auto auto minmax(0, 1fr);
+    gap: 6px;
   }
-  .bottom-bar.has-pause .end-turn {
+  .bottom-bar.has-pause .btn.round.tool {
+    --ring: 40px;
+    gap: 2px;
+    min-width: 0;
+    padding: 0 2px;
+  }
+  .bottom-bar.has-pause .btn.round.tool .round-cap.narrow {
+    display: block;
+    font-size: 11px;
+    color: #efe3c8;
+  }
+  /* the board is narrower here: no medallion, «Ходит Компания» on two lines if it needs them */
+  .bottom-bar.has-pause .end-turn .oak-med {
     display: none;
+  }
+  .bottom-bar.has-pause .end-turn .oak-pan {
+    left: 7px;
+  }
+  .bottom-bar.has-pause .end-turn .oak-pan b {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    line-height: 1.05;
+    text-align: center;
   }
   .bottom-bar .btn.pause {
     min-width: 48px;

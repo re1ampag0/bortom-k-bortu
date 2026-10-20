@@ -223,7 +223,7 @@ export const ROUND_ICON: Record<string, string> = {
  * button stays its accessible name and its text (`.wide`, hidden from sight); the caption is the label without its
  * leading symbol («⏸ Пауза» → «Пауза»).
  */
-export function RoundButton({ b, icon, className = '', thin = false }: { b: Btn; icon: string; className?: string; thin?: boolean }) {
+export function RoundButton({ b, icon, className = '', thin = false, capNarrow }: { b: Btn; icon: string; className?: string; thin?: boolean; capNarrow?: string }) {
   const caption = b.label.replace(/^[^\p{L}]+/u, '');
   return (
     <button
@@ -239,9 +239,15 @@ export function RoundButton({ b, icon, className = '', thin = false }: { b: Btn;
         <span className="round-knot" dangerouslySetInnerHTML={svg(thin ? KNOT_THIN_SVG : KNOT_SVG)} />
         <span className="round-core" dangerouslySetInnerHTML={svg(ROUND_ICON[icon] ?? '')} />
       </span>
-      <span className="round-cap" aria-hidden>
+      <span className={`round-cap ${capNarrow ? 'wide' : ''}`} aria-hidden>
         {caption}
       </span>
+      {/* fix-ui: a phone, the bottom bar — a shorter caption («До конца») */}
+      {capNarrow && (
+        <span className="round-cap narrow" aria-hidden>
+          {capNarrow}
+        </span>
+      )}
       <span className="wide sr-only">{b.label}</span>
       {b.short && <span className="narrow sr-only">{b.short}</span>}
     </button>

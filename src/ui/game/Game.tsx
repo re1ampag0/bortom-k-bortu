@@ -1276,8 +1276,8 @@ export function Game({
           <span className="tile-ic" aria-hidden dangerouslySetInnerHTML={{ __html: ROUND_ICON.rules }} />
           Правила
         </button>
-        {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" />}
-        {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" /> : net ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
+        {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" capNarrow={held ? 'Дальше' : 'Пауза'} />}
+        {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" capNarrow="До конца" /> : net ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
         <OakButton
           b={endBtn}
           className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`}
