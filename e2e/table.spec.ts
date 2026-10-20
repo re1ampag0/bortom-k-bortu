@@ -565,6 +565,8 @@ for (const look of ['deck', 'table'] as const) {
           deck: vis('[data-fx-deck]')[0] ?? null,
           cards: vis('.hand-cards .hcard'),
           hold: box(document.querySelector('.board-bottom > .team-row:not(.table-edge)')),
+          // a phone (a5-phone): the gun stands in the row of the Hold, between its parts — they are checked one by one
+          holdParts: ['.hold-label', '.powder-dots', '.hold-n', '.regroup'].map((q) => box(document.querySelector(`.board-bottom > .team-row ${q}`))),
           glass: vis('.hold-glass')[0] ?? null,
           end: vis('[data-testid="end-turn"]')[0] ?? null,
           undo: vis('.undo')[0] ?? null,
@@ -580,7 +582,7 @@ for (const look of ['deck', 'table'] as const) {
         ['the lantern', r.lantern],
         ...r.props.map((p, i): [string, R] => [`prop ${i}`, p]),
         ['«Колода»', r.deck],
-        ['the Hold', r.hold],
+        ...(r.iw < 701 ? r.holdParts.map((p, i): [string, R | null] => [`the Hold part ${i}`, p]) : [['the Hold', r.hold] as [string, R | null]]),
         ['the hourglass', r.glass],
         ['«Ход окончен»', r.end],
         ['«Отменить»', r.undo],
