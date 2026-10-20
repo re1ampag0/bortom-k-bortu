@@ -5,7 +5,7 @@ import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
 import { deckCards } from '../../engine/data';
 import { InfoTip } from './InfoTip';
-import { roman, SIDE_LABEL } from './text';
+import { plainText, roman, SIDE_LABEL } from './text';
 import { reducedMotion } from '../start/motion';
 import { cellUrl, CELLS, type CellIcon } from './art/cells';
 import { shipSvg } from './art/ships';
@@ -351,7 +351,7 @@ const SOULS_INFO = 'Только у «Голландца», не больше 5.
 /** The text of the card «Чёрная метка» (the card with the operation «mark»), without its markup. */
 function markText(data: GameData): string {
   const card = deckCards(data).find((c) => (c.fx.ops || []).some((o) => o[0] === 'mark'));
-  return card ? `Карта «${card.name}»: ${card.text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()}` : '';
+  return card ? `Карта «${card.name}»: ${plainText(card.text)}` : '';
 }
 
 /**

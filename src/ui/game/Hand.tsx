@@ -8,6 +8,7 @@ import type { CardInstance, GameData } from '../../engine/types';
 import { HIDDEN } from '../../engine/view';
 import type { Btn } from './Table';
 import { reducedMotion } from '../start/motion';
+import { plainText } from './text';
 
 // Before the paint in the browser; the tests render the cards to markup, where only useEffect is quiet.
 const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -273,7 +274,7 @@ export function HandCard({
         </span>
         <span className="hcard-name">{c.name}</span>
         <span className="hcard-big">{note ?? c.big}</span>
-        <span className="hcard-text">{c.text.replace(/<[^>]+>/g, ' ')}</span>
+        <span className="hcard-text">{plainText(c.text)}</span>
         {play &&
           (play.disabled ? (
             <span className="lift-strip no" data-testid="lift-why">
@@ -313,7 +314,7 @@ export function HandCard({
       </span>
       <span className="hcard-name">{c.name}</span>
       <span className="hcard-big">{note ?? c.big}</span>
-      <span className="hcard-text" ref={textRef}>{c.text.replace(/<[^>]+>/g, ' ')}</span>
+      <span className="hcard-text" ref={textRef}>{plainText(c.text)}</span>
       {alarm?.kind === 'ok' && alarm.strip && (
         <span className="hcard-strip ok" data-testid="hcard-strip">
           <b>{alarm.strip.top}</b>
