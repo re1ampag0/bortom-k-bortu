@@ -342,15 +342,25 @@ test('⚙ stays open when the countdown passes the turn to the bot; only the pla
   await page.setViewportSize({ width: 1366, height: 660 });
   await page.goto('?seed=1&speed=fast');
   for (const id of ['quick-bots', 'prep-start', 'placement-done']) await page.getByTestId(id).click();
-  await page.locator('[data-testid="end-turn"]:visible').first().click();
-  for (let i = 0; i < 30 && !(await page.getByTestId('ending').isVisible()); i++) {
-    for (const id of ['confirm-yes', 'no-plans']) if (await page.getByTestId(id).isVisible()) await page.getByTestId(id).click();
-    await page.waitForTimeout(100);
-  }
-  await expect(page.getByTestId('ending')).toBeVisible();
+  const end = page.locator('[data-testid="end-turn"]:visible').first();
+  const finish = async () => {
+    await end.click();
+    for (let i = 0; i < 30 && !/Ход окончен ·/.test(await end.textContent() ?? ''); i++) {
+      for (const id of ['confirm-yes', 'no-plans']) if (await page.getByTestId(id).isVisible()) await page.getByTestId(id).click();
+      await page.waitForTimeout(100);
+    }
+    await expect(end).toContainText('Ход окончен · 3');
+    await expect(page.getByTestId('ending')).toHaveCount(0);
+  };
+  await finish();
+  await expect(end).toContainText('Ход окончен · 2');
+  await page.locator('[data-testid="undo"]:visible').first().click();
+  await expect(end).not.toContainText('Ход окончен ·');
+  await expect(end).not.toHaveAttribute('aria-disabled', 'true');
+  await finish();
   await page.getByTestId('settings-btn').click();
   await expect(page.getByTestId('settings')).toBeVisible();
-  await expect(page.getByTestId('ending')).toHaveCount(0, { timeout: 5000 });
+  await expect(page.getByTestId('end-turn').first()).not.toContainText('Ход окончен ·', { timeout: 5000 });
   await page.waitForTimeout(1500);
   await expect(page.getByTestId('settings')).toBeVisible();
   await page.screenshot({ path: 'docs/screenshots/fix-ci/settings-bot-turn.png' });

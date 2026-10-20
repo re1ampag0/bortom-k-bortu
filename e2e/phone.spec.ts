@@ -208,21 +208,22 @@ async function phone(page: Page, name: string) {
   await last.click();
   await expect(souls).not.toHaveText(before!, { timeout: 15_000 });
 
-  // The invisible 44×44 zone grows upwards from the star, leaving the Hull below untouched.
+  // The zone is 44 px wide. Between the clickable journal and Hull its vertical space is shared (28 px).
   const star = page.getByTestId('star-И');
   await expect(star).toBeVisible();
   const sb = (await star.boundingBox())!;
+  expect(await star.evaluate(el => { const z = getComputedStyle(el, '::before'); return [parseFloat(z.width), parseFloat(z.height)]; })).toEqual([44, 28]);
   const cx = sb.x + sb.width / 2;
   const hits = await page.evaluate(
     ({ x, y }) =>
       [
-        [x - 21, y - 21],
-        [x + 21, y - 21],
+        [x - 21, y - 13],
+        [x + 21, y - 13],
         [x, y],
-        [x - 21, y + 21],
-        [x + 21, y + 21],
+        [x - 21, y + 13],
+        [x + 21, y + 13],
       ].map(([px, py]) => document.elementFromPoint(px, py)?.closest('[data-testid="star-И"]') !== null),
-    { x: cx, y: sb.y + sb.height - 22 },
+    { x: cx, y: sb.y + sb.height / 2 },
   );
   expect(hits).toEqual([true, true, true, true, true]);
   await star.click();
