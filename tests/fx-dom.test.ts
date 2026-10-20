@@ -103,17 +103,18 @@ describe('data-fx-* DOM contract', () => {
 describe('«Чёрная метка» on the plank (U3)', () => {
   const marked = structuredClone(s);
   marked.turn.marks = { И: 2 };
-  it('the marked ship has the stamp: on the drawing of the ship in the head (laptop, A5) and in the row of statuses (phone), the chip «Чёрная метка +2» kept', () => {
+  // a5-phone: one stamp on the drawing of the ship in the head — the pin on a laptop (this markup), the blot on a phone
+  it('the marked ship has the stamp on the drawing of the ship in the head, the chip «Чёрная метка +2» kept', () => {
     const html = plank('И', null, marked);
-    expect(count(html, /data-fx-mark-stamp/g)).toBe(2);
-    expect(html).toMatch(/<span class="ship-art wide"><span class="ship-pic">.*?<\/span><span class="mark-stamp wide" data-fx-mark-stamp="true"[^>]*><svg/s);
-    expect(html).toMatch(/<div class="plank-statuses" data-fx-statuses="true">.*<span class="mark-stamp narrow" data-fx-mark-stamp="true"/s);
+    expect(count(html, /data-fx-mark-stamp/g)).toBe(1);
+    expect(html).toMatch(/<span class="ship-art"><span class="ship-pic">.*?<\/span><span class="mark-stamp wide" data-fx-mark-stamp="true"[^>]*><svg/s);
+    expect(html).toMatch(/<div class="plank-statuses" data-fx-statuses="true">/);
     expect(html).toContain('data-fx-mark="true"');
     expect(html).toContain('Чёрная метка +2');
   });
   it('waits hidden while the clip of the mark has not played, as the chip does', () => {
     const html = plank('И', null, marked, ['mark']);
-    expect(count(html, /class="mark-stamp (wide|narrow)" data-fx-mark-stamp="true" aria-hidden="true" style="visibility:hidden"/g)).toBe(2);
+    expect(count(html, /class="mark-stamp (wide|blot)" data-fx-mark-stamp="true" aria-hidden="true" style="visibility:hidden"/g)).toBe(1);
   });
   it('no mark — no stamp; a sunk ship has none either', () => {
     expect(plank('И')).not.toContain('data-fx-mark-stamp');

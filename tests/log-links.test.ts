@@ -12,8 +12,9 @@ import { cardIn, codesOf, data, newGame, turnOf } from './helpers';
 
 const line = (text: string, cards: string[], sea?: string): LogLine => ({ text, kind: 'action', round: 1, turn: 'ПИРАТЫ', action: 0, cards, ...(sea ? { sea } : {}) });
 const list = (log: LogLine[]) => renderToStaticMarkup(createElement(LogList, { data, log, fresh: 99, onCard: () => {}, onSea: () => {} }));
-/** The text of the markup without tags and with the quotes React escapes back. */
-const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&amp;/g, '&');
+/** The text of the markup without tags and with the quotes React escapes back; the margin of a line (its icon and «раунд·ход»,
+ *  a5-log) is not a part of its text. */
+const plain = (html: string) => html.replace(/<span class="log-rt">[^<]*<\/span>/g, '').replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&amp;/g, '&');
 
 describe('SeaSheet', () => {
   it('shows the sea card asked for, with a link to the current one', () => {
