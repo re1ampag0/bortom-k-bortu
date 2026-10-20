@@ -357,7 +357,11 @@ PLAY.reaction = async (c, ctx) => {
     if (c.r === 'redirect') {
       const cov = plank(ctx, c.ship), d0 = bx(ctx, plank(ctx, vs.declared)), c0 = bx(ctx, cov);
       plank(ctx, vs.declared).classList.remove(TARGETED);
-      lean(ctx, c.ship, `translate(${(d0.cx - c0.cx) * 0.05}px,${dirOf(ctx, c.ship) * 6}px)`, 450, 'cubic-bezier(.2,.8,.3,1.2)');
+      // fix-ui: it leans towards the ally it covers, but no further than half the gap between them — its frame stays off the
+      // neighbouring plank (5 % of the way, ≈ 18 px, ran over it)
+      const gap = d0.cx > c0.cx ? d0.x - c0.r : c0.x - d0.r;
+      const dx = Math.sign(d0.cx - c0.cx) * Math.min(Math.abs(d0.cx - c0.cx) * 0.05, Math.max(0, gap / 2 - 3));
+      lean(ctx, c.ship, `translate(${Math.round(dx * 10) / 10}px,${dirOf(ctx, c.ship) * 6}px)`, 450, 'cubic-bezier(.2,.8,.3,1.2)');
       cov.classList.add(TARGETED);
       vs.target = c.ship;
       const np = placePlate(ctx, vs.shooter), op = vs.plateBox!;
