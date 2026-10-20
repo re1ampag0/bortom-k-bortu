@@ -1829,6 +1829,36 @@ button.star::before {
   overflow-y: auto;
   display: grid;
   gap: 10px;
+  /* fix-ui: the middle scrolls inside the window; the head with «×» and the foot with the buttons stay in sight */
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: start;
+}
+.sheet-head,
+.sheet-foot {
+  flex: none;
+}
+.sheet-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+}
+.sheet-foot .row.buttons {
+  margin-top: 0;
+}
+.sheet:has(> .sheet-foot) > .sheet-body {
+  padding-bottom: 12px;
+}
+/* fix-ui: a check box and its words on one line (the long words wrap beside the box, not under it) */
+.row.check {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+.row.check > input[type='checkbox'] {
+  flex: none;
+  margin-top: 3px;
 }
 .sheet-body h3 {
   margin: 8px 0 0;
