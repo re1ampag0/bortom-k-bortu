@@ -156,7 +156,7 @@ export function ChargeSheet({
       ? 'выберите цель на столе'
       : charges.length
         ? 'можно без Заряда'
-        : 'Зарядов нет — Залп без Заряда';
+        : '';
   return (
     <section className="panel charge-sheet oak-sheet" data-testid="volley-panel">
       <div className="cs-head">
@@ -169,6 +169,12 @@ export function ChargeSheet({
         </span>
       </div>
       <div className="cs-cards">
+        {/* fix-ui: no Charges — the words in the middle of the sheet (the head line kept only the Hold) */}
+        {charges.length === 0 && !mode.heart && (
+          <p className="cs-empty" data-testid="no-charges">
+            Зарядов в руке нет — Залп без Заряда
+          </p>
+        )}
         {charges.map((o) => {
           const pv = previewWith(o);
           const c = cardByCode(data, o.card);
