@@ -3618,14 +3618,9 @@ button.star::before {
     margin-left: calc(-1 * var(--ov, 0px));
   }
   /* fix-ui: the tabs of the ships («Индевор · 0 из 2», «Голландец») stay over a card that rises */
-  .hand-head {
+  .hand-head .tabs {
     position: relative;
     z-index: 4;
-    /* its empty room does not take the pointer off the card under it */
-    pointer-events: none;
-  }
-  .hand-head > * {
-    pointer-events: auto;
   }
   /* the pointer or the keyboard on a card: it straightens, rises and grows; the neighbours step aside */
   .hand-cards > .hcard:hover,
