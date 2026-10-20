@@ -518,8 +518,9 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     let down: { id: number; x: number; y: number; at: number } | null = null;
     const onDown = (e: PointerEvent) => {
       const t = e.target as Element | null;
-      // S1: a badge or a status chip that explains itself (and the press that closes its window) is not the table
-      down = t?.closest('[data-fx-hand], .dock') || tookPress(e) ? null : { id: e.pointerId, x: e.clientX, y: e.clientY, at: e.timeStamp };
+      // S1: a badge or a status chip that explains itself (and the press that closes its window) is not the table; nor a line of a
+      // card in the plate of a Volley (fix-ui: a tap shows the card)
+      down = t?.closest('[data-fx-hand], .dock, .plate [data-card]') || tookPress(e) ? null : { id: e.pointerId, x: e.clientX, y: e.clientY, at: e.timeStamp };
     };
     const onUp = (e: PointerEvent) => {
       const d = down;
