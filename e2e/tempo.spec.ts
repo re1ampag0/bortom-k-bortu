@@ -1,4 +1,4 @@
-// P4, the tempo of the show: «Пауза / Дальше» holds the bots, «Подробнее» of the turn summary lists the enemy's turn,
+// P4, the tempo of the show: «Пауза / Дальше» holds the bots, «Последнее» opens the journal with the enemy's turn,
 // and on the phone «Пауза» leaves room for «Журнал» and «Правила». Screenshots go to docs/screenshots/p4/.
 import { expect, test, type Page } from '@playwright/test';
 
@@ -34,23 +34,28 @@ test.describe('laptop 1366×660', () => {
     await expect.poll(() => lines.count(), { timeout: 30_000 }).toBeGreaterThan(held);
   });
 
-  test('«Подробнее» of the turn summary opens the enemy turn; a card in it opens and returns', async ({ page }) => {
+  test('«Последнее» of the turn summary opens the journal; an enemy card opens and returns', async ({ page }) => {
     await againstBots(page, 'fast');
-    const more = page.getByTestId('summary-more');
-    await expect(more).toBeVisible({ timeout: 120_000 });
-    await page.screenshot({ path: `${SHOTS}/laptop-summary.png` });
-    await more.click();
-    const sheet = page.getByTestId('last-turn');
-    await expect(sheet).toContainText('Что было за ход Пиратов');
-    await expect(sheet.locator('li').first()).toBeVisible();
-    await page.screenshot({ path: `${SHOTS}/laptop-last-turn.png` });
-    const card = sheet.locator('.cref[data-card]').first();
-    if ((await card.count()) > 0) {
-      await card.click();
-      await expect(sheet).toHaveCount(0);
-      await page.getByRole('button', { name: 'Закрыть' }).first().click();
-      await expect(page.getByTestId('last-turn')).toBeVisible();
-    }
+    await expect(page.locator('[data-fx-instruction]')).toContainText('выберите карту или действие', { timeout: 120_000 });
+    const summary = page.getByTestId('middle-info');
+    await expect(summary).toContainText('Последнее: Ход Компании:');
+    await page.screenshot({ path: 'docs/screenshots/fix-ci/tempo-summary-line.png' });
+    await summary.click();
+    const journal = page.getByTestId('log-sheet');
+    await expect(journal).toBeVisible();
+    await expect(journal).toContainText('Ход Пиратов');
+    await expect(journal.locator('li').first()).toBeVisible();
+    await page.screenshot({ path: 'docs/screenshots/fix-ci/tempo-journal.png' });
+    // The seeded Pirates play cards: navigation is required, rather than skipped when no link was found.
+    const card = journal.locator('.cref[data-card]').first();
+    await expect(card).toBeVisible();
+    await card.click();
+    await expect(journal).toHaveCount(0);
+    const detail = page.getByTestId('card-detail');
+    await expect(detail).toBeVisible();
+    await detail.getByRole('button', { name: 'Закрыть', exact: true }).click();
+    await expect(journal).toBeVisible();
+    await expect(journal).toContainText('Ход Пиратов');
   });
 });
 
