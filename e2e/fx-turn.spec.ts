@@ -305,8 +305,10 @@ test.describe('the turn with the layer: «До конца хода», «Ход �
     const pause = page.locator('[data-testid="pause-show"]:visible');
     /** The animations of the layer: how many go, how many stand, where each stands. */
     const look = () =>
-      page.evaluate(() => {
+      page.evaluate(async () => {
         const as = document.querySelector('.fx-layer')!.getAnimations({ subtree: true });
+        // pause() is pending until the browser commits it; playState alone changes before currentTime settles.
+        await Promise.all(as.map((a) => a.ready.catch(() => undefined)));
         return {
           running: as.filter((a) => a.playState === 'running').length,
           paused: as.filter((a) => a.playState === 'paused').length,
