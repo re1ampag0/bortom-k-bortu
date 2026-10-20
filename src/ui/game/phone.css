@@ -227,6 +227,11 @@
     height: 44px;
     transform: none;
   }
+  /* With a clickable journal line above and Hull below, divide their shared vertical space. */
+  .game:has(.middle-info) .planks.bottom button.star::before {
+    inset: -3px -11px;
+    height: auto;
+  }
   /* Neighbouring rows split the available space; their hit areas cannot steal each other's taps. */
   .track .info-hit::after {
     inset: -2px;
@@ -1016,4 +1021,40 @@
   .game.view-hand-deck .hand-head {
     margin-top: 10px;
   }
+}
+
+/* phone-2: four independent cells, with six clear pixels between the numbers and the next icon. */
+@media (max-width: 700px) {
+  .plank-body { column-gap: 6px; }
+  .track-row2 { gap: 6px; padding-right: 0; }
+  .track-row2 > .track + .track { padding-left: 0; border: 0; }
+  .track-row2 > .track + .track::before {
+    content: ''; position: absolute; left: -3px; height: 12px; border-left: 1px solid #bcae91;
+  }
+  .plank-body > .badges .badge.souls { padding-left: 0; border: 0; }
+  .plank-body:has(.badge.souls) .track-row2 .track-num,
+  .plank-body > .badges .badge.souls { font-size: 12px; }
+  .plank-body:has(.badge.souls) .track-icon { width: 13px; height: 13px; }
+  .plank-body:has(.badge.souls) .t-guns .track-icon { width: 17px; height: 11px; }
+}
+@media (max-width: 400px) {
+  .plank-body:has(.badge.souls) .track-row2 > .track { gap: 2px; }
+  .plank-body:has(.badge.souls) .track-row2 .track-num,
+  .plank-body > .badges .badge.souls { font-size: 11px; }
+  .plank-body:has(.badge.souls) .track-icon { width: 12px; height: 12px; }
+  .plank-body:has(.badge.souls) .t-guns .track-icon { width: 15px; height: 10px; }
+}
+
+/* phone-2: ordinary translucent gradients instead of offscreen blend/filter surfaces. */
+@media (max-width: 700px) {
+  .game .deck-light, .game .deck-glow, .game .deck-glint,
+  .game .lantern-light, .game.view-hand-deck::after { mix-blend-mode: normal; }
+  .game .deck-light { opacity: .4; }
+  .game .deck-glint { opacity: .55; }
+  .game .deck-hook, .game .backdrop .deck-piece { filter: none; }
+  .game.fx-busy .deck-flare, .game.fx-busy .lantern-light { animation: none; }
+  .game .fx-layer > *, .game .fx-weather > * { will-change: auto; }
+  .game .fx-layer *, .game .fx-weather * { filter: none !important; }
+  .game .plank-scars *, .game .fx-fireglow { mix-blend-mode: normal; }
+  .game .fx-layer .banner, .game .fx-layer .seacard { box-shadow: 0 3px 7px #0006; }
 }

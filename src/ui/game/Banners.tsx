@@ -1,16 +1,13 @@
-// Banners one after another (docs/TZ.md, «Очередь хода и ожидание», п. 2): at the start of a round the new sea card with
-// its effect (~2 s), then «Ваш ход» / «Ход Компании» (~1 s), then the summary of the start of the turn (4 s, «Детали»,
-// п. 3, with «Подробнее»). They never take input.
+// Banners of the sea and the turn. phone-2: turn summaries live in the clickable journal line, never in this queue.
 import { useEffect, useRef, useState } from 'react';
-import { sideGenitive, turnSummary } from '../../engine/log';
 import { seaCardByCode, type GameEvent } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
 import type { Recent } from '../../net/local';
 import { SIDE_LABEL } from './text';
 
 // The side is kept, not the words: in a game for two the team at the device changes behind the curtain, so «Ваш ход»
-// and whose summary it is are decided when the banner is shown.
-type Banner = { id: number; ms: number } & ({ k: 'sea'; card: string } | { k: 'turn'; side: Side } | { k: 'summary'; side: Side; text: string });
+// is decided when the banner is shown.
+type Banner = { id: number; ms: number } & ({ k: 'sea'; card: string } | { k: 'turn'; side: Side });
 
 /** The banners of the events of one action: the sea card of a new round, the turn (each only when it is on). */
 export function bannersOf(
@@ -29,7 +26,6 @@ export function bannersOf(
 export function useBanners({
   recent,
   version,
-  data,
   bottom,
   mine,
   enabled,
@@ -37,15 +33,13 @@ export function useBanners({
   seaBanners = true,
   start,
   paused,
-  holdSummary = false,
 }: {
   recent: Recent[];
   version: number;
-  data: GameData;
   bottom: Side;
   /** The team at the bottom is played from this device: «Ваш ход». */
   mine: boolean;
-  /** Off at the instant speed and at «?speed=instant»: only the summary is left. */
+  /** Off at the instant speed and at «?speed=instant»: no banners are queued. */
   enabled: boolean;
   /**
    * «Ваш ход» / «Ход Компании» of its own (decided when the action comes): off while the animation layer plays the
@@ -61,11 +55,6 @@ export function useBanners({
   start: { sea: string | null; active: Side } | null;
   /** The curtain «Передайте устройство» is up: the banners wait until it is closed. */
   paused: boolean;
-  /**
-   * The summary of the start of the turn waits — not shown, its 4 s do not run — while the animation layer plays (its
-   * banner «Ваш ход» and the summary never stand on the table together) and while a panel is open in the middle.
-   */
-  holdSummary?: boolean;
 }) {
   const seen = useRef((recent.at(-1)?.n ?? -1) + 1);
   const ids = useRef(0);
@@ -83,30 +72,25 @@ export function useBanners({
       for (const b of bannersOf(r.events, { enabled, turnBanners, seaBanners })) {
         add.push(b.k === 'sea' ? { id: ++ids.current, ms: 2000, k: 'sea', card: b.card } : turnBanner(b.side));
       }
-      const sum = turnSummary(data, r.events);
-      if (sum && sum.text) add.push({ id: ++ids.current, ms: 4000, k: 'summary', side: sum.side, text: `Ход ${sideGenitive(sum.side)}: ${sum.text}` });
     }
     if (add.length > 0) setQueue((q) => [...q, ...add]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version]);
 
   const head = queue[0] ?? null;
-  // The summary of the start of the turn is for the team at the device only; another team's is dropped at once.
-  const skip = !!head && head.k === 'summary' && head.side !== bottom;
-  const held = !!head && head.k === 'summary' && !skip && holdSummary;
   useEffect(() => {
-    if (!head || paused || held) return;
-    const t = setTimeout(() => setQueue((q) => (q[0]?.id === head.id ? q.slice(1) : q)), skip ? 0 : head.ms);
+    if (!head || paused) return;
+    const t = setTimeout(() => setQueue((q) => (q[0]?.id === head.id ? q.slice(1) : q)), head.ms);
     return () => clearTimeout(t);
-  }, [head, paused, skip, held]);
-  if (paused || !head || skip || held) return null;
+  }, [head, paused]);
+  if (paused || !head) return null;
   return head.k === 'turn' ? { ...head, text: mine && head.side === bottom ? 'Ваш ход' : `Ход ${SIDE_LABEL[head.side].gen}`, mine: mine && head.side === bottom } : head;
 }
 
 type Shown = Exclude<Banner, { k: 'turn' }> | (Extract<Banner, { k: 'turn' }> & { text: string; mine: boolean });
 
 export function BannerView({ data, banner }: { data: GameData; banner: Shown | null }) {
-  if (!banner || banner.k === 'summary') return null;
+  if (!banner) return null;
   if (banner.k === 'sea') {
     const sea = seaCardByCode(data, banner.card);
     return (
