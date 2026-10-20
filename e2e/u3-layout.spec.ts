@@ -176,12 +176,24 @@ for (const size of SIZES) {
           }),
         }));
         expect(new Set(rows.tops).size, 'the buttons of «Голландец» in one row').toBe(1);
-        // every button of every plank of one size (two in sight), its text whole
+        // every button of every plank of one height, its text whole; a5-phone (A5Phone, frame 1): one or two buttons fill the
+        // row of their plank, three and more are a third of it each (of one width)
         const btns = await page.evaluate(() =>
-          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons .btn')).map((b) => ({ w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, whole: ((e) => { const r = document.createRange(); r.selectNodeContents(e); const t = r.getBoundingClientRect(), b = e.getBoundingClientRect(); return t.left >= b.left && t.right <= b.right && t.top >= b.top && t.bottom <= b.bottom; })(b) })),
+          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons .btn')).map((b) => ({ ship: b.closest<HTMLElement>('.plank')!.dataset.ship!, n: b.parentElement!.children.length, w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, whole: ((e) => { const r = document.createRange(); r.selectNodeContents(e); const t = r.getBoundingClientRect(), b = e.getBoundingClientRect(); return t.left >= b.left && t.right <= b.right && t.top >= b.top && t.bottom <= b.bottom; })(b) })),
         );
         expect(btns.length).toBeGreaterThanOrEqual(6);
-        expect(spread(btns.map((b) => b.w)), 'the buttons of one width').toBeLessThanOrEqual(1);
+        const fill = await page.evaluate(() =>
+          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons'))
+            .filter((row) => row.children.length <= 2)
+            .map((row) => {
+              const r = row.getBoundingClientRect(), cs = getComputedStyle(row), bs = Array.from(row.children).map((b) => b.getBoundingClientRect());
+              return r.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - bs.reduce((w, b) => w + b.width, 0) - parseFloat(cs.columnGap || '0') * (bs.length - 1);
+            }),
+        );
+        for (const left of fill) expect(Math.abs(left), 'one or two buttons fill the row').toBeLessThanOrEqual(1);
+        for (const ship of new Set(btns.filter((b) => b.n >= 3).map((b) => b.ship))) {
+          expect(spread(btns.filter((b) => b.ship === ship).map((b) => b.w)), `${ship}: the buttons of one width`).toBeLessThanOrEqual(1);
+        }
         expect(spread(btns.map((b) => b.h)), 'the buttons of one height').toBeLessThanOrEqual(1);
         expect(Math.abs(btns[0].h - 34), 'seen 34 px high').toBeLessThanOrEqual(TOL);
         expect(btns.every((b) => b.whole), 'no text cut').toBe(true);
@@ -249,8 +261,9 @@ for (const size of SIZES) {
     test('«Чёрная метка»: a small sharp stamp stays on the marked plank and covers nothing', async ({ page }) => {
       await page.goto('?fxScene=mark&speed=normal');
       await page.waitForFunction(() => !!document.querySelector('.fx-layer .blot'), null, { timeout: 30_000, polling: 20 });
-      // the blot of the clip still flies: the stamp waits hidden, as the chip does
-      expect(await page.evaluate(() => Array.from(document.querySelectorAll('[data-fx-mark-stamp]')).map((e) => getComputedStyle(e).visibility))).toEqual(['hidden', 'hidden']);
+      // the blot of the clip still flies: the stamp waits hidden, as the chip does (a5-phone: one stamp — the pin on a laptop,
+      // the blot on a phone, both on the drawing of the ship)
+      expect(await page.evaluate(() => Array.from(document.querySelectorAll('[data-fx-mark-stamp]')).map((e) => getComputedStyle(e).visibility))).toEqual(['hidden']);
       await shot(page, 'mark-flight', size.width);
       await page.waitForFunction(() => {
         const c = document.querySelector('[data-fx-mark]');
@@ -303,10 +316,11 @@ for (const size of SIZES) {
         expect(st.onShip, 'on the drawing of the ship').toBe(true);
         expect(Math.abs(st.width - 30), 'about 30 px').toBeLessThanOrEqual(TOL);
       } else {
-        expect(st.inStatuses, 'on a phone: in the row of statuses').toBe(true);
-        expect(Math.abs(st.width - 28), 'about 28 px').toBeLessThanOrEqual(TOL);
-        expect(st.plankRight - st.right, 'at the right edge of the plank').toBeLessThanOrEqual(12);
-        expect(st.top, 'above the body (the top right corner under the head)').toBeLessThan(st.bodyTop);
+        // a5-phone (A5Phone, frame 1): a black blot on the picture of the ship in the head
+        expect(st.inStatuses).toBe(false);
+        expect(st.onShip, 'on the drawing of the ship').toBe(true);
+        expect(Math.abs(st.width - 15), 'about 15 px').toBeLessThanOrEqual(TOL);
+        expect(st.top, 'in the head, above the body').toBeLessThan(st.bodyTop);
       }
       expect(st.chip).toContain('Чёрная метка +2');
       await shot(page, 'mark-landed', size.width);

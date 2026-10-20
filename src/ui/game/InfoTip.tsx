@@ -25,6 +25,7 @@ export function InfoTip({
   off = false,
   style,
   data,
+  onPress,
   children,
 }: {
   className: string;
@@ -37,6 +38,8 @@ export function InfoTip({
   style?: CSSProperties;
   /** data-* attributes of the badge (data-fx-fires …). */
   data?: Record<`data-${string}`, string | boolean | undefined>;
+  /** A press does this too (a phone: the icon of a track on the own plank — the plank is chosen as before). */
+  onPress?: () => void;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState<null | 'hover' | 'press'>(null);
@@ -123,6 +126,7 @@ export function InfoTip({
           e.stopPropagation();
           if (open === 'press') hide();
           else show('press');
+          onPress?.();
         }}
         onMouseEnter={() => canHover() && !open && show('hover')}
         onMouseLeave={() => open === 'hover' && hide()}
