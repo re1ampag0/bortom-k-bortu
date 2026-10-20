@@ -265,7 +265,7 @@ export function Game({
   const [seatPick, setSeatPick] = useState<string | null>(null);
   const seat = seatPick && allSeats.includes(seatPick) ? seatPick : (d && d.side === bottom ? d.seats.find((x) => mySeats.includes(x)) : null) ?? mySeats[0] ?? allSeats[0];
 
-  const act = (action: Action | Action[]): boolean => {
+  const act = (action: Action | Action[], { preserveSheet = false } = {}): boolean => {
     const list = Array.isArray(action) ? action : [action];
     // By network «Ход окончен» of a player is a message: the turn ends when the ally pressed it too.
     if (net && list[0].type === 'endTurn') {
@@ -286,7 +286,7 @@ export function Game({
     }
     setFlash(null);
     setMode({ k: 'idle' });
-    setSheet(null);
+    if (!preserveSheet) setSheet(null);
     return true;
   };
 
@@ -418,7 +418,7 @@ export function Game({
   useEffect(() => {
     // «Ход окончен · Отменить»: the turn passes after 3 s (1 s with «Быстрый конец хода»).
     if (mode.k !== 'ending') return;
-    const t = setTimeout(() => act(mode.action), endMs);
+    const t = setTimeout(() => act(mode.action, { preserveSheet: true }), endMs);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
