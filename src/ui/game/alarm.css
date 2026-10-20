@@ -32,6 +32,10 @@
     0 8px 18px rgba(0, 0, 0, 0.55);
   color: #f6e7c6;
   animation: alarm-in var(--alarm-in, 250ms) ease-out both;
+  /* fix-ui: the line wraps inside the plate (.status-text keeps its hint on one line: nowrap ran the words past the plate onto
+     the Hold and the weather when the middle of the top row is narrow) */
+  white-space: normal;
+  line-height: 1.15;
 }
 .alarm-bell {
   flex: none;
@@ -49,6 +53,7 @@
   font-family: var(--font-num);
   font-size: 22px;
   letter-spacing: 0.18em;
+  white-space: nowrap;
 }
 .alarm-line {
   font-family: var(--font-ui, 'Alegreya Sans', 'Alegreya Sans', sans-serif);
