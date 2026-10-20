@@ -44,9 +44,9 @@ interface Placed extends Box {
  * R — 16 px before «Ход окончен» + «Отменить», its balls at the wheel, the lantern (1.3) over the breech; the hand stands in the
  * middle of the strip from L (24 px right of the Hold, the hourglass and «Перестроение») to the gun − 16 (Hand.tsx useFanFit
  * reads the paddings of .hand-cards and closes the step of the fan when the cards do not fit), whole in the window; its tabs
- * begin over its first card, the grating lies over its middle. A phone (a5-phone): a big gun (70 % of the width, turned) behind the fan
- * in the middle of the zone of the hand, its balls by the wheel; the lantern hangs on a hook in the top right corner of that zone;
- * both are the background — the cards, the caption and the bottom bar lie over them.
+ * begin over its first card, the grating lies over its middle. A phone (a5-phone): a big gun (70 % of the width) is the background behind
+ * the row of the Hold, its muzzle in the gap between «2/8» and «Перестроение»; the lantern hangs on the bottom right corner of the
+ * frame of the sea, over the table, its light falls down on the gun and «Перестроение».
  */
 const PIECES = {
   grate: { src: grate, vb: [-7, -7, 354, 38] },
@@ -83,6 +83,8 @@ interface DeckPlace {
   hand?: { pl: number; pr: number; lift: number; tabs: number };
   /** A phone: the hook the lantern hangs on. */
   hook?: Box;
+  /** A phone: the warm glint of the lantern on the barrel of the gun. */
+  glint?: Box;
 }
 
 const visible = (game: HTMLElement, q: string) => Array.from(game.querySelectorAll(q)).find((e) => e.getBoundingClientRect().width > 0) ?? null;
@@ -105,26 +107,36 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
   const cards = Array.from(game.querySelectorAll('.hand-cards .hcard')).map((c) => rect(c, g)).filter((c): c is Box => !!c);
   if (!hand) return null;
   if (W < 701) {
-    // a big gun (turned, its breech to the left), 70 % of the width, behind the row of the Hold — the lowest layer: the frame of the
-    // sea, the tray, «2/8», «Перестроение», the caption of the hand and the cards lie over it; its centre on the middle of the row
-    // (its box is (x − 3·gs, y + 11·gs, 128·gs, 56·gs), its centre (x + 61·gs, y + 39·gs)). The balls lie by its front wheel.
+    // a big gun, 70 % of the width, behind the row of the Hold — the lowest layer: the frame of the sea, the tray, «2/8»,
+    // «Перестроение», the caption of the hand and the cards lie over it. Its muzzle (x 119 of the drawing, the barrel y 15–33) looks
+    // out of the gap between «2/8» and «Перестроение», the barrel on the middle of the row; the box is (x − 3·gs, y + 11·gs, 128·gs, 56·gs).
     const gs = (0.7 * W) / 128;
     const row = rect(game.querySelector('.board-bottom > .team-row:not(.table-edge)'), g);
-    const cx = row ? row.l + row.w / 2 : W / 2,
-      cy = row ? row.t + row.h / 2 : hand.t;
-    const gun = { ...pieceAt('cannon', cx - 61 * gs, cy - 39 * gs, gs), flip: true };
+    const count = rect(visible(game, '.board-bottom > .team-row .hold-n'), g);
+    const regroup = rect(visible(game, '.board-bottom > .team-row .regroup'), g);
+    const gapX = count && regroup ? (count.l + count.w + regroup.l) / 2 + 4 : W * 0.65;
+    const rowY = row ? row.t + row.h / 2 : hand.t;
+    const gun = pieceAt('cannon', gapX - 119 * gs, rowY - 24 * gs, gs);
+    // the balls where they were (by the wheel of the gun as it stood in the middle of the row), under «Колода · Сброс» (phone.css dims them)
     const bs = gs * 0.45;
-    const balls = pieceAt('balls', gun.l + gun.w - 10 * gs + 25 * bs, gun.t + gun.h - 20 * bs, bs);
-    // the lantern hangs on a hook in the top right corner of the zone of the hand, under «Колода · Сброс»; the gun is ≥ 2.5 times wider
-    const deckInfo = rect(visible(game, '[data-fx-deck]'), g);
-    const ls = Math.min(0.9, gun.w / 2.6 / 50);
-    const hookT = (deckInfo ? deckInfo.t + deckInfo.h : hand.t + 20) + 2;
-    const lanternT = hookT + 14;
-    const lx = hand.l + hand.w - 10 - 25 * ls,
-      ly = lanternT + 21 * ls;
+    const mid = pieceAt('cannon', (row ? row.l + row.w / 2 : W / 2) - 61 * gs, rowY - 39 * gs, gs);
+    const balls = pieceAt('balls', mid.l + mid.w - 10 * gs + 25 * bs, mid.t + mid.h - 20 * bs, bs);
+    // the lantern hangs on the bottom right corner of the frame of the sea, a little over the frame, over all of the table: right of the
+    // plank «Месть» and above «Перестроение», as large as that corner allows (its box 50·ls × 59·ls round the flame at (lx, ly − 3·ls))
+    const sea = rect(game.querySelector('.sea-table'), g);
+    const plank = rect(game.querySelector('.planks.bottom > .plank:last-child'), g);
+    const right = Math.min(W - 1, sea ? sea.l + sea.w + 6 : W - 1);
+    const left = plank ? plank.l + plank.w + 1 : right - 20;
+    const top = plank ? plank.t + plank.h - 4 : (sea ? sea.t + sea.h - 22 : hand.t - 40);
+    const bottom = regroup ? regroup.t - 1 : top + 26;
+    const ls = Math.max(0.24, Math.min((right - left) / 50, (bottom - top) / 59, gun.w / 2.6 / 50));
+    const lx = (left + right) / 2,
+      ly = bottom - 38 * ls;
     const lantern = lanternAt(lx, ly, ls);
-    const hook = { l: lx - 6, t: hookT, w: 12, h: lanternT - hookT + 4 * ls };
-    return { phone: true, W, H, pieces: [gun, balls, lantern], lx, ly, ls, hook };
+    const hook = { l: lx - 4, t: lantern.t - 9, w: 8, h: 11 };
+    // the warm glint on the top of the barrel, towards the muzzle (the lantern is to the right)
+    const glint = { l: gun.l + 66 * gs, t: gun.t + 3 * gs, w: 54 * gs, h: 7 * gs };
+    return { phone: true, W, H, pieces: [gun, balls, lantern], lx, ly, ls, hook, glint };
   }
   const end = rect(visible(game, '[data-testid="end-turn"]'), g);
   const undo = rect(visible(game, '.log-col .undo'), g);
@@ -331,6 +343,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
               <img key={p.key} className={`deck-piece ${p.flip ? 'flip' : ''}`} data-piece={p.key} src={PIECES[p.key].src} alt="" draggable={false} style={{ left: p.l, top: p.t, width: p.w, height: p.h }} />
             ))}
           {deck && <DeckLight x={deck.lx} y={deck.ly} r={LIGHT_R[deck.phone ? 'phone' : 'laptop']} ls={deck.ls} sq={deck.H / deck.W} />}
+          {deck?.glint && <i className="deck-glint" style={{ left: deck.glint.l, top: deck.glint.t, width: deck.glint.w, height: deck.glint.h }} />}
           {deck?.hook && <i className="deck-hook" style={{ left: deck.hook.l, top: deck.hook.t, width: deck.hook.w, height: deck.hook.h }} dangerouslySetInnerHTML={{ __html: HOOK_SVG }} />}
           {deck?.pieces
             .filter((p) => p.key === 'lantern')
