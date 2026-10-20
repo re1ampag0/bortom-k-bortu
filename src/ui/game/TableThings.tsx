@@ -122,15 +122,16 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     const balls = pieceAt('balls', Math.max(4, gun.l + 6 * gs) + 25 * bs, gun.t + gun.h - 2 - 20 * bs, bs);
     // the lantern hangs on the bottom right corner of the frame of the sea, a little over the frame, over all of the table: right of the
     // plank «Месть» and above «Перестроение», as large as that corner allows (its box 50·ls × 59·ls round the flame at (lx, ly − 3·ls))
-    const sea = rect(game.querySelector('.sea-table'), g);
+    // fix-ui (the user's choice: as large as fits without covering anything): the lantern hangs on the bottom right corner of the
+    // frame of the sea, in the strip right of «Месть» (its drawing is 30 of the 50 units of its box wide), over the frame, its foot
+    // just above «Перестроение»; whole in the window. The buttons of «Месть» and «Перестроение» stay clear.
     const plank = rect(game.querySelector('.planks.bottom > .plank:last-child'), g);
-    const right = Math.min(W - 1, sea ? sea.l + sea.w + 6 : W - 1);
-    const left = plank ? plank.l + plank.w + 1 : right - 20;
-    const top = plank ? plank.t + plank.h - 4 : (sea ? sea.t + sea.h - 22 : hand.t - 40);
-    const bottom = regroup ? regroup.t - 1 : top + 26;
-    const ls = Math.max(0.24, Math.min((right - left) / 50, (bottom - top) / 59, gun.w / 2.6 / 50));
-    const lx = (left + right) / 2,
-      ly = bottom - 38 * ls;
+    const stripL = plank ? plank.l + plank.w + 1 : W - 20;
+    const ls = Math.max(0.3, Math.min(0.62, (W - 1 - stripL) / 30));
+    const lx = (stripL + W - 1) / 2;
+    const foot = regroup ? regroup.t - 1 : (plank ? plank.t + plank.h + 18 : hand.t - 20);
+    const at0 = lanternAt(0, 0, ls);
+    const ly = foot - (at0.t + at0.h);
     const lantern = lanternAt(lx, ly, ls);
     const hook = { l: lx - 4, t: lantern.t - 9, w: 8, h: 11 };
     // the warm glint on the top of the barrel, towards the muzzle (the lantern is to the right)
