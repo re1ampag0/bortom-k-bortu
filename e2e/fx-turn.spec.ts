@@ -334,3 +334,30 @@ test.describe('the turn with the layer: «До конца хода», «Ход �
     await expect.poll(async () => (await look()).times.join(), { timeout: 10_000 }).not.toBe(held.times.join());
   });
 });
+
+// A2: an automatic end of the turn must not dismiss a window the player is reading.
+test('⚙ stays open when the countdown passes the turn to the bot; only the player closes it', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 660 });
+  await page.goto('?seed=1&speed=fast');
+  for (const id of ['quick-bots', 'prep-start', 'placement-done']) await page.getByTestId(id).click();
+  await page.locator('[data-testid="end-turn"]:visible').first().click();
+  for (let i = 0; i < 30 && !(await page.getByTestId('ending').isVisible()); i++) {
+    for (const id of ['confirm-yes', 'no-plans']) if (await page.getByTestId(id).isVisible()) await page.getByTestId(id).click();
+    await page.waitForTimeout(100);
+  }
+  await expect(page.getByTestId('ending')).toBeVisible();
+  await page.getByTestId('settings-btn').click();
+  await expect(page.getByTestId('settings')).toBeVisible();
+  await expect(page.getByTestId('ending')).toHaveCount(0, { timeout: 5000 });
+  await page.waitForTimeout(1500);
+  await expect(page.getByTestId('settings')).toBeVisible();
+  await page.screenshot({ path: 'docs/screenshots/fix-ci/settings-bot-turn.png' });
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('settings')).toHaveCount(0);
+  await page.getByTestId('settings-btn').click();
+  await page.getByTestId('settings').getByRole('button', { name: 'Закрыть', exact: true }).click();
+  await expect(page.getByTestId('settings')).toHaveCount(0);
+  await page.getByTestId('settings-btn').click();
+  await page.locator('.sheet-backdrop').click({ position: { x: 2, y: 2 } });
+  await expect(page.getByTestId('settings')).toHaveCount(0);
+});
