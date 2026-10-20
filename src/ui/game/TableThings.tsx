@@ -137,7 +137,8 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     const glint = { l: gun.l + 66 * gs, t: gun.t + 3 * gs, w: 54 * gs, h: 7 * gs };
     return { phone: true, W, H, pieces: [gun, balls, lantern], lx, ly, ls, hook, glint };
   }
-  const end = rect(visible(game, '[data-testid="end-turn"]'), g);
+  // «Ход окончен»; in «Тревога!» its place holds «Пропустить» — then the column of the log it stands in (fix-ui)
+  const end = rect(visible(game, '[data-testid="end-turn"]'), g) ?? rect(visible(game, '.log-col .alarm-actions'), g) ?? rect(game.querySelector('.log-col'), g);
   const undo = rect(visible(game, '.log-col .undo'), g);
   if (!end || !cardsBox) return null;
   // L — right of «Трюм + часы + Перестроение» + 24; R — left of «Ход окончен» + «Отменить» − 16
@@ -274,7 +275,9 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         // transitions of the cards bring the measure back when the pointer has gone)
         if (game.querySelector('.hand-cards > .hcard:hover, .hand-cards > .hcard:focus-visible') && !matchMedia('(max-width: 700px)').matches) return;
         const d = deckPlace(game);
-        setDeck((old) => (old && d && JSON.stringify(old) === JSON.stringify(d) ? old : d));
+        // nothing to measure by (in «Тревога!» there is no «Ход окончен»): the gun and the lantern stay where they were
+        if (!d) return;
+        setDeck((old) => (old && JSON.stringify(old) === JSON.stringify(d) ? old : d));
         // the hand in the middle of its strip (paddings of .hand-cards, read by useFanFit), whole in the window, its tabs over it
         const hd = d?.hand;
         // set only what changed
