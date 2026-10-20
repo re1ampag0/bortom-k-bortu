@@ -272,11 +272,12 @@ test.describe('the turn with the layer: «До конца хода», «Ход �
       () =>
         new Promise<string[]>((done) => {
           const out: string[] = [];
+          const started = performance.now();
           const t = setInterval(() => {
             const text = document.querySelector('[data-fx-instruction]')?.textContent ?? '';
             if (out.at(-1) !== text) out.push(text);
             const b = document.querySelector('[data-testid="end-turn"]');
-            if (out.length > 200 || (b && b.textContent === 'Ход окончен' && b.getAttribute('aria-disabled') !== 'true')) { clearInterval(t); done(out); }
+            if (performance.now() - started > 60_000 || (b && b.querySelector('.oak-pan > b')?.textContent === 'Ход окончен' && b.getAttribute('aria-disabled') !== 'true')) { clearInterval(t); done(out); }
           }, 50);
         }),
     );
