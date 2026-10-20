@@ -135,8 +135,8 @@ test.describe('laptop 1366×660', () => {
     await piratesAgainstBots(page, '?seed=1&speed=normal');
     await expect(page.locator('[data-testid="end-turn"]:visible')).toHaveAttribute('aria-disabled', 'false');
     await endTurn(page);
-    const ending = page.getByTestId('ending');
-    await expect(ending).toContainText('через 3 с');
+    const ending = page.locator('[data-testid="end-turn"]:visible').first();
+    await expect(ending).toContainText('Ход окончен · 3');
     // «✓ готов»: the tick is an SVG icon now (A5), the word stays text.
     for (const code of ['Ж', 'М']) {
       const ready = page.getByTestId(`ready-${code}`);
@@ -145,7 +145,8 @@ test.describe('laptop 1366×660', () => {
     }
     await expect(page.locator('[data-testid^="ready-"]')).toHaveCount(2);
     await page.screenshot({ path: `${SHOTS}/laptop-ready.png` });
-    await page.getByTestId('ending-cancel').click();
+    await page.locator('[data-testid="undo"]:visible').first().click();
+    await expect(ending).not.toContainText('Ход окончен ·');
     await expect(page.locator('[data-testid^="ready-"]')).toHaveCount(0);
 
     // ⚙ → «Быстрый конец хода»: the turn passes in 1 s.
@@ -153,9 +154,9 @@ test.describe('laptop 1366×660', () => {
     await page.getByTestId('fast-end').check();
     await page.getByRole('button', { name: 'Закрыть' }).click();
     await endTurn(page);
-    await expect(ending).toContainText('через 1 с');
+    await expect(ending).toContainText('Ход окончен · 1');
     const shown = Date.now();
-    await expect(ending).toBeHidden({ timeout: 5000 });
+    await expect(ending).not.toContainText('Ход окончен ·', { timeout: 5000 });
     expect(Date.now() - shown).toBeLessThan(2500);
     await expect(page.getByTestId('instruction')).toContainText('Бот');
   });
