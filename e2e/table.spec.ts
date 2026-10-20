@@ -527,8 +527,8 @@ for (const v of [
 
 // rig, г: «Фон под рукой» — the deck (or the captain's table) fills the whole window. Б6 on the game table: the gun, its balls, the
 // lantern, «Колода · Сброс», the cards of the hand, the Hold, the hourglass, «Ход окончен» and «Отменить» do not run into each other;
-// the gun is at least 2.5 times as wide as the lantern; no «Вещи на столе» on the deck. On a phone (a5-phone) the gun stands under the
-// cards, in the strip of the dots, and the lantern in the row of the caption of the hand: neither meets a card.
+// the gun is at least 2.5 times as wide as the lantern; no «Вещи на столе» on the deck. On a phone (a5-phone) the gun and the lantern
+// are the background — the big gun behind the row of the Hold, the lantern on a hook behind the fan: the caption and the bar lie over them.
 for (const look of ['deck', 'table'] as const) {
   for (const v of [
     { w: 1366, h: 660 },
@@ -565,8 +565,16 @@ for (const look of ['deck', 'table'] as const) {
           deck: vis('[data-fx-deck]')[0] ?? null,
           cards: vis('.hand-cards .hcard'),
           hold: box(document.querySelector('.board-bottom > .team-row:not(.table-edge)')),
-          // a phone (a5-phone): the gun stands in the row of the Hold, between its parts — they are checked one by one
-          holdParts: ['.hold-label', '.powder-dots', '.hold-n', '.regroup'].map((q) => box(document.querySelector(`.board-bottom > .team-row ${q}`))),
+          // a phone (a5-phone): the gun (behind the row of the Hold) and the lantern (behind the fan) are the background — only the
+          // caption of the hand and the bottom bar must lie over them: a press at their points hits them, not the backdrop
+          over: ['.phone-hand-label', '.bottom-bar'].map((q) => {
+            const e = Array.from(document.querySelectorAll(q)).find((x) => x.getBoundingClientRect().width > 0);
+            if (!e) return `${q}: missing`;
+            const b = e.getBoundingClientRect();
+            const pts = [[b.left + b.width / 2, b.top + b.height / 2], [b.left + 4, b.top + 4], [b.right - 4, b.bottom - 4]];
+            return pts.every(([x, y]) => { const hit = document.elementFromPoint(x, y); return !!hit && !hit.closest('.backdrop') && (e.contains(hit) || hit === e || !!hit.closest(q)); }) ? null : `${q} is not over the deck`;
+          }),
+          phone: innerWidth < 701,
           glass: vis('.hold-glass')[0] ?? null,
           end: vis('[data-testid="end-turn"]')[0] ?? null,
           undo: vis('.undo')[0] ?? null,
@@ -582,7 +590,7 @@ for (const look of ['deck', 'table'] as const) {
         ['the lantern', r.lantern],
         ...r.props.map((p, i): [string, R] => [`prop ${i}`, p]),
         ['«Колода»', r.deck],
-        ...(r.iw < 701 ? r.holdParts.map((p, i): [string, R | null] => [`the Hold part ${i}`, p]) : [['the Hold', r.hold] as [string, R | null]]),
+        ['the Hold', r.hold],
         ['the hourglass', r.glass],
         ['«Ход окончен»', r.end],
         ['«Отменить»', r.undo],
@@ -590,7 +598,9 @@ for (const look of ['deck', 'table'] as const) {
       ];
       const art = (n: string) => ['the gun', 'the balls', 'the lantern'].includes(n) || n.startsWith('prop');
       const bad: string[] = [];
-      for (let i = 0; i < named.length; i++)
+      // a phone: the gun and the lantern are the background (the cards lie on them) — only the caption and the bar over them
+      if (r.phone) bad.push(...r.over.filter((x): x is string => !!x));
+      for (let i = 0; i < named.length && !r.phone; i++)
         for (let j = i + 1; j < named.length; j++) {
           const [na, a] = named[i],
             [nb, b] = named[j];
@@ -598,7 +608,7 @@ for (const look of ['deck', 'table'] as const) {
           if (art(na) && art(nb) && !na.startsWith('prop')) continue; // the balls lie before the gun, the lantern stands on it
           if (meet(a, b)) bad.push(`${na} ∩ ${nb}`);
         }
-      for (const [n, p] of named) if (p && art(n) && (p.l < -1 || p.t < -1 || p.r > r.iw + 1 || p.b > r.ih + 1)) bad.push(`${n} outside the window`);
+      for (const [n, p] of named) if (!r.phone && p && art(n) && (p.l < -1 || p.t < -1 || p.r > r.iw + 1 || p.b > r.ih + 1)) bad.push(`${n} outside the window`);
       // «Колода · Сброс» does not run into the Hold or «Перестроение» either (on «Палуба» it is in the corner under them)
       if (r.deck && r.hold && meet(r.deck, r.hold)) bad.push('«Колода» ∩ the Hold');
       expect(bad).toEqual([]);

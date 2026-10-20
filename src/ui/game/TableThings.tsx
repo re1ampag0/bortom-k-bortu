@@ -44,9 +44,9 @@ interface Placed extends Box {
  * R — 16 px before «Ход окончен» + «Отменить», its balls at the wheel, the lantern (1.3) over the breech; the hand stands in the
  * middle of the strip from L (24 px right of the Hold, the hourglass and «Перестроение») to the gun − 16 (Hand.tsx useFanFit
  * reads the paddings of .hand-cards and closes the step of the fan when the cards do not fit), whole in the window; its tabs
- * begin over its first card, the grating lies over its middle. A phone (a5-phone): the gun (turned, its breech to the left) with its
- * balls whole in the row of the Hold, in the gap between «2/8» and «Перестроение», as tall as the row; the lantern (smaller) stands
- * on its breech, its light falls on the gun and the top of the hand — neither meets the tray, the button, the cards or the bar.
+ * begin over its first card, the grating lies over its middle. A phone (a5-phone): a big gun (70 % of the width, turned) behind the fan
+ * in the middle of the zone of the hand, its balls by the wheel; the lantern hangs on a hook in the top right corner of that zone;
+ * both are the background — the cards, the caption and the bottom bar lie over them.
  */
 const PIECES = {
   grate: { src: grate, vb: [-7, -7, 354, 38] },
@@ -56,6 +56,10 @@ const PIECES = {
   coil: { src: coilArt, vb: [-41, -18, 70, 46] },
 } as const;
 type PieceKey = keyof typeof PIECES;
+/** A phone: the iron hook in a beam the lantern hangs on, and its short chain (stretched to the height of its box). */
+const HOOK_SVG =
+  '<svg width="100%" height="100%" viewBox="0 0 12 30" preserveAspectRatio="none" aria-hidden="true"><circle cx="6" cy="2.4" r="2" fill="#2a2420" stroke="#0e0b09" stroke-width=".6"/><path d="M6 4 V24" stroke="#3a322c" stroke-width="1.6" stroke-dasharray="2.4 1.2"/><path d="M6 23 Q9.4 25 8.4 28 Q7 30.4 4.4 29" fill="none" stroke="#2a2420" stroke-width="1.6" stroke-linecap="round"/></svg>';
+
 /** The light of the lantern reaches R (the values of the user for the whole table). */
 const LIGHT_R = { laptop: 380, phone: 220 } as const;
 /** The scales of the gun and the lantern on a laptop (1366×660). */
@@ -77,6 +81,8 @@ interface DeckPlace {
   /** A laptop: the paddings that put the hand in the middle of its strip (in the px of the zoomed row), the room under the
    *  cards, the indent of the tabs (the left of the first card) and the larger hand of a tall window. */
   hand?: { pl: number; pr: number; lift: number; tabs: number };
+  /** A phone: the hook the lantern hangs on. */
+  hook?: Box;
 }
 
 const visible = (game: HTMLElement, q: string) => Array.from(game.querySelectorAll(q)).find((e) => e.getBoundingClientRect().width > 0) ?? null;
@@ -99,29 +105,26 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
   const cards = Array.from(game.querySelectorAll('.hand-cards .hcard')).map((c) => rect(c, g)).filter((c): c is Box => !!c);
   if (!hand) return null;
   if (W < 701) {
-    // the row of the Hold: the gun stands whole in the gap between «2/8» and «Перестроение», as tall as the row
+    // a big gun (turned, its breech to the left), 70 % of the width, behind the row of the Hold — the lowest layer: the frame of the
+    // sea, the tray, «2/8», «Перестроение», the caption of the hand and the cards lie over it; its centre on the middle of the row
+    // (its box is (x − 3·gs, y + 11·gs, 128·gs, 56·gs), its centre (x + 61·gs, y + 39·gs)). The balls lie by its front wheel.
+    const gs = (0.7 * W) / 128;
     const row = rect(game.querySelector('.board-bottom > .team-row:not(.table-edge)'), g);
-    const count = rect(visible(game, '.board-bottom > .team-row .hold-n'), g) ?? rect(visible(game, '.board-bottom > .team-row .powder-dots'), g);
-    const regroup = rect(visible(game, '.board-bottom > .team-row .regroup'), g);
-    const grateP = pieceAt('grate', 40, hand.t - 4, 0.7);
-    if (!row) return { phone: true, W, H, pieces: [grateP], lx: W - 40, ly: hand.t, ls: 0.5 };
-    const from = (count ? count.l + count.w : row.l) + 6,
-      to = (regroup ? regroup.l : row.l + row.w) - 6;
-    // the gun turned (the breech to the left) in the middle of the gap, its box (x − 3·gs, y + 11·gs, 128·gs, 56·gs); its balls (×0.5)
-    // on the floor before the wheel under the barrel, inside its box
-    const gs = Math.max(0.3, Math.min(0.7, (to - from) / 128, (row.h - 8) / 56));
-    const bs = gs * 0.5;
-    const gunB = row.t + row.h - 3;
-    const gun = { ...pieceAt('cannon', (from + to) / 2 - 64 * gs + 3 * gs, gunB - 67 * gs, gs), flip: true };
-    const balls = pieceAt('balls', gun.l + gun.w - 4 * gs - 69 * bs + 25 * bs, gunB - 20 * bs, bs);
-    // the lantern on the breech, its flame over the row and under the frame of the sea; its width ≤ the gun's / 2.6
-    const sea = rect(game.querySelector('.sea-table'), g);
-    const stand = gun.t + 6 * gs;
-    const ls = Math.max(0.2, Math.min(0.62, (128 * gs) / 2.6 / 50, (stand - (sea ? sea.t + sea.h + 2 : row.t - 20)) / 59));
-    const lx = gun.l + 22 * gs,
-      ly = stand - 38 * ls;
+    const cx = row ? row.l + row.w / 2 : W / 2,
+      cy = row ? row.t + row.h / 2 : hand.t;
+    const gun = { ...pieceAt('cannon', cx - 61 * gs, cy - 39 * gs, gs), flip: true };
+    const bs = gs * 0.45;
+    const balls = pieceAt('balls', gun.l + gun.w - 10 * gs + 25 * bs, gun.t + gun.h - 20 * bs, bs);
+    // the lantern hangs on a hook in the top right corner of the zone of the hand, under «Колода · Сброс»; the gun is ≥ 2.5 times wider
+    const deckInfo = rect(visible(game, '[data-fx-deck]'), g);
+    const ls = Math.min(0.9, gun.w / 2.6 / 50);
+    const hookT = (deckInfo ? deckInfo.t + deckInfo.h : hand.t + 20) + 2;
+    const lanternT = hookT + 14;
+    const lx = hand.l + hand.w - 10 - 25 * ls,
+      ly = lanternT + 21 * ls;
     const lantern = lanternAt(lx, ly, ls);
-    return { phone: true, W, H, pieces: [grateP, gun, balls, lantern], lx, ly, ls };
+    const hook = { l: lx - 6, t: hookT, w: 12, h: lanternT - hookT + 4 * ls };
+    return { phone: true, W, H, pieces: [gun, balls, lantern], lx, ly, ls, hook };
   }
   const end = rect(visible(game, '[data-testid="end-turn"]'), g);
   const undo = rect(visible(game, '.log-col .undo'), g);
@@ -273,6 +276,9 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         put('--deck-pr', hd ? Math.max(0, Math.round(hd.pr)) : 0);
         put('--deck-lift', hd ? Math.round(hd.lift) : 0);
         put('--deck-tabs', hd ? Math.round(hd.tabs) : 0);
+        // a phone: the warm light of the lantern over the fan (phone.css)
+        put('--lamp-x', d ? Math.round(d.lx) : 0);
+        put('--lamp-y', d ? Math.round(d.ly) : 0);
         setPlaced([]);
         return;
       }
@@ -325,6 +331,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
               <img key={p.key} className={`deck-piece ${p.flip ? 'flip' : ''}`} data-piece={p.key} src={PIECES[p.key].src} alt="" draggable={false} style={{ left: p.l, top: p.t, width: p.w, height: p.h }} />
             ))}
           {deck && <DeckLight x={deck.lx} y={deck.ly} r={LIGHT_R[deck.phone ? 'phone' : 'laptop']} ls={deck.ls} sq={deck.H / deck.W} />}
+          {deck?.hook && <i className="deck-hook" style={{ left: deck.hook.l, top: deck.hook.t, width: deck.hook.w, height: deck.hook.h }} dangerouslySetInnerHTML={{ __html: HOOK_SVG }} />}
           {deck?.pieces
             .filter((p) => p.key === 'lantern')
             .map((p) => (
