@@ -551,6 +551,9 @@ for (const look of ['deck', 'table'] as const) {
         await expect(page.getByTestId('lantern-light')).toHaveCount(1);
       } else await expect(page.locator('.table-things')).toHaveCount(1);
       const r = await page.evaluate(() => {
+        // Geometry below is in table px: #stage scales screen coordinates on large windows.
+        const stage = document.getElementById('stage')!;
+        const k = stage.getBoundingClientRect().width / stage.offsetWidth;
         const box = (e: Element | null) => {
           if (!e) return null;
           const b = e.getBoundingClientRect();
@@ -579,7 +582,7 @@ for (const look of ['deck', 'table'] as const) {
           end: vis('[data-testid="end-turn"]')[0] ?? null,
           undo: vis('.undo')[0] ?? null,
           iw: innerWidth,
-          ih: innerHeight,
+          ih: innerHeight / k,
         };
       });
       type R = { l: number; r: number; t: number; b: number };
@@ -641,6 +644,9 @@ for (const v of [
       await page.mouse.move(2, 2);
       await page.waitForTimeout(400);
       const r = await page.evaluate(() => {
+        // Geometry below is in table px: #stage scales screen coordinates on large windows.
+        const stage = document.getElementById('stage')!;
+        const k = stage.getBoundingClientRect().width / stage.offsetWidth;
         const rightOf = (e: Element | null) => {
           let x = 0;
           for (const q of e ? [e, ...Array.from(e.querySelectorAll('*'))] : []) {
@@ -656,16 +662,16 @@ for (const v of [
           undo = vis('.log-col .undo'),
           tabs = vis('.hand .tabs');
         return {
-          L: rightOf(document.querySelector('.board-bottom > .team-row:not(.table-edge)')) + 24,
-          R: Math.min(end.left, undo.left) - 16,
-          gunL: gun.left,
-          gunR: gun.right,
-          left: Math.min(...cards.map((c) => c.left)),
-          right: Math.max(...cards.map((c) => c.right)),
-          top: Math.min(...cards.map((c) => c.top)),
-          bottom: Math.max(...cards.map((c) => c.bottom)),
-          tabsL: tabs.left,
-          ih: innerHeight,
+          L: rightOf(document.querySelector('.board-bottom > .team-row:not(.table-edge)')) / k + 24,
+          R: Math.min(end.left, undo.left) / k - 16,
+          gunL: gun.left / k,
+          gunR: gun.right / k,
+          left: Math.min(...cards.map((c) => c.left)) / k,
+          right: Math.max(...cards.map((c) => c.right)) / k,
+          top: Math.min(...cards.map((c) => c.top)) / k,
+          bottom: Math.max(...cards.map((c) => c.bottom)) / k,
+          tabsL: tabs.left / k,
+          ih: innerHeight / k,
         };
       });
       expect(Math.abs(r.gunR - r.R), 'the gun ends at R').toBeLessThanOrEqual(2);
