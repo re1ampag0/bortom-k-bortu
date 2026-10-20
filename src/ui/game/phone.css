@@ -1,0 +1,890 @@
+/* ═══════════ a5-phone (TASKS-2, PH 1–3): the phone as A5Phone.html, frames 1, 1б, 6. Everything here is a phone only
+   (≤ 700 px) and comes after game.css: a laptop does not change. ═══════════ */
+/* the dots under the fan of a phone (Hand.tsx): a laptop has none */
+.hand-dots {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  /* ——— the top row: the brass plate «ПИРАТЫ · II», the plaque of the sea with its picture, the gear; the paper line of
+     the hint; the Hold of the top team over the sea ——— */
+  .status {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'turn tools'
+      'text text'
+      'hold hold';
+    gap: 6px 7px;
+    padding: 6px 8px 0;
+  }
+  .turn-plate {
+    height: 30px;
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+  .status-tools {
+    min-width: 0;
+    gap: 7px;
+  }
+  .status-tools .chip.sea {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    height: 34px;
+    padding: 0 8px;
+    gap: 6px;
+    font-size: inherit;
+  }
+  .sea-icon,
+  .sea-icon svg {
+    width: 30px;
+    height: 26px;
+  }
+  .sea-cap {
+    font-size: 10.5px;
+    line-height: 1;
+  }
+  .sea-name {
+    font-size: 13.5px;
+    line-height: 1.15;
+  }
+  .status-text {
+    height: 32px;
+    line-height: 32px;
+    padding: 0 8px;
+    font-size: 13.5px;
+    text-align: center;
+  }
+  /* the Hold of the top team: «ТРЮМ КОМПАНИИ», the tray of kegs, «5/8» */
+  .top-hold {
+    flex-direction: row;
+    align-items: center;
+    gap: 7px;
+    height: 24px;
+    padding: 0 4px;
+  }
+  .top-hold .hold-label,
+  .board-bottom > .team-row .hold-label {
+    font-family: var(--font-num);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #efe3c8;
+  }
+  .top-hold .powder-dots,
+  .game .board-bottom > .team-row .powder-dots {
+    display: flex;
+    gap: 2px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: #3f2a1a;
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
+  }
+  .top-hold .powder-dots i,
+  .board-bottom > .team-row .powder-dots i {
+    width: 11px;
+    height: 14px;
+  }
+  .board-bottom > .team-row .powder-dots b {
+    display: none;
+  }
+  .hold-n {
+    font-family: var(--font-num);
+    font-weight: 700;
+    font-size: 12.5px;
+    color: #efe3c8;
+  }
+
+  /* ——— the Hold of the bottom team under the sea, «Перестроение» on the right: dark oak with a round sign ——— */
+  .board-bottom > .team-row {
+    min-height: 46px;
+    gap: 7px;
+    padding: 0 4px;
+    overflow: visible;
+  }
+  .board-bottom > .team-row .team-name {
+    display: none;
+  }
+  .game .board-bottom > .team-row .btn.regroup {
+    margin-left: auto;
+    height: 38px;
+    min-height: 0;
+    padding: 0 11px 0 4px;
+    border: 0;
+    border-radius: 5px;
+    background:
+      repeating-linear-gradient(178deg, rgba(0, 0, 0, 0.09) 0 1px, rgba(0, 0, 0, 0) 1px 5px),
+      linear-gradient(#634128, #3e2716);
+    box-shadow:
+      inset 0 0 0 1px #1e1008,
+      inset 0 1px 0 2px rgba(255, 220, 170, 0.1),
+      0 3px 6px rgba(0, 0, 0, 0.5);
+    color: #f3e6c6;
+    font-family: var(--font-num);
+    font-weight: 700;
+    font-size: 13.5px;
+  }
+  .board-bottom > .team-row .btn.regroup .cmd-in {
+    display: grid;
+    grid-template-columns: 30px auto;
+    grid-template-areas:
+      'ic name'
+      'ic cost';
+    column-gap: 7px;
+    align-items: center;
+    line-height: 1.05;
+    text-align: left;
+  }
+  .board-bottom > .team-row .btn.regroup .cmd-short {
+    display: none;
+  }
+  .board-bottom > .team-row .btn.regroup .cmd-icon {
+    grid-area: ic;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #2a1a0e;
+    box-shadow:
+      inset 0 0 0 1.5px #8a6a46,
+      0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  .board-bottom > .team-row .btn.regroup .cmd-icon svg {
+    width: 16px;
+    height: 14px;
+  }
+  .board-bottom > .team-row .btn.regroup .cmd-icon path {
+    stroke: #efe3c8;
+  }
+  .board-bottom > .team-row .btn.regroup .cmd-name {
+    grid-area: name;
+  }
+  .board-bottom > .team-row .btn.regroup .cost {
+    grid-area: cost;
+    padding: 0;
+    border: 0;
+    font-family: var(--font-text);
+    font-size: 10.5px;
+    font-weight: 800;
+  }
+  .board-bottom > .team-row .btn.regroup .cost.free {
+    color: #9fd8a8;
+  }
+  .board-bottom > .team-row .btn.regroup .cost-keg svg {
+    width: 9px;
+    height: 12px;
+  }
+
+  /* ——— the sea: it takes the room left, never less than 64 px (the effects and the hints live there); then the hand gives
+     way — its cards go under the bottom bar; the planks and the buttons keep their size (1б, Safari 430×740) ——— */
+  .game .sea-table {
+    min-height: auto;
+    grid-template-rows: auto minmax(64px, 1fr) auto;
+  }
+  .board-bottom > .hand-row {
+    flex: 0 1 auto;
+    min-height: 96px;
+  }
+  /* the hand is a column: the label, the cards (they give way: cut by their own strip, above the bottom bar), the dots */
+  .board-bottom > .hand-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 0;
+  }
+  .hand-row > .hand {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .game > .bottom-bar {
+    position: relative;
+    z-index: 6;
+  }
+
+  /* ——— the plank (frame 1): the head — the picture, the short name, ✓, the fan, the Legend; no captain ——— */
+  .plank::after {
+    inset: 31px 3px 3px;
+  }
+  .plank-head {
+    height: 28px;
+    min-height: 28px;
+    padding: 0 4px;
+    gap: 5px;
+  }
+  .plank-head .ship-art {
+    flex: 0 0 32px;
+    height: 20px;
+    border-radius: 4px;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+      inset 0 0 0 2px var(--paper),
+      inset 0 0 0 2.6px rgba(0, 0, 0, 0.18);
+  }
+  .plank-head .ship-pic svg {
+    width: 29px;
+    height: 16px;
+  }
+  .plank-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+  }
+  .plank-role {
+    gap: 3px;
+  }
+  .hand-count svg {
+    width: 30px;
+    height: 18px;
+  }
+  /* the chosen ship (its hand is open): a gold frame and a warm glow instead of the tag «ВЫБРАН»; its fan stays */
+  .head-tag.chosen-tag {
+    display: none;
+  }
+  .plank.selected .hand-count {
+    display: block;
+  }
+  /* the wax seal of the target stays in the head (A5Phone, frame 2: clipped at its foot) — the number of the Hull right under
+     the head is never covered */
+  .plank .target-seal .tails {
+    display: none;
+  }
+  .plank .target-seal svg {
+    clip-path: inset(0 0 14px 0);
+  }
+  /* a target to choose: the «i» of the ship card stands in the head — the fan gives it room, the name stays whole */
+  .plank.aimable .hand-count {
+    display: none;
+  }
+  .plank.selected {
+    border-color: transparent;
+    box-shadow:
+      0 0 0 2.5px #e0bd62,
+      0 0 16px rgba(255, 196, 120, 0.6),
+      0 10px 16px rgba(0, 0, 0, 0.45);
+  }
+  .plank.selected.awaiting {
+    box-shadow:
+      0 0 0 2.5px #e0bd62,
+      0 0 20px rgba(255, 196, 120, 0.75),
+      0 10px 16px rgba(0, 0, 0, 0.45);
+  }
+
+  /* ——— the body: the Hull — its planks the whole width and a big number; Паруса · Пушки · Команда (· Души) — an icon
+     and «2/3» each; no labels, a press on an icon opens the rule (InfoTip) ——— */
+  .plank-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'hull hull'
+      'row2 badges';
+    align-items: center;
+    gap: 4px 0;
+    padding: 5px 7px 4px;
+  }
+  .tracks {
+    display: contents;
+  }
+  .track-label {
+    display: none;
+  }
+  .track,
+  .track-row2 > .track + .track {
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    gap: 3px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    font-size: inherit;
+  }
+  .track.t-hull {
+    grid-area: hull;
+    gap: 1px;
+  }
+  .track.t-hull .cells {
+    display: flex;
+    flex: 0 1 auto;
+    min-width: 0;
+    gap: 1px;
+  }
+  .t-hull .cells i {
+    width: 9.8px;
+    height: 13.5px;
+  }
+  .track.t-hull .bar {
+    display: none;
+  }
+  .track.t-hull .track-num {
+    margin-left: auto;
+    padding-left: 4px;
+    font-size: 17px;
+    line-height: 1;
+  }
+  /* the press zone of the Hull's rule: the planks (the number stays a part of the plank) */
+  .t-hull > .track-tip {
+    position: absolute;
+    left: 0;
+    top: -3px;
+    bottom: -3px;
+    right: 48px;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .t-hull > .track-tip .track-icon {
+    display: none;
+  }
+  /* the groups as wide as their icon and number, spread over the row; a thin line between them (A5Phone .g + .g) */
+  .track-row2 {
+    grid-area: row2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    padding-right: 2px;
+  }
+  .track-row2 > .track {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  .track-row2 > .track + .track {
+    padding-left: 6px;
+    border-left: 1px solid rgba(90, 70, 40, 0.3);
+  }
+  .track-row2 .cells {
+    display: none;
+  }
+  .track:not(.t-hull) .track-num::before {
+    content: none;
+  }
+  .track-row2 .track-num {
+    font-size: 13.5px;
+  }
+  .track-tip {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    line-height: 0;
+    cursor: help;
+  }
+  .track-icon {
+    display: block;
+    width: 15px;
+    height: 15px;
+    background: var(--on) center / contain no-repeat;
+  }
+  .t-guns .track-icon {
+    width: 20px;
+    height: 13px;
+  }
+  /* at its minimum: the number red, the icon of a lost cell */
+  .track.is-low .track-icon {
+    background-image: var(--off);
+  }
+  .plank-body > .badges {
+    grid-area: badges;
+    margin: 0;
+    flex-wrap: nowrap;
+  }
+  .plank-body > .badges .badge.souls {
+    height: 18px;
+    padding: 0 0 0 6px;
+    border-left: 1px solid rgba(90, 70, 40, 0.3);
+    border-radius: 0;
+    font-family: var(--font-num);
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+  .badge.souls .souls-word {
+    display: none;
+  }
+  .badge.souls .chip-icon svg {
+    width: 13px;
+    height: 15px;
+  }
+
+  /* ——— the buttons of a plank: 34 px, a press zone of 44 px (U3); one or two fill the row with the laptop's look «icon ·
+     name | price», three and more — a third each, the short labels, the row scrolls ——— */
+  .plank-buttons .btn {
+    flex: 1 0 calc((100% - 8px) / 3);
+  }
+  .plank-buttons .btn.cmd {
+    font-family: var(--font-sc);
+    font-weight: 800;
+    font-size: 13px;
+    box-shadow:
+      inset 0 0 0 1.5px #fbf5e7,
+      inset 0 0 0 2.5px #6b5a40,
+      0 2px 0 #a68f66;
+  }
+  .plank-buttons:has(> .btn:nth-child(3)) .cmd-in,
+  .plank-buttons:not(:has(> .btn:nth-child(3))) .cmd-short {
+    display: none;
+  }
+  .plank-buttons .cmd-in {
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .plank-buttons .cmd-icon svg {
+    width: 18px;
+    height: auto;
+    max-height: 15px;
+  }
+  .plank-buttons .btn.cmd .cost {
+    gap: 2px;
+    padding-left: 5px;
+  }
+  .plank-buttons .cost-keg svg {
+    width: 9px;
+    height: 12px;
+  }
+  /* two buttons: the first as wide as its words, the second takes the rest; the first loses its icon (A5Phone «act.two») */
+  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) > .btn {
+    font-size: 11px;
+    letter-spacing: -0.02em;
+    padding-inline: 3px;
+  }
+  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) > .btn:first-child {
+    flex: 0 0 auto;
+    padding-inline: 6px;
+  }
+  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) .btn.cmd .cost {
+    padding-left: 3px;
+  }
+  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) > .btn:first-child .cmd-icon {
+    display: none;
+  }
+  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) .cmd-in {
+    gap: 3px;
+  }
+  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) .cmd-icon svg {
+    width: 13px;
+  }
+
+  /* ——— the bottom bar: «Журнал», «Правила» — square icons with a caption; «Отменить»; «Ход окончен» with the line of who
+     is ready inside it ——— */
+  .game > .bottom-bar {
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    border-top: 0;
+    background: linear-gradient(#3a2716, #2a1c10);
+    box-shadow:
+      inset 0 1px 0 rgba(224, 189, 98, 0.45),
+      0 -4px 10px rgba(0, 0, 0, 0.35);
+  }
+  .game .bottom-bar .btn.tile {
+    width: 54px;
+    min-height: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    color: #efe3c8;
+    font-family: var(--font-text);
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+  .tile-ic {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 227, 200, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(239, 227, 200, 0.22);
+  }
+  .tile-ic svg {
+    display: block;
+  }
+  .bottom-bar .oak-btn {
+    justify-self: end;
+  }
+  .oak-ready {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .oak-ready svg {
+    flex: none;
+  }
+
+  /* ——— the statuses (part 2): a row of coloured chips under the tracks — the badge of ST3 and the short name; three and
+     more — only the badges; a press opens the rule. «Чёрная метка» — a blot on the picture of the ship, «Пожар» — small
+     flames on it too ——— */
+  .plank-statuses {
+    flex-wrap: nowrap;
+    gap: 4px;
+    padding: 0 7px 5px;
+    overflow: hidden;
+  }
+  .plank-statuses .status-chip {
+    flex: none;
+    height: 21px;
+    gap: 3px;
+    padding: 0 7px 0 3px;
+    border-radius: 11px;
+    background: linear-gradient(var(--chip-a, #7a7068), var(--chip-b, #423a34));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+      0 1px 2px rgba(0, 0, 0, 0.3);
+    color: #fbf3e2;
+    font-family: var(--font-text);
+    font-size: 11.5px;
+    font-weight: 800;
+  }
+  .plank-statuses .chip-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+  .plank-statuses.icons .status-chip {
+    width: 23px;
+    padding: 0;
+    justify-content: center;
+  }
+  .plank-statuses.icons .chip-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+  .plank-head .ship-art > .mark-stamp.blot {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    width: 15px;
+    z-index: 3;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+  }
+  .head-fire {
+    position: absolute;
+    left: 2px;
+    bottom: 3px;
+    display: flex;
+    align-items: flex-end;
+    gap: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .head-fire svg {
+    display: block;
+    margin-right: -2px;
+    transform-origin: 50% 100%;
+    animation: head-fire 0.5s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 2px rgba(255, 140, 40, 0.7));
+  }
+  .head-fire svg:nth-child(2) {
+    animation-delay: -0.2s;
+    scale: 0.8;
+  }
+  .head-fire svg:nth-child(3) {
+    animation-delay: -0.35s;
+    scale: 0.9;
+  }
+  @keyframes head-fire {
+    to {
+      transform: scale(1.08, 0.9) skewX(-4deg);
+    }
+  }
+  .fx-simple .head-fire svg {
+    animation: none;
+  }
+}
+@media (max-width: 700px) {
+  /* ——— the hand (part 3, A5Phone frames 1, 6): «РУКА «ЖЕМЧУЖИНЫ»» and «Колода · Сброс · сыграно» over the fan; the cards
+     112 × 160 overlap a little, the edges fade; dots under the fan; a tap lifts a card ——— */
+  .hand-head {
+    flex: none;
+    min-height: 30px;
+    gap: 8px;
+    padding: 0 4px;
+  }
+  .hand-head .tabs,
+  .hand-head > .hand-label:not(.phone-hand-label) {
+    display: none;
+  }
+  .phone-hand-label {
+    font-family: var(--font-num);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #efe3c8;
+  }
+  .hand-head .deck-info {
+    font-size: 11px;
+    color: #d8c9a8;
+  }
+  .hand-head .deck-played {
+    display: inline;
+  }
+  /* room above the cards for a lifted one (up to 110 px; the strip lets the presses through to what is under that room) */
+  .hand-cards {
+    flex: 0 1 auto;
+    min-height: 0;
+    align-items: flex-start;
+    padding: 110px 40px 4px;
+    margin-top: -106px;
+    scroll-padding: 0 40px;
+  }
+  .hand-cards > .hcard {
+    width: 112px;
+    height: 160px;
+    padding: 0;
+    border-top-width: 0;
+    gap: 0;
+  }
+  .hand-cards > .hcard + .hcard {
+    margin-left: -14px;
+  }
+  .hand-cards > .hcard > span:not(.hcard-head) {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+  .hand-cards > .hcard .hcard-head {
+    height: 20px;
+    padding: 0 8px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+  .hand-cards > .hcard .hcard-name {
+    margin-top: 7px;
+    font-family: var(--font-num);
+    font-size: 14.5px;
+    line-height: 1.1;
+  }
+  .hand-cards > .hcard .hcard-big {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.15;
+  }
+  .hand-cards > .hcard .hcard-text {
+    flex: 1 1 0;
+    min-height: 0;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .hand-dots {
+    flex: none;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .hand-dots i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(239, 227, 200, 0.35);
+  }
+  .hand-dots i.on {
+    background: #efe3c8;
+  }
+
+  /* ——— the lifted card (frame 6): 150 wide, straight, over its neighbours (they step aside: the card is wider), its whole
+     text; at the bottom «СЫГРАТЬ» (wine) or the grey strip with the reason, under it the other actions that can be pressed
+     now. Its bottom stays at the line of the fan (Hand.tsx sets the margin over it) ——— */
+  .hand-cards > .hcard.lifted {
+    z-index: 5;
+    width: 150px;
+    height: auto;
+    min-height: 224px;
+    max-height: 270px;
+    rotate: 0deg;
+    translate: none;
+    scale: none;
+    opacity: 1;
+    filter: none;
+    cursor: default;
+    box-shadow:
+      0 0 0 2.5px #e0bd62,
+      0 0 22px rgba(255, 196, 120, 0.75),
+      0 14px 22px rgba(0, 0, 0, 0.55);
+  }
+  .hand-cards > .hcard.lift-open {
+    animation: lift-in 0.18s ease-out;
+  }
+  @keyframes lift-in {
+    from {
+      scale: 0.78;
+      translate: 0 30px;
+    }
+  }
+  .hand-cards > .hcard.lifted .hcard-head {
+    height: 22px;
+    font-size: 11px;
+  }
+  .hand-cards > .hcard.lifted .hcard-name {
+    font-size: 17px;
+  }
+  .hand-cards > .hcard.lifted .hcard-big {
+    font-size: 13px;
+  }
+  .hand-cards > .hcard.lifted .hcard-text {
+    display: block;
+    flex: none;
+    overflow: visible;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .hand-cards > .hcard > .lift-strip {
+    flex: none;
+    margin-top: auto;
+    min-height: 36px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    text-align: center;
+    line-height: 1.1;
+    font-family: var(--font-num);
+    font-weight: 700;
+    color: #f6e7c6;
+  }
+  .hand-cards > .hcard > .lift-strip.play {
+    background: linear-gradient(#8e2a20, #5e140e);
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  /* «Предложить в Залп корабля «Мести»» and the like: smaller, as written */
+  .hand-cards > .hcard > .lift-strip.play.long {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+  .hand-cards > .hcard > .lift-strip.no {
+    background: #7c7468;
+    font-family: var(--font-text);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #f4efe6;
+  }
+  .hand-cards > .hcard > .lift-more {
+    flex: none;
+    display: flex;
+    gap: 4px;
+    padding: 5px 5px 6px;
+    background: #efe3c8;
+  }
+  .lift-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 34px;
+    padding: 0 3px;
+    border: 0;
+    border-radius: 4px;
+    background: linear-gradient(#fbf5e7, #efe2c6);
+    box-shadow:
+      inset 0 0 0 1px #2a2521,
+      inset 0 0 0 2.5px #fbf5e7,
+      0 1.5px 0 #a68f66;
+    color: var(--ink-a5);
+    font-family: var(--font-text);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.05;
+    cursor: pointer;
+  }
+  .fx-simple .hand-cards > .hcard.lift-open {
+    animation: none;
+  }
+}
+/* the hook of the lantern of «Палуба» (a phone only draws it: TableThings.tsx) */
+.deck-hook {
+  position: absolute;
+  display: block;
+  filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.5));
+}
+/* the warm glint of the lantern on the barrel of the gun of «Палуба» (a phone only draws it) */
+.deck-glint {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 226, 160, 0.85), rgba(255, 180, 90, 0.35) 60%, rgba(255, 160, 60, 0));
+  mix-blend-mode: screen;
+}
+@media (max-width: 700px) {
+  /* «Палуба»: the big gun lighter (the lantern is near), its balls as light, by its rear wheel; the lantern and its hook hang
+     over the frame of the sea (over the table, not under it) */
+  .backdrop .deck-piece[data-piece='cannon'] {
+    filter: brightness(1.35) saturate(1.1);
+  }
+  .backdrop .deck-piece[data-piece='balls'] {
+    filter: brightness(1.2);
+  }
+  .backdrop .deck-piece[data-piece='lantern'],
+  .backdrop .deck-hook {
+    z-index: 4;
+  }
+}
+@media (max-width: 700px) {
+  /* «Палуба»: the warm light of the lantern falls on the fan too — a faint layer over the hand from the flame (--lamp-x/y) */
+  .game.view-hand-deck::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    mix-blend-mode: soft-light;
+    background: radial-gradient(240px 200px at var(--lamp-x, 100%) var(--lamp-y, 70%), rgba(255, 196, 110, 0.5), rgba(255, 160, 60, 0.18) 50%, rgba(255, 160, 60, 0) 100%);
+  }
+}
+@media (max-width: 400px) {
+  /* a narrow phone: the row of the Hold whole — «Перестроение» with its words and «бесплатно» (a smaller sign, tighter gaps) */
+  .board-bottom > .team-row {
+    gap: 5px;
+  }
+  .board-bottom > .team-row .hold-label {
+    letter-spacing: 0.06em;
+  }
+  .game .board-bottom > .team-row .powder-dots {
+    gap: 1px;
+    padding: 2px 3px;
+  }
+  .game .board-bottom > .team-row .btn.regroup {
+    padding: 0 7px 0 3px;
+  }
+  .board-bottom > .team-row .btn.regroup .cmd-in {
+    grid-template-columns: 26px auto;
+    column-gap: 5px;
+  }
+  .board-bottom > .team-row .btn.regroup .cmd-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+@media (max-width: 700px) and (prefers-reduced-motion: reduce) {
+  .head-fire svg {
+    animation: none;
+  }
+}
+@media (max-width: 700px) and (prefers-reduced-motion: reduce) {
+  .hand-cards > .hcard.lift-open {
+    animation: none;
+  }
+}

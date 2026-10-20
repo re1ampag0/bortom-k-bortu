@@ -47,3 +47,14 @@ export function memo(data: GameData): MemoSection[] {
     { title: 'Типы карт', lines: ['ЗАРЯД · вместе с Залпом', 'ПРИКАЗ · в свой ход', 'РЕМОНТ · в свой ход', 'РЕАКЦИЯ · в ход противника'] },
   ];
 }
+
+/**
+ * The rule of a track in one line (a phone: a press on the icon of a track opens it; the words of the memo above, «Урон»,
+ * «Залп», «Ход команды», «Ход противника»).
+ */
+export const TRACK_RULE = {
+  hull: 'Корпус 0 — корабль тонет. Урон по шкале, которая уже на минимуме, уходит в Корпус.',
+  sails: 'Реакций в ход противника — не больше Парусов.',
+  guns: 'Урон Залпа — по числу Пушек; по диагонали −1.',
+  crew: 'Карт за ход — не больше Команды. Команда не ниже 1.',
+} as const;

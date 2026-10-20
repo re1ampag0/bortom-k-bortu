@@ -28,7 +28,7 @@ import { download, loadSettings, storeSave, storeSettings, type Speed } from '..
 import { Curtain } from './Curtain';
 import { AlarmActions, AlarmArrow, AlarmBar, ReactionSheet, usePhoneLayout } from './Alarm';
 import { alarmInfo, lossOf, reactionStrip } from './alarm';
-import { Hand, type AlarmCard, type HandTab } from './Hand';
+import { Hand, type AlarmCard, type HandTab, type LiftActions } from './Hand';
 import { LogBook } from './LogBook';
 import { CardDetail, DiscardSheet, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
 import {
@@ -54,7 +54,7 @@ import { FxLayer, useFxQueue } from './fx/FxLayer';
 import { T } from './fx/timing';
 import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
-import { Button, OakButton, Plank, RoundButton, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
+import { Button, OakButton, Plank, RoundButton, ROUND_ICON, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
 import { TableBackdrop, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
@@ -540,6 +540,18 @@ export function Game({
       }
     }
     return btns;
+  };
+
+  /**
+   * A phone (a5-phone, A5Phone frame 6): the lifted card in the hand plays itself — the buttons of the window of the card:
+   * «Сыграть» (grey with the reason when it cannot), under it only the other actions that can be pressed now.
+   */
+  const LIFT_SHORT: Record<string, string> = { sell: `Продать +${data.rules.sellGain}\u00a0П`, pass: 'Передать', ext: 'Потушить' };
+  const liftActions = (holder: string, code: string): LiftActions | null => {
+    if (code === HIDDEN || code.endsWith('-Л')) return null;
+    const btns = cardButtons(holder, code);
+    if (btns.length === 0) return null;
+    return { play: btns[0], more: btns.slice(1).filter((b) => !b.disabled).map((b) => ({ ...b, label: LIFT_SHORT[b.key] ?? b.label })) };
   };
 
   // ——— End of the turn: «Залп не дан…» → Plans of the Pearl → endTurn ———
@@ -1213,6 +1225,7 @@ export function Game({
                 note={captainNote}
                 alarmOf={alarmOn ? alarmOf : null}
                 folded={alarmFolded}
+                actionsOf={liftActions}
               />
             )}
             {!wideLog && handActions}
@@ -1242,15 +1255,32 @@ export function Game({
         {wideLog && handActions}
       </aside>
       <nav className={`bottom-bar ${canHold ? 'has-pause' : ''}`}>
-        <button className="btn" onClick={() => setSheet({ k: 'log' })}>
+        {/* A5Phone: «Журнал» and «Правила» are square icons with a caption; «Ход окончен» says who is ready under its name */}
+        <button className="btn tile" onClick={() => setSheet({ k: 'log' })}>
+          <span className="tile-ic" aria-hidden dangerouslySetInnerHTML={{ __html: ROUND_ICON.log }} />
           Журнал
         </button>
-        <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
+        <button className="btn tile" onClick={() => setSheet({ k: 'rules' })}>
+          <span className="tile-ic" aria-hidden dangerouslySetInnerHTML={{ __html: ROUND_ICON.rules }} />
           Правила
         </button>
         {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" />}
         {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" /> : net ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
-        <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+        <OakButton
+          b={endBtn}
+          className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`}
+          sub={
+            allyReady ? (
+              <span className="oak-ready" data-testid="ally-ready-oak">
+                <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+                  <circle cx="8" cy="8" r="7" fill="#3d8562" />
+                  <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} — ждёт вас
+              </span>
+            ) : undefined
+          }
+        />
       </nav>
       {net && <MissedSheet game={net} />}
 

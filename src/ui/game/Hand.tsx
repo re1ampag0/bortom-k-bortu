@@ -1,10 +1,13 @@
 // The hand strip: tabs of the ships one person leads, «Колода 14 · Сброс 6», the cards and, after a divider,
 // the Plans of the Pearl. A5 (V2): on a laptop the cards lie as a fan and always fit (they overlap as much as the width
-// needs); on a phone the fan scrolls sideways and snaps, a tap lifts a card, the second tap opens it.
+// needs); on a phone the fan scrolls sideways and snaps, a tap lifts a card (a5-phone, A5Phone frame 6: it grows, shows its
+// whole text and «Сыграть» or the reason why not, the other actions under it — no window of the card).
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { cardByCode, shipData, type GameState } from '../../engine/state';
 import type { CardInstance, GameData } from '../../engine/types';
 import { HIDDEN } from '../../engine/view';
+import type { Btn } from './Table';
+import { reducedMotion } from '../start/motion';
 
 // Before the paint in the browser; the tests render the cards to markup, where only useEffect is quiet.
 const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -31,6 +34,21 @@ function useWholeLines() {
     fit();
     addEventListener('resize', fit);
     return () => removeEventListener('resize', fit);
+  });
+  return ref;
+}
+
+/**
+ * The lifted card of a phone grows upwards: a margin over it as tall as it grew, so its bottom stays at the line of the fan and
+ * the strip of the hand keeps its height (phone.css gives it the room above the cards).
+ */
+function useLiftMargin(on: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  useBeforePaint(() => {
+    const el = ref.current;
+    if (!on || !el) return;
+    const near = [el.previousElementSibling, el.nextElementSibling].find((x): x is HTMLElement => !!x?.classList.contains('hcard'));
+    el.style.marginTop = `${(near?.offsetHeight ?? 160) - el.offsetHeight}px`;
   });
   return ref;
 }
@@ -96,7 +114,9 @@ function useFanFit(n: number) {
  * The phone: the further a card is from the middle of the strip, the more it tilts and fades (--pr, --pf); the card in
  * the middle is straight. A scroll handler, one frame at a time.
  */
-function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number) {
+function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number): number {
+  // the card nearest to the middle of the strip (the dots under the fan, A5Phone)
+  const [middle, setMiddle] = useState(0);
   useEffect(() => {
     const row = ref.current;
     if (!row) return;
@@ -105,6 +125,13 @@ function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number) {
       raf = 0;
       const phone = isPhone();
       const box = row.getBoundingClientRect(), mid = box.left + box.width / 2;
+      let near = 0,
+        best = Infinity;
+      row.querySelectorAll<HTMLElement>(':scope > .hcard').forEach((c, i) => {
+        const b = c.getBoundingClientRect(), off = Math.abs(b.left + b.width / 2 - mid);
+        if (off < best) [near, best] = [i, off];
+      });
+      if (phone) setMiddle(near);
       for (const c of row.querySelectorAll<HTMLElement>(':scope > .hcard')) {
         if (!phone) {
           c.style.removeProperty('--pr');
@@ -129,6 +156,7 @@ function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number) {
       if (raf) cancelAnimationFrame(raf);
     };
   }, [ref, n]);
+  return middle;
 }
 
 const TYPE_CLASS: Record<string, string> = { ЗАРЯД: 'charge', РЕАКЦИЯ: 'reaction', ПРИКАЗ: 'order', РЕМОНТ: 'repair' };
@@ -153,6 +181,16 @@ export interface AlarmCard {
   why?: string;
 }
 
+/**
+ * A phone: what the lifted card can do now (Game.tsx, the buttons of the old window of the card) — «Сыграть» (`play`; grey
+ * with the reason when it cannot be played) and, under it, the other actions that can be pressed now (Продать, Передать,
+ * Потушить). null — the card is only read (not this player's move).
+ */
+export interface LiftActions {
+  play: Btn | null;
+  more: Btn[];
+}
+
 export function HandCard({
   data,
   code,
@@ -165,6 +203,8 @@ export function HandCard({
   lifted,
   liftKey,
   alarm,
+  actions,
+  onDrop,
 }: {
   data: GameData;
   code: string;
@@ -179,12 +219,68 @@ export function HandCard({
   lifted?: boolean;
   liftKey?: string;
   alarm?: AlarmCard;
+  /** A phone, the lifted card: its strip «Сыграть» and the actions under it (no window of the card). */
+  actions?: LiftActions | null;
+  /** The lifted card goes back into the fan (a press on its strip). */
+  onDrop?: () => void;
 }) {
   const textRef = useWholeLines();
+  const liftRef = useLiftMargin(!!lifted && actions !== undefined);
   if (code === HIDDEN) {
     return <div className={`hcard back ${plan ? 'plan' : ''}`} style={style} data-lift={liftKey} aria-label="Закрытая карта" data-fx-card={HIDDEN} />;
   }
   const c = cardByCode(data, code);
+  if (lifted && actions !== undefined) {
+    // a5-phone (A5Phone, frame 6): the lifted card is a group with buttons of its own (not a button in a button)
+    const run = (b: Btn) => (e: { stopPropagation: () => void }) => {
+      e.stopPropagation();
+      if (b.disabled) return;
+      onDrop?.();
+      b.onClick();
+    };
+    const play = actions?.play ?? null;
+    return (
+      <div
+        ref={liftRef}
+        className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} lifted lift-open`}
+        style={style}
+        data-lift={liftKey}
+        onClick={onClick}
+        role="group"
+        aria-label={`${c.name}: ${c.big}`}
+        data-testid="hand-card"
+        data-card={code}
+        data-fx-card={code}
+      >
+        <span className="hcard-head">
+          <span className="hcard-type">{plan ? 'План' : c.type}</span>
+          <CostBadge c={c} />
+        </span>
+        <span className="hcard-name">{c.name}</span>
+        <span className="hcard-big">{note ?? c.big}</span>
+        <span className="hcard-text">{c.text.replace(/<[^>]+>/g, ' ')}</span>
+        {play &&
+          (play.disabled ? (
+            <span className="lift-strip no" data-testid="lift-why">
+              {play.disabled}
+            </span>
+          ) : (
+            <button type="button" className={`lift-strip play ${play.label.length > 10 ? 'long' : ''}`} data-testid="lift-play" onClick={run(play)}>
+              {play.label}
+            </button>
+          ))}
+        {actions && actions.more.length > 0 && (
+          <span className="lift-more">
+            {actions.more.map((b) => (
+              <button key={b.key} type="button" className="lift-btn" data-testid={`lift-${b.key}`} onClick={run(b)}>
+                {b.label}
+              </button>
+            ))}
+          </span>
+        )}
+      </div>
+    );
+  }
   return (
     <button
       className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''} ${alarm ? `al-${alarm.kind}` : ''}`}
@@ -244,6 +340,7 @@ export function Hand({
   note,
   alarmOf,
   folded = false,
+  actionsOf,
 }: {
   s: GameState;
   data: GameData;
@@ -264,14 +361,21 @@ export function Hand({
   alarmOf?: ((seat: string, code: string) => AlarmCard | null) | null;
   /** «Свернуть, посмотреть стол»: the hand goes down. */
   folded?: boolean;
+  /** A phone: the actions of the lifted card (a5-phone); without it the second tap opens the window of the card. */
+  actionsOf?: (seat: string, code: string) => LiftActions | null;
 }) {
   const holder = s.ships[seat];
   const n = holder.hand.length + holder.plans.length;
   const [rowRef, wideFan] = useFanFit(n);
-  usePhoneFan(rowRef, n);
+  const middle = usePhoneFan(rowRef, n);
   // The phone: the lifted card (its key in the strip); a tap beside it, another ship's tab or a new hand drops it.
   const [lifted, setLifted] = useState<string | null>(null);
   useEffect(() => setLifted(null), [seat, n]);
+  // the lifted card to the middle of the strip (after it has grown: its neighbours stepped aside)
+  useEffect(() => {
+    if (!lifted) return;
+    [...(rowRef.current?.children ?? [])].find((x) => x.getAttribute('data-lift') === lifted)?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
+  }, [lifted, rowRef]);
   useEffect(() => {
     if (!lifted) return;
     const drop = (e: Event) => {
@@ -284,13 +388,14 @@ export function Hand({
   const card = (code: string, k: number, key: string, plan = false) => {
     const f = fanOf(k, n, wideFan);
     const press = () => {
+      // a5-phone: a press on the lifted card itself keeps it up (its strip plays it); no window of the card
+      if (lifted === key && actionsOf && isPhone()) return;
       if (!isPhone() || lifted === key || code === HIDDEN || direct?.(seat, code)) {
         setLifted(null);
         onCard(seat, code);
         return;
       }
       setLifted(key);
-      [...(rowRef.current?.children ?? [])].find((x) => x.getAttribute('data-lift') === key)?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
     };
     return (
       <HandCard
@@ -305,6 +410,8 @@ export function Hand({
         onClick={press}
         lifted={lifted === key}
         liftKey={key}
+        actions={lifted === key && actionsOf && isPhone() ? actionsOf(seat, code) : undefined}
+        onDrop={() => setLifted(null)}
         style={{ ['--r' as string]: `${f.r}deg`, ['--dy' as string]: `${f.dy}px` } as CSSProperties}
       />
     );
@@ -330,6 +437,8 @@ export function Hand({
         ) : (
           <span className="hand-label">{label}</span>
         )}
+        {/* a phone (A5Phone): «РУКА «ЖЕМЧУЖИНЫ»» instead of the tabs — a ship is chosen by a press on its plank */}
+        <span className="hand-label narrow phone-hand-label">Рука «{shipData(data, seat).nickGenitive}»</span>
         <button className="link deck-info" onClick={() => onDiscard(seat)} title="Открыть сброс" data-fx-deck>
           Колода {holder.deck.length} · Сброс {holder.discard.length}
           {tabs.find((t) => t.seat === seat)?.played && <span className="deck-played"> · сыграно {tabs.find((t) => t.seat === seat)!.played}</span>}
@@ -351,6 +460,14 @@ export function Hand({
           </>
         )}
       </div>
+      {/* a phone: where the card in the middle is in the hand (A5Phone) */}
+      {n > 1 && (
+        <div className="hand-dots" aria-hidden>
+          {Array.from({ length: n }, (_, i) => (
+            <i key={i} className={i === middle ? 'on' : ''} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
