@@ -329,7 +329,7 @@ export function RulesSheet({ data, onClose }: { data: GameData; onClose: () => v
   const found = query.length >= 2 ? paragraphs.filter((p) => p.toLowerCase().includes(query)).slice(0, 40) : [];
   return (
     <Sheet title="Правила" onClose={onClose} wide testid="rules">
-      <input className="search" placeholder="Поиск по своду правил (RULES.md)…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+      <input className="search" placeholder="Поиск по правилам…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
       {query.length >= 2 ? (
         <div className="rules-found">
           {found.length === 0 && <p className="muted">Ничего не найдено.</p>}
