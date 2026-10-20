@@ -236,8 +236,11 @@ export const SEAFX: Record<string, SeaFx> = {
       const ctx = t.fx, S = T.sea, hi = sv2(ctx);
       const lost = effects.filter((e): e is Keg & { type: 'powderLost' } => e.type === 'powderLost');
       for (const side of ['ПИРАТЫ', 'КОМПАНИЯ'] as Side[]) {
-        const b = nearHold(ctx, side), w = Math.min(170, Math.max(90, b.w)), x = b.x + 6, y = Math.max(4, b.y - w * 0.36);
-        const cl = sv(hi, `<g><g transform="translate(${R1(x)} ${R1(y)}) scale(${R1(w / 40 * 100) / 100})"><path d="M8 17 C4.6 17 3 15 3.4 12.6 C3.8 10.2 6 9 8.4 9.4 C9.4 5.4 13 3.4 17 4 C20 4.4 22.4 6.4 23.2 9 C24.6 7.8 27 7.6 28.8 8.6 C30.6 9.6 31.4 11.4 31.2 13 C34 13 36 14.6 36 16.8 C36 19 34 20.6 31.6 20.6 H9 C6 20.6 4.6 19 5 17.4 Z" fill="#5d6268" stroke="#2a2e33"/></g>${((nd: number) => Array.from({ length: nd }, (_, i) => `<path class="dr" d="M${R1(x + 6 + (i * (w - 12)) / Math.max(1, nd - 1))} ${R1(y + w * 0.5)} l-2 7" stroke="#9cc4d4" stroke-width="1.3" stroke-linecap="round"/>`).join(''))(room(ctx, 16) || 6)}</g>`);
+        // fix-ui: the cloud stands over the middle of the tray of kegs, its bottom just above it; the Hold at the very top of the
+        // window (a laptop) has no room above it — the cloud is flatter there and covers only the top of the tray
+        const b = nearHold(ctx, side), w = Math.min(170, Math.max(90, b.w)), x = b.cx - w / 2, k = w / 40;
+        const above = b.y - 2, ky = Math.max(0.5 * k, Math.min(k, (above + b.h * 0.4) / 20.6)), y = Math.max(0, above - 20.6 * ky), bottom = y + 20.6 * ky;
+        const cl = sv(hi, `<g><g transform="translate(${R1(x)} ${R1(y)}) scale(${R1(k * 100) / 100} ${R1(ky * 100) / 100})"><path d="M8 17 C4.6 17 3 15 3.4 12.6 C3.8 10.2 6 9 8.4 9.4 C9.4 5.4 13 3.4 17 4 C20 4.4 22.4 6.4 23.2 9 C24.6 7.8 27 7.6 28.8 8.6 C30.6 9.6 31.4 11.4 31.2 13 C34 13 36 14.6 36 16.8 C36 19 34 20.6 31.6 20.6 H9 C6 20.6 4.6 19 5 17.4 Z" fill="#5d6268" stroke="#2a2e33"/></g>${((nd: number) => Array.from({ length: nd }, (_, i) => `<path class="dr" d="M${R1(x + 6 + (i * (w - 12)) / Math.max(1, nd - 1))} ${R1(bottom - 1)} l-2 7" stroke="#9cc4d4" stroke-width="1.3" stroke-linecap="round"/>`).join(''))(room(ctx, 16) || 6)}</g>`);
         A(ctx, cl, [{ opacity: 0, transform: 'translateY(-20px)' }, { opacity: 1, transform: 'none', offset: 0.2 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], S.cloud);
         cl.querySelectorAll('.dr').forEach((d) => A(ctx, d, Array.from({ length: 13 }, (_, j) => ({ transform: j % 2 ? `translate(-3px,${R1(w * 0.55)}px)` : 'translate(0px,0px)', opacity: j % 2 ? 0 : 1 })), S.cloud, rnd(0, 400), 'linear', 'none'));
       }
