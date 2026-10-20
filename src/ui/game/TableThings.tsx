@@ -6,8 +6,6 @@ import cannon from './art/rig/deck-cannon.svg';
 import ballsArt from './art/rig/deck-balls.svg';
 import lanternArt from './art/rig/deck-lantern.svg';
 import coilArt from './art/rig/deck-coil.svg';
-import ink from './art/rig/prop-ink.svg';
-import candle from './art/rig/prop-candle.svg';
 import { tableThings, wheelSvg } from './art/table';
 import { stageK } from '../stage';
 
@@ -21,20 +19,11 @@ export function TableThings() {
   );
 }
 
-/** The props of the captain's table of A5Rig (art/rig/prop-*.svg, captainTable): the size of the picture in px. */
-const PROPS = {
-  ink: { src: ink, w: 44, h: 66 },
-  candle: { src: candle, w: 38, h: 61 },
-} as const;
-type PropKey = keyof typeof PROPS;
 interface Box {
   l: number;
   t: number;
   w: number;
   h: number;
-}
-interface Placed extends Box {
-  key: PropKey;
 }
 
 /**
@@ -183,18 +172,6 @@ function DeckLight({ x, y, r, ls, sq }: { x: number; y: number; r: number; ls: n
   );
 }
 
-/** A prop fitted (centred, not larger than 1.4× its own size) into a fraction [x, y, w, h] of a free region of the table. */
-function fit(key: PropKey, reg: Box, f: [number, number, number, number]): Placed | null {
-  const bw = reg.w * f[2],
-    bh = reg.h * f[3];
-  const p = PROPS[key];
-  const k = Math.min(bw / p.w, bh / p.h, 1.4);
-  if (k < 0.4) return null;
-  const w = p.w * k,
-    h = p.h * k;
-  return { key, l: reg.l + reg.w * f[0] + (bw - w) / 2, t: reg.t + reg.h * f[1] + (bh - h) / 2, w, h };
-}
-
 /** The box of an element in the px of the stage (stage.ts), from the corner of the game. */
 const rect = (e: Element | null, g: DOMRect): Box | null => {
   if (!e) return null;
@@ -214,43 +191,41 @@ function rightOf(e: Element | null, g: DOMRect): number {
   return r / stageK();
 }
 
-/** R — right of the cards of the hand up to the log column (a laptop): the inkwell and the candle of the captain's table. */
-function freeRight(game: HTMLElement): Box | null {
-  const g = game.getBoundingClientRect();
-  if (g.width / stageK() < 701) return null;
-  const hand = rect(game.querySelector('.hand-row > .hand'), g);
-  const log = rect(game.querySelector('.log-col'), g);
-  let cardsRight = 0;
-  game.querySelectorAll('.hand-cards .hcard').forEach((c) => (cardsRight = Math.max(cardsRight, (c.getBoundingClientRect().right - g.left) / stageK())));
-  const R = hand && log && cardsRight ? { l: cardsRight + 10, t: hand.t + 36, w: log.l - 10 - (cardsRight + 10), h: g.height / stageK() - 6 - (hand.t + 36) } : null;
-  return R && R.w > 60 && R.h > 80 ? R : null;
-}
-
 /**
- * The background of the table (rig, г, «Фон под рукой»). «Палуба»: the deck scene of A5Rig as it is (planks with nails, the hatch
+ * The background of the table (rig, г, ⚙ «Фон»). «Палуба»: the deck scene of A5Rig as it is (planks with nails, the hatch
  * grating, the gun with its pile of balls, the lantern and its light, the keg, the coil) under the hand — the cards lie on it — and
  * the planks of the same scene as a seamless tile on all the rest of the window; the warm light of the lantern falls on the planks
  * and the edges of the cards and breathes (still with «простые спецэффекты»); no «Вещи на столе». A phone: scene Б at the bottom
- * panel, the planks on the whole screen. «Стол капитана»: the table with its things (the compass among them) and, from the
- * captain's variant of the reference, the inkwell with a quill and the candle.
+ * panel, the planks on the whole screen. «Стол капитана»: the table with its things (the compass among them) and the wheel under
+ * «Перестроение». Nothing else: the old variant (a candle, an inkwell with a quill, a strip under the hand) is gone.
+ * The look comes through a ref: the observers are set once, and a switch in ⚙ must not leave them measuring the old one.
  */
 export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
   const wrap = useRef<HTMLDivElement>(null);
-  const [placed, setPlaced] = useState<Placed[]>([]);
   const [deck, setDeck] = useState<DeckPlace | null>(null);
   const [wheel, setWheel] = useState<{ x: number; y: number } | null>(null);
-  const watched = useRef<{ game: HTMLElement; ro: ResizeObserver; mo: MutationObserver; off: () => void } | null>(null);
+  const watched = useRef<{ game: HTMLElement; ro: ResizeObserver; mo: MutationObserver; off: () => void; measure: () => void; look: string } | null>(null);
+  const lookNow = useRef(look);
+  lookNow.current = look;
   useLayoutEffect(() => {
     const game = wrap.current?.parentElement ?? null;
     const w = watched.current;
-    if (w && w.game === game) return;
+    if (w && w.game === game) {
+      // a switch in ⚙: measure the new look at once
+      if (w.look !== look) {
+        w.look = look;
+        w.measure();
+      }
+      return;
+    }
     w?.ro.disconnect();
     w?.mo.disconnect();
     w?.off();
     watched.current = null;
     if (!game || typeof ResizeObserver === 'undefined') return;
     const measure = () => {
-      if (look === 'deck') {
+      if (lookNow.current === 'deck') {
+        setWheel(null);
         const d = deckPlace(game);
         setDeck((old) => (old && d && JSON.stringify(old) === JSON.stringify(d) ? old : d));
         // the hand in the middle of its strip (paddings of .hand-cards, read by useFanFit), whole in the window, its tabs over it
@@ -263,16 +238,14 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         put('--deck-pr', hd ? Math.max(0, Math.round(hd.pr)) : 0);
         put('--deck-lift', hd ? Math.round(hd.lift) : 0);
         put('--deck-tabs', hd ? Math.round(hd.tabs) : 0);
-        setPlaced([]);
         return;
       }
+      setDeck(null);
+      for (const k of ['--deck-pl', '--deck-pr', '--deck-lift', '--deck-tabs']) if (game.style.getPropertyValue(k)) game.style.removeProperty(k);
       // the wheel (rig, е): under «Перестроение», its lower half past the edge of the window
       const g = game.getBoundingClientRect();
       const rg = rect(visible(game, '.board-bottom .regroup'), g);
       setWheel(rg && g.width / stageK() > 700 ? { x: rg.l + rg.w / 2, y: rg.t + rg.h + 6 } : null);
-      const R = freeRight(game);
-      const next = R ? [fit('candle', R, [0.55, 0.02, 0.45, 0.5]), fit('ink', R, [0.55, 0.55, 0.45, 0.42])].filter((x): x is Placed => !!x) : [];
-      setPlaced((old) => (old.length === next.length && old.every((o, i) => o.key === next[i].key && Math.abs(o.l - next[i].l) < 1 && Math.abs(o.t - next[i].t) < 1) ? old : next));
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -292,7 +265,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
       if ((e.target as Element).classList?.contains('hcard')) measure();
     };
     game.addEventListener('transitionend', settled);
-    watched.current = { game, ro, mo, off: () => game.removeEventListener('transitionend', settled) };
+    watched.current = { game, ro, mo, off: () => game.removeEventListener('transitionend', settled), measure, look };
   });
   useLayoutEffect(
     () => () => {
@@ -302,7 +275,6 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
     },
     [],
   );
-  const candlePlace = placed.find((x) => x.key === 'candle');
   return (
     <div ref={wrap} className={`backdrop look-${look}`} aria-hidden="true" data-testid="backdrop">
       {look === 'deck' ? (
@@ -327,10 +299,6 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
           {wheel && <i className="table-wheel" data-testid="table-wheel" style={{ left: wheel.x - 60, top: wheel.y }} dangerouslySetInnerHTML={{ __html: WHEEL }} />}
         </>
       )}
-      {placed.map((p) => (
-        <img key={p.key} className="prop" data-prop={p.key} src={PROPS[p.key].src} alt="" draggable={false} style={{ left: p.l, top: p.t, width: p.w, height: p.h }} />
-      ))}
-      {candlePlace && look === 'table' && <i className="lantern-light candle" style={{ left: candlePlace.l + candlePlace.w / 2, top: candlePlace.t + candlePlace.h * 0.25, width: 260, height: 260 }} />}
     </div>
   );
 }

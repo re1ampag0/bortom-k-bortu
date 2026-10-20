@@ -4162,7 +4162,7 @@ button.star::before {
   color: #f3e6c6;
 }
 
-/* «Фон под рукой» (rig, г): the background of the whole table. «Палуба»: the planks of the deck scene of A5Rig as a tile, in the
+/* ⚙ «Фон» (rig, г): the background of the whole table. «Палуба»: the planks of the deck scene of A5Rig as a tile, in the
    shade of the scene's own edges; the scene itself under the hand, its edges melting into the planks (24 px) */
 .backdrop {
   position: absolute;
@@ -4302,60 +4302,6 @@ button.star::before {
 }
 @media (prefers-reduced-motion: reduce) {
   .deck-flare {
-    animation: none;
-  }
-}
-.deck-scene {
-  position: absolute;
-  max-width: none;
-  mask-image:
-    linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent),
-    linear-gradient(to bottom, transparent, #000 24px);
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
-}
-.deck-scene.phone {
-  mask-image: linear-gradient(to bottom, transparent, #000 24px);
-  -webkit-mask-composite: source-over;
-}
-.prop {
-  position: absolute;
-  max-width: none;
-}
-/* the warm light of the lantern (the candle): a big spot over the planks and the edges of the cards (over the board, never
-   catching a click); it breathes, still with «простые спецэффекты» and reduced motion */
-.lantern-light {
-  position: absolute;
-  z-index: 4;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, rgba(255, 246, 208, 0.7), rgba(255, 196, 90, 0.45) 9%, rgba(255, 178, 74, 0) 20%),
-    radial-gradient(circle, rgba(255, 178, 74, 0.5), rgba(255, 154, 48, 0.18) 45%, rgba(255, 138, 32, 0) 70%);
-  mix-blend-mode: screen;
-  pointer-events: none;
-  animation: lantern-flick 1.3s ease-in-out infinite;
-}
-.lantern-light.candle {
-  z-index: auto;
-}
-@keyframes lantern-flick {
-  0%,
-  100% {
-    opacity: 0.8;
-  }
-  35% {
-    opacity: 1;
-  }
-  60% {
-    opacity: 0.86;
-  }
-}
-.fx-simple .lantern-light {
-  animation: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lantern-light {
     animation: none;
   }
 }
