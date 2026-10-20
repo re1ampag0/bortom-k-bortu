@@ -1,6 +1,6 @@
 // Things that appear when needed and go away after (docs/TZ.md, «Принципы стола», п. 1, 8): a card in full,
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import rulesText from '../../../RULES.md?raw';
 import type { LogLine } from '../../engine/log';
 import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engine/state';
@@ -16,8 +16,31 @@ import { CELLS } from './art/cells';
 import { logMarks } from './logBook';
 import { roman, SIDE_LABEL, SPEEDS } from './text';
 
-/** A window over the table: on a laptop in the middle, on a phone a bottom sheet. Closed by the cross or outside. */
+/** The windows open now, the last on top: Esc closes the top one only (fix-ui). */
+const ESC: { current: () => void }[] = [];
+let escOn = false;
+function onEsc(e: KeyboardEvent) {
+  if (e.key !== 'Escape' || !ESC.length || e.defaultPrevented) return;
+  e.preventDefault();
+  ESC[ESC.length - 1].current();
+}
+/** fix-ui: Esc closes this window (a sheet, the book of the log). */
+export function useEscape(onClose: () => void) {
+  const ref = useRef(onClose);
+  ref.current = onClose;
+  useEffect(() => {
+    ESC.push(ref);
+    if (!escOn) addEventListener('keydown', onEsc), (escOn = true);
+    return () => {
+      ESC.splice(ESC.indexOf(ref), 1);
+      if (!ESC.length) removeEventListener('keydown', onEsc), (escOn = false);
+    };
+  }, []);
+}
+
+/** A window over the table: on a laptop in the middle, on a phone a bottom sheet. Closed by the cross, outside or Esc. */
 export function Sheet({ title, onClose, children, wide, testid }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string }) {
+  useEscape(onClose);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <section className={`sheet ${wide ? 'sheet-wide' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title} data-testid={testid}>
