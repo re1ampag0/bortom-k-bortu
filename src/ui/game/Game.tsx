@@ -54,7 +54,7 @@ import { FxLayer, useFxQueue } from './fx/FxLayer';
 import { T } from './fx/timing';
 import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
-import { Button, OakButton, Plank, RoundButton, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
+import { Button, OakButton, Plank, RoundButton, ROUND_ICON, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
 import { TableBackdrop, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
@@ -1242,15 +1242,32 @@ export function Game({
         {wideLog && handActions}
       </aside>
       <nav className={`bottom-bar ${canHold ? 'has-pause' : ''}`}>
-        <button className="btn" onClick={() => setSheet({ k: 'log' })}>
+        {/* A5Phone: «Журнал» and «Правила» are square icons with a caption; «Ход окончен» says who is ready under its name */}
+        <button className="btn tile" onClick={() => setSheet({ k: 'log' })}>
+          <span className="tile-ic" aria-hidden dangerouslySetInnerHTML={{ __html: ROUND_ICON.log }} />
           Журнал
         </button>
-        <button className="btn" onClick={() => setSheet({ k: 'rules' })}>
+        <button className="btn tile" onClick={() => setSheet({ k: 'rules' })}>
+          <span className="tile-ic" aria-hidden dangerouslySetInnerHTML={{ __html: ROUND_ICON.rules }} />
           Правила
         </button>
         {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" />}
         {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" /> : net ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
-        <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
+        <OakButton
+          b={endBtn}
+          className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`}
+          sub={
+            allyReady ? (
+              <span className="oak-ready" data-testid="ally-ready-oak">
+                <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+                  <circle cx="8" cy="8" r="7" fill="#3d8562" />
+                  <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} — ждёт вас
+              </span>
+            ) : undefined
+          }
+        />
       </nav>
       {net && <MissedSheet game={net} />}
 

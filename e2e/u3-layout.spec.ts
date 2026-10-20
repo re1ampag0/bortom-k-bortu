@@ -176,12 +176,24 @@ for (const size of SIZES) {
           }),
         }));
         expect(new Set(rows.tops).size, 'the buttons of «Голландец» in one row').toBe(1);
-        // every button of every plank of one size (two in sight), its text whole
+        // every button of every plank of one height, its text whole; a5-phone (A5Phone, frame 1): one or two buttons fill the
+        // row of their plank, three and more are a third of it each (of one width)
         const btns = await page.evaluate(() =>
-          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons .btn')).map((b) => ({ w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, whole: ((e) => { const r = document.createRange(); r.selectNodeContents(e); const t = r.getBoundingClientRect(), b = e.getBoundingClientRect(); return t.left >= b.left && t.right <= b.right && t.top >= b.top && t.bottom <= b.bottom; })(b) })),
+          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons .btn')).map((b) => ({ ship: b.closest<HTMLElement>('.plank')!.dataset.ship!, n: b.parentElement!.children.length, w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, whole: ((e) => { const r = document.createRange(); r.selectNodeContents(e); const t = r.getBoundingClientRect(), b = e.getBoundingClientRect(); return t.left >= b.left && t.right <= b.right && t.top >= b.top && t.bottom <= b.bottom; })(b) })),
         );
         expect(btns.length).toBeGreaterThanOrEqual(6);
-        expect(spread(btns.map((b) => b.w)), 'the buttons of one width').toBeLessThanOrEqual(1);
+        const fill = await page.evaluate(() =>
+          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons'))
+            .filter((row) => row.children.length <= 2)
+            .map((row) => {
+              const r = row.getBoundingClientRect(), cs = getComputedStyle(row), bs = Array.from(row.children).map((b) => b.getBoundingClientRect());
+              return r.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - bs.reduce((w, b) => w + b.width, 0) - parseFloat(cs.columnGap || '0') * (bs.length - 1);
+            }),
+        );
+        for (const left of fill) expect(Math.abs(left), 'one or two buttons fill the row').toBeLessThanOrEqual(1);
+        for (const ship of new Set(btns.filter((b) => b.n >= 3).map((b) => b.ship))) {
+          expect(spread(btns.filter((b) => b.ship === ship).map((b) => b.w)), `${ship}: the buttons of one width`).toBeLessThanOrEqual(1);
+        }
         expect(spread(btns.map((b) => b.h)), 'the buttons of one height').toBeLessThanOrEqual(1);
         expect(Math.abs(btns[0].h - 34), 'seen 34 px high').toBeLessThanOrEqual(TOL);
         expect(btns.every((b) => b.whole), 'no text cut').toBe(true);
