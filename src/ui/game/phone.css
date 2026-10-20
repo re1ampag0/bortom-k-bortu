@@ -109,11 +109,46 @@
   .board-bottom > .team-row .team-name {
     display: none;
   }
+  /* room for the gun of «Палуба» between the tray and «Перестроение» (TableThings.tsx): the caption in two lines, smaller kegs */
+  .board-bottom > .team-row .hold-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    line-height: 1.15;
+  }
+  .board-bottom > .team-row .hold-label .narrow {
+    display: inline-block;
+    width: min-content;
+    white-space: normal;
+  }
+  .game .board-bottom > .team-row .powder-dots {
+    gap: 1px;
+    padding: 2px 4px;
+  }
+  .board-bottom > .team-row .powder-dots i {
+    width: 10px;
+    height: 13px;
+  }
+  @media (max-width: 400px) {
+    .board-bottom > .team-row .hold-label {
+      font-size: 9.5px;
+    }
+    .board-bottom > .team-row .powder-dots i {
+      width: 8px;
+      height: 11px;
+    }
+    .game .board-bottom > .team-row .btn.regroup {
+      font-size: 11.5px;
+    }
+  }
+  /* «Палуба»: the lantern stands on the gun, its flame over the row */
+  .game.view-hand-deck .board-bottom > .team-row {
+    margin-top: 14px;
+  }
   .game .board-bottom > .team-row .btn.regroup {
     margin-left: auto;
     height: 38px;
     min-height: 0;
-    padding: 0 11px 0 4px;
+    padding: 0 8px 0 4px;
     border: 0;
     border-radius: 5px;
     background:
@@ -126,11 +161,11 @@
     color: #f3e6c6;
     font-family: var(--font-num);
     font-weight: 700;
-    font-size: 13.5px;
+    font-size: 12.5px;
   }
   .board-bottom > .team-row .btn.regroup .cmd-in {
     display: grid;
-    grid-template-columns: 30px auto;
+    grid-template-columns: 26px auto;
     grid-template-areas:
       'ic name'
       'ic cost';
@@ -144,8 +179,8 @@
   }
   .board-bottom > .team-row .btn.regroup .cmd-icon {
     grid-area: ic;
-    width: 30px;
-    height: 30px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     display: flex;
     align-items: center;

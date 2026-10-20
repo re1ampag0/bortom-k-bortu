@@ -44,9 +44,9 @@ interface Placed extends Box {
  * R — 16 px before «Ход окончен» + «Отменить», its balls at the wheel, the lantern (1.3) over the breech; the hand stands in the
  * middle of the strip from L (24 px right of the Hold, the hourglass and «Перестроение») to the gun − 16 (Hand.tsx useFanFit
  * reads the paddings of .hand-cards and closes the step of the fan when the cards do not fit), whole in the window; its tabs
- * begin over its first card, the grating lies over its middle. A phone (a5-phone): the gun (turned, its breech to the left) at the
- * bottom left under the hand, in the strip of the dots under the cards, its balls beside it; the lantern at the top right of the
- * hand, in the row of «Рука «…»» between it and «Колода · Сброс» — neither meets the caption, the cards or the bottom bar.
+ * begin over its first card, the grating lies over its middle. A phone (a5-phone): the gun (turned, its breech to the left) with its
+ * balls whole in the row of the Hold, in the gap between «2/8» and «Перестроение», as tall as the row; the lantern (smaller) stands
+ * on its breech, its light falls on the gun and the top of the hand — neither meets the tray, the button, the cards or the bar.
  */
 const PIECES = {
   grate: { src: grate, vb: [-7, -7, 354, 38] },
@@ -99,28 +99,28 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
   const cards = Array.from(game.querySelectorAll('.hand-cards .hcard')).map((c) => rect(c, g)).filter((c): c is Box => !!c);
   if (!hand) return null;
   if (W < 701) {
-    // the strip under the cards (the dots): from the lowest bottom of a card in the fan to the bottom of the hand
-    // (a low window cuts the cards by the bottom of their strip: the edge of what is seen counts)
-    const fan = cards.filter((c) => c.h < 200);
-    const seen = cardsBox ? cardsBox.t + cardsBox.h : Infinity;
-    const top = Math.min(seen, fan.length ? Math.max(...fan.map((c) => c.t + c.h)) : hand.t + hand.h - 30) + 2;
-    const bottom = Math.max(top + 12, hand.t + hand.h - 1);
-    // the gun turned (the breech to the left), as tall as the strip; its box: (x − 3·gs, y + 11·gs, 128·gs, 56·gs)
-    const gs = Math.min(0.5, (bottom - top) / 56);
-    const gun = { ...pieceAt('cannon', 6 + 3 * gs, top - 11 * gs, gs), flip: true };
-    const bs = gs * 0.9;
-    const balls = pieceAt('balls', gun.l + gun.w + 4 + 25 * bs, bottom - 20 * bs, bs);
-    // the lantern in the row of the caption: its box is 50·ls × 59·ls round the flame at (lx, ly − 3·ls)
-    const head = rect(game.querySelector('.hand .hand-head'), g) ?? { l: 0, t: hand.t, w: W, h: 30 };
-    const label = rect(visible(game, '.phone-hand-label'), g);
-    const deckInfo = rect(visible(game, '[data-fx-deck]'), g);
-    const ls = Math.min(0.5, (head.h - 2) / 59);
-    const from = label ? label.l + label.w : head.l + W / 2 - 40;
-    const to = deckInfo ? deckInfo.l : head.l + head.w;
-    const lx = (from + to) / 2,
-      ly = head.t + 1 + 21 * ls;
-    const lantern = lanternAt(lx, ly, ls);
+    // the row of the Hold: the gun stands whole in the gap between «2/8» and «Перестроение», as tall as the row
+    const row = rect(game.querySelector('.board-bottom > .team-row:not(.table-edge)'), g);
+    const count = rect(visible(game, '.board-bottom > .team-row .hold-n'), g) ?? rect(visible(game, '.board-bottom > .team-row .powder-dots'), g);
+    const regroup = rect(visible(game, '.board-bottom > .team-row .regroup'), g);
     const grateP = pieceAt('grate', 40, hand.t - 4, 0.7);
+    if (!row) return { phone: true, W, H, pieces: [grateP], lx: W - 40, ly: hand.t, ls: 0.5 };
+    const from = (count ? count.l + count.w : row.l) + 6,
+      to = (regroup ? regroup.l : row.l + row.w) - 6;
+    // the gun turned (the breech to the left) in the middle of the gap, its box (x − 3·gs, y + 11·gs, 128·gs, 56·gs); its balls (×0.5)
+    // on the floor before the wheel under the barrel, inside its box
+    const gs = Math.max(0.3, Math.min(0.7, (to - from) / 128, (row.h - 8) / 56));
+    const bs = gs * 0.5;
+    const gunB = row.t + row.h - 3;
+    const gun = { ...pieceAt('cannon', (from + to) / 2 - 64 * gs + 3 * gs, gunB - 67 * gs, gs), flip: true };
+    const balls = pieceAt('balls', gun.l + gun.w - 4 * gs - 69 * bs + 25 * bs, gunB - 20 * bs, bs);
+    // the lantern on the breech, its flame over the row and under the frame of the sea; its width ≤ the gun's / 2.6
+    const sea = rect(game.querySelector('.sea-table'), g);
+    const stand = gun.t + 6 * gs;
+    const ls = Math.max(0.2, Math.min(0.62, (128 * gs) / 2.6 / 50, (stand - (sea ? sea.t + sea.h + 2 : row.t - 20)) / 59));
+    const lx = gun.l + 22 * gs,
+      ly = stand - 38 * ls;
+    const lantern = lanternAt(lx, ly, ls);
     return { phone: true, W, H, pieces: [grateP, gun, balls, lantern], lx, ly, ls };
   }
   const end = rect(visible(game, '[data-testid="end-turn"]'), g);
