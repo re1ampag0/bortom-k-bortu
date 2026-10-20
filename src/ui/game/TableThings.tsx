@@ -274,6 +274,8 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         // a laptop: a card under the pointer rises, grows and moves its neighbours — the fan is measured at rest only (the
         // transitions of the cards bring the measure back when the pointer has gone)
         if (game.querySelector('.hand-cards > .hcard:hover, .hand-cards > .hcard:focus-visible') && !matchMedia('(max-width: 700px)').matches) return;
+        // «Свернуть, посмотреть стол»: the hand went down on purpose — not lifted back
+        if (game.querySelector('.hand.folded')) return;
         const d = deckPlace(game);
         // nothing to measure by (in «Тревога!» there is no «Ход окончен»): the gun and the lantern stay where they were
         if (!d) return;
