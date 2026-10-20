@@ -28,7 +28,7 @@ export interface Settings {
 
 /** «Залп на планшете»: the Guns track as icons (default) or as the gun ports of a ship's side. */
 export type GunsView = 'icons' | 'ports';
-/** «Фон под рукой»: the deck under the cards of the hand (default) or the captain's table around it. */
+/** ⚙ «Фон»: the deck on the whole table (default) or the captain's table with its things. */
 export type HandBg = 'deck' | 'table';
 /** «Рамка моря»: the bulwark of planks (default) or the brass frame of before. */
 export type SeaFrame = 'bulwark' | 'brass';
@@ -114,7 +114,7 @@ export function storeClock(c: { id: string; ms: number }): void {
   write(CLOCK, JSON.stringify(c));
 }
 
-/** A stored view: what is not one of the known variants (the old «brass|wood» frame included) is read as the default. */
+/** A stored view: what is not one of the known variants is read as the default (an old «brass|wood» frame, an old background — «Палуба»). */
 function readView(v: unknown): TableView {
   const o = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
   const pick = <T extends string>(x: unknown, ok: readonly T[], d: T): T => (ok.includes(x as T) ? (x as T) : d);
