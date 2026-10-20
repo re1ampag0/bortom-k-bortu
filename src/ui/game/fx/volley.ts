@@ -7,8 +7,8 @@
 // Changes against the reference («game:»):
 //  - the frames of the shooter and the target are the classes fx-shooter / fx-targeted: React owns shooter / targeted of
 //    the plank (aiming of P2, a pending Volley), a class taken off past React would not come back;
-//  - window does not draw the reference's «window» when a panel of the game (.dock) is in the middle: the real panel
-//    (Reactions, «Компания решает…» of P8, the Volley panel) is there;
+//  - window draws no «window» of the reference: this device's decision is the game's own («Тревога!»), a panel of the game
+//    (.dock) in the middle is the real one; the enemy's window is a paper pill of the game (fix-ui);
 //  - the cards at the plate (a Charge, a Reaction) have no ribbon: the strip of the ship that played them (flyCard);
 //  - CUR_CARD lives in misc.ts (the clip «card»): curCard().
 import { deckCards, legendCards } from '../../../engine/data';
@@ -219,22 +219,20 @@ PLAY.announce = async (c, ctx) => {
 
 PLAY.window = async (c, ctx) => {
   hint(ctx, c.mine ? 'Реакция?' : 'Противник может ответить Реакцией…');
-  // game: the real panel of the middle (Reactions, «Компания решает…», the Volley panel) stands where the window would be.
-  if (ctx.board.querySelector('[data-fx-gap] .dock')) {
+  // game (fix-ui): this device decides — the decision is the game's own («Тревога!», the Reaction sheet), never a window in the
+  // sea; the real panel of the middle («Компания решает…», the Volley panel) stands where the window would be — nothing either.
+  if (c.mine || ctx.board.querySelector('[data-fx-gap] .dock')) {
     await wait(ctx, (c.mine ? 950 : 1300) + 150);
     return;
   }
+  // the enemy may answer: a paper pill of the game in the sea (not the reference's window with its dots)
   const W = ctx.board.clientWidth, g = gapBox(ctx);
   let x = W / 2;
   if (VS && VS.plate) { const pb = bx(ctx, VS.plate); x = W < 701 ? (pb.cx > W / 2 ? pb.x / 2 : (pb.r + W) / 2) : W / 2; }
-  const after = c.phase === 'after';
-  const html = c.mine
-    ? `<b>${after ? 'Можно ответить после попадания' : 'Ваше окно Реакций'}</b><span>в игре здесь панель решения<i></i><i></i><i></i></span>`
-    : `<b>${after ? 'Противник может ответить…' : 'Противник может ответить…'}</b><span>${after ? 'после попадания' : 'ждём Реакцию'}<i></i><i></i><i></i></span>`;
-  const win = mk(ctx, 'window' + (c.mine ? ' mine' : ''), x, g.cy, html);
-  A(ctx, win, [{ opacity: 0, scale: '0.94' }, { opacity: 1, scale: '1' }], 200, 0, 'ease-out', 'forwards');
-  await wait(ctx, c.mine ? 950 : 1300);
-  A(ctx, win, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
+  const pill = mk(ctx, 'wait-pill', x, g.cy, c.phase === 'after' ? 'Противник может ответить Реакцией после попадания…' : 'Противник может ответить Реакцией…');
+  A(ctx, pill, [{ opacity: 0, scale: '0.94' }, { opacity: 1, scale: '1' }], 200, 0, 'ease-out', 'forwards');
+  await wait(ctx, 1300);
+  A(ctx, pill, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
   await wait(ctx, 150);
 };
 
