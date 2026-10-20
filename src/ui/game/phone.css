@@ -829,13 +829,13 @@
   mix-blend-mode: screen;
 }
 @media (max-width: 700px) {
-  /* «Палуба»: the big gun lighter (the lantern is near), its balls dimmed under the caption of the hand; the lantern and its hook hang
+  /* «Палуба»: the big gun lighter (the lantern is near), its balls as light, by its rear wheel; the lantern and its hook hang
      over the frame of the sea (over the table, not under it) */
   .backdrop .deck-piece[data-piece='cannon'] {
     filter: brightness(1.35) saturate(1.1);
   }
   .backdrop .deck-piece[data-piece='balls'] {
-    opacity: 0.5;
+    filter: brightness(1.2);
   }
   .backdrop .deck-piece[data-piece='lantern'],
   .backdrop .deck-hook {

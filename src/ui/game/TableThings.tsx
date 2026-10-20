@@ -117,7 +117,7 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     const gapX = count && regroup ? (count.l + count.w + regroup.l) / 2 + 4 : W * 0.65;
     const rowY = row ? row.t + row.h / 2 : hand.t;
     const gun = pieceAt('cannon', gapX - 119 * gs, rowY - 24 * gs, gs);
-    // the balls at the bottom left of the gun, by its rear wheel, inside the window (phone.css dims them: the caption lies over them)
+    // the balls at the bottom left of the gun, by its rear wheel, inside the window
     const bs = gs * 0.45;
     const balls = pieceAt('balls', Math.max(4, gun.l + 6 * gs) + 25 * bs, gun.t + gun.h - 2 - 20 * bs, bs);
     // the lantern hangs on the bottom right corner of the frame of the sea, a little over the frame, over all of the table: right of the
