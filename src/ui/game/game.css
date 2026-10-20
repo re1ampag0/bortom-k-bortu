@@ -940,6 +940,27 @@ button.star::before {
   padding: 0 0 0 8px;
   border-left: 1px solid #b9a27a;
 }
+/* fix-ui: a laptop, four buttons and more (the Dutchman): one row, «icon · price», the name in the paper pop (data-tip) — the row
+   never wraps and the sea keeps its height */
+@media (min-width: 701px) {
+  .plank-buttons.many {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .plank-buttons.many .btn.cmd {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 0 9px;
+  }
+  .plank-buttons.many .btn.cmd.compact .cmd-name {
+    display: none;
+  }
+  .plank-buttons.many .btn.cmd:not(.compact) .cmd-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
 /* The buttons of a plank: on a phone a row that scrolls with the arrow «›» at its right edge (U3); on a laptop the
    arrow is never there. */
 .plank-buttons-wrap {
