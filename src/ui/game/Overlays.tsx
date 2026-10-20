@@ -39,7 +39,7 @@ export function useEscape(onClose: () => void) {
 }
 
 /** A window over the table: on a laptop in the middle, on a phone a bottom sheet. Closed by the cross, outside or Esc. */
-export function Sheet({ title, onClose, children, wide, testid }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string }) {
+export function Sheet({ title, onClose, children, wide, testid, foot }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string; foot?: ReactNode }) {
   useEscape(onClose);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -51,6 +51,8 @@ export function Sheet({ title, onClose, children, wide, testid }: { title: strin
           </button>
         </header>
         <div className="sheet-body">{children}</div>
+        {/* fix-ui: the buttons at the bottom stay in sight, the middle scrolls */}
+        {foot && <footer className="sheet-foot">{foot}</footer>}
       </section>
     </div>
   );
@@ -463,8 +465,37 @@ export function SettingsSheet({
     setTapSkipState(v);
     storeSettings({ ...loadSettings(), tapSkip: v });
   };
+  const foot =
+    onDownloadLog || onNew ? (
+      <>
+        {onDownloadLog && (
+          <div className="row buttons">
+            <button className="btn" onClick={onDownloadLog}>
+              Скачать журнал
+            </button>
+            {onDownloadGame && (
+              <button className="btn" onClick={onDownloadGame}>
+                Скачать партию
+              </button>
+            )}
+          </div>
+        )}
+        {onNew && (
+          <div className="row buttons">
+            {canConcede && onConcede && (
+              <button className="btn danger" onClick={onConcede}>
+                Сдаться ({SIDE_LABEL[canConcede].name})
+              </button>
+            )}
+            <button className="btn" onClick={onNew}>
+              {newLabel}
+            </button>
+          </div>
+        )}
+      </>
+    ) : undefined;
   return (
-    <Sheet title="Настройки" onClose={onClose} testid="settings">
+    <Sheet title="Настройки" onClose={onClose} testid="settings" foot={foot}>
       {speed !== null && (
         <label className="row">
           <span>Скорость показа ходов</span>
@@ -487,7 +518,7 @@ export function SettingsSheet({
       <section className="view-switches" data-testid="table-view" aria-label="Вид стола">
         <h3>Вид стола</h3>
         <Switch3 label="Залп на планшете" id="guns" value={view.guns} onChange={(guns) => setView({ ...view, guns })} options={[['icons', 'Значки'], ['ports', 'Порты']]} />
-        <Switch3 label="Фон под рукой" id="hand" value={view.hand} onChange={(hand) => setView({ ...view, hand })} options={[['deck', 'Палуба'], ['table', 'Стол капитана']]} />
+        <Switch3 label="Фон" id="hand" value={view.hand} onChange={(hand) => setView({ ...view, hand })} options={[['deck', 'Палуба'], ['table', 'Стол капитана']]} />
         <Switch3 label="Рамка моря" id="frame" value={view.frame} onChange={(frame) => setView({ ...view, frame })} options={[['bulwark', 'Фальшборт'], ['brass', 'Латунь']]} />
       </section>
       <label className="row check">
@@ -505,8 +536,8 @@ export function SettingsSheet({
       )}
       {hints !== null ? (
         <label className="row check">
-          <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
-          целях, «4 → 2» на Реакциях в руке, зелёный «Ход окончен», «Залп не дан…»)
+          <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} />
+          <span>Подсказки (урон Зарядов и на целях, «4 → 2» на Реакциях в руке, зелёный «Ход окончен», «Залп не дан…»)</span>
         </label>
       ) : (
         <p className="row muted">Подсказки в этой комнате выключены.</p>
@@ -560,30 +591,6 @@ export function SettingsSheet({
             Очистить
           </button>
         </details>
-      )}
-      {onDownloadLog && (
-        <div className="row buttons">
-          <button className="btn" onClick={onDownloadLog}>
-            Скачать журнал
-          </button>
-          {onDownloadGame && (
-            <button className="btn" onClick={onDownloadGame}>
-              Скачать партию
-            </button>
-          )}
-        </div>
-      )}
-      {onNew && (
-        <div className="row buttons">
-          {canConcede && onConcede && (
-            <button className="btn danger" onClick={onConcede}>
-              Сдаться ({SIDE_LABEL[canConcede].name})
-            </button>
-          )}
-          <button className="btn" onClick={onNew}>
-            {newLabel}
-          </button>
-        </div>
       )}
       <p className="row muted" data-testid="app-version">
         Версия: {appVersion()}
