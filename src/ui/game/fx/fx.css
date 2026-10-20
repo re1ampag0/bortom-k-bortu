@@ -135,9 +135,10 @@
 .seacard .sc-back { position: absolute; inset: 0; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: radial-gradient(circle at 50% 42%, #335a70, #1f3a4a 75%); box-shadow: inset 0 0 0 3px #c9a048, inset 0 0 0 6px #1f3a4a, inset 0 0 0 7px #c9a048, 0 14px 26px rgba(0, 0, 0, 0.6); font: 700 18px/1 var(--fx-font); letter-spacing: 0.3em; text-transform: uppercase; color: #e9d29a; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .fx-puddle { height: 12px; border-radius: 50%; background: radial-gradient(ellipse, rgba(90, 130, 150, 0.55), rgba(60, 100, 120, 0.25) 60%, transparent 75%); transform-origin: 50% 50%; }
 .lg-fly, .fx-puddle { z-index: 3; }
-.seacard .art { height: 118px; position: relative; overflow: hidden; }
-.seacard .artmain { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-.seacard .kind { position: absolute; left: 12px; top: 9px; font-size: 12px; font-weight: 700; color: var(--navy); opacity: 0.85; z-index: 6; }
+/* fix-ui: «Море · весь раунд» is a line of its own over the drawing, the drawing has its whole height (128), the text is under it */
+.seacard .art { position: relative; overflow: hidden; }
+.seacard .artmain { position: relative; height: 128px; display: flex; align-items: center; justify-content: center; }
+.seacard .kind { display: block; padding: 9px 12px 0; font-size: 12px; font-weight: 700; color: var(--navy); opacity: 0.85; text-align: left; }
 .seacard .fl { position: absolute; inset: 0; background: #fff; z-index: 5; opacity: 0; }
 .seacard .body { padding: 11px 16px 13px; text-align: center; }
 .seacard .t { font-family: var(--font-head); font-weight: 800; font-size: 30px; line-height: 1; }
