@@ -132,8 +132,9 @@ async function phone(page: Page, name: string) {
   await toCompany(page);
 
   // Outside aiming the own planks are as before (P7): a tap on a plank picks the ship, the head opens its card.
+  // a5-phone: the icons of the tracks open their rules, so the tap lands on the number of the Hull (a plain part of the plank)
   for (const code of ['И', 'Г']) {
-    await page.getByTestId(`plank-${code}`).locator('.tracks').click();
+    await page.getByTestId(`plank-${code}`).locator('.t-hull [data-fx-value]').click();
     await expect(page.getByTestId(`plank-${code}`)).toHaveClass(/selected/);
   }
   await expect(page.getByTestId('ship-info-Г')).toHaveCount(0);

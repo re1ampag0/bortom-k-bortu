@@ -3379,18 +3379,21 @@ button.star::before {
 }
 /* a keg of A5 (KEG / KEG_E of art/cells2.json): the dashed empty keg is always under it — the Powder clips animate the
    background of the keg itself (payKegs empties it, gainKegs fills it), so the empty outline shows through */
-.top-hold .powder-dots i {
+.top-hold .powder-dots i,
+.board-bottom > .team-row .powder-dots i {
   border: 0;
   border-radius: 3px;
   background: none;
 }
-.top-hold .powder-dots i::before {
+.top-hold .powder-dots i::before,
+.board-bottom > .team-row .powder-dots i::before {
   content: '';
   position: absolute;
   inset: 0;
   background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2228%22%20viewBox%3D%220%200%2022%2028%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%203.2%20C1.6%209%201.6%2019%204%2024.8%20C8.6%2026.4%2013.4%2026.4%2018%2024.8%20C20.4%2019%2020.4%209%2018%203.2%20C13.4%201.6%208.6%201.6%204%203.2%20Z%22%20fill%3D%22none%22%20stroke%3D%22%238a6a44%22%20stroke-width%3D%221%22%20stroke-dasharray%3D%222%201.6%22%20opacity%3D%22.8%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
 }
-.top-hold .powder-dots i.on {
+.top-hold .powder-dots i.on,
+.board-bottom > .team-row .powder-dots i.on {
   background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2228%22%20viewBox%3D%220%200%2022%2028%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%203.2%20C1.6%209%201.6%2019%204%2024.8%20C8.6%2026.4%2013.4%2026.4%2018%2024.8%20C20.4%2019%2020.4%209%2018%203.2%20C13.4%201.6%208.6%201.6%204%203.2%20Z%22%20fill%3D%22%239a6232%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.9%22%2F%3E%3Cpath%20d%3D%22M7.4%202.4%20C6%209%206%2019%207.4%2025.6%20M11%202.2%20V25.8%20M14.6%202.4%20C16%209%2016%2019%2014.6%2025.6%22%20stroke%3D%22%236e431e%22%20stroke-width%3D%22.6%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M4.6%204.6%20C4%209.6%204%2018.4%204.6%2023.4%22%20stroke%3D%22%23c08a52%22%20stroke-width%3D%221%22%20fill%3D%22none%22%20opacity%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M2.6%208.4%20C8.4%209.8%2013.6%209.8%2019.4%208.4%20M2.6%2019.6%20C8.4%2018.2%2013.6%2018.2%2019.4%2019.6%22%20stroke%3D%22%232c2a28%22%20stroke-width%3D%221.7%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M2.8%207.7%20C8.4%209%2013.6%209%2019.2%207.7%20M2.8%2018.9%20C8.4%2017.6%2013.6%2017.6%2019.2%2018.9%22%20stroke%3D%22%238a857e%22%20stroke-width%3D%22.45%22%20fill%3D%22none%22%2F%3E%3Cellipse%20cx%3D%2211%22%20cy%3D%223%22%20rx%3D%227%22%20ry%3D%221.3%22%20fill%3D%22%237a4b22%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.6%22%2F%3E%3Crect%20x%3D%229.4%22%20y%3D%2212.6%22%20width%3D%223.2%22%20height%3D%222.4%22%20rx%3D%22.6%22%20fill%3D%22%235a3818%22%20stroke%3D%22%232c1a0a%22%20stroke-width%3D%22.4%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
 }
 .top-hold .powder-dots b {
@@ -3513,40 +3516,9 @@ button.star::before {
       'turn hold tools'
       'text text text';
   }
-  /* the phone: a keg and «5/8»; the kegs of the animations lie over that keg, unseen */
+  /* the phone: the Hold of the top team is a row of its own over the sea (phone.css) */
   .top-hold {
     grid-area: hold;
-    position: relative;
-    justify-self: start;
-  }
-  .hold-mini {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    letter-spacing: 0;
-  }
-  .hold-keg,
-  .hold-keg svg {
-    display: block;
-  }
-  .top-hold .powder-dots {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 10px;
-    height: 13px;
-    padding: 0;
-    background: none;
-    box-shadow: none;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .top-hold .powder-dots i {
-    position: absolute;
-    inset: 0;
-    width: auto;
-    height: auto;
   }
 }
 
