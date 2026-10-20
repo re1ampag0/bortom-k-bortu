@@ -105,22 +105,23 @@ describe('the clips of the Volley', () => {
     expect(plates.every((p) => p.removed)).toBe(true);
   });
 
-  it('window: with a panel of the game in the middle the window of the reference is not drawn, the hint stays', async () => {
+  it('window: this device decides — no window in the sea, with a panel or without (fix-ui); the enemy without a panel — a pill', async () => {
     for (const dock of [true, false]) {
       const hints: string[] = [];
       const f = fakeBoard(dock);
       const ctx = ctxOf(f.board, f.layer, hints);
       const clip = { kind: 'window', ev: [], events: [], side: 'КОМПАНИЯ', phase: 'before', mine: true, forCard: false, seats: ['И'] } as never;
-      if (dock) {
-        await PLAY.window!(clip, ctx);
-        expect(f.added).toHaveLength(0);
-        expect(hints).toEqual(['Реакция?']);
-      } else {
-        // Without a panel the clip draws its window (it measures the gap: the fake board has none).
-        await expect(PLAY.window!(clip, ctx)).rejects.toThrow();
-        expect(hints).toEqual(['Реакция?']);
-      }
+      await PLAY.window!(clip, ctx);
+      expect(f.added).toHaveLength(0);
+      expect(hints).toEqual(['Реакция?']);
     }
+    // the enemy decides and no panel stands in the middle: the paper pill is drawn (it measures the gap: the fake board has none)
+    const hints: string[] = [];
+    const f = fakeBoard(false);
+    const ctx = ctxOf(f.board, f.layer, hints);
+    const enemy = { kind: 'window', ev: [], events: [], side: 'КОМПАНИЯ', phase: 'before', mine: false, forCard: false, seats: ['И'] } as never;
+    await expect(PLAY.window!(enemy, ctx)).rejects.toThrow();
+    expect(hints).toEqual(['Противник может ответить Реакцией…']);
   });
 
   it('«Сразу итог»: only the frames of the scene go, shooter / targeted of React stay', () => {

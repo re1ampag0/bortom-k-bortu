@@ -110,6 +110,8 @@ for (const size of SIZES) {
       await page.getByTestId('prep-start').click();
       await page.getByTestId('placement-done').click();
       await expect(page.getByTestId('game')).toBeVisible();
+      // the pointer left where «Готово» was would rest on a plank (a hover opens the rule of a track icon) — off the table
+      await page.mouse.move(2, 2);
       // Every frame from now on: the summary never meets a banner (8 px apart at least) nor «Последнее: …»; the banner
       // «Ваш ход» of the layer stands at the centre of the gap.
       await page.evaluate((tol) => {

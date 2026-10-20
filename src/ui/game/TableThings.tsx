@@ -341,7 +341,15 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
       if ((e.target as Element).classList?.contains('hcard')) ask();
     };
     game.addEventListener('transitionend', settled);
+    // the fonts change the width of the words («Отменить», «Ход окончен») without a mutation or a resize of the watched boxes
+    let live = true;
+    document.fonts?.ready.then(() => live && ask());
+    document.fonts?.addEventListener?.('loadingdone', ask);
+    addEventListener('resize', ask);
     return () => {
+      live = false;
+      document.fonts?.removeEventListener?.('loadingdone', ask);
+      removeEventListener('resize', ask);
       ro.disconnect();
       mo.disconnect();
       game.removeEventListener('transitionend', settled);
