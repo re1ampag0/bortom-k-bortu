@@ -263,23 +263,21 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
   const [placed, setPlaced] = useState<Placed[]>([]);
   const [deck, setDeck] = useState<DeckPlace | null>(null);
   const [wheel, setWheel] = useState<{ x: number; y: number } | null>(null);
-  const watched = useRef<{ game: HTMLElement; ro: ResizeObserver; mo: MutationObserver; off: () => void } | null>(null);
+  // fix-ui: subscribed again when the look changes (a measure of the old look on the new one ran away: «Стол капитана» does not
+  // use --deck-lift, so every measure of «Палуба» added to it, the style changed, the observer fired again — the page hung)
   useLayoutEffect(() => {
     const game = wrap.current?.parentElement ?? null;
-    const w = watched.current;
-    if (w && w.game === game) return;
-    w?.ro.disconnect();
-    w?.mo.disconnect();
-    w?.off();
-    watched.current = null;
     if (!game || typeof ResizeObserver === 'undefined') return;
     const measure = () => {
       if (look === 'deck') {
+        // a laptop: a card under the pointer rises, grows and moves its neighbours — the fan is measured at rest only (the
+        // transitions of the cards bring the measure back when the pointer has gone)
+        if (game.querySelector('.hand-cards > .hcard:hover, .hand-cards > .hcard:focus-visible') && !matchMedia('(max-width: 700px)').matches) return;
         const d = deckPlace(game);
         setDeck((old) => (old && d && JSON.stringify(old) === JSON.stringify(d) ? old : d));
         // the hand in the middle of its strip (paddings of .hand-cards, read by useFanFit), whole in the window, its tabs over it
         const hd = d?.hand;
-        // set only what changed: the observer below watches the style attributes too
+        // set only what changed
         const put = (k: string, v: number) => {
           if (game.style.getPropertyValue(k) !== `${v}px`) game.style.setProperty(k, `${v}px`);
         };
@@ -290,45 +288,61 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         // a phone: the warm light of the lantern over the fan (phone.css)
         put('--lamp-x', d ? Math.round(d.lx) : 0);
         put('--lamp-y', d ? Math.round(d.ly) : 0);
-        setPlaced([]);
+        setPlaced((old) => (old.length ? [] : old));
         return;
       }
       // the wheel (rig, е): under «Перестроение», its lower half past the edge of the window
       const g = game.getBoundingClientRect();
       const rg = rect(visible(game, '.board-bottom .regroup'), g);
-      setWheel(rg && g.width / stageK() > 700 ? { x: rg.l + rg.w / 2, y: rg.t + rg.h + 6 } : null);
+      const nw = rg && g.width / stageK() > 700 ? { x: rg.l + rg.w / 2, y: rg.t + rg.h + 6 } : null;
+      setWheel((old) => (old && nw && Math.abs(old.x - nw.x) < 1 && Math.abs(old.y - nw.y) < 1 ? old : nw));
       const R = freeRight(game);
       const next = R ? [fit('candle', R, [0.55, 0.02, 0.45, 0.5]), fit('ink', R, [0.55, 0.55, 0.45, 0.42])].filter((x): x is Placed => !!x) : [];
       setPlaced((old) => (old.length === next.length && old.every((o, i) => o.key === next[i].key && Math.abs(o.l - next[i].l) < 1 && Math.abs(o.t - next[i].t) < 1) ? old : next));
     };
+    // at most once a frame (fix-ui, 5а: the clips add and take away dozens of elements a second)
+    let raf = 0,
+      again = 0;
+    const ask = () => {
+      if (!raf) raf = requestAnimationFrame(() => ((raf = 0), measure()));
+    };
     measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(game);
-    game.querySelectorAll('.hand-cards, .log-col, .team-row, .sea-table').forEach((e) => ro.observe(e));
+    const ro = new ResizeObserver(ask);
+    const watch = () => {
+      ro.observe(game);
+      game.querySelectorAll('.hand-cards, .log-col, .team-row, .sea-table').forEach((e) => ro.observe(e));
+    };
+    watch();
     // the hand grows and shrinks card by card, the fan tilts its cards (their inline --r/--dy): look again when they change
-    // (and once more when the cards have moved: they glide to their places in .18 s, game.css .hcard transition)
-    let again = 0;
-    const mo = new MutationObserver(() => {
-      measure();
+    // (and once more when the cards have moved: they glide to their places in .18 s, game.css .hcard transition). Not the layers
+    // of the effects, the traces, the background itself, nor the style of the game (this measure writes it).
+    const QUIET = '.fx-layer, .fx-weather, .fx-scars, .plank-scars, .backdrop';
+    const mo = new MutationObserver((recs) => {
+      const hit = recs.some((r) => {
+        const t = r.target as Element;
+        if (r.type === 'attributes') return t !== game && !!t.classList?.contains('hcard');
+        return !t.closest?.(QUIET);
+      });
+      if (!hit) return;
+      watch();
+      ask();
       clearTimeout(again);
-      again = window.setTimeout(measure, 260);
+      again = window.setTimeout(ask, 260);
     });
     mo.observe(game, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
     // a card that glided to its place in the fan (the transitions of .hcard) — measure the fan where it came to rest
     const settled = (e: TransitionEvent) => {
-      if ((e.target as Element).classList?.contains('hcard')) measure();
+      if ((e.target as Element).classList?.contains('hcard')) ask();
     };
     game.addEventListener('transitionend', settled);
-    watched.current = { game, ro, mo, off: () => game.removeEventListener('transitionend', settled) };
-  });
-  useLayoutEffect(
-    () => () => {
-      watched.current?.ro.disconnect();
-      watched.current?.mo.disconnect();
-      watched.current?.off();
-    },
-    [],
-  );
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+      game.removeEventListener('transitionend', settled);
+      cancelAnimationFrame(raf);
+      clearTimeout(again);
+    };
+  }, [look]);
   const candlePlace = placed.find((x) => x.key === 'candle');
   return (
     <div ref={wrap} className={`backdrop look-${look}`} aria-hidden="true" data-testid="backdrop">
