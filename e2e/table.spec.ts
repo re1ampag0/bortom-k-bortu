@@ -301,8 +301,10 @@ test.describe('«Ход окончен» in 3 s; «4 → 2» with «Подска
     await startDuo(page, '?seed=1&speed=normal');
     await page.locator('[data-testid="end-turn"]:visible').click();
     if (await page.getByTestId('plans-panel').isVisible()) await page.getByTestId('no-plans').click();
-    await expect(page.getByTestId('ending')).toBeVisible();
-    await page.getByTestId('ending-cancel').click();
+    const ending = page.locator('[data-testid="end-turn"]:visible').first();
+    await expect(ending).toContainText('Ход окончен · 3');
+    await page.locator('[data-testid="undo"]:visible').first().click();
+    await expect(ending).not.toContainText('Ход окончен ·');
     await page.waitForTimeout(3500);
     await expect(page.getByTestId('game')).toBeVisible();
     await expect(page.getByTestId('status')).toContainText('Ход Пиратов');
