@@ -16,8 +16,10 @@ const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffe
  * The text of a card is cut by whole lines with «…» (U3): as many lines as the height left under the name and the
  * effect holds — a name of one or two lines leaves a different room, so the number is measured, not fixed in CSS.
  */
-function useWholeLines() {
+function useWholeLines(key: string) {
   const ref = useRef<HTMLSpanElement>(null);
+  // fix-ui (5а): measured when the card (its text, its look) changes and on resize — not on every render of the hand: each fit
+  // writes the style and reads the layout, and the hand renders many times a second while the clips run
   useBeforePaint(() => {
     const fit = () => {
       const el = ref.current;
@@ -32,9 +34,15 @@ function useWholeLines() {
       el.style.setProperty('max-height', `${n * line}px`);
     };
     fit();
+    // the fonts of the cards may come after the first fit (their lines are of another height)
+    let live = true;
+    document.fonts?.ready.then(() => live && fit());
     addEventListener('resize', fit);
-    return () => removeEventListener('resize', fit);
-  });
+    return () => {
+      live = false;
+      removeEventListener('resize', fit);
+    };
+  }, [key]);
   return ref;
 }
 
@@ -231,7 +239,7 @@ export function HandCard({
   /** The lifted card goes back into the fan (a press on its strip). */
   onDrop?: () => void;
 }) {
-  const textRef = useWholeLines();
+  const textRef = useWholeLines(`${code}|${note ?? ''}|${plan ? 1 : 0}|${lifted ? 1 : 0}|${alarm?.kind ?? ''}|${alarm?.why ?? ''}|${alarm?.strip?.top ?? ''}`);
   const liftRef = useLiftMargin(!!lifted && actions !== undefined);
   if (code === HIDDEN) {
     return <div className={`hcard back ${plan ? 'plan' : ''}`} style={style} data-lift={liftKey} aria-label="Закрытая карта" data-fx-card={HIDDEN} />;

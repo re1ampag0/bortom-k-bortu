@@ -1142,7 +1142,7 @@ export function Game({
 
   return (
     <div
-      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
+      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${fx.busy ? 'fx-busy' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
       data-testid="game"
       data-bottom={bottom}
     >
