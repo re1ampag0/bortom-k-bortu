@@ -379,3 +379,17 @@
     animation: none;
   }
 }
+
+/* fix-ui: no Charges in the hand — the words in the middle of the sheet, where the cards would be (a laptop and a phone) */
+.cs-cards > .cs-empty {
+  flex: 1 1 auto;
+  align-self: center;
+  margin: 0;
+  padding: 18px 12px;
+  text-align: center;
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 17px;
+  color: #f3e6c6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
