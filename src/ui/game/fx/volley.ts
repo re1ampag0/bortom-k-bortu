@@ -7,8 +7,8 @@
 // Changes against the reference («game:»):
 //  - the frames of the shooter and the target are the classes fx-shooter / fx-targeted: React owns shooter / targeted of
 //    the plank (aiming of P2, a pending Volley), a class taken off past React would not come back;
-//  - window does not draw the reference's «window» when a panel of the game (.dock) is in the middle: the real panel
-//    (Reactions, «Компания решает…» of P8, the Volley panel) is there;
+//  - window draws no «window» of the reference: this device's decision is the game's own («Тревога!»), a panel of the game
+//    (.dock) in the middle is the real one; the enemy's window is a paper pill of the game (fix-ui);
 //  - the cards at the plate (a Charge, a Reaction) have no ribbon: the strip of the ship that played them (flyCard);
 //  - CUR_CARD lives in misc.ts (the clip «card»): curCard().
 import { deckCards, legendCards } from '../../../engine/data';
@@ -20,7 +20,7 @@ import { SMOKE_LIFE, T } from './timing';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
 import {
-  A, at, ballFly, boom, bubbles, burst, bx, capFirst, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, smokeJet, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
+  A, at, ballFly, boom, bubbles, burst, bx, capFirst, cardHTML, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, smokeJet, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
   mk, moveTo, overlayAt, payKegs, pillAt, plank, projectile, puff, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
   tag, trackEl, wait, whirlpool, type FlyCard, type FxCtx,
 } from './primitives';
@@ -78,24 +78,31 @@ const ships = (ctx: FxCtx) => ctx.data.ships.map((s) => s.code);
 /** game: the frame classes of the scene (React owns shooter / targeted). */
 const SHOOTER = 'fx-shooter', TARGETED = 'fx-targeted';
 
+/** fix-ui: the water inside the frame of the sea — the plate, the cards at it and the pills beside it stay in it (not on the log). */
+function seaBox(ctx: FxCtx): { x: number; r: number } {
+  const el = ctx.board.querySelector('.sea-table');
+  if (!el) return { x: 0, r: ctx.board.clientWidth };
+  const b = bx(ctx, el), edge = ctx.board.clientWidth < 701 ? 8 : 12;
+  return { x: b.x + edge, r: b.r - edge };
+}
 function placePlate(ctx: FxCtx, shooter: string): PlateBox {
-  const g = gapBox(ctx), W = ctx.board.clientWidth;
+  const g = gapBox(ctx), W = ctx.board.clientWidth, sea = seaBox(ctx);
   const s = bx(ctx, plank(ctx, shooter));
   // V5: A5Volley.html — 300 px on a laptop, 220 on a phone (390 px too).
   const pw = W < 701 ? 220 : 300;
   // The plate stands in the column the shooter is not in: over the gap, and if it is taller than the gap — over the
   // shooter's ally (fitPlate), never over the target, where the cannonballs land.
-  const x = s.cx < W / 2 ? W - pw - 12 : 12;
+  const x = s.cx < W / 2 ? sea.r - pw : sea.x;
   return { x, y: g.y + 4, w: pw };
 }
 function cardSlot(ctx: FxCtx, p: PlateBox, idx: number) {
-  const W = ctx.board.clientWidth;
+  const W = ctx.board.clientWidth, sea = seaBox(ctx);
   const cw = W < 701 ? 64 : 82;
   const left = p.x > W / 2;
   const x = left ? p.x - (cw + 8) * (idx + 1) : p.x + p.w + 8 + (cw + 8) * idx;
-  // game: the cards stay on the table. A Charge and two Reactions ran off the edge of a phone (the plate is 204 px of
-  // 430): a card that does not fit stops at the edge and goes a step down, a pile beside the plate.
-  const min = 8, max = W - cw - 8;
+  // game: a card that does not fit stops at the edge of the sea and goes a step down (it goes into the plate a moment later:
+  // absorb)
+  const min = sea.x, max = sea.r - cw;
   const over = x > max ? Math.ceil((x - max) / (cw + 8)) : x < min ? Math.ceil((min - x) / (cw + 8)) : 0;
   return { x: Math.min(Math.max(x, min), max), y: p.y - 6 + idx * 6 + over * 26, r: idx ? 4 : -4, s: W < 701 ? 0.62 : 0.72 };
 }
@@ -104,7 +111,9 @@ export function termRows(ctx: FxCtx, terms: Term[] | null | undefined, cls: Reco
     const src = termSrc(t, { cards: fxCards(ctx.data), charge: VS && VS.charge, chargeName: VS && VS.charge ? cardName(ctx, VS.charge) : null, reactions: (VS && VS.reactions) || [] });
     const pos = t.n > 0 && src.kind !== 'guns';
     const c = cls[t.what] || '';
-    return `<span class="${c}">${esc(capFirst(t.what))}</span><span class="${t.n < 0 ? 'neg' : pos ? 'pos' : ''} ${c}">${pos ? '+' : ''}${t.n < 0 ? '−' + -t.n : t.n}</span>`;
+    // fix-ui: the line of a card (a Charge, a Reaction) — the card itself went into it; a pointer (a tap) shows it whole
+    const card = (src.kind === 'charge' || src.kind === 'reaction') && src.card ? ` data-card="${esc(src.card)}"` : '';
+    return `<span class="${c}"${card}>${esc(capFirst(t.what))}</span><span class="${t.n < 0 ? 'neg' : pos ? 'pos' : ''} ${c}"${card}>${pos ? '+' : ''}${t.n < 0 ? '−' + -t.n : t.n}</span>`;
   }).join('');
 }
 export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage, was, terms, cls, extra = '', diagonal }: { shooter: string; declared?: string; target: string; track: Track; damage: number; was?: number | null; terms?: Term[] | null; cls?: Record<string, string>; extra?: string; diagonal?: boolean }): string {
@@ -124,11 +133,88 @@ function fitPlate(ctx: FxCtx) {
 function besidePlate(ctx: FxCtx, t: HTMLElement) {
   const pl = VS?.plate;
   if (!pl || !pl.isConnected) return;
-  const a = bx(ctx, t), p = bx(ctx, pl), W = ctx.board.clientWidth;
+  const a = bx(ctx, t), p = bx(ctx, pl), sea = seaBox(ctx);
   if (a.r <= p.x || a.x >= p.r || a.b <= p.y || a.y >= p.b) return;
-  if (p.x - 6 - a.w >= 8) t.style.left = p.x - 6 - a.w / 2 + 'px';
-  else if (p.r + 6 + a.w <= W - 8) t.style.left = p.r + 6 + a.w / 2 + 'px';
+  if (p.x - 6 - a.w >= sea.x) t.style.left = p.x - 6 - a.w / 2 + 'px';
+  else if (p.r + 6 + a.w <= sea.r) t.style.left = p.r + 6 + a.w / 2 + 'px';
   else t.style.top = p.y - 6 - a.h / 2 + 'px';
+}
+/**
+ * fix-ui: a card played at the plate (the Charge, a Reaction) does not stay in the sea: when it has come to the plate it shrinks into
+ * its line there («Двойная обшивка −2»; a Reaction played before the shot has no line yet — a new one, highlighted, «…» until the
+ * shot writes the plate again). Within the time the card was in the sea before, never longer.
+ */
+function absorb(ctx: FxCtx, el: FlyCard, code: string, delay: number) {
+  at(ctx, delay, () => {
+    const plate = VS?.plate;
+    if (!plate || !plate.isConnected || !el.isConnected) return;
+    let row = plate.querySelector<HTMLElement>(`[data-card="${CSS.escape(code)}"]`);
+    if (!row) {
+      let terms = plate.querySelector('.terms');
+      if (!terms) plate.insertAdjacentHTML('beforeend', '<div class="terms"></div>'), (terms = plate.querySelector('.terms'));
+      terms!.insertAdjacentHTML('beforeend', `<span class="new" data-card="${esc(code)}">${esc(cardName(ctx, code))}</span><span class="new" data-card="${esc(code)}">…</span>`);
+      fitPlate(ctx);
+      row = plate.querySelector<HTMLElement>(`[data-card="${CSS.escape(code)}"]`)!;
+    }
+    const rb = bx(ctx, row), f = el._pos!, w = el.offsetWidth, h = el.offsetHeight;
+    A(ctx, el, [{ opacity: 1, transform: `translate(${f.x}px,${f.y}px) rotate(${f.r || 0}deg) scale(${f.s || 0.72})` }, { opacity: 0, transform: `translate(${rb.x + 30 - w / 2}px,${rb.cy - h / 2}px) rotate(0deg) scale(.12)` }], 300, 0, 'ease-in', 'forwards');
+    A(ctx, row, [{ backgroundColor: 'rgba(201, 160, 72, 0.7)' }, { backgroundColor: 'rgba(201, 160, 72, 0.25)' }], 500, 260, 'ease-out', 'none');
+    at(ctx, 320, () => el.remove());
+  });
+}
+/**
+ * fix-ui: the lines of the cards in the plate show the card whole — a pointer over a line (a laptop), a tap on it (a phone); the card
+ * stands beside the plate, inside the sea. The press does not end the show nor take the plate away (FxLayer: .plate [data-card]).
+ */
+function platePeek(ctx: FxCtx, plate: HTMLElement) {
+  if (plate.dataset.peek) return;
+  plate.dataset.peek = '1';
+  const data = ctx.data, board = ctx.board;
+  let shown: string | null = null,
+    pk: HTMLElement | null = null,
+    watch = 0;
+  const hide = () => {
+    pk?.remove();
+    pk = null;
+    shown = null;
+    clearInterval(watch);
+  };
+  const show = (code: string, row: Element) => {
+    hide();
+    const layer = board.querySelector<HTMLElement>(':scope > .fx-layer');
+    const seaEl = board.querySelector('.sea-table');
+    if (!layer) return;
+    // over the planks (the layer of the effects), beside the plate, inside the sea
+    pk = document.createElement('div');
+    pk.className = 'plate-peek';
+    pk.innerHTML = cardHTML(data, code);
+    layer.appendChild(pk);
+    const p = bx(ctx, plate), r = bx(ctx, row), sea = seaEl ? bx(ctx, seaEl) : { x: 0, y: 0, r: board.clientWidth, b: board.clientHeight };
+    const w = pk.offsetWidth, h = pk.offsetHeight;
+    const x = p.cx > board.clientWidth / 2 ? p.x - 10 - w : p.r + 10;
+    const y = Math.max(sea.y + 6, Math.min(r.cy - h / 2, sea.b - 6 - h));
+    pk.style.left = `${Math.round(Math.max(sea.x + 6, Math.min(x, sea.r - 6 - w)))}px`;
+    pk.style.top = `${Math.round(y)}px`;
+    shown = code;
+    // the plate faded or was taken away — the card goes with it
+    watch = window.setInterval(() => {
+      if (!plate.isConnected || Number(getComputedStyle(plate).opacity) < 0.3) hide();
+    }, 250);
+  };
+  const rowOf = (e: Event) => (e.target as Element | null)?.closest?.('[data-card]') ?? null;
+  plate.addEventListener('pointerover', (e) => {
+    const row = rowOf(e), code = row?.getAttribute('data-card');
+    if (e.pointerType === 'mouse' && row && code && code !== shown) show(code, row);
+  });
+  plate.addEventListener('pointerout', (e) => {
+    if (e.pointerType === 'mouse' && !(e.relatedTarget as Element | null)?.closest?.('[data-card]')) hide();
+  });
+  plate.addEventListener('pointerdown', (e) => {
+    const row = rowOf(e), code = row?.getAttribute('data-card');
+    if (e.pointerType === 'mouse' || !row || !code) return;
+    if (code === shown) hide();
+    else show(code, row);
+  });
 }
 /**
  * V5: the plate is not taken away with the clip: it passes to the traces (fx/scars.ts, 'plate') — stays ≈ 2 s more, fades,
@@ -206,12 +292,15 @@ PLAY.announce = async (c, ctx) => {
     VS.plate.style.width = pp.w + 'px';
     A(ctx, VS.plate, [{ opacity: 0, translate: '0 -8px' }, { opacity: 1, translate: '0 0' }], 300, 120, 'ease-out', 'forwards');
   }
+  platePeek(ctx, VS.plate);
   VS.plateBox = pp;
   VS.plate.innerHTML = plateHTML(ctx, { shooter: c.shooter, target: c.target, track: c.track, damage: c.damage, terms: c.terms, extra });
   fitPlate(ctx);
   if (c.charge && !part2) {
     const from = cardOrigin(ctx, c.charge, c.chargeFrom || c.shooter);
-    VS.cards.push(flyCard(ctx, c.charge, from, cardSlot(ctx, pp, 0), 150, 450, { ship: c.chargeFrom || c.shooter }));
+    const card = flyCard(ctx, c.charge, from, cardSlot(ctx, pp, 0), 150, 450, { ship: c.chargeFrom || c.shooter });
+    VS.cards.push(card);
+    absorb(ctx, card, c.charge, 650);
   }
   if (part2) { const sb = bx(ctx, plank(ctx, c.shooter)); tag(ctx, sb.cx, facingY(ctx, c.shooter) + 16 * dirOf(ctx, c.shooter), 'второй борт', 100, 'plus', 1400); }
   await wait(ctx, c.charge && !part2 ? 820 : 620);
@@ -219,22 +308,20 @@ PLAY.announce = async (c, ctx) => {
 
 PLAY.window = async (c, ctx) => {
   hint(ctx, c.mine ? 'Реакция?' : 'Противник может ответить Реакцией…');
-  // game: the real panel of the middle (Reactions, «Компания решает…», the Volley panel) stands where the window would be.
-  if (ctx.board.querySelector('[data-fx-gap] .dock')) {
+  // game (fix-ui): this device decides — the decision is the game's own («Тревога!», the Reaction sheet), never a window in the
+  // sea; the real panel of the middle («Компания решает…», the Volley panel) stands where the window would be — nothing either.
+  if (c.mine || ctx.board.querySelector('[data-fx-gap] .dock')) {
     await wait(ctx, (c.mine ? 950 : 1300) + 150);
     return;
   }
+  // the enemy may answer: a paper pill of the game in the sea (not the reference's window with its dots)
   const W = ctx.board.clientWidth, g = gapBox(ctx);
   let x = W / 2;
   if (VS && VS.plate) { const pb = bx(ctx, VS.plate); x = W < 701 ? (pb.cx > W / 2 ? pb.x / 2 : (pb.r + W) / 2) : W / 2; }
-  const after = c.phase === 'after';
-  const html = c.mine
-    ? `<b>${after ? 'Можно ответить после попадания' : 'Ваше окно Реакций'}</b><span>в игре здесь панель решения<i></i><i></i><i></i></span>`
-    : `<b>${after ? 'Противник может ответить…' : 'Противник может ответить…'}</b><span>${after ? 'после попадания' : 'ждём Реакцию'}<i></i><i></i><i></i></span>`;
-  const win = mk(ctx, 'window' + (c.mine ? ' mine' : ''), x, g.cy, html);
-  A(ctx, win, [{ opacity: 0, scale: '0.94' }, { opacity: 1, scale: '1' }], 200, 0, 'ease-out', 'forwards');
-  await wait(ctx, c.mine ? 950 : 1300);
-  A(ctx, win, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
+  const pill = mk(ctx, 'wait-pill', x, g.cy, c.phase === 'after' ? 'Противник может ответить Реакцией после попадания…' : 'Противник может ответить Реакцией…');
+  A(ctx, pill, [{ opacity: 0, scale: '0.94' }, { opacity: 1, scale: '1' }], 200, 0, 'ease-out', 'forwards');
+  await wait(ctx, 1300);
+  A(ctx, pill, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
   await wait(ctx, 150);
 };
 
@@ -246,7 +333,11 @@ PLAY.reaction = async (c, ctx) => {
   if (VS && VS.plate && VS.plateBox && c.phase === 'before') to = cardSlot(ctx, VS.plateBox, VS.cards.length);
   else { const s = bx(ctx, plank(ctx, c.ship)); to = { x: s.cx - 40, y: isTop(ctx, c.ship) ? s.b + 6 : s.y - 110, r: 3, s: 0.72 }; }
   const card = flyCard(ctx, c.card, from, to, 0, 500, { ship: c.seat });
-  if (VS) { VS.cards.push(card); VS.reactions.push({ card: c.card, ship: c.ship, r: c.r }); } else at(ctx, 1400, () => A(ctx, card, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards'));
+  if (VS) {
+    VS.cards.push(card);
+    VS.reactions.push({ card: c.card, ship: c.ship, r: c.r });
+    if (VS.plate && c.phase === 'before') absorb(ctx, card, c.card, 520);
+  } else at(ctx, 1400, () => A(ctx, card, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards'));
   if (c.fromPlan) A(ctx, card.firstElementChild!, [{ transform: 'rotateY(90deg)' }, { transform: 'none' }], 300, 300, 'ease-out', 'backwards');
   await wait(ctx, 520);
   const tgt = VS ? VS.target : null;
@@ -266,7 +357,11 @@ PLAY.reaction = async (c, ctx) => {
     if (c.r === 'redirect') {
       const cov = plank(ctx, c.ship), d0 = bx(ctx, plank(ctx, vs.declared)), c0 = bx(ctx, cov);
       plank(ctx, vs.declared).classList.remove(TARGETED);
-      lean(ctx, c.ship, `translate(${(d0.cx - c0.cx) * 0.05}px,${dirOf(ctx, c.ship) * 6}px)`, 450, 'cubic-bezier(.2,.8,.3,1.2)');
+      // fix-ui: it leans towards the ally it covers, but no further than half the gap between them — its frame stays off the
+      // neighbouring plank (5 % of the way, ≈ 18 px, ran over it)
+      const gap = d0.cx > c0.cx ? d0.x - c0.r : c0.x - d0.r;
+      const dx = Math.sign(d0.cx - c0.cx) * Math.min(Math.abs(d0.cx - c0.cx) * 0.05, Math.max(0, gap / 2 - 3));
+      lean(ctx, c.ship, `translate(${Math.round(dx * 10) / 10}px,${dirOf(ctx, c.ship) * 6}px)`, 450, 'cubic-bezier(.2,.8,.3,1.2)');
       cov.classList.add(TARGETED);
       vs.target = c.ship;
       const np = placePlate(ctx, vs.shooter), op = vs.plateBox!;
@@ -295,13 +390,8 @@ PLAY.reaction = async (c, ctx) => {
         if (ctx.rich) for (let k = 0; k < 8; k++) { const s = mk(ctx, 'sparkle', 0, 0); const x = tb.x + Math.random() * tb.w, y = tb.y + Math.random() * tb.h; A(ctx, s, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.5)` }, { opacity: 0.9, offset: 0.5 }, { opacity: 0, transform: `translate(${x}px,${y}px)` }], 900, 300 + k * 80); }
       }
     }
-    if (c.r === 'cancel_charge' && vs.cards[0]) {
-      const cc = vs.cards[0].querySelector<HTMLElement>('.hcard')!;
-      cc.style.position = 'relative';
-      cc.insertAdjacentHTML('beforeend', '<svg class="ink" viewBox="0 0 110 128" preserveAspectRatio="none"><path d="M10 12 L100 116" /><path d="M100 14 L12 114" /></svg>');
-      vs.cards[0].querySelectorAll('.ink path').forEach((p, k) => A(ctx, p, [{ strokeDashoffset: 110 }, { strokeDashoffset: 0 }], 260, k * 200, 'ease-in', 'forwards'));
-      A(ctx, vs.cards[0], [{ opacity: 1 }, { opacity: 0.45 }], 600, 500, 'ease-in', 'forwards');
-    }
+    // fix-ui: the Charge went into its line of the plate — the line is struck out
+    if (c.r === 'cancel_charge' && vs.charge && vs.plate) vs.plate.querySelectorAll(`[data-card="${CSS.escape(vs.charge)}"]`).forEach((x) => x.classList.add('struck'));
     if (c.r === 'cancel_crew') {
       const tr = bx(ctx, trackEl(ctx, tgt, 'crew'));
       const bar = overlayAt(ctx, 'barrier', { x: tr.x, y: tr.y, w: tr.w, h: tr.h }, 4); vs.extras.push(bar);
@@ -333,6 +423,7 @@ PLAY.shot = async (c, ctx) => {
   const blocked = c.shots.filter((b) => b.out === 'block').reduce((n, b) => n + b.units, 0);
   const extra = (c.chargeCancelled && c.charge ? `<div class="who"><span class="struck">«${esc(cardName(ctx, c.charge))}»</span> отменён</div>` : '') + (blocked ? `<div class="terms"><span class="new">${esc((c.shots.find((b) => b.out === 'block')!.label || '').replace(/ −\d+$/, ''))}</span><span class="neg new">−${blocked}</span></div>` : '');
   vs.plate.innerHTML = plateHTML(ctx, { shooter: c.shooter, declared: c.declared, target: c.target, track: c.track, damage: c.damage, was: vs.declDamage, terms: c.terms, cls, extra });
+  platePeek(ctx, vs.plate);
   fitPlate(ctx);
   A(ctx, vs.plate, [{ scale: '1' }, { scale: '1.04' }, { scale: '1' }], 300, 0, 'ease-out', 'none');
   await wait(ctx, 260);

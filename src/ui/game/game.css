@@ -940,6 +940,27 @@ button.star::before {
   padding: 0 0 0 8px;
   border-left: 1px solid #b9a27a;
 }
+/* fix-ui: a laptop, four buttons and more (the Dutchman): one row, «icon · price», the name in the paper pop (data-tip) — the row
+   never wraps and the sea keeps its height */
+@media (min-width: 701px) {
+  .plank-buttons.many {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .plank-buttons.many .btn.cmd {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 0 9px;
+  }
+  .plank-buttons.many .btn.cmd.compact .cmd-name {
+    display: none;
+  }
+  .plank-buttons.many .btn.cmd:not(.compact) .cmd-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
 /* The buttons of a plank: on a phone a row that scrolls with the arrow «›» at its right edge (U3); on a laptop the
    arrow is never there. */
 .plank-buttons-wrap {
@@ -1002,6 +1023,12 @@ button.star::before {
   outline: 3px solid var(--fire-a5);
   outline-offset: 3px;
   touch-action: manipulation;
+}
+/* fix-ui (TASKS-2 PH 4): a ship that cannot be chosen while a target is chosen — dimmed */
+.plank.aim-off {
+  opacity: 0.55;
+  filter: saturate(0.45);
+  transition: opacity 0.15s, filter 0.15s;
 }
 @keyframes aimpulse {
   50% {
@@ -1146,6 +1173,11 @@ button.star::before {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  /* fix-ui: its empty room lets the pointer through to the lines of the plate of a Volley under it (its panels take presses) */
+  pointer-events: none;
+}
+.middle > * {
+  pointer-events: auto;
 }
 .dock {
   position: absolute;
@@ -1803,6 +1835,36 @@ button.star::before {
   overflow-y: auto;
   display: grid;
   gap: 10px;
+  /* fix-ui: the middle scrolls inside the window; the head with «×» and the foot with the buttons stay in sight */
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: start;
+}
+.sheet-head,
+.sheet-foot {
+  flex: none;
+}
+.sheet-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+}
+.sheet-foot .row.buttons {
+  margin-top: 0;
+}
+.sheet:has(> .sheet-foot) > .sheet-body {
+  padding-bottom: 12px;
+}
+/* fix-ui: a check box and its words on one line (the long words wrap beside the box, not under it) */
+.row.check {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+.row.check > input[type='checkbox'] {
+  flex: none;
+  margin-top: 3px;
 }
 .sheet-body h3 {
   margin: 8px 0 0;
@@ -2325,6 +2387,11 @@ button.star::before {
   .panel-actions .btn.primary {
     min-width: 0;
     flex: 2;
+    /* fix-ui: a long label («Отложить 2 и закончить ход») wraps inside the button, whole */
+    white-space: normal;
+    line-height: 1.1;
+    padding-left: 8px;
+    padding-right: 8px;
   }
   /* A compact Reaction window; the list scrolls inside, so the hand and «Пропустить» stay pressable. A flex column, not a grid: iPhone Safari squeezed the grid rows, so a folded text was
      cut through a line and an open one spilled over the next Reaction. A row: the name, then «what happens now» and
@@ -2426,12 +2493,38 @@ button.star::before {
     background: var(--panel);
     border-top: 1px solid var(--line);
   }
-  /* While the bots move «Ход окончен» is off anyway (the status bar says whose turn it is): «Пауза» takes its place. */
+  /* While the bots move: «Пауза» and «До конца» with their captions, and the oak board says who moves («Ходит Компания») —
+     fix-ui: it was hidden, two round buttons stood without a word */
   .bottom-bar.has-pause {
-    grid-template-columns: auto auto auto minmax(0, 1fr);
+    grid-template-columns: auto auto auto auto minmax(0, 1fr);
+    gap: 6px;
   }
-  .bottom-bar.has-pause .end-turn {
+  .bottom-bar.has-pause .btn.round.tool {
+    --ring: 40px;
+    gap: 2px;
+    min-width: 0;
+    padding: 0 2px;
+  }
+  .bottom-bar.has-pause .btn.round.tool .round-cap.cap-short {
+    display: block;
+    font-size: 11px;
+    color: #efe3c8;
+  }
+  /* the board is narrower here: no medallion, «Ходит Компания» on two lines if it needs them */
+  .bottom-bar.has-pause .end-turn .oak-med {
     display: none;
+  }
+  .bottom-bar.has-pause .end-turn .oak-pan {
+    left: 7px;
+  }
+  .bottom-bar.has-pause .end-turn .oak-pan b {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    line-height: 1.05;
+    text-align: center;
   }
   .bottom-bar .btn.pause {
     min-width: 48px;
@@ -2937,6 +3030,23 @@ button.star::before {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* fix-ui: a laptop — the whole text of the weather («Попутный ветер: Перестроение бесплатно»), on two lines if it needs them */
+@media (min-width: 701px) {
+  .chip.sea {
+    height: auto;
+    min-height: 40px;
+    padding: 2px 10px;
+  }
+  .chip.sea .sea-cap {
+    font-size: 10.5px;
+  }
+  .chip.sea .sea-name {
+    font-size: 12.5px;
+    line-height: 1.12;
+    white-space: normal;
+    overflow: visible;
+  }
+}
 /* round brass buttons (the book, the gear, the tempo of the show, «Отменить»): a brass disc with the icon in a «Turk's head»
    ring (A5Rig, art/knot.ts). --ring is the size of the whole button: 64 px under the log, 44 in the top row, 42 on a phone. */
 .btn.round {
@@ -2998,6 +3108,10 @@ button.star::before {
 }
 /* the tools of the top row are icons only (the name is in the title and the label) */
 .btn.round.tool .round-cap {
+  display: none;
+}
+/* fix-ui: the short caption of a round button («До конца») — only in the bottom bar of a phone while the bots move */
+.round-cap.cap-short {
   display: none;
 }
 .btn.round[aria-disabled='true'] {
@@ -3617,6 +3731,11 @@ button.star::before {
   .hand-cards > .hcard + .hcard {
     margin-left: calc(-1 * var(--ov, 0px));
   }
+  /* fix-ui: the tabs of the ships («Индевор · 0 из 2», «Голландец») stay over a card that rises */
+  .hand-head .tabs {
+    position: relative;
+    z-index: 4;
+  }
   /* the pointer or the keyboard on a card: it straightens, rises and grows; the neighbours step aside */
   .hand-cards > .hcard:hover,
   .hand-cards > .hcard:focus-visible {
@@ -4141,6 +4260,12 @@ button.star::before {
   inset: 0;
   pointer-events: none;
 }
+/* fix-ui (5а): while a clip plays the flame of the lantern and the candle stops flickering (a blended layer that changes on every
+   frame); it flickers again when the clip ends */
+.game.fx-busy .deck-flare,
+.game.fx-busy .lantern-light {
+  animation-play-state: paused;
+}
 .deck-bg {
   position: absolute;
   inset: 0;
@@ -4420,4 +4545,14 @@ button.star::before {
   letter-spacing: 0;
   color: #2a2521;
   pointer-events: none;
+}
+
+/* fix-ui: «Колода N · Сброс M · сыграно K из 3» — 12 px and lighter (a laptop in both looks of the table; a phone in phone.css) */
+@media (min-width: 701px) {
+  .game .hand-head .deck-info,
+  .game.view-hand-deck .deck-info {
+    font-size: 12px;
+    color: #f6ecd4;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  }
 }

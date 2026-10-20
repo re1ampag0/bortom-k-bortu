@@ -32,6 +32,10 @@
     0 8px 18px rgba(0, 0, 0, 0.55);
   color: #f6e7c6;
   animation: alarm-in var(--alarm-in, 250ms) ease-out both;
+  /* fix-ui: the line wraps inside the plate (.status-text keeps its hint on one line: nowrap ran the words past the plate onto
+     the Hold and the weather when the middle of the top row is narrow) */
+  white-space: normal;
+  line-height: 1.15;
 }
 .alarm-bell {
   flex: none;
@@ -49,6 +53,7 @@
   font-family: var(--font-num);
   font-size: 22px;
   letter-spacing: 0.18em;
+  white-space: nowrap;
 }
 .alarm-line {
   font-family: var(--font-ui, 'Alegreya Sans', 'Alegreya Sans', sans-serif);
@@ -356,6 +361,9 @@
   .status-text.alarm {
     width: auto;
     justify-self: stretch;
+    /* fix-ui: as tall as the plate (the line of the hint is 32 px; the plate ran down over the row of the Hold) */
+    height: auto;
+    line-height: normal;
   }
   .alarm-bar {
     position: static;
@@ -373,14 +381,16 @@
   .game.alarm-open:not(.alarm-folded) {
     --alarm-h: clamp(236px, 36vh, 340px);
   }
+  /* fix-ui: the sheet stands over the bottom bar (--bar-h, Game.tsx), «Пропустить» and «Свернуть» whole above it; the table gives
+     way by the height of the bar too */
   .game.alarm-open:not(.alarm-folded) .hand-row {
-    min-height: calc(var(--alarm-h) - 61px);
+    min-height: calc(var(--alarm-h) - 61px + var(--bar-h, 0px));
   }
   .dock.sheet-dock:has(> .alarm-sheet) {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: var(--bar-h, 0px);
     top: auto;
     width: auto;
     z-index: 30;
@@ -536,6 +546,44 @@
     align-self: center;
     background: none;
     color: #efe3c8;
+  }
+}
+
+/* fix-ui: a short phone (Safari 430×740): «Пропустить» and «Свернуть» on one row, the sheet a little lower and over the row of its
+   own Hold (the Powder is in the head of the sheet) — the table above keeps its sea */
+@media (max-width: 700px) and (max-height: 800px) {
+  .game.alarm-open:not(.alarm-folded) {
+    --alarm-h: 262px;
+  }
+  .game.alarm-open:not(.alarm-folded) .hand-row {
+    min-height: calc(var(--alarm-h) - 61px + var(--bar-h, 0px) - 46px);
+  }
+  .dock.sheet-dock .panel.alarm-sheet:not(.folded) {
+    flex-flow: row wrap;
+    align-content: flex-start;
+    column-gap: 10px;
+    row-gap: 6px;
+  }
+  .dock.sheet-dock .panel.alarm-sheet:not(.folded) > * {
+    flex: 0 0 100%;
+  }
+  .dock.sheet-dock .panel.alarm-sheet:not(.folded) > .as-btns {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .dock.sheet-dock .panel.alarm-sheet:not(.folded) > .alarm-fold {
+    flex: 0 1 auto;
+    max-width: 44%;
+    font-size: 12.5px;
+    line-height: 1.15;
+    text-align: left;
+  }
+  .alarm-sheet .as-cards {
+    padding-top: 6px;
+  }
+  .alarm-sheet .reaction-memo {
+    font-size: 11px;
+    padding: 3px 7px;
   }
 }
 
