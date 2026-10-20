@@ -159,6 +159,13 @@ function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number): number
   return middle;
 }
 
+/** Scrolls the strip of the hand (and nothing round it) so that the card stands in its middle. */
+function centre(row: HTMLElement, card: Element, behavior: ScrollBehavior) {
+  const r = row.getBoundingClientRect(),
+    c = card.getBoundingClientRect();
+  row.scrollTo({ left: row.scrollLeft + (c.left + c.width / 2) - (r.left + r.width / 2), behavior });
+}
+
 const TYPE_CLASS: Record<string, string> = { ЗАРЯД: 'charge', РЕАКЦИЯ: 'reaction', ПРИКАЗ: 'order', РЕМОНТ: 'repair' };
 
 export function cardClass(c: CardInstance): string {
@@ -371,11 +378,23 @@ export function Hand({
   // The phone: the lifted card (its key in the strip); a tap beside it, another ship's tab or a new hand drops it.
   const [lifted, setLifted] = useState<string | null>(null);
   useEffect(() => setLifted(null), [seat, n]);
-  // the lifted card to the middle of the strip (after it has grown: its neighbours stepped aside)
+  // the lifted card to the middle of the strip (after it has grown: its neighbours stepped aside) — only the strip scrolls, not the
+  // table round it (fix-ui: scrollIntoView moved the whole table when the last card was lifted)
   useEffect(() => {
     if (!lifted) return;
-    [...(rowRef.current?.children ?? [])].find((x) => x.getAttribute('data-lift') === lifted)?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
+    const row = rowRef.current;
+    const card = [...(row?.children ?? [])].find((x) => x.getAttribute('data-lift') === lifted);
+    if (row && card) centre(row, card, reducedMotion() ? 'auto' : 'smooth');
   }, [lifted, rowRef]);
+  // a phone: the fan opens on the first card that can be played (a new hand, another ship)
+  const firstOk = holder.hand.findIndex((code) => offOf(seat, code) === null);
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row || !isPhone() || firstOk < 0) return;
+    const card = row.querySelectorAll(':scope > .hcard')[firstOk];
+    if (card) centre(row, card, 'auto');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seat, n]);
   useEffect(() => {
     if (!lifted) return;
     const drop = (e: Event) => {

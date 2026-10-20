@@ -638,14 +638,23 @@
   .hand-head .deck-played {
     display: inline;
   }
-  /* room above the cards for a lifted one (up to 110 px; the strip lets the presses through to what is under that room) */
+  /* fix-ui: the strip takes the finger itself (pointer-events: none on a scrolling strip — the likely cause why an iPhone did not
+     scroll the fan): a little room above the tilted cards only; the room for a lifted card (up to 110 px, the presses go through
+     it to what is under it) — only while a card is lifted */
   .hand-cards {
     flex: 0 1 auto;
     min-height: 0;
     align-items: flex-start;
-    padding: 110px 40px 4px;
-    margin-top: -106px;
+    padding: 14px 40px 4px;
+    margin-top: -10px;
     scroll-padding: 0 40px;
+    pointer-events: auto;
+    touch-action: pan-x;
+  }
+  .hand-cards:has(> .hcard.lifted) {
+    padding-top: 110px;
+    margin-top: -106px;
+    pointer-events: none;
   }
   .hand-cards > .hcard {
     width: 112px;
