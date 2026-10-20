@@ -527,8 +527,8 @@ for (const v of [
 
 // rig, г: «Фон под рукой» — the deck (or the captain's table) fills the whole window. Б6 on the game table: the gun, its balls, the
 // lantern, «Колода · Сброс», the cards of the hand, the Hold, the hourglass, «Ход окончен» and «Отменить» do not run into each other;
-// the gun is at least 2.5 times as wide as the lantern; no «Вещи на столе» on the deck. On a phone the barrel of the gun goes under the
-// cards on purpose (its breech and wheel are left of them).
+// the gun is at least 2.5 times as wide as the lantern; no «Вещи на столе» on the deck. On a phone (a5-phone) the gun stands under the
+// cards, in the strip of the dots, and the lantern in the row of the caption of the hand: neither meets a card.
 for (const look of ['deck', 'table'] as const) {
   for (const v of [
     { w: 1366, h: 660 },
@@ -574,7 +574,6 @@ for (const look of ['deck', 'table'] as const) {
       });
       type R = { l: number; r: number; t: number; b: number };
       const meet = (a: R, b: R) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
-      const phone = v.w < 701;
       const named: [string, R | null][] = [
         ['the gun', r.gun],
         ['the balls', r.balls],
@@ -595,7 +594,6 @@ for (const look of ['deck', 'table'] as const) {
             [nb, b] = named[j];
           if (!a || !b || !(art(na) || art(nb))) continue; // the panels of the table are checked by the tests above
           if (art(na) && art(nb) && !na.startsWith('prop')) continue; // the balls lie before the gun, the lantern stands on it
-          if (phone && (na === 'the gun' || na === 'the balls') && nb.startsWith('hand card')) continue; // the barrel goes under the cards
           if (meet(a, b)) bad.push(`${na} ∩ ${nb}`);
         }
       for (const [n, p] of named) if (p && art(n) && (p.l < -1 || p.t < -1 || p.r > r.iw + 1 || p.b > r.ih + 1)) bad.push(`${n} outside the window`);

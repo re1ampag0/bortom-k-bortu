@@ -1,5 +1,10 @@
 /* ═══════════ a5-phone (TASKS-2, PH 1–3): the phone as A5Phone.html, frames 1, 1б, 6. Everything here is a phone only
    (≤ 700 px) and comes after game.css: a laptop does not change. ═══════════ */
+/* the dots under the fan of a phone (Hand.tsx): a laptop has none */
+.hand-dots {
+  display: none;
+}
+
 @media (max-width: 700px) {
   /* ——— the top row: the brass plate «ПИРАТЫ · II», the plaque of the sea with its picture, the gear; the paper line of
      the hint; the Hold of the top team over the sea ——— */
@@ -186,6 +191,19 @@
     flex: 0 1 auto;
     min-height: 96px;
   }
+  /* the hand is a column: the label, the cards (they give way: cut by their own strip, above the bottom bar), the dots */
+  .board-bottom > .hand-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 0;
+  }
+  .hand-row > .hand {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
   .game > .bottom-bar {
     position: relative;
     z-index: 6;
@@ -234,6 +252,14 @@
   }
   .plank.selected .hand-count {
     display: block;
+  }
+  /* the wax seal of the target stays in the head (A5Phone, frame 2: clipped at its foot) — the number of the Hull right under
+     the head is never covered */
+  .plank .target-seal .tails {
+    display: none;
+  }
+  .plank .target-seal svg {
+    clip-path: inset(0 0 14px 0);
   }
   /* a target to choose: the «i» of the ship card stands in the head — the fan gives it room, the name stays whole */
   .plank.aimable .hand-count {
@@ -583,8 +609,218 @@
     animation: none;
   }
 }
+@media (max-width: 700px) {
+  /* ——— the hand (part 3, A5Phone frames 1, 6): «РУКА «ЖЕМЧУЖИНЫ»» and «Колода · Сброс · сыграно» over the fan; the cards
+     112 × 160 overlap a little, the edges fade; dots under the fan; a tap lifts a card ——— */
+  .hand-head {
+    flex: none;
+    min-height: 30px;
+    gap: 8px;
+    padding: 0 4px;
+  }
+  .hand-head .tabs,
+  .hand-head > .hand-label:not(.phone-hand-label) {
+    display: none;
+  }
+  .phone-hand-label {
+    font-family: var(--font-num);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #efe3c8;
+  }
+  .hand-head .deck-info {
+    font-size: 11px;
+    color: #d8c9a8;
+  }
+  .hand-head .deck-played {
+    display: inline;
+  }
+  /* room above the cards for a lifted one (up to 110 px; the strip lets the presses through to what is under that room) */
+  .hand-cards {
+    flex: 0 1 auto;
+    min-height: 0;
+    align-items: flex-start;
+    padding: 110px 40px 4px;
+    margin-top: -106px;
+    scroll-padding: 0 40px;
+  }
+  .hand-cards > .hcard {
+    width: 112px;
+    height: 160px;
+    padding: 0;
+    border-top-width: 0;
+    gap: 0;
+  }
+  .hand-cards > .hcard + .hcard {
+    margin-left: -14px;
+  }
+  .hand-cards > .hcard > span:not(.hcard-head) {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+  .hand-cards > .hcard .hcard-head {
+    height: 20px;
+    padding: 0 8px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+  .hand-cards > .hcard .hcard-name {
+    margin-top: 7px;
+    font-family: var(--font-num);
+    font-size: 14.5px;
+    line-height: 1.1;
+  }
+  .hand-cards > .hcard .hcard-big {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.15;
+  }
+  .hand-cards > .hcard .hcard-text {
+    flex: 1 1 0;
+    min-height: 0;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .hand-dots {
+    flex: none;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .hand-dots i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(239, 227, 200, 0.35);
+  }
+  .hand-dots i.on {
+    background: #efe3c8;
+  }
+
+  /* ——— the lifted card (frame 6): 150 wide, straight, over its neighbours (they step aside: the card is wider), its whole
+     text; at the bottom «СЫГРАТЬ» (wine) or the grey strip with the reason, under it the other actions that can be pressed
+     now. Its bottom stays at the line of the fan (Hand.tsx sets the margin over it) ——— */
+  .hand-cards > .hcard.lifted {
+    z-index: 5;
+    width: 150px;
+    height: auto;
+    min-height: 224px;
+    max-height: 270px;
+    rotate: 0deg;
+    translate: none;
+    scale: none;
+    opacity: 1;
+    filter: none;
+    cursor: default;
+    box-shadow:
+      0 0 0 2.5px #e0bd62,
+      0 0 22px rgba(255, 196, 120, 0.75),
+      0 14px 22px rgba(0, 0, 0, 0.55);
+  }
+  .hand-cards > .hcard.lift-open {
+    animation: lift-in 0.18s ease-out;
+  }
+  @keyframes lift-in {
+    from {
+      scale: 0.78;
+      translate: 0 30px;
+    }
+  }
+  .hand-cards > .hcard.lifted .hcard-head {
+    height: 22px;
+    font-size: 11px;
+  }
+  .hand-cards > .hcard.lifted .hcard-name {
+    font-size: 17px;
+  }
+  .hand-cards > .hcard.lifted .hcard-big {
+    font-size: 13px;
+  }
+  .hand-cards > .hcard.lifted .hcard-text {
+    display: block;
+    flex: none;
+    overflow: visible;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .hand-cards > .hcard > .lift-strip {
+    flex: none;
+    margin-top: auto;
+    min-height: 36px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    text-align: center;
+    line-height: 1.1;
+    font-family: var(--font-num);
+    font-weight: 700;
+    color: #f6e7c6;
+  }
+  .hand-cards > .hcard > .lift-strip.play {
+    background: linear-gradient(#8e2a20, #5e140e);
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  /* «Предложить в Залп корабля «Мести»» and the like: smaller, as written */
+  .hand-cards > .hcard > .lift-strip.play.long {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+  .hand-cards > .hcard > .lift-strip.no {
+    background: #7c7468;
+    font-family: var(--font-text);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #f4efe6;
+  }
+  .hand-cards > .hcard > .lift-more {
+    flex: none;
+    display: flex;
+    gap: 4px;
+    padding: 5px 5px 6px;
+    background: #efe3c8;
+  }
+  .lift-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 34px;
+    padding: 0 3px;
+    border: 0;
+    border-radius: 4px;
+    background: linear-gradient(#fbf5e7, #efe2c6);
+    box-shadow:
+      inset 0 0 0 1px #2a2521,
+      inset 0 0 0 2.5px #fbf5e7,
+      0 1.5px 0 #a68f66;
+    color: var(--ink-a5);
+    font-family: var(--font-text);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.05;
+    cursor: pointer;
+  }
+  .fx-simple .hand-cards > .hcard.lift-open {
+    animation: none;
+  }
+}
 @media (max-width: 700px) and (prefers-reduced-motion: reduce) {
   .head-fire svg {
+    animation: none;
+  }
+}
+@media (max-width: 700px) and (prefers-reduced-motion: reduce) {
+  .hand-cards > .hcard.lift-open {
     animation: none;
   }
 }
