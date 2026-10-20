@@ -9,7 +9,6 @@
   /* ——— the top row: the brass plate «ПИРАТЫ · II», the plaque of the sea with its picture, the gear; the paper line of
      the hint; the Hold of the top team over the sea ——— */
   .status {
-    flex-shrink: 0;
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
       'turn tools'
@@ -188,10 +187,6 @@
     min-height: auto;
     grid-template-rows: auto minmax(64px, 1fr) auto;
   }
-  /* The whole enemy plank is a touch target, including a head without action buttons. */
-  .plank.aimable {
-    min-height: 80px;
-  }
   .board-bottom > .hand-row {
     flex: 0 1 auto;
     min-height: 96px;
@@ -219,15 +214,34 @@
     inset: 31px 3px 3px;
   }
   .plank-head {
-    /* A Legend owns a real 44 px target in the head, never the Hull below it. */
-    height: 44px;
-    min-height: 44px;
+    height: 28px;
+    min-height: 28px;
     padding: 0 4px;
     gap: 5px;
   }
+  /* Invisible extensions never reserve room. The Legend grows upwards, away from Hull. */
+  .plank { overflow: visible; }
   button.star::before {
-    top: calc(50% - 22px);
+    inset: auto -11px 0;
+    width: 44px;
     height: 44px;
+    transform: none;
+  }
+  /* Neighbouring rows split the available space; their hit areas cannot steal each other's taps. */
+  .track .info-hit::after {
+    inset: -2px;
+    width: auto;
+    height: auto;
+    transform: none;
+  }
+  .plank-statuses .info-hit::after {
+    inset: -2px -2px -21px;
+    width: auto;
+    height: auto;
+    transform: none;
+  }
+  .plank:has(.plank-buttons) .plank-statuses .info-hit::after {
+    bottom: -2px;
   }
   .plank-head .ship-art {
     flex: 0 0 32px;
@@ -558,11 +572,8 @@
   .plank-statuses {
     flex-wrap: nowrap;
     gap: 4px;
-    /* Keep the 44 px hit zone inside the row instead of clipping its top and bottom. */
-    min-height: 44px;
-    align-items: center;
-    padding: 0 7px;
-    overflow: hidden;
+    padding: 0 7px 5px;
+    overflow: visible;
   }
   .plank-statuses .status-chip {
     flex: none;
