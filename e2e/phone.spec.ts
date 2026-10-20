@@ -50,7 +50,8 @@ async function expectWholePlankTarget(page: Page, code: string) {
   await expect(target).toHaveClass(/aimable/);
   const box = (await target.boundingBox())!;
   expect(box.width).toBeGreaterThanOrEqual(150);
-  expect(box.height).toBeGreaterThanOrEqual(80);
+  expect(box.height).toBeGreaterThanOrEqual(44);
+  expect((await target.locator('.plank-head').boundingBox())!.height).toBe(28);
   const star = page.getByTestId(`star-${code}`);
   const sb = (await star.count()) > 0 ? await star.boundingBox() : null;
   const head = (await target.locator('.plank-head').boundingBox())!;
@@ -207,7 +208,7 @@ async function phone(page: Page, name: string) {
   await last.click();
   await expect(souls).not.toHaveText(before!, { timeout: 15_000 });
 
-  // The star is a centred 44×44 tap zone inside the head: its corners hit the star, never the Hull below it.
+  // The invisible 44×44 zone grows upwards from the star, leaving the Hull below untouched.
   const star = page.getByTestId('star-И');
   await expect(star).toBeVisible();
   const sb = (await star.boundingBox())!;
@@ -221,7 +222,7 @@ async function phone(page: Page, name: string) {
         [x - 21, y + 21],
         [x + 21, y + 21],
       ].map(([px, py]) => document.elementFromPoint(px, py)?.closest('[data-testid="star-И"]') !== null),
-    { x: cx, y: sb.y + sb.height / 2 },
+    { x: cx, y: sb.y + sb.height - 22 },
   );
   expect(hits).toEqual([true, true, true, true, true]);
   await star.click();

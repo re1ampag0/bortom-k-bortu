@@ -291,13 +291,17 @@ test.describe('the badges explain themselves (phone 430×932)', () => {
     await expect(page.getByTestId('info-pop')).toHaveCount(0);
     expect(await showOn(page)).toBe(true);
     const fire = page.getByTestId('fire-И');
-    // the zone of the press is at least 44 × 44 px: the points 21 px around the middle of the badge give the badge
+    // The visible chip stays 21 px high. Its invisible extension grows into the free space below;
+    // the upper edge stops at the midpoint to the neighbouring track row.
     const zone = await fire.evaluate((el) => {
-      const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const d = Math.max(21, r.width / 2 - 1), h = Math.max(21, r.height / 2 - 1);
-      return [[cx, cy - h], [cx, cy + h], [cx - d, cy], [cx + d, cy]].map(([x, y]) => document.elementFromPoint(x, y)?.closest('[data-info]') === el);
+      const r = el.getBoundingClientRect(), cx = r.left + r.width / 2;
+      const hit = (x: number, y: number) => document.elementFromPoint(x, y)?.closest('[data-info]') === el;
+      const above = el.closest('.plank')!.querySelector('.track:not(.t-hull) .info-hit')!;
+      const t = above.getBoundingClientRect();
+      return { height: r.height, hits: [hit(cx, r.top - 1), hit(cx, r.bottom + 20), hit(r.left - 1, r.top + 10), hit(r.right + 1, r.top + 10)],
+        track: document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2)?.closest('[data-info]') === above };
     });
-    expect(zone).toEqual([true, true, true, true]);
+    expect(zone).toEqual({ height: 21, hits: [true, true, true, true], track: true });
     await fire.tap();
     await expect(page.getByTestId('info-pop')).toBeVisible();
     await expect(page.getByTestId('info-pop')).toContainText('−1 Корпус за каждый Пожар');
