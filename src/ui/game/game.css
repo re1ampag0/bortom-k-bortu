@@ -2942,6 +2942,23 @@ button.star::before {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* fix-ui: a laptop — the whole text of the weather («Попутный ветер: Перестроение бесплатно»), on two lines if it needs them */
+@media (min-width: 701px) {
+  .chip.sea {
+    height: auto;
+    min-height: 40px;
+    padding: 2px 10px;
+  }
+  .chip.sea .sea-cap {
+    font-size: 10.5px;
+  }
+  .chip.sea .sea-name {
+    font-size: 12.5px;
+    line-height: 1.12;
+    white-space: normal;
+    overflow: visible;
+  }
+}
 /* round brass buttons (the book, the gear, the tempo of the show, «Отменить»): a brass disc with the icon in a «Turk's head»
    ring (A5Rig, art/knot.ts). --ring is the size of the whole button: 64 px under the log, 44 in the top row, 42 on a phone. */
 .btn.round {
