@@ -75,6 +75,13 @@
 .plate .terms .new { background: rgba(201, 160, 72, 0.25); } .plate .terms .struck { text-decoration: line-through; color: #9a8f82 !important; }
 .plate .stamp { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: var(--seal); border: 1.5px solid var(--seal); border-radius: 4px; padding: 0 5px; transform: rotate(-3deg); }
 .plate .nodiag { margin-top: 3px; font-size: 11px; font-weight: 700; color: var(--green); }
+/* fix-ui: the line of a card in the plate (the card went into it): a pointer over it or a tap shows the card whole beside the plate */
+.plate [data-card] { pointer-events: auto; cursor: help; text-decoration: underline dotted rgba(42, 37, 33, 0.45); text-underline-offset: 2px; }
+.fx-layer > .plate-peek { opacity: 1; z-index: 6; width: 150px; pointer-events: none; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.45)); }
+.plate-peek > .hcard { width: 150px; height: auto; min-height: 0; cursor: default; justify-content: flex-start; }
+.plate-peek > .hcard > span { flex: none; }
+.plate-peek .hcard-text { display: block; overflow: visible; -webkit-line-clamp: unset; max-height: none; }
+@media (max-width: 700px) { .fx-layer > .plate-peek { width: 130px; } .plate-peek > .hcard { width: 130px; } }
 /* game: the breakdown is larger than in the reference (12.5 px) — it is read from a distance; a phone keeps it to 13 px. */
 @media (max-width: 700px) { .plate { width: 220px; font-size: 12.5px; padding: 6px 9px 6px 10px; } .plate .who { font-size: 12px; } .plate .big { font-size: 19px; } .plate .terms { gap: 1px 7px; } }
 .flyc { z-index: 3; transform-origin: 50% 50%; }

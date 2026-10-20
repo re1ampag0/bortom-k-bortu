@@ -1146,6 +1146,11 @@ button.star::before {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  /* fix-ui: its empty room lets the pointer through to the lines of the plate of a Volley under it (its panels take presses) */
+  pointer-events: none;
+}
+.middle > * {
+  pointer-events: auto;
 }
 .dock {
   position: absolute;
