@@ -97,3 +97,10 @@ export function tridentSvg(size = 20): string {
   <path d="M12 1.6 L12 8.6 M6.2 3 L6.6 5.6" stroke="#fffbe6" stroke-width=".4" opacity=".8"/>
   <path d="M7.4 21.6 Q9 20.6 10.4 21.4 M13.6 21.4 Q15 20.6 16.6 21.6" fill="none" stroke="#2f7a8a" stroke-width=".9" stroke-linecap="round"/></svg>`;
 }
+
+/**
+ * «Чёрная метка» on a phone: the black blot of the badge (ST3.mark of A5Rig, status3.js) on the picture of the ship in the
+ * head of the plank (A5Phone, frame 1 notes).
+ */
+export const MARK_BLOT_SVG =
+  '<svg width="16" height="16" viewBox="6 6 12 12" aria-hidden="true"><path d="M12 7.4 C13.6 7.8 13.4 9.4 15 9.2 C16.8 9 17 11.2 15.8 12.2 C14.8 13.2 16.6 14.2 15.4 15.6 C14.2 16.8 12.8 15.6 12.1 16.8 C11.3 17.8 9.4 16.8 9.4 15.4 C9.4 14.3 7.4 14.4 7.2 12.8 C7.1 11.2 8.8 11 8.6 9.6 C8.4 8 10.2 7.2 11.2 8 Z" fill="#14100d" stroke="#efe3c8" stroke-width=".5"/><circle cx="16.6" cy="8" r=".6" fill="#14100d"/><circle cx="8" cy="16.2" r=".45" fill="#14100d"/></svg>';

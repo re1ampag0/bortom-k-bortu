@@ -261,8 +261,9 @@ for (const size of SIZES) {
     test('«Чёрная метка»: a small sharp stamp stays on the marked plank and covers nothing', async ({ page }) => {
       await page.goto('?fxScene=mark&speed=normal');
       await page.waitForFunction(() => !!document.querySelector('.fx-layer .blot'), null, { timeout: 30_000, polling: 20 });
-      // the blot of the clip still flies: the stamp waits hidden, as the chip does
-      expect(await page.evaluate(() => Array.from(document.querySelectorAll('[data-fx-mark-stamp]')).map((e) => getComputedStyle(e).visibility))).toEqual(['hidden', 'hidden']);
+      // the blot of the clip still flies: the stamp waits hidden, as the chip does (a5-phone: one stamp — the pin on a laptop,
+      // the blot on a phone, both on the drawing of the ship)
+      expect(await page.evaluate(() => Array.from(document.querySelectorAll('[data-fx-mark-stamp]')).map((e) => getComputedStyle(e).visibility))).toEqual(['hidden']);
       await shot(page, 'mark-flight', size.width);
       await page.waitForFunction(() => {
         const c = document.querySelector('[data-fx-mark]');
@@ -315,10 +316,11 @@ for (const size of SIZES) {
         expect(st.onShip, 'on the drawing of the ship').toBe(true);
         expect(Math.abs(st.width - 30), 'about 30 px').toBeLessThanOrEqual(TOL);
       } else {
-        expect(st.inStatuses, 'on a phone: in the row of statuses').toBe(true);
-        expect(Math.abs(st.width - 28), 'about 28 px').toBeLessThanOrEqual(TOL);
-        expect(st.plankRight - st.right, 'at the right edge of the plank').toBeLessThanOrEqual(12);
-        expect(st.top, 'above the body (the top right corner under the head)').toBeLessThan(st.bodyTop);
+        // a5-phone (A5Phone, frame 1): a black blot on the picture of the ship in the head
+        expect(st.inStatuses).toBe(false);
+        expect(st.onShip, 'on the drawing of the ship').toBe(true);
+        expect(Math.abs(st.width - 15), 'about 15 px').toBeLessThanOrEqual(TOL);
+        expect(st.top, 'in the head, above the body').toBeLessThan(st.bodyTop);
       }
       expect(st.chip).toContain('Чёрная метка +2');
       await shot(page, 'mark-landed', size.width);

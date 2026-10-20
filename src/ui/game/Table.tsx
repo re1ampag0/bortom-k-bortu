@@ -17,8 +17,9 @@ import { hourglassSvg } from './art/table';
 import { wxSvg } from './art/wx';
 import { KNOT_SVG, KNOT_THIN_SVG } from './art/knot';
 import { oakMedal, type OakSign } from './art/oak';
-import { MARK_PIN_SVG, READY_SVG, SOULS_SVG, tridentSvg, statusSvg, type StatusIcon } from './art/status';
-import { stBadge } from './art/status3';
+import { MARK_BLOT_SVG, MARK_PIN_SVG, READY_SVG, SOULS_SVG, tridentSvg, statusSvg, type StatusIcon } from './art/status';
+import { ST3, stBadge } from './art/status3';
+import { FLAME } from './art/fire';
 import { usePhoneLayout } from './Alarm';
 import { TRACK_RULE } from './memo';
 
@@ -354,12 +355,24 @@ function markText(data: GameData): string {
 }
 
 /**
- * «Чёрная метка» on the plank of the marked ship: the torn leaf blackened with soot, pinned with a dagger (A5, MARK_PIN) —
- * on a laptop on the drawing of the ship in the head, on a phone at the right end of the row of statuses. It appears when
- * the blot of the clip lands (statusFx) and goes with the status.
+ * «Чёрная метка» on the plank of the marked ship, on the drawing of the ship in the head: on a laptop the torn leaf blackened
+ * with soot, pinned with a dagger (A5, MARK_PIN); on a phone a black blot (A5Phone). It appears when the blot of the clip
+ * lands (statusFx) and goes with the status.
  */
-function MarkStamp({ cls, hidden }: { cls: string; hidden: boolean }) {
-  return <span className={`mark-stamp ${cls}`} data-fx-mark-stamp aria-hidden style={hidden ? { visibility: 'hidden' } : undefined} dangerouslySetInnerHTML={svg(MARK_PIN_SVG)} />;
+function MarkStamp({ cls, hidden, art = MARK_PIN_SVG }: { cls: string; hidden: boolean; art?: string }) {
+  return <span className={`mark-stamp ${cls}`} data-fx-mark-stamp aria-hidden style={hidden ? { visibility: 'hidden' } : undefined} dangerouslySetInnerHTML={svg(art)} />;
+}
+
+/** The colours of the enamel of a status badge (ST3): the pill of a chip on a phone. */
+const chipColours = (icon?: StatusIcon) => {
+  const t = icon ? ST3[icon] : undefined;
+  return t ? { ['--chip-a' as string]: t.bg[0], ['--chip-b' as string]: t.bg[1] } : {};
+};
+
+/** A phone: «Пожар» is small flames on the drawing of the ship in the head (still flames; CSS makes them flicker). */
+function HeadFire({ n }: { n: number }) {
+  const art = useMemo(() => Array.from({ length: Math.min(3, n) }, () => FLAME(11, false)).join(''), [n]);
+  return <span className="head-fire" aria-hidden dangerouslySetInnerHTML={svg(art)} />;
 }
 
 /** Statuses of a ship with the moment they end (docs/TZ.md, «Принципы стола», п. 2). */
@@ -481,6 +494,35 @@ export function Plank({
     : {};
   const fireLabel = `Пожар ${ship.fires}`;
   const soulsLabel = `Души ${ship.souls}/${d.souls}`;
+  // A phone (A5Phone, frame 1): the statuses are a row of coloured chips under the tracks, «Пожар ×N» among them; three and
+  // more — only the badges (the name stays for the reader and in the window of the rule).
+  const fireChip = phone && ship.fires > 0;
+  const iconsOnly = phone && st.length + (fireChip ? 1 : 0) >= 3;
+  const chipText = (label: string) => (phone ? <span className={iconsOnly ? 'sr-only' : 'chip-label'}>{label}</span> : label);
+  const statusRow = (st.length > 0 || fireChip) && (
+    <div className={`plank-statuses${iconsOnly ? ' icons' : ''}`} data-fx-statuses>
+      {st.map((x) => (
+        <InfoTip
+          key={x.label}
+          className={`status-chip${x.mark ? ' mark' : ''}`}
+          title={x.label}
+          text={x.info ?? x.hint}
+          off={!!plate}
+          data={{ 'data-fx-status': x.label, 'data-fx-mark': x.mark || undefined }}
+          style={{ ...(phone ? chipColours(x.icon) : {}), ...(x.flag && fxHidden?.includes(x.flag) ? { visibility: 'hidden' } : {}) }}
+        >
+          {x.icon && <span className="chip-icon" dangerouslySetInnerHTML={svg(stBadge(x.icon, 18) || statusSvg(x.icon))} />}
+          {chipText(x.label)}
+        </InfoTip>
+      ))}
+      {fireChip && (
+        <InfoTip className="status-chip fire" title={fireLabel} text={FIRE_INFO} off={!!plate} data={{ 'data-fx-fires': true, 'data-testid': `fire-${ship.code}` }} style={chipColours('fire')}>
+          <span className="chip-icon" dangerouslySetInnerHTML={svg(stBadge('fire', 18))} />
+          {chipText(`Пожар ×${ship.fires}`)}
+        </InfoTip>
+      )}
+    </div>
+  );
   const legendTitle = ship.legend
     ? `Легенда «${legendName}»: ${affordable ? 'нажмите, чтобы прочитать' : 'не хватает Пороха или Душ'}`
     : `Легенда «${legendName}» сыграна`;
@@ -508,7 +550,8 @@ export function Plank({
       >
         <span className="ship-art">
           <span className="ship-pic" dangerouslySetInnerHTML={svg(shipSvg(ship.code, 58, 28, `plank-${ship.code}`))} />
-          {marked && <MarkStamp cls="wide" hidden={markHidden} />}
+          {phone && ship.fires > 0 && <HeadFire n={ship.fires} />}
+          {marked && (phone ? <MarkStamp cls="blot" hidden={markHidden} art={MARK_BLOT_SVG} /> : <MarkStamp cls="wide" hidden={markHidden} />)}
         </span>
         <b className="plank-name">
           <span className="wide">{d.name}</span>
@@ -589,32 +632,14 @@ export function Plank({
           </button>
         )}
       </header>
-      {st.length > 0 && (
-        <div className="plank-statuses" data-fx-statuses>
-          {st.map((x) => (
-            <InfoTip
-              key={x.label}
-              className={`status-chip${x.mark ? ' mark' : ''}`}
-              title={x.label}
-              text={x.info ?? x.hint}
-              off={!!plate}
-              data={{ 'data-fx-status': x.label, 'data-fx-mark': x.mark || undefined }}
-              style={x.flag && fxHidden?.includes(x.flag) ? { visibility: 'hidden' } : undefined}
-            >
-              {x.icon && <span className="chip-icon" dangerouslySetInnerHTML={svg(stBadge(x.icon, 18) || statusSvg(x.icon))} />}
-              {x.label}
-            </InfoTip>
-          ))}
-          {marked && <MarkStamp cls="narrow" hidden={markHidden} />}
-        </div>
-      )}
+      {!phone && statusRow}
       <div className="plank-body">
         <div className="tracks" key={fxGen}>
           {trackEl('hull')}
           <div className="track-row2">{(['sails', 'guns', 'crew'] as const).map(trackEl)}</div>
         </div>
         <div className="badges">
-          {ship.fires > 0 && (
+          {ship.fires > 0 && !phone && (
             <InfoTip className="badge fire" title={fireLabel} text={FIRE_INFO} off={!!plate} data={{ 'data-fx-fires': true, 'data-testid': `fire-${ship.code}` }}>
               <span className="chip-icon" dangerouslySetInnerHTML={svg(stBadge('fire', 18))} />
               {fireLabel}
@@ -635,6 +660,7 @@ export function Plank({
           )}
         </div>
       </div>
+      {phone && statusRow}
       {buttons.length > 0 && (
         <div className="plank-buttons-wrap" onClick={(e) => e.stopPropagation()}>
           <div className="plank-buttons" ref={buttonsRef}>
