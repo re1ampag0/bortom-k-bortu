@@ -2,7 +2,7 @@
 // docs/mockups/a5/fx/src/template.html, fx3.js; ANIMATIONS.md §3.10). It stays for the whole round and lies in the
 // layer of the weather (.fx-weather, clipped to the water): under the traces and under the planks.
 // game: drawn in the coordinates of the real sea (.sea-water), the prototype's numbers of its 1022×404 sea scale with it;
-// the loops are endless Web Animations of the weather layer (no SMIL: the layer keeps them, «Сразу итог» leaves them);
+// CSS keyframes live with the weather SVG (no SMIL); «Сразу итог» leaves them, .wx-paused freezes their phase;
 // a phone has the same weather as a laptop (PH 7: all the drops, the blurred clouds); «простые спецэффекты» — the weather stands still
 // (the same picture, nothing moves, no filters). The planks pitch (storm) or heave (the Ninth wave) by CSS (game.css,
 // .board[data-wx-move]), the sea picture is tinted by CSS (.board[data-wx]).
@@ -28,11 +28,29 @@ interface Wx {
   moving: boolean;
   /** blur, turbulence */
   soft: boolean;
+  rules: string[];
 }
-/** An endless loop of the weather (a negative delay — a phase); nothing when the weather stands still. */
-function loop(w: Wx, el: Element, kf: Keyframe[], dur: number, delay = 0, easing = 'linear'): void {
+let weatherAnimation = 0;
+/** CSS on SVG paint/transform works in WebKit; remove the SVG and its scoped rules go with it. */
+function animateWeather(w: Wx, el: Element, kf: Keyframe[], dur: number, delay = 0, easing = 'linear', once = false): void {
   if (!w.moving) return;
-  el.animate(kf, { duration: dur, delay, iterations: Infinity, easing });
+  const name = `wx-loop-${++weatherAnimation}`;
+  el.classList.add('wx-loop', name);
+  const frames = kf.map((frame, i) => {
+    const declarations = Object.entries(frame).filter(([key]) => !['offset', 'easing', 'composite'].includes(key))
+      .map(([key, value]) => `${key.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)}:${value}${key === 'strokeDashoffset' && typeof value === 'number' ? 'px' : ''}`);
+    // WAAPI eases the entire cycle; CSS eases each interval. Split the original cubic at its
+    // midpoint for the three-frame breathing loops, preserving the same movement at every time.
+    const segmentEase = easing === 'ease-in-out' && kf.length === 3
+      ? (i === 0 ? 'cubic-bezier(.42,0,.71,.5)' : 'cubic-bezier(.29,.5,.58,1)') : easing;
+    declarations.push(`animation-timing-function:${segmentEase}`);
+    return `${(frame.offset ?? i / (kf.length - 1)) * 100}%{${declarations.join(';')}}`;
+  }).join('');
+  w.rules.push(`@keyframes ${name}{${frames}} .${name}{animation:${name} ${dur}ms linear ${delay}ms ${once ? '1 forwards' : 'infinite'}}`);
+}
+/** An endless loop with its original negative delay (phase); nothing in simple effects. */
+function loop(w: Wx, el: Element, kf: Keyframe[], dur: number, delay = 0, easing = 'linear'): void {
+  animateWeather(w, el, kf, dur, delay, easing);
 }
 /** An svg over the sea (its own coordinates: 0..W × 0..H). */
 function seaSvg(w: Wx, host: HTMLElement, cls: string, inner: string): SVGSVGElement {
@@ -186,7 +204,7 @@ function clear(w: Wx, host: HTMLElement): void {
 <mask id="wxSunM"><rect width="${R1(W)}" height="${R1(H)}" fill="#fff"/>${planks.map((b) => `<rect x="${R1(b.x)}" y="${R1(b.y)}" width="${R1(b.w)}" height="${R1(b.h)}" fill="#000"/>`).join('')}</mask></defs><rect width="${R1(W)}" height="${R1(H)}" fill="url(#wxSun)" mask="url(#wxSunM)"/>
 ${w.moving ? glints : ''}`);
   // it comes in a little stronger and settles
-  if (w.moving) s.animate([{ opacity: 1 }, { opacity: 0.8 }], { duration: 2200, fill: 'forwards', easing: 'ease-out' });
+  if (w.moving) animateWeather(w, s, [{ opacity: 1 }, { opacity: 0.8 }], 2200, 0, 'ease-out', true);
   else s.style.opacity = '0.8';
   s.querySelectorAll('.sk').forEach((e) => loop(w, e, [{ opacity: 0 }, { opacity: 1 }, { opacity: 0 }], rnd(1.6, 3) * 1000, -rnd(0, 3000)));
 }
@@ -234,7 +252,7 @@ export function drawWeather(ctx: FxCtx, host: HTMLElement, key: string | null, m
   if (moving && (key === 'storm' || key === 'wave') && !planksStillForTest()) board.dataset.wxMove = key;
   else delete board.dataset.wxMove;
   const sea = bx(ctx, water);
-  const w: Wx = { ctx, sea, W: sea.w, H: sea.h, kx: sea.w / 1022, ky: sea.h / 404, moving, soft: moving && filters(ctx) };
+  const w: Wx = { ctx, sea, W: sea.w, H: sea.h, kx: sea.w / 1022, ky: sea.h / 404, moving, soft: moving && filters(ctx), rules: [] };
   if (key === 'storm') storm(w, host);
   else if (key === 'wave') wave(w, host);
   else if (key === 'maelstrom') maelstrom(w, host);
@@ -245,4 +263,9 @@ export function drawWeather(ctx: FxCtx, host: HTMLElement, key: string | null, m
   else if (key === 'moon') moon(w, host);
   else if (key === 'reefs') reefs(w, host);
   else if (key === 'fleet') fleet(w, host);
+  if (w.rules.length) {
+    const style = document.createElementNS(NS, 'style');
+    style.textContent = w.rules.join('\n');
+    host.querySelector('svg')!.appendChild(style);
+  }
 }

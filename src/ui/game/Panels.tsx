@@ -18,23 +18,12 @@ import type { GameData, Side, Track } from '../../engine/types';
 import { wxSvg } from './art/wx';
 import { HandCard } from './Hand';
 import { OakButton } from './Table';
+import { DecisionSheet, DecisionActions, DecisionStepper } from './DecisionSheet';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const nick = (data: GameData, code: string) => `«${shipData(data, code).nick}»`;
 /** «восстановить 1 клетку / 2 клетки / 5 клеток». */
 const cellsWord = (n: number) => `${n} ${n === 1 ? 'клетку' : n < 5 ? 'клетки' : 'клеток'}`;
-
-function Panel({ title, sub, children, tone, testid }: { title: string; sub?: string; children: React.ReactNode; tone?: string; testid?: string }) {
-  return (
-    <section className={`panel ${tone ?? ''}`} data-testid={testid}>
-      <header className="panel-head">
-        <b>{title}</b>
-        {sub && <span className="panel-sub">{sub}</span>}
-      </header>
-      <div className="panel-body">{children}</div>
-    </section>
-  );
-}
 
 // ——— Volley ———
 
@@ -297,19 +286,9 @@ export function ChargeButtons({
 /** The attacker while the enemy decides on a Reaction (P8): what was fired, who decides, a calm waiting sign. */
 export function ReactionWaitPanel({ line, who }: { line: string; who: string }) {
   return (
-    <section className="panel reaction-wait" data-testid="reaction-wait" aria-live="polite">
-      <div className="panel-head">
-        <b>{line}</b>
-        <span className="wait-who">
-          <span className="wait-dots" aria-hidden>
-            <i />
-            <i />
-            <i />
-          </span>
-          {who}
-        </span>
-      </div>
-    </section>
+    <span className="reaction-wait-pill" data-testid="reaction-wait" role="img" aria-label={`${line} ${who}`} title={`${line} ${who}`}>
+      <span className="wait-dots" aria-hidden><i /><i /><i /></span>
+    </span>
   );
 }
 
@@ -318,21 +297,11 @@ export function ReactionWaitPanel({ line, who }: { line: string; who: string }) 
 export function JackPanel({ s, data, ship, onAct }: { s: GameState; data: GameData; ship: string; onAct: (a: Action) => void }) {
   const legend = cardByCode(data, `${ship}-Л`);
   return (
-    <Panel
-      title={`${nick(data, ship)} тонет! Сыграть «${legend.name}»?`}
-      sub={`${legend.big}. Стоимость ${powderWord(legend.cost)}, в Трюме ${s.teams[s.ships[ship].side].powder}.`}
-      tone="reaction"
-      testid="jack-panel"
-    >
-      <div className="panel-actions">
-        <button className="btn" onClick={() => onAct({ type: 'jack', play: false })}>
-          Нет — утонуть
-        </button>
-        <button className="btn primary legend-btn" onClick={() => onAct({ type: 'jack', play: true })}>
-          Сыграть · {powderWord(legend.cost)}
-        </button>
-      </div>
-    </Panel>
+    <DecisionSheet title={legend.name} sub={`${nick(data, ship)} тонет! ${legend.big}. Стоимость ${powderWord(legend.cost)}.`}
+      hold={{powder: s.teams[s.ships[ship].side].powder, cap: data.econ.cap}} testid="jack-panel"
+      actions={<DecisionActions
+        cancel={<button className="btn" onClick={() => onAct({type: 'jack', play: false})}>Нет — утонуть</button>}
+        primary={{key: 'jack-play', label: `Сыграть · ${powderWord(legend.cost)}`, onClick: () => onAct({type: 'jack', play: true})}} />} />
   );
 }
 
@@ -342,28 +311,17 @@ export function TortugaPanel({ s, data, side, onAct }: { s: GameState; data: Gam
   const total = Object.values(draws).reduce((a, b) => a + b, 0);
   const max = Math.min(data.rules.seaTortuga, s.teams[side].powder);
   return (
-    <Panel title="Тортуга: сколько карт взять?" sub={`1 Порох за карту, не больше ${data.rules.seaTortuga}. В Трюме ${s.teams[side].powder}.`} testid="tortuga-panel">
-      {seats.map((x) => (
-        <div key={x.code} className="stepper">
-          <span>{nick(data, x.code)}</span>
-          <button className="btn small" onClick={() => setDraws({ ...draws, [x.code]: Math.max(0, (draws[x.code] ?? 0) - 1) })}>
-            −
-          </button>
-          <b>{draws[x.code] ?? 0}</b>
-          <button className="btn small" onClick={() => total < max && setDraws({ ...draws, [x.code]: (draws[x.code] ?? 0) + 1 })}>
-            +
-          </button>
-        </div>
-      ))}
-      <div className="panel-actions">
-        <button className="btn" onClick={() => onAct({ type: 'tortuga', side, draws: {} })}>
-          Не брать
-        </button>
-        <button className="btn primary" onClick={() => onAct({ type: 'tortuga', side, draws })}>
-          Взять {total} · {powderWord(total)}
-        </button>
-      </div>
-    </Panel>
+    <DecisionSheet title="Тортуга" sub={`1 Порох за карту, не больше ${data.rules.seaTortuga}.`}
+      hold={{powder: s.teams[side].powder, cap: data.econ.cap}} testid="tortuga-panel"
+      actions={<DecisionActions cancel={<button className="btn" onClick={() => onAct({ type: 'tortuga', side, draws: {} })}>Не брать</button>}
+        primary={{key: 'tortuga-take', label: `Взять ${total} · ${powderWord(total)}`, disabled: total === 0 ? 'Выберите, сколько карт взять' : null,
+          onClick: () => onAct({type: 'tortuga', side, draws})}} />}>
+      {seats.map(x => <DecisionStepper key={x.code}
+        label={<b className="ds-ship" data-ship={x.code} style={{['--ship' as string]: shipData(data, x.code).color}}>{nick(data, x.code)}</b>}
+        value={draws[x.code] ?? 0} minusDisabled={!draws[x.code]} plusDisabled={total >= max}
+        onMinus={() => setDraws({...draws, [x.code]: Math.max(0, (draws[x.code] ?? 0) - 1)})}
+        onPlus={() => total < max && setDraws({...draws, [x.code]: (draws[x.code] ?? 0) + 1})} />)}
+    </DecisionSheet>
   );
 }
 
@@ -449,7 +407,13 @@ export function ChoicePanel({
     return 'выбрана';
   };
   return (
-    <Panel title={`${nick(data, seat)}: ${text.title}`} sub={text.sub} testid="choice-panel">
+    <DecisionSheet title={text.title} sub={`${nick(data, seat)}: ${text.sub}`} testid="choice-panel"
+      hold={{powder: s.teams[s.ships[seat].side].powder, cap: data.econ.cap}}
+      actions={<DecisionActions
+        cancel={<button className="btn" onClick={() => setPicks([])}>Сбросить выбор</button>}
+        primary={{key: 'choice-done', label: `Готово (${picks.length} из ${allowed.count})`,
+          disabled: picks.length !== allowed.count ? `Выберите ${allowed.count}` : null,
+          onClick: () => onAct({type: 'choose', seat, cards: picks})}} />}>
       {tia ? (
         <div className="tia-opts">
           {allowed.from.map((card) => (
@@ -470,19 +434,7 @@ export function ChoicePanel({
           ))}
         </div>
       )}
-      <div className="panel-actions">
-        <button className="btn" onClick={() => setPicks([])}>
-          Сбросить выбор
-        </button>
-        <button
-          className="btn primary"
-          aria-disabled={picks.length !== allowed.count}
-          onClick={() => picks.length === allowed.count && onAct({ type: 'choose', seat, cards: picks })}
-        >
-          Готово ({picks.length} из {allowed.count})
-        </button>
-      </div>
-    </Panel>
+    </DecisionSheet>
   );
 }
 
@@ -536,14 +488,18 @@ export function CardParamsPanel({
   // The ship the engine repairs (repairTarget): the ally's for «Норрингтон на борту», the Dutchman's for «Сердце бьётся».
   const repairShip = needs.repairShip ? s.ships[needs.repairShip] : null;
   const cells = needs.souls !== null ? 2 * (mode.souls ?? needs.souls) : needs.cells;
-  const title = repairShip
-    ? `${c.name} → ${nick(data, repairShip.code)}${cells > 0 ? `: восстановить ${cellsWord(cells)}` : ''}`
-    : `${nick(data, mode.seat)}: «${c.name}»`;
+  const sub = repairShip
+    ? `→ ${nick(data, repairShip.code)}: ${cells > 0 ? `восстановить ${cellsWord(cells)}` : c.big}`
+    : `${nick(data, mode.seat)}: ${c.big}`;
   const split = mode.repair ?? {};
   const used = TRACKS.reduce((n, t) => n + (split[t] ?? 0), 0);
   const canRegroup = needs.regroup && refusal(s, { ...action, regroup: true }, data) === null;
   return (
-    <Panel title={title} sub={c.big} testid="card-panel">
+    <DecisionSheet title={c.name} sub={sub} testid="card-panel"
+      hold={{powder: s.teams[own.side].powder, cap: data.econ.cap}}
+      actions={<DecisionActions cancel={<button className="btn" onClick={onCancel}>Отмена</button>}
+        primary={{key:'card-play', testid:'play-card', label:`Сыграть${c.cost ? ` · ${c.cost} П` : ''}${c.soul ? ` · ${c.soul} Д` : ''}`,
+          disabled: why, onClick: () => onAct(action)}} />}>
       {needs.ship && ally && (
         <div className="choices">
           {[own, ally].map((x) => (
@@ -555,13 +511,13 @@ export function CardParamsPanel({
         </div>
       )}
       {needs.souls !== null && (
-        <div className="stepper">
+        <div className="stepper ds-stepper">
           <span>Потратить Души (2 клетки за каждую)</span>
-          <button className="btn small" onClick={() => setMode({ ...mode, souls: Math.max(0, (mode.souls ?? needs.souls!) - 1), repair: null })}>
+          <button className="btn ds-round" onClick={() => setMode({ ...mode, souls: Math.max(0, (mode.souls ?? needs.souls!) - 1), repair: null })}>
             −
           </button>
           <b>{mode.souls ?? needs.souls}</b>
-          <button className="btn small" onClick={() => setMode({ ...mode, souls: Math.min(needs.souls!, (mode.souls ?? needs.souls!) + 1), repair: null })}>
+          <button className="btn ds-round" onClick={() => setMode({ ...mode, souls: Math.min(needs.souls!, (mode.souls ?? needs.souls!) + 1), repair: null })}>
             +
           </button>
         </div>
@@ -577,16 +533,16 @@ export function CardParamsPanel({
             if (missing <= 0) return null;
             const n = split[t] ?? 0;
             return (
-              <div key={t} className="stepper" data-track={t}>
+              <div key={t} className="stepper ds-stepper" data-track={t}>
                 <span>
                   {TRACK_NAME[t]} {repairShip.tracks[t]}/{startValue(data, repairShip.code, t)}
                 </span>
-                <button className="btn small" onClick={() => setMode({ ...mode, repair: { ...split, [t]: Math.max(0, n - 1) } })}>
+                <button className="btn ds-round" onClick={() => setMode({ ...mode, repair: { ...split, [t]: Math.max(0, n - 1) } })}>
                   −
                 </button>
                 <b>{n}</b>
                 <button
-                  className="btn small"
+                  className="btn ds-round"
                   onClick={() => n < missing && used < cells && setMode({ ...mode, repair: { ...split, [t]: n + 1 } })}
                 >
                   +
@@ -603,16 +559,7 @@ export function CardParamsPanel({
         </label>
       )}
       {why && <p className="why">{why}</p>}
-      <div className="panel-actions">
-        <button className="btn" onClick={onCancel}>
-          Отмена
-        </button>
-        <button className="btn primary" data-testid="play-card" aria-disabled={!!why} onClick={() => !why && onAct(action)}>
-          Сыграть{c.cost ? ` · ${c.cost} П` : ''}
-          {c.soul ? ` · ${c.soul} Д` : ''}
-        </button>
-      </div>
-    </Panel>
+    </DecisionSheet>
   );
 }
 
@@ -626,7 +573,9 @@ export function ConfirmPanel({
   onYes,
   onNo,
   testid,
+  hold,
 }: {
+  hold?: {powder: number; cap: number};
   title: string;
   sub?: string;
   yes: string;
@@ -636,16 +585,9 @@ export function ConfirmPanel({
   testid?: string;
 }) {
   return (
-    <Panel title={title} sub={sub} testid={testid}>
-      <div className="panel-actions">
-        <button className="btn" onClick={onNo}>
-          {no}
-        </button>
-        <button className="btn primary" data-testid="confirm-yes" onClick={onYes}>
-          {yes}
-        </button>
-      </div>
-    </Panel>
+    <DecisionSheet title={title} sub={sub} testid={testid} hold={hold}
+      actions={<DecisionActions cancel={<button className="btn" onClick={onNo}>{no}</button>}
+        primary={{key:'confirm-yes',testid:'confirm-yes',label:yes,onClick:onYes}} />} />
   );
 }
 
@@ -654,11 +596,13 @@ export function PlansPanel({ s, data, seat, onDone, onCancel }: { s: GameState; 
   const room = data.rules.plansMax - holder.plans.length;
   const [picks, setPicks] = useState<string[]>([]);
   return (
-    <Panel
-      title={`${nick(data, seat)}: отложить карты в Планы?`}
-      sub={`До ${room} ${room === 1 ? 'карты' : 'карт'} с руки. Реакцию из Плана можно сыграть сверх лимита Парусов, бонус «План:» действует.`}
-      testid="plans-panel"
-    >
+    <DecisionSheet title="Планы"
+      sub={`${nick(data, seat)}: до ${room} ${room === 1 ? 'карты' : 'карт'} с руки. Реакцию из Плана можно сыграть сверх лимита Парусов, бонус «План:» действует.`}
+      testid="plans-panel" hold={{powder:s.teams[holder.side].powder,cap:data.econ.cap}}
+      tools={<button type="button" className="btn ds-close" aria-label="Отмена" title="Отмена" onClick={onCancel}>×</button>}
+      actions={<DecisionActions cancel={<button className="btn" data-testid="no-plans" onClick={() => onDone([])}>Без Планов</button>}
+        primary={{key:'plans-done',label:`Отложить ${picks.length} и закончить ход`,
+          disabled:picks.length===0?'Выберите карты в Планы':null,onClick:()=>onDone(picks)}} />}>
       <div className="choice-cards">
         {holder.hand.map((card) => (
           <HandCard
@@ -672,18 +616,7 @@ export function PlansPanel({ s, data, seat, onDone, onCancel }: { s: GameState; 
           />
         ))}
       </div>
-      <div className="panel-actions">
-        <button className="btn" onClick={onCancel}>
-          Отмена
-        </button>
-        <button className="btn" data-testid="no-plans" onClick={() => onDone([])}>
-          Без Планов
-        </button>
-        <button className="btn primary" aria-disabled={picks.length === 0} onClick={() => picks.length > 0 && onDone(picks)}>
-          Отложить {picks.length} и закончить ход
-        </button>
-      </div>
-    </Panel>
+    </DecisionSheet>
   );
 }
 

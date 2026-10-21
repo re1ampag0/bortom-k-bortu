@@ -127,13 +127,44 @@ export function at(ctx: FxCtx, t: number, fn: () => void): void {
     if (ctx.run === ctx.live()) fn();
   }, ms(ctx, t));
 }
+// ui-4 Г20: only a particle's visible interval needs a composited surface. Keep the native
+// Animation (and its finished promise) intact for pause/skip; display is restored on reuse.
+const animatedParticles = new WeakSet<Element>();
+const particleSlots = new WeakMap<Element, {display: string; waiting: boolean; hidden: boolean}>();
+const PARTICLE_TAGS = new Set(['circle', 'ellipse', 'rect', 'path', 'line', 'polygon', 'polyline']);
+const PARTICLE_CLASSES = new Set(['puff', 'spark', 'splinter', 'splash', 'ripple', 'flash']);
 export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation {
   // On a phone the default opacity:0 already hides a delayed effect. Backwards fill would
   // keep its future transform in the compositor for the entire wait, even while invisible.
   const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
   const shownFill = phone && delay > 0 && fill === 'both' ? 'forwards' : fill;
   const frames = phone ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
-  return el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill: shownFill });
+  const previous = particleSlots.get(el);
+  if (previous?.hidden) (el as HTMLElement | SVGElement).style.display = previous.display;
+  particleSlots.delete(el); // another animation of this element takes ownership
+  const first = !animatedParticles.has(el);
+  animatedParticles.add(el);
+  const animation = el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill: shownFill });
+  const particle = phone && Number(frames.at(-1)?.opacity) === 0 &&
+    ((el instanceof SVGElement && PARTICLE_TAGS.has(el.localName) && !!el.closest('.fx-layer, .fx-scars, .plank-scars')) ||
+      (el.parentElement === ctx.layer && [...el.classList].some(c => PARTICLE_CLASSES.has(c))));
+  if (particle) {
+    const style = (el as HTMLElement | SVGElement).style;
+    const slot = {display: style.display, waiting: first && delay > 0, hidden: first && delay > 0};
+    particleSlots.set(el, slot);
+    if (slot.waiting) {
+      style.display = 'none';
+      at(ctx, delay, () => {
+        if (particleSlots.get(el) !== slot || !slot.waiting) return;
+        style.display = slot.display; slot.waiting = slot.hidden = false;
+      });
+    }
+    animation.finished.then(() => {
+      if (ctx.run !== ctx.live() || particleSlots.get(el) !== slot) return;
+      style.display = 'none'; slot.hidden = true; slot.waiting = false;
+    }, () => {});
+  }
+  return animation;
 }
 export function bx(ctx: FxCtx, el: Element): Box {
   // in the px of the stage (stage.ts): the effects are put inside the scaled screen

@@ -81,7 +81,7 @@ const gen = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickGeni
 const dat = (ctx: FxCtx, code: string) => `«${shipData(ctx.data, code).nickDative}»`;
 
 /** The card being played: it lies at the middle of the table until it resolves (a Reaction window may come between). */
-let CUR_CARD: { el: FlyCard; code: string } | null = null;
+let CUR_CARD: { el: FlyCard; code: string; size?: { w: number; h: number }; fade?: Animation } | null = null;
 /** For PLAY.cancel (volley.ts): the card cancelled crumbles. */
 export const curCard = () => CUR_CARD;
 
@@ -646,7 +646,7 @@ function cardSpot(ctx: FxCtx, ship?: string) {
 function cardFrom(ctx: FxCtx): Pt {
   const s = (CUR_CARD && CUR_CARD.el._pos) || cardSpot(ctx);
   const sc = s.s ?? 0.9;
-  return { x: s.x + (CARD_W / 2) * sc, y: s.y + (CARD_H / 2) * sc };
+  return { x: s.x + ((CUR_CARD?.size?.w ?? CARD_W) / 2) * sc, y: s.y + ((CUR_CARD?.size?.h ?? CARD_H) / 2) * sc };
 }
 /** An effect of a card: a projectile from the card into the cells (damage). */
 function cardDamage(ctx: FxCtx, e: { ship: string; track: Track; amount: number; toHull: number }, from: Pt, t0: number): number {
@@ -731,10 +731,22 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
   if (CUR_CARD && CUR_CARD.el.isConnected) A(ctx, CUR_CARD.el, [{ opacity: 1 }, { opacity: 0 }], 200, 0, 'ease-in', 'forwards');
   hint(ctx, `${nick(ctx, c.ship)}: ${cardName(ctx, c.card)}${c.target ? ` → ${nick(ctx, c.target)}` : ''}`);
   if (c.cost) payKegs(ctx, sideOf(ctx, c.ship), c.cost, 0);
-  const spot = cardSpot(ctx, c.ship);
-  const el = flyCard(ctx, c.card, cardOrigin(ctx, c.card, c.seat), spot, 0, 500, { ship: c.ship, legend });
-  CUR_CARD = { el, code: c.card };
-  A(ctx, el.firstElementChild!, [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], 260, 500, 'ease-out', 'none');
+  const spot = cardSpot(ctx, c.ship), origin = cardOrigin(ctx, c.card, c.seat);
+  const el = flyCard(ctx, c.card, origin, spot, 0, T.card.fly, { ship: c.ship, legend });
+  const size = { w: el.offsetWidth, h: el.offsetHeight }, g = gapBox(ctx);
+  const info = ctx.board.querySelector('[data-testid="middle-info"]');
+  const lastTop = info ? bx(ctx, info).y : g.b - LAST_H;
+  spot.x = Math.max(8, Math.min(ctx.board.clientWidth - size.w * spot.s - 8, spot.x));
+  spot.y = Math.min(spot.y, lastTop - size.h * spot.s - 8);
+  // Use the actual card including its ship footer, with an unambiguous top-left origin.
+  el.style.transformOrigin = '0 0';
+  el.getAnimations().forEach(a => a.cancel());
+  A(ctx, el, [{ opacity: 1, transform: `translate(${origin.x}px,${origin.y}px) rotate(${origin.r || 0}deg) scale(${origin.s || 1})` },
+    { opacity: 1, transform: `translate(${spot.x}px,${spot.y}px) scale(${spot.s})` }], T.card.fly, 0, 'cubic-bezier(.2,.8,.3,1.1)', 'forwards');
+  el._pos = spot;
+  const fade = A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], T.card.fade, T.card.show - T.card.fade, 'ease-in', 'forwards');
+  CUR_CARD = { el, code: c.card, size, fade };
+  A(ctx, el.firstElementChild!, [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], T.card.settle, T.card.fly, 'ease-out', 'none');
   if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${spot.x + (CARD_W / 2) * spot.s} ${spot.y + (CARD_H / 2) * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
   // game: shorter than the reference (900 / 700 ms): players found the card at the middle hung too long. The full text
   // stays a press away (the Journal, «Сразу итог»).
@@ -758,10 +770,9 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
   }
   await wait(ctx, t + 350);
   if (c.resolvedTo) { // resolved at once — the card goes to the discard (or is gone for good)
-    const db = deckBox(ctx);
-    A(ctx, el, [{ opacity: 1, transform: `translate(${spot.x}px,${spot.y}px) scale(${spot.s})` }, { opacity: 0, transform: `translate(${db.x}px,${db.y - 20}px) scale(.3)` }], 450, 0, 'ease-in', 'forwards');
+    FADING = fade.finished.then(() => el.remove(), () => {});
     CUR_CARD = null;
-    await wait(ctx, 350);
+    await FADING;
   }
 }
 
@@ -869,7 +880,7 @@ export const CARD_SCENE: FxScene = {
     if (CUR_CARD && !item.cardOpen) {
       const el = CUR_CARD.el;
       // game: the queue may end here, with no clip to clear the layer after it — the card leaves the layer when faded.
-      FADING = A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards').finished.then(() => el.remove(), () => {});
+      FADING = (CUR_CARD.fade ?? A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], T.card.fade, 0, 'ease-in', 'forwards')).finished.then(() => el.remove(), () => {});
       CUR_CARD = null;
     }
   },

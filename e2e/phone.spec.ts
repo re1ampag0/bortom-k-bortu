@@ -6,8 +6,8 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 const SHOTS = 'docs/screenshots/p7';
 
 /** Two people on one screen, seed 1: placement of both teams, then the Pirates at the table. */
-async function startDuo(page: Page) {
-  await page.goto('?seed=1&speed=instant');
+async function startDuo(page: Page, extra = '') {
+  await page.goto(`?seed=1&speed=instant${extra}`);
   await page.getByTestId('quick-duo').click();
   await page.getByTestId('prep-start').click();
   await page.getByTestId('placement-done').click();
@@ -266,4 +266,25 @@ test('laptop 1366×660: the log, the rules and a discard stay wide', async ({ pa
   await page.getByTestId('plank-Ж').locator('.plank-head').click({ position: { x: 8, y: 8 } });
   await page.getByTestId('ship-sheet').getByRole('button', { name: /^Сброс:/ }).click();
   await wide(page.getByTestId('discard'), '3-discard');
+});
+
+// ui-4: no painted scrollbar; the native strip and the position dots remain.
+test('phone hand: hidden scrollbar keeps scrolling and the dots', async ({ page }) => {
+  for (const height of [680, 740]) {
+    await page.setViewportSize({ width: 430, height });
+    await startDuo(page, '&hand=8');
+    const row = page.locator('.hand-cards');
+    const css = await row.evaluate(e => ({
+      scrollbar: getComputedStyle(e).scrollbarWidth,
+      webkit: getComputedStyle(e, '::-webkit-scrollbar').display,
+      overflow: getComputedStyle(e).overflowX,
+      touch: getComputedStyle(e).touchAction,
+      canScroll: e.scrollWidth > e.clientWidth,
+    }));
+    expect(css).toEqual({ scrollbar: 'none', webkit: 'none', overflow: 'auto', touch: 'pan-x', canScroll: true });
+    await expect(page.locator('.hand-dots i')).toHaveCount(8);
+    await row.evaluate(e => e.scrollTo({ left: e.scrollWidth, behavior: 'instant' }));
+    await expect.poll(() => row.evaluate(e => e.scrollLeft)).toBeGreaterThan(0);
+    expect(await page.evaluate(() => document.scrollingElement!.scrollLeft)).toBe(0);
+  }
 });

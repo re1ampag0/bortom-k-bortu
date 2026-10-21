@@ -84,8 +84,11 @@ test.describe('laptop 1366×660', () => {
     await expect(page.getByTestId('instruction')).toContainText('Компания (бот) решает', { timeout: 30_000 });
     await page.locator('[data-testid="pause-show"]:visible').click();
     const nick = data.ships.find((x) => x.code === target)!.nick;
-    await expect(plate).toContainText(new RegExp(`Залп «Жемчужина» → «${nick}»: \\d+ по Корпусу\\. Компания решает, ответить ли Реакцией…`));
-    await expect(plate).toContainText('Бот думает…');
+    await expect(page.getByTestId(`plank-${target}`).getByTestId('reaction-wait')).toBeVisible();
+    await expect(plate).toHaveAttribute('aria-label', new RegExp(`Залп «Жемчужина» → «${nick}»: \\d+ по Корпусу\\. Компания решает, ответить ли Реакцией… Бот думает…`));
+    await expect(plate.locator('.wait-dots i')).toHaveCount(3);
+    await expect(page.getByTestId('instruction')).toContainText('Противник может ответить Реакцией…');
+    await expect(page.locator('.dock')).toHaveCount(0);
     // The enemy's Reactions are not named anywhere; the status bar names the team, not the ship.
     await expect(page.getByTestId('instruction')).toContainText('Компания (бот) решает');
     await expect(page.locator('.reaction-opt')).toHaveCount(0);
@@ -162,8 +165,8 @@ test.describe('laptop 1366×660', () => {
   });
 });
 
-test.describe('phone 430×932', () => {
-  test.use({ viewport: { width: 430, height: 932 } });
+test.describe('phone 430×740', () => {
+  test.use({ viewport: { width: 430, height: 740 } });
 
   test('the Reaction window: a sheet with the Reactions as cards, a press chooses, «i» opens the card and keeps the choice, «Сыграть» from it plays', async ({ page }) => {
     await duoReactionWindow(page, true);
@@ -175,10 +178,10 @@ test.describe('phone 430×932', () => {
     const row = panel.locator('.as-card').first();
     const code = (await row.getAttribute('data-card'))!;
     const name = cardByCode(data, code).name;
-    await expect(row.locator('.ro-effect')).toContainText('Залп');
+    await expect(row.getByTestId('hcard-strip')).toContainText('Залп');
     // A press on the card chooses the Reaction.
     await row.locator('.hcard').click();
-    await expect(row.getByTestId('play-reaction')).toHaveText(`Сыграть «${name}»`);
+    await expect(panel.getByTestId('play-reaction').locator('.oak-pan b')).toHaveText(`Сыграть «${name}»`);
     await expect(row).toHaveClass(/on/);
     await page.screenshot({ path: `${SHOTS}/phone-reaction-window.png` });
     // «i» — the card in full; closing it brings back the window with the choice kept.
@@ -187,7 +190,7 @@ test.describe('phone 430×932', () => {
     await page.screenshot({ path: `${SHOTS}/phone-reaction-card.png` });
     await page.getByTestId('card-detail').getByRole('button', { name: 'Закрыть' }).click();
     await expect(page.getByTestId('card-detail')).toBeHidden();
-    await expect(row.getByTestId('play-reaction')).toHaveText(`Сыграть «${name}»`);
+    await expect(panel.getByTestId('play-reaction').locator('.oak-pan b')).toHaveText(`Сыграть «${name}»`);
     await expect(row).toHaveClass(/on/);
     // «Сыграть» in the card plays the Reaction, as the button of the window does.
     await row.getByTestId('reaction-info').click();
