@@ -7,7 +7,7 @@ async function tap(page,id){const el=page.getByTestId(id).filter({visible:true})
 try {
  for(const height of [680,740]){
   const page=await browser.newPage({viewport:{width:430,height},isMobile:true,hasTouch:true,baseURL:'http://127.0.0.1:4173/bortom-k-bortu/'});
-  await page.goto(`?seed=${scenario.seed}&speed=instant&hand=${scenario.hand}&hints=0`);
+  await page.goto(`?seed=${scenario.seed}&speed=instant&hand=${scenario.hand}&hints=${process.argv.includes('--hints')?1:0}`);
   for(const id of ['quick-duo','prep-start','placement-done','curtain-ready','placement-done','curtain-ready'])await tap(page,id);
   await page.locator('[data-testid="end-turn"]:visible').first().click();
   if(await page.getByTestId('confirm-yes').isVisible())await tap(page,'confirm-yes');
@@ -32,6 +32,17 @@ try {
    const box=q=>document.querySelector(q)?.getBoundingClientRect().toJSON();
    return {height:innerHeight,sheet:box('[data-testid="reaction-panel"]'),bar:box('.bottom-bar'),target:box('[data-testid="plank-Ж"]'),alarm:box('[data-testid="alarm"]'),cards:[...document.querySelectorAll('.as-card')].map(e=>({card:e.dataset.card,box:e.getBoundingClientRect().toJSON()}))};
   });
+  if(Number(label.slice(0,2))>=3) {
+    for(const id of ['play-reaction','skip-reaction','alarm-collapse']) {
+      const el=sheet.getByTestId(id), r=await el.boundingBox();
+      expect(r.y+r.height,id+' above bar').toBeLessThanOrEqual(layout.bar.y+1);
+      expect(await el.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}),id+' centre hit').toBe(true);
+    }
+    expect(layout.target.bottom,'target stays above sheet').toBeLessThanOrEqual(layout.sheet.y+1);
+    const pill=await page.getByTestId('alarm-pill').boundingBox();
+    expect(pill.y+pill.height,'damage arrow visible').toBeLessThanOrEqual(layout.sheet.y);
+    expect(layout.alarm.bottom,'alarm plaque visible').toBeLessThan(layout.sheet.y);
+  }
   writeFileSync(`docs/screenshots/ui-4/${label}-430x${height}.json`,JSON.stringify(layout,null,2)+'\n');
   await page.screenshot({path:`docs/screenshots/ui-4/${label}-430x${height}.png`});console.log('FRAME',height,'3 reactions, unavailable card and Plan selected');await page.close();
  }
