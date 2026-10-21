@@ -723,6 +723,8 @@ export function Game({
       );
     }
   } else if (myDecision && d!.kind === 'jack') {
+    dockSheet = true;
+    oakDock = true;
     dock = <JackPanel s={s} data={data} ship={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'tortuga') {
     dockSheet = true;
