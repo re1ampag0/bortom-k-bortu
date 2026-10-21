@@ -1,3 +1,4 @@
+import {perfOff} from '../perf/state';
 // The Legends: the common grand entrance of a Legend and the effect of each. FX-B (package 3): the look and the timings
 // of the A5 prototype (docs/mockups/a5/fx/src/fx3.js, ANIMATIONS.md §3.1–3.5) on the primitives of the game; the
 // pictures are in ../art/legendArt.ts and ../art/bigShips.ts, the durations in timing.ts (T.legend, T.kraken, …).
@@ -295,7 +296,7 @@ LG['И-Л'] = async (c, ctx) => {
   // the broadside ripples down the line at each target; the balls of the events hit their cells
   const units = damageUnits(ctx, c.effects || []);
   const targets = [...new Set(units.map((u) => u.ship))];
-  const smoke = ctx.rich ? scar(fxSvg(ctx, seaScars(ctx) ?? ctx.layer), 'short') : null;
+  const smoke = ctx.rich && !perfOff('particles') ? scar(fxSvg(ctx, seaScars(ctx) ?? ctx.layer), 'short') : null;
   let fired = 0;
   for (const tgt of targets) {
     const tb = bx(ctx, plank(ctx, tgt)), edge = facingY(ctx, tgt), dir = isTop(ctx, tgt) ? -1 : 1; // 1 — the target is below

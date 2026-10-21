@@ -1,3 +1,4 @@
+import {getPerf} from '../perf/state';
 // The animation layer on the table and its queue: the port of play / finish / skip / afterRender / keepSet of
 // docs/mockups/anim/level1/page.js (PORTING.md, section 4). The planks are drawn from the displayed state D: it lags
 // behind the real state, a clip plays → its events are applied to D → the table is drawn again. Buttons and «can I»
@@ -194,6 +195,7 @@ export function useFxQueue({
     const layer = layerRef.current;
     const board = layer?.parentElement;
     if (!layer || !board) return null;
+    const richAtStart = live.current.rich;
     return {
       board,
       layer,
@@ -201,7 +203,7 @@ export function useFxQueue({
       // game: behind the game (more actions queued than the one on screen) the show catches up — twice as fast — instead
       // of dropping the clips (see skipAhead).
       speed: speedFactor(live.current.speed) * (queue.current.length > 1 ? 0.5 : 1),
-      rich: live.current.rich,
+      get rich() { return getPerf().enabled ? live.current.rich : richAtStart; },
       run,
       live: () => RUN.current,
       data: live.current.data,

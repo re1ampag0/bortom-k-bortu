@@ -61,6 +61,7 @@ import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
 import { usePlayClock } from './playClock';
+import {PerfPanel, usePerf} from './perf/PerfPanel';
 
 /** V7: the victory sheet is a chunk of its own (the big ships of its panorama). */
 const Victory = lazy(() => import('./Victory').then((m) => ({ default: m.Victory })));
@@ -115,6 +116,8 @@ export function Game({
     useCallback((cb) => game.subscribe(cb), [game]),
     () => game.version,
   );
+  const perf = usePerf();
+  const simpleFx = perf.config.enabled && perf.config.off.includes('simple');
   const data = game.data;
   const s = game.state;
   // By network the state is already the player's view, the server plays the bots and keeps the game.
@@ -328,7 +331,7 @@ export function Game({
     own: mineBottom,
     enabled: fxEnabled,
     speed,
-    rich: effects === 'rich',
+    rich: effects === 'rich' && !simpleFx,
     myDecision,
     // Back after a lost connection: «Пока вас не было» tells what happened, the table does not replay it.
     jump: !!net && net.missed.length > 0,
@@ -469,7 +472,8 @@ export function Game({
       .filter((l) => l.kind === 'action' || l.kind === 'damage' || l.kind === 'round')
       .map((l) => l.text)
       .slice(-8);
-    return (
+    return (<>
+      {perf.config.enabled && <PerfPanel />}
       <Curtain
         side={curtainSide}
         title={`Передайте устройство ${SIDE_LABEL[curtainSide].dat}`}
@@ -483,7 +487,7 @@ export function Game({
           setSeatPick(null);
         }}
       />
-    );
+    </>);
   }
 
   // ——— Card flows ———
@@ -1155,9 +1159,10 @@ export function Game({
     </div>
   );
 
-  return (
+  return (<>
+    {perf.config.enabled && <PerfPanel />}
     <div
-      className={`game ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' ? 'fx-simple' : ''} ${fx.busy ? 'fx-busy' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
+      className={`game ${perf.classes} ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' || simpleFx ? 'fx-simple' : ''} ${fx.busy ? 'fx-busy' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
       data-testid="game"
       data-bottom={bottom}
     >
@@ -1399,7 +1404,7 @@ export function Game({
         </Suspense>
       )}
     </div>
-  );
+  </>);
 
   function cardStatus(holder: string, code: string): string | null {
     if (code.endsWith('-Л')) {

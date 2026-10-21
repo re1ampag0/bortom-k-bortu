@@ -1,3 +1,4 @@
+import {perfOff} from '../perf/state';
 // The sea cards: the clip «sea» (a new round → the table darkens → the sea card in the middle with its weather → the
 // card flies into the sea chip of the status bar → the changes on the planks by the real events of the clip) and the
 // quiet weather of the round (renderWeather). A port of docs/mockups/anim/level1/play-sea.js (see PORTING.md): the code
@@ -154,7 +155,7 @@ export const SEAFX: Record<string, SeaFx> = {
         weatherHit(ctx, e as Hit, 0, '#FFD84A');
         // the sails smoulder for the rest of the round (a medium trace of the ship)
         const host = plankScars(ctx, e.ship);
-        if (host && ctx.rich) { const hb = bx(ctx, host), sm = smolderEl(lost[lost.length - 1].x - hb.x + 6, lost[lost.length - 1].y - hb.y - 8); host.appendChild(sm); scar(sm, 'medium', e.ship); }
+        if (host && ctx.rich && !perfOff('particles')) { const hb = bx(ctx, host), sm = smolderEl(lost[lost.length - 1].x - hb.x + 6, lost[lost.length - 1].y - hb.y - 8); host.appendChild(sm); scar(sm, 'medium', e.ship); }
         await wait(ctx, S.thunderNext);
       }
       return S.end;
@@ -406,7 +407,7 @@ export const PLAY_SEA = { sea: playSea as unknown as ClipPlayer, round: playRoun
  * only when the card, the size of the board, the places of the ships or the richness change.
  */
 export function renderWeather(ctx: FxCtx, weather: HTMLElement, on: boolean): void {
-  const code = on ? ctx.display.sea : null;
+  const code = on && !perfOff('weather') ? ctx.display.sea : null;
   const key = code ? seaKeyOf(ctx, code) : null;
   const D = ctx.display;
   const k2 = `${key}|${ctx.rich}|${ctx.board.clientWidth}|${ctx.board.clientHeight}|${Object.keys(D.ships).map((c) => D.ships[c].pos + (D.ships[c].sunk ? 's' : '')).join('')}`;
