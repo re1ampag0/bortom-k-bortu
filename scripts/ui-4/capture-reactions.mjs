@@ -1,6 +1,6 @@
 import { chromium, expect } from '@playwright/test';
 import { readFileSync, writeFileSync } from 'node:fs';
-const scenario=JSON.parse(readFileSync('docs/screenshots/ui-4/reaction-scenario.json','utf8'));
+const scenario=JSON.parse(readFileSync(process.argv[3]??'docs/screenshots/ui-4/reaction-scenario.json','utf8'));
 const label=process.argv[2]??'reactions';
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium'});
 async function tap(page,id){const el=page.getByTestId(id).filter({visible:true}).first();await el.click();}
@@ -20,6 +20,11 @@ try {
   console.log('CARDS',await sheet.locator('.as-card').evaluateAll(es=>es.map(e=>({code:e.dataset.card,plan:!!e.querySelector('.plan'),off:e.classList.contains('off')}))));
   await expect(sheet.locator('.as-card')).toHaveCount(3);await expect(sheet.locator('.as-card.off')).toHaveCount(scenario.items.filter(c=>c.why).length);
   await expect(sheet.locator('.hcard.plan')).toHaveCount(1);await expect(sheet.locator('.as-card [data-testid="play-reaction"]')).toHaveCount(0);
+  if(label !== '01-cards') {
+    const single=scenario.items.filter(c=>!c.why).length===1;
+    await expect(sheet.getByTestId('play-reaction')).toHaveAttribute('aria-disabled',String(!single));
+    await expect(sheet.locator('.as-card.on')).toHaveCount(single?1:0);
+  }
   await sheet.locator('.as-card:not(.off) .hcard').first().click();
   await expect(sheet.getByTestId('play-reaction')).toHaveCount(1);
   await page.waitForTimeout(200);

@@ -1,0 +1,84 @@
+{
+  "height": 680,
+  "sheet": {
+    "x": 0,
+    "y": 308,
+    "width": 430,
+    "height": 300,
+    "top": 308,
+    "right": 430,
+    "bottom": 608,
+    "left": 0
+  },
+  "bar": {
+    "x": 0,
+    "y": 608,
+    "width": 430,
+    "height": 72,
+    "top": 608,
+    "right": 430,
+    "bottom": 680,
+    "left": 0
+  },
+  "target": {
+    "x": 18,
+    "y": 270.84375,
+    "width": 193,
+    "height": 76.1875,
+    "top": 270.84375,
+    "right": 211,
+    "bottom": 347.03125,
+    "left": 18
+  },
+  "alarm": {
+    "x": 8,
+    "y": 54,
+    "width": 414,
+    "height": 45.6875,
+    "top": 54,
+    "right": 422,
+    "bottom": 99.6875,
+    "left": 8
+  },
+  "cards": [
+    {
+      "card": "Ж-06",
+      "box": {
+        "x": 16,
+        "y": 361,
+        "width": 102,
+        "height": 167,
+        "top": 361,
+        "right": 118,
+        "bottom": 528,
+        "left": 16
+      }
+    },
+    {
+      "card": "Ж-11",
+      "box": {
+        "x": 130,
+        "y": 361,
+        "width": 102,
+        "height": 167,
+        "top": 361,
+        "right": 232,
+        "bottom": 528,
+        "left": 130
+      }
+    },
+    {
+      "card": "Ж-12",
+      "box": {
+        "x": 244,
+        "y": 361,
+        "width": 102,
+        "height": 167,
+        "top": 361,
+        "right": 346,
+        "bottom": 528,
+        "left": 244
+      }
+    }
+  ]
+}

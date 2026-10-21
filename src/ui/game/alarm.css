@@ -710,11 +710,23 @@
   .alarm-sheet .as-card .hcard-strip i { font-size: 9px; line-height: 1.05; }
   .alarm-sheet .as-card .hcard-strip.no b { display: none; }
   .alarm-sheet .as-card .info { top: 26px; right: 2px; left: auto; width: 23px; height: 23px; }
-  .alarm-sheet .as-btns .alarm-play { grid-row: 3; grid-column: 1 / -1; }
-  .alarm-sheet .as-btns { display: contents; }
-  .alarm-sheet .as-btns .alarm-skip { grid-row: 4; grid-column: 1; min-height: 44px; font-size: 16px; }
-  .dock.sheet-dock .panel.alarm-sheet:not(.folded) > .alarm-fold {
-    grid-row: 4; grid-column: 2; max-width: none; min-height: 44px; margin: 0; font-size: 13px;
+  .alarm-sheet .as-head { display: grid; grid-template-columns: minmax(0,1fr) auto 28px; }
+  .alarm-sheet .as-head .as-collapse {
+    position: relative; display: grid; place-items: center; width: 28px; height: 28px; min-height: 28px; min-width: 28px; padding: 0; margin: 0;
+    background: #352619; border: 1px solid #b99750; border-radius: 50%;
+  }
+  .alarm-sheet .as-head .as-collapse::before { content: ''; position: absolute; inset: -8px -4px; }
+  .alarm-sheet .as-btns {
+    display: grid; grid-column: 1 / -1; grid-row: 4; grid-template-columns: minmax(0,1fr) 124px; gap: 8px;
+  }
+  .alarm-sheet .as-btns .reaction-play { width: 100%; min-width: 0; height: 48px; padding: 2px; gap: 3px; }
+  .alarm-sheet .reaction-play .oak-med { width: 32px; height: 36px; flex: 0 0 32px; }
+  .alarm-sheet .reaction-play .oak-med svg { width: 32px; height: 32px; }
+  .alarm-sheet .reaction-play .oak-in { width: 100%; gap: 3px; padding: 0; min-height: 0; }
+  .alarm-sheet .reaction-play .oak-pan { min-width: 0; padding: 2px 4px; }
+  .alarm-sheet .reaction-play .oak-pan b { font-size: 12px; line-height: 1.05; white-space: normal; }
+  .alarm-sheet .as-btns .alarm-skip {
+    grid-row: auto; grid-column: auto; min-height: 48px; padding: 4px 8px; font-size: 14px; letter-spacing: .03em;
   }
   .alarm-sheet .alarm-fuse { grid-row: 3; grid-column: 1 / -1; }
 }
