@@ -429,7 +429,9 @@ export function Plank({
   flashLegend = false,
   fxGen = 0,
   fxHidden,
+  reactionWait,
 }: {
+  reactionWait?: ReactNode;
   s: GameState;
   data: GameData;
   ship: ShipState;
@@ -590,6 +592,7 @@ export function Plank({
             {plate.tip}
           </span>
         )}
+        {reactionWait}
         <span className="plank-role">
           {(targeted || plate?.chosen) && (
             // «Под огнём»: the wax seal of the target, pressed into the head (A5, TARGET_SEAL); it lives in the plank.

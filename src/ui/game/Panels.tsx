@@ -298,19 +298,9 @@ export function ChargeButtons({
 /** The attacker while the enemy decides on a Reaction (P8): what was fired, who decides, a calm waiting sign. */
 export function ReactionWaitPanel({ line, who }: { line: string; who: string }) {
   return (
-    <section className="panel reaction-wait" data-testid="reaction-wait" aria-live="polite">
-      <div className="panel-head">
-        <b>{line}</b>
-        <span className="wait-who">
-          <span className="wait-dots" aria-hidden>
-            <i />
-            <i />
-            <i />
-          </span>
-          {who}
-        </span>
-      </div>
-    </section>
+    <span className="reaction-wait-pill" data-testid="reaction-wait" role="img" aria-label={`${line} ${who}`} title={`${line} ${who}`}>
+      <span className="wait-dots" aria-hidden><i /><i /><i /></span>
+    </span>
   );
 }
 

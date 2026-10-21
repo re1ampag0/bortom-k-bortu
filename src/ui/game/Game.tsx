@@ -697,6 +697,8 @@ export function Game({
   /** The enemy decides on a Reaction to this device's Volley or card (a person sits here). */
   const waitReaction =
     !s.winner && !!d && d.kind === 'reactions' && d.side !== bottom && !myDecision && (net ? mySeats.length > 0 : game.setup.players[bottom] === 'human');
+  const waitNote = waitReaction ? reactionWait(s, data, d!.side, d!.seats.map(x => ({bot: botSeat(x), name: net ? net.nameOf(x) : null}))) : null;
+  const waitTarget = waitReaction ? alarmInfo(s, data)?.target : null;
   if (s.winner) dock = null;
   else if (myDecision && d!.kind === 'reactions') {
     // A laptop has no panel: the buttons stand where «Ход окончен» does (handActions).
@@ -778,10 +780,6 @@ export function Game({
         );
       }
     }
-  } else if (waitReaction) {
-    // The attacker sees what was fired and who decides; never which enemy ship holds a Reaction.
-    const w = reactionWait(s, data, d!.side, d!.seats.map((x) => ({ bot: botSeat(x), name: net ? net.nameOf(x) : null })));
-    dock = <ReactionWaitPanel line={w.line} who={w.who} />;
   } else if (net && !s.winner) {
     dock = netDock(net, mySeats, bottom, nick);
   }
@@ -1076,6 +1074,7 @@ export function Game({
       fxGen={fx.gen}
       fxHidden={fx.hidden[x.code]}
       data={data}
+      reactionWait={waitNote && waitTarget === x.code ? <ReactionWaitPanel line={waitNote.line} who={waitNote.who} /> : undefined}
       ship={x}
       own={x.side === bottom}
       selected={x.side === bottom && x.code === seat && tabs.length > 1}
@@ -1155,7 +1154,7 @@ export function Game({
         <StatusBar
           s={fx.display ? withDisplay(s, fx.display) : s}
           data={data}
-          instruction={fx.hint ?? flash ?? instruction}
+          instruction={fx.hint ?? flash ?? (waitNote ? `Противник может ответить Реакцией… · ${instruction}` : instruction)}
           waiting={!myDecision || !!flash}
           onSea={() => setSheet({ k: 'sea' })}
           extra={wideLog ? null : toolButtons}
