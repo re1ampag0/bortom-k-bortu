@@ -3,18 +3,20 @@ import type { ReactNode } from 'react';
 import { OakButton, type Btn } from './Table';
 import './decision-sheet.css';
 
-export function DecisionSheet({title, sub, hold, testid, children, actions}: {
+export function DecisionSheet({title, sub, hold, testid, children, actions, tools}: {
   title: string;
   sub?: string;
   hold?: { powder: number; cap: number };
   testid?: string;
   children?: ReactNode;
   actions: ReactNode;
+  tools?: ReactNode;
 }) {
   return <section className="panel oak-sheet decision-sheet" data-testid={testid}>
     <header className="cs-head">
       <b className="cs-title">{title}</b>
       {hold && <span className="cs-hold">Трюм {hold.powder} из {hold.cap}</span>}
+      {tools}
     </header>
     {sub && <p className="ds-note">{sub}</p>}
     {children && <div className="ds-body">{children}</div>}

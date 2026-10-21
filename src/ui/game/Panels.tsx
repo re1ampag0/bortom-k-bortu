@@ -25,18 +25,6 @@ const nick = (data: GameData, code: string) => `«${shipData(data, code).nick}»
 /** «восстановить 1 клетку / 2 клетки / 5 клеток». */
 const cellsWord = (n: number) => `${n} ${n === 1 ? 'клетку' : n < 5 ? 'клетки' : 'клеток'}`;
 
-function Panel({ title, sub, children, tone, testid }: { title: string; sub?: string; children: React.ReactNode; tone?: string; testid?: string }) {
-  return (
-    <section className={`panel ${tone ?? ''}`} data-testid={testid}>
-      <header className="panel-head">
-        <b>{title}</b>
-        {sub && <span className="panel-sub">{sub}</span>}
-      </header>
-      <div className="panel-body">{children}</div>
-    </section>
-  );
-}
-
 // ——— Volley ———
 
 export interface AimMode {
@@ -608,11 +596,13 @@ export function PlansPanel({ s, data, seat, onDone, onCancel }: { s: GameState; 
   const room = data.rules.plansMax - holder.plans.length;
   const [picks, setPicks] = useState<string[]>([]);
   return (
-    <Panel
-      title={`${nick(data, seat)}: отложить карты в Планы?`}
+    <DecisionSheet title={`${nick(data, seat)}: Планы`}
       sub={`До ${room} ${room === 1 ? 'карты' : 'карт'} с руки. Реакцию из Плана можно сыграть сверх лимита Парусов, бонус «План:» действует.`}
-      testid="plans-panel"
-    >
+      testid="plans-panel" hold={{powder:s.teams[holder.side].powder,cap:data.econ.cap}}
+      tools={<button type="button" className="btn ds-close" aria-label="Отмена" title="Отмена" onClick={onCancel}>×</button>}
+      actions={<DecisionActions cancel={<button className="btn" data-testid="no-plans" onClick={() => onDone([])}>Без Планов</button>}
+        primary={{key:'plans-done',label:`Отложить ${picks.length} и закончить ход`,
+          disabled:picks.length===0?'Выберите карты в Планы':null,onClick:()=>onDone(picks)}} />}>
       <div className="choice-cards">
         {holder.hand.map((card) => (
           <HandCard
@@ -626,18 +616,7 @@ export function PlansPanel({ s, data, seat, onDone, onCancel }: { s: GameState; 
           />
         ))}
       </div>
-      <div className="panel-actions">
-        <button className="btn" onClick={onCancel}>
-          Отмена
-        </button>
-        <button className="btn" data-testid="no-plans" onClick={() => onDone([])}>
-          Без Планов
-        </button>
-        <button className="btn primary" aria-disabled={picks.length === 0} onClick={() => picks.length > 0 && onDone(picks)}>
-          Отложить {picks.length} и закончить ход
-        </button>
-      </div>
-    </Panel>
+    </DecisionSheet>
   );
 }
 

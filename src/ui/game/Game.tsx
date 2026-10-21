@@ -777,6 +777,7 @@ export function Game({
       dock = <ConfirmPanel title={mode.text} yes="Закончить ход" no="Вернуться" onYes={() => endFlow('confirmed')} onNo={cancel} testid="confirm-end" />;
     } else if (mode.k === 'plans') {
       dockSheet = true;
+      oakDock = true;
       dock = <PlansPanel s={s} data={data} seat={mode.seat} onDone={(plans) => finishTurn({ type: 'endTurn', side: bottom, plans })} onCancel={cancel} />;
     } else if (mode.k === 'idle' && net) {
       const mine = mySeats.map(offerOf).find((o) => !!o);

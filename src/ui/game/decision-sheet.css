@@ -58,3 +58,9 @@
 .game:has(.decision-dock) { overflow: clip; }
 
 .decision-sheet .why { color: #ffd8a8; }
+
+.ds-close.btn { position: relative; flex: 0 0 28px; width: 28px; height: 28px; min-height: 28px; padding: 0; border-radius: 50%; font-size: 23px; background: #efe2c6; color: #392817; }
+.ds-close::before { content: ''; position: absolute; inset: -8px; }
+/* The full end-turn label fits in two lines; the visible board keeps the shared size. */
+.decision-sheet[data-testid='plans-panel'] .oak-pan { left: 45px; right: 7px; top: 5px; bottom: 5px; }
+.decision-sheet[data-testid='plans-panel'] .oak-pan b { font-size: 11.5px; line-height: 1.1; letter-spacing: .025em; text-indent: 0; white-space: normal; overflow-wrap: anywhere; }

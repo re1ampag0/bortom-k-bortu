@@ -7,9 +7,10 @@ try {for(const viewport of [{width:430,height:680},{width:430,height:740},{width
  await page.goto(`http://127.0.0.1:5174/bortom-k-bortu/scripts/ui-4/panel-preview.html?panel=${panel}&speed=instant`);
  await page.evaluate(()=>document.fonts.ready);
  if(panel==='card'){await page.locator('.hand-cards > .hcard').first().click();await page.getByTestId(viewport.width<701?'lift-play':'detail-play').click();}
- if(panel==='confirm')await page.getByTestId('end-turn').filter({visible:true}).click();
+ if(panel==='confirm'||panel==='plans')await page.getByTestId('end-turn').filter({visible:true}).click();
  const sheet=page.getByTestId(panel==='confirm'?'confirm-end':`${panel}-panel`);
  await expect(sheet).toBeVisible();await expect(sheet).toHaveClass(/decision-sheet/);await page.waitForTimeout(300);
+ if(panel==='plans')await sheet.locator('.choice-cards > .hcard').first().click();
  if(panel==='choice') {
   await sheet.locator('.choice-cards > .hcard').nth(0).click();
   await expect(sheet.locator('.oak-btn')).toHaveAttribute('aria-disabled','true');
@@ -40,6 +41,12 @@ try {for(const viewport of [{width:430,height:680},{width:430,height:740},{width
  if(panel==='confirm') {
   await sheet.getByRole('button',{name:'Вернуться',exact:true}).click();await expect(sheet).toHaveCount(0);
   expect(await page.evaluate(()=>window.ui4Game.state.active)).toBe('ПИРАТЫ');
+ }
+ if(panel==='plans') {
+  const fit=await sheet.locator('.oak-pan b').evaluate(e=>{const r=document.createRange();r.selectNodeContents(e);const p=e.parentElement.getBoundingClientRect();return [...r.getClientRects()].every(b=>b.left>=p.left-1&&b.right<=p.right+1&&b.top>=p.top-1&&b.bottom<=p.bottom+1)});
+  expect(fit,'the complete Plans action fits').toBe(true);
+  await sheet.locator('.oak-btn').click();await expect(sheet).toHaveCount(0);
+  await expect.poll(()=>page.evaluate(()=>window.ui4Game.state.ships['Ж'].plans.length),{timeout:6000}).toBe(1);
  }
  expect(errors).toEqual([]);console.log('FRAME',panel,viewport);await page.close();
 }}finally{await browser.close()}

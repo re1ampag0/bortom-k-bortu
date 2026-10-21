@@ -31,6 +31,7 @@ if(which==='card') {
 if(which==='confirm') {
  game.setup.hints=true;game.state=turnOf('ПИРАТЫ');
 }
+if(which==='plans')game.state=turnOf('ПИРАТЫ',{Ж:['Ловкость рук','Плотник','Компас Джека']});
 (window as unknown as {ui4Game:LocalGame}).ui4Game=game;
 function Preview(){return <div id="stage" style={useStage()??undefined}><Game game={game} onExit={()=>{}} onRestart={()=>{}} /></div>}
 createRoot(document.getElementById('root')!).render(<Preview/>);
