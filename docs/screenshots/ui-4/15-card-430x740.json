@@ -1,0 +1,98 @@
+{
+  "box": {
+    "x": 0,
+    "y": 404.25,
+    "width": 430,
+    "height": 263.75,
+    "top": 404.25,
+    "right": 430,
+    "bottom": 668,
+    "left": 0
+  },
+  "buttons": [
+    {
+      "label": "−",
+      "box": {
+        "x": 308,
+        "y": 526,
+        "width": 28,
+        "height": 28,
+        "top": 526,
+        "right": 336,
+        "bottom": 554,
+        "left": 308
+      },
+      "hit": true
+    },
+    {
+      "label": "+",
+      "box": {
+        "x": 384,
+        "y": 526,
+        "width": 28,
+        "height": 28,
+        "top": 526,
+        "right": 412,
+        "bottom": 554,
+        "left": 384
+      },
+      "hit": true
+    },
+    {
+      "label": "−",
+      "box": {
+        "x": 308,
+        "y": 566,
+        "width": 28,
+        "height": 28,
+        "top": 566,
+        "right": 336,
+        "bottom": 594,
+        "left": 308
+      },
+      "hit": true
+    },
+    {
+      "label": "+",
+      "box": {
+        "x": 384,
+        "y": 566,
+        "width": 28,
+        "height": 28,
+        "top": 566,
+        "right": 412,
+        "bottom": 594,
+        "left": 384
+      },
+      "hit": true
+    },
+    {
+      "label": "Отмена",
+      "box": {
+        "x": 10,
+        "y": 608,
+        "width": 140,
+        "height": 52,
+        "top": 608,
+        "right": 150,
+        "bottom": 660,
+        "left": 10
+      },
+      "hit": true
+    },
+    {
+      "label": "\n    \n    \n    \n  \n  \n  \n  \n  \n  \n  Сыграть",
+      "box": {
+        "x": 160,
+        "y": 608,
+        "width": 260,
+        "height": 52,
+        "top": 608,
+        "right": 420,
+        "bottom": 660,
+        "left": 160
+      },
+      "hit": true
+    }
+  ]
+}

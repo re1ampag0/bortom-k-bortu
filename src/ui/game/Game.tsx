@@ -753,7 +753,10 @@ export function Game({
           setMode={setMode}
         />
       );
-    } else if (mode.k === 'card') dock = <CardParamsPanel s={s} data={data} mode={mode} setMode={setMode} onAct={(a) => act(a)} onCancel={cancel} />;
+    } else if (mode.k === 'card') {
+      oakDock = true; dockSheet = true;
+      dock = <CardParamsPanel s={s} data={data} mode={mode} setMode={setMode} onAct={(a) => act(a)} onCancel={cancel} />;
+    }
     else if (mode.k === 'legend') {
       const c = cardByCode(data, `${mode.seat}-Л`);
       const opts = legendOptions(s, data, mode.seat);
