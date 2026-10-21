@@ -247,6 +247,29 @@ test.describe('the sea cards through ?fxScene', () => {
   });
 });
 
+// ui-4: compare computed SVG paint and real geometry, not the number of registered animations.
+test('maelstrom weather: the arms and wreckage keep moving @iphone', async ({ page }) => {
+  await page.setViewportSize({ width: 430, height: 740 });
+  await open(page, 'sea-maelstrom', 'normal', '&rich=1');
+  await page.waitForFunction(() => document.body.dataset.fxDone === '1');
+  const sample = () => page.locator('.fx-weather .wx-maelstrom').evaluate(svg => ({
+    arms: Array.from(svg.querySelectorAll('.arm')).map(e => getComputedStyle(e).strokeDashoffset),
+    debris: Array.from(svg.querySelectorAll('.db')).map(e => {
+      const r = e.getBoundingClientRect();
+      return { x: r.x, y: r.y };
+    }),
+  }));
+  const before = await sample();
+  expect(before.arms).toHaveLength(6);
+  expect(before.debris).toHaveLength(5);
+  await page.waitForTimeout(2000);
+  const after = await sample();
+  for (let i = 0; i < before.arms.length; i++) expect(after.arms[i]).not.toBe(before.arms[i]);
+  for (let i = 0; i < before.debris.length; i++) {
+    expect(Math.hypot(after.debris[i].x - before.debris[i].x, after.debris[i].y - before.debris[i].y)).toBeGreaterThan(1);
+  }
+});
+
 test('the 17 sea cards play in Safari without errors @iphone', async ({ page }) => {
   test.setTimeout(400_000);
   const errors: string[] = [];
