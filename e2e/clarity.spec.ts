@@ -84,8 +84,11 @@ test.describe('laptop 1366×660', () => {
     await expect(page.getByTestId('instruction')).toContainText('Компания (бот) решает', { timeout: 30_000 });
     await page.locator('[data-testid="pause-show"]:visible').click();
     const nick = data.ships.find((x) => x.code === target)!.nick;
-    await expect(plate).toContainText(new RegExp(`Залп «Жемчужина» → «${nick}»: \\d+ по Корпусу\\. Компания решает, ответить ли Реакцией…`));
-    await expect(plate).toContainText('Бот думает…');
+    await expect(page.getByTestId(`plank-${target}`).getByTestId('reaction-wait')).toBeVisible();
+    await expect(plate).toHaveAttribute('aria-label', new RegExp(`Залп «Жемчужина» → «${nick}»: \\d+ по Корпусу\\. Компания решает, ответить ли Реакцией… Бот думает…`));
+    await expect(plate.locator('.wait-dots i')).toHaveCount(3);
+    await expect(page.getByTestId('instruction')).toContainText('Противник может ответить Реакцией…');
+    await expect(page.locator('.dock')).toHaveCount(0);
     // The enemy's Reactions are not named anywhere; the status bar names the team, not the ship.
     await expect(page.getByTestId('instruction')).toContainText('Компания (бот) решает');
     await expect(page.locator('.reaction-opt')).toHaveCount(0);

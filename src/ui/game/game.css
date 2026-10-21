@@ -4560,3 +4560,12 @@ button.star::before {
 /* phone-2: the journal entry keeps the existing sea-line geometry. */
 button.middle-info { pointer-events: auto; border: 0; font-family: inherit; text-align: left; cursor: pointer; }
 button.middle-info:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+
+/* ui-4 Б12: a small paper waiting pill belongs to the public target, not the sea breakdown. */
+.reaction-wait-pill {
+  display: inline-flex; flex: 0 0 26px; align-items: center; justify-content: center;
+  width: 26px; height: 16px; border: 1px solid #a58a54; border-radius: 10px;
+  background: linear-gradient(#fff5d9, #decda5); color: #59462a; pointer-events: none;
+}
+.reaction-wait-pill .wait-dots { gap: 3px; }
+.reaction-wait-pill .wait-dots i { width: 3px; height: 3px; }
