@@ -299,3 +299,7 @@
 .plate.compact .terms { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0 4px; font-size: 10px; line-height: 1.1; margin: 0; }
 .plate.compact .terms span:nth-child(even) { margin-right: 6px; }
 .plate.compact .stamp, .plate.compact .nodiag { margin: 0; font-size: 9px; }
+
+/* ui-4: the container freezes all weather cycles without recreating or resetting their phase. */
+.fx-weather.wx-paused .wx-loop,
+.fx-weather.wx-paused.wx-loop { animation-play-state: paused !important; }
