@@ -559,7 +559,7 @@ for (const look of ['deck', 'table'] as const) {
         const box = (e: Element | null) => {
           if (!e) return null;
           const b = e.getBoundingClientRect();
-          return b.width > 0 && b.height > 0 ? { l: b.left, r: b.right, t: b.top, b: b.bottom } : null;
+          return b.width > 0 && b.height > 0 ? { l: b.left / k, r: b.right / k, t: b.top / k, b: b.bottom / k } : null;
         };
         const vis = (q: string) => Array.from(document.querySelectorAll(q)).map(box).filter((b) => !!b);
         return {
@@ -583,7 +583,7 @@ for (const look of ['deck', 'table'] as const) {
           glass: vis('.hold-glass')[0] ?? null,
           end: vis('[data-testid="end-turn"]')[0] ?? null,
           undo: vis('.undo')[0] ?? null,
-          iw: innerWidth,
+          iw: innerWidth / k,
           ih: innerHeight / k,
         };
       });
