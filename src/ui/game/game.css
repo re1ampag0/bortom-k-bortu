@@ -4260,10 +4260,11 @@ button.star::before {
   inset: 0;
   pointer-events: none;
 }
-/* fix-ui (5а): while a clip plays the flame of the lantern and the candle stops flickering (a blended layer that changes on every
-   frame); it flickers again when the clip ends */
+/* ui-4 Г21: ambient loops keep their phase during a foreground clip. */
 .game.fx-busy .deck-flare,
-.game.fx-busy .lantern-light {
+.game.fx-busy .lantern-light,
+.game.fx-busy .sea-water::before,
+.game.fx-busy .sea-water::after {
   animation-play-state: paused;
 }
 .deck-bg {

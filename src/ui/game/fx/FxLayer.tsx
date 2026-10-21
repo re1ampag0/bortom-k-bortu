@@ -545,7 +545,7 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
   }, [press, layerRef]);
   return (
     <>
-      <div className="fx-weather" ref={fx.weatherRef} aria-hidden />
+      <div className={`fx-weather${fx.busy ? ' wx-paused' : ''}`} ref={fx.weatherRef} aria-hidden />
       {/* FX-A: the traces on the sea (fx/scars.ts) — over the weather, under the planks; the layer never clears it */}
       <div className="fx-scars" aria-hidden />
       <div className="fx-layer" ref={fx.layerRef} aria-hidden />

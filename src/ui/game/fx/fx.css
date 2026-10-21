@@ -303,3 +303,6 @@
 /* ui-4: the container freezes all weather cycles without recreating or resetting their phase. */
 .fx-weather.wx-paused .wx-loop,
 .fx-weather.wx-paused.wx-loop { animation-play-state: paused !important; }
+
+/* ui-4 Г21: weather-induced heave is ambient; foreground WAAPI clips stay live. */
+.game.fx-busy .board[data-wx-move] .planks > .plank { animation-play-state: paused; }
