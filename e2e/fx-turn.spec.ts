@@ -26,14 +26,15 @@ const FRAMES: Frame[] = [
   { name: 'turn-fire', scene: 'turn', ready: layerHas('.ember'), after: 250, down: true },
   // the drawing: the backs fly to «Голландец» and the label «+2 карты» (not the Plan before it)
   { name: 'turn-draw', scene: 'turn', ready: `Array.from(document.querySelectorAll('.fx-layer .tag.plus')).some((t) => /^\\+\\d+ карт/.test(t.textContent))`, after: 150, down: true },
-  { name: 'card', scene: 'card', ready: layerHas('.flyc'), after: 700, down: true },
-  { name: 'card-hit', scene: 'card', ready: layerHas('.pill'), after: 100, down: true },
+  { name: 'card', scene: 'card', ready: layerHas('.flyc'), after: 700, width: 1920, height: 944, down: true },
+  { name: 'card-hit', scene: 'card', ready: layerHas('.pill'), after: 100, width: 1920, height: 944, down: true },
   { name: 'repair', scene: 'repair', ready: layerHas('.lg-aura'), after: 500, down: false },
   { name: 'mark', scene: 'mark', ready: layerHas('.blot'), after: 250, down: true },
   { name: 'mark-volley', scene: 'mark', ready: layerHas('.ball'), after: 250, down: true },
   { name: 'sink', scene: 'sink', ready: stampShown('Затонул'), after: 0, down: true },
   { name: 'turn-fire', scene: 'turn', ready: layerHas('.ember'), after: 250, width: 430, height: 932, down: true },
-  { name: 'card', scene: 'card', ready: layerHas('.flyc'), after: 700, width: 430, height: 932, down: true },
+  { name: 'card', scene: 'card', ready: layerHas('.flyc'), after: 700, width: 430, height: 740, down: true },
+  { name: 'card', scene: 'card', ready: layerHas('.flyc'), after: 700, width: 430, height: 680, down: true },
 ];
 
 function saveTime(key: string, scene: string, ms: number) {
@@ -137,10 +138,12 @@ test.describe('the turn, the card, repairs and statuses through ?fxScene', () =>
   }
 
   test('card: the layer takes no press while the card lies at the middle', async ({ page }) => {
-    await page.setViewportSize({ width: 1366, height: 660 });
+    await page.setViewportSize({ width: 1920, height: 944 });
     await open(page, 'card');
     await playing(page);
     await page.waitForFunction(() => !!document.querySelector('.fx-layer .flyc'), null, { polling: 'raf' });
+    const appeared = Date.now();
+    const card = await page.locator('.fx-layer .flyc').first().elementHandle();
     const misses = await clickMisses(page);
     expect(misses.planks).toBe(4);
     expect(misses.layer).toBeGreaterThan(0);
@@ -151,6 +154,9 @@ test.describe('the turn, the card, repairs and statuses through ?fxScene', () =>
       return document.elementFromPoint(c.left + c.width / 2, c.top + c.height / 2)?.closest('.fx-layer') ? 'layer' : 'table';
     });
     expect(hit).toBe('table');
+    await expect.poll(() => card!.evaluate(e => !e.isConnected || Number(getComputedStyle(e).opacity) < .02), { timeout: 2200 }).toBe(true);
+    expect(Date.now() - appeared, 'the played card leaves around 1.2 s, without waiting for all damage effects').toBeLessThan(2200);
+
   });
 });
 
