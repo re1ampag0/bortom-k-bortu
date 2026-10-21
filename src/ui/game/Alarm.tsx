@@ -8,6 +8,7 @@ import { fuseLeft, type AlarmInfo } from './alarm';
 import { HandCard, type AlarmCard } from './Hand';
 import { T } from './fx/timing';
 import { stageK } from '../stage';
+import { OakButton } from './Table';
 
 const BELL = `<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 4 C10 4 8 10 8 16 V22 L5 26 H29 L26 22 V16 C26 10 24 4 17 4 Z" fill="#e0bd62" stroke="#3a2412" stroke-width="1"/><path d="M13 27 Q17 32 21 27" fill="#e0bd62" stroke="#3a2412" stroke-width="1"/><path d="M17 1 V4" stroke="#3a2412" stroke-width="2"/><path d="M3 12 Q1 17 3 22 M31 12 Q33 17 31 22" stroke="#e0bd62" stroke-width="1.6" fill="none"/></svg>`;
 
@@ -236,15 +237,6 @@ export function ReactionSheet({
   onInfo: (seat: string, card: string) => void;
   onFold: (folded: boolean) => void;
 }) {
-  if (folded) {
-    return (
-      <section className="panel alarm-sheet folded" data-testid="reaction-panel">
-        <button className="alarm-back" data-testid="alarm-expand" onClick={() => onFold(false)}>
-          Вернуться к Тревоге
-        </button>
-      </section>
-    );
-  }
   const items: { seat: string; card: string; plan: boolean }[] = [];
   for (const seat of seats) {
     const h = s.ships[seat];
@@ -255,7 +247,24 @@ export function ReactionSheet({
   }
   items.sort((a, b) => Number(!!alarmOf(a.seat, a.card)?.why) - Number(!!alarmOf(b.seat, b.card)?.why));
   const side = s.ships[seats[0]]?.side;
-  const picked = (it: { seat: string; card: string }) => pick?.seat === it.seat && pick.card === it.card;
+  const allowed = items.filter(it => alarmOf(it.seat, it.card)?.kind === 'ok');
+  const validPick = allowed.find(it => it.seat === pick?.seat && it.card === pick.card);
+  const sole = allowed.length === 1 ? allowed[0] : null;
+  const selected = validPick ?? sole;
+  const soleSeat = sole?.seat, soleCard = sole?.card;
+  useEffect(() => {
+    if (!folded && !validPick && soleSeat && soleCard) onPick({ seat: soleSeat, card: soleCard });
+  }, [folded, !!validPick, soleSeat, soleCard, onPick]);
+  const picked = (it: { seat: string; card: string }) => selected?.seat === it.seat && selected.card === it.card;
+  if (folded) {
+    return (
+      <section className="panel alarm-sheet folded" data-testid="reaction-panel">
+        <button className="alarm-back" data-testid="alarm-expand" onClick={() => onFold(false)}>
+          Вернуться к Тревоге
+        </button>
+      </section>
+    );
+  }
   return (
     <section className="panel alarm-sheet" data-testid="reaction-panel" style={alarmVars}>
       <div className="as-head">
@@ -263,6 +272,9 @@ export function ReactionSheet({
         <span className="as-count">
           {side ? `Порох ${s.teams[side].powder} из ${data.econ.cap}` : ''}
         </span>
+        <button className="alarm-fold as-collapse" data-testid="alarm-collapse" aria-label="Свернуть, посмотреть стол" title="Свернуть, посмотреть стол" onClick={() => onFold(true)}>
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5 L8 10 L13 5" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+        </button>
       </div>
       <div className="as-mid">
         {hints && memo && (
@@ -303,21 +315,13 @@ export function ReactionSheet({
       </div>
       {fuse && <Fuse {...fuse} />}
       <div className="as-btns">
-        {pick && !alarmOf(pick.seat, pick.card)?.why && (
-          <button className="alarm-play" data-testid="play-reaction" onClick={() => onAct([{ type: 'react', seat: pick.seat, card: pick.card }])}>
-            Сыграть «{cardByCode(data, pick.card).name}»
-          </button>
-        )}
+        <OakButton b={{ key: 'reaction', label: selected ? `Сыграть «${cardByCode(data, selected.card).name}»` : 'Сыграть Реакцию',
+          disabled: selected ? null : 'Выберите доступную Реакцию', testid: 'play-reaction',
+          onClick: () => selected && onAct([{ type: 'react', seat: selected.seat, card: selected.card }]) }} sign="muzzle" className="reaction-play" />
         <button className="alarm-skip" data-testid="skip-reaction" onClick={() => onAct(seats.map((seat) => ({ type: 'noReaction', seat })))}>
           Пропустить
         </button>
       </div>
-      <button className="alarm-fold" data-testid="alarm-collapse" onClick={() => onFold(true)}>
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
-          <path d="M2 5 L7 10 L12 5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-        </svg>
-        Свернуть, посмотреть стол
-      </button>
     </section>
   );
 }
