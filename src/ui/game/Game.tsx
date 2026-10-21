@@ -568,7 +568,7 @@ export function Game({
     if (step === 'start' && hints) {
       const unfired = unfiredShips(s, data, bottom);
       if (unfired.length > 0) {
-        setMode({ k: 'confirmEnd', text: `Залп не дан (${unfired.map(nick).join(', ')}), в Трюме ${s.teams[bottom].powder} Пороха. Закончить ход?` });
+        setMode({ k: 'confirmEnd', text: `Залп не дан: ${unfired.map(nick).join(', ')}. В Трюме ${s.teams[bottom].powder} Пороха.` });
         return;
       }
     }
@@ -763,7 +763,7 @@ export function Game({
       const needsTarget = opts.actions.every((a) => a.type === 'playLegend' && a.target);
       dock = !mode.confirmed ? (
         <ConfirmPanel
-          title={`Разыграть Легенду «${c.name}»?`}
+          title={c.name}
           sub={`${c.big}. Легенда играется один раз за партию.`}
           yes={`Сыграть · ${c.soul ? `${c.soul} Д` : `${c.cost} П`}`}
           onYes={() => (needsTarget ? setMode({ ...mode, confirmed: true }) : act(opts.actions[0]))}
@@ -771,10 +771,10 @@ export function Game({
           testid="legend-confirm"
         />
       ) : (
-        <ConfirmPanel title={`«${c.name}»: выберите цель на столе`} sub={c.big} yes="Отмена" onYes={cancel} onNo={cancel} />
+        <ConfirmPanel title={c.name} sub={`Выберите цель на столе. ${c.big}`} yes="Отмена" onYes={cancel} onNo={cancel} />
       );
     } else if (mode.k === 'confirmEnd') {
-      dock = <ConfirmPanel title={mode.text} yes="Закончить ход" no="Вернуться" onYes={() => endFlow('confirmed')} onNo={cancel} testid="confirm-end" />;
+      dock = <ConfirmPanel title="Закончить ход?" sub={mode.text} yes="Закончить ход" no="Вернуться" onYes={() => endFlow('confirmed')} onNo={cancel} testid="confirm-end" />;
     } else if (mode.k === 'plans') {
       dockSheet = true;
       oakDock = true;
