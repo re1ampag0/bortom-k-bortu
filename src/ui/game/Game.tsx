@@ -678,7 +678,8 @@ export function Game({
   function alarmOf(holder: string, code: string): AlarmCard | null {
     if (!alarmOn || code === HIDDEN) return null;
     if (cardByCode(data, code).type !== 'РЕАКЦИЯ' || !d!.seats.includes(holder)) return { kind: 'dim' };
-    const why = offOf(holder, code);
+    // The sheet includes both ships; the hand cache only covers the selected ship.
+    const why = playOptions(s, data, holder, code).reason;
     if (why) return { kind: 'no', why };
     return { kind: 'ok', strip: hints ? (reactionStrip(s, data, holder, code) ?? undefined) : undefined };
   }

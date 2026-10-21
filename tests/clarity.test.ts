@@ -77,13 +77,15 @@ describe('the Reaction window without «Подсказки»', () => {
     const now = reactionNow(s, data, 'И', card);
     if (!now.ok) throw new Error(now.reason);
     expect(now.text).toMatch(/^Залп \d+ → \d+$/);
-    expect(html).toContain(`<b class="ro-effect as-now">${now.text}</b>`);
+    expect(html).toContain('class="hcard-strip ok"');
+    expect(text(html)).toContain(now.text);
     expect(html).toContain('data-testid="reaction-info"');
     expect(html).not.toContain('reaction-memo');
   });
 
   it('under «Подсказки» the strip of the card says it, the line under the card does not repeat it', () => {
     expect(window(false, true).html).not.toContain('as-now');
+    expect(window(false, true).html).toContain('hcard-strip');
   });
 
   it('the first-window Reaction note is shown only with hints enabled', () => {

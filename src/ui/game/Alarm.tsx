@@ -274,6 +274,9 @@ export function ReactionSheet({
           {items.map((it) => {
             const a = alarmOf(it.seat, it.card);
             const now = reactionNow(s, data, it.seat, it.card);
+            const cardAlarm = a?.kind === 'ok' && now.ok
+              ? { ...a, strip: a.strip ?? { top: now.text, bottom: '' } }
+              : a;
             return (
               <div key={`${it.seat}-${it.card}`} className={`as-card ${a?.why ? 'off' : ''} ${picked(it) ? 'on' : ''}`} data-card={it.card}>
                 <HandCard
@@ -282,14 +285,9 @@ export function ReactionSheet({
                   plan={it.plan}
                   off={a?.why ?? null}
                   chosen={picked(it)}
-                  alarm={a ?? undefined}
+                  alarm={cardAlarm ?? undefined}
                   onClick={() => !a?.why && onPick(picked(it) ? null : { seat: it.seat, card: it.card })}
                 />
-                <button className="alarm-play" data-testid="play-reaction" disabled={!!a?.why}
-                  onClick={() => onAct([{ type: 'react', seat: it.seat, card: it.card }])}>
-                  Сыграть «{cardByCode(data, it.card).name}»
-                </button>
-                {!hints && now.ok && <b className="ro-effect as-now">{now.text}</b>}
                 <button
                   className="info"
                   data-testid="reaction-info"
@@ -305,6 +303,11 @@ export function ReactionSheet({
       </div>
       {fuse && <Fuse {...fuse} />}
       <div className="as-btns">
+        {pick && !alarmOf(pick.seat, pick.card)?.why && (
+          <button className="alarm-play" data-testid="play-reaction" onClick={() => onAct([{ type: 'react', seat: pick.seat, card: pick.card }])}>
+            Сыграть «{cardByCode(data, pick.card).name}»
+          </button>
+        )}
         <button className="alarm-skip" data-testid="skip-reaction" onClick={() => onAct(seats.map((seat) => ({ type: 'noReaction', seat })))}>
           Пропустить
         </button>
