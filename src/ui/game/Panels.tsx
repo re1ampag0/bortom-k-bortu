@@ -407,7 +407,7 @@ export function ChoicePanel({
     return 'выбрана';
   };
   return (
-    <DecisionSheet title={`${nick(data, seat)}: ${text.title}`} sub={text.sub} testid="choice-panel"
+    <DecisionSheet title={text.title} sub={`${nick(data, seat)}: ${text.sub}`} testid="choice-panel"
       hold={{powder: s.teams[s.ships[seat].side].powder, cap: data.econ.cap}}
       actions={<DecisionActions
         cancel={<button className="btn" onClick={() => setPicks([])}>Сбросить выбор</button>}
@@ -488,14 +488,14 @@ export function CardParamsPanel({
   // The ship the engine repairs (repairTarget): the ally's for «Норрингтон на борту», the Dutchman's for «Сердце бьётся».
   const repairShip = needs.repairShip ? s.ships[needs.repairShip] : null;
   const cells = needs.souls !== null ? 2 * (mode.souls ?? needs.souls) : needs.cells;
-  const title = repairShip
-    ? `${c.name} → ${nick(data, repairShip.code)}${cells > 0 ? `: восстановить ${cellsWord(cells)}` : ''}`
-    : `${nick(data, mode.seat)}: «${c.name}»`;
+  const sub = repairShip
+    ? `→ ${nick(data, repairShip.code)}: ${cells > 0 ? `восстановить ${cellsWord(cells)}` : c.big}`
+    : `${nick(data, mode.seat)}: ${c.big}`;
   const split = mode.repair ?? {};
   const used = TRACKS.reduce((n, t) => n + (split[t] ?? 0), 0);
   const canRegroup = needs.regroup && refusal(s, { ...action, regroup: true }, data) === null;
   return (
-    <DecisionSheet title={title} sub={c.big} testid="card-panel"
+    <DecisionSheet title={c.name} sub={sub} testid="card-panel"
       hold={{powder: s.teams[own.side].powder, cap: data.econ.cap}}
       actions={<DecisionActions cancel={<button className="btn" onClick={onCancel}>Отмена</button>}
         primary={{key:'card-play', testid:'play-card', label:`Сыграть${c.cost ? ` · ${c.cost} П` : ''}${c.soul ? ` · ${c.soul} Д` : ''}`,
@@ -596,8 +596,8 @@ export function PlansPanel({ s, data, seat, onDone, onCancel }: { s: GameState; 
   const room = data.rules.plansMax - holder.plans.length;
   const [picks, setPicks] = useState<string[]>([]);
   return (
-    <DecisionSheet title={`${nick(data, seat)}: Планы`}
-      sub={`До ${room} ${room === 1 ? 'карты' : 'карт'} с руки. Реакцию из Плана можно сыграть сверх лимита Парусов, бонус «План:» действует.`}
+    <DecisionSheet title="Планы"
+      sub={`${nick(data, seat)}: до ${room} ${room === 1 ? 'карты' : 'карт'} с руки. Реакцию из Плана можно сыграть сверх лимита Парусов, бонус «План:» действует.`}
       testid="plans-panel" hold={{powder:s.teams[holder.side].powder,cap:data.econ.cap}}
       tools={<button type="button" className="btn ds-close" aria-label="Отмена" title="Отмена" onClick={onCancel}>×</button>}
       actions={<DecisionActions cancel={<button className="btn" data-testid="no-plans" onClick={() => onDone([])}>Без Планов</button>}
