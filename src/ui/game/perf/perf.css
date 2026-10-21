@@ -11,10 +11,10 @@
 .game.perf-off-weather .fx-weather { display:none!important; }
 .game.perf-off-ripples .sea-water::before, .game.perf-off-ripples .sea-water::after,
 .game.perf-off-ripples .fx-weather .wc, .game.perf-off-ripples .fx-weather .sf, .game.perf-off-ripples .fx-weather .crest, .game.perf-off-ripples .fx-weather .sp { display:none!important; }
-.game.perf-off-decor .backdrop :is(.deck-piece,.deck-hook,.table-things,.table-wheel,.prop,.deck-light,.deck-glow,.deck-dark,.deck-flare,.deck-glint,.lantern-light) { display:none!important; }
+.game.perf-off-decor .backdrop :is(.deck-piece,.deck-hook,.table-things,.table-wheel,.prop,.deck-light,.deck-glow,.deck-dark,.deck-flare,.deck-glint,.lantern-light,.phone-lamp-light) { display:none!important; }
 .game.perf-off-decor.view-hand-deck::after { display:none!important; }
 .game.perf-off-light, .game.perf-off-light *, .game.perf-off-light *::before, .game.perf-off-light *::after { mix-blend-mode:normal!important; background-blend-mode:normal!important; }
-.game.perf-off-light :is(.deck-light,.deck-glow,.deck-dark,.deck-flare,.deck-glint,.lantern-light,.fx-fireglow,.flash,.fx-flash),
+.game.perf-off-light :is(.deck-light,.deck-glow,.deck-dark,.deck-flare,.deck-glint,.lantern-light,.phone-lamp-light,.fx-fireglow,.flash,.fx-flash),
 .game.perf-off-light [fill*='fxGlow'], .game.perf-off-light.view-hand-deck::after { display:none!important; }
 .game.perf-off-particles [data-perf-particle], .game.perf-off-particles :is(.puff,.spark,.splinter,.splash,.ripple,.ember,.gold-dust,.dust,.bubble,.wisp,.shred,.ball.trail,.fx-smolder,.streak,.sparkle) { display:none!important; }
 .game.perf-off-labels :is(.fx-layer,.fx-scars) :is(.flyc,.fcard,.seacard,.plate,.plate-peek,.tag,.pill,.wait-pill,.tmark,.hold-tag), .game.perf-off-labels .reaction-wait-pill { visibility:hidden!important; }

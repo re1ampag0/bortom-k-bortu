@@ -85,6 +85,8 @@ interface DeckPlace {
   hook?: Box;
   /** A phone: the warm glint of the lantern on the barrel of the gun. */
   glint?: Box;
+  /** A phone: room beside the instruction, without changing any row height. */
+  lampSpace?: number;
 }
 
 const visible = (game: HTMLElement, q: string) => Array.from(game.querySelectorAll(q)).find((e) => e.getBoundingClientRect().width > 0) ?? null;
@@ -96,6 +98,31 @@ const pieceAt = (key: PieceKey, x: number, y: number, s: number): PieceBox => {
 };
 /** The lantern with its centre (the flame) at (lx, ly): deckScene3 puts LANTERN at (lx − 15·ls, ly − 18·ls). */
 const lanternAt = (lx: number, ly: number, ls: number) => pieceAt('lantern', lx - 15 * ls, ly - 18 * ls, ls);
+
+/** A phone lantern uses the free right-hand strip, above the frame, never over UI content. */
+function phoneLantern(game: HTMLElement, g: DOMRect, W: number) {
+  const frame = rect(game.querySelector('.sea-table'), g);
+  if (!frame) return null;
+  const space = 52;
+  const obstacles = Array.from(game.querySelectorAll(
+    '.status-turn, .status-tools, .status-text, .alarm-bar, .top-hold .hold-label, .top-hold .powder-dots, .top-hold .hold-n, .planks > .plank',
+  )).map(e => {
+    const b = rect(e, g);
+    // Model the reserved strip before the first layout has applied --phone-lamp-space.
+    if (b && (e.matches('.status-text') || e.closest('.status-text'))) b.w = Math.min(b.w, W - 8 - space - b.l);
+    return b;
+  }).filter((b): b is Box => !!b && b.w > 0 && b.h > 0);
+  const meet = (a: Box, b: Box) => a.l < b.l + b.w + 1 && a.l + a.w > b.l - 1 && a.t < b.t + b.h + 1 && a.t + a.h > b.t - 1;
+  for (const height of [44, 40, 36, 32]) {
+    const ls = height / 59, l = W - 8 - 50 * ls, t = frame.t - 2 - height;
+    const lantern: PieceBox = {key: 'lantern', l, t, w: 50 * ls, h: height};
+    const lx = l + 25 * ls, ly = t + 21 * ls;
+    const hook: Box = {l: lx - 4, t: t - 6, w: 8, h: 8};
+    if (hook.t < 4 || l < 4 || obstacles.some(b => meet(lantern, b) || meet(hook, b))) continue;
+    return {lantern, hook, lx, ly, ls, space};
+  }
+  return null;
+}
 
 /** Where the pieces of the deck stand on this window. */
 function deckPlace(game: HTMLElement): DeckPlace | null {
@@ -120,23 +147,11 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     // the balls at the bottom left of the gun, by its rear wheel, inside the window
     const bs = gs * 0.45;
     const balls = pieceAt('balls', Math.max(4, gun.l + 6 * gs) + 25 * bs, gun.t + gun.h - 2 - 20 * bs, bs);
-    // the lantern hangs on the bottom right corner of the frame of the sea, a little over the frame, over all of the table: right of the
-    // plank «Месть» and above «Перестроение», as large as that corner allows (its box 50·ls × 59·ls round the flame at (lx, ly − 3·ls))
-    // fix-ui (the user's choice: as large as fits without covering anything): the lantern hangs on the bottom right corner of the
-    // frame of the sea, in the strip right of «Месть» (its drawing is 30 of the 50 units of its box wide), over the frame, its foot
-    // just above «Перестроение»; whole in the window. The buttons of «Месть» and «Перестроение» stay clear.
-    const plank = rect(game.querySelector('.planks.bottom > .plank:last-child'), g);
-    const stripL = plank ? plank.l + plank.w + 1 : W - 20;
-    const ls = Math.max(0.3, Math.min(0.62, (W - 1 - stripL) / 30));
-    const lx = (stripL + W - 1) / 2;
-    const foot = regroup ? regroup.t - 1 : (plank ? plank.t + plank.h + 18 : hand.t - 20);
-    const at0 = lanternAt(0, 0, ls);
-    const ly = foot - (at0.t + at0.h);
-    const lantern = lanternAt(lx, ly, ls);
-    const hook = { l: lx - 4, t: lantern.t - 9, w: 8, h: 11 };
-    // the warm glint on the top of the barrel, towards the muzzle (the lantern is to the right)
-    const glint = { l: gun.l + 66 * gs, t: gun.t + 3 * gs, w: 54 * gs, h: 7 * gs };
-    return { phone: true, W, H, pieces: [gun, balls, lantern], lx, ly, ls, hook, glint };
+    const lamp = phoneLantern(game, g, W);
+    return { phone: true, W, H, pieces: [gun, balls, ...(lamp ? [lamp.lantern] : [])],
+      lx: lamp?.lx ?? 0, ly: lamp?.ly ?? 0, ls: lamp?.ls ?? 0,
+      hook: lamp?.hook, lampSpace: lamp?.space ?? 0 };
+
   }
   // «Ход окончен»; in «Тревога!» its place holds «Пропустить» — then the column of the log it stands in (fix-ui)
   const end = rect(visible(game, '[data-testid="end-turn"]'), g) ?? rect(visible(game, '.log-col .alarm-actions'), g) ?? rect(game.querySelector('.log-col'), g);
@@ -292,6 +307,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         put('--deck-lift', hd ? Math.round(hd.lift) : 0);
         put('--deck-tabs', hd ? Math.round(hd.tabs) : 0);
         // a phone: the warm light of the lantern over the fan (phone.css)
+        put('--phone-lamp-space', d?.lampSpace ?? 0);
         put('--lamp-x', d ? Math.round(d.lx) : 0);
         put('--lamp-y', d ? Math.round(d.ly) : 0);
         setPlaced((old) => (old.length ? [] : old));
@@ -316,7 +332,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
     const ro = new ResizeObserver(ask);
     const watch = () => {
       ro.observe(game);
-      game.querySelectorAll('.hand-cards, .log-col, .team-row, .sea-table').forEach((e) => ro.observe(e));
+      game.querySelectorAll('.hand-cards, .log-col, .team-row, .sea-table, .status, .top-hold').forEach((e) => ro.observe(e));
     };
     watch();
     // the hand grows and shrinks card by card, the fan tilts its cards (their inline --r/--dy): look again when they change
@@ -369,7 +385,8 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
             .map((p) => (
               <img key={p.key} className={`deck-piece ${p.flip ? 'flip' : ''}`} data-piece={p.key} src={PIECES[p.key].src} alt="" draggable={false} style={{ left: p.l, top: p.t, width: p.w, height: p.h }} />
             ))}
-          {deck && <DeckLight x={deck.lx} y={deck.ly} r={LIGHT_R[deck.phone ? 'phone' : 'laptop']} ls={deck.ls} sq={deck.H / deck.W} />}
+          {deck && !deck.phone && <DeckLight x={deck.lx} y={deck.ly} r={LIGHT_R.laptop} ls={deck.ls} sq={deck.H / deck.W} />}
+          {deck?.phone && deck.hook && <i className="phone-lamp-light" style={{left: deck.lx - 66, top: deck.hook.t + 4 + 59 * deck.ls, width: 132, height: 86}} />}
           {deck?.glint && <i className="deck-glint" style={{ left: deck.glint.l, top: deck.glint.t, width: deck.glint.w, height: deck.glint.h }} />}
           {deck?.hook && <i className="deck-hook" style={{ left: deck.hook.l, top: deck.hook.t, width: deck.hook.w, height: deck.hook.h }} dangerouslySetInnerHTML={{ __html: HOOK_SVG }} />}
           {deck?.pieces

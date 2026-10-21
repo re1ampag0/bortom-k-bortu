@@ -1072,3 +1072,11 @@
   .hand-cards > .hcard + .hcard { margin-left: -40px; }
   .hand-cards > .hcard.lifted { rotate: 0deg; translate: none; }
 }
+
+/* perf-diag: the lamp lives beside the upper Hold; reserve width, never extra height. */
+@media (max-width: 700px) {
+  .game.view-hand-deck .status-text { margin-right: var(--phone-lamp-space, 0px); }
+  .game.view-hand-deck::after { display: none; }
+  .phone-lamp-light { position:absolute; pointer-events:none; z-index:3;
+    background:radial-gradient(ellipse at 50% 0%, #ffd39145, #ffc87818 40%, transparent 72%); }
+}
