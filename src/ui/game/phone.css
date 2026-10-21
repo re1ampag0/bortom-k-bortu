@@ -1058,3 +1058,9 @@
   .game .plank-scars *, .game .fx-fireglow { mix-blend-mode: normal; }
   .game .fx-layer .banner, .game .fx-layer .seacard { box-shadow: 0 3px 7px #0006; }
 }
+
+/* ui-4, В8: native finger scrolling stays; only its painted scrollbar disappears. */
+@media (max-width: 700px) {
+  .hand-cards { scrollbar-width: none; }
+  .hand-cards::-webkit-scrollbar { display: none; }
+}
