@@ -128,7 +128,12 @@ export function at(ctx: FxCtx, t: number, fn: () => void): void {
   }, ms(ctx, t));
 }
 export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation {
-  return el.animate(kf, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
+  // On a phone the default opacity:0 already hides a delayed effect. Backwards fill would
+  // keep its future transform in the compositor for the entire wait, even while invisible.
+  const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
+  const shownFill = phone && delay > 0 && fill === 'both' ? 'forwards' : fill;
+  const frames = phone ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
+  return el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill: shownFill });
 }
 export function bx(ctx: FxCtx, el: Element): Box {
   // in the px of the stage (stage.ts): the effects are put inside the scaled screen
@@ -555,7 +560,8 @@ const R1 = (v: number) => Math.round(v * 10) / 10;
 /** A phone (≤ 700 px): only for the sizes of what would not fit (the number of particles is the laptop's, PH 7). */
 export const isPhone = (ctx: FxCtx) => ctx.board.clientWidth <= 700;
 /** The filters (feTurbulence, blur) are drawn: «богатые» — on a phone too (PH 7). */
-export const filters = (ctx: FxCtx) => ctx.rich;
+// The phone keeps the particles and gradients, without SVG blur/filter surfaces.
+export const filters = (ctx: FxCtx) => ctx.rich && !ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
 
 /** At most so many animations at once in the layer and the traces of the sea (TASKS.md: ~200; a margin for the ones
  *  every effect draws whatever the budget — a flash, a ball). */

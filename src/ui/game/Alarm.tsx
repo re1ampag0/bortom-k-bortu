@@ -256,18 +256,16 @@ export function ReactionSheet({
   items.sort((a, b) => Number(!!alarmOf(a.seat, a.card)?.why) - Number(!!alarmOf(b.seat, b.card)?.why));
   const side = s.ships[seats[0]]?.side;
   const picked = (it: { seat: string; card: string }) => pick?.seat === it.seat && pick.card === it.card;
-  const count = items.filter((it) => !alarmOf(it.seat, it.card)?.why).length;
   return (
     <section className="panel alarm-sheet" data-testid="reaction-panel" style={alarmVars}>
       <div className="as-head">
         <span className="as-title">Ответить Реакцией</span>
         <span className="as-count">
-          {side ? `Порох ${s.teams[side].powder} · ` : ''}
-          {count > 0 ? `можно сыграть: ${count}` : 'сыграть нечего'}
+          {side ? `Порох ${s.teams[side].powder} из ${data.econ.cap}` : ''}
         </span>
       </div>
       <div className="as-mid">
-        {memo && (
+        {hints && memo && (
           <p className="reaction-memo" data-testid="reaction-memo">
             {MEMO}
           </p>
@@ -287,6 +285,10 @@ export function ReactionSheet({
                   alarm={a ?? undefined}
                   onClick={() => !a?.why && onPick(picked(it) ? null : { seat: it.seat, card: it.card })}
                 />
+                <button className="alarm-play" data-testid="play-reaction" disabled={!!a?.why}
+                  onClick={() => onAct([{ type: 'react', seat: it.seat, card: it.card }])}>
+                  Сыграть «{cardByCode(data, it.card).name}»
+                </button>
                 {!hints && now.ok && <b className="ro-effect as-now">{now.text}</b>}
                 <button
                   className="info"
@@ -303,11 +305,6 @@ export function ReactionSheet({
       </div>
       {fuse && <Fuse {...fuse} />}
       <div className="as-btns">
-        {pick && (
-          <button className="alarm-play" data-testid="play-reaction" onClick={() => onAct([{ type: 'react', seat: pick.seat, card: pick.card }])}>
-            Сыграть «{cardByCode(data, pick.card).name}»
-          </button>
-        )}
         <button className="alarm-skip" data-testid="skip-reaction" onClick={() => onAct(seats.map((seat) => ({ type: 'noReaction', seat })))}>
           Пропустить
         </button>

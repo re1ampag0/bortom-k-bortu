@@ -1,6 +1,6 @@
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   abilityButtons,
   cardNeeds,
@@ -17,6 +17,7 @@ import {
   volleyTargets,
   type VolleyTarget,
 } from '../../engine/hints';
+import { sideGenitive, turnSummary } from '../../engine/log';
 import type { MatchRecord, MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
 import { ABILITY, cardByCode, hasAbility, isCaptain, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
@@ -237,6 +238,7 @@ export function Game({
 
   // ——— Interface state ———
   const [mode, setMode] = useState<Mode>({ k: 'idle' });
+  const [endSeconds, setEndSeconds] = useState(endMs / 1000);
   const [sheet, setSheet] = useState<Sheet>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [fastTurn, setFastTurn] = useState<string | null>(null);
@@ -265,7 +267,7 @@ export function Game({
   const [seatPick, setSeatPick] = useState<string | null>(null);
   const seat = seatPick && allSeats.includes(seatPick) ? seatPick : (d && d.side === bottom ? d.seats.find((x) => mySeats.includes(x)) : null) ?? mySeats[0] ?? allSeats[0];
 
-  const act = (action: Action | Action[]): boolean => {
+  const act = (action: Action | Action[], { preserveSheet = false } = {}): boolean => {
     const list = Array.isArray(action) ? action : [action];
     // By network «Ход окончен» of a player is a message: the turn ends when the ally pressed it too.
     if (net && list[0].type === 'endTurn') {
@@ -286,7 +288,7 @@ export function Game({
     }
     setFlash(null);
     setMode({ k: 'idle' });
-    setSheet(null);
+    if (!preserveSheet) setSheet(null);
     return true;
   };
 
@@ -297,17 +299,11 @@ export function Game({
   // The animation layer plays the actions (A2–A4): off at «мгновенно», after «До конца хода», behind the curtain and
   // with prefers-reduced-motion — then the table is at once in the real state.
   const fxEnabled = speed !== 'instant' && !instantUrl() && fastTurn !== turnKey && !curtainSide && !reducedMotion();
-  // The summary of the start of the turn waits while the layer plays and while a panel is open in the middle (U3): it
-  // never covers «Ваш ход» of the layer nor a panel, and its «Подробнее» is not lost. Both are known after the render
-  // (the layer's queue comes after the banners, the panel is decided below), so they come to the banners by an effect.
-  const [summaryHold, setSummaryHold] = useState(false);
   /** A game without actions yet: its first sea card and first turn are shown when the table opens (read once). */
   const newGame = (net ? net.actions : local!.actions.length) === 0 && !s.winner;
-  const dockOpen = useRef(false);
   const banner = useBanners({
     recent: game.recent,
     version,
-    data,
     bottom,
     mine: mineBottom,
     enabled: speed !== 'instant' && !instantUrl(),
@@ -319,9 +315,7 @@ export function Game({
     // them as clips, see fx below).
     start: newGame && !fxEnabled ? { sea: s.sea?.current ?? null, active: s.active } : null,
     paused: !!curtainSide,
-    holdSummary: summaryHold,
   });
-  const toast = banner?.k === 'summary' ? banner.text : null;
   // The animation layer on the table (A2–A4): every action is shown by its clips, the planks are drawn from the
   // displayed state while they play; the bots wait for it.
   const fx = useFxQueue({
@@ -338,11 +332,10 @@ export function Game({
     myDecision,
     // Back after a lost connection: «Пока вас не было» tells what happened, the table does not replay it.
     jump: !!net && net.missed.length > 0,
-    paused: !!banner && banner.k !== 'summary',
+    paused: !!banner,
     hold: held,
     start: newGame ? { round: s.round, sea: s.sea?.current ?? null, active: s.active } : null,
   });
-  useEffect(() => setSummaryHold(fx.busy || dockOpen.current));
   /** The table as it is shown: the displayed fields from the queue's D, the rest from the real view. */
   const tableView = fx.display ? withDisplay(view, fx.display) : view;
   // The log as it is shown (A4): the lines of an action appear when its clips are played; at the end of the game — all.
@@ -353,7 +346,7 @@ export function Game({
   useEffect(() => {
     if (!local || curtainSide || s.winner || held || !local.botToMove()) return;
     const instant = speed === 'instant' || fastTurn === turnKey;
-    if ((fx.busy || (banner && banner.k !== 'summary')) && !instant) return;
+    if ((fx.busy || (banner)) && !instant) return;
     const t = setTimeout(
       () => {
         let n = 0;
@@ -418,8 +411,11 @@ export function Game({
   useEffect(() => {
     // «Ход окончен · Отменить»: the turn passes after 3 s (1 s with «Быстрый конец хода»).
     if (mode.k !== 'ending') return;
-    const t = setTimeout(() => act(mode.action), endMs);
-    return () => clearTimeout(t);
+    const started = performance.now();
+    setEndSeconds(endMs / 1000);
+    const counter = setInterval(() => setEndSeconds(Math.max(0, Math.ceil((endMs - performance.now() + started) / 1000))), 200);
+    const t = setTimeout(() => act(mode.action, { preserveSheet: true }), endMs);
+    return () => { clearTimeout(t); clearInterval(counter); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
@@ -768,20 +764,6 @@ export function Game({
       );
     } else if (mode.k === 'confirmEnd') {
       dock = <ConfirmPanel title={mode.text} yes="Закончить ход" no="Вернуться" onYes={() => endFlow('confirmed')} onNo={cancel} testid="confirm-end" />;
-    } else if (mode.k === 'ending') {
-      dock = (
-        <section className="panel ending" data-testid="ending" style={{ ['--ending-ms' as string]: `${endMs}ms` }}>
-          <div className="panel-head">
-            <b>Ход окончен</b>
-            <span className="panel-sub">
-              ход перейдёт к {SIDE_LABEL[other(bottom)].dat} через {endMs / 1000} с
-            </span>
-            <button className="btn" data-testid="ending-cancel" onClick={cancel}>
-              Отменить
-            </button>
-          </div>
-        </section>
-      );
     } else if (mode.k === 'plans') {
       dockSheet = true;
       dock = <PlansPanel s={s} data={data} seat={mode.seat} onDone={(plans) => finishTurn({ type: 'endTurn', side: bottom, plans })} onCancel={cancel} />;
@@ -838,7 +820,6 @@ export function Game({
     );
   }
 
-  dockOpen.current = !!dock || !!chargeSheet;
 
   // ——— The instruction in the status bar ———
   const instruction = (() => {
@@ -893,7 +874,12 @@ export function Game({
   }
 
   // ——— The middle at rest: the last event ———
-  const lastEvent = [...shownLog].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
+  const lastShownAction = shownLog.at(-1)?.action;
+  const shownRecent = game.recent.find((r) => r.n === lastShownAction);
+  const shownSummary = shownRecent ? turnSummary(data, shownRecent.events) : null;
+  const lastEvent = shownSummary?.text
+    ? `Ход ${sideGenitive(shownSummary.side)}: ${shownSummary.text}`
+    : [...shownLog].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
   /** The ally: «Капитан предлагает Заряд…» (P6). */
   const offerToMe = myTurn && mode.k === 'idle' ? offers.find((o) => mySeats.includes(o.to) && !mySeats.includes(o.from)) : undefined;
   const offerInfo = offerToMe ? `Капитан предлагает Заряд «${cardByCode(data, offerToMe.card).name}» — нажмите «Залп» ${nick(offerToMe.to)}` : null;
@@ -962,7 +948,7 @@ export function Game({
 
   // ——— Bottom buttons ———
   const undoWhy = myTurn && local ? local.undoRefusal(bottom) : 'Отменять можно только свои действия в свой ход';
-  const undoBtn: Btn = { key: 'undo', label: '↶', disabled: undoWhy, onClick: () => (local?.undo(), setMode({ k: 'idle' })), testid: 'undo' };
+  const undoBtn: Btn = { key: 'undo', label: '↶', disabled: mode.k === 'ending' ? null : undoWhy, onClick: () => mode.k === 'ending' ? cancel() : (local?.undo(), setMode({ k: 'idle' })), testid: 'undo' };
   // By network instead of Undo: «Напомнить» those the game waits for.
   const waitingPeople = !!net && !!d && !s.winner && !myDecision && (d.kind === 'turn' ? d.seats.filter((x) => !net.ready.includes(x)) : d.seats).some((x) => !net.isBotSeat(x) && !mySeats.includes(x));
   const remindBtn: Btn = {
@@ -977,7 +963,7 @@ export function Game({
   };
   const endBtn: Btn = {
     key: 'end',
-    label: myTurn || s.winner || !d ? 'Ход окончен' : `${/ы$/.test(SIDE_LABEL[s.active].name) ? 'Ходят' : 'Ходит'} ${SIDE_LABEL[s.active].name}`,
+    label: mode.k === 'ending' ? `Ход окончен · ${endSeconds}` : myTurn || s.winner || !d ? 'Ход окончен' : `${/ы$/.test(SIDE_LABEL[s.active].name) ? 'Ходят' : 'Ходит'} ${SIDE_LABEL[s.active].name}`,
     primary: true,
     disabled: myTurn ? (mode.k === 'idle' ? null : 'Сначала закончите или отмените текущее действие') : 'Сейчас не ваш ход',
     onClick: () => endFlow('start'),
@@ -1139,7 +1125,7 @@ export function Game({
         {botBtns.map((b) => (
           <RoundButton key={b.key} b={b} icon={botIcon[b.key]} />
         ))}
-        {net ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" thin />}
+        {net && mode.k !== 'ending' ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" thin />}
       </div>
       <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       {allyReady && (
@@ -1180,20 +1166,14 @@ export function Game({
           <div className="planks top">{columns(top).map(renderPlank)}</div>
           <div className="middle" data-fx-gap>
             <BannerView data={data} banner={banner} />
-            {toast && (
-              <div className="toast" data-testid="turn-summary" role="status">
-                <span>{toast}</span>
-                <Button b={{ key: 'more', label: 'Подробнее', onClick: () => setSheet({ k: 'lastTurn' }), testid: 'summary-more' }} className="small" />
-              </div>
-            )}
             {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
             {/* Б1: a translucent line along the bottom of the open sea; the hint «выберите карту или действие» is in the top plaque already */}
             {!dock && !s.winner && !alarmOn && (lastEvent || offerInfo) && (
-              <p className="middle-info" data-testid="middle-info" title={lastEvent ?? undefined}>
+              <button type="button" className="middle-info" data-testid="middle-info" title={lastEvent ?? undefined} onClick={() => setSheet({ k: 'log' })} aria-label={`Открыть журнал. Последнее: ${lastEvent ?? ''}`}>
                 {offerInfo && <b data-testid="offer-info">{offerInfo}</b>}
                 {offerInfo && lastEvent && ' · '}
                 {lastEvent && <>Последнее: {lastEvent}</>}
-              </p>
+              </button>
             )}
           </div>
           <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
@@ -1280,7 +1260,7 @@ export function Game({
           Правила
         </button>
         {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" capNarrow={held ? 'Дальше' : 'Пауза'} />}
-        {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" capNarrow="До конца" /> : net ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
+        {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" capNarrow="До конца" /> : net && mode.k !== 'ending' ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
         <OakButton
           b={endBtn}
           className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`}
