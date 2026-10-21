@@ -732,6 +732,7 @@ export function Game({
     dock = <TortugaPanel key={turnKey} s={s} data={data} side={d!.side} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'choice') {
     dockSheet = true;
+    oakDock = true;
     dock = <ChoicePanel key={`${version}`} s={s} data={data} seat={myDeciding[0]} onAct={(a) => act(a)} onSea={(code) => setSheet({ k: 'sea', code })} />;
   } else if (myTurn) {
     if (mode.k === 'aim') {

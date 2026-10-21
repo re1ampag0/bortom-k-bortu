@@ -419,7 +419,13 @@ export function ChoicePanel({
     return 'выбрана';
   };
   return (
-    <Panel title={`${nick(data, seat)}: ${text.title}`} sub={text.sub} testid="choice-panel">
+    <DecisionSheet title={`${nick(data, seat)}: ${text.title}`} sub={text.sub} testid="choice-panel"
+      hold={{powder: s.teams[s.ships[seat].side].powder, cap: data.econ.cap}}
+      actions={<DecisionActions
+        cancel={<button className="btn" onClick={() => setPicks([])}>Сбросить выбор</button>}
+        primary={{key: 'choice-done', label: `Готово (${picks.length} из ${allowed.count})`,
+          disabled: picks.length !== allowed.count ? `Выберите ${allowed.count}` : null,
+          onClick: () => onAct({type: 'choose', seat, cards: picks})}} />}>
       {tia ? (
         <div className="tia-opts">
           {allowed.from.map((card) => (
@@ -440,19 +446,7 @@ export function ChoicePanel({
           ))}
         </div>
       )}
-      <div className="panel-actions">
-        <button className="btn" onClick={() => setPicks([])}>
-          Сбросить выбор
-        </button>
-        <button
-          className="btn primary"
-          aria-disabled={picks.length !== allowed.count}
-          onClick={() => picks.length === allowed.count && onAct({ type: 'choose', seat, cards: picks })}
-        >
-          Готово ({picks.length} из {allowed.count})
-        </button>
-      </div>
-    </Panel>
+    </DecisionSheet>
   );
 }
 
