@@ -45,8 +45,8 @@ async function piratesAgainstBots(page: Page, query: string) {
 }
 
 /** Two people on one screen, seed 1: the Pearl's Volley at the Endeavour opens the Company's Reaction window. */
-async function duoReactionWindow(page: Page) {
-  await page.goto('?seed=1&speed=instant&hints=0');
+async function duoReactionWindow(page: Page, hints = false) {
+  await page.goto(`?seed=1&speed=instant&hints=${Number(hints)}`);
   await page.getByTestId('quick-duo').click();
   await page.getByTestId('prep-start').click();
   await page.getByTestId('placement-done').click();
@@ -99,7 +99,7 @@ test.describe('laptop 1366×660', () => {
     const panel = page.getByTestId('reaction-panel');
     await expect(page.getByTestId('alarm')).toContainText('ТРЕВОГА!');
     await expect(page.getByTestId('alarm')).toContainText('даёт Залп по «Индевору» — ответите Реакцией?');
-    await expect(panel.getByTestId('reaction-memo')).toContainText('Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
+    // The phone-only explanatory note (Б2) is covered with both hint settings below.
     // The arrow and the pill are on the table; the strip of the outcome is under «Подсказки» only.
     await expect(page.getByTestId('alarm-pill')).toContainText('по Корпусу');
     await expect(page.locator('.hcard-strip.ok')).toHaveCount(0);
@@ -166,17 +166,20 @@ test.describe('phone 430×932', () => {
   test.use({ viewport: { width: 430, height: 932 } });
 
   test('the Reaction window: a sheet with the Reactions as cards, a press chooses, «i» opens the card and keeps the choice, «Сыграть» from it plays', async ({ page }) => {
-    await duoReactionWindow(page);
+    await duoReactionWindow(page, true);
+    await expect(page.getByTestId('reaction-memo')).toContainText('Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
+    await duoReactionWindow(page, false);
     const panel = page.getByTestId('reaction-panel');
     await expect(page.getByTestId('alarm')).toContainText('ТРЕВОГА!');
-    await expect(panel.getByTestId('reaction-memo')).toBeVisible();
+    await expect(panel.getByTestId('reaction-memo')).toHaveCount(0);
     const row = panel.locator('.as-card').first();
     const code = (await row.getAttribute('data-card'))!;
     const name = cardByCode(data, code).name;
     await expect(row.locator('.ro-effect')).toContainText('Залп');
     // A press on the card chooses the Reaction.
     await row.locator('.hcard').click();
-    await expect(page.locator('[data-testid="play-reaction"]:visible')).toHaveText(`Сыграть «${name}»`);
+    await expect(row.getByTestId('play-reaction')).toHaveText(`Сыграть «${name}»`);
+    await expect(row).toHaveClass(/on/);
     await page.screenshot({ path: `${SHOTS}/phone-reaction-window.png` });
     // «i» — the card in full; closing it brings back the window with the choice kept.
     await row.getByTestId('reaction-info').click();
@@ -184,14 +187,15 @@ test.describe('phone 430×932', () => {
     await page.screenshot({ path: `${SHOTS}/phone-reaction-card.png` });
     await page.getByTestId('card-detail').getByRole('button', { name: 'Закрыть' }).click();
     await expect(page.getByTestId('card-detail')).toBeHidden();
-    await expect(page.locator('[data-testid="play-reaction"]:visible')).toHaveText(`Сыграть «${name}»`);
+    await expect(row.getByTestId('play-reaction')).toHaveText(`Сыграть «${name}»`);
+    await expect(row).toHaveClass(/on/);
     // «Сыграть» in the card plays the Reaction, as the button of the window does.
     await row.getByTestId('reaction-info').click();
     await page.getByTestId('detail-play').click();
     await expect(page.locator(`.as-card[data-card="${code}"]`)).toHaveCount(0);
-    // Seed 1: the window «после Залпа» opens next (another Reaction) — still the first window: the note stays.
+    // Seed 1: a second Reaction window may open; without hints it has no explanatory note either.
     if (await page.getByTestId('reaction-panel').isVisible()) {
-      await expect(page.getByTestId('reaction-memo')).toBeVisible();
+      await expect(page.getByTestId('reaction-memo')).toHaveCount(0);
       await page.locator('[data-testid="skip-reaction"]:visible').click();
     }
     await expect(page.getByTestId('curtain')).toBeVisible();
