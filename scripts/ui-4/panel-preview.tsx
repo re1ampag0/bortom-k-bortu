@@ -28,6 +28,9 @@ if(which==='card') {
  game.state=turnOf('ПИРАТЫ',{Ж:['Плотник']});
  game.state.ships['Ж'].tracks.guns=0;game.state.ships['Ж'].tracks.hull=7;
 }
+if(which==='confirm') {
+ game.setup.hints=true;game.state=turnOf('ПИРАТЫ');
+}
 (window as unknown as {ui4Game:LocalGame}).ui4Game=game;
 function Preview(){return <div id="stage" style={useStage()??undefined}><Game game={game} onExit={()=>{}} onRestart={()=>{}} /></div>}
 createRoot(document.getElementById('root')!).render(<Preview/>);
