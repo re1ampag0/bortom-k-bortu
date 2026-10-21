@@ -28,6 +28,14 @@ try {
   await sheet.locator('.as-card:not(.off) .hcard').first().click();
   await expect(sheet.getByTestId('play-reaction')).toHaveCount(1);
   await page.waitForTimeout(200);
+  const labelFit=await sheet.locator('.reaction-play .oak-pan b').evaluate(e=>{
+   const range=document.createRange();range.selectNodeContents(e);
+   const panel=e.parentElement.getBoundingClientRect();
+   return {text:e.textContent,lines:[...range.getClientRects()].map(r=>r.toJSON()),panel:panel.toJSON()};
+  });
+  expect(new Set(labelFit.lines.map(r=>Math.round(r.y))).size).toBeLessThanOrEqual(2);
+  for(const r of labelFit.lines){expect(r.x).toBeGreaterThanOrEqual(labelFit.panel.x-1);expect(r.right).toBeLessThanOrEqual(labelFit.panel.right+1);expect(r.y).toBeGreaterThanOrEqual(labelFit.panel.y-1);expect(r.bottom).toBeLessThanOrEqual(labelFit.panel.bottom+1);}
+
   const layout=await page.evaluate(()=>{
    const box=q=>document.querySelector(q)?.getBoundingClientRect().toJSON();
    return {height:innerHeight,sheet:box('[data-testid="reaction-panel"]'),bar:box('.bottom-bar'),target:box('[data-testid="plank-Ж"]'),alarm:box('[data-testid="alarm"]'),cards:[...document.querySelectorAll('.as-card')].map(e=>({card:e.dataset.card,box:e.getBoundingClientRect().toJSON()}))};
