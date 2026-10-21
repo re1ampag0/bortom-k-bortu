@@ -1,0 +1,7 @@
+npm test: 57 files passed; 675/675 tests passed.
+Selected Chromium e2e, one run each:
+clarity phone Reaction window: 1 passed (9.8s)
+Б6 deck 1920×1080: 1 passed (8.4s)
+Б6 table 1920×1080: 1 passed (7.4s)
+npm run typecheck: exit 0 (one final run)
+No application code changes; no full e2e or sim.
