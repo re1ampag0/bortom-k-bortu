@@ -272,11 +272,12 @@ test.describe('the turn with the layer: «До конца хода», «Ход �
       () =>
         new Promise<string[]>((done) => {
           const out: string[] = [];
+          const started = performance.now();
           const t = setInterval(() => {
             const text = document.querySelector('[data-fx-instruction]')?.textContent ?? '';
             if (out.at(-1) !== text) out.push(text);
             const b = document.querySelector('[data-testid="end-turn"]');
-            if (out.length > 200 || (b && b.textContent === 'Ход окончен' && b.getAttribute('aria-disabled') !== 'true')) { clearInterval(t); done(out); }
+            if (performance.now() - started > 60_000 || (b && b.querySelector('.oak-pan > b')?.textContent === 'Ход окончен' && b.getAttribute('aria-disabled') !== 'true')) { clearInterval(t); done(out); }
           }, 50);
         }),
     );
@@ -304,8 +305,10 @@ test.describe('the turn with the layer: «До конца хода», «Ход �
     const pause = page.locator('[data-testid="pause-show"]:visible');
     /** The animations of the layer: how many go, how many stand, where each stands. */
     const look = () =>
-      page.evaluate(() => {
+      page.evaluate(async () => {
         const as = document.querySelector('.fx-layer')!.getAnimations({ subtree: true });
+        // pause() is pending until the browser commits it; playState alone changes before currentTime settles.
+        await Promise.all(as.map((a) => a.ready.catch(() => undefined)));
         return {
           running: as.filter((a) => a.playState === 'running').length,
           paused: as.filter((a) => a.playState === 'paused').length,
@@ -332,4 +335,41 @@ test.describe('the turn with the layer: «До конца хода», «Ход �
     expect((await look()).paused, 'nothing stays paused').toBe(0);
     await expect.poll(async () => (await look()).times.join(), { timeout: 10_000 }).not.toBe(held.times.join());
   });
+});
+
+// A2: an automatic end of the turn must not dismiss a window the player is reading.
+test('⚙ stays open when the countdown passes the turn to the bot; only the player closes it', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 660 });
+  await page.goto('?seed=1&speed=fast');
+  for (const id of ['quick-bots', 'prep-start', 'placement-done']) await page.getByTestId(id).click();
+  const end = page.locator('[data-testid="end-turn"]:visible').first();
+  const finish = async () => {
+    await end.click();
+    for (let i = 0; i < 30 && !/Ход окончен ·/.test(await end.textContent() ?? ''); i++) {
+      for (const id of ['confirm-yes', 'no-plans']) if (await page.getByTestId(id).isVisible()) await page.getByTestId(id).click();
+      await page.waitForTimeout(100);
+    }
+    await expect(end).toContainText('Ход окончен · 3');
+    await expect(page.getByTestId('ending')).toHaveCount(0);
+  };
+  await finish();
+  await expect(end).toContainText('Ход окончен · 2');
+  await page.locator('[data-testid="undo"]:visible').first().click();
+  await expect(end).not.toContainText('Ход окончен ·');
+  await expect(end).not.toHaveAttribute('aria-disabled', 'true');
+  await finish();
+  await page.getByTestId('settings-btn').click();
+  await expect(page.getByTestId('settings')).toBeVisible();
+  await expect(page.getByTestId('end-turn').first()).not.toContainText('Ход окончен ·', { timeout: 5000 });
+  await page.waitForTimeout(1500);
+  await expect(page.getByTestId('settings')).toBeVisible();
+  await page.screenshot({ path: 'docs/screenshots/fix-ci/settings-bot-turn.png' });
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('settings')).toHaveCount(0);
+  await page.getByTestId('settings-btn').click();
+  await page.getByTestId('settings').getByRole('button', { name: 'Закрыть', exact: true }).click();
+  await expect(page.getByTestId('settings')).toHaveCount(0);
+  await page.getByTestId('settings-btn').click();
+  await page.locator('.sheet-backdrop').click({ position: { x: 2, y: 2 } });
+  await expect(page.getByTestId('settings')).toHaveCount(0);
 });

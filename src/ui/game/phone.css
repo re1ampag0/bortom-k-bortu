@@ -219,6 +219,35 @@
     padding: 0 4px;
     gap: 5px;
   }
+  /* Invisible extensions never reserve room. The Legend grows upwards, away from Hull. */
+  .plank { overflow: visible; }
+  button.star::before {
+    inset: auto -11px 0;
+    width: 44px;
+    height: 44px;
+    transform: none;
+  }
+  /* With a clickable journal line above and Hull below, divide their shared vertical space. */
+  .game:has(.middle-info) .planks.bottom button.star::before {
+    inset: -3px -11px;
+    height: auto;
+  }
+  /* Neighbouring rows split the available space; their hit areas cannot steal each other's taps. */
+  .track .info-hit::after {
+    inset: -2px;
+    width: auto;
+    height: auto;
+    transform: none;
+  }
+  .plank-statuses .info-hit::after {
+    inset: -2px -2px -21px;
+    width: auto;
+    height: auto;
+    transform: none;
+  }
+  .plank:has(.plank-buttons) .plank-statuses .info-hit::after {
+    bottom: -2px;
+  }
   .plank-head .ship-art {
     flex: 0 0 32px;
     height: 20px;
@@ -331,6 +360,9 @@
     display: none;
   }
   .track.t-hull .track-num {
+    /* Visible numbers win over invisible hit extensions of the row below. */
+    position: relative;
+    z-index: 2;
     margin-left: auto;
     padding-left: 4px;
     font-size: 17px;
@@ -426,6 +458,12 @@
      name | price», three and more — a third each, the short labels, the row scrolls ——— */
   .plank-buttons .btn {
     flex: 1 0 calc((100% - 8px) / 3);
+  }
+  /* The last tooltip opens into the row, not beyond its scroll boundary. Otherwise hover
+     changes scrollWidth and scroll snapping keeps moving the button away from the pointer. */
+  .plank-buttons .btn.cmd[data-tip]:last-child::after {
+    left: auto;
+    right: 0;
   }
   .plank-buttons .btn.cmd {
     font-family: var(--font-sc);
@@ -540,7 +578,7 @@
     flex-wrap: nowrap;
     gap: 4px;
     padding: 0 7px 5px;
-    overflow: hidden;
+    overflow: visible;
   }
   .plank-statuses .status-chip {
     flex: none;
@@ -983,4 +1021,40 @@
   .game.view-hand-deck .hand-head {
     margin-top: 10px;
   }
+}
+
+/* phone-2: four independent cells, with six clear pixels between the numbers and the next icon. */
+@media (max-width: 700px) {
+  .plank-body { column-gap: 6px; }
+  .track-row2 { gap: 6px; padding-right: 0; }
+  .track-row2 > .track + .track { padding-left: 0; border: 0; }
+  .track-row2 > .track + .track::before {
+    content: ''; position: absolute; left: -3px; height: 12px; border-left: 1px solid #bcae91;
+  }
+  .plank-body > .badges .badge.souls { padding-left: 0; border: 0; }
+  .plank-body:has(.badge.souls) .track-row2 .track-num,
+  .plank-body > .badges .badge.souls { font-size: 12px; }
+  .plank-body:has(.badge.souls) .track-icon { width: 13px; height: 13px; }
+  .plank-body:has(.badge.souls) .t-guns .track-icon { width: 17px; height: 11px; }
+}
+@media (max-width: 400px) {
+  .plank-body:has(.badge.souls) .track-row2 > .track { gap: 2px; }
+  .plank-body:has(.badge.souls) .track-row2 .track-num,
+  .plank-body > .badges .badge.souls { font-size: 11px; }
+  .plank-body:has(.badge.souls) .track-icon { width: 12px; height: 12px; }
+  .plank-body:has(.badge.souls) .t-guns .track-icon { width: 15px; height: 10px; }
+}
+
+/* phone-2: ordinary translucent gradients instead of offscreen blend/filter surfaces. */
+@media (max-width: 700px) {
+  .game .deck-light, .game .deck-glow, .game .deck-glint,
+  .game .lantern-light, .game.view-hand-deck::after { mix-blend-mode: normal; }
+  .game .deck-light { opacity: .4; }
+  .game .deck-glint { opacity: .55; }
+  .game .deck-hook, .game .backdrop .deck-piece { filter: none; }
+  .game.fx-busy .deck-flare, .game.fx-busy .lantern-light { animation: none; }
+  .game .fx-layer > *, .game .fx-weather > * { will-change: auto; }
+  .game .fx-layer *, .game .fx-weather * { filter: none !important; }
+  .game .plank-scars *, .game .fx-fireglow { mix-blend-mode: normal; }
+  .game .fx-layer .banner, .game .fx-layer .seacard { box-shadow: 0 3px 7px #0006; }
 }

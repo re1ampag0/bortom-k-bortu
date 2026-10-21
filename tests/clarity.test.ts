@@ -86,8 +86,11 @@ describe('the Reaction window without «Подсказки»', () => {
     expect(window(false, true).html).not.toContain('as-now');
   });
 
-  it('the note on what a Reaction is, in the first window', () => {
-    expect(text(window(true).html)).toContain('Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
+  it('the first-window Reaction note is shown only with hints enabled', () => {
+    expect(window(true, false).html).not.toContain('reaction-memo');
+    expect(text(window(true, false).html)).not.toContain('Реакция — карта');
+    expect(window(true, true).html).toContain('data-testid="reaction-memo"');
+    expect(text(window(true, true).html)).toContain('Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
   });
 });
 

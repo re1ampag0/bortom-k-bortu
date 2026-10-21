@@ -4556,3 +4556,7 @@ button.star::before {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
   }
 }
+
+/* phone-2: the journal entry keeps the existing sea-line geometry. */
+button.middle-info { pointer-events: auto; border: 0; font-family: inherit; text-align: left; cursor: pointer; }
+button.middle-info:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }

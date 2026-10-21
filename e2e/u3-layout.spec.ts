@@ -19,7 +19,12 @@ const shot = (page: Page, name: string, width: number) => page.screenshot({ path
 /** The vertical centre of the gap between the rows of planks and of the middle group (the summary, the hint). */
 async function middle(page: Page) {
   return page.evaluate(() => {
-    const r = (q: string) => document.querySelector(q)?.getBoundingClientRect() ?? null;
+    const stage = document.getElementById('stage')!;
+    const k = stage.getBoundingClientRect().width / stage.offsetWidth;
+    const r = (q: string) => {
+      const b = document.querySelector(q)?.getBoundingClientRect();
+      return b ? { top: b.top / k, bottom: b.bottom / k, left: b.left / k, right: b.right / k, height: b.height / k } : null;
+    };
     const top = r('.planks.top')!, bottom = r('.planks.bottom')!;
     const sum = r('[data-testid="turn-summary"]');
     const info = r('[data-testid="middle-info"]');
@@ -66,8 +71,8 @@ async function columns(page: Page) {
       const others = Array.from(p.querySelectorAll('.cells, .track-label, .badges > *, .status-chip')).map((e) => e.getBoundingClientRect());
       return {
         ship: p.dataset.ship,
-        heights: badges.map((b) => b.height),
-        gaps: tracks.map((t) => t.num.left - t.cells.right),
+        heights: badges.map((b) => b.height / (document.getElementById('stage')!.getBoundingClientRect().width / document.getElementById('stage')!.offsetWidth)),
+        gaps: tracks.map((t) => (t.num.left - t.cells.right) / (document.getElementById('stage')!.getBoundingClientRect().width / document.getElementById('stage')!.offsetWidth)),
         numsMeet: nums.filter((n) => others.some((o) => o.width > 0 && meet(n, o))).length,
       };
     }),
@@ -101,7 +106,7 @@ for (const size of SIZES) {
   test.describe(`${size.width}×${size.height}`, () => {
     test.use({ viewport: { width: size.width, height: size.height } });
 
-    test('a game against the bots: the summary waits for «Ваш ход», the middle at the centre of the gap, the heads and the columns', async ({ page }) => {
+    test('a game against the bots: the summary stays in «Последнее», the journal opens, the heads and the columns', async ({ page }) => {
       // seed 3 has «Буря» in the first round: «&wxStill=1» keeps the planks from pitching while they are measured and
       // their buttons pressed (the pitch itself — e2e/fx-sea.spec.ts)
       await page.goto('?seed=3&speed=normal&wxStill=1');
@@ -112,52 +117,37 @@ for (const size of SIZES) {
       await expect(page.getByTestId('game')).toBeVisible();
       // the pointer left where «Готово» was would rest on a plank (a hover opens the rule of a track icon) — off the table
       await page.mouse.move(2, 2);
-      // Every frame from now on: the summary never meets a banner (8 px apart at least) nor «Последнее: …»; the banner
-      // «Ваш ход» of the layer stands at the centre of the gap.
-      await page.evaluate((tol) => {
-        const w = window as unknown as { u3: { frames: number; summary: number; bad: string[] } };
-        w.u3 = { frames: 0, summary: 0, bad: [] };
-        const box = (e: Element) => e.getBoundingClientRect();
-        const meet = (a: DOMRect, b: DOMRect, m: number) => a.left < b.right + m && b.left < a.right + m && a.top < b.bottom + m && b.top < a.bottom + m;
-        const tick = () => {
-          w.u3.frames++;
-          const sum = document.querySelector('[data-testid="turn-summary"]');
-          const info = document.querySelector('[data-testid="middle-info"]');
-          const banners = Array.from(document.querySelectorAll('.fx-layer > .banner, .table-banner')).filter((e) => Number(getComputedStyle(e).opacity) > 0.05);
-          if (sum) {
-            w.u3.summary++;
-            for (const b of banners) if (meet(box(sum), box(b), 8)) w.u3.bad.push(`the summary meets «${b.textContent}»`);
-            if (info && meet(box(sum), box(info), 0)) w.u3.bad.push('the summary covers «Последнее»');
-          }
-          for (const b of banners.filter((e) => e.textContent === 'Ваш ход' && Number(getComputedStyle(e).opacity) > 0.9)) {
-            const top = box(document.querySelector('.planks.top')!), bottom = box(document.querySelector('.planks.bottom')!);
-            const dy = Math.abs((box(b).top + box(b).bottom) / 2 - (top.bottom + bottom.top) / 2);
-            if (dy > tol) w.u3.bad.push(`«Ваш ход» ${Math.round(dy)} px off the centre of the gap`);
-          }
-          if (w.u3.bad.length < 20) requestAnimationFrame(tick);
-        };
-        tick();
-      }, TOL);
-
+      // The sea keeps its centre for clips; the start-of-turn summary belongs to the journal line.
       await page.waitForFunction(() => /^«[^»]+»: «|Залп/.test(document.querySelector('[data-fx-instruction]')?.textContent ?? ''), null, { timeout: 90_000, polling: 50 });
       await shot(page, 'bots-turn', size.width);
-      await page.waitForFunction(() => Array.from(document.querySelectorAll('.fx-layer > .banner')).some((b) => b.textContent === 'Ваш ход' && Number(getComputedStyle(b).opacity) > 0.9), null, { timeout: 120_000, polling: 30 });
+      await expect(page.getByTestId('turn-summary')).toHaveCount(0);
+      // Observe the banner and its bounds in the same frame: a screenshot can outlive its short fade.
+      const bannerFrame = await page.waitForFunction(() => {
+        const banner = Array.from(document.querySelectorAll('.fx-layer > .banner')).find(b => b.textContent === 'Ваш ход' && Number(getComputedStyle(b).opacity) > .9);
+        if (!banner) return null;
+        const stage = document.getElementById('stage')!;
+        const k = stage.getBoundingClientRect().width / stage.offsetWidth;
+        const top = document.querySelector('.planks.top')!.getBoundingClientRect();
+        const bottom = document.querySelector('.planks.bottom')!.getBoundingClientRect();
+        const r = banner.getBoundingClientRect();
+        return { offset: Math.abs((r.top + r.bottom - top.bottom - bottom.top) / (2 * k)) };
+      }, null, { timeout: 120_000, polling: 30 });
+      expect((await bannerFrame.jsonValue())!.offset, '«Ваш ход» at the centre of the gap').toBeLessThanOrEqual(TOL);
       await shot(page, 'your-turn', size.width);
-      await expect(page.getByTestId('turn-summary')).toBeVisible({ timeout: 30_000 });
-      await expect(page.getByTestId('summary-more')).toHaveClass(/btn/);
+      await expect(page.locator('[data-fx-instruction]')).toContainText('выберите карту или действие', { timeout: 30_000 });
+      await expect(page.getByTestId('turn-summary')).toHaveCount(0);
+      await expect(page.getByTestId('middle-info')).toContainText(/Последнее: Ход .*Порох/);
       await shot(page, 'summary', size.width);
       const withSummary = await middle(page);
-      expect(Math.abs(withSummary.group! - withSummary.gap), 'the summary at the centre of the gap').toBeLessThanOrEqual(TOL);
-      // Б1: «Последнее» — a line of ≈ 22 px along the bottom of the gap, the width of the water, never over a plank
       expect(withSummary.info, '«Последнее» is on the table').not.toBeNull();
       expect(Math.abs(withSummary.info!.height - 22)).toBeLessThanOrEqual(2);
       expect(withSummary.info!.toPlanks).toBeGreaterThanOrEqual(-1);
       expect(withSummary.info!.toPlanks).toBeLessThanOrEqual(8);
       expect(Math.abs(withSummary.info!.left) + Math.abs(withSummary.info!.right)).toBeLessThanOrEqual(2 * 8);
-      await expect(page.getByTestId('turn-summary')).toHaveCount(0, { timeout: 10_000 });
-      const u3 = await page.evaluate(() => (window as unknown as { u3: { frames: number; summary: number; bad: string[] } }).u3);
-      expect(u3.summary, 'the summary was seen').toBeGreaterThan(0);
-      expect(u3.bad).toEqual([]);
+      await page.getByTestId('middle-info').click();
+      await expect(page.getByTestId('log-sheet')).toBeVisible();
+      await page.locator('.lbook .close').click();
+      await expect(page.getByTestId('log-sheet')).toHaveCount(0);
 
       // The own turn at rest.
       // the hint «выберите карту или действие» is in the top plaque; the line at the bottom holds «Последнее» only
@@ -248,14 +238,15 @@ for (const size of SIZES) {
       await shot(page, 'volley-target', size.width);
       await page.getByTestId('cancel-volley').click();
 
-      // «Ход окончен»: «✓ готов» in the heads, the panel at the centre.
+      // «Ход окончен»: «✓ готов» in the heads, countdown on the oak button; the sea stays clear.
       await page.locator('[data-testid="end-turn"]:visible').first().click();
       const noPlans = page.getByTestId('no-plans');
       if (await noPlans.isVisible({ timeout: 1000 }).catch(() => false)) await noPlans.click();
-      await expect(page.getByTestId('ending')).toBeVisible();
+      const endingButton = page.locator('[data-testid="end-turn"]:visible').first();
+      await expect(endingButton).toContainText('Ход окончен ·');
+      await expect(page.getByTestId('ending')).toHaveCount(0);
+      await expect(page.locator('.dock')).toHaveCount(0);
       await expect(page.locator('[data-testid^="ready-"]')).toHaveCount(2);
-      const ending = await middle(page);
-      expect(Math.abs(ending.dock! - ending.gap), 'the panel «Ход окончен» at the centre of the gap').toBeLessThanOrEqual(TOL);
       await expectHeads(page);
       await shot(page, 'turn-ending', size.width);
     });
@@ -293,7 +284,8 @@ for (const size of SIZES) {
           visibility: getComputedStyle(el).visibility,
           opacity: Number(getComputedStyle(svg).opacity),
           rotated: getComputedStyle(svg).transform !== 'none',
-          width: r.width,
+          // The stamp is 30 table px, including when #stage is scaled.
+          width: r.width / (document.getElementById('stage')!.getBoundingClientRect().width / document.getElementById('stage')!.offsetWidth),
           covers: parts.filter((p) => meet(s, p.getBoundingClientRect())).map((p) => `${p.className}: ${p.textContent}`),
           numsRight: Math.max(...nums.map((n) => n.right)),
           badgesLeft: badges.length ? Math.min(...badges.map((b) => b.left)) : null,
