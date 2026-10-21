@@ -69,7 +69,7 @@ function powderFx(t: TableCtx, e: Keg, t0: number) {
   const ctx = t.fx;
   if (e.type === 'powderGained') { gainKegs(ctx, e.side, e.amount, { x: t.W / 2, y: t.g.cy }, t0); return; }
   const kg = holdEl(ctx, e.side), kids = kg.querySelectorAll('[data-fx-keg]'), n = ctx.display.powder[e.side];
-  for (let k = 0; k < e.amount; k++) { const keg = kids[n - 1 - k]; if (!keg) continue; A(ctx, keg, [{ background: '#2A2521', transform: 'scale(1)' }, { background: '#5E86A0', transform: 'scale(1.3) translateY(2px)', offset: 0.4 }, { background: 'rgba(0,0,0,0)', transform: 'scale(.8) translateY(4px)' }], 700, t0 + k * 120, 'ease-in', 'forwards'); const kb = bx(ctx, keg); const dr = mk(ctx, 'bubble', 0, 0); A(ctx, dr, [{ opacity: 1, transform: `translate(${kb.cx}px,${kb.cy}px)` }, { opacity: 0, transform: `translate(${kb.cx}px,${kb.cy + 16}px)` }], 600, t0 + k * 120 + 200); }
+  for (let k = 0; k < e.amount; k++) { const keg = kids[n - 1 - k]; if (!keg) continue; A(ctx, keg, [{ background: '#2A2521', transform: 'scale(1)' }, { background: '#5E86A0', transform: 'scale(1.3) translateY(2px)', offset: 0.4 }, { background: 'rgba(0,0,0,0)', transform: 'scale(.8) translateY(4px)' }], 700, t0 + k * 120, 'ease-in', 'forwards'); const kb = bx(ctx, keg); if (!perfOff('particles')) { const dr = mk(ctx, 'bubble', 0, 0); A(ctx, dr, [{ opacity: 1, transform: `translate(${kb.cx}px,${kb.cy}px)` }, { opacity: 0, transform: `translate(${kb.cx}px,${kb.cy + 16}px)` }], 600, t0 + k * 120 + 200); } }
   holdTag(ctx, kg, `−${e.amount} Порох`, t0, '', 1300);
 }
 

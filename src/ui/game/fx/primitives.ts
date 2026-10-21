@@ -696,22 +696,26 @@ export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: numb
 <circle r="${K(22)}" fill="url(#fxFire)"/><circle r="${K(8)}" fill="#fff"/></g>`);
   const at0 = `translate(${R1(x)}px,${R1(y)}px) rotate(${R1(deg)}deg)`;
   A(ctx, cone, [{ transform: `${at0} scale(.15,.4)`, opacity: 1 }, { transform: `${at0} scale(1.15,1)`, opacity: 1, offset: 0.22 }, { transform: `${at0} scale(1.3,.7)`, opacity: 0.6, offset: 0.5 }, { transform: `${at0} scale(1.4,.3)`, opacity: 0 }], fl, delay, 'cubic-bezier(.1,.9,.3,1)');
-  const sw = sv(svg, `<circle r="${R1(60 * k)}" fill="none" stroke="#fff6e0" stroke-width="${R1(2.4 * k)}"/>`);
+  if (!perfOff('particles')) {
+  const sw = particleSvg(svg, `<circle r="${R1(60 * k)}" fill="none" stroke="#fff6e0" stroke-width="${R1(2.4 * k)}"/>`);
   A(ctx, sw, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.05)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], fl * 0.86, delay, 'cubic-bezier(.1,.8,.3,1)');
+  }
   for (let i = 0, m = room(ctx, opt.grains ?? 9); i < m; i++) {
     const a = ang + rnd(-0.5, 0.5), v = rnd(30, 80) * k;
-    const g = sv(svg, `<circle r="${R1(rnd(0.8, 1.8) * k)}" fill="${['#fff3c4', '#ffd27a', '#ff9a3c'][i % 3]}"/>`);
+    const g = particleSvg(svg, `<circle r="${R1(rnd(0.8, 1.8) * k)}" fill="${['#fff3c4', '#ffd27a', '#ff9a3c'][i % 3]}"/>`);
     A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * v * 0.6)}px,${R1(y + Math.sin(a) * v * 0.6)}px)`, opacity: 1, offset: 0.5 }, { transform: `translate(${R1(x + Math.cos(a) * v)}px,${R1(y + Math.sin(a) * v + 14 * k)}px)`, opacity: 0 }], rnd(400, 700), delay, 'ease-out');
   }
   if (smoke) {
     smokeJet(ctx, smoke, x, y, ang, k, opt.puffs ?? 9, opt.life ?? 5600, delay);
     smokeJet(ctx, smoke, x, y, ang, k * 0.6, 3, (opt.life ?? 5600) * 0.8, delay + 260);
   }
-  const rp = sv(svg, `<ellipse rx="${R1(40 * k)}" ry="${R1(12 * k)}" fill="none" stroke="#eef6f8" stroke-width="${R1(1.6 * k)}"/>`);
+  if (!perfOff('particles')) {
+  const rp = particleSvg(svg, `<ellipse rx="${R1(40 * k)}" ry="${R1(12 * k)}" fill="none" stroke="#eef6f8" stroke-width="${R1(1.6 * k)}"/>`);
   A(ctx, rp, [{ transform: `translate(${R1(x)}px,${R1(y + 6 * k)}px) scale(.1)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y + 6 * k)}px) scale(1)`, opacity: 0 }], 700, delay + 40, 'cubic-bezier(.1,.8,.3,1)');
+  }
   for (let i = 0, m = room(ctx, opt.wads ?? 4); i < m; i++) {
     const a = ang + rnd(-0.4, 0.4), v = rnd(24, 60) * k;
-    const wd = sv(svg, '<path d="M-1.4 -1 L1.6 -.6 L1 1.2 L-1.2 .8 Z" fill="#ffb347" stroke="#7a2a0c" stroke-width=".3"/>');
+    const wd = particleSvg(svg, '<path d="M-1.4 -1 L1.6 -.6 L1 1.2 L-1.2 .8 Z" fill="#ffb347" stroke="#7a2a0c" stroke-width=".3"/>');
     A(ctx, wd, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg)`, opacity: 1, fill: '#ffe08a' }, { transform: `translate(${R1(x + Math.cos(a) * v)}px,${R1(y + Math.sin(a) * v)}px) rotate(${R1(rnd(-200, 200))}deg)`, opacity: 1, fill: '#ff8a2a', offset: 0.4 }, { transform: `translate(${R1(x + Math.cos(a) * v * 1.2 + rnd(-10, 10))}px,${R1(y + Math.sin(a) * v + 26 * k)}px) rotate(${R1(rnd(-500, 500))}deg)`, opacity: 0, fill: '#3a2a1c' }], rnd(1400, 2200), delay + 60, 'ease-out');
   }
 }
