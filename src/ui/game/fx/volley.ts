@@ -1,3 +1,4 @@
+import {perfOff} from '../perf/state';
 // The clips of the Volley: announce → window → reaction → shot | cancel → counter; heart. A port of
 // docs/mockups/anim/level1/play-volley.js (see PORTING.md): the code is the reference's, what changed is how an element
 // is found (the data-fx-* DOM contract), the globals (the context `ctx`) and the types. Between the clips of one Volley
@@ -364,7 +365,7 @@ PLAY.reaction = async (c, ctx) => {
       const tb = bx(ctx, plank(ctx, c.ship === tgt ? tgt : c.ship));
       if (cardName(ctx, c.card) === 'Уйти по ветру') {
         lean(ctx, tgt, 'translateX(10px) rotate(1.2deg)', 420, 'cubic-bezier(.3,1.4,.5,1)');
-        if (ctx.rich) for (let k = 0; k < 6; k++) { const st = mk(ctx, 'streak', 0, 0); st.style.width = '120px'; const y = tb.y + 10 + k * (tb.h / 6); A(ctx, st, [{ opacity: 0, transform: `translate(${tb.x - 140}px,${y}px)` }, { opacity: 0.9, offset: 0.4 }, { opacity: 0, transform: `translate(${tb.r + 40}px,${y - 6}px)` }], 700, k * 60, 'ease-in'); }
+        if ((ctx.rich && !perfOff('particles'))) for (let k = 0; k < 6; k++) { const st = mk(ctx, 'streak', 0, 0); st.style.width = '120px'; const y = tb.y + 10 + k * (tb.h / 6); A(ctx, st, [{ opacity: 0, transform: `translate(${tb.x - 140}px,${y}px)` }, { opacity: 0.9, offset: 0.4 }, { opacity: 0, transform: `translate(${tb.r + 40}px,${y - 6}px)` }], 700, k * 60, 'ease-in'); }
       } else {
         const ar = overlayAt(ctx, 'armor', tb, 5); vs.extras.push(ar);
         A(ctx, ar, [{ opacity: 0, scale: '1.06' }, { opacity: 1, scale: '1' }], 380, 0, 'ease-out', 'forwards');
@@ -404,7 +405,7 @@ PLAY.reaction = async (c, ctx) => {
       } else {
         const n = overlayAt(ctx, 'night', tb); vs.extras.push(n);
         A(ctx, n, [{ opacity: 0 }, { opacity: 1 }], 500, 0, 'ease-in', 'forwards');
-        if (ctx.rich) for (let k = 0; k < 8; k++) { const s = mk(ctx, 'sparkle', 0, 0); const x = tb.x + Math.random() * tb.w, y = tb.y + Math.random() * tb.h; A(ctx, s, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.5)` }, { opacity: 0.9, offset: 0.5 }, { opacity: 0, transform: `translate(${x}px,${y}px)` }], 900, 300 + k * 80); }
+        if ((ctx.rich && !perfOff('particles'))) for (let k = 0; k < 8; k++) { const s = mk(ctx, 'sparkle', 0, 0); const x = tb.x + Math.random() * tb.w, y = tb.y + Math.random() * tb.h; A(ctx, s, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.5)` }, { opacity: 0.9, offset: 0.5 }, { opacity: 0, transform: `translate(${x}px,${y}px)` }], 900, 300 + k * 80); }
       }
     }
     // fix-ui: the Charge went into its line of the plate — the line is struck out
@@ -455,7 +456,7 @@ PLAY.shot = async (c, ctx) => {
   const FUSE = T.volley.fuse, STEP = T.volley.gunStep, FLY = T.volley.fly, FLY_HIT = T.volley.flyHit;
   const svg = fxSvg(ctx);
   const sea = seaScars(ctx);
-  const smoke = ctx.rich && sea ? scar(fxSvg(ctx, sea), 'short', c.shooter) : null;
+  const smoke = (ctx.rich && !perfOff('particles')) && sea ? scar(fxSvg(ctx, sea), 'short', c.shooter) : null;
   const tb0 = bx(ctx, tPl), aimAt = { x: tb0.cx, y: facingY(ctx, c.target) };
   const gunScale = Math.min(1.05, Math.max(0.6, ctx.board.clientWidth / 1300));
   let fallen = false, hits = 0, skipped = false;
@@ -508,8 +509,8 @@ PLAY.shot = async (c, ctx) => {
       if (b.to === 'hull') kHull += b.units; else kTrack += b.units;
       const pts = curve(p0, p1, (i % 2 ? 0.06 : -0.06) * down);
       flyBall(pts, FLY_HIT, t0, { spin });
-      if (ctx.rich && ['core', 'under', 'joint', 'gold', 'ghost'].includes(b.kind)) for (const [q, op] of [[1, 0.35], [2, 0.18]]) { const gh = mk(ctx, 'ball trail', 0, 0); A(ctx, gh, pts.map((p, j) => ({ offset: j / (pts.length - 1), opacity: j === pts.length - 1 ? 0 : op, transform: `translate(${p.x}px,${p.y}px) scale(${0.8 - q * 0.15})` })), FLY_HIT, t0 + q * 28, 'cubic-bezier(.3,0,.75,1)', 'forwards'); }
-      if (b.kind === 'fire' && ctx.rich) for (let q = 0; q < 8; q++) { const em = mk(ctx, 'ember', 0, 0); const j = Math.floor((q / 8) * (pts.length - 2)) + 1; const p = pts[j]; A(ctx, em, [{ opacity: 1, transform: `translate(${p.x}px,${p.y}px)` }, { opacity: 0, transform: `translate(${p.x + (Math.random() - 0.5) * 14}px,${p.y - 10 - Math.random() * 10}px)` }], 500, t0 + (FLY_HIT * j) / (pts.length - 1)); }
+      if ((ctx.rich && !perfOff('particles')) && ['core', 'under', 'joint', 'gold', 'ghost'].includes(b.kind)) for (const [q, op] of [[1, 0.35], [2, 0.18]]) { const gh = mk(ctx, 'ball trail', 0, 0); A(ctx, gh, pts.map((p, j) => ({ offset: j / (pts.length - 1), opacity: j === pts.length - 1 ? 0 : op, transform: `translate(${p.x}px,${p.y}px) scale(${0.8 - q * 0.15})` })), FLY_HIT, t0 + q * 28, 'cubic-bezier(.3,0,.75,1)', 'forwards'); }
+      if (b.kind === 'fire' && (ctx.rich && !perfOff('particles'))) for (let q = 0; q < 8; q++) { const em = mk(ctx, 'ember', 0, 0); const j = Math.floor((q / 8) * (pts.length - 2)) + 1; const p = pts[j]; A(ctx, em, [{ opacity: 1, transform: `translate(${p.x}px,${p.y}px)` }, { opacity: 0, transform: `translate(${p.x + (Math.random() - 0.5) * 14}px,${p.y - 10 - Math.random() * 10}px)` }], 500, t0 + (FLY_HIT * j) / (pts.length - 1)); }
       const th = t0 + FLY_HIT;
       lastHit = Math.max(lastHit, th);
       const newV = Math.max(0, now - k - b.units);
@@ -539,7 +540,7 @@ PLAY.shot = async (c, ctx) => {
       if (b.out === 'water') { end = { x: mid.x + (aim.x > p0.x ? -1 : 1) * 46 * narrow, y: g2.cy + 8 }; pts = curve(p0, end, 0.18 * down); }
       else if (b.out === 'past') { end = { x: tb.x + (i % 2 ? tb.w * 0.95 : tb.w * 0.05), y: facingY(ctx, c.target) - down * 18 }; pts = curve(p0, end, (i % 2 ? -0.1 : 0.1) * down); d = FLY; }
       else { end = { x: mid.x + 78 * narrow, y: g2.cy + 14 }; d = FLY * 1.25; pts = [...curve(p0, mid, 0, 8), ...curve(mid, end, -0.35 * down, 10).slice(1)];
-        if (ctx.rich) { const gu = mk(ctx, 'gust', 0, 0, '<svg viewBox="0 0 220 40" width="220" height="40"><g fill="none" stroke="#9FB6C6" stroke-width="2" stroke-linecap="round"><path d="M2 14 C60 4 120 26 218 12"/><path d="M20 30 C80 22 140 38 200 26" opacity=".7"/></g></svg>'); A(ctx, gu, [{ opacity: 0, transform: `translate(${mid.x - 40}px,${mid.y + 6}px) scaleX(.4)` }, { opacity: 0.9, offset: 0.3 }, { opacity: 0, transform: `translate(${mid.x + 90}px,${mid.y + 10}px) scaleX(1)` }], 650, t0 + FLY * 0.35); } }
+        if ((ctx.rich && !perfOff('particles'))) { const gu = mk(ctx, 'gust', 0, 0, '<svg viewBox="0 0 220 40" width="220" height="40"><g fill="none" stroke="#9FB6C6" stroke-width="2" stroke-linecap="round"><path d="M2 14 C60 4 120 26 218 12"/><path d="M20 30 C80 22 140 38 200 26" opacity=".7"/></g></svg>'); A(ctx, gu, [{ opacity: 0, transform: `translate(${mid.x - 40}px,${mid.y + 6}px) scaleX(.4)` }, { opacity: 0.9, offset: 0.3 }, { opacity: 0, transform: `translate(${mid.x + 90}px,${mid.y + 10}px) scaleX(1)` }], 650, t0 + FLY * 0.35); } }
       flyBall(pts, d, t0, { lift: 0.15 });
       // A11 (a): the first iron ball of the Volley that falls short skips off the water — a small hop on, a second, lesser splash
       if (b.out === 'water' && b.kind === 'core' && !skipped && !(VS && VS.dust)) {
