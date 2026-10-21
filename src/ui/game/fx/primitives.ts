@@ -129,13 +129,12 @@ export function at(ctx: FxCtx, t: number, fn: () => void): void {
   }, ms(ctx, t));
 }
 export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation {
-  // On a phone the default opacity:0 already hides a delayed effect. Backwards fill would
-  // keep its future transform in the compositor for the entire wait, even while invisible.
+  // Backwards fill also positions SVG children during their delay; unlike direct HTML
+  // children of .fx-layer they need not have opacity:0 in their base style.
   const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
-  const shownFill = phone && delay > 0 && fill === 'both' ? 'forwards' : fill;
   const frames = phone || perfOff('filters') ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
   if ((perfOff('planks') && el.closest('.plank')) || (perfOff('labels') && el.closest('.flyc,.seacard,.plate,.tag,.pill,.wait-pill,.tmark,.hold-tag'))) return el.animate([], {duration: 0});
-  return el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill: shownFill });
+  return el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
 }
 export function bx(ctx: FxCtx, el: Element): Box {
   // in the px of the stage (stage.ts): the effects are put inside the scaled screen
