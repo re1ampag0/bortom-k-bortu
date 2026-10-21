@@ -585,7 +585,9 @@ export function ConfirmPanel({
   onYes,
   onNo,
   testid,
+  hold,
 }: {
+  hold?: {powder: number; cap: number};
   title: string;
   sub?: string;
   yes: string;
@@ -595,16 +597,9 @@ export function ConfirmPanel({
   testid?: string;
 }) {
   return (
-    <Panel title={title} sub={sub} testid={testid}>
-      <div className="panel-actions">
-        <button className="btn" onClick={onNo}>
-          {no}
-        </button>
-        <button className="btn primary" data-testid="confirm-yes" onClick={onYes}>
-          {yes}
-        </button>
-      </div>
-    </Panel>
+    <DecisionSheet title={title} sub={sub} testid={testid} hold={hold}
+      actions={<DecisionActions cancel={<button className="btn" onClick={onNo}>{no}</button>}
+        primary={{key:'confirm-yes',testid:'confirm-yes',label:yes,onClick:onYes}} />} />
   );
 }
 

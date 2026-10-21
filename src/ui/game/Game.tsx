@@ -1,6 +1,6 @@
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { cloneElement, isValidElement, lazy, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   abilityButtons,
   cardNeeds,
@@ -827,6 +827,11 @@ export function Game({
     );
   }
 
+
+  if (isValidElement<Parameters<typeof ConfirmPanel>[0]>(dock) && dock.type === ConfirmPanel) {
+    oakDock = true; dockSheet = true;
+    dock = cloneElement(dock, {hold: {powder: s.teams[bottom].powder, cap: data.econ.cap}});
+  }
 
   // ——— The instruction in the status bar ———
   const instruction = (() => {
