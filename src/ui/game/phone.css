@@ -1052,7 +1052,7 @@
   .game .deck-light { opacity: .4; }
   .game .deck-glint { opacity: .55; }
   .game .deck-hook, .game .backdrop .deck-piece { filter: none; }
-  .game.fx-busy .deck-flare, .game.fx-busy .lantern-light { animation: none; }
+  .game.fx-busy .deck-flare, .game.fx-busy .lantern-light { animation-play-state: paused; }
   .game .fx-layer > *, .game .fx-weather > * { will-change: auto; }
   .game .fx-layer *, .game .fx-weather * { filter: none !important; }
   .game .plank-scars *, .game .fx-fireglow { mix-blend-mode: normal; }
