@@ -1,3 +1,4 @@
+import {perfOff} from '../perf/state';
 // The clips of the ships in motion: a change of places (FLIP), diving and surfacing, sinking, the abilities of the
 // ships. A port of docs/mockups/anim/level1/play-misc.js (see PORTING.md): the code is the reference's, what changed is
 // how an element is found (the data-fx-* DOM contract), the globals (the context `ctx`) and the types. The rest of
@@ -220,7 +221,7 @@ PLAY.sink = async (c, ctx) => {
     A(ctx, ring, [{ transform: `translate(${cx}px,${cy}px) scale(${r0 / r1})`, opacity: 1 }, { transform: `translate(${cx}px,${cy}px) scale(${small ? 0.5 : 1})`, opacity: 0 }], d, tBlast + dl, 'cubic-bezier(.1,.8,.3,1)');
   }
   const W = ctx.board.clientWidth, H = ctx.board.clientHeight;
-  for (let i = 0, m = Math.max(4, room(ctx, 12)); i < (ctx.rich ? m : 0); i++) {
+  for (let i = 0, m = Math.max(4, room(ctx, 12)); i < (ctx.rich && !perfOff('particles') ? m : 0); i++) {
     const ex = clamp(cx + rnd(-260, 260) * (small ? 0.5 : 1), 12, W - 12), ey = clamp(fy + toGap * rnd(14, 90), 12, H - 12);
     const g = sv(svg, DEBRIS[i % 4]), d = S.debris * rnd(0.82, 1.18), rot = rnd(-720, 720);
     const pts = qpts(cx + rnd(-30, 30), cy, (cx + ex) / 2, Math.min(cy, ey) - rnd(80, 170), ex, ey, 18);
@@ -470,7 +471,7 @@ export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): numb
     const pl = bx(ctx, el);
     marks.appendChild(flameEl(ctx, pb.x + pb.w * 0.36 - pl.x, pb.b + 2 - pl.y, small ? 16 : 22, 'fx-flame fx-burn'));
     marks.appendChild(flameEl(ctx, pb.x + pb.w * 0.66 - pl.x, pb.b + 4 - pl.y, small ? 13 : 18, 'fx-flame fx-burn'));
-    marks.appendChild(smolderEl(pb.cx - pl.x, pb.y - pl.y, ctx.rich ? 4 : 0));
+    if (!perfOff('particles')) marks.appendChild(smolderEl(pb.cx - pl.x, pb.y - pl.y, ctx.rich ? 4 : 0));
   });
   return end + F.out;
 }

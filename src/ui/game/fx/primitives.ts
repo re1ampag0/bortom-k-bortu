@@ -1,3 +1,4 @@
+import {getPerf, perfOff} from '../perf/state';
 // Effect primitives of the animation layer: a port of docs/mockups/anim/level1/effects.js (see PORTING.md).
 // The code is the reference's; what changed is how an element is found (the data-fx-* DOM contract, from the board of
 // the context) and the types. The globals of the reference (board, fx, D, SPEED, RICH, RUN, G) are the context `ctx`,
@@ -132,7 +133,8 @@ export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0,
   // keep its future transform in the compositor for the entire wait, even while invisible.
   const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
   const shownFill = phone && delay > 0 && fill === 'both' ? 'forwards' : fill;
-  const frames = phone ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
+  const frames = phone || perfOff('filters') ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
+  if ((perfOff('planks') && el.closest('.plank')) || (perfOff('labels') && el.closest('.flyc,.seacard,.plate,.tag,.pill,.wait-pill,.tmark,.hold-tag'))) return el.animate([], {duration: 0});
   return el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill: shownFill });
 }
 export function bx(ctx: FxCtx, el: Element): Box {
@@ -143,6 +145,7 @@ export function bx(ctx: FxCtx, el: Element): Box {
 export function mk(ctx: FxCtx, cls: string, x: number, y: number, html = ''): HTMLElement {
   const d = document.createElement('div');
   d.className = cls;
+  if (getPerf().enabled && /^(puff|spark|splinter|splash|ripple|ember|gold-dust|dust|bubble|wisp|shred|streak|sparkle)( |$)/.test(cls)) d.dataset.perfParticle = '';
   d.style.left = x + 'px';
   d.style.top = y + 'px';
   d.innerHTML = html;
@@ -238,11 +241,13 @@ export function flash(ctx: FxCtx, x: number, y: number, delay: number, size = 1)
   pop(ctx, f, x, y, 350, delay, 0.3 * size, 1.6 * size);
 }
 export function puff(ctx: FxCtx, x: number, y: number, delay: number): void {
+  if (perfOff('particles')) return;
   if (!ctx.rich) return;
   const p = mk(ctx, 'puff', 0, 0);
   A(ctx, p, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.4)` }, { opacity: 0.95, offset: 0.15 }, { opacity: 0, transform: `translate(${x - 6}px,${y - 10}px) scale(2.4)` }], 1500, delay);
 }
 export function burst(ctx: FxCtx, cls: string, x: number, y: number, delay: number, n: number, r0: number, r1: number, dur = 600, angle0 = 0, spread = 2 * Math.PI): void {
+  if (perfOff('particles')) return;
   if (!ctx.rich) return;
   for (let k = 0; k < n; k++) {
     const e = mk(ctx, cls, 0, 0);
@@ -251,6 +256,7 @@ export function burst(ctx: FxCtx, cls: string, x: number, y: number, delay: numb
   }
 }
 export function splash(ctx: FxCtx, x: number, y: number, delay: number): void {
+  if (perfOff('particles')) return;
   const s = mk(ctx, 'splash', 0, 0, '<svg viewBox="0 0 44 30" width="44" height="30"><g fill="#9CC3DA"><path d="M22 30 C18 18 14 10 10 4 C16 10 19 16 22 22 C25 16 28 10 34 4 C30 10 26 18 22 30Z"/><circle cx="8" cy="14" r="2.5"/><circle cx="36" cy="12" r="2.5"/><circle cx="22" cy="4" r="2"/></g></svg>');
   A(ctx, s, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.3)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1)`, offset: 0.25 }, { opacity: 0, transform: `translate(${x}px,${y - 6}px) scale(1.2)` }], 700, delay);
   const r = mk(ctx, 'ripple', 0, 0);
@@ -278,6 +284,7 @@ export function tag(ctx: FxCtx, x: number, y: number, text: string, delay: numbe
   return t;
 }
 export function bubbles(ctx: FxCtx, x: number, y: number, w: number, delay: number, n = 10, rise = 40): void {
+  if (perfOff('particles')) return;
   if (!ctx.rich) return;
   for (let k = 0; k < n; k++) {
     const b = mk(ctx, 'bubble', 0, 0);
@@ -286,6 +293,7 @@ export function bubbles(ctx: FxCtx, x: number, y: number, w: number, delay: numb
   }
 }
 export function steam(ctx: FxCtx, x: number, y: number, delay: number): void {
+  if (perfOff('particles')) return;
   for (let k = 0; k < (ctx.rich ? 5 : 1); k++) {
     const p = mk(ctx, 'puff', 0, 0);
     A(ctx, p, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.2)` }, { opacity: 0.8, offset: 0.2 }, { opacity: 0, transform: `translate(${x + (k - 2) * 6}px,${y - 26}px) scale(1.1)` }], 900, delay + k * 70);
@@ -296,6 +304,7 @@ export function shake(ctx: FxCtx, el: Element, delay: number, amp = 3, d = 260):
   A(ctx, el, [{ transform: 'none' }, { transform: `translate(${-amp}px,1px)` }, { transform: `translate(${amp}px,-1px)` }, { transform: `translate(${-amp * 0.6}px,0)` }, { transform: `translate(${amp * 0.3}px,0)` }, { transform: 'none' }], d, delay, 'linear', 'none');
 }
 export function ring(ctx: FxCtx, x: number, y: number, delay: number, size = 1, color?: string): void {
+  if (perfOff('particles')) return;
   if (!ctx.rich) return;
   const r = mk(ctx, 'ring', 0, 0);
   if (color) r.style.borderColor = color;
@@ -318,6 +327,7 @@ export function whirlpool(ctx: FxCtx, x: number, y: number, delay: number, size 
   return w;
 }
 export function wisp(ctx: FxCtx, from: Pt, to: Pt, delay: number, d = 800): void {
+  if (perfOff('particles')) return;
   const w = mk(ctx, 'wisp', 0, 0);
   fly(ctx, w, curve(from, to, 0.25, 14), d, delay, { lift: 0.4 });
   if (ctx.rich) {
@@ -568,7 +578,7 @@ export const filters = (ctx: FxCtx) => ctx.rich && !ctx.board.ownerDocument.defa
 export const FX_BUDGET = 190;
 /** How many of `want` particles still fit into the budget (none with «простые спецэффекты»). */
 export function room(ctx: FxCtx, want: number): number {
-  if (!ctx.rich) return 0;
+  if (!ctx.rich || perfOff('particles')) return 0;
   const scars = ctx.board.querySelector('.fx-scars');
   // the animations that run (or wait for their delay): a finished one only holds its last frame
   const running = (el: Element) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length;
@@ -612,6 +622,12 @@ export function sv(parent: Element, markup: string): SVGElement {
   parent.appendChild(g);
   return (g.firstElementChild as SVGElement | null) ?? g;
 }
+function particleSvg(parent: Element, markup: string): SVGElement {
+  const el = sv(parent, markup);
+  if (getPerf().enabled) el.setAttribute('data-perf-particle', '');
+  return el;
+}
+
 /** The points of a quadratic curve (qpts of the prototype). */
 export function qpts(x0: number, y0: number, cx: number, cy: number, x1: number, y1: number, n = 24): Pt[] {
   return Array.from({ length: n + 1 }, (_, i) => {
@@ -621,24 +637,25 @@ export function qpts(x0: number, y0: number, cx: number, cy: number, x1: number,
 }
 
 /** A ring on the water that spreads and fades. */
-export function ringSvg(ctx: FxCtx, svg: Element, x: number, y: number, r0: number, r1: number, color = '#eef6f8', d = 700, delay = 0, w = 2): SVGElement {
+export function ringSvg(ctx: FxCtx, svg: Element, x: number, y: number, r0: number, r1: number, color = '#eef6f8', d = 700, delay = 0, w = 2): SVGElement | null {
+  if (perfOff('particles')) return null;
   // a size, never a direction: a radius computed as «base − i·step» on a narrow plank must not go negative
   r1 = Math.max(1, Math.abs(r1));
-  const g = sv(svg, `<g><ellipse cx="0" cy="0" rx="${R1(r1)}" ry="${R1(r1 * 0.4)}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/></g>`);
+  const g = particleSvg(svg, `<g><ellipse cx="0" cy="0" rx="${R1(r1)}" ry="${R1(r1 * 0.4)}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/></g>`);
   A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d, delay, 'ease-out');
   return g;
 }
 export function sparksSvg(ctx: FxCtx, svg: Element, x: number, y: number, n = 12, delay = 0, colors = ['#fff3c4', '#ffd27a', '#ff9a3c']): void {
   for (let i = 0, m = room(ctx, n); i < m; i++) {
     const a = rnd(0, Math.PI * 2), r = rnd(14, 38);
-    const c = sv(svg, `<circle r="${R1(rnd(1, 2.2))}" fill="${colors[i % colors.length]}"/>`);
+    const c = particleSvg(svg, `<circle r="${R1(rnd(1, 2.2))}" fill="${colors[i % colors.length]}"/>`);
     A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * r)}px,${R1(y + Math.sin(a) * r + 10)}px)`, opacity: 0 }], rnd(380, 700), delay, 'cubic-bezier(.2,.7,.4,1)');
   }
 }
 export function splintersSvg(ctx: FxCtx, svg: Element, x: number, y: number, n = 8, delay = 0): void {
   for (let i = 0, m = room(ctx, n); i < m; i++) {
     const a = rnd(-Math.PI, 0), r = rnd(18, 46), rot = rnd(-400, 400);
-    const c = sv(svg, `<rect x="-3.4" y="-1.1" width="${R1(rnd(4, 8))}" height="2.2" rx=".6" fill="${i % 2 ? '#a8703a' : '#7a4f24'}" stroke="#3a2412" stroke-width=".4"/>`);
+    const c = particleSvg(svg, `<rect x="-3.4" y="-1.1" width="${R1(rnd(4, 8))}" height="2.2" rx=".6" fill="${i % 2 ? '#a8703a' : '#7a4f24'}" stroke="#3a2412" stroke-width=".4"/>`);
     A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * r)}px,${R1(y + Math.sin(a) * r)}px) rotate(${R1(rot * 0.5)}deg)`, opacity: 1, offset: 0.4 }, { transform: `translate(${R1(x + Math.cos(a) * r * 1.3)}px,${R1(y + 60)}px) rotate(${R1(rot)}deg)`, opacity: 0 }], rnd(800, 1200), delay, 'cubic-bezier(.3,.1,.7,1)');
   }
 }
@@ -647,7 +664,7 @@ export function splintersSvg(ctx: FxCtx, svg: Element, x: number, y: number, n =
 export function smokeJet(ctx: FxCtx, svg: Element, x: number, y: number, ang: number, k = 1, n = 9, life = 5600, delay = 0, darkAll = false): void {
   const m = room(ctx, n);
   if (!m) return;
-  const wind = [26, -10], host = sv(svg, '<g/>');
+  const wind = [26, -10], host = particleSvg(svg, '<g/>');
   if (filters(ctx)) host.setAttribute('filter', 'url(#fxSmkF)');
   for (let i = 0; i < m; i++) {
     const t = i / m, dist = (18 + t * 70) * k, a = ang + rnd(-0.35, 0.35), r0 = (5 + t * 4) * k, r1 = (16 + t * 22 + rnd(0, 10)) * k;
@@ -702,7 +719,7 @@ export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: numb
 /** The fuses: sparks spit at each gun a moment before the broadside. */
 export function fuseSparks(ctx: FxCtx, svg: Element, x: number, y: number, up: number, delay = 0, d = 260): void {
   for (let k = 0, m = room(ctx, 5); k < m; k++) {
-    const sp = sv(svg, '<circle r="1.3" fill="#ffe08a"/>');
+    const sp = particleSvg(svg, '<circle r="1.3" fill="#ffe08a"/>');
     A(ctx, sp, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + rnd(-8, 8))}px,${R1(y + up * rnd(6, 14))}px)`, opacity: 0 }], d, delay + k * 50);
   }
 }
@@ -715,7 +732,7 @@ export function ballFly(ctx: FxCtx, svg: Element, p0: Pt, p1: Pt, d = 700, delay
   const N = 28, pts = qpts(p0.x, p0.y, (p0.x + p1.x) / 2, Math.min(p0.y, p1.y) - lift, p1.x, p1.y, N);
   const path = (sc: (i: number) => string) => pts.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)${sc(i)}`, opacity: i === N ? 0 : 1 }));
   for (let i = 1, m = room(ctx, 7); i <= m; i++) {
-    const t = sv(svg, `<circle r="${R1(3.6 - i * 0.35)}" fill="#cfc8bc" opacity="${R1(0.5 - i * 0.06)}"/>`);
+    const t = particleSvg(svg, `<circle r="${R1(3.6 - i * 0.35)}" fill="#cfc8bc" opacity="${R1(0.5 - i * 0.06)}"/>`);
     A(ctx, t, path(() => ''), d, delay + i * 22, 'linear');
   }
   const shadow = sv(svg, '<ellipse rx="5" ry="2" fill="#000" opacity=".3"/>');
@@ -727,11 +744,12 @@ export function ballFly(ctx: FxCtx, svg: Element, p0: Pt, p1: Pt, d = 700, delay
 
 /** A real splash: a hole in the water, a heavy column with a torn top, a crown of jets with drops, mist, foam, rings. */
 export function waterColumn(ctx: FxCtx, svg: Element, x: number, y: number, h = 46, delay = 0, d = 1700): void {
-  const k = h / 46, root = sv(svg, '<g/>'), P = (a: number, b: number) => `${R1(a)} ${R1(b)}`, X = R1(x), Y = R1(y);
-  const hole = sv(root, `<ellipse rx="${R1(12 * k)}" ry="${R1(3.6 * k)}" fill="#0c2a36" opacity=".55"/>`);
+  if (perfOff('particles')) return;
+  const k = h / 46, root = particleSvg(svg, '<g/>'), P = (a: number, b: number) => `${R1(a)} ${R1(b)}`, X = R1(x), Y = R1(y);
+  const hole = particleSvg(root, `<ellipse rx="${R1(12 * k)}" ry="${R1(3.6 * k)}" fill="#0c2a36" opacity=".55"/>`);
   A(ctx, hole, [{ transform: `translate(${X}px,${Y}px) scale(.2)`, opacity: 0.6 }, { transform: `translate(${X}px,${Y}px) scale(1.2)`, opacity: 0.4, offset: 0.3 }, { transform: `translate(${X}px,${Y}px) scale(1.6)`, opacity: 0 }], d * 0.76, delay);
   const bw = 9 * k, bh = h * 0.7;
-  const body = sv(root, `<g><path d="M${P(-bw, 0)} C${P(-bw * 1.1, -bh * 0.5)} ${P(-bw * 0.7, -bh * 0.9)} ${P(-bw * 0.3, -bh)} Q${P(-bw * 0.1, -bh * 1.08)} ${P(0, -bh * 0.98)} Q${P(bw * 0.2, -bh * 1.1)} ${P(bw * 0.4, -bh * 0.96)} C${P(bw * 0.8, -bh * 0.85)} ${P(bw * 1.1, -bh * 0.5)} ${P(bw, 0)} Z" fill="#d6ebf0"/><path d="M${P(-bw * 0.5, -2)} C${P(-bw * 0.6, -bh * 0.4)} ${P(-bw * 0.4, -bh * 0.7)} ${P(-bw * 0.2, -bh * 0.9)}" fill="none" stroke="#fff" stroke-width="${R1(1.6 * k)}" stroke-linecap="round" opacity=".9"/></g>`);
+  const body = particleSvg(root, `<g><path d="M${P(-bw, 0)} C${P(-bw * 1.1, -bh * 0.5)} ${P(-bw * 0.7, -bh * 0.9)} ${P(-bw * 0.3, -bh)} Q${P(-bw * 0.1, -bh * 1.08)} ${P(0, -bh * 0.98)} Q${P(bw * 0.2, -bh * 1.1)} ${P(bw * 0.4, -bh * 0.96)} C${P(bw * 0.8, -bh * 0.85)} ${P(bw * 1.1, -bh * 0.5)} ${P(bw, 0)} Z" fill="#d6ebf0"/><path d="M${P(-bw * 0.5, -2)} C${P(-bw * 0.6, -bh * 0.4)} ${P(-bw * 0.4, -bh * 0.7)} ${P(-bw * 0.2, -bh * 0.9)}" fill="none" stroke="#fff" stroke-width="${R1(1.6 * k)}" stroke-linecap="round" opacity=".9"/></g>`);
   A(ctx, body, [{ transform: `translate(${X}px,${Y}px) scale(.5,.05)`, opacity: 1 }, { transform: `translate(${X}px,${Y}px) scale(1,1)`, opacity: 1, offset: 0.25 }, { transform: `translate(${X}px,${Y}px) scale(1.1,.95)`, opacity: 0.95, offset: 0.5 }, { transform: `translate(${X}px,${R1(y + 2)}px) scale(1.5,.05)`, opacity: 0 }], d, delay, 'cubic-bezier(.15,.7,.4,1)');
   // the crown: the middle jets tall, the outer ones low and wide (9 in the prototype; fewer when the budget is short)
   const JETS: [number, number, number][] = [[0, 1, 6.4], [-0.14, 0.88, 5.2], [0.14, 0.92, 5.2], [-0.36, 0.62, 4.6], [0.36, 0.64, 4.6], [-0.68, 0.4, 3.8], [0.68, 0.42, 3.8], [-1, 0.24, 3], [1, 0.26, 3]];
@@ -739,31 +757,32 @@ export function waterColumn(ctx: FxCtx, svg: Element, x: number, y: number, h = 
   JETS.slice(0, nj).forEach(([a, hh, w], i) => {
     const L = h * hh * rnd(0.85, 1.1), tx = Math.sin(a) * L, ty = -Math.cos(a) * L, ww = w * k, bend = rnd(-3, 3) * k;
     const dd = `M${P(-ww, 0)} C${P(-ww * 0.8 + tx * 0.3 + bend, ty * 0.35)} ${P(tx * 0.8 - ww * 0.3, ty * 0.8)} ${P(tx, ty)} C${P(tx * 0.8 + ww * 0.3, ty * 0.8)} ${P(ww * 0.8 + tx * 0.3 + bend, ty * 0.35)} ${P(ww, 0)} Z`;
-    const j = sv(root, `<g><path d="${dd}" fill="#e8f4f6" opacity=".92"/><path d="${dd}" fill="none" stroke="#9cc4cc" stroke-width=".7" opacity=".7"/><circle cx="${R1(tx)}" cy="${R1(ty - ww * 0.6)}" r="${R1(0.3 * ww)}" fill="#eef7f9"/></g>`);
+    const j = particleSvg(root, `<g><path d="${dd}" fill="#e8f4f6" opacity=".92"/><path d="${dd}" fill="none" stroke="#9cc4cc" stroke-width=".7" opacity=".7"/><circle cx="${R1(tx)}" cy="${R1(ty - ww * 0.6)}" r="${R1(0.3 * ww)}" fill="#eef7f9"/></g>`);
     A(ctx, j, [{ transform: `translate(${X}px,${Y}px) scale(.6,.05)`, opacity: 1 }, { transform: `translate(${X}px,${Y}px) scale(1,1.05)`, opacity: 1, offset: 0.24 }, { transform: `translate(${X}px,${Y}px) scale(1.08,1)`, opacity: 0.95, offset: 0.48 }, { transform: `translate(${X}px,${Y}px) scale(1.25,.55)`, opacity: 0.8, offset: 0.75 }, { transform: `translate(${X}px,${R1(y + 2)}px) scale(1.45,.06)`, opacity: 0 }], d * 0.97 + i * 30, delay + i * 18, 'cubic-bezier(.15,.7,.4,1)');
     // the tip breaks into a drop that arcs out and falls back with a ring
     if (room(ctx, 1)) {
       const dx = tx * rnd(1, 1.6) + rnd(-6, 6) * k, peak = y + ty * rnd(1.02, 1.2), r = R1(rnd(1, 2.2) * k), ex = x + dx * 1.5;
-      const dr = sv(root, `<ellipse rx="${r}" ry="${R1(r * 1.3)}" fill="#eef6f8" stroke="#9cc4cc" stroke-width=".3"/>`);
+      const dr = particleSvg(root, `<ellipse rx="${r}" ry="${R1(r * 1.3)}" fill="#eef6f8" stroke="#9cc4cc" stroke-width=".3"/>`);
       A(ctx, dr, [{ transform: `translate(${R1(x + tx * 0.9)}px,${R1(y + ty * 0.9)}px)`, opacity: 0 }, { transform: `translate(${R1(x + dx)}px,${R1(peak)}px)`, opacity: 1, offset: 0.35 }, { transform: `translate(${R1(ex)}px,${R1(y + 2)}px)`, opacity: 0.9, offset: 0.97 }, { transform: `translate(${R1(ex)}px,${R1(y + 2)}px)`, opacity: 0 }], rnd(900, 1250), delay + 260 + i * 20, 'cubic-bezier(.3,0,.7,1)');
       ringSvg(ctx, root, ex, y + 3, 1, 7 * k, '#eef6f8', 500, delay + 1150 + i * 20, 0.8);
     }
   });
   // mist hangs over the column and drifts (blurred only where the filters are)
   for (let i = 0, m = room(ctx, 4); i < m; i++) {
-    const mm = sv(root, `<circle r="${R1(rnd(8, 13) * k)}" fill="#f4fafb" opacity=".5"${filters(ctx) ? ` style="filter:blur(${R1(3 * k)}px)"` : ''}/>`);
+    const mm = particleSvg(root, `<circle r="${R1(rnd(8, 13) * k)}" fill="#f4fafb" opacity=".5"${filters(ctx) ? ` style="filter:blur(${R1(3 * k)}px)"` : ''}/>`);
     A(ctx, mm, [{ transform: `translate(${X}px,${R1(y - h * 0.6)}px) scale(.3)`, opacity: 0 }, { transform: `translate(${R1(x + rnd(-8, 8) * k)}px,${R1(y - h * rnd(0.75, 1))}px) scale(1)`, opacity: 0.55, offset: 0.3 }, { transform: `translate(${R1(x + rnd(10, 22) * k)}px,${R1(y - h * rnd(0.6, 0.9))}px) scale(1.5)`, opacity: 0 }], d, delay + 200 + i * 60, 'ease-out');
   }
-  const foam = sv(root, `<g><ellipse rx="${R1(16 * k)}" ry="${R1(4.4 * k)}" fill="#f4fafb" opacity=".85"/><ellipse rx="${R1(22 * k)}" ry="${R1(6 * k)}" fill="none" stroke="#f4fafb" stroke-width="${R1(1.2 * k)}" stroke-dasharray="${R1(3 * k)} ${R1(2 * k)}" opacity=".8"/></g>`);
+  const foam = particleSvg(root, `<g><ellipse rx="${R1(16 * k)}" ry="${R1(4.4 * k)}" fill="#f4fafb" opacity=".85"/><ellipse rx="${R1(22 * k)}" ry="${R1(6 * k)}" fill="none" stroke="#f4fafb" stroke-width="${R1(1.2 * k)}" stroke-dasharray="${R1(3 * k)} ${R1(2 * k)}" opacity=".8"/></g>`);
   A(ctx, foam, [{ transform: `translate(${X}px,${R1(y + 1)}px) scale(.2)`, opacity: 0.9 }, { transform: `translate(${X}px,${R1(y + 1)}px) scale(1)`, opacity: 0.9, offset: 0.35 }, { transform: `translate(${X}px,${R1(y + 1)}px) scale(1.35)`, opacity: 0 }], d * 1.3, delay + 120, 'ease-out');
   ringSvg(ctx, svg, x, y + 2, 4, 30 * k, '#eef6f8', 900, delay + 120, 1.6);
   ringSvg(ctx, svg, x, y + 2, 4, 52 * k, '#cfe4ea', 1400, delay + 380, 1);
 }
 /** The miss: two spouts of water and a ring of foam. */
 export function missSplash(ctx: FxCtx, svg: Element, x: number, y: number, k = 1, delay = 0, d = 1700): void {
+  if (perfOff('particles')) return;
   waterColumn(ctx, svg, x, y, 70 * k, delay, d);
   if (ctx.rich) waterColumn(ctx, svg, x + 9 * k, y + 2, 40 * k, delay, d);
-  const f = sv(svg, `<ellipse rx="${R1(24 * k)}" ry="${R1(7 * k)}" fill="#f4f9fa" opacity=".85"/>`);
+  const f = particleSvg(svg, `<ellipse rx="${R1(24 * k)}" ry="${R1(7 * k)}" fill="#f4f9fa" opacity=".85"/>`);
   A(ctx, f, [{ transform: `translate(${R1(x)}px,${R1(y + 2)}px) scale(.2)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y + 2)}px) scale(1.4)`, opacity: 0 }], d * 0.82, delay + 100, 'ease-out');
 }
 /** The hit: a fireball, a shockwave, splinters and sparks, black smoke rolling up (a lighter one for the later hits). */
@@ -795,8 +814,9 @@ export function flashBoard(ctx: FxCtx, color = '#fff', peak = 0.55, d = 520, del
  * afloat a while, rocking (a long trace of the sea; it rocks — SMIL — only where the filters are).
  */
 export function fallBoard(ctx: FxCtx, svg: Element, code: string, p: Pt, delay = 0, d = 1000): void {
+  if (perfOff('particles')) return;
   const to = { x: clamp(p.x + 40, 20, ctx.board.clientWidth - 20), y: clamp(facingY(ctx, code) + dirOf(ctx, code) * 34, 20, ctx.board.clientHeight - 20) };
-  const bd = sv(svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>');
+  const bd = particleSvg(svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>');
   A(ctx, bd, [{ transform: `translate(${R1(p.x)}px,${R1(p.y)}px) rotate(0deg)` }, { transform: `translate(${R1(p.x + 12)}px,${R1(p.y - 16)}px) rotate(40deg)`, offset: 0.2 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 1, offset: 0.98 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 0 }], d, delay, 'cubic-bezier(.3,.1,.7,1)');
   at(ctx, delay + d, () => {
     waterColumn(ctx, svg, to.x, to.y, 22);
