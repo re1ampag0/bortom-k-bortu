@@ -309,21 +309,11 @@ export function ReactionWaitPanel({ line, who }: { line: string; who: string }) 
 export function JackPanel({ s, data, ship, onAct }: { s: GameState; data: GameData; ship: string; onAct: (a: Action) => void }) {
   const legend = cardByCode(data, `${ship}-Л`);
   return (
-    <Panel
-      title={`${nick(data, ship)} тонет! Сыграть «${legend.name}»?`}
-      sub={`${legend.big}. Стоимость ${powderWord(legend.cost)}, в Трюме ${s.teams[s.ships[ship].side].powder}.`}
-      tone="reaction"
-      testid="jack-panel"
-    >
-      <div className="panel-actions">
-        <button className="btn" onClick={() => onAct({ type: 'jack', play: false })}>
-          Нет — утонуть
-        </button>
-        <button className="btn primary legend-btn" onClick={() => onAct({ type: 'jack', play: true })}>
-          Сыграть · {powderWord(legend.cost)}
-        </button>
-      </div>
-    </Panel>
+    <DecisionSheet title={legend.name} sub={`${nick(data, ship)} тонет! ${legend.big}. Стоимость ${powderWord(legend.cost)}.`}
+      hold={{powder: s.teams[s.ships[ship].side].powder, cap: data.econ.cap}} testid="jack-panel"
+      actions={<DecisionActions
+        cancel={<button className="btn" onClick={() => onAct({type: 'jack', play: false})}>Нет — утонуть</button>}
+        primary={{key: 'jack-play', label: `Сыграть · ${powderWord(legend.cost)}`, onClick: () => onAct({type: 'jack', play: true})}} />} />
   );
 }
 

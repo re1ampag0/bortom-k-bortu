@@ -1,0 +1,42 @@
+{
+  "box": {
+    "x": 0,
+    "y": 541.25,
+    "width": 430,
+    "height": 126.75,
+    "top": 541.25,
+    "right": 430,
+    "bottom": 668,
+    "left": 0
+  },
+  "buttons": [
+    {
+      "label": "Нет — утонуть",
+      "box": {
+        "x": 10,
+        "y": 608,
+        "width": 140,
+        "height": 52,
+        "top": 608,
+        "right": 150,
+        "bottom": 660,
+        "left": 10
+      },
+      "hit": true
+    },
+    {
+      "label": "\n    \n    \n    \n  \n  \n  \n  \n  \n  \n  Сыграть · 2 Пороха",
+      "box": {
+        "x": 160,
+        "y": 608,
+        "width": 260,
+        "height": 52,
+        "top": 608,
+        "right": 420,
+        "bottom": 660,
+        "left": 160
+      },
+      "hit": true
+    }
+  ]
+}
