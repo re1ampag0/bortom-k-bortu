@@ -730,3 +730,18 @@
   }
   .alarm-sheet .alarm-fuse { grid-row: 3; grid-column: 1 / -1; }
 }
+
+/* ui-4 / 3: intrinsic sheet height; only the card strip scrolls, never the action row. */
+@media (max-width: 700px) {
+  .game.alarm-open:not(.alarm-folded) .dock.sheet-dock:has(> .alarm-sheet) { height: auto; }
+  .dock.sheet-dock .panel.alarm-sheet { height: auto; }
+  .dock.sheet-dock .panel.alarm-sheet:not(.folded) { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+  .dock.sheet-dock .panel.alarm-sheet:not(.folded) > * { flex: none; }
+  .alarm-sheet .as-mid { flex: none; overflow: visible; padding: 0; gap: 6px; }
+  .alarm-sheet .as-cards { flex: none; padding: 8px 4px 4px; }
+  .alarm-sheet .as-card { width: 94px; flex-basis: 94px; }
+  .alarm-sheet .as-card .hcard { width: 94px; height: 126px; }
+  .alarm-sheet .reaction-memo { display: block; padding: 3px 6px; font-size: 11px; line-height: 1.12; }
+  .alarm-sheet:has(.reaction-memo) .as-card .hcard { height: 96px; }
+  .alarm-sheet .as-head .as-title { justify-self: start; }
+}

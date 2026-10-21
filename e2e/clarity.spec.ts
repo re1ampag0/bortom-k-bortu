@@ -178,7 +178,7 @@ test.describe('phone 430×740', () => {
     await expect(row.getByTestId('hcard-strip')).toContainText('Залп');
     // A press on the card chooses the Reaction.
     await row.locator('.hcard').click();
-    await expect(panel.getByTestId('play-reaction')).toHaveText(`Сыграть «${name}»`);
+    await expect(panel.getByTestId('play-reaction').locator('.oak-pan b')).toHaveText(`Сыграть «${name}»`);
     await expect(row).toHaveClass(/on/);
     await page.screenshot({ path: `${SHOTS}/phone-reaction-window.png` });
     // «i» — the card in full; closing it brings back the window with the choice kept.
@@ -187,7 +187,7 @@ test.describe('phone 430×740', () => {
     await page.screenshot({ path: `${SHOTS}/phone-reaction-card.png` });
     await page.getByTestId('card-detail').getByRole('button', { name: 'Закрыть' }).click();
     await expect(page.getByTestId('card-detail')).toBeHidden();
-    await expect(panel.getByTestId('play-reaction')).toHaveText(`Сыграть «${name}»`);
+    await expect(panel.getByTestId('play-reaction').locator('.oak-pan b')).toHaveText(`Сыграть «${name}»`);
     await expect(row).toHaveClass(/on/);
     // «Сыграть» in the card plays the Reaction, as the button of the window does.
     await row.getByTestId('reaction-info').click();
