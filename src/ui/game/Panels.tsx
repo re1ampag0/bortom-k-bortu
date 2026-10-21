@@ -339,7 +339,7 @@ export function TortugaPanel({ s, data, side, onAct }: { s: GameState; data: Gam
         primary={{key: 'tortuga-take', label: `Взять ${total} · ${powderWord(total)}`, disabled: total === 0 ? 'Выберите, сколько карт взять' : null,
           onClick: () => onAct({type: 'tortuga', side, draws})}} />}>
       {seats.map(x => <DecisionStepper key={x.code}
-        label={<b className={`ds-ship ${side === 'ПИРАТЫ' ? 'pirate' : 'company'}`}>{nick(data, x.code)}</b>}
+        label={<b className="ds-ship" data-ship={x.code} style={{['--ship' as string]: shipData(data, x.code).color}}>{nick(data, x.code)}</b>}
         value={draws[x.code] ?? 0} minusDisabled={!draws[x.code]} plusDisabled={total >= max}
         onMinus={() => setDraws({...draws, [x.code]: Math.max(0, (draws[x.code] ?? 0) - 1)})}
         onPlus={() => total < max && setDraws({...draws, [x.code]: (draws[x.code] ?? 0) + 1})} />)}

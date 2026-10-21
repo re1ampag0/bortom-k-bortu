@@ -51,8 +51,7 @@
 @media (prefers-reduced-motion: reduce) { .panel.decision-sheet { animation: none; } }
 
 .ds-ship { display: inline-block; border: 1px solid #a78b4e; border-radius: 3px; padding: 4px 8px; font: 700 13px var(--font-num); color: #fff2cd; }
-.ds-ship.pirate { background: linear-gradient(#2e6772, #24444b); }
-.ds-ship.company { background: linear-gradient(#7d6d40, #514421); }
+.ds-stepper .ds-ship { background: linear-gradient(color-mix(in srgb, var(--ship) 82%, #fff), color-mix(in srgb, var(--ship) 82%, #000)); }
 
 /* A fixed table is not a scroll container. Native button focus must not pan hidden overflow.
    The sheet body and its card ribbons keep their own native scrolling. */

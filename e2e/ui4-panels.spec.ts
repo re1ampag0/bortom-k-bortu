@@ -11,6 +11,8 @@ test('Tortuga: the oak sheet counts cards and submits the choice', async ({page}
   await expect(sheet.getByRole('button',{name:'Увеличить',exact:true}).first()).toBeDisabled();
   await sheet.getByRole('button',{name:'Не брать',exact:true}).click();
   await page.getByTestId('curtain-ready').click();
+  const colors=await sheet.locator('.ds-ship').evaluateAll(es=>es.map(e=>({label:getComputedStyle(e).backgroundImage,head:getComputedStyle(document.querySelector(`[data-ship="${e.getAttribute('data-ship')}"] .plank-head`)!).backgroundImage})));
+  for(const c of colors)expect(c.label).toBe(c.head);
   const main=sheet.locator('.oak-btn');
   await expect(main).toHaveAttribute('aria-disabled','true');
   const plus=sheet.getByRole('button',{name:'Увеличить',exact:true}).first();
