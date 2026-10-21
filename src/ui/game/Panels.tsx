@@ -18,6 +18,7 @@ import type { GameData, Side, Track } from '../../engine/types';
 import { wxSvg } from './art/wx';
 import { HandCard } from './Hand';
 import { OakButton } from './Table';
+import { DecisionSheet, DecisionActions, DecisionStepper } from './DecisionSheet';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
 const nick = (data: GameData, code: string) => `«${shipData(data, code).nick}»`;
@@ -342,28 +343,17 @@ export function TortugaPanel({ s, data, side, onAct }: { s: GameState; data: Gam
   const total = Object.values(draws).reduce((a, b) => a + b, 0);
   const max = Math.min(data.rules.seaTortuga, s.teams[side].powder);
   return (
-    <Panel title="Тортуга: сколько карт взять?" sub={`1 Порох за карту, не больше ${data.rules.seaTortuga}. В Трюме ${s.teams[side].powder}.`} testid="tortuga-panel">
-      {seats.map((x) => (
-        <div key={x.code} className="stepper">
-          <span>{nick(data, x.code)}</span>
-          <button className="btn small" onClick={() => setDraws({ ...draws, [x.code]: Math.max(0, (draws[x.code] ?? 0) - 1) })}>
-            −
-          </button>
-          <b>{draws[x.code] ?? 0}</b>
-          <button className="btn small" onClick={() => total < max && setDraws({ ...draws, [x.code]: (draws[x.code] ?? 0) + 1 })}>
-            +
-          </button>
-        </div>
-      ))}
-      <div className="panel-actions">
-        <button className="btn" onClick={() => onAct({ type: 'tortuga', side, draws: {} })}>
-          Не брать
-        </button>
-        <button className="btn primary" onClick={() => onAct({ type: 'tortuga', side, draws })}>
-          Взять {total} · {powderWord(total)}
-        </button>
-      </div>
-    </Panel>
+    <DecisionSheet title="Тортуга" sub={`1 Порох за карту, не больше ${data.rules.seaTortuga}.`}
+      hold={{powder: s.teams[side].powder, cap: data.econ.cap}} testid="tortuga-panel"
+      actions={<DecisionActions cancel={<button className="btn" onClick={() => onAct({ type: 'tortuga', side, draws: {} })}>Не брать</button>}
+        primary={{key: 'tortuga-take', label: `Взять ${total} · ${powderWord(total)}`, disabled: total === 0 ? 'Выберите, сколько карт взять' : null,
+          onClick: () => onAct({type: 'tortuga', side, draws})}} />}>
+      {seats.map(x => <DecisionStepper key={x.code}
+        label={<b className={`ds-ship ${side === 'ПИРАТЫ' ? 'pirate' : 'company'}`}>{nick(data, x.code)}</b>}
+        value={draws[x.code] ?? 0} minusDisabled={!draws[x.code]} plusDisabled={total >= max}
+        onMinus={() => setDraws({...draws, [x.code]: Math.max(0, (draws[x.code] ?? 0) - 1)})}
+        onPlus={() => total < max && setDraws({...draws, [x.code]: (draws[x.code] ?? 0) + 1})} />)}
+    </DecisionSheet>
   );
 }
 

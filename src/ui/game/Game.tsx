@@ -689,6 +689,7 @@ export function Game({
   let dock: React.ReactNode = null;
   // Card choices, «Тортуга» and the Plans are bottom sheets on a phone; the Volley and the Reactions stay in the middle.
   let dockSheet = false;
+  let oakDock = false;
   /** The sheet «Заряд» while aiming (in the place of the hand) and, on a laptop, its buttons in the place of «Ход окончен». */
   let chargeSheet: ReactNode = null;
   let chargeBtns: ReactNode = null;
@@ -723,6 +724,7 @@ export function Game({
     dock = <JackPanel s={s} data={data} ship={d!.seats[0]} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'tortuga') {
     dockSheet = true;
+    oakDock = true;
     dock = <TortugaPanel key={turnKey} s={s} data={data} side={d!.side} onAct={(a) => act(a)} />;
   } else if (myDecision && d!.kind === 'choice') {
     dockSheet = true;
@@ -1167,7 +1169,7 @@ export function Game({
           <div className="planks top">{columns(top).map(renderPlank)}</div>
           <div className="middle" data-fx-gap>
             <BannerView data={data} banner={banner} />
-            {dock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
+            {dock && !oakDock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
             {/* Б1: a translucent line along the bottom of the open sea; the hint «выберите карту или действие» is in the top plaque already */}
             {!dock && !s.winner && !alarmOn && (lastEvent || offerInfo) && (
               <button type="button" className="middle-info" data-testid="middle-info" title={lastEvent ?? undefined} onClick={() => setSheet({ k: 'log' })} aria-label={`Открыть журнал. Последнее: ${lastEvent ?? ''}`}>
@@ -1183,8 +1185,10 @@ export function Game({
         {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
+        {phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
         <div className="board-bottom">
           {chargeSheet}
+          {!phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
           <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={fx.gen} />
           <div className="hand-row" data-fx-hand>
             {seat && (

@@ -20,25 +20,26 @@
 .decision-sheet .cs-title { flex: 0 1 auto; height: auto; min-height: 26px; padding-block: 4px; letter-spacing: .06em; }
 .decision-sheet .cs-hold { flex: none; }
 .ds-note { margin: 0; color: #efdfba; font-size: 13px; line-height: 1.25; }
-.ds-body { min-height: 0; overflow-y: auto; }
+.ds-body { min-height: 0; overflow-y: auto; padding-inline: 8px; }
 .ds-actions.panel-actions { flex: none; display: grid; grid-template-columns: minmax(90px, .7fr) minmax(0, 1.3fr); gap: 10px; margin: 0; }
 .ds-cancel { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
 .ds-cancel > .btn { flex: 1; background: linear-gradient(#fff5d9, #decda5); color: #392817; border: 1px solid #9e7c3a; }
-.ds-actions .oak-btn { width: 100%; min-width: 0; height: 52px; padding: 0; }
-.ds-actions .oak-in { width: 100%; min-width: 0; min-height: 0; padding: 0; }
-.ds-actions .oak-med { width: 36px; height: 40px; flex: none; }
-.ds-actions .oak-pan { min-width: 0; }
-.ds-actions .oak-pan b { font-size: 13px; white-space: normal; }
+.panel.decision-sheet .ds-actions .oak-btn { width: 100%; max-width: none; min-width: 0; height: 52px; padding: 0; }
+.panel.decision-sheet .ds-actions .oak-in { width: 100%; min-width: 0; min-height: 0; padding: 0; }
+.panel.decision-sheet .ds-actions .oak-med { width: 36px; height: 40px; flex: none; }
+.panel.decision-sheet .ds-actions .oak-pan { min-width: 0; }
+.panel.decision-sheet .ds-actions .oak-pan b { font-size: 13px; white-space: normal; }
 .ds-stepper.stepper { display: grid; grid-template-columns: minmax(0, 1fr) 28px 32px 28px; gap: 8px; padding: 6px 0; }
 .ds-stepper > span { min-width: 0; }
 .ds-stepper > b { text-align: center; color: #f5dc92; }
 .ds-round.btn { position: relative; min-width: 28px; min-height: 28px; width: 28px; height: 28px; padding: 0; border-radius: 50%; background: linear-gradient(#ebce7f, #99702a); color: #24170b; border: 1px solid #60430d; font-size: 20px; }
-.ds-round::before { content: ''; position: absolute; inset: -8px; }
+/* Adjacent rows are 40px apart: divide their invisible touch area at the shared edge. */
+.ds-round::before { content: ''; position: absolute; inset: -6px -8px; }
 .decision-sheet .choice-cards, .decision-sheet .tia-opts { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding: 8px 4px; touch-action: pan-x; scrollbar-width: none; }
 .decision-sheet .choice-cards::-webkit-scrollbar, .decision-sheet .tia-opts::-webkit-scrollbar { display: none; }
 .decision-sheet .choice-cards > .hcard { flex: 0 0 112px; width: 112px; height: 156px; }
 /* The migrated dock is hosted at board-bottom, independently of the sea's middle. */
-.board-bottom { position: relative; }
+@media (min-width: 701px) { .board-bottom { position: relative; } }
 .decision-dock { position: absolute; z-index: 7; left: 50%; bottom: 100%; transform: translateX(-50%); width: min(860px, 100%); }
 @media (max-width: 700px) {
   .decision-dock { left: 0; bottom: 0; width: 100%; transform: none; }
@@ -48,3 +49,11 @@
   .ds-note { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) { .panel.decision-sheet { animation: none; } }
+
+.ds-ship { display: inline-block; border: 1px solid #a78b4e; border-radius: 3px; padding: 4px 8px; font: 700 13px var(--font-num); color: #fff2cd; }
+.ds-ship.pirate { background: linear-gradient(#2e6772, #24444b); }
+.ds-ship.company { background: linear-gradient(#7d6d40, #514421); }
+
+/* A fixed table is not a scroll container. Native button focus must not pan hidden overflow.
+   The sheet body and its card ribbons keep their own native scrolling. */
+.game:has(.decision-dock) { overflow: clip; }
