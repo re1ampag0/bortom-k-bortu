@@ -291,3 +291,11 @@
 @keyframes wxrideR{from{transform:translate(-2px,-.6px)}to{transform:translate(2.4px,1px)}}
 @keyframes wxrideL{from{transform:translate(2px,.6px)}to{transform:translate(-2.4px,-1px)}}
 @media (prefers-reduced-motion: reduce) { .wx-live [data-a] { animation: none !important; } }
+
+/* ui-4: keep the damage breakdown off the ship boards, even in a 64 px sea gap. */
+.plate.compact { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 6px; padding: 4px 8px; border-left-width: 3px; }
+.plate.compact .who { font-size: 10px; line-height: 1.1; }
+.plate.compact .big { margin: 0; font-size: 13px; line-height: 1.1; white-space: nowrap; }
+.plate.compact .terms { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0 4px; font-size: 10px; line-height: 1.1; margin: 0; }
+.plate.compact .terms span:nth-child(even) { margin-right: 6px; }
+.plate.compact .stamp, .plate.compact .nodiag { margin: 0; font-size: 9px; }

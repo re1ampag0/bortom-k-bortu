@@ -90,16 +90,20 @@ test.describe('V5: the breakdown plate (1366×660)', () => {
   });
 });
 
-test.describe('V5: the plate on a phone (390×844)', () => {
-  test.use({ viewport: { width: 390, height: 844 } });
+test.describe('V5: the plate on a phone (430×680)', () => {
+  test.use({ viewport: { width: 430, height: 680 } });
 
-  test('the same plate, 220 px wide, inside the table', async ({ page }) => {
+  test('the compact plate stays between the planks on a short phone', async ({ page }) => {
     await open(page, 'plain');
     await page.waitForFunction(() => !!document.querySelector('.fx-layer > .plate'));
     const box = await page.locator('.fx-layer > .plate').first().boundingBox();
-    expect(Math.round(box!.width)).toBe(220);
-    expect(box!.x).toBeGreaterThanOrEqual(0);
-    expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(8);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(422);
+    const top = (await page.locator('.planks.top').boundingBox())!;
+    const bottom = (await page.locator('.planks.bottom').boundingBox())!;
+    expect(box!.y).toBeGreaterThanOrEqual(top.y + top.height);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(bottom.y);
   });
 });
 
