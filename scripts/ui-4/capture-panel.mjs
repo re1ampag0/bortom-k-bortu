@@ -6,6 +6,7 @@ try {for(const viewport of [{width:430,height:680},{width:430,height:740},{width
  const page=await browser.newPage({viewport});const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:5174/bortom-k-bortu/scripts/ui-4/panel-preview.html?panel=${panel}&speed=instant`);
  await page.evaluate(()=>document.fonts.ready);
+ if(panel==='card'){await page.locator('.hand-cards > .hcard').first().click();await page.getByTestId(viewport.width<701?'lift-play':'detail-play').click();}
  const sheet=page.getByTestId(panel==='card'?'card-panel':`${panel}-panel`);
  await expect(sheet).toBeVisible();await expect(sheet).toHaveClass(/decision-sheet/);await page.waitForTimeout(300);
  if(panel==='choice') {
@@ -29,6 +30,11 @@ try {for(const viewport of [{width:430,height:680},{width:430,height:740},{width
   await expect(sheet.locator('.oak-btn')).toHaveAttribute('aria-disabled','false');
   await sheet.locator('.oak-btn').click();await expect(sheet).toHaveCount(0);
   expect(await page.evaluate(()=>window.ui4Game.state.ships['Ж'].plans.length)).toBe(1);
+ }
+ if(panel==='card') {
+  const before=await page.evaluate(()=>Object.values(window.ui4Game.state.ships['Ж'].tracks).reduce((a,b)=>a+b,0));
+  await sheet.getByTestId('play-card').click();await expect(sheet).toHaveCount(0);
+  expect(await page.evaluate(()=>Object.values(window.ui4Game.state.ships['Ж'].tracks).reduce((a,b)=>a+b,0))).toBeGreaterThan(before);
  }
  expect(errors).toEqual([]);console.log('FRAME',panel,viewport);await page.close();
 }}finally{await browser.close()}

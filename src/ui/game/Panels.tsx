@@ -507,7 +507,11 @@ export function CardParamsPanel({
   const used = TRACKS.reduce((n, t) => n + (split[t] ?? 0), 0);
   const canRegroup = needs.regroup && refusal(s, { ...action, regroup: true }, data) === null;
   return (
-    <Panel title={title} sub={c.big} testid="card-panel">
+    <DecisionSheet title={title} sub={c.big} testid="card-panel"
+      hold={{powder: s.teams[own.side].powder, cap: data.econ.cap}}
+      actions={<DecisionActions cancel={<button className="btn" onClick={onCancel}>Отмена</button>}
+        primary={{key:'card-play', testid:'play-card', label:`Сыграть${c.cost ? ` · ${c.cost} П` : ''}${c.soul ? ` · ${c.soul} Д` : ''}`,
+          disabled: why, onClick: () => onAct(action)}} />}>
       {needs.ship && ally && (
         <div className="choices">
           {[own, ally].map((x) => (
@@ -519,13 +523,13 @@ export function CardParamsPanel({
         </div>
       )}
       {needs.souls !== null && (
-        <div className="stepper">
+        <div className="stepper ds-stepper">
           <span>Потратить Души (2 клетки за каждую)</span>
-          <button className="btn small" onClick={() => setMode({ ...mode, souls: Math.max(0, (mode.souls ?? needs.souls!) - 1), repair: null })}>
+          <button className="btn ds-round" onClick={() => setMode({ ...mode, souls: Math.max(0, (mode.souls ?? needs.souls!) - 1), repair: null })}>
             −
           </button>
           <b>{mode.souls ?? needs.souls}</b>
-          <button className="btn small" onClick={() => setMode({ ...mode, souls: Math.min(needs.souls!, (mode.souls ?? needs.souls!) + 1), repair: null })}>
+          <button className="btn ds-round" onClick={() => setMode({ ...mode, souls: Math.min(needs.souls!, (mode.souls ?? needs.souls!) + 1), repair: null })}>
             +
           </button>
         </div>
@@ -541,16 +545,16 @@ export function CardParamsPanel({
             if (missing <= 0) return null;
             const n = split[t] ?? 0;
             return (
-              <div key={t} className="stepper" data-track={t}>
+              <div key={t} className="stepper ds-stepper" data-track={t}>
                 <span>
                   {TRACK_NAME[t]} {repairShip.tracks[t]}/{startValue(data, repairShip.code, t)}
                 </span>
-                <button className="btn small" onClick={() => setMode({ ...mode, repair: { ...split, [t]: Math.max(0, n - 1) } })}>
+                <button className="btn ds-round" onClick={() => setMode({ ...mode, repair: { ...split, [t]: Math.max(0, n - 1) } })}>
                   −
                 </button>
                 <b>{n}</b>
                 <button
-                  className="btn small"
+                  className="btn ds-round"
                   onClick={() => n < missing && used < cells && setMode({ ...mode, repair: { ...split, [t]: n + 1 } })}
                 >
                   +
@@ -567,16 +571,7 @@ export function CardParamsPanel({
         </label>
       )}
       {why && <p className="why">{why}</p>}
-      <div className="panel-actions">
-        <button className="btn" onClick={onCancel}>
-          Отмена
-        </button>
-        <button className="btn primary" data-testid="play-card" aria-disabled={!!why} onClick={() => !why && onAct(action)}>
-          Сыграть{c.cost ? ` · ${c.cost} П` : ''}
-          {c.soul ? ` · ${c.soul} Д` : ''}
-        </button>
-      </div>
-    </Panel>
+    </DecisionSheet>
   );
 }
 
