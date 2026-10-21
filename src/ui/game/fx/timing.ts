@@ -26,6 +26,8 @@ const scaled = <T extends Record<string, number>>(k: number, o: T): T => Object.
 export const SMOKE_LIFE = 5600;
 
 export const T = {
+  /** ui-4: the played card is visible for 1.2 s; its effects keep their own timings. */
+  card: { fly: 500, show: 1200, fade: 250, settle: 200 },
   /** A shot of the Volley (the volley() of template.html): the fuses, the guns one after another, the balls, the hits. */
   volley: scaled(VOLLEY_K, {
     /** the fuses spit sparks before the first gun */

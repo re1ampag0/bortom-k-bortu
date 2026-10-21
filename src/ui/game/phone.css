@@ -1052,9 +1052,23 @@
   .game .deck-light { opacity: .4; }
   .game .deck-glint { opacity: .55; }
   .game .deck-hook, .game .backdrop .deck-piece { filter: none; }
-  .game.fx-busy .deck-flare, .game.fx-busy .lantern-light { animation: none; }
+  .game.fx-busy .deck-flare, .game.fx-busy .lantern-light { animation-play-state: paused; }
   .game .fx-layer > *, .game .fx-weather > * { will-change: auto; }
   .game .fx-layer *, .game .fx-weather * { filter: none !important; }
   .game .plank-scars *, .game .fx-fireglow { mix-blend-mode: normal; }
   .game .fx-layer .banner, .game .fx-layer .seacard { box-shadow: 0 3px 7px #0006; }
+}
+
+/* ui-4, В8: native finger scrolling stays; only its painted scrollbar disappears. */
+@media (max-width: 700px) {
+  .hand-cards { scrollbar-width: none; }
+  .hand-cards::-webkit-scrollbar { display: none; }
+}
+
+/* ui-4, В9: a tighter fan; the centre rises without adding height to the hand's layout. */
+@media (max-width: 700px) {
+  .hand-cards { padding-top: 32px; margin-top: -28px; }
+  .hand-cards > .hcard { translate: 0 var(--pdy, 0px); }
+  .hand-cards > .hcard + .hcard { margin-left: -40px; }
+  .hand-cards > .hcard.lifted { rotate: 0deg; translate: none; }
 }

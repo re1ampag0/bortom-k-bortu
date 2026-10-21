@@ -54,6 +54,7 @@ interface VolleyScene {
   dust?: boolean;
 }
 
+let plateWatch: ResizeObserver | null = null;
 let VS: VolleyScene | null = null; // the scene of the current Volley
 const PERSIST: { whirl: HTMLElement | null } = { whirl: null }; // effects till the end of the turn: the whirlpool of «Водоворот»
 
@@ -121,13 +122,24 @@ export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage
   return `<div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
     (terms ? `<div class="terms">${termRows(ctx, terms, cls)}</div>` : '') + extra;
 }
-/** The breakdown plate — in the middle of the gap between the rows; if taller than the gap, it keeps to the shooter's row. */
+/** The damage breakdown always stays in the gap; a short gap uses a compact two-line layout. */
 function fitPlate(ctx: FxCtx) {
-  if (!VS || !VS.plate) return;
-  const g = gapBox(ctx), h = VS.plate.offsetHeight;
-  const y = h <= g.h - 6 ? g.cy - h / 2 : isTop(ctx, VS.shooter) ? g.b - h - 2 : g.y + 2;
-  VS.plate.style.top = y + 'px';
-  if (VS.plateBox) VS.plateBox.y = y;
+  if (!VS?.plate) return;
+  const g = gapBox(ctx), plate = VS.plate, original = placePlate(ctx, VS.shooter);
+  plate.classList.remove('compact');
+  plate.style.width = original.w + 'px';
+  let x = original.x, w = original.w;
+  if (plate.offsetHeight > g.h - 8) {
+    plate.classList.add('compact');
+    const sea = seaBox(ctx);
+    w = Math.min(440, sea.r - sea.x - 8);
+    x = (sea.x + sea.r - w) / 2;
+    plate.style.width = w + 'px';
+  }
+  const h = plate.offsetHeight, y = g.cy - h / 2;
+  plate.style.left = x + 'px';
+  plate.style.top = y + 'px';
+  if (VS.plateBox) Object.assign(VS.plateBox, { x, y, w });
 }
 /** V5: the pill of a miss beside the plate, not over it (a phone: the splash lies at the edge of the plate) — left, else right, else above. */
 function besidePlate(ctx: FxCtx, t: HTMLElement) {
@@ -224,6 +236,7 @@ function holdPlate(vs: NonNullable<typeof VS>) {
   const el = vs.plate;
   const host = el && el.isConnected ? el.closest('.board')?.querySelector<HTMLElement>(':scope > .fx-scars') : null;
   if (!el || !host) return;
+  plateWatch?.disconnect();
   for (const a of el.getAnimations()) {
     try { a.commitStyles(); } catch { /* an animation without a target style */ }
     a.cancel();
@@ -234,6 +247,7 @@ function holdPlate(vs: NonNullable<typeof VS>) {
   vs.plate = undefined;
 }
 function clearVS(ctx: FxCtx, fade = true) {
+  plateWatch?.disconnect();
   if (!VS) return;
   unleanAll(ctx);
   for (const el of [VS.plate, ...VS.cards, ...VS.extras]) if (el && el.isConnected) { if (fade) A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 250, 0, 'ease-in', 'forwards'); else el.remove(); }
@@ -296,6 +310,9 @@ PLAY.announce = async (c, ctx) => {
   VS.plateBox = pp;
   VS.plate.innerHTML = plateHTML(ctx, { shooter: c.shooter, target: c.target, track: c.track, damage: c.damage, terms: c.terms, extra });
   fitPlate(ctx);
+  plateWatch?.disconnect();
+  const gap = ctx.board.querySelector('[data-fx-gap]');
+  if (gap) { plateWatch = new ResizeObserver(() => fitPlate(ctx)); plateWatch.observe(gap); }
   if (c.charge && !part2) {
     const from = cardOrigin(ctx, c.charge, c.chargeFrom || c.shooter);
     const card = flyCard(ctx, c.charge, from, cardSlot(ctx, pp, 0), 150, 450, { ship: c.chargeFrom || c.shooter });
@@ -665,12 +682,15 @@ export const VOLLEY_SCENE: FxScene = {
   },
   afterRender: (ctx) => {
     if (!VS) return;
+    fitPlate(ctx); // The Reaction sheet or ship status rows may have changed the gap.
     const s = ctx.board.querySelector(`[data-fx-ship="${VS.shooter}"]`), t = ctx.board.querySelector(`[data-fx-ship="${VS.target}"]`);
     if (s) s.classList.add(SHOOTER);
     if (t) t.classList.add(TARGETED);
     for (const [code, tf] of Object.entries(VS.lean || {})) { const el = ctx.board.querySelector<HTMLElement>(`[data-fx-ship="${code}"]`); if (el) el.style.transform = tf; }
   },
   reset: (board) => {
+    plateWatch?.disconnect();
+    plateWatch = null;
     VS = null;
     PERSIST.whirl = null;
     if (board) unframe(board);

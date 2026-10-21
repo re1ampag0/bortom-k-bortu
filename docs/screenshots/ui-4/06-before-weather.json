@@ -1,0 +1,403 @@
+{
+  "maelstrom": {
+    "before": {
+      "arms": [
+        "-47.3722px",
+        "-31.417px",
+        "-17.5892px",
+        "-5.48988px",
+        "-170.814px",
+        "-161.324px"
+      ],
+      "debris": [
+        {
+          "x": 223.3645477294922,
+          "y": 279.82965087890625
+        },
+        {
+          "x": 212.97996520996094,
+          "y": 265.15179443359375
+        },
+        {
+          "x": 204.42147827148438,
+          "y": 248.6337127685547
+        },
+        {
+          "x": 227.13922119140625,
+          "y": 302.55810546875
+        },
+        {
+          "x": 243.01870727539062,
+          "y": 255.297119140625
+        }
+      ],
+      "animations": [
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 2400
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1000
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1300
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1600
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1900
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1000
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1300
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1600
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1900
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1000
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1300
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1600
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1900
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1000
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1300
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 2600
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 2800.0000000000005
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 3000
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 3200
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 3400.0000000000005
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 3600
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1600
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1750
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 1900.0000000000002
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 2050
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 2200
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 2350
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 2200
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 6500
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 8000
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 7200
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 9400
+        },
+        {
+          "type": "Animation",
+          "time": 3299.8159999899563,
+          "duration": 10000
+        }
+      ]
+    },
+    "after": {
+      "arms": [
+        "-10.1436px",
+        "-160.276px",
+        "-137.858px",
+        "-118.242px",
+        "-100.933px",
+        "-85.5481px"
+      ],
+      "debris": [
+        {
+          "x": 211.170654296875,
+          "y": 272.1523132324219
+        },
+        {
+          "x": 204.9897003173828,
+          "y": 276.6121826171875
+        },
+        {
+          "x": 180.29254150390625,
+          "y": 281.5367431640625
+        },
+        {
+          "x": 189.93431091308594,
+          "y": 261.1680603027344
+        },
+        {
+          "x": 193.44833374023438,
+          "y": 281.06689453125
+        }
+      ],
+      "animations": [
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 2400
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1000
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1300
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1600
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1900
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1000
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1300
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1600
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1900
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1000
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1300
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1600
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1900
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1000
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1300
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 2600
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 2800.0000000000005
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 3000
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 3200
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 3400.0000000000005
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 3600
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1600
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1750
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 1900.0000000000002
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 2050
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 2200
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 2350
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 2200
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 6500
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 8000
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 7200
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 9400
+        },
+        {
+          "type": "Animation",
+          "time": 5349.847999989956,
+          "duration": 10000
+        }
+      ]
+    },
+    "errors": []
+  }
+}

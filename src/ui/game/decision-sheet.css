@@ -1,0 +1,66 @@
+/* The same oak/brass/paper materials as Charge; its finished layout is left intact. */
+.panel.decision-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  margin: 0;
+  max-height: min(560px, 78dvh);
+  border: 0;
+  border-top: 3px solid #c69a3c;
+  border-radius: 14px 14px 0 0;
+  background:
+    repeating-linear-gradient(0deg, #0005 0 1.5px, #0000 1.5px 26px),
+    radial-gradient(ellipse 90% 60% at 50% 20%, #ffc88c1a, #0000 70%),
+    linear-gradient(#5a2a1c, #33140c);
+  color: #efe3c8;
+  box-shadow: 0 -10px 24px #0008, inset 0 1px #ffe6aa59;
+  animation: cs-up .25s ease-out both;
+}
+.decision-sheet .cs-title { flex: 0 1 auto; height: auto; min-height: 26px; padding-block: 4px; letter-spacing: .06em; }
+.decision-sheet .cs-hold { flex: none; }
+.ds-note { margin: 0; color: #efdfba; font-size: 13px; line-height: 1.25; }
+.ds-body { min-height: 0; overflow-y: auto; padding-inline: 8px; }
+.ds-actions.panel-actions { flex: none; display: grid; grid-template-columns: minmax(90px, .7fr) minmax(0, 1.3fr); gap: 10px; margin: 0; }
+.ds-cancel { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.ds-cancel > .btn { flex: 1; background: linear-gradient(#fff5d9, #decda5); color: #392817; border: 1px solid #9e7c3a; }
+.panel.decision-sheet .ds-actions .oak-btn { width: 100%; max-width: none; min-width: 0; height: 52px; padding: 0; }
+.panel.decision-sheet .ds-actions .oak-in { width: 100%; min-width: 0; min-height: 0; padding: 0; }
+.panel.decision-sheet .ds-actions .oak-med { width: 36px; height: 40px; flex: none; }
+.panel.decision-sheet .ds-actions .oak-pan { min-width: 0; }
+.panel.decision-sheet .ds-actions .oak-pan b { font-size: 13px; white-space: normal; }
+.ds-stepper.stepper { display: grid; grid-template-columns: minmax(0, 1fr) 28px 32px 28px; gap: 8px; padding: 6px 0; }
+.ds-stepper > span { min-width: 0; }
+.ds-stepper > b { text-align: center; color: #f5dc92; }
+.ds-round.btn { position: relative; min-width: 28px; min-height: 28px; width: 28px; height: 28px; padding: 0; border-radius: 50%; background: linear-gradient(#ebce7f, #99702a); color: #24170b; border: 1px solid #60430d; font-size: 20px; }
+/* Adjacent rows are 40px apart: divide their invisible touch area at the shared edge. */
+.ds-round::before { content: ''; position: absolute; inset: -6px -8px; }
+.decision-sheet .choice-cards, .decision-sheet .tia-opts { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding: 8px 4px; touch-action: pan-x; scrollbar-width: none; }
+.decision-sheet .choice-cards::-webkit-scrollbar, .decision-sheet .tia-opts::-webkit-scrollbar { display: none; }
+.decision-sheet .choice-cards > .hcard { flex: 0 0 112px; width: 112px; height: 156px; }
+/* The migrated dock is hosted at board-bottom, independently of the sea's middle. */
+@media (min-width: 701px) { .board-bottom { position: relative; } }
+.decision-dock { position: absolute; z-index: 7; left: 50%; bottom: 100%; transform: translateX(-50%); width: min(860px, 100%); }
+@media (max-width: 700px) {
+  .decision-dock { left: 0; bottom: 0; width: 100%; transform: none; }
+  .panel.decision-sheet { padding: 8px 10px; gap: 8px; max-height: calc(100dvh - 140px); }
+  .decision-sheet .cs-title { font-size: 11px; }
+  .decision-sheet .cs-hold { padding-inline: 6px; font-size: 11px; }
+  .ds-note { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .panel.decision-sheet { animation: none; } }
+
+.ds-ship { display: inline-block; border: 1px solid #a78b4e; border-radius: 3px; padding: 4px 8px; font: 700 13px var(--font-num); color: #fff2cd; }
+.ds-stepper .ds-ship { background: linear-gradient(color-mix(in srgb, var(--ship) 82%, #fff), color-mix(in srgb, var(--ship) 82%, #000)); }
+
+/* A fixed table is not a scroll container. Native button focus must not pan hidden overflow.
+   The sheet body and its card ribbons keep their own native scrolling. */
+.game:has(.decision-dock) { overflow: clip; }
+
+.decision-sheet .why { color: #ffd8a8; }
+
+.ds-close.btn { position: relative; flex: 0 0 28px; width: 28px; height: 28px; min-height: 28px; padding: 0; border-radius: 50%; font-size: 23px; background: #efe2c6; color: #392817; }
+.ds-close::before { content: ''; position: absolute; inset: -8px; }
+/* The full end-turn label fits in two lines; the visible board keeps the shared size. */
+.decision-sheet[data-testid='plans-panel'] .oak-pan { left: 45px; right: 7px; top: 5px; bottom: 5px; }
+.decision-sheet[data-testid='plans-panel'] .oak-pan b { font-size: 11.5px; line-height: 1.1; letter-spacing: .025em; text-indent: 0; white-space: normal; overflow-wrap: anywhere; }

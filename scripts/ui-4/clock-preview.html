@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body>
+<main class="board"><div class="fx-layer"><svg width="400" height="200"><circle id="particle" r="8" fill="orange"/></svg></div></main>
+<script type="module">
+import {A,pauseClock,resumeClock,flushClock} from '../../src/ui/game/fx/primitives';
+const board=document.querySelector('.board'),layer=document.querySelector('.fx-layer'),particle=document.querySelector('#particle');
+const ctx={board,layer,speed:1,rich:true,run:1,live:()=>1};
+window.clockCheck={A,ctx,pauseClock,resumeClock,flushClock,particle};
+</script></body></html>

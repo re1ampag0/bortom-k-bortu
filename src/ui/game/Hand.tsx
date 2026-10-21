@@ -133,11 +133,18 @@ function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number): number
     const draw = () => {
       raf = 0;
       const phone = isPhone();
-      const box = row.getBoundingClientRect(), mid = box.left + box.width / 2;
+      const box = row.getBoundingClientRect(), mid = row.clientWidth / 2;
+      // Layout centres do not include rotation/arc: measuring the transformed bounding box
+      // feeds yesterday's tilt back into the next frame and makes the fan drift while scrolling.
+      const centreX = (c: HTMLElement) => {
+        const parent = c.offsetParent;
+        const origin = parent === row ? 0 : (parent?.getBoundingClientRect().left ?? 0) - box.left;
+        return origin + c.offsetLeft + c.offsetWidth / 2 - row.scrollLeft;
+      };
       let near = 0,
         best = Infinity;
       row.querySelectorAll<HTMLElement>(':scope > .hcard').forEach((c, i) => {
-        const b = c.getBoundingClientRect(), off = Math.abs(b.left + b.width / 2 - mid);
+        const off = Math.abs(centreX(c) - mid);
         if (off < best) [near, best] = [i, off];
       });
       if (phone) setMiddle(near);
@@ -145,11 +152,12 @@ function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number): number
         if (!phone) {
           c.style.removeProperty('--pr');
           c.style.removeProperty('--pf');
+          c.style.removeProperty('--pdy');
           continue;
         }
-        const b = c.getBoundingClientRect();
-        const d = Math.max(-1.5, Math.min(1.5, (b.left + b.width / 2 - mid) / Math.max(1, box.width / 2)));
-        c.style.setProperty('--pr', `${(d * 7).toFixed(1)}deg`);
+        const d = Math.max(-1, Math.min(1, (centreX(c) - mid) / Math.max(1, row.clientWidth / 2)));
+        c.style.setProperty('--pr', `${(d * 13).toFixed(1)}deg`);
+        c.style.setProperty('--pdy', `${(18 * d * d - 18).toFixed(1)}px`);
         c.style.setProperty('--pf', (1 - Math.max(0, Math.abs(d) - 0.55) * 0.5).toFixed(2));
       }
     };

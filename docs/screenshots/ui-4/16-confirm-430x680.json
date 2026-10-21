@@ -1,0 +1,42 @@
+{
+  "box": {
+    "x": 0,
+    "y": 493,
+    "width": 430,
+    "height": 115,
+    "top": 493,
+    "right": 430,
+    "bottom": 608,
+    "left": 0
+  },
+  "buttons": [
+    {
+      "label": "Вернуться",
+      "box": {
+        "x": 10,
+        "y": 548,
+        "width": 140,
+        "height": 52,
+        "top": 548,
+        "right": 150,
+        "bottom": 600,
+        "left": 10
+      },
+      "hit": true
+    },
+    {
+      "label": "\n    \n    \n    \n  \n  \n  \n  \n  \n  \n  Закончить ход",
+      "box": {
+        "x": 160,
+        "y": 548,
+        "width": 260,
+        "height": 52,
+        "top": 548,
+        "right": 420,
+        "bottom": 600,
+        "left": 160
+      },
+      "hit": true
+    }
+  ]
+}
