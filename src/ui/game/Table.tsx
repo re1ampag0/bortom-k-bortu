@@ -1,5 +1,5 @@
 // Presentational parts of the table: the status bar, a team row with its Hold, a ship board (plank).
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
 import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type ShipState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
@@ -413,7 +413,7 @@ export function statuses(s: GameState, data: GameData, ship: ShipState): Status[
   return out;
 }
 
-export function Plank({
+function PlankView({
   s,
   data,
   ship,
@@ -437,6 +437,11 @@ export function Plank({
   fxHidden,
   reactionWait,
 }: {
+  /**
+   * The inputs of the game this plank was built from (Game: tableInteraction). With the same stamp only what the plank
+   * shows of the displayed state is compared — its handlers and buttons are the same by construction.
+   */
+  stamp?: object;
   reactionWait?: ReactNode;
   s: GameState;
   data: GameData;
@@ -483,6 +488,7 @@ export function Plank({
   const handLabel = cardsWord(ship.hand.length);
   const cls = [
     'plank',
+    buttons.length > 0 ? 'has-buttons' : '',
     own ? 'own' : 'enemy',
     selected ? 'selected' : '',
     awaiting ? 'awaiting' : '',
@@ -652,7 +658,7 @@ export function Plank({
         )}
       </header>
       {!phone && statusRow}
-      <div className="plank-body">
+      <div className={`plank-body${d.souls !== undefined ? ' with-souls' : ''}`}>
         <div className="tracks" key={fxGen}>
           {trackEl('hull')}
           <div className="track-row2">{(['sails', 'guns', 'crew'] as const).map(trackEl)}</div>
@@ -684,7 +690,7 @@ export function Plank({
         <div className="plank-buttons-wrap" onClick={(e) => e.stopPropagation()}>
           {/* ui-5: on a laptop the buttons keep their names in one row, only «Погружение» and the Souls are an icon (the name in a
               paper pop) */}
-          <div className={`plank-buttons ${buttons.length >= 4 ? 'many' : ''}`} ref={buttonsRef}>
+          <div className={`plank-buttons ${buttons.length >= 3 ? 'n3plus' : `n${buttons.length}`} ${buttons.length >= 4 ? 'many' : ''}`} ref={buttonsRef}>
             {buttons.map((b) => (
               <PlankButton key={b.key} b={b} compact={!phone && b.key in ICON_URL} />
             ))}
@@ -736,6 +742,23 @@ export function Plank({
   }
 }
 
+type PlankProps = Parameters<typeof PlankView>[0];
+/** What a plank shows of the displayed state besides its own ship: the Powder of its side, the active side, its allies. */
+const plankSide = (p: PlankProps) =>
+  `${p.s.active}|${p.s.teams[p.ship.side].powder}|${Object.values(p.s.ships).filter((x) => x.side === p.ship.side).map((x) => `${x.code}${+x.sunk}${x.souls}`).join()}`;
+const plankShip = (x: ShipState) => `${x.pos}|${x.tracks.hull},${x.tracks.sails},${x.tracks.guns},${x.tracks.crew}|${x.fires}|${+x.sunk}${+x.submerged}${+x.legend}|${x.souls}`;
+function samePlank(a: PlankProps, b: PlankProps): boolean {
+  if (a.stamp === undefined || a.stamp !== b.stamp) {
+    const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof PlankProps>;
+    for (const k of keys) if (!Object.is(a[k], b[k])) return false;
+    return true;
+  }
+  return a.fxGen === b.fxGen && a.s.turn === b.s.turn && plankShip(a.ship) === plankShip(b.ship) && plankSide(a) === plankSide(b) &&
+    (a.fxHidden ?? []).join() === (b.fxHidden ?? []).join();
+}
+/** A plank of the table: drawn again when its inputs change, not at every step of a clip (fx-smooth-a). */
+export const Plank = memo(PlankView, samePlank);
+
 /** The icons of the buttons of a plank (A5: an icon, the name | the price with a keg). */
 const CMD_ICON: Record<string, string> = {
   volley: CELLS.GUN,
@@ -755,12 +778,15 @@ const FREE = /^(.*?) · (бесплатно)$/;
 /** The keg of a price (KEG_S of art/cells2.json). */
 const KEG_SMALL = CELLS.KEG_S;
 
-/** A button of a plank: on a laptop the icon, the name and the price with a keg; on a phone the short label (U3). */
+/** A button of a plank: on a laptop the icon, the name and the price with a keg; on a phone the icon and the short label (U3). */
 export function PlankButton({ b, className = '', compact = false }: { b: Btn; className?: string; compact?: boolean }) {
   const m = PRICED.exec(b.label) ?? FREE.exec(b.label);
   // the trident has gradients of its own: one copy for the life of the button, so the picture is not set again on a render
   const trident = useMemo(() => (b.key === 'sword' ? tridentSvg(20) : null), [b.key]);
   const icon = trident ?? CMD_ICON[b.key];
+  // fx-smooth-a: the short label of a phone carries the same icon (a trident of its own: its gradient ids are unique)
+  const shortTrident = useMemo(() => (b.key === 'sword' ? tridentSvg(20) : null), [b.key]);
+  const shortIcon = shortTrident ?? CMD_ICON[b.key];
   const url = ICON_URL[b.key];
   const name = m ? m[1] : b.label;
   // compact (a laptop, an icon-only button): the name and, if it cannot be pressed, the reason — in the paper pop of the game
@@ -770,7 +796,7 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
   const pop = only || url ? [name, b.tip, b.disabled].filter(Boolean).join(' — ') : b.tip;
   return (
     <button
-      className={`btn cmd ${b.primary ? 'primary' : ''} ${only ? 'compact' : ''} ${className}`}
+      className={`btn cmd ${b.primary ? 'primary' : ''} ${only ? 'compact' : ''} ${url ? `pic${b.key === 'dive' ? '' : ' soul'}` : ''} ${className}`}
       onClick={b.disabled ? undefined : b.onClick}
       aria-disabled={!!b.disabled}
       aria-label={only || url ? name : undefined}
@@ -808,7 +834,10 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
             {b.key !== 'dive' && (b.short ?? b.label).replace(/^Душа\s*→\s*/, '→ ')}
           </>
         ) : (
-          breakAfterArrow(b.short ?? b.label)
+          <>
+            {shortIcon && <span className="short-icon" aria-hidden dangerouslySetInnerHTML={svg(shortIcon)} />}
+            {breakAfterArrow(b.short ?? b.label)}
+          </>
         )}
       </span>
     </button>

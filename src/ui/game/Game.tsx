@@ -1,6 +1,6 @@
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
-import { cloneElement, isValidElement, lazy, memo, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { cloneElement, isValidElement, lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   abilityButtons,
   cardNeeds,
@@ -51,9 +51,8 @@ import {
 import { MissedSheet, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { instantUrl, reducedMotion } from '../start/motion';
-import { FxLayer, useFxQueue } from './fx/FxLayer';
+import { FxLayer, useFxPart, useFxQueue, type FxQueue } from './fx/FxLayer';
 import { T } from './fx/timing';
-import { withDisplay } from './fx/queue';
 import { playTurnSound } from '../sound';
 import { Button, OakButton, Plank, RoundButton, ROUND_ICON, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
 import { TableBackdrop, useSeaClip } from './TableThings';
@@ -61,7 +60,10 @@ import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
 import { usePlayClock } from './playClock';
+import { useTableBody } from './tableBody';
 import {PerfPanel, usePerf} from './perf/PerfPanel';
+import {getPerf} from './perf/state';
+import {clipRender} from './perf/clip';
 
 /** V7: the victory sheet is a chunk of its own (the big ships of its panorama). */
 const Victory = lazy(() => import('./Victory').then((m) => ({ default: m.Victory })));
@@ -112,6 +114,9 @@ export function Game({
   onExit: () => void;
   onRestart: (setup: MatchSetup) => void;
 }) {
+  // ?perf=1: how long a render of the table takes (render + commit, up to the layout effect); off — no clock at all
+  const perfT0 = getPerf().enabled ? performance.now() : 0;
+  useLayoutEffect(() => { if (perfT0) clipRender(performance.now() - perfT0); });
   const version = useSyncExternalStore(
     useCallback((cb) => game.subscribe(cb), [game]),
     () => game.version,
@@ -339,35 +344,16 @@ export function Game({
     hold: held,
     start: newGame ? { round: s.round, sea: s.sea?.current ?? null, active: s.active } : null,
   });
-  /** The table as it is shown: the displayed fields from the queue's D, the rest from the real view. */
-  // D/preview are mutable refs; gen is their explicit revision. Never key this cache by D identity.
-  const tableView = useMemo(() => fx.display ? withDisplay(view, fx.display) : view, [view, fx.gen]);
-  // The log as it is shown (A4): the lines of an action appear when its clips are played; at the end of the game — all.
-  const logFrom = s.winner ? null : fx.logFrom;
-  const shownLog = logFrom == null ? game.log : game.log.filter((l) => l.action < logFrom);
-  // The lines of the newest action shown are highlighted.
-  const freshFrom = shownLog.at(-1)?.action ?? 0;
-  useEffect(() => {
-    if (!local || curtainSide || s.winner || held || !local.botToMove()) return;
-    const instant = speed === 'instant' || fastTurn === turnKey;
-    if ((fx.busy || (banner)) && !instant) return;
-    const t = setTimeout(
-      () => {
-        let n = 0;
-        do local.botStep();
-        while (instant && ++n < 40 && local.botToMove() && (speed === 'instant' || `${local.state.round}:${local.state.active}` === fastTurn));
-      },
-      instant ? 0 : SPEEDS[speed].ms,
-    );
-    return () => clearTimeout(t);
-  }, [version, curtainSide, speed, fastTurn, turnKey, local, s.winner, fx.busy, banner?.k, held]);
-
-  const botBusy = (!!local && !!d && local.isBot(d.side) && !s.winner) || fx.busy;
+  // The table, the log and the Hold as they are shown, and «busy», are read by the parts that draw them (useFxPart):
+  // a step of a clip renders those parts, not Game. The bots and the show buttons follow «busy» the same way.
+  /** A bot decides now (the show of the layer adds to it: see botBusyOf). */
+  const botTurn = !!local && !!d && local.isBot(d.side) && !s.winner;
+  const botBusyOf = (busy: boolean) => botTurn || busy;
   // The pause never keeps a decision of this device waiting: it ends as soon as the game asks the player.
-  const canHold = botBusy && !myDecision;
-  useEffect(() => {
-    if (held && !canHold) setHeld(false);
-  }, [held, canHold]);
+  const canHoldOf = (busy: boolean) => botBusyOf(busy) && !myDecision;
+  /** data-fx-busy on the root, set from the snapshot: the CSS of the show follows it without a render of Game. */
+  const gameRef = useBusyAttr(fx);
+  useTableBody(curtainSide ? null : 'game');
 
   useEffect(() => {
     if (local) storeSave(s.winner ? null : local.record());
@@ -467,8 +453,20 @@ export function Game({
   const [boardRef, seaRef] = useSeaClip();
 
   const tableInteraction = useMemo(() => ({}), [game, version, data, view, bottom, seat, mode, reactPickRaw,
-    hints, alarmFolded, sheet, botBusy, held, fastTurn, openHands, fastEnd, endSeconds, flash,
+    hints, alarmFolded, sheet, botTurn, held, fastTurn, openHands, fastEnd, endSeconds, flash,
     curtainSide, banner, endClosed, memoSeen, memoSide, speed, effects, look, sound]);
+
+  // The dry runs of the engine depend only on the real game, not on the frame of a clip: a render the show asks for
+  // (the displayed state moved on) reuses them. A ref, not useMemo: the code that fills it runs after the curtain return.
+  const engineCache = useRef(new Map<string, { deps: readonly unknown[]; value: unknown }>());
+  const cached = <T,>(key: string, deps: readonly unknown[], make: () => T): T => {
+    const hit = engineCache.current.get(key);
+    if (hit && hit.deps.length === deps.length && hit.deps.every((x, i) => Object.is(x, deps[i]))) return hit.value as T;
+    const value = make();
+    engineCache.current.set(key, { deps, value });
+    return value;
+  };
+  const engineDeps = [version, game, data, bottom, myTurn, myDecision, mySeats.join(','), mode, hints, sAim, aimTargets] as const;
 
   // ——— Curtain ———
   if (curtainSide) {
@@ -592,7 +590,7 @@ export function Game({
   const finishTurn = (action: Action) => (speed === 'instant' ? act(action) : setMode({ k: 'ending', action }));
 
   // ——— Planks ———
-  const columns = (side: Side) => {
+  const columns = (side: Side, tableView: GameState) => {
     const ships = Object.values(tableView.ships).filter((x) => x.side === side);
     const alive = ships.filter((x) => !x.sunk);
     const cols: (typeof ships[number] | null)[] = [null, null];
@@ -601,7 +599,8 @@ export function Game({
     return cols.filter((x): x is NonNullable<typeof x> => !!x);
   };
 
-  const plateFor = (code: string): Plate | null => {
+  const plateFor = (code: string): Plate | null => cached(`plate:${code}`, engineDeps, () => plateNow(code));
+  const plateNow = (code: string): Plate | null => {
     if (mode.k === 'aim') {
       const t = aimTargets.find((x) => x.target === code);
       if (!t) return null;
@@ -623,7 +622,8 @@ export function Game({
     return null;
   };
 
-  const plankButtons = (code: string): Btn[] => {
+  const plankButtons = (code: string): Btn[] => cached(`buttons:${code}`, engineDeps, () => buttonsNow(code));
+  const buttonsNow = (code: string): Btn[] => {
     const ship = s.ships[code];
     if (!myTurn || ship.sunk || ship.side !== bottom || !mySeats.includes(code)) return [];
     const params = shipData(data, code);
@@ -657,7 +657,8 @@ export function Game({
     setSheet({ k: 'card', seat: code, code: `${code}-Л` });
   };
 
-  const regroupBtn = (side: Side): Btn | null => {
+  const regroupBtn = (side: Side): Btn | null => cached(`regroup:${side}`, engineDeps, () => regroupNow(side));
+  const regroupNow = (side: Side): Btn | null => {
     if (side !== bottom) return null;
     // always in its place under the Hold; out of one's turn dimmed, not active, «Только в свой ход», the price still shown
     // (free while a ship of the team is «Быстрее ветра»; the sea «Попутный ветер» is known only by the engine in one's turn)
@@ -895,13 +896,15 @@ export function Game({
     return `Ждём: ${who(d!.seats)} — ${curtainReason(s, data, d!.kind)}`;
   }
 
-  // ——— The middle at rest: the last event ———
-  const lastShownAction = shownLog.at(-1)?.action;
-  const shownRecent = game.recent.find((r) => r.n === lastShownAction);
-  const shownSummary = shownRecent ? turnSummary(data, shownRecent.events) : null;
-  const lastEvent = shownSummary?.text
-    ? `Ход ${sideGenitive(shownSummary.side)}: ${shownSummary.text}`
-    : [...shownLog].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
+  // ——— The middle at rest: the last event (of the log as it is shown) ———
+  const lastEventOf = (shownLog: typeof game.log) => {
+    const lastShownAction = shownLog.at(-1)?.action;
+    const shownRecent = game.recent.find((r) => r.n === lastShownAction);
+    const shownSummary = shownRecent ? turnSummary(data, shownRecent.events) : null;
+    return shownSummary?.text
+      ? `Ход ${sideGenitive(shownSummary.side)}: ${shownSummary.text}`
+      : [...shownLog].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
+  };
   /** The ally: «Капитан предлагает Заряд…» (P6). */
   const offerToMe = myTurn && mode.k === 'idle' ? offers.find((o) => mySeats.includes(o.to) && !mySeats.includes(o.from)) : undefined;
   const offerInfo = offerToMe ? `Капитан предлагает Заряд «${cardByCode(data, offerToMe.card).name}» — нажмите «Залп» ${nick(offerToMe.to)}` : null;
@@ -999,7 +1002,7 @@ export function Game({
     onClick: () => setHeld(!held),
     testid: 'pause-show',
   };
-  const botBtns: Btn[] = botBusy
+  const botBtnsOf = (busy: boolean): Btn[] => botBusyOf(busy)
     ? [
         {
           key: 'faster',
@@ -1020,7 +1023,7 @@ export function Game({
           },
           testid: 'skip-turn',
         },
-        ...(canHold ? [pauseBtn] : []),
+        ...(canHoldOf(busy) ? [pauseBtn] : []),
       ]
     : [];
 
@@ -1088,12 +1091,15 @@ export function Game({
     return !!net && net.ready.includes(code);
   };
 
-  const renderPlank = (x: (typeof view.ships)[string]) => (
+  const renderRow = (side: Side) => (tableView: GameState, rev: (code: string) => number, hidden: Record<string, string[]>) =>
+    columns(side, tableView).map((x) => renderPlank(x, tableView, rev(x.code), hidden[x.code]));
+  const renderPlank = (x: (typeof view.ships)[string], tableView: GameState, fxGen: number, fxHidden: string[] | undefined) => (
     <Plank
       key={x.code}
+      stamp={tableInteraction}
       s={tableView}
-      fxGen={fx.gen}
-      fxHidden={fx.hidden[x.code]}
+      fxGen={fxGen}
+      fxHidden={fxHidden}
       data={data}
       reactionWait={waitNote && waitTarget === x.code ? <ReactionWaitPanel line={waitNote.line} who={waitNote.who} /> : undefined}
       ship={x}
@@ -1181,12 +1187,14 @@ export function Game({
   ) : (
     <div className="hand-actions">
       {/* A5: «Быстрее · До конца · Пауза» (while a bot moves or a move is shown) and «Отменить» — round brass buttons */}
-      <div className="round-row">
-        {botBtns.map((b) => (
-          <RoundButton key={b.key} b={b} icon={botIcon[b.key]} />
-        ))}
-        {net && mode.k !== 'ending' ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" thin />}
-      </div>
+      <FxBusy fx={fx}>{(busy) => (
+        <div className="round-row">
+          {botBtnsOf(busy).map((b) => (
+            <RoundButton key={b.key} b={b} icon={botIcon[b.key]} />
+          ))}
+          {net && mode.k !== 'ending' ? <Button b={remindBtn} className="small wide" /> : <RoundButton b={{ ...undoBtn, label: '↶ Отменить' }} icon="undo" className="undo wide" thin />}
+        </div>
+      )}</FxBusy>
       <OakButton b={endBtn} className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`} />
       {allyReady && (
         <p className="ally-ready" data-testid="ally-ready">
@@ -1204,14 +1212,20 @@ export function Game({
   return (<>
     {perf.config.enabled && <PerfPanel />}
     <div
-      className={`game ${perf.classes} ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' || simpleFx ? 'fx-simple' : ''} ${fx.busy ? 'fx-busy' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
+      className={`game ${perf.classes} ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' || simpleFx ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
       data-testid="game"
       data-bottom={bottom}
+      ref={gameRef}
     >
+      {local && (
+        <BotDriver fx={fx} local={local} version={version} stop={!!curtainSide || !!s.winner} held={held} speed={speed} fastTurn={fastTurn} turnKey={turnKey}
+          banner={banner?.k ?? null} canHoldOf={canHoldOf} setHeld={setHeld} />
+      )}
+      {!local && <HoldReset fx={fx} held={held} canHoldOf={canHoldOf} setHeld={setHeld} />}
       <TableBackdrop look={look.hand} />
       <main className="board" ref={boardRef}>
-        <StatusBar
-          s={fx.display ? withDisplay(s, fx.display) : s}
+        <Shown fx={fx} real={s} keyOf={statusKey}>{(shown) => <StatusBar
+          s={shown}
           data={data}
           fxHint={fx.hintStore}
           instruction={flash ?? (waitNote ? `Противник может ответить Реакцией… · ${instruction}` : instruction)}
@@ -1219,26 +1233,31 @@ export function Game({
           onSea={() => setSheet({ k: 'sea' })}
           extra={wideLog ? null : toolButtons}
           chip={!wideLog}
-          hold={<TopHold side={top} s={tableView} data={data} fxGen={fx.gen} />}
+          hold={<Shown fx={fx} real={view} keyOf={(x) => holdKey(x, top)}>{(shown, rev) => <TopHold side={top} s={shown} data={data} fxGen={rev} />}</Shown>}
           alarm={alarmOn && !flash ? <AlarmBar info={alarm!} /> : undefined}
-        />
+        />}</Shown>
         {net && <NetBar game={net} />}
         <div className="sea-table" ref={seaRef}>
           <div className="sea-water" aria-hidden />
-          <div className="planks top">{/* gen rebuilds imperative tracks at every displayed-state boundary. */}<MemoContent stamp={tableInteraction} revision={fx.gen}>{() => columns(top).map(renderPlank)}</MemoContent></div>
+          <div className="planks top">{/* a plank is built again when what it shows changes (its revision rebuilds the tracks) */}<PlankRow fx={fx} view={view} stamp={tableInteraction} render={renderRow(top)} /></div>
           <div className="middle" data-fx-gap>
             <BannerView data={data} banner={banner} />
             {dock && !oakDock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
             {/* Б1: a translucent line along the bottom of the open sea; the hint «выберите карту или действие» is in the top plaque already */}
-            {!dock && !s.winner && !alarmOn && (lastEvent || offerInfo) && (
-              <button type="button" className="middle-info" data-testid="middle-info" title={lastEvent ?? undefined} onClick={() => setSheet({ k: 'log' })} aria-label={`Открыть журнал. Последнее: ${lastEvent ?? ''}`}>
-                {offerInfo && <b data-testid="offer-info">{offerInfo}</b>}
-                {offerInfo && lastEvent && ' · '}
-                {lastEvent && <>Последнее: {lastEvent}</>}
-              </button>
+            {!dock && !s.winner && !alarmOn && (
+              <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog) => {
+                const lastEvent = lastEventOf(shownLog);
+                return (lastEvent || offerInfo) && (
+                  <button type="button" className="middle-info" data-testid="middle-info" title={lastEvent ?? undefined} onClick={() => setSheet({ k: 'log' })} aria-label={`Открыть журнал. Последнее: ${lastEvent ?? ''}`}>
+                    {offerInfo && <b data-testid="offer-info">{offerInfo}</b>}
+                    {offerInfo && lastEvent && ' · '}
+                    {lastEvent && <>Последнее: {lastEvent}</>}
+                  </button>
+                );
+              }}</ShownLog>
             )}
           </div>
-          <div className="planks bottom"><MemoContent stamp={tableInteraction} revision={fx.gen}>{() => columns(bottom).map(renderPlank)}</MemoContent></div>
+          <div className="planks bottom"><PlankRow fx={fx} view={view} stamp={tableInteraction} render={renderRow(bottom)} /></div>
           {alarm?.kind === 'volley' && alarm.shooter && alarm.target && <AlarmArrow box={seaRef} from={alarm.shooter} to={alarm.target} label={alarm.hit?.pill ?? null} />}
         </div>
         {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
@@ -1248,7 +1267,7 @@ export function Game({
         <div className="board-bottom">
           {chargeSheet}
           {!phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
-          <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={fx.gen} />
+          <Shown fx={fx} real={view} keyOf={(x) => holdKey(x, bottom)}>{(shown, rev) => <TeamRow side={bottom} s={shown} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={rev} />}</Shown>
           <div className="hand-row" data-fx-hand>
             <MemoContent stamp={tableInteraction}>{handNode}</MemoContent>
             {!wideLog && handActions}
@@ -1259,13 +1278,13 @@ export function Game({
       <aside className="log-col">
         {wideLog && (
           <div className="log-tools">
-            <SeaChip s={fx.display ? withDisplay(s, fx.display) : s} data={data} onSea={() => setSheet({ k: 'sea' })} />
+            <Shown fx={fx} real={s} keyOf={statusKey}>{(shown) => <SeaChip s={shown} data={data} onSea={() => setSheet({ k: 'sea' })} />}</Shown>
             {toolButtons}
           </div>
         )}
         <div className="log-paper">
           <h2>Судовой журнал</h2>
-          <LogList data={data} log={shownLog} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />
+          <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog, freshFrom) => <LogList data={data} log={shownLog} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />}</ShownLog>
           <div className="log-actions">
             <button className="brs-btn" onClick={() => setSheet({ k: 'log' })}>
               Весь журнал
@@ -1277,7 +1296,8 @@ export function Game({
         </div>
         {wideLog && handActions}
       </aside>
-      <nav className={`bottom-bar ${canHold ? 'has-pause' : ''}`}>
+      <FxBusy fx={fx}>{(busy) => (
+      <nav className={`bottom-bar ${canHoldOf(busy) ? 'has-pause' : ''}`}>
         {/* A5Phone: «Журнал» and «Правила» are square icons with a caption; «Ход окончен» says who is ready under its name */}
         <button className="btn tile" onClick={() => setSheet({ k: 'log' })}>
           <span className="tile-ic" aria-hidden dangerouslySetInnerHTML={{ __html: ROUND_ICON.log }} />
@@ -1287,8 +1307,8 @@ export function Game({
           <span className="tile-ic" aria-hidden dangerouslySetInnerHTML={{ __html: ROUND_ICON.rules }} />
           Правила
         </button>
-        {canHold && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" capNarrow={held ? 'Дальше' : 'Пауза'} />}
-        {botBusy ? <RoundButton b={botBtns[1]} icon="skip" className="tool" capNarrow="До конца" /> : net && mode.k !== 'ending' ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
+        {canHoldOf(busy) && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" capNarrow={held ? 'Дальше' : 'Пауза'} />}
+        {botBusyOf(busy) ? <RoundButton b={botBtnsOf(busy)[1]} icon="skip" className="tool" capNarrow="До конца" /> : net && mode.k !== 'ending' ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
         <OakButton
           b={endBtn}
           className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`}
@@ -1305,6 +1325,7 @@ export function Game({
           }
         />
       </nav>
+      )}</FxBusy>
       {net && <MissedSheet game={net} />}
 
       {sheet?.k === 'card' && (
@@ -1339,7 +1360,7 @@ export function Game({
       {sheet?.k === 'sea' && <SeaSheet key={sheet.code ?? ''} s={view} data={data} code={sheet.code} onClose={() => setSheet(sheet.back ? { k: sheet.back } : null)} />}
       {sheet?.k === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}
       {sheet?.k === 'log' && (
-        <LogBook
+        <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog, freshFrom) => <LogBook
           data={data}
           log={shownLog}
           fresh={freshFrom}
@@ -1348,18 +1369,18 @@ export function Game({
           onSea={(code) => setSheet({ k: 'sea', code, back: 'log' })}
           onDownload={downloadLog}
           onClose={() => setSheet(null)}
-        />
+        />}</ShownLog>
       )}
       {sheet?.k === 'lastTurn' && (
         <SheetBox title={`Что было за ход ${SIDE_LABEL[other(bottom)].gen}`} onClose={() => setSheet(null)} wide testid="last-turn">
-          <LogList
+          <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog, freshFrom) => <LogList
             data={data}
             log={enemyTurnLines(shownLog, other(bottom))}
             full={shownLog}
             fresh={freshFrom}
             onCard={(code) => setSheet({ k: 'info', code, back: 'lastTurn' })}
             onSea={(code) => setSheet({ k: 'sea', code, back: 'lastTurn' })}
-          />
+          />}</ShownLog>
         </SheetBox>
       )}
       {sheet?.k === 'settings' && (
@@ -1470,8 +1491,109 @@ function e2eReady(s: GameState, side: string, seat: string | null) {
   return Object.values(s.ships).find((x) => x.side === side && !x.sunk && x.code !== seat);
 }
 
-// The stamp lists all game/interaction inputs above the curtain's early return. Only FX-internal
-// renders may reuse the subtree. gen remains a separate plank revision because clips mutate D.
-const MemoContent = memo(function MemoContent({children}: {stamp: object; revision?: number; children: () => ReactNode}) {
+// The stamp lists all game/interaction inputs above the curtain's early return: a render of Game with the same stamp
+// reuses the subtree (the hand is drawn from the real view only).
+const MemoContent = memo(function MemoContent({children}: {stamp: object; children: () => ReactNode}) {
   return <>{children()}</>;
-}, (a,b) => a.stamp === b.stamp && a.revision === b.revision);
+}, (a,b) => a.stamp === b.stamp);
+
+type LogLine = LocalGame['log'][number];
+
+/** «busy» of the show as the attribute data-fx-busy of the root of the table: set by the snapshot, not by a render. */
+function useBusyAttr(fx: FxQueue) {
+  const store = fx.store;
+  const off = useRef<(() => void) | null>(null);
+  return useCallback((el: HTMLDivElement | null) => {
+    off.current?.();
+    off.current = null;
+    if (!el) return;
+    const sync = () => el.toggleAttribute('data-fx-busy', store.get().busy);
+    sync();
+    off.current = store.subscribe(sync);
+  }, [store]);
+}
+
+/** A part that changes with «busy» of the show (the buttons «Быстрее», «До конца хода», «Пауза»). */
+function FxBusy({ fx, children }: { fx: FxQueue; children: (busy: boolean) => ReactNode }) {
+  return <>{children(useFxPart(fx, (x) => x.busy))}</>;
+}
+
+/** The bots of one screen move when the show is over: the effect lives here, so the end of a show does not render Game. */
+function BotDriver({ fx, local, version, stop, held, speed, fastTurn, turnKey, banner, canHoldOf, setHeld }: {
+  fx: FxQueue; local: LocalGame; version: number; stop: boolean; held: boolean; speed: Speed; fastTurn: string | null; turnKey: string;
+  banner: string | null; canHoldOf: (busy: boolean) => boolean; setHeld: (v: boolean) => void;
+}) {
+  const busy = useFxPart(fx, (x) => x.busy);
+  useEffect(() => {
+    if (stop || held || !local.botToMove()) return;
+    const instant = speed === 'instant' || fastTurn === turnKey;
+    if ((busy || banner) && !instant) return;
+    const t = setTimeout(
+      () => {
+        let n = 0;
+        do local.botStep();
+        while (instant && ++n < 40 && local.botToMove() && (speed === 'instant' || `${local.state.round}:${local.state.active}` === fastTurn));
+      },
+      instant ? 0 : SPEEDS[speed].ms,
+    );
+    return () => clearTimeout(t);
+  }, [version, stop, speed, fastTurn, turnKey, local, busy, banner, held]);
+  return <HoldReset fx={fx} held={held} canHoldOf={canHoldOf} setHeld={setHeld} busy={busy} />;
+}
+
+/** «Пауза» ends as soon as there is nothing to hold (the game asks this device). */
+function HoldReset({ fx, held, canHoldOf, setHeld, busy }: { fx: FxQueue; held: boolean; canHoldOf: (busy: boolean) => boolean; setHeld: (v: boolean) => void; busy?: boolean }) {
+  const live = useFxPart(fx, (x) => x.busy);
+  const canHold = canHoldOf(busy ?? live);
+  useEffect(() => {
+    if (held && !canHold) setHeld(false);
+  }, [held, canHold, setHeld]);
+  return null;
+}
+
+/** The displayed fields of the status bar and the sea chip; the Hold of a side. A part is drawn again when they change. */
+const statusKey = (x: GameState) => `${x.round}|${x.active}|${x.sea?.current ?? ''}`;
+const holdKey = (x: GameState, side: Side) => String(x.teams[side].powder);
+
+/**
+ * A part of the table drawn from the shown state: drawn again when its key (what it shows) or the epoch (a cut-off show)
+ * changes. `rev` grows with the key: the kegs it rebuilds (PowderDots) lose what a clip did to them by hand.
+ */
+function Shown({ fx, real, keyOf, children }: { fx: FxQueue; real: GameState; keyOf: (shown: GameState) => string; children: (shown: GameState, rev: number) => ReactNode }) {
+  const key = useFxPart(fx, (x) => `${keyOf(fx.store.shown(real))}|${x.epoch}`);
+  const rev = useRef({ key, gen: fx.store.get().gen });
+  if (rev.current.key !== key) rev.current = { key, gen: fx.store.get().gen };
+  return <>{children(fx.store.shown(real), rev.current.gen)}</>;
+}
+
+/** The log as it is shown (A4): the lines of an action appear when its clips are played; at the end of the game — all. */
+function ShownLog({ fx, log, over, children }: { fx: FxQueue; log: LogLine[]; over: boolean; children: (shown: LogLine[], fresh: number) => ReactNode }) {
+  const from = useFxPart(fx, (x) => (over ? null : x.logFrom));
+  const shown = useMemo(() => (from == null ? log : log.filter((l) => l.action < from)), [log, from, log.length]);
+  // The lines of the newest action shown are highlighted.
+  return <>{children(shown, shown.at(-1)?.action ?? 0)}</>;
+}
+
+/** The display fields of a ship: its plank is drawn again (and its tracks rebuilt) when they change. */
+const shipKey = (x: GameState['ships'][string]) => `${x.pos}|${x.tracks.hull},${x.tracks.sails},${x.tracks.guns},${x.tracks.crew}|${x.fires}|${+x.sunk}${+x.submerged}${+x.legend}|${x.souls}`;
+
+/**
+ * A row of planks drawn from the shown state. The row follows every snapshot; a plank (memo, Table.tsx) is drawn again
+ * only when what it shows changes. The render function comes from the last render of Game with the same stamp.
+ */
+const PlankRow = memo(function PlankRow({ fx, view, render }: {
+  fx: FxQueue; view: GameState; stamp: object;
+  render: (tableView: GameState, rev: (code: string) => number, hidden: Record<string, string[]>) => ReactNode;
+}) {
+  const snap = useFxPart(fx, (x) => x);
+  const tableView = fx.store.shown(view);
+  const revs = useRef(new Map<string, { key: string; gen: number }>());
+  const rev = (code: string) => {
+    const key = `${shipKey(tableView.ships[code])}|${snap.epoch}`;
+    const r = revs.current.get(code);
+    if (r && r.key === key) return r.gen;
+    revs.current.set(code, { key, gen: snap.gen });
+    return snap.gen;
+  };
+  return <>{render(tableView, rev, snap.hidden)}</>;
+}, (a, b) => a.stamp === b.stamp && a.view === b.view);

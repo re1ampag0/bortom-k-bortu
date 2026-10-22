@@ -39,8 +39,8 @@ body {
   overscroll-behavior: none;
 }
 
-body:has(.game),
-body:has(.curtain) {
+body.on-game,
+body.on-curtain {
   overflow: hidden;
   touch-action: manipulation;
 }
@@ -2531,7 +2531,7 @@ button.star::before {
 
 /* Phones lower than the target (iPhone 15 Pro Max ~430×740, 390×664 still fits): the page scrolls. */
 @media (max-width: 700px) and (max-height: 649px) {
-  body:has(.game) {
+  body.on-game {
     overflow: auto;
   }
   .game {
@@ -4234,10 +4234,10 @@ button.star::before {
   pointer-events: none;
 }
 /* ui-4 Г21: ambient loops keep their phase during a foreground clip. */
-.game.fx-busy .deck-flare,
-.game.fx-busy .lantern-light,
-.game.fx-busy .sea-water::before,
-.game.fx-busy .sea-water::after {
+.game[data-fx-busy] .deck-flare,
+.game[data-fx-busy] .lantern-light,
+.game[data-fx-busy] .sea-water::before,
+.game[data-fx-busy] .sea-water::after {
   animation-play-state: paused;
 }
 .deck-bg {

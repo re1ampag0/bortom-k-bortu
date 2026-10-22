@@ -15,7 +15,7 @@ import type { Side } from '../../../engine/types';
 import { flipTo, weatherHit } from './misc';
 import type { RoundClip, SeaClip } from './planFx';
 import {
-  A, at, badgeMark, bx, capFirst, ring, filters, flashBoard, fxPoint, fxSvg, gainKegs, gapBox, hint, holdEl, holdTag, isPhone, isTop, mk, plank, ringSvg, rnd, room,
+  A, at, badgeMark, boardH, boardW, bx, capFirst, ring, filters, flashBoard, fxPoint, fxSvg, gainKegs, gapBox, hint, holdEl, holdTag, isPhone, isTop, mk, plank, ringSvg, rnd, room,
   seaTemp, setTrack, shake, shownTrack, sparksSvg, sv, tag, trackEl, trackMark, visible, wait, waterColumn, flameEl, smolderEl, type FxCtx,
 } from './primitives';
 import { CELLS } from '../art/cells';
@@ -54,8 +54,8 @@ const seaKeyOf = (ctx: Pick<FxCtx, 'data'>, code: string) => seaCardByCode(ctx.d
 interface TableCtx { W: number; R: number; g: ReturnType<typeof gapBox>; fx: FxCtx }
 function tableCtx(ctx: FxCtx): TableCtx {
   const rows = ctx.board.querySelectorAll(':scope > .team-row');
-  const R = rows.length ? bx(ctx, rows[rows.length - 1]).b + 4 : ctx.board.clientHeight;
-  return { W: ctx.board.clientWidth, R, g: gapBox(ctx), fx: ctx };
+  const R = rows.length ? bx(ctx, rows[rows.length - 1]).b + 4 : boardH(ctx);
+  return { W: boardW(ctx), R, g: gapBox(ctx), fx: ctx };
 }
 type Hit = { ship: string; track: 'hull' | 'sails' | 'guns' | 'crew'; amount: number; toHull: number };
 type Fix = { ship: string; track: 'hull' | 'sails' | 'guns' | 'crew'; amount: number };
@@ -394,7 +394,7 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
 
 /** A new round without a new sea card (if there ever is one). */
 const playRound = async (c: RoundClip, ctx: FxCtx) => {
-  const g = gapBox(ctx); const bn = mk(ctx, 'banner small', ctx.board.clientWidth / 2, g.cy, `— Раунд ${c.round} —`);
+  const g = gapBox(ctx); const bn = mk(ctx, 'banner small', boardW(ctx) / 2, g.cy, `— Раунд ${c.round} —`);
   A(ctx, bn, [{ opacity: 0, transform: 'translate(-50%,-50%) scaleX(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1.04)', offset: 0.3 }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1)', offset: 0.8 }, { opacity: 0, transform: 'translate(-50%,-60%)' }], T.round.banner, 0);
   await wait(ctx, T.round.bannerWait);
 };
