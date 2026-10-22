@@ -452,6 +452,7 @@ export function Hand({
       />
     );
   };
+  const hasLifted = lifted !== null && [...holder.hand.map((c, i) => [c, `${c}-${i}`]), ...holder.plans.map((c, i) => [c, `p-${c}-${i}`])].some(([c, k]) => c !== HIDDEN && k === lifted);
   return (
     <div className={`hand ${alarmOf ? 'alarm' : ''} ${alarmOf && folded ? 'folded' : ''}`} data-testid="hand">
       <div className="hand-head">
@@ -485,7 +486,8 @@ export function Hand({
           {note}
         </p>
       )}
-      <div className="hand-cards" ref={rowRef}>
+      {/* has-lifted: a card of this row is lifted (phone.css; a class, not :has — the row changes during the clips) */}
+      <div className={`hand-cards${hasLifted ? ' has-lifted' : ''}`} ref={rowRef}>
         {holder.hand.map((code, i) => card(code, i, `${code}-${i}`))}
         {holder.hand.length === 0 && <span className="muted empty">Рука пуста</span>}
         {holder.plans.length > 0 && (

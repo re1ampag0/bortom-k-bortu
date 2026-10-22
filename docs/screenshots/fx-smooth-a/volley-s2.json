@@ -1,0 +1,62 @@
+{
+ "scene": "volley",
+ "label": "s2",
+ "viewport": "390×844 DPR3 CPU×4",
+ "valid": true,
+ "errors": [],
+ "journal": [
+  "19:05:33 ▶ sea",
+  "19:05:40 ✓ sea 6.7 с",
+  "19:05:40 ▶ turn",
+  "19:05:41 ✓ turn 1.2 с",
+  "19:05:46 ▶ announce",
+  "19:05:47 ✓ announce 0.7 с",
+  "19:05:47 ▶ shot",
+  "19:05:51 ✓ shot 4.1 с"
+ ],
+ "elapsedMs": 6552.5,
+ "scriptingMs": 1620.2300000000005,
+ "recalcStyleMs": 668.171,
+ "recalcStyleCount": 163,
+ "layoutMs": 180.1110000000001,
+ "layoutCount": 224,
+ "forcedStyle": {
+  "count": 43,
+  "ms": 364.597
+ },
+ "forcedLayout": {
+  "count": 39,
+  "ms": 77.828
+ },
+ "longTasks": 47,
+ "longestTaskMs": 425.713,
+ "paint": {
+  "ms": 1160.861,
+  "rasterMs": 602.7219999999995
+ },
+ "worstFrameMs": 633.3000000000011,
+ "framesOver50": 37,
+ "fps": 16.48225867989317,
+ "renders": 1,
+ "renderMs": 133.60000000009313,
+ "renderMaxMs": 133.60000000009313,
+ "renderList": [
+  [
+   539,
+   133.6
+  ]
+ ],
+ "planks": 10,
+ "hands": 1,
+ "layers": {
+  "all": 76,
+  "drawing": 64
+ },
+ "observerLongTasks": 44,
+ "svgAnimations": 12,
+ "svgByFunction": {
+  "gunFire": 4,
+  "hitBlast": 4,
+  "ballFly": 4
+ }
+}

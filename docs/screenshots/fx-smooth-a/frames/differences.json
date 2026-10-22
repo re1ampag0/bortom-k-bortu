@@ -1,0 +1,62 @@
+{
+ "regroup-150": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "regroup-400": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "regroup-700": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "regroup-1000": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "regroup-1600": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "volley-800": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "volley-2000": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "volley-3200": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "volley-4200": {
+  "differentPixels": 19,
+  "share": 0.001
+ },
+ "volley-5200": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "card-300": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "card-900": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "card-1500": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "card-2100": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "card-2700": {
+  "differentPixels": 0,
+  "share": 0
+ }
+}

@@ -2,6 +2,7 @@
 // what happened while the team was away. Nothing hidden is rendered under it: the table is not mounted at all.
 import type { Side } from '../../engine/types';
 import { SIDE_LABEL } from './text';
+import { useTableBody } from './tableBody';
 
 export function Curtain({
   side,
@@ -16,6 +17,7 @@ export function Curtain({
   summary: string[];
   onReady: () => void;
 }) {
+  useTableBody('curtain');
   return (
     <main className={`curtain side-${side === 'ПИРАТЫ' ? 'pirates' : 'company'}`} data-testid="curtain">
       <div className="curtain-body">
