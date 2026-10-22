@@ -87,6 +87,8 @@ interface DeckPlace {
   glint?: Box;
   /** A phone: room beside the instruction, without changing any row height. */
   lampSpace?: number;
+  /** The former lower lantern anchor, retained for its warm spill only. */
+  warm?: { x: number; y: number; ls: number };
 }
 
 const visible = (game: HTMLElement, q: string) => Array.from(game.querySelectorAll(q)).find((e) => e.getBoundingClientRect().width > 0) ?? null;
@@ -148,9 +150,17 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     const bs = gs * 0.45;
     const balls = pieceAt('balls', Math.max(4, gun.l + 6 * gs) + 25 * bs, gun.t + gun.h - 2 - 20 * bs, bs);
     const lamp = phoneLantern(game, g, W);
+    // 6c9e159: preserve the old lower light geometry independently of the relocated lantern.
+    const plank = rect(game.querySelector('.planks.bottom > .plank:last-child'), g);
+    const stripL = plank ? plank.l + plank.w + 1 : W - 20;
+    const ls = Math.max(0.3, Math.min(0.62, (W - 1 - stripL) / 30));
+    const x = (stripL + W - 1) / 2;
+    const foot = regroup ? regroup.t - 1 : (plank ? plank.t + plank.h + 18 : hand.t - 20);
+    const at0 = lanternAt(0, 0, ls);
+    const warm = { x, y: foot - (at0.t + at0.h), ls };
     return { phone: true, W, H, pieces: [gun, balls, ...(lamp ? [lamp.lantern] : [])],
       lx: lamp?.lx ?? 0, ly: lamp?.ly ?? 0, ls: lamp?.ls ?? 0,
-      hook: lamp?.hook, lampSpace: lamp?.space ?? 0 };
+      hook: lamp?.hook, lampSpace: lamp?.space ?? 0, warm };
 
   }
   // «Ход окончен»; in «Тревога!» its place holds «Пропустить» — then the column of the log it stands in (fix-ui)
@@ -310,6 +320,8 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         put('--phone-lamp-space', d?.lampSpace ?? 0);
         put('--lamp-x', d ? Math.round(d.lx) : 0);
         put('--lamp-y', d ? Math.round(d.ly) : 0);
+        put('--deck-warm-x', d.warm ? Math.round(d.warm.x) : 0);
+        put('--deck-warm-y', d.warm ? Math.round(d.warm.y) : 0);
         setPlaced((old) => (old.length ? [] : old));
         return;
       }
@@ -399,6 +411,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
               <img key={p.key} className={`deck-piece ${p.flip ? 'flip' : ''}`} data-piece={p.key} src={PIECES[p.key].src} alt="" draggable={false} style={{ left: p.l, top: p.t, width: p.w, height: p.h }} />
             ))}
           {deck && !deck.phone && <DeckLight x={deck.lx} y={deck.ly} r={LIGHT_R.laptop} ls={deck.ls} sq={deck.H / deck.W} />}
+          {deck?.phone && deck.warm && <DeckLight x={deck.warm.x} y={deck.warm.y} r={LIGHT_R.phone} ls={deck.warm.ls} sq={deck.H / deck.W} />}
           {deck?.phone && deck.hook && <i className="phone-lamp-light" style={{left: deck.lx - 66, top: deck.hook.t + 4 + 59 * deck.ls, width: 132, height: 86}} />}
           {deck?.glint && <i className="deck-glint" style={{ left: deck.glint.l, top: deck.glint.t, width: deck.glint.w, height: deck.glint.h }} />}
           {deck?.hook && <i className="deck-hook" style={{ left: deck.hook.l, top: deck.hook.t, width: deck.hook.w, height: deck.hook.h }} dangerouslySetInnerHTML={{ __html: HOOK_SVG }} />}
