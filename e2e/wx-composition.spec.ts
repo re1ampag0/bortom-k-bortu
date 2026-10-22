@@ -2,7 +2,7 @@ import {expect,test} from '@playwright/test';
 
 // Moving weather crosses HTML/SVG compositor boundaries, but one container must
 // still freeze every loop during a foreground clip without resetting its phase.
-for(const key of ['storm','wave','maelstrom']){
+for(const key of ['storm','wave','maelstrom','reefs']){
   test(`ambient ${key}: the container pauses every weather loop and resumes its phase`,async({page})=>{
     await page.setViewportSize({width:430,height:932});
     await page.goto(`?fxScene=sea-${key}&manual=1&rich=1&speed=normal`);

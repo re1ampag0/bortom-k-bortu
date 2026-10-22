@@ -34,5 +34,21 @@
  "jack-9000": {
   "differentPixels": 4422,
   "share": 0.336
+ },
+ "idle-motion-1000": {
+  "differentPixels": 469,
+  "share": 0.036
+ },
+ "idle-motion-4600": {
+  "differentPixels": 659,
+  "share": 0.05
+ },
+ "idle-motion-4800": {
+  "differentPixels": 810,
+  "share": 0.062
+ },
+ "idle-motion-5000": {
+  "differentPixels": 658,
+  "share": 0.05
  }
 }
