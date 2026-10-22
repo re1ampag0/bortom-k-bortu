@@ -18,7 +18,7 @@ try{
    const now=performance.now();for(const row of window.spriteAnimations){const a=row.animation;if(a.playState==='idle'||a.playState==='finished')continue;const dt=now-row.at,end=a.effect.getComputedTiming().endTime;if(dt>=end)a.finish();else a.currentTime=Math.max(0,dt)}
    for(const a of document.getAnimations())if(a instanceof CSSAnimation){a.pause();a.currentTime=0}
   });
-  if(first===null&&await p.locator(scene==='bottle'?'.lg-card':'.gun-fire').count()){first=t;await p.evaluate(()=>document.fonts.ready)}
+  if(first===null&&(scene==='counter'?await p.locator('.fx-layer > .tag').filter({hasText:'Ответ:'}).count():await p.locator(scene==='bottle'?'.lg-card':'.gun-fire').count())){first=t;await p.evaluate(()=>document.fonts.ready)}
   if(first!==null&&t>=first+phase){
    await p.screenshot({path:`docs/screenshots/fx-smooth-b/${stem}-${label}.png`});
    const meta=await p.evaluate(()=>({veilOpacity:document.querySelector('.lg-veil')?Number(getComputedStyle(document.querySelector('.lg-veil')).opacity):null,ships:document.querySelectorAll('.lg-pitch').length,shots:document.querySelectorAll('.gun-fire').length,sprites:document.querySelectorAll('.fx-sprite').length,canvas:document.querySelector('.fx-layer')?.parentElement?.fxParticles?.()}));

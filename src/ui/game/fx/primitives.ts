@@ -17,6 +17,7 @@ import { scar } from './scars';
 import { FLAME } from '../art/fire';
 import { T } from './timing';
 import { stageK } from '../../stage';
+import {shotArt,shotSprite,shotA,floatBoardSprite} from './volleySprites';
 import { plainText } from '../text';
 
 /** Everything an effect needs: the reference's globals, for one run of the queue. */
@@ -25,6 +26,8 @@ export interface FxCtx {
   board: HTMLElement;
   /** Explicit opt-in: only Volley, Armada, sinking and fire producers. */
   canvasParticles?: boolean;
+  /** Only Volley/Counter opt into prepared object wrappers. */
+  volleySprites?: boolean;
   /** .fx-layer, the last child of the board: effects are added here. */
   layer: HTMLElement;
   /** The displayed state D (what the planks show before the clip's events are applied). */
@@ -795,16 +798,12 @@ export function smokeJet(ctx: FxCtx, svg: Element, x: number, y: number, ang: nu
  * wadding; a beat later a second, smaller puff. `ang` — the direction of the shot (radians); `flash` — its length.
  */
 export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: number, y: number, ang: number, k = 1, delay = 0, opt: { grains?: number; puffs?: number; wads?: number; life?: number; flash?: number; smokeJet?: typeof smokeJet } = {}): void {
-  const deg = (ang * 180) / Math.PI, K = (n: number) => R1(n * k), fl = opt.flash ?? 420;
-  const glow = sv(svg, `<circle r="${R1(90 * k)}" fill="url(#fxGlow)"/>`);
-  A(ctx, glow, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2)`, opacity: 0 }], fl * 1.25, delay);
-  const cone = sv(svg, `<g class="gun-fire"><ellipse cx="${K(44)}" cy="0" rx="${K(60)}" ry="${K(26)}" fill="url(#fxGlow)"/>
-<path d="M0 -${K(7)} C${K(20)} -${K(26)} ${K(62)} -${K(20)} ${K(92)} 0 C${K(62)} ${K(20)} ${K(20)} ${K(26)} 0 ${K(7)} Z" fill="url(#fxCone)"/>
-<path d="M0 -${K(4)} C${K(16)} -${K(12)} ${K(40)} -${K(8)} ${K(60)} 0 C${K(40)} ${K(8)} ${K(16)} ${K(12)} 0 ${K(4)} Z" fill="#fff6d0"/>
-<path d="M2 0 L${K(22)} -${K(26)} L${K(16)} -${K(7)} Z M2 0 L${K(22)} ${K(26)} L${K(16)} ${K(7)} Z M2 0 L-${K(8)} -${K(14)} L${K(4)} -${K(4)} Z M2 0 L-${K(8)} ${K(14)} L${K(4)} ${K(4)} Z" fill="#ffc35a"/>
-<circle r="${K(22)}" fill="url(#fxFire)"/><circle r="${K(8)}" fill="#fff"/></g>`);
+  const deg = (ang * 180) / Math.PI, fl = opt.flash ?? 420;
+  const glow = shotSprite(ctx,svg,'glow',k) ?? sv(svg,shotArt('glow',k));
+  shotA(ctx, glow, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2)`, opacity: 0 }], fl * 1.25, delay);
+  const cone = shotSprite(ctx,svg,'cone',k) ?? sv(svg,shotArt('cone',k));
   const at0 = `translate(${R1(x)}px,${R1(y)}px) rotate(${R1(deg)}deg)`;
-  A(ctx, cone, [{ transform: `${at0} scale(.15,.4)`, opacity: 1 }, { transform: `${at0} scale(1.15,1)`, opacity: 1, offset: 0.22 }, { transform: `${at0} scale(1.3,.7)`, opacity: 0.6, offset: 0.5 }, { transform: `${at0} scale(1.4,.3)`, opacity: 0 }], fl, delay, 'cubic-bezier(.1,.9,.3,1)');
+  shotA(ctx, cone, [{ transform: `${at0} scale(.15,.4)`, opacity: 1 }, { transform: `${at0} scale(1.15,1)`, opacity: 1, offset: 0.22 }, { transform: `${at0} scale(1.3,.7)`, opacity: 0.6, offset: 0.5 }, { transform: `${at0} scale(1.4,.3)`, opacity: 0 }], fl, delay, 'cubic-bezier(.1,.9,.3,1)');
   if (!perfOff('particles')) {
   const sw = particleShape(ctx, svg, `<circle r="${R1(60 * k)}" fill="none" stroke="#fff6e0" stroke-width="${R1(2.4 * k)}"/>`);
   A(ctx, sw, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.05)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], fl * 0.86, delay, 'cubic-bezier(.1,.8,.3,1)');
@@ -848,11 +847,10 @@ export function ballFly(ctx: FxCtx, svg: Element, p0: Pt, p1: Pt, d = 700, delay
     const t = particleCircle(ctx, svg, R1(3.6 - i * 0.35), '#cfc8bc', 'trail', R1(0.5 - i * 0.06));
     A(ctx, t, path(() => ''), d, delay + i * 22, 'linear');
   }
-  const shadow = sv(svg, '<ellipse rx="5" ry="2" fill="#000" opacity=".3"/>');
-  A(ctx, shadow, pts.map((_, i) => { const t = i / N; return { transform: `translate(${R1(p0.x + (p1.x - p0.x) * t)}px,${R1(p0.y + (p1.y - p0.y) * t + 8)}px) scale(${R1(1 - Math.sin(Math.PI * t) * 0.5)})`, opacity: i === N ? 0 : 1 }; }), d, delay, 'linear');
-  const ball = sv(svg, '<g class="ball-svg"><circle r="5" fill="#1a1714"/><circle cx="-1.4" cy="-1.6" r="1.7" fill="#9a948b"/></g>');
-  ball.classList.add('ball');
-  A(ctx, ball, path((i) => ` scale(${R1(1 + Math.sin((Math.PI * i) / N) * 0.15)})`), d, delay, 'linear');
+  const shadow = shotSprite(ctx,svg,'shadow') ?? sv(svg,shotArt('shadow'));
+  shotA(ctx, shadow, pts.map((_, i) => { const t = i / N; return { transform: `translate(${R1(p0.x + (p1.x - p0.x) * t)}px,${R1(p0.y + (p1.y - p0.y) * t + 8)}px) scale(${R1(1 - Math.sin(Math.PI * t) * 0.5)})`, opacity: i === N ? 0 : 1 }; }), d, delay, 'linear');
+  const ball = shotSprite(ctx,svg,'ball') ?? sv(svg,shotArt('ball'));
+  shotA(ctx, ball, path((i) => ` scale(${R1(1 + Math.sin((Math.PI * i) / N) * 0.15)})`), d, delay, 'linear');
 }
 
 /** A real splash: a hole in the water, a heavy column with a torn top, a crown of jets with drops, mist, foam, rings. */
@@ -900,10 +898,10 @@ export function missSplash(ctx: FxCtx, svg: Element, x: number, y: number, k = 1
 }
 /** The hit: a fireball, a shockwave, splinters and sparks, black smoke rolling up (a lighter one for the later hits). */
 export function hitBlast(ctx: FxCtx, svg: Element, x: number, y: number, k = 1, delay = 0, d = 520, light = false): void {
-  const fb = sv(svg, `<circle r="${R1(26 * k)}" fill="url(#fxFire)"/>`);
-  A(ctx, fb, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.1)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 1, offset: 0.25 }, { transform: `translate(${R1(x)}px,${R1(y - 6 * k)}px) scale(1.25)`, opacity: 0 }], d, delay, 'cubic-bezier(.1,.8,.3,1)');
-  const sw = sv(svg, `<circle r="${R1(56 * k)}" fill="none" stroke="#ffe7a4" stroke-width="${R1(3 * k)}"/>`);
-  A(ctx, sw, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.05)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d * 0.8, delay, 'cubic-bezier(.1,.8,.3,1)');
+  const fb = shotSprite(ctx,svg,'blast',k) ?? sv(svg,shotArt('blast',k));
+  shotA(ctx, fb, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.1)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 1, offset: 0.25 }, { transform: `translate(${R1(x)}px,${R1(y - 6 * k)}px) scale(1.25)`, opacity: 0 }], d, delay, 'cubic-bezier(.1,.8,.3,1)');
+  const sw = shotSprite(ctx,svg,'shock',k) ?? sv(svg,shotArt('shock',k));
+  shotA(ctx, sw, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.05)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d * 0.8, delay, 'cubic-bezier(.1,.8,.3,1)');
   splintersSvg(ctx, svg, x, y, Math.round((light ? 5 : 12) * k), delay);
   sparksSvg(ctx, svg, x, y, Math.round((light ? 6 : 16) * k), delay);
   for (let i = 0, m = room(ctx, light ? 2 : 6); i < m; i++) {
@@ -935,6 +933,7 @@ export function fallBoard(ctx: FxCtx, svg: Element, code: string, p: Pt, delay =
     waterColumn(ctx, svg, to.x, to.y, 22);
     const host = ctx.board.querySelector('.fx-scars');
     if (!host) return;
+    if(floatBoardSprite(ctx,host,code,to,filters(ctx)))return;
     const deb = fxSvg(ctx, host);
     const rock = filters(ctx) ? '<animateTransform attributeName="transform" type="rotate" values="-8;8;-8" dur="3.2s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 2;0 0" dur="2.4s" additive="sum" repeatCount="indefinite"/>' : '';
     sv(deb, `<g transform="translate(${R1(to.x)} ${R1(to.y)}) scale(1.4)"><g>${rock}<ellipse cx="0" cy="3" rx="13" ry="3" fill="none" stroke="#e6f2f4" stroke-width="1" opacity=".7"/><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/><path d="M9 -2.6 l2 1 l-2 1.2 l2 1.4" fill="none" stroke="#3a2412" stroke-width=".6"/></g></g>`);
