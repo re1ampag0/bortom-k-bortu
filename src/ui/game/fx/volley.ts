@@ -431,6 +431,7 @@ function gunCell(ctx: FxCtx, plankEl: Element, i: number): (ReturnType<typeof bx
 PLAY.shot = async (c, ctx) => {
   ctx = Object.create(ctx) as typeof ctx;
   ctx.canvasParticles = true;
+  ctx.volleySprites = true;
   if (!VS) VS = { shooter: c.shooter, target: c.target, declared: c.declared, charge: c.charge, reactions: c.reactions, cards: [], extras: [], declDamage: c.damage };
   const vs = VS;
   vs.target = c.target;
@@ -625,6 +626,7 @@ PLAY.cancel = async (c, ctx) => {
 PLAY.counter = async (c, ctx) => {
   ctx = Object.create(ctx) as typeof ctx;
   ctx.canvasParticles = true;
+  ctx.volleySprites = true;
   const from = plank(ctx, c.from), fb = bx(ctx, from), fy = facingY(ctx, c.from), down = dirOf(ctx, c.from);
   hint(ctx, `Ответ «${cardName(ctx, c.card)}»: ${nick(ctx, c.from)} → ${nick(ctx, c.to)}`);
   tag(ctx, fb.cx, fy + down * 18, `Ответ: ${cardName(ctx, c.card)}`, 0, 'plus', 1600);

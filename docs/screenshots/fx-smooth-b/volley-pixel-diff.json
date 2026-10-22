@@ -1,0 +1,22 @@
+[
+  {
+    "frame": "plain-phone-300",
+    "meanAbsoluteRGB": 0.004744688794993217,
+    "pixelsDeltaOver10": 42
+  },
+  {
+    "frame": "plain-phone-900",
+    "meanAbsoluteRGB": 0.0052764562146736015,
+    "pixelsDeltaOver10": 77
+  },
+  {
+    "frame": "plain-laptop-900",
+    "meanAbsoluteRGB": 0.03769016301789077,
+    "pixelsDeltaOver10": 1190
+  },
+  {
+    "frame": "counter-phone-300",
+    "meanAbsoluteRGB": 0.011376994820951303,
+    "pixelsDeltaOver10": 607
+  }
+]

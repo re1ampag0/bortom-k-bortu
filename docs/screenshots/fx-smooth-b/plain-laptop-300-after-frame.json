@@ -1,0 +1,910 @@
+{
+  "first": 880,
+  "t": 1180,
+  "veilOpacity": null,
+  "ships": 0,
+  "shots": 3,
+  "sprites": 12,
+  "canvas": {
+    "active": 173,
+    "drawn": {
+      "spark": 65,
+      "particle": 40,
+      "ball trail": 6
+    },
+    "seen": {
+      "spark": 66,
+      "particle": 40,
+      "smoke": 52,
+      "powder-smoke": 10,
+      "ball trail": 6
+    },
+    "visible": [
+      {
+        "id": 3,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.10486966529181185,
+        "x": 703.2711791992188,
+        "y": 439.841552734375
+      },
+      {
+        "id": 4,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.2719702368078283,
+        "x": 706.8887329101562,
+        "y": 437.1811218261719
+      },
+      {
+        "id": 5,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.49121491561911146,
+        "x": 707.5753784179688,
+        "y": 434.54400634765625
+      },
+      {
+        "id": 6,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 0.9,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 7,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 8,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 9,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 10,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 11,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 12,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 13,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 14,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 15,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 30,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 0.9,
+        "x": 709,
+        "y": 430
+      },
+      {
+        "id": 31,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 32,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 33,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 34,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 709,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 40,
+        "kind": "ball trail",
+        "level": "top",
+        "opacity": 0.35,
+        "x": 709.015625,
+        "y": 429.109375
+      },
+      {
+        "id": 41,
+        "kind": "ball trail",
+        "level": "top",
+        "opacity": 0.18,
+        "x": 709.015625,
+        "y": 429.109375
+      },
+      {
+        "id": 42,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 43,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 44,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 45,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 46,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 47,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 48,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 49,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 50,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 51,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 52,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 53,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 54,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 55,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 56,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 57,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 58,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 59,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 60,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 61,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 62,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 63,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 64,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 65,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 66,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 73,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 729,
+        "y": 117
+      },
+      {
+        "id": 75,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.09165796938747639,
+        "x": 736.2692260742188,
+        "y": 438.5467529296875
+      },
+      {
+        "id": 76,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.25268857003674783,
+        "x": 732.672607421875,
+        "y": 438.66558837890625
+      },
+      {
+        "id": 77,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.46727282788095625,
+        "x": 734.1309204101562,
+        "y": 432.4029235839844
+      },
+      {
+        "id": 78,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.7251469218038311,
+        "x": 731.5602416992188,
+        "y": 431.5187072753906
+      },
+      {
+        "id": 79,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 0.9,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 80,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 81,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 82,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 83,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 84,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 85,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 86,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 87,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 88,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 103,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 0.9,
+        "x": 732,
+        "y": 430
+      },
+      {
+        "id": 104,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 105,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 106,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 107,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 732,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 113,
+        "kind": "ball trail",
+        "level": "top",
+        "opacity": 0.35,
+        "x": 732.015625,
+        "y": 429.109375
+      },
+      {
+        "id": 114,
+        "kind": "ball trail",
+        "level": "top",
+        "opacity": 0.18,
+        "x": 732.015625,
+        "y": 429.109375
+      },
+      {
+        "id": 115,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 116,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 117,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 118,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 119,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 120,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 121,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 122,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 123,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 124,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 715.5,
+        "y": 117
+      },
+      {
+        "id": 127,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.07917701475103756,
+        "x": 750.2117309570312,
+        "y": 441.6231994628906
+      },
+      {
+        "id": 128,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.233933358739133,
+        "x": 752.3187866210938,
+        "y": 433.92620849609375
+      },
+      {
+        "id": 129,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.44375746189402177,
+        "x": 752.1075439453125,
+        "y": 436.55364990234375
+      },
+      {
+        "id": 130,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.6975430964994468,
+        "x": 756.1493530273438,
+        "y": 431.2776794433594
+      },
+      {
+        "id": 131,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 0.9934564264250955,
+        "x": 755.045166015625,
+        "y": 429.18505859375
+      },
+      {
+        "id": 132,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 0.9,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 133,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 134,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 135,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 136,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 137,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 138,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 139,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 140,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 141,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 156,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 0.9,
+        "x": 755,
+        "y": 430
+      },
+      {
+        "id": 157,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 158,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 159,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 160,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 755,
+        "y": 425.1000061035156
+      },
+      {
+        "id": 161,
+        "kind": "ball trail",
+        "level": "top",
+        "opacity": 0.35,
+        "x": 755.015625,
+        "y": 429.109375
+      },
+      {
+        "id": 162,
+        "kind": "ball trail",
+        "level": "top",
+        "opacity": 0.18,
+        "x": 755.015625,
+        "y": 429.109375
+      },
+      {
+        "id": 163,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      },
+      {
+        "id": 164,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      },
+      {
+        "id": 165,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      },
+      {
+        "id": 166,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      },
+      {
+        "id": 167,
+        "kind": "particle",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      },
+      {
+        "id": 168,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      },
+      {
+        "id": 169,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      },
+      {
+        "id": 170,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      },
+      {
+        "id": 171,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      },
+      {
+        "id": 172,
+        "kind": "spark",
+        "level": "top",
+        "opacity": 1,
+        "x": 702,
+        "y": 117
+      }
+    ],
+    "peak": 174,
+    "raf": true,
+    "paused": false,
+    "time": 1180,
+    "surfaces": [
+      {
+        "level": "top",
+        "connected": true,
+        "width": 1066,
+        "height": 672
+      }
+    ]
+  },
+  "errors": []
+}

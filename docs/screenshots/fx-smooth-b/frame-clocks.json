@@ -1,0 +1,44 @@
+[
+  {
+    "frame": "bottle-phone-2200",
+    "first": 20,
+    "t": 2220,
+    "spritesBefore": 0,
+    "spritesAfter": 1
+  },
+  {
+    "frame": "bottle-laptop-2200",
+    "first": 20,
+    "t": 2220,
+    "spritesBefore": 0,
+    "spritesAfter": 1
+  },
+  {
+    "frame": "plain-phone-300",
+    "first": 880,
+    "t": 1180,
+    "spritesBefore": 0,
+    "spritesAfter": 12
+  },
+  {
+    "frame": "plain-phone-900",
+    "first": 880,
+    "t": 1780,
+    "spritesBefore": 0,
+    "spritesAfter": 18
+  },
+  {
+    "frame": "plain-laptop-900",
+    "first": 880,
+    "t": 1780,
+    "spritesBefore": 0,
+    "spritesAfter": 18
+  },
+  {
+    "frame": "counter-phone-300",
+    "first": 4820,
+    "t": 5120,
+    "spritesBefore": 0,
+    "spritesAfter": 9
+  }
+]
