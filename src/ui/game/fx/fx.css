@@ -309,7 +309,7 @@
 .fx-weather.wx-paused.wx-loop { animation-play-state: paused !important; }
 
 /* ui-4 Г21: weather-induced heave is ambient; foreground WAAPI clips stay live. */
-.game.fx-busy .board[data-wx-move] .planks > .plank { animation-play-state: paused; }
+.game[data-fx-busy] .board[data-wx-move] .planks > .plank { animation-play-state: paused; }
 
 /* Decorative descendants cannot opt back into hit testing by an unrelated card/button rule. */
 .fx-layer *, .fx-scars * { pointer-events: none; }

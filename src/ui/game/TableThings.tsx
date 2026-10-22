@@ -339,10 +339,10 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
       dirty = true;
       // A clip changes cards/status repeatedly. The decoration stays put until its final layout;
       // reading the whole fan here would force layout between the effect's DOM writes.
-      if (game.classList.contains('fx-busy') || raf) return;
+      if (game.hasAttribute('data-fx-busy') || raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
-        if (game.classList.contains('fx-busy')) return;
+        if (game.hasAttribute('data-fx-busy')) return;
         dirty = false;
         measure();
       });
@@ -361,7 +361,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
     // of the effects, the traces, the background itself, nor the style of the game (this measure writes it).
     const QUIET = '.fx-layer, .fx-weather, .fx-scars, .plank-scars, .backdrop';
     const mo = new MutationObserver((recs) => {
-      if (dirty && !game.classList.contains('fx-busy') && recs.some((r) => r.target === game && r.attributeName === 'class')) ask();
+      if (dirty && !game.hasAttribute('data-fx-busy') && recs.some((r) => r.target === game && (r.attributeName === 'class' || r.attributeName === 'data-fx-busy'))) ask();
       const hit = recs.some((r) => {
         const t = r.target as Element;
         if (r.type === 'attributes') return r.attributeName === 'style' && t !== game && !!t.classList?.contains('hcard');
@@ -373,7 +373,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
       clearTimeout(again);
       again = window.setTimeout(ask, 260);
     });
-    mo.observe(game, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    mo.observe(game, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class', 'data-fx-busy'] });
     // a card that glided to its place in the fan (the transitions of .hcard) — measure the fan where it came to rest
     const settled = (e: TransitionEvent) => {
       if ((e.target as Element).classList?.contains('hcard')) ask();

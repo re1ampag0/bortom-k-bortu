@@ -1082,7 +1082,7 @@
   .game .deck-light { opacity: .4; }
   .game .deck-glint { opacity: .55; }
   .game .deck-hook, .game .backdrop .deck-piece { filter: none; }
-  .game.fx-busy .deck-flare, .game.fx-busy .lantern-light { animation-play-state: paused; }
+  .game[data-fx-busy] .deck-flare, .game[data-fx-busy] .lantern-light { animation-play-state: paused; }
   .game .fx-layer > *, .game .fx-weather > * { will-change: auto; }
   .game .fx-layer *, .game .fx-weather * { filter: none !important; }
   .game .plank-scars *, .game .fx-fireglow { mix-blend-mode: normal; }
@@ -1136,7 +1136,7 @@
     animation: deck-warm-flick 2.6s ease-in-out infinite;
   }
   .phone-deck-warm { z-index: 3; }
-  .game.fx-busy.view-hand-deck::after, .game.fx-busy .phone-deck-warm { animation-play-state: paused; }
+  .game[data-fx-busy].view-hand-deck::after, .game[data-fx-busy] .phone-deck-warm { animation-play-state: paused; }
   @keyframes deck-warm-flick {
     0%, 100% { opacity: .92; }
     45% { opacity: 1; }

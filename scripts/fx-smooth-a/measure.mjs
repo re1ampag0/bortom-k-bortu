@@ -96,8 +96,13 @@ async function run(scene) {
   const mine = scene === 'armada' ? 'pick-company' : 'pick-pirates';
   for (const id of ['quick-bots', mine, 'prep-start', 'placement-done']) await tap(id);
   const myTurn = () => page.evaluate(() => { const b = [...document.querySelectorAll('[data-testid="end-turn"]')].find((e) => e.getClientRects().length); return !!b && b.getAttribute('aria-disabled') !== 'true'; });
-  await expect.poll(async () => !(await busy()) && (await myTurn()), {timeout: 120000, intervals: [200]}).toBe(true);
-  await page.waitForTimeout(1000);
+  // the player's turn and no show for 1.5 s on end (between two shows of the bots «busy» drops for a moment)
+  let quietSince = 0;
+  await expect.poll(async () => {
+    if ((await busy()) || !(await myTurn())) { quietSince = 0; return false; }
+    quietSince ||= Date.now();
+    return Date.now() - quietSince >= 1500;
+  }, {timeout: 120000, intervals: [200]}).toBe(true);
 
   const sum = (code) => page.evaluate((c) => [...document.querySelectorAll(`[data-fx-ship="${c}"] [data-fx-value]`)].reduce((n, v) => n + parseInt(v.textContent), 0), code);
   let check = async () => true, act;
@@ -134,7 +139,21 @@ async function run(scene) {
   let finished = scene === 'idle';
   if (scene === 'idle') await page.waitForTimeout(10000);
   else {
+    if (flag('--profile')) { await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', {interval: 200}); await cdp.send('Profiler.start'); }
     await act();
+    if (flag('--profile')) {
+      await page.waitForTimeout(1500);
+      const {profile} = await cdp.send('Profiler.stop');
+      const self = new Map(), byId = new Map(profile.nodes.map((n) => [n.id, n])), dt = profile.timeDeltas;
+      const hits = new Map();
+      profile.samples.forEach((id, i) => hits.set(id, (hits.get(id) ?? 0) + (dt[i] ?? 0)));
+      for (const [id, us] of hits) { const n = byId.get(id); const k = `${n.callFrame.functionName || '(anon)'} ${n.callFrame.url.split('/').pop()}:${n.callFrame.lineNumber}`; self.set(k, (self.get(k) ?? 0) + us / 1000); }
+      // inclusive time by function name
+      const parent = new Map(); for (const n of profile.nodes) for (const c of n.children ?? []) parent.set(c, n.id);
+      const incl = new Map();
+      for (const [id, us] of hits) { const seen = new Set(); for (let x = id; x != null; x = parent.get(x)) { const n = byId.get(x); const k = `${n.callFrame.functionName || '(anon)'} ${n.callFrame.url.split('/').pop()}:${n.callFrame.lineNumber}`; if (seen.has(k)) continue; seen.add(k); incl.set(k, (incl.get(k) ?? 0) + us / 1000); } }
+      writeFileSync(`tmp/fx-smooth-a/${scene}-${label}-profile.json`, JSON.stringify({self: [...self].sort((a, b) => b[1] - a[1]).slice(0, 60), incl: [...incl].sort((a, b) => b[1] - a[1]).slice(0, 120)}, null, 1));
+    }
     const limit = Date.now() + 90000;
     while (Date.now() < limit) {
       // done: the show is over, the result is on the table and the turn is the player's again

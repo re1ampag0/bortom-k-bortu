@@ -4234,10 +4234,10 @@ button.star::before {
   pointer-events: none;
 }
 /* ui-4 Г21: ambient loops keep their phase during a foreground clip. */
-.game.fx-busy .deck-flare,
-.game.fx-busy .lantern-light,
-.game.fx-busy .sea-water::before,
-.game.fx-busy .sea-water::after {
+.game[data-fx-busy] .deck-flare,
+.game[data-fx-busy] .lantern-light,
+.game[data-fx-busy] .sea-water::before,
+.game[data-fx-busy] .sea-water::after {
   animation-play-state: paused;
 }
 .deck-bg {
