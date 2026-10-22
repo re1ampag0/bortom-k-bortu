@@ -204,6 +204,10 @@
 .board[data-wx='calm'] .sea-water::before { animation-play-state: paused; }
 .board[data-wx='wind'] .sea-water::before { animation-duration: 12s; }
 /* the storm: the planks pitch (pgpitch of the prototype), each in its own phase */
+/* Only round-long rocking owns these four surfaces; keep translate/rotate separate from
+   the foreground clip's transform, so recoil and sinking retain their existing channels. */
+.board:is([data-wx-move='storm'], [data-wx-move='wave']) .planks > .plank { will-change: transform, translate, rotate; }
+.game:is(.perf-off-planks, .perf-off-css) .board[data-wx-move] .planks > .plank { will-change: auto; }
 .board[data-wx-move='storm'] .planks > .plank { animation: wx-pitch 3.6s ease-in-out infinite; }
 .board[data-wx-move='storm'] .planks.top > .plank:nth-child(2) { animation-delay: -0.9s; }
 .board[data-wx-move='storm'] .planks.bottom > .plank:nth-child(1) { animation-delay: -1.8s; }
@@ -212,7 +216,7 @@
 /* the Ninth wave: the planks ride up and down as the crest passes their middle (pgheave; the delay — by the place) */
 .board[data-wx-move='wave'] .planks > .plank { animation: wx-heave 8s ease-in-out var(--wx-heave, 0s) infinite; }
 @keyframes wx-heave { 0%, 16%, 100% { translate: 0 0; rotate: 0deg; } 3% { translate: 0 -4px; rotate: -0.6deg; } 6% { translate: 0 -11px; rotate: -1.2deg; } 9% { translate: 0 -6px; rotate: 1.1deg; } 12% { translate: 0 4px; rotate: 0.6deg; } }
-@media (prefers-reduced-motion: reduce) { .board[data-wx-move] .planks > .plank { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .board[data-wx-move] .planks > .plank { animation: none; will-change: auto; } }
 
 /* ——— A3: the drawings of the sea cards (art/wx.ts, WX2 of the prototype): the parts marked data-a move on the face of the card ——— */
 .wx-live [data-a]{transform-box:fill-box;transform-origin:center}
@@ -317,3 +321,6 @@
 .sprite-recoil-light { opacity:0; }
 .fx-sprite-trace { position:absolute;left:0;top:0;width:0;height:0;opacity:1;pointer-events:none;will-change:auto; }
 .game.perf-off-light .sprite-recoil-light, .game.perf-off-filters .sprite-recoil-light { display:none; }
+
+/* Ambient surfaces are useful only while these weather animations are enabled. */
+.game.perf-off-css .fx-weather :is(.wx-loop,.wx-island) { will-change: auto !important; }
