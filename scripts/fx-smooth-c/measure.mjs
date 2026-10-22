@@ -88,10 +88,17 @@ async function run(scene) {
     await el.click({position});
     return name;
   };
+  const animationEvents=[];
+  const traceOptions={categories:'devtools.timeline,disabled-by-default-devtools.timeline,disabled-by-default-devtools.timeline.frame,blink.user_timing,v8.execute,cc'+(flag('--compositor')?',blink.animations,disabled-by-default-devtools.timeline.invalidationTracking':''),transferMode:'ReturnAsStream'};
+  if(flag('--compositor')){
+    await cdp.send('Animation.enable');cdp.on('Animation.animationStarted',e=>animationEvents.push(e.animation));
+    writeFileSync(`${OUT}/${scene}-${label}-browser.json`,JSON.stringify(await cdp.send('Browser.getBrowserCommandLine'),null,1));
+    await cdp.send('Tracing.start',traceOptions);
+  }
   await cdp.send('Emulation.setCPUThrottlingRate', {rate: 4});
   await cdp.send('LayerTree.enable');
-  let latestLayers;
-  cdp.on('LayerTree.layerTreeDidChange', (e) => { latestLayers={all:e.layers?.length??0,drawing:e.layers?.filter(l=>l.drawsContent).length??0};if(recording)layers.push(latestLayers); });
+  let latestLayers, latestTree=[];
+  cdp.on('LayerTree.layerTreeDidChange', (e) => { latestTree=e.layers??[];latestLayers={all:e.layers?.length??0,drawing:e.layers?.filter(l=>l.drawsContent).length??0};if(recording)layers.push(latestLayers); });
   let recording = false;
   await page.goto('http://127.0.0.1:5187/bortom-k-bortu/?seed=1&speed=normal&hints=0&perf=0&particleProbe=0');
   // one person against the bots: the whole show plays (two people on one device hand it over behind the curtain)
@@ -135,8 +142,33 @@ async function run(scene) {
     check = async () => (await sum('Ж')) < before;
   }
 
+  if(flag('--compositor')){
+    await cdp.send('DOM.getDocument');
+    const rows=await page.evaluate(()=>document.getAnimations().filter(a=>a instanceof CSSAnimation||a.id==='medal-glint').map(a=>{
+      const el=a.effect.target, ship=el.closest('[data-fx-ship]')?.getAttribute('data-fx-ship');
+      const selector=el.matches('.gl')?`[data-fx-ship="${ship}"] .star .gl`:el.matches('.wx-loop')?`.fx-weather .${a.animationName}`:el.matches('.game')?'.game':el.matches('.sea-water')?'.sea-water':'.phone-deck-warm';
+      const pseudo=a.effect.pseudoElement??(el.matches('.game')?'::after':el.matches('.sea-water')?'::before':null);
+      const properties=[...new Set(a.effect.getKeyframes().flatMap(f=>Object.keys(f).filter(k=>!['offset','computedOffset','easing','composite'].includes(k))))];
+      const ancestors=[];
+      for(let n=el;n;n=n.parentElement){const c=getComputedStyle(n);if(c.filter!=='none'||c.clipPath!=='none'||c.maskImage!=='none')ancestors.push({tag:n.tagName,class:n.className,filter:c.filter,clip:c.clipPath,mask:c.maskImage});}
+      return {name:a.animationName??a.id,selector,pseudo,properties,ancestors};
+    }));
+    for(const row of rows){
+      const {root}=await cdp.send('DOM.getDocument');const {nodeId}=await cdp.send('DOM.querySelector',{nodeId:root.nodeId,selector:row.selector});
+      const {node}=await cdp.send('DOM.describeNode',{nodeId,depth:1});
+      row.backendNodeId=(row.pseudo?node.pseudoElements?.find(n=>'::'+n.pseudoType===row.pseudo):node)?.backendNodeId;
+      row.layers=[];
+      for(const layer of latestTree.filter(l=>l.backendNodeId===row.backendNodeId))row.layers.push({...layer,...await cdp.send('LayerTree.compositingReasons',{layerId:layer.layerId})});
+      const subtree=await cdp.send('DOM.describeNode',{nodeId,depth:-1});
+      const ids=new Set();const visit=n=>{ids.add(n.backendNodeId);for(const x of [...(n.children??[]),...(n.pseudoElements??[])])visit(x);};visit(subtree.node);
+      row.descendantLayers=[];
+      for(const layer of latestTree.filter(l=>ids.has(l.backendNodeId)&&l.backendNodeId!==row.backendNodeId))row.descendantLayers.push({...layer,...await cdp.send('LayerTree.compositingReasons',{layerId:layer.layerId})});
+      row.animationIds=animationEvents.filter(a=>a.source?.backendNodeId===row.backendNodeId).map(a=>a.id);
+    }
+    writeFileSync(`${OUT}/${scene}-${label}-compositing.json`,JSON.stringify(rows,null,1));
+  }
   if(scene==='idle')writeFileSync(`${OUT}/idle-${label}-animations.json`,JSON.stringify(await page.evaluate(()=>document.getAnimations().map(a=>({name:a.animationName??'',target:a.effect?.target?.outerHTML?.slice(0,200),frames:a.effect?.getKeyframes()}))),null,1));
-  await cdp.send('Tracing.start', {categories: 'devtools.timeline,disabled-by-default-devtools.timeline,disabled-by-default-devtools.timeline.frame,blink.user_timing,v8.execute,cc', transferMode: 'ReturnAsStream'});
+  if(!flag('--compositor'))await cdp.send('Tracing.start',traceOptions);
   recording = true;if(latestLayers)layers.push(latestLayers);
   await page.evaluate(() => { performance.mark('cpu-start'); window.fxCpu.start = performance.now(); window.fxCpu.active = true; });
   let finished = scene === 'idle';
@@ -174,8 +206,10 @@ async function run(scene) {
   for (;;) { const c = await cdp.send('IO.read', {handle: stream}); chunks.push(c.base64Encoded ? Buffer.from(c.data, 'base64') : Buffer.from(c.data)); if (c.eof) break; }
   await cdp.send('IO.close', {handle: stream});
   const raw = Buffer.concat(chunks);
+  if(flag('--compositor'))writeFileSync(`${OUT}/${scene}-${label}-cdp-animations.json`,JSON.stringify(animationEvents,null,1));
   const events = JSON.parse(raw.toString()).traceEvents;
   const start = events.find((e) => e.name === 'cpu-start').ts, end = events.find((e) => e.name === 'cpu-end').ts;
+  if(flag('--compositor'))writeFileSync(`${OUT}/${scene}-${label}-animation-trace.json`,JSON.stringify({start,end,events:events.filter(e=>e.name==='Animation')},null,1));
   const m = await page.evaluate(() => window.fxCpu);
   const journal = await page.evaluate(() => JSON.parse(localStorage.getItem('bortom-fx-trace') ?? '[]').slice(0, 20).reverse());
   await context.close();

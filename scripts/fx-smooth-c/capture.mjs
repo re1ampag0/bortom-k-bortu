@@ -10,7 +10,7 @@ const [beforeDist, afterDist, ...rest] = process.argv.slice(2);
 const selected=rest.filter(s=>!s.startsWith('--'));
 const scenes = selected.length ? selected : ['legend','armada','bottle','idle'];
 // the moments after the press, ms of the clip clock: around the renderWith of each clip and after it
-const MOMENTS = {'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700]};
+const MOMENTS = {'idle-compositor':[1000,4600,4800,5000],'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700]};
 const OUT = 'docs/screenshots/fx-smooth-c/frames';
 mkdirSync(OUT, {recursive: true});
 
@@ -76,7 +76,18 @@ async function shoot(dist, port, tag) {
       let at = 0;
       for (const m of MOMENTS[scene]) {
         await step(m - at); at = m;
-        if(scene==='idle-motion')await page.evaluate(phase=>{for(const a of document.getAnimations())if(a instanceof CSSAnimation){a.pause();a.currentTime=phase;}},m);
+        if(scene==='idle-motion'||scene==='idle-compositor')await page.evaluate(({phase,scene})=>{
+          for(const a of document.getAnimations())if(a instanceof CSSAnimation){a.pause();a.currentTime=phase;}
+          // Canonical source-cycle phase for the finite native medal sweeps. During
+          // a static hold the driver has no animation, so set the same source transform.
+          if(scene==='idle-compositor')for(const el of document.querySelectorAll('.medal-scheduled')){
+            const a=el.getAnimations().find(a=>a.id==='medal-glint');
+            const frames=a?.effect.getKeyframes();
+            const from=frames?.[0]?.transform??'translateX(-85.71428571428571%) skewX(-22deg)',to=frames?.[1]?.transform??'translateX(85.71428571428571%) skewX(-22deg)';
+            const demo=el.animate([{transform:from},{transform:to}],{duration:960,delay:4320,easing:'ease-in-out',fill:'both'});
+            a?.cancel();demo.pause();demo.currentTime=phase;
+          }
+        },{phase:m,scene});
         await page.screenshot({path: `${OUT}/${scene}-${m}-${tag}.png`});
       }
       if(errors.length)throw new Error(JSON.stringify(errors));

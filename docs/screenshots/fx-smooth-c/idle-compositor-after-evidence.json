@@ -1,0 +1,573 @@
+{
+ "failures": [
+  {
+   "animation": {
+    "displayName": "",
+    "id": "42",
+    "name": "",
+    "nodeId": 804,
+    "nodeName": "BUTTON class='chip sea'",
+    "state": "running"
+   },
+   "duringIdle": false,
+   "compositeFailed": 8224,
+   "unsupportedProperties": [
+    "box-shadow"
+   ]
+  },
+  {
+   "animation": {
+    "displayName": "",
+    "id": "44",
+    "name": "",
+    "nodeId": 4072,
+    "nodeName": "DIV class='tag'",
+    "state": "running"
+   },
+   "duringIdle": false,
+   "compositeFailed": 131104
+  }
+ ],
+ "nativeMedalSweeps": [
+  {
+   "id": "34",
+   "name": "medal-glint",
+   "source": {
+    "delay": -7.900000005960464,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1238,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "35",
+   "name": "medal-glint",
+   "source": {
+    "delay": -39.79999998211861,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1806,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "36",
+   "name": "medal-glint",
+   "source": {
+    "delay": -41.400000005960464,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2197,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "37",
+   "name": "medal-glint",
+   "source": {
+    "delay": -41,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2587,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "46",
+   "name": "medal-glint",
+   "source": {
+    "delay": -0.29999998211860657,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1238,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "47",
+   "name": "medal-glint",
+   "source": {
+    "delay": -4,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1806,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "48",
+   "name": "medal-glint",
+   "source": {
+    "delay": -18.5,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2197,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "49",
+   "name": "medal-glint",
+   "source": {
+    "delay": -19.5,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2587,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "50",
+   "name": "medal-glint",
+   "source": {
+    "delay": -4.199999988079071,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1238,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "51",
+   "name": "medal-glint",
+   "source": {
+    "delay": -2,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1806,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "52",
+   "name": "medal-glint",
+   "source": {
+    "delay": -20.099999994039536,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2197,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "53",
+   "name": "medal-glint",
+   "source": {
+    "delay": -43.19999998807907,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2587,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "54",
+   "name": "medal-glint",
+   "source": {
+    "delay": -3.7999999821186066,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1238,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "55",
+   "name": "medal-glint",
+   "source": {
+    "delay": -0.5,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1806,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "56",
+   "name": "medal-glint",
+   "source": {
+    "delay": 0,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2197,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "57",
+   "name": "medal-glint",
+   "source": {
+    "delay": -0.19999998807907104,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2587,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "58",
+   "name": "medal-glint",
+   "source": {
+    "delay": -2.199999988079071,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1238,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "59",
+   "name": "medal-glint",
+   "source": {
+    "delay": 0,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 1806,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "60",
+   "name": "medal-glint",
+   "source": {
+    "delay": -13.400000005960464,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2197,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  },
+  {
+   "id": "61",
+   "name": "medal-glint",
+   "source": {
+    "delay": -11.199999988079071,
+    "endDelay": 0,
+    "iterationStart": 0,
+    "iterations": 1,
+    "duration": 960.0000000000002,
+    "direction": "normal",
+    "fill": "both",
+    "backendNodeId": 2587,
+    "keyframesRule": {
+     "keyframes": [
+      {
+       "offset": "0%",
+       "easing": "linear"
+      },
+      {
+       "offset": "100%",
+       "easing": "linear"
+      }
+     ]
+    },
+    "easing": "ease-in-out"
+   }
+  }
+ ]
+}

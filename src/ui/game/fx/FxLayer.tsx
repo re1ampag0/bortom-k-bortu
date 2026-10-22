@@ -18,6 +18,7 @@ import { speedFactor } from '../text';
 import { applyVisible, displayFrom, displayRules, type Display } from './display';
 import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
+import {watchMedalGlints} from './medalIdle';
 import {prepareTitleWidths,invalidateTitleWidths} from './legendTitles';
 import {prepareArmadaSprites} from './armadaSprites';
 import {releaseSprites, spritePause, disposeSprites} from './sprites';
@@ -601,6 +602,7 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
       const ctx = fx.ctx();
       if (ctx && !board.closest('.game[data-fx-busy]')) { prepareTitleWidths(ctx); prepareArmadaSprites(ctx); prepareParticles(board, innerWidth>700?particleDefs(true):undefined); }
     };
+    const stopGlints=watchMedalGlints(board);
     warm();
     let alive=true;
     const refresh=()=>{if(!alive)return;invalidateGeometry(board);invalidateTitleWidths(board);warm();};
@@ -613,7 +615,7 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     if(game)mo.observe(game,{attributes:true,attributeFilter:['class']});
     void board.ownerDocument.fonts?.ready.then(refresh);
     board.ownerDocument.fonts?.addEventListener('loadingdone',refresh);
-    return () => {alive=false;ro.disconnect();mo.disconnect();window.removeEventListener('resize',refresh);board.ownerDocument.fonts?.removeEventListener('loadingdone',refresh);invalidateTitleWidths(board);invalidateGeometry(board);disposeParticles(board);disposeSprites(board);};
+    return () => {alive=false;stopGlints();ro.disconnect();mo.disconnect();window.removeEventListener('resize',refresh);board.ownerDocument.fonts?.removeEventListener('loadingdone',refresh);invalidateTitleWidths(board);invalidateGeometry(board);disposeParticles(board);disposeSprites(board);};
   }, [layerRef]);
   useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!busy){prepareTitleWidths(ctx);prepareArmadaSprites(ctx);}}, [busy]);
   useLayoutEffect(() => {

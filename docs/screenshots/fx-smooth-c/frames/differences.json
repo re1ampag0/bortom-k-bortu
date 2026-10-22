@@ -50,5 +50,21 @@
  "idle-motion-5000": {
   "differentPixels": 658,
   "share": 0.05
+ },
+ "idle-compositor-1000": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-compositor-4600": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-compositor-4800": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-compositor-5000": {
+  "differentPixels": 0,
+  "share": 0
  }
 }

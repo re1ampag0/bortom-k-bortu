@@ -4585,3 +4585,6 @@ button.middle-info:focus-visible { outline: 2px solid var(--brass); outline-offs
 .medal-glint-clip > .gl > svg { width:100%;height:100%; }
 .fx-simple .medal-art .gl, .game.perf-off-css .medal-art .gl, .game.perf-off-planks .medal-art .gl { will-change:auto; }
 @media (prefers-reduced-motion:reduce) { .medal-art .gl { will-change:auto; } }
+
+/* Native, finite sweeps retain the CSS clock/curve; do not run a second CSS copy. */
+.medal-art .gl.medal-scheduled { animation-name:none !important; }

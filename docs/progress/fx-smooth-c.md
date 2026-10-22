@@ -176,3 +176,88 @@ view «in 50 bot games…» и ship bot «in 200 games…». Правила/дв
 Шаг 3 — сделано, commit/push; дальше пользователь проверяет iPhone. Нулевой fxSvg для
 всех Легенд и нулевой Style не заявляются. При продолжении исходить из этой ветки:
 сначала остатки Кракена/Джека/следа бутылки, затем отдельный разбор сохраняющегося Style.
+
+
+## Доправка перед PR: композитор и неподвижные участки бликов
+
+Проверены именно Animation-события с начала загрузки, а не только десятисекундное
+окно после запуска анимаций. `measure.mjs --compositor` добавляет blink.animations,
+инвалидации, CDP Animation и причины LayerTree; обычный замер не меняется.
+Доказательства: `docs/screenshots/fx-smooth-c/idle-compositor-proof-animation-trace.json`,
+`idle-compositor-proof-compositing.json`, `idle-compositor-proof-evidence.json`;
+после правки — `idle-compositor-after-animation-trace.json` и `idle-compositor-after-evidence.json`.
+
+**Предположение об отказе композитора не подтвердилось:** все 12 уже имели ускоренные
+слои. Отсутствие собственного слоя у пустой обёртки прибоя не означает отказ:
+анимация композируется на дочернем paint island. Прежнее объяснение роста Style
+через SVG недостаточно: наличие transform/opacity и Paint=0 не исключает
+покадровых обновлений стиля Blink. Новая трасса показывает причину инвалидаций
+`Animation`; ни clip/mask, ни проценты не дали отказа у этих двенадцати.
+
+| № | Элемент / анимация | Свойства | Причина отказа / доказательство композиции | Что сделано |
+|---|---|---|---|---|
+| 1 | `.game::after`, deck-warm-flick | opacity | Отказа нет; ActiveOpacityAnimation | Сохранена |
+| 2 | `.phone-deck-warm`, deck-warm-flick | opacity | Отказа нет; ActiveOpacityAnimation | Сохранена |
+| 3 | `.sea-water::before`, sea-drift | transform | Отказа нет; ActiveTransformAnimation | Сохранена |
+| 4 | `[data-fx-ship="И"] .star .gl`, medal-glint | transform | Отказа нет; ActiveTransformAnimation, WillChangeTransform | Конечный проход, неподвижные паузы без анимации |
+| 5 | `[data-fx-ship="Г"] .star .gl`, medal-glint | transform | Отказа нет; ActiveTransformAnimation, WillChangeTransform | То же |
+| 6 | `[data-fx-ship="Ж"] .star .gl`, medal-glint | transform | Отказа нет; ActiveTransformAnimation, WillChangeTransform | То же |
+| 7 | `[data-fx-ship="М"] .star .gl`, medal-glint | transform | Отказа нет; ActiveTransformAnimation, WillChangeTransform | То же |
+| 8 | `.fx-weather .wx-loop-1` | transform, opacity | Отказа нет; дочерний слой 3443: ActiveTransformAnimation + ActiveOpacityAnimation | Сохранена |
+| 9 | `.fx-weather .wx-loop-2` | transform, opacity | Отказа нет; дочерний слой 3448: те же причины | Сохранена |
+| 10 | `.fx-weather .wx-loop-3` | transform, opacity | Отказа нет; дочерний слой 3453: те же причины | Сохранена |
+| 11 | `.fx-weather .wx-loop-4` | transform, opacity | Отказа нет; дочерний слой 3458: те же причины | Сохранена |
+| 12 | `.fx-weather .wx-loop-5` | transform, opacity | Отказа нет; дочерний слой 3463: те же причины | Сохранена |
+
+Номера слоёв — из сохранённого запуска, не постоянные идентификаторы приложения.
+Оба найденных compositeFailed находятся ДО cpu-start, вне покоя:
+- BUTTON.chip.sea: 8224, unsupportedProperties=[box-shadow] (8192 unsupported CSS property + 32 invalid compositing state).
+- DIV.tag: 131104 (131072 no visible change + 32 invalid compositing state).
+Это разовые эффекты старта, а не одна из двенадцати фоновых анимаций.
+Корреляция учитывает каждый Animation begin, в том числе с пустым displayName:
+идентификаторы дорожек повторно используются, иначе отказ можно ошибочно приписать погоде.
+
+`medalIdle.ts` берёт исходные keyframes, easing, длительность, задержку и текущую фазу
+CSS. Сам проход остаётся 0,96 с между 72% и 88% шестисекундного цикла, с прежними
+процентными transform и круговой границей. На двух неподвижных участках используется
+статический transform, без живой анимации. По абсолютной эпохе таймер включает следующий
+конечный native transform-проход; опоздание таймера не накапливает сдвиг фазы.
+Сохранены начальная задержка, pause/resume, reduced-motion, Простые и perf-переключатели;
+на resize проверяется видимость, при размонтировании убираются таймеры/анимации.
+T.*, рисунки, размеры и остальные восемь циклов не менялись.
+
+### Только idle: результат
+
+Тот же measure.mjs, seed1, «Рифы», 390×844, DPR3, CPU×4, 10с, Chromium154 (SwiftShader).
+
+| Показатель | Ранее step3 | Теперь idle-final |
+|---|---:|---:|
+| Recalculate Style, мс | 2045,0 | 742,6 |
+| Paint, мс | 0 | 0 |
+| Raster, мс | 0 | 0 |
+| Layout, мс | 0 | 0 |
+| Слои, пик | 41 | 41 |
+| Худший rAF, мс | 200,0 | 33,4 |
+| Интервалы >50 мс | 22 | 0 |
+
+Цель Style≤878,6мс достигнута в обычном замере; near0 пока не достигнуто.
+Артефакт: `docs/screenshots/fx-smooth-c/idle-idle-final.json`. Нельзя считать всю разницу
+с историческими 2045мс выигрышем кода: нагрузка среды меняется. Свежие диагностические
+запуски прежнего кода дали 889,9–1590,2мс; расширенная трасса после — 938,2мс.
+Последние трассы предназначены для причин, а не сравнения FPS: в них больше категорий,
+и во время части диагностики выполнялся захват кадров. В обеих Paint/Raster/Layout=0,
+слои41. Нормальный итоговый замер742,6мс снят отдельно, до захвата кадров.
+
+В диагностическом окне инвалидации Animation: 5964 → 5076; после также12 событий
+изменения inline-стиля на границах пауз. Неизменённые восемь циклов по-прежнему дают
+обновления Blink, хотя визуально композируются. Дополнительные слои не добавлялись.
+В трассе после —20 конечных native medal-glint с transform, compositeFailed у них нет.
+
+Кадры `frames/idle-compositor-{1000,4600,4800,5000}-comparison.png`: непосредственная
+версия6c31c95 слева, исправление справа. Один исходный CSS-фазовый момент применяется
+и к конечному проходу; во всех четырёх кадрах0 отличающихся пикселей RGB>6.
+Кадр4800 просмотрен. Геометрия, свет и прибой совпадают.
+
+Проверка: `npm run typecheck` exit0. Только idle-замеры и собственный capture;
+unit/e2e/sim в этой доправке не запускались. Доправка завершена, PR по просьбе пользователя
+не открывается. Далее — проверка iPhone пользователем.
