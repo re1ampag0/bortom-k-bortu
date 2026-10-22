@@ -134,7 +134,16 @@ export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0,
   const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
   const frames = phone || perfOff('filters') ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
   if ((perfOff('planks') && el.closest('.plank')) || (perfOff('labels') && el.closest('.flyc,.seacard,.plate,.tag,.pill,.wait-pill,.tmark,.hold-tag'))) return el.animate([], {duration: 0});
-  return el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
+  const animation = el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
+  // An opacity-zero plate can otherwise leave its explicitly interactive card links over the table.
+  if (el.matches?.('.plate') && frames[0]?.opacity !== undefined && frames.at(-1)?.opacity !== undefined) {
+    const rising = Number(frames.at(-1)!.opacity) > Number(frames[0].opacity);
+    el.setAttribute('inert', '');
+    if (rising) void animation.finished.then(() => {
+      if (ctx.run === ctx.live() && el.isConnected) el.removeAttribute('inert');
+    }, () => {});
+  }
+  return animation;
 }
 export function bx(ctx: FxCtx, el: Element): Box {
   // in the px of the stage (stage.ts): the effects are put inside the scaled screen
@@ -574,12 +583,15 @@ export const filters = (ctx: FxCtx) => ctx.rich && !ctx.board.ownerDocument.defa
 /** At most so many animations at once in the layer and the traces of the sea (TASKS.md: ~200; a margin for the ones
  *  every effect draws whatever the budget — a flash, a ball). */
 export const FX_BUDGET = 190;
+const budgetExempt = new WeakSet<Animation>();
+/** This replaces brightness on an existing animation without taking another particle slot. */
+export function ignoreFxBudget(animation:Animation):void { budgetExempt.add(animation); }
 /** How many of `want` particles still fit into the budget (none with «простые спецэффекты»). */
 export function room(ctx: FxCtx, want: number): number {
   if (!ctx.rich || perfOff('particles')) return 0;
   const scars = ctx.board.querySelector('.fx-scars');
   // the animations that run (or wait for their delay): a finished one only holds its last frame
-  const running = (el: Element) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length;
+  const running = (el: Element) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && !budgetExempt.has(a)).length;
   const busy = running(ctx.layer) + (scars ? running(scars) : 0);
   const n = Math.max(0, Math.min(want, FX_BUDGET - busy));
   return isPhone(ctx) ? Math.ceil(n / 2) : n;
@@ -683,7 +695,7 @@ export function smokeJet(ctx: FxCtx, svg: Element, x: number, y: number, ang: nu
  * a jet of powder smoke (into `smoke` — a trace of the sea, it outlives the clip), the ripple under the muzzle, scraps of
  * wadding; a beat later a second, smaller puff. `ang` — the direction of the shot (radians); `flash` — its length.
  */
-export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: number, y: number, ang: number, k = 1, delay = 0, opt: { grains?: number; puffs?: number; wads?: number; life?: number; flash?: number } = {}): void {
+export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: number, y: number, ang: number, k = 1, delay = 0, opt: { grains?: number; puffs?: number; wads?: number; life?: number; flash?: number; smokeJet?: typeof smokeJet } = {}): void {
   const deg = (ang * 180) / Math.PI, K = (n: number) => R1(n * k), fl = opt.flash ?? 420;
   const glow = sv(svg, `<circle r="${R1(90 * k)}" fill="url(#fxGlow)"/>`);
   A(ctx, glow, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2)`, opacity: 0 }], fl * 1.25, delay);
@@ -704,8 +716,8 @@ export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: numb
     A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * v * 0.6)}px,${R1(y + Math.sin(a) * v * 0.6)}px)`, opacity: 1, offset: 0.5 }, { transform: `translate(${R1(x + Math.cos(a) * v)}px,${R1(y + Math.sin(a) * v + 14 * k)}px)`, opacity: 0 }], rnd(400, 700), delay, 'ease-out');
   }
   if (smoke) {
-    smokeJet(ctx, smoke, x, y, ang, k, opt.puffs ?? 9, opt.life ?? 5600, delay);
-    smokeJet(ctx, smoke, x, y, ang, k * 0.6, 3, (opt.life ?? 5600) * 0.8, delay + 260);
+    (opt.smokeJet ?? smokeJet)(ctx, smoke, x, y, ang, k, opt.puffs ?? 9, opt.life ?? 5600, delay);
+    (opt.smokeJet ?? smokeJet)(ctx, smoke, x, y, ang, k * 0.6, 3, (opt.life ?? 5600) * 0.8, delay + 260);
   }
   if (!perfOff('particles')) {
   const rp = particleSvg(svg, `<ellipse rx="${R1(40 * k)}" ry="${R1(12 * k)}" fill="none" stroke="#eef6f8" stroke-width="${R1(1.6 * k)}"/>`);

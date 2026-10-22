@@ -28,6 +28,8 @@ import { ruleTag } from './sea';
 import { plankScars, scar, seaScars } from './scars';
 import { T } from './timing';
 import { bigShip, type BigShipKind } from '../art/bigShips';
+import {spriteReady, takeSprite} from './sprites';
+import {armadaGeometry, armadaA, armadaBall, armadaRecoil, armadaSmoke, armadaSmokeHost} from './armadaSprites';
 
 let LG_UID = 0;
 const R1 = (n: number) => Math.round(n * 10) / 10;
@@ -280,23 +282,30 @@ LG['И-Л'] = async (c, ctx) => {
   const y = g.cy + g.h * 0.08;
   const xs = Array.from({ length: n }, (_, i) => W * (0.117 + (i * 0.76) / (n - 1)));
   const sea = seaTemp(ctx), top = fxSvg(ctx);
+  const key = armadaGeometry(ctx).key, stickers = spriteReady(ctx.board,key);
+  if(import.meta.env.DEV||import.meta.env.MODE==='e2e')ctx.layer.dataset.armadaRenderer=stickers?'stickers':'legacy';
+  const seaHost = sea.parentElement!;
   // the haze of the horizon on the right
-  const haze = sv(sea, `<g><ellipse cx="${R1(W - 22)}" cy="${R1(y - 10)}" rx="160" ry="70" fill="#e6eaec" opacity=".7"/><ellipse cx="${R1(W - 62)}" cy="${R1(y + 20)}" rx="120" ry="40" fill="#f2f4f5" opacity=".6"/></g>`);
-  A(ctx, haze, [{ opacity: 0 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], K.haze);
+  const hazeSprite = stickers ? takeSprite(ctx,'armada-haze',seaHost) : null;
+  const haze = hazeSprite ? hazeSprite.root : sv(sea, `<g><ellipse cx="${R1(W - 22)}" cy="${R1(y - 10)}" rx="160" ry="70" fill="#e6eaec" opacity=".7"/><ellipse cx="${R1(W - 62)}" cy="${R1(y + 20)}" rx="120" ry="40" fill="#f2f4f5" opacity=".6"/></g>`);
+  if(hazeSprite){haze.classList.add('fx-temp');hazeSprite.root.style.transform=`translate(${R1(W-22)}px,${R1(y-10)}px)`;}
+  armadaA(ctx, haze, [{ opacity: 0 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], K.haze);
   // the line comes in, each ship with its wake and bow wave, rocking
   const total = K.line + 4 * K.next + 2 * n * K.ship + K.leave + 1000;
   const ships = xs.map((x, i) => {
     const yy = y - (i % 2) * 6 * k;
-    const g0 = sv(sea, `<g><g class="lg-pitch"><path d="M${R1(40 * k)} 2 C${R1(70 * k)} 4 ${R1(110 * k)} 10 ${R1(160 * k)} 6 M${R1(40 * k)} 6 C${R1(70 * k)} 10 ${R1(110 * k)} 18 ${R1(160 * k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46 * k)} 1 q-8 2 -12 6 M${R1(-46 * k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/><g class="lg-recoil">${bigShip('company', 0, 0, k)}</g></g></g>`);
-    A(ctx, g0, [{ transform: `translate(${R1(W + 100 + i * 90)}px,${R1(yy)}px)`, opacity: 0 }, { opacity: 1, offset: 0.15 }, { transform: `translate(${R1(x)}px,${R1(yy)}px)`, opacity: 1 }], K.enter, i * K.enterStep, 'cubic-bezier(.2,.6,.3,1)');
-    if (ctx.rich) { const p = g0.querySelector('.lg-pitch')!; const m = Math.ceil(total / 1600); A(ctx, p, Array.from({ length: m * 2 + 1 }, (_, j) => ({ transform: `rotate(${j % 2 ? 1.6 : -1.2}deg)` })), m * 1600, i * 310, 'ease-in-out', 'none'); }
-    return { g: g0, x, y: yy };
+    const sprite = stickers ? takeSprite(ctx,key,seaHost) : null;
+    const g0 = sprite ? sprite.root : sv(sea, `<g><g class="lg-pitch"><path d="M${R1(40 * k)} 2 C${R1(70 * k)} 4 ${R1(110 * k)} 10 ${R1(160 * k)} 6 M${R1(40 * k)} 6 C${R1(70 * k)} 10 ${R1(110 * k)} 18 ${R1(160 * k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46 * k)} 1 q-8 2 -12 6 M${R1(-46 * k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/><g class="lg-recoil">${bigShip('company', 0, 0, k)}</g></g></g>`);
+    if(sprite)g0.classList.add('fx-temp');
+    armadaA(ctx, g0, [{ transform: `translate(${R1(W + 100 + i * 90)}px,${R1(yy)}px)`, opacity: 0 }, { opacity: 1, offset: 0.15 }, { transform: `translate(${R1(x)}px,${R1(yy)}px)`, opacity: 1 }], K.enter, i * K.enterStep, 'cubic-bezier(.2,.6,.3,1)');
+    if (ctx.rich) { const p = g0.querySelector('.lg-pitch')!; const m = Math.ceil(total / 1600); armadaA(ctx, p, Array.from({ length: m * 2 + 1 }, (_, j) => ({ transform: `rotate(${j % 2 ? 1.6 : -1.2}deg)` })), m * 1600, i * 310, 'ease-in-out', 'none'); }
+    return { g: g0, x, y: yy, sprite };
   });
   await wait(ctx, K.line);
   // the broadside ripples down the line at each target; the balls of the events hit their cells
   const units = damageUnits(ctx, c.effects || []);
   const targets = [...new Set(units.map((u) => u.ship))];
-  const smoke = ctx.rich && !perfOff('particles') ? scar(fxSvg(ctx, seaScars(ctx) ?? ctx.layer), 'short') : null;
+  const smoke = ctx.rich && !perfOff('particles') ? scar(stickers&&!filters(ctx)?armadaSmokeHost(ctx,seaScars(ctx)??ctx.layer):fxSvg(ctx, seaScars(ctx) ?? ctx.layer), 'short') : null;
   let fired = 0;
   for (const tgt of targets) {
     const tb = bx(ctx, plank(ctx, tgt)), edge = facingY(ctx, tgt), dir = isTop(ctx, tgt) ? -1 : 1; // 1 — the target is below
@@ -309,7 +318,8 @@ LG['И-Л'] = async (c, ctx) => {
       // water (the lean of the prototype: bottom-row target → −1)
       at(ctx, t0, () => {
         const rc = sp.g.querySelector('.lg-recoil'), rd = -dir;
-        if (rc) A(ctx, rc, [{ transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)' }, { transform: `rotate(${rd * 2.6}deg) translate(${-rd * 3}px,0)`, filter: 'brightness(1.45) saturate(1.2)', offset: 0.12 }, { transform: `rotate(${-rd * 0.8}deg) translate(0,0)`, filter: 'brightness(1)', offset: 0.55 }, { transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)' }], K.recoil, 0, 'ease-out', 'none');
+        if(sp.sprite)armadaRecoil(ctx,sp.sprite,rd,K.recoil);
+        else if (rc) A(ctx, rc, [{ transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)' }, { transform: `rotate(${rd * 2.6}deg) translate(${-rd * 3}px,0)`, filter: 'brightness(1.45) saturate(1.2)', offset: 0.12 }, { transform: `rotate(${-rd * 0.8}deg) translate(0,0)`, filter: 'brightness(1)', offset: 0.55 }, { transform: 'rotate(0deg) translate(0,0)', filter: 'brightness(1)' }], K.recoil, 0, 'ease-out', 'none');
         circRing(ctx, sea, sp.x, sp.y + 2, 20 * (k / 0.86), 70 * (k / 0.86), '#eef3f4', K.ring, 60, 1.6);
       });
       for (let q = 0; q < 3; q++) {
@@ -318,9 +328,9 @@ LG['И-Л'] = async (c, ctx) => {
         const sm = q === 0 && fired++ < 8 ? smoke : null;
         // each shot is drawn when its time comes (a delayed ball would wait at the muzzle, seen)
         at(ctx, t, () => {
-          gunFire(ctx, top, sm, px, gy, Math.atan2(p.y - gy, p.x - px), 0.62, 0, { grains: 5, puffs: 5, wads: 1, life: 4800 });
+          gunFire(ctx, top, sm, px, gy, Math.atan2(p.y - gy, p.x - px), 0.62, 0, { grains: 5, puffs: 5, wads: 1, life: 4800, smokeJet: stickers ? armadaSmoke : undefined });
           if (q === 1) boom(ctx, 2.4, 220);
-          ballFly(ctx, top, { x: px, y: gy }, p, K.fly, 0, 12);
+          (stickers ? armadaBall : ballFly)(ctx, top, { x: px, y: gy }, p, K.fly, 0, 12);
           at(ctx, K.fly, () => {
             if (u) hitBlast(ctx, top, p.x, p.y, 0.55, 0, 520, true);
             else if (shot % 3 === 0) missSplash(ctx, top, p.x, p.y, 0.8);
@@ -339,12 +349,19 @@ LG['И-Л'] = async (c, ctx) => {
   }
   // the smoke of the broadside stays over the sea and drifts; the fleet sails away into it
   const host = seaScars(ctx);
-  if (host) {
+  if (host && stickers && !filters(ctx) && !perfOff('particles')) {
+    const group=scar(armadaSmokeHost(ctx,host),'short');
+    for(let i=0;i<(phone?7:14);i++){
+      const cx=R1(W*(.1+(i*.85)/(phone?6:13))),cy=R1(y+rnd(-26,26)),rx=R1(rnd(50,80)*Math.max(.6,k)),ry=R1(rnd(20,32));
+      const fog=takeSprite(ctx,'armada-fog',group);fog.root.dataset.perfParticle='';fog.root.style.transform=`translate(${cx}px,${cy}px) scale(${rx},${ry})`;
+    }
+    armadaA(ctx,group,[{opacity:0},{opacity:1}],K.smoke,0,'ease-out','none');
+  } else if(host && !perfOff('particles')) {
     const sm = scar(fxSvg(ctx, host), 'short'), drift = filters(ctx);
     sm.innerHTML += `<defs><radialGradient id="lgArmS"><stop offset="0" stop-color="#eeebe4" stop-opacity=".8"/><stop offset="1" stop-color="#eeebe4" stop-opacity="0"/></radialGradient></defs>${Array.from({ length: phone ? 7 : 14 }, (_, i) => { const cx = R1(W * (0.1 + (i * 0.85) / (phone ? 6 : 13))); return `<ellipse cx="${cx}" cy="${R1(y + rnd(-26, 26))}" rx="${R1(rnd(50, 80) * Math.max(0.6, k))}" ry="${R1(rnd(20, 32))}" fill="url(#lgArmS)">${drift ? `<animate attributeName="cx" values="${cx};${R1(cx + 60)}" dur="22s" fill="freeze"/>` : ''}</ellipse>`; }).join('')}`;
     A(ctx, sm, [{ opacity: 0 }, { opacity: 1 }], K.smoke, 0, 'ease-out', 'none');
   }
-  ships.forEach((s, i) => A(ctx, s.g, [{ transform: `translate(${R1(s.x)}px,${R1(s.y)}px)`, opacity: 1 }, { transform: `translate(${R1(s.x - 1000)}px,${R1(s.y)}px)`, opacity: 0 }], K.leave, i * K.leaveStep, 'cubic-bezier(.5,0,.8,.6)'));
+  ships.forEach((s, i) => armadaA(ctx, s.g, [{ transform: `translate(${R1(s.x)}px,${R1(s.y)}px)`, opacity: 1 }, { transform: `translate(${R1(s.x - 1000)}px,${R1(s.y)}px)`, opacity: 0 }], K.leave, i * K.leaveStep, 'cubic-bezier(.5,0,.8,.6)'));
   await wait(ctx, K.end);
 };
 

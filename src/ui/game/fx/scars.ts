@@ -82,6 +82,7 @@ function tick(now: number): void {
       s.el.remove();
       return false;
     }
+    if (s.el.dataset.scar === 'plate' && o < 0.3) s.el.setAttribute('inert', '');
     s.el.style.opacity = o.toFixed(3);
     return true;
   });
