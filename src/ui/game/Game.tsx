@@ -1,6 +1,6 @@
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
-import { cloneElement, isValidElement, lazy, memo, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { cloneElement, isValidElement, lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   abilityButtons,
   cardNeeds,
@@ -62,6 +62,8 @@ import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
 import { usePlayClock } from './playClock';
 import {PerfPanel, usePerf} from './perf/PerfPanel';
+import {getPerf} from './perf/state';
+import {clipRender} from './perf/clip';
 
 /** V7: the victory sheet is a chunk of its own (the big ships of its panorama). */
 const Victory = lazy(() => import('./Victory').then((m) => ({ default: m.Victory })));
@@ -112,6 +114,9 @@ export function Game({
   onExit: () => void;
   onRestart: (setup: MatchSetup) => void;
 }) {
+  // ?perf=1: how long a render of the table takes (render + commit, up to the layout effect); off — no clock at all
+  const perfT0 = getPerf().enabled ? performance.now() : 0;
+  useLayoutEffect(() => { if (perfT0) clipRender(performance.now() - perfT0); });
   const version = useSyncExternalStore(
     useCallback((cb) => game.subscribe(cb), [game]),
     () => game.version,

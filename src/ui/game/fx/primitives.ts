@@ -1,5 +1,6 @@
 import {animateParticle, canvasRing, canvasHTML, canvasShape, canvasSmoke, canvasCircle, particleCount, pauseParticles, rememberParticleHost, type ParticleAnimation, type ParticleTarget} from './particles';
 import {getPerf, perfOff} from '../perf/state';
+import {perfAnimHook} from '../perf/clip';
 // Effect primitives of the animation layer: a port of docs/mockups/anim/level1/effects.js (see PORTING.md).
 // The code is the reference's; what changed is how an element is found (the data-fx-* DOM contract, from the board of
 // the context) and the types. The globals of the reference (board, fx, D, SPEED, RICH, RUN, G) are the context `ctx`,
@@ -137,6 +138,7 @@ export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay?: nu
 export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay?: number, easing?: string, fill?: FillMode): Animation | ParticleAnimation;
 export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation | ParticleAnimation {
   if ('particle' in el) return animateParticle(el, kf, ms(ctx,d), ms(ctx,delay), easing);
+  if (perfAnimHook) perfAnimHook(el);
   // Backwards fill also positions SVG children during their delay; unlike direct HTML
   // children of .fx-layer they need not have opacity:0 in their base style.
   const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
