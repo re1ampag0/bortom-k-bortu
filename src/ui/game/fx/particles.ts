@@ -18,7 +18,10 @@ export interface ParticleTarget {
   scale: number;
   alpha: number;
   spriteAt?: (t: number) => Sprite | undefined;
+  animatedSprite?: Sprite;
+  animatedAlpha?: number;
   origin?: {x: number;y: number};
+  ring?: {radius: number;width: number;color: string;aspect: number};
 }
 export interface ParticleAnimation {
   finished: Promise<void>;
@@ -155,7 +158,7 @@ export function prepareParticles(board: HTMLElement, smokeDefs?: string): void {
 export function canvasCircle(ctx: FxCtx,host: Element,r: number,color: string,kind='spark',alpha=1): ParticleTarget | null {
   if(!ctx.canvasParticles||perfOff('particles'))return null;
   const sprite=banks.get(ctx.board)?.sprites.get(color);
-  return sprite?{particle:true,ctx,host,kind,sprite,scale:r,alpha}:null;
+  return sprite?{particle:true,ctx,host,kind,sprite,scale:r,alpha,animatedAlpha:ctx.svgParticleOpacity?1:undefined}:null;
 }
 export function canvasHTML(ctx: FxCtx,kind: string): ParticleTarget | null {
   if(!ctx.canvasParticles||perfOff('particles')||!banks.has(ctx.board))return null;
@@ -164,10 +167,17 @@ export function canvasHTML(ctx: FxCtx,kind: string): ParticleTarget | null {
   return sprite?{particle:true,ctx,host:ctx.layer,kind,sprite,scale:1,alpha:1,origin}:null;
 }
 export function canvasRing(ctx: FxCtx,host: Element,r1: number,s0: number,color: string,width: number): ParticleTarget | null {
+  if(ctx.legendParticles)return canvasCircRing(ctx,host,r1,color,width,.4);
   if(!ctx.canvasParticles||perfOff('particles')||!banks.has(ctx.board)||r1>80)return null;
   const sprite=ringArt(color,width*32/r1);
   if(!sprite)return null;
   return {particle:true,ctx,host,kind:'ring',sprite,scale:r1/32,alpha:1,spriteAt:t=>ringArt(color,width*32/Math.max(.01,r1*(s0+(1-s0)*t)))};
+}
+/** A true circle, not the elliptical water ripple atlas. Stroke stays constant as it grows. */
+export function canvasCircRing(ctx: FxCtx,host: Element,radius: number,color: string,width: number,aspect=1): ParticleTarget | null {
+  const bank=banks.get(ctx.board);
+  if(!ctx.canvasParticles||perfOff('particles')||!bank)return null;
+  return {particle:true,ctx,host,kind:'circle-ring',sprite:bank.sprites.values().next().value!,scale:1,alpha:1,ring:{radius,color,width,aspect}};
 }
 export function canvasMote(ctx: FxCtx,r: number,color: string): ParticleTarget | null {
   if(!ctx.canvasParticles||perfOff('particles')||!banks.has(ctx.board))return null;
@@ -176,7 +186,11 @@ export function canvasMote(ctx: FxCtx,r: number,color: string): ParticleTarget |
 export function canvasShape(ctx: FxCtx,host: Element,markup: string,kind='particle'): ParticleTarget | null {
   if(!ctx.canvasParticles||perfOff('particles')||!banks.has(ctx.board))return null;
   const sprite=particleArt(markup,innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio);
-  return sprite?{particle:true,ctx,host,kind,sprite,spriteAt:t=>wadArt(markup,t),scale:1,alpha:1}:null;
+  // A CSS opacity animation replaces an SVG leaf's presentation opacity; it does not multiply it.
+  // Keep the earlier canvas producers unchanged, and preserve that DOM rule for the newly migrated Legends.
+  const opaque=ctx.svgParticleOpacity?markup.replace(/^(\s*<[^>]*?)\sopacity="[^"]*"/, '$1'):markup;
+  const animatedSprite=opaque!==markup?particleArt(opaque,innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio)??undefined:undefined;
+  return sprite?{particle:true,ctx,host,kind,sprite,animatedSprite,spriteAt:t=>wadArt(markup,t),scale:1,alpha:1}:null;
 }
 export function canvasSmoke(ctx: FxCtx,host: Element,r: number,dark: boolean,filtered: boolean,kind='smoke'): ParticleTarget | null {
   if(!ctx.canvasParticles||perfOff('particles')||!banks.has(ctx.board))return null;
@@ -244,7 +258,12 @@ function draw(b: Bank): void {
     const matrix=parent.matrix.multiply(local).scale(target.scale);
     const dpr=b.dpr;
     c.setTransform(dpr*matrix.a,dpr*matrix.b,dpr*matrix.c,dpr*matrix.d,dpr*matrix.e,dpr*matrix.f);
-    c.globalAlpha=Math.max(0,Math.min(1,alpha));const p=target.spriteAt?.(t)??target.sprite;c.drawImage(p.image,p.x,p.y,p.w,p.h);
+    c.globalAlpha=Math.max(0,Math.min(1,alpha));
+    if(target.ring){
+      // All circle-ring trajectories use a uniform scale. Compensate that scale, as SVG non-scaling-stroke did.
+      const scale=Math.hypot(matrix.a,matrix.b);
+      if(scale>0){c.beginPath();c.ellipse(0,0,target.ring.radius,target.ring.radius*target.ring.aspect,0,0,2*Math.PI);c.lineWidth=target.ring.width/scale;c.strokeStyle=target.ring.color;c.stroke();}
+    }else{const p=target.spriteAt?.(t)??target.sprite;c.drawImage(p.image,p.x,p.y,p.w,p.h);}
     if(b.diagnostics)b.drawn[target.kind]=(b.drawn[target.kind]??0)+1;
     if(b.diagnostics&&alpha>.05)b.visible.push({id:item.id,kind:target.kind,level,opacity:alpha,x:matrix.e,y:matrix.f});
     return true;
@@ -263,6 +282,7 @@ function tick(b: Bank): void {
 }
 function run(b: Bank): void {if(!b.items.length)return;active.add(b);if(!b.paused&&!b.raf&&!perfOff('particles')){advance(b);b.raf=requestAnimationFrame(()=>tick(b));}}
 export function animateParticle(target: ParticleTarget,kf: Keyframe[],duration: number,delay: number,easing: string): ParticleAnimation {
+  if(kf.some(f=>f.opacity!==undefined)&&(target.animatedSprite||target.animatedAlpha!==undefined))target={...target,sprite:target.animatedSprite??target.sprite,alpha:target.animatedAlpha??target.alpha};
   const b=banks.get(target.ctx.board)!;
   advance(b);b.paused=paused;
   let finish!:()=>void;const finished=new Promise<void>(resolve=>{finish=resolve;});

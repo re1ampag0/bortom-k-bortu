@@ -1,0 +1,38 @@
+{
+ "legend-1000": {
+  "differentPixels": 25,
+  "share": 0.002
+ },
+ "legend-2200": {
+  "differentPixels": 73,
+  "share": 0.006
+ },
+ "armada-900": {
+  "differentPixels": 4116,
+  "share": 0.313
+ },
+ "bottle-6000": {
+  "differentPixels": 1741,
+  "share": 0.132
+ },
+ "bottle-8000": {
+  "differentPixels": 1640,
+  "share": 0.125
+ },
+ "idle-1000": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-3000": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "kraken-6000": {
+  "differentPixels": 345,
+  "share": 0.026
+ },
+ "jack-9000": {
+  "differentPixels": 4422,
+  "share": 0.336
+ }
+}
