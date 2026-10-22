@@ -1,6 +1,7 @@
 import {particleArt, prepareSmokeArt, smokeArt, prepareHtmlParticleArt, htmlParticleArt, prepareWadArt, wadArt, moteArt, prepareRingArt, ringArt} from './particleArt';
 // Shared particle clock and raster bank. Prepared canvases never enter the document.
 // Large objects keep their DOM/WAAPI renderer. Only explicitly opted-in producers use this API.
+import {perfWorkHook} from '../perf/clip';
 import type {FxCtx} from './primitives';
 import {perfOff,subscribePerf} from '../perf/state';
 
@@ -138,6 +139,8 @@ function circleRaster(color: string): Sprite {
   return {image:canvas,x:-32/30,y:-32/30,w:64/30,h:64/30};
 }
 export function prepareParticles(board: HTMLElement, smokeDefs?: string): void {
+  const perfEnd=perfWorkHook?.('prepare: particle art/bank');
+  try {
   if(smokeDefs)void prepareSmokeArt(smokeDefs,devicePixelRatio);
   if(banks.has(board))return;
   prepareHtmlParticleArt(innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio);
@@ -154,6 +157,7 @@ export function prepareParticles(board: HTMLElement, smokeDefs?: string): void {
     }else{draw(b);run(b);}
   });
   if(b.diagnostics)Object.defineProperty(board,'fxParticles',{configurable:true,value:()=>({active:particleCount(board),drawn:{...b.drawn},seen:{...b.seen},visible:b.visible.map(p=>({...p})),peak:b.peak,raf:!!b.raf,paused:b.paused,time:b.now,surfaces:[...b.surfaces.values()].map(s=>({level:s.level,connected:s.canvas.isConnected,width:s.canvas.width,height:s.canvas.height}))})});
+  } finally {perfEnd?.();}
 }
 export function canvasCircle(ctx: FxCtx,host: Element,r: number,color: string,kind='spark',alpha=1): ParticleTarget | null {
   if(!ctx.canvasParticles||perfOff('particles'))return null;
@@ -205,6 +209,9 @@ export function rememberParticleHost(el: Element,animation: Animation,kf: Keyfra
 }
 function surface(b: Bank,level: Level,layer: HTMLElement): Surface {
   let s=b.surfaces.get(level);
+  const perfEnd=perfWorkHook&&(!s||!s.canvas.isConnected||s.canvas.width!==Math.ceil(b.w*b.dpr)||s.canvas.height!==Math.ceil(b.h*b.dpr))
+    ?perfWorkHook(s?'холст: размер/вставка':'холст: создание'):undefined;
+  try {
   if(!s){const canvas=document.createElement('canvas');canvas.className='fx-particle-canvas';canvas.dataset.perfParticle='';canvas.dataset.particleLevel=level;canvas.setAttribute('aria-hidden','true');canvas.style.cssText='position:absolute;left:0;top:0;opacity:1;pointer-events:none;will-change:auto;display:none';s={canvas,context:canvas.getContext('2d')!,level};b.surfaces.set(level,s);}
   const {w,h,dpr}=b;
   if(s.canvas.width!==Math.ceil(w*dpr)||s.canvas.height!==Math.ceil(h*dpr)){s.canvas.width=Math.ceil(w*dpr);s.canvas.height=Math.ceil(h*dpr);s.canvas.style.width=w+'px';s.canvas.style.height=h+'px';}
@@ -212,6 +219,7 @@ function surface(b: Bank,level: Level,layer: HTMLElement): Surface {
   const host=level==='sea'?b.board.querySelector('.fx-scars')??layer:layer;
   if(!s.canvas.isConnected){s.context.resetTransform();s.context.clearRect(0,0,s.canvas.width,s.canvas.height);host.append(s.canvas);}
   if(s.canvas.style.display!=='block')s.canvas.style.display='block';return s;
+  } finally {perfEnd?.();}
 }
 function ancestorMatrix(host: Element,board: HTMLElement): {matrix: DOMMatrix;alpha: number;live: boolean} {
   let matrix=new DOMMatrix(),alpha=1;
@@ -236,6 +244,8 @@ function hideEmpty(b: Bank): void {
   if(b.raf)cancelAnimationFrame(b.raf);b.raf=0;active.delete(b);
 }
 function draw(b: Bank): void {
+  const perfEnd=perfWorkHook?.('частицы: кадр');
+  try {
   if(b.diagnostics){b.drawn={};b.visible=[];}
   for(const s of b.surfaces.values())if(s.canvas.isConnected){s.context.resetTransform();s.context.clearRect(0,0,s.canvas.width,s.canvas.height);}
   const frameSurfaces=new Map<Level,Surface>();
@@ -270,6 +280,7 @@ function draw(b: Bank): void {
   });
   for(const s of b.surfaces.values())if(!painted.has(s.level)){if(s.canvas.style.display!=='none')s.canvas.style.display='none';if(s.canvas.isConnected)s.canvas.remove();}
   if(!b.items.length)hideEmpty(b);
+  } finally {perfEnd?.();}
 }
 function advance(b: Bank): void {const now=performance.now();if(!b.paused)b.now+=Math.max(0,now-b.last);b.last=now;}
 function tick(b: Bank): void {

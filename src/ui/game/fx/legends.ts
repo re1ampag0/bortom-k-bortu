@@ -1,3 +1,4 @@
+import {perfWorkHook,perfPhaseHook} from '../perf/clip';
 import {canvasCircRing,canvasMote} from './particles';
 import {perfOff} from '../perf/state';
 // The Legends: the common grand entrance of a Legend and the effect of each. FX-B (package 3): the look and the timings
@@ -129,6 +130,7 @@ function motes(ctx: FxCtx, n: number, x0: number, x1: number, y0: number, y1: nu
  */
 export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cost = 0, soulCost = 0, target = null }: { cost?: number; soulCost?: number; target?: string | null } = {}): Promise<() => Promise<void>> {
   const board = ctx.board, L = T.legend;
+  const perfPrepared=perfWorkHook?.('legendIntro: создание');
   const W = boardW(ctx), H = boardH(ctx);
   const c = legendCard(ctx.data, code);
   const ribbonHTML=titleHTML(c.name),ribbonWidth=titleWidth(ctx,c.name);
@@ -152,6 +154,8 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   if (!ctx.rich) {
     // «простые спецэффекты»: the card of the Legend in the middle for 1 s, then the result
     A(ctx, card, [{ opacity: 0, transform: pose(cx, cy, S) }, { opacity: 1, transform: pose(cx, cy, S), offset: 0.15 }, { opacity: 1, transform: pose(cx, cy, S), offset: 0.85 }, { opacity: 0, transform: pose(cx, cy, S) }], L.simple, 0, 'linear');
+    perfPrepared?.();
+    perfPhaseHook?.('legendIntro: простой показ',L.simple*ctx.speed);
     await wait(ctx, L.simple);
     return async () => {};
   }
@@ -175,6 +179,7 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   const tOut = L.cardAt + L.land + L.hit + L.sealHit + L.hold, tOrb = tOut + L.orbAt;
   A(ctx, rays, [{ opacity: 0, transform: 'scale(.6) rotate(0deg)' }, { opacity: 1, transform: 'scale(1) rotate(18deg)', offset: L.rays / (tOrb + 600 - L.raysAt) }, { opacity: 1, transform: `scale(1) rotate(${R1(((tOrb - L.raysAt) / 18000) * 360)}deg)`, offset: (tOrb - L.raysAt) / (tOrb + 600 - L.raysAt) }, { opacity: 0, transform: `scale(1) rotate(${R1(((tOrb + 600 - L.raysAt) / 18000) * 360)}deg)` }], tOrb + 600 - L.raysAt, L.raysAt, 'linear', 'forwards');
   motes(ctx, isPhone(ctx) ? 24 : 46, W * 0.1, W * 0.9, H * 0.62, H * 0.92);
+  perfPhaseHook?.('legendIntro: влёт',L.fly*ctx.speed,L.cardAt*ctx.speed);
   // 3. the card bursts out of the medallion along an arc, grows, turns over
   const path = qpts(mb.cx, mb.cy, (mb.cx + cx) / 2 + (mb.cx < cx ? -60 : 60), Math.max(Math.min(190, cy), Math.min(mb.cy, cy) - 140), cx, cy, 24);
   A(ctx, card, path.map((p, i) => ({ opacity: i ? 1 : 0, transform: pose(p.x, p.y, (0.08 + 0.92 * Math.pow(i / 24, 1.6)) * S, (1 - i / 24) * -24) })), L.fly, L.cardAt, 'cubic-bezier(.3,.1,.2,1)');
@@ -186,12 +191,14 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   A(ctx, card.querySelector('.lc-face')!, [{ transform: 'rotateY(-180deg)' }, { transform: 'rotateY(-180deg)', offset: 0.6 }, { transform: 'rotateY(0)' }], L.flip, L.cardAt, 'ease-in-out');
   // 4. the landing: a shockwave, a gold burst, the table shakes, a soft gold flash
   const tLand = L.cardAt + L.land;
+  perfPhaseHook?.('legendIntro: приземление',L.hit*ctx.speed,tLand*ctx.speed);
   flashBoard(ctx, '#ffe7a4', 0.28, 380, tLand);
   boom(ctx, 5, 420, tLand);
   circRing(ctx, hi, cx, cy, 40, 420 * S, '#ffe7a4', 900, tLand, 5); circRing(ctx, hi, cx, cy, 30, 300 * S, '#fff6d8', 700, tLand + 120, 2);
   at(ctx, tLand, () => goldBurst(ctx, hi, cx, cy, 60, 120 * S, 320 * S));
   // 5. the wax seal «ЛЕГЕНДА» stamps the card in its bottom right corner
   const tSeal = tLand + L.hit, sp = { x: cx + 110 * S, y: cy + 172 * S };
+  perfPhaseHook?.('legendIntro: печать',L.seal*ctx.speed,tSeal*ctx.speed);
   const seal = mk(ctx, 'lg-seal', sp.x, sp.y, SEAL_HTML); seal.style.zIndex = '40';
   A(ctx, seal, [{ transform: `translate(-50%,-50%) scale(${R1(3.2 * S * 100) / 100}) rotate(-40deg)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${R1(0.86 * S * 100) / 100}) rotate(6deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(-50%,-50%) scale(${R1(S * 100) / 100}) rotate(0deg)`, opacity: 1 }], L.seal, tSeal, 'cubic-bezier(.6,0,.9,.5)');
   const tHit = tSeal + L.sealHit;
@@ -204,10 +211,13 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   const bs = Math.min(S, (W - 16) / Math.max(1, ribbonWidth));
   A(ctx, ban, [{ transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(.1)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(1.04)`, opacity: 1, offset: 0.6 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100})`, opacity: 1 }], L.ribbon, tHit, 'cubic-bezier(.2,.8,.3,1)');
   ban.querySelectorAll('span').forEach((s, i) => A(ctx, s, [{ opacity: 0, transform: 'translateY(12px) scale(1.6)' }, { opacity: 1, transform: 'none' }], 400, tHit + i * L.letter, 'cubic-bezier(.2,1.4,.5,1)'));
+  perfPhaseHook?.('legendIntro: удержание',L.hold*ctx.speed,tHit*ctx.speed);
   const shine = card.querySelector('.lc-shine')!, glint = card.querySelector('.lc-glint rect')!;
   for (let k = 0; k * 1600 < L.hold; k++) A(ctx, shine, [{ transform: 'translateX(-120%)' }, { transform: 'translateX(120%)' }], 960, tHit + 100 + k * 1600, 'ease-in-out', 'none');
   if(playLegendGlint(ctx,card.querySelector<HTMLElement>('.lc-face')!,L.hold,tHit))glint.parentElement!.remove();
   else A(ctx, glint, [{ strokeDashoffset: 0, opacity: 1 }, { strokeDashoffset: -1216 * (L.hold / 2200), opacity: 1 }], L.hold, tHit, 'linear', 'none');
+  perfPhaseHook?.('legendIntro: сворачивание/шар',(L.collapse+L.orb)*ctx.speed,tOut*ctx.speed);
+
   // 7. the card collapses into a golden orb that flies to the target
   A(ctx, ban, [{ opacity: 1 }, { opacity: 0 }], L.fade, tOut, 'ease-in', 'forwards');
   A(ctx, seal, [{ opacity: 1, transform: `translate(-50%,-50%) scale(${R1(S * 100) / 100})` }, { opacity: 0, transform: `translate(-50%,-50%) scale(${R1(0.4 * S * 100) / 100})` }], L.fade, tOut, 'ease-in', 'forwards');
@@ -231,6 +241,7 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   const tEnd = tOrb + L.orbEnd;
   circRing(ctx, hi, to.x, to.y, 8, 120, '#ffe7a4', 700, tEnd, 4);
   at(ctx, tEnd, () => goldBurst(ctx, hi, to.x, to.y, 30, 20, 110));
+  perfPrepared?.();
   await wait(ctx, tEnd);
   return async () => {
     A(ctx, top, [{ transform: `scaleY(${R1(thin * 100) / 100})` }, { transform: 'translateY(-100%)' }], 320, 0, 'ease-in', 'forwards');
@@ -635,7 +646,8 @@ export async function legendGeneric(c: LegendClip, ctx: FxCtx): Promise<void> {
 const playLegend = async (c: LegendClip, ctx: FxCtx) => {
   ctx=Object.create(ctx) as typeof ctx;ctx.canvasParticles=true;ctx.legendParticles=true;ctx.svgParticleOpacity=c.card!=='И-Л';
   const outro = await legendIntro(ctx, c.card, c.seat, { cost: c.cost, soulCost: c.soulCost, target: c.target });
-  await (LG[c.card] || legendGeneric)(c, ctx);
+  const perfStory=perfWorkHook?.(`LG[${c.card}]: сюжет`,'visual');
+  try {await (LG[c.card] || legendGeneric)(c, ctx);} finally {perfStory?.();}
   await outro();
 };
 
