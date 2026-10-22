@@ -940,62 +940,39 @@ button.star::before {
   padding: 0 0 0 8px;
   border-left: 1px solid #b9a27a;
 }
-/* fix-ui: a laptop, four buttons and more (the Dutchman): one row, «icon · price», the name in the paper pop (data-tip) — the row
-   never wraps and the sea keeps its height */
+/* ui-5: the pictures of «Погружение» and the Souls (art/icons), of the size of the old icons */
+.cmd-pic img {
+  display: block;
+}
+.cmd-pic.i-soul img {
+  width: 15px;
+  height: 17px;
+}
+.cmd-pic.i-dive img {
+  width: 16px;
+  height: 16px;
+}
+/* ui-5: a laptop — every button keeps its name, «Погружение» and the Souls are an icon (the name in the paper pop, data-tip);
+   four buttons and more (the Dutchman) stay in one row with narrower paddings, the sea keeps its height */
 @media (min-width: 701px) {
+  .btn.cmd.compact .cmd-name {
+    display: none;
+  }
   .plank-buttons.many {
     flex-wrap: nowrap;
     gap: 6px;
   }
   .plank-buttons.many .btn.cmd {
-    flex: 0 1 auto;
-    min-width: 0;
+    flex: 0 0 auto;
     padding: 0 9px;
   }
-  .plank-buttons.many .btn.cmd.compact .cmd-name {
-    display: none;
-  }
-  .plank-buttons.many .btn.cmd:not(.compact) .cmd-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .plank-buttons.many .btn.cmd .cmd-in {
     white-space: nowrap;
   }
 }
-/* The buttons of a plank: on a phone a row that scrolls with the arrow «›» at its right edge (U3); on a laptop the
-   arrow is never there. */
+/* The buttons of a plank: on a phone a row that scrolls with a finger (U3, ui-5). */
 .plank-buttons-wrap {
   position: relative;
-}
-.buttons-more {
-  display: none;
-  position: absolute;
-  right: 4px;
-  top: calc(50% - 4px);
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0 2px;
-  border: 1.5px solid var(--ink);
-  border-radius: 50%;
-  background: var(--panel);
-  color: var(--ink);
-  font-size: 1.2rem;
-  font-weight: 800;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(42, 36, 29, 0.2);
-}
-.buttons-more::after {
-  /* a 44 × 44 press zone without a bigger circle */
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 44px;
-  height: 44px;
-  transform: translate(-50%, -50%);
 }
 /* Aiming: the whole plank is the button (P2, as in docs/mockups/anim/level1/style.css). */
 .plank.aimable {
@@ -2192,8 +2169,8 @@ button.star::before {
     height: 18px;
     font-size: 11px;
   }
-  /* The buttons of a plank: one row that scrolls sideways with a finger (U3) — no scrollbar, the right edge fades
-     while there is more (data-more, Table.tsx); the scroll does not move the table. A button never shrinks below its
+  /* The buttons of a plank: one row that scrolls sideways with a finger (U3) — no scrollbar, an edge with more fades
+     (data-more, data-more-left: Table.tsx); the scroll does not move the table. A button never shrinks below its
      text; a short row still fills the plank. */
   .plank-buttons {
     /* 5 px above and below: the press zone of a button (44 px, ::before) stays inside the row, which clips */
@@ -2209,21 +2186,22 @@ button.star::before {
   .plank-buttons::-webkit-scrollbar {
     display: none;
   }
-  /* the fade and the arrow are narrow, at the very edge: the text of the second button stays clear */
-  .plank-buttons-wrap[data-more] .plank-buttons {
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
+  /* ui-5: a soft fade at the edge beyond which there are more buttons (right; after a scroll — left too), none when all fit;
+     a finger scrolls the row sideways, the vertical gestures are not taken */
+  .plank-buttons {
+    touch-action: pan-x;
+    --fade-l: 0px;
+    --fade-r: 0px;
   }
-  .plank-buttons-wrap[data-more] .buttons-more {
-    display: flex;
-    /* small, over the padding of the row: it does not cover the text of the last button in sight */
-    right: -1px;
-    top: 50%;
-    width: 18px;
-    height: 18px;
-    padding: 0 0 1px;
-    font-size: 0.85rem;
-    border-width: 1px;
+  .plank-buttons-wrap[data-more] .plank-buttons {
+    --fade-r: 18px;
+  }
+  .plank-buttons-wrap[data-more-left] .plank-buttons {
+    --fade-l: 18px;
+  }
+  .plank-buttons-wrap:is([data-more], [data-more-left]) .plank-buttons {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
   }
   /* every button of every plank is of one size: a third of the row (three in sight), 34 px high, 13 px text; more — by
      scrolling. The press zone is 44 px high (::before, 5 px above and below) and reaches half the gap to each side, so
@@ -3731,11 +3709,6 @@ button.star::before {
   .hand-cards > .hcard + .hcard {
     margin-left: calc(-1 * var(--ov, 0px));
   }
-  /* fix-ui: the tabs of the ships («Индевор · 0 из 2», «Голландец») stay over a card that rises */
-  .hand-head .tabs {
-    position: relative;
-    z-index: 4;
-  }
   /* the pointer or the keyboard on a card: it straightens, rises and grows; the neighbours step aside */
   .hand-cards > .hcard:hover,
   .hand-cards > .hcard:focus-visible {
@@ -4299,9 +4272,6 @@ button.star::before {
     padding-right: var(--deck-pr, 0px);
     padding-bottom: var(--deck-lift, 0px);
   }
-  .game.view-hand-deck .hand .tabs {
-    margin-left: var(--deck-tabs, 0px);
-  }
   .game.view-hand-deck .board-bottom {
     position: relative;
   }
@@ -4570,3 +4540,39 @@ button.middle-info:focus-visible { outline: 2px solid var(--brass); outline-offs
 }
 .reaction-wait-pill .wait-dots { gap: 3px; }
 .reaction-wait-pill .wait-dots i { width: 3px; height: 3px; }
+
+/* ui-5: a laptop — the tabs of the ships («Индевор · 0 из 2», «Голландец») stand in the left column, at its left edge under
+   «Перестроение» (on «Палуба» right over «Колода · Сброс · сыграно»), not over the fan: a card that rises keeps its head in sight.
+   The Hold of «Палуба» is a little tighter for them (1366×660 has ≈ 17 px between «Перестроение» and «Колода»); two tabs that do
+   not fit side by side stand one over the other. The phone has no tabs (phone.css). */
+@media (min-width: 701px) {
+  .board-bottom {
+    position: relative;
+  }
+  .board-bottom .hand-head .tabs {
+    position: absolute;
+    left: 0;
+    bottom: 4px;
+    z-index: 4;
+    max-width: var(--hold-w);
+    flex-wrap: wrap-reverse;
+    gap: 4px 6px;
+  }
+  .board-bottom .hand-head .tab {
+    min-height: 22px;
+    padding: 0 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 20px;
+    white-space: nowrap;
+  }
+  .game.view-hand-deck .board-bottom > .team-row {
+    gap: 4px;
+  }
+  .game.view-hand-deck .deck-info {
+    bottom: -4px;
+  }
+  .game.view-hand-deck .board-bottom .hand-head .tabs {
+    bottom: 13px;
+  }
+}

@@ -7,7 +7,6 @@ import { deckCards } from '../../engine/data';
 import {noFxHint, type FxHintStore} from './fx/hintStore';
 import { InfoTip } from './InfoTip';
 import { plainText, roman, SIDE_LABEL } from './text';
-import { reducedMotion } from '../start/motion';
 import { cellUrl, CELLS, type CellIcon } from './art/cells';
 import { shipSvg } from './art/ships';
 import { legendMedal } from './art/medals';
@@ -22,6 +21,8 @@ import { MARK_BLOT_SVG, MARK_PIN_SVG, READY_SVG, SOULS_SVG, tridentSvg, statusSv
 import { ST3, stBadge } from './art/status3';
 import { FLAME } from './art/fire';
 import { usePhoneLayout } from './Alarm';
+import diveIcon from './art/icons/dive.svg';
+import soulIcon from './art/icons/soul.svg';
 import { TRACK_RULE } from './memo';
 
 const TRACKS: Track[] = ['hull', 'sails', 'guns', 'crew'];
@@ -468,7 +469,7 @@ export function Plank({
 }) {
   const d = shipData(data, ship.code);
   const phone = usePhoneLayout();
-  const buttonsRef = useMoreRight<HTMLDivElement>();
+  const buttonsRef = useMoreSides<HTMLDivElement>();
   const st = statuses(s, data, ship);
   const marked = st.some((x) => x.mark);
   const markHidden = !!fxHidden?.includes('mark');
@@ -681,24 +682,13 @@ export function Plank({
       {phone && statusRow}
       {buttons.length > 0 && (
         <div className="plank-buttons-wrap" onClick={(e) => e.stopPropagation()}>
-          {/* fix-ui: four buttons and more — one row of «icon · price» on a laptop, the name in a paper pop */}
+          {/* ui-5: on a laptop the buttons keep their names in one row, only «Погружение» and the Souls are an icon (the name in a
+              paper pop) */}
           <div className={`plank-buttons ${buttons.length >= 4 ? 'many' : ''}`} ref={buttonsRef}>
             {buttons.map((b) => (
-              <PlankButton key={b.key} b={b} compact={buttons.length >= 4} />
+              <PlankButton key={b.key} b={b} compact={!phone && b.key in ICON_URL} />
             ))}
           </div>
-          {/* On a phone, while more buttons are to the right: a press scrolls the row (U3). */}
-          <button
-            className="buttons-more"
-            aria-label="Ещё кнопки"
-            tabIndex={-1}
-            onClick={() => {
-              const row = buttonsRef.current;
-              if (row) row.scrollBy({ left: row.clientWidth, behavior: reducedMotion() ? 'auto' : 'smooth' });
-            }}
-          >
-            ›
-          </button>
         </div>
       )}
       {/* FX-A: the traces the effects leave on this ship (fx/scars.ts). React never fills it, so they live through the
@@ -751,11 +741,13 @@ const CMD_ICON: Record<string, string> = {
   volley: CELLS.GUN,
   heart: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14 C3 10.4 1.2 7.8 1.2 5.4 C1.2 3.2 2.9 1.6 4.9 1.6 C6.2 1.6 7.3 2.3 8 3.4 C8.7 2.3 9.8 1.6 11.1 1.6 C13.1 1.6 14.8 3.2 14.8 5.4 C14.8 7.8 13 10.4 8 14 Z" fill="#a3271d" stroke="#3a0f0a" stroke-width=".8"/><path d="M4 4 Q5 3 6.2 3.4" stroke="#f3b1a4" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>',
   treasury: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="12" rx="6" ry="2.2" fill="#a87c22" stroke="#4a340c" stroke-width=".7"/><ellipse cx="8" cy="9" rx="6" ry="2.2" fill="#c99a3a" stroke="#4a340c" stroke-width=".7"/><ellipse cx="8" cy="6" rx="6" ry="2.2" fill="#e2bf62" stroke="#4a340c" stroke-width=".7"/><path d="M5 5.6 Q8 4.4 11 5.6" stroke="#fff3c4" stroke-width=".6" fill="none"/></svg>',
-  dive: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 5 q1.75 -1.6 3.5 0 t3.5 0 t3.5 0 t3.5 0" fill="none" stroke="#2f5f74" stroke-width="1.4" stroke-linecap="round"/><path d="M8 6.6 V14 M5.2 11.2 L8 14 L10.8 11.2" fill="none" stroke="#22384c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  soulHull: SOULS_SVG,
-  soulCrew: SOULS_SVG,
   regroup: '<svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true"><path d="M2 4 H13 M10 1 L13 4 L10 7 M14 10 H3 M6 7 L3 10 L6 13" fill="none" stroke="#2a2521" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
+/**
+ * ui-5: the icons of «Погружение» and the Souls are pictures of their own (art/icons), shown as images: the dive has gradients
+ * with fixed ids, which would clash between copies in the markup.
+ */
+const ICON_URL: Record<string, string> = { dive: diveIcon, soulHull: soulIcon, soulCrew: soulIcon };
 /** «Залп · 1 П»: the name and the price in Powder. */
 const PRICED = /^(.*?) · (\d+) П$/;
 /** «Перестроение · бесплатно»: free while «Жемчужина» of the Pirates is afloat. */
@@ -769,17 +761,20 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
   // the trident has gradients of its own: one copy for the life of the button, so the picture is not set again on a render
   const trident = useMemo(() => (b.key === 'sword' ? tridentSvg(20) : null), [b.key]);
   const icon = trident ?? CMD_ICON[b.key];
+  const url = ICON_URL[b.key];
   const name = m ? m[1] : b.label;
-  // compact (a laptop, four buttons and more): the name and, if it cannot be pressed, the reason — in the paper pop of the game
+  // compact (a laptop, an icon-only button): the name and, if it cannot be pressed, the reason — in the paper pop of the game
   // (the same as «+1 совместно»), not in the title of the browser; a button without an icon keeps its short name
-  const pop = compact && icon ? [name, b.tip, b.disabled].filter(Boolean).join(' — ') : b.tip;
+  const only = compact && !!(icon || url);
+  // ui-5: a picture stands for a word (on a laptop the whole name, on a phone «Нырок» and «Душа») — the name goes to the pop
+  const pop = only || url ? [name, b.tip, b.disabled].filter(Boolean).join(' — ') : b.tip;
   return (
     <button
-      className={`btn cmd ${b.primary ? 'primary' : ''} ${compact && icon ? 'compact' : ''} ${className}`}
+      className={`btn cmd ${b.primary ? 'primary' : ''} ${only ? 'compact' : ''} ${className}`}
       onClick={b.disabled ? undefined : b.onClick}
       aria-disabled={!!b.disabled}
-      aria-label={compact && icon ? name : undefined}
-      title={compact && icon ? undefined : b.disabled ?? undefined}
+      aria-label={only || url ? name : undefined}
+      title={only ? undefined : b.disabled ?? undefined}
       data-testid={b.testid}
       data-tip={pop}
     >
@@ -790,7 +785,13 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
       )}
       {/* a laptop always; a phone while a plank has one or two buttons (game.css) — else the short label */}
       <span className="cmd-in">
-        {icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />}
+        {url ? (
+          <span className={`cmd-icon cmd-pic i-${b.key === 'dive' ? 'dive' : 'soul'}`}>
+            <img src={url} alt="" draggable={false} />
+          </span>
+        ) : (
+          icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />
+        )}
         <span className="cmd-name">{name}</span>
         {m && (
           <span className={`cost ${m[2] === 'бесплатно' ? 'free' : ''}`} aria-label={m[2] === 'бесплатно' ? 'бесплатно' : `${m[2]} Пороха`}>
@@ -799,22 +800,35 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
           </span>
         )}
       </span>
-      <span className="narrow cmd-short">{breakAfterArrow(b.short ?? b.label)}</span>
+      <span className="narrow cmd-short">
+        {url ? (
+          <>
+            <img className="short-pic" src={url} alt="" draggable={false} />
+            {/* «Душа→Корп» → the picture and «→ Корп»; «Нырок» → the picture alone */}
+            {b.key !== 'dive' && (b.short ?? b.label).replace(/^Душа\s*→\s*/, '→ ')}
+          </>
+        ) : (
+          breakAfterArrow(b.short ?? b.label)
+        )}
+      </span>
     </button>
   );
 }
 
 /**
- * A row that scrolls sideways (the buttons of a plank on a phone, U3): «data-more» on its wrapper while there is more
- * of it to the right — the right edge fades and the arrow «›» shows then.
+ * A row that scrolls sideways with a finger (the buttons of a plank on a phone, U3, ui-5): «data-more» on its wrapper while
+ * there is more of it to the right, «data-more-left» — to the left; the edge with more fades softly.
  */
-function useMoreRight<T extends HTMLElement>() {
+function useMoreSides<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    // on the wrapper of the row: the fade and the arrow «›» stand there; the last 8 px are the padding of the row
-    const check = () => el.parentElement?.toggleAttribute('data-more', el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    // on the wrapper of the row: the fades stand there; the last 8 px are the padding of the row
+    const check = () => {
+      el.parentElement?.toggleAttribute('data-more', el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+      el.parentElement?.toggleAttribute('data-more-left', el.scrollLeft > 8);
+    };
     check();
     el.addEventListener('scroll', check, { passive: true });
     addEventListener('resize', check);
