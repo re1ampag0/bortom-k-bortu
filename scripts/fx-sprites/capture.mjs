@@ -20,7 +20,7 @@ try{
   if(first!==null&&t>=first+100){
    await p.screenshot({path:`docs/screenshots/fx-sprites/armada-${label}.png`});
    const meta=await p.evaluate(()=>({ships:document.querySelectorAll('.lg-pitch').length,shots:document.querySelectorAll('.gun-fire').length,sprites:document.querySelectorAll('.fx-sprite').length}));
-   writeFileSync(`docs/screenshots/fx-sprites/armada-${label}-frame.json`,JSON.stringify({first,t,...meta,errors},null,2));expect(meta.ships).toBe(4);captured=true;break;
+   writeFileSync(`docs/screenshots/fx-sprites/armada-${label}-frame.json`,JSON.stringify({first,t,...meta,errors},null,2));expect(meta.ships).toBe(4);if(label==='after')expect(meta.sprites).toBeGreaterThan(4);captured=true;break;
   }
  }
  expect(captured).toBe(true);expect(errors).toEqual([]);

@@ -33,7 +33,9 @@ try{
  expect(idle.every(Number.isFinite)).toBe(true);if(!idleOnly)expect(clip.every(Number.isFinite)).toBe(true);
  const frames=await page.evaluate(()=>window.spriteFrames),gaps=frames.slice(1).map((t,i)=>t-frames[i]);
  const peak=rows=>({all:Math.max(0,...rows.map(r=>r.all)),drawing:Math.max(0,...rows.map(r=>r.drawing))});
- const result={label,viewport:{width:430,height:932,dpr:3,cpu:4},idle:{...phaseCost(trace,...idle),layers:peak([idleLayers,...layers.filter(l=>l.time>=idleWall&&(!clipWall||l.time<clipWall))].filter(Boolean))},clip:idleOnly?null:{...phaseCost(trace,...clip),frames:frames.length,worstMs:Math.max(0,...gaps),over50:gaps.filter(n=>n>50).length,layers:peak(layers.filter(l=>l.time>=clipWall))},errors};
+ const renderer=await page.locator('.fx-layer').getAttribute('data-armada-renderer');
+ if(label==='after'&&!idleOnly)expect(renderer).toBe('stickers');
+ const result={label,renderer,viewport:{width:430,height:932,dpr:3,cpu:4},idle:{...phaseCost(trace,...idle),layers:peak([idleLayers,...layers.filter(l=>l.time>=idleWall&&(!clipWall||l.time<clipWall))].filter(Boolean))},clip:idleOnly?null:{...phaseCost(trace,...clip),frames:frames.length,worstMs:Math.max(0,...gaps),over50:gaps.filter(n=>n>50).length,layers:peak(layers.filter(l=>l.time>=clipWall))},errors};
  expect(errors).toEqual([]);if(!idleOnly)expect(await page.locator('.lg-pitch').count()).toBe(0);
  writeFileSync(`docs/screenshots/fx-sprites/${label}-metrics.json`,JSON.stringify(result,null,2));writeFileSync(`tmp/fx-sprites/${label}-trace.json.gz`,gzipSync(raw));
  console.log('MEASURE_RESULT',JSON.stringify({...result,idle:{...result.idle,events:undefined},clip:result.clip?{...result.clip,events:undefined}:null}));

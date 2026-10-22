@@ -2,14 +2,20 @@
 import {A, at, type FxCtx} from './primitives';
 export interface SpriteSpec { key: string; html: string; count: number }
 interface Pool { template: HTMLElement; free: HTMLElement[]; count: number }
-interface Bank { storage: DocumentFragment; pools: Map<string,Pool>; active: Map<HTMLElement,Sprite> }
+interface Bank { storage: DocumentFragment; pools: Map<string,Pool>; active: Map<HTMLElement,Sprite>; observer: MutationObserver }
 export interface Sprite { root: HTMLElement; node: (name:string)=>HTMLElement; release: ()=>void }
 const banks = new WeakMap<HTMLElement,Bank>();
 const animations = new WeakMap<HTMLElement,Set<Animation>>();
 let uid = 0;
 function bankFor(board:HTMLElement):Bank {
  let bank=banks.get(board);
- if(!bank){bank={storage:board.ownerDocument.createDocumentFragment(),pools:new Map(),active:new Map()};banks.set(board,bank)}
+ if(!bank){
+  const observer=new MutationObserver(records=>{
+   if(records.some(r=>r.removedNodes.length))for(const s of [...banks.get(board)?.active.values()??[]])if(!s.root.isConnected)s.release();
+  });
+  bank={storage:board.ownerDocument.createDocumentFragment(),pools:new Map(),active:new Map(),observer};banks.set(board,bank);
+  board.querySelectorAll(':scope > .fx-layer, :scope > .fx-scars').forEach(host=>observer.observe(host,{childList:true}));
+ }
  return bank;
 }
 function clone(template:HTMLElement):HTMLElement {
@@ -41,6 +47,7 @@ export function takeSprite(ctx:FxCtx,key:string,host:Element=ctx.layer):Sprite {
  if(!pool||!root)throw new Error(`Unprepared/exhausted sprite: ${key}`);
  const sprite:Sprite={root,node:name=>{const el=root.querySelector<HTMLElement>(`[data-sprite-node="${name}"]`);if(!el)throw new Error(`Sprite node: ${name}`);return el},release:()=>{
   if(bank.active.get(root)!==sprite)return;
+  for(const child of root.querySelectorAll<HTMLElement>('.fx-sprite'))bank.active.get(child)?.release();
   bank.active.delete(root);
   for(const el of [root,...root.querySelectorAll<HTMLElement>('[data-sprite-node]')]){
    for(const animation of animations.get(el)??[])animation.cancel();animations.delete(el);el.removeAttribute('style');
@@ -74,4 +81,8 @@ export function spritePause(board:HTMLElement,paused:boolean):void {
 export function spritePoolStats(board:HTMLElement) {
  const bank=banks.get(board);return{types:bank?.pools.size??0,active:bank?.active.size??0,free:[...(bank?.pools.values()??[])].reduce((n,p)=>n+p.free.length,0),
   preparedNodes:bank?.storage.querySelectorAll('*').length??0,connectedPrepared:[...(bank?.pools.values()??[])].some(p=>p.template.isConnected||p.free.some(el=>el.isConnected))};
+}
+
+export function disposeSprites(board:HTMLElement):void {
+ releaseSprites(board,true);banks.get(board)?.observer.disconnect();banks.delete(board);
 }

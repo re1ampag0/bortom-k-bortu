@@ -314,3 +314,6 @@
 .fx-sprite, .fx-sprite [data-sprite-node], .fx-sprite .sprite-art { position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;pointer-events:none;will-change:auto; }
 .fx-layer > .fx-sprite { opacity:1;will-change:auto; }
 .fx-sprite svg { position:absolute;overflow:visible;pointer-events:none; }
+.sprite-recoil-light { opacity:0; }
+.fx-sprite-trace { position:absolute;left:0;top:0;width:0;height:0;opacity:1;pointer-events:none;will-change:auto; }
+.game.perf-off-light .sprite-recoil-light, .game.perf-off-filters .sprite-recoil-light { display:none; }
