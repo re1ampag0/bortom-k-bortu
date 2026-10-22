@@ -1,16 +1,16 @@
 {
   "before": {
-    "types": 5,
+    "types": 8,
     "active": 0,
-    "free": 172,
-    "preparedNodes": 3186,
+    "free": 191,
+    "preparedNodes": 3292,
     "connectedPrepared": false
   },
   "after": {
-    "types": 5,
+    "types": 8,
     "active": 0,
-    "free": 172,
-    "preparedNodes": 3186,
+    "free": 191,
+    "preparedNodes": 3292,
     "connectedPrepared": false
   },
   "delayed": "",

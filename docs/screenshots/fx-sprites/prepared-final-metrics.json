@@ -1,0 +1,33 @@
+{
+  "label": "prepared-final",
+  "renderer": null,
+  "viewport": {
+    "width": 430,
+    "height": 932,
+    "dpr": 3,
+    "cpu": 4
+  },
+  "idle": {
+    "durationMs": 2018.634,
+    "paint": {
+      "events": 0,
+      "totalMs": 0,
+      "maxEventMs": 0,
+      "maxFrameMs": 0
+    },
+    "raster": {
+      "events": 0,
+      "totalMs": 0,
+      "maxEventMs": 0,
+      "maxFrameMs": 0
+    },
+    "frameCostDefinition": "union per thread, between BeginMainThreadFrame markers; raster threads summed separately from Paint",
+    "events": [],
+    "layers": {
+      "all": 27,
+      "drawing": 21
+    }
+  },
+  "clip": null,
+  "errors": []
+}

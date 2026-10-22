@@ -16,7 +16,7 @@ import { applyVisible, displayFrom, displayRules, type Display } from './display
 import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import {prepareArmadaSprites} from './armadaSprites';
-import {releaseSprites, spritePause} from './sprites';
+import {releaseSprites, spritePause, disposeSprites} from './sprites';
 import { ABORT, flushClock, pauseClock, resumeClock, wait, type FxCtx } from './primitives';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
 import { tookPress } from '../InfoTip';
@@ -509,8 +509,9 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     };
     warm();
     const ro = new ResizeObserver(warm);ro.observe(board);
-    return () => {ro.disconnect();releaseSprites(board,true);};
+    return () => {ro.disconnect();disposeSprites(board);};
   }, [layerRef]);
+  useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!fx.busy)prepareArmadaSprites(ctx);}, [fx.busy]);
   const drawWeather = () => {
     const w = fx.weather();
     if (w.ctx && weatherRef.current) renderWeather(w.ctx, weatherRef.current, w.on);
