@@ -1,4 +1,4 @@
-import {canvasMote} from './particles';
+import {canvasCircRing,canvasMote} from './particles';
 import {perfOff} from '../perf/state';
 // The Legends: the common grand entrance of a Legend and the effect of each. FX-B (package 3): the look and the timings
 // of the A5 prototype (docs/mockups/a5/fx/src/fx3.js, ANIMATIONS.md §3.1–3.5) on the primitives of the game; the
@@ -14,6 +14,8 @@ import {perfOff} from '../perf/state';
 //  - the thin top bar of the effect ends above the top row of planks (on a phone the reference's lay 2 px on the heads);
 //  - «Кракен» takes its frame of the hit off the plank at its end (the plank keeps its node, React would not).
 import { legendCards } from '../../../engine/data';
+import {titleHTML,titleWidth} from './legendTitles';
+import {legendSprite} from './legendSprites';
 import {playLegendGlint} from './legendGlint';
 import { shipData, startValue, type GameEvent } from '../../../engine/state';
 import type { CardInstance, GameData, Track } from '../../../engine/types';
@@ -21,7 +23,7 @@ import type { ClipPlayer } from './FxLayer';
 import { flipTo } from './misc';
 import type { JackClip, LegendClip } from './planFx';
 import {
-  particleShape, A, at, badgeMark, ballFly, boom, facingY, filters, flashBoard, fxSvg, missSplash, seaTemp, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, flash, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
+  particleShape, A, at, boardW, boardH, badgeMark, ballFly, boom, facingY, filters, flashBoard, fxSvg, missSplash, seaTemp, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, flash, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
   qpts, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, sv, trackMark, visible, wait, wisp, type FxCtx, type Pt,
 } from './primitives';
 import { CELLS } from '../art/cells';
@@ -89,7 +91,7 @@ function legendMedal(ctx: FxCtx, ship: string): Element {
 function circRing(ctx: FxCtx, svg: Element, x: number, y: number, r0: number, r1: number, color: string, d: number, delay = 0, w = 2): void {
   // drawn when its time comes (a delayed ring would show its first frame before it)
   if (delay > 0) { at(ctx, delay, () => circRing(ctx, svg, x, y, r0, r1, color, d, 0, w)); return; }
-  const c = sv(svg, `<circle cx="0" cy="0" r="${R1(r1)}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`);
+  const c = canvasCircRing(ctx,svg,R1(r1),color,w) ?? sv(svg, `<circle cx="0" cy="0" r="${R1(r1)}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`);
   A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d, delay, 'cubic-bezier(.2,.7,.3,1)');
 }
 /** Gold dust and four-point sparks from a point (goldBurst of fx3.js), within the budget of the layer. */
@@ -127,8 +129,9 @@ function motes(ctx: FxCtx, n: number, x0: number, x1: number, y0: number, y1: nu
  */
 export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cost = 0, soulCost = 0, target = null }: { cost?: number; soulCost?: number; target?: string | null } = {}): Promise<() => Promise<void>> {
   const board = ctx.board, L = T.legend;
-  const W = board.clientWidth, H = board.clientHeight;
+  const W = boardW(ctx), H = boardH(ctx);
   const c = legendCard(ctx.data, code);
+  const ribbonHTML=titleHTML(c.name),ribbonWidth=titleWidth(ctx,c.name);
   // the middle of the sea between the rows of planks; the card, the seal and the ribbon fit into the board
   const rows = board.querySelectorAll(':scope .planks');
   const g = gapBox(ctx);
@@ -196,9 +199,9 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   circRing(ctx, hi, sp.x, sp.y, 10, 90 * S, '#f6d9c8', 600, tHit, 3);
   at(ctx, tHit, () => goldBurst(ctx, hi, sp.x, sp.y, 20, 20 * S, 80 * S));
   // 6. the name unfurls under the card, letter by letter; the shine and the spark run over the card
-  const ban = mk(ctx, 'lg-title', cx, Math.min(cy + 224 * S, H - 30), [...c.name.toUpperCase()].map((ch) => `<span>${ch === ' ' ? '&nbsp;' : esc(ch)}</span>`).join(''));
+  const ban = mk(ctx, 'lg-title', cx, Math.min(cy + 224 * S, H - 30), ribbonHTML);
   ban.style.zIndex = '40';
-  const bs = Math.min(S, (W - 16) / Math.max(1, ban.offsetWidth));
+  const bs = Math.min(S, (W - 16) / Math.max(1, ribbonWidth));
   A(ctx, ban, [{ transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(.1)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(1.04)`, opacity: 1, offset: 0.6 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100})`, opacity: 1 }], L.ribbon, tHit, 'cubic-bezier(.2,.8,.3,1)');
   ban.querySelectorAll('span').forEach((s, i) => A(ctx, s, [{ opacity: 0, transform: 'translateY(12px) scale(1.6)' }, { opacity: 1, transform: 'none' }], 400, tHit + i * L.letter, 'cubic-bezier(.2,1.4,.5,1)'));
   const shine = card.querySelector('.lc-shine')!, glint = card.querySelector('.lc-glint rect')!;
@@ -281,7 +284,8 @@ export const LG: Record<string, (c: LegendClip, ctx: FxCtx) => Promise<void>> = 
 LG['И-Л'] = async (c, ctx) => {
   ctx = Object.create(ctx) as typeof ctx;
   ctx.canvasParticles = true;
-  const K = T.armada, W = ctx.board.clientWidth, g = gapBox(ctx), phone = isPhone(ctx);
+  ctx.volleySprites = true;
+  const K = T.armada, W = boardW(ctx), g = gapBox(ctx), phone = isPhone(ctx);
   const n = phone ? 4 : 6;
   const k = R1(Math.min(0.86, (W / (n * 1.4)) / 120, (g.h * 0.5) / 78) * 100) / 100;
   const y = g.cy + g.h * 0.08;
@@ -396,7 +400,7 @@ function cellFly(ctx: FxCtx, icon: string, p: Pt): HTMLElement {
  * game: the target may be in the top row — then the arms hang from its lower edge (the picture mirrored).
  */
 LG['Г-Л'] = async (c, ctx) => {
-  const K = T.kraken, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = ctx.board.clientWidth, uid = ++LG_UID;
+  const K = T.kraken, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = boardW(ctx), uid = ++LG_UID;
   const v = isTop(ctx, tgt) ? -1 : 1; // 1 — the arms grow up from the top edge (a ship of the bottom row)
   const edge = v > 0 ? b.y : b.b;     // the edge of the target to the sea
   const rich = filters(ctx);
@@ -410,7 +414,7 @@ LG['Г-Л'] = async (c, ctx) => {
   A(ctx, shadow, [{ transform: `translate(${R1(b.cx - 520 * ks)}px,${R1(edge - v * 40)}px) scale(${R1(0.8 * ks * 100) / 100})` }, { transform: `translate(${R1(b.cx)}px,${R1(edge - v * 30)}px) scale(${R1(1.1 * ks * 100) / 100})` }], K.glide, 0, 'cubic-bezier(.3,.1,.3,1)');
   for (let i = 0, n = room(ctx, 46); i < n; i++) {
     const x = b.cx + rnd(-0.55, 0.55) * b.w, y = edge - v * rnd(4, 80);
-    const o = sv(deep, `<circle r="${R1(rnd(1.4, 4.6))}" fill="rgba(210,240,236,.15)" stroke="#d9f2ec" stroke-width=".9"/>`);
+    const o = particleShape(ctx, deep, `<circle r="${R1(rnd(1.4, 4.6))}" fill="rgba(210,240,236,.15)" stroke="#d9f2ec" stroke-width=".9"/>`);
     A(ctx, o, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${R1(x + rnd(-6, 6))}px,${R1(y - rnd(14, 34))}px) scale(1.1)`, opacity: 0 }], rnd(700, 1300), rnd(400, 2600));
   }
   await wait(ctx, K.eyeAt);
@@ -524,7 +528,7 @@ const bigKind = (code: string): BigShipKind => (code === 'Ж' ? 'pearl' : code =
  * «Джонс свободен» and the repair of the Crew of «Голландец» — events of the same Legend — come after.
  */
 LG['М-Л'] = async (c, ctx) => {
-  const K = T.bottle, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = ctx.board.clientWidth, g = gapBox(ctx);
+  const K = T.bottle, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = boardW(ctx), g = gapBox(ctx);
   const events = (c as LegendClip & { events?: GameEvent[] }).events ?? c.effects ?? [];
   const top = fxSvg(ctx), BS = R1(Math.min(0.82, (W - 24) / 236, g.h / 110) * 100) / 100;
   const bx0 = clamp(b.cx - 10, 100 * BS + 8, W - 130 * BS - 8), by0 = g.cy;
@@ -533,50 +537,51 @@ LG['М-Л'] = async (c, ctx) => {
   // 1. the target glows; sparks orbit it
   A(ctx, tp, [{ boxShadow: '0 0 0 0 rgba(127,240,176,0)' }, { boxShadow: '0 0 0 3px rgba(127,240,176,.9), 0 0 30px rgba(127,240,176,.7)', offset: 0.5 }, { boxShadow: '0 0 0 2px rgba(127,240,176,.6), 0 0 18px rgba(127,240,176,.5)' }], K.glow, 0, 'ease-out', 'none');
   for (let i = 0, m = room(ctx, 24); i < m; i++) {
-    const s = sv(top, `<path d="M0 -3 L.8 -.8 L3 0 L.8 .8 L0 3 L-.8 .8 L-3 0 L-.8 -.8 Z" fill="${i % 2 ? '#bfffd8' : '#ffe7a4'}"/>`);
+    const s = particleShape(ctx, top, `<path d="M0 -3 L.8 -.8 L3 0 L.8 .8 L0 3 L-.8 .8 L-3 0 L-.8 -.8 Z" fill="${i % 2 ? '#bfffd8' : '#ffe7a4'}"/>`);
     A(ctx, s, Array.from({ length: 13 }, (_, k) => { const a = (k / 12 + i / 24) * Math.PI * 2; return { transform: `translate(${R1(b.cx + Math.cos(a) * (b.w * 0.58))}px,${R1(b.cy + Math.sin(a) * (b.h * 0.7))}px)`, opacity: k === 12 ? 0 : 1 }; }), K.orbit, i * K.orbitStep, 'linear');
   }
   // 2. the bottle draws itself in glass, then fills with light, the painted sea, the glints
-  const bot = sv(top, `<g transform="translate(${R1(bx0)} ${R1(by0)}) scale(${BS})">${bottleArt()}</g>`);
+  const bot = legendSprite(ctx,top,'legend-bottle') ?? sv(top, `<g transform="translate(${R1(bx0)} ${R1(by0)}) scale(${BS})">${bottleArt()}</g>`);
+  if(bot instanceof HTMLElement)bot.style.transform=`translate(${R1(bx0)}px,${R1(by0)}px) scale(${BS})`;
   const glass = bot.querySelector<SVGPathElement>('.glass')!, L = R1(glass.getTotalLength());
   glass.style.strokeDasharray = String(L);
   A(ctx, glass, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], K.glass, K.glassAt, 'ease-in-out');
   [bot.querySelector('.gfill'), bot.querySelector('.hl'), ...bot.querySelectorAll('g[clip-path], ellipse')].forEach((e) => e && A(ctx, e, [{ opacity: 0 }, { opacity: 1 }], K.fill, K.fillAt));
   for (let i = 0, m = room(ctx, 10); i < m; i++) {
-    const gl = sv(top, '<path d="M0 -5 L1.3 -1.3 L5 0 L1.3 1.3 L0 5 L-1.3 1.3 L-5 0 L-1.3 -1.3 Z" fill="#fff"/>'), x = bx0 + rnd(-90, 100) * BS, y = by0 + rnd(-44, 44) * BS;
-    A(ctx, gl, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(0)` }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2) rotate(45deg)`, offset: 0.5 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(0) rotate(90deg)` }], K.glint, K.glintAt + i * K.glintStep);
+    const gl = particleShape(ctx, top, '<path d="M0 -5 L1.3 -1.3 L5 0 L1.3 1.3 L0 5 L-1.3 1.3 L-5 0 L-1.3 -1.3 Z" fill="#fff"/>'), x = bx0 + rnd(-90, 100) * BS, y = by0 + rnd(-44, 44) * BS;
+    A(ctx, gl, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(0) rotate(0deg)` }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2) rotate(45deg)`, offset: 0.5 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(0) rotate(90deg)` }], K.glint, K.glintAt + i * K.glintStep);
   }
   await wait(ctx, K.vortexAt);
   // 3. the vortex: the plank spirals and shrinks into the mouth; a funnel of sparks goes with it
   const dx = mouth.x - b.cx, dy = mouth.y - b.cy;
   const sucked = A(ctx, tp, Array.from({ length: 21 }, (_, k) => { const t = k / 20, sw = (1 - t) * 60 * Math.sin(t * Math.PI * 3); return { transform: `translate(${R1(dx * t + sw)}px,${R1(dy * t - sw * 0.4)}px) rotate(${R1(t * 540)}deg) scale(${R1((1 - 0.97 * Math.pow(t, 0.8)) * 1000) / 1000})`, opacity: k === 20 ? 0 : 1 }; }), K.vortex, 0, 'cubic-bezier(.5,0,.6,1)', 'forwards');
   for (let i = 0, m = room(ctx, 46); i < m; i++) {
-    const s = sv(top, `<circle r="${R1(rnd(1.2, 2.8))}" fill="${i % 2 ? '#bfffd8' : '#ffe7a4'}"/>`), r0 = rnd(80, 210), a0 = rnd(0, 6.28);
+    const s = particleShape(ctx, top, `<circle r="${R1(rnd(1.2, 2.8))}" fill="${i % 2 ? '#bfffd8' : '#ffe7a4'}"/>`), r0 = rnd(80, 210), a0 = rnd(0, 6.28);
     A(ctx, s, Array.from({ length: 11 }, (_, k) => { const t = k / 10, a = a0 + t * 9, r = r0 * (1 - t); return { transform: `translate(${R1(mouth.x + 40 * (1 - t) + Math.cos(a) * r)}px,${R1(mouth.y + Math.sin(a) * r * 0.6)}px)`, opacity: t < 0.9 ? 1 : 0 }; }), 1300, rnd(0, 400), 'ease-in');
   }
   await wait(ctx, K.miniAt);
   // 4. inside: a tiny ship rocks on the painted waves
-  const mini = sv(top, `<g><g class="lg-rock">${bigShip(bigKind(tgt), 0, 0, 0.62, false, `data-kind="${bigKind(tgt)}"`)}</g></g>`);
-  A(ctx, mini, [{ transform: `translate(${R1(mouth.x)}px,${R1(mouth.y)}px) scale(.05)`, opacity: 0 }, { transform: `translate(${R1(bx0 - 24 * BS)}px,${R1(by0 + 27 * BS)}px) scale(${BS})`, opacity: 1 }], K.mini, 0, 'cubic-bezier(.3,1.2,.6,1)');
-  if (ctx.rich) A(ctx, mini.querySelector('.lg-rock')!, Array.from({ length: 9 }, (_, j) => ({ transform: `rotate(${j % 2 ? 3 : -3}deg)` })), 4 * 1400, 0, 'ease-in-out', 'none');
+  const mini = legendSprite(ctx,top,`legend-mini-${bigKind(tgt)}`) ?? sv(top, `<g><g class="lg-rock">${bigShip(bigKind(tgt), 0, 0, 0.62, false, `data-kind="${bigKind(tgt)}"`)}</g></g>`);
+  armadaA(ctx, mini, [{ transform: `translate(${R1(mouth.x)}px,${R1(mouth.y)}px) scale(.05)`, opacity: 0 }, { transform: `translate(${R1(bx0 - 24 * BS)}px,${R1(by0 + 27 * BS)}px) scale(${BS})`, opacity: 1 }], K.mini, 0, 'cubic-bezier(.3,1.2,.6,1)');
+  if (ctx.rich) armadaA(ctx, mini.querySelector('.lg-rock')!, Array.from({ length: 9 }, (_, j) => ({ transform: `rotate(${j % 2 ? 3 : -3}deg)` })), 4 * 1400, 0, 'ease-in-out', 'none');
   goldBurst(ctx, top, mouth.x, mouth.y, 24, 10, 70); circRing(ctx, top, mouth.x, mouth.y, 4, 40, '#bfffd8', 500, 0, 2);
   await wait(ctx, K.corkAt);
   // 5. the cork flies from the medallion of the owner, spinning, and pops into the mouth
   const rb = bx(ctx, legendMedal(ctx, c.seat)), cx = bx0 + 118 * BS;
-  const cork = sv(top, CORK);
-  A(ctx, cork, qpts(rb.cx, rb.cy, (rb.cx + cx) / 2 + 60, Math.min(rb.cy, by0) - 150, cx + 14, by0, 20).map((p, k) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px) rotate(${k * 36}deg) scale(${R1(BS * (0.6 + k / 50) * 100) / 100})` })), K.cork, 0, 'cubic-bezier(.4,0,.7,1)');
+  const cork = legendSprite(ctx,top,'legend-cork') ?? sv(top, CORK);
+  armadaA(ctx, cork, qpts(rb.cx, rb.cy, (rb.cx + cx) / 2 + 60, Math.min(rb.cy, by0) - 150, cx + 14, by0, 20).map((p, k) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px) rotate(${k * 36}deg) scale(${R1(BS * (0.6 + k / 50) * 100) / 100})` })), K.cork, 0, 'cubic-bezier(.4,0,.7,1)');
   await wait(ctx, K.cork);
-  A(ctx, cork, [{ transform: `translate(${R1(cx + 14)}px,${R1(by0)}px) scale(${BS})` }, { transform: `translate(${R1(cx - 3)}px,${R1(by0)}px) scale(${R1(BS * 1.08 * 100) / 100},${R1(BS * 0.9 * 100) / 100})`, offset: 0.5 }, { transform: `translate(${R1(cx)}px,${R1(by0)}px) scale(${BS})` }], K.pop, 0, 'cubic-bezier(.6,0,.4,1)');
+  armadaA(ctx, cork, [{ transform: `translate(${R1(cx + 14)}px,${R1(by0)}px) scale(${BS})` }, { transform: `translate(${R1(cx - 3)}px,${R1(by0)}px) scale(${R1(BS * 1.08 * 100) / 100},${R1(BS * 0.9 * 100) / 100})`, offset: 0.5 }, { transform: `translate(${R1(cx)}px,${R1(by0)}px) scale(${BS})` }], K.pop, 0, 'cubic-bezier(.6,0,.4,1)');
   await wait(ctx, K.popAt);
   const pop = mk(ctx, 'lg-pop', cx + 30, by0 - 54, 'чпок!');
   A(ctx, pop, [{ transform: 'scale(.3) rotate(-14deg)', opacity: 0 }, { transform: 'scale(1.15) rotate(-8deg)', opacity: 1, offset: 0.25 }, { transform: 'scale(1) rotate(-8deg)', opacity: 1, offset: 0.8 }, { transform: 'translateY(-14px) scale(1) rotate(-8deg)', opacity: 0 }], K.word);
   circRing(ctx, top, cx, by0, 6, 80, '#fff6d8', 500, 0, 4); goldBurst(ctx, top, cx, by0, 30, 10, 90); flashBoard(ctx, '#ffffff', 0.18, 260);
   await wait(ctx, K.dropAt);
   // 6. the bottle lifts a little and drops onto the sea with a splash
-  const all = sv(top, '<g/>');
+  const all = bot instanceof HTMLElement && mini instanceof HTMLElement && cork instanceof HTMLElement ? legendSprite(ctx,top,'legend-drop')! : sv(top, '<g/>');
   [bot, mini, cork].forEach((e) => all.appendChild(e));
   (all as SVGElement).style.transformOrigin = `${R1(bx0)}px ${R1(by0)}px`;
-  A(ctx, all, [{ transform: 'translate(0,0) rotate(0) scale(1)' }, { transform: 'translate(0,-34px) rotate(-6deg) scale(1.04)', offset: 0.45 }, { transform: 'translate(0,6px) rotate(3deg) scale(.72)' }], K.drop, 0, 'cubic-bezier(.4,0,.6,1)');
+  armadaA(ctx, all, [{ transform: 'translate(0,0) rotate(0) scale(1)' }, { transform: 'translate(0,-34px) rotate(-6deg) scale(1.04)', offset: 0.45 }, { transform: 'translate(0,6px) rotate(3deg) scale(.72)' }], K.drop, 0, 'cubic-bezier(.4,0,.6,1)');
   await wait(ctx, K.splashAt);
   waterColumn(ctx, top, bx0 - 50 * BS, by0 + 30 * BS, 40); waterColumn(ctx, top, bx0 + 50 * BS, by0 + 30 * BS, 34);
   for (let i = 0; i < 3; i++) circRing(ctx, top, bx0, by0 + 24 * BS, 10, (120 - i * 26) * BS, '#eef6f8', 1000, i * 150, 2);
@@ -593,7 +598,7 @@ LG['М-Л'] = async (c, ctx) => {
     keep.innerHTML += `<g transform="translate(${R1(bx0)} ${R1(by0 + 4)})"><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(110 * k2)}" ry="7" fill="#0b2a36" opacity=".28"/><g>${rock ? '<animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.6s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 3;0 0" dur="2.6s" additive="sum" repeatCount="indefinite"/>' : ''}<g transform="scale(${k2})">${bottleArt({ ship: true, cork: true, kind: bigKind(tgt) })}</g></g><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(120 * k2)}" ry="6" fill="none" stroke="#e6f2f4" stroke-width="1.4" opacity=".7">${rock ? `<animate attributeName="rx" values="${R1(110 * k2)};${R1(140 * k2)};${R1(110 * k2)}" dur="2.6s" repeatCount="indefinite"/>` : ''}</ellipse></g>`;
     A(ctx, keep, [{ opacity: 0 }, { opacity: 1 }], 300, 0, 'ease-out', 'none');
   }
-  A(ctx, all, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-out', 'forwards');
+  armadaA(ctx, all, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-out', 'forwards');
   let tEnd = K.end;
   // «Джонс свободен» and the repair of the Crew of «Голландец» — events of the same Legend
   const jf = (c.effects || []).find((e) => e.type === 'jonesFree');
@@ -628,7 +633,7 @@ export async function legendGeneric(c: LegendClip, ctx: FxCtx): Promise<void> {
 }
 
 const playLegend = async (c: LegendClip, ctx: FxCtx) => {
-  if(c.card === 'И-Л'){ctx=Object.create(ctx) as typeof ctx;ctx.canvasParticles=true;}
+  ctx=Object.create(ctx) as typeof ctx;ctx.canvasParticles=true;ctx.legendParticles=true;ctx.svgParticleOpacity=c.card!=='И-Л';
   const outro = await legendIntro(ctx, c.card, c.seat, { cost: c.cost, soulCost: c.soulCost, target: c.target });
   await (LG[c.card] || legendGeneric)(c, ctx);
   await outro();
@@ -644,6 +649,7 @@ const playLegend = async (c: LegendClip, ctx: FxCtx) => {
  * of the events); the Hull 2 shines, coins scatter. game: the Hull and the places are those of the events of the clip.
  */
 const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
+  ctx=Object.create(ctx) as typeof ctx;ctx.canvasParticles=true;ctx.legendParticles=true;ctx.svgParticleOpacity=true;
   const K = T.jack, code = `${c.ship}-Л`, el = plank(ctx, c.ship), b = bx(ctx, el), uid = ++LG_UID;
   const hi = fxSvg(ctx);
   // 1. she should sink: the last boards break, the water rises over the plank, she lists
@@ -660,7 +666,7 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
   A(ctx, water, [{ height: '0%' }, { height: '72%' }], K.sink, 0, 'ease-in', 'forwards');
   const list = A(ctx, el, [{ translate: '0 0', rotate: '0deg' }, { translate: '0 8px', rotate: '1.8deg' }], K.sink, 0, 'ease-in', 'forwards');
   for (let i = 0, m = room(ctx, 18); i < m; i++) {
-    const x = b.x + rnd(10, b.w - 10), o = sv(hi, `<circle r="${R1(rnd(2, 4))}" fill="none" stroke="#dff4f8" stroke-width="1"/>`);
+    const x = b.x + rnd(10, b.w - 10), o = particleShape(ctx, hi, `<circle r="${R1(rnd(2, 4))}" fill="none" stroke="#dff4f8" stroke-width="1"/>`);
     A(ctx, o, [{ transform: `translate(${R1(x)}px,${R1(b.b)}px)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${R1(x)}px,${R1(b.y + rnd(0, 40))}px)`, opacity: 0 }], rnd(800, 1300), rnd(0, 1100));
   }
   hint(ctx, `${nick(ctx, c.ship)} тонет…`);
@@ -741,7 +747,7 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
   setTrack(ctx, c.ship, 'hull', 0); // the table may already show the Hull 2 (drawn with the events): it lights up anew
   setTrack(ctx, c.ship, 'hull', hullNew, '#e0b44c');
   for (let i = 0, m = room(ctx, 18); i < m; i++) {
-    const coin = sv(hi, '<g><ellipse rx="5" ry="2.2" fill="#9a7020"/><ellipse rx="5" ry="2.2" cy="-1" fill="#f2c94c" stroke="#8a6420" stroke-width=".5"/></g>'), a = rnd(-Math.PI, 0), rr = rnd(40, 120);
+    const coin = particleShape(ctx, hi, '<g><ellipse rx="5" ry="2.2" fill="#9a7020"/><ellipse rx="5" ry="2.2" cy="-1" fill="#f2c94c" stroke="#8a6420" stroke-width=".5"/></g>'), a = rnd(-Math.PI, 0), rr = rnd(40, 120);
     A(ctx, coin, [{ transform: `translate(${R1(nb.cx)}px,${R1(nb.y)}px) rotate(0deg)` }, { transform: `translate(${R1(nb.cx + Math.cos(a) * rr)}px,${R1(nb.y + Math.sin(a) * rr)}px) rotate(${R1(rnd(-400, 400))}deg)`, offset: 0.5 }, { transform: `translate(${R1(nb.cx + Math.cos(a) * rr * 1.3)}px,${R1(nb.y + 30)}px) rotate(${R1(rnd(-800, 800))}deg)`, opacity: 0 }], rnd(900, 1300), 0, 'cubic-bezier(.2,.6,.6,1)');
   }
   trackMark(ctx, c.ship, 'hull', hullNew, 200, true); // game (S1): a mark, not a pill

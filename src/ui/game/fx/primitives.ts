@@ -27,6 +27,8 @@ export interface FxCtx {
   board: HTMLElement;
   /** Explicit opt-in: only Volley, Armada, sinking and fire producers. */
   canvasParticles?: boolean;
+  legendParticles?: boolean;
+  svgParticleOpacity?: boolean;
   /** Only Volley/Counter opt into prepared object wrappers. */
   volleySprites?: boolean;
   /** .fx-layer, the last child of the board: effects are added here. */
