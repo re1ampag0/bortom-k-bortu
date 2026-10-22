@@ -143,6 +143,8 @@ export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: n
   const frames = phone || perfOff('filters') ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
   if ((perfOff('planks') && el.closest('.plank')) || (perfOff('labels') && el.closest('.flyc,.seacard,.plate,.tag,.pill,.wait-pill,.tmark,.hold-tag'))) return el.animate([], {duration: 0});
   const animation = el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
+  if (animation) trackBudgetAnimation(ctx, el, animation);
+  if (frames.some(f => f.transform !== undefined) && el.matches?.('[data-fx-ship], .hcard, [data-fx-hand]')) invalidateGeometry(ctx.board);
   if (ctx.canvasParticles) rememberParticleHost(el, animation, frames, easing);
   // These single-use decorations have already become invisible. Freeze opacity before cancelling
   // their forwards fill, so an SVG's normally-visible base style can never flash at the origin.
@@ -156,9 +158,10 @@ export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: n
       // An earlier forwards entrance may still override the inline opacity after the exit
       // is cancelled (the veil has both). Retire every own animation, and descendants of
       // the finished title/card/seal, so that no underlying fill can make them visible again.
-      for (const child of el.getAnimations({subtree:el.matches('.lg-title,.lg-card,.lg-seal')})) {
-        if (!(child instanceof CSSAnimation) && !(child instanceof CSSTransition)) child.cancel();
-      }
+      const targets = el.matches('.lg-title,.lg-card,.lg-seal') ? [el,...el.querySelectorAll('*')] : [el];
+      // These are precisely the WAAPI handles created by A, including finished forwards
+      // entrances. No subtree getAnimations/style flush for each finished spark/flash.
+      for (const target of targets) for (const own of elementAnimations.get(target) ?? []) if (own.playState !== 'idle') own.cancel();
     }, () => {});
   }
   // An opacity-zero plate can otherwise leave its explicitly interactive card links over the table.
@@ -171,10 +174,26 @@ export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: n
   }
   return animation;
 }
+interface GeometryStep { board: DOMRect; k: number; boxes: WeakMap<Element, Box> }
+const geometrySteps = new WeakMap<HTMLElement, GeometryStep>();
+/** A render/FLIP can change anchor positions inside the same synchronous clip step. */
+export function invalidateGeometry(board: HTMLElement): void { geometrySteps.delete(board); }
 export function bx(ctx: FxCtx, el: Element): Box {
-  // in the px of the stage (stage.ts): the effects are put inside the scaled screen
-  const r = el.getBoundingClientRect(), b = ctx.board.getBoundingClientRect(), k = stageK();
-  return { x: (r.left - b.left) / k, y: (r.top - b.top) / k, w: r.width / k, h: r.height / k, cx: (r.left - b.left + r.width / 2) / k, cy: (r.top - b.top + r.height / 2) / k, r: (r.right - b.left) / k, b: (r.bottom - b.top) / k };
+  let step = geometrySteps.get(ctx.board);
+  if (!step) {
+    step = {board: ctx.board.getBoundingClientRect(), k: stageK(), boxes: new WeakMap()};
+    geometrySteps.set(ctx.board, step);
+    const current = step;
+    queueMicrotask(() => { if (geometrySteps.get(ctx.board) === current) geometrySteps.delete(ctx.board); });
+  }
+  // Cache only stable table anchors. Newly written labels/effects still measure their actual size.
+  const anchor = el.matches('[data-fx-ship], [data-fx-track], [data-fx-value], [data-fx-hold], [data-fx-gap], .cells i, .bar');
+  const cached = anchor && step.boxes.get(el);
+  if (cached) return cached;
+  const r = el.getBoundingClientRect(), b = step.board, k = step.k;
+  const box = {x:(r.left-b.left)/k,y:(r.top-b.top)/k,w:r.width/k,h:r.height/k,cx:(r.left-b.left+r.width/2)/k,cy:(r.top-b.top+r.height/2)/k,r:(r.right-b.left)/k,b:(r.bottom-b.top)/k};
+  if (anchor) step.boxes.set(el,box);
+  return box;
 }
 export function particleHTML(ctx: FxCtx,cls: string): HTMLElement | ParticleTarget {
   return canvasHTML(ctx,cls) ?? mk(ctx,cls,0,0);
@@ -360,7 +379,7 @@ export function whirlpool(ctx: FxCtx, x: number, y: number, delay: number, size 
   w.style.height = size * 0.55 + 'px';
   w.style.margin = `-${size * 0.275}px 0 0 -${size / 2}px`;
   A(ctx, w, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.2)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1)` }], 500, delay, 'ease-out', 'forwards');
-  if (ctx.rich) w.querySelector('svg')!.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(-360deg)' }], { duration: ms(ctx, 1800), iterations: dur ? Math.ceil(dur / 1800) : 6, delay: ms(ctx, delay) });
+  if (ctx.rich) { const target=w.querySelector('svg')!; const animation=target.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(-360deg)' }], { duration: ms(ctx, 1800), iterations: dur ? Math.ceil(dur / 1800) : 6, delay: ms(ctx, delay) }); trackBudgetAnimation(ctx,target,animation); }
   return w;
 }
 export function wisp(ctx: FxCtx, from: Pt, to: Pt, delay: number, d = 800): void {
@@ -613,6 +632,26 @@ export const filters = (ctx: FxCtx) => ctx.rich && !ctx.board.ownerDocument.defa
  *  every effect draws whatever the budget — a flash, a ball). */
 export const FX_BUDGET = 190;
 const budgetExempt = new WeakSet<Animation>();
+interface Budget { animations: Map<Animation, Element>; seeded: WeakSet<FxCtx> }
+const budgets = new WeakMap<HTMLElement, Budget>();
+const elementAnimations = new WeakMap<Element, Set<Animation>>();
+function budgetFor(ctx: FxCtx): Budget {
+  let bank = budgets.get(ctx.board);
+  if (!bank) { bank = {animations:new Map(),seeded:new WeakSet()}; budgets.set(ctx.board,bank); }
+  return bank;
+}
+function trackBudgetAnimation(ctx: FxCtx, target: Element, animation: Animation): void {
+  // A is also used by effects outside the canvas scope. Keep its native handles so that
+  // an overlapping trace participates without another subtree traversal at every emission.
+  const own = elementAnimations.get(target) ?? new Set<Animation>();
+  for (const previous of own) if (previous.playState === 'idle') own.delete(previous);
+  own.add(animation);
+  elementAnimations.set(target,own);
+  const bank = budgetFor(ctx);
+  bank.animations.set(animation,target);
+  void animation.finished.then(() => bank.animations.delete(animation), () => bank.animations.delete(animation));
+}
+
 /** This replaces brightness on an existing animation without taking another particle slot. */
 export function ignoreFxBudget(animation:Animation):void { budgetExempt.add(animation); }
 /** How many of `want` particles still fit into the budget (none with «простые спецэффекты»). */
@@ -621,7 +660,23 @@ export function room(ctx: FxCtx, want: number): number {
   const scars = ctx.board.querySelector('.fx-scars');
   // the animations that run (or wait for their delay): a finished one only holds its last frame
   const running = (el: Element) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && !budgetExempt.has(a)).length;
-  const busy = running(ctx.layer) + (scars ? running(scars) : 0) + particleCount(ctx.board);
+  let native = 0;
+  if (ctx.canvasParticles) {
+    const bank = budgetFor(ctx);
+    // Import CSS/direct WAAPI already present once per clip, rather than once per particle burst.
+    if (!bank.seeded.has(ctx)) {
+      bank.seeded.add(ctx);
+      for (const root of [ctx.layer, scars]) if (root) for (const a of root.getAnimations({subtree:true})) {
+        const target = (a.effect as KeyframeEffect | null)?.target;
+        if (target) bank.animations.set(a,target);
+      }
+    }
+    for (const [a,target] of bank.animations) {
+      if (!target.isConnected || a.playState === 'finished' || a.playState === 'idle') { bank.animations.delete(a); continue; }
+      if (a.playState === 'running' && !budgetExempt.has(a) && (ctx.layer.contains(target) || scars?.contains(target))) native++;
+    }
+  } else native = running(ctx.layer) + (scars ? running(scars) : 0);
+  const busy = native + particleCount(ctx.board);
   const n = Math.max(0, Math.min(want, FX_BUDGET - busy));
   return isPhone(ctx) ? Math.ceil(n / 2) : n;
 }

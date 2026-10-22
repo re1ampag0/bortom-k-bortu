@@ -1,4 +1,5 @@
 import {prepareParticles, clearParticles, disposeParticles} from './particles';
+import {createFxHint, type FxHintStore} from './hintStore';
 import {getPerf} from '../perf/state';
 // The animation layer on the table and its queue: the port of play / finish / skip / afterRender / keepSet of
 // docs/mockups/anim/level1/page.js (PORTING.md, section 4). The planks are drawn from the displayed state D: it lags
@@ -18,10 +19,10 @@ import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import {prepareArmadaSprites} from './armadaSprites';
 import {releaseSprites, spritePause, disposeSprites} from './sprites';
-import { ABORT, particleDefs, flushClock, pauseClock, resumeClock, wait, type FxCtx } from './primitives';
+import { ABORT, invalidateGeometry, particleDefs, flushClock, pauseClock, resumeClock, wait, type FxCtx } from './primitives';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
 import { tookPress } from '../InfoTip';
-import { trace } from './trace';
+import { trace, batchTrace } from './trace';
 import { loadSettings } from '../../storage';
 import { PLAY_LEGENDS } from './legends';
 import { dropPlates, setScarClock } from './scars';
@@ -76,7 +77,7 @@ export interface FxQueue {
   /** Grows each time D changes: the parts the effects touched are built again (React keys). */
   gen: number;
   /** The line of the status bar while a clip plays. */
-  hint: string | null;
+  hintStore: FxHintStore;
   /** Flags of statuses by ship whose clip has not played yet: the chips wait hidden (pendingFlags). */
   hidden: Record<string, string[]>;
   /** The log lines of this action and the later ones wait for their clips (logHiddenFrom); null — none waits. */
@@ -156,10 +157,13 @@ export function useFxQueue({
   const preview = useRef<Display | null>(null);
   const RUN = useRef(0);
   const running = useRef(false);
+  const traceBatches = useRef(new Map<number, () => void>());
+  useEffect(() => () => { traceBatches.current.forEach(end => end()); traceBatches.current.clear(); }, []);
   /** The clip on screen, for the journal of the layer (⚙ → «Журнал анимаций»). */
   const playing = useRef<string | null>(null);
   const [gen, setGen] = useState(0);
-  const [hint, setHint] = useState<string | null>(null);
+  const [hintStore] = useState(createFxHint);
+  const setHint = hintStore.set;
   const [busy, setBusy] = useState(false);
   const layerRef = useRef<HTMLDivElement>(null);
   const weatherRef = useRef<HTMLDivElement>(null);
@@ -173,7 +177,7 @@ export function useFxQueue({
   const wake = () => waiters.current.splice(0).forEach((w) => w());
   useEffect(wake, [hold, paused]);
   // «Пауза» of P4 stops the clip in the middle: its timers (at, wait) and its animations on the board stand still (the
-  // weather and the CSS animations go on); «Дальше» goes on from there. The traces wait by the scar clock above.
+  // background weather and plank CSS go on); «Дальше» goes on from there. The traces wait by the scar clock above.
   const frozen = useRef<Animation[]>([]);
   const freezeShow = useCallback(() => {
     const held = live.current.hold || live.current.paused || document.hidden;
@@ -188,8 +192,11 @@ export function useFxQueue({
     const board = layerRef.current?.parentElement, weather = weatherRef.current;
     if (!board) return;
     for (const a of board.getAnimations({ subtree: true })) {
-      if (a instanceof CSSAnimation || a instanceof CSSTransition || a.playState !== 'running') continue;
+      if (a.playState !== 'running') continue;
       const target = (a.effect as KeyframeEffect | null)?.target;
+      // The animated sea-card face belongs to this clip too. Its rain/cloud/lightning
+      // use CSS; only CSS outside the clip layer (quiet weather/planks) keeps going.
+      if ((a instanceof CSSAnimation || a instanceof CSSTransition) && (!target || !layerRef.current?.contains(target))) continue;
       if (weather && target && weather.contains(target)) continue;
       a.pause();
       frozen.current.push(a);
@@ -201,7 +208,11 @@ export function useFxQueue({
     return () => document.removeEventListener('visibilitychange', freezeShow);
   }, [freezeShow]);
 
-  const bump = () => setGen((g) => g + 1);
+  const bump = () => {
+    const board = layerRef.current?.parentElement;
+    if (board) invalidateGeometry(board);
+    setGen((g) => g + 1);
+  };
   const makeCtx = (run: number, display?: Display): FxCtx | null => {
     const layer = layerRef.current;
     const board = layer?.parentElement;
@@ -229,6 +240,7 @@ export function useFxQueue({
         for (const e of evs) applyVisible(p, e, rules);
         preview.current = p;
         flushSync(bump);
+        invalidateGeometry(board);
       },
     };
   };
@@ -315,6 +327,8 @@ export function useFxQueue({
     base.current = displayFrom(live.current.view);
     running.current = false;
     resetFx();
+    traceBatches.current.forEach(end => end());
+    traceBatches.current.clear();
     setHint(null);
     setBusy(false);
     bump();
@@ -328,6 +342,8 @@ export function useFxQueue({
     setBusy(true);
     if (!D.current) D.current = structuredClone(base.current!);
     bump();
+    const endTraceBatch = batchTrace();
+    traceBatches.current.set(run, endTraceBatch);
     try {
       while (queue.current.length > 0) {
         await gate(run);
@@ -392,7 +408,7 @@ export function useFxQueue({
         trace(`✗ очередь: ${e instanceof Error ? e.message : String(e)}`);
         if (run === RUN.current) finish('ошибка очереди');
       }
-    }
+    } finally { endTraceBatch(); traceBatches.current.delete(run); }
   };
 
   // New actions: each is fed to the planner and queued. A layout effect: D is set before the
@@ -492,7 +508,7 @@ export function useFxQueue({
     if (running.current) finish('нажатие по столу');
   }, [finish]);
 
-  return { display: D.current ? preview.current ?? D.current : null, gen, hint: D.current ? hint : null, hidden: D.current ? pendingFlags(queue.current) : {}, logFrom: D.current ? logHiddenFrom(queue.current) : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current),
+  return { display: D.current ? preview.current ?? D.current : null, gen, hintStore, hidden: D.current ? pendingFlags(queue.current) : {}, logFrom: D.current ? logHiddenFrom(queue.current) : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current),
     // game: the weather is off (empty) with prefers-reduced-motion and at «мгновенно»; FX-C: in «простые спецэффекты»
     // it stands still (ctx.rich = false).
     weather: () => ({ ctx: makeCtx(RUN.current, preview.current ?? D.current ?? displayFrom(live.current.view)), on: live.current.enabled }) };

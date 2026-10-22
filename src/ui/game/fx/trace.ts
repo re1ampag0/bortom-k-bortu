@@ -4,6 +4,19 @@
 const KEY = 'bortom-fx-trace';
 const MAX = 60;
 let lines: string[] | null = null;
+let batches = 0, dirty = false;
+function flush(): void {
+  if (!dirty) return;
+  dirty = false;
+  try { window.localStorage.setItem(KEY, JSON.stringify(lines)); } catch { /* optional journal */ }
+}
+/** Memory stays current for the journal; synchronous storage waits until the last show ends. */
+export function batchTrace(): () => void {
+  batches++;
+  let ended = false;
+  return () => { if (ended) return; ended = true; if (--batches === 0) flush(); };
+}
+if (typeof window !== 'undefined') window.addEventListener('pagehide', flush);
 
 function stored(): string[] {
   try {
@@ -21,11 +34,8 @@ export function trace(text: string): void {
   const hms = [now.getHours(), now.getMinutes(), now.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':');
   lines.unshift(`${hms} ${text}`);
   if (lines.length > MAX) lines.length = MAX;
-  try {
-    window.localStorage.setItem(KEY, JSON.stringify(lines));
-  } catch {
-    // the journal is a help, the game goes on without it
-  }
+  dirty = true;
+  if (!batches) flush();
 }
 
 export function loadTrace(): string[] {
@@ -35,6 +45,7 @@ export function loadTrace(): string[] {
 
 export function clearTrace(): void {
   lines = [];
+  dirty = false;
   try {
     window.localStorage.removeItem(KEY);
   } catch {

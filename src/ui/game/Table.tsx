@@ -4,6 +4,7 @@ import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type S
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
 import { deckCards } from '../../engine/data';
+import {noFxHint, type FxHintStore} from './fx/hintStore';
 import { InfoTip } from './InfoTip';
 import { plainText, roman, SIDE_LABEL } from './text';
 import { reducedMotion } from '../start/motion';
@@ -135,6 +136,7 @@ export function StatusBar({
   s,
   data,
   instruction,
+  fxHint = noFxHint,
   waiting,
   onSea,
   extra,
@@ -145,6 +147,7 @@ export function StatusBar({
   s: GameState;
   data: GameData;
   instruction: string;
+  fxHint?: FxHintStore;
   waiting: boolean;
   onSea: () => void;
   /** The buttons of the row («Журнал», «Правила», «Настройки») when they stand in it, not over the log. */
@@ -157,6 +160,8 @@ export function StatusBar({
   alarm?: ReactNode;
 }) {
   const phone = usePhoneLayout();
+  const clipHint = useSyncExternalStore(fxHint.subscribe, fxHint.getSnapshot, () => null);
+  const alarmNow = clipHint ? undefined : alarm;
   return (
     <header className="status" data-testid="status">
       <div className="status-turn">
@@ -171,8 +176,8 @@ export function StatusBar({
         </span>
       </div>
       {hold}
-      <div className={`status-text ${waiting ? 'waiting' : ''} ${alarm ? 'alarm' : ''}`} data-testid="instruction" data-fx-instruction>
-        {alarm ?? instruction}
+      <div className={`status-text ${waiting ? 'waiting' : ''} ${alarmNow ? 'alarm' : ''}`} data-testid="instruction" data-fx-instruction>
+        {alarmNow ?? clipHint ?? instruction}
       </div>
       {(chip || extra) && (
         <div className="status-tools">
