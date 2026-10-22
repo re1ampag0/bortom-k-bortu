@@ -492,6 +492,39 @@
     height: 15px;
   }
   /* ui-5: «Погружение» — its picture instead of «Нырок»; a Soul — its picture and «→ Корп» */
+  /* fx-smooth-a: every button of a phone row keeps the icon of the laptop before its short label; the icon grows with the
+     height of the button (--cmd-h), the press zone stays 44 px */
+  .plank-buttons {
+    --cmd-h: 34px;
+  }
+  .plank-buttons.n3plus .btn:not(.pic) .cmd-short {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  /* with its icon the label does not fit a third of the row — the button is as wide as they are (not narrower than a third) */
+  .plank-buttons.n3plus > .btn.cmd:not(.pic) {
+    flex: 1 0 auto;
+    min-width: calc((100% - 8px) / 3);
+    padding-inline: 6px;
+  }
+  /* with the icons the buttons are wider than a third: a row resting only at the starts of its buttons sprang back from a
+     button scrolled to and left it half hidden — the row of a phone comes to rest where the finger leaves it */
+  .plank-buttons.n3plus {
+    scroll-snap-type: none;
+  }
+  .plank-buttons .short-icon {
+    display: inline-flex;
+    flex: none;
+  }
+  .plank-buttons .short-icon svg {
+    display: block;
+    width: auto;
+    height: calc(var(--cmd-h) * 0.4);
+    max-width: calc(var(--cmd-h) * 0.6);
+  }
   .plank-buttons.n3plus .btn.pic .cmd-short {
     display: inline-flex;
     align-items: center;
@@ -519,7 +552,7 @@
     width: 9px;
     height: 12px;
   }
-  /* two buttons: the first as wide as its words, the second takes the rest; the first loses its icon (A5Phone «act.two») */
+  /* two buttons: the first as wide as its words, the second takes the rest; both keep their icons (fx-smooth-a; A5Phone «act.two» dropped the first one) */
   .plank-buttons.n2 > .btn.cmd {
     font-size: 11px;
     letter-spacing: -0.02em;
@@ -531,9 +564,6 @@
   }
   .plank-buttons.n2 .btn.cmd .cost {
     padding-left: 3px;
-  }
-  .plank-buttons.n2 > .btn.cmd:first-child .cmd-icon {
-    display: none;
   }
   .plank-buttons.n2 .cmd-in {
     gap: 3px;
