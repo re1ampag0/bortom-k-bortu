@@ -1,0 +1,16 @@
+{
+  "label": "after",
+  "lamp": {
+    "x": 384.703125,
+    "y": 62.1875,
+    "width": 37.28125,
+    "height": 44
+  },
+  "errors": [],
+  "light": {
+    "pointer": "none",
+    "filter": "none",
+    "blend": "normal"
+  },
+  "pauseAndPerf": true
+}
