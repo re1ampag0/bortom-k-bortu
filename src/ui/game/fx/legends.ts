@@ -14,6 +14,7 @@ import {perfOff} from '../perf/state';
 //  - the thin top bar of the effect ends above the top row of planks (on a phone the reference's lay 2 px on the heads);
 //  - «Кракен» takes its frame of the hit off the plank at its end (the plank keeps its node, React would not).
 import { legendCards } from '../../../engine/data';
+import {playLegendGlint} from './legendGlint';
 import { shipData, startValue, type GameEvent } from '../../../engine/state';
 import type { CardInstance, GameData, Track } from '../../../engine/types';
 import type { ClipPlayer } from './FxLayer';
@@ -202,7 +203,8 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   ban.querySelectorAll('span').forEach((s, i) => A(ctx, s, [{ opacity: 0, transform: 'translateY(12px) scale(1.6)' }, { opacity: 1, transform: 'none' }], 400, tHit + i * L.letter, 'cubic-bezier(.2,1.4,.5,1)'));
   const shine = card.querySelector('.lc-shine')!, glint = card.querySelector('.lc-glint rect')!;
   for (let k = 0; k * 1600 < L.hold; k++) A(ctx, shine, [{ transform: 'translateX(-120%)' }, { transform: 'translateX(120%)' }], 960, tHit + 100 + k * 1600, 'ease-in-out', 'none');
-  A(ctx, glint, [{ strokeDashoffset: 0, opacity: 1 }, { strokeDashoffset: -1216 * (L.hold / 2200), opacity: 1 }], L.hold, tHit, 'linear', 'none');
+  if(playLegendGlint(ctx,card.querySelector<HTMLElement>('.lc-face')!,L.hold,tHit))glint.parentElement!.remove();
+  else A(ctx, glint, [{ strokeDashoffset: 0, opacity: 1 }, { strokeDashoffset: -1216 * (L.hold / 2200), opacity: 1 }], L.hold, tHit, 'linear', 'none');
   // 7. the card collapses into a golden orb that flies to the target
   A(ctx, ban, [{ opacity: 1 }, { opacity: 0 }], L.fade, tOut, 'ease-in', 'forwards');
   A(ctx, seal, [{ opacity: 1, transform: `translate(-50%,-50%) scale(${R1(S * 100) / 100})` }, { opacity: 0, transform: `translate(-50%,-50%) scale(${R1(0.4 * S * 100) / 100})` }], L.fade, tOut, 'ease-in', 'forwards');
