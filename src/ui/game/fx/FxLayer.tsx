@@ -18,6 +18,7 @@ import { speedFactor } from '../text';
 import { applyVisible, displayFrom, displayRules, type Display } from './display';
 import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
+import {prepareTitleWidths,invalidateTitleWidths} from './legendTitles';
 import {prepareArmadaSprites} from './armadaSprites';
 import {releaseSprites, spritePause, disposeSprites} from './sprites';
 import { ABORT, invalidateGeometry, particleDefs, flushClock, pauseClock, resumeClock, wait, type FxCtx } from './primitives';
@@ -598,13 +599,23 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     if (!board) return;
     const warm = () => {
       const ctx = fx.ctx();
-      if (ctx && !board.closest('.game[data-fx-busy]')) { prepareArmadaSprites(ctx); prepareParticles(board, innerWidth>700?particleDefs(true):undefined); }
+      if (ctx && !board.closest('.game[data-fx-busy]')) { prepareTitleWidths(ctx); prepareArmadaSprites(ctx); prepareParticles(board, innerWidth>700?particleDefs(true):undefined); }
     };
     warm();
-    const ro = new ResizeObserver(warm);ro.observe(board);
-    return () => {ro.disconnect();disposeParticles(board);disposeSprites(board);};
+    let alive=true;
+    const refresh=()=>{if(!alive)return;invalidateGeometry(board);invalidateTitleWidths(board);warm();};
+    const ro = new ResizeObserver(refresh);ro.observe(board);
+    window.addEventListener('resize',refresh);
+    const game=board.closest('.game');
+    const view=()=>[...(game?.classList??[])].filter(c=>c.startsWith('view-')||c.startsWith('frame-')).join(' ');
+    let previous=view();
+    const mo=new MutationObserver(()=>{const next=view();if(next!==previous){previous=next;refresh();}});
+    if(game)mo.observe(game,{attributes:true,attributeFilter:['class']});
+    void board.ownerDocument.fonts?.ready.then(refresh);
+    board.ownerDocument.fonts?.addEventListener('loadingdone',refresh);
+    return () => {alive=false;ro.disconnect();mo.disconnect();window.removeEventListener('resize',refresh);board.ownerDocument.fonts?.removeEventListener('loadingdone',refresh);invalidateTitleWidths(board);invalidateGeometry(board);disposeParticles(board);disposeSprites(board);};
   }, [layerRef]);
-  useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!busy)prepareArmadaSprites(ctx);}, [busy]);
+  useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!busy){prepareTitleWidths(ctx);prepareArmadaSprites(ctx);}}, [busy]);
   useLayoutEffect(() => {
     // The breakdown plate of a Volley is up (in the layer or left in the traces): data-fx-plate on the board hides the line
     // «Последнее: …» (fx.css). Only the direct children of the two hosts are watched — no :has over the whole board.

@@ -1,5 +1,5 @@
 // Original Volley SVG art, prepared off-document; only HTML wrappers animate.
-import {A, ignoreFxBudget, particleDefs, type FxCtx, type Pt} from './primitives';
+import {boardW, A, ignoreFxBudget, particleDefs, type FxCtx, type Pt} from './primitives';
 import type {ParticleTarget} from './particles';
 import {scar} from './scars';
 import {spriteA,spriteReady,takeSprite,type SpriteSpec} from './sprites';
@@ -23,7 +23,7 @@ export function shotArt(kind:ShotArt,k=1):string {
  }
 }
 const key=(kind:ShotArt,k:number)=>`volley-${kind}-${k}`;
-export const volleySize=(ctx:FxCtx)=>Math.min(1.05,Math.max(.6,ctx.board.clientWidth/1300));
+export const volleySize=(ctx:FxCtx)=>Math.min(1.05,Math.max(.6,boardW(ctx)/1300));
 export function volleySpriteSpecs(ctx:FxCtx):SpriteSpec[]{
  const k=volleySize(ctx),specs:SpriteSpec[]=[];
  const add=(kind:ShotArt,scale:number,radius:number,count:number)=>{
