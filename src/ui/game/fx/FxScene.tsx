@@ -20,7 +20,7 @@ import type { Recent } from '../../../net/local';
 import { Plank, SeaChip, StatusBar, TeamRow, TopHold, useWideLog } from '../Table';
 import { TableThings, useSeaClip } from '../TableThings';
 import { applyVisible, displayRules, type Display } from './display';
-import { FxLayer, useFxQueue } from './FxLayer';
+import { FxLayer, useFxPart, useFxQueue } from './FxLayer';
 import { markN } from './misc';
 import {PerfPanel, usePerf} from '../perf/PerfPanel';
 import { clearScars, scar, setScarTestRate, type ScarLife } from './scars';
@@ -232,6 +232,8 @@ function SceneTable({
     paused,
     hold: paused,
   });
+  // the scene is small: it draws all of itself with every snapshot of the queue
+  useFxPart(fx, (x) => x);
   // FX-A (e2e): «&scarRate=20» runs the clock of the traces faster; window.__fxScars lets a test lay traces of its own.
   useEffect(() => {
     setScarTestRate(Number(new URLSearchParams(location.search).get('scarRate')) || 1);
@@ -299,7 +301,7 @@ function SceneTable({
   const seat = setup.handSeat;
   const shown = fx.display ? withDisplay(view, fx.display) : view;
   return (
-    <div className={`game ${perf.classes} ${fx.busy ? 'fx-busy' : ''}`} data-testid="game" data-bottom={bottom} data-fx-scene={scene.id}>
+    <div className={`game ${perf.classes}`} data-fx-busy={fx.busy ? '' : undefined} data-testid="game" data-bottom={bottom} data-fx-scene={scene.id}>
       {perf.config.enabled && <PerfPanel />}
       {hitTest && <div style={{position:'fixed',bottom:0,left:0,zIndex:10001}}><button data-testid="fx-pause" onClick={() => setPaused(!paused)}>Пауза</button><button data-testid="fx-finish" onClick={fx.skip}>До конца хода</button></div>}
       <TableThings />

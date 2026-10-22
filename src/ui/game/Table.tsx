@@ -1,5 +1,5 @@
 // Presentational parts of the table: the status bar, a team row with its Hold, a ship board (plank).
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
 import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type ShipState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
@@ -413,7 +413,7 @@ export function statuses(s: GameState, data: GameData, ship: ShipState): Status[
   return out;
 }
 
-export function Plank({
+function PlankView({
   s,
   data,
   ship,
@@ -437,6 +437,11 @@ export function Plank({
   fxHidden,
   reactionWait,
 }: {
+  /**
+   * The inputs of the game this plank was built from (Game: tableInteraction). With the same stamp only what the plank
+   * shows of the displayed state is compared — its handlers and buttons are the same by construction.
+   */
+  stamp?: object;
   reactionWait?: ReactNode;
   s: GameState;
   data: GameData;
@@ -735,6 +740,23 @@ export function Plank({
     );
   }
 }
+
+type PlankProps = Parameters<typeof PlankView>[0];
+/** What a plank shows of the displayed state besides its own ship: the Powder of its side, the active side, its allies. */
+const plankSide = (p: PlankProps) =>
+  `${p.s.active}|${p.s.teams[p.ship.side].powder}|${Object.values(p.s.ships).filter((x) => x.side === p.ship.side).map((x) => `${x.code}${+x.sunk}${x.souls}`).join()}`;
+const plankShip = (x: ShipState) => `${x.pos}|${x.tracks.hull},${x.tracks.sails},${x.tracks.guns},${x.tracks.crew}|${x.fires}|${+x.sunk}${+x.submerged}${+x.legend}|${x.souls}`;
+function samePlank(a: PlankProps, b: PlankProps): boolean {
+  if (a.stamp === undefined || a.stamp !== b.stamp) {
+    const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof PlankProps>;
+    for (const k of keys) if (!Object.is(a[k], b[k])) return false;
+    return true;
+  }
+  return a.fxGen === b.fxGen && a.s.turn === b.s.turn && plankShip(a.ship) === plankShip(b.ship) && plankSide(a) === plankSide(b) &&
+    (a.fxHidden ?? []).join() === (b.fxHidden ?? []).join();
+}
+/** A plank of the table: drawn again when its inputs change, not at every step of a clip (fx-smooth-a). */
+export const Plank = memo(PlankView, samePlank);
 
 /** The icons of the buttons of a plank (A5: an icon, the name | the price with a keg). */
 const CMD_ICON: Record<string, string> = {
