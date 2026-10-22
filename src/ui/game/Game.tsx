@@ -60,6 +60,7 @@ import { enemyTurnLines } from './lastTurn';
 import { decideVerb, reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
 import { usePlayClock } from './playClock';
+import { useTableBody } from './tableBody';
 import {PerfPanel, usePerf} from './perf/PerfPanel';
 import {getPerf} from './perf/state';
 import {clipRender} from './perf/clip';
@@ -352,6 +353,7 @@ export function Game({
   const canHoldOf = (busy: boolean) => botBusyOf(busy) && !myDecision;
   /** data-fx-busy on the root, set from the snapshot: the CSS of the show follows it without a render of Game. */
   const gameRef = useBusyAttr(fx);
+  useTableBody(curtainSide ? null : 'game');
 
   useEffect(() => {
     if (local) storeSave(s.winner ? null : local.record());

@@ -249,9 +249,12 @@ export function useFxQueue({
     const board = layer?.parentElement;
     if (!layer || !board) return null;
     const richAtStart = live.current.rich;
+    let narrow: boolean | undefined;
     return {
       board,
       layer,
+      // read at the first animation of the clip, then kept for it
+      get narrow() { return (narrow ??= board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches); },
       display: display ?? D.current ?? base.current!,
       // game: behind the game (more actions queued than the one on screen) the show catches up — twice as fast — instead
       // of dropping the clips (see skipAhead).
@@ -602,6 +605,18 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     return () => {ro.disconnect();disposeParticles(board);disposeSprites(board);};
   }, [layerRef]);
   useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!busy)prepareArmadaSprites(ctx);}, [busy]);
+  useLayoutEffect(() => {
+    // The breakdown plate of a Volley is up (in the layer or left in the traces): data-fx-plate on the board hides the line
+    // «Последнее: …» (fx.css). Only the direct children of the two hosts are watched — no :has over the whole board.
+    const board = layerRef.current?.parentElement, scars = board?.querySelector(':scope > .fx-scars');
+    if (!board || !layerRef.current || typeof MutationObserver === 'undefined') return;
+    const sync = () => board.toggleAttribute('data-fx-plate', !!board.querySelector(':scope > .fx-layer > .plate, :scope > .fx-scars > .plate'));
+    const mo = new MutationObserver(sync);
+    mo.observe(layerRef.current, { childList: true });
+    if (scars) mo.observe(scars, { childList: true });
+    sync();
+    return () => mo.disconnect();
+  }, [layerRef]);
   const drawWeather = () => {
     const w = fx.weather();
     if (w.ctx && weatherRef.current) renderWeather(w.ctx, weatherRef.current, w.on);

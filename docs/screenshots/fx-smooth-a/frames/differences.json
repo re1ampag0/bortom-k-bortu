@@ -24,16 +24,16 @@
   "share": 0
  },
  "volley-2000": {
-  "differentPixels": 200,
-  "share": 0.015
+  "differentPixels": 0,
+  "share": 0
  },
  "volley-3200": {
-  "differentPixels": 88,
-  "share": 0.007
+  "differentPixels": 0,
+  "share": 0
  },
  "volley-4200": {
-  "differentPixels": 1,
-  "share": 0
+  "differentPixels": 19,
+  "share": 0.001
  },
  "volley-5200": {
   "differentPixels": 0,

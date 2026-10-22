@@ -107,6 +107,42 @@
 сборке main** (проверено `tmp/fx-smooth-a/wx.mjs`: класс `wx-paused` стоит во время стартового показа и до правок;
 его добавил fx-ambient). Тест не менял — вопрос пользователю.
 
+## Шаг 2 — стили и раскладка (сделано)
+
+Заменены горячие `:has()` (по решению пользователя наведение на соседние карты, alarm.css, charge.css,
+`.sheet:has(> .sheet-foot)`, `.hcard:has(.hcard-strip)` и `.game:has(.middle-info)` не трогались):
+
+| Было | Стало | Кто ставит |
+|---|---|---|
+| `body:has(.game)`, `body:has(.curtain)` (game.css) | `body.on-game`, `body.on-curtain` | `useTableBody` (tableBody.ts): Game без шторки, Curtain, FxScene |
+| `.board:has(> .fx-layer > .plate, > .fx-scars > .plate)` (fx.css) | `.board[data-fx-plate]` | MutationObserver только на прямых детях `.fx-layer`/`.fx-scars` (FxLayer.tsx) |
+| `.hand-cards:has(> .hcard.lifted)` (phone.css) | `.hand-cards.has-lifted` | Hand.tsx (знает поднятую карту) |
+| `.plank:has(.plank-buttons)` | `.plank.has-buttons` | Plank |
+| `.plank-body:has(.badge.souls)` | `.plank .plank-body.with-souls` | Plank (у корабля есть Души) |
+| `.plank-buttons:has(> .btn:nth-child(3))` / `:not(:has(…))`, двойка `:has(:nth-child(2)):not(:has(:nth-child(3)))` | `.plank-buttons.n3plus` / `:not(.n3plus)`, `.plank-buttons.n2` | Plank (число кнопок) |
+| `.cmd-short:has(.short-pic)`, `.btn:has(.short-pic):not(:has(.i-dive))` | `.n3plus .btn.pic .cmd-short`, `.btn.cmd.soul` | PlankButton (значок-картинка, Душа) |
+
+Специфичность подобрана так, чтобы прежние победители правил остались победителями (двойка кнопок — `.btn.cmd`).
+
+- Размер стола в шаге клипа: `boardW/boardH` (primitives.ts) читаются один раз вместе с кешем `bx`, а не после каждой
+  вставки (`fxSvg`, `isPhone`, `tag`, позиции меток; misc.ts, sea.ts). В `playCard` (misc.ts) стол читается до вставки
+  летящей карты — после неё измеряется только сама карта.
+- `matchMedia('(max-width: 700px)')` в `A()` и `filters()` — один раз на клип (`ctx.narrow`, ленивое поле контекста).
+- Не моё по заданию (файлы другого исполнителя): `legends.ts:200` `ban.offsetWidth` сразу после вставки баннера и
+  `legends.ts`/`volley.ts` — 18 чтений `ctx.board.clientWidth/Height` между вставками. Предложение: заменить на
+  `boardW(ctx)/boardH(ctx)` из primitives.ts и читать размеры стола до `mk()`.
+
+| Сцена | Длинные задачи | Самая длинная, мс | Худший кадр, мс | Recalculate Style, мс (принуд.) | Scripting, мс | Рендеры Game (сумма / макс, мс) | Принуд. Layout |
+|---|---:|---:|---:|---:|---:|---|---:|
+| volley | 47 | 426 | 633 | 668 (365) | 1620 | 1 (134 / 134) | 39 (78 мс) |
+| legend | 50 | 464 | 667 | 335 (108) | 893 | 1 (46 / 46) | 16 (40 мс) |
+| armada | 123 | 464 | 667 | 891 (323) | 3653 | 1 (46 / 46) | 95 (165 мс) |
+
+Принудительные пересчёты стилей: Залп 488 → 365 мс, Армада 432 → 323 мс; принудительная раскладка Залпа 122 → 78 мс.
+Кадры клипов до/после (Перестроение, Залп, карта) — 14 из 15 совпадают попиксельно, Залп 4200 мс — 19 пикселей.
+Планшеты всех четырёх кораблей 430×740 (`scripts/fx-smooth-a/planks.mjs`) — 0 отличающихся пикселей
+(`planks-before-vs-s2.json`, `plank-*-before-vs-s2.png`).
+
 ## Как воспроизвести
 
 `node scripts/fx-smooth-a/measure.mjs LABEL [сцены…]` — сборка в tmp/fx-smooth-a/LABEL-dist;

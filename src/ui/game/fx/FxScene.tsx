@@ -21,6 +21,7 @@ import { Plank, SeaChip, StatusBar, TeamRow, TopHold, useWideLog } from '../Tabl
 import { TableThings, useSeaClip } from '../TableThings';
 import { applyVisible, displayRules, type Display } from './display';
 import { FxLayer, useFxPart, useFxQueue } from './FxLayer';
+import { useTableBody } from '../tableBody';
 import { markN } from './misc';
 import {PerfPanel, usePerf} from '../perf/PerfPanel';
 import { clearScars, scar, setScarTestRate, type ScarLife } from './scars';
@@ -234,6 +235,7 @@ function SceneTable({
   });
   // the scene is small: it draws all of itself with every snapshot of the queue
   useFxPart(fx, (x) => x);
+  useTableBody('game');
   // FX-A (e2e): «&scarRate=20» runs the clock of the traces faster; window.__fxScars lets a test lay traces of its own.
   useEffect(() => {
     setScarTestRate(Number(new URLSearchParams(location.search).get('scarRate')) || 1);
