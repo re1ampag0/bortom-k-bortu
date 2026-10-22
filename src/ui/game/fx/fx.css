@@ -76,7 +76,7 @@
 .plate .stamp { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: var(--seal); border: 1.5px solid var(--seal); border-radius: 4px; padding: 0 5px; transform: rotate(-3deg); }
 .plate .nodiag { margin-top: 3px; font-size: 11px; font-weight: 700; color: var(--green); }
 /* fix-ui: the line of a card in the plate (the card went into it): a pointer over it or a tap shows the card whole beside the plate */
-.plate [data-card] { pointer-events: auto; cursor: help; text-decoration: underline dotted rgba(42, 37, 33, 0.45); text-underline-offset: 2px; }
+.plate:not([inert]) [data-card] { pointer-events: auto; cursor: help; text-decoration: underline dotted rgba(42, 37, 33, 0.45); text-underline-offset: 2px; }
 .fx-layer > .plate-peek { opacity: 1; z-index: 6; width: 150px; pointer-events: none; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.45)); }
 .plate-peek > .hcard { width: 150px; height: auto; min-height: 0; cursor: default; justify-content: flex-start; }
 .plate-peek > .hcard > span { flex: none; }
@@ -306,3 +306,14 @@
 
 /* ui-4 Г21: weather-induced heave is ambient; foreground WAAPI clips stay live. */
 .game.fx-busy .board[data-wx-move] .planks > .plank { animation-play-state: paused; }
+
+/* Decorative descendants cannot opt back into hit testing by an unrelated card/button rule. */
+.fx-layer *, .fx-scars * { pointer-events: none; }
+
+/* Local vector stickers: a zero-coordinate HTML transform tree, each SVG has its own tight viewBox. */
+.fx-sprite, .fx-sprite [data-sprite-node], .fx-sprite .sprite-art { position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;pointer-events:none;will-change:auto; }
+.fx-layer > .fx-sprite { opacity:1;will-change:auto; }
+.fx-sprite svg { position:absolute;overflow:visible;pointer-events:none; }
+.sprite-recoil-light { opacity:0; }
+.fx-sprite-trace { position:absolute;left:0;top:0;width:0;height:0;opacity:1;pointer-events:none;will-change:auto; }
+.game.perf-off-light .sprite-recoil-light, .game.perf-off-filters .sprite-recoil-light { display:none; }

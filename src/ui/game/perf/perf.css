@@ -3,11 +3,11 @@
 .perf-buttons { display:flex; flex-wrap:wrap; gap:3px; }
 .perf-panel button { pointer-events:auto; min-height:28px; padding:3px 6px; color:#fff6dc; background:#252b25e8; border:1px solid #a39c7c; border-radius:4px; font:inherit; }
 .perf-panel button:disabled { opacity:.7; }
-.perf-parts { pointer-events:auto; margin:3px 0; padding:5px; max-height:55dvh; overflow:auto; background:#141914ee; border:1px solid #a39c7c; }
-.perf-parts label { display:flex; align-items:center; min-height:30px; gap:5px; }
+.perf-parts { pointer-events:none; margin:3px 0; padding:5px; max-height:55dvh; overflow:auto; background:#141914ee; border:1px solid #a39c7c; }
+.perf-parts label { pointer-events:auto; display:flex; align-items:center; min-height:30px; gap:5px; }
 .perf-parts input { flex:none; }
-.perf-result { pointer-events:auto; padding:5px; background:#141914ee; }
-.perf-result textarea { box-sizing:border-box; width:100%; height:100px; resize:vertical; font:inherit; color:inherit; background:#101510; }
+.perf-result { pointer-events:none; padding:5px; background:#141914ee; }
+.perf-result textarea { pointer-events:auto; box-sizing:border-box; width:100%; height:100px; resize:vertical; font:inherit; color:inherit; background:#101510; }
 .game.perf-off-weather .fx-weather { display:none!important; }
 .game.perf-off-ripples .sea-water::before, .game.perf-off-ripples .sea-water::after,
 .game.perf-off-ripples .fx-weather .wc, .game.perf-off-ripples .fx-weather .sf, .game.perf-off-ripples .fx-weather .crest, .game.perf-off-ripples .fx-weather .sp { display:none!important; }
