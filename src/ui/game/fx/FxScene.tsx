@@ -304,7 +304,7 @@ function SceneTable({
       {hitTest && <div style={{position:'fixed',bottom:0,left:0,zIndex:10001}}><button data-testid="fx-pause" onClick={() => setPaused(!paused)}>Пауза</button><button data-testid="fx-finish" onClick={fx.skip}>До конца хода</button></div>}
       <TableThings />
       <main className="board" ref={boardRef}>
-        <StatusBar s={shown} data={data} instruction={fx.hint ?? scene.title} waiting={false} onSea={() => {}} extra={null} chip={!wideLog} hold={<TopHold side={top} s={tableView} data={data} fxGen={fx.gen} />} />
+        <StatusBar s={shown} data={data} instruction={scene.title} fxHint={fx.hintStore} waiting={false} onSea={() => {}} extra={null} chip={!wideLog} hold={<TopHold side={top} s={tableView} data={data} fxGen={fx.gen} />} />
         <div className="sea-table" ref={seaRef}>
           <div className="sea-water" aria-hidden />
           <div className="planks top">{columns(top).map(renderPlank)}</div>

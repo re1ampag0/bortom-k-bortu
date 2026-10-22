@@ -1,3 +1,4 @@
+import {animateParticle, canvasRing, canvasHTML, canvasShape, canvasSmoke, canvasCircle, particleCount, pauseParticles, rememberParticleHost, type ParticleAnimation, type ParticleTarget} from './particles';
 import {getPerf, perfOff} from '../perf/state';
 // Effect primitives of the animation layer: a port of docs/mockups/anim/level1/effects.js (see PORTING.md).
 // The code is the reference's; what changed is how an element is found (the data-fx-* DOM contract, from the board of
@@ -22,6 +23,8 @@ import { plainText } from '../text';
 export interface FxCtx {
   /** The table (.board, position: relative): positions are relative to it. */
   board: HTMLElement;
+  /** Explicit opt-in: only Volley, Armada, sinking and fire producers. */
+  canvasParticles?: boolean;
   /** .fx-layer, the last child of the board: effects are added here. */
   layer: HTMLElement;
   /** The displayed state D (what the planks show before the clip's events are applied). */
@@ -99,6 +102,7 @@ function later(fn: () => void, delay: number): void {
 export function pauseClock(): void {
   if (clockPaused) return;
   clockPaused = true;
+  pauseParticles(true);
   for (const tm of timers) {
     if (tm.id === null) continue;
     clearTimeout(tm.id);
@@ -109,6 +113,7 @@ export function pauseClock(): void {
 export function resumeClock(): void {
   if (!clockPaused) return;
   clockPaused = false;
+  pauseParticles(false);
   for (const tm of timers) arm(tm);
 }
 /** The run was cut off: every timer fires now — at() of the old run does nothing, its wait() ends with ABORT. */
@@ -128,13 +133,37 @@ export function at(ctx: FxCtx, t: number, fn: () => void): void {
     if (ctx.run === ctx.live()) fn();
   }, ms(ctx, t));
 }
-export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation {
+export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay?: number, easing?: string, fill?: FillMode): Animation;
+export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay?: number, easing?: string, fill?: FillMode): Animation | ParticleAnimation;
+export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation | ParticleAnimation {
+  if ('particle' in el) return animateParticle(el, kf, ms(ctx,d), ms(ctx,delay), easing);
   // Backwards fill also positions SVG children during their delay; unlike direct HTML
   // children of .fx-layer they need not have opacity:0 in their base style.
   const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
   const frames = phone || perfOff('filters') ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
   if ((perfOff('planks') && el.closest('.plank')) || (perfOff('labels') && el.closest('.flyc,.seacard,.plate,.tag,.pill,.wait-pill,.tmark,.hold-tag'))) return el.animate([], {duration: 0});
   const animation = el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
+  if (animation) trackBudgetAnimation(ctx, el, animation);
+  if (frames.some(f => f.transform !== undefined) && el.matches?.('[data-fx-ship], .hcard, [data-fx-hand]')) invalidateGeometry(ctx.board);
+  if (ctx.canvasParticles) rememberParticleHost(el, animation, frames, easing);
+  // These single-use decorations have already become invisible. Freeze opacity before cancelling
+  // their forwards fill, so an SVG's normally-visible base style can never flash at the origin.
+  // Do not touch cannonballs, planks, cards that persist between clips, or reusable sprite bodies.
+  if (ctx.canvasParticles && Number(frames.at(-1)?.opacity) === 0 &&
+      el.matches('.gun-fire,.lg-title,.lg-card,.lg-seal,.lg-sun,.lg-veil,circle[fill^="url(#fx"],circle[fill="none"]')) {
+    void animation.finished.then(() => {
+      if (!el.isConnected || ctx.run !== ctx.live()) return;
+      (el as HTMLElement | SVGElement).style.opacity = '0';
+      (el as HTMLElement | SVGElement).style.willChange = 'auto';
+      // An earlier forwards entrance may still override the inline opacity after the exit
+      // is cancelled (the veil has both). Retire every own animation, and descendants of
+      // the finished title/card/seal, so that no underlying fill can make them visible again.
+      const targets = el.matches('.lg-title,.lg-card,.lg-seal') ? [el,...el.querySelectorAll('*')] : [el];
+      // These are precisely the WAAPI handles created by A, including finished forwards
+      // entrances. No subtree getAnimations/style flush for each finished spark/flash.
+      for (const target of targets) for (const own of elementAnimations.get(target) ?? []) if (own.playState !== 'idle') own.cancel();
+    }, () => {});
+  }
   // An opacity-zero plate can otherwise leave its explicitly interactive card links over the table.
   if (el.matches?.('.plate') && frames[0]?.opacity !== undefined && frames.at(-1)?.opacity !== undefined) {
     const rising = Number(frames.at(-1)!.opacity) > Number(frames[0].opacity);
@@ -145,10 +174,29 @@ export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0,
   }
   return animation;
 }
+interface GeometryStep { board: DOMRect; k: number; boxes: WeakMap<Element, Box> }
+const geometrySteps = new WeakMap<HTMLElement, GeometryStep>();
+/** A render/FLIP can change anchor positions inside the same synchronous clip step. */
+export function invalidateGeometry(board: HTMLElement): void { geometrySteps.delete(board); }
 export function bx(ctx: FxCtx, el: Element): Box {
-  // in the px of the stage (stage.ts): the effects are put inside the scaled screen
-  const r = el.getBoundingClientRect(), b = ctx.board.getBoundingClientRect(), k = stageK();
-  return { x: (r.left - b.left) / k, y: (r.top - b.top) / k, w: r.width / k, h: r.height / k, cx: (r.left - b.left + r.width / 2) / k, cy: (r.top - b.top + r.height / 2) / k, r: (r.right - b.left) / k, b: (r.bottom - b.top) / k };
+  let step = geometrySteps.get(ctx.board);
+  if (!step) {
+    step = {board: ctx.board.getBoundingClientRect(), k: stageK(), boxes: new WeakMap()};
+    geometrySteps.set(ctx.board, step);
+    const current = step;
+    queueMicrotask(() => { if (geometrySteps.get(ctx.board) === current) geometrySteps.delete(ctx.board); });
+  }
+  // Cache only stable table anchors. Newly written labels/effects still measure their actual size.
+  const anchor = el.matches('[data-fx-ship], [data-fx-track], [data-fx-value], [data-fx-hold], [data-fx-gap], .cells i, .bar');
+  const cached = anchor && step.boxes.get(el);
+  if (cached) return cached;
+  const r = el.getBoundingClientRect(), b = step.board, k = step.k;
+  const box = {x:(r.left-b.left)/k,y:(r.top-b.top)/k,w:r.width/k,h:r.height/k,cx:(r.left-b.left+r.width/2)/k,cy:(r.top-b.top+r.height/2)/k,r:(r.right-b.left)/k,b:(r.bottom-b.top)/k};
+  if (anchor) step.boxes.set(el,box);
+  return box;
+}
+export function particleHTML(ctx: FxCtx,cls: string): HTMLElement | ParticleTarget {
+  return canvasHTML(ctx,cls) ?? mk(ctx,cls,0,0);
 }
 export function mk(ctx: FxCtx, cls: string, x: number, y: number, html = ''): HTMLElement {
   const d = document.createElement('div');
@@ -251,14 +299,14 @@ export function flash(ctx: FxCtx, x: number, y: number, delay: number, size = 1)
 export function puff(ctx: FxCtx, x: number, y: number, delay: number): void {
   if (perfOff('particles')) return;
   if (!ctx.rich) return;
-  const p = mk(ctx, 'puff', 0, 0);
+  const p = particleHTML(ctx, 'puff');
   A(ctx, p, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.4)` }, { opacity: 0.95, offset: 0.15 }, { opacity: 0, transform: `translate(${x - 6}px,${y - 10}px) scale(2.4)` }], 1500, delay);
 }
 export function burst(ctx: FxCtx, cls: string, x: number, y: number, delay: number, n: number, r0: number, r1: number, dur = 600, angle0 = 0, spread = 2 * Math.PI): void {
   if (perfOff('particles')) return;
   if (!ctx.rich) return;
   for (let k = 0; k < n; k++) {
-    const e = mk(ctx, cls, 0, 0);
+    const e = particleHTML(ctx, cls);
     const a = angle0 + (k / n - 0.5) * spread + (Math.random() - 0.5) * 0.4, r = r0 + Math.random() * (r1 - r0);
     A(ctx, e, [{ opacity: 1, transform: `translate(${x}px,${y}px) rotate(${a}rad)` }, { opacity: 0, transform: `translate(${x + Math.cos(a) * r}px,${y + Math.sin(a) * r}px) rotate(${a + (cls === 'spark' ? 0 : 3)}rad)` }], dur, delay, 'cubic-bezier(.2,.7,.3,1)');
   }
@@ -267,10 +315,10 @@ export function splash(ctx: FxCtx, x: number, y: number, delay: number): void {
   if (perfOff('particles')) return;
   const s = mk(ctx, 'splash', 0, 0, '<svg viewBox="0 0 44 30" width="44" height="30"><g fill="#9CC3DA"><path d="M22 30 C18 18 14 10 10 4 C16 10 19 16 22 22 C25 16 28 10 34 4 C30 10 26 18 22 30Z"/><circle cx="8" cy="14" r="2.5"/><circle cx="36" cy="12" r="2.5"/><circle cx="22" cy="4" r="2"/></g></svg>');
   A(ctx, s, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.3)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1)`, offset: 0.25 }, { opacity: 0, transform: `translate(${x}px,${y - 6}px) scale(1.2)` }], 700, delay);
-  const r = mk(ctx, 'ripple', 0, 0);
+  const r = particleHTML(ctx, 'ripple');
   A(ctx, r, [{ opacity: 0.9, transform: `translate(${x}px,${y}px) scale(.3)` }, { opacity: 0, transform: `translate(${x}px,${y}px) scale(1.8)` }], 900, delay);
   if (ctx.rich) {
-    const r2 = mk(ctx, 'ripple', 0, 0);
+    const r2 = particleHTML(ctx, 'ripple');
     A(ctx, r2, [{ opacity: 0.6, transform: `translate(${x}px,${y}px) scale(.2)` }, { opacity: 0, transform: `translate(${x}px,${y}px) scale(1.3)` }], 900, delay + 160);
   }
 }
@@ -295,7 +343,7 @@ export function bubbles(ctx: FxCtx, x: number, y: number, w: number, delay: numb
   if (perfOff('particles')) return;
   if (!ctx.rich) return;
   for (let k = 0; k < n; k++) {
-    const b = mk(ctx, 'bubble', 0, 0);
+    const b = particleHTML(ctx, 'bubble');
     const bx0 = x + Math.random() * w, by = y - Math.random() * 8;
     A(ctx, b, [{ opacity: 0, transform: `translate(${bx0}px,${by}px) scale(.5)` }, { opacity: 0.9, offset: 0.2 }, { opacity: 0, transform: `translate(${bx0 + (Math.random() - 0.5) * 12}px,${by - rise - Math.random() * 20}px) scale(1.1)` }], 900 + Math.random() * 400, delay + Math.random() * 500);
   }
@@ -303,7 +351,7 @@ export function bubbles(ctx: FxCtx, x: number, y: number, w: number, delay: numb
 export function steam(ctx: FxCtx, x: number, y: number, delay: number): void {
   if (perfOff('particles')) return;
   for (let k = 0; k < (ctx.rich ? 5 : 1); k++) {
-    const p = mk(ctx, 'puff', 0, 0);
+    const p = particleHTML(ctx, 'puff');
     A(ctx, p, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.2)` }, { opacity: 0.8, offset: 0.2 }, { opacity: 0, transform: `translate(${x + (k - 2) * 6}px,${y - 26}px) scale(1.1)` }], 900, delay + k * 70);
   }
 }
@@ -331,7 +379,7 @@ export function whirlpool(ctx: FxCtx, x: number, y: number, delay: number, size 
   w.style.height = size * 0.55 + 'px';
   w.style.margin = `-${size * 0.275}px 0 0 -${size / 2}px`;
   A(ctx, w, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.2)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1)` }], 500, delay, 'ease-out', 'forwards');
-  if (ctx.rich) w.querySelector('svg')!.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(-360deg)' }], { duration: ms(ctx, 1800), iterations: dur ? Math.ceil(dur / 1800) : 6, delay: ms(ctx, delay) });
+  if (ctx.rich) { const target=w.querySelector('svg')!; const animation=target.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(-360deg)' }], { duration: ms(ctx, 1800), iterations: dur ? Math.ceil(dur / 1800) : 6, delay: ms(ctx, delay) }); trackBudgetAnimation(ctx,target,animation); }
   return w;
 }
 export function wisp(ctx: FxCtx, from: Pt, to: Pt, delay: number, d = 800): void {
@@ -584,6 +632,26 @@ export const filters = (ctx: FxCtx) => ctx.rich && !ctx.board.ownerDocument.defa
  *  every effect draws whatever the budget — a flash, a ball). */
 export const FX_BUDGET = 190;
 const budgetExempt = new WeakSet<Animation>();
+interface Budget { animations: Map<Animation, Element>; seeded: WeakSet<FxCtx> }
+const budgets = new WeakMap<HTMLElement, Budget>();
+const elementAnimations = new WeakMap<Element, Set<Animation>>();
+function budgetFor(ctx: FxCtx): Budget {
+  let bank = budgets.get(ctx.board);
+  if (!bank) { bank = {animations:new Map(),seeded:new WeakSet()}; budgets.set(ctx.board,bank); }
+  return bank;
+}
+function trackBudgetAnimation(ctx: FxCtx, target: Element, animation: Animation): void {
+  // A is also used by effects outside the canvas scope. Keep its native handles so that
+  // an overlapping trace participates without another subtree traversal at every emission.
+  const own = elementAnimations.get(target) ?? new Set<Animation>();
+  for (const previous of own) if (previous.playState === 'idle') own.delete(previous);
+  own.add(animation);
+  elementAnimations.set(target,own);
+  const bank = budgetFor(ctx);
+  bank.animations.set(animation,target);
+  void animation.finished.then(() => bank.animations.delete(animation), () => bank.animations.delete(animation));
+}
+
 /** This replaces brightness on an existing animation without taking another particle slot. */
 export function ignoreFxBudget(animation:Animation):void { budgetExempt.add(animation); }
 /** How many of `want` particles still fit into the budget (none with «простые спецэффекты»). */
@@ -592,12 +660,28 @@ export function room(ctx: FxCtx, want: number): number {
   const scars = ctx.board.querySelector('.fx-scars');
   // the animations that run (or wait for their delay): a finished one only holds its last frame
   const running = (el: Element) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && !budgetExempt.has(a)).length;
-  const busy = running(ctx.layer) + (scars ? running(scars) : 0);
+  let native = 0;
+  if (ctx.canvasParticles) {
+    const bank = budgetFor(ctx);
+    // Import CSS/direct WAAPI already present once per clip, rather than once per particle burst.
+    if (!bank.seeded.has(ctx)) {
+      bank.seeded.add(ctx);
+      for (const root of [ctx.layer, scars]) if (root) for (const a of root.getAnimations({subtree:true})) {
+        const target = (a.effect as KeyframeEffect | null)?.target;
+        if (target) bank.animations.set(a,target);
+      }
+    }
+    for (const [a,target] of bank.animations) {
+      if (!target.isConnected || a.playState === 'finished' || a.playState === 'idle') { bank.animations.delete(a); continue; }
+      if (a.playState === 'running' && !budgetExempt.has(a) && (ctx.layer.contains(target) || scars?.contains(target))) native++;
+    }
+  } else native = running(ctx.layer) + (scars ? running(scars) : 0);
+  const busy = native + particleCount(ctx.board);
   const n = Math.max(0, Math.min(want, FX_BUDGET - busy));
   return isPhone(ctx) ? Math.ceil(n / 2) : n;
 }
 
-const DEFS = (rich: boolean) => `<defs>
+export const particleDefs = (rich: boolean) => `<defs>
 <radialGradient id="fxSmk" cx=".42" cy=".38" r=".62"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#e9e5dc" stop-opacity=".92"/><stop offset=".8" stop-color="#c8c1b4" stop-opacity=".55"/><stop offset="1" stop-color="#a59d90" stop-opacity="0"/></radialGradient>
 <radialGradient id="fxSmkD" cx=".42" cy=".38" r=".62"><stop offset="0" stop-color="#8a847a"/><stop offset=".55" stop-color="#5e5850" stop-opacity=".85"/><stop offset="1" stop-color="#36322c" stop-opacity="0"/></radialGradient>
 <radialGradient id="fxFire" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffffff"/><stop offset=".25" stop-color="#fff2b0"/><stop offset=".55" stop-color="#ffb347"/><stop offset=".8" stop-color="#e2561e" stop-opacity=".7"/><stop offset="1" stop-color="#8a2a0c" stop-opacity="0"/></radialGradient>
@@ -613,7 +697,7 @@ export function fxSvg(ctx: FxCtx, host: Element = ctx.layer): SVGSVGElement {
   s.setAttribute('class', 'fx-svg');
   s.setAttribute('aria-hidden', 'true');
   s.style.cssText = 'position:absolute;left:0;top:0;overflow:visible;pointer-events:none;opacity:1';
-  s.innerHTML = DEFS(filters(ctx));
+  s.innerHTML = particleDefs(filters(ctx));
   host.appendChild(s);
   return s;
 }
@@ -638,6 +722,16 @@ function particleSvg(parent: Element, markup: string): SVGElement {
   return el;
 }
 
+/** Static small SVG leaf -> one reusable offscreen raster, no native animation. */
+export function particleShape(ctx: FxCtx,host: Element,markup: string,kind='particle'): SVGElement | ParticleTarget {
+  return canvasShape(ctx,host,markup,kind) ?? particleSvg(host,markup);
+}
+
+/** Same solid-circle art; other producers retain their original DOM circles. */
+export function particleCircle(ctx: FxCtx, host: Element, r: number, color: string, kind = 'spark', alpha = 1): SVGElement | ParticleTarget {
+  return canvasCircle(ctx, host, r, color, kind, alpha) ?? particleSvg(host, `<circle${kind === 'ember' ? ' class="ember"' : ''} r="${r}" fill="${color}" opacity="${alpha}"/>`);
+}
+
 /** The points of a quadratic curve (qpts of the prototype). */
 export function qpts(x0: number, y0: number, cx: number, cy: number, x1: number, y1: number, n = 24): Pt[] {
   return Array.from({ length: n + 1 }, (_, i) => {
@@ -651,6 +745,11 @@ export function ringSvg(ctx: FxCtx, svg: Element, x: number, y: number, r0: numb
   if (perfOff('particles')) return null;
   // a size, never a direction: a radius computed as «base − i·step» on a narrow plank must not go negative
   r1 = Math.max(1, Math.abs(r1));
+  const canvas = canvasRing(ctx, svg, R1(r1), R1((r0 / r1) * 100) / 100, color, w);
+  if (canvas) {
+    A(ctx, canvas, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d, delay, 'ease-out');
+    return null;
+  }
   const g = particleSvg(svg, `<g><ellipse cx="0" cy="0" rx="${R1(r1)}" ry="${R1(r1 * 0.4)}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/></g>`);
   A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], d, delay, 'ease-out');
   return g;
@@ -658,14 +757,14 @@ export function ringSvg(ctx: FxCtx, svg: Element, x: number, y: number, r0: numb
 export function sparksSvg(ctx: FxCtx, svg: Element, x: number, y: number, n = 12, delay = 0, colors = ['#fff3c4', '#ffd27a', '#ff9a3c']): void {
   for (let i = 0, m = room(ctx, n); i < m; i++) {
     const a = rnd(0, Math.PI * 2), r = rnd(14, 38);
-    const c = particleSvg(svg, `<circle r="${R1(rnd(1, 2.2))}" fill="${colors[i % colors.length]}"/>`);
+    const c = particleCircle(ctx, svg, R1(rnd(1, 2.2)), colors[i % colors.length]);
     A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * r)}px,${R1(y + Math.sin(a) * r + 10)}px)`, opacity: 0 }], rnd(380, 700), delay, 'cubic-bezier(.2,.7,.4,1)');
   }
 }
 export function splintersSvg(ctx: FxCtx, svg: Element, x: number, y: number, n = 8, delay = 0): void {
   for (let i = 0, m = room(ctx, n); i < m; i++) {
     const a = rnd(-Math.PI, 0), r = rnd(18, 46), rot = rnd(-400, 400);
-    const c = particleSvg(svg, `<rect x="-3.4" y="-1.1" width="${R1(rnd(4, 8))}" height="2.2" rx=".6" fill="${i % 2 ? '#a8703a' : '#7a4f24'}" stroke="#3a2412" stroke-width=".4"/>`);
+    const c = particleShape(ctx, svg, `<rect x="-3.4" y="-1.1" width="${R1(rnd(4, 8))}" height="2.2" rx=".6" fill="${i % 2 ? '#a8703a' : '#7a4f24'}" stroke="#3a2412" stroke-width=".4"/>`);
     A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * r)}px,${R1(y + Math.sin(a) * r)}px) rotate(${R1(rot * 0.5)}deg)`, opacity: 1, offset: 0.4 }, { transform: `translate(${R1(x + Math.cos(a) * r * 1.3)}px,${R1(y + 60)}px) rotate(${R1(rot)}deg)`, opacity: 0 }], rnd(800, 1200), delay, 'cubic-bezier(.3,.1,.7,1)');
   }
 }
@@ -679,7 +778,7 @@ export function smokeJet(ctx: FxCtx, svg: Element, x: number, y: number, ang: nu
   for (let i = 0; i < m; i++) {
     const t = i / m, dist = (18 + t * 70) * k, a = ang + rnd(-0.35, 0.35), r0 = (5 + t * 4) * k, r1 = (16 + t * 22 + rnd(0, 10)) * k;
     const ex = x + Math.cos(a) * dist, ey = y + Math.sin(a) * dist, dark = darkAll ? i % 3 !== 2 : i % 4 === 3;
-    const c = sv(host, `<circle r="${R1(r1)}" fill="url(#${dark ? 'fxSmkD' : 'fxSmk'})"/>`);
+    const c = canvasSmoke(ctx, host, R1(r1), dark, filters(ctx), life<=1000?'powder-smoke':'smoke') ?? sv(host, `<circle r="${R1(r1)}" fill="url(#${dark ? 'fxSmkD' : 'fxSmk'})"/>`);
     A(ctx, c, [
       { transform: `translate(${R1(x)}px,${R1(y)}px) scale(${R1((r0 / r1) * 100) / 100})`, opacity: 0 },
       { transform: `translate(${R1(x + (ex - x) * 0.7)}px,${R1(y + (ey - y) * 0.7)}px) scale(.7)`, opacity: dark ? 0.5 : 0.85, offset: 0.04 },
@@ -707,12 +806,12 @@ export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: numb
   const at0 = `translate(${R1(x)}px,${R1(y)}px) rotate(${R1(deg)}deg)`;
   A(ctx, cone, [{ transform: `${at0} scale(.15,.4)`, opacity: 1 }, { transform: `${at0} scale(1.15,1)`, opacity: 1, offset: 0.22 }, { transform: `${at0} scale(1.3,.7)`, opacity: 0.6, offset: 0.5 }, { transform: `${at0} scale(1.4,.3)`, opacity: 0 }], fl, delay, 'cubic-bezier(.1,.9,.3,1)');
   if (!perfOff('particles')) {
-  const sw = particleSvg(svg, `<circle r="${R1(60 * k)}" fill="none" stroke="#fff6e0" stroke-width="${R1(2.4 * k)}"/>`);
+  const sw = particleShape(ctx, svg, `<circle r="${R1(60 * k)}" fill="none" stroke="#fff6e0" stroke-width="${R1(2.4 * k)}"/>`);
   A(ctx, sw, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.05)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], fl * 0.86, delay, 'cubic-bezier(.1,.8,.3,1)');
   }
   for (let i = 0, m = room(ctx, opt.grains ?? 9); i < m; i++) {
     const a = ang + rnd(-0.5, 0.5), v = rnd(30, 80) * k;
-    const g = particleSvg(svg, `<circle r="${R1(rnd(0.8, 1.8) * k)}" fill="${['#fff3c4', '#ffd27a', '#ff9a3c'][i % 3]}"/>`);
+    const g = particleCircle(ctx, svg, R1(rnd(0.8, 1.8) * k), ['#fff3c4', '#ffd27a', '#ff9a3c'][i % 3]);
     A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * v * 0.6)}px,${R1(y + Math.sin(a) * v * 0.6)}px)`, opacity: 1, offset: 0.5 }, { transform: `translate(${R1(x + Math.cos(a) * v)}px,${R1(y + Math.sin(a) * v + 14 * k)}px)`, opacity: 0 }], rnd(400, 700), delay, 'ease-out');
   }
   if (smoke) {
@@ -720,12 +819,12 @@ export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: numb
     (opt.smokeJet ?? smokeJet)(ctx, smoke, x, y, ang, k * 0.6, 3, (opt.life ?? 5600) * 0.8, delay + 260);
   }
   if (!perfOff('particles')) {
-  const rp = particleSvg(svg, `<ellipse rx="${R1(40 * k)}" ry="${R1(12 * k)}" fill="none" stroke="#eef6f8" stroke-width="${R1(1.6 * k)}"/>`);
+  const rp = particleShape(ctx, svg, `<ellipse rx="${R1(40 * k)}" ry="${R1(12 * k)}" fill="none" stroke="#eef6f8" stroke-width="${R1(1.6 * k)}"/>`);
   A(ctx, rp, [{ transform: `translate(${R1(x)}px,${R1(y + 6 * k)}px) scale(.1)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y + 6 * k)}px) scale(1)`, opacity: 0 }], 700, delay + 40, 'cubic-bezier(.1,.8,.3,1)');
   }
   for (let i = 0, m = room(ctx, opt.wads ?? 4); i < m; i++) {
     const a = ang + rnd(-0.4, 0.4), v = rnd(24, 60) * k;
-    const wd = particleSvg(svg, '<path d="M-1.4 -1 L1.6 -.6 L1 1.2 L-1.2 .8 Z" fill="#ffb347" stroke="#7a2a0c" stroke-width=".3"/>');
+    const wd = particleShape(ctx, svg, '<path d="M-1.4 -1 L1.6 -.6 L1 1.2 L-1.2 .8 Z" fill="#ffb347" stroke="#7a2a0c" stroke-width=".3"/>');
     A(ctx, wd, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg)`, opacity: 1, fill: '#ffe08a' }, { transform: `translate(${R1(x + Math.cos(a) * v)}px,${R1(y + Math.sin(a) * v)}px) rotate(${R1(rnd(-200, 200))}deg)`, opacity: 1, fill: '#ff8a2a', offset: 0.4 }, { transform: `translate(${R1(x + Math.cos(a) * v * 1.2 + rnd(-10, 10))}px,${R1(y + Math.sin(a) * v + 26 * k)}px) rotate(${R1(rnd(-500, 500))}deg)`, opacity: 0, fill: '#3a2a1c' }], rnd(1400, 2200), delay + 60, 'ease-out');
   }
 }
@@ -733,7 +832,7 @@ export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: numb
 /** The fuses: sparks spit at each gun a moment before the broadside. */
 export function fuseSparks(ctx: FxCtx, svg: Element, x: number, y: number, up: number, delay = 0, d = 260): void {
   for (let k = 0, m = room(ctx, 5); k < m; k++) {
-    const sp = particleSvg(svg, '<circle r="1.3" fill="#ffe08a"/>');
+    const sp = particleCircle(ctx, svg, 1.3, '#ffe08a');
     A(ctx, sp, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 1 }, { transform: `translate(${R1(x + rnd(-8, 8))}px,${R1(y + up * rnd(6, 14))}px)`, opacity: 0 }], d, delay + k * 50);
   }
 }
@@ -746,7 +845,7 @@ export function ballFly(ctx: FxCtx, svg: Element, p0: Pt, p1: Pt, d = 700, delay
   const N = 28, pts = qpts(p0.x, p0.y, (p0.x + p1.x) / 2, Math.min(p0.y, p1.y) - lift, p1.x, p1.y, N);
   const path = (sc: (i: number) => string) => pts.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)${sc(i)}`, opacity: i === N ? 0 : 1 }));
   for (let i = 1, m = room(ctx, 7); i <= m; i++) {
-    const t = particleSvg(svg, `<circle r="${R1(3.6 - i * 0.35)}" fill="#cfc8bc" opacity="${R1(0.5 - i * 0.06)}"/>`);
+    const t = particleCircle(ctx, svg, R1(3.6 - i * 0.35), '#cfc8bc', 'trail', R1(0.5 - i * 0.06));
     A(ctx, t, path(() => ''), d, delay + i * 22, 'linear');
   }
   const shadow = sv(svg, '<ellipse rx="5" ry="2" fill="#000" opacity=".3"/>');
@@ -760,10 +859,10 @@ export function ballFly(ctx: FxCtx, svg: Element, p0: Pt, p1: Pt, d = 700, delay
 export function waterColumn(ctx: FxCtx, svg: Element, x: number, y: number, h = 46, delay = 0, d = 1700): void {
   if (perfOff('particles')) return;
   const k = h / 46, root = particleSvg(svg, '<g/>'), P = (a: number, b: number) => `${R1(a)} ${R1(b)}`, X = R1(x), Y = R1(y);
-  const hole = particleSvg(root, `<ellipse rx="${R1(12 * k)}" ry="${R1(3.6 * k)}" fill="#0c2a36" opacity=".55"/>`);
+  const hole = particleShape(ctx, root, `<ellipse rx="${R1(12 * k)}" ry="${R1(3.6 * k)}" fill="#0c2a36" opacity=".55"/>`);
   A(ctx, hole, [{ transform: `translate(${X}px,${Y}px) scale(.2)`, opacity: 0.6 }, { transform: `translate(${X}px,${Y}px) scale(1.2)`, opacity: 0.4, offset: 0.3 }, { transform: `translate(${X}px,${Y}px) scale(1.6)`, opacity: 0 }], d * 0.76, delay);
   const bw = 9 * k, bh = h * 0.7;
-  const body = particleSvg(root, `<g><path d="M${P(-bw, 0)} C${P(-bw * 1.1, -bh * 0.5)} ${P(-bw * 0.7, -bh * 0.9)} ${P(-bw * 0.3, -bh)} Q${P(-bw * 0.1, -bh * 1.08)} ${P(0, -bh * 0.98)} Q${P(bw * 0.2, -bh * 1.1)} ${P(bw * 0.4, -bh * 0.96)} C${P(bw * 0.8, -bh * 0.85)} ${P(bw * 1.1, -bh * 0.5)} ${P(bw, 0)} Z" fill="#d6ebf0"/><path d="M${P(-bw * 0.5, -2)} C${P(-bw * 0.6, -bh * 0.4)} ${P(-bw * 0.4, -bh * 0.7)} ${P(-bw * 0.2, -bh * 0.9)}" fill="none" stroke="#fff" stroke-width="${R1(1.6 * k)}" stroke-linecap="round" opacity=".9"/></g>`);
+  const body = particleShape(ctx, root, `<g><path d="M${P(-bw, 0)} C${P(-bw * 1.1, -bh * 0.5)} ${P(-bw * 0.7, -bh * 0.9)} ${P(-bw * 0.3, -bh)} Q${P(-bw * 0.1, -bh * 1.08)} ${P(0, -bh * 0.98)} Q${P(bw * 0.2, -bh * 1.1)} ${P(bw * 0.4, -bh * 0.96)} C${P(bw * 0.8, -bh * 0.85)} ${P(bw * 1.1, -bh * 0.5)} ${P(bw, 0)} Z" fill="#d6ebf0"/><path d="M${P(-bw * 0.5, -2)} C${P(-bw * 0.6, -bh * 0.4)} ${P(-bw * 0.4, -bh * 0.7)} ${P(-bw * 0.2, -bh * 0.9)}" fill="none" stroke="#fff" stroke-width="${R1(1.6 * k)}" stroke-linecap="round" opacity=".9"/></g>`);
   A(ctx, body, [{ transform: `translate(${X}px,${Y}px) scale(.5,.05)`, opacity: 1 }, { transform: `translate(${X}px,${Y}px) scale(1,1)`, opacity: 1, offset: 0.25 }, { transform: `translate(${X}px,${Y}px) scale(1.1,.95)`, opacity: 0.95, offset: 0.5 }, { transform: `translate(${X}px,${R1(y + 2)}px) scale(1.5,.05)`, opacity: 0 }], d, delay, 'cubic-bezier(.15,.7,.4,1)');
   // the crown: the middle jets tall, the outer ones low and wide (9 in the prototype; fewer when the budget is short)
   const JETS: [number, number, number][] = [[0, 1, 6.4], [-0.14, 0.88, 5.2], [0.14, 0.92, 5.2], [-0.36, 0.62, 4.6], [0.36, 0.64, 4.6], [-0.68, 0.4, 3.8], [0.68, 0.42, 3.8], [-1, 0.24, 3], [1, 0.26, 3]];
@@ -771,22 +870,22 @@ export function waterColumn(ctx: FxCtx, svg: Element, x: number, y: number, h = 
   JETS.slice(0, nj).forEach(([a, hh, w], i) => {
     const L = h * hh * rnd(0.85, 1.1), tx = Math.sin(a) * L, ty = -Math.cos(a) * L, ww = w * k, bend = rnd(-3, 3) * k;
     const dd = `M${P(-ww, 0)} C${P(-ww * 0.8 + tx * 0.3 + bend, ty * 0.35)} ${P(tx * 0.8 - ww * 0.3, ty * 0.8)} ${P(tx, ty)} C${P(tx * 0.8 + ww * 0.3, ty * 0.8)} ${P(ww * 0.8 + tx * 0.3 + bend, ty * 0.35)} ${P(ww, 0)} Z`;
-    const j = particleSvg(root, `<g><path d="${dd}" fill="#e8f4f6" opacity=".92"/><path d="${dd}" fill="none" stroke="#9cc4cc" stroke-width=".7" opacity=".7"/><circle cx="${R1(tx)}" cy="${R1(ty - ww * 0.6)}" r="${R1(0.3 * ww)}" fill="#eef7f9"/></g>`);
+    const j = particleShape(ctx, root, `<g><path d="${dd}" fill="#e8f4f6" opacity=".92"/><path d="${dd}" fill="none" stroke="#9cc4cc" stroke-width=".7" opacity=".7"/><circle cx="${R1(tx)}" cy="${R1(ty - ww * 0.6)}" r="${R1(0.3 * ww)}" fill="#eef7f9"/></g>`);
     A(ctx, j, [{ transform: `translate(${X}px,${Y}px) scale(.6,.05)`, opacity: 1 }, { transform: `translate(${X}px,${Y}px) scale(1,1.05)`, opacity: 1, offset: 0.24 }, { transform: `translate(${X}px,${Y}px) scale(1.08,1)`, opacity: 0.95, offset: 0.48 }, { transform: `translate(${X}px,${Y}px) scale(1.25,.55)`, opacity: 0.8, offset: 0.75 }, { transform: `translate(${X}px,${R1(y + 2)}px) scale(1.45,.06)`, opacity: 0 }], d * 0.97 + i * 30, delay + i * 18, 'cubic-bezier(.15,.7,.4,1)');
     // the tip breaks into a drop that arcs out and falls back with a ring
     if (room(ctx, 1)) {
       const dx = tx * rnd(1, 1.6) + rnd(-6, 6) * k, peak = y + ty * rnd(1.02, 1.2), r = R1(rnd(1, 2.2) * k), ex = x + dx * 1.5;
-      const dr = particleSvg(root, `<ellipse rx="${r}" ry="${R1(r * 1.3)}" fill="#eef6f8" stroke="#9cc4cc" stroke-width=".3"/>`);
+      const dr = particleShape(ctx, root, `<ellipse rx="${r}" ry="${R1(r * 1.3)}" fill="#eef6f8" stroke="#9cc4cc" stroke-width=".3"/>`);
       A(ctx, dr, [{ transform: `translate(${R1(x + tx * 0.9)}px,${R1(y + ty * 0.9)}px)`, opacity: 0 }, { transform: `translate(${R1(x + dx)}px,${R1(peak)}px)`, opacity: 1, offset: 0.35 }, { transform: `translate(${R1(ex)}px,${R1(y + 2)}px)`, opacity: 0.9, offset: 0.97 }, { transform: `translate(${R1(ex)}px,${R1(y + 2)}px)`, opacity: 0 }], rnd(900, 1250), delay + 260 + i * 20, 'cubic-bezier(.3,0,.7,1)');
       ringSvg(ctx, root, ex, y + 3, 1, 7 * k, '#eef6f8', 500, delay + 1150 + i * 20, 0.8);
     }
   });
   // mist hangs over the column and drifts (blurred only where the filters are)
   for (let i = 0, m = room(ctx, 4); i < m; i++) {
-    const mm = particleSvg(root, `<circle r="${R1(rnd(8, 13) * k)}" fill="#f4fafb" opacity=".5"${filters(ctx) ? ` style="filter:blur(${R1(3 * k)}px)"` : ''}/>`);
+    const mm = particleShape(ctx, root, `<circle r="${R1(rnd(8, 13) * k)}" fill="#f4fafb" opacity=".5"${filters(ctx) ? ` style="filter:blur(${R1(3 * k)}px)"` : ''}/>`);
     A(ctx, mm, [{ transform: `translate(${X}px,${R1(y - h * 0.6)}px) scale(.3)`, opacity: 0 }, { transform: `translate(${R1(x + rnd(-8, 8) * k)}px,${R1(y - h * rnd(0.75, 1))}px) scale(1)`, opacity: 0.55, offset: 0.3 }, { transform: `translate(${R1(x + rnd(10, 22) * k)}px,${R1(y - h * rnd(0.6, 0.9))}px) scale(1.5)`, opacity: 0 }], d, delay + 200 + i * 60, 'ease-out');
   }
-  const foam = particleSvg(root, `<g><ellipse rx="${R1(16 * k)}" ry="${R1(4.4 * k)}" fill="#f4fafb" opacity=".85"/><ellipse rx="${R1(22 * k)}" ry="${R1(6 * k)}" fill="none" stroke="#f4fafb" stroke-width="${R1(1.2 * k)}" stroke-dasharray="${R1(3 * k)} ${R1(2 * k)}" opacity=".8"/></g>`);
+  const foam = particleShape(ctx, root, `<g><ellipse rx="${R1(16 * k)}" ry="${R1(4.4 * k)}" fill="#f4fafb" opacity=".85"/><ellipse rx="${R1(22 * k)}" ry="${R1(6 * k)}" fill="none" stroke="#f4fafb" stroke-width="${R1(1.2 * k)}" stroke-dasharray="${R1(3 * k)} ${R1(2 * k)}" opacity=".8"/></g>`);
   A(ctx, foam, [{ transform: `translate(${X}px,${R1(y + 1)}px) scale(.2)`, opacity: 0.9 }, { transform: `translate(${X}px,${R1(y + 1)}px) scale(1)`, opacity: 0.9, offset: 0.35 }, { transform: `translate(${X}px,${R1(y + 1)}px) scale(1.35)`, opacity: 0 }], d * 1.3, delay + 120, 'ease-out');
   ringSvg(ctx, svg, x, y + 2, 4, 30 * k, '#eef6f8', 900, delay + 120, 1.6);
   ringSvg(ctx, svg, x, y + 2, 4, 52 * k, '#cfe4ea', 1400, delay + 380, 1);
@@ -796,7 +895,7 @@ export function missSplash(ctx: FxCtx, svg: Element, x: number, y: number, k = 1
   if (perfOff('particles')) return;
   waterColumn(ctx, svg, x, y, 70 * k, delay, d);
   if (ctx.rich) waterColumn(ctx, svg, x + 9 * k, y + 2, 40 * k, delay, d);
-  const f = particleSvg(svg, `<ellipse rx="${R1(24 * k)}" ry="${R1(7 * k)}" fill="#f4f9fa" opacity=".85"/>`);
+  const f = particleShape(ctx, svg, `<ellipse rx="${R1(24 * k)}" ry="${R1(7 * k)}" fill="#f4f9fa" opacity=".85"/>`);
   A(ctx, f, [{ transform: `translate(${R1(x)}px,${R1(y + 2)}px) scale(.2)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y + 2)}px) scale(1.4)`, opacity: 0 }], d * 0.82, delay + 100, 'ease-out');
 }
 /** The hit: a fireball, a shockwave, splinters and sparks, black smoke rolling up (a lighter one for the later hits). */
@@ -808,7 +907,7 @@ export function hitBlast(ctx: FxCtx, svg: Element, x: number, y: number, k = 1, 
   splintersSvg(ctx, svg, x, y, Math.round((light ? 5 : 12) * k), delay);
   sparksSvg(ctx, svg, x, y, Math.round((light ? 6 : 16) * k), delay);
   for (let i = 0, m = room(ctx, light ? 2 : 6); i < m; i++) {
-    const c = sv(svg, `<circle r="${R1(rnd(10, 18) * k)}" fill="url(#fxSmkD)"/>`), dx = rnd(-14, 14) * k;
+    const c = particleShape(ctx, svg, `<circle r="${R1(rnd(10, 18) * k)}" fill="url(#fxSmkD)"/>`, 'smoke'), dx = rnd(-14, 14) * k;
     A(ctx, c, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.2)`, opacity: 0 }, { transform: `translate(${R1(x + dx)}px,${R1(y - 10 * k)}px) scale(1)`, opacity: 0.8, offset: 0.15 }, { transform: `translate(${R1(x + dx + 24 * k)}px,${R1(y - rnd(50, 80) * k)}px) scale(1.8)`, opacity: 0 }], rnd(2400, 3400), delay + 120 + i * 60, 'ease-out');
   }
 }
@@ -830,7 +929,7 @@ export function flashBoard(ctx: FxCtx, color = '#fff', peak = 0.55, d = 520, del
 export function fallBoard(ctx: FxCtx, svg: Element, code: string, p: Pt, delay = 0, d = 1000): void {
   if (perfOff('particles')) return;
   const to = { x: clamp(p.x + 40, 20, ctx.board.clientWidth - 20), y: clamp(facingY(ctx, code) + dirOf(ctx, code) * 34, 20, ctx.board.clientHeight - 20) };
-  const bd = particleSvg(svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>');
+  const bd = particleShape(ctx, svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>');
   A(ctx, bd, [{ transform: `translate(${R1(p.x)}px,${R1(p.y)}px) rotate(0deg)` }, { transform: `translate(${R1(p.x + 12)}px,${R1(p.y - 16)}px) rotate(40deg)`, offset: 0.2 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 1, offset: 0.98 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 0 }], d, delay, 'cubic-bezier(.3,.1,.7,1)');
   at(ctx, delay + d, () => {
     waterColumn(ctx, svg, to.x, to.y, 22);
@@ -876,7 +975,7 @@ export function fireWall(ctx: FxCtx, svg: Element, x0: number, x1: number, y: nu
   }
   if (ctx.rich) for (let x = x0; x <= x1; x += 9) { if (Math.random() < 0.4 || room(ctx, 2) < 2) continue; add(x, y + 3, h * rnd(0.3, 0.55), 0.9, rnd(6, 14), delay + ((x - x0) / span) * spread * nC * 2); }
   for (let i = 0, m = room(ctx, opt.embers ?? 30); i < m; i++) {
-    const e = sv(svg, `<circle class="ember" r="${R1(rnd(0.8, 1.9))}" fill="${['#fff3c4', '#ffd27a', '#ff8a2a'][i % 3]}"/>`), x = rnd(x0, x1);
+    const e = particleCircle(ctx, svg, R1(rnd(0.8, 1.9)), ['#fff3c4', '#ffd27a', '#ff8a2a'][i % 3], 'ember'), x = rnd(x0, x1);
     A(ctx, e, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 0 }, { opacity: 1, offset: 0.1 }, { transform: `translate(${R1(x + rnd(5, 30))}px,${R1(y - h * rnd(1.4, 3))}px)`, opacity: 1, offset: 0.6 }, { transform: `translate(${R1(x + rnd(20, 60))}px,${R1(y - h * rnd(2.6, 4.4))}px)`, opacity: 0 }], rnd(1200, 2400), delay + rnd(0, life * 0.8));
   }
   return out;
