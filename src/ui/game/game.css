@@ -940,24 +940,33 @@ button.star::before {
   padding: 0 0 0 8px;
   border-left: 1px solid #b9a27a;
 }
-/* fix-ui: a laptop, four buttons and more (the Dutchman): one row, «icon · price», the name in the paper pop (data-tip) — the row
-   never wraps and the sea keeps its height */
+/* ui-5: the pictures of «Погружение» and the Souls (art/icons), of the size of the old icons */
+.cmd-pic img {
+  display: block;
+}
+.cmd-pic.i-soul img {
+  width: 15px;
+  height: 17px;
+}
+.cmd-pic.i-dive img {
+  width: 16px;
+  height: 16px;
+}
+/* ui-5: a laptop — every button keeps its name, «Погружение» and the Souls are an icon (the name in the paper pop, data-tip);
+   four buttons and more (the Dutchman) stay in one row with narrower paddings, the sea keeps its height */
 @media (min-width: 701px) {
+  .btn.cmd.compact .cmd-name {
+    display: none;
+  }
   .plank-buttons.many {
     flex-wrap: nowrap;
     gap: 6px;
   }
   .plank-buttons.many .btn.cmd {
-    flex: 0 1 auto;
-    min-width: 0;
+    flex: 0 0 auto;
     padding: 0 9px;
   }
-  .plank-buttons.many .btn.cmd.compact .cmd-name {
-    display: none;
-  }
-  .plank-buttons.many .btn.cmd:not(.compact) .cmd-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .plank-buttons.many .btn.cmd .cmd-in {
     white-space: nowrap;
   }
 }
@@ -3731,11 +3740,6 @@ button.star::before {
   .hand-cards > .hcard + .hcard {
     margin-left: calc(-1 * var(--ov, 0px));
   }
-  /* fix-ui: the tabs of the ships («Индевор · 0 из 2», «Голландец») stay over a card that rises */
-  .hand-head .tabs {
-    position: relative;
-    z-index: 4;
-  }
   /* the pointer or the keyboard on a card: it straightens, rises and grows; the neighbours step aside */
   .hand-cards > .hcard:hover,
   .hand-cards > .hcard:focus-visible {
@@ -4299,9 +4303,6 @@ button.star::before {
     padding-right: var(--deck-pr, 0px);
     padding-bottom: var(--deck-lift, 0px);
   }
-  .game.view-hand-deck .hand .tabs {
-    margin-left: var(--deck-tabs, 0px);
-  }
   .game.view-hand-deck .board-bottom {
     position: relative;
   }
@@ -4570,3 +4571,39 @@ button.middle-info:focus-visible { outline: 2px solid var(--brass); outline-offs
 }
 .reaction-wait-pill .wait-dots { gap: 3px; }
 .reaction-wait-pill .wait-dots i { width: 3px; height: 3px; }
+
+/* ui-5: a laptop — the tabs of the ships («Индевор · 0 из 2», «Голландец») stand in the left column, at its left edge under
+   «Перестроение» (on «Палуба» right over «Колода · Сброс · сыграно»), not over the fan: a card that rises keeps its head in sight.
+   The Hold of «Палуба» is a little tighter for them (1366×660 has ≈ 17 px between «Перестроение» and «Колода»); two tabs that do
+   not fit side by side stand one over the other. The phone has no tabs (phone.css). */
+@media (min-width: 701px) {
+  .board-bottom {
+    position: relative;
+  }
+  .board-bottom .hand-head .tabs {
+    position: absolute;
+    left: 0;
+    bottom: 4px;
+    z-index: 4;
+    max-width: var(--hold-w);
+    flex-wrap: wrap-reverse;
+    gap: 4px 6px;
+  }
+  .board-bottom .hand-head .tab {
+    min-height: 22px;
+    padding: 0 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 20px;
+    white-space: nowrap;
+  }
+  .game.view-hand-deck .board-bottom > .team-row {
+    gap: 4px;
+  }
+  .game.view-hand-deck .deck-info {
+    bottom: -4px;
+  }
+  .game.view-hand-deck .board-bottom .hand-head .tabs {
+    bottom: 13px;
+  }
+}

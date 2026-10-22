@@ -628,7 +628,8 @@ for (const look of ['deck', 'table'] as const) {
 
 // rig, г: «Палуба» on a laptop — the hand stands in the middle of its strip (from 24 px right of the Hold, the hourglass and
 // «Перестроение» to 16 px left of the gun; the gun ends 16 px before «Ход окончен» + «Отменить»), every card whole in the window
-// (the lowest point ≥ 4 px above the edge), the tabs begin over the first card; 3, 5 and 8 cards («&hand=N» of the e2e build).
+// (the lowest point ≥ 4 px above the edge); ui-5: the tabs stand in the left column, at the left edge of the Hold, between
+// «Перестроение» and «Колода · Сброс», clear of the cards; 3, 5 and 8 cards («&hand=N» of the e2e build).
 for (const v of [
   { w: 1280, h: 720 },
   { w: 1366, h: 660 },
@@ -662,7 +663,10 @@ for (const v of [
         const gun = vis('.deck-piece[data-piece="cannon"]'),
           end = vis('[data-testid="end-turn"]'),
           undo = vis('.log-col .undo'),
-          tabs = vis('.hand .tabs');
+          tabs = vis('.hand .tabs'),
+          hold = vis('.board-bottom > .team-row:not(.table-edge)'),
+          regroup = vis('.board-bottom .regroup'),
+          deck = vis('[data-fx-deck]');
         return {
           L: rightOf(document.querySelector('.board-bottom > .team-row:not(.table-edge)')) / k + 24,
           R: Math.min(end.left, undo.left) / k - 16,
@@ -672,7 +676,10 @@ for (const v of [
           right: Math.max(...cards.map((c) => c.right)) / k,
           top: Math.min(...cards.map((c) => c.top)) / k,
           bottom: Math.max(...cards.map((c) => c.bottom)) / k,
-          tabsL: tabs.left / k,
+          tabs: { l: tabs.left / k, t: tabs.top / k, r: tabs.right / k, b: tabs.bottom / k },
+          holdL: hold.left / k,
+          regroupB: regroup.bottom / k,
+          deckT: deck.top / k,
           ih: innerHeight / k,
         };
       });
@@ -682,7 +689,10 @@ for (const v of [
       expect(r.left, 'the hand begins at the strip').toBeGreaterThanOrEqual(r.L - 12);
       expect(r.gunL - r.right, 'the last card keeps ≥ 24 px from the gun').toBeGreaterThanOrEqual(24);
       expect(r.bottom, 'every card whole in the window').toBeLessThanOrEqual(r.ih - 4 + 1);
-      expect(Math.abs(r.tabsL - r.left), 'the tabs begin over the first card').toBeLessThanOrEqual(4);
+      expect(Math.abs(r.tabs.l - r.holdL), 'the tabs at the left edge of the Hold').toBeLessThanOrEqual(1);
+      expect(r.tabs.t, 'the tabs under «Перестроение»').toBeGreaterThanOrEqual(r.regroupB);
+      expect(r.tabs.b, 'the tabs over «Колода · Сброс»').toBeLessThanOrEqual(r.deckT);
+      expect(r.tabs.r, 'the tabs clear of the cards').toBeLessThanOrEqual(r.left);
       if (n === 5 || n === 8) await page.screenshot({ path: `docs/screenshots/rig/g-center-${n}cards-${v.w}x${v.h}.png` });
     });
   }

@@ -487,6 +487,10 @@
     height: auto;
     max-height: 15px;
   }
+  .plank-buttons .cmd-pic img {
+    width: auto;
+    height: 15px;
+  }
   .plank-buttons .btn.cmd .cost {
     gap: 2px;
     padding-left: 5px;
@@ -516,6 +520,9 @@
   }
   .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) .cmd-icon svg {
     width: 13px;
+  }
+  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) .cmd-pic img {
+    height: 13px;
   }
 
   /* ——— the bottom bar: «Журнал», «Правила» — square icons with a caption; «Отменить»; «Ход окончен» with the line of who
