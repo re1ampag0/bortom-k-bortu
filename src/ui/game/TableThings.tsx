@@ -43,9 +43,8 @@ interface Placed extends Box {
  * background. A laptop: the gun (1.6; 1.2 times larger on a window taller than 900 px, as the cards) stands with its right at
  * R — 16 px before «Ход окончен» + «Отменить», its balls at the wheel, the lantern (1.3) over the breech; the hand stands in the
  * middle of the strip from L (24 px right of the Hold, the hourglass and «Перестроение») to the gun − 16 (Hand.tsx useFanFit
- * reads the paddings of .hand-cards and closes the step of the fan when the cards do not fit), whole in the window; its tabs
- * begin over its first card, the grating lies over its middle. A phone (a5-phone): a big gun (70 % of the width) is the background behind
- * the row of the Hold, its muzzle in the gap between «2/8» and «Перестроение»; the lantern hangs on the bottom right corner of the
+ * reads the paddings of .hand-cards and closes the step of the fan when the cards do not fit), whole in the window; the grating
+ * lies over its middle. A phone (a5-phone): a big gun (70 % of the width) is the background behind the row of the Hold, its muzzle in the gap between «2/8» and «Перестроение»; the lantern hangs on the bottom right corner of the
  * frame of the sea, over the table, its light falls down on the gun and «Перестроение».
  */
 const PIECES = {
@@ -79,8 +78,8 @@ interface DeckPlace {
   ly: number;
   ls: number;
   /** A laptop: the paddings that put the hand in the middle of its strip (in the px of the zoomed row), the room under the
-   *  cards, the indent of the tabs (the left of the first card) and the larger hand of a tall window. */
-  hand?: { pl: number; pr: number; lift: number; tabs: number };
+   *  cards and the larger hand of a tall window. */
+  hand?: { pl: number; pr: number; lift: number };
   /** A phone: the hook the lantern hangs on. */
   hook?: Box;
   /** A phone: the warm glint of the lantern on the barrel of the gun. */
@@ -198,7 +197,6 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
   const lowest = cards.length ? Math.max(...cards.map((c) => c.t + c.h)) : 0;
   const curLift = (parseFloat(game.style.getPropertyValue('--deck-lift')) || 0) * f;
   const lift = Math.max(0, curLift + (lowest ? lowest - (H - 4) : 0));
-  const first = cards.length ? Math.min(...cards.map((c) => c.l)) : stripL;
   return {
     phone: false,
     W,
@@ -208,7 +206,7 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     ly,
     ls: lsc,
     // (28 px in from each end: a tilted card of the fan reaches past its own box, and the last card keeps ≥ 24 px from the gun)
-    hand: { pl: (stripL + 28 - cardsBox.l) / f, pr: (cardsBox.l + cardsBox.w - stripR + 28) / f, lift: lift / f, tabs: first - hand.l },
+    hand: { pl: (stripL + 28 - cardsBox.l) / f, pr: (cardsBox.l + cardsBox.w - stripR + 28) / f, lift: lift / f },
   };
 }
 
@@ -304,7 +302,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         // nothing to measure by (in «Тревога!» there is no «Ход окончен»): the gun and the lantern stay where they were
         if (!d) return;
         setDeck((old) => (old && JSON.stringify(old) === JSON.stringify(d) ? old : d));
-        // the hand in the middle of its strip (paddings of .hand-cards, read by useFanFit), whole in the window, its tabs over it
+        // the hand in the middle of its strip (paddings of .hand-cards, read by useFanFit), whole in the window
         const hd = d?.hand;
         // set only what changed
         const put = (k: string, v: number) => {
@@ -313,7 +311,6 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
         put('--deck-pl', hd ? Math.max(0, Math.round(hd.pl)) : 0);
         put('--deck-pr', hd ? Math.max(0, Math.round(hd.pr)) : 0);
         put('--deck-lift', hd ? Math.round(hd.lift) : 0);
-        put('--deck-tabs', hd ? Math.round(hd.tabs) : 0);
         // a phone: the warm light of the lantern over the fan (phone.css)
         put('--phone-lamp-space', d?.lampSpace ?? 0);
         put('--lamp-x', d ? Math.round(d.lx) : 0);
