@@ -1,6 +1,6 @@
 // The same art as legends.ts, prepared outside the rendered document. No gameplay RNG is used here.
 import {bigShip, uidSvg} from '../art/bigShips';
-import {A, gapBox, rnd, room, smokeJet, filters, ignoreFxBudget, particleCircle, type Pt, type FxCtx} from './primitives';
+import {boardW, A, gapBox, rnd, room, smokeJet, filters, ignoreFxBudget, particleCircle, type Pt, type FxCtx} from './primitives';
 import {perfOff} from '../perf/state';
 import {warmSprites, takeSprite, spriteReady, spriteA, type Sprite, type SpriteSpec} from './sprites';
 import {legendGlintSpec} from './legendGlint';
@@ -16,7 +16,7 @@ const LIT=uidSvg(COMPANY.replace(/(#[0-9a-f]{6}|#[0-9a-f]{3})(?=[";])/gi,(hex)=>
 }),'spriteLit');
 const prepared=new WeakMap<HTMLElement,string>();
 export function armadaGeometry(ctx:FxCtx){
- const W=ctx.board.clientWidth,g=gapBox(ctx),phone=W<701,n=phone?4:6;
+ const W=boardW(ctx),g=gapBox(ctx),phone=W<701,n=phone?4:6;
  const k=R1(Math.min(.86,(W/(n*1.4))/120,(g.h*.5)/78)*100)/100;
  return{W,g,phone,n,k,key:`armada-ship-${k}`};
 }
@@ -79,7 +79,7 @@ export function armadaSmoke(ctx:FxCtx,host:Element,x:number,y:number,ang:number,
 }
 export function armadaRecoil(ctx:FxCtx,sprite:Sprite,rd:number,duration:number):void {
  spriteA(ctx,sprite.node('recoil'),[{transform:'rotate(0deg) translate(0,0)'},{transform:`rotate(${rd*2.6}deg) translate(${-rd*3}px,0)`,offset:.12},{transform:`rotate(${-rd*.8}deg) translate(0,0)`,offset:.55},{transform:'rotate(0deg) translate(0,0)'}],duration,0,'ease-out','none');
- if(ctx.board.clientWidth>700&&!perfOff('filters')&&!perfOff('light'))ignoreFxBudget(spriteA(ctx,sprite.node('light'),[{opacity:0},{opacity:1,offset:.12},{opacity:0,offset:.55},{opacity:0}],duration,0,'ease-out','none'));
+ if(boardW(ctx)>700&&!perfOff('filters')&&!perfOff('light'))ignoreFxBudget(spriteA(ctx,sprite.node('light'),[{opacity:0},{opacity:1,offset:.12},{opacity:0,offset:.55},{opacity:0}],duration,0,'ease-out','none'));
 }
 export function armadaSmokeHost(ctx:FxCtx,host:Element):HTMLElement {
  const sprite=takeSprite(ctx,'armada-group',host);sprite.root.classList.add('fx-sprite-trace');return sprite.root;

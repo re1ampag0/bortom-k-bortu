@@ -4,7 +4,7 @@
 import {preview} from 'vite';
 import {chromium, expect} from '@playwright/test';
 import {PNG} from 'pngjs';
-import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 
 const [beforeDist, afterDist, ...rest] = process.argv.slice(2);
 const selected=rest.filter(s=>!s.startsWith('--'));
@@ -91,7 +91,7 @@ async function shoot(dist, port, tag) {
 
 if(!rest.includes('--reuse-before'))await shoot(beforeDist, 5196, 'before');
 await shoot(afterDist, 5197, 'after');
-const report = {};
+const report = existsSync(`${OUT}/differences.json`)?JSON.parse(readFileSync(`${OUT}/differences.json`,'utf8')):{};
 for (const scene of scenes) for (const m of MOMENTS[scene]) {
   const a = PNG.sync.read(readFileSync(`${OUT}/${scene}-${m}-before.png`)), b = PNG.sync.read(readFileSync(`${OUT}/${scene}-${m}-after.png`));
   let diff = 0;

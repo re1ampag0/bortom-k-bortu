@@ -1,11 +1,11 @@
 {
  "legend-1000": {
-  "differentPixels": 25,
+  "differentPixels": 24,
   "share": 0.002
  },
  "legend-2200": {
-  "differentPixels": 73,
-  "share": 0.006
+  "differentPixels": 53,
+  "share": 0.004
  },
  "armada-900": {
   "differentPixels": 4116,

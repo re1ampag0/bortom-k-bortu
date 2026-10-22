@@ -14,6 +14,7 @@ import {perfOff} from '../perf/state';
 //  - the thin top bar of the effect ends above the top row of planks (on a phone the reference's lay 2 px on the heads);
 //  - «Кракен» takes its frame of the hit off the plank at its end (the plank keeps its node, React would not).
 import { legendCards } from '../../../engine/data';
+import {titleHTML,titleWidth} from './legendTitles';
 import {legendSprite} from './legendSprites';
 import {playLegendGlint} from './legendGlint';
 import { shipData, startValue, type GameEvent } from '../../../engine/state';
@@ -22,7 +23,7 @@ import type { ClipPlayer } from './FxLayer';
 import { flipTo } from './misc';
 import type { JackClip, LegendClip } from './planFx';
 import {
-  particleShape, A, at, badgeMark, ballFly, boom, facingY, filters, flashBoard, fxSvg, missSplash, seaTemp, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, flash, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
+  particleShape, A, at, boardW, boardH, badgeMark, ballFly, boom, facingY, filters, flashBoard, fxSvg, missSplash, seaTemp, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, flash, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
   qpts, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, sv, trackMark, visible, wait, wisp, type FxCtx, type Pt,
 } from './primitives';
 import { CELLS } from '../art/cells';
@@ -128,8 +129,9 @@ function motes(ctx: FxCtx, n: number, x0: number, x1: number, y0: number, y1: nu
  */
 export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cost = 0, soulCost = 0, target = null }: { cost?: number; soulCost?: number; target?: string | null } = {}): Promise<() => Promise<void>> {
   const board = ctx.board, L = T.legend;
-  const W = board.clientWidth, H = board.clientHeight;
+  const W = boardW(ctx), H = boardH(ctx);
   const c = legendCard(ctx.data, code);
+  const ribbonHTML=titleHTML(c.name),ribbonWidth=titleWidth(ctx,c.name);
   // the middle of the sea between the rows of planks; the card, the seal and the ribbon fit into the board
   const rows = board.querySelectorAll(':scope .planks');
   const g = gapBox(ctx);
@@ -197,9 +199,9 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   circRing(ctx, hi, sp.x, sp.y, 10, 90 * S, '#f6d9c8', 600, tHit, 3);
   at(ctx, tHit, () => goldBurst(ctx, hi, sp.x, sp.y, 20, 20 * S, 80 * S));
   // 6. the name unfurls under the card, letter by letter; the shine and the spark run over the card
-  const ban = mk(ctx, 'lg-title', cx, Math.min(cy + 224 * S, H - 30), [...c.name.toUpperCase()].map((ch) => `<span>${ch === ' ' ? '&nbsp;' : esc(ch)}</span>`).join(''));
+  const ban = mk(ctx, 'lg-title', cx, Math.min(cy + 224 * S, H - 30), ribbonHTML);
   ban.style.zIndex = '40';
-  const bs = Math.min(S, (W - 16) / Math.max(1, ban.offsetWidth));
+  const bs = Math.min(S, (W - 16) / Math.max(1, ribbonWidth));
   A(ctx, ban, [{ transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(.1)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(1.04)`, opacity: 1, offset: 0.6 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100})`, opacity: 1 }], L.ribbon, tHit, 'cubic-bezier(.2,.8,.3,1)');
   ban.querySelectorAll('span').forEach((s, i) => A(ctx, s, [{ opacity: 0, transform: 'translateY(12px) scale(1.6)' }, { opacity: 1, transform: 'none' }], 400, tHit + i * L.letter, 'cubic-bezier(.2,1.4,.5,1)'));
   const shine = card.querySelector('.lc-shine')!, glint = card.querySelector('.lc-glint rect')!;
@@ -283,7 +285,7 @@ LG['И-Л'] = async (c, ctx) => {
   ctx = Object.create(ctx) as typeof ctx;
   ctx.canvasParticles = true;
   ctx.volleySprites = true;
-  const K = T.armada, W = ctx.board.clientWidth, g = gapBox(ctx), phone = isPhone(ctx);
+  const K = T.armada, W = boardW(ctx), g = gapBox(ctx), phone = isPhone(ctx);
   const n = phone ? 4 : 6;
   const k = R1(Math.min(0.86, (W / (n * 1.4)) / 120, (g.h * 0.5) / 78) * 100) / 100;
   const y = g.cy + g.h * 0.08;
@@ -398,7 +400,7 @@ function cellFly(ctx: FxCtx, icon: string, p: Pt): HTMLElement {
  * game: the target may be in the top row — then the arms hang from its lower edge (the picture mirrored).
  */
 LG['Г-Л'] = async (c, ctx) => {
-  const K = T.kraken, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = ctx.board.clientWidth, uid = ++LG_UID;
+  const K = T.kraken, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = boardW(ctx), uid = ++LG_UID;
   const v = isTop(ctx, tgt) ? -1 : 1; // 1 — the arms grow up from the top edge (a ship of the bottom row)
   const edge = v > 0 ? b.y : b.b;     // the edge of the target to the sea
   const rich = filters(ctx);
@@ -526,7 +528,7 @@ const bigKind = (code: string): BigShipKind => (code === 'Ж' ? 'pearl' : code =
  * «Джонс свободен» and the repair of the Crew of «Голландец» — events of the same Legend — come after.
  */
 LG['М-Л'] = async (c, ctx) => {
-  const K = T.bottle, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = ctx.board.clientWidth, g = gapBox(ctx);
+  const K = T.bottle, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = boardW(ctx), g = gapBox(ctx);
   const events = (c as LegendClip & { events?: GameEvent[] }).events ?? c.effects ?? [];
   const top = fxSvg(ctx), BS = R1(Math.min(0.82, (W - 24) / 236, g.h / 110) * 100) / 100;
   const bx0 = clamp(b.cx - 10, 100 * BS + 8, W - 130 * BS - 8), by0 = g.cy;
