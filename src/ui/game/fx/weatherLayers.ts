@@ -66,8 +66,26 @@ function maelstrom(source: SVGSVGElement): void {
   const art=island(source,group);if(style)art.querySelector('svg')!.append(style);
   box.append(art);source.replaceWith(box);
 }
+/** Reefs: the surf scales about its original (0,4) centre, under each unchanged rock. */
+function reefs(source: SVGSVGElement): void {
+  const box=frame(source),style=source.querySelector(':scope > style');
+  for(const rock of source.querySelectorAll<SVGGElement>(':scope > g')){
+    const surf=rock.querySelector<SVGGraphicsElement>('.sf');if(!surf)continue;
+    const anchor=document.createElement('div'),m=rock.transform.baseVal.consolidate()?.matrix;
+    anchor.style.cssText='position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;pointer-events:none';
+    if(m)anchor.style.transform=`matrix(${m.a},${m.b},${m.c},${m.d},${m.e},${m.f})`;
+    const motion=document.createElement('div');motion.className=surf.getAttribute('class')??'';
+    motion.style.cssText='position:absolute;left:0;top:0;width:0;height:0;transform-origin:0px 4px;will-change:transform,opacity;pointer-events:none';
+    surf.removeAttribute('class');surf.removeAttribute('style');
+    const art=island(source,surf);art.style.willChange='auto';motion.append(art);
+    anchor.append(motion,svgPart(source,[...rock.children]));box.append(anchor);
+  }
+  if(style)box.querySelector('svg')!.append(style);
+  source.replaceWith(box);
+}
 export function compositeWeather(source: SVGSVGElement,key: string,soft: boolean): void {
   if(key==='wave')wave(source);
   else if(key==='storm')storm(source,soft);
   else if(key==='maelstrom')maelstrom(source);
+  else if(key==='reefs')reefs(source);
 }

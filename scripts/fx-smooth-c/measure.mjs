@@ -41,6 +41,7 @@ const inject = {
   },
 };
 if (!flag('--reuse')) await build({root, configFile: resolve(root, 'vite.config.ts'), mode: 'e2e', logLevel: 'warn', plugins: [inject], build: {outDir, emptyOutDir: true, minify: false}});
+if(flag('--build-only'))process.exit(0);
 const server = await preview({root, configFile: resolve(root, 'vite.config.ts'), build: {outDir}, preview: {host: '127.0.0.1', port: 5187, strictPort: true}});
 const browser = await chromium.launch({executablePath:process.env.CHROMIUM_PATH??'/usr/bin/chromium'});
 const summary = [];

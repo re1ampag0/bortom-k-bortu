@@ -10,7 +10,7 @@ const [beforeDist, afterDist, ...rest] = process.argv.slice(2);
 const selected=rest.filter(s=>!s.startsWith('--'));
 const scenes = selected.length ? selected : ['legend','armada','bottle','idle'];
 // the moments after the press, ms of the clip clock: around the renderWith of each clip and after it
-const MOMENTS = {legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700]};
+const MOMENTS = {'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700]};
 const OUT = 'docs/screenshots/fx-smooth-c/frames';
 mkdirSync(OUT, {recursive: true});
 
@@ -68,7 +68,7 @@ async function shoot(dist, port, tag) {
       for (const id of ['quick-bots', 'pick-pirates', 'prep-start', 'placement-done']) { await click(`[data-testid="${id}"]`); await step(100); }
       await until(async () => !(await busy()) && !!(await page.locator('[data-testid="volley-Ж"]').filter({visible: true}).count()));
       await step(1000);
-      if(scene==='idle'){}
+      if(scene.startsWith('idle')){}
       else if (scene === 'regroup') await click('.regroup');
       else if (scene === 'volley') { await click('[data-testid="volley-Ж"]'); await step(200); await click('[data-testid="plate-И"]'); await step(200); await click('[data-testid="fire"]'); }
       else { await click('[data-fx-hand] [data-fx-card="Ж-14"]'); await step(200); await click('[data-testid="lift-play"]'); await step(200); await click('[data-testid="plate-И"]'); await step(200); await click('[data-testid="play-card"]'); }
@@ -76,6 +76,7 @@ async function shoot(dist, port, tag) {
       let at = 0;
       for (const m of MOMENTS[scene]) {
         await step(m - at); at = m;
+        if(scene==='idle-motion')await page.evaluate(phase=>{for(const a of document.getAnimations())if(a instanceof CSSAnimation){a.pause();a.currentTime=phase;}},m);
         await page.screenshot({path: `${OUT}/${scene}-${m}-${tag}.png`});
       }
       if(errors.length)throw new Error(JSON.stringify(errors));
