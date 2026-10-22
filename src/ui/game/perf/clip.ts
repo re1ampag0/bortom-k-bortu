@@ -32,16 +32,16 @@ const listeners = new Set<() => void>();
 export let perfAnimHook: ((el: Element) => void) | null = null;
 
 /** Null while diagnostics is disabled: producers do not read clocks or allocate samples. */
-export let perfWorkHook: ((name: string) => (() => void)) | null = null;
+export let perfWorkHook: ((name: string, kind?: 'work' | 'visual') => (() => void)) | null = null;
 export let perfPhaseHook: ((name: string, duration: number, delay?: number) => void) | null = null;
 let profile: ClipProfile | null = null;
 let recentWork: PhaseSample[] = [], lastPress: PressSample | null = null;
 let listening = false, pausedAt: number | null = null;
 const CAP = 4096;
-function work(name: string): () => void {
+function work(name: string,kind:'work'|'visual'='work'): () => void {
   const r=run, list=r?.phases??recentWork;
   if(list.length>=CAP){if(r)r.dropped++;else list.shift();if(r)return ()=>{};}
-  const row:PhaseSample={at:performance.now(),end:Infinity,clip:current,name,kind:'work'};
+  const row:PhaseSample={at:performance.now(),end:Infinity,clip:current,name,kind};
   list.push(row);
   return ()=>{row.end=performance.now();};
 }
@@ -55,7 +55,7 @@ function press(e: Event): void {
   if(e instanceof KeyboardEvent&&!['Enter',' '].includes(e.key))return;
   const target=e.target instanceof Element?e.target.closest('[data-testid],button'):null;
   lastPress={at:performance.now(),name:`${e.type} ${target?.getAttribute('data-testid')??target?.getAttribute('aria-label')??target?.textContent?.trim().slice(0,48)??'стол'}`};
-  if(run&&run.presses.length<CAP)run.presses.push(lastPress);
+  if(run){if(run.presses.length<CAP)run.presses.push(lastPress);else run.dropped++;}
 }
 function configure(enabled=getPerf().enabled): void {
   perfWorkHook=enabled?work:null;perfPhaseHook=enabled?visual:null;
@@ -72,11 +72,11 @@ export function watchClipDiagnostics(): () => void {configure();return ()=>confi
 export function clipPause(held: boolean): void {
   if(!run)return;
   const now=performance.now();
-  if(held&&pausedAt===null){pausedAt=now;run.phases.push({at:now,end:Infinity,clip:current,name:'Пауза',kind:'work'});}
+  if(held&&pausedAt===null){pausedAt=now;if(run.phases.length<CAP)run.phases.push({at:now,end:Infinity,clip:current,name:'Пауза',kind:'work'});else run.dropped++;}
   else if(!held&&pausedAt!==null){
     const dt=now-pausedAt;
     for(const p of run.phases)if(p.kind==='visual'){if(p.at>=pausedAt)p.at+=dt;if(p.end>=pausedAt)p.end+=dt;}
-    const pause=run.phases.filter(p=>p.name==='Пауза').at(-1);if(pause)pause.end=now;pausedAt=null;
+    const pause=run.phases.filter(p=>p.name==='Пауза'&&p.end===Infinity).at(-1);if(pause)pause.end=now;pausedAt=null;
   }
 }
 export const lastClipProfile = () => profile;

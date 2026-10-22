@@ -244,6 +244,8 @@ function hideEmpty(b: Bank): void {
   if(b.raf)cancelAnimationFrame(b.raf);b.raf=0;active.delete(b);
 }
 function draw(b: Bank): void {
+  const perfEnd=perfWorkHook?.('частицы: кадр');
+  try {
   if(b.diagnostics){b.drawn={};b.visible=[];}
   for(const s of b.surfaces.values())if(s.canvas.isConnected){s.context.resetTransform();s.context.clearRect(0,0,s.canvas.width,s.canvas.height);}
   const frameSurfaces=new Map<Level,Surface>();
@@ -278,6 +280,7 @@ function draw(b: Bank): void {
   });
   for(const s of b.surfaces.values())if(!painted.has(s.level)){if(s.canvas.style.display!=='none')s.canvas.style.display='none';if(s.canvas.isConnected)s.canvas.remove();}
   if(!b.items.length)hideEmpty(b);
+  } finally {perfEnd?.();}
 }
 function advance(b: Bank): void {const now=performance.now();if(!b.paused)b.now+=Math.max(0,now-b.last);b.last=now;}
 function tick(b: Bank): void {
