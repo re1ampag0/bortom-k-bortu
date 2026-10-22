@@ -2,6 +2,7 @@ import {useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore} from
 import {createPortal} from 'react-dom';
 import {getPerf, initPerf, PARTS, perfClasses, subscribePerf, togglePart, type PerfConfig} from './state';
 import {FrameWindow, stats, type Sample, type Stats} from './metrics';
+import {clipText, lastClip, subscribeClip} from './clip';
 import './perf.css';
 export function usePerf() {
   useState(initPerf);
@@ -27,6 +28,9 @@ export function PerfPanel() {
   const [seconds, setSeconds] = useState<number | null>(null), [result, setResult] = useState(''), [copy, setCopy] = useState('');
   const frames = useRef(new FrameWindow()), last = useRef<number | null>(null), record = useRef<Recording | null>(null);
   const text = useRef<HTMLTextAreaElement>(null);
+  const clip = useSyncExternalStore(subscribeClip, lastClip, lastClip);
+  const [clipCopy, setClipCopy] = useState('');
+  const clipArea = useRef<HTMLTextAreaElement>(null);
   const cancelRecord = () => {
     const r = record.current; if (!r) return;
     clearTimeout(r.timer); r.observer.disconnect(); record.current = null; setSeconds(null);
@@ -70,16 +74,20 @@ export function PerfPanel() {
     }, 20000)};
     record.current = r;
   };
-  const copyResult = async () => {
-    try {await navigator.clipboard.writeText(result);setCopy('Скопировано');}
-    catch {text.current?.focus();text.current?.select();text.current?.setSelectionRange(0,result.length);
+  const copyText = async (value: string, area: HTMLTextAreaElement | null, done: (note: string) => void) => {
+    try {await navigator.clipboard.writeText(value);done('Скопировано');}
+    catch {area?.focus();area?.select();area?.setSelectionRange(0,value.length);
       let copied = false; try {copied = document.execCommand('copy');} catch { /* manual copy remains available */ }
-      setCopy(copied ? 'Скопировано' : 'Выделите текст и скопируйте');}
+      done(copied ? 'Скопировано' : 'Выделите текст и скопируйте');}
   };
+  const copyResult = () => copyText(result, text.current, setCopy);
+  const clipValue = clip ? clipText(clip) : '';
+  useEffect(() => setClipCopy(''), [clip]);
   return createPortal(<aside className="perf-panel" data-testid="perf-panel" aria-label="Диагностика скорости">
     <div className="perf-readout">{value.fps.toFixed(0)} кадров/с · худший/10 с {value.worst.toFixed(0)} мс<br/>&gt;50 мс за 10 с: {value.slow}</div>
     <div className="perf-buttons"><button onClick={reset}>Сброс</button><button aria-expanded={parts} onClick={() => setParts(!parts)}>Части</button><button onClick={start} disabled={seconds !== null}>{seconds === null ? 'Записать 20 с' : `Запись: ${seconds} с`}</button></div>
     {parts && <fieldset className="perf-parts"><legend>Отключить части</legend>{PARTS.map(([part,name], i) => <label key={part}><input data-testid={`perf-${part}`} type="checkbox" checked={config.off.includes(part)} onChange={() => togglePart(part)}/>{i+1}. {name}</label>)}</fieldset>}
+    {clip && <div className="perf-result perf-clip" data-testid="perf-clip"><b>Последний клип</b><textarea ref={clipArea} aria-label="Числа последнего клипа" readOnly value={clipValue}/><button onClick={() => copyText(clipValue, clipArea.current, setClipCopy)}>Скопировать числа</button><span role="status">{clipCopy}</span></div>}
     {result && <div className="perf-result"><textarea ref={text} aria-label="Итог диагностики" readOnly value={result}/><button onClick={copyResult}>Копировать</button><span role="status">{copy}</span></div>}
   </aside>, document.body);
 }

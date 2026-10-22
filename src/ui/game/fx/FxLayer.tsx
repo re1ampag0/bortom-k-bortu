@@ -1,6 +1,7 @@
 import {prepareParticles, clearParticles, disposeParticles} from './particles';
 import {createFxHint, type FxHintStore} from './hintStore';
 import {getPerf} from '../perf/state';
+import {clipKind, clipShowEnd, clipShowStart} from '../perf/clip';
 // The animation layer on the table and its queue: the port of play / finish / skip / afterRender / keepSet of
 // docs/mockups/anim/level1/page.js (PORTING.md, section 4). The planks are drawn from the displayed state D: it lags
 // behind the real state, a clip plays → its events are applied to D → the table is drawn again. Buttons and «can I»
@@ -331,6 +332,7 @@ export function useFxQueue({
     traceBatches.current.clear();
     setHint(null);
     setBusy(false);
+    clipShowEnd();
     bump();
     wake();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -340,6 +342,7 @@ export function useFxQueue({
     const run = ++RUN.current;
     running.current = true;
     setBusy(true);
+    clipShowStart();
     if (!D.current) D.current = structuredClone(base.current!);
     bump();
     const endTraceBatch = batchTrace();
@@ -358,6 +361,7 @@ export function useFxQueue({
           if (!ctx) throw ABORT;
           if (clip.kind === 'turn') SCENES.forEach((x) => x.onTurn(ctx));
           playing.current = clip.kind;
+          clipKind(clip.kind);
           const t0 = performance.now();
           trace(`▶ ${clip.kind}${queue.current.length > 1 ? ` (догоняет, в очереди ${queue.current.length})` : ''}`);
           try {
@@ -401,6 +405,7 @@ export function useFxQueue({
       playing.current = null;
       setHint(null);
       setBusy(false);
+      clipShowEnd();
       bump();
     } catch (e) {
       if (e !== ABORT) {
