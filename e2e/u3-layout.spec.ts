@@ -169,8 +169,8 @@ for (const size of SIZES) {
         }));
         expect(new Set(rows.tops).size, 'the buttons of «Голландец» in one row').toBe(1);
         // every button of every plank of one height, its text whole; a5-phone (A5Phone, frame 1): one or two buttons fill the
-        // row of their plank, three and more are a third of it each (of one width; ui-5: a Soul — its picture and «→ Корп» — is as
-        // wide as they are)
+        // row of their plank; three and more are at least a third of it each — fx-smooth-a: with the icon of the laptop before
+        // the short label a button is as wide as they are (ui-5: a Soul — its picture and «→ Корп» — the same)
         const btns = await page.evaluate(() =>
           Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons .btn')).map((b) => ({ ship: b.closest<HTMLElement>('.plank')!.dataset.ship!, n: b.parentElement!.children.length, soul: !!b.querySelector('.short-pic') && !b.querySelector('.i-dive'), w: b.getBoundingClientRect().width, h: b.getBoundingClientRect().height, whole: ((e) => { const r = document.createRange(); r.selectNodeContents(e); const t = r.getBoundingClientRect(), b = e.getBoundingClientRect(); return t.left >= b.left && t.right <= b.right && t.top >= b.top && t.bottom <= b.bottom; })(b) })),
         );
@@ -184,9 +184,16 @@ for (const size of SIZES) {
             }),
         );
         for (const left of fill) expect(Math.abs(left), 'one or two buttons fill the row').toBeLessThanOrEqual(1);
-        for (const ship of new Set(btns.filter((b) => b.n >= 3).map((b) => b.ship))) {
-          expect(spread(btns.filter((b) => b.ship === ship && !b.soul).map((b) => b.w)), `${ship}: the buttons of one width`).toBeLessThanOrEqual(1);
-        }
+        const thirds = await page.evaluate(() =>
+          Array.from(document.querySelectorAll<HTMLElement>('.planks .plank-buttons'))
+            .filter((row) => row.children.length >= 3)
+            .map((row) => {
+              const cs = getComputedStyle(row), inner = row.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+              const third = (inner - 2 * parseFloat(cs.columnGap || '0')) / 3;
+              return { ship: row.closest<HTMLElement>('.plank')!.dataset.ship!, third, widths: Array.from(row.children).map((b) => b.getBoundingClientRect().width) };
+            }),
+        );
+        for (const r of thirds) expect(Math.min(...r.widths), `${r.ship}: every button at least a third of the row`).toBeGreaterThanOrEqual(r.third - 1);
         expect(spread(btns.map((b) => b.h)), 'the buttons of one height').toBeLessThanOrEqual(1);
         expect(Math.abs(btns[0].h - 34), 'seen 34 px high').toBeLessThanOrEqual(TOL);
         expect(btns.every((b) => b.whole), 'no text cut').toBe(true);
@@ -195,7 +202,9 @@ for (const size of SIZES) {
           const r = row.getBoundingClientRect();
           return Array.from(row.querySelectorAll('.btn')).filter((b) => { const x = b.getBoundingClientRect(); return x.left >= r.left - 1 && x.right <= r.right + 1; }).length;
         });
-        expect(sight, 'three buttons of «Голландец» in sight').toBe(3);
+        // fx-smooth-a: with the icons two or three are whole in sight, the rest comes with a finger (the right edge fades)
+        expect(sight, 'at least two buttons of «Голландец» in sight').toBeGreaterThanOrEqual(2);
+        await expect(page.locator('[data-testid="plank-Г"] .plank-buttons-wrap')).toHaveAttribute('data-more', '');
         // the press zone: 44 px high (21.5 px above and below the centre), and the gap between neighbours presses one
         // of them — no miss
         const zones = await page.evaluate(() => {

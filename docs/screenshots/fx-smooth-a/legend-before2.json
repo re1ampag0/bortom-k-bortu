@@ -1,0 +1,80 @@
+{
+ "scene": "legend",
+ "label": "before2",
+ "viewport": "390×844 DPR3 CPU×4",
+ "valid": true,
+ "errors": [],
+ "journal": [
+  "19:22:46 ▶ turnEnd",
+  "19:22:47 ✓ turnEnd 1.4 с",
+  "19:22:49 ▶ announce",
+  "19:22:50 ✓ announce 0.7 с",
+  "19:22:50 ▶ shot",
+  "19:22:54 ✓ shot 4.1 с",
+  "19:22:56 ▶ announce",
+  "19:22:57 ✓ announce 0.7 с",
+  "19:22:57 ▶ shot",
+  "19:23:01 ✓ shot 4.4 с",
+  "19:23:03 ▶ card",
+  "19:23:05 ✓ card 1.7 с",
+  "19:23:07 ▶ sell",
+  "19:23:08 ✓ sell 1.4 с",
+  "19:23:10 ▶ turnEnd",
+  "19:23:12 ✓ turnEnd 1.4 с",
+  "19:23:12 ▶ turn",
+  "19:23:14 ✓ turn 2.4 с",
+  "19:23:18 ▶ legend",
+  "19:23:35 ✓ legend 16.6 с"
+ ],
+ "elapsedMs": 5660.899999999907,
+ "scriptingMs": 904.8439999999998,
+ "recalcStyleMs": 373.924,
+ "recalcStyleCount": 119,
+ "layoutMs": 140.38300000000012,
+ "layoutCount": 133,
+ "forcedStyle": {
+  "count": 24,
+  "ms": 134.684
+ },
+ "forcedLayout": {
+  "count": 18,
+  "ms": 54.344
+ },
+ "longTasks": 44,
+ "longestTaskMs": 520.133,
+ "paint": {
+  "ms": 1205.8180000000002,
+  "rasterMs": 607.7959999999994
+ },
+ "worstFrameMs": 716.6999999999971,
+ "framesOver50": 42,
+ "fps": 16.781783815294663,
+ "renders": 3,
+ "renderMs": 219.60000000032596,
+ "renderMaxMs": 100.70000000018626,
+ "renderList": [
+  [
+   529,
+   66.8
+  ],
+  [
+   600,
+   100.7
+  ],
+  [
+   706,
+   52.1
+  ]
+ ],
+ "planks": 24,
+ "hands": 3,
+ "layers": {
+  "all": 127,
+  "drawing": 114
+ },
+ "observerLongTasks": 44,
+ "svgAnimations": 7,
+ "svgByFunction": {
+  "circRing": 7
+ }
+}

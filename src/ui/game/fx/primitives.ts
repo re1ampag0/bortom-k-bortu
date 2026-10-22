@@ -1,5 +1,6 @@
 import {animateParticle, canvasRing, canvasHTML, canvasShape, canvasSmoke, canvasCircle, particleCount, pauseParticles, rememberParticleHost, type ParticleAnimation, type ParticleTarget} from './particles';
 import {getPerf, perfOff} from '../perf/state';
+import {perfAnimHook} from '../perf/clip';
 // Effect primitives of the animation layer: a port of docs/mockups/anim/level1/effects.js (see PORTING.md).
 // The code is the reference's; what changed is how an element is found (the data-fx-* DOM contract, from the board of
 // the context) and the types. The globals of the reference (board, fx, D, SPEED, RICH, RUN, G) are the context `ctx`,
@@ -49,6 +50,8 @@ export interface FxCtx {
    * change; after the clip D takes them in anyway). The FLIP of the planks measures before and after it.
    */
   renderWith: (evs: readonly GameEvent[]) => void;
+  /** The phone layout (max-width: 700px), read once for the clip, not by matchMedia at every animation. */
+  narrow?: boolean;
 }
 
 export interface Pt {
@@ -137,9 +140,10 @@ export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay?: nu
 export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay?: number, easing?: string, fill?: FillMode): Animation | ParticleAnimation;
 export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation | ParticleAnimation {
   if ('particle' in el) return animateParticle(el, kf, ms(ctx,d), ms(ctx,delay), easing);
+  if (perfAnimHook) perfAnimHook(el);
   // Backwards fill also positions SVG children during their delay; unlike direct HTML
   // children of .fx-layer they need not have opacity:0 in their base style.
-  const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
+  const phone = ctx.narrow ?? ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
   const frames = phone || perfOff('filters') ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
   if ((perfOff('planks') && el.closest('.plank')) || (perfOff('labels') && el.closest('.flyc,.seacard,.plate,.tag,.pill,.wait-pill,.tmark,.hold-tag'))) return el.animate([], {duration: 0});
   const animation = el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
@@ -174,18 +178,25 @@ export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: n
   }
   return animation;
 }
-interface GeometryStep { board: DOMRect; k: number; boxes: WeakMap<Element, Box> }
+interface GeometryStep { board: DOMRect; k: number; boxes: WeakMap<Element, Box>; w: number; h: number }
 const geometrySteps = new WeakMap<HTMLElement, GeometryStep>();
 /** A render/FLIP can change anchor positions inside the same synchronous clip step. */
 export function invalidateGeometry(board: HTMLElement): void { geometrySteps.delete(board); }
-export function bx(ctx: FxCtx, el: Element): Box {
+function stepOf(ctx: FxCtx): GeometryStep {
   let step = geometrySteps.get(ctx.board);
   if (!step) {
-    step = {board: ctx.board.getBoundingClientRect(), k: stageK(), boxes: new WeakMap()};
+    step = {board: ctx.board.getBoundingClientRect(), k: stageK(), boxes: new WeakMap(), w: ctx.board.clientWidth, h: ctx.board.clientHeight};
     geometrySteps.set(ctx.board, step);
     const current = step;
     queueMicrotask(() => { if (geometrySteps.get(ctx.board) === current) geometrySteps.delete(ctx.board); });
   }
+  return step;
+}
+/** The size of the board for this synchronous step: read once, not again after each element a clip adds. */
+export const boardW = (ctx: FxCtx) => stepOf(ctx).w;
+export const boardH = (ctx: FxCtx) => stepOf(ctx).h;
+export function bx(ctx: FxCtx, el: Element): Box {
+  const step = stepOf(ctx);
   // Cache only stable table anchors. Newly written labels/effects still measure their actual size.
   const anchor = el.matches('[data-fx-ship], [data-fx-track], [data-fx-value], [data-fx-hold], [data-fx-gap], .cells i, .bar');
   const cached = anchor && step.boxes.get(el);
@@ -334,8 +345,8 @@ export function tag(ctx: FxCtx, x: number, y: number, text: string, delay: numbe
   t.textContent = capFirst(text);
   // .tag is centred on its point (translate(-50%, -50%)); it rises 4 px at the start
   const w = t.offsetWidth, h = t.offsetHeight;
-  t.style.left = inside(x - w / 2, w, ctx.board.clientWidth) + w / 2 + 'px';
-  t.style.top = inside(y - h / 2, h + 4, ctx.board.clientHeight) + h / 2 + 'px';
+  t.style.left = inside(x - w / 2, w, boardW(ctx)) + w / 2 + 'px';
+  t.style.top = inside(y - h / 2, h + 4, boardH(ctx)) + h / 2 + 'px';
   A(ctx, t, [{ opacity: 0, translate: '0 4px' }, { opacity: 1, translate: '0 0', offset: 0.12 }, { opacity: 1, offset: 0.82 }, { opacity: 0 }], dur, delay);
   return t;
 }
@@ -439,7 +450,7 @@ function clearOfRound(ctx: FxCtx, t: HTMLElement): HTMLElement {
   if (!visible(plate)) return t;
   const pb = bx(ctx, plate), w = t.offsetWidth, h = t.offsetHeight, x = parseFloat(t.style.left), y = parseFloat(t.style.top);
   const meets = y - h / 2 < pb.b && y + h / 2 > pb.y && x - w / 2 < pb.r + 4 && x + w / 2 > pb.x;
-  if (meets) t.style.left = Math.min(ctx.board.clientWidth - 8 - w / 2, pb.r + 6 + w / 2) + 'px';
+  if (meets) t.style.left = Math.min(boardW(ctx) - 8 - w / 2, pb.r + 6 + w / 2) + 'px';
   return t;
 }
 /** Kegs fly into the Hold. */
@@ -532,7 +543,7 @@ export function cardOrigin(ctx: FxCtx, code: string, ship: string): CardPos {
     return { x: b.cx - 55, y: b.y, s: 1 };
   }
   const s = bx(ctx, plank(ctx, ship));
-  return isTop(ctx, ship) ? { x: s.cx - 55, y: -150, r: -8, s: 1 } : { x: s.cx - 55, y: ctx.board.clientHeight + 20, r: 8, s: 1 };
+  return isTop(ctx, ship) ? { x: s.cx - 55, y: -150, r: -8, s: 1 } : { x: s.cx - 55, y: boardH(ctx) + 20, r: 8, s: 1 };
 }
 export function hint(ctx: FxCtx, text: string): void {
   ctx.hint(text);
@@ -541,8 +552,8 @@ export function pill(ctx: FxCtx, x: number, y: number, text: string, delay: numb
   const pl = mk(ctx, 'pill ' + cls, 0, 0, text);
   // game: inside the table (see tag); it moves from +8 px to −12 px and grows to ×1.12
   const w0 = pl.offsetWidth, h0 = pl.offsetHeight, gw = w0 * 0.06, gh = h0 * 0.06; // ×1.12 around its centre
-  x = inside(x - gw, w0 + 2 * gw, ctx.board.clientWidth) + gw;
-  y = Math.max(EDGE + 12 + gh, Math.min(ctx.board.clientHeight - EDGE - h0 - gh - 8, y));
+  x = inside(x - gw, w0 + 2 * gw, boardW(ctx)) + gw;
+  y = Math.max(EDGE + 12 + gh, Math.min(boardH(ctx) - EDGE - h0 - gh - 8, y));
   A(ctx, pl, [{ opacity: 0, transform: `translate(${x}px,${y + 8}px) scale(.4)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1.12)`, offset: 0.18 }, { transform: `translate(${x}px,${y + 2}px) scale(1)`, offset: 0.32 }, { opacity: 1, offset: 0.82 }, { opacity: 0, transform: `translate(${x}px,${y - 12}px) scale(1)` }], 1500, delay);
   return pl;
 }
@@ -593,7 +604,7 @@ export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number,
   const from = fxPoint(ctx, fromShip, 'crew', 0), F = T.soul, svg = fxSvg(ctx);
   const cells = trackEl(ctx, fromShip, 'crew').querySelector('.cells'), cell = visible(cells) ? cells.children[Math.max(0, shownTrack(ctx, fromShip, 'crew') - 1)] : null;
   if (cell) A(ctx, cell, [{ filter: 'none' }, { filter: 'drop-shadow(0 0 6px #7ff0b0) brightness(1.5)', offset: 0.3 }, { filter: 'none' }], 900, delay, 'ease-out', 'none');
-  const swing = Math.min(160, ctx.board.clientWidth * 0.14) * (from.x < to.x ? 1 : -1);
+  const swing = Math.min(160, boardW(ctx) * 0.14) * (from.x < to.x ? 1 : -1);
   const N = 40, path = qpts(from.x, from.y, (from.x + to.x) / 2 - swing, Math.min(from.y, to.y) + 60, to.x, to.y, N);
   for (let k = 0; k < n; k++) {
     const d0 = delay + k * 200;
@@ -623,10 +634,10 @@ const NS = 'http://www.w3.org/2000/svg';
 export const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const R1 = (v: number) => Math.round(v * 10) / 10;
 /** Phone geometry and the historical lighter particle budget (fx-phone). */
-export const isPhone = (ctx: FxCtx) => ctx.board.clientWidth <= 700;
+export const isPhone = (ctx: FxCtx) => (geometrySteps.get(ctx.board)?.w ?? ctx.board.clientWidth) <= 700;
 /** Heavy SVG filters are rich-laptop only; the phone retains gradients without blur/turbulence. */
 // The phone keeps the particles and gradients, without SVG blur/filter surfaces.
-export const filters = (ctx: FxCtx) => ctx.rich && !ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
+export const filters = (ctx: FxCtx) => ctx.rich && !(ctx.narrow ?? ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches);
 
 /** At most so many animations at once in the layer and the traces of the sea (TASKS.md: ~200; a margin for the ones
  *  every effect draws whatever the budget — a flash, a ball). */
@@ -692,8 +703,8 @@ ${rich ? '<filter id="fxSmkF" x="-40%" y="-40%" width="180%" height="180%"><feTu
 /** An svg over the whole board (its coordinates) in the layer — or in another host (the traces of the sea, .fx-scars). */
 export function fxSvg(ctx: FxCtx, host: Element = ctx.layer): SVGSVGElement {
   const s = document.createElementNS(NS, 'svg');
-  s.setAttribute('width', String(ctx.board.clientWidth));
-  s.setAttribute('height', String(ctx.board.clientHeight));
+  s.setAttribute('width', String(boardW(ctx)));
+  s.setAttribute('height', String(boardH(ctx)));
   s.setAttribute('class', 'fx-svg');
   s.setAttribute('aria-hidden', 'true');
   s.style.cssText = 'position:absolute;left:0;top:0;overflow:visible;pointer-events:none;opacity:1';
@@ -928,7 +939,7 @@ export function flashBoard(ctx: FxCtx, color = '#fff', peak = 0.55, d = 520, del
  */
 export function fallBoard(ctx: FxCtx, svg: Element, code: string, p: Pt, delay = 0, d = 1000): void {
   if (perfOff('particles')) return;
-  const to = { x: clamp(p.x + 40, 20, ctx.board.clientWidth - 20), y: clamp(facingY(ctx, code) + dirOf(ctx, code) * 34, 20, ctx.board.clientHeight - 20) };
+  const to = { x: clamp(p.x + 40, 20, boardW(ctx) - 20), y: clamp(facingY(ctx, code) + dirOf(ctx, code) * 34, 20, boardH(ctx) - 20) };
   const bd = particleShape(ctx, svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>');
   A(ctx, bd, [{ transform: `translate(${R1(p.x)}px,${R1(p.y)}px) rotate(0deg)` }, { transform: `translate(${R1(p.x + 12)}px,${R1(p.y - 16)}px) rotate(40deg)`, offset: 0.2 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 1, offset: 0.98 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 0 }], d, delay, 'cubic-bezier(.3,.1,.7,1)');
   at(ctx, delay + d, () => {

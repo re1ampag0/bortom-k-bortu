@@ -1,12 +1,13 @@
 import {prepareParticles, clearParticles, disposeParticles} from './particles';
 import {createFxHint, type FxHintStore} from './hintStore';
-import {getPerf} from '../perf/state';
+import {getPerf, perfOff} from '../perf/state';
+import {clipKind, clipShowEnd, clipShowStart} from '../perf/clip';
 // The animation layer on the table and its queue: the port of play / finish / skip / afterRender / keepSet of
 // docs/mockups/anim/level1/page.js (PORTING.md, section 4). The planks are drawn from the displayed state D: it lags
 // behind the real state, a clip plays → its events are applied to D → the table is drawn again. Buttons and «can I»
 // checks always read the real state. The layer never takes input; a press on the table (not on the hand, not on the
 // decision panel) shows the result at once.
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
 import type { GameEvent, GameState } from '../../../engine/state';
 import type { GameData, Side } from '../../../engine/types';
@@ -20,7 +21,7 @@ import type { FxKind } from './planFx';
 import {prepareArmadaSprites} from './armadaSprites';
 import {releaseSprites, spritePause, disposeSprites} from './sprites';
 import { ABORT, invalidateGeometry, particleDefs, flushClock, pauseClock, resumeClock, wait, type FxCtx } from './primitives';
-import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
+import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, withDisplay, type PlayClip, type QueueItem } from './queue';
 import { tookPress } from '../InfoTip';
 import { trace, batchTrace } from './trace';
 import { loadSettings } from '../../storage';
@@ -71,18 +72,37 @@ interface Item extends QueueItem {
   applied: boolean;
 }
 
-export interface FxQueue {
+/**
+ * What the table shows while the queue plays, as one snapshot. Only the parts that draw it subscribe (useFxPart): a step
+ * of a clip does not render the whole Game.
+ */
+export interface FxSnapshot {
   /** D while the queue plays; null — the table is drawn from the real state. */
   display: Display | null;
   /** Grows each time D changes: the parts the effects touched are built again (React keys). */
   gen: number;
-  /** The line of the status bar while a clip plays. */
-  hintStore: FxHintStore;
+  /** Grows when a show is cut off (skip, a press, Undo): every imperatively touched part is built again. */
+  epoch: number;
   /** Flags of statuses by ship whose clip has not played yet: the chips wait hidden (pendingFlags). */
   hidden: Record<string, string[]>;
   /** The log lines of this action and the later ones wait for their clips (logHiddenFrom); null — none waits. */
   logFrom: number | null;
   busy: boolean;
+}
+
+export interface FxStore {
+  get: () => FxSnapshot;
+  subscribe: (listener: () => void) => () => void;
+  set: (next: FxSnapshot) => void;
+  cut: () => void;
+  /** A state as it is shown: the displayed fields of the snapshot over the real one (cached by gen). */
+  shown: (real: GameState) => GameState;
+}
+
+export interface FxQueue extends FxSnapshot {
+  store: FxStore;
+  /** The line of the status bar while a clip plays. */
+  hintStore: FxHintStore;
   /** «Сразу итог»: D = the real state, the layer is cleared. */
   skip: () => void;
   /** A press on the table: the result at once, if a clip plays. */
@@ -161,10 +181,12 @@ export function useFxQueue({
   useEffect(() => () => { traceBatches.current.forEach(end => end()); traceBatches.current.clear(); }, []);
   /** The clip on screen, for the journal of the layer (⚙ → «Журнал анимаций»). */
   const playing = useRef<string | null>(null);
-  const [gen, setGen] = useState(0);
   const [hintStore] = useState(createFxHint);
   const setHint = hintStore.set;
-  const [busy, setBusy] = useState(false);
+  // busy goes out with the next snapshot (every change of it is followed by bump)
+  const busyNow = useRef(false);
+  const setBusy = (v: boolean) => { busyNow.current = v; };
+  const [store] = useState(createFxStore);
   const layerRef = useRef<HTMLDivElement>(null);
   const weatherRef = useRef<HTMLDivElement>(null);
 
@@ -208,19 +230,31 @@ export function useFxQueue({
     return () => document.removeEventListener('visibilitychange', freezeShow);
   }, [freezeShow]);
 
+  /** The snapshot from the refs of the queue: D (or the renderWith preview), the waiting flags and log lines, busy. */
+  const publish = (gen = store.get().gen) => store.set({
+    display: D.current ? preview.current ?? D.current : null,
+    gen,
+    epoch: store.get().epoch,
+    hidden: D.current ? pendingFlags(queue.current) : {},
+    logFrom: D.current ? logHiddenFrom(queue.current) : null,
+    busy: busyNow.current,
+  });
   const bump = () => {
     const board = layerRef.current?.parentElement;
     if (board) invalidateGeometry(board);
-    setGen((g) => g + 1);
+    publish(store.get().gen + 1);
   };
   const makeCtx = (run: number, display?: Display): FxCtx | null => {
     const layer = layerRef.current;
     const board = layer?.parentElement;
     if (!layer || !board) return null;
     const richAtStart = live.current.rich;
+    let narrow: boolean | undefined;
     return {
       board,
       layer,
+      // read at the first animation of the clip, then kept for it
+      get narrow() { return (narrow ??= board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches); },
       display: display ?? D.current ?? base.current!,
       // game: behind the game (more actions queued than the one on screen) the show catches up — twice as fast — instead
       // of dropping the clips (see skipAhead).
@@ -331,6 +365,8 @@ export function useFxQueue({
     traceBatches.current.clear();
     setHint(null);
     setBusy(false);
+    clipShowEnd();
+    store.cut();
     bump();
     wake();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -340,6 +376,7 @@ export function useFxQueue({
     const run = ++RUN.current;
     running.current = true;
     setBusy(true);
+    clipShowStart();
     if (!D.current) D.current = structuredClone(base.current!);
     bump();
     const endTraceBatch = batchTrace();
@@ -358,6 +395,7 @@ export function useFxQueue({
           if (!ctx) throw ABORT;
           if (clip.kind === 'turn') SCENES.forEach((x) => x.onTurn(ctx));
           playing.current = clip.kind;
+          clipKind(clip.kind);
           const t0 = performance.now();
           trace(`▶ ${clip.kind}${queue.current.length > 1 ? ` (догоняет, в очереди ${queue.current.length})` : ''}`);
           try {
@@ -401,6 +439,7 @@ export function useFxQueue({
       playing.current = null;
       setHint(null);
       setBusy(false);
+      clipShowEnd();
       bump();
     } catch (e) {
       if (e !== ABORT) {
@@ -455,6 +494,8 @@ export function useFxQueue({
       }
     }
     if (!running.current) void loop();
+    // the new actions wait in the queue: their status chips and log lines are hidden before the browser paints
+    else publish();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version]);
 
@@ -508,10 +549,35 @@ export function useFxQueue({
     if (running.current) finish('нажатие по столу');
   }, [finish]);
 
-  return { display: D.current ? preview.current ?? D.current : null, gen, hintStore, hidden: D.current ? pendingFlags(queue.current) : {}, logFrom: D.current ? logHiddenFrom(queue.current) : null, busy, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current),
+  return { ...store.get(), store, hintStore, skip, press, layerRef, weatherRef, ctx: () => makeCtx(RUN.current),
     // game: the weather is off (empty) with prefers-reduced-motion and at «мгновенно»; FX-C: in «простые спецэффекты»
     // it stands still (ctx.rich = false).
     weather: () => ({ ctx: makeCtx(RUN.current, preview.current ?? D.current ?? displayFrom(live.current.view)), on: live.current.enabled }) };
+}
+
+function createFxStore(): FxStore {
+  let snap: FxSnapshot = { display: null, gen: 0, epoch: 0, hidden: {}, logFrom: null, busy: false };
+  const listeners = new Set<() => void>();
+  let cache: { real: GameState; gen: number; display: Display; out: GameState } | null = null;
+  return {
+    get: () => snap,
+    subscribe: (listener) => { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    set: (next) => { snap = next; listeners.forEach((fn) => fn()); },
+    cut: () => { snap = { ...snap, epoch: snap.epoch + 1 }; },
+    // D is changed in place between gens: the cache is keyed by gen, never by the identity of D alone.
+    shown: (real) => {
+      const d = snap.display;
+      if (!d) return real;
+      if (!cache || cache.real !== real || cache.gen !== snap.gen || cache.display !== d) cache = { real, gen: snap.gen, display: d, out: withDisplay(real, d) };
+      return cache.out;
+    },
+  };
+}
+
+/** A part of the table drawn from the shown state subscribes to what it needs of the snapshot (a primitive or a field). */
+export function useFxPart<T>(fx: FxQueue, pick: (s: FxSnapshot) => T): T {
+  const get = () => pick(fx.store.get());
+  return useSyncExternalStore(fx.store.subscribe, get, get);
 }
 
 /**
@@ -519,6 +585,8 @@ export function useFxQueue({
  * press. A press on the table while a clip plays shows the result at once (not on the hand, not on a decision panel).
  */
 export function FxLayer({ fx }: { fx: FxQueue }) {
+  // Drawn again with every snapshot, in the same commit as the planks it follows (afterRender, the weather).
+  const busy = useFxPart(fx, (x) => x).busy;
   useLayoutEffect(() => {
     // afterRender of the reference: React draws the classes of the planks again, the scene of the Volley puts its own back.
     const ctx = fx.ctx();
@@ -530,19 +598,36 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     if (!board) return;
     const warm = () => {
       const ctx = fx.ctx();
-      if (ctx && !board.closest('.game.fx-busy')) { prepareArmadaSprites(ctx); prepareParticles(board, innerWidth>700?particleDefs(true):undefined); }
+      if (ctx && !board.closest('.game[data-fx-busy]')) { prepareArmadaSprites(ctx); prepareParticles(board, innerWidth>700?particleDefs(true):undefined); }
     };
     warm();
     const ro = new ResizeObserver(warm);ro.observe(board);
     return () => {ro.disconnect();disposeParticles(board);disposeSprites(board);};
   }, [layerRef]);
-  useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!fx.busy)prepareArmadaSprites(ctx);}, [fx.busy]);
+  useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!busy)prepareArmadaSprites(ctx);}, [busy]);
+  useLayoutEffect(() => {
+    // The breakdown plate of a Volley is up (in the layer or left in the traces): data-fx-plate on the board hides the line
+    // «Последнее: …» (fx.css). Only the direct children of the two hosts are watched — no :has over the whole board.
+    const board = layerRef.current?.parentElement, scars = board?.querySelector(':scope > .fx-scars');
+    if (!board || !layerRef.current || typeof MutationObserver === 'undefined') return;
+    const sync = () => board.toggleAttribute('data-fx-plate', !!board.querySelector(':scope > .fx-layer > .plate, :scope > .fx-scars > .plate'));
+    const mo = new MutationObserver(sync);
+    mo.observe(layerRef.current, { childList: true });
+    if (scars) mo.observe(scars, { childList: true });
+    sync();
+    return () => mo.disconnect();
+  }, [layerRef]);
   const drawWeather = () => {
     const w = fx.weather();
     if (w.ctx && weatherRef.current) renderWeather(w.ctx, weatherRef.current, w.on);
   };
   // The weather follows the table drawn (the sea card, the places of the ships): it is drawn again only when they change.
-  useLayoutEffect(drawWeather);
+  // Its own check reads the size of the board — a forced layout right after the commit — so it runs only when the
+  // inputs it shows change; a change of the size comes through the observer below.
+  const w = fx.weather(), wd = w.ctx?.display;
+  const weatherKey = wd ? `${w.on}|${w.ctx!.rich}|${perfOff('weather')}|${wd.sea}|${Object.keys(wd.ships).map((c) => wd.ships[c].pos + (wd.ships[c].sunk ? 's' : '')).join('')}` : '';
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(drawWeather, [weatherKey]);
   const redraw = useRef(drawWeather);
   redraw.current = drawWeather;
   useEffect(() => {
@@ -590,7 +675,7 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
   }, [press, layerRef]);
   return (
     <>
-      <div className={`fx-weather${fx.busy ? ' wx-paused' : ''}`} ref={fx.weatherRef} aria-hidden />
+      <div className={`fx-weather${busy ? ' wx-paused' : ''}`} ref={fx.weatherRef} aria-hidden />
       {/* FX-A: the traces on the sea (fx/scars.ts) — over the weather, under the planks; the layer never clears it */}
       <div className="fx-scars" aria-hidden />
       <div className="fx-layer" ref={fx.layerRef} aria-hidden />

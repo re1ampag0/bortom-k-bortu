@@ -1,0 +1,94 @@
+{
+ "scene": "armada",
+ "label": "s1a",
+ "viewport": "390×844 DPR3 CPU×4",
+ "valid": true,
+ "errors": [],
+ "journal": [
+  "17:22:34 ▶ turnEnd",
+  "17:22:35 ✓ turnEnd 1.4 с",
+  "17:22:37 ▶ announce",
+  "17:22:38 ✓ announce 0.7 с",
+  "17:22:38 ▶ shot",
+  "17:22:42 ✓ shot 4.2 с",
+  "17:22:44 ▶ announce",
+  "17:22:45 ✓ announce 0.7 с",
+  "17:22:45 ▶ shot",
+  "17:22:49 ✓ shot 4.3 с",
+  "17:22:51 ▶ card",
+  "17:22:53 ✓ card 1.8 с",
+  "17:22:55 ▶ sell",
+  "17:22:56 ✓ sell 1.5 с",
+  "17:22:58 ▶ turnEnd",
+  "17:23:00 ✓ turnEnd 1.4 с",
+  "17:23:00 ▶ turn",
+  "17:23:02 ✓ turn 2.3 с",
+  "17:23:05 ▶ legend",
+  "17:23:22 ✓ legend 16.3 с"
+ ],
+ "elapsedMs": 17734.59999999986,
+ "scriptingMs": 3688.337000000004,
+ "recalcStyleMs": 990.7889999999996,
+ "recalcStyleCount": 416,
+ "layoutMs": 380.26399999999967,
+ "layoutCount": 498,
+ "forcedStyle": {
+  "count": 136,
+  "ms": 453.9570000000001
+ },
+ "forcedLayout": {
+  "count": 101,
+  "ms": 173.4340000000001
+ },
+ "longTasks": 141,
+ "longestTaskMs": 538.649,
+ "paint": {
+  "ms": 2874.7379999999994,
+  "rasterMs": 847.545000000001
+ },
+ "worstFrameMs": 716.5999999999985,
+ "framesOver50": 118,
+ "fps": 14.88615474834516,
+ "renders": 6,
+ "renderMs": 422.6999999997206,
+ "renderMaxMs": 114.69999999995343,
+ "renderList": [
+  [
+   480,
+   114.7
+  ],
+  [
+   599,
+   85.9
+  ],
+  [
+   690,
+   43.4
+  ],
+  [
+   17034,
+   65.1
+  ],
+  [
+   17207,
+   52.9
+  ],
+  [
+   17475,
+   60.7
+  ]
+ ],
+ "planks": 24,
+ "hands": 3,
+ "layers": {
+  "all": 133,
+  "drawing": 120
+ },
+ "observerLongTasks": 132,
+ "svgAnimations": 75,
+ "svgByFunction": {
+  "gunFire": 48,
+  "circRing": 15,
+  "hitBlast": 12
+ }
+}
