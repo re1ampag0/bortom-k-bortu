@@ -21,7 +21,7 @@ import { SMOKE_LIFE, T } from './timing';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
 import {
-  A, at, ballFly, boom, bubbles, burst, bx, capFirst, cardHTML, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, smokeJet, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
+  A, at, particleHTML, ballFly, boom, bubbles, burst, bx, capFirst, cardHTML, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, smokeJet, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
   mk, moveTo, overlayAt, payKegs, pillAt, plank, projectile, puff, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
   tag, trackEl, wait, whirlpool, type FlyCard, type FxCtx,
 } from './primitives';
@@ -429,6 +429,8 @@ function gunCell(ctx: FxCtx, plankEl: Element, i: number): (ReturnType<typeof bx
 
 /** The shot: a cannonball = 1 damage; where each one flies — from the layout of planFx (to: track | hull). */
 PLAY.shot = async (c, ctx) => {
+  ctx = Object.create(ctx) as typeof ctx;
+  ctx.canvasParticles = true;
   if (!VS) VS = { shooter: c.shooter, target: c.target, declared: c.declared, charge: c.charge, reactions: c.reactions, cards: [], extras: [], declDamage: c.damage };
   const vs = VS;
   vs.target = c.target;
@@ -509,8 +511,8 @@ PLAY.shot = async (c, ctx) => {
       if (b.to === 'hull') kHull += b.units; else kTrack += b.units;
       const pts = curve(p0, p1, (i % 2 ? 0.06 : -0.06) * down);
       flyBall(pts, FLY_HIT, t0, { spin });
-      if ((ctx.rich && !perfOff('particles')) && ['core', 'under', 'joint', 'gold', 'ghost'].includes(b.kind)) for (const [q, op] of [[1, 0.35], [2, 0.18]]) { const gh = mk(ctx, 'ball trail', 0, 0); A(ctx, gh, pts.map((p, j) => ({ offset: j / (pts.length - 1), opacity: j === pts.length - 1 ? 0 : op, transform: `translate(${p.x}px,${p.y}px) scale(${0.8 - q * 0.15})` })), FLY_HIT, t0 + q * 28, 'cubic-bezier(.3,0,.75,1)', 'forwards'); }
-      if (b.kind === 'fire' && (ctx.rich && !perfOff('particles'))) for (let q = 0; q < 8; q++) { const em = mk(ctx, 'ember', 0, 0); const j = Math.floor((q / 8) * (pts.length - 2)) + 1; const p = pts[j]; A(ctx, em, [{ opacity: 1, transform: `translate(${p.x}px,${p.y}px)` }, { opacity: 0, transform: `translate(${p.x + (Math.random() - 0.5) * 14}px,${p.y - 10 - Math.random() * 10}px)` }], 500, t0 + (FLY_HIT * j) / (pts.length - 1)); }
+      if ((ctx.rich && !perfOff('particles')) && ['core', 'under', 'joint', 'gold', 'ghost'].includes(b.kind)) for (const [q, op] of [[1, 0.35], [2, 0.18]]) { const gh = particleHTML(ctx, 'ball trail'); A(ctx, gh, pts.map((p, j) => ({ offset: j / (pts.length - 1), opacity: j === pts.length - 1 ? 0 : op, transform: `translate(${p.x}px,${p.y}px) scale(${0.8 - q * 0.15})` })), FLY_HIT, t0 + q * 28, 'cubic-bezier(.3,0,.75,1)', 'forwards'); }
+      if (b.kind === 'fire' && (ctx.rich && !perfOff('particles'))) for (let q = 0; q < 8; q++) { const em = particleHTML(ctx, 'ember'); const j = Math.floor((q / 8) * (pts.length - 2)) + 1; const p = pts[j]; A(ctx, em, [{ opacity: 1, transform: `translate(${p.x}px,${p.y}px)` }, { opacity: 0, transform: `translate(${p.x + (Math.random() - 0.5) * 14}px,${p.y - 10 - Math.random() * 10}px)` }], 500, t0 + (FLY_HIT * j) / (pts.length - 1)); }
       const th = t0 + FLY_HIT;
       lastHit = Math.max(lastHit, th);
       const newV = Math.max(0, now - k - b.units);
@@ -621,6 +623,8 @@ PLAY.cancel = async (c, ctx) => {
 
 /** The answer of a Reaction («Ответный огонь», «Тяжёлый борт», «Огненная стена»…): from the defender to the shooter. */
 PLAY.counter = async (c, ctx) => {
+  ctx = Object.create(ctx) as typeof ctx;
+  ctx.canvasParticles = true;
   const from = plank(ctx, c.from), fb = bx(ctx, from), fy = facingY(ctx, c.from), down = dirOf(ctx, c.from);
   hint(ctx, `Ответ «${cardName(ctx, c.card)}»: ${nick(ctx, c.from)} → ${nick(ctx, c.to)}`);
   tag(ctx, fb.cx, fy + down * 18, `Ответ: ${cardName(ctx, c.card)}`, 0, 'plus', 1600);

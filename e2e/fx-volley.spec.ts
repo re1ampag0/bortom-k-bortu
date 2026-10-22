@@ -48,7 +48,8 @@ test.describe('the Volley on the table through ?fxScene (1366×660)', () => {
       w.__peak = 0;
       const tick = () => {
         const run = (q: string) => document.querySelector(q)?.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length ?? 0;
-        const n = run('.fx-layer') + run('.fx-scars');
+        const particles = (document.querySelector('.fx-layer')?.parentElement as HTMLElement & {fxParticles?: () => {active:number}})?.fxParticles?.().active ?? 0;
+        const n = run('.fx-layer') + run('.fx-scars') + particles;
         w.__peak = Math.max(w.__peak, n);
         if (!document.body.dataset.fxDone) requestAnimationFrame(tick);
       };
@@ -214,16 +215,22 @@ test('powder smoke in the top layer is seen and lives at most 800 ms', async ({ 
   await page.addInitScript(() => {
     const w = window as unknown as { __smoke: { max: number; seen: number } };
     w.__smoke = { max: 0, seen: 0 };
-    const since = new Map<Element, number>();
+    const since = new Map<number, number>();
     const tick = () => {
       const now = performance.now();
-      document.querySelectorAll('.fx-layer svg circle[fill^="url(#fxSmk"]').forEach((c) => {
-        const host = c.parentElement!.parentElement!;
-        if (host.tagName !== 'g' || host.childElementCount < 3) return;
-        if (Number(getComputedStyle(c).opacity) <= 0.05) { since.delete(c); return; }
-        if (!since.has(c)) { since.set(c, now); w.__smoke.seen++; }
-        w.__smoke.max = Math.max(w.__smoke.max, now - since.get(c)!);
-      });
+      const board = document.querySelector('.fx-layer')?.parentElement as HTMLElement & {fxParticles?: () => {visible:{id:number;kind:string;level:string;x:number;y:number;opacity:number}[]}};
+      const rows = board?.fxParticles?.().visible.filter(p => p.kind === 'powder-smoke' && p.level === 'top' && p.opacity > .05) ?? [];
+      const canvas = document.querySelector<HTMLCanvasElement>('.fx-layer > .fx-particle-canvas[data-particle-level=top]');
+      const active = new Set<number>();
+      for(const puff of rows){
+        if(!canvas)continue;
+        const k=canvas.width/board.clientWidth,x=Math.floor(puff.x*k),y=Math.floor(puff.y*k);
+        if(x<0||y<0||x>=canvas.width||y>=canvas.height||!canvas.getContext('2d')!.getImageData(x,y,1,1).data[3])continue;
+        active.add(puff.id);
+        if(!since.has(puff.id)){since.set(puff.id,now);w.__smoke.seen++;}
+        w.__smoke.max=Math.max(w.__smoke.max,now-since.get(puff.id)!);
+      }
+      for(const id of since.keys())if(!active.has(id))since.delete(id);
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);

@@ -1,3 +1,4 @@
+import {prepareParticles, clearParticles, disposeParticles} from './particles';
 import {getPerf} from '../perf/state';
 // The animation layer on the table and its queue: the port of play / finish / skip / afterRender / keepSet of
 // docs/mockups/anim/level1/page.js (PORTING.md, section 4). The planks are drawn from the displayed state D: it lags
@@ -17,7 +18,7 @@ import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
 import {prepareArmadaSprites} from './armadaSprites';
 import {releaseSprites, spritePause, disposeSprites} from './sprites';
-import { ABORT, flushClock, pauseClock, resumeClock, wait, type FxCtx } from './primitives';
+import { ABORT, particleDefs, flushClock, pauseClock, resumeClock, wait, type FxCtx } from './primitives';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
 import { tookPress } from '../InfoTip';
 import { trace } from './trace';
@@ -174,10 +175,11 @@ export function useFxQueue({
   // «Пауза» of P4 stops the clip in the middle: its timers (at, wait) and its animations on the board stand still (the
   // weather and the CSS animations go on); «Дальше» goes on from there. The traces wait by the scar clock above.
   const frozen = useRef<Animation[]>([]);
-  useEffect(() => {
+  const freezeShow = useCallback(() => {
+    const held = live.current.hold || live.current.paused || document.hidden;
     const spriteBoard = layerRef.current?.parentElement;
-    if (spriteBoard) spritePause(spriteBoard, hold);
-    if (!hold) {
+    if (spriteBoard) spritePause(spriteBoard, held);
+    if (!held) {
       frozen.current.splice(0).forEach((a) => a.playState === 'paused' && a.play());
       resumeClock();
       return;
@@ -192,7 +194,12 @@ export function useFxQueue({
       a.pause();
       frozen.current.push(a);
     }
-  }, [hold]);
+  }, []);
+  useEffect(freezeShow, [hold, paused, freezeShow]);
+  useEffect(() => {
+    document.addEventListener('visibilitychange', freezeShow);
+    return () => document.removeEventListener('visibilitychange', freezeShow);
+  }, [freezeShow]);
 
   const bump = () => setGen((g) => g + 1);
   const makeCtx = (run: number, display?: Display): FxCtx | null => {
@@ -234,6 +241,7 @@ export function useFxQueue({
     const keep = new Set(SCENES.flatMap((x) => x.keep()));
     for (const el of [...layer.children]) if (!keep.has(el)) el.remove();
     layer.parentElement?.querySelectorAll(':scope > .fx-scars > .fx-temp').forEach((el) => el.remove());
+    if (layer.parentElement) clearParticles(layer.parentElement);
   };
   /** resetFx: the layer is empty, the animations of the board are cancelled (the weather and CSS animations stay). */
   const resetFx = () => {
@@ -241,6 +249,7 @@ export function useFxQueue({
     SCENES.forEach((x) => x.reset(layer?.parentElement ?? null));
     if (!layer) return;
     if (layer.parentElement) releaseSprites(layer.parentElement);
+    if (layer.parentElement) clearParticles(layer.parentElement, true);
     layer.innerHTML = '';
     dropPlates();
     const board = layer.parentElement!;
@@ -505,11 +514,11 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     if (!board) return;
     const warm = () => {
       const ctx = fx.ctx();
-      if (ctx && !board.closest('.game.fx-busy')) prepareArmadaSprites(ctx);
+      if (ctx && !board.closest('.game.fx-busy')) { prepareArmadaSprites(ctx); prepareParticles(board, innerWidth>700?particleDefs(true):undefined); }
     };
     warm();
     const ro = new ResizeObserver(warm);ro.observe(board);
-    return () => {ro.disconnect();disposeSprites(board);};
+    return () => {ro.disconnect();disposeParticles(board);disposeSprites(board);};
   }, [layerRef]);
   useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!fx.busy)prepareArmadaSprites(ctx);}, [fx.busy]);
   const drawWeather = () => {
