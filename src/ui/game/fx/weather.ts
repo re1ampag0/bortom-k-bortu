@@ -6,6 +6,7 @@
 // fx-phone: restore the historical phone particle counts, without blur/turbulence; simple effects stand still
 // (the same picture, nothing moves, no filters). The planks pitch (storm) or heave (the Ninth wave) by CSS (game.css,
 // .board[data-wx-move]), the sea picture is tinted by CSS (.board[data-wx]).
+import {compositeWeather} from './weatherLayers';
 import { bigShip } from '../art/bigShips';
 import { bx, filters, isPhone, plank, type Box, type FxCtx } from './primitives';
 
@@ -267,6 +268,8 @@ export function drawWeather(ctx: FxCtx, host: HTMLElement, key: string | null, m
   if (w.rules.length) {
     const style = document.createElementNS(NS, 'style');
     style.textContent = w.rules.join('\n');
-    host.querySelector('svg')!.appendChild(style);
+    const svg=host.querySelector('svg')!;
+    svg.appendChild(style);
+    compositeWeather(svg,key,w.soft);
   }
 }

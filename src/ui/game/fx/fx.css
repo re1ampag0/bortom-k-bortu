@@ -321,3 +321,6 @@
 .sprite-recoil-light { opacity:0; }
 .fx-sprite-trace { position:absolute;left:0;top:0;width:0;height:0;opacity:1;pointer-events:none;will-change:auto; }
 .game.perf-off-light .sprite-recoil-light, .game.perf-off-filters .sprite-recoil-light { display:none; }
+
+/* Ambient surfaces are useful only while these weather animations are enabled. */
+.game.perf-off-css .fx-weather :is(.wx-loop,.wx-island) { will-change: auto !important; }

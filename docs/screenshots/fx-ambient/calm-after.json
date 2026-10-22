@@ -1,0 +1,126 @@
+{
+  "samples": {
+    "before": [
+      {
+        "name": "wx-loop-20",
+        "time": 49.999999999998934,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-21",
+        "time": 49.999999999998934,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-22",
+        "time": 49.999999999998934,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-23",
+        "time": 49.999999999998934,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-24",
+        "time": 49.999999999998934,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-25",
+        "time": 49.999999999998934,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-26",
+        "time": 49.999999999998934,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-27",
+        "time": 49.999999999998934,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-28",
+        "time": 49.999999999998934,
+        "state": "running"
+      }
+    ],
+    "after": [
+      {
+        "name": "wx-loop-20",
+        "time": 3716.4,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-21",
+        "time": 3716.4,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-22",
+        "time": 3716.4,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-23",
+        "time": 3716.4,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-24",
+        "time": 3716.4,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-25",
+        "time": 3716.4,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-26",
+        "time": 3716.4,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-27",
+        "time": 3716.4,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-28",
+        "time": 3716.4,
+        "state": "running"
+      }
+    ]
+  },
+  "label": "after",
+  "key": "calm",
+  "viewport": {
+    "width": 430,
+    "height": 932,
+    "dpr": 3,
+    "cpu": 1
+  },
+  "durationMs": 3043.062,
+  "paint": {
+    "events": 0,
+    "totalMs": 0,
+    "maxEventMs": 0,
+    "maxFrameMs": 0
+  },
+  "raster": {
+    "events": 0,
+    "totalMs": 0,
+    "maxEventMs": 0,
+    "maxFrameMs": 0
+  },
+  "frameCostDefinition": "union per thread, between BeginMainThreadFrame markers; raster threads summed separately from Paint",
+  "layers": {
+    "min": 26,
+    "max": 26,
+    "drawing": 21
+  },
+  "errors": []
+}
