@@ -29,7 +29,7 @@ export function PerfPanel() {
   const frames = useRef(new FrameWindow()), last = useRef<number | null>(null), record = useRef<Recording | null>(null);
   const text = useRef<HTMLTextAreaElement>(null);
   const clip = useSyncExternalStore(subscribeClip, lastClip, lastClip);
-  const [clipCopy, setClipCopy] = useState('');
+  const [clipCopy, setClipCopy] = useState(''), [clipShown, setClipShown] = useState(false);
   const clipArea = useRef<HTMLTextAreaElement>(null);
   const cancelRecord = () => {
     const r = record.current; if (!r) return;
@@ -82,12 +82,15 @@ export function PerfPanel() {
   };
   const copyResult = () => copyText(result, text.current, setCopy);
   const clipValue = clip ? clipText(clip) : '';
-  useEffect(() => setClipCopy(''), [clip]);
+  useEffect(() => { setClipCopy(''); setClipShown(false); }, [clip]);
+  // The numbers go to the clipboard; the field is shown only when the browser lets nothing copy them (select by hand).
+  const copyClip = () => copyText(clipValue, clipArea.current, (note) => { setClipCopy(note); if (note !== 'Скопировано') setClipShown(true); });
   return createPortal(<aside className="perf-panel" data-testid="perf-panel" aria-label="Диагностика скорости">
     <div className="perf-readout">{value.fps.toFixed(0)} кадров/с · худший/10 с {value.worst.toFixed(0)} мс<br/>&gt;50 мс за 10 с: {value.slow}</div>
-    <div className="perf-buttons"><button onClick={reset}>Сброс</button><button aria-expanded={parts} onClick={() => setParts(!parts)}>Части</button><button onClick={start} disabled={seconds !== null}>{seconds === null ? 'Записать 20 с' : `Запись: ${seconds} с`}</button></div>
+    <div className="perf-buttons"><button onClick={reset}>Сброс</button><button aria-expanded={parts} onClick={() => setParts(!parts)}>Части</button><button onClick={start} disabled={seconds !== null}>{seconds === null ? 'Записать 20 с' : `Запись: ${seconds} с`}</button>{clip && <button data-testid="perf-clip-copy" onClick={copyClip}>Скопировать числа</button>}</div>
     {parts && <fieldset className="perf-parts"><legend>Отключить части</legend>{PARTS.map(([part,name], i) => <label key={part}><input data-testid={`perf-${part}`} type="checkbox" checked={config.off.includes(part)} onChange={() => togglePart(part)}/>{i+1}. {name}</label>)}</fieldset>}
-    {clip && <div className="perf-result perf-clip" data-testid="perf-clip"><b>Последний клип</b><textarea ref={clipArea} aria-label="Числа последнего клипа" readOnly value={clipValue}/><button onClick={() => copyText(clipValue, clipArea.current, setClipCopy)}>Скопировать числа</button><span role="status">{clipCopy}</span></div>}
+    {clip && <div className="perf-readout perf-clip" data-testid="perf-clip">клип: {clip.scene}<br/>кадров/с мин {clip.fpsMin.toFixed(0)} · Game {clip.renders}×, макс {clip.renderMaxMs.toFixed(0)} мс{clipCopy && <><br/><span role="status">{clipCopy}</span></>}
+      <textarea ref={clipArea} className={clipShown ? 'shown' : ''} aria-label="Числа последнего клипа" readOnly value={clipValue} tabIndex={clipShown ? 0 : -1}/></div>}
     {result && <div className="perf-result"><textarea ref={text} aria-label="Итог диагностики" readOnly value={result}/><button onClick={copyResult}>Копировать</button><span role="status">{copy}</span></div>}
   </aside>, document.body);
 }
