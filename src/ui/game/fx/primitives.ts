@@ -634,7 +634,7 @@ const NS = 'http://www.w3.org/2000/svg';
 export const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const R1 = (v: number) => Math.round(v * 10) / 10;
 /** Phone geometry and the historical lighter particle budget (fx-phone). */
-export const isPhone = (ctx: FxCtx) => boardW(ctx) <= 700;
+export const isPhone = (ctx: FxCtx) => (geometrySteps.get(ctx.board)?.w ?? ctx.board.clientWidth) <= 700;
 /** Heavy SVG filters are rich-laptop only; the phone retains gradients without blur/turbulence. */
 // The phone keeps the particles and gradients, without SVG blur/filter surfaces.
 export const filters = (ctx: FxCtx) => ctx.rich && !(ctx.narrow ?? ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches);
