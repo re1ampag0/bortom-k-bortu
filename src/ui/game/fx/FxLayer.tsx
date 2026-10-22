@@ -15,6 +15,8 @@ import { speedFactor } from '../text';
 import { applyVisible, displayFrom, displayRules, type Display } from './display';
 import { CARD_SCENE, PLAY_MISC } from './misc';
 import type { FxKind } from './planFx';
+import {prepareArmadaSprites} from './armadaSprites';
+import {releaseSprites, spritePause} from './sprites';
 import { ABORT, flushClock, pauseClock, resumeClock, wait, type FxCtx } from './primitives';
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, type PlayClip, type QueueItem } from './queue';
 import { tookPress } from '../InfoTip';
@@ -173,6 +175,8 @@ export function useFxQueue({
   // weather and the CSS animations go on); «Дальше» goes on from there. The traces wait by the scar clock above.
   const frozen = useRef<Animation[]>([]);
   useEffect(() => {
+    const spriteBoard = layerRef.current?.parentElement;
+    if (spriteBoard) spritePause(spriteBoard, hold);
     if (!hold) {
       frozen.current.splice(0).forEach((a) => a.playState === 'paused' && a.play());
       resumeClock();
@@ -226,6 +230,7 @@ export function useFxQueue({
   const clearFx = () => {
     const layer = layerRef.current;
     if (!layer) return;
+    if (layer.parentElement) releaseSprites(layer.parentElement);
     const keep = new Set(SCENES.flatMap((x) => x.keep()));
     for (const el of [...layer.children]) if (!keep.has(el)) el.remove();
     layer.parentElement?.querySelectorAll(':scope > .fx-scars > .fx-temp').forEach((el) => el.remove());
@@ -235,6 +240,7 @@ export function useFxQueue({
     const layer = layerRef.current;
     SCENES.forEach((x) => x.reset(layer?.parentElement ?? null));
     if (!layer) return;
+    if (layer.parentElement) releaseSprites(layer.parentElement);
     layer.innerHTML = '';
     dropPlates();
     const board = layer.parentElement!;
@@ -494,6 +500,17 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     if (ctx) SCENES.forEach((x) => x.afterRender(ctx));
   });
   const { press, layerRef, weatherRef } = fx;
+  useLayoutEffect(() => {
+    const board = layerRef.current?.parentElement;
+    if (!board) return;
+    const warm = () => {
+      const ctx = fx.ctx();
+      if (ctx && !board.closest('.game.fx-busy')) prepareArmadaSprites(ctx);
+    };
+    warm();
+    const ro = new ResizeObserver(warm);ro.observe(board);
+    return () => {ro.disconnect();releaseSprites(board,true);};
+  }, [layerRef]);
   const drawWeather = () => {
     const w = fx.weather();
     if (w.ctx && weatherRef.current) renderWeather(w.ctx, weatherRef.current, w.on);

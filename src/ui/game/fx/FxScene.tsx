@@ -174,6 +174,7 @@ export default function FxScene({ id, data }: { id: string; data: GameData }) {
   const [started, setStarted] = useState(false);
   const [card, setCard] = useState<string | null>(null);
   useEffect(() => {
+    if (new URLSearchParams(location.search).has('manual')) return;
     const t = setTimeout(() => {
       setStarted(true);
       document.body.dataset.fxStart = '1';
@@ -181,7 +182,10 @@ export default function FxScene({ id, data }: { id: string; data: GameData }) {
     return () => clearTimeout(t);
   }, []);
   if (!scene || !setup) return <p className="page">Нет сцены «{id}». Сцены: {scenes.map((x) => x.id).join(', ')}</p>;
-  return <SceneTable data={data} scene={scene} setup={setup} started={started} card={card} setCard={setCard} />;
+  return <>
+    {new URLSearchParams(location.search).has('manual') && !started && <button data-testid="fx-start" style={{position:'fixed',bottom:4,left:4,zIndex:10001}} onClick={() => {setStarted(true);document.body.dataset.fxStart='1';}}>Начать показ</button>}
+    <SceneTable data={data} scene={scene} setup={setup} started={started} card={card} setCard={setCard} />
+  </>;
 }
 
 function SceneTable({

@@ -1,0 +1,21 @@
+{
+  "before": {
+    "types": 5,
+    "active": 0,
+    "free": 172,
+    "preparedNodes": 3186,
+    "connectedPrepared": false
+  },
+  "after": {
+    "types": 5,
+    "active": 0,
+    "free": 172,
+    "preparedNodes": 3186,
+    "connectedPrepared": false
+  },
+  "delayed": "",
+  "paused": "auto",
+  "finished": "auto",
+  "svgAnimated": false,
+  "connected": 0
+}
