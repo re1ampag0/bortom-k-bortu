@@ -87,9 +87,27 @@ async function expectLook(page: Page, scene: string, before: string[][]) {
     expect(x.includes('(sunk)'), `${c} sunk`).toBe(want.ships[c].sunk);
     expect(x.includes('(under)'), `${c} under water`).toBe(want.ships[c].submerged);
   }
-  // Nothing the clips put on a plank hangs on it: the look is the class.
-  const hanging = await page.evaluate(() => Array.from(document.querySelectorAll('[data-fx-ship]')).flatMap((p) => p.getAnimations({ subtree: true }).filter((a) => !(a instanceof CSSAnimation) && !(a instanceof CSSTransition))).length);
-  expect(hanging).toBe(0);
+  // Nothing the clips put on a plank hangs on it: the look is the class. The idle
+  // medal sweep used to be CSS; fx-smooth-c runs the same decoration through WAAPI.
+  const hanging = await page.evaluate(() => {
+    const glints = new Set<Element>();
+    return Array.from(document.querySelectorAll('[data-fx-ship]')).flatMap((p) => p.getAnimations({ subtree: true }))
+      .filter((a) => {
+        if (a instanceof CSSAnimation || a instanceof CSSTransition) return false;
+        const effect = a.effect;
+        if (effect instanceof KeyframeEffect) {
+          const target = effect.target, timing = effect.getTiming();
+          if (a.id === 'medal-glint' && target?.matches('.medal-glint-clip > .gl.medal-scheduled') &&
+              !glints.has(target) && timing.iterations === 1 && typeof timing.duration === 'number' && timing.duration > 0 &&
+              effect.getKeyframes().every((f) => Object.keys(f).every((key) => ['offset', 'computedOffset', 'easing', 'composite', 'transform'].includes(key)))) {
+            glints.add(target);
+            return false;
+          }
+        }
+        return true;
+      }).map((a) => ({ id: a.id, target: (a.effect as KeyframeEffect | null)?.target?.outerHTML.slice(0, 160) }));
+  });
+  expect(hanging).toEqual([]);
   return { before, after };
 }
 
