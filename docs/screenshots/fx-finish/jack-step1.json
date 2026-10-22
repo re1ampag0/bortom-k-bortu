@@ -1,0 +1,53 @@
+{
+ "scene": "jack",
+ "label": "step1",
+ "viewport": "390×844 DPR3 CPU×4",
+ "valid": true,
+ "errors": [],
+ "journal": [
+  "22:54:08 ▶ announce (догоняет, в очереди 2)",
+  "22:54:09 ✓ announce 0.5 с",
+  "22:54:09 ▶ shot (догоняет, в очереди 2)",
+  "22:54:11 ✓ shot 2.3 с",
+  "22:54:11 ▶ jack",
+  "22:54:25 ✓ jack 13.3 с"
+ ],
+ "elapsedMs": 18164.69999998808,
+ "scriptingMs": 3929.0870000000086,
+ "recalcStyleMs": 1331.8440000000003,
+ "recalcStyleCount": 369,
+ "layoutMs": 803.4100000000003,
+ "layoutCount": 505,
+ "forcedStyle": {
+  "count": 77,
+  "ms": 730.8240000000002
+ },
+ "forcedLayout": {
+  "count": 57,
+  "ms": 298.682
+ },
+ "longTasks": 118,
+ "longestTaskMs": 667.118,
+ "paint": {
+  "ms": 3069.7359999999985,
+  "rasterMs": 1061.095
+ },
+ "worstFrameMs": 816.6000000000004,
+ "framesOver50": 103,
+ "fps": 15.965031076769245,
+ "renders": 0,
+ "renderMs": 0,
+ "renderMaxMs": 0,
+ "renderList": [],
+ "planks": 44,
+ "hands": 11,
+ "layers": {
+  "all": 81,
+  "drawing": 66
+ },
+ "observerLongTasks": 106,
+ "svgAnimations": 9,
+ "svgByFunction": {
+  "playJack": 9
+ }
+}

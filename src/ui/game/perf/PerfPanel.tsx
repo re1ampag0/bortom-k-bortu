@@ -2,7 +2,8 @@ import {useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore} from
 import {createPortal} from 'react-dom';
 import {getPerf, initPerf, PARTS, perfClasses, subscribePerf, togglePart, type PerfConfig} from './state';
 import {FrameWindow, stats, type Sample, type Stats} from './metrics';
-import {clipText, lastClip, subscribeClip} from './clip';
+import {clipText, lastClip, subscribeClip, watchClipDiagnostics} from './clip';
+import {frameText} from './frames';
 import './perf.css';
 export function usePerf() {
   useState(initPerf);
@@ -23,12 +24,14 @@ export function usePerf() {
 }
 interface Recording { start: number; frames: Sample[]; peak: number; config: PerfConfig; observer: MutationObserver; timer: ReturnType<typeof setTimeout> }
 export function PerfPanel() {
+  useLayoutEffect(watchClipDiagnostics,[]);
   const config = useSyncExternalStore(subscribePerf, getPerf, getPerf);
   const [parts, setParts] = useState(false), [value, setValue] = useState<Stats>({fps: 0, worst: 0, slow: 0});
   const [seconds, setSeconds] = useState<number | null>(null), [result, setResult] = useState(''), [copy, setCopy] = useState('');
   const frames = useRef(new FrameWindow()), last = useRef<number | null>(null), record = useRef<Recording | null>(null);
   const text = useRef<HTMLTextAreaElement>(null);
   const clip = useSyncExternalStore(subscribeClip, lastClip, lastClip);
+  const [framesOpen,setFramesOpen]=useState(false);
   const [clipCopy, setClipCopy] = useState(''), [clipShown, setClipShown] = useState(false);
   const clipArea = useRef<HTMLTextAreaElement>(null);
   const cancelRecord = () => {
@@ -87,9 +90,10 @@ export function PerfPanel() {
   const copyClip = () => copyText(clipValue, clipArea.current, (note) => { setClipCopy(note); if (note !== 'Скопировано') setClipShown(true); });
   return createPortal(<aside className="perf-panel" data-testid="perf-panel" aria-label="Диагностика скорости">
     <div className="perf-readout">{value.fps.toFixed(0)} кадров/с · худший/10 с {value.worst.toFixed(0)} мс<br/>&gt;50 мс за 10 с: {value.slow}</div>
-    <div className="perf-buttons"><button onClick={reset}>Сброс</button><button aria-expanded={parts} onClick={() => setParts(!parts)}>Части</button><button onClick={start} disabled={seconds !== null}>{seconds === null ? 'Записать 20 с' : `Запись: ${seconds} с`}</button>{clip && <button data-testid="perf-clip-copy" onClick={copyClip}>Скопировать числа</button>}</div>
+    <div className="perf-buttons"><button onClick={reset}>Сброс</button><button aria-expanded={parts} onClick={() => setParts(!parts)}>Части</button><button onClick={start} disabled={seconds !== null}>{seconds === null ? 'Записать 20 с' : `Запись: ${seconds} с`}</button>{clip && <button aria-expanded={framesOpen} data-testid="perf-frames-toggle" onClick={()=>setFramesOpen(!framesOpen)}>5 худших кадров</button>}{clip && <button data-testid="perf-clip-copy" onClick={copyClip}>Скопировать числа</button>}</div>
     {parts && <fieldset className="perf-parts"><legend>Отключить части</legend>{PARTS.map(([part,name], i) => <label key={part}><input data-testid={`perf-${part}`} type="checkbox" checked={config.off.includes(part)} onChange={() => togglePart(part)}/>{i+1}. {name}</label>)}</fieldset>}
     {clip && <div className="perf-readout perf-clip" data-testid="perf-clip">клип: {clip.scene}<br/>кадров/с мин {clip.fpsMin.toFixed(0)} · Game {clip.renders}×, макс {clip.renderMaxMs.toFixed(0)} мс{clipCopy && <><br/><span role="status">{clipCopy}</span></>}
+      {framesOpen&&<ol className="perf-frames" data-testid="perf-worst-frames">{clip.worstFrames.map((f,i)=><li key={i}>{frameText(f)}</li>)}</ol>}
       <textarea ref={clipArea} className={clipShown ? 'shown' : ''} aria-label="Числа последнего клипа" readOnly value={clipValue} tabIndex={clipShown ? 0 : -1}/></div>}
     {result && <div className="perf-result"><textarea ref={text} aria-label="Итог диагностики" readOnly value={result}/><button onClick={copyResult}>Копировать</button><span role="status">{copy}</span></div>}
   </aside>, document.body);

@@ -1,6 +1,6 @@
 import {animateParticle, canvasRing, canvasHTML, canvasShape, canvasSmoke, canvasCircle, particleCount, pauseParticles, rememberParticleHost, type ParticleAnimation, type ParticleTarget} from './particles';
 import {getPerf, perfOff} from '../perf/state';
-import {perfAnimHook} from '../perf/clip';
+import {perfAnimHook,perfWorkHook,perfPhaseHook} from '../perf/clip';
 // Effect primitives of the animation layer: a port of docs/mockups/anim/level1/effects.js (see PORTING.md).
 // The code is the reference's; what changed is how an element is found (the data-fx-* DOM contract, from the board of
 // the context) and the types. The globals of the reference (board, fx, D, SPEED, RICH, RUN, G) are the context `ctx`,
@@ -215,6 +215,8 @@ export function particleHTML(ctx: FxCtx,cls: string): HTMLElement | ParticleTarg
   return canvasHTML(ctx,cls) ?? mk(ctx,cls,0,0);
 }
 export function mk(ctx: FxCtx, cls: string, x: number, y: number, html = ''): HTMLElement {
+  const perfEnd=perfWorkHook?.('вставка DOM');
+  try {
   const d = document.createElement('div');
   d.className = cls;
   if (getPerf().enabled && /^(puff|spark|splinter|splash|ripple|ember|gold-dust|dust|bubble|wisp|shred|streak|sparkle)( |$)/.test(cls)) d.dataset.perfParticle = '';
@@ -223,6 +225,7 @@ export function mk(ctx: FxCtx, cls: string, x: number, y: number, html = ''): HT
   d.innerHTML = html;
   ctx.layer.appendChild(d);
   return d;
+  } finally {perfEnd?.();}
 }
 export const visible = (el: Element | null | undefined): el is HTMLElement => !!el && el.getClientRects().length > 0 && (el as HTMLElement).offsetWidth > 0;
 export const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -811,7 +814,10 @@ export function smokeJet(ctx: FxCtx, svg: Element, x: number, y: number, ang: nu
  * wadding; a beat later a second, smaller puff. `ang` — the direction of the shot (radians); `flash` — its length.
  */
 export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: number, y: number, ang: number, k = 1, delay = 0, opt: { grains?: number; puffs?: number; wads?: number; life?: number; flash?: number; smokeJet?: typeof smokeJet } = {}): void {
+  const perfEnd=perfWorkHook?.('gunFire: создание');
+  try {
   const deg = (ang * 180) / Math.PI, fl = opt.flash ?? 420;
+  perfPhaseHook?.('gunFire',fl*ctx.speed,delay*ctx.speed);
   const glow = shotSprite(ctx,svg,'glow',k) ?? sv(svg,shotArt('glow',k));
   shotA(ctx, glow, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2)`, opacity: 0 }], fl * 1.25, delay);
   const cone = shotSprite(ctx,svg,'cone',k) ?? sv(svg,shotArt('cone',k));
@@ -839,6 +845,7 @@ export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: numb
     const wd = particleShape(ctx, svg, '<path d="M-1.4 -1 L1.6 -.6 L1 1.2 L-1.2 .8 Z" fill="#ffb347" stroke="#7a2a0c" stroke-width=".3"/>');
     A(ctx, wd, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg)`, opacity: 1, fill: '#ffe08a' }, { transform: `translate(${R1(x + Math.cos(a) * v)}px,${R1(y + Math.sin(a) * v)}px) rotate(${R1(rnd(-200, 200))}deg)`, opacity: 1, fill: '#ff8a2a', offset: 0.4 }, { transform: `translate(${R1(x + Math.cos(a) * v * 1.2 + rnd(-10, 10))}px,${R1(y + Math.sin(a) * v + 26 * k)}px) rotate(${R1(rnd(-500, 500))}deg)`, opacity: 0, fill: '#3a2a1c' }], rnd(1400, 2200), delay + 60, 'ease-out');
   }
+  } finally {perfEnd?.();}
 }
 
 /** The fuses: sparks spit at each gun a moment before the broadside. */

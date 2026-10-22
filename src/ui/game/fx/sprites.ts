@@ -1,4 +1,5 @@
 // Detached vector templates and bounded instance pools. No hidden/offscreen DOM, canvas, RAF or idle painting.
+import {perfWorkHook} from '../perf/clip';
 import {A, at, type FxCtx} from './primitives';
 export interface SpriteSpec { key: string; html: string; count: number }
 interface Pool { template: HTMLElement; free: HTMLElement[]; count: number }
@@ -29,20 +30,26 @@ function clone(template:HTMLElement):HTMLElement {
 }
 /** Called before play, while opening the table or after a resize in idle. */
 export function warmSprites(board:HTMLElement,specs:SpriteSpec[]):void {
+  const perfEnd=perfWorkHook?.('prepare: sprite pool');
+  try {
  const bank=bankFor(board),keys=new Set(specs.map(s=>s.key));
  for(const [key,pool]of bank.pools)if(!keys.has(key)&&![...bank.active.values()].some(s=>s.root.dataset.sprite===key)){
   pool.free.forEach(el=>el.remove());pool.template.remove();bank.pools.delete(key);
  }
  for(const spec of specs){
   if(bank.pools.has(spec.key))continue;
+  const perfCreate=perfWorkHook?.('prepare: создание пула '+spec.key);
   const template=board.ownerDocument.createElement('div');template.className='fx-sprite';template.dataset.sprite=spec.key;template.innerHTML=spec.html;
   bank.storage.append(template);const free=Array.from({length:spec.count},()=>clone(template));free.forEach(el=>bank.storage.append(el));
-  bank.pools.set(spec.key,{template,free,count:spec.count});
+  bank.pools.set(spec.key,{template,free,count:spec.count});perfCreate?.();
  }
+  } finally {perfEnd?.();}
 }
 export function spriteReady(board:HTMLElement,key:string):boolean{return !!banks.get(board)?.pools.get(key)?.free.length}
 /** Taking a prepared instance never parses SVG or grows the pool. */
 export function takeSprite(ctx:FxCtx,key:string,host:Element=ctx.layer):Sprite {
+  const perfEnd=perfWorkHook?.('вставка заготовки');
+  try {
  const bank=bankFor(ctx.board),pool=bank.pools.get(key),root=pool?.free.pop();
  if(!pool||!root)throw new Error(`Unprepared/exhausted sprite: ${key}`);
  const sprite:Sprite={root,node:name=>{const el=root.querySelector<HTMLElement>(`[data-sprite-node="${name}"]`);if(!el)throw new Error(`Sprite node: ${name}`);return el},release:()=>{
@@ -57,6 +64,7 @@ export function takeSprite(ctx:FxCtx,key:string,host:Element=ctx.layer):Sprite {
   bank.storage.append(root);pool.free.push(root);
  }};
  bank.active.set(root,sprite);host.append(root);return sprite;
+  } finally {perfEnd?.();}
 }
 /** Only wrapper transforms/opacity animate; all SVG geometry remains static. */
 export function spriteA(ctx:FxCtx,el:HTMLElement,frames:Keyframe[],duration:number,delay=0,easing='ease-out',fill:FillMode='both'):Animation {
