@@ -1,0 +1,12 @@
+[
+  {
+    "frame": "bottle-phone-2200",
+    "meanAbsoluteRGB": 0.0022402805040792864,
+    "pixelsDeltaOver10": 68
+  },
+  {
+    "frame": "bottle-laptop-2200",
+    "meanAbsoluteRGB": 0.3719423110875706,
+    "pixelsDeltaOver10": 18331
+  }
+]
