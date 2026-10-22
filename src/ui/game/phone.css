@@ -245,7 +245,7 @@
     height: auto;
     transform: none;
   }
-  .plank:has(.plank-buttons) .plank-statuses .info-hit::after {
+  .plank.has-buttons .plank-statuses .info-hit::after {
     bottom: -2px;
   }
   .plank-head .ship-art {
@@ -474,8 +474,8 @@
       inset 0 0 0 2.5px #6b5a40,
       0 2px 0 #a68f66;
   }
-  .plank-buttons:has(> .btn:nth-child(3)) .cmd-in,
-  .plank-buttons:not(:has(> .btn:nth-child(3))) .cmd-short {
+  .plank-buttons.n3plus .cmd-in,
+  .plank-buttons:not(.n3plus) .cmd-short {
     display: none;
   }
   .plank-buttons .cmd-in {
@@ -492,7 +492,40 @@
     height: 15px;
   }
   /* ui-5: «Погружение» — its picture instead of «Нырок»; a Soul — its picture and «→ Корп» */
-  .plank-buttons .cmd-short:has(.short-pic) {
+  /* fx-smooth-a: every button of a phone row keeps the icon of the laptop before its short label; the icon grows with the
+     height of the button (--cmd-h), the press zone stays 44 px */
+  .plank-buttons {
+    --cmd-h: 34px;
+  }
+  .plank-buttons.n3plus .btn:not(.pic) .cmd-short {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  /* with its icon the label does not fit a third of the row — the button is as wide as they are (not narrower than a third) */
+  .plank-buttons.n3plus > .btn.cmd:not(.pic) {
+    flex: 1 0 auto;
+    min-width: calc((100% - 8px) / 3);
+    padding-inline: 6px;
+  }
+  /* with the icons the buttons are wider than a third: a row resting only at the starts of its buttons sprang back from a
+     button scrolled to and left it half hidden — the row of a phone comes to rest where the finger leaves it */
+  .plank-buttons.n3plus {
+    scroll-snap-type: none;
+  }
+  .plank-buttons .short-icon {
+    display: inline-flex;
+    flex: none;
+  }
+  .plank-buttons .short-icon svg {
+    display: block;
+    width: auto;
+    height: calc(var(--cmd-h) * 0.4);
+    max-width: calc(var(--cmd-h) * 0.6);
+  }
+  .plank-buttons.n3plus .btn.pic .cmd-short {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -506,7 +539,7 @@
     height: 18px;
   }
   /* a Soul: the picture and «→ Корп» do not fit a third of the row — the button is as wide as they are (not narrower) */
-  .plank-buttons > .btn:has(.short-pic):not(:has(.i-dive)) {
+  .plank-buttons > .btn.cmd.soul {
     flex: 0 0 auto;
     min-width: calc((100% - 8px) / 3);
     padding-inline: 6px;
@@ -519,29 +552,26 @@
     width: 9px;
     height: 12px;
   }
-  /* two buttons: the first as wide as its words, the second takes the rest; the first loses its icon (A5Phone «act.two») */
-  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) > .btn {
+  /* two buttons: the first as wide as its words, the second takes the rest; both keep their icons (fx-smooth-a; A5Phone «act.two» dropped the first one) */
+  .plank-buttons.n2 > .btn.cmd {
     font-size: 11px;
     letter-spacing: -0.02em;
     padding-inline: 3px;
   }
-  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) > .btn:first-child {
+  .plank-buttons.n2 > .btn.cmd:first-child {
     flex: 0 0 auto;
     padding-inline: 6px;
   }
-  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) .btn.cmd .cost {
+  .plank-buttons.n2 .btn.cmd .cost {
     padding-left: 3px;
   }
-  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) > .btn:first-child .cmd-icon {
-    display: none;
-  }
-  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) .cmd-in {
+  .plank-buttons.n2 .cmd-in {
     gap: 3px;
   }
-  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) .cmd-icon svg {
+  .plank-buttons.n2 .cmd-icon svg {
     width: 13px;
   }
-  .plank-buttons:has(> .btn:nth-child(2)):not(:has(> .btn:nth-child(3))) .cmd-pic img {
+  .plank-buttons.n2 .cmd-pic img {
     height: 13px;
   }
 
@@ -724,7 +754,7 @@
     pointer-events: auto;
     touch-action: pan-x;
   }
-  .hand-cards:has(> .hcard.lifted) {
+  .hand-cards.has-lifted {
     padding-top: 110px;
     margin-top: -106px;
     pointer-events: none;
@@ -1062,17 +1092,17 @@
     content: ''; position: absolute; left: -3px; height: 12px; border-left: 1px solid #bcae91;
   }
   .plank-body > .badges .badge.souls { padding-left: 0; border: 0; }
-  .plank-body:has(.badge.souls) .track-row2 .track-num,
+  .plank .plank-body.with-souls .track-row2 .track-num,
   .plank-body > .badges .badge.souls { font-size: 12px; }
-  .plank-body:has(.badge.souls) .track-icon { width: 13px; height: 13px; }
-  .plank-body:has(.badge.souls) .t-guns .track-icon { width: 17px; height: 11px; }
+  .plank .plank-body.with-souls .track-icon { width: 13px; height: 13px; }
+  .plank .plank-body.with-souls .t-guns .track-icon { width: 17px; height: 11px; }
 }
 @media (max-width: 400px) {
-  .plank-body:has(.badge.souls) .track-row2 > .track { gap: 2px; }
-  .plank-body:has(.badge.souls) .track-row2 .track-num,
+  .plank .plank-body.with-souls .track-row2 > .track { gap: 2px; }
+  .plank .plank-body.with-souls .track-row2 .track-num,
   .plank-body > .badges .badge.souls { font-size: 11px; }
-  .plank-body:has(.badge.souls) .track-icon { width: 12px; height: 12px; }
-  .plank-body:has(.badge.souls) .t-guns .track-icon { width: 15px; height: 10px; }
+  .plank .plank-body.with-souls .track-icon { width: 12px; height: 12px; }
+  .plank .plank-body.with-souls .t-guns .track-icon { width: 15px; height: 10px; }
 }
 
 /* phone-2: ordinary translucent gradients instead of offscreen blend/filter surfaces. */
@@ -1082,7 +1112,7 @@
   .game .deck-light { opacity: .4; }
   .game .deck-glint { opacity: .55; }
   .game .deck-hook, .game .backdrop .deck-piece { filter: none; }
-  .game.fx-busy .deck-flare, .game.fx-busy .lantern-light { animation-play-state: paused; }
+  .game[data-fx-busy] .deck-flare, .game[data-fx-busy] .lantern-light { animation-play-state: paused; }
   .game .fx-layer > *, .game .fx-weather > * { will-change: auto; }
   .game .fx-layer *, .game .fx-weather * { filter: none !important; }
   .game .plank-scars *, .game .fx-fireglow { mix-blend-mode: normal; }
@@ -1136,7 +1166,7 @@
     animation: deck-warm-flick 2.6s ease-in-out infinite;
   }
   .phone-deck-warm { z-index: 3; }
-  .game.fx-busy.view-hand-deck::after, .game.fx-busy .phone-deck-warm { animation-play-state: paused; }
+  .game[data-fx-busy].view-hand-deck::after, .game[data-fx-busy] .phone-deck-warm { animation-play-state: paused; }
   @keyframes deck-warm-flick {
     0%, 100% { opacity: .92; }
     45% { opacity: 1; }
