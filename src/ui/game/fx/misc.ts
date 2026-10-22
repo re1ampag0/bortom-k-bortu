@@ -33,7 +33,7 @@ import {
   type SellClip, type SinkClip, type SoulsClip, type StatusClip, type StealClip, type SurfaceClip, type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
-  A, allPlanks, at, badgeMark, burst, bx, cardOrigin, clamp, fireGroup, fireWall, filters, flameEl, flashBoard, hitBlast, qpts, ringSvg, room, splintersSvg, sv, waterColumn, boom, type Box, fxSvg, handCardPos, isPhone, rnd, smokeColumn, smolderEl, sparksSvg, trackEl, curve, dirOf, facingY, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
+  particleShape, A, allPlanks, at, badgeMark, burst, bx, cardOrigin, clamp, fireGroup, fireWall, filters, flameEl, flashBoard, hitBlast, qpts, ringSvg, room, splintersSvg, sv, waterColumn, boom, type Box, fxSvg, handCardPos, isPhone, rnd, smokeColumn, smolderEl, sparksSvg, trackEl, curve, dirOf, facingY, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
   isTop, mk, overlayAt, payKegs, pillAt, plank, projectile, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, steam, tag, trackMark, visible, wait,
   wisp, type FlyCard, type FxCtx, type Pt,
 } from './primitives';
@@ -192,6 +192,8 @@ function planHalf(ctx: FxCtx, el: HTMLElement, b: Box, clip: string, origin: str
  * before). The timings — T.sink (fx/timing.ts).
  */
 PLAY.sink = async (c, ctx) => {
+  ctx = Object.create(ctx) as typeof ctx;
+  ctx.canvasParticles = true;
   const S = T.sink, el = plank(ctx, c.ship), b = bx(ctx, el), up = isTop(ctx, c.ship) ? false : true; // up: the gap is above (a bottom-row ship)
   const fy = facingY(ctx, c.ship), toGap = up ? -1 : 1, small = isPhone(ctx);
   hint(ctx, `${nick(ctx, c.ship)} тонет`);
@@ -251,7 +253,7 @@ PLAY.sink = async (c, ctx) => {
   const sw = sv(svg, `<g>${[0, 1, 2, 3].map((i) => `<ellipse rx="${swR(i)}" ry="${R1(swR(i) * 0.34)}" fill="none" stroke="#e6f2f4" stroke-width="${2 - i * 0.3}" stroke-dasharray="14 10" opacity="${0.8 - i * 0.12}"/>`).join('')}</g>`);
   A(ctx, sw, [{ transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(0deg)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.75 }, { transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(-200deg)`, opacity: 0 }], D + 1400, tSplit, 'linear');
   for (let i = 0, m = room(ctx, small ? 16 : 40); i < m; i++) {
-    const x = b.x + rnd(10, b.w - 10), bub = sv(svg, `<circle r="${rnd(1.6, 4.4).toFixed(1)}" fill="rgba(220,244,248,.18)" stroke="#dff4f8" stroke-width="1"/>`);
+    const x = b.x + rnd(10, b.w - 10), bub = particleShape(ctx, svg, `<circle r="${rnd(1.6, 4.4).toFixed(1)}" fill="rgba(220,244,248,.18)" stroke="#dff4f8" stroke-width="1"/>`);
     A(ctx, bub, [{ transform: `translate(${x.toFixed(1)}px,${(b.y + rnd(10, b.h)).toFixed(1)}px)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${(x + rnd(-8, 8)).toFixed(1)}px,${(b.y + rnd(-30, 20)).toFixed(1)}px)`, opacity: 0 }], rnd(900, 1500), tSplit + rnd(400, D));
   }
   for (let i = 0; i < 4; i++) ringSvg(ctx, svg, cx, fy + toGap * 8, 30, (small ? 150 : 300) - i * 40, '#cfe8ef', 1600, tSplit + 700 + i * 380, 2);
@@ -268,7 +270,7 @@ PLAY.sink = async (c, ctx) => {
   A(ctx, st, [{ opacity: 0, transform: 'translate(-50%,-50%) rotate(-7deg) scale(2.8)' }, { opacity: 1, transform: 'translate(-50%,-50%) rotate(-7deg) scale(.94)', offset: 0.7 }, { opacity: 1, transform: 'translate(-50%,-50%) rotate(-7deg) scale(1)' }], S.stamp, tBack + 500, 'cubic-bezier(.5,0,.8,.4)');
   at(ctx, tBack + 500 + S.stamp, () => {
     for (let i = 0, m = room(ctx, 7); i < m; i++) {
-      const p = sv(svg, `<circle r="${rnd(6, 12).toFixed(1)}" fill="#d9c9a4" opacity=".7"/>`), dx = rnd(-30, 30);
+      const p = particleShape(ctx, svg, `<circle r="${rnd(6, 12).toFixed(1)}" fill="#d9c9a4" opacity=".7"/>`), dx = rnd(-30, 30);
       A(ctx, p, [{ transform: `translate(${b.cx + dx * 0.3}px,${b.cy + 10}px) scale(.2)`, opacity: 0 }, { transform: `translate(${b.cx + dx}px,${b.cy + 6}px) scale(1)`, opacity: 0.7, offset: 0.2 }, { transform: `translate(${b.cx + dx}px,${b.cy - 4}px) scale(1.6)`, opacity: 0 }], 1000, i * 40);
     }
     boom(ctx, 3, 200);
@@ -409,6 +411,8 @@ export function weatherHit(ctx: FxCtx, e: { ship: string; track: Track; amount: 
  * blur its text and outlive a show cut short) — the flames carry their own torn edge.
  */
 export function burnFx(ctx: FxCtx, ship: string, n: number, delay: number): number {
+  ctx = Object.create(ctx) as typeof ctx;
+  ctx.canvasParticles = true;
   const F = T.fire, el = plank(ctx, ship), b = bx(ctx, el), head = el.querySelector('.plank-head');
   const hb = head ? bx(ctx, head) : b;
   const art = el.querySelector('.ship-art');

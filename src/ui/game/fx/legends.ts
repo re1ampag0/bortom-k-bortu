@@ -1,3 +1,4 @@
+import {canvasMote} from './particles';
 import {perfOff} from '../perf/state';
 // The Legends: the common grand entrance of a Legend and the effect of each. FX-B (package 3): the look and the timings
 // of the A5 prototype (docs/mockups/a5/fx/src/fx3.js, ANIMATIONS.md §3.1–3.5) on the primitives of the game; the
@@ -19,7 +20,7 @@ import type { ClipPlayer } from './FxLayer';
 import { flipTo } from './misc';
 import type { JackClip, LegendClip } from './planFx';
 import {
-  A, at, badgeMark, ballFly, boom, facingY, filters, flashBoard, fxSvg, missSplash, seaTemp, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, flash, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
+  particleShape, A, at, badgeMark, ballFly, boom, facingY, filters, flashBoard, fxSvg, missSplash, seaTemp, sparksSvg, splintersSvg, waterColumn, gunFire, hitBlast, burst, bx, clamp, flash, fxPoint, gapBox, hint, holdEl, inkOn, isPhone, isTop, mk, payKegs, plank,
   qpts, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, sv, trackMark, visible, wait, wisp, type FxCtx, type Pt,
 } from './primitives';
 import { CELLS } from '../art/cells';
@@ -95,7 +96,7 @@ export function goldBurst(ctx: FxCtx, svg: Element, x: number, y: number, n = 40
   const m = room(ctx, n);
   for (let i = 0; i < m; i++) {
     const a = (i / m) * Math.PI * 2 + rnd(-0.1, 0.1), r = rnd(r0, r1);
-    const p = sv(svg, i % 3 ? `<circle r="${R1(rnd(1.2, 2.8))}" fill="${['#fff6d8', '#ffd27a', '#e0bd62'][i % 3]}"/>` : '<path d="M0 -4 L1 -1 L4 0 L1 1 L0 4 L-1 1 L-4 0 L-1 -1 Z" fill="#fff6d8"/>');
+    const p = particleShape(ctx, svg, i % 3 ? `<circle r="${R1(rnd(1.2, 2.8))}" fill="${['#fff6d8', '#ffd27a', '#e0bd62'][i % 3]}"/>` : '<path d="M0 -4 L1 -1 L4 0 L1 1 L0 4 L-1 1 L-4 0 L-1 -1 Z" fill="#fff6d8"/>');
     A(ctx, p, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 1 }, { transform: `translate(${R1(x + Math.cos(a) * r)}px,${R1(y + Math.sin(a) * r)}px) scale(.4)`, opacity: 0 }], rnd(700, 1300), delay, 'cubic-bezier(.1,.8,.3,1)');
   }
 }
@@ -103,8 +104,8 @@ export function goldBurst(ctx: FxCtx, svg: Element, x: number, y: number, n = 40
 function motes(ctx: FxCtx, n: number, x0: number, x1: number, y0: number, y1: number, delay = 0): void {
   const colors = ['#ffe9a8', '#ffd27a', '#fff6d8'], m = room(ctx, n);
   for (let i = 0; i < m; i++) {
-    const el = mk(ctx, 'lg-mote', 0, 0), s = rnd(2, 5);
-    el.style.width = el.style.height = s + 'px'; el.style.background = colors[i % 3];
+    const s = rnd(2, 5), el = canvasMote(ctx,s/2,colors[i%3]) ?? mk(ctx, 'lg-mote', 0, 0);
+    if(el instanceof HTMLElement){el.style.width = el.style.height = s + 'px'; el.style.background = colors[i % 3];}
     const x = rnd(x0, x1), y = rnd(y0, y1);
     A(ctx, el, [{ transform: `translate(${R1(x)}px,${R1(y)}px)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: `translate(${R1(x + rnd(-30, 30))}px,${R1(y - rnd(60, 160))}px)`, opacity: 0 }], rnd(1600, 3000), delay + rnd(0, 1600));
   }
@@ -174,7 +175,7 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   const path = qpts(mb.cx, mb.cy, (mb.cx + cx) / 2 + (mb.cx < cx ? -60 : 60), Math.max(Math.min(190, cy), Math.min(mb.cy, cy) - 140), cx, cy, 24);
   A(ctx, card, path.map((p, i) => ({ opacity: i ? 1 : 0, transform: pose(p.x, p.y, (0.08 + 0.92 * Math.pow(i / 24, 1.6)) * S, (1 - i / 24) * -24) })), L.fly, L.cardAt, 'cubic-bezier(.3,.1,.2,1)');
   for (let i = 0; i < 6; i++) {
-    const t = sv(hi, `<circle r="${R1(6 - i * 0.8)}" fill="#ffd27a" opacity="${R1(0.7 - i * 0.1)}"/>`);
+    const t = particleShape(ctx, hi, `<circle r="${R1(6 - i * 0.8)}" fill="#ffd27a" opacity="${R1(0.7 - i * 0.1)}"/>`);
     A(ctx, t, [...path.map((p) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: 1 })), { transform: `translate(${R1(cx)}px,${R1(cy)}px)`, opacity: 0 }], L.fly, L.cardAt + i * 40, 'cubic-bezier(.3,.1,.2,1)');
   }
   A(ctx, card.querySelector('.lc-back')!, [{ transform: 'rotateY(0)' }, { transform: 'rotateY(0)', offset: 0.6 }, { transform: 'rotateY(180deg)' }], L.flip, L.cardAt, 'ease-in-out');
@@ -210,7 +211,7 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   const to = { x: tb.cx, y: tb.cy };
   const op = qpts(cx, cy, (cx + to.x) / 2, Math.min(cy, to.y) - 80, to.x, to.y, 20);
   for (let i = 0; i <= 6; i++) {
-    const o = sv(hi, i ? `<circle r="${R1(8 - i)}" fill="#ffd27a" opacity="${R1(0.6 - i * 0.08)}"/>` : '<g><circle r="22" fill="#ffd27a" opacity=".35"/><circle r="11" fill="#fff1c0"/><circle r="5" fill="#fff"/></g>');
+    const o = particleShape(ctx, hi, i ? `<circle r="${R1(8 - i)}" fill="#ffd27a" opacity="${R1(0.6 - i * 0.08)}"/>` : '<g><circle r="22" fill="#ffd27a" opacity=".35"/><circle r="11" fill="#fff1c0"/><circle r="5" fill="#fff"/></g>');
     A(ctx, o, [{ transform: `translate(${R1(cx)}px,${R1(cy)}px)`, opacity: 0 }, ...op.map((p) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: 1 })), { transform: `translate(${R1(to.x)}px,${R1(to.y)}px)`, opacity: 0 }], L.orb, tOrb + i * 30, 'cubic-bezier(.5,0,.7,1)');
   }
   A(ctx, back, [{ opacity: 1 }, { opacity: 0 }], 700, tOrb, 'linear', 'forwards');
@@ -276,6 +277,8 @@ export const LG: Record<string, (c: LegendClip, ctx: FxCtx) => Promise<void>> = 
  * (damageUnits/damageMarks); on a phone four ships.
  */
 LG['И-Л'] = async (c, ctx) => {
+  ctx = Object.create(ctx) as typeof ctx;
+  ctx.canvasParticles = true;
   const K = T.armada, W = ctx.board.clientWidth, g = gapBox(ctx), phone = isPhone(ctx);
   const n = phone ? 4 : 6;
   const k = R1(Math.min(0.86, (W / (n * 1.4)) / 120, (g.h * 0.5) / 78) * 100) / 100;
@@ -349,7 +352,15 @@ LG['И-Л'] = async (c, ctx) => {
   }
   // the smoke of the broadside stays over the sea and drifts; the fleet sails away into it
   const host = seaScars(ctx);
-  if (host && stickers && !filters(ctx) && !perfOff('particles')) {
+  if (host && ctx.canvasParticles && !perfOff('particles')) {
+    const group=scar(armadaSmokeHost(ctx,host),'short');
+    for(let i=0;i<(phone?7:14);i++){
+      const cx=R1(W*(.1+(i*.85)/(phone?6:13))),cy=R1(y+rnd(-26,26)),rx=R1(rnd(50,80)*Math.max(.6,k)),ry=R1(rnd(20,32));
+      const fog=particleShape(ctx,group,'<circle r="32" fill="url(#lgArmS)"/>','fog');
+      A(ctx,fog,[{transform:`translate(${cx}px,${cy}px) scale(${rx/32},${ry/32})`,opacity:1},{transform:`translate(${cx+(filters(ctx)?60:0)}px,${cy}px) scale(${rx/32},${ry/32})`,opacity:1}],22000,0,'linear');
+    }
+    armadaA(ctx,group,[{opacity:0},{opacity:1}],K.smoke,0,'ease-out','none');
+  } else if (host && stickers && !filters(ctx) && !perfOff('particles')) {
     const group=scar(armadaSmokeHost(ctx,host),'short');
     for(let i=0;i<(phone?7:14);i++){
       const cx=R1(W*(.1+(i*.85)/(phone?6:13))),cy=R1(y+rnd(-26,26)),rx=R1(rnd(50,80)*Math.max(.6,k)),ry=R1(rnd(20,32));
@@ -615,6 +626,7 @@ export async function legendGeneric(c: LegendClip, ctx: FxCtx): Promise<void> {
 }
 
 const playLegend = async (c: LegendClip, ctx: FxCtx) => {
+  if(c.card === 'И-Л'){ctx=Object.create(ctx) as typeof ctx;ctx.canvasParticles=true;}
   const outro = await legendIntro(ctx, c.card, c.seat, { cost: c.cost, soulCost: c.soulCost, target: c.target });
   await (LG[c.card] || legendGeneric)(c, ctx);
   await outro();

@@ -1,6 +1,6 @@
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
-import { cloneElement, isValidElement, lazy, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { cloneElement, isValidElement, lazy, memo, Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   abilityButtons,
   cardNeeds,
@@ -340,7 +340,8 @@ export function Game({
     start: newGame ? { round: s.round, sea: s.sea?.current ?? null, active: s.active } : null,
   });
   /** The table as it is shown: the displayed fields from the queue's D, the rest from the real view. */
-  const tableView = fx.display ? withDisplay(view, fx.display) : view;
+  // D/preview are mutable refs; gen is their explicit revision. Never key this cache by D identity.
+  const tableView = useMemo(() => fx.display ? withDisplay(view, fx.display) : view, [view, fx.gen]);
   // The log as it is shown (A4): the lines of an action appear when its clips are played; at the end of the game — all.
   const logFrom = s.winner ? null : fx.logFrom;
   const shownLog = logFrom == null ? game.log : game.log.filter((l) => l.action < logFrom);
@@ -464,6 +465,10 @@ export function Game({
   // the layout of the table (V1b): where the tools stand, the measure of the water for the weather
   const wideLog = useWideLog();
   const [boardRef, seaRef] = useSeaClip();
+
+  const tableInteraction = useMemo(() => ({}), [game, version, data, view, bottom, seat, mode, reactPickRaw,
+    hints, alarmFolded, sheet, botBusy, held, fastTurn, openHands, fastEnd, endSeconds, flash,
+    curtainSide, banner, endClosed, memoSeen, memoSide, speed, effects, look, sound]);
 
   // ——— Curtain ———
   if (curtainSide) {
@@ -1111,6 +1116,43 @@ export function Game({
     />
   );
 
+  const handNode = () => seat ? (
+    <Hand
+      s={view}
+      data={data}
+      seat={seat}
+      tabs={tabs}
+      onTab={setSeatPick}
+      offOf={offOf}
+      chosen={chosenCard}
+      noteOf={noteOf}
+      onCard={(holder: string, code: string) => {
+        if (mode.k === 'aim' && code !== HIDDEN && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) {
+          setMode({ ...mode, charge: mode.charge === code ? null : code, chargeFrom: holder, paid: 0 });
+          return;
+        }
+        // In the Reaction window a Reaction in the hand is chosen (again — unchosen) instead of opening it.
+        if (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)) {
+          if (offOf(holder, code)) setSheet({ k: 'card', seat: holder, code });
+          else setReactPick(reactPick?.card === code ? null : { seat: holder, card: code });
+          return;
+        }
+        setSheet({ k: 'card', seat: holder, code });
+      }}
+      // V2: on a phone the first tap lifts a card, but the two choices above take it at once (the user's call)
+      direct={(holder: string, code: string) =>
+        code !== HIDDEN &&
+        ((mode.k === 'aim' && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) ||
+          (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)))
+      }
+      onDiscard={(x) => setSheet({ k: 'discard', seat: x })}
+      label={handLabel}
+      note={captainNote}
+      alarmOf={alarmOn ? alarmOf : null}
+      folded={alarmFolded}
+      actionsOf={liftActions}
+    />
+  ) : null;
   // «‹Союзник› готов — ход закончится, когда нажмёте вы»: by network, an ally of this device already pressed «Ход окончен».
   const allyReady =
     (net && myTurn ? Object.values(s.ships).find((x) => x.side === bottom && !x.sunk && !mySeats.includes(x.code) && net.ready.includes(x.code)) : undefined) ??
@@ -1171,18 +1213,19 @@ export function Game({
         <StatusBar
           s={fx.display ? withDisplay(s, fx.display) : s}
           data={data}
-          instruction={fx.hint ?? flash ?? (waitNote ? `Противник может ответить Реакцией… · ${instruction}` : instruction)}
+          fxHint={fx.hintStore}
+          instruction={flash ?? (waitNote ? `Противник может ответить Реакцией… · ${instruction}` : instruction)}
           waiting={!myDecision || !!flash}
           onSea={() => setSheet({ k: 'sea' })}
           extra={wideLog ? null : toolButtons}
           chip={!wideLog}
           hold={<TopHold side={top} s={tableView} data={data} fxGen={fx.gen} />}
-          alarm={alarmOn && !fx.hint && !flash ? <AlarmBar info={alarm!} /> : undefined}
+          alarm={alarmOn && !flash ? <AlarmBar info={alarm!} /> : undefined}
         />
         {net && <NetBar game={net} />}
         <div className="sea-table" ref={seaRef}>
           <div className="sea-water" aria-hidden />
-          <div className="planks top">{columns(top).map(renderPlank)}</div>
+          <div className="planks top">{/* gen rebuilds imperative tracks at every displayed-state boundary. */}<MemoContent stamp={tableInteraction} revision={fx.gen}>{() => columns(top).map(renderPlank)}</MemoContent></div>
           <div className="middle" data-fx-gap>
             <BannerView data={data} banner={banner} />
             {dock && !oakDock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
@@ -1195,7 +1238,7 @@ export function Game({
               </button>
             )}
           </div>
-          <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
+          <div className="planks bottom"><MemoContent stamp={tableInteraction} revision={fx.gen}>{() => columns(bottom).map(renderPlank)}</MemoContent></div>
           {alarm?.kind === 'volley' && alarm.shooter && alarm.target && <AlarmArrow box={seaRef} from={alarm.shooter} to={alarm.target} label={alarm.hit?.pill ?? null} />}
         </div>
         {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
@@ -1207,43 +1250,7 @@ export function Game({
           {!phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
           <TeamRow side={bottom} s={tableView} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={fx.gen} />
           <div className="hand-row" data-fx-hand>
-            {seat && (
-              <Hand
-                s={view}
-                data={data}
-                seat={seat}
-                tabs={tabs}
-                onTab={setSeatPick}
-                offOf={offOf}
-                chosen={chosenCard}
-                noteOf={noteOf}
-                onCard={(holder: string, code: string) => {
-                  if (mode.k === 'aim' && code !== HIDDEN && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) {
-                    setMode({ ...mode, charge: mode.charge === code ? null : code, chargeFrom: holder, paid: 0 });
-                    return;
-                  }
-                  // In the Reaction window a Reaction in the hand is chosen (again — unchosen) instead of opening it.
-                  if (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)) {
-                    if (offOf(holder, code)) setSheet({ k: 'card', seat: holder, code });
-                    else setReactPick(reactPick?.card === code ? null : { seat: holder, card: code });
-                    return;
-                  }
-                  setSheet({ k: 'card', seat: holder, code });
-                }}
-                // V2: on a phone the first tap lifts a card, but the two choices above take it at once (the user's call)
-                direct={(holder: string, code: string) =>
-                  code !== HIDDEN &&
-                  ((mode.k === 'aim' && cardByCode(data, code).type === 'ЗАРЯД' && seatShip(s, holder)?.code === mode.shooter && chargeOk(holder, code, mode.shooter)) ||
-                    (myDecision && d!.kind === 'reactions' && cardByCode(data, code).type === 'РЕАКЦИЯ' && d!.seats.includes(holder)))
-                }
-                onDiscard={(x) => setSheet({ k: 'discard', seat: x })}
-                label={handLabel}
-                note={captainNote}
-                alarmOf={alarmOn ? alarmOf : null}
-                folded={alarmFolded}
-                actionsOf={liftActions}
-              />
-            )}
+            <MemoContent stamp={tableInteraction}>{handNode}</MemoContent>
             {!wideLog && handActions}
           </div>
         </div>
@@ -1462,3 +1469,9 @@ function e2eReady(s: GameState, side: string, seat: string | null) {
   if (import.meta.env.MODE !== 'e2e' || !new URLSearchParams(location.search).get('ready')) return undefined;
   return Object.values(s.ships).find((x) => x.side === side && !x.sunk && x.code !== seat);
 }
+
+// The stamp lists all game/interaction inputs above the curtain's early return. Only FX-internal
+// renders may reuse the subtree. gen remains a separate plank revision because clips mutate D.
+const MemoContent = memo(function MemoContent({children}: {stamp: object; revision?: number; children: () => ReactNode}) {
+  return <>{children()}</>;
+}, (a,b) => a.stamp === b.stamp && a.revision === b.revision);
