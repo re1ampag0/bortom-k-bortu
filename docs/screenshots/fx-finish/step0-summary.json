@@ -1,0 +1,362 @@
+[
+ {
+  "scene": "legend",
+  "label": "step0",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "22:44:01 ▶ turnEnd",
+   "22:44:02 ✓ turnEnd 1.4 с",
+   "22:44:04 ▶ announce",
+   "22:44:05 ✓ announce 0.7 с",
+   "22:44:05 ▶ shot",
+   "22:44:09 ✓ shot 4.3 с",
+   "22:44:11 ▶ announce",
+   "22:44:12 ✓ announce 0.7 с",
+   "22:44:12 ▶ shot",
+   "22:44:16 ✓ shot 4.3 с",
+   "22:44:18 ▶ card",
+   "22:44:19 ✓ card 1.7 с",
+   "22:44:21 ▶ sell",
+   "22:44:22 ✓ sell 1.4 с",
+   "22:44:24 ▶ turnEnd",
+   "22:44:26 ✓ turnEnd 1.4 с",
+   "22:44:26 ▶ turn",
+   "22:44:28 ✓ turn 2.3 с",
+   "22:44:31 ▶ legend",
+   "22:44:48 ✓ legend 16.9 с"
+  ],
+  "elapsedMs": 5888.0999999940395,
+  "scriptingMs": 1352.9940000000001,
+  "recalcStyleMs": 438.86999999999995,
+  "recalcStyleCount": 100,
+  "layoutMs": 121.90599999999995,
+  "layoutCount": 64,
+  "forcedStyle": {
+   "count": 20,
+   "ms": 179.906
+  },
+  "forcedLayout": {
+   "count": 11,
+   "ms": 93.02199999999999
+  },
+  "longTasks": 36,
+  "longestTaskMs": 907.606,
+  "paint": {
+   "ms": 425.554,
+   "rasterMs": 403.8329999999995
+  },
+  "worstFrameMs": 1216.5999999999985,
+  "framesOver50": 37,
+  "fps": 13.586725768937516,
+  "renders": 1,
+  "renderMs": 68.09999999403954,
+  "renderMaxMs": 68.09999999403954,
+  "renderList": [
+   [
+    333,
+    68.1
+   ]
+  ],
+  "planks": 12,
+  "hands": 1,
+  "layers": {
+   "all": 119,
+   "drawing": 104
+  },
+  "observerLongTasks": 33,
+  "svgAnimations": 0,
+  "svgByFunction": {}
+ },
+ {
+  "scene": "armada",
+  "label": "step0",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "22:44:01 ▶ turnEnd",
+   "22:44:02 ✓ turnEnd 1.4 с",
+   "22:44:04 ▶ announce",
+   "22:44:05 ✓ announce 0.7 с",
+   "22:44:05 ▶ shot",
+   "22:44:09 ✓ shot 4.3 с",
+   "22:44:11 ▶ announce",
+   "22:44:12 ✓ announce 0.7 с",
+   "22:44:12 ▶ shot",
+   "22:44:16 ✓ shot 4.3 с",
+   "22:44:18 ▶ card",
+   "22:44:19 ✓ card 1.7 с",
+   "22:44:21 ▶ sell",
+   "22:44:22 ✓ sell 1.4 с",
+   "22:44:24 ▶ turnEnd",
+   "22:44:26 ✓ turnEnd 1.4 с",
+   "22:44:26 ▶ turn",
+   "22:44:28 ✓ turn 2.3 с",
+   "22:44:31 ▶ legend",
+   "22:44:48 ✓ legend 16.9 с"
+  ],
+  "elapsedMs": 18071,
+  "scriptingMs": 4335.861000000003,
+  "recalcStyleMs": 1164.469,
+  "recalcStyleCount": 379,
+  "layoutMs": 471.05199999999974,
+  "layoutCount": 285,
+  "forcedStyle": {
+   "count": 129,
+   "ms": 527.933
+  },
+  "forcedLayout": {
+   "count": 91,
+   "ms": 312.11999999999983
+  },
+  "longTasks": 106,
+  "longestTaskMs": 907.606,
+  "paint": {
+   "ms": 1449.4079999999994,
+   "rasterMs": 915.3000000000003
+  },
+  "worstFrameMs": 1216.5999999999985,
+  "framesOver50": 94,
+  "fps": 13.225610093520004,
+  "renders": 1,
+  "renderMs": 68.09999999403954,
+  "renderMaxMs": 68.09999999403954,
+  "renderList": [
+   [
+    333,
+    68.1
+   ]
+  ],
+  "planks": 12,
+  "hands": 1,
+  "layers": {
+   "all": 119,
+   "drawing": 104
+  },
+  "observerLongTasks": 101,
+  "svgAnimations": 0,
+  "svgByFunction": {}
+ },
+ {
+  "scene": "hit",
+  "label": "step0",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "22:44:58 ▶ sea",
+   "22:45:05 ✓ sea 6.7 с",
+   "22:45:05 ▶ turn",
+   "22:45:06 ✓ turn 1.2 с",
+   "22:45:13 ▶ announce",
+   "22:45:14 ✓ announce 0.9 с",
+   "22:45:14 ▶ shot",
+   "22:45:18 ✓ shot 4.4 с",
+   "22:45:18 ▶ announce",
+   "22:45:19 ✓ announce 0.7 с",
+   "22:45:19 ▶ shot",
+   "22:45:23 ✓ shot 4.2 с"
+  ],
+  "elapsedMs": 12795.5,
+  "scriptingMs": 3559.976999999997,
+  "recalcStyleMs": 1176.0150000000008,
+  "recalcStyleCount": 254,
+  "layoutMs": 631.4020000000005,
+  "layoutCount": 318,
+  "forcedStyle": {
+   "count": 88,
+   "ms": 670.8630000000002
+  },
+  "forcedLayout": {
+   "count": 69,
+   "ms": 394.53800000000007
+  },
+  "longTasks": 98,
+  "longestTaskMs": 862.434,
+  "paint": {
+   "ms": 1697.458,
+   "rasterMs": 896.7690000000002
+  },
+  "worstFrameMs": 1100,
+  "framesOver50": 84,
+  "fps": 11.097651518111837,
+  "renders": 1,
+  "renderMs": 544.6999999880791,
+  "renderMaxMs": 544.6999999880791,
+  "renderList": [
+   [
+    575,
+    544.7
+   ]
+  ],
+  "planks": 12,
+  "hands": 1,
+  "layers": {
+   "all": 71,
+   "drawing": 59
+  },
+  "observerLongTasks": 93,
+  "svgAnimations": 0,
+  "svgByFunction": {}
+ },
+ {
+  "scene": "kraken",
+  "label": "step0",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "22:45:32 ▶ legend",
+   "22:45:48 ✓ legend 16.6 с"
+  ],
+  "elapsedMs": 17742.600000023842,
+  "scriptingMs": 3611.3320000000035,
+  "recalcStyleMs": 885.6900000000005,
+  "recalcStyleCount": 436,
+  "layoutMs": 372.69499999999954,
+  "layoutCount": 527,
+  "forcedStyle": {
+   "count": 74,
+   "ms": 343.633
+  },
+  "forcedLayout": {
+   "count": 53,
+   "ms": 151.73900000000003
+  },
+  "longTasks": 101,
+  "longestTaskMs": 588.039,
+  "paint": {
+   "ms": 2281.4530000000004,
+   "rasterMs": 1305.1399999999992
+  },
+  "worstFrameMs": 766.5999999999995,
+  "framesOver50": 95,
+  "fps": 19.670172353518144,
+  "renders": 0,
+  "renderMs": 0,
+  "renderMaxMs": 0,
+  "renderList": [],
+  "planks": 24,
+  "hands": 6,
+  "layers": {
+   "all": 94,
+   "drawing": 82
+  },
+  "observerLongTasks": 96,
+  "svgAnimations": 41,
+  "svgByFunction": {
+   "sparksSvg": 13,
+   "LG.Г-Л": 8,
+   "soulsFly": 5,
+   "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21022:5": 3,
+   "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21030:5": 3,
+   "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21036:27": 3,
+   "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21094:5": 3,
+   "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21098:5": 3
+  }
+ },
+ {
+  "scene": "jack",
+  "label": "step0",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "22:46:00 ▶ announce (догоняет, в очереди 2)",
+   "22:46:01 ✓ announce 0.4 с",
+   "22:46:01 ▶ shot (догоняет, в очереди 2)",
+   "22:46:03 ✓ shot 2.6 с",
+   "22:46:03 ▶ jack",
+   "22:46:17 ✓ jack 13.3 с"
+  ],
+  "elapsedMs": 18393.19999998808,
+  "scriptingMs": 4195.257999999998,
+  "recalcStyleMs": 1409.1779999999994,
+  "recalcStyleCount": 330,
+  "layoutMs": 721.413,
+  "layoutCount": 463,
+  "forcedStyle": {
+   "count": 77,
+   "ms": 779.9899999999998
+  },
+  "forcedLayout": {
+   "count": 56,
+   "ms": 299.598
+  },
+  "longTasks": 147,
+  "longestTaskMs": 703.74,
+  "paint": {
+   "ms": 3013.5799999999995,
+   "rasterMs": 1133.5489999999998
+  },
+  "worstFrameMs": 866.6000000000004,
+  "framesOver50": 125,
+  "fps": 13.591979644660093,
+  "renders": 0,
+  "renderMs": 0,
+  "renderMaxMs": 0,
+  "renderList": [],
+  "planks": 44,
+  "hands": 11,
+  "layers": {
+   "all": 84,
+   "drawing": 66
+  },
+  "observerLongTasks": 138,
+  "svgAnimations": 9,
+  "svgByFunction": {
+   "playJack": 9
+  }
+ },
+ {
+  "scene": "idle",
+  "label": "step0",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "22:46:27 ▶ sea",
+   "22:46:34 ✓ sea 6.7 с",
+   "22:46:34 ▶ turn",
+   "22:46:35 ✓ turn 1.2 с"
+  ],
+  "elapsedMs": 10075.59999999404,
+  "scriptingMs": 524.8389999999997,
+  "recalcStyleMs": 1308.2080000000008,
+  "recalcStyleCount": 558,
+  "layoutMs": 0,
+  "layoutCount": 0,
+  "forcedStyle": {
+   "count": 0,
+   "ms": 0
+  },
+  "forcedLayout": {
+   "count": 0,
+   "ms": 0
+  },
+  "longTasks": 4,
+  "longestTaskMs": 108.444,
+  "paint": {
+   "ms": 0,
+   "rasterMs": 0
+  },
+  "worstFrameMs": 116.60000000000218,
+  "framesOver50": 4,
+  "fps": 55.18281789673359,
+  "renders": 0,
+  "renderMs": 0,
+  "renderMaxMs": 0,
+  "renderList": [],
+  "planks": 0,
+  "hands": 0,
+  "layers": {
+   "all": 41,
+   "drawing": 34
+  },
+  "observerLongTasks": 4,
+  "svgAnimations": 0,
+  "svgByFunction": {}
+ }
+]

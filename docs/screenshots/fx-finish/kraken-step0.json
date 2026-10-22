@@ -1,0 +1,56 @@
+{
+ "scene": "kraken",
+ "label": "step0",
+ "viewport": "390×844 DPR3 CPU×4",
+ "valid": true,
+ "errors": [],
+ "journal": [
+  "22:45:32 ▶ legend",
+  "22:45:48 ✓ legend 16.6 с"
+ ],
+ "elapsedMs": 17742.600000023842,
+ "scriptingMs": 3611.3320000000035,
+ "recalcStyleMs": 885.6900000000005,
+ "recalcStyleCount": 436,
+ "layoutMs": 372.69499999999954,
+ "layoutCount": 527,
+ "forcedStyle": {
+  "count": 74,
+  "ms": 343.633
+ },
+ "forcedLayout": {
+  "count": 53,
+  "ms": 151.73900000000003
+ },
+ "longTasks": 101,
+ "longestTaskMs": 588.039,
+ "paint": {
+  "ms": 2281.4530000000004,
+  "rasterMs": 1305.1399999999992
+ },
+ "worstFrameMs": 766.5999999999995,
+ "framesOver50": 95,
+ "fps": 19.670172353518144,
+ "renders": 0,
+ "renderMs": 0,
+ "renderMaxMs": 0,
+ "renderList": [],
+ "planks": 24,
+ "hands": 6,
+ "layers": {
+  "all": 94,
+  "drawing": 82
+ },
+ "observerLongTasks": 96,
+ "svgAnimations": 41,
+ "svgByFunction": {
+  "sparksSvg": 13,
+  "LG.Г-Л": 8,
+  "soulsFly": 5,
+  "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21022:5": 3,
+  "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21030:5": 3,
+  "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21036:27": 3,
+  "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21094:5": 3,
+  "http://127.0.0.1:5187/bortom-k-bortu/assets/index-lNiU6PlN.js:21098:5": 3
+ }
+}
