@@ -323,5 +323,12 @@
 .fx-sprite-trace { position:absolute;left:0;top:0;width:0;height:0;opacity:1;pointer-events:none;will-change:auto; }
 .game.perf-off-light .sprite-recoil-light, .game.perf-off-filters .sprite-recoil-light { display:none; }
 
+/* A plane occupies the original SVG's painter slot; its individual SVG stickers never animate. */
+.fx-layer > .volley-sprite-plane, .fx-scars > .volley-sprite-plane { position:absolute;left:0;top:0;width:0;height:0;opacity:1;pointer-events:none;will-change:auto; }
+.volley-float-moving > .volley-float-rotate { animation:volley-float-rock 3.2s linear infinite;will-change:transform; }
+.volley-float-moving .volley-float-heave { animation:volley-float-heave 2.4s linear infinite;will-change:transform; }
+@keyframes volley-float-rock { 0%,100% { transform:rotate(-8deg); } 50% { transform:rotate(8deg); } }
+@keyframes volley-float-heave { 0%,100% { transform:translateY(0); } 50% { transform:translateY(2px); } }
+
 /* Ambient surfaces are useful only while these weather animations are enabled. */
 .game.perf-off-css .fx-weather :is(.wx-loop,.wx-island) { will-change: auto !important; }
