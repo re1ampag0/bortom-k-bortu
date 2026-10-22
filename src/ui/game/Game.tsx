@@ -1,6 +1,6 @@
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
-import { cloneElement, isValidElement, lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { cloneElement, isValidElement, lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   abilityButtons,
   cardNeeds,
@@ -475,6 +475,18 @@ export function Game({
     hints, alarmFolded, sheet, botBusy, held, fastTurn, openHands, fastEnd, endSeconds, flash,
     curtainSide, banner, endClosed, memoSeen, memoSide, speed, effects, look, sound]);
 
+  // The dry runs of the engine depend only on the real game, not on the frame of a clip: a render the show asks for
+  // (the displayed state moved on) reuses them. A ref, not useMemo: the code that fills it runs after the curtain return.
+  const engineCache = useRef(new Map<string, { deps: readonly unknown[]; value: unknown }>());
+  const cached = <T,>(key: string, deps: readonly unknown[], make: () => T): T => {
+    const hit = engineCache.current.get(key);
+    if (hit && hit.deps.length === deps.length && hit.deps.every((x, i) => Object.is(x, deps[i]))) return hit.value as T;
+    const value = make();
+    engineCache.current.set(key, { deps, value });
+    return value;
+  };
+  const engineDeps = [version, game, data, bottom, myTurn, myDecision, mySeats.join(','), mode, hints, sAim, aimTargets] as const;
+
   // ——— Curtain ———
   if (curtainSide) {
     const summary = game.log
@@ -606,7 +618,8 @@ export function Game({
     return cols.filter((x): x is NonNullable<typeof x> => !!x);
   };
 
-  const plateFor = (code: string): Plate | null => {
+  const plateFor = (code: string): Plate | null => cached(`plate:${code}`, engineDeps, () => plateNow(code));
+  const plateNow = (code: string): Plate | null => {
     if (mode.k === 'aim') {
       const t = aimTargets.find((x) => x.target === code);
       if (!t) return null;
@@ -628,7 +641,8 @@ export function Game({
     return null;
   };
 
-  const plankButtons = (code: string): Btn[] => {
+  const plankButtons = (code: string): Btn[] => cached(`buttons:${code}`, engineDeps, () => buttonsNow(code));
+  const buttonsNow = (code: string): Btn[] => {
     const ship = s.ships[code];
     if (!myTurn || ship.sunk || ship.side !== bottom || !mySeats.includes(code)) return [];
     const params = shipData(data, code);
@@ -662,7 +676,8 @@ export function Game({
     setSheet({ k: 'card', seat: code, code: `${code}-Л` });
   };
 
-  const regroupBtn = (side: Side): Btn | null => {
+  const regroupBtn = (side: Side): Btn | null => cached(`regroup:${side}`, engineDeps, () => regroupNow(side));
+  const regroupNow = (side: Side): Btn | null => {
     if (side !== bottom) return null;
     // always in its place under the Hold; out of one's turn dimmed, not active, «Только в свой ход», the price still shown
     // (free while a ship of the team is «Быстрее ветра»; the sea «Попутный ветер» is known only by the engine in one's turn)
