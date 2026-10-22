@@ -3,6 +3,8 @@ import {bigShip, uidSvg} from '../art/bigShips';
 import {A, gapBox, rnd, room, smokeJet, filters, ignoreFxBudget, particleCircle, type Pt, type FxCtx} from './primitives';
 import {perfOff} from '../perf/state';
 import {warmSprites, takeSprite, spriteReady, spriteA, type Sprite, type SpriteSpec} from './sprites';
+import {legendGlintSpec} from './legendGlint';
+import {volleySize,volleySpriteSpecs} from './volleySprites';
 const R1=(n:number)=>Math.round(n*10)/10;
 const COMPANY=bigShip('company',0,0,1);
 // Static bright artwork: only the wrapper opacity changes, never a moving filter.
@@ -20,7 +22,8 @@ export function armadaGeometry(ctx:FxCtx){
 const svg=(box:[number,number,number,number],content:string)=>`<svg aria-hidden="true" viewBox="${box.join(' ')}" width="${box[2]}" height="${box[3]}" style="left:${box[0]}px;top:${box[1]}px">${content}</svg>`;
 export function prepareArmadaSprites(ctx:FxCtx):void {
  const {k,key,phone,n}=armadaGeometry(ctx);
- if(prepared.get(ctx.board)===key&&spriteReady(ctx.board,key))return;
+ const signature=key+':'+volleySize(ctx);
+ if(prepared.get(ctx.board)===signature&&spriteReady(ctx.board,key))return;
  const hull=svg([-66,-82,136,100],COMPANY),lit=svg([-66,-82,136,100],LIT);
  const wake=svg([-46*k-16,-4,218*k+24,30],`<path d="M${R1(40*k)} 2 C${R1(70*k)} 4 ${R1(110*k)} 10 ${R1(160*k)} 6 M${R1(40*k)} 6 C${R1(70*k)} 10 ${R1(110*k)} 18 ${R1(160*k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46*k)} 1 q-8 2 -12 6 M${R1(-46*k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>`);
  const ship=`<div data-sprite-node="pitch" class="lg-pitch">${wake}<div data-sprite-node="recoil" class="lg-recoil"><div class="sprite-art" style="transform:scale(${k})">${hull}</div>${phone?'':`<div data-sprite-node="light" class="sprite-recoil-light"><div class="sprite-art" style="transform:scale(${k})">${lit}</div></div>`}</div></div>`;
@@ -35,8 +38,8 @@ export function prepareArmadaSprites(ctx:FxCtx):void {
  specs.push({key:'armada-group',html:'',count:4});
  specs.push({key:'armada-haze',html:svg([-160,-70,320,140],'<ellipse cx="0" cy="0" rx="160" ry="70" fill="#e6eaec" opacity=".7"/><ellipse cx="-40" cy="30" rx="120" ry="40" fill="#f2f4f5" opacity=".6"/>'),count:1});
  specs.push({key:'armada-fog',html:svg([-1,-1,2,2],'<defs><radialGradient id="armFog"><stop offset="0" stop-color="#eeebe4" stop-opacity=".8"/><stop offset="1" stop-color="#eeebe4" stop-opacity="0"/></radialGradient></defs><circle r="1" fill="url(#armFog)"/>'),count:14});
- warmSprites(ctx.board,specs);
- prepared.set(ctx.board,key);
+ warmSprites(ctx.board,[...specs,legendGlintSpec,...volleySpriteSpecs(ctx)]);
+ prepared.set(ctx.board,signature);
 }
 
 /** Same curves/counts; only the drawing host and animated element change. */

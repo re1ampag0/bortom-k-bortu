@@ -177,6 +177,7 @@
 .lg-card .lc-foot::before, .lg-card .lc-foot::after { content: ''; width: 22px; height: 1px; background: currentColor; opacity: 0.6; }
 .lg-card .lc-shine { position: absolute; inset: -20%; background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.75) 50%, transparent 60%); transform: translateX(-120%); pointer-events: none; }
 .lg-card .lc-glint { position: absolute; left: 0; top: 0; pointer-events: none; }
+.lg-card .fx-sprite.lc-glint { width:248px;height:372px; }
 .lg-seal { line-height: 0; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 .lg-title { padding: 6px 34px; white-space: nowrap; background: linear-gradient(#a3271d, #7a1a12); color: #fff3e0; font: 700 26px/1.1 var(--fx-font); letter-spacing: 4px; border-top: 2px solid #e0bd62; border-bottom: 2px solid #e0bd62; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); clip-path: polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%, 4% 50%); }
 .lg-title span { display: inline-block; }
@@ -321,6 +322,13 @@
 .sprite-recoil-light { opacity:0; }
 .fx-sprite-trace { position:absolute;left:0;top:0;width:0;height:0;opacity:1;pointer-events:none;will-change:auto; }
 .game.perf-off-light .sprite-recoil-light, .game.perf-off-filters .sprite-recoil-light { display:none; }
+
+/* A plane occupies the original SVG's painter slot; its individual SVG stickers never animate. */
+.fx-layer > .volley-sprite-plane, .fx-scars > .volley-sprite-plane { position:absolute;left:0;top:0;width:0;height:0;opacity:1;pointer-events:none;will-change:auto; }
+.volley-float-moving > .volley-float-rotate { animation:volley-float-rock 3.2s linear infinite;will-change:transform; }
+.volley-float-moving .volley-float-heave { animation:volley-float-heave 2.4s linear infinite;will-change:transform; }
+@keyframes volley-float-rock { 0%,100% { transform:rotate(-8deg); } 50% { transform:rotate(8deg); } }
+@keyframes volley-float-heave { 0%,100% { transform:translateY(0); } 50% { transform:translateY(2px); } }
 
 /* Ambient surfaces are useful only while these weather animations are enabled. */
 .game.perf-off-css .fx-weather :is(.wx-loop,.wx-island) { will-change: auto !important; }
