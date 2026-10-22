@@ -23,7 +23,7 @@ interface Frame {
 const layerHas = (sel: string) => `!!document.querySelector('.fx-layer ${sel}')`;
 const stampShown = (text: string) => `Array.from(document.querySelectorAll('.fx-layer .stamp-fx')).some((t) => t.textContent === ${JSON.stringify(text)} && Number(getComputedStyle(t).opacity) > 0.8)`;
 const FRAMES: Frame[] = [
-  { name: 'turn-fire', scene: 'turn', ready: layerHas('.ember'), after: 250, down: true },
+  { name: 'turn-fire', scene: 'turn', ready: `document.querySelector('.fx-layer')?.parentElement?.fxParticles?.().visible.some(p => p.kind === 'ember' && p.opacity > .05)`, after: 250, down: true },
   // the drawing: the backs fly to «Голландец» and the label «+2 карты» (not the Plan before it)
   { name: 'turn-draw', scene: 'turn', ready: `Array.from(document.querySelectorAll('.fx-layer .tag.plus')).some((t) => /^\\+\\d+ карт/.test(t.textContent))`, after: 150, down: true },
   { name: 'card', scene: 'card', ready: layerHas('.flyc'), after: 700, width: 1920, height: 944, down: true },
@@ -32,7 +32,7 @@ const FRAMES: Frame[] = [
   { name: 'mark', scene: 'mark', ready: layerHas('.blot'), after: 250, down: true },
   { name: 'mark-volley', scene: 'mark', ready: layerHas('.ball'), after: 250, down: true },
   { name: 'sink', scene: 'sink', ready: stampShown('Затонул'), after: 0, down: true },
-  { name: 'turn-fire', scene: 'turn', ready: layerHas('.ember'), after: 250, width: 430, height: 932, down: true },
+  { name: 'turn-fire', scene: 'turn', ready: `document.querySelector('.fx-layer')?.parentElement?.fxParticles?.().visible.some(p => p.kind === 'ember' && p.opacity > .05)`, after: 250, width: 430, height: 932, down: true },
   { name: 'card', scene: 'card', ready: layerHas('.flyc'), after: 700, width: 430, height: 740, down: true },
   { name: 'card', scene: 'card', ready: layerHas('.flyc'), after: 700, width: 430, height: 680, down: true },
 ];

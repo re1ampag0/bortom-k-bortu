@@ -1,6 +1,6 @@
 // The same art as legends.ts, prepared outside the rendered document. No gameplay RNG is used here.
 import {bigShip, uidSvg} from '../art/bigShips';
-import {A, gapBox, rnd, room, smokeJet, filters, ignoreFxBudget, type Pt, type FxCtx} from './primitives';
+import {A, gapBox, rnd, room, smokeJet, filters, ignoreFxBudget, particleCircle, type Pt, type FxCtx} from './primitives';
 import {perfOff} from '../perf/state';
 import {warmSprites, takeSprite, spriteReady, spriteA, type Sprite, type SpriteSpec} from './sprites';
 const R1=(n:number)=>Math.round(n*10)/10;
@@ -45,7 +45,7 @@ export function armadaBall(ctx:FxCtx,svg:Element,p0:Pt,p1:Pt,d=700,delay=0,lift=
  const path=(scale:(i:number)=>number)=>pts.map((p,i)=>({transform:`translate(${R1(p.x)}px,${R1(p.y)}px) scale(${scale(i)})`,opacity:i===N?0:1}));
  // Small trails stay grouped, not separate particle layers.
  for(let i=1,m=room(ctx,7);i<=m;i++){
-  const trail=document.createElementNS('http://www.w3.org/2000/svg','circle');trail.setAttribute('r',String(R1(3.6-i*.35)));trail.setAttribute('fill','#cfc8bc');trail.setAttribute('opacity',String(R1(.5-i*.06)));trail.setAttribute('data-perf-particle','');svg.append(trail);
+  const trail=particleCircle(ctx,svg,R1(3.6-i*.35),'#cfc8bc','trail',R1(.5-i*.06));
   A(ctx,trail,path(()=>1),d,delay+i*22,'linear');
  }
  const shadow=takeSprite(ctx,'armada-shadow');
@@ -56,6 +56,7 @@ export function armadaBall(ctx:FxCtx,svg:Element,p0:Pt,p1:Pt,d=700,delay=0,lift=
 export function armadaSmoke(ctx:FxCtx,host:Element,x:number,y:number,ang:number,k=1,n=9,life=5600,delay=0,darkAll=false):void {
  // Keep the laptop's combined turbulence/blur texture, which cannot be split without changing its picture.
  if(filters(ctx)){smokeJet(ctx,host,x,y,ang,k,n,life,delay,darkAll);return}
+ if(ctx.canvasParticles){smokeJet(ctx,host,x,y,ang,k,n,life,delay,darkAll);return}
  const m=room(ctx,n);if(!m)return;
  for(let i=0;i<m;i++){
   const t=i/m,dist=(18+t*70)*k,a=ang+rnd(-.35,.35),r0=(5+t*4)*k,r1=(16+t*22+rnd(0,10))*k;
