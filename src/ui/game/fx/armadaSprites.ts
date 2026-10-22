@@ -4,6 +4,7 @@ import {A, gapBox, rnd, room, smokeJet, filters, ignoreFxBudget, particleCircle,
 import {perfOff} from '../perf/state';
 import {warmSprites, takeSprite, spriteReady, spriteA, type Sprite, type SpriteSpec} from './sprites';
 import {legendGlintSpec} from './legendGlint';
+import {legendSpriteSpecs} from './legendSprites';
 import {volleySize,volleySpriteSpecs} from './volleySprites';
 const R1=(n:number)=>Math.round(n*10)/10;
 const COMPANY=bigShip('company',0,0,1);
@@ -38,7 +39,7 @@ export function prepareArmadaSprites(ctx:FxCtx):void {
  specs.push({key:'armada-group',html:'',count:4});
  specs.push({key:'armada-haze',html:svg([-160,-70,320,140],'<ellipse cx="0" cy="0" rx="160" ry="70" fill="#e6eaec" opacity=".7"/><ellipse cx="-40" cy="30" rx="120" ry="40" fill="#f2f4f5" opacity=".6"/>'),count:1});
  specs.push({key:'armada-fog',html:svg([-1,-1,2,2],'<defs><radialGradient id="armFog"><stop offset="0" stop-color="#eeebe4" stop-opacity=".8"/><stop offset="1" stop-color="#eeebe4" stop-opacity="0"/></radialGradient></defs><circle r="1" fill="url(#armFog)"/>'),count:14});
- warmSprites(ctx.board,[...specs,legendGlintSpec,...volleySpriteSpecs(ctx)]);
+ warmSprites(ctx.board,[...specs,legendGlintSpec,...volleySpriteSpecs(ctx),...legendSpriteSpecs()]);
  prepared.set(ctx.board,signature);
 }
 

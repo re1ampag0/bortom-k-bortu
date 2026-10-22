@@ -157,8 +157,9 @@ test.describe('the Legends through ?fxScene', () => {
           expect(heel.turn, 'a ship heels from the recoil').toBeGreaterThan(0.005);
         }
         if (l.scene === 'bottle') {
+          // The sticker adds its own local SVG inside the rocking HTML wrapper. Still check the actual ship art.
           // A5: the ship in the bottle is the target's own («Индевор»), not the neutral merchantman of the card
-          const kind = await page.evaluate(() => document.querySelector('.fx-layer .lg-rock > g[data-kind]')?.getAttribute('data-kind'));
+          const kind = await page.evaluate(() => document.querySelector('.fx-layer .lg-rock [data-kind]')?.getAttribute('data-kind'));
           expect(kind, 'the ship in the bottle').toBe('endeavour');
         }
         if (l.scene === 'kraken') {
