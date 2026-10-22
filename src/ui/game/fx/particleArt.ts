@@ -1,3 +1,4 @@
+import {perfWorkHook} from '../perf/clip';
 // Rasterize the original small SVG geometry once, outside the document. Nothing here animates.
 export interface ParticleArt { image: HTMLCanvasElement; x: number; y: number; w: number; h: number }
 const cache = new Map<string, ParticleArt>();
@@ -72,7 +73,8 @@ export function prepareSmokeArt(defs: string,dpr: number): Promise<void> {
   const r=32,pad=48,size=(r+pad)*2;
   const source=`<svg xmlns="http://www.w3.org/2000/svg" width="${size*dpr}" height="${size*dpr}" viewBox="-${r+pad} -${r+pad} ${size} ${size}">${defs}<g filter="url(#fxSmkF)"><circle r="${r}" fill="url(#${fill})"/></g></svg>`;
   const url=URL.createObjectURL(new Blob([source],{type:'image/svg+xml'}));
-  try{const image=new Image();image.src=url;await image.decode();const canvas=document.createElement('canvas');canvas.width=canvas.height=size*dpr;canvas.getContext('2d')!.drawImage(image,0,0);smoke.set(fill,{image:canvas,x:-80,y:-80,w:160,h:160});}finally{URL.revokeObjectURL(url);}
+  const perfEnd=perfWorkHook?.('prepare: smoke SVG decode/raster');
+  try{const image=new Image();image.src=url;await image.decode();const canvas=document.createElement('canvas');canvas.width=canvas.height=size*dpr;canvas.getContext('2d')!.drawImage(image,0,0);smoke.set(fill,{image:canvas,x:-80,y:-80,w:160,h:160});}finally{URL.revokeObjectURL(url);perfEnd?.();}
  })).then(()=>{}).catch(()=>{warming=null;});return warming;
 }
 export function smokeArt(fill: string): ParticleArt | undefined {return smoke.get(fill);}

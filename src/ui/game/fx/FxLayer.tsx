@@ -1,7 +1,7 @@
 import {prepareParticles, clearParticles, disposeParticles} from './particles';
 import {createFxHint, type FxHintStore} from './hintStore';
 import {getPerf, perfOff} from '../perf/state';
-import {clipKind, clipShowEnd, clipShowStart} from '../perf/clip';
+import {clipKind, clipShowEnd, clipShowStart, clipPause, perfWorkHook} from '../perf/clip';
 // The animation layer on the table and its queue: the port of play / finish / skip / afterRender / keepSet of
 // docs/mockups/anim/level1/page.js (PORTING.md, section 4). The planks are drawn from the displayed state D: it lags
 // behind the real state, a clip plays → its events are applied to D → the table is drawn again. Buttons and «can I»
@@ -205,6 +205,7 @@ export function useFxQueue({
   const frozen = useRef<Animation[]>([]);
   const freezeShow = useCallback(() => {
     const held = live.current.hold || live.current.paused || document.hidden;
+    clipPause(held);
     const spriteBoard = layerRef.current?.parentElement;
     if (spriteBoard) spritePause(spriteBoard, held);
     if (!held) {
@@ -272,11 +273,14 @@ export function useFxQueue({
       },
       renderWith: (evs) => {
         if (run !== RUN.current || !D.current) return;
+        const perfEnd=perfWorkHook?.('renderWith');
+        try {
         const p = structuredClone(D.current);
         for (const e of evs) applyVisible(p, e, rules);
         preview.current = p;
         flushSync(bump);
         invalidateGeometry(board);
+        } finally {perfEnd?.();}
       },
     };
   };
@@ -418,8 +422,8 @@ export function useFxQueue({
           item.done++;
           clearFx();
           // The table from D at once, then the planks lose what the clip left on them: the reference draws new nodes.
-          flushSync(bump);
-          settlePlanks();
+          const perfEnd=perfWorkHook?.('renderWith: итог клипа');
+          try {flushSync(bump);settlePlanks();} finally {perfEnd?.();}
         }
         applyQuiet(D.current!, item, rules);
         item.applied = true;
