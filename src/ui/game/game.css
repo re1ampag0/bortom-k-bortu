@@ -970,41 +970,9 @@ button.star::before {
     white-space: nowrap;
   }
 }
-/* The buttons of a plank: on a phone a row that scrolls with the arrow «›» at its right edge (U3); on a laptop the
-   arrow is never there. */
+/* The buttons of a plank: on a phone a row that scrolls with a finger (U3, ui-5). */
 .plank-buttons-wrap {
   position: relative;
-}
-.buttons-more {
-  display: none;
-  position: absolute;
-  right: 4px;
-  top: calc(50% - 4px);
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0 2px;
-  border: 1.5px solid var(--ink);
-  border-radius: 50%;
-  background: var(--panel);
-  color: var(--ink);
-  font-size: 1.2rem;
-  font-weight: 800;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(42, 36, 29, 0.2);
-}
-.buttons-more::after {
-  /* a 44 × 44 press zone without a bigger circle */
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 44px;
-  height: 44px;
-  transform: translate(-50%, -50%);
 }
 /* Aiming: the whole plank is the button (P2, as in docs/mockups/anim/level1/style.css). */
 .plank.aimable {
@@ -2201,8 +2169,8 @@ button.star::before {
     height: 18px;
     font-size: 11px;
   }
-  /* The buttons of a plank: one row that scrolls sideways with a finger (U3) — no scrollbar, the right edge fades
-     while there is more (data-more, Table.tsx); the scroll does not move the table. A button never shrinks below its
+  /* The buttons of a plank: one row that scrolls sideways with a finger (U3) — no scrollbar, an edge with more fades
+     (data-more, data-more-left: Table.tsx); the scroll does not move the table. A button never shrinks below its
      text; a short row still fills the plank. */
   .plank-buttons {
     /* 5 px above and below: the press zone of a button (44 px, ::before) stays inside the row, which clips */
@@ -2218,21 +2186,22 @@ button.star::before {
   .plank-buttons::-webkit-scrollbar {
     display: none;
   }
-  /* the fade and the arrow are narrow, at the very edge: the text of the second button stays clear */
-  .plank-buttons-wrap[data-more] .plank-buttons {
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 10px), transparent);
+  /* ui-5: a soft fade at the edge beyond which there are more buttons (right; after a scroll — left too), none when all fit;
+     a finger scrolls the row sideways, the vertical gestures are not taken */
+  .plank-buttons {
+    touch-action: pan-x;
+    --fade-l: 0px;
+    --fade-r: 0px;
   }
-  .plank-buttons-wrap[data-more] .buttons-more {
-    display: flex;
-    /* small, over the padding of the row: it does not cover the text of the last button in sight */
-    right: -1px;
-    top: 50%;
-    width: 18px;
-    height: 18px;
-    padding: 0 0 1px;
-    font-size: 0.85rem;
-    border-width: 1px;
+  .plank-buttons-wrap[data-more] .plank-buttons {
+    --fade-r: 18px;
+  }
+  .plank-buttons-wrap[data-more-left] .plank-buttons {
+    --fade-l: 18px;
+  }
+  .plank-buttons-wrap:is([data-more], [data-more-left]) .plank-buttons {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
   }
   /* every button of every plank is of one size: a third of the row (three in sight), 34 px high, 13 px text; more — by
      scrolling. The press zone is 44 px high (::before, 5 px above and below) and reaches half the gap to each side, so
