@@ -134,7 +134,16 @@ export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0,
   const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
   const frames = phone || perfOff('filters') ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
   if ((perfOff('planks') && el.closest('.plank')) || (perfOff('labels') && el.closest('.flyc,.seacard,.plate,.tag,.pill,.wait-pill,.tmark,.hold-tag'))) return el.animate([], {duration: 0});
-  return el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
+  const animation = el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
+  // An opacity-zero plate can otherwise leave its explicitly interactive card links over the table.
+  if (el.matches?.('.plate') && frames[0]?.opacity !== undefined && frames.at(-1)?.opacity !== undefined) {
+    const rising = Number(frames.at(-1)!.opacity) > Number(frames[0].opacity);
+    el.setAttribute('inert', '');
+    if (rising) void animation.finished.then(() => {
+      if (ctx.run === ctx.live() && el.isConnected) el.removeAttribute('inert');
+    }, () => {});
+  }
+  return animation;
 }
 export function bx(ctx: FxCtx, el: Element): Box {
   // in the px of the stage (stage.ts): the effects are put inside the scaled screen

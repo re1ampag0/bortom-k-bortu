@@ -22,6 +22,7 @@ import { TableThings, useSeaClip } from '../TableThings';
 import { applyVisible, displayRules, type Display } from './display';
 import { FxLayer, useFxQueue } from './FxLayer';
 import { markN } from './misc';
+import {PerfPanel, usePerf} from '../perf/PerfPanel';
 import { clearScars, scar, setScarTestRate, type ScarLife } from './scars';
 import { withDisplay } from './queue';
 
@@ -198,6 +199,9 @@ function SceneTable({
   card: string | null;
   setCard: (code: string | null) => void;
 }) {
+  const perf = usePerf();
+  const hitTest = new URLSearchParams(location.search).has('hitTest');
+  const [paused, setPaused] = useState(false);
   const view = started ? setup.end : setup.start;
   // «&viewer=<ship>» (FX-B): the table as that ship's team sees it (e.g. «Кракен» on a target of the top row)
   const viewer = new URLSearchParams(location.search).get('viewer') ?? scene.viewer[0];
@@ -221,8 +225,8 @@ function SceneTable({
     rich: new URLSearchParams(location.search).get('rich') !== '0',
     myDecision: false,
     jumpAt: Infinity,
-    paused: false,
-    hold: false,
+    paused,
+    hold: paused,
   });
   // FX-A (e2e): «&scarRate=20» runs the clock of the traces faster; window.__fxScars lets a test lay traces of its own.
   useEffect(() => {
@@ -281,7 +285,7 @@ function SceneTable({
       targeted={false}
       shooter={false}
       plate={null}
-      buttons={[]}
+      buttons={hitTest ? [{key: 'volley', label: 'Залп · 1 П', testid: `probe-${x.code}`, onClick: () => { document.body.dataset.fxButton = x.code; }}] : []}
       role={null}
       onSelect={() => {}}
       onDetails={() => {}}
@@ -291,7 +295,9 @@ function SceneTable({
   const seat = setup.handSeat;
   const shown = fx.display ? withDisplay(view, fx.display) : view;
   return (
-    <div className="game" data-testid="game" data-bottom={bottom} data-fx-scene={scene.id}>
+    <div className={`game ${perf.classes} ${fx.busy ? 'fx-busy' : ''}`} data-testid="game" data-bottom={bottom} data-fx-scene={scene.id}>
+      {perf.config.enabled && <PerfPanel />}
+      {hitTest && <div style={{position:'fixed',bottom:0,left:0,zIndex:10001}}><button data-testid="fx-pause" onClick={() => setPaused(!paused)}>Пауза</button><button data-testid="fx-finish" onClick={fx.skip}>До конца хода</button></div>}
       <TableThings />
       <main className="board" ref={boardRef}>
         <StatusBar s={shown} data={data} instruction={fx.hint ?? scene.title} waiting={false} onSea={() => {}} extra={null} chip={!wideLog} hold={<TopHold side={top} s={tableView} data={data} fxGen={fx.gen} />} />

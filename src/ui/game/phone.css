@@ -1084,32 +1084,32 @@
     background:radial-gradient(ellipse at 50% 0%, #ffd39145, #ffc87818 40%, transparent 72%); }
 }
 
-/* fx-phone: the lower warm spill keeps the geometry/colours of 6c9e159; the real lamp stays above. */
+/* fx-sprites: a bounded 120px spill at the muzzle, clipped below the sea frame. */
 @media (max-width: 700px) {
-  .game.view-hand-deck::after {
-    --lx: var(--deck-warm-x, 430px);
-    --ly: var(--deck-warm-y, 400px);
+  .game.view-hand-deck::after, .phone-deck-warm {
+    --lx: var(--deck-warm-x, 285px);
+    --ly: var(--deck-warm-y, 440px);
+    --lt: max(var(--deck-warm-top, 0px), calc(var(--ly) - 120px));
     content: '';
     display: block;
     position: absolute;
-    left: max(0px, calc(var(--lx) - 240px));
-    right: max(0px, calc(100% - var(--lx) - 240px));
-    top: max(0px, calc(var(--ly) - 200px));
-    bottom: max(0px, calc(100% - var(--ly) - 200px));
+    left: max(0px, calc(var(--lx) - 120px));
+    right: max(0px, calc(100% - var(--lx) - 120px));
+    top: var(--lt);
+    bottom: max(0px, calc(100% - var(--ly) - 120px), calc(100% - var(--deck-warm-bottom, 100%)));
+    width: auto;
+    height: auto;
+    border-radius: 0;
     z-index: 5;
     pointer-events: none;
     mix-blend-mode: normal;
     filter: none;
-    background: radial-gradient(240px 200px at calc(var(--lx) - max(0px, calc(var(--lx) - 240px))) calc(var(--ly) - max(0px, calc(var(--ly) - 200px))),
+    background: radial-gradient(120px 120px at calc(var(--lx) - max(0px, calc(var(--lx) - 120px))) calc(var(--ly) - var(--lt)),
       rgba(255,196,110,.5), rgba(255,160,60,.18) 50%, rgba(255,160,60,0) 100%);
     animation: deck-warm-flick 2.6s ease-in-out infinite;
   }
-  .game.fx-busy.view-hand-deck::after { animation-play-state: paused; }
-  .game .backdrop :is(.deck-light,.deck-glow,.deck-flare,.deck-dark) {
-    pointer-events: none;
-    mix-blend-mode: normal;
-    filter: none;
-  }
+  .phone-deck-warm { z-index: 3; }
+  .game.fx-busy.view-hand-deck::after, .game.fx-busy .phone-deck-warm { animation-play-state: paused; }
   @keyframes deck-warm-flick {
     0%, 100% { opacity: .92; }
     45% { opacity: 1; }
@@ -1117,5 +1117,5 @@
   }
 }
 @media (max-width: 700px) and (prefers-reduced-motion: reduce) {
-  .game.view-hand-deck::after { animation: none; }
+  .game.view-hand-deck::after, .phone-deck-warm { animation: none; }
 }
