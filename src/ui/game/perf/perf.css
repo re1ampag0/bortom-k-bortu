@@ -30,3 +30,6 @@
 .game.perf-off-light [class*='glow'], .game.perf-off-light .fx-flash-board { display:none!important; }
 .game.perf-off-particles .ring { display:none!important; }
 .game.perf-off-planks .plank::before, .game.perf-off-planks .plank::after { animation:none!important; transition:none!important; }
+
+.perf-frames { margin:4px 0 0; padding-left:20px; overflow-wrap:anywhere; }
+.perf-frames li { margin:4px 0; }
