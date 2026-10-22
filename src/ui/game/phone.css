@@ -491,6 +491,26 @@
     width: auto;
     height: 15px;
   }
+  /* ui-5: «Погружение» — its picture instead of «Нырок»; a Soul — its picture and «→ Корп» */
+  .plank-buttons .cmd-short:has(.short-pic) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    white-space: nowrap;
+  }
+  .plank-buttons .short-pic {
+    display: block;
+    flex: none;
+    width: auto;
+    height: 18px;
+  }
+  /* a Soul: the picture and «→ Корп» do not fit a third of the row — the button is as wide as they are (not narrower) */
+  .plank-buttons > .btn:has(.short-pic):not(:has(.i-dive)) {
+    flex: 0 0 auto;
+    min-width: calc((100% - 8px) / 3);
+    padding-inline: 6px;
+  }
   .plank-buttons .btn.cmd .cost {
     gap: 2px;
     padding-left: 5px;

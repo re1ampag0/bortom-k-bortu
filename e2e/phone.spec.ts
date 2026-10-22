@@ -146,8 +146,9 @@ async function phone(page: Page, name: string) {
 
   // The buttons of the Dutchman's plank (U3): one row, each 34 px high to the eye with a press zone of at least 44 px,
   // its text whole; when the row is
-  // wider than the plank the arrow «›» shows and scrolls it; after it the last button is whole inside the plank and the
-  // window and works. The page itself never scrolls sideways.
+  // wider than the plank a finger scrolls it (ui-5: no arrow, touch-action: pan-x) — the edge with more buttons fades (right;
+  // after a scroll, left too); after it the last button is whole inside the plank and the window and works. The page itself
+  // never scrolls sideways.
   const dutchman = page.getByTestId('plank-Г');
   const row = dutchman.locator('.plank-buttons');
   const buttons = row.locator('.btn');
@@ -168,17 +169,24 @@ async function phone(page: Page, name: string) {
   await expect(first).toBeVisible();
   const fb = (await first.boundingBox())!;
   expect(fb.x).toBeGreaterThanOrEqual(plankBox.x - 1);
-  const more = dutchman.locator('.buttons-more');
+  const wrap = dutchman.locator('.plank-buttons-wrap');
+  await expect(dutchman.locator('.buttons-more')).toHaveCount(0);
+  expect(await row.evaluate((e) => getComputedStyle(e).touchAction)).toBe('pan-x');
   const overflows = await row.evaluate((e) => e.scrollWidth > e.clientWidth + 1);
   if (overflows) {
-    await expect(more).toBeVisible();
-    for (let i = 0; i < 6 && (await more.isVisible()); i++) {
-      await more.click();
-      await page.waitForTimeout(400);
-    }
-    await expect(more).toBeHidden();
+    await expect(wrap).toHaveAttribute('data-more', '');
+    await expect(wrap).not.toHaveAttribute('data-more-left', '');
+    await row.evaluate((e) => e.scrollTo({ left: e.scrollWidth, behavior: 'instant' }));
+    await expect(wrap).not.toHaveAttribute('data-more', '');
+    await expect(wrap).toHaveAttribute('data-more-left', '');
   } else {
-    await expect(more).toBeHidden();
+    await expect(wrap).not.toHaveAttribute('data-more', '');
+  }
+  // ui-5: «Погружение» and the Souls are their pictures (a Soul with «→ Корп»), the name in the pop
+  expect(await row.locator('.btn:has(.short-pic)').count(), '«Погружение» and a Soul with pictures').toBeGreaterThanOrEqual(2);
+  for (const b of await row.locator('.btn:has(.short-pic)').all()) {
+    await expect(b).toHaveAttribute('data-tip', /Погружение|Душа/);
+    await expect(b.locator('.cmd-short img.short-pic')).toBeVisible();
   }
   const last = buttons.last();
   await expect(last).toHaveText(/Душа/);
