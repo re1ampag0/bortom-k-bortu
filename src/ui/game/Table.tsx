@@ -778,12 +778,15 @@ const FREE = /^(.*?) · (бесплатно)$/;
 /** The keg of a price (KEG_S of art/cells2.json). */
 const KEG_SMALL = CELLS.KEG_S;
 
-/** A button of a plank: on a laptop the icon, the name and the price with a keg; on a phone the short label (U3). */
+/** A button of a plank: on a laptop the icon, the name and the price with a keg; on a phone the icon and the short label (U3). */
 export function PlankButton({ b, className = '', compact = false }: { b: Btn; className?: string; compact?: boolean }) {
   const m = PRICED.exec(b.label) ?? FREE.exec(b.label);
   // the trident has gradients of its own: one copy for the life of the button, so the picture is not set again on a render
   const trident = useMemo(() => (b.key === 'sword' ? tridentSvg(20) : null), [b.key]);
   const icon = trident ?? CMD_ICON[b.key];
+  // fx-smooth-a: the short label of a phone carries the same icon (a trident of its own: its gradient ids are unique)
+  const shortTrident = useMemo(() => (b.key === 'sword' ? tridentSvg(20) : null), [b.key]);
+  const shortIcon = shortTrident ?? CMD_ICON[b.key];
   const url = ICON_URL[b.key];
   const name = m ? m[1] : b.label;
   // compact (a laptop, an icon-only button): the name and, if it cannot be pressed, the reason — in the paper pop of the game
@@ -831,7 +834,10 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
             {b.key !== 'dive' && (b.short ?? b.label).replace(/^Душа\s*→\s*/, '→ ')}
           </>
         ) : (
-          breakAfterArrow(b.short ?? b.label)
+          <>
+            {shortIcon && <span className="short-icon" aria-hidden dangerouslySetInnerHTML={svg(shortIcon)} />}
+            {breakAfterArrow(b.short ?? b.label)}
+          </>
         )}
       </span>
     </button>
