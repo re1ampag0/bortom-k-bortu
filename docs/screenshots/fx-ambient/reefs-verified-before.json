@@ -1,0 +1,86 @@
+{
+  "samples": {
+    "before": [
+      {
+        "name": "wx-loop-32",
+        "time": 49.93999999999943,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-33",
+        "time": 49.93999999999943,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-34",
+        "time": 49.93999999999943,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-35",
+        "time": 49.93999999999943,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-36",
+        "time": 49.93999999999943,
+        "state": "running"
+      }
+    ],
+    "after": [
+      {
+        "name": "wx-loop-32",
+        "time": 3999.8500000000004,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-33",
+        "time": 3999.8500000000004,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-34",
+        "time": 3999.8500000000004,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-35",
+        "time": 3999.8500000000004,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-36",
+        "time": 3999.8500000000004,
+        "state": "running"
+      }
+    ]
+  },
+  "label": "verified-before",
+  "key": "reefs",
+  "viewport": {
+    "width": 430,
+    "height": 932,
+    "dpr": 3,
+    "cpu": 1
+  },
+  "durationMs": 3009.57,
+  "paint": {
+    "events": 14,
+    "totalMs": 12.550999999999998,
+    "maxEventMs": 4.708,
+    "maxFrameMs": 12.550999999999998
+  },
+  "raster": {
+    "events": 0,
+    "totalMs": 0,
+    "maxEventMs": 0,
+    "maxFrameMs": 0
+  },
+  "frameCostDefinition": "union per thread, between BeginMainThreadFrame markers; raster threads summed separately from Paint",
+  "layers": {
+    "min": 33,
+    "max": 33,
+    "drawing": 27
+  },
+  "errors": []
+}

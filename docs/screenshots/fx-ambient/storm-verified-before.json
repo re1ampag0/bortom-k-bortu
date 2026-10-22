@@ -1,0 +1,226 @@
+{
+  "samples": {
+    "before": [
+      {
+        "name": "wx-loop-20",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-21",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-22",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-23",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-24",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-25",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-26",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-27",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-28",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-29",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-30",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-31",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-32",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-33",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-34",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-35",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-36",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-37",
+        "time": 49.95199999999933,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-38",
+        "time": 49.95199999999933,
+        "state": "running"
+      }
+    ],
+    "after": [
+      {
+        "name": "wx-loop-20",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-21",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-22",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-23",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-24",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-25",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-26",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-27",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-28",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-29",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-30",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-31",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-32",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-33",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-34",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-35",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-36",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-37",
+        "time": 3583.214,
+        "state": "running"
+      },
+      {
+        "name": "wx-loop-38",
+        "time": 3583.214,
+        "state": "running"
+      }
+    ]
+  },
+  "label": "verified-before",
+  "key": "storm",
+  "viewport": {
+    "width": 430,
+    "height": 932,
+    "dpr": 3,
+    "cpu": 1
+  },
+  "durationMs": 3006.72,
+  "paint": {
+    "events": 134,
+    "totalMs": 94.74199999999999,
+    "maxEventMs": 3.516,
+    "maxFrameMs": 94.74199999999999
+  },
+  "raster": {
+    "events": 0,
+    "totalMs": 0,
+    "maxEventMs": 0,
+    "maxFrameMs": 0
+  },
+  "frameCostDefinition": "union per thread, between BeginMainThreadFrame markers; raster threads summed separately from Paint",
+  "layers": {
+    "min": 40,
+    "max": 40,
+    "drawing": 33
+  },
+  "errors": []
+}
