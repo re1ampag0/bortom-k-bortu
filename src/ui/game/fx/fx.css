@@ -309,3 +309,8 @@
 
 /* Decorative descendants cannot opt back into hit testing by an unrelated card/button rule. */
 .fx-layer *, .fx-scars * { pointer-events: none; }
+
+/* Local vector stickers: a zero-coordinate HTML transform tree, each SVG has its own tight viewBox. */
+.fx-sprite, .fx-sprite [data-sprite-node], .fx-sprite .sprite-art { position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;pointer-events:none;will-change:auto; }
+.fx-layer > .fx-sprite { opacity:1;will-change:auto; }
+.fx-sprite svg { position:absolute;overflow:visible;pointer-events:none; }
