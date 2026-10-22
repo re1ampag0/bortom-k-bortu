@@ -184,7 +184,8 @@ async function keyStates(page: Page, name: string) {
     await expect(byId(page, 'play-reaction')).toContainText('Сыграть «');
   } else {
     // Phone: the Reactions are the cards of the sheet; a press chooses, the button of the sheet plays.
-    await expect(page.locator('.as-card .ro-effect').first()).toContainText('Залп');
+    await expect(reactionCard.getByTestId('hcard-strip')).toBeVisible();
+    await expect(reactionCard.getByTestId('hcard-strip')).toContainText('Залп');
     await reactionCard.click();
     await expect(byId(page, 'play-reaction')).toContainText('Сыграть «');
   }
