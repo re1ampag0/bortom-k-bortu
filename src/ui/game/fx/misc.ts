@@ -33,7 +33,7 @@ import {
   type SellClip, type SinkClip, type SoulsClip, type StatusClip, type StealClip, type SurfaceClip, type SwapClip, type TurnClip, type TurnEndClip,
 } from './planFx';
 import {
-  particleShape, A, allPlanks, at, badgeMark, burst, bx, cardOrigin, clamp, fireGroup, fireWall, filters, flameEl, flashBoard, hitBlast, qpts, ringSvg, room, splintersSvg, sv, waterColumn, boom, type Box, fxSvg, handCardPos, isPhone, rnd, smokeColumn, smolderEl, sparksSvg, trackEl, curve, dirOf, facingY, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
+  particleShape, A, allPlanks, boardH, boardW, at, badgeMark, burst, bx, cardOrigin, clamp, fireGroup, fireWall, filters, flameEl, flashBoard, hitBlast, qpts, ringSvg, room, splintersSvg, sv, waterColumn, boom, type Box, fxSvg, handCardPos, isPhone, rnd, smokeColumn, smolderEl, sparksSvg, trackEl, curve, dirOf, facingY, flash, fly, flyCard, fxPoint, gainKegs, gapBox, hint, holdEl,
   isTop, mk, overlayAt, payKegs, pillAt, plank, projectile, ring, setTrack, shake, shownTrack, sideOf, soulsFly, splash, steam, tag, trackMark, visible, wait,
   wisp, type FlyCard, type FxCtx, type Pt,
 } from './primitives';
@@ -72,7 +72,7 @@ export async function flipTo(ctx: FxCtx, evs: readonly GameEvent[], d = 650, fil
 export const SWAP_LABEL: Record<string, string> = { regroup: 'Перестроение', maelstrom: 'Мальстрём', current: 'Течение', jack: 'Джек ускользает', sword: 'Меч Тритона', card: 'Смена мест', sink: 'Капитан уходит к союзнику' };
 export function banner(ctx: FxCtx, text: string, cls = 'small', d = 1200, y?: number): HTMLElement {
   const g = gapBox(ctx);
-  const bn = mk(ctx, 'banner ' + cls, ctx.board.clientWidth / 2, y ?? g.cy, text);
+  const bn = mk(ctx, 'banner ' + cls, boardW(ctx) / 2, y ?? g.cy, text);
   A(ctx, bn, [{ opacity: 0, scale: '0.85' }, { opacity: 1, scale: '1', offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0, scale: '1.04' }], d, 0);
   return bn;
 }
@@ -222,7 +222,7 @@ PLAY.sink = async (c, ctx) => {
     const ring = sv(svg, `<circle r="${r1}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`);
     A(ctx, ring, [{ transform: `translate(${cx}px,${cy}px) scale(${r0 / r1})`, opacity: 1 }, { transform: `translate(${cx}px,${cy}px) scale(${small ? 0.5 : 1})`, opacity: 0 }], d, tBlast + dl, 'cubic-bezier(.1,.8,.3,1)');
   }
-  const W = ctx.board.clientWidth, H = ctx.board.clientHeight;
+  const W = boardW(ctx), H = boardH(ctx);
   for (let i = 0, m = Math.max(4, room(ctx, small ? 6 : 12)); i < (ctx.rich && !perfOff('particles') ? m : 0); i++) {
     const ex = clamp(cx + rnd(-260, 260) * (small ? 0.5 : 1), 12, W - 12), ey = clamp(fy + toGap * rnd(14, 90), 12, H - 12);
     const g = sv(svg, DEBRIS[i % 4]), d = S.debris * rnd(0.82, 1.18), rot = rnd(-720, 720);
@@ -537,7 +537,7 @@ PLAY.turn = async (c, ctx) => {
     const e = effects[i];
     if (e.type === 'powderGained') {
       const g = gapBox(ctx);
-      const t = gainKegs(ctx, e.side, e.amount, { x: ctx.board.clientWidth / 2, y: g.cy }, 0);
+      const t = gainKegs(ctx, e.side, e.amount, { x: boardW(ctx) / 2, y: g.cy }, 0);
       if (e.burned) { const kb = bx(ctx, holdEl(ctx, e.side)); tag(ctx, kb.r + 36, kb.cy + 18, `${e.burned} сгорело: Трюм полон`, 400, '', 1400); }
       await wait(ctx, t + 150);
     } else if (e.type === 'fireDamage') {
@@ -566,7 +566,7 @@ PLAY.turn = async (c, ctx) => {
     } else if (e.type === 'surfaced') {
       await wait(ctx, surfaceFx(ctx, e.ship, 0));
     } else if (e.type === 'swapped') {
-      tag(ctx, ctx.board.clientWidth / 2, gapBox(ctx).cy, SWAP_LABEL[e.reason] || 'Смена мест', 0, '', 1200);
+      tag(ctx, boardW(ctx) / 2, gapBox(ctx).cy, SWAP_LABEL[e.reason] || 'Смена мест', 0, '', 1200);
       await flipTo(ctx, done.concat(e), 650);
     } else if (e.type === 'drew') {
       ctx.renderWith(done);
@@ -577,7 +577,7 @@ PLAY.turn = async (c, ctx) => {
       if (badge && visible(badge)) badgeMark(ctx, badge, `+${e.amount}`, 0, true);
       await wait(ctx, 500);
     } else if (e.type === 'seaEffect') {
-      if (e.key === 'wave') tag(ctx, ctx.board.clientWidth / 2, gapBox(ctx).cy, 'Девятый вал', 0, '', 1000);
+      if (e.key === 'wave') tag(ctx, boardW(ctx) / 2, gapBox(ctx).cy, 'Девятый вал', 0, '', 1000);
     }
     done.push(e);
   }
@@ -591,7 +591,7 @@ PLAY.turnEnd = async (c, ctx) => {
     const pb = bx(ctx, plank(ctx, plans.seat));
     hint(ctx, `${nick(ctx, plans.seat)}: План — ${plans.count} рубашкой вниз`);
     for (let k = 0; k < plans.count; k++) {
-      const from = sideOf(ctx, plans.seat) === ctx.bottom ? (() => { const h = ctx.board.querySelector('[data-fx-hand] .hand-cards'); const hb = h ? bx(ctx, h) : deckBox(ctx); return { x: hb.x + 20 + k * 30, y: hb.y }; })() : { x: pb.cx - 40, y: isTop(ctx, plans.seat) ? -140 : ctx.board.clientHeight };
+      const from = sideOf(ctx, plans.seat) === ctx.bottom ? (() => { const h = ctx.board.querySelector('[data-fx-hand] .hand-cards'); const hb = h ? bx(ctx, h) : deckBox(ctx); return { x: hb.x + 20 + k * 30, y: hb.y }; })() : { x: pb.cx - 40, y: isTop(ctx, plans.seat) ? -140 : boardH(ctx) };
       const back = mk(ctx, 'flyc', 0, 0, '<span class="hcard back"></span><span class="rib plan">ПЛАН</span>');
       A(ctx, back, [{ opacity: 1, transform: `translate(${from.x}px,${from.y}px) scale(1)` }, { opacity: 1, transform: `translate(${pb.r - 64 - k * 8}px,${pb.cy - 40}px) rotate(${-6 + k * 5}deg) scale(.45)`, offset: 0.7 }, { opacity: 0, transform: `translate(${pb.r - 64 - k * 8}px,${pb.cy - 40}px) rotate(${-6 + k * 5}deg) scale(.4)` }], 1100, k * 160, 'cubic-bezier(.2,.8,.3,1)');
     }
@@ -608,7 +608,7 @@ PLAY.draw = async (c, ctx) => { await drawFx(ctx, { seat: c.seat, count: c.count
 export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: number }, t0: number, from?: Pt): number {
   const now = shownTrack(ctx, e.ship, e.track);
   const b = bx(ctx, plank(ctx, e.ship));
-  if (from) { const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${from.x} ${from.y} Q ${(from.x + b.cx) / 2} ${Math.min(from.y, b.cy) - 40} ${b.cx} ${b.cy}" fill="none" stroke="#2F7A4F" stroke-width="3" stroke-dasharray="7 7" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], 1400, t0); }
+  if (from) { const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${boardW(ctx)}" height="${boardH(ctx)}"><path d="M${from.x} ${from.y} Q ${(from.x + b.cx) / 2} ${Math.min(from.y, b.cy) - 40} ${b.cx} ${b.cy}" fill="none" stroke="#2F7A4F" stroke-width="3" stroke-dasharray="7 7" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], 1400, t0); }
   // FX-A: a repair of the Hull takes the traces of its ship away (ANIMATIONS.md, §2)
   if (e.track === 'hull') at(ctx, t0 + 300, () => clearScars(e.ship));
   const fr = overlayAt(ctx, 'lg-aura', b, 4); fr.style.boxShadow = '0 0 0 3px #2F7A4F, 0 0 22px 6px rgba(47,125,74,.45)';
@@ -639,7 +639,7 @@ export function repairFx(ctx: FxCtx, e: { ship: string; track: Track; amount: nu
  */
 const CARD_W = 110, CARD_H = 128, LAST_H = 22;
 function cardSpot(ctx: FxCtx, ship?: string) {
-  const g = gapBox(ctx), W = ctx.board.clientWidth, base = W < 701 ? 0.7 : 0.9;
+  const g = gapBox(ctx), W = boardW(ctx), base = W < 701 ? 0.7 : 0.9;
   const sc = Math.min(base, Math.max(0.5, (g.h - LAST_H - 12) / CARD_H));
   const w = CARD_W * sc, h = CARD_H * sc;
   const pb = ship ? bx(ctx, plank(ctx, ship)) : null;
@@ -691,7 +691,7 @@ export interface StatusEv {
  */
 export function statusFx(ctx: FxCtx, e: StatusEv, t0: number, from?: Pt): number {
   const label = e.flag === 'limitRaised' || e.flag === 'limit' ? `+${e.n} карт сверх Команды` : e.flag === 'volleyBonus' ? `Залпы +${e.n} в этот ход` : FLAG_LABEL(ctx)[e.flag] || e.flag;
-  if (!e.ship) { const g = gapBox(ctx); tag(ctx, ctx.board.clientWidth / 2, g.cy, `${SIDE_LABEL[e.side!].name}: ${label}`, t0, 'plus', 1500); return t0 + 1300; }
+  if (!e.ship) { const g = gapBox(ctx); tag(ctx, boardW(ctx) / 2, g.cy, `${SIDE_LABEL[e.side!].name}: ${label}`, t0, 'plus', 1500); return t0 + 1300; }
   const el = plank(ctx, e.ship), out = facingY(ctx, e.ship) + dirOf(ctx, e.ship) * 18;
   const row = el.querySelector('[data-fx-statuses]');
   const chip = e.flag === 'mark' ? row?.querySelector<HTMLElement>('[data-fx-mark]') : CHIP_OF[e.flag] ? row?.querySelector<HTMLElement>(`[data-fx-status="${CHIP_OF[e.flag]}"]`) : null;
@@ -737,11 +737,12 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
   hint(ctx, `${nick(ctx, c.ship)}: ${cardName(ctx, c.card)}${c.target ? ` → ${nick(ctx, c.target)}` : ''}`);
   if (c.cost) payKegs(ctx, sideOf(ctx, c.ship), c.cost, 0);
   const spot = cardSpot(ctx, c.ship), origin = cardOrigin(ctx, c.card, c.seat);
-  const el = flyCard(ctx, c.card, origin, spot, 0, T.card.fly, { ship: c.ship, legend });
-  const size = { w: el.offsetWidth, h: el.offsetHeight }, g = gapBox(ctx);
-  const info = ctx.board.querySelector('[data-testid="middle-info"]');
+  // the table is read before the card is added: only the size of the card itself waits for its layout
+  const g = gapBox(ctx), info = ctx.board.querySelector('[data-testid="middle-info"]');
   const lastTop = info ? bx(ctx, info).y : g.b - LAST_H;
-  spot.x = Math.max(8, Math.min(ctx.board.clientWidth - size.w * spot.s - 8, spot.x));
+  const el = flyCard(ctx, c.card, origin, spot, 0, T.card.fly, { ship: c.ship, legend });
+  const size = { w: el.offsetWidth, h: el.offsetHeight };
+  spot.x = Math.max(8, Math.min(boardW(ctx) - size.w * spot.s - 8, spot.x));
   spot.y = Math.min(spot.y, lastTop - size.h * spot.s - 8);
   // Use the actual card including its ship footer, with an unambiguous top-left origin.
   el.style.transformOrigin = '0 0';
@@ -752,7 +753,7 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
   const fade = A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], T.card.fade, T.card.show - T.card.fade, 'ease-in', 'forwards');
   CUR_CARD = { el, code: c.card, size, fade };
   A(ctx, el.firstElementChild!, [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], T.card.settle, T.card.fly, 'ease-out', 'none');
-  if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${ctx.board.clientWidth}" height="${ctx.board.clientHeight}"><path d="M${spot.x + (CARD_W / 2) * spot.s} ${spot.y + (CARD_H / 2) * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
+  if (c.target) { const tb = bx(ctx, plank(ctx, c.target)); const ar = mk(ctx, 'svgabs', 0, 0, `<svg width="${boardW(ctx)}" height="${boardH(ctx)}"><path d="M${spot.x + (CARD_W / 2) * spot.s} ${spot.y + (CARD_H / 2) * spot.s} L${tb.cx} ${tb.cy}" fill="none" stroke="#6b4f8a" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round"/></svg>`); A(ctx, ar, [{ opacity: 0 }, { opacity: 0.9, offset: 0.3 }, { opacity: 0.9, offset: 0.8 }, { opacity: 0 }], 1300, 450); }
   // game: shorter than the reference (900 / 700 ms): players found the card at the middle hung too long. The full text
   // stays a press away (the Journal, «Сразу итог»).
   await wait(ctx, 550); // time to read the card
@@ -770,7 +771,7 @@ async function playCard(c: CardClip, ctx: FxCtx, legend: boolean): Promise<void>
     else if (e.type === 'soulsSpent') { const sb = plank(ctx, e.ship).querySelector('[data-fx-souls]'); if (sb && visible(sb)) { const b = bx(ctx, sb); wisp(ctx, { x: b.cx, y: b.cy }, from, 0); } t = Math.max(t, 900); }
     else if (e.type === 'drew') { await wait(ctx, t); t = 0; ctx.renderWith(done); await drawFx(ctx, e); }
     else if (e.type === 'swapped') { await wait(ctx, t); t = 0; await flipTo(ctx, done.concat(e), 650); }
-    else if (e.type === 'stolen' || e.type === 'passed' || e.type === 'discarded' || e.type === 'shown' || e.type === 'seaLooked' || e.type === 'dice') { const g = gapBox(ctx); tag(ctx, ctx.board.clientWidth / 2, g.cy + 50, smallLabel(ctx, e), t, '', 1300); t = Math.max(t, 1000); }
+    else if (e.type === 'stolen' || e.type === 'passed' || e.type === 'discarded' || e.type === 'shown' || e.type === 'seaLooked' || e.type === 'dice') { const g = gapBox(ctx); tag(ctx, boardW(ctx) / 2, g.cy + 50, smallLabel(ctx, e), t, '', 1300); t = Math.max(t, 1000); }
     done.push(e);
   }
   await wait(ctx, t + 350);
@@ -819,7 +820,7 @@ PLAY.repair = async (c, ctx) => {
 };
 
 PLAY.powder = async (c, ctx) => {
-  if (c.n > 0) { const g = gapBox(ctx); await wait(ctx, gainKegs(ctx, c.side!, c.n, { x: ctx.board.clientWidth / 2, y: g.cy }, 0) + 200); }
+  if (c.n > 0) { const g = gapBox(ctx); await wait(ctx, gainKegs(ctx, c.side!, c.n, { x: boardW(ctx) / 2, y: g.cy }, 0) + 200); }
   else { payKegs(ctx, c.side || sideOf(ctx, c.ship!), -c.n, 0); await wait(ctx, 700); }
 };
 PLAY.souls = async (c, ctx) => {
@@ -846,13 +847,13 @@ PLAY.steal = async (c, ctx) => {
   if (c.from && c.seat) { const a = bx(ctx, plank(ctx, c.from)), b = bx(ctx, plank(ctx, c.seat)); const back = mk(ctx, 'flyc', 0, 0, BACK); A(ctx, back, [{ opacity: 1, transform: `translate(${a.cx - 30}px,${a.cy - 40}px) scale(.5)` }, { opacity: 0, transform: `translate(${b.cx - 30}px,${b.cy - 40}px) scale(.5) rotate(20deg)` }], 700, 0, 'ease-in-out', 'forwards'); burst(ctx, 'gold-dust', a.cx, a.cy, 0, 10, 10, 30, 500); }
   const at0 = c.seat ? bx(ctx, plank(ctx, c.seat)) : null;
   const text = c.from && c.seat ? smallLabel(ctx, { type: 'stolen', seat: c.seat, from: c.from, card: c.card }) : c.seat ? `${nick(ctx, c.seat)} забирает карту` : 'Карту забирают';
-  if (at0) tag(ctx, at0.cx, at0.y - 10, text, 300, '', 1200); else tag(ctx, ctx.board.clientWidth / 2, gapBox(ctx).cy, text, 300, '', 1200);
+  if (at0) tag(ctx, at0.cx, at0.y - 10, text, 300, '', 1200); else tag(ctx, boardW(ctx) / 2, gapBox(ctx).cy, text, 300, '', 1200);
   await wait(ctx, 1100);
 };
 PLAY.discard = async (c, ctx) => { const db = deckBox(ctx); const el = flyCard(ctx, c.card || HIDDEN, cardOrigin(ctx, c.card, c.seat), { x: db.x, y: db.y - 30, s: 0.4 }, 0, 500); A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 250, 550, 'ease-in', 'forwards'); await wait(ctx, 900); };
 PLAY.peek = async (c, ctx) => { const b = bx(ctx, plank(ctx, c.seat)); tag(ctx, b.cx, b.y - 10, c.sea ? 'Смотрит карты моря' : 'Подсмотрел руку', 0, '', 1300); await wait(ctx, 900); };
 PLAY.dice = async (c, ctx) => {
-  const g = gapBox(ctx), W = ctx.board.clientWidth, seats = Object.keys(c.cards || {});
+  const g = gapBox(ctx), W = boardW(ctx), seats = Object.keys(c.cards || {});
   seats.forEach((s, k) => { const el = flyCard(ctx, c.cards[s], cardOrigin(ctx, c.cards[s], s), { x: W / 2 - 120 + k * 130, y: g.cy - 60, s: 0.8 }, k * 150, 450); if (c.winner === s) { A(ctx, el, [{ scale: '1' }, { scale: '1.08' }, { scale: '1' }], 400, 900, 'ease-out', 'none'); burst(ctx, 'gold-dust', W / 2 - 75 + k * 130, g.cy, 900, 14, 20, 60, 700); } A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 300, 1900, 'ease-in', 'forwards'); });
   tag(ctx, W / 2, g.cy + 60, c.winner ? `Обе карты забирает ${nick(ctx, c.winner)}` : 'Ничья — обе в сброс', 800, 'plus', 1300);
   await wait(ctx, 2300);
@@ -864,12 +865,12 @@ PLAY.end = async (c, ctx) => {
   const mine = !!won && won === ctx.bottom && ctx.own;
   const text = c.reason === 'concede' && c.side ? `${SIDE_LABEL[c.side].name} сдаются` : mine ? 'Победа!' : won ? `Победа ${SIDE_LABEL[won].gen}` : c.winner === 'НИЧЬЯ' ? 'Ничья' : 'Конец игры';
   const g = gapBox(ctx);
-  const bn = mk(ctx, 'banner' + (mine ? ' own' : ''), ctx.board.clientWidth / 2, g.cy, text);
+  const bn = mk(ctx, 'banner' + (mine ? ' own' : ''), boardW(ctx) / 2, g.cy, text);
   A(ctx, bn, [{ opacity: 0, scale: '0.6' }, { opacity: 1, scale: '1.08', offset: 0.5 }, { opacity: 1, scale: '1' }], 600, 0, 'cubic-bezier(.3,1.6,.5,1)', 'forwards');
-  if (mine && ctx.rich) for (let k = 0; k < 3; k++) burst(ctx, 'gold-dust', ctx.board.clientWidth * (0.25 + k * 0.25), g.cy, 300 + k * 200, 24, 30, 120, 1100);
+  if (mine && ctx.rich) for (let k = 0; k < 3; k++) burst(ctx, 'gold-dust', boardW(ctx) * (0.25 + k * 0.25), g.cy, 300 + k * 200, 24, 30, 120, 1100);
   await wait(ctx, 1800);
 };
-PLAY.fallback = async (c, ctx) => { const g = gapBox(ctx); tag(ctx, ctx.board.clientWidth / 2, g.cy, c.type || c.kind, 0, '', 800); await wait(ctx, 600); };
+PLAY.fallback = async (c, ctx) => { const g = gapBox(ctx); tag(ctx, boardW(ctx) / 2, g.cy, c.type || c.kind, 0, '', 800); await wait(ctx, 600); };
 
 /** The card at the middle for the queue: kept between clips (keepSet), dropped by «Сразу итог» (resetFx). */
 export const CARD_SCENE: FxScene = {

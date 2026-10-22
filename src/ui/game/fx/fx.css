@@ -186,8 +186,8 @@
 
 
 /* While the breakdown plate of a Volley is up, the line «Последнее: …» in the gap gives way to it (on a phone the plate
-   covered half of it). :has needs no state to clean up if a clip breaks off. */
-.board:has(> .fx-layer > .plate, > .fx-scars > .plate) .middle-info { visibility: hidden; }
+   covered half of it). data-fx-plate follows the plate itself (FxLayer.tsx), so nothing to clean up if a clip breaks off. */
+.board[data-fx-plate] .middle-info { visibility: hidden; }
 /* FX-D: the stamp of a sunk ship (pg-stamp of the prototype): a double frame, wide letters, pressed into the paper */
 .stamp-fx.sunk { padding: 2px 14px; border: 3px double var(--fx-bordo); border-radius: 4px; color: var(--fx-bordo); background: rgba(248, 240, 222, 0.55); font-family: var(--fx-font); font-weight: 700; font-size: 22px; line-height: 1.1; letter-spacing: 0.22em; text-transform: uppercase; }
 @media (max-width: 700px) { .stamp-fx.sunk { font-size: 16px; letter-spacing: 0.14em; padding: 1px 9px; } }

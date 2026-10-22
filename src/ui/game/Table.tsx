@@ -488,6 +488,7 @@ function PlankView({
   const handLabel = cardsWord(ship.hand.length);
   const cls = [
     'plank',
+    buttons.length > 0 ? 'has-buttons' : '',
     own ? 'own' : 'enemy',
     selected ? 'selected' : '',
     awaiting ? 'awaiting' : '',
@@ -657,7 +658,7 @@ function PlankView({
         )}
       </header>
       {!phone && statusRow}
-      <div className="plank-body">
+      <div className={`plank-body${d.souls !== undefined ? ' with-souls' : ''}`}>
         <div className="tracks" key={fxGen}>
           {trackEl('hull')}
           <div className="track-row2">{(['sails', 'guns', 'crew'] as const).map(trackEl)}</div>
@@ -689,7 +690,7 @@ function PlankView({
         <div className="plank-buttons-wrap" onClick={(e) => e.stopPropagation()}>
           {/* ui-5: on a laptop the buttons keep their names in one row, only «Погружение» and the Souls are an icon (the name in a
               paper pop) */}
-          <div className={`plank-buttons ${buttons.length >= 4 ? 'many' : ''}`} ref={buttonsRef}>
+          <div className={`plank-buttons ${buttons.length >= 3 ? 'n3plus' : `n${buttons.length}`} ${buttons.length >= 4 ? 'many' : ''}`} ref={buttonsRef}>
             {buttons.map((b) => (
               <PlankButton key={b.key} b={b} compact={!phone && b.key in ICON_URL} />
             ))}
@@ -792,7 +793,7 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
   const pop = only || url ? [name, b.tip, b.disabled].filter(Boolean).join(' — ') : b.tip;
   return (
     <button
-      className={`btn cmd ${b.primary ? 'primary' : ''} ${only ? 'compact' : ''} ${className}`}
+      className={`btn cmd ${b.primary ? 'primary' : ''} ${only ? 'compact' : ''} ${url ? `pic${b.key === 'dive' ? '' : ' soul'}` : ''} ${className}`}
       onClick={b.disabled ? undefined : b.onClick}
       aria-disabled={!!b.disabled}
       aria-label={only || url ? name : undefined}
