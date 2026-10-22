@@ -664,6 +664,9 @@
     display: none;
   }
   .phone-hand-label {
+    /* Above the masked fan, without moving the caption or any card. */
+    position: relative;
+    z-index: 1;
     font-family: var(--font-num);
     font-weight: 700;
     font-size: 11px;
