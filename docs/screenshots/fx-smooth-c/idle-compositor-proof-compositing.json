@@ -1,0 +1,2910 @@
+[
+ {
+  "name": "deck-warm-flick",
+  "selector": ".game",
+  "pseudo": "::after",
+  "properties": [
+   "opacity"
+  ],
+  "ancestors": [],
+  "backendNodeId": 3078,
+  "layers": [
+   {
+    "layerId": "58",
+    "parentLayerId": "5",
+    "backendNodeId": 3078,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 240,
+    "height": 93,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     131,
+     479,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 2,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 240,
+       "height": 93
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated opacity animation or transition."
+    ],
+    "compositingReasonIds": [
+     "ActiveOpacityAnimation"
+    ]
+   }
+  ],
+  "descendantLayers": [
+   {
+    "layerId": "17",
+    "parentLayerId": "5",
+    "backendNodeId": 354,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 390,
+    "height": 844,
+    "paintCount": 42,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 390,
+       "height": 844
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "18",
+    "parentLayerId": "5",
+    "backendNodeId": 986,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 484,
+    "height": 350,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     13,
+     124,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 2,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 484,
+       "height": 350
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation"
+    ]
+   },
+   {
+    "layerId": "19",
+    "parentLayerId": "5",
+    "backendNodeId": 2871,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 374,
+    "height": 196,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     8,
+     546,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 0,
+    "drawsContent": false,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 374,
+       "height": 196
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Is for the visual viewport.",
+     "Is a scrollable overflow element using accelerated scrolling."
+    ],
+    "compositingReasonIds": [
+     "Viewport",
+     "OverflowScrolling"
+    ]
+   },
+   {
+    "layerId": "20",
+    "parentLayerId": "5",
+    "backendNodeId": 2871,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 374,
+    "height": 196,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     8,
+     546,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 0,
+    "drawsContent": false,
+    "compositingReasons": [
+     "Is a scrollable overflow element using accelerated scrolling."
+    ],
+    "compositingReasonIds": [
+     "OverflowScrolling"
+    ]
+   },
+   {
+    "layerId": "21",
+    "parentLayerId": "5",
+    "backendNodeId": 2871,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 512,
+    "height": 205,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     8,
+     546,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 2,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 512,
+       "height": 205
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "27",
+    "parentLayerId": "5",
+    "backendNodeId": 2871,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 378,
+    "height": 200,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     6,
+     544,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "compositingReasons": [
+     "Is for the visual viewport.",
+     "Is a scrollable overflow element using accelerated scrolling."
+    ],
+    "compositingReasonIds": [
+     "Viewport",
+     "OverflowScrolling"
+    ]
+   },
+   {
+    "layerId": "28",
+    "parentLayerId": "5",
+    "backendNodeId": 2868,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 363,
+    "height": 440,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     12,
+     126,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 5,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 3,
+       "y": 0,
+       "width": 360,
+       "height": 346
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 0,
+       "y": 426,
+       "width": 149,
+       "height": 14
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "29",
+    "parentLayerId": "5",
+    "backendNodeId": 3443,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.5220000236034394,
+     0,
+     0,
+     0,
+     0,
+     0.6000000238418579,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     37.95199996042251,
+     293.1000028848648,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   },
+   {
+    "layerId": "30",
+    "parentLayerId": "5",
+    "backendNodeId": 3445,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 394,
+    "height": 376,
+    "transform": [
+     0.6000000238418579,
+     0,
+     0,
+     0,
+     0,
+     0.6000000238418579,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     37.700000047683716,
+     281.7000024318695,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 3,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 15,
+       "y": -1,
+       "width": 28,
+       "height": 1
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 6,
+       "y": 0,
+       "width": 50,
+       "height": 23
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": -1,
+       "y": 23,
+       "width": 70,
+       "height": 2
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": -1,
+       "y": 25,
+       "width": 396,
+       "height": 10
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 29,
+       "y": 35,
+       "width": 366,
+       "height": 342
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "31",
+    "parentLayerId": "5",
+    "backendNodeId": 3448,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.6263999764680861,
+     0,
+     0,
+     0,
+     0,
+     0.7199999690055847,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     173.70240080008506,
+     285.2600032687187,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   },
+   {
+    "layerId": "32",
+    "parentLayerId": "5",
+    "backendNodeId": 3450,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 394,
+    "height": 376,
+    "transform": [
+     0.7199999690055847,
+     0,
+     0,
+     0,
+     0,
+     0.7199999690055847,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     173.40000092983246,
+     271.5800038576126,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 3,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 15,
+       "y": -1,
+       "width": 28,
+       "height": 1
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 6,
+       "y": 0,
+       "width": 50,
+       "height": 23
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": -1,
+       "y": 23,
+       "width": 70,
+       "height": 2
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": -1,
+       "y": 25,
+       "width": 396,
+       "height": 10
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 29,
+       "y": 35,
+       "width": 366,
+       "height": 342
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "33",
+    "parentLayerId": "5",
+    "backendNodeId": 3453,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.4698000212430955,
+     0,
+     0,
+     0,
+     0,
+     0.5400000214576721,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     314.02679927773477,
+     298.7199998497963,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   },
+   {
+    "layerId": "34",
+    "parentLayerId": "5",
+    "backendNodeId": 3455,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 394,
+    "height": 376,
+    "transform": [
+     0.5400000214576721,
+     0,
+     0,
+     0,
+     0,
+     0.5400000214576721,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     313.79999935626984,
+     288.4599994421005,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 3,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 15,
+       "y": -1,
+       "width": 28,
+       "height": 1
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 6,
+       "y": 0,
+       "width": 50,
+       "height": 23
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": -1,
+       "y": 23,
+       "width": 70,
+       "height": 2
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": -1,
+       "y": 25,
+       "width": 396,
+       "height": 10
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 29,
+       "y": 35,
+       "width": 366,
+       "height": 342
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "35",
+    "parentLayerId": "5",
+    "backendNodeId": 3458,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.3654000165224076,
+     0,
+     0,
+     0,
+     0,
+     0.42000001668930054,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     107.37640248999595,
+     450.26001209020615,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   },
+   {
+    "layerId": "36",
+    "parentLayerId": "5",
+    "backendNodeId": 3460,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 394,
+    "height": 376,
+    "transform": [
+     0.42000001668930054,
+     0,
+     0,
+     0,
+     0,
+     0.42000001668930054,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     107.2000025510788,
+     442.28001177310944,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 3,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 15,
+       "y": -1,
+       "width": 28,
+       "height": 1
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 6,
+       "y": 0,
+       "width": 50,
+       "height": 23
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": -1,
+       "y": 23,
+       "width": 70,
+       "height": 2
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": -1,
+       "y": 25,
+       "width": 396,
+       "height": 10
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 29,
+       "y": 35,
+       "width": 366,
+       "height": 342
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "37",
+    "parentLayerId": "5",
+    "backendNodeId": 3463,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.3654000165224076,
+     0,
+     0,
+     0,
+     0,
+     0.42000001668930054,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     264.17640554175375,
+     147.0599998831749,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   },
+   {
+    "layerId": "38",
+    "parentLayerId": "5",
+    "backendNodeId": 3465,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 390,
+    "height": 360,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     112,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 6,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 15,
+       "y": 14,
+       "width": 360,
+       "height": 23
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 15,
+       "y": 37,
+       "width": 361,
+       "height": 149
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 15,
+       "y": 186,
+       "width": 360,
+       "height": 174
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "39",
+    "parentLayerId": "5",
+    "backendNodeId": 1153,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 44,
+    "height": 44,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     125,
+     111,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 2,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 44,
+       "height": 44
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 10,
+       "y": 44,
+       "width": 24,
+       "height": 1
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Is for the visual viewport.",
+     "Is a scrollable overflow element using accelerated scrolling."
+    ],
+    "compositingReasonIds": [
+     "Viewport",
+     "OverflowScrolling"
+    ]
+   },
+   {
+    "layerId": "40",
+    "parentLayerId": "5",
+    "backendNodeId": 1238,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 22,
+    "height": 22,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     -0.4040262258351568,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     121.5666730950152,
+     133,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 22,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has a will-change: transform compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "WillChangeTransform"
+    ]
+   },
+   {
+    "layerId": "41",
+    "parentLayerId": "5",
+    "backendNodeId": 1755,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 44,
+    "height": 44,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     306,
+     111,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 2,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 44,
+       "height": 44
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 10,
+       "y": 44,
+       "width": 24,
+       "height": 1
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Is for the visual viewport.",
+     "Is a scrollable overflow element using accelerated scrolling."
+    ],
+    "compositingReasonIds": [
+     "Viewport",
+     "OverflowScrolling"
+    ]
+   },
+   {
+    "layerId": "42",
+    "parentLayerId": "5",
+    "backendNodeId": 1806,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 22,
+    "height": 22,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     -0.4040262258351568,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     302.5666730950152,
+     133,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 22,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has a will-change: transform compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "WillChangeTransform"
+    ]
+   },
+   {
+    "layerId": "43",
+    "parentLayerId": "5",
+    "backendNodeId": 1610,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 372,
+    "height": 373,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     130,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 19,
+       "y": 0,
+       "width": 171,
+       "height": 75
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 200,
+       "y": 0,
+       "width": 171,
+       "height": 75
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 18,
+       "y": 222,
+       "width": 354,
+       "height": 117
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "44",
+    "parentLayerId": "5",
+    "backendNodeId": 2304,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 171,
+    "height": 44,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     19,
+     424,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 0,
+    "drawsContent": false,
+    "compositingReasons": [
+     "Is a scrollable overflow element using accelerated scrolling."
+    ],
+    "compositingReasonIds": [
+     "OverflowScrolling"
+    ]
+   },
+   {
+    "layerId": "45",
+    "parentLayerId": "5",
+    "backendNodeId": 2304,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 171,
+    "height": 45,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     19,
+     424,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 3,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 171,
+       "height": 45
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "46",
+    "parentLayerId": "5",
+    "backendNodeId": 2340,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 368,
+    "height": 166,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     22,
+     337,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 177,
+       "y": 15,
+       "width": 173,
+       "height": 32
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 0,
+       "y": 47,
+       "width": 165,
+       "height": 81
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 177,
+       "y": 47,
+       "width": 173,
+       "height": 81
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 177,
+       "y": 128,
+       "width": 173,
+       "height": 4
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "47",
+    "parentLayerId": "5",
+    "backendNodeId": 2695,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 171,
+    "height": 44,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     200,
+     424,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 0,
+    "drawsContent": false,
+    "compositingReasons": [
+     "Is a scrollable overflow element using accelerated scrolling."
+    ],
+    "compositingReasonIds": [
+     "OverflowScrolling"
+    ]
+   },
+   {
+    "layerId": "48",
+    "parentLayerId": "5",
+    "backendNodeId": 2695,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 179,
+    "height": 45,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     200,
+     424,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 179,
+       "height": 15
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 0,
+       "y": 15,
+       "width": 180,
+       "height": 14
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 0,
+       "y": 29,
+       "width": 179,
+       "height": 16
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "49",
+    "parentLayerId": "5",
+    "backendNodeId": 2771,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 215,
+    "height": 82,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     153,
+     383,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 3,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 50,
+       "y": 1,
+       "width": 165,
+       "height": 2
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 0,
+       "y": 3,
+       "width": 30,
+       "height": 16
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 50,
+       "y": 3,
+       "width": 165,
+       "height": 16
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 50,
+       "y": 19,
+       "width": 165,
+       "height": 63
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "50",
+    "parentLayerId": "5",
+    "backendNodeId": 2088,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 44,
+    "height": 44,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     125,
+     334,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 2,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 44,
+       "height": 44
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 10,
+       "y": 44,
+       "width": 24,
+       "height": 1
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Is for the visual viewport.",
+     "Is a scrollable overflow element using accelerated scrolling."
+    ],
+    "compositingReasonIds": [
+     "Viewport",
+     "OverflowScrolling"
+    ]
+   },
+   {
+    "layerId": "51",
+    "parentLayerId": "5",
+    "backendNodeId": 2197,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 22,
+    "height": 22,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     -0.4040262258351568,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     121.5666730950152,
+     356,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 22,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has a will-change: transform compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "WillChangeTransform"
+    ]
+   },
+   {
+    "layerId": "52",
+    "parentLayerId": "5",
+    "backendNodeId": 2502,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 44,
+    "height": 44,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     306,
+     334,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 2,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 44,
+       "height": 44
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 10,
+       "y": 44,
+       "width": 24,
+       "height": 1
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Is for the visual viewport.",
+     "Is a scrollable overflow element using accelerated scrolling."
+    ],
+    "compositingReasonIds": [
+     "Viewport",
+     "OverflowScrolling"
+    ]
+   },
+   {
+    "layerId": "53",
+    "parentLayerId": "5",
+    "backendNodeId": 2587,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 22,
+    "height": 22,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     -0.4040262258351568,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     302.5666730950152,
+     356,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 22,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has a will-change: transform compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "WillChangeTransform"
+    ]
+   },
+   {
+    "layerId": "54",
+    "parentLayerId": "5",
+    "backendNodeId": 2339,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 382,
+    "height": 412,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     8,
+     67,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 351,
+       "y": 0,
+       "width": 8,
+       "height": 6
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 337,
+       "y": 6,
+       "width": 37,
+       "height": 42
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 289,
+       "y": 48,
+       "width": 132,
+       "height": 4
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 0,
+       "y": 52,
+       "width": 421,
+       "height": 82
+      },
+      "type": "TouchEventHandler"
+     },
+     {
+      "rect": {
+       "x": 0,
+       "y": 134,
+       "width": 374,
+       "height": 278
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   },
+   {
+    "layerId": "55",
+    "parentLayerId": "5",
+    "backendNodeId": 3480,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 240,
+    "height": 93,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     131,
+     479,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 240,
+       "height": 93
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated opacity animation or transition."
+    ],
+    "compositingReasonIds": [
+     "ActiveOpacityAnimation"
+    ]
+   },
+   {
+    "layerId": "56",
+    "parentLayerId": "5",
+    "backendNodeId": 2916,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 390,
+    "height": 844,
+    "paintCount": 2,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 390,
+       "height": 844
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Overlaps other composited content."
+    ],
+    "compositingReasonIds": [
+     "Overlap"
+    ]
+   }
+  ],
+  "animationIds": [
+   "6"
+  ]
+ },
+ {
+  "name": "deck-warm-flick",
+  "selector": ".phone-deck-warm",
+  "pseudo": null,
+  "properties": [
+   "opacity"
+  ],
+  "ancestors": [],
+  "backendNodeId": 3480,
+  "layers": [
+   {
+    "layerId": "55",
+    "parentLayerId": "5",
+    "backendNodeId": 3480,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 240,
+    "height": 93,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     131,
+     479,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 240,
+       "height": 93
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated opacity animation or transition."
+    ],
+    "compositingReasonIds": [
+     "ActiveOpacityAnimation"
+    ]
+   }
+  ],
+  "descendantLayers": [],
+  "animationIds": [
+   "27"
+  ]
+ },
+ {
+  "name": "sea-drift",
+  "selector": ".sea-water",
+  "pseudo": "::before",
+  "properties": [
+   "transform"
+  ],
+  "ancestors": [],
+  "backendNodeId": 986,
+  "layers": [
+   {
+    "layerId": "18",
+    "parentLayerId": "5",
+    "backendNodeId": 986,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 484,
+    "height": 350,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     6.0501556396484375,
+     124,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 2,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 484,
+       "height": 350
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation"
+    ]
+   }
+  ],
+  "descendantLayers": [],
+  "animationIds": [
+   "3"
+  ]
+ },
+ {
+  "name": "medal-glint",
+  "selector": "[data-fx-ship=\"И\"] .star .gl",
+  "pseudo": null,
+  "properties": [
+   "transform"
+  ],
+  "ancestors": [
+   {
+    "tag": "BUTTON",
+    "class": "star narrow  ",
+    "filter": "drop-shadow(rgba(0, 0, 0, 0.55) 0px 1px 1.6px)",
+    "clip": "none",
+    "mask": "none"
+   }
+  ],
+  "backendNodeId": 1238,
+  "layers": [
+   {
+    "layerId": "40",
+    "parentLayerId": "5",
+    "backendNodeId": 1238,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 22,
+    "height": 22,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     -0.4040262258351568,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     134.88010197379938,
+     133,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 22,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has a will-change: transform compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "WillChangeTransform"
+    ]
+   }
+  ],
+  "descendantLayers": [],
+  "animationIds": [
+   "1"
+  ]
+ },
+ {
+  "name": "medal-glint",
+  "selector": "[data-fx-ship=\"Г\"] .star .gl",
+  "pseudo": null,
+  "properties": [
+   "transform"
+  ],
+  "ancestors": [
+   {
+    "tag": "BUTTON",
+    "class": "star narrow poor ",
+    "filter": "saturate(0.35) brightness(0.92) drop-shadow(rgba(0, 0, 0, 0.55) 0px 1px 1.6px)",
+    "clip": "none",
+    "mask": "none"
+   }
+  ],
+  "backendNodeId": 1806,
+  "layers": [
+   {
+    "layerId": "42",
+    "parentLayerId": "5",
+    "backendNodeId": 1806,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 22,
+    "height": 22,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     -0.4040262258351568,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     315.88010197379936,
+     133,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 22,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has a will-change: transform compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "WillChangeTransform"
+    ]
+   }
+  ],
+  "descendantLayers": [],
+  "animationIds": [
+   "5"
+  ]
+ },
+ {
+  "name": "medal-glint",
+  "selector": "[data-fx-ship=\"Ж\"] .star .gl",
+  "pseudo": null,
+  "properties": [
+   "transform"
+  ],
+  "ancestors": [
+   {
+    "tag": "BUTTON",
+    "class": "star narrow  ",
+    "filter": "drop-shadow(rgba(0, 0, 0, 0.55) 0px 1px 1.6px)",
+    "clip": "none",
+    "mask": "none"
+   }
+  ],
+  "backendNodeId": 2197,
+  "layers": [
+   {
+    "layerId": "51",
+    "parentLayerId": "5",
+    "backendNodeId": 2197,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 22,
+    "height": 22,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     -0.4040262258351568,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     134.88010197379938,
+     356,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 22,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has a will-change: transform compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "WillChangeTransform"
+    ]
+   }
+  ],
+  "descendantLayers": [],
+  "animationIds": [
+   "4"
+  ]
+ },
+ {
+  "name": "medal-glint",
+  "selector": "[data-fx-ship=\"М\"] .star .gl",
+  "pseudo": null,
+  "properties": [
+   "transform"
+  ],
+  "ancestors": [
+   {
+    "tag": "BUTTON",
+    "class": "star narrow poor ",
+    "filter": "saturate(0.35) brightness(0.92) drop-shadow(rgba(0, 0, 0, 0.55) 0px 1px 1.6px)",
+    "clip": "none",
+    "mask": "none"
+   }
+  ],
+  "backendNodeId": 2587,
+  "layers": [
+   {
+    "layerId": "53",
+    "parentLayerId": "5",
+    "backendNodeId": 2587,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 22,
+    "height": 22,
+    "transform": [
+     1,
+     0,
+     0,
+     0,
+     -0.4040262258351568,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     315.88010197379936,
+     356,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 4,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 22,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has a will-change: transform compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "WillChangeTransform"
+    ]
+   }
+  ],
+  "descendantLayers": [],
+  "animationIds": [
+   "2"
+  ]
+ },
+ {
+  "name": "wx-loop-1",
+  "selector": ".fx-weather .wx-loop-1",
+  "pseudo": null,
+  "properties": [
+   "opacity",
+   "transform"
+  ],
+  "ancestors": [
+   {
+    "tag": "DIV",
+    "class": "fx-weather",
+    "filter": "none",
+    "clip": "inset(126px 15px 300px)",
+    "mask": "none"
+   }
+  ],
+  "backendNodeId": 3442,
+  "layers": [],
+  "descendantLayers": [
+   {
+    "layerId": "29",
+    "parentLayerId": "5",
+    "backendNodeId": 3443,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.5357583974106461,
+     0,
+     0,
+     0,
+     0,
+     0.6000000238418579,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     37.484215250977485,
+     293.1000028848648,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   }
+  ],
+  "animationIds": [
+   "13"
+  ]
+ },
+ {
+  "name": "wx-loop-2",
+  "selector": ".fx-weather .wx-loop-2",
+  "pseudo": null,
+  "properties": [
+   "opacity",
+   "transform"
+  ],
+  "ancestors": [
+   {
+    "tag": "DIV",
+    "class": "fx-weather",
+    "filter": "none",
+    "clip": "inset(126px 15px 300px)",
+    "mask": "none"
+   }
+  ],
+  "backendNodeId": 3447,
+  "layers": [],
+  "descendantLayers": [
+   {
+    "layerId": "31",
+    "parentLayerId": "5",
+    "backendNodeId": 3448,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.6429100236699625,
+     0,
+     0,
+     0,
+     0,
+     0.7199999690055847,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     173.14105919522126,
+     285.2600032687187,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   }
+  ],
+  "animationIds": [
+   "11"
+  ]
+ },
+ {
+  "name": "wx-loop-3",
+  "selector": ".fx-weather .wx-loop-3",
+  "pseudo": null,
+  "properties": [
+   "opacity",
+   "transform"
+  ],
+  "ancestors": [
+   {
+    "tag": "DIV",
+    "class": "fx-weather",
+    "filter": "none",
+    "clip": "inset(126px 15px 300px)",
+    "mask": "none"
+   }
+  ],
+  "backendNodeId": 3452,
+  "layers": [],
+  "descendantLayers": [
+   {
+    "layerId": "33",
+    "parentLayerId": "5",
+    "backendNodeId": 3453,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.4821825576695815,
+     0,
+     0,
+     0,
+     0,
+     0.5400000214576721,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     313.60579303923424,
+     298.7199998497963,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   }
+  ],
+  "animationIds": [
+   "14"
+  ]
+ },
+ {
+  "name": "wx-loop-4",
+  "selector": ".fx-weather .wx-loop-4",
+  "pseudo": null,
+  "properties": [
+   "opacity",
+   "transform"
+  ],
+  "ancestors": [
+   {
+    "tag": "DIV",
+    "class": "fx-weather",
+    "filter": "none",
+    "clip": "inset(126px 15px 300px)",
+    "mask": "none"
+   }
+  ],
+  "backendNodeId": 3457,
+  "layers": [],
+  "descendantLayers": [
+   {
+    "layerId": "35",
+    "parentLayerId": "5",
+    "backendNodeId": 3458,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.376928752141346,
+     0,
+     0,
+     0,
+     0,
+     0.42000001668930054,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     106.98442547895205,
+     450.26001209020615,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   }
+  ],
+  "animationIds": [
+   "15"
+  ]
+ },
+ {
+  "name": "wx-loop-5",
+  "selector": ".fx-weather .wx-loop-5",
+  "pseudo": null,
+  "properties": [
+   "opacity",
+   "transform"
+  ],
+  "ancestors": [
+   {
+    "tag": "DIV",
+    "class": "fx-weather",
+    "filter": "none",
+    "clip": "inset(126px 15px 300px)",
+    "mask": "none"
+   }
+  ],
+  "backendNodeId": 3462,
+  "layers": [],
+  "descendantLayers": [
+   {
+    "layerId": "37",
+    "parentLayerId": "5",
+    "backendNodeId": 3463,
+    "offsetX": 0,
+    "offsetY": 0,
+    "width": 68,
+    "height": 22,
+    "transform": [
+     0.38463262536655307,
+     0,
+     0,
+     0,
+     0,
+     0.42000001668930054,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     263.5224968410528,
+     147.0599998831749,
+     0,
+     1
+    ],
+    "anchorX": 0,
+    "anchorY": 0,
+    "anchorZ": 0,
+    "paintCount": 1,
+    "drawsContent": true,
+    "scrollRects": [
+     {
+      "rect": {
+       "x": 0,
+       "y": 0,
+       "width": 68,
+       "height": 22
+      },
+      "type": "TouchEventHandler"
+     }
+    ],
+    "compositingReasons": [
+     "Has an active accelerated transform animation or transition.",
+     "Has an active accelerated opacity animation or transition.",
+     "Has a will-change: transform compositing hint.",
+     "Has a will-change: opacity compositing hint."
+    ],
+    "compositingReasonIds": [
+     "ActiveTransformAnimation",
+     "ActiveOpacityAnimation",
+     "WillChangeTransform",
+     "WillChangeOpacity"
+    ]
+   }
+  ],
+  "animationIds": [
+   "12"
+  ]
+ }
+]

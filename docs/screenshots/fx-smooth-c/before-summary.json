@@ -1,0 +1,196 @@
+[
+ {
+  "scene": "legend",
+  "label": "before",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "20:14:41 ▶ turnEnd",
+   "20:14:42 ✓ turnEnd 1.4 с",
+   "20:14:44 ▶ announce",
+   "20:14:45 ✓ announce 0.8 с",
+   "20:14:45 ▶ shot",
+   "20:14:50 ✓ shot 4.8 с",
+   "20:14:52 ▶ announce",
+   "20:14:53 ✓ announce 0.7 с",
+   "20:14:53 ▶ shot",
+   "20:14:58 ✓ shot 5.6 с",
+   "20:15:00 ▶ card",
+   "20:15:02 ✓ card 1.9 с",
+   "20:15:04 ▶ sell",
+   "20:15:05 ✓ sell 1.6 с",
+   "20:15:08 ▶ turnEnd",
+   "20:15:09 ✓ turnEnd 1.5 с",
+   "20:15:09 ▶ turn",
+   "20:15:12 ✓ turn 2.4 с",
+   "20:15:18 ▶ legend",
+   "20:15:37 ✓ legend 18.9 с"
+  ],
+  "elapsedMs": 6558.399999976158,
+  "scriptingMs": 1486.143999969482,
+  "recalcStyleMs": 533.4509999999999,
+  "recalcStyleCount": 72,
+  "layoutMs": 190.72800000000004,
+  "layoutCount": 106,
+  "forcedStyle": {
+   "count": 22,
+   "ms": 298.969
+  },
+  "forcedLayout": {
+   "count": 17,
+   "ms": 96.72400000000002
+  },
+  "longTasks": 37,
+  "longestTaskMs": 967.149,
+  "paint": {
+   "ms": 1071.68,
+   "rasterMs": 1585.072000000001
+  },
+  "worstFrameMs": 1249.9000000000015,
+  "framesOver50": 41,
+  "fps": 7.166382044427126,
+  "renders": 1,
+  "renderMs": 87,
+  "renderMaxMs": 87,
+  "renderList": [
+   [
+    1009,
+    87
+   ]
+  ],
+  "planks": 12,
+  "hands": 1,
+  "layers": {
+   "all": 123,
+   "drawing": 109
+  },
+  "observerLongTasks": 35,
+  "svgAnimations": 7,
+  "svgByFunction": {
+   "circRing": 7
+  }
+ },
+ {
+  "scene": "armada",
+  "label": "before",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "20:14:41 ▶ turnEnd",
+   "20:14:42 ✓ turnEnd 1.4 с",
+   "20:14:44 ▶ announce",
+   "20:14:45 ✓ announce 0.8 с",
+   "20:14:45 ▶ shot",
+   "20:14:50 ✓ shot 4.8 с",
+   "20:14:52 ▶ announce",
+   "20:14:53 ✓ announce 0.7 с",
+   "20:14:53 ▶ shot",
+   "20:14:58 ✓ shot 5.6 с",
+   "20:15:00 ▶ card",
+   "20:15:02 ✓ card 1.9 с",
+   "20:15:04 ▶ sell",
+   "20:15:05 ✓ sell 1.6 с",
+   "20:15:08 ▶ turnEnd",
+   "20:15:09 ✓ turnEnd 1.5 с",
+   "20:15:09 ▶ turn",
+   "20:15:12 ✓ turn 2.4 с",
+   "20:15:18 ▶ legend",
+   "20:15:37 ✓ legend 18.9 с"
+  ],
+  "elapsedMs": 21212.69999998808,
+  "scriptingMs": 5468.478000000006,
+  "recalcStyleMs": 1426.737,
+  "recalcStyleCount": 323,
+  "layoutMs": 631.4370000000004,
+  "layoutCount": 327,
+  "forcedStyle": {
+   "count": 132,
+   "ms": 723.298
+  },
+  "forcedLayout": {
+   "count": 97,
+   "ms": 277.56399999999996
+  },
+  "longTasks": 125,
+  "longestTaskMs": 967.149,
+  "paint": {
+   "ms": 3003.1050000000005,
+   "rasterMs": 2228.4809999999984
+  },
+  "worstFrameMs": 1249.9000000000015,
+  "framesOver50": 110,
+  "fps": 7.919783903043668,
+  "renders": 1,
+  "renderMs": 87,
+  "renderMaxMs": 87,
+  "renderList": [
+   [
+    1009,
+    87
+   ]
+  ],
+  "planks": 12,
+  "hands": 1,
+  "layers": {
+   "all": 123,
+   "drawing": 109
+  },
+  "observerLongTasks": 116,
+  "svgAnimations": 75,
+  "svgByFunction": {
+   "shotA": 60,
+   "circRing": 15
+  }
+ },
+ {
+  "scene": "idle",
+  "label": "before",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "20:15:50 ▶ sea",
+   "20:15:57 ✓ sea 6.8 с",
+   "20:15:57 ▶ turn",
+   "20:15:58 ✓ turn 1.2 с"
+  ],
+  "elapsedMs": 10070.5,
+  "scriptingMs": 355.146,
+  "recalcStyleMs": 878.6320000000005,
+  "recalcStyleCount": 378,
+  "layoutMs": 203.73999999999998,
+  "layoutCount": 378,
+  "forcedStyle": {
+   "count": 0,
+   "ms": 0
+  },
+  "forcedLayout": {
+   "count": 0,
+   "ms": 0
+  },
+  "longTasks": 12,
+  "longestTaskMs": 108.165,
+  "paint": {
+   "ms": 3796.8619999999987,
+   "rasterMs": 0
+  },
+  "worstFrameMs": 133.29999999999927,
+  "framesOver50": 13,
+  "fps": 37.33677573109578,
+  "renders": 0,
+  "renderMs": 0,
+  "renderMaxMs": 0,
+  "renderList": [],
+  "planks": 0,
+  "hands": 0,
+  "layers": {
+   "all": 0,
+   "drawing": 0
+  },
+  "observerLongTasks": 10,
+  "svgAnimations": 0,
+  "svgByFunction": {}
+ }
+]

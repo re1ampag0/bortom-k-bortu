@@ -22,7 +22,7 @@ export function legendMedal(name: string, u: string, delay = '0'): string {
       r = i % 2 ? 13.5 : 13;
     return (i ? 'L' : 'M') + R1(Math.cos(a) * r) + ' ' + R1(Math.sin(a) * r);
   }).join(' ') + ' Z';
-  return `<svg width="28" height="28" viewBox="-14 -14 28 28" aria-hidden="true"><defs>
+  return `<span class="medal-art"><svg width="28" height="28" viewBox="-14 -14 28 28" aria-hidden="true"><defs>
       <radialGradient id="${u}f" cx=".34" cy=".28" r=".8"><stop offset="0" stop-color="#fff6c8"/><stop offset=".3" stop-color="#ecc86a"/><stop offset=".7" stop-color="#b08428"/><stop offset="1" stop-color="#6e4e12"/></radialGradient>
       <linearGradient id="${u}r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbe7a6"/><stop offset=".45" stop-color="#c99a3a"/><stop offset=".7" stop-color="#7a5414"/><stop offset="1" stop-color="#d8b05a"/></linearGradient>
       <linearGradient id="${u}g" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
@@ -34,5 +34,5 @@ export function legendMedal(name: string, u: string, delay = '0'): string {
     ${[-90, -150, -30].map((d: number) => { const r = d * Math.PI / 180; return `<circle cx="${R1(Math.cos(r) * 11.35)}" cy="${R1(Math.sin(r) * 11.35)}" r=".75" fill="#fff3c4" stroke="#4a340c" stroke-width=".3"/>`; }).join('')}
     <g transform="translate(-8.6 -8.6) scale(1.08)"><g transform="translate(.45 .55)" fill="#fff3c4" stroke="#fff3c4" opacity=".65">${m}</g><g fill="#3a2a0c" stroke="#3a2a0c">${m}</g></g>
     <path d="M-8.6 -4 A9.6 9.6 0 0 1 2 -9.4" fill="none" stroke="#fff8d8" stroke-width="1" stroke-linecap="round" opacity=".7"/>
-    <g clip-path="url(#${u}c)"><rect class="gl" x="-4" y="-14" width="8" height="28" fill="url(#${u}g)" style="animation-delay:${delay}s"/></g></svg>`;
+    </svg><i class="medal-glint-clip" aria-hidden="true"><i class="gl" style="animation-delay:${delay}s"><svg width="28" height="28" viewBox="-14 -14 28 28" aria-hidden="true"><rect x="-4" y="-14" width="8" height="28" fill="url(#${u}g)"/></svg></i></i></span>`;
 }

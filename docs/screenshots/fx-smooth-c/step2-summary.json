@@ -1,0 +1,191 @@
+[
+ {
+  "scene": "legend",
+  "label": "step2",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "20:39:19 ▶ turnEnd",
+   "20:39:20 ✓ turnEnd 1.4 с",
+   "20:39:22 ▶ announce",
+   "20:39:23 ✓ announce 1.0 с",
+   "20:39:23 ▶ shot",
+   "20:39:28 ✓ shot 5.1 с",
+   "20:39:31 ▶ announce",
+   "20:39:32 ✓ announce 0.8 с",
+   "20:39:32 ▶ shot",
+   "20:39:36 ✓ shot 4.5 с",
+   "20:39:38 ▶ card",
+   "20:39:40 ✓ card 2.0 с",
+   "20:39:42 ▶ sell",
+   "20:39:44 ✓ sell 1.5 с",
+   "20:39:46 ▶ turnEnd",
+   "20:39:47 ✓ turnEnd 1.8 с",
+   "20:39:47 ▶ turn",
+   "20:39:50 ✓ turn 2.4 с",
+   "20:39:59 ▶ legend",
+   "20:40:23 ✓ legend 23.2 с"
+  ],
+  "elapsedMs": 9646.09999999404,
+  "scriptingMs": 3056.6330000000016,
+  "recalcStyleMs": 689.0520000000001,
+  "recalcStyleCount": 47,
+  "layoutMs": 343.74199999999996,
+  "layoutCount": 82,
+  "forcedStyle": {
+   "count": 18,
+   "ms": 438.45500000000004
+  },
+  "forcedLayout": {
+   "count": 13,
+   "ms": 121.013
+  },
+  "longTasks": 25,
+  "longestTaskMs": 1896.842,
+  "paint": {
+   "ms": 1634.6409999999998,
+   "rasterMs": 1297.8509999999994
+  },
+  "worstFrameMs": 2549.899999999994,
+  "framesOver50": 25,
+  "fps": 2.9027275271889468,
+  "renders": 1,
+  "renderMs": 216.09999999403954,
+  "renderMaxMs": 216.09999999403954,
+  "renderList": [
+   [
+    1650,
+    216.1
+   ]
+  ],
+  "planks": 12,
+  "hands": 1,
+  "layers": {
+   "all": 111,
+   "drawing": 96
+  },
+  "observerLongTasks": 25,
+  "svgAnimations": 0,
+  "svgByFunction": {}
+ },
+ {
+  "scene": "armada",
+  "label": "step2",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "20:39:19 ▶ turnEnd",
+   "20:39:20 ✓ turnEnd 1.4 с",
+   "20:39:22 ▶ announce",
+   "20:39:23 ✓ announce 1.0 с",
+   "20:39:23 ▶ shot",
+   "20:39:28 ✓ shot 5.1 с",
+   "20:39:31 ▶ announce",
+   "20:39:32 ✓ announce 0.8 с",
+   "20:39:32 ▶ shot",
+   "20:39:36 ✓ shot 4.5 с",
+   "20:39:38 ▶ card",
+   "20:39:40 ✓ card 2.0 с",
+   "20:39:42 ▶ sell",
+   "20:39:44 ✓ sell 1.5 с",
+   "20:39:46 ▶ turnEnd",
+   "20:39:47 ✓ turnEnd 1.8 с",
+   "20:39:47 ▶ turn",
+   "20:39:50 ✓ turn 2.4 с",
+   "20:39:59 ▶ legend",
+   "20:40:23 ✓ legend 23.2 с"
+  ],
+  "elapsedMs": 26702.59999999404,
+  "scriptingMs": 8336.377,
+  "recalcStyleMs": 1987.7120000000004,
+  "recalcStyleCount": 261,
+  "layoutMs": 983.2569999999988,
+  "layoutCount": 338,
+  "forcedStyle": {
+   "count": 128,
+   "ms": 1121.713
+  },
+  "forcedLayout": {
+   "count": 94,
+   "ms": 454.4189999999998
+  },
+  "longTasks": 121,
+  "longestTaskMs": 1896.842,
+  "paint": {
+   "ms": 3690.838999999999,
+   "rasterMs": 2085.2370000000005
+  },
+  "worstFrameMs": 2549.899999999994,
+  "framesOver50": 93,
+  "fps": 4.456494873159413,
+  "renders": 1,
+  "renderMs": 216.09999999403954,
+  "renderMaxMs": 216.09999999403954,
+  "renderList": [
+   [
+    1650,
+    216.1
+   ]
+  ],
+  "planks": 12,
+  "hands": 1,
+  "layers": {
+   "all": 111,
+   "drawing": 96
+  },
+  "observerLongTasks": 119,
+  "svgAnimations": 0,
+  "svgByFunction": {}
+ },
+ {
+  "scene": "idle",
+  "label": "step2",
+  "viewport": "390×844 DPR3 CPU×4",
+  "valid": true,
+  "errors": [],
+  "journal": [
+   "20:40:41 ▶ sea",
+   "20:40:49 ✓ sea 8.3 с",
+   "20:40:49 ▶ turn",
+   "20:40:50 ✓ turn 1.2 с"
+  ],
+  "elapsedMs": 10106.59999999404,
+  "scriptingMs": 376.98699999999997,
+  "recalcStyleMs": 927.0290000000008,
+  "recalcStyleCount": 251,
+  "layoutMs": 170.62599999999998,
+  "layoutCount": 251,
+  "forcedStyle": {
+   "count": 0,
+   "ms": 0
+  },
+  "forcedLayout": {
+   "count": 0,
+   "ms": 0
+  },
+  "longTasks": 49,
+  "longestTaskMs": 247.066,
+  "paint": {
+   "ms": 3743.940000000001,
+   "rasterMs": 0
+  },
+  "worstFrameMs": 233.29999999999927,
+  "framesOver50": 49,
+  "fps": 24.637365681846205,
+  "renders": 0,
+  "renderMs": 0,
+  "renderMaxMs": 0,
+  "renderList": [],
+  "planks": 0,
+  "hands": 0,
+  "layers": {
+   "all": 45,
+   "drawing": 38
+  },
+  "observerLongTasks": 48,
+  "svgAnimations": 0,
+  "svgByFunction": {}
+ }
+]

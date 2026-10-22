@@ -1,0 +1,70 @@
+{
+ "legend-1000": {
+  "differentPixels": 24,
+  "share": 0.002
+ },
+ "legend-2200": {
+  "differentPixels": 53,
+  "share": 0.004
+ },
+ "armada-900": {
+  "differentPixels": 4116,
+  "share": 0.313
+ },
+ "bottle-6000": {
+  "differentPixels": 1741,
+  "share": 0.132
+ },
+ "bottle-8000": {
+  "differentPixels": 1640,
+  "share": 0.125
+ },
+ "idle-1000": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-3000": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "kraken-6000": {
+  "differentPixels": 345,
+  "share": 0.026
+ },
+ "jack-9000": {
+  "differentPixels": 4422,
+  "share": 0.336
+ },
+ "idle-motion-1000": {
+  "differentPixels": 469,
+  "share": 0.036
+ },
+ "idle-motion-4600": {
+  "differentPixels": 659,
+  "share": 0.05
+ },
+ "idle-motion-4800": {
+  "differentPixels": 810,
+  "share": 0.062
+ },
+ "idle-motion-5000": {
+  "differentPixels": 658,
+  "share": 0.05
+ },
+ "idle-compositor-1000": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-compositor-4600": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-compositor-4800": {
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-compositor-5000": {
+  "differentPixels": 0,
+  "share": 0
+ }
+}

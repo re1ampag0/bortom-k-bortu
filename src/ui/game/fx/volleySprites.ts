@@ -1,5 +1,5 @@
 // Original Volley SVG art, prepared off-document; only HTML wrappers animate.
-import {A, ignoreFxBudget, particleDefs, type FxCtx, type Pt} from './primitives';
+import {boardW, A, ignoreFxBudget, particleDefs, type FxCtx, type Pt} from './primitives';
 import type {ParticleTarget} from './particles';
 import {scar} from './scars';
 import {spriteA,spriteReady,takeSprite,type SpriteSpec} from './sprites';
@@ -23,7 +23,7 @@ export function shotArt(kind:ShotArt,k=1):string {
  }
 }
 const key=(kind:ShotArt,k:number)=>`volley-${kind}-${k}`;
-export const volleySize=(ctx:FxCtx)=>Math.min(1.05,Math.max(.6,ctx.board.clientWidth/1300));
+export const volleySize=(ctx:FxCtx)=>Math.min(1.05,Math.max(.6,boardW(ctx)/1300));
 export function volleySpriteSpecs(ctx:FxCtx):SpriteSpec[]{
  const k=volleySize(ctx),specs:SpriteSpec[]=[];
  const add=(kind:ShotArt,scale:number,radius:number,count:number)=>{
@@ -32,8 +32,8 @@ export function volleySpriteSpecs(ctx:FxCtx):SpriteSpec[]{
   const r=radius*scale+2,art=`<svg aria-hidden="true" width="${2*r}" height="${2*r}" viewBox="${-r} ${-r} ${2*r} ${2*r}" style="left:${-r}px;top:${-r}px">${particleDefs(false)}${body}</svg>`;
   specs.push({key:key(kind,scale),count,html:kind==='flotsam'?`<div class="volley-float-rotate" data-sprite-node="rock"><div class="volley-float-heave" data-sprite-node="heave">${art}</div></div>`:art});
  };
- for(const n of new Set([k,.7])){add('glow',n,90,16);add('cone',n,110,16);}
- for(const n of new Set([k*1.1,.8])){add('blast',n,26,24);add('shock',n,59,24);}
+ for(const n of new Set([k,.7,.62])){add('glow',n,90,n===.62?32:16);add('cone',n,110,n===.62?32:16);}
+ for(const n of new Set([k*1.1,.8,.55])){add('blast',n,26,24);add('shock',n,59,24);}
  add('ball',1,6,32);add('shadow',1,6,32);add('flotsam',1,15,4);
  return specs;
 }

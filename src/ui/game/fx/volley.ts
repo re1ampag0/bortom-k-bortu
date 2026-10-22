@@ -21,7 +21,7 @@ import { SMOKE_LIFE, T } from './timing';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { curCard } from './misc';
 import {
-  A, at, particleHTML, ballFly, boom, bubbles, burst, bx, capFirst, cardHTML, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, smokeJet, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
+  boardW, boardH, A, at, particleHTML, ballFly, boom, bubbles, burst, bx, capFirst, cardHTML, fallBoard, flashBoard, fuseSparks, fxSvg, gunFire, hitBlast, missSplash, smokeJet, type Pt, cardOrigin, curve, dirOf, facingY, FLAME_SVG, flash, fly, flyCard, fxPoint, gapBox, hint, holdEl, isTop,
   mk, moveTo, overlayAt, payKegs, pillAt, plank, projectile, puff, setTrack, shake, shownTrack, sideOf, soulsFly, splash,
   tag, trackEl, wait, whirlpool, type FlyCard, type FxCtx,
 } from './primitives';
@@ -83,12 +83,12 @@ const SHOOTER = 'fx-shooter', TARGETED = 'fx-targeted';
 /** fix-ui: the water inside the frame of the sea — the plate, the cards at it and the pills beside it stay in it (not on the log). */
 function seaBox(ctx: FxCtx): { x: number; r: number } {
   const el = ctx.board.querySelector('.sea-table');
-  if (!el) return { x: 0, r: ctx.board.clientWidth };
-  const b = bx(ctx, el), edge = ctx.board.clientWidth < 701 ? 8 : 12;
+  if (!el) return { x: 0, r: boardW(ctx) };
+  const b = bx(ctx, el), edge = boardW(ctx) < 701 ? 8 : 12;
   return { x: b.x + edge, r: b.r - edge };
 }
 function placePlate(ctx: FxCtx, shooter: string): PlateBox {
-  const g = gapBox(ctx), W = ctx.board.clientWidth, sea = seaBox(ctx);
+  const g = gapBox(ctx), W = boardW(ctx), sea = seaBox(ctx);
   const s = bx(ctx, plank(ctx, shooter));
   // V5: A5Volley.html — 300 px on a laptop, 220 on a phone (390 px too).
   const pw = W < 701 ? 220 : 300;
@@ -98,7 +98,7 @@ function placePlate(ctx: FxCtx, shooter: string): PlateBox {
   return { x, y: g.y + 4, w: pw };
 }
 function cardSlot(ctx: FxCtx, p: PlateBox, idx: number) {
-  const W = ctx.board.clientWidth, sea = seaBox(ctx);
+  const W = boardW(ctx), sea = seaBox(ctx);
   const cw = W < 701 ? 64 : 82;
   const left = p.x > W / 2;
   const x = left ? p.x - (cw + 8) * (idx + 1) : p.x + p.w + 8 + (cw + 8) * idx;
@@ -202,9 +202,9 @@ function platePeek(ctx: FxCtx, plate: HTMLElement) {
     pk.className = 'plate-peek';
     pk.innerHTML = cardHTML(data, code);
     layer.appendChild(pk);
-    const p = bx(ctx, plate), r = bx(ctx, row), sea = seaEl ? bx(ctx, seaEl) : { x: 0, y: 0, r: board.clientWidth, b: board.clientHeight };
+    const p = bx(ctx, plate), r = bx(ctx, row), sea = seaEl ? bx(ctx, seaEl) : { x: 0, y: 0, r: boardW(ctx), b: boardH(ctx) };
     const w = pk.offsetWidth, h = pk.offsetHeight;
-    const x = p.cx > board.clientWidth / 2 ? p.x - 10 - w : p.r + 10;
+    const x = p.cx > boardW(ctx) / 2 ? p.x - 10 - w : p.r + 10;
     const y = Math.max(sea.y + 6, Math.min(r.cy - h / 2, sea.b - 6 - h));
     pk.style.left = `${Math.round(Math.max(sea.x + 6, Math.min(x, sea.r - 6 - w)))}px`;
     pk.style.top = `${Math.round(y)}px`;
@@ -333,7 +333,7 @@ PLAY.window = async (c, ctx) => {
     return;
   }
   // the enemy may answer: a paper pill of the game in the sea (not the reference's window with its dots)
-  const W = ctx.board.clientWidth, g = gapBox(ctx);
+  const W = boardW(ctx), g = gapBox(ctx);
   let x = W / 2;
   if (VS && VS.plate) { const pb = bx(ctx, VS.plate); x = W < 701 ? (pb.cx > W / 2 ? pb.x / 2 : (pb.r + W) / 2) : W / 2; }
   const pill = mk(ctx, 'wait-pill', x, g.cy, c.phase === 'after' ? 'Противник может ответить Реакцией после попадания…' : 'Противник может ответить Реакцией…');
@@ -389,7 +389,7 @@ PLAY.reaction = async (c, ctx) => {
         vs.cards.forEach((el, k) => at(ctx, 120, () => moveTo(ctx, el, cardSlot(ctx, vs.plateBox!, k), 450)));
       }
     }
-    if (c.r === 'reduce_all') { const g = gapBox(ctx); if (PERSIST.whirl) PERSIST.whirl.remove(); PERSIST.whirl = whirlpool(ctx, ctx.board.clientWidth / 2, g.cy, 0, Math.min(170, ctx.board.clientWidth * 0.35), 6000); }
+    if (c.r === 'reduce_all') { const g = gapBox(ctx); if (PERSIST.whirl) PERSIST.whirl.remove(); PERSIST.whirl = whirlpool(ctx, boardW(ctx) / 2, g.cy, 0, Math.min(170, boardW(ctx) * 0.35), 6000); }
     if (c.r === 'cancel') {
       const tb = bx(ctx, plank(ctx, tgt));
       const nm = cardName(ctx, c.card);
@@ -457,11 +457,11 @@ PLAY.shot = async (c, ctx) => {
   // iron ball with its trail and shadow; a hit — a fireball, splinters, black smoke, a board falls into the sea; a miss —
   // spouts of water. The timings are fx/timing.ts (VOLLEY_K).
   const FUSE = T.volley.fuse, STEP = T.volley.gunStep, FLY = T.volley.fly, FLY_HIT = T.volley.flyHit;
+  const gunScale = Math.min(1.05, Math.max(0.6, boardW(ctx) / 1300));
   const svg = fxSvg(ctx);
   const sea = seaScars(ctx);
   const smoke = (ctx.rich && !perfOff('particles')) && sea ? scar(fxSvg(ctx, sea), 'short', c.shooter) : null;
   const tb0 = bx(ctx, tPl), aimAt = { x: tb0.cx, y: facingY(ctx, c.target) };
-  const gunScale = Math.min(1.05, Math.max(0.6, ctx.board.clientWidth / 1300));
   let fallen = false, hits = 0, skipped = false;
   let mi = 0, kTrack = 0, kHull = 0, lastHit = 0, firstHit = true, kegI = 0;
   const cur = { track: shownTrack(ctx, c.target, c.track), hull: shownTrack(ctx, c.target, 'hull') };
@@ -538,7 +538,7 @@ PLAY.shot = async (c, ctx) => {
       const g2 = gapBox(ctx);
       const aim = { x: tb.x + tb.w * 0.4, y: facingY(ctx, c.target) };
       const mid = { x: p0.x + (aim.x - p0.x) * 0.45, y: p0.y + (aim.y - p0.y) * 0.45 };
-      const narrow = ctx.board.clientWidth < 701 ? 0.6 : 1;
+      const narrow = boardW(ctx) < 701 ? 0.6 : 1;
       let pts, end, d = FLY * 0.85;
       if (b.out === 'water') { end = { x: mid.x + (aim.x > p0.x ? -1 : 1) * 46 * narrow, y: g2.cy + 8 }; pts = curve(p0, end, 0.18 * down); }
       else if (b.out === 'past') { end = { x: tb.x + (i % 2 ? tb.w * 0.95 : tb.w * 0.05), y: facingY(ctx, c.target) - down * 18 }; pts = curve(p0, end, (i % 2 ? -0.1 : 0.1) * down); d = FLY; }
@@ -553,7 +553,7 @@ PLAY.shot = async (c, ctx) => {
         missSplash(ctx, svg, hop.x, hop.y, 0.45 * gunScale, t0 + d + T.volley.skip, T.volley.splash * 0.7);
       }
       if (VS && VS.dust) { burst(ctx, 'dust', end.x, end.y, t0 + d * 0.6, 8, 6, 22, 700); } else if (b.out === 'past') splash(ctx, end.x, end.y, t0 + d); else missSplash(ctx, svg, end.x, end.y, 0.85 * gunScale, t0 + d, T.volley.splash);
-      if (b.label) besidePlate(ctx, tag(ctx, end.x + (end.x > ctx.board.clientWidth / 2 ? -10 : 10), end.y - 26 * down, b.label, t0 + d + 40, 'mod', 1700));
+      if (b.label) besidePlate(ctx, tag(ctx, end.x + (end.x > boardW(ctx) / 2 ? -10 : 10), end.y - 26 * down, b.label, t0 + d + 40, 'mod', 1700));
     } else if (b.out === 'bounce') {
       const edge = { x: tb.x + tb.w * (0.25 + 0.18 * (i % 3)), y: facingY(ctx, c.target) - down * 6 };
       fly(ctx, ball(), curve(p0, edge, 0.04 * down), FLY * 0.9, t0, { fadeEnd: false });
@@ -568,7 +568,7 @@ PLAY.shot = async (c, ctx) => {
       burst(ctx, 'splinter', edge.x, edge.y, t0 + FLY, 5, 8, 18, 500); flash(ctx, edge.x, edge.y, t0 + FLY, 0.7);
       if (b.label) tag(ctx, edge.x, edge.y - down * 26, b.label, t0 + FLY, 'mod', 1900);
     } else if (b.out === 'whirl') {
-      const g = gapBox(ctx), cx = ctx.board.clientWidth / 2, cy = g.cy, R0 = Math.min(60, ctx.board.clientWidth * 0.12);
+      const g = gapBox(ctx), cx = boardW(ctx) / 2, cy = g.cy, R0 = Math.min(60, boardW(ctx) * 0.12);
       const spiral = Array.from({ length: 14 }, (_, j) => { const a = (j / 13) * Math.PI * 3, rr = R0 * (1 - j / 13); return { x: cx + Math.cos(a) * rr, y: cy + Math.sin(a) * rr * 0.55 }; });
       fly(ctx, ball(), [...curve(p0, { x: cx + R0, y: cy - 6 }, 0.1, 8), ...spiral.slice(1)], FLY * 1.6, t0, { lift: 0.05 });
       if (b.label) tag(ctx, cx, cy - 34, b.label, t0 + FLY, 'mod', 1800);
@@ -605,7 +605,7 @@ PLAY.cancel = async (c, ctx) => {
     const cur = curCard();
     const el = cur && cur.el;
     const g = gapBox(ctx);
-    const st = mk(ctx, 'stamp-fx', ctx.board.clientWidth / 2, g.cy, c.lost ? 'Карта пропала' : 'Отменено');
+    const st = mk(ctx, 'stamp-fx', boardW(ctx) / 2, g.cy, c.lost ? 'Карта пропала' : 'Отменено');
     A(ctx, st, [{ opacity: 0, scale: '1.8' }, { opacity: 1, scale: '1' }], 260, 0, 'cubic-bezier(.3,1.6,.5,1)', 'forwards');
     if (el) { burst(ctx, 'dust', bx(ctx, el).cx, bx(ctx, el).cy, 200, 12, 10, 40, 800); A(ctx, el, [{ opacity: 1 }, { opacity: 0, filter: 'blur(3px)' }], 600, 250, 'ease-in', 'forwards'); }
     await wait(ctx, 1100);
@@ -667,7 +667,7 @@ PLAY.heart = async (c, ctx) => {
   const h = { x: a.x + a.w * 0.62, y: a.cy };
   const heart = mk(ctx, 'heart', 0, 0, '<svg viewBox="0 0 30 26" width="30" height="26"><path d="M15 25 C4 17 0 11 2 6 C4 1 11 0 15 6 C19 0 26 1 28 6 C30 11 26 17 15 25Z" fill="#B23A2E" stroke="#6E1A12" stroke-width="1.5"/></svg>');
   A(ctx, heart, [{ opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(.4)` }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.15 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.3 }, { transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.42 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.56 }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.7 }, { opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(1)` }], 2000, 0, 'ease-in-out');
-  const tgt = { x: b.x + b.w * 0.3, y: b.cy }, W = ctx.board.clientWidth, H = ctx.board.clientHeight;
+  const tgt = { x: b.x + b.w * 0.3, y: b.cy }, W = boardW(ctx), H = boardH(ctx);
   const svg = mk(ctx, 'svgabs', 0, 0, `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><path d="M${h.x} ${h.y} C ${(h.x + tgt.x) / 2} ${h.y - 40}, ${(h.x + tgt.x) / 2} ${tgt.y + 40}, ${tgt.x} ${tgt.y}" fill="none" stroke="#B23A2E" stroke-width="2.5" stroke-dasharray="600" stroke-dashoffset="600" stroke-linecap="round"/></svg>`);
   A(ctx, svg, [{ opacity: 1 }, { opacity: 1, offset: 0.85 }, { opacity: 0 }], 1900, 600);
   A(ctx, svg.querySelector('path')!, [{ strokeDashoffset: 600 }, { strokeDashoffset: 0 }], 600, 750, 'ease-in-out', 'forwards');
