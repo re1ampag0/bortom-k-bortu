@@ -129,13 +129,12 @@ export function at(ctx: FxCtx, t: number, fn: () => void): void {
   }, ms(ctx, t));
 }
 export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation {
-  // On a phone the default opacity:0 already hides a delayed effect. Backwards fill would
-  // keep its future transform in the compositor for the entire wait, even while invisible.
+  // Backwards fill also positions SVG children during their delay; unlike direct HTML
+  // children of .fx-layer they need not have opacity:0 in their base style.
   const phone = ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
-  const shownFill = phone && delay > 0 && fill === 'both' ? 'forwards' : fill;
   const frames = phone || perfOff('filters') ? kf.map(({ filter: _filter, ...frame }) => frame) : kf;
   if ((perfOff('planks') && el.closest('.plank')) || (perfOff('labels') && el.closest('.flyc,.seacard,.plate,.tag,.pill,.wait-pill,.tmark,.hold-tag'))) return el.animate([], {duration: 0});
-  return el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill: shownFill });
+  return el.animate(frames, { duration: Math.max(1, ms(ctx, d)), delay: ms(ctx, delay), easing, fill });
 }
 export function bx(ctx: FxCtx, el: Element): Box {
   // in the px of the stage (stage.ts): the effects are put inside the scaled screen
@@ -562,14 +561,13 @@ export const FLAME_SVG = '<svg width="18" height="22" viewBox="0 0 14 17"><path 
    docs/mockups/a5/fx/src/fx3.js and template.html). The pictures and the timings are the prototype's; what changed: they
    draw into an svg of the layer (the coordinates of the board), every time goes through A/at (the speed of the show,
    «Пауза», «До конца хода»), the particles are counted against the budget of the layer (room), «простые спецэффекты» draw
-   no particles and no smoke. A phone gets the same effects as a laptop (PH 7, the user's call of 19.10): only the sizes
-   follow the screen. ——— */
+   no particles and no smoke. fx-phone restores the historical lighter phone particle counts; geometry follows the screen. ——— */
 const NS = 'http://www.w3.org/2000/svg';
 export const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const R1 = (v: number) => Math.round(v * 10) / 10;
-/** A phone (≤ 700 px): only for the sizes of what would not fit (the number of particles is the laptop's, PH 7). */
+/** Phone geometry and the historical lighter particle budget (fx-phone). */
 export const isPhone = (ctx: FxCtx) => ctx.board.clientWidth <= 700;
-/** The filters (feTurbulence, blur) are drawn: «богатые» — on a phone too (PH 7). */
+/** Heavy SVG filters are rich-laptop only; the phone retains gradients without blur/turbulence. */
 // The phone keeps the particles and gradients, without SVG blur/filter surfaces.
 export const filters = (ctx: FxCtx) => ctx.rich && !ctx.board.ownerDocument.defaultView?.matchMedia('(max-width: 700px)').matches;
 
@@ -584,7 +582,7 @@ export function room(ctx: FxCtx, want: number): number {
   const running = (el: Element) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length;
   const busy = running(ctx.layer) + (scars ? running(scars) : 0);
   const n = Math.max(0, Math.min(want, FX_BUDGET - busy));
-  return n;
+  return isPhone(ctx) ? Math.ceil(n / 2) : n;
 }
 
 const DEFS = (rich: boolean) => `<defs>
@@ -757,7 +755,7 @@ export function waterColumn(ctx: FxCtx, svg: Element, x: number, y: number, h = 
   A(ctx, body, [{ transform: `translate(${X}px,${Y}px) scale(.5,.05)`, opacity: 1 }, { transform: `translate(${X}px,${Y}px) scale(1,1)`, opacity: 1, offset: 0.25 }, { transform: `translate(${X}px,${Y}px) scale(1.1,.95)`, opacity: 0.95, offset: 0.5 }, { transform: `translate(${X}px,${R1(y + 2)}px) scale(1.5,.05)`, opacity: 0 }], d, delay, 'cubic-bezier(.15,.7,.4,1)');
   // the crown: the middle jets tall, the outer ones low and wide (9 in the prototype; fewer when the budget is short)
   const JETS: [number, number, number][] = [[0, 1, 6.4], [-0.14, 0.88, 5.2], [0.14, 0.92, 5.2], [-0.36, 0.62, 4.6], [0.36, 0.64, 4.6], [-0.68, 0.4, 3.8], [0.68, 0.42, 3.8], [-1, 0.24, 3], [1, 0.26, 3]];
-  const nj = ctx.rich ? Math.max(3, room(ctx, 9)) : 0;
+  const nj = ctx.rich ? Math.max(3, room(ctx, isPhone(ctx) ? 5 : 9)) : 0;
   JETS.slice(0, nj).forEach(([a, hh, w], i) => {
     const L = h * hh * rnd(0.85, 1.1), tx = Math.sin(a) * L, ty = -Math.cos(a) * L, ww = w * k, bend = rnd(-3, 3) * k;
     const dd = `M${P(-ww, 0)} C${P(-ww * 0.8 + tx * 0.3 + bend, ty * 0.35)} ${P(tx * 0.8 - ww * 0.3, ty * 0.8)} ${P(tx, ty)} C${P(tx * 0.8 + ww * 0.3, ty * 0.8)} ${P(ww * 0.8 + tx * 0.3 + bend, ty * 0.35)} ${P(ww, 0)} Z`;

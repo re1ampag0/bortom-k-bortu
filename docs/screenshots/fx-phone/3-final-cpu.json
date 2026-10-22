@@ -1,0 +1,167 @@
+{
+  "label": "3-final",
+  "viewport": {
+    "width": 430,
+    "height": 932,
+    "dpr": 3,
+    "cpu": 4
+  },
+  "valid": true,
+  "elapsed": 7694.20000000298,
+  "longTasks": 20,
+  "longest": 1336,
+  "active": false,
+  "harness": false,
+  "start": 9660.90000000596,
+  "end": 17355.10000000894,
+  "rect": 381,
+  "rectMs": 1347.2999999076128,
+  "animations": 40,
+  "animationsMs": 51.599999994039536,
+  "renders": 12,
+  "backdrop": 10,
+  "backdropMs": 776.1000000089407,
+  "backdropCalls": [
+    {
+      "at": 163,
+      "busy": false
+    },
+    {
+      "at": 702.7999999970198,
+      "busy": false
+    },
+    {
+      "at": 1575.4000000059605,
+      "busy": false
+    },
+    {
+      "at": 2121.4000000059605,
+      "busy": false
+    },
+    {
+      "at": 2251.5999999940395,
+      "busy": false
+    },
+    {
+      "at": 2393.7000000029802,
+      "busy": false
+    },
+    {
+      "at": 6066.0999999940395,
+      "busy": false
+    },
+    {
+      "at": 7150.70000000298,
+      "busy": false
+    },
+    {
+      "at": 7308.4000000059605,
+      "busy": false
+    },
+    {
+      "at": 7595.79999999702,
+      "busy": false
+    }
+  ],
+  "shots": 2,
+  "tasks": [
+    {
+      "start": 222.09999999403954,
+      "duration": 110
+    },
+    {
+      "start": 473.09999999403954,
+      "duration": 1094
+    },
+    {
+      "start": 1568.5,
+      "duration": 478
+    },
+    {
+      "start": 2049.0999999940395,
+      "duration": 63
+    },
+    {
+      "start": 2554.0999999940395,
+      "duration": 722
+    },
+    {
+      "start": 3418.2000000029802,
+      "duration": 198
+    },
+    {
+      "start": 3620.5,
+      "duration": 116
+    },
+    {
+      "start": 4223.29999999702,
+      "duration": 63
+    },
+    {
+      "start": 4291.0999999940395,
+      "duration": 51
+    },
+    {
+      "start": 4364.0999999940395,
+      "duration": 99
+    },
+    {
+      "start": 4475.9000000059605,
+      "duration": 88
+    },
+    {
+      "start": 4608.29999999702,
+      "duration": 78
+    },
+    {
+      "start": 4712.20000000298,
+      "duration": 71
+    },
+    {
+      "start": 4796.5999999940395,
+      "duration": 94
+    },
+    {
+      "start": 4890.9000000059605,
+      "duration": 88
+    },
+    {
+      "start": 5002,
+      "duration": 92
+    },
+    {
+      "start": 5121.70000000298,
+      "duration": 58
+    },
+    {
+      "start": 5221.70000000298,
+      "duration": 159
+    },
+    {
+      "start": 5803.79999999702,
+      "duration": 1336
+    },
+    {
+      "start": 7140.29999999702,
+      "duration": 145
+    }
+  ],
+  "hullBefore": 12,
+  "hullAfter": 10,
+  "clicks": [
+    "quick-duo",
+    "prep-start",
+    "placement-done",
+    "curtain-ready",
+    "placement-done",
+    "curtain-ready",
+    "volley-Ж",
+    "plate-И",
+    "fire",
+    "curtain-ready",
+    "skip-reaction",
+    "skip-reaction",
+    "curtain-ready"
+  ],
+  "errors": []
+}
