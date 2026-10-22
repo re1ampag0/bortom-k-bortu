@@ -10,6 +10,7 @@ import {chromium, expect} from '@playwright/test';
 import {gzipSync} from 'node:zlib';
 import {mkdirSync, writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
+import {frameCosts} from './frame-costs.mjs';
 import {mainCosts} from '../fx-smooth-c/trace-metrics.mjs';
 
 const args = process.argv.slice(2);
@@ -34,6 +35,11 @@ const inject = {
     if (id.endsWith('/src/ui/game/Table.tsx')) return must(code.replace('  const d = shipData(data, ship.code);', counter('planks') + '\n  const d = shipData(data, ship.code);'), 'Plank renders');
     if (id.endsWith('/src/ui/game/Hand.tsx')) return must(code.replace('  const holder = s.ships[seat];', counter('hands') + '\n  const holder = s.ships[seat];'), 'Hand renders');
     if (id.endsWith('/src/ui/game/fx/legends.ts')) return must(code.replace(/(\n\s*const outro = await legendIntro\(ctx, c\.card, c\.seat[^\n]*;)/, `$1\n  if (window.fxCpu?.active) window.fxCpu.introEnd = performance.now() - window.fxCpu.start;`), 'the end of the Legend entrance');
+    if(id.endsWith('/src/ui/game/perf/clip.ts'))return code+`
+window.fxFinish={lastClip,lastClipProfile,top:worstFrames,text:clipText,shows:[],hooks:()=>({work:!!perfWorkHook,phase:!!perfPhaseHook,animation:!!perfAnimHook})};
+subscribeClip(()=>{const x=window.fxFinish;if(x.shows.length>=32)x.shows.shift();x.shows.push({stats:lastClip(),profile:lastClipProfile()});});`;
+    if(id.endsWith('/src/ui/game/fx/sprites.ts'))return code+'\nwindow.fxSpriteReady=spritePoolStats;';
+    if(id.endsWith('/src/ui/game/fx/particles.ts'))return code+`\nwindow.fxCanvasReady=board=>{const b=banks.get(board);return {bank:!!b,art:b?.sprites.size??0,surfaces:b?.surfaces.size??0,active:b?.items.length??0};};`;
     if (id.endsWith('/src/ui/game/fx/primitives.ts')) {
       // Native animations whose target lies inside a board-wide SVG (fxSvg), by the function that called A().
       return must(code.replace(/(export function A\(ctx: FxCtx, el: Element \| ParticleTarget, kf: Keyframe\[\], d: number, delay = 0[^\n]*\{\n)/,
@@ -101,13 +107,14 @@ async function run(scene) {
   let latestLayers, latestTree=[];
   cdp.on('LayerTree.layerTreeDidChange', (e) => { latestTree=e.layers??[];latestLayers={all:e.layers?.length??0,drawing:e.layers?.filter(l=>l.drawsContent).length??0};if(recording)layers.push(latestLayers); });
   let recording = false;
+  const perf=scene!=='idle'&&!flag('--perf-off');
   const harness=['kraken','jack'].includes(scene);
   const myTurn = () => harness ? Promise.resolve(true) : page.evaluate(() => { const b = [...document.querySelectorAll('[data-testid="end-turn"]')].find((e) => e.getClientRects().length); return !!b && b.getAttribute('aria-disabled') !== 'true'; });
   if(harness){
-    await page.goto(`http://127.0.0.1:5187/bortom-k-bortu/?fxScene=${scene}&manual=1&speed=normal&perf=0`);
+    await page.goto(`http://127.0.0.1:5187/bortom-k-bortu/?fxScene=${scene}&manual=1&speed=normal&perf=${perf?1:0}&particleProbe=0`);
     await expect(page.getByTestId('fx-start')).toBeVisible();
   }else{
-  await page.goto('http://127.0.0.1:5187/bortom-k-bortu/?seed=1&speed=normal&hints=0&perf=0&particleProbe=0');
+  await page.goto(`http://127.0.0.1:5187/bortom-k-bortu/?seed=1&speed=normal&hints=0&perf=${perf?1:0}&particleProbe=0`);
   // one person against the bots: the whole show plays (two people on one device hand it over behind the curtain)
   const mine = scene === 'armada' ? 'pick-company' : 'pick-pirates';
   for (const id of ['quick-bots', mine, 'prep-start', 'placement-done']) await tap(id);
@@ -177,10 +184,16 @@ async function run(scene) {
     }
     writeFileSync(`${OUT}/${scene}-${label}-compositing.json`,JSON.stringify(rows,null,1));
   }
+  const readyBefore=await page.evaluate(()=>{
+    const board=document.querySelector('.board'),d=window.fxFinish;
+    const boot=d?.shows?.[0]??null;
+    if(d)d.shows=[];
+    return {at:performance.now(),sprites:window.fxSpriteReady(board),canvas:window.fxCanvasReady(board),hooks:d?.hooks(),firstBootShow:boot?{start:boot.profile.start,end:boot.profile.end,prepared:boot.profile.prepared,latePreparation:boot.profile.phases.filter(p=>p.name.startsWith('prepare'))}:null};
+  });
   if(scene==='idle')writeFileSync(`${OUT}/idle-${label}-animations.json`,JSON.stringify(await page.evaluate(()=>document.getAnimations().map(a=>({name:a.animationName??'',target:a.effect?.target?.outerHTML?.slice(0,200),frames:a.effect?.getKeyframes()}))),null,1));
   if(!flag('--compositor'))await cdp.send('Tracing.start',traceOptions);
   recording = true;if(latestLayers)layers.push(latestLayers);
-  await page.evaluate(() => { performance.mark('cpu-start'); window.fxCpu.start = performance.now(); window.fxCpu.active = true; });
+  await page.evaluate(() => { performance.mark('cpu-start'); window.fxCpu.start = performance.now();window.fxCpu.anchor=performance.getEntriesByName('cpu-start').at(-1).startTime; window.fxCpu.active = true; });
   let finished = scene === 'idle';
   if (scene === 'idle') await page.waitForTimeout(10000);
   else {
@@ -221,10 +234,14 @@ async function run(scene) {
   const start = events.find((e) => e.name === 'cpu-start').ts, end = events.find((e) => e.name === 'cpu-end').ts;
   if(flag('--compositor'))writeFileSync(`${OUT}/${scene}-${label}-animation-trace.json`,JSON.stringify({start,end,events:events.filter(e=>e.name==='Animation')},null,1));
   const m = await page.evaluate(() => window.fxCpu);
+  const diagnostic=await page.evaluate(()=>({shows:window.fxFinish?.shows??[]}));
+  writeFileSync(`${OUT}/${scene}-${label}-diagnostic.json`,JSON.stringify({readyBefore,...diagnostic},null,1));
+  const anchorEvent=events.find(e=>e.name==='cpu-start');
+  const anchor={trace:start,perf:m.anchor,pid:anchorEvent.pid,tid:anchorEvent.tid};
   const journal = await page.evaluate(() => JSON.parse(localStorage.getItem('bortom-fx-trace') ?? '[]').slice(0, 20).reverse());
-  await context.close();
   writeFileSync(`tmp/fx-finish/${scene}-${label}-trace.json.gz`, gzipSync(raw));
 
+  const introFrames=m.introEnd==null?null:await page.evaluate(to=>{const d=window.fxFinish,s=d.shows.filter(s=>s.stats.scene.includes('legend')).at(-1);return s?d.top(s.profile,s.profile.start,Math.min(s.profile.end,to)):[];},m.start+m.introEnd).catch(()=>null);
   const result = (name, a, b, from, to) => {
     const costs = mainCosts(events, a, b);
     const paint = {ms: costs.paint.paint.totalMs, rasterMs: costs.paint.raster.totalMs};
@@ -242,11 +259,24 @@ async function run(scene) {
       layers: {all: Math.max(0, ...layers.map((l) => l.all)), drawing: Math.max(0, ...layers.map((l) => l.drawing))},
       observerLongTasks: m.tasks.filter((t) => t.start >= from && t.start <= to).length,
       svgAnimations: svg.reduce((s, [, n]) => s + n, 0), svgByFunction: Object.fromEntries(svg)};
+    r.perfEnabled=perf;
+    const relevant=diagnostic.shows.filter(s=>s.profile&&s.profile.end>m.start+from&&s.profile.start<m.start+to);
+    const selected=(name==='armada'||name==='legend'?relevant.filter(s=>s.stats.scene.includes('legend')):name==='hit'?relevant.filter(s=>s.stats.scene.includes('shot')):relevant).at(-1)??relevant.at(-1);
+    if(selected){
+      const p=selected.profile;
+      const five=name==='legend'?introFrames??[]:selected.stats.worstFrames;
+      r.selectedShow=selected.stats.scene;
+      r.sameAsLastClip=name!=='legend'&&selected===diagnostic.shows.at(-1);
+      r.worstFrames=frameCosts(events,five,p,anchor);
+      r.latePreparation=p.phases.filter(x=>x.name.startsWith('prepare: создание')||x.name==='prepare: particle art/bank');
+      r.dropped=selected.stats.dropped;
+    }
     writeFileSync(`${OUT}/${name}-${label}.json`, JSON.stringify(r, null, 1) + '\n');
     console.log(`${name}: valid=${r.valid} renders=${r.renders} longTasks=${r.longTasks} longest=${r.longestTaskMs.toFixed(0)} worst=${r.worstFrameMs.toFixed(0)} style=${r.recalcStyleMs.toFixed(0)} script=${r.scriptingMs.toFixed(0)}${errors.length ? ' errors=' + errors.join(' | ') : ''}`);
     return r;
   };
   const out = [result(scene, start, end, 0, m.end - m.start)];
   if (scene === 'armada' && m.introEnd != null) out.unshift(result('legend', start, start + m.introEnd * 1000, 0, m.introEnd));
+  await context.close();
   return out;
 }

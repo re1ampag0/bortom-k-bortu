@@ -1,0 +1,21 @@
+{
+ "state": {
+  "status": "WORKFLOW_RUN_STATUS_COMPLETED",
+  "conclusion": "WORKFLOW_RUN_CONCLUSION_SUCCESS"
+ },
+ "runUrl": "https://github.com/re1ampag0/bortom-k-bortu/actions/runs/39866767579",
+ "description": {
+  "primaryText": "Commit",
+  "linkText": "b466926",
+  "linkUrl": "/re1ampag0/bortom-k-bortu/commit/b466926b124aecbb067ac3ee43a905c5a4334d6f",
+  "action": "pushed",
+  "showActor": true,
+  "actorName": "re1ampag0",
+  "actorUrl": "/re1ampag0",
+  "actorType": "WORKFLOW_RUN_ACTOR_TYPE_USER",
+  "actorHovercard": {
+   "type": "WORKFLOW_RUN_HOVERCARD_TYPE_USER",
+   "url": "/users/re1ampag0/hovercard"
+  }
+ }
+}

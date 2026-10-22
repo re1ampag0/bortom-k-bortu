@@ -13,6 +13,7 @@ describe('the five worst show intervals',()=>{
     expect(rows[1]).toMatchObject({at:100,clips:['legend'],stages:['JS: создание','приземление'],presses:['click fire'],partial:false});
     expect(rows[2].stages).toEqual(['JS: создание']);
     expect(rows[0].presses).toEqual([]);
+    expect(rows[0].stages).toEqual(['после приземление']);
   });
   it('clips the entrance window and labels incomplete intervals instead of borrowing later work',()=>{
     const rows=worstFrames(profile,180,280);

@@ -646,7 +646,8 @@ export async function legendGeneric(c: LegendClip, ctx: FxCtx): Promise<void> {
 const playLegend = async (c: LegendClip, ctx: FxCtx) => {
   ctx=Object.create(ctx) as typeof ctx;ctx.canvasParticles=true;ctx.legendParticles=true;ctx.svgParticleOpacity=c.card!=='И-Л';
   const outro = await legendIntro(ctx, c.card, c.seat, { cost: c.cost, soulCost: c.soulCost, target: c.target });
-  await (LG[c.card] || legendGeneric)(c, ctx);
+  const perfStory=perfWorkHook?.(`LG[${c.card}]: сюжет`,'visual');
+  try {await (LG[c.card] || legendGeneric)(c, ctx);} finally {perfStory?.();}
   await outro();
 };
 
