@@ -43,3 +43,19 @@ $ npx playwright test e2e/fx-volley.spec.ts -g 'hull impact:' --project=chromium
 1 passed (15.0s); final development run, earlier failed pilots documented in progress
 $ npx playwright test e2e/fx-volley.spec.ts -g 'it stays ≈ 2 s|the compact plate stays' --project=chromium --workers=1 --config=scripts/fx-smooth-c/playwright.config.ts
 2 passed (15.4s); once each after these changes
+
+Final verification (2026-10-23)
+$ npx playwright test e2e/perf-guard.spec.ts -g 'perf guard:' --project=chromium --workers=1 --repeat-each=3 --max-failures=1 --config=scripts/fx-smooth-c/playwright.config.ts
+3 passed (2.9m); consecutive: 54.8s, 55.4s, 56.2s
+All sampled shows: renders Game 0; board-wide SVG animations none; unknown properties none.
+Idle: no unknown running animations for 3 seconds. No layer/Paint assertions.
+$ npx playwright test e2e/fx-reactions.spec.ts -g 'counter: the effect' --project=chromium --workers=1 --config=scripts/fx-smooth-c/playwright.config.ts
+1 passed (15.9s); one actual run after impact changes
+$ npm test
+Test Files  63 passed (63)
+Tests  690 passed (690)
+Duration  29.92s (transform 3.22s, setup 0ms, collect 12.16s, tests 44.08s, environment 10ms, prepare 5.35s)
+exit 0
+
+$ npm run typecheck (final, including e2e/perf-guard.spec.ts)
+exit 0
