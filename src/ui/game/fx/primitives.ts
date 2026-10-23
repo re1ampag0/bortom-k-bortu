@@ -973,9 +973,9 @@ export function flameEl(ctx: FxCtx, x: number, y: number, h = 22, cls = 'fx-flam
  * A wall of fire along a line: a bed of embers that breathes, clumps of strong flames with lower ones between them, low
  * tongues in the gaps, embers flying up (`.ember`). «Простые»: the clumps only, no gaps, no embers. Gives the flames.
  */
-export function fireWall(ctx: FxCtx, svg: Element, x0: number, x1: number, y: number, h = 34, opt: { delay?: number; spread?: number; clump?: number; embers?: number; life?: number; host?: Element } = {}): HTMLElement[] {
+export function fireWall(ctx: FxCtx, svg: Element, x0: number, x1: number, y: number, h = 34, opt: { delay?: number; spread?: number; clump?: number; embers?: number; life?: number; host?: Element; bed?: HTMLElement } = {}): HTMLElement[] {
   const out: HTMLElement[] = [], delay = opt.delay ?? 0, spread = opt.spread ?? 40, life = opt.life ?? 3000;
-  const bed = sv(svg, `<g><ellipse cx="${R1((x0 + x1) / 2)}" cy="${R1(y)}" rx="${R1((x1 - x0) / 2 + 10)}" ry="${R1(h * 0.32)}" fill="url(#fxGlow)"/><path d="M${R1(x0)} ${R1(y + 1)} H${R1(x1)}" stroke="#ffb347" stroke-width="${R1(h * 0.1)}" stroke-linecap="round" opacity=".55"${filters(ctx) ? ' style="filter:blur(2px)"' : ''}/></g>`);
+  const bed = opt.bed ?? sv(svg, `<g><ellipse cx="${R1((x0 + x1) / 2)}" cy="${R1(y)}" rx="${R1((x1 - x0) / 2 + 10)}" ry="${R1(h * 0.32)}" fill="url(#fxGlow)"/><path d="M${R1(x0)} ${R1(y + 1)} H${R1(x1)}" stroke="#ffb347" stroke-width="${R1(h * 0.1)}" stroke-linecap="round" opacity=".55"${filters(ctx) ? ' style="filter:blur(2px)"' : ''}/></g>`);
   A(ctx, bed, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.75, offset: 0.45 }, { opacity: 1, offset: 0.7 }, { opacity: 0.85 }], life, delay);
   const span = Math.max(1, x1 - x0), nC = Math.max(1, Math.round(span / (opt.clump ?? 70)));
   const add = (x: number, yy: number, hh: number, op: number, tilt: number, at0: number) => {

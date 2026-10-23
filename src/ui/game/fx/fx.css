@@ -359,3 +359,5 @@
 .fx-layer > .plate { z-index:6; }
 
 .reaction-whirl .reaction-whirl-spin { position:relative;width:100%;height:auto;aspect-ratio:1;transform-origin:50% 50%; }
+
+@keyframes sink-wreck-rock {0%,100% {transform:rotate(-6deg)} 50% {transform:rotate(6deg)}}
