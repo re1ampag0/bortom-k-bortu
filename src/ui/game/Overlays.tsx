@@ -58,6 +58,32 @@ export function Sheet({ title, onClose, children, wide, testid, foot }: { title:
   );
 }
 
+/**
+ * ui-fixes: «Начать новую партию?», «Сдаться?», «Выйти из комнаты?» — asked from «Настройки», so they open as a window of the
+ * same kind (the backdrop, in the middle on a laptop, a sheet from the bottom on a phone), not as a panel over the sea.
+ */
+export function ConfirmSheet({ title, sub, yes, onYes, onNo }: { title: string; sub: string; yes: string; onYes: () => void; onNo: () => void }) {
+  return (
+    <Sheet
+      title={title}
+      onClose={onNo}
+      testid="confirm-sheet"
+      foot={
+        <div className="row buttons">
+          <button className="btn" onClick={onNo}>
+            Отмена
+          </button>
+          <button className="btn primary" data-testid="confirm-yes" onClick={onYes}>
+            {yes}
+          </button>
+        </div>
+      }
+    >
+      <p className="confirm-sub">{sub}</p>
+    </Sheet>
+  );
+}
+
 export function CardDetail({
   data,
   code,

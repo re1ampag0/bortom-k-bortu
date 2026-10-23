@@ -1869,6 +1869,13 @@ button.star::before {
 .sheet-foot .row.buttons {
   margin-top: 0;
 }
+/* ui-fixes: «Начать новую партию?» and the like (ConfirmSheet) — the words, then «Отмена» and the answer of one size */
+.confirm-sub {
+  margin: 0;
+}
+.sheet[data-testid='confirm-sheet'] .sheet-foot .row.buttons > .btn {
+  flex: 1 1 0;
+}
 .sheet.with-foot > .sheet-body {
   padding-bottom: 12px;
 }
