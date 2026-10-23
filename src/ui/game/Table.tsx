@@ -750,7 +750,8 @@ const plankShip = (x: ShipState) => `${x.pos}|${x.tracks.hull},${x.tracks.sails}
 function samePlank(a: PlankProps, b: PlankProps): boolean {
   if (a.stamp === undefined || a.stamp !== b.stamp) {
     const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof PlankProps>;
-    for (const k of keys) if (!Object.is(a[k], b[k])) return false;
+    // (the stamp itself only says the props came from another render of Game: each of them is compared — ui-press)
+    for (const k of keys) if (k !== 'stamp' && !Object.is(a[k], b[k])) return false;
     return true;
   }
   return a.fxGen === b.fxGen && a.s.turn === b.s.turn && plankShip(a.ship) === plankShip(b.ship) && plankSide(a) === plankSide(b) &&

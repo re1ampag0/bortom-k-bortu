@@ -3,7 +3,7 @@
    «Ход окончен»; a phone: a sheet from below. Durations come from fx/timing.ts (T.ui) through --alarm-in and --bell. ═══════════ */
 
 /* the bar: a bordeaux plate with a brass rim; it stands over the top edge of the sea like in the mockup */
-.game.alarm-open .status {
+.board.alarm-open .status {
   position: relative;
   z-index: 8;
 }
@@ -119,16 +119,16 @@
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
 }
 
-/* the hand: the Reactions that can be played stand up with a gold frame, the others lie lower, faded into the table
+/* the hand (and the layer of its lifted card on a phone, Hand.tsx): the Reactions that can be played stand up with a gold frame, the others lie lower, faded into the table
    (A5Alarm.html: opacity .55, saturate(.4), ≈ 50 px under the Reactions); a pointer on them does not lift them */
-.hand.alarm .hand-cards > .hcard.al-dim {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-dim {
   opacity: 0.55;
   filter: saturate(0.4);
   translate: 0 calc(var(--dy, 0px) + 40px);
   scale: 1;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
 }
-.hand.alarm .hand-cards > .hcard.al-ok {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok {
   z-index: 2;
   translate: 0 calc(var(--dy, 0px) - 22px);
   box-shadow:
@@ -136,15 +136,15 @@
     0 0 18px rgba(233, 180, 76, 0.6),
     0 12px 18px rgba(0, 0, 0, 0.6);
 }
-.hand.alarm .hand-cards > .hcard.al-no {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-no {
   z-index: 1;
   translate: 0 calc(var(--dy, 0px) - 10px);
 }
-.hand.alarm .hand-cards > .hcard.al-ok:hover,
-.hand.alarm .hand-cards > .hcard.al-ok:focus-visible {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok:hover,
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok:focus-visible {
   translate: 0 -40px;
 }
-.hand.alarm .hand-cards > .hcard.al-ok.chosen {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok.chosen {
   box-shadow:
     0 0 0 3px #ffd36b,
     0 0 24px rgba(255, 211, 107, 0.85),
@@ -189,7 +189,7 @@
 .hand.alarm.folded .hand-cards {
   translate: 0 230px;
 }
-.hand.alarm.folded .hand-cards > .hcard {
+:is(.hand, .hand-lift).alarm.folded .hand-cards > .hcard {
   pointer-events: none;
 }
 
@@ -378,15 +378,17 @@
   }
   /* the sheet sits in the place of the hand and the bottom bar; the table above shrinks to stay whole (the hand row
      keeps the room, the sea gives way) */
-  .game.alarm-open:not(.alarm-folded) {
+  /* ui-press: the height is declared on its two readers, not on the board (a variable of the board is inherited by the whole
+     table: every opening and folding restyled all of it) */
+  .board.alarm-open:not(.alarm-folded) :is(.hand-row, .dock.sheet-dock.alarm-dock) {
     --alarm-h: clamp(236px, 36vh, 340px);
   }
   /* fix-ui: the sheet stands over the bottom bar (--bar-h, Game.tsx), «Пропустить» and «Свернуть» whole above it; the table gives
      way by the height of the bar too */
-  .game.alarm-open:not(.alarm-folded) .hand-row {
+  .board.alarm-open:not(.alarm-folded) .hand-row {
     min-height: calc(var(--alarm-h) - 61px + var(--bar-h, 0px));
   }
-  .dock.sheet-dock:has(> .alarm-sheet) {
+  .dock.sheet-dock.alarm-dock {
     position: fixed;
     left: 0;
     right: 0;
@@ -395,7 +397,7 @@
     width: auto;
     z-index: 30;
   }
-  .game.alarm-open:not(.alarm-folded) .dock.sheet-dock:has(> .alarm-sheet) {
+  .board.alarm-open:not(.alarm-folded) .dock.sheet-dock.alarm-dock {
     height: var(--alarm-h);
   }
   .dock.sheet-dock .panel.alarm-sheet {
@@ -552,10 +554,10 @@
 /* fix-ui: a short phone (Safari 430×740): «Пропустить» and «Свернуть» on one row, the sheet a little lower and over the row of its
    own Hold (the Powder is in the head of the sheet) — the table above keeps its sea */
 @media (max-width: 700px) and (max-height: 800px) {
-  .game.alarm-open:not(.alarm-folded) {
+  .board.alarm-open:not(.alarm-folded) :is(.hand-row, .dock.sheet-dock.alarm-dock) {
     --alarm-h: 262px;
   }
-  .game.alarm-open:not(.alarm-folded) .hand-row {
+  .board.alarm-open:not(.alarm-folded) .hand-row {
     min-height: calc(var(--alarm-h) - 61px + var(--bar-h, 0px) - 46px);
   }
   .dock.sheet-dock .panel.alarm-sheet:not(.folded) {
@@ -610,11 +612,11 @@
 }
 
 /* the strip lies over the foot of the card: the text of the card keeps above it */
-.hcard:has(.hcard-strip) .hcard-text {
+.hcard.with-strip .hcard-text {
   margin-bottom: 44px;
 }
 @media (max-width: 700px) {
-  .as-card .hcard:has(.hcard-strip) .hcard-big {
+  .as-card .hcard.with-strip .hcard-big {
     display: none;
   }
 }
@@ -669,8 +671,8 @@
 
 /* phone-2: a fixed sheet with a reserved footer, even with Safari's short viewport. */
 @media (max-width: 700px) {
-  .game.alarm-open:not(.alarm-folded) { --alarm-h: 300px; }
-  .game.alarm-open:not(.alarm-folded) .hand-row { min-height: 96px; }
+  .board.alarm-open:not(.alarm-folded) :is(.hand-row, .dock.sheet-dock.alarm-dock) { --alarm-h: 300px; }
+  .board.alarm-open:not(.alarm-folded) .hand-row { min-height: 96px; }
   .dock.sheet-dock .panel.alarm-sheet:not(.folded) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -733,7 +735,7 @@
 
 /* ui-4 / 3: intrinsic sheet height; only the card strip scrolls, never the action row. */
 @media (max-width: 700px) {
-  .game.alarm-open:not(.alarm-folded) .dock.sheet-dock:has(> .alarm-sheet) { height: auto; }
+  .board.alarm-open:not(.alarm-folded) .dock.sheet-dock.alarm-dock { height: auto; }
   .dock.sheet-dock .panel.alarm-sheet { height: auto; }
   .dock.sheet-dock .panel.alarm-sheet:not(.folded) { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
   .dock.sheet-dock .panel.alarm-sheet:not(.folded) > * { flex: none; }
@@ -742,7 +744,7 @@
   .alarm-sheet .as-card { width: 94px; flex-basis: 94px; }
   .alarm-sheet .as-card .hcard { width: 94px; height: 126px; }
   .alarm-sheet .reaction-memo { display: block; padding: 3px 6px; font-size: 11px; line-height: 1.12; }
-  .alarm-sheet:has(.reaction-memo) .as-card .hcard { height: 96px; }
+  .alarm-sheet.with-memo .as-card .hcard { height: 96px; }
   .alarm-sheet .as-head .as-title { justify-self: start; }
 }
 /* ui-4 follow-up: the 48px board needs its own inset, enough for two complete text lines. */

@@ -228,7 +228,7 @@
     transform: none;
   }
   /* With a clickable journal line above and Hull below, divide their shared vertical space. */
-  .game:has(.middle-info) .planks.bottom button.star::before {
+  .sea-table.has-info .planks.bottom button.star::before {
     inset: -3px -11px;
     height: auto;
   }
@@ -838,6 +838,41 @@
   .hand-cards > .hcard.lift-open {
     animation: lift-in 0.18s ease-out;
   }
+  /* ui-press: the lifted card in its layer over the table (Hand.tsx useLiftLayer; the strip would cut it off): over the deck,
+     the captions and the bottom bar, under the windows. The layer is a point on the bottom of the empty place; the card
+     stands on it. The host is a .hand-cards, so the card keeps every rule of the strip — without the strip's own box. */
+  .hand-lift {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 8;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .hand-lift > .hand-cards.lift-host {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    display: block;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+    scroll-snap-type: none;
+    translate: none;
+    transition: none;
+  }
+  /* the empty place of the lifted card in the fan: as wide as the card (above), as tall as the others, straight */
+  .hand-cards > .hcard.lift-place {
+    width: 150px;
+    visibility: hidden;
+    rotate: 0deg;
+    translate: none;
+    scale: none;
+    transition: none;
+  }
   @keyframes lift-in {
     from {
       scale: 0.78;
@@ -1175,4 +1210,21 @@
 }
 @media (max-width: 700px) and (prefers-reduced-motion: reduce) {
   .game.view-hand-deck::after, .phone-deck-warm { animation: none; }
+}
+/* ui-press: the place of the warm light (TableThings.tsx writes it on .game when a sheet moves the deck) is not inherited by
+   the table — a change of an inherited variable of the root restyled every element. Its two readers take it themselves:
+   the ::after of .game from .game, the warm light from its own style. */
+@property --deck-warm-x { syntax: '*'; inherits: false; }
+@property --deck-warm-y { syntax: '*'; inherits: false; }
+@property --deck-warm-top { syntax: '*'; inherits: false; }
+@property --deck-warm-bottom { syntax: '*'; inherits: false; }
+@property --lamp-x { syntax: '*'; inherits: false; }
+@property --lamp-y { syntax: '*'; inherits: false; }
+.game.view-hand-deck::after {
+  --deck-warm-x: inherit;
+  --deck-warm-y: inherit;
+  --deck-warm-top: inherit;
+  --deck-warm-bottom: inherit;
+  --lamp-x: inherit;
+  --lamp-y: inherit;
 }

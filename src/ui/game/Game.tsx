@@ -48,10 +48,10 @@ import {
   type AimMode,
   type CardMode,
 } from './Panels';
-import { MissedSheet, NetBar, OfferPanel, netDock } from './NetParts';
+import { MissedSheet, missedLines, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { instantUrl, reducedMotion } from '../start/motion';
-import { FxLayer, useFxPart, useFxQueue, type FxQueue } from './fx/FxLayer';
+import { FxLayer, useFxPart, useFxQueue, type FxQueue, type FxSnapshot } from './fx/FxLayer';
 import { T } from './fx/timing';
 import { playTurnSound } from '../sound';
 import { Button, OakButton, Plank, RoundButton, ROUND_ICON, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
@@ -64,6 +64,7 @@ import { useTableBody } from './tableBody';
 import {PerfPanel, usePerf} from './perf/PerfPanel';
 import {getPerf} from './perf/state';
 import {clipRender} from './perf/clip';
+import {pressOpen, pressRender} from './perf/press';
 
 /** V7: the victory sheet is a chunk of its own (the big ships of its panorama). */
 const Victory = lazy(() => import('./Victory').then((m) => ({ default: m.Victory })));
@@ -97,6 +98,8 @@ type Sheet =
   | { k: 'settings' };
 
 const SIDES: Side[] = ['ПИРАТЫ', 'КОМПАНИЯ'];
+/** A plank without buttons: one array, so the memo of the plank sees no change. */
+const NO_BUTTONS: Btn[] = [];
 const other = (side: Side): Side => (side === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ');
 
 /** «?speed=instant» in the address: bots without pauses (for the browser test). */
@@ -216,24 +219,34 @@ export function Game({
   // The note «Реакция — карта…» in the first Reaction window of each team at the device; a window offered again
   // after a Reaction (RULES.md 12.5) is the same one. Not saved: after a reload it shows once more.
   const reactOpen = myDecision && d!.kind === 'reactions';
+  // ?perf=1: «Тревога!» opens without a press of this device (the enemy's Volley) — its own window «нажатие», from this render
+  useLayoutEffect(() => {
+    if (!perfT0 || !reactOpen) return;
+    pressOpen('«Тревога!» открылась', perfT0);
+    pressRender(performance.now() - perfT0);
+  }, [reactOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   // «Тревога!»: «Свернуть, посмотреть стол» lowers the hand and hides the buttons; it opens again with the next window.
   const [alarmFolded, setAlarmFolded] = useState(false);
   useEffect(() => {
     if (!reactOpen) setAlarmFolded(false);
   }, [reactOpen]);
   const phone = usePhoneLayout();
-  // fix-ui: a phone — the height of the bottom bar (--bar-h): the sheet of «Тревога!» stands over it, not under it
+  // fix-ui: a phone — the height of the bottom bar (--bar-h): the sheet of «Тревога!» stands over it, not under it.
+  // ui-press: on the board (its readers — the sheet and the row of the hand — are in it), from the observer's own size (no
+  // read of the layout in the frame of a press), written only when it changes; subscribed again when the table comes back
+  // from behind the curtain (not at every opening of «Тревога!»)
   useEffect(() => {
     if (!phone) return;
     const bar = document.querySelector<HTMLElement>('.game > .bottom-bar');
-    const game = bar?.parentElement;
-    if (!bar || !game || typeof ResizeObserver === 'undefined') return;
-    const put = () => game.style.setProperty('--bar-h', `${bar.offsetHeight}px`);
-    put();
-    const ro = new ResizeObserver(put);
+    const board = bar?.parentElement?.querySelector<HTMLElement>(':scope > .board');
+    if (!bar || !board || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => {
+      const h = `${Math.round(e.borderBoxSize?.[0]?.blockSize ?? (e.target as HTMLElement).offsetHeight)}px`;
+      if (board.style.getPropertyValue('--bar-h') !== h) board.style.setProperty('--bar-h', h);
+    });
     ro.observe(bar);
     return () => ro.disconnect();
-  }, [phone, reactOpen]);
+  }, [phone, !!curtainSide]); // eslint-disable-line react-hooks/exhaustive-deps
   const [memoSeen, setMemoSeen] = useState<Side[]>([]);
   const [memoSide, setMemoSide] = useState<Side | null>(null);
   useEffect(() => {
@@ -451,6 +464,14 @@ export function Game({
   // the layout of the table (V1b): where the tools stand, the measure of the water for the weather
   const wideLog = useWideLog();
   const [boardRef, seaRef] = useSeaClip();
+  // ui-press: «Последнее: …» is in the sea — a class of the sea for the press zones of the stars under it (phone.css), set by
+  // the line itself: the line follows the shown log, which never renders the table
+  // (the sea from the line itself: the ref of a child is set before the ref of the sea on the first commit)
+  const infoSea = useRef<Element | null>(null);
+  const infoFlag = useCallback((el: HTMLButtonElement | null) => {
+    if (el) infoSea.current = el.closest('.sea-table');
+    infoSea.current?.classList.toggle('has-info', !!el);
+  }, []);
 
   const tableInteraction = useMemo(() => ({}), [game, version, data, view, bottom, seat, mode, reactPickRaw,
     hints, alarmFolded, sheet, botTurn, held, fastTurn, openHands, fastEnd, endSeconds, flash,
@@ -467,6 +488,18 @@ export function Game({
     return value;
   };
   const engineDeps = [version, game, data, bottom, myTurn, myDecision, mySeats.join(','), mode, hints, sAim, aimTargets] as const;
+  // ui-press: handlers that keep their identity from render to render and call the newest function: a memo'd part of the
+  // table (a plank, the log) skips a render that changes nothing it shows. Called only from events, after the commit.
+  const handlers = useRef(new Map<string, { fn: (...a: never[]) => unknown; call: (...a: never[]) => unknown }>());
+  const stable = <F extends (...a: never[]) => unknown>(key: string, fn: F): F => {
+    let h = handlers.current.get(key);
+    if (!h) {
+      const box: { fn: (...a: never[]) => unknown; call: (...a: never[]) => unknown } = { fn, call: (...a) => box.fn(...a) };
+      handlers.current.set(key, (h = box));
+    }
+    h.fn = fn;
+    return h.call as F;
+  };
 
   // ——— Curtain ———
   if (curtainSide) {
@@ -625,7 +658,7 @@ export function Game({
   const plankButtons = (code: string): Btn[] => cached(`buttons:${code}`, engineDeps, () => buttonsNow(code));
   const buttonsNow = (code: string): Btn[] => {
     const ship = s.ships[code];
-    if (!myTurn || ship.sunk || ship.side !== bottom || !mySeats.includes(code)) return [];
+    if (!myTurn || ship.sunk || ship.side !== bottom || !mySeats.includes(code)) return NO_BUTTONS;
     const params = shipData(data, code);
     const vt = volleyTargets(s, data, { ship: code });
     const joint = jointAlly();
@@ -687,6 +720,10 @@ export function Game({
   /** How a card of the hand looks while the window is open: playable (the strip — only under «Подсказки»), not playable, dimmed. */
   function alarmOf(holder: string, code: string): AlarmCard | null {
     if (!alarmOn || code === HIDDEN) return null;
+    // the same card of the same window: one dry run per real state (the sheet and the hand ask on every render)
+    return cached(`alarmOf:${holder}:${code}`, [version, hints, d], () => alarmNow(holder, code));
+  }
+  function alarmNow(holder: string, code: string): AlarmCard | null {
     if (cardByCode(data, code).type !== 'РЕАКЦИЯ' || !d!.seats.includes(holder)) return { kind: 'dim' };
     // The sheet includes both ships; the hand cache only covers the selected ship.
     const why = playOptions(s, data, holder, code).reason;
@@ -699,6 +736,8 @@ export function Game({
   let dock: React.ReactNode = null;
   // Card choices, «Тортуга» and the Plans are bottom sheets on a phone; the Volley and the Reactions stay in the middle.
   let dockSheet = false;
+  /** The dock holds the sheet of «Тревога!» (a phone). */
+  let alarmDock = false;
   let oakDock = false;
   /** The sheet «Заряд» while aiming (in the place of the hand) and, on a laptop, its buttons in the place of «Ход окончен». */
   let chargeSheet: ReactNode = null;
@@ -714,6 +753,7 @@ export function Game({
     // A laptop has no panel: the buttons stand where «Ход окончен» does (handActions).
     if (phone && alarm) {
       dockSheet = true;
+      alarmDock = true;
       dock = (
         <ReactionSheet
           s={s}
@@ -1101,23 +1141,25 @@ export function Game({
       fxGen={fxGen}
       fxHidden={fxHidden}
       data={data}
-      reactionWait={waitNote && waitTarget === x.code ? <ReactionWaitPanel line={waitNote.line} who={waitNote.who} /> : undefined}
+      reactionWait={cached(`wait:${x.code}`, [waitNote?.line, waitNote?.who, waitTarget === x.code], () =>
+        waitNote && waitTarget === x.code ? <ReactionWaitPanel line={waitNote.line} who={waitNote.who} /> : undefined)}
       ship={x}
       own={x.side === bottom}
       selected={x.side === bottom && x.code === seat && tabs.length > 1}
       awaiting={decidingSeats.includes(x.code) && !botSeat(x.code) && !(net && d?.kind === 'turn' && net.ready.includes(x.code))}
       targeted={targeted === x.code}
       shooter={shooter === x.code}
-      alarm={alarm?.kind === 'volley' && alarm.target === x.code ? { loss: hints && alarm.hit ? lossOf(s, x.code, alarm.hit) : null } : null}
+      alarm={cached(`alarm:${x.code}`, [version, hints, alarm?.kind === 'volley' && alarm.target === x.code], () =>
+        alarm?.kind === 'volley' && alarm.target === x.code ? { loss: hints && alarm.hit ? lossOf(s, x.code, alarm.hit) : null } : null)}
       repairing={repairing === x.code}
       plate={plateFor(x.code)}
       aimOff={choosingTarget && x.code !== shooter && !plateFor(x.code)}
       buttons={plankButtons(x.code)}
       role={net ? netRole(x.code) : null}
       ready={readyOf(x.code)}
-      onSelect={() => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code)}
-      onDetails={() => setSheet({ k: 'ship', code: x.code })}
-      onLegend={() => legendClick(x.code)}
+      onSelect={stable(`select:${x.code}`, () => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code))}
+      onDetails={stable(`details:${x.code}`, () => setSheet({ k: 'ship', code: x.code }))}
+      onLegend={stable(`legend:${x.code}`, () => legendClick(x.code))}
       flashLegend={hints && x.side === bottom && mySeats.includes(x.code)}
     />
   );
@@ -1212,7 +1254,9 @@ export function Game({
   return (<>
     {perf.config.enabled && <PerfPanel />}
     <div
-      className={`game ${perf.classes} ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' || simpleFx ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
+      // ui-press: the state of a sheet is a class of the nearest box of what it changes (.board, .middle, .board-bottom), not of
+      // the root — only `decision-open` stays here: it is about the root itself (overflow: clip, decision-sheet.css)
+      className={`game ${perf.classes} ${s.winner ? 'over' : ''} ${oakDock && dock ? 'decision-open' : ''} ${effects === 'simple' || simpleFx ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''}`}
       data-testid="game"
       data-bottom={bottom}
       ref={gameRef}
@@ -1223,7 +1267,7 @@ export function Game({
       )}
       {!local && <HoldReset fx={fx} held={held} canHoldOf={canHoldOf} setHeld={setHeld} />}
       <TableBackdrop look={look.hand} />
-      <main className="board" ref={boardRef}>
+      <main className={`board ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${dockSheet ? 'has-sheet' : ''}`} ref={boardRef}>
         <Shown fx={fx} real={s} keyOf={statusKey}>{(shown) => <StatusBar
           s={shown}
           data={data}
@@ -1240,15 +1284,15 @@ export function Game({
         <div className="sea-table" ref={seaRef}>
           <div className="sea-water" aria-hidden />
           <div className="planks top">{/* a plank is built again when what it shows changes (its revision rebuilds the tracks) */}<PlankRow fx={fx} view={view} stamp={tableInteraction} render={renderRow(top)} /></div>
-          <div className="middle" data-fx-gap>
+          <div className={`middle ${dock ? 'has-dock' : ''}`} data-fx-gap>
             <BannerView data={data} banner={banner} />
-            {dock && !oakDock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
+            {dock && !oakDock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''} ${alarmDock ? 'alarm-dock' : ''}`}>{dock}</div>}
             {/* Б1: a translucent line along the bottom of the open sea; the hint «выберите карту или действие» is in the top plaque already */}
             {!dock && !s.winner && !alarmOn && (
               <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog) => {
                 const lastEvent = lastEventOf(shownLog);
                 return (lastEvent || offerInfo) && (
-                  <button type="button" className="middle-info" data-testid="middle-info" title={lastEvent ?? undefined} onClick={() => setSheet({ k: 'log' })} aria-label={`Открыть журнал. Последнее: ${lastEvent ?? ''}`}>
+                  <button type="button" className="middle-info" ref={infoFlag} data-testid="middle-info" title={lastEvent ?? undefined} onClick={() => setSheet({ k: 'log' })} aria-label={`Открыть журнал. Последнее: ${lastEvent ?? ''}`}>
                     {offerInfo && <b data-testid="offer-info">{offerInfo}</b>}
                     {offerInfo && lastEvent && ' · '}
                     {lastEvent && <>Последнее: {lastEvent}</>}
@@ -1264,7 +1308,8 @@ export function Game({
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
         {phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
-        <div className="board-bottom">
+        {/* under-window: a window (.sheet-backdrop) lies over the sheet «Заряд» — charge.css */}
+        <div className={`board-bottom ${chargeSheet ? 'charge-open' : ''} ${chargeSheet && ((sheet && sheet.k !== 'log') || (net && missedLines(net).length > 0)) ? 'under-window' : ''}`}>
           {chargeSheet}
           {!phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
           <Shown fx={fx} real={view} keyOf={(x) => holdKey(x, bottom)}>{(shown, rev) => <TeamRow side={bottom} s={shown} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={rev} />}</Shown>
@@ -1284,7 +1329,7 @@ export function Game({
         )}
         <div className="log-paper">
           <h2>Судовой журнал</h2>
-          <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog, freshFrom) => <LogList data={data} log={shownLog} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />}</ShownLog>
+          <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog, freshFrom) => <LogList data={data} log={shownLog} fresh={freshFrom} onCard={stable('log-card', (code: string) => setSheet({ k: 'info', code }))} onSea={stable('log-sea', (code: string) => setSheet({ k: 'sea', code }))} />}</ShownLog>
           <div className="log-actions">
             <button className="brs-btn" onClick={() => setSheet({ k: 'log' })}>
               Весь журнал
@@ -1586,7 +1631,12 @@ const PlankRow = memo(function PlankRow({ fx, view, render }: {
   render: (tableView: GameState, rev: (code: string) => number, hidden: Record<string, string[]>) => ReactNode;
 }) {
   const snap = useFxPart(fx, (x) => x);
-  const tableView = fx.store.shown(view);
+  // the shown state of this row: one object per real state and snapshot (the store keeps one entry for every reader of
+  // it, so between two renders of the table it may hand out an equal copy — a plank would take it for a change, ui-press)
+  const shownRef = useRef<{ view: GameState; gen: number; display: FxSnapshot['display']; out: GameState } | null>(null);
+  const m = shownRef.current;
+  if (!m || m.view !== view || m.gen !== snap.gen || m.display !== snap.display) shownRef.current = { view, gen: snap.gen, display: snap.display, out: fx.store.shown(view) };
+  const tableView = shownRef.current!.out;
   const revs = useRef(new Map<string, { key: string; gen: number }>());
   const rev = (code: string) => {
     const key = `${shipKey(tableView.ships[code])}|${snap.epoch}`;

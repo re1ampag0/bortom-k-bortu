@@ -7,13 +7,15 @@ import {PNG} from 'pngjs';
 import {existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync} from 'node:fs';
 
 const [beforeDist, afterDist, ...rest] = process.argv.slice(2);
-const selected=rest.filter(s=>!s.startsWith('--'));
+const selected=rest.filter((s,i)=>!s.startsWith('--')&&rest[i-1]!=='--out');
 const tag=rest.find(s=>s.startsWith('--tag='))?.slice(6);
 if(tag&&!/^[a-z0-9-]+$/i.test(tag))throw Error('Invalid capture tag');
 const scenes = selected.length ? selected : ['legend','armada','bottle','idle'];
 // the moments after the press, ms of the clip clock: around the renderWith of each clip and after it
-const MOMENTS = {hit:[800,2000,3200,4200,5200],'idle-compositor':[1000,4600,4800,5000],'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700]};
-const OUT = 'docs/screenshots/fx-finish/'+(tag?'frames-'+tag:'frames');
+const MOMENTS = {hit:[800,2000,3200,4200,5200],'idle-compositor':[1000,4600,4800,5000],'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700], lift: [0, 100, 200, 400, 700]};
+// --out DIR: another task's folder (ui-press: the card that flies from the lifted card of a phone, scene «lift»);
+// --tag=NAME: frames-NAME under fx-finish, so the comparisons of a later part do not overwrite the earlier ones
+const OUT = rest.includes('--out') ? rest[rest.indexOf('--out') + 1] : 'docs/screenshots/fx-finish/'+(tag?'frames-'+tag:'frames');
 mkdirSync(OUT, {recursive: true});
 // Capture-only hook in generated, unminified temporary builds. Bring canvas to the
 // SAME controlled instant as the native wrappers, instead of the preceding rAF.
@@ -96,6 +98,7 @@ async function shoot(dist, port, tag) {
         if(scene==='hit'){await click('.charge-sheet [data-fx-card="Ж-04"]');await step(200);}
         await click('[data-testid="fire"]');
       }
+      else if (scene === 'lift') { await click('[data-fx-hand] [data-fx-card="Ж-17"]'); await step(400); await click('[data-testid="lift-play"]'); }
       else { await click('[data-fx-hand] [data-fx-card="Ж-14"]'); await step(200); await click('[data-testid="lift-play"]'); await step(200); await click('[data-testid="plate-И"]'); await step(200); await click('[data-testid="play-card"]'); }
       }
       let at = 0;const sampleClocks={};

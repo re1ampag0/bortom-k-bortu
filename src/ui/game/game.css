@@ -1164,7 +1164,7 @@ button.star::before {
   width: min(860px, 100%);
   z-index: 5;
 }
-.game.has-dock .middle::before {
+.sea-table > .middle.has-dock::before {
   content: '';
 }
 /* The summary of the start of the turn: a note in the colours of the table; «Подробнее» is a button. */
@@ -1831,7 +1831,7 @@ button.star::before {
 .sheet-foot .row.buttons {
   margin-top: 0;
 }
-.sheet:has(> .sheet-foot) > .sheet-body {
+.sheet.with-foot > .sheet-body {
   padding-bottom: 12px;
 }
 /* fix-ui: a check box and its words on one line (the long words wrap beside the box, not under it) */
@@ -2323,10 +2323,10 @@ button.star::before {
   .dock {
     width: calc(100% - 4px);
   }
-  .game.has-sheet .hand {
+  .board.has-sheet .hand {
     visibility: hidden;
   }
-  .game.has-sheet .middle {
+  .board.has-sheet .middle {
     position: static;
   }
   .dock.sheet-dock {
@@ -3206,7 +3206,7 @@ button.star::before {
 .sea-table > .middle {
   z-index: 3;
 }
-/* the weather of the round lies on the water only (--sea-* are set by useSeaClip, TableThings.tsx) */
+/* the weather of the round lies on the water only (--sea-* are set on it by useSeaClip, TableThings.tsx) */
 .board > .fx-weather {
   clip-path: inset(calc(var(--sea-t, 0px) + 7px) calc(var(--sea-r, 0px) + 7px) calc(var(--sea-b, 0px) + 7px) calc(var(--sea-l, 0px) + 7px));
 }
@@ -3786,7 +3786,11 @@ button.star::before {
 .fx-simple .hand-cards > .hcard.lifted,
 .fx-simple .hand-cards > .hcard.chosen,
 .fx-simple .hand-cards > .hcard:has(+ .hcard:hover),
-.fx-simple .hand-cards > .hcard:hover + .hcard {
+.fx-simple .hand-cards > .hcard:hover + .hcard,
+/* ui-press: the lifted card of a phone lies in its layer (it holds the touch's :hover); its neighbours (the place's next, and
+   .lift-prev of Hand.tsx) stay as they were beside the hovered card */
+.fx-simple .hand-cards > .hcard.lift-place + .hcard,
+.fx-simple .hand-cards > .hcard.lift-prev {
   rotate: none;
   translate: none;
   scale: none;
@@ -3799,7 +3803,9 @@ button.star::before {
   .hand-cards > .hcard.lifted,
   .hand-cards > .hcard.chosen,
   .hand-cards > .hcard:has(+ .hcard:hover),
-  .hand-cards > .hcard:hover + .hcard {
+  .hand-cards > .hcard:hover + .hcard,
+  .hand-cards > .hcard.lift-place + .hcard,
+  .hand-cards > .hcard.lift-prev {
     rotate: none;
     translate: none;
     scale: none;
@@ -4588,3 +4594,13 @@ button.middle-info:focus-visible { outline: 2px solid var(--brass); outline-offs
 
 /* Native, finite sweeps retain the CSS clock/curve; do not run a second CSS copy. */
 .medal-art .gl.medal-scheduled { animation-name:none !important; }
+
+/* ui-press: independent parts of the table — a change inside one does not lay out or restyle the others (docs/ui/RULES.md
+   12). Only where the frames before/after stay the same (scripts/ui-press/styles.mjs): containment makes a stacking context
+   and a containing block, so not on the sea or the bottom of the table (fixed sheets live inside them), not on the hand or
+   the backdrop (the rope and the lantern lie between the cards and the table by z-index); on the planks and the sheets the
+   frames changed with it — left without. */
+.log-col,
+.bottom-bar {
+  contain: layout style;
+}

@@ -2,7 +2,8 @@
 // the Plans of the Pearl. A5 (V2): on a laptop the cards lie as a fan and always fit (they overlap as much as the width
 // needs); on a phone the fan scrolls sideways and snaps, a tap lifts a card (a5-phone, A5Phone frame 6: it grows, shows its
 // whole text and «Сыграть» or the reason why not, the other actions under it — no window of the card).
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { memo, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { cardByCode, shipData, type GameState } from '../../engine/state';
 import type { CardInstance, GameData } from '../../engine/types';
 import { HIDDEN } from '../../engine/view';
@@ -48,18 +49,44 @@ function useWholeLines(key: string) {
 }
 
 /**
- * The lifted card of a phone grows upwards: a margin over it as tall as it grew, so its bottom stays at the line of the fan and
- * the strip of the hand keeps its height (phone.css gives it the room above the cards).
+ * ui-press: the lifted card of a phone lies in a layer of its own over the table (`.hand-lift`, a child of `.game`), not in the
+ * strip — the strip scrolls sideways and so cuts off whatever rises above it, and the deck of the table lay over it. Its
+ * bottom stands on the bottom of its empty place in the fan (`.lift-place`), as the margin over it did before; the layer
+ * follows the place while the strip scrolls. One read of the place and the table, then one write (the layer's transform).
  */
-function useLiftMargin(on: boolean) {
-  const ref = useRef<HTMLDivElement>(null);
+function useLiftLayer(rowRef: { current: HTMLDivElement | null }, lifted: string | null) {
+  // the table the layer goes into: looked up when a card is lifted (the strip is in the document by then), no render of its own
+  const game = lifted ? (rowRef.current?.closest<HTMLElement>('.game') ?? null) : null;
+  const layerRef = useRef<HTMLDivElement>(null);
   useBeforePaint(() => {
-    const el = ref.current;
-    if (!on || !el) return;
-    const near = [el.previousElementSibling, el.nextElementSibling].find((x): x is HTMLElement => !!x?.classList.contains('hcard'));
-    el.style.marginTop = `${(near?.offsetHeight ?? 160) - el.offsetHeight}px`;
-  });
-  return ref;
+    const row = rowRef.current,
+      layer = layerRef.current;
+    if (!lifted || !row || !layer || !game) return;
+    let raf = 0;
+    const put = () => {
+      raf = 0;
+      const place = row.querySelector<HTMLElement>(':scope > .lift-place');
+      if (!place) return;
+      const g = game.getBoundingClientRect(),
+        r = place.getBoundingClientRect();
+      layer.style.transform = `translate(${r.left - g.left}px, ${r.bottom - g.top}px)`;
+    };
+    const ask = () => {
+      if (!raf) raf = requestAnimationFrame(put);
+    };
+    put();
+    row.addEventListener('scroll', ask, { passive: true });
+    addEventListener('resize', ask);
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(ask);
+    ro?.observe(row);
+    return () => {
+      row.removeEventListener('scroll', ask);
+      removeEventListener('resize', ask);
+      ro?.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [lifted, game]);
+  return [game, layerRef] as const;
 }
 
 /** A phone: the hand scrolls and a tap lifts a card (the same width as the phone rules of game.css). */
@@ -229,6 +256,7 @@ export function HandCard({
   alarm,
   actions,
   onDrop,
+  beforeLift,
 }: {
   data: GameData;
   code: string;
@@ -247,9 +275,10 @@ export function HandCard({
   actions?: LiftActions | null;
   /** The lifted card goes back into the fan (a press on its strip). */
   onDrop?: () => void;
+  /** A phone: the next card of the strip is lifted into its layer (the reduced motion keeps this one straight, game.css). */
+  beforeLift?: boolean;
 }) {
   const textRef = useWholeLines(`${code}|${note ?? ''}|${plan ? 1 : 0}|${lifted ? 1 : 0}|${alarm?.kind ?? ''}|${alarm?.why ?? ''}|${alarm?.strip?.top ?? ''}`);
-  const liftRef = useLiftMargin(!!lifted && actions !== undefined);
   if (code === HIDDEN) {
     return <div className={`hcard back ${plan ? 'plan' : ''}`} style={style} data-lift={liftKey} aria-label="Закрытая карта" data-fx-card={HIDDEN} />;
   }
@@ -265,7 +294,6 @@ export function HandCard({
     const play = actions?.play ?? null;
     return (
       <div
-        ref={liftRef}
         className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} lifted lift-open`}
         style={style}
         data-lift={liftKey}
@@ -307,7 +335,7 @@ export function HandCard({
   }
   return (
     <button
-      className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''} ${alarm ? `al-${alarm.kind}` : ''}`}
+      className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''} ${beforeLift ? 'lift-prev' : ''} ${alarm ? `al-${alarm.kind}` : ''} ${(alarm?.kind === 'ok' && alarm.strip) || alarm?.kind === 'no' ? 'with-strip' : ''}`}
       style={style}
       data-lift={liftKey}
       onClick={onClick}
@@ -338,6 +366,24 @@ export function HandCard({
     </button>
   );
 }
+
+type HandCardProps = Parameters<typeof HandCard>[0];
+/**
+ * A card of the fan (ui-press): drawn again only when what it shows changes. Hand gives it press handlers that keep their
+ * identity and call the newest press; the actions of the lifted card are new each render, so that card is always drawn.
+ */
+const FanCard = memo(HandCard, (a: HandCardProps, b: HandCardProps) => {
+  for (const k of new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof HandCardProps>) {
+    if (k === 'onClick' || k === 'onDrop') continue;
+    if (k === 'style') {
+      const x = a.style as Record<string, unknown> | undefined, y = b.style as Record<string, unknown> | undefined;
+      if (x?.['--r'] !== y?.['--r'] || x?.['--dy'] !== y?.['--dy']) return false;
+      continue;
+    }
+    if (!Object.is(a[k], b[k])) return false;
+  }
+  return true;
+});
 
 export interface HandTab {
   seat: string;
@@ -395,6 +441,9 @@ export function Hand({
   // The phone: the lifted card (its key in the strip); a tap beside it, another ship's tab or a new hand drops it.
   const [lifted, setLifted] = useState<string | null>(null);
   useEffect(() => setLifted(null), [seat, n]);
+  const [game, layerRef] = useLiftLayer(rowRef, lifted);
+  /** The lifted card of a phone, drawn in its layer (its place in the strip stays empty). */
+  let floating: ReactNode = null;
   // the lifted card to the middle of the strip (after it has grown: its neighbours stepped aside) — only the strip scrolls, not the
   // table round it (fix-ui: scrollIntoView moved the whole table when the last card was lifted)
   useEffect(() => {
@@ -421,7 +470,19 @@ export function Hand({
     addEventListener('pointerdown', drop, true);
     return () => removeEventListener('pointerdown', drop, true);
   }, [lifted]);
-  const card = (code: string, k: number, key: string, plan = false) => {
+  // the press of each card keeps its identity (FanCard skips a render that changes nothing it shows) and runs the newest press
+  const presses = useRef(new Map<string, { fn: () => void; call: () => void }>());
+  const pressOf = (key: string, fn: () => void) => {
+    let p = presses.current.get(key);
+    if (!p) {
+      const box = { fn, call: () => box.fn() };
+      presses.current.set(key, (p = box));
+    }
+    p.fn = fn;
+    return p.call;
+  };
+  const drop = pressOf('drop', () => setLifted(null));
+  const card = (code: string, k: number, key: string, plan = false, next: string | null = null) => {
     const f = fanOf(k, n, wideFan);
     const press = () => {
       // a5-phone: a press on the lifted card itself keeps it up (its strip plays it); no window of the card
@@ -433,8 +494,8 @@ export function Hand({
       }
       setLifted(key);
     };
-    return (
-      <HandCard
+    const shown = (
+      <FanCard
         key={key}
         data={data}
         code={code}
@@ -443,14 +504,20 @@ export function Hand({
         alarm={alarmOf?.(seat, code) ?? undefined}
         chosen={chosen === code}
         note={noteOf(code)}
-        onClick={press}
+        onClick={pressOf(key, press)}
         lifted={lifted === key}
         liftKey={key}
         actions={lifted === key && actionsOf && isPhone() ? actionsOf(seat, code) : undefined}
-        onDrop={() => setLifted(null)}
+        onDrop={drop}
+        beforeLift={next !== null && next === lifted && !!game && isPhone()}
         style={{ ['--r' as string]: `${f.r}deg`, ['--dy' as string]: `${f.dy}px` } as CSSProperties}
       />
     );
+    if (lifted !== key || code === HIDDEN || !game || !isPhone()) return shown;
+    floating = shown;
+    // its place: as wide as the lifted card, as tall as the others — the neighbours stand where they stood; a card of the
+    // strip for the dots and the middle of the fan (usePhoneFan); data-lift for the centring and the tap beside it
+    return <div key={key} className="hcard lift-place" data-lift={key} aria-hidden />;
   };
   const hasLifted = lifted !== null && [...holder.hand.map((c, i) => [c, `${c}-${i}`]), ...holder.plans.map((c, i) => [c, `p-${c}-${i}`])].some(([c, k]) => c !== HIDDEN && k === lifted);
   return (
@@ -488,16 +555,22 @@ export function Hand({
       )}
       {/* has-lifted: a card of this row is lifted (phone.css; a class, not :has — the row changes during the clips) */}
       <div className={`hand-cards${hasLifted ? ' has-lifted' : ''}`} ref={rowRef}>
-        {holder.hand.map((code, i) => card(code, i, `${code}-${i}`))}
+        {holder.hand.map((code, i, all) => card(code, i, `${code}-${i}`, false, i + 1 < all.length ? `${all[i + 1]}-${i + 1}` : null))}
         {holder.hand.length === 0 && <span className="muted empty">Рука пуста</span>}
         {holder.plans.length > 0 && (
           <>
             <span className="hand-divider" aria-hidden />
             <span className="plans-label">Планы</span>
-            {holder.plans.map((code, i) => card(code, holder.hand.length + i, `p-${code}-${i}`, true))}
+            {holder.plans.map((code, i, all) => card(code, holder.hand.length + i, `p-${code}-${i}`, true, i + 1 < all.length ? `p-${all[i + 1]}-${i + 1}` : null))}
           </>
         )}
       </div>
+      {floating && game && createPortal(
+        <div className={`hand-lift ${alarmOf ? 'alarm' : ''} ${alarmOf && folded ? 'folded' : ''}`} ref={layerRef} data-testid="hand-lift">
+          <div className="hand-cards lift-host">{floating}</div>
+        </div>,
+        game,
+      )}
       {/* a phone: where the card in the middle is in the hand (A5Phone) */}
       {n > 1 && (
         <div className="hand-dots" aria-hidden>

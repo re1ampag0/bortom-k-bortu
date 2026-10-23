@@ -55,7 +55,7 @@
 
 /* A fixed table is not a scroll container. Native button focus must not pan hidden overflow.
    The sheet body and its card ribbons keep their own native scrolling. */
-.game:has(.decision-dock) { overflow: clip; }
+.game.decision-open { overflow: clip; }
 
 .decision-sheet .why { color: #ffd8a8; }
 
