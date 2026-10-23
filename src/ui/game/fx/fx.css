@@ -358,23 +358,4 @@
 /* A flying board/particle canvas is below the damage breakdown (also below its review variants). */
 .fx-layer > .plate { z-index:6; }
 
-/* Review-only A/B damage UI; ?plateReview is ignored in the ordinary server/site build. */
-.plate.plate-review { font-family:var(--font-head);font-size:14px;line-height:22px;padding:3px 10px;border:1px solid #b59a68;border-radius:3px;background:linear-gradient(#fbf5e7,#efe2c6);color:#493c2d;box-shadow:inset 0 0 0 1px #f8f0de;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap; }
-.plate-review .review-parts { display:flex;align-items:center;justify-content:center;gap:6px;min-width:0; }
-.plate-review .review-term.negative { color:#8e2b22; }
-.plate-review .review-total { color:#8e2b22;font-size:17px; }
-.plate.plate-review[data-review='B'] { background:none;border:0;box-shadow:none;padding:0;justify-content:center; }
-.plate-review[data-review='B'] .review-parts { gap:4px; }
-.plate-review[data-review='B'] .review-term { background:#f8f0de;border:1px solid #b59a68;border-radius:3px;padding:0 5px; }
-.plate-review[data-review='B'] .review-separator { display:none; }
-.plate-review[data-review='B'] .review-total { position:absolute;left:var(--total-x);top:var(--total-y);background:#f8f0de;border:1px solid #b59a68;border-radius:10px;padding:0 5px; }
-@media(max-width:700px) {
- .plate.plate-review { font-size:11px;gap:5px;padding:3px 5px; }
- .plate-review .review-parts { gap:4px; }
- .plate-review .review-total { font-size:14px; }
- .plate-review[data-review='B'] .review-parts { flex-wrap:wrap; }
- .plate-review[data-review='B'] .review-term { padding:0 3px; }
-}
 .reaction-whirl .reaction-whirl-spin { position:relative;width:100%;height:auto;aspect-ratio:1;transform-origin:50% 50%; }
-
-@media(max-width:700px) { .plate-review[data-review='B'] .review-parts { width:calc(100% - 40px);margin-right:40px; } }
