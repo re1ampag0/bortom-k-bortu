@@ -119,16 +119,16 @@
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
 }
 
-/* the hand: the Reactions that can be played stand up with a gold frame, the others lie lower, faded into the table
+/* the hand (and the layer of its lifted card on a phone, Hand.tsx): the Reactions that can be played stand up with a gold frame, the others lie lower, faded into the table
    (A5Alarm.html: opacity .55, saturate(.4), ≈ 50 px under the Reactions); a pointer on them does not lift them */
-.hand.alarm .hand-cards > .hcard.al-dim {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-dim {
   opacity: 0.55;
   filter: saturate(0.4);
   translate: 0 calc(var(--dy, 0px) + 40px);
   scale: 1;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
 }
-.hand.alarm .hand-cards > .hcard.al-ok {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok {
   z-index: 2;
   translate: 0 calc(var(--dy, 0px) - 22px);
   box-shadow:
@@ -136,15 +136,15 @@
     0 0 18px rgba(233, 180, 76, 0.6),
     0 12px 18px rgba(0, 0, 0, 0.6);
 }
-.hand.alarm .hand-cards > .hcard.al-no {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-no {
   z-index: 1;
   translate: 0 calc(var(--dy, 0px) - 10px);
 }
-.hand.alarm .hand-cards > .hcard.al-ok:hover,
-.hand.alarm .hand-cards > .hcard.al-ok:focus-visible {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok:hover,
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok:focus-visible {
   translate: 0 -40px;
 }
-.hand.alarm .hand-cards > .hcard.al-ok.chosen {
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok.chosen {
   box-shadow:
     0 0 0 3px #ffd36b,
     0 0 24px rgba(255, 211, 107, 0.85),
@@ -189,7 +189,7 @@
 .hand.alarm.folded .hand-cards {
   translate: 0 230px;
 }
-.hand.alarm.folded .hand-cards > .hcard {
+:is(.hand, .hand-lift).alarm.folded .hand-cards > .hcard {
   pointer-events: none;
 }
 

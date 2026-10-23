@@ -838,6 +838,41 @@
   .hand-cards > .hcard.lift-open {
     animation: lift-in 0.18s ease-out;
   }
+  /* ui-press: the lifted card in its layer over the table (Hand.tsx useLiftLayer; the strip would cut it off): over the deck,
+     the captions and the bottom bar, under the windows. The layer is a point on the bottom of the empty place; the card
+     stands on it. The host is a .hand-cards, so the card keeps every rule of the strip — without the strip's own box. */
+  .hand-lift {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 8;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .hand-lift > .hand-cards.lift-host {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    display: block;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+    scroll-snap-type: none;
+    translate: none;
+    transition: none;
+  }
+  /* the empty place of the lifted card in the fan: as wide as the card (above), as tall as the others, straight */
+  .hand-cards > .hcard.lift-place {
+    width: 150px;
+    visibility: hidden;
+    rotate: 0deg;
+    translate: none;
+    scale: none;
+    transition: none;
+  }
   @keyframes lift-in {
     from {
       scale: 0.78;
