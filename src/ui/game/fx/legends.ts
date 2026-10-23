@@ -1,5 +1,6 @@
 import {perfWorkHook,perfPhaseHook} from '../perf/clip';
 import {canvasCircRing,canvasMote} from './particles';
+import {prepareIntroArt,introArt} from './legendIntroArt';
 import {perfOff} from '../perf/state';
 // The Legends: the common grand entrance of a Legend and the effect of each. FX-B (package 3): the look and the timings
 // of the A5 prototype (docs/mockups/a5/fx/src/fx3.js, ANIMATIONS.md §3.1–3.5) on the primitives of the game; the
@@ -82,6 +83,64 @@ export function fitCardText(card: Element): void {
   for (let f = 13; f > 11 && p.offsetHeight > box.clientHeight - 12; f -= 0.5) p.style.fontSize = f - 0.5 + 'px';
 }
 
+type IntroPart='card'|'back'|'top'|'bot'|'rays'|'seal'|'ban'|'cap';
+interface IntroBank {signature:string;data:GameData;cards:Map<string,Record<IntroPart,HTMLElement>>}
+const introBanks=new WeakMap<HTMLElement,IntroBank>();
+function prepareIntroPictures(board:HTMLElement,parts:Record<IntroPart,HTMLElement>):void {
+  const art=introArt(board);
+  if(!art?.rays||!art.shadow||parts.rays.dataset.picture)return;
+  parts.rays.dataset.picture='pending';
+  const rays=art.rays.cloneNode(true) as HTMLImageElement,shadow=art.shadow.cloneNode(true) as HTMLImageElement;
+  rays.alt='';shadow.alt='';shadow.className='lg-seal-shadow';
+  void Promise.all([rays.decode(),shadow.decode()]).then(()=>{
+    // A show that started before decoding keeps its original artwork throughout.
+    if(parts.rays.isConnected||parts.seal.isConnected)return;
+    parts.rays.append(rays);parts.rays.classList.add('lg-sun-ready');parts.rays.dataset.picture='ready';
+    parts.seal.prepend(shadow);parts.seal.classList.add('lg-seal-ready');parts.seal.dataset.density='2';
+  }).catch(()=>{delete parts.rays.dataset.picture;});
+}
+export function invalidateLegendIntro(board:HTMLElement):void {introBanks.delete(board);}
+/** Parse artwork/text and fit all four cards in idle. No prepared element remains in the document. */
+export function prepareLegendIntro(ctx:FxCtx):void {
+  const W=boardW(ctx),H=boardH(ctx),S=Math.min(1,(W-24)/248,(H-16)/470);
+  const signature=`${W}:${H}:${S}`;
+  prepareIntroArt(ctx.board,Math.round(Math.max(W,H)*.95),()=>{
+    for(const parts of introBanks.get(ctx.board)?.cards.values()??[])prepareIntroPictures(ctx.board,parts);
+  });
+  let bank=introBanks.get(ctx.board);
+  if(!bank||bank.signature!==signature||bank.data!==ctx.data){
+    bank={signature,data:ctx.data,cards:new Map()};introBanks.set(ctx.board,bank);
+  }
+  const missing=legendCards(ctx.data).filter(c=>!bank!.cards.has(c.code));
+  if(!missing.length)return;
+  const end=perfWorkHook?.('prepare: legendIntro art/text');
+  try {
+    const create=(cls:string,html='')=>{
+      const el=document.createElement('div');el.className=cls;el.style.left='0px';el.style.top='0px';el.innerHTML=html;return el;
+    };
+    const probes=missing.map(c=>{
+      const parts:Record<IntroPart,HTMLElement>={
+        card:create('lg-card',lgCardHTML(ctx.data,c.code,c.deck,S)),back:create('lg-veil'),
+        top:create('lg-bar top'),bot:create('lg-bar bottom'),rays:create('lg-sun'),
+        seal:create('lg-seal',SEAL_HTML),ban:create('lg-title',titleHTML(c.name)),
+        cap:create('lg-cap',`<span>ЛЕГЕНДА</span> <b>${esc(c.name)}</b>`),
+      };
+      bank!.cards.set(c.code,parts);prepareIntroPictures(ctx.board,parts);parts.card.style.visibility='hidden';return parts.card;
+    });
+    // The exact existing font-fit needs layout. Batch insertion in idle, then detach before paint.
+    ctx.layer.append(...probes);
+    try{for(const card of probes)fitCardText(card);}finally{for(const card of probes){card.remove();card.style.removeProperty('visibility');}}
+  } finally {end?.();}
+}
+function takeLegendIntro(ctx:FxCtx,code:string,owner:string,W:number,H:number):Record<IntroPart,HTMLElement>|undefined {
+  const bank=introBanks.get(ctx.board),S=Math.min(1,(W-24)/248,(H-16)/470);
+  // A resize can precede its observer callback; never take a card fitted for the old viewport.
+  if(bank?.signature!==`${W}:${H}:${S}`||bank.data!==ctx.data||code!==`${owner}-Л`)return;
+  const parts=bank.cards.get(code);
+  // Replenish only when the queue returns to idle; no DOM parsing during a warmed clip.
+  bank?.cards.delete(code);return parts;
+}
+
 /** Where the Legend comes from: the medallion «Легенда» on the plank of the owner (on a phone — the star in the head). */
 function legendMedal(ctx: FxCtx, ship: string): Element {
   const p = plank(ctx, ship);
@@ -133,7 +192,13 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   const perfPrepared=perfWorkHook?.('legendIntro: создание');
   const W = boardW(ctx), H = boardH(ctx);
   const c = legendCard(ctx.data, code);
-  const ribbonHTML=titleHTML(c.name),ribbonWidth=titleWidth(ctx,c.name);
+  const ribbonWidth=titleWidth(ctx,c.name),prepared=takeLegendIntro(ctx,code,owner,W,H);
+  const insert=(key:IntroPart,cls:string,x:number,y:number,html='')=>{
+    const el=prepared?.[key];
+    if(!el)return mk(ctx,cls,x,y,html);
+    const end=perfWorkHook?.('legendIntro: вставка готового '+key);
+    try{el.style.left=x+'px';el.style.top=y+'px';ctx.layer.append(el);return el;}finally{end?.();}
+  };
   // the middle of the sea between the rows of planks; the card, the seal and the ribbon fit into the board
   const rows = board.querySelectorAll(':scope .planks');
   const g = gapBox(ctx);
@@ -143,9 +208,9 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   // the price. game (S1): a short mark «−N» at the Hold / at the badge of the Souls, not a label over a plank
   if (cost) { payKegs(ctx, sideOf(ctx, owner), cost, 0, false); badgeMark(ctx, holdEl(ctx, sideOf(ctx, owner)), `−${cost}`, 0); }
   const medal = legendMedal(ctx, owner), mb = bx(ctx, medal);
-  const card = mk(ctx, 'lg-card', 0, 0, lgCardHTML(ctx.data, code, owner, S));
+  const card = prepared?insert('card','lg-card',0,0):mk(ctx,'lg-card',0,0,lgCardHTML(ctx.data,code,owner,S));
   card.style.zIndex = '39';
-  fitCardText(card);
+  if(!prepared)fitCardText(card);
   const pose = (x: number, y: number, s: number, r = 0) => `translate(${R1(x - 124)}px,${R1(y - 186)}px) scale(${R1(s * 1000) / 1000}) rotate(${R1(r)}deg)`;
   if (soulCost) {
     const badge = plank(ctx, owner).querySelector('[data-fx-souls]');
@@ -165,16 +230,16 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   for (let i = 0; i < 3; i++) circRing(ctx, hi, mb.cx, mb.cy, 4, 70, '#ffd27a', L.medal, i * 160, 3 - i);
   goldBurst(ctx, hi, mb.cx, mb.cy, 24, 10, 60);
   // 2. the stage: the dim with a vignette, the cinema bars with gold lines, slow rays behind the middle, motes
-  const back = mk(ctx, 'lg-veil', 0, 0);
+  const back = insert('back','lg-veil',0,0);
   Object.assign(back.style, { width: W + 'px', height: H + 'px', zIndex: '33', background: `radial-gradient(ellipse ${R1(W * 0.6)}px ${R1(H * 0.7)}px at ${R1(cx)}px ${R1(cy)}px, rgba(30,20,8,.35), rgba(6,8,12,.82) 70%), radial-gradient(circle at ${R1(cx)}px ${R1(cy)}px, transparent ${R1(H * 0.36)}px, rgba(201,160,72,.25) ${R1(H * 0.37)}px, transparent ${R1(H * 0.46)}px)` });
   A(ctx, back, [{ opacity: 0 }, { opacity: 1 }], L.back, L.backAt);
   const barH = 46;
-  const top = mk(ctx, 'lg-bar top', 0, 0), bot = mk(ctx, 'lg-bar bottom', 0, H - barH);
+  const top = insert('top','lg-bar top',0,0), bot = insert('bot','lg-bar bottom',0,H-barH);
   for (const b of [top, bot]) Object.assign(b.style, { width: W + 'px', height: barH + 'px', zIndex: '37' });
   A(ctx, top, [{ opacity: 1, transform: 'translateY(-100%)' }, { opacity: 1, transform: 'none' }], L.bars, L.barsAt, 'cubic-bezier(.2,.8,.3,1)');
   A(ctx, bot, [{ opacity: 1, transform: 'translateY(100%)' }, { opacity: 1, transform: 'none' }], L.bars, L.barsAt, 'cubic-bezier(.2,.8,.3,1)');
   const D = Math.round(Math.max(W, H) * 0.95);
-  const rays = mk(ctx, 'lg-sun', cx, cy); Object.assign(rays.style, { width: D + 'px', height: D + 'px', margin: `${-D / 2}px 0 0 ${-D / 2}px`, zIndex: '34' });
+  const rays = insert('rays','lg-sun',cx,cy); Object.assign(rays.style, { width: D + 'px', height: D + 'px', margin: `${-D / 2}px 0 0 ${-D / 2}px`, zIndex: '34' });
   // the rays turn 18 s a turn (the CSS loop of the prototype, here by the clock of the show)
   const tOut = L.cardAt + L.land + L.hit + L.sealHit + L.hold, tOrb = tOut + L.orbAt;
   A(ctx, rays, [{ opacity: 0, transform: 'scale(.6) rotate(0deg)' }, { opacity: 1, transform: 'scale(1) rotate(18deg)', offset: L.rays / (tOrb + 600 - L.raysAt) }, { opacity: 1, transform: `scale(1) rotate(${R1(((tOrb - L.raysAt) / 18000) * 360)}deg)`, offset: (tOrb - L.raysAt) / (tOrb + 600 - L.raysAt) }, { opacity: 0, transform: `scale(1) rotate(${R1(((tOrb + 600 - L.raysAt) / 18000) * 360)}deg)` }], tOrb + 600 - L.raysAt, L.raysAt, 'linear', 'forwards');
@@ -199,14 +264,15 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   // 5. the wax seal «ЛЕГЕНДА» stamps the card in its bottom right corner
   const tSeal = tLand + L.hit, sp = { x: cx + 110 * S, y: cy + 172 * S };
   perfPhaseHook?.('legendIntro: печать',L.seal*ctx.speed,tSeal*ctx.speed);
-  const seal = mk(ctx, 'lg-seal', sp.x, sp.y, SEAL_HTML); seal.style.zIndex = '40';
-  A(ctx, seal, [{ transform: `translate(-50%,-50%) scale(${R1(3.2 * S * 100) / 100}) rotate(-40deg)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${R1(0.86 * S * 100) / 100}) rotate(6deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(-50%,-50%) scale(${R1(S * 100) / 100}) rotate(0deg)`, opacity: 1 }], L.seal, tSeal, 'cubic-bezier(.6,0,.9,.5)');
+  const seal = insert('seal','lg-seal',sp.x,sp.y,SEAL_HTML); seal.style.zIndex = '40';
+  const sealScale=(n:number)=>R1(n*S*100)/100/(seal.dataset.density==='2'?2:1);
+  A(ctx, seal, [{ transform: `translate(-50%,-50%) scale(${sealScale(3.2)}) rotate(-40deg)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${sealScale(.86)}) rotate(6deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(-50%,-50%) scale(${sealScale(1)}) rotate(0deg)`, opacity: 1 }], L.seal, tSeal, 'cubic-bezier(.6,0,.9,.5)');
   const tHit = tSeal + L.sealHit;
   A(ctx, card, [{ translate: '0 0' }, { translate: '-6px 2.4px' }, { translate: '6px -1.8px' }, { translate: '-3.6px 0' }, { translate: '2.4px 1.2px' }, { translate: '0 0' }], 300, tHit, 'linear', 'none');
   circRing(ctx, hi, sp.x, sp.y, 10, 90 * S, '#f6d9c8', 600, tHit, 3);
   at(ctx, tHit, () => goldBurst(ctx, hi, sp.x, sp.y, 20, 20 * S, 80 * S));
   // 6. the name unfurls under the card, letter by letter; the shine and the spark run over the card
-  const ban = mk(ctx, 'lg-title', cx, Math.min(cy + 224 * S, H - 30), ribbonHTML);
+  const ban = prepared?insert('ban','lg-title',cx,Math.min(cy+224*S,H-30)):mk(ctx,'lg-title',cx,Math.min(cy+224*S,H-30),titleHTML(c.name));
   ban.style.zIndex = '40';
   const bs = Math.min(S, (W - 16) / Math.max(1, ribbonWidth));
   A(ctx, ban, [{ transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(.1)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100}) scaleX(1.04)`, opacity: 1, offset: 0.6 }, { transform: `translate(-50%,-50%) scale(${R1(bs * 100) / 100})`, opacity: 1 }], L.ribbon, tHit, 'cubic-bezier(.2,.8,.3,1)');
@@ -220,7 +286,7 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
 
   // 7. the card collapses into a golden orb that flies to the target
   A(ctx, ban, [{ opacity: 1 }, { opacity: 0 }], L.fade, tOut, 'ease-in', 'forwards');
-  A(ctx, seal, [{ opacity: 1, transform: `translate(-50%,-50%) scale(${R1(S * 100) / 100})` }, { opacity: 0, transform: `translate(-50%,-50%) scale(${R1(0.4 * S * 100) / 100})` }], L.fade, tOut, 'ease-in', 'forwards');
+  A(ctx, seal, [{ opacity: 1, transform: `translate(-50%,-50%) scale(${sealScale(1)})` }, { opacity: 0, transform: `translate(-50%,-50%) scale(${sealScale(.4)})` }], L.fade, tOut, 'ease-in', 'forwards');
   A(ctx, card, [{ opacity: 1, transform: pose(cx, cy, S), filter: 'brightness(1)' }, { opacity: 1, transform: pose(cx, cy, S * 1.06), filter: 'brightness(1.4)', offset: 0.3 }, { opacity: 0, transform: pose(cx, cy, S * 0.04, 25), filter: 'brightness(3)' }], L.collapse, tOut, 'cubic-bezier(.6,0,.9,.4)', 'forwards');
   const tb = target ? bx(ctx, plank(ctx, target)) : g;
   const to = { x: tb.cx, y: tb.cy };
@@ -235,7 +301,7 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   const row = rows[0];
   const thin = row ? clamp((bx(ctx, row).y - 2) / barH, 0, 1) : 0.6;
   A(ctx, top, [{ transform: 'none' }, { transform: `scaleY(${R1(thin * 100) / 100})` }], 300, tOrb + 300, 'ease-in-out', 'forwards');
-  const cap = mk(ctx, 'lg-cap', cx, Math.max(9, (barH * thin) / 2), `<span>ЛЕГЕНДА</span> <b>${esc(c.name)}</b>`); cap.style.zIndex = '41';
+  const cap = prepared?insert('cap','lg-cap',cx,Math.max(9,(barH*thin)/2)):mk(ctx,'lg-cap',cx,Math.max(9,(barH*thin)/2),`<span>ЛЕГЕНДА</span> <b>${esc(c.name)}</b>`); cap.style.zIndex = '41';
   if (barH * thin < 14) cap.style.display = 'none';
   A(ctx, cap, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.7)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], 300, tOrb + 400, 'ease-out');
   const tEnd = tOrb + L.orbEnd;

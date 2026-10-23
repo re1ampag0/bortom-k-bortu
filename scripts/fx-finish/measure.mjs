@@ -34,7 +34,8 @@ const inject = {
       `  const __fxT0 = performance.now();\n  __fxULE(() => { const m = window.fxCpu; if (m?.active) m.renders.push({at: __fxT0 - m.start, ms: performance.now() - __fxT0}); });\n  const version = useSyncExternalStore(`), 'Game renders');
     if (id.endsWith('/src/ui/game/Table.tsx')) return must(code.replace('  const d = shipData(data, ship.code);', counter('planks') + '\n  const d = shipData(data, ship.code);'), 'Plank renders');
     if (id.endsWith('/src/ui/game/Hand.tsx')) return must(code.replace('  const holder = s.ships[seat];', counter('hands') + '\n  const holder = s.ships[seat];'), 'Hand renders');
-    if (id.endsWith('/src/ui/game/fx/legends.ts')) return must(code.replace(/(\n\s*const outro = await legendIntro\(ctx, c\.card, c\.seat[^\n]*;)/, `$1\n  if (window.fxCpu?.active) window.fxCpu.introEnd = performance.now() - window.fxCpu.start;`), 'the end of the Legend entrance');
+    if (id.endsWith('/src/ui/game/fx/legends.ts')) return must(code.replace(/(\n\s*const outro = await legendIntro\(ctx, c\.card, c\.seat[^\n]*;)/, `$1\n  if (window.fxCpu?.active) window.fxCpu.introEnd = performance.now() - window.fxCpu.start;`), 'the end of the Legend entrance')+(code.includes('function prepareIntroPictures(')?`
+window.fxIntroReady=board=>{const b=introBanks.get(board),p=Array.from(b?.cards.values()??[]);return {count:p.length,ready:p.length===4&&p.every(x=>x.rays.dataset.picture==='ready'),connectedPrepared:p.some(x=>Object.values(x).some(el=>el.isConnected))};};`:'');
     if(id.endsWith('/src/ui/game/perf/clip.ts'))return code+`
 window.fxFinish={lastClip,lastClipProfile,top:worstFrames,text:clipText,shows:[],hooks:()=>({work:!!perfWorkHook,phase:!!perfPhaseHook,animation:!!perfAnimHook})};
 subscribeClip(()=>{const x=window.fxFinish;if(x.shows.length>=32)x.shows.shift();x.shows.push({stats:lastClip(),profile:lastClipProfile()});});`;
@@ -77,7 +78,7 @@ async function run(scene) {
     }).observe({type: 'longtask', buffered: false});
   });
   const page = await context.newPage(), cdp = await context.newCDPSession(page), errors = [], layers = [];
-  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('pageerror', (e) => {errors.push(e.message);console.error('[measure page error]',e.message);});
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   const busy = () => page.evaluate(() => { const g = document.querySelector('.game'); return !!g && (g.classList.contains('fx-busy') || g.hasAttribute('data-fx-busy')); });
   const settle = async (ms = 60000) => { await expect.poll(busy, {timeout: ms, intervals: [100]}).toBe(false); };
@@ -112,7 +113,7 @@ async function run(scene) {
   const myTurn = () => harness ? Promise.resolve(true) : page.evaluate(() => { const b = [...document.querySelectorAll('[data-testid="end-turn"]')].find((e) => e.getClientRects().length); return !!b && b.getAttribute('aria-disabled') !== 'true'; });
   if(harness){
     await page.goto(`http://127.0.0.1:5187/bortom-k-bortu/?fxScene=${scene}&manual=1&speed=normal&perf=${perf?1:0}&particleProbe=0`);
-    await expect(page.getByTestId('fx-start')).toBeVisible();
+    await expect(page.getByTestId('fx-start')).toBeVisible({timeout:20000});
   }else{
   await page.goto(`http://127.0.0.1:5187/bortom-k-bortu/?seed=1&speed=normal&hints=0&perf=${perf?1:0}&particleProbe=0`);
   // one person against the bots: the whole show plays (two people on one device hand it over behind the curtain)
@@ -184,11 +185,12 @@ async function run(scene) {
     }
     writeFileSync(`${OUT}/${scene}-${label}-compositing.json`,JSON.stringify(rows,null,1));
   }
+  await expect.poll(()=>page.evaluate(()=>window.fxIntroReady?.(document.querySelector('.board'))?.ready??true),{timeout:20000}).toBe(true);
   const readyBefore=await page.evaluate(()=>{
     const board=document.querySelector('.board'),d=window.fxFinish;
     const boot=d?.shows?.[0]??null;
     if(d)d.shows=[];
-    return {at:performance.now(),sprites:window.fxSpriteReady(board),canvas:window.fxCanvasReady(board),hooks:d?.hooks(),firstBootShow:boot?{start:boot.profile.start,end:boot.profile.end,prepared:boot.profile.prepared,latePreparation:boot.profile.phases.filter(p=>p.name.startsWith('prepare'))}:null};
+    return {at:performance.now(),sprites:window.fxSpriteReady(board),canvas:window.fxCanvasReady(board),intro:window.fxIntroReady?.(board)??null,hooks:d?.hooks(),firstBootShow:boot?{start:boot.profile.start,end:boot.profile.end,prepared:boot.profile.prepared,latePreparation:boot.profile.phases.filter(p=>p.name.startsWith('prepare'))}:null};
   });
   if(scene==='idle')writeFileSync(`${OUT}/idle-${label}-animations.json`,JSON.stringify(await page.evaluate(()=>document.getAnimations().map(a=>({name:a.animationName??'',target:a.effect?.target?.outerHTML?.slice(0,200),frames:a.effect?.getKeyframes()}))),null,1));
   if(!flag('--compositor'))await cdp.send('Tracing.start',traceOptions);

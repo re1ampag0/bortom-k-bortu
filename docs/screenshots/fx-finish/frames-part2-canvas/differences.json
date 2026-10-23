@@ -1,0 +1,74 @@
+{
+ "legend-1000": {
+  "rgbaDifferentPixels": 899,
+  "maxChannelDifference": 9,
+  "differentPixels": 2,
+  "share": 0
+ },
+ "legend-2200": {
+  "rgbaDifferentPixels": 98,
+  "maxChannelDifference": 11,
+  "differentPixels": 2,
+  "share": 0
+ },
+ "armada-900": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "hit-800": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "hit-2000": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "hit-3200": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "hit-4200": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "hit-5200": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "kraken-6000": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "jack-9000": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-1000": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-3000": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ }
+}
