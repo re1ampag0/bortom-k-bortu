@@ -10,7 +10,6 @@ const [beforeDist, afterDist, ...rest] = process.argv.slice(2);
 const selected=rest.filter((s,i)=>!s.startsWith('--')&&rest[i-1]!=='--out');
 const tag=rest.find(s=>s.startsWith('--tag='))?.slice(6);
 if(tag&&!/^[a-z0-9-]+$/i.test(tag))throw Error('Invalid capture tag');
-const plateReview=rest.find(s=>s.startsWith('--plate='))?.slice(8);
 const width=Number(rest.find(s=>s.startsWith('--width='))?.slice(8)??390),height=Number(rest.find(s=>s.startsWith('--height='))?.slice(9)??844);
 const scenes = selected.length ? selected : ['legend','armada','bottle','idle'];
 // the moments after the press, ms of the clip clock: around the renderWith of each clip and after it
@@ -86,7 +85,7 @@ async function shoot(dist, port, tag) {
       const until = async (ok, limit = 60000) => { for (let t = 0; t < limit; t += 200) { if (await ok()) return; await step(200); } throw new Error('timeout'); };
       const click = async (sel) => { const el = page.locator(sel).filter({visible: true}).first(); await expect(el).toBeVisible(); await el.click(); };
       if(['legend','armada','bottle','kraken','jack','whirl'].includes(scene)){
-        await page.goto(`http://127.0.0.1:${port}/bortom-k-bortu/?fxScene=${scene==='legend'?'bottle':scene}&manual=1&speed=normal&perf=0${plateReview?`&plateReview=${plateReview}`:''}`);
+        await page.goto(`http://127.0.0.1:${port}/bortom-k-bortu/?fxScene=${scene==='legend'?'bottle':scene}&manual=1&speed=normal&perf=0`);
         await page.evaluate(()=>document.fonts.ready);
         if(await page.evaluate(()=>!!window.fxCaptureIntroReady))await page.waitForFunction(()=>window.fxCaptureIntroReady(),null,{timeout:20000});
         if(scene==='armada')await page.evaluate(()=>window.fxPrepareFlashPool?.(document.querySelector('.board')));
@@ -108,7 +107,7 @@ async function shoot(dist, port, tag) {
       else if (scene === 'lift') { await click('[data-fx-hand] [data-fx-card="Ж-17"]'); await step(400); await click('[data-testid="lift-play"]'); }
       else { await click('[data-fx-hand] [data-fx-card="Ж-14"]'); await step(200); await click('[data-testid="lift-play"]'); await step(200); await click('[data-testid="plate-И"]'); await step(200); await click('[data-testid="play-card"]'); }
       }
-      let at = 0;const sampleClocks={},review=[];
+      let at = 0;const sampleClocks={};
       for (const m of MOMENTS[scene]) {
         await step(m - at); at = m;
         if(scene==='idle-motion'||scene==='idle-compositor')await page.evaluate(({phase,scene})=>{
@@ -124,15 +123,8 @@ async function shoot(dist, port, tag) {
           }
         },{phase:m,scene});
         sampleClocks[m]=await page.evaluate(()=>window.fxCaptureParticles?.()??[]);
-        if(scene==='whirl')review.push(await page.evaluate(()=>{
-          const plate=document.querySelector('.plate'),r=plate?.getBoundingClientRect();window.reviewPlate??=plate;
-          const rect=e=>{const b=e.getBoundingClientRect();return {x:b.x,y:b.y,w:b.width,h:b.height}};
-          const pieces=[...document.querySelectorAll('.plate-review .review-parts,.plate-review .review-total')];
-          return {sameNode:plate===window.reviewPlate,text:plate?.textContent,rect:r?rect(plate):null,pieces:pieces.map(e=>({text:e.textContent,rect:rect(e),scroll:e.scrollWidth,width:e.clientWidth})),planks:[...document.querySelectorAll('[data-fx-ship]')].map(rect),gap:rect(document.querySelector('[data-fx-gap]')),whirl:!!document.querySelector('.reaction-whirl'),bigSvgAnimations:window.fxBoardSvg.length,plateZ:plate?getComputedStyle(plate).zIndex:null,particleZ:[...document.querySelectorAll('.fx-particle-canvas')].map(e=>({level:e.dataset.particleLevel,z:getComputedStyle(e).zIndex}))};
-        }));
         await page.screenshot({path: `${OUT}/${scene}-${m}-${tag}.png`});
       }
-      if(scene==='whirl')writeFileSync(`${OUT}/review-${tag}.json`,JSON.stringify(review,null,1));
       writeFileSync(`${OUT}/${scene}-${tag}-clocks.json`,JSON.stringify(sampleClocks,null,1));
       if(errors.length)throw new Error(JSON.stringify(errors));
       if(['armada','bottle','kraken','jack'].includes(scene))await until(()=>page.evaluate(()=>document.body.dataset.fxDone==='1'));
