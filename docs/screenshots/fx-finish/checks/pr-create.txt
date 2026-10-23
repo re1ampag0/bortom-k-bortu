@@ -1,0 +1,5 @@
+2026-10-23; after pushing cf9ce5e
+$ gh pr create --base main --head fx-finish-2 --title <saved title> --body-file /tmp/finish-pr-body.md
+Post "https://api.github.com/graphql": Forbidden
+exit 1
+Manual creation: https://github.com/re1ampag0/bortom-k-bortu/compare/main...fx-finish-2?expand=1

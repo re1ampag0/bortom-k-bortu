@@ -1131,9 +1131,15 @@ Math.random=19427, speed=fast; лимит теста 60 с. Три послед�
 | Итоговый typecheck | Сделано | npm run typecheck, exit 0; checks/verification.txt |
 | npm test один раз в конце | Сделано | 690/690; 63/63 файла; checks/verification.txt |
 | Печать стрелка | Отложено по решению пользователя | Эталон docs/mockups/seal (PR #70) не изменён |
-| PR в main, CI 2/2 и новая проверка iPhone | Не подтверждено | После push будет попытка gh pr create; прежние обращения к API возвращали Forbidden; локальные проверки не заменяют CI/iPhone |
+| PR в main, CI 2/2 и новая проверка iPhone | Не подтверждено | После push cf9ce5e команда gh pr create вернула GraphQL Forbidden; checks/pr-create.txt; локальные проверки не заменяют CI/iPhone |
 
 Все пути доказательств в таблице — внутри docs/screenshots/fx-finish/, кроме
 исходников и явно названных документов. Новых GPU-замеров после смены пользователем
 порядка проверок не проводили: прежние таблицы шагов 3–5в сохранены выше;
 новое сравнение потопления — счётчик и одинаковые кадры, не обещание FPS на iPhone.
+
+После финального push cf9ce5e попытка `gh pr create` выполнена: API GitHub
+вернул `Post "https://api.github.com/graphql": Forbidden` (exit 1). PR автоматически
+не создан. Ссылка на создание: https://github.com/re1ampag0/bortom-k-bortu/compare/main...fx-finish-2?expand=1
+Все исходники и доказательства на GitHub, рабочее дерево чистое перед этой
+записью. Осталось создать PR, дождаться CI 2/2 и проверки iPhone.
