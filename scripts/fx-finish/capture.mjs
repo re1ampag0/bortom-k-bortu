@@ -38,7 +38,9 @@ async function shoot(dist, port, tag) {
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.clock.install({time: new Date(0)});
-      await page.clock.pauseAt(new Date(1));
+      // Pause safely before navigation: 1 ms raced the protocol round trip on a busy host.
+      // The blank page has no game work; both builds start at the same fixed virtual time.
+      await page.clock.pauseAt(new Date(60000));
       await page.addInitScript(() => {
         let seed = 19427;
         Math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
