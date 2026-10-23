@@ -1,0 +1,817 @@
+[
+ {
+  "scene": "charge-open",
+  "label": "s1",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 11.89999999972133,
+  "worstFrameMs": 666.5999999999985,
+  "framesOver50": 3,
+  "renders": [
+   {
+    "at": 24.4,
+    "ms": 275.2
+   }
+  ],
+  "count": {
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "Plank": 4,
+   "ChargeSheet": 1,
+   "HandCard": 5,
+   "ChargeButtons": 1,
+   "TeamRow": 1,
+   "Hand": 1,
+   "TableBackdrop": 2
+  },
+  "style": {
+   "ms": 540.3660000000002,
+   "count": 48,
+   "elements": 6262
+  },
+  "layout": {
+   "ms": 49.708000000000006,
+   "count": 35,
+   "dirty": 296,
+   "total": 2046
+  },
+  "paint": {
+   "ms": 254.57499999999996,
+   "count": 160
+  },
+  "forced": {
+   "style": 228.99499999999998,
+   "layout": 38.348000000000006,
+   "styleCount": 15,
+   "layoutCount": 9
+  },
+  "scriptingMs": 486.065,
+  "longTasks": 4,
+  "longestTaskMs": 359.995,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 22.4,
+    "ms": 290.6,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 24.4,
+    "ms": 277.4,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 98.5,
+    "ms": 166.2,
+    "elements": 1971,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 346.3,
+    "ms": 133.4,
+    "elements": 2005,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 489.2,
+    "ms": 103.2,
+    "elements": 1743,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 778.9,
+    "ms": 76.6,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 778.9,
+    "ms": 73.6,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 598.3,
+    "ms": 59.2,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "charge-cancel",
+  "label": "s1",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 14.599999999813008,
+  "worstFrameMs": 466.6000000000022,
+  "framesOver50": 2,
+  "renders": [
+   {
+    "at": 33,
+    "ms": 108.6
+   }
+  ],
+  "count": {
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "Plank": 4,
+   "TeamRow": 1,
+   "Hand": 1,
+   "HandCard": 4,
+   "TableBackdrop": 2
+  },
+  "style": {
+   "ms": 433.57200000000023,
+   "count": 71,
+   "elements": 7026
+  },
+  "layout": {
+   "ms": 18.432000000000002,
+   "count": 32,
+   "dirty": 344,
+   "total": 2148
+  },
+  "paint": {
+   "ms": 57.629999999999995,
+   "count": 89
+  },
+  "forced": {
+   "style": 184.46800000000005,
+   "layout": 13.113,
+   "styleCount": 14,
+   "layoutCount": 8
+  },
+  "scriptingMs": 393.8909999999998,
+  "longTasks": 4,
+  "longestTaskMs": 237.215,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 32.6,
+    "ms": 215.2,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 32.9,
+    "ms": 208.4,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 321.3,
+    "ms": 99.1,
+    "elements": 1771,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 143,
+    "ms": 91.9,
+    "elements": 2035,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 571.4,
+    "ms": 75.9,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 571.4,
+    "ms": 71.9,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 252.3,
+    "ms": 61.9,
+    "elements": 2033,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 88.7,
+    "ms": 44.9,
+    "elements": 585,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "lift-play",
+  "label": "s1",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 12.999999999905413,
+  "worstFrameMs": 600,
+  "framesOver50": 2,
+  "renders": [
+   {
+    "at": 24,
+    "ms": 234.9
+   }
+  ],
+  "count": {
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "Plank": 4,
+   "ChargeSheet": 2,
+   "HandCard": 8,
+   "ChargeButtons": 1,
+   "TeamRow": 1,
+   "Hand": 2,
+   "TableBackdrop": 2
+  },
+  "style": {
+   "ms": 505.31499999952314,
+   "count": 70,
+   "elements": 6992
+  },
+  "layout": {
+   "ms": 55.01900000000001,
+   "count": 43,
+   "dirty": 417,
+   "total": 2065
+  },
+  "paint": {
+   "ms": 251.26099999999997,
+   "count": 194
+  },
+  "forced": {
+   "style": 350.0329999999999,
+   "layout": 48.717999999999996,
+   "styleCount": 26,
+   "layoutCount": 18
+  },
+  "scriptingMs": 590.1550000000003,
+  "longTasks": 3,
+  "longestTaskMs": 329.124,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 17.9,
+    "ms": 257.2,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 23.9,
+    "ms": 236.9,
+    "stack": []
+   },
+   {
+    "name": "FireAnimationFrame",
+    "t": 298.7,
+    "ms": 137.6,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 298.8,
+    "ms": 134.2,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 298.8,
+    "ms": 118.4,
+    "elements": 2010,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 131.2,
+    "ms": 109.5,
+    "elements": 1969,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 447.1,
+    "ms": 95.2,
+    "elements": 1748,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 712.7,
+    "ms": 53.7,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "fire",
+  "label": "s1",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 2.5999999999075953,
+  "worstFrameMs": 833.2000000000007,
+  "framesOver50": 3,
+  "renders": [
+   {
+    "at": 44.6,
+    "ms": 352.2
+   }
+  ],
+  "count": {
+   "StatusBar": 3,
+   "TopHold": 1,
+   "SeaChip": 3,
+   "Plank": 10,
+   "TeamRow": 3,
+   "Hand": 2,
+   "HandCard": 4,
+   "LogList": 2
+  },
+  "style": {
+   "ms": 468.5690000000001,
+   "count": 59,
+   "elements": 5051
+  },
+  "layout": {
+   "ms": 143.95800000000006,
+   "count": 78,
+   "dirty": 1243,
+   "total": 2121
+  },
+  "paint": {
+   "ms": 159.894,
+   "count": 78
+  },
+  "forced": {
+   "style": 400.5320000000001,
+   "layout": 123.62200000000001,
+   "styleCount": 33,
+   "layoutCount": 26
+  },
+  "scriptingMs": 876.182,
+  "longTasks": 6,
+  "longestTaskMs": 637.908,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 37.1,
+    "ms": 578.1,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 44.6,
+    "ms": 473.8,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 254.7,
+    "ms": 128.2,
+    "elements": 1999,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 677.3,
+    "ms": 91.2,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 678.5,
+    "ms": 86,
+    "elements": 1744,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 996.6,
+    "ms": 83.5,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 996.6,
+    "ms": 78.3,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 1462.9,
+    "ms": 76.5,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "alarm-open",
+  "label": "s1",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 262.00000000009277,
+  "worstFrameMs": 262.00000000009277,
+  "framesOver50": 3,
+  "renders": [
+   {
+    "at": 280.4,
+    "ms": 37.3
+   }
+  ],
+  "count": {
+   "StatusBar": 7,
+   "SeaChip": 7,
+   "LogList": 3,
+   "TableBackdrop": 1,
+   "TopHold": 4,
+   "Plank": 12,
+   "ReactionSheet": 2,
+   "HandCard": 20,
+   "TeamRow": 2,
+   "Hand": 2
+  },
+  "style": {
+   "ms": 61.31100000000001,
+   "count": 36,
+   "elements": 222
+  },
+  "layout": {
+   "ms": 73.39100000000002,
+   "count": 47,
+   "dirty": 544,
+   "total": 2179
+  },
+  "paint": {
+   "ms": 162.40900000000002,
+   "count": 63
+  },
+  "forced": {
+   "style": 6.162,
+   "layout": 12.318000000000001,
+   "styleCount": 2,
+   "layoutCount": 2
+  },
+  "scriptingMs": 209.20700000000002,
+  "longTasks": 2,
+  "longestTaskMs": 135.153,
+  "top": [
+   {
+    "name": "Paint",
+    "t": 185.8,
+    "ms": 70.5,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 185.9,
+    "ms": 70.4,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 280.3,
+    "ms": 41.3,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 778.7,
+    "ms": 32.9,
+    "stack": []
+   },
+   {
+    "name": "FireAnimationFrame",
+    "t": 662.2,
+    "ms": 32.4,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 662.2,
+    "ms": 31.5,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 370.8,
+    "ms": 25,
+    "stack": []
+   },
+   {
+    "name": "Layout",
+    "t": 113.3,
+    "ms": 15.1,
+    "dirty": 19,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "alarm-fold",
+  "label": "s1",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 15.799999999813735,
+  "worstFrameMs": 300,
+  "framesOver50": 1,
+  "renders": [
+   {
+    "at": 35.8,
+    "ms": 199.4
+   }
+  ],
+  "count": {
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "Plank": 4,
+   "ReactionSheet": 1,
+   "TeamRow": 1,
+   "Hand": 1,
+   "HandCard": 5
+  },
+  "style": {
+   "ms": 273.661,
+   "count": 76,
+   "elements": 2721
+  },
+  "layout": {
+   "ms": 4.401,
+   "count": 20,
+   "dirty": 43,
+   "total": 2063
+  },
+  "paint": {
+   "ms": 42.975,
+   "count": 39
+  },
+  "forced": {
+   "style": 148.335,
+   "layout": 2.822,
+   "styleCount": 3,
+   "layoutCount": 1
+  },
+  "scriptingMs": 315.0249999999997,
+  "longTasks": 2,
+  "longestTaskMs": 255.923,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 34,
+    "ms": 213.7,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 35.7,
+    "ms": 204.3,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 82.2,
+    "ms": 145.7,
+    "elements": 2026,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 273.8,
+    "ms": 37.8,
+    "stack": []
+   },
+   {
+    "name": "EventDispatch",
+    "t": 16.5,
+    "ms": 8.3,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 286.4,
+    "ms": 7.1,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 16.6,
+    "ms": 6.1,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 1007.2,
+    "ms": 5.2,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "alarm-unfold",
+  "label": "s1",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 3.6000000001877197,
+  "worstFrameMs": 300,
+  "framesOver50": 1,
+  "renders": [
+   {
+    "at": 32.6,
+    "ms": 170.2
+   }
+  ],
+  "count": {
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "ReactionSheet": 1,
+   "HandCard": 10,
+   "TeamRow": 1,
+   "Hand": 1
+  },
+  "style": {
+   "ms": 239.88200000000003,
+   "count": 88,
+   "elements": 2700
+  },
+  "layout": {
+   "ms": 15.145999999999997,
+   "count": 20,
+   "dirty": 128,
+   "total": 2148
+  },
+  "paint": {
+   "ms": 56.67,
+   "count": 35
+  },
+  "forced": {
+   "style": 124.814,
+   "layout": 10.543,
+   "styleCount": 15,
+   "layoutCount": 1
+  },
+  "scriptingMs": 301.38699999999994,
+  "longTasks": 2,
+  "longestTaskMs": 217.828,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 29.7,
+    "ms": 184.5,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 32.6,
+    "ms": 170.3,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 68.4,
+    "ms": 116.7,
+    "elements": 2095,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 242.9,
+    "ms": 56.3,
+    "stack": []
+   },
+   {
+    "name": "FireAnimationFrame",
+    "t": 473,
+    "ms": 16.4,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 473,
+    "ms": 16.3,
+    "stack": []
+   },
+   {
+    "name": "FireAnimationFrame",
+    "t": 226.9,
+    "ms": 12.5,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 226.9,
+    "ms": 12.4,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "react-play",
+  "label": "s1",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 10.600000000093132,
+  "worstFrameMs": 500,
+  "framesOver50": 2,
+  "renders": [
+   {
+    "at": 33.7,
+    "ms": 102.2
+   }
+  ],
+  "count": {
+   "StatusBar": 3,
+   "TopHold": 1,
+   "SeaChip": 3,
+   "Plank": 4,
+   "ReactionSheet": 1,
+   "HandCard": 8,
+   "TeamRow": 1,
+   "Hand": 2,
+   "LogList": 2
+  },
+  "style": {
+   "ms": 362.57800000000003,
+   "count": 85,
+   "elements": 2844
+  },
+  "layout": {
+   "ms": 79.39900000000002,
+   "count": 54,
+   "dirty": 475,
+   "total": 2177
+  },
+  "paint": {
+   "ms": 118.65999999999997,
+   "count": 123
+  },
+  "forced": {
+   "style": 231.22799999999998,
+   "layout": 58.613,
+   "styleCount": 38,
+   "layoutCount": 29
+  },
+  "scriptingMs": 576.424,
+  "longTasks": 4,
+  "longestTaskMs": 270.765,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 27.8,
+    "ms": 214.3,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 33.6,
+    "ms": 153.5,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 313.4,
+    "ms": 126.8,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 313.6,
+    "ms": 124.1,
+    "elements": 1793,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 563.9,
+    "ms": 75.7,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 563.9,
+    "ms": 70.9,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 450,
+    "ms": 50.5,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 640.5,
+    "ms": 35.4,
+    "elements": 66,
+    "stack": []
+   }
+  ]
+ }
+]

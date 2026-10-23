@@ -2,6 +2,7 @@
 // animations whose target lies inside a board-wide SVG (fxSvg). Off (no ?perf=1): every entry returns at once.
 import {getPerf} from './state';
 import {worstFrames, frameText, type ClipProfile, type PhaseSample, type PressSample, type WorstFrame} from './frames';
+import {pressOpen, pressPhases, pressRender, pressStop} from './press';
 
 export interface ClipStats {
   scene: string;
@@ -54,8 +55,11 @@ function visual(name: string,duration: number,delay=0): void {
 function press(e: Event): void {
   if(e instanceof KeyboardEvent&&!['Enter',' '].includes(e.key))return;
   const target=e.target instanceof Element?e.target.closest('[data-testid],button'):null;
-  lastPress={at:performance.now(),name:`${e.type} ${target?.getAttribute('data-testid')??target?.getAttribute('aria-label')??target?.textContent?.trim().slice(0,48)??'стол'}`};
+  const label=target?.getAttribute('data-testid')??target?.getAttribute('aria-label')??target?.textContent?.trim().slice(0,48)??'стол';
+  lastPress={at:performance.now(),name:`${e.type} ${label}`};
   if(run){if(run.presses.length<CAP)run.presses.push(lastPress);else run.dropped++;}
+  // ui-press: a press of a button of the table (not of this panel) opens the window «нажатие», from the event's own time
+  if(e.type!=='pointerdown'&&target?.closest('button,[role="button"]')&&!target.closest('.perf-panel'))pressOpen(label,e.timeStamp);
 }
 function configure(enabled=getPerf().enabled): void {
   perfWorkHook=enabled?work:null;perfPhaseHook=enabled?visual:null;
@@ -65,7 +69,12 @@ function configure(enabled=getPerf().enabled): void {
     if(enabled)document.addEventListener(name,press,{capture:true,passive:true});
     else document.removeEventListener(name,press,true);
   }
-  if(!enabled){if(run){cancelAnimationFrame(run.raf);run.observer?.disconnect();}run=null;perfAnimHook=null;recentWork=[];lastPress=null;pausedAt=null;current='';}
+  pressPhases(enabled?pressStages:null);
+  if(!enabled){if(run){cancelAnimationFrame(run.raf);run.observer?.disconnect();}run=null;perfAnimHook=null;recentWork=[];lastPress=null;pausedAt=null;current='';pressStop();}
+}
+/** The stages of the show measured now and of the last one that overlap a window «нажатие». */
+function pressStages(from: number, to: number): PhaseSample[] {
+  return [...(run?.phases??[]),...(profile?.phases??[])].filter(p=>p.at<to&&p.end>from);
 }
 export function watchClipDiagnostics(): () => void {configure();return ()=>configure(false);}
 /** Pause uses the same state change as the native animation/particle clocks. */
@@ -125,6 +134,7 @@ export function clipKind(kind: string): void {
 /** A render of Game took so long (render + commit, up to its layout effect). */
 export function clipRender(ms: number): void {
   run?.renders.push(ms);
+  pressRender(ms);
 }
 
 export function clipShowEnd(): void {

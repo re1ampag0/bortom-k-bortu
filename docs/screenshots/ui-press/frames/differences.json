@@ -1,0 +1,32 @@
+{
+ "lift-0": {
+  "rgbaDifferentPixels": 536131,
+  "maxChannelDifference": 206,
+  "differentPixels": 287380,
+  "share": 21.827
+ },
+ "lift-100": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "lift-200": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "lift-400": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "lift-700": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ }
+}
