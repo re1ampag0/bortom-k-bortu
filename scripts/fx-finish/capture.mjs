@@ -20,11 +20,14 @@ mkdirSync(OUT, {recursive: true});
 for(const dist of new Set([beforeDist,afterDist])){
   for(const name of readdirSync(`${dist}/assets`).filter(n=>n.endsWith('.js'))){
     const path=`${dist}/assets/${name}`,source=readFileSync(path,'utf8');
+    if(source.includes('function prepareIntroPictures(')&&!source.includes('window.fxCaptureIntroReady=')){
+      writeFileSync(path,source+`\nwindow.fxCaptureIntroReady=()=>{const b=introBanks.get(document.querySelector('.board'));return b&&Array.from(b.cards.values()).every(p=>p.rays.dataset.picture==='ready');};\n`);
+    }
     if(!source.includes('function prepareParticles(')||source.includes('window.fxCaptureParticles='))continue;
     const prep=source.slice(source.indexOf('function prepareParticles('));
     const bank=prep.match(/if \((\w+(?:\$\w+)?)\.has\(board\)\)/)?.[1];
     if(!bank||!source.includes('function draw(b)')||!source.includes('function advance(b)'))throw Error('Unknown particle bundle; capture hook refused');
-    writeFileSync(path,source+`\nwindow.fxCaptureParticles=()=>Array.from(document.querySelectorAll('.board')).flatMap(board=>{const b=${bank}.get(board);if(!b)return [];advance(b);draw(b);return [{clock:performance.now(),time:b.now,count:b.items.length}];});\n`);
+    writeFileSync(path,readFileSync(path,'utf8')+`\nwindow.fxCaptureParticles=()=>Array.from(document.querySelectorAll('.board')).flatMap(board=>{const b=${bank}.get(board);if(!b)return [];advance(b);draw(b);return [{clock:performance.now(),time:b.now,count:b.items.length}];});\n`);
   }
 }
 
@@ -77,6 +80,7 @@ async function shoot(dist, port, tag) {
       if(['legend','armada','bottle','kraken','jack'].includes(scene)){
         await page.goto(`http://127.0.0.1:${port}/bortom-k-bortu/?fxScene=${scene==='legend'?'bottle':scene}&manual=1&speed=normal&perf=0`);
         await page.evaluate(()=>document.fonts.ready);
+        if(await page.evaluate(()=>!!window.fxCaptureIntroReady))await page.waitForFunction(()=>window.fxCaptureIntroReady(),null,{timeout:20000});
         await click('[data-testid="fx-start"]');
         await until(async()=>!!await page.locator(scene==='armada'?'.gun-fire':'.lg-card').count());
         await page.evaluate(()=>document.fonts.ready);

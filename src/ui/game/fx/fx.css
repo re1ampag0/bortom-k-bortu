@@ -332,3 +332,11 @@
 
 /* Ambient surfaces are useful only while these weather animations are enabled. */
 .game.perf-off-css .fx-weather :is(.wx-loop,.wx-island) { will-change: auto !important; }
+
+/* Prepared in idle at screen density: one decoded picture, no live ray mask or wax filter. */
+.lg-sun.lg-sun-ready { background:none;-webkit-mask:none;mask:none; }
+.lg-sun-ready > img { position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none; }
+.lg-seal.lg-seal-ready { width:192px;height:192px;filter:none; }
+.lg-seal-ready > svg { position:relative;z-index:1;width:192px;height:192px;display:block; }
+.lg-seal-shadow { position:absolute;left:-96px;top:-96px;width:384px;height:384px;z-index:0;pointer-events:none; }
+.game.perf-off-filters .lg-seal-shadow { display:none; }
