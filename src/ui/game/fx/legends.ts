@@ -18,6 +18,7 @@ import {perfOff} from '../perf/state';
 import { legendCards } from '../../../engine/data';
 import {titleHTML,titleWidth} from './legendTitles';
 import {legendSprite} from './legendSprites';
+import {motionSticker} from './legendMotionSprites';
 import {playLegendGlint} from './legendGlint';
 import { shipData, startValue, type GameEvent } from '../../../engine/state';
 import type { CardInstance, GameData, Track } from '../../../engine/types';
@@ -29,7 +30,7 @@ import {
   qpts, rnd, room, setTrack, shake, shownTrack, sideOf, soulsFly, sv, trackMark, visible, wait, wisp, type FxCtx, type Pt,
 } from './primitives';
 import { CELLS } from '../art/cells';
-import { ART_FRAME, bottleArt, compassArt, CORK, COST_ICON, COST_WORD, crackArt, EMBLEM, SEAL_HTML, TENT } from '../art/legendArt';
+import { ART_FRAME, bottleArt, CORK, COST_ICON, COST_WORD, crackArt, EMBLEM, SEAL_HTML } from '../art/legendArt';
 import { ruleTag } from './sea';
 import { plankScars, scar, seaScars } from './scars';
 import { T } from './timing';
@@ -480,15 +481,15 @@ LG['Г-Л'] = async (c, ctx) => {
   const K = T.kraken, tgt = c.target!, tp = plank(ctx, tgt), b = bx(ctx, tp), W = boardW(ctx), uid = ++LG_UID;
   const v = isTop(ctx, tgt) ? -1 : 1; // 1 — the arms grow up from the top edge (a ship of the bottom row)
   const edge = v > 0 ? b.y : b.b;     // the edge of the target to the sea
-  const rich = filters(ctx);
+  const motion=(host:Element,name:string)=>motionSticker(ctx,host,b,name);
   // 1. the sea around the target turns dark and green; the shadow of the beast glides under it; bubbles boil
   const sea = seaScars(ctx), deep = seaTemp(ctx), top = fxSvg(ctx);
-  sv(deep, `<defs><radialGradient id="lgKrDeep${uid}"><stop offset="0" stop-color="#05140f" stop-opacity=".85"/><stop offset=".6" stop-color="#0c2a22" stop-opacity=".55"/><stop offset="1" stop-color="#0c2a22" stop-opacity="0"/></radialGradient>${rich ? `<filter id="lgKrBlur${uid}"><feGaussianBlur stdDeviation="8"/></filter>` : ''}</defs>`);
-  const dark = sv(deep, `<ellipse cx="${R1(b.cx)}" cy="${R1(edge - v * 30)}" rx="${R1(Math.min(330, b.w * 0.75))}" ry="110" fill="url(#lgKrDeep${uid})"/>`);
-  A(ctx, dark, [{ opacity: 0 }, { opacity: 1 }], K.deep);
-  const shadow = sv(deep, `<g ${rich ? `filter="url(#lgKrBlur${uid})"` : ''} opacity=".75"><ellipse cx="0" cy="0" rx="130" ry="42" fill="#020806"/>${[-1, 1].map((s) => [0, 1, 2].map((i) => `<path d="M${s * 90} ${-10 + i * 12} q${s * 60} ${-20 + i * 20} ${s * 120} ${10 + i * 6}" stroke="#020806" stroke-width="${14 - i * 3}" fill="none" stroke-linecap="round"/>`).join('')).join('')}</g>`);
+  const deepHost=motion(deep,'group');deepHost.classList.add('fx-temp');
+  const dark = motion(deep,'dark');dark.querySelector('ellipse')!.setAttribute('rx',String(R1(Math.min(330,b.w*.75))));deepHost.append(dark);dark.style.transform=`translate(${R1(b.cx)}px,${R1(edge-v*30)}px)`;
+  armadaA(ctx, dark, [{ opacity: 0 }, { opacity: 1 }], K.deep);
+  const shadow = motion(deep,'shadow');deepHost.append(shadow);
   const ks = clamp(b.w / 480, 0.5, 1);
-  A(ctx, shadow, [{ transform: `translate(${R1(b.cx - 520 * ks)}px,${R1(edge - v * 40)}px) scale(${R1(0.8 * ks * 100) / 100})` }, { transform: `translate(${R1(b.cx)}px,${R1(edge - v * 30)}px) scale(${R1(1.1 * ks * 100) / 100})` }], K.glide, 0, 'cubic-bezier(.3,.1,.3,1)');
+  armadaA(ctx, shadow, [{ transform: `translate(${R1(b.cx - 520 * ks)}px,${R1(edge - v * 40)}px) scale(${R1(0.8 * ks * 100) / 100})` }, { transform: `translate(${R1(b.cx)}px,${R1(edge - v * 30)}px) scale(${R1(1.1 * ks * 100) / 100})` }], K.glide, 0, 'cubic-bezier(.3,.1,.3,1)');
   for (let i = 0, n = room(ctx, 46); i < n; i++) {
     const x = b.cx + rnd(-0.55, 0.55) * b.w, y = edge - v * rnd(4, 80);
     const o = particleShape(ctx, deep, `<circle r="${R1(rnd(1.4, 4.6))}" fill="rgba(210,240,236,.15)" stroke="#d9f2ec" stroke-width=".9"/>`);
@@ -496,9 +497,9 @@ LG['Г-Л'] = async (c, ctx) => {
   }
   await wait(ctx, K.eyeAt);
   // 2. the eye opens in the water by the target, looks, blinks
-  const eye = sv(deep, '<g><ellipse rx="40" ry="20" fill="#06100c" opacity=".8"/><ellipse rx="34" ry="16" fill="#0a1a14"/><ellipse rx="26" ry="11" fill="#f2c94c" stroke="#3a2a0c" stroke-width="1.4"/><ellipse rx="3.4" ry="10" fill="#060606"/><circle cx="-8" cy="-4" r="2.4" fill="#fff" opacity=".8"/></g>');
+  const eye = motion(deep,'eye');deepHost.append(eye);
   const ex = b.cx + 40 * ks, ey = edge - v * 56, et = (sy: number) => `translate(${R1(ex)}px,${R1(ey)}px) scale(${ks},${sy * ks})`;
-  A(ctx, eye, [{ transform: et(0) }, { transform: et(1), offset: 0.2 }, { transform: et(1), offset: 0.45 }, { transform: et(0.08), offset: 0.5 }, { transform: et(1), offset: 0.56 }, { transform: et(1), offset: 0.92 }, { transform: et(0) }], K.eye);
+  armadaA(ctx, eye, [{ transform: et(0) }, { transform: et(1), offset: 0.2 }, { transform: et(1), offset: 0.45 }, { transform: et(0.08), offset: 0.5 }, { transform: et(1), offset: 0.56 }, { transform: et(1), offset: 0.92 }, { transform: et(0) }], K.eye);
   await wait(ctx, K.armsAt);
   // 3. the arms burst out of the water: three around the target, three right at its edge — those will grip
   const right = b.cx > W / 2; // the side arm goes into the gap between the columns
@@ -506,17 +507,17 @@ LG['Г-Л'] = async (c, ctx) => {
   const spots: [number, number, boolean, number, number][] = [[b.x + 40, edge + v * 8, false, 1.3, -14], [b.r - 36, edge + v * 8, true, 1.3, 14], [right ? b.x - 18 : b.r + 18, b.cy + v * b.h * 0.05, !right, 1.15, right ? -26 : 26]];
   const arms = spots.map(([x, y, fl, k, rot], i) => {
     waterColumn(ctx, top, x, y, 44, i * 160);
-    const g = sv(top, `<g><g transform="scale(${fl ? -1 : 1} 1)">${TENT(`a${uid}${i}`, k * ks, 1.5)}</g></g>`);
+    const g = motion(top,`arm-${k}-${fl}`);
     const r = rot * v;
-    A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${r}deg) ${flip(0)}` }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${r}deg) ${flip(1.15)}`, offset: 0.6 }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${r}deg) ${flip(1)}` }], K.rise, i * K.riseStep, 'cubic-bezier(.2,1.3,.5,1)');
+    armadaA(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${r}deg) ${flip(0)}` }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${r}deg) ${flip(1.15)}`, offset: 0.6 }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${r}deg) ${flip(1)}` }], K.rise, i * K.riseStep, 'cubic-bezier(.2,1.3,.5,1)');
     return { g, x, y, r };
   });
   const gripX = [0.3, 0.55, 0.78].map((f) => b.w * f); // where the arms grip — and where the plank splits
   const grips = gripX.map((x0, i) => {
     const x = b.x + x0, y = edge + v * 3;
     waterColumn(ctx, top, x, y - v * 2, 50, K.gripAt + i * K.gripStep);
-    const g = sv(top, `<g><g class="gin">${TENT(`g${uid}${i}`, 0.92, 1.35 * Math.max(0.6, ks))}</g></g>`);
-    A(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg) ${flip(0)}` }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${i % 2 ? 6 : -6}deg) ${flip(1.15)}`, offset: 0.6 }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg) ${flip(1)}` }], K.rise, K.gripAt + i * K.gripStep, 'cubic-bezier(.2,1.3,.5,1)');
+    const g = motion(top,'grip');
+    armadaA(ctx, g, [{ transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg) ${flip(0)}` }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(${i % 2 ? 6 : -6}deg) ${flip(1.15)}`, offset: 0.6 }, { transform: `translate(${R1(x)}px,${R1(y)}px) rotate(0deg) ${flip(1)}` }], K.rise, K.gripAt + i * K.gripStep, 'cubic-bezier(.2,1.3,.5,1)');
     g.dataset.grip = String(i);
     return { g, x, y, s: i % 2 ? 1 : -1 };
   });
@@ -524,7 +525,7 @@ LG['Г-Л'] = async (c, ctx) => {
   // 4. the three arms fall over the plank and lie across it (the length — the height of the plank); each squeezes in
   //    turn — and right under it the wood splits
   const kY = R1(((b.h - 6) / 146 / 0.92) * 100) / 100;
-  grips.forEach((a, i) => A(ctx, a.g, [{ transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(0deg) ${flip(1)}` }, { transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 95}deg) ${flip(0.9)}`, offset: 0.55 }, { transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 180}deg) ${flip(kY)}` }], K.fall, i * K.fallStep, 'cubic-bezier(.6,0,.9,.5)'));
+  grips.forEach((a, i) => armadaA(ctx, a.g, [{ transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(0deg) ${flip(1)}` }, { transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 95}deg) ${flip(0.9)}`, offset: 0.55 }, { transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 180}deg) ${flip(kY)}` }], K.fall, i * K.fallStep, 'cubic-bezier(.6,0,.9,.5)'));
   await wait(ctx, K.land);
   grips.forEach((a) => { splintersSvg(ctx, top, a.x, edge + v * 6, 5); sparksSvg(ctx, top, a.x, edge + v * 4, 4, 0, ['#e9d29a', '#a8703a', '#fff']); });
   const host = plankScars(ctx, tgt);
@@ -541,7 +542,7 @@ LG['Г-Л'] = async (c, ctx) => {
     const a = grips[k], x0 = gripX[k];
     const g = sv(cracks, crackArt(`k${uid}${k}`, x0, y0, b.h * rnd(0.82, 0.98), (v * Math.PI) / 2 + rnd(-0.14, 0.14), rnd(2.8, 3.6)));
     A(ctx, g.querySelector('.rv')!, [{ transform: `translate(${R1(x0)}px,${R1(y0)}px) scale(0)` }, { transform: `translate(${R1(x0)}px,${R1(y0)}px) scale(1)` }], K.crack, 60, 'cubic-bezier(.2,.9,.3,1)');
-    A(ctx, a.g.querySelector('.gin')!, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.22,.96)', offset: 0.4 }, { transform: 'scale(1.08,1)' }], K.squeeze, 0, 'ease-in-out');
+    armadaA(ctx, a.g.querySelector('.gin')!, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.22,.96)', offset: 0.4 }, { transform: 'scale(1.08,1)' }], K.squeeze, 0, 'ease-in-out');
     A(ctx, tp, [{ scale: '1 1' }, { scale: '.97 .92', offset: 0.4 }, { scale: '1 1' }], K.squeeze, 0, 'ease-in-out', 'none');
     boom(ctx, 4, 300); flashBoard(ctx, '#0b1f18', 0.16, 300);
     splintersSvg(ctx, top, a.x, b.cy, 4);
@@ -572,22 +573,27 @@ LG['Г-Л'] = async (c, ctx) => {
   const soulsEnd = c.souls ? soulsFly(ctx, tgt, c.souls, t + 200, true) : 0;
   await wait(ctx, t + K.after);
   // 6. the beast lets go: an ink cloud bursts and stays on the sea (short), the arms slide down into it
-  const ink = sea ? scar(fxSvg(ctx, sea), 'short') : fxSvg(ctx);
-  const ty = edge - v * 28;
-  ink.innerHTML += `${rich ? `<defs><filter id="lgInk${uid}" x="-50%" y="-50%" width="200%" height="200%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="26"/><feGaussianBlur stdDeviation="2"/></filter></defs>` : ''}<g class="lg-ink" ${rich ? `filter="url(#lgInk${uid})"` : ''}>${Array.from({ length: 7 }, (_, i) => `<ellipse cx="${R1(b.cx + (i - 3) * 62 * ks)}" cy="${R1(ty + (i % 2) * 14 * v)}" rx="${R1(rnd(46, 70) * ks)}" ry="${R1(rnd(18, 28))}" fill="#08100e" opacity=".7"/>`).join('')}</g>`;
-  const blot = ink.querySelector('.lg-ink')!;
-  (blot as SVGElement).style.transformOrigin = `${R1(b.cx)}px ${R1(ty)}px`;
-  A(ctx, blot, [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1)' }], K.ink, 0, 'cubic-bezier(.2,.8,.3,1)');
+  const inkSvg = fxSvg(ctx,sea??ctx.layer);
+  const blot=motion(inkSvg,'ink'),ty=edge-v*28;
+  blot.querySelectorAll('ellipse').forEach((e,i)=>{
+    e.setAttribute('cx',String(R1(b.cx+(i-3)*62*ks)));e.setAttribute('cy',String(R1(ty+(i%2)*14*v)));
+    e.setAttribute('rx',String(R1(rnd(46,70)*ks)));e.setAttribute('ry',String(R1(rnd(18,28))));
+  });
+  // The static SVG uses board coordinates, but its viewport is local to the cloud.
+  const inkArt=blot.querySelector('svg')!;inkArt.setAttribute('viewBox',`${R1(b.cx-600)} ${R1(ty-180)} 1200 360`);
+  inkArt.style.left=R1(b.cx-600)+'px';inkArt.style.top=R1(ty-180)+'px';
+  blot.style.transformOrigin=`${R1(b.cx)}px ${R1(ty)}px`;if(sea){const trace=motion(inkSvg,'group');trace.append(blot);scar(trace,'short');inkSvg.remove();}
+  armadaA(ctx,blot,[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)'}],K.ink,0,'cubic-bezier(.2,.8,.3,1)');
   arms.forEach((a, i) => {
-    A(ctx, a.g, [{ opacity: 1, transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.r}deg) ${flip(1)}` }, { opacity: 0, transform: `translate(${R1(a.x)}px,${R1(a.y + v * 30)}px) rotate(${a.r}deg) ${flip(0)}` }], K.sink, i * K.sinkStep, 'ease-in');
+    armadaA(ctx, a.g, [{ opacity: 1, transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.r}deg) ${flip(1)}` }, { opacity: 0, transform: `translate(${R1(a.x)}px,${R1(a.y + v * 30)}px) rotate(${a.r}deg) ${flip(0)}` }], K.sink, i * K.sinkStep, 'ease-in');
     waterColumn(ctx, top, a.x, a.y, 28, 500 + i * K.sinkStep);
   });
   grips.forEach((a, i) => {
-    A(ctx, a.g, [{ transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 180}deg) ${flip(kY)}` }, { transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 20}deg) ${flip(0.9)}`, offset: 0.5 }, { transform: `translate(${R1(a.x)}px,${R1(a.y + v * 20)}px) rotate(0deg) ${flip(0)}`, opacity: 0.6 }], K.release, 150 + i * 100, 'ease-in-out');
+    armadaA(ctx, a.g, [{ transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 180}deg) ${flip(kY)}` }, { transform: `translate(${R1(a.x)}px,${R1(a.y)}px) rotate(${a.s * 20}deg) ${flip(0.9)}`, offset: 0.5 }, { transform: `translate(${R1(a.x)}px,${R1(a.y + v * 20)}px) rotate(0deg) ${flip(0)}`, opacity: 0.6 }], K.release, 150 + i * 100, 'ease-in-out');
     waterColumn(ctx, top, a.x, a.y, 32, 700 + i * 100);
   });
-  A(ctx, eye, [{ opacity: 1 }, { opacity: 0 }], 400, 0, 'ease-in', 'forwards');
-  if (sea) { deep.classList.remove('fx-temp'); scar(deep, 'short'); } // the dark of the deep stays a while and dissolves
+  armadaA(ctx, eye, [{ opacity: 1 }, { opacity: 0 }], 400, 0, 'ease-in', 'forwards');
+  if (sea) { deep.remove(); deepHost.classList.remove('fx-temp');scar(deepHost,'short'); } // the dark of the deep stays a while and dissolves
   await wait(ctx, Math.max(K.end, soulsEnd - (t + K.after) + 100));
 };
 
@@ -671,9 +677,19 @@ LG['М-Л'] = async (c, ctx) => {
   A(ctx, st, [{ opacity: 0, transform: 'translate(-50%,-50%) rotate(-7deg) scale(2.8)' }, { opacity: 1, transform: 'translate(-50%,-50%) rotate(-7deg) scale(.94)', offset: 0.7 }, { opacity: 1, transform: 'translate(-50%,-50%) rotate(-7deg) scale(1)' }], K.stamp, K.back * 0.5, 'cubic-bezier(.5,0,.8,.4)');
   const host = seaScars(ctx);
   if (host) {
-    const keep = scar(fxSvg(ctx, host), 'long', tgt), rock = filters(ctx), k2 = R1(BS * 0.72 * 100) / 100;
-    keep.innerHTML += `<g transform="translate(${R1(bx0)} ${R1(by0 + 4)})"><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(110 * k2)}" ry="7" fill="#0b2a36" opacity=".28"/><g>${rock ? '<animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.6s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;0 3;0 0" dur="2.6s" additive="sum" repeatCount="indefinite"/>' : ''}<g transform="scale(${k2})">${bottleArt({ ship: true, cork: true, kind: bigKind(tgt) })}</g></g><ellipse cx="0" cy="${R1(40 * k2)}" rx="${R1(120 * k2)}" ry="6" fill="none" stroke="#e6f2f4" stroke-width="1.4" opacity=".7">${rock ? `<animate attributeName="rx" values="${R1(110 * k2)};${R1(140 * k2)};${R1(110 * k2)}" dur="2.6s" repeatCount="indefinite"/>` : ''}</ellipse></g>`;
-    A(ctx, keep, [{ opacity: 0 }, { opacity: 1 }], 300, 0, 'ease-out', 'none');
+    const rock=filters(ctx),k2=R1(BS*.72*100)/100;
+    const keep=takeSprite(ctx,`legend-trace-${bigKind(tgt)}`,host).root;
+    scar(keep,'long',tgt);keep.style.transform=`translate(${R1(bx0)}px,${R1(by0+4)}px)`;
+    keep.querySelector<HTMLElement>('[data-bottle-scale]')!.style.transform=`scale(${k2})`;
+    const shadow=keep.querySelector('[data-bottle-shadow]')!,rim=keep.querySelector('[data-bottle-rim]')!;
+    for(const [el,rx,ry]of [[shadow,R1(110*k2),7],[rim,R1(120*k2),6]] as const){el.setAttribute('cx','0');el.setAttribute('cy',String(R1(40*k2)));el.setAttribute('rx',String(rx));el.setAttribute('ry',String(ry));}
+    if(rock){
+      keep.classList.add('bottle-float-moving');
+      // Preserve the existing local waterline's constant stroke; unlike the bottle this is not a moving SVG object.
+      const ripple=keep.querySelector<SVGAnimateElement>('[data-bottle-ripple]')!;
+      ripple.setAttribute('values',`${R1(110*k2)};${R1(140*k2)};${R1(110*k2)}`);ripple.beginElement();
+    }
+    armadaA(ctx,keep,[{opacity:0},{opacity:1}],300,0,'ease-out','none');
   }
   armadaA(ctx, all, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-out', 'forwards');
   let tEnd = K.end;
@@ -728,8 +744,9 @@ const playLegend = async (c: LegendClip, ctx: FxCtx) => {
  */
 const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
   ctx=Object.create(ctx) as typeof ctx;ctx.canvasParticles=true;ctx.legendParticles=true;ctx.svgParticleOpacity=true;
-  const K = T.jack, code = `${c.ship}-Л`, el = plank(ctx, c.ship), b = bx(ctx, el), uid = ++LG_UID;
+  const K = T.jack, code = `${c.ship}-Л`, el = plank(ctx, c.ship), b = bx(ctx, el);
   const hi = fxSvg(ctx);
+  const motion=(name:string)=>motionSticker(ctx,hi,b,name);
   // 1. she should sink: the last boards break, the water rises over the plank, she lists
   const h0 = shownTrack(ctx, c.ship, 'hull');
   for (let i = h0 - 1, t = 0; i >= 0; i--, t += K.board) {
@@ -761,8 +778,9 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
   let sw: Extract<GameEvent, { type: 'swapped' }> | undefined, ob: ReturnType<typeof bx> | null = null;
   try {
     for (let i = 0; i < 3; i++) circRing(ctx, hi, b.cx, b.cy, 20, 360, '#e6dcc4', K.ring, i * K.ringStep, 2);
-    const drops = sv(hi, `<g>${Array.from({ length: 14 }, () => `<ellipse cx="${R1(b.x + rnd(0, b.w))}" cy="${R1(b.y - rnd(4, 40))}" rx="1.6" ry="2.6" fill="#dff4f8" opacity=".9"/>`).join('')}</g>`);
-    A(ctx, drops, [{ opacity: 0 }, { opacity: 1 }], 200, 0, 'linear', 'forwards');
+    const drops=motion('drops');drops.style.left=R1(b.x)+'px';drops.style.top=R1(b.y)+'px';
+    drops.querySelectorAll('ellipse').forEach(e=>{e.setAttribute('cx',String(R1(b.x+rnd(0,b.w))-R1(b.x)));e.setAttribute('cy',String(R1(b.y-rnd(4,40))-R1(b.y)));});
+    armadaA(ctx, drops, [{ opacity: 0 }, { opacity: 1 }], 200, 0, 'linear', 'forwards');
     // game (S1): the explanation is in the middle of the table, not over the plank
     ruleTag(ctx, b.cx, gapBox(ctx).cy, 'время замерло…', 60, '', 1100);
     await wait(ctx, K.freeze);
@@ -775,35 +793,34 @@ const playJack = async (c: JackClip & { events: GameEvent[] }, ctx: FxCtx) => {
     const r = R1(clamp(Math.min(b.h * 0.9, b.w * 0.35), 56, 80));
     // A10: a golden glow with slowly turning soft rays behind the compass (pgJkA, pgJkR of fx3.js), s — the size of this compass to the prototype's
     const gs = r / 80;
-    const aura = sv(hi, `<g><defs><radialGradient id="lgJkA${uid}"><stop offset="0" stop-color="#ffe7a4" stop-opacity=".75"/><stop offset=".55" stop-color="#ffd27a" stop-opacity=".25"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient>
-      <radialGradient id="lgJkR${uid}"><stop offset=".35" stop-color="#fff2c8" stop-opacity=".5"/><stop offset="1" stop-color="#fff2c8" stop-opacity="0"/></radialGradient></defs><circle r="${R1(150 * gs)}" fill="url(#lgJkA${uid})"/><g class="ry" fill="url(#lgJkR${uid})">${Array.from({ length: 12 }, (_, i) => { const a1 = (i * Math.PI) / 6, a2 = a1 + 0.09; return `<path d="M0 0 L${R1(Math.cos(a1) * 170 * gs)} ${R1(Math.sin(a1) * 170 * gs)} L${R1(Math.cos(a2) * 170 * gs)} ${R1(Math.sin(a2) * 170 * gs)} Z"/>`; }).join('')}</g></g>`);
-    A(ctx, aura, [{ transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(.2)`, opacity: 0 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1)`, opacity: 1 }], K.compass, 0, 'ease-out', 'forwards');
-    const ry = aura.querySelector<SVGGElement>('.ry')!;
+    const aura=motion('aura');
+    armadaA(ctx, aura, [{ transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(.2)`, opacity: 0 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1)`, opacity: 1 }], K.compass, 0, 'ease-out', 'forwards');
+    const ry = aura.querySelector<HTMLElement>('.ry')!;
     ry.style.transformBox = 'view-box'; ry.style.transformOrigin = '0 0';
-    A(ctx, ry, [{ transform: 'rotate(0deg)' }, { transform: 'rotate(60deg)' }], K.rays, 0, 'linear', 'forwards');
-    const comp = sv(hi, compassArt(`jk${uid}`, r));
-    A(ctx, comp, [{ transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(.1) rotate(-90deg)`, opacity: 0 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.1) rotate(8deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1) rotate(0deg)`, opacity: 1 }], K.compass, 0, 'cubic-bezier(.3,1.3,.6,1)');
-    const nd = comp.querySelector<SVGGElement>('.nd')!;
+    armadaA(ctx, ry, [{ transform: 'rotate(0deg)' }, { transform: 'rotate(60deg)' }], K.rays, 0, 'linear', 'forwards');
+    const comp=motion('compass');
+    armadaA(ctx, comp, [{ transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(.1) rotate(-90deg)`, opacity: 0 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.1) rotate(8deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1) rotate(0deg)`, opacity: 1 }], K.compass, 0, 'cubic-bezier(.3,1.3,.6,1)');
+    const nd = comp.querySelector<HTMLElement>('.nd')!;
     nd.style.transformBox = 'view-box'; nd.style.transformOrigin = '0 0';
     const toAlly = ob ? (Math.atan2(ob.cy - b.cy, ob.cx - b.cx) * 180) / Math.PI + 90 : 90;
     const end = 1080 + ((toAlly % 360) + 360) % 360;
-    A(ctx, nd, [{ transform: 'rotate(0deg)' }, { transform: `rotate(${R1(end - 270)}deg)`, offset: 0.55 }, { transform: `rotate(${R1(end - 20)}deg)`, offset: 0.8 }, { transform: `rotate(${R1(end)}deg)` }], K.needle, K.needleAt, 'cubic-bezier(.2,.6,.3,1)');
+    armadaA(ctx, nd, [{ transform: 'rotate(0deg)' }, { transform: `rotate(${R1(end - 270)}deg)`, offset: 0.55 }, { transform: `rotate(${R1(end - 20)}deg)`, offset: 0.8 }, { transform: `rotate(${R1(end)}deg)` }], K.needle, K.needleAt, 'cubic-bezier(.2,.6,.3,1)');
     await wait(ctx, K.point);
     // the needle has stopped: a golden ring and sparks over the north
     circRing(ctx, hi, b.cx, b.cy, 70 * gs, 150 * gs, '#ffe7a4', 700, 0, 3); goldBurst(ctx, hi, b.cx, b.cy - 64 * gs, 14, 8, 40);
     if (ob) {
       const ey = isTop(ctx, c.ship) ? b.b + 6 : b.y - 6, oy = isTop(ctx, ally!) ? ob.b + 6 : ob.y - 6, lift = isTop(ctx, c.ship) ? 90 : -90;
-      const course = sv(hi, `<path d="M${R1(b.cx)} ${R1(ey)} C${R1(b.cx + Math.sign(ob.cx - b.cx) * 120)} ${R1(ey + lift)} ${R1(ob.cx - Math.sign(ob.cx - b.cx) * 120)} ${R1(oy + lift)} ${R1(ob.cx)} ${R1(oy)}" fill="none" stroke="#ffd27a" stroke-width="3" stroke-dasharray="10 8"/>`);
-      A(ctx, course, [{ opacity: 0 }, { opacity: 1 }], K.course, 0, 'linear', 'forwards');
+      const course=motion('course');course.querySelector('path')!.setAttribute('d',`M${R1(b.cx)} ${R1(ey)} C${R1(b.cx + Math.sign(ob.cx - b.cx) * 120)} ${R1(ey + lift)} ${R1(ob.cx - Math.sign(ob.cx - b.cx) * 120)} ${R1(oy + lift)} ${R1(ob.cx)} ${R1(oy)}`);
+      armadaA(ctx, course, [{ opacity: 0 }, { opacity: 1 }], K.course, 0, 'linear', 'forwards');
       goldBurst(ctx, hi, ob.cx, oy, 20, 10, 60);
     }
     await wait(ctx, K.go);
     // 4. the water runs off, the colour comes back with a flash, she slips along the course with ghosts; the ally the
     //    other way (the change of places of the events)
     A(ctx, water, [{ height: '72%' }, { height: '0%' }], K.drain, 0, 'ease-out', 'forwards');
-    A(ctx, comp, [{ opacity: 1, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1)` }, { opacity: 0, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.4)` }], 400, 0, 'ease-in', 'forwards');
-    A(ctx, aura, [{ opacity: 1 }, { opacity: 0 }], 400, 0, 'ease-in', 'forwards');
-    A(ctx, drops, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'linear', 'forwards');
+    armadaA(ctx, comp, [{ opacity: 1, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1)` }, { opacity: 0, transform: `translate(${R1(b.cx)}px,${R1(b.cy)}px) scale(1.4)` }], 400, 0, 'ease-in', 'forwards');
+    armadaA(ctx, aura, [{ opacity: 1 }, { opacity: 0 }], 400, 0, 'ease-in', 'forwards');
+    armadaA(ctx, drops, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'linear', 'forwards');
     frozen.forEach((x) => A(ctx, x, [{ filter: FZ }, { filter: 'none' }], K.unfreeze, 0, 'linear', 'none'));
     flashBoard(ctx, '#ffe7a4', 0.4, 400);
     await wait(ctx, K.drain);

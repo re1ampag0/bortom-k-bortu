@@ -1,0 +1,30 @@
+{
+ "readyBefore": {
+  "at": 13747,
+  "sprites": {
+   "types": 31,
+   "active": 0,
+   "free": 539,
+   "preparedNodes": 16627,
+   "connectedPrepared": false
+  },
+  "canvas": {
+   "bank": true,
+   "art": 8,
+   "surfaces": 3,
+   "active": 0
+  },
+  "intro": {
+   "count": 4,
+   "ready": true,
+   "connectedPrepared": false
+  },
+  "hooks": {
+   "work": false,
+   "phase": false,
+   "animation": false
+  },
+  "firstBootShow": null
+ },
+ "shows": []
+}

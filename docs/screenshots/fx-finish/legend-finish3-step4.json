@@ -1,0 +1,434 @@
+{
+ "scene": "legend",
+ "label": "finish3-step4",
+ "viewport": "390×844 DPR3 CPU×4",
+ "valid": true,
+ "errors": [],
+ "journal": [
+  "11:21:01 ▶ turnEnd",
+  "11:21:02 ✓ turnEnd 1.4 с",
+  "11:21:04 ▶ announce",
+  "11:21:05 ✓ announce 0.7 с",
+  "11:21:05 ▶ shot",
+  "11:21:09 ✓ shot 4.1 с",
+  "11:21:11 ▶ announce",
+  "11:21:12 ✓ announce 0.7 с",
+  "11:21:12 ▶ shot",
+  "11:21:16 ✓ shot 4.1 с",
+  "11:21:17 ▶ card",
+  "11:21:19 ✓ card 1.7 с",
+  "11:21:21 ▶ sell",
+  "11:21:22 ✓ sell 1.4 с",
+  "11:21:24 ▶ turnEnd",
+  "11:21:25 ✓ turnEnd 1.4 с",
+  "11:21:25 ▶ turn",
+  "11:21:27 ✓ turn 2.3 с",
+  "11:21:31 ▶ legend",
+  "11:21:46 ✓ legend 15.2 с"
+ ],
+ "elapsedMs": 5444.9000000003725,
+ "scriptingMs": 947.2390000000001,
+ "recalcStyleMs": 292.94299999999987,
+ "recalcStyleCount": 148,
+ "layoutMs": 111.55000000000001,
+ "layoutCount": 74,
+ "forcedStyle": {
+  "count": 19,
+  "ms": 92.27499999999999
+ },
+ "forcedLayout": {
+  "count": 10,
+  "ms": 44.946999999999996
+ },
+ "longTasks": 15,
+ "longestTaskMs": 377.018,
+ "paint": {
+  "ms": 404.74099999999993,
+  "rasterMs": 467.2910000000001
+ },
+ "worstFrameMs": 533.3000000000029,
+ "framesOver50": 21,
+ "fps": 23.508237065876553,
+ "renders": 1,
+ "renderMs": 55.799999999813735,
+ "renderMaxMs": 55.799999999813735,
+ "renderList": [
+  [
+   446,
+   55.8
+  ]
+ ],
+ "planks": 12,
+ "hands": 1,
+ "layers": {
+  "all": 131,
+  "drawing": 111
+ },
+ "observerLongTasks": 12,
+ "svgAnimations": 0,
+ "svgByFunction": {},
+ "perfEnabled": true,
+ "selectedShow": "legend",
+ "sameAsLastClip": false,
+ "worstFrames": [
+  {
+   "at": 0,
+   "ms": 446.2000000007465,
+   "partial": true,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "JS: legendIntro: создание",
+    "JS: вставка DOM",
+    "JS: legendIntro: вставка готового card",
+    "JS: legendIntro: вставка готового back",
+    "JS: legendIntro: вставка готового top",
+    "JS: legendIntro: вставка готового bot",
+    "JS: legendIntro: вставка готового rays",
+    "JS: legendIntro: вставка готового seal",
+    "JS: legendIntro: вставка готового ban",
+    "JS: вставка заготовки",
+    "JS: legendIntro: вставка готового cap",
+    "JS: частицы: кадр",
+    "JS: холст: вставка"
+   ],
+   "presses": [
+    "перед показом: click confirm-yes"
+   ],
+   "costs": {
+    "styleMs": 86.458,
+    "layoutMs": 39.497,
+    "paintMs": 91.226,
+    "scriptExclusiveMs": 163.96200000095368,
+    "layerizeMs": 16.253,
+    "rasterWorkerMs": 0,
+    "unattributedWallMs": 51.533999999792854
+   },
+   "domWork": {
+    "ms": 159.2,
+    "calls": 14,
+    "names": [
+     "legendIntro: создание",
+     "вставка DOM",
+     "legendIntro: вставка готового card",
+     "legendIntro: вставка готового back",
+     "legendIntro: вставка готового top",
+     "legendIntro: вставка готового bot",
+     "legendIntro: вставка готового rays",
+     "legendIntro: вставка готового seal",
+     "legendIntro: вставка готового ban",
+     "вставка заготовки",
+     "legendIntro: вставка готового cap",
+     "холст: вставка"
+    ]
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 16.253
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "EventDispatch",
+     "ms": 266.17100000095365,
+     "stack": []
+    },
+    {
+     "name": "RunMicrotasks",
+     "ms": 264.97800000095367,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 91.48900000095368,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 91.226,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 87.354,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 41.081,
+     "stack": []
+    }
+   ]
+  },
+  {
+   "at": 2062.800000000745,
+   "ms": 100,
+   "partial": false,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "legendIntro: печать",
+    "legendIntro: удержание",
+    "JS: частицы: кадр"
+   ],
+   "presses": [],
+   "costs": {
+    "styleMs": 0.535,
+    "layoutMs": 6.138,
+    "paintMs": 46.909,
+    "scriptExclusiveMs": 6.184,
+    "layerizeMs": 13.595,
+    "rasterWorkerMs": 0.698,
+    "unattributedWallMs": 29.456000000000003
+   },
+   "domWork": {
+    "ms": 0,
+    "calls": 0,
+    "names": []
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 13.595
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "Paint",
+     "ms": 46.909,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 45.924,
+     "stack": []
+    },
+    {
+     "name": "Layerize",
+     "ms": 13.595,
+     "stack": []
+    },
+    {
+     "name": "FireAnimationFrame",
+     "ms": 3.361,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 3.354,
+     "stack": []
+    },
+    {
+     "name": "Layout",
+     "ms": 3.321,
+     "stack": []
+    }
+   ]
+  },
+  {
+   "at": 4579.300000000745,
+   "ms": 83.40000000000146,
+   "partial": false,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "legendIntro: сворачивание/шар",
+    "JS: частицы: кадр"
+   ],
+   "presses": [],
+   "costs": {
+    "styleMs": 2.381,
+    "layoutMs": 3.206,
+    "paintMs": 28.454,
+    "scriptExclusiveMs": 15.042,
+    "layerizeMs": 14.917,
+    "rasterWorkerMs": 7.985,
+    "unattributedWallMs": 19.400000000001455
+   },
+   "domWork": {
+    "ms": 0,
+    "calls": 0,
+    "names": []
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 14.917
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "Paint",
+     "ms": 28.454,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 20.468,
+     "stack": []
+    },
+    {
+     "name": "Layerize",
+     "ms": 14.917,
+     "stack": []
+    },
+    {
+     "name": "RunMicrotasks",
+     "ms": 7.841,
+     "stack": []
+    },
+    {
+     "name": "Layout",
+     "ms": 3.206,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 3.13,
+     "stack": []
+    }
+   ]
+  },
+  {
+   "at": 4429.400000000744,
+   "ms": 83.30000000000291,
+   "partial": false,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "legendIntro: сворачивание/шар",
+    "JS: частицы: кадр"
+   ],
+   "presses": [],
+   "costs": {
+    "styleMs": 2.782,
+    "layoutMs": 1.243,
+    "paintMs": 14.403,
+    "scriptExclusiveMs": 7.75,
+    "layerizeMs": 17.217,
+    "rasterWorkerMs": 34.982,
+    "unattributedWallMs": 39.90500000000291
+   },
+   "domWork": {
+    "ms": 0,
+    "calls": 0,
+    "names": []
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 17.217
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "Layerize",
+     "ms": 17.217,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 14.403,
+     "stack": []
+    },
+    {
+     "name": "FireAnimationFrame",
+     "ms": 3.509,
+     "stack": []
+    },
+    {
+     "name": "RunMicrotasks",
+     "ms": 2.118,
+     "stack": []
+    },
+    {
+     "name": "TimerFire",
+     "ms": 1.807,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 1.739,
+     "stack": []
+    }
+   ]
+  },
+  {
+   "at": 1412.9000000007436,
+   "ms": 83.20000000000437,
+   "partial": false,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "legendIntro: приземление",
+    "JS: частицы: кадр"
+   ],
+   "presses": [],
+   "costs": {
+    "styleMs": 1.64,
+    "layoutMs": 23.083,
+    "paintMs": 12.82,
+    "scriptExclusiveMs": 9.153,
+    "layerizeMs": 12.205,
+    "rasterWorkerMs": 0.155,
+    "unattributedWallMs": 24.299000000004362
+   },
+   "domWork": {
+    "ms": 0,
+    "calls": 0,
+    "names": []
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 12.205
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "Layout",
+     "ms": 23.083,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 12.82,
+     "stack": []
+    },
+    {
+     "name": "Layerize",
+     "ms": 12.205,
+     "stack": []
+    },
+    {
+     "name": "FireAnimationFrame",
+     "ms": 6.17,
+     "stack": []
+    },
+    {
+     "name": "RunMicrotasks",
+     "ms": 5.483,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 5.471,
+     "stack": []
+    }
+   ]
+  }
+ ],
+ "latePreparation": [],
+ "dropped": 0
+}

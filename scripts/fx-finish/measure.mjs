@@ -11,6 +11,7 @@ import {gzipSync} from 'node:zlib';
 import {mkdirSync, writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {frameCosts} from './frame-costs.mjs';
+import {flashPoolProbe} from './flash-pool-probe.mjs';
 import {mainCosts} from '../fx-smooth-c/trace-metrics.mjs';
 
 const args = process.argv.slice(2);
@@ -48,7 +49,7 @@ subscribeClip(()=>{const x=window.fxFinish;if(x.shows.length>=32)x.shows.shift()
     }
   },
 };
-if (!flag('--reuse')) await build({root, configFile: resolve(root, 'vite.config.ts'), mode: 'e2e', logLevel: 'warn', plugins: [inject], build: {outDir, emptyOutDir: true, minify: false}});
+if (!flag('--reuse')) await build({root, configFile: resolve(root, 'vite.config.ts'), mode: 'e2e', logLevel: 'warn', plugins: [inject,...(flag('--flash-pool')?[flashPoolProbe()]:[])], build: {outDir, emptyOutDir: true, minify: false}});
 if(flag('--build-only'))process.exit(0);
 const server = await preview({root, configFile: resolve(root, 'vite.config.ts'), build: {outDir}, preview: {host: '127.0.0.1', port: 5187, strictPort: true}});
 const browser = await chromium.launch({executablePath:process.env.CHROMIUM_PATH??'/usr/bin/chromium'});
@@ -186,6 +187,13 @@ async function run(scene) {
     writeFileSync(`${OUT}/${scene}-${label}-compositing.json`,JSON.stringify(rows,null,1));
   }
   await expect.poll(()=>page.evaluate(()=>window.fxIntroReady?.(document.querySelector('.board'))?.ready??true),{timeout:20000}).toBe(true);
+  let flashParking=null;
+  if(flag('--flash-pool')){
+    const before=latestLayers;
+    await page.evaluate(()=>window.fxPrepareFlashPool(document.querySelector('.board')));
+    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+    flashParking={before,after:latestLayers,...await page.evaluate(()=>({...window.fxFlashProbe,hidden:document.querySelectorAll('[data-flash-parking] > [style*="display: none"]').length}))};
+  }
   const readyBefore=await page.evaluate(()=>{
     const board=document.querySelector('.board'),d=window.fxFinish;
     const boot=d?.shows?.[0]??null;
@@ -262,6 +270,7 @@ async function run(scene) {
       observerLongTasks: m.tasks.filter((t) => t.start >= from && t.start <= to).length,
       svgAnimations: svg.reduce((s, [, n]) => s + n, 0), svgByFunction: Object.fromEntries(svg)};
     r.perfEnabled=perf;
+    if(flashParking)r.flashParking={...flashParking,...flashAfter};
     const relevant=diagnostic.shows.filter(s=>s.profile&&s.profile.end>m.start+from&&s.profile.start<m.start+to);
     const selected=(name==='armada'||name==='legend'?relevant.filter(s=>s.stats.scene.includes('legend')):name==='hit'?relevant.filter(s=>s.stats.scene.includes('shot')):relevant).at(-1)??relevant.at(-1);
     if(selected){
@@ -277,6 +286,8 @@ async function run(scene) {
     console.log(`${name}: valid=${r.valid} renders=${r.renders} longTasks=${r.longTasks} longest=${r.longestTaskMs.toFixed(0)} worst=${r.worstFrameMs.toFixed(0)} style=${r.recalcStyleMs.toFixed(0)} script=${r.scriptingMs.toFixed(0)}${errors.length ? ' errors=' + errors.join(' | ') : ''}`);
     return r;
   };
+  const flashAfter=flag('--flash-pool')?await page.evaluate(()=>({...window.fxFlashProbe})):null;
+  if(flashAfter&&(!flashAfter.reveals||flashAfter.inserts))throw Error('Flash pool experiment not exercised: '+JSON.stringify(flashAfter));
   const out = [result(scene, start, end, 0, m.end - m.start)];
   if (scene === 'armada' && m.introEnd != null) out.unshift(result('legend', start, start + m.introEnd * 1000, 0, m.introEnd));
   await context.close();

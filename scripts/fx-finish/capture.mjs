@@ -10,9 +10,10 @@ const [beforeDist, afterDist, ...rest] = process.argv.slice(2);
 const selected=rest.filter((s,i)=>!s.startsWith('--')&&rest[i-1]!=='--out');
 const tag=rest.find(s=>s.startsWith('--tag='))?.slice(6);
 if(tag&&!/^[a-z0-9-]+$/i.test(tag))throw Error('Invalid capture tag');
+const width=Number(rest.find(s=>s.startsWith('--width='))?.slice(8)??390),height=Number(rest.find(s=>s.startsWith('--height='))?.slice(9)??844);
 const scenes = selected.length ? selected : ['legend','armada','bottle','idle'];
 // the moments after the press, ms of the clip clock: around the renderWith of each clip and after it
-const MOMENTS = {hit:[800,2000,3200,4200,5200],'idle-compositor':[1000,4600,4800,5000],'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700], lift: [0, 100, 200, 400, 700]};
+const MOMENTS = {arrival:[800,1260,1820],sink:[100,2000,3300,6500,8200],plain:[1000,2600,4600],whirl:[1000,2600,4600],hit:[800,2000,3200,4200,5200],'idle-compositor':[1000,4600,4800,5000],'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000,12000],idle:[1000,3000],kraken:[6000,8500,11000,14000],jack:[9000,10500,12000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700], lift: [0, 100, 200, 400, 700]};
 // --out DIR: another task's folder (ui-press: the card that flies from the lifted card of a phone, scene «lift»);
 // --tag=NAME: frames-NAME under fx-finish, so the comparisons of a later part do not overwrite the earlier ones
 const OUT = rest.includes('--out') ? rest[rest.indexOf('--out') + 1] : 'docs/screenshots/fx-finish/'+(tag?'frames-'+tag:'frames');
@@ -39,7 +40,7 @@ async function shoot(dist, port, tag) {
   const browser = await chromium.launch({executablePath:process.env.CHROMIUM_PATH??'/usr/bin/chromium'});
   try {
     for (const scene of scenes) {
-      const page = await browser.newPage({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
+      const page = await browser.newPage({viewport: {width, height}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.clock.install({time: new Date(0)});
@@ -49,12 +50,15 @@ async function shoot(dist, port, tag) {
       await page.addInitScript(() => {
         let seed = 19427;
         Math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
-        window.fxAnims = [];
+        window.fxAnims = [];window.fxBoardSvg=[];
+        window.fxBirth=new WeakMap();
+        new MutationObserver(records=>{const now=performance.now();for(const r of records)for(const n of r.addedNodes)if(n.nodeType===1){window.fxBirth.set(n,now);for(const el of n.querySelectorAll('*'))window.fxBirth.set(el,now);}}).observe(document,{childList:true,subtree:true});
         window.fxCpu={active:true,start:0,svg:[],renders:[]};
         const controlled = new WeakSet(), state = Object.getOwnPropertyDescriptor(Animation.prototype, 'playState').get;
         Object.defineProperty(Animation.prototype, 'playState', {configurable: true, get() { const s = state.call(this); return s === 'paused' && controlled.has(this) && !this.fxHeld ? 'running' : s; }});
         const native = Element.prototype.animate;
         Element.prototype.animate = function (frames, options) {
+          if(this.closest('svg.fx-svg'))window.fxBoardSvg.push({at:performance.now(),tag:this.tagName,cls:this.getAttribute('class')});
           const a = native.call(this, frames, options);
           a.pause(); controlled.add(a); a.currentTime = 0;
           window.fxAnims.push({a, at: performance.now()});
@@ -72,19 +76,21 @@ async function shoot(dist, port, tag) {
               const dt = now - row.at, end = a.effect?.getComputedTiming().endTime ?? 0;
               if (dt >= end) a.finish(); else a.currentTime = Math.max(0, dt);
             }
-            for (const a of document.getAnimations()) if (a instanceof CSSAnimation) { a.pause(); a.currentTime = 0; }
+            for (const a of document.getAnimations()) if (a instanceof CSSAnimation) { a.pause(); a.currentTime = (a.animationName.startsWith('bottle-float-')||a.animationName==='sink-wreck-rock')?now-(window.fxBirth.get(a.effect.target)??now):0; }
+            for(const svg of document.querySelectorAll('svg'))if(svg.querySelector('animate,animateTransform')){svg.pauseAnimations();svg.setCurrentTime(Math.max(0,now-(window.fxBirth.get(svg)??now))/1000);}
           });
         }
       };
       const busy = () => page.evaluate(() => { const g = document.querySelector('.game'); return !!g && (g.classList.contains('fx-busy') || g.hasAttribute('data-fx-busy')); });
       const until = async (ok, limit = 60000) => { for (let t = 0; t < limit; t += 200) { if (await ok()) return; await step(200); } throw new Error('timeout'); };
       const click = async (sel) => { const el = page.locator(sel).filter({visible: true}).first(); await expect(el).toBeVisible(); await el.click(); };
-      if(['legend','armada','bottle','kraken','jack'].includes(scene)){
-        await page.goto(`http://127.0.0.1:${port}/bortom-k-bortu/?fxScene=${scene==='legend'?'bottle':scene}&manual=1&speed=normal&perf=0`);
+      if(['legend','armada','bottle','kraken','jack','whirl','plain','sink','arrival'].includes(scene)){
+        await page.goto(`http://127.0.0.1:${port}/bortom-k-bortu/?fxScene=${scene==='arrival'?'plain':scene==='legend'?'bottle':scene}&manual=1&speed=normal&perf=0`);
         await page.evaluate(()=>document.fonts.ready);
         if(await page.evaluate(()=>!!window.fxCaptureIntroReady))await page.waitForFunction(()=>window.fxCaptureIntroReady(),null,{timeout:20000});
+        if(scene==='armada')await page.evaluate(()=>window.fxPrepareFlashPool?.(document.querySelector('.board')));
         await click('[data-testid="fx-start"]');
-        await until(async()=>!!await page.locator(scene==='armada'?'.gun-fire':'.lg-card').count());
+        await until(async()=>scene==='arrival'?await page.evaluate(()=>window.fxAnims.some(row=>row.a.effect?.target?.dataset?.volleyArt==='blast')):scene==='sink'?!!await page.locator('.stamp-fx.sunk').count():scene==='armada'?await page.evaluate(()=>window.fxAnims.some(row=>row.a.effect?.target?.dataset?.volleyArt==='cone')):!!await page.locator(['whirl','plain'].includes(scene)?'.plate':'.lg-card').count());
         await page.evaluate(()=>document.fonts.ready);
       }else{
       await page.goto(`http://127.0.0.1:${port}/bortom-k-bortu/?seed=1&speed=normal&hints=0&perf=0`);
@@ -101,7 +107,12 @@ async function shoot(dist, port, tag) {
       else if (scene === 'lift') { await click('[data-fx-hand] [data-fx-card="Ж-17"]'); await step(400); await click('[data-testid="lift-play"]'); }
       else { await click('[data-fx-hand] [data-fx-card="Ж-14"]'); await step(200); await click('[data-testid="lift-play"]'); await step(200); await click('[data-testid="plate-И"]'); await step(200); await click('[data-testid="play-card"]'); }
       }
-      let at = 0;const sampleClocks={};
+      if(scene==='arrival'){
+        const offset=await page.evaluate(()=>{const row=window.fxAnims.find(row=>row.a.effect?.target?.dataset?.volleyArt==='blast');return performance.now()-row.at;});
+        // until polls in 200ms steps: align both builds at the same rounded 200ms boundary.
+        if(offset>200)throw Error('Arrival anchor overshot');
+      }
+      let at = scene==='arrival'?await page.evaluate(()=>{const row=window.fxAnims.find(row=>row.a.effect?.target?.dataset?.volleyArt==='blast');return performance.now()-row.at;}):0;const sampleClocks={},plateFrames={};
       for (const m of MOMENTS[scene]) {
         await step(m - at); at = m;
         if(scene==='idle-motion'||scene==='idle-compositor')await page.evaluate(({phase,scene})=>{
@@ -117,11 +128,18 @@ async function shoot(dist, port, tag) {
           }
         },{phase:m,scene});
         sampleClocks[m]=await page.evaluate(()=>window.fxCaptureParticles?.()??[]);
+        if(scene==='plain'||scene==='whirl'||scene==='arrival')plateFrames[m]=await page.evaluate(()=>{
+          const el=document.querySelector('.plate');if(!el)return null;
+          const b=el.getBoundingClientRect(),style=getComputedStyle(el);
+          return {html:el.innerHTML,text:el.textContent,box:{x:b.x,y:b.y,w:b.width,h:b.height},font:style.font,fontFamily:style.fontFamily,background:style.background,color:style.color};
+        });
         await page.screenshot({path: `${OUT}/${scene}-${m}-${tag}.png`});
       }
+      if(scene==='plain'||scene==='whirl'||scene==='arrival')writeFileSync(`${OUT}/${scene}-${tag}-plate.json`,JSON.stringify(plateFrames,null,1));
       writeFileSync(`${OUT}/${scene}-${tag}-clocks.json`,JSON.stringify(sampleClocks,null,1));
       if(errors.length)throw new Error(JSON.stringify(errors));
-      if(['armada','bottle','kraken','jack'].includes(scene))await until(()=>page.evaluate(()=>document.body.dataset.fxDone==='1'));
+      if(['armada','bottle','kraken','jack','sink'].includes(scene))await until(()=>page.evaluate(()=>document.body.dataset.fxDone==='1'));
+      writeFileSync(`${OUT}/${scene}-${tag}-native-big-svg.json`,JSON.stringify(await page.evaluate(()=>window.fxBoardSvg),null,1));
       writeFileSync(`${OUT}/${scene}-${tag}-svg.json`,JSON.stringify(await page.evaluate(()=>window.fxCpu.svg),null,1));
       await page.close();
     }
@@ -145,7 +163,7 @@ for (const scene of scenes) for (const m of MOMENTS[scene]) {
     if (Math.max(...[0, 1, 2].map((c) => Math.abs(a.data[i + c] - b.data[i + c]))) > 6) diff++;
     for (let c = 0; c < 4; c++) { side.data[j + c] = a.data[i + c]; side.data[k + c] = b.data[i + c]; }
   }
-  writeFileSync(`${OUT}/${scene}-${m}-comparison.png`, PNG.sync.write(side));
+  writeFileSync(`${OUT}/${scene}-${m}-comparison.png`, PNG.sync.write(side,{deflateLevel:9,deflateStrategy:0}));
   report[`${scene}-${m}`] = {rgbaDifferentPixels,maxChannelDifference,differentPixels: diff, share: +(diff / (a.width * a.height) * 100).toFixed(3)};
 }
 writeFileSync(`${OUT}/differences.json`, JSON.stringify(report, null, 1) + '\n');

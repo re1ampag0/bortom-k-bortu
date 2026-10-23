@@ -1,0 +1,20 @@
+{
+ "arrival-800": {
+  "rgbaDifferentPixels": 671,
+  "maxChannelDifference": 198,
+  "differentPixels": 602,
+  "share": 0.038
+ },
+ "arrival-1260": {
+  "rgbaDifferentPixels": 246,
+  "maxChannelDifference": 181,
+  "differentPixels": 208,
+  "share": 0.013
+ },
+ "arrival-1820": {
+  "rgbaDifferentPixels": 9,
+  "maxChannelDifference": 1,
+  "differentPixels": 0,
+  "share": 0
+ }
+}

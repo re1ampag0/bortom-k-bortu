@@ -1,0 +1,32 @@
+{
+ "sink-100": {
+  "rgbaDifferentPixels": 16312,
+  "maxChannelDifference": 198,
+  "differentPixels": 1208,
+  "share": 0.033
+ },
+ "sink-2000": {
+  "rgbaDifferentPixels": 120895,
+  "maxChannelDifference": 78,
+  "differentPixels": 32288,
+  "share": 0.895
+ },
+ "sink-3300": {
+  "rgbaDifferentPixels": 10358,
+  "maxChannelDifference": 190,
+  "differentPixels": 3664,
+  "share": 0.102
+ },
+ "sink-6500": {
+  "rgbaDifferentPixels": 27873,
+  "maxChannelDifference": 119,
+  "differentPixels": 12390,
+  "share": 0.344
+ },
+ "sink-8200": {
+  "rgbaDifferentPixels": 23880,
+  "maxChannelDifference": 131,
+  "differentPixels": 9001,
+  "share": 0.25
+ }
+}

@@ -1,0 +1,44 @@
+{
+ "800": {
+  "html": "<div class=\"who\"><b>«Индевор»</b> → <b>«Месть»</b>, напротив</div><div class=\"big\">3 по Корпусу</div><div class=\"terms\"><span class=\"\">Пушки</span><span class=\" \">3</span></div>",
+  "text": "«Индевор» → «Месть», напротив3 по КорпусуПушки3",
+  "box": {
+   "x": 16,
+   "y": 344.59375,
+   "w": 220,
+   "h": 68.734375
+  },
+  "font": "",
+  "fontFamily": "\"Alegreya Sans\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+  "background": "rgb(251, 245, 231) none repeat scroll 0% 0% / auto padding-box border-box",
+  "color": "rgb(42, 37, 33)"
+ },
+ "1260": {
+  "html": "<div class=\"who\"><b>«Индевор»</b> → <b>«Месть»</b>, напротив</div><div class=\"big\">3 по Корпусу</div><div class=\"terms\"><span class=\"\">Пушки</span><span class=\" \">3</span></div>",
+  "text": "«Индевор» → «Месть», напротив3 по КорпусуПушки3",
+  "box": {
+   "x": 16,
+   "y": 344.59375,
+   "w": 220,
+   "h": 68.734375
+  },
+  "font": "",
+  "fontFamily": "\"Alegreya Sans\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+  "background": "rgb(251, 245, 231) none repeat scroll 0% 0% / auto padding-box border-box",
+  "color": "rgb(42, 37, 33)"
+ },
+ "1820": {
+  "html": "<div class=\"who\"><b>«Индевор»</b> → <b>«Месть»</b>, напротив</div><div class=\"big\">3 по Корпусу</div><div class=\"terms\"><span class=\"\">Пушки</span><span class=\" \">3</span></div>",
+  "text": "«Индевор» → «Месть», напротив3 по КорпусуПушки3",
+  "box": {
+   "x": 16,
+   "y": 344.59375,
+   "w": 220,
+   "h": 68.734375
+  },
+  "font": "",
+  "fontFamily": "\"Alegreya Sans\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+  "background": "rgb(251, 245, 231) none repeat scroll 0% 0% / auto padding-box border-box",
+  "color": "rgb(42, 37, 33)"
+ }
+}

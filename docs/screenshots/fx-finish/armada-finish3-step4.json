@@ -1,0 +1,462 @@
+{
+ "scene": "armada",
+ "label": "finish3-step4",
+ "viewport": "390×844 DPR3 CPU×4",
+ "valid": true,
+ "errors": [],
+ "journal": [
+  "11:21:01 ▶ turnEnd",
+  "11:21:02 ✓ turnEnd 1.4 с",
+  "11:21:04 ▶ announce",
+  "11:21:05 ✓ announce 0.7 с",
+  "11:21:05 ▶ shot",
+  "11:21:09 ✓ shot 4.1 с",
+  "11:21:11 ▶ announce",
+  "11:21:12 ✓ announce 0.7 с",
+  "11:21:12 ▶ shot",
+  "11:21:16 ✓ shot 4.1 с",
+  "11:21:17 ▶ card",
+  "11:21:19 ✓ card 1.7 с",
+  "11:21:21 ▶ sell",
+  "11:21:22 ✓ sell 1.4 с",
+  "11:21:24 ▶ turnEnd",
+  "11:21:25 ✓ turnEnd 1.4 с",
+  "11:21:25 ▶ turn",
+  "11:21:27 ✓ turn 2.3 с",
+  "11:21:31 ▶ legend",
+  "11:21:46 ✓ legend 15.2 с"
+ ],
+ "elapsedMs": 16462.60000000056,
+ "scriptingMs": 3140.8929999999987,
+ "recalcStyleMs": 841.3769999999998,
+ "recalcStyleCount": 548,
+ "layoutMs": 408.8489999999997,
+ "layoutCount": 346,
+ "forcedStyle": {
+  "count": 129,
+  "ms": 284.237
+ },
+ "forcedLayout": {
+  "count": 92,
+  "ms": 206.851
+ },
+ "longTasks": 71,
+ "longestTaskMs": 377.018,
+ "paint": {
+  "ms": 1279.3089999999993,
+  "rasterMs": 726.0369999999999
+ },
+ "worstFrameMs": 533.3000000000029,
+ "framesOver50": 75,
+ "fps": 24.601217304677647,
+ "renders": 1,
+ "renderMs": 55.799999999813735,
+ "renderMaxMs": 55.799999999813735,
+ "renderList": [
+  [
+   446,
+   55.8
+  ]
+ ],
+ "planks": 12,
+ "hands": 1,
+ "layers": {
+  "all": 131,
+  "drawing": 111
+ },
+ "observerLongTasks": 67,
+ "svgAnimations": 0,
+ "svgByFunction": {},
+ "perfEnabled": true,
+ "selectedShow": "legend",
+ "sameAsLastClip": true,
+ "worstFrames": [
+  {
+   "at": 0,
+   "ms": 446.2000000007465,
+   "partial": true,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "JS: legendIntro: создание",
+    "JS: вставка DOM",
+    "JS: legendIntro: вставка готового card",
+    "JS: legendIntro: вставка готового back",
+    "JS: legendIntro: вставка готового top",
+    "JS: legendIntro: вставка готового bot",
+    "JS: legendIntro: вставка готового rays",
+    "JS: legendIntro: вставка готового seal",
+    "JS: legendIntro: вставка готового ban",
+    "JS: вставка заготовки",
+    "JS: legendIntro: вставка готового cap",
+    "JS: частицы: кадр",
+    "JS: холст: вставка"
+   ],
+   "presses": [
+    "перед показом: click confirm-yes"
+   ],
+   "costs": {
+    "styleMs": 86.458,
+    "layoutMs": 39.497,
+    "paintMs": 91.226,
+    "scriptExclusiveMs": 163.96200000095368,
+    "layerizeMs": 16.253,
+    "rasterWorkerMs": 0,
+    "unattributedWallMs": 51.533999999792854
+   },
+   "domWork": {
+    "ms": 159.2,
+    "calls": 14,
+    "names": [
+     "legendIntro: создание",
+     "вставка DOM",
+     "legendIntro: вставка готового card",
+     "legendIntro: вставка готового back",
+     "legendIntro: вставка готового top",
+     "legendIntro: вставка готового bot",
+     "legendIntro: вставка готового rays",
+     "legendIntro: вставка готового seal",
+     "legendIntro: вставка готового ban",
+     "вставка заготовки",
+     "legendIntro: вставка готового cap",
+     "холст: вставка"
+    ]
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 16.253
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "EventDispatch",
+     "ms": 266.17100000095365,
+     "stack": []
+    },
+    {
+     "name": "RunMicrotasks",
+     "ms": 264.97800000095367,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 91.48900000095368,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 91.226,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 87.354,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 41.081,
+     "stack": []
+    }
+   ]
+  },
+  {
+   "at": 10379.100000000748,
+   "ms": 200,
+   "partial": false,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "LG[И-Л]: сюжет",
+    "JS: gunFire: создание",
+    "gunFire",
+    "JS: вставка заготовки",
+    "JS: частицы: кадр"
+   ],
+   "presses": [],
+   "costs": {
+    "styleMs": 20.78,
+    "layoutMs": 15.223,
+    "paintMs": 57.121,
+    "scriptExclusiveMs": 50.449,
+    "layerizeMs": 17.958,
+    "rasterWorkerMs": 0.977,
+    "unattributedWallMs": 39.77799999999999
+   },
+   "domWork": {
+    "ms": 27.299999999046324,
+    "calls": 15,
+    "names": [
+     "gunFire: создание",
+     "вставка заготовки"
+    ]
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 17.958
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "Paint",
+     "ms": 57.121,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 54.911,
+     "stack": []
+    },
+    {
+     "name": "Paint",
+     "ms": 39.652,
+     "stack": []
+    },
+    {
+     "name": "TimerFire",
+     "ms": 21.004,
+     "stack": []
+    },
+    {
+     "name": "Layerize",
+     "ms": 17.958,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 17.931,
+     "stack": []
+    }
+   ]
+  },
+  {
+   "at": 8245.900000000744,
+   "ms": 199.90000000000146,
+   "partial": false,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "LG[И-Л]: сюжет",
+    "gunFire",
+    "JS: gunFire: создание",
+    "JS: вставка заготовки",
+    "JS: частицы: кадр"
+   ],
+   "presses": [],
+   "costs": {
+    "styleMs": 41.79,
+    "layoutMs": 11.379,
+    "paintMs": 10.266,
+    "scriptExclusiveMs": 91.676,
+    "layerizeMs": 6.71,
+    "rasterWorkerMs": 2,
+    "unattributedWallMs": 38.07900000000146
+   },
+   "domWork": {
+    "ms": 74.50000000095368,
+    "calls": 20,
+    "names": [
+     "gunFire: создание",
+     "вставка заготовки"
+    ]
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 0.286
+    },
+    {
+     "name": "Layerize",
+     "ms": 6.424
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "TimerFire",
+     "ms": 62.154,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 60.26,
+     "stack": []
+    },
+    {
+     "name": "TimerFire",
+     "ms": 29.186,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 28.871,
+     "stack": []
+    },
+    {
+     "name": "Layerize",
+     "ms": 0.286,
+     "stack": []
+    },
+    {
+     "name": "MajorGC",
+     "ms": 16.589,
+     "stack": []
+    }
+   ]
+  },
+  {
+   "at": 4912.7000000007465,
+   "ms": 183.29999999999563,
+   "partial": false,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "LG[И-Л]: сюжет",
+    "JS: вставка заготовки",
+    "JS: частицы: кадр"
+   ],
+   "presses": [],
+   "costs": {
+    "styleMs": 38.079,
+    "layoutMs": 4.873,
+    "paintMs": 41.596,
+    "scriptExclusiveMs": 33.67,
+    "layerizeMs": 36.556,
+    "rasterWorkerMs": 0.102,
+    "unattributedWallMs": 28.525999999995634
+   },
+   "domWork": {
+    "ms": 2.9999999990463255,
+    "calls": 5,
+    "names": [
+     "вставка заготовки"
+    ]
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 9.478
+    },
+    {
+     "name": "Layerize",
+     "ms": 27.078
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "Paint",
+     "ms": 41.596,
+     "stack": []
+    },
+    {
+     "name": "UpdateLayoutTree",
+     "ms": 38.079,
+     "stack": []
+    },
+    {
+     "name": "Layerize",
+     "ms": 27.078,
+     "stack": []
+    },
+    {
+     "name": "TimerFire",
+     "ms": 21.479,
+     "stack": []
+    },
+    {
+     "name": "RunMicrotasks",
+     "ms": 21.399,
+     "stack": []
+    },
+    {
+     "name": "Layerize",
+     "ms": 9.478,
+     "stack": []
+    }
+   ]
+  },
+  {
+   "at": 8445.800000000745,
+   "ms": 150.09999999999854,
+   "partial": false,
+   "clips": [
+    "legend"
+   ],
+   "stages": [
+    "LG[И-Л]: сюжет",
+    "gunFire",
+    "JS: gunFire: создание",
+    "JS: вставка заготовки",
+    "JS: частицы: кадр"
+   ],
+   "presses": [],
+   "costs": {
+    "styleMs": 12.169,
+    "layoutMs": 11.426,
+    "paintMs": 3.066,
+    "scriptExclusiveMs": 62.198,
+    "layerizeMs": 11.67,
+    "rasterWorkerMs": 3.459,
+    "unattributedWallMs": 49.57099999999855
+   },
+   "domWork": {
+    "ms": 23.499999999046327,
+    "calls": 20,
+    "names": [
+     "gunFire: создание",
+     "вставка заготовки"
+    ]
+   },
+   "layerEvents": [
+    {
+     "name": "Layerize",
+     "ms": 11.67
+    }
+   ],
+   "allocatedLayers": null,
+   "evidence": [
+    {
+     "name": "TimerFire",
+     "ms": 17.466,
+     "stack": []
+    },
+    {
+     "name": "TimerFire",
+     "ms": 15.846,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 15.327,
+     "stack": []
+    },
+    {
+     "name": "TimerFire",
+     "ms": 14.614,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 12.795,
+     "stack": []
+    },
+    {
+     "name": "FunctionCall",
+     "ms": 12.338,
+     "stack": []
+    }
+   ]
+  }
+ ],
+ "latePreparation": [],
+ "dropped": 0
+}

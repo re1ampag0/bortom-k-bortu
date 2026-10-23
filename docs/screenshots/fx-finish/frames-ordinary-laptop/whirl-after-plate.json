@@ -1,0 +1,44 @@
+{
+ "1000": {
+  "html": "<div class=\"who\"><b>«Месть»</b> → <b>«Индевор»</b>, напротив</div><div class=\"big\">4 по Корпусу</div><div class=\"terms\"><span class=\"new\" data-card=\"М-03\">Греческий огонь</span><span class=\"new\" data-card=\"М-03\">…</span></div>",
+  "text": "«Месть» → «Индевор», напротив4 по КорпусуГреческий огонь…",
+  "box": {
+   "x": 24,
+   "y": 219,
+   "w": 300,
+   "h": 77.96875
+  },
+  "font": "",
+  "fontFamily": "\"Alegreya Sans\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+  "background": "rgb(251, 245, 231) none repeat scroll 0% 0% / auto padding-box border-box",
+  "color": "rgb(42, 37, 33)"
+ },
+ "2600": {
+  "html": "<div class=\"who\"><b>«Месть»</b> → <b>«Индевор»</b>, напротив</div><div class=\"big\"><s>4</s>3 по Корпусу</div><div class=\"terms\"><span class=\"\">Пушки</span><span class=\" \">3</span><span class=\"\" data-card=\"М-03\">Греческий огонь</span><span class=\"pos \" data-card=\"М-03\">+1</span><span class=\"new\" data-card=\"Г-23\">Водоворот</span><span class=\"neg new\" data-card=\"Г-23\">−1</span></div>",
+  "text": "«Месть» → «Индевор», напротив43 по КорпусуПушки3Греческий огонь+1Водоворот−1",
+  "box": {
+   "x": 24,
+   "y": 210,
+   "w": 300,
+   "h": 95.859375
+  },
+  "font": "",
+  "fontFamily": "\"Alegreya Sans\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+  "background": "rgb(251, 245, 231) none repeat scroll 0% 0% / auto padding-box border-box",
+  "color": "rgb(42, 37, 33)"
+ },
+ "4600": {
+  "html": "<div class=\"who\"><b>«Месть»</b> → <b>«Индевор»</b>, напротив</div><div class=\"big\"><s>4</s>3 по Корпусу</div><div class=\"terms\"><span class=\"\">Пушки</span><span class=\" \">3</span><span class=\"\" data-card=\"М-03\">Греческий огонь</span><span class=\"pos \" data-card=\"М-03\">+1</span><span class=\"new\" data-card=\"Г-23\">Водоворот</span><span class=\"neg new\" data-card=\"Г-23\">−1</span></div>",
+  "text": "«Месть» → «Индевор», напротив43 по КорпусуПушки3Греческий огонь+1Водоворот−1",
+  "box": {
+   "x": 24,
+   "y": 210,
+   "w": 300,
+   "h": 95.859375
+  },
+  "font": "",
+  "fontFamily": "\"Alegreya Sans\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+  "background": "rgb(251, 245, 231) none repeat scroll 0% 0% / auto padding-box border-box",
+  "color": "rgb(42, 37, 33)"
+ }
+}

@@ -1,0 +1,61 @@
+step1 typecheck
+> bortom-k-bortu@0.0.0 typecheck
+> tsc -p tsconfig.json && tsc -p tsconfig.node.json
+
+step2 typecheck
+> bortom-k-bortu@0.0.0 typecheck
+> tsc -p tsconfig.json && tsc -p tsconfig.node.json
+
+step3 typecheck
+> bortom-k-bortu@0.0.0 typecheck
+> tsc -p tsconfig.json && tsc -p tsconfig.node.json
+
+settings states (first run includes failed new live scenario)
+  ✓  1 [chromium] › e2e/settings-damage.spec.ts:30:40 › damage breakdown setting (430×932) › damage breakdown show: settings persist, cards fade, result and clickthrough (14.7s)
+  ✓  2 [chromium] › e2e/settings-damage.spec.ts:30:40 › damage breakdown setting (430×932) › damage breakdown hide: settings persist, cards fade, result and clickthrough (14.6s)
+  ✘  3 [chromium] › e2e/settings-damage.spec.ts:101:3 › damage breakdown setting (430×932) › damage breakdown changes immediately during a Volley (30.2s)
+    Error: expect(locator).toBeVisible() failed
+  1 failed
+  2 passed (1.1m)
+
+settings live after Settings-click fix
+  ✓  1 [chromium] › e2e/settings-damage.spec.ts:101:3 › damage breakdown setting (430×932) › damage breakdown changes immediately during a Volley (17.2s)
+  1 passed (21.2s)
+
+fx-volley selected, one run
+  ✓  1 [chromium] › e2e/fx-volley.spec.ts:17:5 › the Volley on the table through ?fxScene (1366×660) › plain: the layer takes no press, a hand card opens during the show, the numbers are the result (6.3s)
+  ✓  2 [chromium] › e2e/fx-volley.spec.ts:97:3 › V5: the breakdown plate (1366×660) › it stays ≈ 2 s after the clip, then goes by itself; the layer is empty meanwhile (8.4s)
+  ✓  3 [chromium] › e2e/fx-volley.spec.ts:110:3 › V5: the breakdown plate (1366×660) › a press on the table takes it away at once (7.6s)
+  ✓  4 [chromium] › e2e/fx-volley.spec.ts:131:3 › V5: the plate on a phone (430×680) › the compact plate stays between the planks on a short phone (1.2s)
+  4 passed (28.9s)
+
+fx-reactions selected, one run
+  ✓  1 [chromium] › e2e/fx-reactions.spec.ts:112:5 › the Reactions and the special Volleys through ?fxScene (1366×660) › whirl: the effect on the table, the frame, the result (9.3s)
+  ✓  2 [chromium] › e2e/fx-reactions.spec.ts:132:3 › the Reactions and the special Volleys through ?fxScene (1366×660) › whirl: the layer takes no press during the effect (2.8s)
+  2 passed (17.5s)
+
+2026-10-23 additional sinking migration and Volley fixes
+$ npm run typecheck (after sinking)
+exit 0
+$ npm run typecheck (after impact arrival fixes and new e2e)
+exit 0
+$ npx playwright test e2e/fx-volley.spec.ts -g 'hull impact:' --project=chromium --workers=1 --config=scripts/fx-smooth-c/playwright.config.ts
+1 passed (15.0s); final development run, earlier failed pilots documented in progress
+$ npx playwright test e2e/fx-volley.spec.ts -g 'it stays ≈ 2 s|the compact plate stays' --project=chromium --workers=1 --config=scripts/fx-smooth-c/playwright.config.ts
+2 passed (15.4s); once each after these changes
+
+Final verification (2026-10-23)
+$ npx playwright test e2e/perf-guard.spec.ts -g 'perf guard:' --project=chromium --workers=1 --repeat-each=3 --max-failures=1 --config=scripts/fx-smooth-c/playwright.config.ts
+3 passed (2.9m); consecutive: 54.8s, 55.4s, 56.2s
+All sampled shows: renders Game 0; board-wide SVG animations none; unknown properties none.
+Idle: no unknown running animations for 3 seconds. No layer/Paint assertions.
+$ npx playwright test e2e/fx-reactions.spec.ts -g 'counter: the effect' --project=chromium --workers=1 --config=scripts/fx-smooth-c/playwright.config.ts
+1 passed (15.9s); one actual run after impact changes
+$ npm test
+Test Files  63 passed (63)
+Tests  690 passed (690)
+Duration  29.92s (transform 3.22s, setup 0ms, collect 12.16s, tests 44.08s, environment 10ms, prepare 5.35s)
+exit 0
+
+$ npm run typecheck (final, including e2e/perf-guard.spec.ts)
+exit 0

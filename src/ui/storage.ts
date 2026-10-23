@@ -37,9 +37,11 @@ export interface TableView {
   guns: GunsView;
   hand: HandBg;
   frame: SeaFrame;
+  /** Damage breakdown during a Volley, and its short trace. Old settings show it. */
+  damage: 'show' | 'hide';
 }
 
-export const DEFAULT_VIEW: TableView = { guns: 'icons', hand: 'deck', frame: 'bulwark' };
+export const DEFAULT_VIEW: TableView = { guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show' };
 
 export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false, tapSkip: false, view: DEFAULT_VIEW };
 
@@ -121,6 +123,7 @@ function readView(v: unknown): TableView {
   return {
     guns: pick(o.guns, ['icons', 'ports'], DEFAULT_VIEW.guns),
     hand: pick(o.hand, ['deck', 'table'], DEFAULT_VIEW.hand),
+    damage: pick(o.damage, ['show', 'hide'], DEFAULT_VIEW.damage),
     frame: pick(o.frame, ['bulwark', 'brass'], DEFAULT_VIEW.frame),
   };
 }
@@ -135,8 +138,15 @@ export function loadSettings(): Settings {
   }
 }
 
+const settingsListeners = new Set<(settings: Settings) => void>();
+/** Same-tab view changes reach imperative clips without rendering Game on every clip frame. */
+export function subscribeSettings(fn: (settings: Settings) => void): () => void {
+  settingsListeners.add(fn);
+  return () => { settingsListeners.delete(fn); };
+}
 export function storeSettings(s: Settings): void {
   write(SETTINGS, JSON.stringify(s));
+  settingsListeners.forEach(fn => fn(s));
 }
 
 /** Gives the viewer a file to save. */

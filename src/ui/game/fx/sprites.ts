@@ -29,11 +29,11 @@ function clone(template:HTMLElement):HTMLElement {
  return root;
 }
 /** Called before play, while opening the table or after a resize in idle. */
-export function warmSprites(board:HTMLElement,specs:SpriteSpec[]):void {
+export function warmSprites(board:HTMLElement,specs:SpriteSpec[],retain=false):void {
   const perfEnd=perfWorkHook?.('prepare: sprite pool');
   try {
  const bank=bankFor(board),keys=new Set(specs.map(s=>s.key));
- for(const [key,pool]of bank.pools)if(!keys.has(key)&&![...bank.active.values()].some(s=>s.root.dataset.sprite===key)){
+ for(const [key,pool]of bank.pools)if(!retain&&!keys.has(key)&&![...bank.active.values()].some(s=>s.root.dataset.sprite===key)){
   pool.free.forEach(el=>el.remove());pool.template.remove();bank.pools.delete(key);
  }
  for(const spec of specs){
@@ -76,9 +76,9 @@ export function spriteA(ctx:FxCtx,el:HTMLElement,frames:Keyframe[],duration:numb
  const done=()=>{set.delete(animation);if(animations.get(el)===set&&!set.size)el.style.willChange='auto'};
  void animation.finished.then(done,done);return animation;
 }
-export function releaseSprites(board:HTMLElement,includeTraces=false):void {
+export function releaseSprites(board:HTMLElement,includeTraces=false,keep:ReadonlySet<Element>=new Set()):void {
  const bank=banks.get(board);if(!bank)return;
- for(const s of [...bank.active.values()])if(includeTraces||s.root.closest('.fx-layer')||s.root.classList.contains('fx-temp')||!s.root.isConnected)s.release();
+ for(const s of [...bank.active.values()])if(!keep.has(s.root)&&(includeTraces||s.root.closest('.fx-layer')||s.root.classList.contains('fx-temp')||!s.root.isConnected))s.release();
 }
 export function spritePause(board:HTMLElement,paused:boolean):void {
  for(const s of banks.get(board)?.active.values()??[])for(const el of [s.root,...s.root.querySelectorAll<HTMLElement>('[data-sprite-node]')]){

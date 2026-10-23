@@ -123,9 +123,31 @@ export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage
   return `<div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
     (terms ? `<div class="terms">${termRows(ctx, terms, cls)}</div>` : '') + extra;
 }
+/** A hidden plate is prepared off-document, never briefly inserted into the layer. */
+function makePlate(ctx: FxCtx, box: PlateBox): HTMLElement {
+  if (ctx.showDamage !== false) return mk(ctx, 'plate', box.x, box.y);
+  const el = document.createElement('div');
+  el.className = 'plate';
+  Object.assign(el.style, { left: box.x + 'px', top: box.y + 'px', opacity: '1' });
+  return el;
+}
+/** Only a live Volley can be restored; dismissed/expired traces never come back. */
+export function setDamagePlateVisibility(ctx: FxCtx, visible: boolean): void {
+  if (!visible) {
+    ctx.board.querySelectorAll('.plate,.plate-peek').forEach(el => el.remove());
+    dropPlates();
+    return;
+  }
+  if (VS?.plate && !VS.plate.isConnected) {
+    ctx.layer.append(VS.plate);
+    VS.plate.style.opacity = '1';
+    if (!VS.plate.getAnimations().some(a => a.playState === 'running')) VS.plate.removeAttribute('inert');
+    fitPlate(ctx);
+  }
+}
 /** The damage breakdown always stays in the gap; a short gap uses a compact two-line layout. */
 function fitPlate(ctx: FxCtx) {
-  if (!VS?.plate) return;
+  if (!VS?.plate || ctx.showDamage === false) return;
   const g = gapBox(ctx), plate = VS.plate, original = placePlate(ctx, VS.shooter);
   plate.classList.remove('compact');
   plate.style.width = original.w + 'px';
@@ -160,7 +182,14 @@ function besidePlate(ctx: FxCtx, t: HTMLElement) {
 function absorb(ctx: FxCtx, el: FlyCard, code: string, delay: number) {
   at(ctx, delay, () => {
     const plate = VS?.plate;
-    if (!plate || !plate.isConnected || !el.isConnected) return;
+    if (!el.isConnected) return;
+    if (ctx.showDamage === false) {
+      // Same absorption delay/duration; the Charge/Reaction fades where it stopped in the sea.
+      A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 300, 0, 'ease-in', 'forwards');
+      at(ctx, 320, () => el.remove());
+      return;
+    }
+    if (!plate || !plate.isConnected) return;
     let row = plate.querySelector<HTMLElement>(`[data-card="${CSS.escape(code)}"]`);
     if (!row) {
       let terms = plate.querySelector('.terms');
@@ -194,6 +223,7 @@ function platePeek(ctx: FxCtx, plate: HTMLElement) {
   };
   const show = (code: string, row: Element) => {
     hide();
+    if (ctx.showDamage === false) return;
     const layer = board.querySelector<HTMLElement>(':scope > .fx-layer');
     const seaEl = board.querySelector('.sea-table');
     if (!layer) return;
@@ -233,7 +263,8 @@ function platePeek(ctx: FxCtx, plate: HTMLElement) {
  * V5: the plate is not taken away with the clip: it passes to the traces (fx/scars.ts, 'plate') — stays ≈ 2 s more, fades,
  * and a press on the table drops it at once. The layer is empty when the show ends (the e2e of the layer count on it).
  */
-function holdPlate(vs: NonNullable<typeof VS>) {
+function holdPlate(ctx: FxCtx, vs: NonNullable<typeof VS>) {
+  if (ctx.showDamage === false) { vs.plate?.remove(); vs.plate = undefined; return; }
   const el = vs.plate;
   const host = el && el.isConnected ? el.closest('.board')?.querySelector<HTMLElement>(':scope > .fx-scars') : null;
   if (!el || !host) return;
@@ -301,11 +332,11 @@ PLAY.announce = async (c, ctx) => {
   const pp = placePlate(ctx, c.shooter);
   const extra = (c.noDiagBy ? `<div class="nodiag">по диагонали без штрафа: «${esc(cardName(ctx, c.noDiagBy))}»</div>` : '') +
     (c.noReact ? '<span class="stamp">Без Реакций</span>' : '') + (part2 ? '<span class="stamp" style="color:#24465c;border-color:#24465c">второй борт</span>' : '');
-  if (!VS.plate || !VS.plate.isConnected) {
-    VS.plate = mk(ctx, 'plate', pp.x, pp.y);
+  if (!VS.plate) {
+    VS.plate = makePlate(ctx, pp);
     VS.plate.style.setProperty('--pc', shipData(ctx.data, c.shooter).color);
     VS.plate.style.width = pp.w + 'px';
-    A(ctx, VS.plate, [{ opacity: 0, translate: '0 -8px' }, { opacity: 1, translate: '0 0' }], 300, 120, 'ease-out', 'forwards');
+    if (ctx.showDamage !== false) A(ctx, VS.plate, [{ opacity: 0, translate: '0 -8px' }, { opacity: 1, translate: '0 0' }], 300, 120, 'ease-out', 'forwards');
   }
   platePeek(ctx, VS.plate);
   VS.plateBox = pp;
@@ -432,13 +463,14 @@ PLAY.shot = async (c, ctx) => {
   ctx = Object.create(ctx) as typeof ctx;
   ctx.canvasParticles = true;
   ctx.volleySprites = true;
+  const impactCtx=Object.assign(Object.create(ctx) as typeof ctx,{hideDelayedImpact:true});
   if (!VS) VS = { shooter: c.shooter, target: c.target, declared: c.declared, charge: c.charge, reactions: c.reactions, cards: [], extras: [], declDamage: c.damage };
   const vs = VS;
   vs.target = c.target;
   const shooterEl = plank(ctx, c.shooter), tPl = plank(ctx, c.target);
   hint(ctx, `${nick(ctx, c.shooter)} → ${nick(ctx, c.target)}: ${c.damage} по ${TRACK_DATIVE[c.track]}`);
   // the plate: the final breakdown, the new lines of Reactions highlighted, a cancelled Charge struck out
-  if (!vs.plate || !vs.plate.isConnected) { const pp = placePlate(ctx, c.shooter); vs.plate = mk(ctx, 'plate', pp.x, pp.y); vs.plate.style.width = pp.w + 'px'; vs.plate.style.setProperty('--pc', shipData(ctx.data, c.shooter).color); vs.plateBox = pp; A(ctx, vs.plate, [{ opacity: 0 }, { opacity: 1 }], 200, 0, 'ease-out', 'forwards'); }
+  if (!vs.plate) { const pp = placePlate(ctx, c.shooter); vs.plate = makePlate(ctx, pp); vs.plate.style.width = pp.w + 'px'; vs.plate.style.setProperty('--pc', shipData(ctx.data, c.shooter).color); vs.plateBox = pp; if (ctx.showDamage !== false) A(ctx, vs.plate, [{ opacity: 0 }, { opacity: 1 }], 200, 0, 'ease-out', 'forwards'); }
   const cls: Record<string, string> = {};
   for (const r of c.reactions) cls[cardName(ctx, r.card)] = 'new';
   const blocked = c.shots.filter((b) => b.out === 'block').reduce((n, b) => n + b.units, 0);
@@ -446,7 +478,7 @@ PLAY.shot = async (c, ctx) => {
   vs.plate.innerHTML = plateHTML(ctx, { shooter: c.shooter, declared: c.declared, target: c.target, track: c.track, damage: c.damage, was: vs.declDamage, terms: c.terms, cls, extra });
   platePeek(ctx, vs.plate);
   fitPlate(ctx);
-  A(ctx, vs.plate, [{ scale: '1' }, { scale: '1.04' }, { scale: '1' }], 300, 0, 'ease-out', 'none');
+  if (ctx.showDamage !== false) A(ctx, vs.plate, [{ scale: '1' }, { scale: '1.04' }, { scale: '1' }], 300, 0, 'ease-out', 'none');
   await wait(ctx, 260);
   // the cannonballs
   const s = bx(ctx, shooterEl), sy = facingY(ctx, c.shooter), down = dirOf(ctx, c.shooter);
@@ -518,14 +550,14 @@ PLAY.shot = async (c, ctx) => {
       lastHit = Math.max(lastHit, th);
       const newV = Math.max(0, now - k - b.units);
       at(ctx, th, () => setTrack(ctx, c.target, tr, newV, '#c0392b'));
-      hitBlast(ctx, svg, p1.x, p1.y, 1.1 * gunScale, th, T.volley.blast, hits++ > 0);
+      hitBlast(impactCtx, svg, p1.x, p1.y, 1.1 * gunScale, th, T.volley.blast, hits++ > 0);
       if (hits === 1) { flashBoard(ctx, '#fff6d8', 0.38, 240, th); boom(ctx, 6, 420, th); }
       // the first board of the Hull broken off falls into the sea and stays afloat a while (a long trace)
-      if (tr === 'hull' && !fallen && !markEl) { fallen = true; fallBoard(ctx, svg, c.target, p1, th); }
+      if (tr === 'hull' && !fallen && !markEl) { fallen = true; fallBoard(impactCtx, svg, c.target, p1, th); }
       // FX-A: the soot of the hit stays on the plank for a while (a short trace, fx/scars.ts)
       if (!markEl) at(ctx, th, () => hitMark(ctx, c.target, p1.x, p1.y));
-      if (b.kind === 'chain') burst(ctx, 'shred', p1.x, p1.y, th, 8, 14, 32, 650);
-      else if (b.kind === 'grape') burst(ctx, 'dust', p1.x, p1.y, th, 5, 6, 20, 700);
+      if (b.kind === 'chain') burst(impactCtx, 'shred', p1.x, p1.y, th, 8, 14, 32, 650);
+      else if (b.kind === 'grape') burst(impactCtx, 'dust', p1.x, p1.y, th, 5, 6, 20, 700);
       if (b.label && !labelled.has(b.label) && b.kind !== 'joint') { labelled.add(b.label); tag(ctx, p1.x, facingY(ctx, c.target) - 14 * down, b.label, th - 120, 'plus', 1500); }
       if (firstHit) { firstHit = false; at(ctx, th, () => tPl.classList.add('hitframe')); shake(ctx, tPl, th, 3); }
     } else if (b.out === 'overkill' || b.out === 'moon') {
@@ -595,7 +627,7 @@ PLAY.shot = async (c, ctx) => {
   await wait(ctx, Math.max(Math.max(endShots, lastHit) + (c.fire ? Math.max(1100, T.volley.linger) : T.volley.linger), soulsEnd + 100));
   unleanAll(ctx);
   vs.done = true;
-  holdPlate(vs);
+  holdPlate(ctx, vs);
   clearVS(ctx, true);
   await wait(ctx, 260);
 };
@@ -627,6 +659,7 @@ PLAY.counter = async (c, ctx) => {
   ctx = Object.create(ctx) as typeof ctx;
   ctx.canvasParticles = true;
   ctx.volleySprites = true;
+  const impactCtx=Object.assign(Object.create(ctx) as typeof ctx,{hideDelayedImpact:true});
   const from = plank(ctx, c.from), fb = bx(ctx, from), fy = facingY(ctx, c.from), down = dirOf(ctx, c.from);
   hint(ctx, `Ответ «${cardName(ctx, c.card)}»: ${nick(ctx, c.from)} → ${nick(ctx, c.to)}`);
   tag(ctx, fb.cx, fy + down * 18, `Ответ: ${cardName(ctx, c.card)}`, 0, 'plus', 1600);
@@ -646,8 +679,8 @@ PLAY.counter = async (c, ctx) => {
         fly(ctx, projectile(ctx, kind), curve(p0, p1, 0.08), 440, t0, { spin: tr === 'sails' ? 720 : 0 });
         const v = Math.max(0, now - 1 - j);
         at(ctx, t0 + 440, () => setTrack(ctx, c.to, tr, v, '#c0392b'));
-        hitBlast(ctx, svg, p1.x, p1.y, 0.8, t0 + 440, T.volley.blast, n > 0);
-        if (tr !== 'hull') burst(ctx, tr === 'sails' ? 'shred' : 'dust', p1.x, p1.y, t0 + 440, 7, 14, 32, 600);
+        hitBlast(impactCtx, svg, p1.x, p1.y, 0.8, t0 + 440, T.volley.blast, n > 0);
+        if (tr !== 'hull') burst(impactCtx, tr === 'sails' ? 'shred' : 'dust', p1.x, p1.y, t0 + 440, 7, 14, 32, 600);
         if (n === 0) shake(ctx, plank(ctx, c.to), t0 + 440, 3);
         lastHit = t0 + 440;
       }

@@ -1,0 +1,50 @@
+{
+ "scene": "idle",
+ "label": "finish5-review",
+ "viewport": "390×844 DPR3 CPU×4",
+ "valid": true,
+ "errors": [],
+ "journal": [
+  "11:47:14 ▶ sea",
+  "11:47:20 ✓ sea 6.6 с",
+  "11:47:20 ▶ turn",
+  "11:47:21 ✓ turn 1.2 с"
+ ],
+ "elapsedMs": 10011,
+ "scriptingMs": 312.28300000000013,
+ "recalcStyleMs": 727.7609999999999,
+ "recalcStyleCount": 601,
+ "layoutMs": 0,
+ "layoutCount": 0,
+ "forcedStyle": {
+  "count": 0,
+  "ms": 0
+ },
+ "forcedLayout": {
+  "count": 0,
+  "ms": 0
+ },
+ "longTasks": 0,
+ "longestTaskMs": 0,
+ "paint": {
+  "ms": 0,
+  "rasterMs": 0
+ },
+ "worstFrameMs": 16.80000000000291,
+ "framesOver50": 0,
+ "fps": 59.83418239936071,
+ "renders": 0,
+ "renderMs": 0,
+ "renderMaxMs": 0,
+ "renderList": [],
+ "planks": 0,
+ "hands": 0,
+ "layers": {
+  "all": 41,
+  "drawing": 34
+ },
+ "observerLongTasks": 0,
+ "svgAnimations": 0,
+ "svgByFunction": {},
+ "perfEnabled": false
+}
