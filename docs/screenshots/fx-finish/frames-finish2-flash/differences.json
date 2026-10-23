@@ -1,0 +1,8 @@
+{
+ "armada-900": {
+  "rgbaDifferentPixels": 565,
+  "maxChannelDifference": 40,
+  "differentPixels": 63,
+  "share": 0.005
+ }
+}
