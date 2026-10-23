@@ -136,13 +136,44 @@
     0 0 18px rgba(233, 180, 76, 0.6),
     0 12px 18px rgba(0, 0, 0, 0.6);
 }
+/* ui-fixes: a Reaction that cannot be played now lies down with the other cards, faded as they are; its reason (the strip
+   «нельзя») shows only under the pointer — the card stays behind the Reactions that can be played */
 :is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-no {
   z-index: 1;
-  translate: 0 calc(var(--dy, 0px) - 10px);
+  opacity: 0.55;
+  filter: saturate(0.4);
+  translate: 0 calc(var(--dy, 0px) + 40px);
+  scale: 1;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+}
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-no:not(:hover, :focus-visible) .hcard-strip {
+  display: none;
+}
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-no:not(:hover, :focus-visible) .hcard-text {
+  margin-bottom: 0;
+}
+:is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-no:is(:hover, :focus-visible) {
+  opacity: 0.95;
+  filter: none;
 }
 :is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok:hover,
 :is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok:focus-visible {
   translate: 0 -40px;
+}
+/* ui-fixes, a laptop: no card lies over a Reaction that can be played (data-whole: Hand.tsx useFanFit), and the cards that
+   cannot be played do not rise or grow under the pointer — they stay behind and beside the Reactions */
+@media (min-width: 701px) {
+  .hand.alarm .hand-cards[data-whole] > .hcard.al-ok,
+  .hand.alarm .hand-cards[data-whole] > .hcard.al-ok + .hcard {
+    margin-left: 0;
+  }
+  .hand.alarm .hand-cards > .hcard:is(.al-no, .al-dim):is(:hover, :focus-visible) {
+    rotate: var(--r, 0deg);
+    scale: 1;
+  }
+  .hand.alarm .hand-cards > .hcard.al-ok:is(:hover, :focus-visible) {
+    z-index: 3;
+  }
 }
 :is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok.chosen {
   box-shadow:
@@ -755,5 +786,42 @@
   .alarm-sheet .reaction-play .oak-pan b {
     font-size: 11.5px; line-height: 1.1; letter-spacing: .025em; text-indent: 0;
     white-space: normal; overflow: visible; overflow-wrap: anywhere; text-overflow: clip;
+  }
+}
+
+/* ui-fixes, a phone: the cards of «Ответить Реакцией» never rise inside the scrolling row (it would cut their heads); the
+   chosen one is a gold rim with a glow, the row keeps room for it above and below; a Reaction that cannot be played is faded,
+   without the strip over it — «сейчас нельзя» under it, the whole reason behind «i» */
+@media (max-width: 700px) {
+  .alarm-sheet .as-cards {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .alarm-sheet .as-card {
+    align-self: flex-start;
+  }
+  /* position: the strip «Залп 1 → 0» stays on the foot of its card (a transform held it there before) */
+  .alarm-sheet .as-card .hcard,
+  .alarm-sheet .as-card.on .hcard {
+    position: relative;
+    translate: none;
+    transform: none;
+  }
+  .alarm-sheet .as-card.on .hcard {
+    box-shadow:
+      0 0 0 3px #ffd36b,
+      0 0 8px rgba(255, 211, 107, 0.8);
+  }
+  .alarm-sheet .as-card.off .hcard {
+    opacity: 0.55;
+    filter: saturate(0.4);
+  }
+  .as-why {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.1;
+    text-align: center;
+    color: #d8c9a8;
   }
 }

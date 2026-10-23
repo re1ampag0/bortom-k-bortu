@@ -294,11 +294,12 @@ export function ReactionSheet({
           {items.map((it) => {
             const a = alarmOf(it.seat, it.card);
             const now = nowOf(it.seat, it.card);
+            const key = `${it.seat}-${it.card}`;
             const cardAlarm = a?.kind === 'ok' && now.ok
               ? { ...a, strip: a.strip ?? { top: now.text, bottom: '' } }
-              : a;
+              : a?.kind === 'no' ? { ...a, kind: 'dim' as const } : a;
             return (
-              <div key={`${it.seat}-${it.card}`} className={`as-card ${a?.why ? 'off' : ''} ${picked(it) ? 'on' : ''}`} data-card={it.card}>
+              <div key={key} className={`as-card ${a?.why ? 'off' : ''} ${picked(it) ? 'on' : ''}`} data-card={it.card}>
                 <HandCard
                   data={data}
                   code={it.card}
@@ -316,6 +317,8 @@ export function ReactionSheet({
                 >
                   i
                 </button>
+                {/* ui-fixes: faded, without the strip over it; the reason in short under it, in full behind «i» */}
+                {a?.why && <span className="as-why" data-testid="reaction-why">сейчас нельзя</span>}
               </div>
             );
           })}
