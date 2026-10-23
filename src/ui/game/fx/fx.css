@@ -22,7 +22,10 @@
 .fx-weather { z-index: 1; }
 /* game: under the panels of the middle (.dock, z-index 5) — the real decision panel stays on top. */
 .fx-layer { z-index: 4; }
-.fx-layer > *, .fx-weather > * { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+.fx-layer > *, .fx-weather > * { position: absolute; left: 0; top: 0; }
+/* Clip wrappers are promoted by their running animations, not by being present.
+   Prepared/finished films must not retain a full-screen compositing layer. */
+.fx-weather > * { will-change: transform, opacity; }
 .fx-layer > * { opacity: 0; }
 .ball { width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #5a524b, #1e1a17 60%); box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25); }
 .ball.trail { background: #1e1a17; box-shadow: none; }
