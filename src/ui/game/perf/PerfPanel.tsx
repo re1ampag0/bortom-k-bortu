@@ -4,6 +4,7 @@ import {getPerf, initPerf, PARTS, perfClasses, subscribePerf, togglePart, type P
 import {FrameWindow, stats, type Sample, type Stats} from './metrics';
 import {clipText, lastClip, subscribeClip, watchClipDiagnostics} from './clip';
 import {frameText} from './frames';
+import {lastPresses, pressText, pressTitle, subscribePress} from './press';
 import './perf.css';
 export function usePerf() {
   useState(initPerf);
@@ -32,6 +33,9 @@ export function PerfPanel() {
   const text = useRef<HTMLTextAreaElement>(null);
   const clip = useSyncExternalStore(subscribeClip, lastClip, lastClip);
   const [framesOpen,setFramesOpen]=useState(false);
+  // ui-press: the windows «нажатие» (1.5 s after a press), the newest first
+  const presses = useSyncExternalStore(subscribePress, lastPresses, lastPresses);
+  const [pressOpen, setPressOpen] = useState(false);
   const [clipCopy, setClipCopy] = useState(''), [clipShown, setClipShown] = useState(false);
   const clipArea = useRef<HTMLTextAreaElement>(null);
   const cancelRecord = () => {
@@ -84,17 +88,19 @@ export function PerfPanel() {
       done(copied ? 'Скопировано' : 'Выделите текст и скопируйте');}
   };
   const copyResult = () => copyText(result, text.current, setCopy);
-  const clipValue = clip ? clipText(clip) : '';
-  useEffect(() => { setClipCopy(''); setClipShown(false); }, [clip]);
+  const clipValue = [...(clip ? [clipText(clip)] : []), ...(presses.length ? ['Нажатия (окно 1,5 с), новые сверху:', ...presses.map(pressText)] : [])].join('\n');
+  useEffect(() => { setClipCopy(''); setClipShown(false); }, [clip, presses]);
   // The numbers go to the clipboard; the field is shown only when the browser lets nothing copy them (select by hand).
   const copyClip = () => copyText(clipValue, clipArea.current, (note) => { setClipCopy(note); if (note !== 'Скопировано') setClipShown(true); });
   return createPortal(<aside className="perf-panel" data-testid="perf-panel" aria-label="Диагностика скорости">
     <div className="perf-readout">{value.fps.toFixed(0)} кадров/с · худший/10 с {value.worst.toFixed(0)} мс<br/>&gt;50 мс за 10 с: {value.slow}</div>
-    <div className="perf-buttons"><button onClick={reset}>Сброс</button><button aria-expanded={parts} onClick={() => setParts(!parts)}>Части</button><button onClick={start} disabled={seconds !== null}>{seconds === null ? 'Записать 20 с' : `Запись: ${seconds} с`}</button>{clip && <button aria-expanded={framesOpen} data-testid="perf-frames-toggle" onClick={()=>setFramesOpen(!framesOpen)}>5 худших кадров</button>}{clip && <button data-testid="perf-clip-copy" onClick={copyClip}>Скопировать числа</button>}</div>
+    <div className="perf-buttons"><button onClick={reset}>Сброс</button><button aria-expanded={parts} onClick={() => setParts(!parts)}>Части</button><button onClick={start} disabled={seconds !== null}>{seconds === null ? 'Записать 20 с' : `Запись: ${seconds} с`}</button>{clip && <button aria-expanded={framesOpen} data-testid="perf-frames-toggle" onClick={()=>setFramesOpen(!framesOpen)}>5 худших кадров</button>}{presses.length > 0 && <button aria-expanded={pressOpen} data-testid="perf-press-toggle" onClick={() => setPressOpen(!pressOpen)}>Нажатия</button>}{(clip || presses.length > 0) && <button data-testid="perf-clip-copy" onClick={copyClip}>Скопировать числа</button>}</div>
     {parts && <fieldset className="perf-parts"><legend>Отключить части</legend>{PARTS.map(([part,name], i) => <label key={part}><input data-testid={`perf-${part}`} type="checkbox" checked={config.off.includes(part)} onChange={() => togglePart(part)}/>{i+1}. {name}</label>)}</fieldset>}
     {clip && <div className="perf-readout perf-clip" data-testid="perf-clip">клип: {clip.scene}<br/>кадров/с мин {clip.fpsMin.toFixed(0)} · Game {clip.renders}×, макс {clip.renderMaxMs.toFixed(0)} мс{clipCopy && <><br/><span role="status">{clipCopy}</span></>}
       {framesOpen&&<ol className="perf-frames" data-testid="perf-worst-frames">{clip.worstFrames.map((f,i)=><li key={i}>{frameText(f)}</li>)}</ol>}
       <textarea ref={clipArea} className={clipShown ? 'shown' : ''} aria-label="Числа последнего клипа" readOnly value={clipValue} tabIndex={clipShown ? 0 : -1}/></div>}
+    {pressOpen && presses.length > 0 && <div className="perf-readout perf-clip" data-testid="perf-presses"><ol className="perf-frames">{presses.map((p, i) => <li key={i}>{pressTitle(p)}: до кадра {p.firstFrameMs.toFixed(0)} мс, худший {p.worstFrameMs.toFixed(0)} мс, Game {p.renders}× макс {p.renderMaxMs.toFixed(0)} мс<ol className="perf-frames">{p.worstFrames.map((f, j) => <li key={j}>{frameText(f)}</li>)}</ol></li>)}</ol></div>}
+    {!clip && presses.length > 0 && <div className="perf-readout perf-clip">{clipCopy && <span role="status">{clipCopy}</span>}<textarea ref={clipArea} className={clipShown ? 'shown' : ''} aria-label="Числа нажатий" readOnly value={clipValue} tabIndex={clipShown ? 0 : -1}/></div>}
     {result && <div className="perf-result"><textarea ref={text} aria-label="Итог диагностики" readOnly value={result}/><button onClick={copyResult}>Копировать</button><span role="status">{copy}</span></div>}
   </aside>, document.body);
 }

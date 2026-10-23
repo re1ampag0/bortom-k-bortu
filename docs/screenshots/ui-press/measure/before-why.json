@@ -1,0 +1,1368 @@
+[
+ {
+  "scene": "charge-open",
+  "label": "before",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 11.499999999907232,
+  "worstFrameMs": 783.2999999999993,
+  "framesOver50": 3,
+  "renders": [
+   {
+    "at": 12.2,
+    "ms": 404.9
+   }
+  ],
+  "count": {
+   "TableBackdrop": 3,
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "Plank": 4,
+   "ChargeSheet": 1,
+   "HandCard": 6,
+   "ChargeButtons": 1,
+   "TeamRow": 1,
+   "Hand": 1,
+   "LogList": 1
+  },
+  "style": {
+   "ms": 577.4090000000001,
+   "count": 41,
+   "elements": 6170
+  },
+  "layout": {
+   "ms": 53.39500000000001,
+   "count": 35,
+   "dirty": 296,
+   "total": 2046
+  },
+  "paint": {
+   "ms": 202.982,
+   "count": 138
+  },
+  "forced": {
+   "style": 271.207,
+   "layout": 36.673,
+   "styleCount": 15,
+   "layoutCount": 9
+  },
+  "scriptingMs": 623.5430000000002,
+  "longTasks": 5,
+  "longestTaskMs": 439.098,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 7.9,
+    "ms": 422.6,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 11.4,
+    "ms": 408.2,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 183.4,
+    "ms": 201.7,
+    "elements": 1971,
+    "stack": [
+     "fit2:11634",
+     ":11640",
+     "Qj:5031"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 457.7,
+    "ms": 131.3,
+    "elements": 2005,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 598.8,
+    "ms": 111.4,
+    "elements": 1743,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 880.1,
+    "ms": 106.8,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 880.1,
+    "ms": 102.1,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 717,
+    "ms": 63.8,
+    "stack": []
+   }
+  ],
+  "why": [
+   [
+    "Layout | SVG changed | circle | ",
+    184
+   ],
+   [
+    "Layout | SVG changed | path | ",
+    172
+   ],
+   [
+    "Layout | SVG changed | rect | ",
+    100
+   ],
+   [
+    "Layout | Removed from layout | path | ",
+    85
+   ],
+   [
+    "StyleRecalc | Animation | SECTION class='plank enemy aimable' | ",
+    40
+   ],
+   [
+    "Layout | Added to layout | path | ",
+    39
+   ],
+   [
+    "StyleRecalc | @keyframes rule change | I class='gl medal-scheduled' | ",
+    39
+   ],
+   [
+    "Layout | SVG changed | ellipse | ",
+    34
+   ],
+   [
+    "Layout | Added to layout | #text | ",
+    27
+   ],
+   [
+    "Layout | Removed from layout | BUTTON class='track-tip info-hit' | ",
+    24
+   ],
+   [
+    "StyleRecalc | Animation | ::before | ",
+    23
+   ],
+   [
+    "StyleRecalc | Animation | ::after | ",
+    23
+   ],
+   [
+    "StyleRecalc | Animation | I class='phone-deck-warm deck-flare' | ",
+    23
+   ],
+   [
+    "Layout | Size changed | svg | ",
+    22
+   ],
+   [
+    "Layout | Unknown | #document | ",
+    22
+   ],
+   [
+    "StyleRecalc | @keyframes rule change | BUTTON class='hcard order off' | ",
+    21
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-6' | ",
+    18
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-7' | ",
+    18
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-8' | ",
+    18
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-9' | ",
+    18
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-10' | ",
+    18
+   ],
+   [
+    "Layout | Removed from layout | circle | ",
+    16
+   ],
+   [
+    "Layout | Removed from layout | g | ",
+    15
+   ],
+   [
+    "Layout | Removed from layout | #text | ",
+    13
+   ],
+   [
+    "Layout | Removed from layout | svg | ",
+    13
+   ],
+   [
+    "Layout | Added to layout | circle | ",
+    13
+   ],
+   [
+    "StyleRecalc | Related style rule | BUTTON class='hcard order off' | ",
+    12
+   ],
+   [
+    "Layout | Added to layout | svg | ",
+    12
+   ],
+   [
+    "Layout | Removed from layout | rect | ",
+    12
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | SPAN class='hcard-big' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    11
+   ],
+   [
+    "StyleRecalc | Related style rule | SPAN class='hcard-big' | ",
+    11
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | SPAN class='hcard-text' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    11
+   ],
+   [
+    "StyleRecalc | Related style rule | SPAN class='hcard-text' | ",
+    11
+   ],
+   [
+    "Layout | Removed from layout | ellipse | ",
+    10
+   ],
+   [
+    "Layout | Removed from layout | SPAN class='sr-only' | ",
+    8
+   ],
+   [
+    "StyleRecalc | Node was inserted into tree | SPAN class='track-tip' | ",
+    8
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched tagName | B class='track-num' | oak-pan",
+    8
+   ],
+   [
+    "StyleRecalc | Related style rule | B class='track-num' | ",
+    8
+   ],
+   [
+    "Layout | Added to layout | SPAN class='track-tip' | ",
+    8
+   ],
+   [
+    "Layout | Added to layout | SPAN class='sr-only' | ",
+    8
+   ]
+  ],
+  "stacks": [
+   {
+    "name": "UpdateLayoutTree",
+    "t": 183.4,
+    "ms": 201.7,
+    "stack": [
+     "fit2@index-JMeWqn2C.js:11634",
+     "@index-JMeWqn2C.js:11640",
+     "Qj@index-JMeWqn2C.js:5031",
+     "kk@index-JMeWqn2C.js:5476"
+    ]
+   },
+   {
+    "name": "Layout",
+    "t": 385.2,
+    "ms": 26.5,
+    "stack": [
+     "fit2@index-JMeWqn2C.js:11634",
+     "@index-JMeWqn2C.js:11640",
+     "Qj@index-JMeWqn2C.js:5031",
+     "kk@index-JMeWqn2C.js:5476"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 457.7,
+    "ms": 131.3,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 598.8,
+    "ms": 111.4,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 892.9,
+    "ms": 31.4,
+    "stack": [
+     "stepOf@index-JMeWqn2C.js:17915",
+     "bx@index-JMeWqn2C.js:17927",
+     "drawWeather@index-JMeWqn2C.js:20499",
+     "renderWeather@index-JMeWqn2C.js:20919"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 936.3,
+    "ms": 24.6,
+    "stack": [
+     "island@index-JMeWqn2C.js:20161",
+     "reefs$1@index-JMeWqn2C.js:20251",
+     "compositeWeather@index-JMeWqn2C.js:20264",
+     "drawWeather@index-JMeWqn2C.js:20516"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 987.5,
+    "ms": 23.9,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "charge-cancel",
+  "label": "before",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 9.399999999906868,
+  "worstFrameMs": 900,
+  "framesOver50": 2,
+  "renders": [
+   {
+    "at": 41.6,
+    "ms": 286.9
+   }
+  ],
+  "count": {
+   "TableBackdrop": 3,
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "Plank": 4,
+   "TeamRow": 1,
+   "Hand": 1,
+   "HandCard": 5,
+   "LogList": 1
+  },
+  "style": {
+   "ms": 672.861,
+   "count": 42,
+   "elements": 6795
+  },
+  "layout": {
+   "ms": 31.855000000000004,
+   "count": 32,
+   "dirty": 344,
+   "total": 2148
+  },
+  "paint": {
+   "ms": 79.425,
+   "count": 88
+  },
+  "forced": {
+   "style": 356.3009999999999,
+   "layout": 18.604,
+   "styleCount": 13,
+   "layoutCount": 8
+  },
+  "scriptingMs": 685.5729999999999,
+  "longTasks": 4,
+  "longestTaskMs": 496.2,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 39.4,
+    "ms": 466.7,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 41.6,
+    "ms": 458.1,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 330.5,
+    "ms": 164.3,
+    "elements": 2035,
+    "stack": [
+     "check:13797",
+     ":13800",
+     "Qj:5031"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 133.1,
+    "ms": 132.5,
+    "elements": 585,
+    "stack": [
+     "Zj:5113",
+     "Yj:5097",
+     "Zj:5140"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 676,
+    "ms": 132.4,
+    "elements": 1771,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 535.7,
+    "ms": 131.8,
+    "elements": 2033,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 963.5,
+    "ms": 89.9,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 963.6,
+    "ms": 85.8,
+    "stack": []
+   }
+  ],
+  "why": [
+   [
+    "Layout | SVG changed | circle | ",
+    176
+   ],
+   [
+    "Layout | SVG changed | path | ",
+    168
+   ],
+   [
+    "Layout | SVG changed | rect | ",
+    90
+   ],
+   [
+    "Layout | Added to layout | path | ",
+    85
+   ],
+   [
+    "Layout | Removed from layout | path | ",
+    39
+   ],
+   [
+    "StyleRecalc | @keyframes rule change | I class='gl medal-scheduled' | ",
+    39
+   ],
+   [
+    "Layout | SVG changed | ellipse | ",
+    32
+   ],
+   [
+    "Layout | Removed from layout | #text | ",
+    27
+   ],
+   [
+    "StyleRecalc | Animation | ::before | ",
+    27
+   ],
+   [
+    "StyleRecalc | Animation | ::after | ",
+    27
+   ],
+   [
+    "StyleRecalc | Animation | I class='phone-deck-warm deck-flare' | ",
+    27
+   ],
+   [
+    "Layout | Added to layout | BUTTON class='track-tip info-hit' | ",
+    24
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-11' | ",
+    23
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-12' | ",
+    23
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-13' | ",
+    23
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-14' | ",
+    23
+   ],
+   [
+    "StyleRecalc | Animation | DIV class='sf wx-loop wx-loop-15' | ",
+    23
+   ],
+   [
+    "StyleRecalc | @keyframes rule change | BUTTON class='hcard order' | ",
+    21
+   ],
+   [
+    "Layout | Size changed | svg | ",
+    20
+   ],
+   [
+    "Layout | Unknown | #document | ",
+    20
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | SPAN class='hcard-big' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    16
+   ],
+   [
+    "StyleRecalc | Related style rule | SPAN class='hcard-big' | ",
+    16
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | SPAN class='hcard-text' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    16
+   ],
+   [
+    "StyleRecalc | Related style rule | SPAN class='hcard-text' | ",
+    16
+   ],
+   [
+    "Layout | Added to layout | circle | ",
+    16
+   ],
+   [
+    "Layout | Added to layout | g | ",
+    15
+   ],
+   [
+    "Layout | Removed from layout | circle | ",
+    13
+   ],
+   [
+    "Layout | Added to layout | svg | ",
+    13
+   ],
+   [
+    "Layout | Added to layout | #text | ",
+    13
+   ],
+   [
+    "Layout | Removed from layout | svg | ",
+    12
+   ],
+   [
+    "Layout | Added to layout | rect | ",
+    12
+   ],
+   [
+    "StyleRecalc | Related style rule | BUTTON class='hcard order' | ",
+    12
+   ],
+   [
+    "Layout | Removed from layout | ellipse | ",
+    10
+   ],
+   [
+    "Layout | Removed from layout | SPAN class='sr-only' | ",
+    8
+   ],
+   [
+    "Layout | Removed from layout | SPAN class='track-tip' | ",
+    8
+   ],
+   [
+    "StyleRecalc | Node was inserted into tree | BUTTON class='track-tip info-hit' | ",
+    8
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched tagName | B class='track-num' | oak-pan",
+    8
+   ],
+   [
+    "StyleRecalc | Related style rule | B class='track-num' | ",
+    8
+   ],
+   [
+    "Layout | Added to layout | SPAN class='sr-only' | ",
+    8
+   ],
+   [
+    "StyleRecalc | PseudoClass | BUTTON class='brs-btn cs-cancel' | ",
+    7
+   ]
+  ],
+  "stacks": [
+   {
+    "name": "UpdateLayoutTree",
+    "t": 133.1,
+    "ms": 132.5,
+    "stack": [
+     "Zj@index-JMeWqn2C.js:5113",
+     "Yj@index-JMeWqn2C.js:5097",
+     "Zj@index-JMeWqn2C.js:5140",
+     "ck@index-JMeWqn2C.js:5196"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 330.5,
+    "ms": 164.3,
+    "stack": [
+     "check@index-JMeWqn2C.js:13797",
+     "@index-JMeWqn2C.js:13800",
+     "Qj@index-JMeWqn2C.js:5031",
+     "Hk@index-JMeWqn2C.js:6266"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 535.7,
+    "ms": 131.8,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 676,
+    "ms": 132.4,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 972.3,
+    "ms": 28.8,
+    "stack": [
+     "stepOf@index-JMeWqn2C.js:17915",
+     "bx@index-JMeWqn2C.js:17927",
+     "drawWeather@index-JMeWqn2C.js:20499",
+     "renderWeather@index-JMeWqn2C.js:20919"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 1010.5,
+    "ms": 20.3,
+    "stack": [
+     "island@index-JMeWqn2C.js:20161",
+     "reefs$1@index-JMeWqn2C.js:20251",
+     "compositeWeather@index-JMeWqn2C.js:20264",
+     "drawWeather@index-JMeWqn2C.js:20516"
+    ]
+   }
+  ]
+ },
+ {
+  "scene": "lift-play",
+  "label": "before",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 12.69999999990614,
+  "worstFrameMs": 1033.2999999999993,
+  "framesOver50": 4,
+  "renders": [
+   {
+    "at": 32.6,
+    "ms": 617.9
+   }
+  ],
+  "count": {
+   "TableBackdrop": 3,
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "Plank": 4,
+   "ChargeSheet": 2,
+   "HandCard": 8,
+   "ChargeButtons": 1,
+   "TeamRow": 1,
+   "Hand": 2,
+   "LogList": 1
+  },
+  "style": {
+   "ms": 755.733,
+   "count": 42,
+   "elements": 6644
+  },
+  "layout": {
+   "ms": 94.20400000000002,
+   "count": 44,
+   "dirty": 418,
+   "total": 2065
+  },
+  "paint": {
+   "ms": 98.546,
+   "count": 106
+  },
+  "forced": {
+   "style": 600.867,
+   "layout": 79.63700000000001,
+   "styleCount": 25,
+   "layoutCount": 18
+  },
+  "scriptingMs": 1031.169,
+  "longTasks": 5,
+  "longestTaskMs": 682.784,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 25.2,
+    "ms": 646.5,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 32.6,
+    "ms": 619.4,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 170.4,
+    "ms": 199.5,
+    "elements": 511,
+    "stack": [
+     "Zj:5113",
+     "ck:5196",
+     "dk:5215"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 469.4,
+    "ms": 152.4,
+    "elements": 1969,
+    "stack": [
+     "fit2:11634",
+     ":11640",
+     "Qj:5031"
+    ]
+   },
+   {
+    "name": "FireAnimationFrame",
+    "t": 711.5,
+    "ms": 147.1,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 711.5,
+    "ms": 143.3,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 712.4,
+    "ms": 130.1,
+    "elements": 2010,
+    "stack": [
+     "draw2:11711"
+    ]
+   },
+   {
+    "name": "TimerFire",
+    "t": 1123.5,
+    "ms": 116.1,
+    "stack": []
+   }
+  ],
+  "why": [
+   [
+    "Layout | SVG changed | circle | ",
+    184
+   ],
+   [
+    "Layout | SVG changed | path | ",
+    172
+   ],
+   [
+    "StyleRecalc | @keyframes rule change | BUTTON class='hcard order off' | ",
+    135
+   ],
+   [
+    "Layout | SVG changed | rect | ",
+    100
+   ],
+   [
+    "Layout | Removed from layout | path | ",
+    89
+   ],
+   [
+    "Layout | Added to layout | #text | ",
+    51
+   ],
+   [
+    "Layout | Added to layout | path | ",
+    45
+   ],
+   [
+    "Layout | Removed from layout | #text | ",
+    35
+   ],
+   [
+    "Layout | SVG changed | ellipse | ",
+    34
+   ],
+   [
+    "Layout | Removed from layout | circle | ",
+    29
+   ],
+   [
+    "Layout | Added to layout | circle | ",
+    28
+   ],
+   [
+    "StyleRecalc | @keyframes rule change | BUTTON class='hcard reaction off' | ",
+    27
+   ],
+   [
+    "Layout | Removed from layout | BUTTON class='track-tip info-hit' | ",
+    24
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | SPAN class='hcard-big' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    22
+   ],
+   [
+    "StyleRecalc | Related style rule | SPAN class='hcard-big' | ",
+    22
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | SPAN class='hcard-text' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    22
+   ],
+   [
+    "StyleRecalc | Related style rule | SPAN class='hcard-text' | ",
+    22
+   ],
+   [
+    "Layout | Size changed | svg | ",
+    22
+   ],
+   [
+    "Layout | Unknown | #document | ",
+    22
+   ],
+   [
+    "StyleRecalc | Inline CSS style declaration was mutated | SPAN class='hcard-text' | ",
+    18
+   ],
+   [
+    "StyleRecalc | Animation | SECTION class='plank enemy aimable' | ",
+    18
+   ],
+   [
+    "StyleRecalc | Related style rule | BUTTON class='hcard order off' | ",
+    17
+   ],
+   [
+    "Layout | Removed from layout | rect | ",
+    16
+   ],
+   [
+    "Layout | Removed from layout | g | ",
+    16
+   ],
+   [
+    "Layout | Removed from layout | svg | ",
+    15
+   ],
+   [
+    "Layout | Added to layout | svg | ",
+    15
+   ],
+   [
+    "StyleRecalc | @keyframes rule change | I class='gl medal-scheduled' | ",
+    12
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | BUTTON class='hcard order off' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    11
+   ],
+   [
+    "StyleRecalc | Animation | ::before | ",
+    11
+   ],
+   [
+    "StyleRecalc | Animation | ::after | ",
+    11
+   ],
+   [
+    "StyleRecalc | Animation | I class='phone-deck-warm deck-flare' | ",
+    11
+   ],
+   [
+    "Layout | Removed from layout | ellipse | ",
+    10
+   ],
+   [
+    "Layout | Style changed | SPAN class='hcard-text' | ",
+    9
+   ],
+   [
+    "StyleRecalc | Animation | BUTTON class='hcard order off' | ",
+    9
+   ],
+   [
+    "Layout | Removed from layout | SPAN class='sr-only' | ",
+    8
+   ],
+   [
+    "StyleRecalc | Node was inserted into tree | SPAN class='track-tip' | ",
+    8
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | BUTTON class='star narrow' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    8
+   ],
+   [
+    "StyleRecalc | Related style rule | BUTTON class='star narrow' | ",
+    8
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched tagName | B class='track-num' | oak-pan",
+    8
+   ],
+   [
+    "StyleRecalc | Related style rule | B class='track-num' | ",
+    8
+   ]
+  ],
+  "stacks": [
+   {
+    "name": "UpdateLayoutTree",
+    "t": 170.4,
+    "ms": 199.5,
+    "stack": [
+     "Zj@index-JMeWqn2C.js:5113",
+     "ck@index-JMeWqn2C.js:5196",
+     "dk@index-JMeWqn2C.js:5215",
+     "ck@index-JMeWqn2C.js:5206"
+    ]
+   },
+   {
+    "name": "Layout",
+    "t": 369.9,
+    "ms": 38,
+    "stack": [
+     "Zj@index-JMeWqn2C.js:5113",
+     "ck@index-JMeWqn2C.js:5196",
+     "dk@index-JMeWqn2C.js:5215",
+     "ck@index-JMeWqn2C.js:5206"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 469.4,
+    "ms": 152.4,
+    "stack": [
+     "fit2@index-JMeWqn2C.js:11634",
+     "@index-JMeWqn2C.js:11640",
+     "Qj@index-JMeWqn2C.js:5031",
+     "kk@index-JMeWqn2C.js:5476"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 712.4,
+    "ms": 130.1,
+    "stack": [
+     "draw2@index-JMeWqn2C.js:11711"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 868.4,
+    "ms": 115.1,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 1132.1,
+    "ms": 38.5,
+    "stack": [
+     "stepOf@index-JMeWqn2C.js:17915",
+     "bx@index-JMeWqn2C.js:17927",
+     "drawWeather@index-JMeWqn2C.js:20499",
+     "renderWeather@index-JMeWqn2C.js:20919"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 1179.4,
+    "ms": 33,
+    "stack": [
+     "island@index-JMeWqn2C.js:20161",
+     "reefs$1@index-JMeWqn2C.js:20251",
+     "compositeWeather@index-JMeWqn2C.js:20264",
+     "drawWeather@index-JMeWqn2C.js:20516"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 1240.7,
+    "ms": 25.8,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 1310.4,
+    "ms": 23.2,
+    "stack": [
+     "fit2@index-JMeWqn2C.js:11634",
+     "@index-JMeWqn2C.js:11640",
+     "Qj@index-JMeWqn2C.js:5031",
+     "kk@index-JMeWqn2C.js:5476"
+    ]
+   }
+  ]
+ },
+ {
+  "scene": "fire",
+  "label": "before",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 11.000000000185537,
+  "worstFrameMs": 1450,
+  "framesOver50": 1,
+  "renders": [
+   {
+    "at": 39.6,
+    "ms": 788.5
+   }
+  ],
+  "count": {
+   "TableBackdrop": 2,
+   "StatusBar": 2,
+   "TopHold": 1,
+   "SeaChip": 2,
+   "Plank": 8,
+   "TeamRow": 2,
+   "Hand": 2,
+   "HandCard": 8,
+   "LogList": 2
+  },
+  "style": {
+   "ms": 629.8939999999999,
+   "count": 29,
+   "elements": 4738
+  },
+  "layout": {
+   "ms": 85.69300000000001,
+   "count": 36,
+   "dirty": 730,
+   "total": 2121
+  },
+  "paint": {
+   "ms": 64.292,
+   "count": 20
+  },
+  "forced": {
+   "style": 609.512,
+   "layout": 72.339,
+   "styleCount": 22,
+   "layoutCount": 15
+  },
+  "scriptingMs": 1327.9039999999998,
+  "longTasks": 2,
+  "longestTaskMs": 1202.646,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 33.5,
+    "ms": 1141.8,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 39.6,
+    "ms": 1050.2,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 306.9,
+    "ms": 225.3,
+    "elements": 673,
+    "stack": [
+     "Zj:5113",
+     "Yj:5097",
+     "Zj:5140"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 667.6,
+    "ms": 149.1,
+    "elements": 1999,
+    "stack": [
+     "fit2:11634",
+     ":11640",
+     "Qj:5031"
+    ]
+   },
+   {
+    "name": "FunctionCall",
+    "t": 1241.7,
+    "ms": 143.4,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 1242.8,
+    "ms": 138.8,
+    "elements": 1744,
+    "stack": [
+     "stepOf:17915",
+     "bx:17927",
+     "gapBox:17961"
+    ]
+   },
+   {
+    "name": "Paint",
+    "t": 1392.9,
+    "ms": 59.2,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 1393,
+    "ms": 59.1,
+    "stack": []
+   }
+  ],
+  "why": [
+   [
+    "Layout | SVG changed | circle | ",
+    176
+   ],
+   [
+    "Layout | SVG changed | path | ",
+    168
+   ],
+   [
+    "Layout | SVG changed | rect | ",
+    90
+   ],
+   [
+    "Layout | Added to layout | path | ",
+    85
+   ],
+   [
+    "Layout | Removed from layout | #text | ",
+    71
+   ],
+   [
+    "Layout | Removed from layout | path | ",
+    64
+   ],
+   [
+    "Layout | Added to layout | #text | ",
+    64
+   ],
+   [
+    "Layout | Removed from layout | I class='on' | ",
+    48
+   ],
+   [
+    "Layout | Added to layout | BUTTON class='track-tip info-hit' | ",
+    48
+   ],
+   [
+    "Layout | Added to layout | I class='on' | ",
+    48
+   ],
+   [
+    "Layout | Removed from layout | I | ",
+    47
+   ],
+   [
+    "Layout | Added to layout | I | ",
+    46
+   ],
+   [
+    "Layout | SVG changed | ellipse | ",
+    32
+   ],
+   [
+    "Layout | Removed from layout | circle | ",
+    31
+   ],
+   [
+    "Layout | Added to layout | circle | ",
+    27
+   ],
+   [
+    "Layout | Removed from layout | BUTTON class='track-tip info-hit' | ",
+    24
+   ],
+   [
+    "Layout | Added to layout | rect | ",
+    22
+   ],
+   [
+    "Layout | Size changed | svg | ",
+    20
+   ],
+   [
+    "Layout | Unknown | #document | ",
+    20
+   ],
+   [
+    "Layout | Removed from layout | SPAN class='sr-only' | ",
+    16
+   ],
+   [
+    "Layout | Removed from layout | B class='track-num' | ",
+    16
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | SPAN class='hcard-big' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    16
+   ],
+   [
+    "StyleRecalc | Related style rule | SPAN class='hcard-big' | ",
+    16
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | SPAN class='hcard-text' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    16
+   ],
+   [
+    "StyleRecalc | Related style rule | SPAN class='hcard-text' | ",
+    16
+   ],
+   [
+    "Layout | Added to layout | SPAN class='sr-only' | ",
+    16
+   ],
+   [
+    "Layout | Added to layout | B class='track-num' | ",
+    16
+   ],
+   [
+    "Layout | Style changed | path | ",
+    15
+   ],
+   [
+    "Layout | Added to layout | g | ",
+    15
+   ],
+   [
+    "StyleRecalc | Related style rule | BUTTON class='star narrow poor' | ",
+    13
+   ],
+   [
+    "Layout | Removed from layout | SPAN class='track-icon' | ",
+    12
+   ],
+   [
+    "Layout | Removed from layout | DIV class='track t-guns' | ",
+    12
+   ],
+   [
+    "Layout | Removed from layout | DIV class='track t-crew' | ",
+    12
+   ],
+   [
+    "Layout | Added to layout | SPAN class='track-icon' | ",
+    12
+   ],
+   [
+    "Layout | Added to layout | DIV class='track t-guns' | ",
+    12
+   ],
+   [
+    "Layout | Added to layout | DIV class='track t-crew' | ",
+    12
+   ],
+   [
+    "StyleRecalc | Inline CSS style declaration was mutated | BUTTON class='hcard order' | ",
+    12
+   ],
+   [
+    "Layout | Removed from layout | rect | ",
+    11
+   ],
+   [
+    "Layout | Removed from layout | g | ",
+    10
+   ],
+   [
+    "StyleInvalidator | Invalidation set matched class | BUTTON class='star narrow poor' | hcard-text.charge-sheet.star.hcard-big.hcard.sheet-body",
+    10
+   ]
+  ],
+  "stacks": [
+   {
+    "name": "UpdateLayoutTree",
+    "t": 306.9,
+    "ms": 225.3,
+    "stack": [
+     "Zj@index-JMeWqn2C.js:5113",
+     "Yj@index-JMeWqn2C.js:5097",
+     "Zj@index-JMeWqn2C.js:5140",
+     "ck@index-JMeWqn2C.js:5196"
+    ]
+   },
+   {
+    "name": "Layout",
+    "t": 532.2,
+    "ms": 24.6,
+    "stack": [
+     "Zj@index-JMeWqn2C.js:5113",
+     "Yj@index-JMeWqn2C.js:5097",
+     "Zj@index-JMeWqn2C.js:5140",
+     "ck@index-JMeWqn2C.js:5196"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 667.6,
+    "ms": 149.1,
+    "stack": [
+     "fit2@index-JMeWqn2C.js:11634",
+     "@index-JMeWqn2C.js:11640",
+     "Qj@index-JMeWqn2C.js:5031",
+     "kk@index-JMeWqn2C.js:5476"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 1030.6,
+    "ms": 50,
+    "stack": [
+     "check@index-JMeWqn2C.js:13797",
+     "@index-JMeWqn2C.js:13800",
+     "Qj@index-JMeWqn2C.js:5031",
+     "Hk@index-JMeWqn2C.js:6266"
+    ]
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 1242.8,
+    "ms": 138.8,
+    "stack": [
+     "stepOf@index-JMeWqn2C.js:17915",
+     "bx@index-JMeWqn2C.js:17927",
+     "gapBox@index-JMeWqn2C.js:17961",
+     "fitPlate@index-JMeWqn2C.js:21661"
+    ]
+   }
+  ]
+ }
+]

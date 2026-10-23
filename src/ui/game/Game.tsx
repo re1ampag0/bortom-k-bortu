@@ -64,6 +64,7 @@ import { useTableBody } from './tableBody';
 import {PerfPanel, usePerf} from './perf/PerfPanel';
 import {getPerf} from './perf/state';
 import {clipRender} from './perf/clip';
+import {pressOpen, pressRender} from './perf/press';
 
 /** V7: the victory sheet is a chunk of its own (the big ships of its panorama). */
 const Victory = lazy(() => import('./Victory').then((m) => ({ default: m.Victory })));
@@ -216,6 +217,12 @@ export function Game({
   // The note «Реакция — карта…» in the first Reaction window of each team at the device; a window offered again
   // after a Reaction (RULES.md 12.5) is the same one. Not saved: after a reload it shows once more.
   const reactOpen = myDecision && d!.kind === 'reactions';
+  // ?perf=1: «Тревога!» opens without a press of this device (the enemy's Volley) — its own window «нажатие», from this render
+  useLayoutEffect(() => {
+    if (!perfT0 || !reactOpen) return;
+    pressOpen('«Тревога!» открылась', perfT0);
+    pressRender(performance.now() - perfT0);
+  }, [reactOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   // «Тревога!»: «Свернуть, посмотреть стол» lowers the hand and hides the buttons; it opens again with the next window.
   const [alarmFolded, setAlarmFolded] = useState(false);
   useEffect(() => {
