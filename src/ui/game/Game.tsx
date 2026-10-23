@@ -51,7 +51,7 @@ import {
 import { MissedSheet, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { instantUrl, reducedMotion } from '../start/motion';
-import { FxLayer, useFxPart, useFxQueue, type FxQueue } from './fx/FxLayer';
+import { FxLayer, useFxPart, useFxQueue, type FxQueue, type FxSnapshot } from './fx/FxLayer';
 import { T } from './fx/timing';
 import { playTurnSound } from '../sound';
 import { Button, OakButton, Plank, RoundButton, ROUND_ICON, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
@@ -98,6 +98,8 @@ type Sheet =
   | { k: 'settings' };
 
 const SIDES: Side[] = ['ПИРАТЫ', 'КОМПАНИЯ'];
+/** A plank without buttons: one array, so the memo of the plank sees no change. */
+const NO_BUTTONS: Btn[] = [];
 const other = (side: Side): Side => (side === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ');
 
 /** «?speed=instant» in the address: bots without pauses (for the browser test). */
@@ -474,6 +476,18 @@ export function Game({
     return value;
   };
   const engineDeps = [version, game, data, bottom, myTurn, myDecision, mySeats.join(','), mode, hints, sAim, aimTargets] as const;
+  // ui-press: handlers that keep their identity from render to render and call the newest function: a memo'd part of the
+  // table (a plank, the log) skips a render that changes nothing it shows. Called only from events, after the commit.
+  const handlers = useRef(new Map<string, { fn: (...a: never[]) => unknown; call: (...a: never[]) => unknown }>());
+  const stable = <F extends (...a: never[]) => unknown>(key: string, fn: F): F => {
+    let h = handlers.current.get(key);
+    if (!h) {
+      const box: { fn: (...a: never[]) => unknown; call: (...a: never[]) => unknown } = { fn, call: (...a) => box.fn(...a) };
+      handlers.current.set(key, (h = box));
+    }
+    h.fn = fn;
+    return h.call as F;
+  };
 
   // ——— Curtain ———
   if (curtainSide) {
@@ -632,7 +646,7 @@ export function Game({
   const plankButtons = (code: string): Btn[] => cached(`buttons:${code}`, engineDeps, () => buttonsNow(code));
   const buttonsNow = (code: string): Btn[] => {
     const ship = s.ships[code];
-    if (!myTurn || ship.sunk || ship.side !== bottom || !mySeats.includes(code)) return [];
+    if (!myTurn || ship.sunk || ship.side !== bottom || !mySeats.includes(code)) return NO_BUTTONS;
     const params = shipData(data, code);
     const vt = volleyTargets(s, data, { ship: code });
     const joint = jointAlly();
@@ -694,6 +708,10 @@ export function Game({
   /** How a card of the hand looks while the window is open: playable (the strip — only under «Подсказки»), not playable, dimmed. */
   function alarmOf(holder: string, code: string): AlarmCard | null {
     if (!alarmOn || code === HIDDEN) return null;
+    // the same card of the same window: one dry run per real state (the sheet and the hand ask on every render)
+    return cached(`alarmOf:${holder}:${code}`, [version, hints, d], () => alarmNow(holder, code));
+  }
+  function alarmNow(holder: string, code: string): AlarmCard | null {
     if (cardByCode(data, code).type !== 'РЕАКЦИЯ' || !d!.seats.includes(holder)) return { kind: 'dim' };
     // The sheet includes both ships; the hand cache only covers the selected ship.
     const why = playOptions(s, data, holder, code).reason;
@@ -1108,23 +1126,25 @@ export function Game({
       fxGen={fxGen}
       fxHidden={fxHidden}
       data={data}
-      reactionWait={waitNote && waitTarget === x.code ? <ReactionWaitPanel line={waitNote.line} who={waitNote.who} /> : undefined}
+      reactionWait={cached(`wait:${x.code}`, [waitNote?.line, waitNote?.who, waitTarget === x.code], () =>
+        waitNote && waitTarget === x.code ? <ReactionWaitPanel line={waitNote.line} who={waitNote.who} /> : undefined)}
       ship={x}
       own={x.side === bottom}
       selected={x.side === bottom && x.code === seat && tabs.length > 1}
       awaiting={decidingSeats.includes(x.code) && !botSeat(x.code) && !(net && d?.kind === 'turn' && net.ready.includes(x.code))}
       targeted={targeted === x.code}
       shooter={shooter === x.code}
-      alarm={alarm?.kind === 'volley' && alarm.target === x.code ? { loss: hints && alarm.hit ? lossOf(s, x.code, alarm.hit) : null } : null}
+      alarm={cached(`alarm:${x.code}`, [version, hints, alarm?.kind === 'volley' && alarm.target === x.code], () =>
+        alarm?.kind === 'volley' && alarm.target === x.code ? { loss: hints && alarm.hit ? lossOf(s, x.code, alarm.hit) : null } : null)}
       repairing={repairing === x.code}
       plate={plateFor(x.code)}
       aimOff={choosingTarget && x.code !== shooter && !plateFor(x.code)}
       buttons={plankButtons(x.code)}
       role={net ? netRole(x.code) : null}
       ready={readyOf(x.code)}
-      onSelect={() => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code)}
-      onDetails={() => setSheet({ k: 'ship', code: x.code })}
-      onLegend={() => legendClick(x.code)}
+      onSelect={stable(`select:${x.code}`, () => x.side === bottom && mySeats.includes(x.code) && setSeatPick(x.code))}
+      onDetails={stable(`details:${x.code}`, () => setSheet({ k: 'ship', code: x.code }))}
+      onLegend={stable(`legend:${x.code}`, () => legendClick(x.code))}
       flashLegend={hints && x.side === bottom && mySeats.includes(x.code)}
     />
   );
@@ -1291,7 +1311,7 @@ export function Game({
         )}
         <div className="log-paper">
           <h2>Судовой журнал</h2>
-          <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog, freshFrom) => <LogList data={data} log={shownLog} fresh={freshFrom} onCard={(code) => setSheet({ k: 'info', code })} onSea={(code) => setSheet({ k: 'sea', code })} />}</ShownLog>
+          <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog, freshFrom) => <LogList data={data} log={shownLog} fresh={freshFrom} onCard={stable('log-card', (code: string) => setSheet({ k: 'info', code }))} onSea={stable('log-sea', (code: string) => setSheet({ k: 'sea', code }))} />}</ShownLog>
           <div className="log-actions">
             <button className="brs-btn" onClick={() => setSheet({ k: 'log' })}>
               Весь журнал
@@ -1593,7 +1613,12 @@ const PlankRow = memo(function PlankRow({ fx, view, render }: {
   render: (tableView: GameState, rev: (code: string) => number, hidden: Record<string, string[]>) => ReactNode;
 }) {
   const snap = useFxPart(fx, (x) => x);
-  const tableView = fx.store.shown(view);
+  // the shown state of this row: one object per real state and snapshot (the store keeps one entry for every reader of
+  // it, so between two renders of the table it may hand out an equal copy — a plank would take it for a change, ui-press)
+  const shownRef = useRef<{ view: GameState; gen: number; display: FxSnapshot['display']; out: GameState } | null>(null);
+  const m = shownRef.current;
+  if (!m || m.view !== view || m.gen !== snap.gen || m.display !== snap.display) shownRef.current = { view, gen: snap.gen, display: snap.display, out: fx.store.shown(view) };
+  const tableView = shownRef.current!.out;
   const revs = useRef(new Map<string, { key: string; gen: number }>());
   const rev = (code: string) => {
     const key = `${shipKey(tableView.ships[code])}|${snap.epoch}`;

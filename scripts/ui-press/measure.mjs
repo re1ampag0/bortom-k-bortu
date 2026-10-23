@@ -29,20 +29,23 @@ const WINDOW = 1500;
 // counters: renders of the big parts of the table (memo'd Plank and the hand by a line inside them; the others by a wrapper
 // over the exported function — a function declaration is a live binding, the importers get the wrapper)
 const count = (name) => `{const m=window.fxCpu;if(m?.active)m.count[${JSON.stringify(name)}]=(m.count[${JSON.stringify(name)}]??0)+1;}`;
-const wrap = (names) => '\n' + names.map((n) => `{const o=${n};${n}=function(p){${count(n)}return o(p);};}`).join('\n');
+// (a memo'd component — `export const X = memo(...)`, an object — gets the wrapper on its inner function instead)
+const wrap = (names, code) => '\n' + names.map((n) => new RegExp(`export const ${n} = `).test(code)
+  ? `{const t=${n}.type;${n}.type=function(p){${count(n)}return t(p);};}`
+  : `{const o=${n};${n}=function(p){${count(n)}return o(p);};}`).join('\n');
 const inject = {
   name: 'ui-press-counters', enforce: 'post',
   transform(code, id) {
     const must = (out, what) => { if (out === code) throw new Error(`[measure] no hook for ${what} in ${id}`); return out; };
     if (id.endsWith('/src/ui/game/Game.tsx')) return must(code.replace(/(const version = useSyncExternalStore\()/,
       `const __t0 = performance.now(); useLayoutEffect(() => { const m = window.fxCpu; if (m?.active) m.renders.push({at: __t0 - m.start, ms: performance.now() - __t0}); });\n  $1`), 'Game renders');
-    if (id.endsWith('/src/ui/game/Table.tsx')) return must(code.replace('const d = shipData(data, ship.code);', count('Plank') + 'const d = shipData(data, ship.code);'), 'Plank') + wrap(['StatusBar', 'TeamRow', 'TopHold', 'SeaChip']);
+    if (id.endsWith('/src/ui/game/Table.tsx')) return must(code.replace('const d = shipData(data, ship.code);', count('Plank') + 'const d = shipData(data, ship.code);'), 'Plank') + wrap(['StatusBar', 'TeamRow', 'TopHold', 'SeaChip'], code);
     if (id.endsWith('/src/ui/game/Hand.tsx')) return must(must(code.replace('const holder = s.ships[seat];', count('Hand') + 'const holder = s.ships[seat];'), 'Hand')
       .replace(/(const textRef = useWholeLines\()/, count('HandCard') + '$1'), 'HandCard');
-    if (id.endsWith('/src/ui/game/Overlays.tsx')) return code + wrap(['LogList']);
-    if (id.endsWith('/src/ui/game/Panels.tsx')) return code + wrap(['ChargeSheet', 'ChargeButtons']);
-    if (id.endsWith('/src/ui/game/Alarm.tsx')) return code + wrap(['ReactionSheet']);
-    if (id.endsWith('/src/ui/game/TableThings.tsx')) return code + wrap(['TableThings', 'TableBackdrop']);
+    if (id.endsWith('/src/ui/game/Overlays.tsx')) return code + wrap(['LogList'], code);
+    if (id.endsWith('/src/ui/game/Panels.tsx')) return code + wrap(['ChargeSheet', 'ChargeButtons'], code);
+    if (id.endsWith('/src/ui/game/Alarm.tsx')) return code + wrap(['ReactionSheet'], code);
+    if (id.endsWith('/src/ui/game/TableThings.tsx')) return code + wrap(['TableThings', 'TableBackdrop'], code);
   },
 };
 if (!flag('--reuse')) await build({root, configFile: resolve(root, 'vite.config.ts'), mode: 'e2e', logLevel: 'warn', plugins: [inject], build: {outDir, emptyOutDir: true, minify: false}});
