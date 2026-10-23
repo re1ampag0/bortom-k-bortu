@@ -33,3 +33,13 @@ fx-reactions selected, one run
   ✓  1 [chromium] › e2e/fx-reactions.spec.ts:112:5 › the Reactions and the special Volleys through ?fxScene (1366×660) › whirl: the effect on the table, the frame, the result (9.3s)
   ✓  2 [chromium] › e2e/fx-reactions.spec.ts:132:3 › the Reactions and the special Volleys through ?fxScene (1366×660) › whirl: the layer takes no press during the effect (2.8s)
   2 passed (17.5s)
+
+2026-10-23 additional sinking migration and Volley fixes
+$ npm run typecheck (after sinking)
+exit 0
+$ npm run typecheck (after impact arrival fixes and new e2e)
+exit 0
+$ npx playwright test e2e/fx-volley.spec.ts -g 'hull impact:' --project=chromium --workers=1 --config=scripts/fx-smooth-c/playwright.config.ts
+1 passed (15.0s); final development run, earlier failed pilots documented in progress
+$ npx playwright test e2e/fx-volley.spec.ts -g 'it stays ≈ 2 s|the compact plate stays' --project=chromium --workers=1 --config=scripts/fx-smooth-c/playwright.config.ts
+2 passed (15.4s); once each after these changes

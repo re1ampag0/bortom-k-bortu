@@ -1,0 +1,38 @@
+[
+ {
+  "viewport": {
+   "width": 430,
+   "height": 932
+  },
+  "audit": {
+   "early": [],
+   "framesBefore": 44,
+   "visibleBoards": 35,
+   "impacts": 3
+  },
+  "stack": {
+   "plate": 40,
+   "wrecks": [
+    0
+   ]
+  }
+ },
+ {
+  "viewport": {
+   "width": 1366,
+   "height": 660
+  },
+  "audit": {
+   "early": [],
+   "framesBefore": 24,
+   "visibleBoards": 23,
+   "impacts": 3
+  },
+  "stack": {
+   "plate": 40,
+   "wrecks": [
+    0
+   ]
+  }
+ }
+]

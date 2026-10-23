@@ -12,6 +12,7 @@ interface Channel<T> { offset: number; value: T }
 interface Transform { names: string[]; values: number[][] }
 export interface ParticleTarget {
   readonly particle: true;
+  hideBeforeStart?: boolean;
   ctx: FxCtx;
   host: Element;
   kind: string;
@@ -280,6 +281,7 @@ function draw(b: Bank): void {
     const parent=ancestry.get(target.host)??ancestorMatrix(target.host,b.board);ancestry.set(target.host,parent);
     if(!parent.live){item.finish();return false;}
     const elapsed=b.now-item.start,progress=Math.max(0,Math.min(1,elapsed/item.duration)),t=item.easing(progress);
+    if(target.hideBeforeStart&&elapsed<0)return true;
     const alpha=alphaAt(item.opacity,t)*target.alpha*parent.alpha;
     if(elapsed>=item.duration&&!item.ended){item.ended=true;item.finish();}
     if(item.ended&&alpha<=0)return false;

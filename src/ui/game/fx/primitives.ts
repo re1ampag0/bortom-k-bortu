@@ -32,6 +32,8 @@ export interface FxCtx {
   canvasParticles?: boolean;
   legendParticles?: boolean;
   svgParticleOpacity?: boolean;
+  /** Impact-only producers are prepared now but stay invisible until their scheduled arrival. */
+  hideDelayedImpact?: boolean;
   /** Only Volley/Counter opt into prepared object wrappers. */
   volleySprites?: boolean;
   /** .fx-layer, the last child of the board: effects are added here. */
@@ -147,7 +149,14 @@ export function at(ctx: FxCtx, t: number, fn: () => void): void {
 export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay?: number, easing?: string, fill?: FillMode): Animation;
 export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay?: number, easing?: string, fill?: FillMode): Animation | ParticleAnimation;
 export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation | ParticleAnimation {
-  if ('particle' in el) return animateParticle(el, kf, ms(ctx,d), ms(ctx,delay), easing);
+  if ('particle' in el) return animateParticle(ctx.hideDelayedImpact?{...el,hideBeforeStart:true}:el, kf, ms(ctx,d), ms(ctx,delay), easing);
+  if(ctx.hideDelayedImpact&&delay>0){
+    // Unlike arbitrary SVG effects, these impact-only nodes have an explicitly hidden
+    // base style. Forward fill can therefore keep them hidden until their own arrival,
+    // while preserving every active keyframe/offset and the original finishing frame.
+    (el as HTMLElement|SVGElement).style.opacity='0';
+    if(fill==='both')fill='forwards';else if(fill==='backwards')fill='none';
+  }
   if (perfAnimHook) perfAnimHook(el);
   // Backwards fill also positions SVG children during their delay; unlike direct HTML
   // children of .fx-layer they need not have opacity:0 in their base style.
@@ -945,7 +954,7 @@ export function flashBoard(ctx: FxCtx, color = '#fff', peak = 0.55, d = 520, del
 export function fallBoard(ctx: FxCtx, svg: Element, code: string, p: Pt, delay = 0, d = 1000): void {
   if (perfOff('particles')) return;
   const to = { x: clamp(p.x + 40, 20, boardW(ctx) - 20), y: clamp(facingY(ctx, code) + dirOf(ctx, code) * 34, 20, boardH(ctx) - 20) };
-  const bd = particleShape(ctx, svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>');
+  const bd = particleShape(ctx, svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>', 'fall-board');
   A(ctx, bd, [{ transform: `translate(${R1(p.x)}px,${R1(p.y)}px) rotate(0deg)` }, { transform: `translate(${R1(p.x + 12)}px,${R1(p.y - 16)}px) rotate(40deg)`, offset: 0.2 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 1, offset: 0.98 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 0 }], d, delay, 'cubic-bezier(.3,.1,.7,1)');
   at(ctx, delay + d, () => {
     waterColumn(ctx, svg, to.x, to.y, 22);
