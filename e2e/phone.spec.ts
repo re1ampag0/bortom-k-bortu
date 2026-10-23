@@ -296,3 +296,57 @@ test('phone hand: hidden scrollbar keeps scrolling and the dots', async ({ page 
     expect(await page.evaluate(() => document.scrollingElement!.scrollLeft)).toBe(0);
   }
 });
+
+// ui-press: the lifted card of a phone lies in a layer of its own over the table, whole, with every button of it — the
+// strip scrolls sideways and used to cut it off (375×667: «Продать»/«Передать» under its edge). Its place in the fan stays
+// empty; the Hold, «Перестроение», the caption and the dots do not move (the neighbours in the fan — the same as before
+// ui-press: scripts/ui-press/lift.mjs); a tap beside it drops it.
+test('phone 375×667: the lifted card lies whole over the table, the fan and the deck stay', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await startDuo(page);
+  const cards = page.locator('[data-fx-hand] .hand-cards > .hcard');
+  const rects = (sel: string) => page.locator(sel).evaluateAll((list) => list.filter((e) => e.getClientRects().length).map((e) => {
+    const r = e.getBoundingClientRect();
+    return [r.left, r.top, r.width, r.height].map((x) => Math.round(x));
+  }));
+  const DECK = '.board-bottom .regroup, .phone-hand-label, .hand-dots, .board-bottom .team-row';
+  const deck = await rects(DECK);
+  const n = await cards.count();
+  await cards.first().click();
+  const layer = page.getByTestId('hand-lift');
+  const lifted = layer.locator('.hcard.lifted');
+  await expect(lifted).toBeVisible();
+  await expect(page.locator('[data-fx-hand] .hand-cards > .lift-place')).toHaveCount(1);
+  await expect(cards).toHaveCount(n);
+  // the card stands on its place: the same left edge and bottom as the empty place in the fan (once it has grown in and the
+  // strip has centred it)
+  const off = async () => {
+    const [card, place] = await Promise.all([lifted.boundingBox(), page.locator('.lift-place').boundingBox()]);
+    return Math.max(Math.abs(card!.x - place!.x), Math.abs(card!.y + card!.height - (place!.y + place!.height)));
+  };
+  await expect.poll(off).toBeLessThanOrEqual(1);
+  // every button of it is in the window and takes the finger (nothing lies over it)
+  // (the strip: «Сыграть», or the reason why not — this first card is a Reaction)
+  for (const id of ['strip', 'lift-sell', 'lift-pass']) {
+    const b = id === 'strip' ? lifted.locator('.lift-strip') : page.getByTestId(id);
+    await expect(b).toBeVisible();
+    expect(await b.evaluate((e) => {
+      const r = e.getBoundingClientRect();
+      const inside = r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight;
+      return inside && e.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
+    }), id).toBe(true);
+  }
+  expect(await rects(DECK)).toEqual(deck);
+  // a tap beside it drops it: the card is back in the fan (the fan itself, before/after ui-press: scripts/ui-press/lift.mjs)
+  const sea = (await page.locator('.sea-water').boundingBox())!;
+  await page.mouse.click(sea.x + sea.width / 2, sea.y + sea.height / 2);
+  await expect(layer).toHaveCount(0);
+  await expect(page.locator('.lift-place')).toHaveCount(0);
+  await expect(cards).toHaveCount(n);
+  // its buttons work from the layer: «Продать» sells it
+  await cards.first().click();
+  await page.getByTestId('lift-sell').click();
+  await expect(layer).toHaveCount(0);
+  await expect(cards).toHaveCount(n - 1);
+  await page.screenshot({ path: 'docs/screenshots/ui-press/e2e-phone-375x667-lift.png' });
+});

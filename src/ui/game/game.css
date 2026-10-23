@@ -3786,7 +3786,11 @@ button.star::before {
 .fx-simple .hand-cards > .hcard.lifted,
 .fx-simple .hand-cards > .hcard.chosen,
 .fx-simple .hand-cards > .hcard:has(+ .hcard:hover),
-.fx-simple .hand-cards > .hcard:hover + .hcard {
+.fx-simple .hand-cards > .hcard:hover + .hcard,
+/* ui-press: the lifted card of a phone lies in its layer (it holds the touch's :hover); its neighbours (the place's next, and
+   .lift-prev of Hand.tsx) stay as they were beside the hovered card */
+.fx-simple .hand-cards > .hcard.lift-place + .hcard,
+.fx-simple .hand-cards > .hcard.lift-prev {
   rotate: none;
   translate: none;
   scale: none;
@@ -3799,7 +3803,9 @@ button.star::before {
   .hand-cards > .hcard.lifted,
   .hand-cards > .hcard.chosen,
   .hand-cards > .hcard:has(+ .hcard:hover),
-  .hand-cards > .hcard:hover + .hcard {
+  .hand-cards > .hcard:hover + .hcard,
+  .hand-cards > .hcard.lift-place + .hcard,
+  .hand-cards > .hcard.lift-prev {
     rotate: none;
     translate: none;
     scale: none;
