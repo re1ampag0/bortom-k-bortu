@@ -56,3 +56,55 @@
   тесты перезаписывают, возвращены из git.
 - Ноутбук: подъём карты только на телефоне (`isPhone()`), новые правила касаются только `.hand-lift/.lift-place/
   .lift-prev`; u3-layout 1366×660 и 1920×1080 прошли.
+
+## Шаг 0б — окно «нажатие» и замер «до» (сделано, PR 2)
+
+### (а) Окно «нажатие» в ?perf=1
+`src/ui/game/perf/press.ts`: нажатие на кнопку стола (`button`/`[role=button]`, не панели perf) — тем же пассивным
+слушателем `click`/`keydown` из clip.ts, который вешается только с ?perf=1 — открывает окно 1,5 с от `event.timeStamp`:
+свой rAF (стоит, когда окна нет), кадры, рендеры Game (`clipRender` пишет и сюда), этапы показа, если он начался в
+окне. «Тревога!» открывается без нажатия — Game открывает окно ««Тревога!» открылась» от начала своего рендера.
+Метка: кнопка (data-testid/aria-label/текст) → что открылось/закрылось (по DOM в начале и в конце окна: лист «Заряд»,
+«Тревога!» развёрнута/свёрнута, окно решения, карта, окно, журнал, поднятая карта) и «показ: <клипы>». Три сцены
+«Сыграть» различаются: `lift-play → открыт лист «Заряд»`, `fire → … показ: announce + …`, `play-reaction → закрыт
+«Тревога!» …, показ: …`. Панель: кнопка «Нажатия» (8 последних окон, у каждого 5 худших кадров) и тот же текст в
+«Скопировать числа» (кнопка есть, если есть клип или нажатие). Без ?perf=1 слушатели не повешены, Game не вызывает
+`pressOpen` (часы не читаются) — `tests/perf-press.test.ts`.
+
+### (б) Замер «до» — сборка main 28a21f1
+`node scripts/ui-press/measure.mjs before --root tmp/ui-press/main` (390×844, DPR 3, CPU ×4, против ботов, нажатия с
+hit-test; окно 1,5 с от `event.timeStamp` нажатия, у «Тревоги!» — от вставки листа). Сцены: шесть из задачи с уточнением
+и две дополнительные — «Отмена» листа «Заряд» и «Вернуться» свёрнутой «Тревоги!» (обе — нажатия из списка задачи).
+Цепочка Залпа — seed 1 за Пиратов; цепочка «Тревоги!» — seed 8 за Компанию (первый Залп ботов даёт Реакцию; найден
+перебором `tmp/ui-press/probe.mjs`). JS компонентов — включительное время по имени функции из отдельного прогона с
+профилировщиком (`--profile`, его собственные числа трассы в таблицу не идут). Style — union UpdateLayoutTree и сумма
+`elementCount`; Layout — сумма `dirtyObjects`; JSON: `docs/screenshots/ui-press/measure/before*.json`.
+
+| Сцена | До кадра, мс | Худший кадр, мс | Рендер Game (render+commit), мс | Рендеры компонентов | JS компонентов, мс (профиль) | Style, мс (элементов / раз) | из них принуд., мс | Layout, мс (dirty узлов / раз) | Paint, мс (раз) |
+|---|---:|---:|---:|---|---|---|---:|---|---|
+| charge-open | 14 | 533 | 199 | TableBackdrop 3, StatusBar 1, TopHold 1, SeaChip 1, Plank 4, ChargeSheet 1, HandCard 6, ChargeButtons 1, TeamRow 1, Hand 1, LogList 1 | Game 10.4, PlankView 8.2, Hand 0.5, HandCard 1.5, ChargeSheet 5.5, ChargeButtons 0.3, TableBackdrop 3.7, FxLayer 0.9 | 466 (6416 / 61) | 173 | 22 (296 / 35) | 328 (201) |
+| charge-cancel | 3 | 583 | 103 | TableBackdrop 3, StatusBar 1, TopHold 1, SeaChip 1, Plank 4, TeamRow 1, Hand 1, HandCard 5, LogList 1 | Game 5.3, PlankView 10.5, Hand 1.2, StatusBar 0.9, TableBackdrop 1.3, FxLayer 0.9 | 503 (6979 / 65) | 208 | 20 (344 / 32) | 56 (86) |
+| lift-play | 10 | 633 | 231 | TableBackdrop 3, StatusBar 1, TopHold 1, SeaChip 1, Plank 4, ChargeSheet 2, HandCard 8, ChargeButtons 1, TeamRow 1, Hand 2, LogList 1 | Game 8.5, PlankView 3.9, Hand 1, TopHold 1, LogList 0.6, ChargeSheet 1.6, TableBackdrop 0.2 | 526 (6971 / 70) | 350 | 65 (417 / 43) | 214 (189) |
+| fire | 13 | 800 | 289 | TableBackdrop 2, StatusBar 3, TopHold 1, SeaChip 3, Plank 10, TeamRow 3, Hand 2, HandCard 8, LogList 2 | Game 10.6, PlankView 14.1, Hand 1.1, TeamRow 2.7, LogList 3.5, FxLayer 0.2 | 469 (5091 / 62) | 405 | 120 (1268 / 80) | 153 (98) |
+| alarm-open | 175 | 183 | 70 | StatusBar 7, SeaChip 7, LogList 4, TableBackdrop 3, TopHold 4, Plank 12, ReactionSheet 2, HandCard 20, TeamRow 2, Hand 2 | Game 12.5, PlankView 10.2, Hand 3.8, HandCard 1.7, StatusBar 1.9, LogList 1.2, ReactionSheet 30.8, TableBackdrop 1 | 58 (194 / 37) | 6 | 60 (544 / 47) | 142 (59) |
+| alarm-fold | 10 | 267 | 170 | TableBackdrop 2, StatusBar 1, TopHold 1, SeaChip 1, Plank 4, ReactionSheet 1, TeamRow 1, Hand 1, HandCard 5, LogList 1 | Game 5.1, PlankView 5.6, Hand 5.4, HandCard 0.2, StatusBar 0.7, TeamRow 0.1, LogList 1.6, ReactionSheet 14.1, TableBackdrop 1.8, FxLayer 2.2 | 219 (2663 / 78) | 121 | 4 (43 / 20) | 51 (40) |
+| alarm-unfold | 10 | 233 | 168 | TableBackdrop 1, StatusBar 1, TopHold 1, SeaChip 1, Plank 4, ReactionSheet 1, HandCard 10, TeamRow 1, Hand 1, LogList 1 | Game 4.1, PlankView 8.2, Hand 3, HandCard 2.3, TopHold 0.3, LogList 0.9, ReactionSheet 15.5, FxLayer 0.9 | 182 (2713 / 89) | 100 | 10 (128 / 20) | 36 (35) |
+| react-play | 4 | 517 | 117 | TableBackdrop 2, StatusBar 3, TopHold 1, SeaChip 3, Plank 4, ReactionSheet 1, HandCard 13, TeamRow 1, Hand 2, LogList 2 | Game 9.7, PlankView 5.1, Hand 10, HandCard 1, StatusBar 0.7, TopHold 0.6, LogList 2.5, ReactionSheet 24.9, TableBackdrop 1.3, FxLayer 1.5 | 321 (2718 / 82) | 219 | 79 (464 / 52) | 106 (116) |
+
+Что показал замер (и трасса с `--why`: причины пересчёта стилей по узлам):
+- **Главное — оформление, не React.** JS всех компонентов в окне — 10–60 мс, а «рендер Game» 100–290 мс — это
+  render + commit + layout-эффекты, и почти всё в нём — принудительный пересчёт стилей ~2000 элементов, который
+  первым же чтением размеров вызывает `fit` в `useWholeLines` (Hand.tsx). Элементов так много, потому что листы
+  ставят класс и **наследуемую переменную на корень** (`.game.charge-open { --charge-h }`, `.game.alarm-open
+  { --alarm-h }`) — пересчитывается всё дерево.
+- **Ещё два полных пересчёта по ~2000 элементов (110–130 мс каждый) в следующих кадрах** — это и есть худшие кадры.
+  Причина в трассе — «Inline CSS style declaration was mutated» на `DIV.game` и `MAIN.board`: лист сжимает море на
+  5 px, после этого TableThings «Палуба» переставляет пушку/фонарь и пишет `--deck-warm-*` на `.game`, а
+  `useSeaClip` пишет `--sea-*` на `.board`. Эти переменные читают только `.game::after`, `.phone-deck-warm`,
+  `.fx-weather`, `.fx-scars`, но из-за наследования пересчитывается всё дерево.
+- Погода (`fx/weather.ts`, не мой файл) при смене размера моря заново вставляет `<style>` с `@keyframes` — «@keyframes
+  rule change» у всех анимированных элементов, 25–40 мс в конце окна. Предложение для fx-finish: переиспользовать
+  правила и не вставлять `<style>` повторно.
+- В «Тревоге!» дорог сам `ReactionSheet` — 14–31 мс JS (на каждую карту `playOptions` и `reactionNow` на каждый рендер).
+- Планшеты перерисовываются все 4 на любое нажатие (новый штамп + новые обработчики) — 4–14 мс; рука, LogList,
+  StatusBar — тоже на каждое нажатие.
