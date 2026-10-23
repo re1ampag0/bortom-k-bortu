@@ -538,11 +538,28 @@
     width: auto;
     height: 18px;
   }
-  /* a Soul: the picture and «→ Корп» do not fit a third of the row — the button is as wide as they are (not narrower) */
+  /* a Soul (ui-fixes): compact — the skull, «→», the icon of its track and «+1» without spare room; it never shrinks below them */
   .plank-buttons > .btn.cmd.soul {
     flex: 0 0 auto;
-    min-width: calc((100% - 8px) / 3);
-    padding-inline: 6px;
+    min-width: 0;
+    padding-inline: 5px;
+  }
+  .plank-buttons.n3plus .btn.soul .cmd-short,
+  .plank-buttons .soul-gain {
+    gap: 1px;
+  }
+  .plank-buttons .soul-arrow {
+    font-size: 11px;
+  }
+  .plank-buttons .btn.soul .short-pic {
+    height: 16px;
+  }
+  .plank-buttons .soul-track svg {
+    height: 14px;
+  }
+  .plank-buttons .soul-plus {
+    font-size: 13px;
+    letter-spacing: -0.04em;
   }
   .plank-buttons .btn.cmd .cost {
     gap: 2px;

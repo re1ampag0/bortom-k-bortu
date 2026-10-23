@@ -772,6 +772,22 @@ const CMD_ICON: Record<string, string> = {
  * with fixed ids, which would clash between copies in the markup.
  */
 const ICON_URL: Record<string, string> = { dive: diveIcon, soulHull: soulIcon, soulCrew: soulIcon };
+/** ui-fixes: what a Soul gives, on the button itself — the icon of its track (a cell of the Hull, a sailor of the Crew). */
+const SOUL_TRACK: Record<string, CellIcon> = { soulHull: 'HULL', soulCrew: 'CREW' };
+
+/** «→ [icon] +1» after the skull of a Soul button: the «+1» is the one of its label («Душа → +1 Корпус», engine/hints.ts). */
+function SoulGain({ b }: { b: Btn }) {
+  const icon = SOUL_TRACK[b.key];
+  const plus = /\+\d+/.exec(b.label)?.[0];
+  if (!icon || !plus) return null;
+  return (
+    <span className="soul-gain" aria-hidden>
+      <span className="soul-arrow">→</span>
+      <span className="soul-track" dangerouslySetInnerHTML={svg(CELLS[icon])} />
+      <span className="soul-plus">{plus}</span>
+    </span>
+  );
+}
 /** «Залп · 1 П»: the name and the price in Powder. */
 const PRICED = /^(.*?) · (\d+) П$/;
 /** «Перестроение · бесплатно»: free while «Жемчужина» of the Pirates is afloat. */
@@ -813,9 +829,12 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
       {/* a laptop always; a phone while a plank has one or two buttons (game.css) — else the short label */}
       <span className="cmd-in">
         {url ? (
-          <span className={`cmd-icon cmd-pic i-${b.key === 'dive' ? 'dive' : 'soul'}`}>
-            <img src={url} alt="" draggable={false} />
-          </span>
+          <>
+            <span className={`cmd-icon cmd-pic i-${b.key === 'dive' ? 'dive' : 'soul'}`}>
+              <img src={url} alt="" draggable={false} />
+            </span>
+            <SoulGain b={b} />
+          </>
         ) : (
           icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />
         )}
@@ -831,8 +850,8 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
         {url ? (
           <>
             <img className="short-pic" src={url} alt="" draggable={false} />
-            {/* «Душа→Корп» → the picture and «→ Корп»; «Нырок» → the picture alone */}
-            {b.key !== 'dive' && (b.short ?? b.label).replace(/^Душа\s*→\s*/, '→ ')}
+            {/* a Soul → the skull, «→», the icon of its track and «+1»; «Нырок» → the picture alone */}
+            <SoulGain b={b} />
           </>
         ) : (
           <>
