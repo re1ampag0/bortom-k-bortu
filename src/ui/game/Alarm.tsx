@@ -256,8 +256,6 @@ export function ReactionSheet({
     if (!folded && !validPick && soleSeat && soleCard) onPick({ seat: soleSeat, card: soleCard });
   }, [folded, !!validPick, soleSeat, soleCard, onPick]);
   const picked = (it: { seat: string; card: string }) => selected?.seat === it.seat && selected.card === it.card;
-  // ui-fixes: a Reaction that cannot be played lies faded without its reason; a tap on it shows the strip «нельзя», another hides it
-  const [why, setWhy] = useState<string | null>(null);
   // «what happens now» of each Reaction: one dry run per state, not on every render of the sheet (ui-press)
   const nows = useMemo(() => new Map<string, ReturnType<typeof reactionNow>>(), [s, data]);
   const nowOf = (seat: string, card: string) => {
@@ -299,9 +297,9 @@ export function ReactionSheet({
             const key = `${it.seat}-${it.card}`;
             const cardAlarm = a?.kind === 'ok' && now.ok
               ? { ...a, strip: a.strip ?? { top: now.text, bottom: '' } }
-              : a?.kind === 'no' && why !== key ? { ...a, kind: 'dim' as const } : a;
+              : a?.kind === 'no' ? { ...a, kind: 'dim' as const } : a;
             return (
-              <div key={key} className={`as-card ${a?.why ? 'off' : ''} ${picked(it) ? 'on' : ''} ${why === key ? 'why' : ''}`} data-card={it.card}>
+              <div key={key} className={`as-card ${a?.why ? 'off' : ''} ${picked(it) ? 'on' : ''}`} data-card={it.card}>
                 <HandCard
                   data={data}
                   code={it.card}
@@ -309,7 +307,7 @@ export function ReactionSheet({
                   off={a?.why ?? null}
                   chosen={picked(it)}
                   alarm={cardAlarm ?? undefined}
-                  onClick={() => (a?.why ? setWhy(why === key ? null : key) : onPick(picked(it) ? null : { seat: it.seat, card: it.card }))}
+                  onClick={() => !a?.why && onPick(picked(it) ? null : { seat: it.seat, card: it.card })}
                 />
                 <button
                   className="info"
@@ -319,6 +317,8 @@ export function ReactionSheet({
                 >
                   i
                 </button>
+                {/* ui-fixes: faded, without the strip over it; the reason in short under it, in full behind «i» */}
+                {a?.why && <span className="as-why" data-testid="reaction-why">сейчас нельзя</span>}
               </div>
             );
           })}
