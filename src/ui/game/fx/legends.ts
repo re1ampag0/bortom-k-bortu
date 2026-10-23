@@ -1,5 +1,6 @@
 import {perfWorkHook,perfPhaseHook} from '../perf/clip';
 import {canvasCircRing,canvasMote} from './particles';
+import {prepareIntroArt,introArt} from './legendIntroArt';
 import {perfOff} from '../perf/state';
 // The Legends: the common grand entrance of a Legend and the effect of each. FX-B (package 3): the look and the timings
 // of the A5 prototype (docs/mockups/a5/fx/src/fx3.js, ANIMATIONS.md §3.1–3.5) on the primitives of the game; the
@@ -85,11 +86,27 @@ export function fitCardText(card: Element): void {
 type IntroPart='card'|'back'|'top'|'bot'|'rays'|'seal'|'ban'|'cap';
 interface IntroBank {signature:string;data:GameData;cards:Map<string,Record<IntroPart,HTMLElement>>}
 const introBanks=new WeakMap<HTMLElement,IntroBank>();
+function prepareIntroPictures(board:HTMLElement,parts:Record<IntroPart,HTMLElement>):void {
+  const art=introArt(board);
+  if(!art?.rays||!art.shadow||parts.rays.dataset.picture)return;
+  parts.rays.dataset.picture='pending';
+  const rays=art.rays.cloneNode(true) as HTMLImageElement,shadow=art.shadow.cloneNode(true) as HTMLImageElement;
+  rays.alt='';shadow.alt='';shadow.className='lg-seal-shadow';
+  void Promise.all([rays.decode(),shadow.decode()]).then(()=>{
+    // A show that started before decoding keeps its original artwork throughout.
+    if(parts.rays.isConnected||parts.seal.isConnected)return;
+    parts.rays.append(rays);parts.rays.classList.add('lg-sun-ready');parts.rays.dataset.picture='ready';
+    parts.seal.prepend(shadow);parts.seal.classList.add('lg-seal-ready');parts.seal.dataset.density='2';
+  }).catch(()=>{delete parts.rays.dataset.picture;});
+}
 export function invalidateLegendIntro(board:HTMLElement):void {introBanks.delete(board);}
 /** Parse artwork/text and fit all four cards in idle. No prepared element remains in the document. */
 export function prepareLegendIntro(ctx:FxCtx):void {
   const W=boardW(ctx),H=boardH(ctx),S=Math.min(1,(W-24)/248,(H-16)/470);
   const signature=`${W}:${H}:${S}`;
+  prepareIntroArt(ctx.board,Math.round(Math.max(W,H)*.95),()=>{
+    for(const parts of introBanks.get(ctx.board)?.cards.values()??[])prepareIntroPictures(ctx.board,parts);
+  });
   let bank=introBanks.get(ctx.board);
   if(!bank||bank.signature!==signature||bank.data!==ctx.data){
     bank={signature,data:ctx.data,cards:new Map()};introBanks.set(ctx.board,bank);
@@ -108,7 +125,7 @@ export function prepareLegendIntro(ctx:FxCtx):void {
         seal:create('lg-seal',SEAL_HTML),ban:create('lg-title',titleHTML(c.name)),
         cap:create('lg-cap',`<span>ЛЕГЕНДА</span> <b>${esc(c.name)}</b>`),
       };
-      bank!.cards.set(c.code,parts);parts.card.style.visibility='hidden';return parts.card;
+      bank!.cards.set(c.code,parts);prepareIntroPictures(ctx.board,parts);parts.card.style.visibility='hidden';return parts.card;
     });
     // The exact existing font-fit needs layout. Batch insertion in idle, then detach before paint.
     ctx.layer.append(...probes);
@@ -248,7 +265,8 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
   const tSeal = tLand + L.hit, sp = { x: cx + 110 * S, y: cy + 172 * S };
   perfPhaseHook?.('legendIntro: печать',L.seal*ctx.speed,tSeal*ctx.speed);
   const seal = insert('seal','lg-seal',sp.x,sp.y,SEAL_HTML); seal.style.zIndex = '40';
-  A(ctx, seal, [{ transform: `translate(-50%,-50%) scale(${R1(3.2 * S * 100) / 100}) rotate(-40deg)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${R1(0.86 * S * 100) / 100}) rotate(6deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(-50%,-50%) scale(${R1(S * 100) / 100}) rotate(0deg)`, opacity: 1 }], L.seal, tSeal, 'cubic-bezier(.6,0,.9,.5)');
+  const sealScale=(n:number)=>R1(n*S*100)/100/(seal.dataset.density==='2'?2:1);
+  A(ctx, seal, [{ transform: `translate(-50%,-50%) scale(${sealScale(3.2)}) rotate(-40deg)`, opacity: 0 }, { transform: `translate(-50%,-50%) scale(${sealScale(.86)}) rotate(6deg)`, opacity: 1, offset: 0.7 }, { transform: `translate(-50%,-50%) scale(${sealScale(1)}) rotate(0deg)`, opacity: 1 }], L.seal, tSeal, 'cubic-bezier(.6,0,.9,.5)');
   const tHit = tSeal + L.sealHit;
   A(ctx, card, [{ translate: '0 0' }, { translate: '-6px 2.4px' }, { translate: '6px -1.8px' }, { translate: '-3.6px 0' }, { translate: '2.4px 1.2px' }, { translate: '0 0' }], 300, tHit, 'linear', 'none');
   circRing(ctx, hi, sp.x, sp.y, 10, 90 * S, '#f6d9c8', 600, tHit, 3);
@@ -268,7 +286,7 @@ export async function legendIntro(ctx: FxCtx, code: string, owner: string, { cos
 
   // 7. the card collapses into a golden orb that flies to the target
   A(ctx, ban, [{ opacity: 1 }, { opacity: 0 }], L.fade, tOut, 'ease-in', 'forwards');
-  A(ctx, seal, [{ opacity: 1, transform: `translate(-50%,-50%) scale(${R1(S * 100) / 100})` }, { opacity: 0, transform: `translate(-50%,-50%) scale(${R1(0.4 * S * 100) / 100})` }], L.fade, tOut, 'ease-in', 'forwards');
+  A(ctx, seal, [{ opacity: 1, transform: `translate(-50%,-50%) scale(${sealScale(1)})` }, { opacity: 0, transform: `translate(-50%,-50%) scale(${sealScale(.4)})` }], L.fade, tOut, 'ease-in', 'forwards');
   A(ctx, card, [{ opacity: 1, transform: pose(cx, cy, S), filter: 'brightness(1)' }, { opacity: 1, transform: pose(cx, cy, S * 1.06), filter: 'brightness(1.4)', offset: 0.3 }, { opacity: 0, transform: pose(cx, cy, S * 0.04, 25), filter: 'brightness(3)' }], L.collapse, tOut, 'cubic-bezier(.6,0,.9,.4)', 'forwards');
   const tb = target ? bx(ctx, plank(ctx, target)) : g;
   const to = { x: tb.cx, y: tb.cy };
