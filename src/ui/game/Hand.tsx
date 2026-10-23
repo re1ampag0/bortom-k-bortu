@@ -335,7 +335,7 @@ export function HandCard({
   }
   return (
     <button
-      className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''} ${beforeLift ? 'lift-prev' : ''} ${alarm ? `al-${alarm.kind}` : ''}`}
+      className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''} ${beforeLift ? 'lift-prev' : ''} ${alarm ? `al-${alarm.kind}` : ''} ${(alarm?.kind === 'ok' && alarm.strip) || alarm?.kind === 'no' ? 'with-strip' : ''}`}
       style={style}
       data-lift={liftKey}
       onClick={onClick}

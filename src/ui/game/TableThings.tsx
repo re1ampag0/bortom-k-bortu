@@ -282,6 +282,10 @@ function freeRight(game: HTMLElement): Box | null {
  * captain's variant of the reference, the inkwell with a quill and the candle.
  */
 // memo (ui-press): the deck is measured by itself; a render of the table with the same look does not draw it again
+/** The place of the warm light of the lantern (phone.css: .game::after and .phone-deck-warm read it). */
+const warmVars = (w: DeckPlace['warm']): [string, number][] =>
+  [['--deck-warm-x', w ? Math.round(w.x) : 0], ['--deck-warm-y', w ? Math.round(w.y) : 0], ['--deck-warm-top', w ? Math.round(w.top) : 0], ['--deck-warm-bottom', w ? Math.round(w.bottom) : 0]];
+
 export const TableBackdrop = memo(function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [placed, setPlaced] = useState<Placed[]>([]);
@@ -306,8 +310,8 @@ export const TableBackdrop = memo(function TableBackdrop({ look }: { look: 'deck
         // the hand in the middle of its strip (paddings of .hand-cards, read by useFanFit), whole in the window
         const hd = d?.hand;
         // set only what changed
-        const put = (k: string, v: number) => {
-          if (game.style.getPropertyValue(k) !== `${v}px`) game.style.setProperty(k, `${v}px`);
+        const put = (k: string, v: number, el: HTMLElement = game) => {
+          if (el.style.getPropertyValue(k) !== `${v}px`) el.style.setProperty(k, `${v}px`);
         };
         put('--deck-pl', hd ? Math.max(0, Math.round(hd.pl)) : 0);
         put('--deck-pr', hd ? Math.max(0, Math.round(hd.pr)) : 0);
@@ -316,10 +320,12 @@ export const TableBackdrop = memo(function TableBackdrop({ look }: { look: 'deck
         put('--phone-lamp-space', d?.lampSpace ?? 0);
         put('--lamp-x', d ? Math.round(d.lx) : 0);
         put('--lamp-y', d ? Math.round(d.ly) : 0);
-        put('--deck-warm-x', d.warm ? Math.round(d.warm.x) : 0);
-        put('--deck-warm-y', d.warm ? Math.round(d.warm.y) : 0);
-        put('--deck-warm-top', d.warm ? Math.round(d.warm.top) : 0);
-        put('--deck-warm-bottom', d.warm ? Math.round(d.warm.bottom) : 0);
+        // (not inherited — phone.css @property: .game::after takes them from .game, the warm light gets its own copy)
+        const warmEl = game.querySelector<HTMLElement>('.phone-deck-warm');
+        for (const [k, v] of warmVars(d.warm)) {
+          put(k, v);
+          if (warmEl) put(k, v, warmEl);
+        }
         setPlaced((old) => (old.length ? [] : old));
         return;
       }
@@ -362,7 +368,9 @@ export const TableBackdrop = memo(function TableBackdrop({ look }: { look: 'deck
     // of the effects, the traces, the background itself, nor the style of the game (this measure writes it).
     const QUIET = '.fx-layer, .fx-weather, .fx-scars, .plank-scars, .backdrop';
     const mo = new MutationObserver((recs) => {
-      if (dirty && !game.hasAttribute('data-fx-busy') && recs.some((r) => r.target === game && (r.attributeName === 'class' || r.attributeName === 'data-fx-busy'))) ask();
+      // the state of the table changed (ui-press: a sheet sets its class on .board/.board-bottom, the root keeps the rest)
+      const box = (t: Node) => t === game || (t as Element).matches?.('.board, .board-bottom');
+      if (dirty && !game.hasAttribute('data-fx-busy') && recs.some((r) => box(r.target) && (r.attributeName === 'class' || r.attributeName === 'data-fx-busy'))) ask();
       const hit = recs.some((r) => {
         const t = r.target as Element;
         if (r.type === 'attributes') return r.attributeName === 'style' && t !== game && !!t.classList?.contains('hcard');
@@ -409,7 +417,7 @@ export const TableBackdrop = memo(function TableBackdrop({ look }: { look: 'deck
               <img key={p.key} className={`deck-piece ${p.flip ? 'flip' : ''}`} data-piece={p.key} src={PIECES[p.key].src} alt="" draggable={false} style={{ left: p.l, top: p.t, width: p.w, height: p.h }} />
             ))}
           {deck && !deck.phone && <DeckLight x={deck.lx} y={deck.ly} r={LIGHT_R.laptop} ls={deck.ls} sq={deck.H / deck.W} />}
-          {deck?.phone && deck.warm && <i className="phone-deck-warm deck-flare" data-testid="lantern-light" />}
+          {deck?.phone && deck.warm && <i className="phone-deck-warm deck-flare" data-testid="lantern-light" style={Object.fromEntries(warmVars(deck.warm).map(([k, v]) => [k, `${v}px`]))} />}
           {deck?.phone && deck.hook && <i className="phone-lamp-light" style={{left: deck.lx - 66, top: deck.hook.t + 4 + 59 * deck.ls, width: 132, height: 86}} />}
           {deck?.glint && <i className="deck-glint" style={{ left: deck.glint.l, top: deck.glint.t, width: deck.glint.w, height: deck.glint.h }} />}
           {deck?.hook && <i className="deck-hook" style={{ left: deck.hook.l, top: deck.hook.t, width: deck.hook.w, height: deck.hook.h }} dangerouslySetInnerHTML={{ __html: HOOK_SVG }} />}
@@ -434,8 +442,8 @@ export const TableBackdrop = memo(function TableBackdrop({ look }: { look: 'deck
 });
 
 /**
- * The weather of the round lies on the water only: the board gets the insets of the sea (--sea-t/r/b/l), .fx-weather
- * is cut by them (game.css). Measured again whenever the board or the sea changes size.
+ * The weather of the round lies on the water only: .fx-weather and .fx-scars get the insets of the sea (--sea-t/r/b/l) and
+ * are cut by them (game.css). Measured again whenever the board or the sea changes size.
  */
 export function useSeaClip() {
   const boardRef = useRef<HTMLElement>(null);
@@ -450,14 +458,18 @@ export function useSeaClip() {
     w?.ro.disconnect();
     watched.current = null;
     if (!board || !sea || typeof ResizeObserver === 'undefined') return;
+    // ui-press: written on the two layers that read them (the weather and the traces cut by the sea), not on the board — a
+    // variable of the board is inherited by the whole table, and every change of the sea (a sheet opens) restyled all of it
     const measure = () => {
       const b = board.getBoundingClientRect(),
         r = sea.getBoundingClientRect();
       const k = stageK();
-      board.style.setProperty('--sea-t', `${Math.round((r.top - b.top) / k)}px`);
-      board.style.setProperty('--sea-l', `${Math.round((r.left - b.left) / k)}px`);
-      board.style.setProperty('--sea-r', `${Math.round((b.right - r.right) / k)}px`);
-      board.style.setProperty('--sea-b', `${Math.round((b.bottom - r.bottom) / k)}px`);
+      const insets: [string, number][] = [['--sea-t', r.top - b.top], ['--sea-l', r.left - b.left], ['--sea-r', b.right - r.right], ['--sea-b', b.bottom - r.bottom]];
+      for (const layer of board.querySelectorAll<HTMLElement>(':scope > .fx-weather, :scope > .fx-scars'))
+        for (const [name, v] of insets) {
+          const px = `${Math.round(v / k)}px`;
+          if (layer.style.getPropertyValue(name) !== px) layer.style.setProperty(name, px);
+        }
     };
     measure();
     const ro = new ResizeObserver(measure);

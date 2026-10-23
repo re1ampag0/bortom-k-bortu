@@ -43,7 +43,7 @@ export function Sheet({ title, onClose, children, wide, testid, foot }: { title:
   useEscape(onClose);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <section className={`sheet ${wide ? 'sheet-wide' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title} data-testid={testid}>
+      <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title} data-testid={testid}>
         <header className="sheet-head">
           <b>{title}</b>
           <button className="btn small close" onClick={onClose} aria-label="Закрыть">
