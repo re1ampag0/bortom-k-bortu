@@ -228,7 +228,7 @@
     transform: none;
   }
   /* With a clickable journal line above and Hull below, divide their shared vertical space. */
-  .game:has(.middle-info) .planks.bottom button.star::before {
+  .sea-table.has-info .planks.bottom button.star::before {
     inset: -3px -11px;
     height: auto;
   }
@@ -1210,4 +1210,21 @@
 }
 @media (max-width: 700px) and (prefers-reduced-motion: reduce) {
   .game.view-hand-deck::after, .phone-deck-warm { animation: none; }
+}
+/* ui-press: the place of the warm light (TableThings.tsx writes it on .game when a sheet moves the deck) is not inherited by
+   the table — a change of an inherited variable of the root restyled every element. Its two readers take it themselves:
+   the ::after of .game from .game, the warm light from its own style. */
+@property --deck-warm-x { syntax: '*'; inherits: false; }
+@property --deck-warm-y { syntax: '*'; inherits: false; }
+@property --deck-warm-top { syntax: '*'; inherits: false; }
+@property --deck-warm-bottom { syntax: '*'; inherits: false; }
+@property --lamp-x { syntax: '*'; inherits: false; }
+@property --lamp-y { syntax: '*'; inherits: false; }
+.game.view-hand-deck::after {
+  --deck-warm-x: inherit;
+  --deck-warm-y: inherit;
+  --deck-warm-top: inherit;
+  --deck-warm-bottom: inherit;
+  --lamp-x: inherit;
+  --lamp-y: inherit;
 }

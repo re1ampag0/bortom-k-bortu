@@ -208,10 +208,10 @@
 /* ——— a laptop: the sheet over the whole bottom of the table — the Hold, «Перестроение» and the hand under it — up to
    «Отмена» and «Огонь!» in the place of «Ход окончен»; the laying out of frame 2 ——— */
 @media (min-width: 701px) {
-  .game.charge-open .board-bottom {
+  .board > .board-bottom.charge-open {
     position: relative;
   }
-  .game.charge-open .board-bottom > .charge-sheet {
+  .board .board-bottom.charge-open > .charge-sheet {
     position: absolute;
     top: 0;
     /* to the left edge and the foot of the window (the padding of the board: 12 px aside, 8 px below) */
@@ -221,11 +221,11 @@
     z-index: 8;
     padding: 8px 16px;
   }
-  .game.charge-open .hand-row > .hand {
+  .board-bottom.charge-open .hand-row > .hand {
     visibility: hidden;
   }
   /* below 1280 px the buttons stand in the row of the hand: the sheet stops at them */
-  .game.charge-open .hand-row > .hand-actions {
+  .board-bottom.charge-open .hand-row > .hand-actions {
     position: relative;
     z-index: 9;
   }
@@ -280,20 +280,21 @@
   }
 }
 @media (min-width: 701px) and (max-width: 1279px) {
-  .game.charge-open .board-bottom > .charge-sheet {
+  .board .board-bottom.charge-open > .charge-sheet {
     right: 324px;
   }
 }
 
 /* ——— a phone: from below, in the place of the hand and the bottom panel (frame 2) ——— */
 @media (max-width: 700px) {
-  .game.charge-open {
+  /* ui-press: declared on its two readers (the row of the hand, the sheet), not inherited by the whole bottom of the table */
+  .board-bottom.charge-open :is(.hand-row, .charge-sheet) {
     --charge-h: clamp(250px, 36vh, 338px);
   }
-  .game.charge-open .hand-row {
+  .board-bottom.charge-open .hand-row {
     min-height: calc(var(--charge-h) - 61px);
   }
-  .game.charge-open .board-bottom > .charge-sheet {
+  .board .board-bottom.charge-open > .charge-sheet {
     position: fixed;
     left: 0;
     right: 0;
@@ -306,7 +307,7 @@
     padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
     overflow: visible;
   }
-  .game.charge-open .charge-sheet::before {
+  .board-bottom.charge-open .charge-sheet::before {
     content: '';
     flex: none;
     width: 46px;
@@ -360,7 +361,7 @@
 }
 @media (max-width: 700px) {
   /* a window opened from the sheet («i» of a card or of a ship) lies over it */
-  .game.charge-open:has(.sheet-backdrop) .board-bottom > .charge-sheet {
+  .board .board-bottom.charge-open.under-window > .charge-sheet {
     z-index: 1;
   }
 }
