@@ -8,22 +8,28 @@ import {existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync} from 'n
 
 const [beforeDist, afterDist, ...rest] = process.argv.slice(2);
 const selected=rest.filter((s,i)=>!s.startsWith('--')&&rest[i-1]!=='--out');
+const tag=rest.find(s=>s.startsWith('--tag='))?.slice(6);
+if(tag&&!/^[a-z0-9-]+$/i.test(tag))throw Error('Invalid capture tag');
 const scenes = selected.length ? selected : ['legend','armada','bottle','idle'];
 // the moments after the press, ms of the clip clock: around the renderWith of each clip and after it
 const MOMENTS = {hit:[800,2000,3200,4200,5200],'idle-compositor':[1000,4600,4800,5000],'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700], lift: [0, 100, 200, 400, 700]};
-// --out DIR: another task's folder (ui-press: the card that flies from the lifted card of a phone, scene «lift»)
-const OUT = rest.includes('--out') ? rest[rest.indexOf('--out') + 1] : 'docs/screenshots/fx-finish/frames';
+// --out DIR: another task's folder (ui-press: the card that flies from the lifted card of a phone, scene «lift»);
+// --tag=NAME: frames-NAME under fx-finish, so the comparisons of a later part do not overwrite the earlier ones
+const OUT = rest.includes('--out') ? rest[rest.indexOf('--out') + 1] : 'docs/screenshots/fx-finish/'+(tag?'frames-'+tag:'frames');
 mkdirSync(OUT, {recursive: true});
 // Capture-only hook in generated, unminified temporary builds. Bring canvas to the
 // SAME controlled instant as the native wrappers, instead of the preceding rAF.
 for(const dist of new Set([beforeDist,afterDist])){
   for(const name of readdirSync(`${dist}/assets`).filter(n=>n.endsWith('.js'))){
     const path=`${dist}/assets/${name}`,source=readFileSync(path,'utf8');
+    if(source.includes('function prepareIntroPictures(')&&!source.includes('window.fxCaptureIntroReady=')){
+      writeFileSync(path,source+`\nwindow.fxCaptureIntroReady=()=>{const b=introBanks.get(document.querySelector('.board'));return b&&Array.from(b.cards.values()).every(p=>p.rays.dataset.picture==='ready');};\n`);
+    }
     if(!source.includes('function prepareParticles(')||source.includes('window.fxCaptureParticles='))continue;
     const prep=source.slice(source.indexOf('function prepareParticles('));
     const bank=prep.match(/if \((\w+(?:\$\w+)?)\.has\(board\)\)/)?.[1];
     if(!bank||!source.includes('function draw(b)')||!source.includes('function advance(b)'))throw Error('Unknown particle bundle; capture hook refused');
-    writeFileSync(path,source+`\nwindow.fxCaptureParticles=()=>Array.from(document.querySelectorAll('.board')).flatMap(board=>{const b=${bank}.get(board);if(!b)return [];advance(b);draw(b);return [{clock:performance.now(),time:b.now,count:b.items.length}];});\n`);
+    writeFileSync(path,readFileSync(path,'utf8')+`\nwindow.fxCaptureParticles=()=>Array.from(document.querySelectorAll('.board')).flatMap(board=>{const b=${bank}.get(board);if(!b)return [];advance(b);draw(b);return [{clock:performance.now(),time:b.now,count:b.items.length}];});\n`);
   }
 }
 
@@ -37,7 +43,9 @@ async function shoot(dist, port, tag) {
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.clock.install({time: new Date(0)});
-      await page.clock.pauseAt(new Date(1));
+      // Pause safely before navigation: 1 ms raced the protocol round trip on a busy host.
+      // The blank page has no game work; both builds start at the same fixed virtual time.
+      await page.clock.pauseAt(new Date(60000));
       await page.addInitScript(() => {
         let seed = 19427;
         Math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
@@ -74,6 +82,7 @@ async function shoot(dist, port, tag) {
       if(['legend','armada','bottle','kraken','jack'].includes(scene)){
         await page.goto(`http://127.0.0.1:${port}/bortom-k-bortu/?fxScene=${scene==='legend'?'bottle':scene}&manual=1&speed=normal&perf=0`);
         await page.evaluate(()=>document.fonts.ready);
+        if(await page.evaluate(()=>!!window.fxCaptureIntroReady))await page.waitForFunction(()=>window.fxCaptureIntroReady(),null,{timeout:20000});
         await click('[data-testid="fx-start"]');
         await until(async()=>!!await page.locator(scene==='armada'?'.gun-fire':'.lg-card').count());
         await page.evaluate(()=>document.fonts.ready);
