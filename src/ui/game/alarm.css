@@ -144,6 +144,21 @@
 :is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok:focus-visible {
   translate: 0 -40px;
 }
+/* ui-fixes, a laptop: no card lies over a Reaction that can be played (data-whole: Hand.tsx useFanFit), and the cards that
+   cannot be played do not rise or grow under the pointer — they stay behind and beside the Reactions */
+@media (min-width: 701px) {
+  .hand.alarm .hand-cards[data-whole] > .hcard.al-ok,
+  .hand.alarm .hand-cards[data-whole] > .hcard.al-ok + .hcard {
+    margin-left: 0;
+  }
+  .hand.alarm .hand-cards > .hcard:is(.al-no, .al-dim):is(:hover, :focus-visible) {
+    rotate: var(--r, 0deg);
+    scale: 1;
+  }
+  .hand.alarm .hand-cards > .hcard.al-ok:is(:hover, :focus-visible) {
+    z-index: 3;
+  }
+}
 :is(.hand, .hand-lift).alarm .hand-cards > .hcard.al-ok.chosen {
   box-shadow:
     0 0 0 3px #ffd36b,
