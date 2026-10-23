@@ -1,0 +1,172 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Fog.dc.html": {
+      "h": 600,
+      "title": "Туман — ноутбук",
+      "w": 920,
+      "x": 1000,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 600,
+      "title": "Буря — ноутбук",
+      "w": 920,
+      "x": 0,
+      "y": 0
+    },
+    "Phone.dc.html": {
+      "h": 1180,
+      "title": "Буря — телефон",
+      "w": 390,
+      "x": 2000,
+      "y": 0
+    },
+    "Tortuga.dc.html": {
+      "h": 600,
+      "title": "Тортуга (сразу) — ноутбук",
+      "w": 920,
+      "x": 0,
+      "y": 720
+    },
+    "Calm.dc.html": {
+      "h": 600,
+      "title": "Штиль (весь раунд) — ноутбук",
+      "w": 920,
+      "x": 1000,
+      "y": 720
+    },
+    "Wind.dc.html": {
+      "h": 600,
+      "title": "Попутный ветер (весь раунд) — ноутбук",
+      "w": 920,
+      "x": 0,
+      "y": 1440
+    },
+    "NinthWave.dc.html": {
+      "h": 600,
+      "title": "Девятый вал (весь раунд) — ноутбук",
+      "w": 920,
+      "x": 1000,
+      "y": 1440
+    },
+    "Maelstrom.dc.html": {
+      "h": 600,
+      "title": "Мальстрём (весь раунд) — ноутбук",
+      "w": 920,
+      "x": 2000,
+      "y": 1440
+    },
+    "ClearSky.dc.html": {
+      "h": 600,
+      "title": "Ясное небо (весь раунд) — ноутбук",
+      "w": 920,
+      "x": 0,
+      "y": 2160
+    },
+    "Mermaids.dc.html": {
+      "h": 600,
+      "title": "Русалки (сразу) — ноутбук",
+      "w": 920,
+      "x": 1000,
+      "y": 2160
+    },
+    "Rum.dc.html": {
+      "h": 600,
+      "title": "Ром в волнах (сразу) — ноутбук",
+      "w": 920,
+      "x": 2000,
+      "y": 2160
+    },
+    "Caravan.dc.html": {
+      "h": 600,
+      "title": "Торговый караван (сразу) — ноутбук",
+      "w": 920,
+      "x": 0,
+      "y": 2880
+    },
+    "WetPowder.dc.html": {
+      "h": 600,
+      "title": "Сырой порох (сразу) — ноутбук",
+      "w": 920,
+      "x": 1000,
+      "y": 2880
+    },
+    "Reefs.dc.html": {
+      "h": 600,
+      "title": "Рифы (весь раунд) — ноутбук",
+      "w": 920,
+      "x": 2000,
+      "y": 2880
+    },
+    "Thunder.dc.html": {
+      "h": 600,
+      "title": "Гроза (сразу) — ноутбук",
+      "w": 920,
+      "x": 0,
+      "y": 3600
+    },
+    "Fleet.dc.html": {
+      "h": 600,
+      "title": "Флот на горизонте (весь раунд) — ноутбук",
+      "w": 920,
+      "x": 1000,
+      "y": 3600
+    },
+    "Moonlight.dc.html": {
+      "h": 600,
+      "title": "Лунный свет (весь раунд) — ноутбук",
+      "w": 920,
+      "x": 2000,
+      "y": 3600
+    },
+    "Current.dc.html": {
+      "h": 600,
+      "title": "Течение (сразу) — ноутбук",
+      "w": 920,
+      "x": 0,
+      "y": 4320
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-23T12:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "title": {
+      "kind": "title1",
+      "maxW": 2390,
+      "text": "Окно погоды: все 17 карт моря",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Fog.dc.html",
+    "Tortuga.dc.html",
+    "Phone.dc.html",
+    "Calm.dc.html",
+    "Wind.dc.html",
+    "NinthWave.dc.html",
+    "Maelstrom.dc.html",
+    "ClearSky.dc.html",
+    "Mermaids.dc.html",
+    "Rum.dc.html",
+    "Caravan.dc.html",
+    "WetPowder.dc.html",
+    "Reefs.dc.html",
+    "Thunder.dc.html",
+    "Fleet.dc.html",
+    "Moonlight.dc.html",
+    "Current.dc.html"
+  ],
+  "pages": [],
+  "title": "Бортом к борту — окно погоды"
+}
