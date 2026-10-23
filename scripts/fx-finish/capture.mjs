@@ -83,8 +83,9 @@ async function shoot(dist, port, tag) {
         await page.goto(`http://127.0.0.1:${port}/bortom-k-bortu/?fxScene=${scene==='legend'?'bottle':scene}&manual=1&speed=normal&perf=0`);
         await page.evaluate(()=>document.fonts.ready);
         if(await page.evaluate(()=>!!window.fxCaptureIntroReady))await page.waitForFunction(()=>window.fxCaptureIntroReady(),null,{timeout:20000});
+        if(scene==='armada')await page.evaluate(()=>window.fxPrepareFlashPool?.(document.querySelector('.board')));
         await click('[data-testid="fx-start"]');
-        await until(async()=>!!await page.locator(scene==='armada'?'.gun-fire':'.lg-card').count());
+        await until(async()=>scene==='armada'?await page.evaluate(()=>window.fxAnims.some(row=>row.a.effect?.target?.dataset?.volleyArt==='cone')):!!await page.locator('.lg-card').count());
         await page.evaluate(()=>document.fonts.ready);
       }else{
       await page.goto(`http://127.0.0.1:${port}/bortom-k-bortu/?seed=1&speed=normal&hints=0&perf=0`);
