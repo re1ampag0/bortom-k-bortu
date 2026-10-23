@@ -68,7 +68,8 @@ const banks = new WeakMap<HTMLElement, Bank>();
 const active = new Set<Bank>();
 interface HostAnimation {animation:Animation;frames:Frame[];transforms:Channel<Transform>[]|null|undefined;opacity:Channel<number>[]|null;easing:(t:number)=>number}
 const hosts = new WeakMap<Element, HostAnimation[]>();
-const COLORS = ['#fff3c4', '#ffd27a', '#ff9a3c', '#ffe08a', '#ff8a2a', '#cfc8bc', '#d9c9a4', '#3a2412'];
+const LEGEND_COLORS=new Set(['#e9d29a', '#a8703a', '#fff', '#effff4', '#a8ffcc', '#7ff0b0']);
+const COLORS = ['#fff3c4', '#ffd27a', '#ff9a3c', '#ffe08a', '#ff8a2a', '#cfc8bc', '#d9c9a4', '#3a2412', ...LEGEND_COLORS];
 let paused = false;
 
 // CSS easing is applied to the complete iteration, then keyframe offsets select the segment.
@@ -161,6 +162,7 @@ export function prepareParticles(board: HTMLElement, smokeDefs?: string): void {
 }
 export function canvasCircle(ctx: FxCtx,host: Element,r: number,color: string,kind='spark',alpha=1): ParticleTarget | null {
   if(!ctx.canvasParticles||perfOff('particles'))return null;
+  if(!ctx.legendParticles&&LEGEND_COLORS.has(color))return null;
   const sprite=banks.get(ctx.board)?.sprites.get(color);
   return sprite?{particle:true,ctx,host,kind,sprite,scale:r,alpha,animatedAlpha:ctx.svgParticleOpacity?1:undefined}:null;
 }

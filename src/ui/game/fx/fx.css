@@ -343,3 +343,9 @@
 .lg-seal-ready > svg { position:relative;z-index:1;width:192px;height:192px;display:block; }
 .lg-seal-shadow { position:absolute;left:-96px;top:-96px;width:384px;height:384px;z-index:0;pointer-events:none; }
 .game.perf-off-filters .lg-seal-shadow { display:none; }
+
+/* Same wall-time motion as the original bottle's additive SMIL; the detailed art is static. */
+.bottle-float-moving > .bottle-float-rock { animation:bottle-float-rock 3.6s linear infinite;will-change:transform; }
+.bottle-float-moving .bottle-float-heave { animation:bottle-float-heave 2.6s linear infinite;will-change:transform; }
+@keyframes bottle-float-rock { 0%,100% { transform:rotate(-3deg); } 50% { transform:rotate(3deg); } }
+@keyframes bottle-float-heave { 0%,100% { transform:translateY(0); } 50% { transform:translateY(3px); } }

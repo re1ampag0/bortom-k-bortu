@@ -1,0 +1,74 @@
+{
+ "kraken-6000": {
+  "rgbaDifferentPixels": 71147,
+  "maxChannelDifference": 94,
+  "differentPixels": 815,
+  "share": 0.062
+ },
+ "kraken-8500": {
+  "rgbaDifferentPixels": 77566,
+  "maxChannelDifference": 44,
+  "differentPixels": 3520,
+  "share": 0.267
+ },
+ "kraken-11000": {
+  "rgbaDifferentPixels": 87696,
+  "maxChannelDifference": 50,
+  "differentPixels": 5555,
+  "share": 0.422
+ },
+ "kraken-14000": {
+  "rgbaDifferentPixels": 63151,
+  "maxChannelDifference": 73,
+  "differentPixels": 861,
+  "share": 0.065
+ },
+ "jack-9000": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "jack-10500": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "jack-12000": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "bottle-6000": {
+  "rgbaDifferentPixels": 629,
+  "maxChannelDifference": 42,
+  "differentPixels": 205,
+  "share": 0.016
+ },
+ "bottle-8000": {
+  "rgbaDifferentPixels": 629,
+  "maxChannelDifference": 42,
+  "differentPixels": 205,
+  "share": 0.016
+ },
+ "bottle-12000": {
+  "rgbaDifferentPixels": 3535,
+  "maxChannelDifference": 3,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-1000": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ },
+ "idle-3000": {
+  "rgbaDifferentPixels": 0,
+  "maxChannelDifference": 0,
+  "differentPixels": 0,
+  "share": 0
+ }
+}
