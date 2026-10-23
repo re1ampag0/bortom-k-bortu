@@ -22,7 +22,10 @@
 .fx-weather { z-index: 1; }
 /* game: under the panels of the middle (.dock, z-index 5) — the real decision panel stays on top. */
 .fx-layer { z-index: 4; }
-.fx-layer > *, .fx-weather > * { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+.fx-layer > *, .fx-weather > * { position: absolute; left: 0; top: 0; }
+/* Clip wrappers are promoted by their running animations, not by being present.
+   Prepared/finished films must not retain a full-screen compositing layer. */
+.fx-weather > * { will-change: transform, opacity; }
 .fx-layer > * { opacity: 0; }
 .ball { width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #5a524b, #1e1a17 60%); box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25); }
 .ball.trail { background: #1e1a17; box-shadow: none; }
@@ -340,3 +343,24 @@
 .lg-seal-ready > svg { position:relative;z-index:1;width:192px;height:192px;display:block; }
 .lg-seal-shadow { position:absolute;left:-96px;top:-96px;width:384px;height:384px;z-index:0;pointer-events:none; }
 .game.perf-off-filters .lg-seal-shadow { display:none; }
+
+/* Same wall-time motion as the original bottle's additive SMIL; the detailed art is static. */
+.bottle-float-moving > .bottle-float-rock { animation:bottle-float-rock 3.6s linear infinite;will-change:transform; }
+.bottle-float-moving .bottle-float-heave { animation:bottle-float-heave 2.6s linear infinite;will-change:transform; }
+@keyframes bottle-float-rock { 0%,100% { transform:rotate(-3deg); } 50% { transform:rotate(3deg); } }
+@keyframes bottle-float-heave { 0%,100% { transform:translateY(0); } 50% { transform:translateY(3px); } }
+
+/* Reaction Maelstrom: static artwork, rotation of a square HTML wrapper flattened to the sea. */
+.reaction-whirl-base { position:absolute;inset:0;width:100%;height:100%; }
+.reaction-whirl-squash { position:absolute;left:0;top:50%;width:100%;height:0;transform:scaleY(.36); }
+.reaction-whirl-spin { position:relative;width:100%;aspect-ratio:1;margin-top:-50%; }
+.reaction-whirl-spin > svg { display:block;width:100%;height:100%; }
+/* A flying board/particle canvas is below the damage breakdown (also below its review variants). */
+/* The active AND lingering plate stay over falling particles (front canvas is 38)
+   and floating wrecks. The card peek belongs above its plate. */
+.fx-layer > .plate, .fx-scars > .plate { z-index:40; }
+.fx-layer > .plate-peek { z-index:41; }
+
+.reaction-whirl .reaction-whirl-spin { position:relative;width:100%;height:auto;aspect-ratio:1;transform-origin:50% 50%; }
+
+@keyframes sink-wreck-rock {0%,100% {transform:rotate(-6deg)} 50% {transform:rotate(6deg)}}

@@ -19,16 +19,21 @@ import { FLAME } from '../art/fire';
 import { T } from './timing';
 import { stageK } from '../../stage';
 import {shotArt,shotSprite,shotA,floatBoardSprite} from './volleySprites';
+import {reactionWhirl} from './reactionWhirl';
 import { plainText } from '../text';
 
 /** Everything an effect needs: the reference's globals, for one run of the queue. */
 export interface FxCtx {
   /** The table (.board, position: relative): positions are relative to it. */
   board: HTMLElement;
+  /** Live per-device view preference; omitted contexts retain the ordinary plate. */
+  readonly showDamage?: boolean;
   /** Explicit opt-in: only Volley, Armada, sinking and fire producers. */
   canvasParticles?: boolean;
   legendParticles?: boolean;
   svgParticleOpacity?: boolean;
+  /** Impact-only producers are prepared now but stay invisible until their scheduled arrival. */
+  hideDelayedImpact?: boolean;
   /** Only Volley/Counter opt into prepared object wrappers. */
   volleySprites?: boolean;
   /** .fx-layer, the last child of the board: effects are added here. */
@@ -144,7 +149,14 @@ export function at(ctx: FxCtx, t: number, fn: () => void): void {
 export function A(ctx: FxCtx, el: Element, kf: Keyframe[], d: number, delay?: number, easing?: string, fill?: FillMode): Animation;
 export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay?: number, easing?: string, fill?: FillMode): Animation | ParticleAnimation;
 export function A(ctx: FxCtx, el: Element | ParticleTarget, kf: Keyframe[], d: number, delay = 0, easing = 'ease-out', fill: FillMode = 'both'): Animation | ParticleAnimation {
-  if ('particle' in el) return animateParticle(el, kf, ms(ctx,d), ms(ctx,delay), easing);
+  if ('particle' in el) return animateParticle(ctx.hideDelayedImpact?{...el,hideBeforeStart:true}:el, kf, ms(ctx,d), ms(ctx,delay), easing);
+  if(ctx.hideDelayedImpact&&delay>0){
+    // Unlike arbitrary SVG effects, these impact-only nodes have an explicitly hidden
+    // base style. Forward fill can therefore keep them hidden until their own arrival,
+    // while preserving every active keyframe/offset and the original finishing frame.
+    (el as HTMLElement|SVGElement).style.opacity='0';
+    if(fill==='both')fill='forwards';else if(fill==='backwards')fill='none';
+  }
   if (perfAnimHook) perfAnimHook(el);
   // Backwards fill also positions SVG children during their delay; unlike direct HTML
   // children of .fx-layer they need not have opacity:0 in their base style.
@@ -393,13 +405,7 @@ export function overlayAt(ctx: FxCtx, cls: string, b: Pick<Box, 'x' | 'y' | 'w' 
   return o;
 }
 export function whirlpool(ctx: FxCtx, x: number, y: number, delay: number, size = 90, dur = 0): HTMLElement {
-  const w = mk(ctx, 'whirl', 0, 0, `<svg viewBox="-50 -50 100 100" width="${size}" height="${size * 0.55}"><g fill="none" stroke="#5E86A0" stroke-width="3" stroke-linecap="round"><path d="M0 0 m-4 0 a4 4 0 1 1 8 0 a10 10 0 1 1 -20 0 a16 16 0 1 1 32 0 a22 22 0 1 1 -44 0 a28 28 0 1 1 56 0"/></g><circle r="5" fill="#24465C"/></svg>`);
-  w.style.width = size + 'px';
-  w.style.height = size * 0.55 + 'px';
-  w.style.margin = `-${size * 0.275}px 0 0 -${size / 2}px`;
-  A(ctx, w, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.2)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1)` }], 500, delay, 'ease-out', 'forwards');
-  if (ctx.rich) { const target=w.querySelector('svg')!; const animation=target.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(-360deg)' }], { duration: ms(ctx, 1800), iterations: dur ? Math.ceil(dur / 1800) : 6, delay: ms(ctx, delay) }); trackBudgetAnimation(ctx,target,animation); }
-  return w;
+  return reactionWhirl(ctx,x,y,delay,size,dur);
 }
 export function wisp(ctx: FxCtx, from: Pt, to: Pt, delay: number, d = 800): void {
   if (perfOff('particles')) return;
@@ -614,12 +620,13 @@ export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number,
   if (cell) A(ctx, cell, [{ filter: 'none' }, { filter: 'drop-shadow(0 0 6px #7ff0b0) brightness(1.5)', offset: 0.3 }, { filter: 'none' }], 900, delay, 'ease-out', 'none');
   const swing = Math.min(160, boardW(ctx) * 0.14) * (from.x < to.x ? 1 : -1);
   const N = 40, path = qpts(from.x, from.y, (from.x + to.x) / 2 - swing, Math.min(from.y, to.y) + 60, to.x, to.y, N);
+  const soulShape=(art:string)=>ctx.legendParticles?particleShape(ctx,svg,art):sv(svg,art);
   for (let k = 0; k < n; k++) {
     const d0 = delay + k * 200;
-    const glow = sv(svg, '<g><circle r="18" fill="#7ff0b0" opacity=".22"/><circle r="9" fill="#a8ffcc" opacity=".6"/><circle r="4.4" fill="#effff4"/><circle cx="-3" cy="-2" r="1.2" fill="#0f3a24"/><circle cx="3" cy="-2" r="1.2" fill="#0f3a24"/></g>');
+    const glow = soulShape( '<g><circle r="18" fill="#7ff0b0" opacity=".22"/><circle r="9" fill="#a8ffcc" opacity=".6"/><circle r="4.4" fill="#effff4"/><circle cx="-3" cy="-2" r="1.2" fill="#0f3a24"/><circle cx="3" cy="-2" r="1.2" fill="#0f3a24"/></g>');
     A(ctx, glow, path.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: i === N ? 0 : 1 })), F.fly, d0, 'ease-in-out');
     for (let q = 1, m = room(ctx, 8); q <= m; q++) {
-      const t = sv(svg, `<circle r="${R1(4 - q * 0.35)}" fill="#a8ffcc"/>`);
+      const t = soulShape( `<circle r="${R1(4 - q * 0.35)}" fill="#a8ffcc"/>`);
       A(ctx, t, path.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: i === N ? 0 : R1(0.8 - q * 0.08) })), F.fly, d0 + q * 45, 'ease-in-out');
     }
   }
@@ -947,7 +954,7 @@ export function flashBoard(ctx: FxCtx, color = '#fff', peak = 0.55, d = 520, del
 export function fallBoard(ctx: FxCtx, svg: Element, code: string, p: Pt, delay = 0, d = 1000): void {
   if (perfOff('particles')) return;
   const to = { x: clamp(p.x + 40, 20, boardW(ctx) - 20), y: clamp(facingY(ctx, code) + dirOf(ctx, code) * 34, 20, boardH(ctx) - 20) };
-  const bd = particleShape(ctx, svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>');
+  const bd = particleShape(ctx, svg, '<g><rect x="-9" y="-2.6" width="18" height="5.2" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.6 V2.6 M3 -2.6 V2.6" stroke="#6b4422" stroke-width=".6"/></g>', 'fall-board');
   A(ctx, bd, [{ transform: `translate(${R1(p.x)}px,${R1(p.y)}px) rotate(0deg)` }, { transform: `translate(${R1(p.x + 12)}px,${R1(p.y - 16)}px) rotate(40deg)`, offset: 0.2 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 1, offset: 0.98 }, { transform: `translate(${R1(to.x)}px,${R1(to.y)}px) rotate(170deg)`, opacity: 0 }], d, delay, 'cubic-bezier(.3,.1,.7,1)');
   at(ctx, delay + d, () => {
     waterColumn(ctx, svg, to.x, to.y, 22);
@@ -975,9 +982,9 @@ export function flameEl(ctx: FxCtx, x: number, y: number, h = 22, cls = 'fx-flam
  * A wall of fire along a line: a bed of embers that breathes, clumps of strong flames with lower ones between them, low
  * tongues in the gaps, embers flying up (`.ember`). «Простые»: the clumps only, no gaps, no embers. Gives the flames.
  */
-export function fireWall(ctx: FxCtx, svg: Element, x0: number, x1: number, y: number, h = 34, opt: { delay?: number; spread?: number; clump?: number; embers?: number; life?: number; host?: Element } = {}): HTMLElement[] {
+export function fireWall(ctx: FxCtx, svg: Element, x0: number, x1: number, y: number, h = 34, opt: { delay?: number; spread?: number; clump?: number; embers?: number; life?: number; host?: Element; bed?: HTMLElement } = {}): HTMLElement[] {
   const out: HTMLElement[] = [], delay = opt.delay ?? 0, spread = opt.spread ?? 40, life = opt.life ?? 3000;
-  const bed = sv(svg, `<g><ellipse cx="${R1((x0 + x1) / 2)}" cy="${R1(y)}" rx="${R1((x1 - x0) / 2 + 10)}" ry="${R1(h * 0.32)}" fill="url(#fxGlow)"/><path d="M${R1(x0)} ${R1(y + 1)} H${R1(x1)}" stroke="#ffb347" stroke-width="${R1(h * 0.1)}" stroke-linecap="round" opacity=".55"${filters(ctx) ? ' style="filter:blur(2px)"' : ''}/></g>`);
+  const bed = opt.bed ?? sv(svg, `<g><ellipse cx="${R1((x0 + x1) / 2)}" cy="${R1(y)}" rx="${R1((x1 - x0) / 2 + 10)}" ry="${R1(h * 0.32)}" fill="url(#fxGlow)"/><path d="M${R1(x0)} ${R1(y + 1)} H${R1(x1)}" stroke="#ffb347" stroke-width="${R1(h * 0.1)}" stroke-linecap="round" opacity=".55"${filters(ctx) ? ' style="filter:blur(2px)"' : ''}/></g>`);
   A(ctx, bed, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 0.75, offset: 0.45 }, { opacity: 1, offset: 0.7 }, { opacity: 0.85 }], life, delay);
   const span = Math.max(1, x1 - x0), nC = Math.max(1, Math.round(span / (opt.clump ?? 70)));
   const add = (x: number, yy: number, hh: number, op: number, tilt: number, at0: number) => {

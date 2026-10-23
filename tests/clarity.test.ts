@@ -112,17 +112,26 @@ describe('«Быстрый конец хода» in the settings', () => {
     storageWith(null);
     expect(loadSettings().fastEnd).toBe(false);
     storageWith(JSON.stringify({ speed: 'slow', effects: 'simple', hints: true, sound: true }));
-    expect(loadSettings()).toEqual({ speed: 'slow', effects: 'simple', hints: true, sound: true, fastEnd: false, tapSkip: false, view: { guns: 'icons', hand: 'deck', frame: 'bulwark' } });
+    expect(loadSettings()).toEqual({ speed: 'slow', effects: 'simple', hints: true, sound: true, fastEnd: false, tapSkip: false, view: { guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show' } });
   });
 
   it('«Вид стола»: the first variant of each switch by default; the old «brass|wood» frame is read as the default', () => {
     storageWith(JSON.stringify({ seaFrame: 'wood' }));
-    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark' });
+    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show' });
     storageWith(JSON.stringify({ seaFrame: 'brass', view: { guns: 'ports', hand: 'table', frame: 'brass' } }));
-    expect(loadSettings().view).toEqual({ guns: 'ports', hand: 'table', frame: 'brass' });
+    expect(loadSettings().view).toEqual({ guns: 'ports', hand: 'table', frame: 'brass', damage: 'show' });
     expect(loadSettings()).not.toHaveProperty('seaFrame');
     storageWith(JSON.stringify({ view: { guns: 'x', frame: 5 } }));
-    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark' });
+    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show' });
+  });
+
+  it('damage breakdown: old records show it, hide persists, unknown values show it', () => {
+    storageWith(JSON.stringify({view: {damage: 'hide'}}));
+    expect(loadSettings().view.damage).toBe('hide');
+    storeSettings({...loadSettings(), view: {...loadSettings().view, damage: 'show'}});
+    expect(loadSettings().view.damage).toBe('show');
+    storageWith(JSON.stringify({view: {damage: 'unknown'}}));
+    expect(loadSettings().view.damage).toBe('show');
   });
 
   it('is kept like the other settings', () => {

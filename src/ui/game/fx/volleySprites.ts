@@ -33,7 +33,7 @@ export function volleySpriteSpecs(ctx:FxCtx):SpriteSpec[]{
   specs.push({key:key(kind,scale),count,html:kind==='flotsam'?`<div class="volley-float-rotate" data-sprite-node="rock"><div class="volley-float-heave" data-sprite-node="heave">${art}</div></div>`:art});
  };
  for(const n of new Set([k,.7,.62])){add('glow',n,90,n===.62?32:16);add('cone',n,110,n===.62?32:16);}
- for(const n of new Set([k*1.1,.8,.55])){add('blast',n,26,24);add('shock',n,59,24);}
+ for(const n of new Set([k*1.1,.8,.55,.7,.95,1.6,2.6])){add('blast',n,26,24);add('shock',n,59,24);}
  add('ball',1,6,32);add('shadow',1,6,32);add('flotsam',1,15,4);
  return specs;
 }

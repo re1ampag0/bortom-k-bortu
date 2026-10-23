@@ -9,6 +9,7 @@ export function legendSpriteSpecs():SpriteSpec[]{
   {key:'legend-bottle',count:1,html:svg(-130,-65,280,130,bottleArt())},
   {key:'legend-cork',count:1,html:svg(-20,-20,40,40,CORK)},
   {key:'legend-drop',count:1,html:''},
+  ...(['pearl','revenge','endeavour','dutch'] as BigShipKind[]).map(kind=>({key:`legend-trace-${kind}`,count:1,html:`${svg(-150,-20,300,100,'<ellipse data-bottle-shadow fill="#0b2a36" opacity=".28"/>')}<div class="bottle-float-rock" data-sprite-node="rock"><div class="bottle-float-heave" data-sprite-node="heave"><div class="sprite-art" data-bottle-scale>${svg(-130,-65,280,130,bottleArt({ship:true,cork:true,kind}))}</div></div></div>${svg(-150,-20,300,100,'<ellipse data-bottle-rim fill="none" stroke="#e6f2f4" stroke-width="1.4" opacity=".7"><animate data-bottle-ripple attributeName="rx" begin="indefinite" dur="2.6s" repeatCount="indefinite"/></ellipse>')}`})),
   ...(['pearl','revenge','endeavour','dutch'] as BigShipKind[]).map(kind=>({key:`legend-mini-${kind}`,count:1,html:`<div data-sprite-node="rock" class="lg-rock">${svg(-60,-60,120,90,bigShip(kind,0,0,.62,false,`data-kind="${kind}"`))}</div>`})),
  ];
 }

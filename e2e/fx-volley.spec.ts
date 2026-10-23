@@ -242,3 +242,67 @@ test('powder smoke in the top layer is seen and lives at most 800 ms', async ({ 
   expect(r.seen, 'puffs of powder smoke in the top layer').toBeGreaterThan(0);
   expect(r.max, 'the longest a puff stays visible there, ms').toBeLessThanOrEqual(850);
 });
+
+// User's iPhone regression: backwards-filled impact particles used to wait visibly on the target.
+// Observe real clip clocks/results; do not infer an arrival from a hard-coded sleep.
+test('hull impact: no debris or damage before arrival; the plate stays above wreckage', async ({ page }) => {
+  test.setTimeout(60000);
+  const evidence=[];
+  for(const viewport of [{width:430,height:932},{width:1366,height:660}]){
+    await page.setViewportSize(viewport);
+    await page.addInitScript(()=>{
+      type Shot={a:Animation;el:Element;arrival:number};
+      const shots:Shot[]=[],early:string[]=[];
+      const values=new Map<Element,string|null>();
+      const data={early,framesBefore:0,visibleBoards:0,impacts:0};
+      (window as unknown as {impactAudit:typeof data}).impactAudit=data;
+      const native=Element.prototype.animate;
+      Element.prototype.animate=function(frames,options){
+        const a=native.call(this,frames,options);
+        if((this as HTMLElement).dataset.volleyArt==='blast'){
+          if(!shots.length)document.querySelectorAll('[data-fx-value]').forEach(el=>values.set(el,el.textContent));
+          shots.push({a,el:this,arrival:performance.now()+Number(a.effect!.getTiming().delay)});data.impacts++;
+        }
+        return a;
+      };
+      function frame(){
+        if(shots.length){
+          const now=performance.now(),first=Math.min(...shots.map(s=>s.arrival));
+          const board=document.querySelector('.board') as HTMLElement & {fxParticles?:()=>{visible:{kind:string}[]}};
+          const boards=board?.fxParticles?.().visible.filter(p=>p.kind==='fall-board').length??0;
+          data.visibleBoards+=boards;
+          if(now<first-20){
+            data.framesBefore++;
+            if(boards)early.push('falling board before the first arrival');
+            for(const [el,value]of values)if(el.textContent!==value)early.push('track changed before the first arrival');
+            if(document.querySelector('.hitframe'))early.push('hit frame before arrival');
+          }
+          for(const shot of shots)if(now<shot.arrival-20&&Number(getComputedStyle(shot.el).opacity)>.01)early.push('fireball before its own arrival');
+        }
+        if(!document.body.dataset.fxDone)requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    });
+    await open(page,'plain','fast','&manual=1&seed=1');
+    await page.getByTestId('fx-start').click();
+    await expectResult(page,'plain');
+    const audit=await page.evaluate(()=>(window as unknown as {impactAudit:{early:string[];framesBefore:number;visibleBoards:number;impacts:number}}).impactAudit);
+    expect([...new Set(audit.early)]).toEqual([]);expect(audit.framesBefore).toBeGreaterThan(3);
+    expect(audit.impacts).toBeGreaterThan(0);expect(audit.visibleBoards).toBeGreaterThan(0);
+    const stack=await page.evaluate(()=>{
+      const plate=document.querySelector('.fx-scars > .plate')!;
+      return {plate:Number(getComputedStyle(plate).zIndex),wrecks:Array.from(document.querySelectorAll('.fx-scars > .volley-flotsam')).map(el=>Number(getComputedStyle(el).zIndex)||0)};
+    });
+    expect(stack.wrecks.length).toBeGreaterThan(0);
+    expect(stack.plate).toBeGreaterThan(38); // also above the front particle canvas, not just a DOM trace
+    for(const z of stack.wrecks)expect(stack.plate).toBeGreaterThan(z);
+    const presses=await clickMisses(page);
+    expect(presses.planks).toBe(4);
+    // The phone fan may extend beyond the viewport; audit the four on-screen ships.
+    expect(presses.out.filter(message=>message.startsWith('plank '))).toEqual([]);
+    evidence.push({viewport,audit,stack});
+  }
+  const {mkdirSync,writeFileSync}=await import('node:fs');
+  mkdirSync('docs/screenshots/fx-finish/checks',{recursive:true});
+  writeFileSync('docs/screenshots/fx-finish/checks/impact-arrival.json',JSON.stringify(evidence,null,1)+'\n');
+});
