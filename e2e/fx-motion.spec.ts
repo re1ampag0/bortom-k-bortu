@@ -186,14 +186,15 @@ test('the scenes of the ships in motion play in Safari without errors @iphone', 
 });
 
 // A5 (A8): the captain's longboat of «Гибель» is the new clinker-built one — a shadow and a reflection on the water, the planking in
-// strakes (a clip path of its own), the oars on oarlocks; its ids are its own (no id twice in the document).
+// strakes (a clip path of its own), the oars on oarlocks; its ids are its own (no id twice in the document). fx-finish moved it
+// out of the board SVG: the boat is a sprite (.fx-sprite «sink-boat-…»), each oar and the hull in an SVG of their own.
 test('sink: the captain rows across in the new clinker longboat', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 660 });
   await open(page, 'sink');
   await page.waitForFunction(() => !!document.querySelector('.fx-layer .oar'), null, { timeout: 40_000, polling: 'raf' });
   await page.waitForTimeout(600);
   const r = await page.evaluate(() => {
-    const boat = document.querySelector('.fx-layer .oar')!.closest('svg > g')!;
+    const boat = document.querySelector('.fx-layer .oar')!.closest('.fx-sprite[data-sprite^="sink-boat-"]')!;
     const ids = Array.from(document.querySelectorAll('[id]')).map((e) => e.id);
     return {
       oars: boat.querySelectorAll('.oar').length,
