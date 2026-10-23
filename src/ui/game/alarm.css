@@ -788,3 +788,40 @@
     white-space: normal; overflow: visible; overflow-wrap: anywhere; text-overflow: clip;
   }
 }
+
+/* ui-fixes, a phone: the cards of «Ответить Реакцией» never rise inside the scrolling row (it would cut their heads); the
+   chosen one is a gold rim with a glow, the row keeps room for it above and below; a Reaction that cannot be played is faded,
+   without the strip over it — «сейчас нельзя» under it, the whole reason behind «i» */
+@media (max-width: 700px) {
+  .alarm-sheet .as-cards {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .alarm-sheet .as-card {
+    align-self: flex-start;
+  }
+  /* position: the strip «Залп 1 → 0» stays on the foot of its card (a transform held it there before) */
+  .alarm-sheet .as-card .hcard,
+  .alarm-sheet .as-card.on .hcard {
+    position: relative;
+    translate: none;
+    transform: none;
+  }
+  .alarm-sheet .as-card.on .hcard {
+    box-shadow:
+      0 0 0 3px #ffd36b,
+      0 0 8px rgba(255, 211, 107, 0.8);
+  }
+  .alarm-sheet .as-card.off .hcard {
+    opacity: 0.55;
+    filter: saturate(0.4);
+  }
+  .as-why {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.1;
+    text-align: center;
+    color: #d8c9a8;
+  }
+}
