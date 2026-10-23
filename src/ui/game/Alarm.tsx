@@ -274,7 +274,7 @@ export function ReactionSheet({
     );
   }
   return (
-    <section className="panel alarm-sheet" data-testid="reaction-panel" style={alarmVars}>
+    <section className={`panel alarm-sheet ${hints && memo ? 'with-memo' : ''}`} data-testid="reaction-panel" style={alarmVars}>
       <div className="as-head">
         <span className="as-title">Ответить Реакцией</span>
         <span className="as-count">

@@ -48,7 +48,7 @@ import {
   type AimMode,
   type CardMode,
 } from './Panels';
-import { MissedSheet, NetBar, OfferPanel, netDock } from './NetParts';
+import { MissedSheet, missedLines, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { instantUrl, reducedMotion } from '../start/motion';
 import { FxLayer, useFxPart, useFxQueue, type FxQueue, type FxSnapshot } from './fx/FxLayer';
@@ -231,18 +231,22 @@ export function Game({
     if (!reactOpen) setAlarmFolded(false);
   }, [reactOpen]);
   const phone = usePhoneLayout();
-  // fix-ui: a phone — the height of the bottom bar (--bar-h): the sheet of «Тревога!» stands over it, not under it
+  // fix-ui: a phone — the height of the bottom bar (--bar-h): the sheet of «Тревога!» stands over it, not under it.
+  // ui-press: on the board (its readers — the sheet and the row of the hand — are in it), from the observer's own size (no
+  // read of the layout in the frame of a press), written only when it changes; subscribed again when the table comes back
+  // from behind the curtain (not at every opening of «Тревога!»)
   useEffect(() => {
     if (!phone) return;
     const bar = document.querySelector<HTMLElement>('.game > .bottom-bar');
-    const game = bar?.parentElement;
-    if (!bar || !game || typeof ResizeObserver === 'undefined') return;
-    const put = () => game.style.setProperty('--bar-h', `${bar.offsetHeight}px`);
-    put();
-    const ro = new ResizeObserver(put);
+    const board = bar?.parentElement?.querySelector<HTMLElement>(':scope > .board');
+    if (!bar || !board || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => {
+      const h = `${Math.round(e.borderBoxSize?.[0]?.blockSize ?? (e.target as HTMLElement).offsetHeight)}px`;
+      if (board.style.getPropertyValue('--bar-h') !== h) board.style.setProperty('--bar-h', h);
+    });
     ro.observe(bar);
     return () => ro.disconnect();
-  }, [phone, reactOpen]);
+  }, [phone, !!curtainSide]); // eslint-disable-line react-hooks/exhaustive-deps
   const [memoSeen, setMemoSeen] = useState<Side[]>([]);
   const [memoSide, setMemoSide] = useState<Side | null>(null);
   useEffect(() => {
@@ -460,6 +464,14 @@ export function Game({
   // the layout of the table (V1b): where the tools stand, the measure of the water for the weather
   const wideLog = useWideLog();
   const [boardRef, seaRef] = useSeaClip();
+  // ui-press: «Последнее: …» is in the sea — a class of the sea for the press zones of the stars under it (phone.css), set by
+  // the line itself: the line follows the shown log, which never renders the table
+  // (the sea from the line itself: the ref of a child is set before the ref of the sea on the first commit)
+  const infoSea = useRef<Element | null>(null);
+  const infoFlag = useCallback((el: HTMLButtonElement | null) => {
+    if (el) infoSea.current = el.closest('.sea-table');
+    infoSea.current?.classList.toggle('has-info', !!el);
+  }, []);
 
   const tableInteraction = useMemo(() => ({}), [game, version, data, view, bottom, seat, mode, reactPickRaw,
     hints, alarmFolded, sheet, botTurn, held, fastTurn, openHands, fastEnd, endSeconds, flash,
@@ -724,6 +736,8 @@ export function Game({
   let dock: React.ReactNode = null;
   // Card choices, «Тортуга» and the Plans are bottom sheets on a phone; the Volley and the Reactions stay in the middle.
   let dockSheet = false;
+  /** The dock holds the sheet of «Тревога!» (a phone). */
+  let alarmDock = false;
   let oakDock = false;
   /** The sheet «Заряд» while aiming (in the place of the hand) and, on a laptop, its buttons in the place of «Ход окончен». */
   let chargeSheet: ReactNode = null;
@@ -739,6 +753,7 @@ export function Game({
     // A laptop has no panel: the buttons stand where «Ход окончен» does (handActions).
     if (phone && alarm) {
       dockSheet = true;
+      alarmDock = true;
       dock = (
         <ReactionSheet
           s={s}
@@ -1239,7 +1254,9 @@ export function Game({
   return (<>
     {perf.config.enabled && <PerfPanel />}
     <div
-      className={`game ${perf.classes} ${dock ? 'has-dock' : ''} ${dockSheet ? 'has-sheet' : ''} ${s.winner ? 'over' : ''} ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${effects === 'simple' || simpleFx ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''} ${chargeSheet ? 'charge-open' : ''}`}
+      // ui-press: the state of a sheet is a class of the nearest box of what it changes (.board, .middle, .board-bottom), not of
+      // the root — only `decision-open` stays here: it is about the root itself (overflow: clip, decision-sheet.css)
+      className={`game ${perf.classes} ${s.winner ? 'over' : ''} ${oakDock && dock ? 'decision-open' : ''} ${effects === 'simple' || simpleFx ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''}`}
       data-testid="game"
       data-bottom={bottom}
       ref={gameRef}
@@ -1250,7 +1267,7 @@ export function Game({
       )}
       {!local && <HoldReset fx={fx} held={held} canHoldOf={canHoldOf} setHeld={setHeld} />}
       <TableBackdrop look={look.hand} />
-      <main className="board" ref={boardRef}>
+      <main className={`board ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${dockSheet ? 'has-sheet' : ''}`} ref={boardRef}>
         <Shown fx={fx} real={s} keyOf={statusKey}>{(shown) => <StatusBar
           s={shown}
           data={data}
@@ -1267,15 +1284,15 @@ export function Game({
         <div className="sea-table" ref={seaRef}>
           <div className="sea-water" aria-hidden />
           <div className="planks top">{/* a plank is built again when what it shows changes (its revision rebuilds the tracks) */}<PlankRow fx={fx} view={view} stamp={tableInteraction} render={renderRow(top)} /></div>
-          <div className="middle" data-fx-gap>
+          <div className={`middle ${dock ? 'has-dock' : ''}`} data-fx-gap>
             <BannerView data={data} banner={banner} />
-            {dock && !oakDock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''}`}>{dock}</div>}
+            {dock && !oakDock && <div className={`dock ${dockSheet ? 'sheet-dock' : ''} ${alarmDock ? 'alarm-dock' : ''}`}>{dock}</div>}
             {/* Б1: a translucent line along the bottom of the open sea; the hint «выберите карту или действие» is in the top plaque already */}
             {!dock && !s.winner && !alarmOn && (
               <ShownLog fx={fx} log={game.log} over={!!s.winner}>{(shownLog) => {
                 const lastEvent = lastEventOf(shownLog);
                 return (lastEvent || offerInfo) && (
-                  <button type="button" className="middle-info" data-testid="middle-info" title={lastEvent ?? undefined} onClick={() => setSheet({ k: 'log' })} aria-label={`Открыть журнал. Последнее: ${lastEvent ?? ''}`}>
+                  <button type="button" className="middle-info" ref={infoFlag} data-testid="middle-info" title={lastEvent ?? undefined} onClick={() => setSheet({ k: 'log' })} aria-label={`Открыть журнал. Последнее: ${lastEvent ?? ''}`}>
                     {offerInfo && <b data-testid="offer-info">{offerInfo}</b>}
                     {offerInfo && lastEvent && ' · '}
                     {lastEvent && <>Последнее: {lastEvent}</>}
@@ -1291,7 +1308,8 @@ export function Game({
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
         {phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
-        <div className="board-bottom">
+        {/* under-window: a window (.sheet-backdrop) lies over the sheet «Заряд» — charge.css */}
+        <div className={`board-bottom ${chargeSheet ? 'charge-open' : ''} ${chargeSheet && ((sheet && sheet.k !== 'log') || (net && missedLines(net).length > 0)) ? 'under-window' : ''}`}>
           {chargeSheet}
           {!phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
           <Shown fx={fx} real={view} keyOf={(x) => holdKey(x, bottom)}>{(shown, rev) => <TeamRow side={bottom} s={shown} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={rev} />}</Shown>

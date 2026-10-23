@@ -1,0 +1,104 @@
+{
+ "phone-volley-rest": {
+  "elements": 678,
+  "differ": 0,
+  "pixels": 24,
+  "rows": []
+ },
+ "phone-volley-charge": {
+  "elements": 697,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "phone-volley-charge-window": {
+  "elements": 718,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "phone-volley-decision": {
+  "elements": 691,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "phone-alarm-alarm": {
+  "elements": 733,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "phone-alarm-alarm-folded": {
+  "elements": 661,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "small-volley-rest": {
+  "elements": 674,
+  "differ": 0,
+  "pixels": 2,
+  "rows": []
+ },
+ "small-volley-charge": {
+  "elements": 693,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "small-volley-charge-window": {
+  "elements": 714,
+  "differ": 0,
+  "pixels": 3,
+  "rows": []
+ },
+ "small-volley-decision": {
+  "elements": 687,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "small-alarm-alarm": {
+  "elements": 733,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "laptop-volley-rest": {
+  "elements": 595,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "laptop-volley-charge": {
+  "elements": 607,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "laptop-volley-charge-window": {
+  "elements": 628,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "laptop-volley-decision": {
+  "elements": 617,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "laptop-alarm-alarm": {
+  "elements": 567,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ },
+ "laptop-alarm-alarm-folded": {
+  "elements": 564,
+  "differ": 0,
+  "pixels": 0,
+  "rows": []
+ }
+}
