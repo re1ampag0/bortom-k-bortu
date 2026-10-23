@@ -26,11 +26,11 @@ import { ABORT, invalidateGeometry, particleDefs, flushClock, pauseClock, resume
 import { applyClip, applyQuiet, JUMP, logHiddenFrom, pendingFlags, planItem, plannerFor, skipAhead, withDisplay, type PlayClip, type QueueItem } from './queue';
 import { tookPress } from '../InfoTip';
 import { trace, batchTrace } from './trace';
-import { loadSettings } from '../../storage';
+import { loadSettings, subscribeSettings } from '../../storage';
 import { PLAY_LEGENDS,prepareLegendIntro,invalidateLegendIntro } from './legends';
 import { dropPlates, setScarClock } from './scars';
 import { PLAY_SEA, renderWeather } from './sea';
-import { PLAY_VOLLEY, VOLLEY_SCENE } from './volley';
+import { PLAY_VOLLEY, VOLLEY_SCENE, setDamagePlateVisibility } from './volley';
 import './fx.css';
 
 export type ClipPlayer = (c: PlayClip, ctx: FxCtx) => Promise<void>;
@@ -191,6 +191,8 @@ export function useFxQueue({
   const [store] = useState(createFxStore);
   const layerRef = useRef<HTMLDivElement>(null);
   const weatherRef = useRef<HTMLDivElement>(null);
+  const damageVisible = useRef<boolean | null>(null);
+  if (damageVisible.current === null) damageVisible.current = loadSettings().view.damage !== 'hide';
 
   // The latest values for the loop (it lives across renders).
   const live = useRef({ view, speed, rich, data, bottom, own, hold, paused, myDecision, enabled });
@@ -262,6 +264,7 @@ export function useFxQueue({
       // game: behind the game (more actions queued than the one on screen) the show catches up — twice as fast — instead
       // of dropping the clips (see skipAhead).
       speed: speedFactor(live.current.speed) * (queue.current.length > 1 ? 0.5 : 1),
+      get showDamage() { return damageVisible.current !== false; },
       get rich() { return getPerf().enabled ? live.current.rich : richAtStart; },
       run,
       live: () => RUN.current,
@@ -284,6 +287,14 @@ export function useFxQueue({
       },
     };
   };
+
+  useLayoutEffect(() => subscribeSettings(settings => {
+    const visible = settings.view.damage !== 'hide';
+    if (visible === damageVisible.current) return;
+    damageVisible.current = visible;
+    const ctx = makeCtx(RUN.current);
+    if (ctx) setDamagePlateVisibility(ctx, visible);
+  }), []);
 
   /** clearFx(keepSet()): the effects of the clip go, the scene of the Volley stays. */
   const clearFx = () => {
@@ -673,7 +684,7 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
       const t = e.target as Element | null;
       // S1: a badge or a status chip that explains itself (and the press that closes its window) is not the table; nor a line of a
       // card in the plate of a Volley (fix-ui: a tap shows the card)
-      down = t?.closest('[data-fx-hand], .dock, .plate [data-card]') || tookPress(e) ? null : { id: e.pointerId, x: e.clientX, y: e.clientY, at: e.timeStamp };
+      down = t?.closest('[data-fx-hand], .dock, .plate [data-card], [data-testid="settings-btn"]') || tookPress(e) ? null : { id: e.pointerId, x: e.clientX, y: e.clientY, at: e.timeStamp };
     };
     const onUp = (e: PointerEvent) => {
       const d = down;

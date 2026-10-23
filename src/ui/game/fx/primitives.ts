@@ -26,6 +26,8 @@ import { plainText } from '../text';
 export interface FxCtx {
   /** The table (.board, position: relative): positions are relative to it. */
   board: HTMLElement;
+  /** Live per-device view preference; omitted contexts retain the ordinary plate. */
+  readonly showDamage?: boolean;
   /** Explicit opt-in: only Volley, Armada, sinking and fire producers. */
   canvasParticles?: boolean;
   legendParticles?: boolean;
