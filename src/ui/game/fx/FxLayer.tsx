@@ -289,8 +289,8 @@ export function useFxQueue({
   const clearFx = () => {
     const layer = layerRef.current;
     if (!layer) return;
-    if (layer.parentElement) releaseSprites(layer.parentElement);
     const keep = new Set(SCENES.flatMap((x) => x.keep()));
+    if (layer.parentElement) releaseSprites(layer.parentElement,false,keep);
     for (const el of [...layer.children]) if (!keep.has(el)) el.remove();
     layer.parentElement?.querySelectorAll(':scope > .fx-scars > .fx-temp').forEach((el) => el.remove());
     if (layer.parentElement) clearParticles(layer.parentElement);

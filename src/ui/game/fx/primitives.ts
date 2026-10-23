@@ -19,6 +19,7 @@ import { FLAME } from '../art/fire';
 import { T } from './timing';
 import { stageK } from '../../stage';
 import {shotArt,shotSprite,shotA,floatBoardSprite} from './volleySprites';
+import {reactionWhirl} from './reactionWhirl';
 import { plainText } from '../text';
 
 /** Everything an effect needs: the reference's globals, for one run of the queue. */
@@ -393,13 +394,7 @@ export function overlayAt(ctx: FxCtx, cls: string, b: Pick<Box, 'x' | 'y' | 'w' 
   return o;
 }
 export function whirlpool(ctx: FxCtx, x: number, y: number, delay: number, size = 90, dur = 0): HTMLElement {
-  const w = mk(ctx, 'whirl', 0, 0, `<svg viewBox="-50 -50 100 100" width="${size}" height="${size * 0.55}"><g fill="none" stroke="#5E86A0" stroke-width="3" stroke-linecap="round"><path d="M0 0 m-4 0 a4 4 0 1 1 8 0 a10 10 0 1 1 -20 0 a16 16 0 1 1 32 0 a22 22 0 1 1 -44 0 a28 28 0 1 1 56 0"/></g><circle r="5" fill="#24465C"/></svg>`);
-  w.style.width = size + 'px';
-  w.style.height = size * 0.55 + 'px';
-  w.style.margin = `-${size * 0.275}px 0 0 -${size / 2}px`;
-  A(ctx, w, [{ opacity: 0, transform: `translate(${x}px,${y}px) scale(.2)` }, { opacity: 1, transform: `translate(${x}px,${y}px) scale(1)` }], 500, delay, 'ease-out', 'forwards');
-  if (ctx.rich) { const target=w.querySelector('svg')!; const animation=target.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(-360deg)' }], { duration: ms(ctx, 1800), iterations: dur ? Math.ceil(dur / 1800) : 6, delay: ms(ctx, delay) }); trackBudgetAnimation(ctx,target,animation); }
-  return w;
+  return reactionWhirl(ctx,x,y,delay,size,dur);
 }
 export function wisp(ctx: FxCtx, from: Pt, to: Pt, delay: number, d = 800): void {
   if (perfOff('particles')) return;
