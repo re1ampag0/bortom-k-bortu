@@ -1,4 +1,6 @@
 import {perfOff} from '../perf/state';
+import {canvasCircRing} from './particles';
+import {SINK_DEBRIS,SINK_WAKE,sinkSticker,sinkWreck} from './sinkSprites';
 // The clips of the ships in motion: a change of places (FLIP), diving and surfacing, sinking, the abilities of the
 // ships. A port of docs/mockups/anim/level1/play-misc.js (see PORTING.md): the code is the reference's, what changed is
 // how an element is found (the data-fx-* DOM contract), the globals (the context `ctx`) and the types. The rest of
@@ -24,8 +26,6 @@ import { HIDDEN } from '../../../engine/view';
 import { SIDE_LABEL } from '../text';
 import type { ClipPlayer, FxScene } from './FxLayer';
 import { clearScars, plankScars, scar, seaScars } from './scars';
-import { CELLS } from '../art/cells';
-import { uidSvg } from '../art/bigShips';
 import { T } from './timing';
 import {
   KIND_BY_TRACK, type AbilityClip, type CardClip, type DiceClip, type DiscardClip, type DiveClip, type DrawClip, type EndClip, type FallbackClip,
@@ -162,16 +162,6 @@ PLAY.swap = async (c, ctx) => {
 };
 
 /** The captain of A5: the icon of the Crew in a red coat and a cocked hat (fxSink of fx3.js). */
-const SAILOR = CELLS.CREW.replace(/<svg[^>]*>/, '').replace('</svg>', '');
-const CAPTAIN = SAILOR.replace('fill="#ece4d0"', 'fill="#8a1c14"').replace(/fill="#3a2a22"/g, 'fill="#5a1410"').replace('fill="#9b2a1f"', 'fill="#1c1814"').replace('fill="#7e1f16"', 'fill="none"').replace('stroke="#4e120c" stroke-width=".25"', 'stroke="none"')
-  + '<path d="M1.2 4.8 Q7 -1.8 12.8 4.8 Q10.2 3.4 7 4.2 Q3.8 3.4 1.2 4.8 Z" fill="#1c1814" stroke="#e0bd62" stroke-width=".45"/><path d="M6.4 2.2 L7 1.4 L7.6 2.2 Z" fill="#e0bd62"/>';
-const OAR = '<g class="oar"><path d="M0 0 L22 9" stroke="#6b4422" stroke-width="1.6" stroke-linecap="round"/><path d="M19 7.6 L27 11.4 L26 13.4 L18.4 9.6 Z" fill="#8a5a32" stroke="#2a1a0c" stroke-width=".5"/></g>';
-const DEBRIS = [
-  '<rect x="-9" y="-2.4" width="18" height="4.8" rx="1" fill="#a8703a" stroke="#3a2412" stroke-width=".7"/>',
-  '<g><ellipse rx="6" ry="7.4" fill="#8a5a32" stroke="#3a2412" stroke-width=".7"/><path d="M-6 -2.4 H6 M-6 2.4 H6" stroke="#3a3530" stroke-width="1.1"/></g>',
-  '<rect x="-16" y="-1.6" width="32" height="3.2" rx="1" fill="#6b4422" stroke="#22190f" stroke-width=".6"/>',
-  '<path d="M-6 -5 L6 -3 L4 5 L-5 4 Z" fill="#e8dcc0" stroke="#22190f" stroke-width=".6"/>',
-];
 /** A half of the plank for the break: a copy of the plank in the layer (no data-fx-*, no test ids — it is not a ship). */
 function planHalf(ctx: FxCtx, el: HTMLElement, b: Box, clip: string, origin: string, jag: string): HTMLElement {
   const c = el.cloneNode(true) as HTMLElement;
@@ -194,6 +184,8 @@ function planHalf(ctx: FxCtx, el: HTMLElement, b: Box, clip: string, origin: str
 PLAY.sink = async (c, ctx) => {
   ctx = Object.create(ctx) as typeof ctx;
   ctx.canvasParticles = true;
+  ctx.volleySprites = true;
+  ctx.legendParticles = true;
   const S = T.sink, el = plank(ctx, c.ship), b = bx(ctx, el), up = isTop(ctx, c.ship) ? false : true; // up: the gap is above (a bottom-row ship)
   const fy = facingY(ctx, c.ship), toGap = up ? -1 : 1, small = isPhone(ctx);
   hint(ctx, `${nick(ctx, c.ship)} тонет`);
@@ -208,7 +200,9 @@ PLAY.sink = async (c, ctx) => {
   }
   // the fire takes hold, black smoke goes up, the plank browns
   const tFire = 3 * S.hit;
-  fireWall(ctx, svg, b.x + 8, b.r - 8, b.b + 2, small ? 20 : 30, { delay: tFire, spread: 22, embers: 16, life: S.take + S.blast + 900, host: group });
+  const bed=sinkSticker(ctx,'sink-bed-'+c.ship+'-'+small+'-'+(b.w-16));
+  bed.style.transform=`translate(${b.x+8}px,${b.b+2}px)`;
+  fireWall(ctx, svg, b.x + 8, b.r - 8, b.b + 2, small ? 20 : 30, { bed, delay: tFire, spread: 22, embers: 16, life: S.take + S.blast + 900, host: group });
   smokeColumn(ctx, svg, b.cx - b.w * 0.2, b.y + 8, small ? 0.8 : 1.3, 6, 600, tFire);
   smokeColumn(ctx, svg, b.cx + b.w * 0.18, b.y + 8, small ? 0.8 : 1.2, 6, 650, tFire);
   const browning = A(ctx, el, [{ filter: 'none' }, { filter: 'sepia(.6) saturate(1.6) brightness(1.05)' }], 900, tFire, 'ease-out', 'forwards');
@@ -219,13 +213,13 @@ PLAY.sink = async (c, ctx) => {
   boom(ctx, small ? 6 : 11, 650, tBlast);
   hitBlast(ctx, svg, cx, cy, small ? 1.6 : 2.6, tBlast, 700);
   for (const [r0, r1, color, d, dl, w] of [[20, 260, '#fff2c8', 700, 0, 5], [10, 380, '#ffd27a', 1000, 120, 2]] as const) {
-    const ring = sv(svg, `<circle r="${r1}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`);
+    const ring = canvasCircRing(ctx,svg,r1,color,w) ?? sv(svg, `<circle r="${r1}" fill="none" stroke="${color}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`);
     A(ctx, ring, [{ transform: `translate(${cx}px,${cy}px) scale(${r0 / r1})`, opacity: 1 }, { transform: `translate(${cx}px,${cy}px) scale(${small ? 0.5 : 1})`, opacity: 0 }], d, tBlast + dl, 'cubic-bezier(.1,.8,.3,1)');
   }
   const W = boardW(ctx), H = boardH(ctx);
   for (let i = 0, m = Math.max(4, room(ctx, small ? 6 : 12)); i < (ctx.rich && !perfOff('particles') ? m : 0); i++) {
     const ex = clamp(cx + rnd(-260, 260) * (small ? 0.5 : 1), 12, W - 12), ey = clamp(fy + toGap * rnd(14, 90), 12, H - 12);
-    const g = sv(svg, DEBRIS[i % 4]), d = S.debris * rnd(0.82, 1.18), rot = rnd(-720, 720);
+    const g = particleShape(ctx, svg, SINK_DEBRIS[i % 4], 'sink-debris'), d = S.debris * rnd(0.82, 1.18), rot = rnd(-720, 720);
     const pts = qpts(cx + rnd(-30, 30), cy, (cx + ex) / 2, Math.min(cy, ey) - rnd(80, 170), ex, ey, 18);
     A(ctx, g, pts.map((p, k) => ({ transform: `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px) rotate(${((rot * k) / 18).toFixed(0)}deg)`, opacity: k === 18 ? 0 : 1 })), d, tBlast, 'cubic-bezier(.3,.1,.7,1)');
     at(ctx, tBlast + d, () => waterColumn(ctx, svg, ex, ey, 24));
@@ -249,8 +243,7 @@ PLAY.sink = async (c, ctx) => {
   boom(ctx, 6, 400, tSplit);
   // the water boils and closes: bubbles, a swirl, rings
   // the rings narrow by the same share on a phone (70 − 3·26 was a negative radius)
-  const swR = (i: number) => R1((small ? 70 : 140) * (1 - (i * 26) / 140));
-  const sw = sv(svg, `<g>${[0, 1, 2, 3].map((i) => `<ellipse rx="${swR(i)}" ry="${R1(swR(i) * 0.34)}" fill="none" stroke="#e6f2f4" stroke-width="${2 - i * 0.3}" stroke-dasharray="14 10" opacity="${0.8 - i * 0.12}"/>`).join('')}</g>`);
+  const sw = sinkSticker(ctx,'sink-swirl-'+small);
   A(ctx, sw, [{ transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(0deg)`, opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.75 }, { transform: `translate(${cx}px,${fy + toGap * 20}px) rotate(-200deg)`, opacity: 0 }], D + 1400, tSplit, 'linear');
   for (let i = 0, m = room(ctx, small ? 16 : 40); i < m; i++) {
     const x = b.x + rnd(10, b.w - 10), bub = particleShape(ctx, svg, `<circle r="${rnd(1.6, 4.4).toFixed(1)}" fill="rgba(220,244,248,.18)" stroke="#dff4f8" stroke-width="1"/>`);
@@ -279,8 +272,8 @@ PLAY.sink = async (c, ctx) => {
   at(ctx, tBack, () => {
     const host = seaScars(ctx);
     if (!host) return;
-    const deb = fxSvg(ctx, host), wx = b.cx - (small ? 30 : 60), wy = fy + toGap * 34, rock = filters(ctx);
-    sv(deb, `<g transform="translate(${wx.toFixed(1)} ${wy.toFixed(1)}) scale(${small ? 1 : 1.5})">${([[0, 0, 'mast', 3.6], [70, 6, 'barrel', 2.8], [-60, 10, 'plank', 3], [130, -4, 'plank', 3.4], [40, -12, 'plank', 2.6]] as const).map(([x, y, k, d2]) => `<g transform="translate(${x} ${y})"><g>${rock ? `<animateTransform attributeName="transform" type="rotate" values="-6;6;-6" dur="${d2}s" repeatCount="indefinite"/>` : ''}<ellipse cx="0" cy="4" rx="16" ry="3.4" fill="none" stroke="#e6f2f4" stroke-width="1" opacity=".6"/>${k === 'mast' ? '<rect x="-24" y="-2" width="48" height="4" rx="1.4" fill="#6b4422" stroke="#22190f" stroke-width=".8"/><path d="M-8 -2 L4 -16 L14 -2 Z" fill="#e8dcc0" stroke="#22190f" stroke-width=".7"/>' : k === 'barrel' ? '<ellipse rx="8" ry="6.4" fill="#8a5a32" stroke="#22190f" stroke-width=".8"/><path d="M-3 -6 V6 M3 -6 V6" stroke="#3a3530" stroke-width="1.2"/>' : '<rect x="-11" y="-2.6" width="22" height="5.2" rx="1" fill="#a8703a" stroke="#22190f" stroke-width=".7"/>'}</g></g>`).join('')}</g>`);
+    const deb=sinkWreck(ctx,host),wx=b.cx-(small?30:60),wy=fy+toGap*34;
+    deb.style.transform=`translate(${wx.toFixed(1)}px,${wy.toFixed(1)}px) scale(${small?1:1.5})`;
     A(ctx, deb, [{ opacity: 0 }, { opacity: 1 }], 900);
     scar(deb, 'long', c.ship);
   });
@@ -291,36 +284,12 @@ PLAY.sink = async (c, ctx) => {
   if (ally) {
     const ab = bx(ctx, plank(ctx, ally)), fa = facingY(ctx, ally);
     const x0 = b.cx, y0 = fy + toGap * 30, x1 = ab.cx, y1 = fa + toGap * 30, flip = x1 < x0 ? -1 : 1, k = small ? 1.1 : 1.7;
-    const man = (x: number, kk: number, body: string) => `<g transform="translate(${(x - 7 * kk).toFixed(1)} ${(-0.6 - 16.8 * kk).toFixed(1)}) scale(${kk})">${body}</g>`;
-    const live = filters(ctx);
     const t0 = tBack + S.back, D2 = S.boat, N = 24;
-    // A5 (A8): the new clinker-built boat of fxSink — a shadow and a reflection on the water, the planking in strakes with rivets,
-    // the gunwale and the stem, the oarlocks; ids unique for each boat (uidSvg)
-    const HULL_B = 'M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z';
-    const boat = sv(svg, uidSvg(`<g><g><path d="M-30 6 Q-2 10 30 4" fill="none" stroke="#eef6f8" stroke-width="2" opacity=".7"/>
-<g transform="translate(-9 1)">${OAR}</g><g transform="translate(5 1)">${OAR}</g>${man(-9, 0.82, SAILOR)}${man(5, 0.82, SAILOR)}${man(-21, 0.98, CAPTAIN)}
-<ellipse cx="2" cy="11" rx="32" ry="3" fill="#0b2430" opacity=".35"/>
-<g opacity=".22" transform="matrix(1 0 0 -.35 0 12.2)"><path d="M-28 -3 Q-26 7 -10 9 L14 9 Q27 7 31 -5 Q12 -1 -28 -3 Z" fill="#5a3418"/></g>
-<defs><linearGradient id="pgBoatH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a06a3a"/><stop offset=".5" stop-color="#7a4a26"/><stop offset="1" stop-color="#4a2a12"/></linearGradient>
-<linearGradient id="pgBoatL" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient>
-<clipPath id="pgBoatC"><path d="${HULL_B}"/></clipPath></defs>
-<path d="${HULL_B}" fill="url(#pgBoatH)" stroke="#2a1a0c" stroke-width="1"/>
-<g clip-path="url(#pgBoatC)">
-<path d="M-27.4 -.6 Q2 2.6 30.2 -2.6 M-26.4 2.4 Q2 5.8 28.6 .6 M-24.6 5.4 Q0 8.4 25.4 3.8" fill="none" stroke="#2a1a0c" stroke-width=".8"/>
-<path d="M-27.4 0 Q2 3.2 30 -2 M-26.2 3 Q2 6.4 28.2 1.2 M-24.2 6 Q0 9 25 4.4" fill="none" stroke="#d9a46c" stroke-width=".45" opacity=".7"/>
-${[-20, -12, -4, 4, 12, 20].map((x) => `<circle cx="${x}" cy="${(0.6 + Math.abs(x) * 0.02).toFixed(1)}" r=".45" fill="#e0c08a"/><circle cx="${x + 2}" cy="${(3.7 + Math.abs(x) * 0.02).toFixed(1)}" r=".45" fill="#e0c08a"/>`).join('')}
-<path d="${HULL_B}" fill="url(#pgBoatL)"/></g>
-<path d="M-28.6 -3.4 Q12 -1.4 31.4 -5.6" fill="none" stroke="#3a2210" stroke-width="2.4" stroke-linecap="round"/><path d="M-28 -3.8 Q12 -1.8 31 -6" fill="none" stroke="#e0b07a" stroke-width="1" stroke-linecap="round"/>
-<path d="M-28.4 -3.6 Q-27.6 3 -25 7.2" fill="none" stroke="#3a2210" stroke-width="1.6"/><path d="M31.2 -5.6 Q32.6 -7.6 32 -9.4" fill="none" stroke="#3a2210" stroke-width="1.8" stroke-linecap="round"/>
-<path d="M-10 9.4 L14 9.4" stroke="#2a1a0c" stroke-width="1.4" stroke-linecap="round"/>
-${[-9, 5].map((x) => `<path d="M${x - 1} ${(-2.6 - (x + 28) * 0.006).toFixed(1)} v-1.6 M${x + 1} ${(-2.8 - (x + 28) * 0.006).toFixed(1)} v-1.6" stroke="#2b2f31" stroke-width=".6"/>`).join('')}
-<path d="M-2 9 q-.6 .8 0 1.6 M20 7.4 q.6 .8 0 1.6" stroke="#eef6f8" stroke-width=".6" fill="none" opacity=".6"/>
-<path d="M-29 -2 V-22" stroke="#4a2a12" stroke-width="1"/><path d="M-29 -22 L-17 -19 L-29 -16 Z" fill="${shipData(ctx.data, c.ship).color}">${live ? '<animateTransform attributeName="transform" type="skewY" values="0;-8;0;6;0" dur="1.2s" repeatCount="indefinite"/>' : ''}</path>
-<path d="M28 -5 L33 -14" stroke="#4a2a12" stroke-width="1"/><g transform="translate(33 -15)"><circle r="6" fill="#ffd27a" opacity=".35">${live ? '<animate attributeName="opacity" values=".35;.2;.4;.25;.35" dur=".9s" repeatCount="indefinite"/>' : ''}</circle><rect x="-1.8" y="-2.6" width="3.6" height="4.6" rx=".8" fill="#ffe7a0" stroke="#3a2412" stroke-width=".6"/><path d="M-1.8 -2.6 H1.8 M0 -2.6 V-4" stroke="#3a2412" stroke-width=".6"/></g></g></g>`, 'boat'));
+    const boat=sinkSticker(ctx,'sink-boat-'+c.ship+'-'+filters(ctx));
     const pts = qpts(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2 + toGap * 26, x1, y1, N);
     A(ctx, boat, [...pts.map((p, i) => ({ transform: `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px) scale(${flip * k},${k})`, opacity: i === 0 ? 0 : 1, offset: (i / N) * 0.9 })), { transform: `translate(${x1.toFixed(1)}px,${y1.toFixed(1)}px) scale(${flip * k},${k})`, opacity: 0, offset: 1 }], D2 + 400, t0, 'ease-in-out');
     const strokes = Math.max(1, Math.round(D2 / S.stroke));
-    boat.querySelectorAll('.oar').forEach((o) => A(ctx, o, Array.from({ length: strokes * 2 + 1 }, (_, q) => ({ transform: `rotate(${q % 2 ? 26 : -34}deg)` })), strokes * S.stroke, t0, 'ease-in-out', 'none'));
+    boat.querySelectorAll('[data-sprite-node^=oar]').forEach((o) => A(ctx, o, Array.from({ length: strokes * 2 + 1 }, (_, q) => ({ transform: `rotate(${q % 2 ? 26 : -34}deg)` })), strokes * S.stroke, t0, 'ease-in-out', 'none'));
     for (let q = 0; q < strokes; q++) {
       const p = pts[Math.min(N, Math.round(((q + 0.5) / strokes) * N * 0.9))];
       ringSvg(ctx, svg, p.x - flip * 6 * k, p.y + 7 * k, 3, 22, '#eef6f8', 900, t0 + q * S.stroke + S.stroke / 2, 1.2);
@@ -328,7 +297,7 @@ ${[-9, 5].map((x) => `<path d="M${x - 1} ${(-2.6 - (x + 28) * 0.006).toFixed(1)}
     }
     // the wake spreads behind the boat (eight traces one after another)
     for (let i = 0; i < 8; i++) {
-      const w = sv(svg, '<path d="M0 0 q-10 3 -22 1 M0 4 q-10 4 -24 6" fill="none" stroke="#eef6f8" stroke-width="1.2" stroke-linecap="round"/>');
+      const w = particleShape(ctx,svg,SINK_WAKE,'sink-wake');
       A(ctx, w, [...pts.map((p, q) => ({ transform: `translate(${(p.x - flip * 36 * (k / 1.7)).toFixed(1)}px,${(p.y + 6 * (k / 1.7)).toFixed(1)}px) scale(${flip},1)`, opacity: Number((0.7 - i * 0.08).toFixed(2)), offset: (q / N) * 0.9 })), { transform: `translate(${(x1 - flip * 36 * (k / 1.7)).toFixed(1)}px,${(y1 + 6 * (k / 1.7)).toFixed(1)}px) scale(${flip},1)`, opacity: 0, offset: 1 }], D2 + 400, t0 + i * 90, 'ease-in-out');
     }
     at(ctx, t0 + D2 + 400, () => A(ctx, plank(ctx, ally), [{ boxShadow: '0 0 0 3px #e0bd62, 0 0 22px rgba(224,189,98,.7)' }, { boxShadow: '0 0 0 0 rgba(0,0,0,0)' }], S.glow, 0, 'ease-out', 'none'));
