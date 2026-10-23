@@ -463,6 +463,7 @@ PLAY.shot = async (c, ctx) => {
   ctx = Object.create(ctx) as typeof ctx;
   ctx.canvasParticles = true;
   ctx.volleySprites = true;
+  const impactCtx=Object.assign(Object.create(ctx) as typeof ctx,{hideDelayedImpact:true});
   if (!VS) VS = { shooter: c.shooter, target: c.target, declared: c.declared, charge: c.charge, reactions: c.reactions, cards: [], extras: [], declDamage: c.damage };
   const vs = VS;
   vs.target = c.target;
@@ -549,14 +550,14 @@ PLAY.shot = async (c, ctx) => {
       lastHit = Math.max(lastHit, th);
       const newV = Math.max(0, now - k - b.units);
       at(ctx, th, () => setTrack(ctx, c.target, tr, newV, '#c0392b'));
-      hitBlast(ctx, svg, p1.x, p1.y, 1.1 * gunScale, th, T.volley.blast, hits++ > 0);
+      hitBlast(impactCtx, svg, p1.x, p1.y, 1.1 * gunScale, th, T.volley.blast, hits++ > 0);
       if (hits === 1) { flashBoard(ctx, '#fff6d8', 0.38, 240, th); boom(ctx, 6, 420, th); }
       // the first board of the Hull broken off falls into the sea and stays afloat a while (a long trace)
-      if (tr === 'hull' && !fallen && !markEl) { fallen = true; fallBoard(ctx, svg, c.target, p1, th); }
+      if (tr === 'hull' && !fallen && !markEl) { fallen = true; fallBoard(impactCtx, svg, c.target, p1, th); }
       // FX-A: the soot of the hit stays on the plank for a while (a short trace, fx/scars.ts)
       if (!markEl) at(ctx, th, () => hitMark(ctx, c.target, p1.x, p1.y));
-      if (b.kind === 'chain') burst(ctx, 'shred', p1.x, p1.y, th, 8, 14, 32, 650);
-      else if (b.kind === 'grape') burst(ctx, 'dust', p1.x, p1.y, th, 5, 6, 20, 700);
+      if (b.kind === 'chain') burst(impactCtx, 'shred', p1.x, p1.y, th, 8, 14, 32, 650);
+      else if (b.kind === 'grape') burst(impactCtx, 'dust', p1.x, p1.y, th, 5, 6, 20, 700);
       if (b.label && !labelled.has(b.label) && b.kind !== 'joint') { labelled.add(b.label); tag(ctx, p1.x, facingY(ctx, c.target) - 14 * down, b.label, th - 120, 'plus', 1500); }
       if (firstHit) { firstHit = false; at(ctx, th, () => tPl.classList.add('hitframe')); shake(ctx, tPl, th, 3); }
     } else if (b.out === 'overkill' || b.out === 'moon') {
@@ -658,6 +659,7 @@ PLAY.counter = async (c, ctx) => {
   ctx = Object.create(ctx) as typeof ctx;
   ctx.canvasParticles = true;
   ctx.volleySprites = true;
+  const impactCtx=Object.assign(Object.create(ctx) as typeof ctx,{hideDelayedImpact:true});
   const from = plank(ctx, c.from), fb = bx(ctx, from), fy = facingY(ctx, c.from), down = dirOf(ctx, c.from);
   hint(ctx, `Ответ «${cardName(ctx, c.card)}»: ${nick(ctx, c.from)} → ${nick(ctx, c.to)}`);
   tag(ctx, fb.cx, fy + down * 18, `Ответ: ${cardName(ctx, c.card)}`, 0, 'plus', 1600);
@@ -677,8 +679,8 @@ PLAY.counter = async (c, ctx) => {
         fly(ctx, projectile(ctx, kind), curve(p0, p1, 0.08), 440, t0, { spin: tr === 'sails' ? 720 : 0 });
         const v = Math.max(0, now - 1 - j);
         at(ctx, t0 + 440, () => setTrack(ctx, c.to, tr, v, '#c0392b'));
-        hitBlast(ctx, svg, p1.x, p1.y, 0.8, t0 + 440, T.volley.blast, n > 0);
-        if (tr !== 'hull') burst(ctx, tr === 'sails' ? 'shred' : 'dust', p1.x, p1.y, t0 + 440, 7, 14, 32, 600);
+        hitBlast(impactCtx, svg, p1.x, p1.y, 0.8, t0 + 440, T.volley.blast, n > 0);
+        if (tr !== 'hull') burst(impactCtx, tr === 'sails' ? 'shred' : 'dust', p1.x, p1.y, t0 + 440, 7, 14, 32, 600);
         if (n === 0) shake(ctx, plank(ctx, c.to), t0 + 440, 3);
         lastHit = t0 + 440;
       }

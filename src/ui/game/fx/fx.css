@@ -356,7 +356,10 @@
 .reaction-whirl-spin { position:relative;width:100%;aspect-ratio:1;margin-top:-50%; }
 .reaction-whirl-spin > svg { display:block;width:100%;height:100%; }
 /* A flying board/particle canvas is below the damage breakdown (also below its review variants). */
-.fx-layer > .plate { z-index:6; }
+/* The active AND lingering plate stay over falling particles (front canvas is 38)
+   and floating wrecks. The card peek belongs above its plate. */
+.fx-layer > .plate, .fx-scars > .plate { z-index:40; }
+.fx-layer > .plate-peek { z-index:41; }
 
 .reaction-whirl .reaction-whirl-spin { position:relative;width:100%;height:auto;aspect-ratio:1;transform-origin:50% 50%; }
 
