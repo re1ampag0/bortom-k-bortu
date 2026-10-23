@@ -147,8 +147,11 @@ export function netDock(game: NetGame, mySeats: string[], bottom: Side, nick: (c
 }
 
 /** «Пока вас не было»: what happened while the player was away (a reload, the connection lost, Safari asleep). */
+/** The lines «Пока вас не было» shows; none — no sheet (Game: the sheet «Заряд» knows a window lies over it). */
+export const missedLines = (game: NetGame) => game.missed.filter((l) => l.kind === 'action' || l.kind === 'damage' || l.kind === 'round' || l.kind === 'end');
+
 export function MissedSheet({ game }: { game: NetGame }) {
-  const lines = game.missed.filter((l) => l.kind === 'action' || l.kind === 'damage' || l.kind === 'round' || l.kind === 'end');
+  const lines = missedLines(game);
   if (lines.length === 0) return null;
   return (
     <div className="sheet-backdrop" onClick={() => game.clearMissed()}>
