@@ -1,6 +1,6 @@
 // Things that appear when needed and go away after (docs/TZ.md, «Принципы стола», п. 1, 8): a card in full,
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { memo as reactMemo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import rulesText from '../../../RULES.md?raw';
 import type { LogLine } from '../../engine/log';
 import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engine/state';
@@ -278,7 +278,8 @@ export function logIcon(data: GameData, line: LogLine): LogIcon {
   return 'other';
 }
 
-export function LogList({
+// memo (ui-press): the column of the log is drawn on every render of the table, also where it is hidden (a phone)
+export const LogList = reactMemo(function LogList({
   data,
   log,
   full,
@@ -345,7 +346,7 @@ export function LogList({
       ))}
     </ol>
   );
-}
+});
 
 export function RulesSheet({ data, onClose }: { data: GameData; onClose: () => void }) {
   const [q, setQ] = useState('');

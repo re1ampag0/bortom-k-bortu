@@ -1,5 +1,5 @@
 // The table around the sea (A5, V1b): the things in the shade by its edges and the measure of the water for the weather.
-import { useLayoutEffect, useRef, useState } from 'react';
+import { memo, useLayoutEffect, useRef, useState } from 'react';
 import { DECK_TILE_H, DECK_TILE_URL, DECK_TILE_W } from './art/deckTile';
 import grate from './art/rig/deck-grate.svg';
 import cannon from './art/rig/deck-cannon.svg';
@@ -281,7 +281,8 @@ function freeRight(game: HTMLElement): Box | null {
  * panel, the planks on the whole screen. «Стол капитана»: the table with its things (the compass among them) and, from the
  * captain's variant of the reference, the inkwell with a quill and the candle.
  */
-export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
+// memo (ui-press): the deck is measured by itself; a render of the table with the same look does not draw it again
+export const TableBackdrop = memo(function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [placed, setPlaced] = useState<Placed[]>([]);
   const [deck, setDeck] = useState<DeckPlace | null>(null);
@@ -430,7 +431,7 @@ export function TableBackdrop({ look }: { look: 'deck' | 'table' }) {
       {candlePlace && look === 'table' && <i className="lantern-light candle" style={{ left: candlePlace.l + candlePlace.w / 2, top: candlePlace.t + candlePlace.h * 0.25, width: 260, height: 260 }} />}
     </div>
   );
-}
+});
 
 /**
  * The weather of the round lies on the water only: the board gets the insets of the sea (--sea-t/r/b/l), .fx-weather

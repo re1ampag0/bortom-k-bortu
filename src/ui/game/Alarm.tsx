@@ -1,6 +1,6 @@
 // «Тревога!» (U2): the bar at the top, the arrow with the pill over the sea, the buttons of the Reaction window (a laptop)
 // and its sheet (a phone). The Reaction cards are the cards of the hand (Hand.tsx, `alarm`); nothing here blocks the input.
-import { useEffect, useLayoutEffect, useState, useSyncExternalStore, type CSSProperties, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, type CSSProperties, type RefObject } from 'react';
 import { reactionNow } from '../../engine/hints';
 import { cardByCode, type Action, type GameState } from '../../engine/state';
 import type { GameData } from '../../engine/types';
@@ -256,6 +256,14 @@ export function ReactionSheet({
     if (!folded && !validPick && soleSeat && soleCard) onPick({ seat: soleSeat, card: soleCard });
   }, [folded, !!validPick, soleSeat, soleCard, onPick]);
   const picked = (it: { seat: string; card: string }) => selected?.seat === it.seat && selected.card === it.card;
+  // «what happens now» of each Reaction: one dry run per state, not on every render of the sheet (ui-press)
+  const nows = useMemo(() => new Map<string, ReturnType<typeof reactionNow>>(), [s, data]);
+  const nowOf = (seat: string, card: string) => {
+    const k = `${seat}:${card}`;
+    let v = nows.get(k);
+    if (!v) nows.set(k, (v = reactionNow(s, data, seat, card)));
+    return v;
+  };
   if (folded) {
     return (
       <section className="panel alarm-sheet folded" data-testid="reaction-panel">
@@ -285,7 +293,7 @@ export function ReactionSheet({
         <div className="as-cards">
           {items.map((it) => {
             const a = alarmOf(it.seat, it.card);
-            const now = reactionNow(s, data, it.seat, it.card);
+            const now = nowOf(it.seat, it.card);
             const cardAlarm = a?.kind === 'ok' && now.ok
               ? { ...a, strip: a.strip ?? { top: now.text, bottom: '' } }
               : a;

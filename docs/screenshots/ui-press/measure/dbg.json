@@ -1,0 +1,425 @@
+[
+ {
+  "scene": "alarm-open",
+  "label": "dbg",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [
+   "plank М s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsefalse",
+   "plank Ж s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsefalse",
+   "plank И s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsefalse",
+   "plank Г s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsefalse",
+   "plank М s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsetrue",
+   "plank Ж s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsetrue",
+   "plank И s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsetrue",
+   "plank Г s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsetrue"
+  ],
+  "firstFrameMs": 192.60000000000036,
+  "worstFrameMs": 192.60000000000036,
+  "framesOver50": 2,
+  "renders": [
+   {
+    "at": 211.7,
+    "ms": 61.8
+   }
+  ],
+  "count": {
+   "StatusBar": 7,
+   "SeaChip": 7,
+   "LogList": 3,
+   "TableBackdrop": 1,
+   "TopHold": 4,
+   "Plank": 12,
+   "ReactionSheet": 2,
+   "HandCard": 20,
+   "TeamRow": 2,
+   "Hand": 2
+  },
+  "style": {
+   "ms": 51.90500000000001,
+   "count": 40,
+   "elements": 219
+  },
+  "layout": {
+   "ms": 66.116,
+   "count": 47,
+   "dirty": 544,
+   "total": 2179
+  },
+  "paint": {
+   "ms": 136.514,
+   "count": 67
+  },
+  "forced": {
+   "style": 2.451,
+   "layout": 17.071,
+   "styleCount": 2,
+   "layoutCount": 2
+  },
+  "scriptingMs": 209.40200000000002,
+  "longTasks": 3,
+  "longestTaskMs": 111.556,
+  "top": [
+   {
+    "name": "FunctionCall",
+    "t": 210.4,
+    "ms": 64.5,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 125.7,
+    "ms": 55.7,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 126.5,
+    "ms": 54.9,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 712,
+    "ms": 34.2,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 329.1,
+    "ms": 24.5,
+    "stack": []
+   },
+   {
+    "name": "Layout",
+    "t": 253.5,
+    "ms": 14.9,
+    "dirty": 172,
+    "stack": []
+   },
+   {
+    "name": "Layout",
+    "t": 65,
+    "ms": 13.7,
+    "dirty": 19,
+    "stack": []
+   },
+   {
+    "name": "Layout",
+    "t": 309.3,
+    "ms": 11.7,
+    "dirty": 167,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "alarm-fold",
+  "label": "dbg",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [
+   "plank М s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsetrue",
+   "plank Ж s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsetrue",
+   "plank И s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsetrue",
+   "plank Г s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsetrue"
+  ],
+  "firstFrameMs": 8,
+  "worstFrameMs": 250,
+  "framesOver50": 1,
+  "renders": [
+   {
+    "at": 29.4,
+    "ms": 159
+   }
+  ],
+  "count": {
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "Plank": 4,
+   "ReactionSheet": 1,
+   "TeamRow": 1,
+   "Hand": 1,
+   "HandCard": 5
+  },
+  "style": {
+   "ms": 241.64100000000005,
+   "count": 79,
+   "elements": 2745
+  },
+  "layout": {
+   "ms": 4.501999999999999,
+   "count": 20,
+   "dirty": 43,
+   "total": 2063
+  },
+  "paint": {
+   "ms": 48.745999999999995,
+   "count": 39
+  },
+  "forced": {
+   "style": 112.772,
+   "layout": 2.235,
+   "styleCount": 3,
+   "layoutCount": 1
+  },
+  "scriptingMs": 271.6989999999998,
+  "longTasks": 2,
+  "longestTaskMs": 201.941,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 27.8,
+    "ms": 170.2,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 29.3,
+    "ms": 161.7,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 72,
+    "ms": 109.9,
+    "elements": 2026,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 217.1,
+    "ms": 39.1,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 1018.2,
+    "ms": 9.7,
+    "stack": []
+   },
+   {
+    "name": "EventDispatch",
+    "t": 14.2,
+    "ms": 7.7,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 14.2,
+    "ms": 5.9,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 219.3,
+    "ms": 4.5,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "alarm-unfold",
+  "label": "dbg",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [],
+  "firstFrameMs": 12.30000000009386,
+  "worstFrameMs": 283.2999999999993,
+  "framesOver50": 1,
+  "renders": [
+   {
+    "at": 19.3,
+    "ms": 164.4
+   }
+  ],
+  "count": {
+   "StatusBar": 1,
+   "TopHold": 1,
+   "SeaChip": 1,
+   "ReactionSheet": 1,
+   "HandCard": 10,
+   "TeamRow": 1,
+   "Hand": 1
+  },
+  "style": {
+   "ms": 243.97199999999992,
+   "count": 89,
+   "elements": 2712
+  },
+  "layout": {
+   "ms": 13.482,
+   "count": 20,
+   "dirty": 128,
+   "total": 2148
+  },
+  "paint": {
+   "ms": 56.012,
+   "count": 35
+  },
+  "forced": {
+   "style": 124.498,
+   "layout": 9.621,
+   "styleCount": 15,
+   "layoutCount": 1
+  },
+  "scriptingMs": 276.26599999999996,
+  "longTasks": 2,
+  "longestTaskMs": 200.008,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 17.4,
+    "ms": 177.2,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 19.2,
+    "ms": 165.3,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 49.7,
+    "ms": 116,
+    "elements": 2095,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 221.8,
+    "ms": 54.7,
+    "stack": []
+   },
+   {
+    "name": "FireAnimationFrame",
+    "t": 464,
+    "ms": 12.8,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 464,
+    "ms": 12.3,
+    "stack": []
+   },
+   {
+    "name": "FireAnimationFrame",
+    "t": 206,
+    "ms": 12,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 206,
+    "ms": 11.9,
+    "stack": []
+   }
+  ]
+ },
+ {
+  "scene": "react-play",
+  "label": "dbg",
+  "viewport": "390×844 DPR3 CPU×4",
+  "errors": [
+   "plank М s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsefalse",
+   "plank Ж s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsefalse",
+   "plank И s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsefalse",
+   "plank Г s [\"seed\",\"rng\",\"variant\",\"round\",\"active\",\"ships\",\"teams\",\"sefalsefalse"
+  ],
+  "firstFrameMs": 8.700000000000728,
+  "worstFrameMs": 483.2999999999993,
+  "framesOver50": 4,
+  "renders": [
+   {
+    "at": 12.2,
+    "ms": 83.2
+   }
+  ],
+  "count": {
+   "StatusBar": 3,
+   "TopHold": 1,
+   "SeaChip": 3,
+   "Plank": 4,
+   "ReactionSheet": 1,
+   "HandCard": 8,
+   "TeamRow": 1,
+   "Hand": 2,
+   "LogList": 2
+  },
+  "style": {
+   "ms": 335.84199999999987,
+   "count": 80,
+   "elements": 2797
+  },
+  "layout": {
+   "ms": 76.75599999999999,
+   "count": 54,
+   "dirty": 475,
+   "total": 2177
+  },
+  "paint": {
+   "ms": 142.41600000000003,
+   "count": 121
+  },
+  "forced": {
+   "style": 223.42499999999998,
+   "layout": 54.594,
+   "styleCount": 38,
+   "layoutCount": 29
+  },
+  "scriptingMs": 586.9789999999996,
+  "longTasks": 5,
+  "longestTaskMs": 272.28,
+  "top": [
+   {
+    "name": "EventDispatch",
+    "t": 11.1,
+    "ms": 189.4,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 12,
+    "ms": 134,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 283,
+    "ms": 132.4,
+    "stack": []
+   },
+   {
+    "name": "UpdateLayoutTree",
+    "t": 284.2,
+    "ms": 129,
+    "elements": 1793,
+    "stack": []
+   },
+   {
+    "name": "TimerFire",
+    "t": 555.2,
+    "ms": 73.4,
+    "stack": []
+   },
+   {
+    "name": "FunctionCall",
+    "t": 555.2,
+    "ms": 68.2,
+    "stack": []
+   },
+   {
+    "name": "Paint",
+    "t": 428.6,
+    "ms": 59,
+    "stack": []
+   },
+   {
+    "name": "FireAnimationFrame",
+    "t": 238.7,
+    "ms": 28.6,
+    "stack": []
+   }
+  ]
+ }
+]

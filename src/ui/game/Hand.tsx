@@ -2,7 +2,7 @@
 // the Plans of the Pearl. A5 (V2): on a laptop the cards lie as a fan and always fit (they overlap as much as the width
 // needs); on a phone the fan scrolls sideways and snaps, a tap lifts a card (a5-phone, A5Phone frame 6: it grows, shows its
 // whole text and «Сыграть» or the reason why not, the other actions under it — no window of the card).
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { memo, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cardByCode, shipData, type GameState } from '../../engine/state';
 import type { CardInstance, GameData } from '../../engine/types';
@@ -367,6 +367,24 @@ export function HandCard({
   );
 }
 
+type HandCardProps = Parameters<typeof HandCard>[0];
+/**
+ * A card of the fan (ui-press): drawn again only when what it shows changes. Hand gives it press handlers that keep their
+ * identity and call the newest press; the actions of the lifted card are new each render, so that card is always drawn.
+ */
+const FanCard = memo(HandCard, (a: HandCardProps, b: HandCardProps) => {
+  for (const k of new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof HandCardProps>) {
+    if (k === 'onClick' || k === 'onDrop') continue;
+    if (k === 'style') {
+      const x = a.style as Record<string, unknown> | undefined, y = b.style as Record<string, unknown> | undefined;
+      if (x?.['--r'] !== y?.['--r'] || x?.['--dy'] !== y?.['--dy']) return false;
+      continue;
+    }
+    if (!Object.is(a[k], b[k])) return false;
+  }
+  return true;
+});
+
 export interface HandTab {
   seat: string;
   label: string;
@@ -452,6 +470,18 @@ export function Hand({
     addEventListener('pointerdown', drop, true);
     return () => removeEventListener('pointerdown', drop, true);
   }, [lifted]);
+  // the press of each card keeps its identity (FanCard skips a render that changes nothing it shows) and runs the newest press
+  const presses = useRef(new Map<string, { fn: () => void; call: () => void }>());
+  const pressOf = (key: string, fn: () => void) => {
+    let p = presses.current.get(key);
+    if (!p) {
+      const box = { fn, call: () => box.fn() };
+      presses.current.set(key, (p = box));
+    }
+    p.fn = fn;
+    return p.call;
+  };
+  const drop = pressOf('drop', () => setLifted(null));
   const card = (code: string, k: number, key: string, plan = false, next: string | null = null) => {
     const f = fanOf(k, n, wideFan);
     const press = () => {
@@ -465,7 +495,7 @@ export function Hand({
       setLifted(key);
     };
     const shown = (
-      <HandCard
+      <FanCard
         key={key}
         data={data}
         code={code}
@@ -474,11 +504,11 @@ export function Hand({
         alarm={alarmOf?.(seat, code) ?? undefined}
         chosen={chosen === code}
         note={noteOf(code)}
-        onClick={press}
+        onClick={pressOf(key, press)}
         lifted={lifted === key}
         liftKey={key}
         actions={lifted === key && actionsOf && isPhone() ? actionsOf(seat, code) : undefined}
-        onDrop={() => setLifted(null)}
+        onDrop={drop}
         beforeLift={next !== null && next === lifted && !!game && isPhone()}
         style={{ ['--r' as string]: `${f.r}deg`, ['--dy' as string]: `${f.dy}px` } as CSSProperties}
       />
