@@ -648,13 +648,19 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
   const redraw = useRef(drawWeather);
   redraw.current = drawWeather;
   useEffect(() => {
-    // … and the size of the board.
+    // … and the size of the board, of the sea between the rows and of the planks: the glow of «Ясное небо» is masked by the
+    // planks and its glints keep clear of them, so a plank that grows or shrinks (its buttons, a badge, an open sheet) while
+    // the board keeps its size must draw the weather again. Positions of planks follow the sizes of these boxes.
     const board = layerRef.current?.parentElement;
     if (!board || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(() => redraw.current());
+    // A sheet that opens or a plank that grows moves the table at the moment of the press: the weather is drawn again a
+    // little later (once the boxes settle), not in that frame — the sea under the planks may lag for a blink.
+    let timer = 0;
+    const ro = new ResizeObserver(() => { clearTimeout(timer); timer = window.setTimeout(() => redraw.current(), 250); });
     ro.observe(board);
-    return () => ro.disconnect();
-  }, [layerRef]);
+    board.querySelectorAll('[data-fx-gap], [data-fx-ship]').forEach((el) => ro.observe(el));
+    return () => { clearTimeout(timer); ro.disconnect(); };
+  }, [layerRef, weatherKey]);
   useEffect(() => {
     // Always on: press() itself checks that a clip of the layer plays. Waiting for «busy» lost a press that came before
     // React ran the effect (the layer may draw within the same task the queue starts in).

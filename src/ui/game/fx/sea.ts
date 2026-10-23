@@ -410,7 +410,10 @@ export function renderWeather(ctx: FxCtx, weather: HTMLElement, on: boolean): vo
   const code = on && !perfOff('weather') ? ctx.display.sea : null;
   const key = code ? seaKeyOf(ctx, code) : null;
   const D = ctx.display;
-  const k2 = `${key}|${ctx.rich}|${ctx.board.clientWidth}|${ctx.board.clientHeight}|${Object.keys(D.ships).map((c) => D.ships[c].pos + (D.ships[c].sunk ? 's' : '')).join('')}`;
+  // the boxes of the sea and of the planks (layout sizes, not the rocking of a storm): the glow and the glints of the sea
+  // are placed by them
+  const boxes = Array.from(ctx.board.querySelectorAll<HTMLElement>('[data-fx-gap], [data-fx-ship]')).map((e) => `${e.offsetLeft},${e.offsetTop},${e.offsetWidth},${e.offsetHeight}`).join(';');
+  const k2 = `${key}|${ctx.rich}|${ctx.board.clientWidth}|${ctx.board.clientHeight}|${Object.keys(D.ships).map((c) => D.ships[c].pos + (D.ships[c].sunk ? 's' : '')).join('')}|${boxes}`;
   if (k2 === weather.dataset.key) return;
   weather.dataset.key = k2;
   drawWeather(ctx, weather, key && ctx.board.querySelector('[data-fx-gap]') ? key : null, ctx.rich);
