@@ -113,8 +113,11 @@ export function fanOf(k: number, n: number, wide = false): { r: number; dy: numb
 /**
  * The laptop: the overlap of the cards is what the width needs, so the whole hand fits and no card is cut off when it
  * rises (no scrolling there). Measured on resize and when the cards change; --ov is the extra overlap of each card.
+ * ui-fixes: in the Reaction window (`whole` — which cards can be played) the Reactions that can be played lie whole — no
+ * card overlaps them (data-whole, alarm.css), the others overlap each other more; if they would hide each other almost
+ * entirely, the fan stays even.
  */
-function useFanFit(n: number) {
+function useFanFit(n: number, whole = '') {
   const ref = useRef<HTMLDivElement>(null);
   // the fan of a wide window (game.css --fan-wide: «Палуба», 1600 px and wider)
   const [wide, setWide] = useState(false);
@@ -135,14 +138,24 @@ function useFanFit(n: number) {
       const maxStep = parseFloat(cs.getPropertyValue('--fan-max-step'));
       const w = cards[0].offsetWidth;
       const capped = maxStep > 0 ? Math.ceil(w + gap - maxStep * w) : 0;
-      const ov = Math.max(0, capped, Math.ceil((natural - room) / (cards.length - 1)));
+      let ov = Math.max(0, capped, Math.ceil((natural - room) / (cards.length - 1)));
+      const ok = cards.map((x) => x.classList.contains('al-ok'));
+      let spread = false;
+      if (ok.some(Boolean)) {
+        // the pairs that still overlap: neither card can be played
+        const pairs = ok.slice(1).filter((x, i) => !x && !ok[i]).length;
+        const need = natural - room;
+        const spreadOv = pairs > 0 ? Math.max(0, capped, Math.ceil(need / pairs)) : need <= 0 ? 0 : Infinity;
+        if (spreadOv <= w - 24) [spread, ov] = [true, spreadOv];
+      }
+      row.toggleAttribute('data-whole', spread);
       row.style.setProperty('--ov', `${ov}px`);
     };
     fit();
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
     ro?.observe(row);
     return () => ro?.disconnect();
-  }, [n]);
+  }, [n, whole]);
   return [ref, wide] as const;
 }
 
@@ -436,7 +449,9 @@ export function Hand({
 }) {
   const holder = s.ships[seat];
   const n = holder.hand.length + holder.plans.length;
-  const [rowRef, wideFan] = useFanFit(n);
+  // the Reaction window: which cards can be played (they lie whole on a laptop, useFanFit)
+  const whole = alarmOf ? holder.hand.map((c) => (alarmOf(seat, c)?.kind === 'ok' ? 1 : 0)).join('') : '';
+  const [rowRef, wideFan] = useFanFit(n, whole);
   const middle = usePhoneFan(rowRef, n);
   // The phone: the lifted card (its key in the strip); a tap beside it, another ship's tab or a new hand drops it.
   const [lifted, setLifted] = useState<string | null>(null);

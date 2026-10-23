@@ -31,7 +31,7 @@ import { AlarmActions, AlarmArrow, AlarmBar, ReactionSheet, usePhoneLayout } fro
 import { alarmInfo, lossOf, reactionStrip } from './alarm';
 import { Hand, type AlarmCard, type HandTab, type LiftActions } from './Hand';
 import { LogBook } from './LogBook';
-import { CardDetail, DiscardSheet, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
+import { CardDetail, ConfirmSheet, DiscardSheet, LogList, RulesSheet, Sheet as SheetBox, SeaSheet, SettingsSheet, ShipSheet } from './Overlays';
 import {
   CardParamsPanel,
   ChoicePanel,
@@ -734,6 +734,8 @@ export function Game({
 
   // ——— The panel in the middle (laptop) or in place of the hand (phone) ———
   let dock: React.ReactNode = null;
+  /** «Начать новую партию?», «Сдаться?», «Выйти из комнаты?»: a window like «Настройки», where they are asked from (ui-fixes). */
+  let confirm: React.ReactNode = null;
   // Card choices, «Тортуга» and the Plans are bottom sheets on a phone; the Volley and the Reactions stay in the middle.
   let dockSheet = false;
   /** The dock holds the sheet of «Тревога!» (a phone). */
@@ -842,8 +844,8 @@ export function Game({
   }
   if (mode.k === 'concede') {
     const allyPeople = net ? Object.values(s.ships).some((x) => x.side === mode.side && !mySeats.includes(x.code) && !net.isBotSeat(x.code)) : false;
-    dock = (
-      <ConfirmPanel
+    confirm = (
+      <ConfirmSheet
         title={`Сдаться за ${SIDE_LABEL[mode.side].acc}?`}
         sub={allyPeople ? 'Команда сдаётся, когда «Сдаться» нажмут оба игрока.' : 'Партия закончится победой противника.'}
         yes="Сдаться"
@@ -857,8 +859,8 @@ export function Game({
       />
     );
   } else if (mode.k === 'exitRoom') {
-    dock = (
-      <ConfirmPanel
+    confirm = (
+      <ConfirmSheet
         title="Выйти из комнаты?"
         sub={s.winner ? 'Партия окончена.' : 'Ваш корабль останется на месте: создатель комнаты сможет заменить вас ботом.'}
         yes="Выйти"
@@ -867,8 +869,8 @@ export function Game({
       />
     );
   } else if (mode.k === 'leave') {
-    dock = (
-      <ConfirmPanel
+    confirm = (
+      <ConfirmSheet
         title="Начать новую партию?"
         sub="Текущая партия останется в автосохранении, пока вы не начнёте новую."
         yes="Новая партия"
@@ -1428,6 +1430,7 @@ export function Game({
           />}</ShownLog>
         </SheetBox>
       )}
+      {confirm}
       {sheet?.k === 'settings' && (
         <SettingsSheet
           speed={speed}

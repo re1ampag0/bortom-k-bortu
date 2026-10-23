@@ -856,10 +856,11 @@ button.star::before {
     margin: 8px 0 0 12px;
     min-height: 20px;
   }
+  /* ui-fixes: 12 px from the right edge, as the tracks — «Души 1/5» never touches the frame of the plank */
   .plank-body > .badges {
     grid-area: badges;
     justify-self: end;
-    margin: 8px 0 0 10px;
+    margin: 8px 12px 0 10px;
   }
   .plank-body > .badges:empty {
     display: none;
@@ -952,6 +953,39 @@ button.star::before {
   width: 16px;
   height: 16px;
 }
+/* ui-fixes: a Soul says what it gives — the skull, «→», the icon of its track (a cell of the Hull, a sailor) and «+1» */
+.soul-gain {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+.soul-arrow {
+  font-family: var(--font-text);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+}
+.soul-track {
+  display: inline-flex;
+  flex: none;
+}
+.soul-track svg {
+  display: block;
+  width: auto;
+  height: 15px;
+}
+.soul-plus {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.btn.cmd.soul .cmd-in {
+  gap: 3px;
+}
 /* ui-5: a laptop — every button keeps its name, «Погружение» and the Souls are an icon (the name in the paper pop, data-tip);
    four buttons and more (the Dutchman) stay in one row with narrower paddings, the sea keeps its height */
 @media (min-width: 701px) {
@@ -968,6 +1002,10 @@ button.star::before {
   }
   .plank-buttons.many .btn.cmd .cmd-in {
     white-space: nowrap;
+  }
+  /* ui-fixes: a Soul (the skull, «→», the icon of its track, «+1») — narrower paddings, the same height */
+  .plank-buttons .btn.cmd.soul {
+    padding-inline: 7px;
   }
 }
 /* The buttons of a plank: on a phone a row that scrolls with a finger (U3, ui-5). */
@@ -1830,6 +1868,13 @@ button.star::before {
 }
 .sheet-foot .row.buttons {
   margin-top: 0;
+}
+/* ui-fixes: «Начать новую партию?» and the like (ConfirmSheet) — the words, then «Отмена» and the answer of one size */
+.confirm-sub {
+  margin: 0;
+}
+.sheet[data-testid='confirm-sheet'] .sheet-foot .row.buttons > .btn {
+  flex: 1 1 0;
 }
 .sheet.with-foot > .sheet-body {
   padding-bottom: 12px;
