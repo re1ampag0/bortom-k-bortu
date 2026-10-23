@@ -1,0 +1,3 @@
+Chromium; seed=1; speed=fast; fxScene=sink
+    анимации в SVG на весь стол: sink · path ×9, sink · circle ×6, sink · g ×6, sink · circle[fxFire] ×4, sink · rect ×2 … всего 30
+Strict zero assertion failed. No exception has been approved/applied.
