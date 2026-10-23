@@ -1,0 +1,20 @@
+{
+ "whirl-1000": {
+  "rgbaDifferentPixels": 201324,
+  "maxChannelDifference": 234,
+  "differentPixels": 170790,
+  "share": 10.654
+ },
+ "whirl-2600": {
+  "rgbaDifferentPixels": 168666,
+  "maxChannelDifference": 231,
+  "differentPixels": 135960,
+  "share": 8.481
+ },
+ "whirl-4600": {
+  "rgbaDifferentPixels": 160522,
+  "maxChannelDifference": 231,
+  "differentPixels": 128815,
+  "share": 8.036
+ }
+}

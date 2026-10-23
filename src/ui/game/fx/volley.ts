@@ -1,3 +1,4 @@
+import {plateReviewMode,reviewPlateHTML,fitReviewPlate} from './plateReview';
 import {perfOff} from '../perf/state';
 // The clips of the Volley: announce → window → reaction → shot | cancel → counter; heart. A port of
 // docs/mockups/anim/level1/play-volley.js (see PORTING.md): the code is the reference's, what changed is how an element
@@ -119,6 +120,7 @@ export function termRows(ctx: FxCtx, terms: Term[] | null | undefined, cls: Reco
   }).join('');
 }
 export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage, was, terms, cls, extra = '', diagonal }: { shooter: string; declared?: string; target: string; track: Track; damage: number; was?: number | null; terms?: Term[] | null; cls?: Record<string, string>; extra?: string; diagonal?: boolean }): string {
+  if(plateReviewMode())return reviewPlateHTML(terms,damage,track);
   const who = `<b>${esc(nick(ctx, shooter))}</b> → ${declared && declared !== target ? `<s>${esc(nick(ctx, declared))}</s> ` : ''}<b>${esc(nick(ctx, target))}</b>${(diagonal ?? !!(VS && VS.diagonal)) ? ', по диагонали' : ', напротив'}`;
   return `<div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
     (terms ? `<div class="terms">${termRows(ctx, terms, cls)}</div>` : '') + extra;
@@ -126,6 +128,7 @@ export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage
 /** The damage breakdown always stays in the gap; a short gap uses a compact two-line layout. */
 function fitPlate(ctx: FxCtx) {
   if (!VS?.plate) return;
+  if(fitReviewPlate(ctx,VS.plate,VS.target))return;
   const g = gapBox(ctx), plate = VS.plate, original = placePlate(ctx, VS.shooter);
   plate.classList.remove('compact');
   plate.style.width = original.w + 'px';
@@ -162,6 +165,7 @@ function absorb(ctx: FxCtx, el: FlyCard, code: string, delay: number) {
     const plate = VS?.plate;
     if (!plate || !plate.isConnected || !el.isConnected) return;
     let row = plate.querySelector<HTMLElement>(`[data-card="${CSS.escape(code)}"]`);
+    if (!row && plateReviewMode()) row=plate.querySelector<HTMLElement>('.review-parts');
     if (!row) {
       let terms = plate.querySelector('.terms');
       if (!terms) plate.insertAdjacentHTML('beforeend', '<div class="terms"></div>'), (terms = plate.querySelector('.terms'));
@@ -446,7 +450,7 @@ PLAY.shot = async (c, ctx) => {
   vs.plate.innerHTML = plateHTML(ctx, { shooter: c.shooter, declared: c.declared, target: c.target, track: c.track, damage: c.damage, was: vs.declDamage, terms: c.terms, cls, extra });
   platePeek(ctx, vs.plate);
   fitPlate(ctx);
-  A(ctx, vs.plate, [{ scale: '1' }, { scale: '1.04' }, { scale: '1' }], 300, 0, 'ease-out', 'none');
+  if(!plateReviewMode())A(ctx, vs.plate, [{ scale: '1' }, { scale: '1.04' }, { scale: '1' }], 300, 0, 'ease-out', 'none');
   await wait(ctx, 260);
   // the cannonballs
   const s = bx(ctx, shooterEl), sy = facingY(ctx, c.shooter), down = dirOf(ctx, c.shooter);
@@ -577,7 +581,7 @@ PLAY.shot = async (c, ctx) => {
       const end = { x: tr.x + 10 + (i % 3) * 12, y: tr.cy };
       fly(ctx, ball(), curve(p0, end, 0.05 * down), FLY, t0, { fadeEnd: false });
       burst(ctx, 'dust', end.x, end.y, t0 + FLY, 5, 6, 18, 600);
-      if (b.label && !labelled.has(b.label)) { labelled.add(b.label); tag(ctx, tr.cx, tr.y - 12, b.label, t0 + FLY, 'mod', 1800); }
+      if (plateReviewMode()!=='B' && b.label && !labelled.has(b.label)) { labelled.add(b.label); tag(ctx, tr.cx, tr.y - 12, b.label, t0 + FLY, 'mod', 1800); }
     }
   });
   const endShots = FUSE + c.shots.length * STEP + FLY_HIT * 1.2;
