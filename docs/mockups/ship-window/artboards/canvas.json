@@ -1,0 +1,68 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Dutchman.dc.html": {
+      "h": 640,
+      "title": "«Летучий голландец» — ноутбук",
+      "w": 920,
+      "x": 1000,
+      "y": 760
+    },
+    "Endeavour.dc.html": {
+      "h": 640,
+      "title": "«Индевор» — ноутбук",
+      "w": 920,
+      "x": 0,
+      "y": 760
+    },
+    "Main.dc.html": {
+      "h": 640,
+      "title": "«Чёрная жемчужина» — ноутбук",
+      "w": 920,
+      "x": 0,
+      "y": 0
+    },
+    "Phone.dc.html": {
+      "h": 1360,
+      "title": "«Летучий голландец» — телефон",
+      "w": 390,
+      "x": 2000,
+      "y": 0
+    },
+    "Revenge.dc.html": {
+      "h": 640,
+      "title": "«Месть королевы Анны» — ноутбук",
+      "w": 920,
+      "x": 1000,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-21T00:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "title": {
+      "kind": "title1",
+      "maxW": 2390,
+      "text": "Окно корабля: у каждого своя сцена",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Revenge.dc.html",
+    "Endeavour.dc.html",
+    "Dutchman.dc.html",
+    "Phone.dc.html"
+  ],
+  "pages": [],
+  "title": "Бортом к борту — окно корабля"
+}
