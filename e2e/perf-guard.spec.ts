@@ -1,5 +1,3 @@
-// DRAFT: strict zero currently fails in sinking (30 board-SVG animations).
-// Move back to e2e/perf-guard.spec.ts after the user resolves the remaining renderer scope.
 // Regression guard of known page facts, never a GPU benchmark. Run only in Chromium.
 import {test,expect} from '@playwright/test';
 import {mkdirSync,writeFileSync} from 'node:fs';
@@ -20,6 +18,8 @@ test('perf guard: Volley, ordinary card, Legend and Armada, sinking, idle',async
    ['[data-fx-track]','boxShadow','Original 700 ms local track change flash on phone'],
    ['[data-fx-track]','backgroundColor','Brief local track blink on damage'],
    ['.plate .terms span','backgroundColor','Existing card absorption highlight; ordinary plate is preserved'],
+   ['.fx-sinkwater','backgroundPosition','Same local rising-water shorthand exposed by native keyframes'],
+   ['.plank[data-fx-ship]','boxShadow','misc.ts sink: original 1400 ms captain-arrival glow, native keyframes only'],
    ['.fx-sinkwater','backgroundPositionY','Existing water rising inside the two local sinking halves'],
    ['[data-fx-status="Переговоры"]','boxShadow','misc.ts flag: original 380 ms landing highlight on this one status chip'],
    ['.plank.own','filter','Existing CSS transition into the awaiting/disabled own-plank state'],
@@ -42,6 +42,7 @@ test('perf guard: Volley, ordinary card, Legend and Armada, sinking, idle',async
     const exception=exceptions.find(([selector,property])=>property===key&&e.target.matches(selector)&&
      (!['.plank','.plank.own'].includes(selector)||e.animation instanceof CSSTransition)&&
      (selector!=='.plank.aimable'||e.name==='aimpulse')&&
+     (selector!=='.plank[data-fx-ship]'||e.native&&Number(e.animation.effect?.getTiming().duration)===840&&String(frames[0]?.boxShadow).includes('22px'))&&
      (selector!=='[data-fx-status="Переговоры"]'||e.native&&Number(e.animation.effect?.getTiming().duration)<=380));
     if(exception)used.add(exception.join(' · '));else problems.push(`${e.target.tagName}.${e.target.getAttribute('class')??''}: ${key} (${e.name})`);
    }
@@ -98,6 +99,10 @@ test('perf guard: Volley, ordinary card, Legend and Armada, sinking, idle',async
   await quiet();
  }
  await game('pirates');
+ // Check idle on the FIRST fresh table, before any clip aftermath exists.
+ await page.waitForTimeout(3000);
+ const idle=await page.evaluate(()=>(window as unknown as {fxGuard:Guard}).fxGuard.idle());
+ expect(idle).toEqual([]);rows.push({scene:'idle-3s',unexpectedAnimations:idle});
  await page.getByTestId('volley-Ж').filter({visible:true}).first().click();await page.getByTestId('plate-И').click();
  // An ordinary hit costs one Powder, leaving the other for the following Order.
  const before=await page.locator('[data-fx-ship="И"] [data-fx-value]').first().textContent();
@@ -113,11 +118,6 @@ test('perf guard: Volley, ordinary card, Legend and Armada, sinking, idle',async
  await page.getByRole('button',{name:'Разыграть Легенду',exact:true}).click();
  await start();await page.getByTestId('legend-confirm').getByRole('button',{name:/^Сыграть/}).click();
  await expect(page.getByTestId('perf-clip')).toContainText('legend');await quiet();await result('legend-intro-and-armada');
- // Fresh table: idle means no lingering clip, not the still-fading aftermath of the Armada.
- await game('pirates');
- await page.waitForTimeout(3000);
- const idle=await page.evaluate(()=>(window as unknown as {fxGuard:Guard}).fxGuard.idle());
- expect(idle).toEqual([]);rows.push({scene:'idle-3s',unexpectedAnimations:idle});
  await page.goto('?fxScene=sink&manual=1&speed=fast&seed=1&perf=1');
  await start();await page.getByTestId('fx-start').click();
  await page.waitForFunction(()=>document.body.dataset.fxDone==='1');await result('sinking');
