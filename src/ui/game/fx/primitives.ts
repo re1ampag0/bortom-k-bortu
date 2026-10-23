@@ -614,12 +614,13 @@ export function soulsFly(ctx: FxCtx, fromShip: string, n: number, delay: number,
   if (cell) A(ctx, cell, [{ filter: 'none' }, { filter: 'drop-shadow(0 0 6px #7ff0b0) brightness(1.5)', offset: 0.3 }, { filter: 'none' }], 900, delay, 'ease-out', 'none');
   const swing = Math.min(160, boardW(ctx) * 0.14) * (from.x < to.x ? 1 : -1);
   const N = 40, path = qpts(from.x, from.y, (from.x + to.x) / 2 - swing, Math.min(from.y, to.y) + 60, to.x, to.y, N);
+  const soulShape=(art:string)=>ctx.legendParticles?particleShape(ctx,svg,art):sv(svg,art);
   for (let k = 0; k < n; k++) {
     const d0 = delay + k * 200;
-    const glow = sv(svg, '<g><circle r="18" fill="#7ff0b0" opacity=".22"/><circle r="9" fill="#a8ffcc" opacity=".6"/><circle r="4.4" fill="#effff4"/><circle cx="-3" cy="-2" r="1.2" fill="#0f3a24"/><circle cx="3" cy="-2" r="1.2" fill="#0f3a24"/></g>');
+    const glow = soulShape( '<g><circle r="18" fill="#7ff0b0" opacity=".22"/><circle r="9" fill="#a8ffcc" opacity=".6"/><circle r="4.4" fill="#effff4"/><circle cx="-3" cy="-2" r="1.2" fill="#0f3a24"/><circle cx="3" cy="-2" r="1.2" fill="#0f3a24"/></g>');
     A(ctx, glow, path.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: i === N ? 0 : 1 })), F.fly, d0, 'ease-in-out');
     for (let q = 1, m = room(ctx, 8); q <= m; q++) {
-      const t = sv(svg, `<circle r="${R1(4 - q * 0.35)}" fill="#a8ffcc"/>`);
+      const t = soulShape( `<circle r="${R1(4 - q * 0.35)}" fill="#a8ffcc"/>`);
       A(ctx, t, path.map((p, i) => ({ transform: `translate(${R1(p.x)}px,${R1(p.y)}px)`, opacity: i === N ? 0 : R1(0.8 - q * 0.08) })), F.fly, d0 + q * 45, 'ease-in-out');
     }
   }

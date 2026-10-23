@@ -29,11 +29,11 @@ function clone(template:HTMLElement):HTMLElement {
  return root;
 }
 /** Called before play, while opening the table or after a resize in idle. */
-export function warmSprites(board:HTMLElement,specs:SpriteSpec[]):void {
+export function warmSprites(board:HTMLElement,specs:SpriteSpec[],retain=false):void {
   const perfEnd=perfWorkHook?.('prepare: sprite pool');
   try {
  const bank=bankFor(board),keys=new Set(specs.map(s=>s.key));
- for(const [key,pool]of bank.pools)if(!keys.has(key)&&![...bank.active.values()].some(s=>s.root.dataset.sprite===key)){
+ for(const [key,pool]of bank.pools)if(!retain&&!keys.has(key)&&![...bank.active.values()].some(s=>s.root.dataset.sprite===key)){
   pool.free.forEach(el=>el.remove());pool.template.remove();bank.pools.delete(key);
  }
  for(const spec of specs){

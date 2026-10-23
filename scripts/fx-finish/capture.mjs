@@ -10,9 +10,10 @@ const [beforeDist, afterDist, ...rest] = process.argv.slice(2);
 const selected=rest.filter((s,i)=>!s.startsWith('--')&&rest[i-1]!=='--out');
 const tag=rest.find(s=>s.startsWith('--tag='))?.slice(6);
 if(tag&&!/^[a-z0-9-]+$/i.test(tag))throw Error('Invalid capture tag');
+const width=Number(rest.find(s=>s.startsWith('--width='))?.slice(8)??390),height=Number(rest.find(s=>s.startsWith('--height='))?.slice(9)??844);
 const scenes = selected.length ? selected : ['legend','armada','bottle','idle'];
 // the moments after the press, ms of the clip clock: around the renderWith of each clip and after it
-const MOMENTS = {hit:[800,2000,3200,4200,5200],'idle-compositor':[1000,4600,4800,5000],'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700], lift: [0, 100, 200, 400, 700]};
+const MOMENTS = {hit:[800,2000,3200,4200,5200],'idle-compositor':[1000,4600,4800,5000],'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000,12000],idle:[1000,3000],kraken:[6000,8500,11000,14000],jack:[9000,10500,12000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700], lift: [0, 100, 200, 400, 700]};
 // --out DIR: another task's folder (ui-press: the card that flies from the lifted card of a phone, scene «lift»);
 // --tag=NAME: frames-NAME under fx-finish, so the comparisons of a later part do not overwrite the earlier ones
 const OUT = rest.includes('--out') ? rest[rest.indexOf('--out') + 1] : 'docs/screenshots/fx-finish/'+(tag?'frames-'+tag:'frames');
@@ -39,7 +40,7 @@ async function shoot(dist, port, tag) {
   const browser = await chromium.launch({executablePath:process.env.CHROMIUM_PATH??'/usr/bin/chromium'});
   try {
     for (const scene of scenes) {
-      const page = await browser.newPage({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
+      const page = await browser.newPage({viewport: {width, height}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.clock.install({time: new Date(0)});
@@ -49,12 +50,15 @@ async function shoot(dist, port, tag) {
       await page.addInitScript(() => {
         let seed = 19427;
         Math.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
-        window.fxAnims = [];
+        window.fxAnims = [];window.fxBoardSvg=[];
+        window.fxBirth=new WeakMap();
+        new MutationObserver(records=>{const now=performance.now();for(const r of records)for(const n of r.addedNodes)if(n.nodeType===1){window.fxBirth.set(n,now);for(const el of n.querySelectorAll('*'))window.fxBirth.set(el,now);}}).observe(document,{childList:true,subtree:true});
         window.fxCpu={active:true,start:0,svg:[],renders:[]};
         const controlled = new WeakSet(), state = Object.getOwnPropertyDescriptor(Animation.prototype, 'playState').get;
         Object.defineProperty(Animation.prototype, 'playState', {configurable: true, get() { const s = state.call(this); return s === 'paused' && controlled.has(this) && !this.fxHeld ? 'running' : s; }});
         const native = Element.prototype.animate;
         Element.prototype.animate = function (frames, options) {
+          if(this.closest('svg.fx-svg'))window.fxBoardSvg.push({at:performance.now(),tag:this.tagName,cls:this.getAttribute('class')});
           const a = native.call(this, frames, options);
           a.pause(); controlled.add(a); a.currentTime = 0;
           window.fxAnims.push({a, at: performance.now()});
@@ -72,7 +76,8 @@ async function shoot(dist, port, tag) {
               const dt = now - row.at, end = a.effect?.getComputedTiming().endTime ?? 0;
               if (dt >= end) a.finish(); else a.currentTime = Math.max(0, dt);
             }
-            for (const a of document.getAnimations()) if (a instanceof CSSAnimation) { a.pause(); a.currentTime = 0; }
+            for (const a of document.getAnimations()) if (a instanceof CSSAnimation) { a.pause(); a.currentTime = a.animationName.startsWith('bottle-float-')?now-(window.fxBirth.get(a.effect.target)??now):0; }
+            for(const svg of document.querySelectorAll('svg'))if(svg.querySelector('animate,animateTransform')){svg.pauseAnimations();svg.setCurrentTime(Math.max(0,now-(window.fxBirth.get(svg)??now))/1000);}
           });
         }
       };
@@ -123,6 +128,7 @@ async function shoot(dist, port, tag) {
       writeFileSync(`${OUT}/${scene}-${tag}-clocks.json`,JSON.stringify(sampleClocks,null,1));
       if(errors.length)throw new Error(JSON.stringify(errors));
       if(['armada','bottle','kraken','jack'].includes(scene))await until(()=>page.evaluate(()=>document.body.dataset.fxDone==='1'));
+      writeFileSync(`${OUT}/${scene}-${tag}-native-big-svg.json`,JSON.stringify(await page.evaluate(()=>window.fxBoardSvg),null,1));
       writeFileSync(`${OUT}/${scene}-${tag}-svg.json`,JSON.stringify(await page.evaluate(()=>window.fxCpu.svg),null,1));
       await page.close();
     }

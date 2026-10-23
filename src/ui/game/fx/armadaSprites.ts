@@ -4,6 +4,7 @@ import {boardW, A, gapBox, rnd, room, smokeJet, filters, ignoreFxBudget, particl
 import {perfOff} from '../perf/state';
 import {warmSprites, takeSprite, spriteReady, spriteA, type Sprite, type SpriteSpec} from './sprites';
 import {legendGlintSpec} from './legendGlint';
+import {motionSpecs,motionSignature} from './legendMotionSprites';
 import {legendSpriteSpecs} from './legendSprites';
 import {volleySize,volleySpriteSpecs} from './volleySprites';
 const R1=(n:number)=>Math.round(n*10)/10;
@@ -23,7 +24,7 @@ export function armadaGeometry(ctx:FxCtx){
 const svg=(box:[number,number,number,number],content:string)=>`<svg aria-hidden="true" viewBox="${box.join(' ')}" width="${box[2]}" height="${box[3]}" style="left:${box[0]}px;top:${box[1]}px">${content}</svg>`;
 export function prepareArmadaSprites(ctx:FxCtx):void {
  const {k,key,phone,n}=armadaGeometry(ctx);
- const signature=key+':'+volleySize(ctx);
+ const signature=key+':'+volleySize(ctx)+':'+motionSignature(ctx);
  if(prepared.get(ctx.board)===signature&&spriteReady(ctx.board,key))return;
  const hull=svg([-66,-82,136,100],COMPANY),lit=svg([-66,-82,136,100],LIT);
  const wake=svg([-46*k-16,-4,218*k+24,30],`<path d="M${R1(40*k)} 2 C${R1(70*k)} 4 ${R1(110*k)} 10 ${R1(160*k)} 6 M${R1(40*k)} 6 C${R1(70*k)} 10 ${R1(110*k)} 18 ${R1(160*k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46*k)} 1 q-8 2 -12 6 M${R1(-46*k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>`);
@@ -39,7 +40,7 @@ export function prepareArmadaSprites(ctx:FxCtx):void {
  specs.push({key:'armada-group',html:'',count:4});
  specs.push({key:'armada-haze',html:svg([-160,-70,320,140],'<ellipse cx="0" cy="0" rx="160" ry="70" fill="#e6eaec" opacity=".7"/><ellipse cx="-40" cy="30" rx="120" ry="40" fill="#f2f4f5" opacity=".6"/>'),count:1});
  specs.push({key:'armada-fog',html:svg([-1,-1,2,2],'<defs><radialGradient id="armFog"><stop offset="0" stop-color="#eeebe4" stop-opacity=".8"/><stop offset="1" stop-color="#eeebe4" stop-opacity="0"/></radialGradient></defs><circle r="1" fill="url(#armFog)"/>'),count:14});
- warmSprites(ctx.board,[...specs,legendGlintSpec,...volleySpriteSpecs(ctx),...legendSpriteSpecs()]);
+ warmSprites(ctx.board,[...specs,legendGlintSpec,...volleySpriteSpecs(ctx),...legendSpriteSpecs(),...motionSpecs(ctx)]);
  prepared.set(ctx.board,signature);
 }
 

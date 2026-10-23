@@ -35,8 +35,9 @@ const LEGENDS: Legend[] = [
   { scene: 'kraken', owner: 'Г', effect: `document.querySelectorAll('[data-fx-ship="М"] .fx-cracks .rv').length === 3`, after: 700 },
   // the little ship is in the bottle, the cork comes
   { scene: 'bottle', owner: 'М', effect: `!!document.querySelector('.fx-layer .lg-rock')`, after: 300 },
+  // The compass needle and rays move as HTML sticker wrappers; their SVG art stays static.
   // the compass over «Жемчужина», its needle spins
-  { scene: 'jack', owner: 'Ж', effect: `!!document.querySelector('.fx-layer svg .nd')`, after: 600, from: `!!document.querySelector('[data-fx-instruction]')?.textContent?.includes('тонет')` },
+  { scene: 'jack', owner: 'Ж', effect: `!!document.querySelector('.fx-layer .nd')`, after: 600, from: `!!document.querySelector('[data-fx-instruction]')?.textContent?.includes('тонет')` },
 ];
 const SIZES: [number, number][] = [[1366, 660], [430, 932]];
 
@@ -126,13 +127,13 @@ test.describe('the Legends through ?fxScene', () => {
         await shot(page, l.effect, l.after, `${SHOTS}/e2e-${l.scene}-effect-${size}.png`);
         if (l.scene === 'jack') {
           // A10: the compass of «Джек ускользает» — knurled bezel (96 notches), the degrees (8 numbers), the golden glow with 12 soft rays
-          await page.waitForFunction(() => document.querySelectorAll('.fx-layer svg .ry path').length > 0, null, { timeout: 40_000, polling: 'raf' });
+          await page.waitForFunction(() => document.querySelectorAll('.fx-layer .ry path').length > 0, null, { timeout: 40_000, polling: 'raf' });
           await page.waitForTimeout(300);
           const j = await page.evaluate(() => ({
             knurl: document.querySelectorAll('.fx-layer svg path[stroke="#5e400e"]').length,
-            rays: document.querySelectorAll('.fx-layer svg .ry path').length,
+            rays: document.querySelectorAll('.fx-layer .ry path').length,
             nums: Array.from(document.querySelectorAll('.fx-layer svg text')).filter((t) => /^\d+$/.test(t.textContent || '')).length,
-            needle: document.querySelectorAll('.fx-layer svg .nd').length,
+            needle: document.querySelectorAll('.fx-layer .nd').length,
           }));
           // (the small compass of the card, while it is still there, has its own bezel and degrees: whole multiples)
           expect(j.rays).toBe(12);
