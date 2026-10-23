@@ -8,10 +8,12 @@ import {existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync} from 'n
 
 const [beforeDist, afterDist, ...rest] = process.argv.slice(2);
 const selected=rest.filter(s=>!s.startsWith('--'));
+const tag=rest.find(s=>s.startsWith('--tag='))?.slice(6);
+if(tag&&!/^[a-z0-9-]+$/i.test(tag))throw Error('Invalid capture tag');
 const scenes = selected.length ? selected : ['legend','armada','bottle','idle'];
 // the moments after the press, ms of the clip clock: around the renderWith of each clip and after it
 const MOMENTS = {hit:[800,2000,3200,4200,5200],'idle-compositor':[1000,4600,4800,5000],'idle-motion':[1000,4600,4800,5000],legend:[1000,2200],armada:[900],bottle:[6000,8000],idle:[1000,3000],kraken:[6000],jack:[9000],regroup: [150, 400, 700, 1000, 1600], volley: [800, 2000, 3200, 4200, 5200], card: [300, 900, 1500, 2100, 2700]};
-const OUT = 'docs/screenshots/fx-finish/frames';
+const OUT = 'docs/screenshots/fx-finish/'+(tag?'frames-'+tag:'frames');
 mkdirSync(OUT, {recursive: true});
 // Capture-only hook in generated, unminified temporary builds. Bring canvas to the
 // SAME controlled instant as the native wrappers, instead of the preceding rAF.
