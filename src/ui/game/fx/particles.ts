@@ -142,12 +142,12 @@ export function prepareParticles(board: HTMLElement, smokeDefs?: string): void {
   const perfEnd=perfWorkHook?.('prepare: particle art/bank');
   try {
   if(smokeDefs)void prepareSmokeArt(smokeDefs,devicePixelRatio);
-  if(banks.has(board))return;
+  if(banks.has(board)){prepareSurfaces(banks.get(board)!);return;}
   prepareHtmlParticleArt(innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio);
   prepareWadArt(innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio);
   prepareRingArt(innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio);
-  const b: Bank={board,sprites:new Map(COLORS.map(color=>[color,circleRaster(color)])),surfaces:new Map(),items:[],now:0,last:performance.now(),raf:0,paused,drawn:{},seen:{},peak:0,visible:[],nextId:0,diagnostics:(import.meta.env.DEV||import.meta.env.MODE==='e2e')&&new URLSearchParams(location.search).get('particleProbe')!=='0',w:board.clientWidth,h:board.clientHeight,dpr:innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio,resize:new ResizeObserver(()=>{b.w=board.clientWidth;b.h=board.clientHeight;b.dpr=innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio;}),unsubscribe:()=>{}};
-  banks.set(board,b);b.resize.observe(board);
+  const b: Bank={board,sprites:new Map(COLORS.map(color=>[color,circleRaster(color)])),surfaces:new Map(),items:[],now:0,last:performance.now(),raf:0,paused,drawn:{},seen:{},peak:0,visible:[],nextId:0,diagnostics:(import.meta.env.DEV||import.meta.env.MODE==='e2e')&&new URLSearchParams(location.search).get('particleProbe')!=='0',w:board.clientWidth,h:board.clientHeight,dpr:innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio,resize:new ResizeObserver(()=>prepareSurfaces(b)),unsubscribe:()=>{}};
+  banks.set(board,b);prepareSurfaces(b);b.resize.observe(board);
   b.unsubscribe=subscribePerf(()=>{
     if(!b.items.length)return;
     advance(b);
@@ -207,18 +207,40 @@ export function rememberParticleHost(el: Element,animation: Animation,kf: Keyfra
   const frames=framesOf(kf),list=(hosts.get(el)??[]).filter(a=>a.animation.playState!=='idle'&&a.animation.effect?.getComputedTiming().progress!==null);
   list.push({animation,frames,transforms:frames.some(f=>f.transform!==undefined)?undefined:null,opacity:frames.some(f=>f.opacity!==undefined)?channel(frames,'opacity',Number,1):null,easing:particleEasing(easing)});hosts.set(el,list);
 }
+/** Allocate every screen-sized backing store before a clip, never on its first particle frame.
+ * Detached, display:none canvases have no idle compositing layer. Reuse them after clear/skip.
+ */
+function prepareSurfaces(b: Bank): void {
+  b.w=b.board.clientWidth;b.h=b.board.clientHeight;
+  b.dpr=innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio;
+  const width=Math.ceil(b.w*b.dpr),height=Math.ceil(b.h*b.dpr);
+  for(const level of ['sea','top','front'] as const){
+    let s=b.surfaces.get(level);
+    if(s&&s.canvas.width===width&&s.canvas.height===height)continue;
+    const perfEnd=perfWorkHook?.(s?'prepare: холст: размер':'prepare: холст: создание');
+    try {
+      if(!s){
+        const canvas=document.createElement('canvas');
+        canvas.className='fx-particle-canvas';canvas.dataset.perfParticle='';canvas.dataset.particleLevel=level;
+        canvas.setAttribute('aria-hidden','true');
+        canvas.style.cssText='position:absolute;left:0;top:0;opacity:1;pointer-events:none;will-change:auto;display:none';
+        if(level==='front')canvas.style.zIndex='38';
+        s={canvas,context:canvas.getContext('2d')!,level};b.surfaces.set(level,s);
+      }
+      s.canvas.width=width;s.canvas.height=height;
+      s.canvas.style.width=b.w+'px';s.canvas.style.height=b.h+'px';
+      // Materialize the 2D backing now, rather than leaving the first drawImage to allocate it.
+      s.context.fillRect(0,0,1,1);s.context.clearRect(0,0,width,height);
+    } finally {perfEnd?.();}
+  }
+}
 function surface(b: Bank,level: Level,layer: HTMLElement): Surface {
-  let s=b.surfaces.get(level);
-  const perfEnd=perfWorkHook&&(!s||!s.canvas.isConnected||s.canvas.width!==Math.ceil(b.w*b.dpr)||s.canvas.height!==Math.ceil(b.h*b.dpr))
-    ?perfWorkHook(s?'холст: размер/вставка':'холст: создание'):undefined;
+  const s=b.surfaces.get(level)!;
+  const perfEnd=!s.canvas.isConnected?perfWorkHook?.('холст: вставка'):undefined;
   try {
-  if(!s){const canvas=document.createElement('canvas');canvas.className='fx-particle-canvas';canvas.dataset.perfParticle='';canvas.dataset.particleLevel=level;canvas.setAttribute('aria-hidden','true');canvas.style.cssText='position:absolute;left:0;top:0;opacity:1;pointer-events:none;will-change:auto;display:none';s={canvas,context:canvas.getContext('2d')!,level};b.surfaces.set(level,s);}
-  const {w,h,dpr}=b;
-  if(s.canvas.width!==Math.ceil(w*dpr)||s.canvas.height!==Math.ceil(h*dpr)){s.canvas.width=Math.ceil(w*dpr);s.canvas.height=Math.ceil(h*dpr);s.canvas.style.width=w+'px';s.canvas.style.height=h+'px';}
-  if(level==='front')s.canvas.style.zIndex='38';
-  const host=level==='sea'?b.board.querySelector('.fx-scars')??layer:layer;
-  if(!s.canvas.isConnected){s.context.resetTransform();s.context.clearRect(0,0,s.canvas.width,s.canvas.height);host.append(s.canvas);}
-  if(s.canvas.style.display!=='block')s.canvas.style.display='block';return s;
+    const host=level==='sea'?b.board.querySelector('.fx-scars')??layer:layer;
+    if(!s.canvas.isConnected){s.context.resetTransform();s.context.clearRect(0,0,s.canvas.width,s.canvas.height);host.append(s.canvas);}
+    if(s.canvas.style.display!=='block')s.canvas.style.display='block';return s;
   } finally {perfEnd?.();}
 }
 function ancestorMatrix(host: Element,board: HTMLElement): {matrix: DOMMatrix;alpha: number;live: boolean} {
