@@ -856,10 +856,11 @@ button.star::before {
     margin: 8px 0 0 12px;
     min-height: 20px;
   }
+  /* ui-fixes: 12 px from the right edge, as the tracks — «Души 1/5» never touches the frame of the plank */
   .plank-body > .badges {
     grid-area: badges;
     justify-self: end;
-    margin: 8px 0 0 10px;
+    margin: 8px 12px 0 10px;
   }
   .plank-body > .badges:empty {
     display: none;
