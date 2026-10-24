@@ -1,0 +1,81 @@
+/* Local, window-only faces matching the artboard. Other game typography is unchanged. */
+/* alegreya-latin-500-normal */
+@font-face {
+  font-family: 'Ship Alegreya';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(@fontsource/alegreya/files/alegreya-latin-500-normal.woff2) format('woff2'), url(@fontsource/alegreya/files/alegreya-latin-500-normal.woff) format('woff');
+}
+/* alegreya-latin-700-normal */
+@font-face {
+  font-family: 'Ship Alegreya';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(@fontsource/alegreya/files/alegreya-latin-700-normal.woff2) format('woff2'), url(@fontsource/alegreya/files/alegreya-latin-700-normal.woff) format('woff');
+}
+/* alegreya-latin-400-italic */
+@font-face {
+  font-family: 'Ship Alegreya';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url(@fontsource/alegreya/files/alegreya-latin-400-italic.woff2) format('woff2'), url(@fontsource/alegreya/files/alegreya-latin-400-italic.woff) format('woff');
+}
+/* alegreya-cyrillic-500-normal */
+@font-face {
+  font-family: 'Ship Alegreya';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(@fontsource/alegreya/files/alegreya-cyrillic-500-normal.woff2) format('woff2'), url(@fontsource/alegreya/files/alegreya-cyrillic-500-normal.woff) format('woff');
+}
+/* alegreya-cyrillic-700-normal */
+@font-face {
+  font-family: 'Ship Alegreya';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(@fontsource/alegreya/files/alegreya-cyrillic-700-normal.woff2) format('woff2'), url(@fontsource/alegreya/files/alegreya-cyrillic-700-normal.woff) format('woff');
+}
+/* alegreya-cyrillic-400-italic */
+@font-face {
+  font-family: 'Ship Alegreya';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url(@fontsource/alegreya/files/alegreya-cyrillic-400-italic.woff2) format('woff2'), url(@fontsource/alegreya/files/alegreya-cyrillic-400-italic.woff) format('woff');
+}
+/* alegreya-sc-latin-500-normal */
+@font-face {
+  font-family: 'Ship Alegreya SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(@fontsource/alegreya-sc/files/alegreya-sc-latin-500-normal.woff2) format('woff2'), url(@fontsource/alegreya-sc/files/alegreya-sc-latin-500-normal.woff) format('woff');
+}
+/* alegreya-sc-latin-700-normal */
+@font-face {
+  font-family: 'Ship Alegreya SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(@fontsource/alegreya-sc/files/alegreya-sc-latin-700-normal.woff2) format('woff2'), url(@fontsource/alegreya-sc/files/alegreya-sc-latin-700-normal.woff) format('woff');
+}
+/* alegreya-sc-cyrillic-500-normal */
+@font-face {
+  font-family: 'Ship Alegreya SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(@fontsource/alegreya-sc/files/alegreya-sc-cyrillic-500-normal.woff2) format('woff2'), url(@fontsource/alegreya-sc/files/alegreya-sc-cyrillic-500-normal.woff) format('woff');
+}
+/* alegreya-sc-cyrillic-700-normal */
+@font-face {
+  font-family: 'Ship Alegreya SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(@fontsource/alegreya-sc/files/alegreya-sc-cyrillic-700-normal.woff2) format('woff2'), url(@fontsource/alegreya-sc/files/alegreya-sc-cyrillic-700-normal.woff) format('woff');
+}
