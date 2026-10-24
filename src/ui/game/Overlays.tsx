@@ -11,10 +11,12 @@ import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type TableVie
 import { clearTrace, loadTrace } from './fx/trace';
 import { cardClass, CostBadge, HandCard } from './Hand';
 import { memo } from './memo';
-import { statuses, type Btn } from './Table';
+import { type Btn } from './Table';
 import { CELLS } from './art/cells';
 import { logMarks } from './logBook';
 import { roman, SIDE_LABEL, SPEEDS } from './text';
+import {ShipWindow} from './ship-window/ShipWindow';
+import type {FxStore} from './fx/FxLayer';
 
 /** The windows open now, the last on top: Esc closes the top one only (fix-ui). */
 const ESC: { current: () => void }[] = [];
@@ -138,41 +140,9 @@ export function CardDetail({
   );
 }
 
-export function ShipSheet({ s, data, code, onClose, onDiscard }: { s: GameState; data: GameData; code: string; onClose: () => void; onDiscard: () => void }) {
-  const d = shipData(data, code);
-  const ship = s.ships[code];
-  const legend = cardByCode(data, `${code}-Л`);
-  return (
-    <Sheet title={d.name} onClose={onClose} testid="ship-sheet">
-      <p className="muted">
-        {d.captain} · {SIDE_LABEL[d.side].name}. <i>{d.motto}</i>
-      </p>
-      {statuses(s, data, ship).map((x) => (
-        <p key={x.label} className="status-line">
-          <b>{x.label}:</b> {x.hint}
-        </p>
-      ))}
-      <h3>Особенности</h3>
-      {d.abilities.map((a) => (
-        <p key={a.name}>
-          <b>{a.name}.</b> <RichText html={a.text} />
-        </p>
-      ))}
-      <h3>
-        Легенда «{legend.name}» · {legend.cost} {legend.soul ? `П, ${legend.soul} Д` : 'П'}
-        {ship.legend ? '' : ' — сыграна или ушла из игры'}
-      </h3>
-      <p className={ship.legend ? '' : 'struck'}>
-        <RichText html={legend.text} />
-      </p>
-      <p>
-        <button className="link" onClick={onDiscard}>
-          Сброс: {ship.discard.length} · Колода: {ship.deck.length} · Рука: {ship.hand.length}
-          {ship.plans.length ? ` · Планы: ${ship.plans.length}` : ''}
-        </button>
-      </p>
-    </Sheet>
-  );
+export function ShipSheet({s,data,code,store,onClose,onDiscard}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void}) {
+  useEscape(onClose);
+  return <ShipWindow s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/>;
 }
 
 /** The sea: the current card or, by `code`, any sea card (from the log, from «Тиа Дальма»). */

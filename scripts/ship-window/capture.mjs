@@ -1,0 +1,35 @@
+// Short frame script, not an e2e suite. The game supplies all values; artboards supply the comparison artwork.
+import {chromium,expect} from '@playwright/test';
+import {PNG} from 'pngjs';
+import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+const stage=process.argv[2]??'stage1',url=process.env.SHIP_URL??'http://127.0.0.1:5321/bortom-k-bortu/';
+const out=`docs/screenshots/ship-window/${stage}`;mkdirSync(out,{recursive:true});
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium'}),proof=[];
+try{for(const [w,h]of [[1366,660],[1920,944],...stage==='stage1'?[]:[[430,740]]]){
+ const page=await browser.newPage({viewport:{width:w,height:h},deviceScaleFactor:1}),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(url+'?seed=1&speed=instant&perf=1');
+ for(const id of ['quick-duo','prep-start','placement-done','curtain-ready','placement-done','curtain-ready'])await page.getByTestId(id).click();
+ await page.evaluate(()=>document.fonts.ready);
+ for(const [code,name]of Object.entries({'Ж':'Main','М':'Revenge','И':'Endeavour','Г':'Dutchman'})){
+  await page.getByTestId('plank-'+code).locator('.plank-head').click({position:{x:8,y:8}});
+  const sheet=page.getByTestId('ship-sheet');await expect(sheet).toBeVisible();
+  await page.screenshot({path:`${out}/${name}-${w}x${h}-game.png`});
+  await sheet.screenshot({path:`${out}/${name}-${w}x${h}-window.png`});
+  const record=await sheet.evaluate(el=>{const b=el.getBoundingClientRect();return {ship:el.getAttribute('data-ship-window'),box:{x:b.x,y:b.y,w:b.width,h:b.height},text:el.textContent,overflow:[el.scrollWidth,el.clientWidth,el.scrollHeight,el.clientHeight]}});
+  if(record.box.x<0||record.box.y<0||record.box.x+record.box.w>w+.5||record.box.y+record.box.h>h+.5)throw Error('Window clipped '+name);
+  proof.push({viewport:[w,h],...record,errors:[...errors]});
+  if(errors.length)throw Error(errors.join('\n'));
+  const ref=await browser.newPage({viewport:{width:920,height:640},deviceScaleFactor:1});
+  await ref.route('**/bortom-k-bortu/node_modules/**',route=>route.continue({url:route.request().url().replace('http://127.0.0.1:5319',new URL(url).origin)}));
+  await ref.goto('http://127.0.0.1:5319/artboards/'+(w<=700?'Phone':name)+'.dc.html');await ref.evaluate(async url=>{await import(url+'src/ui/fonts.ts');await document.fonts.ready;},url);
+  await ref.evaluate(()=>{for(const a of document.getAnimations()){a.pause();a.currentTime=0;}});
+  await ref.screenshot({path:`${out}/${name}-${w}x${h}-mockup.png`});await ref.close();
+  const a=PNG.sync.read(readFileSync(`${out}/${name}-${w}x${h}-mockup.png`)),b=PNG.sync.read(readFileSync(`${out}/${name}-${w}x${h}-window.png`)),c=new PNG({width:a.width+b.width+8,height:Math.max(a.height,b.height),fill:true});
+  PNG.bitblt(a,c,0,0,a.width,a.height,0,0);PNG.bitblt(b,c,0,0,b.width,b.height,a.width+8,0);
+  writeFileSync(`${out}/${name}-${w}x${h}-comparison.png`,PNG.sync.write(c));
+  await sheet.getByRole('button',{name:'Закрыть',exact:true}).click();
+ }
+ await page.close();
+}}finally{await browser.close();}
+writeFileSync(`${out}/proof.json`,JSON.stringify(proof,null,1)+'\n');console.log('frames:',proof.length,'; no clipping or page errors');
