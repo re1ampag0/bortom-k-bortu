@@ -256,7 +256,7 @@ test.describe('«Подсказки»', () => {
       // «i» opens the ship card; closing it keeps the target and the Volley panel.
       await page.getByTestId('ship-info-Г').click();
       await expect(page.getByTestId('ship-sheet')).toBeVisible();
-      await page.locator('.sheet .close').first().click();
+      await page.getByTestId('ship-sheet').getByRole('button', {name:'Закрыть',exact:true}).click();
       await expect(page.getByTestId('ship-sheet')).toHaveCount(0);
       await expect(target).toHaveClass(/chosen/);
       await expect(page.getByTestId('fire')).toContainText(/по «Голландцу» · \d+ по Корпусу/);
