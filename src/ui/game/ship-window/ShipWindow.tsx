@@ -13,7 +13,7 @@ import catalogue from './catalogue.json';
 import './fonts.css';
 import './ship-window.css';
 import {prepareShipWindow,shipArt} from './assets';
-import {ShipScene} from './ShipScene';
+import {ShipScene,prepareShipScene} from './ShipScene';
 import {FeatureIcon,Medal} from './Decorations';
 export {prepareShipWindow} from './assets';
 const TRACKS:Track[]=['hull','sails','guns','crew'];
@@ -27,11 +27,11 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
  const frame=useRef<HTMLDivElement>(null),close=useRef<HTMLButtonElement>(null);
  const [ready,setReady]=useState(false);
  useLayoutEffect(()=>{
-  const resize=()=>{const w=window.innerWidth,h=window.visualViewport?.height??window.innerHeight,k=Math.min(1,(w-16)/920,(h-16)/640);frame.current?.style.setProperty('--sw-scale',String(Math.max(.1,k)));};
+  const resize=()=>{const w=window.innerWidth,h=window.visualViewport?.height??window.innerHeight,k=Math.min(1,(w-16)/920,(h-16)/640);frame.current?.style.setProperty('--sw-scale',String(Math.max(.1,k)));frame.current?.style.setProperty('--sw-phone-scale',String(w/390));frame.current?.style.setProperty('--sw-height',h+'px');};
   resize();addEventListener('resize',resize);visualViewport?.addEventListener('resize',resize);
   return()=>{removeEventListener('resize',resize);visualViewport?.removeEventListener('resize',resize);};
  },[]);
- useEffect(()=>{let live=true;setReady(false);void prepareShipWindow(code).then(()=>{if(live)setReady(true);});return()=>{live=false;};},[code]);
+ useEffect(()=>{let live=true;setReady(false);void Promise.all([prepareShipWindow(code),prepareShipScene(code),document.fonts.ready]).then(()=>{if(live)setReady(true);});return()=>{live=false;};},[code]);
  useEffect(()=>{if(!ready)return;const old=document.activeElement as HTMLElement|null;close.current?.focus({preventScroll:true});return()=>{if(old?.isConnected)old.focus({preventScroll:true});};},[ready]);
  const asset=(part:string)=>shipArt(`${name}-${part}`);
  return createPortal(<div className="ship-window-backdrop" onClick={onClose}>
@@ -46,7 +46,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
      </div>
      <button ref={close} className="sw-close" style={st('close')} aria-label="Закрыть" onClick={onClose}><img src={asset('close.svg')} alt=""/></button>
     </header>
-    <img className="sw-body-art" src={asset('body.svg')} alt=""/>
+    <picture className="sw-body-art">{code==='Г'&&<source media="(max-width:700px)" srcSet={shipArt('Phone-body.svg')}/>}<img src={asset('body.svg')} alt=""/></picture>
     <div className="sw-body" style={st('body')}>
      <div className="sw-main" style={st('left')}>
       <p className="sw-motto" style={st('motto')}>{d.motto}</p>
@@ -67,7 +67,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
       </div>)}
       {statuses(shown,data,ship).length>0&&<div className="sw-statuses">{statuses(shown,data,ship).map(x=><span key={x.label} title={x.hint}>{x.label}</span>)}</div>}
      </div>
-     <aside className="sw-legend" aria-label="Легенда">
+     <aside className="sw-legend" aria-label="Легенда"><h2 className="sw-phone-legend-heading" style={st('featureHeading')}>Легенда</h2>
       <article className={`sw-legend-card${ship.legend?'':' sw-legend-spent'}`} style={st('card')}>
        <i className="sw-card-inset"/>
        <div style={st('cardHeader')}><span className="sw-price" style={st('cost')}><b>{legend.soul||legend.cost}</b><span className="sw-price-icon">{legend.soul?<img src={soulIcon} width="13" height="15" alt="Души"/>:<span dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/>}</span></span><span className="sw-card-type">Легенда · {legend.type.toLowerCase()}</span></div>

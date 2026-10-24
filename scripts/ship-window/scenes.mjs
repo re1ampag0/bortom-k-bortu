@@ -3,14 +3,16 @@
 import {chromium} from '@playwright/test';
 import {createHash} from 'node:crypto';
 import {mkdirSync,readFileSync,writeFileSync,existsSync} from 'node:fs';
-const out='src/ui/game/ship-window/art',manifest={};mkdirSync(out,{recursive:true});
+const phone=process.argv.includes('--phone');
+const out='src/ui/game/ship-window/art',manifest=phone?JSON.parse(readFileSync('src/ui/game/ship-window/scenes.json','utf8')):{};mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium'});
 const page=await browser.newPage({viewport:{width:920,height:640}});
 const raster=await browser.newPage({deviceScaleFactor:3});
-try{for(const [code,name]of Object.entries({'Ж':'Main','М':'Revenge','И':'Endeavour','Г':'Dutchman'})){
+try{for(const [code,name]of Object.entries(phone?{'Г-phone':'Phone'}:{'Ж':'Main','М':'Revenge','И':'Endeavour','Г':'Dutchman'})){
+ await page.setViewportSize({width:phone?390:920,height:phone?1360:640});
  await page.goto(`http://127.0.0.1:5319/artboards/${name}.dc.html`);await page.evaluate(()=>Promise.all([...document.images].map(i=>i.decode())));
  const result=await page.evaluate(()=>{
-  const scene=document.querySelector('[class$="-scene"]'),title=scene.querySelector('h1').parentElement.parentElement,close=scene.querySelector('button');
+  const scene=document.querySelector('[class$="-scene"]'),title=document.querySelector('h1').parentElement.parentElement,close=scene.querySelector('button');
   const native=document.getAnimations();native.forEach(a=>{a.pause();a.currentTime=0;});
   const animations=new Map(),assets=[];let id=0;
   for(const a of native){const el=a.effect.target;if(!scene.contains(el)||title.contains(el))continue;
@@ -45,7 +47,7 @@ try{for(const [code,name]of Object.entries({'Ж':'Main','М':'Revenge','И':'End
    }else{
     const s=style(e),w=e.offsetWidth,h=e.offsetHeight;if(!w||!h)return;
     const frames=animations.get(e)?.find(a=>a.frames.some(f=>f.backgroundPositionX!==undefined));
-    if(frames&&frames.name==='d-rain'){
+    if(frames&&/^(d|m)-rain$/.test(frames.name)){
      const pad=64,asset=assets.length;
      assets.push({html:`<div style="position:absolute;left:0;top:0;width:${w+pad*2}px;height:${h+pad*2}px;background-image:${s.backgroundImage};background-size:${s.backgroundSize};background-position:${pad}px ${pad}px"></div>`,w:w+pad*2,h:h+pad*2});
      node.art={asset,x:-pad,y:-pad,w:w+pad*2,h:h+pad*2};node.rain=true;
@@ -137,7 +139,8 @@ try{for(const [code,name]of Object.entries({'Ж':'Main','М':'Revenge','И':'End
   if(n.image){const file=n.image.split('/').pop();const target=`${name}-asset-${file}`;writeFileSync(`${out}/${target}`,readFileSync('docs/mockups/ship-window/assets/'+file));n.image=target;}
   n.children.forEach(link);
  }
- result.tree.forEach(link);result.features.forEach(f=>f.frames.forEach(a=>{a.src=result.assets[a.asset].file;delete a.asset;}));manifest[code]={name,width:914,height:210,tree:result.tree,features:result.features};
+ result.tree.forEach(link);result.features.forEach(f=>f.frames.forEach(a=>{a.src=result.assets[a.asset].file;delete a.asset;}));manifest[code]={name,width:phone?390:914,height:phone?196:210,tree:result.tree,features:result.features};
+ if(phone){const body=await page.evaluate(()=>{const svg=document.querySelector('.m-scene').previousElementSibling.cloneNode(true);svg.querySelectorAll('animate,animateTransform').forEach(e=>e.remove());return new XMLSerializer().serializeToString(svg);});writeFileSync(`${out}/Phone-body.svg`,body);}
  console.log(name,'prepared layers',result.assets.length);
  writeFileSync('src/ui/game/ship-window/scenes.json',JSON.stringify(manifest)+'\n');
 }}finally{await browser.close();}
