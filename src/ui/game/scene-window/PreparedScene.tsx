@@ -6,7 +6,7 @@ import type {SceneCache} from './assets';
 type Art={src:string;x:number;y:number;w:number;h:number};
 type Frame=Keyframe&{computedOffset?:number};
 type Motion={name:string;frames:Frame[];timing:KeyframeAnimationOptions};
-type Layer={id:number;tag:string;cls:string;style:Record<string,string>;anim:Motion[];children:Layer[];art?:Art;image?:string;frames?:Art[];frameTiming?:KeyframeAnimationOptions;particle?:boolean;rain?:boolean;animations?:Frame[];rainTiming?:KeyframeAnimationOptions};
+type Layer={text?:string;id:number;tag:string;cls:string;style:Record<string,string>;anim:Motion[];children:Layer[];art?:Art;image?:string;frames?:Art[];frameTiming?:KeyframeAnimationOptions;particle?:boolean;rain?:boolean;animations?:Frame[];rainTiming?:KeyframeAnimationOptions};
 export type Scene={width:number;height:number;tree:Layer[]};
 const options=(t:KeyframeAnimationOptions):KeyframeAnimationOptions=>({...t,iterations:t.iterations??Infinity});
 const frames=(f:Frame[])=>f.map(({computedOffset:_c,composite:_k,...frame})=>{
@@ -54,6 +54,7 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
    Object.assign(el.style,node.style);
    for(const k of ['backgroundColor','backgroundImage','boxShadow','filter','maskImage','mixBlendMode'])el.style[k as 'filter']='';
    el.style.pointerEvents='none';
+   if(node.text)el.append(document.createTextNode(node.text));
    if(node.art){const img=image(node.art);el.append(img);if(node.rain){el.style.overflow='hidden';own(img,node.animations!,node.rainTiming!);}}
    if(node.image){const img=document.createElement('img');img.src=cache.url(node.image);img.alt='';img.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none';el.append(img);}
    if(node.frames){

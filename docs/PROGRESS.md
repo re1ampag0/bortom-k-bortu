@@ -989,3 +989,7 @@ Typecheck — exit 0. Финальная группа А: 12 прошли / 4 п
 - (ui-press) Прицел: `aimpulse` анимирует `outline-color` планшетов-целей — Paint всего экрана каждый кадр, пока открыт «Заряд»;
   тот же вид — отдельной рамкой с opacity (нужна обёртка планшета). Погода (fx) заново вставляет `<style>` с `@keyframes`
   при смене размера моря — 25–40 мс пересчёта у всех анимированных элементов.
+
+weather-window, этап2: пять сцен подключены через общий PreparedScene;
+кадры и контракт анимаций — docs/screenshots/weather-window/stage2/proof.json.
+Typecheck зелёный. Продолжение — docs/progress/weather-window.md.
