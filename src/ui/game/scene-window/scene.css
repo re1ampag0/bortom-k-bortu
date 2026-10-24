@@ -1,0 +1,5 @@
+.sw-native-scene {position:absolute;left:0;top:0;width:914px;height:210px;overflow:hidden;pointer-events:none;}
+.sw-native-scene:not([data-ready]) {visibility:hidden;}
+.sw-scene-layer {position:absolute;transform-origin:0 0;pointer-events:none;}
+.sw-native-scene img {max-width:none;}
+.sw-particles {position:absolute;left:0;top:0;pointer-events:none;}
