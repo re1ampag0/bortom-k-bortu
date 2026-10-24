@@ -993,3 +993,5 @@ Typecheck — exit 0. Финальная группа А: 12 прошли / 4 п
 weather-window, этап2: пять сцен подключены через общий PreparedScene;
 кадры и контракт анимаций — docs/screenshots/weather-window/stage2/proof.json.
 Typecheck зелёный. Продолжение — docs/progress/weather-window.md.
+weather-window, этап3: ещё шесть сцен, HTML-обрезка волны и корректные центры
+качки SVG-заготовок; typecheck зелёный. Кадры — weather-window/stage3/.
