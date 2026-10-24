@@ -1,7 +1,7 @@
 import {WeatherWindow} from './weather-window/WeatherWindow';
 // Things that appear when needed and go away after (docs/TZ.md, «Принципы стола», п. 1, 8): a card in full,
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
-import { memo as reactMemo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { memo as reactMemo, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import rulesText from '../../../RULES.md?raw';
 import type { LogLine } from '../../engine/log';
 import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engine/state';
@@ -16,7 +16,8 @@ import { type Btn } from './Table';
 import { CELLS } from './art/cells';
 import { logMarks } from './logBook';
 import { roman, SIDE_LABEL, SPEEDS } from './text';
-import {ShipWindow} from './ship-window/ShipWindow';
+import {loadShipWindow} from './scene-window/loadWindows';
+const ShipWindow=lazy(()=>loadShipWindow().then(module=>({default:module.ShipWindow})));
 import type {FxStore} from './fx/FxLayer';
 
 /** The windows open now, the last on top: Esc closes the top one only (fix-ui). */
@@ -143,7 +144,7 @@ export function CardDetail({
 
 export function ShipSheet({s,data,code,store,onClose,onDiscard}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void}) {
   useEscape(onClose);
-  return <ShipWindow s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/>;
+  return <Suspense fallback={null}><ShipWindow s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/></Suspense>;
 }
 
 /** The sea: the current card or, by `code`, any sea card (from the log, from «Тиа Дальма»). */

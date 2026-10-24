@@ -77,13 +77,5 @@
  .sw-soul-exchange {gap:3px;}
 }
 
-/* Local stage state, never a class on .game/body; only while an opaque phone portal covers it. */
-#stage[data-ship-window-covered] {visibility:hidden;}
-#stage[data-ship-window-covered] .perf-panel,
-#stage[data-ship-window-covered] .perf-panel * {visibility:visible;}
-/* Keep the four tiny, already-rasterized glints resident under the opaque sheet.
-   Dropping these clips forces a late repaint on their first sweep after closing. */
-#stage[data-ship-window-covered] .medal-glint-clip,
-#stage[data-ship-window-covered] .medal-glint-clip * {visibility:visible;}
 
 .sw-cells>span>img {display:block;width:100%;height:17px;object-fit:contain;}
