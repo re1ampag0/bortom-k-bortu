@@ -995,3 +995,5 @@ weather-window, этап2: пять сцен подключены через о�
 Typecheck зелёный. Продолжение — docs/progress/weather-window.md.
 weather-window, этап3: ещё шесть сцен, HTML-обрезка волны и корректные центры
 качки SVG-заготовок; typecheck зелёный. Кадры — weather-window/stage3/.
+weather-window, этап4: все17 сцен подключены, ещё шесть сравнений в stage4/;
+typecheck зелёный. Остался этап5 и итоговые проверки.
