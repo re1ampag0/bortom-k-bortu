@@ -8,11 +8,13 @@ import {RichText} from '../../RichText';
 import {roman} from '../text';
 import whistle from './art/whistle.svg';
 import {wxSvg} from '../art/wx';
+import type {FxStore} from '../fx/FxLayer';
+import {WeatherScene} from './WeatherScene';
 import {weatherRows,seaHistory,seaResultLines} from './model';
 import '../scene-window/fonts.css';
 import '../scene-window/scene.css';
 import './weather-window.css';
-export function WeatherWindow({s,data,code,log=[],onClose}:{s:GameState;data:GameData;code?:string;log?:readonly LogLine[];onClose:()=>void}){
+export function WeatherWindow({s,data,code,log=[],store,onClose}:{s:GameState;data:GameData;code?:string;store?:FxStore;log?:readonly LogLine[];onClose:()=>void}){
  const current=s.sea?.current,[selected,setSelected]=useState(code??current),card=selected?seaCardByCode(data,selected):null,frame=useRef<HTMLDivElement>(null);
  useLayoutEffect(()=>{const update=()=>frame.current?.style.setProperty('--ww-scale',String(Math.min(1,(innerWidth-16)/920,((visualViewport?.height??innerHeight)-16)/600)));update();addEventListener('resize',update);visualViewport?.addEventListener('resize',update);return()=>{removeEventListener('resize',update);visualViewport?.removeEventListener('resize',update);};},[]);
  const history=seaHistory(log),entry=[...history].reverse().find(x=>x.code===selected),round=entry?.round??s.round,all=card?.when==='Весь раунд';
@@ -21,7 +23,7 @@ export function WeatherWindow({s,data,code,log=[],onClose}:{s:GameState;data:Gam
  const currentCard=current?seaCardByCode(data,current):null,onTable=currentCard?.when==='Весь раунд'?1:0;
  const view=(<div className="weather-window-backdrop" onClick={onClose}><div className="weather-window-frame" ref={frame}>
  <section className="weather-window" role="dialog" aria-modal="true" aria-label={card?`Море: ${card.name}`:'Море'} data-testid="sea-sheet" onClick={e=>e.stopPropagation()}>
- <header className="ww-scene"><div className="ww-plaque"><small>Море · {card?.when.toLowerCase()}</small><h1>{card?.name??'Море'}</h1><b>{card?.big}</b></div><button className="ww-close" aria-label="Закрыть" onClick={onClose}>×</button></header>
+ <header className="ww-scene">{card&&store&&<WeatherScene name={card.key} store={store}/>}<div className="ww-plaque"><small>Море · {card?.when.toLowerCase()}</small><h1>{card?.name??'Море'}</h1><b>{card?.big}</b></div><button className="ww-close" aria-label="Закрыть" onClick={onClose}>×</button></header>
  {card?<div className="ww-body"><div className="ww-main"><div className="ww-heading"><h2>Что делает</h2><span>{selected!==current?entry?`Карта раунда ${roman(round)}`:'Ещё не открыта':all?`до конца раунда ${roman(round)}`:`сработала в начале раунда ${roman(round)}`}</span></div>
  <div className="ww-rules"><RichText html={card.text}/></div>
  <h2>{all?'Сейчас на столе':'Что изменилось'}</h2>

@@ -147,8 +147,8 @@ export function ShipSheet({s,data,code,store,onClose,onDiscard}:{s:GameState;dat
 }
 
 /** The sea: the current card or, by `code`, any sea card (from the log, from «Тиа Дальма»). */
-export function SeaSheet({s,data,code,log=[],onClose}:{s:GameState;data:GameData;code?:string;log?:readonly LogLine[];onClose:()=>void}){
- useEscape(onClose);return <WeatherWindow s={s} data={data} code={code} log={log} onClose={onClose}/>;
+export function SeaSheet({s,data,code,log=[],store,onClose}:{s:GameState;data:GameData;code?:string;store?:FxStore;log?:readonly LogLine[];onClose:()=>void}){
+ useEscape(onClose);return <WeatherWindow store={store} s={s} data={data} code={code} log={log} onClose={onClose}/>;
 }
 
 export function DiscardSheet({ s, data, seat, onClose }: { s: GameState; data: GameData; seat: string; onClose: () => void }) {
