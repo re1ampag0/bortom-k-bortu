@@ -59,7 +59,7 @@ function press(e: Event): void {
   lastPress={at:performance.now(),name:`${e.type} ${label}`};
   if(run){if(run.presses.length<CAP)run.presses.push(lastPress);else run.dropped++;}
   // ui-press: a press of a button of the table (not of this panel) opens the window «нажатие», from the event's own time
-  if(e.type!=='pointerdown'&&target?.closest('button,[role="button"]')&&!target.closest('.perf-panel'))pressOpen(label,e.timeStamp);
+  if(e.type!=='pointerdown'&&(target?.closest('button,[role="button"]')||e.target instanceof Element&&e.target.closest('.plank-head'))&&!target?.closest('.perf-panel'))pressOpen(label,e.timeStamp);
 }
 function configure(enabled=getPerf().enabled): void {
   perfWorkHook=enabled?work:null;perfPhaseHook=enabled?visual:null;

@@ -2,7 +2,7 @@ import {useEffect,useRef} from 'react';
 import type {FxStore} from '../fx/FxLayer';
 import {prepareSceneImages,shipArt} from './assets';
 import manifest from './scenes.json';
-type Feature={duration:number;frames:{src:string}[]};
+type Feature={duration:number;frames:{src:string;w:number;h:number}[]};
 const features=(manifest as unknown as Record<string,{features:Feature[]}>);
 /** No timers/React state: visibility and the clip store directly pause the native handles. */
 function useDecoration(ref:{current:HTMLSpanElement|null},key:string,ready:boolean,store:FxStore,make:(el:HTMLSpanElement)=>Promise<Animation[]>){
@@ -18,18 +18,18 @@ function useDecoration(ref:{current:HTMLSpanElement|null},key:string,ready:boole
  },[key,ready,store,ref]);
 }
 export function FeatureIcon({code,index,name,ready,store}:{code:string;index:number;name:string;ready:boolean;store:FxStore}){
- const ref=useRef<HTMLSpanElement>(null);
+ const ref=useRef<HTMLSpanElement>(null),width=34*features[code].features[index].frames[0].w/features[code].features[index].frames[0].h;
  useDecoration(ref,code+index,ready,store,async el=>{
   const f=features[code].features[index];await prepareSceneImages(code,f.frames.map(a=>a.src));
   if(!el.isConnected)return [];
-  const handles=f.frames.map((a,i)=>{const img=new Image();img.src=shipArt(a.src);img.alt='';img.dataset.readyFrame='';img.style.cssText='position:absolute;left:0;top:0;width:34px;height:34px;opacity:0';el.append(img);
+  const handles=f.frames.map((a,i)=>{const img=new Image();img.src=shipArt(a.src);img.alt='';img.dataset.readyFrame='';img.style.cssText='position:absolute;left:0;top:0;width:'+width+'px;height:34px;opacity:0';el.append(img);
    return img.animate(Array.from({length:5},(_,q)=>({offset:q/4,opacity:q%4===i?1:0})),{duration:f.duration,iterations:Infinity});
   });el.dataset.ready='1';return handles;
  });
- return <span ref={ref} className="sw-feature-frames"><img className="sw-feature-icon" src={shipArt(`${name}-feature-${index}.svg`)} alt=""/></span>;
+ return <span ref={ref} className="sw-feature-frames" style={{width}}><img style={{width}} className="sw-feature-icon" src={shipArt(`${name}-feature-${index}.svg`)} alt=""/></span>;
 }
 export function Medal({name,alt,ready,store}:{name:string;alt:string;ready:boolean;store:FxStore}){
  const ref=useRef<HTMLSpanElement>(null);
- useDecoration(ref,name,ready,store,async el=>{const img=el.querySelector<HTMLImageElement>('.sw-medal-ray')!;await img.decode();return [img.animate([{offset:0,transform:'translateX(-42.857px) skewX(-18deg)'},{offset:.62,transform:'translateX(-42.857px) skewX(-18deg)'},{offset:.82,transform:'translateX(42.857px) skewX(-18deg)'},{offset:1,transform:'translateX(42.857px) skewX(-18deg)'}],{duration:4200,easing:'ease-in-out',iterations:Infinity})];});
+ useDecoration(ref,name,ready,store,async el=>{const img=el.querySelector<HTMLImageElement>('.sw-medal-ray')!;await img.decode();return [img.animate([{offset:0,transform:'translateX(-42.857px) skewX(-18deg)'},{offset:.62,easing:'ease-in-out',transform:'translateX(-42.857px) skewX(-18deg)'},{offset:.82,transform:'translateX(42.857px) skewX(-18deg)'},{offset:1,transform:'translateX(42.857px) skewX(-18deg)'}],{duration:4200,easing:'linear',iterations:Infinity})];});
  return <span ref={ref} className="sw-medal-wrap"><img className="sw-medal" src={shipArt(`${name}-medal.svg`)} alt={alt}/><span className="sw-medal-clip"><img className="sw-medal-ray" src={shipArt(`${name}-glint.svg`)} alt=""/></span></span>;
 }

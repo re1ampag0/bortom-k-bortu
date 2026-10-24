@@ -15,6 +15,7 @@ const stage=process.argv[2]??'stage1',url=process.env.SHIP_URL??'http://127.0.0.
 const out=`docs/screenshots/ship-window/${stage}`;mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium'}),proof=[];
 try{for(const [w,h]of [[1366,660],[1920,944],...['stage3','final'].includes(stage)?[[430,740]]:[]]){
+ if(stage==='final-motion'&&w!==1366)continue;
  const page=await browser.newPage({viewport:{width:w,height:h},deviceScaleFactor:1}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(url+'?seed=1&speed=instant&perf=0');
@@ -34,7 +35,7 @@ try{for(const [w,h]of [[1366,660],[1920,944],...['stage3','final'].includes(stag
   if(errors.length)throw Error(errors.join('\n'));
   const ref=await browser.newPage({viewport:{width:w<=700?390:920,height:w<=700?1360:640},deviceScaleFactor:1});
   await ref.route('**/bortom-k-bortu/node_modules/**',route=>route.continue({url:route.request().url().replace('http://127.0.0.1:5319',new URL(url).origin)}));
-  await ref.goto('http://127.0.0.1:5319/artboards/'+(w<=700?'Phone':name)+'.dc.html');await ref.addStyleTag({content:referenceFonts});await ref.evaluate(()=>document.fonts.ready);
+  await ref.goto('http://127.0.0.1:5319/artboards/'+(w<=700?'Phone':name)+'.dc.html');await ref.addStyleTag({content:referenceFonts});await ref.evaluate(async()=>{await document.fonts.load('500 13px \"Alegreya SC\"','Корпус Паруса ABC123');await document.fonts.ready;});
   await ref.evaluate(phase=>{for(const a of document.getAnimations()){a.pause();a.currentTime=phase;}},phase);
   await ref.screenshot({path:`${out}/${name}-${w}x${h}-mockup.png`});await ref.close();
   const a=PNG.sync.read(readFileSync(`${out}/${name}-${w}x${h}-mockup.png`)),b=PNG.sync.read(readFileSync(`${out}/${name}-${w}x${h}-window.png`)),c=new PNG({width:a.width+b.width+8,height:Math.max(a.height,b.height),fill:true});

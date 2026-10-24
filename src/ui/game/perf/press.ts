@@ -32,7 +32,7 @@ const STATES: [string, string][] = [
   ['окно решения', '.decision-dock'],
   ['панель в море', '.middle > .dock:not(.sheet-dock)'],
   ['карта', '[data-testid="card-detail"]'],
-  ['окно', '.sheet-backdrop'],
+  ['окно', '.sheet-backdrop, .ship-window-backdrop'],
   ['журнал', '.book-backdrop'],
   ['поднятая карта', '.hand-lift'],
 ];

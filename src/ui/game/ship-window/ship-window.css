@@ -10,7 +10,7 @@
 .sw-medal {width:50px;height:50px;}
 .sw-close img {width:16px;height:16px;pointer-events:none;}
 .sw-track {display:flex;align-items:center;gap:8px;min-width:0;}
-.sw-track-label {font:13px 'Old Standard TT',Georgia,serif;color:#584c3c;min-width:62px;}
+.sw-track-label {font:13px 'Ship Alegreya SC',Georgia,serif;color:#5a4e40;min-width:62px;}
 .sw-track b {margin-left:auto;font:700 17px 'Old Standard TT',Georgia,serif;color:#2e2720;}
 .sw-cells {display:flex;height:17px;flex:none;align-items:center;overflow:hidden;}
 .sw-cells>span {display:inline-flex;flex:none;justify-content:center;}
@@ -81,3 +81,14 @@
  .sw-souls>span:first-child {min-width:62px;}
  .sw-soul-exchange {gap:3px;}
 }
+
+/* Local stage state, never a class on .game/body; only while an opaque phone portal covers it. */
+#stage[data-ship-window-covered] {visibility:hidden;}
+#stage[data-ship-window-covered] .perf-panel,
+#stage[data-ship-window-covered] .perf-panel * {visibility:visible;}
+/* Keep the four tiny, already-rasterized glints resident under the opaque sheet.
+   Dropping these clips forces a late repaint on their first sweep after closing. */
+#stage[data-ship-window-covered] .medal-glint-clip,
+#stage[data-ship-window-covered] .medal-glint-clip * {visibility:visible;}
+
+.sw-cells>span>img {display:block;width:100%;height:17px;object-fit:contain;}

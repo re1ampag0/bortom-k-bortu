@@ -1,0 +1,20 @@
+ref { font: '13px "Alegreya SC", Georgia, serif', transform: 'none' } {
+  fonts: [
+    {
+      familyName: 'Alegreya SC Medium',
+      postScriptName: 'AlegreyaSC-Medium',
+      isCustomFont: true,
+      glyphCount: 6
+    }
+  ]
+}
+game { font: '13px "Ship Alegreya SC", Georgia, serif', transform: 'none' } {
+  fonts: [
+    {
+      familyName: 'Alegreya SC Medium',
+      postScriptName: 'AlegreyaSC-Medium',
+      isCustomFont: true,
+      glyphCount: 6
+    }
+  ]
+}

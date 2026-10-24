@@ -129,7 +129,7 @@ async function phone(page: Page, name: string) {
   await closeSheet(page);
   await page.getByTestId('plank-Ж').locator('.plank-head').click({ position: { x: 8, y: 8 } });
   await expect(page.getByTestId('ship-sheet')).toBeVisible();
-  await page.getByTestId('ship-sheet').getByRole('button', { name: /^Сброс:/ }).click();
+  await page.getByTestId('ship-sheet').getByRole('button', { name: /^Открыть сброс:/ }).click();
   await expectInWindow(page, page.getByTestId('discard'));
   await page.screenshot({ path: `${SHOTS}/${name}-3-discard.png` });
   await closeSheet(page);
@@ -272,7 +272,7 @@ test('laptop 1366×660: the log, the rules and a discard stay wide', async ({ pa
   await page.getByRole('button', { name: 'Правила' }).first().click();
   await wide(page.getByTestId('rules'), '2-rules');
   await page.getByTestId('plank-Ж').locator('.plank-head').click({ position: { x: 8, y: 8 } });
-  await page.getByTestId('ship-sheet').getByRole('button', { name: /^Сброс:/ }).click();
+  await page.getByTestId('ship-sheet').getByRole('button', { name: /^Открыть сброс:/ }).click();
   await wide(page.getByTestId('discard'), '3-discard');
 });
 

@@ -18,7 +18,6 @@ import {FeatureIcon,Medal} from './Decorations';
 export {prepareShipWindow} from './assets';
 const TRACKS:Track[]=['hull','sails','guns','crew'];
 const LABELS:Record<Track,string>={hull:'Корпус',sails:'Паруса',guns:'Пушки',crew:'Команда'};
-const ICONS:Record<Track,keyof typeof CELLS>={hull:'HULL',sails:'SAIL',guns:'GUN',crew:'CREW'};
 const WIDTHS:Record<Track,number>={hull:13,sails:16,guns:24,crew:15};
 export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDiscard}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void}){
  const shown=useSyncExternalStore(store.subscribe,()=>store.shown(s),()=>s),ship=shown.ships[code],d=shipData(data,code),legend=cardByCode(data,`${code}-Л`);
@@ -31,12 +30,18 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
   resize();addEventListener('resize',resize);visualViewport?.addEventListener('resize',resize);
   return()=>{removeEventListener('resize',resize);visualViewport?.removeEventListener('resize',resize);};
  },[]);
- useEffect(()=>{let live=true;setReady(false);void Promise.all([prepareShipWindow(code),prepareShipScene(code),document.fonts.ready]).then(()=>{if(live)setReady(true);});return()=>{live=false;};},[code]);
+ useEffect(()=>{let live=true;setReady(false);void Promise.all([prepareShipWindow(code),prepareShipScene(code),...['700 28px \"Ship Alegreya SC\"','500 14px \"Ship Alegreya SC\"','700 17px \"Ship Alegreya\"','italic 400 17px \"Ship Alegreya\"'].map(font=>document.fonts.load(font,'Корабль Легенда ABC123'))]).then(()=>{if(live)setReady(true);});return()=>{live=false;};},[code]);
+ // The phone sheet is opaque. Cull the covered stage without unmounting Game or changing its state.
+ // The portal and diagnostics remain visible; restore the exact prior attribute on close/rotation.
+ useLayoutEffect(()=>{const stage=document.getElementById('stage');if(!stage)return;const old=stage.getAttribute('data-ship-window-covered'),phone=matchMedia('(max-width:700px)');
+  const update=()=>{if(ready&&phone.matches)stage.setAttribute('data-ship-window-covered','');else if(old===null)stage.removeAttribute('data-ship-window-covered');else stage.setAttribute('data-ship-window-covered',old);};
+  update();phone.addEventListener('change',update);return()=>{phone.removeEventListener('change',update);if(old===null)stage.removeAttribute('data-ship-window-covered');else stage.setAttribute('data-ship-window-covered',old);};
+ },[ready]);
  useEffect(()=>{if(!ready)return;const old=document.activeElement as HTMLElement|null;close.current?.focus({preventScroll:true});return()=>{if(old?.isConnected)old.focus({preventScroll:true});};},[ready]);
  const asset=(part:string)=>shipArt(`${name}-${part}`);
  return createPortal(<div className="ship-window-backdrop" onClick={onClose}>
   <div className="ship-window-frame" ref={frame}>
-   <section className="ship-window" style={{...st('root'),visibility:ready?'visible':'hidden'}} role="dialog" aria-modal="true" aria-label={d.name} data-testid="ship-sheet" data-ship-window={code} onClick={e=>e.stopPropagation()}>
+   {ready&&<section className="ship-window" style={st('root')} role="dialog" aria-modal="true" aria-label={d.name} data-testid="ship-sheet" data-ship-window={code} onClick={e=>e.stopPropagation()}>
     <header className="sw-scene" style={st('scene')} aria-label={`Сцена ${d.name}`}>
      <img className="sw-scene-still" src={asset('scene.png')} alt=""/><ShipScene code={code} ready={ready} store={store}/>
      <div className="sw-plaque" style={st('plaque')}>
@@ -53,7 +58,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
       <div className="sw-tracks" style={st('tracks')}>
        {TRACKS.map(track=><div className="sw-track" key={track} data-sw-track={track}>
         <span className="sw-track-label">{LABELS[track]}</span>
-        <span className="sw-cells" style={{width:d[track]*WIDTHS[track]}} aria-hidden>{Array.from({length:d[track]},(_,i)=><span key={i} style={{width:WIDTHS[track],opacity:i<ship.tracks[track]?1:.22}} dangerouslySetInnerHTML={{__html:CELLS[ICONS[track]]}}/>)}</span>
+        <span className="sw-cells" style={{width:d[track]*WIDTHS[track]}} aria-hidden>{Array.from({length:d[track]},(_,i)=><span key={i} style={{width:WIDTHS[track],opacity:i<ship.tracks[track]?1:.22}} ><img src={shipArt(`track-${track}.svg`)} alt=""/></span>)}</span>
         <b>{ship.tracks[track]}/{d[track]}</b>
        </div>)}
        {d.souls!==undefined&&<div className="sw-souls" data-testid="ship-souls"><span>Души</span><span className="sw-soul-count"><img src={soulIcon} alt=""/>{ship.souls}/{d.souls}</span>
@@ -84,7 +89,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
      <button style={st('discard')} data-testid="ship-discard" onClick={onDiscard} aria-label={`Открыть сброс: ${ship.discard.length} карт`}><img width="22" height="22" src={asset('discard.svg')} alt=""/>Сброс {ship.discard.length}</button>
      {ship.plans.length>0&&<span className="sw-plan-count">Планы {ship.plans.length}</span>}
     </footer>
-   </section>
+   </section>}
   </div>
  </div>,document.body);
 });
