@@ -1,0 +1,39 @@
+.ship-window-backdrop {position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.62);}
+.ship-window-frame {--sw-scale:1;position:relative;width:calc(920px * var(--sw-scale));height:calc(640px * var(--sw-scale));}
+.ship-window {transform:scale(var(--sw-scale));transform-origin:0 0;isolation:isolate;text-align:left;line-height:normal;}
+.ship-window *, .ship-window *::before, .ship-window *::after {box-sizing:content-box;}
+.ship-window h1,.ship-window h2,.ship-window h3 {text-transform:none;letter-spacing:normal;}
+.sw-scene-still {position:absolute;inset:0;width:914px;height:210px;pointer-events:none;}
+.sw-body-art {position:absolute;left:0;top:210px;width:920px;height:430px;pointer-events:none;}
+.sw-rivet {position:absolute;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3c4,#b48a34 60%,#5c4615);pointer-events:none;}
+.sw-rivet-0 {left:5px;top:5px}.sw-rivet-1 {right:5px;top:5px}.sw-rivet-2 {left:5px;bottom:5px}.sw-rivet-3 {right:5px;bottom:5px}
+.sw-medal {width:50px;height:50px;}
+.sw-close img {width:16px;height:16px;pointer-events:none;}
+.sw-track {display:flex;align-items:center;gap:8px;min-width:0;}
+.sw-track-label {font:13px 'Old Standard TT',Georgia,serif;color:#584c3c;min-width:62px;}
+.sw-track b {margin-left:auto;font:700 17px 'Old Standard TT',Georgia,serif;color:#2e2720;}
+.sw-cells {display:flex;height:17px;flex:none;align-items:center;overflow:hidden;}
+.sw-cells>span {display:inline-flex;flex:none;justify-content:center;}
+.sw-cells svg {height:17px;max-width:100%;}
+.sw-feature-icon {display:block;width:38px;height:38px;}
+.sw-legend {flex:none;width:236px;}
+.sw-card-inset {position:absolute;inset:2px;border:1px solid #8a6420;border-radius:8px;pointer-events:none;}
+.sw-card-type {font:700 11px 'Alegreya SC',Georgia,serif;letter-spacing:1px;text-transform:uppercase;color:#8a6420;white-space:nowrap;}
+.sw-price-icon {display:inline-flex;align-items:center;}
+.sw-price-icon svg {width:13px;height:15px;}
+.sw-card-foot {display:flex;align-items:center;justify-content:center;gap:10px;}
+.sw-card-foot::before,.sw-card-foot::after {content:'';width:22px;height:1px;background:currentColor;opacity:.6;}
+.sw-spent-label {position:absolute;inset:auto 0 32px;text-align:center;background:#fbf5e7;color:#9e2b25;font:700 12px 'Alegreya Sans',sans-serif;}
+.sw-legend-spent {opacity:.7;}
+.sw-souls {grid-column:1/-1;display:flex;gap:10px;align-items:center;color:#1f5548;font:13px 'Old Standard TT',Georgia,serif;}
+.sw-soul-count,.sw-soul-exchange {display:inline-flex;gap:3px;align-items:center;white-space:nowrap;}
+.sw-soul-count img,.sw-soul-exchange img {width:16px;height:18px;}
+.sw-soul-exchange svg {width:auto;height:15px;display:block;}
+.sw-soul-exchange strong {font-size:14px;}
+.sw-statuses {display:flex;gap:6px;font-size:12px;}
+.sw-statuses>span {padding:1px 6px;border:1px solid currentColor;border-radius:8px;}
+.sw-plan-count {font-size:13px;}
+@media(prefers-reduced-motion:reduce){.ship-window-backdrop * {animation:none!important;transition:none!important;}}
+
+.ship-window {font-size:16px;}
+.sw-price b {font-size:18px;color:#f6dc8e;}

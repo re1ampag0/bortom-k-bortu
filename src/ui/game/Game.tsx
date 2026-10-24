@@ -51,6 +51,7 @@ import {
 import { MissedSheet, missedLines, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { instantUrl, reducedMotion } from '../start/motion';
+import {prepareShipWindow} from './ship-window/ShipWindow';
 import { FxLayer, useFxPart, useFxQueue, type FxQueue, type FxSnapshot } from './fx/FxLayer';
 import { T } from './fx/timing';
 import { playTurnSound } from '../sound';
@@ -366,6 +367,10 @@ export function Game({
   const canHoldOf = (busy: boolean) => botBusyOf(busy) && !myDecision;
   /** data-fx-busy on the root, set from the snapshot: the CSS of the show follows it without a render of Game. */
   const gameRef = useBusyAttr(fx);
+  useEffect(()=>{
+    const id=setTimeout(()=>{void prepareShipWindow();},0);
+    return()=>clearTimeout(id);
+  },[]);
   useTableBody(curtainSide ? null : 'game');
 
   useEffect(() => {
@@ -1402,7 +1407,7 @@ export function Game({
         />
       )}
       {sheet?.k === 'info' && <CardDetail data={data} code={sheet.code} status={null} buttons={[]} onClose={() => setSheet(sheet.back ? { k: sheet.back } : null)} />}
-      {sheet?.k === 'ship' && <ShipSheet s={view} data={data} code={sheet.code} onClose={() => setSheet(null)} onDiscard={() => setSheet({ k: 'discard', seat: sheet.code })} />}
+      {sheet?.k === 'ship' && <ShipSheet store={fx.store} s={view} data={data} code={sheet.code} onClose={() => setSheet(null)} onDiscard={() => setSheet({ k: 'discard', seat: sheet.code })} />}
       {sheet?.k === 'discard' && <DiscardSheet s={view} data={data} seat={sheet.seat} onClose={() => setSheet(null)} />}
       {sheet?.k === 'sea' && <SeaSheet key={sheet.code ?? ''} s={view} data={data} code={sheet.code} onClose={() => setSheet(sheet.back ? { k: sheet.back } : null)} />}
       {sheet?.k === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}
