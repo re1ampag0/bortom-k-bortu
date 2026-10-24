@@ -1,0 +1,31 @@
+{
+  "entry": {
+    "name": "index-BhMB3SUB.js",
+    "bytes": 1422227,
+    "gzip": 392836
+  },
+  "initialStaticJS": [
+    {
+      "name": "index-BhMB3SUB.js",
+      "bytes": 1422227,
+      "gzip": 392836
+    }
+  ],
+  "deferred": [
+    {
+      "name": "PreparedScene-Bjb8-4h5.js",
+      "bytes": 6203,
+      "gzip": 2977
+    },
+    {
+      "name": "ShipWindow-5IY5mqUn.js",
+      "bytes": 1322695,
+      "gzip": 358906
+    },
+    {
+      "name": "WeatherScene-CmgJsitX.js",
+      "bytes": 8021900,
+      "gzip": 1109509
+    }
+  ]
+}

@@ -20,7 +20,7 @@ import {
 import { sideGenitive, turnSummary } from '../../engine/log';
 import type { MatchRecord, MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
-import { ABILITY, cardByCode, hasAbility, isCaptain, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
+import { ABILITY, cardByCode, hasAbility, isCaptain, seaCardByCode, seatShip, seatsOf, shipData, type Action, type GameState } from '../../engine/state';
 import type { Side } from '../../engine/types';
 import { HIDDEN, viewFor } from '../../engine/view';
 import type { LocalGame } from '../../net/local';
@@ -51,7 +51,7 @@ import {
 import { MissedSheet, missedLines, NetBar, OfferPanel, netDock } from './NetParts';
 import { BannerView, useBanners } from './Banners';
 import { instantUrl, reducedMotion } from '../start/motion';
-import {prepareShipWindow} from './ship-window/ShipWindow';
+import {prepareInfoWindows} from './scene-window/loadWindows';
 import { FxLayer, useFxPart, useFxQueue, type FxQueue, type FxSnapshot } from './fx/FxLayer';
 import { T } from './fx/timing';
 import { playTurnSound } from '../sound';
@@ -368,8 +368,16 @@ export function Game({
   /** data-fx-busy on the root, set from the snapshot: the CSS of the show follows it without a render of Game. */
   const gameRef = useBusyAttr(fx);
   useEffect(()=>{
-    const id=setTimeout(()=>{void prepareShipWindow();},0);
-    return()=>clearTimeout(id);
+    let alive=true,idle:number|undefined,timer:number|undefined;
+    const warm=()=>{
+      if(!alive)return;
+      if(fx.store.get().busy){timer=window.setTimeout(schedule,500);return;}
+      const key=s.sea?.current?seaCardByCode(data,s.sea.current).key:undefined;
+      void prepareInfoWindows(key).catch(()=>{}); // An idle failure must not interrupt the game.
+    };
+    const schedule=()=>{if(typeof window.requestIdleCallback==='function')idle=window.requestIdleCallback(warm);else timer=window.setTimeout(warm,1500);};
+    schedule();
+    return()=>{alive=false;if(idle!==undefined)window.cancelIdleCallback(idle);if(timer!==undefined)clearTimeout(timer);};
   },[]);
   useTableBody(curtainSide ? null : 'game');
 

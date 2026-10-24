@@ -1012,3 +1012,10 @@ Game0, SVG-motion0; после закрытия Paint0 и анимаций ок�
 Подробности/реплики/ограничения: docs/progress/weather-window.md; доказательства:
 docs/screenshots/weather-window/{final,checks}/. Реальный iPhone/WebKit и CI
 ещё не проверены, PR создаёт пользователь.
+
+weather-window, перед слиянием: scenes.json обоих окон и catalogue.json кораблей
+вынесены из стартового JS динамическими импортами. Прогрев в idle стола,
+тот же decode-кэш. npm run build: основной JS10705.42→1353.80кБ,
+gzip1866.50→392.84кБ; тяжёлые chunks отсутствуют в начальном статическом графе.
+Typecheck зелёный; адресные e2e двух окон на production-сборке5/5.
+Доказательства: docs/screenshots/weather-window/bundle/ и progress/weather-window.md.
