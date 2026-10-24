@@ -1,0 +1,21 @@
+typecheck
+> tsc -p tsconfig.json && tsc -p tsconfig.node.json
+
+npm test (one full run)
+ Test Files  64 passed (64)
+      Tests  695 passed (695)
+
+weather phone after clipping fix
+  1 passed (15.4s)
+
+ship window regression
+  3 passed (48.5s)
+
+perf-guard, built e2e site
+  1 passed (55.9s)
+
+weather-window final run (both viewports)
+  2 passed (55.2s)
+
+Final rebuilt gradients: 12 frame records, page errors 0.
+Final measurement: 18 rows; visible Layout/Paint/Game/SVG = 0, large visible layers = 3; closed Paint/window animations = 0 (six scenes).

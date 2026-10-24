@@ -35,7 +35,7 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
  const ref=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   const element=ref.current;if(!element||!ready)return;const host:HTMLDivElement=element;
-  let live=true,raf=0,elapsed=0,last=performance.now(),running=false,intersecting=false;
+  let live=true,raf=0,elapsed=0,last=performance.now(),running=false,intersecting=false,capturing=false;
   const animations:Animation[]=[],particles:{node:Layer;chain:Layer[];image:HTMLImageElement;level:number}[]=[];
   const surfaces=new Map<number,{canvas:HTMLCanvasElement;context:CanvasRenderingContext2D}>();
   let observer:IntersectionObserver|undefined,unsubscribe:(()=>void)|undefined;
@@ -83,7 +83,7 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
    }
   }
   function tick(now:number){raf=0;if(!running)return;elapsed+=Math.min(50,Math.max(0,now-last));last=now;draw(elapsed);raf=requestAnimationFrame(tick);}
-  function update(){const next=live&&intersecting&&!document.hidden&&!store.get().busy&&!reduced.matches;
+  function update(){const next=!capturing&&live&&intersecting&&!document.hidden&&!store.get().busy&&!reduced.matches;
    if(next===running)return;running=next;last=performance.now();
    for(const a of animations)next?a.play():a.pause();
    if(next&&particles.some(p=>p.level>=0))raf=requestAnimationFrame(tick);else stop();
@@ -92,7 +92,7 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
    if(!live)return;const fragment=document.createDocumentFragment();for(const n of scene.tree){const el=build(n,[]);if(el)fragment.append(el);}host.append(fragment);host.dataset.ready='1';host.parentElement?.setAttribute('data-scene-live','');
    observer=new IntersectionObserver(entries=>{intersecting=entries[0]?.isIntersecting??false;update();});observer.observe(host);
    document.addEventListener('visibilitychange',update);reduced.addEventListener('change',update);unsubscribe=store.subscribe(update);draw(0);
-   if(import.meta.env.DEV||import.meta.env.MODE==='e2e')Object.defineProperty(host,'captureScene',{configurable:true,value:(time:number)=>{running=false;stop();for(const a of animations){a.pause();a.currentTime=time;}draw(time);}});
+   if(import.meta.env.DEV||import.meta.env.MODE==='e2e')Object.defineProperty(host,'captureScene',{configurable:true,value:(time:number)=>{capturing=true;running=false;stop();for(const a of animations){a.pause();a.currentTime=time;}draw(time);}});
   });
   return()=>{live=false;running=false;stop();observer?.disconnect();unsubscribe?.();document.removeEventListener('visibilitychange',update);reduced.removeEventListener('change',update);animations.forEach(a=>a.cancel());host.replaceChildren();host.removeAttribute('data-ready');host.parentElement?.removeAttribute('data-scene-live');};
  },[cacheKey,ready,store,narrow,scene,cache]);
