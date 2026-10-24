@@ -1,4 +1,4 @@
-import {useEffect,useRef} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import type {FxStore} from '../fx/FxLayer';
 import {particleEasing} from '../fx/particles';
 import {prepareSceneImages,sceneImage,shipArt} from './assets';
@@ -14,6 +14,7 @@ const frames=(f:Frame[])=>f.map(({computedOffset:_c,composite:_k,...frame})=>{
  if(Object.keys(frame).some(k=>!['offset','easing','transform','opacity'].includes(k)))throw Error('Unsupported ship scene animation');return frame;
 });
 function urls(nodes:Layer[]):string[]{return nodes.flatMap(n=>[...n.art?[n.art.src]:[],...n.image?[n.image]:[],...(n.frames??[]).map(a=>a.src),...urls(n.children)]);}
+export function prepareShipScene(code:string,phone=innerWidth<=700){const scene=scenes[phone&&code==='Г'?'Г-phone':code];return prepareSceneImages(code,urls(scene.tree));}
 const px=(v:string|undefined)=>parseFloat(v??'0')||0;
 function matrix(value:string|undefined,w:number,h:number){
  if(!value||value==='none')return new DOMMatrix();
@@ -32,10 +33,11 @@ function sample(anim:Motion,time:number){
 }
 /** One owner, native wrapper clocks + one shared particle rAF. Cleanup always cancels both. */
 export function ShipScene({code,ready,store}:{code:string;ready:boolean;store:FxStore}){
- const ref=useRef<HTMLDivElement>(null);
+ const ref=useRef<HTMLDivElement>(null),[phone,setPhone]=useState(()=>innerWidth<=700);
+ useEffect(()=>{const q=matchMedia('(max-width:700px)'),change=()=>setPhone(q.matches);q.addEventListener('change',change);return()=>q.removeEventListener('change',change);},[]);
  useEffect(()=>{
   const element=ref.current;if(!element||!ready)return;const host:HTMLDivElement=element;
-  const scene=scenes[code];let live=true,raf=0,elapsed=0,last=performance.now(),running=false,intersecting=false;
+  const scene=scenes[phone&&code==='Г'?'Г-phone':code];let live=true,raf=0,elapsed=0,last=performance.now(),running=false,intersecting=false;
   const animations:Animation[]=[],particles:{node:Layer;chain:Layer[];image:HTMLImageElement;level:number}[]=[];
   const surfaces=new Map<number,{canvas:HTMLCanvasElement;context:CanvasRenderingContext2D}>();
   let observer:IntersectionObserver|undefined,unsubscribe:(()=>void)|undefined;
@@ -94,6 +96,6 @@ export function ShipScene({code,ready,store}:{code:string;ready:boolean;store:Fx
    if(import.meta.env.DEV||import.meta.env.MODE==='e2e')Object.defineProperty(host,'captureScene',{configurable:true,value:(time:number)=>{running=false;stop();for(const a of animations){a.pause();a.currentTime=time;}draw(time);}});
   });
   return()=>{live=false;running=false;stop();observer?.disconnect();unsubscribe?.();document.removeEventListener('visibilitychange',update);reduced.removeEventListener('change',update);animations.forEach(a=>a.cancel());host.replaceChildren();host.removeAttribute('data-ready');host.parentElement?.removeAttribute('data-scene-live');};
- },[code,ready,store]);
- return <div ref={ref} className="sw-native-scene" aria-hidden="true"/>;
+ },[code,ready,store,phone]);
+ return <div ref={ref} className="sw-native-scene" data-mobile-art={phone&&code==='Г'?'':undefined} aria-hidden="true"/>;
 }

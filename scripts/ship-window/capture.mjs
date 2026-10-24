@@ -17,20 +17,22 @@ const browser=await chromium.launch({executablePath:'/usr/bin/chromium'}),proof=
 try{for(const [w,h]of [[1366,660],[1920,944],...['stage3','final'].includes(stage)?[[430,740]]:[]]){
  const page=await browser.newPage({viewport:{width:w,height:h},deviceScaleFactor:1}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- await page.goto(url+'?seed=1&speed=instant&perf=1');
+ await page.goto(url+'?seed=1&speed=instant&perf=0');
  for(const id of ['quick-duo','prep-start','placement-done','curtain-ready','placement-done','curtain-ready'])await page.getByTestId(id).click();
  await page.evaluate(()=>document.fonts.ready);
  for(const [code,name]of Object.entries({'Ж':'Main','М':'Revenge','И':'Endeavour','Г':'Dutchman'})){
   await page.getByTestId('plank-'+code).locator('.plank-head').click({position:{x:8,y:8}});
-  const sheet=page.getByTestId('ship-sheet');await expect(sheet).toBeVisible();
+  const sheet=page.getByTestId('ship-sheet');await expect(sheet).toBeVisible();await page.evaluate(()=>document.fonts.ready);
   if(stage!=='stage1'){await page.waitForSelector('.sw-native-scene[data-ready]');await expect(page.locator('.sw-feature-frames[data-ready]')).toHaveCount(2);await page.evaluate(phase=>{document.querySelector('.sw-native-scene').captureScene?.(phase);for(const a of document.querySelector('[data-testid=ship-sheet]').getAnimations({subtree:true})){a.pause();a.currentTime=phase;}},phase);}
   await page.screenshot({path:`${out}/${name}-${w}x${h}-game.png`});
-  await sheet.screenshot({path:`${out}/${name}-${w}x${h}-window.png`});
-  const record=await sheet.evaluate(el=>{const b=el.getBoundingClientRect();return {ship:el.getAttribute('data-ship-window'),box:{x:b.x,y:b.y,w:b.width,h:b.height},text:el.textContent,animations:el.getAnimations({subtree:true}).map(a=>({tag:a.effect.target.tagName,properties:[...new Set(a.effect.getKeyframes().flatMap(f=>Object.keys(f)))].filter(k=>!['offset','computedOffset','easing','composite'].includes(k))})),overflow:[el.scrollWidth,el.clientWidth,el.scrollHeight,el.clientHeight]}});
+  if(w<=700){const height=await sheet.evaluate(e=>e.scrollHeight);await page.setViewportSize({width:w,height});await page.locator('.ship-window-frame').evaluate(e=>e.scrollTop=0);await page.evaluate(phase=>{document.querySelector('.sw-native-scene').captureScene?.(phase);for(const a of document.querySelector('[data-testid=ship-sheet]').getAnimations({subtree:true})){a.pause();a.currentTime=phase;}},phase);await sheet.screenshot({path:`${out}/${name}-${w}x${h}-window.png`});await page.setViewportSize({width:w,height:h});}
+  else await sheet.screenshot({path:`${out}/${name}-${w}x${h}-window.png`});
+  if(w<=700){await sheet.getByTestId('ship-discard').scrollIntoViewIfNeeded();await page.screenshot({path:`${out}/${name}-${w}x${h}-bottom.png`});await page.locator('.ship-window-frame').evaluate(e=>e.scrollTop=0);}
+  const record=await sheet.evaluate(el=>{const b=(innerWidth<=700?el.parentElement:el).getBoundingClientRect();return {ship:el.getAttribute('data-ship-window'),box:{x:b.x,y:b.y,w:b.width,h:b.height},text:el.textContent,animations:el.getAnimations({subtree:true}).map(a=>({tag:a.effect.target.tagName,properties:[...new Set(a.effect.getKeyframes().flatMap(f=>Object.keys(f)))].filter(k=>!['offset','computedOffset','easing','composite'].includes(k))})),overflow:[el.scrollWidth,el.clientWidth,el.scrollHeight,el.clientHeight]}});
   if(record.box.x<0||record.box.y<0||record.box.x+record.box.w>w+.5||record.box.y+record.box.h>h+.5)throw Error('Window clipped '+name);
   proof.push({viewport:[w,h],...record,errors:[...errors]});
   if(errors.length)throw Error(errors.join('\n'));
-  const ref=await browser.newPage({viewport:{width:920,height:640},deviceScaleFactor:1});
+  const ref=await browser.newPage({viewport:{width:w<=700?390:920,height:w<=700?1360:640},deviceScaleFactor:1});
   await ref.route('**/bortom-k-bortu/node_modules/**',route=>route.continue({url:route.request().url().replace('http://127.0.0.1:5319',new URL(url).origin)}));
   await ref.goto('http://127.0.0.1:5319/artboards/'+(w<=700?'Phone':name)+'.dc.html');await ref.addStyleTag({content:referenceFonts});await ref.evaluate(()=>document.fonts.ready);
   await ref.evaluate(phase=>{for(const a of document.getAnimations()){a.pause();a.currentTime=phase;}},phase);
