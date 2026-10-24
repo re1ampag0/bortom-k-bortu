@@ -17,7 +17,7 @@ try{for(const [code,name]of Object.entries(boards)){
   const scene=document.querySelector('[class*="-scene"]'),title=[...scene.children].find(e=>e.contains(document.querySelector('h1')))??document.querySelector('h1').parentElement.parentElement,close=scene.querySelector('button');
   const native=document.getAnimations();native.forEach(a=>{a.pause();a.currentTime=0;});
   const animations=new Map(),assets=[];let id=0;const padding=weather?24:8;
-  for(const a of native){const el=a.effect.target;if(!scene.contains(el)||title.contains(el))continue;
+  for(const a of native){const el=a.effect.target;if(!scene.contains(el)||(scene.contains(title)&&title.contains(el)))continue;
    const list=animations.get(el)??[];list.push({name:a.animationName,frames:a.effect.getKeyframes(),timing:a.effect.getTiming(),native:a});animations.set(el,list);
   }
   const style=e=>{const s=getComputedStyle(e);return Object.fromEntries(['position','display','left','top','right','bottom','width','height','z-index','overflow-x','overflow-y','border-radius','opacity','transform','transform-origin','background-color','background-image','background-size','background-position','background-repeat','box-shadow','filter','mask-image','mask-size','mask-repeat','mix-blend-mode','box-sizing','font-family','font-size','font-weight','font-style','line-height','letter-spacing','text-align','text-shadow','color'].map(k=>[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase()),s.getPropertyValue(k)]));};
@@ -32,7 +32,7 @@ try{for(const [code,name]of Object.entries(boards)){
     if(neutral){clones[q].removeAttribute('transform');clones[q].style.transform='none';clones[q].style.opacity='1';}
     clones[q].querySelectorAll('animate,animateTransform,animateMotion,script').forEach(e=>e.remove());
    }
-   const defs=[...svg.querySelectorAll('defs')].map(e=>e.outerHTML).join('');
+   const defs=[...(weather?document:svg).querySelectorAll('defs')].map(e=>e.outerHTML).join('');
    return `<svg xmlns="http://www.w3.org/2000/svg" width="${bounds.w}" height="${bounds.h}" viewBox="${bounds.x} ${bounds.y} ${bounds.w} ${bounds.h}">${defs}${clones.map(c=>new XMLSerializer().serializeToString(c)).join('')}</svg>`;
   };
   function art(e,node,svg){
@@ -116,7 +116,7 @@ try{for(const [code,name]of Object.entries(boards)){
    if(weather&&!isSvg){
     const at=layout(e),parent=layout(e.parentElement);node.style.position='absolute';node.style.left=(at.x-parent.x)+'px';node.style.top=(at.y-parent.y)+'px';node.style.width=e.offsetWidth+'px';node.style.height=e.offsetHeight+'px';node.style.boxSizing='border-box';
    }else if(weather&&root&&s.position!=='absolute'){const at=layout(e),parent=layout(e.parentElement);node.style.position='absolute';node.style.left=(at.x-parent.x)+'px';node.style.top=(at.y-parent.y)+'px';}
-   node.particle=!!node.art&&!!node.anim.length&&/(?:tw$|spk$|shoot$|spray$|splash$|glit$|wisp$|drip$|port$|ember$|farsm$|rise$|puff$|crown$|ring$|drop$|mote$|spark$|shard$|ember$|smk$|dust$|fly$)/.test(node.anim[0].name)&&node.art.w<160&&node.art.h<180;
+   node.particle=!!node.art&&!!node.anim.length&&/(?:tw$|spk$|shoot$|spray$|splash$|glit$|wisp$|drip$|port$|ember$|farsm$|rise$|puff$|crown$|ring$|drop$|mote$|spark$|shard$|ember$|smk$|dust$|fly$|glint$|bub$|emb$|msmoke$|mist$|c2-s[0-7]$|cv-s[A-D]$|cv-spl$|cv-sfoam$|cv-sh[0-9]$)/.test(node.anim[0].name)&&node.art.w<160&&node.art.h<180;
    return node;
   }
   if(weather)for(const [el,list]of animations)for(const a of list){
