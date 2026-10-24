@@ -5,7 +5,7 @@ const base=new Map<string,Promise<void>>();
 export function prepareShipWindow(code?:string):Promise<void>{
  const names=code?[(catalogue as Record<string,{name:string}>)[code].name]:Object.values(catalogue).map(x=>x.name);
  if(!code||code==='Г')names.push('Phone');
- return Promise.all(Object.entries(files).filter(([key])=>names.some(name=>key.startsWith('./art/'+name+'-'))&&!key.includes('-live-')&&!key.includes('-asset-')).map(([,url])=>{
+ return Promise.all(Object.entries(files).filter(([key])=>(key.startsWith('./art/track-')||names.some(name=>key.startsWith('./art/'+name+'-')))&&!key.includes('-live-')&&!key.includes('-asset-')).map(([,url])=>{
   let p=base.get(url);if(!p){const image=new Image();image.src=url;p=image.decode().then(()=>{});base.set(url,p);}return p;
  })).then(()=>{});
 }

@@ -102,7 +102,8 @@ try{for(const [code,name]of Object.entries(phone?{'Г-phone':'Phone'}:{'Ж':'Mai
   for(const h of document.querySelectorAll('h3')){
    const svg=h.parentElement.parentElement.querySelector('svg');if(!svg)continue;
    const actions=native.filter(a=>svg.contains(a.effect.target)),vb=svg.viewBox.baseVal,frames=[];
-   const duration=Number(actions[0]?.effect.getTiming().duration??1400);
+   const primary=actions[0]?.effect.getTiming();
+   const duration=Number(primary?.duration??1400)*(primary?.direction.startsWith('alternate')?2:1);
    for(let f=0;f<4;f++){
     actions.forEach(a=>a.currentTime=duration*f/4);
     const box={x:vb.x,y:vb.y,w:vb.width,h:vb.height},asset=assets.length;
