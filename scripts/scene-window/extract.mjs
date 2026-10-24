@@ -77,7 +77,7 @@ try{for(const [code,name]of Object.entries(boards)){
   const hasDesc=e=>[...animations.keys()].some(el=>el!==e&&e.contains(el));
   function walk(e,svg){
    if(e===title||e===close||['defs','title','desc','style','script'].includes(e.tagName))return null;
-   const isSvg=e.namespaceURI==='http://www.w3.org/2000/svg',root=isSvg&&e.tagName==='svg';
+   const isSvg=e.namespaceURI==='http://www.w3.org/2000/svg',root=isSvg&&e.tagName==='svg';if(isSvg&&!(e instanceof SVGGraphicsElement))return null;
    const s=style(e),anim=(animations.get(e)??[]).map(({native,...a})=>a),node={id:++id,tag:e.tagName,cls:e.getAttribute('class')??'',style:s,anim,children:[]};
    if(root){
     const vb=e.viewBox.baseVal,w=parseFloat(s.width)||e.width.baseVal.value,h=parseFloat(s.height)||e.height.baseVal.value;
@@ -95,12 +95,18 @@ try{for(const [code,name]of Object.entries(boards)){
     node.children=[inner];node.svgRoot=true;
    }else if(isSvg){
     node.style={position:'absolute',left:'0px',top:'0px',width:'0px',height:'0px',transform:s.transform,transformOrigin:s.transformOrigin,opacity:s.opacity,overflowX:'visible',overflowY:'visible'};
-    if(weather&&anim.some(a=>/^th-fl[123]$/.test(a.name))){
-     const actions=animations.get(e),duration=Number(actions[0].timing.duration)*2,b=e.getBBox(),box={x:Math.floor(b.x-24),y:Math.floor(b.y-24),w:Math.ceil(b.width+48),h:Math.ceil(b.height+48)};
+    if(weather&&getComputedStyle(e).transformBox==='fill-box'){const b=e.getBBox(),o=s.transformOrigin.split(' ').map(parseFloat);node.style.transformOrigin=(b.x+o[0])+'px '+(b.y+o[1])+'px';}
+    const clipId=e.getAttribute('clip-path')?.match(/#([^)]*)/)?.[1],clip=clipId?svg.querySelector('[id="'+clipId+'"]'):null;
+    if(weather&&((clip&&clip.querySelector('path')&&hasDesc(e))||anim.some(a=>/^th-fl[123]$/.test(a.name)))){
+     const actions=[...animations].filter(([el])=>el===e||e.contains(el)).flatMap(([,a])=>a),duration=Math.max(...actions.map(a=>Number(a.timing.duration)*(String(a.timing.direction).startsWith('alternate')?2:1))),b=e.getBBox(),box={x:Math.floor(b.x-24),y:Math.floor(b.y-24),w:Math.ceil(b.width+48),h:Math.ceil(b.height+48)};
      node.frames=[];node.frameTiming={duration,iterations:null,fill:'both',easing:'linear'};node.anim=[];node.style.transform='none';node.style.opacity='1';
      for(let f=0;f<4;f++){actions.forEach(a=>a.native.currentTime=duration*f/4);const asset=assets.length;assets.push({svg:svgStatic(e,svg,box,false),w:box.w,h:box.h});node.frames.push({asset,...box});}actions.forEach(a=>a.native.currentTime=0);
     }else if(hasDesc(e)){for(const child of e.children){const c=walk(child,svg);if(c)node.children.push(c);}}
     else art(e,node,svg);
+    if(weather&&clip?.querySelector('rect')&&node.children.length){
+     const rect=clip.querySelector('rect'),x=Number(rect.getAttribute('x')),y=Number(rect.getAttribute('y')),w=Number(rect.getAttribute('width')),h=Number(rect.getAttribute('height')),children=node.children;
+     node.children=[{id:++id,tag:'clip',cls:'',style:{position:'absolute',left:x+'px',top:y+'px',width:w+'px',height:h+'px',overflowX:'hidden',overflowY:'hidden'},anim:[],children:[{id:++id,tag:'clip-content',cls:'',style:{position:'absolute',left:-x+'px',top:-y+'px',width:'0px',height:'0px',overflowX:'visible',overflowY:'visible'},anim:[],children}]}];
+    }
    }else{
     if(e.children.length){if(s.backgroundImage!=='none'||s.backgroundColor!=='rgba(0, 0, 0, 0)')art(e,node,null);for(const child of e.children){const c=walk(child,null);if(c)node.children.push(c);}}
     else if(weather&&e.textContent.trim()){node.text=e.textContent;for(const side of ['Left','Right','Top','Bottom'])node.style['padding'+side]=(parseFloat(getComputedStyle(e)['padding'+side])+parseFloat(getComputedStyle(e)['border'+side+'Width']))+'px';}else art(e,node,null);
