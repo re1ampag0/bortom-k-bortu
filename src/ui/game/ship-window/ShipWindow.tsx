@@ -10,17 +10,12 @@ import {SIDE_LABEL} from '../text';
 import type {FxStore} from '../fx/FxLayer';
 import {statuses} from '../Table';
 import catalogue from './catalogue.json';
+import './fonts.css';
 import './ship-window.css';
-const files=import.meta.glob('./art/*',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
-export const shipArt=(name:string)=>files['./art/'+name];
-const decoded=new Map<string,Promise<void>>();
-function decode(url:string){
- let p=decoded.get(url);if(!p){const image=new Image();image.src=url;p=image.decode().then(()=>{});decoded.set(url,p);}return p;
-}
-export function prepareShipWindow(code?:string):Promise<void>{
- const names=code?[(catalogue as Record<string,{name:string}>)[code].name]:Object.values(catalogue).map(x=>x.name);
- return Promise.all(Object.entries(files).filter(([key])=>names.some(name=>key.startsWith('./art/'+name+'-'))).map(([,url])=>decode(url))).then(()=>{});
-}
+import {prepareShipWindow,shipArt} from './assets';
+import {ShipScene} from './ShipScene';
+import {FeatureIcon,Medal} from './Decorations';
+export {prepareShipWindow} from './assets';
 const TRACKS:Track[]=['hull','sails','guns','crew'];
 const LABELS:Record<Track,string>={hull:'Корпус',sails:'Паруса',guns:'Пушки',crew:'Команда'};
 const ICONS:Record<Track,keyof typeof CELLS>={hull:'HULL',sails:'SAIL',guns:'GUN',crew:'CREW'};
@@ -28,7 +23,7 @@ const WIDTHS:Record<Track,number>={hull:13,sails:16,guns:24,crew:15};
 export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDiscard}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void}){
  const shown=useSyncExternalStore(store.subscribe,()=>store.shown(s),()=>s),ship=shown.ships[code],d=shipData(data,code),legend=cardByCode(data,`${code}-Л`);
  const design=(catalogue as Record<string,{name:string;styles:Record<string,Record<string,string>>}>)[code],name=design.name;
- const st=(key:string)=>design.styles[key] as CSSProperties;
+ const st=(key:string):CSSProperties=>{const style={...design.styles[key]} as CSSProperties;if(String(style.fontFamily).includes('Alegreya SC'))style.fontFamily="'Ship Alegreya SC',Georgia,serif";else if(style.fontFamily==="Alegreya, Georgia, serif")style.fontFamily="'Ship Alegreya',Georgia,serif";return style;};
  const frame=useRef<HTMLDivElement>(null),close=useRef<HTMLButtonElement>(null);
  const [ready,setReady]=useState(false);
  useLayoutEffect(()=>{
@@ -43,11 +38,11 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
   <div className="ship-window-frame" ref={frame}>
    <section className="ship-window" style={{...st('root'),visibility:ready?'visible':'hidden'}} role="dialog" aria-modal="true" aria-label={d.name} data-testid="ship-sheet" data-ship-window={code} onClick={e=>e.stopPropagation()}>
     <header className="sw-scene" style={st('scene')} aria-label={`Сцена ${d.name}`}>
-     <img className="sw-scene-still" src={asset('scene.png')} alt=""/>
+     <img className="sw-scene-still" src={asset('scene.png')} alt=""/><ShipScene code={code} ready={ready} store={store}/>
      <div className="sw-plaque" style={st('plaque')}>
       {[0,1,2,3].map(i=><i key={i} className={'sw-rivet sw-rivet-'+i}/>)}
-      <div style={st('plaqueText')}><span style={st('team')}>{SIDE_LABEL[d.side].name}</span><h1 style={st('title')}>«{d.name}»</h1><span style={st('captain')}>{d.captain}</span></div>
-      <img className="sw-medal" style={{...st('medal'),filter:'none'}} src={asset('medal.svg')} alt={`Легенда «${legend.name}»`}/>
+      <div style={st('plaqueText')}><span style={st('team')}>{SIDE_LABEL[d.side].name}</span><h1 style={st('title')}>{d.name.startsWith("«")?d.name:`«${d.name}»`}</h1><span style={st('captain')}>{d.captain}</span></div>
+      <Medal name={name} alt={`Легенда «${legend.name}»`} ready={ready} store={store}/>
      </div>
      <button ref={close} className="sw-close" style={st('close')} aria-label="Закрыть" onClick={onClose}><img src={asset('close.svg')} alt=""/></button>
     </header>
@@ -67,7 +62,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
       </div>
       <h2 style={st('featureHeading')}>Особенности</h2>
       {d.abilities.map((ability,i)=><div className="sw-feature" style={st('featureRow')} key={ability.name}>
-       <span style={st('featureMedal')}><img className="sw-feature-icon" src={asset(`feature-${i}.svg`)} alt=""/></span>
+       <span style={st('featureMedal')}><FeatureIcon code={code} index={i} name={name} ready={ready} store={store}/></span>
        <div style={st('featureCopy')}><h3 style={st('featureName')}>{ability.name}</h3><div className="sw-feature-text" style={st('featureText')}><RichText html={ability.text}/></div></div>
       </div>)}
       {statuses(shown,data,ship).length>0&&<div className="sw-statuses">{statuses(shown,data,ship).map(x=><span key={x.label} title={x.hint}>{x.label}</span>)}</div>}
