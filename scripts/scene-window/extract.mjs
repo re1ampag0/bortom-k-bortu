@@ -5,16 +5,16 @@ import {referenceFonts} from './fonts.mjs';
 import {createHash} from 'node:crypto';
 import {mkdirSync,readFileSync,writeFileSync,existsSync} from 'node:fs';
 export async function extractScenes(config){
-const {phone=false,weather=false,menu=false,out,manifestPath,boards,sourceDir,sourceURL}=config;
+const {phone=false,weather=false,menu=false,sceneSelector='[class*="-scene"]',out,manifestPath,boards,sourceDir,sourceURL}=config;
 const manifest=weather||phone?JSON.parse(existsSync(manifestPath)?readFileSync(manifestPath,'utf8'):'{}'):{};mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium'});
 const page=await browser.newPage({viewport:{width:920,height:640}});
 const raster=await browser.newPage({deviceScaleFactor:3});
 try{for(const [code,name]of Object.entries(boards)){
- await page.setViewportSize({width:menu?1366:phone?390:920,height:phone?1360:660});
+ await page.setViewportSize({width:menu?1366:phone?390:920,height:menu?660:phone?1360:640});
  await page.goto(`${sourceURL}/artboards/${name}.dc.html`);await page.addStyleTag({content:referenceFonts});await page.evaluate(async()=>{await document.fonts.load('500 13px "Alegreya SC"','Корпус Паруса ABC123');await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode()));});
- const result=await page.evaluate(({weather,menu})=>{
-  const scene=document.querySelector(menu?'#menu-art':'[class*="-scene"]'),title=menu?document.createElement('div'):[...scene.children].find(e=>e.contains(document.querySelector('h1')))??document.querySelector('h1').parentElement.parentElement,close=scene.querySelector('button');
+ const result=await page.evaluate(({weather,menu,sceneSelector})=>{
+  const scene=document.querySelector(sceneSelector),title=menu?document.createElement('div'):[...scene.children].find(e=>e.contains(document.querySelector('h1')))??document.querySelector('h1').parentElement.parentElement,close=scene.querySelector('button');
   const native=document.getAnimations();native.forEach(a=>{a.pause();a.currentTime=0;});
   const animations=new Map(),assets=[];let id=0;const padding=weather?24:8;
   for(const a of native){const el=a.effect.target;if(!scene.contains(el)||(scene.contains(title)&&title.contains(el)))continue;
@@ -98,7 +98,7 @@ try{for(const [code,name]of Object.entries(boards)){
     node.style={position:'absolute',left:'0px',top:'0px',width:'0px',height:'0px',transform:s.transform,transformOrigin:s.transformOrigin,opacity:s.opacity,overflowX:'visible',overflowY:'visible'};
     if(weather&&getComputedStyle(e).transformBox==='fill-box'){const b=e.getBBox(),o=s.transformOrigin.split(' ').map(parseFloat);node.style.transformOrigin=(b.x+o[0])+'px '+(b.y+o[1])+'px';}
     const clipId=e.getAttribute('clip-path')?.match(/#([^)]*)/)?.[1],clip=clipId?svg.querySelector('[id="'+clipId+'"]'):null;
-    if(weather&&((clip&&clip.querySelector('path')&&hasDesc(e))||anim.some(a=>/^th-fl[123]$/.test(a.name)))){
+    if(weather&&((clip&&clip.querySelector('path')&&hasDesc(e))||anim.some(a=>/^th-fl[123]$/.test(a.name)||menu&&a.name==='torch'))){
      const actions=[...animations].filter(([el])=>el===e||e.contains(el)).flatMap(([,a])=>a),duration=Math.max(...actions.map(a=>Number(a.timing.duration)*(String(a.timing.direction).startsWith('alternate')?2:1))),b=e.getBBox(),box={x:Math.floor(b.x-24),y:Math.floor(b.y-24),w:Math.ceil(b.width+48),h:Math.ceil(b.height+48)};
      node.frames=[];node.frameTiming={duration,iterations:null,fill:'both',easing:'linear'};node.anim=[];node.style.transform='none';node.style.opacity='1';
      for(let f=0;f<4;f++){actions.forEach(a=>a.native.currentTime=duration*f/4);const asset=assets.length;assets.push({svg:svgStatic(e,svg,box,false),w:box.w,h:box.h});node.frames.push({asset,...box});}actions.forEach(a=>a.native.currentTime=0);
@@ -108,6 +108,17 @@ try{for(const [code,name]of Object.entries(boards)){
      const rect=clip.querySelector('rect'),x=Number(rect.getAttribute('x')),y=Number(rect.getAttribute('y')),w=Number(rect.getAttribute('width')),h=Number(rect.getAttribute('height')),children=node.children;
      node.children=[{id:++id,tag:'clip',cls:'',style:{position:'absolute',left:x+'px',top:y+'px',width:w+'px',height:h+'px',overflowX:'hidden',overflowY:'hidden'},anim:[],children:[{id:++id,tag:'clip-content',cls:'',style:{position:'absolute',left:-x+'px',top:-y+'px',width:'0px',height:'0px',overflowX:'visible',overflowY:'visible'},anim:[],children}]}];
     }
+   }else if(menu&&s.maskImage!=='none'&&e.children.length){
+    // A rippled/blurred reflection is one prepared four-frame picture, never a live mask ancestor.
+    const actions=[...animations].filter(([el])=>e.contains(el)).flatMap(([,a])=>a),duration=Math.max(1000,...actions.map(a=>Number(a.timing.duration))),w=e.offsetWidth,h=e.offsetHeight;
+    node.frames=[];node.frameTiming={duration,iterations:null,fill:'both',easing:'linear'};node.anim=[];
+    for(let f=0;f<4;f++){
+     actions.forEach(a=>a.native.currentTime=Number(a.timing.delay??0)+duration*f/4);
+     const clone=e.cloneNode(true),original=[e,...e.querySelectorAll('*')],copies=[clone,...clone.querySelectorAll('*')];
+     original.forEach((el,i)=>{const computed=getComputedStyle(el);for(const prop of computed)if(!prop.startsWith('animation')&&!prop.startsWith('transition'))copies[i].style.setProperty(prop,computed.getPropertyValue(prop));copies[i].style.animation='none';});
+     Object.assign(clone.style,{position:'absolute',left:padding+'px',top:padding+'px',transform:'none',opacity:'1'});
+     const asset=assets.length;assets.push({html:clone.outerHTML,w:w+padding*2,h:h+padding*2});node.frames.push({asset,x:-padding,y:-padding,w:w+padding*2,h:h+padding*2});
+    }actions.forEach(a=>a.native.currentTime=0);
    }else{
     if(e.children.length){if(s.backgroundImage!=='none'||s.backgroundColor!=='rgba(0, 0, 0, 0)')art(e,node,null);for(const child of e.children){const c=walk(child,null);if(c)node.children.push(c);}}
     else if(weather&&e.textContent.trim()){node.text=e.textContent;for(const side of ['Left','Right','Top','Bottom'])node.style['padding'+side]=(parseFloat(getComputedStyle(e)['padding'+side])+parseFloat(getComputedStyle(e)['border'+side+'Width']))+'px';}else art(e,node,null);
@@ -117,7 +128,7 @@ try{for(const [code,name]of Object.entries(boards)){
    if(weather&&!isSvg){
     const at=layout(e),parent=layout(e.parentElement);node.style.position='absolute';node.style.left=(at.x-parent.x)+'px';node.style.top=(at.y-parent.y)+'px';node.style.width=e.offsetWidth+'px';node.style.height=e.offsetHeight+'px';node.style.boxSizing='border-box';
    }else if(weather&&root&&s.position!=='absolute'){const at=layout(e),parent=layout(e.parentElement);node.style.position='absolute';node.style.left=(at.x-parent.x)+'px';node.style.top=(at.y-parent.y)+'px';}
-   node.particle=!!node.art&&!!node.anim.length&&/(?:tw$|spk$|shoot$|spray$|splash$|glit$|wisp$|drip$|port$|ember$|farsm$|rise$|puff$|crown$|ring$|drop$|mote$|spark$|shard$|ember$|smk$|dust$|fly$|glint$|bub$|emb$|msmoke$|mist$|c2-s[0-7]$|cv-s[A-D]$|cv-spl$|cv-sfoam$|cv-sh[0-9]$)/.test(node.anim[0].name)&&node.art.w<160&&node.art.h<180;if(menu&&node.art&&node.anim.length&&/^(twinkle|glitter|spark)/.test(node.anim[0].name))node.particle=true;
+   node.particle=!!node.art&&!!node.anim.length&&/(?:tw$|spk$|shoot$|spray$|splash$|glit$|wisp$|drip$|port$|ember$|farsm$|rise$|puff$|crown$|ring$|drop$|mote$|spark$|shard$|ember$|smk$|dust$|fly$|glint$|bub$|emb$|msmoke$|mist$|c2-s[0-7]$|cv-s[A-D]$|cv-spl$|cv-sfoam$|cv-sh[0-9]$)/.test(node.anim[0].name)&&node.art.w<160&&node.art.h<180;if(menu&&node.art&&node.anim.length&&/^(twinkle|glitter|spark|gl$)/.test(node.anim[0].name))node.particle=true;
    return node;
   }
   if(weather)for(const [el,list]of animations)for(const a of list){
@@ -143,7 +154,7 @@ try{for(const [code,name]of Object.entries(boards)){
    tree.unshift({id:++id,tag:'sky',cls:'',style:{position:'absolute',left:'0px',top:'0px',width:box.w+'px',height:box.h+'px',pointerEvents:'none'},anim:[],children:[],art:{asset,...box}});
   }
   return {tree,assets,features,width:scene.clientWidth,height:scene.clientHeight};
- },{weather,menu});
+ },{weather,menu,sceneSelector});
  // Inline any mask URLs into the offline HTML before rasterization. Images never fetch the design runtime.
  for(let i=0;i<result.assets.length;i++){
   const a=result.assets[i],filename=`${name}-live-${createHash('sha256').update(JSON.stringify(a)).digest('hex').slice(0,16)}.png`;a.file=filename;

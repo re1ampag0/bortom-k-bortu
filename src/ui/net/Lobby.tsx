@@ -2,7 +2,7 @@
 // the link with «Скопировать» and a QR code, the four seats (who sits, online), bots, the coin, the options and
 // «Начать» for the creator; then the secret placement of each team; then the table.
 import QRCode from 'qrcode';
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Variant } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
 import { normalizeCode, type RoomInfo, type RoomSettings } from '../../net/protocol';
@@ -10,7 +10,7 @@ import { chooseServer, storedServer, storeServer } from '../../net/server-url';
 import { LOST_MS, NetClient, loadName, loadNetSaved } from '../../net/ws';
 import { Game } from '../game/Game';
 import { SIDE_LABEL } from '../game/text';
-import {MenuSurface,Icon,Boat,shipName} from '../menus/Menus';
+import {MenuSurface,Icon,Dock,shipName} from '../menus/Menus';
 import {PlacementBoard} from '../menus/PlacementBoard';
 
 const SIDES: Side[] = ['ПИРАТЫ', 'КОМПАНИЯ'];
@@ -226,6 +226,8 @@ export function Qr({ text }: { text: string }) {
 
 function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; room: RoomInfo }) {
   const link = useRoomLink(room.code);
+  const optionsRef=useRef<HTMLDetailsElement>(null);
+  useLayoutEffect(()=>{const q=matchMedia('(min-width:701px)'),update=()=>{if(optionsRef.current)optionsRef.current.open=q.matches;};update();q.addEventListener('change',update);return()=>q.removeEventListener('change',update);},[]);
   const [copied, setCopied] = useState(false);
   const creator = room.you.creator;
   const mySide = room.you.seats.length > 0 ? data.ships.find((x) => x.code === room.you.seats[0])!.side : null;
@@ -276,7 +278,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
                 const canSit = free && (!mySide || mySide === side);
                 return (
                   <div key={ship.code} className={`seat ${mine ? 'mine' : ''}`} style={{ borderColor: ship.color }} data-testid={`seat-${ship.code}`}>
-                    <div className="menu-dock"><div className="menu-dock-water"/><Boat name={shipName(ship.code)}/></div><b style={{ color: ship.color }}>{ship.name}</b>
+                    <Dock name={shipName(ship.code)}/><b style={{ background:ship.color,color:'#f6e7c6' }}>{ship.name}</b>
                     <span className="seat-who">
                       <i className={`menu-status-dot ${seat.online||seat.bot?'online':''}`}/>{seat.bot?<><Icon name="autohelm" size={23}/> Бот у штурвала</>:seat.player?`${seat.name}${mine?' (вы)':''} · ${seat.online?'в сети':'не в сети'}`:'свободно'}
                     </span>
@@ -315,6 +317,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         </p>
       )}
 
+      <details className="menu-room-options" ref={optionsRef}><summary><Icon name="flags" size={24}/> Партия: {st.variant==='standard'?'Обычная':st.variant==='first'?'Первая партия':'Быстрый бой'}</summary>
       <section className="more-body room-settings"><h2><Icon name="flags"/> Партия</h2>
         <label className="row variant-row">
           <span>Вариант</span>
@@ -358,6 +361,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
           />
         </label>
       </section>
+      </details>
 
       <p className="muted menu-room-start-note">Бой начинает создатель комнаты. На пустые места встанут боты.</p>
       <div className="row buttons menu-room-actions">
