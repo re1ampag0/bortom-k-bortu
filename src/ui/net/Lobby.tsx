@@ -10,6 +10,8 @@ import { chooseServer, storedServer, storeServer } from '../../net/server-url';
 import { LOST_MS, NetClient, loadName, loadNetSaved } from '../../net/ws';
 import { Game } from '../game/Game';
 import { SIDE_LABEL } from '../game/text';
+import {MenuSurface,Icon,Boat,shipName} from '../menus/Menus';
+import {PlacementBoard} from '../menus/PlacementBoard';
 
 const SIDES: Side[] = ['ПИРАТЫ', 'КОМПАНИЯ'];
 const BASE = import.meta.env.BASE_URL;
@@ -391,11 +393,10 @@ function NetPlacement({ data, client, room }: { data: GameData; client: NetClien
   const side = room.you.seats.length > 0 ? data.ships.find((x) => x.code === room.you.seats[0])!.side : null;
   const ships = side ? data.ships.filter((x) => x.side === side) : [];
   const [order, setOrder] = useState<[string, string]>(ships.length === 2 ? [ships[0].code, ships[1].code] : ['', '']);
-  const ship = (code: string) => data.ships.find((x) => x.code === code)!;
   const placed = side ? room.placed.includes(side) : true;
   const playing = side && room.you.seats.some((x) => !room.seats[x].bot);
   return (
-    <main className="setup placement" data-testid="placement">
+    <MenuSurface kind="prep"><main className="menu-placement" data-testid="placement">
       <header className="setup-head">
         <h1>{side ? `${SIDE_LABEL[side].name}: расстановка` : 'Команды расставляют корабли'}</h1>
         <ConnectionLine client={client} />
@@ -410,18 +411,10 @@ function NetPlacement({ data, client, room }: { data: GameData; client: NetClien
       </header>
       {side && playing && !placed ? (
         <>
-          <div className="slots">
-            {order.map((code, i) => (
-              <div key={code} className="slot" style={{ borderColor: ship(code).color }}>
-                <span className="muted">{i === 0 ? 'Слева' : 'Справа'}</span>
-                <b style={{ color: ship(code).color }}>{ship(code).name}</b>
-                <span className="muted">{ship(code).captain}</span>
-              </div>
-            ))}
-          </div>
+          <PlacementBoard data={data} side={side} order={order} onSwap={()=>setOrder([order[1],order[0]])}/>
           <div className="row buttons">
             <button className="btn" onClick={() => setOrder([order[1], order[0]])}>
-              ⇄ Поменять местами
+              Переставить корабли
             </button>
             <button className="btn primary" data-testid="placement-done" onClick={() => client.send({ t: 'place', side, positions: order })}>
               Готово
@@ -433,6 +426,6 @@ function NetPlacement({ data, client, room }: { data: GameData; client: NetClien
           {side && placed ? 'Расстановка выбрана. Ждём противника…' : 'Ждём, пока команды расставят корабли…'}
         </p>
       )}
-    </main>
+    </main></MenuSurface>
   );
 }
