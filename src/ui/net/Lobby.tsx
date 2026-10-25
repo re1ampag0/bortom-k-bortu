@@ -2,7 +2,7 @@
 // the link with «Скопировать» and a QR code, the four seats (who sits, online), bots, the coin, the options and
 // «Начать» for the creator; then the secret placement of each team; then the table.
 import QRCode from 'qrcode';
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { Variant } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
 import { normalizeCode, type RoomInfo, type RoomSettings } from '../../net/protocol';
@@ -10,7 +10,7 @@ import { chooseServer, storedServer, storeServer } from '../../net/server-url';
 import { LOST_MS, NetClient, loadName, loadNetSaved } from '../../net/ws';
 import { Game } from '../game/Game';
 import { SIDE_LABEL } from '../game/text';
-import {MenuSurface,Icon,Dock,shipName} from '../menus/Menus';
+import {MenuSurface,Icon,Dock,shipName,Arrow} from '../menus/Menus';
 import {PlacementBoard} from '../menus/PlacementBoard';
 
 const SIDES: Side[] = ['ПИРАТЫ', 'КОМПАНИЯ'];
@@ -133,7 +133,7 @@ function Entry({
   return (
     <MenuSurface kind="net"><main className="menu-net" data-testid="net-entry"><div className="menu-bunting" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i}/>)}</div>
       <header className="setup-head">
-        <h1 className="menu-title"><Icon name="flags" size={42}/> Игра по сети</h1>
+        <h1 className="menu-title">Игра по сети</h1>
         <p className="muted">У каждого игрока своё устройство. Один создаёт комнату, остальные входят по коду или ссылке.</p>
       </header>
       {client && <ConnectionLine client={client} />}
@@ -148,11 +148,11 @@ function Entry({
       <section className="quick">
         <section className="quick-btn">
           <span className="menu-medal"><Icon name="bell" size={50}/></span><b>Создать комнату</b>
-          <span>Получите код и ссылку для остальных.</span><button className="menu-primary" data-testid="net-create" disabled={!client || !okName} onClick={() => client?.create(name.trim())}>Создать комнату</button>
+          <span>Вы получите код и ссылку для друзей, рассадите всех по кораблям и начнёте бой.</span><button className="menu-primary" data-testid="net-create" disabled={!client || !okName} onClick={() => client?.create(name.trim())}>Создать комнату</button>
         </section>
         <div className="quick-btn join-box">
           <span className="menu-medal"><Icon name="key" size={50}/></span><b>Войти по коду</b>
-          <span className="menu-code-entry"><span className="menu-code-cells" aria-hidden="true">{Array.from({length:5},(_,i)=><span key={i}>{code[i]??''}</span>)}</span>
+          <span className="menu-code-entry"><span className="menu-code-cells" aria-hidden="true">{Array.from({length:5},(_,i)=><span className={i===Math.min(code.length,4)?'active':''} key={i}>{code[i]??''}</span>)}</span>
             <input aria-label="Код комнаты"
               data-testid="net-code"
               value={code}
@@ -169,7 +169,7 @@ function Entry({
       </section>
       <section className="more">
         <button className="link" onClick={() => setMore(!more)} aria-expanded={more}>
-          {more ? '▾' : '▸'} Сервер
+          <Arrow chevron/> Сервер
         </button>
         {more && (
           <div className="more-body">
@@ -191,7 +191,7 @@ function Entry({
       </section>
       <span className="menu-server-state"><i className={`menu-status-dot ${client?.connection==='online'?'online':''}`}/>{client?.connection==='online'?'Сервер на связи':'Нет связи с сервером'}</span><footer className="setup-foot">
         <button className="link" onClick={onBack}>
-          ← Назад
+          <Arrow back/> Назад
         </button>
       </footer>
     </main></MenuSurface>
@@ -226,6 +226,9 @@ export function Qr({ text }: { text: string }) {
 
 function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; room: RoomInfo }) {
   const link = useRoomLink(room.code);
+  const [qrOpen,setQrOpen]=useState(false);
+  const [phone,setPhone]=useState(()=>innerWidth<=700);
+  useEffect(()=>{const q=matchMedia('(max-width:700px)'),update=()=>setPhone(q.matches);q.addEventListener('change',update);return()=>q.removeEventListener('change',update);},[]);
   const [copied, setCopied] = useState(false);
   const creator = room.you.creator;
   const mySide = room.you.seats.length > 0 ? data.ships.find((x) => x.code === room.you.seats[0])!.side : null;
@@ -242,28 +245,26 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
   const st = room.settings;
   const people = Object.values(room.seats).filter((x) => x.player).length;
   return (
-    <MenuSurface kind="net"><main className="menu-net room" data-testid="room"><div className="menu-bunting" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i}/>)}</div>
+    <MenuSurface kind="net"><main className={"menu-net room"+(qrOpen?" menu-room-showqr":"")} data-testid="room"><div className="menu-bunting" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i}/>)}</div>
       <header className="setup-head">
-        <h1>
-          Игра по сети
-        </h1>
+        <button className="menu-link menu-room-exit" onClick={()=>client.leave()}><Arrow back/>Выйти из комнаты</button>
         <ConnectionLine client={client} />
         {client.error && <p className="error">{client.error.text}</p>}
       </header>
-      <section className="room-link"><h2>Комната</h2><span className="room-code" data-testid="room-code">{room.code}</span>
+      <section className="room-link"><h2><Icon name="key" size={28}/>Код комнаты</h2><span className="room-code" data-testid="room-code">{room.code}</span>
         <div>
-          <p className="muted">Остальные открывают ссылку или вводят код на экране «По сети»:</p>
+          <p className="muted">Друзья открывают ссылку или вводят код в разделе «Игра по сети».</p>
           <p className="link-row">
-            <code data-testid="room-link">{link}</code>
+            <code data-testid="room-link" className="menu-raw-link">{link}</code>
             <button className="btn small" onClick={copy}>
-              {copied ? 'Скопировано' : 'Скопировать ссылку'}
+              {copied ? 'Скопировано' : <><span className="menu-desktop">Скопировать ссылку</span><span className="menu-phone">Ссылка</span></>}
             </button>
           </p>
         </div>
-        {creator && <Qr text={link} />}
+        <button className="menu-phone menu-qr-toggle" aria-label="Показать QR-код" aria-expanded={qrOpen} onClick={()=>setQrOpen(!qrOpen)}><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2H9V9H2ZM15 2H22V9H15ZM2 15H9V22H2ZM15 15H18V18H15ZM19 19H22V22H19Z" fill="none" stroke="currentColor" strokeWidth="2"/></svg></button>{(!phone||qrOpen)&&<Qr text={link}/> }
       </section>
 
-      <section className="seats"><h2 className="menu-seats-title">Кто на каком корабле</h2>
+      <section className="seats"><div className="menu-seats-heading"><h2 className="menu-seats-title">Кто на каком корабле</h2><p>Сядьте на корабль. Пустые места займут боты.</p></div>
         {SIDES.map((side) => (
           <div key={side} className={`seat-col side-${side === 'ПИРАТЫ' ? 'pirates' : 'company'}`}>
             <h2>{SIDE_LABEL[side].name}</h2>
@@ -276,9 +277,9 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
                 const canSit = free && (!mySide || mySide === side);
                 return (
                   <div key={ship.code} className={`seat ${mine ? 'mine' : ''}`} style={{ borderColor: ship.color }} data-testid={`seat-${ship.code}`}>
-                    <Dock name={shipName(ship.code)}/><b style={{ background:ship.color,color:'#f6e7c6' }}>{ship.name}</b>
+                    <Dock name={shipName(ship.code)}/><b>{ship.name}</b>
                     <span className="seat-who">
-                      <i className={`menu-status-dot ${seat.online||seat.bot?'online':''}`}/>{seat.bot?<><Icon name="autohelm" size={23}/> Бот у штурвала</>:seat.player?`${seat.name}${mine?' (вы)':''} · ${seat.online?'в сети':'не в сети'}`:'свободно'}
+                      <i className={`menu-status-dot ${seat.online||seat.bot?'online':''}`}/>{seat.bot?<><Icon name="autohelm" size={23}/> Бот у штурвала</>:seat.player?`${seat.name}${mine?' (вы)':''} · ${seat.online?'в сети':'не в сети'}`:'Свободно'}
                     </span>
                     <span className="seat-btns">
                       {canSit && (
@@ -315,23 +316,15 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         </p>
       )}
 
-      <section className="menu-room-options">
+      <details className="menu-room-options" open={!phone}><summary><Icon name="flags" size={24}/><span>Партия<small>{st.variant==='standard'?'Обычная':st.variant==='first'?'Первая':'Быстрый бой'}</small></span><Arrow chevron/></summary>
       <section className="more-body room-settings"><h2><Icon name="flags"/> Партия</h2>
         <div className="menu-variants" role="group" aria-label="Вариант партии">{(['standard','first','quick'] as Variant[]).map(v=><button key={v} disabled={!creator} aria-pressed={st.variant===v} className={st.variant===v?'on':''} onClick={()=>set({variant:v,sea:v!=='first',legends:v!=='first'})}>{{standard:'Обычная',first:'Первая',quick:'Быстрый бой'}[v]}</button>)}</div>
         <Check disabled={!creator} value={st.sea} label="Колода моря" onChange={(v) => set({ sea: v })} />
         <Check disabled={!creator} value={st.legends} label="Легенды" onChange={(v) => set({ legends: v })} />
         <Check disabled={!creator} value={st.allyHands} label="Союзники видят руки друг друга" onChange={(v) => set({ allyHands: v })} />
-        <Check disabled={!creator} value={st.hints} label="Разрешить подсказки (каждый включает их у себя в ⚙)" onChange={(v) => set({ hints: v })} />
-        <label className="row">
-          <span><Icon name="hourglass" size={26}/> Время на Реакцию, с (0: без таймера)</span>
-          <input
-            disabled={!creator}
-            inputMode="numeric"
-            value={st.reactionTimer}
-            onChange={(e) => set({ reactionTimer: Number(e.target.value) || 0 })}
-          />
-        </label>
-        <details className="menu-advanced"><summary>Ещё</summary>
+        <Check disabled={!creator} value={st.hints} label={<>Подсказки <span className="menu-hint-per-player">(каждый включает у себя в <Icon name="wheel" size={16}/>)</span></>} onChange={(v) => set({ hints: v })} />
+        <div className="menu-reaction-timer"><Icon name="hourglass" size={26}/><span>Время на Реакцию</span><div><button disabled={!creator||st.reactionTimer<=0} aria-label="Уменьшить время на Реакцию" onClick={()=>set({reactionTimer:Math.max(0,st.reactionTimer-15)})}>−</button><output>{st.reactionTimer?st.reactionTimer+' с':'не ограничено'}</output><button disabled={!creator} aria-label="Увеличить время на Реакцию" onClick={()=>set({reactionTimer:st.reactionTimer+15})}>+</button></div></div>
+        <details className="menu-advanced"><summary><Arrow chevron/>Ещё</summary>
         <Check disabled={!creator} value={st.allOpen} label="Всё открыто: все руки видны всем (для тестов)" onChange={(v) => set({ allOpen: v })} />
         <label className="row"><span>Адрес сервера</span><input readOnly value={storedServer()||location.origin}/></label>
         <label className="row">
@@ -346,10 +339,11 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
           />
         </label>
         </details>
+        <p className="menu-room-permissions">Настройки меняет создатель комнаты.</p>
       </section>
-      </section>
+      </details>
 
-      <p className="muted menu-room-start-note">Бой начинает создатель комнаты. На пустые места встанут боты.</p>
+      <p className="muted menu-room-start-note">Бой начинает создатель комнаты. Пустые места займут боты.</p>
       <div className="row buttons menu-room-actions">
         {creator ? (
           <>
@@ -363,18 +357,16 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         ) : (
           <p className="muted">Начинает создатель комнаты.</p>
         )}
-        <button className="link" onClick={() => client.leave()}>
-          Выйти из комнаты
-        </button>
+
       </div>
     </main></MenuSurface>
   );
 }
 
-function Check({ value, label, disabled, onChange }: { value: boolean; label: string; disabled: boolean; onChange: (v: boolean) => void }) {
+function Check({ value, label, disabled, onChange }: { value: boolean; label: ReactNode; disabled: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="row check menu-toggle">
-      <input type="checkbox" disabled={disabled} checked={value} onChange={(e) => onChange(e.target.checked)} /> {label}
+      <input type="checkbox" disabled={disabled} checked={value} onChange={(e) => onChange(e.target.checked)} /><span>{label}</span>
     </label>
   );
 }

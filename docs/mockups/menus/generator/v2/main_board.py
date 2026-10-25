@@ -197,7 +197,7 @@ def scene_phone():
     s.append(sky(W, HOR + 2, 'P', 'night', seed=6, stars=110, milky=True))
     s.append(glint_star(62, 30, 1.2, cls='tw3'))
     s.append(meteor(250, 120, 110, 'P'))
-    s.append(moon(318, 156, 15, 'P'))
+    s.append(moon(340, 196, 14, 'P'))
     s.append(cloud(250, 196, 130, 10, 'pc1', '#101c2a', '#a8bccc', -1, .8, seed=3, op=.55))
     s.append(cloud(80, 150, 150, 14, 'pc2', '#0c1724', '#6f8496', 1, .35, seed=12, cls='clouds2'))
     s.append(ridge(W, HOR + 1, 10, 4, '#2a4258', .8, step=8, rough=.7))

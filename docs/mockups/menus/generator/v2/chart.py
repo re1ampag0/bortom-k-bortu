@@ -260,7 +260,7 @@ VARIANTS = {
                  towns=[(.865, .2, 'Порт-де-Пэ', 'middle', 12), (.11, .19, 'Сантьяго', 'middle', 12)],
                  forests=[(.07, .07, 8), (.9, .06, 9)], shoals=[(.42, .94, 16), (.6, .95, 14), (.25, .18, 14)],
                  reefs=[(.33, .9), (.7, .07)], roses=[(.035, .56, 54, .55)], rhumbs=[(.5, .5, 900), (.035, .56, 700)],
-                 cartouche=('НАВЕТРЕННЫЙ ПРОЛИВ', 'промеры 1718 года', .27, .16),
+                 cartouche=None,
                  egg=('тут был шторм', .31, .86), lat=('21°', '20°', '19°', '18°'), lon=('76°', '75°', '74°', '73°', '72°'),
                  route=[(.33, .965), (.42, .955), (.52, .97), (.62, .955), (.72, .965)], serpent=(.73, .07),
                  anchored=(.61, .085, .42), gulls=(.62, .03), frame=True, light=True),
@@ -277,7 +277,7 @@ VARIANTS = {
                        isles=[(.82, .93, 12, None), (.12, .92, 9, None)], towns=[], forests=[], shoals=[(.5, .94, 12)], reefs=[],
                        roses=[(.86, .78, 30, .5)], rhumbs=[(.5, .8, 700)], egg=None, lat=(), lon=(),
                        route=[(.18, .9), (.35, .92), (.52, .9), (.68, .92)], serpent=(.03, .72), anchored=None, gulls=(.2, .73),
-                       frame=False, phone=True, light=False),
+                       frame=False, sail=False, phone=True, light=False),
     'phone': dict(W=390, H=844, seed=51, coast=('bottom', 16), sea_name=('Наветренный пролив', .5, .99, 11),
                   isles=[(.86, .06, 14, None), (.08, .97, 9, None)], towns=[], forests=[], shoals=[(.5, .97, 10)], reefs=[],
                   roses=[(.88, .5, 30, .45)], rhumbs=[(.5, .6, 900)], egg=None, lat=(), lon=(),
@@ -400,8 +400,9 @@ def anim_layer(name, left=0, top=0):
         out += f'<path class="brk b{i % 4}" d="{d}" stroke="{INK}" stroke-width=".9" fill="none" stroke-linecap="round"/>'
     # wake: three short curves behind the ship, travelling with it
     wake = ''.join(f'<path class="wk w{j}" d="M{-6 - j * 9} {84 + j * .6} q-4 -2 -8 0" stroke="{GOLD}" stroke-width="1.2" fill="none"/>' for j in range(3))
-    out += (f'<g class="sail{uid}" style="transform-origin:{x0}px {y0}px"><g transform="translate({x0 - 56 * sc:.1f} {y0 - 80 * sc:.1f}) scale({sc})">'
-            f'<g class="bobc">{ship}{wake}</g></g></g>')
+    if v.get('sail', True):
+        out += (f'<g class="sail{uid}" style="transform-origin:{x0}px {y0}px"><g transform="translate({x0 - 56 * sc:.1f} {y0 - 80 * sc:.1f}) scale({sc})">'
+                f'<g class="bobc">{ship}{wake}</g></g></g>')
     cx, cy, r, _ = v['roses'][0]
     cx, cy, r = W * cx, H * cy, r * k
     out += (f'<g class="needle" style="transform-origin:{cx:.1f}px {cy:.1f}px"><path d="M{cx:.1f} {cy - r * .7:.1f} L{cx + r * .05:.1f} {cy:.1f} L{cx:.1f} {cy + r * .5:.1f} L{cx - r * .05:.1f} {cy:.1f} Z" fill="{RED}" opacity=".6"/>'
