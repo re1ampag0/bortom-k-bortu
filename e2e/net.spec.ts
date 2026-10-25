@@ -155,7 +155,7 @@ test('two tabs: a room by its code, a Volley and a Reaction, a reload brings the
   // V7: Аня gives up — both see the victory sheet of the Company with the same numbers and titles (from the record the
   // server sends after the end); «Реванш» counts the votes under its name.
   await a.locator('[data-testid="settings-btn"]:visible').click();
-  await a.getByRole('button', { name: 'Сдаться (Пираты)' }).click();
+  await a.getByRole('button', { name: 'Сдаться за Пиратов' }).click();
   await a.getByRole('button', { name: 'Сдаться', exact: true }).click();
   for (const p of [a, b]) {
     await expect(p.getByTestId('end-screen')).toBeVisible({ timeout: 15_000 });
