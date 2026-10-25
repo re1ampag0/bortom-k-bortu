@@ -1,0 +1,47 @@
+[
+  {
+    "size": "1366x660",
+    "screen": "table",
+    "pixels": 0
+  },
+  {
+    "size": "1366x660",
+    "screen": "log",
+    "pixels": 0
+  },
+  {
+    "size": "1366x660",
+    "screen": "reaction",
+    "pixels": 729599
+  },
+  {
+    "size": "390x844",
+    "screen": "table",
+    "pixels": 7731
+  },
+  {
+    "size": "390x844",
+    "screen": "log",
+    "pixels": 0
+  },
+  {
+    "size": "390x844",
+    "screen": "reaction",
+    "pixels": 0
+  },
+  {
+    "size": "430x932",
+    "screen": "table",
+    "pixels": 0
+  },
+  {
+    "size": "430x932",
+    "screen": "log",
+    "pixels": 0
+  },
+  {
+    "size": "430x932",
+    "screen": "reaction",
+    "pixels": 0
+  }
+]
