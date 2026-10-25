@@ -2,7 +2,8 @@ import {WeatherWindow} from './weather-window/WeatherWindow';
 // Things that appear when needed and go away after (docs/TZ.md, «Принципы стола», п. 1, 8): a card in full,
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
 import { memo as reactMemo, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import rulesText from '../../../RULES.md?raw';
+import {RulesWindow} from '../menus/RulesWindow';
+import {Icon} from '../menus/Menus';
 import type { LogLine } from '../../engine/log';
 import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
@@ -11,7 +12,6 @@ import { RichText } from '../RichText';
 import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type TableView, type Speed } from '../storage';
 import { clearTrace, loadTrace } from './fx/trace';
 import { cardClass, CostBadge, HandCard } from './Hand';
-import { memo } from './memo';
 import { type Btn } from './Table';
 import { CELLS } from './art/cells';
 import { logMarks } from './logBook';
@@ -43,7 +43,7 @@ export function useEscape(onClose: () => void) {
 }
 
 /** A window over the table: on a laptop in the middle, on a phone a bottom sheet. Closed by the cross, outside or Esc. */
-export function Sheet({ title, onClose, children, wide, testid, foot }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string; foot?: ReactNode }) {
+export function Sheet({ title, onClose, children, wide, testid, foot }: { title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string; foot?: ReactNode }) {
   useEscape(onClose);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -299,37 +299,7 @@ export const LogList = reactMemo(function LogList({
   );
 });
 
-export function RulesSheet({ data, onClose }: { data: GameData; onClose: () => void }) {
-  const [q, setQ] = useState('');
-  const paragraphs = useMemo(() => rulesText.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean), []);
-  const query = q.trim().toLowerCase();
-  const found = query.length >= 2 ? paragraphs.filter((p) => p.toLowerCase().includes(query)).slice(0, 40) : [];
-  return (
-    <Sheet title="Правила" onClose={onClose} wide testid="rules">
-      <input className="search" placeholder="Поиск по правилам…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
-      {query.length >= 2 ? (
-        <div className="rules-found">
-          {found.length === 0 && <p className="muted">Ничего не найдено.</p>}
-          {found.map((p, i) => (
-            <p key={i}>{p.replace(/\*\*/g, '').replace(/`/g, '')}</p>
-          ))}
-        </div>
-      ) : (
-        <div className="memo">
-          {memo(data).map((m) => (
-            <section key={m.title}>
-              <h3>{m.title}</h3>
-              {m.lines.map((l) => (
-                <p key={l}>{l}</p>
-              ))}
-            </section>
-          ))}
-          <p className="muted">Учебный фанатский прототип по мотивам «Пиратов Карибского моря». Не для продажи.</p>
-        </div>
-      )}
-    </Sheet>
-  );
-}
+export function RulesSheet({data,onClose}:{data:GameData;onClose:()=>void}){useEscape(onClose);return <RulesWindow data={data} onClose={onClose}/>;}
 
 /** «Версия: 1a2b3c4 · сборка 17.10, 23:40» — at once visible whether the site or the server is updated. */
 function appVersion(): string {
@@ -436,7 +406,7 @@ export function SettingsSheet({
           <div className="row buttons">
             {canConcede && onConcede && (
               <button className="btn danger" onClick={onConcede}>
-                Сдаться ({SIDE_LABEL[canConcede].name})
+                Сдаться за {SIDE_LABEL[canConcede].gen}
               </button>
             )}
             <button className="btn" onClick={onNew}>
@@ -447,39 +417,17 @@ export function SettingsSheet({
       </>
     ) : undefined;
   return (
-    <Sheet title="Настройки" onClose={onClose} testid="settings" foot={foot}>
-      {speed !== null && (
-        <label className="row">
-          <span>Скорость показа ходов</span>
-          <select value={speed} onChange={(e) => setSpeed(e.target.value as Speed)}>
-            {Object.entries(SPEEDS).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-      <label className="row">
-        <span>Спецэффекты</span>
-        <select value={effects} onChange={(e) => setEffects(e.target.value as 'rich' | 'simple')}>
-          <option value="rich">Богатые</option>
-          <option value="simple">Простые</option>
-        </select>
-      </label>
-      <section className="view-switches" data-testid="table-view" aria-label="Вид стола">
-        <h3>Вид стола</h3>
-        <Switch3 label="Залп на планшете" id="guns" value={view.guns} onChange={(guns) => setView({ ...view, guns })} options={[['icons', 'Значки'], ['ports', 'Порты']]} />
-        <Switch3 label="Фон" id="hand" value={view.hand} onChange={(hand) => setView({ ...view, hand })} options={[['deck', 'Палуба'], ['table', 'Стол капитана']]} />
-        <Switch3 label="Разбор урона" id="damage" value={view.damage} onChange={(damage) => setView({ ...view, damage })} options={[['show', 'Показывать'], ['hide', 'Скрыть']]} />
-        <Switch3 label="Рамка моря" id="frame" value={view.frame} onChange={(frame) => setView({ ...view, frame })} options={[['bulwark', 'Фальшборт'], ['brass', 'Латунь']]} />
-      </section>
+    <Sheet title={<span className="menu-settings-title"><Icon name="wheel" size={38}/>Настройки</span>} onClose={onClose} testid="settings" foot={foot}>
+      <h3 className="menu-settings-section"><Icon name="lantern"/>Показ</h3>
+      {speed!==null&&<div className="row"><span>Скорость показа ходов</span><span className="view-switch" role="group" aria-label="Скорость показа ходов">{Object.keys(SPEEDS).map(k=><button key={k} aria-pressed={speed===k} onClick={()=>setSpeed(k as Speed)}>{{slow:'Медленно',normal:'Обычно',fast:'Быстро',instant:'Мгновенно'}[k]}</button>)}</span></div>}
+      <div className="row"><span>Спецэффекты</span><span className="view-switch" role="group" aria-label="Спецэффекты">{(['rich','simple']as const).map(v=><button key={v} aria-pressed={effects===v} onClick={()=>setEffects(v)}>{v==='rich'?'Полные':'Простые'}</button>)}</span></div>
+      <h3 className="menu-settings-section"><Icon name="bell"/>Игра</h3>
+
       <label className="row check">
         <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} data-testid="sound" /> Звук «ваш ход»
       </label>
       <label className="row check">
-        <input type="checkbox" checked={fastEnd} onChange={(e) => setFastEnd(e.target.checked)} data-testid="fast-end" /> Быстрый конец хода
-        («Ход окончен · Отменить» — 1 с вместо 3 с)
+        <input type="checkbox" checked={fastEnd} onChange={(e) => setFastEnd(e.target.checked)} data-testid="fast-end" /> Быстрый конец хода: 1 с вместо 3 с
       </label>
       {openHands !== null && (
         <label className="row check">
@@ -490,7 +438,7 @@ export function SettingsSheet({
       {hints !== null ? (
         <label className="row check">
           <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} />
-          <span>Подсказки (урон Зарядов и на целях, «4 → 2» на Реакциях в руке, зелёный «Ход окончен», «Залп не дан…»)</span>
+          <span>Подсказки: урон на целях, «4 → 2» на Реакциях</span>
         </label>
       ) : (
         <p className="row muted">Подсказки в этой комнате выключены.</p>
@@ -499,6 +447,13 @@ export function SettingsSheet({
         <input type="checkbox" checked={tapSkip} onChange={(e) => setTapSkip(e.target.checked)} data-testid="tap-skip" /> Пропуск
         анимации касанием стола (телефон)
       </label>
+      <section className="view-switches" data-testid="table-view" aria-label="Вид стола">
+        <h3 className="menu-settings-section"><Icon name="compass"/>Вид стола</h3>
+        <Switch3 label="Залп на планшете" id="guns" value={view.guns} onChange={(guns) => setView({ ...view, guns })} options={[['icons', 'Значки'], ['ports', 'Порты']]} />
+        <Switch3 label="Фон" id="hand" value={view.hand} onChange={(hand) => setView({ ...view, hand })} options={[['deck', 'Палуба'], ['table', 'Стол капитана']]} />
+        <Switch3 label="Разбор урона" id="damage" value={view.damage} onChange={(damage) => setView({ ...view, damage })} options={[['show', 'Показывать'], ['hide', 'Скрыть']]} />
+        <Switch3 label="Рамка моря" id="frame" value={view.frame} onChange={(frame) => setView({ ...view, frame })} options={[['bulwark', 'Фальшборт'], ['brass', 'Латунь']]} />
+      </section>
       {fxErrors.length > 0 && (
         <div className="row fx-errors" data-testid="fx-errors">
           <b>Ошибки анимаций ({fxErrors.length})</b>
@@ -546,7 +501,7 @@ export function SettingsSheet({
         </details>
       )}
       <p className="row muted" data-testid="app-version">
-        Версия: {appVersion()}
+        <span title="Этот компас показывает не на север, а туда, куда вам действительно нужно"><Icon name="compass" size={28}/></span>Версия: {appVersion()}
       </p>
     </Sheet>
   );

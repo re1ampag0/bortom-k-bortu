@@ -359,14 +359,15 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         </label>
       </section>
 
-      <div className="row buttons">
+      <p className="muted menu-room-start-note">Бой начинает создатель комнаты. На пустые места встанут боты.</p>
+      <div className="row buttons menu-room-actions">
         {creator ? (
           <>
             <button className="btn" onClick={() => client.send({ t: 'coin' })} data-testid="coin-btn">
               Жребий
             </button>
             <button className="btn primary" data-testid="room-start" disabled={people === 0} onClick={() => client.send({ t: 'start' })}>
-              Начать{Object.values(room.seats).some((x) => !x.player && !x.bot) ? ' (на пустые места — боты)' : ''}
+              <Icon name="sail" size={36}/>Поднять паруса
             </button>
           </>
         ) : (

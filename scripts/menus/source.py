@@ -15,3 +15,6 @@ for side,fn in [('Pirates',p.pirates_scene),('Company',p.company_scene)]:
 for name,pal in [('Panel','panel'),('Blood','blood'),('Deep','deep')]:
  s,css=art.sea(1366,240,'menu'+name,pal,light_x=683)
  save(name,1366,240,s,css)
+import chart
+for key,name in [('main','ChartMain'),('prep','ChartPrep'),('net','ChartNet'),('phone-main','ChartPhoneMain'),('phone','ChartPhone')]:
+ s,css=chart.anim_layer(key);v=chart.VARIANTS[key];save(name,v['W'],v['H'],s,chart.CHART_CSS+css)
