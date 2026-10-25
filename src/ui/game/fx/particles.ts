@@ -1,3 +1,4 @@
+import {gameScaleEnabled,gameViewport,gameGeometry} from '../layout';
 import {particleArt, prepareSmokeArt, smokeArt, prepareHtmlParticleArt, htmlParticleArt, prepareWadArt, wadArt, moteArt, prepareRingArt, ringArt} from './particleArt';
 // Shared particle clock and raster bank. Prepared canvases never enter the document.
 // Large objects keep their DOM/WAAPI renderer. Only explicitly opted-in producers use this API.
@@ -6,6 +7,13 @@ import type {FxCtx} from './primitives';
 import {perfOff,subscribePerf} from '../perf/state';
 
 type Level = 'sea' | 'top' | 'front';
+/** Screen backing density only. At k1 and with gamescale=0 this is the original calculation. */
+function screenDpr(){
+ const old=innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio;
+ if(!gameScaleEnabled())return old;
+ const k=gameGeometry(gameViewport()).k;
+ return k===1?old:Math.min(devicePixelRatio*k,3);
+}
 interface Sprite { image: CanvasImageSource; x: number; y: number; w: number; h: number }
 interface Frame { offset: number; transform?: string; opacity?: number }
 interface Channel<T> { offset: number; value: T }
@@ -150,7 +158,8 @@ export function prepareParticles(board: HTMLElement, smokeDefs?: string): void {
   prepareRingArt(innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio);
   const b: Bank={board,sprites:new Map(COLORS.map(color=>[color,circleRaster(color)])),surfaces:new Map(),items:[],now:0,last:performance.now(),raf:0,paused,drawn:{},seen:{},peak:0,visible:[],nextId:0,diagnostics:(import.meta.env.DEV||import.meta.env.MODE==='e2e')&&new URLSearchParams(location.search).get('particleProbe')!=='0',w:board.clientWidth,h:board.clientHeight,dpr:innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio,resize:new ResizeObserver(()=>prepareSurfaces(b)),unsubscribe:()=>{}};
   banks.set(board,b);prepareSurfaces(b);b.resize.observe(board);
-  b.unsubscribe=subscribePerf(()=>{
+  const resized=()=>prepareSurfaces(b);window.addEventListener('resize',resized);
+  const offPerf=subscribePerf(()=>{
     if(!b.items.length)return;
     advance(b);
     if(perfOff('particles')){
@@ -158,6 +167,7 @@ export function prepareParticles(board: HTMLElement, smokeDefs?: string): void {
       for(const s of b.surfaces.values()){s.canvas.style.display='none';s.canvas.remove();}
     }else{draw(b);run(b);}
   });
+  b.unsubscribe=()=>{offPerf();window.removeEventListener('resize',resized);};
   if(b.diagnostics)Object.defineProperty(board,'fxParticles',{configurable:true,value:()=>({active:particleCount(board),drawn:{...b.drawn},seen:{...b.seen},visible:b.visible.map(p=>({...p})),peak:b.peak,raf:!!b.raf,paused:b.paused,time:b.now,surfaces:[...b.surfaces.values()].map(s=>({level:s.level,connected:s.canvas.isConnected,width:s.canvas.width,height:s.canvas.height}))})});
   } finally {perfEnd?.();}
 }
@@ -215,7 +225,7 @@ export function rememberParticleHost(el: Element,animation: Animation,kf: Keyfra
  */
 function prepareSurfaces(b: Bank): void {
   b.w=b.board.clientWidth;b.h=b.board.clientHeight;
-  b.dpr=innerWidth<=700?Math.min(devicePixelRatio,2):devicePixelRatio;
+  b.dpr=screenDpr();
   const width=Math.ceil(b.w*b.dpr),height=Math.ceil(b.h*b.dpr);
   for(const level of ['sea','top','front'] as const){
     let s=b.surfaces.get(level);

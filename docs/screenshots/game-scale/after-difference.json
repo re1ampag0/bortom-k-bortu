@@ -1,0 +1,779 @@
+[
+  {
+    "size": "1366x660",
+    "screen": "table",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": []
+  },
+  {
+    "size": "1366x660",
+    "screen": "log",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": []
+  },
+  {
+    "size": "1366x660",
+    "screen": "reaction",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": []
+  },
+  {
+    "size": "430x932",
+    "screen": "table",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": []
+  },
+  {
+    "size": "430x932",
+    "screen": "log",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": []
+  },
+  {
+    "size": "430x932",
+    "screen": "reaction",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": []
+  },
+  {
+    "size": "390x844",
+    "screen": "table",
+    "pixels": 4535,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 495,
+        "w": 108.984375,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 239.15625,
+        "y": 474,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 549,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 495,
+        "w": 108.984375,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 239.15625,
+        "y": 474,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 549,
+        "w": 155.171875,
+        "h": 20
+      }
+    ]
+  },
+  {
+    "size": "390x844",
+    "screen": "log",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 495,
+        "w": 108.984375,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 239.15625,
+        "y": 474,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 549,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 495,
+        "w": 108.984375,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 239.15625,
+        "y": 474,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 549,
+        "w": 155.171875,
+        "h": 20
+      }
+    ]
+  },
+  {
+    "size": "390x844",
+    "screen": "reaction",
+    "pixels": 1810,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 495,
+        "w": 124.421875,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 254.59375,
+        "y": 474,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 549,
+        "w": 144.4375,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 495,
+        "w": 124.421875,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 254.59375,
+        "y": 474,
+        "w": 135.40625,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 549,
+        "w": 144.4375,
+        "h": 20
+      }
+    ]
+  },
+  {
+    "size": "430x740",
+    "screen": "table",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 414.375,
+        "w": 114.265625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 267.828125,
+        "y": 393.375,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 468.375,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 414.375,
+        "w": 114.265625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 267.828125,
+        "y": 393.375,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 468.375,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "clipped-hand",
+        "x": 8,
+        "y": 453.375,
+        "w": 414,
+        "h": 214.625
+      }
+    ]
+  },
+  {
+    "size": "430x740",
+    "screen": "log",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 414.375,
+        "w": 114.265625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 267.828125,
+        "y": 393.375,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 468.375,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 414.375,
+        "w": 114.265625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 267.828125,
+        "y": 393.375,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 468.375,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "clipped-hand",
+        "x": 8,
+        "y": 453.375,
+        "w": 414,
+        "h": 214.625
+      }
+    ]
+  },
+  {
+    "size": "430x740",
+    "screen": "reaction",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 402.921875,
+        "w": 130.140625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 277.3125,
+        "y": 381.921875,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 456.921875,
+        "w": 144.4375,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 402.921875,
+        "w": 130.140625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 277.3125,
+        "y": 381.921875,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 456.921875,
+        "w": 144.4375,
+        "h": 20
+      },
+      {
+        "kind": "clipped-hand",
+        "x": 8,
+        "y": 441.921875,
+        "w": 414,
+        "h": 226.078125
+      }
+    ]
+  },
+  {
+    "size": "430x680",
+    "screen": "table",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 395.421875,
+        "w": 114.265625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 267.828125,
+        "y": 374.421875,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 449.421875,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 395.421875,
+        "w": 114.265625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 267.828125,
+        "y": 374.421875,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 449.421875,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "clipped-hand",
+        "x": 8,
+        "y": 434.421875,
+        "w": 414,
+        "h": 173.578125
+      }
+    ]
+  },
+  {
+    "size": "430x680",
+    "screen": "log",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 395.421875,
+        "w": 114.265625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 267.828125,
+        "y": 374.421875,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 449.421875,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 395.421875,
+        "w": 114.265625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 267.828125,
+        "y": 374.421875,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 449.421875,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "clipped-hand",
+        "x": 8,
+        "y": 434.421875,
+        "w": 414,
+        "h": 173.578125
+      }
+    ]
+  },
+  {
+    "size": "430x680",
+    "screen": "reaction",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 380.828125,
+        "w": 130.140625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 277.3125,
+        "y": 359.828125,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 434.828125,
+        "w": 144.4375,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 380.828125,
+        "w": 130.140625,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 277.3125,
+        "y": 359.828125,
+        "w": 162.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 434.828125,
+        "w": 144.4375,
+        "h": 20
+      },
+      {
+        "kind": "clipped-hand",
+        "x": 8,
+        "y": 419.828125,
+        "w": 414,
+        "h": 188.171875
+      }
+    ]
+  },
+  {
+    "size": "390x664",
+    "screen": "table",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 387.765625,
+        "w": 108.984375,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 239.15625,
+        "y": 366.765625,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 441.765625,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 387.765625,
+        "w": 108.984375,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 239.15625,
+        "y": 366.765625,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 441.765625,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "clipped-hand",
+        "x": 8,
+        "y": 426.765625,
+        "w": 374,
+        "h": 165.234375
+      }
+    ]
+  },
+  {
+    "size": "390x664",
+    "screen": "log",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 387.765625,
+        "w": 108.984375,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 239.15625,
+        "y": 366.765625,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 441.765625,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 387.765625,
+        "w": 108.984375,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 239.15625,
+        "y": 366.765625,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 441.765625,
+        "w": 155.171875,
+        "h": 20
+      },
+      {
+        "kind": "clipped-hand",
+        "x": 8,
+        "y": 426.765625,
+        "w": 374,
+        "h": 165.234375
+      }
+    ]
+  },
+  {
+    "size": "390x664",
+    "screen": "reaction",
+    "pixels": 0,
+    "outsideAllowedZones": 0,
+    "zones": [
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 372.546875,
+        "w": 124.421875,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 254.59375,
+        "y": 351.546875,
+        "w": 151.171875,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 426.546875,
+        "w": 144.4375,
+        "h": 20
+      },
+      {
+        "kind": "hold",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 372.546875,
+        "w": 124.421875,
+        "h": 20
+      },
+      {
+        "kind": "regroup",
+        "paintMargin": 12,
+        "x": 254.59375,
+        "y": 351.546875,
+        "w": 135.40625,
+        "h": 62
+      },
+      {
+        "kind": "hand",
+        "paintMargin": 3,
+        "x": 9,
+        "y": 426.546875,
+        "w": 144.4375,
+        "h": 20
+      },
+      {
+        "kind": "clipped-hand",
+        "x": 8,
+        "y": 411.546875,
+        "w": 374,
+        "h": 180.453125
+      }
+    ]
+  }
+]
