@@ -2,7 +2,9 @@ import {WeatherWindow} from './weather-window/WeatherWindow';
 // Things that appear when needed and go away after (docs/TZ.md, «Принципы стола», п. 1, 8): a card in full,
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
 import { memo as reactMemo, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import rulesText from '../../../RULES.md?raw';
+import {RulesWindow} from '../menus/RulesWindow';
+import {Icon} from '../menus/Menus';
+import {holdMenuMotion} from '../menus/motion';
 import type { LogLine } from '../../engine/log';
 import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
@@ -11,7 +13,6 @@ import { RichText } from '../RichText';
 import { clearFxErrors, loadFxErrors, loadSettings, storeSettings, type TableView, type Speed } from '../storage';
 import { clearTrace, loadTrace } from './fx/trace';
 import { cardClass, CostBadge, HandCard } from './Hand';
-import { memo } from './memo';
 import { type Btn } from './Table';
 import { CELLS } from './art/cells';
 import { logMarks } from './logBook';
@@ -43,11 +44,11 @@ export function useEscape(onClose: () => void) {
 }
 
 /** A window over the table: on a laptop in the middle, on a phone a bottom sheet. Closed by the cross, outside or Esc. */
-export function Sheet({ title, onClose, children, wide, testid, foot }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string; foot?: ReactNode }) {
+export function Sheet({ title, onClose, children, wide, testid, foot }: { title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string; foot?: ReactNode }) {
   useEscape(onClose);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title} data-testid={testid}>
+      <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={typeof title==='string'?title:testid==='settings'?'Настройки':undefined} data-testid={testid}>
         <header className="sheet-head">
           <b>{title}</b>
           <button className="btn small close" onClick={onClose} aria-label="Закрыть">
@@ -299,37 +300,7 @@ export const LogList = reactMemo(function LogList({
   );
 });
 
-export function RulesSheet({ data, onClose }: { data: GameData; onClose: () => void }) {
-  const [q, setQ] = useState('');
-  const paragraphs = useMemo(() => rulesText.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean), []);
-  const query = q.trim().toLowerCase();
-  const found = query.length >= 2 ? paragraphs.filter((p) => p.toLowerCase().includes(query)).slice(0, 40) : [];
-  return (
-    <Sheet title="Правила" onClose={onClose} wide testid="rules">
-      <input className="search" placeholder="Поиск по правилам…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
-      {query.length >= 2 ? (
-        <div className="rules-found">
-          {found.length === 0 && <p className="muted">Ничего не найдено.</p>}
-          {found.map((p, i) => (
-            <p key={i}>{p.replace(/\*\*/g, '').replace(/`/g, '')}</p>
-          ))}
-        </div>
-      ) : (
-        <div className="memo">
-          {memo(data).map((m) => (
-            <section key={m.title}>
-              <h3>{m.title}</h3>
-              {m.lines.map((l) => (
-                <p key={l}>{l}</p>
-              ))}
-            </section>
-          ))}
-          <p className="muted">Учебный фанатский прототип по мотивам «Пиратов Карибского моря». Не для продажи.</p>
-        </div>
-      )}
-    </Sheet>
-  );
-}
+export function RulesSheet({data,onClose}:{data:GameData;onClose:()=>void}){useEscape(onClose);return <RulesWindow data={data} onClose={onClose}/>;}
 
 /** «Версия: 1a2b3c4 · сборка 17.10, 23:40» — at once visible whether the site or the server is updated. */
 function appVersion(): string {
@@ -402,6 +373,7 @@ export function SettingsSheet({
   onView?: (v: TableView) => void;
   onClose: () => void;
 }) {
+  useEffect(()=>holdMenuMotion(),[]);
   const [view, setViewState] = useState(() => loadSettings().view);
   const setView = (v: TableView) => {
     setViewState(v);
@@ -436,7 +408,7 @@ export function SettingsSheet({
           <div className="row buttons">
             {canConcede && onConcede && (
               <button className="btn danger" onClick={onConcede}>
-                Сдаться ({SIDE_LABEL[canConcede].name})
+                Сдаться за {SIDE_LABEL[canConcede].gen}
               </button>
             )}
             <button className="btn" onClick={onNew}>
@@ -447,58 +419,26 @@ export function SettingsSheet({
       </>
     ) : undefined;
   return (
-    <Sheet title="Настройки" onClose={onClose} testid="settings" foot={foot}>
-      {speed !== null && (
-        <label className="row">
-          <span>Скорость показа ходов</span>
-          <select value={speed} onChange={(e) => setSpeed(e.target.value as Speed)}>
-            {Object.entries(SPEEDS).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-      <label className="row">
-        <span>Спецэффекты</span>
-        <select value={effects} onChange={(e) => setEffects(e.target.value as 'rich' | 'simple')}>
-          <option value="rich">Богатые</option>
-          <option value="simple">Простые</option>
-        </select>
-      </label>
-      <section className="view-switches" data-testid="table-view" aria-label="Вид стола">
-        <h3>Вид стола</h3>
+    <Sheet title={<span className="menu-settings-title"><Icon name="wheel" size={38}/>Настройки</span>} onClose={onClose} testid="settings" foot={<>{foot}      <p className="row muted" data-testid="app-version">
+        <span title="Этот компас показывает не на север, а туда, куда вам действительно нужно"><Icon name="compass" size={28}/></span>Версия: {appVersion()}
+      </p></>}>
+      <div className="menu-settings-grid"><section className="menu-settings-left"><h3 className="menu-settings-section"><Icon name="lantern"/>Показ</h3>
+      {speed!==null&&<div className="menu-setting-segment"><span>Скорость показа ходов</span><span className="view-switch" role="group" aria-label="Скорость показа ходов">{Object.keys(SPEEDS).map(k=><button key={k} aria-pressed={speed===k} onClick={()=>setSpeed(k as Speed)}>{{slow:'Медленно',normal:'Обычно',fast:'Быстро',instant:'Мгновенно'}[k]}</button>)}</span></div>}
+      <div className="menu-setting-segment"><span>Спецэффекты</span><span className="view-switch" role="group" aria-label="Спецэффекты">{(['rich','simple']as const).map(v=><button key={v} aria-pressed={effects===v} onClick={()=>setEffects(v)}>{v==='rich'?'Полные':'Простые'}</button>)}</span></div>
+      <SettingToggle label="Касание стола пропускает показ" note="для телефона" value={tapSkip} onChange={setTapSkip} testid="tap-skip"/>
+      <h3 className="menu-settings-section"><Icon name="bell"/>Игра</h3>
+      <SettingToggle label="Звук «ваш ход»" value={sound} onChange={setSound} testid="sound"/>
+      <SettingToggle label="Быстрый конец хода" note="Отменить «Ход окончен» можно 1 с, а не 3 с" value={fastEnd} onChange={setFastEnd} testid="fast-end"/>
+      {openHands!==null&&<SettingToggle label="Открытые руки" note="Все руки видны, без заставок" value={openHands} onChange={setOpenHands}/>}
+      {hints!==null?<SettingToggle label="Подсказки" note="урон на целях, «4 → 2» на Реакциях" value={hints} onChange={setHints}/>:<p className="muted">Подсказки в этой комнате выключены.</p>}
+      </section><section className="view-switches" data-testid="table-view" aria-label="Вид стола">
+        <h3 className="menu-settings-section"><Icon name="compass"/>Вид стола</h3>
         <Switch3 label="Залп на планшете" id="guns" value={view.guns} onChange={(guns) => setView({ ...view, guns })} options={[['icons', 'Значки'], ['ports', 'Порты']]} />
         <Switch3 label="Фон" id="hand" value={view.hand} onChange={(hand) => setView({ ...view, hand })} options={[['deck', 'Палуба'], ['table', 'Стол капитана']]} />
-        <Switch3 label="Разбор урона" id="damage" value={view.damage} onChange={(damage) => setView({ ...view, damage })} options={[['show', 'Показывать'], ['hide', 'Скрыть']]} />
         <Switch3 label="Рамка моря" id="frame" value={view.frame} onChange={(frame) => setView({ ...view, frame })} options={[['bulwark', 'Фальшборт'], ['brass', 'Латунь']]} />
-      </section>
-      <label className="row check">
-        <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} data-testid="sound" /> Звук «ваш ход»
-      </label>
-      <label className="row check">
-        <input type="checkbox" checked={fastEnd} onChange={(e) => setFastEnd(e.target.checked)} data-testid="fast-end" /> Быстрый конец хода
-        («Ход окончен · Отменить» — 1 с вместо 3 с)
-      </label>
-      {openHands !== null && (
-        <label className="row check">
-          <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все
-          руки видны, без заставок)
-        </label>
-      )}
-      {hints !== null ? (
-        <label className="row check">
-          <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} />
-          <span>Подсказки (урон Зарядов и на целях, «4 → 2» на Реакциях в руке, зелёный «Ход окончен», «Залп не дан…»)</span>
-        </label>
-      ) : (
-        <p className="row muted">Подсказки в этой комнате выключены.</p>
-      )}
-      <label className="row check">
-        <input type="checkbox" checked={tapSkip} onChange={(e) => setTapSkip(e.target.checked)} data-testid="tap-skip" /> Пропуск
-        анимации касанием стола (телефон)
-      </label>
+        <Switch3 label="Разбор урона" id="damage" value={view.damage} onChange={(damage) => setView({ ...view, damage })} options={[['show', 'Показывать'], ['hide', 'Скрыть']]} />
+        <aside className="menu-view-preview"><svg width="80" height="54" viewBox="0 0 80 54" aria-hidden="true"><rect x="2" y="2" width="76" height="50" rx="7" fill="#254556" stroke="#c9a048" strokeWidth="2"/><rect x="8" y="8" width="64" height="12" rx="2" fill="#e9ddb9"/><rect x="8" y="34" width="27" height="12" rx="2" fill="#c9a048"/><rect x="43" y="34" width="29" height="12" rx="2" fill="#e9ddb9"/></svg><span>Вид стола меняется сразу,<br/>это видно за окном.</span></aside>
+      </section></div>
       {fxErrors.length > 0 && (
         <div className="row fx-errors" data-testid="fx-errors">
           <b>Ошибки анимаций ({fxErrors.length})</b>
@@ -507,7 +447,7 @@ export function SettingsSheet({
             {fxErrors.map((x, i) => (
               <li key={i}>
                 <code>
-                  {x.at.slice(5, 16).replace('T', ' ')} · {x.clip} · {x.width}px — {x.text}
+                  {x.at.slice(5, 16).replace('T', ' ')} · {x.clip} · {x.width}px: {x.text}
                 </code>
               </li>
             ))}
@@ -526,7 +466,7 @@ export function SettingsSheet({
       {fxTrace.length > 0 && (
         <details className="row fx-errors" data-testid="fx-trace">
           <summary>Журнал анимаций (для разработчика)</summary>
-          <span className="muted">Если анимация оборвалась или не показалась — сразу откройте и пришлите скриншот.</span>
+          <span className="muted">Если анимация оборвалась или не показалась, сразу откройте и пришлите скриншот.</span>
           <ol>
             {fxTrace.map((x, i) => (
               <li key={i}>
@@ -545,9 +485,9 @@ export function SettingsSheet({
           </button>
         </details>
       )}
-      <p className="row muted" data-testid="app-version">
-        Версия: {appVersion()}
-      </p>
+
     </Sheet>
   );
 }
+
+function SettingToggle({label,note,value,onChange,testid}:{label:string;note?:string;value:boolean;onChange:(v:boolean)=>void;testid?:string}){return <label className="menu-setting-toggle"><span>{label}{note&&<small>{note}</small>}</span><input type="checkbox" checked={value} onChange={e=>onChange(e.target.checked)} data-testid={testid}/></label>;}

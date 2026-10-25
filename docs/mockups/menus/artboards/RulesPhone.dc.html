@@ -39,7 +39,9 @@ a{color:#e0bd62}
 .doc td{border-bottom:1px solid rgba(201,160,72,.2);padding:5px 8px;vertical-align:top}
 .doc td:nth-child(2){white-space:nowrap}
 .doc .bosun{margin:4px 0 14px}
-.chip{flex:none;display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:18px;border:1.5px solid rgba(201,160,72,.6);background:#0b141c;color:#c8d6dc;font-size:14px;white-space:nowrap}.chip.on{background:linear-gradient(#5a3a22,#3a2414);border-color:#c9a048;color:#f6dd92}.card p,.step{font-size:14px}.bosun{font-size:14.5px}</style>
+.chip{flex:none;display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:18px;border:1.5px solid rgba(201,160,72,.6);background:#0b141c;color:#c8d6dc;font-size:14px;white-space:nowrap}.chip.on{background:linear-gradient(#5a3a22,#3a2414);border-color:#c9a048;color:#f6dd92}.card p,.step{font-size:14px}.bosun{font-size:14.5px}
+header:has(button[aria-label="Закрыть"]){height:60px!important}
+</style>
 </helmet>
 <div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'Alegreya Sans', system-ui, sans-serif; color: #eef3f6; background: #234a5e">
   <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(4,8,12,.7)"></div>
@@ -56,11 +58,11 @@ a{color:#e0bd62}
       <span aria-hidden="true" style="position: absolute; right: 0; top: 0; bottom: 0; width: 40px; background: linear-gradient(90deg, rgba(21,33,43,0), #15212b)"></span>
     </nav>
     <div style="flex: 1; min-height: 0; overflow: hidden; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 10px; position: relative">
-      <div class="bosun"><img src="../assets/icons/ic_pipe.svg" alt="" width="38" height="38" style="flex: none"><span><b>Боцман:</b> «Всё главное — здесь. Подробности — в главах выше».</span></div>
-      <div class="card"><h3>Раунд</h3><div style="display: flex; flex-direction: column; gap: 5px"><div class="step"><i>1</i>Море — откройте карту моря</div><div class="step"><i>2</i>Ход Пиратов</div><div class="step"><i>3</i>Ход Компании</div></div></div>
-      <div class="card"><h3>Ход команды — оба корабля сразу</h3><div style="display: flex; flex-direction: column; gap: 5px"><div class="step"><i>1</i>Трюм: +3 Пороха (больше 8 не влезет). Горящие корабли получают урон.</div><div class="step"><i>2</i>Добор до 5 карт. Планы «Жемчужины» тоже считаются.</div><div class="step"><i>3</i>Действия: карт — не больше Команды, Залп — один на корабль.</div><div class="step"><i>4</i>«Ход окончен».</div></div></div>
-      <div class="card"><h3>Залп</h3><p>Стоит 1 Порох. Урон = Пушки. По диагонали — на 1 меньше. Второй корабль бьёт ту же цель — на 1 больше (раз в ход). Без Заряда — по Корпусу.</p></div>
-      <div class="card"><h3>Ход противника</h3><p>Реакций — не больше Парусов. Играйте, когда враг объявил Залп или карту, — до урона.</p></div>
+      <div class="bosun"><img src="../assets/icons/ic_pipe.svg" alt="" width="38" height="38" style="flex: none"><span><b>Боцман:</b> «Всё главное здесь. Подробности в главах выше».</span></div>
+      <div class="card"><h3>Раунд</h3><div style="display: flex; flex-direction: column; gap: 5px"><div class="step"><i>1</i>Море: откройте карту моря</div><div class="step"><i>2</i>Ход Пиратов</div><div class="step"><i>3</i>Ход Компании</div></div></div>
+      <div class="card"><h3>Ход команды: оба корабля сразу</h3><div style="display: flex; flex-direction: column; gap: 5px"><div class="step"><i>1</i>Трюм: +3 Пороха (больше 8 не влезет). Горящие корабли получают урон.</div><div class="step"><i>2</i>Добор до 5 карт. Планы «Жемчужины» тоже считаются.</div><div class="step"><i>3</i>Действия: карт не больше Команды, один Залп на корабль.</div><div class="step"><i>4</i>«Ход окончен».</div></div></div>
+      <div class="card"><h3>Залп</h3><p>Стоит 1 Порох. Урон равен Пушкам, по диагонали на 1 меньше. Второй корабль по той же цели бьёт на 1 сильнее (раз в ход). Без Заряда бьёт по Корпусу.</p></div>
+      <div class="card"><h3>Ход противника</h3><p>Реакций не больше, чем Парусов. Играйте их, когда враг объявил Залп или карту, до урона.</p></div>
       <span aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: linear-gradient(rgba(14,27,38,0), #0e1b26)"></span>
     </div>
   </section>

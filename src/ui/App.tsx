@@ -76,7 +76,7 @@ export function App() {
         />
       );
     case 'prep':
-      return <Prep mode={screen.mode} onStart={start} onResume={resume} onBack={() => setScreen({ k: 'setup' })} />;
+      return <Prep data={data} mode={screen.mode} onStart={start} onResume={resume} onBack={() => setScreen({ k: 'setup' })} />;
     case 'net':
       return (
         <NetScreen

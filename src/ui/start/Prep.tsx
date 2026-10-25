@@ -3,13 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import { parseRecord, type Controller, type MatchRecord, type MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
 import type { Variant } from '../../engine/state';
-import type { Side } from '../../engine/types';
+import type { GameData, Side } from '../../engine/types';
 import { SIDE_LABEL } from '../game/text';
 import { loadSettings, storeSettings } from '../storage';
 import { seedFrom, tossSeed, urlSeedText } from '../seed';
 import { Coin } from './Coin';
 import { instantUrl, reducedMotion } from './motion';
-import { Rhumbs } from './Rhumbs';
+import {MenuSurface,MenuScene,Icon,Arrow,Flourish} from '../menus/Menus';
 import type { Mode } from './Start';
 
 export interface StartRequest {
@@ -26,11 +26,13 @@ const other = (side: Side): Side => (side === 'ПИРАТЫ' ? 'КОМПАНИЯ
 export const coinOf = (seed: number): Side => (createRng(seed ^ 0x5bd1e995).int(2) === 0 ? 'ПИРАТЫ' : 'КОМПАНИЯ');
 
 export function Prep({
+  data,
   mode,
   onStart,
   onResume,
   onBack,
 }: {
+  data: GameData;
   mode: Mode;
   onStart: (req: StartRequest) => void;
   onResume: (record: MatchRecord) => void;
@@ -84,7 +86,7 @@ export function Prep({
   /** The game starts with the seed the coin fell by (or the screen's seed, when the side was picked). */
   const start = (side: Side, byCoin: boolean, gameSeed: number) => {
     const game = { seed: gameSeed, variant, sea, legends };
-    const lead = byCoin ? 'Жребий: ' : '';
+    const lead = byCoin ? 'Монета выбрала: ' : '';
     if (mode === 'bots') {
       onStart({
         setup: { game, players: { [side]: 'human', [other(side)]: 'bot' } as Record<Side, Controller>, openHands, hints },
@@ -93,7 +95,7 @@ export function Prep({
     } else {
       onStart({
         setup: { game, players: { ПИРАТЫ: 'human', КОМПАНИЯ: 'human' }, openHands, hints },
-        note: `${lead}кто держит устройство — за ${SIDE_LABEL[side].acc}, второй игрок — за ${SIDE_LABEL[other(side)].acc}. Первыми ходят Пираты.`,
+        note: `${lead}кто держит устройство, играет за ${SIDE_LABEL[side].acc}, второй игрок играет за ${SIDE_LABEL[other(side)].acc}. Первыми ходят Пираты.`,
       });
     }
   };
@@ -112,112 +114,18 @@ export function Prep({
   };
 
   const who = mode === 'bots' ? 'Вы играете за' : 'Кто держит устройство, играет за';
-  const verdict = coin && !coin.spinning ? `Жребий: ${mode === 'bots' ? 'вы' : 'держащий устройство'} — ${SIDE_LABEL[coin.side].name}` : coin ? 'Монета крутится…' : 'Монета решит, кто за какую сторону';
+  const verdict = coin && !coin.spinning ? `Жребий: ${mode === 'bots' ? 'вы' : 'держащий устройство'}: ${SIDE_LABEL[coin.side].name}` : coin ? 'Монета крутится…' : 'Монета решит, кто за какую сторону';
 
-  return (
-    <div className="start-page">
-      <Rhumbs />
-      <main className="prep" data-testid="prep">
-        <div className="prep-card">
-          <button className="link prep-back" onClick={onBack}>
-            ← Назад
-          </button>
-          <h1 className="prep-title">{mode === 'bots' ? 'Против ботов' : 'Вдвоём на одном экране'}</h1>
-          <p className="prep-sub">{mode === 'bots' ? 'Вы ведёте одну команду, боты — другую.' : 'Каждый за свою команду; между ходами — заставка «Передайте устройство».'} Первыми всегда ходят Пираты.</p>
-
-          <p className="prep-label">{who}</p>
-          <div className="side-pick" role="radiogroup" aria-label={who}>
-            {(['ПИРАТЫ', 'КОМПАНИЯ'] as Side[]).map((side) => (
-              <button
-                key={side}
-                role="radio"
-                aria-checked={pick === side}
-                className={`side-btn ${side === 'ПИРАТЫ' ? 'pirates' : 'company'} ${pick === side ? 'on' : ''}`}
-                data-testid={side === 'ПИРАТЫ' ? 'pick-pirates' : 'pick-company'}
-                onClick={() => setPick(side)}
-              >
-                {SIDE_LABEL[side].name}
-              </button>
-            ))}
-            <button
-              role="radio"
-              aria-checked={pick === 'coin'}
-              className={`side-btn coin-btn ${pick === 'coin' ? 'on' : ''}`}
-              data-testid="pick-coin"
-              onClick={() => {
-                setPick('coin');
-                if (!coin?.spinning) toss();
-              }}
-            >
-              Жребий
-            </button>
-          </div>
-          {pick === 'coin' && (
-            <div className="coin-row" aria-live="polite">
-              <Coin face={coin?.side ?? null} spinning={!!coin?.spinning} />
-              <span data-testid="coin-verdict">{verdict}</span>
-            </div>
-          )}
-
-          <section className="prep-more">
-            <button className="link" onClick={() => setMore(!more)} aria-expanded={more}>
-              {more ? '▾' : '▸'} Дополнительно
-            </button>
-            {more && (
-              <div className="more-body">
-                <label className="row">
-                  <span>Вариант</span>
-                  <select
-                    value={variant}
-                    onChange={(e) => {
-                      const v = e.target.value as Variant;
-                      setVariant(v);
-                      // «Первая партия» turns the hints on by default; the box can turn them off.
-                      if (v === 'first') setHintsChoice(true);
-                      // «Первая партия» plays without the sea and the Legends (RULES.md 20.1); the boxes can turn them back on.
-                      setSea(v !== 'first');
-                      setLegends(v !== 'first');
-                    }}
-                  >
-                    <option value="standard">обычная партия</option>
-                    <option value="first">«Первая партия»</option>
-                    <option value="quick">«Быстрый бой»</option>
-                  </select>
-                </label>
-                <label className="row check">
-                  <input type="checkbox" checked={sea} onChange={(e) => setSea(e.target.checked)} /> Колода моря
-                </label>
-                <label className="row check">
-                  <input type="checkbox" checked={legends} onChange={(e) => setLegends(e.target.checked)} /> Легенды
-                </label>
-                <label className="row check">
-                  <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} /> Подсказки (урон Зарядов и на
-                  целях, «4 → 2» на Реакциях в руке, зелёный «Ход окончен», «Залп не дан…»); без них — как за столом
-                </label>
-                <label className="row check">
-                  <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все
-                  руки видны, без заставок)
-                </label>
-                <label className="row">
-                  <span>Seed</span>
-                  <input inputMode="numeric" placeholder="случайный" value={seedText} onChange={(e) => changeSeed(e.target.value)} />
-                </label>
-                <div className="row buttons">
-                  <button className="btn" onClick={() => file.current?.click()}>
-                    Загрузить партию (.json)
-                  </button>
-                  <input ref={file} type="file" accept=".json,application/json" hidden onChange={(e) => e.target.files?.[0] && load(e.target.files[0])} />
-                </div>
-                {error && <p className="error">{error}</p>}
-              </div>
-            )}
-          </section>
-
-          <button className="prep-start" data-testid="prep-start" onClick={begin} disabled={!!coin?.spinning}>
-            Начать
-          </button>
-        </div>
-      </main>
+  const variantPick=(v:Variant)=>{setVariant(v);if(v==='first')setHintsChoice(true);setSea(v!=='first');setLegends(v!=='first');};
+  return <MenuSurface kind="prep"><main className="menu-prep-content" data-testid="prep">
+    <button className="menu-link menu-back" onClick={onBack}><Arrow back/><span>Назад</span></button><h1 className="menu-title">{mode==='bots'?'Против ботов':'На одном экране'}</h1><Flourish/><p className="menu-subtitle">{mode==='bots'?'Вы командуете одной стороной, боты другой.':'Каждый за свою команду, передавайте устройство друг другу.'} <span className="menu-desktop">Пираты всегда ходят первыми.</span><span className="menu-phone">Пираты ходят первыми.</span></p>
+    <div className="menu-kicker">Ваша сторона</div><div className="menu-side-pick" role="radiogroup" aria-label={who}>
+     {(['ПИРАТЫ','КОМПАНИЯ']as Side[]).map(side=><button key={side} role="radio" aria-checked={pick===side} className={`menu-side-tile ${pick===side?'on':''}`} data-testid={side==='ПИРАТЫ'?'pick-pirates':'pick-company'} onClick={()=>setPick(side)}>{pick===side&&<span className="menu-picked"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8L6.5 11.5L13 4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg><span className="menu-desktop">Выбрано</span></span>}<MenuScene name={side==='ПИРАТЫ'?'Pirates':'Company'}/><span className="menu-side-copy"><b>{SIDE_LABEL[side].name}</b><small>{data.ships.filter(x=>x.side===side).map(x=>x.name).join(' и ')}</small></span></button>)}
+     <button role="radio" aria-checked={pick==='coin'} className={`menu-side-tile menu-coin-tile ${pick==='coin'?'on':''}`} data-testid="pick-coin" onClick={()=>{setPick('coin');if(!coin?.spinning)toss();}}><MenuScene name="CoinSpark"/><Coin face={coin?.side??null} spinning={!!coin?.spinning}/><b>Жребий</b><small data-testid="coin-verdict" aria-live="polite">{coin?verdict:'Монета выберет сторону'}</small></button>
     </div>
-  );
+    <div className="menu-prep-options"><section><div className="menu-kicker">Вариант партии</div><div className="menu-variants" role="radiogroup" aria-label="Вариант">{([{v:'standard',label:'Обычная',icon:'cannon'},{v:'first',label:'Первая партия',icon:'chart'},{v:'quick',label:'Быстрый бой',icon:'bomb'}]as const).map(x=><button key={x.v} role="radio" aria-checked={variant===x.v} className={variant===x.v?'on':''} onClick={()=>variantPick(x.v)}><Icon name={x.icon}/>{x.label}</button>)}</div><p>{variant==='standard'?'Все правила, Колода моря и Легенды. Бой идёт, пока у одной стороны не утонут оба корабля.':variant==='first'?'Для знакомства с игрой. Колоду моря и Легенды можно включить отдельно.':'Короткая партия с правилами варианта «Быстрый бой».'}</p></section>
+    <section><div className="menu-kicker">Настройки стола</div><div className="menu-toggles">{[{text:'Колода моря',value:sea,set:setSea},{text:'Легенды',value:legends,set:setLegends},{text:'Подсказки',value:hints,set:setHints},{text:'Открытые руки',value:openHands,set:setOpenHands}].map(x=><label className="menu-toggle" key={x.text}><input type="checkbox" checked={x.value} onChange={e=>x.set(e.target.checked)}/>{x.text}</label>)}</div><p>Подсказки: урон по целям и выгодные ходы. Открытые руки: все карты на виду.</p></section></div>
+    <footer className="menu-prep-bottom"><button className="menu-link" aria-expanded={more} onClick={()=>setMore(!more)}><Arrow chevron/><span className="menu-desktop">Ещё: номер партии и загрузка сохранения</span><span className="menu-phone">Ещё настройки</span></button><button className="menu-primary" data-testid="prep-start" disabled={!!coin?.spinning} onClick={begin}><Icon name="sail" size={46}/>Поднять паруса</button></footer>
+    {more&&<section className="menu-advanced"><label>Номер партии <input inputMode="numeric" placeholder="случайный" value={seedText} onChange={e=>changeSeed(e.target.value)}/></label><button className="menu-link" onClick={()=>file.current?.click()}>Загрузить партию (.json)</button><input ref={file} type="file" accept=".json,application/json" hidden onChange={e=>e.target.files?.[0]&&load(e.target.files[0])}/>{error&&<p className="error">{error}</p>}</section>}
+  </main></MenuSurface>;
 }

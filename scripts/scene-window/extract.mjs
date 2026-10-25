@@ -5,21 +5,22 @@ import {referenceFonts} from './fonts.mjs';
 import {createHash} from 'node:crypto';
 import {mkdirSync,readFileSync,writeFileSync,existsSync} from 'node:fs';
 export async function extractScenes(config){
-const {phone=false,weather=false,out,manifestPath,boards,sourceDir,sourceURL}=config;
+const {phone=false,weather=false,menu=false,sceneSelector='[class*="-scene"]',out,manifestPath,boards,sourceDir,sourceURL}=config;
 const manifest=weather||phone?JSON.parse(existsSync(manifestPath)?readFileSync(manifestPath,'utf8'):'{}'):{};mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium'});
 const page=await browser.newPage({viewport:{width:920,height:640}});
 const raster=await browser.newPage({deviceScaleFactor:3});
 try{for(const [code,name]of Object.entries(boards)){
- await page.setViewportSize({width:phone?390:920,height:phone?1360:640});
+ await page.setViewportSize({width:menu?1366:phone?390:920,height:menu?660:phone?1360:640});
  await page.goto(`${sourceURL}/artboards/${name}.dc.html`);await page.addStyleTag({content:referenceFonts});await page.evaluate(async()=>{await document.fonts.load('500 13px "Alegreya SC"','Корпус Паруса ABC123');await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode()));});
- const result=await page.evaluate((weather)=>{
-  const scene=document.querySelector('[class*="-scene"]'),title=[...scene.children].find(e=>e.contains(document.querySelector('h1')))??document.querySelector('h1').parentElement.parentElement,close=scene.querySelector('button');
+ const result=await page.evaluate(({weather,menu,sceneSelector})=>{
+  const scene=document.querySelector(sceneSelector),title=menu?document.createElement('div'):[...scene.children].find(e=>e.contains(document.querySelector('h1')))??document.querySelector('h1').parentElement.parentElement,close=scene.querySelector('button');
   const native=document.getAnimations();native.forEach(a=>{a.pause();a.currentTime=0;});
   const animations=new Map(),assets=[];let id=0;const padding=weather?24:8;
   for(const a of native){const el=a.effect.target;if(!scene.contains(el)||(scene.contains(title)&&title.contains(el)))continue;
    const list=animations.get(el)??[];list.push({name:a.animationName,frames:a.effect.getKeyframes(),timing:a.effect.getTiming(),native:a});animations.set(el,list);
   }
+  function motion(e){const c=getComputedStyle(e),b=e instanceof SVGGraphicsElement?e.getBBox():{width:e.offsetWidth,height:e.offsetHeight},parts=c.translate.split(' '),value=(s,n)=>s?.endsWith('%')?parseFloat(s)*n/100:parseFloat(s)||0;let m=new DOMMatrix();if(c.translate!=='none')m=m.translate(value(parts[0],b.width),value(parts[1],b.height));if(c.rotate!=='none')m=m.rotate(parseFloat(c.rotate)||0);if(c.scale!=='none'){const a=c.scale.split(' ').map(Number);m=m.scale(a[0],a[1]??a[0]);}return m.multiply(new DOMMatrix(c.transform==='none'?undefined:c.transform)).toString();}
   const style=e=>{const s=getComputedStyle(e);return Object.fromEntries(['position','display','left','top','right','bottom','width','height','z-index','overflow-x','overflow-y','border-radius','opacity','transform','transform-origin','background-color','background-image','background-size','background-position','background-repeat','box-shadow','filter','mask-image','mask-size','mask-repeat','mix-blend-mode','box-sizing','font-family','font-size','font-weight','font-style','line-height','letter-spacing','text-align','text-shadow','color'].map(k=>[k.replace(/-([a-z])/g,(_,c)=>c.toUpperCase()),s.getPropertyValue(k)]));};
   const svgStatic=(nodes,svg,bounds,neutral=true)=>{
    const original=Array.isArray(nodes)?nodes:[nodes],clones=original.map(n=>n.cloneNode(true));
@@ -78,7 +79,7 @@ try{for(const [code,name]of Object.entries(boards)){
   function walk(e,svg){
    if(e===title||e===close||['defs','title','desc','style','script'].includes(e.tagName))return null;
    const isSvg=e.namespaceURI==='http://www.w3.org/2000/svg',root=isSvg&&e.tagName==='svg';if(isSvg&&!(e instanceof SVGGraphicsElement))return null;
-   const s=style(e),anim=(animations.get(e)??[]).map(({native,...a})=>a),node={id:++id,tag:e.tagName,cls:e.getAttribute('class')??'',style:s,anim,children:[]};
+   const s=style(e);if(menu)s.transform=motion(e);const anim=(animations.get(e)??[]).map(({native,...a})=>a),node={id:++id,tag:e.tagName,cls:e.getAttribute('class')??'',style:s,anim,children:[]};
    if(root){
     const vb=e.viewBox.baseVal,w=parseFloat(s.width)||e.width.baseVal.value,h=parseFloat(s.height)||e.height.baseVal.value;
     const inner={id:++id,tag:'viewbox',style:{position:'absolute',left:'0px',top:'0px',width:'0px',height:'0px',opacity:'1',transform:`scale(${w/(vb.width||w)},${h/(vb.height||h)}) translate(${-vb.x}px,${-vb.y}px)`,transformOrigin:'0px 0px'},anim:[],children:[]};
@@ -97,7 +98,7 @@ try{for(const [code,name]of Object.entries(boards)){
     node.style={position:'absolute',left:'0px',top:'0px',width:'0px',height:'0px',transform:s.transform,transformOrigin:s.transformOrigin,opacity:s.opacity,overflowX:'visible',overflowY:'visible'};
     if(weather&&getComputedStyle(e).transformBox==='fill-box'){const b=e.getBBox(),o=s.transformOrigin.split(' ').map(parseFloat);node.style.transformOrigin=(b.x+o[0])+'px '+(b.y+o[1])+'px';}
     const clipId=e.getAttribute('clip-path')?.match(/#([^)]*)/)?.[1],clip=clipId?svg.querySelector('[id="'+clipId+'"]'):null;
-    if(weather&&((clip&&clip.querySelector('path')&&hasDesc(e))||anim.some(a=>/^th-fl[123]$/.test(a.name)))){
+    if(weather&&((clip&&clip.querySelector('path')&&hasDesc(e))||anim.some(a=>/^th-fl[123]$/.test(a.name)||menu&&a.name==='torch'))){
      const actions=[...animations].filter(([el])=>el===e||e.contains(el)).flatMap(([,a])=>a),duration=Math.max(...actions.map(a=>Number(a.timing.duration)*(String(a.timing.direction).startsWith('alternate')?2:1))),b=e.getBBox(),box={x:Math.floor(b.x-24),y:Math.floor(b.y-24),w:Math.ceil(b.width+48),h:Math.ceil(b.height+48)};
      node.frames=[];node.frameTiming={duration,iterations:null,fill:'both',easing:'linear'};node.anim=[];node.style.transform='none';node.style.opacity='1';
      for(let f=0;f<4;f++){actions.forEach(a=>a.native.currentTime=duration*f/4);const asset=assets.length;assets.push({svg:svgStatic(e,svg,box,false),w:box.w,h:box.h});node.frames.push({asset,...box});}actions.forEach(a=>a.native.currentTime=0);
@@ -107,6 +108,17 @@ try{for(const [code,name]of Object.entries(boards)){
      const rect=clip.querySelector('rect'),x=Number(rect.getAttribute('x')),y=Number(rect.getAttribute('y')),w=Number(rect.getAttribute('width')),h=Number(rect.getAttribute('height')),children=node.children;
      node.children=[{id:++id,tag:'clip',cls:'',style:{position:'absolute',left:x+'px',top:y+'px',width:w+'px',height:h+'px',overflowX:'hidden',overflowY:'hidden'},anim:[],children:[{id:++id,tag:'clip-content',cls:'',style:{position:'absolute',left:-x+'px',top:-y+'px',width:'0px',height:'0px',overflowX:'visible',overflowY:'visible'},anim:[],children}]}];
     }
+   }else if(menu&&s.maskImage!=='none'&&e.children.length){
+    // A rippled/blurred reflection is one prepared four-frame picture, never a live mask ancestor.
+    const actions=[...animations].filter(([el])=>e.contains(el)).flatMap(([,a])=>a),duration=Math.max(1000,...actions.map(a=>Number(a.timing.duration))),w=e.offsetWidth,h=e.offsetHeight;
+    node.frames=[];node.frameTiming={duration,iterations:null,fill:'both',easing:'linear'};node.anim=[];
+    for(let f=0;f<4;f++){
+     actions.forEach(a=>a.native.currentTime=Number(a.timing.delay??0)+duration*f/4);
+     const clone=e.cloneNode(true),original=[e,...e.querySelectorAll('*')],copies=[clone,...clone.querySelectorAll('*')];
+     original.forEach((el,i)=>{const computed=getComputedStyle(el);for(const prop of computed)if(!prop.startsWith('animation')&&!prop.startsWith('transition'))copies[i].style.setProperty(prop,computed.getPropertyValue(prop));copies[i].style.animation='none';});
+     Object.assign(clone.style,{position:'absolute',left:padding+'px',top:padding+'px',transform:'none',opacity:'1'});
+     const asset=assets.length;assets.push({html:clone.outerHTML,w:w+padding*2,h:h+padding*2});node.frames.push({asset,x:-padding,y:-padding,w:w+padding*2,h:h+padding*2});
+    }actions.forEach(a=>a.native.currentTime=0);
    }else{
     if(e.children.length){if(s.backgroundImage!=='none'||s.backgroundColor!=='rgba(0, 0, 0, 0)')art(e,node,null);for(const child of e.children){const c=walk(child,null);if(c)node.children.push(c);}}
     else if(weather&&e.textContent.trim()){node.text=e.textContent;for(const side of ['Left','Right','Top','Bottom'])node.style['padding'+side]=(parseFloat(getComputedStyle(e)['padding'+side])+parseFloat(getComputedStyle(e)['border'+side+'Width']))+'px';}else art(e,node,null);
@@ -116,12 +128,12 @@ try{for(const [code,name]of Object.entries(boards)){
    if(weather&&!isSvg){
     const at=layout(e),parent=layout(e.parentElement);node.style.position='absolute';node.style.left=(at.x-parent.x)+'px';node.style.top=(at.y-parent.y)+'px';node.style.width=e.offsetWidth+'px';node.style.height=e.offsetHeight+'px';node.style.boxSizing='border-box';
    }else if(weather&&root&&s.position!=='absolute'){const at=layout(e),parent=layout(e.parentElement);node.style.position='absolute';node.style.left=(at.x-parent.x)+'px';node.style.top=(at.y-parent.y)+'px';}
-   node.particle=!!node.art&&!!node.anim.length&&/(?:tw$|spk$|shoot$|spray$|splash$|glit$|wisp$|drip$|port$|ember$|farsm$|rise$|puff$|crown$|ring$|drop$|mote$|spark$|shard$|ember$|smk$|dust$|fly$|glint$|bub$|emb$|msmoke$|mist$|c2-s[0-7]$|cv-s[A-D]$|cv-spl$|cv-sfoam$|cv-sh[0-9]$)/.test(node.anim[0].name)&&node.art.w<160&&node.art.h<180;
+   node.particle=!!node.art&&!!node.anim.length&&/(?:tw$|spk$|shoot$|spray$|splash$|glit$|wisp$|drip$|port$|ember$|farsm$|rise$|puff$|crown$|ring$|drop$|mote$|spark$|shard$|ember$|smk$|dust$|fly$|glint$|bub$|emb$|msmoke$|mist$|c2-s[0-7]$|cv-s[A-D]$|cv-spl$|cv-sfoam$|cv-sh[0-9]$)/.test(node.anim[0].name)&&node.art.w<160&&node.art.h<180;if(menu&&node.art&&node.anim.length&&/^(twinkle|glitter|spark|gl$)/.test(node.anim[0].name))node.particle=true;
    return node;
   }
   if(weather)for(const [el,list]of animations)for(const a of list){
-   const properties=[...new Set(a.frames.flatMap(f=>Object.keys(f)))].filter(k=>['transform','opacity'].includes(k));if(!properties.length)continue;
-   const duration=Number(a.timing.duration),old=a.native.currentTime;a.frames=Array.from({length:51},(_,i)=>{a.native.currentTime=Number(a.timing.delay??0)+duration*(i===50?1-1e-8:i/50);const computed=getComputedStyle(el);return Object.fromEntries([['offset',i/50],['easing','linear'],...properties.map(k=>[k,computed[k]])]);});a.native.currentTime=old;
+   const properties=[...new Set(a.frames.flatMap(f=>Object.keys(f)))].filter(k=>(menu?['transform','opacity','translate','rotate','scale']:['transform','opacity']).includes(k));if(!properties.length)continue;
+   if(menu&&properties.some(k=>k!=='opacity')){properties.splice(0,properties.length,...properties.includes('opacity')?['transform','opacity']:['transform']);}const duration=Number(a.timing.duration),old=a.native.currentTime;a.frames=Array.from({length:51},(_,i)=>{a.native.currentTime=Number(a.timing.delay??0)+duration*(i===50?1-1e-8:i/50);const computed=getComputedStyle(el);return Object.fromEntries([['offset',i/50],['easing','linear'],...properties.map(k=>[k,menu&&k==='transform'?motion(el):computed[k]])]);});a.native.currentTime=old;
   }
   const tree=[];for(const e of scene.children){const n=walk(e,null);if(n)tree.push(n);}
   const features=[];
@@ -142,7 +154,7 @@ try{for(const [code,name]of Object.entries(boards)){
    tree.unshift({id:++id,tag:'sky',cls:'',style:{position:'absolute',left:'0px',top:'0px',width:box.w+'px',height:box.h+'px',pointerEvents:'none'},anim:[],children:[],art:{asset,...box}});
   }
   return {tree,assets,features,width:scene.clientWidth,height:scene.clientHeight};
- },weather);
+ },{weather,menu,sceneSelector});
  // Inline any mask URLs into the offline HTML before rasterization. Images never fetch the design runtime.
  for(let i=0;i<result.assets.length;i++){
   const a=result.assets[i],filename=`${name}-live-${createHash('sha256').update(JSON.stringify(a)).digest('hex').slice(0,16)}.png`;a.file=filename;
@@ -168,7 +180,7 @@ try{for(const [code,name]of Object.entries(boards)){
    if(key==='frames')n.frames.forEach(f=>{f.src=result.assets[f.asset].file;delete f.asset;});
    else if(n.art){n.art.src=result.assets[n.art.asset].file;delete n.art.asset;}
   }
-  if(n.image){const file=n.image.split('/').pop();const target=`${name}-asset-${file}`;writeFileSync(`${out}/${target}`,readFileSync(sourceDir+'/assets/'+file));n.image=target;}
+  if(n.image){const source=n.image.split('/assets/')[1]??n.image.split('/').pop(),file=n.image.split('/').pop();const target=`${name}-asset-${file}`;writeFileSync(`${out}/${target}`,readFileSync(sourceDir+'/assets/'+source));n.image=target;}
   n.children.forEach(link);
  }
  result.tree.forEach(link);result.features.forEach(f=>f.frames.forEach(a=>{a.src=result.assets[a.asset].file;delete a.asset;}));manifest[code]={name,width:result.width,height:result.height,tree:result.tree,features:result.features};

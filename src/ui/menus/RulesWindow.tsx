@@ -1,0 +1,40 @@
+import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {createPortal} from 'react-dom';
+import type {GameData} from '../../engine/types';
+import player from '../../../RULES-PLAYER.md?raw';
+import full from '../../../RULES.md?raw';
+import {memo} from '../game/memo';
+import {Icon} from './Menus';
+import {useMenuOverlay} from './layout';
+import {holdMenuMotion} from './motion';
+const chapters=player.split(/^## /m).slice(1).map((part,i)=>{const at=part.indexOf('\n');return{id:i,title:part.slice(0,at).trim(),text:part.slice(at+1).trim()};});
+function inline(text:string):ReactNode{return text.replace('Попадать — тоже.', 'Попадать тоже.').replace(/\s*—\s*/g, ': ').split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((s,i)=>s.startsWith('**')?<strong key={i}>{s.slice(2,-2)}</strong>:s.startsWith('`')?<code key={i}>{s.slice(1,-1)}</code>:s);}
+function Markdown({text}:{text:string}){
+ const lines=text.split('\n'),nodes:ReactNode[]=[];let i=0;
+ while(i<lines.length){const line=lines[i].trim();if(!line){i++;continue;}const key=i;
+  if(line.startsWith('|')){const rows:string[][]=[];while(i<lines.length&&lines[i].trim().startsWith('|'))rows.push(lines[i++].trim().replace(/^\||\|$/g,'').split('|').map(s=>s.trim()));nodes.push(<div className="menu-rules-table" key={key}><table><thead><tr>{rows[0].map((c,j)=><th key={j}>{inline(c)}</th>)}</tr></thead><tbody>{rows.slice(2).map((r,k)=><tr key={k}>{r.map((c,j)=><td key={j}>{inline(c)}</td>)}</tr>)}</tbody></table></div>);continue;}
+  if(/^>/.test(line)){const q:string[]=[];while(i<lines.length&&lines[i].startsWith('>'))q.push(lines[i++].replace(/^>\s*/,''));nodes.push(<aside key={key} className="menu-boatswain"><Icon name="pipe" size={24}/><span>{inline(q.join(' '))}</span></aside>);continue;}
+  if(/^#{1,4}\s/.test(line)){nodes.push(<h3 key={key}>{inline(line.replace(/^#+\s/,''))}</h3>);i++;continue;}
+  if(/^[-*]\s|^\d+\.\s/.test(line)){const ordered=/^\d/.test(line),rows:ReactNode[]=[];while(i<lines.length&&/^[-*]\s|^\d+\.\s/.test(lines[i].trim())){rows.push(<li key={i}>{inline(lines[i++].trim().replace(/^([-*]|\d+\.)\s/,''))}</li>);}nodes.push(ordered?<ol key={key}>{rows}</ol>:<ul key={key}>{rows}</ul>);continue;}
+  const paragraph=[line];i++;while(i<lines.length&&lines[i].trim()&&!/^(#|>|\||[-*]\s|\d+\.\s)/.test(lines[i]))paragraph.push(lines[i++].trim());nodes.push(<p key={key}>{inline(paragraph.join(' '))}</p>);
+ }
+ return <>{nodes}</>;
+}
+function SearchIcon(){return <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M15 15L22 22" stroke="currentColor" strokeWidth="2"/></svg>;}
+function ChapterTitle({title}:{title:string}){const m=title.match(/^(\d+)\.\s*(.*)$/);return m?<><b className="menu-chapter-number">{m[1]}</b>{m[2]}</>:<>{title}</>;}
+function MemoLine({line}:{line:string}){const m=line.match(/^(\d+)\.\s*(.*)$/);return <p className={m?'menu-numbered-step':''}>{m?<><b className="menu-step">{m[1]}</b><span>{inline(m[2])}</span></>:inline(line)}</p>;}
+function VolleyDiagram({data}:{data:GameData}){const d=data.ships[0];return <aside className="menu-volley-aside"><div className="menu-volley-diagram"><div className="menu-diagram-targets"><span>ВРАГ</span><span>ВРАГ</span></div><svg viewBox="0 0 300 135" aria-hidden="true"><defs><marker id="menu-arrow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#c9a048"/></marker></defs><path d="M60 118V16" stroke="#c9a048" strokeWidth="4" markerEnd="url(#menu-arrow-head)"/><path d="M60 118L242 16" stroke="#bd7960" strokeWidth="2.5" strokeDasharray="7 5"/><text x="48" y="65" textAnchor="end" fill="#f0d27a" fontSize="13"><tspan x="48">полный</tspan><tspan x="48" dy="16">урон</tspan></text><text x="185" y="65" fill="#bd7960" fontSize="15">−1</text></svg></div><section className="menu-rule-example"><h3>Пример</h3><p>{d.name}: Пушки {d.guns}. Напротив: {d.guns} урона, по диагонали: {Math.max(0,d.guns+('offset'in d.diagDamage?d.diagDamage.offset:0))}. Без Заряда урон идёт по Корпусу.</p></section></aside>;}
+export function RulesWindow({data,onClose}:{data:GameData;onClose:()=>void}){
+ const overlay=useMenuOverlay();
+ useEffect(()=>holdMenuMotion(),[]);
+ const [selected,setSelected]=useState(-1),[q,setQ]=useState(''),[all,setAll]=useState(false),[searchOpen,setSearchOpen]=useState(false),body=useRef<HTMLDivElement>(null),close=useRef<HTMLButtonElement>(null);
+ useEffect(()=>{close.current?.focus({preventScroll:true});},[]);useEffect(()=>{body.current?.scrollTo(0,0);},[selected,all]);
+ const query=q.trim().toLocaleLowerCase('ru'),found=useMemo(()=>query.length>=2?chapters.filter(c=>(c.title+'\n'+c.text).toLocaleLowerCase('ru').includes(query)):[],[query]);
+ const view=<div className="menu-window-backdrop" onClick={onClose}><section className="menu-rules-window" role="dialog" aria-modal="true" aria-label="Правила" data-testid="rules" onClick={e=>e.stopPropagation()}>
+  <header><h1><Icon name="book" size={40}/>Правила</h1><button className="menu-rules-search-toggle" aria-label="Показать поиск" onClick={()=>setSearchOpen(!searchOpen)}><SearchIcon/></button><label className={"menu-rules-search"+(searchOpen?' open':'')}><SearchIcon/><input className="search" aria-label="Поиск по правилам" placeholder="Поиск по правилам…" value={q} onChange={e=>{setQ(e.target.value);setAll(false);}}/></label><button className="menu-link" onClick={()=>{setAll(!all);setQ('');}}>{all?'Правила для новичка':'Полный свод правил'}</button><button className="menu-window-close" aria-label="Закрыть" onClick={onClose} ref={close}>×</button></header>
+  <div className="menu-rules-layout"><nav aria-label="Главы правил"><button className={selected===-1&&!all?'on':''} onClick={()=>{setSelected(-1);setAll(false);setQ('');}}><svg className="menu-memo-star" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1L12.5 7L19 7.5L14 12L15.5 19L10 15.5L4.5 19L6 12L1 7.5L7.5 7Z" fill="currentColor"/></svg>Памятка</button>{chapters.map(c=><button aria-label={c.title} key={c.id} className={selected===c.id&&!all?'on':''} onClick={()=>{setSelected(c.id);setAll(false);setQ('');}}><ChapterTitle title={c.title}/></button>)}</nav>
+  <div className="menu-rules-content" ref={body}>{query.length>=2?<><h2>Результаты поиска</h2>{!found.length&&<p>Ничего не найдено.</p>}{found.map(c=><section key={c.id}><h3><button className="menu-link" onClick={()=>{setSelected(c.id);setQ('');}}><ChapterTitle title={c.title}/></button></h3><Markdown text={c.text}/></section>)}</>:all?<><h2>Полный свод правил</h2><Markdown text={full}/></>:selected<0?<><div className="menu-memo-title"><div><h2>Памятка</h2><small>всё главное на одной странице</small></div><span className="menu-boatswain"><Icon name="pipe" size={22}/><span className="menu-desktop">Боцман: «Подробности в главах слева, по одной за вахту»</span><span className="menu-phone">Боцман: «Всё главное здесь. Подробности в главах выше».</span></span></div><div className="menu-memo">{memo(data).map(m=><section key={m.title}><h3>{m.title}</h3>{m.title==='Типы карт'?m.lines.map((l,i)=><p key={l}><Icon name={['t_charge','t_order','t_repair','t_reaction'][i]} size={24}/><b className={'menu-card-type type-'+i}>{l.split(' · ')[0]}</b><span>{l.split(' · ')[1]}</span></p>):m.lines.map(l=><MemoLine key={l} line={l}/>)}</section>)}</div></>:<><h2><ChapterTitle title={chapters[selected].title}/></h2><div className={chapters[selected].title.startsWith('8.')?'menu-rules-volley':''}><div><Markdown text={chapters[selected].text}/></div>{chapters[selected].title.startsWith('8.')&&<VolleyDiagram data={data}/>}</div></>}
+  </div></div>
+ </section></div>;
+ return typeof document==='undefined'?view:createPortal(view,overlay??document.body);
+}
