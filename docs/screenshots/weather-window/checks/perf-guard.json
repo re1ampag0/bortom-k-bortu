@@ -1,0 +1,73 @@
+[
+ {
+  "scene": "idle-3s",
+  "unexpectedAnimations": []
+ },
+ {
+  "scene": "volley-hit",
+  "report": {
+   "animations": 69,
+   "problems": [],
+   "exceptions": [
+    ".plank · borderBottomColor · Existing short target/hit frame CSS transition",
+    ".plank · borderLeftColor · Existing short target/hit frame CSS transition",
+    ".plank · borderRightColor · Existing short target/hit frame CSS transition",
+    ".plank · borderTopColor · Existing short target/hit frame CSS transition",
+    ".plank · boxShadow · Existing short target/hit frame CSS transition",
+    ".plank.own · filter · Existing CSS transition into the awaiting/disabled own-plank state",
+    ".plank.aimable · outlineColor · Target-selection aimpulse, existing UI outside effect artwork",
+    "[data-fx-keg] · background · Powder expenditure, small keg only (native shorthand)",
+    "[data-fx-value] · color · The displayed track number flashes on damage"
+   ]
+  },
+  "diagnostics": "сцена: announce + shot, 2.8 с\nкадров/с мин 56 / ср 58.3; худший кадр 67 мс\nдлинные задачи 1 (самая 74 мс); кадров >50 мс 1\nрендеры Game: 0, сумма 0 мс, макс 0.0 мс\nанимации в SVG на весь стол: нет\n5 худших интервалов rAF (≥ — неполный край показа):\n1. ≥35.1 мс; +0.000 с; announce; JS: вставка DOM; нажатие: перед показом: click fire\n2. 33.3 мс; +0.085 с; announce; после вставка DOM; нажатие: нет\n3. 33.3 мс; +1.635 с; shot; JS: частицы: кадр; нажатие: нет\n4. 33.3 мс; +0.052 с; announce; после вставка DOM; нажатие: нет\n5. 16.8 мс; +0.585 с; shot; JS: частицы: кадр / JS: холст: вставка; нажатие: нет\nНажатия (окно 1,5 с), новые сверху:\nfire → закрыт лист «Заряд», показ: announce + shot\n  до первого кадра 9 мс; худший кадр 67 мс; >50 мс: 1; рендеры Game 1 (сумма 36, макс 35.6 мс)\n  1. 66.6 мс; +0.009 с; announce; JS: вставка DOM; нажатие: нет\n  2. 33.3 мс; +0.126 с; announce; после вставка DOM; нажатие: нет\n  3. 33.3 мс; +0.092 с; announce; после вставка DOM; нажатие: нет\n  4. 16.8 мс; +0.626 с; shot; JS: частицы: кадр / JS: холст: вставка; нажатие: нет\n  5. 16.8 мс; +0.676 с; shot; JS: частицы: кадр; нажатие: нет\nplate-И → без смены листов\n  до первого кадра 9 мс; худший кадр 17 мс; >50 мс: 0; рендеры Game 1 (сумма 6, макс 5.9 мс)\n  1. 16.7 мс; +0.025 с; очередь; между этапами; нажатие: нет\n  2. 16.7 мс; +0.075 с; очередь; между этапами; нажатие: нет\n  3. 16.7 мс; +0.142 с; очередь; между этапами; нажатие: нет\n  4. 16.7 мс; +0.175 с; очередь; между этапами; нажатие: нет\n  5. 16.7 мс; +0.242 с; очередь; между этапами; нажатие: нет\nvolley-Ж → открыт лист «Заряд»\n  до первого кадра 10 мс; худший кадр 33 мс; >50 мс: 0; рендеры Game 1 (сумма 19, макс 19.1 мс)\n  1. 33.4 мс; +0.043 с; очередь; между этапами; нажатие: нет\n  2. ≥16.7 мс; +0.093 с; очередь; между этапами; нажатие: нет\n  3. 16.7 мс; +0.026 с; очередь; между этапами; нажатие: нет\n  4. 16.6 мс; +0.010 с; очередь; между этапами; нажатие: нет\n  5. 16.6 мс; +0.076 с; очередь; между этапами; нажатие: нет"
+ },
+ {
+  "scene": "ordinary-card",
+  "report": {
+   "animations": 38,
+   "problems": [],
+   "exceptions": [
+    ".plank · borderBottomColor · Existing short target/hit frame CSS transition",
+    ".plank · borderLeftColor · Existing short target/hit frame CSS transition",
+    ".plank · borderRightColor · Existing short target/hit frame CSS transition",
+    ".plank · borderTopColor · Existing short target/hit frame CSS transition",
+    ".plank · boxShadow · Existing short target/hit frame CSS transition",
+    ".plank.own · filter · Existing CSS transition into the awaiting/disabled own-plank state",
+    ".plank.aimable · outlineColor · Target-selection aimpulse, existing UI outside effect artwork",
+    "[data-fx-keg] · background · Powder expenditure, small keg only (native shorthand)",
+    "[data-fx-status=\"Переговоры\"] · boxShadow · misc.ts flag: original 380 ms landing highlight on this one status chip"
+   ]
+  },
+  "diagnostics": "сцена: card, 1.5 с\nкадров/с мин 59 / ср 58.9; худший кадр 50 мс\nдлинные задачи 1 (самая 51 мс); кадров >50 мс 0\nрендеры Game: 0, сумма 0 мс, макс 0.0 мс\nанимации в SVG на весь стол: нет\n5 худших интервалов rAF (≥ — неполный край показа):\n1. ≥29.5 мс; +0.000 с; card; JS: вставка DOM / JS: частицы: кадр; нажатие: перед показом: click play-card\n2. 16.8 мс; +0.246 с; card; JS: частицы: кадр; нажатие: нет\n3. 16.8 мс; +0.979 с; card; после вставка DOM; нажатие: нет\n4. 16.7 мс; +0.063 с; card; JS: частицы: кадр; нажатие: нет\n5. 16.7 мс; +0.096 с; card; JS: частицы: кадр; нажатие: нет\nНажатия (окно 1,5 с), новые сверху:\nplay-card → закрыт окно решения, показ: card\n  до первого кадра 9 мс; худший кадр 50 мс; >50 мс: 0; рендеры Game 1 (сумма 25, макс 25.1 мс)\n  1. 50.0 мс; +0.009 с; card; JS: вставка DOM / JS: частицы: кадр; нажатие: нет\n  2. 16.8 мс; +0.276 с; card; JS: частицы: кадр; нажатие: нет\n  3. 16.8 мс; +1.009 с; card; после вставка DOM; нажатие: нет\n  4. 16.7 мс; +0.092 с; card; JS: частицы: кадр; нажатие: нет\n  5. 16.7 мс; +0.126 с; card; JS: частицы: кадр; нажатие: нет\nplate-И → без смены листов\n  до первого кадра 8 мс; худший кадр 17 мс; >50 мс: 0; рендеры Game 1 (сумма 5, макс 5.1 мс)\n  1. 16.8 мс; +0.225 с; очередь; между этапами; нажатие: нет\n  2. 16.7 мс; +0.025 с; очередь; между этапами; нажатие: нет\n  3. 16.7 мс; +0.091 с; очередь; между этапами; нажатие: нет\n  4. 16.7 мс; +0.125 с; очередь; между этапами; нажатие: нет\n  5. 16.7 мс; +0.191 с; очередь; между этапами; нажатие: нет\nlift-play → открыт окно решения, закрыт поднятая карта\n  до первого кадра 10 мс; худший кадр 33 мс; >50 мс: 0; рендеры Game 1 (сумма 23, макс 22.6 мс)\n  1. 33.4 мс; +0.010 с; очередь; между этапами; нажатие: нет\n  2. ≥16.7 мс; +0.060 с; очередь; между этапами; нажатие: нет\n  3. 16.5 мс; +0.044 с; очередь; между этапами; нажатие: нет\n  4. ≥10.4 мс; +0.000 с; очередь; между этапами; нажатие: перед показом: lift-play\nhand-card → открыт поднятая карта\n  до первого кадра 8 мс; худший кадр 17 мс; >50 мс: 0; рендеры Game 0 (сумма 0, макс 0.0 мс)\n  1. 16.8 мс; +0.075 с; очередь; между этапами; нажатие: нет\n  2. 16.7 мс; +0.058 с; очередь; между этапами; нажатие: нет\n  3. 16.7 мс; +0.141 с; очередь; между этапами; нажатие: нет\n  4. 16.7 мс; +0.208 с; очередь; между этапами; нажатие: нет\n  5. 16.7 мс; +0.241 с; очередь; между этапами; нажатие: нет\nfire → закрыт лист «Заряд», показ: announce + shot\n  до первого кадра 9 мс; худший кадр 67 мс; >50 мс: 1; рендеры Game 1 (сумма 36, макс 35.6 мс)\n  1. 66.6 мс; +0.009 с; announce; JS: вставка DOM; нажатие: нет\n  2. 33.3 мс; +0.126 с; announce; после вставка DOM; нажатие: нет\n  3. 33.3 мс; +0.092 с; announce; после вставка DOM; нажатие: нет\n  4. 16.8 мс; +0.626 с; shot; JS: частицы: кадр / JS: холст: вставка; нажатие: нет\n  5. 16.8 мс; +0.676 с; shot; JS: частицы: кадр; нажатие: нет\nplate-И → без смены листов\n  до первого кадра 9 мс; худший кадр 17 мс; >50 мс: 0; рендеры Game 1 (сумма 6, макс 5.9 мс)\n  1. 16.7 мс; +0.025 с; очередь; между этапами; нажатие: нет\n  2. 16.7 мс; +0.075 с; очередь; между этапами; нажатие: нет\n  3. 16.7 мс; +0.142 с; очередь; между этапами; нажатие: нет\n  4. 16.7 мс; +0.175 с; очередь; между этапами; нажатие: нет\n  5. 16.7 мс; +0.242 с; очередь; между этапами; нажатие: нет\nvolley-Ж → открыт лист «Заряд»\n  до первого кадра 10 мс; худший кадр 33 мс; >50 мс: 0; рендеры Game 1 (сумма 19, макс 19.1 мс)\n  1. 33.4 мс; +0.043 с; очередь; между этапами; нажатие: нет\n  2. ≥16.7 мс; +0.093 с; очередь; между этапами; нажатие: нет\n  3. 16.7 мс; +0.026 с; очередь; между этапами; нажатие: нет\n  4. 16.6 мс; +0.010 с; очередь; между этапами; нажатие: нет\n  5. 16.6 мс; +0.076 с; очередь; между этапами; нажатие: нет"
+ },
+ {
+  "scene": "legend-intro-and-armada",
+  "report": {
+   "animations": 234,
+   "problems": [],
+   "exceptions": [
+    "[data-fx-keg] · background · Powder expenditure, small keg only (native shorthand)",
+    "[data-fx-hold] · backgroundColor · Original local Powder income flash",
+    "[data-fx-value] · color · The displayed track number flashes on damage",
+    "[data-fx-track] · boxShadow · Original 700 ms local track change flash on phone",
+    "[data-fx-track] · backgroundColor · Brief local track blink on damage"
+   ]
+  },
+  "diagnostics": "сцена: legend, 8.8 с\nкадров/с мин 56 / ср 59.1; худший кадр 67 мс\nдлинные задачи 1 (самая 70 мс); кадров >50 мс 2\nрендеры Game: 0, сумма 0 мс, макс 0.0 мс\nанимации в SVG на весь стол: нет\n5 худших интервалов rAF (≥ — неполный край показа):\n1. 66.6 мс; +6.217 с; legend; LG[И-Л]: сюжет / gunFire / JS: вставка заготовки / JS: частицы: кадр; нажатие: нет\n2. ≥50.5 мс; +0.000 с; legend; JS: legendIntro: создание / JS: вставка DOM / JS: legendIntro: вставка готового card / JS: legendIntro: вставка готового back / JS: legendIntro: вставка готового top / JS: legendIntro: вставка готового bot / JS: legendIntro: вставка готового rays / JS: legendIntro: вставка готового seal / JS: legendIntro: вставка готового ban / JS: вставка заготовки / JS: legendIntro: вставка готового cap / JS: частицы: кадр / JS: холст: вставка; нажатие: перед показом: click confirm-yes\n3. 33.4 мс; +0.067 с; legend; JS: частицы: кадр; нажатие: нет\n4. 33.3 мс; +2.800 с; legend; legendIntro: сворачивание/шар / LG[И-Л]: сюжет / JS: вставка заготовки / JS: частицы: кадр; нажатие: нет\n5. 16.8 мс; +1.950 с; legend; legendIntro: удержание / JS: частицы: кадр; нажатие: нет\nНажатия (окно 1,5 с), новые сверху:\nconfirm-yes → закрыт окно решения, показ: legend + turn\n  до первого кадра 12 мс; худший кадр 67 мс; >50 мс: 1; рендеры Game 1 (сумма 8, макс 7.9 мс)\n  1. 66.7 мс; +0.012 с; legend; JS: legendIntro: создание / JS: вставка DOM / JS: legendIntro: вставка готового card / JS: legendIntro: вставка готового back / JS: legendIntro: вставка готового top / JS: legendIntro: вставка готового bot / JS: legendIntro: вставка готового rays / JS: legendIntro: вставка готового seal / JS: legendIntro: вставка готового ban / JS: вставка заготовки / JS: legendIntro: вставка готового cap / JS: частицы: кадр / JS: холст: вставка; нажатие: нет\n  2. 33.4 мс; +0.095 с; legend; JS: частицы: кадр; нажатие: нет\n  3. 16.8 мс; +1.062 с; legend; legendIntro: печать / JS: частицы: кадр; нажатие: нет\n  4. 16.8 мс; +1.112 с; legend; legendIntro: печать / JS: частицы: кадр; нажатие: нет\n  5. 16.8 мс; +1.345 с; legend; legendIntro: удержание / JS: частицы: кадр; нажатие: нет\nРазыграть Легенду → открыт окно решения, закрыт карта, закрыт окно, показ: turnEnd + turn\n  до первого кадра 11 мс; худший кадр 17 мс; >50 мс: 0; рендеры Game 1 (сумма 7, макс 7.0 мс)\n  1. 16.8 мс; +0.077 с; turnEnd; между этапами; нажатие: нет\n  2. 16.8 мс; +0.127 с; turnEnd; между этапами; нажатие: нет\n  3. 16.7 мс; +0.061 с; turnEnd; между этапами; нажатие: нет\n  4. 16.7 мс; +0.161 с; turnEnd; между этапами; нажатие: нет\n  5. 16.7 мс; +0.211 с; turnEnd; между этапами; нажатие: нет\nstar-И → открыт карта, открыт окно, показ: turnEnd\n  до первого кадра 11 мс; худший кадр 17 мс; >50 мс: 0; рендеры Game 1 (сумма 4, макс 3.6 мс)\n  1. 16.8 мс; +0.027 с; turnEnd; между этапами; нажатие: нет\n  2. 16.6 мс; +0.011 с; turnEnd; между этапами; нажатие: нет\n  3. ≥16.6 мс; +0.044 с; turnEnd; между этапами; нажатие: нет\n  4. ≥10.8 мс; +0.000 с; turnEnd; между этапами; нажатие: перед показом: star-И"
+ },
+ {
+  "scene": "sinking",
+  "report": {
+   "animations": 132,
+   "problems": [],
+   "exceptions": [
+    "[data-fx-keg] · background · Powder expenditure, small keg only (native shorthand)",
+    "[data-fx-value] · color · The displayed track number flashes on damage",
+    ".fx-sinkwater · backgroundPosition · Same local rising-water shorthand exposed by native keyframes",
+    ".plank[data-fx-ship] · boxShadow · misc.ts sink: original 1400 ms captain-arrival glow, native keyframes only"
+   ]
+  },
+  "diagnostics": "сцена: card + sink, 7.9 с\nкадров/с мин 58 / ср 59.5; худший кадр 50 мс\nдлинные задачи 1 (самая 63 мс); кадров >50 мс 0\nрендеры Game: 0, сумма 0 мс, макс 0.0 мс\nанимации в SVG на весь стол: нет\n5 худших интервалов rAF (≥ — неполный край показа):\n1. ≥47.4 мс; +0.000 с; card; JS: вставка DOM; нажатие: перед показом: click fx-start\n2. 33.4 мс; +1.097 с; sink; JS: вставка DOM / JS: вставка заготовки / JS: частицы: кадр / JS: холст: вставка; нажатие: нет\n3. 33.4 мс; +1.147 с; sink; JS: частицы: кадр; нажатие: нет\n4. 16.8 мс; +0.347 с; card; после вставка DOM; нажатие: нет\n5. 16.8 мс; +0.697 с; card; после вставка DOM; нажатие: нет\nНажатия (окно 1,5 с), новые сверху:\nfx-start → показ: card + sink\n  до первого кадра 11 мс; худший кадр 50 мс; >50 мс: 0; рендеры Game 0 (сумма 0, макс 0.0 мс)\n  1. 50.0 мс; +0.011 с; card; JS: вставка DOM; нажатие: нет\n  2. 33.4 мс; +1.110 с; sink; JS: вставка DOM / JS: вставка заготовки / JS: частицы: кадр / JS: холст: вставка; нажатие: нет\n  3. 33.4 мс; +1.160 с; sink; JS: частицы: кадр; нажатие: нет\n  4. 16.8 мс; +0.360 с; card; после вставка DOM; нажатие: нет\n  5. 16.8 мс; +0.710 с; card; после вставка DOM; нажатие: нет"
+ }
+]

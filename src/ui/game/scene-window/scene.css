@@ -1,0 +1,15 @@
+.sw-native-scene {position:absolute;left:0;top:0;width:914px;height:210px;overflow:hidden;pointer-events:none;}
+.sw-native-scene:not([data-ready]) {visibility:hidden;}
+.sw-scene-layer {position:absolute;transform-origin:0 0;pointer-events:none;}
+.sw-native-scene img {max-width:none;}
+.sw-particles {position:absolute;left:0;top:0;pointer-events:none;}
+
+/* Local stage state, never a class on .game/body; only while an opaque phone portal covers it. */
+#stage[data-ship-window-covered] {visibility:hidden;}
+#stage[data-ship-window-covered] .perf-panel,
+#stage[data-ship-window-covered] .perf-panel * {visibility:visible;}
+/* Keep the four tiny, already-rasterized glints resident under the opaque sheet.
+   Dropping these clips forces a late repaint on their first sweep after closing. */
+#stage[data-ship-window-covered] .medal-glint-clip,
+#stage[data-ship-window-covered] .medal-glint-clip * {visibility:visible;}
+

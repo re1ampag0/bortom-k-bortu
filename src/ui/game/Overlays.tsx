@@ -1,6 +1,7 @@
+import {WeatherWindow} from './weather-window/WeatherWindow';
 // Things that appear when needed and go away after (docs/TZ.md, «Принципы стола», п. 1, 8): a card in full,
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
-import { memo as reactMemo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { memo as reactMemo, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import rulesText from '../../../RULES.md?raw';
 import type { LogLine } from '../../engine/log';
 import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engine/state';
@@ -15,7 +16,8 @@ import { type Btn } from './Table';
 import { CELLS } from './art/cells';
 import { logMarks } from './logBook';
 import { roman, SIDE_LABEL, SPEEDS } from './text';
-import {ShipWindow} from './ship-window/ShipWindow';
+import {loadShipWindow} from './scene-window/loadWindows';
+const ShipWindow=lazy(()=>loadShipWindow().then(module=>({default:module.ShipWindow})));
 import type {FxStore} from './fx/FxLayer';
 
 /** The windows open now, the last on top: Esc closes the top one only (fix-ui). */
@@ -142,59 +144,12 @@ export function CardDetail({
 
 export function ShipSheet({s,data,code,store,onClose,onDiscard}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void}) {
   useEscape(onClose);
-  return <ShipWindow s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/>;
+  return <Suspense fallback={null}><ShipWindow s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/></Suspense>;
 }
 
 /** The sea: the current card or, by `code`, any sea card (from the log, from «Тиа Дальма»). */
-export function SeaSheet({ s, data, code, onClose }: { s: GameState; data: GameData; code?: string; onClose: () => void }) {
-  const current = s.sea?.current ?? null;
-  const [shown, setShown] = useState(code ?? current);
-  const sea = shown ? seaCardByCode(data, shown) : null;
-  return (
-    <Sheet title={sea ? `Море: ${sea.name}` : 'Море'} onClose={onClose}>
-      {sea ? (
-        <>
-          <p className="muted">{sea.when}</p>
-          <p className="card-big">{sea.big}</p>
-          <p>
-            <RichText html={sea.text} />
-          </p>
-          <p className="card-flavor">{sea.flavor}</p>
-        </>
-      ) : (
-        <p>Партия без колоды моря.</p>
-      )}
-      {current && shown !== current && (
-        <p className="muted" data-testid="sea-current">
-          Сейчас в море:{' '}
-          <button className="cref" data-sea={current} onClick={() => setShown(current)}>
-            {seaCardByCode(data, current).name}
-          </button>
-          .
-        </p>
-      )}
-      {s.sea?.peek && s.sea.deck.slice(0, s.sea.peek.n).every((c) => c !== HIDDEN) && (
-        <p data-testid="sea-peek">
-          Следующие карты моря («Тиа Дальма», их знаете только вы):{' '}
-          {s.sea.deck.slice(0, s.sea.peek.n).map((c, i) => (
-            <span key={c}>
-              {i > 0 && ', '}
-              <button className="cref" data-sea={c} onClick={() => setShown(c)}>
-                «{seaCardByCode(data, c).name}»
-              </button>
-            </span>
-          ))}
-          .
-        </p>
-      )}
-      {s.sea && (
-        <p className="muted">
-          В колоде моря {s.sea.deck.length}, в сбросе {s.sea.discard.length}
-          {s.sea.discard.length > 0 && `: ${s.sea.discard.map((c) => seaCardByCode(data, c).name).join(', ')}`}.
-        </p>
-      )}
-    </Sheet>
-  );
+export function SeaSheet({s,data,code,log=[],store,onClose}:{s:GameState;data:GameData;code?:string;store?:FxStore;log?:readonly LogLine[];onClose:()=>void}){
+ useEscape(onClose);return <WeatherWindow store={store} s={s} data={data} code={code} log={log} onClose={onClose}/>;
 }
 
 export function DiscardSheet({ s, data, seat, onClose }: { s: GameState; data: GameData; seat: string; onClose: () => void }) {
