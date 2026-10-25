@@ -11,19 +11,23 @@ export function Curtain({
   reason,
   summary,
   onReady,
+  round,
 }: {
   side: Side;
   title: string;
   reason: string;
   summary: string[];
   onReady: () => void;
+  round?: number;
 }) {
   useTableBody('curtain');
   return <MenuSurface kind="prep" className={`menu-curtain ${side==='ПИРАТЫ'?'pirates':'company'}`}><main data-testid="curtain">
-    <p className="menu-kicker">Игра на одном экране</p><span className="menu-medal dark"><Icon name="mugs" size={48}/></span><h1 className="menu-title">{title}</h1><p className="menu-subtitle">{reason}</p>
-    {summary.length>0&&<section className="menu-curtain-summary"><h2>Пока вас не было</h2><ul>{summary.map((line,i)=><li key={i}>{line}</li>)}</ul></section>}
+    <p className="menu-kicker">Игра на одном экране</p><span className="menu-medal dark"><Icon name={side==='ПИРАТЫ'?'coin':'coin_back'} size={76}/></span><h1 className="menu-title">{title}</h1><p className="menu-curtain-turn">{round?`Ход ${SIDE_LABEL[side].gen}, раунд ${roman(round)}`:reason}</p>
+    {<section className="menu-curtain-summary"><h2>Пока вас не было</h2><ul>{(summary.length?summary:['Пока новых событий нет.']).map((line,i)=><li key={i}>{line}</li>)}</ul></section>}
     <button className="menu-primary" data-testid="curtain-ready" onClick={onReady} autoFocus>Открыть карты {SIDE_LABEL[side].gen}</button>
     <p className="menu-curtain-note">Ваши карты откроются только после нажатия.<br/>Боцман уже отвернулся.</p>
     <div className="menu-curtain-sea"><MenuScene name={side==='ПИРАТЫ'?'Blood':'Deep'}/><div><Boat name={side==='ПИРАТЫ'?'pearl':'endeavour'} muted/><Boat name={side==='ПИРАТЫ'?'revenge':'dutch'} muted/></div></div>
    </main></MenuSurface>;
 }
+
+function roman(n:number):string {return n>=40?String(n):[[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]].reduce((s,[v,c])=>{while(n>=Number(v)){s+=c;n-=Number(v);}return s;},"");}
