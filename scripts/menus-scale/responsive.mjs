@@ -1,7 +1,7 @@
 // Convert viewport-dependent menu layout rules to the shared mode. Keep the exact legacy/game fallback.
 import postcss from 'postcss';import{readFileSync,writeFileSync}from'node:fs';
 for(const file of ['menus.css','menus-fix2.css','menus-fix3.css']){
- const path='src/ui/menus/'+file,root=postcss.parse(readFileSync(path,'utf8'));
+ const path='src/ui/menus/'+file,source=readFileSync(path,'utf8');if(source.includes(':where(body[data-menuscale='))continue;const root=postcss.parse(source);
  root.walkAtRules('media',rule=>{
   const p=rule.params;let mode=null;
   if(/max-width:\s*(700|999)px/.test(p))mode='phone';

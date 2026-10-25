@@ -1,11 +1,11 @@
 /* These rules never apply to game windows or to ?menuscale=0. */
-body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"]{overflow-x:hidden;overflow-y:auto;position:relative;min-height:100vh;min-height:100dvh;background:#0e1b26 var(--menu-background,none) center/cover no-repeat}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"]{position:relative;min-height:100vh;min-height:100dvh;background:#0e1b26 var(--menu-background,none) center/cover no-repeat}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="scene"],body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-tablet]{height:100vh;height:100dvh;overflow:hidden}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-kind="main"]{background-image:linear-gradient(#09192a 0 40%,#143a48 55%,#0e1b2600 75%),var(--menu-background,none)}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-kind="pirates"]{background:radial-gradient(ellipse at 50% 38%,#4a1a14,#2a0e0b 55%,#140706)}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-kind="company"]{background:radial-gradient(ellipse at 50% 38%,#23445c,#102b41 55%,#071423)}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage{will-change:auto;backface-visibility:visible}
-body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .menus-surface{-webkit-text-size-adjust:100%;text-size-adjust:100%;--menu-stroke-1:max(1px,calc(1px / var(--menu-k,1)));--menu-stroke-15:max(1.5px,calc(1px / var(--menu-k,1)));min-height:var(--app-h);overflow-x:hidden;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .menus-surface{-webkit-text-size-adjust:100%;text-size-adjust:100%;min-height:var(--app-h);overflow-x:hidden;padding:var(--menu-safe-top,env(safe-area-inset-top,0px)) var(--menu-safe-right,env(safe-area-inset-right,0px)) var(--menu-safe-bottom,env(safe-area-inset-bottom,0px)) var(--menu-safe-left,env(safe-area-inset-left,0px))}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .menus-surface.menu-phone{display:block}
 .menu-overlays{display:contents}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .menus-surface button{touch-action:manipulation}
@@ -25,7 +25,7 @@ body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layou
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-prep-bottom>.menu-primary,
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-placement-actions>.menu-primary,
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin].menu-curtain main>.menu-primary,
-body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-room-actions{position:fixed;top:auto;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:auto;margin:0;z-index:10}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-room-actions{position:fixed;top:auto;left:max(16px,var(--menu-safe-left,env(safe-area-inset-left,0px)));right:max(16px,var(--menu-safe-right,env(safe-area-inset-right,0px)));bottom:calc(16px + var(--menu-safe-bottom,env(safe-area-inset-bottom,0px)));width:auto;margin:0;z-index:10}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-prep-bottom>.menu-primary,
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-placement-actions>.menu-primary,
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin].menu-curtain main>.menu-primary{height:54px;max-height:54px;min-height:54px}
@@ -58,3 +58,13 @@ body[data-menuscale="1"] #stage [data-menu-narrow] .sheet[data-testid=settings] 
 body[data-menuscale="1"] #stage [data-menu-narrow] .menu-setting-segment{max-width:100%;min-width:0}
 body[data-menuscale="1"] #stage [data-menu-narrow] .menu-room-actions>.btn.primary{padding-inline:8px;white-space:nowrap}
 body[data-menuscale="1"] #stage [data-menu-narrow] .menu-room-actions>.btn.primary>.menu-icon{display:none}
+
+body[data-menuscale="1"][data-menu-downscaled] #stage{--menu-stroke-1:max(1px,calc(1px / var(--menu-k,1)));--menu-stroke-15:max(1.5px,calc(1px / var(--menu-k,1)))}
+
+body.on-curtain[data-menuscale="1"][data-menu-layout="phone"][data-menu-user-scroll]:not([data-menu-tablet]) #root{height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto}
+body[data-menuscale="1"][data-menu-keyboard] #root{overflow-y:auto;overflow-x:hidden}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save{height:96px;min-height:96px;padding-left:12px;padding-right:38px;grid-template-rows:26px 1fr}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save .menu-mode-head small{white-space:normal;line-height:1.1}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save>p{font-size:12px;line-height:1.2}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save>p>span:last-child{white-space:normal;overflow:visible;text-overflow:clip}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save-x{right:6px;width:24px;height:24px}
