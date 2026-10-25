@@ -1,0 +1,17 @@
+[
+  {
+    "size": "1366x660",
+    "screen": "table",
+    "pixels": 176
+  },
+  {
+    "size": "1366x660",
+    "screen": "log",
+    "pixels": 176
+  },
+  {
+    "size": "1366x660",
+    "screen": "reaction",
+    "pixels": 0
+  }
+]
