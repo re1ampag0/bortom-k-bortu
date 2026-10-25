@@ -1,0 +1,54 @@
+[
+  {
+    "query": "",
+    "panel": {
+      "inner": 915,
+      "visual": 780,
+      "stage": "--app-h: 780px; --app-w: 412px;",
+      "gameHeight": 780,
+      "barBottom": 780
+    },
+    "inputFont": "16px",
+    "before": {
+      "inner": 915,
+      "visual": 915,
+      "stage": "--app-h: 915px; --app-w: 412px;",
+      "gameHeight": 915,
+      "barBottom": 915
+    },
+    "keyboard": {
+      "inner": 615,
+      "visual": 615,
+      "stage": "--app-h: 915px; --app-w: 412px;",
+      "gameHeight": 915,
+      "barBottom": 915
+    },
+    "recovered": {
+      "inner": 915,
+      "visual": 915,
+      "stage": "--app-h: 915px; --app-w: 412px;",
+      "gameHeight": 915,
+      "barBottom": 915
+    }
+  },
+  {
+    "query": "&gamescale=0",
+    "panel": {
+      "inner": 915,
+      "visual": 780,
+      "stage": "",
+      "gameHeight": 915,
+      "barBottom": 915
+    }
+  },
+  {
+    "query": "&menuscale=0",
+    "panel": {
+      "inner": 915,
+      "visual": 780,
+      "stage": "--app-h: 780px; --app-w: 412px;",
+      "gameHeight": 780,
+      "barBottom": 780
+    }
+  }
+]

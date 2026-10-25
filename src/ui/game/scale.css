@@ -11,3 +11,16 @@
  .game[data-game-scale] .board-bottom>.team-row .hold-label{flex-shrink:0}
  .game[data-game-scale] .phone-hand-label{min-width:0}
 }
+/* The root's transform stays ordinary 2D, without will-change or translateZ promotion. */
+.game[data-game-downscaled]{--game-line:max(1px,calc(1px / var(--game-k)));--game-line-15:max(1.5px,calc(1px / var(--game-k)))}
+.game[data-game-downscaled] .btn,.game[data-game-downscaled] .chip,.game[data-game-downscaled] .view-switch{border-width:var(--game-line)}
+.game[data-game-downscaled] .status,.game[data-game-downscaled] .log-entry{border-bottom-width:var(--game-line)}
+.game[data-game-downscaled] .hcard{border-left-width:var(--game-line-15);border-right-width:var(--game-line-15);border-bottom-width:var(--game-line-15)}
+/* Rules opened by the game keep their existing body portal; menu calls are unaffected. */
+body.on-game[data-gamescale='1'] .menu-rules-search input{font-size:16px}
+.game[data-game-downscaled] .plank-head{border-bottom-width:var(--game-line)}
+.game[data-game-downscaled] .track-row2>.track+.track,.game[data-game-downscaled] .cmd-in>.cost{border-left-width:var(--game-line)}
+body.on-game[data-game-shrunk]{background:#21170e}
+/* Keep hardware insets in screen pixels when a very small scene is reduced. */
+.game[data-game-downscaled]{padding-top:calc(env(safe-area-inset-top,0px) / var(--game-k));padding-right:calc(env(safe-area-inset-right,0px) / var(--game-k));padding-left:calc(env(safe-area-inset-left,0px) / var(--game-k))}
+.game[data-game-downscaled]>.bottom-bar{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px) / var(--game-k))}
