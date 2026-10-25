@@ -56,7 +56,7 @@ export function Placement({
   };
 
   return <MenuSurface kind="prep"><main className="menu-placement" data-testid="placement">
-    <header><h1 className="menu-title">{SIDE_LABEL[side].name}: кто слева, кто справа?</h1>{note&&index===0&&<p className="menu-subtitle">{note}</p>}<p className="menu-subtitle">Корабли напротив стреляют без штрафа. Противник увидит расстановку только в начале партии.</p></header>
+    <header><div className="menu-kicker">Тайная расстановка</div><h1 className="menu-title">{SIDE_LABEL[side].name}: кто слева, кто справа?</h1><p className="menu-subtitle">Напротив корабль бьёт в полную силу, по диагонали на 1 слабее. {side==='ПИРАТЫ'?'Компания':'Пираты'} увидит расстановку только в начале боя.</p>{index===0&&<p className="menu-placement-verdict"><Icon name="coin" size={24}/>{note.startsWith('Монета')?'Монета выбрала:':'Вы выбрали:'} вы за {SIDE_LABEL[side].acc}. Пираты ходят первыми.</p>}</header>
     <PlacementBoard data={data} side={side} order={order} onSwap={()=>setOrder([order[1],order[0]])}/>
     <footer className="menu-placement-actions"><button className="menu-link" onClick={onBack}>← Назад</button><button className="menu-link" onClick={()=>setOrder([order[1],order[0]])}><Icon name="swap"/>Переставить корабли</button><button className="menu-primary" data-testid="placement-done" onClick={done}>Готово</button></footer>
    </main></MenuSurface>;
