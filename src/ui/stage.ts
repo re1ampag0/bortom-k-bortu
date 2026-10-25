@@ -5,7 +5,7 @@
 // (getBoundingClientRect, clientX/Y) and puts something into the stage turns them into the stage's px with toStage / stageK.
 import { useLayoutEffect, useState } from 'react';
 import {getMenuLayout,subscribeMenuLayout} from './menus/layout';
-import {gameScaleEnabled,gameViewport,subscribeGameViewport} from './game/layout';
+import {gameScaleEnabled,gameViewport,subscribeGameViewport,gameGeometry} from './game/layout';
 
 let k = 1;
 
@@ -41,8 +41,12 @@ export function useStage(): Record<string, string | number> | null {
   }
   if(!menu.active&&gameScaleEnabled()){
     const view=gameViewport();
-    k=scaleOf(view.w,view.h);
-    document.body.classList.toggle('staged',k>1);
+    const geometry=gameGeometry(view);k=geometry.k;
+    document.body.classList.toggle('staged',k!==1);
+    if(geometry.small){
+      const dpr=devicePixelRatio||1,snap=(n:number)=>Math.round(n*dpr)/dpr,w=geometry.phoneScene?view.w:1366,h=geometry.phoneScene?650:660;
+      return {width:w,height:h,left:snap((view.w-w*k)/2),top:snap((view.h-h*k)/2),transform:`scale(${k})`,transformOrigin:'0 0','--app-h':`${h}px`,'--app-w':`${w}px`,'--game-k':k};
+    }
     if(k===1)return view.w<=700?{'--app-h':`${view.h}px`,'--app-w':`${view.w}px`}:null;
     return {width:view.w/k,height:view.h/k,transform:`scale(${k})`,transformOrigin:'0 0','--app-h':`${view.h/k}px`};
   }
