@@ -68,3 +68,28 @@ body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save .menu-mode-head sm
 body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save>p{font-size:12px;line-height:1.2}
 body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save>p>span:last-child{white-space:normal;overflow:visible;text-overflow:clip}
 body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save-x{right:6px;width:24px;height:24px}
+/* Narrow phones: preserve the established 390px+ boards, fit content before clipping. */
+@media(max-width:374px){
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-start-heading{padding-inline:12px}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-start-heading h1{font-size:clamp(30px,10.5vw,39px);margin-inline:0;white-space:nowrap}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-start-heading p{max-width:270px;margin-inline:auto;white-space:normal;text-wrap:balance}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat{grid-template-columns:64px minmax(0,1fr);grid-template-rows:auto auto auto;height:auto;min-height:108px;gap:4px 6px;padding:8px 6px}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat>.menu-dock{grid-column:1;grid-row:1 / 4;width:64px;align-self:center}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat>b{grid-column:2;grid-row:1;min-width:0;line-height:1.2;white-space:normal;text-wrap:balance}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat-who{grid-column:2;grid-row:2;min-width:0}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat-btns{grid-column:2;grid-row:3;justify-self:start;justify-content:start;flex-wrap:wrap;max-width:100%}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat-btns>.btn{max-width:none;white-space:nowrap;font-size:14px;padding-inline:6px}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-net.room{padding-bottom:calc(84px + var(--menu-safe-bottom,env(safe-area-inset-bottom,0px)))}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-room-actions:before{content:"";position:absolute;inset:-12px -16px calc(-16px - var(--menu-safe-bottom,env(safe-area-inset-bottom,0px)));background:#0e1b26;z-index:-1;pointer-events:none}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot{padding-left:52px}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot>strong{font-size:12px;white-space:nowrap;position:relative;z-index:2}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot>span{font-size:11px}
+}
+@media(max-width:374px){
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-room-actions>.btn.primary{min-width:0;flex:1;padding-inline:8px;white-space:nowrap}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-room-actions>.btn.primary>.menu-icon{display:none}
+}
+@media(max-width:359px){
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot>.menu-icon{display:none}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot{padding-left:46px}
+}

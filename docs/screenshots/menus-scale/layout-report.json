@@ -4123,197 +4123,6 @@
     "rootWillChange": "auto"
   },
   {
-    "size": "320x568",
-    "screen": "prep",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "placement",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "curtain",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "rules",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "settings",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [
-      {
-        "text": "Версия:",
-        "x": 74.265625,
-        "y": 544,
-        "w": 32.984375,
-        "h": 10,
-        "font": 10,
-        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
-      },
-      {
-        "text": "scale-compare · сборка 25.10, 00:00",
-        "x": 107.25,
-        "y": 544,
-        "w": 138.484375,
-        "h": 10,
-        "font": 10,
-        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
-      }
-    ],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "net-room",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "start",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [
-      {
-        "text": "ПИРАТЫ · ПРОТИВ · КОМПАНИИ",
-        "x": 79.65625,
-        "y": 25,
-        "w": 200.671875,
-        "h": 13,
-        "font": 10,
-        "block": ""
-      }
-    ],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "prep",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "placement",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "curtain",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "rules",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "settings",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [
-      {
-        "text": "Версия:",
-        "x": 166.765625,
-        "y": 606.5,
-        "w": 32.984375,
-        "h": 10,
-        "font": 10,
-        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
-      },
-      {
-        "text": "scale-compare · сборка 25.10, 00:00",
-        "x": 199.75,
-        "y": 606.5,
-        "w": 138.484375,
-        "h": 10,
-        "font": 10,
-        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
-      }
-    ],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "net-room",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
     "size": "360x740",
     "screen": "start",
     "engine": "chromium",
@@ -11466,28 +11275,6 @@
     "rootWillChange": "auto"
   },
   {
-    "size": "320x568",
-    "screen": "net-entry",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "net-entry",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [],
-    "rootWillChange": "auto"
-  },
-  {
     "size": "360x740",
     "screen": "net-entry",
     "engine": "chromium",
@@ -11741,27 +11528,6 @@
         "h": 14.333332061767578,
         "font": 10.424242055957174,
         "block": "<button class=\"link\"><svg class=\"menu-arrow back\" width=\"22\" height=\"14\" viewBox=\"0 0 22 14\" aria-hi"
-      }
-    ],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "start",
-    "engine": "chromium",
-    "errors": [],
-    "horizontalScroll": false,
-    "outside": [],
-    "overlap": [],
-    "small": [
-      {
-        "text": "ПИРАТЫ · ПРОТИВ · КОМПАНИИ",
-        "x": 59.65625,
-        "y": 25,
-        "w": 200.671875,
-        "h": 13,
-        "font": 10,
-        "block": ""
       }
     ],
     "rootWillChange": "auto"
@@ -12175,6 +11941,245 @@
         "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
       }
     ],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "start",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [
+      {
+        "text": "ПИРАТЫ · ПРОТИВ · КОМПАНИИ",
+        "x": 59.65625,
+        "y": 25,
+        "w": 200.671875,
+        "h": 13,
+        "font": 10,
+        "block": ""
+      }
+    ],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "prep",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "curtain",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "rules",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "settings",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [
+      {
+        "text": "Версия:",
+        "x": 74.265625,
+        "y": 544,
+        "w": 32.984375,
+        "h": 10,
+        "font": 10,
+        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
+      },
+      {
+        "text": "scale-compare · сборка 25.10, 00:00",
+        "x": 107.25,
+        "y": 544,
+        "w": 138.484375,
+        "h": 10,
+        "font": 10,
+        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
+      }
+    ],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "net-entry",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "start",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [
+      {
+        "text": "ПИРАТЫ · ПРОТИВ · КОМПАНИИ",
+        "x": 79.65625,
+        "y": 25,
+        "w": 200.671875,
+        "h": 13,
+        "font": 10,
+        "block": ""
+      }
+    ],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "prep",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "curtain",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "rules",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "settings",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [
+      {
+        "text": "Версия:",
+        "x": 166.765625,
+        "y": 606.5,
+        "w": 32.984375,
+        "h": 10,
+        "font": 10,
+        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
+      },
+      {
+        "text": "scale-compare · сборка 25.10, 00:00",
+        "x": 199.75,
+        "y": 606.5,
+        "w": 138.484375,
+        "h": 10,
+        "font": 10,
+        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
+      }
+    ],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "net-entry",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "placement",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "placement",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "net-room",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [],
+    "small": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "net-room",
+    "engine": "chromium",
+    "errors": [],
+    "horizontalScroll": false,
+    "outside": [],
+    "overlap": [
+      [
+        "Нанять",
+        "Жребий"
+      ]
+    ],
+    "small": [],
     "rootWillChange": "auto"
   }
 ]

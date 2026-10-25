@@ -5382,376 +5382,6 @@
     "rootWillChange": "auto"
   },
   {
-    "size": "320x568",
-    "screen": "prep",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 320,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [
-      {
-        "x": 16,
-        "y": 498,
-        "w": 288,
-        "h": 54
-      }
-    ],
-    "stripTop": 482,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "placement",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 320,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [
-      {
-        "x": 16,
-        "y": 498,
-        "w": 288,
-        "h": 54
-      }
-    ],
-    "stripTop": 482,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "curtain",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 320,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [
-      {
-        "x": 16,
-        "y": 498,
-        "w": 288,
-        "h": 54
-      }
-    ],
-    "stripTop": 482,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "rules",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 320,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [],
-    "stripTop": 568,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "settings",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 320,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [],
-    "stripTop": 568,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [
-      {
-        "text": "Версия:",
-        "x": 74.265625,
-        "y": 544,
-        "w": 32.984375,
-        "h": 10,
-        "font": 10,
-        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
-      },
-      {
-        "text": "scale-compare · сборка 25.10, 00:00",
-        "x": 107.25,
-        "y": 544,
-        "w": 138.484375,
-        "h": 10,
-        "font": 10,
-        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
-      }
-    ],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
-    "screen": "net-room",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 320,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [
-      {
-        "x": 16,
-        "y": 500,
-        "w": 288,
-        "h": 52
-      }
-    ],
-    "stripTop": 484,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "start",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 360,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [],
-    "stripTop": 640,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [
-      {
-        "text": "ПИРАТЫ · ПРОТИВ · КОМПАНИИ",
-        "x": 79.65625,
-        "y": 25,
-        "w": 200.671875,
-        "h": 13,
-        "font": 10,
-        "block": ""
-      }
-    ],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "prep",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 360,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [
-      {
-        "x": 16,
-        "y": 570,
-        "w": 328,
-        "h": 54
-      }
-    ],
-    "stripTop": 554,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "placement",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 360,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [
-      {
-        "x": 16,
-        "y": 570,
-        "w": 328,
-        "h": 54
-      }
-    ],
-    "stripTop": 554,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "curtain",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 360,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [],
-    "stripTop": 640,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "rules",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 360,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [],
-    "stripTop": 640,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "settings",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 360,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [],
-    "stripTop": 640,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [
-      {
-        "text": "Версия:",
-        "x": 166.765625,
-        "y": 606.5,
-        "w": 32.984375,
-        "h": 10,
-        "font": 10,
-        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
-      },
-      {
-        "text": "scale-compare · сборка 25.10, 00:00",
-        "x": 199.75,
-        "y": 606.5,
-        "w": 138.484375,
-        "h": 10,
-        "font": 10,
-        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
-      }
-    ],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "360x640",
-    "screen": "net-room",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 360,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [
-      {
-        "x": 16,
-        "y": 572,
-        "w": 328,
-        "h": 52
-      }
-    ],
-    "stripTop": 556,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
     "size": "360x740",
     "screen": "start",
     "engine": "chromium",
@@ -13638,27 +13268,6 @@
   },
   {
     "size": "320x568",
-    "screen": "net-entry",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 320,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [],
-    "stripTop": 568,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
-  },
-  {
-    "size": "320x568",
     "screen": "keyboard",
     "before": {
       "width": "",
@@ -13675,27 +13284,6 @@
       "top": ""
     },
     "engine": "chromium"
-  },
-  {
-    "size": "360x640",
-    "screen": "net-entry",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 360,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [],
-    "stripTop": 640,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [],
-    "overlap": [],
-    "rootWillChange": "auto"
   },
   {
     "size": "360x640",
@@ -14147,37 +13735,6 @@
       "top": "0px"
     },
     "engine": "chromium"
-  },
-  {
-    "size": "320x568",
-    "screen": "start",
-    "engine": "chromium",
-    "errors": [],
-    "stage": {
-      "x": 0,
-      "y": 0,
-      "w": 320,
-      "h": 844,
-      "k": 1
-    },
-    "mode": "phone",
-    "pinned": [],
-    "stripTop": 568,
-    "horizontalScroll": false,
-    "outside": [],
-    "small": [
-      {
-        "text": "ПИРАТЫ · ПРОТИВ · КОМПАНИИ",
-        "x": 59.65625,
-        "y": 25,
-        "w": 200.671875,
-        "h": 13,
-        "font": 10,
-        "block": ""
-      }
-    ],
-    "overlap": [],
-    "rootWillChange": "auto"
   },
   {
     "size": "1180x820",
@@ -14678,6 +14235,454 @@
       }
     ],
     "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "start",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [],
+    "stripTop": 568,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [
+      {
+        "text": "ПИРАТЫ · ПРОТИВ · КОМПАНИИ",
+        "x": 59.65625,
+        "y": 25,
+        "w": 200.671875,
+        "h": 13,
+        "font": 10,
+        "block": ""
+      }
+    ],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "prep",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [
+      {
+        "x": 16,
+        "y": 498,
+        "w": 288,
+        "h": 54
+      }
+    ],
+    "stripTop": 482,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "curtain",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [
+      {
+        "x": 16,
+        "y": 498,
+        "w": 288,
+        "h": 54
+      }
+    ],
+    "stripTop": 482,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "rules",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [],
+    "stripTop": 568,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "settings",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [],
+    "stripTop": 568,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [
+      {
+        "text": "Версия:",
+        "x": 74.265625,
+        "y": 544,
+        "w": 32.984375,
+        "h": 10,
+        "font": 10,
+        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
+      },
+      {
+        "text": "scale-compare · сборка 25.10, 00:00",
+        "x": 107.25,
+        "y": 544,
+        "w": 138.484375,
+        "h": 10,
+        "font": 10,
+        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
+      }
+    ],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "net-entry",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [],
+    "stripTop": 568,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "start",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [],
+    "stripTop": 640,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [
+      {
+        "text": "ПИРАТЫ · ПРОТИВ · КОМПАНИИ",
+        "x": 79.65625,
+        "y": 25,
+        "w": 200.671875,
+        "h": 13,
+        "font": 10,
+        "block": ""
+      }
+    ],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "prep",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [
+      {
+        "x": 16,
+        "y": 570,
+        "w": 328,
+        "h": 54
+      }
+    ],
+    "stripTop": 554,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "curtain",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [],
+    "stripTop": 640,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "rules",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [],
+    "stripTop": 640,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "settings",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [],
+    "stripTop": 640,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [
+      {
+        "text": "Версия:",
+        "x": 166.765625,
+        "y": 606.5,
+        "w": 32.984375,
+        "h": 10,
+        "font": 10,
+        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
+      },
+      {
+        "text": "scale-compare · сборка 25.10, 00:00",
+        "x": 199.75,
+        "y": 606.5,
+        "w": 138.484375,
+        "h": 10,
+        "font": 10,
+        "block": "<p class=\"row muted\" data-testid=\"app-version\"><span title=\"Этот компас показывает не на север, а ту"
+      }
+    ],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "net-entry",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [],
+    "stripTop": 640,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "placement",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [
+      {
+        "x": 16,
+        "y": 498,
+        "w": 288,
+        "h": 54
+      }
+    ],
+    "stripTop": 482,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "placement",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 844,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [
+      {
+        "x": 16,
+        "y": 570,
+        "w": 328,
+        "h": 54
+      }
+    ],
+    "stripTop": 554,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "320x568",
+    "screen": "net-room",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 980.75,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [
+      {
+        "x": 16,
+        "y": 500,
+        "w": 288,
+        "h": 52
+      }
+    ],
+    "stripTop": 484,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [],
+    "rootWillChange": "auto"
+  },
+  {
+    "size": "360x640",
+    "screen": "net-room",
+    "engine": "chromium",
+    "errors": [],
+    "stage": {
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 980.75,
+      "k": 1
+    },
+    "mode": "phone",
+    "pinned": [
+      {
+        "x": 16,
+        "y": 572,
+        "w": 328,
+        "h": 52
+      }
+    ],
+    "stripTop": 556,
+    "horizontalScroll": false,
+    "outside": [],
+    "small": [],
+    "overlap": [
+      [
+        "Нанять",
+        "Жребий"
+      ]
+    ],
     "rootWillChange": "auto"
   }
 ]
