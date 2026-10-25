@@ -16,7 +16,7 @@
 #stage .menu-net.room .menu-room-permissions{margin-top:12px;margin-bottom:0}
 #stage .menu-net.room .menu-room-actions{display:flex;flex-direction:row;flex-wrap:nowrap;gap:12px;align-items:center;margin:0}
 #stage .menu-net.room .menu-room-actions>.btn{height:52px;min-height:52px;box-sizing:border-box;margin:0}
-#stage .menu-net.room .menu-room-actions>.btn:not(.primary){background:#122331;color:#f0d27a;padding:8px 18px;border:1px solid #c9a048}
+#stage .menu-net.room .menu-room-actions>.btn:not(.primary){background:#122331;color:#f0d27a;padding:8px 18px;border:var(--menu-stroke-1, 1px) solid #c9a048}
 #stage .menu-net .menu-code-cells>span{color:#f6dd92;font-weight:700;opacity:1}
 #stage .menu-net .join-box>.menu-primary:disabled{color:#f0d27a;background:#121d27;border-color:#c9a048;opacity:1}
 #stage .menu-placement .menu-enemy-slot .menu-boat{opacity:1}
@@ -32,66 +32,124 @@
 #stage .menus-start .menu-save>p{font-size:14px;line-height:1.3;margin:12px 0}
 #stage .menus-start .menu-save>p>span{display:block}
 .menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-rules-layout>nav>button:nth-child(2){padding-left:40px}
-.menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-rules-content .menu-rules-volley .menu-boatswain{border:1px dashed #c9a04880;border-radius:7px;background:#c9a04810;padding:10px 12px}
+.menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-rules-content .menu-rules-volley .menu-boatswain{border:var(--menu-stroke-1, 1px) dashed #c9a04880;border-radius:7px;background:#c9a04810;padding:10px 12px}
 .menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-volley-diagram{padding-bottom:16px}
 @media(min-width:1000px){
- #stage .menu-net.room .seat{height:80px;min-height:80px;grid-template-rows:1fr 1fr;align-items:end;padding-top:12px;padding-bottom:12px}
- #stage .menu-net.room .seat-who{align-self:start;margin-top:3px}
- #stage .menu-net.room .seat>b{align-self:end}
- #stage .menu-net.room .seat>.menu-dock{align-self:center;margin-top:-12px;margin-bottom:-12px}
- #stage .menu-net.room .seat-btns{align-self:center}
- #stage .menu-net.room .room-settings{height:auto;min-height:470px;padding-bottom:10px;gap:6px}
- #stage .menu-net.room .menu-room-start-note{left:420px;right:40px;bottom:90px;line-height:1.4;margin:0}
- #stage .menu-net.room>.menu-room-actions{right:40px;bottom:24px}
- #stage .menu-net.room .menu-room-actions>.btn.primary{min-width:250px;max-width:326px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat{height:80px;min-height:80px;grid-template-rows:1fr 1fr;align-items:end;padding-top:12px;padding-bottom:12px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat-who{align-self:start;margin-top:3px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat>b{align-self:end}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat>.menu-dock{align-self:center;margin-top:-12px;margin-bottom:-12px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat-btns{align-self:center}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .room-settings{height:auto;min-height:470px;padding-bottom:10px;gap:6px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .menu-room-start-note{left:420px;right:40px;bottom:90px;line-height:1.4;margin:0}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room>.menu-room-actions{right:40px;bottom:24px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .menu-room-actions>.btn.primary{min-width:250px;max-width:326px}
+}
+@media all{
+ :where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room .seat{height:80px;min-height:80px;grid-template-rows:1fr 1fr;align-items:end;padding-top:12px;padding-bottom:12px}
+ :where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room .seat-who{align-self:start;margin-top:3px}
+ :where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room .seat>b{align-self:end}
+ :where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room .seat>.menu-dock{align-self:center;margin-top:-12px;margin-bottom:-12px}
+ :where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room .seat-btns{align-self:center}
+ :where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room .room-settings{height:auto;min-height:470px;padding-bottom:10px;gap:6px}
+ :where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room .menu-room-start-note{left:420px;right:40px;bottom:90px;line-height:1.4;margin:0}
+ :where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room>.menu-room-actions{right:40px;bottom:24px}
+ :where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room .menu-room-actions>.btn.primary{min-width:250px;max-width:326px}
 }
 @media(max-width:700px){
- #stage .menu-curtain .menu-title{max-width:none;font-size:34px}
- #stage .menu-curtain main>.menu-kicker{font-size:15px;letter-spacing:.32em;white-space:nowrap}
- #stage .menu-curtain .menu-curtain-sea .menu-boat{width:190px;height:138px;top:-105px}
- #stage .menu-curtain .menu-curtain-placement{font-size:15px;line-height:1.4}
- #stage .menu-curtain .menu-curtain-note{font-size:13.5px;line-height:1.35}
- #stage .menu-prep-content>.menu-subtitle,#stage .menu-placement .menu-subtitle{font-size:15px;line-height:1.35}
- #stage .menu-prep-content .menu-side-copy>small{font-size:13px;line-height:1.3}
- #stage .menu-prep-content .menu-coin-tile>small{font-size:13px}
- #stage .menu-placement .menu-placement-verdict{font-size:13.5px;line-height:1.3}
- #stage .menu-placement .menu-slot-name>small{font-size:12.5px}
- #stage .menu-prep-content .menu-prep-bottom>.menu-primary,#stage .menu-placement .menu-placement-actions>.menu-primary,#stage .menu-curtain main>.menu-primary{font-size:20px!important}
- #stage .menu-placement .menu-own-slot .menu-boat{top:12px}
- #stage .menu-placement .menu-slot-name{top:115px}
- #stage .menu-net.room .menu-dock{--menu-dock-height:58px}
- #stage .menu-net.room .seat>b,#stage .menu-net.room .seat-who{justify-self:start;text-align:left;justify-content:start}
- #stage .menu-net.room .seat-btns{display:flex;flex-direction:row;justify-content:end}
- #stage .menu-net.room .menu-room-actions>.btn.primary{order:0;width:auto;flex:1;min-width:0;font-size:20px}
- #stage .menu-net.room .menu-room-actions>.btn:not(.primary){order:0;flex:none;width:auto;padding:6px 12px;font-size:14px}
- #stage .menus-start .menu-start-heading>p{top:0}
- #stage .menus-start .menu-save{display:grid;grid-template-columns:minmax(0,1fr) 126px;grid-template-rows:18px 1fr;height:80px;min-height:80px;padding:10px 48px 10px 18px;gap:2px 10px}
- #stage .menus-start .menu-save .menu-mode-head{display:block;grid-column:1;grid-row:1}
- #stage .menus-start .menu-save .menu-mode-head>.menu-icon,#stage .menus-start .menu-save .menu-mode-head h2{display:none}
- #stage .menus-start .menu-save .menu-mode-head small{font-size:11px;white-space:nowrap;letter-spacing:.02em;margin:0}
- #stage .menus-start .menu-save>p{grid-column:1;grid-row:2;font-size:12.5px;line-height:1.2;margin:0}
- #stage .menus-start .menu-save>p>span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
- #stage .menus-start .menu-save>.menu-primary{grid-column:2;grid-row:1/3;font-size:18px!important;white-space:nowrap;padding:6px 10px;min-height:42px;height:42px;align-self:center;width:126px}
- #stage .menus-start .menu-save-x{right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;font-size:16px}
- .menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-rules-layout>nav>button:nth-child(2){padding-left:12px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-curtain .menu-title{max-width:none;font-size:34px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-curtain main>.menu-kicker{font-size:15px;letter-spacing:.32em;white-space:nowrap}
+ :where(body:not([data-menuscale="1"])) #stage .menu-curtain .menu-curtain-sea .menu-boat{width:190px;height:138px;top:-105px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-curtain .menu-curtain-placement{font-size:15px;line-height:1.4}
+ :where(body:not([data-menuscale="1"])) #stage .menu-curtain .menu-curtain-note{font-size:13.5px;line-height:1.35}
+ :where(body:not([data-menuscale="1"])) #stage .menu-prep-content>.menu-subtitle,:where(body:not([data-menuscale="1"])) #stage .menu-placement .menu-subtitle{font-size:15px;line-height:1.35}
+ :where(body:not([data-menuscale="1"])) #stage .menu-prep-content .menu-side-copy>small{font-size:13px;line-height:1.3}
+ :where(body:not([data-menuscale="1"])) #stage .menu-prep-content .menu-coin-tile>small{font-size:13px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-placement .menu-placement-verdict{font-size:13.5px;line-height:1.3}
+ :where(body:not([data-menuscale="1"])) #stage .menu-placement .menu-slot-name>small{font-size:12.5px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-prep-content .menu-prep-bottom>.menu-primary,:where(body:not([data-menuscale="1"])) #stage .menu-placement .menu-placement-actions>.menu-primary,:where(body:not([data-menuscale="1"])) #stage .menu-curtain main>.menu-primary{font-size:20px!important}
+ :where(body:not([data-menuscale="1"])) #stage .menu-placement .menu-own-slot .menu-boat{top:12px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-placement .menu-slot-name{top:115px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .menu-dock{--menu-dock-height:58px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat>b,:where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat-who{justify-self:start;text-align:left;justify-content:start}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat-btns{display:flex;flex-direction:row;justify-content:end}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .menu-room-actions>.btn.primary{order:0;width:auto;flex:1;min-width:0;font-size:20px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .menu-room-actions>.btn:not(.primary){order:0;flex:none;width:auto;padding:6px 12px;font-size:14px}
+ :where(body:not([data-menuscale="1"])) #stage .menus-start .menu-start-heading>p{top:0}
+ :where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save{display:grid;grid-template-columns:minmax(0,1fr) 126px;grid-template-rows:18px 1fr;height:80px;min-height:80px;padding:10px 48px 10px 18px;gap:2px 10px}
+ :where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save .menu-mode-head{display:block;grid-column:1;grid-row:1}
+ :where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save .menu-mode-head>.menu-icon,:where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save .menu-mode-head h2{display:none}
+ :where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save .menu-mode-head small{font-size:11px;white-space:nowrap;letter-spacing:.02em;margin:0}
+ :where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save>p{grid-column:1;grid-row:2;font-size:12.5px;line-height:1.2;margin:0}
+ :where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save>p>span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ :where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save>.menu-primary{grid-column:2;grid-row:1/3;font-size:18px!important;white-space:nowrap;padding:6px 10px;min-height:42px;height:42px;align-self:center;width:126px}
+ :where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save-x{right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;font-size:16px}
+ :where(body:not([data-menuscale="1"])) .menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-rules-layout>nav>button:nth-child(2){padding-left:12px}
+}
+@media all{
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-curtain .menu-title{max-width:none;font-size:34px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-curtain main>.menu-kicker{font-size:15px;letter-spacing:.32em;white-space:nowrap}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-curtain .menu-curtain-sea .menu-boat{width:190px;height:138px;top:-105px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-curtain .menu-curtain-placement{font-size:15px;line-height:1.4}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-curtain .menu-curtain-note{font-size:13.5px;line-height:1.35}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content>.menu-subtitle,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-placement .menu-subtitle{font-size:15px;line-height:1.35}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content .menu-side-copy>small{font-size:13px;line-height:1.3}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content .menu-coin-tile>small{font-size:13px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-placement .menu-placement-verdict{font-size:13.5px;line-height:1.3}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-placement .menu-slot-name>small{font-size:12.5px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content .menu-prep-bottom>.menu-primary,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-placement .menu-placement-actions>.menu-primary,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-curtain main>.menu-primary{font-size:20px!important}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-placement .menu-own-slot .menu-boat{top:12px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-placement .menu-slot-name{top:115px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .menu-dock{--menu-dock-height:58px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .seat>b,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .seat-who{justify-self:start;text-align:left;justify-content:start}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .seat-btns{display:flex;flex-direction:row;justify-content:end}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .menu-room-actions>.btn.primary{order:0;width:auto;flex:1;min-width:0;font-size:20px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .menu-room-actions>.btn:not(.primary){order:0;flex:none;width:auto;padding:6px 12px;font-size:14px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-start-heading>p{top:0}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save{display:grid;grid-template-columns:minmax(0,1fr) 126px;grid-template-rows:18px 1fr;height:80px;min-height:80px;padding:10px 48px 10px 18px;gap:2px 10px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save .menu-mode-head{display:block;grid-column:1;grid-row:1}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save .menu-mode-head>.menu-icon,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save .menu-mode-head h2{display:none}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save .menu-mode-head small{font-size:11px;white-space:nowrap;letter-spacing:.02em;margin:0}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save>p{grid-column:1;grid-row:2;font-size:12.5px;line-height:1.2;margin:0}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save>p>span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save>.menu-primary{grid-column:2;grid-row:1/3;font-size:18px!important;white-space:nowrap;padding:6px 10px;min-height:42px;height:42px;align-self:center;width:126px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save-x{right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;font-size:16px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) .menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-rules-layout>nav>button:nth-child(2){padding-left:12px}
 }
 /* Hulls cross the waterline; the room note clears the last 80px berth. */
 #stage .menu-curtain .menu-curtain-sea .menu-boat{top:-127px}
-@media(min-width:1000px){#stage .menu-net.room .menu-room-start-note{bottom:66px;height:18px;line-height:18px;color:#c8d6dc}}
-@media(max-width:700px){#stage .menu-curtain .menu-curtain-sea .menu-boat{top:-92px}}
-@media(max-width:700px){#stage .menus-start .menu-save{grid-template-columns:minmax(0,1fr) 132px}#stage .menus-start .menu-save>.menu-primary{width:132px;font-size:20px!important}}
+@media(min-width:1000px){:where(body:not([data-menuscale="1"])) #stage .menu-net.room .menu-room-start-note{bottom:66px;height:18px;line-height:18px;color:#c8d6dc}}
+@media all{:where(body[data-menuscale="1"][data-menu-layout="scene"]) #stage .menu-net.room .menu-room-start-note{bottom:66px;height:18px;line-height:18px;color:#c8d6dc}}
+@media(max-width:700px){:where(body:not([data-menuscale="1"])) #stage .menu-curtain .menu-curtain-sea .menu-boat{top:-92px}}
+@media all{:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-curtain .menu-curtain-sea .menu-boat{top:-92px}}
+@media(max-width:700px){:where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save{grid-template-columns:minmax(0,1fr) 132px}:where(body:not([data-menuscale="1"])) #stage .menus-start .menu-save>.menu-primary{width:132px;font-size:20px!important}}
+@media all{:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save{grid-template-columns:minmax(0,1fr) 132px}:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menus-start .menu-save>.menu-primary{width:132px;font-size:20px!important}}
 /* Baseline for menus-scale: approved phone typography, before any scaling changes. */
 @media(max-width:700px){
- #stage .menu-prep-content>.menu-subtitle,#stage .menu-placement .menu-subtitle,#stage .menu-curtain .menu-curtain-placement{font-size:15px;line-height:1.35}
- #stage .menu-prep-content .menu-side-copy>small,#stage .menu-prep-content .menu-coin-tile>small{font-size:13px;line-height:1.3}
- #stage .menu-prep-content .menu-prep-options p,#stage .menu-prep-content .menu-toggle{font-size:14px;line-height:1.3}
- #stage .menu-placement .menu-slot-name>small{font-size:12.5px}
- #stage .menu-net.room .seat>b{font-size:14px!important;text-align:left;line-height:1.15}
- #stage .menu-net.room .seat-who{font-size:14px;line-height:1.2;min-height:17px}
- #stage .menu-net.room .seat{grid-template-columns:76px minmax(0,1fr) auto;padding:4px 6px;gap:2px 5px}
- #stage .menu-net.room .seat>.menu-dock{width:76px}
- #stage .menu-net.room .seat-btns>.btn{font-size:14px;line-height:1.15;max-width:68px;min-height:34px;padding:3px 5px}
- #stage .menu-net.room .menu-room-start-note,#stage .menu-net.room .room-link>div:first-of-type>.muted,#stage .menu-net.room .menu-room-options small{font-size:14px;line-height:1.3}
- #stage .menu-net.room .menu-room-actions>.btn,#stage .menu-prep-content .menu-prep-bottom>.menu-primary,#stage .menu-placement .menu-placement-actions>.menu-primary,#stage .menu-curtain main>.menu-primary{font-size:20px!important}
- #stage .menu-net.room .seat-btns{align-items:center}
+ :where(body:not([data-menuscale="1"])) #stage .menu-prep-content>.menu-subtitle,:where(body:not([data-menuscale="1"])) #stage .menu-placement .menu-subtitle,:where(body:not([data-menuscale="1"])) #stage .menu-curtain .menu-curtain-placement{font-size:15px;line-height:1.35}
+ :where(body:not([data-menuscale="1"])) #stage .menu-prep-content .menu-side-copy>small,:where(body:not([data-menuscale="1"])) #stage .menu-prep-content .menu-coin-tile>small{font-size:13px;line-height:1.3}
+ :where(body:not([data-menuscale="1"])) #stage .menu-prep-content .menu-prep-options p,:where(body:not([data-menuscale="1"])) #stage .menu-prep-content .menu-toggle{font-size:14px;line-height:1.3}
+ :where(body:not([data-menuscale="1"])) #stage .menu-placement .menu-slot-name>small{font-size:12.5px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat>b{font-size:14px!important;text-align:left;line-height:1.15}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat-who{font-size:14px;line-height:1.2;min-height:17px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat{grid-template-columns:76px minmax(0,1fr) auto;padding:4px 6px;gap:2px 5px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat>.menu-dock{width:76px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat-btns>.btn{font-size:14px;line-height:1.15;max-width:68px;min-height:34px;padding:3px 5px}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .menu-room-start-note,:where(body:not([data-menuscale="1"])) #stage .menu-net.room .room-link>div:first-of-type>.muted,:where(body:not([data-menuscale="1"])) #stage .menu-net.room .menu-room-options small{font-size:14px;line-height:1.3}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .menu-room-actions>.btn,:where(body:not([data-menuscale="1"])) #stage .menu-prep-content .menu-prep-bottom>.menu-primary,:where(body:not([data-menuscale="1"])) #stage .menu-placement .menu-placement-actions>.menu-primary,:where(body:not([data-menuscale="1"])) #stage .menu-curtain main>.menu-primary{font-size:20px!important}
+ :where(body:not([data-menuscale="1"])) #stage .menu-net.room .seat-btns{align-items:center}
+}
+@media all{
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content>.menu-subtitle,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-placement .menu-subtitle,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-curtain .menu-curtain-placement{font-size:15px;line-height:1.35}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content .menu-side-copy>small,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content .menu-coin-tile>small{font-size:13px;line-height:1.3}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content .menu-prep-options p,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content .menu-toggle{font-size:14px;line-height:1.3}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-placement .menu-slot-name>small{font-size:12.5px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .seat>b{font-size:14px!important;text-align:left;line-height:1.15}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .seat-who{font-size:14px;line-height:1.2;min-height:17px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .seat{grid-template-columns:76px minmax(0,1fr) auto;padding:4px 6px;gap:2px 5px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .seat>.menu-dock{width:76px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .seat-btns>.btn{font-size:14px;line-height:1.15;max-width:68px;min-height:34px;padding:3px 5px}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .menu-room-start-note,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .room-link>div:first-of-type>.muted,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .menu-room-options small{font-size:14px;line-height:1.3}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .menu-room-actions>.btn,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-prep-content .menu-prep-bottom>.menu-primary,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-placement .menu-placement-actions>.menu-primary,:where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-curtain main>.menu-primary{font-size:20px!important}
+ :where(body[data-menuscale="1"][data-menu-layout="phone"]) #stage .menu-net.room .seat-btns{align-items:center}
 }

@@ -4,6 +4,7 @@
 // (≤ 700 px) and a laptop of 1366 × 660 or smaller have k = 1: nothing changes. The code that takes coordinates on the screen
 // (getBoundingClientRect, clientX/Y) and puts something into the stage turns them into the stage's px with toStage / stageK.
 import { useLayoutEffect, useState } from 'react';
+import {getMenuLayout,subscribeMenuLayout} from './menus/layout';
 
 let k = 1;
 
@@ -26,9 +27,17 @@ export function useStage(): Record<string, string | number> | null {
   const [size, setSize] = useState(() => ({ w: innerWidth, h: innerHeight }));
   useLayoutEffect(() => {
     const on = () => setSize({ w: innerWidth, h: innerHeight });
+    const offMenu=subscribeMenuLayout(on);on();
     addEventListener('resize', on);
-    return () => removeEventListener('resize', on);
+    return () => {offMenu();removeEventListener('resize', on);};
   }, []);
+  const menu=getMenuLayout();
+  if(menu.active&&menu.enabled){
+    k=menu.k;document.body.classList.toggle('staged',false);
+    const column=menu.mode==='phone'&&!menu.tablet;
+    if(k===1&&menu.left===0&&menu.top===0)return {'--app-h':`${menu.sceneH}px`,'--app-w':`${menu.sceneW}px`,'--menu-k':1};
+    return {width:menu.sceneW,height:menu.sceneH,position:column?'relative':'absolute',left:menu.left,top:menu.top,transform:k===1?'none':`scale(${k})`,transformOrigin:'0 0','--app-h':`${menu.sceneH}px`,'--app-w':`${menu.sceneW}px`,'--menu-k':k};
+  }
   k = scaleOf(size.w, size.h);
   document.body.classList.toggle('staged', k > 1);
   // --app-h: the height of the screen inside the stage (game.css uses it where it said 100dvh)

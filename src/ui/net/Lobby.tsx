@@ -2,6 +2,7 @@
 // the link with «Скопировать» and a QR code, the four seats (who sits, online), bots, the coin, the options and
 // «Начать» for the creator; then the secret placement of each team; then the table.
 import QRCode from 'qrcode';
+import {useMenuLayout} from '../menus/layout';
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { Variant } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
@@ -227,8 +228,7 @@ export function Qr({ text }: { text: string }) {
 function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; room: RoomInfo }) {
   const link = useRoomLink(room.code);
   const [qrOpen,setQrOpen]=useState(false);
-  const [phone,setPhone]=useState(()=>innerWidth<=700);
-  useEffect(()=>{const q=matchMedia('(max-width:700px)'),update=()=>setPhone(q.matches);q.addEventListener('change',update);return()=>q.removeEventListener('change',update);},[]);
+  const phone=useMenuLayout().mode==='phone';
   const [copied, setCopied] = useState(false);
   const creator = room.you.creator;
   const mySide = room.you.seats.length > 0 ? data.ships.find((x) => x.code === room.you.seats[0])!.side : null;
