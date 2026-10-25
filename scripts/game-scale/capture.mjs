@@ -33,6 +33,9 @@ try{for(const phase of requested==='both'?['before','after']:[requested]){
    await page.goto(`http://127.0.0.1:${phase==='before'||process.env.MAIN_ONLY==='1'?5361:5362}/bortom-k-bortu/?speed=instant${phase==='disabled'?'&gamescale=0':''}`);
    await page.evaluate(async()=>{await Promise.all([...document.fonts].map(f=>f.load().catch(()=>{})));await document.fonts.ready;});await tick();
    await press('[data-testid=resume-go]');await tick(2000);await shot('table');
+   if(await page.locator('.game').evaluate(e=>e.hasAttribute('data-game-hand-scroll'))){
+    await page.locator('.hand-cards').first().evaluate(e=>e.scrollTop=e.scrollHeight);await tick(50);await shot('hand-bottom');await page.locator('.hand-cards').first().evaluate(e=>e.scrollTop=0);await tick(50);
+   }
    const log=page.locator('.bottom-bar').getByRole('button',{name:'Журнал',exact:true});
    if(await log.isVisible()){await log.evaluate(e=>e.click());await tick();await shot('log');await page.getByTestId('log-sheet').getByRole('button',{name:'Закрыть',exact:true}).evaluate(e=>e.click());await tick();}else await shot('log');
    await press('[data-testid="volley-Ж"]');await press('[data-testid="plate-И"]');await press('[data-testid=fire]');await tick(2000);await shot('reaction');

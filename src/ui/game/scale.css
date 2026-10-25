@@ -1,0 +1,13 @@
+/* Enabled on the existing game node only. ?gamescale=0 has the original cascade. */
+.game[data-game-scale]{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.game[data-game-scale] input,.game[data-game-scale] textarea{font-size:max(16px,1em)}
+@media(max-width:700px){
+ .game[data-game-scale]{position:fixed;inset:0;height:var(--game-visible-h);overflow:hidden}
+ .game[data-game-scale][data-game-regroup-wrap] .board-bottom>.team-row{flex-wrap:wrap;height:auto}
+ .game[data-game-scale][data-game-regroup-wrap] .board-bottom>.team-row .regroup{flex:none;margin-left:auto;max-width:100%}
+ .game[data-game-scale] .regroup[data-game-compact] .cmd-icon{display:none}
+ .game[data-game-scale] .regroup[data-game-compact] .cmd-in{grid-template-columns:auto;grid-template-areas:'name' 'cost'}
+ .game[data-game-scale][data-game-hand-scroll] .hand-cards:not(.has-lifted):not(.lift-host){overflow-y:auto;touch-action:pan-x pan-y;overscroll-behavior:contain}
+ .game[data-game-scale] .board-bottom>.team-row .hold-label{flex-shrink:0}
+ .game[data-game-scale] .phone-hand-label{min-width:0}
+}
