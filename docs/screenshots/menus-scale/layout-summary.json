@@ -1,0 +1,428 @@
+{
+  "frames": 200,
+  "pageErrors": 0,
+  "horizontalScroll": [],
+  "outside": [],
+  "overlap": [],
+  "small": [
+    [
+      "1366x660",
+      "settings",
+      2
+    ],
+    [
+      "390x844",
+      "start",
+      5
+    ],
+    [
+      "390x844",
+      "settings",
+      2
+    ],
+    [
+      "430x932",
+      "start",
+      5
+    ],
+    [
+      "430x932",
+      "settings",
+      2
+    ],
+    [
+      "430x740",
+      "start",
+      1
+    ],
+    [
+      "430x740",
+      "settings",
+      2
+    ],
+    [
+      "430x680",
+      "start",
+      1
+    ],
+    [
+      "430x680",
+      "settings",
+      2
+    ],
+    [
+      "390x664",
+      "start",
+      1
+    ],
+    [
+      "1024x650",
+      "start",
+      7
+    ],
+    [
+      "1024x650",
+      "prep",
+      4
+    ],
+    [
+      "1024x650",
+      "placement",
+      18
+    ],
+    [
+      "1024x650",
+      "rules",
+      62
+    ],
+    [
+      "1024x650",
+      "settings",
+      23
+    ],
+    [
+      "1024x650",
+      "net-entry",
+      1
+    ],
+    [
+      "1024x650",
+      "net-room",
+      23
+    ],
+    [
+      "1280x600",
+      "start",
+      4
+    ],
+    [
+      "1280x600",
+      "settings",
+      2
+    ],
+    [
+      "1366x625",
+      "start",
+      4
+    ],
+    [
+      "1366x625",
+      "settings",
+      2
+    ],
+    [
+      "1440x790",
+      "settings",
+      2
+    ],
+    [
+      "1024x768",
+      "start",
+      7
+    ],
+    [
+      "1024x768",
+      "prep",
+      4
+    ],
+    [
+      "1024x768",
+      "placement",
+      18
+    ],
+    [
+      "1024x768",
+      "rules",
+      62
+    ],
+    [
+      "1024x768",
+      "settings",
+      23
+    ],
+    [
+      "1024x768",
+      "net-room",
+      23
+    ],
+    [
+      "320x568",
+      "settings",
+      2
+    ],
+    [
+      "360x640",
+      "start",
+      1
+    ],
+    [
+      "360x640",
+      "settings",
+      2
+    ],
+    [
+      "360x740",
+      "start",
+      1
+    ],
+    [
+      "360x740",
+      "settings",
+      2
+    ],
+    [
+      "375x667",
+      "start",
+      1
+    ],
+    [
+      "375x667",
+      "settings",
+      2
+    ],
+    [
+      "412x915",
+      "start",
+      5
+    ],
+    [
+      "412x915",
+      "settings",
+      2
+    ],
+    [
+      "667x375",
+      "start",
+      24
+    ],
+    [
+      "667x375",
+      "prep",
+      21
+    ],
+    [
+      "667x375",
+      "placement",
+      36
+    ],
+    [
+      "667x375",
+      "curtain",
+      6
+    ],
+    [
+      "667x375",
+      "rules",
+      91
+    ],
+    [
+      "667x375",
+      "settings",
+      35
+    ],
+    [
+      "667x375",
+      "net-room",
+      41
+    ],
+    [
+      "844x390",
+      "start",
+      23
+    ],
+    [
+      "844x390",
+      "prep",
+      20
+    ],
+    [
+      "844x390",
+      "placement",
+      35
+    ],
+    [
+      "844x390",
+      "curtain",
+      5
+    ],
+    [
+      "844x390",
+      "rules",
+      88
+    ],
+    [
+      "844x390",
+      "settings",
+      31
+    ],
+    [
+      "844x390",
+      "net-room",
+      37
+    ],
+    [
+      "932x430",
+      "start",
+      18
+    ],
+    [
+      "932x430",
+      "prep",
+      15
+    ],
+    [
+      "932x430",
+      "placement",
+      33
+    ],
+    [
+      "932x430",
+      "curtain",
+      5
+    ],
+    [
+      "932x430",
+      "rules",
+      88
+    ],
+    [
+      "932x430",
+      "settings",
+      31
+    ],
+    [
+      "932x430",
+      "net-room",
+      31
+    ],
+    [
+      "1024x768",
+      "net-entry",
+      1
+    ],
+    [
+      "667x375",
+      "net-entry",
+      9
+    ],
+    [
+      "844x390",
+      "net-entry",
+      7
+    ],
+    [
+      "932x430",
+      "net-entry",
+      5
+    ],
+    [
+      "320x568",
+      "start",
+      1
+    ],
+    [
+      "1180x820",
+      "start",
+      5
+    ],
+    [
+      "1180x820",
+      "placement",
+      2
+    ],
+    [
+      "1180x820",
+      "rules",
+      16
+    ],
+    [
+      "1180x820",
+      "settings",
+      5
+    ],
+    [
+      "1180x820",
+      "net-room",
+      4
+    ],
+    [
+      "390x664",
+      "settings",
+      2
+    ]
+  ],
+  "keyboard": [
+    {
+      "size": "1024x650",
+      "stable": true
+    },
+    {
+      "size": "390x844",
+      "stable": true
+    },
+    {
+      "size": "430x932",
+      "stable": true
+    },
+    {
+      "size": "430x740",
+      "stable": true
+    },
+    {
+      "size": "430x680",
+      "stable": true
+    },
+    {
+      "size": "390x664",
+      "stable": true
+    },
+    {
+      "size": "768x1024",
+      "stable": true
+    },
+    {
+      "size": "834x1194",
+      "stable": true
+    },
+    {
+      "size": "1024x768",
+      "stable": true
+    },
+    {
+      "size": "1180x820",
+      "stable": true
+    },
+    {
+      "size": "320x568",
+      "stable": true
+    },
+    {
+      "size": "360x640",
+      "stable": true
+    },
+    {
+      "size": "360x740",
+      "stable": true
+    },
+    {
+      "size": "375x667",
+      "stable": true
+    },
+    {
+      "size": "412x915",
+      "stable": true
+    },
+    {
+      "size": "667x375",
+      "stable": true
+    },
+    {
+      "size": "844x390",
+      "stable": true
+    },
+    {
+      "size": "932x430",
+      "stable": true
+    }
+  ]
+}
