@@ -1,5 +1,29 @@
 [
   {
+    "name": "settings",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "settings-game",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "settings",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
+    "name": "settings-game",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
     "name": "start",
     "width": 1366,
     "height": 660,
@@ -15,72 +39,6 @@
     "name": "placement",
     "width": 1366,
     "height": 660,
-    "errors": []
-  },
-  {
-    "name": "curtain",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
-    "name": "net-entry",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
-    "name": "start-save",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
-    "name": "start",
-    "width": 390,
-    "height": 844,
-    "errors": []
-  },
-  {
-    "name": "prep",
-    "width": 390,
-    "height": 844,
-    "errors": []
-  },
-  {
-    "name": "placement",
-    "width": 390,
-    "height": 844,
-    "errors": []
-  },
-  {
-    "name": "curtain",
-    "width": 390,
-    "height": 844,
-    "errors": []
-  },
-  {
-    "name": "net-entry",
-    "width": 390,
-    "height": 844,
-    "errors": []
-  },
-  {
-    "name": "start-save",
-    "width": 390,
-    "height": 844,
-    "errors": []
-  },
-  {
-    "name": "net-room",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
-    "name": "net-room",
-    "width": 390,
-    "height": 844,
     "errors": []
   },
   {
@@ -102,6 +60,30 @@
     "errors": []
   },
   {
+    "name": "net-entry",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "start",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
+    "name": "prep",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
+    "name": "placement",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
     "name": "rules-memo",
     "width": 390,
     "height": 844,
@@ -120,25 +102,43 @@
     "errors": []
   },
   {
-    "name": "settings",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
-    "name": "settings-game",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
-    "name": "settings",
+    "name": "net-entry",
     "width": 390,
     "height": 844,
     "errors": []
   },
   {
-    "name": "settings-game",
+    "name": "curtain",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "net-room",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "curtain",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
+    "name": "net-room",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
+    "name": "start-save",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "start-save",
     "width": 390,
     "height": 844,
     "errors": []

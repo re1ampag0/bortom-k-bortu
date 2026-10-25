@@ -7,4 +7,4 @@ await extractScenes({weather:true,menu:true,sceneSelector:'#menu-art',out:'src/u
 // Opponent boats are deliberately anonymous dark silhouettes, never team artwork.
 const {readFileSync,writeFileSync}=await import('node:fs');
 const silhouette='src/ui/menus/art/Boat_engraved_ink-asset-ship_engraved_ink.svg';
-writeFileSync(silhouette,readFileSync(silhouette,'utf8').replace(/(fill|stroke|stop-color)="(?!none)[^"]*"/g,(_,attr)=>`${attr}="${attr==='stroke'?'#304652':'#122630'}"`));
+writeFileSync(silhouette,readFileSync(silhouette,'utf8').replace(/(fill|stroke|stop-color)="(?!none)[^"]*"/g,(_,attr)=>`${attr}="${attr==='stroke'?'#12232d':'#050c10'}"`));

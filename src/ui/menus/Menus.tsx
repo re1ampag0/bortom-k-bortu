@@ -2,6 +2,7 @@ import {lazy,Suspense,useEffect,useRef,useState,type ReactNode,type RefObject} f
 import type {GameData} from '../../engine/types';
 import './menus.css';
 import './menus-fix2.css';
+import './menus-fix3.css';
 import {menuImagePool} from './assets';
 import {initMenuMotion,menuMotionAllowed,subscribeMenuMotion} from './motion';
 const Scene=lazy(()=>import('./MenuScene').then(m=>({default:m.MenuScene})));
