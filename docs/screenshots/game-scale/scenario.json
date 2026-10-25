@@ -1,0 +1,39 @@
+{
+  "format": "bortom-k-bortu/match",
+  "version": 1,
+  "dataVersion": "0.3",
+  "setup": {
+    "game": {
+      "seed": 1,
+      "variant": "standard",
+      "sea": true,
+      "legends": true,
+      "positions": {
+        "ПИРАТЫ": [
+          "Ж",
+          "М"
+        ],
+        "КОМПАНИЯ": [
+          "И",
+          "Г"
+        ]
+      }
+    },
+    "players": {
+      "ПИРАТЫ": "human",
+      "КОМПАНИЯ": "human"
+    },
+    "openHands": true,
+    "hints": false
+  },
+  "actions": [
+    {
+      "type": "endTurn",
+      "side": "ПИРАТЫ"
+    },
+    {
+      "type": "endTurn",
+      "side": "КОМПАНИЯ"
+    }
+  ]
+}
