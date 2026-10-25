@@ -1,0 +1,95 @@
+/* These rules never apply to game windows or to ?menuscale=0. */
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"]{position:relative;min-height:100vh;min-height:100dvh;background:#0e1b26 var(--menu-background,none) center/cover no-repeat}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="scene"],body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-tablet]{height:100vh;height:100dvh;overflow:hidden}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-kind="main"]{background-image:linear-gradient(#09192a 0 40%,#143a48 55%,#0e1b2600 75%),var(--menu-background,none)}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-kind="pirates"]{background:radial-gradient(ellipse at 50% 38%,#4a1a14,#2a0e0b 55%,#140706)}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-kind="company"]{background:radial-gradient(ellipse at 50% 38%,#23445c,#102b41 55%,#071423)}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage{will-change:auto;backface-visibility:visible}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .menus-surface{-webkit-text-size-adjust:100%;text-size-adjust:100%;min-height:var(--app-h);overflow-x:hidden;padding:var(--menu-safe-top,env(safe-area-inset-top,0px)) var(--menu-safe-right,env(safe-area-inset-right,0px)) var(--menu-safe-bottom,env(safe-area-inset-bottom,0px)) var(--menu-safe-left,env(safe-area-inset-left,0px))}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .menus-surface.menu-phone{display:block}
+.menu-overlays{display:contents}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .menus-surface button{touch-action:manipulation}
+body[data-menuscale="1"][data-menu-layout="phone"] .menu-rules-search input,body[data-menuscale="1"] .menu-advanced input,body[data-menuscale="1"] .menu-rules-search input:focus{font-size:16px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="scene"] #stage .menus-surface{width:1366px;min-height:660px;height:660px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="scene"] .menus-start>main{height:660px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="scene"] #stage .menu-curtain main{min-height:660px;height:660px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="scene"] #stage .menu-start-hero{height:340px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .menu-window-backdrop,body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .sheet-backdrop{width:var(--app-w);height:var(--app-h);max-width:none;max-height:none}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .menu-rules-window{max-width:calc(var(--app-w) - 24px);max-height:calc(var(--app-h) - 24px)}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] .sheet[data-testid=settings]{max-width:calc(var(--app-w) - 24px);max-height:calc(var(--app-h) - 24px)}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] .menus-surface{min-height:max(844px,var(--app-h))}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] .menu-rules-window{width:var(--app-w);height:calc(var(--app-h) - 44px);max-height:calc(var(--app-h) - 44px);max-width:none}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] .sheet[data-testid=settings]{width:var(--app-w);max-width:none;height:calc(var(--app-h) - 44px);max-height:calc(var(--app-h) - 44px)}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] .menus-surface[data-menu-tablet]{height:844px;min-height:844px;overflow-y:auto}
+/***** Primary actions are pinned only when their natural bottom is outside the viewport. *****/
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-prep-bottom>.menu-primary,
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-placement-actions>.menu-primary,
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin].menu-curtain main>.menu-primary,
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-room-actions{position:fixed;top:auto;left:max(16px,var(--menu-safe-left,env(safe-area-inset-left,0px)));right:max(16px,var(--menu-safe-right,env(safe-area-inset-right,0px)));bottom:calc(16px + var(--menu-safe-bottom,env(safe-area-inset-bottom,0px)));width:auto;margin:0;z-index:10}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-prep-bottom>.menu-primary,
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-placement-actions>.menu-primary,
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin].menu-curtain main>.menu-primary{height:54px;max-height:54px;min-height:54px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-room-actions{height:52px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-title{font-size:28px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-prep-content>.menu-title{font-size:28px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-side-tile>.menu-scene{width:122px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-side-copy{padding:0 8px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-side-copy>b{font-size:24px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-side-copy>small{font-size:12.5px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-variants>button{font-size:12px;padding-inline:2px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-toggle{font-size:12.5px;gap:6px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-toggle input{width:42px;flex-basis:42px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-toggle input:checked:after{left:20px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-curtain main>.menu-kicker{font-size:12px;letter-spacing:.26em}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-curtain main>.menu-title{font-size:28px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-net.room .seat{grid-template-columns:62px minmax(0,1fr) auto}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-net.room .seat>.menu-dock{width:62px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-net.room .seat-btns>.btn{font-size:12px;padding:3px}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-net.room .seat>b{font-size:13px!important}
+body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"] #stage .menus-surface[data-menu-narrow] .menu-net.room .seat-who{font-size:12px}
+/* Preserve the original portal input paint after moving it under MenuSurface. */
+body[data-menuscale="1"] .menus-surface .menu-rules-search input{background:#091823;color:#eef3f6;border:1px solid #a28341;border-radius:20px;padding:8px 16px 8px 42px;height:38px;min-height:0;font:14px 'Alegreya Sans',sans-serif}
+body[data-menuscale="1"][data-menu-layout="phone"] .menus-surface .menu-rules-search input,body[data-menuscale="1"] .menus-surface .menu-rules-search input:focus{font-size:16px}
+/* Clip the layout overflow of a shrunken transformed stage in the existing viewport owner. */
+body[data-menuscale="1"][data-menu-transform] #root{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden}
+/* Narrow columns: fit existing controls, without changing the established 360–430px layouts. */
+body[data-menuscale="1"] #stage [data-menu-narrow] .sheet[data-testid=settings] .view-switch{min-width:0;max-width:100%}
+body[data-menuscale="1"] #stage [data-menu-narrow] .sheet[data-testid=settings] .view-switch>button{min-width:0;font-size:12px!important;padding-inline:3px!important}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-setting-segment{max-width:100%;min-width:0}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-room-actions>.btn.primary{padding-inline:8px;white-space:nowrap}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-room-actions>.btn.primary>.menu-icon{display:none}
+
+body[data-menuscale="1"][data-menu-downscaled] #stage{--menu-stroke-1:max(1px,calc(1px / var(--menu-k,1)));--menu-stroke-15:max(1.5px,calc(1px / var(--menu-k,1)))}
+
+body.on-curtain[data-menuscale="1"][data-menu-layout="phone"][data-menu-user-scroll]:not([data-menu-tablet]) #root{height:100vh;height:100dvh;overflow-x:hidden;overflow-y:auto}
+body[data-menuscale="1"][data-menu-keyboard] #root{overflow-y:auto;overflow-x:hidden}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save{height:96px;min-height:96px;padding-left:12px;padding-right:38px;grid-template-rows:26px 1fr}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save .menu-mode-head small{white-space:normal;line-height:1.1}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save>p{font-size:12px;line-height:1.2}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save>p>span:last-child{white-space:normal;overflow:visible;text-overflow:clip}
+body[data-menuscale="1"] #stage [data-menu-narrow] .menu-save-x{right:6px;width:24px;height:24px}
+/* Narrow phones: preserve the established 390px+ boards, fit content before clipping. */
+@media(max-width:374px){
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-start-heading{padding-inline:12px}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-start-heading h1{font-size:clamp(30px,10.5vw,39px);margin-inline:0;white-space:nowrap}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-start-heading p{max-width:270px;margin-inline:auto;white-space:normal;text-wrap:balance}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat{grid-template-columns:64px minmax(0,1fr);grid-template-rows:auto auto auto;height:auto;min-height:108px;gap:4px 6px;padding:8px 6px}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat>.menu-dock{grid-column:1;grid-row:1 / 4;width:64px;align-self:center}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat>b{grid-column:2;grid-row:1;min-width:0;line-height:1.2;white-space:normal;text-wrap:balance}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat-who{grid-column:2;grid-row:2;min-width:0}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat-btns{grid-column:2;grid-row:3;justify-self:start;justify-content:start;flex-wrap:wrap;max-width:100%}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-net.room .seat-btns>.btn{max-width:none;white-space:nowrap;font-size:14px;padding-inline:6px}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-net.room{padding-bottom:calc(84px + var(--menu-safe-bottom,env(safe-area-inset-bottom,0px)))}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menus-surface[data-menu-pin] .menu-room-actions:before{content:"";position:absolute;inset:-12px -16px calc(-16px - var(--menu-safe-bottom,env(safe-area-inset-bottom,0px)));background:#0e1b26;z-index:-1;pointer-events:none}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot{padding-left:52px}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot>strong{font-size:12px;white-space:nowrap;position:relative;z-index:2}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot>span{font-size:11px}
+}
+@media(max-width:374px){
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-room-actions>.btn.primary{min-width:0;flex:1;padding-inline:8px;white-space:nowrap}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-room-actions>.btn.primary>.menu-icon{display:none}
+}
+@media(max-width:359px){
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot>.menu-icon{display:none}
+ body[data-menuscale="1"][data-menu-layout="phone"] #stage .menu-placement .menu-enemy-slot{padding-left:46px}
+}

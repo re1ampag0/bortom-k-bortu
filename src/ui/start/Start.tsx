@@ -1,13 +1,13 @@
 // The start screen (docs/mockups/start/): an old sea chart, «Продолжить партию» and «Вернуться в комнату», the three
 // modes, links to a bot match, the rules, the cards and the settings.
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { replay, type MatchRecord, type MatchSetup } from '../../engine/match';
 import type { GameData } from '../../engine/types';
 import { loadNetSaved } from '../../net/ws';
 import { RulesSheet, SettingsSheet } from '../game/Overlays';
 import { SIDE_LABEL } from '../game/text';
 import { loadSave, loadSettings, storeSave, storeSettings, type Settings } from '../storage';
-import { Rhumbs } from './Rhumbs';
+import {MenuSurface,MenuScene,Icon,Arrow,Flourish} from '../menus/Menus';
 
 export type Mode = 'bots' | 'duo';
 
@@ -46,84 +46,16 @@ export function Start({
   };
 
   return (
-    <div className="start-page">
-      <Rhumbs />
-      <main className={`start ${save && netSaved?.code ? 'two-plaques' : ''}`}>
-        <section className="start-hero">
-          <h1 className="start-title">
-            <span>Бортом</span>
-            <span className="k">к борту</span>
-          </h1>
-          <p className="start-sub">Морской бой два на два: Пираты против Ост-Индской компании, до последнего корабля.</p>
-          <figure className="start-art">
-            <div className="start-frame">
-              <SeaMap />
-            </div>
-          </figure>
-        </section>
-
-        <nav className="start-menu" aria-label="Начать игру">
-          {save && (
-            <div className="plaque" data-testid="resume">
-              <button className="plaque-main" onClick={() => onResume(save.record)} data-testid="resume-go">
-                <span className="t">Продолжить партию</span>
-                <span className="d">{save.text}</span>
-                <span className="go">Вернуться</span>
-              </button>
-              <button
-                className="plaque-x"
-                title="Удалить сохранённую партию"
-                aria-label="Удалить сохранённую партию"
-                onClick={() => {
-                  storeSave(null);
-                  setSave(null);
-                }}
-              >
-                ✕
-              </button>
-            </div>
-          )}
-          {netSaved?.code && (
-            <div className="plaque" data-testid="net-resume">
-              <button className="plaque-main" onClick={onNet}>
-                <span className="t">Вернуться в комнату {netSaved.code}</span>
-                <span className="d">Игра по сети</span>
-                <span className="go">Вернуться</span>
-              </button>
-            </div>
-          )}
-
-          <button className="mode main" data-testid="quick-bots" onClick={() => onMode('bots')}>
-            <IconBots />
-            <span className="t">Против ботов</span>
-            <span className="d">Вы — одна команда, боты — другая</span>
-          </button>
-          <button className="mode" data-testid="quick-net" onClick={onNet}>
-            <IconNet />
-            <span className="t">По сети</span>
-            <span className="d">Каждый со своего телефона или ноутбука</span>
-          </button>
-          <button className="mode" data-testid="quick-duo" onClick={() => onMode('duo')}>
-            <IconDuo />
-            <span className="t">Вдвоём на одном экране</span>
-            <span className="d">Передаёте устройство друг другу</span>
-          </button>
-
-          <div className="start-links">
-            <button className="link" data-testid="quick-match" onClick={onMatch}>
-              Матч ботов
-            </button>
-            <button className="link" onClick={() => setSheet('rules')}>
-              Правила
-            </button>
-            <button className="link" onClick={onCards}>
-              Все карты
-            </button>
-            <button className="link" data-testid="start-settings" onClick={() => setSheet('settings')}>
-              Настройки
-            </button>
-          </div>
+    <MenuSurface kind="main" className="menus-start">
+      <main>
+        <section className="menu-start-hero"><MenuScene name="Main"/><div className="menu-start-heading"><small>ПИРАТЫ · ПРОТИВ · КОМПАНИИ</small><h1>Бортом к борту</h1><Flourish/><p>Морской бой два на два, до последнего корабля.</p></div></section>
+        <nav className={`menu-mode-grid ${save||netSaved?.code?'with-save':''}`} aria-label="Начать игру">
+          {save&&<section className="menu-mode-card menu-plaque menu-save" data-testid="resume"><button className="menu-save-x" aria-label="Удалить сохранённую партию" onClick={()=>{storeSave(null);setSave(null);}}>×</button><div className="menu-mode-head"><Icon name="logbook" size={50}/><div><small>Сохранённая партия</small><h2>Продолжить</h2></div></div><p><span>{describeSetup(save.record.setup).replace(/^./,c=>c.toUpperCase())}</span><span>{save.text.slice(0,save.text.lastIndexOf(','))}</span></p><button className="menu-primary" data-testid="resume-go" onClick={()=>onResume(save.record)}><span className="menu-desktop">Вернуться к столу</span><span className="menu-phone">Продолжить</span></button></section>}
+          {!save&&netSaved?.code&&<button className="menu-mode-card menu-plaque menu-save" data-testid="net-resume" onClick={onNet}><h2>Вернуться в комнату {netSaved.code}</h2><p>Игра по сети</p><span className="menu-cta">Вернуться к столу <Arrow/></span></button>}
+          {([{id:'quick-bots',icon:'cutlasses',title:'Против ботов',text:'Вы командуете одной стороной, боты другой.',cta:'Выбрать сторону',go:()=>onMode('bots')},{id:'quick-net',icon:'flags',title:'Игра по сети',text:'Каждый играет со своего телефона или ноутбука.',cta:'Комната по коду',go:onNet},{id:'quick-duo',icon:'mugs',title:'На одном экране',text:'Играете вдвоём, передавая устройство друг другу.',cta:'Сесть за стол',go:()=>onMode('duo')}]as const).map(m=><button key={m.id} className="menu-mode-card menu-plaque" data-testid={m.id} onClick={m.go}><span className="menu-mode-head"><span className="menu-medal"><Icon name={m.icon} size={50}/></span><h2>{m.title}</h2></span><p><span className="menu-desktop">{m.text}</span><span className="menu-phone">{m.id==='quick-bots'?'Вы командуете одной стороной, боты другой':m.id==='quick-net'?'Каждый со своего телефона или ноутбука':'Вдвоём, передавая устройство'}</span></p><span className="menu-cta">{m.cta}<Arrow/></span><span className="menu-mobile-chevron"><Arrow chevron/></span></button>)}
         </nav>
+        <nav className="menu-start-links" aria-label="Ещё"><button onClick={()=>setSheet('rules')}><span className="menu-medal dark"><Icon name="book" size={38}/></span>Правила</button><button onClick={onCards}><span className="menu-medal dark"><Icon name="cards" size={38}/></span><span className="menu-desktop">Коллекция карт</span><span className="menu-phone">Карты</span></button><button data-testid="start-settings" onClick={()=>setSheet('settings')}><span className="menu-medal dark"><Icon name="wheel" size={38}/></span>Настройки</button><button data-testid="quick-match" onClick={onMatch}><span className="menu-medal dark"><Icon name="spyglass" size={38}/></span>Матч ботов</button></nav>
+        <footer className="menu-version">Версия {__APP_COMMIT__} · сборка {new Date(__APP_BUILT__).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</footer>
       </main>
       {sheet === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}
       {sheet === 'settings' && (
@@ -143,7 +75,7 @@ export function Start({
           onClose={() => setSheet(null)}
         />
       )}
-    </div>
+    </MenuSurface>
   );
 }
 
@@ -154,53 +86,3 @@ function describeSetup(setup: MatchSetup): string {
   return 'против ботов';
 }
 
-/** The sea chart (public/art/start-map.svg), inlined so its captions use the page's Alegreya. */
-function SeaMap() {
-  const [svg, setSvg] = useState<string | null>(null);
-  useEffect(() => {
-    let alive = true;
-    fetch(`${import.meta.env.BASE_URL}art/start-map.svg`)
-      .then((r) => (r.ok ? r.text() : null))
-      .then((t) => alive && t && setSvg(t.replace('<svg ', '<svg class="start-map" ')))
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, []);
-  return useMemo(
-    () => (svg ? <div className="start-map-box" dangerouslySetInnerHTML={{ __html: svg }} /> : <div className="start-map-box" aria-hidden="true" />),
-    [svg],
-  );
-}
-
-function IconBots() {
-  return (
-    <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
-      <circle cx="22" cy="22" r="20" fill="none" stroke="#C8A04A" strokeWidth="1.5" />
-      <path d="M10 27 H34 L31 32 Q22 34 13 32Z" fill="#2A2521" />
-      <path d="M22 27 V9 M15 14 Q22 16 29 14 L28 24 Q22 26 16 24Z" stroke="#2A2521" strokeWidth="1.5" fill="none" />
-    </svg>
-  );
-}
-
-function IconNet() {
-  return (
-    <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
-      <circle cx="22" cy="22" r="20" fill="none" stroke="#C9B48C" strokeWidth="1.5" />
-      <path d="M8 26 q3-3 6 0 t6 0 t6 0 t6 0 t6 0" stroke="#24465C" strokeWidth="1.6" fill="none" />
-      <path d="M22 10 v10 M17 14 a7 7 0 0 1 10 0 M13 10 a12 12 0 0 1 18 0" stroke="#C8A04A" strokeWidth="1.6" fill="none" />
-    </svg>
-  );
-}
-
-function IconDuo() {
-  return (
-    <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
-      <circle cx="22" cy="22" r="20" fill="none" stroke="#C9B48C" strokeWidth="1.5" />
-      <path d="M7 25 H20 L18 29 H9Z" fill="#B23A2E" />
-      <path d="M24 25 H37 L35 29 H26Z" fill="#C8A04A" />
-      <path d="M13 25 V14 M31 25 V14" stroke="#2A2521" strokeWidth="1.5" />
-      <path d="M13 15 L19 18 L13 21Z M31 15 L25 18 L31 21Z" fill="#2A2521" />
-    </svg>
-  );
-}

@@ -53,20 +53,20 @@ a{color:#e0bd62}a:hover{color:#f0d27a}
 
     <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 34px; padding: 18px 26px 0">
       <div>
-        <h2 class="h2"><img src="../assets/icons/ic_spyglass.svg" alt="" width="22" height="22">Показ</h2>
+        <h2 class="h2"><img src="../assets/icons/ic_lantern.svg" alt="" width="22" height="22">Показ</h2>
         <div style="display: flex; flex-direction: column; gap: 8px; padding: 4px 0 6px"><span class="name">Скорость показа ходов</span><span class="seg" role="group" aria-label="Скорость показа ходов" style="align-self: flex-start"><button aria-pressed="false">Медленно</button><button aria-pressed="true">Обычно</button><button aria-pressed="false">Быстро</button><button aria-pressed="false">Мгновенно</button></span></div>
-        <div class="row"><span class="name">Спецэффекты</span><span class="seg" role="group" aria-label="Спецэффекты"><button aria-pressed="true">Богатые</button><button aria-pressed="false">Простые</button></span></div>
-        <label class="row"><span class="name">Пропуск показа касанием стола<span class="hint" style="display: block">для телефона</span></span><span class="track"><i></i></span></label>
+        <div class="row"><span class="name">Спецэффекты</span><span class="seg" role="group" aria-label="Спецэффекты"><button aria-pressed="true">Полные</button><button aria-pressed="false">Простые</button></span></div>
+        <label class="row"><span class="name">Касание стола пропускает показ<span class="hint" style="display: block">для телефона</span></span><span class="track"><i></i></span></label>
 
-        <h2 class="h2" style="margin-top: 16px"><img src="../assets/icons/ic_cutlasses.svg" alt="" width="22" height="22">Игра</h2>
+        <h2 class="h2" style="margin-top: 16px"><img src="../assets/icons/ic_bell.svg" alt="" width="22" height="22">Игра</h2>
         <label class="row"><span class="name">Звук «ваш ход»</span><span class="track on"><i></i></span></label>
-        <label class="row"><span class="name">Быстрый конец хода<span class="hint" style="display: block">«Ход окончен · Отменить» — 1 с вместо 3 с</span></span><span class="track"><i></i></span></label>
+        <label class="row"><span class="name">Быстрый конец хода<span class="hint" style="display: block">Отменить «Ход окончен» можно 1 с, а не 3 с</span></span><span class="track"><i></i></span></label>
         <label class="row"><span class="name">Подсказки<span class="hint" style="display: block">урон на целях, «4 → 2» на Реакциях</span></span><span class="track on"><i></i></span></label>
       </div>
       <div>
         <h2 class="h2"><img src="../assets/icons/ic_compass.svg" alt="" width="22" height="22">Вид стола</h2>
         <div class="row"><span class="name">Залп на планшете</span><span class="seg" role="group" aria-label="Залп на планшете"><button aria-pressed="true">Значки</button><button aria-pressed="false">Порты</button></span></div>
-        <div class="row"><span class="name">Фон под рукой</span><span class="seg" role="group" aria-label="Фон под рукой"><button aria-pressed="true">Палуба</button><button aria-pressed="false">Стол капитана</button></span></div>
+        <div class="row"><span class="name">Фон</span><span class="seg" role="group" aria-label="Фон"><button aria-pressed="true">Палуба</button><button aria-pressed="false">Стол капитана</button></span></div>
         <div class="row"><span class="name">Рамка моря</span><span class="seg" role="group" aria-label="Рамка моря"><button aria-pressed="true">Фальшборт</button><button aria-pressed="false">Латунь</button></span></div>
         <div class="row"><span class="name">Разбор урона</span><span class="seg" role="group" aria-label="Разбор урона"><button aria-pressed="true">Показывать</button><button aria-pressed="false">Скрыть</button></span></div>
 
@@ -76,7 +76,7 @@ a{color:#e0bd62}a:hover{color:#f0d27a}
             <span style="position: absolute; left: 6px; bottom: 6px; width: 34px; height: 14px; border-radius: 3px; background: #c9a048"></span>
             <span style="position: absolute; right: 6px; bottom: 6px; width: 34px; height: 14px; border-radius: 3px; background: #efe6cf"></span>
           </div>
-          <span class="hint" style="font-size: 13px">Вид стола меняется сразу — изменения видно за окном.</span>
+          <span class="hint" style="font-size: 13px">Вид стола меняется сразу, это видно за окном.</span>
         </div>
       </div>
     </div>
@@ -85,7 +85,7 @@ a{color:#e0bd62}a:hover{color:#f0d27a}
       <button class="btn-line"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><path d="M8 1 V11 M3.5 6.5 L8 11 L12.5 6.5 M2 14.5 H14" stroke="#f0d27a" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>Скачать журнал</button>
       <button class="btn-line"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><path d="M8 1 V11 M3.5 6.5 L8 11 L12.5 6.5 M2 14.5 H14" stroke="#f0d27a" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>Скачать партию</button>
       <span style="flex: 1; display: flex; justify-content: center"><span class="egg" title="Этот компас показывает не на север, а туда, куда вам действительно нужно" style="font-size: 12px; color: #6f8796"><img src="../assets/icons/ic_compass.svg" alt="" width="20" height="20"><span style="line-height: 1.25">Версия 1a2b3c4<br>24.10, 18:40</span></span></span>
-      <button class="btn-red">Сдаться (Пираты)</button>
+      <button class="btn-red">Сдаться за Пиратов</button>
       <button class="btn-line">Новая партия</button>
     </footer>
   </section>

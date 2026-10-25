@@ -5,6 +5,8 @@ import type { MatchSetup } from '../../engine/match';
 import type { GameData, Side } from '../../engine/types';
 import { Curtain } from './Curtain';
 import { SIDE_LABEL } from './text';
+import {MenuSurface,Icon,Arrow} from '../menus/Menus';
+import {PlacementBoard} from '../menus/PlacementBoard';
 
 export function Placement({
   data,
@@ -39,7 +41,6 @@ export function Placement({
     );
   }
 
-  const ship = (code: string) => data.ships.find((x) => x.code === code)!;
   const done = () => {
     const all = { ...positions, [side]: order };
     if (index + 1 < humans.length) {
@@ -54,36 +55,9 @@ export function Placement({
     onDone({ ...setup, game: { ...setup.game, positions: all } });
   };
 
-  return (
-    <main className="setup placement" data-testid="placement">
-      <header className="setup-head">
-        <h1>{SIDE_LABEL[side].name}: расстановка</h1>
-        {note && index === 0 && <p className="note">{note}</p>}
-        <p className="muted">
-          Кто слева, кто справа? Корабли напротив друг друга стреляют без штрафа. Противник увидит расстановку только в
-          начале партии.
-        </p>
-      </header>
-      <div className="slots">
-        {order.map((code, i) => (
-          <div key={code} className="slot" style={{ borderColor: ship(code).color }}>
-            <span className="muted">{i === 0 ? 'Слева' : 'Справа'}</span>
-            <b style={{ color: ship(code).color }}>{ship(code).name}</b>
-            <span className="muted">{ship(code).captain}</span>
-          </div>
-        ))}
-      </div>
-      <div className="row buttons">
-        <button className="btn" onClick={() => setOrder([order[1], order[0]])}>
-          ⇄ Поменять местами
-        </button>
-        <button className="btn primary" data-testid="placement-done" onClick={done}>
-          Готово
-        </button>
-        <button className="link" onClick={onBack}>
-          Назад
-        </button>
-      </div>
-    </main>
-  );
+  return <MenuSurface kind="prep"><main className="menu-placement" data-testid="placement">
+    <button className="menu-phone menu-placement-back" aria-label="Назад" onClick={onBack}><Arrow back/></button><header><div className="menu-kicker">Тайная расстановка</div><h1 className="menu-title"><span className="menu-desktop">{SIDE_LABEL[side].name}: кто слева, кто справа?</span><span className="menu-phone">{SIDE_LABEL[side].name}</span></h1><p className="menu-subtitle"><span className="menu-desktop">Напротив корабль бьёт в полную силу, по диагонали на 1 слабее. {side==='ПИРАТЫ'?'Компания':'Пираты'} увидит расстановку только в начале боя.</span><span className="menu-phone">Кто встанет слева, а кто справа? Напротив корабль бьёт в полную силу, по диагонали на 1 слабее.</span></p>{index===0&&<p className="menu-placement-verdict"><Icon name="coin" size={24}/>{note.startsWith('Монета')?'Монета выбрала: вы':'Вы'} за {SIDE_LABEL[side].acc}. Пираты ходят первыми.</p>}</header>
+    <PlacementBoard data={data} side={side} order={order} onSwap={()=>setOrder([order[1],order[0]])}/>
+    <footer className="menu-placement-actions"><button className="menu-link menu-desktop" onClick={onBack}><Arrow back/>Назад</button><button className="menu-link" onClick={()=>setOrder([order[1],order[0]])}><Icon name="swap"/>Переставить корабли</button><button className="menu-primary" data-testid="placement-done" onClick={done}>Готово</button></footer>
+   </main></MenuSurface>;
 }

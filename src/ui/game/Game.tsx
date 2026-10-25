@@ -528,6 +528,7 @@ export function Game({
         title={`Передайте устройство ${SIDE_LABEL[curtainSide].dat}`}
         reason={curtainReason(s, data, d!.kind) + ` · раунд ${s.round}`}
         summary={summary}
+        round={s.round}
         onReady={() => {
           setSeen({ ...seen, [curtainSide]: game.log.length });
           setDevice(curtainSide);

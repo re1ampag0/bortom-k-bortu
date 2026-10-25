@@ -333,3 +333,23 @@ describe('log lines name only the cards the reader sees', () => {
     }
   });
 });
+
+// During placement GameState does not exist yet. Check the actual RoomInfo sent
+// to the enemy, rather than disguising an already-disclosed order with CSS.
+describe('secret placement: the enemy client receives no left ship',()=>{
+ it('opposite private orders produce the same opponent and spectator payload',async()=>{
+  const {Room}=await import('../server/rooms');
+  const {createRng}=await import('../src/engine/rng');
+  const {DEFAULT_ROOM_SETTINGS}=await import('../src/net/protocol');
+  const room=new Room(data,'ABCDE','pirates',{...DEFAULT_ROOM_SETTINGS},1,createRng(1),{bot:[0,0],pause:[0,0]},{changed:()=>{},remind:()=>{}});
+  for(const id of ['pirates','company','spectator'])room.addPlayer({id,name:id,token:id,conns:1,lastRemind:0});
+  room.seats.Ж.player='pirates';room.seats.М.player='pirates';room.seats.И.player='company';room.seats.Г.player='company';room.phase='placement';
+  expect(room.handle('pirates',{t:'place',side:'ПИРАТЫ',positions:['М','Ж']})).toBeNull();
+  const enemy=structuredClone(room.info('company')),spectator=structuredClone(room.info('spectator'));
+  expect(room.table).toBeNull();expect(enemy.phase).toBe('placement');expect(enemy.placed).toEqual(['ПИРАТЫ']);
+  expect(enemy).not.toHaveProperty('placement');expect(enemy).not.toHaveProperty('positions');
+  room.placement.ПИРАТЫ=['Ж','М'];
+  expect(room.info('company')).toEqual(enemy);expect(room.info('spectator')).toEqual(spectator);
+  expect(room.placement.ПИРАТЫ).toEqual(['Ж','М']);
+ });
+});
