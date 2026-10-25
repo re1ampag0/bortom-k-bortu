@@ -35,6 +35,8 @@ body{margin:0}
 .wheelbtn img{transition:rotate .6s cubic-bezier(.3,.7,.2,1)}.wheelbtn:hover img{rotate:180deg}
 .egg{display:inline-flex;align-items:center;gap:6px}.egg img{transition:rotate 1.2s ease}.egg:hover img{rotate:-200deg}
 @media (prefers-reduced-motion: reduce){*{transition:none !important}}
+
+header:has(button[aria-label="Закрыть"]){height:60px!important}
 </style>
 </helmet>
 <div style="width: 390px; height: 844px; position: relative; overflow: hidden; font-family: 'Alegreya Sans', system-ui, sans-serif; color: #eef3f6; background: #234a5e">
@@ -48,19 +50,19 @@ body{margin:0}
     </header>
 
     <div style="flex: 1; min-height: 0; overflow: hidden; padding: 0 16px; position: relative">
-      <h2 class="h2"><img src="../assets/icons/ic_spyglass.svg" alt="" width="22" height="22">Показ</h2>
+      <h2 class="h2"><img src="../assets/icons/ic_lantern.svg" alt="" width="22" height="22">Показ</h2>
       <div style="display: flex; flex-direction: column; gap: 6px; padding: 2px 0 6px"><span class="name">Скорость показа ходов</span><span class="seg" role="group" aria-label="Скорость показа ходов" style="align-self: stretch"><button aria-pressed="false" style="flex: 1">Медленно</button><button aria-pressed="true" style="flex: 1">Обычно</button><button aria-pressed="false" style="flex: 1">Быстро</button><button aria-pressed="false" style="flex: 1">Мгновенно</button></span></div>
-      <div class="row"><span class="name">Спецэффекты</span><span class="seg" role="group" aria-label="Спецэффекты"><button aria-pressed="true">Богатые</button><button aria-pressed="false">Простые</button></span></div>
-      <label class="row"><span class="name">Пропуск показа касанием стола</span><span class="track on"><i></i></span></label>
+      <div class="row"><span class="name">Спецэффекты</span><span class="seg" role="group" aria-label="Спецэффекты"><button aria-pressed="true">Полные</button><button aria-pressed="false">Простые</button></span></div>
+      <label class="row"><span class="name">Касание стола пропускает показ</span><span class="track on"><i></i></span></label>
 
-      <h2 class="h2"><img src="../assets/icons/ic_cutlasses.svg" alt="" width="22" height="22">Игра</h2>
+      <h2 class="h2"><img src="../assets/icons/ic_bell.svg" alt="" width="22" height="22">Игра</h2>
       <label class="row"><span class="name">Звук «ваш ход»</span><span class="track on"><i></i></span></label>
-      <label class="row"><span class="name">Быстрый конец хода<span class="hint">«Ход окончен · Отменить» — 1 с вместо 3 с</span></span><span class="track"><i></i></span></label>
+      <label class="row"><span class="name">Быстрый конец хода<span class="hint">Отменить «Ход окончен» можно 1 с, а не 3 с</span></span><span class="track"><i></i></span></label>
       <label class="row"><span class="name">Подсказки<span class="hint">урон на целях, «4 → 2» на Реакциях</span></span><span class="track on"><i></i></span></label>
 
       <h2 class="h2"><img src="../assets/icons/ic_compass.svg" alt="" width="22" height="22">Вид стола</h2>
       <div class="row"><span class="name">Залп на планшете</span><span class="seg" role="group" aria-label="Залп на планшете"><button aria-pressed="true">Значки</button><button aria-pressed="false">Порты</button></span></div>
-      <div class="row"><span class="name">Фон под рукой</span><span class="seg" role="group" aria-label="Фон под рукой"><button aria-pressed="true">Палуба</button><button aria-pressed="false">Стол капитана</button></span></div>
+      <div class="row"><span class="name">Фон</span><span class="seg" role="group" aria-label="Фон"><button aria-pressed="true">Палуба</button><button aria-pressed="false">Стол капитана</button></span></div>
       <div class="row"><span class="name">Рамка моря</span><span class="seg" role="group" aria-label="Рамка моря"><button aria-pressed="true">Фальшборт</button><button aria-pressed="false">Латунь</button></span></div>
       <div class="row"><span class="name">Разбор урона</span><span class="seg" role="group" aria-label="Разбор урона"><button aria-pressed="true">Показывать</button><button aria-pressed="false">Скрыть</button></span></div>
       <span aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 28px; background: linear-gradient(rgba(14,27,38,0), #0e1b26)"></span>
@@ -69,7 +71,7 @@ body{margin:0}
     <footer style="flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 16px 14px; border-top: 1px solid rgba(201,160,72,.35); background: rgba(10,18,26,.85)">
       <button class="btn-line">Скачать журнал</button>
       <button class="btn-line">Скачать партию</button>
-      <button class="btn-red">Сдаться (Пираты)</button>
+      <button class="btn-red">Сдаться за Пиратов</button>
       <button class="btn-line">Новая партия</button>
       <span style="grid-column: span 2; display: flex; justify-content: center"><span class="egg" title="Этот компас показывает не на север, а туда, куда вам действительно нужно" style="font-size: 11.5px; color: #6f8796"><img src="../assets/icons/ic_compass.svg" alt="" width="16" height="16">Версия 1a2b3c4 · 24.10, 18:40</span></span>
     </footer>
