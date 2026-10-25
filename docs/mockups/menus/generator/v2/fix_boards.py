@@ -154,6 +154,12 @@ def run():
             extra += '\nheader:has(button[aria-label="Закрыть"]){height:60px!important}\n'
         s = re.sub(r'<svg aria-hidden="true" width="24" height="22" viewBox="0 0 24 22">(?:(?!</svg>).)*</svg>(\s*)Поднять паруса',
                    r'<img src="../assets/icons/ic_sail.svg" alt="" width="46" height="34" style="display: block; margin-top: -2px">\1Поднять паруса', s, flags=re.S)
+        if name.startswith('Curtain'):
+            # the medallion is the new two-sided coin: the pirate face for the Pirates, the Company face for the Company
+            face = 'ic_coin.svg' if name == 'Curtain' else 'ic_coin_back.svg'
+            s = re.sub(r'<svg aria-hidden="true" width="(\d+)" height="\1" viewBox="-50 -50 100 100"([^>]*)>.*?</svg>',
+                       lambda m: f'<img src="../assets/icons/{face}" alt="" width="{m.group(1)}" height="{m.group(1)}"{m.group(2)} style="display: block; filter: drop-shadow(0 6px 10px rgba(0,0,0,.55))">'.replace(' style="margin-top: 14px" style="', ' style="margin-top: 14px; '),
+                       s, count=1, flags=re.S)
         s = s.replace('</style>', extra + '</style>', 1)
         open(p, 'w').write(s)
     return miss

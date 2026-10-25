@@ -26,3 +26,5 @@ for name in ['pearl','revenge','endeavour','dutch','engraved_ink']:
   sea,css=art.sea(260,28,'dock'+name,pal,light_x=175)
   s+='<div style="position:absolute;left:0;top:72px;width:260px;height:28px;overflow:hidden">'+sea+'</div>'+art.ship(name,55,74,150,98,False,shadow=True)
   save('Dock_'+name,260,100,s,css)
+spark=''.join(f'<span class="tw" style="position:absolute;left:{x}%;top:{y}%;width:14px;height:14px;border-radius:50%;background:radial-gradient(#fff3c4,#ffdc8c55 20%,transparent 70%);animation-delay:-{i*.7}s"></span>' for i,(x,y) in enumerate([(26,22),(74,18),(80,52),(20,58),(66,34)]))
+save('CoinSpark',300,212,spark+'<span style="position:absolute;left:85px;top:155px;width:130px;height:26px;border-radius:50%;background:radial-gradient(closest-side,#0009,transparent)"></span>')

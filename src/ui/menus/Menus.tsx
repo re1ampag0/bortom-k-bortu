@@ -1,6 +1,7 @@
 import {lazy,Suspense,useEffect,useRef,useState,type ReactNode,type RefObject} from 'react';
 import type {GameData} from '../../engine/types';
 import './menus.css';
+import './menus-fix2.css';
 import {menuImagePool} from './assets';
 import {initMenuMotion,menuMotionAllowed,subscribeMenuMotion} from './motion';
 const Scene=lazy(()=>import('./MenuScene').then(m=>({default:m.MenuScene})));
@@ -30,3 +31,6 @@ export function Dock({name}:{name:string}){return <div className="menu-dock"><Me
 
 export const shipName=(code:string)=>({'Ж':'pearl','М':'revenge','И':'endeavour','Г':'dutch'}[code]??'pearl');
 export function ShipScales({data,code}:{data:GameData;code:string}){const d=data.ships.find(s=>s.code===code)!;return <div className="menu-scales">{(['hull','sails','guns','crew']as const).map((key,i)=><span key={key}><img src={new URL(`../../../docs/mockups/menus/assets/cell_${['hull','sail','gun','crew'][i]}.svg`,import.meta.url).href} alt={['Корпус','Паруса','Пушки','Команда'][i]}/><b>{d[key]}</b></span>)}</div>;}
+
+export function Arrow({back=false,chevron=false}:{back?:boolean;chevron?:boolean}){return <svg className={'menu-arrow'+(back?' back':'')} width={chevron?12:22} height="14" viewBox={chevron?'0 0 12 18':'0 0 22 14'} aria-hidden="true"><path d={chevron?'M2 2L10 9L2 16':'M1 7H20M14 1L20 7L14 13'} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;}
+export function Flourish(){return <img className="menu-flourish" src={new URL('./art/flourish.svg',import.meta.url).href} alt=""/>;}
