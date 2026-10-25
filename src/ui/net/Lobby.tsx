@@ -324,6 +324,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         <Check disabled={!creator} value={st.allyHands} label="Союзники видят руки друг друга" onChange={(v) => set({ allyHands: v })} />
         <Check disabled={!creator} value={st.hints} label={<>Подсказки <span className="menu-hint-per-player">(каждый включает у себя в <Icon name="wheel" size={16}/>)</span></>} onChange={(v) => set({ hints: v })} />
         <div className="menu-reaction-timer"><Icon name="hourglass" size={26}/><span>Время на Реакцию</span><div><button disabled={!creator||st.reactionTimer<=0} aria-label="Уменьшить время на Реакцию" onClick={()=>set({reactionTimer:Math.max(0,st.reactionTimer-15)})}>−</button><output>{st.reactionTimer?st.reactionTimer+' с':'не ограничено'}</output><button disabled={!creator} aria-label="Увеличить время на Реакцию" onClick={()=>set({reactionTimer:st.reactionTimer+15})}>+</button></div></div>
+        <p className="menu-room-permissions">Настройки меняет создатель комнаты.</p>
         <details className="menu-advanced"><summary><Arrow chevron/>Ещё</summary>
         <Check disabled={!creator} value={st.allOpen} label="Всё открыто: все руки видны всем (для тестов)" onChange={(v) => set({ allOpen: v })} />
         <label className="row"><span>Адрес сервера</span><input readOnly value={storedServer()||location.origin}/></label>
@@ -339,7 +340,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
           />
         </label>
         </details>
-        <p className="menu-room-permissions">Настройки меняет создатель комнаты.</p>
+
       </section>
       </details>
 

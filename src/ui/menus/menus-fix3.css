@@ -1,0 +1,82 @@
+/* Final board corrections. The stage scale and the prepared animation clocks stay unchanged. */
+#stage .menu-curtain .menu-title{width:100%;max-width:none;text-align:center;margin-left:auto;margin-right:auto;align-self:center;position:relative;left:auto;right:auto;float:none}
+#stage .menu-curtain .menu-title>span{display:block;text-align:center;width:100%}
+#stage .menu-curtain main>.menu-kicker{font:700 15px/1.2 'Alegreya SC',serif;letter-spacing:.32em;text-transform:uppercase}
+#stage .menu-curtain .menu-curtain-sea{opacity:.8}
+#stage .menu-curtain .menu-curtain-sea .menu-boat{opacity:.85;width:260px;height:189px;top:-149px}
+#stage .menu-curtain .menu-curtain-sea>div:last-child{align-items:start;justify-content:space-between}
+/* The dock cover has the same 2.6:1 aspect as its exported scene; its window crops only the sides. */
+#stage .menu-net.room .menu-dock{--menu-dock-height:74px;position:relative;overflow:hidden;height:var(--menu-dock-height)}
+#stage .menu-net.room .menu-dock>.menu-scene{height:100%;overflow:hidden}
+#stage .menu-net.room .menu-dock>.menu-scene>.menu-prepared{position:absolute;left:50%;top:0;width:calc(var(--menu-dock-height) * 2.6);height:var(--menu-dock-height);transform:translateX(-50%);aspect-ratio:2.6!important}
+#stage .menu-net.room .menu-reaction-timer>div{justify-content:start;width:auto;gap:8px;flex:0 0 100%;margin:4px 0 0}
+#stage .menu-net.room .menu-reaction-timer output{white-space:nowrap;flex:none}
+#stage .menu-net.room .menu-advanced{position:relative;flex:none;margin-top:4px;padding-top:6px;clear:both}
+#stage .menu-net.room .menu-advanced>summary{min-height:28px}
+#stage .menu-net.room .menu-room-permissions{margin-top:12px;margin-bottom:0}
+#stage .menu-net.room .menu-room-actions{display:flex;flex-direction:row;flex-wrap:nowrap;gap:12px;align-items:center;margin:0}
+#stage .menu-net.room .menu-room-actions>.btn{height:52px;min-height:52px;box-sizing:border-box;margin:0}
+#stage .menu-net.room .menu-room-actions>.btn:not(.primary){background:#122331;color:#f0d27a;padding:8px 18px;border:1px solid #c9a048}
+#stage .menu-net .menu-code-cells>span{color:#f6dd92;font-weight:700;opacity:1}
+#stage .menu-net .join-box>.menu-primary:disabled{color:#f0d27a;background:#121d27;border-color:#c9a048;opacity:1}
+#stage .menu-placement .menu-enemy-slot .menu-boat{opacity:1}
+#stage .menu-placement .menu-enemy-slot .menu-fog{opacity:.18}
+#stage .menu-placement .menu-own-slot .menu-boat{top:-2px}
+#stage .menu-placement .menu-slot-name{top:101px}
+#stage .menus-start .menu-start-heading>p{position:relative;top:-12px}
+#stage .menus-start .menu-save .menu-mode-head{display:flex;gap:10px;align-items:center}
+#stage .menus-start .menu-save .menu-mode-head>.menu-icon{width:50px;height:50px;flex:none}
+#stage .menus-start .menu-save .menu-mode-head>div{flex:1;min-width:0}
+#stage .menus-start .menu-save .menu-mode-head small{display:block;color:#a33b2a;font:800 12px/1.2 'Alegreya SC',serif;letter-spacing:.08em;margin-bottom:4px}
+#stage .menus-start .menu-save .menu-mode-head h2{margin:0;font-size:26px;color:#2b2016}
+#stage .menus-start .menu-save>p{font-size:14px;line-height:1.3;margin:12px 0}
+#stage .menus-start .menu-save>p>span{display:block}
+.menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-rules-layout>nav>button:nth-child(2){padding-left:40px}
+.menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-rules-content .menu-rules-volley .menu-boatswain{border:1px dashed #c9a04880;border-radius:7px;background:#c9a04810;padding:10px 12px}
+.menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-volley-diagram{padding-bottom:16px}
+@media(min-width:1000px){
+ #stage .menu-net.room .seat{height:80px;min-height:80px;grid-template-rows:1fr 1fr;align-items:end;padding-top:12px;padding-bottom:12px}
+ #stage .menu-net.room .seat-who{align-self:start;margin-top:3px}
+ #stage .menu-net.room .seat>b{align-self:end}
+ #stage .menu-net.room .seat>.menu-dock{align-self:center;margin-top:-12px;margin-bottom:-12px}
+ #stage .menu-net.room .seat-btns{align-self:center}
+ #stage .menu-net.room .room-settings{height:auto;min-height:470px;padding-bottom:10px;gap:6px}
+ #stage .menu-net.room .menu-room-start-note{left:420px;right:40px;bottom:90px;line-height:1.4;margin:0}
+ #stage .menu-net.room>.menu-room-actions{right:40px;bottom:24px}
+ #stage .menu-net.room .menu-room-actions>.btn.primary{min-width:250px;max-width:326px}
+}
+@media(max-width:700px){
+ #stage .menu-curtain .menu-title{max-width:none;font-size:34px}
+ #stage .menu-curtain main>.menu-kicker{font-size:15px;letter-spacing:.32em;white-space:nowrap}
+ #stage .menu-curtain .menu-curtain-sea .menu-boat{width:190px;height:138px;top:-105px}
+ #stage .menu-curtain .menu-curtain-placement{font-size:15px;line-height:1.4}
+ #stage .menu-curtain .menu-curtain-note{font-size:13.5px;line-height:1.35}
+ #stage .menu-prep-content>.menu-subtitle,#stage .menu-placement .menu-subtitle{font-size:15px;line-height:1.35}
+ #stage .menu-prep-content .menu-side-copy>small{font-size:13px;line-height:1.3}
+ #stage .menu-prep-content .menu-coin-tile>small{font-size:13px}
+ #stage .menu-placement .menu-placement-verdict{font-size:13.5px;line-height:1.3}
+ #stage .menu-placement .menu-slot-name>small{font-size:12.5px}
+ #stage .menu-prep-content .menu-prep-bottom>.menu-primary,#stage .menu-placement .menu-placement-actions>.menu-primary,#stage .menu-curtain main>.menu-primary{font-size:20px!important}
+ #stage .menu-placement .menu-own-slot .menu-boat{top:12px}
+ #stage .menu-placement .menu-slot-name{top:115px}
+ #stage .menu-net.room .menu-dock{--menu-dock-height:58px}
+ #stage .menu-net.room .seat>b,#stage .menu-net.room .seat-who{justify-self:start;text-align:left;justify-content:start}
+ #stage .menu-net.room .seat-btns{display:flex;flex-direction:row;justify-content:end}
+ #stage .menu-net.room .menu-room-actions>.btn.primary{order:0;width:auto;flex:1;min-width:0;font-size:20px}
+ #stage .menu-net.room .menu-room-actions>.btn:not(.primary){order:0;flex:none;width:auto;padding:6px 12px;font-size:14px}
+ #stage .menus-start .menu-start-heading>p{top:0}
+ #stage .menus-start .menu-save{display:grid;grid-template-columns:minmax(0,1fr) 126px;grid-template-rows:18px 1fr;height:80px;min-height:80px;padding:10px 48px 10px 18px;gap:2px 10px}
+ #stage .menus-start .menu-save .menu-mode-head{display:block;grid-column:1;grid-row:1}
+ #stage .menus-start .menu-save .menu-mode-head>.menu-icon,#stage .menus-start .menu-save .menu-mode-head h2{display:none}
+ #stage .menus-start .menu-save .menu-mode-head small{font-size:11px;white-space:nowrap;letter-spacing:.02em;margin:0}
+ #stage .menus-start .menu-save>p{grid-column:1;grid-row:2;font-size:12.5px;line-height:1.2;margin:0}
+ #stage .menus-start .menu-save>p>span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #stage .menus-start .menu-save>.menu-primary{grid-column:2;grid-row:1/3;font-size:18px!important;white-space:nowrap;padding:6px 10px;min-height:42px;height:42px;align-self:center;width:126px}
+ #stage .menus-start .menu-save-x{right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;font-size:16px}
+ .menu-window-backdrop.menu-window-backdrop.menu-window-backdrop .menu-rules-layout>nav>button:nth-child(2){padding-left:12px}
+}
+/* Hulls cross the waterline; the room note clears the last 80px berth. */
+#stage .menu-curtain .menu-curtain-sea .menu-boat{top:-127px}
+@media(min-width:1000px){#stage .menu-net.room .menu-room-start-note{bottom:66px;height:18px;line-height:18px;color:#c8d6dc}}
+@media(max-width:700px){#stage .menu-curtain .menu-curtain-sea .menu-boat{top:-92px}}
+@media(max-width:700px){#stage .menus-start .menu-save{grid-template-columns:minmax(0,1fr) 132px}#stage .menus-start .menu-save>.menu-primary{width:132px;font-size:20px!important}}
