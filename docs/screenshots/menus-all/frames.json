@@ -24,37 +24,13 @@
     "errors": []
   },
   {
-    "name": "rules-memo",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
-    "name": "rules-minute",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
-    "name": "rules-volley",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
-    "name": "settings",
-    "width": 1366,
-    "height": 660,
-    "errors": []
-  },
-  {
     "name": "net-entry",
     "width": 1366,
     "height": 660,
     "errors": []
   },
   {
-    "name": "net-room",
+    "name": "start-save",
     "width": 1366,
     "height": 660,
     "errors": []
@@ -84,6 +60,48 @@
     "errors": []
   },
   {
+    "name": "net-entry",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
+    "name": "start-save",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
+    "name": "net-room",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "net-room",
+    "width": 390,
+    "height": 844,
+    "errors": []
+  },
+  {
+    "name": "rules-memo",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "rules-minute",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "rules-volley",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
     "name": "rules-memo",
     "width": 390,
     "height": 844,
@@ -103,18 +121,24 @@
   },
   {
     "name": "settings",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "settings-game",
+    "width": 1366,
+    "height": 660,
+    "errors": []
+  },
+  {
+    "name": "settings",
     "width": 390,
     "height": 844,
     "errors": []
   },
   {
-    "name": "net-entry",
-    "width": 390,
-    "height": 844,
-    "errors": []
-  },
-  {
-    "name": "net-room",
+    "name": "settings-game",
     "width": 390,
     "height": 844,
     "errors": []
