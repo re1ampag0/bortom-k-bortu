@@ -10,6 +10,8 @@ import { HIDDEN } from '../../engine/view';
 import type { Btn } from './Table';
 import { reducedMotion } from '../start/motion';
 import { plainText } from './text';
+import {stageK} from '../stage';
+import {gameScaleEnabled} from './layout';
 
 // Before the paint in the browser; the tests render the cards to markup, where only useEffect is quiet.
 const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffect;
@@ -69,7 +71,13 @@ function useLiftLayer(rowRef: { current: HTMLDivElement | null }, lifted: string
       if (!place) return;
       const g = game.getBoundingClientRect(),
         r = place.getBoundingClientRect();
-      layer.style.transform = `translate(${r.left - g.left}px, ${r.bottom - g.top}px)`;
+      let bottom=r.bottom;
+      if(gameScaleEnabled()){
+        const strip=row.getBoundingClientRect(),bar=game.querySelector('.bottom-bar')?.getBoundingClientRect();
+        // A short strip can scroll: anchor to its visible bottom, above the controls.
+        bottom=Math.min(r.bottom,strip.bottom,bar?.height?bar.top-2*stageK():r.bottom);
+      }
+      layer.style.transform = `translate(${(r.left - g.left)/stageK()}px, ${(bottom - g.top)/stageK()}px)`;
     };
     const ask = () => {
       if (!raf) raf = requestAnimationFrame(put);
@@ -178,7 +186,7 @@ function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number): number
       // feeds yesterday's tilt back into the next frame and makes the fan drift while scrolling.
       const centreX = (c: HTMLElement) => {
         const parent = c.offsetParent;
-        const origin = parent === row ? 0 : (parent?.getBoundingClientRect().left ?? 0) - box.left;
+        const origin = parent === row ? 0 : ((parent?.getBoundingClientRect().left ?? 0) - box.left)/stageK();
         return origin + c.offsetLeft + c.offsetWidth / 2 - row.scrollLeft;
       };
       let near = 0,
@@ -220,7 +228,7 @@ function usePhoneFan(ref: { current: HTMLDivElement | null }, n: number): number
 function centre(row: HTMLElement, card: Element, behavior: ScrollBehavior) {
   const r = row.getBoundingClientRect(),
     c = card.getBoundingClientRect();
-  row.scrollTo({ left: row.scrollLeft + (c.left + c.width / 2) - (r.left + r.width / 2), behavior });
+  row.scrollTo({ left: row.scrollLeft + ((c.left + c.width / 2) - (r.left + r.width / 2))/stageK(), behavior });
 }
 
 const TYPE_CLASS: Record<string, string> = { ЗАРЯД: 'charge', РЕАКЦИЯ: 'reaction', ПРИКАЗ: 'order', РЕМОНТ: 'repair' };

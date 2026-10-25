@@ -5,6 +5,7 @@
 // (getBoundingClientRect, clientX/Y) and puts something into the stage turns them into the stage's px with toStage / stageK.
 import { useLayoutEffect, useState } from 'react';
 import {getMenuLayout,subscribeMenuLayout} from './menus/layout';
+import {gameScaleEnabled,gameViewport,subscribeGameViewport,gameGeometry} from './game/layout';
 
 let k = 1;
 
@@ -27,9 +28,9 @@ export function useStage(): Record<string, string | number> | null {
   const [size, setSize] = useState(() => ({ w: innerWidth, h: innerHeight }));
   useLayoutEffect(() => {
     const on = () => setSize({ w: innerWidth, h: innerHeight });
-    const offMenu=subscribeMenuLayout(on);on();
+    const offMenu=subscribeMenuLayout(on),offGame=subscribeGameViewport(on);on();
     addEventListener('resize', on);
-    return () => {offMenu();removeEventListener('resize', on);};
+    return () => {offMenu();offGame();removeEventListener('resize', on);};
   }, []);
   const menu=getMenuLayout();
   if(menu.active&&menu.enabled){
@@ -37,6 +38,17 @@ export function useStage(): Record<string, string | number> | null {
     const column=menu.mode==='phone'&&!menu.tablet;
     if(k===1&&menu.left===0&&menu.top===0)return {'--app-h':`${menu.sceneH}px`,'--app-w':`${menu.sceneW}px`,'--menu-k':1};
     return {width:menu.sceneW,height:menu.sceneH,position:column?'relative':'absolute',left:menu.left,top:menu.top,transform:k===1?'none':`scale(${k})`,transformOrigin:'0 0','--app-h':`${menu.sceneH}px`,'--app-w':`${menu.sceneW}px`,'--menu-k':k};
+  }
+  if(!menu.active&&gameScaleEnabled()){
+    const view=gameViewport();
+    const geometry=gameGeometry(view);k=geometry.k;
+    document.body.classList.toggle('staged',k!==1);
+    if(geometry.small){
+      const dpr=devicePixelRatio||1,snap=(n:number)=>Math.round(n*dpr)/dpr,w=geometry.phoneScene?view.w:1366,h=geometry.phoneScene?650:660;
+      return {width:w,height:h,left:snap((view.w-w*k)/2),top:snap((view.h-h*k)/2),transform:`scale(${k})`,transformOrigin:'0 0','--app-h':`${h}px`,'--app-w':`${w}px`,'--game-k':k};
+    }
+    if(k===1)return view.w<=700?{'--app-h':`${view.h}px`,'--app-w':`${view.w}px`}:null;
+    return {width:view.w/k,height:view.h/k,transform:`scale(${k})`,transformOrigin:'0 0','--app-h':`${view.h/k}px`};
   }
   k = scaleOf(size.w, size.h);
   document.body.classList.toggle('staged', k > 1);
