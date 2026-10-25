@@ -5,6 +5,7 @@ import player from '../../../RULES-PLAYER.md?raw';
 import full from '../../../RULES.md?raw';
 import {memo} from '../game/memo';
 import {Icon} from './Menus';
+import {useMenuOverlay} from './layout';
 import {holdMenuMotion} from './motion';
 const chapters=player.split(/^## /m).slice(1).map((part,i)=>{const at=part.indexOf('\n');return{id:i,title:part.slice(0,at).trim(),text:part.slice(at+1).trim()};});
 function inline(text:string):ReactNode{return text.replace('Попадать — тоже.', 'Попадать тоже.').replace(/\s*—\s*/g, ': ').split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((s,i)=>s.startsWith('**')?<strong key={i}>{s.slice(2,-2)}</strong>:s.startsWith('`')?<code key={i}>{s.slice(1,-1)}</code>:s);}
@@ -24,6 +25,7 @@ function ChapterTitle({title}:{title:string}){const m=title.match(/^(\d+)\.\s*(.
 function MemoLine({line}:{line:string}){const m=line.match(/^(\d+)\.\s*(.*)$/);return <p className={m?'menu-numbered-step':''}>{m?<><b className="menu-step">{m[1]}</b><span>{inline(m[2])}</span></>:inline(line)}</p>;}
 function VolleyDiagram({data}:{data:GameData}){const d=data.ships[0];return <aside className="menu-volley-aside"><div className="menu-volley-diagram"><div className="menu-diagram-targets"><span>ВРАГ</span><span>ВРАГ</span></div><svg viewBox="0 0 300 135" aria-hidden="true"><defs><marker id="menu-arrow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#c9a048"/></marker></defs><path d="M60 118V16" stroke="#c9a048" strokeWidth="4" markerEnd="url(#menu-arrow-head)"/><path d="M60 118L242 16" stroke="#bd7960" strokeWidth="2.5" strokeDasharray="7 5"/><text x="48" y="65" textAnchor="end" fill="#f0d27a" fontSize="13"><tspan x="48">полный</tspan><tspan x="48" dy="16">урон</tspan></text><text x="185" y="65" fill="#bd7960" fontSize="15">−1</text></svg></div><section className="menu-rule-example"><h3>Пример</h3><p>{d.name}: Пушки {d.guns}. Напротив: {d.guns} урона, по диагонали: {Math.max(0,d.guns+('offset'in d.diagDamage?d.diagDamage.offset:0))}. Без Заряда урон идёт по Корпусу.</p></section></aside>;}
 export function RulesWindow({data,onClose}:{data:GameData;onClose:()=>void}){
+ const overlay=useMenuOverlay();
  useEffect(()=>holdMenuMotion(),[]);
  const [selected,setSelected]=useState(-1),[q,setQ]=useState(''),[all,setAll]=useState(false),[searchOpen,setSearchOpen]=useState(false),body=useRef<HTMLDivElement>(null),close=useRef<HTMLButtonElement>(null);
  useEffect(()=>{close.current?.focus({preventScroll:true});},[]);useEffect(()=>{body.current?.scrollTo(0,0);},[selected,all]);
@@ -34,5 +36,5 @@ export function RulesWindow({data,onClose}:{data:GameData;onClose:()=>void}){
   <div className="menu-rules-content" ref={body}>{query.length>=2?<><h2>Результаты поиска</h2>{!found.length&&<p>Ничего не найдено.</p>}{found.map(c=><section key={c.id}><h3><button className="menu-link" onClick={()=>{setSelected(c.id);setQ('');}}><ChapterTitle title={c.title}/></button></h3><Markdown text={c.text}/></section>)}</>:all?<><h2>Полный свод правил</h2><Markdown text={full}/></>:selected<0?<><div className="menu-memo-title"><div><h2>Памятка</h2><small>всё главное на одной странице</small></div><span className="menu-boatswain"><Icon name="pipe" size={22}/><span className="menu-desktop">Боцман: «Подробности в главах слева, по одной за вахту»</span><span className="menu-phone">Боцман: «Всё главное здесь. Подробности в главах выше».</span></span></div><div className="menu-memo">{memo(data).map(m=><section key={m.title}><h3>{m.title}</h3>{m.title==='Типы карт'?m.lines.map((l,i)=><p key={l}><Icon name={['t_charge','t_order','t_repair','t_reaction'][i]} size={24}/><b className={'menu-card-type type-'+i}>{l.split(' · ')[0]}</b><span>{l.split(' · ')[1]}</span></p>):m.lines.map(l=><MemoLine key={l} line={l}/>)}</section>)}</div></>:<><h2><ChapterTitle title={chapters[selected].title}/></h2><div className={chapters[selected].title.startsWith('8.')?'menu-rules-volley':''}><div><Markdown text={chapters[selected].text}/></div>{chapters[selected].title.startsWith('8.')&&<VolleyDiagram data={data}/>}</div></>}
   </div></div>
  </section></div>;
- return typeof document==='undefined'?view:createPortal(view,document.body);
+ return typeof document==='undefined'?view:createPortal(view,overlay??document.body);
 }
