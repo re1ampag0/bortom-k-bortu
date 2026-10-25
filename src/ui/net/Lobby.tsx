@@ -2,7 +2,7 @@
 // the link with «Скопировать» and a QR code, the four seats (who sits, online), bots, the coin, the options and
 // «Начать» for the creator; then the secret placement of each team; then the table.
 import QRCode from 'qrcode';
-import { useCallback, useEffect, useMemo, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { Variant } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
 import { normalizeCode, type RoomInfo, type RoomSettings } from '../../net/protocol';
@@ -93,7 +93,7 @@ function ConnectionLine({ client }: { client: NetClient }) {
         ? 'Сервер недоступен: проверьте, что ноутбук с игрой не уснул и вы в той же сети.'
         : client.connection === 'connecting'
           ? 'Подключаемся к серверу…'
-          : 'Нет связи с сервером — переподключаемся…'}
+          : 'Нет связи с сервером, переподключаемся…'}
     </p>
   );
 }
@@ -141,41 +141,41 @@ function Entry({
       {saved && client?.connection === 'online' && !client.room && saved.code && (
         <p className="muted">Возвращаемся в комнату {saved.code}…</p>
       )}
-      <label className="row">
-        <span><Icon name="pipe" size={24}/> Ваше имя</span>
+      <label className="row menu-name">
+        <span>Ваше имя</span><svg className="menu-quill" viewBox="0 0 26 26" aria-hidden="true"><path d="M4 22C8 14 14 6 23 3C21 10 15 17 6 21Z" fill="#f6f0e2" stroke="#8a7a5a"/><path d="M3 24L18 8" stroke="#c9a048"/></svg>
         <input data-testid="net-name" value={name} maxLength={24} placeholder="Например, Аня" onChange={(e) => setName(e.target.value)} />
       </label>
       <section className="quick">
-        <button className="quick-btn" data-testid="net-create" disabled={!client || !okName} onClick={() => client?.create(name.trim())}>
+        <section className="quick-btn">
           <span className="menu-medal"><Icon name="bell" size={50}/></span><b>Создать комнату</b>
-          <span>Получите код и ссылку для остальных.</span>
-        </button>
+          <span>Получите код и ссылку для остальных.</span><button className="menu-primary" data-testid="net-create" disabled={!client || !okName} onClick={() => client?.create(name.trim())}>Создать комнату</button>
+        </section>
         <div className="quick-btn join-box">
           <span className="menu-medal"><Icon name="key" size={50}/></span><b>Войти по коду</b>
-          <span className="row">
-            <input
+          <span className="menu-code-entry"><span className="menu-code-cells" aria-hidden="true">{Array.from({length:5},(_,i)=><span key={i}>{code[i]??''}</span>)}</span>
+            <input aria-label="Код комнаты"
               data-testid="net-code"
               value={code}
-              placeholder="ABCDE"
+              placeholder=""
               maxLength={5}
               autoCapitalize="characters"
               onChange={(e) => setCode(normalizeCode(e.target.value))}
             />
-            <button className="btn primary" data-testid="net-join" disabled={!client || !okName || code.length !== 5} onClick={() => client?.join(code, name.trim())}>
+          </span>
+            <button className="menu-primary" data-testid="net-join" disabled={!client || !okName || code.length !== 5} onClick={() => client?.join(code, name.trim())}>
               Войти
             </button>
-          </span>
         </div>
       </section>
       <section className="more">
         <button className="link" onClick={() => setMore(!more)} aria-expanded={more}>
-          {more ? '▾' : '▸'} Адрес сервера
+          {more ? '▾' : '▸'} Сервер
         </button>
         {more && (
           <div className="more-body">
             <p className="muted">
-              Если сайт открыт с адреса сервера (например, http://192.168.1.23:8080), ничего вписывать не нужно. С GitHub Pages — адрес
-              сервера с https, например wss://game.example.ru (подробнее — DEPLOY.md).
+              Если сайт открыт с адреса сервера (например, http://192.168.1.23:8080), ничего вписывать не нужно. Для GitHub Pages нужен адрес
+              сервера с https, например wss://game.example.ru (подробнее: DEPLOY.md).
             </p>
             <label className="row">
               <span>Сервер</span>
@@ -226,8 +226,6 @@ export function Qr({ text }: { text: string }) {
 
 function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; room: RoomInfo }) {
   const link = useRoomLink(room.code);
-  const optionsRef=useRef<HTMLDetailsElement>(null);
-  useLayoutEffect(()=>{const q=matchMedia('(min-width:701px)'),update=()=>{if(optionsRef.current)optionsRef.current.open=q.matches;};update();q.addEventListener('change',update);return()=>q.removeEventListener('change',update);},[]);
   const [copied, setCopied] = useState(false);
   const creator = room.you.creator;
   const mySide = room.you.seats.length > 0 ? data.ships.find((x) => x.code === room.you.seats[0])!.side : null;
@@ -247,12 +245,12 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
     <MenuSurface kind="net"><main className="menu-net room" data-testid="room"><div className="menu-bunting" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i}/>)}</div>
       <header className="setup-head">
         <h1>
-          Комната <Icon name="key" size={32}/><span className="room-code" data-testid="room-code">{room.code}</span>
+          Игра по сети
         </h1>
         <ConnectionLine client={client} />
         {client.error && <p className="error">{client.error.text}</p>}
       </header>
-      <section className="room-link">
+      <section className="room-link"><h2>Комната</h2><span className="room-code" data-testid="room-code">{room.code}</span>
         <div>
           <p className="muted">Остальные открывают ссылку или вводят код на экране «По сети»:</p>
           <p className="link-row">
@@ -265,7 +263,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         {creator && <Qr text={link} />}
       </section>
 
-      <section className="seats">
+      <section className="seats"><h2 className="menu-seats-title">Кто на каком корабле</h2>
         {SIDES.map((side) => (
           <div key={side} className={`seat-col side-${side === 'ПИРАТЫ' ? 'pirates' : 'company'}`}>
             <h2>{SIDE_LABEL[side].name}</h2>
@@ -317,29 +315,13 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         </p>
       )}
 
-      <details className="menu-room-options" ref={optionsRef}><summary><Icon name="flags" size={24}/> Партия: {st.variant==='standard'?'Обычная':st.variant==='first'?'Первая партия':'Быстрый бой'}</summary>
+      <section className="menu-room-options">
       <section className="more-body room-settings"><h2><Icon name="flags"/> Партия</h2>
-        <label className="row variant-row">
-          <span>Вариант</span>
-          <select
-            disabled={!creator}
-            value={st.variant}
-            onChange={(e) => {
-              const v = e.target.value as Variant;
-              // «Первая партия» plays without the sea and the Legends (RULES.md 20.1); the boxes can turn them back on.
-              set({ variant: v, sea: v !== 'first', legends: v !== 'first' });
-            }}
-          >
-            <option value="standard">обычная партия</option>
-            <option value="first">«Первая партия»</option>
-            <option value="quick">«Быстрый бой»</option>
-          </select>
-        </label>
+        <div className="menu-variants" role="group" aria-label="Вариант партии">{(['standard','first','quick'] as Variant[]).map(v=><button key={v} disabled={!creator} aria-pressed={st.variant===v} className={st.variant===v?'on':''} onClick={()=>set({variant:v,sea:v!=='first',legends:v!=='first'})}>{{standard:'Обычная',first:'Первая',quick:'Быстрый бой'}[v]}</button>)}</div>
         <Check disabled={!creator} value={st.sea} label="Колода моря" onChange={(v) => set({ sea: v })} />
         <Check disabled={!creator} value={st.legends} label="Легенды" onChange={(v) => set({ legends: v })} />
         <Check disabled={!creator} value={st.allyHands} label="Союзники видят руки друг друга" onChange={(v) => set({ allyHands: v })} />
         <Check disabled={!creator} value={st.hints} label="Разрешить подсказки (каждый включает их у себя в ⚙)" onChange={(v) => set({ hints: v })} />
-        <Check disabled={!creator} value={st.allOpen} label="Всё открыто — все руки видны всем (для тестов)" onChange={(v) => set({ allOpen: v })} />
         <label className="row">
           <span><Icon name="hourglass" size={26}/> Время на Реакцию, с (0: без таймера)</span>
           <input
@@ -349,6 +331,9 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
             onChange={(e) => set({ reactionTimer: Number(e.target.value) || 0 })}
           />
         </label>
+        <details className="menu-advanced"><summary>Ещё</summary>
+        <Check disabled={!creator} value={st.allOpen} label="Всё открыто: все руки видны всем (для тестов)" onChange={(v) => set({ allOpen: v })} />
+        <label className="row"><span>Адрес сервера</span><input readOnly value={storedServer()||location.origin}/></label>
         <label className="row">
           <span>Seed</span>
           <input
@@ -360,8 +345,9 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
             onChange={(e) => set({ seed: Number(e.target.value) || null })}
           />
         </label>
+        </details>
       </section>
-      </details>
+      </section>
 
       <p className="muted menu-room-start-note">Бой начинает создатель комнаты. На пустые места встанут боты.</p>
       <div className="row buttons menu-room-actions">
@@ -387,7 +373,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
 
 function Check({ value, label, disabled, onChange }: { value: boolean; label: string; disabled: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="row check">
+    <label className="row check menu-toggle">
       <input type="checkbox" disabled={disabled} checked={value} onChange={(e) => onChange(e.target.checked)} /> {label}
     </label>
   );
@@ -419,7 +405,7 @@ function NetPlacement({ data, client, room }: { data: GameData; client: NetClien
           <PlacementBoard data={data} side={side} order={order} onSwap={()=>setOrder([order[1],order[0]])}/>
           <div className="row buttons">
             <button className="btn" onClick={() => setOrder([order[1], order[0]])}>
-              Переставить корабли
+              <Icon name="swap"/>Переставить корабли
             </button>
             <button className="btn primary" data-testid="placement-done" onClick={() => client.send({ t: 'place', side, positions: order })}>
               Готово
