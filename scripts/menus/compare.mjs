@@ -1,0 +1,12 @@
+// User-facing board | game frames. No assertions or performance measurements.
+import{chromium}from'@playwright/test';import{readFileSync,writeFileSync,existsSync}from'node:fs';
+const b=await chromium.launch({executablePath:'/usr/bin/chromium'}),out='docs/screenshots/menus-all/',only=new Set((process.env.MENU_FRAMES??'').split(',').filter(Boolean));
+const boards={start:['Main','StartPhone'],prep:['Prep','PrepPhone'],placement:['Placement','PlacementPhone'],curtain:['Curtain','CurtainPhone'],'net-entry':['NetJoin','NetJoin'],'net-room':['NetRoom','NetRoomPhone'],settings:['Settings','SettingsPhone'],'settings-game':['Settings','SettingsPhone'],'start-save':['Main','StartPhone'],'rules-memo':['Rules','RulesPhone'],'rules-minute':['RulesText','RulesPhone'],'rules-volley':['RulesChapter','RulesPhone']};
+try{for(const [width,height]of [[1366,660],[390,844]])for(const [name,names]of Object.entries(boards)){
+ if(only.size&&!only.has(name))continue;const board=names[width===390?1:0],ref=out+`board-${name}-${width}x${height}.png`,game=out+`${name}-${width}x${height}.png`;if(!existsSync(game))continue;
+ const p=await b.newPage({viewport:{width,height}});
+ if(!only.size||!existsSync(ref)){
+ await p.route(/\/assets\/ship_[^/]+\.svg$/,route=>route.continue({url:route.request().url().replace('/assets/ship_','/assets/ships/ship_')}));
+ await p.goto(`http://127.0.0.1:5343/artboards/${board}.dc.html`);await p.evaluate(()=>document.fonts.ready);await p.evaluate(()=>Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))));await p.waitForTimeout(300);await p.evaluate(()=>document.getAnimations().forEach(a=>{a.pause();a.currentTime=1000;}));await p.screenshot({path:ref});}
+ const url=f=>'data:image/png;base64,'+readFileSync(f).toString('base64');await p.setViewportSize({width:width*2,height:height+28});await p.setContent(`<style>body{margin:0;background:#0e1b26;color:#f0d27a;font:16px Georgia}main{display:flex}section{width:${width}px}header{height:28px;text-align:center;line-height:28px}img{display:block;width:100%}</style><main><section><header>Доска · ${board}${width===390&&['rules-minute','rules-volley','net-entry'].includes(name)?' (общая структура)':''}</header><img src="${url(ref)}"></section><section><header>Игра · ${name}</header><img src="${url(game)}"></section></main>`);await p.evaluate(()=>Promise.all([...document.images].map(i=>i.decode())));await p.screenshot({path:out+`compare-${name}-${width}x${height}.png`});await p.close();console.log('compare',name,width);
+}}finally{await b.close();}

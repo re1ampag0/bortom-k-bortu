@@ -247,7 +247,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
   return (
     <MenuSurface kind="net"><main className={"menu-net room"+(qrOpen?" menu-room-showqr":"")} data-testid="room"><div className="menu-bunting" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i}/>)}</div>
       <header className="setup-head">
-        <button className="menu-link menu-room-exit" onClick={()=>client.leave()}><Arrow back/>Выйти из комнаты</button>
+        <button className="menu-link menu-room-exit" onClick={()=>client.leave()}><Arrow back/><span className="menu-desktop">Выйти из комнаты</span><span className="menu-phone">Игра по сети</span></button>
         <ConnectionLine client={client} />
         {client.error && <p className="error">{client.error.text}</p>}
       </header>
@@ -279,7 +279,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
                   <div key={ship.code} className={`seat ${mine ? 'mine' : ''}`} style={{ borderColor: ship.color }} data-testid={`seat-${ship.code}`}>
                     <Dock name={shipName(ship.code)}/><b>{ship.name}</b>
                     <span className="seat-who">
-                      <i className={`menu-status-dot ${seat.online||seat.bot?'online':''}`}/>{seat.bot?<><Icon name="autohelm" size={23}/> Бот у штурвала</>:seat.player?`${seat.name}${mine?' (вы)':''} · ${seat.online?'в сети':'не в сети'}`:'Свободно'}
+                      <i className={`menu-status-dot ${seat.online||seat.bot?'online':''}`}/>{seat.bot?<><Icon name="autohelm" size={23}/> Бот у штурвала</>:seat.player?`${seat.name}${mine?' (вы)':''}${seat.online?'':' · не в сети'}`:'Свободно'}
                     </span>
                     <span className="seat-btns">
                       {canSit && (
@@ -316,7 +316,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         </p>
       )}
 
-      <details className="menu-room-options" open={!phone}><summary><Icon name="flags" size={24}/><span>Партия<small>{st.variant==='standard'?'Обычная':st.variant==='first'?'Первая':'Быстрый бой'}</small></span><Arrow chevron/></summary>
+      <details className="menu-room-options" open={!phone}><summary><Icon name="flags" size={24}/><span>Партия<small>{[st.variant==='standard'?'Обычная':st.variant==='first'?'Первая':'Быстрый бой',st.sea&&'Колода моря',st.legends&&'Легенды',st.hints&&'подсказки'].filter(Boolean).join(', ')}</small></span><Arrow chevron/></summary>
       <section className="more-body room-settings"><h2><Icon name="flags"/> Партия</h2>
         <div className="menu-variants" role="group" aria-label="Вариант партии">{(['standard','first','quick'] as Variant[]).map(v=><button key={v} disabled={!creator} aria-pressed={st.variant===v} className={st.variant===v?'on':''} onClick={()=>set({variant:v,sea:v!=='first',legends:v!=='first'})}>{{standard:'Обычная',first:'Первая',quick:'Быстрый бой'}[v]}</button>)}</div>
         <Check disabled={!creator} value={st.sea} label="Колода моря" onChange={(v) => set({ sea: v })} />

@@ -22,7 +22,7 @@ export function Curtain({
 }) {
   useTableBody('curtain');
   return <MenuSurface kind="prep" className={`menu-curtain ${side==='ПИРАТЫ'?'pirates':'company'}`}><main data-testid="curtain">
-    <p className="menu-kicker">Игра на одном экране</p><span className="menu-medal dark"><Icon name={side==='ПИРАТЫ'?'coin':'coin_back'} size={76}/></span><h1 className="menu-title">{title}</h1><p className="menu-curtain-turn">{round?`Ход ${SIDE_LABEL[side].gen}, раунд ${roman(round)}`:reason}</p>
+    <p className="menu-kicker">Игра на одном экране</p><span className="menu-medal dark"><Icon name={side==='ПИРАТЫ'?'coin':'coin_back'} size={76}/></span><h1 className="menu-title">{title.startsWith('Передайте устройство ')?<><span>Передайте устройство</span><span>{title.slice('Передайте устройство '.length)}</span></>:title}</h1><p className="menu-curtain-turn">{round?`Ход ${SIDE_LABEL[side].gen}, раунд ${roman(round)}`:reason}</p>
     {<section className={"menu-curtain-summary"+(!round?" menu-curtain-empty":"")}><h2>Пока вас не было</h2><ul>{(summary.length?summary:['Пока новых событий нет.']).map((line,i)=><li key={i}>{line}</li>)}</ul></section>}
     {!round&&<p className="menu-curtain-placement menu-phone">{side==='КОМПАНИЯ'?'Пираты уже расставили корабли. Теперь Компания решает, кто слева, а кто справа.':'Компания уже расставила корабли. Теперь Пираты решают, кто слева, а кто справа.'}</p>}
     <button className="menu-primary" data-testid="curtain-ready" onClick={onReady} autoFocus>Открыть карты {SIDE_LABEL[side].gen}</button>

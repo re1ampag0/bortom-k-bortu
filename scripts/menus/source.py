@@ -21,7 +21,7 @@ for key,name in [('main','ChartMain'),('prep','ChartPrep'),('net','ChartNet'),('
 for name in ['pearl','revenge','endeavour','dutch','engraved_ink']:
  save('Boat_'+name,220,160,art.ship(name,10,112,200,130,False,shadow=True))
  if name!='engraved_ink':
-  pal='sunset' if name in ['pearl','revenge'] else 'dawn'
+  pal='deep'
   s='<svg width="260" height="73" xmlns="http://www.w3.org/2000/svg">'+art.sky(260,73,'dock'+name,pal,stars=0)+'</svg>'
   sea,css=art.sea(260,28,'dock'+name,pal,light_x=175)
   s+='<div style="position:absolute;left:0;top:72px;width:260px;height:28px;overflow:hidden">'+sea+'</div>'+art.ship(name,55,74,150,98,False,shadow=True)
