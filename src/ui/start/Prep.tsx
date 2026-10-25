@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { parseRecord, type Controller, type MatchRecord, type MatchSetup } from '../../engine/match';
 import { createRng } from '../../engine/rng';
 import type { Variant } from '../../engine/state';
-import type { Side } from '../../engine/types';
+import type { GameData, Side } from '../../engine/types';
 import { SIDE_LABEL } from '../game/text';
 import { loadSettings, storeSettings } from '../storage';
 import { seedFrom, tossSeed, urlSeedText } from '../seed';
@@ -26,11 +26,13 @@ const other = (side: Side): Side => (side === 'ПИРАТЫ' ? 'КОМПАНИЯ
 export const coinOf = (seed: number): Side => (createRng(seed ^ 0x5bd1e995).int(2) === 0 ? 'ПИРАТЫ' : 'КОМПАНИЯ');
 
 export function Prep({
+  data,
   mode,
   onStart,
   onResume,
   onBack,
 }: {
+  data: GameData;
   mode: Mode;
   onStart: (req: StartRequest) => void;
   onResume: (record: MatchRecord) => void;
