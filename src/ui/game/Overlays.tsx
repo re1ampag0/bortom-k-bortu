@@ -423,42 +423,22 @@ export function SettingsSheet({
         <span title="Этот компас показывает не на север, а туда, куда вам действительно нужно"><Icon name="compass" size={28}/></span>Версия: {appVersion()}
       </p></>}>
       <div className="menu-settings-grid"><section className="menu-settings-left"><h3 className="menu-settings-section"><Icon name="lantern"/>Показ</h3>
-      {speed!==null&&<div className="row"><span>Скорость показа ходов</span><span className="view-switch" role="group" aria-label="Скорость показа ходов">{Object.keys(SPEEDS).map(k=><button key={k} aria-pressed={speed===k} onClick={()=>setSpeed(k as Speed)}>{{slow:'Медленно',normal:'Обычно',fast:'Быстро',instant:'Мгновенно'}[k]}</button>)}</span></div>}
-      <div className="row"><span>Спецэффекты</span><span className="view-switch" role="group" aria-label="Спецэффекты">{(['rich','simple']as const).map(v=><button key={v} aria-pressed={effects===v} onClick={()=>setEffects(v)}>{v==='rich'?'Полные':'Простые'}</button>)}</span></div>
+      {speed!==null&&<div className="menu-setting-segment"><span>Скорость показа ходов</span><span className="view-switch" role="group" aria-label="Скорость показа ходов">{Object.keys(SPEEDS).map(k=><button key={k} aria-pressed={speed===k} onClick={()=>setSpeed(k as Speed)}>{{slow:'Медленно',normal:'Обычно',fast:'Быстро',instant:'Мгновенно'}[k]}</button>)}</span></div>}
+      <div className="menu-setting-segment"><span>Спецэффекты</span><span className="view-switch" role="group" aria-label="Спецэффекты">{(['rich','simple']as const).map(v=><button key={v} aria-pressed={effects===v} onClick={()=>setEffects(v)}>{v==='rich'?'Полные':'Простые'}</button>)}</span></div>
+      <SettingToggle label="Касание стола пропускает показ" note="для телефона" value={tapSkip} onChange={setTapSkip} testid="tap-skip"/>
       <h3 className="menu-settings-section"><Icon name="bell"/>Игра</h3>
-
-      <label className="row check">
-        <input type="checkbox" checked={sound} onChange={(e) => setSound(e.target.checked)} data-testid="sound" /> Звук «ваш ход»
-      </label>
-      <label className="row check">
-        <input type="checkbox" checked={fastEnd} onChange={(e) => setFastEnd(e.target.checked)} data-testid="fast-end" /> Быстрый конец хода: 1 с вместо 3 с
-      </label>
-      {openHands !== null && (
-        <label className="row check">
-          <input type="checkbox" checked={openHands} onChange={(e) => setOpenHands(e.target.checked)} /> Открытые руки (все
-          руки видны, без заставок)
-        </label>
-      )}
-      {hints !== null ? (
-        <label className="row check">
-          <input type="checkbox" checked={hints} onChange={(e) => setHints(e.target.checked)} />
-          <span>Подсказки: урон на целях, «4 → 2» на Реакциях</span>
-        </label>
-      ) : (
-        <p className="row muted">Подсказки в этой комнате выключены.</p>
-      )}
-      <label className="row check">
-        <input type="checkbox" checked={tapSkip} onChange={(e) => setTapSkip(e.target.checked)} data-testid="tap-skip" /> Пропуск
-        анимации касанием стола (телефон)
-      </label>
+      <SettingToggle label="Звук «ваш ход»" value={sound} onChange={setSound} testid="sound"/>
+      <SettingToggle label="Быстрый конец хода" note="Отменить «Ход окончен» можно 1 с, а не 3 с" value={fastEnd} onChange={setFastEnd} testid="fast-end"/>
+      {openHands!==null&&<SettingToggle label="Открытые руки" note="Все руки видны, без заставок" value={openHands} onChange={setOpenHands}/>}
+      {hints!==null?<SettingToggle label="Подсказки" note="урон на целях, «4 → 2» на Реакциях" value={hints} onChange={setHints}/>:<p className="muted">Подсказки в этой комнате выключены.</p>}
       </section><section className="view-switches" data-testid="table-view" aria-label="Вид стола">
         <h3 className="menu-settings-section"><Icon name="compass"/>Вид стола</h3>
         <Switch3 label="Залп на планшете" id="guns" value={view.guns} onChange={(guns) => setView({ ...view, guns })} options={[['icons', 'Значки'], ['ports', 'Порты']]} />
         <Switch3 label="Фон" id="hand" value={view.hand} onChange={(hand) => setView({ ...view, hand })} options={[['deck', 'Палуба'], ['table', 'Стол капитана']]} />
-        <Switch3 label="Разбор урона" id="damage" value={view.damage} onChange={(damage) => setView({ ...view, damage })} options={[['show', 'Показывать'], ['hide', 'Скрыть']]} />
         <Switch3 label="Рамка моря" id="frame" value={view.frame} onChange={(frame) => setView({ ...view, frame })} options={[['bulwark', 'Фальшборт'], ['brass', 'Латунь']]} />
-      </section>
-      </div>
+        <Switch3 label="Разбор урона" id="damage" value={view.damage} onChange={(damage) => setView({ ...view, damage })} options={[['show', 'Показывать'], ['hide', 'Скрыть']]} />
+        <aside className="menu-view-preview"><Icon name="chart" size={44}/><span>Вид стола меняется сразу,<br/>это видно за окном.</span></aside>
+      </section></div>
       {fxErrors.length > 0 && (
         <div className="row fx-errors" data-testid="fx-errors">
           <b>Ошибки анимаций ({fxErrors.length})</b>
@@ -509,3 +489,5 @@ export function SettingsSheet({
     </Sheet>
   );
 }
+
+function SettingToggle({label,note,value,onChange,testid}:{label:string;note?:string;value:boolean;onChange:(v:boolean)=>void;testid?:string}){return <label className="menu-setting-toggle"><span>{label}{note&&<small>{note}</small>}</span><input type="checkbox" checked={value} onChange={e=>onChange(e.target.checked)} data-testid={testid}/></label>;}
