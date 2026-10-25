@@ -1,5 +1,4 @@
 import {useEffect,useRef} from 'react';
-import type {FxStore} from '../fx/FxLayer';
 import {particleEasing} from '../fx/particles';
 import './scene.css';
 import type {SceneCache} from './assets';
@@ -7,6 +6,7 @@ type Art={src:string;x:number;y:number;w:number;h:number};
 type Frame=Keyframe&{computedOffset?:number};
 type Motion={name:string;frames:Frame[];timing:KeyframeAnimationOptions};
 type Layer={text?:string;id:number;tag:string;cls:string;style:Record<string,string>;anim:Motion[];children:Layer[];art?:Art;image?:string;frames?:Art[];frameTiming?:KeyframeAnimationOptions;particle?:boolean;rain?:boolean;animations?:Frame[];rainTiming?:KeyframeAnimationOptions};
+export type SceneActivity={get:()=>{busy:boolean};subscribe:(listener:()=>void)=>()=>void};
 export type Scene={width:number;height:number;tree:Layer[]};
 const options=(t:KeyframeAnimationOptions):KeyframeAnimationOptions=>({...t,iterations:t.iterations??Infinity});
 const frames=(f:Frame[])=>f.map(({computedOffset:_c,composite:_k,...frame})=>{
@@ -31,7 +31,7 @@ function sample(anim:Motion,time:number){
  return {a,b,p:particleEasing(String(a.easing??'linear'))(Math.max(0,Math.min(1,(p-from)/(to-from||1))))};
 }
 /** One owner, native wrapper clocks + one shared particle rAF. Cleanup always cancels both. */
-export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className="sw-native-scene",mobileArt=false}:{scene:Scene;cache:SceneCache;cacheKey:string;ready:boolean;store:FxStore;narrow:boolean;className?:string;mobileArt?:boolean}){
+export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className="sw-native-scene",mobileArt=false}:{scene:Scene;cache:SceneCache;cacheKey:string;ready:boolean;store:SceneActivity;narrow:boolean;className?:string;mobileArt?:boolean}){
  const ref=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   const element=ref.current;if(!element||!ready)return;const host:HTMLDivElement=element;
