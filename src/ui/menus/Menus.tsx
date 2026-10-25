@@ -23,7 +23,7 @@ function ChartPicture({kind}:{kind:string}){
 export function MenuSurface({children,kind='prep',className=''}:{children:ReactNode;kind?:string;className?:string}){
  const ref=useRef<HTMLDivElement>(null);
  useMenuMotion(ref);
- return <div ref={ref} className={`menus-surface menu-${kind} ${className}`}><ChartPicture kind={kind}/><MenuScene name={`Chart_${kind}`} className="menu-chart-animation"/>{children}</div>;
+ return <div ref={ref} className={`menus-surface menu-${kind==='net'?'net-background':kind} ${className}`}><ChartPicture kind={kind}/><MenuScene name={`Chart_${kind}`} className="menu-chart-animation"/>{children}</div>;
 }
 export function Boat({name,muted=false}:{name:string;muted?:boolean}){return <div className={`menu-boat${muted?' muted':''}`} aria-hidden="true"><MenuScene name={'Boat_'+name}/></div>;}
 export function Dock({name}:{name:string}){return <div className="menu-dock"><MenuScene name={'Dock_'+name}/></div>;}
