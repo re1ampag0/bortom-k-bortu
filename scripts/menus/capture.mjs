@@ -1,0 +1,14 @@
+// Frames for the user, not assertions or a browser test suite. Stop after two minutes.
+import{chromium}from'@playwright/test';import{writeFileSync}from'node:fs';
+const b=await chromium.launch({executablePath:'/usr/bin/chromium'}),deadline=Date.now()+120000,records=[];const out='docs/screenshots/menus-all/';
+try{for(const [width,height]of [[1366,660],[390,844]]){
+ const p=await b.newPage({viewport:{width,height}});p.setDefaultTimeout(6000);const errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await p.route(/\/src\/ui\/main\.tsx(?:\?.*)?$/,async route=>{const response=await route.fetch();await route.fulfill({response,body:(await response.text()).replace(/StrictMode/g,'Fragment')});});
+ const shot=async name=>{if(Date.now()>deadline)throw Error('frame budget reached');await p.evaluate(()=>document.fonts.ready);await p.waitForTimeout(350);await p.screenshot({path:out+name+'-'+width+'x'+height+'.png'});records.push({name,width,height,errors:[...errors]});console.log(name,width);};
+ try{
+ await p.goto('http://127.0.0.1:5341/bortom-k-bortu/?seed=1&speed=instant');await p.waitForSelector('.menu-prepared .sw-native-scene[data-ready]');await shot('start');
+ await p.getByTestId('quick-bots').click();await p.getByTestId('pick-pirates').click();await shot('prep');await p.goto('http://127.0.0.1:5341/bortom-k-bortu/?seed=1&speed=instant');await p.getByTestId('quick-duo').click();await p.getByTestId('pick-pirates').click();await p.getByTestId('prep-start').click();await shot('placement');await p.getByTestId('placement-done').click();await p.getByTestId('curtain-ready').waitFor();await shot('curtain');
+ await p.goto('http://127.0.0.1:5341/bortom-k-bortu/?seed=1&speed=instant');await p.getByRole('button',{name:'Правила',exact:true}).click();await shot('rules-memo');await p.getByRole('button',{name:'За минуту',exact:true}).click();await shot('rules-minute');await p.getByRole('button',{name:'8. Залп',exact:true}).click();await shot('rules-volley');await p.getByRole('button',{name:'Закрыть',exact:true}).click();await p.getByTestId('start-settings').click();await shot('settings');await p.getByRole('button',{name:'Закрыть',exact:true}).click();
+ await p.getByTestId('quick-net').click();await shot('net-entry');await p.getByTestId('net-name').fill('Матрос');await p.getByTestId('net-create').click();await p.getByTestId('room').waitFor();await shot('net-room');
+ }catch(e){records.push({width,height,skipped:String(e),errors});console.log('remaining frames skipped',width,String(e).split('\n')[0]);}await p.close();if(Date.now()>deadline)break;
+}}finally{await b.close();writeFileSync(out+'frames.json',JSON.stringify(records,null,2)+'\n');}

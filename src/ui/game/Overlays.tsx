@@ -4,6 +4,7 @@ import {WeatherWindow} from './weather-window/WeatherWindow';
 import { memo as reactMemo, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {RulesWindow} from '../menus/RulesWindow';
 import {Icon} from '../menus/Menus';
+import {holdMenuMotion} from '../menus/motion';
 import type { LogLine } from '../../engine/log';
 import { cardByCode, seaCardByCode, shipData, type GameState } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
@@ -47,7 +48,7 @@ export function Sheet({ title, onClose, children, wide, testid, foot }: { title:
   useEscape(onClose);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title} data-testid={testid}>
+      <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={typeof title==='string'?title:testid==='settings'?'Настройки':undefined} data-testid={testid}>
         <header className="sheet-head">
           <b>{title}</b>
           <button className="btn small close" onClick={onClose} aria-label="Закрыть">
@@ -372,6 +373,7 @@ export function SettingsSheet({
   onView?: (v: TableView) => void;
   onClose: () => void;
 }) {
+  useEffect(()=>holdMenuMotion(),[]);
   const [view, setViewState] = useState(() => loadSettings().view);
   const setView = (v: TableView) => {
     setViewState(v);
