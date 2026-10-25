@@ -419,8 +419,10 @@ export function SettingsSheet({
       </>
     ) : undefined;
   return (
-    <Sheet title={<span className="menu-settings-title"><Icon name="wheel" size={38}/>Настройки</span>} onClose={onClose} testid="settings" foot={foot}>
-      <h3 className="menu-settings-section"><Icon name="lantern"/>Показ</h3>
+    <Sheet title={<span className="menu-settings-title"><Icon name="wheel" size={38}/>Настройки</span>} onClose={onClose} testid="settings" foot={<>{foot}      <p className="row muted" data-testid="app-version">
+        <span title="Этот компас показывает не на север, а туда, куда вам действительно нужно"><Icon name="compass" size={28}/></span>Версия: {appVersion()}
+      </p></>}>
+      <div className="menu-settings-grid"><section className="menu-settings-left"><h3 className="menu-settings-section"><Icon name="lantern"/>Показ</h3>
       {speed!==null&&<div className="row"><span>Скорость показа ходов</span><span className="view-switch" role="group" aria-label="Скорость показа ходов">{Object.keys(SPEEDS).map(k=><button key={k} aria-pressed={speed===k} onClick={()=>setSpeed(k as Speed)}>{{slow:'Медленно',normal:'Обычно',fast:'Быстро',instant:'Мгновенно'}[k]}</button>)}</span></div>}
       <div className="row"><span>Спецэффекты</span><span className="view-switch" role="group" aria-label="Спецэффекты">{(['rich','simple']as const).map(v=><button key={v} aria-pressed={effects===v} onClick={()=>setEffects(v)}>{v==='rich'?'Полные':'Простые'}</button>)}</span></div>
       <h3 className="menu-settings-section"><Icon name="bell"/>Игра</h3>
@@ -449,13 +451,14 @@ export function SettingsSheet({
         <input type="checkbox" checked={tapSkip} onChange={(e) => setTapSkip(e.target.checked)} data-testid="tap-skip" /> Пропуск
         анимации касанием стола (телефон)
       </label>
-      <section className="view-switches" data-testid="table-view" aria-label="Вид стола">
+      </section><section className="view-switches" data-testid="table-view" aria-label="Вид стола">
         <h3 className="menu-settings-section"><Icon name="compass"/>Вид стола</h3>
         <Switch3 label="Залп на планшете" id="guns" value={view.guns} onChange={(guns) => setView({ ...view, guns })} options={[['icons', 'Значки'], ['ports', 'Порты']]} />
         <Switch3 label="Фон" id="hand" value={view.hand} onChange={(hand) => setView({ ...view, hand })} options={[['deck', 'Палуба'], ['table', 'Стол капитана']]} />
         <Switch3 label="Разбор урона" id="damage" value={view.damage} onChange={(damage) => setView({ ...view, damage })} options={[['show', 'Показывать'], ['hide', 'Скрыть']]} />
         <Switch3 label="Рамка моря" id="frame" value={view.frame} onChange={(frame) => setView({ ...view, frame })} options={[['bulwark', 'Фальшборт'], ['brass', 'Латунь']]} />
       </section>
+      </div>
       {fxErrors.length > 0 && (
         <div className="row fx-errors" data-testid="fx-errors">
           <b>Ошибки анимаций ({fxErrors.length})</b>
@@ -464,7 +467,7 @@ export function SettingsSheet({
             {fxErrors.map((x, i) => (
               <li key={i}>
                 <code>
-                  {x.at.slice(5, 16).replace('T', ' ')} · {x.clip} · {x.width}px — {x.text}
+                  {x.at.slice(5, 16).replace('T', ' ')} · {x.clip} · {x.width}px: {x.text}
                 </code>
               </li>
             ))}
@@ -483,7 +486,7 @@ export function SettingsSheet({
       {fxTrace.length > 0 && (
         <details className="row fx-errors" data-testid="fx-trace">
           <summary>Журнал анимаций (для разработчика)</summary>
-          <span className="muted">Если анимация оборвалась или не показалась — сразу откройте и пришлите скриншот.</span>
+          <span className="muted">Если анимация оборвалась или не показалась, сразу откройте и пришлите скриншот.</span>
           <ol>
             {fxTrace.map((x, i) => (
               <li key={i}>
@@ -502,9 +505,7 @@ export function SettingsSheet({
           </button>
         </details>
       )}
-      <p className="row muted" data-testid="app-version">
-        <span title="Этот компас показывает не на север, а туда, куда вам действительно нужно"><Icon name="compass" size={28}/></span>Версия: {appVersion()}
-      </p>
+
     </Sheet>
   );
 }
