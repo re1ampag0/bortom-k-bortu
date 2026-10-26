@@ -42,7 +42,7 @@
 .sw-scene[data-scene-live]>.sw-scene-still {visibility:hidden;}
 
 .sw-feature-frames {position:relative;display:block;width:34px;height:34px;}
-.sw-feature-frames[data-ready]>.sw-feature-icon {visibility:hidden;}
+
 .sw-medal-wrap {position:relative;display:block;width:50px;height:50px;flex:none;}
 .sw-medal-clip {position:absolute;left:6px;top:6px;width:38px;height:38px;border-radius:50%;overflow:hidden;pointer-events:none;}
 .sw-medal-ray {position:absolute;left:11.5px;top:-6px;width:15px;height:50px;}
@@ -79,3 +79,7 @@
 
 
 .sw-cells>span>img {display:block;width:100%;height:17px;object-fit:contain;}
+.sw-spent-label{inset:auto!important;left:9%!important;right:9%!important;top:42%!important;bottom:auto!important;box-sizing:border-box;transform:rotate(-12deg);padding:6px 4px!important;border:4px double #9e2b25;border-radius:3px;color:#9e2b25;background:transparent!important;opacity:.85;font:700 21px/1.1 'Ship Alegreya SC',Georgia,serif;letter-spacing:.07em;z-index:2;pointer-events:none;white-space:nowrap}
+.sw-legend-spent>div{filter:sepia(.7) contrast(.8);opacity:.65}
+.sw-feature-frames .sw-medal-clip{position:absolute;inset:0;border-radius:50%;overflow:hidden;pointer-events:none}
+.sw-feature-frames .sw-medal-ray{opacity:0;width:34px;height:34px}

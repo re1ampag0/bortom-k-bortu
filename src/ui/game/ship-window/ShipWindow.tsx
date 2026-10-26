@@ -1,3 +1,4 @@
+import type {LogLine} from '../../../engine/log';
 // Ship information from the current visible game; the artboards supply only presentation and artwork.
 import {memo,useEffect,useLayoutEffect,useRef,useState,useSyncExternalStore,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
@@ -17,10 +18,11 @@ import {prepareShipWindow,shipArt} from './assets';
 import {ShipScene,prepareShipScene} from './ShipScene';
 import {FeatureIcon,Medal} from './Decorations';
 export {prepareShipWindow} from './assets';
+export {prepareShipScene} from './ShipScene';
 const TRACKS:Track[]=['hull','sails','guns','crew'];
 const LABELS:Record<Track,string>={hull:'Корпус',sails:'Паруса',guns:'Пушки',crew:'Команда'};
 const WIDTHS:Record<Track,number>={hull:13,sails:16,guns:24,crew:15};
-export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDiscard}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void}){
+export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDiscard,log=[]}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void;log?:readonly LogLine[]}){
  const shown=useSyncExternalStore(store.subscribe,()=>store.shown(s),()=>s),ship=shown.ships[code],d=shipData(data,code),legend=cardByCode(data,`${code}-Л`);
  const design=(catalogue as Record<string,{name:string;styles:Record<string,Record<string,string>>}>)[code],name=design.name;
  const st=(key:string):CSSProperties=>{const style={...design.styles[key]} as CSSProperties;if(String(style.fontFamily).includes('Alegreya SC'))style.fontFamily="'Ship Alegreya SC',Georgia,serif";else if(style.fontFamily==="Alegreya, Georgia, serif")style.fontFamily="'Ship Alegreya',Georgia,serif";return style;};
@@ -39,6 +41,8 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
   update();phone.addEventListener('change',update);return()=>{phone.removeEventListener('change',update);if(old===null)stage.removeAttribute('data-ship-window-covered');else stage.setAttribute('data-ship-window-covered',old);};
  },[ready]);
  useEffect(()=>{if(!ready)return;const old=document.activeElement as HTMLElement|null;close.current?.focus({preventScroll:true});return()=>{if(old?.isConnected)old.focus({preventScroll:true});};},[ready]);
+ const played=log.some(l=>l.kind==='action'&&l.cards.includes(`${code}-Л`)&&l.text.includes(': Легенда '));
+ const stamp=played?'СЫГРАНА':'НЕ В ИГРЕ';
  const asset=(part:string)=>shipArt(`${name}-${part}`);
  return createPortal(<div className="ship-window-backdrop" onClick={onClose}>
   <div className="ship-window-frame" ref={frame}>
@@ -74,14 +78,14 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
       {statuses(shown,data,ship).length>0&&<div className="sw-statuses">{statuses(shown,data,ship).map(x=><span key={x.label} title={x.hint}>{x.label}</span>)}</div>}
      </div>
      <aside className="sw-legend" aria-label="Легенда"><h2 className="sw-phone-legend-heading" style={st('featureHeading')}>Легенда</h2>
-      <article className={`sw-legend-card${ship.legend?'':' sw-legend-spent'}`} style={st('card')}>
+      <article aria-label={ship.legend?`Легенда «${legend.name}»`:`Легенда «${legend.name}» ${played?'уже сыграна':'больше не в игре'}`} className={`sw-legend-card${ship.legend?'':' sw-legend-spent'}`} style={st('card')}>
        <i className="sw-card-inset"/>
        <div style={st('cardHeader')}><span className="sw-price" style={st('cost')}><b>{legend.soul||legend.cost}</b><span className="sw-price-icon">{legend.soul?<img src={soulIcon} width="13" height="15" alt="Души"/>:<span dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/>}</span></span><span className="sw-card-type">Легенда · {legend.type.toLowerCase()}</span></div>
        <div style={st('cardArt')}><img style={st('cardImage')} src={asset('legend.svg')} alt=""/></div>
        <div style={st('cardName')}>{legend.name}</div><div style={st('cardBig')}>{legend.big}</div>
        <div style={st('cardTextBox')}><div style={st('cardText')}><RichText html={legend.text}/></div></div>
        <div className="sw-card-foot" style={st('cardFoot')}>{d.nick}</div>
-       {!ship.legend&&<span className="sw-spent-label">Сыграна или ушла из игры</span>}
+       {!ship.legend&&<span className="sw-spent-label">{stamp}</span>}
       </article>
      </aside>
     </div>
