@@ -15,6 +15,7 @@ import './game/scale.css';
 import './game/phone-fix.css';
 import './scrollbars.css';
 import './start/start.css';
+import './ui-polish.css';
 
 // The sound «ваш ход» needs a first touch of the page (iPhone): listen for it from the start.
 armSound();

@@ -50,7 +50,7 @@ export function Sheet({ title, onClose, children, wide, testid, foot }: { title:
     <div className="sheet-backdrop" onClick={onClose}>
       <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={typeof title==='string'?title:testid==='settings'?'Настройки':undefined} data-testid={testid}>
         <header className="sheet-head">
-          <b>{title}</b>
+          <b>{testid==='confirm-sheet'&&<Icon name="wheel" size={30}/>} {title}</b>
           <button className="btn small close" onClick={onClose} aria-label="Закрыть">
             ✕
           </button>
@@ -109,7 +109,7 @@ export function CardDetail({
     <Sheet title={c.name} onClose={onClose} testid="card-detail">
       <article className={`card-full ${cardClass(c)}`}>
         <header className="card-full-head">
-          <span>{c.legend ? `Легенда · ${c.type}` : c.type}</span>
+          <span>{c.legend ? `Легенда, одна на партию` : c.type}</span>
           <CostBadge c={c} />
         </header>
         <div className="card-big">{c.big}</div>
@@ -118,7 +118,7 @@ export function CardDetail({
         </p>
         <p className="card-flavor">{c.flavor}</p>
         <p className="muted small">
-          Стоимость: {c.cost} Пороха{c.soul ? `, ${c.soul} Души` : ''} · {shipData(data, c.deck).nick}
+          Цена: {c.cost} <span aria-label="Порох" dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/>{c.soul ? `, ${c.soul} Души` : ''} · {shipData(data, c.deck).nick}
         </p>
       </article>
       {status && <p className={`why ${status.startsWith('Можно') ? 'ok' : ''}`}>{status}</p>}
@@ -156,9 +156,9 @@ export function SeaSheet({s,data,code,log=[],store,onClose}:{s:GameState;data:Ga
 export function DiscardSheet({ s, data, seat, onClose }: { s: GameState; data: GameData; seat: string; onClose: () => void }) {
   const ship = s.ships[seat];
   return (
-    <Sheet title={`Сброс «${shipData(data, seat).nick}» · ${ship.discard.length}`} onClose={onClose} wide testid="discard">
+    <Sheet title={`Сброс «${({Ж:'Жемчужины',М:'Мести',И:'Индевора',Г:'Голландца'} as Record<string,string>)[seat]??shipData(data, seat).nick}» · ${ship.discard.length}`} onClose={onClose} wide testid="discard">
       <div className="choice-cards">
-        {ship.discard.length === 0 && <p className="muted">Сброс пуст.</p>}
+        {ship.discard.length === 0 && <div className="discard-empty"><span className="discard-placeholder" aria-hidden="true"/><p>Сброс пуст: сыгранные карты лягут сюда</p></div>}
         {[...ship.discard].reverse().map((code, i) => (
           <HandCard key={`${code}-${i}`} data={data} code={code} off={null} />
         ))}
@@ -465,7 +465,7 @@ export function SettingsSheet({
           </button>
         </div>
       )}
-      {fxTrace.length > 0 && (
+      {new URLSearchParams(location.search).get('perf')==='1' && fxTrace.length > 0 && (
         <details className="row fx-errors" data-testid="fx-trace">
           <summary>Журнал анимаций (для разработчика)</summary>
           <span className="muted">Если анимация оборвалась или не показалась, сразу откройте и пришлите скриншот.</span>

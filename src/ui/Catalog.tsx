@@ -10,18 +10,18 @@ export function Catalog({ data, onBack }: { data: GameData; onBack: () => void }
   const deckTotal = deckCards(data).length;
 
   return (
-    <main className="page">
+    <main className="page polish-catalog">
       <button className="btn back" onClick={onBack}>
         ← К игре
       </button>
       <h1>Карты и корабли</h1>
       <p className="summary">
-        Данные версии {data.version}. Всего карт: <b>{deckTotal + legends.length + sea.length}</b> — в колодах{' '}
+        Данные версии {data.version}. Всего карт: <b>{deckTotal + legends.length + sea.length}</b>: в колодах{' '}
         {deckTotal}, Легенд {legends.length}, карт моря {sea.length}.
       </p>
       <nav className="toc">
         {data.ships.map((s) => (
-          <a key={s.code} href={`#ship-${s.code}`}>
+          <a key={s.code} style={{background:s.color}} href={`#ship-${s.code}`}>
             {s.name}
           </a>
         ))}
