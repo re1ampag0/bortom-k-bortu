@@ -162,7 +162,7 @@ export function ChargeSheet({
         {/* fix-ui: no Charges — the words in the middle of the sheet (the head line kept only the Hold) */}
         {charges.length === 0 && !mode.heart && (
           <p className="cs-empty" data-testid="no-charges">
-            Зарядов в руке нет — Залп без Заряда
+            Зарядов в руке нет: Залп без Заряда
           </p>
         )}
         {charges.map((o) => {
@@ -301,7 +301,7 @@ export function JackPanel({ s, data, ship, onAct }: { s: GameState; data: GameDa
     <DecisionSheet title={legend.name} sub={`${nick(data, ship)} тонет! ${legend.big}. Стоимость ${powderWord(legend.cost)}.`}
       hold={{powder: s.teams[s.ships[ship].side].powder, cap: data.econ.cap}} testid="jack-panel"
       actions={<DecisionActions
-        cancel={<button className="btn" onClick={() => onAct({type: 'jack', play: false})}>Нет — утонуть</button>}
+        cancel={<button className="btn" onClick={() => onAct({type: 'jack', play: false})}>Нет: утонуть</button>}
         primary={{key: 'jack-play', label: `Сыграть · ${powderWord(legend.cost)}`, onClick: () => onAct({type: 'jack', play: true})}} />} />
   );
 }
@@ -312,11 +312,12 @@ export function TortugaPanel({ s, data, side, onAct }: { s: GameState; data: Gam
   const total = Object.values(draws).reduce((a, b) => a + b, 0);
   const max = Math.min(data.rules.seaTortuga, s.teams[side].powder);
   return (
-    <DecisionSheet title="Тортуга" sub={`1 Порох за карту, не больше ${data.rules.seaTortuga}.`}
+    <DecisionSheet title="Море · Тортуга" sub={`1 Порох за карту, не больше ${data.rules.seaTortuga}.`}
       hold={{powder: s.teams[side].powder, cap: data.econ.cap}} testid="tortuga-panel"
       actions={<DecisionActions cancel={<button className="btn" onClick={() => onAct({ type: 'tortuga', side, draws: {} })}>Не брать</button>}
-        primary={{key: 'tortuga-take', label: `Взять ${total} · ${powderWord(total)}`, disabled: total === 0 ? 'Выберите, сколько карт взять' : null,
+        primary={{key: 'tortuga-take', label: `Взять ${total} ${total===1?'карту':total<5?'карты':'карт'} · ${powderWord(total)}`, disabled: total === 0 ? 'Выберите, сколько карт взять' : null,
           onClick: () => onAct({type: 'tortuga', side, draws})}} />}>
+      <p className="polish-tortuga-total">Карт {total} · Пороха {total} из {s.teams[side].powder} в Трюме</p>
       {seats.map(x => <DecisionStepper key={x.code}
         label={<b className="ds-ship" data-ship={x.code} style={{['--ship' as string]: shipData(data, x.code).color}}>{nick(data, x.code)}</b>}
         value={draws[x.code] ?? 0} minusDisabled={!draws[x.code]} plusDisabled={total >= max}
@@ -332,10 +333,10 @@ const CHOICE_TEXT: Record<string, { title: string; sub: string }> = {
   compass: { title: 'Компас Джека', sub: 'Выберите карту в руку, затем карту в План. Третья уйдёт в сброс.' },
   toPlan: { title: 'Безумный план', sub: 'Выберите карту с руки в План.' },
   pass: { title: 'Анжелика', sub: 'Выберите карту, которую получит союзник.' },
-  spy: { title: 'Шпион Мерсер', sub: 'Выберите Реакцию противника — он её сбросит.' },
-  tia: { title: 'Тиа Дальма', sub: 'Разложите карты моря: первая выбранная откроется первой. «i» — карта целиком.' },
+  spy: { title: 'Шпион Мерсер', sub: 'Выберите Реакцию противника: он её сбросит.' },
+  tia: { title: 'Тиа Дальма', sub: 'Разложите карты моря: первая выбранная откроется первой. «i»: карта целиком.' },
   bell: { title: 'Колокол «Голландца»', sub: 'Выберите карту с руки и сбросьте её.' },
-  dice: { title: 'Игра в кости лжеца', sub: 'Втайне выберите карту с руки. Дороже в Порохе — забирает обе.' },
+  dice: { title: 'Игра в кости лжеца', sub: 'Втайне выберите карту с руки. Дороже в Порохе: забирает обе.' },
 };
 
 /**

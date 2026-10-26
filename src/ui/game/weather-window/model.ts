@@ -18,9 +18,9 @@ export function weatherRows(s:GameState,data:GameData,key:string,results:readonl
  if(['calm','wind','tortuga','current','wet','caravan'].includes(key))return sides.map(side=>{
   const own=ships.filter(x=>x.side===side&&!x.sunk);
   if(!own.length)return team(side,'Нет кораблей на плаву','none');
-  if(key==='calm')return team(side,'Перестроение и «смена мест» — нельзя','down');
+  if(key==='calm')return team(side,'Перестроение и «смена мест»: нельзя','down');
   if(key==='wind'){const free=Object.values(s.ships).filter(x=>x.side===side).some(x=>hasAbility(data,x,ABILITY.fasterThanWind));return team(side,free?'Перестроение и так 0 («Быстрее ветра»)':change('Перестроение',r.regroupCost,0,'up'),free?'none':'up');}
-  if(key==='tortuga')return team(side,s.pending?.kind==='tortuga'&&s.pending.waiting.includes(side)?`Трюм ${s.teams[side].powder}: до ${Math.min(r.seaTortuga,s.teams[side].powder)} Пороха — столько же карт`:`Трюм ${s.teams[side].powder} · решение принято`, 'info');
+  if(key==='tortuga')return team(side,s.pending?.kind==='tortuga'&&s.pending.waiting.includes(side)?`Трюм ${s.teams[side].powder}: до ${Math.min(r.seaTortuga,s.teams[side].powder)} Пороха: столько же карт`:`Трюм ${s.teams[side].powder} · решение принято`, 'info');
   if(key==='current')return team(side,own.map(x=>`«${shipData(data,x.code).nick}»`).join(' ⇄ '),'info');
   const line=results.find(l=>l.text.startsWith(side==='ПИРАТЫ'?'Пираты:':'Компания:'));
   const hit=line?.text.match(/([+−])(\d+) Пороха.*?→ (\d+)/);

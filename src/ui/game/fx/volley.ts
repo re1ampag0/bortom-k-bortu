@@ -87,16 +87,10 @@ function seaBox(ctx: FxCtx): { x: number; r: number } {
   const b = bx(ctx, el), edge = boardW(ctx) < 701 ? 8 : 12;
   return { x: b.x + edge, r: b.r - edge };
 }
-function placePlate(ctx: FxCtx, shooter: string): PlateBox {
-  const g = gapBox(ctx), W = boardW(ctx), sea = seaBox(ctx);
-  const s = bx(ctx, plank(ctx, shooter));
-  // V5: A5Volley.html — 300 px on a laptop, 220 on a phone (390 px too).
-  const pw = W < 701 ? 220 : 300;
-  // The plate stands in the column the shooter is not in: over the gap, and if it is taller than the gap — over the
-  // shooter's ally (fitPlate), never over the target, where the cannonballs land.
-  const x = s.cx < W / 2 ? sea.r - pw : sea.x;
-  return { x, y: g.y + 4, w: pw };
+function placePlate(ctx: FxCtx, _shooter: string): PlateBox {
+  const g=gapBox(ctx),sea=seaBox(ctx);return {x:sea.x,y:g.cy,w:Math.min(236,sea.r-sea.x)};
 }
+
 function cardSlot(ctx: FxCtx, p: PlateBox, idx: number) {
   const W = boardW(ctx), sea = seaBox(ctx);
   const cw = W < 701 ? 64 : 82;
@@ -120,7 +114,7 @@ export function termRows(ctx: FxCtx, terms: Term[] | null | undefined, cls: Reco
 }
 export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage, was, terms, cls, extra = '', diagonal }: { shooter: string; declared?: string; target: string; track: Track; damage: number; was?: number | null; terms?: Term[] | null; cls?: Record<string, string>; extra?: string; diagonal?: boolean }): string {
   const who = `<b>${esc(nick(ctx, shooter))}</b> → ${declared && declared !== target ? `<s>${esc(nick(ctx, declared))}</s> ` : ''}<b>${esc(nick(ctx, target))}</b>${(diagonal ?? !!(VS && VS.diagonal)) ? ', по диагонали' : ', напротив'}`;
-  return `<div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
+  return `<div class="polish-plate-head">Залп</div><div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
     (terms ? `<div class="terms">${termRows(ctx, terms, cls)}</div>` : '') + extra;
 }
 /** A hidden plate is prepared off-document, never briefly inserted into the layer. */
@@ -155,10 +149,11 @@ function fitPlate(ctx: FxCtx) {
   if (plate.offsetHeight > g.h - 8) {
     plate.classList.add('compact');
     const sea = seaBox(ctx);
-    w = Math.min(440, sea.r - sea.x - 8);
-    x = (sea.x + sea.r - w) / 2;
+    w = Math.min(236, sea.r - sea.x - 8);
+    x = sea.x;
     plate.style.width = w + 'px';
   }
+  plate.style.maxHeight=Math.max(28,g.h-8)+'px';plate.style.overflowY='auto';
   const h = plate.offsetHeight, y = g.cy - h / 2;
   plate.style.left = x + 'px';
   plate.style.top = y + 'px';
@@ -696,7 +691,7 @@ PLAY.counter = async (c, ctx) => {
 PLAY.heart = async (c, ctx) => {
   const by = ships(ctx).find((x) => sideOf(ctx, x) === sideOf(ctx, c.ship) && x !== c.ship)!;
   const a = bx(ctx, plank(ctx, by)), b = bx(ctx, plank(ctx, c.ship));
-  hint(ctx, `${nick(ctx, by)}: Сердце Дейви Джонса — ещё один Залп ${gen(ctx, c.ship)}`);
+  hint(ctx, `${nick(ctx, by)}: Сердце Дейви Джонса: ещё один Залп ${gen(ctx, c.ship)}`);
   const h = { x: a.x + a.w * 0.62, y: a.cy };
   const heart = mk(ctx, 'heart', 0, 0, '<svg viewBox="0 0 30 26" width="30" height="26"><path d="M15 25 C4 17 0 11 2 6 C4 1 11 0 15 6 C19 0 26 1 28 6 C30 11 26 17 15 25Z" fill="#B23A2E" stroke="#6E1A12" stroke-width="1.5"/></svg>');
   A(ctx, heart, [{ opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(.4)` }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.15 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.3 }, { transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.42 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.56 }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.7 }, { opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(1)` }], 2000, 0, 'ease-in-out');
