@@ -30,7 +30,7 @@ try{for(const phase of requested==='both'?['before','after']:[requested]){
    records.push({size:`${w}x${h}`,screen:name,engine:browser.version(),dpr:w<=1100?3:1,...await page.evaluate(audit),...await page.evaluate(()=>({horizontalScroll:document.documentElement.scrollWidth>innerWidth,stage:document.getElementById('stage').getAttribute('style'),buttons:[...document.querySelectorAll('.game button')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.height;}).map(e=>{const r=e.getBoundingClientRect();return{id:e.dataset.testid,disabled:e.getAttribute('aria-disabled')==='true'||e.disabled===true,title:e.getAttribute('title'),text:e.textContent.trim().slice(0,40),x:r.x,y:r.y,w:r.width,h:r.height,hit:e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))};})}))});
   };
   try{
-   await page.goto(`http://127.0.0.1:${phase==='before'||process.env.MAIN_ONLY==='1'?5361:5362}/bortom-k-bortu/?speed=instant${phase==='disabled'?'&gamescale=0':''}`);
+   await page.goto(`http://127.0.0.1:${phase==='before'||process.env.MAIN_ONLY==='1'?(process.env.BEFORE_PORT??5361):(process.env.AFTER_PORT??5362)}/bortom-k-bortu/?speed=instant${phase==='disabled'?'&gamescale=0':''}`);
    await page.evaluate(async()=>{await Promise.all([...document.fonts].map(f=>f.load().catch(()=>{})));await document.fonts.ready;});await tick();
    await press('[data-testid=resume-go]');await tick(2000);await shot('table');
    if(await page.locator('.game').evaluate(e=>e.hasAttribute('data-game-hand-scroll'))){

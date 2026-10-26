@@ -1,3 +1,4 @@
+import {stageK} from '../stage';
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
 import { cloneElement, isValidElement, lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
@@ -380,6 +381,20 @@ export function Game({
     return()=>{alive=false;if(idle!==undefined)window.cancelIdleCallback(idle);if(timer!==undefined)clearTimeout(timer);};
   },[]);
   useTableBody(curtainSide ? null : 'game');
+  const cardDecision=['card','legend','confirmEnd','plans'].includes(mode.k);
+  useLayoutEffect(()=>{
+    const game=document.querySelector<HTMLElement>('.game'),board=game?.querySelector<HTMLElement>('.board'),bottom=game?.querySelector<HTMLElement>('.board-bottom'),dock=game?.querySelector<HTMLElement>('.decision-dock');
+    if(!game||!board||!bottom||!dock||!cardDecision)return;
+    const measure=()=>{
+      const d=dock.getBoundingClientRect(),b=bottom.getBoundingClientRect(),l=game.querySelector('.log-col')?.getBoundingClientRect(),k=stageK();
+      const small=innerWidth<=700,scroll=look.play==='scroll'&&!small;
+      const height=scroll?0:d.height/k;
+      if(bottom.style.getPropertyValue('--decision-h')!==`${height}px`)bottom.style.setProperty('--decision-h',`${height}px`);
+      if(scroll&&l){dock.style.setProperty('--scroll-left',`${(l.left-b.left)/k}px`);dock.style.setProperty('--scroll-bottom',`${(b.bottom-l.bottom)/k}px`);dock.style.setProperty('--scroll-width',`${l.width/k}px`);dock.style.setProperty('--scroll-height',`${Math.max(240,l.height/k-52)}px`);}
+    };
+    const ro=new ResizeObserver(measure);ro.observe(dock);ro.observe(game);measure();
+    return()=>{ro.disconnect();bottom.style.removeProperty('--decision-h');};
+  },[cardDecision,look.play,mode.k,curtainSide]);
 
   useEffect(() => {
     if (local) storeSave(s.winner ? null : local.record());
@@ -834,7 +849,7 @@ export function Game({
           yes={`Сыграть · ${c.soul ? `${c.soul} Д` : `${c.cost} П`}`}
           onYes={() => (needsTarget ? setMode({ ...mode, confirmed: true }) : act(opts.actions[0]))}
           onNo={cancel}
-          testid="legend-confirm"
+          testid="legend-confirm" card={{data,code:`${mode.seat}-Л`}}
         />
       ) : (
         <ConfirmPanel title={c.name} sub={`Выберите цель на столе. ${c.big}`} yes="Отмена" onYes={cancel} onNo={cancel} />
@@ -1025,7 +1040,7 @@ export function Game({
   };
   const handLabel = `${seat ? `Рука · ${nick(seat)}` : 'Рука'}`;
   const captainNote =
-    seat && mySeats.includes(seat) && isCaptain(s, seat) ? `Вы капитан на борту корабля ${nick(seatShip(s, seat)!.code)}: 1 карта за ход за него, Порох — команды` : undefined;
+    seat && mySeats.includes(seat) && isCaptain(s, seat) ? `Вы капитан ${nick(seatShip(s, seat)!.code)}: одна карта за ход за неё, Порох общий` : undefined;
 
   // ——— Bottom buttons ———
   const undoWhy = myTurn && local ? local.undoRefusal(bottom) : 'Отменять можно только свои действия в свой ход';
@@ -1283,7 +1298,7 @@ export function Game({
       )}
       {!local && <HoldReset fx={fx} held={held} canHoldOf={canHoldOf} setHeld={setHeld} />}
       <TableBackdrop look={look.hand} />
-      <main className={`board ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${dockSheet ? 'has-sheet' : ''}`} ref={boardRef}>
+      <main data-card-decision={cardDecision ? look.play : undefined} className={`board ${alarmOn ? 'alarm-open' : ''} ${alarmOn && alarmFolded ? 'alarm-folded' : ''} ${dockSheet ? 'has-sheet' : ''}`} ref={boardRef}>
         <Shown fx={fx} real={s} keyOf={statusKey}>{(shown) => <StatusBar
           s={shown}
           data={data}
@@ -1323,11 +1338,10 @@ export function Game({
         {/* the bottom of the table for the weather and the darkening of FX (sea.ts tableCtx: the last row of the board) — the
             Hold of the bottom team stands beside the hand on a laptop now (V1c), this empty row keeps the old edge */}
         <div className="team-row table-edge" aria-hidden />
-        {phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
         {/* under-window: a window (.sheet-backdrop) lies over the sheet «Заряд» — charge.css */}
         <div className={`board-bottom ${chargeSheet ? 'charge-open' : ''} ${chargeSheet && ((sheet && sheet.k !== 'log') || (net && missedLines(net).length > 0)) ? 'under-window' : ''}`}>
           {chargeSheet}
-          {!phone && oakDock && dock && <div className="decision-dock">{dock}</div>}
+          {oakDock && dock && <div className="decision-dock">{dock}</div>}
           <Shown fx={fx} real={view} keyOf={(x) => holdKey(x, bottom)}>{(shown, rev) => <TeamRow side={bottom} s={shown} data={data} hands={null} regroup={regroupBtn(bottom)} hint={null} fxGen={rev} />}</Shown>
           <div className="hand-row" data-fx-hand>
             <MemoContent stamp={tableInteraction}>{handNode}</MemoContent>
