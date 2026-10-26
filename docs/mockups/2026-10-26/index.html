@@ -1,0 +1,503 @@
+<title>Бортом к борту: правки на одобрение</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700&family=Alegreya:ital,wght@0,400;0,700;1,400&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* Layout: a captain's chart table; every change is one numbered entry, "сейчас" and "будет" side by side; all text centred. Single dark look, like the game. */
+:root{
+  --sea:#0f1d28; --brass:#c9a048; --brass-hi:#f0d27a; --paper:#f3e6c4; --muted:#a9bccb; --ink:#24180a; --red:#a8382a; --green:#5c9a6a; --violet:#8f74b3;
+  --f-head:'Alegreya SC',Georgia,serif; --f-body:'Alegreya Sans',system-ui,sans-serif; --f-serif:Alegreya,Georgia,serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--sea);color:var(--paper);font:16px/1.5 var(--f-body);text-align:center;
+  background-image:radial-gradient(80% 40% at 50% 0%,rgba(90,150,180,.16),transparent 70%),
+  repeating-linear-gradient(0deg,rgba(150,190,210,.05) 0 1px,transparent 1px 72px),
+  repeating-linear-gradient(90deg,rgba(150,190,210,.05) 0 1px,transparent 1px 72px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:44px;align-items:center}
+header{display:flex;flex-direction:column;align-items:center;gap:10px}
+header h1{font:700 clamp(28px,5vw,44px)/1.1 var(--f-head);color:var(--brass-hi);margin:0;letter-spacing:.03em;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:68ch}
+header p b{color:var(--paper)}
+.toc{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:8px 0 0;padding:0;list-style:none}
+.toc a{display:inline-flex;gap:8px;align-items:center;padding:5px 12px;border:1px solid rgba(201,160,72,.5);border-radius:6px;color:var(--paper);text-decoration:none;font-size:14px;background:rgba(0,0,0,.2)}
+.toc a span{font:700 13px var(--f-head);color:var(--brass-hi);font-variant-numeric:tabular-nums}
+.toc a:hover,.toc a:focus-visible{border-color:var(--brass-hi);outline:none}
+.fixed{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 22px;border:1px solid rgba(201,160,72,.45);border-radius:10px;background:rgba(0,0,0,.22);max-width:780px}
+.fixed h2{margin:0 0 4px;font:700 18px var(--f-head);color:var(--brass-hi);letter-spacing:.04em}
+.fixed p{margin:0;color:#dfe7ec}
+section.item{width:100%;border-top:1px solid rgba(201,160,72,.35);padding-top:24px;display:flex;flex-direction:column;align-items:center;gap:14px;scroll-margin-top:16px}
+.item h2{margin:0;display:flex;flex-direction:column;align-items:center;gap:10px;font:700 24px/1.2 var(--f-head);color:var(--paper);text-wrap:balance}
+.n{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;font:700 17px var(--f-head);color:var(--ink);
+  background:radial-gradient(circle at 38% 30%,#fff3c4,#e2bf62 45%,#9a7020);box-shadow:0 2px 5px rgba(0,0,0,.5)}
+.what{margin:0;max-width:72ch;color:#dfe7ec}
+.what b{color:var(--brass-hi)}
+.lines{display:flex;flex-direction:column;align-items:center;gap:6px;max-width:72ch;color:#dfe7ec}
+.lines p{margin:0}
+.lines p::before{content:"◆";color:var(--brass);font-size:10px;margin-right:10px;vertical-align:2px}
+.lines b{color:var(--brass-hi)}
+.pair{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.pair.stack{grid-template-columns:1fr}
+.pair.tall{grid-template-columns:repeat(2,minmax(0,360px));justify-content:center}
+.pair.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pair.one{grid-template-columns:minmax(0,900px);justify-content:center}
+figure{margin:0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+figure img{display:block;width:100%;height:auto;border-radius:8px;border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 20px rgba(0,0,0,.45)}
+figcaption{font:700 12px var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:center;justify-content:center}
+figcaption::before{content:"";width:9px;height:9px;border-radius:50%;background:#6c7a85}
+figure.after figcaption{color:var(--brass-hi)}
+figure.after figcaption::before{background:var(--green)}
+figure.after img{border-color:rgba(240,210,122,.55)}
+.variants{width:100%;display:flex;flex-direction:column;gap:30px;align-items:center}
+.variant{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px;border:1px solid rgba(143,116,179,.5);border-radius:12px;background:rgba(40,28,60,.18)}
+.variant h3{margin:0;display:flex;align-items:center;justify-content:center;gap:12px;font:700 21px var(--f-head);color:var(--paper)}
+.variant h3 .v{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:6px;background:#6b4f8a;color:#fff;font:700 18px var(--f-head)}
+.variant p{margin:0;max-width:70ch;color:#dfe7ec}
+.variant .pro{color:#b9d9bf}.variant .con{color:#e7b3a8}
+.variant img{max-width:900px}
+.note{font:italic 15px/1.45 var(--f-serif);color:var(--muted);margin:0;max-width:72ch}
+.textonly{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.card{background:linear-gradient(#f8efd8,#efe1bd);color:var(--ink);border:2px solid var(--brass);border-radius:10px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.card h3{margin:0;font:700 19px var(--f-head);display:flex;flex-direction:column;align-items:center;gap:6px}
+.card h3 .k{font-size:14px;color:#8a6a2e}
+.card p{margin:0;font:15px/1.45 var(--f-serif)}
+.chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:2px 10px;border:1.5px solid #4a3208;border-radius:6px;background:#fff8e6;font:700 15px var(--f-head)}
+.chip s{color:var(--red)}
+.tbl-wrap{width:100%;overflow-x:auto}
+table{margin:0 auto;border-collapse:separate;border-spacing:0 6px;min-width:620px;width:100%;max-width:980px}
+th,td{text-align:center;padding:9px 14px;vertical-align:middle}
+th{font:700 12px var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+td{background:rgba(0,0,0,.24);border-top:1px solid rgba(201,160,72,.25);border-bottom:1px solid rgba(201,160,72,.25)}
+td:first-child{border-left:1px solid rgba(201,160,72,.25);border-radius:8px 0 0 8px}
+td:last-child{border-right:1px solid rgba(201,160,72,.25);border-radius:0 8px 8px 0}
+.tag{display:inline-block;padding:2px 10px;border-radius:12px;font:700 13px var(--f-body);white-space:nowrap}
+.tag.a{background:#2f5d44;color:#dff3e4}.tag.b{background:#2a5370;color:#dcecf7}.tag.c{background:#6b4f8a;color:#f1e8fb}
+.sub{margin:10px 0 0;font:700 19px var(--f-head);color:var(--brass-hi);letter-spacing:.04em}
+.finds{width:100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start}
+.find{padding:12px;border:1px solid rgba(201,160,72,.35);border-radius:10px;background:rgba(0,0,0,.2);gap:10px}
+.find figcaption{display:block;text-transform:none;letter-spacing:0;font:15px/1.45 var(--f-body);color:#dfe7ec}
+.find figcaption::before{display:none}
+.find figcaption b{color:var(--paper)}
+.find.wide{grid-column:1/-1}
+.find .pair{gap:12px}
+footer{width:100%;border-top:1px solid rgba(201,160,72,.35);padding-top:20px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:6px}
+footer p{margin:0;max-width:72ch}
+footer b{color:var(--paper)}
+@media(max-width:760px){.pair,.pair.three{grid-template-columns:1fr}.pair.tall{grid-template-columns:repeat(2,minmax(0,1fr))}.item h2{font-size:20px}}
+@media(prefers-reduced-motion:no-preference){.toc a{transition:border-color .15s}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Правки на одобрение</h1>
+  <p>Каждый пункт снят с настоящей игры: слева <b>сейчас</b>, справа <b>как будет</b>. Весь текст в макетах выровнен по центру, элементы не касаются друг друга. Ответьте номерами: что принимаете, что поправить, что принимаете из приказа и находок.</p>
+  <ul class="toc">
+    <li><a href="#r26"><span>✓</span>Ответы 26.10</a></li>
+    <li><a href="#i1"><span>1</span>Новая партия</a></li>
+    <li><a href="#i2"><span>2</span>Приказ: оба варианта</a></li>
+    <li><a href="#plans"><span>10</span>Планы: закрома</a></li>
+    <li><a href="#i3"><span>3</span>Надпись капитана</a></li>
+    <li><a href="#i4"><span>4</span>Полосы прокрутки</a></li>
+    <li><a href="#i5"><span>5</span>Шире стол</a></li>
+    <li><a href="#i6"><span>6</span>Кнопки режимов</a></li>
+    <li><a href="#i7"><span>7</span>Расстановка</a></li>
+    <li><a href="#i8"><span>8</span>Души</a></li>
+    <li><a href="#i9"><span>9</span>Штамп Легенды</a></li>
+    <li><a href="#i10"><span>10</span>Молния</a></li>
+    <li><a href="#i11"><span>11</span>Телефон</a></li>
+    <li><a href="#i12"><span>12</span>Коллекция</a></li>
+    <li><a href="#i13"><span>13–16</span>Без картинок</a></li>
+    <li><a href="#audit"><span>!</span>Найдено в игре</a></li>
+    <li><a href="#all"><span>✓</span>Все ваши просьбы</a></li>
+  </ul>
+</header>
+
+<div class="fixed">
+  <h2>Исправлено после ваших замечаний</h2>
+  <p>Пункт 3: надпись капитана стоит в зазоре между рамкой моря и картами: 9 пикселей до рамки, 8 до карт. Карты не закрыты.</p>
+  <p>Пункт 5: «Ход окончен» снова целиком, журнал чуть шире, чем в прошлом макете.</p>
+  <p>Пункт 11: карты на телефоне больше не уходят под палубу, видны целиком.</p>
+  <p>Пункт 7: убран кружок на конце каната, медальон больше не переворачивается, имя и капитан по центру, капитан выше.</p>
+  <p>Пункт 11: фонарь прежнего размера стоит на палубе под «Перестроением», рядом с пушкой.</p>
+  <p>Пункт 1: окно доработано, на телефоне растянуто на всю ширину экрана.</p>
+  <p>Пункт 4: полосы прокрутки без стрелок, ниже крупный план.</p>
+</div>
+
+<section class="item" id="r26">
+  <h2><span class="n">✓</span>По вашим ответам 26.10</h2>
+  <p class="what">Всё по вашим замечаниям, с деталями. Пункты 6 и 23 сделаны макетами, решите, нужны ли они.</p>
+  <div class="finds">
+    <figure class="find wide"><figcaption><b>Карты, десятая версия.</b> «Индевор»: «Подкуп» две руки, наша и белая перчатка Компании, между ними кошелёк; «Указ о казнях» вороны на перекладине, барабанщик Компании, толпа у помоста; «Оплаченный залп» счёт с печатью рядом с монетами; «Залп всей батареей» дым стелется по воде, ядра падают в море; «Морская пехота» срезанная абордажная кошка на палубе. «Голландец»: со «Всплывшего» корабля стекает вода; у «Сундука мертвеца» красное свечение и стук сердца; в «Части корабля» лицо матроса, вросшее в борт; в «Вербовке» тонущий матрос; водоворот не лезет на небо; у шторма нормальные гребни волн; у подводных сцен мягкая поверхность воды.<br><br><b>Девятая версия.</b> «Компас Джека»: стрелка крупная и смотрит на крестик, на шнурке бусины, на крышке потёртости. «Право на переговоры»: развевающийся белый флаг с завязками, шлюпка вытащена на берег, следы от неё к флагу. Новый «Кодекс»: толстый том, корешок с бинтами, латунные уголки, застёжка, табличка «Кодекс», медальон с черепом, внизу «братства», закладки. «Индевор»: в «Прицельном огне» в порту видна цель, «Жемчужина», под прицелом; в «Бизнес есть бизнес» бочка пороха перевешивает золото; в «Каперском патенте» лист «Патент»; в «Строе линии» сигнальные флаги на флагмане и кильватерный след; в «Блокаде» башня, которая держит цепь; в «Ничего личного» чашка чая на столе, пока горит «Жемчужина»; у Мерсера шейный платок и пояс.<br><br><b>Восьмая версия: каждая карта проверена отдельно.</b> «Один выстрел»: настоящий кремнёвый пистолет. «Латаем паруса»: парусина на палубе, разрыв, заплата на стежках, игла с ниткой, гардаман и моток. «Поднять флаги!»: флагшток стоит на корме нашего корабля, а не в воде. «Бочки с порохом»: бочки в сети, к ним летит один меткий выстрел. «Картечь»: холщовый мешок с картечью. «Банка с землёй»: стеклянная банка с пробкой, землёй и ростком. «Фонтан молодости»: пещера с источником, свет сверху, чаши на камне. «Пленная русалка»: перерисована целиком, связана верёвкой. «Приказ лорда Беккета»: свиток с надписью «Приказ» и печатью. «Двойная обшивка»: второй слой досок на борту. «Подкрепление флота»: шлюпка с солдатами идёт к кораблям. «Чёрная метка» на ладони. «Жатва»: череп на палубе. Канаты в «Живых снастях», кораллы, «Зомби-офицеры» (ядро прошло насквозь). Убраны висящие в воздухе линии и дуги.<br><br><b>Седьмая версия.</b> По вашему выбору: отсылки оставлены, русалка снова на камне, без аквариума. Компас Джека нарисован заново: тёмный деревянный корпус, откинутая крышка с латунным ободком, роза ветров на старой бумаге, стрелка смотрит не на север, а на крестик на карте. Обезьянка Джек перерисована: мех, мордочка, красный камзол с латунными пуговицами, ацтекская монета в лапе, тень-скелет падает на стену от лунного окна. У Тиа Дальмы на столе гадальные крабьи клешни и живой краб. Рыболюди теперь с шеей, второй другого оттенка. В «Вербовке утопленников» тонущий матрос под треуголкой.<br><br><b>Шестая версия: отсылки к фильмам.</b> «Один выстрел»: необитаемый островок с одной пальмой, ром и пистолет с одной пулей. «Гиббс за штурвалом»: его фляжка. «Обезьянка Джек»: в лапе ацтекская монета с черепом, а в лунном свете на стене тень обезьянки-скелета. «Кукла вуду»: кукла похожа на Джека (дреды с бусинами, красная бандана, треуголка). «Пленная русалка»: русалка в стеклянном гробу, перетянутом верёвками. «Живые снасти»: светящийся меч Тритона управляет канатами. «Указ о казнях»: виселица на четыре петли и монета на помосте. «Сделка с Сяо Фэном»: круглая навигационная карта с поворотными кольцами. «Норрингтон на борту»: его парик рядом с треуголкой и шпагой. «Сердце бьётся»: рядом музыкальный медальон с нотами. «Право на переговоры»: на книге надпись «Кодекс». «Бросить якорь»: резкий разворот по пене за кормой. «Чёрные паруса в ночи»: туман над водой.<br><br><b>Пятая версия: всё на своих местах.</b> Корабли стоят в воде: отражение, тень у ватерлинии, пена у носа и кормы. У всего, что висело в воздухе, появилась опора: флаги на древках, весы на стойке, штурвал на тумбе, колокол на деревянной раме, свечи в латунных подсвечниках, фонарь на кронштейне у мачты, плеть на крюке, якорная цепь из клюза уходит под воду. Под предметами на столах и палубе мягкие тени. Сабли воткнуты в палубу и в песок. Новые сцены: «Огонь по орудиям» (борт с пробитым портом), «Тяжёлый борт» (окованный борт, ядра отскакивают), «Брандер» (горящий шлюп), «Водоворот», щупальце кракена с присосками, «Игра в кости» на бочке, бочки с порохом плавают в воде, Мерсер с подзорной трубой на стене форта, судно на стапеле.<br><br><b>Четвёртая версия: живописные фоны.</b> Небо с объёмными облаками, дымка дальних островов, рябь и солнечная дорожка на воде, текстура дерева, камня и бумаги, один источник света на сцену. Перерисованы фигуры: рыболюди, ракушки, зомби-офицеры, морская пехота, русалка, Чернобородый с фитилями в бороде, рука, огненная стена. «Греческий огонь» вернул как в прошлой версии. Прошлые варианты внизу страницы.<br><br><b>Сцена по смыслу каждой карты.</b> Каждая картинка показывает то, что делает карта, с отсылками к фильмам (своими рисунками, без кадров):
+  «Ограбление банка» сейф на колёсах тащат канатами по улице колониального городка с вывеской «Банк»; «Поднять флаги!» Весёлый Роджер над «Жемчужиной» и «Местью»; «Банка с землёй» банка на палубе, в шторм из тумана выходит «Голландец»; «Компас Джека» раскрытый компас на столе капитана ночью; «Тиа Дальма» её хижина на болоте: крабьи клешни, свечи, бусы, склянки под потолком; «Обезьянка Джек» в красном камзоле с монетой в таверне; «Право на переговоры» белый флаг и Кодекс на берегу; «Ужас Карибского моря» чернобородый капитан с дымящимися фитилями в бороде на фоне пожара; «Кукла вуду» с иглой; «Фонтан молодости» две серебряные чаши в пещере с источником; «Пленная русалка» на камне в лунной бухте; «Прихлоп Билл» вросший в борт рыбочеловек в ракушках и цепях; «Игра в кости лжеца» кружки и кости на палубе «Голландца»; «Сундук мертвеца» на острове с ключом; «Каперский патент» договор с печатью и флаг Компании; «Указ о казнях» виселица и указ у стены форта; «Сделка с Сяо Фэном» фонари Сингапура, веер и карта; «Строй линии» три линейных корабля под флагом Компании; «Блокада» цепь поперёк гавани.
+  Фоны разные: море днём, на закате, ночью, в шторм, в огне, под водой; таверна, капитанская каюта, орудийная палуба, палуба «Голландца», болото, городок, форт, контора Компании, Сингапур, пещера, остров, верфь.</figcaption>
+      <div class="pair one"><figure class="after"><img src="img/deck10-pearl.jpg" alt="Колода «Жемчужины»" loading="lazy"><figcaption>«Чёрная жемчужина»</figcaption></figure></div>
+      <div class="pair one"><figure class="after"><img src="img/deck10-revenge.jpg" alt="Колода «Мести»" loading="lazy"><figcaption>«Месть королевы Анны»</figcaption></figure></div>
+      <div class="pair one"><figure class="after"><img src="img/deck10-endeavour.jpg" alt="Колода «Индевора»" loading="lazy"><figcaption>«Индевор»</figcaption></figure></div>
+      <div class="pair one"><figure class="after"><img src="img/deck10-dutchman.jpg" alt="Колода «Голландца»" loading="lazy"><figcaption>«Летучий голландец»</figcaption></figure></div>
+      <div class="pair"><figure><img src="img/e21-hand-before.jpg" alt="Рука на ноутбуке, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/e21-hand-after.jpg" alt="Рука на ноутбуке, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div><div class="pair"><figure><img src="img/e21-hand-phone-before.jpg" alt="Рука на телефоне, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/e21-hand-phone-after.jpg" alt="Рука на телефоне, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div>
+      <p class="note">Карты в руке: белая рамка убрана, золотой кант как в игре. Картинка во всю ширину карты и выше. Название и пометка крупнее, темнее и переносятся на две строки по центру, ничего не обрезается. Чтобы надписи не прятались под соседней картой, карты в руке меньше заходят друг на друга: на ноутбуке все пять видны целиком, на телефоне листаются, как и сейчас. «Рука «Жемчужины»» без чёрной плашки.</p></figure>
+    <figure class="find wide" id="hand3"><figcaption><b>Карты в руке: вариант А с описанием.</b> Картинка видна целиком, без обрезки (банк, флаги, корабли полностью): у неё те же пропорции, что у нарисованной сцены. На ноутбуке карта стала выше (168 вместо 146 пикселей, растёт вверх, рука не сдвигается); на телефоне размер карты прежний, шрифт чуть плотнее. Название под картинкой. Бумага светлая, слоновая кость. Шапка с типом ниже (16 пикселей), тип ровно по центру, цена справа. Описание карты снова на карте под пометкой: столько целых строк, сколько помещается, последняя с многоточием, обрезанных строк нет. Всё на одной оси и одних высотах: место под название всегда на две строки, поэтому у всех карт картинка, название, пометка и начало описания стоят на одной линии.<br>Полное описание целиком: на телефоне при нажатии карта поднимается и показывает весь текст, «Сыграть», «Продать» и «Передать»; на ноутбуке в окне карты.</figcaption>
+      <div class="pair one"><figure class="after"><img src="img/g16-hand.jpg" alt="Рука, ноутбук" loading="lazy"><figcaption>Ноутбук</figcaption></figure></div>
+      <div class="pair"><figure class="after"><img src="img/g16-hand-phone.jpg" alt="Рука, телефон" loading="lazy"><figcaption>Телефон</figcaption></figure><figure class="after"><img src="img/g16-lift-phone.jpg" alt="Поднятая карта, телефон" loading="lazy"><figcaption>Нажатие: весь текст</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>Комната: «На борт» и «Нанять».</b> Оставляю как на ноутбуке в прошлом макете: обе кнопки одной длины, по центру строки.</figcaption><div class="pair"><figure><img src="img/c9-room-before.jpg" alt="Комната на ноутбуке, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/c9-room-after.jpg" alt="Комната на ноутбуке, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div><div class="pair"><figure><img src="img/c9-room-phone-before.jpg" alt="Комната на телефоне, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/c9-room-phone-after.jpg" alt="Комната на телефоне, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>12. Разбор урона.</b> Остаётся слева, по вертикали ровно посередине моря. Уже (236). Новый вид: красная шапка «Залп» с пушкой, кто по кому и откуда стреляют, крупно урон, слагаемые в отдельных плашках (бонусы зелёным). Пергамент с латунной кромкой.</figcaption><div class="pair"><figure><img src="img/d11-plate-before.jpg" alt="Разбор урона, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/d11-plate-after.jpg" alt="Разбор урона, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide" id="sur3"><figcaption><b>14. Кнопка сдачи без слова «сдаться».</b> Выбран вариант Б. В окне подтверждения тот же текст с вопросом, например «Спустить флаг и просить пощады?».<br>А: «Спустить флаг», значок белого флага, который опускают. Б: то же и мелко «пощады!». В: «Сложить сабли», значок сабель остриём вниз.</figcaption>
+      <p class="note"><b>Ноутбук</b></p><div class="pair one"><figure><img src="img/f13-sur-lap-before.jpg" alt="Кнопка сдачи сейчас, ноутбук" loading="lazy"><figcaption>Сейчас</figcaption></figure></div>
+      <div class="pair"><figure class="after"><img src="img/f13-sur-lap-A.jpg" alt="Вариант А, ноутбук" loading="lazy"><figcaption>А</figcaption></figure><figure class="after"><img src="img/f13-sur-lap-B.jpg" alt="Вариант Б, ноутбук" loading="lazy"><figcaption>Б</figcaption></figure></div>
+      <div class="pair one"><figure class="after"><img src="img/f13-sur-lap-C.jpg" alt="Вариант В, ноутбук" loading="lazy"><figcaption>В</figcaption></figure></div>
+      <p class="note"><b>Телефон</b></p><div class="pair"><figure><img src="img/f13-sur-phone-before.jpg" alt="Кнопка сдачи сейчас, телефон" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/f13-sur-phone-A.jpg" alt="Вариант А, телефон" loading="lazy"><figcaption>А</figcaption></figure></div>
+      <div class="pair"><figure class="after"><img src="img/f13-sur-phone-B.jpg" alt="Вариант Б, телефон" loading="lazy"><figcaption>Б</figcaption></figure><figure class="after"><img src="img/f13-sur-phone-C.jpg" alt="Вариант В, телефон" loading="lazy"><figcaption>В</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>17. Окно «Мести».</b> Лава и трещины остаются везде, где нет текста: выше текста, между строками блоков, по краям, у Легенды и внизу. Убраны только те, что шли прямо по буквам. На телефоне без изменений.</figcaption><div class="pair"><figure><img src="img/d11-revenge-before.jpg" alt="Окно «Мести», сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/d11-revenge-after.jpg" alt="Окно «Мести», будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>21. Окно Легенды.</b> Как было в прошлом макете.</figcaption><div class="pair"><figure><img src="img/c9-legend-before.jpg" alt="Окно Легенды, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/c9-legend-after.jpg" alt="Окно Легенды, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>22. Табличка моря на телефоне.</b> Короче по тексту: «Море · весь раунд» и название, и стоит ровно посередине между «Пираты · I» и шестерёнкой. Полный текст по нажатию, как сейчас.</figcaption><div class="pair"><figure><img src="img/g14-seachip-before.jpg" alt="Табличка моря, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/g14-seachip-after.jpg" alt="Табличка моря, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>23. «Жемчуж…» на телефоне.</b> Зелёная галочка «готов» садится маленьким значком на угол картинки корабля, имя остаётся целиком.</figcaption><div class="pair"><figure><img src="img/d11-tick-before.jpg" alt="Имя на планшете, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/d11-tick-after.jpg" alt="Имя на планшете, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>24. Светлые полосы на ноутбуке 1024×768.</b> Тёмное дерево вместо светлого фона.</figcaption><div class="pair"><figure><img src="img/c9-bars-before.jpg" alt="Стол 1024×768, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/c9-bars-after.jpg" alt="Стол 1024×768, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>25. Расстановка в игре по сети.</b> Тот же экран, что против ботов.</figcaption><div class="pair"><figure><img src="img/c9-netplace-lap.jpg" alt="Расстановка по сети" loading="lazy"><figcaption>По сети сейчас</figcaption></figure><figure class="after"><img src="img/c9-localplace-lap.jpg" alt="Расстановка как против ботов" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>26. Тортуга (и другие выборы моря).</b> Лист снизу на месте руки, как Приказ, но с бирюзовой лентой моря. Слева «Море · Тортуга» и условие, в центре корабли с кнопками «−» и «+», справа итог «Карт 1 · Пороха 1 из 2 в Трюме», большая кнопка «Взять 1 карту · 1 Порох» и «Не брать». Корабли наверху видны.</figcaption><div class="pair"><figure><img src="img/d11-tortuga-before.jpg" alt="Тортуга, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/d11-tortuga-after.jpg" alt="Тортуга, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>27. Друг вышел из игры.</b> У создателя комнаты сверху окно: «Друг вышел из игры», какой корабль остался без капитана, что партия на паузе и друг может вернуться по ссылке. Кнопки «Занять место ботом» и «Подождать».</figcaption><div class="pair one"><figure class="after"><img src="img/d11-friendleft-after.jpg" alt="Друг вышел" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+  </div>
+  <h3 class="sub">Четвёртый прогон</h3>
+  <p class="what">Проверил другие виды стола из Настроек (порты на планшетах, «Стол капитана», латунная рамка, разбор урона скрыт) на ноутбуке и телефоне, окна моря. Ошибок в коде страницы нет, новых поломок не нашлось. Единственное: в виде «Стол капитана» при Залпе без Зарядов строка «Зарядов в руке нет — Залп без Заряда» с длинным тире, это уходит в общий пункт про тексты.</p>
+</section>
+
+<section class="item" id="i1">
+  <h2><span class="n">1</span>«Начать новую партию?» в стиле игры</h2>
+  <p class="what">Тёмное дерево, латунная рамка с заклёпками, штурвал и золотой заголовок по центру. Круглая латунная кнопка закрытия стоит отдельно в углу. <b>«Отмена»</b> обведена латунью, <b>«Новая партия»</b> красная, как «Ход окончен». На телефоне окно встаёт снизу <b>на всю ширину экрана</b>.</p>
+  <div class="pair">
+    <figure><img src="img/newgame-before.jpg" alt="Окно новой партии сейчас, ноутбук" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/newgame-after2.jpg" alt="Окно новой партии в стиле игры, ноутбук" loading="lazy"><figcaption>Будет</figcaption></figure>
+  </div>
+  <div class="pair tall">
+    <figure><img src="img/newgame-phone-before.jpg" alt="Окно новой партии сейчас, телефон" loading="lazy"><figcaption>Телефон, сейчас</figcaption></figure>
+    <figure class="after"><img src="img/newgame-phone-after2.jpg" alt="Окно новой партии на всю ширину телефона" loading="lazy"><figcaption>Телефон, будет</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i2">
+  <h2><span class="n">2</span>Приказ: оба варианта и переключатель</h2>
+  <p class="what">Красные доски остаются за <b>Зарядами</b>. Приказ выглядит как <b>письменный приказ на пергаменте</b>: фиолетовая лента цвета карт Приказа, значок прицела. Оставляем <b>оба варианта</b>: игрок выбирает в Настройках, по умолчанию лист снизу. Каждый показан в двух состояниях: цель ещё не выбрана и цель выбрана.</p>
+  <div class="lines">
+    <p>Пока цели нет, кнопка «Сыграть» приглушена, в строке «Цель» пунктир «не выбрана».</p>
+    <p>Корабли, по которым можно сыграть, обведены <b>золотым пунктиром</b>.</p>
+    <p>После выбора: цель в двойной рамке, золото и фиолет, под ней флажок <b>«Цель приказа»</b>; кнопка становится яркой, в строке «Цель» имя корабля в его цвете.</p>
+    <p>Новые детали: латунные уголки по краям листа, бледный компас на бумаге. Кнопка «Сыграть» та же, что в игре (якорь и красная доска, как у «Ход окончен»); пока цели нет, она приглушена.</p>
+  </div>
+  <h3 class="sub">Цена: новый значок</h3>
+  <p class="what">Вместо мелкой бочки рядом с цифрой: <b>латунная монета с бочкой</b> и цифрой на красной сургучной метке, рядом «2 Пороха». Справа <b>Трюм так же, как на столе</b>: восемь бочек, полные и пустые. Бочки, которые уйдут на приказ, приподняты, подсвечены красным и подчёркнуты; под ними «останется 0 из 8».</p>
+  <div class="pair one">
+    <figure class="after"><img src="img/price-zoom2.jpg" alt="Новый значок цены крупно" loading="lazy"><figcaption>Цена крупно</figcaption></figure>
+  </div>
+  <div class="pair one">
+    <figure><img src="img/order-now.jpg" alt="Приказ сейчас: тёмная плашка поверх кораблей" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+  </div>
+  <div class="variants">
+    <div class="variant">
+      <h3><span class="v">A</span>Лист снизу (по умолчанию)</h3>
+      <p>Лист выезжает снизу на место руки и трюма, как «Заряд». Три части разделены тонкими линиями: слева сама карта, в центре название и что выбрать, справа цена, кнопка с печатью и «Отмена».</p>
+      <p class="pro">Плюс: тот же жест, что у Залпа, глаз уже знает, где искать кнопки.</p>
+      <p class="con">Минус: рука и трюм на время скрыты.</p>
+      <div class="pair">
+        <figure><img src="img/ordA-0-v3.jpg" alt="Вариант A, цель не выбрана" loading="lazy"><figcaption>Цель не выбрана</figcaption></figure>
+        <figure class="after"><img src="img/ordA-1-v3.jpg" alt="Вариант A, цель выбрана" loading="lazy"><figcaption>Цель выбрана</figcaption></figure>
+      </div>
+      <div class="pair tall">
+        <figure><img src="img/ordA-phone-0-v3.jpg" alt="Вариант A на телефоне, цель не выбрана" loading="lazy"><figcaption>Телефон, цели нет</figcaption></figure>
+        <figure class="after"><img src="img/ordA-phone-1-v3.jpg" alt="Вариант A на телефоне, цель выбрана" loading="lazy"><figcaption>Телефон, цель выбрана</figcaption></figure>
+      </div>
+    </div>
+    <div class="variant">
+      <h3><span class="v">D</span>Свиток у журнала</h3>
+      <p>На месте журнала разворачивается свиток со скалками и латунными наконечниками. Стол и рука свободны, разыгрываемая карта приподнята в руке и обведена фиолетовым.</p>
+      <p class="pro">Плюс: ничего на столе не закрыто, видно и цели, и руку.</p>
+      <p class="con">Минус: кнопки справа, далеко от кораблей. На телефоне журнала нет, там свиток со скалками встаёт на место руки.</p>
+      <div class="pair">
+        <figure><img src="img/ordD-0-v3.jpg" alt="Вариант D, цель не выбрана" loading="lazy"><figcaption>Цель не выбрана</figcaption></figure>
+        <figure class="after"><img src="img/ordD-1-v3.jpg" alt="Вариант D, цель выбрана" loading="lazy"><figcaption>Цель выбрана</figcaption></figure>
+      </div>
+      <div class="pair tall">
+        <figure><img src="img/ordD-phone-0-v3.jpg" alt="Вариант D на телефоне, цель не выбрана" loading="lazy"><figcaption>Телефон, цели нет</figcaption></figure>
+        <figure class="after"><img src="img/ordD-phone-1-v3.jpg" alt="Вариант D на телефоне, цель выбрана" loading="lazy"><figcaption>Телефон, цель выбрана</figcaption></figure>
+      </div>
+    </div>
+  </div>
+  <h3 class="sub">Переключатель в Настройках</h3>
+  <p class="what">В разделе «Вид стола» новая строка <b>«Розыгрыш карты: Лист снизу | Свиток у журнала»</b>, под ней пояснение. Работает для Приказа, Ремонта, Реакции, Легенды и «Планов». Запоминается вместе с остальными настройками стола.</p>
+  <div class="pair">
+    <figure class="after"><img src="img/toggle.jpg" alt="Переключатель на ноутбуке" loading="lazy"><figcaption>Ноутбук</figcaption></figure>
+    <figure class="after"><img src="img/toggle-phone.jpg" alt="Переключатель на телефоне" loading="lazy" style="max-width:360px;margin:0 auto"><figcaption>Телефон</figcaption></figure>
+  </div>
+  <p class="note">Ремонт, Реакции, Легенды и «Планы» оформлю тем же листом, каждый в цвете своего типа карты: Ремонт зелёный, Реакция синяя, Легенда золотая.</p>
+</section>
+
+<section class="item" id="plans">
+  <h2><span class="n">10</span>«Планы»: закрома «Жемчужины»</h2>
+  <p class="what">«Планы» это закрома: «Жемчужина» прячет до двух карт рубашкой вверх. Лист в характере корабля: <b>обугленное чёрное дерево, рваный чёрный парус с канатом и люверсами по верхнему краю, туман снизу, железо и олово</b> вместо латуни.</p>
+  <div class="lines">
+    <p><b>Люк закромов</b>: откинутая крышка из досок на железных петлях с кольцом, под ней тёмная яма с тёплым отсветом, два места «I» и «II», железные скобы, табличка «Закрома».</p>
+    <p>Спрятанная карта ложится в яму рубашкой вверх, с железной накладкой и висячим замком.</p>
+    <p>Выбранная в руке карта приподнята, светится и получает значок ключа.</p>
+    <p>Счётчик: «в руке 5 → 4, в закромах 1 из 2».</p>
+    <p>Главная кнопка «Закончить ход» и строкой ниже «1 карта в План», на медальоне ключ. Она всегда яркая; «Без Планов» рядом, тише.</p>
+    <p>Мелочи: меловые засечки на досках, заклёпки по углам.</p>
+    <p>Работает в обоих положениях переключателя: лист снизу или свиток у журнала.</p>
+  </div>
+  <div class="pair one">
+    <figure><img src="img/plans-now.jpg" alt="Планы сейчас поверх кораблей" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+  </div>
+  <div class="pair one">
+    <figure class="after"><img src="img/plans-zoom-v2.jpg" alt="Планы крупно" loading="lazy"><figcaption>Лист снизу крупно</figcaption></figure>
+  </div>
+  <div class="pair">
+    <figure class="after"><img src="img/plans-A-0-v2.jpg" alt="Планы, ничего не выбрано" loading="lazy"><figcaption>Лист снизу, ничего не выбрано</figcaption></figure>
+    <figure class="after"><img src="img/plans-A-1-v2.jpg" alt="Планы, одна карта" loading="lazy"><figcaption>Лист снизу, одна карта в тайнике</figcaption></figure>
+  </div>
+  <div class="pair one">
+    <figure class="after"><img src="img/plans-D-1-v2.jpg" alt="Планы свитком" loading="lazy"><figcaption>Свиток у журнала, карта выбрана в руке</figcaption></figure>
+  </div>
+  <div class="pair three">
+    <figure><img src="img/plans-phone-now.jpg" alt="Планы на телефоне сейчас" loading="lazy"><figcaption>Телефон, сейчас</figcaption></figure>
+    <figure class="after"><img src="img/plans-phone-A-v2.jpg" alt="Планы на телефоне, лист" loading="lazy"><figcaption>Телефон, лист</figcaption></figure>
+    <figure class="after"><img src="img/plans-phone-D-v2.jpg" alt="Планы на телефоне, свиток" loading="lazy"><figcaption>Телефон, свиток</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i3">
+  <h2><span class="n">3</span>Надпись капитана не двигает стол</h2>
+  <p class="what">Плашка «Капитан» стоит в узкой полосе дерева <b>между рамкой моря и верхом карт</b>, с зазором с обеих сторон. Она не закрывает ни карт, ни решётки, ничего не сдвигает. Если карта поднимается при наведении, она проходит поверх плашки.</p>
+  <div class="pair stack">
+    <figure><img src="img/captain-before.jpg" alt="Надпись капитана сдвигает руку" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/captain-after3.jpg" alt="Надпись капитана плашкой над решёткой" loading="lazy"><figcaption>Будет</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i4">
+  <h2><span class="n">4</span>Полосы прокрутки в стиле игры</h2>
+  <p class="what">Без стрелок и белой дорожки. На бумаге тонкая линия-желобок и бегунок <b>из коричневой кожи</b>, на тёмных окнах (море, Легенды, Правила, Настройки, комната) бегунок <b>латунный</b>. Ширина та же, текст не сдвигается.</p>
+  <div class="pair">
+    <figure><img src="img/zoom-scroll.jpg" alt="Крупно: полоса в журнале, сейчас и будет" loading="lazy"><figcaption>Журнал крупно: сейчас | будет</figcaption></figure>
+    <figure class="after"><img src="img/zoom-sea.jpg" alt="Крупно: полоса в окне моря, сейчас и будет" loading="lazy"><figcaption>Тёмное окно крупно: сейчас | будет</figcaption></figure>
+  </div>
+  <div class="pair">
+    <figure class="after"><img src="img/scroll-after2.jpg" alt="Журнал с новой полосой" loading="lazy"><figcaption>Журнал целиком</figcaption></figure>
+    <figure class="after"><img src="img/seascroll-after2.jpg" alt="Окно моря с латунной полосой" loading="lazy"><figcaption>Окно моря целиком</figcaption></figure>
+  </div>
+  <p class="note">Почему в прошлый раз остались стрелки: Хром перестаёт слушать оформление полос, если в стилях задан общий тонкий режим. Этот режим теперь только для Firefox, это я запишу в задание.</p>
+</section>
+
+<section class="item" id="i5">
+  <h2><span class="n">5</span>Шире игровой стол, уже судовой журнал</h2>
+  <p class="what">Снято на 1920×969, как у вас. Журнал уже (было 300 единиц ширины, станет 270), текст в нём чуть плотнее. Стол с кораблями <b>шире примерно на 40 пикселей</b>. Кнопка «Ход окончен» и все кнопки справа целиком, без многоточия.</p>
+  <div class="pair stack">
+    <figure><img src="img/wide-before.jpg" alt="Стол сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/wide-after2.jpg" alt="Шире стол, уже журнал" loading="lazy"><figcaption>Будет</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i6">
+  <h2><span class="n">6</span>Кнопки режимов без внутренней жёлтой обводки</h2>
+  <p class="what">Остаётся <b>только латунная полоса по краю</b> и заклёпки.</p>
+  <div class="pair stack">
+    <figure><img src="img/cards-before.jpg" alt="Кнопки режимов с внутренней линией" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/cards-after.jpg" alt="Кнопки режимов без внутренней линии" loading="lazy"><figcaption>Будет</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i7">
+  <h2><span class="n">7</span>Расстановка: рамки отдельно друг от друга</h2>
+  <div class="lines">
+    <p>Табличка с именем <b>внутри рамки</b>, с зазором до столбика шкал. Имя и капитан по центру, капитан ближе к имени.</p>
+    <p>Канаты и пунктир <b>не заходят в рамки</b>, кружков на концах нет.</p>
+    <p>Медальон нажимается и светится при наведении. Якорь <b>не переворачивается</b>.</p>
+    <p>Значки и числа в плашках шкал по центру.</p>
+  </div>
+  <div class="pair stack">
+    <figure><img src="img/placement-before.jpg" alt="Расстановка сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/placement-after2.jpg" alt="Расстановка после правки" loading="lazy"><figcaption>Будет</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i8">
+  <h2><span class="n">8</span>Души «Голландца» в окне корабля текстом</h2>
+  <p class="what">Вместо значков: <b>«1/5 | в свой ход 1 Душа чинит 1 Корпус или 1 Команду»</b>, по центру своей ячейки.</p>
+  <div class="pair">
+    <figure><img src="img/souls-before.jpg" alt="Строка Душ со значками" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/souls-after2.jpg" alt="Строка Душ текстом" loading="lazy"><figcaption>Будет</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i9">
+  <h2><span class="n">9</span>Сыгранная Легенда: штамп вместо надписи</h2>
+  <p class="what">Красный штамп <b>«СЫГРАНА»</b> наискосок по картинке, карта выцветает, ничего не выходит за рамку.</p>
+  <div class="pair tall">
+    <figure><img src="img/stamp-before.jpg" alt="Легенда с надписью снизу" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/stamp-after.jpg" alt="Легенда со штампом" loading="lazy"><figcaption>Будет</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i10">
+  <h2><span class="n">10</span>Гроза без парусов: молния бьёт в воду</h2>
+  <p class="what">Около секунды: вспышка над морем, <b>молния бьёт в воду</b> между кораблями, круги и брызги, затем подпись по центру. Ниже кадр из середины.</p>
+  <div class="pair">
+    <figure><img src="img/lightning-before.jpg" alt="Море без анимации" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/lightning-after.jpg" alt="Молния бьёт в воду" loading="lazy"><figcaption>Будет, кадр</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i11">
+  <h2><span class="n">11</span>Телефон, 390×640</h2>
+  <div class="lines">
+    <p>По бокам <b>нет полос</b>, фон под столом тёмное дерево.</p>
+    <p>Кнопки планшетов одного вида и целиком: «Залп | 1», «Меч | 1».</p>
+    <p><b>Фонарь прежнего размера</b> стоит на палубе под «Перестроением», рядом с пушкой. Свет идёт от его пламени. Наверху фонаря больше нет.</p>
+    <p><b>Карты не уходят под палубу.</b> Сейчас веер выше места под рукой, и низ карт срезан. Будет ровный ряд карт, каждая видна целиком: тип, цена, название и главное свойство, всё по центру. Полный текст по нажатию, как сейчас. Точки листания убраны, вместо них правый край ряда мягко гаснет.</p>
+  </div>
+  <div class="pair tall">
+    <figure><img src="img/phone-before.jpg" alt="Телефон сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/phone-after3.jpg" alt="Телефон после правки" loading="lazy"><figcaption>Будет</figcaption></figure>
+  </div>
+  <div class="pair">
+    <figure><img src="img/hand-before.jpg" alt="Карты руки срезаны палубой" loading="lazy"><figcaption>Рука крупно, сейчас</figcaption></figure>
+    <figure class="after"><img src="img/hand-after.jpg" alt="Карты руки видны целиком" loading="lazy"><figcaption>Рука крупно, будет</figcaption></figure>
+  </div>
+</section>
+
+<section class="item" id="i12">
+  <h2><span class="n">12</span>Коллекция карт в оформлении игры</h2>
+  <div class="lines">
+    <p>Страница <b>прокручивается</b> на любом экране.</p>
+    <p>Морская карта вместо светлого листа, золотой заголовок, латунная кнопка «К игре».</p>
+    <p>Корабли переключаются плашками в их цветах, строка остаётся сверху.</p>
+    <p>Карты как в руке: цветная шапка с типом и ценой, пергамент.</p>
+  </div>
+  <div class="pair three">
+    <figure><img src="img/coll-before.jpg" alt="Коллекция сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure>
+    <figure class="after"><img src="img/coll-after.jpg" alt="Коллекция, верх страницы" loading="lazy"><figcaption>Будет, верх</figcaption></figure>
+    <figure class="after"><img src="img/coll-after2.jpg" alt="Коллекция, карты" loading="lazy"><figcaption>Будет, карты</figcaption></figure>
+  </div>
+  <div class="pair tall">
+    <figure><img src="img/coll-phone-before.jpg" alt="Коллекция на телефоне сейчас" loading="lazy"><figcaption>Телефон, сейчас</figcaption></figure>
+    <figure class="after"><img src="img/coll-phone-after2.jpg" alt="Коллекция на телефоне" loading="lazy"><figcaption>Телефон, будет</figcaption></figure>
+  </div>
+  <p class="note">Текст на картах коллекции пока стоит как на настоящих картах в руке. Если его тоже нужно по центру, скажите.</p>
+</section>
+
+<section class="item" id="i13">
+  <h2><span class="n">13</span>Без картинок</h2>
+  <div class="textonly">
+    <div class="card">
+      <h3><span class="k">13</span>Кнопка Души на планшете</h3>
+      <p>Убираем «+1», остаются только рисунки души и корпуса.</p>
+      <p><span class="chip">душа → корпус <s>+1</s></span></p>
+      <p><span class="chip">душа → корпус</span></p>
+    </div>
+    <div class="card">
+      <h3><span class="k">14</span>Карты дрожат под курсором</h3>
+      <p>Поднятая карта уходит из-под курсора, опускается и снова поднимается.</p>
+      <p>Зона наведения будет стоять на месте, поднимается только рисунок. Дрожи нет.</p>
+    </div>
+    <div class="card">
+      <h3><span class="k">15</span>Водоворот поверх планшетов</h3>
+      <p>Во время анимаций Мальстрём застывает и поднимается над планшетами кораблей.</p>
+      <p>Погода всегда остаётся под планшетами и не останавливается, если не включены «Простые эффекты».</p>
+    </div>
+    <div class="card">
+      <h3><span class="k">16</span>Пушки на планшете загораются рано</h3>
+      <p>Огонёк и дым на значках пушек появляются раньше выстрела и выглядят как пятно.</p>
+      <p>Вспышка будет у дула каждой пушки ровно в момент выстрела, затем короткий дымок, который тает.</p>
+    </div>
+  </div>
+</section>
+
+<section class="item" id="audit">
+  <h2><span class="n">!</span>Найдено при проверке всей игры</h2>
+  <p class="what">Я прошёл игру на ноутбуке 1366×660 и 1920×969 и на телефоне 390×844 и 390×640: меню, подготовку, сеть, комнату, игру на одном экране, партию против ботов, все окна, матч ботов до победы. Ниже то, что ломается или выбивается из стиля, кроме пунктов выше.</p>
+
+  <h3 class="sub">Ошибки</h3>
+  <div class="finds">
+    <figure class="find wide"><figcaption><b>1. «Полный свод правил».</b> Убраны служебные строки: источники, пути к файлам, пометки вроде «QUESTIONS.md», «---». Вместо них по центру «Версия правил 0.3» и строка, что это все правила по разделам, а короткая версия в «Памятке».</figcaption><div class="pair"><figure><img src="img/a7-rules-before.jpg" alt="Свод правил, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/a7-rules-after.jpg" alt="Свод правил, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>2. Комната.</b> Свёрнутая строка «Партия» скрывается, пока открыт полный блок. «Жребий» и «Поднять паруса» стоят в отдельной полосе внизу экрана с тёмной подложкой и ничего не закрывают. На ноутбуке то же самое: сейчас «Жребий» и «Поднять паруса» лежат на полях «Адрес сервера» и «Номер партии».</figcaption><div class="pair tall"><figure><img src="img/a7-room-before.jpg" alt="Комната на телефоне, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/a7-room-after.jpg" alt="Комната на телефоне, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div><div class="pair one"><figure><img src="img/b8-roomlap.jpg" alt="Комната на ноутбуке сейчас" loading="lazy"><figcaption>Ноутбук сейчас: кнопки поверх полей</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>3. Стол после конца партии.</b> Вместо «Ход окончен», «Быстрее», «До конца хода» и «Отменить»: большая кнопка «Реванш» и две кнопки «Итоги партии» и «Новая партия».</figcaption><div class="pair"><figure><img src="img/a7-after-before.jpg" alt="После партии, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/a7-after-after.jpg" alt="После партии, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>4. Плашка капитана.</b> Висит не на строке «Последнее», а вкладкой на верхней кромке планшета того корабля, которым игрок правит: «Капитан «Жемчужины» на борту».</figcaption><div class="pair"><figure><img src="img/a7-captain-before.jpg" alt="Плашка капитана, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/a7-captain-after.jpg" alt="Плашка капитана, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>5. Строка моря вверху.</b> Вместо длинного текста с многоточием: «Море: «Мальстрём» | корабли меняются местами» и кружок «i»; полный текст по нажатию. Всё по центру.</figcaption><div class="pair"><figure><img src="img/a7-strip-before.jpg" alt="Строка моря, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/a7-strip-after.jpg" alt="Строка моря, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>6. Окно моря.</b> Нижняя строка с медальоном раундов закреплена внизу окна поверх тёмной подложки, медальон и «В колоде моря» видны целиком при любой длине текста.</figcaption><div class="pair"><figure><img src="img/a7-sea-before.jpg" alt="Окно моря, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/a7-sea-after.jpg" alt="Окно моря, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>7. Экран победы на телефоне.</b> «на плаву» и «затонул» на отдельной строке под названием, длинные названия переносятся, ничего не обрезано.</figcaption><div class="pair tall"><figure><img src="img/a7-victory-before.jpg" alt="Экран победы, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/a7-victory-after.jpg" alt="Экран победы, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+  </div>
+
+  <h3 class="sub">Выбивается из стиля</h3>
+  <div class="finds">
+    <figure class="find wide"><figcaption><b>8. Окно карты.</b> Сейчас белое, как на сайте. Будет большая карта на пергаменте в рамке из тёмного дерева: шапка в цвете типа карты, текст по центру, цена с бочкой, «Сыграть» красной доской, «Продать» и «Передать союзнику» тёмными с латунью.</figcaption><div class="pair"><figure><img src="img/f8-card-before.jpg" alt="Окно карты, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/f8-card-after.jpg" alt="Окно карты, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>9. «Нельзя сыграть».</b> То же окно; причина в красной плашке по центру, кнопка «Сыграть» приглушена, остальные кнопки в стиле игры.</figcaption><div class="pair"><figure><img src="img/f8-cant-before.jpg" alt="Нельзя сыграть, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/f8-cant-after.jpg" alt="Нельзя сыграть, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>10. «Планы».</b> Переделаны в закрома «Жемчужины», макет выше в разделе «Планы».</figcaption></figure>
+    <figure class="find wide"><figcaption><b>11. «Отмена» при Залпе.</b> Тёмная с латунью и меньше «Огонь!», по центру над ним.</figcaption><div class="pair"><figure><img src="img/f8-cancel-before.jpg" alt="Отмена при Залпе, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/f8-cancel-after.jpg" alt="Отмена при Залпе, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>12. Разбор урона.</b> Пергамент в латунной рамке, красная полоска сверху, всё по центру, слагаемые через разделители.</figcaption><div class="pair"><figure><img src="img/f8-plate-before.jpg" alt="Разбор урона, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/f8-plate-after.jpg" alt="Разбор урона, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>13. «Скачать журнал».</b> Вместо красной ссылки маленькая бумажная кнопка с иконкой под остальными.</figcaption><div class="pair"><figure><img src="img/f8-victory-before.jpg" alt="Экран победы, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/f8-victory-after.jpg" alt="Экран победы, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>14. Настройки.</b> Строка «Журнал анимаций (для разработчика)» скрыта (только с ?perf=1), версия крупнее и светлее.</figcaption><div class="pair"><figure><img src="img/f8-settings-before.jpg" alt="Настройки, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/f8-settings-after.jpg" alt="Настройки, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+  </div>
+
+
+  <h3 class="sub">Второй проход: новые находки</h3>
+  <p class="what">Второй раз прошёл всё на 1366×660 и 390×844, в том числе то, куда первый проход не дошёл: окна всех четырёх кораблей и Легенд, сброс, неверный код комнаты, «Ещё» в комнате и на подготовке, поиск по правилам, Реакцию в ход ботов, паузу, игру на одном экране до первого хода. Ошибок в коде страницы нет. Нашлось ещё вот что.</p>
+  <div class="finds">
+    <figure class="find wide"><figcaption><b>15. Неверный код комнаты.</b> Сообщение «Комнаты с кодом ZZZZZ нет» написано белым на светло-розовой полосе: прочитать нельзя, и полоса лежит на подписи «Ваше имя». Будет красная плашка с восклицательным знаком прямо под кнопкой «Войти», по центру.</figcaption><div class="pair"><figure><img src="img/b8-neterr-before.jpg" alt="Неверный код, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/b8-neterr-after.jpg" alt="Неверный код, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div><div class="pair tall"><figure><img src="img/b8-neterr-phone-before.jpg" alt="Неверный код на телефоне, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/b8-neterr-phone-after.jpg" alt="Неверный код на телефоне, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>16. «Ещё настройки» на подготовке, телефон.</b> Поле «Номер партии» ложится на кнопку «Поднять паруса». Кнопка будет закреплена внизу экрана на тёмной подложке, поле прокручивается над ней.</figcaption><div class="pair tall"><figure><img src="img/b8-prep-before.jpg" alt="Подготовка, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/b8-prep-after.jpg" alt="Подготовка, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>17. Окно корабля «Месть».</b> Светящиеся трещины на досках проходят прямо по строкам текста («Пожар», «если враг остался один»). Под текстом доски будут притемнены, трещины видны только по краям.</figcaption><div class="pair"><figure><img src="img/b8-ember-before.jpg" alt="Окно «Мести», сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/b8-ember-after.jpg" alt="Окно «Мести», будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>18. Сброс.</b> Белое окно «Сброс «Жемчужина» · 0 / Сброс пуст.» с ошибкой в падеже. Будет тёмное окно в стиле игры, «Сброс «Жемчужины»», пустое место под карту и подпись «Сброс пуст: сыгранные карты лягут сюда». С картами там будут сами карты рядом.</figcaption><div class="pair"><figure><img src="img/b8-discard-before.jpg" alt="Сброс, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/b8-discard-after.jpg" alt="Сброс, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>19. Реакция в ход противника.</b> Кнопка «Пропустить» светлая, как пустое поле. Будет тёмной с латунью, подсказка по центру.</figcaption><div class="pair"><figure><img src="img/b8-react-before.jpg" alt="Реакция, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/b8-react-after.jpg" alt="Реакция, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>20. Телефон: «Ход окончен ·».</b> После нажатия на телефоне видно только «Ход окончен ·», число секунд на отмену обрезано. Будет две строки: «Ход окончен» и «отменить: 3 с».</figcaption><div class="pair"><figure><img src="img/b8-endlabel-before.jpg" alt="Ход окончен, сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/b8-endlabel-after.jpg" alt="Ход окончен, будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find wide"><figcaption><b>21. Окно Легенды («Джек ускользает»).</b> Сейчас белое окно и серая кнопка. Будет в стиле окна карты, с золотой рамкой и шапкой Легенды, подписью «Легенда, одна на партию» и причиной в красной плашке по центру.</figcaption><div class="pair"><figure><img src="img/c9-legend-before.jpg" alt="Окно Легенды сейчас" loading="lazy"><figcaption>Сейчас</figcaption></figure><figure class="after"><img src="img/c9-legend-after.jpg" alt="Окно Легенды будет" loading="lazy"><figcaption>Будет</figcaption></figure></div></figure>
+    <figure class="find"><img src="img/b8-seachip-phone.jpg" alt="Строка моря на телефоне" loading="lazy"><figcaption><b>22. Телефон: «Флот на горизонте: +1…».</b> Табличка моря обрезана многоточием. Короткая форма, как в пункте 5: название и одно слово, полный текст по нажатию.</figcaption></figure>
+    <figure class="find"><img src="img/b8-plankname-phone.jpg" alt="Имя корабля на планшете" loading="lazy"><figcaption><b>23. Телефон: «Жемчуж…» на планшете.</b> Когда появляется зелёная галочка «готов», имя корабля обрезается. Галочка встаёт вместо значка карт в руке, имя остаётся целиком.</figcaption></figure>
+  </div>
+  <h3 class="sub">Тексты</h3>
+  <div class="lines">
+    <p>«Индевор» добирает <b>1 карта</b>. Должно быть «1 карту».</p>
+    <p>«Бот: Пираты <b>думает</b>…». Должно быть «думают» (и «Компания думает»).</p>
+    <p>«Сброс «<b>Жемчужина</b>»». Должно быть «Сброс «Жемчужины»».</p>
+    <p>Длинные тире в журнале, строке моря и картах: «(весь раунд) — водоворот», «Зарядов в руке нет — Залп без Заряда», «чужая карта — ваша». Заменить на двоеточие или точку.</p>
+    <p>В комнате в «Ещё» английское слово <b>Seed</b>. Должно быть «Номер партии».</p>
+    <p>В Настройках версия написана серым шрифтом 9 пикселей, её почти не видно.</p>
+  </div>
+</section>
+
+<section class="item" id="all">
+  <h2><span class="n">✓</span>Все ваши просьбы: где они учтены</h2>
+  <p class="what">Анимации Легенд и окна корабля учтены: они в задании <b>menus-speed</b> (пункты K и L). Новое задание <b>ui-polish</b> я соберу после вашего ответа.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Просьба</th><th>Задание</th><th>Пункт</th></tr></thead>
+      <tbody>
+        <tr><td>Светлые полосы по бокам на телефоне</td><td><span class="tag a">game-phone-fix</span></td><td>1–2</td></tr>
+        <tr><td>Кнопки планшетов разные и обрезаны</td><td><span class="tag a">game-phone-fix</span></td><td>3–4</td></tr>
+        <tr><td>Свет есть, а фонаря нет; фонарь на палубу к пушке</td><td><span class="tag a">game-phone-fix</span></td><td>5, 8 (обновлю по макету)</td></tr>
+        <tr><td>Души на телефонном планшете налезают</td><td><span class="tag a">game-phone-fix</span></td><td>7</td></tr>
+        <tr><td>Табличка производительности на сайте</td><td><span class="tag a">game-phone-fix</span></td><td>9</td></tr>
+        <tr><td>Полосы прокрутки, в том числе в Легендах</td><td><span class="tag a">game-phone-fix</span></td><td>10 (уточню про стрелки)</td></tr>
+        <tr><td>Карты на телефоне уходят под палубу</td><td><span class="tag a">game-phone-fix</span></td><td>2, 6 (обновлю по макету)</td></tr>
+        <tr><td>Надпись капитана поднимает стол и закрывает карты</td><td><span class="tag a">game-phone-fix</span></td><td>11</td></tr>
+        <tr><td>Приказы как-то по-другому</td><td><span class="tag a">game-phone-fix</span></td><td>12 (заменю на ваш вариант)</td></tr>
+        <tr><td>Экраны долго грузятся</td><td><span class="tag b">menus-speed</span></td><td>A–F</td></tr>
+        <tr><td>Анимации не зациклены</td><td><span class="tag b">menus-speed</span></td><td>G</td></tr>
+        <tr><td>Медальон нажимается, пунктиры не в рамках</td><td><span class="tag b">menus-speed</span></td><td>H, I</td></tr>
+        <tr><td>Иконки мерцают, «Казна»</td><td><span class="tag b">menus-speed</span></td><td>J</td></tr>
+        <tr><td>Легенды долго открываются</td><td><span class="tag b">menus-speed</span></td><td>K</td></tr>
+        <tr><td>Огонь и луч маяка у «Жемчужины»</td><td><span class="tag b">menus-speed</span></td><td>L</td></tr>
+        <tr><td>Дым и стрельба у «Мести»</td><td><span class="tag b">menus-speed</span></td><td>L</td></tr>
+        <tr><td>Надпись «Сыграна» у Легенды</td><td><span class="tag b">menus-speed</span></td><td>M</td></tr>
+        <tr><td>Новая партия, Души текстом, молния, «+1», дрожь карт</td><td><span class="tag c">ui-polish</span></td><td>новое</td></tr>
+        <tr><td>Обводка кнопок режимов, Коллекция карт</td><td><span class="tag c">ui-polish</span></td><td>новое</td></tr>
+        <tr><td>Рамки расстановки, шире стол</td><td><span class="tag c">ui-polish</span></td><td>новое</td></tr>
+        <tr><td>Водоворот поверх планшетов, пушки загораются рано</td><td><span class="tag c">ui-polish</span></td><td>новое</td></tr>
+        <tr><td>Найдено при проверке всей игры, 1–27, тексты, ответы 26.10</td><td><span class="tag c">ui-polish</span></td><td>новое</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+
+<footer>
+  <p>Отправлять Codex по порядку: <b>game-phone-fix</b>, затем <b>menus-speed</b>, затем <b>ui-polish</b>.</p>
+  <p>Перед отправкой я обновлю game-phone-fix по этим макетам: фонарь, полосы прокрутки и выбранный вариант приказа.</p>
+</footer>
+</div>
