@@ -143,9 +143,9 @@ export function CardDetail({
   );
 }
 
-export function ShipSheet({s,data,code,store,onClose,onDiscard}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void}) {
+export function ShipSheet({s,data,code,store,onClose,onDiscard,log=[]}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void;log?:readonly LogLine[]}) {
   useEscape(onClose);
-  return <Suspense fallback={null}><ShipWindow s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/></Suspense>;
+  return <Suspense fallback={null}><ShipWindow log={log} s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/></Suspense>;
 }
 
 /** The sea: the current card or, by `code`, any sea card (from the log, from «Тиа Дальма»). */

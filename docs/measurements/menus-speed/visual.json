@@ -1,0 +1,90 @@
+[
+  {
+    "family": "menus",
+    "name": "Main",
+    "samples": 192,
+    "meanAbsoluteRGB": 0.17470975306498482,
+    "worstPSNR": 37.29,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "menus",
+    "name": "Phone",
+    "samples": 125,
+    "meanAbsoluteRGB": 0.15799133442718585,
+    "worstPSNR": 37.31,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "menus",
+    "name": "Pirates",
+    "samples": 50,
+    "meanAbsoluteRGB": 0.2368796677613291,
+    "worstPSNR": 39.68,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "menus",
+    "name": "Company",
+    "samples": 87,
+    "meanAbsoluteRGB": 0.18468254653986954,
+    "worstPSNR": 37.28,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "menus",
+    "name": "Blood",
+    "samples": 13,
+    "meanAbsoluteRGB": 0.17864867186832298,
+    "worstPSNR": 49.71,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "ship",
+    "name": "Ж",
+    "samples": 195,
+    "meanAbsoluteRGB": 0.08113685700565999,
+    "worstPSNR": 40.24,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "ship",
+    "name": "М",
+    "samples": 78,
+    "meanAbsoluteRGB": 0.24072408313884602,
+    "worstPSNR": 40.18,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "ship",
+    "name": "И",
+    "samples": 145,
+    "meanAbsoluteRGB": 0.145753269765519,
+    "worstPSNR": 34.89,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "ship",
+    "name": "Г",
+    "samples": 134,
+    "meanAbsoluteRGB": 0.14956294425428088,
+    "worstPSNR": 23.4,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "weather",
+    "name": "storm",
+    "samples": 51,
+    "meanAbsoluteRGB": 0.13679653646435647,
+    "worstPSNR": 42.15,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  },
+  {
+    "family": "weather",
+    "name": "tortuga",
+    "samples": 180,
+    "meanAbsoluteRGB": 0.25475282011419015,
+    "worstPSNR": 38.07,
+    "note": "static corresponding rasters only; alpha premultiplied; G/L intentional changes excluded"
+  }
+]

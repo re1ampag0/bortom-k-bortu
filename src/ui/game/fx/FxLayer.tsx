@@ -1,3 +1,4 @@
+import {queueSceneWarm} from '../scene-window/idle';
 import {prepareParticles, clearParticles, disposeParticles} from './particles';
 import {createFxHint, type FxHintStore} from './hintStore';
 import {getPerf, perfOff} from '../perf/state';
@@ -615,7 +616,7 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     if (!board) return;
     const warm = () => {
       const ctx = fx.ctx();
-      if (ctx && !board.closest('.game[data-fx-busy]')) { prepareTitleWidths(ctx); prepareArmadaSprites(ctx); prepareLegendIntro(ctx); prepareParticles(board, innerWidth>700?particleDefs(true):undefined); }
+      if (ctx && !board.closest('.game[data-fx-busy]')) { prepareTitleWidths(ctx); void queueSceneWarm(async()=>{if(board.isConnected&&!board.closest('.game[data-fx-busy]')){prepareArmadaSprites(ctx);prepareLegendIntro(ctx);}}); prepareParticles(board, innerWidth>700?particleDefs(true):undefined); }
     };
     const stopGlints=watchMedalGlints(board);
     warm();
@@ -632,7 +633,7 @@ export function FxLayer({ fx }: { fx: FxQueue }) {
     board.ownerDocument.fonts?.addEventListener('loadingdone',refresh);
     return () => {alive=false;stopGlints();ro.disconnect();mo.disconnect();window.removeEventListener('resize',refresh);board.ownerDocument.fonts?.removeEventListener('loadingdone',refresh);invalidateTitleWidths(board);invalidateLegendIntro(board);invalidateGeometry(board);disposeParticles(board);disposeSprites(board);};
   }, [layerRef]);
-  useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!busy){prepareTitleWidths(ctx);prepareArmadaSprites(ctx);prepareLegendIntro(ctx);}}, [busy]);
+  useLayoutEffect(() => {const ctx=fx.ctx();if(ctx&&!busy){prepareTitleWidths(ctx);void queueSceneWarm(async()=>{if(ctx.board.isConnected&&!ctx.board.closest('.game[data-fx-busy]')){prepareArmadaSprites(ctx);prepareLegendIntro(ctx);}});}}, [busy]);
   useLayoutEffect(() => {
     // The breakdown plate of a Volley is up (in the layer or left in the traces): data-fx-plate on the board hides the line
     // «Последнее: …» (fx.css). Only the direct children of the two hosts are watched — no :has over the whole board.
