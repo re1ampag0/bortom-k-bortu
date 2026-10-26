@@ -9,7 +9,7 @@ const {phone=false,weather=false,menu=false,sceneSelector='[class*="-scene"]',ou
 const manifest=weather||phone?JSON.parse(existsSync(manifestPath)?readFileSync(manifestPath,'utf8'):'{}'):{};mkdirSync(out,{recursive:true});
 const browser=await chromium.launch({executablePath:'/usr/bin/chromium'});
 const page=await browser.newPage({viewport:{width:920,height:640}});
-const raster=await browser.newPage({deviceScaleFactor:3});
+const raster=await browser.newPage({deviceScaleFactor:2});
 try{for(const [code,name]of Object.entries(boards)){
  await page.setViewportSize({width:menu?1366:phone?390:920,height:menu?660:phone?1360:640});
  await page.goto(`${sourceURL}/artboards/${name}.dc.html`);await page.addStyleTag({content:referenceFonts});await page.evaluate(async()=>{await document.fonts.load('500 13px "Alegreya SC"','Корпус Паруса ABC123');await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode()));});
@@ -157,7 +157,7 @@ try{for(const [code,name]of Object.entries(boards)){
  },{weather,menu,sceneSelector});
  // Inline any mask URLs into the offline HTML before rasterization. Images never fetch the design runtime.
  for(let i=0;i<result.assets.length;i++){
-  const a=result.assets[i],filename=`${name}-live-${createHash('sha256').update(JSON.stringify(a)).digest('hex').slice(0,16)}.png`;a.file=filename;
+  const a=result.assets[i],filename=`${name}-live-${createHash('sha256').update(JSON.stringify({density:2,asset:a})).digest('hex').slice(0,16)}.png`;a.file=filename;
   if(existsSync(`${out}/${filename}`))continue;
   await raster.setViewportSize({width:Math.max(1,Math.ceil(a.w)),height:Math.max(1,Math.ceil(a.h))});
   let body;
@@ -171,7 +171,7 @@ try{for(const [code,name]of Object.entries(boards)){
    const mask=readFileSync(sourceDir+'/assets/'+maskName).toString('base64');
    const data=await raster.evaluate(async({png,mask,w,h,pad})=>{
     const source=new Image(),shape=new Image();source.src='data:image/png;base64,'+png;shape.src='data:image/svg+xml;base64,'+mask;await Promise.all([source.decode(),shape.decode()]);
-    const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const c=canvas.getContext('2d');c.drawImage(source,0,0);c.globalCompositeOperation='destination-in';c.drawImage(shape,pad*3,pad*3,(w-pad*2)*3,(h-pad*2)*3);return canvas.toDataURL().split(',')[1];
+    const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const c=canvas.getContext('2d');c.drawImage(source,0,0);c.globalCompositeOperation='destination-in';c.drawImage(shape,pad*2,pad*2,(w-pad*2)*2,(h-pad*2)*2);return canvas.toDataURL().split(',')[1];
    },{png:png.toString('base64'),mask,w:a.w,h:a.h,pad:a.padding??8});writeFileSync(`${out}/${filename}`,Buffer.from(data,'base64'));
   }else writeFileSync(`${out}/${filename}`,png);
  }

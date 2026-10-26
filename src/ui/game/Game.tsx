@@ -1435,7 +1435,7 @@ export function Game({
         />
       )}
       {sheet?.k === 'info' && <CardDetail data={data} code={sheet.code} status={null} buttons={[]} onClose={() => setSheet(sheet.back ? { k: sheet.back } : null)} />}
-      {sheet?.k === 'ship' && <ShipSheet store={fx.store} s={view} data={data} code={sheet.code} onClose={() => setSheet(null)} onDiscard={() => setSheet({ k: 'discard', seat: sheet.code })} />}
+      {sheet?.k === 'ship' && <ShipSheet log={game.log} store={fx.store} s={view} data={data} code={sheet.code} onClose={() => setSheet(null)} onDiscard={() => setSheet({ k: 'discard', seat: sheet.code })} />}
       {sheet?.k === 'discard' && <DiscardSheet s={view} data={data} seat={sheet.seat} onClose={() => setSheet(null)} />}
       {sheet?.k === 'sea' && <SeaSheet store={fx.store} log={game.log} key={sheet.code ?? ''} s={view} data={data} code={sheet.code} onClose={() => setSheet(sheet.back ? { k: sheet.back } : null)} />}
       {sheet?.k === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}

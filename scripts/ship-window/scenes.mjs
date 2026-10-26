@@ -4,4 +4,4 @@ const phone=process.argv.includes('--phone');
 await extractScenes({phone,out:'src/ui/game/ship-window/art',manifestPath:'src/ui/game/ship-window/scenes.json',sourceDir:'docs/mockups/ship-window',sourceURL:'http://127.0.0.1:5319',boards:phone?{'Г-phone':'Phone'}:{'Ж':'Main','М':'Revenge','И':'Endeavour','Г':'Dutchman'}});
 
 // Keep the runtime scene chunks in sync with each offline export.
-await import('../menus-speed/split-scenes.mjs').then(m=>m.splitScenes());
+await import('../menus-speed/prepare.mjs').then(m=>m.prepareScenes());

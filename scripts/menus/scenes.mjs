@@ -10,4 +10,4 @@ const silhouette='src/ui/menus/art/Boat_engraved_ink-asset-ship_engraved_ink.svg
 writeFileSync(silhouette,readFileSync(silhouette,'utf8').replace(/(fill|stroke|stop-color)="(?!none)[^"]*"/g,(_,attr)=>`${attr}="${attr==='stroke'?'#12232d':'#050c10'}"`));
 
 // Keep the runtime scene chunks in sync with each offline export.
-await import('../menus-speed/split-scenes.mjs').then(m=>m.splitScenes());
+await import('../menus-speed/prepare.mjs').then(m=>m.prepareScenes());

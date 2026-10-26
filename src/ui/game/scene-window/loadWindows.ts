@@ -6,6 +6,6 @@ export const loadShipWindow=()=>ship??=import('../ship-window/ShipWindow');
 export const loadWeatherScene=()=>weather??=import('../weather-window/WeatherScene');
 /** Sequential idle work shares the promises used by a real press. */
 export async function prepareInfoWindows(weatherName?:string){
- for(const code of ['Ж','М','И','Г'])await queueSceneWarm(()=>loadShipWindow().then(module=>module.prepareShipWindow(code)));
+ for(const code of ['Ж','М','И','Г'])await queueSceneWarm(()=>loadShipWindow().then(async module=>{await module.prepareShipWindow(code);await module.prepareShipScene(code)}));
  if(weatherName)await queueSceneWarm(()=>loadWeatherScene().then(module=>module.prepareWeatherScene(weatherName)));
 }
