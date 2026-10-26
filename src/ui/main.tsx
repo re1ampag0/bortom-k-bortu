@@ -12,6 +12,8 @@ import './game/logbook.css';
 import './game/charge.css';
 import './game/phone.css';
 import './game/scale.css';
+import './game/phone-fix.css';
+import './scrollbars.css';
 import './start/start.css';
 
 // The sound «ваш ход» needs a first touch of the page (iPhone): listen for it from the start.
