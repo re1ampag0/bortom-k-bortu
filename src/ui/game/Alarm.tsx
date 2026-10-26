@@ -138,7 +138,7 @@ export function Fuse({ seconds, k }: { seconds: number; k: string }) {
   );
 }
 
-const MEMO = 'Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.';
+const MEMO = 'Реакция: карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.';
 
 /** A laptop: the buttons under the log, where «Ход окончен» stands — the Reaction is chosen in the hand, then played here. */
 export function AlarmActions({

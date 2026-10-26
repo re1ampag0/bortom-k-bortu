@@ -91,7 +91,7 @@ export function Victory({
     <div className="victory-backdrop" style={victoryVars}>
       <section className="victory" data-testid="end-screen" aria-label={ribbon}>
         <div className="v-scroll">
-          <div className="v-over">— Конец партии · Раунд {roman(s.round)} —</div>
+          <div className="v-over">: Конец партии · Раунд {roman(s.round)} —</div>
           <h1 className="v-ribbon" data-testid="victory-ribbon">
             {ribbon}
           </h1>
@@ -113,7 +113,7 @@ export function Victory({
                 <div className="v-three">
                   <div>
                     <b>{best.dmg}</b>
-                    {best.most ? 'урона — больше всех' : 'урона за партию'}
+                    {best.most ? 'урона: больше всех' : 'урона за партию'}
                   </div>
                   <div>
                     <b>{best.share} %</b>

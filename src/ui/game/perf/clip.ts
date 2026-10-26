@@ -182,7 +182,7 @@ export function clipText(c: ClipStats): string {
     tasks,
     `рендеры Game: ${c.renders}, сумма ${c.renderMs.toFixed(0)} мс, макс ${c.renderMaxMs.toFixed(1)} мс`,
     `анимации в SVG на весь стол: ${svg}`,
-    '5 худших интервалов rAF (≥ — неполный край показа):',
+    '5 худших интервалов rAF (≥: неполный край показа):',
     ...c.worstFrames.map((f,i)=>`${i+1}. ${frameText(f)}`),
     ...(c.dropped?[`меток потеряно: ${c.dropped}`]:[]),
   ].join('\n');

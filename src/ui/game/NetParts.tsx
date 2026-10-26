@@ -1,10 +1,11 @@
 // Parts of the table that exist only in a network game: the state of the connection, players who left («Заменить
 // ботом»), «Напомнить» received, «Ход окончен» of each player («Ждём союзника…», «Вернуться к ходу»), the vote to give
 // up, and «Пока вас не было» after the player was away.
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, useRef, type ReactNode } from 'react';
 import type { Side } from '../../engine/types';
 import { LOST_MS, type NetGame } from '../../net/ws';
 import { SIDE_LABEL } from './text';
+import {Sheet} from './Overlays';
 
 /** The captain offered a Charge for the ally's Volley (P6): the ally decides; «Отозвать». */
 export function OfferPanel({ title, onWithdraw }: { title: string; onWithdraw: () => void }) {
@@ -12,7 +13,7 @@ export function OfferPanel({ title, onWithdraw }: { title: string; onWithdraw: (
     <section className="panel" data-testid="offer-panel">
       <div className="panel-head">
         <b>{title}</b>
-        <span className="panel-sub">Залп даёт союзник — он решит, брать ли Заряд</span>
+        <span className="panel-sub">Залп даёт союзник: он решит, брать ли Заряд</span>
         <button className="btn" data-testid="offer-cancel" onClick={onWithdraw}>
           Отозвать
         </button>
@@ -35,7 +36,7 @@ export function NetBar({ game }: { game: NetGame }) {
   const [reminded, setReminded] = useState<string | null>(null);
   useEffect(() => {
     if (!client.reminded) return;
-    setReminded(`Вас ждут — напоминает ${client.reminded.by}`);
+    setReminded(`Вас ждут: напоминает ${client.reminded.by}`);
     try {
       navigator.vibrate?.(200);
     } catch {
@@ -50,12 +51,19 @@ export function NetBar({ game }: { game: NetGame }) {
   const canReplace = room.you.creator || (!room.creatorOnline && room.you.seats.length > 0);
   const away = [...new Set(Object.values(room.seats).filter((x) => x.player && x.player !== me && !x.bot && !x.online).map((x) => x.player!))];
 
+  const [lost,setLost]=useState<string|null>(null),seen=useRef(new Set<string>());
+  const absentKey=away.join('|');
+  useEffect(()=>{
+    for(const id of away)if(!seen.current.has(id)){seen.current.add(id);if(room.you.creator&&!game.state.winner)setLost(id);}
+    for(const id of seen.current)if(!away.includes(id))seen.current.delete(id);
+  },[absentKey,room.you.creator,game.state.winner]);
+  const missing=Object.entries(room.seats).filter(([,x])=>x.player===lost&&!x.bot&&!x.online);
   const items: ReactNode[] = [];
   if (offline) {
     const long = client.lostAt !== null && now - client.lostAt > LOST_MS;
     items.push(
       <p key="conn" className="net-line bad" data-testid="net-offline">
-        {long ? 'Сервер недоступен: проверьте, что ноутбук с игрой не уснул и вы в той же сети. Переподключаемся…' : 'Нет связи с сервером — переподключаемся…'}
+        {long ? 'Сервер недоступен: проверьте, что ноутбук с игрой не уснул и вы в той же сети. Переподключаемся…' : 'Нет связи с сервером: переподключаемся…'}
       </p>,
     );
   }
@@ -71,7 +79,7 @@ export function NetBar({ game }: { game: NetGame }) {
     items.push(
       <p key={id} className="net-line">
         {seat[1].name} не в сети.{' '}
-        {canReplace && !game.state.winner && (
+        {canReplace && !game.state.winner && lost!==id && (
           <button className="btn small" onClick={() => game.replace(seat[0])} data-testid={`replace-${seat[0]}`}>
             Заменить ботом
           </button>
@@ -79,8 +87,8 @@ export function NetBar({ game }: { game: NetGame }) {
       </p>,
     );
   }
-  if (items.length === 0) return null;
-  return <div className="net-bar">{items}</div>;
+  if (items.length === 0 && !lost) return null;
+  return <><div className="net-bar">{items}</div>{lost&&<Sheet title={missing.length?'Друг вышел из игры':'Друг вернулся в игру'} onClose={()=>setLost(null)} testid="friend-left" foot={<div className="row buttons">{missing.length>0&&<button className="btn primary" data-testid={`replace-${missing[0][0]}`} onClick={()=>{for(const [code]of missing)game.replace(code);setLost(null);}}>Занять место ботом</button>}<button className="btn" data-testid="friend-wait" onClick={()=>setLost(null)}>{missing.length?'Подождать':'Продолжить'}</button></div>}><p>{missing.map(([code])=>game.data.ships.find(ship=>ship.code===code)?.name??code).join(', ')}{missing.length?' ждёт капитана. Друг может вернуться по ссылке комнаты.':'Снова на борту.'}</p></Sheet>}</>;
 }
 
 /**
@@ -165,7 +173,7 @@ export function MissedSheet({ game }: { game: NetGame }) {
               <li key={i}>{l.text}</li>
             ))}
           </ul>
-          {lines.length > 12 && <p className="muted">Раньше — ещё {lines.length - 12} в журнале.</p>}
+          {lines.length > 12 && <p className="muted">Раньше: ещё {lines.length - 12} в журнале.</p>}
           <button className="btn primary" onClick={() => game.clearMissed()} autoFocus>
             Продолжить
           </button>

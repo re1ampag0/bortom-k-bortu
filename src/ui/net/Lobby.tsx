@@ -138,7 +138,7 @@ function Entry({
         <p className="muted">У каждого игрока своё устройство. Один создаёт комнату, остальные входят по коду или ссылке.</p>
       </header>
       {client && <ConnectionLine client={client} />}
-      {(error || client?.error) && <p className="error">{error ?? client?.error?.text}</p>}
+      
       {saved && client?.connection === 'online' && !client.room && saved.code && (
         <p className="muted">Возвращаемся в комнату {saved.code}…</p>
       )}
@@ -166,6 +166,7 @@ function Entry({
             <button className="menu-primary" data-testid="net-join" disabled={!client || !okName || code.length !== 5} onClick={() => client?.join(code, name.trim())}>
               Войти
             </button>
+            {(error || client?.error) && <p className="error polish-code-error" role="alert"><b aria-hidden="true">!</b> {error ?? client?.error?.text}</p>
         </div>
       </section>
       <section className="more">
@@ -329,7 +330,7 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         <Check disabled={!creator} value={st.allOpen} label="Всё открыто: все руки видны всем (для тестов)" onChange={(v) => set({ allOpen: v })} />
         <label className="row"><span>Адрес сервера</span><input readOnly value={storedServer()||location.origin}/></label>
         <label className="row">
-          <span>Seed</span>
+          <span>Номер партии</span>
           <input
             disabled={!creator}
             inputMode="numeric"
@@ -382,14 +383,13 @@ function NetPlacement({ data, client, room }: { data: GameData; client: NetClien
   return (
     <MenuSurface kind="prep"><main className="menu-placement" data-testid="placement">
       <header className="setup-head">
-        <h1>{side ? `${SIDE_LABEL[side].name}: расстановка` : 'Команды расставляют корабли'}</h1>
+        <h1 className="menu-title">{side ? `${SIDE_LABEL[side].name}: кто слева, кто справа?` : 'Команды расставляют корабли'}</h1>
         <ConnectionLine client={client} />
         {client.error && <p className="error">{client.error.text}</p>}
         {room.coin && <p className="note">{room.coin}</p>}
         {side && !placed && (
           <p className="muted">
-            Кто слева, кто справа? Корабли напротив друг друга стреляют без штрафа. Решает любой игрок команды; противник увидит
-            расстановку только в начале партии.
+            Напротив корабль бьёт в полную силу, по диагонали на 1 слабее. Противник увидит расстановку только в начале боя.
           </p>
         )}
       </header>

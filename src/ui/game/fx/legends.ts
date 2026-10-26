@@ -616,7 +616,7 @@ LG['М-Л'] = async (c, ctx) => {
   const top = fxSvg(ctx), BS = R1(Math.min(0.82, (W - 24) / 236, g.h / 110) * 100) / 100;
   const bx0 = clamp(b.cx - 10, 100 * BS + 8, W - 130 * BS - 8), by0 = g.cy;
   const mouth = { x: bx0 + 112 * BS, y: by0 };
-  ruleTag(ctx, W / 2, g.cy - 60 * BS, `Корпус ${shownTrack(ctx, tgt, 'hull')} — можно`, 0, 'plus', 1200);
+  ruleTag(ctx, W / 2, g.cy - 60 * BS, `Корпус ${shownTrack(ctx, tgt, 'hull')}: можно`, 0, 'plus', 1200);
   // 1. the target glows; sparks orbit it
   A(ctx, tp, [{ boxShadow: '0 0 0 0 rgba(127,240,176,0)' }, { boxShadow: '0 0 0 3px rgba(127,240,176,.9), 0 0 30px rgba(127,240,176,.7)', offset: 0.5 }, { boxShadow: '0 0 0 2px rgba(127,240,176,.6), 0 0 18px rgba(127,240,176,.5)' }], K.glow, 0, 'ease-out', 'none');
   for (let i = 0, m = room(ctx, 24); i < m; i++) {

@@ -198,14 +198,14 @@ export function SeaChip({ s, data, onSea }: { s: GameState; data: GameData; onSe
   const sea = s.sea?.current ? seaCardByCode(data, s.sea.current) : null;
   if (!sea) return null;
   return (
-    <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-fx-sea-chip>
+    <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-testid="sea-info" data-fx-sea-chip>
       <span className="sea-icon" dangerouslySetInnerHTML={svg(wxSvg(sea.key, 40, 34))} />
       <span className="sea-words">
-        <span className="sea-cap">Море · весь раунд</span>
+        <span className="sea-cap"><span className="sea-phone">Море · весь раунд</span><span className="sea-desktop">Море:</span></span>
         <span className="sea-name">
-          {sea.name}: {sea.big}
+          «{sea.name}»<span className="sea-desktop"> | {sea.big}</span>
         </span>
-      </span>
+      </span><span className="sea-info-icon" aria-hidden="true">i</span>
     </button>
   );
 }
@@ -358,7 +358,7 @@ export interface Status {
 }
 
 // The windows of the badges (S1): the rules of RULES.md 13.2–13.3 (Fires) and 3.6, 6.3, 14.7 (Souls).
-const FIRE_INFO = 'В начале хода своей команды: −1 Корпус за каждый Пожар. Потушить: сбросьте 1 карту с руки — снимите 1 Пожар (в свой ход, сколько угодно раз).';
+const FIRE_INFO = 'В начале хода своей команды: −1 Корпус за каждый Пожар. Потушить: сбросьте 1 карту с руки: снимите 1 Пожар (в свой ход, сколько угодно раз).';
 const SOULS_INFO = 'Только у «Голландца», не больше 5. +1 Душа за каждый вражеский корабль, получивший от «Голландца» урон по Команде. Тратятся на карты с бирюзовой ценой; в свой ход 1 Душа = +1 Корпус или +1 Команда «Голландца».';
 /** The text of the card «Чёрная метка» (the card with the operation «mark»), without its markup. */
 function markText(data: GameData): string {
@@ -414,6 +414,7 @@ export function statuses(s: GameState, data: GameData, ship: ShipState): Status[
 }
 
 function PlankView({
+  captainOnBoard=false,
   s,
   data,
   ship,
@@ -442,6 +443,7 @@ function PlankView({
    * shows of the displayed state is compared — its handlers and buttons are the same by construction.
    */
   stamp?: object;
+  captainOnBoard?: boolean;
   reactionWait?: ReactNode;
   s: GameState;
   data: GameData;
@@ -555,12 +557,14 @@ function PlankView({
       className={cls}
       data-testid={plate ? `plate-${ship.code}` : `plank-${ship.code}`}
       data-has-souls={d.souls !== undefined ? '' : undefined}
+      data-captain-on-board={captainOnBoard?'':undefined}
       data-ship={ship.code}
       data-fx-ship={ship.code}
       style={{ ['--ship' as string]: d.color }}
       onClick={plate ? plate.onClick : onSelect}
       {...aim}
     >
+      {captainOnBoard&&<span className="polish-captain-tab" data-testid={`captain-${ship.code}`}>Капитан «{d.nickGenitive}» на борту</span>}
       <header
         className="plank-head"
         onClick={
@@ -588,7 +592,7 @@ function PlankView({
             className={`star narrow ${affordable ? '' : 'poor'} ${flash}`}
             data-testid={`star-${ship.code}`}
             aria-label={`Легенда «${legendName}»`}
-            title={`Легенда: ${legendName}${affordable ? '' : ' — не хватает Пороха или Душ'}`}
+            title={`Легенда: ${legendName}${affordable ? '' : ': не хватает Пороха или Душ'}`}
             tabIndex={plate ? -1 : undefined}
             onClick={(e) => {
               if (plate) return;
@@ -647,7 +651,7 @@ function PlankView({
           <button
             className="ship-info"
             data-testid={`ship-info-${ship.code}`}
-            aria-label={`Корабль «${d.nick}» — подробнее`}
+            aria-label={`Корабль «${d.nick}»: подробнее`}
             title="Подробнее о корабле"
             onClick={(e) => {
               e.stopPropagation();

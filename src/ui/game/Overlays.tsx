@@ -394,8 +394,8 @@ export function SettingsSheet({
       <>
         {onDownloadLog && (
           <div className="row buttons">
-            <button className="btn" onClick={onDownloadLog}>
-              Скачать журнал
+            <button className="btn polish-download" onClick={onDownloadLog}>
+              <Icon name="book" size={18}/> Скачать журнал
             </button>
             {onDownloadGame && (
               <button className="btn" onClick={onDownloadGame}>
@@ -407,8 +407,8 @@ export function SettingsSheet({
         {onNew && (
           <div className="row buttons">
             {canConcede && onConcede && (
-              <button className="btn danger" onClick={onConcede}>
-                Сдаться за {SIDE_LABEL[canConcede].gen}
+              <button className="btn danger polish-concede" data-testid="concede" onClick={onConcede}>
+                <svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M5 3V22" stroke="currentColor" strokeWidth="2"/><path d="M6 8Q11 5 15 8T21 8V17Q16 20 12 17T6 17Z" fill="#f4e8cf" stroke="#b39a65"/></svg><span>Спустить флаг<small>пощады!</small></span>
               </button>
             )}
             <button className="btn" onClick={onNew}>
