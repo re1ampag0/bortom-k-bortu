@@ -554,6 +554,7 @@ function PlankView({
     <section
       className={cls}
       data-testid={plate ? `plate-${ship.code}` : `plank-${ship.code}`}
+      data-has-souls={d.souls !== undefined ? '' : undefined}
       data-ship={ship.code}
       data-fx-ship={ship.code}
       style={{ ['--ship' as string]: d.color }}
@@ -806,6 +807,7 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
   const shortIcon = shortTrident ?? CMD_ICON[b.key];
   const url = ICON_URL[b.key];
   const name = m ? m[1] : b.label;
+  const shortName: Record<string,string>={volley:'Залп',heart:'Сердце',treasury:'Казна',sword:'Меч',dive:'Нырок'};
   // compact (a laptop, an icon-only button): the name and, if it cannot be pressed, the reason — in the paper pop of the game
   // (the same as «+1 совместно»), not in the title of the browser; a button without an icon keeps its short name
   const only = compact && !!(icon || url);
@@ -816,8 +818,8 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
       className={`btn cmd ${b.primary ? 'primary' : ''} ${only ? 'compact' : ''} ${url ? `pic${b.key === 'dive' ? '' : ' soul'}` : ''} ${className}`}
       onClick={b.disabled ? undefined : b.onClick}
       aria-disabled={!!b.disabled}
-      aria-label={only || url ? name : undefined}
-      title={only ? undefined : b.disabled ?? undefined}
+      aria-label={b.label}
+      title={b.disabled ?? b.label}
       data-testid={b.testid}
       data-tip={pop}
     >
@@ -838,7 +840,8 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
         ) : (
           icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />
         )}
-        <span className="cmd-name">{name}</span>
+        <span className="cmd-name" data-phone-name={shortName[b.key] ?? name}>{name}</span>
+        {SOUL_TRACK[b.key] && <span className="cost narrow soul-price" aria-label="1 Душа">1 <img src={soulIcon} alt=""/></span>}
         {m && (
           <span className={`cost ${m[2] === 'бесплатно' ? 'free' : ''}`} aria-label={m[2] === 'бесплатно' ? 'бесплатно' : `${m[2]} Пороха`}>
             {m[2]}

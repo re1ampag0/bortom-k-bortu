@@ -10,6 +10,7 @@ import { HIDDEN } from '../../engine/view';
 import type { Btn } from './Table';
 import { reducedMotion } from '../start/motion';
 import { plainText } from './text';
+import {InfoTip} from './InfoTip';
 import {stageK} from '../stage';
 import {gameScaleEnabled} from './layout';
 
@@ -542,9 +543,15 @@ export function Hand({
     // strip for the dots and the middle of the fan (usePhoneFan); data-lift for the centring and the tap beside it
     return <div key={key} className="hcard lift-place" data-lift={key} aria-hidden />;
   };
+  useLayoutEffect(()=>{
+    const row=rowRef.current;if(!row||!gameScaleEnabled())return;
+    const measure=()=>row.toggleAttribute('data-more-right',row.scrollWidth-row.clientWidth-row.scrollLeft>2);
+    const ro=new ResizeObserver(measure);ro.observe(row);row.addEventListener('scroll',measure,{passive:true});measure();
+    return()=>{ro.disconnect();row.removeEventListener('scroll',measure);};
+  },[holder.hand.length,holder.plans.length]);
   const hasLifted = lifted !== null && [...holder.hand.map((c, i) => [c, `${c}-${i}`]), ...holder.plans.map((c, i) => [c, `p-${c}-${i}`])].some(([c, k]) => c !== HIDDEN && k === lifted);
   return (
-    <div className={`hand ${alarmOf ? 'alarm' : ''} ${alarmOf && folded ? 'folded' : ''}`} data-testid="hand">
+    <div className={`hand ${alarmOf ? 'alarm' : ''} ${alarmOf && folded ? 'folded' : ''}`} data-testid="hand" data-captain={note ? '' : undefined}>
       <div className="hand-head">
         {tabs.length > 1 ? (
           <div className="tabs" role="tablist">
@@ -573,7 +580,9 @@ export function Hand({
       </div>
       {note && (
         <p className="hand-note" data-testid="captain-note">
-          {note}
+          <InfoTip className="captain-plaque" title="Капитан" text={note.replaceAll(' — ', ': ')}>
+            <span className="wide">Капитан</span><span className="narrow" aria-hidden>К</span>
+          </InfoTip>
         </p>
       )}
       {/* has-lifted: a card of this row is lifted (phone.css; a class, not :has — the row changes during the clips) */}

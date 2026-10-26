@@ -9,13 +9,13 @@ const users = { game: 0, curtain: 0 };
 export function useTableBody(kind: 'game' | 'curtain' | null): void {
   useLayoutEffect(() => {
     if (!kind) return;
-    if (users[kind]++ === 0) document.body.classList.add(`on-${kind}`);
+    if (users[kind]++ === 0) {document.body.classList.add(`on-${kind}`);if(kind==='game')document.documentElement.classList.add('on-game');}
     if(kind==='game')document.body.dataset.gamescale=gameScaleEnabled()?'1':'0';
     const game=kind==='game'?document.querySelector<HTMLElement>('.game'):null;
     const stop=game?fitGame(game):()=>{};
     return () => {
       stop();
-      if (--users[kind] === 0){document.body.classList.remove(`on-${kind}`);if(kind==='game')delete document.body.dataset.gamescale;}
+      if (--users[kind] === 0){document.body.classList.remove(`on-${kind}`);if(kind==='game')document.documentElement.classList.remove('on-game');if(kind==='game')delete document.body.dataset.gamescale;}
     };
   }, [kind]);
 }

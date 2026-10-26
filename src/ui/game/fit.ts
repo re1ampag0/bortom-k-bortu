@@ -16,10 +16,17 @@ export function fitGame(game:HTMLElement):()=>void{
   if(!phone||!busy&&(previousWidth!==view.w||previousSide!==side)){
    for(const b of compacted){b.style.removeProperty('width');b.style.removeProperty('min-width');b.removeAttribute('data-game-compact');}compacted.clear();game.removeAttribute('data-game-regroup-wrap');wrappedAt=0;previousWidth=view.w;previousSide=side;
   }
-  if(!phone){for(const label of clipped){label.style.removeProperty('background');label.style.removeProperty('box-shadow');}clipped.clear();return;}
+  if(!phone){
+   const note=game.querySelector<HTMLElement>('.hand-note'),bottom=game.querySelector('.board-bottom'),sea=game.querySelector('.sea-table');
+   if(note&&bottom&&sea&&!busy){
+    const b=bottom.getBoundingClientRect(),s=sea.getBoundingClientRect(),cards=[...game.querySelectorAll('.hand-cards:not(.lift-host)>.hcard')].map(e=>e.getBoundingClientRect());
+    const top=Math.min(...cards.map(r=>r.top)),left=(Math.min(...cards.map(r=>r.left))+Math.max(...cards.map(r=>r.right)))/2;
+    if(cards.length){put(note,'top',`${((s.bottom+top)/2-b.top)/geometry.k-9}px`);put(note,'left',`${(left-b.left)/geometry.k}px`);}
+   }
+   for(const label of clipped){label.style.removeProperty('background');label.style.removeProperty('box-shadow');}clipped.clear();return;}
   if(busy)return;
   const frame=game.getBoundingClientRect();
-  const row=game.querySelector<HTMLElement>('.board-bottom>.team-row'),hand=game.querySelector<HTMLElement>('.hand-cards:not(.lift-host)');
+  const row=game.querySelector<HTMLElement>('.board-bottom>.team-row');
   if(row){
    if(game.hasAttribute('data-game-regroup-wrap')&&wrappedAt!==view.w)game.removeAttribute('data-game-regroup-wrap');
    if(!game.hasAttribute('data-game-regroup-wrap')){
@@ -31,18 +38,9 @@ export function fitGame(game:HTMLElement):()=>void{
     }
    }
   }
-  const handBottom=hand?.getBoundingClientRect().bottom??0;
-  const textBottom=hand?Math.max(0,...[...hand.querySelectorAll<HTMLElement>(':scope>.hcard .hcard-text')].map(e=>e.getBoundingClientRect().bottom))+hand.scrollTop*geometry.k:0;
-  const croppedHand=!!hand&&hand.scrollHeight>hand.clientHeight+2&&textBottom>handBottom+1;
-  game.toggleAttribute('data-game-hand-scroll',croppedHand);
-  // Preserve every deck coordinate. Narrow captions receive an opaque wooden
-  // backing only where the decorative cannon would otherwise show through them.
-  const pictures=[...game.querySelectorAll<HTMLElement>('.deck-piece[data-piece=cannon],.deck-piece[data-piece=balls]')].map(e=>e.getBoundingClientRect());
+  game.removeAttribute('data-game-hand-scroll');
   for(const label of game.querySelectorAll<HTMLElement>('.board-bottom .hold-label,.phone-hand-label')){
-   const r=label.getBoundingClientRect(),overlap=view.w<420&&(!croppedHand||geometry.phoneScene)&&pictures.some(p=>r.width&&r.height&&r.left<p.right&&r.right>p.left&&r.top<p.bottom&&r.bottom>p.top);
-   put(label,'background',overlap?'#302216':'transparent');
-   put(label,'box-shadow',overlap?'0 0 0 2px #302216':'none');
-   clipped.add(label);
+   put(label,'background','transparent');put(label,'box-shadow','none');clipped.add(label);
   }
  };
  const ro=new ResizeObserver(measure);ro.observe(game);

@@ -12,7 +12,7 @@ export const useGameViewport=()=>useSyncExternalStore(subscribeGameViewport,game
 /** Preserve the existing portrait-tablet interaction mode; shrinking is a landscape/laptop scene. */
 export function gameGeometry(v:{w:number;h:number}){
  const portraitTablet=v.w>700&&v.w<=1100&&v.h>v.w;
- const phoneScene=v.w<=700&&v.h<650;
+ const phoneScene=false;
  const small=v.w>700&&!portraitTablet&&(v.w<1366||v.h<660);
  const k=phoneScene?v.h/650:small?Math.min(v.w/1366,v.h/660):v.w<=700?1:Math.max(1,Math.min(v.w/1366,v.h/660));
  return{k,small:small||phoneScene,phoneScene,portraitTablet};
