@@ -1,0 +1,577 @@
+{
+ "Ядра": {
+  "file": "yadra.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "Ж",
+   "М",
+   "И",
+   "Г"
+  ]
+ },
+ "Книппели": {
+  "file": "knippeli.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Бросить якорь": {
+  "file": "brosit-yakor.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Залп с обоих бортов": {
+  "file": "zalp-s-oboih-bortov.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Один выстрел": {
+  "file": "odin-vystrel.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Уйти по ветру": {
+  "file": "uyti-po-vetru.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Чёрные паруса в ночи": {
+  "file": "chernye-parusa-v-nochi.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Бочки с порохом": {
+  "file": "bochki-s-porohom.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Всё по плану": {
+  "file": "vse-po-planu.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Ловкость рук": {
+  "file": "lovkost-ruk.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Банка с землёй": {
+  "file": "banka-s-zemley.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Компас Джека": {
+  "file": "kompas-dzheka.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Право на переговоры": {
+  "file": "pravo-na-peregovory.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Гиббс за штурвалом": {
+  "file": "gibbs-za-shturvalom.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Обезьянка Джек": {
+  "file": "obezyanka-dzhek.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Безумный план": {
+  "file": "bezumnyy-plan.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Тиа Дальма": {
+  "file": "tia-dalma.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Ограбление банка": {
+  "file": "ograblenie-banka.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Тёрнер и Суонн": {
+  "file": "terner-i-suonn.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Поднять флаги!": {
+  "file": "podnyat-flagi.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Плотник": {
+  "file": "plotnik.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "Ж",
+   "М",
+   "И"
+  ]
+ },
+ "Ром для всех": {
+  "file": "rom-dlya-vseh.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Латаем паруса": {
+  "file": "lataem-parusa.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "Ж"
+  ]
+ },
+ "Картечь": {
+  "file": "kartech.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "М",
+   "И",
+   "Г"
+  ]
+ },
+ "Греческий огонь": {
+  "file": "grecheskiy-ogon.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "М"
+  ]
+ },
+ "Огонь по орудиям": {
+  "file": "ogon-po-orudiyam.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "М"
+  ]
+ },
+ "Калёные ядра": {
+  "file": "kalenye-yadra.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "М"
+  ]
+ },
+ "На абордаж!": {
+  "file": "na-abordazh.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Ужас Карибского моря": {
+  "file": "uzhas-karibskogo-morya.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Жестокая дисциплина": {
+  "file": "zhestokaya-distsiplina.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Анжелика": {
+  "file": "anzhelika.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Выкуп за пленников": {
+  "file": "vykup-za-plennikov.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Брандер": {
+  "file": "brander.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Кукла вуду": {
+  "file": "kukla-vudu.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Пленная русалка": {
+  "file": "plennaya-rusalka.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Зомби у пушек": {
+  "file": "zombi-u-pushek.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Живые снасти": {
+  "file": "zhivye-snasti.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Фонтан молодости": {
+  "file": "fontan-molodosti.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Зомби-офицеры": {
+  "file": "zombi-ofitsery.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Тяжёлый борт": {
+  "file": "tyazhelyy-bort.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Ответный залп": {
+  "file": "otvetnyy-zalp.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Прикрыть бортом": {
+  "file": "prikryt-bortom.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "М",
+   "Г"
+  ]
+ },
+ "Огненная стена": {
+  "file": "ognennaya-stena.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "М"
+  ]
+ },
+ "Залп всей батареей": {
+  "file": "zalp-vsey-batareey.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "И"
+  ]
+ },
+ "Прицельный огонь": {
+  "file": "pritselnyy-ogon.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "И"
+  ]
+ },
+ "Оплаченный залп": {
+  "file": "oplachennyy-zalp.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "И"
+  ]
+ },
+ "Шпион Мерсер": {
+  "file": "shpion-merser.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Бизнес есть бизнес": {
+  "file": "biznes-est-biznes.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Каперский патент": {
+  "file": "kaperskiy-patent.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Выгодная сделка": {
+  "file": "vygodnaya-sdelka.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Приказ лорда Беккета": {
+  "file": "prikaz-lorda-bekketa.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Строй линии": {
+  "file": "stroy-linii.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Блокада": {
+  "file": "blokada.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Ничего личного": {
+  "file": "nichego-lichnogo.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Указ о казнях": {
+  "file": "ukaz-o-kaznyah.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Подкуп": {
+  "file": "podkup.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Сделка с Сяо Фэном": {
+  "file": "sdelka-s-syao-fenom.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Подкрепление флота": {
+  "file": "podkreplenie-flota.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Верфь Компании": {
+  "file": "verf-kompanii.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Двойная обшивка": {
+  "file": "dvoynaya-obshivka.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Ответный огонь": {
+  "file": "otvetnyy-ogon.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Морская пехота": {
+  "file": "morskaya-pehota.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "И"
+  ]
+ },
+ "Из пучины": {
+  "file": "iz-puchiny.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Зов глубин": {
+  "file": "zov-glubin.webp",
+  "type": "ЗАРЯД",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Всплытие": {
+  "file": "vsplytie.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Сундук мертвеца": {
+  "file": "sunduk-mertvetsa.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Абордаж рыболюдей": {
+  "file": "abordazh-rybolyudey.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Колокол «Голландца»": {
+  "file": "kolokol-gollandtsa.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Чёрная метка": {
+  "file": "chernaya-metka.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Сто лет службы": {
+  "file": "sto-let-sluzhby.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Прихлоп Билл": {
+  "file": "prihlop-bill.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Жатва": {
+  "file": "zhatva.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Игра в кости лжеца": {
+  "file": "igra-v-kosti-lzhetsa.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Часть корабля — часть команды": {
+  "file": "chast-korablya-chast-komandy.webp",
+  "type": "ПРИКАЗ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Вербовка утопленников": {
+  "file": "verbovka-utoplennikov.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Морские наросты": {
+  "file": "morskie-narosty.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Норрингтон на борту": {
+  "file": "norrington-na-bortu.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Сердце бьётся": {
+  "file": "serdtse-betsya.webp",
+  "type": "РЕМОНТ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Уйти на глубину": {
+  "file": "uyti-na-glubinu.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Водоворот": {
+  "file": "vodovorot.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "Г"
+  ]
+ },
+ "Ответ из пучины": {
+  "file": "otvet-iz-puchiny.webp",
+  "type": "РЕАКЦИЯ",
+  "decks": [
+   "Г"
+  ]
+ }
+}

@@ -1,0 +1,35 @@
+/* Card mockup CSS: .cc full card (230x384), .cm mini card (120x148). --a = type colour */
+
+.cc,.cm{--paper1:#fffaf0;--paper2:#f3e6c6;--paper3:#e6d0a0;position:relative;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;color:#2a1d10;
+  background:radial-gradient(130% 70% at 50% 0%,var(--paper1),var(--paper2) 60%,var(--paper3));border-radius:12px;
+  box-shadow:0 0 0 1.5px #2e1d10,inset 0 0 0 4px var(--paper1),inset 0 0 0 5px color-mix(in srgb,var(--a) 70%,#2e1d10),inset 0 0 26px rgba(140,100,50,.25),0 8px 16px rgba(0,0,0,.4);overflow:hidden}
+.cc *,.cm *{box-sizing:border-box;text-align:center}
+.cc{width:230px;height:384px;padding:0 0 9px}
+.cc>*{flex:none}
+.cc .cc-text{flex:1 1 auto;min-height:0}
+.cc-head{position:relative;width:100%;height:28px;display:flex;align-items:center;justify-content:center;background:linear-gradient(var(--a),color-mix(in srgb,var(--a) 75%,#000));color:#fff;
+  font:700 11.5px 'Alegreya Sans',sans-serif;letter-spacing:.22em;text-transform:uppercase;box-shadow:inset 0 -1px 0 rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.25)}
+.cc-cost{position:absolute;right:7px;top:3px;min-width:22px;height:22px;padding:0 6px;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:2px;
+  background:#2a1d10;border:1.5px solid #e2bf62;color:#fff3c4;font:700 12px 'Alegreya Sans';letter-spacing:0}
+.cc-cost i{width:9px;height:12px;background:url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2222%22%20height%3D%2228%22%20viewBox%3D%220%200%2022%2028%22%20aria-hidden%3D%22true%22%3E%3Cpath%20d%3D%22M4%203.2%20C1.6%209%201.6%2019%204%2024.8%20C8.6%2026.4%2013.4%2026.4%2018%2024.8%20C20.4%2019%2020.4%209%2018%203.2%20C13.4%201.6%208.6%201.6%204%203.2%20Z%22%20fill%3D%22%239a6232%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.9%22%2F%3E%3Cpath%20d%3D%22M7.4%202.4%20C6%209%206%2019%207.4%2025.6%20M11%202.2%20V25.8%20M14.6%202.4%20C16%209%2016%2019%2014.6%2025.6%22%20stroke%3D%22%236e431e%22%20stroke-width%3D%22.6%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M4.6%204.6%20C4%209.6%204%2018.4%204.6%2023.4%22%20stroke%3D%22%23c08a52%22%20stroke-width%3D%221%22%20fill%3D%22none%22%20opacity%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M2.6%208.4%20C8.4%209.8%2013.6%209.8%2019.4%208.4%20M2.6%2019.6%20C8.4%2018.2%2013.6%2018.2%2019.4%2019.6%22%20stroke%3D%22%232c2a28%22%20stroke-width%3D%221.7%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M2.8%207.7%20C8.4%209%2013.6%209%2019.2%207.7%20M2.8%2018.9%20C8.4%2017.6%2013.6%2017.6%2019.2%2018.9%22%20stroke%3D%22%238a857e%22%20stroke-width%3D%22.45%22%20fill%3D%22none%22%2F%3E%3Cellipse%20cx%3D%2211%22%20cy%3D%223%22%20rx%3D%227%22%20ry%3D%221.3%22%20fill%3D%22%237a4b22%22%20stroke%3D%22%233a2412%22%20stroke-width%3D%22.6%22%2F%3E%3Crect%20x%3D%229.4%22%20y%3D%2212.6%22%20width%3D%223.2%22%20height%3D%222.4%22%20rx%3D%22.6%22%20fill%3D%22%235a3818%22%20stroke%3D%22%232c1a0a%22%20stroke-width%3D%22.4%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat}
+.cc-cost.free{background:rgba(0,0,0,.25);border-color:rgba(255,255,255,.6)}
+.cc-cost.soul{background:#1f4d46;border-color:#bfe0d8}
+.cc-pic{width:calc(100% - 20px);aspect-ratio:200/120;margin:9px 10px 0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+.cc-name{margin:7px 10px 0;font:700 18px/1.06 'Alegreya SC',Alegreya,Georgia,serif;letter-spacing:.02em;color:#24180a;text-wrap:balance}
+.cc-orn{width:110px;height:8px;margin:4px 0 2px;background:linear-gradient(var(--a),var(--a)) center/100% 1px no-repeat;position:relative;opacity:.8}
+.cc-orn i{position:absolute;left:50%;top:50%;width:7px;height:7px;transform:translate(-50%,-50%) rotate(45deg);background:var(--a)}
+.cc-big{display:inline-block;margin:2px 12px 0;padding:2px 10px;border-radius:10px;background:color-mix(in srgb,var(--a) 14%,transparent);color:color-mix(in srgb,var(--a) 85%,#000);font:700 14px 'Alegreya Sans'}
+.cc-text{flex:1;margin:6px 14px 0;font:12.5px/1.32 Alegreya,Georgia,serif;color:#3a2a18;display:flex;align-items:center;justify-content:center}
+.cc.l .cc-text{font-size:11.5px;line-height:1.26}.cc.xl .cc-text{font-size:10.6px;line-height:1.22}.cc.xl .cc-flavor{display:none}.cc.l .cc-pic,.cc.xl .cc-pic{width:calc(100% - 44px);margin-top:7px}
+.cc-flavor{margin:4px 16px 0;font:italic 11px/1.28 Alegreya,Georgia,serif;color:#7a6243}
+.cc-foot{width:calc(100% - 28px);margin-top:6px;padding-top:5px;border-top:1px dashed rgba(138,106,46,.55);font:700 10.5px 'Alegreya SC',serif;letter-spacing:.12em;color:var(--ship)}
+.cc.legend{box-shadow:0 0 0 2px #8f6b20,inset 0 0 0 4px #f6dd92,inset 0 0 0 6px #c9a048,inset 0 0 26px rgba(160,120,40,.3),0 0 18px rgba(240,210,122,.55),0 8px 16px rgba(0,0,0,.45)}
+.cc.legend .cc-head{background:linear-gradient(90deg,#9a7020,#e2bf62,#9a7020);color:#24180a}
+.cc-seal{position:absolute;right:10px;bottom:30px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 38% 32%,#e0705e,#a8302a 60%,#651812);color:#ffd27a;font-size:16px;box-shadow:0 2px 3px rgba(0,0,0,.4);transform:rotate(-10deg)}
+.cm{width:120px;height:148px;border-radius:10px;padding:0 0 4px}
+.cm .cc-head{height:19px;font-size:8.5px;letter-spacing:.16em}
+.cm .cc-cost{right:4px;top:2px;min-width:15px;height:15px;font-size:9.5px;padding:0 4px}
+.cm .cc-cost i{width:6px;height:8px}
+.cm .cc-pic{width:calc(100% - 10px);margin:4px 5px 0}
+.cm .cc-name{margin:4px 6px 0;font-size:13.5px;line-height:1.05}
+.cm .cc-big{margin:3px 4px 0;padding:1px 6px;font-size:10.5px}
