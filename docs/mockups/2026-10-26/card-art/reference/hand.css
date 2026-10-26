@@ -1,0 +1,32 @@
+/* Hand mini card, approved variant A (mockup g16): picture whole (200/120), .cm.vA rules win over earlier .vA lines. Rules text .cm-text clamped to whole lines in JS (as Hand.tsx useWholeLines). .mk-has = mockup marker. On top of card.css. */
+.cm{background:radial-gradient(140% 80% at 50% 0%,#fffdf8,#f7f2e6 55%,#ebe2cf)!important;border-radius:10px!important;padding:0 0 5px!important;
+  box-shadow:0 0 0 1.5px #b8964a,inset 0 0 0 1px rgba(255,255,255,.6),inset 0 0 14px rgba(120,95,55,.14),0 6px 12px rgba(0,0,0,.45)!important;color:#1e1408}
+ .cm .cc-head{border-radius:9px 9px 0 0}
+ .cm .cc-pic{width:100%!important;margin:0!important;filter:none!important;position:relative}
+ .cm .cc-pic svg>rect:first-of-type{display:none}
+ .cm .cc-name{font:700 12.5px/1.06 'Alegreya SC',Georgia,serif!important;color:#1e1408!important;margin:5px 8px 0!important;display:flex;align-items:center;justify-content:center;text-wrap:balance;letter-spacing:.01em;text-align:center}
+ .cm .cc-big{font:700 10px/1.15 'Alegreya Sans'!important;margin:4px 9px 0!important;padding:2px 7px!important;max-width:calc(100% - 18px);white-space:normal;text-wrap:balance;color:color-mix(in srgb,var(--a) 75%,#000)!important;background:color-mix(in srgb,var(--a) 10%,#fffdf8)!important;border:1px solid color-mix(in srgb,var(--a) 30%,transparent)}
+ .cm.vA .cc-pic{aspect-ratio:200/104!important}.cm.vA .cc-name{min-height:27px}
+ .cm.vB .cc-pic{aspect-ratio:200/168!important}.cm.vB .cc-name.rib{position:absolute;left:0;right:0;bottom:0;margin:0!important;padding:14px 6px 4px;color:#fff6dc!important;text-shadow:0 1px 2px #000,0 0 6px rgba(0,0,0,.8);background:linear-gradient(rgba(16,10,4,0),rgba(16,10,4,.82) 55%);min-height:0}
+ .cm.vC .cc-name{min-height:27px;margin:4px 8px 4px!important}.cm.vC .cc-pic{aspect-ratio:200/104!important}
+ .cm .cm-text{font:11px/1.25 Alegreya,Georgia,serif;color:#3a2a18;margin:5px 9px 0;text-align:center;text-wrap:pretty}.cm .cm-text b{color:#1e1408}
+ @media (min-width:701px){.cm.vA .cc-pic,.cm.vC .cc-pic{aspect-ratio:200/88!important}.cm.vB .cc-pic{aspect-ratio:200/150!important}.cm .cc-name{font-size:12px!important}.cm .cc-big{font-size:9.5px!important;margin-top:3px!important;padding:1px 6px!important}.cm.vA .cc-name{min-height:0}
+   .hand-cards .hcard:not(:first-child){margin-left:-16px!important}}
+ @media (max-width:700px){.hand-cards .hcard:not(:first-child){margin-left:-6px!important}}
+ .cm.vA{display:flex!important;flex-direction:column;align-items:center}
+ .cm .cc-head{height:16px!important;min-height:16px;flex:none;font:700 8px/16px 'Alegreya Sans'!important;letter-spacing:.18em!important;position:relative;display:flex!important;align-items:center;justify-content:center;padding:0!important}
+ .cm .cc-head .cc-type{position:absolute;left:0;right:0;text-align:center}
+ .cm .cc-cost{position:absolute!important;right:3px!important;top:1.5px!important;height:13px!important;min-width:13px!important;padding:0 3px!important;font:700 8.5px/13px 'Alegreya Sans'!important;border-width:1px!important;gap:1px!important}
+ .cm .cc-cost i{width:5px!important;height:7px!important}
+ .cm.vA .cc-pic{flex:none;min-height:0!important;height:auto!important;overflow:hidden}
+ .cm.vA .cc-name{flex:none;height:2.14em;min-height:0!important;margin:4px 6px 0!important;line-height:1.06!important}
+ .cm.vA .cc-big{flex:none;margin:3px auto 0!important;padding:1px 6px!important;line-height:1.15!important;border-radius:8px}
+ .cm .cm-text{flex:1 1 0;min-height:0;width:calc(100% - 14px);margin:3px 7px 0!important;font:9.5px/1.2 Alegreya,Georgia,serif!important;color:#3a2a18;text-align:center;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3}
+ .cm .cm-text.full{flex:none;-webkit-line-clamp:unset;display:block;font-size:11px!important;line-height:1.25!important;margin-bottom:2px!important}
+ @media (min-width:701px){.hand-cards .hcard.mk-has:not(.lifted){height:168px!important;align-self:flex-end}.cm.vA .cc-pic{aspect-ratio:200/120!important}.cm.vA .cc-name{font-size:11px!important;margin-top:3px!important}.cm.vA .cc-big{font-size:9px!important;margin-top:2px!important}.cm .cm-text{font-size:9px!important;margin-top:2px!important}}
+ @media (max-width:700px){.cm.vA .cc-pic{aspect-ratio:200/120!important}.cm.vA .cc-name{font-size:11.5px!important;margin-top:3px!important}.cm.vA .cc-big{font-size:9px!important;margin-top:2px!important}.cm.vA .cm-text{margin-top:2px!important}.cm .cm-text{-webkit-line-clamp:4}}
+.hand-cards .hcard.mk-has{background:none!important;border:0!important;padding:0!important;box-shadow:none!important;overflow:visible!important}
+ .hand-cards .hcard.mk-has>*:not(.cm):not(.lift-strip):not(.lift-more){display:none!important}.hand-cards .hcard.mk-has .cm{width:100%;height:100%}
+ .hand-cards .hcard.mk-has.lifted{height:auto!important;min-height:0!important;max-height:none!important}.hand-cards .hcard.mk-has.lifted .cm{height:auto;flex:none}
+ .hand-cards .hcard.mk-has.lifted .lift-strip,.hand-cards .hcard.mk-has.lifted .lift-more{position:relative;margin-top:4px}
+ .hand-cards .hcard.mk-has.lifted .lift-more{background:none!important;gap:6px}.hand-cards .hcard.mk-has.lifted .lift-btn{background:linear-gradient(#4a2f1a,#33200f)!important;border:1.5px solid #c69a3c!important;color:#f0d27a!important;font:700 13px 'Alegreya Sans'!important;border-radius:8px!important;box-shadow:inset 0 1px 0 rgba(255,230,170,.2),0 2px 0 #1e1208!important;text-align:center}
