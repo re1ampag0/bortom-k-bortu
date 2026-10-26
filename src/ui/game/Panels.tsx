@@ -16,6 +16,7 @@ import { powderWord } from '../../engine/log';
 import { cardByCode, seaCardByCode, seatShip, shipData, startValue, type Action, type GameState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { wxSvg } from './art/wx';
+import {PlaySheet,PLAN_LOCK} from './PlaySheet';
 import { HandCard } from './Hand';
 import { OakButton } from './Table';
 import { DecisionSheet, DecisionActions, DecisionStepper } from './DecisionSheet';
@@ -495,7 +496,8 @@ export function CardParamsPanel({
   const used = TRACKS.reduce((n, t) => n + (split[t] ?? 0), 0);
   const canRegroup = needs.regroup && refusal(s, { ...action, regroup: true }, data) === null;
   return (
-    <DecisionSheet title={c.name} sub={sub} testid="card-panel"
+    <PlaySheet title={c.name} sub={sub} card={{data,code:mode.card}}
+      target={needs.target? (mode.target?{name:nick(data,seatShip(s,mode.target)?.code??mode.target),color:shipData(data,seatShip(s,mode.target)?.code??mode.target).color}:null):repairShip?{name:nick(data,repairShip.code),color:shipData(data,repairShip.code).color}:undefined} testid="card-panel"
       hold={{powder: s.teams[own.side].powder, cap: data.econ.cap}}
       actions={<DecisionActions cancel={<button className="btn" onClick={onCancel}>Отмена</button>}
         primary={{key:'card-play', testid:'play-card', label:`Сыграть${c.cost ? ` · ${c.cost} П` : ''}${c.soul ? ` · ${c.soul} Д` : ''}`,
@@ -559,7 +561,7 @@ export function CardParamsPanel({
         </label>
       )}
       {why && <p className="why">{why}</p>}
-    </DecisionSheet>
+    </PlaySheet>
   );
 }
 
@@ -574,8 +576,10 @@ export function ConfirmPanel({
   onNo,
   testid,
   hold,
+  card,
 }: {
   hold?: {powder: number; cap: number};
+  card?:{data:GameData;code:string};
   title: string;
   sub?: string;
   yes: string;
@@ -585,7 +589,7 @@ export function ConfirmPanel({
   testid?: string;
 }) {
   return (
-    <DecisionSheet title={title} sub={sub} testid={testid} hold={hold}
+    <PlaySheet card={card} title={title} sub={sub} testid={testid} hold={hold}
       actions={<DecisionActions cancel={<button className="btn" onClick={onNo}>{no}</button>}
         primary={{key:'confirm-yes',testid:'confirm-yes',label:yes,onClick:onYes}} />} />
   );
@@ -596,13 +600,16 @@ export function PlansPanel({ s, data, seat, onDone, onCancel }: { s: GameState; 
   const room = data.rules.plansMax - holder.plans.length;
   const [picks, setPicks] = useState<string[]>([]);
   return (
-    <DecisionSheet title="Планы"
+    <PlaySheet plans title="Закрома «Жемчужины»"
       sub={`${nick(data, seat)}: до ${room} ${room === 1 ? 'карты' : 'карт'} с руки. Реакцию из Плана можно сыграть сверх лимита Парусов, бонус «План:» действует.`}
       testid="plans-panel" hold={{powder:s.teams[holder.side].powder,cap:data.econ.cap}}
       tools={<button type="button" className="btn ds-close" aria-label="Отмена" title="Отмена" onClick={onCancel}>×</button>}
       actions={<DecisionActions cancel={<button className="btn" data-testid="no-plans" onClick={() => onDone([])}>Без Планов</button>}
-        primary={{key:'plans-done',label:`Отложить ${picks.length} и закончить ход`,
-          disabled:picks.length===0?'Выберите карты в Планы':null,onClick:()=>onDone(picks)}} />}>
+        primary={{key:'plans-done',label:'Закончить ход',
+          disabled:null,onClick:()=>onDone(picks)}} />}>
+      <div className="plans-count">в руке {holder.hand.length} → {holder.hand.length-picks.length}, в закромах {holder.plans.length+picks.length} из {data.rules.plansMax}</div>
+      <div className="plans-vault" aria-label="Закрома"><i className="vault-lid"/><div className="vault-slots">{Array.from({length:data.rules.plansMax},(_,i)=><span key={i} className={i<holder.plans.length+picks.length?'occupied':''}>{i<holder.plans.length+picks.length?<b dangerouslySetInnerHTML={{__html:PLAN_LOCK}}/>:i===0?'I':'II'}</span>)}</div><b className="vault-title">Закрома</b></div>
+      <div className="plans-added">{picks.length} {picks.length===1?'карта':picks.length<5?'карты':'карт'} в План</div>
       <div className="choice-cards">
         {holder.hand.map((card) => (
           <HandCard
@@ -616,7 +623,7 @@ export function PlansPanel({ s, data, seat, onDone, onCancel }: { s: GameState; 
           />
         ))}
       </div>
-    </DecisionSheet>
+    </PlaySheet>
   );
 }
 

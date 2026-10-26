@@ -19,7 +19,7 @@ export function fitGame(game:HTMLElement):()=>void{
   if(!phone){for(const label of clipped){label.style.removeProperty('background');label.style.removeProperty('box-shadow');}clipped.clear();return;}
   if(busy)return;
   const frame=game.getBoundingClientRect();
-  const row=game.querySelector<HTMLElement>('.board-bottom>.team-row'),hand=game.querySelector<HTMLElement>('.hand-cards:not(.lift-host)');
+  const row=game.querySelector<HTMLElement>('.board-bottom>.team-row');
   if(row){
    if(game.hasAttribute('data-game-regroup-wrap')&&wrappedAt!==view.w)game.removeAttribute('data-game-regroup-wrap');
    if(!game.hasAttribute('data-game-regroup-wrap')){

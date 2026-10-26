@@ -71,3 +71,9 @@ html.on-game,body.on-game{background:#21170e}
  .game[data-game-scale] .board-bottom>.team-row .btn.regroup .cmd-icon{width:22px;height:22px}
  .game[data-game-scale] .board-bottom>.team-row .btn.regroup .cmd-in{grid-template-columns:22px auto;column-gap:6px}
 }
+@media(max-width:700px){
+ .game[data-game-scale] .hand-cards:not(.lift-host)>.hcard .hcard-big{white-space:normal;overflow-wrap:anywhere}
+ .game[data-game-scale] .plank-buttons .soul-price img{width:12px;height:14px}
+ .game[data-game-scale] .plank-buttons .soul-gain{gap:2px}.game[data-game-scale] .plank-buttons .soul-gain .soul-arrow{display:none}
+ .game[data-game-scale] .plank-buttons .cmd-tag{display:block;font-size:8px}
+}

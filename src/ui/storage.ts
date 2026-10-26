@@ -39,9 +39,10 @@ export interface TableView {
   frame: SeaFrame;
   /** Damage breakdown during a Volley, and its short trace. Old settings show it. */
   damage: 'show' | 'hide';
+  play: 'sheet' | 'scroll';
 }
 
-export const DEFAULT_VIEW: TableView = { guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show' };
+export const DEFAULT_VIEW: TableView = { guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show', play: 'sheet' };
 
 export const DEFAULT_SETTINGS: Settings = { speed: 'normal', effects: 'rich', hints: null, sound: false, fastEnd: false, tapSkip: false, view: DEFAULT_VIEW };
 
@@ -124,6 +125,7 @@ function readView(v: unknown): TableView {
     guns: pick(o.guns, ['icons', 'ports'], DEFAULT_VIEW.guns),
     hand: pick(o.hand, ['deck', 'table'], DEFAULT_VIEW.hand),
     damage: pick(o.damage, ['show', 'hide'], DEFAULT_VIEW.damage),
+    play: pick(o.play, ['sheet', 'scroll'], DEFAULT_VIEW.play),
     frame: pick(o.frame, ['bulwark', 'brass'], DEFAULT_VIEW.frame),
   };
 }

@@ -437,6 +437,8 @@ export function SettingsSheet({
         <Switch3 label="Фон" id="hand" value={view.hand} onChange={(hand) => setView({ ...view, hand })} options={[['deck', 'Палуба'], ['table', 'Стол капитана']]} />
         <Switch3 label="Рамка моря" id="frame" value={view.frame} onChange={(frame) => setView({ ...view, frame })} options={[['bulwark', 'Фальшборт'], ['brass', 'Латунь']]} />
         <Switch3 label="Разбор урона" id="damage" value={view.damage} onChange={(damage) => setView({ ...view, damage })} options={[['show', 'Показывать'], ['hide', 'Скрыть']]} />
+        <Switch3 label="Розыгрыш карты" id="play" value={view.play} onChange={(play) => setView({ ...view, play })} options={[['sheet', 'Лист снизу'], ['scroll', 'Свиток у журнала']]} />
+        <p className="menu-view-note">Лист занимает место руки и Трюма. Свиток занимает место журнала, на телефоне место руки.</p>
         <aside className="menu-view-preview"><svg width="80" height="54" viewBox="0 0 80 54" aria-hidden="true"><rect x="2" y="2" width="76" height="50" rx="7" fill="#254556" stroke="#c9a048" strokeWidth="2"/><rect x="8" y="8" width="64" height="12" rx="2" fill="#e9ddb9"/><rect x="8" y="34" width="27" height="12" rx="2" fill="#c9a048"/><rect x="43" y="34" width="29" height="12" rx="2" fill="#e9ddb9"/></svg><span>Вид стола меняется сразу,<br/>это видно за окном.</span></aside>
       </section></div>
       {fxErrors.length > 0 && (

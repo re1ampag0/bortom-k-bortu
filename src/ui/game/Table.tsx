@@ -840,6 +840,7 @@ export function PlankButton({ b, className = '', compact = false }: { b: Btn; cl
           icon && <span className="cmd-icon" dangerouslySetInnerHTML={svg(icon)} />
         )}
         <span className="cmd-name" data-phone-name={shortName[b.key] ?? name}>{name}</span>
+        {SOUL_TRACK[b.key] && <span className="cost narrow soul-price" aria-label="1 Душа">1 <img src={soulIcon} alt=""/></span>}
         {m && (
           <span className={`cost ${m[2] === 'бесплатно' ? 'free' : ''}`} aria-label={m[2] === 'бесплатно' ? 'бесплатно' : `${m[2]} Пороха`}>
             {m[2]}
