@@ -1,0 +1,170 @@
+[
+  {
+    "family": "menus",
+    "name": "Pirates",
+    "id": 31,
+    "animation": "seaDriftmenuPirates",
+    "pixels": 217,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Pirates",
+    "id": 32,
+    "animation": "seaSwellmenuPirates",
+    "pixels": 3,
+    "seam": false
+  },
+  {
+    "family": "menus",
+    "name": "Pirates",
+    "id": 34,
+    "animation": "seaDriftmenuPirates",
+    "pixels": 217,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Company",
+    "id": 29,
+    "animation": "seaDriftmenuCompany",
+    "pixels": 260,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Company",
+    "id": 30,
+    "animation": "seaSwellmenuCompany",
+    "pixels": 8,
+    "seam": false
+  },
+  {
+    "family": "menus",
+    "name": "Company",
+    "id": 32,
+    "animation": "seaDriftmenuCompany",
+    "pixels": 273,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "PiratesPhone",
+    "id": 31,
+    "animation": "seaDriftmenuPiratesPhone",
+    "pixels": 232,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "PiratesPhone",
+    "id": 32,
+    "animation": "seaSwellmenuPiratesPhone",
+    "pixels": 2,
+    "seam": false
+  },
+  {
+    "family": "menus",
+    "name": "PiratesPhone",
+    "id": 34,
+    "animation": "seaDriftmenuPiratesPhone",
+    "pixels": 209,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "CompanyPhone",
+    "id": 29,
+    "animation": "seaDriftmenuCompanyPhone",
+    "pixels": 258,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "CompanyPhone",
+    "id": 30,
+    "animation": "seaSwellmenuCompanyPhone",
+    "pixels": 5,
+    "seam": false
+  },
+  {
+    "family": "menus",
+    "name": "CompanyPhone",
+    "id": 32,
+    "animation": "seaDriftmenuCompanyPhone",
+    "pixels": 271,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Panel",
+    "id": 10,
+    "animation": "seaDriftmenuPanel",
+    "pixels": 2579,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Panel",
+    "id": 11,
+    "animation": "seaSwellmenuPanel",
+    "pixels": 1437,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Panel",
+    "id": 13,
+    "animation": "seaDriftmenuPanel",
+    "pixels": 2516,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Blood",
+    "id": 10,
+    "animation": "seaDriftmenuBlood",
+    "pixels": 1825,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Blood",
+    "id": 11,
+    "animation": "seaSwellmenuBlood",
+    "pixels": 921,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Blood",
+    "id": 13,
+    "animation": "seaDriftmenuBlood",
+    "pixels": 1750,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Deep",
+    "id": 10,
+    "animation": "seaDriftmenuDeep",
+    "pixels": 2333,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Deep",
+    "id": 11,
+    "animation": "seaSwellmenuDeep",
+    "pixels": 1191,
+    "seam": true
+  },
+  {
+    "family": "menus",
+    "name": "Deep",
+    "id": 13,
+    "animation": "seaDriftmenuDeep",
+    "pixels": 2205,
+    "seam": true
+  }
+]

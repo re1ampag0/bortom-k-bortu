@@ -35,4 +35,23 @@ for code,scene in scenes.items():
     n=copy.deepcopy(flash);n['id']=nid;nid+=1;n['cls']=label;n['style'].update(left=f'{x}px',top=f'{yy}px',zIndex='9');n['art'].update(x=-aw/2,y=-ah/2,w=aw,h=ah);n['anim'][0]['name']=label
     for f in n['anim'][0]['frames']:f['opacity']=float(f.get('opacity',0))*alpha
     ship['children'].append(n)
-p.write_text(json.dumps(scenes,separators=(',',':'),ensure_ascii=False));Path('docs/measurements/menus-speed/ports.json').write_text(json.dumps(ports,indent=2))
+# The large burning ship has its own rising smoke, separate from the small boat.
+revenge=scenes['М']
+if not revenge.get('smokeRevision'):
+ keep={24,25,28,30,33,34};index=0
+ def prune(ns):
+  global index
+  out=[]
+  for n in ns:
+   if n.get('cls')=='r-smoke':
+    if n['id']not in keep:continue
+    for a in n['anim']:
+     if a['name']=='r-rise':
+      a['timing'].update(duration=6800+index*500,delay=-index*1300,easing='linear')
+      a['frames']=[{'offset':0,'opacity':0,'transform':'translate(0px,0px) scale(1)'},{'offset':.15,'opacity':.5,'transform':'translate(-3px,-8px) scale(1.05)'},{'offset':.7,'opacity':.3,'transform':'translate(-20px,-38px) scale(1.3)'},{'offset':1,'opacity':0,'transform':'translate(-30px,-55px) scale(1.4)'}]
+    index+=1
+   n['children']=prune(n['children']);out.append(n)
+  return out
+ revenge['tree']=prune(revenge['tree']);revenge['smokeRevision']=1
+p.write_text(json.dumps(scenes,separators=(',',':'),ensure_ascii=False))
+if ports:Path('docs/measurements/menus-speed/ports.json').write_text(json.dumps(ports,indent=2))

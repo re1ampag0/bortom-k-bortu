@@ -152,14 +152,14 @@
   {
     "family": "src/ui/game/ship-window",
     "name": "\u0416",
-    "requests": 19,
-    "bytes": 353510
+    "requests": 20,
+    "bytes": 361166
   },
   {
     "family": "src/ui/game/ship-window",
     "name": "\u041c",
-    "requests": 23,
-    "bytes": 630604
+    "requests": 21,
+    "bytes": 609480
   },
   {
     "family": "src/ui/game/ship-window",
@@ -170,20 +170,20 @@
   {
     "family": "src/ui/game/ship-window",
     "name": "\u0413",
-    "requests": 25,
-    "bytes": 757534
+    "requests": 23,
+    "bytes": 471888
   },
   {
     "family": "src/ui/game/ship-window",
     "name": "\u0413-phone",
-    "requests": 21,
-    "bytes": 490326
+    "requests": 19,
+    "bytes": 345704
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "storm",
-    "requests": 27,
-    "bytes": 702884
+    "requests": 22,
+    "bytes": 597290
   },
   {
     "family": "src/ui/game/weather-window",
@@ -194,14 +194,14 @@
   {
     "family": "src/ui/game/weather-window",
     "name": "tortuga",
-    "requests": 23,
-    "bytes": 339236
+    "requests": 24,
+    "bytes": 345416
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "wind",
-    "requests": 18,
-    "bytes": 219560
+    "requests": 21,
+    "bytes": 241780
   },
   {
     "family": "src/ui/game/weather-window",
@@ -212,20 +212,20 @@
   {
     "family": "src/ui/game/weather-window",
     "name": "wet",
-    "requests": 24,
-    "bytes": 885096
+    "requests": 26,
+    "bytes": 941698
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "calm",
-    "requests": 13,
-    "bytes": 263588
+    "requests": 14,
+    "bytes": 267430
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "wave",
-    "requests": 22,
-    "bytes": 611400
+    "requests": 24,
+    "bytes": 657464
   },
   {
     "family": "src/ui/game/weather-window",
@@ -236,55 +236,55 @@
   {
     "family": "src/ui/game/weather-window",
     "name": "mermaids",
-    "requests": 16,
-    "bytes": 130246
+    "requests": 17,
+    "bytes": 134110
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "rum",
-    "requests": 19,
-    "bytes": 172978
+    "requests": 20,
+    "bytes": 182008
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "caravan",
-    "requests": 21,
-    "bytes": 192936
+    "requests": 22,
+    "bytes": 199612
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "reefs",
-    "requests": 18,
-    "bytes": 178190
+    "requests": 19,
+    "bytes": 184912
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "thunder",
-    "requests": 22,
-    "bytes": 768754
+    "requests": 24,
+    "bytes": 806438
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "fleet",
-    "requests": 25,
-    "bytes": 137280
+    "requests": 26,
+    "bytes": 143264
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "moon",
-    "requests": 17,
-    "bytes": 297164
+    "requests": 18,
+    "bytes": 301230
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "current",
-    "requests": 16,
-    "bytes": 91378
+    "requests": 18,
+    "bytes": 103576
   },
   {
     "family": "src/ui/game/weather-window",
     "name": "storm-phone",
-    "requests": 27,
-    "bytes": 460352
+    "requests": 22,
+    "bytes": 338992
   }
 ]

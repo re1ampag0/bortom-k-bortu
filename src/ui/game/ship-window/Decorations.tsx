@@ -13,7 +13,7 @@ function useDecoration(ref:{current:HTMLSpanElement|null},key:string,ready:boole
   const update=()=>{const allowed=!reduced.matches&&loadSettings().effects!=='simple'&&!perfOff('simple')&&!perfOff('css')&&!perfOff('light');const run=allowed&&live&&visible&&!document.hidden&&!store.get().busy;for(const a of owned){run?a.play():a.pause();const target=(a.effect as KeyframeEffect).target as HTMLElement;target.style.visibility=allowed?'visible':'hidden';target.style.willChange=run?'transform, opacity':'auto';}};
   const observer=new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting??false;update();});observer.observe(el);
   const unsubscribe=store.subscribe(update),offSettings=subscribeSettings(update),offPerf=subscribePerf(update);document.addEventListener('visibilitychange',update);reduced.addEventListener('change',update);
-  void factory.current(el).then(animations=>{if(!live){animations.forEach(a=>a.cancel());return;}owned.push(...animations);owned.forEach(a=>{a.pause();a.currentTime=0;});update();});
+  void factory.current(el).then(animations=>{if(!live){animations.forEach(a=>a.cancel());return;}owned.push(...animations);el.dataset.ready='1';owned.forEach(a=>{a.pause();a.currentTime=0;});update();});
   return()=>{live=false;owned.forEach(a=>a.cancel());observer.disconnect();unsubscribe();offSettings();offPerf();document.removeEventListener('visibilitychange',update);reduced.removeEventListener('change',update);el.querySelectorAll('[data-ready-frame]').forEach(e=>e.remove());el.removeAttribute('data-ready');};
  },[key,ready,store,ref]);
 }

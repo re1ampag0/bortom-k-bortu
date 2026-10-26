@@ -1,0 +1,38 @@
+[
+  {
+    "mode": "simple",
+    "poster": true,
+    "live": false,
+    "sceneModules": [],
+    "clock": 0
+  },
+  {
+    "mode": "reduced",
+    "poster": true,
+    "live": false,
+    "sceneModules": [],
+    "clock": 0
+  },
+  {
+    "mode": "perf-css",
+    "poster": true,
+    "live": false,
+    "sceneModules": [],
+    "clock": 0
+  },
+  {
+    "mode": "rich",
+    "poster": true,
+    "live": true,
+    "sceneModules": [
+      "http://127.0.0.1:5370/bortom-k-bortu/src/ui/menus/scenes/Phone.json?t=1793052373755&import"
+    ],
+    "clock": 399.9219999612309
+  },
+  {
+    "mode": "cover continuity",
+    "at": 466.62199996123087,
+    "paused": 466.62199996123087,
+    "resumed": 566.6479999195786
+  }
+]

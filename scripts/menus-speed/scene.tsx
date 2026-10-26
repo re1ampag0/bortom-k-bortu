@@ -10,6 +10,7 @@ const cache=createSceneCache(src=>before?base+folder+'/art/'+src:src.startsWith(
 const store={get:()=>({busy:true}),subscribe:()=>()=>{}},root=document.getElementById('root')!,react=createRoot(root);
 root.style.width=original.width+'px';root.style.height=original.height+'px';
 await document.fonts.ready;await cache.prepare(name,sceneUrls(original));
-function render(scene:typeof original){react.render(<PreparedScene scene={scene} cache={cache} cacheKey={name} ready={true} store={store} narrow={false}/>);}
+const Renderer=before?(await import(/* @vite-ignore */ base+'src/ui/game/scene-window/PreparedScene.tsx')).PreparedScene:PreparedScene;
+function render(scene:typeof original){react.render(<Renderer scene={scene} cache={cache} cacheKey={name} ready={true} store={store} narrow={false}/>);}
 render(original);
 Object.assign(window,{sceneData:original,sceneCache:cache,renderScene:render});
