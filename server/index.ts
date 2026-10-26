@@ -2,7 +2,7 @@
 // code for `npm run lan` and for a VPS. Each player gets only viewFor of the game; actions are checked by
 // permissions.ts and the engine; messages are limited in size and rate.
 import { randomBytes, randomInt } from 'node:crypto';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, createReadStream, statSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { WebSocketServer, type WebSocket } from 'ws';
@@ -254,7 +254,7 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
       return;
     }
     if (!url.pathname.startsWith(BASE) || !staticRoot) return notFound(res);
-    serveStatic(staticRoot, decodeURIComponent(url.pathname.slice(BASE.length)), res);
+    serveStatic(staticRoot, decodeURIComponent(url.pathname.slice(BASE.length)), req, res);
   });
 
   // ——— WebSocket ———
@@ -347,7 +347,7 @@ function notFound(res: ServerResponse): void {
   res.end('Не найдено');
 }
 
-function serveStatic(root: string, path: string, res: ServerResponse): void {
+function serveStatic(root: string, path: string, req: IncomingMessage, res: ServerResponse): void {
   const file = normalize(join(root, path));
   if (file !== root && !file.startsWith(root + sep)) return notFound(res);
   let target = file;
@@ -358,9 +358,26 @@ function serveStatic(root: string, path: string, res: ServerResponse): void {
     return;
   }
   const hashed = target.includes(`${sep}assets${sep}`);
-  res.writeHead(200, {
-    'content-type': MIME[extname(target)] ?? 'application/octet-stream',
-    'cache-control': hashed ? 'public, max-age=31536000, immutable' : 'no-cache',
+  const contentType=MIME[extname(target)]??'application/octet-stream';
+  const accepted=String(req.headers['accept-encoding']??'').toLowerCase().split(',').map(part=>{
+    const [name,...params]=part.trim().split(';');const param=params.find(p=>p.trim().startsWith('q='));
+    const quality=param?Number(param.trim().slice(2)):1;return{name,q:Number.isFinite(quality)&&quality>=0&&quality<=1?quality:0};
   });
-  res.end(readFileSync(target));
+  const quality=(name:string)=>accepted.find(x=>x.name===name)?.q??accepted.find(x=>x.name==='*')?.q??0;
+  let encoding:string|undefined;
+  for(const candidate of ['br','gzip'].sort((a,b)=>quality(b)-quality(a))){
+    const file=target+(candidate==='br'?'.br':'.gz');
+    if(quality(candidate)>0&&existsSync(file)){target=file;encoding=candidate;break;}
+  }
+  const st=statSync(target),etag=`W/"${st.size.toString(16)}-${st.mtimeMs.toString(16)}"`;
+  const headers:Record<string,string|number>={
+    'content-type':contentType,'cache-control':hashed?'public, max-age=31536000, immutable':'no-cache',
+    'vary':'Accept-Encoding','etag':etag,
+  };
+  if(encoding)headers['content-encoding']=encoding;
+  const validators=String(req.headers['if-none-match']??'').split(',').map(v=>v.trim());
+  if(validators.some(v=>v==='*'||v.replace(/^W\//,'')===etag.replace(/^W\//,''))){res.writeHead(304,headers);res.end();return;}
+  headers['content-length']=st.size;res.writeHead(200,headers);
+  if(req.method==='HEAD'){res.end();return;}
+  const stream=createReadStream(target);stream.on('error',()=>res.destroy());stream.pipe(res);
 }

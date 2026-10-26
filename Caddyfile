@@ -1,6 +1,6 @@
 # Caddy (docker-compose.https.yml): HTTPS for the domain from .env, everything goes to the game server
 # (the site, /health and the WebSocket /ws).
 {$DOMAIN} {
-	encode gzip
+	encode zstd gzip
 	reverse_proxy game:8080
 }
