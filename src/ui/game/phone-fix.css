@@ -1,7 +1,6 @@
 /* game-phone-fix: layout only. The legacy geometry remains available through gamescale=0. */
 html.on-game,body.on-game{background:#21170e}
-.hand{position:relative}
-.hand-note{position:absolute;z-index:2;top:-29px;left:50%;transform:translateX(-50%);margin:0;padding:0;line-height:18px}
+.hand-note{position:absolute;z-index:2;top:8px;left:60%;transform:translateX(-50%);margin:0;padding:0;line-height:18px}
 .captain-plaque{padding:1px 10px;border:1px solid #987743;border-radius:3px;background:#322416;color:#e8d8ad;font:700 11px var(--font-num);white-space:nowrap}
 .hand-lift{z-index:10}
 @media(max-width:700px){
@@ -77,3 +76,32 @@ html.on-game,body.on-game{background:#21170e}
  .game[data-game-scale] .plank-buttons .soul-gain{gap:2px}.game[data-game-scale] .plank-buttons .soul-gain .soul-arrow{display:none}
  .game[data-game-scale] .plank-buttons .cmd-tag{display:block;font-size:8px}
 }
+@media(max-width:700px){
+ .game[data-game-scale]{--phone-card-h:clamp(76px,calc((var(--app-h,100dvh) - 568px) * .4 + 76px),164px)}
+ .game[data-game-scale] .status{flex:none}
+ .game[data-game-scale] .sea-table{min-height:0;grid-template-rows:auto minmax(0,1fr) auto}
+ .game[data-game-scale] .board-bottom>.team-row{min-height:clamp(38px,calc((var(--app-h,100dvh) - 568px) * .6 + 38px),82px)}
+}
+
+@media(max-width:700px){.game[data-game-scale] .hand[data-captain]{position:relative}}
+@media(max-width:400px){
+ .game[data-game-scale] .plank[data-has-souls] .ship-art{display:none}
+ .game[data-game-scale] .plank[data-has-souls] .plank-name{font-size:11px}
+ .game[data-game-scale] .plank[data-has-souls] .plank-head .star{margin-right:32px;width:17px;height:17px}
+ .game[data-game-scale] .plank[data-has-souls] .plank-body{position:static;grid-template-columns:minmax(0,1fr)}
+ .game[data-game-scale] .plank[data-has-souls] .track-row2{grid-column:1/-1}
+ .game[data-game-scale] .plank[data-has-souls] .plank-body>.badges{position:absolute;top:9px;right:30px;border:0;padding:0}
+ .game[data-game-scale] .plank[data-has-souls] .plank-body>.badges .badge.souls{font-size:10px;padding:0;gap:2px}
+ .game[data-game-scale] .plank[data-has-souls] .badge.souls .chip-icon{width:11px;height:13px}.game[data-game-scale] .plank[data-has-souls] .badge.souls svg{width:11px;height:13px}
+ .game[data-game-scale] .plank[data-has-souls] .track-row2 .track-num{font-size:12px}
+}
+.game.decision-open[data-game-scale] .backdrop .phone-deck-warm{display:none!important}
+@media(max-width:400px){
+ .game[data-game-scale] .plank[data-has-souls] .plank-head{padding-right:86px}
+ .game[data-game-scale] .plank[data-has-souls] .plank-head .star{position:absolute;right:68px;top:4px;margin:0}
+ .game[data-game-scale] .plank[data-has-souls] .plank-role{position:absolute;right:4px;top:5px}
+ .game[data-game-scale] .plank[data-has-souls] .plank-body>.badges{z-index:5;top:12px}
+ .game[data-game-scale] .plank[data-has-souls] .plank-body>.badges .badge.souls{min-width:0;width:32px;max-width:32px;color:#f5eacf;background:none;font-size:10px;display:flex;justify-content:center}
+ .game[data-game-scale] .plank[data-has-souls] .badge.souls .chip-icon{flex:none;width:11px}
+}
+@media(max-width:700px){.game[data-game-scale] .hand-cards:not(.lift-host){justify-content:flex-start}}

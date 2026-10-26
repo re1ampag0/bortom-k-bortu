@@ -1,0 +1,14 @@
+{
+  "normal": {
+    "panels": 0,
+    "legacyFlag": null
+  },
+  "default": "true",
+  "persisted": "scroll",
+  "immediate": "scroll",
+  "enabled": {
+    "panels": 1,
+    "stored": null
+  },
+  "closed": 0
+}

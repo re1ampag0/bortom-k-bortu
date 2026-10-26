@@ -2,7 +2,8 @@
 import type {ReactNode} from 'react';
 import type {GameData} from '../../engine/types';
 import {cardByCode} from '../../engine/state';
-import {HandCard,cardClass} from './Hand';
+import {CostBadge,cardClass} from './Hand';
+import {plainText} from './text';
 import {CELLS} from './art/cells';
 import {oakMedal} from './art/oak';
 export const PLAN_KEY='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24"><g fill="none" stroke="#d6d8da" stroke-width="2.8" stroke-linecap="round"><circle cx="11" cy="12" r="6"/><path d="M17 12h18m-6 0v6m5-6v4"/></g></svg>';
@@ -14,7 +15,9 @@ export function PlaySheet({title,sub,card,hold,target,actions,children,testid,to
 }){
  const c=card?cardByCode(card.data,card.code):null,cost=c?.cost??0;
  return <section className={`panel oak-sheet decision-sheet play-sheet ${c?cardClass(c):''} ${plans?'plans-sheet':''}`} data-testid={testid}>
-  <div className="ps-card" aria-hidden>{card?<HandCard data={card.data} code={card.code} off={null}/>:<span className="ps-emblem" dangerouslySetInnerHTML={{__html:plans?PLAN_KEY:oakMedal('anchor')}}/>}</div>
+  <div className="ps-card" aria-hidden>{card?<article className={`hcard ${c?cardClass(c):''}`}>
+    <span className="hcard-head"><span>{c?.type}</span>{c&&<CostBadge c={c}/>}</span><span className="hcard-name">{c?.name}</span><span className="hcard-big">{c?.big}</span><span className="hcard-text">{plainText(c?.text??'')}</span>
+   </article>:<span className="ps-emblem" dangerouslySetInnerHTML={{__html:plans?PLAN_KEY:oakMedal('anchor')}}/>}</div>
   <div className="ps-main">
    <header className="cs-head"><span className="ps-kind">{plans?'Планы':c?.type??'Решение'}</span>{tools}</header>
    <h2 className="cs-title">{title}</h2>

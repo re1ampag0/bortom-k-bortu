@@ -1,0 +1,254 @@
+{
+  "order": {
+    "record": {
+      "format": "bortom-k-bortu/match",
+      "version": 1,
+      "dataVersion": "0.3",
+      "setup": {
+        "game": {
+          "seed": 1,
+          "variant": "standard",
+          "sea": true,
+          "legends": true,
+          "positions": {
+            "ПИРАТЫ": [
+              "Ж",
+              "М"
+            ],
+            "КОМПАНИЯ": [
+              "И",
+              "Г"
+            ]
+          }
+        },
+        "players": {
+          "ПИРАТЫ": "human",
+          "КОМПАНИЯ": "human"
+        },
+        "openHands": true,
+        "hints": false
+      },
+      "actions": [
+        {
+          "type": "endTurn",
+          "side": "ПИРАТЫ"
+        },
+        {
+          "type": "endTurn",
+          "side": "КОМПАНИЯ"
+        }
+      ]
+    },
+    "seat": "Ж",
+    "code": "Ж-09",
+    "name": "Бочки с порохом"
+  },
+  "repair": {
+    "record": {
+      "format": "bortom-k-bortu/match",
+      "version": 1,
+      "dataVersion": "0.3",
+      "setup": {
+        "game": {
+          "seed": 2,
+          "variant": "standard",
+          "sea": true,
+          "legends": true,
+          "positions": {
+            "ПИРАТЫ": [
+              "Ж",
+              "М"
+            ],
+            "КОМПАНИЯ": [
+              "И",
+              "Г"
+            ]
+          }
+        },
+        "players": {
+          "ПИРАТЫ": "human",
+          "КОМПАНИЯ": "human"
+        },
+        "openHands": true,
+        "hints": false
+      },
+      "actions": [
+        {
+          "type": "endTurn",
+          "side": "ПИРАТЫ"
+        },
+        {
+          "type": "endTurn",
+          "side": "КОМПАНИЯ"
+        }
+      ]
+    },
+    "seat": "М",
+    "code": "М-18",
+    "name": "Живые снасти"
+  },
+  "legend": {
+    "record": {
+      "format": "bortom-k-bortu/match",
+      "version": 1,
+      "dataVersion": "0.3",
+      "setup": {
+        "game": {
+          "seed": 1,
+          "variant": "standard",
+          "sea": false,
+          "legends": true,
+          "positions": {
+            "ПИРАТЫ": [
+              "Ж",
+              "М"
+            ],
+            "КОМПАНИЯ": [
+              "И",
+              "Г"
+            ]
+          }
+        },
+        "players": {
+          "ПИРАТЫ": "human",
+          "КОМПАНИЯ": "human"
+        },
+        "openHands": true,
+        "hints": false
+      },
+      "actions": [
+        {
+          "type": "endTurn",
+          "side": "ПИРАТЫ"
+        }
+      ]
+    },
+    "seat": "И",
+    "code": "И-Л"
+  },
+  "table": {
+    "record": {
+      "format": "bortom-k-bortu/match",
+      "version": 1,
+      "dataVersion": "0.3",
+      "setup": {
+        "game": {
+          "seed": 1,
+          "variant": "standard",
+          "sea": true,
+          "legends": true,
+          "positions": {
+            "ПИРАТЫ": [
+              "Ж",
+              "М"
+            ],
+            "КОМПАНИЯ": [
+              "И",
+              "Г"
+            ]
+          }
+        },
+        "players": {
+          "ПИРАТЫ": "human",
+          "КОМПАНИЯ": "human"
+        },
+        "openHands": true,
+        "hints": false
+      },
+      "actions": [
+        {
+          "type": "endTurn",
+          "side": "ПИРАТЫ"
+        },
+        {
+          "type": "endTurn",
+          "side": "КОМПАНИЯ"
+        }
+      ]
+    },
+    "seat": "Ж"
+  },
+  "captain": {
+    "seat": "М",
+    "record": {
+      "format": "bortom-k-bortu/match",
+      "version": 1,
+      "dataVersion": "0.3",
+      "setup": {
+        "game": {
+          "seed": 1,
+          "variant": "standard",
+          "sea": false,
+          "legends": true,
+          "positions": {
+            "ПИРАТЫ": [
+              "Ж",
+              "М"
+            ],
+            "КОМПАНИЯ": [
+              "И",
+              "Г"
+            ]
+          }
+        },
+        "players": {
+          "ПИРАТЫ": "human",
+          "КОМПАНИЯ": "human"
+        },
+        "openHands": true,
+        "hints": false
+      },
+      "actions": [
+        {
+          "type": "endTurn",
+          "side": "ПИРАТЫ"
+        },
+        {
+          "type": "volley",
+          "ship": "И",
+          "target": "М"
+        },
+        {
+          "type": "volley",
+          "ship": "Г",
+          "target": "М"
+        },
+        {
+          "type": "endTurn",
+          "side": "КОМПАНИЯ"
+        },
+        {
+          "type": "endTurn",
+          "side": "ПИРАТЫ"
+        },
+        {
+          "type": "volley",
+          "ship": "И",
+          "target": "М"
+        },
+        {
+          "type": "volley",
+          "ship": "Г",
+          "target": "М"
+        },
+        {
+          "type": "endTurn",
+          "side": "КОМПАНИЯ"
+        },
+        {
+          "type": "endTurn",
+          "side": "ПИРАТЫ"
+        },
+        {
+          "type": "volley",
+          "ship": "И",
+          "target": "М"
+        },
+        {
+          "type": "endTurn",
+          "side": "КОМПАНИЯ"
+        }
+      ]
+    }
+  }
+}
