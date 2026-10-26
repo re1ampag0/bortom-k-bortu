@@ -18,12 +18,12 @@ export function initPerf(): void {
   initialized = true;
   let enabled = false, off: Part[] = [];
   try {
-    enabled = localStorage.getItem('bortom-perf') === '1';
+    localStorage.removeItem('bortom-perf');
     const saved: unknown = JSON.parse(localStorage.getItem('bortom-perf-parts') ?? '[]');
     if (Array.isArray(saved)) off = PARTS.map(([key]) => key).filter(key => saved.includes(key));
   } catch { /* URL still works with unavailable storage */ }
   const query = new URLSearchParams(location.search).get('perf');
-  if (query === '1' || query === '0') { enabled = query === '1'; write('bortom-perf', query); }
+  enabled = query === '1';
   config = {enabled, off};
 }
 export function togglePart(part: Part): void {
@@ -34,3 +34,5 @@ export function togglePart(part: Part): void {
 }
 export const subscribePerf = (fn: () => void) => { listeners.add(fn); return () => {listeners.delete(fn);}; };
 export const perfClasses = (c: PerfConfig) => c.enabled ? c.off.map(p => `perf-off-${p}`).join(' ') : '';
+
+export function closePerf():void {config={...config,enabled:false};listeners.forEach(fn=>fn());}

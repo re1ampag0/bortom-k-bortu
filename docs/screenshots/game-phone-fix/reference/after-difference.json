@@ -1,0 +1,44 @@
+[
+  {
+    "size": "1366x660",
+    "screen": "table",
+    "pixels": 16727,
+    "outsideAllowedZones": 16727,
+    "zones": []
+  },
+  {
+    "size": "1366x660",
+    "screen": "log",
+    "pixels": 16727,
+    "outsideAllowedZones": 16727,
+    "zones": []
+  },
+  {
+    "size": "1366x660",
+    "screen": "reaction",
+    "pixels": 305057,
+    "outsideAllowedZones": 305057,
+    "zones": []
+  },
+  {
+    "size": "430x932",
+    "screen": "table",
+    "pixels": 148621,
+    "outsideAllowedZones": 148621,
+    "zones": []
+  },
+  {
+    "size": "430x932",
+    "screen": "log",
+    "pixels": 20281,
+    "outsideAllowedZones": 20281,
+    "zones": []
+  },
+  {
+    "size": "430x932",
+    "screen": "reaction",
+    "pixels": 205540,
+    "outsideAllowedZones": 205540,
+    "zones": []
+  }
+]

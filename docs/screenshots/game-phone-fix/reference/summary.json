@@ -1,0 +1,74 @@
+[
+  {
+    "size": "1366x660",
+    "screen": "table",
+    "pixels": 16727,
+    "outsideDesktopLog": 0,
+    "bbox": [
+      1066,
+      94,
+      1353,
+      416
+    ]
+  },
+  {
+    "size": "1366x660",
+    "screen": "log",
+    "pixels": 16727,
+    "outsideDesktopLog": 0,
+    "bbox": [
+      1066,
+      94,
+      1353,
+      416
+    ]
+  },
+  {
+    "size": "1366x660",
+    "screen": "reaction",
+    "pixels": 305057,
+    "outsideDesktopLog": 219638,
+    "bbox": [
+      290,
+      94,
+      1365,
+      659
+    ]
+  },
+  {
+    "size": "430x932",
+    "screen": "table",
+    "pixels": 148621,
+    "outsideDesktopLog": 148621,
+    "bbox": [
+      0,
+      47,
+      429,
+      859
+    ]
+  },
+  {
+    "size": "430x932",
+    "screen": "log",
+    "pixels": 20281,
+    "outsideDesktopLog": 20281,
+    "bbox": [
+      0,
+      47,
+      429,
+      859
+    ]
+  },
+  {
+    "size": "430x932",
+    "screen": "reaction",
+    "pixels": 205540,
+    "outsideDesktopLog": 205540,
+    "bbox": [
+      0,
+      35,
+      429,
+      659
+    ]
+  }
+]

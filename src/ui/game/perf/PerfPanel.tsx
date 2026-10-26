@@ -1,6 +1,6 @@
 import {useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore} from 'react';
 import {createPortal} from 'react-dom';
-import {getPerf, initPerf, PARTS, perfClasses, subscribePerf, togglePart, type PerfConfig} from './state';
+import {getPerf, initPerf, PARTS, perfClasses, closePerf, subscribePerf, togglePart, type PerfConfig} from './state';
 import {FrameWindow, stats, type Sample, type Stats} from './metrics';
 import {clipText, lastClip, subscribeClip, watchClipDiagnostics} from './clip';
 import {frameText} from './frames';
@@ -94,7 +94,7 @@ export function PerfPanel() {
   const copyClip = () => copyText(clipValue, clipArea.current, (note) => { setClipCopy(note); if (note !== 'Скопировано') setClipShown(true); });
   return createPortal(<aside className="perf-panel" data-testid="perf-panel" aria-label="Диагностика скорости">
     <div className="perf-readout">{value.fps.toFixed(0)} кадров/с · худший/10 с {value.worst.toFixed(0)} мс<br/>&gt;50 мс за 10 с: {value.slow}</div>
-    <div className="perf-buttons"><button onClick={reset}>Сброс</button><button aria-expanded={parts} onClick={() => setParts(!parts)}>Части</button><button onClick={start} disabled={seconds !== null}>{seconds === null ? 'Записать 20 с' : `Запись: ${seconds} с`}</button>{clip && <button aria-expanded={framesOpen} data-testid="perf-frames-toggle" onClick={()=>setFramesOpen(!framesOpen)}>5 худших кадров</button>}{presses.length > 0 && <button aria-expanded={pressOpen} data-testid="perf-press-toggle" onClick={() => setPressOpen(!pressOpen)}>Нажатия</button>}{(clip || presses.length > 0) && <button data-testid="perf-clip-copy" onClick={copyClip}>Скопировать числа</button>}</div>
+    <div className="perf-buttons"><button aria-label="Закрыть диагностику" onClick={closePerf}>×</button><button onClick={reset}>Сброс</button><button aria-expanded={parts} onClick={() => setParts(!parts)}>Части</button><button onClick={start} disabled={seconds !== null}>{seconds === null ? 'Записать 20 с' : `Запись: ${seconds} с`}</button>{clip && <button aria-expanded={framesOpen} data-testid="perf-frames-toggle" onClick={()=>setFramesOpen(!framesOpen)}>5 худших кадров</button>}{presses.length > 0 && <button aria-expanded={pressOpen} data-testid="perf-press-toggle" onClick={() => setPressOpen(!pressOpen)}>Нажатия</button>}{(clip || presses.length > 0) && <button data-testid="perf-clip-copy" onClick={copyClip}>Скопировать числа</button>}</div>
     {parts && <fieldset className="perf-parts"><legend>Отключить части</legend>{PARTS.map(([part,name], i) => <label key={part}><input data-testid={`perf-${part}`} type="checkbox" checked={config.off.includes(part)} onChange={() => togglePart(part)}/>{i+1}. {name}</label>)}</fieldset>}
     {clip && <div className="perf-readout perf-clip" data-testid="perf-clip">клип: {clip.scene}<br/>кадров/с мин {clip.fpsMin.toFixed(0)} · Game {clip.renders}×, макс {clip.renderMaxMs.toFixed(0)} мс{clipCopy && <><br/><span role="status">{clipCopy}</span></>}
       {framesOpen&&<ol className="perf-frames" data-testid="perf-worst-frames">{clip.worstFrames.map((f,i)=><li key={i}>{frameText(f)}</li>)}</ol>}

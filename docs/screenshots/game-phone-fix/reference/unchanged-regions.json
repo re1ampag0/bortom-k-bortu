@@ -1,0 +1,132 @@
+{
+  "phoneGeometry": [
+    {
+      "class": "status",
+      "before": {
+        "x": 0,
+        "y": 0,
+        "width": 430,
+        "height": 116,
+        "top": 0,
+        "right": 430,
+        "bottom": 116,
+        "left": 0
+      },
+      "after": {
+        "x": 0,
+        "y": 0,
+        "width": 430,
+        "height": 116,
+        "top": 0,
+        "right": 430,
+        "bottom": 116,
+        "left": 0
+      },
+      "equal": true
+    },
+    {
+      "class": "sea-table has-info",
+      "before": {
+        "x": 8,
+        "y": 119,
+        "width": 414,
+        "height": 448,
+        "top": 119,
+        "right": 422,
+        "bottom": 567,
+        "left": 8
+      },
+      "after": {
+        "x": 8,
+        "y": 119,
+        "width": 414,
+        "height": 448,
+        "top": 119,
+        "right": 422,
+        "bottom": 567,
+        "left": 8
+      },
+      "equal": true
+    },
+    {
+      "class": "planks top",
+      "before": {
+        "x": 18,
+        "y": 129,
+        "width": 394,
+        "height": 78,
+        "top": 129,
+        "right": 412,
+        "bottom": 207,
+        "left": 18
+      },
+      "after": {
+        "x": 18,
+        "y": 129,
+        "width": 394,
+        "height": 78,
+        "top": 129,
+        "right": 412,
+        "bottom": 207,
+        "left": 18
+      },
+      "equal": true
+    },
+    {
+      "class": "planks bottom",
+      "before": {
+        "x": 18,
+        "y": 436.8125,
+        "width": 394,
+        "height": 120.1875,
+        "top": 436.8125,
+        "right": 412,
+        "bottom": 557,
+        "left": 18
+      },
+      "after": {
+        "x": 18,
+        "y": 436.8125,
+        "width": 394,
+        "height": 120.1875,
+        "top": 436.8125,
+        "right": 412,
+        "bottom": 557,
+        "left": 18
+      },
+      "equal": true
+    }
+  ],
+  "unchangedPixelRegions": [
+    {
+      "name": "wholeMiddle",
+      "box": [
+        18,
+        211,
+        412,
+        432
+      ],
+      "pixels": 0
+    },
+    {
+      "name": "topBar",
+      "box": [
+        0,
+        0,
+        430,
+        45
+      ],
+      "pixels": 0
+    },
+    {
+      "name": "bottomBar",
+      "box": [
+        0,
+        861,
+        430,
+        932
+      ],
+      "pixels": 0
+    }
+  ]
+}

@@ -1,0 +1,253 @@
+[
+  {
+    "size": "1366x660",
+    "captainNote": {
+      "x": 510.828125,
+      "y": 478.53125,
+      "width": 65.34375,
+      "height": 19
+    },
+    "geometryEqual": true
+  },
+  {
+    "size": "390x844",
+    "captainNote": {
+      "x": 360.625,
+      "y": 573,
+      "width": 17.375,
+      "height": 16
+    },
+    "geometryEqual": true
+  },
+  {
+    "size": "320x700",
+    "souls": 0,
+    "rect": {
+      "x": 239,
+      "y": 142,
+      "width": 32,
+      "height": 18,
+      "top": 142,
+      "right": 271,
+      "bottom": 160,
+      "left": 239
+    },
+    "minimumGap": -55,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "320x700",
+    "souls": 1,
+    "rect": {
+      "x": 239,
+      "y": 142,
+      "width": 32,
+      "height": 18,
+      "top": 142,
+      "right": 271,
+      "bottom": 160,
+      "left": 239
+    },
+    "minimumGap": -55,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "320x700",
+    "souls": 5,
+    "rect": {
+      "x": 239,
+      "y": 142,
+      "width": 32,
+      "height": 18,
+      "top": 142,
+      "right": 271,
+      "bottom": 160,
+      "left": 239
+    },
+    "minimumGap": -55,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "360x700",
+    "souls": 0,
+    "rect": {
+      "x": 279,
+      "y": 142,
+      "width": 32,
+      "height": 18,
+      "top": 142,
+      "right": 311,
+      "bottom": 160,
+      "left": 279
+    },
+    "minimumGap": -55,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "360x700",
+    "souls": 1,
+    "rect": {
+      "x": 279,
+      "y": 142,
+      "width": 32,
+      "height": 18,
+      "top": 142,
+      "right": 311,
+      "bottom": 160,
+      "left": 279
+    },
+    "minimumGap": -55,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "360x700",
+    "souls": 5,
+    "rect": {
+      "x": 279,
+      "y": 142,
+      "width": 32,
+      "height": 18,
+      "top": 142,
+      "right": 311,
+      "bottom": 160,
+      "left": 279
+    },
+    "minimumGap": -55,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "390x700",
+    "souls": 0,
+    "rect": {
+      "x": 309,
+      "y": 142,
+      "width": 32,
+      "height": 18,
+      "top": 142,
+      "right": 341,
+      "bottom": 160,
+      "left": 309
+    },
+    "minimumGap": -55,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "390x700",
+    "souls": 1,
+    "rect": {
+      "x": 309,
+      "y": 142,
+      "width": 32,
+      "height": 18,
+      "top": 142,
+      "right": 341,
+      "bottom": 160,
+      "left": 309
+    },
+    "minimumGap": -55,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "390x700",
+    "souls": 5,
+    "rect": {
+      "x": 309,
+      "y": 142,
+      "width": 32,
+      "height": 18,
+      "top": 142,
+      "right": 341,
+      "bottom": 160,
+      "left": 309
+    },
+    "minimumGap": -55,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "430x700",
+    "souls": 0,
+    "rect": {
+      "x": 354.421875,
+      "y": 184,
+      "width": 49.578125,
+      "height": 18,
+      "top": 184,
+      "right": 404,
+      "bottom": 202,
+      "left": 354.421875
+    },
+    "minimumGap": 13,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "430x700",
+    "souls": 1,
+    "rect": {
+      "x": 354.421875,
+      "y": 184,
+      "width": 49.578125,
+      "height": 18,
+      "top": 184,
+      "right": 404,
+      "bottom": 202,
+      "left": 354.421875
+    },
+    "minimumGap": 13,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "size": "430x700",
+    "souls": 5,
+    "rect": {
+      "x": 354.421875,
+      "y": 184,
+      "width": 49.578125,
+      "height": 18,
+      "top": 184,
+      "right": 404,
+      "bottom": 202,
+      "left": 354.421875
+    },
+    "minimumGap": 13,
+    "overlap": false,
+    "header": false,
+    "hit": true,
+    "headerOverlaps": []
+  },
+  {
+    "diagnosticLegacyFlag": null
+  }
+]
