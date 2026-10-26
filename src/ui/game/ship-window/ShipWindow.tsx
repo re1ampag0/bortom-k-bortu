@@ -66,9 +66,8 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
         <span className="sw-cells" style={{width:d[track]*WIDTHS[track]}} aria-hidden>{Array.from({length:d[track]},(_,i)=><span key={i} style={{width:WIDTHS[track],opacity:i<ship.tracks[track]?1:.22}} ><img src={shipArt(`track-${track}.svg`)} alt=""/></span>)}</span>
         <b>{ship.tracks[track]}/{d[track]}</b>
        </div>)}
-       {d.souls!==undefined&&<div className="sw-souls" data-testid="ship-souls"><span>Души</span><span className="sw-soul-count"><img src={soulIcon} alt=""/>{ship.souls}/{d.souls}</span>
-        {(['HULL','CREW'] as const).map(track=><span className="sw-soul-exchange" key={track} aria-label={`Душа → +1 ${track==='HULL'?'Корпус':'Команда'}`}><img src={soulIcon} alt=""/><span>→</span><span dangerouslySetInnerHTML={{__html:CELLS[track]}}/><strong>+1</strong></span>)}
-       </div>}
+       {d.souls!==undefined&&<div className="sw-souls" data-testid="ship-souls"><span>{ship.souls}/{d.souls} | в свой ход 1 Душа чинит 1 Корпус или 1 Команду</span></div>}
+
       </div>
       <h2 style={st('featureHeading')}>Особенности</h2>
       {d.abilities.map((ability,i)=><div className="sw-feature" style={st('featureRow')} key={ability.name}>
