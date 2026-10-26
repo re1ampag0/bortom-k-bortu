@@ -1,0 +1,22 @@
+{
+  "before": {
+    "entry": [
+      {
+        "name": "index-JUUlhNiA.js",
+        "bytes": 1497549
+      }
+    ],
+    "brFiles": 0,
+    "gzipFiles": 0
+  },
+  "checkpoint": {
+    "entry": [
+      {
+        "name": "index-hPaJSBGv.js",
+        "bytes": 1497969
+      }
+    ],
+    "brFiles": 137,
+    "gzipFiles": 137
+  }
+}

@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import {compressedAssets} from './scripts/compressed-assets';
 import react from '@vitejs/plugin-react';
 import { execSync } from 'node:child_process';
 
@@ -15,7 +16,7 @@ function commit(): string {
 // GitHub Pages serves the site from https://<user>.github.io/bortom-k-bortu/
 export default defineConfig({
   base: '/bortom-k-bortu/',
-  plugins: [react()],
+  plugins: [react(),compressedAssets()],
   define: { __APP_COMMIT__: JSON.stringify(commit()), __APP_BUILT__: JSON.stringify(new Date().toISOString()) },
   // `npm run dev` / `vite preview` next to a game server on port 8080 (`npm run server`): the game goes through it.
   server: { proxy: { '/ws': { target: 'ws://localhost:8080', ws: true } } },
