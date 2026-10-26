@@ -1,7 +1,7 @@
 """Close sampled curves without changing their duration or intermediate story keys."""
 from pathlib import Path
 from PIL import Image
-import json,re,hashlib,io
+import json,re,hashlib,io,copy
 rows=json.loads(Path('docs/measurements/menus-speed/seams-before-fix.json').read_text());bank=Path('src/ui/game/scene-window/art');changes=[]
 def walk(ns):
  for n in ns:yield n;yield from walk(n['children'])
@@ -19,7 +19,7 @@ for family in ['menus','ship','weather']:
   if row['family']!=family or not row.get('seam'):continue
   n=next(n for n in walk(data[row['name']]['tree'])if n['id']==row['id']);a=next((a for a in n['anim']if a['name']==row['animation']),None)
   if not a or a.get('closedRevision'):continue
-  fs=a['frames'];first,last=fs[0],fs[-1];action='close sampled return over final 20%'
+  fs=a['frames'];a.setdefault('originalFrames',copy.deepcopy(fs));first,last=fs[0],fs[-1];action='close sampled return over final 20%'
   # Static ripple strips and repeating water are textures, not returning objects.
   art=n.get('art');name=a['name'];v0=nums(first.get('transform',''));v1=nums(last.get('transform',''));dx=0
   if len(v0)==len(v1)==6:dx=v1[4]-v0[4]

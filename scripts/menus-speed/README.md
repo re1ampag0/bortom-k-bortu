@@ -19,7 +19,7 @@ It records raw pixel counts; >12 channel levels on >100 pixels (or >0.01% on a l
 scene) is a visible seam. Tiny isolated antialias edge differences remain in raw results.
 `LAYERS=ship:Г:120,...` restricts re-capture to modified layers.
 
-`network.mjs` runs once against original production HTTP server :5380 and changed :5381,
+`network.mjs` runs once against original production HTTP server :5380 and changed :5384,
 with fresh browser contexts per version/network/viewport, Fast4G 9Mbps and Slow4G1.6Mbps,
 150ms latency. Subsequent transitions use that context's cache. Response bytes are CDP
 encodedDataLength, including headers; simultaneous idle downloads belong to the observed

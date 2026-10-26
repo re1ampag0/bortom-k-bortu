@@ -82,3 +82,6 @@
 @media(prefers-reduced-motion:reduce){.menu-placement-center button .menu-icon{transition:none}}
 /* Slots are opaque up to their attachment edge; ropes remain behind them. */
 .menu-own-slot{isolation:isolate;background-color:#203c47;z-index:2}
+/* Empty space between own slots must not intercept the central swap medallion. */
+.menu-own-ships{pointer-events:none}
+.menu-placement-center{z-index:3}

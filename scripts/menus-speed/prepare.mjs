@@ -7,7 +7,7 @@ export async function prepareScenes(){
  try{
   await run('python3','scripts/menus-speed/optimize.py');await run('node','scripts/menus-speed/raster-images.mjs');
   for(const file of ['tile-seas','ship-motion','close-loops','pixel-periods','rain-loops','quality'])await run('python3',`scripts/menus-speed/${file}.py`);
-  await run('node','scripts/menus-speed/posters.mjs');for(const file of ['minify','compact'])await run('python3',`scripts/menus-speed/${file}.py`);splitScenes();
+  await run('python3','scripts/menus-speed/two-key-loops.py');await run('node','scripts/menus-speed/cloud-loops.mjs');await run('node','scripts/menus-speed/posters.mjs');for(const file of ['minify','compact'])await run('python3',`scripts/menus-speed/${file}.py`);splitScenes();
  }finally{await server.close();}
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname.endsWith(process.argv[1]))await prepareScenes();

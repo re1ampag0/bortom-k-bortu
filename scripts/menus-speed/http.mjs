@@ -1,0 +1,5 @@
+import{writeFileSync}from'node:fs';
+const base='http://127.0.0.1:5381/bortom-k-bortu/',results=[];
+const html=await fetch(base),text=await html.text(),asset=new URL(text.match(/src="([^\"]+\.js)"/)[1],base).href;
+for(const [label,method,headers]of [['br','GET',{'accept-encoding':'br, gzip'}],['gzip','GET',{'accept-encoding':'br;q=0, gzip;q=1'}],['identity','GET',{'accept-encoding':'identity'}],['head','HEAD',{'accept-encoding':'br'}]]){const r=await fetch(asset,{method,headers});results.push({label,status:r.status,headers:Object.fromEntries(r.headers),decodedBody:method==='HEAD'?0:(await r.arrayBuffer()).byteLength});}
+const etag=results[0].headers.etag,r=await fetch(asset,{headers:{'accept-encoding':'br','if-none-match':etag}});results.push({label:'etag',status:r.status,body:(await r.arrayBuffer()).byteLength});results.push({label:'index',status:html.status,headers:Object.fromEntries(html.headers)});writeFileSync('docs/measurements/menus-speed/http.json',JSON.stringify(results,null,2));console.log(results.map(r=>[r.label,r.status,r.headers?.['content-encoding']??'',r.headers?.['cache-control']??'']));

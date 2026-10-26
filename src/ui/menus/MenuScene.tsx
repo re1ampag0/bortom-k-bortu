@@ -8,7 +8,7 @@ import {hasScene,loadScene} from './sceneManifest';
 import {useMenuLayout} from './layout';
 import {menuImagePool as pool} from './assets';
 import {getPerf,perfOff,subscribePerf} from '../game/perf/state';
-import {initMenuMotion,menuMotionAllowed,subscribeMenuMotion} from './motion';
+import {initMenuMotion,menuMotionAllowed,menuMotionEnabled,subscribeMenuMotion} from './motion';
 import {queueSceneWarm} from '../game/scene-window/idle';
 const files=import.meta.glob('./art/*',{eager:true,query:'?url',import:'default'})as Record<string,string>;
 const pictures=import.meta.glob('./posters/*.webp',{eager:true,query:'?url',import:'default'})as Record<string,string>;
@@ -16,13 +16,13 @@ const art=(path:string)=>sharedSceneArt((aliases as Record<string,string>)[path]
 const idle={get:()=>({busy:!menuMotionAllowed()}),subscribe:subscribeMenuMotion};
 const warmed=new Set<string>();
 export function MenuScene({name}:{name:string}){
- const [cache]=useState(()=>createSceneCache(art,pool)),layout=useMenuLayout(),phone=layout.mode==='phone';
+ const [clockOwner]=useState(()=>({})),[cache]=useState(()=>createSceneCache(art,pool)),layout=useMenuLayout(),phone=layout.mode==='phone';
  const key=phone&&hasScene(name+'Phone')?name+'Phone':name==='Main'&&phone?'Phone':name;
  const info=(posters as Record<string,{width:number;height:number;src:string}>)[key];
  const [source,setSource]=useState<Scene|null>(null),[ready,setReady]=useState(false),[shown,setShown]=useState(''),[posterDecoded,setPosterDecoded]=useState('');
  const ref=useRef<HTMLDivElement>(null),reduced=useMemo(()=>matchMedia('(prefers-reduced-motion:reduce)'),[]);
- const [motion,setMotion]=useState(()=>menuMotionAllowed()&&!reduced.matches),[perf,setPerf]=useState(getPerf);
- useEffect(()=>{initMenuMotion();const update=()=>{setMotion(menuMotionAllowed()&&!reduced.matches);setPerf(getPerf());};const off=subscribeMenuMotion(update),p=subscribePerf(update);reduced.addEventListener('change',update);update();return()=>{off();p();reduced.removeEventListener('change',update);};},[reduced]);
+ const [motion,setMotion]=useState(()=>menuMotionEnabled()&&!reduced.matches),[perf,setPerf]=useState(getPerf);
+ useEffect(()=>{initMenuMotion();const update=()=>{setMotion(menuMotionEnabled()&&!reduced.matches);setPerf(getPerf());};const off=subscribeMenuMotion(update),p=subscribePerf(update);reduced.addEventListener('change',update);update();return()=>{off();p();reduced.removeEventListener('change',update);};},[reduced]);
  const poster=info?pictures['./posters/'+info.src]:undefined;
  useEffect(()=>{let live=true;if(poster)void pool.load(poster).then(()=>{if(live)setPosterDecoded(key);});return()=>{live=false}},[poster,key]);
  useEffect(()=>{let live=true;setReady(false);setShown('');setSource(null);if(motion&&!/^Chart_main/.test(key))void loadScene(key).then(s=>{if(live)setSource(s)});return()=>{live=false}},[key,motion]);
@@ -37,6 +37,6 @@ export function MenuScene({name}:{name:string}){
  if(!info)return null;
  return <div className="menu-prepared" ref={ref} style={{aspectRatio:`${info.width}/${info.height}`,'--menu-art-width':info.width+'px','--menu-art-height':info.height+'px'}as React.CSSProperties}>
   {posterDecoded===key&&<img src={poster} alt="" aria-hidden style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',opacity:shown===key?0:1,visibility:shown===key?'hidden':'visible',transition:'opacity 300ms ease, visibility 0s 300ms'}}/>}
-  {scene&&motion&&<PreparedScene scene={scene} cache={cache} cacheKey={key} ready={ready} store={idle} narrow={phone} pixelRatio={layout.enabled&&(layout.k!==1||!phone&&devicePixelRatio>3)?phone?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio*layout.k,3):undefined}/>}
+  {scene&&motion&&<PreparedScene clockOwner={clockOwner} scene={scene} cache={cache} cacheKey={key} ready={ready} store={idle} narrow={phone} pixelRatio={layout.enabled&&(layout.k!==1||!phone&&devicePixelRatio>3)?phone?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio*layout.k,3):undefined}/>}
  </div>;
 }

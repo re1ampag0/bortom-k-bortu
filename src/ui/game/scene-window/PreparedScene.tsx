@@ -8,7 +8,7 @@ type Motion={name:string;frames:Frame[];timing:KeyframeAnimationOptions};
 type Layer={text?:string;id:number;tag:string;cls:string;style:Record<string,string>;anim:Motion[];children:Layer[];art?:Art;image?:string;frames?:Art[];frameTiming?:KeyframeAnimationOptions;particle?:boolean;rain?:boolean;animations?:Frame[];rainTiming?:KeyframeAnimationOptions};
 export type SceneActivity={get:()=>{busy:boolean};subscribe:(listener:()=>void)=>()=>void};
 export type Scene={width:number;height:number;tree:Layer[]};
-const options=(t:KeyframeAnimationOptions):KeyframeAnimationOptions=>({...t,iterations:t.iterations??Infinity});
+const options=(t:KeyframeAnimationOptions):KeyframeAnimationOptions=>({...t,fill:t.fill==='none'?'both':t.fill??'both',iterations:t.iterations??Infinity});
 const frames=(f:Frame[])=>f.map(({computedOffset:_c,composite:_k,...frame})=>{
  if(Object.keys(frame).some(k=>!['offset','easing','transform','opacity'].includes(k)))throw Error('Unsupported ship scene animation');return frame;
 });
@@ -22,7 +22,7 @@ export function sceneMatrix(value:string|undefined,w:number,h:number){
  return new DOMMatrix(value);
 }
 export function sampleSceneMotion(anim:Motion,time:number){
- const duration=Number(anim.timing.duration),delay=Number(anim.timing.delay??0),elapsed=time-delay;
+ const duration=Number(anim.timing.duration),delay=Number(anim.timing.delay??0),elapsed=Math.max(0,time-delay);
  if(elapsed<0)return null;
  const iteration=Math.floor(elapsed/duration);let p=(elapsed%duration)/duration;
  if(anim.timing.direction==='reverse'||anim.timing.direction==='alternate'&&iteration%2||anim.timing.direction==='alternate-reverse'&&!(iteration%2))p=1-p;
@@ -30,13 +30,13 @@ export function sampleSceneMotion(anim:Motion,time:number){
  const a=rows[i],b=rows[i+1]??a,from=Number(a.offset??0),to=Number(b.offset??1);
  return {a,b,p:particleEasing(String(a.easing??'linear'))(Math.max(0,Math.min(1,(p-from)/(to-from||1))))};
 }
-const clocks=new WeakMap<HTMLElement,Map<string,number>>();
+const clocks=new WeakMap<object,Map<string,number>>();
 /** One owner, native wrapper clocks + one shared particle rAF. Cleanup always cancels both. */
-export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className="sw-native-scene",mobileArt=false,pixelRatio}:{scene:Scene;cache:SceneCache;cacheKey:string;ready:boolean;store:SceneActivity;narrow:boolean;className?:string;mobileArt?:boolean;pixelRatio?:number}){
+export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className="sw-native-scene",mobileArt=false,pixelRatio,clockOwner}:{scene:Scene;cache:SceneCache;cacheKey:string;ready:boolean;store:SceneActivity;narrow:boolean;className?:string;mobileArt?:boolean;pixelRatio?:number;clockOwner?:object}){
  const ref=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   const element=ref.current;if(!element||!ready)return;const host:HTMLDivElement=element;
-  let live=true,raf=0,elapsed=clocks.get(host)?.get(cacheKey)??0,last=performance.now(),running=false,intersecting=false,capturing=false;
+  let live=true,raf=0,elapsed=clocks.get(clockOwner??host)?.get(cacheKey)??0,last=performance.now(),running=false,intersecting=false,capturing=false;
   const animations:Animation[]=[],particles:{node:Layer;chain:Layer[];image:HTMLImageElement;level:number}[]=[];
   const surfaces=new Map<number,{canvas:HTMLCanvasElement;context:CanvasRenderingContext2D}>();
   let observer:IntersectionObserver|undefined,unsubscribe:(()=>void)|undefined;
@@ -98,10 +98,10 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
   void cache.prepare(cacheKey,sceneUrls(scene)).then(()=>{
    if(!live)return;const fragment=document.createDocumentFragment();for(const n of scene.tree){const el=build(n,[]);if(el)fragment.append(el);}host.append(fragment);host.dataset.ready='1';host.parentElement?.setAttribute('data-scene-live','');
    observer=new IntersectionObserver(entries=>{intersecting=entries[0]?.isIntersecting??false;update();});observer.observe(host);
-   document.addEventListener('visibilitychange',update);reduced.addEventListener('change',update);unsubscribe=store.subscribe(update);draw(0);
+   document.addEventListener('visibilitychange',update);reduced.addEventListener('change',update);unsubscribe=store.subscribe(update);draw(elapsed);
    if(import.meta.env.DEV||import.meta.env.MODE==='e2e')Object.defineProperty(host,'captureScene',{configurable:true,value:(time:number)=>{capturing=true;running=false;stop();for(const a of animations){a.pause();a.currentTime=time;}draw(time);}});
   });
-  return()=>{let saved=clocks.get(host);if(!saved){saved=new Map();clocks.set(host,saved);}saved.set(cacheKey,Math.max(elapsed,Number(animations[0]?.currentTime??elapsed)));live=false;running=false;stop();observer?.disconnect();unsubscribe?.();document.removeEventListener('visibilitychange',update);reduced.removeEventListener('change',update);animations.forEach(a=>a.cancel());host.replaceChildren();host.removeAttribute('data-ready');host.parentElement?.removeAttribute('data-scene-live');};
- },[cacheKey,ready,store,narrow,scene,cache,pixelRatio]);
+  return()=>{let saved=clocks.get(clockOwner??host);if(!saved){saved=new Map();clocks.set(clockOwner??host,saved);}saved.set(cacheKey,Math.max(elapsed,Number(animations[0]?.currentTime??elapsed)));live=false;running=false;stop();observer?.disconnect();unsubscribe?.();document.removeEventListener('visibilitychange',update);reduced.removeEventListener('change',update);animations.forEach(a=>a.cancel());host.replaceChildren();host.removeAttribute('data-ready');host.parentElement?.removeAttribute('data-scene-live');};
+ },[cacheKey,ready,store,narrow,scene,cache,pixelRatio,clockOwner]);
  return <div ref={ref} className={className} data-mobile-art={mobileArt?'':undefined} aria-hidden="true"/>;
 }
