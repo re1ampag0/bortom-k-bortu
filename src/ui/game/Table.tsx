@@ -554,6 +554,7 @@ function PlankView({
     <section
       className={cls}
       data-testid={plate ? `plate-${ship.code}` : `plank-${ship.code}`}
+      data-has-souls={d.souls !== undefined ? '' : undefined}
       data-ship={ship.code}
       data-fx-ship={ship.code}
       style={{ ['--ship' as string]: d.color }}

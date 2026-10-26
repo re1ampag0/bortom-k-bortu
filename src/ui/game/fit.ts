@@ -16,7 +16,14 @@ export function fitGame(game:HTMLElement):()=>void{
   if(!phone||!busy&&(previousWidth!==view.w||previousSide!==side)){
    for(const b of compacted){b.style.removeProperty('width');b.style.removeProperty('min-width');b.removeAttribute('data-game-compact');}compacted.clear();game.removeAttribute('data-game-regroup-wrap');wrappedAt=0;previousWidth=view.w;previousSide=side;
   }
-  if(!phone){for(const label of clipped){label.style.removeProperty('background');label.style.removeProperty('box-shadow');}clipped.clear();return;}
+  if(!phone){
+   const note=game.querySelector<HTMLElement>('.hand-note'),bottom=game.querySelector('.board-bottom'),sea=game.querySelector('.sea-table');
+   if(note&&bottom&&sea&&!busy){
+    const b=bottom.getBoundingClientRect(),s=sea.getBoundingClientRect(),cards=[...game.querySelectorAll('.hand-cards:not(.lift-host)>.hcard')].map(e=>e.getBoundingClientRect());
+    const top=Math.min(...cards.map(r=>r.top)),left=(Math.min(...cards.map(r=>r.left))+Math.max(...cards.map(r=>r.right)))/2;
+    if(cards.length){put(note,'top',`${((s.bottom+top)/2-b.top)/geometry.k-9}px`);put(note,'left',`${(left-b.left)/geometry.k}px`);}
+   }
+   for(const label of clipped){label.style.removeProperty('background');label.style.removeProperty('box-shadow');}clipped.clear();return;}
   if(busy)return;
   const frame=game.getBoundingClientRect();
   const row=game.querySelector<HTMLElement>('.board-bottom>.team-row');

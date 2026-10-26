@@ -1,20 +1,20 @@
 /* Prepared parchment and fittings. Only the sheet wrapper moves; no animated SVG. */
 .board[data-card-decision] .board-bottom{position:relative;min-height:var(--decision-h,0px)}
 .board[data-card-decision] .decision-dock{left:0;bottom:0;transform:none;width:100%;z-index:8}
-.play-sheet.panel{--type:#73548b;display:grid;grid-template-columns:130px minmax(160px,1fr) minmax(260px,330px);gap:18px;padding:14px 20px;max-height:350px;overflow:visible;border:2px solid #b79c62;border-top:6px solid var(--type);border-radius:10px 10px 0 0;color:#42321e;text-align:center;background:repeating-linear-gradient(0deg,#a88a4920 0 1px,transparent 1px 23px),radial-gradient(ellipse at 50% 70%,#d9c28755,transparent 55%),linear-gradient(100deg,#ede2be,#fff7db 48%,#eddfb4);box-shadow:none;animation:cs-up .23s ease-out both}
-.play-sheet.repair{--type:#477545}.play-sheet.reaction{--type:#326581}.play-sheet.legend{--type:#b38e29}
+.game .play-sheet.panel{--type:#73548b;display:grid;grid-template-columns:130px minmax(160px,1fr) minmax(260px,330px);gap:18px;padding:14px 20px;max-height:350px;overflow:visible;border:2px solid #b79c62;border-top:6px solid var(--type);border-radius:10px 10px 0 0;color:#42321e;text-align:center;background:repeating-linear-gradient(0deg,#a88a4920 0 1px,transparent 1px 23px),radial-gradient(ellipse at 50% 70%,#d9c28755,transparent 55%),linear-gradient(100deg,#ede2be,#fff7db 48%,#eddfb4);box-shadow:none;animation:cs-up .23s ease-out both}
+.game .play-sheet.repair{--type:#477545}.game .play-sheet.reaction{--type:#326581}.game .play-sheet.legend{--type:#b38e29}
 .ps-card{display:flex;align-items:center;justify-content:center;border-right:1px solid #a08a5c80;padding-right:12px}
 .ps-card>.hcard{width:110px;height:150px;pointer-events:none;rotate:-3deg;transform:none;text-align:center;padding:0;gap:4px;overflow:hidden}
 .ps-card .hcard-name{font-size:15px}.ps-card .hcard-text{font-size:10px}.ps-card .hcard-big{font-size:11px}
 .ps-emblem{display:block;width:74px;height:74px}.ps-emblem svg{width:100%;height:100%}
 .ps-main{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:8px;position:relative;isolation:isolate}
 .ps-main::before{content:'';position:absolute;inset:4px;pointer-events:none;z-index:-1;opacity:.07;background:center/contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 150'%3E%3Cg fill='none' stroke='%23634d2d'%3E%3Ccircle cx='75' cy='75' r='65'/%3E%3Ccircle cx='75' cy='75' r='58'/%3E%3Cpath d='M75 3l10 62 62 10-62 10-10 62-10-62L3 75l62-10zM24 24l51 41 51-41-41 51 41 51-51-41-51 41 41-51z'/%3E%3C/g%3E%3C/svg%3E")}
-.play-sheet .cs-head{justify-content:center;min-height:0;position:relative}
+.game .play-sheet .cs-head{justify-content:center;min-height:0;position:relative}
 .ps-kind{border-radius:20px;background:var(--type);color:#fff7e4;padding:2px 14px;font:700 11px var(--font-text);letter-spacing:.16em;text-transform:uppercase}
-.play-sheet .cs-title{font:700 24px/1.05 var(--font-num);text-align:center;color:var(--type);background:none;box-shadow:none;border:0;padding:0;margin:0;letter-spacing:.02em}
-.play-sheet .ds-note{color:#59432d;text-align:center;font:italic 14px/1.15 var(--font-num);margin:0}
-.play-sheet .ds-body{padding:0 4px;max-height:170px;overflow:auto;color:#42321e}
-.play-sheet .why{color:#83572e;font-size:12px;margin:4px 0}
+.game .play-sheet .cs-title{font:700 24px/1.05 var(--font-num);text-align:center;color:var(--type);background:none;box-shadow:none;border:0;padding:0;margin:0;letter-spacing:.02em}
+.game .play-sheet .ds-note{color:#59432d;text-align:center;font:italic 14px/1.15 var(--font-num);margin:0}
+.game .play-sheet .ds-body{padding:0 4px;max-height:170px;overflow:auto;color:#42321e}
+.game .play-sheet .why{color:#83572e;font-size:12px;margin:4px 0}
 .ps-target{margin:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;font-size:12px}
 .ps-target>span{font:700 11px var(--font-num);letter-spacing:.1em}.ps-target>b{padding:4px 10px;min-width:90px;border:1px dashed #a89974;border-radius:14px;color:#74633e;font:700 13px var(--font-num)}
 .ps-target>b.picked{color:#fff8dc;border:2px double #d4b45e}
@@ -23,33 +23,33 @@
 .ps-price small{display:block;font:700 9px var(--font-text);letter-spacing:.15em;text-transform:uppercase;color:#8f7039}.ps-price strong{display:block;font:700 13px var(--font-num)}
 .ps-coin{position:relative;display:grid;place-items:center;flex:none;width:35px;height:35px;background:radial-gradient(#403426 43%,#c6a44b 45%,#e8d28b 65%,#9b7632 68%);border-radius:50%}.ps-coin i{width:15px;height:22px}.ps-coin svg{width:100%;height:100%}.ps-coin b{position:absolute;right:-2px;top:-4px;border-radius:50%;width:16px;height:16px;color:#fff;background:#a33931;font-size:11px}
 .ps-hold{padding-left:7px;margin-left:4px;border-left:1px solid #ae945c;color:#776137;font-size:10px}.ps-kegs{display:flex;justify-content:center;gap:2px;margin:3px 0}.ps-kegs i{width:9px;height:13px;opacity:.22}.ps-kegs svg{width:100%;height:100%}.ps-kegs .full{opacity:1}.ps-kegs .spent{translate:0 -3px;border-bottom:2px solid #ab3529;background:#c8472844}
-.play-sheet .ds-actions{gap:8px;grid-template-columns:minmax(80px,.8fr) minmax(0,1.2fr)}
-.play-sheet .ds-actions .oak-btn{height:46px}.play-sheet .ds-cancel>.btn{font:700 16px var(--font-num);text-align:center}
-.play-sheet .ds-stepper{grid-template-columns:minmax(0,1fr) 26px 24px 26px;gap:6px;font-size:12px}
-.play-sheet .ds-stepper>b{color:#684e29}
-.play-sheet .cs-head .ds-close{position:absolute;right:0;top:-4px}
+.game .play-sheet .ds-actions{gap:8px;grid-template-columns:minmax(80px,.8fr) minmax(0,1.2fr)}
+.game .play-sheet .ds-actions .oak-btn{height:46px}.game .play-sheet .ds-cancel>.btn{font:700 16px var(--font-num);text-align:center}
+.game .play-sheet .ds-stepper{grid-template-columns:minmax(0,1fr) 26px 24px 26px;gap:6px;font-size:12px}
+.game .play-sheet .ds-stepper>b{color:#684e29}
+.game .play-sheet .cs-head .ds-close{position:absolute;right:0;top:-4px}
 /* A scroll occupies the existing log column; the hand and the sea keep their layout. */
 @media(min-width:701px){
  .board[data-card-decision='scroll'] .decision-dock{left:var(--scroll-left);bottom:var(--scroll-bottom);width:var(--scroll-width,290px);height:var(--scroll-height,390px)}
- .board[data-card-decision='scroll'] .play-sheet{display:flex;flex-direction:column;min-height:100%;max-height:100%;padding:16px 18px;border-top-width:2px;border-radius:0;gap:16px}
+ .game .board[data-card-decision='scroll'] .play-sheet{display:flex;flex-direction:column;min-height:100%;max-height:100%;padding:16px 18px;border-top-width:2px;border-radius:0;gap:16px}
  .board[data-card-decision='scroll'] .ps-card{display:none}
  .board[data-card-decision='scroll'] .ps-main{flex:1;justify-content:center}
  .board[data-card-decision='scroll'] .ps-end{padding:12px 0 0;border-left:0;border-top:1px solid #b39d6a}
  .board[data-card-decision='scroll'] .ps-end .ds-actions{display:flex;flex-direction:column-reverse}
- .board[data-card-decision='scroll'] .play-sheet::before,.board[data-card-decision='scroll'] .play-sheet::after{content:'';position:absolute;left:-8px;right:-8px;height:18px;border-radius:8px;background:linear-gradient(#dec78d,#97713b 45%,#d8c08b 70%,#715127);border-inline:7px solid #caab55;pointer-events:none}
- .board[data-card-decision='scroll'] .play-sheet::before{top:-9px}.board[data-card-decision='scroll'] .play-sheet::after{bottom:-9px}
+ .game .board[data-card-decision='scroll'] .play-sheet::before,.game .board[data-card-decision='scroll'] .play-sheet::after{content:'';position:absolute;left:-8px;right:-8px;height:18px;border-radius:8px;background:linear-gradient(#dec78d,#97713b 45%,#d8c08b 70%,#715127);border-inline:7px solid #caab55;pointer-events:none}
+ .game .board[data-card-decision='scroll'] .play-sheet::before{top:-9px}.game .board[data-card-decision='scroll'] .play-sheet::after{bottom:-9px}
  .game .hand-cards>.hcard.chosen{outline:2px solid var(--type,#ac87c8);outline-offset:2px;translate:0 -10px;z-index:3}
 }
 @media(max-width:700px){
  .board[data-card-decision] .board-bottom{height:var(--decision-h,210px);min-height:var(--decision-h,210px);flex:none}
- .play-sheet.panel{display:flex;flex-direction:column;gap:8px;padding:9px 14px 12px;max-height:calc(var(--app-h,100dvh) - 300px);min-height:0;border-inline:0;overflow-y:auto}
- .ps-card{display:none}.ps-main{gap:6px;flex:none}.play-sheet .cs-title{font-size:20px;line-height:1.05}
- .play-sheet .ds-note{font-size:12px}.play-sheet .ds-body{max-height:82px}
+ .game .play-sheet.panel{display:flex;flex-direction:column;gap:8px;padding:9px 14px 12px;max-height:calc(var(--app-h,100dvh) - 300px);min-height:0;border-inline:0;overflow-y:auto}
+ .ps-card{display:none}.ps-main{gap:6px;flex:none}.game .play-sheet .cs-title{font-size:20px;line-height:1.05}
+ .game .play-sheet .ds-note{font-size:12px}.game .play-sheet .ds-body{max-height:82px}
  .ps-end{padding:0;border:0;gap:8px}.ps-price{width:max-content;max-width:100%;align-self:center;padding:5px 10px}
- .play-sheet .ds-actions{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
- .play-sheet .ds-actions .oak-btn{height:44px}.play-sheet .ds-actions .oak-pan b{font-size:12px}.play-sheet .ds-cancel>.btn{font-size:15px}
- .board[data-card-decision='scroll'] .play-sheet{border-radius:0;border-top:10px ridge #bca16a;border-bottom:10px ridge #bca16a}
- .play-sheet .ps-kind{font-size:9px}.ps-target>b{padding:2px 8px;font-size:11px}.ps-target{font-size:11px;gap:6px}
+ .game .play-sheet .ds-actions{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+ .game .play-sheet .ds-actions .oak-btn{height:44px}.game .play-sheet .ds-actions .oak-pan b{font-size:12px}.game .play-sheet .ds-cancel>.btn{font-size:15px}
+ .game .board[data-card-decision='scroll'] .play-sheet{border-radius:0;border-top:10px ridge #bca16a;border-bottom:10px ridge #bca16a}
+ .game .play-sheet .ps-kind{font-size:9px}.ps-target>b{padding:2px 8px;font-size:11px}.ps-target{font-size:11px;gap:6px}
  .board[data-card-decision] .plank.aimable{outline:2px dashed #d8ba61;outline-offset:-2px}
  .board[data-card-decision] .plank.chosen{outline:3px double #d8ba61;outline-offset:-3px}
 }
@@ -57,7 +57,7 @@
 .board[data-card-decision] .plank.chosen{outline:3px double #d8ba61;outline-offset:2px}
 .board[data-card-decision] .plank.chosen::before{content:'Цель приказа';position:absolute;left:50%;top:100%;transform:translateX(-50%);padding:2px 12px;border-radius:12px;background:#73548b;color:#fff;z-index:4;white-space:nowrap;font:700 10px var(--font-text);pointer-events:none}
 /* The Pearl's stores: static wood, sail, iron, two locked backs. */
-.plans-sheet.play-sheet{--type:#81868a;color:#eee;background:repeating-linear-gradient(0deg,#0008 0 2px,transparent 2px 18px),radial-gradient(ellipse at 50% 100%,#d1d6d344,transparent 55%),linear-gradient(#252325,#100f0f);border-color:#747474;border-top-color:#181719}
+.game .plans-sheet.play-sheet{--type:#81868a;color:#eee;background:repeating-linear-gradient(0deg,#0008 0 2px,transparent 2px 18px),radial-gradient(ellipse at 50% 100%,#d1d6d344,transparent 55%),linear-gradient(#252325,#100f0f);border-color:#747474;border-top-color:#181719}
 .plans-sheet .cs-title,.plans-sheet .ds-note,.plans-sheet .plans-count{color:#eee}.plans-sheet .ps-price{display:none}.plans-sheet .ps-main::before{display:none}
 .plans-sheet::before{content:'';position:absolute;top:0;left:0;right:0;height:20px;border-top:5px solid #444;border-bottom:3px dotted #9d9079;background:linear-gradient(170deg,#090909,#29282a);clip-path:polygon(0 0,100% 0,100% 70%,85% 85%,70% 65%,55% 95%,35% 70%,15% 90%,0 70%);pointer-events:none}
 .plans-sheet .ds-body{display:flex;gap:12px;align-items:center;max-height:190px;position:relative;overflow-x:auto}
@@ -74,4 +74,67 @@
  .plans-sheet .choice-cards>.hcard{width:80px;height:112px;flex-basis:80px}.plans-sheet .choice-cards .hcard-text{display:none}
  .plans-vault{grid-column:2;grid-row:1;width:92px;padding:6px}.vault-slots{height:40px}.vault-slots>span{font-size:16px}.vault-title{font-size:9px}.plans-added{grid-column:2;grid-row:2;font-size:10px}.plans-count{display:none}
 }
-@media(prefers-reduced-motion:reduce){.play-sheet.panel{animation:none}}
+@media(prefers-reduced-motion:reduce){.game .play-sheet.panel{animation:none}}
+@media(max-width:700px){
+ .game .board[data-card-decision]>.status{flex:none}
+ .game .board[data-card-decision] .board-bottom{display:block;order:3;min-height:var(--decision-h,210px);height:var(--decision-h,210px)}
+ .game .board[data-card-decision] .board-bottom>.team-row,.game .board[data-card-decision] .board-bottom>.hand-row{display:none}
+ .game .board[data-card-decision] .play-sheet{max-height:calc(var(--app-h,100dvh) * .43);gap:6px}
+ .game .board[data-card-decision] .play-sheet .ds-body{max-height:48px}
+ .game.decision-open .phone-deck-warm,.game.decision-open [data-piece=lantern]{display:none}
+}
+@media(max-width:700px){
+ .game .board[data-card-decision] .play-sheet{display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;max-height:var(--decision-limit,220px);height:var(--decision-limit,220px);overflow:hidden;padding:6px 12px;gap:6px}
+ .game .board[data-card-decision] .ps-main{overflow:auto;min-height:0;gap:6px}
+ .game .board[data-card-decision] .ps-end{min-height:0;gap:6px}
+ .game .board[data-card-decision] .play-sheet .why{display:none}
+ .game .board[data-card-decision] .play-sheet .ps-price{padding-block:3px}
+ .game .board[data-card-decision] .play-sheet .ps-coin{width:28px;height:28px}
+ .game .board[data-card-decision] .play-sheet .ps-target{margin-bottom:3px}
+ .game .board[data-card-decision] .plans-sheet .ps-main{overflow:auto}
+}
+@media(min-width:701px){
+ .game .board[data-card-decision='sheet']>.status{flex:none}
+ .game .board[data-card-decision='sheet'] .board-bottom{display:block;min-height:var(--decision-h,180px);height:var(--decision-h,180px);flex:none}
+ .game .board[data-card-decision='sheet'] .board-bottom>.team-row,.game .board[data-card-decision='sheet'] .board-bottom>.hand-row{visibility:hidden;height:0;overflow:hidden}
+ .game .board[data-card-decision='scroll'] .play-sheet{min-height:0;height:100%}
+}
+/* Reaction handlers and selection stay in the existing alarm components. */
+.game .alarm-sheet:not(.folded),.game .alarm-actions{--type:#326581;color:#42321e;background:repeating-linear-gradient(0deg,#a88a4920 0 1px,transparent 1px 23px),linear-gradient(100deg,#ede2be,#fff7db 48%,#eddfb4);border-top:6px solid var(--type);text-align:center}
+.game .alarm-sheet .as-title{background:#326581;color:#fff7e4}.game .alarm-sheet .as-count{color:#42321e;background:#f5ebcd;border-color:#aa945d}
+.game .alarm-sheet .as-btns{gap:8px}.game .alarm-sheet .as-cards{gap:8px}.game .alarm-sheet .as-card{margin:0}
+.game[data-play-layout='scroll'] .alarm-sheet{border-top:10px ridge #bca16a;border-bottom:10px ridge #bca16a;border-radius:0}
+@media(min-width:701px){
+ .game[data-play-layout='sheet'] .hand-actions.alarm-mode{position:absolute;left:12px;right:312px;bottom:8px;z-index:8;max-height:180px;overflow:auto;background:#f4e8c9}
+ .game[data-play-layout='sheet'] .alarm-actions{padding:12px 20px;display:flex;gap:12px;align-items:center;justify-content:center}
+ .game[data-play-layout='sheet'] .alarm-actions .alarm-pick{flex:1}
+ .game[data-play-layout='scroll'] .alarm-actions{padding:12px;border-bottom:8px ridge #bca16a}
+}
+@media(max-width:700px){
+ .game .board[data-card-decision] .ps-main>*{flex-shrink:0}
+ .game .board[data-card-decision] .ps-main>.cs-head{min-height:14px}
+ .game .board[data-card-decision] .plans-sheet .ps-main{display:grid;grid-template-columns:82px minmax(0,1fr);grid-template-rows:auto 1fr;align-items:center;overflow:visible}
+ .game .board[data-card-decision] .plans-sheet .ps-main>.cs-head{grid-column:1;grid-row:1}
+ .game .board[data-card-decision] .plans-sheet .cs-title{grid-column:1;grid-row:2;font-size:16px;overflow-wrap:anywhere}
+ .game .board[data-card-decision] .plans-sheet .ds-note{display:none}
+ .game .board[data-card-decision] .plans-sheet .ds-body{grid-column:2;grid-row:1/3;max-height:125px;grid-template-columns:minmax(0,1fr) 74px;padding:0;overflow:auto}
+ .game .board[data-card-decision] .plans-sheet .plans-vault{width:70px;margin-top:12px;padding:4px}.game .board[data-card-decision] .plans-sheet .choice-cards>.hcard{height:96px}
+ .game .board[data-card-decision] .plans-sheet .ds-close{right:0;top:-6px;width:22px;height:22px;min-height:22px}
+}
+.game .play-sheet{position:relative}
+.game .play-sheet::after{content:'';position:absolute;inset:7px;pointer-events:none;background:linear-gradient(#b49652,#b49652) left top/14px 2px no-repeat,linear-gradient(#b49652,#b49652) left top/2px 14px no-repeat,linear-gradient(#b49652,#b49652) right top/14px 2px no-repeat,linear-gradient(#b49652,#b49652) right top/2px 14px no-repeat,linear-gradient(#b49652,#b49652) left bottom/14px 2px no-repeat,linear-gradient(#b49652,#b49652) left bottom/2px 14px no-repeat,linear-gradient(#b49652,#b49652) right bottom/14px 2px no-repeat,linear-gradient(#b49652,#b49652) right bottom/2px 14px no-repeat}
+.game .plans-sheet::after{background:radial-gradient(circle,#bbb 0 2px,#363636 2px 3px,transparent 3px) left top/8px 8px no-repeat,radial-gradient(circle,#bbb 0 2px,#363636 2px 3px,transparent 3px) right top/8px 8px no-repeat,radial-gradient(circle,#bbb 0 2px,#363636 2px 3px,transparent 3px) left bottom/8px 8px no-repeat,radial-gradient(circle,#bbb 0 2px,#363636 2px 3px,transparent 3px) right bottom/8px 8px no-repeat}
+.game .plans-count::before{content:'ⅠⅡⅠⅠ';font:italic 9px Georgia;color:#aaa9;margin-right:6px}
+@media(max-width:700px){.game .board[data-card-decision] .plans-sheet .plans-count{display:block;grid-column:1/-1;grid-row:3;font-size:10px;white-space:nowrap}}
+.game .plans-sheet.play-sheet .cs-title{color:#f1ede5}
+@media(max-width:700px){
+ .game .board[data-card-decision] .plans-sheet .cs-title{font-size:13.5px;line-height:1.16;letter-spacing:0;overflow-wrap:normal}
+ .game .board[data-card-decision] .plans-sheet .ps-main{padding-bottom:16px}
+ .game .board[data-card-decision] .plans-sheet .ds-body{position:static;overflow:visible}
+ .game .board[data-card-decision] .plans-sheet .plans-count{position:absolute;left:0;right:0;bottom:0;line-height:12px;min-height:12px;margin:0;text-align:center}
+ .game .board[data-card-decision] .plans-sheet .choice-cards>.hcard{height:90px;gap:4px;text-align:center;padding:0}
+ .game .board[data-card-decision] .plans-sheet .choice-cards .hcard-name{font-size:12px;line-height:1.1;white-space:normal;text-align:center;padding:0 4px}
+ .game .board[data-card-decision] .plans-sheet .choice-cards .hcard-big{font-size:10px;line-height:1.1;white-space:normal;text-align:center;padding:0 4px}
+}
+@media(max-width:700px){.game .board[data-card-decision] .plans-sheet .cs-title{font-size:11px;white-space:normal;overflow:visible;min-width:0;max-width:none;word-break:normal}}
+@media(max-width:700px){.game .board[data-card-decision] .plans-sheet .ps-main{grid-template-columns:100px minmax(0,1fr)}}

@@ -388,7 +388,11 @@ export function Game({
     const measure=()=>{
       const d=dock.getBoundingClientRect(),b=bottom.getBoundingClientRect(),l=game.querySelector('.log-col')?.getBoundingClientRect(),k=stageK();
       const small=innerWidth<=700,scroll=look.play==='scroll'&&!small;
-      const height=scroll?0:d.height/k;
+      const status=board.querySelector('.status')?.getBoundingClientRect().height??0;
+      const ships=[...board.querySelectorAll('.planks')].reduce((n,e)=>n+e.getBoundingClientRect().height,0);
+      const limit=small?Math.max(130,(board.getBoundingClientRect().height-status-ships)/k-34):350;
+      dock.style.setProperty('--decision-limit',`${limit}px`);
+      const height=scroll?0:Math.min(d.height/k,limit);
       if(bottom.style.getPropertyValue('--decision-h')!==`${height}px`)bottom.style.setProperty('--decision-h',`${height}px`);
       if(scroll&&l){dock.style.setProperty('--scroll-left',`${(l.left-b.left)/k}px`);dock.style.setProperty('--scroll-bottom',`${(b.bottom-l.bottom)/k}px`);dock.style.setProperty('--scroll-width',`${l.width/k}px`);dock.style.setProperty('--scroll-height',`${Math.max(240,l.height/k-52)}px`);}
     };
@@ -1288,6 +1292,7 @@ export function Game({
       // ui-press: the state of a sheet is a class of the nearest box of what it changes (.board, .middle, .board-bottom), not of
       // the root — only `decision-open` stays here: it is about the root itself (overflow: clip, decision-sheet.css)
       className={`game ${perf.classes} ${s.winner ? 'over' : ''} ${oakDock && dock ? 'decision-open' : ''} ${effects === 'simple' || simpleFx ? 'fx-simple' : ''} ${look.frame === 'bulwark' ? 'frame-bulwark' : ''} view-guns-${look.guns} view-hand-${look.hand} ${sheet?.k === 'log' ? 'book-open' : ''}`}
+      data-play-layout={look.play}
       data-testid="game"
       data-bottom={bottom}
       ref={gameRef}
