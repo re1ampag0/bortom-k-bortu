@@ -31,18 +31,9 @@ export function fitGame(game:HTMLElement):()=>void{
     }
    }
   }
-  const handBottom=hand?.getBoundingClientRect().bottom??0;
-  const textBottom=hand?Math.max(0,...[...hand.querySelectorAll<HTMLElement>(':scope>.hcard .hcard-text')].map(e=>e.getBoundingClientRect().bottom))+hand.scrollTop*geometry.k:0;
-  const croppedHand=!!hand&&hand.scrollHeight>hand.clientHeight+2&&textBottom>handBottom+1;
-  game.toggleAttribute('data-game-hand-scroll',croppedHand);
-  // Preserve every deck coordinate. Narrow captions receive an opaque wooden
-  // backing only where the decorative cannon would otherwise show through them.
-  const pictures=[...game.querySelectorAll<HTMLElement>('.deck-piece[data-piece=cannon],.deck-piece[data-piece=balls]')].map(e=>e.getBoundingClientRect());
+  game.removeAttribute('data-game-hand-scroll');
   for(const label of game.querySelectorAll<HTMLElement>('.board-bottom .hold-label,.phone-hand-label')){
-   const r=label.getBoundingClientRect(),overlap=view.w<420&&(!croppedHand||geometry.phoneScene)&&pictures.some(p=>r.width&&r.height&&r.left<p.right&&r.right>p.left&&r.top<p.bottom&&r.bottom>p.top);
-   put(label,'background',overlap?'#302216':'transparent');
-   put(label,'box-shadow',overlap?'0 0 0 2px #302216':'none');
-   clipped.add(label);
+   put(label,'background','transparent');put(label,'box-shadow','none');clipped.add(label);
   }
  };
  const ro=new ResizeObserver(measure);ro.observe(game);

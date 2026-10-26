@@ -1,3 +1,4 @@
+import {gameScaleEnabled} from './layout';
 // The table around the sea (A5, V1b): the things in the shade by its edges and the measure of the water for the weather.
 import { memo, useLayoutEffect, useRef, useState } from 'react';
 import { DECK_TILE_H, DECK_TILE_URL, DECK_TILE_W } from './art/deckTile';
@@ -101,7 +102,7 @@ const pieceAt = (key: PieceKey, x: number, y: number, s: number): PieceBox => {
 const lanternAt = (lx: number, ly: number, ls: number) => pieceAt('lantern', lx - 15 * ls, ly - 18 * ls, ls);
 
 /** A phone lantern uses the free right-hand strip, above the frame, never over UI content. */
-function phoneLantern(game: HTMLElement, g: DOMRect, W: number) {
+function legacyPhoneLantern(game: HTMLElement, g: DOMRect, W: number) {
   const frame = rect(game.querySelector('.sea-table'), g);
   if (!frame) return null;
   const space = 52;
@@ -123,6 +124,18 @@ function phoneLantern(game: HTMLElement, g: DOMRect, W: number) {
     return {lantern, hook, lx, ly, ls, space};
   }
   return null;
+}
+
+/** Measure the free deck below Regroup. No lamp or spill if this space is occupied. */
+function phoneLantern(game:HTMLElement,g:DOMRect,W:number){
+ if(!gameScaleEnabled())return legacyPhoneLantern(game,g,W);
+ const row=rect(game.querySelector('.board-bottom>.team-row'),g),regroup=rect(visible(game,'.board-bottom .regroup'),g),caption=rect(game.querySelector('.phone-hand-label'),g);
+ if(!row||!regroup||!caption)return null;
+ const ls=40/59,l=regroup.l+Math.min(22,regroup.w/3)-25*ls,t=regroup.t+regroup.h+6;
+ const lantern:PieceBox={key:'lantern',l,t,w:50*ls,h:59*ls};
+ const obstacles=[...game.querySelectorAll('.board-bottom>.team-row .hold-label,.board-bottom>.team-row .powder-dots,.board-bottom>.team-row .hold-n,.phone-hand-label,.deck-info')].map(e=>rect(e,g)).filter((b):b is Box=>!!b&&b.w>0&&b.h>0);
+ if(l<6||l+lantern.w>W-6||t+lantern.h>caption.t-6||obstacles.some(b=>l<b.l+b.w+6&&l+lantern.w>b.l-6&&t<b.t+b.h+6&&t+lantern.h>b.t-6))return null;
+ return {lantern,lx:l+25*ls,ly:t+21*ls,ls,space:0,hook:undefined};
 }
 
 /** Where the pieces of the deck stand on this window. */
@@ -153,7 +166,7 @@ function deckPlace(game: HTMLElement): DeckPlace | null {
     const label = rect(game.querySelector('.board-bottom .hold-label'), g);
     const caption = rect(game.querySelector('.phone-hand-label'), g);
     const sea = rect(game.querySelector('.sea-table'), g);
-    const warm = { x: regroup?.l ?? gapX, y: label && caption ? (label.t + label.h + caption.t) / 2 : rowY,
+    const warm = gameScaleEnabled() ? (lamp ? {x:lamp.lx,y:lamp.ly,top:sea?sea.t+sea.h:rowY,bottom:caption?caption.t+20:H} : undefined) : { x: regroup?.l ?? gapX, y: label && caption ? (label.t + label.h + caption.t) / 2 : rowY,
       top: sea ? sea.t + sea.h : row?.t ?? hand.t, bottom: (caption?.t ?? hand.t) + 20 };
     return { phone: true, W, H, pieces: [gun, balls, ...(lamp ? [lamp.lantern] : [])],
       lx: lamp?.lx ?? 0, ly: lamp?.ly ?? 0, ls: lamp?.ls ?? 0,
