@@ -39,3 +39,39 @@
  .game[data-game-scale] .status-tools .chip.sea .sea-name{display:block;font-size:clamp(11px,3vw,14px);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .game[data-game-scale] .status-tools .chip.sea .sea-cap{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
+/* Review: readable type in both card windows; decisions never scroll out with the card. */
+.sheet[data-testid='card-detail']{width:min(680px,calc(100vw - 24px));min-height:560px;gap:6px}
+.sheet[data-testid='card-detail'] .sheet-head{min-height:50px;padding:8px 44px;box-sizing:border-box}
+.sheet[data-testid='card-detail'] .sheet-head>b{font:700 26px/1.15 'Alegreya SC';text-align:center}
+.sheet[data-testid='card-detail']>.sheet-body{flex:1 1 auto;padding:4px 12px}
+.sheet[data-testid='card-detail'] .card-full{margin:0;gap:6px;padding-bottom:10px;min-height:250px}
+.sheet[data-testid='card-detail'] .card-full-head{font-size:14px;letter-spacing:.15em}
+.sheet[data-testid='card-detail'] .card-art{width:160px;margin:4px auto}
+.sheet[data-testid='card-detail'] .card-name{font-size:24px;margin:4px 12px}
+.sheet[data-testid='card-detail'] .card-big{font-size:20px;line-height:1.2;margin:8px 12px}
+.sheet[data-testid='card-detail'] .card-full p{font-size:18px;line-height:1.3;margin:6px 18px}
+.sheet[data-testid='card-detail'] .card-full .card-flavor{font-size:16px}
+.sheet[data-testid='card-detail'] .card-full p.muted{font-size:15px}
+.sheet[data-testid='card-detail']>.sheet-foot{flex:none;min-height:0;background:transparent;border:0;padding:4px 12px 8px}
+.sheet[data-testid='card-detail'] .sheet-foot .why{margin:0 0 8px;font-size:16px;line-height:1.2;padding:8px}
+.sheet[data-testid='card-detail'] .sheet-foot .panel-actions{margin:0;gap:8px}
+.sheet[data-testid='card-detail'] .sheet-foot .btn{font-size:18px;line-height:1.15}
+.sheet[data-testid='card-detail'] .sheet-foot .btn-why{font-size:13px;line-height:1.2}
+.sw-scene,.ww-scene{background:#19333a linear-gradient(#132c36,#355258 58%,#143e49)}
+@media(max-width:700px){
+ .sheet[data-testid='card-detail']{width:100%;min-height:0;max-height:calc(var(--app-h,100dvh) - 8px);padding:10px;gap:4px}
+ .sheet[data-testid='card-detail'] .sheet-head>b{font-size:23px}
+ .sheet[data-testid='card-detail'] .card-art{width:140px;max-width:50%;margin:4px auto}
+ .sheet[data-testid='card-detail'] .card-full{min-height:0;gap:4px}
+ .sheet[data-testid='card-detail'] .card-name{font-size:21px}
+ .sheet[data-testid='card-detail'] .card-big{font-size:18px;margin:4px 10px}
+ .sheet[data-testid='card-detail'] .card-full p{font-size:15px;line-height:1.2;margin:5px 10px}
+ .sheet[data-testid='card-detail'] .card-full .card-flavor{font-size:14px}
+ .sheet[data-testid='card-detail'] .sheet-foot .why{font-size:14px;padding:6px}
+ .sheet[data-testid='card-detail'] .sheet-foot .btn{font-size:16px;padding:8px 10px}
+ .game.over .polish-finished-actions>.oak-btn{max-width:none!important;width:100%;--oak-w:100%;--oak-h:76px;--oak-med:54px;height:76px}
+ .game.over .polish-finished-actions .oak-pan{top:10px;bottom:10px;left:78px;right:12px;gap:3px}
+ .game.over .polish-finished-actions .oak-pan b{font-size:20px!important;line-height:1.15;letter-spacing:.06em;text-indent:0;white-space:normal;text-overflow:clip;flex:none}
+ .game.over .polish-finished-actions .oak-pan small{font-size:12px;line-height:1.15;white-space:normal;text-align:center;flex:none}
+}
+@media(min-width:701px){.sheet[data-testid='card-detail'] .card-full.legend{min-height:360px;justify-content:space-between}}

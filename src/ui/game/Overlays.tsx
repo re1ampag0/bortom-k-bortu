@@ -109,22 +109,7 @@ export function CardDetail({
   if (code === HIDDEN) return null;
   const c = cardByCode(data, code);
   return (
-    <Sheet title={c.name} onClose={onClose} testid="card-detail">
-      <article className={`card-full ${cardClass(c)}`}>
-        <header className="card-full-head">
-          <span>{c.legend ? `Легенда, одна на партию` : c.type}</span>
-          <CostBadge c={c} />
-        </header>
-        {!c.legend&&<><CardArt name={c.name} full/><h3 className="card-name">{c.name}</h3></>}
-        <div className="card-big">{uiWords(c.big)}</div>
-        <p>
-          <RichText html={c.text} />
-        </p>
-        <p className="card-flavor">{uiWords(c.flavor)}</p>
-        <p className="muted small">
-          Цена: {c.cost} <span aria-label="Порох" dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/>{c.soul ? `, ${c.soul} Души` : ''} · {shipData(data, c.deck).nick}
-        </p>
-      </article>
+    <Sheet title={c.name} onClose={onClose} testid="card-detail" foot={<>
       {status && <p className={`why ${status.startsWith('Можно') ? 'ok' : ''}`}>{uiWords(status)}</p>}
       {buttons.length > 0 && (
         <div className="panel-actions wrap">
@@ -143,6 +128,23 @@ export function CardDetail({
           ))}
         </div>
       )}
+      </>}>
+      <article className={`card-full ${cardClass(c)}`}>
+        <header className="card-full-head">
+          <span>{c.legend ? `Легенда, одна на партию` : c.type}</span>
+          <CostBadge c={c} />
+        </header>
+        {!c.legend&&<><CardArt name={c.name} full/><h3 className="card-name">{c.name}</h3></>}
+        <div className="card-big">{uiWords(c.big)}</div>
+        <p>
+          <RichText html={c.text} />
+        </p>
+        <p className="card-flavor">{uiWords(c.flavor)}</p>
+        <p className="muted small">
+          Цена: {c.cost} <span aria-label="Порох" dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/>{c.soul ? `, ${c.soul} Души` : ''} · {shipData(data, c.deck).nick}
+        </p>
+      </article>
+
     </Sheet>
   );
 }
