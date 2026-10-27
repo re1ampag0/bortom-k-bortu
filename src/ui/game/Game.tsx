@@ -1,3 +1,4 @@
+import {logText,logDownloadText} from './logText';
 import {useSeaLabelRoom} from './afterPolishLayout';
 import {stageK} from '../stage';
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
@@ -979,7 +980,7 @@ export function Game({
     const shownSummary = shownRecent ? turnSummary(data, shownRecent.events) : null;
     return shownSummary?.text
       ? `Ход ${sideGenitive(shownSummary.side)}: ${shownSummary.text}`
-      : [...shownLog].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
+      : (()=>{const last=[...shownLog].reverse().find(l=>l.kind==='action'||l.kind==='damage');return last?logText(data,last):null;})();
   };
   /** The ally: «Капитан предлагает Заряд…» (P6). */
   const offerToMe = myTurn && mode.k === 'idle' ? offers.find((o) => mySeats.includes(o.to) && !mySeats.includes(o.from)) : undefined;
@@ -1120,7 +1121,7 @@ export function Game({
   // «Весь журнал»: the book of the ship whose hand is open; a spectator — of the first ship of the bottom team
   const bookShip = seat ?? Object.values(s.ships).find((x) => x.side === bottom)?.code ?? 'Ж';
   const fileName = net ? `bortom-k-bortu-${net.room.code}` : `bortom-k-bortu-${game.setup.game.seed}`;
-  const downloadLog = () => download(`${fileName}.txt`, game.log.map((l) => (l.kind === 'round' ? `\n${l.text}` : l.text)).join('\n'));
+  const downloadLog = () => download(`${fileName}.txt`, logDownloadText(data,game.log));
   // By network the record (every card) comes from the server, and only after the end of the game.
   const downloadGame = local
     ? () => download(`${fileName}.json`, JSON.stringify(local.record(), null, 1), 'application/json')
