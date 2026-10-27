@@ -39,7 +39,7 @@ export function Catalog({ data, onBack }: { data: GameData; onBack: () => void }
             <ShipView ship={ship} />
             <div className="cards">
               {cards.map((c) => (
-                <CardView key={c.code} card={c} />
+                <CardView key={c.code} card={c} shipName={ship.name} />
               ))}
               <CardView card={legend} />
             </div>

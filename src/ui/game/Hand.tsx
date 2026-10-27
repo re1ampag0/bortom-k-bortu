@@ -1,3 +1,4 @@
+import {CardArt,useWarmCardDeck} from '../CardArt';
 import {uiWords} from '../uiWords';
 // The hand strip: tabs of the ships one person leads, «Колода 14 · Сброс 6», the cards and, after a divider,
 // the Plans of the Pearl. A5 (V2): on a laptop the cards lie as a fan and always fit (they overlap as much as the width
@@ -79,7 +80,9 @@ function useLiftLayer(rowRef: { current: HTMLDivElement | null }, lifted: string
         // A short strip can scroll: anchor to its visible bottom, above the controls.
         bottom=Math.min(r.bottom,strip.bottom,bar?.height?bar.top-2*stageK():r.bottom);
       }
-      layer.style.transform = `translate(${(r.left - g.left)/stageK()}px, ${(bottom - g.top)/stageK()}px)`;
+      const artWidth=layer.querySelector('.lift-open')?.getBoundingClientRect().width??r.width;
+      const left=Math.max(g.left+8,Math.min(r.left,g.right-artWidth-8));
+      layer.style.transform = `translate(${(left - g.left)/stageK()}px, ${(bottom - g.top)/stageK()}px)`;
     };
     const ask = () => {
       if (!raf) raf = requestAnimationFrame(put);
@@ -147,7 +150,7 @@ function useFanFit(n: number, whole = '') {
       // --fan-max-step (game.css, «Палуба»): the step of the fan is at most that part of a card — the cards always overlap a little
       const maxStep = parseFloat(cs.getPropertyValue('--fan-max-step'));
       const w = cards[0].offsetWidth;
-      const capped = maxStep > 0 ? Math.ceil(w + gap - maxStep * w) : 0;
+      const capped = maxStep > 0 ? Math.min(16, Math.ceil(w + gap - maxStep * w)) : 0;
       let ov = Math.max(0, capped, Math.ceil((natural - room) / (cards.length - 1)));
       const ok = cards.map((x) => x.classList.contains('al-ok'));
       let spread = false;
@@ -317,7 +320,7 @@ export function HandCard({
     const play = actions?.play ?? null;
     return (
       <div
-        className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} lifted lift-open`}
+        className={`hcard ${cardClass(c)} ${!c.legend?'has-card-art':''} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} lifted lift-open`}
         style={style}
         data-lift={liftKey}
         onClick={onClick}
@@ -331,6 +334,7 @@ export function HandCard({
           <span className="hcard-type">{plan ? 'План' : c.type}</span>
           <CostBadge c={c} />
         </span>
+        {!c.legend&&<CardArt name={c.name}/>}
         <span className="hcard-name">{c.name}</span>
         <span className="hcard-big">{uiWords(note ?? c.big)}</span>
         <span className="hcard-text">{plainText(c.text)}</span>
@@ -358,7 +362,7 @@ export function HandCard({
   }
   return (
     <button
-      className={`hcard ${cardClass(c)} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''} ${beforeLift ? 'lift-prev' : ''} ${alarm ? `al-${alarm.kind}` : ''} ${(alarm?.kind === 'ok' && alarm.strip) || alarm?.kind === 'no' ? 'with-strip' : ''}`}
+      className={`hcard ${cardClass(c)} ${!c.legend?'has-card-art':''} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''} ${beforeLift ? 'lift-prev' : ''} ${alarm ? `al-${alarm.kind}` : ''} ${(alarm?.kind === 'ok' && alarm.strip) || alarm?.kind === 'no' ? 'with-strip' : ''}`}
       style={style}
       data-lift={liftKey}
       onClick={onClick}
@@ -372,7 +376,8 @@ export function HandCard({
         <span className="hcard-type">{plan ? 'План' : c.type}</span>
         <CostBadge c={c} />
       </span>
-      <span className="hcard-name">{c.name}</span>
+      {!c.legend&&<CardArt name={c.name}/>}
+        <span className="hcard-name">{c.name}</span>
       <span className="hcard-big">{uiWords(note ?? c.big)}</span>
       <span className="hcard-text" ref={textRef}>{plainText(c.text)}</span>
       {alarm?.kind === 'ok' && alarm.strip && (
@@ -464,6 +469,7 @@ export function Hand({
   // the Reaction window: which cards can be played (they lie whole on a laptop, useFanFit)
   const whole = alarmOf ? holder.hand.map((c) => (alarmOf(seat, c)?.kind === 'ok' ? 1 : 0)).join('') : '';
   const [rowRef, wideFan] = useFanFit(n, whole);
+  useWarmCardDeck(seat);
   const middle = usePhoneFan(rowRef, n);
   // The phone: the lifted card (its key in the strip); a tap beside it, another ship's tab or a new hand drops it.
   const [lifted, setLifted] = useState<string | null>(null);

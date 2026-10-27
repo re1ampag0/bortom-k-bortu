@@ -1,3 +1,4 @@
+import {CardArt} from '../CardArt';
 import {uiWords} from '../uiWords';
 import {WeatherWindow} from './weather-window/WeatherWindow';
 // Things that appear when needed and go away after (docs/TZ.md, «Принципы стола», п. 1, 8): a card in full,
@@ -113,6 +114,7 @@ export function CardDetail({
           <span>{c.legend ? `Легенда, одна на партию` : c.type}</span>
           <CostBadge c={c} />
         </header>
+        {!c.legend&&<><CardArt name={c.name}/><h3 className="card-name">{c.name}</h3></>}
         <div className="card-big">{uiWords(c.big)}</div>
         <p>
           <RichText html={c.text} />
