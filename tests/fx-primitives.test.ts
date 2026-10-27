@@ -62,8 +62,11 @@ describe('effect primitives', () => {
 
   it('a flying card has the markup of a card in the hand', () => {
     const html = cardHTML(data, 'Ж-01');
-    expect(html).toMatch(/^<button class="hcard [a-z ]+" tabindex="-1" data-fx-card="Ж-01">/);
+    expect(html).toMatch(/^<button class="hcard charge has-card-art" tabindex="-1" data-fx-card="Ж-01">/);
     expect(html).toContain('class="hcard-name"');
+    expect(html).toContain('/thumb/yadra.webp');
+    expect(html).toContain('background-size:contain');
+    expect(cardHTML(data, 'Ж-Л')).not.toContain('/thumb/');
     expect(cardHTML(data, '?')).toContain('hcard back');
   });
 });

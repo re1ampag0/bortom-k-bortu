@@ -151,7 +151,7 @@ function Entry({
           <span className="menu-medal"><Icon name="bell" size={50}/></span><b>Создать комнату</b>
           <span>Вы получите код и ссылку для друзей, рассадите всех по кораблям и начнёте бой.</span><button className="menu-primary" data-testid="net-create" disabled={!client || !okName} onClick={() => client?.create(name.trim())}>Создать комнату</button>
         </section>
-        <div className="quick-btn join-box">
+        <div className={`quick-btn join-box${error||client?.error?' has-error':''}`}>
           <span className="menu-medal"><Icon name="key" size={50}/></span><b>Войти по коду</b>
           <span className="menu-code-entry"><span className="menu-code-cells" aria-hidden="true">{Array.from({length:5},(_,i)=><span className={i===Math.min(code.length,4)?'active':''} key={i}>{code[i]??''}</span>)}</span>
             <input aria-label="Код комнаты"

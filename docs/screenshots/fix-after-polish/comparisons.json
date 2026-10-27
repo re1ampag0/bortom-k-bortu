@@ -1,0 +1,226 @@
+[
+  {
+    "size": "1366x660",
+    "state": "sea-clip",
+    "reference": "docs/mockups/2026-10-26/a7-strip-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/sea-clip.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-sea-clip.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "round-banner",
+    "reference": "docs/mockups/2026-10-26/a7-strip-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/round-banner.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-round-banner.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "table",
+    "reference": "docs/mockups/2026-10-26/wide-after2.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/table.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-table.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "card",
+    "reference": "docs/mockups/2026-10-26/f8-card-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/card.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-card.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "card-cant",
+    "reference": "docs/mockups/2026-10-26/f8-cant-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/card-cant.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-card-cant.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "legend",
+    "reference": "docs/mockups/2026-10-26/c9-legend-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/legend.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-legend.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "reaction",
+    "reference": "docs/mockups/2026-10-26/b8-react-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/reaction.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-reaction.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "scroll-reaction",
+    "reference": "docs/mockups/2026-10-26/ordD-0-v3.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/scroll-reaction.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-scroll-reaction.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "scroll-card",
+    "reference": "docs/mockups/2026-10-26/ordD-0-v3.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/scroll-card.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-scroll-card.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "victory",
+    "reference": "docs/mockups/2026-10-26/a7-victory-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/victory.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-victory.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "after-game",
+    "reference": "docs/mockups/2026-10-26/a7-after-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/after-game.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-after-game.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "net-error",
+    "reference": "docs/mockups/2026-10-26/b8-neterr-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/net-error.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-net-error.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "tortuga",
+    "reference": "docs/mockups/2026-10-26/d11-tortuga-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/tortuga.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-tortuga.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "plans",
+    "reference": "docs/mockups/2026-10-26/plans-A-0-v2.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/plans.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-plans.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "friend-left",
+    "reference": "docs/mockups/2026-10-26/d11-friendleft-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/friend-left.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-friend-left.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "catalog",
+    "reference": "docs/mockups/2026-10-26/coll-after2.jpg",
+    "game": "docs/screenshots/fix-after-polish/1366x660/catalog.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/1366x660-catalog.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "sea-clip",
+    "reference": "docs/mockups/2026-10-26/a7-strip-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/sea-clip.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-sea-clip.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "round-banner",
+    "reference": "docs/mockups/2026-10-26/a7-strip-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/round-banner.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-round-banner.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "table",
+    "reference": "docs/mockups/2026-10-26/phone-after3.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/table.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-table.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "card",
+    "reference": "docs/mockups/2026-10-26/f8-card-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/card.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-card.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "card-cant",
+    "reference": "docs/mockups/2026-10-26/f8-cant-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/card-cant.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-card-cant.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "legend",
+    "reference": "docs/mockups/2026-10-26/c9-legend-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/legend.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-legend.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "reaction",
+    "reference": "docs/mockups/2026-10-26/b8-react-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/reaction.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-reaction.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "scroll-reaction",
+    "reference": "docs/mockups/2026-10-26/ordD-0-v3.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/scroll-reaction.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-scroll-reaction.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "scroll-card",
+    "reference": "docs/mockups/2026-10-26/ordD-phone-0-v3.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/scroll-card.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-scroll-card.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "victory",
+    "reference": "docs/mockups/2026-10-26/a7-victory-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/victory.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-victory.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "after-game",
+    "reference": "docs/mockups/2026-10-26/a7-after-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/after-game.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-after-game.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "net-error",
+    "reference": "docs/mockups/2026-10-26/b8-neterr-phone-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/net-error.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-net-error.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "tortuga",
+    "reference": "docs/mockups/2026-10-26/d11-tortuga-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/tortuga.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-tortuga.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "plans",
+    "reference": "docs/mockups/2026-10-26/plans-phone-A-v2.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/plans.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-plans.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "friend-left",
+    "reference": "docs/mockups/2026-10-26/d11-friendleft-after.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/friend-left.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-friend-left.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "catalog",
+    "reference": "docs/mockups/2026-10-26/coll-phone-after2.jpg",
+    "game": "docs/screenshots/fix-after-polish/390x640/catalog.png",
+    "compare": "docs/screenshots/fix-after-polish/compare/390x640-catalog.jpg"
+  }
+]

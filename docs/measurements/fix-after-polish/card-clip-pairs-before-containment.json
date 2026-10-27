@@ -1,0 +1,134 @@
+[
+  {
+    "run": 1,
+    "tag": "before",
+    "rows": [
+      {
+        "size": "390x844",
+        "dpr": 3,
+        "cpu": 4,
+        "frames": 156,
+        "worstMs": 366.59999999999945,
+        "over50": 5
+      },
+      {
+        "size": "1366x660",
+        "dpr": 1,
+        "cpu": 4,
+        "frames": 183,
+        "worstMs": 216.6999999999989,
+        "over50": 4
+      }
+    ]
+  },
+  {
+    "run": 1,
+    "tag": "after",
+    "rows": [
+      {
+        "size": "390x844",
+        "dpr": 3,
+        "cpu": 4,
+        "frames": 173,
+        "worstMs": 250,
+        "over50": 6
+      },
+      {
+        "size": "1366x660",
+        "dpr": 1,
+        "cpu": 4,
+        "frames": 181,
+        "worstMs": 233.29999999999927,
+        "over50": 6
+      }
+    ]
+  },
+  {
+    "run": 2,
+    "tag": "before",
+    "rows": [
+      {
+        "size": "390x844",
+        "dpr": 3,
+        "cpu": 4,
+        "frames": 173,
+        "worstMs": 349.89999999999964,
+        "over50": 5
+      },
+      {
+        "size": "1366x660",
+        "dpr": 1,
+        "cpu": 4,
+        "frames": 167,
+        "worstMs": 233.29999999999927,
+        "over50": 9
+      }
+    ]
+  },
+  {
+    "run": 2,
+    "tag": "after",
+    "rows": [
+      {
+        "size": "390x844",
+        "dpr": 3,
+        "cpu": 4,
+        "frames": 144,
+        "worstMs": 516.5999999999995,
+        "over50": 10
+      },
+      {
+        "size": "1366x660",
+        "dpr": 1,
+        "cpu": 4,
+        "frames": 180,
+        "worstMs": 233.39999999999964,
+        "over50": 6
+      }
+    ]
+  },
+  {
+    "run": 3,
+    "tag": "before",
+    "rows": [
+      {
+        "size": "390x844",
+        "dpr": 3,
+        "cpu": 4,
+        "frames": 190,
+        "worstMs": 233.39999999999964,
+        "over50": 4
+      },
+      {
+        "size": "1366x660",
+        "dpr": 1,
+        "cpu": 4,
+        "frames": 188,
+        "worstMs": 233.29999999999927,
+        "over50": 4
+      }
+    ]
+  },
+  {
+    "run": 3,
+    "tag": "after",
+    "rows": [
+      {
+        "size": "390x844",
+        "dpr": 3,
+        "cpu": 4,
+        "frames": 172,
+        "worstMs": 349.89999999999964,
+        "over50": 6
+      },
+      {
+        "size": "1366x660",
+        "dpr": 1,
+        "cpu": 4,
+        "frames": 173,
+        "worstMs": 216.60000000000036,
+        "over50": 10
+      }
+    ]
+  }
+]

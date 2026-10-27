@@ -1,3 +1,5 @@
+import {weatherPoster} from '../scene-window/posters';
+import {mayWarmScenes} from '../scene-window/idle';
 import {lazy,Suspense,useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {seaCardByCode,shipData,type GameState} from '../../../engine/state';
@@ -21,13 +23,15 @@ export function WeatherWindow({s,data,code,log=[],store,onClose}:{s:GameState;da
  // Reuse the opaque ship sheet's local stage culling, preserving diagnostics and resident glints.
  useLayoutEffect(()=>{const stage=document.getElementById('stage');if(!stage)return;const old=stage.getAttribute('data-ship-window-covered'),media=matchMedia('(max-width:700px)');const update=()=>{if(media.matches)stage.setAttribute('data-ship-window-covered','');else if(old===null)stage.removeAttribute('data-ship-window-covered');else stage.setAttribute('data-ship-window-covered',old);};update();media.addEventListener('change',update);return()=>{media.removeEventListener('change',update);if(old===null)stage.removeAttribute('data-ship-window-covered');else stage.setAttribute('data-ship-window-covered',old);};},[]);
  useEffect(()=>{const previous=document.activeElement as HTMLElement|null;frame.current?.querySelector<HTMLButtonElement>('.ww-close')?.focus({preventScroll:true});return()=>{if(previous?.isConnected)previous.focus({preventScroll:true});};},[]);
+ const [liveScene,setLiveScene]=useState(false);
+ useEffect(()=>{setLiveScene(false);let frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(()=>setLiveScene(true));});return()=>cancelAnimationFrame(frame);},[selected]);
  const history=seaHistory(log),entry=[...history].reverse().find(x=>x.code===selected),round=entry?.round??s.round,all=card?.when==='Весь раунд';
  const rows=card&&selected?weatherRows(s,data,card.key,seaResultLines(log,selected,round)):[];
  const tips=(data as GameData&{seaTips?:Record<string,string>}).seaTips;
  const currentCard=current?seaCardByCode(data,current):null,onTable=currentCard?.when==='Весь раунд'?1:0;
  const view=(<div className="weather-window-backdrop" onClick={onClose}><div className="weather-window-frame" ref={frame}>
  <section className="weather-window" role="dialog" aria-modal="true" aria-label={card?`Море: ${card.name}`:'Море'} data-testid="sea-sheet" onClick={e=>e.stopPropagation()}>
- <header className="ww-scene">{card&&store&&<Suspense fallback={null}><WeatherScene name={card.key} store={store}/></Suspense>}<div className="ww-plaque">{[0,1,2,3].map(i=><i key={i} className={'ww-rivet ww-rivet-'+i}/>)}<small>Море · {card?.when.toLowerCase()}</small><h1 style={{fontSize:card&&card.name.length>10?25:30}}>{card?.name??'Море'}</h1><b>{card?.big}</b></div><button className="ww-close" aria-label="Закрыть" onClick={onClose}><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="#2e2014" strokeWidth="2.6" strokeLinecap="round"/></svg></button></header>
+ <header className="ww-scene">{card&&<picture className="ww-poster"><source media="(max-width:700px)" srcSet={weatherPoster(card.key,true)}/><img src={weatherPoster(card.key)} alt=""/></picture>}{card&&store&&liveScene&&mayWarmScenes()&&<div className="ww-live"><Suspense fallback={null}><WeatherScene name={card.key} store={store}/></Suspense></div>}<div className="ww-plaque">{[0,1,2,3].map(i=><i key={i} className={'ww-rivet ww-rivet-'+i}/>)}<small>Море · {card?.when.toLowerCase()}</small><h1 style={{fontSize:card&&card.name.length>10?25:30}}>{card?.name??'Море'}</h1><b>{card?.big}</b></div><button className="ww-close" aria-label="Закрыть" onClick={onClose}><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="#2e2014" strokeWidth="2.6" strokeLinecap="round"/></svg></button></header>
  {card?<div className="ww-body"><div className="ww-main"><div className="ww-heading"><h2>Что делает</h2><span>{selected!==current?entry?`Карта раунда ${roman(round)}`:'Ещё не открыта':all?`до конца раунда ${roman(round)}`:`сработала в начале раунда ${roman(round)}`}</span></div>
  <div className="ww-rules"><RichText html={card.text}/></div>
  <h2>{all?'Сейчас на столе':'Что изменилось'}</h2>

@@ -90,9 +90,9 @@ describe('the Reaction window without «Подсказки»', () => {
 
   it('the first-window Reaction note is shown only with hints enabled', () => {
     expect(window(true, false).html).not.toContain('reaction-memo');
-    expect(text(window(true, false).html)).not.toContain('Реакция — карта');
+    expect(text(window(true, false).html)).not.toContain('Реакция: карта');
     expect(window(true, true).html).toContain('data-testid="reaction-memo"');
-    expect(text(window(true, true).html)).toContain('Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
+    expect(text(window(true, true).html)).toContain('Реакция: карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
   });
 });
 
@@ -112,17 +112,17 @@ describe('«Быстрый конец хода» in the settings', () => {
     storageWith(null);
     expect(loadSettings().fastEnd).toBe(false);
     storageWith(JSON.stringify({ speed: 'slow', effects: 'simple', hints: true, sound: true }));
-    expect(loadSettings()).toEqual({ speed: 'slow', effects: 'simple', hints: true, sound: true, fastEnd: false, tapSkip: false, view: { guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show' } });
+    expect(loadSettings()).toEqual({ speed: 'slow', effects: 'simple', hints: true, sound: true, fastEnd: false, tapSkip: false, view: { guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show', play: 'sheet' } });
   });
 
   it('«Вид стола»: the first variant of each switch by default; the old «brass|wood» frame is read as the default', () => {
     storageWith(JSON.stringify({ seaFrame: 'wood' }));
-    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show' });
+    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show', play: 'sheet' });
     storageWith(JSON.stringify({ seaFrame: 'brass', view: { guns: 'ports', hand: 'table', frame: 'brass' } }));
-    expect(loadSettings().view).toEqual({ guns: 'ports', hand: 'table', frame: 'brass', damage: 'show' });
+    expect(loadSettings().view).toEqual({ guns: 'ports', hand: 'table', frame: 'brass', damage: 'show', play: 'sheet' });
     expect(loadSettings()).not.toHaveProperty('seaFrame');
     storageWith(JSON.stringify({ view: { guns: 'x', frame: 5 } }));
-    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show' });
+    expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck', frame: 'bulwark', damage: 'show', play: 'sheet' });
   });
 
   it('damage breakdown: old records show it, hide persists, unknown values show it', () => {

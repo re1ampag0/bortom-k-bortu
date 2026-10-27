@@ -1,0 +1,177 @@
+[
+  {
+    "file": "src/ui/ShipView.tsx",
+    "line": 42,
+    "text": "Легенда: "
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "line": 1337,
+    "text": "Последнее: "
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "line": 1400,
+    "text": "отменить: "
+  },
+  {
+    "file": "src/ui/game/Overlays.tsx",
+    "line": 124,
+    "text": "Цена: "
+  },
+  {
+    "file": "src/ui/game/Overlays.tsx",
+    "line": 430,
+    "text": "Версия: "
+  },
+  {
+    "file": "src/ui/game/Panels.tsx",
+    "line": 605,
+    "text": "⟦значение⟧: до ⟦значение⟧ ⟦значение⟧ с руки. Реакцию из Плана можно сыграть сверх лимита Парусов, бонус «План:» действует."
+  },
+  {
+    "file": "src/ui/game/Placement.tsx",
+    "line": 59,
+    "text": ": кто слева, кто справа?"
+  },
+  {
+    "file": "src/ui/game/Table.tsx",
+    "line": 204,
+    "text": "Море:"
+  },
+  {
+    "file": "src/ui/game/Victory.tsx",
+    "line": 124,
+    "text": "раунд: "
+  },
+  {
+    "file": "src/ui/game/fx/FxScene.tsx",
+    "line": 185,
+    "text": "». Сцены: "
+  },
+  {
+    "file": "src/ui/game/fx/legends.ts",
+    "line": 72,
+    "text": "<span class=\"lc-cost lc-⟦значение⟧\" title=\"Цена: ⟦значение⟧\" aria-label=\"Цена: ⟦значение⟧\"><b>⟦значение⟧</b>⟦значение⟧</span>"
+  },
+  {
+    "file": "src/ui/game/fx/particles.ts",
+    "line": 233,
+    "text": "prepare: холст: размер"
+  },
+  {
+    "file": "src/ui/game/fx/particles.ts",
+    "line": 233,
+    "text": "prepare: холст: создание"
+  },
+  {
+    "file": "src/ui/game/fx/volley.ts",
+    "line": 330,
+    "text": "<span class=\"stamp\" style=\"color:#24465c;border-color:#24465c\">второй борт</span>"
+  },
+  {
+    "file": "src/ui/game/memo.ts",
+    "line": 17,
+    "text": "Продать карту: +⟦значение⟧ Порох. Передать карту союзнику. Перестроение: ⟦значение⟧ Порох (Пиратам бесплатно, пока «Жемчужина» на плаву). Потушить Пожар: сбросить карту."
+  },
+  {
+    "file": "src/ui/game/perf/PerfPanel.tsx",
+    "line": 79,
+    "text": "выкл: ⟦значение⟧; кадров/с ср. ⟦значение⟧; худший ⟦значение⟧ мс; >50 мс: ⟦значение⟧; узлов в слое эффектов (пик): ⟦значение⟧; устройство: ⟦значение⟧, экран ⟦значение⟧×⟦значение⟧×⟦значение⟧"
+  },
+  {
+    "file": "src/ui/game/perf/PerfPanel.tsx",
+    "line": 91,
+    "text": "Нажатия (окно 1,5 с), новые сверху:"
+  },
+  {
+    "file": "src/ui/game/perf/PerfPanel.tsx",
+    "line": 96,
+    "text": "&gt;50 мс за 10 с: "
+  },
+  {
+    "file": "src/ui/game/perf/PerfPanel.tsx",
+    "line": 99,
+    "text": "клип: "
+  },
+  {
+    "file": "src/ui/game/perf/PerfPanel.tsx",
+    "line": 102,
+    "text": ": до кадра "
+  },
+  {
+    "file": "src/ui/game/perf/clip.ts",
+    "line": 184,
+    "text": "5 худших интервалов rAF (≥: неполный край показа):"
+  },
+  {
+    "file": "src/ui/game/perf/frames.ts",
+    "line": 24,
+    "text": "перед показом: "
+  },
+  {
+    "file": "src/ui/game/weather-window/WeatherWindow.tsx",
+    "line": 41,
+    "text": "Боцман:"
+  },
+  {
+    "file": "src/ui/game/weather-window/WeatherWindow.tsx",
+    "line": 43,
+    "text": "Сейчас в море: "
+  },
+  {
+    "file": "src/ui/game/weather-window/WeatherWindow.tsx",
+    "line": 44,
+    "text": "Следующие карты моря («Тиа Дальма», их знаете только вы): "
+  },
+  {
+    "file": "src/ui/game/weather-window/model.ts",
+    "line": 25,
+    "text": "Пираты:"
+  },
+  {
+    "file": "src/ui/game/weather-window/model.ts",
+    "line": 25,
+    "text": "Компания:"
+  },
+  {
+    "file": "src/ui/menus/RulesWindow.tsx",
+    "line": 27,
+    "text": ": Пушки "
+  },
+  {
+    "file": "src/ui/menus/RulesWindow.tsx",
+    "line": 27,
+    "text": ". Напротив: "
+  },
+  {
+    "file": "src/ui/menus/RulesWindow.tsx",
+    "line": 27,
+    "text": "урона, по диагонали: "
+  },
+  {
+    "file": "src/ui/net/Lobby.tsx",
+    "line": 178,
+    "text": "Если сайт открыт с адреса сервера (например, http://192.168.1.23:8080), ничего вписывать не нужно. Для GitHub Pages нужен адрес\n              сервера с https, например wss://game.example.ru (подробнее: DEPLOY.md).\n            "
+  },
+  {
+    "file": "src/ui/net/Lobby.tsx",
+    "line": 242,
+    "text": "Скопируйте ссылку:"
+  },
+  {
+    "file": "src/ui/net/Lobby.tsx",
+    "line": 313,
+    "text": "Смотрят: "
+  },
+  {
+    "file": "src/ui/start/Prep.tsx",
+    "line": 89,
+    "text": "Монета выбрала: "
+  },
+  {
+    "file": "src/ui/start/Prep.tsx",
+    "line": 127,
+    "text": "Подсказки: урон по целям и выгодные ходы. Открытые руки: все карты на виду."
+  }
+]

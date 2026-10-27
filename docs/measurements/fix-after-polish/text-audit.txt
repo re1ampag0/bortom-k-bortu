@@ -1,0 +1,36 @@
+src/ui/ShipView.tsx:42 Легенда:
+src/ui/game/Game.tsx:1337 Последнее:
+src/ui/game/Game.tsx:1400 отменить:
+src/ui/game/Overlays.tsx:124 Цена:
+src/ui/game/Overlays.tsx:430 Версия:
+src/ui/game/Panels.tsx:605 ⟦значение⟧: до ⟦значение⟧ ⟦значение⟧ с руки. Реакцию из Плана можно сыграть сверх лимита Парусов, бонус «План:» действует.
+src/ui/game/Placement.tsx:59 : кто слева, кто справа?
+src/ui/game/Table.tsx:204 Море:
+src/ui/game/Victory.tsx:124 раунд:
+src/ui/game/fx/FxScene.tsx:185 ». Сцены:
+src/ui/game/fx/legends.ts:72 <span class="lc-cost lc-⟦значение⟧" title="Цена: ⟦значение⟧" aria-label="Цена: ⟦значение⟧"><b>⟦значение⟧</b>⟦значение⟧</span>
+src/ui/game/fx/particles.ts:233 prepare: холст: размер
+src/ui/game/fx/particles.ts:233 prepare: холст: создание
+src/ui/game/fx/volley.ts:330 <span class="stamp" style="color:#24465c;border-color:#24465c">второй борт</span>
+src/ui/game/memo.ts:17 Продать карту: +⟦значение⟧ Порох. Передать карту союзнику. Перестроение: ⟦значение⟧ Порох (Пиратам бесплатно, пока «Жемчужина» на плаву). Потушить Пожар: сбросить карту.
+src/ui/game/perf/PerfPanel.tsx:79 выкл: ⟦значение⟧; кадров/с ср. ⟦значение⟧; худший ⟦значение⟧ мс; >50 мс: ⟦значение⟧; узлов в слое эффектов (пик): ⟦значение⟧; устройство: ⟦значение⟧, экран ⟦значение⟧×⟦значение⟧×⟦значение⟧
+src/ui/game/perf/PerfPanel.tsx:91 Нажатия (окно 1,5 с), новые сверху:
+src/ui/game/perf/PerfPanel.tsx:96 &gt;50 мс за 10 с:
+src/ui/game/perf/PerfPanel.tsx:99 клип:
+src/ui/game/perf/PerfPanel.tsx:102 : до кадра
+src/ui/game/perf/clip.ts:184 5 худших интервалов rAF (≥: неполный край показа):
+src/ui/game/perf/frames.ts:24 перед показом:
+src/ui/game/weather-window/WeatherWindow.tsx:41 Боцман:
+src/ui/game/weather-window/WeatherWindow.tsx:43 Сейчас в море:
+src/ui/game/weather-window/WeatherWindow.tsx:44 Следующие карты моря («Тиа Дальма», их знаете только вы):
+src/ui/game/weather-window/model.ts:25 Пираты:
+src/ui/game/weather-window/model.ts:25 Компания:
+src/ui/menus/RulesWindow.tsx:27 : Пушки
+src/ui/menus/RulesWindow.tsx:27 . Напротив:
+src/ui/menus/RulesWindow.tsx:27 урона, по диагонали:
+src/ui/net/Lobby.tsx:178 Если сайт открыт с адреса сервера (например, http://192.168.1.23:8080), ничего вписывать не нужно. Для GitHub Pages нужен адрес
+              сервера с https, например wss://game.example.ru (подробнее: DEPLOY.md).
+src/ui/net/Lobby.tsx:242 Скопируйте ссылку:
+src/ui/net/Lobby.tsx:313 Смотрят:
+src/ui/start/Prep.tsx:89 Монета выбрала:
+src/ui/start/Prep.tsx:127 Подсказки: урон по целям и выгодные ходы. Открытые руки: все карты на виду.

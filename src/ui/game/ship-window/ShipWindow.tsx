@@ -1,3 +1,5 @@
+import {shipPoster} from '../scene-window/posters';
+import {mayWarmScenes} from '../scene-window/idle';
 import type {LogLine} from '../../../engine/log';
 // Ship information from the current visible game; the artboards supply only presentation and artwork.
 import {memo,useEffect,useLayoutEffect,useRef,useState,useSyncExternalStore,type CSSProperties} from 'react';
@@ -33,7 +35,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
   resize();addEventListener('resize',resize);visualViewport?.addEventListener('resize',resize);
   return()=>{removeEventListener('resize',resize);visualViewport?.removeEventListener('resize',resize);};
  },[]);
- useEffect(()=>{let live=true;setReady(false);void Promise.all([prepareShipWindow(code),prepareShipScene(code),...['700 28px \"Ship Alegreya SC\"','500 14px \"Ship Alegreya SC\"','700 17px \"Ship Alegreya\"','italic 400 17px \"Ship Alegreya\"'].map(font=>document.fonts.load(font,'Корабль Легенда ABC123'))]).then(()=>{if(live)setReady(true);});return()=>{live=false;};},[code]);
+ useEffect(()=>{let live=true;setReady(false);void Promise.all([prepareShipWindow(code),...(mayWarmScenes()?[prepareShipScene(code)]:[]),...['700 28px \"Ship Alegreya SC\"','500 14px \"Ship Alegreya SC\"','700 17px \"Ship Alegreya\"','italic 400 17px \"Ship Alegreya\"'].map(font=>document.fonts.load(font,'Корабль Легенда ABC123'))]).then(()=>{if(live)setReady(true);});return()=>{live=false;};},[code]);
  // The phone sheet is opaque. Cull the covered stage without unmounting Game or changing its state.
  // The portal and diagnostics remain visible; restore the exact prior attribute on close/rotation.
  useLayoutEffect(()=>{const stage=document.getElementById('stage');if(!stage)return;const old=stage.getAttribute('data-ship-window-covered'),phone=matchMedia('(max-width:700px)');
@@ -58,13 +60,13 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
  const asset=(part:string)=>shipArt(`${name}-${part}`);
  return createPortal(<div className="ship-window-backdrop" onClick={onClose}>
   <div className="ship-window-frame" ref={frame}>
-   {ready&&<section className="ship-window" style={st('root')} role="dialog" aria-modal="true" aria-label={d.name} data-testid="ship-sheet" data-ship-window={code} onClick={e=>e.stopPropagation()}>
+   {<section className="ship-window" style={st('root')} role="dialog" aria-modal="true" aria-label={d.name} data-testid="ship-sheet" data-ship-window={code} onClick={e=>e.stopPropagation()}>
     <header className="sw-scene" style={st('scene')} aria-label={`Сцена ${d.name}`}>
-     <img className="sw-scene-still" src={asset('scene.png')} alt=""/><ShipScene code={code} ready={ready} store={store}/>
+     <img className="sw-scene-still" src={shipPoster(code)} alt=""/><img className="sw-scene-still" style={{opacity:ready?1:0}} src={asset('scene.png')} alt=""/><ShipScene code={code} ready={ready&&mayWarmScenes()} store={store}/>
      <div className="sw-plaque" style={st('plaque')}>
       {[0,1,2,3].map(i=><i key={i} className={'sw-rivet sw-rivet-'+i}/>)}
       <div style={st('plaqueText')}><span style={st('team')}>{SIDE_LABEL[d.side].name}</span><h1 style={st('title')}>{d.name.startsWith("«")?d.name:`«${d.name}»`}</h1><span style={st('captain')}>{d.captain}</span></div>
-      <Medal name={name} alt={`Легенда «${legend.name}»`} ready={ready} store={store}/>
+      <Medal name={name} alt={`Легенда «${legend.name}»`} ready={ready&&mayWarmScenes()} store={store}/>
      </div>
      <button ref={close} className="sw-close" style={st('close')} aria-label="Закрыть" onClick={onClose}><img src={asset('close.svg')} alt=""/></button>
     </header>
@@ -83,7 +85,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
       </div>
       <h2 style={st('featureHeading')}>Особенности</h2>
       {d.abilities.map((ability,i)=><div className="sw-feature" style={st('featureRow')} key={ability.name}>
-       <span style={st('featureMedal')}><FeatureIcon code={code} index={i} name={name} ready={ready} store={store}/></span>
+       <span style={st('featureMedal')}><FeatureIcon code={code} index={i} name={name} ready={ready&&mayWarmScenes()} store={store}/></span>
        <div style={st('featureCopy')}><h3 style={st('featureName')}>{ability.name}</h3><div className="sw-feature-text" style={st('featureText')}><RichText html={ability.text}/></div></div>
       </div>)}
       {statuses(shown,data,ship).length>0&&<div className="sw-statuses">{statuses(shown,data,ship).map(x=><span key={x.label} title={x.hint}>{x.label}</span>)}</div>}

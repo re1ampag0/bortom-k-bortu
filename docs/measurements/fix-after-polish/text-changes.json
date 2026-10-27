@@ -1,0 +1,97 @@
+[
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "'Партия окончена: ничья'",
+    "after": "'Партия окончена. Ничья'"
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "`Партия окончена: победа: ${SIDE_LABEL[s.winner].name}`",
+    "after": "`Партия окончена. Победа ${SIDE_LABEL[s.winner].gen}`"
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "`Ждём: ${SIDE_LABEL[d.side].name} (бот) ${decideVerb(d.side)}, ответить ли Реакцией…`",
+    "after": "`Ждём Реакцию ${SIDE_LABEL[d.side].gen}. Бот ${d.side==='ПИРАТЫ'?'думает':'думает'}…`"
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "`Ждём: ${SIDE_LABEL[d.side].name}: ${curtainReason(s, data, d.kind)}`",
+    "after": "`Ждём ${SIDE_LABEL[d.side].name}: ${curtainReason(s, data, d.kind)}`"
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "`${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])}: ${s.volley ? 'Залп' : 'карта'}: ответите Реакцией?`",
+    "after": "`${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])} ${s.volley ? 'даёт Залп' : `играет «${cardByCode(data,s.card!.card).name}»`}. Ответите Реакцией?`"
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "`${nick(mode.seat)}: «${cardByCode(data, mode.card).name}»: выберите параметры`",
+    "after": "`${nick(mode.seat)}, «${cardByCode(data, mode.card).name}»: выберите параметры`"
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "`Ждём: ${who(d!.seats)}: Реакция…`",
+    "after": "`Ждём Реакцию. Решают ${who(d!.seats)}…`"
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "`Ход окончен: ждём: ${who(left.length > 0 ? left : d!.seats)}`",
+    "after": "`Ход окончен. Ждём ${who(left.length > 0 ? left : d!.seats)}`"
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "`Ждём: ${who(d!.seats)}: ${curtainReason(s, data, d!.kind)}`",
+    "after": "`Ждём ${who(d!.seats)}: ${curtainReason(s, data, d!.kind)}`"
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": "${d.side==='ПИРАТЫ'?'думает':'думает'}",
+    "after": "думает"
+  },
+  {
+    "file": "src/ui/game/Panels.tsx",
+    "before": "Разложите карты моря: первая выбранная откроется первой. «i»: карта целиком.",
+    "after": "Разложите карты моря. Первая выбранная откроется первой. Нажмите «i», чтобы прочитать карту целиком."
+  },
+  {
+    "file": "src/ui/game/fx/misc.ts",
+    "before": "${nick(ctx, plans.seat)}: План: ${plans.count} рубашкой вниз",
+    "after": "${nick(ctx, plans.seat)} откладывает в План ${plans.count} рубашкой вниз"
+  },
+  {
+    "file": "src/ui/game/fx/volley.ts",
+    "before": "${nick(ctx, by)}: Сердце Дейви Джонса: ещё один Залп ${gen(ctx, c.ship)}",
+    "after": "${nick(ctx, by)} использует Сердце Дейви Джонса. Ещё один Залп ${gen(ctx, c.ship)}"
+  },
+  {
+    "file": "src/ui/game/fx/sea.ts",
+    "before": "import {perfOff} from '../perf/state';",
+    "after": "import {roman} from '../text';\nimport {perfOff} from '../perf/state';"
+  },
+  {
+    "file": "src/ui/game/fx/sea.ts",
+    "before": "`: Раунд ${c.round}: `",
+    "after": "`<span class=\"round-orn\" aria-hidden=\"true\">◆</span> Раунд ${roman(c.round)} <span class=\"round-orn\" aria-hidden=\"true\">◆</span>`"
+  },
+  {
+    "file": "src/ui/game/fx/sea.ts",
+    "before": "`Раунд ${c.round}: новая карта моря`",
+    "after": "`Раунд ${roman(c.round)}. Новая карта моря`"
+  },
+  {
+    "file": "src/ui/game/alarm.ts",
+    "before": ": ответите Реакцией?",
+    "after": ". Ответите Реакцией?"
+  },
+  {
+    "file": "src/ui/game/alarm.ts",
+    "before": "${name(s.card.ship)}: «${c.name}»",
+    "after": "${name(s.card.ship)} играет «${c.name}»"
+  },
+  {
+    "file": "src/ui/game/Table.tsx",
+    "before": "В начале хода своей команды: −1 Корпус за каждый Пожар. Потушить: сбросьте 1 карту с руки: снимите 1 Пожар (в свой ход, сколько угодно раз).",
+    "after": "В начале хода своей команды теряется 1 Корпус за каждый Пожар. Чтобы потушить 1 Пожар, сбросьте 1 карту с руки. В свой ход это можно делать сколько угодно раз."
+  }
+]

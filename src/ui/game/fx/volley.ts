@@ -693,7 +693,7 @@ PLAY.counter = async (c, ctx) => {
 PLAY.heart = async (c, ctx) => {
   const by = ships(ctx).find((x) => sideOf(ctx, x) === sideOf(ctx, c.ship) && x !== c.ship)!;
   const a = bx(ctx, plank(ctx, by)), b = bx(ctx, plank(ctx, c.ship));
-  hint(ctx, `${nick(ctx, by)}: Сердце Дейви Джонса: ещё один Залп ${gen(ctx, c.ship)}`);
+  hint(ctx, `${nick(ctx, by)} использует Сердце Дейви Джонса. Ещё один Залп ${gen(ctx, c.ship)}`);
   const h = { x: a.x + a.w * 0.62, y: a.cy };
   const heart = mk(ctx, 'heart', 0, 0, '<svg viewBox="0 0 30 26" width="30" height="26"><path d="M15 25 C4 17 0 11 2 6 C4 1 11 0 15 6 C19 0 26 1 28 6 C30 11 26 17 15 25Z" fill="#B23A2E" stroke="#6E1A12" stroke-width="1.5"/></svg>');
   A(ctx, heart, [{ opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(.4)` }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.15 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.3 }, { transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.42 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.56 }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.7 }, { opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(1)` }], 2000, 0, 'ease-in-out');

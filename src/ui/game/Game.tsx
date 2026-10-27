@@ -1,3 +1,4 @@
+import {useSeaLabelRoom} from './afterPolishLayout';
 import {stageK} from '../stage';
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
@@ -59,7 +60,7 @@ import { playTurnSound } from '../sound';
 import { Button, OakButton, Plank, RoundButton, ROUND_ICON, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
 import { TableBackdrop, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
-import { decideVerb, reactionWait } from './clarity';
+import { reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
 import { usePlayClock } from './playClock';
 import { useTableBody } from './tableBody';
@@ -379,7 +380,7 @@ export function Game({
     const schedule=()=>{if(typeof window.requestIdleCallback==='function')idle=window.requestIdleCallback(warm);else timer=window.setTimeout(warm,1500);};
     schedule();
     return()=>{alive=false;if(idle!==undefined)window.cancelIdleCallback(idle);if(timer!==undefined)clearTimeout(timer);};
-  },[]);
+  },[s.sea?.current]);
   useTableBody(curtainSide ? null : 'game');
   const cardDecision=['card','legend','confirmEnd','plans'].includes(mode.k)||(myDecision&&['tortuga','choice','jack'].includes(d?.kind??''));
   useLayoutEffect(()=>{
@@ -394,7 +395,7 @@ export function Game({
       dock.style.setProperty('--decision-limit',`${limit}px`);
       const height=scroll?0:Math.min(d.height/k,limit);
       if(bottom.style.getPropertyValue('--decision-h')!==`${height}px`)bottom.style.setProperty('--decision-h',`${height}px`);
-      if(scroll&&l){dock.style.setProperty('--scroll-left',`${(l.left-b.left)/k}px`);dock.style.setProperty('--scroll-bottom',`${(b.bottom-l.bottom)/k}px`);dock.style.setProperty('--scroll-width',`${l.width/k}px`);dock.style.setProperty('--scroll-height',`${Math.max(240,l.height/k-52)}px`);}
+      if(scroll&&l){dock.style.setProperty('--scroll-left',`${(l.left-b.left)/k}px`);dock.style.setProperty('--scroll-bottom',`${(b.bottom-l.bottom)/k}px`);dock.style.setProperty('--scroll-width',`${l.width/k}px`);dock.style.setProperty('--scroll-height',`${Math.max(180,(l.bottom-Math.max(l.top,(game.querySelector('.log-tools')?.getBoundingClientRect().bottom??(board.getBoundingClientRect().top+status))+12))/k-24)}px`);}
     };
     const ro=new ResizeObserver(measure);ro.observe(dock);ro.observe(game);measure();
     return()=>{ro.disconnect();bottom.style.removeProperty('--decision-h');};
@@ -494,6 +495,7 @@ export function Game({
   const nick = (code: string) => `«${shipData(data, code).nick}»`;
 
   // the layout of the table (V1b): where the tools stand, the measure of the water for the weather
+  useSeaLabelRoom();
   const wideLog = useWideLog();
   const [boardRef, seaRef] = useSeaClip();
   // ui-press: «Последнее: …» is in the sea — a class of the sea for the press zones of the stars under it (phone.css), set by
@@ -921,19 +923,19 @@ export function Game({
 
   // ——— The instruction in the status bar ———
   const instruction = (() => {
-    if (s.winner) return s.winner === 'НИЧЬЯ' ? 'Партия окончена: ничья' : `Партия окончена: победа: ${SIDE_LABEL[s.winner].name}`;
+    if (s.winner) return s.winner === 'НИЧЬЯ' ? 'Партия окончена. Ничья' : `Партия окончена. Победа ${SIDE_LABEL[s.winner].gen}`;
     if (!d) return '';
     if (net && !myDecision) return netWaiting();
     if (botSide(d.side)) {
       // The team, not the ship: the ship deciding would tell who holds a Reaction.
-      if (d.kind === 'reactions') return `Ждём: ${SIDE_LABEL[d.side].name} (бот) ${decideVerb(d.side)}, ответить ли Реакцией…`;
+      if (d.kind === 'reactions') return `Ждём Реакцию ${SIDE_LABEL[d.side].gen}. Бот думает…`;
       if (d.kind === 'turn') return `Бот: ${SIDE_LABEL[d.side].name} ${d.side==='ПИРАТЫ'?'думают':'думает'}…`;
       return `Бот: ${SIDE_LABEL[d.side].name} решает…`;
     }
-    if (!myDecision) return `Ждём: ${SIDE_LABEL[d.side].name}: ${curtainReason(s, data, d.kind)}`;
+    if (!myDecision) return `Ждём ${SIDE_LABEL[d.side].acc}: ${curtainReason(s, data, d.kind)}`;
     switch (d.kind) {
       case 'reactions':
-        return `${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])}: ${s.volley ? 'Залп' : 'карта'}: ответите Реакцией?`;
+        return `${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])} ${s.volley ? 'даёт Залп' : `играет «${cardByCode(data,s.card!.card).name}»`}. Ответите Реакцией?`;
       case 'jack':
         return `${nick(d.seats[0])} тонет: сыграть «Джек ускользает»?`;
       case 'tortuga':
@@ -946,7 +948,7 @@ export function Game({
       const to = `«${shipData(data, mode.target).nickDative}»`;
       return mode.charge ? `Залп по ${to}: проверьте и нажмите «Огонь»` : `Залп по ${to}: Заряд картой из руки`;
     }
-    if (mode.k === 'card') return `${nick(mode.seat)}: «${cardByCode(data, mode.card).name}»: выберите параметры`;
+    if (mode.k === 'card') return `${nick(mode.seat)}, «${cardByCode(data, mode.card).name}»: выберите параметры`;
     if (!useful) return 'Полезных действий не осталось: нажмите «Ход окончен»';
     return `${nick(seat)}: выберите карту или действие`;
   })();
@@ -961,14 +963,14 @@ export function Game({
     };
     if (d!.kind === 'reactions') {
       if (d!.side !== bottom) return 'Противник может ответить Реакцией…';
-      return d!.seats.length === 0 ? `${s.volley ? 'Залп' : 'Карта'} противника: Реакций нет` : `Ждём: ${who(d!.seats)}: Реакция…`;
+      return d!.seats.length === 0 ? `${s.volley ? 'Залп' : 'Карта'} противника: Реакций нет` : `Ждём Реакцию ${SIDE_LABEL[d!.side].gen}…`;
     }
     if (d!.kind === 'turn') {
       const left = d!.seats.filter((x) => !g.ready.includes(x));
-      if (d!.side === bottom) return `Ход окончен: ждём: ${who(left.length > 0 ? left : d!.seats)}`;
+      if (d!.side === bottom) return `Ход окончен. Ждём ${who(left.length > 0 ? left : d!.seats)}`;
       return `Ход ${SIDE_LABEL[d!.side].gen}: ${who(left.length > 0 ? left : d!.seats)}`;
     }
-    return `Ждём: ${who(d!.seats)}: ${curtainReason(s, data, d!.kind)}`;
+    return `Ждём ${who(d!.seats)}: ${curtainReason(s, data, d!.kind)}`;
   }
 
   // ——— The middle at rest: the last event (of the log as it is shown) ———
@@ -1244,12 +1246,13 @@ export function Game({
   // «Быстрее · До конца · Пауза · Отменить» and «Ход окончен»: under the log ≥ 1280 px (A5: the hand gets the whole width
   // of the table), at the end of the hand row narrower.
   const pickNow = reactPick ? reactionNow(s, data, reactPick.seat, reactPick.card) : null;
-  const finishedActions=<div className="polish-finished-actions"><button className="btn primary" data-testid="table-rematch" onClick={()=>net?net.voteRematch(!vote?.you):rematch()}>{rematchLabel}</button><button className="btn" data-testid="table-results" onClick={()=>setEndClosed(false)}>Итоги партии</button><button className="btn" data-testid="table-new-game" onClick={onExit}>Новая партия</button></div>;
+  const finishedActions=<div className="polish-finished-actions"><OakButton b={{key:"table-rematch",label:rematchLabel,testid:"table-rematch",onClick:()=>net?net.voteRematch(!vote?.you):rematch()}} sub="те же корабли, новая партия"/><button className="btn" data-testid="table-results" onClick={()=>setEndClosed(false)}>Итоги партии</button><button className="btn" data-testid="table-new-game" onClick={onExit}>Новая партия</button></div>;
   const handActions = s.winner ? <div className="hand-actions">{finishedActions}</div> : chargeBtns ? (
     <div className="hand-actions charge-mode">{chargeBtns}</div>
   ) : alarmOn && !phone ? (
     <div className="hand-actions alarm-mode" style={{ ['--alarm-in' as string]: `${T.ui.alarmIn}ms` }}>
       <AlarmActions
+        price={{cost:reactPick?cardByCode(data,reactPick.card).cost:null,powder:s.teams[bottom].powder,cap:data.econ.cap}}
         memo={!memoSeen.includes(bottom)}
         pickName={reactPick ? cardByCode(data, reactPick.card).name : null}
         now={pickNow?.ok ? pickNow.text : null}
@@ -1280,7 +1283,7 @@ export function Game({
             <circle cx="8" cy="8" r="7" fill="#3d8562" />
             <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} : ход закончится, когда нажмёте вы
+          «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'}. Ход закончится, когда нажмёте вы
         </p>
       )}
     </div>
@@ -1374,8 +1377,9 @@ export function Game({
             </button>
           </div>
         </div>
-        {wideLog && handActions}
+        {wideLog && !alarmOn && handActions}
       </aside>
+      {wideLog && alarmOn && handActions}
       <FxBusy fx={fx}>{(busy) => (
       <nav className={`bottom-bar ${canHoldOf(busy) ? 'has-pause' : ''}`}>{s.winner?finishedActions:<>
         {/* A5Phone: «Журнал» and «Правила» are square icons with a caption; «Ход окончен» says who is ready under its name */}
@@ -1399,7 +1403,7 @@ export function Game({
                   <circle cx="8" cy="8" r="7" fill="#3d8562" />
                   <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} : ждёт вас
+                «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'}, ждёт вас
               </span>
             ) : undefined
           }
@@ -1520,7 +1524,7 @@ export function Game({
     if (code.endsWith('-Л')) {
       const o = legendOptions(s, data, holder);
       const c = cardByCode(data, code);
-      if (c.type !== 'ПРИКАЗ') return `Сыграть: когда ${nick(holder)} должна утонуть. Порох: ${s.teams[s.ships[holder].side].powder} из ${c.cost}`;
+      if (c.type !== 'ПРИКАЗ') return `Сыграть, когда ${nick(holder)} должна утонуть. Порох: ${s.teams[s.ships[holder].side].powder} из ${c.cost}`;
       return o.reason ? `Нельзя: ${o.reason}` : 'Можно сыграть сейчас';
     }
     if (!myDecision) return null;

@@ -36,7 +36,7 @@ describe('Card panel: the repaired ship', () => {
     const card = cardIn(s, 'Г', 'Норрингтон на борту');
     expect(cardNeeds(s, data, 'Г', card).repairShip).toBe('И');
     const html = panel(s, 'Г', card);
-    expect(html).toContain('<b class="cs-title">Норрингтон на борту</b>');
+    expect(html).toContain('<h2 class="cs-title">Норрингтон на борту</h2>');
     expect(html).toContain('<p class="ds-note">→ «Индевор»: восстановить 2 клетки</p>');
     expect(rows(html)).toEqual(expectedRows(s, 'И'));
     expect(rows(html)).toEqual(['hull Корпус 10/12', 'sails Паруса 0/1']);
@@ -57,7 +57,7 @@ describe('Card panel: the repaired ship', () => {
     s.ships['И'].tracks.hull = 5;
     expect(cardNeeds(s, data, 'И', card).repairShip).toBe('Г');
     const html = panel(s, 'И', card);
-    expect(html).toContain('<b class="cs-title">Сердце бьётся</b>');
+    expect(html).toContain('<h2 class="cs-title">Сердце бьётся</h2>');
     expect(html).toContain('<p class="ds-note">→ «Голландец»: восстановить 2 клетки</p>');
     expect(rows(html)).toEqual(['crew Команда 1/3']);
   });

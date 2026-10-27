@@ -1,3 +1,4 @@
+import {ShipPending} from './ship-window/ShipPending';
 import {CardArt} from '../CardArt';
 import {uiWords} from '../uiWords';
 import {WeatherWindow} from './weather-window/WeatherWindow';
@@ -108,22 +109,7 @@ export function CardDetail({
   if (code === HIDDEN) return null;
   const c = cardByCode(data, code);
   return (
-    <Sheet title={c.name} onClose={onClose} testid="card-detail">
-      <article className={`card-full ${cardClass(c)}`}>
-        <header className="card-full-head">
-          <span>{c.legend ? `Легенда, одна на партию` : c.type}</span>
-          <CostBadge c={c} />
-        </header>
-        {!c.legend&&<><CardArt name={c.name}/><h3 className="card-name">{c.name}</h3></>}
-        <div className="card-big">{uiWords(c.big)}</div>
-        <p>
-          <RichText html={c.text} />
-        </p>
-        <p className="card-flavor">{uiWords(c.flavor)}</p>
-        <p className="muted small">
-          Цена: {c.cost} <span aria-label="Порох" dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/>{c.soul ? `, ${c.soul} Души` : ''} · {shipData(data, c.deck).nick}
-        </p>
-      </article>
+    <Sheet title={c.name} onClose={onClose} testid="card-detail" foot={<>
       {status && <p className={`why ${status.startsWith('Можно') ? 'ok' : ''}`}>{uiWords(status)}</p>}
       {buttons.length > 0 && (
         <div className="panel-actions wrap">
@@ -142,13 +128,33 @@ export function CardDetail({
           ))}
         </div>
       )}
+      </>}>
+      <article className={`card-full ${cardClass(c)}`}>
+        <header className="card-full-head">
+          <span>{c.legend ? `Легенда, одна на партию` : c.type}</span>
+          <CostBadge c={c} />
+        </header>
+        {!c.legend&&<><CardArt name={c.name} full/><h3 className="card-name">{c.name}</h3></>}
+        <div className="card-big">{uiWords(c.big)}</div>
+        <p>
+          <RichText html={c.text} />
+        </p>
+        <p className="card-flavor">{uiWords(c.flavor)}</p>
+        <p className="muted small">
+          Цена: {c.cost} <span aria-label="Порох" dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/>{c.soul ? `, ${c.soul} Души` : ''} · {shipData(data, c.deck).nick}
+        </p>
+      </article>
+
     </Sheet>
   );
 }
 
 export function ShipSheet({s,data,code,store,onClose,onDiscard,log=[]}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void;log?:readonly LogLine[]}) {
   useEscape(onClose);
-  return <Suspense fallback={null}><ShipWindow log={log} s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/></Suspense>;
+  const [showFull,setShowFull]=useState(false);
+  useEffect(()=>{setShowFull(false);let frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(()=>setShowFull(true));});return()=>cancelAnimationFrame(frame);},[code]);
+  if(!showFull)return <ShipPending s={s} data={data} code={code} onClose={onClose}/>;
+  return <Suspense fallback={<ShipPending s={s} data={data} code={code} onClose={onClose}/>}><ShipWindow log={log} s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/></Suspense>;
 }
 
 /** The sea: the current card or, by `code`, any sea card (from the log, from «Тиа Дальма»). */
@@ -269,9 +275,9 @@ export const LogList = reactMemo(function LogList({
           {l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? (
             <span className="log-round-line">
               <i className="lr-orn" aria-hidden />
-              <span className="lr-dash">— </span>
+              <span className="lr-dash" aria-hidden />
               {l.text.replace(/\.$/, '').replace(/\d+/, (n) => roman(Number(n)))}
-              <span className="lr-dash"> —</span>
+              <span className="lr-dash" aria-hidden />
               <i className="lr-orn flip" aria-hidden />
             </span>
           ) : (
@@ -281,7 +287,7 @@ export const LogList = reactMemo(function LogList({
                 <span className="log-rt">{marks.get(l) ?? ''}</span>
               </span>
               <span className="log-text">
-                {logParts(data, l).map((p, j) =>
+                {logParts(data, {...l,text:uiWords(l.text)}).map((p, j) =>
                   typeof p === 'string' ? (
                     uiWords(p)
                   ) : 'card' in p ? (

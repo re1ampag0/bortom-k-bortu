@@ -1,0 +1,36 @@
+[
+  {
+    "size": "1366x660",
+    "links": [
+      {
+        "url": "http://127.0.0.1:5412/bortom-k-bortu/assets/Main-lSFpg6H3.webp",
+        "media": "(min-width: 701px)",
+        "matches": true,
+        "requested": true
+      },
+      {
+        "url": "http://127.0.0.1:5412/bortom-k-bortu/assets/Phone-D67HZEjp.webp",
+        "media": "(max-width: 700px)",
+        "matches": false,
+        "requested": false
+      }
+    ]
+  },
+  {
+    "size": "390x844",
+    "links": [
+      {
+        "url": "http://127.0.0.1:5412/bortom-k-bortu/assets/Main-lSFpg6H3.webp",
+        "media": "(min-width: 701px)",
+        "matches": false,
+        "requested": false
+      },
+      {
+        "url": "http://127.0.0.1:5412/bortom-k-bortu/assets/Phone-D67HZEjp.webp",
+        "media": "(max-width: 700px)",
+        "matches": true,
+        "requested": true
+      }
+    ]
+  }
+]

@@ -22,7 +22,7 @@ export function CardView({ card, shipName }: { card: CardInstance;shipName?:stri
           {card.cost === 0 && card.soul === 0 && <span className="free">0</span>}
         </span>
       </header>
-      {!card.legend&&<CardArt name={card.name}/>} 
+      {!card.legend&&<CardArt name={card.name} full/>}
       <h3 className="card-name">{card.name}</h3>
       {!card.legend&&<span className="card-orn" aria-hidden="true"/>}
       <div className="card-big">{uiWords(card.big)}</div>

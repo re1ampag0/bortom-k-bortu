@@ -1,0 +1,22 @@
+[
+  {
+    "size": "390x844",
+    "dpr": 3,
+    "cpu": 1,
+    "start": "flight",
+    "preparationMs": 221,
+    "frames": 239,
+    "worstMs": 33.399999999999636,
+    "over50": 0
+  },
+  {
+    "size": "1366x660",
+    "dpr": 1,
+    "cpu": 1,
+    "start": "flight",
+    "preparationMs": 141,
+    "frames": 239,
+    "worstMs": 33.29999999999927,
+    "over50": 0
+  }
+]

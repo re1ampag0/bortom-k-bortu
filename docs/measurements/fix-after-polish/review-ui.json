@@ -1,0 +1,216 @@
+[
+  {
+    "size": "1366x660",
+    "state": "card",
+    "captureError": null,
+    "status": [
+      {
+        "text": "Можно сыграть сейчас",
+        "r": {
+          "x": 371,
+          "y": 473.953125,
+          "width": 624,
+          "height": 37.1875,
+          "top": 473.953125,
+          "right": 995,
+          "bottom": 511.140625,
+          "left": 371
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "offscreenButtons": [],
+    "blockedButtons": []
+  },
+  {
+    "size": "1366x660",
+    "state": "card-cant",
+    "captureError": null,
+    "status": [
+      {
+        "text": "Нельзя сыграть: Реакцию играют в ход противника, когда он объявит Залп или карту",
+        "r": {
+          "x": 371,
+          "y": 462.53125,
+          "width": 624,
+          "height": 37.1875,
+          "top": 462.53125,
+          "right": 995,
+          "bottom": 499.71875,
+          "left": 371
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "offscreenButtons": [],
+    "blockedButtons": []
+  },
+  {
+    "size": "1366x660",
+    "state": "legend",
+    "captureError": null,
+    "status": [
+      {
+        "text": "Нельзя: Сейчас ход другой команды",
+        "r": {
+          "x": 371,
+          "y": 540.8125,
+          "width": 624,
+          "height": 37.1875,
+          "top": 540.8125,
+          "right": 995,
+          "bottom": 578,
+          "left": 371
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "offscreenButtons": [],
+    "blockedButtons": []
+  },
+  {
+    "size": "1366x660",
+    "state": "after-game",
+    "captureError": null,
+    "status": [],
+    "rematch": [
+      {
+        "r": {
+          "x": 1096,
+          "y": 552,
+          "width": 258,
+          "height": 80,
+          "top": 552,
+          "right": 1354,
+          "bottom": 632,
+          "left": 1096
+        },
+        "label": {
+          "x": 1187.375,
+          "y": 573.078125,
+          "width": 132.53125,
+          "height": 25.296875,
+          "top": 573.078125,
+          "right": 1319.90625,
+          "bottom": 598.375,
+          "left": 1187.375
+        },
+        "labelScroll": 133,
+        "labelWidth": 133,
+        "hit": true
+      }
+    ],
+    "offscreenButtons": [],
+    "blockedButtons": []
+  },
+  {
+    "size": "390x640",
+    "state": "card",
+    "captureError": null,
+    "status": [
+      {
+        "text": "Можно сыграть сейчас",
+        "r": {
+          "x": 24,
+          "y": 477.203125,
+          "width": 342,
+          "height": 30.796875,
+          "top": 477.203125,
+          "right": 366,
+          "bottom": 508,
+          "left": 24
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "offscreenButtons": [],
+    "blockedButtons": []
+  },
+  {
+    "size": "390x640",
+    "state": "card-cant",
+    "captureError": null,
+    "status": [
+      {
+        "text": "Нельзя сыграть: Реакцию играют в ход противника, когда он объявит Залп или карту",
+        "r": {
+          "x": 24,
+          "y": 434.828125,
+          "width": 342,
+          "height": 47.59375,
+          "top": 434.828125,
+          "right": 366,
+          "bottom": 482.421875,
+          "left": 24
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "offscreenButtons": [],
+    "blockedButtons": []
+  },
+  {
+    "size": "390x640",
+    "state": "legend",
+    "captureError": null,
+    "status": [
+      {
+        "text": "Нельзя: Сейчас ход другой команды",
+        "r": {
+          "x": 24,
+          "y": 581.203125,
+          "width": 342,
+          "height": 30.796875,
+          "top": 581.203125,
+          "right": 366,
+          "bottom": 612,
+          "left": 24
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "offscreenButtons": [],
+    "blockedButtons": []
+  },
+  {
+    "size": "390x640",
+    "state": "after-game",
+    "captureError": null,
+    "status": [],
+    "rematch": [
+      {
+        "r": {
+          "x": 10,
+          "y": 556,
+          "width": 370,
+          "height": 76,
+          "top": 556,
+          "right": 380,
+          "bottom": 632,
+          "left": 10
+        },
+        "label": {
+          "x": 176.75,
+          "y": 574.09375,
+          "width": 102.484375,
+          "height": 23,
+          "top": 574.09375,
+          "right": 279.234375,
+          "bottom": 597.09375,
+          "left": 176.75
+        },
+        "labelScroll": 102,
+        "labelWidth": 102,
+        "hit": true
+      }
+    ],
+    "offscreenButtons": [],
+    "blockedButtons": []
+  }
+]
