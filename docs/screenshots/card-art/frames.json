@@ -435,5 +435,112 @@
         "hit": true
       }
     ]
+  },
+  {
+    "name": "catalog",
+    "size": "390x844",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "table",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "lift",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "card",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 0,
+          "y": 96,
+          "width": 390,
+          "height": 544,
+          "top": 96,
+          "right": 390,
+          "bottom": 640,
+          "left": 0
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 338,
+          "y": 112,
+          "width": 36,
+          "height": 36,
+          "top": 112,
+          "right": 374,
+          "bottom": 148,
+          "left": 338
+        },
+        "hit": true
+      },
+      {
+        "text": "Сыграть",
+        "testid": "detail-play",
+        "r": {
+          "x": 32,
+          "y": 512,
+          "width": 311,
+          "height": 44,
+          "top": 512,
+          "right": 343,
+          "bottom": 556,
+          "left": 32
+        },
+        "hit": true
+      },
+      {
+        "text": "Продать · +1 П",
+        "r": {
+          "x": 32,
+          "y": 564,
+          "width": 142.375,
+          "height": 44,
+          "top": 564,
+          "right": 174.375,
+          "bottom": 608,
+          "left": 32
+        },
+        "hit": true
+      },
+      {
+        "text": "Передать союзнику",
+        "r": {
+          "x": 182.375,
+          "y": 564,
+          "width": 160.625,
+          "height": 44,
+          "top": 564,
+          "right": 343,
+          "bottom": 608,
+          "left": 182.375
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "catalog",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
   }
 ]
