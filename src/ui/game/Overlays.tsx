@@ -1,4 +1,4 @@
-import {cardObjectName,logText} from './logText';
+import {logText} from './logText';
 import {ShipPending} from './ship-window/ShipPending';
 import {CardArt} from '../CardArt';
 import {uiWords} from '../uiWords';
@@ -192,8 +192,7 @@ export function logParts(data: GameData, line: LogLine): LogPart[] {
   let from = 0;
   for (const code of line.cards) {
     const name=cardByCode(data,code).name;
-    const labels=[`«${name}»`,`«${cardObjectName(name)}»`];
-    const text=labels.find(t=>line.text.indexOf(t,from)>=0)??labels[0];
+    const text=`«${name}»`;
     const at = line.text.indexOf(text, from);
     if (at < 0) continue;
     marks.push({ at, part: { card: code, text } });
