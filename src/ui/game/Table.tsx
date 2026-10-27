@@ -564,7 +564,6 @@ function PlankView({
       onClick={plate ? plate.onClick : onSelect}
       {...aim}
     >
-      {captainOnBoard&&<span className="polish-captain-tab" data-testid={`captain-${ship.code}`}>Капитан «{d.nickGenitive}» на борту</span>}
       <header
         className="plank-head"
         onClick={
@@ -577,6 +576,7 @@ function PlankView({
         }
         title={plate ? undefined : 'Подробнее о корабле'}
       >
+      {captainOnBoard&&<span title={`Капитан «${d.nickGenitive}» на борту`} className="polish-captain-tab" data-testid={`captain-${ship.code}`}>Капитан «{d.nickGenitive}» на борту</span>}
         <span className="ship-art">
           <span className="ship-pic" dangerouslySetInnerHTML={svg(shipSvg(ship.code, 58, 28, `plank-${ship.code}`))} />
           {phone && ship.fires > 0 && <HeadFire n={ship.fires} />}
