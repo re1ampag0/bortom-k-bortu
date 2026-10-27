@@ -1,0 +1,9 @@
+{
+  "src/ui/CardArt.tsx": 2162,
+  "src/ui/card-art.css": 7107,
+  "src/ui/art/cards/manifest.json": 9927,
+  "src/ui/game/scene-window/assets.ts": 1485,
+  "totalSourceBytes": 20681,
+  "gzipSourceBytes": 5995,
+  "scope": "Source payload, not production bundle measurement; URL table additional estimate <10KB"
+}

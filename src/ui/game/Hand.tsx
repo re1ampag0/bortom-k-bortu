@@ -80,7 +80,9 @@ function useLiftLayer(rowRef: { current: HTMLDivElement | null }, lifted: string
         // A short strip can scroll: anchor to its visible bottom, above the controls.
         bottom=Math.min(r.bottom,strip.bottom,bar?.height?bar.top-2*stageK():r.bottom);
       }
-      layer.style.transform = `translate(${(r.left - g.left)/stageK()}px, ${(bottom - g.top)/stageK()}px)`;
+      const artWidth=layer.querySelector('.lift-open')?.getBoundingClientRect().width??r.width;
+      const left=Math.max(g.left+8,Math.min(r.left,g.right-artWidth-8));
+      layer.style.transform = `translate(${(left - g.left)/stageK()}px, ${(bottom - g.top)/stageK()}px)`;
     };
     const ask = () => {
       if (!raf) raf = requestAnimationFrame(put);

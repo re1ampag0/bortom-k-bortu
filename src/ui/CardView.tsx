@@ -1,3 +1,4 @@
+import {CELLS} from './game/art/cells';
 import {CardArt} from './CardArt';
 import {uiWords} from './uiWords';
 import type { CardInstance, SeaCardInstance } from '../engine/types';
@@ -16,14 +17,14 @@ export function CardView({ card, shipName }: { card: CardInstance;shipName?:stri
       <header className="card-head">
         <span className="card-type">{card.legend ? `Легенда · ${card.type}` : card.type}</span>
         <span className="card-cost" title="Стоимость">
-          {card.cost > 0 && <span className="powder">{card.cost} П</span>}
+          {card.cost > 0 && <span className="powder">{card.cost} <span aria-hidden="true" dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/></span>}
           {card.soul > 0 && <span className="soul">{card.soul} Д</span>}
           {card.cost === 0 && card.soul === 0 && <span className="free">0</span>}
         </span>
       </header>
       {!card.legend&&<CardArt name={card.name}/>} 
       <h3 className="card-name">{card.name}</h3>
-      <span className="card-orn" aria-hidden="true"/>
+      {!card.legend&&<span className="card-orn" aria-hidden="true"/>}
       <div className="card-big">{uiWords(card.big)}</div>
       <p className="card-text">
         <RichText html={card.text} />
