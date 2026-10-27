@@ -1,4 +1,4 @@
-import shell from './shell.json';
+import {shipPoster} from '../scene-window/posters';
 import {mayWarmScenes} from '../scene-window/idle';
 import type {LogLine} from '../../../engine/log';
 // Ship information from the current visible game; the artboards supply only presentation and artwork.
@@ -62,7 +62,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
   <div className="ship-window-frame" ref={frame}>
    {<section className="ship-window" style={st('root')} role="dialog" aria-modal="true" aria-label={d.name} data-testid="ship-sheet" data-ship-window={code} onClick={e=>e.stopPropagation()}>
     <header className="sw-scene" style={st('scene')} aria-label={`Сцена ${d.name}`}>
-     <img className="sw-scene-still" src={(shell as Record<string,{poster:string}>)[code].poster} alt=""/><img className="sw-scene-still" style={{opacity:ready?1:0}} src={asset('scene.png')} alt=""/><ShipScene code={code} ready={ready&&mayWarmScenes()} store={store}/>
+     <img className="sw-scene-still" src={shipPoster(code)} alt=""/><img className="sw-scene-still" style={{opacity:ready?1:0}} src={asset('scene.png')} alt=""/><ShipScene code={code} ready={ready&&mayWarmScenes()} store={store}/>
      <div className="sw-plaque" style={st('plaque')}>
       {[0,1,2,3].map(i=><i key={i} className={'sw-rivet sw-rivet-'+i}/>)}
       <div style={st('plaqueText')}><span style={st('team')}>{SIDE_LABEL[d.side].name}</span><h1 style={st('title')}>{d.name.startsWith("«")?d.name:`«${d.name}»`}</h1><span style={st('captain')}>{d.captain}</span></div>

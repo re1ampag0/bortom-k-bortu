@@ -75,6 +75,7 @@ export function NetBar({ game }: { game: NetGame }) {
     );
   }
   for (const id of away) {
+    if (id === lost) continue; // The open sheet already explains this departure.
     const seat = Object.entries(room.seats).find(([, x]) => x.player === id)!;
     items.push(
       <p key={id} className="net-line">

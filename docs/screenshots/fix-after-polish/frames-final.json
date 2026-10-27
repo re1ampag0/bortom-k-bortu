@@ -1,163 +1,5 @@
 [
   {
-    "name": "card",
-    "size": "1366x660",
-    "horizontalScroll": false,
-    "dialogs": [
-      {
-        "id": "card-detail",
-        "r": {
-          "x": 373,
-          "y": 16,
-          "width": 620,
-          "height": 629.078125,
-          "top": 16,
-          "right": 993,
-          "bottom": 645.078125,
-          "left": 373
-        }
-      }
-    ],
-    "buttons": [
-      {
-        "text": "✕",
-        "r": {
-          "x": 941,
-          "y": 32,
-          "width": 36,
-          "height": 36,
-          "top": 32,
-          "right": 977,
-          "bottom": 68,
-          "left": 941
-        },
-        "hit": true
-      },
-      {
-        "text": "Сыграть",
-        "testid": "detail-play",
-        "r": {
-          "x": 405,
-          "y": 513.078125,
-          "width": 541,
-          "height": 44,
-          "top": 513.078125,
-          "right": 946,
-          "bottom": 557.078125,
-          "left": 405
-        },
-        "hit": true
-      },
-      {
-        "text": "Продать · +1 П",
-        "r": {
-          "x": 530.296875,
-          "y": 565.078125,
-          "width": 121.78125,
-          "height": 44,
-          "top": 565.078125,
-          "right": 652.078125,
-          "bottom": 609.078125,
-          "left": 530.296875
-        },
-        "hit": true
-      },
-      {
-        "text": "Передать союзнику",
-        "r": {
-          "x": 660.078125,
-          "y": 565.078125,
-          "width": 160.625,
-          "height": 44,
-          "top": 565.078125,
-          "right": 820.703125,
-          "bottom": 609.078125,
-          "left": 660.078125
-        },
-        "hit": true
-      }
-    ]
-  },
-  {
-    "name": "card-cant",
-    "size": "1366x660",
-    "horizontalScroll": false,
-    "dialogs": [
-      {
-        "id": "card-detail",
-        "r": {
-          "x": 373,
-          "y": 16,
-          "width": 620,
-          "height": 636,
-          "top": 16,
-          "right": 993,
-          "bottom": 652,
-          "left": 373
-        }
-      }
-    ],
-    "buttons": [
-      {
-        "text": "✕",
-        "r": {
-          "x": 941,
-          "y": 32,
-          "width": 36,
-          "height": 36,
-          "top": 32,
-          "right": 977,
-          "bottom": 68,
-          "left": 941
-        },
-        "hit": true
-      },
-      {
-        "text": "СыгратьРеакцию играют в ход противника, когда он о",
-        "testid": "detail-play",
-        "r": {
-          "x": 405,
-          "y": 548.875,
-          "width": 541,
-          "height": 53,
-          "top": 548.875,
-          "right": 946,
-          "bottom": 601.875,
-          "left": 405
-        },
-        "hit": true
-      },
-      {
-        "text": "Продать · +1 П",
-        "r": {
-          "x": 530.296875,
-          "y": 609.875,
-          "width": 121.78125,
-          "height": 44,
-          "top": 609.875,
-          "right": 652.078125,
-          "bottom": 653.875,
-          "left": 530.296875
-        },
-        "hit": true
-      },
-      {
-        "text": "Передать союзнику",
-        "r": {
-          "x": 660.078125,
-          "y": 609.875,
-          "width": 160.625,
-          "height": 44,
-          "top": 609.875,
-          "right": 820.703125,
-          "bottom": 653.875,
-          "left": 660.078125
-        },
-        "hit": true
-      }
-    ]
-  },
-  {
     "name": "scroll-reaction",
     "size": "1366x660",
     "horizontalScroll": false,
@@ -262,200 +104,6 @@
     "buttons": []
   },
   {
-    "name": "card",
-    "size": "390x640",
-    "horizontalScroll": false,
-    "dialogs": [
-      {
-        "id": "card-detail",
-        "r": {
-          "x": 0,
-          "y": 8,
-          "width": 390,
-          "height": 632,
-          "top": 8,
-          "right": 390,
-          "bottom": 640,
-          "left": 0
-        }
-      }
-    ],
-    "buttons": [
-      {
-        "text": "✕",
-        "r": {
-          "x": 338,
-          "y": 24,
-          "width": 36,
-          "height": 36,
-          "top": 24,
-          "right": 374,
-          "bottom": 60,
-          "left": 338
-        },
-        "hit": true
-      },
-      {
-        "text": "Сыграть",
-        "testid": "detail-play",
-        "r": {
-          "x": 32,
-          "y": 645.4375,
-          "width": 311,
-          "height": 44,
-          "top": 645.4375,
-          "right": 343,
-          "bottom": 689.4375,
-          "left": 32
-        },
-        "hit": false
-      },
-      {
-        "text": "Продать · +1 П",
-        "r": {
-          "x": 32,
-          "y": 697.4375,
-          "width": 142.375,
-          "height": 44,
-          "top": 697.4375,
-          "right": 174.375,
-          "bottom": 741.4375,
-          "left": 32
-        },
-        "hit": false
-      },
-      {
-        "text": "Передать союзнику",
-        "r": {
-          "x": 182.375,
-          "y": 697.4375,
-          "width": 160.625,
-          "height": 44,
-          "top": 697.4375,
-          "right": 343,
-          "bottom": 741.4375,
-          "left": 182.375
-        },
-        "hit": false
-      }
-    ]
-  },
-  {
-    "name": "card-cant",
-    "size": "390x640",
-    "horizontalScroll": false,
-    "dialogs": [
-      {
-        "id": "card-detail",
-        "r": {
-          "x": 0,
-          "y": 8,
-          "width": 390,
-          "height": 632,
-          "top": 8,
-          "right": 390,
-          "bottom": 640,
-          "left": 0
-        }
-      }
-    ],
-    "buttons": [
-      {
-        "text": "✕",
-        "r": {
-          "x": 338,
-          "y": 24,
-          "width": 36,
-          "height": 36,
-          "top": 24,
-          "right": 374,
-          "bottom": 60,
-          "left": 338
-        },
-        "hit": true
-      },
-      {
-        "text": "СыгратьРеакцию играют в ход противника, когда он о",
-        "testid": "detail-play",
-        "r": {
-          "x": 32,
-          "y": 720.9375,
-          "width": 311,
-          "height": 63.96875,
-          "top": 720.9375,
-          "right": 343,
-          "bottom": 784.90625,
-          "left": 32
-        },
-        "hit": false
-      },
-      {
-        "text": "Продать · +1 П",
-        "r": {
-          "x": 32,
-          "y": 792.90625,
-          "width": 142.375,
-          "height": 44,
-          "top": 792.90625,
-          "right": 174.375,
-          "bottom": 836.90625,
-          "left": 32
-        },
-        "hit": false
-      },
-      {
-        "text": "Передать союзнику",
-        "r": {
-          "x": 182.375,
-          "y": 792.90625,
-          "width": 160.625,
-          "height": 44,
-          "top": 792.90625,
-          "right": 343,
-          "bottom": 836.90625,
-          "left": 182.375
-        },
-        "hit": false
-      }
-    ]
-  },
-  {
-    "name": "legend",
-    "size": "390x640",
-    "horizontalScroll": false,
-    "dialogs": [
-      {
-        "id": "card-detail",
-        "r": {
-          "x": 0,
-          "y": 199.25,
-          "width": 390,
-          "height": 440.75,
-          "top": 199.25,
-          "right": 390,
-          "bottom": 640,
-          "left": 0
-        }
-      }
-    ],
-    "buttons": [
-      {
-        "text": "✕",
-        "r": {
-          "x": 338,
-          "y": 215.25,
-          "width": 36,
-          "height": 36,
-          "top": 215.25,
-          "right": 374,
-          "bottom": 251.25,
-          "left": 338
-        },
-        "hit": true
-      }
-    ]
-  },
-  {
     "name": "catalog",
     "size": "390x640",
     "horizontalScroll": false,
@@ -500,9 +148,562 @@
     "buttons": []
   },
   {
+    "name": "card",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "cardStatus": [
+      {
+        "text": "Можно сыграть сейчас",
+        "r": {
+          "x": 371,
+          "y": 473.953125,
+          "width": 624,
+          "height": 37.1875,
+          "top": 473.953125,
+          "right": 995,
+          "bottom": 511.140625,
+          "left": 371
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 343,
+          "y": 12.875,
+          "width": 680,
+          "height": 634.265625,
+          "top": 12.875,
+          "right": 1023,
+          "bottom": 647.140625,
+          "left": 343
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 971,
+          "y": 28.875,
+          "width": 36,
+          "height": 36,
+          "top": 28.875,
+          "right": 1007,
+          "bottom": 64.875,
+          "left": 971
+        },
+        "hit": true
+      },
+      {
+        "text": "Сыграть",
+        "testid": "detail-play",
+        "r": {
+          "x": 371,
+          "y": 527.140625,
+          "width": 624,
+          "height": 44,
+          "top": 527.140625,
+          "right": 995,
+          "bottom": 571.140625,
+          "left": 371
+        },
+        "hit": true
+      },
+      {
+        "text": "Продать · +1 П",
+        "r": {
+          "x": 523.890625,
+          "y": 579.140625,
+          "width": 133.25,
+          "height": 44,
+          "top": 579.140625,
+          "right": 657.140625,
+          "bottom": 623.140625,
+          "left": 523.890625
+        },
+        "hit": true
+      },
+      {
+        "text": "Передать союзнику",
+        "r": {
+          "x": 665.140625,
+          "y": 579.140625,
+          "width": 176.953125,
+          "height": 44,
+          "top": 579.140625,
+          "right": 842.09375,
+          "bottom": 623.140625,
+          "left": 665.140625
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "card-cant",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "cardStatus": [
+      {
+        "text": "Нельзя сыграть: Реакцию играют в ход противника, когда он объявит Залп или карту",
+        "r": {
+          "x": 371,
+          "y": 462.53125,
+          "width": 624,
+          "height": 37.1875,
+          "top": 462.53125,
+          "right": 995,
+          "bottom": 499.71875,
+          "left": 371
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 343,
+          "y": 12,
+          "width": 680,
+          "height": 636,
+          "top": 12,
+          "right": 1023,
+          "bottom": 648,
+          "left": 343
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 971,
+          "y": 28,
+          "width": 36,
+          "height": 36,
+          "top": 28,
+          "right": 1007,
+          "bottom": 64,
+          "left": 971
+        },
+        "hit": true
+      },
+      {
+        "text": "СыгратьРеакцию играют в ход противника, когда он о",
+        "testid": "detail-play",
+        "r": {
+          "x": 371,
+          "y": 515.71875,
+          "width": 624,
+          "height": 56.28125,
+          "top": 515.71875,
+          "right": 995,
+          "bottom": 572,
+          "left": 371
+        },
+        "hit": true
+      },
+      {
+        "text": "Продать · +1 П",
+        "r": {
+          "x": 523.890625,
+          "y": 580,
+          "width": 133.25,
+          "height": 44,
+          "top": 580,
+          "right": 657.140625,
+          "bottom": 624,
+          "left": 523.890625
+        },
+        "hit": true
+      },
+      {
+        "text": "Передать союзнику",
+        "r": {
+          "x": 665.140625,
+          "y": 580,
+          "width": 176.953125,
+          "height": 44,
+          "top": 580,
+          "right": 842.09375,
+          "bottom": 624,
+          "left": 665.140625
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "legend",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "cardStatus": [
+      {
+        "text": "Нельзя: Сейчас ход другой команды",
+        "r": {
+          "x": 371,
+          "y": 540.8125,
+          "width": 624,
+          "height": 37.1875,
+          "top": 540.8125,
+          "right": 995,
+          "bottom": 578,
+          "left": 371
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 343,
+          "y": 50,
+          "width": 680,
+          "height": 560,
+          "top": 50,
+          "right": 1023,
+          "bottom": 610,
+          "left": 343
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 971,
+          "y": 66,
+          "width": 36,
+          "height": 36,
+          "top": 66,
+          "right": 1007,
+          "bottom": 102,
+          "left": 971
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "after-game",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [
+      {
+        "r": {
+          "x": 1096,
+          "y": 552,
+          "width": 258,
+          "height": 80,
+          "top": 552,
+          "right": 1354,
+          "bottom": 632,
+          "left": 1096
+        },
+        "label": {
+          "x": 1187.375,
+          "y": 573.078125,
+          "width": 132.53125,
+          "height": 25.296875,
+          "top": 573.078125,
+          "right": 1319.90625,
+          "bottom": 598.375,
+          "left": 1187.375
+        },
+        "labelScroll": 133,
+        "labelWidth": 133,
+        "hit": true
+      }
+    ],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "card",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "cardStatus": [
+      {
+        "text": "Можно сыграть сейчас",
+        "r": {
+          "x": 24,
+          "y": 477.203125,
+          "width": 342,
+          "height": 30.796875,
+          "top": 477.203125,
+          "right": 366,
+          "bottom": 508,
+          "left": 24
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 0,
+          "y": 60.71875,
+          "width": 390,
+          "height": 579.28125,
+          "top": 60.71875,
+          "right": 390,
+          "bottom": 640,
+          "left": 0
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 342,
+          "y": 72.71875,
+          "width": 36,
+          "height": 36,
+          "top": 72.71875,
+          "right": 378,
+          "bottom": 108.71875,
+          "left": 342
+        },
+        "hit": true
+      },
+      {
+        "text": "Сыграть",
+        "testid": "detail-play",
+        "r": {
+          "x": 24,
+          "y": 524,
+          "width": 342,
+          "height": 44,
+          "top": 524,
+          "right": 366,
+          "bottom": 568,
+          "left": 24
+        },
+        "hit": true
+      },
+      {
+        "text": "Продать · +1 П",
+        "r": {
+          "x": 24,
+          "y": 576,
+          "width": 167,
+          "height": 44,
+          "top": 576,
+          "right": 191,
+          "bottom": 620,
+          "left": 24
+        },
+        "hit": true
+      },
+      {
+        "text": "Передать союзнику",
+        "r": {
+          "x": 199,
+          "y": 576,
+          "width": 167,
+          "height": 44,
+          "top": 576,
+          "right": 366,
+          "bottom": 620,
+          "left": 199
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "card-cant",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "cardStatus": [
+      {
+        "text": "Нельзя сыграть: Реакцию играют в ход противника, когда он объявит Залп или карту",
+        "r": {
+          "x": 24,
+          "y": 434.828125,
+          "width": 342,
+          "height": 47.59375,
+          "top": 434.828125,
+          "right": 366,
+          "bottom": 482.421875,
+          "left": 24
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 0,
+          "y": 8,
+          "width": 390,
+          "height": 632,
+          "top": 8,
+          "right": 390,
+          "bottom": 640,
+          "left": 0
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 342,
+          "y": 20,
+          "width": 36,
+          "height": 36,
+          "top": 20,
+          "right": 378,
+          "bottom": 56,
+          "left": 342
+        },
+        "hit": true
+      },
+      {
+        "text": "СыгратьРеакцию играют в ход противника, когда он о",
+        "testid": "detail-play",
+        "r": {
+          "x": 24,
+          "y": 498.421875,
+          "width": 342,
+          "height": 69.578125,
+          "top": 498.421875,
+          "right": 366,
+          "bottom": 568,
+          "left": 24
+        },
+        "hit": true
+      },
+      {
+        "text": "Продать · +1 П",
+        "r": {
+          "x": 24,
+          "y": 576,
+          "width": 167,
+          "height": 44,
+          "top": 576,
+          "right": 191,
+          "bottom": 620,
+          "left": 24
+        },
+        "hit": true
+      },
+      {
+        "text": "Передать союзнику",
+        "r": {
+          "x": 199,
+          "y": 576,
+          "width": 167,
+          "height": 44,
+          "top": 576,
+          "right": 366,
+          "bottom": 620,
+          "left": 199
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "legend",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "cardStatus": [
+      {
+        "text": "Нельзя: Сейчас ход другой команды",
+        "r": {
+          "x": 24,
+          "y": 581.203125,
+          "width": 342,
+          "height": 30.796875,
+          "top": 581.203125,
+          "right": 366,
+          "bottom": 612,
+          "left": 24
+        },
+        "bodyScroll": 0
+      }
+    ],
+    "rematch": [],
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 0,
+          "y": 275.8125,
+          "width": 390,
+          "height": 364.1875,
+          "top": 275.8125,
+          "right": 390,
+          "bottom": 640,
+          "left": 0
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 342,
+          "y": 287.8125,
+          "width": 36,
+          "height": 36,
+          "top": 287.8125,
+          "right": 378,
+          "bottom": 323.8125,
+          "left": 342
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
     "name": "after-game",
     "size": "390x640",
     "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [
+      {
+        "r": {
+          "x": 10,
+          "y": 556,
+          "width": 370,
+          "height": 76,
+          "top": 556,
+          "right": 380,
+          "bottom": 632,
+          "left": 10
+        },
+        "label": {
+          "x": 176.75,
+          "y": 574.09375,
+          "width": 102.484375,
+          "height": 23,
+          "top": 574.09375,
+          "right": 279.234375,
+          "bottom": 597.09375,
+          "left": 176.75
+        },
+        "labelScroll": 102,
+        "labelWidth": 102,
+        "hit": true
+      }
+    ],
     "dialogs": [],
     "buttons": []
   }
