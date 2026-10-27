@@ -28,10 +28,8 @@ import { drawWeather } from './weather';
 
 const R1 = (n: number) => Math.round(n * 10) / 10;
 import type { ClipPlayer } from './FxLayer';
-import { plainText } from '../text';
 
 const esc = (s: string) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
-const strip = plainText;
 const other = (side: Side): Side => (side === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ');
 
 /** The ship of a side at a place (pos) on the displayed table: the pairs «opposite» and «diagonal» go by places, not by codes. */
@@ -361,7 +359,7 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
   // it turns over
   A(ctx, card.querySelector('.sc-back')!, [{ transform: 'perspective(800px) rotateY(0deg)' }, { transform: 'perspective(800px) rotateY(180deg)' }], R.flip, 0, 'ease-in-out', 'forwards');
   A(ctx, card.querySelector('.sc-face')!, [{ transform: 'perspective(800px) rotateY(-180deg)' }, { transform: 'perspective(800px) rotateY(0deg)' }], R.flip, 0, 'ease-in-out', 'forwards');
-  hint(ctx, `Море: «${S.name}»: ${strip(S.text)}`);
+  hint(ctx, `Море: «${S.name}» | ${S.big.replace(/\s*—\s*/g,': ')}`);
   // the drawing comes alive
   const d0 = R.flip * 0.6;
   A(ctx, card.querySelector('.artmain')!, [{ transform: 'scale(.6) translateY(10px)', opacity: 0 }, { transform: 'scale(1.08)', opacity: 1, offset: 0.6 }, { transform: 'scale(1)', opacity: 1 }], 700, d0, 'cubic-bezier(.2,.8,.3,1.2)');

@@ -1,0 +1,316 @@
+[
+  {
+    "size": "1920x969",
+    "hoverBefore": {
+      "x": 908.8125,
+      "y": 746.991455078125,
+      "width": 179.3236083984375,
+      "height": 216.56573486328125
+    },
+    "hoverAfter": {
+      "x": 908.8125,
+      "y": 746.991455078125,
+      "width": 179.3236083984375,
+      "height": 216.56573486328125
+    }
+  },
+  {
+    "size": "1920x969",
+    "shots": [
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 83.30199996363375,
+            "delay": 420,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 83.30199996363375,
+            "delay": 420,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 83.30199996363375,
+            "delay": 570,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 83.30199996363375,
+            "delay": 570,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 83.30199996363375,
+            "delay": 720,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 83.30199996363375,
+            "delay": 720,
+            "firstOpacity": "0"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "size": "1024x768",
+    "hoverBefore": {
+      "x": 638.6485595703125,
+      "y": 507.4121398925781,
+      "width": 102.80645751953125,
+      "height": 121.08175659179688
+    },
+    "hoverAfter": {
+      "x": 638.6485595703125,
+      "y": 507.4121398925781,
+      "width": 102.80645751953125,
+      "height": 121.08175659179688
+    }
+  },
+  {
+    "size": "1024x768",
+    "shots": [
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.74600002709764,
+            "delay": 420,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.74600002709764,
+            "delay": 420,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.74600002709764,
+            "delay": 570,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.74600002709764,
+            "delay": 570,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.74600002709764,
+            "delay": 720,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.74600002709764,
+            "delay": 720,
+            "firstOpacity": "0"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "size": "390x844",
+    "shots": [
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 33.359000001289104,
+            "delay": 420,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 33.359000001289104,
+            "delay": 420,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 33.359000001289104,
+            "delay": 570,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 33.359000001289104,
+            "delay": 570,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 33.359000001289104,
+            "delay": 720,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 33.359000001289104,
+            "delay": 720,
+            "firstOpacity": "0"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "size": "390x640",
+    "shots": [
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.61199998864919,
+            "delay": 420,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.61199998864919,
+            "delay": 420,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.61199998864919,
+            "delay": 570,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.61199998864919,
+            "delay": 570,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "glow",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.61199998864919,
+            "delay": 720,
+            "firstOpacity": "0"
+          }
+        ]
+      },
+      {
+        "art": "cone",
+        "opacity": "0",
+        "animations": [
+          {
+            "time": 66.61199998864919,
+            "delay": 720,
+            "firstOpacity": "0"
+          }
+        ]
+      }
+    ]
+  }
+]

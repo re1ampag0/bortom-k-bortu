@@ -178,7 +178,7 @@ export function StatusBar({
       </div>
       {hold}
       <div className={`status-text ${waiting ? 'waiting' : ''} ${alarmNow ? 'alarm' : ''}`} data-testid="instruction" data-fx-instruction>
-        {alarmNow ?? clipHint ?? instruction}
+        {clipHint?.startsWith('Море:')?<button className="polish-sea-strip" data-testid="sea-strip" onClick={onSea}>{clipHint}<span className="sea-info-icon" aria-hidden="true">i</span></button>:(alarmNow ?? clipHint ?? instruction)}
       </div>
       {(chip || extra) && (
         <div className="status-tools">

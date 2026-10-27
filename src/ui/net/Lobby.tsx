@@ -166,7 +166,7 @@ function Entry({
             <button className="menu-primary" data-testid="net-join" disabled={!client || !okName || code.length !== 5} onClick={() => client?.join(code, name.trim())}>
               Войти
             </button>
-            {(error || client?.error) && <p className="error polish-code-error" role="alert"><b aria-hidden="true">!</b> {error ?? client?.error?.text}</p>
+            {(error || client?.error) && <p className="error polish-code-error" role="alert"><b aria-hidden="true">!</b> {error ?? client?.error?.text}</p>}
         </div>
       </section>
       <section className="more">

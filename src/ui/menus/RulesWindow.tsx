@@ -7,7 +7,7 @@ import {memo} from '../game/memo';
 import {Icon} from './Menus';
 import {useMenuOverlay} from './layout';
 import {holdMenuMotion} from './motion';
-const fullForPlayers=full.slice(full.indexOf('## ')).replace(/\*\*\[Q\d+\]\*\*/g,'').split('\n').filter(line=>!/^\s*---\s*$/.test(line)&&!line.includes('QUESTIONS.md')&&!line.startsWith('Источники:')&&!line.startsWith('Сверка источников:')).join('\n');
+const fullForPlayers=full.slice(full.indexOf('## ')).split(/\n## 21[. ]/)[0].replace(/\*\*\[Q\d+\]\*\*/g,'').split('\n').filter(line=>!/^\s*---\s*$/.test(line)&&!line.includes('QUESTIONS.md')&&!line.startsWith('Источники:')&&!line.startsWith('Сверка источников:')).join('\n');
 const chapters=player.split(/^## /m).slice(1).map((part,i)=>{const at=part.indexOf('\n');return{id:i,title:part.slice(0,at).trim(),text:part.slice(at+1).trim()};});
 function inline(text:string):ReactNode{return text.replace('Попадать — тоже.', 'Попадать тоже.').replace(/\s*—\s*/g, ': ').split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((s,i)=>s.startsWith('**')?<strong key={i}>{s.slice(2,-2)}</strong>:s.startsWith('`')?<code key={i}>{s.slice(1,-1)}</code>:s);}
 function Markdown({text}:{text:string}){

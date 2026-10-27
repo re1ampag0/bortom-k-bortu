@@ -1,0 +1,32 @@
+[
+  {
+    "name": "plate",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "buttons": []
+  },
+  {
+    "name": "plate",
+    "size": "1920x969",
+    "horizontalScroll": false,
+    "buttons": []
+  },
+  {
+    "name": "plate",
+    "size": "1024x768",
+    "horizontalScroll": false,
+    "buttons": []
+  },
+  {
+    "name": "plate",
+    "size": "390x844",
+    "horizontalScroll": false,
+    "buttons": []
+  },
+  {
+    "name": "plate",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "buttons": []
+  }
+]
