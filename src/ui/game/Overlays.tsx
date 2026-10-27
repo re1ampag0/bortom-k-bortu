@@ -269,9 +269,9 @@ export const LogList = reactMemo(function LogList({
           {l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? (
             <span className="log-round-line">
               <i className="lr-orn" aria-hidden />
-              <span className="lr-dash">— </span>
+              <span className="lr-dash" aria-hidden />
               {l.text.replace(/\.$/, '').replace(/\d+/, (n) => roman(Number(n)))}
-              <span className="lr-dash"> —</span>
+              <span className="lr-dash" aria-hidden />
               <i className="lr-orn flip" aria-hidden />
             </span>
           ) : (
@@ -281,7 +281,7 @@ export const LogList = reactMemo(function LogList({
                 <span className="log-rt">{marks.get(l) ?? ''}</span>
               </span>
               <span className="log-text">
-                {logParts(data, l).map((p, j) =>
+                {logParts(data, {...l,text:uiWords(l.text)}).map((p, j) =>
                   typeof p === 'string' ? (
                     uiWords(p)
                   ) : 'card' in p ? (

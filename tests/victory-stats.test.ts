@@ -145,7 +145,7 @@ describe('awardTitles: the order of the list and the ties', () => {
       ship('Г', 'КОМПАНИЯ', { souls: 5, dmgOut: 3 }),
     );
     const t = awardTitles(data, m, 'ПИРАТЫ');
-    expect(t['М']).toEqual({ key: 'decisive', name: 'Решающий залп', fact: 'Залп на 6 — «Индевор» на дне' });
+    expect(t['М']).toEqual({ key: 'decisive', name: 'Решающий залп', fact: 'Залп на 6. «Индевор» на дне' });
     expect(t['Ж']).toMatchObject({ name: 'Главный калибр', fact: '12 по Корпусу за партию' });
     expect(t['Г']).toMatchObject({ name: 'Собиратель душ', fact: '5 Душ за партию' });
     expect(t['И']).toMatchObject({ name: 'Бился до конца' });
@@ -173,7 +173,7 @@ describe('awardTitles: the order of the list and the ties', () => {
       ship('Г', 'КОМПАНИЯ', { dmgIn: 4 }),
     );
     const t = awardTitles(data, m, 'ПИРАТЫ');
-    expect(t['М']).toMatchObject({ name: 'Дубовый борт', fact: '9 урона — и на плаву' });
+    expect(t['М']).toMatchObject({ name: 'Дубовый борт', fact: '9 урона, и на плаву' });
     expect(t['Ж']).toMatchObject({ name: 'Ни царапины', fact: 'ни одной доски' });
     expect(t['Г'].name).toBe('Бился до конца');
   });
