@@ -8,3 +8,6 @@ export const weatherPoster=(key:string,phone=false)=>weatherPosters[`../weather-
 const pool=createSceneImagePool(24);
 /** Detached background decoding after the menu poster; no base64 or resident DOM layers. */
 export async function prepareWindowPosters(){for(const url of [...Object.values(ships),...Object.values(weatherPosters)])await queueSceneWarm(()=>pool.load(url));}
+
+/** Prioritize the one poster a sea-chip press will need, before the full idle catalogue. */
+export const prepareWeatherPoster=(key:string)=>pool.load(weatherPoster(key,innerWidth<=700));

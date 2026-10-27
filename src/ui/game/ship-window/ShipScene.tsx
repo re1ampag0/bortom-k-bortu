@@ -11,5 +11,5 @@ export function ShipScene({code,ready,store}:{code:string;ready:boolean;store:Fx
  useEffect(()=>{const q=matchMedia('(max-width:700px)'),change=()=>setPhone(q.matches);q.addEventListener('change',change);return()=>q.removeEventListener('change',change);},[]);
  const key=phone&&code==='Г'?'Г-phone':code,[scene,setScene]=useState<Scene|null>(null);
  useEffect(()=>{if(!mayWarmScenes())return;let live=true;setScene(null);void loadScene(key).then(s=>{if(live)setScene(s)});return()=>{live=false}},[key]);
- return scene&&mayWarmScenes()?<PreparedScene scene={scene} cache={sceneCache} cacheKey={code} ready={ready} store={store} narrow={phone} mobileArt={phone&&code==='Г'}/>:null;
+ return scene&&mayWarmScenes()?<PreparedScene stagger scene={scene} cache={sceneCache} cacheKey={code} ready={ready} store={store} narrow={phone} mobileArt={phone&&code==='Г'}/>:null;
 }

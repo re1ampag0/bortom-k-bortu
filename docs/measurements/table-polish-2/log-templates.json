@@ -1,0 +1,206 @@
+[
+  {
+    "line": 73,
+    "source": "text.trim()"
+  },
+  {
+    "line": 81,
+    "source": "`Раунд ${e.round}.`"
+  },
+  {
+    "line": 85,
+    "source": "`Море: ${sea.name} (${sea.when.toLowerCase()}) — ${sea.big}${e.reshuffled ? ' Колода моря перемешана.' : ''}`"
+  },
+  {
+    "line": 90,
+    "source": "`Ход ${SIDE_GEN[e.side]}.`"
+  },
+  {
+    "line": 96,
+    "source": "` +${e.amount} Порох → ${powder[e.side]}.`"
+  },
+  {
+    "line": 99,
+    "source": "`${SIDE_NAME[e.side]}: +${e.amount} Пороха (${why}) → ${powder[e.side]}${e.burned ? `, сгорело ${e.burned}` : ''}.`"
+  },
+  {
+    "line": 107,
+    "source": "`${SIDE_NAME[e.side]}: −${e.amount} Пороха → ${powder[e.side]}.`"
+  },
+  {
+    "line": 111,
+    "source": "`${name(e.ship)}: −${e.amount} ${plural(e.amount, 'Душа', 'Души', 'Душ')} → ${ships[e.ship].souls}.`"
+  },
+  {
+    "line": 115,
+    "source": "` ${name(e.ship)}: +${e.amount} ${plural(e.amount, 'Душа', 'Души', 'Душ')} → ${ships[e.ship].souls}.`"
+  },
+  {
+    "line": 119,
+    "source": "`${name(e.ship)}: Душа → +1 ${TRACK_NAME[e.track]}.`"
+  },
+  {
+    "line": 122,
+    "source": "`${name(e.ship)}: Пожар (${e.fires}) —`"
+  },
+  {
+    "line": 126,
+    "source": "`${name(e.ship)}: Пожар → ${e.fires}.`"
+  },
+  {
+    "line": 129,
+    "source": "`${name(e.seat)} тушит Пожар, сбросив ${card(e.card)}. Пожаров: ${e.fires}.`"
+  },
+  {
+    "line": 132,
+    "source": "`${name(e.seat)} добирает ${cardsWord(e.count)}.`"
+  },
+  {
+    "line": 135,
+    "source": "`${name(e.seat)}: колода собрана из сброса.`"
+  },
+  {
+    "line": 150,
+    "source": "` ${text}.`"
+  },
+  {
+    "line": 151,
+    "source": "`${name(e.ship)}: −${e.amount + e.toHull} ${TRACK_NAME[e.track]}. ${text}.`"
+  },
+  {
+    "line": 156,
+    "source": "`${name(e.ship)}: +${e.amount} ${TRACK_NAME[e.track]} (${t[e.track]} → ${t[e.track] + e.amount}).`"
+  },
+  {
+    "line": 161,
+    "source": "`${name(e.ship)} тонет!`"
+  },
+  {
+    "line": 165,
+    "source": "`${name(e.ship)}: Залп по ${to(e.target)}${charge}${e.diagonal ? ' (по диагонали)' : ''} — ${e.damage} по ${TRACK_DATIVE[e.track]}.`"
+  },
+  {
+    "line": 169,
+    "source": "`Попадание по ${to(e.target)}: ${formatTerms(e.terms)} = ${e.damage} по ${TRACK_DATIVE[e.track]}.`"
+  },
+  {
+    "line": 174,
+    "source": "`Залп ${name(e.ship)} по ${to(e.target)} отменён.`"
+  },
+  {
+    "line": 179,
+    "source": "`${name(e.seat)}: ${card(e.card)}${target}${forAlly}.`"
+  },
+  {
+    "line": 183,
+    "source": "`${name(e.seat)}: Легенда ${card(e.card)}${e.target ? ` по ${to(e.target)}` : ''}.`"
+  },
+  {
+    "line": 186,
+    "source": "`${name(e.seat)} продаёт ${card(e.card)}:`"
+  },
+  {
+    "line": 189,
+    "source": "`${name(e.seat)} передаёт карту союзнику.`"
+  },
+  {
+    "line": 192,
+    "source": "`${SIDE_NAME[e.side]}: Перестроение.`"
+  },
+  {
+    "line": 196,
+    "source": "`${SIDE_NAME[e.side]}: корабли поменялись местами${why}.`"
+  },
+  {
+    "line": 202,
+    "source": "`${name(e.seat)}: Реакция ${card(e.card)}${e.fromPlan ? ' из Плана' : ''}.`"
+  },
+  {
+    "line": 205,
+    "source": "`${name(e.seat)}: без Реакции.`"
+  },
+  {
+    "line": 208,
+    "source": "`${name(e.ship)}: Джек ускользает! Корпус → 2.`"
+  },
+  {
+    "line": 211,
+    "source": "`${card(e.card)} отменена.`"
+  },
+  {
+    "line": 214,
+    "source": "`${card(e.card)} не сработала: корабль утонул.`"
+  },
+  {
+    "line": 217,
+    "source": "`${name(e.seat)} откладывает в Планы: ${cardsWord(e.count)}.`"
+  },
+  {
+    "line": 220,
+    "source": "`${name(e.ship)} уходит под воду.`"
+  },
+  {
+    "line": 223,
+    "source": "`${name(e.ship)} всплывает: первый Залп +1 и без Реакций.`"
+  },
+  {
+    "line": 226,
+    "source": "`${name(e.ship)}: Меч Тритона.`"
+  },
+  {
+    "line": 229,
+    "source": "`${name(e.ship)}: Казна — ещё одна карта сверх Команды.`"
+  },
+  {
+    "line": 232,
+    "source": "`${name(e.ship)}: Сердце Дейви Джонса — дополнительный Залп.`"
+  },
+  {
+    "line": 235,
+    "source": "`Джонс свободен: ${name(e.ship)} восстанавливает Пушки и Команду.`"
+  },
+  {
+    "line": 241,
+    "source": "`${name(e.seat)} забирает ${card(e.card)} себе в руку.`"
+  },
+  {
+    "line": 243,
+    "source": "`${name(e.seat)} забирает случайную карту из руки противника — ${name(e.from)}.`"
+  },
+  {
+    "line": 246,
+    "source": "`${name(e.seat)} сбрасывает ${card(e.card)}.`"
+  },
+  {
+    "line": 249,
+    "source": "`${name(e.to)} смотрит руку игрока ${name(e.seat)}.`"
+  },
+  {
+    "line": 252,
+    "source": "`${name(e.seat)} смотрит верх колоды моря.`"
+  },
+  {
+    "line": 257,
+    "source": "`Кости лжеца: ${name(a[0])} ${card(a[1])}, ${name(b[0])} ${card(b[1])} — ${win}.`"
+  },
+  {
+    "line": 262,
+    "source": "`${name(e.ship)}: ${what}.`"
+  },
+  {
+    "line": 267,
+    "source": "`${SIDE_NAME[e.side]}: ${what}.`"
+  },
+  {
+    "line": 271,
+    "source": "`${name(e.ship)}: ещё ${cardsWord(e.n)} сверх Команды.`"
+  },
+  {
+    "line": 276,
+    "source": "`${SIDE_NAME[e.side]} сдаются.`"
+  },
+  {
+    "line": 281,
+    "source": "`${who}${why}.`"
+  }
+]

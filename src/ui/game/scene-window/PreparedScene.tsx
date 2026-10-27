@@ -32,18 +32,19 @@ export function sampleSceneMotion(anim:Motion,time:number){
 }
 const clocks=new WeakMap<object,Map<string,number>>();
 /** One owner, native wrapper clocks + one shared particle rAF. Cleanup always cancels both. */
-export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className="sw-native-scene",mobileArt=false,pixelRatio,clockOwner}:{scene:Scene;cache:SceneCache;cacheKey:string;ready:boolean;store:SceneActivity;narrow:boolean;className?:string;mobileArt?:boolean;pixelRatio?:number;clockOwner?:object}){
+export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className="sw-native-scene",mobileArt=false,pixelRatio,clockOwner,stagger=false}:{scene:Scene;cache:SceneCache;cacheKey:string;ready:boolean;store:SceneActivity;narrow:boolean;className?:string;mobileArt?:boolean;pixelRatio?:number;clockOwner?:object;stagger?:boolean}){
  const ref=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   const element=ref.current;if(!element||!ready)return;const host:HTMLDivElement=element;
   let live=true,raf=0,elapsed=clocks.get(clockOwner??host)?.get(cacheKey)??0,last=performance.now(),running=false,intersecting=false,capturing=false;
+  let revealTimer=0,resumeBuild:(()=>void)|undefined;
   const animations:Animation[]=[],particles:{node:Layer;chain:Layer[];image:HTMLImageElement;level:number}[]=[];
   const surfaces=new Map<number,{canvas:HTMLCanvasElement;context:CanvasRenderingContext2D}>();
   let observer:IntersectionObserver|undefined,unsubscribe:(()=>void)|undefined;
   const reduced=matchMedia('(prefers-reduced-motion:reduce)');
   const dpr=pixelRatio??(narrow?Math.min(devicePixelRatio,2):devicePixelRatio);
   const stop=()=>{if(raf)cancelAnimationFrame(raf);raf=0;};
-  function own(el:HTMLElement,kf:Frame[],timing:KeyframeAnimationOptions,name=""){const a=el.animate(frames(kf),options(timing));a.id=name;a.pause();a.currentTime=elapsed;animations.push(a);return a;}
+  function own(el:HTMLElement,kf:Frame[],timing:KeyframeAnimationOptions,name=""){const a=el.animate(frames(kf),options(timing));a.id=name;a.pause();a.currentTime=elapsed;animations.push(a);if(running)a.play();return a;}
   function image(art:Art){
    if(art.tile){const el=document.createElement('div');Object.assign(el.style,{position:'absolute',left:art.x+'px',top:art.y+'px',width:art.w+'px',height:art.h+'px',backgroundImage:`url("${cache.url(art.src)}")`,backgroundRepeat:'repeat-x',backgroundSize:`${art.tile.period}px ${art.h}px`,backgroundPosition:`${art.tile.origin}px 0`,pointerEvents:'none'});return el;}
    const img=document.createElement('img');img.src=cache.url(art.src);img.alt='';
@@ -51,7 +52,7 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
    const [x,y,w,h,aw,ah]=art.crop,el=document.createElement('div');Object.assign(el.style,{position:'absolute',left:art.x+'px',top:art.y+'px',width:art.w+'px',height:art.h+'px',overflow:'hidden',pointerEvents:'none'});
    Object.assign(img.style,{position:'absolute',left:-x*art.w/w+'px',top:-y*art.h/h+'px',width:aw*art.w/w+'px',height:ah*art.h/h+'px',maxWidth:'none',pointerEvents:'none'});el.append(img);return el;
   }
-  function build(node:Layer,chain:Layer[]):HTMLElement|null{
+  function build(node:Layer,chain:Layer[],deep=true):HTMLElement|null{
    if(node.particle&&node.art){
     if(!narrow||particles.length%2===0){const bitmap=cache.image(node.art.src);if(bitmap)particles.push({node,chain:[...chain,node],image:bitmap,level:/tw$|shoot$/.test(node.anim[0]?.name)?0:4});}
     else particles.push({node,chain:[],image:cache.image(node.art.src)!,level:-1});
@@ -68,7 +69,7 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
     node.frames.forEach((art,i)=>{const img=image(art),kf=Array.from({length:5},(_,q)=>({offset:q/4,opacity:q%4===i?1:0,easing:'linear'}));el.append(img);own(img,kf,node.frameTiming!,"prepared-frames");});
    }
    for(const a of node.anim){if(a.frames.some(f=>f.backgroundPositionX!==undefined))continue;own(el,a.frames,a.timing,a.name);}
-   for(const child of node.children){const c=build(child,[...chain,node]);if(c)el.append(c);}
+   if(deep)for(const child of node.children){const c=build(child,[...chain,node]);if(c)el.append(c);}
    return el;
   }
   function draw(time:number){
@@ -95,13 +96,27 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
    for(const a of animations)next?a.play():a.pause();
    if(next&&particles.some(p=>p.level>=0))raf=requestAnimationFrame(tick);else stop();
   }
-  void cache.prepare(cacheKey,sceneUrls(scene)).then(()=>{
-   if(!live)return;const fragment=document.createDocumentFragment();for(const n of scene.tree){const el=build(n,[]);if(el)fragment.append(el);}host.append(fragment);host.dataset.ready='1';host.parentElement?.setAttribute('data-scene-live','');
+  function observe(){
    observer=new IntersectionObserver(entries=>{intersecting=entries[0]?.isIntersecting??false;update();});observer.observe(host);
-   document.addEventListener('visibilitychange',update);reduced.addEventListener('change',update);unsubscribe=store.subscribe(update);draw(elapsed);
-   if(import.meta.env.DEV||import.meta.env.MODE==='e2e')Object.defineProperty(host,'captureScene',{configurable:true,value:(time:number)=>{capturing=true;running=false;stop();for(const a of animations){a.pause();a.currentTime=time;}draw(time);}});
+   document.addEventListener('visibilitychange',update);reduced.addEventListener('change',update);unsubscribe=store.subscribe(update);
+   if(import.meta.env.DEV||import.meta.env.MODE==='e2e')Object.defineProperty(host,'captureScene',{configurable:true,value:(time:number)=>{capturing=true;running=false;elapsed=time;stop();for(const a of animations){a.pause();a.currentTime=time;}draw(time);}});
+  }
+  const prepare=async()=>{if(stagger){for(const src of sceneUrls(scene)){if(!live)return;await cache.prepare(cacheKey,[src]);}}else await cache.prepare(cacheKey,sceneUrls(scene));};
+  void prepare().then(()=>{
+   if(!live)return;
+   const complete=()=>{host.dataset.ready='1';host.removeAttribute('data-revealing');host.parentElement?.setAttribute('data-scene-live','');};
+   if(!stagger){const fragment=document.createDocumentFragment();for(const n of scene.tree){const el=build(n,[]);if(el)fragment.append(el);}host.append(fragment);complete();observe();draw(elapsed);return;}
+   // Insert small, ordered batches. Only the existing particle clock runs indefinitely.
+   host.dataset.revealing='';observe();
+   const jobs:{node:Layer;parent:HTMLElement;chain:Layer[]}[]=scene.tree.map(node=>({node,parent:host,chain:[]}));
+   const step=()=>{if(!live)return;if(document.hidden){resumeBuild=()=>{if(!document.hidden){document.removeEventListener('visibilitychange',resumeBuild!);step();}};document.addEventListener('visibilitychange',resumeBuild);return;}
+    elapsed=Math.max(elapsed,Number(animations[0]?.currentTime??elapsed));const started=performance.now();let count=0;
+    do{const job=jobs.shift();if(!job)break;const el=build(job.node,job.chain,false);if(el){job.parent.append(el);jobs.unshift(...job.node.children.map(node=>({node,parent:el,chain:[...job.chain,job.node]})));}count++;}while(jobs.length&&count<6&&performance.now()-started<2);
+    if(running&&!raf&&particles.some(p=>p.level>=0)){last=performance.now();raf=requestAnimationFrame(tick);}
+    if(jobs.length)revealTimer=window.setTimeout(step,16);else complete();
+   };step();
   });
-  return()=>{let saved=clocks.get(clockOwner??host);if(!saved){saved=new Map();clocks.set(clockOwner??host,saved);}saved.set(cacheKey,Math.max(elapsed,Number(animations[0]?.currentTime??elapsed)));live=false;running=false;stop();observer?.disconnect();unsubscribe?.();document.removeEventListener('visibilitychange',update);reduced.removeEventListener('change',update);animations.forEach(a=>a.cancel());host.replaceChildren();host.removeAttribute('data-ready');host.parentElement?.removeAttribute('data-scene-live');};
- },[cacheKey,ready,store,narrow,scene,cache,pixelRatio,clockOwner]);
+  return()=>{let saved=clocks.get(clockOwner??host);if(!saved){saved=new Map();clocks.set(clockOwner??host,saved);}saved.set(cacheKey,Math.max(elapsed,Number(animations[0]?.currentTime??elapsed)));live=false;running=false;clearTimeout(revealTimer);if(resumeBuild)document.removeEventListener('visibilitychange',resumeBuild);stop();observer?.disconnect();unsubscribe?.();document.removeEventListener('visibilitychange',update);reduced.removeEventListener('change',update);animations.forEach(a=>a.cancel());host.replaceChildren();host.removeAttribute('data-ready');host.removeAttribute('data-revealing');host.parentElement?.removeAttribute('data-scene-live');};
+ },[cacheKey,ready,store,narrow,scene,cache,pixelRatio,clockOwner,stagger]);
  return <div ref={ref} className={className} data-mobile-art={mobileArt?'':undefined} aria-hidden="true"/>;
 }

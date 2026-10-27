@@ -146,8 +146,8 @@ function Entry({
       <label className="row menu-name">
         <span>Ваше имя</span><svg className="menu-quill" viewBox="0 0 26 26" aria-hidden="true"><path d="M4 22C8 14 14 6 23 3C21 10 15 17 6 21Z" fill="#f6f0e2" stroke="#8a7a5a"/><path d="M3 24L18 8" stroke="#c9a048"/></svg>
         <input ref={nameField} aria-invalid={nameError||undefined} aria-describedby={nameError?'net-name-notice':undefined} data-testid="net-name" value={name} maxLength={24} placeholder="Например, Аня" onChange={(e) => {setName(e.target.value);if(e.target.value.trim())setNameError(false);}} />
+      {nameError&&<span className="net-name-notice" id="net-name-notice" role="alert">Введите имя, чтобы создать комнату.</span>}
       </label>
-      {nameError&&<p className="net-name-notice" id="net-name-notice" role="alert">Введите имя, чтобы создать комнату.</p>}
       <section className="quick">
         <section className="quick-btn">
           <span className="menu-medal"><Icon name="bell" size={50}/></span><b>Создать комнату</b>

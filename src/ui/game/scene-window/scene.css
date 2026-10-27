@@ -13,3 +13,5 @@
 #stage[data-ship-window-covered] .medal-glint-clip,
 #stage[data-ship-window-covered] .medal-glint-clip * {visibility:visible;}
 
+
+.sw-native-scene[data-revealing]{visibility:visible}
