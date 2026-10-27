@@ -1,3 +1,4 @@
+import {logText,logDownloadText} from '../src/ui/game/logText';
 // Cards in the log and the sea cards of «Тиа Дальма» open in full (P3): the sea sheet shows any sea card by its code.
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -31,13 +32,14 @@ describe('SeaSheet', () => {
 });
 
 describe('the log: card names are links', () => {
-  it('the name of a played card is a button that opens it; the text stays the same', () => {
+  it('the name of a played card is a button that opens it; the readable text keeps the same card link', () => {
     const s = turnOf('ПИРАТЫ', { Ж: ['Ядра'] });
     const card = cardIn(s, 'Ж', 'Ядра');
     const l = line('«Жемчужина»: «Ядра».', [card]);
     const html = list([l]);
     expect(html).toContain(`<button class="cref" data-card="${card}">«Ядра»</button>`);
-    expect(plain(html)).toBe(l.text);
+    expect(plain(html)).toBe(logText(data,l));
+    expect(l.text).toContain(':');
   });
 
   it('«Колокол «Голландца»» with the quotes inside is found whole', () => {
@@ -49,8 +51,9 @@ describe('the log: card names are links', () => {
     const l = log.find((x) => x.cards.includes(bell))!;
     const html = list([l]);
     expect(html).toContain(`<button class="cref" data-card="${bell}">«Колокол «Голландца»»</button>`);
-    expect(plain(html)).toBe(l.text);
-    expect(plain(list(log))).toBe([...log].reverse().map((x) => x.text).join(''));
+    expect(plain(html)).toBe(logText(data,l));
+    expect(l.text).toContain(':');
+    expect(plain(list(log))).toBe([...log].reverse().map((x) => logText(data,x)).join(''));
   });
 
   it('two copies of a card in one line are found in their places', () => {
@@ -129,4 +132,32 @@ describe('«Судовой журнал» (A5): the icon of a line, «— Рау
     expect(plain(html)).toBe('Раунд II');
     expect(html.match(/class="lr-dash" aria-hidden="true"/g)).toHaveLength(2);
   });
+});
+
+
+describe('natural log and download',()=>{
+ it('keeps the printed card name while preserving its link and the stored source',()=>{
+  const s=turnOf('ПИРАТЫ',{М:['Анжелика']});const code=cardIn(s,'М','Анжелика'),l=line('«Месть»: «Анжелика».',[code]);
+  expect(logText(data,l)).toBe('«Месть» сыграла карту «Анжелика».');
+  expect(logDownloadText(data,[l])).toBe('«Месть» сыграла карту «Анжелика».');
+  expect(list([l])).toContain(`data-card="${code}">«Анжелика»</button>`);
+  expect(l.text).toBe('«Месть»: «Анжелика».');
+ });
+ it('keeps every deck card name quoted and unchanged for plays, Reactions and Legends',()=>{
+  for(const deck of data.ships)for(const card of deckCards(data,deck.code)){
+   for(const [who,played,reacted,legend]of [['«Месть»','сыграла','ответила','разыграла'],['«Индевор»','сыграл','ответил','разыграл']]){
+    const l=line(`${who}: «${card.name}».`,[card.code]);
+    const expected=`${who} ${played} карту «${card.name}».`;
+    expect(logText(data,l)).toBe(expected);
+    expect(logDownloadText(data,[l])).toBe(expected);
+    expect(logParts(data,{...l,text:expected}).find(p=>typeof p!=='string')).toEqual({card:card.code,text:`«${card.name}»`});
+    if(card.type==='РЕАКЦИЯ')expect(logText(data,line(`${who}: Реакция «${card.name}».`,[card.code]))).toBe(`${who} ${reacted} Реакцией «${card.name}».`);
+    if(card.legend)expect(logText(data,line(`${who}: Легенда «${card.name}».`,[card.code]))).toBe(`${who} ${legend} Легенду «${card.name}».`);
+   }
+  }
+ });
+ it('turns the Volley chain into one action and its result',()=>{
+  const l=line('«Месть»: Залп по «Голландцу» — 3 по Корпусу.',[]);
+  expect(logText(data,l)).toBe('«Месть» бьёт «Голландца»: 3 по Корпусу.');
+ });
 });

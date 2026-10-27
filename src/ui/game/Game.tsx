@@ -1,3 +1,4 @@
+import {logText,logDownloadText} from './logText';
 import {useSeaLabelRoom} from './afterPolishLayout';
 import {stageK} from '../stage';
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
@@ -12,7 +13,6 @@ import {
   playOptions,
   previewReaction,
   previewVolley,
-  reactionNow,
   refusal,
   tryAction,
   unfiredShips,
@@ -29,7 +29,7 @@ import type { LocalGame } from '../../net/local';
 import type { NetGame } from '../../net/ws';
 import { download, loadSettings, storeSave, storeSettings, type Speed } from '../storage';
 import { Curtain } from './Curtain';
-import { AlarmActions, AlarmArrow, AlarmBar, ReactionSheet, usePhoneLayout } from './Alarm';
+import { AlarmArrow, AlarmBar, ReactionSheet, usePhoneLayout } from './Alarm';
 import { alarmInfo, lossOf, reactionStrip } from './alarm';
 import { Hand, type AlarmCard, type HandTab, type LiftActions } from './Hand';
 import { LogBook } from './LogBook';
@@ -55,7 +55,6 @@ import { BannerView, useBanners } from './Banners';
 import { instantUrl, reducedMotion } from '../start/motion';
 import {prepareInfoWindows} from './scene-window/loadWindows';
 import { FxLayer, useFxPart, useFxQueue, type FxQueue, type FxSnapshot } from './fx/FxLayer';
-import { T } from './fx/timing';
 import { playTurnSound } from '../sound';
 import { Button, OakButton, Plank, RoundButton, ROUND_ICON, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
 import { TableBackdrop, useSeaClip } from './TableThings';
@@ -382,7 +381,7 @@ export function Game({
     return()=>{alive=false;if(idle!==undefined)window.cancelIdleCallback(idle);if(timer!==undefined)clearTimeout(timer);};
   },[s.sea?.current]);
   useTableBody(curtainSide ? null : 'game');
-  const cardDecision=['card','legend','confirmEnd','plans'].includes(mode.k)||(myDecision&&['tortuga','choice','jack'].includes(d?.kind??''));
+  const cardDecision=(!phone&&myDecision&&d?.kind==='reactions')||['card','legend','confirmEnd','plans'].includes(mode.k)||(myDecision&&['tortuga','choice','jack'].includes(d?.kind??''));
   useLayoutEffect(()=>{
     const game=document.querySelector<HTMLElement>('.game'),board=game?.querySelector<HTMLElement>('.board'),bottom=game?.querySelector<HTMLElement>('.board-bottom'),dock=game?.querySelector<HTMLElement>('.decision-dock');
     if(!game||!board||!bottom||!dock||!cardDecision)return;
@@ -765,7 +764,6 @@ export function Game({
     if (why) return { kind: 'no', why };
     return { kind: 'ok', strip: hints ? (reactionStrip(s, data, holder, code) ?? undefined) : undefined };
   }
-  const skipReaction = () => act(myDeciding.map((x) => ({ type: 'noReaction', seat: x }) as Action));
 
   // ——— The panel in the middle (laptop) or in place of the hand (phone) ———
   let dock: React.ReactNode = null;
@@ -788,13 +786,15 @@ export function Game({
   if (s.winner) dock = null;
   else if (myDecision && d!.kind === 'reactions') {
     // A laptop has no panel: the buttons stand where «Ход окончен» does (handActions).
-    if (phone && alarm) {
+    if (alarm) {
       dockSheet = true;
       alarmDock = true;
+      oakDock = !phone;
       dock = (
         <ReactionSheet
           s={s}
           data={data}
+          desktop={!phone}
           seats={myDeciding}
           hints={hints}
           memo={!memoSeen.includes(bottom)}
@@ -980,7 +980,7 @@ export function Game({
     const shownSummary = shownRecent ? turnSummary(data, shownRecent.events) : null;
     return shownSummary?.text
       ? `Ход ${sideGenitive(shownSummary.side)}: ${shownSummary.text}`
-      : [...shownLog].reverse().find((l) => l.kind === 'action' || l.kind === 'damage')?.text ?? null;
+      : (()=>{const last=[...shownLog].reverse().find(l=>l.kind==='action'||l.kind==='damage');return last?logText(data,last):null;})();
   };
   /** The ally: «Капитан предлагает Заряд…» (P6). */
   const offerToMe = myTurn && mode.k === 'idle' ? offers.find((o) => mySeats.includes(o.to) && !mySeats.includes(o.from)) : undefined;
@@ -1121,7 +1121,7 @@ export function Game({
   // «Весь журнал»: the book of the ship whose hand is open; a spectator — of the first ship of the bottom team
   const bookShip = seat ?? Object.values(s.ships).find((x) => x.side === bottom)?.code ?? 'Ж';
   const fileName = net ? `bortom-k-bortu-${net.room.code}` : `bortom-k-bortu-${game.setup.game.seed}`;
-  const downloadLog = () => download(`${fileName}.txt`, game.log.map((l) => (l.kind === 'round' ? `\n${l.text}` : l.text)).join('\n'));
+  const downloadLog = () => download(`${fileName}.txt`, logDownloadText(data,game.log));
   // By network the record (every card) comes from the server, and only after the end of the game.
   const downloadGame = local
     ? () => download(`${fileName}.json`, JSON.stringify(local.record(), null, 1), 'application/json')
@@ -1245,26 +1245,10 @@ export function Game({
 
   // «Быстрее · До конца · Пауза · Отменить» and «Ход окончен»: under the log ≥ 1280 px (A5: the hand gets the whole width
   // of the table), at the end of the hand row narrower.
-  const pickNow = reactPick ? reactionNow(s, data, reactPick.seat, reactPick.card) : null;
   const finishedActions=<div className="polish-finished-actions"><OakButton b={{key:"table-rematch",label:rematchLabel,testid:"table-rematch",onClick:()=>net?net.voteRematch(!vote?.you):rematch()}} sub="те же корабли, новая партия"/><button className="btn" data-testid="table-results" onClick={()=>setEndClosed(false)}>Итоги партии</button><button className="btn" data-testid="table-new-game" onClick={onExit}>Новая партия</button></div>;
   const handActions = s.winner ? <div className="hand-actions">{finishedActions}</div> : chargeBtns ? (
     <div className="hand-actions charge-mode">{chargeBtns}</div>
-  ) : alarmOn && !phone ? (
-    <div className="hand-actions alarm-mode" style={{ ['--alarm-in' as string]: `${T.ui.alarmIn}ms` }}>
-      <AlarmActions
-        price={{cost:reactPick?cardByCode(data,reactPick.card).cost:null,powder:s.teams[bottom].powder,cap:data.econ.cap}}
-        memo={!memoSeen.includes(bottom)}
-        pickName={reactPick ? cardByCode(data, reactPick.card).name : null}
-        now={pickNow?.ok ? pickNow.text : null}
-        folded={alarmFolded}
-        fuse={fuse}
-        onSkip={skipReaction}
-        onPlay={() => reactPick && act([{ type: 'react', seat: reactPick.seat, card: reactPick.card }])}
-        onInfo={() => reactPick && setSheet({ k: 'card', seat: reactPick.seat, code: reactPick.card })}
-        onFold={setAlarmFolded}
-      />
-    </div>
-  ) : (
+  ) : alarmOn && !phone ? null : (
     <div className="hand-actions">
       {/* A5: «Быстрее · До конца · Пауза» (while a bot moves or a move is shown) and «Отменить» — round brass buttons */}
       <FxBusy fx={fx}>{(busy) => (
@@ -1527,7 +1511,6 @@ export function Game({
       if (c.type !== 'ПРИКАЗ') return `Сыграть, когда ${nick(holder)} должна утонуть. Порох: ${s.teams[s.ships[holder].side].powder} из ${c.cost}`;
       return o.reason ? `Нельзя: ${o.reason}` : 'Можно сыграть сейчас';
     }
-    if (!myDecision) return null;
     const o = cardHints.get(code) ?? playOptions(s, data, holder, code);
     return o.reason ? `Нельзя сыграть: ${o.reason}` : 'Можно сыграть сейчас';
   }
