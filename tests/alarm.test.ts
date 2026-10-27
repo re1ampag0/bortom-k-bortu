@@ -9,7 +9,7 @@ describe('«Тревога!»: the bar and the arrow', () => {
     const s = act(turnOf('ПИРАТЫ', { И: ['Двойная обшивка'] }), { type: 'volley', ship: 'Ж', target: 'И' }).state;
     const info = alarmInfo(s, data)!;
     expect(info.kind).toBe('volley');
-    expect(info.line).toBe('«Жемчужина» даёт Залп по «Индевору» — ответите Реакцией?');
+    expect(info.line).toBe('«Жемчужина» даёт Залп по «Индевору». Ответите Реакцией?');
     expect(info.shooter).toBe('Ж');
     expect(info.target).toBe('И');
     expect(info.hit).toEqual({ n: s.ships['Ж'].tracks.guns, track: 'hull', pill: `${s.ships['Ж'].tracks.guns} по Корпусу` });

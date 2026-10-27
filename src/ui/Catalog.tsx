@@ -17,7 +17,7 @@ export function Catalog({ data, onBack }: { data: GameData; onBack: () => void }
       </button>
       <h1>Карты и корабли</h1>
       <p className="summary">
-        Данные версии {data.version}. Всего карт: <b>{deckTotal + legends.length + sea.length}</b>: в колодах{' '}
+        Данные версии {data.version}. Всего <b>{deckTotal + legends.length + sea.length}</b> карт. В колодах{' '}
         {deckTotal}, Легенд {legends.length}, карт моря {sea.length}.
       </p>
       <nav className="toc">

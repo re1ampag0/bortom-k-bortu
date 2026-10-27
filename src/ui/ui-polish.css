@@ -86,3 +86,6 @@
 [data-testid="tortuga-panel"]{border-top:7px solid #2b656b!important}
 [data-testid="tortuga-panel"] .cs-title{background:transparent!important;border:0!important;box-shadow:none!important;color:#245e61!important}
 [data-testid="tortuga-panel"] .ds-stepper>b{color:#50371d}
+/* Journal ornaments are rules, not punctuation in the visible text. */
+.lr-dash{display:inline-block;vertical-align:middle;width:24px;height:1px;background:currentColor;margin:0 6px}
+.round-orn{font-size:.55em;vertical-align:middle;margin:0 .6em;color:#b68a46}

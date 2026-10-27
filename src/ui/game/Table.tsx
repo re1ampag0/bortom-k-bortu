@@ -201,7 +201,7 @@ export function SeaChip({ s, data, onSea }: { s: GameState; data: GameData; onSe
     <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-testid="sea-info" data-fx-sea-chip>
       <span className="sea-icon" dangerouslySetInnerHTML={svg(wxSvg(sea.key, 40, 34))} />
       <span className="sea-words">
-        <span className="sea-cap"><span className="sea-phone">Море · весь раунд</span><span className="sea-desktop">Море:</span></span>
+        <span className="sea-cap"><span className="sea-phone">Море · {sea.when.toLowerCase()}</span><span className="sea-desktop">Море:</span></span>
         <span className="sea-name">
           «{sea.name}»<span className="sea-desktop"> | {sea.big}</span>
         </span>
@@ -358,7 +358,7 @@ export interface Status {
 }
 
 // The windows of the badges (S1): the rules of RULES.md 13.2–13.3 (Fires) and 3.6, 6.3, 14.7 (Souls).
-const FIRE_INFO = 'В начале хода своей команды: −1 Корпус за каждый Пожар. Потушить: сбросьте 1 карту с руки: снимите 1 Пожар (в свой ход, сколько угодно раз).';
+const FIRE_INFO = 'В начале хода своей команды теряется 1 Корпус за каждый Пожар. Чтобы потушить 1 Пожар, сбросьте 1 карту с руки. В свой ход это можно делать сколько угодно раз.';
 const SOULS_INFO = 'Только у «Голландца», не больше 5. +1 Душа за каждый вражеский корабль, получивший от «Голландца» урон по Команде. Тратятся на карты с бирюзовой ценой; в свой ход 1 Душа = +1 Корпус или +1 Команда «Голландца».';
 /** The text of the card «Чёрная метка» (the card with the operation «mark»), without its markup. */
 function markText(data: GameData): string {
@@ -564,7 +564,6 @@ function PlankView({
       onClick={plate ? plate.onClick : onSelect}
       {...aim}
     >
-      {captainOnBoard&&<span className="polish-captain-tab" data-testid={`captain-${ship.code}`}>Капитан «{d.nickGenitive}» на борту</span>}
       <header
         className="plank-head"
         onClick={
@@ -577,6 +576,7 @@ function PlankView({
         }
         title={plate ? undefined : 'Подробнее о корабле'}
       >
+      {captainOnBoard&&<span title={`Капитан «${d.nickGenitive}» на борту`} className="polish-captain-tab" data-testid={`captain-${ship.code}`}>Капитан «{d.nickGenitive}» на борту</span>}
         <span className="ship-art">
           <span className="ship-pic" dangerouslySetInnerHTML={svg(shipSvg(ship.code, 58, 28, `plank-${ship.code}`))} />
           {phone && ship.fires > 0 && <HeadFire n={ship.fires} />}
@@ -592,7 +592,7 @@ function PlankView({
             className={`star narrow ${affordable ? '' : 'poor'} ${flash}`}
             data-testid={`star-${ship.code}`}
             aria-label={`Легенда «${legendName}»`}
-            title={`Легенда: ${legendName}${affordable ? '' : ': не хватает Пороха или Душ'}`}
+            title={`Легенда «${legendName}»${affordable ? '' : '. Не хватает Пороха или Душ'}`}
             tabIndex={plate ? -1 : undefined}
             onClick={(e) => {
               if (plate) return;

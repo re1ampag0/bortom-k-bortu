@@ -114,7 +114,7 @@ export function Prep({
   };
 
   const who = mode === 'bots' ? 'Вы играете за' : 'Кто держит устройство, играет за';
-  const verdict = coin && !coin.spinning ? `Жребий: ${mode === 'bots' ? 'вы' : 'держащий устройство'}: ${SIDE_LABEL[coin.side].name}` : coin ? 'Монета крутится…' : 'Монета решит, кто за какую сторону';
+  const verdict = coin && !coin.spinning ? `Монета выбрала ${SIDE_LABEL[coin.side].acc}. ${mode === 'bots' ? 'Вы играете за эту команду.' : 'За неё играет тот, кто держит устройство.'}` : coin ? 'Монета крутится…' : 'Монета решит, кто за какую сторону';
 
   const variantPick=(v:Variant)=>{setVariant(v);if(v==='first')setHintsChoice(true);setSea(v!=='first');setLegends(v!=='first');};
   return <MenuSurface kind="prep"><main className="menu-prep-content" data-testid="prep">

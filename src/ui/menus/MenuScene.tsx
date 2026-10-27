@@ -1,3 +1,4 @@
+import {prepareInfoWindows} from '../game/scene-window/loadWindows';
 import {useEffect,useMemo,useRef,useState} from 'react';
 import aliases from './aliases.json';
 import posters from './posters.json';
@@ -15,6 +16,7 @@ const pictures=import.meta.glob('./posters/*.webp',{eager:true,query:'?url',impo
 const art=(path:string)=>sharedSceneArt((aliases as Record<string,string>)[path]??path)??files['./art/'+path];
 const idle={get:()=>({busy:!menuMotionAllowed()}),subscribe:subscribeMenuMotion};
 const warmed=new Set<string>();
+let windowsWarmed=false;
 export function MenuScene({name}:{name:string}){
  const [clockOwner]=useState(()=>({})),[cache]=useState(()=>createSceneCache(art,pool)),layout=useMenuLayout(),phone=layout.mode==='phone';
  const key=phone&&hasScene(name+'Phone')?name+'Phone':name==='Main'&&phone?'Phone':name;
@@ -23,6 +25,7 @@ export function MenuScene({name}:{name:string}){
  const ref=useRef<HTMLDivElement>(null),reduced=useMemo(()=>matchMedia('(prefers-reduced-motion:reduce)'),[]);
  const [motion,setMotion]=useState(()=>menuMotionEnabled()&&!reduced.matches),[perf,setPerf]=useState(getPerf);
  useEffect(()=>{initMenuMotion();const update=()=>{setMotion(menuMotionEnabled()&&!reduced.matches);setPerf(getPerf());};const off=subscribeMenuMotion(update),p=subscribePerf(update);reduced.addEventListener('change',update);update();return()=>{off();p();reduced.removeEventListener('change',update);};},[reduced]);
+ useEffect(()=>{if(!['Main','Phone','Chart_prep','Chart_prepPhone','Curtain','CurtainPhone','Placement','PlacementPhone'].includes(key)||posterDecoded!==key||windowsWarmed)return;windowsWarmed=true;void prepareInfoWindows().catch(()=>{windowsWarmed=false});},[posterDecoded,key]);
  const poster=info?pictures['./posters/'+info.src]:undefined;
  useEffect(()=>{let live=true;if(poster)void pool.load(poster).then(()=>{if(live)setPosterDecoded(key);});return()=>{live=false}},[poster,key]);
  useEffect(()=>{let live=true;setReady(false);setShown('');setSource(null);if(motion&&!/^Chart_main/.test(key))void loadScene(key).then(s=>{if(live)setSource(s)});return()=>{live=false}},[key,motion]);
