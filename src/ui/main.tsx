@@ -35,3 +35,5 @@ createRoot(document.getElementById('root')!).render(
     <Stage />
   </StrictMode>,
 );
+
+import './card-art.css';
