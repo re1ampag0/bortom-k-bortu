@@ -88,7 +88,7 @@ export function NetBar({ game }: { game: NetGame }) {
     );
   }
   if (items.length === 0 && !lost) return null;
-  return <><div className="net-bar">{items}</div>{lost&&<Sheet title={missing.length?'Друг вышел из игры':'Друг вернулся в игру'} onClose={()=>setLost(null)} testid="friend-left" foot={<div className="row buttons">{missing.length>0&&<button className="btn primary" data-testid={`replace-${missing[0][0]}`} onClick={()=>{for(const [code]of missing)game.replace(code);setLost(null);}}>Занять место ботом</button>}<button className="btn" data-testid="friend-wait" onClick={()=>setLost(null)}>{missing.length?'Подождать':'Продолжить'}</button></div>}><p>{missing.map(([code])=>game.data.ships.find(ship=>ship.code===code)?.name??code).join(', ')}{missing.length?' ждёт капитана. Друг может вернуться по ссылке комнаты.':'Снова на борту.'}</p></Sheet>}</>;
+  return <><div className="net-bar">{items}</div>{lost&&<Sheet title={missing.length?'Друг вышел из игры':'Друг вернулся в игру'} onClose={()=>setLost(null)} testid="friend-left" foot={<div className="row buttons">{missing.length>0&&<button className="btn primary" data-testid={`replace-${missing[0][0]}`} onClick={()=>{for(const [code]of missing)game.replace(code);setLost(null);}}>Занять место ботом</button>}<button className="btn" data-testid="friend-wait" onClick={()=>setLost(null)}>{missing.length?'Подождать':'Продолжить'}</button></div>}><p>{missing.map(([code])=>game.data.ships.find(ship=>ship.code===code)?.name??code).join(', ')}{missing.length?`${missing.length>1?' ждут капитанов.':' ждёт капитана.'} Друг может вернуться по ссылке комнаты.`:'Снова на борту.'}</p></Sheet>}</>;
 }
 
 /**

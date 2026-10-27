@@ -1,3 +1,4 @@
+import {CELLS} from '../art/cells';
 import {perfOff} from '../perf/state';
 // The clips of the Volley: announce → window → reaction → shot | cancel → counter; heart. A port of
 // docs/mockups/anim/level1/play-volley.js (see PORTING.md): the code is the reference's, what changed is how an element
@@ -114,7 +115,7 @@ export function termRows(ctx: FxCtx, terms: Term[] | null | undefined, cls: Reco
 }
 export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage, was, terms, cls, extra = '', diagonal }: { shooter: string; declared?: string; target: string; track: Track; damage: number; was?: number | null; terms?: Term[] | null; cls?: Record<string, string>; extra?: string; diagonal?: boolean }): string {
   const who = `<b>${esc(nick(ctx, shooter))}</b> → ${declared && declared !== target ? `<s>${esc(nick(ctx, declared))}</s> ` : ''}<b>${esc(nick(ctx, target))}</b>${(diagonal ?? !!(VS && VS.diagonal)) ? ', по диагонали' : ', напротив'}`;
-  return `<div class="polish-plate-head">Залп</div><div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
+  return `<div class="polish-plate-head">${CELLS.GUN} Залп</div><div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
     (terms ? `<div class="terms">${termRows(ctx, terms, cls)}</div>` : '') + extra;
 }
 /** A hidden plate is prepared off-document, never briefly inserted into the layer. */
@@ -504,14 +505,14 @@ PLAY.shot = async (c, ctx) => {
       // rig, г: a «Залп с планшета» — the shot leaves a gun of the Guns track of the plank (an icon or an open port; the live guns
       // fire in turn); a plank without cells (a phone) keeps the muzzles along its edge
       const cell = gunCell(ctx, shooterEl, g);
-      p0 = cell ? { x: cell.cx, y: cell.cy } : { x: s.cx - (sp * (muzzle.length - 1)) / 2 + sp * g, y: sy };
+      p0 = cell ? { x: cell.r-0.5, y: cell.y+cell.h*5/14 } : { x: s.cx - (sp * (muzzle.length - 1)) / 2 + sp * g, y: sy };
       if (cell) {
-        A(ctx, cell.el, [{ transform: 'none', filter: 'none' }, { transform: 'translateX(-3px) rotate(-6deg)', filter: 'drop-shadow(0 0 3px #ff8a2a) brightness(1.45)', offset: 0.15 }, { transform: 'none', filter: 'none' }], 380, t0, 'ease-out', 'none');
+        A(ctx, cell.el, [{ transform: 'none' }, { transform: 'translateX(-3px) rotate(-6deg)', offset: 0.15 }, { transform: 'none' }], 380, t0, 'ease-out', 'none');
       }
       // the fuse spits sparks, then the gun goes off; after the third gun the shots are lighter (the budget of the layer)
-      fuseSparks(ctx, svg, p0.x, p0.y, -down, Math.max(0, t0 - FUSE) * 0.3, FUSE * 0.62);
+      fuseSparks(ctx, svg, p0.x, p0.y, -down, t0, Math.min(100,FUSE * 0.62));
       const full = g < 3;
-      gunFire(ctx, svg, full ? smoke : null, p0.x, p0.y + down * 4, Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale, t0, { grains: full ? 9 : 3, puffs: full ? 11 : 4, wads: full ? 4 : 0, life: SMOKE_LIFE, flash: T.volley.flash });
+      gunFire(ctx, svg, full ? smoke : null, p0.x, p0.y + (cell?0:down*4), Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale, t0, { grains: full ? 9 : 3, puffs: full ? 11 : 4, wads: full ? 4 : 0, life: SMOKE_LIFE, flash: T.volley.flash });
       // A11 (c): a short breath of powder smoke over the planks (in the top layer), gone within T.volley.smokeOver ≤ 800 ms; the long
       // smoke of the Volley lies under the planks (the trace of the sea)
       if (full && g < 2) smokeJet(ctx, svg, p0.x, p0.y + down * 4, Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale * 0.8, 5, T.volley.smokeOver, t0);
@@ -667,8 +668,9 @@ PLAY.counter = async (c, ctx) => {
       const now = shownTrack(ctx, c.to, tr);
       for (let j = 0; j < units; j++, n++) {
         const t0 = 120 + n * 170;
-        const p0 = { x: fb.cx + ((n % 3) - 1) * 22, y: fy };
-        gunFire(ctx, svg, null, p0.x, p0.y + down * 4, Math.atan2(tb.cy - p0.y, tb.cx - p0.x), 0.7, t0, { grains: 4, wads: 0, flash: T.volley.flash });
+        const cell=gunCell(ctx,from,n);
+        const p0 = cell?{x:cell.r-.5,y:cell.y+cell.h*5/14}:{ x: fb.cx + ((n % 3) - 1) * 22, y: fy };
+        gunFire(ctx, svg, null, p0.x, p0.y + (cell?0:down*4), Math.atan2(tb.cy - p0.y, tb.cx - p0.x), 0.7, t0, { grains: 4, wads: 0, flash: T.volley.flash });
         const p1 = fxPoint(ctx, c.to, tr, now - 1 - j);
         const kind = fireCard ? 'fire' : KIND_BY_TRACK[tr];
         fly(ctx, projectile(ctx, kind), curve(p0, p1, 0.08), 440, t0, { spin: tr === 'sails' ? 720 : 0 });

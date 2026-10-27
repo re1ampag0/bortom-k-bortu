@@ -43,3 +43,46 @@
 .sheet[data-testid="friend-left"]{background:linear-gradient(100deg,#352313,#654528,#352313);color:#f0dfba;border:2px solid #c9a048;text-align:center;gap:12px}.sheet[data-testid="friend-left"] .sheet-head{justify-content:center;color:#f0d27a;gap:12px}.sheet[data-testid="friend-left"] .sheet-foot{background:#2d2116}.sheet[data-testid="friend-left"] .row.buttons{justify-content:center;gap:12px}.sheet[data-testid="friend-left"] .btn{border:1px solid #c9a048;background:#392818;color:#f0dfba}
 .plank[data-captain-on-board]{overflow:visible}.polish-captain-tab{position:absolute;left:6px;top:-15px;max-width:calc(100% - 24px);padding:1px 5px;background:#49351e;color:#f3deb2;border:1px solid #b69149;border-radius:4px 4px 0 0;font:700 11px/13px 'Alegreya Sans',sans-serif;text-align:center;z-index:5;pointer-events:none;white-space:normal}
 [data-testid="tortuga-panel"] .ds-heading{background:#25585b;color:#eef1cf}.polish-tortuga-total{text-align:center;color:#efdbaa;margin:6px}.fx-layer .plate{box-sizing:border-box;width:236px;background:linear-gradient(#fff1d2,#ead8b0);color:#382617;border:2px solid #b48b40;text-align:center;border-radius:6px;padding:8px;pointer-events:auto}.polish-plate-head{margin:-8px -8px 8px;padding:4px;background:#943628;color:#fff0cf;font:700 16px 'Alegreya SC',serif}.plate .who{text-align:center;line-height:1.3}.plate .big{text-align:center;font-size:24px}.plate .terms{gap:6px}.plate .terms>span{border:1px solid #a38c6066;border-radius:4px;padding:2px 4px}.plate .plus{color:#32713c}.plate.compact .big{font-size:18px}.plate.compact .who,.plate.compact .terms{font-size:11px}
+.polish-card-paper{display:contents}
+@media(min-width:701px){
+ .hand-cards>button.hcard:not(.back):not(.lift-place){background:none!important;border-color:transparent!important;box-shadow:none!important;overflow:visible}
+ .hand-cards>button.hcard:not(.back):not(.lift-place)>.polish-card-paper{display:flex;position:absolute;inset:-1.5px;top:-6px;box-sizing:border-box;flex-direction:column;gap:2px;padding:inherit;background:#f3e6c4 var(--art-card,none);border:1.5px solid var(--line);border-top:6px solid var(--accent);border-radius:inherit;text-align:inherit;pointer-events:none;transform-origin:50% 100%;transition:transform .18s ease-out;box-shadow:0 0 0 2px #d5b059,0 6px 12px #0005;overflow:hidden}
+ .hand-cards>button.hcard:not(.back):not(.lift-place).plan>.polish-card-paper{border-style:dashed;border-top-style:solid}
+ .hand-cards>button.hcard:not(.back):not(.lift-place):is(:hover,:focus-visible,.chosen){rotate:var(--r,0deg)!important;translate:0 var(--dy,0px)!important;scale:1!important;transform:none!important}
+ .hand-cards>button.hcard:not(.back):not(.lift-place):is(:hover,:focus-visible,.chosen)>.polish-card-paper{transform:rotate(calc(-1 * var(--r,0deg))) translateY(calc(-26px - var(--dy,0px))) scale(1.12)}
+ .game.fx-simple .hand-cards>button.hcard:not(.back):not(.lift-place)>.polish-card-paper{transition:none}
+}
+@media(prefers-reduced-motion:reduce){.hand-cards>button.hcard:not(.back):not(.lift-place)>.polish-card-paper{transition:none!important}}
+[data-testid="volley-panel"] .cs-actions{display:flex;flex-direction:column;align-items:center;gap:8px}[data-testid="cancel-volley"]{order:-1;min-height:34px!important;padding:5px 20px!important;width:auto!important;align-self:center;background:linear-gradient(#44301e,#281d12)!important;border:1px solid #c9a048!important;color:#f0ddae!important}
+.polish-swap-art{display:block;position:relative;width:46px;height:46px;pointer-events:none}.polish-swap-art>img{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.polish-swap-arrows{transition:transform .3s ease}.menu-placement-center button:hover:not(:disabled) .polish-swap-arrows{transform:rotate(180deg)}.menu-placement-center button:disabled .polish-swap-arrows{transform:none}
+@media(prefers-reduced-motion:reduce){.polish-swap-arrows{transition:none!important}}
+.charge-btns{display:flex!important;flex-direction:column!important;align-items:center;gap:8px}.charge-btns .cs-cancel{max-width:160px}.charge-btns>.fire-btn{align-self:stretch}
+.polish-top-backdrop{align-items:flex-start!important;padding-top:max(32px,env(safe-area-inset-top))!important}
+[data-testid="tortuga-panel"]{display:grid!important;grid-template-columns:minmax(130px,.8fr) minmax(200px,1fr) minmax(190px,1fr);gap:8px 16px;background:#f2e6c9!important;color:#402c1b!important;box-sizing:border-box;max-width:none!important;width:100%!important;text-align:center}
+[data-testid="tortuga-panel"]>.cs-head{grid-column:1;grid-row:1;justify-content:center;background:none!important;padding:6px!important;border:0!important}[data-testid="tortuga-panel"] .cs-title{color:#245e61!important;text-align:center}[data-testid="tortuga-panel"] .cs-hold{display:none}[data-testid="tortuga-panel"]>.ds-note{grid-column:1;grid-row:2/4;text-align:center;color:#4d3825!important;font-size:13px;margin:0}
+[data-testid="tortuga-panel"]>.ds-body{display:contents}[data-testid="tortuga-panel"] .ds-stepper{grid-column:2;min-width:0;margin:0}[data-testid="tortuga-panel"] .ds-stepper:nth-of-type(1){grid-row:1}[data-testid="tortuga-panel"] .ds-stepper:nth-of-type(2){grid-row:2}.polish-tortuga-total{grid-column:3;grid-row:1;color:#49311e!important;margin:0;font-size:12px;align-self:center}[data-testid="tortuga-panel"]>.ds-actions{grid-column:3;grid-row:2/4;display:flex;flex-direction:column;gap:6px;margin:0}[data-testid="tortuga-panel"] .ds-actions>.primary{order:-1;min-height:40px!important}[data-testid="tortuga-panel"] .ds-cancel{width:100%;text-align:center}
+@media(max-width:700px){[data-testid="tortuga-panel"]{grid-template-columns:minmax(0,1fr);gap:6px;padding:10px!important}[data-testid="tortuga-panel"]>.cs-head,[data-testid="tortuga-panel"]>.ds-note,[data-testid="tortuga-panel"] .ds-stepper,[data-testid="tortuga-panel"] .polish-tortuga-total,[data-testid="tortuga-panel"]>.ds-actions{grid-column:1;grid-row:auto}[data-testid="tortuga-panel"] .ds-stepper{display:grid;grid-template-columns:minmax(0,1fr) 34px 22px 34px}}
+.polish-sea-strip{display:flex;justify-content:center;align-items:center;gap:8px;max-width:100%;width:100%;border:0;background:transparent;color:inherit;font:inherit;text-align:center;cursor:pointer}.polish-plate-head>svg{width:20px;height:14px;vertical-align:middle}
+.charge-btns .cs-cancel{flex:0 0 auto!important;height:34px!important;min-height:34px!important;max-height:34px;box-sizing:border-box}.charge-btns>.oak-btn{flex:none!important;min-height:52px}
+@media(max-width:700px){.board-bottom.charge-open :is(.hand-row,.charge-sheet){--charge-h:clamp(294px,calc(36vh + 44px),382px)}.charge-sheet .charge-btns{height:100px!important;min-height:100px;flex:none!important;gap:8px!important}.charge-sheet .charge-btns>.oak-btn{height:56px!important;min-height:56px!important}.menu-rules-window>header>.menu-link{display:inline-flex!important;justify-content:center;font-size:13px;min-height:34px;grid-column:1/-1;grid-row:2}}
+
+/* The captain tab occupies the edge, with a clear gap above it for the log line. */
+.polish-captain-tab{white-space:nowrap;max-width:none;width:max-content;top:-15px}
+.board .middle-info{bottom:22px}
+@media(max-width:700px){.polish-captain-tab{font-size:10px;line-height:12px;top:-14px}.planks>.plank:last-child .polish-captain-tab{left:auto;right:6px}.board .middle-info{bottom:20px}}
+
+@media(min-width:701px){.log-col .end-turn .oak-pan b{font-size:18px!important;letter-spacing:.06em!important;white-space:normal;text-overflow:clip;line-height:1.15}.log-col .hand-actions>.oak-btn{width:100%;min-width:0}}
+.menus-surface[data-menu-still] .polish-swap-arrows{transition:none!important;transform:none!important}
+.game:is(.perf-off-simple,.perf-off-css) .polish-card-paper{transition:none!important}
+
+.sheet[data-testid="friend-left"] .sheet-head{position:relative;padding:12px 44px;min-height:40px}.sheet[data-testid="friend-left"] .close{position:absolute;right:10px;top:8px}
+/* When the phone leaves only one line of sea, keep the damage in that first line; details scroll inside the plate. */
+.fx-layer .plate.compact{grid-template-columns:auto minmax(0,1fr);gap:4px 6px;padding:4px 8px}
+.plate.compact>.polish-plate-head{grid-column:1;grid-row:1;margin:0;padding:0 4px;font-size:11px;align-self:center}
+.plate.compact>.big{grid-column:2;grid-row:1;font-size:14px!important;align-self:center}
+.plate.compact>.who{grid-column:1/-1;grid-row:2}
+[data-testid="tortuga-panel"] .ds-stepper{color:#50371d}
+@media(max-width:700px){[data-testid="tortuga-panel"]>.cs-head{grid-row:1}[data-testid="tortuga-panel"]>.ds-note{grid-row:2}[data-testid="tortuga-panel"] .ds-stepper:nth-of-type(1){grid-row:3}[data-testid="tortuga-panel"] .ds-stepper:nth-of-type(2){grid-row:4}[data-testid="tortuga-panel"] .polish-tortuga-total{grid-row:5}[data-testid="tortuga-panel"]>.ds-actions{grid-row:6}}
+[data-testid="tortuga-panel"]{border-top:7px solid #2b656b!important}
+[data-testid="tortuga-panel"] .cs-title{background:transparent!important;border:0!important;box-shadow:none!important;color:#245e61!important}
+[data-testid="tortuga-panel"] .ds-stepper>b{color:#50371d}

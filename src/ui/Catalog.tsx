@@ -1,3 +1,4 @@
+import {plural} from './game/victoryStats';
 // The catalog of ships and cards (stage 2): opened from the setup screen.
 import { deckCards, legendCards, seaCards } from '../engine/data';
 import type { GameData } from '../engine/types';
@@ -33,7 +34,7 @@ export function Catalog({ data, onBack }: { data: GameData; onBack: () => void }
         return (
           <section key={ship.code} id={`ship-${ship.code}`}>
             <h2>
-              {ship.name} <span className="count">{cards.length} карты + Легенда</span>
+              {ship.name} <span className="count">{cards.length} {plural(cards.length,'карта','карты','карт')} + Легенда</span>
             </h2>
             <ShipView ship={ship} />
             <div className="cards">

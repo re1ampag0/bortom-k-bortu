@@ -381,7 +381,7 @@ export function Game({
     return()=>{alive=false;if(idle!==undefined)window.cancelIdleCallback(idle);if(timer!==undefined)clearTimeout(timer);};
   },[]);
   useTableBody(curtainSide ? null : 'game');
-  const cardDecision=['card','legend','confirmEnd','plans'].includes(mode.k);
+  const cardDecision=['card','legend','confirmEnd','plans'].includes(mode.k)||(myDecision&&['tortuga','choice','jack'].includes(d?.kind??''));
   useLayoutEffect(()=>{
     const game=document.querySelector<HTMLElement>('.game'),board=game?.querySelector<HTMLElement>('.board'),bottom=game?.querySelector<HTMLElement>('.board-bottom'),dock=game?.querySelector<HTMLElement>('.decision-dock');
     if(!game||!board||!bottom||!dock||!cardDecision)return;

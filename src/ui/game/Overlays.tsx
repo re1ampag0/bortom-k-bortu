@@ -1,3 +1,4 @@
+import {uiWords} from '../uiWords';
 import {WeatherWindow} from './weather-window/WeatherWindow';
 // Things that appear when needed and go away after (docs/TZ.md, «Принципы стола», п. 1, 8): a card in full,
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
@@ -16,7 +17,7 @@ import { cardClass, CostBadge, HandCard } from './Hand';
 import { type Btn } from './Table';
 import { CELLS } from './art/cells';
 import { logMarks } from './logBook';
-import { roman, SIDE_LABEL, SPEEDS } from './text';
+import { roman, SPEEDS } from './text';
 import {loadShipWindow} from './scene-window/loadWindows';
 const ShipWindow=lazy(()=>loadShipWindow().then(module=>({default:module.ShipWindow})));
 import type {FxStore} from './fx/FxLayer';
@@ -47,7 +48,7 @@ export function useEscape(onClose: () => void) {
 export function Sheet({ title, onClose, children, wide, testid, foot }: { title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string; foot?: ReactNode }) {
   useEscape(onClose);
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className={`sheet-backdrop${testid==='friend-left'?' polish-top-backdrop':''}`} onClick={onClose}>
       <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={typeof title==='string'?title:testid==='settings'?'Настройки':undefined} data-testid={testid}>
         <header className="sheet-head">
           <b>{testid==='confirm-sheet'&&<Icon name="wheel" size={30}/>} {title}</b>
@@ -112,16 +113,16 @@ export function CardDetail({
           <span>{c.legend ? `Легенда, одна на партию` : c.type}</span>
           <CostBadge c={c} />
         </header>
-        <div className="card-big">{c.big}</div>
+        <div className="card-big">{uiWords(c.big)}</div>
         <p>
           <RichText html={c.text} />
         </p>
-        <p className="card-flavor">{c.flavor}</p>
+        <p className="card-flavor">{uiWords(c.flavor)}</p>
         <p className="muted small">
           Цена: {c.cost} <span aria-label="Порох" dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/>{c.soul ? `, ${c.soul} Души` : ''} · {shipData(data, c.deck).nick}
         </p>
       </article>
-      {status && <p className={`why ${status.startsWith('Можно') ? 'ok' : ''}`}>{status}</p>}
+      {status && <p className={`why ${status.startsWith('Можно') ? 'ok' : ''}`}>{uiWords(status)}</p>}
       {buttons.length > 0 && (
         <div className="panel-actions wrap">
           {buttons.map((b) => (
@@ -280,7 +281,7 @@ export const LogList = reactMemo(function LogList({
               <span className="log-text">
                 {logParts(data, l).map((p, j) =>
                   typeof p === 'string' ? (
-                    p
+                    uiWords(p)
                   ) : 'card' in p ? (
                     <button key={j} className="cref" data-card={p.card} onClick={() => onCard(p.card)}>
                       {p.text}
