@@ -35,7 +35,9 @@ function useWholeLines(key: string) {
       el.style.removeProperty('max-height');
       const line = parseFloat(getComputedStyle(el).lineHeight);
       if (!(line > 0)) return;
-      const n = Math.max(1, Math.floor((el.clientHeight + 1) / line));
+      const available=el.clientHeight;
+      el.style.visibility=available+1<line?'hidden':'';
+      const n = Math.max(1, Math.floor((available + 1) / line));
       el.style.setProperty('-webkit-line-clamp', String(n));
       // no part of the next line under the last one
       el.style.setProperty('max-height', `${n * line}px`);

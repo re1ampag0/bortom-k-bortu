@@ -201,7 +201,7 @@ export function SeaChip({ s, data, onSea }: { s: GameState; data: GameData; onSe
     <button className="chip sea" onClick={onSea} title={`${sea.name}: ${sea.big}`} data-testid="sea-info" data-fx-sea-chip>
       <span className="sea-icon" dangerouslySetInnerHTML={svg(wxSvg(sea.key, 40, 34))} />
       <span className="sea-words">
-        <span className="sea-cap"><span className="sea-phone">Море · весь раунд</span><span className="sea-desktop">Море:</span></span>
+        <span className="sea-cap"><span className="sea-phone">Море · {sea.when.toLowerCase()}</span><span className="sea-desktop">Море:</span></span>
         <span className="sea-name">
           «{sea.name}»<span className="sea-desktop"> | {sea.big}</span>
         </span>
@@ -592,7 +592,7 @@ function PlankView({
             className={`star narrow ${affordable ? '' : 'poor'} ${flash}`}
             data-testid={`star-${ship.code}`}
             aria-label={`Легенда «${legendName}»`}
-            title={`Легенда: ${legendName}${affordable ? '' : ': не хватает Пороха или Душ'}`}
+            title={`Легенда «${legendName}»${affordable ? '' : '. Не хватает Пороха или Душ'}`}
             tabIndex={plate ? -1 : undefined}
             onClick={(e) => {
               if (plate) return;

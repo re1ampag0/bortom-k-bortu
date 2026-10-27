@@ -1,3 +1,4 @@
+import {ShipPending} from './ship-window/ShipPending';
 import {CardArt} from '../CardArt';
 import {uiWords} from '../uiWords';
 import {WeatherWindow} from './weather-window/WeatherWindow';
@@ -114,7 +115,7 @@ export function CardDetail({
           <span>{c.legend ? `Легенда, одна на партию` : c.type}</span>
           <CostBadge c={c} />
         </header>
-        {!c.legend&&<><CardArt name={c.name}/><h3 className="card-name">{c.name}</h3></>}
+        {!c.legend&&<><CardArt name={c.name} full/><h3 className="card-name">{c.name}</h3></>}
         <div className="card-big">{uiWords(c.big)}</div>
         <p>
           <RichText html={c.text} />
@@ -148,7 +149,10 @@ export function CardDetail({
 
 export function ShipSheet({s,data,code,store,onClose,onDiscard,log=[]}:{s:GameState;data:GameData;code:string;store:FxStore;onClose:()=>void;onDiscard:()=>void;log?:readonly LogLine[]}) {
   useEscape(onClose);
-  return <Suspense fallback={null}><ShipWindow log={log} s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/></Suspense>;
+  const [showFull,setShowFull]=useState(false);
+  useEffect(()=>{setShowFull(false);let frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(()=>setShowFull(true));});return()=>cancelAnimationFrame(frame);},[code]);
+  if(!showFull)return <ShipPending s={s} data={data} code={code} onClose={onClose}/>;
+  return <Suspense fallback={<ShipPending s={s} data={data} code={code} onClose={onClose}/>}><ShipWindow log={log} s={s} data={data} code={code} store={store} onClose={onClose} onDiscard={onDiscard}/></Suspense>;
 }
 
 /** The sea: the current card or, by `code`, any sea card (from the log, from «Тиа Дальма»). */
