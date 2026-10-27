@@ -39,3 +39,5 @@ createRoot(document.getElementById('root')!).render(
 import './card-art.css';
 
 import './fix-after-polish.css';
+
+import './table-polish-2.css';

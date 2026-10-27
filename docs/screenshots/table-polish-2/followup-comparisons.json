@@ -1,0 +1,12 @@
+[
+  {
+    "size": "1366x660",
+    "state": "card-cant",
+    "compare": "followup-compare/1366x660-card-cant.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "card-cant",
+    "compare": "followup-compare/390x640-card-cant.jpg"
+  }
+]

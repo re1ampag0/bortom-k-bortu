@@ -1,0 +1,152 @@
+[
+  {
+    "size": "1366x660",
+    "state": "card-cant",
+    "compare": "compare/1366x660-card-cant.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "flying-card",
+    "compare": "compare/1366x660-flying-card.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "lifted",
+    "compare": "compare/1366x660-lifted.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "log",
+    "compare": "compare/1366x660-log.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "net-name",
+    "compare": "compare/1366x660-net-name.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "reaction-scroll",
+    "compare": "compare/1366x660-reaction-scroll.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "reaction-sheet",
+    "compare": "compare/1366x660-reaction-sheet.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "ship",
+    "compare": "compare/1366x660-ship.jpg"
+  },
+  {
+    "size": "1366x660",
+    "state": "weather",
+    "compare": "compare/1366x660-weather.jpg"
+  },
+  {
+    "size": "320x568",
+    "state": "narrow",
+    "compare": "compare/320x568-narrow.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "card-cant",
+    "compare": "compare/390x640-card-cant.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "flying-card",
+    "compare": "compare/390x640-flying-card.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "lift-outside",
+    "compare": "compare/390x640-lift-outside.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "lifted",
+    "compare": "compare/390x640-lifted.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "log",
+    "compare": "compare/390x640-log.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "net-name",
+    "compare": "compare/390x640-net-name.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "reaction-scroll",
+    "compare": "compare/390x640-reaction-scroll.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "reaction-sheet",
+    "compare": "compare/390x640-reaction-sheet.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "ship",
+    "compare": "compare/390x640-ship.jpg"
+  },
+  {
+    "size": "390x640",
+    "state": "weather",
+    "compare": "compare/390x640-weather.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "card-cant",
+    "compare": "compare/390x844-card-cant.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "flying-card",
+    "compare": "compare/390x844-flying-card.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "lift-outside",
+    "compare": "compare/390x844-lift-outside.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "lifted",
+    "compare": "compare/390x844-lifted.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "log",
+    "compare": "compare/390x844-log.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "net-name",
+    "compare": "compare/390x844-net-name.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "reaction-scroll",
+    "compare": "compare/390x844-reaction-scroll.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "reaction-sheet",
+    "compare": "compare/390x844-reaction-sheet.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "ship",
+    "compare": "compare/390x844-ship.jpg"
+  },
+  {
+    "size": "390x844",
+    "state": "weather",
+    "compare": "compare/390x844-weather.jpg"
+  }
+]

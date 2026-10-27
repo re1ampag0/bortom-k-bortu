@@ -1,0 +1,17 @@
+[
+  {
+    "size": "1366x660",
+    "background": "rgba(0, 0, 0, 0) radial-gradient(at 50% 0%, rgb(255, 253, 248), rgb(247, 242, 230) 55%, rgb(235, 226, 207)) repeat scroll 0% 0% / auto padding-box border-box",
+    "card": "Ж-07"
+  },
+  {
+    "size": "390x844",
+    "background": "rgba(0, 0, 0, 0) radial-gradient(at 50% 0%, rgb(255, 253, 248), rgb(247, 242, 230) 55%, rgb(235, 226, 207)) repeat scroll 0% 0% / auto padding-box border-box",
+    "card": "Ж-07"
+  },
+  {
+    "size": "390x640",
+    "background": "rgba(0, 0, 0, 0) radial-gradient(at 50% 0%, rgb(255, 253, 248), rgb(247, 242, 230) 55%, rgb(235, 226, 207)) repeat scroll 0% 0% / auto padding-box border-box",
+    "card": "Ж-07"
+  }
+]

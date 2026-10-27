@@ -336,6 +336,7 @@ export function HandCard({
           <span className="hcard-type">{plan ? 'План' : c.type}</span>
           <CostBadge c={c} />
         </span>
+        <button type="button" className="lift-close" data-testid="lift-close" aria-label="Закрыть поднятую карту" onClick={e=>{e.stopPropagation();onDrop?.();}}>×</button>
         {!c.legend&&<CardArt name={c.name}/>}
         <span className="hcard-name">{c.name}</span>
         <span className="hcard-big">{uiWords(note ?? c.big)}</span>
@@ -475,7 +476,7 @@ export function Hand({
   const middle = usePhoneFan(rowRef, n);
   // The phone: the lifted card (its key in the strip); a tap beside it, another ship's tab or a new hand drops it.
   const [lifted, setLifted] = useState<string | null>(null);
-  useEffect(() => setLifted(null), [seat, n]);
+  useEffect(() => setLifted(null), [seat, n, s.round, s.active]);
   const [game, layerRef] = useLiftLayer(rowRef, lifted);
   /** The lifted card of a phone, drawn in its layer (its place in the strip stays empty). */
   let floating: ReactNode = null;
@@ -503,7 +504,8 @@ export function Hand({
       if (t?.closest?.('[data-lift]')?.getAttribute('data-lift') !== lifted) setLifted(null);
     };
     addEventListener('pointerdown', drop, true);
-    return () => removeEventListener('pointerdown', drop, true);
+    addEventListener('click',drop,true);
+    return () => {removeEventListener('pointerdown', drop, true);removeEventListener('click',drop,true);};
   }, [lifted]);
   // the press of each card keeps its identity (FanCard skips a render that changes nothing it shows) and runs the newest press
   const presses = useRef(new Map<string, { fn: () => void; call: () => void }>());

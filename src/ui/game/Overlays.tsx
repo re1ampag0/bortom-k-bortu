@@ -1,3 +1,4 @@
+import {logText} from './logText';
 import {ShipPending} from './ship-window/ShipPending';
 import {CardArt} from '../CardArt';
 import {uiWords} from '../uiWords';
@@ -47,11 +48,11 @@ export function useEscape(onClose: () => void) {
 }
 
 /** A window over the table: on a laptop in the middle, on a phone a bottom sheet. Closed by the cross, outside or Esc. */
-export function Sheet({ title, onClose, children, wide, testid, foot }: { title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string; foot?: ReactNode }) {
+export function Sheet({ title, onClose, children, wide, testid, foot, className='' }: { title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string; foot?: ReactNode; className?:string }) {
   useEscape(onClose);
   return (
     <div className={`sheet-backdrop${testid==='friend-left'?' polish-top-backdrop':''}`} onClick={onClose}>
-      <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={typeof title==='string'?title:testid==='settings'?'Настройки':undefined} data-testid={testid}>
+      <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''} ${className}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={typeof title==='string'?title:testid==='settings'?'Настройки':undefined} data-testid={testid}>
         <header className="sheet-head">
           <b>{testid==='confirm-sheet'&&<Icon name="wheel" size={30}/>} {title}</b>
           <button className="btn small close" onClick={onClose} aria-label="Закрыть">
@@ -108,9 +109,11 @@ export function CardDetail({
 }) {
   if (code === HIDDEN) return null;
   const c = cardByCode(data, code);
+  const unavailable=!!status&&!status.startsWith('Можно');
+  const when=status?.includes('Реакцию играют в ход противника')?'Когда можно: в ответ на Залп или карту противника.':status?.includes('Сейчас ход другой команды')?'Когда можно: в свой ход.':status;
   return (
-    <Sheet title={c.name} onClose={onClose} testid="card-detail" foot={<>
-      {status && <p className={`why ${status.startsWith('Можно') ? 'ok' : ''}`}>{uiWords(status)}</p>}
+    <Sheet className={unavailable?'card-unavailable':''} title={c.name} onClose={onClose} testid="card-detail" foot={<>
+      {status && <p className={`why ${status.startsWith('Можно') ? 'ok' : ''}`}>{uiWords(when??status)}</p>}
       {buttons.length > 0 && (
         <div className="panel-actions wrap">
           {buttons.map((b) => (
@@ -188,7 +191,8 @@ export function logParts(data: GameData, line: LogLine): LogPart[] {
   const marks: { at: number; part: Exclude<LogPart, string> }[] = [];
   let from = 0;
   for (const code of line.cards) {
-    const text = `«${cardByCode(data, code).name}»`;
+    const name=cardByCode(data,code).name;
+    const text=`«${name}»`;
     const at = line.text.indexOf(text, from);
     if (at < 0) continue;
     marks.push({ at, part: { card: code, text } });
@@ -287,7 +291,7 @@ export const LogList = reactMemo(function LogList({
                 <span className="log-rt">{marks.get(l) ?? ''}</span>
               </span>
               <span className="log-text">
-                {logParts(data, {...l,text:uiWords(l.text)}).map((p, j) =>
+                {logParts(data, {...l,text:logText(data,l)}).map((p, j) =>
                   typeof p === 'string' ? (
                     uiWords(p)
                   ) : 'card' in p ? (

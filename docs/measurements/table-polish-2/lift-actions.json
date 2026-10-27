@@ -1,0 +1,15 @@
+{
+  "close": true,
+  "turnChange": {
+    "before": {
+      "round": 2,
+      "active": "ПИРАТЫ"
+    },
+    "after": {
+      "round": 2,
+      "active": "КОМПАНИЯ"
+    },
+    "error": null
+  },
+  "closedAfterTurn": true
+}

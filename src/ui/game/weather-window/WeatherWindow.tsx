@@ -1,3 +1,4 @@
+import {useWindowSceneOpening} from '../scene-window/opening';
 import {weatherPoster} from '../scene-window/posters';
 import {mayWarmScenes} from '../scene-window/idle';
 import {lazy,Suspense,useEffect,useLayoutEffect,useRef,useState} from 'react';
@@ -23,8 +24,7 @@ export function WeatherWindow({s,data,code,log=[],store,onClose}:{s:GameState;da
  // Reuse the opaque ship sheet's local stage culling, preserving diagnostics and resident glints.
  useLayoutEffect(()=>{const stage=document.getElementById('stage');if(!stage)return;const old=stage.getAttribute('data-ship-window-covered'),media=matchMedia('(max-width:700px)');const update=()=>{if(media.matches)stage.setAttribute('data-ship-window-covered','');else if(old===null)stage.removeAttribute('data-ship-window-covered');else stage.setAttribute('data-ship-window-covered',old);};update();media.addEventListener('change',update);return()=>{media.removeEventListener('change',update);if(old===null)stage.removeAttribute('data-ship-window-covered');else stage.setAttribute('data-ship-window-covered',old);};},[]);
  useEffect(()=>{const previous=document.activeElement as HTMLElement|null;frame.current?.querySelector<HTMLButtonElement>('.ww-close')?.focus({preventScroll:true});return()=>{if(previous?.isConnected)previous.focus({preventScroll:true});};},[]);
- const [liveScene,setLiveScene]=useState(false);
- useEffect(()=>{setLiveScene(false);let frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(()=>setLiveScene(true));});return()=>cancelAnimationFrame(frame);},[selected]);
+ const liveScene=useWindowSceneOpening(frame,selected??'');
  const history=seaHistory(log),entry=[...history].reverse().find(x=>x.code===selected),round=entry?.round??s.round,all=card?.when==='Весь раунд';
  const rows=card&&selected?weatherRows(s,data,card.key,seaResultLines(log,selected,round)):[];
  const tips=(data as GameData&{seaTips?:Record<string,string>}).seaTips;

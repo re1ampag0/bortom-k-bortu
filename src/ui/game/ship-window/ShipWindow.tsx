@@ -1,3 +1,4 @@
+import {useWindowSceneOpening} from '../scene-window/opening';
 import {shipPoster} from '../scene-window/posters';
 import {mayWarmScenes} from '../scene-window/idle';
 import type {LogLine} from '../../../engine/log';
@@ -17,7 +18,7 @@ import '../scene-window/fonts.css';
 import '../scene-window/scene.css';
 import './ship-window.css';
 import {prepareShipWindow,shipArt} from './assets';
-import {ShipScene,prepareShipScene} from './ShipScene';
+import {ShipScene} from './ShipScene';
 import {FeatureIcon,Medal} from './Decorations';
 export {prepareShipWindow} from './assets';
 export {prepareShipScene} from './ShipScene';
@@ -30,12 +31,13 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
  const st=(key:string):CSSProperties=>{const style={...design.styles[key]} as CSSProperties;if(String(style.fontFamily).includes('Alegreya SC'))style.fontFamily="'Ship Alegreya SC',Georgia,serif";else if(style.fontFamily==="Alegreya, Georgia, serif")style.fontFamily="'Ship Alegreya',Georgia,serif";return style;};
  const bodyArt=useRef<HTMLPictureElement>(null),frame=useRef<HTMLDivElement>(null),close=useRef<HTMLButtonElement>(null);
  const [ready,setReady]=useState(false);
+ const entered=useWindowSceneOpening(frame,code);
  useLayoutEffect(()=>{
   const resize=()=>{const w=window.innerWidth,h=window.visualViewport?.height??window.innerHeight,k=Math.min(1,(w-16)/920,(h-16)/640);frame.current?.style.setProperty('--sw-scale',String(Math.max(.1,k)));frame.current?.style.setProperty('--sw-phone-scale',String(w/390));frame.current?.style.setProperty('--sw-height',h+'px');};
   resize();addEventListener('resize',resize);visualViewport?.addEventListener('resize',resize);
   return()=>{removeEventListener('resize',resize);visualViewport?.removeEventListener('resize',resize);};
  },[]);
- useEffect(()=>{let live=true;setReady(false);void Promise.all([prepareShipWindow(code),...(mayWarmScenes()?[prepareShipScene(code)]:[]),...['700 28px \"Ship Alegreya SC\"','500 14px \"Ship Alegreya SC\"','700 17px \"Ship Alegreya\"','italic 400 17px \"Ship Alegreya\"'].map(font=>document.fonts.load(font,'Корабль Легенда ABC123'))]).then(()=>{if(live)setReady(true);});return()=>{live=false;};},[code]);
+ useEffect(()=>{let live=true;setReady(false);void Promise.all([prepareShipWindow(code),...['700 28px \"Ship Alegreya SC\"','500 14px \"Ship Alegreya SC\"','700 17px \"Ship Alegreya\"','italic 400 17px \"Ship Alegreya\"'].map(font=>document.fonts.load(font,'Корабль Легенда ABC123'))]).then(()=>{if(live)setReady(true);});return()=>{live=false;};},[code]);
  // The phone sheet is opaque. Cull the covered stage without unmounting Game or changing its state.
  // The portal and diagnostics remain visible; restore the exact prior attribute on close/rotation.
  useLayoutEffect(()=>{const stage=document.getElementById('stage');if(!stage)return;const old=stage.getAttribute('data-ship-window-covered'),phone=matchMedia('(max-width:700px)');
@@ -62,11 +64,11 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
   <div className="ship-window-frame" ref={frame}>
    {<section className="ship-window" style={st('root')} role="dialog" aria-modal="true" aria-label={d.name} data-testid="ship-sheet" data-ship-window={code} onClick={e=>e.stopPropagation()}>
     <header className="sw-scene" style={st('scene')} aria-label={`Сцена ${d.name}`}>
-     <img className="sw-scene-still" src={shipPoster(code)} alt=""/><img className="sw-scene-still" style={{opacity:ready?1:0}} src={asset('scene.png')} alt=""/><ShipScene code={code} ready={ready&&mayWarmScenes()} store={store}/>
+     <img className="sw-scene-still" src={shipPoster(code)} alt=""/><img className="sw-scene-still" style={{opacity:ready?1:0}} src={asset('scene.png')} alt=""/>{entered&&<ShipScene code={code} ready={ready&&entered&&mayWarmScenes()} store={store}/>}
      <div className="sw-plaque" style={st('plaque')}>
       {[0,1,2,3].map(i=><i key={i} className={'sw-rivet sw-rivet-'+i}/>)}
       <div style={st('plaqueText')}><span style={st('team')}>{SIDE_LABEL[d.side].name}</span><h1 style={st('title')}>{d.name.startsWith("«")?d.name:`«${d.name}»`}</h1><span style={st('captain')}>{d.captain}</span></div>
-      <Medal name={name} alt={`Легенда «${legend.name}»`} ready={ready&&mayWarmScenes()} store={store}/>
+      <Medal name={name} alt={`Легенда «${legend.name}»`} ready={ready&&entered&&mayWarmScenes()} store={store}/>
      </div>
      <button ref={close} className="sw-close" style={st('close')} aria-label="Закрыть" onClick={onClose}><img src={asset('close.svg')} alt=""/></button>
     </header>
@@ -85,7 +87,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
       </div>
       <h2 style={st('featureHeading')}>Особенности</h2>
       {d.abilities.map((ability,i)=><div className="sw-feature" style={st('featureRow')} key={ability.name}>
-       <span style={st('featureMedal')}><FeatureIcon code={code} index={i} name={name} ready={ready&&mayWarmScenes()} store={store}/></span>
+       <span style={st('featureMedal')}><FeatureIcon code={code} index={i} name={name} ready={ready&&entered&&mayWarmScenes()} store={store}/></span>
        <div style={st('featureCopy')}><h3 style={st('featureName')}>{ability.name}</h3><div className="sw-feature-text" style={st('featureText')}><RichText html={ability.text}/></div></div>
       </div>)}
       {statuses(shown,data,ship).length>0&&<div className="sw-statuses">{statuses(shown,data,ship).map(x=><span key={x.label} title={x.hint}>{x.label}</span>)}</div>}
