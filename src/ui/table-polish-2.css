@@ -12,3 +12,10 @@
 }
 .sheet[data-testid='card-detail'].card-unavailable{min-height:0}.sheet[data-testid='card-detail'].card-unavailable>.sheet-body{flex:0 1 auto}.sheet[data-testid='card-detail'].card-unavailable .card-full{min-height:0;justify-content:flex-start}
 .hand-lift .lift-close{position:absolute;right:6px;top:24px;z-index:5;width:32px;height:32px;display:grid;place-items:center;border:1px solid #d4ae57;border-radius:50%;background:#3e2c1b;color:#f5dd9e;font:700 26px/1 'Alegreya Sans';padding:0}.lift-close:before{content:'';position:absolute;inset:-6px}
+.flyc .fcard{background:radial-gradient(ellipse at top,#fffdf8,#f7f2e6 55%,#ebe2cf)}
+.net-name-notice{margin:6px auto 12px;padding:8px 16px;max-width:560px;text-align:center;border:1px solid #c5a358;background:#342416;color:#f1d99a;border-radius:6px}.menu-net input[aria-invalid='true']{outline:2px solid #c88755;outline-offset:3px;background:#40291f}
+@media(max-width:320px){
+ .game[data-game-scale] .status-tools .chip.sea .sea-icon{display:none}.game[data-game-scale] .status-tools .chip.sea .sea-cap{font-size:8px;overflow:visible;text-overflow:clip;letter-spacing:.02em}.game[data-game-scale] .status-tools .chip.sea .sea-name{font-size:10.5px;line-height:1.05;white-space:normal;overflow:visible;text-overflow:clip}
+ .game[data-game-scale] .bottom-bar .end-turn{--oak-h:52px;--oak-med:36px;--oak-fs:12px;max-width:none}.game[data-game-scale] .bottom-bar .end-turn .oak-pan b{font-size:12px!important;line-height:1.05;letter-spacing:.02em!important;text-indent:0;white-space:normal;text-overflow:clip}
+ .game[data-game-scale] .board-bottom>.team-row .regroup .cmd-icon{display:none!important}.game[data-game-scale] .board-bottom>.team-row .regroup .cmd-in{grid-template-columns:1fr;gap:2px}.game[data-game-scale] .board-bottom>.team-row .regroup .cmd-name{font-size:10.5px;overflow:visible;text-overflow:clip;white-space:nowrap}.game[data-game-scale] .board-bottom>.team-row .regroup{max-width:124px;padding-inline:6px}
+}

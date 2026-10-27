@@ -1,3 +1,4 @@
+import {cardObjectName,logText} from './logText';
 import {ShipPending} from './ship-window/ShipPending';
 import {CardArt} from '../CardArt';
 import {uiWords} from '../uiWords';
@@ -190,7 +191,9 @@ export function logParts(data: GameData, line: LogLine): LogPart[] {
   const marks: { at: number; part: Exclude<LogPart, string> }[] = [];
   let from = 0;
   for (const code of line.cards) {
-    const text = `«${cardByCode(data, code).name}»`;
+    const name=cardByCode(data,code).name;
+    const labels=[`«${name}»`,`«${cardObjectName(name)}»`];
+    const text=labels.find(t=>line.text.indexOf(t,from)>=0)??labels[0];
     const at = line.text.indexOf(text, from);
     if (at < 0) continue;
     marks.push({ at, part: { card: code, text } });
@@ -289,7 +292,7 @@ export const LogList = reactMemo(function LogList({
                 <span className="log-rt">{marks.get(l) ?? ''}</span>
               </span>
               <span className="log-text">
-                {logParts(data, {...l,text:uiWords(l.text)}).map((p, j) =>
+                {logParts(data, {...l,text:logText(data,l)}).map((p, j) =>
                   typeof p === 'string' ? (
                     uiWords(p)
                   ) : 'card' in p ? (

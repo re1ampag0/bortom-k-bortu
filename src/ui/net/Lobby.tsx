@@ -3,7 +3,7 @@
 // «Начать» for the creator; then the secret placement of each team; then the table.
 import QRCode from 'qrcode';
 import {useMenuLayout} from '../menus/layout';
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { Variant } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
 import { normalizeCode, type RoomInfo, type RoomSettings } from '../../net/protocol';
@@ -115,6 +115,7 @@ function Entry({
   typed: string;
 }) {
   const [name, setName] = useState(loadName());
+  const [nameError,setNameError]=useState(false);const nameField=useRef<HTMLInputElement>(null);
   const [code, setCode] = useState(roomFromUrl());
   const [server, setServer] = useState(typed);
   const [more, setMore] = useState(!!error);
@@ -144,12 +145,13 @@ function Entry({
       )}
       <label className="row menu-name">
         <span>Ваше имя</span><svg className="menu-quill" viewBox="0 0 26 26" aria-hidden="true"><path d="M4 22C8 14 14 6 23 3C21 10 15 17 6 21Z" fill="#f6f0e2" stroke="#8a7a5a"/><path d="M3 24L18 8" stroke="#c9a048"/></svg>
-        <input data-testid="net-name" value={name} maxLength={24} placeholder="Например, Аня" onChange={(e) => setName(e.target.value)} />
+        <input ref={nameField} aria-invalid={nameError||undefined} aria-describedby={nameError?'net-name-notice':undefined} data-testid="net-name" value={name} maxLength={24} placeholder="Например, Аня" onChange={(e) => {setName(e.target.value);if(e.target.value.trim())setNameError(false);}} />
       </label>
+      {nameError&&<p className="net-name-notice" id="net-name-notice" role="alert">Введите имя, чтобы создать комнату.</p>}
       <section className="quick">
         <section className="quick-btn">
           <span className="menu-medal"><Icon name="bell" size={50}/></span><b>Создать комнату</b>
-          <span>Вы получите код и ссылку для друзей, рассадите всех по кораблям и начнёте бой.</span><button className="menu-primary" data-testid="net-create" disabled={!client || !okName} onClick={() => client?.create(name.trim())}>Создать комнату</button>
+          <span>Вы получите код и ссылку для друзей, рассадите всех по кораблям и начнёте бой.</span><button className="menu-primary" data-testid="net-create" disabled={!client&&okName} onClick={()=>{if(!okName){setNameError(true);nameField.current?.focus();return;}client?.create(name.trim());}}>Создать комнату</button>
         </section>
         <div className={`quick-btn join-box${error||client?.error?' has-error':''}`}>
           <span className="menu-medal"><Icon name="key" size={50}/></span><b>Войти по коду</b>
