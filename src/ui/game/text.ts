@@ -1,3 +1,4 @@
+import {uiWords} from '../uiWords';
 // Words of the interface that depend on the side, the track or the speed.
 import type { Side } from '../../engine/types';
 import type { Speed } from '../storage';
@@ -35,7 +36,7 @@ export function speedFactor(speed: Speed): number {
  * a gap (a gap before «.» and a double one were left), a line break is a space.
  */
 export function plainText(h: string): string {
-  return String(h)
+  return uiWords(String(h))
     .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<[^>]+>/g, '')
     .replace(/\s+/g, ' ')

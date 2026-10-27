@@ -1,0 +1,127 @@
+[
+  {
+    "name": "ending",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "buttons": []
+  },
+  {
+    "name": "ending",
+    "size": "1920x969",
+    "horizontalScroll": false,
+    "buttons": []
+  },
+  {
+    "name": "ending",
+    "size": "1024x768",
+    "horizontalScroll": false,
+    "buttons": []
+  },
+  {
+    "name": "ending",
+    "size": "390x844",
+    "horizontalScroll": false,
+    "buttons": []
+  },
+  {
+    "name": "ending",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "buttons": []
+  },
+  {
+    "name": "friend-left",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "buttons": [
+      {
+        "text": "✕",
+        "hit": true
+      },
+      {
+        "text": "Занять место ботом",
+        "hit": true
+      },
+      {
+        "text": "Подождать",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "friend-left",
+    "size": "1920x969",
+    "horizontalScroll": false,
+    "buttons": [
+      {
+        "text": "✕",
+        "hit": true
+      },
+      {
+        "text": "Занять место ботом",
+        "hit": true
+      },
+      {
+        "text": "Подождать",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "friend-left",
+    "size": "1024x768",
+    "horizontalScroll": false,
+    "buttons": [
+      {
+        "text": "✕",
+        "hit": true
+      },
+      {
+        "text": "Занять место ботом",
+        "hit": true
+      },
+      {
+        "text": "Подождать",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "friend-left",
+    "size": "390x844",
+    "horizontalScroll": false,
+    "buttons": [
+      {
+        "text": "✕",
+        "hit": true
+      },
+      {
+        "text": "Занять место ботом",
+        "hit": true
+      },
+      {
+        "text": "Подождать",
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "friend-left",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "buttons": [
+      {
+        "text": "✕",
+        "hit": true
+      },
+      {
+        "text": "Занять место ботом",
+        "hit": true
+      },
+      {
+        "text": "Подождать",
+        "hit": true
+      }
+    ]
+  }
+]

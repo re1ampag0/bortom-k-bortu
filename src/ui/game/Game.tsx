@@ -381,7 +381,7 @@ export function Game({
     return()=>{alive=false;if(idle!==undefined)window.cancelIdleCallback(idle);if(timer!==undefined)clearTimeout(timer);};
   },[]);
   useTableBody(curtainSide ? null : 'game');
-  const cardDecision=['card','legend','confirmEnd','plans'].includes(mode.k);
+  const cardDecision=['card','legend','confirmEnd','plans'].includes(mode.k)||(myDecision&&['tortuga','choice','jack'].includes(d?.kind??''));
   useLayoutEffect(()=>{
     const game=document.querySelector<HTMLElement>('.game'),board=game?.querySelector<HTMLElement>('.board'),bottom=game?.querySelector<HTMLElement>('.board-bottom'),dock=game?.querySelector<HTMLElement>('.decision-dock');
     if(!game||!board||!bottom||!dock||!cardDecision)return;
@@ -421,7 +421,7 @@ export function Game({
   }, [myTurn]);
 
   useEffect(() => {
-    document.title = myDecision && (humans.length > 0 || !!net) ? '● Ваш ход — Бортом к борту' : 'Бортом к борту';
+    document.title = myDecision && (humans.length > 0 || !!net) ? '● Ваш ход: Бортом к борту' : 'Бортом к борту';
     return () => {
       document.title = 'Бортом к борту';
     };
@@ -879,9 +879,9 @@ export function Game({
     const allyPeople = net ? Object.values(s.ships).some((x) => x.side === mode.side && !mySeats.includes(x.code) && !net.isBotSeat(x.code)) : false;
     confirm = (
       <ConfirmSheet
-        title={`Сдаться за ${SIDE_LABEL[mode.side].acc}?`}
-        sub={allyPeople ? 'Команда сдаётся, когда «Сдаться» нажмут оба игрока.' : 'Партия закончится победой противника.'}
-        yes="Сдаться"
+        title="Спустить флаг и просить пощады?"
+        sub={allyPeople ? 'Решение команды вступает в силу, когда оба игрока спустят флаг.' : 'Партия закончится победой противника.'}
+        yes="Спустить флаг"
         onYes={() => {
           if (net) {
             net.voteConcede(true);
@@ -921,21 +921,21 @@ export function Game({
 
   // ——— The instruction in the status bar ———
   const instruction = (() => {
-    if (s.winner) return s.winner === 'НИЧЬЯ' ? 'Партия окончена: ничья' : `Партия окончена: победа — ${SIDE_LABEL[s.winner].name}`;
+    if (s.winner) return s.winner === 'НИЧЬЯ' ? 'Партия окончена: ничья' : `Партия окончена: победа: ${SIDE_LABEL[s.winner].name}`;
     if (!d) return '';
     if (net && !myDecision) return netWaiting();
     if (botSide(d.side)) {
       // The team, not the ship: the ship deciding would tell who holds a Reaction.
       if (d.kind === 'reactions') return `Ждём: ${SIDE_LABEL[d.side].name} (бот) ${decideVerb(d.side)}, ответить ли Реакцией…`;
-      if (d.kind === 'turn') return `Бот: ${SIDE_LABEL[d.side].name} думает…`;
+      if (d.kind === 'turn') return `Бот: ${SIDE_LABEL[d.side].name} ${d.side==='ПИРАТЫ'?'думают':'думает'}…`;
       return `Бот: ${SIDE_LABEL[d.side].name} решает…`;
     }
-    if (!myDecision) return `Ждём: ${SIDE_LABEL[d.side].name} — ${curtainReason(s, data, d.kind)}`;
+    if (!myDecision) return `Ждём: ${SIDE_LABEL[d.side].name}: ${curtainReason(s, data, d.kind)}`;
     switch (d.kind) {
       case 'reactions':
-        return `${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])}: ${s.volley ? 'Залп' : 'карта'} — ответите Реакцией?`;
+        return `${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])}: ${s.volley ? 'Залп' : 'карта'}: ответите Реакцией?`;
       case 'jack':
-        return `${nick(d.seats[0])} тонет — сыграть «Джек ускользает»?`;
+        return `${nick(d.seats[0])} тонет: сыграть «Джек ускользает»?`;
       case 'tortuga':
         return 'Тортуга: сколько карт взять?';
       case 'choice':
@@ -944,10 +944,10 @@ export function Game({
     if (mode.k === 'aim') {
       if (!mode.target) return `${nick(mode.shooter)}: выберите цель Залпа`;
       const to = `«${shipData(data, mode.target).nickDative}»`;
-      return mode.charge ? `Залп по ${to} — проверьте и нажмите «Огонь»` : `Залп по ${to} — Заряд картой из руки`;
+      return mode.charge ? `Залп по ${to}: проверьте и нажмите «Огонь»` : `Залп по ${to}: Заряд картой из руки`;
     }
-    if (mode.k === 'card') return `${nick(mode.seat)}: «${cardByCode(data, mode.card).name}» — выберите параметры`;
-    if (!useful) return 'Полезных действий не осталось — нажмите «Ход окончен»';
+    if (mode.k === 'card') return `${nick(mode.seat)}: «${cardByCode(data, mode.card).name}»: выберите параметры`;
+    if (!useful) return 'Полезных действий не осталось: нажмите «Ход окончен»';
     return `${nick(seat)}: выберите карту или действие`;
   })();
 
@@ -961,14 +961,14 @@ export function Game({
     };
     if (d!.kind === 'reactions') {
       if (d!.side !== bottom) return 'Противник может ответить Реакцией…';
-      return d!.seats.length === 0 ? `${s.volley ? 'Залп' : 'Карта'} противника: Реакций нет` : `Ждём: ${who(d!.seats)} — Реакция…`;
+      return d!.seats.length === 0 ? `${s.volley ? 'Залп' : 'Карта'} противника: Реакций нет` : `Ждём: ${who(d!.seats)}: Реакция…`;
     }
     if (d!.kind === 'turn') {
       const left = d!.seats.filter((x) => !g.ready.includes(x));
-      if (d!.side === bottom) return `Ход окончен — ждём: ${who(left.length > 0 ? left : d!.seats)}`;
+      if (d!.side === bottom) return `Ход окончен: ждём: ${who(left.length > 0 ? left : d!.seats)}`;
       return `Ход ${SIDE_LABEL[d!.side].gen}: ${who(left.length > 0 ? left : d!.seats)}`;
     }
-    return `Ждём: ${who(d!.seats)} — ${curtainReason(s, data, d!.kind)}`;
+    return `Ждём: ${who(d!.seats)}: ${curtainReason(s, data, d!.kind)}`;
   }
 
   // ——— The middle at rest: the last event (of the log as it is shown) ———
@@ -982,7 +982,7 @@ export function Game({
   };
   /** The ally: «Капитан предлагает Заряд…» (P6). */
   const offerToMe = myTurn && mode.k === 'idle' ? offers.find((o) => mySeats.includes(o.to) && !mySeats.includes(o.from)) : undefined;
-  const offerInfo = offerToMe ? `Капитан предлагает Заряд «${cardByCode(data, offerToMe.card).name}» — нажмите «Залп» ${nick(offerToMe.to)}` : null;
+  const offerInfo = offerToMe ? `Капитан предлагает Заряд «${cardByCode(data, offerToMe.card).name}»: нажмите «Залп» ${nick(offerToMe.to)}` : null;
 
   // ——— Hand ———
   const tabs: HandTab[] = allSeats
@@ -1010,14 +1010,14 @@ export function Game({
     if (net && !mySeats.includes(holder) && !offered) return net.isBotSeat(holder) ? 'Этой рукой играет бот' : 'Это рука союзника: ею играет он';
     if (!myDecision) return s.winner ? 'Партия окончена' : 'Сейчас не ваше решение';
     if (mode.k === 'aim') {
-      if (cardByCode(data, code).type !== 'ЗАРЯД' || seatShip(s, holder)?.code !== mode.shooter) return 'Во время Залпа — только Заряды';
+      if (cardByCode(data, code).type !== 'ЗАРЯД' || seatShip(s, holder)?.code !== mode.shooter) return 'Во время Залпа: только Заряды';
       if (mode.target) {
         const p = previewVolley(sAim, data, volleyOrder({ ...mode, charge: code, chargeFrom: holder, paid: 0 }, mode.target));
         return p.ok ? null : p.reason;
       }
       return null;
     }
-    if (d!.kind === 'reactions') return cardByCode(data, code).type === 'РЕАКЦИЯ' ? (cardHints.get(code)?.reason ?? null) : 'Сейчас — только Реакции';
+    if (d!.kind === 'reactions') return cardByCode(data, code).type === 'РЕАКЦИЯ' ? (cardHints.get(code)?.reason ?? null) : 'Сейчас: только Реакции';
     if (d!.kind !== 'turn') return 'Сначала закончите выбор';
     return cardHints.get(code)?.reason ?? null;
   };
@@ -1043,8 +1043,6 @@ export function Game({
     return undefined;
   };
   const handLabel = `${seat ? `Рука · ${nick(seat)}` : 'Рука'}`;
-  const captainNote =
-    seat && mySeats.includes(seat) && isCaptain(s, seat) ? `Вы капитан ${nick(seatShip(s, seat)!.code)}: одна карта за ход за неё, Порох общий` : undefined;
 
   // ——— Bottom buttons ———
   const undoWhy = myTurn && local ? local.undoRefusal(bottom) : 'Отменять можно только свои действия в свой ход';
@@ -1179,6 +1177,7 @@ export function Game({
       reactionWait={cached(`wait:${x.code}`, [waitNote?.line, waitNote?.who, waitTarget === x.code], () =>
         waitNote && waitTarget === x.code ? <ReactionWaitPanel line={waitNote.line} who={waitNote.who} /> : undefined)}
       ship={x}
+      captainOnBoard={x.code===seat&&mySeats.includes(x.code)}
       own={x.side === bottom}
       selected={x.side === bottom && x.code === seat && tabs.length > 1}
       awaiting={decidingSeats.includes(x.code) && !botSeat(x.code) && !(net && d?.kind === 'turn' && net.ready.includes(x.code))}
@@ -1230,7 +1229,7 @@ export function Game({
       }
       onDiscard={(x) => setSheet({ k: 'discard', seat: x })}
       label={handLabel}
-      note={captainNote}
+      note={undefined}
       alarmOf={alarmOn ? alarmOf : null}
       folded={alarmFolded}
       actionsOf={liftActions}
@@ -1245,7 +1244,8 @@ export function Game({
   // «Быстрее · До конца · Пауза · Отменить» and «Ход окончен»: under the log ≥ 1280 px (A5: the hand gets the whole width
   // of the table), at the end of the hand row narrower.
   const pickNow = reactPick ? reactionNow(s, data, reactPick.seat, reactPick.card) : null;
-  const handActions = chargeBtns ? (
+  const finishedActions=<div className="polish-finished-actions"><button className="btn primary" data-testid="table-rematch" onClick={()=>net?net.voteRematch(!vote?.you):rematch()}>{rematchLabel}</button><button className="btn" data-testid="table-results" onClick={()=>setEndClosed(false)}>Итоги партии</button><button className="btn" data-testid="table-new-game" onClick={onExit}>Новая партия</button></div>;
+  const handActions = s.winner ? <div className="hand-actions">{finishedActions}</div> : chargeBtns ? (
     <div className="hand-actions charge-mode">{chargeBtns}</div>
   ) : alarmOn && !phone ? (
     <div className="hand-actions alarm-mode" style={{ ['--alarm-in' as string]: `${T.ui.alarmIn}ms` }}>
@@ -1280,7 +1280,7 @@ export function Game({
             <circle cx="8" cy="8" r="7" fill="#3d8562" />
             <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} — ход закончится, когда нажмёте вы
+          «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} : ход закончится, когда нажмёте вы
         </p>
       )}
     </div>
@@ -1377,7 +1377,7 @@ export function Game({
         {wideLog && handActions}
       </aside>
       <FxBusy fx={fx}>{(busy) => (
-      <nav className={`bottom-bar ${canHoldOf(busy) ? 'has-pause' : ''}`}>
+      <nav className={`bottom-bar ${canHoldOf(busy) ? 'has-pause' : ''}`}>{s.winner?finishedActions:<>
         {/* A5Phone: «Журнал» and «Правила» are square icons with a caption; «Ход окончен» says who is ready under its name */}
         <button className="btn tile" onClick={() => setSheet({ k: 'log' })}>
           <span className="tile-ic" aria-hidden dangerouslySetInnerHTML={{ __html: ROUND_ICON.log }} />
@@ -1390,20 +1390,21 @@ export function Game({
         {canHoldOf(busy) && <RoundButton b={pauseBtn} icon={held ? 'play' : 'pause'} className="tool pause" capNarrow={held ? 'Дальше' : 'Пауза'} />}
         {botBusyOf(busy) ? <RoundButton b={botBtnsOf(busy)[1]} icon="skip" className="tool" capNarrow="До конца" /> : net && mode.k !== 'ending' ? <Button b={remindBtn} /> : <RoundButton b={undoBtn} icon="undo" className="tool undo" />}
         <OakButton
-          b={endBtn}
+          b={mode.k==='ending'?{...endBtn,label:'Ход окончен'}:endBtn}
           className={`end-turn ${myTurn && !useful && mode.k === 'idle' ? 'ready' : ''}`}
           sub={
-            allyReady ? (
+            mode.k==='ending'?<span>отменить: {endSeconds} с</span>:allyReady ? (
               <span className="oak-ready" data-testid="ally-ready-oak">
                 <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
                   <circle cx="8" cy="8" r="7" fill="#3d8562" />
                   <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} — ждёт вас
+                «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} : ждёт вас
               </span>
             ) : undefined
           }
         />
+      </>}
       </nav>
       )}</FxBusy>
       {net && <MissedSheet game={net} />}
@@ -1540,7 +1541,7 @@ function curtainReason(s: GameState, data: LocalGame['data'], kind: string): str
       return 'Тортуга';
     case 'choice': {
       const p = s.pending;
-      if (p?.kind === 'choice' && p.what === 'dice') return 'тайный выбор — Кости лжеца';
+      if (p?.kind === 'choice' && p.what === 'dice') return 'тайный выбор: Кости лжеца';
       if (p?.kind === 'choice' && p.what === 'bell') return 'Колокол «Голландца»: сбросьте карту';
       return 'выбор карты';
     }

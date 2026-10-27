@@ -826,10 +826,10 @@ export function gunFire(ctx: FxCtx, svg: Element, smoke: Element | null, x: numb
   const deg = (ang * 180) / Math.PI, fl = opt.flash ?? 420;
   perfPhaseHook?.('gunFire',fl*ctx.speed,delay*ctx.speed);
   const glow = shotSprite(ctx,svg,'glow',k) ?? sv(svg,shotArt('glow',k));
-  shotA(ctx, glow, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 1 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2)`, opacity: 0 }], fl * 1.25, delay);
+  shotA(ctx, glow, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 0 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(.4)`, opacity: 1, offset: .001 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1.2)`, opacity: 0 }], fl * 1.25, delay);
   const cone = shotSprite(ctx,svg,'cone',k) ?? sv(svg,shotArt('cone',k));
   const at0 = `translate(${R1(x)}px,${R1(y)}px) rotate(${R1(deg)}deg)`;
-  shotA(ctx, cone, [{ transform: `${at0} scale(.15,.4)`, opacity: 1 }, { transform: `${at0} scale(1.15,1)`, opacity: 1, offset: 0.22 }, { transform: `${at0} scale(1.3,.7)`, opacity: 0.6, offset: 0.5 }, { transform: `${at0} scale(1.4,.3)`, opacity: 0 }], fl, delay, 'cubic-bezier(.1,.9,.3,1)');
+  shotA(ctx, cone, [{ transform: `${at0} scale(.15,.4)`, opacity: 0 }, { transform: `${at0} scale(.15,.4)`, opacity: 1, offset: .001 }, { transform: `${at0} scale(1.15,1)`, opacity: 1, offset: 0.22 }, { transform: `${at0} scale(1.3,.7)`, opacity: 0.6, offset: 0.5 }, { transform: `${at0} scale(1.4,.3)`, opacity: 0 }], fl, delay, 'cubic-bezier(.1,.9,.3,1)');
   if (!perfOff('particles')) {
   const sw = particleShape(ctx, svg, `<circle r="${R1(60 * k)}" fill="none" stroke="#fff6e0" stroke-width="${R1(2.4 * k)}"/>`);
   A(ctx, sw, [{ transform: `translate(${R1(x)}px,${R1(y)}px) scale(.05)`, opacity: 0.9 }, { transform: `translate(${R1(x)}px,${R1(y)}px) scale(1)`, opacity: 0 }], fl * 0.86, delay, 'cubic-bezier(.1,.8,.3,1)');

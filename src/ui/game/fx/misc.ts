@@ -301,7 +301,7 @@ PLAY.sink = async (c, ctx) => {
       A(ctx, w, [...pts.map((p, q) => ({ transform: `translate(${(p.x - flip * 36 * (k / 1.7)).toFixed(1)}px,${(p.y + 6 * (k / 1.7)).toFixed(1)}px) scale(${flip},1)`, opacity: Number((0.7 - i * 0.08).toFixed(2)), offset: (q / N) * 0.9 })), { transform: `translate(${(x1 - flip * 36 * (k / 1.7)).toFixed(1)}px,${(y1 + 6 * (k / 1.7)).toFixed(1)}px) scale(${flip},1)`, opacity: 0, offset: 1 }], D2 + 400, t0 + i * 90, 'ease-in-out');
     }
     at(ctx, t0 + D2 + 400, () => A(ctx, plank(ctx, ally), [{ boxShadow: '0 0 0 3px #e0bd62, 0 0 22px rgba(224,189,98,.7)' }, { boxShadow: '0 0 0 0 rgba(0,0,0,0)' }], S.glow, 0, 'ease-out', 'none'));
-    tag(ctx, ab.cx, ab.y - 12, `Капитан ${gen(ctx, c.ship)} — на борту ${gen(ctx, ally)}`, t0 + D2, 'good', 1600);
+    tag(ctx, ab.cx, ab.y - 12, `Капитан ${gen(ctx, c.ship)}: на борту ${gen(ctx, ally)}`, t0 + D2, 'good', 1600);
     // the glow of the ally ends inside the clip (the queue takes only the finished animations off the planks)
     end = Math.max(end, t0 + D2 + 400 + Math.max(S.end, S.glow + 100));
   }
@@ -558,7 +558,7 @@ PLAY.turnEnd = async (c, ctx) => {
   if (c.plans) {
     const plans = c.plans;
     const pb = bx(ctx, plank(ctx, plans.seat));
-    hint(ctx, `${nick(ctx, plans.seat)}: План — ${plans.count} рубашкой вниз`);
+    hint(ctx, `${nick(ctx, plans.seat)}: План: ${plans.count} рубашкой вниз`);
     for (let k = 0; k < plans.count; k++) {
       const from = sideOf(ctx, plans.seat) === ctx.bottom ? (() => { const h = ctx.board.querySelector('[data-fx-hand] .hand-cards'); const hb = h ? bx(ctx, h) : deckBox(ctx); return { x: hb.x + 20 + k * 30, y: hb.y }; })() : { x: pb.cx - 40, y: isTop(ctx, plans.seat) ? -140 : boardH(ctx) };
       const back = mk(ctx, 'flyc', 0, 0, '<span class="hcard back"></span><span class="rib plan">ПЛАН</span>');
@@ -824,7 +824,7 @@ PLAY.peek = async (c, ctx) => { const b = bx(ctx, plank(ctx, c.seat)); tag(ctx, 
 PLAY.dice = async (c, ctx) => {
   const g = gapBox(ctx), W = boardW(ctx), seats = Object.keys(c.cards || {});
   seats.forEach((s, k) => { const el = flyCard(ctx, c.cards[s], cardOrigin(ctx, c.cards[s], s), { x: W / 2 - 120 + k * 130, y: g.cy - 60, s: 0.8 }, k * 150, 450); if (c.winner === s) { A(ctx, el, [{ scale: '1' }, { scale: '1.08' }, { scale: '1' }], 400, 900, 'ease-out', 'none'); burst(ctx, 'gold-dust', W / 2 - 75 + k * 130, g.cy, 900, 14, 20, 60, 700); } A(ctx, el, [{ opacity: 1 }, { opacity: 0 }], 300, 1900, 'ease-in', 'forwards'); });
-  tag(ctx, W / 2, g.cy + 60, c.winner ? `Обе карты забирает ${nick(ctx, c.winner)}` : 'Ничья — обе в сброс', 800, 'plus', 1300);
+  tag(ctx, W / 2, g.cy + 60, c.winner ? `Обе карты забирает ${nick(ctx, c.winner)}` : 'Ничья: обе в сброс', 800, 'plus', 1300);
   await wait(ctx, 2300);
 };
 PLAY.fireOut = async (c, ctx) => { const fb = plank(ctx, c.seat).querySelector('[data-fx-fires]') || plank(ctx, c.seat).querySelector('.plank-head')!; const b = bx(ctx, fb); splash(ctx, b.cx, b.cy, 0); steam(ctx, b.cx, b.cy - 6, 200); tag(ctx, b.cx, b.y - 10, c.fires ? `Пожар −1 (осталось ${c.fires})` : 'Пожар потушен', 250, 'good', 1200); await wait(ctx, 1100); };

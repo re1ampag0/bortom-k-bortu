@@ -1,3 +1,4 @@
+import {CELLS} from '../art/cells';
 import {perfOff} from '../perf/state';
 // The clips of the Volley: announce → window → reaction → shot | cancel → counter; heart. A port of
 // docs/mockups/anim/level1/play-volley.js (see PORTING.md): the code is the reference's, what changed is how an element
@@ -87,16 +88,10 @@ function seaBox(ctx: FxCtx): { x: number; r: number } {
   const b = bx(ctx, el), edge = boardW(ctx) < 701 ? 8 : 12;
   return { x: b.x + edge, r: b.r - edge };
 }
-function placePlate(ctx: FxCtx, shooter: string): PlateBox {
-  const g = gapBox(ctx), W = boardW(ctx), sea = seaBox(ctx);
-  const s = bx(ctx, plank(ctx, shooter));
-  // V5: A5Volley.html — 300 px on a laptop, 220 on a phone (390 px too).
-  const pw = W < 701 ? 220 : 300;
-  // The plate stands in the column the shooter is not in: over the gap, and if it is taller than the gap — over the
-  // shooter's ally (fitPlate), never over the target, where the cannonballs land.
-  const x = s.cx < W / 2 ? sea.r - pw : sea.x;
-  return { x, y: g.y + 4, w: pw };
+function placePlate(ctx: FxCtx, _shooter: string): PlateBox {
+  const g=gapBox(ctx),sea=seaBox(ctx);return {x:sea.x,y:g.cy,w:Math.min(236,sea.r-sea.x)};
 }
+
 function cardSlot(ctx: FxCtx, p: PlateBox, idx: number) {
   const W = boardW(ctx), sea = seaBox(ctx);
   const cw = W < 701 ? 64 : 82;
@@ -120,7 +115,7 @@ export function termRows(ctx: FxCtx, terms: Term[] | null | undefined, cls: Reco
 }
 export function plateHTML(ctx: FxCtx, { shooter, declared, target, track, damage, was, terms, cls, extra = '', diagonal }: { shooter: string; declared?: string; target: string; track: Track; damage: number; was?: number | null; terms?: Term[] | null; cls?: Record<string, string>; extra?: string; diagonal?: boolean }): string {
   const who = `<b>${esc(nick(ctx, shooter))}</b> → ${declared && declared !== target ? `<s>${esc(nick(ctx, declared))}</s> ` : ''}<b>${esc(nick(ctx, target))}</b>${(diagonal ?? !!(VS && VS.diagonal)) ? ', по диагонали' : ', напротив'}`;
-  return `<div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
+  return `<div class="polish-plate-head">${CELLS.GUN} Залп</div><div class="who">${who}</div><div class="big">${was != null && was !== damage ? `<s>${was}</s>` : ''}${damage} по ${TRACK_DATIVE[track]}</div>` +
     (terms ? `<div class="terms">${termRows(ctx, terms, cls)}</div>` : '') + extra;
 }
 /** A hidden plate is prepared off-document, never briefly inserted into the layer. */
@@ -155,10 +150,11 @@ function fitPlate(ctx: FxCtx) {
   if (plate.offsetHeight > g.h - 8) {
     plate.classList.add('compact');
     const sea = seaBox(ctx);
-    w = Math.min(440, sea.r - sea.x - 8);
-    x = (sea.x + sea.r - w) / 2;
+    w = Math.min(236, sea.r - sea.x - 8);
+    x = sea.x;
     plate.style.width = w + 'px';
   }
+  plate.style.maxHeight=Math.max(28,g.h-8)+'px';plate.style.overflowY='auto';
   const h = plate.offsetHeight, y = g.cy - h / 2;
   plate.style.left = x + 'px';
   plate.style.top = y + 'px';
@@ -509,14 +505,14 @@ PLAY.shot = async (c, ctx) => {
       // rig, г: a «Залп с планшета» — the shot leaves a gun of the Guns track of the plank (an icon or an open port; the live guns
       // fire in turn); a plank without cells (a phone) keeps the muzzles along its edge
       const cell = gunCell(ctx, shooterEl, g);
-      p0 = cell ? { x: cell.cx, y: cell.cy } : { x: s.cx - (sp * (muzzle.length - 1)) / 2 + sp * g, y: sy };
+      p0 = cell ? { x: cell.r-0.5, y: cell.y+cell.h*5/14 } : { x: s.cx - (sp * (muzzle.length - 1)) / 2 + sp * g, y: sy };
       if (cell) {
-        A(ctx, cell.el, [{ transform: 'none', filter: 'none' }, { transform: 'translateX(-3px) rotate(-6deg)', filter: 'drop-shadow(0 0 3px #ff8a2a) brightness(1.45)', offset: 0.15 }, { transform: 'none', filter: 'none' }], 380, t0, 'ease-out', 'none');
+        A(ctx, cell.el, [{ transform: 'none' }, { transform: 'translateX(-3px) rotate(-6deg)', offset: 0.15 }, { transform: 'none' }], 380, t0, 'ease-out', 'none');
       }
       // the fuse spits sparks, then the gun goes off; after the third gun the shots are lighter (the budget of the layer)
-      fuseSparks(ctx, svg, p0.x, p0.y, -down, Math.max(0, t0 - FUSE) * 0.3, FUSE * 0.62);
+      fuseSparks(ctx, svg, p0.x, p0.y, -down, t0, Math.min(100,FUSE * 0.62));
       const full = g < 3;
-      gunFire(ctx, svg, full ? smoke : null, p0.x, p0.y + down * 4, Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale, t0, { grains: full ? 9 : 3, puffs: full ? 11 : 4, wads: full ? 4 : 0, life: SMOKE_LIFE, flash: T.volley.flash });
+      gunFire(ctx, svg, full ? smoke : null, p0.x, p0.y + (cell?0:down*4), Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale, t0, { grains: full ? 9 : 3, puffs: full ? 11 : 4, wads: full ? 4 : 0, life: SMOKE_LIFE, flash: T.volley.flash });
       // A11 (c): a short breath of powder smoke over the planks (in the top layer), gone within T.volley.smokeOver ≤ 800 ms; the long
       // smoke of the Volley lies under the planks (the trace of the sea)
       if (full && g < 2) smokeJet(ctx, svg, p0.x, p0.y + down * 4, Math.atan2(aimAt.y - p0.y, aimAt.x - p0.x), gunScale * 0.8, 5, T.volley.smokeOver, t0);
@@ -672,8 +668,9 @@ PLAY.counter = async (c, ctx) => {
       const now = shownTrack(ctx, c.to, tr);
       for (let j = 0; j < units; j++, n++) {
         const t0 = 120 + n * 170;
-        const p0 = { x: fb.cx + ((n % 3) - 1) * 22, y: fy };
-        gunFire(ctx, svg, null, p0.x, p0.y + down * 4, Math.atan2(tb.cy - p0.y, tb.cx - p0.x), 0.7, t0, { grains: 4, wads: 0, flash: T.volley.flash });
+        const cell=gunCell(ctx,from,n);
+        const p0 = cell?{x:cell.r-.5,y:cell.y+cell.h*5/14}:{ x: fb.cx + ((n % 3) - 1) * 22, y: fy };
+        gunFire(ctx, svg, null, p0.x, p0.y + (cell?0:down*4), Math.atan2(tb.cy - p0.y, tb.cx - p0.x), 0.7, t0, { grains: 4, wads: 0, flash: T.volley.flash });
         const p1 = fxPoint(ctx, c.to, tr, now - 1 - j);
         const kind = fireCard ? 'fire' : KIND_BY_TRACK[tr];
         fly(ctx, projectile(ctx, kind), curve(p0, p1, 0.08), 440, t0, { spin: tr === 'sails' ? 720 : 0 });
@@ -696,7 +693,7 @@ PLAY.counter = async (c, ctx) => {
 PLAY.heart = async (c, ctx) => {
   const by = ships(ctx).find((x) => sideOf(ctx, x) === sideOf(ctx, c.ship) && x !== c.ship)!;
   const a = bx(ctx, plank(ctx, by)), b = bx(ctx, plank(ctx, c.ship));
-  hint(ctx, `${nick(ctx, by)}: Сердце Дейви Джонса — ещё один Залп ${gen(ctx, c.ship)}`);
+  hint(ctx, `${nick(ctx, by)}: Сердце Дейви Джонса: ещё один Залп ${gen(ctx, c.ship)}`);
   const h = { x: a.x + a.w * 0.62, y: a.cy };
   const heart = mk(ctx, 'heart', 0, 0, '<svg viewBox="0 0 30 26" width="30" height="26"><path d="M15 25 C4 17 0 11 2 6 C4 1 11 0 15 6 C19 0 26 1 28 6 C30 11 26 17 15 25Z" fill="#B23A2E" stroke="#6E1A12" stroke-width="1.5"/></svg>');
   A(ctx, heart, [{ opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(.4)` }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.15 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.3 }, { transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.42 }, { transform: `translate(${h.x}px,${h.y}px) scale(1.4)`, offset: 0.56 }, { opacity: 1, transform: `translate(${h.x}px,${h.y}px) scale(1)`, offset: 0.7 }, { opacity: 0, transform: `translate(${h.x}px,${h.y}px) scale(1)` }], 2000, 0, 'ease-in-out');

@@ -1,3 +1,4 @@
+import {uiWords} from '../uiWords';
 import {WeatherWindow} from './weather-window/WeatherWindow';
 // Things that appear when needed and go away after (docs/TZ.md, «Принципы стола», п. 1, 8): a card in full,
 // a ship, the sea card, a discard, the log, the rules, the settings menu and the end of the game.
@@ -16,7 +17,7 @@ import { cardClass, CostBadge, HandCard } from './Hand';
 import { type Btn } from './Table';
 import { CELLS } from './art/cells';
 import { logMarks } from './logBook';
-import { roman, SIDE_LABEL, SPEEDS } from './text';
+import { roman, SPEEDS } from './text';
 import {loadShipWindow} from './scene-window/loadWindows';
 const ShipWindow=lazy(()=>loadShipWindow().then(module=>({default:module.ShipWindow})));
 import type {FxStore} from './fx/FxLayer';
@@ -47,10 +48,10 @@ export function useEscape(onClose: () => void) {
 export function Sheet({ title, onClose, children, wide, testid, foot }: { title: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; testid?: string; foot?: ReactNode }) {
   useEscape(onClose);
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className={`sheet-backdrop${testid==='friend-left'?' polish-top-backdrop':''}`} onClick={onClose}>
       <section className={`sheet ${wide ? 'sheet-wide' : ''} ${foot ? 'with-foot' : ''}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={typeof title==='string'?title:testid==='settings'?'Настройки':undefined} data-testid={testid}>
         <header className="sheet-head">
-          <b>{title}</b>
+          <b>{testid==='confirm-sheet'&&<Icon name="wheel" size={30}/>} {title}</b>
           <button className="btn small close" onClick={onClose} aria-label="Закрыть">
             ✕
           </button>
@@ -109,19 +110,19 @@ export function CardDetail({
     <Sheet title={c.name} onClose={onClose} testid="card-detail">
       <article className={`card-full ${cardClass(c)}`}>
         <header className="card-full-head">
-          <span>{c.legend ? `Легенда · ${c.type}` : c.type}</span>
+          <span>{c.legend ? `Легенда, одна на партию` : c.type}</span>
           <CostBadge c={c} />
         </header>
-        <div className="card-big">{c.big}</div>
+        <div className="card-big">{uiWords(c.big)}</div>
         <p>
           <RichText html={c.text} />
         </p>
-        <p className="card-flavor">{c.flavor}</p>
+        <p className="card-flavor">{uiWords(c.flavor)}</p>
         <p className="muted small">
-          Стоимость: {c.cost} Пороха{c.soul ? `, ${c.soul} Души` : ''} · {shipData(data, c.deck).nick}
+          Цена: {c.cost} <span aria-label="Порох" dangerouslySetInnerHTML={{__html:CELLS.KEG_S}}/>{c.soul ? `, ${c.soul} Души` : ''} · {shipData(data, c.deck).nick}
         </p>
       </article>
-      {status && <p className={`why ${status.startsWith('Можно') ? 'ok' : ''}`}>{status}</p>}
+      {status && <p className={`why ${status.startsWith('Можно') ? 'ok' : ''}`}>{uiWords(status)}</p>}
       {buttons.length > 0 && (
         <div className="panel-actions wrap">
           {buttons.map((b) => (
@@ -156,9 +157,9 @@ export function SeaSheet({s,data,code,log=[],store,onClose}:{s:GameState;data:Ga
 export function DiscardSheet({ s, data, seat, onClose }: { s: GameState; data: GameData; seat: string; onClose: () => void }) {
   const ship = s.ships[seat];
   return (
-    <Sheet title={`Сброс «${shipData(data, seat).nick}» · ${ship.discard.length}`} onClose={onClose} wide testid="discard">
+    <Sheet title={`Сброс «${({Ж:'Жемчужины',М:'Мести',И:'Индевора',Г:'Голландца'} as Record<string,string>)[seat]??shipData(data, seat).nick}» · ${ship.discard.length}`} onClose={onClose} wide testid="discard">
       <div className="choice-cards">
-        {ship.discard.length === 0 && <p className="muted">Сброс пуст.</p>}
+        {ship.discard.length === 0 && <div className="discard-empty"><span className="discard-placeholder" aria-hidden="true"/><p>Сброс пуст: сыгранные карты лягут сюда</p></div>}
         {[...ship.discard].reverse().map((code, i) => (
           <HandCard key={`${code}-${i}`} data={data} code={code} off={null} />
         ))}
@@ -280,7 +281,7 @@ export const LogList = reactMemo(function LogList({
               <span className="log-text">
                 {logParts(data, l).map((p, j) =>
                   typeof p === 'string' ? (
-                    p
+                    uiWords(p)
                   ) : 'card' in p ? (
                     <button key={j} className="cref" data-card={p.card} onClick={() => onCard(p.card)}>
                       {p.text}
@@ -394,8 +395,8 @@ export function SettingsSheet({
       <>
         {onDownloadLog && (
           <div className="row buttons">
-            <button className="btn" onClick={onDownloadLog}>
-              Скачать журнал
+            <button className="btn polish-download" onClick={onDownloadLog}>
+              <Icon name="book" size={18}/> Скачать журнал
             </button>
             {onDownloadGame && (
               <button className="btn" onClick={onDownloadGame}>
@@ -407,8 +408,8 @@ export function SettingsSheet({
         {onNew && (
           <div className="row buttons">
             {canConcede && onConcede && (
-              <button className="btn danger" onClick={onConcede}>
-                Сдаться за {SIDE_LABEL[canConcede].gen}
+              <button className="btn danger polish-concede" data-testid="concede" onClick={onConcede}>
+                <svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M5 3V22" stroke="currentColor" strokeWidth="2"/><path d="M6 8Q11 5 15 8T21 8V17Q16 20 12 17T6 17Z" fill="#f4e8cf" stroke="#b39a65"/></svg><span>Спустить флаг<small>пощады!</small></span>
               </button>
             )}
             <button className="btn" onClick={onNew}>
@@ -465,7 +466,7 @@ export function SettingsSheet({
           </button>
         </div>
       )}
-      {fxTrace.length > 0 && (
+      {new URLSearchParams(location.search).get('perf')==='1' && fxTrace.length > 0 && (
         <details className="row fx-errors" data-testid="fx-trace">
           <summary>Журнал анимаций (для разработчика)</summary>
           <span className="muted">Если анимация оборвалась или не показалась, сразу откройте и пришлите скриншот.</span>
