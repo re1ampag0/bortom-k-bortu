@@ -476,7 +476,7 @@ export function Hand({
   const middle = usePhoneFan(rowRef, n);
   // The phone: the lifted card (its key in the strip); a tap beside it, another ship's tab or a new hand drops it.
   const [lifted, setLifted] = useState<string | null>(null);
-  useEffect(() => setLifted(null), [seat, n]);
+  useEffect(() => setLifted(null), [seat, n, s.round, s.active]);
   const [game, layerRef] = useLiftLayer(rowRef, lifted);
   /** The lifted card of a phone, drawn in its layer (its place in the strip stays empty). */
   let floating: ReactNode = null;
