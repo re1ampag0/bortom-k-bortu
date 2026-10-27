@@ -1,0 +1,3 @@
+import {useLayoutEffect} from 'react';
+/** View geometry only: labels yield when the sea's actual free gap is too short. */
+export function useSeaLabelRoom(){useLayoutEffect(()=>{const board=document.querySelector<HTMLElement>('.board'),gap=board?.querySelector<HTMLElement>('.sea-table>.middle');if(!board||!gap)return;const update=()=>board.toggleAttribute('data-tight-sea',innerWidth<=700&&gap.getBoundingClientRect().height<54);const observer=new ResizeObserver(update);observer.observe(gap);update();addEventListener('resize',update);return()=>{observer.disconnect();removeEventListener('resize',update);board.removeAttribute('data-tight-sea');};},[])}

@@ -1,3 +1,4 @@
+import {useSeaLabelRoom} from './afterPolishLayout';
 import {stageK} from '../stage';
 // The table on one screen: who sits at the device, what they see (viewFor), what is expected from them, and the
 // bots moving one action at a time. The engine answers every question about the rules (hints.ts).
@@ -394,7 +395,7 @@ export function Game({
       dock.style.setProperty('--decision-limit',`${limit}px`);
       const height=scroll?0:Math.min(d.height/k,limit);
       if(bottom.style.getPropertyValue('--decision-h')!==`${height}px`)bottom.style.setProperty('--decision-h',`${height}px`);
-      if(scroll&&l){dock.style.setProperty('--scroll-left',`${(l.left-b.left)/k}px`);dock.style.setProperty('--scroll-bottom',`${(b.bottom-l.bottom)/k}px`);dock.style.setProperty('--scroll-width',`${l.width/k}px`);dock.style.setProperty('--scroll-height',`${Math.max(240,l.height/k-52)}px`);}
+      if(scroll&&l){dock.style.setProperty('--scroll-left',`${(l.left-b.left)/k}px`);dock.style.setProperty('--scroll-bottom',`${(b.bottom-l.bottom)/k}px`);dock.style.setProperty('--scroll-width',`${l.width/k}px`);dock.style.setProperty('--scroll-height',`${Math.max(180,(l.bottom-Math.max(l.top,board.getBoundingClientRect().top+status))/k-24)}px`);}
     };
     const ro=new ResizeObserver(measure);ro.observe(dock);ro.observe(game);measure();
     return()=>{ro.disconnect();bottom.style.removeProperty('--decision-h');};
@@ -494,6 +495,7 @@ export function Game({
   const nick = (code: string) => `«${shipData(data, code).nick}»`;
 
   // the layout of the table (V1b): where the tools stand, the measure of the water for the weather
+  useSeaLabelRoom();
   const wideLog = useWideLog();
   const [boardRef, seaRef] = useSeaClip();
   // ui-press: «Последнее: …» is in the sea — a class of the sea for the press zones of the stars under it (phone.css), set by
@@ -1244,7 +1246,7 @@ export function Game({
   // «Быстрее · До конца · Пауза · Отменить» and «Ход окончен»: under the log ≥ 1280 px (A5: the hand gets the whole width
   // of the table), at the end of the hand row narrower.
   const pickNow = reactPick ? reactionNow(s, data, reactPick.seat, reactPick.card) : null;
-  const finishedActions=<div className="polish-finished-actions"><button className="btn primary" data-testid="table-rematch" onClick={()=>net?net.voteRematch(!vote?.you):rematch()}>{rematchLabel}</button><button className="btn" data-testid="table-results" onClick={()=>setEndClosed(false)}>Итоги партии</button><button className="btn" data-testid="table-new-game" onClick={onExit}>Новая партия</button></div>;
+  const finishedActions=<div className="polish-finished-actions"><OakButton b={{key:"table-rematch",label:rematchLabel,testid:"table-rematch",onClick:()=>net?net.voteRematch(!vote?.you):rematch()}} sub="те же корабли, новая партия"/><button className="btn" data-testid="table-results" onClick={()=>setEndClosed(false)}>Итоги партии</button><button className="btn" data-testid="table-new-game" onClick={onExit}>Новая партия</button></div>;
   const handActions = s.winner ? <div className="hand-actions">{finishedActions}</div> : chargeBtns ? (
     <div className="hand-actions charge-mode">{chargeBtns}</div>
   ) : alarmOn && !phone ? (
@@ -1374,8 +1376,9 @@ export function Game({
             </button>
           </div>
         </div>
-        {wideLog && handActions}
+        {wideLog && !alarmOn && handActions}
       </aside>
+      {wideLog && alarmOn && handActions}
       <FxBusy fx={fx}>{(busy) => (
       <nav className={`bottom-bar ${canHoldOf(busy) ? 'has-pause' : ''}`}>{s.winner?finishedActions:<>
         {/* A5Phone: «Журнал» and «Правила» are square icons with a caption; «Ход окончен» says who is ready under its name */}

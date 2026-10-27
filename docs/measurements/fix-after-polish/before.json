@@ -1,0 +1,80 @@
+[
+  {
+    "size": "1366x660",
+    "kind": "start",
+    "ms": 713
+  },
+  {
+    "size": "1366x660",
+    "kind": "ship",
+    "ageSeconds": 0,
+    "shellMs": 2126,
+    "imageMs": 2194
+  },
+  {
+    "size": "1366x660",
+    "kind": "ship",
+    "ageSeconds": 20,
+    "shellMs": 138,
+    "imageMs": 154
+  },
+  {
+    "size": "1366x660",
+    "kind": "weather",
+    "ageSeconds": 0,
+    "shellMs": 590,
+    "imageMs": 1003
+  },
+  {
+    "size": "1366x660",
+    "kind": "weather",
+    "ageSeconds": 20,
+    "shellMs": 155,
+    "imageMs": 179
+  },
+  {
+    "kind": "raf-start",
+    "frames": 216,
+    "worstMs": 250,
+    "over50": 1
+  },
+  {
+    "kind": "raf-idle",
+    "frames": 241,
+    "worstMs": 16.80000000000291,
+    "over50": 0
+  },
+  {
+    "size": "390x844",
+    "kind": "start",
+    "ms": 658
+  },
+  {
+    "size": "390x844",
+    "kind": "ship",
+    "ageSeconds": 0,
+    "shellMs": 1810,
+    "imageMs": 1891
+  },
+  {
+    "size": "390x844",
+    "kind": "ship",
+    "ageSeconds": 20,
+    "shellMs": 211,
+    "imageMs": 217
+  },
+  {
+    "size": "390x844",
+    "kind": "weather",
+    "ageSeconds": 0,
+    "shellMs": 644,
+    "imageMs": 1047
+  },
+  {
+    "size": "390x844",
+    "kind": "weather",
+    "ageSeconds": 20,
+    "shellMs": 279,
+    "imageMs": 295
+  }
+]
