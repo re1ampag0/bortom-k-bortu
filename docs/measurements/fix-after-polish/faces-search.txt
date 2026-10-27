@@ -1,0 +1,34 @@
+src/ui/Catalog.tsx:42:                <CardView key={c.code} card={c} shipName={ship.name} />
+src/ui/Catalog.tsx:44:              <CardView card={legend} />
+src/ui/CardView.tsx:25:      {!card.legend&&<CardArt name={card.name} full/>}
+src/ui/game/Hand.tsx:311:    return <div className={`hcard back ${plan ? 'plan' : ''}`} style={style} data-lift={liftKey} aria-label="Закрытая карта" data-fx-card={HIDDEN} />;
+src/ui/game/Hand.tsx:325:        className={`hcard ${cardClass(c)} ${!c.legend?'has-card-art':''} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} lifted lift-open`}
+src/ui/game/Hand.tsx:335:        <span className="hcard-head">
+src/ui/game/Hand.tsx:336:          <span className="hcard-type">{plan ? 'План' : c.type}</span>
+src/ui/game/Hand.tsx:339:        {!c.legend&&<CardArt name={c.name}/>}
+src/ui/game/Hand.tsx:340:        <span className="hcard-name">{c.name}</span>
+src/ui/game/Hand.tsx:341:        <span className="hcard-big">{uiWords(note ?? c.big)}</span>
+src/ui/game/Hand.tsx:342:        <span className="hcard-text">{plainText(c.text)}</span>
+src/ui/game/Hand.tsx:367:      className={`hcard ${cardClass(c)} ${!c.legend?'has-card-art':''} ${plan ? 'plan' : ''} ${off ? 'off' : ''} ${chosen ? 'chosen' : ''} ${lifted ? 'lifted' : ''} ${beforeLift ? 'lift-prev' : ''} ${alarm ? `al-${alarm.kind}` : ''} ${(alarm?.kind === 'ok' && alarm.strip) || alarm?.kind === 'no' ? 'with-strip' : ''}`}
+src/ui/game/Hand.tsx:377:      <span className="hcard-head">
+src/ui/game/Hand.tsx:378:        <span className="hcard-type">{plan ? 'План' : c.type}</span>
+src/ui/game/Hand.tsx:381:      {!c.legend&&<CardArt name={c.name}/>}
+src/ui/game/Hand.tsx:382:        <span className="hcard-name">{c.name}</span>
+src/ui/game/Hand.tsx:383:      <span className="hcard-big">{uiWords(note ?? c.big)}</span>
+src/ui/game/Hand.tsx:384:      <span className="hcard-text" ref={textRef}>{plainText(c.text)}</span>
+src/ui/game/Hand.tsx:386:        <span className="hcard-strip ok" data-testid="hcard-strip">
+src/ui/game/Hand.tsx:392:        <span className="hcard-strip no" data-testid="hcard-strip">
+src/ui/game/Hand.tsx:555:    return <div key={key} className="hcard lift-place" data-lift={key} aria-hidden />;
+src/ui/game/fx/volley.ts:229:    pk.innerHTML = cardHTML(data, code);
+src/ui/game/fx/primitives.ts:490:export function cardHTML(data: GameData, code: string): string {
+src/ui/game/fx/primitives.ts:526:    ? `<div class="fcard${by.legend ? ' legend' : ''}" style="--by:${shipData(ctx.data, by.ship).color}">${cardHTML(ctx.data, code)}${footHTML(ctx.data, by, to.s || 0.72)}</div>`
+src/ui/game/fx/primitives.ts:527:    : `<div style="position:relative">${cardHTML(ctx.data, code)}</div>`;
+src/ui/game/PlaySheet.tsx:19:  <div className="ps-card" aria-hidden>{card?<article className={`hcard ${c?cardClass(c):''} ${c&&!c.legend?'has-card-art':''}`}>
+src/ui/game/PlaySheet.tsx:20:    <span className="hcard-head"><span className="hcard-type">{c?.type}</span>{c&&<CostBadge c={c}/>}</span>{c&&!c.legend&&<CardArt name={c.name}/>}<span className="hcard-name">{c?.name}</span><span className="hcard-big">{c?.big}</span><span className="hcard-text">{plainText(c?.text??'')}</span>
+src/ui/game/Overlays.tsx:137:        {!c.legend&&<><CardArt name={c.name} full/><h3 className="card-name">{c.name}</h3></>}
+src/ui/game/Overlays.tsx:172:          <HandCard key={`${code}-${i}`} data={data} code={code} off={null} />
+src/ui/game/Alarm.tsx:306:                <HandCard
+src/ui/game/Panels.tsx:191:              <HandCard
+src/ui/game/Panels.tsx:210:          <HandCard data={data} code={peek.card} plan={s.ships[peek.from].plans.includes(peek.card)} off={null} />
+src/ui/game/Panels.tsx:435:            <HandCard key={card} data={data} code={card} off={null} chosen={picks.includes(card)} note={note(card)} onClick={() => toggle(card)} />
+src/ui/game/Panels.tsx:616:          <HandCard

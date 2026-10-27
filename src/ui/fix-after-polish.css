@@ -75,3 +75,54 @@
  .game.over .polish-finished-actions .oak-pan small{font-size:12px;line-height:1.15;white-space:normal;text-align:center;flex:none}
 }
 @media(min-width:701px){.sheet[data-testid='card-detail'] .card-full.legend{min-height:360px;justify-content:space-between}}
+/* A face always has the same full-width illustration; shorter hands sacrifice prose first. */
+.game .hand-cards .hcard.has-card-art .card-art{width:100%!important;max-width:100%;max-height:none!important;aspect-ratio:5/3;align-self:stretch}
+.ps-card .hcard.has-card-art{display:flex;flex-direction:column;align-items:center;height:160px;min-height:160px;gap:3px;padding-bottom:4px!important}
+.ps-card .hcard.has-card-art .card-art{width:100%!important;height:auto;max-height:none!important;aspect-ratio:5/3;margin:0}
+.ps-card .hcard.has-card-art .hcard-text{display:none!important}
+.flyc .hcard.has-card-art .card-art,.plate-peek .hcard.has-card-art .card-art{width:100%;max-height:none;aspect-ratio:5/3}
+.flyc .hcard.has-card-art .hcard-text{display:none!important}
+@media(max-width:700px){
+ .game[data-game-scale]{--face-card-w:clamp(86px,27vw,112px);--phone-card-h:max(clamp(74px,calc((var(--app-h,100dvh) - 568px) * .416667 + 74px),160px),calc(var(--face-card-w) * .6 + 57px))}
+ .game[data-game-scale] .hand-cards:not(.lift-host)>.hcard.has-card-art{width:var(--face-card-w)!important;flex-basis:var(--face-card-w)!important}
+ .game[data-game-scale] .sea-table{grid-template-rows:auto minmax(2px,1fr) auto}
+ .game[data-game-scale] .status{row-gap:clamp(2px,calc((var(--app-h,100dvh) - 640px) * .04 + 2px),6px);padding-block:4px}
+ .game[data-game-scale] .status-text{height:clamp(20px,calc((var(--app-h,100dvh) - 640px) * .1 + 24px),32px);min-height:0;line-height:1.2}
+ .game[data-game-scale] .top-hold{height:clamp(20px,calc((var(--app-h,100dvh) - 640px) * .04 + 20px),24px)}
+ .game[data-game-scale] .hand-head{margin-top:clamp(0px,calc((var(--app-h,100dvh) - 640px) * .04),6px)}
+ .game[data-game-scale] .board-bottom>.team-row .powder-dots{gap:1px;padding-inline:3px}
+ .game[data-game-scale] .board-bottom>.team-row .powder-dots i{width:7px;height:10px}
+ .game[data-game-scale] .board-bottom>.team-row .btn.regroup{min-width:0}
+}
+@media(min-width:701px){
+ .board[data-card-decision='scroll'] .ps-card{display:flex;border:0;padding:0;flex:none;height:160px}
+ .board[data-card-decision='scroll'] .play-sheet.has-face{display:grid;grid-template-columns:110px minmax(0,1fr);grid-template-rows:minmax(160px,1fr) auto;gap:8px;overflow-y:auto}
+ .board[data-card-decision='scroll'] .play-sheet.has-face .ps-main{grid-column:2;grid-row:1;min-height:0;overflow:auto}
+ .board[data-card-decision='scroll'] .play-sheet.has-face .ps-end{grid-column:1/-1;grid-row:2}
+}
+@media(max-width:700px){
+ .game .play-sheet.has-face.panel{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:auto auto;gap:8px;max-height:calc(var(--app-h,100dvh) - 180px)}
+ .game .play-sheet.has-face .ps-card{display:flex;grid-column:1;grid-row:1;border:0;padding:0}
+ .game .play-sheet.has-face .ps-card .hcard{width:86px;min-height:124px;height:124px;rotate:0deg}
+ .game .play-sheet.has-face .ps-main{grid-column:2;grid-row:1;min-width:0}
+ .game .play-sheet.has-face .ps-end{grid-column:1/-1;grid-row:2}
+}
+@media(max-width:700px){.game .hand-cards .hcard.has-card-art>.polish-card-paper{display:flex;position:relative;flex-direction:column;align-items:stretch;box-sizing:border-box;width:100%;height:100%}}
+.flyc .hcard.has-card-art{height:148px;min-height:148px;box-sizing:border-box;gap:2px}
+@media(max-width:700px){.game .hand-cards:not(.lift-host)>.hcard.has-card-art>.polish-card-paper>.card-art{width:calc(var(--face-card-w,112px) - 2px)!important;min-width:calc(var(--face-card-w,112px) - 2px)}}
+@media(max-width:700px){
+ .game .play-sheet.has-face.panel{box-sizing:border-box;height:300px;grid-template-rows:minmax(0,1fr) auto;overflow:hidden}
+ .game .play-sheet.has-face .ps-main{min-height:0;max-height:100%;overflow:auto}
+ .game .play-sheet.has-face .ps-card{min-height:0;align-self:center}
+ .game .play-sheet.has-face .ps-end{min-height:0}
+}
+@media(max-width:700px){
+ .game .board[data-card-decision] .play-sheet.has-face.panel{display:grid;grid-template-columns:92px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;height:300px;max-height:calc(var(--app-h,100dvh) - 180px);box-sizing:border-box;gap:8px;overflow:hidden}
+ .game .board[data-card-decision] .play-sheet.has-face .ps-main{grid-column:2;grid-row:1;min-width:0;min-height:0;max-height:100%;overflow:auto}
+ .game .board[data-card-decision] .play-sheet.has-face .ps-card{display:flex;grid-column:1;grid-row:1;min-height:0;align-self:center;border:0;padding:0}
+ .game .board[data-card-decision] .play-sheet.has-face .ps-end{grid-column:1/-1;grid-row:2;min-height:0}
+}
+@media(max-width:700px){.plans-sheet .choice-cards>.hcard.has-card-art{height:136px}}
+
+.flyc .hcard.has-card-art .card-art{width:120px!important;max-width:100%;height:72px;flex:none}
+@media(max-width:700px){.game[data-game-scale] .hand-cards:not(.lift-host)>.hcard.has-card-art .hcard-name{margin-top:3px!important}}

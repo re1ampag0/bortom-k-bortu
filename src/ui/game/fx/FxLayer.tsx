@@ -1,3 +1,4 @@
+import {prepareClipCardImages} from '../../cardImages';
 import {queueSceneWarm} from '../scene-window/idle';
 import {prepareParticles, clearParticles, disposeParticles} from './particles';
 import {createFxHint, type FxHintStore} from './hintStore';
@@ -409,6 +410,9 @@ export function useFxQueue({
         while (item.done < item.clips.length) {
           await gate(run);
           const clip = item.clips[item.done];
+          await prepareClipCardImages(data,clip).catch(()=>{});
+          if(run!==RUN.current)throw ABORT;
+          await gate(run);
           const ctx = makeCtx(run);
           if (!ctx) throw ABORT;
           if (clip.kind === 'turn') SCENES.forEach((x) => x.onTurn(ctx));

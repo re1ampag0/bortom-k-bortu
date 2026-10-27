@@ -23,13 +23,6 @@
     ]
   },
   {
-    "name": "scroll-card",
-    "size": "1366x660",
-    "horizontalScroll": false,
-    "dialogs": [],
-    "buttons": []
-  },
-  {
     "name": "reaction",
     "size": "1366x660",
     "horizontalScroll": false,
@@ -95,13 +88,6 @@
         "hit": true
       }
     ]
-  },
-  {
-    "name": "scroll-card",
-    "size": "390x640",
-    "horizontalScroll": false,
-    "dialogs": [],
-    "buttons": []
   },
   {
     "name": "catalog",
@@ -704,6 +690,150 @@
         "hit": true
       }
     ],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "scroll-card",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "sheet-card",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "scroll-card",
+    "size": "1920x969",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "sheet-card",
+    "size": "1920x969",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "scroll-card",
+    "size": "1024x768",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "sheet-card",
+    "size": "1024x768",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "scroll-card",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "sheet-card",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "scroll-card",
+    "size": "360x600",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "sheet-card",
+    "size": "360x600",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "scroll-card",
+    "size": "320x568",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "sheet-card",
+    "size": "320x568",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "scroll-card",
+    "size": "390x844",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "sheet-card",
+    "size": "390x844",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "scroll-card",
+    "size": "412x780",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "sheet-card",
+    "size": "412x780",
+    "horizontalScroll": false,
+    "cardStatus": [],
+    "rematch": [],
     "dialogs": [],
     "buttons": []
   }
