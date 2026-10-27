@@ -71,7 +71,7 @@ describe('the log: card names are links', () => {
     const l = line(`Море: ${card.name} (${card.when.toLowerCase()}) — ${card.big}`, [], sea);
     const html = list([l]);
     expect(html).toContain(`<button class="cref" data-sea="${sea}">${card.name}</button>`);
-    expect(plain(html)).toBe(l.text);
+    expect(plain(html)).toBe(`Море: ${card.name} (${card.when.toLowerCase()}). ${card.big.charAt(0).toLocaleUpperCase('ru')}${card.big.slice(1)}`);
   });
 
   it('a legend is a link too', () => {
@@ -126,6 +126,7 @@ describe('«Судовой журнал» (A5): the icon of a line, «— Рау
   it('the line of a new round is a separator with the roman number; the text of other lines stays', () => {
     const html = list([{ text: 'Раунд 2.', kind: 'round', round: 2, turn: 'ПИРАТЫ', action: 0, cards: [] }]);
     expect(html).toContain('log-sep');
-    expect(plain(html)).toBe('— Раунд II —');
+    expect(plain(html)).toBe('Раунд II');
+    expect(html.match(/class="lr-dash" aria-hidden="true"/g)).toHaveLength(2);
   });
 });

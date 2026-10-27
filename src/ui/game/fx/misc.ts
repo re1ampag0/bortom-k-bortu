@@ -558,7 +558,7 @@ PLAY.turnEnd = async (c, ctx) => {
   if (c.plans) {
     const plans = c.plans;
     const pb = bx(ctx, plank(ctx, plans.seat));
-    hint(ctx, `${nick(ctx, plans.seat)}: План: ${plans.count} рубашкой вниз`);
+    hint(ctx, `${nick(ctx, plans.seat)} откладывает в План ${plans.count} рубашкой вниз`);
     for (let k = 0; k < plans.count; k++) {
       const from = sideOf(ctx, plans.seat) === ctx.bottom ? (() => { const h = ctx.board.querySelector('[data-fx-hand] .hand-cards'); const hb = h ? bx(ctx, h) : deckBox(ctx); return { x: hb.x + 20 + k * 30, y: hb.y }; })() : { x: pb.cx - 40, y: isTop(ctx, plans.seat) ? -140 : boardH(ctx) };
       const back = mk(ctx, 'flyc', 0, 0, '<span class="hcard back"></span><span class="rib plan">ПЛАН</span>');

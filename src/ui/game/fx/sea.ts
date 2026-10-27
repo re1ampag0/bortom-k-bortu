@@ -1,3 +1,4 @@
+import {roman} from '../text';
 import {perfOff} from '../perf/state';
 // The sea cards: the clip «sea» (a new round → the table darkens → the sea card in the middle with its weather → the
 // card flies into the sea chip of the status bar → the changes on the planks by the real events of the clip) and the
@@ -338,9 +339,9 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
   const key = c.key, S = seaCardByCode(ctx.data, c.card), fxs = SEAFX[key] || {};
   const W = t.W, Rb = t.R;
   if (c.round) {
-    const g = gapBox(ctx), bn = mk(ctx, 'banner small', W / 2, g.cy, `: Раунд ${c.round}: `);
+    const g = gapBox(ctx), bn = mk(ctx, 'banner small', W / 2, g.cy, `<span class="round-orn" aria-hidden="true">◆</span> Раунд ${roman(c.round ?? ctx.display.round)} <span class="round-orn" aria-hidden="true">◆</span>`);
     A(ctx, bn, [{ opacity: 0, transform: 'translate(-50%,-50%) scaleX(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1.04)', offset: 0.3 }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1)', offset: 0.8 }, { opacity: 0, transform: 'translate(-50%,-60%)' }], R.banner, 0);
-    hint(ctx, `Раунд ${c.round}: новая карта моря`);
+    hint(ctx, `Раунд ${roman(c.round ?? ctx.display.round)}. Новая карта моря`);
     await wait(ctx, R.bannerWait);
   }
   if (c.reshuffled) { const db = bx(ctx, ctx.board.querySelector('[data-fx-deck]') || ctx.board); tag(ctx, db.cx, db.y - 10, 'Колода моря перемешана', 0, '', 1200); }
@@ -395,7 +396,7 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
 
 /** A new round without a new sea card (if there ever is one). */
 const playRound = async (c: RoundClip, ctx: FxCtx) => {
-  const g = gapBox(ctx); const bn = mk(ctx, 'banner small', boardW(ctx) / 2, g.cy, `: Раунд ${c.round}: `);
+  const g = gapBox(ctx); const bn = mk(ctx, 'banner small', boardW(ctx) / 2, g.cy, `<span class="round-orn" aria-hidden="true">◆</span> Раунд ${roman(c.round ?? ctx.display.round)} <span class="round-orn" aria-hidden="true">◆</span>`);
   A(ctx, bn, [{ opacity: 0, transform: 'translate(-50%,-50%) scaleX(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1.04)', offset: 0.3 }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1)', offset: 0.8 }, { opacity: 0, transform: 'translate(-50%,-60%)' }], T.round.banner, 0);
   await wait(ctx, T.round.bannerWait);
 };

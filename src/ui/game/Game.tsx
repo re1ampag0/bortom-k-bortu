@@ -59,7 +59,7 @@ import { playTurnSound } from '../sound';
 import { Button, OakButton, Plank, RoundButton, ROUND_ICON, SeaChip, StatusBar, TeamRow, TopHold, useWideLog, type Btn, type Plate } from './Table';
 import { TableBackdrop, useSeaClip } from './TableThings';
 import { enemyTurnLines } from './lastTurn';
-import { decideVerb, reactionWait } from './clarity';
+import { reactionWait } from './clarity';
 import { SIDE_LABEL, SPEEDS } from './text';
 import { usePlayClock } from './playClock';
 import { useTableBody } from './tableBody';
@@ -921,19 +921,19 @@ export function Game({
 
   // ——— The instruction in the status bar ———
   const instruction = (() => {
-    if (s.winner) return s.winner === 'НИЧЬЯ' ? 'Партия окончена: ничья' : `Партия окончена: победа: ${SIDE_LABEL[s.winner].name}`;
+    if (s.winner) return s.winner === 'НИЧЬЯ' ? 'Партия окончена. Ничья' : `Партия окончена. Победа ${SIDE_LABEL[s.winner].gen}`;
     if (!d) return '';
     if (net && !myDecision) return netWaiting();
     if (botSide(d.side)) {
       // The team, not the ship: the ship deciding would tell who holds a Reaction.
-      if (d.kind === 'reactions') return `Ждём: ${SIDE_LABEL[d.side].name} (бот) ${decideVerb(d.side)}, ответить ли Реакцией…`;
+      if (d.kind === 'reactions') return `Ждём Реакцию ${SIDE_LABEL[d.side].gen}. Бот думает…`;
       if (d.kind === 'turn') return `Бот: ${SIDE_LABEL[d.side].name} ${d.side==='ПИРАТЫ'?'думают':'думает'}…`;
       return `Бот: ${SIDE_LABEL[d.side].name} решает…`;
     }
-    if (!myDecision) return `Ждём: ${SIDE_LABEL[d.side].name}: ${curtainReason(s, data, d.kind)}`;
+    if (!myDecision) return `Ждём ${SIDE_LABEL[d.side].name}: ${curtainReason(s, data, d.kind)}`;
     switch (d.kind) {
       case 'reactions':
-        return `${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])}: ${s.volley ? 'Залп' : 'карта'}: ответите Реакцией?`;
+        return `${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])} ${s.volley ? 'даёт Залп' : `играет «${cardByCode(data,s.card!.card).name}»`}. Ответите Реакцией?`;
       case 'jack':
         return `${nick(d.seats[0])} тонет: сыграть «Джек ускользает»?`;
       case 'tortuga':
@@ -946,7 +946,7 @@ export function Game({
       const to = `«${shipData(data, mode.target).nickDative}»`;
       return mode.charge ? `Залп по ${to}: проверьте и нажмите «Огонь»` : `Залп по ${to}: Заряд картой из руки`;
     }
-    if (mode.k === 'card') return `${nick(mode.seat)}: «${cardByCode(data, mode.card).name}»: выберите параметры`;
+    if (mode.k === 'card') return `${nick(mode.seat)}, «${cardByCode(data, mode.card).name}»: выберите параметры`;
     if (!useful) return 'Полезных действий не осталось: нажмите «Ход окончен»';
     return `${nick(seat)}: выберите карту или действие`;
   })();
@@ -961,14 +961,14 @@ export function Game({
     };
     if (d!.kind === 'reactions') {
       if (d!.side !== bottom) return 'Противник может ответить Реакцией…';
-      return d!.seats.length === 0 ? `${s.volley ? 'Залп' : 'Карта'} противника: Реакций нет` : `Ждём: ${who(d!.seats)}: Реакция…`;
+      return d!.seats.length === 0 ? `${s.volley ? 'Залп' : 'Карта'} противника: Реакций нет` : `Ждём Реакцию ${SIDE_LABEL[d!.side].gen}…`;
     }
     if (d!.kind === 'turn') {
       const left = d!.seats.filter((x) => !g.ready.includes(x));
-      if (d!.side === bottom) return `Ход окончен: ждём: ${who(left.length > 0 ? left : d!.seats)}`;
+      if (d!.side === bottom) return `Ход окончен. Ждём ${who(left.length > 0 ? left : d!.seats)}`;
       return `Ход ${SIDE_LABEL[d!.side].gen}: ${who(left.length > 0 ? left : d!.seats)}`;
     }
-    return `Ждём: ${who(d!.seats)}: ${curtainReason(s, data, d!.kind)}`;
+    return `Ждём ${who(d!.seats)}: ${curtainReason(s, data, d!.kind)}`;
   }
 
   // ——— The middle at rest: the last event (of the log as it is shown) ———

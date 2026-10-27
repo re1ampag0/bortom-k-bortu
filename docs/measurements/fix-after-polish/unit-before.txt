@@ -1,0 +1,490 @@
+
+> bortom-k-bortu@0.0.0 test
+> vitest run
+
+
+ RUN  v3.0.5 /workspace/fix-after-polish
+
+ ✓ tests/reactions.test.ts (29 tests) 57ms
+ ✓ tests/cards-pearl.test.ts (31 tests) 88ms
+ ✓ tests/cards-revenge.test.ts (26 tests) 86ms
+ ✓ tests/cards-dutchman.test.ts (26 tests) 67ms
+ ✓ tests/view.test.ts (26 tests) 1396ms
+   ✓ viewFor > in 50 bot games no view of a team holds a card of the enemy hands, Plans or decks 1094ms
+ ✓ tests/abilities.test.ts (32 tests) 67ms
+ ✓ tests/cards-endeavour.test.ts (23 tests) 40ms
+ ✓ tests/sea.test.ts (22 tests) 24ms
+ ✓ tests/hints.test.ts (19 tests) 317ms
+ ✓ tests/legends.test.ts (21 tests) 41ms
+ ✓ tests/server.test.ts (23 tests) 2872ms
+   ✓ game server > 2 на 2: four clients play a game to the end; one reconnects in the middle; nobody sees enemy cards 522ms
+   ✓ game server: the Reaction window > no Reaction to play: the attackers wait the pause like a real window, the window closes by itself 326ms
+   ✓ game server: the Reaction window > the timer of the room closes a window nobody answers 1033ms
+ ❯ tests/victory-stats.test.ts (12 tests | 2 failed) 346ms
+   ✓ matchStats over 20 bot games > the damage of each side is its ships’ damage plus the damage no enemy ship dealt (= matchTotals)
+   ✓ matchStats over 20 bot games > the sunk ships, the rounds and the kills agree with the end of the game
+   ✓ matchStats over 20 bot games > each ship has one title; a title of the list goes to one ship only; the best captain is of the winners
+   ✓ matchStats over 20 bot games > the same record gives the same numbers (both players of a network game see one sheet)
+   ✓ matchStats over 20 bot games > the first Volley that hits: its shooter has the Volley and the damage
+   × awardTitles: the order of the list and the ties > the Volley that sank the last ship is «Решающий залп», before the most damage 7ms
+     → expected { key: 'decisive', …(2) } to deeply equal { key: 'decisive', …(2) }
+   ✓ awardTitles: the order of the list and the ties > a tie gives the title to nobody: each ship goes on down the list
+   × awardTitles: the order of the list and the ties > «Ни царапины» only for the one ship that lost no Hull; «Дубовый борт» only among the ships afloat 2ms
+     → expected { key: 'oak', …(2) } to match object { name: 'Дубовый борт', …(1) }
+(1 matching property omitted from actual)
+   ✓ awardTitles: the order of the list and the ties > «Козырь» — a Legend played and not cancelled; «Флагман» for a winner with nothing else
+   ✓ awardTitles: the order of the list and the ties > a sunk ship of the winners with nothing of its own: «Бился до конца», not «Флагман»
+   ✓ bestCaptain > the winner with the most damage, its share of the side and the last ship it sank
+   ✓ plural > Russian forms
+ ✓ tests/data.test.ts (29 tests) 35ms
+ ✓ tests/limits.test.ts (20 tests) 68ms
+ ✓ tests/charges.test.ts (20 tests) 69ms
+ ✓ tests/round.test.ts (16 tests) 32ms
+stderr | tests/log-links.test.ts > SeaSheet > shows the sea card asked for, with a link to the current one
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at WeatherWindow (/workspace/fix-after-polish/src/ui/game/weather-window/WeatherWindow.tsx:16:26)
+    at SeaSheet (/workspace/fix-after-polish/src/ui/game/Overlays.tsx:267:21)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at WeatherWindow (/workspace/fix-after-polish/src/ui/game/weather-window/WeatherWindow.tsx:16:26)
+    at SeaSheet (/workspace/fix-after-polish/src/ui/game/Overlays.tsx:267:21)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at WeatherWindow (/workspace/fix-after-polish/src/ui/game/weather-window/WeatherWindow.tsx:16:26)
+    at SeaSheet (/workspace/fix-after-polish/src/ui/game/Overlays.tsx:267:21)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at WeatherWindow (/workspace/fix-after-polish/src/ui/game/weather-window/WeatherWindow.tsx:16:26)
+    at SeaSheet (/workspace/fix-after-polish/src/ui/game/Overlays.tsx:267:21)
+
+stderr | tests/log-links.test.ts > «Тиа Дальма»: sea mini cards with «i» > the sea sheet links the next sea cards known after «Тиа Дальма»
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at WeatherWindow (/workspace/fix-after-polish/src/ui/game/weather-window/WeatherWindow.tsx:16:26)
+    at SeaSheet (/workspace/fix-after-polish/src/ui/game/Overlays.tsx:267:21)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at WeatherWindow (/workspace/fix-after-polish/src/ui/game/weather-window/WeatherWindow.tsx:16:26)
+    at SeaSheet (/workspace/fix-after-polish/src/ui/game/Overlays.tsx:267:21)
+
+ ❯ tests/log-links.test.ts (12 tests | 1 failed) 95ms
+   ✓ SeaSheet > shows the sea card asked for, with a link to the current one
+   ✓ the log: card names are links > the name of a played card is a button that opens it; the text stays the same
+   ✓ the log: card names are links > «Колокол «Голландца»» with the quotes inside is found whole
+   ✓ the log: card names are links > two copies of a card in one line are found in their places
+   ✓ the log: card names are links > a card not named in the text stays plain text
+   × the log: card names are links > the sea card of the line is a button that opens the sea sheet 17ms
+     → expected 'Море: Туман (весь раунд): только напр…' to be 'Море: Туман (весь раунд) — только нап…' // Object.is equality
+   ✓ the log: card names are links > a legend is a link too
+   ✓ «Тиа Дальма»: sea mini cards with «i» > each of the three sea cards shows its name and effect, is pressed to order and has «i»
+   ✓ «Тиа Дальма»: sea mini cards with «i» > the sea sheet links the next sea cards known after «Тиа Дальма»
+   ✓ «Судовой журнал» (A5): the icon of a line, «— Раунд II —» > the icon goes by what the line is: a Volley, a Reaction, a Legend, another card, the sea, Powder, the rest
+   ✓ «Судовой журнал» (A5): the icon of a line, «— Раунд II —» > a Reaction card gets the shield
+   ✓ «Судовой журнал» (A5): the icon of a line, «— Раунд II —» > the line of a new round is a separator with the roman number; the text of other lines stays
+ ❯ tests/clarity.test.ts (11 tests | 3 failed) 98ms
+   ✓ the attacker waits for a Reaction > against bots: the Volley in words, the team decides, «бот думает»
+   ✓ the attacker waits for a Reaction > by network: the people by name, a bot of the team as «бот»
+   ✓ the attacker waits for a Reaction > the Pirates «решают»
+   ✓ the attacker waits for a Reaction > nothing about which ship holds a Reaction: the same words whichever ship decides
+   ✓ the Reaction window without «Подсказки» > each Reaction: «what happens now» from the engine, «i»
+   ✓ the Reaction window without «Подсказки» > under «Подсказки» the strip of the card says it, the line under the card does not repeat it
+   × the Reaction window without «Подсказки» > the first-window Reaction note is shown only with hints enabled 26ms
+     → expected 'Ответить РеакциейПорох 8 из 8Реакция:…' to contain 'Реакция — карта, которую играют в ход…'
+   × «Быстрый конец хода» in the settings > off by default; an old record without it is read with it off 9ms
+     → expected { speed: 'slow', …(6) } to deeply equal { speed: 'slow', …(6) }
+   × «Быстрый конец хода» in the settings > «Вид стола»: the first variant of each switch by default; the old «brass|wood» frame is read as the default 3ms
+     → expected { guns: 'icons', hand: 'deck', …(3) } to deeply equal { guns: 'icons', hand: 'deck', …(2) }
+   ✓ «Быстрый конец хода» in the settings > damage breakdown: old records show it, hide persists, unknown values show it
+   ✓ «Быстрый конец хода» in the settings > is kept like the other settings
+ ✓ tests/free-actions.test.ts (19 tests) 51ms
+ ✓ tests/volley.test.ts (20 tests) 28ms
+ ✓ tests/fx-turn.test.ts (17 tests) 1732ms
+   ✓ a card waiting (20 bot games, both sides) > the action of the card ends with a window or a choice: the card stays at the middle until a later action resolves it 744ms
+   ✓ every action goes through the layer (A4) > 24 bot games, both sides, with and without the pause of empty windows: every clip of every action has its player (nothing for the old ShowLayer); D = the real state after each 669ms
+ ✓ tests/damage.test.ts (13 tests) 15ms
+ ✓ tests/fx-volley.test.ts (7 tests) 418ms
+   ✓ the clips of the Volley > the declaration and the shot of a Volley of the bots are shown by the layer (20 games, both sides) 401ms
+stderr | tests/fx-dom.test.ts > data-fx-* DOM contract > plank Г: data-fx-ship and 4 tracks with their numbers
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+stderr | tests/fx-dom.test.ts > data-fx-* DOM contract > plank Г as a target: data-fx-ship and 4 tracks with their numbers
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+stderr | tests/fx-dom.test.ts > data-fx-* DOM contract > the hand: data-fx-card on every card (a hidden one too) and data-fx-deck
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at Hand (/workspace/fix-after-polish/src/ui/game/Hand.tsx:415:3)
+
+stderr | tests/fx-dom.test.ts > «Чёрная метка» on the plank (U3) > the marked ship has the stamp on the drawing of the ship in the head, the chip «Чёрная метка +2» kept
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+stderr | tests/fx-dom.test.ts > «Чёрная метка» on the plank (U3) > waits hidden while the clip of the mark has not played, as the chip does
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+stderr | tests/fx-dom.test.ts > «Чёрная метка» on the plank (U3) > no mark — no stamp; a sunk ship has none either
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+ ✓ tests/fx-dom.test.ts (15 tests) 71ms
+stdout | tests/fx-plan.test.ts > animation planner on bot games > covers every event once, lays out shots by damage, keeps the displayed state equal to the real one
+fx-plan: 60 партий, 8926 действий (обе стороны), 1532 выстрелов; клипы по видам: {"window":2726,"card":2128,"announce":1640,"shot":1532,"turnEnd":978,"turn":884,"reaction":664,"impact":482,"sell":444,"sea":400,"sink":292,"draw":196,"legend":192,"counter":148,"heart":144,"cancel":134,"discard":132,"end":120,"ability":116,"status":108,"fireOut":102,"steal":98,"repair":90,"powder":88,"dive":82,"swap":78,"pass":62,"dice":50,"jack":46,"peek":36,"souls":20,"fire":6}
+
+ ✓ tests/fx-plan.test.ts (4 tests) 753ms
+   ✓ animation planner on bot games > covers every event once, lays out shots by damage, keeps the displayed state equal to the real one 748ms
+ ✓ tests/both-sides.test.ts (7 tests) 19ms
+ ✓ tests/fx-legends.test.ts (12 tests) 27ms
+ ✓ tests/plans.test.ts (9 tests) 25ms
+ ❯ tests/card-panel.test.ts (4 tests | 2 failed) 41ms
+   × Card panel: the repaired ship > «Норрингтон на борту»: the tracks and the title of the ally’s ship, the own ship whole 29ms
+     → expected '<section class="panel oak-sheet decis…' to contain '<b class="cs-title">Норрингтон на бор…'
+   ✓ Card panel: the repaired ship > «Норрингтон на борту»: the own damaged tracks are not offered
+   × Card panel: the repaired ship > «Сердце бьётся» played by the Endeavour: the tracks of the Dutchman (Q43) 4ms
+     → expected '<section class="panel oak-sheet decis…' to contain '<b class="cs-title">Сердце бьётся</b>'
+   ✓ Card panel: the repaired ship > «Живые снасти»: without a choice the panel marks the ship the engine repairs — the ally when own Sails are whole
+stderr | tests/fx-motion.test.ts > the ships in motion > dive: through the layer; «Под водой» is the class of the plank from the displayed state
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+ ❯ tests/alarm.test.ts (10 tests | 1 failed) 26ms
+   × «Тревога!»: the bar and the arrow > a Volley before it hits: who fires at whom, the damage and the track on the pill 12ms
+     → expected '«Жемчужина» даёт Залп по «Индевору»: …' to be '«Жемчужина» даёт Залп по «Индевору» —…' // Object.is equality
+   ✓ «Тревога!»: the bar and the arrow > a Crew hit: the pill says «по Команде»
+   ✓ «Тревога!»: the bar and the arrow > nothing outside a Reaction window
+   ✓ «Тревога!»: what the target loses > a Hull hit: the last cells of the Hull, the count is the damage
+   ✓ «Тревога!»: what the target loses > the damage the track cannot take goes to the Hull: both are ringed
+   ✓ «Тревога!»: what the target loses > no damage — no loss
+   ✓ «Тревога!»: the strip of a Reaction > «Уйти по ветру»: from → to, and what changes
+   ✓ «Тревога!»: the strip of a Reaction > a Reaction that cannot be played has no strip (the reason comes from the engine, not from here)
+   ✓ «Тревога!»: the strip of a Reaction > the words of the pill follow the track dative of the engine
+   ✓ «Тревога!»: the fuse > shrinks with the time spent and stays in 0…1
+ ✓ tests/fx-motion.test.ts (6 tests) 315ms
+ ✓ tests/fx-show.test.ts (7 tests) 16ms
+stderr | tests/plank-aim.test.ts > Plank as a target > outside the choice: plank-<code>, no role, no «i», the star is a button of its own
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+stderr | tests/plank-aim.test.ts > Plank as a target > a target: plate-<code> on the plank, a button with its name, «i» in the head, the star out of the tab order
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+stderr | tests/plank-aim.test.ts > Plank as a target > the chosen target: «chosen» instead of «aimable», the seal «Под огнём» in the head (A5, in place of the reticle)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+stderr | tests/plank-aim.test.ts > Plank as a target > «Подсказки»: the damage as a tag in the corner and in the name of the target; without — only the frame
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at InfoTip (/workspace/fix-after-polish/src/ui/game/InfoTip.tsx:14:3)
+    at div
+    at div
+    at section
+    at PlankView (/workspace/fix-after-polish/src/ui/game/Table.tsx:575:3)
+
+ ✓ tests/plank-aim.test.ts (4 tests) 48ms
+ ✓ tests/ship-bot.test.ts (2 tests) 1654ms
+   ✓ ship bot > in 200 games it plays only its own ship, keeps the rules, and the games end within 30 rounds 1650ms
+ ✓ tests/art-ids.test.ts (6 tests) 16ms
+ ✓ tests/local.test.ts (6 tests) 829ms
+   ✓ LocalGame > a bot match plays the same game as the simulator 520ms
+ ✓ tests/pano.test.ts (6 tests) 62ms
+ ✓ tests/fx-reactions.test.ts (24 tests) 27ms
+ ✓ tests/setup.test.ts (8 tests) 23ms
+ ✓ tests/fx-sea.test.ts (22 tests) 33ms
+ ✓ tests/fx-primitives.test.ts (5 tests) 22ms
+ ✓ tests/fx-queue.test.ts (3 tests) 716ms
+   ✓ the displayed state in the queue > D = the real state after every action, its clips and its quiet events applied (20 bot games, both sides) 593ms
+ ✓ tests/last-turn.test.ts (2 tests) 41ms
+ ✓ tests/weather-window.test.ts (5 tests) 11ms
+ ✓ tests/random-games.test.ts (1 test) 9569ms
+   ✓ random games > 200 games keep the invariants and end by round 30 9568ms
+ ✓ tests/hints-view.test.ts (1 test) 5955ms
+   ✓ hints on a view > in 20 bot games every hint on the deciding team’s view works and matches the full state 5954ms
+ ✓ tests/rng.test.ts (8 tests) 24ms
+ ✓ tests/perf-press.test.ts (2 tests) 6ms
+ ✓ tests/perf-clip-frames.test.ts (3 tests) 5ms
+ ✓ tests/info.test.ts (3 tests) 6ms
+ ✓ tests/fx-trace-batch.test.ts (3 tests) 4ms
+ ✓ tests/no-implicit-globals.test.ts (1 test) 4994ms
+   ✓ src/ reads no global of the browser by accident > none of external, name, event, status, parent, top, length, closed, origin, self, opener, frames resolves to a global of lib.dom 4993ms
+ ✓ tests/hand-fan.test.ts (3 tests) 9ms
+ ✓ tests/fx-scars.test.ts (3 tests) 5ms
+ ✓ tests/seed.test.ts (4 tests) 6ms
+ ✓ tests/fx-timing.test.ts (3 tests) 11ms
+ ✓ tests/table-art.test.ts (2 tests) 4ms
+ ✓ tests/banners.test.ts (3 tests) 2ms
+ ✓ tests/tempo.test.ts (3 tests) 4ms
+ ✓ tests/play-clock.test.ts (3 tests) 3ms
+ ✓ tests/fx-phone-density.test.ts (2 tests) 3ms
+ ✓ tests/fx-fill.test.ts (2 tests) 7ms
+ ✓ tests/perf-metrics.test.ts (2 tests) 3ms
+ ✓ tests/bots.test.ts (3 tests) 13297ms
+   ✓ bot games > 1000 games keep the invariants, raise no exceptions and end by round 30 11514ms
+   ✓ bot games > the same seed gives the same game and the same statistics 599ms
+   ✓ bot games > bots play the variants «Первая партия» and «Быстрый бой» to the end 1182ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/alarm.test.ts > «Тревога!»: the bar and the arrow > a Volley before it hits: who fires at whom, the damage and the track on the pill
+AssertionError: expected '«Жемчужина» даёт Залп по «Индевору»: …' to be '«Жемчужина» даёт Залп по «Индевору» —…' // Object.is equality
+
+Expected: "«Жемчужина» даёт Залп по «Индевору» — ответите Реакцией?"
+Received: "«Жемчужина» даёт Залп по «Индевору»: ответите Реакцией?"
+
+ ❯ tests/alarm.test.ts:12:23
+     10|     const info = alarmInfo(s, data)!;
+     11|     expect(info.kind).toBe('volley');
+     12|     expect(info.line).toBe('«Жемчужина» даёт Залп по «Индевору» — отве…
+       |                       ^
+     13|     expect(info.shooter).toBe('Ж');
+     14|     expect(info.target).toBe('И');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/card-panel.test.ts > Card panel: the repaired ship > «Норрингтон на борту»: the tracks and the title of the ally’s ship, the own ship whole
+AssertionError: expected '<section class="panel oak-sheet decis…' to contain '<b class="cs-title">Норрингтон на бор…'
+
+- Expected
++ Received
+
+- <b class="cs-title">Норрингтон на борту</b>
++ <section class="panel oak-sheet decision-sheet play-sheet repair " data-testid="card-panel"><div class="ps-card" aria-hidden="true"><article class="hcard repair"><span class="hcard-head"><span>РЕМОНТ</span><span class="cost" title="Стоимость: 0 Пороха">0</span></span><span class="hcard-name">Норрингтон на борту</span><span class="hcard-big">союзнику +2</span><span class="hcard-text">Восстановите 2 клетки на любых шкалах корабля союзника.</span></article></div><div class="ps-main"><header class="cs-head"><span class="ps-kind">РЕМОНТ</span></header><h2 class="cs-title">Норрингтон на борту</h2><p class="ds-note">→ «Индевор»: восстановить 2 клетки</p><p class="ps-target"><span>Цель</span><b class="picked" style="background:#9C7A2C">«Индевор»</b></p><div class="ds-body"><div class="repair" data-testid="repair-tracks"><span class="muted">Восстановить 2 клетки · по умолчанию: Пушки, Корпус, Команда, Паруса</span><div class="stepper ds-stepper" data-track="hull"><span>Корпус 10/12</span><button class="btn ds-round">−</button><b>0</b><button class="btn ds-round">+</button></div><div class="stepper ds-stepper" data-track="sails"><span>Паруса 0/1</span><button class="btn ds-round">−</button><b>0</b><button class="btn ds-round">+</button></div></div></div></div><div class="ps-end"><div class="ps-price"><div class="ps-coin" aria-label="Цена: 0 Пороха"><i><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><b>0</b></div><div><small>Цена</small><strong>0 Пороха</strong></div><div class="ps-hold"><small>Трюм</small><span class="ps-kegs"><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i></span><span>останется 8 из 8</span></div></div><div class="panel-actions ds-actions"><div class="ds-cancel"><button class="btn">Отмена</button></div><button class="btn oak-btn  primary" aria-disabled="false" data-testid="play-card"><span class="oak-in"><span class="oak-med" aria-hidden="true"><svg viewBox="0 0 54 54" aria-hidden="true" focusable="false"><defs>
++     <linearGradient id="oak1b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset=".35" stop-color="#e2bf62"/><stop offset=".7" stop-color="#9a7020"/><stop offset="1" stop-color="#d8b05a"/></linearGradient>
++     <radialGradient id="oak1r" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#e2bf62"/><stop offset=".8" stop-color="#8f6b20"/><stop offset="1" stop-color="#5e4210"/></radialGradient></defs>
++     <circle cx="28" cy="29" r="27" fill="#000" opacity=".35"/><circle cx="27" cy="27" r="27" fill="url(#oak1r)" stroke="#4a3208" stroke-width="1"/><circle cx="27" cy="27" r="23" fill="#2a1a0e" stroke="#4a3208" stroke-width=".8"/><circle cx="27" cy="27" r="21.4" fill="none" stroke="url(#oak1b)" stroke-width=".8" stroke-dasharray="1.2 1.4"/><path d="M8 18 A20 20 0 0 1 21 6" stroke="#fff6d8" stroke-width="1.6" fill="none" opacity=".35" stroke-linecap="round"/><g transform="translate(14.6 10.4) scale(1.12)"><g transform="translate(-3 0)"><circle cx="13" cy="3.2" r="2.7" fill="none" stroke="#4a3208" stroke-width="2.6"/><circle cx="13" cy="3.2" r="2.7" fill="none" stroke="url(#oak1b)" stroke-width="1.6"/>
++   <path d="M2.6 7.2 Q13 6.4 23.4 7.2 L23.4 9.4 Q13 8.6 2.6 9.4 Z" fill="url(#oak1b)" stroke="#4a3208" stroke-width=".55"/><circle cx="2.4" cy="8.3" r="1.6" fill="url(#oak1r)" stroke="#4a3208" stroke-width=".45"/><circle cx="23.6" cy="8.3" r="1.6" fill="url(#oak1r)" stroke="#4a3208" stroke-width=".45"/>
++   <path d="M11.5 5.6 H14.5 L15.1 24.6 H10.9 Z" fill="url(#oak1b)" stroke="#4a3208" stroke-width=".6"/><path d="M12.2 6.2 L11.8 24" stroke="#fff3c4" stroke-width=".6" opacity=".8"/>
++   <path d="M1.4 16.8 Q1.6 26.4 13 28.8 Q24.4 26.4 24.6 16.8 L21.8 19 Q21 24.8 13 26 Q5 24.8 4.2 19 Z" fill="url(#oak1b)" stroke="#4a3208" stroke-width=".6"/>
++   <path d="M1.4 16.8 L-1.8 18.6 Q-1.4 21.8 0.8 23.8 L4.6 20.4 Z M24.6 16.8 L27.8 18.6 Q27.4 21.8 25.2 23.8 L21.4 20.4 Z" fill="url(#oak1b)" stroke="#4a3208" stroke-width=".55"/>
++   <path d="M-.6 19.2 Q0 21.4 1.2 22.6 M26.6 19.2 Q26 21.4 24.8 22.6" stroke="#fff3c4" stroke-width=".5" fill="none" opacity=".7"/>
++   <circle cx="13" cy="27.8" r="1.6" fill="url(#oak1r)" stroke="#4a3208" stroke-width=".45"/><path d="M3.6 20 Q5.6 25.6 13 27" stroke="#fff3c4" stroke-width=".55" fill="none" opacity=".6"/>
++   <defs><linearGradient id="oak1g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3c88e"/><stop offset=".55" stop-color="#a8824a"/><stop offset="1" stop-color="#5e4220"/></linearGradient></defs><path d="M13 5.6 C19 8.6 18 11.4 13 12.6 C8 13.8 8 16.6 13 17.8 C18 19 18 21.4 13 22.8 C9.6 23.8 9 25.8 11 27" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="3.25" stroke-linecap="round" transform="translate(0.22499999999999998 0.375)"/><path d="M13 5.6 C19 8.6 18 11.4 13 12.6 C8 13.8 8 16.6 13 17.8 C18 19 18 21.4 13 22.8 C9.6 23.8 9 25.8 11 27" fill="none" stroke="#4a3214" stroke-width="2.05" stroke-linecap="round"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.3 5.8) rotate(85.7)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14 6.1) rotate(87.7)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.6 6.5) rotate(90.5)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.2 6.9) rotate(94)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.8 7.3) rotate(98.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.3 7.8) rotate(105.2)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.7 8.4) rotate(115.3)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(17 9.1) rotate(131.1)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(17.1 9.8) rotate(153.7)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.9 10.5) rotate(176.8)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.5 11) rotate(193.7)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.9 11.5) rotate(204.5)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.3 11.8) rotate(211.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.6 12.1) rotate(216.7)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.9 12.4) rotate(220.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.2 12.5) rotate(223.4)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(12.5 12.7) rotate(222.3)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.8 12.9) rotate(218.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.1 13.2) rotate(213.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.5 13.5) rotate(206.7)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.9 14) rotate(195.9)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.4 14.5) rotate(177.1)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.3 15.2) rotate(147.5)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.5 15.9) rotate(118.2)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.9 16.4) rotate(99.7)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.5 16.9) rotate(89.1)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.2 17.2) rotate(82.2)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.8 17.5) rotate(77.3)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(12.5 17.7) rotate(73.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.2 17.9) rotate(72.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.9 18.1) rotate(75.3)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.6 18.3) rotate(79.3)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.3 18.6) rotate(84.8)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.9 18.9) rotate(93.7)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.4 19.4) rotate(110.1)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.7 20.1) rotate(140.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.6 20.8) rotate(174.9)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.1 21.3) rotate(195.5)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.6 21.8) rotate(206.2)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.9 22.1) rotate(212.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.3 22.4) rotate(216.9)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.6 22.6) rotate(220.2)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(12.9 22.8) rotate(220.5)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(12.2 23.1) rotate(216.3)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.5 23.4) rotate(210.3)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.9 23.8) rotate(202.1)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.4 24.2) rotate(189.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10 24.8) rotate(169.6)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.9 25.5) rotate(141.5)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.1 26.2) rotate(114.9)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.6 26.7) rotate(97.3)" fill="url(#oak1g)" stroke="#4a3214" stroke-width="0.4"/></g></g></svg></span><span class="oak-pan"><b>Сыграть</b></span></span></button></div></div></section>
+
+ ❯ tests/card-panel.test.ts:39:18
+     37|     expect(cardNeeds(s, data, 'Г', card).repairShip).toBe('И');
+     38|     const html = panel(s, 'Г', card);
+     39|     expect(html).toContain('<b class="cs-title">Норрингтон на борту</b…
+       |                  ^
+     40|     expect(html).toContain('<p class="ds-note">→ «Индевор»: восстанови…
+     41|     expect(rows(html)).toEqual(expectedRows(s, 'И'));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/card-panel.test.ts > Card panel: the repaired ship > «Сердце бьётся» played by the Endeavour: the tracks of the Dutchman (Q43)
+AssertionError: expected '<section class="panel oak-sheet decis…' to contain '<b class="cs-title">Сердце бьётся</b>'
+
+- Expected
++ Received
+
+- <b class="cs-title">Сердце бьётся</b>
++ <section class="panel oak-sheet decision-sheet play-sheet repair " data-testid="card-panel"><div class="ps-card" aria-hidden="true"><article class="hcard repair"><span class="hcard-head"><span>РЕМОНТ</span><span class="cost" title="Стоимость: 0 Пороха">0</span></span><span class="hcard-name">Сердце бьётся</span><span class="hcard-big">+2 за Душу</span><span class="hcard-text">Потратьте сколько угодно Душ: восстановите 2 клетки на любых шкалах «Голландца» за каждую.</span></article></div><div class="ps-main"><header class="cs-head"><span class="ps-kind">РЕМОНТ</span></header><h2 class="cs-title">Сердце бьётся</h2><p class="ds-note">→ «Голландец»: восстановить 2 клетки</p><p class="ps-target"><span>Цель</span><b class="picked" style="background:#2C6658">«Голландец»</b></p><div class="ds-body"><div class="stepper ds-stepper"><span>Потратить Души (2 клетки за каждую)</span><button class="btn ds-round">−</button><b>1</b><button class="btn ds-round">+</button></div><div class="repair" data-testid="repair-tracks"><span class="muted">Восстановить 2 клетки · по умолчанию: Пушки, Корпус, Команда, Паруса</span><div class="stepper ds-stepper" data-track="crew"><span>Команда 1/3</span><button class="btn ds-round">−</button><b>0</b><button class="btn ds-round">+</button></div></div></div></div><div class="ps-end"><div class="ps-price"><div class="ps-coin" aria-label="Цена: 0 Пороха"><i><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><b>0</b></div><div><small>Цена</small><strong>0 Пороха</strong></div><div class="ps-hold"><small>Трюм</small><span class="ps-kegs"><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i><i class="full "><svg width="10" height="13" viewBox="0 0 22 28" aria-hidden="true"><path d="M4 3.2 C1.6 9 1.6 19 4 24.8 C8.6 26.4 13.4 26.4 18 24.8 C20.4 19 20.4 9 18 3.2 C13.4 1.6 8.6 1.6 4 3.2 Z" fill="#9a6232" stroke="#3a2412" stroke-width=".9"/><path d="M7.4 2.4 C6 9 6 19 7.4 25.6 M11 2.2 V25.8 M14.6 2.4 C16 9 16 19 14.6 25.6" stroke="#6e431e" stroke-width=".6" fill="none"/><path d="M4.6 4.6 C4 9.6 4 18.4 4.6 23.4" stroke="#c08a52" stroke-width="1" fill="none" opacity=".8"/><path d="M2.6 8.4 C8.4 9.8 13.6 9.8 19.4 8.4 M2.6 19.6 C8.4 18.2 13.6 18.2 19.4 19.6" stroke="#2c2a28" stroke-width="1.7" fill="none"/><path d="M2.8 7.7 C8.4 9 13.6 9 19.2 7.7 M2.8 18.9 C8.4 17.6 13.6 17.6 19.2 18.9" stroke="#8a857e" stroke-width=".45" fill="none"/><ellipse cx="11" cy="3" rx="7" ry="1.3" fill="#7a4b22" stroke="#3a2412" stroke-width=".6"/><rect x="9.4" y="12.6" width="3.2" height="2.4" rx=".6" fill="#5a3818" stroke="#2c1a0a" stroke-width=".4"/></svg></i></span><span>останется 8 из 8</span></div></div><div class="panel-actions ds-actions"><div class="ds-cancel"><button class="btn">Отмена</button></div><button class="btn oak-btn  primary" aria-disabled="false" data-testid="play-card"><span class="oak-in"><span class="oak-med" aria-hidden="true"><svg viewBox="0 0 54 54" aria-hidden="true" focusable="false"><defs>
++     <linearGradient id="oak3b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0b8"/><stop offset=".35" stop-color="#e2bf62"/><stop offset=".7" stop-color="#9a7020"/><stop offset="1" stop-color="#d8b05a"/></linearGradient>
++     <radialGradient id="oak3r" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#e2bf62"/><stop offset=".8" stop-color="#8f6b20"/><stop offset="1" stop-color="#5e4210"/></radialGradient></defs>
++     <circle cx="28" cy="29" r="27" fill="#000" opacity=".35"/><circle cx="27" cy="27" r="27" fill="url(#oak3r)" stroke="#4a3208" stroke-width="1"/><circle cx="27" cy="27" r="23" fill="#2a1a0e" stroke="#4a3208" stroke-width=".8"/><circle cx="27" cy="27" r="21.4" fill="none" stroke="url(#oak3b)" stroke-width=".8" stroke-dasharray="1.2 1.4"/><path d="M8 18 A20 20 0 0 1 21 6" stroke="#fff6d8" stroke-width="1.6" fill="none" opacity=".35" stroke-linecap="round"/><g transform="translate(14.6 10.4) scale(1.12)"><g transform="translate(-3 0)"><circle cx="13" cy="3.2" r="2.7" fill="none" stroke="#4a3208" stroke-width="2.6"/><circle cx="13" cy="3.2" r="2.7" fill="none" stroke="url(#oak3b)" stroke-width="1.6"/>
++   <path d="M2.6 7.2 Q13 6.4 23.4 7.2 L23.4 9.4 Q13 8.6 2.6 9.4 Z" fill="url(#oak3b)" stroke="#4a3208" stroke-width=".55"/><circle cx="2.4" cy="8.3" r="1.6" fill="url(#oak3r)" stroke="#4a3208" stroke-width=".45"/><circle cx="23.6" cy="8.3" r="1.6" fill="url(#oak3r)" stroke="#4a3208" stroke-width=".45"/>
++   <path d="M11.5 5.6 H14.5 L15.1 24.6 H10.9 Z" fill="url(#oak3b)" stroke="#4a3208" stroke-width=".6"/><path d="M12.2 6.2 L11.8 24" stroke="#fff3c4" stroke-width=".6" opacity=".8"/>
++   <path d="M1.4 16.8 Q1.6 26.4 13 28.8 Q24.4 26.4 24.6 16.8 L21.8 19 Q21 24.8 13 26 Q5 24.8 4.2 19 Z" fill="url(#oak3b)" stroke="#4a3208" stroke-width=".6"/>
++   <path d="M1.4 16.8 L-1.8 18.6 Q-1.4 21.8 0.8 23.8 L4.6 20.4 Z M24.6 16.8 L27.8 18.6 Q27.4 21.8 25.2 23.8 L21.4 20.4 Z" fill="url(#oak3b)" stroke="#4a3208" stroke-width=".55"/>
++   <path d="M-.6 19.2 Q0 21.4 1.2 22.6 M26.6 19.2 Q26 21.4 24.8 22.6" stroke="#fff3c4" stroke-width=".5" fill="none" opacity=".7"/>
++   <circle cx="13" cy="27.8" r="1.6" fill="url(#oak3r)" stroke="#4a3208" stroke-width=".45"/><path d="M3.6 20 Q5.6 25.6 13 27" stroke="#fff3c4" stroke-width=".55" fill="none" opacity=".6"/>
++   <defs><linearGradient id="oak3g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3c88e"/><stop offset=".55" stop-color="#a8824a"/><stop offset="1" stop-color="#5e4220"/></linearGradient></defs><path d="M13 5.6 C19 8.6 18 11.4 13 12.6 C8 13.8 8 16.6 13 17.8 C18 19 18 21.4 13 22.8 C9.6 23.8 9 25.8 11 27" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="3.25" stroke-linecap="round" transform="translate(0.22499999999999998 0.375)"/><path d="M13 5.6 C19 8.6 18 11.4 13 12.6 C8 13.8 8 16.6 13 17.8 C18 19 18 21.4 13 22.8 C9.6 23.8 9 25.8 11 27" fill="none" stroke="#4a3214" stroke-width="2.05" stroke-linecap="round"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.3 5.8) rotate(85.7)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14 6.1) rotate(87.7)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.6 6.5) rotate(90.5)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.2 6.9) rotate(94)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.8 7.3) rotate(98.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.3 7.8) rotate(105.2)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.7 8.4) rotate(115.3)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(17 9.1) rotate(131.1)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(17.1 9.8) rotate(153.7)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.9 10.5) rotate(176.8)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.5 11) rotate(193.7)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.9 11.5) rotate(204.5)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.3 11.8) rotate(211.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.6 12.1) rotate(216.7)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.9 12.4) rotate(220.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.2 12.5) rotate(223.4)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(12.5 12.7) rotate(222.3)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.8 12.9) rotate(218.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.1 13.2) rotate(213.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.5 13.5) rotate(206.7)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.9 14) rotate(195.9)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.4 14.5) rotate(177.1)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.3 15.2) rotate(147.5)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.5 15.9) rotate(118.2)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.9 16.4) rotate(99.7)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.5 16.9) rotate(89.1)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.2 17.2) rotate(82.2)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.8 17.5) rotate(77.3)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(12.5 17.7) rotate(73.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.2 17.9) rotate(72.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.9 18.1) rotate(75.3)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.6 18.3) rotate(79.3)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.3 18.6) rotate(84.8)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.9 18.9) rotate(93.7)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.4 19.4) rotate(110.1)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.7 20.1) rotate(140.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.6 20.8) rotate(174.9)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(16.1 21.3) rotate(195.5)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(15.6 21.8) rotate(206.2)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.9 22.1) rotate(212.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(14.3 22.4) rotate(216.9)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(13.6 22.6) rotate(220.2)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(12.9 22.8) rotate(220.5)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(12.2 23.1) rotate(216.3)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(11.5 23.4) rotate(210.3)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.9 23.8) rotate(202.1)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.4 24.2) rotate(189.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10 24.8) rotate(169.6)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(9.9 25.5) rotate(141.5)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.1 26.2) rotate(114.9)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/><ellipse cx="0" cy="0" rx="0.7" ry="0.4" transform="translate(10.6 26.7) rotate(97.3)" fill="url(#oak3g)" stroke="#4a3214" stroke-width="0.4"/></g></g></svg></span><span class="oak-pan"><b>Сыграть</b></span></span></button></div></div></section>
+
+ ❯ tests/card-panel.test.ts:60:18
+     58|     expect(cardNeeds(s, data, 'И', card).repairShip).toBe('Г');
+     59|     const html = panel(s, 'И', card);
+     60|     expect(html).toContain('<b class="cs-title">Сердце бьётся</b>');
+       |                  ^
+     61|     expect(html).toContain('<p class="ds-note">→ «Голландец»: восстано…
+     62|     expect(rows(html)).toEqual(['crew Команда 1/3']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/clarity.test.ts > the Reaction window without «Подсказки» > the first-window Reaction note is shown only with hints enabled
+AssertionError: expected 'Ответить РеакциейПорох 8 из 8Реакция:…' to contain 'Реакция — карта, которую играют в ход…'
+
+- Expected
++ Received
+
+- Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.
++ Ответить РеакциейПорох 8 из 8Реакция: карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.РЕАКЦИЯ0Двойная обшивка−2 уронаЗалп по «Индевору» наносит на 2 урона меньше.Залп 2 → 0i
++     
++     
++     
++   
++   
++   Сыграть «Двойная обшивка»Пропустить
+
+ ❯ tests/clarity.test.ts:95:43
+     93|     expect(text(window(true, false).html)).not.toContain('Реакция — ка…
+     94|     expect(window(true, true).html).toContain('data-testid="reaction-m…
+     95|     expect(text(window(true, true).html)).toContain('Реакция — карта, …
+       |                                           ^
+     96|   });
+     97| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  tests/clarity.test.ts > «Быстрый конец хода» in the settings > off by default; an old record without it is read with it off
+AssertionError: expected { speed: 'slow', …(6) } to deeply equal { speed: 'slow', …(6) }
+
+- Expected
++ Received
+
+  {
+    "effects": "simple",
+    "fastEnd": false,
+    "hints": true,
+    "sound": true,
+    "speed": "slow",
+    "tapSkip": false,
+    "view": {
+      "damage": "show",
+      "frame": "bulwark",
+      "guns": "icons",
+      "hand": "deck",
++     "play": "sheet",
+    },
+  }
+
+ ❯ tests/clarity.test.ts:115:28
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  tests/clarity.test.ts > «Быстрый конец хода» in the settings > «Вид стола»: the first variant of each switch by default; the old «brass|wood» frame is read as the default
+AssertionError: expected { guns: 'icons', hand: 'deck', …(3) } to deeply equal { guns: 'icons', hand: 'deck', …(2) }
+
+- Expected
++ Received
+
+  {
+    "damage": "show",
+    "frame": "bulwark",
+    "guns": "icons",
+    "hand": "deck",
++   "play": "sheet",
+  }
+
+ ❯ tests/clarity.test.ts:120:33
+    118|   it('«Вид стола»: the first variant of each switch by default; the ol…
+    119|     storageWith(JSON.stringify({ seaFrame: 'wood' }));
+    120|     expect(loadSettings().view).toEqual({ guns: 'icons', hand: 'deck',…
+       |                                 ^
+    121|     storageWith(JSON.stringify({ seaFrame: 'brass', view: { guns: 'por…
+    122|     expect(loadSettings().view).toEqual({ guns: 'ports', hand: 'table'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  tests/log-links.test.ts > the log: card names are links > the sea card of the line is a button that opens the sea sheet
+AssertionError: expected 'Море: Туман (весь раунд): только напр…' to be 'Море: Туман (весь раунд) — только нап…' // Object.is equality
+
+Expected: "Море: Туман (весь раунд) — только напротив"
+Received: "Море: Туман (весь раунд): только напротив"
+
+ ❯ tests/log-links.test.ts:74:25
+     72|     const html = list([l]);
+     73|     expect(html).toContain(`<button class="cref" data-sea="${sea}">${c…
+     74|     expect(plain(html)).toBe(l.text);
+       |                         ^
+     75|   });
+     76| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  tests/victory-stats.test.ts > awardTitles: the order of the list and the ties > the Volley that sank the last ship is «Решающий залп», before the most damage
+AssertionError: expected { key: 'decisive', …(2) } to deeply equal { key: 'decisive', …(2) }
+
+- Expected
++ Received
+
+  {
+-   "fact": "Залп на 6 — «Индевор» на дне",
++   "fact": "Залп на 6: «Индевор» на дне",
+    "key": "decisive",
+    "name": "Решающий залп",
+  }
+
+ ❯ tests/victory-stats.test.ts:148:20
+    146|     );
+    147|     const t = awardTitles(data, m, 'ПИРАТЫ');
+    148|     expect(t['М']).toEqual({ key: 'decisive', name: 'Решающий залп', f…
+       |                    ^
+    149|     expect(t['Ж']).toMatchObject({ name: 'Главный калибр', fact: '12 п…
+    150|     expect(t['Г']).toMatchObject({ name: 'Собиратель душ', fact: '5 Ду…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  tests/victory-stats.test.ts > awardTitles: the order of the list and the ties > «Ни царапины» only for the one ship that lost no Hull; «Дубовый борт» only among the ships afloat
+AssertionError: expected { key: 'oak', …(2) } to match object { name: 'Дубовый борт', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "fact": "9 урона — и на плаву",
++   "fact": "9 урона: и на плаву",
+    "name": "Дубовый борт",
+  }
+
+ ❯ tests/victory-stats.test.ts:176:20
+    174|     );
+    175|     const t = awardTitles(data, m, 'ПИРАТЫ');
+    176|     expect(t['М']).toMatchObject({ name: 'Дубовый борт', fact: '9 урон…
+       |                    ^
+    177|     expect(t['Ж']).toMatchObject({ name: 'Ни царапины', fact: 'ни одно…
+    178|     expect(t['Г'].name).toBe('Бился до конца');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  5 failed | 59 passed (64)
+      Tests  9 failed | 687 passed (696)
+   Start at  11:24:58
+   Duration  32.08s (transform 3.72s, setup 0ms, collect 15.64s, tests 46.73s, environment 12ms, prepare 4.90s)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

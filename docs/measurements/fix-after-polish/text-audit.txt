@@ -1,0 +1,86 @@
+src/ui/Catalog.tsx:20 . Всего карт: 
+src/ui/Catalog.tsx:20 : в колодах
+src/ui/ShipView.tsx:42 Легенда: 
+src/ui/game/Game.tsx:930 `Бот: ${SIDE_LABEL[d.side].name} ${d.side==='ПИРАТЫ'?'думают':'думает'}…`
+src/ui/game/Game.tsx:964 `${s.volley ? 'Залп' : 'Карта'} противника: Реакций нет`
+src/ui/game/Game.tsx:969 `Ход ${SIDE_LABEL[d!.side].gen}: ${who(left.length > 0 ? left : d!.seats)}`
+src/ui/game/Game.tsx:1283 : ход закончится, когда нажмёте вы
+        
+src/ui/game/Game.tsx:1334 Последнее: 
+src/ui/game/Game.tsx:1396 отменить: 
+src/ui/game/Game.tsx:1402 : ждёт вас
+              
+src/ui/game/Game.tsx:1523 `Сыграть: когда ${nick(holder)} должна утонуть. Порох: ${s.teams[s.ships[holder].side].powder} из ${c.cost}`
+src/ui/game/Hand.tsx:247 `Стоимость: ${c.cost} Пороха${c.soul ? `, ${c.soul} Души` : ''}`
+src/ui/game/Overlays.tsx:123 Цена: 
+src/ui/game/Overlays.tsx:162 `Сброс «${({Ж:'Жемчужины',М:'Мести',И:'Индевора',Г:'Голландца'} as Record<string,string>)[seat]??shipData(data, seat).nick}» · ${ship.discard.length}`
+src/ui/game/Overlays.tsx:268 `log-${l.kind} ${l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? 'log-sep' : ''} ${l.action >= fresh ? 'fresh' : ''}`
+src/ui/game/Overlays.tsx:426 Версия: 
+src/ui/game/Panels.tsx:27 `${n} ${n === 1 ? 'клетку' : n < 5 ? 'клетки' : 'клеток'}`
+src/ui/game/Panels.tsx:72 `диагональ${diag ? ` ${diag.n < 0 ? '−' : '+'}${Math.abs(diag.n)}` : ''}`
+src/ui/game/Panels.tsx:318 `Взять ${total} ${total===1?'карту':total<5?'карты':'карт'} · ${powderWord(total)}`
+src/ui/game/Panels.tsx:494 `→ ${nick(data, repairShip.code)}: ${cells > 0 ? `восстановить ${cellsWord(cells)}` : c.big}`
+src/ui/game/Panels.tsx:504 `Сыграть${c.cost ? ` · ${c.cost} П` : ''}${c.soul ? ` · ${c.soul} Д` : ''}`
+src/ui/game/Panels.tsx:605 `${nick(data, seat)}: до ${room} ${room === 1 ? 'карты' : 'карт'} с руки. Реакцию из Плана можно сыграть сверх лимита Парусов, бонус «План:» действует.`
+src/ui/game/Placement.tsx:59 : кто слева, кто справа?
+src/ui/game/PlaySheet.tsx:29 `Цена: ${cost} Пороха${c?.soul?`, ${c.soul} Душ`:''}`
+src/ui/game/Table.tsx:181 'Море:'
+src/ui/game/Table.tsx:204 Море:
+src/ui/game/Table.tsx:512 `Цель: «${d.nick}»${plate.tip ? `, ${plate.tip}` : ''}`
+src/ui/game/Table.tsx:553 `Легенда «${legendName}»: ${affordable ? 'нажмите, чтобы прочитать' : 'не хватает Пороха или Душ'}`
+src/ui/game/Table.tsx:595 `Легенда: ${legendName}${affordable ? '' : ': не хватает Пороха или Душ'}`
+src/ui/game/Table.tsx:595 ': не хватает Пороха или Душ'
+src/ui/game/Victory.tsx:36 `На дне: ${sunk.length > 1 ? `${sunk.slice(0, -1).join(', ')} и ${sunk[sunk.length - 1]}` : sunk[0]}`
+src/ui/game/Victory.tsx:124 раунд: 
+src/ui/game/art/legendArt.ts:160 `${n} ${n === 1 ? 'Душа' : n < 5 ? 'Души' : 'Душ'}`
+src/ui/game/art/legendArt.ts:160 `${n} ${n === 1 ? 'Порох' : n < 5 ? 'Пороха' : 'Пороха'}`
+src/ui/game/clarity.ts:29 `${people.length > 1 || bots ? 'Решают' : 'Решает'}: ${people.join(', ')}${bots ? ' и бот' : ''}`
+src/ui/game/fx/FxLayer.tsx:371 `⏹ показ прерван: ${why}${playing.current ? ` (шёл «${playing.current}»)` : ''}, в очереди ${queue.current.length}`
+src/ui/game/fx/FxLayer.tsx:465 `✗ очередь: ${e instanceof Error ? e.message : String(e)}`
+src/ui/game/fx/FxLayer.tsx:500 `⏭ пропущено действий: ${queue.current.length - 1} (${jump ? 'возврат после потери связи' : `пришло сразу ${fresh.length}`})${playing.current ? `, оборван «${playing.current}»` : ''}`
+src/ui/game/fx/FxScene.tsx:185 ». Сцены: 
+src/ui/game/fx/FxScene.tsx:317 Последнее: «Жемчужина» откладывает в Планы: 2 карты: а вот это очень длинная запись журнала, которую строка обрежет многоточием.
+src/ui/game/fx/legends.ts:71 `<div class="lc-face"><div class="lc-top">${n ? `<span class="lc-cost lc-${kind}" title="Цена: ${word}" aria-label="Цена: ${word}"><b>${n}</b>${COST_ICON[kind]}</span>` : '<span></span>'}<span class="lc-type">Легенда · ${esc(c.type.toLowerCase())}</span></div>`
+src/ui/game/fx/legends.ts:72 `<span class="lc-cost lc-${kind}" title="Цена: ${word}" aria-label="Цена: ${word}"><b>${n}</b>${COST_ICON[kind]}</span>`
+src/ui/game/fx/misc.ts:490 `+${e.count} ${e.count === 1 ? 'карта' : e.count < 5 ? 'карты' : 'карт'}`
+src/ui/game/fx/particles.ts:233 'prepare: холст: размер'
+src/ui/game/fx/particles.ts:233 'prepare: холст: создание'
+src/ui/game/fx/sea.ts:329 `<svg width="112" height="112" viewBox="-20 -20 40 40" aria-hidden="true">${Array.from({ length: 16 }, (_, i) => { const a = (i * Math.PI) / 8 - Math.PI / 2, r = i % 4 === 0 ? 17 : i % 2 === 0 ? 11 : 6; return `<path d="M0 0 L${(Math.cos(a - 0.14) * 3).toFixed(1)} ${(Math.sin(a - 0.14) * 3).toFixed(1)} L${(Math.cos(a) * r).toFixed(1)} ${(Math.sin(a) * r).toFixed(1)} Z" fill="${i % 2 ? '#c9a048' : '#e9d29a'}"/>`; }).join('')}<circle r="13" fill="none" stroke="#c9a048" stroke-width=".8"/><circle r="18.6" fill="none" stroke="#c9a048" stroke-width=".5"/></svg><b>Море</b>`
+src/ui/game/fx/sea.ts:363 `Море: «${S.name}» | ${S.big.replace(/\s*—\s*/g,': ')}`
+src/ui/game/fx/volley.ts:117 `<b>${esc(nick(ctx, shooter))}</b> → ${declared && declared !== target ? `<s>${esc(nick(ctx, declared))}</s> ` : ''}<b>${esc(nick(ctx, target))}</b>${(diagonal ?? !!(VS && VS.diagonal)) ? ', по диагонали' : ', напротив'}`
+src/ui/game/fx/volley.ts:323 `${nick(ctx, c.shooter)}: Залп по ${dat(ctx, c.target)}${c.charge ? ` · Заряд «${cardName(ctx, c.charge)}»` : ''}`
+src/ui/game/fx/volley.ts:330 '<span class="stamp" style="color:#24465c;border-color:#24465c">второй борт</span>'
+src/ui/game/memo.ts:17 `Продать карту: +${r.sellGain} Порох. Передать карту союзнику. Перестроение: ${r.regroupCost} Порох (Пиратам бесплатно, пока «Жемчужина» на плаву). Потушить Пожар: сбросить карту.`
+src/ui/game/perf/PerfPanel.tsx:79 `выкл: ${off}; кадров/с ср. ${s.fps.toFixed(1)}; худший ${s.worst.toFixed(1)} мс; >50 мс: ${s.slow}; узлов в слое эффектов (пик): ${r.peak}; устройство: ${navigator.userAgent.slice(0,160)}, экран ${innerWidth}×${innerHeight}×${devicePixelRatio}`
+src/ui/game/perf/PerfPanel.tsx:91 'Нажатия (окно 1,5 с), новые сверху:'
+src/ui/game/perf/PerfPanel.tsx:96 &gt;50 мс за 10 с: 
+src/ui/game/perf/PerfPanel.tsx:99 клип: 
+src/ui/game/perf/PerfPanel.tsx:102 : до кадра 
+src/ui/game/perf/clip.ts:184 '5 худших интервалов rAF (≥: неполный край показа):'
+src/ui/game/perf/frames.ts:24 'перед показом: '
+src/ui/game/perf/frames.ts:28 `${f.partial?'≥':''}${f.ms.toFixed(1)} мс; +${(f.at/1000).toFixed(3)} с; ${f.clips.join(' / ')||'очередь'}; ${f.stages.join(' / ')||'между этапами'}; нажатие: ${f.presses.join(', ')||'нет'}`
+src/ui/game/ship-window/ShipWindow.tsx:56 ': Легенда '
+src/ui/game/weather-window/WeatherWindow.tsx:37 Боцман:
+src/ui/game/weather-window/WeatherWindow.tsx:39 Сейчас в море: 
+src/ui/game/weather-window/WeatherWindow.tsx:40 Следующие карты моря («Тиа Дальма», их знаете только вы): 
+src/ui/game/weather-window/model.ts:23 `Трюм ${s.teams[side].powder}: до ${Math.min(r.seaTortuga,s.teams[side].powder)} Пороха: столько же карт`
+src/ui/game/weather-window/model.ts:25 'Пираты:'
+src/ui/game/weather-window/model.ts:25 'Компания:'
+src/ui/game/weather-window/model.ts:45 `${key==='thunder'?'Паруса':'Команда'} ${key==='thunder'?x.tracks.sails:x.tracks.crew}`
+src/ui/menus/RulesWindow.tsx:10 'Источники:'
+src/ui/menus/RulesWindow.tsx:10 'Сверка источников:'
+src/ui/menus/RulesWindow.tsx:12 'Попадать — тоже.'
+src/ui/menus/RulesWindow.tsx:27 : Пушки 
+src/ui/menus/RulesWindow.tsx:27 . Напротив: 
+src/ui/menus/RulesWindow.tsx:27 урона, по диагонали: 
+src/ui/net/Lobby.tsx:178 Если сайт открыт с адреса сервера (например, http://192.168.1.23:8080), ничего вписывать не нужно. Для GitHub Pages нужен адрес
+              сервера с https, например wss://game.example.ru (подробнее: DEPLOY.md).
+            
+src/ui/net/Lobby.tsx:242 'Скопируйте ссылку:'
+src/ui/net/Lobby.tsx:283 `${seat.name}${mine?' (вы)':''}${seat.online?'':' · не в сети'}`
+src/ui/net/Lobby.tsx:313 Смотрят: 
+src/ui/start/Coin.tsx:5 `coin menu-coin ${spinning?'toss':face?face==='ПИРАТЫ'?'pirates':'company':'idle'}`
+src/ui/start/Prep.tsx:89 'Монета выбрала: '
+src/ui/start/Prep.tsx:117 `Жребий: ${mode === 'bots' ? 'вы' : 'держащий устройство'}: ${SIDE_LABEL[coin.side].name}`
+src/ui/start/Prep.tsx:127 Подсказки: урон по целям и выгодные ходы. Открытые руки: все карты на виду.
+src/ui/uiWords.ts:3 `${verb} ${n} ${last===1&&teen!==11?'карту':last>=2&&last<=4&&(teen<12||teen>14)?'карты':'карт'}`
