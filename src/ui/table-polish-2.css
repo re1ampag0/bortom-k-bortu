@@ -21,3 +21,8 @@
 }
 
 .menu-net .menu-name{position:relative}.menu-net .menu-name .net-name-notice{position:absolute;top:calc(100% + 6px);left:0;width:100%;margin:0;padding:0;border:0;background:none;color:#f1c483;text-align:center;font:14px/1.1 'Alegreya Sans';}
+
+/* Keep intrinsic card rows in the scroll body; the explanation is a separate opaque footer. */
+.sheet[data-testid='card-detail'].card-unavailable>.sheet-body{display:block;overflow:auto}
+.sheet[data-testid='card-detail'].card-unavailable .card-full>*{flex-shrink:0}
+.sheet[data-testid='card-detail'].card-unavailable>.sheet-foot{position:relative;background:#49301c;padding-top:10px}

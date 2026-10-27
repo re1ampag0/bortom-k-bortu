@@ -32,12 +32,12 @@ export function sampleSceneMotion(anim:Motion,time:number){
 }
 const clocks=new WeakMap<object,Map<string,number>>();
 /** One owner, native wrapper clocks + one shared particle rAF. Cleanup always cancels both. */
-export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className="sw-native-scene",mobileArt=false,pixelRatio,clockOwner,stagger=false}:{scene:Scene;cache:SceneCache;cacheKey:string;ready:boolean;store:SceneActivity;narrow:boolean;className?:string;mobileArt?:boolean;pixelRatio?:number;clockOwner?:object;stagger?:boolean}){
+export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className="sw-native-scene",mobileArt=false,pixelRatio,clockOwner,stagger=false,oneLayerPerFrame=false}:{scene:Scene;cache:SceneCache;cacheKey:string;ready:boolean;store:SceneActivity;narrow:boolean;className?:string;mobileArt?:boolean;pixelRatio?:number;clockOwner?:object;stagger?:boolean;oneLayerPerFrame?:boolean}){
  const ref=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   const element=ref.current;if(!element||!ready)return;const host:HTMLDivElement=element;
   let live=true,raf=0,elapsed=clocks.get(clockOwner??host)?.get(cacheKey)??0,last=performance.now(),running=false,intersecting=false,capturing=false;
-  let revealTimer=0,resumeBuild:(()=>void)|undefined;
+  let revealTimer=0,revealFrame=0,resumeBuild:(()=>void)|undefined;
   const animations:Animation[]=[],particles:{node:Layer;chain:Layer[];image:HTMLImageElement;level:number}[]=[];
   const surfaces=new Map<number,{canvas:HTMLCanvasElement;context:CanvasRenderingContext2D}>();
   let observer:IntersectionObserver|undefined,unsubscribe:(()=>void)|undefined;
@@ -109,14 +109,14 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
    // Insert small, ordered batches. Only the existing particle clock runs indefinitely.
    host.dataset.revealing='';observe();
    const jobs:{node:Layer;parent:HTMLElement;chain:Layer[]}[]=scene.tree.map(node=>({node,parent:host,chain:[]}));
-   const step=()=>{if(!live)return;if(document.hidden){resumeBuild=()=>{if(!document.hidden){document.removeEventListener('visibilitychange',resumeBuild!);step();}};document.addEventListener('visibilitychange',resumeBuild);return;}
+   const step=()=>{revealFrame=0;if(!live)return;if(document.hidden){resumeBuild=()=>{if(!document.hidden){document.removeEventListener('visibilitychange',resumeBuild!);if(oneLayerPerFrame)revealFrame=requestAnimationFrame(step);else step();}};document.addEventListener('visibilitychange',resumeBuild);return;}
     elapsed=Math.max(elapsed,Number(animations[0]?.currentTime??elapsed));const started=performance.now();let count=0;
-    do{const job=jobs.shift();if(!job)break;const el=build(job.node,job.chain,false);if(el){job.parent.append(el);jobs.unshift(...job.node.children.map(node=>({node,parent:el,chain:[...job.chain,job.node]})));}count++;}while(jobs.length&&count<6&&performance.now()-started<2);
+    do{const job=jobs.shift();if(!job)break;const el=build(job.node,job.chain,false);if(el){job.parent.append(el);jobs.unshift(...job.node.children.map(node=>({node,parent:el,chain:[...job.chain,job.node]})));}count++;}while(jobs.length&&count<(oneLayerPerFrame?1:6)&&performance.now()-started<2);
     if(running&&!raf&&particles.some(p=>p.level>=0)){last=performance.now();raf=requestAnimationFrame(tick);}
-    if(jobs.length)revealTimer=window.setTimeout(step,16);else complete();
-   };step();
+    if(jobs.length){if(oneLayerPerFrame)revealFrame=requestAnimationFrame(step);else revealTimer=window.setTimeout(step,16);}else complete();
+   };if(oneLayerPerFrame)revealFrame=requestAnimationFrame(step);else step();
   });
-  return()=>{let saved=clocks.get(clockOwner??host);if(!saved){saved=new Map();clocks.set(clockOwner??host,saved);}saved.set(cacheKey,Math.max(elapsed,Number(animations[0]?.currentTime??elapsed)));live=false;running=false;clearTimeout(revealTimer);if(resumeBuild)document.removeEventListener('visibilitychange',resumeBuild);stop();observer?.disconnect();unsubscribe?.();document.removeEventListener('visibilitychange',update);reduced.removeEventListener('change',update);animations.forEach(a=>a.cancel());host.replaceChildren();host.removeAttribute('data-ready');host.removeAttribute('data-revealing');host.parentElement?.removeAttribute('data-scene-live');};
- },[cacheKey,ready,store,narrow,scene,cache,pixelRatio,clockOwner,stagger]);
+  return()=>{let saved=clocks.get(clockOwner??host);if(!saved){saved=new Map();clocks.set(clockOwner??host,saved);}saved.set(cacheKey,Math.max(elapsed,Number(animations[0]?.currentTime??elapsed)));live=false;running=false;clearTimeout(revealTimer);cancelAnimationFrame(revealFrame);if(resumeBuild)document.removeEventListener('visibilitychange',resumeBuild);stop();observer?.disconnect();unsubscribe?.();document.removeEventListener('visibilitychange',update);reduced.removeEventListener('change',update);animations.forEach(a=>a.cancel());host.replaceChildren();host.removeAttribute('data-ready');host.removeAttribute('data-revealing');host.parentElement?.removeAttribute('data-scene-live');};
+ },[cacheKey,ready,store,narrow,scene,cache,pixelRatio,clockOwner,stagger,oneLayerPerFrame]);
  return <div ref={ref} className={className} data-mobile-art={mobileArt?'':undefined} aria-hidden="true"/>;
 }
