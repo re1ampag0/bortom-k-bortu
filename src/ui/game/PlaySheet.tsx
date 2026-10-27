@@ -1,3 +1,4 @@
+import {CardArt} from '../CardArt';
 // Presentation only. The callers retain the original engine decisions and handlers.
 import type {ReactNode} from 'react';
 import type {GameData} from '../../engine/types';
@@ -14,9 +15,9 @@ export function PlaySheet({title,sub,card,hold,target,actions,children,testid,to
  target?:{name:string;color:string}|null;actions:ReactNode;children?:ReactNode;testid?:string;tools?:ReactNode;plans?:boolean;
 }){
  const c=card?cardByCode(card.data,card.code):null,cost=c?.cost??0;
- return <section className={`panel oak-sheet decision-sheet play-sheet ${c?cardClass(c):''} ${plans?'plans-sheet':''}`} data-testid={testid}>
-  <div className="ps-card" aria-hidden>{card?<article className={`hcard ${c?cardClass(c):''}`}>
-    <span className="hcard-head"><span>{c?.type}</span>{c&&<CostBadge c={c}/>}</span><span className="hcard-name">{c?.name}</span><span className="hcard-big">{c?.big}</span><span className="hcard-text">{plainText(c?.text??'')}</span>
+ return <section className={`panel oak-sheet decision-sheet play-sheet ${c?cardClass(c):''} ${c&&!c.legend?'has-face':''} ${plans?'plans-sheet':''}`} data-testid={testid}>
+  <div className="ps-card" aria-hidden>{card?<article className={`hcard ${c?cardClass(c):''} ${c&&!c.legend?'has-card-art':''}`}>
+    <span className="hcard-head"><span className="hcard-type">{c?.type}</span>{c&&<CostBadge c={c}/>}</span>{c&&!c.legend&&<CardArt name={c.name}/>}<span className="hcard-name">{c?.name}</span><span className="hcard-big">{c?.big}</span><span className="hcard-text">{plainText(c?.text??'')}</span>
    </article>:<span className="ps-emblem" dangerouslySetInnerHTML={{__html:plans?PLAN_KEY:oakMedal('anchor')}}/>}</div>
   <div className="ps-main">
    <header className="cs-head"><span className="ps-kind">{plans?'Планы':c?.type??'Решение'}</span>{tools}</header>

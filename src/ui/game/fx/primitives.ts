@@ -1,3 +1,4 @@
+import {cardImageUrl} from '../../cardImages';
 import {animateParticle, canvasRing, canvasHTML, canvasShape, canvasSmoke, canvasCircle, particleCount, pauseParticles, rememberParticleHost, type ParticleAnimation, type ParticleTarget} from './particles';
 import {getPerf, perfOff} from '../perf/state';
 import {perfAnimHook,perfWorkHook,perfPhaseHook} from '../perf/clip';
@@ -489,8 +490,9 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&
 export function cardHTML(data: GameData, code: string): string {
   if (!code || code === HIDDEN) return `<div class="hcard back" data-fx-card="${HIDDEN}"></div>`;
   const c = cardByCode(data, code);
+  const art=!c.legend&&cardImageUrl(c.name);
   const cost = c.soul > 0 ? `${c.soul} Д` : `${c.cost}`;
-  return `<button class="hcard ${cardClass(c)}" tabindex="-1" data-fx-card="${esc(code)}"><span class="hcard-head"><span class="hcard-type">${esc(c.type)}</span><span class="cost">${esc(cost)}</span></span><span class="hcard-name">${esc(c.name)}</span><span class="hcard-big">${esc(c.big)}</span><span class="hcard-text">${esc(plainText(c.text))}</span></button>`;
+  return `<button class="hcard ${cardClass(c)}${art?' has-card-art':''}" tabindex="-1" data-fx-card="${esc(code)}"><span class="hcard-head"><span class="hcard-type">${esc(c.type)}</span><span class="cost">${esc(cost)}</span></span>${art?`<span class="card-art" aria-hidden="true" style="background-image:url(&quot;${esc(art)}&quot;);background-size:contain;background-position:center;background-repeat:no-repeat"></span>`:''}<span class="hcard-name">${esc(c.name)}</span><span class="hcard-big">${esc(c.big)}</span><span class="hcard-text">${esc(plainText(c.text))}</span></button>`;
 }
 /** The relative luminance of a colour «#rrggbb» (WCAG). */
 function luminance(hex: string): number {
