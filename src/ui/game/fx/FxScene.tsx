@@ -314,7 +314,7 @@ function SceneTable({
           <div className="planks top">{columns(top).map(renderPlank)}</div>
           <div className="middle" data-fx-gap>
             {/* «&strip=1»: the line «Последнее» of the game (e2e: nothing lies over it) */}
-            {new URLSearchParams(location.search).get('strip') === '1' && <p className="middle-info" data-testid="middle-info">Последнее: «Жемчужина» откладывает в Планы: 2 карты — а вот это очень длинная запись журнала, которую строка обрежет многоточием.</p>}
+            {new URLSearchParams(location.search).get('strip') === '1' && <p className="middle-info" data-testid="middle-info">Последнее: «Жемчужина» откладывает в Планы: 2 карты: а вот это очень длинная запись журнала, которую строка обрежет многоточием.</p>}
           </div>
           <div className="planks bottom">{columns(bottom).map(renderPlank)}</div>
         </div>

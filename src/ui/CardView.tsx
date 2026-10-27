@@ -1,3 +1,4 @@
+import {uiWords} from './uiWords';
 import type { CardInstance, SeaCardInstance } from '../engine/types';
 import { RichText } from './RichText';
 
@@ -19,15 +20,16 @@ export function CardView({ card }: { card: CardInstance }) {
           {card.cost === 0 && card.soul === 0 && <span className="free">0</span>}
         </span>
       </header>
+      <div className="polish-card-art" aria-hidden="true"/>
       <h3 className="card-name">{card.name}</h3>
-      <div className="card-big">{card.big}</div>
+      <div className="card-big">{uiWords(card.big)}</div>
       <p className="card-text">
         <RichText html={card.text} />
       </p>
-      <p className="card-flavor">{card.flavor}</p>
+      <p className="card-flavor">{uiWords(card.flavor)}</p>
       <footer className="card-foot">
         <span>{card.code}</span>
-        <span title="Ценность по шкале баланса">v {card.v}</span>
+
       </footer>
     </article>
   );
@@ -39,15 +41,16 @@ export function SeaCardView({ card }: { card: SeaCardInstance }) {
       <header className="card-head">
         <span className="card-type">Море · {card.when}</span>
       </header>
+      <div className="polish-card-art" aria-hidden="true"/>
       <h3 className="card-name">{card.name}</h3>
-      <div className="card-big">{card.big}</div>
+      <div className="card-big">{uiWords(card.big)}</div>
       <p className="card-text">
         <RichText html={card.text} />
       </p>
-      <p className="card-flavor">{card.flavor}</p>
+      <p className="card-flavor">{uiWords(card.flavor)}</p>
       <footer className="card-foot">
         <span>{card.code}</span>
-        <span>{card.key}</span>
+
       </footer>
     </article>
   );

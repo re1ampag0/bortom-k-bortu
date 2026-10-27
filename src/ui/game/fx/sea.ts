@@ -28,10 +28,8 @@ import { drawWeather } from './weather';
 
 const R1 = (n: number) => Math.round(n * 10) / 10;
 import type { ClipPlayer } from './FxLayer';
-import { plainText } from '../text';
 
 const esc = (s: string) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
-const strip = plainText;
 const other = (side: Side): Side => (side === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ');
 
 /** The ship of a side at a place (pos) on the displayed table: the pairs «opposite» and «diagonal» go by places, not by codes. */
@@ -134,7 +132,10 @@ export const SEAFX: Record<string, SeaFx> = {
     applyAsync: async (t, effects, used) => {
       const ctx = t.fx, S = T.sea;
       const hits = effects.filter((e): e is Dmg => e.type === 'damage' && e.track === 'sails');
-      if (!hits.length) { ruleTag(ctx, t.W / 2, t.g.cy, 'Парусов нет ни у кого — молния ушла в воду', 100, '', 1500); return 1500; }
+      if (!hits.length) {
+        if(ctx.rich){const x=t.W/2,y=t.g.cy,bh=Math.max(16,Math.min(130,t.g.h/2-4));flashBoard(ctx,'#dceaff',.2,240);const lightning=mk(ctx,'sea-water-bolt',x-55,y-bh,`<svg width="110" height="${bh}" viewBox="0 0 110 130" aria-hidden="true"><path d="M66 2L40 48L59 45L28 99L47 89L55 128L74 67L54 72L83 20L64 26Z" fill="#fff2ba" stroke="#d8eeff" stroke-width="3"/></svg>`);A(ctx,lightning,[{opacity:0},{opacity:1,offset:.08},{opacity:.2,offset:.25},{opacity:1,offset:.4},{opacity:0}],700);const hi=sv2(ctx);sparksSvg(ctx,hi,x,y,18);ringSvg(ctx,hi,x,y,4,48,'#dcefff',650,0,2);await wait(ctx,850);}
+        ruleTag(ctx,t.W/2,t.g.cy,'Парусов нет ни у кого: молния ушла в воду',100,'',1500);return 1500;
+      }
       dimTable(t, 0.55, S.thunderDim);
       await wait(ctx, S.flash1); flashBoard(ctx, '#cfe0ff', 0.18, 300);
       await wait(ctx, S.flash2); flashBoard(ctx, '#cfe0ff', 0.22, 300);
@@ -188,7 +189,7 @@ export const SEAFX: Record<string, SeaFx> = {
         waterColumn(ctx, hi, tx, ty + 8, 30, S.draw - 20);
         await wait(ctx, S.draw + S.mermaidNext);
       }
-      if (!any) { ruleTag(ctx, t.W / 2, t.g.cy, 'Команда 3 и больше теряет 1 — таких нет', 100, '', 1500); return 1500; }
+      if (!any) { ruleTag(ctx, t.W / 2, t.g.cy, 'Команда 3 и больше теряет 1: таких нет', 100, '', 1500); return 1500; }
       return S.end;
     },
   },
@@ -249,7 +250,7 @@ export const SEAFX: Record<string, SeaFx> = {
       await wait(ctx, S.soakAt);
       let tm = 0;
       for (const e of lost) { used.add(e); powderFx(t, e, tm); tm += S.soakStep * e.amount + 200; }
-      if (!lost.length) ruleTag(ctx, t.W / 2, t.g.cy, 'Порох отсырел — но терять нечего', 100, '', 1400);
+      if (!lost.length) ruleTag(ctx, t.W / 2, t.g.cy, 'Порох отсырел: но терять нечего', 100, '', 1400);
       else { const b = nearHold(ctx, lost[0].side), p = mk(ctx, 'fx-puddle', b.x + 8, b.y + b.h - 10); p.style.width = Math.max(40, b.w - 16) + 'px'; A(ctx, p, [{ opacity: 0, transform: 'scaleX(.3)' }, { opacity: 1, transform: 'scaleX(1)' }], 600, tm + 300, 'ease-out'); }
       return tm + S.wetEnd;
     },
@@ -337,7 +338,7 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
   const key = c.key, S = seaCardByCode(ctx.data, c.card), fxs = SEAFX[key] || {};
   const W = t.W, Rb = t.R;
   if (c.round) {
-    const g = gapBox(ctx), bn = mk(ctx, 'banner small', W / 2, g.cy, `— Раунд ${c.round} —`);
+    const g = gapBox(ctx), bn = mk(ctx, 'banner small', W / 2, g.cy, `: Раунд ${c.round}: `);
     A(ctx, bn, [{ opacity: 0, transform: 'translate(-50%,-50%) scaleX(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1.04)', offset: 0.3 }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1)', offset: 0.8 }, { opacity: 0, transform: 'translate(-50%,-60%)' }], R.banner, 0);
     hint(ctx, `Раунд ${c.round}: новая карта моря`);
     await wait(ctx, R.bannerWait);
@@ -358,7 +359,7 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
   // it turns over
   A(ctx, card.querySelector('.sc-back')!, [{ transform: 'perspective(800px) rotateY(0deg)' }, { transform: 'perspective(800px) rotateY(180deg)' }], R.flip, 0, 'ease-in-out', 'forwards');
   A(ctx, card.querySelector('.sc-face')!, [{ transform: 'perspective(800px) rotateY(-180deg)' }, { transform: 'perspective(800px) rotateY(0deg)' }], R.flip, 0, 'ease-in-out', 'forwards');
-  hint(ctx, `Море: «${S.name}» — ${strip(S.text)}`);
+  hint(ctx, `Море: «${S.name}» | ${S.big.replace(/\s*—\s*/g,': ')}`);
   // the drawing comes alive
   const d0 = R.flip * 0.6;
   A(ctx, card.querySelector('.artmain')!, [{ transform: 'scale(.6) translateY(10px)', opacity: 0 }, { transform: 'scale(1.08)', opacity: 1, offset: 0.6 }, { transform: 'scale(1)', opacity: 1 }], 700, d0, 'cubic-bezier(.2,.8,.3,1.2)');
@@ -394,7 +395,7 @@ const playSea = async (c: SeaClip & { events: GameEvent[] }, ctx: FxCtx) => {
 
 /** A new round without a new sea card (if there ever is one). */
 const playRound = async (c: RoundClip, ctx: FxCtx) => {
-  const g = gapBox(ctx); const bn = mk(ctx, 'banner small', boardW(ctx) / 2, g.cy, `— Раунд ${c.round} —`);
+  const g = gapBox(ctx); const bn = mk(ctx, 'banner small', boardW(ctx) / 2, g.cy, `: Раунд ${c.round}: `);
   A(ctx, bn, [{ opacity: 0, transform: 'translate(-50%,-50%) scaleX(.2)' }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1.04)', offset: 0.3 }, { opacity: 1, transform: 'translate(-50%,-50%) scaleX(1)', offset: 0.8 }, { opacity: 0, transform: 'translate(-50%,-60%)' }], T.round.banner, 0);
   await wait(ctx, T.round.bannerWait);
 };

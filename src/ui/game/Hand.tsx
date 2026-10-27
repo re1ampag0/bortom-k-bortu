@@ -1,3 +1,4 @@
+import {uiWords} from '../uiWords';
 // The hand strip: tabs of the ships one person leads, «Колода 14 · Сброс 6», the cards and, after a divider,
 // the Plans of the Pearl. A5 (V2): on a laptop the cards lie as a fan and always fit (they overlap as much as the width
 // needs); on a phone the fan scrolls sideways and snaps, a tap lifts a card (a5-phone, A5Phone frame 6: it grows, shows its
@@ -331,7 +332,7 @@ export function HandCard({
           <CostBadge c={c} />
         </span>
         <span className="hcard-name">{c.name}</span>
-        <span className="hcard-big">{note ?? c.big}</span>
+        <span className="hcard-big">{uiWords(note ?? c.big)}</span>
         <span className="hcard-text">{plainText(c.text)}</span>
         {play &&
           (play.disabled ? (
@@ -366,12 +367,13 @@ export function HandCard({
       data-card={code}
       data-fx-card={code}
     >
+      <span className="polish-card-paper">
       <span className="hcard-head">
         <span className="hcard-type">{plan ? 'План' : c.type}</span>
         <CostBadge c={c} />
       </span>
       <span className="hcard-name">{c.name}</span>
-      <span className="hcard-big">{note ?? c.big}</span>
+      <span className="hcard-big">{uiWords(note ?? c.big)}</span>
       <span className="hcard-text" ref={textRef}>{plainText(c.text)}</span>
       {alarm?.kind === 'ok' && alarm.strip && (
         <span className="hcard-strip ok" data-testid="hcard-strip">
@@ -385,6 +387,7 @@ export function HandCard({
           <i>{alarm.why}</i>
         </span>
       )}
+      </span>
     </button>
   );
 }

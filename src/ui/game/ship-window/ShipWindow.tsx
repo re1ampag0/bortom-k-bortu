@@ -26,7 +26,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
  const shown=useSyncExternalStore(store.subscribe,()=>store.shown(s),()=>s),ship=shown.ships[code],d=shipData(data,code),legend=cardByCode(data,`${code}-Л`);
  const design=(catalogue as Record<string,{name:string;styles:Record<string,Record<string,string>>}>)[code],name=design.name;
  const st=(key:string):CSSProperties=>{const style={...design.styles[key]} as CSSProperties;if(String(style.fontFamily).includes('Alegreya SC'))style.fontFamily="'Ship Alegreya SC',Georgia,serif";else if(style.fontFamily==="Alegreya, Georgia, serif")style.fontFamily="'Ship Alegreya',Georgia,serif";return style;};
- const frame=useRef<HTMLDivElement>(null),close=useRef<HTMLButtonElement>(null);
+ const bodyArt=useRef<HTMLPictureElement>(null),frame=useRef<HTMLDivElement>(null),close=useRef<HTMLButtonElement>(null);
  const [ready,setReady]=useState(false);
  useLayoutEffect(()=>{
   const resize=()=>{const w=window.innerWidth,h=window.visualViewport?.height??window.innerHeight,k=Math.min(1,(w-16)/920,(h-16)/640);frame.current?.style.setProperty('--sw-scale',String(Math.max(.1,k)));frame.current?.style.setProperty('--sw-phone-scale',String(w/390));frame.current?.style.setProperty('--sw-height',h+'px');};
@@ -40,6 +40,18 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
   const update=()=>{if(ready&&phone.matches)stage.setAttribute('data-ship-window-covered','');else if(old===null)stage.removeAttribute('data-ship-window-covered');else stage.setAttribute('data-ship-window-covered',old);};
   update();phone.addEventListener('change',update);return()=>{phone.removeEventListener('change',update);if(old===null)stage.removeAttribute('data-ship-window-covered');else stage.setAttribute('data-ship-window-covered',old);};
  },[ready]);
+ // Only the static lava artwork is cut underneath text; the surrounding light stays intact.
+ useLayoutEffect(()=>{
+  const art=bodyArt.current;if(!ready||!art||code!=='М')return;
+  const phone=matchMedia('(max-width:700px)');
+  const update=()=>{
+   if(phone.matches){art.style.maskImage='none';art.style.setProperty('-webkit-mask-image','none');return;}
+   const box=art.getBoundingClientRect(),k=box.width/920;if(!k)return;
+   const holes=[...frame.current!.querySelectorAll('.sw-motto,.sw-feature h3,.sw-feature-text')].map(el=>{const r=el.getBoundingClientRect();return {x:(r.left-box.left)/k-6,y:(r.top-box.top)/k-4,w:r.width/k+12,h:r.height/k+8};});
+   const svg='<svg xmlns="http://www.w3.org/2000/svg" width="920" height="430"><rect width="920" height="430" fill="white"/>'+holes.map(r=>`<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="3" fill="black"/>`).join('')+'</svg>';
+   const image=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;art.style.maskMode='luminance';art.style.maskImage=image;art.style.setProperty('-webkit-mask-image',image);
+  };update();addEventListener('resize',update);phone.addEventListener('change',update);return()=>{removeEventListener('resize',update);phone.removeEventListener('change',update);art.style.removeProperty('mask-image');art.style.removeProperty('-webkit-mask-image');};
+ },[ready,code]);
  useEffect(()=>{if(!ready)return;const old=document.activeElement as HTMLElement|null;close.current?.focus({preventScroll:true});return()=>{if(old?.isConnected)old.focus({preventScroll:true});};},[ready]);
  const played=log.some(l=>l.kind==='action'&&l.cards.includes(`${code}-Л`)&&l.text.includes(': Легенда '));
  const stamp=played?'СЫГРАНА':'НЕ В ИГРЕ';
@@ -56,7 +68,7 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
      </div>
      <button ref={close} className="sw-close" style={st('close')} aria-label="Закрыть" onClick={onClose}><img src={asset('close.svg')} alt=""/></button>
     </header>
-    <picture className="sw-body-art">{code==='Г'&&<source media="(max-width:700px)" srcSet={shipArt('Phone-body.svg')}/>}<img src={asset('body.svg')} alt=""/></picture>
+    <picture className="sw-body-art" ref={bodyArt}>{code==='Г'&&<source media="(max-width:700px)" srcSet={shipArt('Phone-body.svg')}/>}<img src={asset('body.svg')} alt=""/></picture>
     <div className="sw-body" style={st('body')}>
      <div className="sw-main" style={st('left')}>
       <p className="sw-motto" style={st('motto')}>{d.motto}</p>
@@ -66,9 +78,8 @@ export const ShipWindow=memo(function ShipWindow({s,data,code,store,onClose,onDi
         <span className="sw-cells" style={{width:d[track]*WIDTHS[track]}} aria-hidden>{Array.from({length:d[track]},(_,i)=><span key={i} style={{width:WIDTHS[track],opacity:i<ship.tracks[track]?1:.22}} ><img src={shipArt(`track-${track}.svg`)} alt=""/></span>)}</span>
         <b>{ship.tracks[track]}/{d[track]}</b>
        </div>)}
-       {d.souls!==undefined&&<div className="sw-souls" data-testid="ship-souls"><span>Души</span><span className="sw-soul-count"><img src={soulIcon} alt=""/>{ship.souls}/{d.souls}</span>
-        {(['HULL','CREW'] as const).map(track=><span className="sw-soul-exchange" key={track} aria-label={`Душа → +1 ${track==='HULL'?'Корпус':'Команда'}`}><img src={soulIcon} alt=""/><span>→</span><span dangerouslySetInnerHTML={{__html:CELLS[track]}}/><strong>+1</strong></span>)}
-       </div>}
+       {d.souls!==undefined&&<div className="sw-souls" data-testid="ship-souls"><span>{ship.souls}/{d.souls} | в свой ход 1 Душа чинит 1 Корпус или 1 Команду</span></div>}
+
       </div>
       <h2 style={st('featureHeading')}>Особенности</h2>
       {d.abilities.map((ability,i)=><div className="sw-feature" style={st('featureRow')} key={ability.name}>

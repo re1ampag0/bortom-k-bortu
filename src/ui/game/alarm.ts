@@ -25,7 +25,7 @@ export function alarmInfo(s: GameState, data: GameData): AlarmInfo | null {
     if (p.window === 'after') {
       return {
         kind: 'after',
-        line: `${name(v.shooter)} выстрелил по ${to(v.target)} — ответите Реакцией?`,
+        line: `${name(v.shooter)} выстрелил по ${to(v.target)}: ответите Реакцией?`,
         shooter: v.shooter,
         target: v.target,
         hit: null,
@@ -34,7 +34,7 @@ export function alarmInfo(s: GameState, data: GameData): AlarmInfo | null {
     const n = Number(/: (\d+) по /.exec(threatLine(s, data) ?? '')?.[1] ?? 0);
     return {
       kind: 'volley',
-      line: `${name(v.shooter)} даёт Залп по ${to(v.target)} — ответите Реакцией?`,
+      line: `${name(v.shooter)} даёт Залп по ${to(v.target)}: ответите Реакцией?`,
       shooter: v.shooter,
       target: v.target,
       hit: { n, track: v.track, pill: `${n} по ${TRACK_DATIVE[v.track]}` },
@@ -45,7 +45,7 @@ export function alarmInfo(s: GameState, data: GameData): AlarmInfo | null {
     const target = s.card.target && s.ships[s.card.target] ? ` по ${to(s.card.target)}` : '';
     return {
       kind: 'card',
-      line: `${name(s.card.ship)}: «${c.name}»${target} — ответите Реакцией?`,
+      line: `${name(s.card.ship)}: «${c.name}»${target}: ответите Реакцией?`,
       shooter: s.card.ship,
       target: s.card.target ?? null,
       hit: null,
