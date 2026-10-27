@@ -380,7 +380,7 @@ export function Game({
     const schedule=()=>{if(typeof window.requestIdleCallback==='function')idle=window.requestIdleCallback(warm);else timer=window.setTimeout(warm,1500);};
     schedule();
     return()=>{alive=false;if(idle!==undefined)window.cancelIdleCallback(idle);if(timer!==undefined)clearTimeout(timer);};
-  },[]);
+  },[s.sea?.current]);
   useTableBody(curtainSide ? null : 'game');
   const cardDecision=['card','legend','confirmEnd','plans'].includes(mode.k)||(myDecision&&['tortuga','choice','jack'].includes(d?.kind??''));
   useLayoutEffect(()=>{
@@ -395,7 +395,7 @@ export function Game({
       dock.style.setProperty('--decision-limit',`${limit}px`);
       const height=scroll?0:Math.min(d.height/k,limit);
       if(bottom.style.getPropertyValue('--decision-h')!==`${height}px`)bottom.style.setProperty('--decision-h',`${height}px`);
-      if(scroll&&l){dock.style.setProperty('--scroll-left',`${(l.left-b.left)/k}px`);dock.style.setProperty('--scroll-bottom',`${(b.bottom-l.bottom)/k}px`);dock.style.setProperty('--scroll-width',`${l.width/k}px`);dock.style.setProperty('--scroll-height',`${Math.max(180,(l.bottom-Math.max(l.top,board.getBoundingClientRect().top+status))/k-24)}px`);}
+      if(scroll&&l){dock.style.setProperty('--scroll-left',`${(l.left-b.left)/k}px`);dock.style.setProperty('--scroll-bottom',`${(b.bottom-l.bottom)/k}px`);dock.style.setProperty('--scroll-width',`${l.width/k}px`);dock.style.setProperty('--scroll-height',`${Math.max(180,(l.bottom-Math.max(l.top,(game.querySelector('.log-tools')?.getBoundingClientRect().bottom??(board.getBoundingClientRect().top+status))+12))/k-24)}px`);}
     };
     const ro=new ResizeObserver(measure);ro.observe(dock);ro.observe(game);measure();
     return()=>{ro.disconnect();bottom.style.removeProperty('--decision-h');};
@@ -932,7 +932,7 @@ export function Game({
       if (d.kind === 'turn') return `Бот: ${SIDE_LABEL[d.side].name} ${d.side==='ПИРАТЫ'?'думают':'думает'}…`;
       return `Бот: ${SIDE_LABEL[d.side].name} решает…`;
     }
-    if (!myDecision) return `Ждём ${SIDE_LABEL[d.side].name}: ${curtainReason(s, data, d.kind)}`;
+    if (!myDecision) return `Ждём ${SIDE_LABEL[d.side].acc}: ${curtainReason(s, data, d.kind)}`;
     switch (d.kind) {
       case 'reactions':
         return `${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])} ${s.volley ? 'даёт Залп' : `играет «${cardByCode(data,s.card!.card).name}»`}. Ответите Реакцией?`;
@@ -1252,6 +1252,7 @@ export function Game({
   ) : alarmOn && !phone ? (
     <div className="hand-actions alarm-mode" style={{ ['--alarm-in' as string]: `${T.ui.alarmIn}ms` }}>
       <AlarmActions
+        price={{cost:reactPick?cardByCode(data,reactPick.card).cost:null,powder:s.teams[bottom].powder,cap:data.econ.cap}}
         memo={!memoSeen.includes(bottom)}
         pickName={reactPick ? cardByCode(data, reactPick.card).name : null}
         now={pickNow?.ok ? pickNow.text : null}
@@ -1282,7 +1283,7 @@ export function Game({
             <circle cx="8" cy="8" r="7" fill="#3d8562" />
             <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} : ход закончится, когда нажмёте вы
+          «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'}. Ход закончится, когда нажмёте вы
         </p>
       )}
     </div>
@@ -1402,7 +1403,7 @@ export function Game({
                   <circle cx="8" cy="8" r="7" fill="#3d8562" />
                   <path d="M4.4 8.4 L7 11 L11.8 5.4" fill="none" stroke="#f2fbf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'} : ждёт вас
+                «{shipData(data, allyReady.code).nick}» {/[аяь]$/.test(shipData(data, allyReady.code).nick) ? 'готова' : 'готов'}, ждёт вас
               </span>
             ) : undefined
           }
@@ -1523,7 +1524,7 @@ export function Game({
     if (code.endsWith('-Л')) {
       const o = legendOptions(s, data, holder);
       const c = cardByCode(data, code);
-      if (c.type !== 'ПРИКАЗ') return `Сыграть: когда ${nick(holder)} должна утонуть. Порох: ${s.teams[s.ships[holder].side].powder} из ${c.cost}`;
+      if (c.type !== 'ПРИКАЗ') return `Сыграть, когда ${nick(holder)} должна утонуть. Порох: ${s.teams[s.ships[holder].side].powder} из ${c.cost}`;
       return o.reason ? `Нельзя: ${o.reason}` : 'Можно сыграть сейчас';
     }
     if (!myDecision) return null;

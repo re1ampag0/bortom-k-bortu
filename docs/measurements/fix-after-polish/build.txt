@@ -1,0 +1,719 @@
+
+> bortom-k-bortu@0.0.0 build
+> vite build
+
+vite v6.0.7 building for production...
+transforming...
+✓ 1354 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                                1.10 kB │ gzip:   0.51 kB
+dist/assets/art-5315e0f64f6cbdd6ffd2-B6zxGwLE.webp                             4.14 kB
+dist/assets/art-3ffa4fd79059b7c47fd0-BeVOW2ZF.webp                             4.14 kB
+dist/assets/art-d7376a080a2f4b836b87-BjXc4gSw.webp                             4.20 kB
+dist/assets/fontan-molodosti-CKlf1vKS.webp                                     4.23 kB
+dist/assets/igra-v-kosti-lzhetsa-cFwSAnr6.webp                                 4.23 kB
+dist/assets/art-af294e521910b453f8a8-DIeJc4nn.webp                             4.32 kB
+dist/assets/art-cd8b23478450655d06d5-Cn6xEax2.webp                             4.39 kB
+dist/assets/art-d8d0a634996e7ab7fe61-BjJRS0MS.webp                             4.39 kB
+dist/assets/shpion-merser-B_okAMkM.webp                                        4.41 kB
+dist/assets/art-c543d5b7cefcc87a3d8c-CLaZZ-52.webp                             4.43 kB
+dist/assets/art-ce236139c5f80367a2b2-BoYiFkq8.webp                             4.43 kB
+dist/assets/verbovka-utoplennikov-Bn8xQ2eG.webp                                4.44 kB
+dist/assets/art-d3bca5ed705528e00f72-CUKQRJT-.webp                             4.45 kB
+dist/assets/uyti-na-glubinu-DpRyVyyD.webp                                      4.45 kB
+dist/assets/zhestokaya-distsiplina-Bhblsixg.webp                               4.52 kB
+dist/assets/art-282677d9f64ac660d9a2-VUlsmKjE.webp                             4.54 kB
+dist/assets/sto-let-sluzhby-DnCzaqnU.webp                                      4.57 kB
+dist/assets/art-9cba0a434bcee43fd281-D5HhJSWz.webp                             4.60 kB
+dist/assets/art-44cc9319bef841e4c8ce-C6EzAl1T.webp                             4.64 kB
+dist/assets/art-d35b169ebd1185b8fef3-CVrfMfGY.webp                             4.66 kB
+dist/assets/chernye-parusa-v-nochi-CbKbI6iu.webp                               4.67 kB
+dist/assets/art-5bbe4204deec41de7e51-DGabp_gU.webp                             4.68 kB
+dist/assets/terner-i-suonn-DI_0eQsM.webp                                       4.68 kB
+dist/assets/art-d9ac345ed211ad51c07d-yM5x9duC.webp                             4.69 kB
+dist/assets/banka-s-zemley-uao4qc2i.webp                                       4.70 kB
+dist/assets/port-closed-fmY0PXTw.svg                                           4.71 kB │ gzip:   1.01 kB
+dist/assets/art-7c9ce85433718365f9bf-BtPn-ktO.webp                             4.72 kB
+dist/assets/kalenye-yadra-BTQuQ0p5.webp                                        4.74 kB
+dist/assets/art-692afe382863707097b3-qVPE-jcc.webp                             4.74 kB
+dist/assets/art-aea6a5b32a86c970d9c0-CDJp8YbZ.webp                             4.80 kB
+dist/assets/Dutchman-feature-0-inHaNLxn.svg                                    4.80 kB │ gzip:   0.92 kB
+dist/assets/art-91828db7d76f66ebb2e6-DLdbRzZV.webp                             4.81 kB
+dist/assets/zhatva-DBe5WtSV.webp                                               4.82 kB
+dist/assets/ic_pipe-BGxLNhCz.svg                                               4.87 kB │ gzip:   1.04 kB
+dist/assets/art-3d01732054f9fb46c70f-V6GfwIZ-.webp                             4.90 kB
+dist/assets/kolokol-gollandtsa-ChkRsi6Z.webp                                   4.92 kB
+dist/assets/art-2791c259bce2b76b984e-CiesKWwJ.webp                             4.93 kB
+dist/assets/prop-candle-__idVvba.svg                                           4.94 kB │ gzip:   1.14 kB
+dist/assets/art-3d661515a89dc75ee09e-To0gG7en.webp                             4.95 kB
+dist/assets/vygodnaya-sdelka-Ck4bpTuO.webp                                     4.95 kB
+dist/assets/art-deb3fa46a118f14108e6-DXjjf8BR.webp                             4.98 kB
+dist/assets/art-fc3abf8c7f4944c471ce-Ddeccg-z.webp                             5.00 kB
+dist/assets/morskie-narosty-Cp-NnX6g.webp                                      5.03 kB
+dist/assets/art-d2c221c575284022410a-BjPZ1BGB.webp                             5.03 kB
+dist/assets/odin-vystrel-CWL4TFFl.webp                                         5.11 kB
+dist/assets/uyti-po-vetru-D9ftRHYT.webp                                        5.12 kB
+dist/assets/art-abefffc32d3538128fdd-u-JF4tVI.webp                             5.13 kB
+dist/assets/deck-balls-CfgqN4pL.svg                                            5.14 kB │ gzip:   0.94 kB
+dist/assets/art-2fa3dcb021cda8151a9b-b34CdqBT.webp                             5.15 kB
+dist/assets/prop-ink-BVdUUxBA.svg                                              5.18 kB │ gzip:   1.11 kB
+dist/assets/ic_spyglass-D-TdCfGn.svg                                           5.21 kB │ gzip:   1.09 kB
+dist/assets/art-0b53d7984535481d1ae7-C8QvnDb4.webp                             5.23 kB
+dist/assets/art-5ac055ec90bfaf91528a-CHrWgZvq.webp                             5.23 kB
+dist/assets/otvetnyy-zalp-DBgz3Py8.webp                                        5.23 kB
+dist/assets/uzhas-karibskogo-morya-DBnxonYd.webp                               5.23 kB
+dist/assets/brosit-yakor-CclMkx0T.webp                                         5.24 kB
+dist/assets/art-d8a697ce998f2716daa3-DpYWY5B3.webp                             5.24 kB
+dist/assets/dvoynaya-obshivka-ox9v-D9I.webp                                    5.24 kB
+dist/assets/art-b72c42bc1c85e1dfdf65-zKN4SyeZ.webp                             5.27 kB
+dist/assets/ic_key-4RQJbP2T.svg                                                5.29 kB │ gzip:   1.10 kB
+dist/assets/port-open-CvsXKxYV.svg                                             5.32 kB │ gzip:   1.23 kB
+dist/assets/prikryt-bortom-BpvO5HKb.webp                                       5.33 kB
+dist/assets/art-22024a105c1c7c4eb876-B8z-yJgg.webp                             5.33 kB
+dist/assets/art-d1f9e5f64e205881637f-7L8TyIyE.webp                             5.33 kB
+dist/assets/art-0adbf7fc07fb655d1243-BMN5BLMZ.webp                             5.35 kB
+dist/assets/plennaya-rusalka-DGd6tVtk.webp                                     5.37 kB
+dist/assets/anzhelika-Cc5ZkhuA.webp                                            5.41 kB
+dist/assets/kartech-CWVoMdFq.webp                                              5.41 kB
+dist/assets/prihlop-bill-1mKFoilq.webp                                         5.44 kB
+dist/assets/zombi-u-pushek-qIsuK-VD.webp                                       5.48 kB
+dist/assets/art-6ccb96262534276b7ec0-CA9eDIF7.webp                             5.52 kB
+dist/assets/ic_bell-DAtithPe.svg                                               5.52 kB │ gzip:   1.26 kB
+dist/assets/art-1c457ff9c3d51a27666b-CF7gZgoP.webp                             5.55 kB
+dist/assets/podnyat-flagi-DBZsJVw-.webp                                        5.59 kB
+dist/assets/iz-puchiny-CJosDBep.webp                                           5.60 kB
+dist/assets/art-7fb3f80de13a7314ed47-knHUwIq7.webp                             5.62 kB
+dist/assets/otvet-iz-puchiny-D4SK8lyR.webp                                     5.66 kB
+dist/assets/otvetnyy-ogon-CMbJXC8y.webp                                        5.68 kB
+dist/assets/tia-dalma-D69H-eUw.webp                                            5.70 kB
+dist/assets/yadra-Gsxc2hr-.webp                                                5.71 kB
+dist/assets/art-1b3e2f1e470c5869c6ee-SZ9sUSZ8.webp                             5.73 kB
+dist/assets/art-955719bfde40be9462ed-CZkOesAa.webp                             5.74 kB
+dist/assets/biznes-est-biznes-CMDkcoGG.webp                                    5.76 kB
+dist/assets/knippeli-CSQocsVq.webp                                             5.76 kB
+dist/assets/pritselnyy-ogon-jon-m4jl.webp                                      5.77 kB
+dist/assets/abordazh-rybolyudey-C1KhprUF.webp                                  5.82 kB
+dist/assets/art-d2065bb04a26949e0a62-DVCCoiXd.webp                             5.82 kB
+dist/assets/nichego-lichnogo-BScxpcG_.webp                                     5.84 kB
+dist/assets/vsplytie-CIBZ1zAZ.webp                                             5.84 kB
+dist/assets/kompas-dzheka-Dl6ujsdo.webp                                        5.86 kB
+dist/assets/ognennaya-stena-DTm5gYLU.webp                                      5.90 kB
+dist/assets/ogon-po-orudiyam-B3e0sPlY.webp                                     5.90 kB
+dist/assets/art-d7e6089fc39d1f845b29-B6_0JWqy.webp                             5.91 kB
+dist/assets/art-ee087654daf746199b71-Belbbt-4.webp                             5.93 kB
+dist/assets/vykup-za-plennikov-D0V5EduK.webp                                   5.94 kB
+dist/assets/art-17b4c34ee588f5ff2314-CuXt-Zky.webp                             5.95 kB
+dist/assets/kukla-vudu-DL2a3fhC.webp                                           5.98 kB
+dist/assets/art-4e9d8b7363cf322b7fb5-fe-Orgxg.webp                             5.98 kB
+dist/assets/art-b4a0d2c334f37283e935-Df4fUeKQ.webp                             5.99 kB
+dist/assets/art-0df778c56bad9edc02ec-Dp3vEZQ-.webp                             6.00 kB
+dist/assets/zombi-ofitsery-CIlpIzNe.webp                                       6.01 kB
+dist/assets/vodovorot-De9aAaND.webp                                            6.01 kB
+dist/assets/ic_flags-DjYT_b9y.svg                                              6.03 kB │ gzip:   1.24 kB
+dist/assets/sdelka-s-syao-fenom-Bx_o2Mlp.webp                                  6.04 kB
+dist/assets/tyazhelyy-bort-Ds15AhRB.webp                                       6.04 kB
+dist/assets/art-1cbb7ec6cdf225b1ac22-D0Bn1-ZU.webp                             6.06 kB
+dist/assets/art-8b73d389e1618a4ac43a-RHwCHkg_.webp                             6.12 kB
+dist/assets/pravo-na-peregovory-1Sc2MduT.webp                                  6.14 kB
+dist/assets/bochki-s-porohom-CkTNH-90.webp                                     6.18 kB
+dist/assets/art-e10eb428c5fce04eb005-CW5TOp5m.webp                             6.18 kB
+dist/assets/vse-po-planu-40DWuxtZ.webp                                         6.18 kB
+dist/assets/podkreplenie-flota-CucfphSs.webp                                   6.22 kB
+dist/assets/bezumnyy-plan-B8rYSDuZ.webp                                        6.22 kB
+dist/assets/ic_book-DLaolMxh.svg                                               6.24 kB │ gzip:   1.29 kB
+dist/assets/plotnik-C0Z2DTCC.webp                                              6.24 kB
+dist/assets/art-4319d2128a1ac3b41103-CA86AsC9.webp                             6.28 kB
+dist/assets/art-10688f62213794ba589d-ByVVna3L.webp                             6.29 kB
+dist/assets/oplachennyy-zalp-BLMYe1mb.webp                                     6.30 kB
+dist/assets/art-9f4fd2fba1eab71f8895-BYKHrNmz.webp                             6.34 kB
+dist/assets/deck-lantern-COkGeFVy.svg                                          6.36 kB │ gzip:   1.30 kB
+dist/assets/lataem-parusa-CEAaac7d.webp                                        6.42 kB
+dist/assets/stroy-linii-B6bkt9aE.webp                                          6.44 kB
+dist/assets/ic_cards-CIQFTFxp.svg                                              6.45 kB │ gzip:   1.22 kB
+dist/assets/sunduk-mertvetsa-CvLPVWEb.webp                                     6.47 kB
+dist/assets/chernaya-metka-fFZuBiIU.webp                                       6.51 kB
+dist/assets/zalp-vsey-batareey-MkEGhoHL.webp                                   6.53 kB
+dist/assets/art-c6350ab65dfff0308665-DBEbrS45.webp                             6.56 kB
+dist/assets/kaperskiy-patent-DlJA7SVi.webp                                     6.59 kB
+dist/assets/art-33f4daf11e51a05b6152-BEtOVmFq.webp                             6.59 kB
+dist/assets/brander-BNX7kqJq.webp                                              6.65 kB
+dist/assets/serdtse-betsya-CcmtRuqr.webp                                       6.66 kB
+dist/assets/art-2fea2ca7d9bfb8406e79-BXL2f5Ut.webp                             6.66 kB
+dist/assets/art-81a7a3d4d977f551e400-jvamgVck.webp                             6.68 kB
+dist/assets/zalp-s-oboih-bortov-DP7zghiB.webp                                  6.70 kB
+dist/assets/art-82661a181d7b6c90aafc-BPXsK5wS.webp                             6.72 kB
+dist/assets/blokada-oeJlzYFQ.webp                                              6.72 kB
+dist/assets/art-3de5c58368b4a39883fe-CXET5Be9.webp                             6.72 kB
+dist/assets/chast-korablya-chast-komandy-C5-7HlXn.webp                         6.73 kB
+dist/assets/ic_hourglass-Bj-UP0Xf.svg                                          6.80 kB │ gzip:   1.35 kB
+dist/assets/prikaz-lorda-bekketa-DvtGITtG.webp                                 6.84 kB
+dist/assets/CoinSpark-BdPlZ6OO.webp                                            6.92 kB
+dist/assets/art-9ee75b776fed6a83b5a9-BjJHplBC.webp                             6.93 kB
+dist/assets/art-ff8e280b312dc5256f29-CdtGQjKO.webp                             7.00 kB
+dist/assets/art-d938bcac5930c79ef27d-CPSU4PVI.webp                             7.01 kB
+dist/assets/art-3be21b608b02938b196b-CJrM7IMu.webp                             7.04 kB
+dist/assets/art-b7347b2757a6e9a9efb3-i6sDtk_p.webp                             7.05 kB
+dist/assets/art-f4341d7e8fa99700cc31-B10A-K29.webp                             7.08 kB
+dist/assets/art-94b278f9e63145cf30c9-CkwIGp7o.webp                             7.11 kB
+dist/assets/zov-glubin-D5Sm40VD.webp                                           7.12 kB
+dist/assets/art-9659daa0aec215370e38-CO-8KDem.webp                             7.16 kB
+dist/assets/art-6098673733148cbd9511-Bo5MKCYf.webp                             7.20 kB
+dist/assets/art-f4dc4a3d87023db15aae-DUtOa1JY.webp                             7.20 kB
+dist/assets/podkup-CZosLrFa.webp                                               7.20 kB
+dist/assets/art-3a01413c07404f588682-CXAliuzT.webp                             7.22 kB
+dist/assets/art-147d370ed5c6283cc02b-BKosJKdl.webp                             7.25 kB
+dist/assets/art-32cd3cf8739d49e01309-cCuWof4B.webp                             7.28 kB
+dist/assets/art-9ffcd8df9e00938b1ffe-Gp6bp5Xw.webp                             7.30 kB
+dist/assets/gibbs-za-shturvalom-DRdpflpP.webp                                  7.32 kB
+dist/assets/rom-dlya-vseh-mQtE-Aee.webp                                        7.35 kB
+dist/assets/art-6ef62c363fd510c567a8-DvM0_vNc.webp                             7.37 kB
+dist/assets/art-897199153f29aa0af1e0-D2CI6Y3P.webp                             7.38 kB
+dist/assets/art-9b337f66175c5b1b070c-C1QM5LiO.webp                             7.38 kB
+dist/assets/art-c3e027097487274f3bfd-CUIrOO5Q.webp                             7.39 kB
+dist/assets/art-ca4e7d182111bf2e7848-5E3HqwhB.webp                             7.39 kB
+dist/assets/na-abordazh-CBv3kcli.webp                                          7.40 kB
+dist/assets/art-563a9663462861e0b703-M18rBWG0.webp                             7.41 kB
+dist/assets/obezyanka-dzhek-Cz1Jcie0.webp                                      7.42 kB
+dist/assets/art-ed6320a891e3f72a55ca-B2iuIIp1.webp                             7.43 kB
+dist/assets/ograblenie-banka-CJRhOEHA.webp                                     7.43 kB
+dist/assets/art-c0584f654cea1a430db5-BMJ301IN.webp                             7.48 kB
+dist/assets/lovkost-ruk-CYTxdC9-.webp                                          7.49 kB
+dist/assets/art-bc7e6df2db03c560c5d1-BdGlY4tZ.webp                             7.51 kB
+dist/assets/ukaz-o-kaznyah-C-LvW4kb.webp                                       7.55 kB
+dist/assets/art-fc541f29db6e96d023e1-24pfUYqe.webp                             7.56 kB
+dist/assets/art-012698733aa223ed9299-BnH-wUvv.webp                             7.57 kB
+dist/assets/art-5e90cd49b450574e57f4-4JgZUuX4.webp                             7.66 kB
+dist/assets/art-d69c1fa9be97a7470e6b-CNVSzSUE.webp                             7.67 kB
+dist/assets/ic_compass-BgOWvsQM.svg                                            7.69 kB │ gzip:   1.19 kB
+dist/assets/art-c97847d7384fca4cba87-BK-shi8k.webp                             7.74 kB
+dist/assets/art-53cc360dde7e029623b5-Ct_1e4tR.webp                             7.80 kB
+dist/assets/Chart_mainPhone-BdqsRBH1.webp                                      7.81 kB
+dist/assets/morskaya-pehota-CHpl_h0Z.webp                                      7.84 kB
+dist/assets/bunting-DLkaCtP-.svg                                               7.91 kB │ gzip:   1.13 kB
+dist/assets/art-7c924a873608b306dd02-Cys1qLXm.webp                             7.96 kB
+dist/assets/art-756bcde4d5816ae390f8-CP9qpbxy.webp                             8.06 kB
+dist/assets/art-2d10afc000b9ad19b590-DmKxufHv.webp                             8.10 kB
+dist/assets/art-d58b9ef8b738badee968-CI70EHuA.webp                             8.12 kB
+dist/assets/art-af637a29822361787693-CaJbvHHX.webp                             8.13 kB
+dist/assets/ic_logbook-CUFLLAh8.svg                                            8.15 kB │ gzip:   1.46 kB
+dist/assets/ic_cutlasses-Dp689PWl.svg                                          8.17 kB │ gzip:   1.32 kB
+dist/assets/art-ba71de3f78deb61ad122-DdKm6GxK.webp                             8.20 kB
+dist/assets/verf-kompanii-BxZOmS_f.webp                                        8.23 kB
+dist/assets/art-099d6db2e32c4c443d11-Dh0R69Ah.webp                             8.27 kB
+dist/assets/zhivye-snasti-m679wHEk.webp                                        8.30 kB
+dist/assets/art-2bf2e8f5d52912aef6ab-JxHZhgCO.webp                             8.32 kB
+dist/assets/art-b2fb97737492e0b0b4fa-CaXTOJi0.webp                             8.40 kB
+dist/assets/art-42a9687bacc30ba642c6-CxP3jsWc.webp                             8.49 kB
+dist/assets/ic_lantern-BndABgTr.svg                                            8.57 kB │ gzip:   1.60 kB
+dist/assets/art-71886b16333778b86310-vEoJgrTN.webp                             8.64 kB
+dist/assets/art-1b0263f8daedfcbb94a3-BnQpbhl1.webp                             8.65 kB
+dist/assets/art-d00832dbacfb077cea44-t4WpJb4c.webp                             8.67 kB
+dist/assets/swap-arrows-WEQZRz2n.svg                                           8.68 kB │ gzip:   1.46 kB
+dist/assets/Revenge-feature-1-BQNC3Glu.svg                                     8.69 kB │ gzip:   1.14 kB
+dist/assets/swap-anchor-CAuwul7v.svg                                           8.71 kB │ gzip:   1.55 kB
+dist/assets/Chart_netPhone-CuZGxSbv.webp                                       8.75 kB
+dist/assets/ic_t_repair-BBP2GSAU.svg                                           8.87 kB │ gzip:   1.66 kB
+dist/assets/ic_t_charge-BT_tsfV8.svg                                           8.90 kB │ gzip:   1.55 kB
+dist/assets/art-2fb12f96d38618ca4dc3-DCXvTGyt.webp                             8.93 kB
+dist/assets/ic_bomb-CfIILUEN.svg                                               8.94 kB │ gzip:   1.79 kB
+dist/assets/ic_t_reaction-DI9FUgEf.svg                                         8.95 kB │ gzip:   1.66 kB
+dist/assets/art-462b70ba6d88757206de-BhwMqHHN.webp                             9.03 kB
+dist/assets/ic_wheel-CCpAssvF.svg                                              9.15 kB │ gzip:   1.22 kB
+dist/assets/ic_chart-DZciktPM.svg                                              9.17 kB │ gzip:   1.80 kB
+dist/assets/art-8838370803c63e911928-CM3AjZVN.webp                             9.23 kB
+dist/assets/art-4e702afa7fda9403363a-CqjaghPj.webp                             9.24 kB
+dist/assets/art-ef4f37ae66986439e209-CZjDGocH.webp                             9.29 kB
+dist/assets/ic_t_order-CmRA1S3o.svg                                            9.39 kB │ gzip:   1.81 kB
+dist/assets/art-b9e970f9606dd396bee1-THXoatwJ.webp                             9.48 kB
+dist/assets/art-a8e563c75058304306e3-D_UTjpQ6.webp                             9.56 kB
+dist/assets/deck-grate-Bm8pzIbG.svg                                            9.60 kB │ gzip:   1.19 kB
+dist/assets/art-1006845d6eaef350583b-eKNCwQ98.webp                             9.62 kB
+dist/assets/ic_cannon-Cgw9jkcO.svg                                             9.82 kB │ gzip:   1.83 kB
+dist/assets/ic_swap-BOndXozM.svg                                               9.90 kB │ gzip:   1.71 kB
+dist/assets/old-standard-tt-cyrillic-700-normal-BeSD8YYN.woff                  9.97 kB
+dist/assets/grecheskiy-ogon-2wr4JQHM.webp                                     10.03 kB
+dist/assets/art-a564930c6cbc752d2c7e-CpUzdXId.webp                            10.05 kB
+dist/assets/art-6aaf31e0fe5b94905577-BOub2gIW.webp                            10.06 kB
+dist/assets/art-a5218c94bd99d9ef566f-BCjtdFUL.webp                            10.10 kB
+dist/assets/ic_autohelm-D9uFez8n.svg                                          10.20 kB │ gzip:   1.68 kB
+dist/assets/art-76c4af82754c0c18aa7b-C6GZKsaA.webp                            10.28 kB
+dist/assets/ic_mugs-Bo_WmPkU.svg                                              10.29 kB │ gzip:   1.82 kB
+dist/assets/alegreya-sans-cyrillic-500-normal-gEBUHwKD.woff                   10.32 kB
+dist/assets/norrington-na-bortu-KBhxZDtL.webp                                 10.35 kB
+dist/assets/alegreya-sans-cyrillic-700-normal-qSextXl4.woff                   10.36 kB
+dist/assets/art-4ba945001b35d63e186c-CNJvvNGL.webp                            10.36 kB
+dist/assets/alegreya-sans-cyrillic-400-normal-C2XSGevv.woff                   10.37 kB
+dist/assets/old-standard-tt-cyrillic-400-normal-B9opELhc.woff                 10.40 kB
+dist/assets/art-bc239cc37e97c16700bf-uxMrIXpA.webp                            10.44 kB
+dist/assets/alegreya-sans-cyrillic-400-italic-Bc6UFQqS.woff                   10.94 kB
+dist/assets/Main-feature-1-doWNTOhP.svg                                       11.10 kB │ gzip:   1.32 kB
+dist/assets/art-ddf182d11daa7279e401-CwVhHvL-.webp                            11.14 kB
+dist/assets/shpion-merser-Xuz1XGHa.webp                                       11.22 kB
+dist/assets/igra-v-kosti-lzhetsa-BHcPeqZA.webp                                11.28 kB
+dist/assets/zhestokaya-distsiplina-D84i4wKs.webp                              11.36 kB
+dist/assets/fontan-molodosti-CvmXiBFA.webp                                    11.36 kB
+dist/assets/art-0cbc16dbb60ef04f8a4a-BVyqgv0O.webp                            11.38 kB
+dist/assets/art-30d84d2e9067d14b9a04-Ch7Vt_if.webp                            11.47 kB
+dist/assets/art-1bc54eb459b60a734ab6-CSc03LIz.webp                            11.62 kB
+dist/assets/art-00f7b8a4c68e597379c7-I7aYlhcN.webp                            11.65 kB
+dist/assets/art-37961d6b3192484bc435-DSTnrpLt.webp                            11.73 kB
+dist/assets/art-4c91d08c8554accca591-jFsNTLhU.webp                            11.77 kB
+dist/assets/art-a38e18ebaa56904db327-Bim23jxV.webp                            11.89 kB
+dist/assets/art-17f2d5bab6796bce9733-DTRJ2Phe.webp                            11.91 kB
+dist/assets/art-c1c4c061d8f88286d9d2-pUyZkIP_.webp                            12.02 kB
+dist/assets/art-807fe105117a474c778a-B34SWkNN.webp                            12.09 kB
+dist/assets/sto-let-sluzhby-BG5kVs0E.webp                                     12.13 kB
+dist/assets/art-98f303d6e2a0dadcc060-DadV34Vv.webp                            12.16 kB
+dist/assets/alegreya-sans-cyrillic-500-normal-kQHBM3cE.woff2                  12.20 kB
+dist/assets/alegreya-sans-cyrillic-400-normal-CFUoBDld.woff2                  12.28 kB
+dist/assets/art-168346cab5ba7aa7c8df-C34HWTPW.webp                            12.33 kB
+dist/assets/alegreya-sans-cyrillic-700-normal-BMO00Gdb.woff2                  12.34 kB
+dist/assets/art-6b72b2f6a4d730dc9863-BM_LMuCf.webp                            12.48 kB
+dist/assets/art-55b7242889c79daa179d-D7aJjtIa.webp                            12.60 kB
+dist/assets/art-4202b6bf44a9929fc0ae-D1m85W2B.webp                            12.68 kB
+dist/assets/art-c86fe043393d1a5c44a7-BhxS94L_.webp                            12.71 kB
+dist/assets/art-400b1f48a0cb0ab51e0e-B-B5MXCj.webp                            12.79 kB
+dist/assets/kalenye-yadra-D3zeTgda.webp                                       12.80 kB
+dist/assets/alegreya-cyrillic-500-normal-uJUgykjJ.woff2                       12.86 kB
+dist/assets/alegreya-cyrillic-700-normal-Bftrb-m-.woff2                       12.94 kB
+dist/assets/art-636e66671605c3a25ce4-DYFQBRo1.webp                            12.96 kB
+dist/assets/zhatva--kMV1Mm2.webp                                              12.97 kB
+dist/assets/art-590b8d868eec28dce8cc-D9cFDw7I.webp                            12.97 kB
+dist/assets/kolokol-gollandtsa-C7FnOQBw.webp                                  12.98 kB
+dist/assets/alegreya-cyrillic-800-normal-TM6to0H1.woff2                       13.05 kB
+dist/assets/uyti-na-glubinu-BRjjnxEh.webp                                     13.08 kB
+dist/assets/alegreya-sans-cyrillic-400-italic-BfxaBkav.woff2                  13.12 kB
+dist/assets/alegreya-sc-cyrillic-700-normal-ClX7Bawf.woff                     13.15 kB
+dist/assets/art-838900e539817790e8db-PuykFPcO.webp                            13.22 kB
+dist/assets/alegreya-sc-cyrillic-800-normal-pY9pQq7F.woff                     13.25 kB
+dist/assets/alegreya-sc-cyrillic-500-normal-nt2kUJBw.woff                     13.28 kB
+dist/assets/art-d618d4f935e394c5baa6-VgtjPaRJ.webp                            13.31 kB
+dist/assets/alegreya-cyrillic-400-italic-CzOFVsaV.woff2                       13.35 kB
+dist/assets/Endeavour-feature-1-Dxsr8u8I.svg                                  13.37 kB │ gzip:   1.61 kB
+dist/assets/odin-vystrel-BXe18pfS.webp                                        13.41 kB
+dist/assets/verbovka-utoplennikov-BSAHnbxn.webp                               13.43 kB
+dist/assets/banka-s-zemley-8KOK1XCP.webp                                      13.56 kB
+dist/assets/Main-feature-0-juOavtz9.svg                                       13.58 kB │ gzip:   1.36 kB
+dist/assets/vygodnaya-sdelka-DG10pT18.webp                                    13.60 kB
+dist/assets/art-c8b1a32daae7580378e5-CwssqM_8.webp                            13.70 kB
+dist/assets/Boat_engraved_ink-BIedkLuK.webp                                   13.71 kB
+dist/assets/alegreya-cyrillic-500-italic-FKTH7hJp.woff2                       13.77 kB
+dist/assets/art-d76ca937d2cbf93a657c-CuHZrS1a.webp                            13.79 kB
+dist/assets/terner-i-suonn-Cu_kVG1U.webp                                      13.88 kB
+dist/assets/art-75f2af043899e09bf29c-DzPY-dYS.webp                            13.89 kB
+dist/assets/chernye-parusa-v-nochi-B_tHn9xt.webp                              14.02 kB
+dist/assets/dvoynaya-obshivka-D_A69fha.webp                                   14.15 kB
+dist/assets/uzhas-karibskogo-morya-CrpgykVg.webp                              14.27 kB
+dist/assets/old-standard-tt-cyrillic-700-normal-Ruokj-he.woff2                14.40 kB
+dist/assets/art-4b3fa35890460d98786a-wqnRA1Q3.webp                            14.45 kB
+dist/assets/art-957d3e2105dac1100e98-BLd74l73.webp                            14.48 kB
+dist/assets/old-standard-tt-cyrillic-400-normal-Dx4QB4EU.woff2                14.53 kB
+dist/assets/art-4174124d936bac673012-Bri5IXhN.webp                            14.83 kB
+dist/assets/Dock_pearl-r2-qQtpR.webp                                          14.87 kB
+dist/assets/cell_gun-CMKfRGvW.svg                                             15.00 kB │ gzip:   2.59 kB
+dist/assets/alegreya-cyrillic-500-normal-h-VttLAG.woff                        15.10 kB
+dist/assets/alegreya-cyrillic-800-normal-BgJWiuWK.woff                        15.14 kB
+dist/assets/alegreya-cyrillic-700-normal-_o_NBoYw.woff                        15.15 kB
+dist/assets/Revenge-feature-0-Byxe__nH.svg                                    15.20 kB │ gzip:   1.66 kB
+dist/assets/Dock_dutch-D30tVv9X.webp                                          15.24 kB
+dist/assets/vykup-za-plennikov-Df8YeIrl.webp                                  15.31 kB
+dist/assets/uyti-po-vetru-C_8Jsx0L.webp                                       15.36 kB
+dist/assets/biznes-est-biznes-Cna82uC-.webp                                   15.51 kB
+dist/assets/plennaya-rusalka-Bu58hWVC.webp                                    15.53 kB
+dist/assets/ogon-po-orudiyam-9KEt8T_j.webp                                    15.58 kB
+dist/assets/art-96f4c27f27748e34e98b-JmfTZz-_.webp                            15.60 kB
+dist/assets/art-3b73d43eeb73cc07591d-PsyaL58c.webp                            15.61 kB
+dist/assets/art-6363b461e4779e89c113-DSb460-U.webp                            15.63 kB
+dist/assets/brosit-yakor-C_0ITHm-.webp                                        15.66 kB
+dist/assets/morskie-narosty-3fjL0mG1.webp                                     15.70 kB
+dist/assets/art-c426b0e37f50cd47703d-d81EANR5.webp                            15.84 kB
+dist/assets/art-345f4b3f867da7271861-DKwOm1kL.webp                            15.90 kB
+dist/assets/ognennaya-stena-CA9ZN97k.webp                                     15.96 kB
+dist/assets/alegreya-cyrillic-400-italic-DSxbt1-2.woff                        15.96 kB
+dist/assets/art-00716ba5055201c89e98-DRt0EuUj.webp                            16.10 kB
+dist/assets/art-4189eb1b7498ae77361d-s-CLkhN4.webp                            16.17 kB
+dist/assets/art-b5ff303fc8e21d7cdc82-sAoOK2jN.webp                            16.24 kB
+dist/assets/alegreya-cyrillic-500-italic-BOagbZrs.woff                        16.29 kB
+dist/assets/anzhelika-CvLWJhbF.webp                                           16.31 kB
+dist/assets/art-fd3d1c6dfba655f9c7ce-B6jMPvpd.webp                            16.42 kB
+dist/assets/art-1b9b5ae4d0415792a57d-DyfZoojy.webp                            16.43 kB
+dist/assets/tia-dalma-DW7TIkra.webp                                           16.47 kB
+dist/assets/plotnik-CJVrFjEA.webp                                             16.61 kB
+dist/assets/podnyat-flagi-CFJlf3GA.webp                                       16.65 kB
+dist/assets/kartech-BwJYR6wH.webp                                             16.72 kB
+dist/assets/zombi-ofitsery-CWBJGq06.webp                                      16.74 kB
+dist/assets/kukla-vudu-bPyi0nvJ.webp                                          16.80 kB
+dist/assets/art-4708d6f150a5d74b8f28-ZfTfOwuh.webp                            16.81 kB
+dist/assets/art-164e00f3e98752cb8c1d-Vhf4GIJG.webp                            16.97 kB
+dist/assets/Dock_revenge-DFTKjQgF.webp                                        16.98 kB
+dist/assets/art-d0b712158f86d16f2089-BK_Ui9l9.webp                            17.00 kB
+dist/assets/otvetnyy-zalp-De6D02pS.webp                                       17.07 kB
+dist/assets/prihlop-bill-xGtwCPub.webp                                        17.18 kB
+dist/assets/yadra-_1MJTtbb.webp                                               17.19 kB
+dist/assets/zombi-u-pushek--RWGIVEU.webp                                      17.24 kB
+dist/assets/art-d40645594e8924de47f7-DhssW9A8.webp                            17.26 kB
+dist/assets/iz-puchiny-CtO2q61I.webp                                          17.30 kB
+dist/assets/tyazhelyy-bort-CWd5T3zu.webp                                      17.34 kB
+dist/assets/otvet-iz-puchiny-DXto87ZF.webp                                    17.34 kB
+dist/assets/art-6058aadad10700bb567b-C2cQSQIX.webp                            17.39 kB
+dist/assets/lataem-parusa-5w3qmV_L.webp                                       17.39 kB
+dist/assets/prikryt-bortom-ChNQG29Y.webp                                      17.39 kB
+dist/assets/old-standard-tt-latin-700-normal-Bw7EIiLL.woff                    17.42 kB
+dist/assets/old-standard-tt-latin-400-normal-CEoEX30F.woff                    17.43 kB
+dist/assets/art-50388169628d51a0edba-BvC8KBes.webp                            17.53 kB
+dist/assets/alegreya-sc-cyrillic-700-normal-DywRGmLG.woff2                    17.84 kB
+dist/assets/alegreya-sc-cyrillic-500-normal-BjmNXJC0.woff2                    17.94 kB
+dist/assets/vsplytie-Dosjbu19.webp                                            17.97 kB
+dist/assets/abordazh-rybolyudey-BMosnlXH.webp                                 18.00 kB
+dist/assets/art-fbc98125f032100d96d5-0mNl10lW.webp                            18.03 kB
+dist/assets/alegreya-sc-cyrillic-800-normal-BhY3D9Kz.woff2                    18.04 kB
+dist/assets/sdelka-s-syao-fenom-BfPK3YhT.webp                                 18.05 kB
+dist/assets/chernaya-metka-CkFvC-fT.webp                                      18.06 kB
+dist/assets/vodovorot-D_a2BJvj.webp                                           18.18 kB
+dist/assets/Dock_endeavour-B4AMghai.webp                                      18.19 kB
+dist/assets/art-3df5b4e7e5694fa56794-CVim8c8U.webp                            18.19 kB
+dist/assets/otvetnyy-ogon-D-oLTh-y.webp                                       18.33 kB
+dist/assets/knippeli-DAMVXfMX.webp                                            18.39 kB
+dist/assets/deck-coil-C91w3Wiy.svg                                            18.43 kB │ gzip:   2.28 kB
+dist/assets/kaperskiy-patent-CjgTW0ra.webp                                    18.46 kB
+dist/assets/art-da671fb12e20d71b6664-Bu48fvR1.webp                            18.46 kB
+dist/assets/vse-po-planu-W5P8uW2D.webp                                        18.51 kB
+dist/assets/nichego-lichnogo-C_dC_bku.webp                                    18.52 kB
+dist/assets/pritselnyy-ogon-DaQ8Vg_3.webp                                     18.55 kB
+dist/assets/kompas-dzheka-NH24QHRd.webp                                       18.63 kB
+dist/assets/sunduk-mertvetsa-rx3rOWAp.webp                                    18.65 kB
+dist/assets/pravo-na-peregovory-DFgEtPpT.webp                                 18.65 kB
+dist/assets/bezumnyy-plan-CPZ7bwV-.webp                                       19.03 kB
+dist/assets/art-0313408f44ea9910269f-DwIVeBWy.webp                            19.14 kB
+dist/assets/Boat_pearl-j86Fnm-A.webp                                          19.16 kB
+dist/assets/ograblenie-banka-CyymSZla.webp                                    19.17 kB
+dist/assets/art-09b50ef369bc429142c2-Dam4ql8Y.webp                            19.26 kB
+dist/assets/serdtse-betsya-aYfbvySK.webp                                      19.30 kB
+dist/assets/art-25d0479ac06b6d83bca9-BtXoi43y.webp                            19.51 kB
+dist/assets/ukaz-o-kaznyah-BTz6hXpi.webp                                      19.59 kB
+dist/assets/brander-BPJF-P9-.webp                                             19.63 kB
+dist/assets/podkreplenie-flota-DxPEUe5S.webp                                  19.83 kB
+dist/assets/art-72b16b0bb84d1ed67c8d-CxMkM79n.webp                            19.91 kB
+dist/assets/zalp-vsey-batareey-22ivKWE-.webp                                  19.98 kB
+dist/assets/gibbs-za-shturvalom-DzGDH5ls.webp                                 20.41 kB
+dist/assets/oplachennyy-zalp-D9aIkQpg.webp                                    20.54 kB
+dist/assets/art-83a0afae7221c61fd0a3-_ZgJN_P5.webp                            20.60 kB
+dist/assets/prikaz-lorda-bekketa-Bs4bo7Wu.webp                                20.70 kB
+dist/assets/rom-dlya-vseh-D5q_vbz9.webp                                       20.84 kB
+dist/assets/bochki-s-porohom-Bi5KZn7O.webp                                    20.96 kB
+dist/assets/art-82cb4d1dc90bb4882136-obc00ITL.webp                            20.97 kB
+dist/assets/zov-glubin-wFEiwWQK.webp                                          21.18 kB
+dist/assets/podkup-eRbBmtft.webp                                              21.20 kB
+dist/assets/stroy-linii-BXGl-Wy9.webp                                         21.37 kB
+dist/assets/lovkost-ruk-D1Jt-q_U.webp                                         21.39 kB
+dist/assets/art-8f773f8d1532df776463-DMQXEh-y.webp                            21.43 kB
+dist/assets/art-d7ca5271a7af3b2fc8b9-i6nElKkq.webp                            21.43 kB
+dist/assets/obezyanka-dzhek-BSeQj-_k.webp                                     21.46 kB
+dist/assets/blokada-sXRlVbet.webp                                             21.50 kB
+dist/assets/alegreya-sans-latin-400-normal-DmA8jeke.woff                      21.55 kB
+dist/assets/alegreya-sans-latin-700-normal-BnzUNlma.woff                      21.60 kB
+dist/assets/alegreya-sans-latin-500-normal-vXxrTKJT.woff                      21.72 kB
+dist/assets/art-2e09c627a70472197cbb-ByMePrYY.webp                            21.72 kB
+dist/assets/art-d7c68ecd1b68a7d3adc5-Ck3LeWm9.webp                            21.76 kB
+dist/assets/zalp-s-oboih-bortov-o2LKKTzS.webp                                 21.76 kB
+dist/assets/chast-korablya-chast-komandy-BG4lydIx.webp                        21.80 kB
+dist/assets/Dutchman-feature-1-Cruy57IR.svg                                   21.85 kB │ gzip:   1.98 kB
+dist/assets/alegreya-sans-latin-400-italic-CgbdrOqg.woff                      22.62 kB
+dist/assets/na-abordazh-DB3U9Ezb.webp                                         22.63 kB
+dist/assets/art-ac1fa21be072dc429336-CNMQU7bv.webp                            22.85 kB
+dist/assets/art-7d210431072c4cb519cf-CVwlxYXG.webp                            22.91 kB
+dist/assets/art-cdbcb53198fd7fdcebc8-DGIJLcpA.webp                            23.07 kB
+dist/assets/alegreya-latin-400-italic-BXpar-rJ.woff2                          23.16 kB
+dist/assets/morskaya-pehota-yyZCHaEl.webp                                     23.26 kB
+dist/assets/ship_engraved_gold-CBnhCh71.svg                                   23.27 kB │ gzip:   7.29 kB
+dist/assets/ship_engraved_ink-DrLXuT_A.svg                                    23.27 kB │ gzip:   7.29 kB
+dist/assets/Boat_engraved_ink-asset-ship_engraved_ink-DSOwnq9M.svg            23.27 kB │ gzip:   7.28 kB
+dist/assets/ic_sail-D4VKyhq3.svg                                              23.41 kB │ gzip:   7.27 kB
+dist/assets/art-f8dd43dfb3824e94b52f-Bkq4Oscn.webp                            23.55 kB
+dist/assets/art-105e301aa36650613d82-CiyXGVCo.webp                            23.66 kB
+dist/assets/old-standard-tt-latin-400-normal-CksAFory.woff2                   23.68 kB
+dist/assets/alegreya-sans-latin-400-normal-DtLlO8BS.woff2                     23.71 kB
+dist/assets/Boat_revenge-q5I3pZRp.webp                                        23.73 kB
+dist/assets/art-502199e7cb467f7118ee-cLV8N7V9.webp                            23.87 kB
+dist/assets/alegreya-sans-latin-500-normal-DS713u5J.woff2                     23.93 kB
+dist/assets/alegreya-sans-latin-700-normal-DEbcy2sF.woff2                     23.98 kB
+dist/assets/old-standard-tt-latin-700-normal-DLkH_MDP.woff2                   24.02 kB
+dist/assets/alegreya-latin-500-normal-C25lLdV_.woff2                          24.20 kB
+dist/assets/art-7842bb0359e04d40138e-bLOxIwx8.webp                            24.26 kB
+dist/assets/alegreya-latin-700-normal-Vpz_43wJ.woff2                          24.35 kB
+dist/assets/alegreya-sans-latin-400-italic-rmlAbObI.woff2                     24.38 kB
+dist/assets/alegreya-latin-500-italic-CLRFusCx.woff2                          24.39 kB
+dist/assets/alegreya-latin-800-normal-BcufLBxY.woff2                          24.67 kB
+dist/assets/verf-kompanii-eLT7vKmc.webp                                       25.32 kB
+dist/assets/art-7f3043980af8b54f514c-CgV67ks5.webp                            25.56 kB
+dist/assets/art-a2cd6c1656e6a178b2e0-D6xsAPEQ.webp                            25.59 kB
+dist/assets/art-ac1128d2866a35f247b8-DmaLDRuc.webp                            25.71 kB
+dist/assets/art-ff31536f88d42890aab7-CCIVlD94.webp                            25.72 kB
+dist/assets/Boat_dutch-6hzB0PGf.webp                                          25.75 kB
+dist/assets/alegreya-sc-latin-800-normal-Dr6tPAWG.woff                        25.81 kB
+dist/assets/Boat_endeavour-DjgqyBqP.webp                                      25.93 kB
+dist/assets/alegreya-sc-latin-700-normal-C1NSl7Ln.woff                        25.94 kB
+dist/assets/art-c9361faa11087cb2f2a1-adHPrZz8.webp                            26.04 kB
+dist/assets/deck-cannon-CmrfVt4z.svg                                          26.05 kB │ gzip:   3.44 kB
+dist/assets/alegreya-sc-latin-500-normal-D4VbSUPX.woff                        26.23 kB
+dist/assets/ic_coin_back-CgPWbbqm.svg                                         26.35 kB │ gzip:   5.19 kB
+dist/assets/Endeavour-feature-0-43CJxuAJ.svg                                  26.87 kB │ gzip:   2.05 kB
+dist/assets/zhivye-snasti-BS8OhVVd.webp                                       26.88 kB
+dist/assets/art-64266584164b4a41bf92-DJCa3_qA.webp                            26.98 kB
+dist/assets/art-f1147f3281bbae1f49d3-D6etH3Cw.webp                            27.28 kB
+dist/assets/art-021b3998085d06b89f07-BKyIC95Q.webp                            28.02 kB
+dist/assets/art-5482f3d20d4dc06fc285-SbiNnUNk.webp                            28.21 kB
+dist/assets/art-5b6dfb7f7ca07b7d22e3-CYVHFh5o.webp                            28.40 kB
+dist/assets/art-07b868487798a1fe8310-ktrPfWFn.webp                            28.67 kB
+dist/assets/alegreya-latin-400-italic-CJvUQvZT.woff                           28.68 kB
+dist/assets/alegreya-latin-500-normal-B7TqNLeg.woff                           29.46 kB
+dist/assets/alegreya-latin-700-normal-BS7r-qZs.woff                           29.55 kB
+dist/assets/art-2b6b22714678daa6d76c-Ct1YgTVo.webp                            29.62 kB
+dist/assets/art-acca3cf8aea9c4418d05-DQOZVnn-.webp                            29.63 kB
+dist/assets/alegreya-latin-500-italic-BOyCbY3P.woff                           29.73 kB
+dist/assets/alegreya-latin-800-normal-C-QiqklE.woff                           29.78 kB
+dist/assets/art-afbb028b473a92b58d9c-Bq6qs259.webp                            30.16 kB
+dist/assets/art-1b1cbf3429e3e631839f-C_UXYrJf.webp                            30.32 kB
+dist/assets/art-4fa6d5d251cead04408f-IdNm-ZvA.webp                            30.58 kB
+dist/assets/art-f5429ee40efe9a578da8-v-7qmdIJ.webp                            30.58 kB
+dist/assets/alegreya-sc-latin-700-normal-ztAmjLTs.woff2                       30.66 kB
+dist/assets/alegreya-sc-latin-800-normal-CRktX6B4.woff2                       30.68 kB
+dist/assets/alegreya-sc-latin-500-normal-4QwauZv7.woff2                       30.88 kB
+dist/assets/art-f967119d127d7880534d-CQokH1im.webp                            30.97 kB
+dist/assets/art-3650598c8b468b375af2-BUS7lzdx.webp                            31.04 kB
+dist/assets/art-5472d8d17a649d022ee4-_ubTtDr3.webp                            31.36 kB
+dist/assets/ic_coin-c-IgYIvN.svg                                              31.76 kB │ gzip:   4.96 kB
+dist/assets/art-feec83ef4471445fdd0b-QIc1XM4V.webp                            31.92 kB
+dist/assets/art-41c5098b82a96eec2e7a-DLNNxQIg.webp                            32.43 kB
+dist/assets/art-121ba1f298e3861e19f5-D73sOLr1.webp                            32.65 kB
+dist/assets/art-51f830bdb3c434e63aba-BXcDDtOr.webp                            33.08 kB
+dist/assets/Revenge-medal-BU93cc0q.svg                                        33.59 kB │ gzip:   2.90 kB
+dist/assets/PiratesPhone-CqCUR93b.webp                                        34.11 kB
+dist/assets/art-4b441f1a3b1c0e7b21c5-u2b0cnxa.webp                            34.44 kB
+dist/assets/CompanyPhone-DUGaF2g8.webp                                        34.47 kB
+dist/assets/Endeavour-medal-CCcHYz1U.svg                                      34.49 kB │ gzip:   2.96 kB
+dist/assets/art-30bc339b55e878a61e65-rpl2ewZp.webp                            34.90 kB
+dist/assets/Endeavour-asset-9514fb3ffff21f471d30ae5d13137a98-tX9-2W3k.svg     35.07 kB │ gzip:   6.72 kB
+dist/assets/Dutchman-medal-B5MbDTLL.svg                                       35.29 kB │ gzip:   4.90 kB
+dist/assets/art-6d9bc594f5645ae0dab7-ZNla7MD6.webp                            35.52 kB
+dist/assets/art-6f4962e2652b563406f1-D0f-IIFk.webp                            36.18 kB
+dist/assets/art-36035dd2c16d760cc46d-ChnZWwHv.webp                            36.30 kB
+dist/assets/art-54b5c5a1cadc8578e6e6-DWvW8YQm.webp                            36.30 kB
+dist/assets/art-8276836f350bca1d6fd3-Dg7mxWDO.webp                            36.84 kB
+dist/assets/ship_dutch-CysmfJD7.svg                                           36.99 kB │ gzip:   7.48 kB
+dist/assets/art-603206d49e3b93881e88-2GzK2gyS.webp                            37.45 kB
+dist/assets/art-3d6ff85b6c038031da33-C2gAB3k6.webp                            38.17 kB
+dist/assets/ship_endeavour-qxrJEova.svg                                       38.28 kB │ gzip:   7.04 kB
+dist/assets/art-c7f05ed8c7a722436a3a-D08f2zSq.webp                            38.47 kB
+dist/assets/art-d0eb0f0840e66d89b42d-8DDsMIJq.webp                            38.82 kB
+dist/assets/art-40aa0c37a1dbe08dadfe-C4-hyUSs.webp                            39.81 kB
+dist/assets/ship_revenge-x_t1r4h2.svg                                         39.95 kB │ gzip:   7.58 kB
+dist/assets/Phone-asset-8804f9d1da21f5e437496aced59c2768-C1_z4c_D.svg         40.62 kB │ gzip:   7.95 kB
+dist/assets/art-b187d181c5e19671567b-BhUG8TQD.webp                            40.70 kB
+dist/assets/art-029bb1614644bff779b6-FB7bOEMz.webp                            40.80 kB
+dist/assets/Company-5JDAxqca.webp                                             40.93 kB
+dist/assets/Revenge-asset-18e650ad88171ca0731ae0f44a83c214-Gu5IEfMh.svg       41.01 kB │ gzip:   7.84 kB
+dist/assets/ship_pearl-LorDnSAW.svg                                           41.09 kB │ gzip:   7.46 kB
+dist/assets/Pirates-DISNgdVE.webp                                             41.18 kB
+dist/assets/art-1f7e34f89e8fc794abc8-DxwoU8_2.webp                            41.21 kB
+dist/assets/art-f364aab60dc66a45ec5f-BhYVrkg0.webp                            41.53 kB
+dist/assets/art-9e7069198673b0033244-DuuHIOs2.webp                            41.65 kB
+dist/assets/Endeavour-asset-144bab81ab4782581e3c61e594fb6bff-r5E0gvle.svg     41.69 kB │ gzip:   7.40 kB
+dist/assets/Main-asset-090defdfd1cccaf592c1e142df2bb874-aDu8W397.svg          42.15 kB │ gzip:   7.72 kB
+dist/assets/Endeavour-asset-d3fdbc24697d350355c9eac0f0fc57d5-DqdMSnsr.svg     42.16 kB │ gzip:   7.47 kB
+dist/assets/art-bb2aefaa5c20cf802fe2-DQKV8OjK.webp                            42.34 kB
+dist/assets/Wind-asset-ship_merchant-HVO0NOBC.svg                             42.84 kB │ gzip:   9.15 kB
+dist/assets/Main-medal-oCqs2bw7.svg                                           43.06 kB │ gzip:   3.04 kB
+dist/assets/art-bb621eb5e2b0dc38ddd2-f-EN2jA1.webp                            43.92 kB
+dist/assets/art-d827ae2e9a32c047954d-C0TfMPbF.webp                            44.06 kB
+dist/assets/art-a9c8d8e57f05fcca49dc-DwJMV5pC.webp                            44.52 kB
+dist/assets/art-d901472912f201d2e353-Bv9xEASO.webp                            44.60 kB
+dist/assets/Phone-D67HZEjp.webp                                               44.92 kB
+dist/assets/Thunder-asset-ship_dutch-Ccb8RI3o.svg                             46.05 kB │ gzip:  10.30 kB
+dist/assets/art-9c7a1fd5c6251b1c240e-By7_VN-q.webp                            46.64 kB
+dist/assets/Fog-asset-ship_endeavour-DGdxrNPU.svg                             47.05 kB │ gzip:   9.76 kB
+dist/assets/chart-QzivW6HQ.svg                                                47.15 kB │ gzip:   7.89 kB
+dist/assets/art-0c5a6e0f2b8f7a87ad94-DIOSrYWS.webp                            47.30 kB
+dist/assets/art-5bf105c2b7ef81e35dea-DM6ttiXU.webp                            47.33 kB
+dist/assets/art-d6b4c15ebe2d57925c85-BqqN5tgo.webp                            47.47 kB
+dist/assets/Fleet-asset-ship_company-DAVi2O-o.svg                             47.53 kB │ gzip:   9.81 kB
+dist/assets/art-453d49dd7b12cabf03a7-D6N-PgjH.webp                            48.08 kB
+dist/assets/art-72aac34400dfe4fb907c-DCjgvphq.webp                            48.22 kB
+dist/assets/Fleet-asset-ship_revenge-CojXq5SR.svg                             48.79 kB │ gzip:  10.29 kB
+dist/assets/art-0820ab79adb18a844a0d-DIHmz9A6.webp                            48.93 kB
+dist/assets/art-e099766102d1ca7b2f88-C6uRA7tD.webp                            49.70 kB
+dist/assets/Fog-asset-ship_pearl-CtOdCbcU.svg                                 49.92 kB │ gzip:  10.17 kB
+dist/assets/art-3297c9161761526e80fa-DL80TRgV.webp                            50.02 kB
+dist/assets/Phone-chart-CkGofnXJ.svg                                          50.68 kB │ gzip:   8.17 kB
+dist/assets/art-320482844c4583c22380-CUo049L8.webp                            50.80 kB
+dist/assets/art-b6ea897be32c1fbb03d8-MHdIDgmH.webp                            51.55 kB
+dist/assets/Revenge-legend-BTp0Vevl.svg                                       52.41 kB │ gzip:   9.96 kB
+dist/assets/art-080c373ebec65c068e4b-DBiNs6t0.webp                            52.85 kB
+dist/assets/art-753468ccf861ae4b8417-Boffo3d-.webp                            54.27 kB
+dist/assets/art-d337c95200fe2025bc39-Dde2r57l.webp                            55.33 kB
+dist/assets/art-5911726028dab3e13f51-DfPYf1Dv.webp                            56.73 kB
+dist/assets/art-15e8e030b9219484fbd3-BtAWgLOH.webp                            57.38 kB
+dist/assets/art-33858a7cc5ea58bf6da6-pVKsTEeL.webp                            57.77 kB
+dist/assets/art-f214461c4c50e8f50ab2-D6wMR0zR.webp                            58.00 kB
+dist/assets/art-5f82316e968f7817b040-CBsq6OFZ.webp                            59.37 kB
+dist/assets/art-43f6c3b911bfcaa8bff0-DWAYRMvI.webp                            60.81 kB
+dist/assets/Phone-body-DjEqvmMO.svg                                           61.20 kB │ gzip:   8.73 kB
+dist/assets/art-3e2a16103619f3a7b394-q4Uwd7XA.webp                            61.70 kB
+dist/assets/art-59c7cc7f4755f774ff41-DM8npaLn.webp                            61.82 kB
+dist/assets/art-ad83769995ac5c086b2f-dMRaYwY1.webp                            62.08 kB
+dist/assets/art-69bae499679f575def71-cRRBG5he.webp                            68.17 kB
+dist/assets/art-bb05a24aff122d29a91a-DLD-5L5Y.webp                            68.29 kB
+dist/assets/art-625bb1e6b532f1e32ff2-DurjQkPc.webp                            68.55 kB
+dist/assets/art-b35171f27904b269133c-paE8ejam.webp                            70.79 kB
+dist/assets/art-8f9918a16865700e5cd2-DB29U1fx.webp                            72.41 kB
+dist/assets/art-4475377a78c674ab502f-Dk4a0oHh.webp                            72.46 kB
+dist/assets/art-2a7f4c8c15de1cc32cc1-cheMiXsm.webp                            73.23 kB
+dist/assets/art-240cae397fa4b5460787-DMQAE_-P.webp                            73.28 kB
+dist/assets/art-40d3652b54cc7f28e920-BmIRZzD2.webp                            75.69 kB
+dist/assets/art-22bd5f8041341b0c4c07-B7JdJtnB.webp                            78.70 kB
+dist/assets/art-f405d1b857d578e3bba9-CC28Nsgw.webp                            80.76 kB
+dist/assets/art-fd538a5641657fa6292e-BvDuyU1z.webp                            82.04 kB
+dist/assets/art-991467ae680a37116651-sawKo1ZC.webp                            82.42 kB
+dist/assets/chart-phone-main-DKCWScn6.webp                                    82.49 kB
+dist/assets/art-8f8757f13ca02c2a8f18-CDiXN_qw.webp                            83.27 kB
+dist/assets/art-51f5c2f9addfaf9441a4-CnMzkR42.webp                            86.80 kB
+dist/assets/art-36e6cfae67c73eff0d11-HXT39-4r.webp                            89.48 kB
+dist/assets/art-06aad313cae4d5a696d3-DjVt8bL8.webp                            89.73 kB
+dist/assets/art-f66972dbf070ddb20b08-C44JvVdL.webp                            89.97 kB
+dist/assets/Dutchman-legend-CJ3dmvzc.svg                                      89.99 kB │ gzip:  13.32 kB
+dist/assets/art-9d83a9147ab260e960da-CptKTOiI.webp                            90.49 kB
+dist/assets/art-ba1092d30d54eed82ac1-CJ1fjrKI.webp                            92.19 kB
+dist/assets/art-471f0cc8c4d98627062e-DtaL_iRo.webp                            92.36 kB
+dist/assets/art-780f85d8791c306bf6d2-DQDqSIuR.webp                            93.45 kB
+dist/assets/art-b68590564be0ff9a9638-DL0Rua6t.webp                            94.35 kB
+dist/assets/art-3be76e56d2ec1c187554-C54gD4Wr.webp                            94.40 kB
+dist/assets/art-573603d067c7c93ae8d1-CPyC6zyR.webp                            97.43 kB
+dist/assets/art-6043cd56ff038d7502b5-By1NgqgK.webp                            99.96 kB
+dist/assets/art-0ba3d7929592827e6e1d-BqfW7CJd.webp                           102.48 kB
+dist/assets/art-9a6356b5004faa9436e4-BujSYRbn.webp                           103.84 kB
+dist/assets/art-52466793a5dbeff9791b-CeRDQ8js.webp                           104.90 kB
+dist/assets/art-498bfb3253381bbddfbc-DuQHbVzM.webp                           104.94 kB
+dist/assets/art-9880b259a466c03bd32a-Dk-4Hqhr.webp                           105.34 kB
+dist/assets/art-111069d8fb9aabfc05ad-CCzOUVt1.webp                           106.04 kB
+dist/assets/art-5c76b7b055d4fc2bb68c-D-_cx3sy.webp                           106.25 kB
+dist/assets/art-0e71f8fe33c395b237bf-DutEQ7Of.webp                           107.01 kB
+dist/assets/art-68934805224ba223618b-VhvsfYG3.webp                           110.50 kB
+dist/assets/art-6164390fd6e2c17aa6b1-NObt6oGh.webp                           110.93 kB
+dist/assets/art-294127eb06050b8e97e8-CZ61zvt9.webp                           111.80 kB
+dist/assets/art-9c16b1e1a79932a5e56a-BHy-EPiS.webp                           113.34 kB
+dist/assets/art-8ca7469a22d886f4ecbe-DYEep2sm.webp                           113.87 kB
+dist/assets/chart-phone-C1dEp3G-.webp                                        114.39 kB
+dist/assets/Main-body-BHvUn-Z3.svg                                           116.06 kB │ gzip:   4.45 kB
+dist/assets/art-fb996506e061a1b69a05-CKG_hdDH.webp                           116.14 kB
+dist/assets/art-4a4ab20550a00b7cf168-m5MXBF6X.webp                           116.71 kB
+dist/assets/art-31dcecd0d5d1609815b6-CVsvG0sK.webp                           119.10 kB
+dist/assets/art-b96e8e7134ddd6f3b05e-CAu1DqkY.webp                           124.83 kB
+dist/assets/art-2ef00f192448ef79c9ff-D_JRxDJP.webp                           129.18 kB
+dist/assets/art-614c5a727185bf475089-C5MaDRzc.webp                           134.44 kB
+dist/assets/art-ec58bb53ceed61927d57-DW9ycxDC.webp                           135.16 kB
+dist/assets/Endeavour-legend-BwekWe99.svg                                    138.09 kB │ gzip:  23.54 kB
+dist/assets/art-8434004333fa3a1b031d-CMBlbb9H.webp                           140.55 kB
+dist/assets/art-c33c2722a8094405356c-UmKZRDwQ.webp                           146.66 kB
+dist/assets/art-8c2cb821c95be0a56eea-YPcIeYZ_.webp                           148.71 kB
+dist/assets/Main-lSFpg6H3.webp                                               160.17 kB
+dist/assets/art-81db353022056d02e9a6-BkkdUD0N.webp                           162.04 kB
+dist/assets/chart-main-BIdZhaML.webp                                         164.18 kB
+dist/assets/art-13e58b6e0f3b7a7ac2ed-CBDN9YtC.webp                           165.08 kB
+dist/assets/art-2aa80ce52aead6512c3e-Dd_hjcOV.webp                           165.80 kB
+dist/assets/Main-legend-D4lkS_sm.svg                                         167.45 kB │ gzip:  27.63 kB
+dist/assets/art-ecd1c57ccf182234c61e-CDLqhGqG.webp                           169.52 kB
+dist/assets/Blood-JFjA_gJO.webp                                              169.70 kB
+dist/assets/art-f812dc5a709991f59817-BAIz58eB.webp                           171.88 kB
+dist/assets/Dutchman-body-DrmHA8c_.svg                                       173.49 kB │ gzip:   7.97 kB
+dist/assets/art-7a78ca6a79ecb056c570-CZ7sIxZ_.webp                           175.92 kB
+dist/assets/Panel-14z8rqzN.webp                                              178.76 kB
+dist/assets/Deep-9w6jD2JE.webp                                               184.28 kB
+dist/assets/art-7b3cadf564886018a5b3-DwLiA-uN.webp                           188.42 kB
+dist/assets/Revenge-body-GoEnhY68.svg                                        190.32 kB │ gzip:   7.95 kB
+dist/assets/art-eca5b9249f1cdda257da-Ci6vINXD.webp                           191.89 kB
+dist/assets/art-ada37747a18ea2a52dbe-LRFE_UB9.webp                           195.20 kB
+dist/assets/art-c3d949b84deac1129b6a-Bs_2zqlN.webp                           200.98 kB
+dist/assets/art-44428638ab7fb0819de8-DI2Rrcac.webp                           232.79 kB
+dist/assets/art-b6f6d6413bbcac851012-DTJo-NV9.webp                           243.60 kB
+dist/assets/art-585f434fe3bb976f4917-ibInuA4f.webp                           245.54 kB
+dist/assets/art-dbbb38323da2099b94ab-Dcx_oBAD.webp                           255.19 kB
+dist/assets/art-bede4803deff0d6377a2-BX7xzfJI.webp                           266.81 kB
+dist/assets/art-7c9cf5b2556b82998817-C2FEbJIP.webp                           267.29 kB
+dist/assets/art-a27ca9428bb889ad1165-BVTXAoRp.webp                           277.50 kB
+dist/assets/Endeavour-body-FxCx2gxx.svg                                      278.46 kB │ gzip:  14.49 kB
+dist/assets/art-44eaaea26c101665f570-DeefR5SA.webp                           299.42 kB
+dist/assets/chart-net-DsfztapC.webp                                          318.02 kB
+dist/assets/chart-prep-Bce-Icn5.webp                                         326.12 kB
+dist/assets/art-3be7a1db5f706bb1e7c5-lCT4GG0P.webp                           341.81 kB
+dist/assets/Chart_main-D0sW4Qgc.webp                                         397.12 kB
+dist/assets/art-97e4c3172b8055170034-BRhWxzkr.webp                           413.70 kB
+dist/assets/Chart_prep-BzhF0rf2.webp                                         803.32 kB
+dist/assets/Chart_net-DeVrV4Cy.webp                                          805.55 kB
+dist/assets/art-800fa408eab39145a13c-VbpV1RLp.webp                           805.99 kB
+dist/assets/index-DAjJ8DlG.css                                               547.54 kB │ gzip:  86.93 kB
+dist/assets/WeatherScene-D7VH1Iap.js                                           6.61 kB │ gzip:   1.89 kB
+dist/assets/Boat_dutch-DnXuaHsi.js                                            11.86 kB │ gzip:   2.15 kB
+dist/assets/Boat_pearl-BwpRBrfi.js                                            11.86 kB │ gzip:   2.15 kB
+dist/assets/Boat_revenge-0ES7Z5Ym.js                                          11.86 kB │ gzip:   2.15 kB
+dist/assets/Boat_endeavour-DRtI22kI.js                                        11.86 kB │ gzip:   2.15 kB
+dist/assets/Boat_engraved_ink-Dg49cjtm.js                                     11.86 kB │ gzip:   2.15 kB
+dist/assets/MenuScene-DZp7AJT9.js                                             12.18 kB │ gzip:   3.94 kB
+dist/assets/CoinSpark-CU96uElX.js                                             14.38 kB │ gzip:   1.34 kB
+dist/assets/Victory-QT2Hq8mi.js                                               19.27 kB │ gzip:   6.98 kB
+dist/assets/Deep-gxx8Q71d.js                                                  28.77 kB │ gzip:   2.98 kB
+dist/assets/Blood-8seT5ziB.js                                                 28.77 kB │ gzip:   2.98 kB
+dist/assets/Panel-7TWl2-Vl.js                                                 28.77 kB │ gzip:   2.97 kB
+dist/assets/Dock_dutch-IY8TF1kS.js                                            42.70 kB │ gzip:   4.53 kB
+dist/assets/Dock_pearl-CcW3Hd4f.js                                            42.70 kB │ gzip:   4.52 kB
+dist/assets/Dock_revenge-1El-oeGd.js                                          42.71 kB │ gzip:   4.53 kB
+dist/assets/Dock_endeavour-wy1meyGf.js                                        42.72 kB │ gzip:   4.53 kB
+dist/assets/Chart_mainPhone-BoTLwmtI.js                                       58.84 kB │ gzip:   5.43 kB
+dist/assets/fog-BkVducMg.js                                                   80.69 kB │ gzip:   7.09 kB
+dist/assets/Г-phone-DMpD9q4o.js                                               91.95 kB │ gzip:   6.77 kB
+dist/assets/Г-Dr_308wK.js                                                     94.20 kB │ gzip:   6.91 kB
+dist/assets/PiratesPhone-YxvrZssS.js                                         104.58 kB │ gzip:   9.72 kB
+dist/assets/Pirates-C2d6iQcN.js                                              105.10 kB │ gzip:   9.50 kB
+dist/assets/И-CXktOH8M.js                                                    108.78 kB │ gzip:   6.98 kB
+dist/assets/Chart_netPhone-D_1tqfmD.js                                       114.89 kB │ gzip:   9.27 kB
+dist/assets/Chart_prepPhone-D_1tqfmD.js                                      114.89 kB │ gzip:   9.27 kB
+dist/assets/ShipWindow-XOLLhj4W.js                                           118.35 kB │ gzip:  13.30 kB
+dist/assets/Chart_prep-DDheN6Bj.js                                           119.62 kB │ gzip:   9.80 kB
+dist/assets/Chart_main-nUshWSV_.js                                           119.64 kB │ gzip:   9.81 kB
+dist/assets/Chart_net-isRAX5xS.js                                            119.66 kB │ gzip:   9.82 kB
+dist/assets/Company-BzupSwQ6.js                                              119.86 kB │ gzip:  11.22 kB
+dist/assets/CompanyPhone-DU0QzZdm.js                                         119.97 kB │ gzip:  11.24 kB
+dist/assets/current-qGzD---I.js                                              121.69 kB │ gzip:   9.83 kB
+dist/assets/М-DX5zgAv3.js                                                    129.45 kB │ gzip:   7.02 kB
+dist/assets/Ж-27BJN7a0.js                                                    134.56 kB │ gzip:   7.89 kB
+dist/assets/storm-phone-CgAm1uT4.js                                          137.81 kB │ gzip:  10.35 kB
+dist/assets/fleet-DcmnbUXz.js                                                152.69 kB │ gzip:  12.40 kB
+dist/assets/storm-ddQTyOT4.js                                                164.32 kB │ gzip:  11.14 kB
+dist/assets/calm-D0KdzTfa.js                                                 168.59 kB │ gzip:  14.91 kB
+dist/assets/reefs-QYuQRmGY.js                                                184.17 kB │ gzip:  17.08 kB
+dist/assets/Phone-D0m4OWda.js                                                184.88 kB │ gzip:  14.76 kB
+dist/assets/maelstrom-bY2VVV_R.js                                            188.95 kB │ gzip:  12.26 kB
+dist/assets/caravan-BQZDw98u.js                                              209.00 kB │ gzip:  17.30 kB
+dist/assets/rum-CR0dO7cf.js                                                  214.79 kB │ gzip:  19.14 kB
+dist/assets/thunder-BvG1xURz.js                                              235.23 kB │ gzip:  17.51 kB
+dist/assets/wave-3iGeXWVH.js                                                 243.74 kB │ gzip:  20.04 kB
+dist/assets/wind-DHI_OWrL.js                                                 245.42 kB │ gzip:  19.45 kB
+dist/assets/tortuga-BpMN3LeN.js                                              283.73 kB │ gzip:  22.96 kB
+dist/assets/mermaids-D0HqTzsT.js                                             289.35 kB │ gzip:  21.60 kB
+dist/assets/moon-DE6W6QIf.js                                                 337.15 kB │ gzip:  18.22 kB
+dist/assets/Main-CEu2CnVb.js                                                 348.00 kB │ gzip:  25.59 kB
+dist/assets/wet-Bk6z8rgi.js                                                  485.56 kB │ gzip:  38.68 kB
+dist/assets/clear-xfb3g8n6.js                                                721.59 kB │ gzip:  56.66 kB
+dist/assets/PreparedScene-WGCFGu3z.js                                        810.77 kB │ gzip: 462.72 kB
+dist/assets/index-pYKcsW5R.js                                              2,217.53 kB │ gzip: 995.96 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.49s
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

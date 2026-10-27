@@ -151,7 +151,9 @@ export function AlarmActions({
   onPlay,
   onInfo,
   onFold,
+  price,
 }: {
+  price?: {cost:number|null;powder:number;cap:number};
   memo: boolean;
   pickName: string | null;
   /** What the chosen Reaction does now (the engine's words), with or without «Подсказки». */
@@ -165,6 +167,7 @@ export function AlarmActions({
 }) {
   return (
     <div className="alarm-actions" data-testid="reaction-panel">
+      {price&&<div className="alarm-price"><b>Реакция</b><span>{price.cost===null?'Выберите карту':`Цена ${price.cost} Пороха`}</span><span>Трюм {price.powder} из {price.cap}</span></div>}
       {folded ? (
         <button className="alarm-back" data-testid="alarm-expand" onClick={() => onFold(false)}>
           Вернуться к Тревоге

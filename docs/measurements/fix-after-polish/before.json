@@ -2,79 +2,95 @@
   {
     "size": "1366x660",
     "kind": "start",
-    "ms": 713
+    "ms": 688
   },
   {
     "size": "1366x660",
     "kind": "ship",
     "ageSeconds": 0,
-    "shellMs": 2126,
-    "imageMs": 2194
+    "shellMs": 1413.1000000238419,
+    "imageMs": 1413.2000000476837,
+    "wallShellMs": 1845,
+    "wallImageMs": 1875
   },
   {
     "size": "1366x660",
     "kind": "ship",
     "ageSeconds": 20,
-    "shellMs": 138,
-    "imageMs": 154
+    "shellMs": 36.89999997615814,
+    "imageMs": 36.89999997615814,
+    "wallShellMs": 168,
+    "wallImageMs": 216
   },
   {
     "size": "1366x660",
     "kind": "weather",
     "ageSeconds": 0,
-    "shellMs": 590,
-    "imageMs": 1003
+    "shellMs": 50.10000002384186,
+    "imageMs": 685.3000000119209,
+    "wallShellMs": 167,
+    "wallImageMs": 701
   },
   {
     "size": "1366x660",
     "kind": "weather",
     "ageSeconds": 20,
-    "shellMs": 155,
-    "imageMs": 179
+    "shellMs": 35.5,
+    "imageMs": 35.59999996423721,
+    "wallShellMs": 90,
+    "wallImageMs": 107
   },
   {
     "kind": "raf-start",
-    "frames": 216,
-    "worstMs": 250,
-    "over50": 1
+    "frames": 215,
+    "worstMs": 249.9000000000001,
+    "over50": 3
   },
   {
     "kind": "raf-idle",
-    "frames": 241,
-    "worstMs": 16.80000000000291,
+    "frames": 240,
+    "worstMs": 33.39999999999782,
     "over50": 0
   },
   {
     "size": "390x844",
     "kind": "start",
-    "ms": 658
+    "ms": 683
   },
   {
     "size": "390x844",
     "kind": "ship",
     "ageSeconds": 0,
-    "shellMs": 1810,
-    "imageMs": 1891
+    "shellMs": 1154.9000000357628,
+    "imageMs": 1155.1000000238419,
+    "wallShellMs": 1533,
+    "wallImageMs": 1569
   },
   {
     "size": "390x844",
     "kind": "ship",
     "ageSeconds": 20,
-    "shellMs": 211,
-    "imageMs": 217
+    "shellMs": 121.80000001192093,
+    "imageMs": 121.80000001192093,
+    "wallShellMs": 186,
+    "wallImageMs": 191
   },
   {
     "size": "390x844",
     "kind": "weather",
     "ageSeconds": 0,
-    "shellMs": 644,
-    "imageMs": 1047
+    "shellMs": 83,
+    "imageMs": 504.5,
+    "wallShellMs": 150,
+    "wallImageMs": 573
   },
   {
     "size": "390x844",
     "kind": "weather",
     "ageSeconds": 20,
-    "shellMs": 279,
-    "imageMs": 295
+    "shellMs": 243.70000004768372,
+    "imageMs": 243.70000004768372,
+    "wallShellMs": 391,
+    "wallImageMs": 449
   }
 ]

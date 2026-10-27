@@ -1,0 +1,1950 @@
+[
+  {
+    "size": "390x640",
+    "ship": "Ж",
+    "seaGap": 44,
+    "visibleSeaGap": 52,
+    "handBottom": 568,
+    "barTop": 568,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Ж-11",
+        "name": {
+          "x": 24,
+          "y": 505.984375,
+          "width": 106,
+          "height": 24.375,
+          "top": 505.984375,
+          "right": 130,
+          "bottom": 530.359375,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 533.359375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 533.359375,
+          "right": 130,
+          "bottom": 543.703125,
+          "left": 24
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "Ж-19",
+        "name": {
+          "x": 142,
+          "y": 505.984375,
+          "width": 106,
+          "height": 24.375,
+          "top": 505.984375,
+          "right": 248,
+          "bottom": 530.359375,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 533.359375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 533.359375,
+          "right": 248,
+          "bottom": 543.703125,
+          "left": 142
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "Ж-17",
+        "name": {
+          "x": 260,
+          "y": 505.984375,
+          "width": 106,
+          "height": 24.375,
+          "top": 505.984375,
+          "right": 366,
+          "bottom": 530.359375,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 533.359375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 533.359375,
+          "right": 366,
+          "bottom": 543.703125,
+          "left": 260
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "Ж-09",
+        "name": {
+          "x": 378,
+          "y": 478,
+          "width": 106,
+          "height": 24.375,
+          "top": 478,
+          "right": 484,
+          "bottom": 502.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 505.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 505.375,
+          "right": 484,
+          "bottom": 515.71875,
+          "left": 378
+        },
+        "rowBottom": 568
+      }
+    ]
+  },
+  {
+    "size": "390x640",
+    "ship": "М",
+    "seaGap": 44,
+    "visibleSeaGap": 52,
+    "handBottom": 568,
+    "barTop": 568,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "М-16",
+        "name": {
+          "x": 24,
+          "y": 505.984375,
+          "width": 106,
+          "height": 24.375,
+          "top": 505.984375,
+          "right": 130,
+          "bottom": 530.359375,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 533.359375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 533.359375,
+          "right": 130,
+          "bottom": 543.703125,
+          "left": 24
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "М-20",
+        "name": {
+          "x": 142,
+          "y": 505.984375,
+          "width": 106,
+          "height": 24.375,
+          "top": 505.984375,
+          "right": 248,
+          "bottom": 530.359375,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 533.359375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 533.359375,
+          "right": 248,
+          "bottom": 543.703125,
+          "left": 142
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "М-06",
+        "name": {
+          "x": 260,
+          "y": 505.984375,
+          "width": 106,
+          "height": 24.375,
+          "top": 505.984375,
+          "right": 366,
+          "bottom": 530.359375,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 533.359375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 533.359375,
+          "right": 366,
+          "bottom": 543.703125,
+          "left": 260
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "М-23",
+        "name": {
+          "x": 378,
+          "y": 478,
+          "width": 106,
+          "height": 24.375,
+          "top": 478,
+          "right": 484,
+          "bottom": 502.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 505.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 505.375,
+          "right": 484,
+          "bottom": 515.71875,
+          "left": 378
+        },
+        "rowBottom": 568
+      }
+    ]
+  },
+  {
+    "size": "390x640",
+    "ship": "И",
+    "seaGap": 44,
+    "visibleSeaGap": 52,
+    "handBottom": 568,
+    "barTop": 568,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "И-17",
+        "name": {
+          "x": 24,
+          "y": 478,
+          "width": 106,
+          "height": 24.375,
+          "top": 478,
+          "right": 130,
+          "bottom": 502.375,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 505.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 505.375,
+          "right": 130,
+          "bottom": 515.71875,
+          "left": 24
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "И-03",
+        "name": {
+          "x": 142,
+          "y": 478,
+          "width": 106,
+          "height": 24.375,
+          "top": 478,
+          "right": 248,
+          "bottom": 502.375,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 505.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 505.375,
+          "right": 248,
+          "bottom": 515.71875,
+          "left": 142
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "И-16",
+        "name": {
+          "x": 260,
+          "y": 478,
+          "width": 106,
+          "height": 24.375,
+          "top": 478,
+          "right": 366,
+          "bottom": 502.375,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 505.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 505.375,
+          "right": 366,
+          "bottom": 515.71875,
+          "left": 260
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "И-04",
+        "name": {
+          "x": 378,
+          "y": 478,
+          "width": 106,
+          "height": 24.375,
+          "top": 478,
+          "right": 484,
+          "bottom": 502.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 505.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 505.375,
+          "right": 484,
+          "bottom": 515.71875,
+          "left": 378
+        },
+        "rowBottom": 568
+      }
+    ]
+  },
+  {
+    "size": "390x640",
+    "ship": "Г",
+    "seaGap": 44,
+    "visibleSeaGap": 52,
+    "handBottom": 568,
+    "barTop": 568,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Г-14",
+        "name": {
+          "x": 24,
+          "y": 505.984375,
+          "width": 106,
+          "height": 24.375,
+          "top": 505.984375,
+          "right": 130,
+          "bottom": 530.359375,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 533.359375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 533.359375,
+          "right": 130,
+          "bottom": 543.703125,
+          "left": 24
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "Г-18",
+        "name": {
+          "x": 142,
+          "y": 505.984375,
+          "width": 106,
+          "height": 24.375,
+          "top": 505.984375,
+          "right": 248,
+          "bottom": 530.359375,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 533.359375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 533.359375,
+          "right": 248,
+          "bottom": 543.703125,
+          "left": 142
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "Г-11",
+        "name": {
+          "x": 260,
+          "y": 505.984375,
+          "width": 106,
+          "height": 24.375,
+          "top": 505.984375,
+          "right": 366,
+          "bottom": 530.359375,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 533.359375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 533.359375,
+          "right": 366,
+          "bottom": 543.703125,
+          "left": 260
+        },
+        "rowBottom": 568
+      },
+      {
+        "card": "Г-23",
+        "name": {
+          "x": 378,
+          "y": 478,
+          "width": 106,
+          "height": 24.375,
+          "top": 478,
+          "right": 484,
+          "bottom": 502.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 505.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 505.375,
+          "right": 484,
+          "bottom": 515.71875,
+          "left": 378
+        },
+        "rowBottom": 568
+      }
+    ]
+  },
+  {
+    "size": "360x600",
+    "ship": "Ж",
+    "seaGap": 20.65625,
+    "visibleSeaGap": 28.65625,
+    "handBottom": 528,
+    "barTop": 528,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Ж-11",
+        "name": {
+          "x": 9,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 115,
+          "bottom": 491.046875,
+          "left": 9
+        },
+        "big": {
+          "x": 9,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 115,
+          "bottom": 504.390625,
+          "left": 9
+        },
+        "rowBottom": 528
+      },
+      {
+        "card": "Ж-19",
+        "name": {
+          "x": 127,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 233,
+          "bottom": 491.046875,
+          "left": 127
+        },
+        "big": {
+          "x": 127,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 233,
+          "bottom": 504.390625,
+          "left": 127
+        },
+        "rowBottom": 528
+      },
+      {
+        "card": "Ж-17",
+        "name": {
+          "x": 245,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 351,
+          "bottom": 491.046875,
+          "left": 245
+        },
+        "big": {
+          "x": 245,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 351,
+          "bottom": 504.390625,
+          "left": 245
+        },
+        "rowBottom": 528
+      }
+    ]
+  },
+  {
+    "size": "360x600",
+    "ship": "М",
+    "seaGap": 20.65625,
+    "visibleSeaGap": 28.65625,
+    "handBottom": 528,
+    "barTop": 528,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "М-16",
+        "name": {
+          "x": 24,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 130,
+          "bottom": 491.046875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 130,
+          "bottom": 504.390625,
+          "left": 24
+        },
+        "rowBottom": 528
+      },
+      {
+        "card": "М-20",
+        "name": {
+          "x": 142,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 248,
+          "bottom": 491.046875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 248,
+          "bottom": 504.390625,
+          "left": 142
+        },
+        "rowBottom": 528
+      },
+      {
+        "card": "М-06",
+        "name": {
+          "x": 260,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 366,
+          "bottom": 491.046875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 366,
+          "bottom": 504.390625,
+          "left": 260
+        },
+        "rowBottom": 528
+      }
+    ]
+  },
+  {
+    "size": "360x600",
+    "ship": "И",
+    "seaGap": 20.65625,
+    "visibleSeaGap": 28.65625,
+    "handBottom": 528,
+    "barTop": 528,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "И-17",
+        "name": {
+          "x": 24,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 130,
+          "bottom": 491.046875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 130,
+          "bottom": 504.390625,
+          "left": 24
+        },
+        "rowBottom": 528
+      },
+      {
+        "card": "И-03",
+        "name": {
+          "x": 142,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 248,
+          "bottom": 491.046875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 248,
+          "bottom": 504.390625,
+          "left": 142
+        },
+        "rowBottom": 528
+      },
+      {
+        "card": "И-16",
+        "name": {
+          "x": 260,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 366,
+          "bottom": 491.046875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 366,
+          "bottom": 504.390625,
+          "left": 260
+        },
+        "rowBottom": 528
+      }
+    ]
+  },
+  {
+    "size": "360x600",
+    "ship": "Г",
+    "seaGap": 20.65625,
+    "visibleSeaGap": 28.65625,
+    "handBottom": 528,
+    "barTop": 528,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Г-14",
+        "name": {
+          "x": 24,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 130,
+          "bottom": 491.046875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 130,
+          "bottom": 504.390625,
+          "left": 24
+        },
+        "rowBottom": 528
+      },
+      {
+        "card": "Г-18",
+        "name": {
+          "x": 142,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 248,
+          "bottom": 491.046875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 248,
+          "bottom": 504.390625,
+          "left": 142
+        },
+        "rowBottom": 528
+      },
+      {
+        "card": "Г-11",
+        "name": {
+          "x": 260,
+          "y": 466.671875,
+          "width": 106,
+          "height": 24.375,
+          "top": 466.671875,
+          "right": 366,
+          "bottom": 491.046875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 494.046875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 494.046875,
+          "right": 366,
+          "bottom": 504.390625,
+          "left": 260
+        },
+        "rowBottom": 528
+      }
+    ]
+  },
+  {
+    "size": "320x568",
+    "ship": "Ж",
+    "seaGap": 2,
+    "visibleSeaGap": 10,
+    "handBottom": 496,
+    "barTop": 496,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Ж-11",
+        "name": {
+          "x": -11,
+          "y": 448,
+          "width": 106,
+          "height": 24.375,
+          "top": 448,
+          "right": 95,
+          "bottom": 472.375,
+          "left": -11
+        },
+        "big": {
+          "x": -11,
+          "y": 475.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 475.375,
+          "right": 95,
+          "bottom": 485.71875,
+          "left": -11
+        },
+        "rowBottom": 496
+      },
+      {
+        "card": "Ж-19",
+        "name": {
+          "x": 107,
+          "y": 448,
+          "width": 106,
+          "height": 24.375,
+          "top": 448,
+          "right": 213,
+          "bottom": 472.375,
+          "left": 107
+        },
+        "big": {
+          "x": 107,
+          "y": 475.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 475.375,
+          "right": 213,
+          "bottom": 485.71875,
+          "left": 107
+        },
+        "rowBottom": 496
+      },
+      {
+        "card": "Ж-17",
+        "name": {
+          "x": 225,
+          "y": 448,
+          "width": 106,
+          "height": 24.375,
+          "top": 448,
+          "right": 331,
+          "bottom": 472.375,
+          "left": 225
+        },
+        "big": {
+          "x": 225,
+          "y": 475.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 475.375,
+          "right": 331,
+          "bottom": 485.71875,
+          "left": 225
+        },
+        "rowBottom": 496
+      }
+    ]
+  },
+  {
+    "size": "320x568",
+    "ship": "М",
+    "seaGap": 2,
+    "visibleSeaGap": 10,
+    "handBottom": 496,
+    "barTop": 496,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "М-16",
+        "name": {
+          "x": 24,
+          "y": 448,
+          "width": 106,
+          "height": 24.375,
+          "top": 448,
+          "right": 130,
+          "bottom": 472.375,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 475.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 475.375,
+          "right": 130,
+          "bottom": 485.71875,
+          "left": 24
+        },
+        "rowBottom": 496
+      },
+      {
+        "card": "М-20",
+        "name": {
+          "x": 142,
+          "y": 448,
+          "width": 106,
+          "height": 24.375,
+          "top": 448,
+          "right": 248,
+          "bottom": 472.375,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 475.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 475.375,
+          "right": 248,
+          "bottom": 485.71875,
+          "left": 142
+        },
+        "rowBottom": 496
+      },
+      {
+        "card": "М-06",
+        "name": {
+          "x": 260,
+          "y": 436,
+          "width": 106,
+          "height": 24.375,
+          "top": 436,
+          "right": 366,
+          "bottom": 460.375,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 463.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 463.375,
+          "right": 366,
+          "bottom": 473.71875,
+          "left": 260
+        },
+        "rowBottom": 496
+      }
+    ]
+  },
+  {
+    "size": "320x568",
+    "ship": "И",
+    "seaGap": 2,
+    "visibleSeaGap": 10,
+    "handBottom": 496,
+    "barTop": 496,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "И-17",
+        "name": {
+          "x": 24,
+          "y": 448,
+          "width": 106,
+          "height": 24.375,
+          "top": 448,
+          "right": 130,
+          "bottom": 472.375,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 475.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 475.375,
+          "right": 130,
+          "bottom": 485.71875,
+          "left": 24
+        },
+        "rowBottom": 496
+      },
+      {
+        "card": "И-03",
+        "name": {
+          "x": 142,
+          "y": 448,
+          "width": 106,
+          "height": 24.375,
+          "top": 448,
+          "right": 248,
+          "bottom": 472.375,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 475.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 475.375,
+          "right": 248,
+          "bottom": 485.71875,
+          "left": 142
+        },
+        "rowBottom": 496
+      },
+      {
+        "card": "И-16",
+        "name": {
+          "x": 260,
+          "y": 436,
+          "width": 106,
+          "height": 24.375,
+          "top": 436,
+          "right": 366,
+          "bottom": 460.375,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 463.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 463.375,
+          "right": 366,
+          "bottom": 473.71875,
+          "left": 260
+        },
+        "rowBottom": 496
+      }
+    ]
+  },
+  {
+    "size": "320x568",
+    "ship": "Г",
+    "seaGap": 2,
+    "visibleSeaGap": 10,
+    "handBottom": 496,
+    "barTop": 496,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Г-14",
+        "name": {
+          "x": 24,
+          "y": 448,
+          "width": 106,
+          "height": 24.375,
+          "top": 448,
+          "right": 130,
+          "bottom": 472.375,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 475.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 475.375,
+          "right": 130,
+          "bottom": 485.71875,
+          "left": 24
+        },
+        "rowBottom": 496
+      },
+      {
+        "card": "Г-18",
+        "name": {
+          "x": 142,
+          "y": 448,
+          "width": 106,
+          "height": 24.375,
+          "top": 448,
+          "right": 248,
+          "bottom": 472.375,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 475.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 475.375,
+          "right": 248,
+          "bottom": 485.71875,
+          "left": 142
+        },
+        "rowBottom": 496
+      },
+      {
+        "card": "Г-11",
+        "name": {
+          "x": 260,
+          "y": 436,
+          "width": 106,
+          "height": 24.375,
+          "top": 436,
+          "right": 366,
+          "bottom": 460.375,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 463.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 463.375,
+          "right": 366,
+          "bottom": 473.71875,
+          "left": 260
+        },
+        "rowBottom": 496
+      }
+    ]
+  },
+  {
+    "size": "390x844",
+    "ship": "Ж",
+    "seaGap": 141.21875,
+    "visibleSeaGap": 149.21875,
+    "handBottom": 772,
+    "barTop": 772,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Ж-11",
+        "name": {
+          "x": 24,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 130,
+          "bottom": 721.171875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 130,
+          "bottom": 734.515625,
+          "left": 24
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "Ж-19",
+        "name": {
+          "x": 142,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 248,
+          "bottom": 721.171875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 248,
+          "bottom": 734.515625,
+          "left": 142
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "Ж-17",
+        "name": {
+          "x": 260,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 366,
+          "bottom": 721.171875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 366,
+          "bottom": 734.515625,
+          "left": 260
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "Ж-09",
+        "name": {
+          "x": 378,
+          "y": 626,
+          "width": 106,
+          "height": 24.375,
+          "top": 626,
+          "right": 484,
+          "bottom": 650.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 653.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 653.375,
+          "right": 484,
+          "bottom": 663.71875,
+          "left": 378
+        },
+        "rowBottom": 772
+      }
+    ]
+  },
+  {
+    "size": "390x844",
+    "ship": "М",
+    "seaGap": 141.21875,
+    "visibleSeaGap": 149.21875,
+    "handBottom": 772,
+    "barTop": 772,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "М-16",
+        "name": {
+          "x": 24,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 130,
+          "bottom": 721.171875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 130,
+          "bottom": 734.515625,
+          "left": 24
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "М-20",
+        "name": {
+          "x": 142,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 248,
+          "bottom": 721.171875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 248,
+          "bottom": 734.515625,
+          "left": 142
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "М-06",
+        "name": {
+          "x": 260,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 366,
+          "bottom": 721.171875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 366,
+          "bottom": 734.515625,
+          "left": 260
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "М-23",
+        "name": {
+          "x": 378,
+          "y": 626,
+          "width": 106,
+          "height": 24.375,
+          "top": 626,
+          "right": 484,
+          "bottom": 650.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 653.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 653.375,
+          "right": 484,
+          "bottom": 663.71875,
+          "left": 378
+        },
+        "rowBottom": 772
+      }
+    ]
+  },
+  {
+    "size": "390x844",
+    "ship": "И",
+    "seaGap": 141.21875,
+    "visibleSeaGap": 149.21875,
+    "handBottom": 772,
+    "barTop": 772,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "И-17",
+        "name": {
+          "x": 24,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 130,
+          "bottom": 721.171875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 130,
+          "bottom": 734.515625,
+          "left": 24
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "И-03",
+        "name": {
+          "x": 142,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 248,
+          "bottom": 721.171875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 248,
+          "bottom": 734.515625,
+          "left": 142
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "И-16",
+        "name": {
+          "x": 260,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 366,
+          "bottom": 721.171875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 366,
+          "bottom": 734.515625,
+          "left": 260
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "И-04",
+        "name": {
+          "x": 378,
+          "y": 626,
+          "width": 106,
+          "height": 24.375,
+          "top": 626,
+          "right": 484,
+          "bottom": 650.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 653.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 653.375,
+          "right": 484,
+          "bottom": 663.71875,
+          "left": 378
+        },
+        "rowBottom": 772
+      }
+    ]
+  },
+  {
+    "size": "390x844",
+    "ship": "Г",
+    "seaGap": 141.21875,
+    "visibleSeaGap": 149.21875,
+    "handBottom": 772,
+    "barTop": 772,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Г-14",
+        "name": {
+          "x": 24,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 130,
+          "bottom": 721.171875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 130,
+          "bottom": 734.515625,
+          "left": 24
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "Г-18",
+        "name": {
+          "x": 142,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 248,
+          "bottom": 721.171875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 248,
+          "bottom": 734.515625,
+          "left": 142
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "Г-11",
+        "name": {
+          "x": 260,
+          "y": 696.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 696.796875,
+          "right": 366,
+          "bottom": 721.171875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 724.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 724.171875,
+          "right": 366,
+          "bottom": 734.515625,
+          "left": 260
+        },
+        "rowBottom": 772
+      },
+      {
+        "card": "Г-23",
+        "name": {
+          "x": 378,
+          "y": 626,
+          "width": 106,
+          "height": 24.375,
+          "top": 626,
+          "right": 484,
+          "bottom": 650.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 653.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 653.375,
+          "right": 484,
+          "bottom": 663.71875,
+          "left": 378
+        },
+        "rowBottom": 772
+      }
+    ]
+  },
+  {
+    "size": "412x780",
+    "ship": "Ж",
+    "seaGap": 71.8125,
+    "visibleSeaGap": 79.8125,
+    "handBottom": 708,
+    "barTop": 708,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Ж-11",
+        "name": {
+          "x": 24,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 130,
+          "bottom": 657.171875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 130,
+          "bottom": 670.515625,
+          "left": 24
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "Ж-19",
+        "name": {
+          "x": 142,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 248,
+          "bottom": 657.171875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 248,
+          "bottom": 670.515625,
+          "left": 142
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "Ж-17",
+        "name": {
+          "x": 260,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 366,
+          "bottom": 657.171875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 366,
+          "bottom": 670.515625,
+          "left": 260
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "Ж-09",
+        "name": {
+          "x": 378,
+          "y": 562,
+          "width": 106,
+          "height": 24.375,
+          "top": 562,
+          "right": 484,
+          "bottom": 586.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 589.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 589.375,
+          "right": 484,
+          "bottom": 599.71875,
+          "left": 378
+        },
+        "rowBottom": 708
+      }
+    ]
+  },
+  {
+    "size": "412x780",
+    "ship": "М",
+    "seaGap": 71.8125,
+    "visibleSeaGap": 79.8125,
+    "handBottom": 708,
+    "barTop": 708,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "М-16",
+        "name": {
+          "x": 24,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 130,
+          "bottom": 657.171875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 130,
+          "bottom": 670.515625,
+          "left": 24
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "М-20",
+        "name": {
+          "x": 142,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 248,
+          "bottom": 657.171875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 248,
+          "bottom": 670.515625,
+          "left": 142
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "М-06",
+        "name": {
+          "x": 260,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 366,
+          "bottom": 657.171875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 366,
+          "bottom": 670.515625,
+          "left": 260
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "М-23",
+        "name": {
+          "x": 378,
+          "y": 562,
+          "width": 106,
+          "height": 24.375,
+          "top": 562,
+          "right": 484,
+          "bottom": 586.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 589.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 589.375,
+          "right": 484,
+          "bottom": 599.71875,
+          "left": 378
+        },
+        "rowBottom": 708
+      }
+    ]
+  },
+  {
+    "size": "412x780",
+    "ship": "И",
+    "seaGap": 71.8125,
+    "visibleSeaGap": 79.8125,
+    "handBottom": 708,
+    "barTop": 708,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "И-17",
+        "name": {
+          "x": 24,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 130,
+          "bottom": 657.171875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 130,
+          "bottom": 670.515625,
+          "left": 24
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "И-03",
+        "name": {
+          "x": 142,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 248,
+          "bottom": 657.171875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 248,
+          "bottom": 670.515625,
+          "left": 142
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "И-16",
+        "name": {
+          "x": 260,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 366,
+          "bottom": 657.171875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 366,
+          "bottom": 670.515625,
+          "left": 260
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "И-04",
+        "name": {
+          "x": 378,
+          "y": 562,
+          "width": 106,
+          "height": 24.375,
+          "top": 562,
+          "right": 484,
+          "bottom": 586.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 589.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 589.375,
+          "right": 484,
+          "bottom": 599.71875,
+          "left": 378
+        },
+        "rowBottom": 708
+      }
+    ]
+  },
+  {
+    "size": "412x780",
+    "ship": "Г",
+    "seaGap": 71.8125,
+    "visibleSeaGap": 79.8125,
+    "handBottom": 708,
+    "barTop": 708,
+    "horizontalScroll": false,
+    "cards": [
+      {
+        "card": "Г-14",
+        "name": {
+          "x": 24,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 130,
+          "bottom": 657.171875,
+          "left": 24
+        },
+        "big": {
+          "x": 24,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 130,
+          "bottom": 670.515625,
+          "left": 24
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "Г-18",
+        "name": {
+          "x": 142,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 248,
+          "bottom": 657.171875,
+          "left": 142
+        },
+        "big": {
+          "x": 142,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 248,
+          "bottom": 670.515625,
+          "left": 142
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "Г-11",
+        "name": {
+          "x": 260,
+          "y": 632.796875,
+          "width": 106,
+          "height": 24.375,
+          "top": 632.796875,
+          "right": 366,
+          "bottom": 657.171875,
+          "left": 260
+        },
+        "big": {
+          "x": 260,
+          "y": 660.171875,
+          "width": 106,
+          "height": 10.34375,
+          "top": 660.171875,
+          "right": 366,
+          "bottom": 670.515625,
+          "left": 260
+        },
+        "rowBottom": 708
+      },
+      {
+        "card": "Г-23",
+        "name": {
+          "x": 378,
+          "y": 562,
+          "width": 106,
+          "height": 24.375,
+          "top": 562,
+          "right": 484,
+          "bottom": 586.375,
+          "left": 378
+        },
+        "big": {
+          "x": 378,
+          "y": 589.375,
+          "width": 106,
+          "height": 10.34375,
+          "top": 589.375,
+          "right": 484,
+          "bottom": 599.71875,
+          "left": 378
+        },
+        "rowBottom": 708
+      }
+    ]
+  }
+]

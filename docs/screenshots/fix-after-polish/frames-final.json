@@ -1,0 +1,509 @@
+[
+  {
+    "name": "card",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 373,
+          "y": 16,
+          "width": 620,
+          "height": 629.078125,
+          "top": 16,
+          "right": 993,
+          "bottom": 645.078125,
+          "left": 373
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 941,
+          "y": 32,
+          "width": 36,
+          "height": 36,
+          "top": 32,
+          "right": 977,
+          "bottom": 68,
+          "left": 941
+        },
+        "hit": true
+      },
+      {
+        "text": "Сыграть",
+        "testid": "detail-play",
+        "r": {
+          "x": 405,
+          "y": 513.078125,
+          "width": 541,
+          "height": 44,
+          "top": 513.078125,
+          "right": 946,
+          "bottom": 557.078125,
+          "left": 405
+        },
+        "hit": true
+      },
+      {
+        "text": "Продать · +1 П",
+        "r": {
+          "x": 530.296875,
+          "y": 565.078125,
+          "width": 121.78125,
+          "height": 44,
+          "top": 565.078125,
+          "right": 652.078125,
+          "bottom": 609.078125,
+          "left": 530.296875
+        },
+        "hit": true
+      },
+      {
+        "text": "Передать союзнику",
+        "r": {
+          "x": 660.078125,
+          "y": 565.078125,
+          "width": 160.625,
+          "height": 44,
+          "top": 565.078125,
+          "right": 820.703125,
+          "bottom": 609.078125,
+          "left": 660.078125
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "card-cant",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 373,
+          "y": 16,
+          "width": 620,
+          "height": 636,
+          "top": 16,
+          "right": 993,
+          "bottom": 652,
+          "left": 373
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 941,
+          "y": 32,
+          "width": 36,
+          "height": 36,
+          "top": 32,
+          "right": 977,
+          "bottom": 68,
+          "left": 941
+        },
+        "hit": true
+      },
+      {
+        "text": "СыгратьРеакцию играют в ход противника, когда он о",
+        "testid": "detail-play",
+        "r": {
+          "x": 405,
+          "y": 548.875,
+          "width": 541,
+          "height": 53,
+          "top": 548.875,
+          "right": 946,
+          "bottom": 601.875,
+          "left": 405
+        },
+        "hit": true
+      },
+      {
+        "text": "Продать · +1 П",
+        "r": {
+          "x": 530.296875,
+          "y": 609.875,
+          "width": 121.78125,
+          "height": 44,
+          "top": 609.875,
+          "right": 652.078125,
+          "bottom": 653.875,
+          "left": 530.296875
+        },
+        "hit": true
+      },
+      {
+        "text": "Передать союзнику",
+        "r": {
+          "x": 660.078125,
+          "y": 609.875,
+          "width": 160.625,
+          "height": 44,
+          "top": 609.875,
+          "right": 820.703125,
+          "bottom": 653.875,
+          "left": 660.078125
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "scroll-reaction",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": [
+      {
+        "text": "Пропустить",
+        "testid": "skip-reaction",
+        "r": {
+          "x": 1120,
+          "y": 517,
+          "width": 222,
+          "height": 40,
+          "top": 517,
+          "right": 1342,
+          "bottom": 557,
+          "left": 1120
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "scroll-card",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "reaction",
+    "size": "1366x660",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": [
+      {
+        "text": "Пропустить",
+        "testid": "skip-reaction",
+        "r": {
+          "x": 447.515625,
+          "y": 561.625,
+          "width": 188.96875,
+          "height": 40,
+          "top": 561.625,
+          "right": 636.484375,
+          "bottom": 601.625,
+          "left": 447.515625
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "net-error",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "table",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "plans",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "scroll-reaction",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": [
+      {
+        "text": "Пропустить",
+        "testid": "skip-reaction",
+        "r": {
+          "x": 162.046875,
+          "y": 510,
+          "width": 124,
+          "height": 48,
+          "top": 510,
+          "right": 286.046875,
+          "bottom": 558,
+          "left": 162.046875
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "scroll-card",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "card",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 0,
+          "y": 8,
+          "width": 390,
+          "height": 632,
+          "top": 8,
+          "right": 390,
+          "bottom": 640,
+          "left": 0
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 338,
+          "y": 24,
+          "width": 36,
+          "height": 36,
+          "top": 24,
+          "right": 374,
+          "bottom": 60,
+          "left": 338
+        },
+        "hit": true
+      },
+      {
+        "text": "Сыграть",
+        "testid": "detail-play",
+        "r": {
+          "x": 32,
+          "y": 645.4375,
+          "width": 311,
+          "height": 44,
+          "top": 645.4375,
+          "right": 343,
+          "bottom": 689.4375,
+          "left": 32
+        },
+        "hit": false
+      },
+      {
+        "text": "Продать · +1 П",
+        "r": {
+          "x": 32,
+          "y": 697.4375,
+          "width": 142.375,
+          "height": 44,
+          "top": 697.4375,
+          "right": 174.375,
+          "bottom": 741.4375,
+          "left": 32
+        },
+        "hit": false
+      },
+      {
+        "text": "Передать союзнику",
+        "r": {
+          "x": 182.375,
+          "y": 697.4375,
+          "width": 160.625,
+          "height": 44,
+          "top": 697.4375,
+          "right": 343,
+          "bottom": 741.4375,
+          "left": 182.375
+        },
+        "hit": false
+      }
+    ]
+  },
+  {
+    "name": "card-cant",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 0,
+          "y": 8,
+          "width": 390,
+          "height": 632,
+          "top": 8,
+          "right": 390,
+          "bottom": 640,
+          "left": 0
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 338,
+          "y": 24,
+          "width": 36,
+          "height": 36,
+          "top": 24,
+          "right": 374,
+          "bottom": 60,
+          "left": 338
+        },
+        "hit": true
+      },
+      {
+        "text": "СыгратьРеакцию играют в ход противника, когда он о",
+        "testid": "detail-play",
+        "r": {
+          "x": 32,
+          "y": 720.9375,
+          "width": 311,
+          "height": 63.96875,
+          "top": 720.9375,
+          "right": 343,
+          "bottom": 784.90625,
+          "left": 32
+        },
+        "hit": false
+      },
+      {
+        "text": "Продать · +1 П",
+        "r": {
+          "x": 32,
+          "y": 792.90625,
+          "width": 142.375,
+          "height": 44,
+          "top": 792.90625,
+          "right": 174.375,
+          "bottom": 836.90625,
+          "left": 32
+        },
+        "hit": false
+      },
+      {
+        "text": "Передать союзнику",
+        "r": {
+          "x": 182.375,
+          "y": 792.90625,
+          "width": 160.625,
+          "height": 44,
+          "top": 792.90625,
+          "right": 343,
+          "bottom": 836.90625,
+          "left": 182.375
+        },
+        "hit": false
+      }
+    ]
+  },
+  {
+    "name": "legend",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [
+      {
+        "id": "card-detail",
+        "r": {
+          "x": 0,
+          "y": 199.25,
+          "width": 390,
+          "height": 440.75,
+          "top": 199.25,
+          "right": 390,
+          "bottom": 640,
+          "left": 0
+        }
+      }
+    ],
+    "buttons": [
+      {
+        "text": "✕",
+        "r": {
+          "x": 338,
+          "y": 215.25,
+          "width": 36,
+          "height": 36,
+          "top": 215.25,
+          "right": 374,
+          "bottom": 251.25,
+          "left": 338
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "catalog",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "tortuga",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "reaction",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": [
+      {
+        "text": "Пропустить",
+        "testid": "skip-reaction",
+        "r": {
+          "x": 162.046875,
+          "y": 510,
+          "width": 124,
+          "height": 48,
+          "top": 510,
+          "right": 286.046875,
+          "bottom": 558,
+          "left": 162.046875
+        },
+        "hit": true
+      }
+    ]
+  },
+  {
+    "name": "victory",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  },
+  {
+    "name": "after-game",
+    "size": "390x640",
+    "horizontalScroll": false,
+    "dialogs": [],
+    "buttons": []
+  }
+]

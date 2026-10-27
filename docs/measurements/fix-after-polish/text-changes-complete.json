@@ -1,0 +1,170 @@
+[
+  {
+    "file": "src/ui/Catalog.tsx",
+    "before": [
+      ". Всего карт:",
+      ": в колодах"
+    ],
+    "after": [
+      ". Всего",
+      "карт. В колодах"
+    ]
+  },
+  {
+    "file": "src/ui/game/Alarm.tsx",
+    "before": [],
+    "after": [
+      "Реакция",
+      "'Выберите карту'",
+      "`Цена ${price.cost} Пороха`",
+      "Трюм",
+      "из"
+    ]
+  },
+  {
+    "file": "src/ui/game/Game.tsx",
+    "before": [
+      "'Партия окончена: ничья'",
+      "`Партия окончена: победа: ${SIDE_LABEL[s.winner].name}`",
+      "`Ждём: ${SIDE_LABEL[d.side].name} (бот) ${decideVerb(d.side)}, ответить ли Реакцией…`",
+      "`Ждём: ${SIDE_LABEL[d.side].name}: ${curtainReason(s, data, d.kind)}`",
+      "`${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])}: ${s.volley ? 'Залп' : 'карта'}: ответите Реакцией?`",
+      "`${nick(mode.seat)}: «${cardByCode(data, mode.card).name}»: выберите параметры`",
+      "`Ждём: ${who(d!.seats)}: Реакция…`",
+      "`Ход окончен: ждём: ${who(left.length > 0 ? left : d!.seats)}`",
+      "`Ждём: ${who(d!.seats)}: ${curtainReason(s, data, d!.kind)}`",
+      ": ход закончится, когда нажмёте вы",
+      ": ждёт вас",
+      "`Сыграть: когда ${nick(holder)} должна утонуть. Порох: ${s.teams[s.ships[holder].side].powder} из ${c.cost}`"
+    ],
+    "after": [
+      "'Партия окончена. Ничья'",
+      "`Партия окончена. Победа ${SIDE_LABEL[s.winner].gen}`",
+      "`Ждём Реакцию ${SIDE_LABEL[d.side].gen}. Бот думает…`",
+      "`Ждём ${SIDE_LABEL[d.side].acc}: ${curtainReason(s, data, d.kind)}`",
+      "`${nick(s.volley?.shooter ?? s.card?.ship ?? d.seats[0])} ${s.volley ? 'даёт Залп' : `играет «${cardByCode(data,s.card!.card).name}»`}. Ответите Реакцией?`",
+      "`${nick(mode.seat)}, «${cardByCode(data, mode.card).name}»: выберите параметры`",
+      "`Ждём Реакцию ${SIDE_LABEL[d!.side].gen}…`",
+      "`Ход окончен. Ждём ${who(left.length > 0 ? left : d!.seats)}`",
+      "`Ждём ${who(d!.seats)}: ${curtainReason(s, data, d!.kind)}`",
+      "\"те же корабли, новая партия\"",
+      ". Ход закончится, когда нажмёте вы",
+      ", ждёт вас",
+      "`Сыграть, когда ${nick(holder)} должна утонуть. Порох: ${s.teams[s.ships[holder].side].powder} из ${c.cost}`"
+    ]
+  },
+  {
+    "file": "src/ui/game/NetParts.tsx",
+    "before": [
+      "не в сети.",
+      "`${missing.length>1?' ждут капитанов.':' ждёт капитана.'} Друг может вернуться по ссылке комнаты.`"
+    ],
+    "after": [
+      "вышел из игры.",
+      "`${missing.length>1?' ждут капитанов.':' ждёт капитана.'} Партия не приостановлена. Друг может вернуться по ссылке комнаты или вы можете занять его место ботом.`"
+    ]
+  },
+  {
+    "file": "src/ui/game/Panels.tsx",
+    "before": [
+      "'Разложите карты моря: первая выбранная откроется первой. «i»: карта целиком.'"
+    ],
+    "after": [
+      "'Разложите карты моря. Первая выбранная откроется первой. Нажмите «i», чтобы прочитать карту целиком.'"
+    ]
+  },
+  {
+    "file": "src/ui/game/Table.tsx",
+    "before": [
+      "Море · весь раунд",
+      "'В начале хода своей команды: −1 Корпус за каждый Пожар. Потушить: сбросьте 1 карту с руки: снимите 1 Пожар (в свой ход, сколько угодно раз).'",
+      "`Легенда: ${legendName}${affordable ? '' : ': не хватает Пороха или Душ'}`"
+    ],
+    "after": [
+      "Море ·",
+      "'В начале хода своей команды теряется 1 Корпус за каждый Пожар. Чтобы потушить 1 Пожар, сбросьте 1 карту с руки. В свой ход это можно делать сколько угодно раз.'",
+      "`Капитан «${d.nickGenitive}» на борту`",
+      "`Легенда «${legendName}»${affordable ? '' : '. Не хватает Пороха или Душ'}`"
+    ]
+  },
+  {
+    "file": "src/ui/game/alarm.ts",
+    "before": [
+      "`${name(v.shooter)} выстрелил по ${to(v.target)}: ответите Реакцией?`",
+      "`${name(v.shooter)} даёт Залп по ${to(v.target)}: ответите Реакцией?`",
+      "`${name(s.card.ship)}: «${c.name}»${target}: ответите Реакцией?`"
+    ],
+    "after": [
+      "`${name(v.shooter)} выстрелил по ${to(v.target)}. Ответите Реакцией?`",
+      "`${name(v.shooter)} даёт Залп по ${to(v.target)}. Ответите Реакцией?`",
+      "`${name(s.card.ship)} играет «${c.name}»${target}. Ответите Реакцией?`"
+    ]
+  },
+  {
+    "file": "src/ui/game/fx/FxScene.tsx",
+    "before": [
+      "Последнее: «Жемчужина» откладывает в Планы: 2 карты: а вот это очень длинная запись журнала, которую строка обрежет многоточием."
+    ],
+    "after": [
+      "Последнее: «Жемчужина» откладывает 2 карты в План. Это длинная запись журнала, которую строка обрежет многоточием."
+    ]
+  },
+  {
+    "file": "src/ui/game/fx/misc.ts",
+    "before": [
+      "`${nick(ctx, plans.seat)}: План: ${plans.count} рубашкой вниз`"
+    ],
+    "after": [
+      "`${nick(ctx, plans.seat)} откладывает в План ${plans.count} рубашкой вниз`"
+    ]
+  },
+  {
+    "file": "src/ui/game/fx/sea.ts",
+    "before": [
+      "`: Раунд ${c.round}: `",
+      "`Раунд ${c.round}: новая карта моря`"
+    ],
+    "after": [
+      "`<span class=\"round-orn\" aria-hidden=\"true\">◆</span> Раунд ${roman(c.round ?? ctx.display.round)} <span class=\"round-orn\" aria-hidden=\"true\">◆</span>`",
+      "`Раунд ${roman(c.round ?? ctx.display.round)}. Новая карта моря`"
+    ]
+  },
+  {
+    "file": "src/ui/game/fx/volley.ts",
+    "before": [
+      "`${nick(ctx, by)}: Сердце Дейви Джонса: ещё один Залп ${gen(ctx, c.ship)}`"
+    ],
+    "after": [
+      "`${nick(ctx, by)} использует Сердце Дейви Джонса. Ещё один Залп ${gen(ctx, c.ship)}`"
+    ]
+  },
+  {
+    "file": "src/ui/game/victoryStats.ts",
+    "before": [
+      "`Залп на ${st(c).kills.find((k) => k.ship === last)!.volley}: ${nick(data, last)} на дне`",
+      "`${st(c).dmgIn} урона: и на плаву`"
+    ],
+    "after": [
+      "`Залп на ${st(c).kills.find((k) => k.ship === last)!.volley}. ${nick(data, last)} на дне`",
+      "`${st(c).dmgIn} урона, и на плаву`"
+    ]
+  },
+  {
+    "file": "src/ui/game/weather-window/model.ts",
+    "before": [
+      "`Трюм ${s.teams[side].powder}: до ${Math.min(r.seaTortuga,s.teams[side].powder)} Пороха: столько же карт`"
+    ],
+    "after": [
+      "`В Трюме ${s.teams[side].powder}. До ${Math.min(r.seaTortuga,s.teams[side].powder)} Пороха можно обменять на столько же карт`"
+    ]
+  },
+  {
+    "file": "src/ui/start/Prep.tsx",
+    "before": [
+      "`Жребий: ${mode === 'bots' ? 'вы' : 'держащий устройство'}: ${SIDE_LABEL[coin.side].name}`"
+    ],
+    "after": [
+      "`Монета выбрала ${SIDE_LABEL[coin.side].acc}. ${mode === 'bots' ? 'Вы играете за эту команду.' : 'За неё играет тот, кто держит устройство.'}`"
+    ]
+  }
+]
