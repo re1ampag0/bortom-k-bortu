@@ -2,9 +2,9 @@
 // and its sheet (a phone). The Reaction cards are the cards of the hand (Hand.tsx, `alarm`); nothing here blocks the input.
 import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore, type CSSProperties, type RefObject } from 'react';
 import { reactionNow } from '../../engine/hints';
-import { cardByCode, type Action, type GameState } from '../../engine/state';
+import { cardByCode, shipData, type Action, type GameState } from '../../engine/state';
 import type { GameData } from '../../engine/types';
-import { fuseLeft, type AlarmInfo } from './alarm';
+import { alarmInfo, fuseLeft, type AlarmInfo } from './alarm';
 import { HandCard, type AlarmCard } from './Hand';
 import { T } from './fx/timing';
 import { stageK } from '../stage';
@@ -214,6 +214,7 @@ export function AlarmActions({
 export function ReactionSheet({
   s,
   data,
+  desktop=false,
   seats,
   hints,
   memo,
@@ -228,6 +229,7 @@ export function ReactionSheet({
 }: {
   s: GameState;
   data: GameData;
+  desktop?: boolean;
   seats: string[];
   hints: boolean;
   memo: boolean;
@@ -250,6 +252,8 @@ export function ReactionSheet({
   }
   items.sort((a, b) => Number(!!alarmOf(a.seat, a.card)?.why) - Number(!!alarmOf(b.seat, b.card)?.why));
   const side = s.ships[seats[0]]?.side;
+  const threat=desktop?alarmInfo(s,data):null;
+  const heading=threat?.shooter&&threat.target?`«${shipData(data,threat.shooter).nick}» ${threat.kind==='after'?'выстрелил':'даёт Залп'} по «${shipData(data,threat.target).nickDative}»`:threat?.line.replace(/\. Ответите Реакцией\?$/,'');
   const allowed = items.filter(it => alarmOf(it.seat, it.card)?.kind === 'ok');
   const validPick = allowed.find(it => it.seat === pick?.seat && it.card === pick.card);
   const sole = allowed.length === 1 ? allowed[0] : null;
@@ -277,9 +281,10 @@ export function ReactionSheet({
     );
   }
   return (
-    <section className={`panel alarm-sheet ${hints && memo ? 'with-memo' : ''}`} data-testid="reaction-panel" style={alarmVars}>
+    <section className={`panel alarm-sheet ${desktop?'reaction-desktop':''} ${hints && memo ? 'with-memo' : ''}`} data-testid="reaction-panel" style={alarmVars}>
       <div className="as-head">
-        <span className="as-title">Ответить Реакцией</span>
+        <span className="as-title">{desktop?'РЕАКЦИЯ':'Ответить Реакцией'}</span>
+        {desktop&&<div className="rx-heading"><h2>{heading}</h2>{threat?.hit&&<p>Ожидается {threat.hit.pill}</p>}</div>}
         <span className="as-count">
           {side ? `Порох ${s.teams[side].powder} из ${data.econ.cap}` : ''}
         </span>
