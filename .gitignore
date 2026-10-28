@@ -7,3 +7,7 @@ playwright-report/
 dist-server/
 server-data/
 tmp/
+
+# Reproducible local lossless capture archives; review PNG/JSON evidence is tracked.
+/docs/measurements/fps-pass/frames/
+/.fps-vite.config.mjs
