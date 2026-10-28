@@ -39,7 +39,10 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
   let live=true,raf=0,elapsed=clocks.get(clockOwner??host)?.get(cacheKey)??0,last=performance.now(),running=false,intersecting=false,capturing=false;
   let revealTimer=0,revealFrame=0,resumeBuild:(()=>void)|undefined;
   const animations:Animation[]=[],particles:{node:Layer;chain:Layer[];image:HTMLImageElement;level:number}[]=[];
-  const surfaces=new Map<number,{canvas:HTMLCanvasElement;context:CanvasRenderingContext2D}>();
+  type Bounds={l:number;t:number;r:number;b:number};
+  const surfaces=new Map<number,{canvas:HTMLCanvasElement;context:CanvasRenderingContext2D;dirty:Bounds|null}>();
+  const matrices=new Map<string,DOMMatrix>();
+  const matrix=(value:string|undefined,w:number,h:number)=>{const key=`${w}:${h}:${value}`;let m=matrices.get(key);if(!m){m=sceneMatrix(value,w,h);matrices.set(key,m);}return m;};
   let observer:IntersectionObserver|undefined,unsubscribe:(()=>void)|undefined;
   const reduced=matchMedia('(prefers-reduced-motion:reduce)');
   const dpr=pixelRatio??(narrow?Math.min(devicePixelRatio,2):devicePixelRatio);
@@ -74,20 +77,28 @@ export function PreparedScene({scene,cache,cacheKey,ready,store,narrow,className
   }
   function draw(time:number){
    const cache=new Map<Layer,{matrix:DOMMatrix;alpha:number}>();
-   for(const s of surfaces.values()){s.context.resetTransform();s.context.clearRect(0,0,s.canvas.width,s.canvas.height);}
+   for(const s of surfaces.values()){
+    if(s.dirty){const {l,t,r,b}=s.dirty;s.context.resetTransform();s.context.clearRect(l,t,r-l,b-t);}
+    s.dirty=null;
+   }
    for(const p of particles){if(p.level<0)continue;
     let parent=new DOMMatrix(),alpha=1;
     for(const n of p.chain){let state=cache.get(n);if(!state){
-      const s=n.style,w=px(s.width),h=px(s.height),origin=(s.transformOrigin??'0 0').split(' ');let t=sceneMatrix(s.transform,w,h),op=Number(s.opacity??1);
+      const s=n.style,w=px(s.width),h=px(s.height),origin=(s.transformOrigin??'0 0').split(' ');let t=matrix(s.transform,w,h),op=Number(s.opacity??1);
       for(const anim of n.anim){const v=sampleSceneMotion(anim,time);if(!v)continue;const {a,b,p:k}=v;
-       if(a.transform!==undefined||b.transform!==undefined){const m0=sceneMatrix(String(a.transform??s.transform),w,h),m1=sceneMatrix(String(b.transform??s.transform),w,h);t=new DOMMatrix([m0.a+(m1.a-m0.a)*k,m0.b+(m1.b-m0.b)*k,m0.c+(m1.c-m0.c)*k,m0.d+(m1.d-m0.d)*k,m0.e+(m1.e-m0.e)*k,m0.f+(m1.f-m0.f)*k]);}
+       if(a.transform!==undefined||b.transform!==undefined){const m0=matrix(String(a.transform??s.transform),w,h),m1=matrix(String(b.transform??s.transform),w,h);t=new DOMMatrix([m0.a+(m1.a-m0.a)*k,m0.b+(m1.b-m0.b)*k,m0.c+(m1.c-m0.c)*k,m0.d+(m1.d-m0.d)*k,m0.e+(m1.e-m0.e)*k,m0.f+(m1.f-m0.f)*k]);}
        if(a.opacity!==undefined||b.opacity!==undefined)op=Number(a.opacity??op)+(Number(b.opacity??op)-Number(a.opacity??op))*k;
       }
       const x=px(origin[0]),y=px(origin[1]);state={matrix:new DOMMatrix().translate(px(s.left),px(s.top)).translate(x,y).multiply(t).translate(-x,-y),alpha:op};cache.set(n,state);
      }parent=parent.multiply(state.matrix);alpha*=state.alpha;
     }
-    if(alpha<=0)continue;let s=surfaces.get(p.level);if(!s){const canvas=document.createElement('canvas');canvas.className='sw-particles';canvas.width=Math.ceil(scene.width*dpr);canvas.height=Math.ceil(scene.height*dpr);Object.assign(canvas.style,{width:scene.width+'px',height:scene.height+'px',zIndex:String(p.level)});s={canvas,context:canvas.getContext('2d')!};surfaces.set(p.level,s);host.append(canvas);}
-    const c=s.context,art=p.node.art!;c.setTransform(dpr*parent.a,dpr*parent.b,dpr*parent.c,dpr*parent.d,dpr*parent.e,dpr*parent.f);c.globalAlpha=Math.max(0,Math.min(1,alpha));if(art.crop)c.drawImage(p.image,...art.crop.slice(0,4) as [number,number,number,number],art.x,art.y,art.w,art.h);else c.drawImage(p.image,art.x,art.y,art.w,art.h);
+    if(alpha<=0)continue;let s=surfaces.get(p.level);if(!s){const canvas=document.createElement('canvas');canvas.className='sw-particles';canvas.width=Math.ceil(scene.width*dpr);canvas.height=Math.ceil(scene.height*dpr);Object.assign(canvas.style,{width:scene.width+'px',height:scene.height+'px',zIndex:String(p.level)});s={canvas,context:canvas.getContext('2d')!,dirty:null};surfaces.set(p.level,s);host.append(canvas);}
+    const c=s.context,art=p.node.art!;
+    // AABB in physical pixels, including the antialias fringe. Clear exactly the previous occupied union.
+    const points=[[art.x,art.y],[art.x+art.w,art.y],[art.x,art.y+art.h],[art.x+art.w,art.y+art.h]].map(([x,y])=>({x:dpr*(parent.a*x+parent.c*y+parent.e),y:dpr*(parent.b*x+parent.d*y+parent.f)}));
+    const area={l:Math.max(0,Math.floor(Math.min(...points.map(p=>p.x)))-2),t:Math.max(0,Math.floor(Math.min(...points.map(p=>p.y)))-2),r:Math.min(s.canvas.width,Math.ceil(Math.max(...points.map(p=>p.x)))+2),b:Math.min(s.canvas.height,Math.ceil(Math.max(...points.map(p=>p.y)))+2)};
+    if(area.r>area.l&&area.b>area.t)s.dirty=s.dirty?{l:Math.min(s.dirty.l,area.l),t:Math.min(s.dirty.t,area.t),r:Math.max(s.dirty.r,area.r),b:Math.max(s.dirty.b,area.b)}:area;
+    c.setTransform(dpr*parent.a,dpr*parent.b,dpr*parent.c,dpr*parent.d,dpr*parent.e,dpr*parent.f);c.globalAlpha=Math.max(0,Math.min(1,alpha));if(art.crop)c.drawImage(p.image,...art.crop.slice(0,4) as [number,number,number,number],art.x,art.y,art.w,art.h);else c.drawImage(p.image,art.x,art.y,art.w,art.h);
    }
   }
   function tick(now:number){raf=0;if(!running)return;elapsed+=Math.min(50,Math.max(0,now-last));last=now;draw(elapsed);raf=requestAnimationFrame(tick);}
