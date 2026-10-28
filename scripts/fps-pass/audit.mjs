@@ -1,5 +1,6 @@
+import {readRecords} from './record-data.mjs';
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
-const [before,after,out='audit']=process.argv.slice(2),a=JSON.parse(readFileSync(before))[0],b=JSON.parse(readFileSync(after))[0];
+const [before,after,out='audit']=process.argv.slice(2),a=readRecords(before)[0],b=readRecords(after)[0];
 const timing={busyStart:[a.busyStart,b.busyStart],busyEnd:[a.busyEnd,b.busyEnd],frames:[a.frames,b.frames],categories:[...new Set([...Object.keys(a.first),...Object.keys(b.first)])].map(name=>({name,before:a.first[name]??null,after:b.first[name]??null}))};
 const canonical=x=>JSON.stringify(x);
 const controls=(a.samples??[]).flatMap((v,i)=>canonical(v.controls)!==canonical(b.samples?.[i]?.controls)?[{at:v.at,before:v.controls,after:b.samples?.[i]?.controls}]:[]);
