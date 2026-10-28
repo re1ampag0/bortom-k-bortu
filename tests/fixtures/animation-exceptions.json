@@ -1,0 +1,102 @@
+[
+  {
+    "path": "src/ui/game/art/fire.ts",
+    "kind": "SMIL",
+    "hash": "21dc7f101da93cb2a6c1",
+    "source": "<animate attributeName=\"seed\" values=\"1;2;3;4;5;6;7\" dur=\".7s\" calcMode=\"discrete\" repeatCount=\"indefinite\"/>",
+    "reason": "Непрерывный морфинг трёх контуров с независимыми периодами .55–.85 с и 7 дискретными seed фильтра. 2–4 общих кадра не воспроизводят все промежуточные формы/фазы."
+  },
+  {
+    "path": "src/ui/game/art/fire.ts",
+    "kind": "SMIL",
+    "hash": "1dff4ee757e266715468",
+    "source": "<animate attributeName=\"d\" values=\"${a};${b};${a}\" dur=\"${r()}s\" repeatCount=\"indefinite\"/>",
+    "reason": "Непрерывный морфинг трёх контуров с независимыми периодами .55–.85 с и 7 дискретными seed фильтра. 2–4 общих кадра не воспроизводят все промежуточные формы/фазы."
+  },
+  {
+    "path": "src/ui/game/fx/fx.css",
+    "kind": "keyframes",
+    "name": "wxflash",
+    "hash": "99693105cb65b52e94ce",
+    "properties": [
+      "filter"
+    ],
+    "reason": "Короткая вспышка облака на локальной карте моря: brightness изменяет все исходные цвета. Белая opacity-накладка не эквивалентна; исходник сохранён."
+  },
+  {
+    "path": "src/ui/game/fx/legendSprites.ts",
+    "kind": "SMIL",
+    "hash": "afb2a187916de71a3120",
+    "source": "<animate data-bottle-ripple attributeName=\"rx\" begin=\"indefinite\" dur=\"2.6s\" repeatCount=\"indefinite\"/>",
+    "reason": "Рябь вокруг следа бутылки: rx меняется при постоянной толщине штриха. HTML scaleX изменяет толщину; исходник сохранён."
+  },
+  {
+    "path": "src/ui/game/fx/primitives.ts",
+    "kind": "SMIL",
+    "hash": "48f2bd7186bba8c51445",
+    "source": "<animateTransform attributeName=\"transform\" type=\"rotate\" values=\"-8;8;-8\" dur=\"3.2s\" repeatCount=\"indefinite\"/>",
+    "reason": "Старый след доски на воде, две независимые SMIL-трансформации. Сохранён до покадрового переноса без изменения взаимного порядка."
+  },
+  {
+    "path": "src/ui/game/fx/primitives.ts",
+    "kind": "SMIL",
+    "hash": "04a41cd05a227ed60929",
+    "source": "<animateTransform attributeName=\"transform\" type=\"translate\" values=\"0 0;0 2;0 0\" dur=\"2.4s\" additive=\"sum\" repeatCount=\"indefinite\"/>",
+    "reason": "Старый след доски на воде, две независимые SMIL-трансформации. Сохранён до покадрового переноса без изменения взаимного порядка."
+  },
+  {
+    "path": "src/ui/game/fx/sinkSprites.ts",
+    "kind": "SMIL",
+    "hash": "25a0f2aeb42f87d070a8",
+    "source": "<animateTransform attributeName=\"transform\" type=\"skewY\" values=\"0;-8;0;6;0\" dur=\"1.2s\" repeatCount=\"indefinite\"/>",
+    "reason": "Два локальных элемента шлюпки (<150 px): флаг и свет фонаря. Сохранены форма и фаза SVG-презентации."
+  },
+  {
+    "path": "src/ui/game/fx/sinkSprites.ts",
+    "kind": "SMIL",
+    "hash": "e1583ab186b847ca2706",
+    "source": "<animate attributeName=\"opacity\" values=\".35;.2;.4;.25;.35\" dur=\".9s\" repeatCount=\"indefinite\"/>",
+    "reason": "Два локальных элемента шлюпки (<150 px): флаг и свет фонаря. Сохранены форма и фаза SVG-презентации."
+  },
+  {
+    "path": "src/ui/game/game.css",
+    "kind": "keyframes",
+    "name": "aimpulse",
+    "hash": "38816fee0c5b84311ffc",
+    "properties": [
+      "outline-color"
+    ],
+    "reason": "Исходная рамка остаётся резервом для качающихся планшетов: общий слой должен повторять их трансформацию. Обычная неподвижная цель использует aim-framepulse (opacity)."
+  },
+  {
+    "path": "src/ui/game/game.css",
+    "kind": "keyframes",
+    "name": "ending",
+    "hash": "635dd37ba739dadfd1a0",
+    "properties": [
+      "width"
+    ],
+    "reason": "Текущая полоса ожидания союзника. Требует отдельного эталона сетевого состояния."
+  },
+  {
+    "path": "src/ui/game/game.css",
+    "kind": "keyframes",
+    "name": "legend-flash",
+    "hash": "6198694ac1359a4f3cae",
+    "properties": [
+      "box-shadow",
+      "background"
+    ],
+    "reason": "Исходная вспышка доступности Легенды: растущий радиус тени и дискретная смена фонового градиента не равны opacity-накладке."
+  },
+  {
+    "path": "src/ui/game/victory.css",
+    "kind": "keyframes",
+    "name": "v-ribbon",
+    "hash": "a6320058762d3f446fd3",
+    "properties": [
+      "clip-path"
+    ],
+    "reason": "Раскрытие фигурной ленты с неподвижным текстом: scaleX растягивает текст, overflow скрывает меняющуюся форму вырезов. Вид сохранён."
+  }
+]

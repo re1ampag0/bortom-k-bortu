@@ -2,6 +2,9 @@
 // with a milled edge, a struck sign and a running glint. Signs: «Джек ускользает» — a compass rose, «Кракен» — the kraken,
 // «Корабль в бутылке» — a ship in a bottle, «Армада Компании» — a ship of the line under sail.
 
+// The same glint in a self-contained static image: its transparent padding keeps a bounded resident surface.
+const GLINT_IMAGE='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="-14 -14 28 28"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect x="-4" y="-14" width="8" height="28" fill="url(#g)"/></svg>');
+
 const R1 = (n: number) => Math.round(n * 10) / 10;
 
 export const MEDAL: Record<string, string> = {
@@ -34,5 +37,5 @@ export function legendMedal(name: string, u: string, delay = '0'): string {
     ${[-90, -150, -30].map((d: number) => { const r = d * Math.PI / 180; return `<circle cx="${R1(Math.cos(r) * 11.35)}" cy="${R1(Math.sin(r) * 11.35)}" r=".75" fill="#fff3c4" stroke="#4a340c" stroke-width=".3"/>`; }).join('')}
     <g transform="translate(-8.6 -8.6) scale(1.08)"><g transform="translate(.45 .55)" fill="#fff3c4" stroke="#fff3c4" opacity=".65">${m}</g><g fill="#3a2a0c" stroke="#3a2a0c">${m}</g></g>
     <path d="M-8.6 -4 A9.6 9.6 0 0 1 2 -9.4" fill="none" stroke="#fff8d8" stroke-width="1" stroke-linecap="round" opacity=".7"/>
-    </svg><i class="medal-glint-clip" aria-hidden="true"><i class="gl" style="animation-delay:${delay}s"><svg width="28" height="28" viewBox="-14 -14 28 28" aria-hidden="true"><rect x="-4" y="-14" width="8" height="28" fill="url(#${u}g)"/></svg></i></i></span>`;
+    </svg><i class="medal-glint-clip" aria-hidden="true"><i class="gl" style="animation-delay:${delay}s"><img width="28" height="28" alt="" src="${GLINT_IMAGE}" decoding="sync"/></i></i></span>`;
 }

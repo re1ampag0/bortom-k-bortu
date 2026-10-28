@@ -124,3 +124,31 @@ test('perf guard: Volley, ordinary card, Legend and Armada, sinking, idle',async
  mkdirSync('docs/screenshots/fx-finish/checks',{recursive:true});
  writeFileSync(`docs/screenshots/fx-finish/checks/perf-guard-${info.repeatEachIndex+1}.json`,JSON.stringify(rows,null,1)+'\n');
 });
+
+// A deterministic page fact, not a frame-rate threshold. No diagnostic HUD is painted in this sample.
+test('perf guard: idle table has no large SVG motion and no Paint after preparation',async({page},info)=>{
+ test.skip(info.project.name!=='chromium','CDP Paint is a Chromium page fact.');
+ test.setTimeout(45000);
+ await page.goto('?fxScene=plain&manual=1&speed=fast&seed=19427&perf=0');
+ await expect(page.getByTestId('fx-start')).toBeVisible();
+ await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(Array.from(document.images).map(i=>i.decode().catch(()=>{})));});
+ // Pass the established ten-second template preparation and two complete six-second glint cycles.
+ await page.waitForTimeout(12000);
+ const large=await page.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running').flatMap(a=>{
+  const target=(a.effect as KeyframeEffect|null)?.target;
+  if(!(target instanceof SVGElement))return [];
+  const svg=target instanceof SVGSVGElement?target:target.ownerSVGElement;
+  if(!svg)return [];const r=svg.getBoundingClientRect();
+  return Math.max(r.width,r.height)>150?[`${target.tagName}.${target.getAttribute('class')??''}`]:[];
+ }));
+ expect(large,'running animations inside large SVG').toEqual([]);
+ const cdp=await page.context().newCDPSession(page);
+ await cdp.send('Tracing.start',{categories:'devtools.timeline,disabled-by-default-devtools.timeline',transferMode:'ReturnAsStream'});
+ await page.waitForTimeout(4000);
+ const done=new Promise<{stream?:string}>(resolve=>cdp.once('Tracing.tracingComplete',resolve));
+ await cdp.send('Tracing.end');const{stream}=await done;if(!stream)throw new Error('CDP trace stream missing');let data='';
+ try{while(true){const chunk=await cdp.send('IO.read',{handle:stream});data+=chunk.data;if(chunk.eof)break;}}finally{await cdp.send('IO.close',{handle:stream});}
+ const trace=JSON.parse(data) as {traceEvents:{name:string;ph:string;dur?:number;args?:unknown}[]};
+ const paints=trace.traceEvents.filter(e=>e.name==='Paint'&&e.ph==='X').map(e=>({ms:(e.dur??0)/1000,args:e.args}));
+ expect(paints,'idle Paint must stay zero').toEqual([]);
+});

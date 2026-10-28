@@ -34,3 +34,15 @@ function tableSettling(){const game=document.querySelector('.game');if(!game)ret
 export function queueSceneWarm(work:()=>Promise<unknown>){
  tail=tail.catch(()=>{}).then(()=>mayWarmScenes()?sceneIdleWork(work,true):undefined);return tail;
 }
+
+// Clip templates retain their established readiness clock. Delaying this channel can select
+// the legacy renderer or exhaust a pool halfway through a story; it is not an image catalogue.
+let clipTail=Promise.resolve();
+export function queueClipWarm(work:()=>Promise<unknown>){
+ clipTail=clipTail.catch(()=>{}).then(()=>new Promise<void>(resolve=>{
+  if(!mayWarmScenes()){resolve();return;}
+  const start=()=>{if(document.hidden){const visible=()=>{if(!document.hidden){document.removeEventListener('visibilitychange',visible);start();}};document.addEventListener('visibilitychange',visible);return;}
+   const settle=tableSettling();if(settle>0){setTimeout(start,settle);return;}void work().catch(()=>{}).finally(resolve);};
+  if(typeof requestIdleCallback==='function')requestIdleCallback(start);else setTimeout(start,1500);
+ }));return clipTail;
+}
