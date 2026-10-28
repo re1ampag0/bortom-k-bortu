@@ -1,6 +1,6 @@
 // The same art as legends.ts, prepared outside the rendered document. No gameplay RNG is used here.
 import {bigShip, uidSvg} from '../art/bigShips';
-import {boardW, A, gapBox, rnd, room, smokeJet, filters, ignoreFxBudget, particleCircle, type Pt, type FxCtx} from './primitives';
+import {boardW, A, gapBox, room, smokeJet, ignoreFxBudget, particleCircle, type Pt, type FxCtx} from './primitives';
 import {perfOff} from '../perf/state';
 import {warmSprites, takeSprite, spriteReady, spriteA, type Sprite, type SpriteSpec} from './sprites';
 import {legendGlintSpec} from './legendGlint';
@@ -32,16 +32,11 @@ export function prepareArmadaSprites(ctx:FxCtx):void {
  const wake=svg([-46*k-16,-4,218*k+24,30],`<path d="M${R1(40*k)} 2 C${R1(70*k)} 4 ${R1(110*k)} 10 ${R1(160*k)} 6 M${R1(40*k)} 6 C${R1(70*k)} 10 ${R1(110*k)} 18 ${R1(160*k)} 16" fill="none" stroke="#eef6f8" stroke-width="2" stroke-linecap="round" opacity=".75"/><path d="M${R1(-46*k)} 1 q-8 2 -12 6 M${R1(-46*k)} 4 q-6 3 -9 8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>`);
  const ship=`<div data-sprite-node="pitch" class="lg-pitch">${wake}<div data-sprite-node="recoil" class="lg-recoil"><div class="sprite-art" style="transform:scale(${k})">${hull}</div>${phone?'':`<div data-sprite-node="light" class="sprite-recoil-light"><div class="sprite-art" style="transform:scale(${k})">${lit}</div></div>`}</div></div>`;
  const specs:SpriteSpec[]=[{key,html:ship,count:n}];
- // Canonical gradients/circles. Size and placement belong to HTML wrappers, not animated SVG attributes.
- for(const name of ['light','dark']){
-  const stops=name==='light'?'<stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#e9e5dc" stop-opacity=".92"/><stop offset=".8" stop-color="#c8c1b4" stop-opacity=".55"/><stop offset="1" stop-color="#a59d90" stop-opacity="0"/>':'<stop offset="0" stop-color="#8a847a"/><stop offset=".55" stop-color="#5e5850" stop-opacity=".85"/><stop offset="1" stop-color="#36322c" stop-opacity="0"/>';
-  specs.push({key:`armada-smoke-${name}`,html:svg([-1,-1,2,2],`<defs><radialGradient id="spriteSmoke" cx=".42" cy=".38" r=".62">${stops}</radialGradient></defs><circle r="1" fill="url(#spriteSmoke)"/>`),count:phone?48:96});
- }
  specs.push({key:'armada-ball',html:svg([-6,-6,12,12],'<g class="ball-svg ball"><circle r="5" fill="#1a1714"/><circle cx="-1.4" cy="-1.6" r="1.7" fill="#9a948b"/></g>'),count:36});
  specs.push({key:'armada-shadow',html:svg([-6,-3,12,6],'<ellipse rx="5" ry="2" fill="#000" opacity=".3"/>'),count:36});
  specs.push({key:'armada-group',html:'',count:4});
  specs.push({key:'armada-haze',html:svg([-160,-70,320,140],'<ellipse cx="0" cy="0" rx="160" ry="70" fill="#e6eaec" opacity=".7"/><ellipse cx="-40" cy="30" rx="120" ry="40" fill="#f2f4f5" opacity=".6"/>'),count:1});
- specs.push({key:'armada-fog',html:svg([-1,-1,2,2],'<defs><radialGradient id="armFog"><stop offset="0" stop-color="#eeebe4" stop-opacity=".8"/><stop offset="1" stop-color="#eeebe4" stop-opacity="0"/></radialGradient></defs><circle r="1" fill="url(#armFog)"/>'),count:14});
+
  warmSprites(ctx.board,[...specs,reactionWhirlSpec,legendGlintSpec,...volleySpriteSpecs(ctx),...legendSpriteSpecs(),...motionSpecs(ctx),...sinkSpecs(ctx)]);
  prepared.set(ctx.board,signature);
 }
@@ -61,25 +56,10 @@ export function armadaBall(ctx:FxCtx,svg:Element,p0:Pt,p1:Pt,d=700,delay=0,lift=
  const ball=takeSprite(ctx,'armada-ball');const b=spriteA(ctx,ball.root,path(i=>R1(1+Math.sin(Math.PI*i/N)*.15)),d,delay,'linear');void b.finished.then(ball.release,()=>{});
 }
 export function armadaSmoke(ctx:FxCtx,host:Element,x:number,y:number,ang:number,k=1,n=9,life=5600,delay=0,darkAll=false):void {
- // Keep the laptop's combined turbulence/blur texture, which cannot be split without changing its picture.
- if(filters(ctx)){smokeJet(ctx,host,x,y,ang,k,n,life,delay,darkAll);return}
- if(ctx.canvasParticles){smokeJet(ctx,host,x,y,ang,k,n,life,delay,darkAll);return}
- const m=room(ctx,n);if(!m)return;
- for(let i=0;i<m;i++){
-  const t=i/m,dist=(18+t*70)*k,a=ang+rnd(-.35,.35),r0=(5+t*4)*k,r1=(16+t*22+rnd(0,10))*k;
-  const ex=x+Math.cos(a)*dist,ey=y+Math.sin(a)*dist,dark=darkAll?i%3!==2:i%4===3,r=R1(r1);
-  const sprite=takeSprite(ctx,`armada-smoke-${dark?'dark':'light'}`,host);sprite.root.dataset.perfParticle='';
-  const tf=(px:number,py:number,s:number)=>`translate(${R1(px)}px,${R1(py)}px) scale(${r*s})`;
-  const animation=spriteA(ctx,sprite.root,[
-   {transform:tf(x,y,R1((r0/r1)*100)/100),opacity:0},
-   {transform:tf(x+(ex-x)*.7,y+(ey-y)*.7,.7),opacity:dark?.5:.85,offset:.04},
-   {transform:tf(ex,ey,1),opacity:dark?.5:.9,offset:.14},
-   {transform:tf(ex+26*.5*k,ey-10*.5*k,1.25),opacity:dark?.35:.7,offset:.5},
-   {transform:tf(ex+26*1.6*k,ey-10*1.6*k,1.7),opacity:0},
-  ],life*rnd(.8,1.15),delay+90+i*18,'cubic-bezier(.1,.8,.3,1)');
-  void animation.finished.then(sprite.release,()=>{});
- }
+ // Every caller is the Armada's canvas-particle context. Keep the original smoke texture/path.
+ smokeJet(ctx,host,x,y,ang,k,n,life,delay,darkAll);
 }
+
 export function armadaRecoil(ctx:FxCtx,sprite:Sprite,rd:number,duration:number):void {
  spriteA(ctx,sprite.node('recoil'),[{transform:'rotate(0deg) translate(0,0)'},{transform:`rotate(${rd*2.6}deg) translate(${-rd*3}px,0)`,offset:.12},{transform:`rotate(${-rd*.8}deg) translate(0,0)`,offset:.55},{transform:'rotate(0deg) translate(0,0)'}],duration,0,'ease-out','none');
  if(boardW(ctx)>700&&!perfOff('filters')&&!perfOff('light'))ignoreFxBudget(spriteA(ctx,sprite.node('light'),[{opacity:0},{opacity:1,offset:.12},{opacity:0,offset:.55},{opacity:0}],duration,0,'ease-out','none'));

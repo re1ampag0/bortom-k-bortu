@@ -14,9 +14,10 @@ function svgPart(source: SVGSVGElement,nodes: Element[]): SVGSVGElement {
   svg.append(...nodes);return svg;
 }
 /** Bounds are read only at weather creation, before any frame is displayed. */
-function island(source: SVGSVGElement,node: SVGGraphicsElement,pad=4): HTMLDivElement {
+function island(source: SVGSVGElement,node: SVGGraphicsElement,pad=4,pixelAligned=false): HTMLDivElement {
   const b=node.getBBox(),box=document.createElement('div'),svg=svgPart(source,[]);
-  const x=b.x-pad,y=b.y-pad,w=Math.max(1,b.width+pad*2),h=Math.max(1,b.height+pad*2);
+  const x=pixelAligned?Math.floor(b.x-pad):b.x-pad,y=pixelAligned?Math.floor(b.y-pad):b.y-pad;
+  const w=pixelAligned?Math.max(1,Math.ceil(b.x+b.width+pad)-x):Math.max(1,b.width+pad*2),h=pixelAligned?Math.max(1,Math.ceil(b.y+b.height+pad)-y):Math.max(1,b.height+pad*2);
   box.className='wx-island';box.style.cssText=`position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;pointer-events:none;will-change:transform`;
   svg.setAttribute('width',String(w));svg.setAttribute('height',String(h));svg.setAttribute('viewBox',`${x} ${y} ${w} ${h}`);
   svg.style.overflow='hidden';svg.append(node);box.append(svg);return box;
@@ -97,7 +98,7 @@ function groups(source: SVGSVGElement): void {
     motion.style.cssText='position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;pointer-events:none;will-change:transform,opacity';
     // CSS opacity replaces an SVG presentation attribute, not a second opacity factor.
     if(node.matches('.fb,.rd,.st,.sk,.gl'))node.removeAttribute('opacity');node.removeAttribute('class');
-    const art=island(source,node as SVGGraphicsElement);art.style.willChange='auto';
+    const art=island(source,node as SVGGraphicsElement,4,true);art.style.willChange='auto';
     motion.append(art);box.append(motion);
   }
   flush();if(style)box.querySelector('svg')!.append(style);source.replaceWith(box);

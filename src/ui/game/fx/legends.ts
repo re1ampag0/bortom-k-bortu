@@ -436,7 +436,7 @@ LG['И-Л'] = async (c, ctx) => {
   }
   // the smoke of the broadside stays over the sea and drifts; the fleet sails away into it
   const host = seaScars(ctx);
-  if (host && ctx.canvasParticles && !perfOff('particles')) {
+  if (host && !perfOff('particles')) {
     const group=scar(armadaSmokeHost(ctx,host),'short');
     for(let i=0;i<(phone?7:14);i++){
       const cx=R1(W*(.1+(i*.85)/(phone?6:13))),cy=R1(y+rnd(-26,26)),rx=R1(rnd(50,80)*Math.max(.6,k)),ry=R1(rnd(20,32));
@@ -444,17 +444,7 @@ LG['И-Л'] = async (c, ctx) => {
       A(ctx,fog,[{transform:`translate(${cx}px,${cy}px) scale(${rx/32},${ry/32})`,opacity:1},{transform:`translate(${cx+(filters(ctx)?60:0)}px,${cy}px) scale(${rx/32},${ry/32})`,opacity:1}],22000,0,'linear');
     }
     armadaA(ctx,group,[{opacity:0},{opacity:1}],K.smoke,0,'ease-out','none');
-  } else if (host && stickers && !filters(ctx) && !perfOff('particles')) {
-    const group=scar(armadaSmokeHost(ctx,host),'short');
-    for(let i=0;i<(phone?7:14);i++){
-      const cx=R1(W*(.1+(i*.85)/(phone?6:13))),cy=R1(y+rnd(-26,26)),rx=R1(rnd(50,80)*Math.max(.6,k)),ry=R1(rnd(20,32));
-      const fog=takeSprite(ctx,'armada-fog',group);fog.root.dataset.perfParticle='';fog.root.style.transform=`translate(${cx}px,${cy}px) scale(${rx},${ry})`;
-    }
-    armadaA(ctx,group,[{opacity:0},{opacity:1}],K.smoke,0,'ease-out','none');
-  } else if(host && !perfOff('particles')) {
-    const sm = scar(fxSvg(ctx, host), 'short'), drift = filters(ctx);
-    sm.innerHTML += `<defs><radialGradient id="lgArmS"><stop offset="0" stop-color="#eeebe4" stop-opacity=".8"/><stop offset="1" stop-color="#eeebe4" stop-opacity="0"/></radialGradient></defs>${Array.from({ length: phone ? 7 : 14 }, (_, i) => { const cx = R1(W * (0.1 + (i * 0.85) / (phone ? 6 : 13))); return `<ellipse cx="${cx}" cy="${R1(y + rnd(-26, 26))}" rx="${R1(rnd(50, 80) * Math.max(0.6, k))}" ry="${R1(rnd(20, 32))}" fill="url(#lgArmS)">${drift ? `<animate attributeName="cx" values="${cx};${R1(cx + 60)}" dur="22s" fill="freeze"/>` : ''}</ellipse>`; }).join('')}`;
-    A(ctx, sm, [{ opacity: 0 }, { opacity: 1 }], K.smoke, 0, 'ease-out', 'none');
+
   }
   ships.forEach((s, i) => armadaA(ctx, s.g, [{ transform: `translate(${R1(s.x)}px,${R1(s.y)}px)`, opacity: 1 }, { transform: `translate(${R1(s.x - 1000)}px,${R1(s.y)}px)`, opacity: 0 }], K.leave, i * K.leaveStep, 'cubic-bezier(.5,0,.8,.6)'));
   await wait(ctx, K.end);
