@@ -1,6 +1,6 @@
 import {perfOff} from '../perf/state';
 import {canvasCircRing} from './particles';
-import {SINK_DEBRIS,SINK_WAKE,sinkSticker,sinkWreck} from './sinkSprites';
+import {SINK_DEBRIS,SINK_WAKE,prepareSinkSprites,sinkSticker,sinkWreck} from './sinkSprites';
 // The clips of the ships in motion: a change of places (FLIP), diving and surfacing, sinking, the abilities of the
 // ships. A port of docs/mockups/anim/level1/play-misc.js (see PORTING.md): the code is the reference's, what changed is
 // how an element is found (the data-fx-* DOM contract), the globals (the context `ctx`) and the types. The rest of
@@ -186,6 +186,7 @@ PLAY.sink = async (c, ctx) => {
   ctx.canvasParticles = true;
   ctx.volleySprites = true;
   ctx.legendParticles = true;
+  prepareSinkSprites(ctx);
   const S = T.sink, el = plank(ctx, c.ship), b = bx(ctx, el), up = isTop(ctx, c.ship) ? false : true; // up: the gap is above (a bottom-row ship)
   const fy = facingY(ctx, c.ship), toGap = up ? -1 : 1, small = isPhone(ctx);
   hint(ctx, `${nick(ctx, c.ship)} тонет`);
