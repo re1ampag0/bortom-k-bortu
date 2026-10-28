@@ -1,3 +1,4 @@
+import {idleSceneAsset} from '../game/scene-window/assets';
 import {prepareInfoWindows} from '../game/scene-window/loadWindows';
 import {useEffect,useMemo,useRef,useState} from 'react';
 import aliases from './aliases.json';
@@ -35,7 +36,7 @@ export function MenuScene({name}:{name:string}){
  useEffect(()=>{const el=ref.current;if(!el||!ready)return;const check=()=>{if(el.querySelector('[data-ready="1"]'))setShown(key)};const mo=new MutationObserver(check);check();mo.observe(el,{subtree:true,attributes:true,attributeFilter:['data-ready']});return()=>mo.disconnect()},[key,ready]);
  useEffect(()=>{
   if(!motion||shown!==key||posterDecoded!==key||!['Main','Phone'].includes(key)||warmed.has(key))return;warmed.add(key);
-  for(const next of phone?['PiratesPhone','CompanyPhone','Chart_prepPhone']:['Pirates','Company','Chart_prep'])void queueSceneWarm(async()=>{if(!menuMotionAllowed()||reduced.matches)return;const p=(posters as Record<string,{src:string}>)[next];if(p)await pool.load(pictures['./posters/'+p.src]);const s=await loadScene(next);await Promise.all([...new Set(sceneUrls(s))].map(src=>pool.load(art(src))));});
+  for(const next of phone?['PiratesPhone','CompanyPhone','Chart_prepPhone']:['Pirates','Company','Chart_prep'])void queueSceneWarm(async()=>{if(!menuMotionAllowed()||reduced.matches)return;const p=(posters as Record<string,{src:string}>)[next];if(p)await pool.load(pictures['./posters/'+p.src]);const s=await loadScene(next);for(const src of new Set(sceneUrls(s)))await idleSceneAsset(()=>pool.load(art(src))); });
  },[key,shown,posterDecoded,motion,phone,reduced]);
  if(!info)return null;
  return <div className="menu-prepared" ref={ref} style={{aspectRatio:`${info.width}/${info.height}`,'--menu-art-width':info.width+'px','--menu-art-height':info.height+'px'}as React.CSSProperties}>

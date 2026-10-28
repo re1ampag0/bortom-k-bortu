@@ -1,3 +1,4 @@
+import {sceneIdleWork} from './idle';
 /** Shared detached decoding pool. Active owners retain their own references when the LRU evicts a URL. */
 export function createSceneImagePool(limit=512){
  const pending=new Map<string,Promise<HTMLImageElement>>();
@@ -17,4 +18,4 @@ export function createSceneCache(url:(path:string)=>string,pool?:ReturnType<type
 }
 export type SceneCache=ReturnType<typeof createSceneCache>;
 /** Background decode is one image per idle turn; foreground windows and clips take priority. */
-export function idleSceneAsset(work:()=>Promise<unknown>):Promise<void>{return new Promise(resolve=>{const schedule=()=>{if(typeof requestIdleCallback==='function')requestIdleCallback(run);else setTimeout(run,50);};const run=()=>{if(document.hidden||document.querySelector('.ship-window-backdrop,.weather-window-backdrop,.game[data-fx-busy]')){setTimeout(schedule,250);return;}void work().catch(()=>{}).finally(resolve);};schedule();});}
+export function idleSceneAsset(work:()=>Promise<unknown>):Promise<void>{return sceneIdleWork(work,true,false);}

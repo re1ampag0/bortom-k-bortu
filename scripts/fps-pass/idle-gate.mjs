@@ -1,0 +1,8 @@
+// Read-only probes of the shared warm-up scheduler; actual pointer and actual clip.
+import {chromium} from '@playwright/test';import {writeFileSync}from'node:fs';
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium'}),p=await browser.newPage(),proof={};
+try{await p.goto('http://127.0.0.1:5431/bortom-k-bortu/?fxScene=plain&manual=1&speed=fast&hints=0');await p.getByTestId('fx-start').waitFor();await p.evaluate(async()=>{const{sceneIdleWork}=await import('/bortom-k-bortu/src/ui/game/scene-window/idle.ts');window.probes=[];window.probe=label=>sceneIdleWork(async()=>{window.probes.push({label,at:performance.now()});},false,false);});
+ await p.mouse.move(2,200);await p.mouse.down();await p.evaluate(()=>{window.probe('held')});await p.waitForTimeout(350);proof.blockedWhileHeld=await p.evaluate(()=>window.probes.length===0);await p.mouse.up();await p.waitForTimeout(350);proof.resumedAfterRelease=await p.evaluate(()=>window.probes.some(p=>p.label==='held'));
+ await p.getByTestId('fx-start').click();await p.locator('.game[data-fx-busy]').waitFor();await p.evaluate(()=>{window.probe('clip')});await p.waitForTimeout(400);proof.blockedDuringClip=await p.evaluate(()=>!window.probes.some(p=>p.label==='clip'));await p.locator('.game[data-fx-busy]').waitFor({state:'detached',timeout:60000});await p.waitForFunction(()=>window.probes.some(p=>p.label==='clip'));
+ proof.resumedAfterClip=true;proof.records=await p.evaluate(()=>window.probes);writeFileSync('docs/measurements/fps-pass/m6-idle-gate.json',JSON.stringify(proof,null,2));console.log(proof);if(Object.values(proof).some(v=>v===false))throw Error('Idle gate probe failed');
+}finally{await browser.close()}
