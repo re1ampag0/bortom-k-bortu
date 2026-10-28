@@ -1,0 +1,7 @@
+[
+  {
+    "test": "without «Подсказки» the Reaction window: «Тревога!», the Reaction chosen inside the sheet says what happens now, «i» gives the full card",
+    "status": "passed",
+    "durationMs": 4485
+  }
+]
