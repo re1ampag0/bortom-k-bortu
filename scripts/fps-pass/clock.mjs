@@ -44,15 +44,15 @@ export function installDeterministicClock(){
   },
   info(){return{time:performance.now(),seed,randomCalls,randomTrace,history:[...bank.values()].map(r=>({at:r.at,css:r.css,tag:r.animation.effect?.target?.tagName,class:r.animation.effect?.target?.getAttribute?.('class'),duration:r.animation.effect?.getTiming().duration,delay:r.animation.effect?.getTiming().delay,cancelled:r.cancelled,completed:r.completed})),animations:bank.size,pendingDecodes:jobs.size,finishErrors:[...bank.values()].filter(r=>r.finishError).map(r=>r.finishError)}},
  };
+ // Same 10 ms completion grid, advanced in one CDP call rather than five round trips per recorded frame.
+ setInterval(()=>{},10);
 }
 const protocols=new WeakMap();
 export const bindProtocol=(page,cdp)=>protocols.set(page,cdp);
 export async function advance(page,ms){
  const cdp=protocols.get(page);
- for(let left=ms;left>0;left-=10){
-  if(cdp)await cdp.send('Animation.setPlaybackRate',{playbackRate:.1});
-  await page.clock.runFor(Math.min(10,left));
-  if(cdp)await cdp.send('Animation.setPlaybackRate',{playbackRate:0});
-  await page.evaluate(async()=>{await window.__fpsClock.settle();window.__fpsClock.sync()});
- }
+ if(cdp)await cdp.send('Animation.setPlaybackRate',{playbackRate:.1});
+ await page.clock.runFor(ms);
+ if(cdp)await cdp.send('Animation.setPlaybackRate',{playbackRate:0});
+ await page.evaluate(async()=>{await window.__fpsClock.settle();window.__fpsClock.sync()});
 }

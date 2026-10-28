@@ -83,9 +83,29 @@ function reefs(source: SVGSVGElement): void {
   if(style)box.querySelector('svg')!.append(style);
   source.replaceWith(box);
 }
+/** Keep the original painter order, defs and CSS timing, but composite each moving
+ * fog bank / gust / star / glint / ship independently of the sea-sized SVG. */
+function groups(source: SVGSVGElement): void {
+  const box=frame(source),style=source.querySelector(':scope > style');
+  let still:Element[]=[];
+  const flush=()=>{if(still.length){box.append(svgPart(source,still));still=[];}};
+  for(const node of [...source.children]){
+    if(node.matches('defs,style'))continue;
+    if(!node.classList.contains('wx-loop')){still.push(node);continue;}
+    flush();
+    const motion=document.createElement('div');motion.className=node.getAttribute('class')??'';
+    motion.style.cssText='position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;pointer-events:none;will-change:transform,opacity';
+    // CSS opacity replaces an SVG presentation attribute, not a second opacity factor.
+    if(node.matches('.fb,.rd,.st,.sk,.gl'))node.removeAttribute('opacity');node.removeAttribute('class');
+    const art=island(source,node as SVGGraphicsElement);art.style.willChange='auto';
+    motion.append(art);box.append(motion);
+  }
+  flush();if(style)box.querySelector('svg')!.append(style);source.replaceWith(box);
+}
 export function compositeWeather(source: SVGSVGElement,key: string,soft: boolean): void {
   if(key==='wave')wave(source);
   else if(key==='storm')storm(source,soft);
   else if(key==='maelstrom')maelstrom(source);
   else if(key==='reefs')reefs(source);
+  else if(['fog','calm','wind','moon','fleet'].includes(key))groups(source);
 }
