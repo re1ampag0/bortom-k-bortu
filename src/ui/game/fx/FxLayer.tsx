@@ -415,6 +415,11 @@ export function useFxQueue({
           await gate(run);
           const ctx = makeCtx(run);
           if (!ctx) throw ABORT;
+          // Initial sea playback can make the mount-time idle warmup skip the board entirely.
+          // A mandatory renderer must be ready before the first effect, not after ten idle seconds.
+          prepareParticles(ctx.board, innerWidth > 700 ? particleDefs(true) : undefined);
+          if (['shot', 'counter', 'sink', 'legend', 'jack'].includes(clip.kind)) prepareArmadaSprites(ctx);
+          if (clip.kind === 'legend' || clip.kind === 'jack') prepareLegendIntro(ctx);
           if (clip.kind === 'turn') SCENES.forEach((x) => x.onTurn(ctx));
           playing.current = clip.kind;
           clipKind(clip.kind);

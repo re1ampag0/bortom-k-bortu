@@ -1,0 +1,26 @@
+{
+  "stats": {
+    "startTime": "2026-10-28T18:33:57.772Z",
+    "duration": 37017.158,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "test": "hull impact: no debris or damage before arrival; the plate stays above wreckage",
+      "project": "chromium",
+      "status": "passed",
+      "durationMs": 9898,
+      "error": ""
+    },
+    {
+      "test": "two tabs: a room by its code, a Volley and a Reaction, a reload brings the player back",
+      "project": "chromium",
+      "status": "failed",
+      "durationMs": 25295,
+      "error": "Error: expect(locator).toContainText(expected) failed\n\nLocator: locator('.log-col')\nTimeout: 20000ms\n- Expected substring  -   1\n+ Received string     + 167\n\n- Реакция\n+\n+     \n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+     \n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+     \n+     \n+     \n+     \n+     \n+     Море · весь раундМоре:«Туман» | только напротивiПравилаПравилаНастройкиНастройкиСудовой журналI·1Попадание по «Индевору»: 2 Пушки − 1 Водоворот = 1 по Корпусу. Корпус 12 → 11.I·1«Голландец» ответил Реакцией «Водоворот».I·1«Жемчужина» бьёт «Индевора»: 2 по Корпусу.I·1Пираты: +2 Пороха (Трюм) → 2.I·1Ход Пиратов.IМоре: Туман (весь раунд). Только напротивРаунд II«Голландец» добирает 5 карт.I«Индевор» добирает 5 карт.I«Месть» добирает 5 карт.I«Жемчужина» добирает 5 карт.Весь журналСкачатьНапомнить\n+     \n+     \n+     \n+   \n+   \n+   \n+   \n+   \n+   \n+   Ходят Пираты\n\nCall log:\n  - Expect \"toContainText\" with timeout 20000ms\n  - waiting for locator('.log-col')\n    5 × locator resolved to <aside class=\"log-col\">…</aside>\n      - unexpected value \"\n    \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n    \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n    \n    \n    \n    \n    \n    Море · весь раундМоре:«Туман» | только напротивiПравилаПравилаНастройкиНастройкиСудовой журналI·1«Голландец» ответил Реакцией «Водоворот».I·1«Жемчужина» бьёт «Индевора»: 2 по Корпусу.I·1Пираты: +2 Пороха (Трюм) → 2.I·1Ход Пиратов.IМоре: Туман (весь раунд). Только напротивРаунд II«Голландец» добирает 5 карт.I«Индевор» добирает 5 карт.I«Месть» добирает 5 карт.I«Жемчужина» добирает 5 карт.Весь журналСкачатьНапомнить\n    \n    \n    \n  \n  \n  \n  \n  \n  \n  Ходят Пираты\"\n    18 × locator resolved to <aside class=\"log-col\">…</aside>\n       - unexpected value \"\n    \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n    \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n    \n    \n    \n    \n    \n    Море · весь раундМоре:«Туман» | только напротивiПравилаПравилаНастройкиНастройкиСудовой журналI·1Попадание по «Индевору»: 2 Пушки − 1 Водоворот = 1 по Корпусу. Корпус 12 → 11.I·1«Голландец» ответил Реакцией «Водоворот».I·1«Жемчужина» бьёт «Индевора»: 2 по Корпусу.I·1Пираты: +2 Пороха (Трюм) → 2.I·1Ход Пиратов.IМоре: Туман (весь раунд). Только напротивРаунд II«Голландец» добирает 5 карт.I«Индевор» добирает 5 карт.I«Месть» добирает 5 карт.I«Жемчужина» добирает 5 карт.Весь журналСкачатьНапомнить\n    \n    \n    \n  \n  \n  \n  \n  \n  \n  Ходят Пираты\"\n"
+    }
+  ]
+}
