@@ -1,3 +1,4 @@
+import {useDeferredPaint} from '../useDeferredPaint';
 import {logText} from './logText';
 import {ShipPending} from './ship-window/ShipPending';
 import {CardArt} from '../CardArt';
@@ -263,6 +264,7 @@ export const LogList = reactMemo(function LogList({
   onCard: (code: string) => void;
   onSea: (code: string) => void;
 }) {
+  const paintRef=useRef<HTMLOListElement>(null);useDeferredPaint(paintRef,':scope > li');
   const all = full ?? log;
   // the log grows in place (the same array): its length is a dependency too
   const marks = useMemo(() => {
@@ -273,7 +275,7 @@ export const LogList = reactMemo(function LogList({
   // PH 5: a page of the ship's book — on the margin the icon of the line and «раунд·ход», the line in ink, the cards
   // underlined in bordeaux, a vignette between the rounds, the lines shown now under a yellow marker
   return (
-    <ol className="log-list" data-testid="log">
+    <ol ref={paintRef} className="log-list" data-testid="log">
       {lines.map((l, i) => (
         <li key={chrono ? i : log.length - i} className={`log-${l.kind} ${l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? 'log-sep' : ''} ${l.action >= fresh ? 'fresh' : ''}`}>
           {l.kind === 'round' && /^Раунд \d+\.?$/.test(l.text) ? (

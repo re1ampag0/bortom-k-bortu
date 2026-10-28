@@ -108,5 +108,5 @@ export function compositeWeather(source: SVGSVGElement,key: string,soft: boolean
   else if(key==='storm')storm(source,soft);
   else if(key==='maelstrom')maelstrom(source);
   else if(key==='reefs')reefs(source);
-  else if(['fog','calm','wind','moon','fleet'].includes(key))groups(source);
+  else if(['fog','calm','moon','fleet'].includes(key))groups(source);
 }
