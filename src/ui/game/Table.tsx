@@ -1,5 +1,5 @@
 // Presentational parts of the table: the status bar, a team row with its Hold, a ship board (plank).
-import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
+import { memo, useLayoutEffect, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
 import { cardByCode, seaCardByCode, shipData, startValue, type GameState, type ShipState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
 import { cardsWord } from '../../engine/log';
@@ -477,6 +477,18 @@ function PlankView({
   const d = shipData(data, ship.code);
   const phone = usePhoneLayout();
   const buttonsRef = useMoreSides<HTMLDivElement>();
+  const frameRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const plank=frameRef.current;
+    if(!plank||!plate||plate.chosen||plank.closest<HTMLElement>('.board')?.dataset.wxMove||plank.closest('.board[data-card-decision]'))return;
+    // A sibling escapes the plank's paper clip without changing its layout/children.
+    const frame=document.createElement('div');frame.className='aim-frame';frame.setAttribute('aria-hidden','true');
+    const update=()=>{const style=getComputedStyle(plank),parent=plank.parentElement!,p=parent.getBoundingClientRect(),r=plank.getBoundingClientRect(),k=p.width/parseFloat(getComputedStyle(parent).width);Object.assign(frame.style,{left:(r.left-p.left)/k+'px',top:(r.top-p.top)/k+'px',width:r.width/k+'px',height:r.height/k+'px',borderRadius:style.borderRadius,outlineOffset:style.outlineOffset});};
+    update();plank.after(frame);plank.dataset.aimComposited='';
+    const observer=new ResizeObserver(update);observer.observe(plank);
+    window.addEventListener('resize',update);
+    return()=>{observer.disconnect();window.removeEventListener('resize',update);delete plank.dataset.aimComposited;frame.remove();};
+  }, [!!plate,plate?.chosen,phone]);
   const st = statuses(s, data, ship);
   const marked = st.some((x) => x.mark);
   const markHidden = !!fxHidden?.includes('mark');
@@ -560,6 +572,7 @@ function PlankView({
       data-captain-on-board={captainOnBoard?'':undefined}
       data-ship={ship.code}
       data-fx-ship={ship.code}
+      ref={frameRef}
       style={{ ['--ship' as string]: d.color }}
       onClick={plate ? plate.onClick : onSelect}
       {...aim}

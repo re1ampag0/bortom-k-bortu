@@ -4649,3 +4649,19 @@ button.middle-info:focus-visible { outline: 2px solid var(--brass); outline-offs
 .bottom-bar {
   contain: layout style;
 }
+
+/* The selection frame is outside the clipped paper; it does not move/repaint its contents. */
+.plank.aimable[data-aim-composited] { outline-color:transparent; animation:none; }
+.aim-frame {
+  position:absolute;box-sizing:border-box;pointer-events:none;
+  outline:2px dashed rgba(163,52,31,.7);outline-offset:3px;
+  animation:aim-framepulse 1.4s ease-in-out infinite;
+}
+@keyframes aim-framepulse { 50% { opacity:.35714285714285715; } }
+.plank.aimable[data-aim-composited]:focus-visible {outline-color:rgba(163,52,31,.7);}
+.plank.aimable:focus-visible + .aim-frame {display:none;}
+@media(hover:hover) {
+  .plank.aimable[data-aim-composited]:hover {outline-color:rgba(163,52,31,.7);}
+  .plank.aimable:hover + .aim-frame {display:none;}
+}
+@media(prefers-reduced-motion:reduce) { .aim-frame {animation:none;} }
