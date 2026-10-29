@@ -236,7 +236,8 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
   const staticRoot = options.staticDir ? resolve(options.staticDir) : null;
   let port = options.port;
   const http = createServer((req, res) => {
-    const url = new URL(req.url ?? '/', 'http://x');
+    const url = parseUrl(req.url);
+    if (!url) return badRequest(res);
     if (url.pathname === '/health' || url.pathname === `${BASE}health`) {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': '*' });
       res.end(JSON.stringify({ ok: true, rooms: rooms.size, connections: conns.size, uptime: Math.round((Date.now() - started) / 1000) }));
@@ -254,7 +255,9 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
       return;
     }
     if (!url.pathname.startsWith(BASE) || !staticRoot) return notFound(res);
-    serveStatic(staticRoot, decodeURIComponent(url.pathname.slice(BASE.length)), req, res);
+    const path = decodePath(url.pathname.slice(BASE.length));
+    if (path === null) return badRequest(res);
+    serveStatic(staticRoot, path, req, res);
   });
 
   // ——— WebSocket ———
@@ -262,9 +265,9 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
   const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_MESSAGE });
   const allowed = (options.allowedOrigins ?? []).filter(Boolean);
   http.on('upgrade', (req: IncomingMessage, socket, head) => {
-    const path = new URL(req.url ?? '/', 'http://x').pathname;
+    const path = parseUrl(req.url)?.pathname;
     const origin = req.headers.origin;
-    const sameHost = !!origin && !!req.headers.host && new URL(origin).host === req.headers.host;
+    const sameHost = !!origin && !!req.headers.host && parseUrl(origin, undefined)?.host === req.headers.host;
     if ((path !== '/ws' && path !== `${BASE}ws`) || (allowed.length > 0 && origin && !sameHost && !allowed.includes(origin))) {
       socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
       socket.destroy();
@@ -340,6 +343,29 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
       await new Promise<void>((ok) => http.close(() => ok()));
     },
   };
+}
+
+/** A request URL or an Origin header; null when it cannot be parsed (`//`, `null` from a file:// page). */
+function parseUrl(raw: string | undefined, base: string | undefined = 'http://x'): URL | null {
+  try {
+    return new URL(raw ?? '/', base);
+  } catch {
+    return null;
+  }
+}
+
+/** A percent-encoded path; null for a broken escape such as `%E0%A4%A`. */
+function decodePath(raw: string): string | null {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+}
+
+function badRequest(res: ServerResponse): void {
+  res.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' });
+  res.end('Неверный адрес');
 }
 
 function notFound(res: ServerResponse): void {
