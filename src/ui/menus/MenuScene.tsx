@@ -26,11 +26,12 @@ export function MenuScene({name}:{name:string}){
  const [motion,setMotion]=useState(()=>menuMotionEnabled()&&!reduced.matches),[perf,setPerf]=useState(getPerf);
  useEffect(()=>{initMenuMotion();const update=()=>{setMotion(menuMotionEnabled()&&!reduced.matches);setPerf(getPerf());};const off=subscribeMenuMotion(update),p=subscribePerf(update);reduced.addEventListener('change',update);update();return()=>{off();p();reduced.removeEventListener('change',update);};},[reduced]);
  useEffect(()=>{if(!['Main','Phone','Chart_prep','Chart_prepPhone','Curtain','CurtainPhone','Placement','PlacementPhone'].includes(key)||posterDecoded!==key||windowsWarmed)return;windowsWarmed=true;void prepareInfoWindows().catch(()=>{windowsWarmed=false});},[posterDecoded,key]);
+ // A menu may unmount during decoding. Only its live owner can report a preparation failure.
  const poster=info?pictures['./posters/'+info.src]:undefined;
- useEffect(()=>{let live=true;if(poster)void pool.load(poster).then(()=>{if(live)setPosterDecoded(key);});return()=>{live=false}},[poster,key]);
- useEffect(()=>{let live=true;setReady(false);setShown('');setSource(null);if(motion&&!/^Chart_main/.test(key))void loadScene(key).then(s=>{if(live)setSource(s)});return()=>{live=false}},[key,motion]);
+ useEffect(()=>{let live=true;if(poster)void pool.load(poster).then(()=>{if(live)setPosterDecoded(key);}).catch(error=>{if(live)throw error;});return()=>{live=false}},[poster,key]);
+ useEffect(()=>{let live=true;setReady(false);setShown('');setSource(null);if(motion&&!/^Chart_main/.test(key))void loadScene(key).then(s=>{if(live)setSource(s)}).catch(error=>{if(live)throw error;});return()=>{live=false}},[key,motion]);
  const scene=useMemo(()=>{if(!source)return null;const prune=(nodes:Scene['tree']):Scene['tree']=>nodes.filter(n=>!(perfOff('particles')&&n.particle)&&!(perfOff('light')&&/beam|light|sheen|lantern|cabin|stern|flick|glow|rays|lhWater|refl|fw|torch|lhFlash/i.test(n.cls??''))).map(n=>({...n,children:prune(n.children)}));return {...source,tree:prune(source.tree)};},[source,perf]);
- useEffect(()=>{let live=true;setReady(false);if(scene)void cache.prepare(key,sceneUrls(scene)).then(()=>{if(live)setReady(true);});return()=>{live=false}},[scene,key,cache]);
+ useEffect(()=>{let live=true;setReady(false);if(scene)void cache.prepare(key,sceneUrls(scene)).then(()=>{if(live)setReady(true);}).catch(error=>{if(live)throw error;});return()=>{live=false}},[scene,key,cache]);
  useEffect(()=>{const el=ref.current;if(!el||!info)return;const resize=()=>el.style.setProperty('--menu-art-scale',String(el.clientWidth/info.width));const ro=new ResizeObserver(resize);ro.observe(el);resize();return()=>ro.disconnect()},[info]);
  useEffect(()=>{const el=ref.current;if(!el||!ready)return;const check=()=>{if(el.querySelector('[data-ready="1"]'))setShown(key)};const mo=new MutationObserver(check);check();mo.observe(el,{subtree:true,attributes:true,attributeFilter:['data-ready']});return()=>mo.disconnect()},[key,ready]);
  useEffect(()=>{

@@ -37,7 +37,11 @@ async function skipWindows(defender: Page, attacker: Page) {
     if (hasSkip) {
       // The panel may close under the click (the window closed): then just look again.
       clearChecks = 0;
-      await skip.click({ timeout: 3000 }).catch(() => {});
+      try { await skip.click({ timeout: 3000 }); }
+      catch (error) {
+        // A disappearing window is expected; a still-visible blocked button is a real failure.
+        if (await skip.isVisible().catch(() => false)) throw error;
+      }
     } else if (hasWaitStatus) {
       clearChecks = 0;
     } else {
@@ -75,6 +79,8 @@ test('two tabs: a room by its code, a Volley and a Reaction, a reload brings the
   const code = (await a.getByTestId('room-code').textContent())!.trim();
   expect(code).toMatch(/^[A-Z2-9]{5}$/);
   await expect(a.getByTestId('room-qr')).toBeVisible();
+  // PR #78 moves service settings into the room's disclosure.
+  await a.getByText('Ещё', { exact: true }).click();
   await a.getByTestId('room-seed').fill(String(seed));
 
   // Боря opens the link of the room on a phone and enters his name.
@@ -112,7 +118,7 @@ test('two tabs: a room by its code, a Volley and a Reaction, a reload brings the
   await b.screenshot({ path: `${SHOTS}/iphone-2-reaction.png` });
   await b.locator('.as-card .hcard:not(.off)').first().click();
   await b.locator('[data-testid="play-reaction"]:visible').click();
-  await expect(a.locator('.log-col')).toContainText('Реакция');
+  await expect(a.locator('.log-col')).toContainText(/ответил(?:а)? Реакцией «[^»]+»/);
   // The window is offered again after a Reaction (RULES.md 12.5): Боря has nothing more to play.
   await skipWindows(b, a);
   await a.screenshot({ path: `${SHOTS}/laptop-3-after-reaction.png` });
@@ -137,6 +143,13 @@ test('two tabs: a room by its code, a Volley and a Reaction, a reload brings the
   await b.screenshot({ path: `${SHOTS}/iphone-5-offline.png` });
   await b.context().setOffline(false);
   await expect(b.getByTestId('net-offline')).toBeHidden({ timeout: 15_000 });
+  // PR #84 turns the peer-disconnect notice into an explicit modal. A reconnect does not dismiss it for the user.
+  const left = a.getByTestId('friend-left');
+  if (await left.isVisible()) {
+    await expect(left).toContainText('Друг вернулся в игру');
+    await left.getByRole('button', { name: 'Продолжить', exact: true }).click();
+    await expect(left).toHaveCount(0);
+  }
 
   // Боря fires back and ends the turn; the turn returns to Аня.
   const volley = b.locator('.plank-buttons [data-testid^="volley-"]:not([aria-disabled="true"]):visible');
@@ -155,8 +168,8 @@ test('two tabs: a room by its code, a Volley and a Reaction, a reload brings the
   // V7: Аня gives up — both see the victory sheet of the Company with the same numbers and titles (from the record the
   // server sends after the end); «Реванш» counts the votes under its name.
   await a.locator('[data-testid="settings-btn"]:visible').click();
-  await a.getByRole('button', { name: 'Сдаться за Пиратов' }).click();
-  await a.getByRole('button', { name: 'Сдаться', exact: true }).click();
+  await a.getByTestId('concede').click();
+  await a.getByRole('button', { name: 'Спустить флаг', exact: true }).click();
   for (const p of [a, b]) {
     await expect(p.getByTestId('end-screen')).toBeVisible({ timeout: 15_000 });
     await expect(p.getByTestId('victory-ribbon')).toHaveText('Победа Компании');
