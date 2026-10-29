@@ -83,8 +83,8 @@ test('perf guard: Volley, ordinary card, Legend and Armada, sinking, idle',async
   const value=await page.getByRole('textbox',{name:'Числа последнего клипа',includeHidden:true}).inputValue();
   const report=await page.evaluate(()=>(window as unknown as {fxGuard:Guard}).fxGuard.report());
   rows.push({scene,report,diagnostics:value});
-  mkdirSync('docs/screenshots/fx-finish/checks',{recursive:true});
-  writeFileSync('docs/screenshots/fx-finish/checks/perf-guard-observation.json',JSON.stringify(rows,null,1)+'\n');
+  mkdirSync('e2e-shots/fx-finish/checks',{recursive:true});
+  writeFileSync('e2e-shots/fx-finish/checks/perf-guard-observation.json',JSON.stringify(rows,null,1)+'\n');
   expect(value,scene).toContain('рендеры Game: 0');
   expect(value,scene).toContain('анимации в SVG на весь стол: нет');
   expect(report.animations,scene).toBeGreaterThan(0);expect(report.problems,scene).toEqual([]);
@@ -122,6 +122,6 @@ test('perf guard: Volley, ordinary card, Legend and Armada, sinking, idle',async
  await start();await page.getByTestId('fx-start').click();
  // The complete fast sinking takes ~8.6 s; the generic 8 s action timeout cannot cover it.
  await page.waitForFunction(()=>document.body.dataset.fxDone==='1',null,{timeout:20000});await result('sinking');
- mkdirSync('docs/screenshots/fx-finish/checks',{recursive:true});
- writeFileSync(`docs/screenshots/fx-finish/checks/perf-guard-${info.repeatEachIndex+1}.json`,JSON.stringify(rows,null,1)+'\n');
+ mkdirSync('e2e-shots/fx-finish/checks',{recursive:true});
+ writeFileSync(`e2e-shots/fx-finish/checks/perf-guard-${info.repeatEachIndex+1}.json`,JSON.stringify(rows,null,1)+'\n');
 });

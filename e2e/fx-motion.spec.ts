@@ -1,14 +1,14 @@
 // A3: the ships in motion on the table through «?fxScene=<id>» — a change of places (FLIP), diving, surfacing, sinking,
-// the abilities. For each scene a frame of the game at the moment of the effect goes to docs/screenshots/a3/, its
-// milliseconds from the load of the page to docs/screenshots/a3/times.json; the frames of the reference are taken by
-// capture.mjs into docs/screenshots/a3/ref/. After the show the numbers are the result of the scene, the planks are the
+// the abilities. For each scene a frame of the game at the moment of the effect goes to e2e-shots/a3/, its
+// milliseconds from the load of the page to e2e-shots/a3/times.json; the frames of the reference are taken by
+// capture.mjs into e2e-shots/a3/ref/. After the show the numbers are the result of the scene, the planks are the
 // same DOM nodes in their new places, the steady look («Под водой», sunk) is a class, no animation hangs on a plank.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import type { Track } from '../src/engine/types';
 import { clickMisses, expectResult, finalOf, open, playing } from './fx-scene';
 
-const SHOTS = 'docs/screenshots/a3';
+const SHOTS = 'e2e-shots/a3';
 const TIMES = `${SHOTS}/times.json`;
 
 /** A frame: the scene (and more of the address), the moment (a check in the page), how long after it the frame is taken. */

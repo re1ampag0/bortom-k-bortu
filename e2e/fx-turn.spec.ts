@@ -1,13 +1,13 @@
 // A4: the start of a turn, the played card, repairs, «Чёрная метка», a ship sunk by a card — through «?fxScene=<id>».
-// For each moment a frame of the game goes to docs/screenshots/a4/, its milliseconds from the load of the page to
-// docs/screenshots/a4/times.json; the frames of the reference are taken by capture.mjs into docs/screenshots/a4/ref/
+// For each moment a frame of the game goes to e2e-shots/a4/, its milliseconds from the load of the page to
+// e2e-shots/a4/times.json; the frames of the reference are taken by capture.mjs into e2e-shots/a4/ref/
 // at the same milliseconds. After the show the numbers are the result of the scene and the layer is empty.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import type { Track } from '../src/engine/types';
 import { clickMisses, expectResult, finalOf, open, playing } from './fx-scene';
 
-const SHOTS = 'docs/screenshots/a4';
+const SHOTS = 'e2e-shots/a4';
 const TIMES = `${SHOTS}/times.json`;
 
 interface Frame {
@@ -371,7 +371,7 @@ test('⚙ stays open when the countdown passes the turn to the bot; only the pla
   await expect(page.getByTestId('end-turn').first()).not.toContainText('Ход окончен ·', { timeout: 5000 });
   await page.waitForTimeout(1500);
   await expect(page.getByTestId('settings')).toBeVisible();
-  await page.screenshot({ path: 'docs/screenshots/fix-ci/settings-bot-turn.png' });
+  await page.screenshot({ path: 'e2e-shots/fix-ci/settings-bot-turn.png' });
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('settings')).toHaveCount(0);
   await page.getByTestId('settings-btn').click();

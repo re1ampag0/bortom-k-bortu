@@ -1,13 +1,13 @@
 // Stage 7, second part: the start screen, the preparation, a turn, the show of the enemy's move and the sea banner on
 // a laptop (1366×660) and the target phone iPhone 15 Pro Max (430×740), without page scrolling. Screenshots go to
-// docs/screenshots/stage7b/ (replaced on every run).
+// e2e-shots/stage7b/ (replaced on every run).
 import { expect, test, type Page } from '@playwright/test';
 
 const SIZES = [
   { name: 'laptop', width: 1366, height: 660 },
   { name: 'iphone', width: 430, height: 740 },
 ] as const;
-const SHOTS = 'docs/screenshots/stage7b';
+const SHOTS = 'e2e-shots/stage7b';
 
 async function expectNoScroll(page: Page) {
   const r = await page.evaluate(() => ({ sh: document.scrollingElement!.scrollHeight, sw: document.scrollingElement!.scrollWidth, ih: innerHeight, iw: innerWidth, menuPhone: document.body.dataset.menuLayout === 'phone' && !document.querySelector('[data-testid=game]') }));

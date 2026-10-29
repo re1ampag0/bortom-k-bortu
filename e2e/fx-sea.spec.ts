@@ -1,8 +1,8 @@
 // S1: the sea cards through «?fxScene=sea-<key>» — the 17 cards of the reference. For each card a frame of the game at
-// the moment «the effect on the planks» (the card has flown into the sea chip, +600 ms) goes to docs/screenshots/s1/,
+// the moment «the effect on the planks» (the card has flown into the sea chip, +600 ms) goes to e2e-shots/s1/,
 // and a frame of the reference (docs/mockups/anim/level1/anim-demo.html) at the same moment of its own clip goes to
-// docs/screenshots/s1/ref/: the moment is found by the same condition on both pages, not by the milliseconds from the
-// load (they are in docs/screenshots/s1/times.json, for capture.mjs). On the planks no label covers the head, the
+// e2e-shots/s1/ref/: the moment is found by the same condition on both pages, not by the milliseconds from the
+// load (they are in e2e-shots/s1/times.json, for capture.mjs). On the planks no label covers the head, the
 // chips, a track or a badge for longer than a short flash; the rules in the middle never touch a plank.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -10,7 +10,7 @@ import { pathToFileURL } from 'node:url';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { clickMisses, expectResult, open, playing, readCover, watchCover } from './fx-scene';
 
-const SHOTS = 'docs/screenshots/s1';
+const SHOTS = 'e2e-shots/s1';
 const TIMES = `${SHOTS}/times.json`;
 const REF = pathToFileURL(resolve('docs/mockups/anim/level1/anim-demo.html')).href;
 const KEYS = ['calm', 'wind', 'fog', 'storm', 'wave', 'maelstrom', 'clear', 'mermaids', 'tortuga', 'rum', 'caravan', 'wet', 'reefs', 'thunder', 'fleet', 'moon', 'current'];

@@ -1,11 +1,11 @@
 // FX-A: the traces of the effects (src/ui/game/fx/scars.ts; docs/mockups/a5/fx/ANIMATIONS.md, §2) on the table of the
 // game through «?fxScene=<id>»: a hit leaves soot on the plank after the clip, it dissolves by itself; a seventh trace
 // pushes the oldest out; «Сразу итог» does not wipe them; they take no press; a trace on a ship rides with the ship when
-// the places change. Frames go to docs/screenshots/a5-fight/.
+// the places change. Frames go to e2e-shots/a5-fight/.
 import { expect, test } from '@playwright/test';
 import { open, playing } from './fx-scene';
 
-const SHOTS = 'docs/screenshots/a5-fight';
+const SHOTS = 'e2e-shots/a5-fight';
 
 test.describe('the traces of the effects (1366×660)', () => {
   test.use({ viewport: { width: 1366, height: 660 } });
