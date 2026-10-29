@@ -1,9 +1,9 @@
 // P7: the phone (≤ 700 px) opens the log, the rules and a discard, plays a Legend by the star and shows every
 // button of the Dutchman's plank. The same scenario runs on an iPhone 15 Pro Max in WebKit (@iphone, GitHub Actions).
-// The laptop keeps the wide sheets. Screenshots go to docs/screenshots/p7/ (replaced on every run).
+// The laptop keeps the wide sheets. Screenshots go to e2e-shots/p7/ (replaced on every run).
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-const SHOTS = 'docs/screenshots/p7';
+const SHOTS = 'e2e-shots/p7';
 
 /** Two people on one screen, seed 1: placement of both teams, then the Pirates at the table. */
 async function startDuo(page: Page, extra = '') {
@@ -349,5 +349,5 @@ test('phone 375×667: the lifted card lies whole over the table, the fan and the
   await page.getByTestId('lift-sell').click();
   await expect(layer).toHaveCount(0);
   await expect(cards).toHaveCount(n - 1);
-  await page.screenshot({ path: 'docs/screenshots/ui-press/e2e-phone-375x667-lift.png' });
+  await page.screenshot({ path: 'e2e-shots/ui-press/e2e-phone-375x667-lift.png' });
 });

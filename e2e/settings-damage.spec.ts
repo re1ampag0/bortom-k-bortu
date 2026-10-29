@@ -1,7 +1,7 @@
 import {mkdirSync} from 'node:fs';
 import {test,expect,type Page} from '@playwright/test';
 import {clickMisses,expectResult,playing} from './fx-scene';
-const SHOTS='docs/screenshots/fx-finish/damage-setting';
+const SHOTS='e2e-shots/fx-finish/damage-setting';
 const KEY='bortom-k-bortu.settings';
 async function game(page:Page,speed='fast'){
  await page.goto(`?seed=1&speed=${speed}&hints=0`);

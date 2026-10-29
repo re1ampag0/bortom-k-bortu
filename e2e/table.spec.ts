@@ -1,6 +1,6 @@
 // The game through the interface (docs/TZ.md, stage 7): bots play a match to the victory screen, people play
 // against bots and against each other to the end; the table fits the window without page scrolling on a laptop
-// (1366×660), the target phone iPhone 15 Pro Max (430×740) and a 390×664 phone; smaller phones may scroll. Screenshots of the key states go to docs/screenshots/stage7/ (replaced on every run).
+// (1366×660), the target phone iPhone 15 Pro Max (430×740) and a 390×664 phone; smaller phones may scroll. Screenshots of the key states go to e2e-shots/stage7/ (replaced on every run).
 import { expect, test, type Page } from '@playwright/test';
 
 const SIZES = [
@@ -9,7 +9,7 @@ const SIZES = [
   { name: 'phone', width: 390, height: 664 },
 ] as const;
 
-const SHOTS = 'docs/screenshots/stage7';
+const SHOTS = 'e2e-shots/stage7';
 
 async function shot(page: Page, size: string, name: string) {
   await page.screenshot({ path: `${SHOTS}/${size}-${name}.png` });
@@ -366,7 +366,7 @@ test.describe('whole games through the interface', () => {
 });
 
 // V7: the victory sheet. Four bots play to the end (the seeds give a victory of the Pirates and of the Company); frames at
-// 1366×660 and 430×932 go to docs/screenshots/a5-windows/ next to the reference (c-victory-ref-*).
+// 1366×660 and 430×932 go to e2e-shots/a5-windows/ next to the reference (c-victory-ref-*).
 const VICTORIES = [
   { seed: 4, who: 'pirates', ribbon: 'Победа Пиратов', side: 'ПИРАТЫ' },
   { seed: 6, who: 'company', ribbon: 'Победа Компании', side: 'КОМПАНИЯ' },
@@ -422,7 +422,7 @@ for (const size of [
         await expect(page.getByTestId('rematch')).toBeInViewport();
         await expectFits(page);
         await settled(page);
-        await page.screenshot({ path: `docs/screenshots/a5-windows/c-victory-${v.who}-${size.width}x${size.height}.png` });
+        await page.screenshot({ path: `e2e-shots/a5-windows/c-victory-${v.who}-${size.width}x${size.height}.png` });
         await sheet.getByRole('button', { name: 'Посмотреть стол' }).click();
         await expect(sheet).toHaveCount(0);
         expect(errors).toEqual([]);
@@ -622,7 +622,7 @@ for (const look of ['deck', 'table'] as const) {
         expect(r.gun && r.lantern, 'the gun and the lantern').toBeTruthy();
         expect(r.gun!.r - r.gun!.l, 'the gun is at least 2.5 times as wide as the lantern').toBeGreaterThanOrEqual(2.5 * (r.lantern!.r - r.lantern!.l));
       }
-      await page.screenshot({ path: `docs/screenshots/rig/g-e2e-${look}-${v.w}x${v.h}.png` });
+      await page.screenshot({ path: `e2e-shots/rig/g-e2e-${look}-${v.w}x${v.h}.png` });
     });
   }
 }
@@ -694,7 +694,7 @@ for (const v of [
       expect(r.tabs.t, 'the tabs under «Перестроение»').toBeGreaterThanOrEqual(r.regroupB);
       expect(r.tabs.b, 'the tabs over «Колода · Сброс»').toBeLessThanOrEqual(r.deckT);
       expect(r.tabs.r, 'the tabs clear of the cards').toBeLessThanOrEqual(r.left);
-      if (n === 5 || n === 8) await page.screenshot({ path: `docs/screenshots/rig/g-center-${n}cards-${v.w}x${v.h}.png` });
+      if (n === 5 || n === 8) await page.screenshot({ path: `e2e-shots/rig/g-center-${n}cards-${v.w}x${v.h}.png` });
     });
   }
 }

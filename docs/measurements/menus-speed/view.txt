@@ -1,4 +1,0 @@
- ✓ tests/view.test.ts (26 tests) 1310ms
- Test Files  1 passed (1)
-      Tests  26 passed (26)
-   Duration  2.25s (transform 544ms, setup 0ms, collect 554ms, tests 1.31s, environment 0ms, prepare 142ms)

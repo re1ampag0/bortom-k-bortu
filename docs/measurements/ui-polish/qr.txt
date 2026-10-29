@@ -1,4 +1,0 @@
-Декодер: zxing-cpp
-QR: http://127.0.0.1:5405/bortom-k-bortu/?room=XSFJC
-Ожидалось: http://127.0.0.1:5405/bortom-k-bortu/?room=XSFJC
-Совпадает: True

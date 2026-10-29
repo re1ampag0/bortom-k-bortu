@@ -1,9 +1,0 @@
-// Frame diagnostics for canvas migration; not an e2e runner.
-import {createServer} from 'vite';import {chromium} from '@playwright/test';import{writeFileSync}from'node:fs';
-const server=await createServer({mode:'e2e',server:{host:'127.0.0.1',port:5189,strictPort:true}});await server.listen();const browser=await chromium.launch({executablePath:'/usr/bin/chromium'});
-try{
- const p=await browser.newPage({viewport:{width:1366,height:660}});const errors=[];p.on('pageerror',e=>errors.push(e.message));
- await p.addInitScript(()=>{window.particleInspection={seen:{},samples:[],domSmoke:0};const tick=()=>{const layer=document.querySelector('.fx-layer'),board=layer?.parentElement,s=board?.fxParticles?.(),m=window.particleInspection;if(s){m.seen=s.seen;const rows=s.visible.filter(r=>r.kind==='powder-smoke');if(rows.length&&m.samples.length<12){const canvas=layer.querySelector('canvas'),row=rows[0],k=canvas?.width/board.clientWidth;m.samples.push({row,canvases:layer.querySelectorAll('canvas').length,size:canvas?[canvas.width,canvas.height]:null,pixel:canvas?[...canvas.getContext('2d').getImageData(row.x*k,row.y*k,1,1).data]:null});}}m.domSmoke=Math.max(m.domSmoke,document.querySelectorAll('.fx-layer svg circle[fill^="url(#fxSmk"]').length);if(!document.body?.dataset.fxDone)requestAnimationFrame(tick)};requestAnimationFrame(tick);});
- await p.goto('http://127.0.0.1:5189/bortom-k-bortu/?fxScene=plain&speed=normal');await p.waitForFunction(()=>document.body.dataset.fxDone==='1',null,{timeout:60000});
- const result=await p.evaluate(()=>({inspection:window.particleInspection,trace:localStorage.getItem('bortom-fx-trace')}));result.errors=errors;writeFileSync('tmp/fx-canvas/inspection.json',JSON.stringify(result,null,2));console.log('INSPECTION',JSON.stringify(result));
-}finally{await browser.close();await server.close()}

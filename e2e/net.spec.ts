@@ -1,13 +1,13 @@
 // A network game in two browser tabs against a local game server (stage 8): create a room, enter it by the code,
 // take the seats, place the ships, play turns with a Volley and a Reaction, reload one tab — the player comes back to
-// the seat. Screenshots go to docs/screenshots/stage8/ (replaced on every run).
+// the seat. Screenshots go to e2e-shots/stage8/ (replaced on every run).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 import { loadGameData } from '../src/engine/data';
 import { applyAction, createGame } from '../src/engine/engine';
 
 const SERVER = 'http://localhost:8090/bortom-k-bortu/';
-const SHOTS = 'docs/screenshots/stage8';
+const SHOTS = 'e2e-shots/stage8';
 const data = loadGameData(JSON.parse(readFileSync('data/game-data.json', 'utf8')));
 
 /**

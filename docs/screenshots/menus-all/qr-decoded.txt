@@ -1,4 +1,0 @@
-Decoder: jsQR
-Decoded: http://172.26.91.254:5342/bortom-k-bortu/?room=VF7MV
-Expected: http://172.26.91.254:5342/bortom-k-bortu/?room=VF7MV
-Matches room URL: true
