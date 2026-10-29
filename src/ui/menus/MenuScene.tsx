@@ -41,6 +41,6 @@ export function MenuScene({name}:{name:string}){
  if(!info)return null;
  return <div className="menu-prepared" ref={ref} style={{aspectRatio:`${info.width}/${info.height}`,'--menu-art-width':info.width+'px','--menu-art-height':info.height+'px'}as React.CSSProperties}>
   {posterDecoded===key&&<img src={poster} alt="" aria-hidden style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',opacity:shown===key?0:1,visibility:shown===key?'hidden':'visible',transition:'opacity 300ms ease, visibility 0s 300ms'}}/>}
-  {scene&&motion&&<PreparedScene clockOwner={clockOwner} scene={scene} cache={cache} cacheKey={key} ready={ready} store={idle} narrow={phone} pixelRatio={layout.enabled&&(layout.k!==1||!phone&&devicePixelRatio>3)?phone?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio*layout.k,3):undefined}/>}
+  {scene&&motion&&<PreparedScene clockOwner={clockOwner} scene={scene} cache={cache} cacheKey={key} ready={ready} store={idle} narrow={phone} pixelRatio={(layout.k!==1||!phone&&devicePixelRatio>3)?phone?Math.min(devicePixelRatio,2):Math.min(devicePixelRatio*layout.k,3):undefined}/>}
  </div>;
 }
