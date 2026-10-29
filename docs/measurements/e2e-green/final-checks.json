@@ -1,0 +1,27 @@
+[
+  {
+    "command": "npm run typecheck",
+    "exitCode": 0,
+    "seconds": 13.01
+  },
+  {
+    "command": "npm test",
+    "exitCode": 0,
+    "seconds": 31.5
+  },
+  {
+    "command": "npm run sim:check",
+    "exitCode": 0,
+    "seconds": 18.72
+  },
+  {
+    "command": "npm run build",
+    "exitCode": 0,
+    "seconds": 8.93
+  },
+  {
+    "command": "npm run build:server",
+    "exitCode": 0,
+    "seconds": 2.43
+  }
+]

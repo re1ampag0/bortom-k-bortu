@@ -1,0 +1,19 @@
+{
+  "stats": {
+    "startTime": "2026-10-28T18:34:54.259Z",
+    "duration": 60296.463,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "test": "perf guard: Volley, ordinary card, Legend and Armada, sinking, idle",
+      "project": "chromium",
+      "status": "passed",
+      "durationMs": 58324,
+      "error": ""
+    }
+  ]
+}

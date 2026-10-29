@@ -120,7 +120,8 @@ test('perf guard: Volley, ordinary card, Legend and Armada, sinking, idle',async
  await expect(page.getByTestId('perf-clip')).toContainText('legend');await quiet();await result('legend-intro-and-armada');
  await page.goto('?fxScene=sink&manual=1&speed=fast&seed=1&perf=1');
  await start();await page.getByTestId('fx-start').click();
- await page.waitForFunction(()=>document.body.dataset.fxDone==='1');await result('sinking');
+ // The complete fast sinking takes ~8.6 s; the generic 8 s action timeout cannot cover it.
+ await page.waitForFunction(()=>document.body.dataset.fxDone==='1',null,{timeout:20000});await result('sinking');
  mkdirSync('docs/screenshots/fx-finish/checks',{recursive:true});
  writeFileSync(`docs/screenshots/fx-finish/checks/perf-guard-${info.repeatEachIndex+1}.json`,JSON.stringify(rows,null,1)+'\n');
 });

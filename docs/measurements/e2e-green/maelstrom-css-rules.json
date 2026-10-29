@@ -1,0 +1,36 @@
+{
+  "classes": "fx-weather wx-paused",
+  "computed": "running",
+  "rules": [
+    {
+      "selector": ".fx-weather.wx-paused .wx-loop, .fx-weather.wx-paused.wx-loop",
+      "css": "animation-play-state: paused !important;",
+      "anc": []
+    },
+    {
+      "selector": "*, ::before, ::after",
+      "css": "transition: none !important; animation: auto ease 0s 1 normal none running none !important;",
+      "anc": [
+        "(prefers-reduced-motion: reduce)"
+      ]
+    },
+    {
+      "selector": ".board[data-wx=\"maelstrom\"] > .fx-weather.wx-paused .wx-loop",
+      "css": "animation-play-state: running !important;",
+      "anc": []
+    },
+    {
+      "selector": ".board[data-wx=\"maelstrom\"] > .fx-weather .wx-loop",
+      "css": "animation-play-state: paused !important;",
+      "anc": [
+        "(prefers-reduced-motion: reduce)"
+      ]
+    },
+    {
+      "selector": ".wx-loop-109",
+      "css": "animation: 2600ms linear 0ms infinite normal none running wx-loop-109;",
+      "anc": []
+    }
+  ],
+  "styleCount": 52
+}

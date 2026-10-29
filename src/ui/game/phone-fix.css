@@ -11,9 +11,11 @@ html.on-game,body.on-game{background:#21170e}
  .game[data-game-scale] .plank-head{gap:3px;padding-inline:4px;position:relative}
  .game[data-game-scale] .plank-name{flex:1;min-width:0;font-size:clamp(11px,3.2vw,14px);overflow:visible;white-space:nowrap}
  .game[data-game-scale] .plank-role{gap:3px}
- .game[data-game-scale] .plank-role .ready{position:absolute;left:18px;top:-2px;width:12px;height:12px;padding:0;z-index:3}
+ .game[data-game-scale] .plank-role .ready{position:absolute;left:9px;top:-2px;width:12px;height:12px;padding:0;z-index:3}
  .game[data-game-scale] .plank-head .ship-art{flex:none;width:22px}
  .game[data-game-scale] .plank-head .star{width:20px;height:20px;margin:0}
+ /* Keep the invisible hit zone as tall as the 28px header after shrinking the visible medal. */
+ .game[data-game-scale] .sea-table.has-info .planks.bottom button.star::before{inset-block:-4px}
  .game[data-game-scale] .plank-head .hand-count,.game[data-game-scale] .plank-head .hand-count svg{width:21px}
  .game[data-game-scale] .plank-buttons{display:flex;gap:6px;padding-inline:1px;scrollbar-width:none}
  .game[data-game-scale] .plank-buttons>.btn.cmd{flex:1 0 0;min-width:0;height:34px;min-height:34px;padding:3px;box-sizing:border-box}

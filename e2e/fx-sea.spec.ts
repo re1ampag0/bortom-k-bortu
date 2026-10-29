@@ -327,7 +327,7 @@ test.describe('the badges explain themselves (phone 430×932)', () => {
     expect(zone).toEqual({ height: 21, hits: [true, true, true, true], track: true });
     await fire.tap();
     await expect(page.getByTestId('info-pop')).toBeVisible();
-    await expect(page.getByTestId('info-pop')).toContainText('−1 Корпус за каждый Пожар');
+    await expect(page.getByTestId('info-pop')).toContainText('теряется 1 Корпус за каждый Пожар');
     expect(await showOn(page)).toBe(true);
     // the window is inside the screen
     const box = (await page.getByTestId('info-pop').boundingBox())!;

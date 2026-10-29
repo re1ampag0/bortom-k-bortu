@@ -396,8 +396,12 @@ export function Game({
       if(bottom.style.getPropertyValue('--decision-h')!==`${height}px`)bottom.style.setProperty('--decision-h',`${height}px`);
       if(scroll&&l){dock.style.setProperty('--scroll-left',`${(l.left-b.left)/k}px`);dock.style.setProperty('--scroll-bottom',`${(b.bottom-l.bottom)/k}px`);dock.style.setProperty('--scroll-width',`${l.width/k}px`);dock.style.setProperty('--scroll-height',`${Math.max(180,(l.bottom-Math.max(l.top,(game.querySelector('.log-tools')?.getBoundingClientRect().bottom??(board.getBoundingClientRect().top+status))+12))/k-24)}px`);}
     };
-    const ro=new ResizeObserver(measure);ro.observe(dock);ro.observe(game);measure();
-    return()=>{ro.disconnect();bottom.style.removeProperty('--decision-h');};
+    // The dock height also sizes its parent: commit the next measurement outside
+    // ResizeObserver delivery, so WebKit can finish the current layout first.
+    let frame=0;
+    const schedule=()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;measure();});};
+    const ro=new ResizeObserver(schedule);ro.observe(dock);ro.observe(game);measure();
+    return()=>{ro.disconnect();cancelAnimationFrame(frame);bottom.style.removeProperty('--decision-h');};
   },[cardDecision,look.play,mode.k,curtainSide]);
 
   useEffect(() => {

@@ -1,0 +1,37 @@
+[
+  {
+    "test": "the attacker sees the Volley and «бот думает» while the Company decides on a Reaction",
+    "status": "passed",
+    "durationMs": 11114
+  },
+  {
+    "test": "without «Подсказки» the Reaction window: «Тревога!», the Reaction chosen in the hand says what happens now, «i» gives the full card",
+    "status": "failed",
+    "durationMs": 43836
+  },
+  {
+    "test": "the Reaction window: a sheet with the Reactions as cards, a press chooses, «i» opens the card and keeps the choice, «Сыграть» from it plays",
+    "status": "passed",
+    "durationMs": 7777
+  },
+  {
+    "test": "without a seed each toss is new: both sides come up in 20 tosses",
+    "status": "passed",
+    "durationMs": 3897
+  },
+  {
+    "test": "sink: the captain rows across in the new clinker longboat",
+    "status": "passed",
+    "durationMs": 5626
+  },
+  {
+    "test": "heart 1366×660: the effect on the table, the frame, the result",
+    "status": "passed",
+    "durationMs": 20634
+  },
+  {
+    "test": "sink 430×932: the effect on the table, the frame, the result",
+    "status": "passed",
+    "durationMs": 19666
+  }
+]

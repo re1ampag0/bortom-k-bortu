@@ -81,7 +81,7 @@ test.describe('laptop 1366×660', () => {
     // The clip of the Volley is on screen first, and the status bar describes the clip; «Пауза» stops a clip in the
     // middle. So the clip goes by (the bar then names the team that decides), and only then «Пауза» holds the bot: the
     // plate stays for the check and the screenshot.
-    await expect(page.getByTestId('instruction')).toContainText('Компания (бот) решает', { timeout: 30_000 });
+    await expect(page.getByTestId('instruction')).toContainText('Ждём Реакцию Компании. Бот думает…', { timeout: 30_000 });
     await page.locator('[data-testid="pause-show"]:visible').click();
     const nick = data.ships.find((x) => x.code === target)!.nick;
     await expect(page.getByTestId(`plank-${target}`).getByTestId('reaction-wait')).toBeVisible();
@@ -90,33 +90,38 @@ test.describe('laptop 1366×660', () => {
     await expect(page.getByTestId('instruction')).toContainText('Противник может ответить Реакцией…');
     await expect(page.locator('.dock')).toHaveCount(0);
     // The enemy's Reactions are not named anywhere; the status bar names the team, not the ship.
-    await expect(page.getByTestId('instruction')).toContainText('Компания (бот) решает');
+    await expect(page.getByTestId('instruction')).toContainText('Ждём Реакцию Компании. Бот думает…');
     await expect(page.locator('.reaction-opt')).toHaveCount(0);
     await page.screenshot({ path: `${SHOTS}/laptop-reaction-wait.png` });
     await page.locator('[data-testid="pause-show"]:visible').click();
     await expect(plate).toBeHidden({ timeout: 30_000 });
   });
 
-  test('without «Подсказки» the Reaction window: «Тревога!», the Reaction chosen in the hand says what happens now, «i» gives the full card', async ({ page }) => {
+  test('without «Подсказки» the Reaction window: «Тревога!», the Reaction chosen inside the sheet says what happens now, «i» gives the full card', async ({ page }) => {
     await duoReactionWindow(page);
     const panel = page.getByTestId('reaction-panel');
     await expect(page.getByTestId('alarm')).toContainText('ТРЕВОГА!');
-    await expect(page.getByTestId('alarm')).toContainText('даёт Залп по «Индевору» — ответите Реакцией?');
+    await expect(page.getByTestId('alarm')).toContainText('даёт Залп по «Индевору». Ответите Реакцией?');
     // The phone-only explanatory note (Б2) is covered with both hint settings below.
     // The arrow and the pill are on the table; the strip of the outcome is under «Подсказки» only.
     await expect(page.getByTestId('alarm-pill')).toContainText('по Корпусу');
-    await expect(page.locator('.hcard-strip.ok')).toHaveCount(0);
+    await expect(page.locator('.hand .hcard-strip.ok')).toHaveCount(0);
     // The cards that are not Reactions are faded and lowered (A5Alarm.png).
     const dim = page.locator('.hand .hcard.al-dim');
     expect(await dim.count()).toBeGreaterThan(0);
     expect(Number(await dim.first().evaluate((e) => getComputedStyle(e).opacity))).toBeLessThan(0.7);
     const card = page.locator('.hand .hcard.al-ok').first();
     const code = (await card.getAttribute('data-card'))!;
-    await card.click();
-    await expect(panel.getByTestId('reaction-now')).toHaveText(/^Залп \d+ → \d+$/);
+    const selected = panel.locator(`.as-card[data-card="${code}"]`);
+    // PR #85 puts the interactive choice inside the sheet; the hand remains highlighted below it.
+    // A sole available Reaction starts selected. Exercise deselection and selection there too.
+    if ((await selected.getAttribute('class'))?.split(' ').includes('on')) await selected.locator('.hcard').click();
+    await selected.locator('.hcard').click();
+    await expect(selected).toHaveClass(/\bon\b/);
+    await expect(selected.getByTestId('hcard-strip')).toHaveText(/^Залп \d+ → \d+$/);
     await expect(panel.getByTestId('play-reaction')).toHaveText(`Сыграть «${cardByCode(data, code).name}»`);
     await page.screenshot({ path: `${SHOTS}/laptop-reaction-window.png` });
-    await panel.getByTestId('reaction-info').click();
+    await selected.getByTestId('reaction-info').click();
     await expect(page.getByTestId('card-detail')).toContainText(plain(cardByCode(data, code).text));
     await page.getByTestId('card-detail').getByRole('button', { name: 'Закрыть' }).click();
   });
@@ -170,7 +175,7 @@ test.describe('phone 430×740', () => {
 
   test('the Reaction window: a sheet with the Reactions as cards, a press chooses, «i» opens the card and keeps the choice, «Сыграть» from it plays', async ({ page }) => {
     await duoReactionWindow(page, true);
-    await expect(page.getByTestId('reaction-memo')).toContainText('Реакция — карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
+    await expect(page.getByTestId('reaction-memo')).toContainText('Реакция: карта, которую играют в ход противника в ответ на его Залп. Можно пропустить.');
     await duoReactionWindow(page, false);
     const panel = page.getByTestId('reaction-panel');
     await expect(page.getByTestId('alarm')).toContainText('ТРЕВОГА!');
@@ -235,12 +240,12 @@ test.describe('«Жребий» on the preparation screen', () => {
 
   test('without a seed each toss is new: both sides come up in 20 tosses', async ({ page }) => {
     const verdicts = await tosses(page, '?speed=instant');
-    expect(verdicts.some((v) => v.includes('Пираты'))).toBe(true);
-    expect(verdicts.some((v) => v.includes('Компания'))).toBe(true);
+    expect(verdicts.some((v) => v.includes('Пиратов'))).toBe(true);
+    expect(verdicts.some((v) => v.includes('Компанию'))).toBe(true);
     // The game starts on the side the coin showed last.
-    const last = verdicts.at(-1)!.includes('Пираты') ? 'Пиратов' : 'Компанию';
+    const last = verdicts.at(-1)!.includes('Пиратов') ? 'Пиратов' : 'Компанию';
     await page.getByTestId('prep-start').click();
-    await expect(page.getByTestId('placement')).toContainText(`Жребий: вы играете за ${last}`);
+    await expect(page.getByTestId('placement')).toContainText(`Монета выбрала: вы за ${last}`);
     // …and with the seed the coin fell by (the autosave keeps it; the coin of a seed — coinOf in Prep.tsx).
     await page.getByTestId('placement-done').click();
     await expect(page.getByTestId('game')).toBeVisible();

@@ -1,0 +1,338 @@
+[
+  {
+    "name": "wx-loop-121",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 2400,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<ellipse class=\"rim wx-loop wx-loop-121\" cx=\"202\" cy=\"246.5\" rx=\"85\" ry=\"30.6\" fill=\"none\" stroke=\"#eef6f8\" stroke-width=\"2.6\" stroke-dasharray=\"4 7 14 9\" opaci"
+  },
+  {
+    "name": "wx-loop-122",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 1000,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<circle class=\"fd wx-loop wx-loop-122\" cx=\"287\" cy=\"246.5\" r=\"1.6\" fill=\"#eef6f8\" opacity=\"0\"></circle>"
+  },
+  {
+    "name": "wx-loop-123",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 1300,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<circle class=\"fd wx-loop wx-loop-123\" cx=\"262.1\" cy=\"268.1\" r=\"1.6\" fill=\"#eef6f8\" opacity=\"0\"></circle>"
+  },
+  {
+    "name": "wx-loop-124",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 1600,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<circle class=\"fd wx-loop wx-loop-124\" cx=\"202\" cy=\"277.1\" r=\"1.6\" fill=\"#eef6f8\" opacity=\"0\"></circle>"
+  },
+  {
+    "name": "wx-loop-125",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 1900,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<circle class=\"fd wx-loop wx-loop-125\" cx=\"141.9\" cy=\"268.1\" r=\"1.6\" fill=\"#eef6f8\" opacity=\"0\"></circle>"
+  },
+  {
+    "name": "wx-loop-126",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 1000,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<circle class=\"fd wx-loop wx-loop-126\" cx=\"117\" cy=\"246.5\" r=\"1.6\" fill=\"#eef6f8\" opacity=\"0\"></circle>"
+  },
+  {
+    "name": "wx-loop-127",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 1300,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<circle class=\"fd wx-loop wx-loop-127\" cx=\"141.9\" cy=\"224.8\" r=\"1.6\" fill=\"#eef6f8\" opacity=\"0\"></circle>"
+  },
+  {
+    "name": "wx-loop-128",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 1600,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<circle class=\"fd wx-loop wx-loop-128\" cx=\"202\" cy=\"215.8\" r=\"1.6\" fill=\"#eef6f8\" opacity=\"0\"></circle>"
+  },
+  {
+    "name": "wx-loop-129",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 1900,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<circle class=\"fd wx-loop wx-loop-129\" cx=\"262.1\" cy=\"224.8\" r=\"1.6\" fill=\"#eef6f8\" opacity=\"0\"></circle>"
+  },
+  {
+    "name": "wx-loop-130",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 2600,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<path class=\"arm wx-loop wx-loop-130\" d=\"M285 246.5 L283.2 249.3 L280.6 252.1 L277.3 254.7 L273.4 257.2 L268.9 259.4 L263.9 261.5 L258.5 263.3 L252.7 264.9 L246"
+  },
+  {
+    "name": "wx-loop-131",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 2800.0000000000005,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<path class=\"arm wx-loop wx-loop-131\" d=\"M243.3 272.4 L235.4 273.2 L227.5 273.8 L219.5 274.1 L211.7 274.1 L204.1 273.8 L196.7 273.3 L189.6 272.5 L182.8 271.5 L1"
+  },
+  {
+    "name": "wx-loop-132",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 3000,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<path class=\"arm wx-loop wx-loop-132\" d=\"M160.1 272.3 L154.1 270.2 L148.8 268 L144.1 265.7 L140.3 263.2 L137.1 260.7 L134.7 258.1 L133.1 255.5 L132.2 252.9 L132"
+  },
+  {
+    "name": "wx-loop-133",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 3200,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<path class=\"arm wx-loop wx-loop-133\" d=\"M119 246.2 L120.9 243.3 L123.6 240.6 L126.9 238 L130.9 235.5 L135.4 233.3 L140.4 231.3 L145.9 229.5 L151.7 227.9 L157.8"
+  },
+  {
+    "name": "wx-loop-134",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 3400.0000000000005,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<path class=\"arm wx-loop wx-loop-134\" d=\"M161.3 220.4 L169.2 219.6 L177.2 219 L185.1 218.8 L192.9 218.8 L200.6 219.1 L208 219.7 L215 220.5 L221.7 221.5 L228 222"
+  },
+  {
+    "name": "wx-loop-135",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 3600,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<path class=\"arm wx-loop wx-loop-135\" d=\"M244.5 220.8 L250.5 222.8 L255.7 225.1 L260.3 227.4 L264.1 229.9 L267.2 232.4 L269.5 235 L271.1 237.6 L272 240.2 L272.1"
+  },
+  {
+    "name": "wx-loop-136",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 2200,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<ellipse class=\"eye wx-loop wx-loop-136\" cx=\"202\" cy=\"246.5\" rx=\"16\" ry=\"6\" fill=\"#030a0d\" style=\"transform-box:fill-box;transform-origin:center\"></ellipse>"
+  },
+  {
+    "name": "wx-loop-137",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": 0,
+      "direction": "normal",
+      "duration": 6500,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<g class=\"db wx-loop wx-loop-137\"><rect x=\"-9\" y=\"-2.4\" width=\"18\" height=\"4.8\" rx=\"1\" fill=\"#a8703a\" stroke=\"#3a2412\" stroke-width=\".7\"></rect><path d=\"M-6 -2."
+  },
+  {
+    "name": "wx-loop-138",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": -2100,
+      "direction": "normal",
+      "duration": 8000,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<g class=\"db wx-loop wx-loop-138\"><ellipse rx=\"6\" ry=\"7.4\" fill=\"#8a5a32\" stroke=\"#3a2412\" stroke-width=\".7\"></ellipse><path d=\"M-6 -2.4 H6 M-6 2.4 H6\" stroke=\""
+  },
+  {
+    "name": "wx-loop-139",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": -4200,
+      "direction": "normal",
+      "duration": 7200,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<g class=\"db wx-loop wx-loop-139\"><rect x=\"-9\" y=\"-2.4\" width=\"18\" height=\"4.8\" rx=\"1\" fill=\"#a8703a\" stroke=\"#3a2412\" stroke-width=\".7\"></rect><path d=\"M-6 -2."
+  },
+  {
+    "name": "wx-loop-140",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": -6300,
+      "direction": "normal",
+      "duration": 9400,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<g class=\"db wx-loop wx-loop-140\"><rect x=\"-9\" y=\"-2.4\" width=\"18\" height=\"4.8\" rx=\"1\" fill=\"#a8703a\" stroke=\"#3a2412\" stroke-width=\".7\"></rect><path d=\"M-6 -2."
+  },
+  {
+    "name": "wx-loop-141",
+    "state": "running",
+    "time": 3366.592000003532,
+    "timing": {
+      "delay": -8400,
+      "direction": "normal",
+      "duration": 10000,
+      "easing": "linear",
+      "endDelay": 0,
+      "fill": "none",
+      "iterationStart": 0,
+      "iterations": null
+    },
+    "target": "<g class=\"db wx-loop wx-loop-141\"><ellipse rx=\"6\" ry=\"7.4\" fill=\"#8a5a32\" stroke=\"#3a2412\" stroke-width=\".7\"></ellipse><path d=\"M-6 -2.4 H6 M-6 2.4 H6\" stroke=\""
+  }
+]

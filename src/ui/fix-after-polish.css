@@ -126,3 +126,13 @@
 
 .flyc .hcard.has-card-art .card-art{width:120px!important;max-width:100%;height:72px;flex:none}
 @media(max-width:700px){.game[data-game-scale] .hand-cards:not(.lift-host)>.hcard.has-card-art .hcard-name{margin-top:3px!important}}
+
+/* e2e-green: the inspection footer after a match is taller than the live controls.
+   The settled Hold band uses its content height; cards, ship boards and the sea keep their dimensions. */
+@media(max-width:700px){
+ .game[data-game-scale].over:not([data-fx-busy]) .board-bottom>.team-row{min-height:0}
+}
+/* The two parent borders must not take pixels from the oak action's 260px body. */
+@media(min-width:701px){
+ .hand-actions.charge-mode .charge-btns{min-width:260px}
+}

@@ -1,0 +1,86 @@
+{
+  "children": [
+    {
+      "class": "status",
+      "y": 0,
+      "h": 105.25,
+      "bottom": 105.25,
+      "display": "grid",
+      "minHeight": "0px",
+      "flex": "0 0 auto",
+      "gap": "2.96px 7px"
+    },
+    {
+      "class": "sea-table",
+      "y": 108.25,
+      "h": 228.78125,
+      "bottom": 337.03125,
+      "display": "grid",
+      "minHeight": "min-content",
+      "flex": "1 1 0px",
+      "gap": "4px"
+    },
+    {
+      "class": "team-row table-edge",
+      "y": 376.625,
+      "h": 0,
+      "bottom": 376.625,
+      "display": "flex",
+      "minHeight": "0px",
+      "flex": "0 1 auto",
+      "gap": "6px"
+    },
+    {
+      "class": "board-bottom  ",
+      "y": 0,
+      "h": 0,
+      "bottom": 0,
+      "display": "contents",
+      "minHeight": "0px",
+      "flex": "0 1 auto",
+      "gap": "normal"
+    },
+    {
+      "class": "fx-weather",
+      "y": 0,
+      "h": 522,
+      "bottom": 522,
+      "display": "block",
+      "minHeight": "0px",
+      "flex": "0 1 auto",
+      "gap": "normal"
+    },
+    {
+      "class": "fx-scars",
+      "y": 0,
+      "h": 522,
+      "bottom": 522,
+      "display": "block",
+      "minHeight": "0px",
+      "flex": "0 1 auto",
+      "gap": "normal"
+    },
+    {
+      "class": "fx-layer",
+      "y": 0,
+      "h": 522,
+      "bottom": 522,
+      "display": "block",
+      "minHeight": "0px",
+      "flex": "0 1 auto",
+      "gap": "normal"
+    }
+  ],
+  "card": [
+    {
+      "class": "polish-card-paper",
+      "y": 408.578125,
+      "h": 120.171875,
+      "bottom": 528.75,
+      "display": "flex",
+      "minHeight": "auto",
+      "flex": "0 1 auto",
+      "gap": "0px"
+    }
+  ]
+}
