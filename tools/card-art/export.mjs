@@ -6,6 +6,7 @@
 //
 // --no-frame  drops the type-coloured frame and corner marks (for print, where the card draws its own frame).
 // --svg       also writes each picture as a standalone .svg next to the .png.
+// --compare   <dir with an earlier PNG export>: also writes <slug>-compare.jpg (before | after, plus thumbnails).
 // --webp      the game's files instead of PNG: <slug>.webp 600 x 360 and thumb/<slug>.webp 240 x 144, on the ivory
 //             paper colour (WebP quality 0.82). `--webp --out src/ui/art/cards` updates the pictures in the game.
 // Writes <slug>.png (or .webp) and, when every card is exported (no --only), manifest.json
@@ -28,6 +29,9 @@ const webp = args.includes('--webp');
 const scale = webp ? 3 : Number(opt('--scale', '3'));
 const noFrame = args.includes('--no-frame');
 const writeSvg = args.includes('--svg');
+// --compare <dir>: a PNG export of the same cards made earlier (the "before"); writes <slug>-compare.jpg:
+// before | after at the render scale, and under them both at the game's thumbnail size 240 x 144.
+const compareDir = opt('--compare', '') ? path.resolve(opt('--compare', '')) : null;
 const only = opt('--only', '') ? new Set(opt('--only', '').split(',').map(s => s.trim())) : null;
 
 const TYPE = { 'ЗАРЯД': '#b5542c', 'ПРИКАЗ': '#6b4f8a', 'РЕМОНТ': '#3f7f4a', 'РЕАКЦИЯ': '#2f6b8f' };
@@ -86,7 +90,25 @@ for (const [name, c] of cards) {
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(150); // embedded <image> pieces decode asynchronously
   const png = await page.screenshot({ omitBackground: true });
-  if (!webp) { fs.writeFileSync(path.join(out, c.file), png); continue; }
+  if (!webp) {
+    fs.writeFileSync(path.join(out, c.file), png);
+    const before = compareDir && path.join(compareDir, c.file);
+    if (before && fs.existsSync(before)) {
+      const jpg = await page.evaluate(async ({ a, b, paper }) => {
+        const load = async s => { const i = new Image(); i.src = 'data:image/png;base64,' + s; await i.decode(); return i; };
+        const [x, y] = [await load(a), await load(b)]; const W = y.width, H = y.height, gap = 16;
+        const c = document.createElement('canvas'); c.width = 2 * W + gap; c.height = H + gap + 144; const g = c.getContext('2d');
+        g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height); g.imageSmoothingQuality = 'high';
+        for (const [img, x0] of [[x, 0], [y, W + gap]]) {
+          g.fillStyle = paper; g.fillRect(x0, 0, W, H); g.drawImage(img, x0, 0, W, H);
+          g.fillRect(x0, H + gap, 240, 144); g.drawImage(img, x0, H + gap, 240, 144);
+        }
+        return c.toDataURL('image/jpeg', 0.85).split(',')[1];
+      }, { a: fs.readFileSync(before).toString('base64'), b: png.toString('base64'), paper: PAPER });
+      fs.writeFileSync(path.join(out, c.file.replace(/\.png$/, '-compare.jpg')), Buffer.from(jpg, 'base64'));
+    }
+    continue;
+  }
   const { full, thumb } = await toWebp(page, png);
   fs.writeFileSync(path.join(out, c.file), Buffer.from(full, 'base64'));
   fs.writeFileSync(path.join(out, 'thumb', c.file), Buffer.from(thumb, 'base64'));

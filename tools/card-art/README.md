@@ -17,6 +17,7 @@ node tools/card-art/export.mjs --out <папка> [--scale 3] [--no-frame] [--on
 - `--no-frame` — без рамки цвета типа и уголков (для печати, где рамку рисует сама карта).
 - `--only` — только перечисленные карты (имена как в `data/game-data.json`).
 - `--svg` — заодно сохранить каждую сцену отдельным `.svg`.
+- `--compare <папка>` — рядом с PNG кладёт `<slug>-compare.jpg`: «было» из папки прошлого экспорта | «стало», под ними миниатюры 240 × 144.
 - `--webp` — файлы для игры: `<slug>.webp` 600 × 360 и `thumb/<slug>.webp` 240 × 144 на цвете бумаги карты.
 
 Нужны `npm ci` (Playwright с Chromium и шрифты `@fontsource`). Результат — PNG (или WebP) и, если выгружены
@@ -27,6 +28,8 @@ PNG в репо не коммитить. Обновить картинку в и
 ```
 npm run card-art -- --webp --only "Ядра" --out src/ui/art/cards
 ```
+
+Как дорабатывать картинки — `docs/tasks/card-art-polish.md`.
 
 ## Что где
 
