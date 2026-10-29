@@ -42,6 +42,20 @@ const ghostDeck = u => sky(u, 0, 100, [[0, '#0b1715'], [.6, '#1f3a34'], [1, '#36
   + [18, 66, 120, 172].map(x => `<path d="M${x} 86q3 8 -1 14q4 3 1 6" stroke="#3a7a5a" stroke-width="1.2" fill="none" opacity=".8"/>`).join('')
   + grad('pmist' + u, [[0, '#b8f0d8', 0], [.4, '#b8f0d8', .12], [1, '#b8f0d8', 0]]) + `<rect y="90" width="${W}" height="80" fill="url(#pmist${u})"/>`
   + motes(20, 0, 0, 200, 110, '#c8f8e8', 3);
+// A ship under way in open water: the hull is cut at the waterline (nothing of it shows under the surface),
+// a dark band of shadow and short broken streaks stand in for the reflection, foam runs along the waterline.
+function sailing(k, x, y, s, r, u, bowLeft = true) {
+  const d = bowLeft ? -1 : 1; // the bow points to x + d * hw
+  const w = 64 * s, wl = y + .205 * w, hw = w * .36, id = 'psl' + u + (fid++);
+  const cut = `<clipPath id="${id}"><rect x="${x - w}" y="${y - w}" width="${2 * w}" height="${wl - y + w}"/></clipPath>`;
+  const shade = `<ellipse cx="${x}" cy="${wl + 2.4}" rx="${hw * 1.02}" ry="${(w * .03).toFixed(2)}" fill="#04121a" opacity=".45" filter="url(#soft${u})"/>`
+    + Array.from({ length: 7 }, (_, i) => { const yy = wl + 3 + i * 2.6, ww = hw * (1.5 - i * .16); return `<path d="M${(x - ww / 2 + (i % 2 ? 6 : -4)).toFixed(1)} ${yy.toFixed(1)}h${ww.toFixed(1)}" stroke="#0a1e28" stroke-width="${(1.2 - i * .1).toFixed(2)}" opacity="${(.32 - i * .04).toFixed(2)}"/>`; }).join('');
+  const r2 = R(k.length + 3);
+  const foam = Array.from({ length: 9 }, (_, i) => { const x0 = x - hw + i * hw * .22 + r2() * 3, ww = 4 + r2() * 7; return `<path d="M${x0.toFixed(1)} ${(wl + r2() * .8).toFixed(1)}q${(ww / 2).toFixed(1)} -1.2 ${ww.toFixed(1)} 0" stroke="#f4fcff" stroke-width="${(.7 + r2() * .6).toFixed(2)}" fill="none" opacity="${(.55 + r2() * .35).toFixed(2)}"/>`; }).join('')
+    + `<g transform="translate(${x} 0) scale(${d} 1)"><path d="M${hw - 6} ${wl - 1}q8 -4 16 -3q-4 3 -2 6q-8 1 -14 -3z" fill="#f4fcff" opacity=".8"/>`
+    + `<path d="M${-hw + 2} ${wl + .5}q-14 1 -30 4M${-hw + 4} ${wl + 2}q-18 3 -36 9" stroke="#f4fcff" stroke-width=".8" fill="none" opacity=".55"/></g>`;
+  return `${cut}${shade}<g clip-path="url(#${id})">${img(k, x, y, s, r, u)}</g>${foam}`;
+}
 const cup = (u, x, y, flip = false) => `<g transform="translate(${x} ${y}) scale(1.25)" filter="url(#drop${u})">${flip ? `<path d="M-7 0l1.6 -15h10.8l1.6 15z" fill="url(#leather${u})" stroke="#1a0e06" stroke-width=".6"/><ellipse cx="0" cy="-15" rx="5.4" ry="1.4" fill="#5a3418"/><ellipse cx="0" cy="0" rx="7" ry="1.6" fill="#2a1608"/>` : `<path d="M-5.4 0l-1.6 -15h14l-1.6 15z" fill="url(#leather${u})" stroke="#1a0e06" stroke-width=".6"/><ellipse cx="0" cy="-15" rx="7" ry="1.8" fill="#1a0e06"/><ellipse cx="0" cy="0" rx="5.4" ry="1.3" fill="#5a3418"/>`}<path d="M-4 -12v10" stroke="#e8c49a" stroke-width=".8" opacity=".35"/></g>`;
 const dieP = (u, x, y, a, pips) => `<g transform="translate(${x} ${y}) rotate(${a}) scale(1.25)" filter="url(#drop${u})"><rect x="-4.4" y="-4.4" width="8.8" height="8.8" rx="1.6" fill="#f4ecd8" stroke="#6a5a40" stroke-width=".5"/>${pips.map(([a2, b2]) => `<circle cx="${a2 * 2.4}" cy="${b2 * 2.4}" r=".8" fill="#2a1a0a"/>`).join('')}</g>`;
 
@@ -69,36 +83,47 @@ const SCENES = {
     return [ghostDeck(u) + lamp, barrel + play + fallen];
   },
 
-  // Gun deck: the gun runs out through a real open port; the port shows sea and sky; the lantern lights the deck.
+  // Gun deck in a cut-away: the gun runs out through the port in the hull side (on the right, seen in section);
+  // outside are the sea and the enemy ship, the shot flies at it and lifts a splash beside her.
   'Ядра': u => {
-    const wall = woodTex(u, 0, 0, W, 176, '#4e301a', '#26150a', '#120a04', 14, true, 7);
-    const ceiling = beam(u, 0, 0, W, 12) + `<path d="M0 12h200" stroke="#0a0502" stroke-width="1.2"/>` + [22, 178].map(x => `<rect x="${x - 7}" y="0" width="14" height="176" fill="#2a180a"/><path d="M${x - 6} 0v176" stroke="#7a4e2a" stroke-width=".6"/><path d="M${x + 6} 0v176" stroke="#0e0804" stroke-width=".8"/>`).join('');
-    // the port: thick hull timber around a square opening; the lid hangs open above on its tackle
-    const px = 160, py = 104;
-    const port = `<rect x="${px - 30}" y="${py - 24}" width="60" height="50" rx="2" fill="#120a04"/>`
-      + `<clipPath id="pport${u}"><rect x="${px - 25}" y="${py - 19}" width="50" height="40"/></clipPath><g clip-path="url(#pport${u})">`
-      + sky(u, py - 19, 22, [[0, '#7fb2cc'], [1, '#e9e2c6']]) + `<circle cx="${px + 12}" cy="${py - 8}" r="10" fill="#fff6d6" opacity=".55"/>`
-      + sea(u, py + 3, py + 21, '#5c9aa8', '#2c6a7c', '#0e3442', '#e8fbff', '#fff6d6', px + 12)
-      + `<g transform="translate(${px - 4} ${py + 3}) scale(.42)" opacity=".75"><path d="M-14 0h28l-4 4h-20z" fill="#3a4a50"/><path d="M-6 0v-16M4 0v-18" stroke="#3a4a50" stroke-width=".8"/><path d="M-11 -14q5 2 10 0v10q-5 2 -10 0zM-1 -16q5 2 10 0v12q-5 2 -10 0z" fill="#3a4a50"/></g></g>`
-      + `<rect x="${px - 25}" y="${py - 19}" width="50" height="40" fill="none" stroke="#3a2210" stroke-width="2.4"/><path d="M${px - 30} ${py + 26}h60" stroke="#8a5a30" stroke-width="1.6"/>`
-      + `<g filter="url(#drop${u})"><path d="M${px - 26} ${py - 24}l-8 -26h66l-6 26z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".7"/><path d="M${px - 22} ${py - 32}h52M${px - 24} ${py - 42}h56" stroke="#2a180a" stroke-width=".8"/><path d="M${px - 30} ${py - 24}h60" stroke="url(#iron${u})" stroke-width="2.2"/></g>`
-      + `<path d="M${px - 28} ${py - 50}L${px - 34} 12M${px + 26} ${py - 50}L${px + 30} 12" stroke="#a88a5a" stroke-width=".8"/>`
-      + halo(px, py, 46, '#d8eef4', .32);
-    // light: the lantern (left, warm) and the daylight from the port (right, cool)
-    const lamp = `<path d="M44 12v30" stroke="#2a1a0a" stroke-width=".8"/><path d="M44 12v30" stroke="#6a5a44" stroke-width=".3" stroke-dasharray=".8 .8"/>` + lantern(44, 54, 1.25);
-    const rammer = `<g filter="url(#drop${u})"><path d="M20 168L30 40" stroke="url(#oakH${u})" stroke-width="2.4"/><ellipse cx="30.3" cy="37.5" rx="5" ry="3.4" fill="#3a2a1a" transform="rotate(5 30.3 37.5)"/><path d="M26.4 35.2q3.8 -1.2 7.6 .8" stroke="#8a6a4a" stroke-width=".6" fill="none"/><path d="M17 120h12M18 76h13" stroke="url(#iron${u})" stroke-width="2"/></g>`;
-    const floor = plankFloor(u, 176, 128, '#5e3a1a', '#2a180a', '#140a04', 8) + `<path d="M0 176h200" stroke="#0e0804" stroke-width="2"/><path d="M0 178h200" stroke="#a87444" stroke-width=".5" opacity=".5"/>`;
-    const ringbolts = [70, 132].map(x => `<circle cx="${x}" cy="168" r="3" fill="none" stroke="url(#iron${u})" stroke-width="1.6"/><path d="M${x} 171v4" stroke="#1a1a1a" stroke-width="1.6"/>`).join('');
-    const tackle = `<path d="M70 170q24 6 44 2M132 170q-6 4 -10 3" stroke="#c9a878" stroke-width="1.1" fill="none"/>`;
-    const gun = img('deck-cannon', 132, 150, 2.05, 0, u) + shadow(u, 128, 186, 62, .55);
-    const shot = put('flash', 178, py + 4, 1.05, 0, u, false) + put('smokeP', 192, py - 4, .7, 0, u, false);
-    const balls = shadow(u, 64, 183, 26, .55) + img('deck-balls', 64, 170, 1.25, 0, u);
-    const bucket = `<g filter="url(#drop${u})" transform="translate(160 206)"><path d="M-9 -12h18l-2 16h-14z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/><path d="M-9.5 -8h19M-8.5 1h17" stroke="url(#iron${u})" stroke-width="1.4"/><ellipse cx="0" cy="-12" rx="9" ry="2" fill="#1e3a44"/></g>`;
-    const cartridges = `<g filter="url(#drop${u})" transform="translate(98 232)"><path d="M-16 -8h32v16h-32z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/>${[-10, -2, 6].map(x => `<ellipse cx="${x + 2}" cy="-9" rx="3.4" ry="2" fill="#e8dcc0" stroke="#9a8a6a" stroke-width=".4"/>`).join('')}</g>`;
-    // the whole deck sits 24 units higher so the gun's wheels and the shot stay above the text plate
-    const up = b => `<g transform="translate(0 -24)">${b}</g>`;
-    return [up(wall + ceiling + port + halo(44, 60, 80, '#ffb050', .32) + lamp + rammer + floor + ringbolts + tackle + motes(26, 0, 14, 200, 160, '#ffd8a0', 8)),
-      up(gun + shot + balls + bucket + cartridges + halo(150, 110, 60, '#cfe8f0', .12))];
+    const HX = 128, HW = 14, FL = 152, by = 120; // hull section x, its thickness, the deck line, the bore height
+    const out = HX + HW;
+    const wall = woodTex(u, 0, 0, HX, FL, '#4e301a', '#26150a', '#120a04', 14, true, 7)
+      + beam(u, 0, 0, HX, 11) + `<path d="M0 11h${HX}" stroke="#0a0502" stroke-width="1.2"/>`
+      + `<rect x="15" y="0" width="13" height="${FL}" fill="#2a180a"/><path d="M16 0v${FL}" stroke="#7a4e2a" stroke-width=".6"/><path d="M27 0v${FL}" stroke="#0e0804" stroke-width=".8"/>`;
+    const floor = plankFloor(u, FL, H - FL, '#5e3a1a', '#2a180a', '#140a04', 8) + `<path d="M0 ${FL}h${HX}" stroke="#0e0804" stroke-width="2"/><path d="M0 ${FL + 2}h${HX}" stroke="#a87444" stroke-width=".5" opacity=".5"/>`;
+    // outside the hull: sky, a far coast, the sea, the enemy with the splash of our shot next to her
+    const hz = 112;
+    const outside = `<clipPath id="pout${u}"><rect x="${out}" y="0" width="${W - out}" height="${H}"/></clipPath><g clip-path="url(#pout${u})">`
+      + sky(u, 0, hz, [[0, '#5d97bd'], [.6, '#a8cad8'], [1, '#efe4c4']]) + halo(184, 30, 30, '#fff4cc', .7)
+      + cloudBand(u, 20, 30, '#fffaf0', '#b9c4cc', 13, 2.2)
+      + `<path d="M150 ${hz}q12 -6 24 -3q10 -4 26 2v1h-50z" fill="#7e9aa0" opacity=".55"/>`
+      + sea(u, hz, H, '#5c9aa8', '#2c6a7c', '#0e3442', '#e8fbff', '#fff6d6', 184)
+      + afloat('endeavour', 184, hz - 3, .52, 2, u)
+      + put('splash', 166, hz + 6, .3, 0, u, false) + `<ellipse cx="166" cy="${hz + 7}" rx="6" ry="1" fill="#f4fcff" opacity=".6"/>`
+      + `<path d="M${out + 8} ${by - 4}Q158 ${by - 24} 166 ${hz}" stroke="#ffffff" stroke-width=".6" stroke-dasharray="1.4 1.6" fill="none" opacity=".7"/>`
+      + `<circle cx="161" cy="${by - 14}" r="1.6" fill="#1a1a1a"/>`
+      + `</g>`;
+    // the hull in section: thick frames and planking, the port cut through it, the lid hauled up outside
+    const ph = 26, pt = by - ph / 2;
+    const hull = `<path d="M${HX} 0h${HW}v${pt}h${-HW}zM${HX} ${pt + ph}h${HW}V${H}h${-HW}z" fill="url(#oakH${u})" stroke="#140a04" stroke-width=".8"/>`
+      + Array.from({ length: 9 }, (_, k) => k * 31 + 8).filter(y => y < pt - 2 || y > pt + ph + 2).map(y => `<path d="M${HX} ${y}h${HW}" stroke="#2a180a" stroke-width=".7"/>`).join('')
+      + `<path d="M${HX + 4} 0v${pt}M${HX + 4} ${pt + ph}V${H}" stroke="#c08a52" stroke-width=".4" opacity=".5"/>`
+      + `<path d="M${HX} ${pt}h${HW}M${HX} ${pt + ph}h${HW}" stroke="#0a0502" stroke-width="1.4"/>`
+      + `<g filter="url(#drop${u})"><path d="M${out} ${pt}l14 -22l4 3l-14 21z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/></g>`
+      + `<path d="M${out + 15} ${pt - 20}L${out - 4} 0" stroke="#a88a5a" stroke-width=".6"/>`;
+    // inside: lantern, rammer, the gun run out (its muzzle stands in the port), the shot piled by the carriage
+    const lamp = `<path d="M70 11v20" stroke="#2a1a0a" stroke-width=".8"/>` + lantern(70, 42, 1.15);
+    const rammer = `<g filter="url(#drop${u})"><path d="M11 ${FL - 4}L20 34" stroke="url(#oakH${u})" stroke-width="2.4"/><ellipse cx="20.3" cy="31.5" rx="5" ry="3.4" fill="#3a2a1a" transform="rotate(5 20.3 31.5)"/></g>`;
+    const s = 1.5, w = 64 * s, gx = HX + 13 - .465 * w, gy = by + .149 * w;
+    const gun = shadow(u, gx - 2, FL + 2, 46, .55) + img('deck-cannon', gx, gy, s, 0, u);
+    const shot = put('flash', out + 7, by, .55, 0, u, false) + put('smokeP', out + 10, by - 16, .34, 0, u, false);
+    const balls = shadow(u, 30, FL + 1, 22, .55) + img('deck-balls', 30, FL - 13, 1.1, 0, u);
+    const tackle = `<path d="M${gx - 40} ${FL - 6}q-20 -6 -30 -30" stroke="#c9a878" stroke-width="1" fill="none"/><circle cx="${gx - 70}" cy="${FL - 36}" r="2.4" fill="none" stroke="url(#iron${u})" stroke-width="1.3"/>`;
+    const bucket = `<g filter="url(#drop${u})" transform="translate(96 206)"><path d="M-9 -12h18l-2 16h-14z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/><path d="M-9.5 -8h19M-8.5 1h17" stroke="url(#iron${u})" stroke-width="1.4"/><ellipse cx="0" cy="-12" rx="9" ry="2" fill="#1e3a44"/></g>`;
+    const cartridges = `<g filter="url(#drop${u})" transform="translate(40 226)"><path d="M-16 -8h32v16h-32z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/>${[-10, -2, 6].map(x => `<ellipse cx="${x + 2}" cy="-9" rx="3.4" ry="2" fill="#e8dcc0" stroke="#9a8a6a" stroke-width=".4"/>`).join('')}</g>`;
+    return [wall + floor + outside + halo(70, 50, 70, '#ffb050', .3) + lamp + rammer + motes(26, 0, 14, HX, 140, '#ffd8a0', 8),
+      gun + balls + hull + shot + bucket + cartridges + halo(out + 10, by, 40, '#ffe0a0', .25)];
   },
 
   // Captain's cabin at night: the stern window with the moon over the sea; on the table the map, the crossed sabres,
@@ -132,27 +157,50 @@ const SCENES = {
     return [wall + win + table + map + motes(16, 0, 0, 200, 150, '#ffe0b0', 12), blades + ring + light];
   },
 
-  // The Company's dry dock: the flagship sits high on the keel blocks inside tall scaffolding, a crane lowers
-  // a new spar, fresh planks and a tar barrel wait on the quay. The sun is on the left.
+  // The Company's yard: the ship stands on the slip, on keel blocks, held by shores on both sides; her sails are
+  // off and the masts bare, the shipwrights fit fresh planks into her side while the crane lowers the next one.
+  // Behind her the storehouses of the yard and the harbour; the sun is on the left.
   'Верфь Компании': u => {
-    const back = sky(u, 0, 150, [[0, '#6fa6c8'], [.55, '#b7d4dc'], [.92, '#efe6c8'], [1, '#f6e2b2']])
-      + halo(40, 34, 60, '#fff4cc', .85) + `<circle cx="40" cy="34" r="9" fill="#fffbe6"/>`
-      + cloudBand(u, 6, 54, '#fffaf0', '#b9c4cc', 11, 2.15) + cloudBand(u, 70, 40, '#fff4dc', '#c8c0b0', 23, 2.4, '0.016 0.06')
-      + isles(150, '#7e9aa0', .5) + sea(u, 150, 176, '#5c9aa8', '#2c6a7c', '#0e3442', '#e8fbff', '#fff6d6', 40) + gulls([[120, 40, 1], [132, 34, .8], [70, 60, .7]]);
-    const dock = woodTex(u, 0, 176, W, 104, '#a07a4c', '#5e4224', '#2a1a0a', 9, false, 7) + `<path d="M0 176h200" stroke="#3a2410" stroke-width="2"/><path d="M0 178h200" stroke="#e0b880" stroke-width=".6" opacity=".6"/>`;
-    const posts = Array.from({ length: 6 }, (_, k) => { const x = 14 + k * 34.4; return `<path d="M${x} 44v134" stroke="#5a3a1c" stroke-width="3"/><path d="M${x - .8} 44v134" stroke="#a87444" stroke-width=".7"/>`; }).join('')
-      + `<path d="M14 52h172M14 96h172M14 140h172" stroke="#5a3a1c" stroke-width="2"/>`
-      + Array.from({ length: 5 }, (_, k) => { const x = 14 + k * 34.4; return `<path d="M${x} 52l34.4 44M${x + 34.4} 52l-34.4 44M${x} 96l34.4 44M${x + 34.4} 96l-34.4 44" stroke="#6a4a24" stroke-width=".7"/>`; }).join('')
-      + `<path d="M14 140h172" stroke="#c08a52" stroke-width=".5" opacity=".6"/>`;
-    const crane = `<path d="M180 176V14" stroke="#4a2e14" stroke-width="3.6"/><path d="M180 18L112 18M180 18l-14 14M180 40l-24 -22" stroke="#4a2e14" stroke-width="2.4"/><path d="M118 18v46" stroke="#8a6a3a" stroke-width=".7"/>`
-      + `<g filter="url(#drop${u})"><rect x="72" y="62" width="92" height="5" rx="2" fill="url(#oakH${u})" stroke="#2a180a" stroke-width=".5" transform="rotate(-3 118 64)"/></g><path d="M118 64l-18 -4M118 64l18 -4" stroke="#8a6a3a" stroke-width=".5"/>`;
-    const blocks = [60, 82, 104, 126, 148].map(x => `<rect x="${x - 6}" y="160" width="12" height="16" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".5"/>`).join('')
-      + `<path d="M38 176L60 156M164 176L142 156M24 176L50 148M178 176L152 148" stroke="#6a4424" stroke-width="2.4"/>`;
-    const ship = img('endeavour', 102, 131, 1.75, 0, u);
+    const GR = 166, sx = 102, sy = 125, s = 1.75; // ground line; the ship's picture position (hull bottom at 156)
+    const back = sky(u, 0, 120, [[0, '#6fa6c8'], [.55, '#b7d4dc'], [.92, '#efe6c8'], [1, '#f6e2b2']])
+      + halo(36, 30, 56, '#fff4cc', .85) + `<circle cx="36" cy="30" r="8.5" fill="#fffbe6"/>`
+      + cloudBand(u, 6, 46, '#fffaf0', '#b9c4cc', 11, 2.15) + gulls([[150, 30, 1], [162, 24, .8]])
+      + isles(116, '#7e9aa0', .5) + sea(u, 116, 132, '#7fb0bc', '#4c8a9a', '#2c6a7c', '#e8fbff', '#fff6d6', 36)
+      + afloat('revenge', 30, 114, .34, 0, u);
+    // storehouses of the yard: stone walls, tiled roofs, small dark windows, a flagstaff
+    const house = (x, y, w, h, roof) => `<g filter="url(#drop${u})"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#c9b08a" stroke="#6a5030" stroke-width=".5"/><path d="M${x - 3} ${y}L${x + w / 2} ${y - roof}L${x + w + 3} ${y}z" fill="#9a4a32" stroke="#5a2a1a" stroke-width=".5"/>`
+      + Array.from({ length: Math.floor(w / 9) }, (_, k) => `<rect x="${x + 4 + k * 9}" y="${y + 5}" width="3.4" height="4.6" fill="#3a2a1a"/>`).join('') + `<rect x="${x + w / 2 - 4}" y="${y + h - 10}" width="8" height="10" fill="#4a3018"/></g>`;
+    const yard = house(126, 104, 70, 28, 14) + house(70, 112, 40, 20, 10)
+      + `<path d="M192 104V70" stroke="#5a3a1c" stroke-width="1.2"/><path d="M192 71h14v8h-14z" fill="#b8402e"/><path d="M192 74.5h14" stroke="#f4ecd8" stroke-width="1.4"/>`
+      + `<rect y="130" width="${W}" height="${GR - 130}" fill="#b49a72"/>` + `<path d="M0 130h200" stroke="#7a6040" stroke-width=".8"/>`
+      + Array.from({ length: 8 }, (_, k) => `<path d="M${-20 + k * 30} ${GR}L${10 + k * 26} 130" stroke="#9a8058" stroke-width=".5" opacity=".6"/>`).join('');
+    const ground = woodTex(u, 0, GR, W, H - GR, '#a07a4c', '#5e4224', '#2a1a0a', 9, false, 7) + `<path d="M0 ${GR}h200" stroke="#3a2410" stroke-width="2"/><path d="M0 ${GR + 2}h200" stroke="#e0b880" stroke-width=".6" opacity=".6"/>`;
+    // the slip: two ways under the keel, blocks the hull rests on
+    const slip = `<rect x="30" y="${GR - 4}" width="150" height="4" fill="#5a3a1c"/><path d="M30 ${GR - 4}h150" stroke="#c08a52" stroke-width=".5"/>`
+      + [56, 74, 92, 110, 128, 146].map(x => `<rect x="${x - 5}" y="156" width="10" height="${GR - 4 - 156}" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".5"/>`).join('');
+    // the hull only: the picture is cut above the rail, so no sails show; bowsprit kept
+    const id = 'phc' + u;
+    const hull = `<clipPath id="${id}"><path d="M0 136.6H200V200H0zM137 127H170V137H137z"/></clipPath><g clip-path="url(#${id})">${img('endeavour', sx, sy, s, 0, u)}</g>`;
+    // bare masts with their yards and shrouds
+    const masts = [[79.5, 52, 30], [102.5, 40, 36], [124, 62, 24]].map(([x, top, yd]) => `<path d="M${x} 136V${top}" stroke="#4a2e14" stroke-width="2.2"/><path d="M${x - .6} 136V${top}" stroke="#a87444" stroke-width=".5"/>`
+      + [0, .38].map(f => { const y = top + 6 + f * (136 - top); const ww = yd * (1 - f * .5); return `<path d="M${x - ww / 2} ${y.toFixed(1)}h${ww}" stroke="#4a2e14" stroke-width="1.1"/>`; }).join('')
+      + `<path d="M${x} ${top + 2}L${x - 12} 137M${x} ${top + 2}L${x + 12} 137M${x} ${top + 14}L${x - 9} 137M${x} ${top + 14}L${x + 9} 137" stroke="#3a2a1a" stroke-width=".35" opacity=".8"/>`).join('')
+      + `<path d="M79.5 54L102.5 42L124 64" stroke="#3a2a1a" stroke-width=".4" fill="none"/>`;
+    // the repair: a row of fresh light planks let into the dark side, one still missing
+    const patch = `<g><path d="M88 142.5h30l-.4 4.6h-29.6z" fill="#e2bc80" stroke="#7a5020" stroke-width=".4"/><path d="M96 142.5v4.6M108 142.5v4.6" stroke="#9a6a30" stroke-width=".4"/>`
+      + `<path d="M118 142.6h12v4.4h-12z" fill="#1a0e06"/>${[90, 94, 100, 104, 112, 116].map(x => `<circle cx="${x}" cy="144.8" r=".35" fill="#3a2410"/>`).join('')}</g>`;
+    // shores from the ground to the turn of the bilge, a stage plank and ladder at the patch
+    const shores = [[34, 64, 146], [50, 72, 150], [176, 140, 146], [160, 132, 150]].map(([gx, hx, hy]) => `<path d="M${gx} ${GR - 3}L${hx} ${hy}" stroke="#6a4424" stroke-width="2.6"/><path d="M${gx} ${GR - 3}L${hx} ${hy}" stroke="#b07a44" stroke-width=".5" transform="translate(-.6 0)"/>`).join('');
+    const stage = `<path d="M63 137L42 126" stroke="#3a2410" stroke-width="1.6"/><path d="M42 126L62 112" stroke="#3a2a1a" stroke-width=".35"/>`
+      + `<path d="M140 166l6 -30M146 166l6 -30" stroke="#7a5030" stroke-width="1"/>` + Array.from({ length: 6 }, (_, k) => `<path d="M${140.8 + k} ${161 - k * 5}h6" stroke="#7a5030" stroke-width=".8"/>`).join('');
+    // the crane on the right lowers the next plank to the gap
+    const crane = `<path d="M176 ${GR - 2}V22" stroke="#4a2e14" stroke-width="3.4"/><path d="M175.2 ${GR - 2}V22" stroke="#a87444" stroke-width=".6"/><path d="M176 24H120M176 24l-14 14M176 46l-26 -22" stroke="#4a2e14" stroke-width="2.2"/>`
+      + `<path d="M124 24v86" stroke="#8a6a3a" stroke-width=".6"/><g filter="url(#drop${u})"><rect x="108" y="110" width="34" height="4" rx="1" fill="#e2bc80" stroke="#7a5020" stroke-width=".4" transform="rotate(-4 124 112)"/></g><path d="M124 110l-12 -6M124 110l12 -6" stroke="#8a6a3a" stroke-width=".4"/>`;
     const quay = `<g filter="url(#drop${u})" transform="translate(150 214)">${[0, 5, 10].map(d => `<rect x="${-26 + d}" y="${-8 - d}" width="50" height="5" fill="#d8b47e" stroke="#7a5a30" stroke-width=".5"/>`).join('')}</g>`
       + `<g filter="url(#drop${u})" transform="translate(40 214)"><path d="M-12 -16q-5 16 0 32h24q5 -16 0 -32z" fill="url(#oak${u})" stroke="#2a1608"/><path d="M-15 -8h30M-15 8h30" stroke="url(#iron${u})" stroke-width="2.4"/><ellipse cx="0" cy="-16" rx="12" ry="3" fill="#120a04"/></g>`
       + shadow(u, 92, 232, 22, .45) + img('t_repair', 92, 220, .8, -8, u);
-    return [back + posts + dock + blocks + crane + motes(10, 0, 40, 200, 120, '#fff8e0', 5), ship + quay];
+    return [back + yard + ground + slip + motes(10, 0, 40, 200, 100, '#fff8e0', 5),
+      shadow(u, 102, 160, 66, .5) + masts + hull + patch + shores + stage + crane + quay];
   },
 
   // Reaction: the black ship runs before a strong wind; the enemy's ball falls short in her wake.
@@ -161,15 +209,33 @@ const SCENES = {
       + halo(158, 36, 64, '#fff4cc', .85) + `<circle cx="158" cy="36" r="9" fill="#fffbe6"/>`
       + cloudBand(u, 2, 50, '#fffaf0', '#a9b8c4', 31, 2.0, '0.02 0.05') + cloudBand(u, 50, 40, '#fff4dc', '#c0bcb0', 17, 2.3, '0.03 0.07')
       + cloudBand(u, 84, 26, '#fffaf0', '#c8c4b8', 5, 2.45, '0.024 0.08');
-    const gust = Array.from({ length: 7 }, (_, k) => { const y = 40 + k * 8, x = 4 + k * 3; return `<path d="M${x} ${y}q36 -5 74 -1" stroke="#ffffff" stroke-width="${(.5 + k * .06).toFixed(2)}" fill="none" opacity="${(.18 + k * .03).toFixed(2)}"/>`; }).join('');
+    const gust = Array.from({ length: 7 }, (_, k) => { const y = 40 + k * 8, x = 196 - k * 3; return `<path d="M${x} ${y}q-36 -5 -74 -1" stroke="#ffffff" stroke-width="${(.5 + k * .06).toFixed(2)}" fill="none" opacity="${(.18 + k * .03).toFixed(2)}"/>`; }).join('');
     const water = isles(112, '#6e8a96', .5) + sea(u, 112, 280, '#5c9aa8', '#2c6a7c', '#0a2a36', '#e8fbff', '#fff6d6', 158) + swell(120, 280, '#dff2f2', .45);
-    const miss = put('splash', 36, 146, .55, 0, u, false) + `<ellipse cx="36" cy="150" rx="14" ry="2.4" fill="#f4fcff" opacity=".55"/>`;
-    const wake = `<path d="M24 140q50 4 92 -4M24 146q60 6 96 -2" stroke="#f4fcff" stroke-width="1.2" fill="none" opacity=".55"/>`;
-    const ship = afloat('pearl', 120, 108, 2.2, -5, u);
-    const bow = put('splash', 178, 136, .5, 0, u, false) + `<path d="M166 140q12 -1 30 -5M166 142q16 3 30 6" stroke="#ffffff" stroke-width="1" fill="none" opacity=".75"/>`;
-    return [back + gust + water + wake + miss + gulls([[48, 30, 1.1], [60, 24, .8]]), ship + bow];
+    const miss = put('splash', 184, 150, .5, 0, u, false) + `<ellipse cx="184" cy="154" rx="14" ry="2.4" fill="#f4fcff" opacity=".55"/>`;
+    const wake = '';
+    const ship = sailing('pearl', 116, 110, 2.2, -2, u);
+    const bow = put('splash', 54, 136, .36, 0, u, false) + `<path d="M58 140q-14 1 -34 6" stroke="#ffffff" stroke-width=".9" fill="none" opacity=".7"/>`;
+    return [back + gust + water + wake + miss + gulls([[150, 26, 1.1], [138, 20, .8]]), ship + bow];
   }
 };
+
+// Card backs: one picture per ship deck, the ship under way in her own light. The back layout (title, crest,
+// name) is drawn over it by the card template, so the middle band stays clear for the ship.
+const BACKS = {
+  pearl: { sky: [[0, '#070d18'], [.6, '#1c2c44'], [1, '#3e5470']], sea: ['#2e4660', '#14263a', '#060e18'], streak: '#9ab8d0', light: '#e8f0ff', moon: [148, 52, '#f6f0d8'], night: true },
+  revenge: { sky: [[0, '#2a0806'], [.45, '#7a2416'], [.85, '#d8683a'], [1, '#f2b070']], sea: ['#7a3a28', '#3a1810', '#140604'], streak: '#f2b070', light: '#ffd8a0', moon: [56, 150, '#ffe0a0'] },
+  endeavour: { sky: [[0, '#3a76a6'], [.55, '#8ab8d4'], [.9, '#e8e2c8'], [1, '#f6e2b2']], sea: ['#5c9aa8', '#2c6a7c', '#0e3442'], streak: '#e8fbff', light: '#fff6d6', moon: [150, 44, '#fffbe6'] },
+  dutch: { sky: [[0, '#06100e'], [.6, '#1a3430'], [1, '#3a6458']], sea: ['#2a4a42', '#122a24', '#040c0a'], streak: '#9ff0d0', light: '#c8fff0', moon: [54, 50, '#dff4ec'], night: true, mist: true }
+};
+function backArt(k) {
+  const u = 'b' + (fid++), c = BACKS[k], hz = 166;
+  let body = sky(u, 0, hz, c.sky) + halo(c.moon[0], c.moon[1], 50, c.moon[2], c.night ? .5 : .8) + `<circle cx="${c.moon[0]}" cy="${c.moon[1]}" r="${c.night ? 8 : 10}" fill="${c.moon[2]}" opacity=".95"/>`
+    + (c.night ? Array.from({ length: 40 }, (_, i) => { const r = R(i + 3); return `<circle cx="${(r() * 200).toFixed(1)}" cy="${(r() * 110).toFixed(1)}" r="${(.3 + r() * .6).toFixed(2)}" fill="#fff8e0" opacity="${(.3 + r() * .6).toFixed(2)}"/>`; }).join('') : cloudBand(u, 70, 40, '#fff4dc', '#c0bcb0', 17, 2.3, '0.03 0.07'))
+    + sea(u, hz, H, c.sea[0], c.sea[1], c.sea[2], c.streak, c.light, c.moon[0]) + swell(hz + 10, H, c.streak, .3)
+    + sailing(k, 100, 150, 2.5, 0, u);
+  if (c.mist) body += grad('bm' + u, [[0, '#b8f0d8', 0], [.5, '#b8f0d8', .18], [1, '#b8f0d8', 0]]) + `<rect y="140" width="${W}" height="60" fill="url(#bm${u})"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%"><defs>${DEFS(u)}</defs>${body}${vignette(u)}</svg>`;
+}
 
 // portrait(name) — the whole picture; portrait(name, {layer: 'fg'}) — only the foreground on transparency
 // (for a card frame that lets the foreground step over its border).
@@ -180,4 +246,4 @@ function portrait(name, opts = {}) {
   const body = opts.layer === 'fg' ? fg : bg + fg + (opts.vignette === false ? '' : vignette(u));
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"><defs>${DEFS(u)}<clipPath id="pc${u}"><rect width="${W}" height="${H}"/></clipPath></defs><g clip-path="url(#pc${u})">${body}</g></svg>`;
 }
-module.exports = { portrait, SCENES: Object.keys(SCENES), W, H };
+module.exports = { portrait, backArt, BACKS: Object.keys(BACKS), SCENES: Object.keys(SCENES), W, H };
