@@ -205,7 +205,9 @@ test.describe('the log follows the clips (a game against the bots, 1366×660)', 
     // A Volley of the Pirates is on the table: its lines are not in the log yet.
     await expect(page.locator('.fx-layer .plate')).toBeVisible({ timeout: 60_000 });
     const during = await lines.allTextContents();
-    expect(during.some((t) => /Залп по/.test(t) && /Корпус \d+ → \d+|Паруса \d+ → \d+|Пушки \d+ → \d+|Команда \d+ → \d+/.test(t))).toBe(false);
+    // PR #85 formats the shot as a sentence, retaining the track deltas below it.
+    const volleyResult = (text: string) => /бьёт «[^»]+»[^:]*: \d+ по (?:Корпусу|Парусам|Пушкам|Команде)/.test(text);
+    expect(during.some((t) => volleyResult(t) && /Корпус \d+ → \d+|Паруса \d+ → \d+|Пушки \d+ → \d+|Команда \d+ → \d+/.test(t))).toBe(false);
 
     // A card named in the log opens while the show goes on (P3).
     const cref = page.locator('.log-col .cref[data-card]').first();
@@ -219,7 +221,7 @@ test.describe('the log follows the clips (a game against the bots, 1366×660)', 
     await page.mouse.click(5, 300);
     await expect.poll(async () => (await lines.allTextContents()).length).toBeGreaterThan(during.length);
     const after = await lines.allTextContents();
-    expect(after.some((t) => /Залп по/.test(t))).toBe(true);
+    expect(after.some(volleyResult)).toBe(true);
     const hidden = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('[data-fx-status]')).filter((c) => getComputedStyle(c).visibility === 'hidden').length);
     expect(hidden).toBe(0);
     // the newest lines are highlighted
