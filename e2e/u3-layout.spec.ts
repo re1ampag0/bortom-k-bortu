@@ -50,7 +50,11 @@ async function headTags(page: Page) {
         .filter((e) => e.offsetWidth > 0)
         .map((e) => {
           const b = e.getBoundingClientRect();
-          return { text: e.textContent, dy: Math.abs((b.top + b.bottom) / 2 - (n.top + n.bottom) / 2), transform: getComputedStyle(e).transform, nameWhole: name.scrollWidth <= name.clientWidth + 1 };
+          const head = h.getBoundingClientRect();
+          const cornerReady = innerWidth <= 700 && e.matches('.ready') && !!h.closest('.game[data-game-scale]');
+          const meetsName = b.left < n.right && n.left < b.right && b.top < n.bottom && n.top < b.bottom;
+          return { text: e.textContent, dy: Math.abs((b.top + b.bottom) / 2 - (n.top + n.bottom) / 2), transform: getComputedStyle(e).transform, nameWhole: name.scrollWidth <= name.clientWidth + 1,
+            cornerReady, meetsName, box: {width:b.width,height:b.height,top:b.top,bottom:b.bottom}, head: {top:head.top,bottom:head.bottom} };
         });
     }),
   );
@@ -84,7 +88,13 @@ const spread = (xs: number[]) => (xs.length ? Math.max(...xs) - Math.min(...xs) 
 async function expectHeads(page: Page) {
   for (const t of await headTags(page)) {
     expect(t.transform, `${t.text}`).toBe('none');
-    expect(t.dy, `${t.text}: centre against the name`).toBeLessThanOrEqual(TOL);
+    if(t.cornerReady){
+      // PR #79 pins a compact ready tick in the corner, leaving the name unobscured.
+      expect(t.box.width).toBeGreaterThanOrEqual(10);expect(t.box.width).toBeLessThanOrEqual(14);
+      expect(t.box.height).toBeGreaterThanOrEqual(10);expect(t.box.height).toBeLessThanOrEqual(14);
+      expect(t.box.top).toBeGreaterThanOrEqual(t.head.top-TOL);expect(t.box.bottom).toBeLessThanOrEqual(t.head.bottom);
+      expect(t.meetsName, 'the corner ready tick leaves the name clear').toBe(false);
+    }else expect(t.dy, `${t.text}: centre against the name`).toBeLessThanOrEqual(TOL);
     expect(t.nameWhole, `${t.text}: the name of the ship is whole`).toBe(true);
   }
 }
@@ -142,7 +152,8 @@ for (const size of SIZES) {
       expect(withSummary.info, '«Последнее» is on the table').not.toBeNull();
       expect(Math.abs(withSummary.info!.height - 22)).toBeLessThanOrEqual(2);
       expect(withSummary.info!.toPlanks).toBeGreaterThanOrEqual(-1);
-      expect(withSummary.info!.toPlanks).toBeLessThanOrEqual(8);
+      // PR #82 raises the journal strip by 22px (desktop) / 20px (phone), above the 4px row gap.
+      expect(Math.abs(withSummary.info!.toPlanks - (laptop ? 26 : 24))).toBeLessThanOrEqual(TOL);
       expect(Math.abs(withSummary.info!.left) + Math.abs(withSummary.info!.right)).toBeLessThanOrEqual(2 * 8);
       await page.getByTestId('middle-info').click();
       await expect(page.getByTestId('log-sheet')).toBeVisible();
@@ -193,7 +204,8 @@ for (const size of SIZES) {
               return { ship: row.closest<HTMLElement>('.plank')!.dataset.ship!, third, widths: Array.from(row.children).map((b) => b.getBoundingClientRect().width) };
             }),
         );
-        for (const r of thirds) expect(Math.min(...r.widths), `${r.ship}: every button at least a third of the row`).toBeGreaterThanOrEqual(r.third - 1);
+        // PR #79 keeps compact icon buttons >=44px; extra buttons scroll rather than each taking a third.
+        for (const r of thirds) expect(Math.min(...r.widths), `${r.ship}: each compact button remains a 44px target`).toBeGreaterThanOrEqual(44);
         expect(spread(btns.map((b) => b.h)), 'the buttons of one height').toBeLessThanOrEqual(1);
         expect(Math.abs(btns[0].h - 34), 'seen 34 px high').toBeLessThanOrEqual(TOL);
         expect(btns.every((b) => b.whole), 'no text cut').toBe(true);
@@ -253,7 +265,7 @@ for (const size of SIZES) {
       const noPlans = page.getByTestId('no-plans');
       if (await noPlans.isVisible({ timeout: 1000 }).catch(() => false)) await noPlans.click();
       const endingButton = page.locator('[data-testid="end-turn"]:visible').first();
-      await expect(endingButton).toContainText('Ход окончен ·');
+      await expect(endingButton).toContainText(laptop ? 'Ход окончен ·' : /Ход окончен\s*отменить: [1-3] с/);
       await expect(page.getByTestId('ending')).toHaveCount(0);
       await expect(page.locator('.dock')).toHaveCount(0);
       await expect(page.locator('[data-testid^="ready-"]')).toHaveCount(2);

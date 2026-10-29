@@ -4,19 +4,20 @@ import {readFileSync} from 'node:fs';
 import type {GameData} from '../src/engine/types';
 const data=JSON.parse(readFileSync('data/game-data.json','utf8')) as GameData;
 for(const [width,height] of [[1366,660],[1920,944],[430,740]]){
- test(`ship window ${width}×${height}: all four ships, data, prepared motion, pause, discard and close${width<=700?' @iphone':''}`,async({page})=>{
-  test.setTimeout(60000);await page.setViewportSize({width,height});
+ test(`ship window ${width}×${height}: all four ships, data, prepared motion, pause, discard and close${width<=700?' @iphone':''}`,async({page,browserName})=>{
+  // PR #85 reveals one node per frame: software WebKit needs time for four complete scenes.
+  test.setTimeout(browserName==='webkit'?240000:60000);await page.setViewportSize({width,height});
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('?seed=1&speed=instant&perf=0');
   for(const id of ['quick-duo','prep-start','placement-done','curtain-ready','placement-done','curtain-ready'])await page.getByTestId(id).click();
   for(const code of ['Ж','М','И','Г']){
    await page.getByTestId(`plank-${code}`).locator('.plank-head').click({position:{x:8,y:8}});
    const sheet=page.getByTestId('ship-sheet'),ship=data.ships.find(s=>s.code===code)!;
-   await expect(sheet).toBeVisible();if(width<=700)await expect(page.locator('#stage')).toHaveAttribute('data-ship-window-covered','');await expect(page.locator('.sw-native-scene')).toHaveAttribute('data-ready','1');
+   await expect(sheet).toBeVisible();if(width<=700)await expect(page.locator('#stage')).toHaveAttribute('data-ship-window-covered','');await expect(page.locator('.sw-native-scene')).toHaveAttribute('data-ready','1',{timeout:browserName==='webkit'?60000:20000});
    await expect(sheet.getByRole('heading',{level:1})).toContainText(ship.name.replace(/[«»]/g,''));
    for(const track of ['hull','sails','guns','crew'] as const)await expect(sheet.locator(`[data-sw-track=${track}]`)).toContainText(`${ship[track]}/${ship[track]}`);
    for(const a of ship.abilities)await expect(sheet).toContainText(a.name);
-   if(code==='Г'){await expect(sheet.getByTestId('ship-souls')).toContainText('1/5');await expect(sheet.locator('.sw-soul-exchange')).toHaveCount(2);}
+   if(code==='Г'){await expect(sheet.getByTestId('ship-souls')).toContainText('1/5');await expect(sheet.getByTestId('ship-souls')).toContainText('в свой ход 1 Душа чинит 1 Корпус или 1 Команду');}
    const box=await page.locator(width<=700?'.ship-window-frame':'.ship-window').boundingBox();expect(box).toBeTruthy();
    expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.y).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(width+.5);expect(box!.y+box!.height).toBeLessThanOrEqual(height+.5);
    // The artboard's 920px body painting deliberately extends 6px under the border. Check live content, not that decorative crop.

@@ -186,7 +186,7 @@ async function phone(page: Page, name: string) {
   expect(await row.locator('.btn:has(.short-pic)').count(), '«Погружение» and a Soul with pictures').toBeGreaterThanOrEqual(2);
   for (const b of await row.locator('.btn:has(.short-pic)').all()) {
     await expect(b).toHaveAttribute('data-tip', /Погружение|Душа/);
-    await expect(b.locator('.cmd-short img.short-pic')).toBeVisible();
+    await expect(b.locator('.cmd-in .cmd-icon img')).toBeVisible();
   }
   const last = buttons.last();
   await expect(last).toHaveText(/Душа/);
@@ -270,7 +270,7 @@ test('laptop 1366×660: the log, the rules and a discard stay wide', async ({ pa
   await page.locator('.log-actions').getByRole('button', { name: 'Весь журнал' }).click();
   await wide(page.getByTestId('log-sheet'), '1-log', 760);
   await page.getByRole('button', { name: 'Правила' }).first().click();
-  await wide(page.getByTestId('rules'), '2-rules', 1040);
+  await wide(page.getByTestId('rules'), '2-rules', 1120);
   await page.getByTestId('plank-Ж').locator('.plank-head').click({ position: { x: 8, y: 8 } });
   await page.getByTestId('ship-sheet').getByRole('button', { name: /^Открыть сброс:/ }).click();
   await wide(page.getByTestId('discard'), '3-discard');
@@ -339,7 +339,8 @@ test('phone 375×667: the lifted card lies whole over the table, the fan and the
   expect(await rects(DECK)).toEqual(deck);
   // a tap beside it drops it: the card is back in the fan (the fan itself, before/after ui-press: scripts/ui-press/lift.mjs)
   const sea = (await page.locator('.sea-water').boundingBox())!;
-  await page.mouse.click(sea.x + sea.width / 2, sea.y + sea.height / 2);
+  // The wider card from PR #83 covers the sea centre. Use the uncovered right edge.
+  await page.mouse.click(sea.x + sea.width - 8, sea.y + sea.height / 2);
   await expect(layer).toHaveCount(0);
   await expect(page.locator('.lift-place')).toHaveCount(0);
   await expect(cards).toHaveCount(n);

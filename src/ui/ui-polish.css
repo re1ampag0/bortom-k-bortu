@@ -30,7 +30,7 @@
 [data-testid="skip-reaction"]{background:linear-gradient(#46321f,#251b12)!important;border:1px solid #c9a048!important;color:#f4dfa9!important}
 @media(min-width:1101px){.game{grid-template-columns:minmax(0,1fr) 270px}.game .log-list{line-height:1.35}.hand-actions .end-turn{white-space:normal;text-overflow:clip}.hand-actions button{max-width:100%}}
 /* The maelstrom is the explicit exception to pausing ambient weather during a clip. */
-.board[data-wx="maelstrom"]>.fx-weather{z-index:1!important}.board[data-wx="maelstrom"]>.fx-weather.wx-paused .wx-loop{animation-play-state:running!important}
+.board[data-wx="maelstrom"]>.fx-weather{z-index:1!important}
 @media(prefers-reduced-motion:reduce){.board[data-wx="maelstrom"]>.fx-weather .wx-loop{animation-play-state:paused!important}}
 .game.perf-off-css .board[data-wx="maelstrom"]>.fx-weather .wx-loop,.game.perf-off-weather .board[data-wx="maelstrom"]>.fx-weather .wx-loop{animation-play-state:paused!important}
 .polish-finished-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:100%}.polish-finished-actions>.primary{flex-basis:100%;min-height:48px}.polish-finished-actions>.btn:not(.primary){flex:1;min-width:0;text-align:center}

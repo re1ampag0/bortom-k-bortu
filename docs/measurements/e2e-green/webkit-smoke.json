@@ -1,0 +1,19 @@
+{
+  "stats": {
+    "startTime": "2026-10-28T18:32:58.699Z",
+    "duration": 16804.596999999998,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "test": "a press on «Пожар» opens its rule in Safari and keeps the show @iphone",
+      "project": "iphone",
+      "status": "passed",
+      "durationMs": 14422,
+      "error": ""
+    }
+  ]
+}

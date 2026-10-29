@@ -1,0 +1,89 @@
+{
+  "before": {
+    "classes": "fx-weather",
+    "states": [
+      {
+        "name": "wx-loop-95",
+        "state": "running",
+        "connected": true,
+        "match": false,
+        "computed": "running",
+        "inline": null
+      },
+      {
+        "name": "wx-loop-96",
+        "state": "running",
+        "connected": true,
+        "match": false,
+        "computed": "running",
+        "inline": null
+      },
+      {
+        "name": "wx-loop-97",
+        "state": "running",
+        "connected": true,
+        "match": false,
+        "computed": "running",
+        "inline": null
+      }
+    ]
+  },
+  "immediate": {
+    "classes": "fx-weather wx-paused",
+    "states": [
+      {
+        "name": "wx-loop-95",
+        "state": "running",
+        "connected": true,
+        "match": true,
+        "computed": "running",
+        "inline": null
+      },
+      {
+        "name": "wx-loop-96",
+        "state": "running",
+        "connected": true,
+        "match": true,
+        "computed": "running",
+        "inline": null
+      },
+      {
+        "name": "wx-loop-97",
+        "state": "running",
+        "connected": true,
+        "match": true,
+        "computed": "running",
+        "inline": null
+      }
+    ]
+  },
+  "later": {
+    "classes": "fx-weather wx-paused",
+    "states": [
+      {
+        "name": "wx-loop-95",
+        "state": "running",
+        "connected": true,
+        "match": true,
+        "computed": "running",
+        "inline": null
+      },
+      {
+        "name": "wx-loop-96",
+        "state": "running",
+        "connected": true,
+        "match": true,
+        "computed": "running",
+        "inline": null
+      },
+      {
+        "name": "wx-loop-97",
+        "state": "running",
+        "connected": true,
+        "match": true,
+        "computed": "running",
+        "inline": null
+      }
+    ]
+  }
+}
