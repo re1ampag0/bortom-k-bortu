@@ -1,5 +1,5 @@
 // Renders the card pictures (one per unique card name in data/game-data.json) from their SVG scenes.
-// The scenes are vector (200 x 120 box), so any size is sharp: --scale 3 gives the game's 600 x 360,
+// The scenes are vector (200 x 120 box), so any size is sharp: --scale 3 gives 600 x 360,
 // --scale 10 gives 2000 x 1200 for print.
 //
 //   node tools/card-art/export.mjs --out <dir> [--scale 3] [--no-frame] [--only "Ядра,Анжелика"] [--svg] [--webp]
@@ -7,7 +7,7 @@
 // --no-frame  drops the type-coloured frame and corner marks (for print, where the card draws its own frame).
 // --svg       also writes each picture as a standalone .svg next to the .png.
 // --compare   <dir with an earlier PNG export>: also writes <slug>-compare.jpg (before | after, plus thumbnails).
-// --webp      the game's files instead of PNG: <slug>.webp 600 x 360 and thumb/<slug>.webp 240 x 144, on the ivory
+// --webp      the game's files instead of PNG: <slug>.webp 1200 x 720 (the card window, sharp on 2x-3x screens) and thumb/<slug>.webp 240 x 144, on the ivory
 //             paper colour (WebP quality 0.82). `--webp --out src/ui/art/cards` updates the pictures in the game.
 // Writes <slug>.png (or .webp) and, when every card is exported (no --only), manifest.json
 // ({ name: { file, type, decks } }, the game's manifest shape).
@@ -26,7 +26,7 @@ const args = process.argv.slice(2);
 const opt = (name, def) => { const i = args.indexOf(name); return i < 0 ? def : args[i + 1]; };
 const out = path.resolve(opt('--out', path.join(root, 'test-results/card-art')));
 const webp = args.includes('--webp');
-const scale = webp ? 3 : Number(opt('--scale', '3'));
+const scale = webp ? 6 : Number(opt('--scale', '3'));
 const noFrame = args.includes('--no-frame');
 const writeSvg = args.includes('--svg');
 // --compare <dir>: a PNG export of the same cards made earlier (the "before"); writes <slug>-compare.jpg:
@@ -73,7 +73,7 @@ async function toWebp(page, png) {
     const enc = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
       g.fillStyle = paper; g.fillRect(0, 0, w, h); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, w, h);
       return c.toDataURL('image/webp', 0.82).split(',')[1]; };
-    return { full: enc(600, 360), thumb: enc(240, 144) };
+    return { full: enc(1200, 720), thumb: enc(240, 144) };
   }, { b64: png.toString('base64'), paper: PAPER });
 }
 
@@ -116,4 +116,4 @@ for (const [name, c] of cards) {
 await browser.close();
 // A partial export (--only) must not replace the full manifest.
 if (!only) fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(Object.fromEntries(cards), null, 1));
-console.log(`${cards.size} pictures, ${webp ? '600x360 + thumb 240x144 WebP' : `${200 * scale}x${120 * scale}`}${noFrame ? ', no frame' : ''} -> ${out}`);
+console.log(`${cards.size} pictures, ${webp ? '1200x720 + thumb 240x144 WebP' : `${200 * scale}x${120 * scale}`}${noFrame ? ', no frame' : ''} -> ${out}`);
