@@ -10,8 +10,9 @@ const SIZES = [
 const SHOTS = 'docs/screenshots/stage7b';
 
 async function expectNoScroll(page: Page) {
-  const r = await page.evaluate(() => ({ sh: document.scrollingElement!.scrollHeight, sw: document.scrollingElement!.scrollWidth, ih: innerHeight, iw: innerWidth }));
-  expect(r.sh).toBeLessThanOrEqual(r.ih);
+  const r = await page.evaluate(() => ({ sh: document.scrollingElement!.scrollHeight, sw: document.scrollingElement!.scrollWidth, ih: innerHeight, iw: innerWidth, menuPhone: document.body.dataset.menuLayout === 'phone' && !document.querySelector('[data-testid=game]') }));
+  // PR #78 menus-scale permits vertical menu scrolling when its content does not fit.
+  if (!r.menuPhone) expect(r.sh).toBeLessThanOrEqual(r.ih);
   expect(r.sw).toBeLessThanOrEqual(r.iw);
 }
 
@@ -39,6 +40,9 @@ for (const size of SIZES) {
       );
       await page.goto('?seed=3&speed=fast');
       await expect(page.getByTestId('resume')).toContainText('Раунд 1');
+      // PR #78 gives the saved game priority in the single Continue plaque.
+      await expect(page.getByTestId('net-resume')).toHaveCount(0);
+      await page.getByTestId('resume').getByRole('button', { name: 'Удалить сохранённую партию' }).click();
       await expect(page.getByTestId('net-resume')).toContainText('ABCDE');
       await page.waitForTimeout(300);
       await shot(page, size.name, '1-start');
@@ -46,7 +50,7 @@ for (const size of SIZES) {
       // The preparation: the coin decides.
       await page.getByTestId('quick-bots').click();
       await page.getByTestId('pick-coin').click();
-      await expect(page.getByTestId('coin-verdict')).toContainText('Жребий', { timeout: 4000 });
+      await expect(page.getByTestId('coin-verdict')).toContainText('Монета выбрала', { timeout: 4000 });
       await shot(page, size.name, '2-prep');
 
       // The Company against the Pirate bots: the Pirates move first, their moves are shown one at a time.
@@ -90,7 +94,7 @@ test.describe('prefers-reduced-motion', () => {
     await page.goto('?seed=3&speed=fast');
     await page.getByTestId('quick-bots').click();
     await page.getByTestId('pick-coin').click();
-    await expect(page.getByTestId('coin-verdict')).toContainText('Жребий', { timeout: 300 });
+    await expect(page.getByTestId('coin-verdict')).toContainText('Монета выбрала', { timeout: 300 });
     await page.getByTestId('pick-company').click();
     await page.getByTestId('prep-start').click();
     await page.getByTestId('placement-done').click();

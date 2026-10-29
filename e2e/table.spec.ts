@@ -160,7 +160,7 @@ async function keyStates(page: Page, name: string) {
   // Behind the curtain the animation layer is off: no plate and no cannonball of the Volley over the Reaction window.
   await expect(page.locator('.fx-layer .plate')).toHaveCount(0);
   await expect(page.locator('.fx-layer .ball')).toHaveCount(0);
-  const reactionCard = name === 'laptop' ? page.locator('.hand .hcard.reaction:not(.off)').first() : page.locator('.as-card .hcard:not(.off)').first();
+  const reactionCard = page.locator('.as-card .hcard:not(.off)').first();
   const clickable = await reactionCard.evaluate((node) => {
     const box = node.getBoundingClientRect();
     const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
@@ -178,15 +178,15 @@ async function keyStates(page: Page, name: string) {
   // does now and gives its full text.
   await expect(page.getByTestId('alarm-pill')).toContainText('по Корпусу');
   if (name === 'laptop') {
-    // The Reaction is chosen in the hand, the buttons under the log play it and say what happens now.
-    await reactionCard.click();
-    await expect(page.getByTestId('reaction-now')).toContainText('Залп');
+    // PR #85: the highlighted hand remains below; the interactive choice is inside the sheet.
+    if (!(await reactionCard.getAttribute('class'))?.split(' ').includes('chosen')) await reactionCard.click();
+    await expect(reactionCard.getByTestId('hcard-strip')).toContainText('Залп');
     await expect(byId(page, 'play-reaction')).toContainText('Сыграть «');
   } else {
     // Phone: the Reactions are the cards of the sheet; a press chooses, the button of the sheet plays.
     await expect(reactionCard.getByTestId('hcard-strip')).toBeVisible();
     await expect(reactionCard.getByTestId('hcard-strip')).toContainText('Залп');
-    await reactionCard.click();
+    if (!(await reactionCard.getAttribute('class'))?.split(' ').includes('chosen')) await reactionCard.click();
     await expect(byId(page, 'play-reaction')).toContainText('Сыграть «');
   }
   await expectFits(page);
@@ -311,7 +311,7 @@ test.describe('«Ход окончен» in 3 s; «4 → 2» with «Подска
     await expect(page.getByTestId('status')).toContainText('Ход Пиратов');
     await page.locator('[data-testid="end-turn"]:visible').click();
     if (await page.getByTestId('plans-panel').isVisible()) await page.getByTestId('no-plans').click();
-    await expect(page.getByTestId('curtain')).toContainText('ход Компании', { timeout: 5000 });
+    await expect(page.getByTestId('curtain')).toContainText('Ход Компании', { timeout: 5000 });
   });
 
   test('with «Подсказки» a Reaction shows «4 → 2»', async ({ page }) => {
