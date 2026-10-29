@@ -9,9 +9,7 @@ import {menuImagePool} from './assets';
 import {initMenuMotion,menuMotionAllowed,subscribeMenuMotion} from './motion';
 const Scene=lazy(()=>import('./MenuScene').then(m=>({default:m.MenuScene})));
 const icons=import.meta.glob('../../../docs/mockups/menus/assets/icons/*.svg',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
-const ships=import.meta.glob('../../../docs/mockups/menus/assets/ships/*.svg',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
 const charts=import.meta.glob('./art/chart-*.webp',{eager:true,query:'?url',import:'default'}) as Record<string,string>;
-export const menuShip=(name:string)=>ships[`../../../docs/mockups/menus/assets/ships/ship_${name}.svg`];
 export function Icon({name,size=32}:{name:string;size?:number}){return <img className="menu-icon" width={size} height={size} src={icons[`../../../docs/mockups/menus/assets/icons/ic_${name}.svg`]} alt=""/>;}
 export function MenuScene({name,className=''}:{name:string;className?:string}){return <div className={'menu-scene '+className}><Suspense fallback={null}><Scene name={name}/></Suspense></div>;}
 export function useMenuMotion<T extends HTMLElement>(ref:RefObject<T|null>){

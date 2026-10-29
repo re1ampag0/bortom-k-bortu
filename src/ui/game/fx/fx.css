@@ -111,26 +111,26 @@
 .heart { width: 30px; height: 26px; margin: -13px 0 0 -15px; z-index: 3; }
 .blot { width: 30px; height: 26px; margin: -13px 0 0 -15px; }
 .stamp-fx { transform: translate(-50%, -50%) rotate(-6deg); font-family: var(--fx-font); font-weight: 800; color: var(--seal); border: 2.5px solid var(--seal); border-radius: 6px; padding: 1px 8px; background: rgba(255, 250, 240, 0.92); white-space: nowrap; font-size: 15px; }
-.cursor { width: 22px; height: 26px; margin: -2px 0 0 -3px; z-index: 9; }
+
 .dim { background: #1d2a35; }
 .tint { }
 .svgabs { }
 .drop { width: 2px; height: 16px; border-radius: 2px; background: linear-gradient(transparent, #c7d6e2); }
 .streak { height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, rgba(240, 246, 250, 0.95), transparent); box-shadow: 0 0 4px rgba(255, 255, 255, 0.6); }
-.fogblob { border-radius: 50%; background: radial-gradient(rgba(244, 246, 247, 0.95), rgba(244, 246, 247, 0.6) 45%, transparent 70%); }
+
 .haze { width: 360px; height: 250px; border-radius: 50%; background: radial-gradient(rgba(240, 243, 245, 0.8), transparent 70%); }
 .cloud { width: 240px; height: 90px; border-radius: 50px; background: radial-gradient(ellipse at 50% 60%, rgba(160, 170, 178, 0.95), rgba(160, 170, 178, 0) 70%); }
 .rays { width: 720px; height: 720px; margin: -360px 0 0 -360px; border-radius: 50%; background: repeating-conic-gradient(rgba(255, 224, 138, 0.4) 0 6deg, transparent 6deg 18deg); -webkit-mask: radial-gradient(circle, #000 18%, transparent 62%); mask: radial-gradient(circle, #000 18%, transparent 62%); }
 .note { font-size: 20px; color: #3e8c90; font-weight: 800; }
 .sparkle { width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: #fff7d6; box-shadow: 0 0 7px 3px rgba(255, 247, 214, 0.9); }
-.pipfloat { width: 11px; height: 10px; margin: -5px 0 0 -5.5px; border-radius: 2px; background: #3e8c90; }
+
 .lantern { width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: radial-gradient(#fff3c4, #ffb84d 55%, rgba(255, 184, 77, 0) 72%); box-shadow: 0 0 22px 10px rgba(255, 184, 77, 0.35); }
 .barrel { width: 20px; height: 24px; margin: -12px 0 0 -10px; }
 .sail { width: 60px; height: 40px; margin: -20px 0 0 -30px; }
 .sail.small { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
-.wetband { border-radius: 10px; background: linear-gradient(90deg, rgba(94, 134, 160, 0), rgba(94, 134, 160, 0.8), rgba(94, 134, 160, 0)); transform-origin: 0 50%; }
+
 .rock { width: 40px; height: 26px; }
-.moonorb { width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #fffdf2, #e6e2cf 60%, #cfc9ae); box-shadow: 0 0 34px 12px rgba(230, 226, 207, 0.45); }
+
 .chevron { font-size: 36px; font-weight: 800; color: #3e6e8a; line-height: 1; }
 .seacard { width: 250px; transform: translate(-50%, -50%); }
 /* FX-C: the sea card comes up on its back and turns over (pg-flip / pg-back of playRound) */
@@ -147,7 +147,6 @@
 .seacard .t { font-family: var(--font-head); font-weight: 800; font-size: 30px; line-height: 1; }
 .seacard .fxl { margin-top: 6px; font-size: 15px; font-weight: 700; color: var(--navy); }
 .seacard .dur { margin-top: 7px; display: inline-block; font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 20px; padding: 1px 10px; }
-.chipart { display: inline-flex; width: 24px; height: 16px; border-radius: 4px; align-items: center; justify-content: center; overflow: hidden; }
 
 /* ——— ЛЕГЕНДЫ ——— */
 /* FX-B: the entrance of a Legend (pg-lback, pg-lbar, pg-lrays, pg-lcard, pg-lseal, pg-lban of the prototype, §3.1) */
@@ -187,7 +186,6 @@
 .lg-cap { white-space: nowrap; font-family: var(--fx-font); font-weight: 700; font-size: 17px; color: #fff0b8; letter-spacing: 0.04em; }
 .lg-cap span { font-size: 11px; letter-spacing: 0.22em; color: #e0b44c; margin-right: 6px; vertical-align: 2px; }
 .lg-cap b { font-weight: 700; }
-
 
 /* While the breakdown plate of a Volley is up, the line «Последнее: …» in the gap gives way to it (on a phone the plate
    covered half of it). data-fx-plate follows the plate itself (FxLayer.tsx), so nothing to clean up if a clip breaks off. */

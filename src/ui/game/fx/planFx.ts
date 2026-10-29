@@ -829,4 +829,3 @@ export function createPlanner(opts: PlannerOptions) {
   return { feed, state: st };
 }
 
-export type Planner = ReturnType<typeof createPlanner>;

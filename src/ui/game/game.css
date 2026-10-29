@@ -119,9 +119,6 @@ button {
 .narrow {
   display: none;
 }
-.narrow-block {
-  display: none !important;
-}
 
 /* ——— Setup and placement ——— */
 .setup {
@@ -266,47 +263,11 @@ button {
 .curtain.side-pirates {
   background: radial-gradient(circle at 50% 30%, #4b2a24, #1b1312 70%);
 }
-.curtain-body {
-  max-width: 720px;
-  text-align: center;
-}
-.curtain-kicker {
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  opacity: 0.7;
-}
+
 .curtain h1 {
   font-family: var(--font-head);
   font-size: clamp(1.8rem, 5vw, 3rem);
   margin: 8px 0;
-}
-.curtain-summary {
-  text-align: left;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 12px 18px;
-  margin: 16px 0;
-}
-.curtain-summary h2 {
-  font-size: 0.8rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  opacity: 0.7;
-  margin: 0 0 6px;
-}
-.curtain-summary ul {
-  margin: 0;
-  padding-left: 18px;
-}
-.curtain-btn {
-  background: #f8efdc;
-  color: #2a241d;
-  border: none;
-  font-size: 1.1rem;
-  padding: 14px 28px;
-  min-height: 52px;
 }
 
 /* ——— The table ——— */
@@ -1279,17 +1240,7 @@ button.star::before {
   opacity: 0.8;
   font-size: 0.92rem;
 }
-.panel-body {
-  padding: 8px 16px 12px;
-  display: grid;
-  gap: 8px;
-  max-height: calc(var(--app-h, 100dvh) * 0.46);
-  overflow: auto;
-}
-.panel.volley .panel-body {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-}
+
 .panel-actions {
   display: flex;
   justify-content: flex-end;
@@ -1448,58 +1399,7 @@ button.star::before {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
 }
-.reaction-opt {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: left;
-  border: 2px solid var(--reaction);
-  border-radius: 12px;
-  padding: 10px 40px 10px 12px;
-  background: #fff;
-  cursor: pointer;
-  min-height: 44px;
-}
-.reaction-opt.on {
-  border-color: var(--ink);
-  box-shadow: 0 0 0 2px var(--reaction);
-}
-.reaction-opt .info {
-  position: absolute;
-  right: 6px;
-  top: 6px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #fff;
-  border: 1.5px solid var(--reaction);
-  color: var(--reaction);
-  font-weight: 800;
-  font-size: 13px;
-  cursor: pointer;
-  padding: 0;
-}
-.reaction-opt .info::after {
-  /* A 44×44 touch area without a bigger circle. */
-  content: '';
-  position: absolute;
-  inset: -7px;
-}
-.ro-text {
-  font-size: 0.86rem;
-  line-height: 1.3;
-}
-.ro-more {
-  align-self: flex-start;
-  background: none;
-  border: 0;
-  padding: 2px 0;
-  color: var(--reaction);
-  font-weight: 700;
-  text-decoration: underline;
-  cursor: pointer;
-}
+
 .reaction-memo {
   margin: 0;
   padding: 6px 10px;
@@ -1508,18 +1408,11 @@ button.star::before {
   border-radius: 6px;
   font-size: 0.92rem;
 }
-.reaction-opt.off {
-  border-color: var(--line);
-  opacity: 0.55;
-  cursor: not-allowed;
-}
+
 .ro-effect {
   font-size: 1.4rem;
 }
-.ro-sub {
-  font-size: 0.82rem;
-  color: var(--muted);
-}
+
 /* The attacker waits while the enemy decides on a Reaction (P8). The dots breathe slowly; without motion they stand. */
 .panel.reaction-wait {
   border-color: var(--reaction);
@@ -1531,13 +1424,7 @@ button.star::before {
   gap: 6px;
   padding: 14px 18px;
 }
-.wait-who {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--ink-soft);
-  font-weight: 600;
-}
+
 .wait-dots {
   display: inline-flex;
   gap: 5px;
@@ -1572,15 +1459,6 @@ button.star::before {
     animation: none;
     opacity: 0.8;
   }
-}
-.reaction-skip {
-  border: 3px solid var(--ink);
-  border-radius: 12px;
-  background: #fff;
-  font-weight: 800;
-  font-size: 1.15rem;
-  min-height: 64px;
-  cursor: pointer;
 }
 
 /* ——— Hand ——— */
@@ -1940,10 +1818,7 @@ button.star::before {
   font-size: 0.85rem;
   color: var(--muted);
 }
-.rules-found p {
-  border-bottom: 1px dashed var(--line);
-  padding: 6px 0;
-}
+
 .panel-actions.wrap {
   justify-content: center;
 }
@@ -1992,17 +1867,9 @@ button.star::before {
   .narrow {
     display: inline;
   }
-  .narrow-block {
-    display: flex !important;
-  }
-  .wide-block {
-    display: none !important;
-  }
-  .choice-cards.narrow-block {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 2px;
-  }
+  
+  
+  
   .quick {
     grid-template-columns: 1fr;
   }
@@ -2396,13 +2263,8 @@ button.star::before {
   .panel-sub {
     font-size: 0.82rem;
   }
-  .panel-body {
-    padding: 6px 12px 10px;
-    max-height: calc(var(--app-h, 100dvh) * 0.52);
-  }
-  .panel.volley .panel-body {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  
+  
   .panel-actions .btn {
     min-height: 48px;
     flex: 1;
@@ -2427,52 +2289,19 @@ button.star::before {
     overflow-y: auto;
     overscroll-behavior: contain;
   }
-  .reaction-opt {
-    flex: 0 0 auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 2px 10px;
-    padding: 6px 44px 6px 10px;
-  }
-  .reaction-opt .info {
-    width: 28px;
-    height: 28px;
-    top: 7px;
-  }
-  .ro-name {
-    flex: 1 0 100%;
-    font-size: 0.95rem;
-    line-height: 1.25;
-  }
+  
+  
+  
   .ro-effect {
     order: 1;
     font-size: 1.02rem;
     line-height: 1.25;
   }
-  .ro-more {
-    order: 2;
-    margin-left: auto;
-    padding: 0;
-    font-size: 0.82rem;
-  }
-  .ro-text {
-    order: 3;
-    flex: 1 0 100%;
-    font-size: 0.82rem;
-  }
-  .ro-sub {
-    order: 4;
-    flex: 1 0 100%;
-    font-size: 0.76rem;
-    line-height: 1.25;
-  }
-  .reaction-opt:not(.open) .ro-text {
-    display: none;
-  }
-  .reaction-opt:not(.off) .ro-sub {
-    display: none;
-  }
+  
+  
+  
+  
+  
   .reaction-memo {
     font-size: 0.76rem;
     line-height: 1.3;
@@ -2489,20 +2318,10 @@ button.star::before {
   .panel.reaction .panel-sub {
     font-size: 0.78rem;
   }
-  .react-phone > .muted {
-    font-size: 0.76rem;
-    text-align: center;
-  }
-  .react-phone .panel-actions .btn {
-    min-height: 44px;
-    padding: 4px 10px;
-    font-size: 0.95rem;
-  }
+  
+  
   /* «Сыграть «Прикрыть бортом»» wraps inside the button instead of running out of it. */
-  .react-phone .react-play {
-    white-space: normal;
-    line-height: 1.15;
-  }
+  
   .choice {
     padding: 4px 10px;
   }
@@ -2572,8 +2391,6 @@ button.star::before {
   }
 }
 
-
-
 /* Phones lower than the target (iPhone 15 Pro Max ~430×740, 390×664 still fits): the page scrolls. */
 @media (max-width: 700px) and (max-height: 649px) {
   body.on-game {
@@ -2602,13 +2419,6 @@ button.star::before {
   border-radius: 50%;
   background: var(--reaction);
   vertical-align: middle;
-}
-.react-phone {
-  flex-direction: column;
-  gap: 8px;
-}
-.react-play[aria-disabled='true'] {
-  background: #8d857a;
 }
 
 /* ——— Network game (stage 8) ——— */
@@ -4424,19 +4234,7 @@ button.star::before {
     animation: none;
   }
 }
-.deck-scene {
-  position: absolute;
-  max-width: none;
-  mask-image:
-    linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 24px), transparent),
-    linear-gradient(to bottom, transparent, #000 24px);
-  mask-composite: intersect;
-  -webkit-mask-composite: source-in;
-}
-.deck-scene.phone {
-  mask-image: linear-gradient(to bottom, transparent, #000 24px);
-  -webkit-mask-composite: source-over;
-}
+
 .prop {
   position: absolute;
   max-width: none;

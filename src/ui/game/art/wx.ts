@@ -181,6 +181,5 @@ const WX2: Record<string, string> = {
     <g data-a="rideL">${SHIP({x: 27.6, y: 26.8, scale: .3, sails: 'full', heel: 14, flip: true, flag: '#2f4f66'})}</g>`,
 };
 
-export const WX_KEYS = Object.keys(WX2);
 /** The icon of a sea card by its key (data/game-data.json); an unknown key — an empty frame. */
 export const wxSvg = (key: string, w = 40, h = 34): string => `<svg width="${w}" height="${h}" viewBox="0 0 40 34" aria-hidden="true">${WX2[key] ?? ''}</svg>`;

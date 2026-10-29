@@ -16,5 +16,3 @@ export function prepareShipWindow(code?:string,serial=false):Promise<void>{
 }
 export const shipImagePool=createSceneImagePool();
 export const sceneCache=createSceneCache(shipArt,shipImagePool);
-export const prepareSceneImages=sceneCache.prepare;
-export const sceneImage=sceneCache.image;
