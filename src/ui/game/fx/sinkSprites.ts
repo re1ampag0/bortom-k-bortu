@@ -3,7 +3,7 @@ import {CELLS} from '../art/cells';
 import {uidSvg} from '../art/bigShips';
 import {boardW,bx,plank,filters,ignoreFxBudget,type FxCtx} from './primitives';
 import {particleArt} from './particleArt';
-import {takeSprite,type SpriteSpec} from './sprites';
+import {takeSprite,warmSprites,type SpriteSpec} from './sprites';
 const R1=(n:number)=>Math.round(n*10)/10;
 const SAILOR = CELLS.CREW.replace(/<svg[^>]*>/, '').replace('</svg>', '');
 const CAPTAIN = SAILOR.replace('fill="#ece4d0"', 'fill="#8a1c14"').replace(/fill="#3a2a22"/g, 'fill="#5a1410"').replace('fill="#9b2a1f"', 'fill="#1c1814"').replace('fill="#7e1f16"', 'fill="none"').replace('stroke="#4e120c" stroke-width=".25"', 'stroke="none"')
@@ -60,6 +60,11 @@ export function sinkSpecs(ctx:FxCtx):SpriteSpec[]{
   return `<div style="position:absolute;left:${x}px;top:${y}px"><div class="sink-wreck-rock" style="${live?`animation:sink-wreck-rock ${d}s linear infinite;`:''}">${svg(-28,-20,56,40,art)}</div></div>`;
  }).join('');
  specs.push({key:'sink-wreck-'+live,count:4,html:wreck});return specs;
+}
+/** A sink can start before the ten-second idle warmup, or after its geometry changed.
+ * Retain the other clips' pools and prepare the current sizes before inserting any effect. */
+export function prepareSinkSprites(ctx:FxCtx):void {
+ warmSprites(ctx.board,sinkSpecs(ctx),true);
 }
 export function sinkSticker(ctx:FxCtx,name:string,host:Element=ctx.layer):HTMLElement{
  const root=takeSprite(ctx,name,host).root;return root;
