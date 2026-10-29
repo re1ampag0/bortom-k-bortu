@@ -87,16 +87,18 @@ const SCENES = {
     // light: the lantern (left, warm) and the daylight from the port (right, cool)
     const lamp = `<path d="M44 12v30" stroke="#2a1a0a" stroke-width=".8"/><path d="M44 12v30" stroke="#6a5a44" stroke-width=".3" stroke-dasharray=".8 .8"/>` + lantern(44, 54, 1.25);
     const rammer = `<g filter="url(#drop${u})"><path d="M20 168L30 40" stroke="url(#oakH${u})" stroke-width="2.4"/><ellipse cx="30.3" cy="37.5" rx="5" ry="3.4" fill="#3a2a1a" transform="rotate(5 30.3 37.5)"/><path d="M26.4 35.2q3.8 -1.2 7.6 .8" stroke="#8a6a4a" stroke-width=".6" fill="none"/><path d="M17 120h12M18 76h13" stroke="url(#iron${u})" stroke-width="2"/></g>`;
-    const floor = plankFloor(u, 176, 104, '#5e3a1a', '#2a180a', '#140a04', 8) + `<path d="M0 176h200" stroke="#0e0804" stroke-width="2"/><path d="M0 178h200" stroke="#a87444" stroke-width=".5" opacity=".5"/>`;
+    const floor = plankFloor(u, 176, 128, '#5e3a1a', '#2a180a', '#140a04', 8) + `<path d="M0 176h200" stroke="#0e0804" stroke-width="2"/><path d="M0 178h200" stroke="#a87444" stroke-width=".5" opacity=".5"/>`;
     const ringbolts = [70, 132].map(x => `<circle cx="${x}" cy="168" r="3" fill="none" stroke="url(#iron${u})" stroke-width="1.6"/><path d="M${x} 171v4" stroke="#1a1a1a" stroke-width="1.6"/>`).join('');
     const tackle = `<path d="M70 170q24 6 44 2M132 170q-6 4 -10 3" stroke="#c9a878" stroke-width="1.1" fill="none"/>`;
     const gun = img('deck-cannon', 132, 150, 2.05, 0, u) + shadow(u, 128, 186, 62, .55);
     const shot = put('flash', 178, py + 4, 1.05, 0, u, false) + put('smokeP', 192, py - 4, .7, 0, u, false);
-    const balls = shadow(u, 44, 196, 26, .55) + img('deck-balls', 44, 182, 1.25, 0, u);
+    const balls = shadow(u, 64, 183, 26, .55) + img('deck-balls', 64, 170, 1.25, 0, u);
     const bucket = `<g filter="url(#drop${u})" transform="translate(160 206)"><path d="M-9 -12h18l-2 16h-14z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/><path d="M-9.5 -8h19M-8.5 1h17" stroke="url(#iron${u})" stroke-width="1.4"/><ellipse cx="0" cy="-12" rx="9" ry="2" fill="#1e3a44"/></g>`;
     const cartridges = `<g filter="url(#drop${u})" transform="translate(98 232)"><path d="M-16 -8h32v16h-32z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/>${[-10, -2, 6].map(x => `<ellipse cx="${x + 2}" cy="-9" rx="3.4" ry="2" fill="#e8dcc0" stroke="#9a8a6a" stroke-width=".4"/>`).join('')}</g>`;
-    return [wall + ceiling + port + halo(44, 60, 80, '#ffb050', .32) + lamp + rammer + floor + ringbolts + tackle + motes(26, 0, 14, 200, 160, '#ffd8a0', 8),
-      gun + shot + balls + bucket + cartridges + halo(150, 110, 60, '#cfe8f0', .12)];
+    // the whole deck sits 24 units higher so the gun's wheels and the shot stay above the text plate
+    const up = b => `<g transform="translate(0 -24)">${b}</g>`;
+    return [up(wall + ceiling + port + halo(44, 60, 80, '#ffb050', .32) + lamp + rammer + floor + ringbolts + tackle + motes(26, 0, 14, 200, 160, '#ffd8a0', 8)),
+      up(gun + shot + balls + bucket + cartridges + halo(150, 110, 60, '#cfe8f0', .12))];
   },
 
   // Captain's cabin at night: the stern window with the moon over the sea; on the table the map, the crossed sabres,
