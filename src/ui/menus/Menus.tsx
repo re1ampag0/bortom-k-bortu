@@ -31,21 +31,21 @@ export function MenuSurface({children,kind='prep',className=''}:{children:ReactN
  useLayoutEffect(()=>activateMenu(),[]);
  useLayoutEffect(()=>{document.body.dataset.menuLayout=layout.mode;document.body.toggleAttribute('data-menu-tablet',layout.tablet);document.body.toggleAttribute('data-menu-transform',layout.k!==1);document.body.toggleAttribute('data-menu-downscaled',layout.k<1);document.body.dataset.menuKind=className.includes('menu-curtain')?(className.includes('pirates')?'pirates':'company'):kind;},[layout.mode,layout.tablet,layout.k,kind,className]);
  useLayoutEffect(()=>{
-  const root=ref.current;if(!root||!layout.enabled||layout.mode!=='phone')return;
+  const root=ref.current;if(!root||layout.mode!=='phone')return;
   const targets=['.menu-prep-bottom>.menu-primary','.menu-placement-actions>.menu-primary','.menu-curtain main>.menu-primary','.menu-room-actions'];
   let live=true,timer:ReturnType<typeof setTimeout>|undefined;
   const measure=()=>{if(!live||!document.contains(root))return;if(document.body.hasAttribute('data-menu-user-scroll')&&(document.getElementById('root')?.scrollTop??0)>0){root.setAttribute('data-menu-pin','');return;}root.removeAttribute('data-menu-pin');const el=root.querySelector<HTMLElement>(targets.join(','));if(!el)return;const stage=document.getElementById('stage')!.getBoundingClientRect(),r=el.getBoundingClientRect(),bottom=(r.bottom-stage.top)/layout.k;root.toggleAttribute('data-menu-pin',bottom>layout.sceneH-16);};
   const schedule=()=>{clearTimeout(timer);timer=setTimeout(measure,40);};
   measure();void document.fonts.ready.then(measure);const changes=new MutationObserver(schedule);changes.observe(root,{childList:true,subtree:true});root.addEventListener('toggle',schedule,true);root.addEventListener('load',schedule,true);return()=>{live=false;clearTimeout(timer);changes.disconnect();root.removeEventListener('toggle',schedule,true);root.removeEventListener('load',schedule,true);};
- },[layout.enabled,layout.mode,layout.sceneH,layout.k]);
+ },[layout.mode,layout.sceneH,layout.k]);
  useLayoutEffect(()=>{
-  const root=ref.current;if(!root||!layout.enabled||layout.mode!=='phone'||!className.includes('menu-curtain')||layout.tablet)return;
+  const root=ref.current;if(!root||layout.mode!=='phone'||!className.includes('menu-curtain')||layout.tablet)return;
   const enable=()=>{if(root.scrollHeight<=layout.sceneH||document.body.hasAttribute('data-menu-user-scroll'))return false;document.body.setAttribute('data-menu-user-scroll','');void document.getElementById('root')?.offsetHeight;return true;};
   const touch=()=>{enable();};const wheel=(event:WheelEvent)=>{if(enable()){event.preventDefault();document.getElementById('root')!.scrollTop+=event.deltaY;}};
   const scroller=document.getElementById('root'),scrolled=()=>{if(document.body.hasAttribute('data-menu-user-scroll')&&(scroller?.scrollTop??0)>0)root.setAttribute('data-menu-pin','');};
   scroller?.addEventListener('scroll',scrolled,{passive:true});root.addEventListener('touchstart',touch,{passive:true});root.addEventListener('wheel',wheel,{passive:false});return()=>{scroller?.removeEventListener('scroll',scrolled);root.removeEventListener('touchstart',touch);root.removeEventListener('wheel',wheel);};
- },[layout.enabled,layout.mode,layout.sceneH,layout.tablet,className]);
- return <MenuOverlayContext.Provider value={layout.enabled?overlay:null}><><div ref={ref} data-menu-layout={layout.mode} data-menu-tablet={layout.tablet?'':undefined} data-menu-narrow={layout.sceneW<360?'':undefined} className={`menus-surface menu-${kind==='net'?'net-background':kind} ${className}${layout.enabled&&layout.mode==='phone'?' menu-phone':''}`}><ChartPicture kind={kind}/><MenuScene name={`Chart_${kind}`} className="menu-chart-animation"/>{children}</div><div className="menu-overlays" ref={setOverlay}/></></MenuOverlayContext.Provider>;
+ },[layout.mode,layout.sceneH,layout.tablet,className]);
+ return <MenuOverlayContext.Provider value={overlay}><><div ref={ref} data-menu-layout={layout.mode} data-menu-tablet={layout.tablet?'':undefined} data-menu-narrow={layout.sceneW<360?'':undefined} className={`menus-surface menu-${kind==='net'?'net-background':kind} ${className}${layout.mode==='phone'?' menu-phone':''}`}><ChartPicture kind={kind}/><MenuScene name={`Chart_${kind}`} className="menu-chart-animation"/>{children}</div><div className="menu-overlays" ref={setOverlay}/></></MenuOverlayContext.Provider>;
 }
 export function Boat({name,muted=false}:{name:string;muted?:boolean}){return <div className={`menu-boat${muted?' muted':''}`} aria-hidden="true"><MenuScene name={'Boat_'+name}/></div>;}
 export function Dock({name}:{name:string}){return <div className="menu-dock"><MenuScene name={'Dock_'+name}/></div>;}
