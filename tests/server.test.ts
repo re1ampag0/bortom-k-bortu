@@ -2,7 +2,8 @@
 // game to the end, a client reconnects in the middle, and no client ever gets an enemy hand, the Plans or the order
 // of the decks. Also: whose actions are refused, «Сдаться» by the whole team, a restart of the server, «Заменить
 // ботом», the ship bot and the limits of the server.
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { request as httpRequest } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -309,6 +310,32 @@ describe('game server', () => {
     const { srv } = await server();
     const r = await fetch(`http://127.0.0.1:${srv.port}/health`);
     expect(await r.json()).toMatchObject({ ok: true, rooms: 0 });
+  });
+
+  it('a broken address or Origin does not stop the server', async () => {
+    const site = mkdtempSync(join(tmpdir(), 'bortom-site-'));
+    dirs.push(site);
+    writeFileSync(join(site, 'index.html'), '<!doctype html>');
+    const { srv } = await server(undefined, { staticDir: site });
+    const base = `http://127.0.0.1:${srv.port}`;
+    // a broken percent escape in the path (decodeURIComponent throws URIError)
+    expect((await fetch(`${base}/bortom-k-bortu/%E0%A4%A`)).status).toBe(400);
+    // a request target that is not a path at all
+    const raw = await new Promise<number>((done, fail) => {
+      const req = httpRequest({ host: '127.0.0.1', port: srv.port, path: '//', method: 'GET' }, (r) => { r.resume(); done(r.statusCode ?? 0); });
+      req.on('error', fail);
+      req.end();
+    });
+    expect(raw).toBe(400);
+    // a page opened from a file sends «Origin: null» (new URL('null') throws)
+    const opened = await new Promise<boolean>((done) => {
+      const ws = new WebSocket(`ws://127.0.0.1:${srv.port}/ws`, { origin: 'null' });
+      ws.on('open', () => { ws.close(); done(true); });
+      ws.on('error', () => done(false));
+    });
+    expect(opened).toBe(true);
+    const r = await fetch(`${base}/health`);
+    expect(await r.json()).toMatchObject({ ok: true });
   });
 
   it('2 на 2: four clients play a game to the end; one reconnects in the middle; nobody sees enemy cards', async () => {
