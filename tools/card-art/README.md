@@ -17,9 +17,16 @@ node tools/card-art/export.mjs --out <папка> [--scale 3] [--no-frame] [--on
 - `--no-frame` — без рамки цвета типа и уголков (для печати, где рамку рисует сама карта).
 - `--only` — только перечисленные карты (имена как в `data/game-data.json`).
 - `--svg` — заодно сохранить каждую сцену отдельным `.svg`.
+- `--webp` — файлы для игры: `<slug>.webp` 600 × 360 и `thumb/<slug>.webp` 240 × 144 на цвете бумаги карты.
 
-Нужны `npm ci` (Playwright с Chromium и шрифты `@fontsource`). Результат — PNG и `manifest.json`
-(имя карты → файл, тип, колоды). Готовые картинки в репо не коммитить; в игру они попадают как WebP.
+Нужны `npm ci` (Playwright с Chromium и шрифты `@fontsource`). Результат — PNG (или WebP) и, если выгружены
+все карты (без `--only`), `manifest.json` (имя карты → файл, тип, колоды).
+
+PNG в репо не коммитить. Обновить картинку в игре после правки сцены:
+
+```
+npm run card-art -- --webp --only "Ядра" --out src/ui/art/cards
+```
 
 ## Что где
 

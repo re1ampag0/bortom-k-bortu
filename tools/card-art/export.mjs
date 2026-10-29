@@ -2,11 +2,14 @@
 // The scenes are vector (200 x 120 box), so any size is sharp: --scale 3 gives the game's 600 x 360,
 // --scale 10 gives 2000 x 1200 for print.
 //
-//   node tools/card-art/export.mjs --out <dir> [--scale 3] [--no-frame] [--only "Ядра,Анжелика"] [--svg]
+//   node tools/card-art/export.mjs --out <dir> [--scale 3] [--no-frame] [--only "Ядра,Анжелика"] [--svg] [--webp]
 //
 // --no-frame  drops the type-coloured frame and corner marks (for print, where the card draws its own frame).
 // --svg       also writes each picture as a standalone .svg next to the .png.
-// Writes <slug>.png and manifest.json ({ name: { file, type, decks } }, same shape as the game's manifest).
+// --webp      the game's files instead of PNG: <slug>.webp 600 x 360 and thumb/<slug>.webp 240 x 144, on the ivory
+//             paper colour (WebP quality 0.82). `--webp --out src/ui/art/cards` updates the pictures in the game.
+// Writes <slug>.png (or .webp) and, when every card is exported (no --only), manifest.json
+// ({ name: { file, type, decks } }, the game's manifest shape).
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -21,7 +24,8 @@ const { chromium } = (() => { try { return require('@playwright/test'); } catch 
 const args = process.argv.slice(2);
 const opt = (name, def) => { const i = args.indexOf(name); return i < 0 ? def : args[i + 1]; };
 const out = path.resolve(opt('--out', path.join(root, 'test-results/card-art')));
-const scale = Number(opt('--scale', '3'));
+const webp = args.includes('--webp');
+const scale = webp ? 3 : Number(opt('--scale', '3'));
 const noFrame = args.includes('--no-frame');
 const writeSvg = args.includes('--svg');
 const only = opt('--only', '') ? new Set(opt('--only', '').split(',').map(s => s.trim())) : null;
@@ -53,23 +57,41 @@ for (const [deck, list] of Object.entries(data.decks)) for (const c of list) {
   if (only && !only.has(c.name)) continue;
   const known = cards.get(c.name);
   if (known) { if (!known.decks.includes(deck)) known.decks.push(deck); continue; }
-  cards.set(c.name, { file: slug(c.name) + '.png', type: c.type, decks: [deck] });
+  cards.set(c.name, { file: slug(c.name) + (webp ? '.webp' : '.png'), type: c.type, decks: [deck] });
 }
 if (!cards.size) { console.error('no cards matched'); process.exit(1); }
 
+// PNG screenshot -> the game's WebP pair, encoded by the browser's own canvas (no extra image library).
+const PAPER = '#f7f2e6';
+async function toWebp(page, png) {
+  return page.evaluate(async ({ b64, paper }) => {
+    const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+    const enc = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
+      g.fillStyle = paper; g.fillRect(0, 0, w, h); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, w, h);
+      return c.toDataURL('image/webp', 0.82).split(',')[1]; };
+    return { full: enc(600, 360), thumb: enc(240, 144) };
+  }, { b64: png.toString('base64'), paper: PAPER });
+}
+
 fs.mkdirSync(out, { recursive: true });
+if (webp) fs.mkdirSync(path.join(out, 'thumb'), { recursive: true });
 const browser = await chromium.launch();
 const page = await (await browser.newContext({ viewport: { width: 200, height: 120 }, deviceScaleFactor: scale })).newPage();
 await page.setContent(`<style>${fontFaces()} html,body{margin:0;background:transparent}</style><div id="p" style="width:200px;height:120px"></div>`);
 for (const [name, c] of cards) {
   let svg = picture3(name, TYPE[c.type]);
   if (noFrame) svg = stripFrame(svg);
-  if (writeSvg) fs.writeFileSync(path.join(out, c.file.replace(/\.png$/, '.svg')), svg);
+  if (writeSvg) fs.writeFileSync(path.join(out, c.file.replace(/\.(png|webp)$/, '.svg')), svg);
   await page.evaluate(s => { document.getElementById('p').innerHTML = s; }, svg);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(150); // embedded <image> pieces decode asynchronously
-  await page.screenshot({ path: path.join(out, c.file), omitBackground: true });
+  const png = await page.screenshot({ omitBackground: true });
+  if (!webp) { fs.writeFileSync(path.join(out, c.file), png); continue; }
+  const { full, thumb } = await toWebp(page, png);
+  fs.writeFileSync(path.join(out, c.file), Buffer.from(full, 'base64'));
+  fs.writeFileSync(path.join(out, 'thumb', c.file), Buffer.from(thumb, 'base64'));
 }
 await browser.close();
-fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(Object.fromEntries(cards), null, 1));
-console.log(`${cards.size} pictures, ${200 * scale}x${120 * scale}${noFrame ? ', no frame' : ''} -> ${out}`);
+// A partial export (--only) must not replace the full manifest.
+if (!only) fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(Object.fromEntries(cards), null, 1));
+console.log(`${cards.size} pictures, ${webp ? '600x360 + thumb 240x144 WebP' : `${200 * scale}x${120 * scale}`}${noFrame ? ', no frame' : ''} -> ${out}`);
