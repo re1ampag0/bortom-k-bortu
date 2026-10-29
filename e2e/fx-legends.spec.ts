@@ -2,13 +2,13 @@
 // (the scenes armada, kraken, bottle, jack). The look is the A5 prototype's (docs/mockups/a5/fx/prototype.html,
 // ANIMATIONS.md §3.1–3.5): for each Legend two frames of the game — «the seal» (the wax seal has landed on the card) and
 // «the effect» (the broadside flies / the arms lie across the plank and it cracks / the little ship is in the bottle /
-// the compass points) — at 1366×660 and 430×932 go to docs/screenshots/a5-legends-sea/ (e2e-*). The frames of the
+// the compass points) — at 1366×660 and 430×932 go to e2e-shots/a5-legends-sea/ (e2e-*). The frames of the
 // prototype next to them are taken by hand at each stage (docs/progress/a5-legends-sea.md), not here.
 import { mkdirSync, readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { clickMisses, expectResult, open, playing, readCover, watchCover } from './fx-scene';
 
-const SHOTS = 'docs/screenshots/a5-legends-sea';
+const SHOTS = 'e2e-shots/a5-legends-sea';
 /** The longest a label may cover a part of a plank: the short mark at a number lasts 700 ms (MARK_MS). */
 const FLASH_MS = 800;
 /** The shouts of the effects stay as in the reference (the decision of the user): not explanations. */

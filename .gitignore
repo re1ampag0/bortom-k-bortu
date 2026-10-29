@@ -7,3 +7,5 @@ playwright-report/
 dist-server/
 server-data/
 tmp/
+e2e-shots/
+report/

@@ -1,2 +1,0 @@
-import{execFileSync}from'node:child_process';import{readFileSync,writeFileSync}from'node:fs';
-const result=[];for(let run=1;run<=3;run++)for(const[tag,port]of[['before','5414'],['after','5411']]){execFileSync(process.execPath,['scripts/fix-after-polish/card-clip.mjs',tag,port],{stdio:'ignore'});result.push({run,tag,rows:JSON.parse(readFileSync(`docs/measurements/fix-after-polish/card-clip-${tag}.json`))});writeFileSync('docs/measurements/fix-after-polish/card-clip-pairs.json',JSON.stringify(result,null,2));}console.log('3 sequential pairs recorded');

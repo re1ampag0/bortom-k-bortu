@@ -33,7 +33,7 @@ export function useStage(): Record<string, string | number> | null {
     return () => {offMenu();offGame();removeEventListener('resize', on);};
   }, []);
   const menu=getMenuLayout();
-  if(menu.active&&menu.enabled){
+  if(menu.active){
     k=menu.k;document.body.classList.toggle('staged',false);
     const column=menu.mode==='phone'&&!menu.tablet;
     if(k===1&&menu.left===0&&menu.top===0)return {'--app-h':`${menu.sceneH}px`,'--app-w':`${menu.sceneW}px`,'--menu-k':1};

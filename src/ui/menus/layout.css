@@ -1,4 +1,4 @@
-/* These rules never apply to game windows or to ?menuscale=0. */
+/* Menu layer: these rules never apply to game windows (the body has no data-menuscale there). */
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"]{position:relative;min-height:100vh;min-height:100dvh;background:#0e1b26 var(--menu-background,none) center/cover no-repeat}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-layout="scene"],body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-tablet]{height:100vh;height:100dvh;overflow:hidden}
 body[data-menuscale="1"][data-menuscale="1"][data-menuscale="1"][data-menu-kind="main"]{background-image:linear-gradient(#09192a 0 40%,#143a48 55%,#0e1b2600 75%),var(--menu-background,none)}

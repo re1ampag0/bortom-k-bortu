@@ -25,6 +25,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Reports are not kept in the repository: no screenshot folders, no big files (CLAUDE.md, «Отчёты»).
+      - run: node scripts/check-size.mjs
       - run: npm run typecheck
       - run: npm test
       - run: npm run sim:check
@@ -58,9 +60,8 @@ jobs:
         if: always()
         with:
           name: e2e-screenshots
-          path: |
-            docs/screenshots/stage7
-            docs/screenshots/stage8
+          path: e2e-shots
+          if-no-files-found: ignore
 
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
