@@ -75,11 +75,29 @@ test.describe('the Reactions and the special Volleys through ?fxScene (1366×660
 
 test('the Reaction scenes play in Safari without errors @iphone', async ({ page }) => {
   test.setTimeout(300_000);
+  // A short fast clip may finish before WebKit returns from goto/load. Observe
+  // its real visible interval from document creation, not only after open().
+  await page.addInitScript(() => {
+    const playback = { observed: false };
+    Object.defineProperty(window, '__reactionPlayback', { value: playback });
+    const observer = new MutationObserver(() => {
+      if (document.body?.dataset.fxStart === '1' &&
+          document.querySelector('.fx-layer > *') && !document.body.dataset.fxDone) {
+        playback.observed = true;
+        observer.disconnect();
+      }
+    });
+    observer.observe(document, {
+      subtree: true, childList: true, attributes: true,
+      attributeFilter: ['data-fx-start', 'data-fx-done'],
+    });
+  });
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   for (const id of ['dbl', 'wind', 'cover', 'whirl', 'night', 'deepcancel', 'plan', 'zombie', 'firewall', 'both', 'deep', 'ghost']) {
     await open(page, id, 'fast');
-    await playing(page);
+    await page.waitForFunction(() =>
+      (window as Window & { __reactionPlayback?: { observed: boolean } }).__reactionPlayback?.observed === true);
     await page.waitForFunction(() => document.body.dataset.fxDone === '1', null, { timeout: 30_000 });
     expect(await page.locator('.fx-layer > *:not(.whirl)').count(), id).toBe(0);
     expect(errors, id).toEqual([]);

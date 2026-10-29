@@ -63,6 +63,32 @@
 
 Среда: Node 24, Playwright 1.56.1, Chromium 141 и WebKit 26. Недостающие библиотеки WebKit распакованы локально; конфигурация CI не менялась. Запуск: `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright LD_LIBRARY_PATH=/workspace/e2e-browser-deps/unpacked/usr/lib/x86_64-linux-gnu E2E_WEBKIT=1 CI=1 npm run e2e -- --reporter=list,json`.
 
-## Точка продолжения
+## Итоговый полный прогон до последней правки
 
-Повторная проверка WebKit после исправления ResizeObserver прошла (53,6 с), stage7b телефона также прошёл (29 с). Далее пять команд (typecheck, unit, sim:check, build, build:server) и отдельный полный e2e обоих проектов на неизменяемой сборке. Полная итоговая зелень пока не заявлена.
+`E2E_WEBKIT=1 CI=1 npm run e2e -- --reporter=list,json`: **208 passed / 1 failed / 0 flaky / 0 skipped**, 44,8 мин. **Chromium 198/198, WebKit 10/11**. Все 40 первоначальных падений main устранены и прошли в этом полном прогоне. Полный JSON: `docs/measurements/e2e-green/final-e2e.json`; код завершения 1 сохранён в `final-e2e-exit.json`.
+
+| Дополнительное падение | Причина | Последняя правка |
+|---|---|---|
+| fx-reactions: the Reaction scenes play in Safari without errors @iphone | Нестабильный тест: `playing()` запускается после goto/load и проверки корня сцены; короткий fast-клип dbl может уже закончиться. Таймаут 40 с в playing(), состояние уже после показа. На исходном main тест прошёл, поэтому это не одно из первоначальных 40. | Наблюдатель устанавливается через addInitScript до загрузки каждого документа и фиксирует именно прежнее условие: fxStart=1, в слое есть элемент, fxDone ещё нет. Затем по-прежнему обязательны завершение, пустой слой (кроме предусмотренного whirl) и отсутствие ошибок для каждой из 12 сцен. Игровой код, скорость и тайминги не менялись. |
+
+**После последней правки тесты не запускались по прямому указанию пользователя.** Полностью зелёный итоговый e2e не заявляется: последняя правка ожидает проверки владельцем/CI.
+
+## Пять итоговых команд
+
+Все выполнены до последней правки только e2e-теста, код завершения каждой 0. После неё новые проверки не запускались.
+
+| Команда | Результат | Доказательство |
+|---|---|---|
+| npm run typecheck | прошла | docs/measurements/e2e-green/final-typecheck.txt |
+| npm test | 699/699, 64 файла | docs/measurements/e2e-green/final-unit.txt |
+| npm run sim:check | прошла | docs/measurements/e2e-green/final-sim-check.txt |
+| npm run build | прошла | docs/measurements/e2e-green/final-build.txt |
+| npm run build:server | прошла | docs/measurements/e2e-green/final-build-server.txt |
+
+Время и exitCode: `docs/measurements/e2e-green/final-checks.json`.
+
+## Решения и границы
+
+Движок, данные, сервер и ветка fps-pass не менялись. Ветка fps-pass по-прежнему `7b07158d8f351555c7a3e4273149eb51916f2fea`. Ожидания обновлялись только с указанной причиной и PR; исключения perf-guard не расширялись, проверки порядка/результата/доступности нажатий сохранены. Общий бюджет perf-guard остался 60 с.
+
+PR создаёт пользователь: https://github.com/re1ampag0/bortom-k-bortu/pull/new/e2e-green . Сливать после зелёных build и e2e на GitHub. Точка продолжения: проверить последнюю правку Safari-наблюдения; новых локальных прогонов по просьбе пользователя не делать.
