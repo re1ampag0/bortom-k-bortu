@@ -232,7 +232,6 @@ h3,
 .ship-name,
 .plank-name,
 .team-name,
-.ro-name,
 .hcard-name {
   font-family: var(--font-head);
 }

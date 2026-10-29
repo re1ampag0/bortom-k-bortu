@@ -13,5 +13,5 @@
 *::-webkit-scrollbar-corner{background:transparent}
 @supports not selector(::-webkit-scrollbar){
  *{scrollbar-width:thin;scrollbar-color:var(--scroll-thumb) var(--scroll-track)}
- .hand-cards,.choice-cards,.tia-opts,.plank-buttons,.charge-cards,.reaction-cards{scrollbar-width:none}
+ .hand-cards,.choice-cards,.tia-opts,.plank-buttons{scrollbar-width:none}
 }

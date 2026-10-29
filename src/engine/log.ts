@@ -26,7 +26,6 @@ export interface LogLine {
 
 const SIDE_NAME: Record<Side, string> = { ПИРАТЫ: 'Пираты', КОМПАНИЯ: 'Компания' };
 const SIDE_GEN: Record<Side, string> = { ПИРАТЫ: 'Пиратов', КОМПАНИЯ: 'Компании' };
-export const sideName = (side: Side) => SIDE_NAME[side];
 export const sideGenitive = (side: Side) => SIDE_GEN[side];
 
 function plural(n: number, one: string, few: string, many: string): string {

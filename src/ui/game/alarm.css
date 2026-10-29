@@ -343,9 +343,6 @@
   color: #2a2521;
   cursor: pointer;
 }
-.hand-actions.alarm-mode .ally-ready {
-  display: none;
-}
 
 /* the fuse over «ПРОПУСТИТЬ»: a real timer only; the length is the time left */
 .alarm-fuse {
@@ -475,19 +472,8 @@
     font-size: 12px;
     color: #d8c9a8;
   }
-  .as-line {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 5px 10px;
-    border-radius: 3px;
-    background: rgba(0, 0, 0, 0.28);
-    font-weight: 700;
-    font-size: 13px;
-  }
-  .as-powder {
-    color: #e0bd62;
-  }
+  
+  
   .alarm-sheet .reaction-memo {
     margin: 0;
     padding: 5px 8px;
@@ -547,13 +533,7 @@
     font-family: var(--font-num);
     font-weight: 700;
   }
-  .as-now {
-    display: block;
-    margin-top: 4px;
-    font-size: 12px;
-    text-align: center;
-    color: #efe3c8;
-  }
+  
   .alarm-sheet .alarm-skip {
     flex: none;
     min-height: 52px;

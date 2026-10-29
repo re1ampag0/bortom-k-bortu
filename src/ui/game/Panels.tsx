@@ -2,16 +2,7 @@
 // Every number in them comes from the engine (hints.ts); a choice the rules refuse is grey with the reason.
 import { useEffect, useRef, useState } from 'react';
 import { choiceFor } from '../../engine/cards';
-import {
-  TRACK_DATIVE,
-  TRACK_NAME,
-  cardNeeds,
-  formatTerms,
-  playOptions,
-  previewVolley,
-  refusal,
-  type VolleyPreview,
-} from '../../engine/hints';
+import {TRACK_DATIVE, TRACK_NAME, cardNeeds, formatTerms, previewVolley, refusal, type VolleyPreview} from '../../engine/hints';
 import { powderWord } from '../../engine/log';
 import { cardByCode, seaCardByCode, seatShip, shipData, startValue, type Action, type GameState } from '../../engine/state';
 import type { GameData, Side, Track } from '../../engine/types';
@@ -628,7 +619,3 @@ export function PlansPanel({ s, data, seat, onDone, onCancel }: { s: GameState; 
   );
 }
 
-/** A Reaction or Order card the player opened: is it playable now and why not. */
-export function playHint(s: GameState, data: GameData, seat: string, card: string): string | null {
-  return playOptions(s, data, seat, card).reason;
-}

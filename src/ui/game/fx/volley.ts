@@ -60,9 +60,6 @@ let plateWatch: ResizeObserver | null = null;
 let VS: VolleyScene | null = null; // the scene of the current Volley
 const PERSIST: { whirl: HTMLElement | null } = { whirl: null }; // effects till the end of the turn: the whirlpool of «Водоворот»
 
-export const KIND_NAME = { fire: 'огонь', chain: 'цепь', grape: 'дробь', under: 'из-под воды', keg: 'бочонок', joint: 'с союзника', mark: 'в метку', gold: 'блик', hot: 'калёное', ghost: 'призрачное', flag: 'флаги' };
-export const OUT_NAME = { water: 'в воду', wind: 'ветер', bounce: 'отскок', stick: 'вязнет', past: 'мимо', whirl: 'в воронку', block: 'в заслон', overkill: 'по пустой шкале', moon: 'сквозь Команду' };
-
 /* ——— helpers of the reference (board.js) ——— */
 const esc = (s: unknown) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
 const fxCardsOf = new WeakMap<GameData, FxCards>();
@@ -738,5 +735,3 @@ export const VOLLEY_SCENE: FxScene = {
   alive: () => !!VS,
 };
 
-/** For tests: the scene of the current Volley. */
-export const volleyScene = () => VS;

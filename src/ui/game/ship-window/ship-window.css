@@ -27,10 +27,7 @@
 .sw-spent-label {position:absolute;inset:auto 0 32px;text-align:center;background:#fbf5e7;color:#9e2b25;font:700 12px 'Alegreya Sans',sans-serif;}
 .sw-legend-spent {opacity:.7;}
 .sw-souls {grid-column:1/-1;display:flex;gap:10px;align-items:center;color:#1f5548;font:13px 'Old Standard TT',Georgia,serif;}
-.sw-soul-count,.sw-soul-exchange {display:inline-flex;gap:3px;align-items:center;white-space:nowrap;}
-.sw-soul-count img,.sw-soul-exchange img {width:16px;height:18px;}
-.sw-soul-exchange svg {width:auto;height:15px;display:block;}
-.sw-soul-exchange strong {font-size:14px;}
+
 .sw-statuses {display:flex;gap:6px;font-size:12px;}
 .sw-statuses>span {padding:1px 6px;border:1px solid currentColor;border-radius:8px;}
 .sw-plan-count {font-size:13px;}
@@ -76,7 +73,6 @@
  .sw-souls>span:first-child {min-width:62px;}
  .sw-soul-exchange {gap:3px;}
 }
-
 
 .sw-cells>span>img {display:block;width:100%;height:17px;object-fit:contain;}
 .sw-spent-label{inset:auto!important;left:9%!important;right:9%!important;top:42%!important;bottom:auto!important;box-sizing:border-box;transform:rotate(-12deg);padding:6px 4px!important;border:4px double #9e2b25;border-radius:3px;color:#9e2b25;background:transparent!important;opacity:.85;font:700 21px/1.1 'Ship Alegreya SC',Georgia,serif;letter-spacing:.07em;z-index:2;pointer-events:none;white-space:nowrap}
