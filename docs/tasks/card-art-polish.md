@@ -33,7 +33,7 @@
    и смотри картинку.
 5. «Было | стало»: `npm run card-art -- --only "<имя>" --scale 6 --out test-results/card-art/after --compare test-results/card-art/before`
    даёт `<slug>-compare.jpg` (две картинки 1200 × 720, под ними миниатюры 240 × 144). Скопируй его в
-   `docs/screenshots/card-art-polish/<slug>.jpg` — это единственный скриншот в репо на карту.
+   `report/card-art-polish/<slug>.jpg` (не коммитится; покажи пользователю вложением).
 6. В игру: `npm run card-art -- --webp --only "<имя>" --out src/ui/art/cards` (картинка 1200 × 720 для окна карты
    и миниатюра `thumb/` 240 × 144 для руки). Бюджет: картинка до 60 КБ, миниатюра до 10 КБ (сейчас около 35 и 6). В миниатюре
    карта должна читаться: мелкие детали не превращаются в шум. `manifest.json` не меняется.

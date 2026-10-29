@@ -1,6 +1,6 @@
 // P8, clear the first time: the attacker's plate while the enemy decides on a Reaction, the Reaction window with the
 // full card text and «what happens now» without «Подсказки», «✓ готов» after «Ход окончен», the 1 s end of the turn.
-// Screenshots go to docs/screenshots/p8/ (replaced on every run).
+// Screenshots go to e2e-shots/p8/ (replaced on every run).
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { loadGameData } from '../src/engine/data';
@@ -8,7 +8,7 @@ import { applyAction, createGame } from '../src/engine/engine';
 import { createRng } from '../src/engine/rng';
 import { cardByCode } from '../src/engine/state';
 
-const SHOTS = 'docs/screenshots/p8';
+const SHOTS = 'e2e-shots/p8';
 const data = loadGameData(JSON.parse(readFileSync('data/game-data.json', 'utf8')));
 const plain = (html: string) => html.replace(/<[^>]+>/g, '');
 

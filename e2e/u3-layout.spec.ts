@@ -2,10 +2,10 @@
 // covers the banner «Ваш ход» nor «Последнее: …», the middle of the table (banners, the summary, the hint, the panels)
 // stands at the centre of the gap between the rows, the badges are a column at one right edge, the numbers of the
 // tracks one column, «Чёрная метка» stays on the marked plank as a small stamp that covers nothing. Chromium only. Screenshots of the same states
-// as docs/screenshots/u3/before/ go to docs/screenshots/u3/after/ (replaced on every run).
+// as e2e-shots/u3/before/ go to e2e-shots/u3/after/ (replaced on every run).
 import { expect, test, type Page } from '@playwright/test';
 
-const SHOTS = 'docs/screenshots/u3/after';
+const SHOTS = 'e2e-shots/u3/after';
 const SIZES = [
   { width: 1366, height: 660 },
   { width: 1920, height: 1080 },

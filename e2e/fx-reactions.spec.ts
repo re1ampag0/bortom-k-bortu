@@ -1,12 +1,12 @@
 // A2b: the Reactions and the special Volleys on the table through «?fxScene=<id>». For each scene a frame of the game at
-// the moment of the effect (the element of the effect is in the layer) goes to docs/screenshots/a2b/, its milliseconds from
-// the load of the page to docs/screenshots/a2b/times.json; the frames of the reference at the same milliseconds are taken
-// by capture.mjs into docs/screenshots/a2b/ref/. After the show the numbers are the result of the scene and the layer is empty.
+// the moment of the effect (the element of the effect is in the layer) goes to e2e-shots/a2b/, its milliseconds from
+// the load of the page to e2e-shots/a2b/times.json; the frames of the reference at the same milliseconds are taken
+// by capture.mjs into e2e-shots/a2b/ref/. After the show the numbers are the result of the scene and the layer is empty.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { clickMisses, expectResult, open, playing } from './fx-scene';
 
-const SHOTS = 'docs/screenshots/a2b';
+const SHOTS = 'e2e-shots/a2b';
 const TIMES = `${SHOTS}/times.json`;
 
 /** A frame: the scene, the moment (a check in the page: the effect is there), and how long after it the frame is taken. */

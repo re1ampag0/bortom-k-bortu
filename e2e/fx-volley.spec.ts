@@ -1,12 +1,12 @@
 // A2: the Volley on the table (the animation layer) through «?fxScene=<id>» — scenes of the reference
 // (docs/mockups/anim/level1/scenes.js) played on the table of the game. The layer never takes a press, a card of the
 // hand opens during the show, the numbers after the show are the result of the scene; in a bot match a Volley of the
-// bots is shown by the layer. Frames go to docs/screenshots/a2/, next to the frames of the reference
-// (capture.mjs → docs/screenshots/a2/ref/), at the same milliseconds from the load of the page.
+// bots is shown by the layer. Frames go to e2e-shots/a2/, next to the frames of the reference
+// (capture.mjs → e2e-shots/a2/ref/), at the same milliseconds from the load of the page.
 import { expect, test } from '@playwright/test';
 import { clickMisses, expectResult, open, playing } from './fx-scene';
 
-const SHOTS = 'docs/screenshots/a2';
+const SHOTS = 'e2e-shots/a2';
 
 test.describe('the Volley on the table through ?fxScene (1366×660)', () => {
   test.use({ viewport: { width: 1366, height: 660 } });
@@ -109,7 +109,7 @@ test.describe('V5: the plate on a phone (430×680)', () => {
 });
 
 // V5: a ball the modifier took falls short; at its splash — the pill of that modifier. Frames go to
-// docs/screenshots/a5-windows/ (b-volley-miss-*), next to b-volley-ref-*.
+// e2e-shots/a5-windows/ (b-volley-miss-*), next to b-volley-ref-*.
 for (const { width, height } of [
   { width: 1366, height: 660 },
   { width: 390, height: 844 },
@@ -131,7 +131,7 @@ for (const { width, height } of [
         // beside the plate, not over it
         const plate = (await page.locator('.fx-layer > .plate').boundingBox())!;
         expect(box.x + box.width <= plate.x || box.x >= plate.x + plate.width || box.y + box.height <= plate.y || box.y >= plate.y + plate.height).toBe(true);
-        await page.screenshot({ path: `docs/screenshots/a5-windows/b-volley-miss-${id}-${width}x${height}.png` });
+        await page.screenshot({ path: `e2e-shots/a5-windows/b-volley-miss-${id}-${width}x${height}.png` });
       });
     }
   });
@@ -303,6 +303,6 @@ test('hull impact: no debris or damage before arrival; the plate stays above wre
     evidence.push({viewport,audit,stack});
   }
   const {mkdirSync,writeFileSync}=await import('node:fs');
-  mkdirSync('docs/screenshots/fx-finish/checks',{recursive:true});
-  writeFileSync('docs/screenshots/fx-finish/checks/impact-arrival.json',JSON.stringify(evidence,null,1)+'\n');
+  mkdirSync('e2e-shots/fx-finish/checks',{recursive:true});
+  writeFileSync('e2e-shots/fx-finish/checks/impact-arrival.json',JSON.stringify(evidence,null,1)+'\n');
 });

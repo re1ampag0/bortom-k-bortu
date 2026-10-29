@@ -1,8 +1,8 @@
 // P4, the tempo of the show: «Пауза / Дальше» holds the bots, «Последнее» opens the journal with the enemy's turn,
-// and on the phone «Пауза» leaves room for «Журнал» and «Правила». Screenshots go to docs/screenshots/p4/.
+// and on the phone «Пауза» leaves room for «Журнал» and «Правила». Screenshots go to e2e-shots/p4/.
 import { expect, test, type Page } from '@playwright/test';
 
-const SHOTS = 'docs/screenshots/p4';
+const SHOTS = 'e2e-shots/p4';
 
 /** The Company against the Pirate bots: the Pirates move first. */
 async function againstBots(page: Page, speed: string) {
@@ -39,13 +39,13 @@ test.describe('laptop 1366×660', () => {
     await expect(page.locator('[data-fx-instruction]')).toContainText('выберите карту или действие', { timeout: 120_000 });
     const summary = page.getByTestId('middle-info');
     await expect(summary).toContainText('Последнее: Ход Компании:');
-    await page.screenshot({ path: 'docs/screenshots/fix-ci/tempo-summary-line.png' });
+    await page.screenshot({ path: 'e2e-shots/fix-ci/tempo-summary-line.png' });
     await summary.click();
     const journal = page.getByTestId('log-sheet');
     await expect(journal).toBeVisible();
     await expect(journal).toContainText('Ход Пиратов');
     await expect(journal.locator('li').first()).toBeVisible();
-    await page.screenshot({ path: 'docs/screenshots/fix-ci/tempo-journal.png' });
+    await page.screenshot({ path: 'e2e-shots/fix-ci/tempo-journal.png' });
     // The seeded Pirates play cards: navigation is required, rather than skipped when no link was found.
     const card = journal.locator('.cref[data-card]').first();
     await expect(card).toBeVisible();
