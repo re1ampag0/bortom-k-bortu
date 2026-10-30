@@ -1,0 +1,446 @@
+/* «Админка»: the look of the game's menus (navy plaques, gold lines, Alegreya), a scrolling page with tables.
+   Phone layout ≤ 700 px (docs/ui/RULES.md 2). Only transform/opacity move; no shadows on what moves. */
+.admin {
+  --a-bg: #0e1b26;
+  --a-panel: linear-gradient(#20303d, #111c26);
+  --a-line: #c9a048;
+  --a-gold: #f0d27a;
+  --a-text: #eef3f6;
+  --a-muted: #9fb2bf;
+  --a-field: #0b1620;
+  --a-good: #6fcf8a;
+  --a-bad: #ff8a73;
+  height: var(--app-h, 100dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: radial-gradient(ellipse at top, #1b2f3f, var(--a-bg) 60%);
+  color: var(--a-text);
+  font: 15px/1.35 'Alegreya Sans', sans-serif;
+  text-align: left;
+}
+.admin *,
+.admin *::before,
+.admin *::after {
+  box-sizing: border-box;
+}
+.admin button,
+.admin input,
+.admin select,
+.admin textarea {
+  font: inherit;
+  color: inherit;
+}
+.admin button {
+  cursor: pointer;
+}
+.admin button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.admin :focus-visible {
+  outline: 2px solid #fff1b0;
+  outline-offset: 2px;
+}
+
+.admin-top {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px 20px;
+  padding: 8px 24px;
+  background: #0e1b26f2;
+  border-bottom: 1px solid #c9a04866;
+}
+.admin-top h1 {
+  margin: 0;
+  font: 700 28px/1.1 'Alegreya SC', serif;
+  color: var(--a-gold);
+}
+.admin-back.admin-back {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  color: #e0bd62;
+  font: 700 16px 'Alegreya SC', serif;
+  padding: 0;
+}
+.admin-tabs,
+.admin-subtabs {
+  display: flex;
+  gap: 6px;
+}
+.admin-tabs button,
+.admin-subtabs button {
+  width: 140px;
+  min-height: 44px;
+  border: 2px solid #715018;
+  border-radius: 9px;
+  background: linear-gradient(#223443, #0e1820);
+  color: #e0bd62;
+  font: 700 16px 'Alegreya SC', serif;
+  white-space: nowrap;
+}
+.admin-tabs button.on,
+.admin-subtabs button.on {
+  background: linear-gradient(#f6dd92, #c9a048 48%, #a8822e);
+  color: #24180a;
+  border-color: #715018;
+}
+.admin-subtabs {
+  margin: 14px 0 12px;
+}
+.admin-subtabs button {
+  width: 120px;
+  min-height: 40px;
+  font-size: 15px;
+}
+
+.admin-body {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 14px 24px 40px;
+}
+.admin h2 {
+  margin: 18px 0 8px;
+  font: 700 20px 'Alegreya SC', serif;
+  color: var(--a-gold);
+}
+.admin h3 {
+  margin: 0 0 10px;
+  font: 700 18px 'Alegreya SC', serif;
+  color: var(--a-gold);
+}
+.admin h3 small {
+  margin-left: 8px;
+  color: var(--a-muted);
+  font: 14px 'Alegreya Sans', sans-serif;
+}
+.admin-note {
+  margin: 8px 0;
+  color: var(--a-muted);
+  font-size: 14px;
+}
+
+.admin-panel {
+  border: 2px solid var(--a-line);
+  border-left-width: 6px;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--a-panel);
+  margin: 0 0 12px;
+}
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.admin-grid > .admin-panel {
+  margin: 0;
+}
+
+.admin-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: flex-start;
+}
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 88px;
+}
+.admin-field > label {
+  font-size: 13px;
+  color: var(--a-muted);
+}
+.admin-op code {
+  font: 600 12.5px ui-monospace, Menlo, Consolas, monospace;
+  color: #d9e6ee;
+  background: #ffffff12;
+  border-radius: 4px;
+  padding: 0 4px;
+}
+.admin-op small {
+  font-size: 12px;
+  color: var(--a-muted);
+}
+.admin-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.admin-field input:not([type='checkbox']),
+.admin-field select,
+.admin-field textarea,
+.admin-filters input,
+.admin-filters select,
+.admin-form input,
+.admin-form select {
+  min-height: 36px;
+  border: 1px solid #5a6f7d;
+  border-radius: 7px;
+  background: var(--a-field);
+  padding: 4px 8px;
+}
+.admin-field input:not([type='checkbox']) {
+  width: 78px;
+}
+.admin-field input.admin-text {
+  width: min(360px, 100%);
+}
+.admin-field.k-text,
+.admin-field.k-long {
+  flex: 1 1 100%;
+}
+.admin-field textarea {
+  width: 100%;
+  resize: vertical;
+}
+.admin-field input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  accent-color: #c9a048;
+}
+.admin-field.changed input:not([type='checkbox']),
+.admin-field.changed select,
+.admin-field.changed textarea {
+  border: 2px solid var(--a-gold);
+  background: #2c2612;
+}
+.admin-field.bad input:not([type='checkbox']),
+.admin-field.bad textarea {
+  border: 2px solid var(--a-bad);
+}
+.admin-field input:disabled,
+.admin-field select:disabled,
+.admin-field textarea:disabled {
+  opacity: 0.8;
+  border-style: dashed;
+}
+.admin-revert {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #c9a04888;
+  border-radius: 50%;
+  background: none;
+  color: var(--a-gold);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+}
+.admin-was {
+  font-size: 12px;
+  color: #e0bd62;
+}
+.admin-problem {
+  font-size: 12.5px;
+  color: var(--a-bad);
+}
+.admin-diag {
+  display: flex;
+  gap: 4px;
+}
+.admin-diag input:not([type='checkbox']) {
+  width: 56px;
+}
+
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+.admin-filters input[type='search'] {
+  flex: 1 1 240px;
+}
+.admin-count {
+  color: var(--a-muted);
+  font-size: 14px;
+}
+
+.admin-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.admin-card {
+  border: 1px solid #c9a04866;
+  border-left: 6px solid var(--a-line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #142430;
+  contain: layout paint style;
+}
+.admin-card.off {
+  opacity: 0.6;
+}
+.admin-card > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 8px;
+}
+.admin-card > header > b {
+  font: 700 17px 'Alegreya SC', serif;
+  color: var(--a-gold);
+}
+.admin-card > header > small {
+  color: var(--a-muted);
+}
+.admin-card.sea > header .admin-field {
+  flex-direction: row-reverse;
+  align-items: center;
+  min-width: 0;
+  margin-left: auto;
+}
+.admin-balance {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--a-muted);
+}
+.admin-balance b {
+  color: var(--a-text);
+  font-variant-numeric: tabular-nums;
+}
+.admin-excess.low b {
+  color: var(--a-good);
+}
+.admin-excess.high b {
+  color: var(--a-bad);
+}
+.admin-excess.low,
+.admin-excess.high {
+  border-radius: 6px;
+  padding: 0 4px;
+}
+.admin-excess.low {
+  background: #6fcf8a22;
+}
+.admin-excess.high {
+  background: #ff8a7322;
+}
+.admin-warn {
+  flex: 1 1 100%;
+  border-radius: 6px;
+  padding: 3px 8px;
+  background: #5b3a0c;
+  color: #ffd98a;
+  font-size: 13px;
+}
+.admin-texts {
+  margin-top: 8px;
+}
+.admin-texts > summary {
+  min-height: 32px;
+  color: #e0bd62;
+  cursor: pointer;
+  font: 700 14px 'Alegreya SC', serif;
+}
+.admin-texts[open] > summary {
+  margin-bottom: 6px;
+}
+.admin-big {
+  margin: 0 0 6px;
+  font-style: italic;
+  color: var(--a-muted);
+}
+
+.admin-decks table,
+.admin-table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.admin-decks th,
+.admin-decks td,
+.admin-table th,
+.admin-table td {
+  padding: 4px 12px 4px 0;
+  text-align: right;
+  border-bottom: 1px solid #ffffff14;
+}
+.admin-decks th:first-child,
+.admin-decks td:first-child,
+.admin-table th:first-child,
+.admin-table td:first-child {
+  text-align: left;
+}
+.admin-decks th,
+.admin-table th {
+  color: var(--a-muted);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* buttons of the admin page: the game's gold button, smaller */
+.admin-btn {
+  min-height: 40px;
+  border: 2px solid #715018;
+  border-radius: 9px;
+  padding: 4px 14px;
+  background: linear-gradient(#223443, #0e1820);
+  color: #e0bd62;
+  font: 700 15px 'Alegreya SC', serif !important;
+  white-space: nowrap;
+}
+.admin-btn.primary {
+  background: linear-gradient(#f6dd92, #c9a048 48%, #a8822e);
+  color: #24180a;
+}
+.admin-btn.danger {
+  color: var(--a-bad);
+  border-color: #7a2c1e;
+}
+
+@media (max-width: 700px) {
+  .admin {
+    font-size: 15px;
+  }
+  .admin-top {
+    grid-template-columns: auto 1fr;
+    padding: 6px 12px 8px;
+  }
+  .admin-top h1 {
+    font-size: 22px;
+  }
+  .admin-tabs {
+    grid-column: 1 / -1;
+  }
+  .admin-tabs button {
+    flex: 1 1 0;
+    width: auto;
+    font-size: 15px;
+  }
+  .admin-subtabs button {
+    flex: 1 1 0;
+    width: auto;
+    font-size: 14px;
+  }
+  .admin-body {
+    padding: 8px 12px 32px;
+  }
+  .admin-grid,
+  .admin-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-balance {
+    margin-left: 0;
+    flex: 1 1 100%;
+  }
+  .admin-field {
+    min-width: 76px;
+  }
+  .admin-field input:not([type='checkbox']) {
+    width: 70px;
+  }
+}

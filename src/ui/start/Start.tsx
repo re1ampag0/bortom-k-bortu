@@ -18,6 +18,7 @@ export function Start({
   onNet,
   onResume,
   onCards,
+  onAdmin,
 }: {
   data: GameData;
   onMode: (mode: Mode) => void;
@@ -25,6 +26,7 @@ export function Start({
   onNet: () => void;
   onResume: (record: MatchRecord) => void;
   onCards: () => void;
+  onAdmin: () => void;
 }) {
   const netSaved = loadNetSaved();
   const [save, setSave] = useState(() => {
@@ -55,7 +57,7 @@ export function Start({
           {([{id:'quick-bots',icon:'cutlasses',title:'Против ботов',text:'Вы командуете одной стороной, боты другой.',cta:'Выбрать сторону',go:()=>onMode('bots')},{id:'quick-net',icon:'flags',title:'Игра по сети',text:'Каждый играет со своего телефона или ноутбука.',cta:'Комната по коду',go:onNet},{id:'quick-duo',icon:'mugs',title:'На одном экране',text:'Играете вдвоём, передавая устройство друг другу.',cta:'Сесть за стол',go:()=>onMode('duo')}]as const).map(m=><button key={m.id} className="menu-mode-card menu-plaque" data-testid={m.id} onClick={m.go}><span className="menu-mode-head"><span className="menu-medal"><Icon name={m.icon} size={50}/></span><h2>{m.title}</h2></span><p><span className="menu-desktop">{m.text}</span><span className="menu-phone">{m.id==='quick-bots'?'Вы командуете одной стороной, боты другой':m.id==='quick-net'?'Каждый со своего телефона или ноутбука':'Вдвоём, передавая устройство'}</span></p><span className="menu-cta">{m.cta}<Arrow/></span><span className="menu-mobile-chevron"><Arrow chevron/></span></button>)}
         </nav>
         <nav className="menu-start-links" aria-label="Ещё"><button onClick={()=>setSheet('rules')}><span className="menu-medal dark"><Icon name="book" size={38}/></span>Правила</button><button onClick={onCards}><span className="menu-medal dark"><Icon name="cards" size={38}/></span><span className="menu-desktop">Коллекция карт</span><span className="menu-phone">Карты</span></button><button data-testid="start-settings" onClick={()=>setSheet('settings')}><span className="menu-medal dark"><Icon name="wheel" size={38}/></span>Настройки</button><button data-testid="quick-match" onClick={onMatch}><span className="menu-medal dark"><Icon name="spyglass" size={38}/></span>Матч ботов</button></nav>
-        <footer className="menu-version">Версия {__APP_COMMIT__} · сборка {new Date(__APP_BUILT__).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</footer>
+        <footer className="menu-version">Версия {__APP_COMMIT__} · сборка {new Date(__APP_BUILT__).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · <button className="menu-admin-link" data-testid="start-admin" onClick={onAdmin}>Админка</button></footer>
       </main>
       {sheet === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}
       {sheet === 'settings' && (

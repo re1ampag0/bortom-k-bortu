@@ -20,17 +20,22 @@ import { loadSettings, storeSave } from './storage';
 const FxScene = import.meta.env.DEV || import.meta.env.MODE === 'e2e' ? lazy(() => import('./game/fx/FxScene')) : null;
 const fxSceneId = FxScene ? new URLSearchParams(location.search).get('fxScene') : null;
 
+/** «Админка»: its own chunk, loaded only when opened (the link at the bottom of the start screen or «?admin»). */
+const Admin = lazy(() => import('./admin/Admin'));
+const adminInUrl = () => new URLSearchParams(location.search).has('admin');
+
 type Screen =
   | { k: 'setup' }
   | { k: 'prep'; mode: Mode }
   | { k: 'cards' }
   | { k: 'net' }
+  | { k: 'admin' }
   | { k: 'placement'; setup: MatchSetup; note: string }
   | { k: 'game'; game: LocalGame };
 
 export function App() {
   // A link to a room («…?room=ABCDE») opens the network screen at once.
-  const [screen, setScreen] = useState<Screen>(() => (roomFromUrl() ? { k: 'net' } : { k: 'setup' }));
+  const [screen, setScreen] = useState<Screen>(() => (roomFromUrl() ? { k: 'net' } : adminInUrl() ? { k: 'admin' } : { k: 'setup' }));
   if (loaded.error !== null) {
     return (
       <main className="page">
@@ -73,6 +78,7 @@ export function App() {
           onResume={resume}
           onCards={() => setScreen({ k: 'cards' })}
           onNet={() => setScreen({ k: 'net' })}
+          onAdmin={() => setScreen({ k: 'admin' })}
         />
       );
     case 'prep':
@@ -86,6 +92,17 @@ export function App() {
             setScreen({ k: 'setup' });
           }}
         />
+      );
+    case 'admin':
+      return (
+        <Suspense fallback={null}>
+          <Admin
+            onBack={() => {
+              if (adminInUrl()) history.replaceState(null, '', location.pathname);
+              setScreen({ k: 'setup' });
+            }}
+          />
+        </Suspense>
       );
     case 'cards':
       return <Catalog data={data} onBack={() => setScreen({ k: 'setup' })} />;

@@ -12,3 +12,6 @@ function load(): { data: GameData; error: null } | { data: null; error: string }
 }
 
 export const loaded = load();
+
+/** The main data as written in data/game-data.json: the base of the presets of the admin page. */
+export const mainRaw = raw as Record<string, any>;

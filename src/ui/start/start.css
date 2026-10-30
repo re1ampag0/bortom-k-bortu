@@ -197,3 +197,6 @@
   }
 }
 
+
+/* «Админка» in the line of the version at the bottom of the start screen */
+.menu-admin-link{background:none;border:0;padding:4px 2px;margin:-4px 0;color:#c9a048;font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;pointer-events:auto}
