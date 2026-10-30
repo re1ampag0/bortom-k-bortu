@@ -124,6 +124,15 @@ export function LabTab({ presets, main }: { presets: Preset[]; main: RawData }) 
   };
 
   const setOne = (i: 0 | 1, patch: Partial<SetChoice>) => setSets((s) => (i === 0 ? [{ ...s[0], ...patch }, s[1]] : [s[0], { ...s[1], ...patch }]));
+  const firstVsFirst = () => {
+    const both: [SetChoice, SetChoice] = [
+      { ...sets[0], first: 'ПИРАТЫ' },
+      { ...sets[0], first: 'КОМПАНИЯ' },
+    ];
+    setSets(both);
+    void launch(both);
+  };
+
   return (
     <>
       <section className="admin-panel admin-lab-setup" data-testid="lab">
@@ -203,9 +212,16 @@ export function LabTab({ presets, main }: { presets: Preset[]; main: RawData }) 
               <button className="admin-btn primary" disabled={gamesBad || seedBad} onClick={() => launch(sets)} data-testid="lab-run">
                 Запустить
               </button>
+              <button className="admin-btn admin-wide" disabled={gamesBad || seedBad} onClick={firstVsFirst} data-testid="lab-first-vs" title="A и B — данные набора A">
+                Пираты первыми / Компания первой
+              </button>
             </>
           )}
         </div>
+        <p className="admin-note">
+          «Пираты первыми / Компания первой» — один и тот же набор A дважды: Пираты ходят первыми и Компания ходит первой. Если разница в победах не больше 3
+          п. п., первый ход сможет решать монета (отдельная настройка — потом).
+        </p>
         {error && <p className="admin-error">{error}</p>}
       </section>
       {done && <LabResults done={done} />}
