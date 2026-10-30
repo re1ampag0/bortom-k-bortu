@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     environment:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      # «Админка → Сервер»: the password from .env next to this file; empty — uploading presets is off.
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     volumes:
       - ./server-data:/data
     expose:

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { replay, type MatchRecord, type MatchSetup } from '../../engine/match';
 import type { GameData } from '../../engine/types';
 import { loadNetSaved } from '../../net/ws';
+import { dataFor } from '../data';
 import { RulesSheet, SettingsSheet } from '../game/Overlays';
 import { SIDE_LABEL } from '../game/text';
 import { loadSave, loadSettings, storeSave, storeSettings, type Settings } from '../storage';
@@ -18,6 +19,7 @@ export function Start({
   onNet,
   onResume,
   onCards,
+  onAdmin,
 }: {
   data: GameData;
   onMode: (mode: Mode) => void;
@@ -25,14 +27,15 @@ export function Start({
   onNet: () => void;
   onResume: (record: MatchRecord) => void;
   onCards: () => void;
+  onAdmin: () => void;
 }) {
   const netSaved = loadNetSaved();
   const [save, setSave] = useState(() => {
     const record = loadSave();
     if (!record) return null;
     try {
-      const state = replay(data, record.setup, record.actions);
-      return state.winner ? null : { record, text: `Раунд ${state.round}, ход ${SIDE_LABEL[state.active].gen}, ${describeSetup(record.setup)}` };
+      const state = replay(dataFor(record.setup, data), record.setup, record.actions);
+      return state.winner ? null : { record, text: `Раунд ${state.round}, ход ${SIDE_LABEL[state.active].gen}` };
     } catch {
       return null;
     }
@@ -50,12 +53,12 @@ export function Start({
       <main>
         <section className="menu-start-hero"><MenuScene name="Main"/><div className="menu-start-heading"><small>ПИРАТЫ · ПРОТИВ · КОМПАНИИ</small><h1>Бортом к борту</h1><Flourish/><p>Морской бой два на два, до последнего корабля.</p></div></section>
         <nav className={`menu-mode-grid ${save||netSaved?.code?'with-save':''}`} aria-label="Начать игру">
-          {save&&<section className="menu-mode-card menu-plaque menu-save" data-testid="resume"><button className="menu-save-x" aria-label="Удалить сохранённую партию" onClick={()=>{storeSave(null);setSave(null);}}>×</button><div className="menu-mode-head"><Icon name="logbook" size={50}/><div><small>Сохранённая партия</small><h2>Продолжить</h2></div></div><p><span>{describeSetup(save.record.setup).replace(/^./,c=>c.toUpperCase())}</span><span>{save.text.slice(0,save.text.lastIndexOf(','))}</span></p><button className="menu-primary" data-testid="resume-go" onClick={()=>onResume(save.record)}><span className="menu-desktop">Вернуться к столу</span><span className="menu-phone">Продолжить</span></button></section>}
+          {save&&<section className="menu-mode-card menu-plaque menu-save" data-testid="resume"><button className="menu-save-x" aria-label="Удалить сохранённую партию" onClick={()=>{storeSave(null);setSave(null);}}>×</button><div className="menu-mode-head"><Icon name="logbook" size={50}/><div><small>Сохранённая партия</small><h2>Продолжить</h2></div></div><p><span>{describeSetup(save.record.setup).replace(/^./,c=>c.toUpperCase())}</span><span>{save.text}</span></p><button className="menu-primary" data-testid="resume-go" onClick={()=>onResume(save.record)}><span className="menu-desktop">Вернуться к столу</span><span className="menu-phone">Продолжить</span></button></section>}
           {!save&&netSaved?.code&&<button className="menu-mode-card menu-plaque menu-save" data-testid="net-resume" onClick={onNet}><h2>Вернуться в комнату {netSaved.code}</h2><p>Игра по сети</p><span className="menu-cta">Вернуться к столу <Arrow/></span></button>}
           {([{id:'quick-bots',icon:'cutlasses',title:'Против ботов',text:'Вы командуете одной стороной, боты другой.',cta:'Выбрать сторону',go:()=>onMode('bots')},{id:'quick-net',icon:'flags',title:'Игра по сети',text:'Каждый играет со своего телефона или ноутбука.',cta:'Комната по коду',go:onNet},{id:'quick-duo',icon:'mugs',title:'На одном экране',text:'Играете вдвоём, передавая устройство друг другу.',cta:'Сесть за стол',go:()=>onMode('duo')}]as const).map(m=><button key={m.id} className="menu-mode-card menu-plaque" data-testid={m.id} onClick={m.go}><span className="menu-mode-head"><span className="menu-medal"><Icon name={m.icon} size={50}/></span><h2>{m.title}</h2></span><p><span className="menu-desktop">{m.text}</span><span className="menu-phone">{m.id==='quick-bots'?'Вы командуете одной стороной, боты другой':m.id==='quick-net'?'Каждый со своего телефона или ноутбука':'Вдвоём, передавая устройство'}</span></p><span className="menu-cta">{m.cta}<Arrow/></span><span className="menu-mobile-chevron"><Arrow chevron/></span></button>)}
         </nav>
         <nav className="menu-start-links" aria-label="Ещё"><button onClick={()=>setSheet('rules')}><span className="menu-medal dark"><Icon name="book" size={38}/></span>Правила</button><button onClick={onCards}><span className="menu-medal dark"><Icon name="cards" size={38}/></span><span className="menu-desktop">Коллекция карт</span><span className="menu-phone">Карты</span></button><button data-testid="start-settings" onClick={()=>setSheet('settings')}><span className="menu-medal dark"><Icon name="wheel" size={38}/></span>Настройки</button><button data-testid="quick-match" onClick={onMatch}><span className="menu-medal dark"><Icon name="spyglass" size={38}/></span>Матч ботов</button></nav>
-        <footer className="menu-version">Версия {__APP_COMMIT__} · сборка {new Date(__APP_BUILT__).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</footer>
+        <footer className="menu-version">Версия {__APP_COMMIT__} · сборка {new Date(__APP_BUILT__).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})} · <button className="menu-admin-link" data-testid="start-admin" onClick={onAdmin}>Админка</button></footer>
       </main>
       {sheet === 'rules' && <RulesSheet data={data} onClose={() => setSheet(null)} />}
       {sheet === 'settings' && (
@@ -81,8 +84,9 @@ export function Start({
 
 function describeSetup(setup: MatchSetup): string {
   const p = setup.players;
-  if (p.ПИРАТЫ === 'bot' && p.КОМПАНИЯ === 'bot') return 'матч ботов';
-  if (p.ПИРАТЫ === 'human' && p.КОМПАНИЯ === 'human') return 'вдвоём на одном экране';
-  return 'против ботов';
+  const preset = setup.preset ? `, пресет «${setup.preset.name}»` : '';
+  if (p.ПИРАТЫ === 'bot' && p.КОМПАНИЯ === 'bot') return `матч ботов${preset}`;
+  if (p.ПИРАТЫ === 'human' && p.КОМПАНИЯ === 'human') return `вдвоём на одном экране${preset}`;
+  return `против ботов${preset}`;
 }
 

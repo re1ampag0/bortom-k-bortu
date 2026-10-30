@@ -16,6 +16,11 @@ export interface GameOptions {
   legends?: boolean;
   /** Network games: open a Reaction window also when nobody can react (see GameState.pauseEmptyWindows). */
   pauseEmptyWindows?: boolean;
+  /**
+   * The team that moves first (the balance lab); the Pirates by default. The first team gets `first_income` in the very
+   * first turn, the second team starts with `second_start` Powder (RULES.md 4, 5.2: «Пираты» / «Компания» stand for them).
+   */
+  first?: Side;
 }
 
 export function createGame(data: GameData, options: GameOptions): { state: GameState; events: GameEvent[] } {
@@ -23,6 +28,8 @@ export function createGame(data: GameData, options: GameOptions): { state: GameS
   const withSea = options.sea ?? variant !== 'first';
   const withLegends = options.legends ?? variant !== 'first';
   const rng = createRng(options.seed);
+  const first: Side = options.first ?? 'ПИРАТЫ';
+  const second: Side = first === 'ПИРАТЫ' ? 'КОМПАНИЯ' : 'ПИРАТЫ';
   const ships: Record<string, ShipState> = {};
 
   for (const side of ['ПИРАТЫ', 'КОМПАНИЯ'] as Side[]) {
@@ -61,12 +68,12 @@ export function createGame(data: GameData, options: GameOptions): { state: GameS
     rng: 0,
     variant,
     round: 0,
-    active: 'ПИРАТЫ',
+    active: first,
     ships,
     teams: {
-      ПИРАТЫ: { powder: 0 },
-      КОМПАНИЯ: { powder: variant === 'first' ? data.rules.firstGameSecondStart : data.econ.second_start },
-    },
+      [first]: { powder: 0 },
+      [second]: { powder: variant === 'first' ? data.rules.firstGameSecondStart : data.econ.second_start },
+    } as GameState['teams'],
     sea: !withSea ? null : { deck: rng.shuffle(seaCards(data).map((c) => c.code)), discard: [], current: null },
     turn: newTurn(),
     winner: null,
@@ -76,6 +83,7 @@ export function createGame(data: GameData, options: GameOptions): { state: GameS
     card: null,
   };
   if (options.pauseEmptyWindows) state.pauseEmptyWindows = true;
+  if (first !== 'ПИРАТЫ') state.first = first;
 
   const ctx: Ctx = { s: state, data, rng, events: [] };
   for (const code of Object.keys(ships)) drawUp(ctx, code);

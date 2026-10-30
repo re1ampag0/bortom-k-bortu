@@ -437,6 +437,7 @@ export function loadGameData(raw: unknown): GameData {
       ch.string(c, 'text', at);
       ch.string(c, 'flavor', at);
       ch.oneOf(c, 'key', at, SEA_KEYS);
+      if (c.off !== undefined && typeof c.off !== 'boolean') ch.fail(at, 'поле «off» должно быть true или false');
     });
   }
 
@@ -465,9 +466,9 @@ export function legendCards(data: GameData): CardInstance[] {
   return data.ships.map((ship) => ({ ...data.legends[ship.code], deck: ship.code, code: `${ship.code}-Л` }));
 }
 
-/** Sea cards, codes "С-01" … */
+/** Sea cards in the deck, codes "С-01" … by the place in the list: a card taken out (`off`) keeps the codes of the others. */
 export function seaCards(data: GameData): SeaCardInstance[] {
-  return data.sea.map((c: SeaCard, i) => ({ ...c, code: `С-${String(i + 1).padStart(2, '0')}` }));
+  return data.sea.map((c: SeaCard, i) => ({ ...c, code: `С-${String(i + 1).padStart(2, '0')}` })).filter((c) => !c.off);
 }
 
 function withoutCopies(entry: DeckEntry): Card {

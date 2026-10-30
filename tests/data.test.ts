@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import raw from '../data/game-data.json';
+import raw from './fixtures/game-data.v0.3.json';
 import { DataError, deckCards, legendCards, loadGameData, seaCards } from '../src/engine/data';
 
 const clone = (): any => structuredClone(raw);

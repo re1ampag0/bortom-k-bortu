@@ -1,5 +1,7 @@
+// Tests of the rules run on the frozen data of version 0.3 (tests/fixtures/game-data.v0.3.json): a change of the site's
+// data in data/game-data.json (the admin page) does not break them; tests/main-data.test.ts checks that data.
 // Test helpers: a game with known placement and hands. Tests may change the state directly (it is plain JSON).
-import raw from '../data/game-data.json';
+import raw from './fixtures/game-data.v0.3.json';
 import { TRACKS, deckCards, legendCards, loadGameData, seaCards } from '../src/engine/data';
 import { choiceFor } from '../src/engine/cards';
 import { applyAction, createGame, type GameOptions } from '../src/engine/engine';

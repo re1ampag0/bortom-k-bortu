@@ -7,6 +7,7 @@ import type { GameData, Side } from '../../engine/types';
 import { SIDE_LABEL } from '../game/text';
 import { loadSettings, storeSettings } from '../storage';
 import { seedFrom, tossSeed, urlSeedText } from '../seed';
+import { MAIN, MAIN_NAME, loadPresets, presetGameData } from '../presets';
 import { Coin } from './Coin';
 import { instantUrl, reducedMotion } from './motion';
 import {MenuSurface,MenuScene,Icon,Arrow,Flourish} from '../menus/Menus';
@@ -57,6 +58,9 @@ export function Prep({
   const [legends, setLegends] = useState(true);
   const [openHands, setOpenHands] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // «Ещё → Данные игры»: the main data or a preset of the admin page (this browser's presets).
+  const [presets] = useState(loadPresets);
+  const [presetId, setPresetId] = useState(MAIN);
   const file = useRef<HTMLInputElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
@@ -87,15 +91,18 @@ export function Prep({
   const start = (side: Side, byCoin: boolean, gameSeed: number) => {
     const game = { seed: gameSeed, variant, sea, legends };
     const lead = byCoin ? 'Монета выбрала: ' : '';
+    const p = presetGameData(presetId);
+    const preset = p ? { preset: { name: p.name, data: p.raw } } : {};
+    const on = p ? ` Данные: пресет «${p.name}».` : '';
     if (mode === 'bots') {
       onStart({
-        setup: { game, players: { [side]: 'human', [other(side)]: 'bot' } as Record<Side, Controller>, openHands, hints },
-        note: `${lead}вы играете за ${SIDE_LABEL[side].acc}. Первыми ходят Пираты.`,
+        setup: { game, players: { [side]: 'human', [other(side)]: 'bot' } as Record<Side, Controller>, openHands, hints, ...preset },
+        note: `${lead}вы играете за ${SIDE_LABEL[side].acc}. Первыми ходят Пираты.${on}`,
       });
     } else {
       onStart({
-        setup: { game, players: { ПИРАТЫ: 'human', КОМПАНИЯ: 'human' }, openHands, hints },
-        note: `${lead}кто держит устройство, играет за ${SIDE_LABEL[side].acc}, второй игрок играет за ${SIDE_LABEL[other(side)].acc}. Первыми ходят Пираты.`,
+        setup: { game, players: { ПИРАТЫ: 'human', КОМПАНИЯ: 'human' }, openHands, hints, ...preset },
+        note: `${lead}кто держит устройство, играет за ${SIDE_LABEL[side].acc}, второй игрок играет за ${SIDE_LABEL[other(side)].acc}. Первыми ходят Пираты.${on}`,
       });
     }
   };
@@ -125,7 +132,7 @@ export function Prep({
     </div>
     <div className="menu-prep-options"><section><div className="menu-kicker">Вариант партии</div><div className="menu-variants" role="radiogroup" aria-label="Вариант">{([{v:'standard',label:'Обычная',icon:'cannon'},{v:'first',label:'Первая партия',icon:'chart'},{v:'quick',label:'Быстрый бой',icon:'bomb'}]as const).map(x=><button key={x.v} role="radio" aria-checked={variant===x.v} className={variant===x.v?'on':''} onClick={()=>variantPick(x.v)}><Icon name={x.icon}/>{x.label}</button>)}</div><p>{variant==='standard'?'Все правила, Колода моря и Легенды. Бой идёт, пока у одной стороны не утонут оба корабля.':variant==='first'?'Для знакомства с игрой. Колоду моря и Легенды можно включить отдельно.':'Короткая партия с правилами варианта «Быстрый бой».'}</p></section>
     <section><div className="menu-kicker">Настройки стола</div><div className="menu-toggles">{[{text:'Колода моря',value:sea,set:setSea},{text:'Легенды',value:legends,set:setLegends},{text:'Подсказки',value:hints,set:setHints},{text:'Открытые руки',value:openHands,set:setOpenHands}].map(x=><label className="menu-toggle" key={x.text}><input type="checkbox" checked={x.value} onChange={e=>x.set(e.target.checked)}/>{x.text}</label>)}</div><p>Подсказки: урон по целям и выгодные ходы. Открытые руки: все карты на виду.</p></section></div>
-    <footer className="menu-prep-bottom"><button className="menu-link" aria-expanded={more} onClick={()=>setMore(!more)}><Arrow chevron/><span className="menu-desktop">Ещё: номер партии и загрузка сохранения</span><span className="menu-phone">Ещё настройки</span></button><button className="menu-primary" data-testid="prep-start" disabled={!!coin?.spinning} onClick={begin}><Icon name="sail" size={46}/>Поднять паруса</button></footer>
-    {more&&<section className="menu-advanced"><label>Номер партии <input inputMode="numeric" placeholder="случайный" value={seedText} onChange={e=>changeSeed(e.target.value)}/></label><button className="menu-link" onClick={()=>file.current?.click()}>Загрузить партию (.json)</button><input ref={file} type="file" accept=".json,application/json" hidden onChange={e=>e.target.files?.[0]&&load(e.target.files[0])}/>{error&&<p className="error">{error}</p>}</section>}
+    <footer className="menu-prep-bottom"><button className="menu-link" aria-expanded={more} onClick={()=>setMore(!more)}><Arrow chevron/><span className="menu-desktop">Ещё: номер партии, данные и загрузка сохранения</span><span className="menu-phone">Ещё настройки</span></button><button className="menu-primary" data-testid="prep-start" disabled={!!coin?.spinning} onClick={begin}><Icon name="sail" size={46}/>Поднять паруса</button></footer>
+    {more&&<section className="menu-advanced"><label>Номер партии <input inputMode="numeric" placeholder="случайный" value={seedText} onChange={e=>changeSeed(e.target.value)}/></label><label>Данные игры <select data-testid="prep-preset" value={presetId} onChange={e=>setPresetId(e.target.value)}><option value={MAIN}>{MAIN_NAME}</option>{presets.map(p=><option key={p.id} value={p.id} disabled={!presetGameData(p.id)}>Пресет «{p.name}»{presetGameData(p.id)?'':' — с ошибками'}</option>)}</select></label><button className="menu-link" onClick={()=>file.current?.click()}>Загрузить партию (.json)</button><input ref={file} type="file" accept=".json,application/json" hidden onChange={e=>e.target.files?.[0]&&load(e.target.files[0])}/>{error&&<p className="error">{error}</p>}</section>}
   </main></MenuSurface>;
 }

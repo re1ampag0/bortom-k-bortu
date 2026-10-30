@@ -2,6 +2,7 @@
 // the token of the player's seat and the room; NetGame is the game for the table, with the same role as LocalGame
 // but with only the player's view. The connection comes back by itself: after a phone slept or Safari was in the
 // background, on `visibilitychange`, `pageshow` and `online` the client reconnects at once with the same token.
+import { DataError, loadGameData } from '../engine/data';
 import { decider, type Decider } from '../engine/hints';
 import type { LogLine } from '../engine/log';
 import type { MatchRecord } from '../engine/match';
@@ -64,6 +65,50 @@ export function storeName(name: string): void {
 
 export type Connection = 'connecting' | 'online' | 'offline';
 
+/** The http(s) address of the server of a WebSocket address: «ws://host:8080/ws» → «http://host:8080». */
+export const httpBase = (wsUrl: string) => wsUrl.replace(/^ws/, 'http').replace(/\/ws$/, '');
+
+/** The presets of the server: name, hash, date (GET /presets); [] when the server has none or does not answer. */
+export async function serverPresets(wsUrl: string): Promise<{ name: string; hash: string; updated: number }[]> {
+  try {
+    const r = await fetch(`${httpBase(wsUrl)}/presets`);
+    return r.ok ? ((await r.json()).presets ?? []) : [];
+  } catch {
+    return [];
+  }
+}
+
+const PRESET_CACHE = 'bortom-k-bortu.net-preset';
+const presetCache = new Map<string, GameData>();
+
+/** The data of a preset of the server by its hash: from memory, from the last one kept in this browser, or loaded. */
+async function presetData(wsUrl: string, preset: { name: string; hash: string }): Promise<GameData> {
+  const known = presetCache.get(preset.hash);
+  if (known) return known;
+  let raw: unknown = null;
+  try {
+    const kept = JSON.parse(localStorage.getItem(PRESET_CACHE) ?? 'null') as { hash: string; data: unknown } | null;
+    if (kept?.hash === preset.hash) raw = kept.data;
+  } catch {
+    // Storage is a cache only.
+  }
+  if (!raw) {
+    const r = await fetch(`${httpBase(wsUrl)}/presets/${encodeURIComponent(preset.name)}`);
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error ?? `сервер ответил ${r.status}`);
+    if (body.hash !== preset.hash) throw new Error('пресет на сервере изменился после создания комнаты: создайте комнату заново');
+    raw = body.data;
+    try {
+      localStorage.setItem(PRESET_CACHE, JSON.stringify({ hash: preset.hash, data: raw }));
+    } catch {
+      // A cache only.
+    }
+  }
+  const data = loadGameData(raw);
+  presetCache.set(preset.hash, data);
+  return data;
+}
+
 export class NetClient {
   connection: Connection = 'connecting';
   /** When the connection was lost (for «Сервер недоступен» after 10 s), or null. */
@@ -75,6 +120,15 @@ export class NetClient {
   /** «Напомнить» from another player. */
   reminded: { n: number; by: string } | null = null;
   version = 0;
+  /**
+   * The data of the room's game: the main data, or the room's preset of the server once loaded; null while it loads
+   * (the table waits for it: the game messages that come meanwhile are kept).
+   */
+  roomData: GameData | null;
+  /** Why the preset of the room could not be loaded, in Russian. */
+  presetError: string | null = null;
+  private presetHash = '';
+  private waitingGames: GameInfo[] = [];
 
   private ws: WebSocket | null = null;
   private listeners = new Set<() => void>();
@@ -94,6 +148,7 @@ export class NetClient {
     saved: NetSaved | null = null,
   ) {
     this.saved = saved && saved.url === url ? saved : null;
+    this.roomData = data;
     this.connect();
     window.addEventListener('visibilitychange', this.wake);
     window.addEventListener('pageshow', this.wake);
@@ -209,9 +264,48 @@ export class NetClient {
     return id;
   }
 
-  create(name: string, settings?: Partial<RoomSettings>): void {
+  /** A new room; `preset` — the name of a preset of the server to play on (absent — the main data). */
+  create(name: string, settings?: Partial<RoomSettings>, preset?: string): void {
     storeName(name);
-    this.send({ t: 'create', name, settings });
+    this.send({ t: 'create', name, settings, ...(preset ? { preset } : {}) });
+  }
+
+  /** The room's data follows its preset: the main data, or the preset loaded from the server by its hash. */
+  private syncPreset(): void {
+    const p = this.room?.preset ?? null;
+    const hash = p?.hash ?? '';
+    if (hash === this.presetHash) return;
+    this.presetHash = hash;
+    this.presetError = null;
+    if (!p) {
+      this.roomData = this.data;
+      return;
+    }
+    this.roomData = presetCache.get(p.hash) ?? null;
+    if (this.roomData) return;
+    presetData(this.url, p).then(
+      (data) => {
+        if (this.presetHash !== p.hash) return;
+        this.roomData = data;
+        this.flushGames();
+        this.changed();
+      },
+      (e) => {
+        if (this.presetHash !== p.hash) return;
+        this.presetError = `Не удалось загрузить пресет «${p.name}»: ${e instanceof DataError ? e.problems.slice(0, 3).join('; ') : e instanceof Error ? e.message : String(e)}`;
+        this.changed();
+      },
+    );
+  }
+
+  /** Game messages that came while the preset loaded go to the table now, in their order. */
+  private flushGames(): void {
+    for (const info of this.waitingGames.splice(0)) this.takeGame(info);
+  }
+
+  private takeGame(info: GameInfo): void {
+    if (!this.game || !this.room) this.game = new NetGame(this, this.roomData!, info, this.room!, this.saved?.seen ?? null);
+    else this.game.update(info);
   }
 
   join(code: string, name: string): void {
@@ -229,6 +323,8 @@ export class NetClient {
     storeNetSaved(null);
     this.room = null;
     this.game = null;
+    this.waitingGames = [];
+    this.syncPreset();
     this.changed();
   }
 
@@ -257,12 +353,14 @@ export class NetClient {
         // «Реванш» began the next game of the room: a new table, its log from the start.
         if (this.room && this.room.match !== msg.room.match) {
           this.game = null;
+          this.waitingGames = [];
           if (this.saved) {
             this.saved = { ...this.saved, seen: 0 };
             storeNetSaved(this.saved);
           }
         }
         this.room = msg.room;
+        this.syncPreset();
         if (this.saved) {
           this.saved = { ...this.saved, code: msg.room.code, name: msg.room.you.name };
           storeNetSaved(this.saved);
@@ -271,8 +369,8 @@ export class NetClient {
         break;
       case 'game':
         this.lostAt = null;
-        if (!this.game || !this.room) this.game = new NetGame(this, this.data, msg.game, this.room!, this.saved?.seen ?? null);
-        else this.game.update(msg.game);
+        if (!this.roomData) this.waitingGames.push(msg.game);
+        else this.takeGame(msg.game);
         break;
       case 'record':
         this.onRecord?.(msg.record);

@@ -297,7 +297,12 @@ export interface GameState {
    * give their hands away (`waiting` is empty; the server closes it with `closeWindow`).
    */
   pauseEmptyWindows?: boolean;
+  /** The team that moves first, when it is not the Pirates (the balance lab, GameOptions.first). */
+  first?: Side;
 }
+
+/** The team that moves first in each round. */
+export const firstSide = (s: GameState): Side => s.first ?? 'ПИРАТЫ';
 
 export type Action =
   | {

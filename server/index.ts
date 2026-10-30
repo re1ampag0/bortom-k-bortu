@@ -1,18 +1,19 @@
 // The game server (docs/TZ.md, «Игровой сервер»): the site from dist/ and the game over a WebSocket at /ws, the same
 // code for `npm run lan` and for a VPS. Each player gets only viewFor of the game; actions are checked by
 // permissions.ts and the engine; messages are limited in size and rate.
-import { randomBytes, randomInt } from 'node:crypto';
+import { createHash, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { existsSync, createReadStream, statSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { WebSocketServer, type WebSocket } from 'ws';
 import raw from '../data/game-data.json';
-import { loadGameData } from '../src/engine/data';
+import { DataError, loadGameData } from '../src/engine/data';
 import { createRng } from '../src/engine/rng';
 import type { GameData } from '../src/engine/types';
 import { DEFAULT_ROOM_SETTINGS, normalizeCode, type ClientMsg, type ServerMsg } from '../src/net/protocol';
 import { lanAddresses } from './lan';
-import { ROOM_TTL_MS, Room, cleanSettings, newCode, type Player, type RoomHooks } from './rooms';
+import { PresetStore, nameProblem } from './presets';
+import { ROOM_TTL_MS, Room, cleanSettings, newCode, type Player, type RoomHooks, type RoomPreset } from './rooms';
 import { RoomStore } from './store';
 import type { Delays } from './table';
 
@@ -20,6 +21,8 @@ import type { Delays } from './table';
 export const BASE = '/bortom-k-bortu/';
 const MAX_MESSAGE = 16 * 1024;
 const NAME_MAX = 24;
+/** The largest preset a POST may carry (the data of v0.3 is about 80 KB). */
+const MAX_PRESET = 512 * 1024;
 
 export interface ServerOptions {
   port: number;
@@ -35,6 +38,13 @@ export interface ServerOptions {
   rate?: { burst: number; perSecond: number };
   log?: (text: string) => void;
   data?: GameData;
+  /**
+   * ADMIN_PASSWORD from the server's .env: uploading and deleting presets (POST/DELETE /admin/presets). Empty — those
+   * routes are off (403). Never sent to the site.
+   */
+  adminPassword?: string;
+  /** The wait before «неверный пароль» (ms): guessing the password is slow. */
+  adminDelayMs?: number;
 }
 
 export interface GameServer {
@@ -82,6 +92,11 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
   const conns = new Set<Conn>();
   const dirty = new Set<Room>();
   const started = Date.now();
+  const presets = new PresetStore(options.dataDir);
+  const adminPassword = options.adminPassword ?? '';
+  const adminDelay = options.adminDelayMs ?? 1000;
+  /** Requests to the preset routes by address: a burst and then per second, as the messages of a connection. */
+  const buckets = new Map<string, { tokens: number; refilled: number }>();
 
   const send = (c: Conn, msg: ServerMsg) => {
     if (c.ws.readyState === c.ws.OPEN) c.ws.send(JSON.stringify(msg));
@@ -126,7 +141,7 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
       continue;
     }
     try {
-      const room = Room.fromRecord(data, r, rng, delays, hooks);
+      const room = Room.fromRecord(r.preset ? loadGameData(r.preset.data) : data, r, rng, delays, hooks);
       rooms.set(room.code, room);
       for (const p of room.players.values()) tokens.set(p.token, { code: room.code, player: p.id });
     } catch (e) {
@@ -192,12 +207,27 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
         return attach(c, room, player);
       }
       case 'create': {
+        // A preset of the server: the room keeps its data, the game is played on it.
+        let roomData = data;
+        let preset: RoomPreset | null = null;
+        if (msg.preset) {
+          let found: ReturnType<PresetStore['gameData']> = null;
+          try {
+            found = presets.gameData(String(msg.preset));
+          } catch (e) {
+            log(`Пресет «${String(msg.preset)}» не загружается: ${String(e)}`);
+          }
+          if (!found) return send(c, { t: 'error', id: msg.id, message: `Пресета «${String(msg.preset)}» на сервере нет или он с ошибками` });
+          roomData = found.data;
+          preset = { name: found.record.name, hash: found.record.hash, data: found.record.data };
+        }
         const code = newCode(rng, (x) => rooms.has(x));
-        const room = new Room(data, code, '', cleanSettings({ ...DEFAULT_ROOM_SETTINGS, ...(msg.settings ?? {}) }), Date.now(), rng, delays, hooks);
+        const room = new Room(roomData, code, '', cleanSettings({ ...DEFAULT_ROOM_SETTINGS, ...(msg.settings ?? {}) }), Date.now(), rng, delays, hooks);
+        room.preset = preset;
         rooms.set(code, room);
         const player = newPlayer(room, cleanName(msg.name));
         room.creator = player.id;
-        log(`Комната ${code} создана`);
+        log(`Комната ${code} создана${preset ? ` на пресете «${preset.name}»` : ''}`);
         return attach(c, room, player);
       }
       case 'join': {
@@ -249,6 +279,15 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
       res.end(JSON.stringify({ urls: lanAddresses().map((a) => `http://${a.address}:${port}${BASE}`) }));
       return;
     }
+    const api = apiPath(url.pathname);
+    if (api) {
+      presetRoute(api, req, res).catch((e) => {
+        log(`Ошибка запроса ${req.method} ${api}: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`);
+        if (!res.headersSent) json(res, 500, { error: 'Ошибка сервера' });
+        else res.destroy();
+      });
+      return;
+    }
     if (url.pathname === '/' || url.pathname === BASE.slice(0, -1)) {
       res.writeHead(302, { location: `${BASE}${url.search}` });
       res.end();
@@ -259,6 +298,81 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
     if (path === null) return badRequest(res);
     serveStatic(staticRoot, path, req, res);
   });
+
+  // ——— Presets: GET /presets, GET /presets/:name, POST /admin/presets, DELETE /admin/presets/:name ———
+
+  async function presetRoute(path: string, req: IncomingMessage, res: ServerResponse): Promise<void> {
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, CORS);
+      res.end();
+      return;
+    }
+    const ip = req.socket.remoteAddress ?? '';
+    const now = Date.now();
+    const b = buckets.get(ip) ?? { tokens: rate.burst, refilled: now };
+    b.tokens = Math.min(rate.burst, b.tokens + ((now - b.refilled) / 1000) * rate.perSecond);
+    b.refilled = now;
+    buckets.set(ip, b);
+    if (b.tokens < 1) return json(res, 429, { error: 'Слишком много запросов: подождите секунду' });
+    b.tokens--;
+    if (buckets.size > 10_000) buckets.clear();
+
+    const name = (prefix: string) => decodePath(path.slice(prefix.length)) ?? '';
+    if (path === '/presets' && req.method === 'GET') return json(res, 200, { presets: presets.list() });
+    if (path.startsWith('/presets/') && req.method === 'GET') {
+      const p = presets.get(name('/presets/'));
+      return p ? json(res, 200, p) : json(res, 404, { error: `Пресета «${name('/presets/')}» на сервере нет` });
+    }
+    const admin = path === '/admin/presets' || path.startsWith('/admin/presets/');
+    if (!admin) return json(res, 404, { error: 'Не найдено' });
+    if (!adminPassword) {
+      return json(res, 403, { error: 'Загрузка пресетов на этом сервере выключена: не задан пароль ADMIN_PASSWORD (файл .env рядом с сервером, см. DEPLOY.md)' });
+    }
+    if (!passwordOk(req.headers.authorization)) {
+      await new Promise((ok) => setTimeout(ok, adminDelay));
+      log('Админка: неверный пароль');
+      return json(res, 401, { error: 'Неверный пароль администратора' });
+    }
+    if (path === '/admin/presets' && req.method === 'POST') {
+      const body = await readBody(req, MAX_PRESET);
+      if (body === null) return json(res, 413, { error: `Пресет больше ${MAX_PRESET / 1024} КБ` });
+      let msg: { name?: unknown; data?: unknown };
+      try {
+        msg = JSON.parse(body);
+      } catch {
+        return json(res, 400, { error: 'Пресет не принят: это не JSON' });
+      }
+      const bad = nameProblem(msg?.name);
+      if (bad) return json(res, 400, { error: `Пресет не принят: ${bad}` });
+      try {
+        const info = presets.put(String(msg.name), msg.data);
+        log(`Админка: пресет «${info.name}» загружен`);
+        return json(res, 200, info);
+      } catch (e) {
+        const problems = e instanceof DataError ? e.problems : [String(e instanceof Error ? e.message : e)];
+        return json(res, 400, { error: `Пресет не принят: ошибки в данных — ${problems.slice(0, 5).join('; ')}`, problems });
+      }
+    }
+    if (path.startsWith('/admin/presets/') && req.method === 'DELETE') {
+      const n = name('/admin/presets/');
+      if (!presets.remove(n)) return json(res, 404, { error: `Пресета «${n}» на сервере нет` });
+      log(`Админка: пресет «${n}» удалён`);
+      return json(res, 200, { ok: true });
+    }
+    return json(res, 405, { error: 'Такой запрос не поддерживается' });
+  }
+
+  /**
+   * «Authorization: Bearer <password>». A header carries only Latin-1, so the admin page sends the password
+   * percent-encoded (encodeURIComponent: a password of Latin letters and digits stays as it is).
+   */
+  function passwordOk(header: string | undefined): boolean {
+    const m = /^Bearer (.+)$/.exec(header ?? '');
+    if (!m) return false;
+    const digest = (x: string) => createHash('sha256').update(x).digest();
+    const typed = decodePath(m[1]) ?? m[1];
+    return timingSafeEqual(digest(typed), digest(adminPassword));
+  }
 
   // ——— WebSocket ———
 
@@ -343,6 +457,41 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
       await new Promise<void>((ok) => http.close(() => ok()));
     },
   };
+}
+
+/** Cross-origin calls of the preset routes: the admin page may be on GitHub Pages; the password goes in a header. */
+const CORS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, DELETE, OPTIONS',
+  'access-control-allow-headers': 'authorization, content-type',
+  'access-control-max-age': '600',
+};
+
+/** The preset route of a path («/presets…» or «/admin/presets…», also under the site's base), or null. */
+function apiPath(pathname: string): string | null {
+  const p = pathname.startsWith(BASE) ? `/${pathname.slice(BASE.length)}` : pathname;
+  return p === '/presets' || p.startsWith('/presets/') || p === '/admin/presets' || p.startsWith('/admin/presets/') ? p : null;
+}
+
+function json(res: ServerResponse, status: number, body: unknown): void {
+  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...CORS });
+  res.end(JSON.stringify(body));
+}
+
+/** The request's body as text; null when it is longer than `max` bytes. */
+function readBody(req: IncomingMessage, max: number): Promise<string | null> {
+  return new Promise((ok) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    let over = false;
+    req.on('data', (c: Buffer) => {
+      size += c.length;
+      if (size > max) over = true;
+      else chunks.push(c);
+    });
+    req.on('end', () => ok(over ? null : Buffer.concat(chunks).toString('utf8')));
+    req.on('error', () => ok(null));
+  });
 }
 
 /** A request URL or an Origin header; null when it cannot be parsed (`//`, `null` from a file:// page). */

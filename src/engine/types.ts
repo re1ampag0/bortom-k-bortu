@@ -103,6 +103,8 @@ export interface SeaCard {
   text: string;
   flavor: string;
   key: string;
+  /** The card is taken out of the sea deck (the admin page); absent — in the deck. */
+  off?: boolean;
 }
 
 export interface Econ {

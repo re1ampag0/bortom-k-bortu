@@ -18,6 +18,7 @@ import { HIDDEN } from '../src/engine/view';
 import type { ClientMsg, GameInfo, RoomInfo, RoomSettings, ServerMsg } from '../src/net/protocol';
 import { startServer, type GameServer } from '../server/index';
 import { liveOffers } from '../server/table';
+import raw from './fixtures/game-data.v0.3.json';
 import { data } from './helpers';
 
 const DELAYS = { bot: [0, 0] as [number, number], pause: [5, 5] as [number, number] };
@@ -34,7 +35,7 @@ afterEach(async () => {
 async function server(dir?: string, extra: Partial<Parameters<typeof startServer>[0]> = {}): Promise<{ srv: GameServer; dir: string }> {
   const d = dir ?? mkdtempSync(join(tmpdir(), 'bortom-'));
   if (!dir) dirs.push(d);
-  const srv = await startServer({ port: 0, host: '127.0.0.1', dataDir: d, staticDir: null, delays: DELAYS, ...extra });
+  const srv = await startServer({ port: 0, host: '127.0.0.1', dataDir: d, staticDir: null, delays: DELAYS, data, ...extra });
   servers.push(srv);
   return { srv, dir: d };
 }
@@ -824,5 +825,71 @@ describe('game server: the captain offers a Charge (P6)', () => {
     const sunk = structuredClone(s);
     sunk.ships['Ж'].sunk = true;
     expect(liveOffers(sunk, offers, new Set())).toEqual([]);
+  });
+});
+
+describe('game server: presets and the admin password (E9c)', () => {
+  /** A password of the tests only: the real one is written by the owner of the server into .env. */
+  const PASSWORD = 'test-only-пароль-42';
+  const preset = () => {
+    const d = structuredClone(raw) as any;
+    d.ships.find((x: any) => x.code === 'М').hull = 13;
+    return d;
+  };
+  const call = (port: number, method: string, path: string, body?: unknown, password?: string) =>
+    fetch(`http://127.0.0.1:${port}${path}`, {
+      method,
+      // As the admin page sends it: percent-encoded (a header carries only Latin-1).
+      headers: { 'content-type': 'application/json', ...(password !== undefined ? { authorization: `Bearer ${encodeURIComponent(password)}` } : {}) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+
+  it('without ADMIN_PASSWORD the admin routes are off: 403 with a clear text', async () => {
+    const { srv } = await server();
+    const r = await call(srv.port, 'POST', '/admin/presets', { name: 'Тест', data: preset() }, PASSWORD);
+    expect(r.status).toBe(403);
+    expect((await r.json()).error).toContain('выключена');
+    expect((await (await call(srv.port, 'GET', '/presets')).json()).presets).toEqual([]);
+  });
+
+  it('a wrong password: 401 after a delay, nothing saved', async () => {
+    const { srv } = await server(undefined, { adminPassword: PASSWORD, adminDelayMs: 50 });
+    const t = Date.now();
+    const r = await call(srv.port, 'POST', '/admin/presets', { name: 'Тест', data: preset() }, 'не тот');
+    expect(r.status).toBe(401);
+    expect(Date.now() - t).toBeGreaterThanOrEqual(45);
+    expect((await r.json()).error).toContain('Неверный пароль');
+    expect((await call(srv.port, 'POST', '/admin/presets', { name: 'Тест', data: preset() })).status).toBe(401);
+    expect((await (await call(srv.port, 'GET', '/presets')).json()).presets).toEqual([]);
+  });
+
+  it('the right password: the preset is in the list and loads; delete removes it', async () => {
+    const { srv } = await server(undefined, { adminPassword: PASSWORD, adminDelayMs: 0 });
+    const r = await call(srv.port, 'POST', '/admin/presets', { name: 'Крепкая Месть', data: preset() }, PASSWORD);
+    expect(r.status).toBe(200);
+    const info = await r.json();
+    const list = (await (await call(srv.port, 'GET', '/presets')).json()).presets;
+    expect(list).toEqual([{ name: 'Крепкая Месть', hash: info.hash, updated: info.updated }]);
+    const got = await (await call(srv.port, 'GET', `/presets/${encodeURIComponent('Крепкая Месть')}`)).json();
+    expect(got.hash).toBe(info.hash);
+    expect(got.data.ships.find((x: any) => x.code === 'М').hull).toBe(13);
+    expect((await call(srv.port, 'DELETE', `/admin/presets/${encodeURIComponent('Крепкая Месть')}`, undefined, PASSWORD)).status).toBe(200);
+    expect((await (await call(srv.port, 'GET', '/presets')).json()).presets).toEqual([]);
+  });
+
+  it('a broken preset: 400 with the problems in words', async () => {
+    const { srv } = await server(undefined, { adminPassword: PASSWORD, adminDelayMs: 0 });
+    const bad = preset();
+    bad.decks['М'][0].cost = -1;
+    const r = await call(srv.port, 'POST', '/admin/presets', { name: 'Битый', data: bad }, PASSWORD);
+    expect(r.status).toBe(400);
+    const body = await r.json();
+    expect(body.error).toContain('ошибки в данных');
+    expect(body.error).toContain('«Ядра»');
+    expect(body.error).toContain('cost');
+    const notJson = await fetch(`http://127.0.0.1:${srv.port}/admin/presets`, { method: 'POST', headers: { authorization: `Bearer ${encodeURIComponent(PASSWORD)}` }, body: '{' });
+    expect(notJson.status).toBe(400);
+    expect((await notJson.json()).error).toContain('это не JSON');
+    expect((await (await call(srv.port, 'GET', '/presets')).json()).presets).toEqual([]);
   });
 });
