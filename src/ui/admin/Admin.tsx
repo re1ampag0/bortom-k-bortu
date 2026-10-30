@@ -6,6 +6,7 @@ import { mainRaw } from '../data';
 import { Arrow } from '../menus/Menus';
 import { MAIN, loadPresets, newPresetId, storePresets, type Preset, type RawData } from '../presets';
 import { DataPane, type PresetsApi } from './DataPane';
+import { LabTab } from './LabTab';
 import { MakeMain } from './MakeMain';
 import { setAt, type Path } from './model';
 import './admin.css';
@@ -91,6 +92,12 @@ function usePresets(): PresetsApi {
 
 export default function Admin({ onBack }: { onBack: () => void }) {
   const [tab, setTab] = useState<Tab>('data');
+  // A tab once opened stays mounted (hidden): a run of the lab and its results survive a look at another tab.
+  const [seen, setSeen] = useState<Set<Tab>>(() => new Set(['data']));
+  const open = (t: Tab) => {
+    setTab(t);
+    setSeen((s) => (s.has(t) ? s : new Set(s).add(t)));
+  };
   const api = usePresets();
   return (
     <div className="admin" data-testid="admin">
@@ -102,13 +109,22 @@ export default function Admin({ onBack }: { onBack: () => void }) {
         <h1>Админка</h1>
         <nav className="admin-tabs" role="tablist" aria-label="Разделы админки">
           {TABS.map((t) => (
-            <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} data-testid={`admin-${t.id}`} onClick={() => setTab(t.id)}>
+            <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} data-testid={`admin-${t.id}`} onClick={() => open(t.id)}>
               {t.label}
             </button>
           ))}
         </nav>
       </header>
-      <main className="admin-body">{tab === 'data' && <DataPane api={api} base={mainRaw} extra={(raw, name, bad) => <MakeMain raw={raw} name={name} bad={bad} />} />}</main>
+      <main className="admin-body">
+        <div hidden={tab !== 'data'}>
+          <DataPane api={api} base={mainRaw} extra={(raw, name, bad) => <MakeMain raw={raw} name={name} bad={bad} />} />
+        </div>
+        {seen.has('lab') && (
+          <div hidden={tab !== 'lab'}>
+            <LabTab presets={api.presets} main={mainRaw} />
+          </div>
+        )}
+      </main>
     </div>
   );
 }
