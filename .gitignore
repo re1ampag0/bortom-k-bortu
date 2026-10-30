@@ -9,3 +9,6 @@ server-data/
 tmp/
 e2e-shots/
 report/
+
+# Secrets of the server (ADMIN_PASSWORD): never in git
+.env
