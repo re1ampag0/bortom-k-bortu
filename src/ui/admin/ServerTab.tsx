@@ -97,7 +97,8 @@ export function ServerTab({ presets, main }: { presets: Preset[]; main: RawData 
     try {
       const r = await fetch(`${base.url}${path}`, {
         method,
-        headers: { authorization: `Bearer ${password}`, 'content-type': 'application/json' },
+        // A header carries only Latin-1: the server decodes the password (Cyrillic works too).
+        headers: { authorization: `Bearer ${encodeURIComponent(password)}`, 'content-type': 'application/json' },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
       const text = await r.text();

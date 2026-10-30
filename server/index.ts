@@ -362,11 +362,16 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
     return json(res, 405, { error: 'Такой запрос не поддерживается' });
   }
 
+  /**
+   * «Authorization: Bearer <password>». A header carries only Latin-1, so the admin page sends the password
+   * percent-encoded (encodeURIComponent: a password of Latin letters and digits stays as it is).
+   */
   function passwordOk(header: string | undefined): boolean {
     const m = /^Bearer (.+)$/.exec(header ?? '');
     if (!m) return false;
     const digest = (x: string) => createHash('sha256').update(x).digest();
-    return timingSafeEqual(digest(m[1]), digest(adminPassword));
+    const typed = decodePath(m[1]) ?? m[1];
+    return timingSafeEqual(digest(typed), digest(adminPassword));
   }
 
   // ——— WebSocket ———

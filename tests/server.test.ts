@@ -839,7 +839,8 @@ describe('game server: presets and the admin password (E9c)', () => {
   const call = (port: number, method: string, path: string, body?: unknown, password?: string) =>
     fetch(`http://127.0.0.1:${port}${path}`, {
       method,
-      headers: { 'content-type': 'application/json', ...(password !== undefined ? { authorization: `Bearer ${password}` } : {}) },
+      // As the admin page sends it: percent-encoded (a header carries only Latin-1).
+      headers: { 'content-type': 'application/json', ...(password !== undefined ? { authorization: `Bearer ${encodeURIComponent(password)}` } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
 
@@ -886,7 +887,7 @@ describe('game server: presets and the admin password (E9c)', () => {
     expect(body.error).toContain('ошибки в данных');
     expect(body.error).toContain('«Ядра»');
     expect(body.error).toContain('cost');
-    const notJson = await fetch(`http://127.0.0.1:${srv.port}/admin/presets`, { method: 'POST', headers: { authorization: `Bearer ${PASSWORD}` }, body: '{' });
+    const notJson = await fetch(`http://127.0.0.1:${srv.port}/admin/presets`, { method: 'POST', headers: { authorization: `Bearer ${encodeURIComponent(PASSWORD)}` }, body: '{' });
     expect(notJson.status).toBe(400);
     expect((await notJson.json()).error).toContain('это не JSON');
     expect((await (await call(srv.port, 'GET', '/presets')).json()).presets).toEqual([]);
