@@ -7,10 +7,12 @@ import {
   aliveShips,
   allyOf,
   cardByCode,
+  firstSide,
   getShip,
   hasAbility,
   isCaptain,
   newTurn,
+  otherSide,
   ownerOf,
   pushSteps,
   seaKey,
@@ -27,7 +29,7 @@ import {
 } from './state';
 import type { Side } from './types';
 
-/** A new round: open the next sea card, then the Pirates' turn (RULES.md 4.1–4.4). */
+/** A new round: open the next sea card, then the turn of the first team, the Pirates (RULES.md 4.1–4.4). */
 export function startRound(ctx: Ctx): void {
   const { s, data } = ctx;
   if (s.round >= data.rules.maxRounds) {
@@ -37,7 +39,7 @@ export function startRound(ctx: Ctx): void {
   }
   s.round++;
   ctx.events.push({ type: 'roundStarted', round: s.round });
-  pushSteps(s, { k: 'startTurn', side: 'ПИРАТЫ' });
+  pushSteps(s, { k: 'startTurn', side: firstSide(s) });
   if (s.sea) revealSea(ctx);
 }
 
@@ -72,7 +74,7 @@ export function startTurn(ctx: Ctx, side: Side): void {
   s.turn = newTurn();
   ctx.events.push({ type: 'turnStarted', side });
 
-  const firstTurn = s.round === 1 && side === 'ПИРАТЫ';
+  const firstTurn = s.round === 1 && side === firstSide(s);
   addPowder(ctx, side, firstTurn ? data.econ.first_income : data.econ.income, 'hold');
 
   const ships = aliveShips(s, side);
@@ -158,7 +160,7 @@ export function endTurn(ctx: Ctx, side: Side, plans: string[] = []): void {
     ship.voodoo = null;
   }
   ctx.events.push({ type: 'turnEnded', side });
-  pushSteps(s, side === 'ПИРАТЫ' ? { k: 'startTurn', side: 'КОМПАНИЯ' } : { k: 'startRound' });
+  pushSteps(s, side === firstSide(s) ? { k: 'startTurn', side: otherSide(side) } : { k: 'startRound' });
 }
 
 export function requireActive(ctx: Ctx, side: Side): void {

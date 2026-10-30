@@ -48,17 +48,26 @@ export interface BotFeedback {
   error?: string;
 }
 
+/**
+ * Features the bots do not use, as `cfg.off` of sim.py (the balance lab; none by default): «Меч Тритона», «Погружение»,
+ * «Сердце Дейви Джонса», Plans, «Корабль в бутылке», «Джек ускользает». «souls» and «free_regroup» are rules, not choices:
+ * the lab turns them off in a copy of the data (sim/lab.ts).
+ */
+export type BotOff = ReadonlySet<string>;
+const NO_OFF: BotOff = new Set();
+
 /** Bot memory kept by the driver between answers. */
 export interface BotMemory {
   rng: Rng;
+  off: BotOff;
   /** Reactions played in the current window (sim.py plays at most 4 against one Volley or card). */
   reactionsInWindow: number;
   /** Which window they were played in, see windowKey. */
   window: string;
 }
 
-export function newBotMemory(seed: number): BotMemory {
-  return { rng: createRng(seed), reactionsInWindow: 0, window: '' };
+export function newBotMemory(seed: number, off: BotOff = NO_OFF): BotMemory {
+  return { rng: createRng(seed), off, reactionsInWindow: 0, window: '' };
 }
 
 /** Tells one Reaction window from another: the window, its Volley or card and the turn's counters. */
@@ -203,6 +212,7 @@ export class TurnBot extends View {
     data: GameData,
     readonly side: Side,
     readonly rng: Rng,
+    readonly off: BotOff = NO_OFF,
   ) {
     super(s, data);
     this.enemy = otherSide(side);
@@ -419,7 +429,7 @@ export class TurnBot extends View {
         }
         case 'bottle': {
           const es = this.enemies().filter((e) => e.tracks.hull <= a);
-          if (es.length === 0) return [-9, null];
+          if (es.length === 0 || this.off.has('bottle')) return [-9, null];
           tgt = es[0];
           total += 12;
           break;
@@ -562,9 +572,9 @@ export class TurnBot extends View {
  * One turn of the bot for `side` (sim.py AI.run): Souls → Fires → Regroup → Legends → Orders before the Volleys →
  * Triton's Sword → Volleys (or the dive) → Heart of Davy Jones → Legends → Orders → selling → Plans → end of turn.
  */
-export function* botTurn(state: GameState, data: GameData, rng: Rng): Generator<Action, void, BotFeedback> {
+export function* botTurn(state: GameState, data: GameData, rng: Rng, off: BotOff = NO_OFF): Generator<Action, void, BotFeedback> {
   const side = state.active;
-  const bot = new TurnBot(state, data, side, rng);
+  const bot = new TurnBot(state, data, side, rng, off);
   let actions = 0;
   /** Sends an action; true if the engine accepted it. */
   function* act(action: Action): Generator<Action, boolean, BotFeedback> {
@@ -643,7 +653,7 @@ export function* botTurn(state: GameState, data: GameData, rng: Rng): Generator<
 
   function* sword(): Generator<Action, void, BotFeedback> {
     const m = bot.alive(side).find((x) => hasAbility(data, x, ABILITY.sword));
-    if (!m || bot.s.turn.swordUsed || m.tracks.guns === 0) return;
+    if (!m || off.has('sword') || bot.s.turn.swordUsed || m.tracks.guns === 0) return;
     const es = bot.enemies();
     const volleyCost = shipData(data, m.code).volleyCost;
     if (es.length === 0 || bot.powder(side) < data.rules.swordCost + volleyCost + bot.reactReserve()) return;
@@ -721,7 +731,7 @@ export function* botTurn(state: GameState, data: GameData, rng: Rng): Generator<
 
   function* maybeDive(code: string): Generator<Action, boolean, BotFeedback> {
     const s = bot.ship(code);
-    if (!hasAbility(data, s, ABILITY.dive) || s.submerged) return false;
+    if (!hasAbility(data, s, ABILITY.dive) || s.submerged || off.has('dive')) return false;
     const ally = bot.allyOf(s);
     if (!ally) return false;
     // Not two own turns in a row (RULES.md 14.8, 21.10): the engine refuses, the bot fires instead.
@@ -737,7 +747,7 @@ export function* botTurn(state: GameState, data: GameData, rng: Rng): Generator<
   function* heart(): Generator<Action, void, BotFeedback> {
     const i = bot.alive(side).find((x) => hasAbility(data, x, ABILITY.heart));
     const d = i && bot.allyOf(i);
-    if (!i || !d || d.submerged || bot.s.turn.heartUsed) return;
+    if (!i || !d || d.submerged || bot.s.turn.heartUsed || off.has('heart')) return;
     if (d.tracks.guns === 0 || (d.tracks.crew <= 1 && d.souls === 0)) return;
     if (bot.powder(side) < shipData(data, d.code).volleyCost + bot.reactReserve()) return;
     yield* doVolley(d.code, true);
@@ -779,7 +789,7 @@ export function* botTurn(state: GameState, data: GameData, rng: Rng): Generator<
 
   function makePlans(): string[] | undefined {
     const p = bot.alive(side).find((x) => hasAbility(data, x, ABILITY.madPlan));
-    if (!p) return undefined;
+    if (!p || off.has('plans')) return undefined;
     const hand = [...p.hand];
     const out: string[] = [];
     while (p.plans.length + out.length < data.rules.plansMax && hand.length > 0) {
@@ -802,7 +812,7 @@ export function botAnswer(state: GameState, data: GameData, mem: BotMemory): Act
   const view = new View(state, data);
   switch (p.kind) {
     case 'jack':
-      return { type: 'jack', play: true };
+      return { type: 'jack', play: !mem.off.has('jack') };
     case 'tortuga': {
       const side = p.waiting[0];
       const n = Math.min(data.rules.seaTortuga, Math.max(0, view.powder(side) - 2));

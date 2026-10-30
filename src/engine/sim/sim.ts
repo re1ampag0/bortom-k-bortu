@@ -1,6 +1,6 @@
 // Bot games and their statistics (docs/TZ.md, «Проверки → Эталон баланса»; reference/sim.py run and report).
 // Pure: the same code runs in the console (scripts/sim.ts), in tests and later in a Web Worker.
-import { botAnswer, botTurn, newBotMemory, type BotFeedback } from '../ai/bot';
+import { botAnswer, botTurn, newBotMemory, type BotFeedback, type BotOff } from '../ai/bot';
 import { applyAction, createGame } from '../engine';
 import { createRng } from '../rng';
 import { RuleError, cardByCode, type Action, type GameEvent, type GameState, type Variant, type Winner } from '../state';
@@ -25,7 +25,10 @@ export interface SideStats {
   sold: number;
   reactions: number;
   legends: number;
-  /** Detailed counters: «play:<card name>», volleys, abilities. For the balance lab and comparisons with sim.py. */
+  /**
+   * Detailed counters: «play:<card name>», «card:<deck>|<card name>», «legend:<name>», volleys, abilities, «dmg:<source>»
+   * (damage the side's ships took, by its source). For the balance lab and comparisons with sim.py.
+   */
   counts: Record<string, number>;
 }
 
@@ -75,11 +78,23 @@ function newSideStats(): SideStats {
 /** A game too long for bots means a bug in the bots or the engine. */
 const MAX_GAME_ACTIONS = 20000;
 
+/** The balance lab's settings of a game: who moves first, features the bots do not use (sim/lab.ts). */
+export interface PlayOptions {
+  first?: Side;
+  off?: BotOff;
+}
+
 /** One game of two bot teams. Throws on anything but a refused bot move (RuleError). */
-export function playGame(data: GameData, seed: number, variant: Variant = 'standard', onState?: (s: GameState) => void): GameResult {
-  const mem = newBotMemory(seed ^ 0x2545f491);
+export function playGame(
+  data: GameData,
+  seed: number,
+  variant: Variant = 'standard',
+  onState?: (s: GameState) => void,
+  options: PlayOptions = {},
+): GameResult {
+  const mem = newBotMemory(seed ^ 0x2545f491, options.off);
   const stats: Record<Side, SideStats> = { ПИРАТЫ: newSideStats(), КОМПАНИЯ: newSideStats() };
-  const created = createGame(data, { seed, variant });
+  const created = createGame(data, { seed, variant, first: options.first });
   let state = created.state;
   // The first round starts inside createGame: the Pirates' first Hold is among its events.
   record(data, stats, state, null, created.events);
@@ -104,7 +119,7 @@ export function playGame(data: GameData, seed: number, variant: Variant = 'stand
     const turnOf = `${state.round}:${state.active}`;
     const side = state.active;
     let ended = false;
-    const turn = botTurn(state, data, mem.rng);
+    const turn = botTurn(state, data, mem.rng, mem.off);
     let next = turn.next();
     while (!next.done && !state.winner) {
       let feedback: BotFeedback;
@@ -143,9 +158,9 @@ function turnOver(st: SideStats, powder: number): void {
 /** Counts what sim.py counts: Powder by purpose, cards by cost, Reactions, Legends, turns by Powder left. */
 function record(data: GameData, stats: Record<Side, SideStats>, before: GameState, action: Action | null, events: GameEvent[]): void {
   const sideOf = (seat: string) => before.ships[seat].side;
-  const count = (side: Side, key: string) => {
+  const count = (side: Side, key: string, n = 1) => {
     const c = stats[side].counts;
-    c[key] = (c[key] ?? 0) + 1;
+    c[key] = (c[key] ?? 0) + n;
   };
   const tier = (side: Side, code: string) => {
     const st = stats[side];
@@ -153,14 +168,21 @@ function record(data: GameData, stats: Record<Side, SideStats>, before: GameStat
     st.cardsPlayed++;
     st.tiers[Math.min(3, card.cost)]++;
     count(side, `play:${card.name}`);
+    count(side, `card:${card.deck}|${card.name}`);
   };
+  // The source of damage: the last event that tells it (a Volley, a card, a Reaction, a Fire, the sea…).
+  let source = action ? (ACTION_SOURCE[action.type] ?? 'other') : 'other';
   if (action?.type === 'endTurn') turnOver(stats[action.side], before.teams[action.side].powder);
   // A Charge is played with its Volley (sim.py counts it as a card).
   if (action?.type === 'volley' && action.charge) tier(before.ships[action.ship].side, action.charge);
   // «Сырой порох» burns Powder; «Ограбление банка» also takes it, but that Powder is not wasted.
   const wet = events.some((e) => e.type === 'seaEffect' && e.key === 'wet');
   for (const e of events) {
+    source = EVENT_SOURCE[e.type] ?? source;
     switch (e.type) {
+      case 'damage':
+        count(sideOf(e.ship), `dmg:${source}`, e.amount + e.toHull);
+        break;
       case 'powderGained':
         stats[e.side].income += e.amount;
         stats[e.side].wasted += e.burned;
@@ -183,15 +205,20 @@ function record(data: GameData, stats: Record<Side, SideStats>, before: GameStat
       case 'legendPlayed':
         tier(sideOf(e.seat), e.card);
         stats[sideOf(e.seat)].legends++;
+        count(sideOf(e.seat), `legend:${cardByCode(data, e.card).name}`);
         break;
       case 'jackEscaped':
         stats[sideOf(e.ship)].legends++;
         count(sideOf(e.ship), 'jackEscape');
+        count(sideOf(e.ship), `legend:${cardByCode(data, `${e.ship}-Л`).name}`);
         break;
-      case 'reaction':
+      case 'reaction': {
         stats[sideOf(e.seat)].reactions++;
-        count(sideOf(e.seat), `play:${cardByCode(data, e.card).name}`);
+        const card = cardByCode(data, e.card);
+        count(sideOf(e.seat), `play:${card.name}`);
+        count(sideOf(e.seat), card.legend ? `legend:${card.name}` : `card:${card.deck}|${card.name}`);
         break;
+      }
       // A Volley either hits or is cancelled; both count as fired, as in sim.py.
       case 'hit':
         count(sideOf(e.ship), 'volleys');
@@ -222,7 +249,31 @@ function record(data: GameData, stats: Record<Side, SideStats>, before: GameStat
   }
 }
 
-function addStats(to: SideStats, from: SideStats): void {
+/** Sources of damage for «dmg:<source>»: by the action, then by the events that start a new cause. */
+const ACTION_SOURCE: Partial<Record<Action['type'], string>> = {
+  volley: 'volley',
+  playCard: 'card',
+  playLegend: 'legend',
+  react: 'reaction',
+  sword: 'ability',
+  dive: 'ability',
+  souls: 'ability',
+  treasury: 'ability',
+};
+const EVENT_SOURCE: Partial<Record<GameEvent['type'], string>> = {
+  turnStarted: 'other',
+  volley: 'volley',
+  hit: 'volley',
+  cardPlayed: 'card',
+  legendPlayed: 'legend',
+  reaction: 'reaction',
+  fireDamage: 'fire',
+  seaRevealed: 'sea',
+  seaEffect: 'sea',
+  heart: 'ability',
+};
+
+export function addStats(to: SideStats, from: SideStats): void {
   for (const key of Object.keys(to) as (keyof SideStats)[]) {
     if (key === 'tiers') to.tiers = to.tiers.map((n, i) => n + from.tiers[i]);
     else if (key === 'counts') for (const [k, n] of Object.entries(from.counts)) to.counts[k] = (to.counts[k] ?? 0) + n;
