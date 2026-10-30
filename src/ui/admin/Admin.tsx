@@ -6,6 +6,7 @@ import { mainRaw } from '../data';
 import { Arrow } from '../menus/Menus';
 import { MAIN, loadPresets, newPresetId, storePresets, type Preset, type RawData } from '../presets';
 import { DataPane, type PresetsApi } from './DataPane';
+import { MakeMain } from './MakeMain';
 import { setAt, type Path } from './model';
 import './admin.css';
 
@@ -107,7 +108,7 @@ export default function Admin({ onBack }: { onBack: () => void }) {
           ))}
         </nav>
       </header>
-      <main className="admin-body">{tab === 'data' && <DataPane api={api} base={mainRaw} />}</main>
+      <main className="admin-body">{tab === 'data' && <DataPane api={api} base={mainRaw} extra={(raw, name, bad) => <MakeMain raw={raw} name={name} bad={bad} />} />}</main>
     </div>
   );
 }
