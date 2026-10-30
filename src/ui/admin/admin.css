@@ -444,3 +444,114 @@
     width: 70px;
   }
 }
+
+/* the preset bar of «Данные» */
+.admin-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 20px;
+}
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-form select,
+.admin-form input {
+  min-width: 260px;
+}
+.admin-kicker {
+  font: 700 14px 'Alegreya SC', serif;
+  color: var(--a-gold);
+  letter-spacing: 0.04em;
+}
+.admin-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--a-muted);
+  padding-bottom: 8px;
+}
+.admin-status [data-testid='changed-count'] {
+  color: var(--a-gold);
+  font-weight: 700;
+}
+.admin-bad-count {
+  color: var(--a-bad);
+  font-weight: 700;
+}
+/* a row of equal buttons; on a phone it scrolls under the finger with a fading edge (docs/ui/RULES.md 3) */
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.admin-actions::-webkit-scrollbar {
+  display: none;
+}
+.admin-actions > .admin-btn {
+  flex: 0 0 168px;
+}
+.admin-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 10px;
+  padding: 10px;
+  border: 1px dashed #c9a04888;
+  border-radius: 10px;
+}
+.admin-inline > span {
+  flex: 1 1 260px;
+}
+.admin-error {
+  margin: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #4a1d14;
+  color: #ffd2c8;
+  font-size: 14px;
+}
+.admin-error p {
+  margin: 2px 0;
+}
+.admin-error ul,
+.admin-changes ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+.admin-error summary,
+.admin-changes summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.admin-changes {
+  font-size: 14px;
+  color: var(--a-muted);
+}
+.admin-changes summary {
+  color: #e0bd62;
+}
+@media (max-width: 700px) {
+  .admin-form select,
+  .admin-form input {
+    min-width: 0;
+    width: 100%;
+  }
+  .admin-form {
+    flex: 1 1 100%;
+  }
+  .admin-actions {
+    mask-image: linear-gradient(90deg, #000 85%, #0000);
+  }
+  .admin-actions > .admin-btn {
+    flex-basis: 150px;
+  }
+}
