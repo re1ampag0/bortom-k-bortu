@@ -4,8 +4,12 @@ import { memo, useDeferredValue, useMemo, useState } from 'react';
 import { CARD_TYPES } from '../../engine/data';
 import { Bound, FieldInput, type Edit } from './fields';
 import {
+  cardNorm,
   cardRefs,
+  deckBalance,
   econFields,
+  excessTone,
+  fmt,
   fxFields,
   getAt,
   seaFields,
@@ -100,6 +104,33 @@ function Cards({ raw, base, readOnly, onEdit }: DataTabProps) {
   });
   return (
     <>
+      <section className="admin-panel admin-decks">
+        <h3>Колоды: ценность, норма, перевес</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Колода</th>
+              <th>Ценность</th>
+              <th>Норма</th>
+              <th>Перевес</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(raw.ships as Raw[]).map((ship) => {
+              const b = deckBalance(raw, ship.code);
+              return (
+                <tr key={ship.code}>
+                  <td>{ship.name}</td>
+                  <td>{fmt(b.value)}</td>
+                  <td>{fmt(b.norm)}</td>
+                  <td>{(b.excess > 0 ? '+' : '') + fmt(b.excess)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p className="admin-note">Норма карты: Заряд 1, Реакция 1,5, Приказ и Ремонт 2; +1 за каждый Порох или Душу в стоимости; +2 у Легенды (PDF, с. 25). Перевес = ценность − норма, по копиям.</p>
+      </section>
       <div className="admin-filters">
         <input type="search" placeholder="Поиск по названию и тексту" aria-label="Поиск карты" value={query} onChange={(e) => setQuery(e.target.value)} data-testid="card-search" />
         <select aria-label="Колода" value={deck} onChange={(e) => setDeck(e.target.value)} data-testid="card-deck">
@@ -164,6 +195,9 @@ const CardRow = memo(function CardRow({
   if (!cardRef.legend) numbers.push(at('copies', 'копии', 'int', 1));
   numbers.push(at('v', 'ценность', 'num'), ...fxFields(card.fx, [...cardRef.path, 'fx'], where));
   const texts = [at('big', 'крупно', 'text'), at('text', 'текст', 'long'), at('flavor', 'цитата', 'long')];
+  const norm = cardNorm(card);
+  const v = typeof card.v === 'number' ? card.v : NaN;
+  const excess = v - norm;
   const old = was && textMayBeOld({ x: card }, { x: was }, { ...cardRef, path: ['x'] });
   const rel = (f: Field) => f.path.slice(cardRef.path.length);
   return (
@@ -173,6 +207,17 @@ const CardRow = memo(function CardRow({
         <small>
           {nick} · {cardRef.legend ? 'Легенда' : TYPE_NAMES[card.type] ?? card.type}
         </small>
+        <span className="admin-balance">
+          <span>
+            ценность <b>{Number.isNaN(v) ? '—' : fmt(v)}</b>
+          </span>
+          <span>
+            норма <b>{fmt(norm)}</b>
+          </span>
+          <span className={`admin-excess ${Number.isNaN(excess) ? '' : excessTone(excess)}`} data-testid="excess">
+            перевес <b>{Number.isNaN(excess) ? '—' : (excess > 0 ? '+' : '') + fmt(excess)}</b>
+          </span>
+        </span>
         {old && (
           <span className="admin-warn" data-testid="text-old">
             Текст карты мог устареть: числа в fx изменены, а текст нет
