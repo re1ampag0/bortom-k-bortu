@@ -21,12 +21,13 @@ export type WorkerReply =
   | { t: 'block'; req: number; result: LabResult }
   | { t: 'blockFail'; req: number; message: string };
 
-const post = (msg: WorkerReply) => (self as unknown as Worker).postMessage(msg);
+// The worker's global scope; `globalThis`, not `self` (tests/no-implicit-globals.test.ts).
+const post = (msg: WorkerReply) => (globalThis as unknown as Worker).postMessage(msg);
 const sets = new Map<number, { data: GameData; settings: LabSettings; seeds: number[] } | { error: string }>();
 
 const text = (err: unknown) => (err instanceof DataError ? err.message : err instanceof Error ? err.message : String(err));
 
-self.onmessage = (e: MessageEvent<WorkerJob>) => {
+globalThis.addEventListener('message', (e: MessageEvent<WorkerJob>) => {
   const job = e.data;
   if (job.kind === 'setup') {
     try {
@@ -65,4 +66,4 @@ self.onmessage = (e: MessageEvent<WorkerJob>) => {
     post({ t: 'progress', done: i + 1 });
   }
   post({ t: 'done' });
-};
+});
