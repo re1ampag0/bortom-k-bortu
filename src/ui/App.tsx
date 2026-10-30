@@ -4,7 +4,7 @@ import type { MatchRecord, MatchSetup } from '../engine/match';
 import type { Side } from '../engine/types';
 import { LocalGame } from '../net/local';
 import { Catalog } from './Catalog';
-import { loaded } from './data';
+import { dataFor, loaded } from './data';
 import { Game } from './game/Game';
 import { Placement } from './game/Placement';
 import { NetScreen, roomFromUrl } from './net/Lobby';
@@ -54,7 +54,7 @@ export function App() {
   }
 
   const startGame = (setup: MatchSetup) => {
-    const game = new LocalGame(data, setup);
+    const game = new LocalGame(dataFor(setup, data), setup);
     storeSave(game.record());
     setScreen({ k: 'game', game });
   };
@@ -63,7 +63,8 @@ export function App() {
     if (humans.length === 0) startGame(req.setup);
     else setScreen({ k: 'placement', setup: req.setup, note: req.note });
   };
-  const resume = (record: MatchRecord) => setScreen({ k: 'game', game: LocalGame.fromRecord(data, record) });
+  // A broken preset in the file throws here: «Загрузить партию» shows the problem.
+  const resume = (record: MatchRecord) => setScreen({ k: 'game', game: LocalGame.fromRecord(dataFor(record.setup, data), record) });
 
   switch (screen.k) {
     case 'setup':

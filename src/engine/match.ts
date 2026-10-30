@@ -17,6 +17,11 @@ export interface MatchSetup {
    * столом», the default; records without the field play without hints.
    */
   hints?: boolean;
+  /**
+   * A preset of the admin page: the game is played on its data, kept in the record so «Загрузить партию» replays it
+   * exactly. Absent — the main data of the site.
+   */
+  preset?: { name: string; data: Record<string, unknown> };
 }
 
 export interface MatchRecord {

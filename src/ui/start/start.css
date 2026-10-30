@@ -200,3 +200,7 @@
 
 /* «Админка» in the line of the version at the bottom of the start screen */
 .menu-admin-link{background:none;border:0;padding:4px 2px;margin:-4px 0;color:#c9a048;font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;pointer-events:auto}
+/* «Ещё» of the preparation screen: the number of the game, «Данные игры» (a preset of the admin page), loading */
+.menu-prep-content>.menu-advanced{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}
+.menu-prep-content>.menu-advanced>label{display:inline-flex;align-items:center;gap:8px}
+.menu-prep-content>.menu-advanced select{max-width:100%}
