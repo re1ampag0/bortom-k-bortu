@@ -56,6 +56,15 @@ export interface RoomRecord {
   game: TableRecord | null;
   /** The number of the game in the room (absent in rooms saved before «Реванш»). */
   match?: number;
+  /** The server's preset the room plays on, with its data (absent — the main data). */
+  preset?: RoomPreset;
+}
+
+/** A preset of the server kept in the room: the game goes on on it even if the preset is changed or deleted later. */
+export interface RoomPreset {
+  name: string;
+  hash: string;
+  data: Record<string, unknown>;
 }
 
 /** What the room tells the server: something changed (save and send), a reminder for players. */
@@ -78,6 +87,8 @@ export class Room {
   private rematch = new Set<string>();
   /** «Реванш»: a new seed even if the room fixed one. */
   private freshSeed = false;
+  /** The server's preset of the room; null — the main data. `data` of the room is its data. */
+  preset: RoomPreset | null = null;
 
   constructor(
     readonly data: GameData,
@@ -111,6 +122,7 @@ export class Room {
       coin: this.coin,
       game: this.table?.record() ?? null,
       match: this.match,
+      ...(this.preset ? { preset: this.preset } : {}),
     };
   }
 
@@ -123,6 +135,7 @@ export class Room {
     room.coin = r.coin;
     room.phase = r.phase;
     room.match = r.match ?? 1;
+    room.preset = r.preset ?? null;
     if (r.game) room.table = room.newTable(r.game.options, r.game);
     return room;
   }
@@ -177,6 +190,7 @@ export class Room {
       placed: SIDES.filter((side) => this.placement[side]),
       match: this.match,
       rematch: this.rematchOpen() ? { agreed: this.rematchPeople().filter((p) => this.rematch.has(p)).length, need: this.rematchPeople().length, you: this.rematch.has(playerId) } : null,
+      preset: this.preset ? { name: this.preset.name, hash: this.preset.hash } : null,
     };
   }
 

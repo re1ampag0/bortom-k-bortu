@@ -144,6 +144,7 @@ export function StatusBar({
   chip = true,
   hold,
   alarm,
+  preset,
 }: {
   s: GameState;
   data: GameData;
@@ -159,6 +160,8 @@ export function StatusBar({
   hold?: ReactNode;
   /** «Тревога!» (U2): the bar in place of the line of the status (the line stays in it for the reader and the tests). */
   alarm?: ReactNode;
+  /** The name of the preset of the admin page the game is played on (absent — the main data). */
+  preset?: string;
 }) {
   const phone = usePhoneLayout();
   const clipHint = useSyncExternalStore(fxHint.subscribe, fxHint.getSnapshot, () => null);
@@ -175,6 +178,11 @@ export function StatusBar({
             Раунд {s.round} · Ход {SIDE_LABEL[s.active].gen}
           </span>
         </span>
+        {preset && (
+          <span className="preset-tag" data-testid="game-preset" title={`Партия на данных пресета «${preset}»`}>
+            {preset}
+          </span>
+        )}
       </div>
       {hold}
       <div className={`status-text ${waiting ? 'waiting' : ''} ${alarmNow ? 'alarm' : ''}`} data-testid="instruction" data-fx-instruction>

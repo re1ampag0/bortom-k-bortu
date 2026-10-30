@@ -204,3 +204,10 @@
 .menu-prep-content>.menu-advanced{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}
 .menu-prep-content>.menu-advanced>label{display:inline-flex;align-items:center;gap:8px}
 .menu-prep-content>.menu-advanced select{max-width:100%}
+/* «Игра по сети»: «Данные игры» of a new room (a preset of the server), its name in the room */
+.menu-room-preset{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px}
+.menu-room-preset select{max-width:100%;min-height:36px!important;padding:4px 8px!important}
+.menu-room-preset-name{margin:0 0 6px;color:#f0d27a;font-weight:700}
+/* the preset of the game next to the plate of the turn */
+.preset-tag{display:inline-block;max-width:160px;margin-left:8px;padding:1px 8px;border:1px solid #c9a048aa;border-radius:10px;background:#0e1b26cc;color:#f0d27a;font:700 12px/1.5 'Alegreya Sans',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+@media(max-width:700px){.preset-tag{max-width:90px;margin-left:4px;font-size:11px}}

@@ -8,7 +8,7 @@ import type { Variant } from '../../engine/state';
 import type { GameData, Side } from '../../engine/types';
 import { normalizeCode, type RoomInfo, type RoomSettings } from '../../net/protocol';
 import { chooseServer, storedServer, storeServer } from '../../net/server-url';
-import { LOST_MS, NetClient, loadName, loadNetSaved } from '../../net/ws';
+import { LOST_MS, NetClient, loadName, loadNetSaved, serverPresets } from '../../net/ws';
 import { Game } from '../game/Game';
 import { SIDE_LABEL } from '../game/text';
 import {MenuSurface,Icon,Dock,shipName,Arrow} from '../menus/Menus';
@@ -74,8 +74,19 @@ function Connected({
     );
   }
   if (!room) return <Entry data={data} client={client} error={null} onBack={onBack} onServer={onServer} typed={typed} />;
-  if (room.phase === 'placement') return <NetPlacement data={data} client={client} room={room} />;
-  return <RoomLobby data={data} client={client} room={room} />;
+  // A room on a preset of the server: its data first (GET /presets/:name), then the lobby, the placement, the table.
+  const roomData = client.roomData;
+  if (!roomData) {
+    return (
+      <MenuSurface kind="net"><main className="menu-net" data-testid="net-preset-wait">
+        <header className="setup-head"><h1 className="menu-title">Комната {room.code}</h1></header>
+        <p className={client.presetError ? 'error' : 'muted'} role="status">{client.presetError ?? `Загружаем данные пресета «${room.preset?.name}»…`}</p>
+        {client.presetError && <button className="menu-link" onClick={() => client.leave()}><Arrow back/><span>Выйти из комнаты</span></button>}
+      </main></MenuSurface>
+    );
+  }
+  if (room.phase === 'placement') return <NetPlacement data={roomData} client={client} room={room} />;
+  return <RoomLobby data={roomData} client={client} room={room} />;
 }
 
 /** The state of the connection in words; after 10 s without it — the hint about the sleeping laptop. */
@@ -132,6 +143,17 @@ function Entry({
   }, [client, client?.connection, autoJoined, fromLink, known, saved?.code]);
   void data;
   const okName = name.trim().length > 0;
+  // «Данные игры» of a new room: the main data or a preset of the server (shown only when the server has presets).
+  const [presets, setPresets] = useState<{ name: string }[]>([]);
+  const [preset, setPreset] = useState('');
+  useEffect(() => {
+    if (!client || client.connection !== 'online') return;
+    let live = true;
+    void serverPresets(client.url).then((list) => live && setPresets(list));
+    return () => {
+      live = false;
+    };
+  }, [client, client?.connection]);
   return (
     <MenuSurface kind="net"><main className="menu-net" data-testid="net-entry"><div className="menu-bunting" aria-hidden="true">{Array.from({length:13},(_,i)=><i key={i}/>)}</div>
       <header className="setup-head">
@@ -151,7 +173,7 @@ function Entry({
       <section className="quick">
         <section className="quick-btn">
           <span className="menu-medal"><Icon name="bell" size={50}/></span><b>Создать комнату</b>
-          <span>Вы получите код и ссылку для друзей, рассадите всех по кораблям и начнёте бой.</span><button className="menu-primary" data-testid="net-create" disabled={!client&&okName} onClick={()=>{if(!okName){setNameError(true);nameField.current?.focus();return;}client?.create(name.trim());}}>Создать комнату</button>
+          <span>Вы получите код и ссылку для друзей, рассадите всех по кораблям и начнёте бой.</span><button className="menu-primary" data-testid="net-create" disabled={!client&&okName} onClick={()=>{if(!okName){setNameError(true);nameField.current?.focus();return;}client?.create(name.trim(),undefined,preset||undefined);}}>Создать комнату</button>{presets.length>0&&<label className="menu-room-preset"><span>Данные игры</span><select data-testid="net-preset" value={preset} onChange={e=>setPreset(e.target.value)}><option value="">Основной</option>{presets.map(p=><option key={p.name} value={p.name}>Пресет «{p.name}»</option>)}</select></label>}
         </section>
         <div className={`quick-btn join-box${error||client?.error?' has-error':''}`}>
           <span className="menu-medal"><Icon name="key" size={50}/></span><b>Войти по коду</b>
@@ -319,8 +341,9 @@ function RoomLobby({ data, client, room }: { data: GameData; client: NetClient; 
         </p>
       )}
 
-      <details className="menu-room-options" open={!phone}><summary><Icon name="flags" size={24}/><span>Партия<small>{[st.variant==='standard'?'Обычная':st.variant==='first'?'Первая':'Быстрый бой',st.sea&&'Колода моря',st.legends&&'Легенды',st.hints&&'подсказки'].filter(Boolean).join(', ')}</small></span><Arrow chevron/></summary>
+      <details className="menu-room-options" open={!phone}><summary><Icon name="flags" size={24}/><span>Партия<small>{[room.preset&&`пресет «${room.preset.name}»`,st.variant==='standard'?'Обычная':st.variant==='first'?'Первая':'Быстрый бой',st.sea&&'Колода моря',st.legends&&'Легенды',st.hints&&'подсказки'].filter(Boolean).join(', ')}</small></span><Arrow chevron/></summary>
       <section className="more-body room-settings"><h2><Icon name="flags"/> Партия</h2>
+        {room.preset&&<p className="menu-room-preset-name" data-testid="room-preset">Данные игры: пресет «{room.preset.name}»</p>}
         <div className="menu-variants" role="group" aria-label="Вариант партии">{(['standard','first','quick'] as Variant[]).map(v=><button key={v} disabled={!creator} aria-pressed={st.variant===v} className={st.variant===v?'on':''} onClick={()=>set({variant:v,sea:v!=='first',legends:v!=='first'})}>{{standard:'Обычная',first:'Первая',quick:'Быстрый бой'}[v]}</button>)}</div>
         <Check disabled={!creator} value={st.sea} label="Колода моря" onChange={(v) => set({ sea: v })} />
         <Check disabled={!creator} value={st.legends} label="Легенды" onChange={(v) => set({ legends: v })} />

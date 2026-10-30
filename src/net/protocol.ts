@@ -67,6 +67,11 @@ export interface RoomInfo {
   match: number;
   /** «Реванш» after the end of the game: how many people agreed of how many, and whether you did; null — no vote now. */
   rematch: { agreed: number; need: number; you: boolean } | null;
+  /**
+   * The preset of the server the room plays on (chosen at its creation); null — the main data. The client loads its data
+   * by GET /presets/:name and keeps it by the hash.
+   */
+  preset: { name: string; hash: string } | null;
 }
 
 /**
@@ -112,7 +117,7 @@ export interface GameInfo {
 
 export type ClientMsg = { id?: number } & (
   | { t: 'hello'; token: string }
-  | { t: 'create'; name: string; settings?: Partial<RoomSettings> }
+  | { t: 'create'; name: string; settings?: Partial<RoomSettings>; preset?: string }
   | { t: 'join'; code: string; name: string }
   | { t: 'sit'; seat: Seat }
   | { t: 'stand'; seat: Seat }

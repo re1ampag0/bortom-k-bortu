@@ -13,7 +13,7 @@ import type { GameData } from '../src/engine/types';
 import { DEFAULT_ROOM_SETTINGS, normalizeCode, type ClientMsg, type ServerMsg } from '../src/net/protocol';
 import { lanAddresses } from './lan';
 import { PresetStore, nameProblem } from './presets';
-import { ROOM_TTL_MS, Room, cleanSettings, newCode, type Player, type RoomHooks } from './rooms';
+import { ROOM_TTL_MS, Room, cleanSettings, newCode, type Player, type RoomHooks, type RoomPreset } from './rooms';
 import { RoomStore } from './store';
 import type { Delays } from './table';
 
@@ -141,7 +141,7 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
       continue;
     }
     try {
-      const room = Room.fromRecord(data, r, rng, delays, hooks);
+      const room = Room.fromRecord(r.preset ? loadGameData(r.preset.data) : data, r, rng, delays, hooks);
       rooms.set(room.code, room);
       for (const p of room.players.values()) tokens.set(p.token, { code: room.code, player: p.id });
     } catch (e) {
@@ -207,12 +207,27 @@ export async function startServer(options: ServerOptions): Promise<GameServer> {
         return attach(c, room, player);
       }
       case 'create': {
+        // A preset of the server: the room keeps its data, the game is played on it.
+        let roomData = data;
+        let preset: RoomPreset | null = null;
+        if (msg.preset) {
+          let found: ReturnType<PresetStore['gameData']> = null;
+          try {
+            found = presets.gameData(String(msg.preset));
+          } catch (e) {
+            log(`Пресет «${String(msg.preset)}» не загружается: ${String(e)}`);
+          }
+          if (!found) return send(c, { t: 'error', id: msg.id, message: `Пресета «${String(msg.preset)}» на сервере нет или он с ошибками` });
+          roomData = found.data;
+          preset = { name: found.record.name, hash: found.record.hash, data: found.record.data };
+        }
         const code = newCode(rng, (x) => rooms.has(x));
-        const room = new Room(data, code, '', cleanSettings({ ...DEFAULT_ROOM_SETTINGS, ...(msg.settings ?? {}) }), Date.now(), rng, delays, hooks);
+        const room = new Room(roomData, code, '', cleanSettings({ ...DEFAULT_ROOM_SETTINGS, ...(msg.settings ?? {}) }), Date.now(), rng, delays, hooks);
+        room.preset = preset;
         rooms.set(code, room);
         const player = newPlayer(room, cleanName(msg.name));
         room.creator = player.id;
-        log(`Комната ${code} создана`);
+        log(`Комната ${code} создана${preset ? ` на пресете «${preset.name}»` : ''}`);
         return attach(c, room, player);
       }
       case 'join': {

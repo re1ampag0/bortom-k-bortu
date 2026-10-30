@@ -1306,6 +1306,7 @@ export function Game({
           chip={!wideLog}
           hold={<Shown fx={fx} real={view} keyOf={(x) => holdKey(x, top)}>{(shown, rev) => <TopHold side={top} s={shown} data={data} fxGen={rev} />}</Shown>}
           alarm={alarmOn && !flash ? <AlarmBar info={alarm!} /> : undefined}
+          preset={net ? net.room.preset?.name : local?.setup.preset?.name}
         />}</Shown>
         {net && <NetBar game={net} />}
         <div className="sea-table" ref={seaRef}>
