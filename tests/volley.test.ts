@@ -1,6 +1,6 @@
 // The Volley (RULES.md 10). Placement: Ж opposite И on the left, М opposite Г on the right.
 import { describe, expect, it } from 'vitest';
-import raw from '../data/game-data.json';
+import raw from './fixtures/game-data.v0.3.json';
 import { loadGameData } from '../src/engine/data';
 import { createGame } from '../src/engine/engine';
 import type { Action, GameState } from '../src/engine/state';
