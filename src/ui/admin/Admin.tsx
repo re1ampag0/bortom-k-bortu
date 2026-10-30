@@ -8,6 +8,7 @@ import { MAIN, loadPresets, newPresetId, storePresets, type Preset, type RawData
 import { DataPane, type PresetsApi } from './DataPane';
 import { LabTab } from './LabTab';
 import { MakeMain } from './MakeMain';
+import { ServerTab } from './ServerTab';
 import { setAt, type Path } from './model';
 import './admin.css';
 
@@ -122,6 +123,11 @@ export default function Admin({ onBack }: { onBack: () => void }) {
         {seen.has('lab') && (
           <div hidden={tab !== 'lab'}>
             <LabTab presets={api.presets} main={mainRaw} />
+          </div>
+        )}
+        {seen.has('server') && (
+          <div hidden={tab !== 'server'}>
+            <ServerTab presets={api.presets} main={mainRaw} />
           </div>
         )}
       </main>

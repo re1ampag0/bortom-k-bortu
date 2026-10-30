@@ -752,3 +752,52 @@
     flex-basis: 280px;
   }
 }
+
+/* «Сервер» */
+.admin-grow {
+  flex: 1 1 280px;
+}
+.admin-grow input {
+  width: 100%;
+}
+.admin-ok {
+  margin: 8px 0 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #173d26;
+  color: #c9f2d3;
+  font-size: 14px;
+}
+.admin-server-list {
+  width: 100%;
+}
+.admin-server-list td {
+  vertical-align: middle;
+}
+.admin-server-list td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+.admin-server-list .admin-btn {
+  width: 120px;
+}
+.admin-confirm {
+  display: inline-flex;
+  gap: 6px;
+}
+.admin .admin-panel code {
+  font: 600 13px ui-monospace, Menlo, Consolas, monospace;
+}
+.admin-panel > .admin-actions {
+  margin-top: 8px;
+}
+@media (max-width: 700px) {
+  .admin-server-list .admin-btn {
+    width: 96px;
+    padding: 4px 6px;
+  }
+  .admin-server-list th:nth-child(2),
+  .admin-server-list td:nth-child(2) {
+    display: none;
+  }
+}
