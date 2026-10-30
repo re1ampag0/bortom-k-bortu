@@ -7,7 +7,8 @@ Object.assign(P, require('./pieces4.cjs')); // the pieces (splash, flash, candle
 const { img, put } = require('./art3.cjs');
 const { halo, lantern, cloudBand, woodTex, motes, R } = require('./bg4.cjs');
 const { afloat, shadow } = require('./helpers4.cjs');
-const W = 200, H = 280;
+// W × VH is the card picture; scenes are drawn down to H so a camera that zooms or lifts them leaves no gap
+const W = 200, VH = 280, H = 420;
 let fid = 0;
 
 const grad = (id, stops, x2 = 0, y2 = 1) => `<linearGradient id="${id}" x1="0" y1="0" x2="${x2}" y2="${y2}">${stops.map(([o, c, a]) => `<stop offset="${o}" stop-color="${c}"${a !== undefined ? ` stop-opacity="${a}"` : ''}/>`).join('')}</linearGradient>`;
@@ -30,14 +31,14 @@ const isles = (y, col, op = .55) => `<path d="M0 ${y}q8 -5 18 -3t20 -2q6 -3 12 1
 const gulls = (list, col = '#3a4a54') => list.map(([x, y, s]) => `<path d="M${x - 3 * s} ${y}q${1.5 * s} ${-1.6 * s} ${3 * s} 0q${1.5 * s} ${-1.6 * s} ${3 * s} 0" stroke="${col}" stroke-width="${.5 * s}" fill="none"/>`).join('');
 const plankFloor = (u, y, h, c1, c2, seam, seed) => woodTex(u, 0, y, W, h, c1, c2, seam, 10, false, seed);
 const beam = (u, x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#oak${u})" stroke="#140a04" stroke-width=".6"/><path d="M${x} ${y + 1}h${w}" stroke="#c08a52" stroke-width=".5" opacity=".6"/>`;
-const vignette = u => `<radialGradient id="pvig${u}" cx=".5" cy=".42" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#140a04" stop-opacity=".45"/></radialGradient><rect width="${W}" height="${H}" fill="url(#pvig${u})"/>`;
+const vignette = (u, vh = VH) => `<radialGradient id="pvig${u}" cx=".5" cy=".42" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#140a04" stop-opacity=".45"/></radialGradient><rect width="${W}" height="${vh}" fill="url(#pvig${u})"/>`;
 
 // The ghost ship's deck at full height: green fog over a dark sea, the rail hung with weed, a barnacled deck.
 const ghostDeck = u => sky(u, 0, 100, [[0, '#0b1715'], [.6, '#1f3a34'], [1, '#365a50']])
   + cloudBand(u, 0, 66, '#7aa094', '#0e1a18', 51, 2.1) + halo(152, 30, 44, '#b8e8d8', .32) + `<circle cx="152" cy="30" r="6" fill="#dff4ec" opacity=".8"/>`
   + `<rect y="80" width="${W}" height="6" fill="#3a3024"/><path d="M0 80h200" stroke="#6a5a44" stroke-width=".6"/>`
   + Array.from({ length: 10 }, (_, k) => `<rect x="${k * 21 + 3}" y="86" width="3.6" height="22" fill="#30281e"/><path d="M${k * 21 + 3.6} 86v22" stroke="#6a5a44" stroke-width=".4"/>`).join('')
-  + woodTex(u, 0, 108, W, 172, '#3e3428', '#1a140e', '#100b07', 10, false, 9) + `<path d="M0 108h200" stroke="#5a4a36" stroke-width="2.4"/>`
+  + woodTex(u, 0, 108, W, H - 108, '#3e3428', '#1a140e', '#100b07', 10, false, 9) + `<path d="M0 108h200" stroke="#5a4a36" stroke-width="2.4"/>`
   + (() => { const r = R(4); return Array.from({ length: 16 }, () => { const x = r() * 200, y = 116 + r() * 156, s = .5 + r() * .7; return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(2)})" opacity=".75"><ellipse cx="0" cy="1.4" rx="5" ry="1.4" fill="#2a3a22" opacity=".6"/><path d="M-2 1l.8 -3h2.4l.8 3z" fill="#8a8c74"/><ellipse cy="-2" rx="1" ry=".4" fill="#2a2a20"/></g>`; }).join(''); })()
   + [18, 66, 120, 172].map(x => `<path d="M${x} 86q3 8 -1 14q4 3 1 6" stroke="#3a7a5a" stroke-width="1.2" fill="none" opacity=".8"/>`).join('')
   + grad('pmist' + u, [[0, '#b8f0d8', 0], [.4, '#b8f0d8', .12], [1, '#b8f0d8', 0]]) + `<rect y="90" width="${W}" height="80" fill="url(#pmist${u})"/>`
@@ -118,13 +119,13 @@ const SCENES = {
     const play = `<g transform="translate(0 0) scale(1)">` + cup(u, 76, top + 1, true) + dieP(u, 97, top - 2, 12, [[-1, -1], [0, 0], [1, 1]]) + dieP(u, 110, top, -8, [[-1, -1], [1, -1], [-1, 1], [1, 1]]) + dieP(u, 102, top + 4, 30, [[0, 0]]) + cup(u, 124, top + 2, false) + `</g>`
       + `<path d="M108 ${top - 9}q4 -3 9 -2M95 ${top - 10}q-3 -3 -8 -2" stroke="#f4ecd8" stroke-width=".6" fill="none" opacity=".6"/>`;
     const fallen = cup(u, 40, 176, true) + dieP(u, 58, 174, 20, [[-1, -1], [1, 1]]);
-    const lamp = `<path d="M30 52v14" stroke="#2a2418" stroke-width=".8"/>` + lantern(30, 76, 1.05).replace(/#ffb24a/g, '#9ff0d0');
+    const lamp = `<path d="M52 52v14" stroke="#2a2418" stroke-width=".8"/>` + lantern(52, 76, 1.05).replace(/#ffb24a/g, '#9ff0d0');
     // the stake: two cards face down on the barrel head, as the card's rule says; a coil of rope, a low green fog
     const back = (x, y, a) => `<g transform="translate(${x} ${y}) rotate(${a})" filter="url(#drop${u})"><rect x="-6" y="-4" width="12" height="8" rx="1" fill="#2f6b4a" stroke="#e8d6aa" stroke-width=".6"/><rect x="-4.4" y="-2.6" width="8.8" height="5.2" rx=".6" fill="none" stroke="#c9a048" stroke-width=".4"/><circle r="1.2" fill="#c9a048"/></g>`;
     const stake = `<g transform="translate(0 0)">${back(88, top - 1, -14).replace('translate(88 ' + (top - 1) + ')', 'translate(88 ' + (top - 1) + ') scale(1 .5)')}${back(114, top + 1, 10).replace('translate(114 ' + (top + 1) + ')', 'translate(114 ' + (top + 1) + ') scale(1 .5)')}</g>`;
     const rope0 = coil(160, 156, 13, 4);
     const fog = grad('pfk' + u, [[0, '#b8f0d8', 0], [.55, '#b8f0d8', .2], [1, '#b8f0d8', 0]]) + `<rect y="140" width="${W}" height="30" fill="url(#pfk${u})"/>`;
-    const light = glow(u, 30, 80, 60, 50, '#9ff0d0', .3) + glow(u, 100, top, 44, 12, '#9ff0d0', .22)
+    const light = glow(u, 52, 80, 60, 50, '#9ff0d0', .3) + glow(u, 100, top, 44, 12, '#9ff0d0', .22)
       + gloom(u, 40, 80, 200, 40, .45, '#020806') + gloom(u, 100, 140, 100, 280, .5, '#020806');
     return [ghostDeck(u) + lamp, barrel + stake + play + fallen + rope0 + fog + light];
   },
@@ -204,8 +205,8 @@ const SCENES = {
     const table = woodTex(u, 0, 112, W, 54, '#8a5a30', '#5a3618', '#2a1608', 12, false, 5)
       + `<path d="M0 112h200" stroke="#d4a066" stroke-width="1.4"/><path d="M0 114h200" stroke="#1e1006" stroke-width=".8"/>`
       + `<rect y="166" width="${W}" height="9" fill="#3a2210"/><path d="M0 166h200" stroke="#c08a52" stroke-width=".8"/><path d="M0 175h200" stroke="#0e0804" stroke-width="1.4"/>`
-      + woodTex(u, 0, 175, W, 105, '#2e1c0e', '#140a04', '#0a0502', 10, false, 9)
-      + [18, 182].map(x => `<rect x="${x - 7}" y="175" width="14" height="105" fill="url(#oak${u})" stroke="#0a0502" stroke-width=".6"/><path d="M${x - 5} 175v105" stroke="#c08a52" stroke-width=".4" opacity=".5"/>`).join('');
+      + woodTex(u, 0, 175, W, H - 175, '#2e1c0e', '#140a04', '#0a0502', 10, false, 9)
+      + [18, 182].map(x => `<rect x="${x - 7}" y="175" width="14" height="${H - 175}" fill="url(#oak${u})" stroke="#0a0502" stroke-width=".6"/><path d="M${x - 5} 175v${H - 175}" stroke="#c08a52" stroke-width=".4" opacity=".5"/>`).join('');
     const map = `<g transform="translate(0 -32)"><g transform="rotate(-3 90 176)" filter="url(#drop${u})"><path d="M18 156h132l3 40h-138z" fill="#eedcb0"/>`
       + `<radialGradient id="ppap${u}" cx=".5" cy=".4" r=".7"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#7a5020" stop-opacity=".35"/></radialGradient><path d="M18 156h132l3 40h-138z" fill="url(#ppap${u})"/>`
       + `<path d="M32 172q14 -10 30 -4q12 -8 22 2q-6 10 -20 8q-16 6 -32 -6z" fill="#d8c08a" stroke="#9a7a50" stroke-width=".5"/><path d="M98 180q10 -8 22 -2q4 8 -8 10q-12 0 -14 -8z" fill="#d8c08a" stroke="#9a7a50" stroke-width=".5"/>`
@@ -330,16 +331,29 @@ function backArt(k) {
     + sea(u, hz, H, c.sea[0], c.sea[1], c.sea[2], c.streak, c.light, c.moon[0]) + swell(hz + 10, H, c.streak, .3)
     + sailing(k, 100, 150, 2.5, 0, u);
   if (c.mist) body += grad('bm' + u, [[0, '#b8f0d8', 0], [.5, '#b8f0d8', .18], [1, '#b8f0d8', 0]]) + `<rect y="140" width="${W}" height="60" fill="url(#bm${u})"/>`;
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%"><defs>${DEFS(u)}</defs>${body}${vignette(u)}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${VH}" width="100%" height="100%"><defs>${DEFS(u)}</defs>${body}${vignette(u)}</svg>`;
 }
 
+// portrait(name, {vh}) — vh: the picture's height for another card shape (343 for a 70 × 120 mm tarot card);
 // portrait(name) — the whole picture; portrait(name, {layer: 'fg'}) — only the foreground on transparency
 // (for a card frame that lets the foreground step over its border).
+// The camera of each card: the part of the scene {x, y, w} that fills the open top of the card (200 × 150 units,
+// above the text plate). Chosen so that what the card is about is large and nothing of it hides under the plate.
+const CAM = {
+  'Ядра': { x: 0, y: 14, w: 200 },
+  'Верфь Компании': { x: 10, y: 38, w: 176 },
+  'Анжелика': { x: 0, y: 14, w: 200 },
+  'Уйти по ветру': { x: 0, y: 4, w: 200 },
+  'Сто лет службы': { x: 0, y: 24, w: 200 },
+  'Игра в кости лжеца': { x: 8, y: 42, w: 184 }
+};
 function portrait(name, opts = {}) {
   const u = 'q' + (fid++);
   const f = SCENES[name]; if (!f) throw new Error('no portrait scene ' + name);
   const [bg, fg] = f(u);
-  const body = opts.layer === 'fg' ? fg : bg + fg + (opts.vignette === false ? '' : vignette(u));
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"><defs>${DEFS(u)}<clipPath id="pc${u}"><rect width="${W}" height="${H}"/></clipPath></defs><g clip-path="url(#pc${u})">${body}</g></svg>`;
+  const c = opts.cam || CAM[name] || { x: 0, y: 0, w: W }, k = W / c.w, vh = opts.vh || VH;
+  const cam = b => `<g transform="scale(${k.toFixed(4)}) translate(${-c.x} ${-c.y})">${b}</g>`;
+  const body = opts.layer === 'fg' ? cam(fg) : cam(bg + fg) + (opts.vignette === false ? '' : vignette(u, vh));
+  return `<svg viewBox="0 0 ${W} ${vh}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"><defs>${DEFS(u)}<clipPath id="pc${u}"><rect width="${W}" height="${vh}"/></clipPath></defs><g clip-path="url(#pc${u})">${body}</g></svg>`;
 }
-module.exports = { portrait, backArt, BACKS: Object.keys(BACKS), SCENES: Object.keys(SCENES), W, H };
+module.exports = { portrait, backArt, BACKS: Object.keys(BACKS), SCENES: Object.keys(SCENES), W, H: VH };
