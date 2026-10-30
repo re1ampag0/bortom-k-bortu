@@ -2,7 +2,7 @@
 // presets), each with who moves first and features turned off; common games, seed and variant; «Запустить». The
 // results of A and B side by side; differences with p < 0.05 are highlighted (the z-test of two shares for wins,
 // Welch's t-test for means).
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { DataError, loadGameData } from '../../engine/data';
 import {
   DEFAULT_LAB,
@@ -233,11 +233,14 @@ export function LabTab({ presets, main }: { presets: Preset[]; main: RawData }) 
 
 interface Row {
   label: string;
-  a: string;
-  b: string;
+  a: ReactNode;
+  b: ReactNode;
   diff: string;
   p: number | null;
 }
+
+/** A number and its unit stay on one line. */
+const NB = '\u00a0';
 
 const sign = (x: number, digits: number) => (Number(x.toFixed(digits)) > 0 ? '+' : '') + fmt(x, digits);
 
@@ -245,9 +248,9 @@ const sign = (x: number, digits: number) => (Number(x.toFixed(digits)) > 0 ? '+'
 function meanRow(label: string, a: Stat, b: Stat, unit: string, digits = 2): Row {
   return {
     label,
-    a: `${fmt(a.mean, digits)}${unit}`,
-    b: `${fmt(b.mean, digits)}${unit}`,
-    diff: `${sign(b.mean - a.mean, digits)}${unit}`,
+    a: `${fmt(a.mean, digits)}${unit.replace(' ', NB)}`,
+    b: `${fmt(b.mean, digits)}${unit.replace(' ', NB)}`,
+    diff: `${sign(b.mean - a.mean, digits)}${unit.replace(' ', NB)}`,
     p: welchP(a, b),
   };
 }
@@ -262,11 +265,17 @@ function LabResults({ done }: { done: Done }) {
   const wins: Row[] = (['ПИРАТЫ', 'КОМПАНИЯ', 'НИЧЬЯ'] as const).map((w) => {
     const k = [ra.wins[w], rb.wins[w]];
     const ci = (i: number) => wilson(k[i], n[i]).map((x) => fmt(x * 100, 1)).join('–');
+    const cell = (i: number) => (
+      <>
+        {`${fmt((k[i] / n[i]) * 100, 1)}${NB}%`}
+        <small className="admin-ci">{` ${ci(i)}`}</small>
+      </>
+    );
     return {
       label: w === 'НИЧЬЯ' ? 'Ничьи' : `Победы: ${SIDE_NAME[w]}`,
-      a: `${fmt((k[0] / n[0]) * 100, 1)} % (${ci(0)})`,
-      b: `${fmt((k[1] / n[1]) * 100, 1)} % (${ci(1)})`,
-      diff: `${sign(((k[1] / n[1]) - k[0] / n[0]) * 100, 1)} п. п.`,
+      a: cell(0),
+      b: cell(1),
+      diff: `${sign(((k[1] / n[1]) - k[0] / n[0]) * 100, 1)}${NB}п.${NB}п.`,
       p: twoProportionP(k[0], n[0], k[1], n[1]),
     };
   });

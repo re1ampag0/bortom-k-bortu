@@ -801,3 +801,18 @@
     display: none;
   }
 }
+.admin-lab-table td:not(:first-child) {
+  white-space: nowrap;
+}
+.admin-ci {
+  color: var(--a-muted);
+  font-size: 12.5px;
+}
+@media (max-width: 700px) {
+  .admin-ci {
+    display: block;
+  }
+}
+.admin-lab-common .admin-grow input {
+  width: 100%;
+}
