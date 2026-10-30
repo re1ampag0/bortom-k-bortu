@@ -7,7 +7,8 @@ Object.assign(P, require('./pieces4.cjs')); // the pieces (splash, flash, candle
 const { img, put } = require('./art3.cjs');
 const { halo, lantern, cloudBand, woodTex, motes, R } = require('./bg4.cjs');
 const { afloat, shadow } = require('./helpers4.cjs');
-const W = 200, H = 280;
+// W × VH is the card picture; scenes are drawn down to H so a camera that zooms or lifts them leaves no gap
+const W = 200, VH = 280, H = 420;
 let fid = 0;
 
 const grad = (id, stops, x2 = 0, y2 = 1) => `<linearGradient id="${id}" x1="0" y1="0" x2="${x2}" y2="${y2}">${stops.map(([o, c, a]) => `<stop offset="${o}" stop-color="${c}"${a !== undefined ? ` stop-opacity="${a}"` : ''}/>`).join('')}</linearGradient>`;
@@ -30,14 +31,14 @@ const isles = (y, col, op = .55) => `<path d="M0 ${y}q8 -5 18 -3t20 -2q6 -3 12 1
 const gulls = (list, col = '#3a4a54') => list.map(([x, y, s]) => `<path d="M${x - 3 * s} ${y}q${1.5 * s} ${-1.6 * s} ${3 * s} 0q${1.5 * s} ${-1.6 * s} ${3 * s} 0" stroke="${col}" stroke-width="${.5 * s}" fill="none"/>`).join('');
 const plankFloor = (u, y, h, c1, c2, seam, seed) => woodTex(u, 0, y, W, h, c1, c2, seam, 10, false, seed);
 const beam = (u, x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#oak${u})" stroke="#140a04" stroke-width=".6"/><path d="M${x} ${y + 1}h${w}" stroke="#c08a52" stroke-width=".5" opacity=".6"/>`;
-const vignette = u => `<radialGradient id="pvig${u}" cx=".5" cy=".42" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#140a04" stop-opacity=".45"/></radialGradient><rect width="${W}" height="${H}" fill="url(#pvig${u})"/>`;
+const vignette = (u, vh = VH) => `<radialGradient id="pvig${u}" cx=".5" cy=".42" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#140a04" stop-opacity=".45"/></radialGradient><rect width="${W}" height="${vh}" fill="url(#pvig${u})"/>`;
 
 // The ghost ship's deck at full height: green fog over a dark sea, the rail hung with weed, a barnacled deck.
 const ghostDeck = u => sky(u, 0, 100, [[0, '#0b1715'], [.6, '#1f3a34'], [1, '#365a50']])
   + cloudBand(u, 0, 66, '#7aa094', '#0e1a18', 51, 2.1) + halo(152, 30, 44, '#b8e8d8', .32) + `<circle cx="152" cy="30" r="6" fill="#dff4ec" opacity=".8"/>`
   + `<rect y="80" width="${W}" height="6" fill="#3a3024"/><path d="M0 80h200" stroke="#6a5a44" stroke-width=".6"/>`
   + Array.from({ length: 10 }, (_, k) => `<rect x="${k * 21 + 3}" y="86" width="3.6" height="22" fill="#30281e"/><path d="M${k * 21 + 3.6} 86v22" stroke="#6a5a44" stroke-width=".4"/>`).join('')
-  + woodTex(u, 0, 108, W, 172, '#3e3428', '#1a140e', '#100b07', 10, false, 9) + `<path d="M0 108h200" stroke="#5a4a36" stroke-width="2.4"/>`
+  + woodTex(u, 0, 108, W, H - 108, '#3e3428', '#1a140e', '#100b07', 10, false, 9) + `<path d="M0 108h200" stroke="#5a4a36" stroke-width="2.4"/>`
   + (() => { const r = R(4); return Array.from({ length: 16 }, () => { const x = r() * 200, y = 116 + r() * 156, s = .5 + r() * .7; return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(2)})" opacity=".75"><ellipse cx="0" cy="1.4" rx="5" ry="1.4" fill="#2a3a22" opacity=".6"/><path d="M-2 1l.8 -3h2.4l.8 3z" fill="#8a8c74"/><ellipse cy="-2" rx="1" ry=".4" fill="#2a2a20"/></g>`; }).join(''); })()
   + [18, 66, 120, 172].map(x => `<path d="M${x} 86q3 8 -1 14q4 3 1 6" stroke="#3a7a5a" stroke-width="1.2" fill="none" opacity=".8"/>`).join('')
   + grad('pmist' + u, [[0, '#b8f0d8', 0], [.4, '#b8f0d8', .12], [1, '#b8f0d8', 0]]) + `<rect y="90" width="${W}" height="80" fill="url(#pmist${u})"/>`
@@ -59,6 +60,34 @@ function sailing(k, x, y, s, r, u, bowLeft = true) {
 const cup = (u, x, y, flip = false) => `<g transform="translate(${x} ${y}) scale(1.25)" filter="url(#drop${u})">${flip ? `<path d="M-7 0l1.6 -15h10.8l1.6 15z" fill="url(#leather${u})" stroke="#1a0e06" stroke-width=".6"/><ellipse cx="0" cy="-15" rx="5.4" ry="1.4" fill="#5a3418"/><ellipse cx="0" cy="0" rx="7" ry="1.6" fill="#2a1608"/>` : `<path d="M-5.4 0l-1.6 -15h14l-1.6 15z" fill="url(#leather${u})" stroke="#1a0e06" stroke-width=".6"/><ellipse cx="0" cy="-15" rx="7" ry="1.8" fill="#1a0e06"/><ellipse cx="0" cy="0" rx="5.4" ry="1.3" fill="#5a3418"/>`}<path d="M-4 -12v10" stroke="#e8c49a" stroke-width=".8" opacity=".35"/></g>`;
 const dieP = (u, x, y, a, pips) => `<g transform="translate(${x} ${y}) rotate(${a}) scale(1.25)" filter="url(#drop${u})"><rect x="-4.4" y="-4.4" width="8.8" height="8.8" rx="1.6" fill="#f4ecd8" stroke="#6a5a40" stroke-width=".5"/>${pips.map(([a2, b2]) => `<circle cx="${a2 * 2.4}" cy="${b2 * 2.4}" r=".8" fill="#2a1a0a"/>`).join('')}</g>`;
 
+// ——— finishing touches: light, fire, smoke, rope (docs/tasks/card-art-polish.md, «Как рисовать») ———
+const blurF = (id, sd) => `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
+// light poured over what is already drawn (screen blend): a lantern's pool, daylight from a port, moonlight
+const glow = (u, x, y, rx, ry, col, op) => { const id = 'pgl' + u + (fid++); return `<radialGradient id="${id}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${col}" stop-opacity="${op}"/><stop offset=".45" stop-color="${col}" stop-opacity="${(op * .35).toFixed(3)}"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></radialGradient><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#${id})" style="mix-blend-mode:screen"/>`; };
+// darkness growing away from the light (multiply), from (x1,y1) clear to (x2,y2) dark
+const gloom = (u, x1, y1, x2, y2, op, col = '#1a0e06') => { const id = 'pgm' + u + (fid++); return `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"><stop offset="0" stop-color="${col}" stop-opacity="0"/><stop offset="1" stop-color="${col}" stop-opacity="${op}"/></linearGradient><rect width="${W}" height="${H}" fill="url(#${id})" style="mix-blend-mode:multiply"/>`; };
+// shafts of light from a window or the sun: soft wedges from (x,y)
+const shafts = (u, x, y, list, col, op) => { const f = 'psh' + u + (fid++); return blurF(f, 2.4) + `<g filter="url(#${f})" style="mix-blend-mode:screen">${list.map(([a, b, c, d]) => `<path d="M${x} ${y}L${a} ${b}L${c} ${d}z" fill="${col}" opacity="${op}"/>`).join('')}</g>`; };
+// fire in layers: dark red rim, orange body, yellow core, white heart, sparks above
+function flame(u, x, y, s, seed = 3) {
+  const f = 'pfl' + u + (fid++), r = R(seed);
+  const tongue = (w, h, col, op) => `<path d="M${-w} 0q${-w * .25} ${-h * .5} ${w * .1} ${-h}q${w * .3} ${h * .35} ${w * .55} ${h * .12}q${w * .25} ${-h * .3} ${w * .45} ${-h * .62}q${w * .55} ${h * .55} ${w * .9} ${h * 1.5}z" fill="${col}" opacity="${op}"/>`;
+  return blurF(f, .45) + `<g transform="translate(${x} ${y}) scale(${s})"><g filter="url(#${f})">${tongue(9, 22, '#7a1a08', .9)}${tongue(7, 18, '#e0601a', .95)}${tongue(4.6, 12.5, '#ffc23a', 1)}${tongue(2.4, 7, '#fff4c8', 1)}</g>`
+    + Array.from({ length: 8 }, () => `<circle cx="${((r() - .5) * 18).toFixed(1)}" cy="${(-16 - r() * 20).toFixed(1)}" r="${(.3 + r() * .5).toFixed(2)}" fill="#ffd27a" opacity="${(.5 + r() * .5).toFixed(2)}"/>`).join('') + `</g>`;
+}
+// smoke: puffs of different size, shaded below, thinning out as the wind carries them (dx: -1 left, 1 right)
+function smoke(u, x, y, s, n = 6, dx = 1, seed = 5, col = '#ddd6ca', rise = 30) {
+  const f = 'psm' + u + (fid++), g = 'psg' + u + (fid++), r = R(seed);
+  let out = `<radialGradient id="${g}" cx=".42" cy=".32" r=".62"><stop offset="0" stop-color="${col}"/><stop offset=".65" stop-color="${col}" stop-opacity=".8"/><stop offset="1" stop-color="#5a544c" stop-opacity="0"/></radialGradient>` + blurF(f, 1) + `<g filter="url(#${f})" transform="translate(${x} ${y}) scale(${s})">`;
+  for (let i = 0; i < n; i++) { const t = i / Math.max(1, n - 1); out += `<circle cx="${(dx * t * 26 + (r() - .5) * 6).toFixed(1)}" cy="${(-t * rise + (r() - .5) * 4).toFixed(1)}" r="${(4.5 + t * 7 + r() * 3).toFixed(1)}" fill="url(#${g})" opacity="${(.85 - t * .55).toFixed(2)}"/>`; }
+  return out + '</g>';
+}
+// a laid rope: dark core and light strands twisting round it
+const rope = (d, w = 1.2) => `<path d="${d}" stroke="#6a4a24" stroke-width="${(w + .7).toFixed(2)}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#d4b07a" stroke-width="${w}" fill="none" stroke-dasharray="${(w * .9).toFixed(2)} ${(w * .7).toFixed(2)}"/>`;
+const coil = (x, y, r, n = 4) => Array.from({ length: n }, (_, i) => { const rr = r - i * 1.7; return `<ellipse cx="${x}" cy="${(y - i * 1.2).toFixed(1)}" rx="${rr.toFixed(1)}" ry="${(rr * .36).toFixed(2)}" fill="none" stroke="#6a4a24" stroke-width="2"/><ellipse cx="${x}" cy="${(y - i * 1.2).toFixed(1)}" rx="${rr.toFixed(1)}" ry="${(rr * .36).toFixed(2)}" fill="none" stroke="#d4b07a" stroke-width="1.2" stroke-dasharray="1 .8"/>`; }).join('');
+// iron nail heads / treenails along a plank seam
+const nails = (pts, col = '#2a180a', r = .5) => pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${col}"/><circle cx="${x - r * .3}" cy="${y - r * .3}" r="${r * .35}" fill="#c89868" opacity=".5"/>`).join('');
+
 const SCENES = {
   // Hundred years of service: the hourglass of the ghost ship; its sand turns into the souls of an enemy crew.
   'Сто лет службы': u => {
@@ -67,7 +96,18 @@ const SCENES = {
       + Array.from({ length: 14 }, (_, k) => { const r = R(k + 40); const x = 100 + (r() - .5) * 46, y = 60 + r() * 84; return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(.6 + r() * 1.1).toFixed(2)}" fill="#c8fff4" opacity="${(.35 + r() * .5).toFixed(2)}"/>`; }).join('');
     const irons = `<path d="M38 152q6 8 14 6" stroke="url(#iron${u})" stroke-width="1.6" fill="none"/><circle cx="54" cy="158" r="2.6" fill="none" stroke="url(#iron${u})" stroke-width="1.4"/>`
       + shadow(u, 28, 156, 18, .5) + put('shackle', 28, 150, .7, 0, u);
-    return [ghostDeck(u), glass + irons];
+    // souls drawn out of the enemy crew stream in from the left as pale wisps, fall through the glass as sand
+    // and rise again on the right, the Dutchman's new hands; a low fog creeps over the deck
+    const f = 'pws' + u, r = R(31);
+    const wisp = (d, w, op) => `<path d="${d}" stroke="#bff8ee" stroke-width="${w}" fill="none" stroke-linecap="round" opacity="${op}" filter="url(#${f})"/><path d="${d}" stroke="#ffffff" stroke-width="${(w * .3).toFixed(2)}" fill="none" stroke-linecap="round" opacity="${(op * .8).toFixed(2)}"/>`;
+    const souls = blurF(f, 2.2)
+      + wisp('M0 46q30 -6 46 6t40 4q10 -2 14 4', 5, .5) + wisp('M0 66q24 8 44 -2t36 -10q12 -2 20 6', 4, .42)
+      + wisp('M100 150q16 -10 30 -4t26 -14q8 -6 10 -18', 4.4, .45) + wisp('M104 154q24 2 40 -8t30 -2', 3.4, .38)
+      + Array.from({ length: 18 }, () => { const x = 120 + r() * 60, y = 96 + r() * 56; return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(.4 + r() * .8).toFixed(2)}" fill="#c8fff4" opacity="${(.3 + r() * .5).toFixed(2)}"/>`; }).join('');
+    const fog = grad('pfg' + u, [[0, '#b8f0d8', 0], [.55, '#b8f0d8', .22], [1, '#b8f0d8', 0]]) + `<rect y="132" width="${W}" height="34" fill="url(#pfg${u})"/>`;
+    const light = glow(u, 100, 104, 56, 64, '#7fe3d8', .35) + glow(u, 100, 152, 50, 10, '#7fe3d8', .3)
+      + gloom(u, 100, 100, 0, 0, .45, '#020806') + gloom(u, 100, 120, 100, 280, .5, '#020806');
+    return [ghostDeck(u), souls + glass + irons + fog + light];
   },
 
   // Liar's dice: a barrel is the table; two leather cups, the dice still rolling. A cup and a die fell to the deck.
@@ -79,8 +119,15 @@ const SCENES = {
     const play = `<g transform="translate(0 0) scale(1)">` + cup(u, 76, top + 1, true) + dieP(u, 97, top - 2, 12, [[-1, -1], [0, 0], [1, 1]]) + dieP(u, 110, top, -8, [[-1, -1], [1, -1], [-1, 1], [1, 1]]) + dieP(u, 102, top + 4, 30, [[0, 0]]) + cup(u, 124, top + 2, false) + `</g>`
       + `<path d="M108 ${top - 9}q4 -3 9 -2M95 ${top - 10}q-3 -3 -8 -2" stroke="#f4ecd8" stroke-width=".6" fill="none" opacity=".6"/>`;
     const fallen = cup(u, 40, 176, true) + dieP(u, 58, 174, 20, [[-1, -1], [1, 1]]);
-    const lamp = `<path d="M30 52v14" stroke="#2a2418" stroke-width=".8"/>` + lantern(30, 76, 1.05).replace(/#ffb24a/g, '#9ff0d0');
-    return [ghostDeck(u) + lamp, barrel + play + fallen];
+    const lamp = `<path d="M52 52v14" stroke="#2a2418" stroke-width=".8"/>` + lantern(52, 76, 1.05).replace(/#ffb24a/g, '#9ff0d0');
+    // the stake: two cards face down on the barrel head, as the card's rule says; a coil of rope, a low green fog
+    const back = (x, y, a) => `<g transform="translate(${x} ${y}) rotate(${a})" filter="url(#drop${u})"><rect x="-6" y="-4" width="12" height="8" rx="1" fill="#2f6b4a" stroke="#e8d6aa" stroke-width=".6"/><rect x="-4.4" y="-2.6" width="8.8" height="5.2" rx=".6" fill="none" stroke="#c9a048" stroke-width=".4"/><circle r="1.2" fill="#c9a048"/></g>`;
+    const stake = `<g transform="translate(0 0)">${back(88, top - 1, -14).replace('translate(88 ' + (top - 1) + ')', 'translate(88 ' + (top - 1) + ') scale(1 .5)')}${back(114, top + 1, 10).replace('translate(114 ' + (top + 1) + ')', 'translate(114 ' + (top + 1) + ') scale(1 .5)')}</g>`;
+    const rope0 = coil(160, 156, 13, 4);
+    const fog = grad('pfk' + u, [[0, '#b8f0d8', 0], [.55, '#b8f0d8', .2], [1, '#b8f0d8', 0]]) + `<rect y="140" width="${W}" height="30" fill="url(#pfk${u})"/>`;
+    const light = glow(u, 52, 80, 60, 50, '#9ff0d0', .3) + glow(u, 100, top, 44, 12, '#9ff0d0', .22)
+      + gloom(u, 40, 80, 200, 40, .45, '#020806') + gloom(u, 100, 140, 100, 280, .5, '#020806');
+    return [ghostDeck(u) + lamp, barrel + stake + play + fallen + rope0 + fog + light];
   },
 
   // Gun deck in a cut-away: the gun runs out through the port in the hull side (on the right, seen in section);
@@ -101,8 +148,10 @@ const SCENES = {
       + sea(u, hz, H, '#5c9aa8', '#2c6a7c', '#0e3442', '#e8fbff', '#fff6d6', 184)
       + afloat('endeavour', 184, hz - 3, .52, 2, u)
       + put('splash', 166, hz + 6, .3, 0, u, false) + `<ellipse cx="166" cy="${hz + 7}" rx="6" ry="1" fill="#f4fcff" opacity=".6"/>`
-      + `<path d="M${out + 8} ${by - 4}Q158 ${by - 24} 166 ${hz}" stroke="#ffffff" stroke-width=".6" stroke-dasharray="1.4 1.6" fill="none" opacity=".7"/>`
-      + `<circle cx="161" cy="${by - 14}" r="1.6" fill="#1a1a1a"/>`
+      + shafts(u, 184, 30, [[150, 112, 162, 112], [176, 112, 190, 112]], '#fff4cc', .18)
+      + smoke(u, 182, hz - 9, .22, 4, 1, 11) // smoke of her own gun: she has fired back
+      + `<filter id="pbl${u}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4 .3"/></filter><path d="M${out + 10} ${by - 7}L159 ${by - 15}" stroke="#2a2a2a" stroke-width="2.4" opacity=".35" filter="url(#pbl${u})"/>`
+      + `<circle cx="160" cy="${by - 15.3}" r="1.5" fill="#1a1a1a"/><circle cx="159.6" cy="${by - 15.7}" r=".5" fill="#8a8a8a"/>`
       + `</g>`;
     // the hull in section: thick frames and planking, the port cut through it, the lid hauled up outside
     const ph = 26, pt = by - ph / 2;
@@ -119,11 +168,23 @@ const SCENES = {
     const gun = shadow(u, gx - 2, FL + 2, 46, .55) + img('deck-cannon', gx, gy, s, 0, u);
     const shot = put('flash', out + 7, by, .55, 0, u, false) + put('smokeP', out + 10, by - 16, .34, 0, u, false);
     const balls = shadow(u, 30, FL + 1, 22, .55) + img('deck-balls', 30, FL - 13, 1.1, 0, u);
+    // the breeching rope: from a ringbolt in the hull, round the breech of the gun, back to the hull
+    const ring = (x, y) => `<circle cx="${x}" cy="${y}" r="2.2" fill="none" stroke="url(#iron${u})" stroke-width="1.3"/><rect x="${x + 1.6}" y="${y - 1}" width="2.4" height="2" fill="#2a2a2a"/>`;
+    const breeching = ring(HX - 3, by + 18) + rope(`M${HX - 4} ${by + 18}Q${gx - 10} ${by + 30} ${gx - 46} ${by + 4}`, 1.1)
+      + rope(`M${gx - 46} ${by + 4}Q${gx - 30} ${by + 22} ${gx - 6} ${FL - 2}`, 1) + coil(gx - 8, FL + 4, 8, 3);
+    const horn = `<path d="M44 64v8" stroke="#2a1a0a" stroke-width=".8"/><circle cx="44" cy="63" r="1.2" fill="url(#iron${u})"/>`
+      + `<g filter="url(#drop${u})"><path d="M40 72q-6 10 2 20q4 4 9 2l1 -3q-6 -2 -8 -8q-2 -6 2 -11z" fill="#e8d6aa" stroke="#6a5a3a" stroke-width=".5"/><path d="M41 86q4 4 9 4" stroke="#b89a6a" stroke-width=".5" fill="none"/><path d="M50 92l3 -1" stroke="#3a2a14" stroke-width="1.6"/></g>`;
+    const pegs = nails(Array.from({ length: 6 }, (_, k) => [8 + k * 22, FL + 9]).concat(Array.from({ length: 6 }, (_, k) => [18 + k * 22, FL + 21])), '#1a0e06', .55);
     const tackle = `<path d="M${gx - 40} ${FL - 6}q-20 -6 -30 -30" stroke="#c9a878" stroke-width="1" fill="none"/><circle cx="${gx - 70}" cy="${FL - 36}" r="2.4" fill="none" stroke="url(#iron${u})" stroke-width="1.3"/>`;
     const bucket = `<g filter="url(#drop${u})" transform="translate(96 206)"><path d="M-9 -12h18l-2 16h-14z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/><path d="M-9.5 -8h19M-8.5 1h17" stroke="url(#iron${u})" stroke-width="1.4"/><ellipse cx="0" cy="-12" rx="9" ry="2" fill="#1e3a44"/></g>`;
     const cartridges = `<g filter="url(#drop${u})" transform="translate(40 226)"><path d="M-16 -8h32v16h-32z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/>${[-10, -2, 6].map(x => `<ellipse cx="${x + 2}" cy="-9" rx="3.4" ry="2" fill="#e8dcc0" stroke="#9a8a6a" stroke-width=".4"/>`).join('')}</g>`;
-    return [wall + floor + outside + halo(70, 50, 70, '#ffb050', .3) + lamp + rammer + motes(26, 0, 14, HX, 140, '#ffd8a0', 8),
-      gun + balls + hull + shot + bucket + cartridges + halo(out + 10, by, 40, '#ffe0a0', .25)];
+    const fire = glow(u, out + 8, by, 30, 22, '#ffcf7a', .75) + glow(u, out + 6, by, 10, 7, '#fff6d8', .9)
+      + smoke(u, out + 8, by - 4, .5, 6, 1, 7, '#e8e2d6', 24);
+    const light = glow(u, 70, 46, 60, 52, '#ffb050', .32) + glow(u, HX - 18, by - 4, 46, 30, '#cfe8f0', .22)
+      + glow(u, gx + 20, by - 2, 40, 10, '#ffd8a0', .18) // the barrel catches the flash along its top
+      + gloom(u, 90, 70, 0, 160, .45) + gloom(u, 64, 150, 64, 280, .5);
+    return [wall + floor + pegs + outside + lamp + horn + rammer + motes(26, 0, 14, HX, 140, '#ffd8a0', 8),
+      breeching + gun + balls + hull + shot + fire + bucket + cartridges + light];
   },
 
   // Captain's cabin at night: the stern window with the moon over the sea; on the table the map, the crossed sabres,
@@ -144,8 +205,8 @@ const SCENES = {
     const table = woodTex(u, 0, 112, W, 54, '#8a5a30', '#5a3618', '#2a1608', 12, false, 5)
       + `<path d="M0 112h200" stroke="#d4a066" stroke-width="1.4"/><path d="M0 114h200" stroke="#1e1006" stroke-width=".8"/>`
       + `<rect y="166" width="${W}" height="9" fill="#3a2210"/><path d="M0 166h200" stroke="#c08a52" stroke-width=".8"/><path d="M0 175h200" stroke="#0e0804" stroke-width="1.4"/>`
-      + woodTex(u, 0, 175, W, 105, '#2e1c0e', '#140a04', '#0a0502', 10, false, 9)
-      + [18, 182].map(x => `<rect x="${x - 7}" y="175" width="14" height="105" fill="url(#oak${u})" stroke="#0a0502" stroke-width=".6"/><path d="M${x - 5} 175v105" stroke="#c08a52" stroke-width=".4" opacity=".5"/>`).join('');
+      + woodTex(u, 0, 175, W, H - 175, '#2e1c0e', '#140a04', '#0a0502', 10, false, 9)
+      + [18, 182].map(x => `<rect x="${x - 7}" y="175" width="14" height="${H - 175}" fill="url(#oak${u})" stroke="#0a0502" stroke-width=".6"/><path d="M${x - 5} 175v${H - 175}" stroke="#c08a52" stroke-width=".4" opacity=".5"/>`).join('');
     const map = `<g transform="translate(0 -32)"><g transform="rotate(-3 90 176)" filter="url(#drop${u})"><path d="M18 156h132l3 40h-138z" fill="#eedcb0"/>`
       + `<radialGradient id="ppap${u}" cx=".5" cy=".4" r=".7"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#7a5020" stop-opacity=".35"/></radialGradient><path d="M18 156h132l3 40h-138z" fill="url(#ppap${u})"/>`
       + `<path d="M32 172q14 -10 30 -4q12 -8 22 2q-6 10 -20 8q-16 6 -32 -6z" fill="#d8c08a" stroke="#9a7a50" stroke-width=".5"/><path d="M98 180q10 -8 22 -2q4 8 -8 10q-12 0 -14 -8z" fill="#d8c08a" stroke="#9a7a50" stroke-width=".5"/>`
@@ -154,7 +215,19 @@ const SCENES = {
     const blades = shadow(u, 80, 154, 40, .4) + img('cutlasses', 80, 118, 1.55, 0, u);
     const ring = `<g transform="translate(132 154)">${put('ring', 0, 0, 1.05, 0, u)}</g>`;
     const light = put('candleTall', 166, 134, 1.25, 0, u) + halo(166, 96, 70, '#ffb050', .38);
-    return [wall + win + table + map + motes(16, 0, 0, 200, 150, '#ffe0b0', 12), blades + ring + light];
+    // heavy curtains drawn aside and tied, folds shaded away from the candle
+    const curtain = (x, dir) => { const id = 'pcu' + u + (fid++); const d = dir; return grad(id, [[0, '#4a0e12'], [.5, '#8e2420'], [1, '#3a0a0c']], 1, 0)
+      + `<g filter="url(#drop${u})"><path d="M${x} 2h${16 * d}q${-2 * d} 40 ${-6 * d} 58q${8 * d} 22 ${4 * d} 46h${-12 * d}q${-4 * d} -30 ${-2 * d} -46q${-2 * d} -30 0 -58z" fill="url(#${id})"/>`
+      + [3, 7, 11].map(k => `<path d="M${x + k * d} 4q${-1 * d} 30 ${-3 * d} 56q${3 * d} 22 ${1 * d} 44" stroke="#2a0608" stroke-width=".7" fill="none" opacity=".7"/>`).join('')
+      + `<path d="M${x - 1 * d} 60q${8 * d} 3 ${14 * d} -1" stroke="#c9a048" stroke-width="2"/><circle cx="${x + 14 * d}" cy="59" r="1.6" fill="#e8c46a"/></g>`; };
+    const inkwell = `<g filter="url(#drop${u})"><path d="M22 150q-1 -7 4 -8h6q5 1 4 8z" fill="#1a2430" stroke="#0a0e14" stroke-width=".5"/><ellipse cx="29" cy="142" rx="3.4" ry="1.1" fill="#3a4a5a"/><path d="M24 145q2 -2 3 0" stroke="#8ab0d0" stroke-width=".5" fill="none" opacity=".7"/>`
+      + `<path d="M29 142L46 104" stroke="#e8e0d0" stroke-width=".8"/><path d="M46 104q-6 6 -10 16q4 -3 8 -4q-2 -3 2 -12z" fill="#f4ecdc" stroke="#b8a888" stroke-width=".3"/><path d="M45 106q-4 7 -7 13" stroke="#c8b898" stroke-width=".3"/></g>`;
+    const moon = shafts(u, 132, 36, [[60, 150, 100, 160], [118, 150, 150, 156]], '#c8dcf0', .16) + glow(u, 100, 138, 70, 22, '#a8c4e0', .2);
+    const candle = glow(u, 166, 112, 70, 56, '#ffb050', .42) + glow(u, 166, 98, 14, 18, '#fff0c0', .5)
+      + glow(u, 92, 116, 26, 10, '#ffd8a0', .3) // the blades catch the candle
+      + gloom(u, 150, 110, 0, 40, .5) + gloom(u, 100, 160, 100, 280, .5);
+    return [wall + win + curtain(18, -1) + curtain(182, 1) + table + map + motes(16, 0, 0, 200, 150, '#ffe0b0', 12),
+      inkwell + blades + ring + light + moon + candle];
   },
 
   // The Company's yard: the ship stands on the slip, on keel blocks, held by shores on both sides; her sails are
@@ -199,23 +272,47 @@ const SCENES = {
     const quay = `<g filter="url(#drop${u})" transform="translate(150 214)">${[0, 5, 10].map(d => `<rect x="${-26 + d}" y="${-8 - d}" width="50" height="5" fill="#d8b47e" stroke="#7a5a30" stroke-width=".5"/>`).join('')}</g>`
       + `<g filter="url(#drop${u})" transform="translate(40 214)"><path d="M-12 -16q-5 16 0 32h24q5 -16 0 -32z" fill="url(#oak${u})" stroke="#2a1608"/><path d="M-15 -8h30M-15 8h30" stroke="url(#iron${u})" stroke-width="2.4"/><ellipse cx="0" cy="-16" rx="12" ry="3" fill="#120a04"/></g>`
       + shadow(u, 92, 232, 22, .45) + img('t_repair', 92, 220, .8, -8, u);
-    return [back + yard + ground + slip + motes(10, 0, 40, 200, 100, '#fff8e0', 5),
-      shadow(u, 102, 160, 66, .5) + masts + hull + patch + shores + stage + crane + quay];
+    // a stack of timber on the yard behind, a tar kettle boiling on a fire in front, its smoke drifting with the wind
+    const timber = `<g filter="url(#drop${u})">${[0, 1, 2, 3].map(k => `<rect x="${4 + k * 1.5}" y="${136 - k * 3.2}" width="34" height="3.2" fill="${k % 2 ? '#c49a62' : '#b08850'}" stroke="#6a4a24" stroke-width=".3"/>`).join('')}${[0, 1, 2, 3, 4].map(k => `<circle cx="${6 + k * 6.6}" cy="139.4" r="1.6" fill="#d8b47e" stroke="#7a5a30" stroke-width=".3"/>`).join('')}</g>`;
+    const kettle = shadow(u, 24, GR, 14, .45) + flame(u, 24, GR - 1, .38, 9)
+      + `<path d="M15 ${GR}l4 -7M33 ${GR}l-4 -7M24 ${GR}v-7" stroke="#2a1a0a" stroke-width="1.2"/>`
+      + `<g filter="url(#drop${u})"><path d="M14 ${GR - 18}h20l-2 9q-8 3 -16 0z" fill="#2a2a2a" stroke="#111" stroke-width=".5"/><ellipse cx="24" cy="${GR - 18}" rx="10" ry="2" fill="#0a0a0a"/><path d="M16 ${GR - 16}h3" stroke="#6a6a6a" stroke-width=".6"/></g>`
+      + smoke(u, 26, GR - 24, .7, 8, 1.2, 13, '#6e6860', 46) + glow(u, 24, GR - 4, 18, 10, '#ffb050', .5);
+    const sun = shafts(u, 36, 30, [[60, 166, 96, 166], [110, 166, 140, 166], [0, 120, 0, 150]], '#fff4cc', .14)
+      + glow(u, 70, 140, 50, 20, '#fff0c8', .25) + gloom(u, 60, 100, 200, 160, .35);
+    return [back + yard + timber + ground + slip + motes(10, 0, 40, 200, 100, '#fff8e0', 5),
+      shadow(u, 102, 160, 66, .5) + masts + hull + patch + shores + stage + crane + kettle + quay + sun];
   },
 
-  // Reaction: the black ship runs before a strong wind; the enemy's ball falls short in her wake.
+  // Reaction «Уйти по ветру»: the black ship runs before a strong wind and leaves the chaser behind. The wind is
+  // shown by what it does: every sail full, the long pennant and the flags streaming aft, spume torn off
+  // the crests, low clouds racing; she pitches bow-up over a big bow wave and draws a long white wake; far astern
+  // the chaser's shot drops short into that wake.
   'Уйти по ветру': u => {
-    const back = sky(u, 0, 112, [[0, '#4a86b0'], [.5, '#9cc4d8'], [.88, '#efe6c8'], [1, '#f6e2b2']])
-      + halo(158, 36, 64, '#fff4cc', .85) + `<circle cx="158" cy="36" r="9" fill="#fffbe6"/>`
-      + cloudBand(u, 2, 50, '#fffaf0', '#a9b8c4', 31, 2.0, '0.02 0.05') + cloudBand(u, 50, 40, '#fff4dc', '#c0bcb0', 17, 2.3, '0.03 0.07')
-      + cloudBand(u, 84, 26, '#fffaf0', '#c8c4b8', 5, 2.45, '0.024 0.08');
-    const gust = Array.from({ length: 7 }, (_, k) => { const y = 40 + k * 8, x = 196 - k * 3; return `<path d="M${x} ${y}q-36 -5 -74 -1" stroke="#ffffff" stroke-width="${(.5 + k * .06).toFixed(2)}" fill="none" opacity="${(.18 + k * .03).toFixed(2)}"/>`; }).join('');
-    const water = isles(112, '#6e8a96', .5) + sea(u, 112, 280, '#5c9aa8', '#2c6a7c', '#0a2a36', '#e8fbff', '#fff6d6', 158) + swell(120, 280, '#dff2f2', .45);
-    const miss = put('splash', 184, 150, .5, 0, u, false) + `<ellipse cx="184" cy="154" rx="14" ry="2.4" fill="#f4fcff" opacity=".55"/>`;
-    const wake = '';
-    const ship = sailing('pearl', 116, 110, 2.2, -2, u);
-    const bow = put('splash', 54, 136, .36, 0, u, false) + `<path d="M58 140q-14 1 -34 6" stroke="#ffffff" stroke-width=".9" fill="none" opacity=".7"/>`;
-    return [back + gust + water + wake + miss + gulls([[150, 26, 1.1], [138, 20, .8]]), ship + bow];
+    const hz = 112;
+    const back = sky(u, 0, hz, [[0, '#3e7aa6'], [.5, '#94bed4'], [.88, '#efe6c8'], [1, '#f6e2b2']])
+      + halo(166, 34, 60, '#fff4cc', .8) + `<circle cx="166" cy="34" r="8.5" fill="#fffbe6"/>`
+      + cloudBand(u, 4, 40, '#fffaf0', '#a9b8c4', 31, 2.0, '0.012 0.09') + cloudBand(u, 46, 34, '#fff4dc', '#b8b4a8', 17, 2.3, '0.016 0.11')
+      + cloudBand(u, 80, 26, '#fffaf0', '#c8c4b8', 5, 2.45, '0.02 0.12')
+      + shafts(u, 166, 34, [[110, hz, 136, hz], [184, hz, 200, 100]], '#fff4cc', .15);
+    const chaser = afloat('endeavour', 186, hz - 1, .3, 2, u) + smoke(u, 178, hz - 2, .2, 4, -1, 21, '#f2eee6', 12);
+    const water = isles(hz, '#6e8a96', .45) + sea(u, hz, H, '#5a96a6', '#2a6678', '#0a2a36', '#e8fbff', '#fff6d6', 166) + swell(hz + 8, H, '#e8f8f8', .5, 9);
+    // white caps with spume blown aft, the way her flags stream (the wind she makes with her speed)
+    const r = R(23);
+    const caps = Array.from({ length: 16 }, () => { const x = 8 + r() * 184, y = hz + 14 + r() * 50, w = 6 + (y - hz) * .18; return `<path d="M${x.toFixed(1)} ${y.toFixed(1)}q${(w / 2).toFixed(1)} -2.2 ${w.toFixed(1)} 0" stroke="#ffffff" stroke-width="1.1" fill="none" opacity=".8"/><path d="M${(x + w).toFixed(1)} ${(y - 1).toFixed(1)}q5 -1 ${(8 + r() * 6).toFixed(1)} -0.4" stroke="#ffffff" stroke-width=".5" fill="none" opacity=".55"/>`; }).join('');
+    // her wake: two diverging lines of foam from the stern to the right edge, churned water between
+    const sx = 168, sy = 140;
+    const wake = `<path d="M${sx} ${sy}Q186 ${sy + 2} 204 ${sy + 4}M${sx} ${sy + 1}Q188 ${sy + 8} 204 ${sy + 14}" stroke="#ffffff" stroke-width="1.6" fill="none" opacity=".75"/>`
+      + `<path d="M${sx} ${sy}Q188 ${sy + 4} 204 ${sy + 8}" stroke="#d8f4f4" stroke-width="5" fill="none" opacity=".35"/>`;
+    const miss = put('splash', 192, sy + 8, .42, 0, u, false) + `<ellipse cx="192" cy="${sy + 11}" rx="11" ry="2" fill="#f4fcff" opacity=".55"/>`;
+    const ship = sailing('pearl', 112, 108, 2.2, 4, u);
+    // the long pennant from the main truck and the spray at the bow, both blown ahead of her
+    const pennant = `<path d="M122 60q10 -3 20 1t20 0t18 3l-2 2q-8 -3 -17 -2t-20 -1t-19 -1z" fill="#1d1d1f" stroke="#0a0a0a" stroke-width=".3"/><path d="M122 60q10 -1 20 2" stroke="#8e2420" stroke-width=".8" fill="none"/>`;
+    const r2 = R(17);
+    const spray = Array.from({ length: 30 }, () => { const x = 22 + r2() * 34, y = 118 + r2() * 20; return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(.3 + r2() * .7).toFixed(2)}" fill="#ffffff" opacity="${(.4 + r2() * .5).toFixed(2)}"/>`; }).join('');
+    const bow = put('splash', 46, 134, .5, -14, u, false) + `<path d="M52 140q-16 0 -40 8M54 142q-10 4 -30 12" stroke="#ffffff" stroke-width="1" fill="none" opacity=".75"/>` + spray;
+    const light = glow(u, 150, 70, 60, 50, '#fff0c8', .2) + glow(u, 166, 150, 46, 14, '#fff6d6', .25) + gloom(u, 100, 120, 100, 280, .38, '#06202a');
+    return [back + chaser + water + caps + wake + miss + gulls([[150, 26, 1.1], [138, 20, .8]]), ship + pennant + bow + light];
   }
 };
 
@@ -234,16 +331,29 @@ function backArt(k) {
     + sea(u, hz, H, c.sea[0], c.sea[1], c.sea[2], c.streak, c.light, c.moon[0]) + swell(hz + 10, H, c.streak, .3)
     + sailing(k, 100, 150, 2.5, 0, u);
   if (c.mist) body += grad('bm' + u, [[0, '#b8f0d8', 0], [.5, '#b8f0d8', .18], [1, '#b8f0d8', 0]]) + `<rect y="140" width="${W}" height="60" fill="url(#bm${u})"/>`;
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%"><defs>${DEFS(u)}</defs>${body}${vignette(u)}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${VH}" width="100%" height="100%"><defs>${DEFS(u)}</defs>${body}${vignette(u)}</svg>`;
 }
 
+// portrait(name, {vh}) — vh: the picture's height for another card shape (343 for a 70 × 120 mm tarot card);
 // portrait(name) — the whole picture; portrait(name, {layer: 'fg'}) — only the foreground on transparency
 // (for a card frame that lets the foreground step over its border).
+// The camera of each card: the part of the scene {x, y, w} that fills the open top of the card (200 × 150 units,
+// above the text plate). Chosen so that what the card is about is large and nothing of it hides under the plate.
+const CAM = {
+  'Ядра': { x: 0, y: 14, w: 200 },
+  'Верфь Компании': { x: 10, y: 38, w: 176 },
+  'Анжелика': { x: 0, y: 14, w: 200 },
+  'Уйти по ветру': { x: 0, y: 4, w: 200 },
+  'Сто лет службы': { x: 0, y: 24, w: 200 },
+  'Игра в кости лжеца': { x: 8, y: 42, w: 184 }
+};
 function portrait(name, opts = {}) {
   const u = 'q' + (fid++);
   const f = SCENES[name]; if (!f) throw new Error('no portrait scene ' + name);
   const [bg, fg] = f(u);
-  const body = opts.layer === 'fg' ? fg : bg + fg + (opts.vignette === false ? '' : vignette(u));
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"><defs>${DEFS(u)}<clipPath id="pc${u}"><rect width="${W}" height="${H}"/></clipPath></defs><g clip-path="url(#pc${u})">${body}</g></svg>`;
+  const c = opts.cam || CAM[name] || { x: 0, y: 0, w: W }, k = W / c.w, vh = opts.vh || VH;
+  const cam = b => `<g transform="scale(${k.toFixed(4)}) translate(${-c.x} ${-c.y})">${b}</g>`;
+  const body = opts.layer === 'fg' ? cam(fg) : cam(bg + fg) + (opts.vignette === false ? '' : vignette(u, vh));
+  return `<svg viewBox="0 0 ${W} ${vh}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"><defs>${DEFS(u)}<clipPath id="pc${u}"><rect width="${W}" height="${vh}"/></clipPath></defs><g clip-path="url(#pc${u})">${body}</g></svg>`;
 }
-module.exports = { portrait, backArt, BACKS: Object.keys(BACKS), SCENES: Object.keys(SCENES), W, H };
+module.exports = { portrait, backArt, BACKS: Object.keys(BACKS), SCENES: Object.keys(SCENES), W, H: VH };
