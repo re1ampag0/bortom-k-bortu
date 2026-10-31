@@ -4,91 +4,10 @@
 // picture runs on blurred and darkened, so there is only calm ground (deck, sea, floor). The top corners (16 %)
 // carry the type medal and the price: only background there.
 // Reuses the materials and pieces of the landscape scenes; backgrounds are drawn here at the full height.
-const { DEFS, P } = require('./art.cjs');
-Object.assign(P, require('./pieces4.cjs')); // the pieces (splash, flash, candleTall …) as the landscape scenes use them
-const { img, put } = require('./art3.cjs');
-const { halo, lantern, cloudBand, woodTex, motes, R } = require('./bg4.cjs');
-const { afloat, shadow } = require('./helpers4.cjs');
-// W × VH is the card picture; scenes are drawn down to H so a camera that zooms or lifts them leaves no gap
-const W = 200, VH = 280, H = 420;
+const K = require('./portrait-kit.cjs');
+const { DEFS, img, put, halo, lantern, cloudBand, woodTex, motes, R, afloat, shadow, grad, sky, sea, swell, isles, gulls, plankFloor, beam, vignette, ghostDeck, sailing, cup, dieP, glow, gloom, shafts, flame, smoke, rope, coil, nails } = K;
+const { W, VH, H } = K;
 let fid = 0;
-
-const grad = (id, stops, x2 = 0, y2 = 1) => `<linearGradient id="${id}" x1="0" y1="0" x2="${x2}" y2="${y2}">${stops.map(([o, c, a]) => `<stop offset="${o}" stop-color="${c}"${a !== undefined ? ` stop-opacity="${a}"` : ''}/>`).join('')}</linearGradient>`;
-const sky = (u, y, h, stops) => { const id = 'psk' + u + (fid++); return grad(id, stops) + `<rect y="${y}" width="${W}" height="${h}" fill="url(#${id})"/>`; };
-
-// Sea from the horizon y0 down to y1: perspective streaks, a glitter path under the light, darker near the viewer.
-function sea(u, y0, y1, c1, c2, c3, streak, light, lx, seed = 3) {
-  const f = 'psw' + u + (fid++), h = y1 - y0;
-  return grad(f + 'g', [[0, c1], [.3, c2], [1, c3]])
-    + `<filter id="${f}" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.006 0.12" numOctaves="3" seed="${seed}" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  3.4 0 0 0 -1.9"/></filter>
-    <filter id="${f}d" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.007 0.06" numOctaves="3" seed="${seed + 9}" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 .05  0 0 0 0 .1  3 0 0 0 -1.5"/></filter>
-    <rect y="${y0}" width="${W}" height="${h}" fill="url(#${f}g)"/><rect y="${y0}" width="${W}" height="${h}" filter="url(#${f}d)" opacity=".55"/>
-    <g opacity=".5" style="mix-blend-mode:screen"><rect y="${y0}" width="${W}" height="${h}" filter="url(#${f})" fill="${streak}"/></g>
-    ${light ? Array.from({ length: 22 }, (_, k) => { const r = R(k + 5); const yy = y0 + 1 + k * k * .22 + r() * 1.5, w = 4 + k * 1.8 + r() * 6; return yy < y1 ? `<path d="M${(lx - w / 2 + (r() - .5) * k * 1.6).toFixed(1)} ${yy.toFixed(1)}h${w.toFixed(1)}" stroke="${light}" stroke-width="${(.5 + k * .07).toFixed(2)}" opacity="${Math.max(.15, .9 - k * .04).toFixed(2)}"/>` : ''; }).join('') : ''}
-    <path d="M0 ${y0 + .4}h${W}" stroke="${streak}" stroke-width=".6" opacity=".7"/>`;
-}
-// Rolling swell in the foreground: rows of wave crests, larger and further apart towards the viewer.
-const swell = (y0, y1, col, op = .5, seed = 4) => { const r = R(seed); let out = ''; for (let y = y0, k = 0; y < y1; k++) { const g = 3 + k * 1.3; for (let x = -10 + r() * 20; x < W; x += 18 + k * 4 + r() * 10) { const w = 8 + k * 2.4; out += `<path d="M${x.toFixed(1)} ${y.toFixed(1)}q${(w / 2).toFixed(1)} ${(-1.2 - k * .25).toFixed(1)} ${w.toFixed(1)} 0" stroke="${col}" stroke-width="${(.5 + k * .08).toFixed(2)}" fill="none" opacity="${op}"/>`; } y += g; } return out; };
-const isles = (y, col, op = .55) => `<path d="M0 ${y}q8 -5 18 -3t20 -2q6 -3 12 1t10 4z" fill="${col}" opacity="${op}"/><path d="M128 ${y}q10 -9 22 -7q8 -5 16 -1q10 1 14 8z" fill="${col}" opacity="${op * .8}"/>`;
-const gulls = (list, col = '#3a4a54') => list.map(([x, y, s]) => `<path d="M${x - 3 * s} ${y}q${1.5 * s} ${-1.6 * s} ${3 * s} 0q${1.5 * s} ${-1.6 * s} ${3 * s} 0" stroke="${col}" stroke-width="${.5 * s}" fill="none"/>`).join('');
-const plankFloor = (u, y, h, c1, c2, seam, seed) => woodTex(u, 0, y, W, h, c1, c2, seam, 10, false, seed);
-const beam = (u, x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#oak${u})" stroke="#140a04" stroke-width=".6"/><path d="M${x} ${y + 1}h${w}" stroke="#c08a52" stroke-width=".5" opacity=".6"/>`;
-const vignette = (u, vh = VH) => `<radialGradient id="pvig${u}" cx=".5" cy=".42" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#140a04" stop-opacity=".45"/></radialGradient><rect width="${W}" height="${vh}" fill="url(#pvig${u})"/>`;
-
-// The ghost ship's deck at full height: green fog over a dark sea, the rail hung with weed, a barnacled deck.
-const ghostDeck = u => sky(u, 0, 100, [[0, '#0b1715'], [.6, '#1f3a34'], [1, '#365a50']])
-  + cloudBand(u, 0, 66, '#7aa094', '#0e1a18', 51, 2.1) + halo(152, 30, 44, '#b8e8d8', .32) + `<circle cx="152" cy="30" r="6" fill="#dff4ec" opacity=".8"/>`
-  + `<rect y="80" width="${W}" height="6" fill="#3a3024"/><path d="M0 80h200" stroke="#6a5a44" stroke-width=".6"/>`
-  + Array.from({ length: 10 }, (_, k) => `<rect x="${k * 21 + 3}" y="86" width="3.6" height="22" fill="#30281e"/><path d="M${k * 21 + 3.6} 86v22" stroke="#6a5a44" stroke-width=".4"/>`).join('')
-  + woodTex(u, 0, 108, W, H - 108, '#3e3428', '#1a140e', '#100b07', 10, false, 9) + `<path d="M0 108h200" stroke="#5a4a36" stroke-width="2.4"/>`
-  + (() => { const r = R(4); return Array.from({ length: 16 }, () => { const x = r() * 200, y = 116 + r() * 156, s = .5 + r() * .7; return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(2)})" opacity=".75"><ellipse cx="0" cy="1.4" rx="5" ry="1.4" fill="#2a3a22" opacity=".6"/><path d="M-2 1l.8 -3h2.4l.8 3z" fill="#8a8c74"/><ellipse cy="-2" rx="1" ry=".4" fill="#2a2a20"/></g>`; }).join(''); })()
-  + [18, 66, 120, 172].map(x => `<path d="M${x} 86q3 8 -1 14q4 3 1 6" stroke="#3a7a5a" stroke-width="1.2" fill="none" opacity=".8"/>`).join('')
-  + grad('pmist' + u, [[0, '#b8f0d8', 0], [.4, '#b8f0d8', .12], [1, '#b8f0d8', 0]]) + `<rect y="90" width="${W}" height="80" fill="url(#pmist${u})"/>`
-  + motes(20, 0, 0, 200, 110, '#c8f8e8', 3);
-// A ship under way in open water: the hull is cut at the waterline (nothing of it shows under the surface),
-// a dark band of shadow and short broken streaks stand in for the reflection, foam runs along the waterline.
-function sailing(k, x, y, s, r, u, bowLeft = true) {
-  const d = bowLeft ? -1 : 1; // the bow points to x + d * hw
-  const w = 64 * s, wl = y + .205 * w, hw = w * .36, id = 'psl' + u + (fid++);
-  const cut = `<clipPath id="${id}"><rect x="${x - w}" y="${y - w}" width="${2 * w}" height="${wl - y + w}"/></clipPath>`;
-  const shade = `<ellipse cx="${x}" cy="${wl + 2.4}" rx="${hw * 1.02}" ry="${(w * .03).toFixed(2)}" fill="#04121a" opacity=".45" filter="url(#soft${u})"/>`
-    + Array.from({ length: 7 }, (_, i) => { const yy = wl + 3 + i * 2.6, ww = hw * (1.5 - i * .16); return `<path d="M${(x - ww / 2 + (i % 2 ? 6 : -4)).toFixed(1)} ${yy.toFixed(1)}h${ww.toFixed(1)}" stroke="#0a1e28" stroke-width="${(1.2 - i * .1).toFixed(2)}" opacity="${(.32 - i * .04).toFixed(2)}"/>`; }).join('');
-  const r2 = R(k.length + 3);
-  const foam = Array.from({ length: 9 }, (_, i) => { const x0 = x - hw + i * hw * .22 + r2() * 3, ww = 4 + r2() * 7; return `<path d="M${x0.toFixed(1)} ${(wl + r2() * .8).toFixed(1)}q${(ww / 2).toFixed(1)} -1.2 ${ww.toFixed(1)} 0" stroke="#f4fcff" stroke-width="${(.7 + r2() * .6).toFixed(2)}" fill="none" opacity="${(.55 + r2() * .35).toFixed(2)}"/>`; }).join('')
-    + `<g transform="translate(${x} 0) scale(${d} 1)"><path d="M${hw - 6} ${wl - 1}q8 -4 16 -3q-4 3 -2 6q-8 1 -14 -3z" fill="#f4fcff" opacity=".8"/>`
-    + `<path d="M${-hw + 2} ${wl + .5}q-14 1 -30 4M${-hw + 4} ${wl + 2}q-18 3 -36 9" stroke="#f4fcff" stroke-width=".8" fill="none" opacity=".55"/></g>`;
-  return `${cut}${shade}<g clip-path="url(#${id})">${img(k, x, y, s, r, u)}</g>${foam}`;
-}
-const cup = (u, x, y, flip = false) => `<g transform="translate(${x} ${y}) scale(1.25)" filter="url(#drop${u})">${flip ? `<path d="M-7 0l1.6 -15h10.8l1.6 15z" fill="url(#leather${u})" stroke="#1a0e06" stroke-width=".6"/><ellipse cx="0" cy="-15" rx="5.4" ry="1.4" fill="#5a3418"/><ellipse cx="0" cy="0" rx="7" ry="1.6" fill="#2a1608"/>` : `<path d="M-5.4 0l-1.6 -15h14l-1.6 15z" fill="url(#leather${u})" stroke="#1a0e06" stroke-width=".6"/><ellipse cx="0" cy="-15" rx="7" ry="1.8" fill="#1a0e06"/><ellipse cx="0" cy="0" rx="5.4" ry="1.3" fill="#5a3418"/>`}<path d="M-4 -12v10" stroke="#e8c49a" stroke-width=".8" opacity=".35"/></g>`;
-const dieP = (u, x, y, a, pips) => `<g transform="translate(${x} ${y}) rotate(${a}) scale(1.25)" filter="url(#drop${u})"><rect x="-4.4" y="-4.4" width="8.8" height="8.8" rx="1.6" fill="#f4ecd8" stroke="#6a5a40" stroke-width=".5"/>${pips.map(([a2, b2]) => `<circle cx="${a2 * 2.4}" cy="${b2 * 2.4}" r=".8" fill="#2a1a0a"/>`).join('')}</g>`;
-
-// ——— finishing touches: light, fire, smoke, rope (docs/tasks/card-art-polish.md, «Как рисовать») ———
-const blurF = (id, sd) => `<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
-// light poured over what is already drawn (screen blend): a lantern's pool, daylight from a port, moonlight
-const glow = (u, x, y, rx, ry, col, op) => { const id = 'pgl' + u + (fid++); return `<radialGradient id="${id}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${col}" stop-opacity="${op}"/><stop offset=".45" stop-color="${col}" stop-opacity="${(op * .35).toFixed(3)}"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></radialGradient><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#${id})" style="mix-blend-mode:screen"/>`; };
-// darkness growing away from the light (multiply), from (x1,y1) clear to (x2,y2) dark
-const gloom = (u, x1, y1, x2, y2, op, col = '#1a0e06') => { const id = 'pgm' + u + (fid++); return `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"><stop offset="0" stop-color="${col}" stop-opacity="0"/><stop offset="1" stop-color="${col}" stop-opacity="${op}"/></linearGradient><rect width="${W}" height="${H}" fill="url(#${id})" style="mix-blend-mode:multiply"/>`; };
-// shafts of light from a window or the sun: soft wedges from (x,y)
-const shafts = (u, x, y, list, col, op) => { const f = 'psh' + u + (fid++); return blurF(f, 2.4) + `<g filter="url(#${f})" style="mix-blend-mode:screen">${list.map(([a, b, c, d]) => `<path d="M${x} ${y}L${a} ${b}L${c} ${d}z" fill="${col}" opacity="${op}"/>`).join('')}</g>`; };
-// fire in layers: dark red rim, orange body, yellow core, white heart, sparks above
-function flame(u, x, y, s, seed = 3) {
-  const f = 'pfl' + u + (fid++), r = R(seed);
-  const tongue = (w, h, col, op) => `<path d="M${-w} 0q${-w * .25} ${-h * .5} ${w * .1} ${-h}q${w * .3} ${h * .35} ${w * .55} ${h * .12}q${w * .25} ${-h * .3} ${w * .45} ${-h * .62}q${w * .55} ${h * .55} ${w * .9} ${h * 1.5}z" fill="${col}" opacity="${op}"/>`;
-  return blurF(f, .45) + `<g transform="translate(${x} ${y}) scale(${s})"><g filter="url(#${f})">${tongue(9, 22, '#7a1a08', .9)}${tongue(7, 18, '#e0601a', .95)}${tongue(4.6, 12.5, '#ffc23a', 1)}${tongue(2.4, 7, '#fff4c8', 1)}</g>`
-    + Array.from({ length: 8 }, () => `<circle cx="${((r() - .5) * 18).toFixed(1)}" cy="${(-16 - r() * 20).toFixed(1)}" r="${(.3 + r() * .5).toFixed(2)}" fill="#ffd27a" opacity="${(.5 + r() * .5).toFixed(2)}"/>`).join('') + `</g>`;
-}
-// smoke: puffs of different size, shaded below, thinning out as the wind carries them (dx: -1 left, 1 right)
-function smoke(u, x, y, s, n = 6, dx = 1, seed = 5, col = '#ddd6ca', rise = 30) {
-  const f = 'psm' + u + (fid++), g = 'psg' + u + (fid++), r = R(seed);
-  let out = `<radialGradient id="${g}" cx=".42" cy=".32" r=".62"><stop offset="0" stop-color="${col}"/><stop offset=".65" stop-color="${col}" stop-opacity=".8"/><stop offset="1" stop-color="#5a544c" stop-opacity="0"/></radialGradient>` + blurF(f, 1) + `<g filter="url(#${f})" transform="translate(${x} ${y}) scale(${s})">`;
-  for (let i = 0; i < n; i++) { const t = i / Math.max(1, n - 1); out += `<circle cx="${(dx * t * 26 + (r() - .5) * 6).toFixed(1)}" cy="${(-t * rise + (r() - .5) * 4).toFixed(1)}" r="${(4.5 + t * 7 + r() * 3).toFixed(1)}" fill="url(#${g})" opacity="${(.85 - t * .55).toFixed(2)}"/>`; }
-  return out + '</g>';
-}
-// a laid rope: dark core and light strands twisting round it
-const rope = (d, w = 1.2) => `<path d="${d}" stroke="#6a4a24" stroke-width="${(w + .7).toFixed(2)}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#d4b07a" stroke-width="${w}" fill="none" stroke-dasharray="${(w * .9).toFixed(2)} ${(w * .7).toFixed(2)}"/>`;
-const coil = (x, y, r, n = 4) => Array.from({ length: n }, (_, i) => { const rr = r - i * 1.7; return `<ellipse cx="${x}" cy="${(y - i * 1.2).toFixed(1)}" rx="${rr.toFixed(1)}" ry="${(rr * .36).toFixed(2)}" fill="none" stroke="#6a4a24" stroke-width="2"/><ellipse cx="${x}" cy="${(y - i * 1.2).toFixed(1)}" rx="${rr.toFixed(1)}" ry="${(rr * .36).toFixed(2)}" fill="none" stroke="#d4b07a" stroke-width="1.2" stroke-dasharray="1 .8"/>`; }).join('');
-// iron nail heads / treenails along a plank seam
-const nails = (pts, col = '#2a180a', r = .5) => pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${col}"/><circle cx="${x - r * .3}" cy="${y - r * .3}" r="${r * .35}" fill="#c89868" opacity=".5"/>`).join('');
 
 const SCENES = {
   // Hundred years of service: the hourglass of the ghost ship; its sand turns into the souls of an enemy crew.
@@ -349,6 +268,8 @@ const CAM = {
   'Сто лет службы': { x: 0, y: 24, w: 200 },
   'Игра в кости лжеца': { x: 8, y: 42, w: 184 }
 };
+// the other 75 cards, one file per deck: each exports { SCENES, CAM } in the same shape as above
+for (const d of ['pearl', 'revenge', 'endeavour', 'dutch']) { const m = require(`./portrait-${d}.cjs`); Object.assign(SCENES, m.SCENES); Object.assign(CAM, m.CAM); }
 function portrait(name, opts = {}) {
   const u = 'q' + (fid++);
   const f = SCENES[name]; if (!f) throw new Error('no portrait scene ' + name);
