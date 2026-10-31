@@ -5,7 +5,7 @@
 // carry the type medal and the price: only background there.
 // Reuses the materials and pieces of the landscape scenes; backgrounds are drawn here at the full height.
 const K = require('./portrait-kit.cjs');
-const { DEFS, img, put, halo, lantern, cloudBand, woodTex, motes, R, afloat, shadow, grad, sky, sea, swell, isles, gulls, plankFloor, beam, vignette, ghostDeck, sailing, cup, dieP, glow, gloom, shafts, flame, smoke, rope, coil, nails } = K;
+const { DEFS, img, put, halo, lantern, cloudBand, woodTex, motes, R, afloat, shadow, grad, sky, sea, swell, isles, gulls, plankFloor, beam, vignette, ghostDeck, sailing, cup, dieP, blurF, glow, gloom, shafts, flame, smoke, rope, coil, nails } = K;
 const { W, VH, H } = K;
 let fid = 0;
 
