@@ -15,4 +15,4 @@ function picture3(name, frame) { const u = 'p' + (n++); const f = S[name]; if (!
   <g clip-path="url(#cl${u})">${fixLines(f(u))}<rect width="200" height="120" fill="url(#vig${u})"/></g>
   <rect x="1" y="1" width="198" height="118" rx="4" fill="none" stroke="${frame}" stroke-width="2"/><rect x="4" y="4" width="192" height="112" rx="2.5" fill="none" stroke="#2e1d10" stroke-width=".6" opacity=".7"/>
   ${[[6, 6, 0], [194, 6, 90], [194, 114, 180], [6, 114, 270]].map(([x, y, a]) => `<path transform="translate(${x} ${y}) rotate(${a})" d="M0 9V0h9M2.5 6V2.5H6" stroke="${frame}" stroke-width="1.2" fill="none"/>`).join('')}</svg>`; }
-module.exports = { picture3 };
+module.exports = { picture3, fixLines };
