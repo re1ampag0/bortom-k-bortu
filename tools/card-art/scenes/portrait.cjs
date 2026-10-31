@@ -1,6 +1,8 @@
 // Portrait card pictures: a full-card scene in a 200 x 280 box (the card's own 63.5 x 88.9 mm proportion).
-// Composition rule for the printed card: what the card is about sits in the upper two thirds (y 20..160);
-// the lower third is calm ground (deck, sea, floor) because the text plate covers it.
+// Composition rule for the printed card (view В-2, docs/tasks/card-art-portrait.md): what the card is about sits in
+// the open top, 0-45 % of the picture height; 45-50 % is the edge of the glass text plate; below it (50-90 %) the
+// picture runs on blurred and darkened, so there is only calm ground (deck, sea, floor). The top corners (16 %)
+// carry the type medal and the price: only background there.
 // Reuses the materials and pieces of the landscape scenes; backgrounds are drawn here at the full height.
 const { DEFS, P } = require('./art.cjs');
 Object.assign(P, require('./pieces4.cjs')); // the pieces (splash, flash, candleTall …) as the landscape scenes use them
@@ -337,8 +339,8 @@ function backArt(k) {
 // portrait(name, {vh}) — vh: the picture's height for another card shape (343 for a 70 × 120 mm tarot card);
 // portrait(name) — the whole picture; portrait(name, {layer: 'fg'}) — only the foreground on transparency
 // (for a card frame that lets the foreground step over its border).
-// The camera of each card: the part of the scene {x, y, w} that fills the open top of the card (200 × 150 units,
-// above the text plate). Chosen so that what the card is about is large and nothing of it hides under the plate.
+// The camera of each card: the part of the scene {x, y, w} (w wide, w × 1.4 high) that fills the whole picture
+// 200 × 280. Chosen so that what the card is about is large and sits in the open top (0-45 %, above the plate).
 const CAM = {
   'Ядра': { x: 0, y: 14, w: 200 },
   'Верфь Компании': { x: 10, y: 38, w: 176 },
