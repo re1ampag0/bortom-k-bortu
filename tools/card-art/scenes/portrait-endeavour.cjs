@@ -50,59 +50,69 @@ function gunWall(u, y1, port, view, seed = 7) {
 }
 
 const SCENES = {
-  // skeleton (picture units 0–280): path A, orig k 1.4 tx -36 ty 4; horizon y=112, eye 7.7 m (from the deck of the ship
-  // she fires at); the sea is the one plane: y = 112 + 7.7 s; light: the sun upper left (x 36, y 56) plus the orange
+  // skeleton (picture units 0–280): path A, orig k 1.4 tx -36 ty -6; horizon y=102, eye 7.7 m (from the deck of the ship
+  // she fires at); the sea is the one plane: y = 102 + 7.7 s; light: the sun upper left (x 40, y 56) plus the orange
   // flashes; the wind from the left — pennant, ensign and smoke all go right
-  // ship: the Company ship broadside to us (sprite `endeavour` in profile, s 2.3), waterline y=134 (s 2.85 u/m),
-  // x 28–170, mast tops y 58; 12 upper-deck ports fire (y 125), a few of the lower tier (y 132)
-  // smoke: a wall from the ports lying on the water along the waterline, y 118–172, drifting right and towards us
-  // far ships: two small grey ships, waterline y=115 (s 0.4), x 10–25 and 172–188, not cut by the edge
-  // splashes: the shots fall short, between her and us: water columns rising out of the sea with foam rings, bases y
-  // 186–204 (s 10–12: 4–5 m high), under the glass
-  // below the glass: a dark near wave crest with foam across y 236–280, flashes reflected in the water
+  // ship: the Company ship broadside to us (sprite `endeavour` in profile, s 2.3), waterline y=124 (s 2.85 u/m),
+  // x 28–170, mast tops y 48; 9 of the 12 upper-deck ports fire (y 115), three only smoke; a thin foam line at the hull
+  // smoke: from every port, merging into a wall that lies on the water along the waterline, y 112–166, drifting right
+  // and towards us, shaded below, orange near the flashes
+  // far ships: two small grey ships, waterline y=105 (s 0.4), x 10–22 and 176–190, not cut by the edge
+  // splashes: the shots fall short, between her and us: ragged water columns out of foam rings, bases y 182–200
+  // (s 10–13: 4–5 m high), under the glass
+  // below the glass: a near swell (dark back, lit foaming crest, trough) and a broken spar floating in it; flashes
+  // reflected in the water
   'Залп всей батареей': u => {
-    const hz = 112, E = 7.7, sx = 36, sy = 56;
+    const hz = 102, E = 7.7, sx = 40, sy = 56;
     const back = sky(u, 0, hz + 1, [[0, '#3a76a6'], [.55, '#8ab8d4'], [.9, '#e2e0cc'], [1, '#f2e2b8']]) + glow(u, sx, sy, 56, 56, '#fff4cc', .8)
-      + `<circle cx="${sx}" cy="${sy}" r="8" fill="#fffbe6"/>` + K.cloudBand(u, 10, 50, '#fffaf0', '#a9b8c4', 36, 2.2, '0.012 0.07') + K.cloudBand(u, 70, 38, '#fff6e8', '#b0bcc4', 52, 2.3, '0.016 0.1')
+      + `<circle cx="${sx}" cy="${sy}" r="8" fill="#fffbe6"/>` + K.cloudBand(u, 6, 46, '#fffaf0', '#a9b8c4', 36, 2.2, '0.012 0.07') + K.cloudBand(u, 62, 36, '#fff6e8', '#b0bcc4', 52, 2.3, '0.016 0.1')
       + `<path d="M0 ${hz}q24 -5 50 -3q12 -3 22 1q30 2 40 2z" fill="#8aa0a8" opacity=".5"/>`
-      + sea(u, hz, H, '#5c9aa8', '#2c6a7c', '#0e3442', '#e8fbff', '#fff6d6', sx, 7) + gulls([[64, 40, 1.2], [76, 34, .9], [150, 48, 1]], '#3a4a54');
-    // the far ships, small and pale in the haze, each whole and on the waterline
-    // each hull cut at its waterline with only a thin line of foam (no wake bigger than the ship)
-    const farShip = (k, x, wl, w, dir) => { const id = uid('pzk' + u), y = wl - .205 * w, s2 = w / 64; return `<clipPath id="${id}"><rect x="${x - w}" y="${y - w}" width="${2 * w}" height="${wl - y + w}"/></clipPath>`
-      + `<g clip-path="url(#${id})" transform="translate(${x} 0) scale(${dir} 1) translate(${-x} 0)">${K.img(k, x, y, s2, 0, u)}</g><path d="M${f1(x - w * .34)} ${f1(wl + .2)}h${f1(w * .68)}" stroke="#f4fcff" stroke-width=".5" opacity=".8"/>`; };
-    const far = lit(farShip('revenge', 17.5, 115, 16, -1) + farShip('pearl', 180, 115, 16, 1), [[.62, .7, .76], [.24, .3, .36], .3]);
-    // the ship and her battery: flashes seen nearly head-on (we are the target), each a little different
-    const ship = sailing('endeavour', 101, 103.8, 2.3, 0, u);
-    const fr = R(41), ports = [];
-    for (let i = 0; i < 12; i++) ports.push([101 + (-18.3 + i * 3.2) * 2.3, 125.4, .8 + fr() * .5]);
-    [[123.4, 131.9], [133, 131.9], [113.6, 131.9]].forEach(([x, y]) => ports.push([x, y, .7 + fr() * .3]));
-    const flash = ([x, y, k], i) => { const g = uid('pzf' + u), a = 70 + fr() * 40; return glow(u, x, y + 1, 7 * k, 5.5 * k, '#ffb050', .7)
-      + `<radialGradient id="${g}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fffbe6"/><stop offset=".35" stop-color="#ffd25a"/><stop offset=".7" stop-color="#ff7a1e" stop-opacity=".75"/><stop offset="1" stop-color="#c03a0a" stop-opacity="0"/></radialGradient>`
-      + `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(a)}) scale(${f2(k)})"><path d="M0 -2.6L7 -5Q10.6 0 7 5L0 2.6Q-3 0 0 -2.6z" fill="url(#${g})"/><path d="M-3 -2.6L-6 -4L-5 0L-6 4L-3 2.6z" fill="#ffd25a" opacity=".8"/></g>`
-      + `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f2(1.7 * k)}" fill="#fffbe6"/>`; };
-    const flashes = ports.map(flash).join('');
-    // the smoke wall: billows from every port merge into one bank on the water, lit orange from inside, shaded below
-    const sm = R(17);
-    let smokeW = '';
-    for (let i = 0; i < 18; i++) { const x = 30 + i * 8.4 + sm() * 4, y = 150 + sm() * 8; smokeW += smoke(u, x, y, .8 + sm() * .35, 6, 1, 30 + i, i % 3 ? '#e8e2d8' : '#f4eee4', 3); }
-    smokeW = `<g opacity=".92">${smokeW}</g>` + ports.map(([x, y]) => glow(u, x + 4, y + 10, 10, 8, '#ff9a40', .35)).join('')
-      + grad('pzs' + u, [[0, '#5a5a62', 0], [1, '#3a4048', .55]]) + `<path d="M24 150Q100 140 190 150L196 174Q100 182 20 174z" fill="url(#pzs${u})" opacity=".7" filter="url(#soft${u})"/>`;
-    // the splashes: columns of water out of the sea, a foam ring at the foot of each, spray falling back
-    const column = (x, y, h, seed) => { const r = R(seed), w = h * .34; return `<ellipse cx="${x}" cy="${y + 1}" rx="${f1(w * 1.3)}" ry="${f1(w * .26)}" fill="#f4fcff" opacity=".75"/><ellipse cx="${x}" cy="${y + 1}" rx="${f1(w * .9)}" ry="${f1(w * .16)}" fill="#cfeaf0" opacity=".8"/>`
-      + `<path d="M${f1(x - w * .55)} ${y}Q${f1(x - w * .6)} ${f1(y - h * .5)} ${f1(x - w * .2)} ${f1(y - h)}Q${f1(x)} ${f1(y - h * 1.06)} ${f1(x + w * .2)} ${f1(y - h * .96)}Q${f1(x + w * .64)} ${f1(y - h * .5)} ${f1(x + w * .55)} ${y}z" fill="url(#pzc${u})"/>`
-      + Array.from({ length: 14 }, () => `<circle cx="${f1(x + (r() - .5) * w * 2.2)}" cy="${f1(y - h * (.4 + r() * .7))}" r="${f2(.4 + r() * 1)}" fill="#ffffff" opacity="${f2(.5 + r() * .5)}"/>`).join('')
-      + `<path d="M${f1(x - w * .3)} ${f1(y - h * .2)}q${f1(w * .1)} ${f1(-h * .4)} ${f1(w * .2)} ${f1(-h * .7)}" stroke="#ffffff" stroke-width="${f2(w * .12)}" fill="none" opacity=".7"/>`; };
-    const sp = (x, y, k, dir) => `<g transform="translate(${x} ${y}) scale(${dir} 1) translate(${-x} ${-y})">${put('splash', x, y - 8 * k, k, 0, u, false)}</g>`;
-    const splashes = sp(52, 190, 1.05, 1) + sp(104, 205, 1.4, -1) + sp(156, 186, .95, -1);
-    // the near swell: a dark crest with foam along its top, the flashes' orange in the troughs
-    // wavelets in perspective: short crests, wider and further apart towards us, lit on the side facing the sun
+      + sea(u, hz, H, '#5c9aa8', '#2c6a7c', '#0e3442', '#e8fbff', '#fff6d6', sx, 7) + gulls([[64, 36, 1.2], [76, 30, .9], [150, 40, 1]], '#3a4a54');
+    // wavelets in perspective: short crests, tiny at the horizon, wider and further apart towards us
     const wr = R(29);
     let waves = '';
-    for (let y = hz + 3, k = 0; y < 236; k++) { const d = (y - hz) / E, w = 2.2 * d, h = .35 * d; for (let x = -wr() * w * 3; x < 210; x += w * (1.4 + wr() * 1.6)) waves += `<path d="M${f1(x)} ${f1(y)}q${f1(w / 2)} ${f1(-h)} ${f1(w)} 0" stroke="${wr() > .45 ? '#e8fbff' : '#0a2a34'}" stroke-width="${f2(.25 + d * .06)}" fill="none" opacity="${f2(.25 + wr() * .3)}"/>`; y += h * 1.8 + .6; }
-    // the near swell: a dark crest with foam along its top, the flashes' orange in the troughs
-    const near = grad('pzw' + u, [[0, '#3a8a9a'], [.25, '#1e5a6a'], [1, '#061a22']]) + `<path d="M0 246Q22 230 50 236Q74 242 96 232Q126 220 150 234Q172 244 200 236V280H0z" fill="url(#pzw${u})"/>`
-      + `<path d="M0 246Q22 230 50 236Q74 242 96 232Q126 220 150 234Q172 244 200 236" stroke="#f4fcff" stroke-width="1.8" fill="none" opacity=".8"/><path d="M6 242q12 -8 26 -8M100 230q18 -8 34 -6M156 236q14 2 28 -1" stroke="#ffffff" stroke-width="1.2" fill="none" opacity=".7"/>`
-      + `<path d="M0 252Q24 238 50 243Q74 248 96 240Q126 228 150 241Q172 250 200 243" stroke="#9ad8e0" stroke-width=".8" fill="none" opacity=".5"/><path d="M20 266q30 -6 60 -2M110 262q30 -8 70 -2" stroke="#020c10" stroke-width="2.4" fill="none" opacity=".5"/>` + glow(u, 100, 214, 90, 10, '#ff9a40', .18);
+    for (let y = hz + 2; y < 236;) { const d = (y - hz) / E, w = 3.2 * d, h = .42 * d; for (let x = -wr() * w * 3; x < 210; x += w * (1.5 + wr() * 1.8)) waves += `<path d="M${f1(x)} ${f1(y)}q${f1(w / 2)} ${f1(-h)} ${f1(w)} 0" stroke="${wr() > .45 ? '#e8fbff' : '#0a2a34'}" stroke-width="${f2(.15 + d * .07)}" fill="none" opacity="${f2(.2 + wr() * .3)}"/>`; y += h * 2 + .4; }
+    // a hull cut at its waterline with only a thin line of foam along it (no wake bigger than the ship)
+    const hull = (k, x, wl, w, dir, foam = .6) => { const id = uid('pzk' + u), y = wl - .205 * w, s2 = w / 64; return `<clipPath id="${id}"><rect x="${x - w}" y="${y - w}" width="${2 * w}" height="${wl - y + w}"/></clipPath>`
+      + `<ellipse cx="${x}" cy="${f1(wl + w * .015)}" rx="${f1(w * .36)}" ry="${f1(w * .02)}" fill="#04121a" opacity=".35"/>`
+      + `<g clip-path="url(#${id})" transform="translate(${x} 0) scale(${dir} 1) translate(${-x} 0)">${K.img(k, x, y, s2, 0, u)}</g><path d="M${f1(x - w * .35)} ${f1(wl + .1)}h${f1(w * .7)}" stroke="#f4fcff" stroke-width="${foam}" opacity=".85"/>`; };
+    const far = lit(hull('revenge', 16, 105, 12, -1, .4) + hull('pearl', 183, 105, 14, 1, .4), [[.62, .7, .76], [.24, .3, .36], .3]);
+    const W2 = 64 * 2.3, wl = 124;
+    const ship = hull('endeavour', 101, wl, W2, 1, 1) + Array.from({ length: 8 }, (_, i) => { const x = 46 + i * 15 + wr() * 6; return `<path d="M${f1(x)} ${f1(wl + .8)}q3 -1 6 0" stroke="#ffffff" stroke-width=".6" fill="none" opacity=".7"/>`; }).join('');
+    // the ports: 12 on the upper deck (y 115); 9 fire, 3 only smoke
+    const fr = R(41), ports = [];
+    for (let i = 0; i < 12; i++) ports.push([101 + (-18.3 + i * 3.2) * 2.3, wl - 8.6, i % 4 === 2 ? 0 : .55 + fr() * .5]);
+    // a burst pushed out of the port towards us and to the side: dark red edge, orange body, white-yellow core, sparks
+    const burst = ([x, y, k], i) => { if (!k) return ''; const g = uid('pzb' + u), a = 15 + fr() * 45, r = R(70 + i);
+      return glow(u, x + 3, y + 1, 9 * k, 6 * k, '#ffb050', .55)
+        + `<radialGradient id="${g}" cx=".2" cy=".5" r=".85"><stop offset="0" stop-color="#fffbe6"/><stop offset=".3" stop-color="#ffd25a"/><stop offset=".65" stop-color="#ff7a1e"/><stop offset="1" stop-color="#8a1a08" stop-opacity=".6"/></radialGradient>`
+        + `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(a)}) scale(${f2(k)})"><path d="M0 -2.2Q5 -6 ${f1(9 + r() * 3)} ${f1(-4 - r() * 2)}Q${f1(12 + r() * 2)} 0 ${f1(9 + r() * 3)} ${f1(4 + r() * 2)}Q5 6 0 2.2z" fill="url(#${g})"/>`
+        + `<path d="M1 -1.2Q4 -2.6 7 -1.4Q8 0 7 1.4Q4 2.6 1 1.2z" fill="#fffbe6" opacity=".9"/></g>`
+        + Array.from({ length: 4 }, () => `<circle cx="${f1(x + (r() - .3) * 10 * k)}" cy="${f1(y + (r() - .2) * 9 * k)}" r="${f2(.25 + r() * .35)}" fill="#ffe08a"/>`).join(''); };
+    const flashes = ports.map(burst).join('');
+    // smoke: a puff out of every port drifting right, merging into a bank on the water, darker below
+    const sm = R(17);
+    let smokeW = ports.map(([x, y, k], i) => smoke(u, x + 3, y + 4, .5 + sm() * .2 + (k ? 0 : .1), 5, 1, 50 + i, '#ece6dc', 6)).join('');
+    for (let i = 0; i < 16; i++) { const x = 28 + i * 10 + sm() * 5, y = 142 + sm() * 10; smokeW += smoke(u, x, y, .8 + sm() * .3, 6, 1, 30 + i, i % 3 ? '#e2dcd2' : '#efe9e0', 6); }
+    smokeW = `<g opacity=".93">${smokeW}</g>` + ports.map(([x, y, k]) => k ? glow(u, x + 5, y + 9, 9, 7, '#ff9a40', .32) : '').join('')
+      + `<path d="M22 154Q100 148 196 154L196 170Q100 176 20 170z" fill="#3a4048" opacity=".35" filter="url(#soft${u})"/>`;
+    // the splashes: ragged columns of water out of foam rings, irregular jets and falling spray
+    const column = (x, y, h, seed) => { const r = R(seed), w = h * .3; let o = `<ellipse cx="${x}" cy="${f1(y + 1)}" rx="${f1(w * 1.5)}" ry="${f1(w * .3)}" fill="#e4f6f8" opacity=".55"/><ellipse cx="${x}" cy="${f1(y + 1)}" rx="${f1(w * 1.1)}" ry="${f1(w * .2)}" fill="none" stroke="#ffffff" stroke-width=".9" opacity=".8"/>`;
+      for (let j = 0; j < 7; j++) { const bx = x + (r() - .5) * w * 1.3, hh = h * (.45 + r() * .55), lean = (r() - .5) * w * .8, ww = w * (.18 + r() * .2);
+        o += `<path d="M${f1(bx - ww)} ${f1(y)}Q${f1(bx - ww * .6 + lean * .4)} ${f1(y - hh * .6)} ${f1(bx + lean)} ${f1(y - hh)}Q${f1(bx + ww * .6 + lean * .4)} ${f1(y - hh * .6)} ${f1(bx + ww)} ${f1(y)}z" fill="url(#pzc${u})" opacity="${f2(.7 + r() * .3)}"/>`; }
+      return o + Array.from({ length: 22 }, () => { const a = -Math.PI * (.1 + r() * .8), d = h * (.5 + r() * .6); return `<circle cx="${f1(x + Math.cos(a) * d * .5)}" cy="${f1(y + Math.sin(a) * d)}" r="${f2(.3 + r() * .9)}" fill="#ffffff" opacity="${f2(.5 + r() * .5)}"/>`; }).join('')
+        + `<path d="M${f1(x - w * .2)} ${f1(y - 1)}q${f1(w * .1)} ${f1(-h * .4)} ${f1(w * .05)} ${f1(-h * .75)}" stroke="#ffffff" stroke-width="${f2(w * .1)}" fill="none" opacity=".6"/>`; };
+    const splashes = `<linearGradient id="pzc${u}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9ccad4"/><stop offset=".55" stop-color="#eefafc"/><stop offset="1" stop-color="#ffffff" stop-opacity=".4"/></linearGradient>`
+      + column(52, 186, 34, 3) + column(106, 200, 46, 5) + column(156, 182, 30, 7);
+    // the near swell: a dark back, the lit crest breaking into foam, the trough in front; a broken spar floating in it
+    const near = grad('pzw' + u, [[0, '#6ab8c4'], [.22, '#2e7e8c'], [.5, '#0e3a48'], [1, '#04161e']]) + `<path d="M0 240Q26 222 56 230Q80 236 100 226Q128 212 156 228Q178 238 200 230V280H0z" fill="url(#pzw${u})"/>`
+      + `<path d="M0 240Q26 222 56 230Q80 236 100 226Q128 212 156 228Q178 238 200 230" stroke="#f4fcff" stroke-width="3.2" fill="none" opacity=".85"/>` + blurF('pzq' + u, 1.2) + `<path d="M0 243Q26 226 56 234Q80 240 100 230Q128 216 156 232Q178 242 200 234" stroke="#e8fbff" stroke-width="5" fill="none" opacity=".35" filter="url(#pzq${u})"/>`
+      + `<path d="M40 228q10 -3 20 1q-6 4 -14 3zM104 222q14 -8 28 -4q-10 6 -20 7zM160 228q12 -2 24 1q-8 4 -18 3z" fill="#ffffff" opacity=".75"/>`
+      + Array.from({ length: 30 }, () => { const x = wr() * 200, y = 222 + wr() * 14; return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f2(.3 + wr() * .7)}" fill="#ffffff" opacity="${f2(.4 + wr() * .4)}"/>`; }).join('')
+      + `<path d="M0 252Q30 240 60 246Q84 251 104 244Q128 236 156 248Q178 256 200 250" stroke="#9ad8e0" stroke-width=".8" fill="none" opacity=".45"/><path d="M14 264q30 -6 60 -2M104 262q30 -8 70 -2" stroke="#020c10" stroke-width="2.4" fill="none" opacity=".5"/>`
+      + glow(u, 100, 206, 90, 10, '#ff9a40', .2) + glow(u, 70, 236, 30, 4, '#ff9a40', .25)
+      + `<g transform="rotate(-9 46 248)"><rect x="14" y="244" width="64" height="7" rx="3" fill="url(#oak${u})" stroke="#140a04" stroke-width=".6"/><path d="M78 244l5 2l-3 2l4 2l-6 1z" fill="#8a6a44" stroke="#140a04" stroke-width=".4"/><path d="M16 245h60" stroke="#e0b07a" stroke-width=".6" opacity=".6"/><path d="M40 244q-4 -4 -2 -9" stroke="#6a4a24" stroke-width="1.2" fill="none"/></g>`
+      + `<path d="M10 252q34 4 72 -8" stroke="#ffffff" stroke-width="1" fill="none" opacity=".6"/>`;
     const light = gloom(u, 100, 160, 100, 280, .35, '#04161e');
     return [back + far + waves, ship + smokeW + flashes + splashes + near + light];
   },
@@ -337,13 +347,15 @@ const SCENES = {
   // viewer stands on the guardhouse steps across the yard, above the crowd); light upper-left, overcast, soft shadows
   // to the lower right. Units per metre s on the ground: y = 100 + 3.4 s, x = 100 + X s.
   // ground: the parade ground from the wall foot y=162 (s 18.2) down; cobble rows widen towards us
-  // wall: frontal, foot y=162, parapet y=89 (4 m), merlons to y=71 (5 m); the decree is nailed to it (x 12–34, y 94–123)
+  // wall: frontal, foot y=162, parapet y=89 (4 m), merlons to y=71 (5 m); the decree is nailed to it (x 13–29, y 100–122)
   // scaffold: front legs on the ground y=196 (s 28.2), back y=176 (s 22.5); 2 m high: top 140 front, 132 back
   // gallows: posts on the scaffold at s 25 (top y 135), x 48 and 152; beam on the posts y 47–55 (5.2 m), x 28–172;
   // knee braces post→underside of the beam, foot braces post→deck with iron straps; 4 nooses tied round the beam
   // at x 73, 91, 109, 127 (clear of the braces), different lengths
   // crows: two standing on the beam; flying: one from the wall, x 92 y 28, wing tips blurred
-  // drummer: stands on the scaffold front right, s 27, feet y 138, 1.72 m → head y 91, shako y 85; drum on a sling
+  // drummer: stands on the scaffold front right, s 27, feet y 138, 1.72 m → head y 92, tricorn y 87; drum on a sling.
+  // He is on the scaffold, not on the ground as in the analysis: seen from 3.4 m he would be all under the glass there.
+  // The decree is on the left part of the wall (16 × 22, its real 0.9 × 1.2 m): on the right the drummer stands.
   // below the glass: dark mass of the crowd's heads and shoulders, three rows (feet y 215 / 250 / 300, off-frame),
   // a gap on the left where the scaffold's front leg stands on the cobbles (contact shadow)
   'Указ о казнях': u => {
@@ -360,7 +372,8 @@ const SCENES = {
       wall += `<rect x="${f1(x + .5)}" y="${f1(y + .5)}" width="${f1(w)}" height="7.2" rx=".9" fill="${col}"/><path d="M${f1(x + 1)} ${f1(y + 1.1)}h${f1(w - 1.5)}M${f1(x + .9)} ${f1(y + 1)}v5.6" stroke="#e8e2d2" stroke-width=".45" opacity=".55"/><path d="M${f1(x + 1)} ${f1(y + 7.5)}h${f1(w - .5)}v-6" stroke="#5a5446" stroke-width=".4" fill="none" opacity=".6"/>`;
     }
     const wr = R(12);
-    wall += Array.from({ length: 9 }, () => { const x = wr() * 200, h = 12 + wr() * 30; return `<path d="M${f1(x)} ${py + 2}q${f1(wr() * 2 - 1)} ${f1(h / 2)} 0 ${f1(h)}" stroke="#4a463c" stroke-width="${f2(1 + wr() * 2.4)}" opacity=".16"/>`; }).join('')
+    // weather: soft dark streaks running down from the coping, blurred, tapering
+    wall += blurF('pkb' + u, 1.4) + `<g filter="url(#pkb${u})">` + Array.from({ length: 9 }, () => { const x = wr() * 200, h = 12 + wr() * 30, w = .8 + wr() * 1.6; return `<path d="M${f1(x - w)} ${py + 2}h${f1(2 * w)}l${f1(-w * .7)} ${f1(h)}h${f1(-w * .6)}z" fill="#4a463c" opacity=".14"/>`; }).join('') + `</g>`
       + grad('pkw' + u, [[0, '#3a3a2a', 0], [1, '#2e3424', .55]]) + `<rect y="${wy - 22}" width="200" height="22" fill="url(#pkw${u})"/>`
       + `<rect y="${py - 3}" width="200" height="4.6" fill="#c8c1ae"/><path d="M0 ${py - 3}h200" stroke="#ece6d4" stroke-width=".6"/><path d="M0 ${py + 1.6}h200" stroke="#4e483c" stroke-width="1"/>`
       + Array.from({ length: 8 }, (_, k) => { const x = -6 + k * 29; return `<rect x="${x}" y="${my}" width="17" height="${py - 3 - my}" fill="#b4ad9b"/><path d="M${x} ${my}h17" stroke="#e8e2d0" stroke-width=".7"/><path d="M${x + .4} ${my}v${py - 3 - my}" stroke="#d8d2c0" stroke-width=".6"/><path d="M${x + 16.6} ${my}v${py - 3 - my}" stroke="#6a6456" stroke-width=".8"/><path d="M${x} ${my + 8.6}h17" stroke="#857e6e" stroke-width=".45"/><rect x="${x + 17}" y="${py - 4.6}" width="12" height="1.6" fill="#5e584a" opacity=".45"/>`; }).join('');
@@ -372,7 +385,7 @@ const SCENES = {
     const leg = (x, y0, y1, w, lit = '#a07850') => `<rect x="${f1(x - w / 2)}" y="${f1(y0)}" width="${f1(w)}" height="${f1(y1 - y0)}" fill="url(#oakH${u})" stroke="#1e1208" stroke-width=".5"/><path d="M${f1(x - w / 2 + .6)} ${f1(y0)}V${f1(y1)}" stroke="${lit}" stroke-width=".6" opacity=".7"/>`;
     let scaf = `<path d="M${xb0} ${tb}H${xb1}L${xf1} ${tf}H${xf0}z" fill="#3a2614"/>`
       // under the deck: dark, the back legs and the far ground in its shadow
-      + `<path d="M${xf0} ${tf}H${xf1}V${yf}H${xf0}z" fill="#1a120a"/>` + leg(xb0 + 3, tb, yb, 4.4, '#5a4028') + leg(xb1 - 3, tb, yb, 4.4, '#5a4028') + leg(100, tb, yb, 4.4, '#5a4028')
+      + `<path d="M${xf0} ${tf}H${xf1}V${yf}H${xf0}z" fill="#1a120a"/>` + leg(xb0 + 3, tf + 7.6, yb, 4.4, '#5a4028') + leg(xb1 - 3, tf + 7.6, yb, 4.4, '#5a4028') + leg(100, tf + 7.6, yb, 4.4, '#5a4028')
       + `<path d="M${xb0 + 3} ${yb - 6}L100 ${tb + 10}L${xb1 - 3} ${yb - 6}" stroke="#2e1e10" stroke-width="2.2" fill="none"/>`
       + `<ellipse cx="100" cy="${yb + 1}" rx="${f1((xb1 - xb0) / 2)}" ry="2.2" fill="#0a0604" opacity=".7"/>`;
     // front frame: three legs to the ground with contact shadows, X braces, iron bolts
@@ -401,8 +414,7 @@ const SCENES = {
     // the beam, a rough log with its top in light, bark knots, sitting on the posts with iron dogs
     gal += `<rect x="28" y="${f1(by - 7.5)}" width="144" height="7.5" rx="1.2" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/><path d="M29 ${f1(by - 7)}h142" stroke="#d6ae80" stroke-width=".8" opacity=".8"/><path d="M29 ${f1(by - .6)}h142" stroke="#140a04" stroke-width="1"/>`
       + [40, 77, 101, 122, 160].map((x, i) => `<path d="M${x} ${f1(by - 5 + i % 2)}q5 -.8 9 0" stroke="#3a2410" stroke-width=".45" fill="none"/>`).join('') + `<ellipse cx="94" cy="${f1(by - 3.6)}" rx="1.8" ry="1.3" fill="#3a2412"/>`
-      + `<path d="M28.6 ${f1(by - 7)}q-1.2 3.7 0 7" stroke="#c49a6a" stroke-width=".8" fill="none"/>` + [P1, P2].map(x => `<path d="M${x - 4.4} ${f1(by - 4)}v6.6h8.8v-6.6" stroke="url(#iron${u})" stroke-width="1.2" fill="none"/>`).join('')
-      + `<rect x="28" y="${f1(by)}" width="144" height="2.4" fill="#000" opacity=".22"/>`;
+      + `<path d="M28.6 ${f1(by - 7)}q-1.2 3.7 0 7" stroke="#c49a6a" stroke-width=".8" fill="none"/>` + [P1, P2].map(x => `<path d="M${x - 4.4} ${f1(by - 4)}v6.6h8.8v-6.6" stroke="url(#iron${u})" stroke-width="1.2" fill="none"/>`).join('');
     // four nooses: the rope wrapped round the beam, a hangman's knot of coils, an empty loop, slightly swinging
     const noose = (x, kn, a) => {
       const top = by - 7.5;
@@ -424,56 +436,60 @@ const SCENES = {
     const fly = blurF('pkf' + u, .5) + `<g transform="translate(92 28)"><path d="M0 0q-6 -5 -15 -4q5 1 8 5q-6 0 -9 3q7 -1 11 0z" fill="#1a1c20" filter="url(#pkf${u})"/><path d="M0 0q6 -6 14 -8q-4 3 -6 7q5 -1 8 1q-7 1 -11 2z" fill="#1a1c20" filter="url(#pkf${u})"/><path d="M-3 1q3 -2 6 -1q2 1 4 0l-1 2q-5 1 -9 0z" fill="#16181c"/><path d="M6.6 .2l2 .3l-2 .6" fill="#2a2a2e"/><path d="M-3 1.4l-4 1.6l1 -1.8" fill="#16181c"/></g>`;
     const crows = crow(57, by - 7.5, 1.05, -1, -8) + crow(140, by - 7.5, 1.12, 1, 6) + fly;
     // the decree, nailed to the wall: paper with ruled strokes instead of letters, the Company's red seal and ribbon
-    const dx = 11, dy = 94, dw = 21, dh = 29;
+    const dx = 13, dy = 100, dw = 16, dh = 22;
     const decree = `<path d="M${dx + 2} ${dy + 2}h${dw}v${dh}h${-dw}z" fill="#3e3a30" opacity=".35"/>`
       + `<path d="M${dx} ${dy}h${dw}l-.4 ${dh}h${-dw + .8}q-1 -2 -.4 -4z" fill="#ece4cc" stroke="#8a7a58" stroke-width=".45"/><path d="M${dx + dw - 4} ${dy}l4 4h-4z" fill="#c8bc9c"/>`
-      + `<path d="M${dx + 5} ${dy + 4.2}h${dw - 10}" stroke="#2a2418" stroke-width="1.1"/>` + Array.from({ length: 8 }, (_, k) => `<path d="M${dx + 3} ${f1(dy + 8 + k * 2.2)}q${f1((dw - 6) * .3)} -.4 ${f1((dw - 6) * (k % 4 === 3 ? .55 : 1))} 0" stroke="#4a4232" stroke-width=".42" fill="none"/>`).join('')
-      + `<path d="M${dx + 12} ${dy + dh - 4.4}q2 1.6 6 -.4" stroke="#3a3426" stroke-width=".45" fill="none"/>`
+      + `<path d="M${dx + 5} ${dy + 4.2}h${dw - 10}" stroke="#2a2418" stroke-width="1.1"/>` + Array.from({ length: 6 }, (_, k) => `<path d="M${dx + 3} ${f1(dy + 7.4 + k * 2.1)}q${f1((dw - 6) * .3)} -.4 ${f1((dw - 6) * (k % 4 === 3 ? .55 : 1))} 0" stroke="#4a4232" stroke-width=".42" fill="none"/>`).join('')
+      + `<path d="M${dx + 9} ${dy + dh - 4.4}q1.6 1.4 4.6 -.4" stroke="#3a3426" stroke-width=".45" fill="none"/>`
       + `<path d="M${dx + 6} ${dy + dh - 3}l-1.6 7l1.8 -1.4l1 2l.6 -7z" fill="#9a1a14"/><circle cx="${dx + 6.4}" cy="${dy + dh - 3.6}" r="2.6" fill="#b0221a" stroke="#5a0a06" stroke-width=".4"/><circle cx="${dx + 6.4}" cy="${dy + dh - 3.6}" r="1.4" fill="none" stroke="#e06a5a" stroke-width=".35"/>`
       + K.nails([[dx + 1.6, dy + 1.6], [dx + dw - 1.8, dy + 5.6], [dx + 1.6, dy + dh - 1.8], [dx + dw - 1.8, dy + dh - 1.8]], '#2a2a2a', .6);
-    // the drummer on the scaffold: Company red coat with white cross-belts, shako, ¾ to the left, sticks up
-    const dd = 27, fy = G(dd) - 2 * dd, hs = 1.72 * dd, dxm = 170;
+    // the drummer on the scaffold: Company red coat, white breeches and cross-belts, a tricorn; ¾ to the left, the near
+    // knee bent, the left stick on the drum head, the right one raised clear of the hat; light from the upper left
+    const dd = 27, fy = G(dd) - 2 * dd, dxm = 170, k = 1.72 * dd / 46;
     const drummer = (() => {
-      const h = hs, k = h / 46, tx = dxm, ty = fy;
-      const T = (x, y) => `${f1(tx + x * k)} ${f1(ty - y * k)}`;
-      let o = `<ellipse cx="${tx + 3}" cy="${f1(ty + .5)}" rx="${f1(9 * k)}" ry="1.3" fill="#120a04" opacity=".6"/>`;
-      // legs: white breeches, black gaiters, shoes; weight on the back leg
-      o += `<path d="M${T(-4.2, 22)}L${T(-5.4, 11)}L${T(-5, 1.2)}L${T(-1.6, 1.2)}L${T(-1.4, 11)}L${T(-.6, 21)}z" fill="#dcd8cc" stroke="#5a564c" stroke-width=".4"/>`
-        + `<path d="M${T(.6, 21)}L${T(2.6, 11)}L${T(3.6, 1.2)}L${T(6.8, 1.2)}L${T(5.6, 11)}L${T(4.8, 22)}z" fill="#ece8dc" stroke="#5a564c" stroke-width=".4"/>`
-        + `<path d="M${T(-5.5, 11.5)}L${T(-5.1, 1)}H${T(-1.5, 1).split(' ')[0]}L${T(-1.4, 11.5)}z" fill="#1c1c20"/><path d="M${T(2.5, 11.5)}L${T(3.5, 1)}H${T(6.9, 1).split(' ')[0]}L${T(5.7, 11.5)}z" fill="#24242a"/>`
-        + `<path d="M${T(-7.6, 0)}L${T(-1.2, 0)}L${T(-1.4, 1.6)}L${T(-6.4, 1.8)}z" fill="#0e0e10"/><path d="M${T(2.6, 0)}L${T(8, 0)}L${T(7.4, 1.6)}L${T(3.4, 1.8)}z" fill="#141416"/><path d="M${T(-7, .4)}h${f1(4 * k)}" stroke="#6a6a70" stroke-width=".35"/>`;
-      // coat with skirts, lapels, cross-belts, buttons; light from the upper left
-      o += `<path d="M${T(-6.4, 37)}Q${T(-8, 30)} ${T(-7.6, 16)}L${T(-2, 14.6)}L${T(1, 20)}L${T(4.6, 14.6)}L${T(7.6, 16.4)}Q${T(7.8, 28)} ${T(6.4, 37)}Q${T(0, 39.4)} ${T(-6.4, 37)}z" fill="#b8302a" stroke="#4a0a06" stroke-width=".5"/>`
-        + `<path d="M${T(-6.4, 37)}Q${T(-8, 30)} ${T(-7.6, 16)}L${T(-5.4, 15.6)}Q${T(-6, 28)} ${T(-4.4, 37.6)}z" fill="#e0685a" opacity=".55"/><path d="M${T(6.4, 37)}Q${T(7.8, 28)} ${T(7.6, 16.4)}L${T(5.4, 16)}Q${T(5.8, 28)} ${T(4.6, 37.4)}z" fill="#5a0e0a" opacity=".55"/>`
-        + `<path d="M${T(-5.6, 36)}L${T(5, 21)}M${T(5.2, 36)}L${T(-5, 21)}" stroke="#f4f0e6" stroke-width="${f2(1.6 * k)}"/><circle cx="${T(0, 28.4).split(' ')[0]}" cy="${T(0, 28.4).split(' ')[1]}" r="${f2(1 * k)}" fill="url(#brass${u})"/>`
-        + `<path d="M${T(-1.6, 37.6)}L${T(-.6, 22)}M${T(1.6, 37.6)}L${T(.8, 22)}" stroke="#f0e8d8" stroke-width=".5"/>` + [34, 31, 25].map(y => `<circle cx="${T(-.2, y).split(' ')[0]}" cy="${T(-.2, y).split(' ')[1]}" r=".5" fill="#e8c46a"/>`).join('')
-        + `<path d="M${T(-6.6, 37.4)}Q${T(-3, 38.6)} ${T(0, 38.6)}Q${T(3.4, 38.6)} ${T(6.6, 37.4)}" stroke="#f4f0e6" stroke-width=".7" fill="none"/>`;
-      // the drum on its sling, at the left thigh: shell, hoops, cords, the head lit from the upper left
-      const dcx = tx - 3.2 * k, dcy = ty - 19.8 * k, rx = 5.6 * k, ry = 2.2 * k, dh2 = 6.4 * k;
-      o += `<path d="M${T(5.4, 37)}L${f1(dcx + rx - .6)} ${f1(dcy - 1)}" stroke="#f0ece0" stroke-width="${f2(1.3 * k)}"/>`
-        + `<path d="M${f1(dcx - rx)} ${f1(dcy)}v${f1(dh2)}a${f1(rx)} ${f1(ry)} 0 0 0 ${f1(2 * rx)} 0v${f1(-dh2)}z" fill="#9a1a16" stroke="#3a0604" stroke-width=".5"/>`
-        + `<path d="M${f1(dcx - rx)} ${f1(dcy + dh2 * .5)}${Array.from({ length: 6 }, (_, i) => `L${f1(dcx - rx + (i + .5) * rx / 3)} ${f1(dcy + (i % 2 ? dh2 * .15 : dh2 * .9) + Math.sin((i + .5) / 6 * Math.PI) * ry)}`).join('')}L${f1(dcx + rx)} ${f1(dcy + dh2 * .5)}" stroke="#f0e2b0" stroke-width=".45" fill="none"/>`
-        + `<path d="M${f1(dcx - rx)} ${f1(dcy + dh2)}a${f1(rx)} ${f1(ry)} 0 0 0 ${f1(2 * rx)} 0" stroke="#e8c46a" stroke-width="1" fill="none"/><path d="M${f1(dcx - rx + .5)} ${f1(dcy + 1)}v${f1(dh2 - 1.4)}" stroke="#e86050" stroke-width=".7" opacity=".7"/>`
-        + `<ellipse cx="${f1(dcx)}" cy="${f1(dcy)}" rx="${f1(rx)}" ry="${f1(ry)}" fill="#e8e0c8" stroke="#e8c46a" stroke-width="1"/><ellipse cx="${f1(dcx - 1.4)}" cy="${f1(dcy - .3)}" rx="${f1(rx * .5)}" ry="${f1(ry * .4)}" fill="#ffffff" opacity=".45"/>`;
-      // arms: the left one bent, stick resting on the head; the right one raised with the stick up
-      o += `<path d="M${T(-5.4, 35.6)}Q${T(-9.4, 29)} ${T(-7.4, 23.6)}L${T(-4.4, 21.4)}L${T(-3, 23.6)}L${T(-5, 26.4)}Q${T(-5.6, 30)} ${T(-3.4, 34.6)}z" fill="#a82822" stroke="#4a0a06" stroke-width=".45"/>`
-        + `<path d="M${T(-4.8, 22)}l${f1(1.8 * k)} ${f1(-.6 * k)}l${f1(.4 * k)} ${f1(1.6 * k)}l${f1(-1.8 * k)} ${f1(.4 * k)}z" fill="#f4f0e6"/><circle cx="${T(-3.4, 21).split(' ')[0]}" cy="${T(-3.4, 21).split(' ')[1]}" r="${f2(1.3 * k)}" fill="#e2b48c" stroke="#6a3a1a" stroke-width=".3"/>`
-        + `<path d="M${T(-3, 21.4)}L${T(1.6, 20.6)}" stroke="#d8c0a0" stroke-width=".9" stroke-linecap="round"/>`
-        + `<path d="M${T(5.4, 36)}Q${T(10.6, 33)} ${T(10.4, 37.6)}L${T(9.6, 42.6)}L${T(7.4, 42)}L${T(7.6, 38)}Q${T(6.6, 37)} ${T(4, 33.6)}z" fill="#b02c26" stroke="#4a0a06" stroke-width=".45"/>`
-        + `<circle cx="${T(8.6, 43.6).split(' ')[0]}" cy="${T(8.6, 43.6).split(' ')[1]}" r="${f2(1.3 * k)}" fill="#e8bc94" stroke="#6a3a1a" stroke-width=".3"/><path d="M${T(8.4, 43.4)}L${T(2.4, 47.6)}" stroke="#d8c0a0" stroke-width=".9" stroke-linecap="round"/>`;
-      // head ¾ to the left: brow, nose, jaw, ear; stock at the neck; the shako with a brass plate
-      o += `<path d="M${T(-1.6, 38.6)}h${f1(3.4 * k)}v${f1(-1.6 * k)}h${f1(-3.4 * k)}z" fill="#1c1c20"/>`
-        + `<path d="M${T(2.4, 39.4)}Q${T(3.2, 43.6)} ${T(1.4, 45.6)}L${T(-1.6, 45.8)}Q${T(-2.6, 44.6)} ${T(-2.4, 43.4)}L${T(-3.2, 42.4)}L${T(-2.4, 42)}Q${T(-2.6, 40.4)} ${T(-1.2, 39.4)}Q${T(.6, 38.8)} ${T(2.4, 39.4)}z" fill="#e2b088" stroke="#6a3a1a" stroke-width=".35"/>`
-        + `<path d="M${T(-2.2, 43.6)}q${f1(.8 * k)} ${f1(-.3 * k)} ${f1(1.6 * k)} 0" stroke="#3a2010" stroke-width=".4" fill="none"/><circle cx="${T(-1.2, 43.1).split(' ')[0]}" cy="${T(-1.2, 43.1).split(' ')[1]}" r=".35" fill="#1a0e06"/>`
-        + `<path d="M${T(1.4, 43)}q${f1(.9 * k)} ${f1(-.4 * k)} ${f1(.9 * k)} ${f1(-1.2 * k)}q${f1(-.2 * k)} ${f1(-.6 * k)} ${f1(-.8 * k)} ${f1(-.2 * k)}" stroke="#8a5030" stroke-width=".4" fill="#d09a74"/><path d="M${T(-2, 40.6)}q${f1(1.2 * k)} ${f1(-.8 * k)} ${f1(2.4 * k)} ${f1(-.4 * k)}" stroke="#a86a44" stroke-width=".35" fill="none"/>`
-        + `<path d="M${T(2.6, 39.8)}Q${T(3.4, 43)} ${T(2.2, 45)}" stroke="#8a4a28" stroke-width=".7" fill="none" opacity=".6"/>`
-        + `<path d="M${T(-2.6, 45.4)}L${T(-2.2, 52)}L${T(3.2, 52.4)}L${T(3, 45.4)}z" fill="#1a1a1e" stroke="#000" stroke-width=".3"/><path d="M${T(-3.4, 45.6)}L${T(-.4, 45.2)}" stroke="#141418" stroke-width="${f2(.9 * k)}"/>`
-        + `<path d="M${T(-2.5, 46)}L${T(3.1, 46)}" stroke="#e8c46a" stroke-width=".7"/><path d="M${T(-1.2, 47)}L${T(1.4, 47)}L${T(1.2, 50.6)}L${T(-1, 50.6)}z" fill="url(#brass${u})"/><path d="M${T(-2.3, 51.6)}L${T(-2.2, 47)}" stroke="#5a5a64" stroke-width=".5"/>`;
-      return o;
+      const pt = l => l.map(([x, y], i) => (i ? 'L' : 'M') + f1(x) + ' ' + f1(y)).join('') + 'z';
+      let o = `<ellipse cx="3.6" cy=".4" rx="9" ry="1.3" fill="#120a04" opacity=".6"/>`
+        + `<linearGradient id="pkl${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4f0e4"/><stop offset=".6" stop-color="#cfc8b8"/><stop offset="1" stop-color="#8a8478"/></linearGradient>`;
+      // the back leg straight, the near one bent at the knee; white breeches to the knee, black gaiters, shoes
+      o += `<path d="${pt([[-4.6, -22], [-1, -22], [-1.8, -11], [-4.8, -11.2]])}" fill="url(#pkl${u})" stroke="#5a564c" stroke-width=".3"/><path d="${pt([[-4.9, -11.4], [-1.8, -11.2], [-2.4, -1.4], [-4.6, -1.4]])}" fill="#1a1a1e"/>`
+        + `<path d="${pt([[-7.2, 0], [-2.2, 0], [-2.4, -1.6], [-6, -1.8]])}" fill="#0c0c0e"/>`
+        + `<path d="${pt([[0, -22.4], [4.4, -22], [2.4, -11], [-1.6, -11.6]])}" fill="url(#pkl${u})" stroke="#5a564c" stroke-width=".3"/><path d="M3.6 -20q-1 4 -2.2 8.4" stroke="#8a8478" stroke-width=".5" fill="none"/>`
+        + `<path d="${pt([[-1.7, -11.8], [2.4, -11.2], [3.2, -1.4], [.6, -1.4]])}" fill="#202026"/><path d="M-1.2 -11q.6 5 1.6 9.4" stroke="#5a5a64" stroke-width=".4" fill="none"/>`
+        + `<path d="${pt([[-1.4, 0], [4.4, 0], [3.8, -1.7], [.2, -1.9]])}" fill="#101012"/><path d="M-.8 -.5h3" stroke="#6a6a70" stroke-width=".3"/>`;
+      // the coat: skirts with the turned-back white lining, folds, lapels, cross-belts and buttons
+      o += `<path d="M-6 -37.2Q-8.4 -30 -8 -14.6L-3 -13.6L-.6 -19.6L1.6 -14L7.2 -15.4Q7.8 -27 5.8 -37.6Q0 -39.6 -6 -37.2z" fill="#b02c26" stroke="#4a0a06" stroke-width=".45"/>`
+        + `<path d="M-8 -14.6L-3 -13.6L-4.2 -18.6Q-6.6 -18 -7.6 -16.6z" fill="#f0ece0"/><path d="M7.2 -15.4L1.6 -14L3.2 -18.4Q5.8 -18 7 -17z" fill="#d8d2c4"/>`
+        + `<path d="M-6 -37.2Q-8.4 -30 -8 -14.6L-6.2 -14.4Q-6.8 -28 -4.4 -37.6z" fill="#e8705e" opacity=".5"/><path d="M5.8 -37.6Q7.8 -27 7.2 -15.4L5.4 -15Q6 -27 4.2 -37.6z" fill="#4a0806" opacity=".55"/>`
+        + `<path d="M-4.6 -30q1 4 .4 9M2.6 -29q.8 5 -.2 10M-6.4 -24q1.4 3 1.2 8M5.4 -24q-.4 4 .4 8" stroke="#5a0e0a" stroke-width=".45" fill="none"/>`
+        + `<path d="M-1.6 -38L-2.6 -23M1.4 -38.2L1.2 -23" stroke="#e8e0cc" stroke-width=".7"/>`
+        + `<path d="M-5.2 -36.4L4.6 -22.2M5 -36.6L-4.6 -22" stroke="#f4f0e6" stroke-width="1.5"/><path d="M-5.2 -36.4L4.6 -22.2" stroke="#b8b2a4" stroke-width=".35" transform="translate(.4 .5)"/><circle cx="0" cy="-29.2" r="1" fill="url(#brass${u})"/>`
+        + [-34.4, -31.6, -26.4, -24].map(y => `<circle cx="-.6" cy="${y}" r=".5" fill="#e8c46a"/>`).join('')
+        + `<path d="M4.8 -37L-3.8 -21.6" stroke="#ece8dc" stroke-width="1.1"/>`;
+      // the drum on its sling at the left thigh: a red shell, hoops, the cords zigzag, the head lit from the upper left
+      const dcx = -3.6, dcy = -20.6, rx = 5.4, ry = 2.1, dh2 = 6.2;
+      o += `<g transform="rotate(-8 ${dcx} ${dcy})"><path d="M${dcx - rx} ${dcy}v${dh2}a${rx} ${ry} 0 0 0 ${2 * rx} 0v${-dh2}z" fill="#9a1a16" stroke="#3a0604" stroke-width=".45"/>`
+        + `<path d="M${dcx - rx} ${dcy + 3}${Array.from({ length: 6 }, (_, i) => `L${f1(dcx - rx + (i + .5) * rx / 3)} ${f1(dcy + (i % 2 ? 1.2 : dh2 - .4) + Math.sin((i + .5) / 6 * Math.PI) * ry)}`).join('')}L${dcx + rx} ${dcy + 3}" stroke="#f0e2b0" stroke-width=".4" fill="none"/>`
+        + `<path d="M${dcx - rx} ${dcy + dh2}a${rx} ${ry} 0 0 0 ${2 * rx} 0" stroke="#e8c46a" stroke-width=".9" fill="none"/><path d="M${dcx + rx - .6} ${dcy + 1}v${dh2 - 1}" stroke="#4a0604" stroke-width="1.2" opacity=".6"/>`
+        + `<ellipse cx="${dcx}" cy="${dcy}" rx="${rx}" ry="${ry}" fill="#e8e0c8" stroke="#e8c46a" stroke-width=".9"/><ellipse cx="${dcx - 1.4}" cy="${dcy - .3}" rx="2.6" ry=".8" fill="#ffffff" opacity=".45"/></g>`;
+      // the arms: the near (left) one bent, its stick on the drum; the far (right) one raised, the stick up and away
+      const fist = (x, y) => `<path d="M${x - 1.2} ${y - 1}q1.2 -.8 2.4 0q.6 1.2 0 2.2q-1.2 .8 -2.4 0q-.6 -1.2 0 -2.2z" fill="#e2b48c" stroke="#6a3a1a" stroke-width=".3"/><path d="M${x - .9} ${y - .2}h1.8M${x - .9} ${y + .5}h1.8" stroke="#a86a44" stroke-width=".25"/>`;
+      o += `<path d="M-5 -36.4Q-9 -33 -8.2 -27.4L-4.6 -23.6L-3 -25.2L-5.4 -28Q-5.6 -31 -3.6 -34.4z" fill="#a82822" stroke="#4a0a06" stroke-width=".4"/><path d="M-5.2 -24.6l1.8 -.6l.6 1.4l-1.8 .5z" fill="#f4f0e6"/>`
+        + `<path d="M-3.2 -23.2L1.8 -21.2" stroke="#d8c0a0" stroke-width=".8" stroke-linecap="round"/>` + fist(-3.6, -23.6)
+        + `<path d="M4.6 -36.6Q9.6 -35 10.6 -31.4L10 -38.4L8.2 -38.8L8.4 -33.4Q6.6 -34.4 3.6 -34z" fill="#b8302a" stroke="#4a0a06" stroke-width=".4"/><path d="M8 -38.6l2.2 .2l-.2 1.2l-2.2 -.2z" fill="#f4f0e6"/>`
+        + `<path d="M9.4 -40.4L14 -46" stroke="#d8c0a0" stroke-width=".8" stroke-linecap="round"/>` + fist(9.2, -40);
+      // the head ¾ to the left: brow, nose, cheek, jaw, ear, a queue of hair; the tricorn with its white edging
+      o += `<path d="M-1.6 -38.4h3.2v-1.4h-3.2z" fill="#f4f0e6"/>`
+        + `<path d="M2 -39.6Q2.8 -43.6 1.2 -45.6L-1.8 -45.8Q-2.8 -44.6 -2.6 -43.4L-3.4 -42.4L-2.6 -41.8Q-2.8 -40.4 -1.4 -39.6Q.4 -39 2 -39.6z" fill="#e2b088" stroke="#6a3a1a" stroke-width=".3"/>`
+        + `<path d="M-2.4 -43.6q.8 -.3 1.6 0" stroke="#3a2010" stroke-width=".35" fill="none"/><circle cx="-1.3" cy="-43.1" r=".3" fill="#1a0e06"/><path d="M-2.2 -40.8q.9 .3 1.6 0" stroke="#8a4a30" stroke-width=".3" fill="none"/>`
+        + `<path d="M.9 -42.2q.9 -.4 .9 -1.3q-.3 -.6 -.9 -.2z" fill="#c88a64" stroke="#8a5030" stroke-width=".3"/><path d="M2 -39.8Q2.8 -42.8 1.8 -45" stroke="#8a4a28" stroke-width=".6" fill="none" opacity=".55"/>`
+        + `<path d="M1.6 -44.6q2.4 .4 2.4 3.4l-.6 1.6" stroke="#d8d0c0" stroke-width="1" fill="none"/><path d="M3.6 -40.6l.8 2.4" stroke="#1a1a1a" stroke-width=".8"/>`
+        + `<path d="M-5.6 -45.4Q-.6 -49.6 5 -45.8Q2 -46.8 1.2 -48.6Q-.6 -51 -2.8 -48.6Q-4 -47 -5.6 -45.4z" fill="#141416" stroke="#000" stroke-width=".3"/>`
+        + `<path d="M-5.6 -45.4Q-.6 -49.6 5 -45.8" stroke="#f0ece0" stroke-width=".6" fill="none"/><path d="M-2.6 -48.8Q-.6 -50.4 1.2 -48.6" stroke="#5a5a64" stroke-width=".4" fill="none"/>`;
+      return `<g transform="translate(${dxm} ${f1(fy)}) scale(${f2(k)})">${o}</g>`;
     })();
     // the crowd below the glass: three rows of dark heads and shoulders, different hats, no faces; a cold rim light
-    const head = (x, fy2, Hh, hat, sc, col, lean = 0) => {
-      const s = (fy2 - hz) / E * sc, top = fy2 - Hh * s, hw = .22 * s, sw = .5 * s;
+    const head = (x, fy2, Hh, hat, sc, col, lean = 0, swf = .5, prof = 0) => {
+      const s = (fy2 - hz) / E * sc, top = fy2 - Hh * s, hw = .22 * s, sw = swf * s;
       const hy = top + .14 * s, ny = top + .3 * s;
       // a body: sloping shoulders running into the upper arms, a neck, the head turned a little; rim light on the left
       const sh = ny + .07 * s, L = x - sw / 2, Rr = x + sw / 2;
@@ -482,6 +498,8 @@ const SCENES = {
         + `<ellipse cx="${f1(x)}" cy="${f1(hy)}" rx="${f1(hw / 2)}" ry="${f1(.125 * s)}" fill="${col}"/>`
         + `<path d="M${f1(L - .005 * s)} ${f1(sh + .26 * s)}Q${f1(L)} ${f1(sh + .02 * s)} ${f1(L + .1 * s)} ${f1(sh)}Q${f1(x - .12 * s)} ${f1(ny + .02 * s)} ${f1(x - .07 * s)} ${f1(ny)}" stroke="#7e8e9c" stroke-width="${f2(Math.max(.5, .012 * s))}" fill="none" opacity=".5"/>`
         + `<path d="M${f1(x - hw * .5)} ${f1(hy + .03 * s)}a${f1(hw / 2)} ${f1(.125 * s)} 0 0 1 ${f1(hw * .45)} ${f1(-.125 * s)}" stroke="#7e8e9c" stroke-width="${f2(Math.max(.45, .01 * s))}" fill="none" opacity=".45"/>`;
+      if (prof) o += `<path d="M${f1(x + prof * hw * .45)} ${f1(hy - .02 * s)}l${f1(prof * .045 * s)} ${f1(.035 * s)}l${f1(-prof * .045 * s)} ${f1(.02 * s)}z" fill="${col}"/><path d="M${f1(x + prof * hw * .42)} ${f1(hy + .05 * s)}q${f1(prof * .02 * s)} ${f1(.03 * s)} 0 ${f1(.06 * s)}" stroke="${col}" stroke-width="${f2(.03 * s)}" fill="none"/>`;
+      if (hat === 'shawl') o += `<path d="M${f1(x - hw * .7)} ${f1(hy + .1 * s)}Q${f1(x - hw * .75)} ${f1(top - .02 * s)} ${f1(x)} ${f1(top - .02 * s)}Q${f1(x + hw * .75)} ${f1(top - .02 * s)} ${f1(x + hw * .7)} ${f1(hy + .1 * s)}L${f1(x + sw * .55)} ${f1(ny + .32 * s)}L${f1(x - sw * .55)} ${f1(ny + .32 * s)}z" fill="${col}"/><path d="M${f1(x - hw * .7)} ${f1(hy + .1 * s)}L${f1(x - sw * .55)} ${f1(ny + .32 * s)}" stroke="#7e8e9c" stroke-width=".5" opacity=".4"/>`;
       if (hat === 'tricorn') o += `<path d="M${f1(x - hw * .95)} ${f1(top + .06 * s)}Q${f1(x)} ${f1(top - .1 * s)} ${f1(x + hw * .95)} ${f1(top + .06 * s)}L${f1(x + hw * .6)} ${f1(top + .1 * s)}Q${f1(x)} ${f1(top + .04 * s)} ${f1(x - hw * .6)} ${f1(top + .1 * s)}z" fill="${col}"/>`;
       if (hat === 'round') o += `<ellipse cx="${f1(x)}" cy="${f1(top + .08 * s)}" rx="${f1(hw * .95)}" ry="${f1(.04 * s)}" fill="${col}"/><path d="M${f1(x - hw * .45)} ${f1(top + .08 * s)}v${f1(-.12 * s)}h${f1(hw * .9)}v${f1(.12 * s)}z" fill="${col}"/>`;
       if (hat === 'cap') o += `<path d="M${f1(x - hw * .55)} ${f1(top + .1 * s)}Q${f1(x)} ${f1(top - .08 * s)} ${f1(x + hw * .7)} ${f1(top + .06 * s)}l${f1(.06 * s)} ${f1(.05 * s)}z" fill="${col}"/>`;
@@ -489,14 +507,15 @@ const SCENES = {
       if (hat === 'bicorne') o += `<path d="M${f1(x - hw * 1.1)} ${f1(top + .1 * s)}Q${f1(x)} ${f1(top - .16 * s)} ${f1(x + hw * 1.1)} ${f1(top + .1 * s)}Q${f1(x)} ${f1(top + .02 * s)} ${f1(x - hw * 1.1)} ${f1(top + .1 * s)}z" fill="${col}"/>`;
       return o + '</g>';
     };
-    const cr = R(5), hats = ['tricorn', 'round', 'bare', 'cap', 'bonnet', 'tricorn', 'bicorne', 'round', 'bare', 'cap'];
+    const cr = R(5), hats = ['tricorn', 'round', 'shawl', 'cap', 'bonnet', 'tricorn', 'bare', 'bicorne', 'round', 'shawl', 'cap', 'bare'];
     let crowd = '';
     [[214, 11, .95, '#2a3038'], [246, 8, 1, '#1e232a'], [300, 5, 1, '#121519']].forEach(([fy2, n, sc, col], row) => {
       const span = 200 / n;
       for (let i = 0; i < n; i++) {
         let x = (i + .5) * span + (cr() - .5) * span * .3 + (row % 2) * span * .3;
-        if (row < 2 && x < 44) continue; // the gap where the scaffold's leg stands on the cobbles
-        crowd += head(x, fy2, 1.6 + cr() * .28, hats[(i * 3 + row * 4) % hats.length], sc, col, (cr() - .5) * 8);
+        if (row < 2 && (x < 44 || (x > 164 && x < 188))) continue; // gaps where the scaffold's front legs stand on the cobbles
+        const hh = i % 5 === 3 ? 1.35 : 1.55 + cr() * .3; // one shorter figure in each row
+        crowd += head(x, fy2, hh, hats[(i * 3 + row * 5) % hats.length], sc, col, (cr() - .5) * 10, .42 + cr() * .16, i % 4 === 1 ? (cr() > .5 ? 1 : -1) : 0);
       }
     });
     // light: overcast from the upper left, a cool haze in the distance, the crowd darkest
@@ -627,19 +646,20 @@ SKEL['Указ о казнях'] = { orig: { k: 1.4, tx: -12, ty: 14 }, horizon:
     ['crow-l', 47, 47, 22, 12, 'on beam'],
     ['crow-r', 130, 47, 22, 12, 'on beam'],
     ['crow-fly', 77, 32, 30, 12, 'flying from the wall'],
-    ['decree', 11, 123, 21, 29, 'nailed on wall'],
-    ['drummer', 160, 138, 20, 53, 'on scaffold, in front of post-r (s 27: 1.72 m = 46 + shako)'],
+    ['decree', 13, 122, 16, 22, 'nailed on wall'],
+    ['drummer', 162, 138, 24, 53, 'on scaffold, in front of post-r (s 27: 1.72 m = 46 + shako)'],
     ['crowd', 0, 280, 200, 128, 'ground, in front of scaffold; feet off-frame', { edge: 1 }]] };
-SKEL['Залп всей батареей'] = { orig: { k: 1.4, tx: -36, ty: 4 }, horizon: 112, eye: 7.7, light: 'sun upper-left + orange flashes',
+SKEL['Залп всей батареей'] = { orig: { k: 1.4, tx: -36, ty: -6 }, horizon: 102, eye: 7.7, light: 'sun upper-left + orange flashes',
   items: [
-    ['ship', 55, 134, 115, 76, 'water: her waterline y 134'],
-    ['jibs', 28, 134, 30, 40, 'on the bowsprit of ship'],
-    ['far-l', 10, 115, 16, 12, 'water: waterline y 115'],
-    ['far-r', 172, 115, 16, 12, 'water: waterline y 115'],
-    ['sun', 28, 64, 16, 16, 'sky, far behind'],
-    ['smoke', 24, 172, 172, 36, 'on the water along the waterline of ship; in front of ship, behind splash-l, splash-c, splash-r, jibs', { edge: 1 }],
-    ['splash-l', 36, 190, 34, 40, 'water (the column rises from it)'],
-    ['splash-c', 83, 205, 42, 52, 'water (the column rises from it)'],
-    ['splash-r', 141, 186, 30, 36, 'water (the column rises from it)'],
-    ['near-wave', 0, 280, 200, 54, 'water', { edge: 1 }]] };
+    ['ship', 55, 124, 115, 76, 'water: her waterline y 124'],
+    ['jibs', 28, 124, 30, 40, 'on the bowsprit of ship'],
+    ['far-l', 10, 105, 12, 9, 'water: waterline y 105'],
+    ['far-r', 176, 105, 14, 10, 'water: waterline y 105'],
+    ['sun', 32, 64, 16, 16, 'sky, far behind'],
+    ['smoke', 24, 166, 172, 54, 'out of the ports of ship, on the water along her waterline; in front of ship, behind splash-l, splash-c, splash-r, jibs', { edge: 1 }],
+    ['splash-l', 38, 186, 28, 34, 'water (the column rises from it)'],
+    ['splash-c', 86, 200, 40, 46, 'water (the column rises from it)'],
+    ['splash-r', 142, 182, 28, 30, 'water (the column rises from it)'],
+    ['spar', 14, 254, 70, 14, 'floats in near-wave'],
+    ['near-wave', 0, 280, 200, 66, 'water', { edge: 1 }]] };
 module.exports = { SCENES, CAM, SKEL, redcoat, lines, seal, coinStack, quill, inkwell };

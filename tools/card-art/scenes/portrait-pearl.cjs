@@ -628,10 +628,10 @@ const SCENES = {
   // brackets with four bottles standing on it (y 96, x 10–54), a window with the moon (x 134–184, y 48–98)
   // on the counter: three cards face down in a fan (x 136–168, y 110–124) and coins in stacks (x 22–56), contact shadows
   // hand: our right hand rises from the bottom edge in front of the counter, 0.2 m from the eye (drawn at 1.6 about the
-  // wrist y 150): sleeve from the bottom, lace cuff y 152–168 (under the glass), back of the hand to us, knuckles y ~92,
-  // the card (x 78–114, y 12–60) gripped between the index (in front of it) and the middle finger (behind it); ring and
+  // wrist y 157): sleeve from the bottom, lace cuff y 160–172 (under the glass), back of the hand to us, knuckles y ~92,
+  // the card (x 78–114, y 16–64) gripped between the index (in front of it) and the middle finger (behind it); ring and
   // little finger curled, thumb out to the left (tip x 61)
-  // flying: the card arrived from the fan — a short blurred trail and one faint after-image from the lower right
+  // flying: the card arrived from the fan — a blurred trail from the fan (150, 112) to the card and one faint after-image
   'Ловкость рук': u => {
     const hz = 72;
     // brick wall in the lantern light, darker to the right and down; a cold cast near the window
@@ -664,7 +664,7 @@ const SCENES = {
     [111.4, 117.8, 125.2].forEach((y, i) => { counter += `<path d="M0 ${y}h200" stroke="#1a0e06" stroke-width="${.5 + i * .2}"/><path d="M0 ${y + .6}h200" stroke="#c08850" stroke-width=".3" opacity=".4"/>`; });
     const cr = R(14);
     counter += Array.from({ length: 22 }, () => { const y = ct + 2 + cr() * (cf - ct - 4), x = cr() * 200, w = 10 + cr() * 30 * (y - hz) / 40; return `<path d="M${f1(x)} ${f1(y)}q${f1(w / 2)} ${f1(cr() - .5)} ${f1(w)} 0" stroke="#24140a" stroke-width=".3" fill="none" opacity=".6"/>`; }).join('')
-      + glow(u, 52, 114, 80, 16, '#ffb860', .3) + `<path d="M150 ${ct + 1}L174 ${ct + 1}L186 ${cf - 1}L150 ${cf - 1}z" fill="#9ab8e0" opacity=".1"/>`
+      + glow(u, 52, 114, 80, 16, '#ffb860', .3) + blurF('plm' + u, 3) + `<path d="M150 ${ct + 2}L172 ${ct + 2}L184 ${cf - 2}L152 ${cf - 2}z" fill="#9ab8e0" opacity=".12" filter="url(#plm${u})"/>`
       + `<rect y="${cf}" width="200" height="5" fill="url(#oak${u})"/><path d="M0 ${cf + .4}h200" stroke="#e0a868" stroke-width=".7" opacity=".7"/><path d="M0 ${cf + 5}h200" stroke="#0a0604" stroke-width="1.4"/>`
       + `<rect y="${cf + 5}" width="200" height="${280 - cf - 5}" fill="#24140a"/>`
       + Array.from({ length: 6 }, (_, k) => `<rect x="${4 + k * 33}" y="${cf + 12}" width="27" height="120" rx="1" fill="#2e1a0c" stroke="#120804" stroke-width=".8"/><path d="M${5 + k * 33} ${cf + 13}h25" stroke="#6a4224" stroke-width=".5"/>`).join('')
@@ -674,15 +674,15 @@ const SCENES = {
     const onCounter = coins(26, 121, 6) + coins(33, 118, 9) + coins(40, 123, 4) + coins(48, 117, 3)
       + `<ellipse cx="54" cy="125" rx="3.2" ry="1" fill="url(#brass${u})" stroke="#5e4210" stroke-width=".3"/>`
       + `<ellipse cx="156" cy="121.4" rx="17" ry="2.4" fill="#000" opacity=".45"/>`
-      + K.cardBack(u, 146, 117, -26, .7, .42, '#5a1a1a') + K.cardBack(u, 153, 116.4, -4, .7, .42, '#5a1a1a') + K.cardBack(u, 161, 117.2, 20, .7, .42, '#5a1a1a');
+      + `<g transform="translate(0 117) scale(1 .36) translate(0 -117)">` + K.cardBack(u, 145, 117, -62, .7, 1, '#5a1a1a') + K.cardBack(u, 153, 116, -84, .7, 1, '#5a1a1a') + K.cardBack(u, 161, 117.4, -106, .7, 1, '#5a1a1a') + `</g>`;
     // the flying card's trail from the fan: a soft streak and two fading after-images
     const ft = blurF('plt' + u, 1.4);
-    const trail = ft + `<linearGradient id="plg${u}" gradientUnits="userSpaceOnUse" x1="140" y1="78" x2="112" y2="40"><stop offset="0" stop-color="#e8d6aa" stop-opacity="0"/><stop offset="1" stop-color="#e8d6aa" stop-opacity=".5"/></linearGradient>`
-      + `<path d="M140 80L108 44L120 30L146 72z" fill="url(#plg${u})" filter="url(#plt${u})"/>`
-      + `<g opacity=".16" filter="url(#plt${u})">${K.cardBack(u, 124, 52, 26, 1.7, 1, '#5a1a1a')}</g>`;
+    const trail = ft + `<linearGradient id="plg${u}" gradientUnits="userSpaceOnUse" x1="152" y1="112" x2="116" y2="70"><stop offset="0" stop-color="#e8d6aa" stop-opacity="0"/><stop offset="1" stop-color="#e8d6aa" stop-opacity=".55"/></linearGradient>`
+      + `<path d="M151 113L112 72L121 64L155 109z" fill="url(#plg${u})" filter="url(#plt${u})"/>`
+      + `<g opacity=".14" filter="url(#plt${u})">${K.cardBack(u, 132, 86, 30, 1.5, .9, '#5a1a1a')}</g>`;
     // the hand: back of the right hand, the card between index (in front) and middle finger (behind)
     const skin = `url(#plsk${u})`, st = 'stroke="#5a2e16" stroke-width=".5"';
-    const skinG = `<linearGradient id="plsk${u}" gradientUnits="userSpaceOnUse" x1="70" y1="0" x2="114" y2="0"><stop offset="0" stop-color="#f4c8a0"/><stop offset=".45" stop-color="#d89a72"/><stop offset=".8" stop-color="#a0603e"/><stop offset="1" stop-color="#7a4a3a"/></linearGradient>`;
+    const skinG = `<linearGradient id="plsd${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c08460"/><stop offset="1" stop-color="#6a3a26"/></linearGradient><linearGradient id="plsk${u}" gradientUnits="userSpaceOnUse" x1="70" y1="0" x2="114" y2="0"><stop offset="0" stop-color="#f4c8a0"/><stop offset=".45" stop-color="#d89a72"/><stop offset=".8" stop-color="#a0603e"/><stop offset="1" stop-color="#7a4a3a"/></linearGradient>`;
     // a straight finger from the knuckle (x0,y0) to the tip (x1,y1), width w0 → w1, two joint creases, the nail
     const finger = (x0, y0, x1, y1, w0, w1, j1, j2) => {
       const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L;
@@ -695,32 +695,38 @@ const SCENES = {
         + crease(j1) + crease(j2) + nail;
     };
     // a curled finger seen from the back: the knuckle, then the bent middle phalanx pointing at us and down
-    const curled = (x, y, w, h) => `<path d="M${f1(x - w / 2)} ${y}Q${f1(x - w / 2 - .4)} ${f1(y + h * .8)} ${f1(x - w * .1)} ${f1(y + h)}Q${f1(x + w * .45)} ${f1(y + h + .4)} ${f1(x + w / 2)} ${f1(y + h * .7)}L${f1(x + w / 2)} ${y}z" fill="${skin}" ${st}/>`
-      + `<path d="M${f1(x - w * .42)} ${f1(y + h * .46)}q${f1(w * .42)} ${f1(-1.2)} ${f1(w * .84)} 0" stroke="#8a4a2a" stroke-width=".45" fill="none"/><path d="M${f1(x - w * .3)} ${f1(y + h * .52)}q${f1(w * .3)} -.6 ${f1(w * .6)} 0" stroke="#7a4028" stroke-width=".3" fill="none"/>`
-      + `<path d="M${f1(x - w * .36)} ${f1(y + 1.5)}q${f1(-.6)} ${f1(h * .5)} ${f1(.4)} ${f1(h * .8)}" stroke="#ffe0c4" stroke-width=".7" fill="none" opacity=".5"/>`;
+    // a finger curled into the palm, seen from the back: the knuckle and the first phalanx going away from us, end-on —
+    // a rounded hump above the knuckle row, darker where it turns away from the lantern
+    const curled = (x, y, w, h) => `<path d="M${f1(x - w / 2)} ${f1(y + 1)}Q${f1(x - w / 2)} ${f1(y - h)} ${f1(x)} ${f1(y - h)}Q${f1(x + w / 2)} ${f1(y - h)} ${f1(x + w / 2)} ${f1(y + 1.4)}Q${x} ${f1(y + 2.4)} ${f1(x - w / 2)} ${f1(y + 1)}z" fill="url(#plsd${u})" ${st}/>`
+      + `<path d="M${f1(x - w * .3)} ${f1(y - h * .55)}q${f1(w * .3)} -1 ${f1(w * .6)} 0" stroke="#5a2a18" stroke-width=".4" fill="none"/><path d="M${f1(x - w * .38)} ${f1(y - .4)}q${f1(-.2)} ${f1(-h * .5)} ${f1(w * .3)} ${f1(-h * .8)}" stroke="#ffe0c4" stroke-width=".6" fill="none" opacity=".45"/>`
+      + `<ellipse cx="${x}" cy="${f1(y + .4)}" rx="${f1(w * .36)}" ry=".9" fill="#ffe2c8" opacity=".4"/>`;
     const card = K.cardBack(u, 96.5, 63.5, 13, 1.12, 1, '#5a1a1a');
     const middle = finger(93.6, 98, 99.2, 70.4, 6, 5.2, .38, .7);
     const index = finger(85.2, 100, 87.4, 74.6, 5.8, 5, .36, .68);
     const thumb = `<path d="M84.6 129Q78.4 124 74.2 114.6L70.2 106.4Q69.4 103.4 71.6 102.4Q74 101.6 75.6 104.2L80.6 112.4Q83 116.4 87.6 119z" fill="${skin}" ${st}/>`
       + `<path d="M71.2 104.4Q71.6 102.2 73.8 102.6Q75 103.6 75.4 105.4Q73.6 106.8 71.2 104.4z" fill="#f0c8b0" stroke="#a0644a" stroke-width=".35"/><path d="M75.4 113q2 -.4 3.4 1.4" stroke="#8a4a2a" stroke-width=".4" fill="none"/><path d="M73.4 110.4q3 4 9.6 10" stroke="#ffe0c4" stroke-width=".8" fill="none" opacity=".5"/>`;
-    const back = `<path d="M85.4 136Q84.2 129 84.6 122Q84 112 83 104.6Q83.6 99.4 87.8 98.8L96.8 96.6Q103 96.6 106.6 99.4Q111.6 101.2 112.2 106Q112 116 109.6 124Q108.6 130 108.4 136z" fill="${skin}" ${st}/>`
+    const back = `<path d="M84.6 141Q84.2 129 84.6 122Q84 112 83 104.6Q83.6 99.4 87.8 98.8L96.8 96.6Q103 96.6 106.6 99.4Q111.6 101.2 112.2 106Q112 116 109.6 124Q108.8 132 109.4 141z" fill="${skin}" ${st}/>`
       // tendons fanning to the knuckles, a vein, knuckle highlights from the lantern
       + [[95, 134, 86, 102], [97, 134, 94, 100], [100, 134, 101.6, 101.6], [103, 134, 108.6, 105]].map(([a, b, c, d]) => `<path d="M${a} ${b}Q${f1((a + c) / 2 + .6)} ${f1((b + d) / 2)} ${c} ${d}" stroke="#b07250" stroke-width=".6" fill="none" opacity=".55"/><path d="M${a - .7} ${b}Q${f1((a + c) / 2 - .1)} ${f1((b + d) / 2)} ${c - .7} ${d}" stroke="#ffd8b8" stroke-width=".45" fill="none" opacity=".35"/>`).join('')
       + `<path d="M89 132q3 -8 2 -14t4 -10" stroke="#8a6070" stroke-width=".55" fill="none" opacity=".45"/>`
       + [[86.4, 100.6], [94.2, 98.4], [101.6, 99.4], [108.2, 103]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="2.4" ry="1.4" fill="#ffe2c8" opacity=".45"/><path d="M${x - 1.6} ${y + 1.6}q1.6 .8 3.2 0" stroke="#8a4a2a" stroke-width=".35" fill="none"/>`).join('')
       + `<path d="M108 110q2.6 10 .6 22" stroke="#5a2a18" stroke-width="1.2" fill="none" opacity=".35"/><path d="M84.8 108q-.6 12 .8 26" stroke="#ffe4cc" stroke-width="1" fill="none" opacity=".4"/>`;
-    const rings = `<rect x="98.6" y="102.6" width="6.2" height="2.2" rx="1" fill="url(#brass${u})" stroke="#5e4210" stroke-width=".3"/><path d="M99.4 103.2h3.6" stroke="#fff6d0" stroke-width=".45"/>`
+    const rings = `<rect x="98.7" y="95.4" width="6.2" height="2" rx="1" fill="url(#brass${u})" stroke="#5e4210" stroke-width=".3"/><path d="M99.4 95.9h3.6" stroke="#fff6d0" stroke-width=".45"/>`
       + `<rect x="82.2" y="90" width="6.4" height="2.2" rx="1" fill="url(#brass${u})" stroke="#5e4210" stroke-width=".3" transform="rotate(5 85.4 91)"/><circle cx="85.4" cy="90.4" r="1.6" fill="#7a1420" stroke="#3a0a0a" stroke-width=".3"/><circle cx="84.9" cy="89.9" r=".5" fill="#ffb0b8"/>`;
     // the lace cuff and the dark blue sleeve with its gold-braided turn-back, going down out of the picture
-    const cuff = Array.from({ length: 9 }, (_, k) => { const x = 82 + k * 3.4, y = 137 + Math.sin(k * 1.3) * .8; return `<path d="M${f1(x)} ${f1(y)}q1.7 -4.2 3.4 0q-.8 2.4 -1.7 3.2q-.9 -.8 -1.7 -3.2z" fill="#f4eee0" stroke="#a89e88" stroke-width=".35"/>`; }).join('')
-      + `<path d="M81 139Q96 136 112 139L113 145Q96 142.6 80 145z" fill="#ece4d2" stroke="#a89e88" stroke-width=".35"/>` + Array.from({ length: 10 }, (_, k) => `<circle cx="${82.6 + k * 3.2}" cy="${f1(141.6 - Math.sin(k / 9 * Math.PI) * .6)}" r=".55" fill="none" stroke="#b8ae98" stroke-width=".3"/>`).join('');
+    const frill = (y0, w0, col, edge, ph) => `<path d="M${96 - w0} ${y0 + 3}${Array.from({ length: 12 }, (_, k) => { const x = 96 - w0 + (k + .5) * w0 / 6, yy = y0 - 1.6 - Math.sin(k * 1.7 + ph) * .9; return `Q${f1(x)} ${f1(yy - 1.8)} ${f1(x + w0 / 12)} ${f1(yy + .4)}`; }).join('')}L${96 + w0} ${y0 + 4}Q96 ${y0 + 2} ${96 - w0} ${y0 + 3}z" fill="${col}" stroke="${edge}" stroke-width=".3"/>`;
+    const cuff = frill(141, 15, '#e8e0cc', '#9a907a', 0) + frill(139.4, 14, '#f4eee0', '#a89e88', 1.3) + frill(138, 13, '#fbf8ee', '#b8ae98', 2.6)
+      + Array.from({ length: 12 }, (_, k) => `<path d="M${f1(84 + k * 2.1)} ${f1(137.6 + (k % 2) * .6)}q.5 2.4 0 4.6" stroke="#c8bea8" stroke-width=".3" fill="none"/>`).join('');
     const sleeve = grad('plv' + u, [[0, '#3a4a7a'], [.4, '#1e2a4e'], [1, '#0a1024']], 1, 0)
       + `<path d="M77 146Q96 142 116 146L128 290H50z" fill="url(#plv${u})" stroke="#060a16" stroke-width=".6"/>`
       + `<path d="M76 146Q96 142 117 146L119 162Q96 157 73 162z" fill="#1a2650" stroke="#060a16" stroke-width=".5"/><path d="M75 149Q96 145 118 149M74 159Q96 154.6 119 159" stroke="url(#brass${u})" stroke-width="1.3" fill="none"/>`
       + [84, 96, 108].map(x => `<circle cx="${x}" cy="${f1(154 - Math.sin((x - 74) / 45 * Math.PI) * 2)}" r="1.6" fill="url(#brassR${u})" stroke="#5e4210" stroke-width=".3"/>`).join('')
-      + `<path d="M64 200q10 -6 24 -4M60 236q14 -8 30 -4" stroke="#060a16" stroke-width="1.2" fill="none" opacity=".6"/><path d="M80 164q-6 40 -16 116" stroke="#5a6aa0" stroke-width="1.2" fill="none" opacity=".4"/>`;
-    // the hand is close to the eye (0.2 m): the whole group is drawn at 1.6 about the wrist, which sits at y 153
-    const hand = `<g transform="translate(96 153) scale(1.6) translate(-96 -136)">` + skinG + sleeve + cuff + middle + card + back + curled(101.8, 98.6, 6, 12.6) + curled(108.6, 102, 5.2, 10.4) + index + rings + thumb
+      + `<clipPath id="plc2${u}"><path d="M77 146Q96 142 116 146L128 290H50z"/></clipPath><g clip-path="url(#plc2${u})">`
+      + `<path d="M60 186q20 -8 46 -2q-18 2 -30 8zM56 222q26 -10 58 -2q-24 2 -40 9zM54 258q30 -10 66 -1q-28 2 -46 9z" fill="#060a16" opacity=".45"/>`
+      + `<path d="M62 184q20 -7 42 -3M58 220q26 -8 54 -2M56 256q30 -8 62 -1" stroke="#5a6aa0" stroke-width=".8" fill="none" opacity=".45"/>`
+      + `<path d="M79 164q-8 50 -22 126" stroke="#6a7ab0" stroke-width="3" fill="none" opacity=".25"/><path d="M114 164q4 60 10 126" stroke="#02040a" stroke-width="5" fill="none" opacity=".4"/></g>`;
+    // the hand is close to the eye (0.2 m): the whole group is drawn at 1.6 about the wrist, which sits at y 157
+    const hand = `<g transform="translate(96 157) scale(1.6) translate(-96 -136)">` + skinG + sleeve + middle + card + index + back + curled(101.8, 100.4, 6.2, 7.4) + curled(108.4, 103.4, 5.2, 6) + rings + cuff + thumb
       + glow(u, 96, 64, 22, 26, '#ffe8c0', .12) + `</g>`;
     const light = gloom(u, 0, 131, 0, 280, .25, '#0a0604');
     return [wall + win + lamp + shelf + counter + onCounter, trail + hand + light];
