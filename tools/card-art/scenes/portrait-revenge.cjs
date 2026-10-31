@@ -456,7 +456,7 @@ const SCENES = {
   // bulwark: frontal at 3.0 m, rail cap y=127 (1.1 m), stanchions every 1.2 m; a strip of the sea above it
   // right officer: stands on the deck 1.5 m from us (s 137), feet off-frame; chest up: tricorn y 30–54, eyes y 60,
   // shoulders y 100; a round hole through the chest x 98–120, y 103–125 — the sky, the sea and the rail through it; his right
-  // hand (our left) holds the brim of the hat (the upper arm forward, elbow at (58, 126)); the left arm hangs, hand
+  // hand (our left) grips the brim of the hat, fingers over it (the upper arm forward, elbow at (57, 136)); the left arm hangs, hand
   // at y 206–226; the coat skirts end at the knee y 211, grey stockings below
   // left officer: shorter and stout, hands behind his back, 3.0 m away at the bulwark (s 70): feet on the deck y=204
   // (contact shadow thrown towards us, under the glass), head y 82–104, x 10–48; a dark silhouette with a red rim from the moon
@@ -504,7 +504,11 @@ const SCENES = {
     // the coat (drawn 8 higher than seen): body to the waist y 141, skirts flaring to the knee y 203, the front open;
     // the waistcoat to y 150, breeches between the skirts, grey stockings below the knee down out of the frame
     const coat = `<linearGradient id="pzc${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a3050"/><stop offset=".45" stop-color="#161a30"/><stop offset="1" stop-color="#0a0c18"/></linearGradient>`
-      + `<path d="M84 200L83 290H98L99 202zM112 202L113 290H128L127 200z" fill="#8a8a82" stroke="#2a2a28" stroke-width=".5"/><path d="M85 206q1 40 0 84M115 206q1 40 0 84" stroke="#c8c8c0" stroke-width=".8" fill="none" opacity=".6"/><path d="M96 206q-1 40 0 84M126 206q-1 40 0 84" stroke="#3a3a38" stroke-width="1" fill="none" opacity=".6"/>`
+      + `<linearGradient id="pzl${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a8a8a0"/><stop offset=".5" stop-color="#7a7a72"/><stop offset="1" stop-color="#3a3a36"/></linearGradient>`
+      + `<path d="M84 204Q81 222 84 236Q86 256 85 290H97Q98 262 99 240Q100 222 98 204z" fill="url(#pzl${u})" stroke="#2a2a28" stroke-width=".5"/>`
+      + `<path d="M113 204Q114 222 117 236Q122 256 126 290H138Q134 260 130 238Q130 220 128 204z" fill="url(#pzl${u})" stroke="#2a2a28" stroke-width=".5"/>`
+      + `<path d="M83 212h16M113 212h16" stroke="#b8a888" stroke-width="3"/><path d="M83 213.4h16M113 213.4h16" stroke="#5a5040" stroke-width=".5"/><circle cx="86" cy="212" r=".8" fill="#c8902a"/><circle cx="126" cy="212" r=".8" fill="#c8902a"/>`
+      + `<path d="M87 222q-2 12 0 24M120 222q1 14 6 26" stroke="#d0d0c8" stroke-width=".8" fill="none" opacity=".55"/><path d="M95 224q2 14 0 30M128 226q2 14 6 28" stroke="#2a2a28" stroke-width="1" fill="none" opacity=".5"/>`
       + `<path d="M86 140L126 140L130 206L82 206z" fill="#b8a888" stroke="#3a3428" stroke-width=".5"/><path d="M106 150v56" stroke="#5a5040" stroke-width=".6"/><path d="M83 200h16M113 200h16" stroke="#7a6a50" stroke-width="1.6"/>`
       + `<path d="M64 141Q60 120 62 112Q62 100 72 94L94 86L106 92L120 86L140 93Q150 98 150 112Q152 124 146 141L154 206Q140 212 124 206L114 150L100 150L90 206Q72 212 56 206z" fill="url(#pzc${u})" stroke="#05060c" stroke-width=".7"/>`
       // red lapels to the waist, the waistcoat with its pointed hem, gold buttons, the white stock; folds
@@ -513,11 +517,13 @@ const SCENES = {
       + [100, 110, 120, 130].map((y, i) => `<circle cx="${f1(92.4 + i * .2)}" cy="${y}" r="1.8" fill="url(#brassR${u})" stroke="#4a3410" stroke-width=".35"/><circle cx="${f1(120 - i * .2)}" cy="${y}" r="1.7" fill="url(#brassR${u})" stroke="#4a3410" stroke-width=".35"/>`).join('')
       + `<path d="M98 86Q106 84 114 86L112 96Q106 99 100 96z" fill="#e8e0cc" stroke="#7a705c" stroke-width=".4"/><path d="M103 92q3 4 6 0" stroke="#9a907a" stroke-width=".4" fill="none"/>`
       + `<path d="M70 130q4 30 -4 74M140 128q0 40 8 76M78 110q6 10 10 30M134 150q-6 20 -6 52" stroke="#05060c" stroke-width="1" fill="none" opacity=".6"/><path d="M62 118Q62 104 72 96" stroke="#ff8a5a" stroke-width="1.1" fill="none" opacity=".7"/><path d="M140 93Q150 98 150 116" stroke="#ff8a5a" stroke-width="1.1" fill="none" opacity=".75"/>`
+      + `<path d="M124 96Q140 120 146 141L154 206Q140 212 124 206z" fill="#000" opacity=".28"/><path d="M108 100q2 20 0 44M110 120q-2 10 -1 22" stroke="#8a7a58" stroke-width=".6" fill="none"/><path d="M66 150q6 20 4 50M76 156q2 22 -2 46M136 152q4 24 10 50" stroke="#05060c" stroke-width=".8" fill="none" opacity=".7"/><path d="M64 152q4 20 2 48" stroke="#4a5280" stroke-width=".8" fill="none" opacity=".5"/>`
       // his left arm (our right) hanging along the body, the cuff and a bony hand at the coat skirt
       + `<path d="M140 94Q154 100 154 124L156 160Q156 168 150 170L142 168L144 128Q142 110 136 100z" fill="url(#pzc${u})" stroke="#05060c" stroke-width=".6"/><path d="M152 106q3 20 3 50" stroke="#ff8a5a" stroke-width=".8" fill="none" opacity=".55"/>`
       + `<path d="M156 160L158 196L146 198L143 166z" fill="#141830" stroke="#05060c" stroke-width=".6"/><path d="M145 190l13 -1l.6 8l-13 1z" fill="#7a1a14" stroke="#2a0604" stroke-width=".5"/>`
-      + `<path d="M147 198Q146 206 148 212L150 218M150 199Q150 208 152 214L154 220M153 199Q154 207 156 212L157 217M156 198Q158 204 159 208" stroke="#1a2016" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M147 198Q146 206 148 212L150 218M150 199Q150 208 152 214L154 220M153 199Q154 207 156 212L157 217M156 198Q158 204 159 208" stroke="#6e7e60" stroke-width="1.7" fill="none" stroke-linecap="round"/>`
-      + `<path d="M146 198q-3 4 -2 9" stroke="#6e7e60" stroke-width="1.9" fill="none" stroke-linecap="round"/>`;
+      + `<path d="M146 197L159 196Q160 202 158 207L148 208Q145 203 146 197z" fill="#6e7e60" stroke="#1a2016" stroke-width=".5"/><path d="M149 199q4 -1 8 0" stroke="#9aaa8a" stroke-width=".5" fill="none"/>`
+      + [[148.6, 207.6, 147.6, 213, 148.6, 217], [151.6, 208, 151.4, 215, 152.6, 220], [154.6, 207.8, 155, 214, 156.2, 218.6], [157.4, 206.8, 158.4, 211.6, 159.6, 214.6]].map(([a1, b1, a2, b2, a3, b3]) => `<path d="M${a1} ${b1}L${a2} ${b2}L${a3} ${b3}" stroke="#1a2016" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M${a1} ${b1}L${a2} ${b2}L${a3} ${b3}" stroke="#76866a" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${a2}" cy="${b2}" r=".5" fill="#9aaa8a"/>`).join('')
+      + `<path d="M146.6 200Q143.4 204 144.4 209.6" stroke="#1a2016" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M146.6 200Q143.4 204 144.4 209.6" stroke="#6e7e60" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
     // torn epaulettes on both shoulders, gold fringe with missing strands
     const epaulette = (x, y, dir) => `<path d="M${x - 10} ${y}q10 -6 20 0l-1 4h-18z" fill="url(#brass${u})" stroke="#4a3410" stroke-width=".4" transform="rotate(${dir * 10} ${x} ${y})"/>`
       + Array.from({ length: 9 }, (_, k) => k === 3 || k === 6 ? '' : `<path d="M${x - 9 + k * 2.2} ${y + 4}q${dir * .4} ${4 + (k % 3)} ${dir * .8} ${6 + (k * 7) % 4}" stroke="#d8b050" stroke-width=".8" fill="none" transform="rotate(${dir * 10} ${x} ${y})"/>`).join('')
@@ -531,7 +537,7 @@ const SCENES = {
     // the neck and the head ¾ to the left: grey-green skin, hollow cheeks, deep eye sockets with a faint glow, a slack jaw
     const head = `<path d="M98 88L100 72L114 72L114 88z" fill="#5a6a52" stroke="#1a2016" stroke-width=".4"/><path d="M102 76q1 6 0 12M109 75q-1 7 0 13" stroke="#2a3428" stroke-width=".5" fill="none"/>`
       + `<path d="M93 48Q92 36 104 34Q117 34 120 46Q122 56 119 64Q117 72 111 76Q104 79 99 75Q95 72 94 66L91.6 62Q90.6 59 92.4 57.6z" fill="url(#pzs${u})" stroke="#1a2016" stroke-width=".55"/>`
-      + `<linearGradient id="pzs${u}" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#8a9a76"/><stop offset=".5" stop-color="#5e6e52"/><stop offset="1" stop-color="#3a4632"/></linearGradient>`
+      + `<linearGradient id="pzs${u}" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#6e7c5e"/><stop offset=".5" stop-color="#4a5842"/><stop offset="1" stop-color="#2c3626"/></linearGradient>`
       // brow ridge, sockets, nose, cheekbone, hollow cheek, jaw and teeth, ear, strands of hair
       + `<path d="M93.4 50Q99 47.4 104.6 49.6M107 49.6Q111 48 114 50" stroke="#2a3226" stroke-width=".9" fill="none"/>`
       + `<ellipse cx="99.4" cy="${f1(ey + .6)}" rx="3" ry="2.3" fill="#1a1e16"/><ellipse cx="110.2" cy="${f1(ey + .4)}" rx="2.7" ry="2.2" fill="#161a12"/><circle cx="99.8" cy="${f1(ey + .8)}" r=".9" fill="#d8f08a"/><circle cx="110.4" cy="${f1(ey + .6)}" r=".8" fill="#c8e07a"/>`
@@ -540,6 +546,7 @@ const SCENES = {
       + `<path d="M95 60Q97 63 96 67M113.4 58Q116 60 116 65" stroke="#2a3226" stroke-width=".6" fill="none"/><path d="M113 55.6q3 1 4.4 4" stroke="#9aaa86" stroke-width=".5" fill="none" opacity=".7"/>`
       + `<path d="M99.6 66.6Q104 67.8 109 66.2Q108 69.4 104.4 70Q101 69.6 99.6 66.6z" fill="#140e0c" stroke="#141a10" stroke-width=".4"/><path d="M101.4 66.9l.9 1.2l.8 -1M104.4 67.2l.6 1.4l.9 -1.5M106.8 66.8l.5 1l.7 -1.1" fill="#c8bc98"/><path d="M100.6 70.6q4 1.6 7.6 -.6" stroke="#2a3226" stroke-width=".45" fill="none"/>`
       + `<path d="M118.4 52q3.4 -1 3.6 4q.2 5 -3 6" fill="#5a6a4e" stroke="#1a2016" stroke-width=".45"/><path d="M119.4 54.6q1.6 1.4 .4 4" stroke="#2a3226" stroke-width=".4" fill="none"/>`
+      + `<path d="M93 48Q92 36 104 34Q117 34 120 46Q122 56 119 64" stroke="#ff8a5a" stroke-width=".9" fill="none" opacity=".7"/><path d="M93 48Q91.6 54 92.4 57.6" stroke="#ff8a5a" stroke-width=".7" fill="none" opacity=".5"/>`
       + `<path d="M118 44q4 6 2 14M119.6 42q3 8 4 16M93.6 44q-2 6 -1 12" stroke="#8a8a80" stroke-width=".6" fill="none" opacity=".8"/>`
       + `<path d="M106 38l1.6 4l-2 1M96 54l2 2" stroke="#3a1a10" stroke-width=".5" fill="none"/>`;
     // the tricorn seen from a little below: the underside of the brim, gold braid, the moon's rim on its top
@@ -548,12 +555,12 @@ const SCENES = {
       + `<path d="M86 42Q96 22 108 22Q120 22 128 38Q116 34 106 35Q94 36 86 42z" fill="#140e10" stroke="#000" stroke-width=".5"/><path d="M90 36Q98 24 108 23.4Q118 23.6 124 32" stroke="#ff8a5a" stroke-width=".9" fill="none" opacity=".85"/>`
       + `<path d="M92 42Q106 36 124 42Q116 47 106 46Q98 46 92 42z" fill="#1e1416"/><path d="M95 43Q106 39.4 120 43" stroke="#3a2a2a" stroke-width=".5" fill="none"/><circle cx="96" cy="38" r="2" fill="#c8b890" stroke="#5a5040" stroke-width=".3"/>`;
     // his right arm (our left): the elbow out, the forearm up to the hat, bony fingers pinching the brim
-    const armL = `<path d="M74 96Q62 100 56 112Q54 122 60 124Q66 122 70 114L76 106z" fill="url(#pzc${u})" stroke="#05060c" stroke-width=".6"/><ellipse cx="59" cy="118" rx="5" ry="5.6" fill="#1a2040" stroke="#05060c" stroke-width=".5"/>`
-      + `<path d="M55 118Q56 124 62 122L76 64L69 61z" fill="#1c2240" stroke="#05060c" stroke-width=".6"/><path d="M56 117L69.6 62" stroke="#ff8a5a" stroke-width=".9" opacity=".6"/><path d="M66 90q3 1 5 0M63 102q3 1 5 0" stroke="#05060c" stroke-width=".6" fill="none"/>`
+    const armL = `<path d="M75 96Q62 102 55 118Q52 128 58 131Q65 130 69 120L77 106z" fill="url(#pzc${u})" stroke="#05060c" stroke-width=".6"/><path d="M58 114q4 2 7 0M56 121q4 2 8 0" stroke="#05060c" stroke-width=".6" fill="none"/>`
+      + `<path d="M53 126Q55 132 61 130L76 64L69 61z" fill="#1c2240" stroke="#05060c" stroke-width=".6"/><path d="M54 125L69.6 62" stroke="#ff8a5a" stroke-width=".9" opacity=".6"/><path d="M66 90q3 1 5 0M63 103q3 1 5 0M60 115q3 1 5 0" stroke="#05060c" stroke-width=".6" fill="none"/>`
       + `<path d="M67 64L77.2 67.4L79 60.6L69.4 57.6z" fill="#7a1a14" stroke="#2a0604" stroke-width=".5"/><circle cx="73" cy="63.4" r="1" fill="url(#brassR${u})"/>`
       // the hand: a bony back of the hand, four fingers over the brim's edge, the thumb under it
       + `<path d="M70 58.6Q69 53.6 71.6 50.6L76.4 47.8Q79 47 80.2 48.8L80.6 52.6Q80 55.6 78.4 57.4z" fill="#6e7e60" stroke="#1a2016" stroke-width=".5"/>`
-      + [[74.2, 48.2, 74.6, 42.6, 76, 41.4], [76.4, 47.6, 77.8, 42, 79.2, 41.2], [78.6, 47.8, 80.6, 43, 82, 42.6], [80.2, 49.4, 82.6, 45.6, 83.8, 45.6]].map(([a1, b1, a2, b2, a3, b3]) => `<path d="M${a1} ${b1}L${a2} ${b2}L${a3} ${b3}" stroke="#1a2016" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M${a1} ${b1}L${a2} ${b2}L${a3} ${b3}" stroke="#76866a" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${a2}" cy="${b2}" r=".55" fill="#9aaa8a"/>`).join('')
+      + [[74.2, 48.2, 74.6, 42, 76.6, 40.4], [76.4, 47.6, 77.8, 41.2, 80, 39.8], [78.6, 47.8, 80.6, 42.2, 82.6, 41.4], [80.2, 49.4, 82.8, 44.6, 84.8, 44]].map(([a1, b1, a2, b2, a3, b3]) => `<path d="M${a1} ${b1}L${a2} ${b2}L${a3} ${b3}" stroke="#1a2016" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M${a1} ${b1}L${a2} ${b2}L${a3} ${b3}" stroke="#76866a" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${a2}" cy="${b2}" r=".55" fill="#9aaa8a"/>`).join('')
       + `<path d="M71 52.4Q74 50 77.4 50.6L80 47.4" stroke="#1a2016" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M71 52.4Q74 50 77.4 50.6L80 47.4" stroke="#6e7e60" stroke-width="1.4" fill="none" stroke-linecap="round"/>`
       + `<path d="M72 56q2 -.6 3.4 .8M72.4 53.6q2 -.4 3 .6" stroke="#2a3226" stroke-width=".4" fill="none"/>`;
     // the ball, gone through and away over the bulwark: a blurred smoky trail with shreds of cloth and splinters
