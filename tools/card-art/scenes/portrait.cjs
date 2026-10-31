@@ -271,7 +271,9 @@ const CAM = {
 };
 const FIRST = new Set(Object.keys(SCENES));
 // the other 75 cards, one file per deck: each exports { SCENES, CAM } in the same shape as above
-for (const d of ['pearl', 'revenge', 'endeavour', 'dutch']) { const m = require(`./portrait-${d}.cjs`); Object.assign(SCENES, m.SCENES); Object.assign(CAM, m.CAM); }
+// and SKEL: the skeleton of a scene (horizon, supports, item boxes) for `export.mjs --portrait --skel`
+const SKEL = {};
+for (const d of ['pearl', 'revenge', 'endeavour', 'dutch']) { const m = require(`./portrait-${d}.cjs`); Object.assign(SCENES, m.SCENES); Object.assign(CAM, m.CAM); Object.assign(SKEL, m.SKEL || {}); }
 function portrait(name, opts = {}) {
   const u = 'q' + (fid++);
   const f = SCENES[name]; if (!f) throw new Error('no portrait scene ' + name);
@@ -284,4 +286,4 @@ function portrait(name, opts = {}) {
   const body = opts.layer === 'fg' ? cam(fg) : cam(bg + fg) + (opts.vignette === false ? '' : vignette(u, vh));
   return `<svg viewBox="0 0 ${W} ${vh}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"><defs>${DEFS(u)}<clipPath id="pc${u}"><rect width="${W}" height="${vh}"/></clipPath></defs><g clip-path="url(#pc${u})">${body}</g></svg>`;
 }
-module.exports = { portrait, backArt, BACKS: Object.keys(BACKS), SCENES: Object.keys(SCENES), W, H: VH };
+module.exports = { portrait, backArt, BACKS: Object.keys(BACKS), SCENES: Object.keys(SCENES), SKEL, W, H: VH };

@@ -25,6 +25,8 @@ node tools/card-art/export.mjs --out <папка> [--scale 3] [--no-frame] [--on
 ```
 node tools/card-art/export.mjs --portrait --out report/portrait [--scale 3] [--only "Ядра,Анжелика"] [--svg]
 node tools/card-art/export.mjs --portrait --sheet --out report/portrait
+node tools/card-art/export.mjs --portrait --only "Указ о казнях" --skel --out report/portrait
+node tools/card-art/export.mjs --portrait --only "Указ о казнях" --scale 6 --guides --grid --out report/portrait/x6
 ```
 
 - `--portrait` — картинки печатной карты из `scenes/portrait.cjs`: `<slug>.png` 200 × 280 × `--scale` (3 → 600 × 840,
@@ -33,7 +35,20 @@ node tools/card-art/export.mjs --portrait --sheet --out report/portrait
 - `--sheet` — вдобавок листы-обзоры `sheet-<колода>-<n>.png`: по 6 карт, каждая — макет настоящей карты В-2
   300 × 420 px поверх картинки: медаль типа, цена, стеклянная панель с текстом карты из `data/game-data.json`
   (под ней размытая и затемнённая картинка), полоса колоды. Только для проверки: видно, что закрывает стекло.
-- Если Chromium не совпадает с версией Playwright проекта, путь к нему — в переменной `CHROMIUM_PATH`.
+  `--sheet` ещё пишет `glass.json`: `{ имя: верх стекла в % высоты карты }` (с `--only` дописывает к прежнему файлу).
+- `--skel` — вместо сцены скелет `SKEL[имя]` из файла колоды (`scenes/portrait-<колода>.cjs`, экспорт рядом с
+  `SCENES`) в `skel/<slug>.png`: исходная горизонтальная картинка подложкой (`orig: {k, tx, ty}`), горизонт,
+  прямоугольники предметов с id и опорой. Печатает предупреждения: два прямоугольника пересекаются, а опора ни одного
+  не называет другой (`on X`, `behind X`, `held by X`); высота предмета на `ground` расходится с
+  h = H · (y_осн − y_гор) / E больше чем на 15 %; основание на земле выше горизонта; предмет в углу 45 × 45 сверху
+  или ближе 10 к краю (если это фон или масса под стеклом — `{ edge: 1 }` последним элементом). Формат предмета:
+  `[id, x левого края, y основания, w, h, опора, высота в м (для ground), {edge}]`.
+- `--guides` — `guides/<slug>.png`: картинка с линиями y 126 (45 %), y 140 (50 %), линией стекла этой карты, углами
+  45 × 45, полями 10 и горизонтом из `SKEL`.
+- `--grid` — `grid/<slug>-r<1–4>c<1–3>-x<…>-y<…>.png`: 12 крупных клеток картинки (3 × 4, 66,7 × 70 единиц,
+  нахлёст 8) при `deviceScaleFactor` 10 — для поиска висящего, разрывов и наложений.
+- Если Chromium не совпадает с версией Playwright проекта, путь к нему — в переменной `CHROMIUM_PATH`
+  (в облачном контейнере: `CHROMIUM_PATH=/opt/pw-browsers/chromium`).
 
 Нужны `npm ci` (Playwright с Chromium и шрифты `@fontsource`). Результат — PNG (или WebP) и, если выгружены
 все карты (без `--only`), `manifest.json` (имя карты → файл, тип, колоды).
