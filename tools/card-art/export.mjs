@@ -3,12 +3,16 @@
 // --scale 10 gives 2000 x 1200 for print.
 //
 //   node tools/card-art/export.mjs --out <dir> [--scale 3] [--no-frame] [--only "Ядра,Анжелика"] [--svg] [--webp]
+//   node tools/card-art/export.mjs --portrait [--sheet] --out <dir> [--scale 3] [--only …] [--svg]
 //
 // --no-frame  drops the type-coloured frame and corner marks (for print, where the card draws its own frame).
 // --svg       also writes each picture as a standalone .svg next to the .png.
 // --compare   <dir with an earlier PNG export>: also writes <slug>-compare.jpg (before | after, plus thumbnails).
 // --webp      the game's files instead of PNG: <slug>.webp 1200 x 720 (the card window, sharp on 2x-3x screens) and thumb/<slug>.webp 240 x 144, on the ivory
 //             paper colour (WebP quality 0.82). `--webp --out src/ui/art/cards` updates the pictures in the game.
+// --portrait  the printed card's pictures instead (scenes/portrait.cjs): <slug>.png 200 x 280 x scale (3 -> 600 x 840).
+// --sheet     with --portrait: sheet-<deck>-<n>.png, six cards per sheet, each a mock-up of the printed card В-2
+//             (type medal, price, the glass text plate over the blurred picture, the deck strip) — only for review.
 // Writes <slug>.png (or .webp) and, when every card is exported (no --only), manifest.json
 // ({ name: { file, type, decks } }, the game's manifest shape).
 import fs from 'node:fs';
@@ -21,6 +25,8 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
 const { picture3 } = require('./scenes/pic3.cjs');
 const { chromium } = (() => { try { return require('@playwright/test'); } catch { return require('playwright'); } })();
+// A machine whose preinstalled Chromium does not match the project's Playwright: CHROMIUM_PATH points at it.
+const launch = () => chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 
 const args = process.argv.slice(2);
 const opt = (name, def) => { const i = args.indexOf(name); return i < 0 ? def : args[i + 1]; };
@@ -78,8 +84,9 @@ async function toWebp(page, png) {
 }
 
 fs.mkdirSync(out, { recursive: true });
+if (args.includes('--portrait') || args.includes('--sheet')) { await exportPortraits(); process.exit(0); }
 if (webp) fs.mkdirSync(path.join(out, 'thumb'), { recursive: true });
-const browser = await chromium.launch();
+const browser = await launch();
 const page = await (await browser.newContext({ viewport: { width: 200, height: 120 }, deviceScaleFactor: scale })).newPage();
 await page.setContent(`<style>${fontFaces()} html,body{margin:0;background:transparent}</style><div id="p" style="width:200px;height:120px"></div>`);
 for (const [name, c] of cards) {
@@ -117,3 +124,74 @@ await browser.close();
 // A partial export (--only) must not replace the full manifest.
 if (!only) fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(Object.fromEntries(cards), null, 1));
 console.log(`${cards.size} pictures, ${webp ? '1200x720 + thumb 240x144 WebP' : `${200 * scale}x${120 * scale}`}${noFrame ? ', no frame' : ''} -> ${out}`);
+
+// ——— portrait pictures and review sheets (the printed card В-2, 300 × 420 px) ———
+async function exportPortraits() {
+  const { portrait, SCENES } = require('./scenes/portrait.cjs');
+  const have = new Set(SCENES), sheet = args.includes('--sheet'), sc = Number(opt('--scale', '3'));
+  const list = [...cards].filter(([name]) => have.has(name)), missing = [...cards.keys()].filter(n => !have.has(n));
+  const browser = await launch();
+  const page = await (await browser.newContext({ viewport: { width: 200, height: 280 }, deviceScaleFactor: sc })).newPage();
+  await page.setContent(`<style>html,body{margin:0;background:transparent}</style><div id="p" style="width:200px;height:280px"></div>`);
+  const pngs = new Map();
+  for (const [name, c] of list) {
+    const svg = portrait(name), file = slug(name) + '.png';
+    if (writeSvg) fs.writeFileSync(path.join(out, slug(name) + '.svg'), svg);
+    await page.evaluate(s => { document.getElementById('p').innerHTML = s; }, svg);
+    await page.waitForTimeout(150); // embedded <image> pieces decode asynchronously
+    const png = await page.screenshot({ omitBackground: true });
+    fs.writeFileSync(path.join(out, file), png); pngs.set(name, png);
+  }
+  if (!only) fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(Object.fromEntries(list.map(([n, c]) => [n, { file: slug(n) + '.png', type: c.type, decks: c.decks }])), null, 1));
+  let sheets = 0;
+  if (sheet) {
+    const full = new Map(); // the card's texts from the data (first copy of the name)
+    for (const [deck, l] of Object.entries(data.decks)) for (const c of l) if (!full.has(c.name)) full.set(c.name, { ...c, deck });
+    const sp = await (await browser.newContext({ viewport: { width: 964, height: 888 }, deviceScaleFactor: 2 })).newPage();
+    const icon = t => 'data:image/svg+xml;base64,' + fs.readFileSync(path.join(root, `docs/mockups/menus/assets/icons/ic_t_${{ 'ЗАРЯД': 'charge', 'ПРИКАЗ': 'order', 'РЕМОНТ': 'repair', 'РЕАКЦИЯ': 'reaction' }[t]}.svg`)).toString('base64');
+    const DECK = { 'Ж': ['Чёрная жемчужина', '#16161a', '#c8d0dc'], 'М': ['Месть королевы Анны', '#5a1410', '#f2c08a'], 'И': ['Индевор', '#1e3e66', '#e8f0f8'], 'Г': ['Летучий голландец', '#123a30', '#b8f0d8'] };
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const groups = {};
+    for (const [name] of list) { const d = full.get(name).deck; (groups[d] ||= []).push(name); }
+    await sp.setContent(`<style>${fontFaces()}html,body{margin:0;background:#2a2622}
+      .sh{display:grid;grid-template-columns:repeat(3,300px);gap:16px;padding:16px;width:fit-content}
+      .cd{position:relative;width:300px;height:420px;border-radius:12px;overflow:hidden;background-size:300px 420px}
+      .med{position:absolute;left:19px;top:19px;width:44px;height:44px;border-radius:50%;border:2px solid #e8d6aa;box-sizing:border-box;display:grid;place-items:center;box-shadow:0 2px 4px #0008}
+      .med img{width:30px;height:30px}
+      .cost{position:absolute;right:19px;top:19px;display:flex;flex-direction:column;gap:9px}
+      .pw,.so{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#5a4022,#241608);border:2px solid #d8b468;box-sizing:border-box;color:#ffe8b0;font:700 22px/40px 'Alegreya SC';text-align:center;box-shadow:0 2px 4px #0008}
+      .so{height:54px;border-radius:22px;background:radial-gradient(circle at 40% 35%,#2a6a5a,#0a2a24);border-color:#9fe8d0;line-height:50px}
+      .gl{position:absolute;left:16px;right:16px;bottom:40px;border-radius:10px;overflow:hidden;border:1px solid #ffffff55;box-sizing:border-box}
+      .gl .bg{position:absolute;left:-16px;width:300px;height:420px;background-size:300px 420px;filter:blur(7px) brightness(.45)}
+      .gl .tx{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 12px 10px;color:#f6ecd4;text-align:center;line-height:1.3}
+      .nm{font:700 24px/1.05 'Alegreya SC'}.rb{font:700 12px 'Alegreya SC';letter-spacing:.12em;padding:1px 10px;border-radius:3px;color:#fff}
+      .bg2{font:700 19px/1.15 'Alegreya'}.ru{font:15px/1.3 'Alegreya'}.pl{font:13.5px/1.3 'Alegreya'}.fl{font:italic 12px/1.3 'Alegreya';opacity:.85}
+      .dk{position:absolute;left:0;right:0;bottom:0;height:34px;font:700 13px/34px 'Alegreya SC';letter-spacing:.1em;text-align:center}
+      .tag{position:absolute;left:0;top:0;padding:2px 6px;font:11px monospace;background:#000a;color:#fff;display:none}</style><div id="s"></div>`);
+    for (const [deck, names] of Object.entries(groups)) for (let i = 0; i < names.length; i += 6) {
+      const html = names.slice(i, i + 6).map(name => {
+        const c = full.get(name), bgi = `url(data:image/png;base64,${pngs.get(name).toString('base64')})`, tc = TYPE[c.type];
+        const [rule, plan] = c.text.split(/<b>План:<\/b>/), plain = rule.replace(/<[^>]+>/g, '');
+        const nl = name.length, rl = plain.length, [dn, dbg, dfg] = DECK[deck];
+        const price = c.soul > 0 ? `<div class="so">${c.soul}</div>` : `<div class="pw">${c.cost}</div>`;
+        return `<div class="cd" style="background-image:${bgi}"><div class="med" style="background:${tc}"><img src="${icon(c.type)}"></div><div class="cost">${price}</div>
+          <div class="gl"><div class="bg" style="background-image:${bgi}"></div><div class="tx">
+          <div class="nm" style="font-size:${nl > 14 ? 20 : nl > 10 ? 22 : 24}px">${esc(name)}</div><div class="rb" style="background:${tc}">${esc(c.type)}</div>
+          ${rl < 80 && c.big ? `<div class="bg2">${esc(c.big)}</div>` : ''}<div class="ru" style="font-size:${rl > 150 ? 13.5 : rl > 80 ? 14 : 15}px">${rule.replace(/(<br\/?>)+$/, '')}</div>
+          ${plan ? `<div class="pl"><b>План:</b>${plan}</div>` : ''}${c.flavor ? `<div class="fl">${esc(c.flavor)}</div>` : ''}</div></div>
+          <div class="dk" style="background:${dbg};color:${dfg}">${dn}</div></div>`;
+      }).join('');
+      await sp.evaluate(h => { document.getElementById('s').innerHTML = `<div class="sh">${h}</div>`; }, html);
+      await sp.evaluate(() => document.fonts.ready);
+      // the flavour line only if it fits: the plate must not climb above 45 % of the card
+      await sp.evaluate(() => document.querySelectorAll('.gl').forEach(g => { const f = g.querySelector('.fl'); if (f && g.offsetHeight > 420 - 40 - .45 * 420) f.remove(); g.querySelector('.bg').style.top = -(420 - 40 - g.offsetHeight) + 'px'; }));
+      await sp.waitForTimeout(100);
+      const el = await sp.$('.sh');
+      fs.writeFileSync(path.join(out, `sheet-${slug(DECK[deck][0])}-${i / 6 + 1}.png`), await el.screenshot());
+      sheets++;
+    }
+  }
+  await browser.close();
+  console.log(`${list.length} portrait pictures ${200 * sc}x${280 * sc}${sheet ? `, ${sheets} sheets` : ''} -> ${out}`);
+  if (missing.length) { console.error(`no portrait scene for ${missing.length}: ${missing.join(', ')}`); process.exit(1); }
+}
