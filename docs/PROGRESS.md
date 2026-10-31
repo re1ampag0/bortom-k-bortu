@@ -25,7 +25,8 @@
 
 Портретные картинки, второй круг: задача `docs/tasks/card-art-portrait-2.md`, ветка `claude/zealous-hypatia-c4wmj5`
 (в неё слиты `claude/kind-ramanujan-jr1725` — PR #94, первый круг — и `task/card-art-portrait`). Состояние каждой
-из 75 карт — [docs/progress/card-art-portrait-2.md](progress/card-art-portrait-2.md).
+из 75 карт — [docs/progress/card-art-portrait-2.md](progress/card-art-portrait-2.md). PR (черновик):
+https://github.com/re1ampag0/bortom-k-bortu/pull/95 — он заменяет #94.
 
 - Инструменты (`tools/card-art/export.mjs`, описаны в README): `--skel` (скелет `SKEL` сцены поверх исходной и
   предупреждения: пересечения без `on`/`behind`, масштаб по формуле, основание выше горизонта, углы и поля),
