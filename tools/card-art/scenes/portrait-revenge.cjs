@@ -98,14 +98,14 @@ const SCENES = {
   'Калёные ядра': u => {
     const view = dusk(u, 52, 150, 36, 4) + tint(sailing('endeavour', 100, 38, .6, 0, u), [1, .7, .55], [.05, 0, 0], .8) + flame(u, 92, 42, .35, 3) + flame(u, 108, 42, .3, 5) + smoke(u, 100, 30, .3, 5, -1, 6, '#3a2a28', 18);
     const wall = gunWall(u, 0, 140, [62, 22, 76, 46], view, 5) + beam(u, 0, 0, W, 14) + `<path d="M0 14h200" stroke="#0a0402" stroke-width="1.2"/>` + `<path d="M10 0h60q-10 10 -30 12z" fill="#0a0604" opacity=".5"/>`
-      + `<g filter="url(#drop${u})"><path d="M138 22l16 -14l3 3l-15 14z" fill="#8a1a10" stroke="#3a0806" stroke-width=".6"/></g>`;
+      + `<g filter="url(#drop${u})"><path d="M136 22l12 -10l3 3l-11 10z" fill="#8a1a10" stroke="#3a0806" stroke-width=".6"/></g>`;
     const gun = gunFromBehind(u, 100, 86, .95);
     const deck = woodTex(u, 0, 128, W, H - 128, '#5a3820', '#2a160a', '#0e0604', 9, false, 6) + `<path d="M0 128h200" stroke="#0e0604" stroke-width="1.6"/>`;
     // the brazier: an iron bowl on three legs, coals and the shot in them, one white hot; heat shimmer and sparks
     const bx = 92, by = 96;
     const brazier = shadow(u, bx, 130, 44, .6, 4) + `<path d="M${bx - 30} ${by + 6}L${bx - 38} 130M${bx + 30} ${by + 6}L${bx + 38} 130M${bx} ${by + 14}L${bx + 2} 131" stroke="#1a1c1e" stroke-width="3.2"/><path d="M${bx - 30} ${by + 6}L${bx - 38} 130M${bx + 30} ${by + 6}L${bx + 38} 130" stroke="#7a8288" stroke-width=".6"/>`
       + `<path d="M${bx - 42} ${by}q42 26 84 0z" fill="url(#iron${u})" stroke="#0a0a0c" stroke-width=".8"/><ellipse cx="${bx}" cy="${by}" rx="42" ry="8" fill="#1a0a04"/>`
-      + Array.from({ length: 24 }, (_, k) => { const r = R(k + 7); const x = bx - 36 + r() * 72, y = by - 3 + r() * 6; return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f2(2 + r() * 2.4)}" fill="${['#8a1a08', '#d8401a', '#ff8a2a'][k % 3]}"/>`; }).join('')
+      + Array.from({ length: 24 }, (_, k) => { const r = R(k + 7); const x = bx - 36 + r() * 72, y = by - 3 + r() * 6; return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f2(2 + r() * 2.4)}" fill="${['#2a0a04', '#5a1406', '#8a1a08', '#3a0a04'][k % 4]}"/>`; }).join('')
       + [[bx - 22, by - 4, '#d84a1a'], [bx - 6, by - 6, '#ff9a3a'], [bx + 14, by - 5, '#ffe8b0'], [bx + 28, by - 2, '#e86a2a']].map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="5.4" fill="${c}"/><circle cx="${x - 1.6}" cy="${y - 1.6}" r="1.6" fill="#fff6d8" opacity=".8"/>` + glow(u, x, y, 9, 9, c, .7)).join('')
       + `<path d="M${bx - 40} ${by - 1}q40 10 80 0" stroke="#dfe6ea" stroke-width=".6" fill="none" opacity=".5"/>` + sparks(bx - 30, by - 40, 60, 34, 26, 3) + glow(u, bx, by - 8, 60, 30, '#ff8a2a', .5);
     const hf = uid('phf' + u);
@@ -134,8 +134,8 @@ const SCENES = {
     const mf = uid('pmf' + u), r = R(13);
     const swarm = blurF(mf, .6) + Array.from({ length: 30 }, () => { const a = -.75 + r() * .7, d = 12 + r() * 50, x = 121 + Math.cos(a) * d, y = 75 + Math.sin(a) * d; return `<path d="M${f1(x - Math.cos(a) * 5)} ${f1(y - Math.sin(a) * 5)}L${f1(x)} ${f1(y)}" stroke="#8a8a88" stroke-width="1.2" opacity=".45" filter="url(#${mf})"/><circle cx="${f1(x)}" cy="${f1(y)}" r="1.1" fill="#3a3a3c"/><circle cx="${f1(x - .3)}" cy="${f1(y - .3)}" r=".35" fill="#dfe6ea"/>`; }).join('');
     const fire = muzzle(u, 121, 75, -32, 1.1) + smoke(u, 134, 58, .5, 6, 1, 8, '#c8b8a8', 26);
-    const bag = `<g transform="translate(40 116) scale(1.4)">${put('grapebag', 0, 0, 1, 0, u)}</g>` + [[60, 128], [66, 126], [18, 130]].map(([x, y]) => ball(u, x, y, 2)).join('')
-      + `<g transform="translate(24 104) rotate(-70)" filter="url(#drop${u})"><rect x="-1.6" y="-30" width="3.2" height="60" fill="url(#oakH${u})"/><ellipse cx="0" cy="-32" rx="4" ry="5" fill="#3a2a1a"/></g>`;
+    const bag = `<g transform="translate(30 120) scale(1.3)">${put('grapebag', 0, 0, 1, 0, u)}</g>` + [[60, 128], [66, 126], [18, 130]].map(([x, y]) => ball(u, x, y, 2)).join('')
+      ;
     const box = `<g filter="url(#drop${u})" transform="translate(150 150)"><path d="M-24 -10h48v22h-48z" fill="url(#oak${u})" stroke="#140a04" stroke-width=".6"/>${[-14, 0, 14].map(x => `<ellipse cx="${x}" cy="-11" rx="6" ry="3" fill="#e0d0b0" stroke="#7a6a50" stroke-width=".4"/>`).join('')}</g>`;
     const light = glow(u, 121, 75, 70, 50, '#ffb050', .35) + glow(u, 140, 70, 50, 40, '#ffc890', .2) + gloom(u, 140, 70, 0, 120, .4) + gloom(u, 100, 140, 100, 280, .5);
     return [wall + deck, gun + bag + box + swarm + fire + light];
@@ -173,7 +173,7 @@ const SCENES = {
     const hz = 108;
     const back = dusk(u, hz, 214, 96, 7);
     const enemy = tint(sailing('endeavour', 160, 92, .72, 0, u), [1, .72, .56], [.08, 0, 0], .85) + glow(u, 150, 90, 30, 30, '#ff9a3a', .25)
-      + `<path d="M163 66l9 1l-1 4l-8 -1z" fill="#2a3a6a"/><path d="M164 67l7 1" stroke="#f0e0c0" stroke-width=".8"/>`;
+      ;
     // the column of fire and pitch smoke from the schooner up to the top edge, bending right with the wind
     const col = smoke(u, 66, 54, 1.7, 9, .8, 17, '#5a3e30', 30) + smoke(u, 80, 24, 1.6, 8, 1.6, 23, '#6a4a3a', 14) + smoke(u, 112, 4, 1.4, 7, 2.2, 29, '#7a5a48', 6)
       + flame(u, 70, 96, 1.5, 3) + flame(u, 58, 92, 1.1, 8) + flame(u, 84, 94, 1.2, 12) + glow(u, 72, 40, 40, 60, '#ff7a2a', .3)
@@ -182,7 +182,7 @@ const SCENES = {
     // the torn yard hanging on one rope, tar barrels burning on deck
     const extra = `<path d="M56 62L84 92" stroke="#1a0c06" stroke-width="2.6" stroke-linecap="round"/><path d="M56 62L52 52" stroke="#3a2a1a" stroke-width=".6"/>`
       + [[40, 108], [100, 108]].map(([x, y]) => `<rect x="${x - 4}" y="${y - 7}" width="8" height="8" rx="1.4" fill="url(#oakH${u})" stroke="#140a04" stroke-width=".4"/>` + flame(u, x, y - 7, .35, x)).join('')
-      + `<path d="M130 124q-6 -3 -2 -8" stroke="#fff0d8" stroke-width="1.4" fill="none"/>`;
+      ;
     const light = glow(u, 80, 100, 100, 60, '#ff8a2a', .3) + glow(u, 80, 140, 60, 10, '#ffb050', .3) + gloom(u, 100, 140, 100, 280, .5, '#0a0202');
     return [back + enemy, col + ship + extra + light];
   },
@@ -283,7 +283,7 @@ const SCENES = {
       + `<circle cx="0" cy="0" r="13" fill="${fill}" stroke="${stroke}" stroke-width=".6"/>`;
     const bg = uid('pvb' + u);
     const burlap = `<pattern id="${bg}" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#a8885a"/><path d="M0 1h2M1 0v2" stroke="#7a5e38" stroke-width=".5"/></pattern>`;
-    const shadowDoll = glow(u, 120, 50, 90, 60, '#ffb050', .3) + `<g transform="translate(140 28) scale(1.7) rotate(8)" opacity=".75" filter="url(#soft${u})">${dollShape('#0a0402', 'none')}<path d="M0 -12l-6 -10M4 -12l4 -12M-2 -12l1 -12" stroke="#0a0402" stroke-width="1.6"/><path d="M10 20l22 -14M-6 30l-20 -10" stroke="#0a0402" stroke-width=".8"/></g>`;
+    const shadowDoll = glow(u, 120, 50, 90, 60, '#ffb050', .45) + `<g transform="translate(140 28) scale(1.7) rotate(8)" opacity=".9" filter="url(#soft${u})">${dollShape('#0a0402', 'none')}<path d="M0 -12l-6 -10M4 -12l4 -12M-2 -12l1 -12" stroke="#0a0402" stroke-width="1.6"/><path d="M10 20l22 -14M-6 30l-20 -10" stroke="#0a0402" stroke-width=".8"/></g>`;
     const bottle0 = shadow(u, 118, 120, 24, .5) + `<g filter="url(#drop${u})"><path d="M100 120q-8 -34 10 -44v-16h12v16q18 10 10 44z" fill="#2a3a2a" stroke="#0a120a" stroke-width=".6"/><path d="M104 112q-2 -20 6 -26" stroke="#c8e0c0" stroke-width="1.4" fill="none" opacity=".4"/><rect x="109" y="54" width="14" height="6" fill="#6a1a14"/></g>`;
     const doll = `<g transform="translate(94 62) rotate(-6) scale(1.15)" filter="url(#drop${u})">${burlap}${dollShape(`url(#${bg})`, '#3a2a14')}`
       + `<path d="M-14 26q14 4 28 0v8q-14 4 -28 0z" fill="#2a3a6a" stroke="#141e3a" stroke-width=".5"/><path d="M-14 28q14 4 28 0" stroke="#5a6aa8" stroke-width=".5" fill="none"/>`
@@ -294,7 +294,7 @@ const SCENES = {
       + `</g>`;
     // the pins: long, steel, with coloured heads; the red one in the chest
     const pin = (x, y, a, l, col, r) => `<g transform="translate(${x} ${y}) rotate(${a})"><path d="M0 0v${-l}" stroke="url(#silver${u})" stroke-width=".8"/><circle cy="${-l}" r="${r}" fill="${col}" stroke="#1a0a0a" stroke-width=".3"/><circle cx="${-r * .3}" cy="${-l - r * .3}" r="${r * .3}" fill="#fff" opacity=".7"/></g>`;
-    const pins = pin(98, 90, 32, 26, '#d81a14', 3.2) + pin(86, 66, -40, 22, '#e8e0c8', 1.8) + pin(108, 82, 60, 20, '#2a2a2a', 1.8) + pin(90, 104, -70, 18, '#c9a048', 1.8);
+    const pins = pin(96, 94, 24, 12, '#d81a14', 3.2) + pin(86, 66, -40, 22, '#e8e0c8', 1.8) + pin(108, 82, 60, 20, '#2a2a2a', 1.8) + pin(90, 104, -70, 18, '#c9a048', 1.8);
     const near = put('candleTall', 38, 112, 1.2, 0, u) + put('candleTall', 168, 104, .8, 0, u);
     const altar = `<path d="M20 124q10 -4 26 0" stroke="#efe6d0" stroke-width="2" fill="none"/><path d="M34 126q2 6 0 10M44 124q1 4 0 8" stroke="#efe6d0" stroke-width="1.6" fill="none"/>`
       + Array.from({ length: 20 }, (_, k) => { const r = R(k + 9); return `<circle cx="${f1(130 + r() * 30)}" cy="${f1(122 + r() * 6)}" r=".5" fill="#f4f0e8"/>`; }).join('')
@@ -318,13 +318,13 @@ const SCENES = {
       + [[74, 36], [118, 24], [54, 62]].map(([x, y]) => `<path d="M${x - 6} ${y + 10}q-2 4 -6 4" stroke="#ffb070" stroke-width=".5" fill="none" opacity=".6"/>`).join('');
     // our rail on the lower left, the grapnel lines taut from it up to the enemy's rail, the hooks biting in
     const rail = `<path d="M-4 112h120v8h-120z" fill="#5a3a20"/><path d="M-4 112h120" stroke="#ffc890" stroke-width="1"/>` + woodTex(u, 0, 120, 116, 16, '#4a2e1a', '#22140a', '#0a0604', 4, false, 8) + `<path d="M116 112v24" stroke="#1a0e06" stroke-width="2"/>`;
-    const hook = (x, y) => `<g transform="translate(${x} ${y})" filter="url(#drop${u})"><path d="M0 0v8M0 8q-6 0 -6 -6M0 8q6 0 6 -6M0 8q0 5 -4 6" stroke="url(#iron${u})" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>`;
+    const hook = (x, y) => `<g transform="translate(${x} ${y + 14}) rotate(180)" filter="url(#drop${u})"><path d="M0 0v8M0 8q-6 0 -6 -6M0 8q6 0 6 -6M0 8q0 5 -4 6" stroke="url(#iron${u})" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>`;
     const lines = [[34, 112, 120, 66], [62, 112, 140, 66], [92, 112, 164, 64]].map(([a, b, c, d]) => rope(`M${a} ${b}L${c} ${d}`, 1) + hook(c, d - 8)).join('') + splinters(140, 62, 12, 3, '#f0d0a0', 8) + splinters(120, 64, 8, 5, '#f0d0a0', 6);
     const deck = woodTex(u, 0, 136, W, H - 136, '#5a3a22', '#2a180a', '#0a0604', 9, false, 3) + `<path d="M0 136h200" stroke="#0a0604" stroke-width="1.4"/>`;
     // the sabres driven into the deck in front of the rail at different angles, rim lit by the sunset
     const sabre = (x, y, a, l) => `<g transform="translate(${x} ${y}) rotate(${a})" filter="url(#drop${u})"><path d="M0 0q2 ${-l * .5} -1 ${-l}" stroke="url(#silver${u})" stroke-width="3.2" fill="none"/><path d="M1 -2q2 ${-l * .5} -1 ${-l + 2}" stroke="#ffe0b0" stroke-width=".6" fill="none"/>`
       + `<path d="M-6 ${-l}h11" stroke="url(#brass${u})" stroke-width="2.4" stroke-linecap="round"/><path d="M-5 ${-l}q-3 -8 4 -12" stroke="url(#brass${u})" stroke-width="1.2" fill="none"/><rect x="-2.6" y="${-l - 13}" width="4.4" height="13" rx="1.4" fill="#3a1e0e"/><circle cx="-.4" cy="${-l - 14}" r="2.2" fill="url(#brassR${u})"/></g>`;
-    const blades = sabre(40, 130, -12, 34) + sabre(84, 131, 8, 36) + sabre(150, 130, 18, 30) + `<path d="M36 130q4 -2 8 0M80 131q4 -2 8 0M146 130q4 -2 8 0" stroke="#1a0e06" stroke-width="1.4" fill="none"/>` + splinters(100, 150, 14, 9, '#d8b080', 30);
+    const blades = sabre(40, 130, -12, 34) + sabre(84, 131, 8, 36) + sabre(108, 131, 16, 30) + `<path d="M36 130q4 -2 8 0M80 131q4 -2 8 0M104 131q4 -2 8 0" stroke="#1a0e06" stroke-width="1.4" fill="none"/>` + splinters(100, 150, 14, 9, '#d8b080', 30);
     const light = glow(u, 60, 100, 90, 50, '#ffb070', .2) + gloom(u, 60, 100, 200, 140, .4, '#1a0806') + gloom(u, 100, 140, 100, 280, .5, '#140604');
     return [back + enemy, swing + rail + lines + deck + blades + light];
   },
@@ -358,7 +358,8 @@ const SCENES = {
       + `<path d="M78 62q-2 -10 6 -12q7 0 7 7q0 6 -4 8q-4 1 -9 -3z" fill="url(#${sk})" stroke="#2a1408" stroke-width=".5"/><ellipse cx="89" cy="60" rx="1" ry="1.3" fill="#2a0e08"/><path d="M86 55.6l2 .4" stroke="#1a0a04" stroke-width=".6"/>`
       + `<path d="M84 49q-10 -2 -12 8q-4 10 -10 20q-4 8 -2 14q6 -10 10 -18q4 -8 6 -14q2 -6 8 -10z" fill="#e8e2d0" stroke="#8a8270" stroke-width=".4"/><path d="M80 52q-6 10 -14 30" stroke="#a8a090" stroke-width=".4" fill="none"/>`
       + `<path d="M80 52l2 2l-1 2l-2 -1z" fill="#fff8f0"/><path d="M70 70q-2 6 0 10" stroke="#3a7a4a" stroke-width="1" fill="none"/><path d="M75 58l2.4 -1.6l1 2.6z" fill="#f4e8e0"/>`
-      + `<path d="M84 49q6 -1 7 4" stroke="#ffd8b0" stroke-width=".6" fill="none" opacity=".8"/>`;
+      + `<path d="M77 54q2 -8 8 -7q5 0 7 4q-6 -3 -9 0q-3 4 -6 3z" fill="#e8e2d0" stroke="#8a8270" stroke-width=".4"/>` + [[76, 64, '#3a7a4a'], [72, 74, '#3a7a4a']].map(([x, y, c]) => `<path d="M${x} ${y}q-3 6 -1 12" stroke="${c}" stroke-width="1.2" fill="none"/>`).join('')
+      + [[78, 52], [70, 66], [66, 78]].map(([x, y]) => `<path d="M${x - 2} ${y + 1.4}l2 -3.4l2 3.4z" fill="#f4e8e0" stroke="#a89888" stroke-width=".3"/>`).join('') + `<path d="M84 49q6 -1 7 4M78 62q-1 10 -6 22" stroke="#ffd8b0" stroke-width=".7" fill="none" opacity=".85"/>`;
     const surf = `<path d="M0 132q20 -6 40 -2t60 -2t100 2" stroke="#fff0e0" stroke-width="1.2" fill="none" opacity=".5"/>` + spray(100, 126, 20, 6, 10, 9);
     const light = glow(u, 66, 50, 50, 40, '#ffc8a0', .25) + gloom(u, 100, 140, 100, 280, .55, '#0a0202');
     return [back + ship + path, rock + tail + maid + surf + light];
@@ -384,12 +385,12 @@ const SCENES = {
     // the beard: black, down to the chest, in thick braids tied with red ribbons, fuses glowing at the ends
     const braid = (x, l, a, k) => `<g transform="translate(${x} 100) rotate(${a})"><path d="M-3 0q-1 ${l / 2} 0 ${l}h6q1 ${-l / 2} 0 ${-l}z" fill="#141010" stroke="#050404" stroke-width=".4"/>`
       + Array.from({ length: Math.floor(l / 4) }, (_, i) => `<path d="M-3 ${i * 4 + 2}q3 2 6 0" stroke="#3a3436" stroke-width=".6" fill="none"/>`).join('') + `<rect x="-3.4" y="${l - 2}" width="6.8" height="3" fill="#c81a14"/><path d="M0 ${l + 1}q-1 4 1 6" stroke="#3a2a1a" stroke-width="1" fill="none"/></g>`;
-    const beard = `<path d="M78 92q22 12 44 0q2 10 -4 16q-18 8 -36 0q-6 -6 -4 -16z" fill="#141010"/><path d="M84 88q16 -6 32 0q-6 4 -16 4t-16 -4z" fill="#1a1414"/>`
+    const beard = `<path d="M74 80q-6 34 10 50q16 10 32 0q16 -16 10 -50q-8 16 -26 16t-26 -16z" fill="#141010" stroke="#050404" stroke-width=".5"/>${Array.from({ length: 10 }, (_, k) => `<path d="M${78 + k * 5} ${92 + (k % 3) * 3}q-1 10 1 18" stroke="#2e2a2c" stroke-width=".7" fill="none"/>`).join('')}<path d="M80 96q-2 14 6 26" stroke="#ff9a5a" stroke-width=".7" fill="none" opacity=".5"/><path d="M84 88q16 -6 32 0q-6 4 -16 4t-16 -4z" fill="#1a1414"/>`
       + [[84, 26, 10], [92, 30, 4], [100, 32, 0], [108, 30, -4], [116, 26, -10], [96, 22, 2]].map(([x, l, a], k) => braid(x, l, a, k)).join('')
       + [[89, 134], [94, 138], [100, 140], [106, 138], [111, 134]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".9" fill="#ffd27a"/>` + glow(u, x, y, 4, 4, '#ff9a3a', .8)).join('');
-    const smokes = [[89, 134], [100, 140], [111, 134], [80, 52], [122, 52]].map(([x, y], k) => `<path d="M${x} ${y}q4 -10 0 -18q-4 -8 4 -16q6 -8 4 -18" stroke="#bfb0a8" stroke-width="1.2" fill="none" opacity=".35" transform="translate(0 0) rotate(${18} ${x} ${y})"/>`).join('');
+    const smokes = smoke(u, 134, 116, .35, 5, 1.2, 3, '#bfb0a8', 30) + smoke(u, 140, 50, .3, 4, 1.2, 7, '#bfb0a8', 20) + smoke(u, 66, 50, .25, 4, 1.4, 9, '#bfb0a8', 20).replace('translate(66 50)', 'translate(150 30)');
     // the tricorn: a simple skull pattern on the front, fuses smouldering under the brim
-    const hat = `<g filter="url(#drop${u})"><path d="M52 56q48 -26 96 0q-10 -26 -48 -30q-38 4 -48 30z" fill="#16110e" stroke="#050403" stroke-width=".6"/><path d="M52 56q48 -20 96 0" stroke="#5a4030" stroke-width="1.6" fill="none"/>`
+    const hat = `<g filter="url(#drop${u})"><path d="M60 46q40 -24 80 0l-4 10h-72z" fill="#120e0c"/><path d="M48 50Q70 20 100 30Q130 20 152 50Q126 42 100 62Q74 42 48 50z" fill="#16110e" stroke="#050403" stroke-width=".6"/><path d="M48 50Q74 42 100 62Q126 42 152 50" stroke="#c9a048" stroke-width="1.4" fill="none"/>`
       + `<g transform="translate(100 40) scale(.7)"><path d="M-6 0q0 -8 6 -8t6 8q0 3 -2 4v2h-8v-2q-2 -1 -2 -4z" fill="#e8dcc4"/><circle cx="-2.4" cy="-1" r="1.6" fill="#16110e"/><circle cx="2.4" cy="-1" r="1.6" fill="#16110e"/><path d="M-9 8l18 -4M-9 4l18 4" stroke="#e8dcc4" stroke-width="1.6"/></g></g>`
       + [[70, 54], [80, 56], [120, 56], [130, 54]].map(([x, y]) => `<path d="M${x} ${y}q-1 4 1 7" stroke="#3a2a1a" stroke-width="1" fill="none"/><circle cx="${x + 1}" cy="${y + 7}" r=".9" fill="#ffd27a"/>` + glow(u, x + 1, y + 7, 4, 4, '#ff9a3a', .7)).join('');
     // the bandolier with pistol grips across his chest
@@ -404,14 +405,14 @@ const SCENES = {
   'Живые снасти': u => {
     const back = sky(u, 0, 120, [[0, '#3a0e0a'], [.45, '#8a3418'], [.85, '#e8884a'], [1, '#f6c080']]) + glow(u, 40, 100, 70, 40, '#ffd8a0', .5) + K.cloudBand(u, 50, 40, '#f2a070', '#5a1a10', 67, 2.3, '0.02 0.08');
     // the sail on its yard being hauled up, folds gathering; blocks and taut lines straight down
-    const sail = `<path d="M30 24Q100 18 170 24" stroke="#2a1608" stroke-width="3" fill="none"/><path d="M34 26Q100 20 166 26L160 54Q100 66 40 54z" fill="#e8d8b8" stroke="#6a5a40" stroke-width=".6"/>`
-      + [50, 70, 90, 110, 130, 150].map(x => `<path d="M${x} 24q${x < 100 ? -3 : 3} 14 0 ${32 + Math.abs(100 - x) * -.08}" stroke="#a8987a" stroke-width="1" fill="none"/>`).join('') + `<path d="M40 54Q100 66 160 54" stroke="#ffd8b0" stroke-width=".8" fill="none"/>`
-      + [[60, 20], [140, 20]].map(([x, y]) => `<g filter="url(#drop${u})"><rect x="${x - 3}" y="${y - 2}" width="6" height="9" rx="2.4" fill="url(#oak${u})" stroke="#140a04" stroke-width=".4"/><circle cx="${x}" cy="${y + 2.6}" r="1.4" fill="url(#iron${u})"/></g>`).join('');
+    const sail = `<path d="M50 52Q100 46 150 52" stroke="#2a1608" stroke-width="3" fill="none"/><path d="M54 54Q100 48 146 54L142 76Q100 86 58 76z" fill="#e8d8b8" stroke="#6a5a40" stroke-width=".6"/>`
+      + [66, 82, 100, 118, 134].map(x => `<path d="M${x} 52q${x < 100 ? -3 : 3} 12 0 ${26 + Math.abs(100 - x) * -.06}" stroke="#a8987a" stroke-width="1" fill="none"/>`).join('') + `<path d="M58 76Q100 86 142 76" stroke="#ffd8b0" stroke-width=".8" fill="none"/>`
+      + [[70, 48], [130, 48]].map(([x, y]) => `<g filter="url(#drop${u})"><rect x="${x - 3}" y="${y - 2}" width="6" height="9" rx="2.4" fill="url(#oak${u})" stroke="#140a04" stroke-width=".4"/><circle cx="${x}" cy="${y + 2.6}" r="1.4" fill="url(#iron${u})"/></g>`).join('');
     const bulwark = `<path d="M110 84h96v40h-96z" fill="#3a2414"/>` + woodTex(u, 110, 84, 96, 40, '#5a3a20', '#2a180a', '#0a0604', 5, false, 9) + `<path d="M110 84h96" stroke="#ffc890" stroke-width="1"/>`;
     const deck = woodTex(u, 0, 124, W, H - 124, '#6a4424', '#2a160a', '#0a0604', 9, false, 3) + `<path d="M0 124h200" stroke="#0a0604" stroke-width="1.4"/>`;
     // the pin rail with its belaying pins; the ropes rising off them in coils, wound round the pins in figure eights
     const rail = `<rect x="120" y="104" width="66" height="5" fill="url(#oak${u})" stroke="#140a04" stroke-width=".5"/>` + [128, 142, 156, 170, 182].map(x => `<rect x="${x - 1.4}" y="96" width="2.8" height="18" rx="1" fill="url(#oakH${u})" stroke="#140a04" stroke-width=".3"/><circle cx="${x}" cy="96" r="1.8" fill="url(#oak${u})"/>`).join('');
-    const live = [[128, 60, -18], [142, 140, 10], [156, 60, -8], [170, 140, 14]].map(([x, tx, sw], k) => { const d = `M${x} 104q${sw} -8 0 -16t${-sw} -16t${sw * .6} -14L${tx} 22`;
+    const live = [[128, 70, -18], [142, 130, 10], [156, 70, -8], [170, 130, 14]].map(([x, tx, sw], k) => { const d = `M${x} 104q${sw} -8 0 -16t${-sw} -16t${sw * .6} -14L${tx} 50`;
       return `<path d="M${x - 4} 100q4 -3 8 0q-4 3 -8 0" stroke="#d4b07a" stroke-width="1.1" fill="none"/>` + rope(d, 1.1) + `<path d="${d}" stroke="#7aff9a" stroke-width="2.6" fill="none" opacity=".16"/>`; }).join('');
     // the sword: a broadsword with a cup hilt, a green stone in the pommel, driven into the planks
     const sword = shadow(u, 70, 127, 10, .6, 2) + `<g filter="url(#drop${u})"><path d="M68.4 126V80h3.2V126z" fill="url(#silver${u})" stroke="#3a4248" stroke-width=".4"/><path d="M70 82v42" stroke="#ffffff" stroke-width=".5" opacity=".6"/>`
@@ -443,7 +444,7 @@ const SCENES = {
       + `<path d="M-14 -40q0 22 14 24q14 -2 14 -24z" fill="url(#silver${u})" stroke="#3a4248" stroke-width=".5"/><ellipse cy="-40" rx="14" ry="3.6" fill="${full ? '#2a8a8a' : '#2a3034'}" stroke="#dfe6ea" stroke-width=".6"/>`
       + (full ? `<ellipse cy="-40" rx="8" ry="2" fill="none" stroke="#c8fff8" stroke-width=".5"/><ellipse cy="-40" rx="4" ry="1" fill="none" stroke="#e8fff8" stroke-width=".5"/>` : '')
       + `<path d="M-10 -32q10 4 20 0M-8 -26q8 3 16 0" stroke="#5a6268" stroke-width=".5" fill="none"/>${[-8, -3, 3, 8].map(xx => `<path d="M${xx} -30l1.4 2l1.4 -2" stroke="#5a6268" stroke-width=".4" fill="none"/>`).join('')}<path d="M-12 -38q2 14 8 18" stroke="#ffffff" stroke-width="1" fill="none" opacity=".6"/></g>`;
-    const cups = shadow(u, 74, 111, 16, .6, 2) + shadow(u, 128, 111, 16, .6, 2) + chal(74, 1.25, true, 0) + chal(128, 1.15, false, 6) + glow(u, 74, 60, 20, 12, '#b8fff0', .3);
+    const cups = shadow(u, 74, 111, 16, .6, 2) + shadow(u, 128, 111, 16, .6, 2) + chal(74, 1.25, true, 0) + chal(128, 1.15, false, 0) + glow(u, 74, 60, 20, 12, '#b8fff0', .3);
     const light = glow(u, 100, 100, 70, 30, '#ffd8a0', .3) + gloom(u, 100, 140, 100, 280, .5, '#020606');
     return [cave + beamL, drip + ledge + pool + cups + light];
   },
@@ -455,8 +456,8 @@ const SCENES = {
     const back = redNight(u, hz, 41) + moon(u, 100, 26, 7, '#ffe0c0', '#ff9a6a', .45);
     const bulwark = `<rect y="92" width="200" height="16" fill="#3a2414"/>` + woodTex(u, 0, 92, W, 16, '#4a3020', '#22140a', '#0a0604', 4, false, 5) + `<path d="M0 92h200" stroke="#ffb090" stroke-width="1" opacity=".7"/><path d="M0 89h200v3h-200z" fill="#4a3020"/>`
       + woodTex(u, 0, 108, W, H - 108, '#4a3020', '#1e120a', '#0a0604', 9, false, 7);
-    const splash = put('splash', 172, 88, .4, 0, u, false) + shot(u, 142, 74, 166, 84, .1, '#d8c8c0').replace(/<circle[^>]*\/>/g, '');
-    const fat = `<g transform="translate(70 0) scale(1.25 1) translate(-70 0)">${deadman(u, 70, 126, 66, { coat: '#2a2a40', trim: '#c9a048', skin: '#7a8a62', epaulettes: true, back: true, hat: 'tricorn', light: '#ffb090' })}</g>`;
+    const splash = put('splash', 172, 88, .4, 0, u, false) + shot(u, 134, 72, 168, 84, 2, '#d8c8c0');
+    const fat = `<g transform="translate(70 0) scale(1.25 1) translate(-70 0)">${deadman(u, 70, 126, 66, { coat: '#3a2a22', trim: '#a8b0b8', skin: '#8a9468', back: true, hat: 'cap', pants: '#2a2420', light: '#ffb090' })}</g>`;
     const thin = deadman(u, 122, 126, 84, { coat: '#26263a', trim: '#c9a048', skin: '#6a7a58', epaulettes: true, hat: 'tricorn', armL: [6, 2], armR: [150, 228], hole: 'M0 -66m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0', light: '#ffb090' });
     const shadows = shadow(u, 70, 127, 18, .6, 2.4) + shadow(u, 122, 127, 14, .6, 2.4);
     const light = glow(u, 100, 26, 60, 40, '#ffc8a8', .2) + gloom(u, 100, 140, 100, 280, .5, '#0a0202');
@@ -483,7 +484,7 @@ const SCENES = {
   // at the enemy, who is already taking our hits: splinters, a yard shot away, columns of water at her waterline.
   'Ответный залп': u => {
     const hz = 82;
-    const back = dusk(u, hz, 30, 50, 13);
+    const back = dusk(u, hz, 70, 52, 13);
     const enemy = tint(sailing('endeavour', 126, 62, 1.0, -3, u), [1, .74, .58], [.05, 0, 0], .85) + smoke(u, 110, 76, .45, 5, -1, 7, '#c8b8b0', 8) + smoke(u, 140, 76, .4, 4, -1, 9, '#c8b8b0', 8)
       + `<path d="M140 38l12 10" stroke="#2a1a10" stroke-width="1.6"/>` + splinters(118, 72, 12, 3, '#ffd8a8', 8) + put('splash', 100, 80, .3, 0, u, false) + put('splash', 150, 81, .26, 0, u, false);
     // the Revenge's bulwark on the inside, three ports, the guns run out at different distances from us
@@ -502,13 +503,13 @@ const SCENES = {
   // ally; the Black Pearl further off is untouched; the ball comes in from the near lower left corner.
   'Прикрыть бортом': u => {
     const hz = 70;
-    const back = dusk(u, hz, 186, 40, 19);
+    const back = dusk(u, hz, 116, 50, 19);
     const ally = tint(sailing('pearl', 150, 64, .8, 0, u, false), [1, .82, .72], [.04, 0, 0], .9);
     const near = `<g transform="rotate(-3 76 110)">${tint(sailing('revenge', 76, 97, 2.0, 0, u), [1, .86, .76], [.03, 0, 0], .95)}</g>`
       + `<path d="M10 124q30 -6 60 -2t70 0" stroke="#fff0e0" stroke-width="1.4" fill="none" opacity=".7"/>` + put('splash', 80, 120, .3, 0, u, false);
     const hit = shot(u, -4, 230, 70, 112, 3.2, '#d8c8b8') + glow(u, 74, 110, 22, 16, '#ffc060', .9) + `<path d="M74 110l-7 -6l8 2l-1 -9l4 8l6 -6l-2 8l8 1l-8 3l4 7l-6 -4l-2 8l-2 -8l-7 2z" fill="#ffe080" opacity=".9"/>`
       + splinters(76, 106, 22, 7, '#f0d0a0', 18) + smoke(u, 70, 100, .5, 5, -1, 3, '#d8ccc0', 16);
-    const light = glow(u, 186, 40, 70, 40, '#ffd8a0', .3) + gloom(u, 100, 140, 100, 280, .5, '#0a0202');
+    const light = glow(u, 116, 50, 70, 40, '#ffd8a0', .3) + gloom(u, 100, 140, 100, 280, .5, '#0a0202');
     return [back + ally, near + hit + light];
   },
 
@@ -516,7 +517,7 @@ const SCENES = {
   // glances off up to the right in sparks and splinters, its splash falls on the water; her guns are already run out.
   'Тяжёлый борт': u => {
     const hz = 92;
-    const back = dusk(u, hz, 176, 52, 21) + tint(sailing('endeavour', 162, 88, .5, 0, u), [.8, .56, .46], [.03, 0, 0], .7) + put('splash', 146, 104, .32, 0, u, false);
+    const back = dusk(u, hz, 140, 52, 21) + tint(sailing('endeavour', 180, 90, .44, 0, u), [.8, .56, .46], [.03, 0, 0], .7);
     // the side in perspective: tall on the left, running to a vanishing point on the right
     const P = (t, y0, y1) => [f1(t * 150), f1(y0 + (y1 - y0) * t)];
     const hg = uid('phl' + u);
@@ -532,8 +533,8 @@ const SCENES = {
     const ports = [[20, 112, 1.2], [62, 118, .95], [100, 122, .75], [130, 124, .58]].map(([x, y, s]) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-10" y="-8" width="20" height="16" fill="#0e0604" stroke="#1a0a04" stroke-width="1.4"/>`
       + `<path d="M-11 -8l-2 -12h26l-2 12z" fill="#b8301e" stroke="#4a0a06" stroke-width=".6"/><path d="M-10 0l20 -2" stroke="#1a1c1e" stroke-width="7" stroke-linecap="round"/><ellipse cx="11" cy="-2" rx="2.4" ry="3.6" fill="#2a2c2e" stroke="#0a0a0c" stroke-width=".5"/><ellipse cx="11" cy="-2" rx="1.2" ry="2" fill="#050505"/><path d="M-10 -2l20 -2" stroke="#8a9298" stroke-width="1" opacity=".6"/></g>`).join('');
     const water = `<path d="M-4 300L150 130H200V${H}H-4z" fill="#3a1810" opacity=".0"/>` + `<path d="M150 130q20 2 50 0" stroke="#fff0e0" stroke-width="1" opacity=".6" fill="none"/>`;
-    const light = glow(u, 176, 52, 60, 40, '#ffd8a0', .3) + gloom(u, 100, 140, 100, 280, .5, '#0a0202');
-    return [back, side + band + ports + hit + water + light];
+    const light = glow(u, 140, 52, 60, 40, '#ffd8a0', .3) + gloom(u, 100, 140, 100, 280, .5, '#0a0202');
+    return [back, side + band + ports + hit + water + put('splash', 162, 106, .34, 0, u, false) + `<ellipse cx="162" cy="108" rx="8" ry="1.6" fill="#fff0e0" opacity=".6"/>` + light];
   }
 };
 

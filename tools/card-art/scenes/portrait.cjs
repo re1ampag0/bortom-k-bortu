@@ -5,6 +5,7 @@
 // carry the type medal and the price: only background there.
 // Reuses the materials and pieces of the landscape scenes; backgrounds are drawn here at the full height.
 const K = require('./portrait-kit.cjs');
+const { fixLines } = require('./pic3.cjs');
 const { DEFS, img, put, halo, lantern, cloudBand, woodTex, motes, R, afloat, shadow, grad, sky, sea, swell, isles, gulls, plankFloor, beam, vignette, ghostDeck, sailing, cup, dieP, blurF, glow, gloom, shafts, flame, smoke, rope, coil, nails } = K;
 const { W, VH, H } = K;
 let fid = 0;
@@ -268,12 +269,16 @@ const CAM = {
   'Сто лет службы': { x: 0, y: 24, w: 200 },
   'Игра в кости лжеца': { x: 8, y: 42, w: 184 }
 };
+const FIRST = new Set(Object.keys(SCENES));
 // the other 75 cards, one file per deck: each exports { SCENES, CAM } in the same shape as above
 for (const d of ['pearl', 'revenge', 'endeavour', 'dutch']) { const m = require(`./portrait-${d}.cjs`); Object.assign(SCENES, m.SCENES); Object.assign(CAM, m.CAM); }
 function portrait(name, opts = {}) {
   const u = 'q' + (fid++);
   const f = SCENES[name]; if (!f) throw new Error('no portrait scene ' + name);
-  const [bg, fg] = f(u);
+  let [bg, fg] = f(u);
+  // straight one-segment strokes with a gradient have a zero-size box and vanish: draw them as rects (the deck
+  // scenes rely on it; the six first scenes are left exactly as they were)
+  if (!FIRST.has(name)) { bg = fixLines(bg); fg = fixLines(fg); }
   const c = opts.cam || CAM[name] || { x: 0, y: 0, w: W }, k = W / c.w, vh = opts.vh || VH;
   const cam = b => `<g transform="scale(${k.toFixed(4)}) translate(${-c.x} ${-c.y})">${b}</g>`;
   const body = opts.layer === 'fg' ? cam(fg) : cam(bg + fg) + (opts.vignette === false ? '' : vignette(u, vh));
