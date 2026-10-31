@@ -13,7 +13,8 @@
 // --portrait  the printed card's pictures instead (scenes/portrait.cjs): <slug>.png 200 x 280 x scale (3 -> 600 x 840).
 // --sheet     with --portrait: sheet-<deck>-<n>.png, six cards per sheet, each a mock-up of the printed card В-2
 //             (type medal, price, the glass text plate over the blurred picture, the deck strip) — only for review;
-//             and glass.json { name: top of the glass plate in % of the card }, merged with an earlier file.
+//             and glass.json { name: top of the glass plate in % of the card }, merged with an earlier file;
+//             --mixed puts the --only cards on common sheets in their order (sheet-mixed-<n>.png).
 // --skel      with --portrait: skel/<slug>.png, the skeleton SKEL[name] over the original picture, and its warnings.
 // --guides    with --portrait: guides/<slug>.png, the picture with the lines y 126, y 140, the glass line, the top
 //             corners, the margins and the horizon of SKEL.
@@ -132,7 +133,8 @@ console.log(`${cards.size} pictures, ${webp ? '1200x720 + thumb 240x144 WebP' : 
 
 // ——— portrait pictures and review sheets (the printed card В-2, 300 × 420 px) ———
 // Skeleton check (--skel): the boxes of SKEL[name] (scenes/portrait-<deck>.cjs). An item is
-// [id, x, yBase, w, h, support, heightM?, { edge }?]: x is the left side, yBase the bottom, in picture units 0-280.
+// [id, x, yBase, w, h, support, heightM?, { edge, bg }?]: x is the left side, yBase the bottom, in picture units 0-280;
+// edge: a mass that may cross the 10-unit margin (under the glass); bg: background, allowed in the top corners too.
 // A support naming another item's id ("on scaffold", "behind wall", "held by hand") allows the two boxes to overlap.
 export function skelWarnings(sk) {
   const items = sk.items.map(([id, x, y, w, h, sup = '', ...rest]) => ({ id, x, y, w, h, sup: String(sup), m: rest.find(v => typeof v === 'number'), o: rest.find(v => v && typeof v === 'object') || {} }));
@@ -143,8 +145,8 @@ export function skelWarnings(sk) {
       else if (a.m) { const want = a.m * (a.y - sk.horizon) / sk.eye; if (Math.abs(a.h - want) > .15 * want) out.push(`${a.id}: height ${a.h} but ${a.m} m at base y ${a.y} gives ${want.toFixed(1)} (${Math.round(100 * (a.h - want) / want)} %)`); }
     }
     const top = a.y - a.h;
-    if (top < 45 && ((a.x < 45) || (a.x + a.w > 155))) out.push(`${a.id}: enters a top corner 45 × 45 (box x ${a.x}..${a.x + a.w}, top y ${top})`);
-    if (!a.o.edge && (a.x < 10 || a.x + a.w > 190 || top < 10)) out.push(`${a.id}: closer than 10 to the edge (box x ${a.x}..${a.x + a.w}, top y ${top}); mark { edge: 1 } if it is a background or under-glass mass`);
+    if (!a.o.bg && top < 45 && ((a.x < 45) || (a.x + a.w > 155))) out.push(`${a.id}: enters a top corner 45 × 45 (box x ${a.x}..${a.x + a.w}, top y ${top})`);
+    if (!a.o.edge && !a.o.bg && (a.x < 10 || a.x + a.w > 190 || top < 10)) out.push(`${a.id}: closer than 10 to the edge (box x ${a.x}..${a.x + a.w}, top y ${top}); mark { edge: 1 } for an under-glass mass, { bg: 1 } for the background`);
   }
   for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
     const a = items[i], b = items[j];
@@ -216,14 +218,16 @@ async function exportPortraits() {
       .bg2{font:700 19px/1.15 'Alegreya'}.ru{font:15px/1.3 'Alegreya'}.pl{font:13.5px/1.3 'Alegreya'}.fl{font:italic 12px/1.3 'Alegreya';opacity:.85}
       .dk{position:absolute;left:0;right:0;bottom:0;height:34px;font:700 13px/34px 'Alegreya SC';letter-spacing:.1em;text-align:center}</style><div id="s"></div>`);
     const groups = {};
-    for (const [name] of list) { const d = full.get(name).deck; (groups[d] ||= []).push(name); }
+    // --mixed: the listed cards on common sheets in the --only order (a pilot of cards from several decks)
+    const mixed = args.includes('--mixed');
+    for (const [name] of (mixed && only ? [...only].filter(n => have.has(n)).map(n => [n]) : list)) { const d = mixed ? 'mix' : full.get(name).deck; (groups[d] ||= []).push(name); }
     for (const [deck, names] of Object.entries(groups)) for (let i = 0; i < names.length; i += 6) {
       const part = names.slice(i, i + 6);
       Object.assign(glass, await layout(sp, part.map(name => cardHtml(name, `url(data:image/png;base64,${pngs.get(name).toString('base64')})`)).join('')));
       if (!sheet) continue;
       await sp.waitForTimeout(100);
       const el = await sp.$('.sh');
-      fs.writeFileSync(path.join(out, `sheet-${slug(DECK[deck][0])}-${i / 6 + 1}.png`), await el.screenshot());
+      fs.writeFileSync(path.join(out, `sheet-${deck === 'mix' ? 'mixed' : slug(DECK[deck][0])}-${i / 6 + 1}.png`), await el.screenshot());
       sheets++;
     }
     if (sheet) { // merged with an earlier file, so a partial run (--only) keeps the other cards

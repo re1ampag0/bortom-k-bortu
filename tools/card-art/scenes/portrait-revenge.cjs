@@ -449,23 +449,109 @@ const SCENES = {
     return [cave + beamL, drip + ledge + pool + cups + light];
   },
 
-  // Zombie officers: two dead officers stand on the deck, one short and stout with his hands behind his back, the
-  // other tall and thin, a hole of a round shot through his chest (the sky shows through it) — he straightens his hat.
+  // skeleton (picture units 0–280): path A, orig k 1.6 tx -138 ty -6; horizon y=118, eye 1.23 m (a low camera: we
+  // crouch on the deck), focal ≈ 205 units at 1 m; light: the moon behind them (x 112, y 19) in a red haze — rim light on
+  // hats and shoulders, faces in the dim red fill; one direction for all shadows: forward, towards us
+  // ground: the deck from the bulwark foot y=201 (3.0 m away, s 68) to us; planks run to (100, 118)
+  // bulwark: frontal at 3.0 m, rail cap y=127 (1.1 m), stanchions every 1.2 m; a strip of the sea above it
+  // right officer: stands on the deck 1.5 m from us (s 137), feet off-frame; chest up: tricorn y 30–54, eyes y 60,
+  // shoulders y 100; a round hole through the chest x 98–120, y 103–125 — the sky, the sea and the rail through it; his right
+  // hand (our left) holds the brim of the hat, the elbow out at x 52
+  // left officer: shorter and stout, hands behind his back, 2.6 m away (s 79): feet on the deck y=215 (contact shadow,
+  // under the glass), head y 77–98, x 10–56; a dark silhouette with a red rim from the moon
+  // flying: the ball, from the hole to the right and away over the bulwark, x 176 y 100, a blurred trail with shreds of
+  // cloth and splinters
+  // below the glass: his coat and the gold buttons, the deck planks converging, the far officer's legs
   'Зомби-офицеры': u => {
-    const hz = 84;
-    const back = redNight(u, hz, 41) + moon(u, 100, 26, 7, '#ffe0c0', '#ff9a6a', .45);
-    const bulwark = `<rect y="92" width="200" height="16" fill="#3a2414"/>` + woodTex(u, 0, 92, W, 16, '#4a3020', '#22140a', '#0a0604', 4, false, 5) + `<path d="M0 92h200" stroke="#ffb090" stroke-width="1" opacity=".7"/><path d="M0 89h200v3h-200z" fill="#4a3020"/>`
-      + woodTex(u, 0, 108, W, H - 108, '#4a3020', '#1e120a', '#0a0604', 9, false, 7);
-    const splash = put('splash', 172, 88, .4, 0, u, false) + shot(u, 134, 72, 168, 84, 2, '#d8c8c0');
-    const fat = `<g transform="translate(70 0) scale(1.25 1) translate(-70 0)">${deadman(u, 70, 126, 66, { coat: '#3a2a22', trim: '#a8b0b8', skin: '#8a9468', back: true, hat: 'cap', pants: '#2a2420', light: '#ffb090' })}</g>`;
-    const thin = deadman(u, 122, 126, 84, { coat: '#26263a', trim: '#c9a048', skin: '#6a7a58', epaulettes: true, hat: 'tricorn', armL: [6, 2], armR: [150, 228], hole: 'M0 -66m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0', light: '#ffb090' });
-    const shadows = shadow(u, 70, 127, 18, .6, 2.4) + shadow(u, 122, 127, 14, .6, 2.4);
-    const light = glow(u, 100, 26, 60, 40, '#ffc8a8', .2) + gloom(u, 100, 140, 100, 280, .5, '#0a0202');
-    return [back, splash + bulwark + shadows + fat + thin + light];
+    const hz = 118, E = 1.227;
+    // the night sky in a red haze, the moon high in the middle, the sea strip and the far coast
+    const skyB = () => sky(u, 0, hz + 1, [[0, '#0c0306'], [.45, '#2e0c0c'], [.85, '#6e2414'], [1, '#a8452a']]) + stars(34, 0, 0, W, 80, 17, '#ffd8c8')
+      + moon(u, 112, 19, 7.5, '#ffe0c0', '#ff9a6a', .5) + K.cloudBand(u, 30, 40, '#d87a5a', '#3a0e0a', 33, 2.3, '0.016 0.09')
+      + `<path d="M0 ${hz}q20 -6 44 -4t40 -2q8 3 16 6z" fill="#3a1410" opacity=".8"/>` + sea(u, hz, 130, '#6a2a1c', '#3a140c', '#1a0604', '#d86a3a', '#ffc890', 112, 4);
+    // the bulwark: frontal planking, a rail cap, stanchions; the deck from its foot towards us, planks converging
+    const bw = 68, bt = hz - (1.1 - E) * bw, bb = hz + E * bw;
+    const bulwark = () => `<rect y="${f1(bt)}" width="200" height="${f1(bb - bt)}" fill="#2a120a"/>`
+      + Array.from({ length: 6 }, (_, k) => `<path d="M0 ${f1(bt + 6 + k * 12)}h200" stroke="#120604" stroke-width=".9"/><path d="M0 ${f1(bt + 7 + k * 12)}h200" stroke="#6a3420" stroke-width=".4" opacity=".6"/>`).join('')
+      + Array.from({ length: 4 }, (_, k) => { const x = 14 + k * 82; return `<rect x="${x}" y="${f1(bt + 3)}" width="7" height="${f1(bb - bt - 3)}" fill="#3a1a0e" stroke="#120604" stroke-width=".5"/><path d="M${x + 1} ${f1(bt + 4)}v${f1(bb - bt - 5)}" stroke="#8a4a2a" stroke-width=".5" opacity=".6"/>`; }).join('')
+      + `<rect x="-2" y="${f1(bt - 2.6)}" width="204" height="4.6" rx="1" fill="url(#oak${u})" stroke="#120604" stroke-width=".5"/><path d="M0 ${f1(bt - 2.2)}h200" stroke="#ff9a6a" stroke-width=".7" opacity=".8"/>`
+      + grad('pzb' + u, [[0, '#000', 0], [1, '#000', .5]]) + `<rect y="${f1(bb - 22)}" width="200" height="22" fill="url(#pzb${u})"/>`;
+    let deck = `<rect y="${f1(bb)}" width="200" height="${f1(280 - bb)}" fill="#3a1c10"/><path d="M0 ${f1(bb)}h200" stroke="#0a0302" stroke-width="2"/>`;
+    for (let m = -4; m <= 4.01; m += .22) { const x0 = 100 + m * bw, x1 = 100 + m * 205 * 1.2; deck += `<path d="M${f1(x0)} ${f1(bb)}L${f1(x1)} 400" stroke="#140804" stroke-width=".7"/><path d="M${f1(x0 + .5)} ${f1(bb)}L${f1(x1 + 3)} 400" stroke="#8a4a2a" stroke-width=".35" opacity=".4"/>`; }
+    deck += grad('pzd' + u, [[0, '#ff8a5a', .12], [1, '#000', .4]]) + `<rect y="${f1(bb)}" width="200" height="${f1(280 - bb)}" fill="url(#pzd${u})"/>`;
+    const bg = skyB() + bulwark() + deck;
+    // the far officer: stout, hands behind the back, a bicorne; dark against the bulwark with a red rim on the left side
+    const s2 = 79, fy2 = hz + E * s2, X2 = 31;
+    const P2 = (x, h) => `${f1(X2 + x * s2)} ${f1(fy2 - h * s2)}`;
+    const pp = l => l.map(([x, h], i) => (i ? 'L' : 'M') + P2(x, h)).join('') + 'z';
+    // silhouette in metres: shoes, stockings to the knee, breeches, the coat skirts flaring over a stout belly, sloping
+    // shoulders, the arms folded behind the back (elbows out), a short neck, the head, a bicorne worn crosswise
+    const body = pp([[-.22, 0], [-.03, 0], [-.04, .1], [-.05, .4], [-.03, .52], [0, .55], [.03, .52], [.05, .4], [.05, .1], [.04, 0], [.23, 0], [.2, .05], [.17, .1], [.18, .4],
+      [.2, .5], [.31, .52], [.3, .7], [.28, .94], [.32, 1.04], [.31, 1.2], [.26, 1.36], [.18, 1.43], [.07, 1.46], [.06, 1.5], [-.06, 1.5], [-.07, 1.46], [-.18, 1.43], [-.26, 1.36],
+      [-.31, 1.2], [-.32, 1.04], [-.28, .94], [-.3, .7], [-.31, .52], [-.2, .5], [-.18, .4], [-.17, .1], [-.2, .05]]);
+    const far = `<ellipse cx="${X2 + 2}" cy="${f1(fy2 + .6)}" rx="22" ry="2.6" fill="#000" opacity=".6"/>`
+      + `<path d="${body}" fill="#170b0b"/>`
+      + `<path d="M${P2(-.29, .72)}L${P2(-.27, .94)}L${P2(-.31, 1.04)}L${P2(-.3, 1.2)}L${P2(-.26, 1.36)}L${P2(-.18, 1.43)}L${P2(-.07, 1.46)}" stroke="#ff8a5a" stroke-width=".9" fill="none" opacity=".7"/>`
+      + `<path d="M${P2(.26, 1.36)}L${P2(.18, 1.43)}L${P2(.07, 1.46)}" stroke="#ff8a5a" stroke-width=".7" fill="none" opacity=".55"/>`
+      + `<path d="M${P2(-.27, .94)}L${P2(-.2, .96)}M${P2(.27, .94)}L${P2(.2, .96)}M${P2(-.3, .58)}L${P2(-.24, .76)}" stroke="#2e1814" stroke-width=".6" fill="none"/>`
+      + `<path d="M${P2(-.26, 1.38)}l${f1(-.06 * s2)} ${f1(.02 * s2)}l${f1(.06 * s2)} ${f1(.05 * s2)}z" fill="#c8902a" opacity=".7"/><path d="M${P2(.26, 1.38)}l${f1(.06 * s2)} ${f1(.02 * s2)}l${f1(-.06 * s2)} ${f1(.05 * s2)}z" fill="#8a6020" opacity=".55"/>`
+      + `<ellipse cx="${f1(X2 + .01 * s2)}" cy="${f1(fy2 - 1.58 * s2)}" rx="${f1(.1 * s2)}" ry="${f1(.12 * s2)}" fill="#1a0c0c"/><path d="M${P2(-.09, 1.54)}a${f1(.1 * s2)} ${f1(.12 * s2)} 0 0 1 ${f1(.07 * s2)} ${f1(-.1 * s2)}" stroke="#ff8a5a" stroke-width=".7" fill="none" opacity=".7"/>`
+      + `<path d="M${P2(-.22, 1.66)}Q${P2(0, 1.86)} ${P2(.22, 1.66)}Q${P2(0, 1.7)} ${P2(-.22, 1.66)}z" fill="#120808"/><path d="M${P2(-.22, 1.66)}Q${P2(0, 1.86)} ${P2(.22, 1.66)}" stroke="#ff9a6a" stroke-width=".8" fill="none" opacity=".8"/><path d="M${P2(-.2, 1.668)}Q${P2(0, 1.715)} ${P2(.2, 1.668)}" stroke="#c89030" stroke-width=".5" fill="none" opacity=".6"/>`
+      + `<circle cx="${f1(X2 - .025 * s2)}" cy="${f1(fy2 - 1.58 * s2)}" r=".7" fill="#c8f08a" opacity=".8"/><circle cx="${f1(X2 + .04 * s2)}" cy="${f1(fy2 - 1.58 * s2)}" r=".6" fill="#c8f08a" opacity=".6"/>`
+      + [1.32, 1.22, 1.12, 1.02].map(h => `<circle cx="${f1(X2 + .04 * s2)}" cy="${f1(fy2 - h * s2)}" r=".6" fill="#c8902a" opacity=".55"/>`).join('');
+    // the near officer, chest up, 1.5 m away
+    const s1 = 137, ey = hz - (1.65 - E) * s1 - 8; // his eye line (the head is drawn 8 lower and shifted back up)
+    const coat = `<linearGradient id="pzc${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a3050"/><stop offset=".45" stop-color="#161a30"/><stop offset="1" stop-color="#0a0c18"/></linearGradient>`
+      + `<path d="M58 300L60 120Q60 100 72 94L94 86L106 92L120 86L140 93Q150 98 150 118L152 300z" fill="url(#pzc${u})" stroke="#05060c" stroke-width=".7"/>`
+      // red lapels, the waistcoat, gold buttons, the white stock; folds
+      + `<path d="M94 86L106 92L104 300L84 300Q86 200 90 140z" fill="#7a1a14" stroke="#2a0604" stroke-width=".5"/><path d="M120 86L106 92L108 300L128 300Q126 200 122 140z" fill="#6a1410" stroke="#2a0604" stroke-width=".5"/>`
+      + `<path d="M98 92L106 96L114 92L112 300H100z" fill="#c8b890"/><path d="M100 94L106 97L112 94" stroke="#5a5040" stroke-width=".4" fill="none"/>`
+      + [100, 116, 132, 148, 168, 190, 214, 240].map((y, i) => `<circle cx="${f1(91 + i * .2)}" cy="${y}" r="1.9" fill="url(#brassR${u})" stroke="#4a3410" stroke-width=".35"/><circle cx="${f1(122 - i * .2)}" cy="${y}" r="1.8" fill="url(#brassR${u})" stroke="#4a3410" stroke-width=".35"/>`).join('')
+      + `<path d="M98 86Q106 84 114 86L112 96Q106 99 100 96z" fill="#e8e0cc" stroke="#7a705c" stroke-width=".4"/><path d="M103 92q3 4 6 0" stroke="#9a907a" stroke-width=".4" fill="none"/>`
+      + `<path d="M70 130q4 40 2 90M140 128q-2 50 2 100M78 110q6 10 10 30" stroke="#05060c" stroke-width="1" fill="none" opacity=".6"/><path d="M61 120Q62 104 72 96" stroke="#ff8a5a" stroke-width="1.1" fill="none" opacity=".7"/><path d="M140 93Q150 98 150 118" stroke="#ff8a5a" stroke-width="1.1" fill="none" opacity=".75"/>`;
+    // torn epaulettes on both shoulders, gold fringe with missing strands
+    const epaulette = (x, y, dir) => `<path d="M${x - 10} ${y}q10 -6 20 0l-1 4h-18z" fill="url(#brass${u})" stroke="#4a3410" stroke-width=".4" transform="rotate(${dir * 10} ${x} ${y})"/>`
+      + Array.from({ length: 9 }, (_, k) => k === 3 || k === 6 ? '' : `<path d="M${x - 9 + k * 2.2} ${y + 4}q${dir * .4} ${4 + (k % 3)} ${dir * .8} ${6 + (k * 7) % 4}" stroke="#d8b050" stroke-width=".8" fill="none" transform="rotate(${dir * 10} ${x} ${y})"/>`).join('')
+      + `<path d="M${x - 9} ${y + 3}l3 6l1 -3" stroke="#6a4a18" stroke-width=".5" fill="none" transform="rotate(${dir * 10} ${x} ${y})"/>`;
+    // the hole through the chest: the sky, the sea and the rail seen through it; a ragged rim of cloth, the dark inside
+    const hx = 109, hy = 106, hole = `M${hx - 10} ${hy}Q${hx - 11} ${hy - 9} ${hx - 2} ${hy - 11}L${hx + 1} ${hy - 9}L${hx + 3} ${hy - 11.4}Q${hx + 11} ${hy - 9} ${hx + 11} ${hy - 1}L${hx + 9.4} ${hy + 1}L${hx + 11} ${hy + 3}Q${hx + 9} ${hy + 11} ${hx} ${hy + 11}Q${hx - 9} ${hy + 10} ${hx - 10} ${hy}z`;
+    const through = `<clipPath id="pzh${u}"><path d="${hole}"/></clipPath><g clip-path="url(#pzh${u})"><g transform="translate(0 -8)">${skyB()}${bulwark()}</g></g>`
+      + `<path d="${hole}" fill="none" stroke="#2a0a06" stroke-width="2.4"/><path d="${hole}" fill="none" stroke="#5a1a10" stroke-width="1" transform="translate(.8 .8)"/>`
+      + `<path d="M${hx - 10} ${hy - 2}l-3 -2l2 4zM${hx + 8} ${hy + 8}l3 4l-1 -5zM${hx - 4} ${hy + 10.6}l-1 4l3 -3.6zM${hx + 10} ${hy - 6}l4 -1l-3.6 2.6z" fill="#2a3050" stroke="#05060c" stroke-width=".3"/>`
+      + `<path d="M${hx - 9} ${hy + 3}q-2 3 -1 6M${hx + 10.4} ${hy - 3}q3 1 4 4" stroke="#c8b890" stroke-width=".6" fill="none"/>`;
+    // the neck and the head ¾ to the left: grey-green skin, hollow cheeks, deep eye sockets with a faint glow, a slack jaw
+    const head = `<path d="M98 88L100 72L114 72L114 88z" fill="#5a6a52" stroke="#1a2016" stroke-width=".4"/><path d="M102 76q1 6 0 12M109 75q-1 7 0 13" stroke="#2a3428" stroke-width=".5" fill="none"/>`
+      + `<path d="M93 48Q92 36 104 34Q117 34 120 46Q122 56 119 64Q117 72 111 76Q104 79 99 75Q95 72 94 66L91.6 62Q90.6 59 92.4 57.6z" fill="url(#pzs${u})" stroke="#1a2016" stroke-width=".55"/>`
+      + `<linearGradient id="pzs${u}" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#8a9a76"/><stop offset=".5" stop-color="#5e6e52"/><stop offset="1" stop-color="#3a4632"/></linearGradient>`
+      // brow ridge, sockets, nose, cheekbone, hollow cheek, jaw and teeth, ear, strands of hair
+      + `<path d="M93.4 50Q99 47.4 104.6 49.6M107 49.6Q111 48 114 50" stroke="#2a3226" stroke-width=".9" fill="none"/>`
+      + `<ellipse cx="99.4" cy="${f1(ey + .6)}" rx="3" ry="2.3" fill="#1a1e16"/><ellipse cx="110.2" cy="${f1(ey + .4)}" rx="2.7" ry="2.2" fill="#161a12"/><circle cx="99.8" cy="${f1(ey + .8)}" r=".9" fill="#d8f08a"/><circle cx="110.4" cy="${f1(ey + .6)}" r=".8" fill="#c8e07a"/>`
+      + glow(u, 105, ey + .6, 9, 4, '#c8f08a', .3)
+      + `<path d="M104.6 51Q103.4 56 102 59.4Q103.6 61 105.8 60.4" stroke="#2a3226" stroke-width=".6" fill="#6e7e60"/><path d="M103.4 60.2q.8 .4 1.6 0" stroke="#141a10" stroke-width=".6"/>`
+      + `<path d="M95 60Q97 63 96 67M113.4 58Q116 60 116 65" stroke="#2a3226" stroke-width=".6" fill="none"/><path d="M113 55.6q3 1 4.4 4" stroke="#9aaa86" stroke-width=".5" fill="none" opacity=".7"/>`
+      + `<path d="M99.6 66.6Q104 67.8 109 66.2Q108 69.4 104.4 70Q101 69.6 99.6 66.6z" fill="#140e0c" stroke="#141a10" stroke-width=".4"/><path d="M101.4 66.9l.9 1.2l.8 -1M104.4 67.2l.6 1.4l.9 -1.5M106.8 66.8l.5 1l.7 -1.1" fill="#c8bc98"/><path d="M100.6 70.6q4 1.6 7.6 -.6" stroke="#2a3226" stroke-width=".45" fill="none"/>`
+      + `<path d="M118.4 52q3.4 -1 3.6 4q.2 5 -3 6" fill="#5a6a4e" stroke="#1a2016" stroke-width=".45"/><path d="M119.4 54.6q1.6 1.4 .4 4" stroke="#2a3226" stroke-width=".4" fill="none"/>`
+      + `<path d="M118 44q4 6 2 14M119.6 42q3 8 4 16M93.6 44q-2 6 -1 12" stroke="#8a8a80" stroke-width=".6" fill="none" opacity=".8"/>`
+      + `<path d="M106 38l1.6 4l-2 1M96 54l2 2" stroke="#3a1a10" stroke-width=".5" fill="none"/>`;
+    // the tricorn seen from a little below: the underside of the brim, gold braid, the moon's rim on its top
+    const hat = `<path d="M76 46Q90 30 106 30Q124 28 140 40Q132 44 124 42Q108 34 92 42Q84 46 76 46z" fill="#0e0a0c" stroke="#000" stroke-width=".5"/>`
+      + `<path d="M76 46Q90 30 106 30Q124 28 140 40" stroke="#d8a840" stroke-width="1.2" fill="none"/><path d="M78 45.4Q90 31.6 106 31.6Q122 30 138 40" stroke="#ff9a6a" stroke-width=".6" fill="none" opacity=".8"/>`
+      + `<path d="M86 42Q96 22 108 22Q120 22 128 38Q116 34 106 35Q94 36 86 42z" fill="#140e10" stroke="#000" stroke-width=".5"/><path d="M90 36Q98 24 108 23.4Q118 23.6 124 32" stroke="#ff8a5a" stroke-width=".9" fill="none" opacity=".85"/>`
+      + `<path d="M92 42Q106 36 124 42Q116 47 106 46Q98 46 92 42z" fill="#1e1416"/><path d="M95 43Q106 39.4 120 43" stroke="#3a2a2a" stroke-width=".5" fill="none"/><circle cx="96" cy="38" r="2" fill="#c8b890" stroke="#5a5040" stroke-width=".3"/>`;
+    // his right arm (our left): the elbow out, the forearm up to the hat, bony fingers pinching the brim
+    const armL = `<path d="M74 96Q60 102 52 124Q50 132 56 134Q64 130 70 118L74 112z" fill="url(#pzc${u})" stroke="#05060c" stroke-width=".6"/>`
+      + `<path d="M52 124Q52 132 57 133L74 66L66 62z" fill="#1c2240" stroke="#05060c" stroke-width=".6"/><path d="M53 124L66.6 63" stroke="#ff8a5a" stroke-width=".9" opacity=".6"/>`
+      + `<path d="M64 66L75.6 70L77.8 62.6L66.6 58.4z" fill="#7a1a14" stroke="#2a0604" stroke-width=".5"/><circle cx="71" cy="66" r="1.1" fill="url(#brassR${u})"/>`
+      + `<path d="M67.4 59.2Q66.6 54 70 51.4L74.4 48.6Q77 47.4 78.2 49L79.4 51.4Q79.6 54 77.6 56.2L76.8 61.6z" fill="#6e7e60" stroke="#1a2016" stroke-width=".5"/>`
+      + `<path d="M74.4 48.6L76 44.2Q76.8 42.6 78 43.4L79.2 46.4M77.2 49L79.8 45.4Q81 44.4 81.8 45.6L80.8 49.6M79.2 51L82.4 48.6Q83.6 48 84 49.4L82 52.4" stroke="#1a2016" stroke-width=".5" fill="#76866a"/>`
+      + `<path d="M70 52Q71.6 49.4 73.6 50.4L75.4 46.4" stroke="#2a3226" stroke-width=".45" fill="none"/><path d="M68.4 57q2 -.6 3.4 .8M69 54.6q2 -.4 3 .6" stroke="#2a3226" stroke-width=".4" fill="none"/>`;
+    // the ball, gone through and away over the bulwark: a blurred smoky trail with shreds of cloth and splinters
+    const fz = blurF('pzf' + u, 1.2);
+    const trail = fz + `<linearGradient id="pzt${u}" gradientUnits="userSpaceOnUse" x1="${hx + 12}" y1="${hy - 2}" x2="174" y2="98"><stop offset="0" stop-color="#d8c8b8" stop-opacity=".1"/><stop offset="1" stop-color="#e8d8c8" stop-opacity=".6"/></linearGradient>`
+      + `<path d="M150 108L174 96.4L175.4 103L150 116z" fill="url(#pzt${u})" filter="url(#pzf${u})"/>` + K.ball(u, 176, 99.4, 3.4)
+      + `<path d="M156 103l3 -2l1 2.4zM163 108l2.6 .6l-1.4 1.8zM166 98l2 -1.4l.4 2z" fill="#2a3050"/><path d="M158 112l3 -1M160 99l2.4 -.4" stroke="#c8b890" stroke-width=".6"/>`;
+    const light = glow(u, 112, 36, 70, 46, '#ff9a6a', .14) + gloom(u, 100, 120, 100, 280, .45, '#080202');
+    return [bg, far + `<g transform="translate(0 8)">` + coat + epaulette(73, 93, -1) + epaulette(139, 93, 1) + through + head + hat + armL + `</g>` + trail + light];
   },
-
-  // Wall of fire: oil spilled on the sea burns in a wall in front of the enemy who has just fired; the smoke of her
-  // broadside still hangs at her ports, her sails smoulder, the forecastle has caught; black smoke drifts up and left.
   'Огненная стена': u => {
     const hz = 96;
     const back = redNight(u, hz, 47) + smoke(u, 20, 60, 1.6, 7, -.6, 3, '#2a1e1c', 40) + smoke(u, 10, 30, 1.4, 6, -1, 9, '#3a2c28', 20);
@@ -540,4 +626,14 @@ const SCENES = {
 
 const CAM = {};
 for (const k of Object.keys(SCENES)) CAM[k] = { x: 0, y: 0, w: 200 };
-module.exports = { SCENES, CAM };
+// skeletons of the round-2 scenes (docs/tasks/card-art-portrait-2.md): `export.mjs --portrait --skel` checks them.
+// item: [id, x of the left side, y of the base, w, h, support, height in m (on the ground), {edge | bg}]
+const SKEL = {};
+SKEL['Зомби-офицеры'] = { orig: { k: 1.6, tx: -138, ty: -6 }, horizon: 118, eye: 1.227, light: 'moon behind, upper middle, red haze',
+  items: [
+    ['bulwark', 0, 201, 200, 75, 'ground; behind near-officer, far-officer, ball', 1.1, { bg: 1 }],
+    ['far-officer', 10, 215, 46, 141, 'ground', 1.78],
+    ['near-officer', 50, 280, 102, 250, 'ground (feet off-frame, 1.5 m away); in front of far-officer', { edge: 1 }],
+    ['moon', 104, 27, 16, 16, 'sky, far behind'],
+    ['ball', 150, 104, 30, 12, 'flying from the hole in near-officer, over the bulwark']] };
+module.exports = { SCENES, CAM, SKEL };

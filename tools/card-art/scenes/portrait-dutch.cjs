@@ -156,36 +156,103 @@ const SCENES = {
     return [deck0, frame + theBell + puddles + fog + light];
   },
 
-  // Bootstrap Bill: the old sailor, grown with shells, still at his work in the flooded hold, hauling on a rope; a
-  // shackle on his wrist, the chain sagging to a ringbolt in the side; a green shaft of light from the grating.
+  // skeleton (picture units 0–280): path A, orig k 1.6 tx -68 ty 6; no horizon in the frame: our eye is level with his,
+  // y≈75; he stands 0.9 m from us (s≈228 units/m), feet far below the frame; light: a narrow green shaft from the hatch
+  // grating upper left onto his face and shoulder, the rest in shadow; shadows fall down and to the right
+  // wall: the hull planking behind him (1.15 m, s≈180): strakes 0.2 m high, a frame (rib) at x 168–190 with the ring
+  // bolt; the deck beam overhead y 0–17 with a knee down to the frame (all background, corners allowed)
+  // him: an old sailor, knitted cap y 40–58, face ¾ to our left, eyes y 72, grey stubble, barnacles grown into the
+  // right cheek and the left shoulder; his back touches the planking (a contact shadow on the wall at his sides)
+  // pike: held upright in his right hand (our left), fist at y 134–150, the shaft goes down out of the frame (its butt
+  // on the floor), the blade y 48–86 at x 28–52 (below the medal corner)
+  // chains: the right shackle's chain hangs to the floor (out of the frame bottom); the left shackle (y 198) is
+  // chained to the ring bolt in the frame (x 179, y 176)
+  // below the glass: his jacket and belt, the left hand holding a bailing bucket by its rope (bucket y 222–280, dark),
+  // barnacles on the planking low left
   'Прихлоп Билл': u => {
-    const back = `<rect width="200" height="${H}" fill="#0a1412"/>` + woodTex(u, 0, 0, W, 170, '#2a2a22', '#121410', '#060806', 12, false, 3) + beam(u, 0, 0, W, 10) + beam(u, 0, 22, W, 6)
-      + `<rect x="80" y="2" width="40" height="18" fill="#2a2a22"/>` + [0, 1, 2].map(k => `<rect x="${83 + k * 12}" y="5" width="9" height="12" fill="#c8f0e0"/>`).join('') + shafts(u, 100, 18, [[80, 100, 120, 100]], '#c8fff0', .22);
-    const water = grad('pbw' + u, [[0, '#1a3a34'], [1, '#040c0a']]) + `<rect y="150" width="200" height="${H - 150}" fill="url(#pbw${u})"/><path d="M0 150q20 -2 40 0t40 0t40 0t40 0t40 0" stroke="#9ff0d0" stroke-width=".8" fill="none" opacity=".6"/>`;
-    // the ringbolt in the side, the chain sagging to his wrist
-    const chain0 = `<circle cx="172" cy="96" r="3.4" fill="none" stroke="url(#iron${u})" stroke-width="1.8"/>` + Array.from({ length: 10 }, (_, k) => { const t = k / 9, x = 170 - t * 42, y = 98 + Math.sin(t * Math.PI) * 12 + t * 14; return `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="2.2" ry="1.4" fill="none" stroke="#6a4a2a" stroke-width="1.1"/>`; }).join('');
-    // the old man: knitted cap, short grey beard, deep lines, shells on shoulder, sleeve and cheek
-    const sk = uid('pbs' + u);
-    const man = `<radialGradient id="${sk}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#a8a888"/><stop offset=".7" stop-color="#6a705a"/><stop offset="1" stop-color="#3a4030"/></radialGradient>`
-      + `<path d="M64 160q-2 -50 8 -78q10 -14 28 -16q18 2 28 16q10 28 8 78z" fill="#3a3a2e" stroke="#0a0c08" stroke-width=".6"/><path d="M72 82q-6 30 -6 78" stroke="#9ff0d0" stroke-width=".8" fill="none" opacity=".5"/>`
-      + `<path d="M76 90l20 60M120 90l-14 60" stroke="#2a2a20" stroke-width="1" opacity=".7"/><path d="M88 150h24v12h-24z" fill="#2a2018"/>`
-      + `<path d="M92 66h16v10h-16z" fill="url(#${sk})"/><path d="M86 52q0 -16 14 -16t14 16q0 10 -5 15q-4 4 -9 4t-9 -4q-5 -5 -5 -15z" fill="url(#${sk})" stroke="#1a1c14" stroke-width=".5"/>`
-      + `<path d="M85 46q15 -14 30 0q-2 -10 -15 -11q-13 1 -15 11z" fill="#5a2a22"/><path d="M85 46q15 -5 30 0" stroke="#3a1a14" stroke-width="2" fill="none"/>${[88, 92, 96, 100, 104, 108, 112].map(x => `<path d="M${x} 38v6" stroke="#3a1a14" stroke-width=".4"/>`).join('')}`
-      + `<path d="M90 52q3 -2 6 0M104 52q3 -2 6 0" stroke="#1a1a12" stroke-width="1.1" fill="none"/><path d="M89 49q4 -2 7 -1M104 48q4 -1 7 1" stroke="#d8dcc8" stroke-width=".8" fill="none"/><path d="M100 54q-2 5 0 8h2" stroke="#3a3a2a" stroke-width=".6" fill="none"/>`
-      + `<path d="M88 56q-1 3 0 6M112 56q1 3 0 6M94 58l-3 2M106 58l3 2M92 47h4M104 47h4" stroke="#3a3a2a" stroke-width=".4" fill="none"/>`
-      + `<path d="M88 62q12 16 24 0q-2 10 -12 12q-10 -2 -12 -12z" fill="#c8c8c0"/><path d="M92 64q8 4 16 0" stroke="#5a5a50" stroke-width=".6" fill="none"/>${[92, 96, 100, 104, 108].map(x => `<path d="M${x} 66q0 3 -1 5" stroke="#8a8a80" stroke-width=".4" fill="none"/>`).join('')}`
-      + barn(110, 58, 1.6) + barn(113, 61, 1.2) + barn(76, 82, 2.4) + barn(82, 79, 1.8) + barn(70, 90, 2) + `<path d="M120 86q4 -6 2 -10M122 86q4 -4 6 -2" stroke="#e88a7a" stroke-width="1.2" fill="none"/>`;
-    // his arms on the rope he hauls, which runs up to the hatch
-    const ropeUp = rope('M118 18L108 102', 1.4);
-    const arms = `<path d="M72 92q-6 18 22 14M126 92q8 10 -14 8" stroke="#3a3a2e" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M72 92q-6 18 22 14" stroke="#9ff0d0" stroke-width=".6" fill="none" opacity=".5"/>`
-      + `<circle cx="104" cy="104" r="5" fill="url(#${sk})" stroke="#1a1c14" stroke-width=".4"/><circle cx="112" cy="98" r="5" fill="url(#${sk})" stroke="#1a1c14" stroke-width=".4"/><rect x="117" y="96" width="6" height="5" rx="1" fill="none" stroke="url(#iron${u})" stroke-width="1.6"/>` + barn(122, 92, 1.4);
-    const weedW = weed(60, 170, 12, '#2a5a3a', 3) + weed(140, 172, 14, '#2a5a3a', 7, -1) + spray(70, 140, 60, 14, 14, 9, '#c8fff0');
-    const light = glow(u, 104, 56, 30, 30, '#c8fff0', .35) + gloom(u, 100, 140, 100, 280, .5, '#020806');
-    return [back + water + chain0, man + ropeUp + arms + weedW + light];
+    const ey = 72;
+    // the hull planking, frames and the deck beam; wet, green-black, barnacle clusters with their own shadows
+    let wall = `<rect width="200" height="280" fill="#0e1a16"/>`;
+    for (let k = 0, y = 17; y < 280; k++, y += 34) wall += woodTex(u, 0, y, 200, 34, '#22352e', '#13211c', '#060c0a', 34, false, 30 + k) + `<path d="M0 ${y + 33}h200" stroke="#040806" stroke-width="1.6"/><path d="M0 ${y + 1.2}h200" stroke="#5a8a78" stroke-width=".6" opacity=".35"/>`
+      + K.nails([[22 + (k * 37) % 40, y + 6], [22 + (k * 37) % 40, y + 27], [96 + (k * 23) % 30, y + 6], [96 + (k * 23) % 30, y + 27]], '#0a1210', .9);
+    wall += `<rect x="168" y="17" width="24" height="263" fill="url(#oakH${u})" opacity=".55"/><rect x="168" y="17" width="24" height="263" fill="#10201a" opacity=".6"/><path d="M168.6 17v263" stroke="#5a8a78" stroke-width=".7" opacity=".5"/><path d="M191.4 17v263" stroke="#020403" stroke-width="1.2"/>`
+      + `<rect width="200" height="17" fill="#1a2a24"/><rect width="200" height="17" fill="url(#oak${u})" opacity=".35"/><path d="M0 16.4h200" stroke="#020403" stroke-width="1.6"/><path d="M0 1.2h200" stroke="#6a9a88" stroke-width=".6" opacity=".4"/>`
+      + `<path d="M150 17h42v22q-24 0 -42 -22z" fill="#1c2e28" stroke="#040806" stroke-width=".7"/><path d="M152 18q14 16 38 19" stroke="#6a9a88" stroke-width=".5" fill="none" opacity=".4"/>` + K.nails([[176, 22], [184, 30], [160, 20]], '#0a1210', 1);
+    // the grating's light: a narrow green shaft from the upper left
+    const f = 'pbs' + u;
+    const beamL = blurF(f, 3.4) + `<path d="M40 0L74 0L136 150L84 150z" fill="#9ff0d0" opacity=".16" filter="url(#${f})" style="mix-blend-mode:screen"/>`;
+    // barnacles: cones of different size, a dark mouth, a shadow below-right; on the wall and on him
+    const barn = (x, y, r, a = 0) => `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${a})"><ellipse cx="${f2(r * .4)}" cy="${f2(r * .5)}" rx="${f2(r * 1.1)}" ry="${f2(r * .6)}" fill="#000" opacity=".45"/>`
+      + `<path d="M${f2(-r)} ${f2(r * .3)}Q${f2(-r * .8)} ${f2(-r * .5)} ${f2(-r * .35)} ${f2(-r * .7)}H${f2(r * .35)}Q${f2(r * .8)} ${f2(-r * .5)} ${f2(r)} ${f2(r * .3)}z" fill="#c8c4b0" stroke="#5a5848" stroke-width=".3"/>`
+      + `<path d="M${f2(-r * .55)} ${f2(r * .2)}L${f2(-r * .3)} ${f2(-r * .6)}M0 ${f2(r * .25)}V${f2(-r * .65)}M${f2(r * .55)} ${f2(r * .2)}L${f2(r * .3)} ${f2(-r * .6)}" stroke="#8a8670" stroke-width=".3"/>`
+      + `<ellipse cy="${f2(-r * .66)}" rx="${f2(r * .34)}" ry="${f2(r * .14)}" fill="#1a1a14"/><path d="M${f2(-r * .9)} ${f2(r * .1)}Q${f2(-r * .7)} ${f2(-r * .5)} ${f2(-r * .3)} ${f2(-r * .66)}" stroke="#f4f0e0" stroke-width=".4" fill="none" opacity=".7"/></g>`;
+    const br = R(21);
+    const cluster = (x, y, w, h, n, rmax) => Array.from({ length: n }, () => [x + br() * w, y + br() * h, 1 + br() * rmax]).sort((a, b) => a[1] - b[1]).map(([bx, by, r]) => barn(bx, by, r, (br() - .5) * 30)).join('');
+    const wallBarn = cluster(156, 58, 30, 50, 9, 3.6) + cluster(170, 118, 16, 30, 4, 2.6) + cluster(10, 150, 24, 46, 7, 3.4) + cluster(140, 26, 16, 10, 3, 2.2)
+      // seaweed hanging from the beam and the knee, drops falling from it
+      + [[60, 17, 22], [64, 17, 30], [126, 17, 18], [158, 30, 24]].map(([x, y, l], i) => `<path d="M${x} ${y}q${3 - i} ${l * .4} ${-2 + i} ${l * .7}t${1 + i % 2} ${l * .3}" stroke="#2e5a40" stroke-width="${1.4 - i * .15}" fill="none"/><path d="M${x + .4} ${y}q${3 - i} ${l * .4} ${-2 + i} ${l * .7}" stroke="#7ac0a0" stroke-width=".35" fill="none" opacity=".6"/>`).join('')
+      + [[60.6, 44], [127, 40], [64, 56]].map(([x, y]) => `<path d="M${x} ${y}q-.9 1.4 0 2.2q.9 -.8 0 -2.2z" fill="#c8fff0" opacity=".7"/>`).join('');
+    // the ring bolt in the frame and the chain from his left shackle
+    const ringBolt = `<circle cx="179" cy="172" r="3.4" fill="url(#iron${u})" stroke="#020403" stroke-width=".5"/><circle cx="179" cy="172" r="1.4" fill="#060a08"/><path d="M175.4 175q3.6 8 7.2 0" stroke="#3a2a1a" stroke-width="2.4" fill="none"/><path d="M175.4 175q3.6 8 7.2 0" stroke="#8a6a4a" stroke-width=".7" fill="none"/>`;
+    const link = (x, y, a, c = '#6a5a4a') => `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(a)})"><rect x="-3.4" y="-1.9" width="6.8" height="3.8" rx="1.9" fill="none" stroke="#1a120c" stroke-width="2"/><rect x="-3.4" y="-1.9" width="6.8" height="3.8" rx="1.9" fill="none" stroke="${c}" stroke-width="1.1"/><path d="M-2.4 -1.4h3" stroke="#c8a888" stroke-width=".35" opacity=".7"/></g>`;
+    const chainPts = (x0, y0, x1, y1, sag, n) => Array.from({ length: n }, (_, i) => { const t = (i + .5) / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t + sag * 4 * t * (1 - t); const dx = (x1 - x0) / n, dy = (y1 - y0) / n + sag * 4 * (1 - 2 * t) / n; return link(x, y, Math.atan2(dy, dx) * 180 / Math.PI + (i % 2 ? 0 : 0), i % 3 ? '#6a5a4a' : '#8a5a3a'); }).join('');
+    // the pike: a dark wet shaft, a rusty spearhead with a side blade, barnacles on the socket
+    const pike = `<rect x="38.4" y="84" width="4.4" height="206" fill="url(#oakH${u})" stroke="#060a08" stroke-width=".5"/><rect x="38.4" y="84" width="4.4" height="206" fill="#1a2420" opacity=".5"/><path d="M39.2 84v206" stroke="#7a9a88" stroke-width=".5" opacity=".6"/>`
+      + `<g transform="translate(0 4)"><path d="M37.6 82h6v-8h-6z" fill="url(#iron${u})" stroke="#020403" stroke-width=".4"/><path d="M40.6 74L36.4 66L40.6 44L44.8 66z" fill="url(#ironH${u})" stroke="#020403" stroke-width=".5"/><path d="M40.6 46v26" stroke="#c8d8d0" stroke-width=".4" opacity=".7"/>`
+      + `<path d="M43 70q8 -2 10 -10q-2 6 -10 6z" fill="url(#iron${u})" stroke="#020403" stroke-width=".4"/><path d="M38 68q-6 2 -9 6l1 2q4 -4 8 -4z" fill="url(#iron${u})" stroke="#020403" stroke-width=".4"/>`
+      + `<path d="M38 60q2 4 1 9M43 56q-1 6 1 12M44 77q1 3 -1 5" stroke="#7a3a1a" stroke-width=".8" fill="none" opacity=".7"/>` + `</g>` + barn(42.6, 89, 1.6) + barn(38.8, 92, 1.2);
+    // his body: a ragged wet jacket, slumped shoulders; the planking shadow at his sides (he leans on it)
+    const jacket = `<path d="M44 300L46 160Q46 132 62 124L90 112L100 116L112 112L140 122Q154 130 156 160L158 300z" fill="#000" opacity=".5" transform="translate(5 4)"/>`
+      + `<linearGradient id="pbj${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a5a4a"/><stop offset=".4" stop-color="#2a3a30"/><stop offset="1" stop-color="#101a14"/></linearGradient>`
+      + `<path d="M46 300L48 162Q48 134 62 126L90 112L100 117L112 112L140 122Q152 130 154 160L156 300z" fill="url(#pbj${u})" stroke="#040806" stroke-width=".7"/>`
+      + `<path d="M90 112L100 117L112 112L110 140L100 148L92 140z" fill="#c8c8b0"/><path d="M92 120l16 -1M92 127l17 -1M93 134l15 -1" stroke="#3a4a5a" stroke-width="2"/>`
+      + `<path d="M90 112L80 150L96 146L100 117zM112 112L122 150L106 146L100 117z" fill="#34443a" stroke="#040806" stroke-width=".5"/>`
+      + `<path d="M62 126Q54 140 54 170M140 122Q148 136 150 166M70 160q4 20 2 40M128 158q-4 22 0 44" stroke="#040806" stroke-width=".9" fill="none" opacity=".7"/><path d="M62 126L90 112" stroke="#9ff0d0" stroke-width="1" opacity=".5"/>`
+      + `<path d="M46 300L48 162Q48 140 56 130" stroke="#7aa898" stroke-width=".9" fill="none" opacity=".45"/>`
+      + `<rect x="48" y="214" width="108" height="8" fill="#1a1410" stroke="#040806" stroke-width=".5"/><rect x="94" y="212" width="12" height="12" fill="none" stroke="url(#brass${u})" stroke-width="2"/>`
+      + cluster(124, 116, 26, 16, 8, 3.2) + `<path d="M132 120q4 10 0 22M138 122q6 8 4 18" stroke="#2e5a40" stroke-width="1.1" fill="none"/>` + cluster(52, 150, 10, 30, 3, 1.8);
+    // his right arm (our left): the upper arm down, the forearm up to the fist on the shaft; the shackle at the wrist
+    const armR = `<path d="M62 126Q50 132 50 160L52 196Q54 202 62 200L68 168Q70 146 66 132z" fill="url(#pbj${u})" stroke="#040806" stroke-width=".6"/>`
+      + `<path d="M52 196Q56 204 62 198L50 150L42 152z" fill="#26342c" stroke="#040806" stroke-width=".6"/><path d="M43 153L52 196" stroke="#9ff0d0" stroke-width=".6" opacity=".35"/>`
+      + `<rect x="35.6" y="148" width="12" height="7" rx="1.4" fill="url(#iron${u})" stroke="#020403" stroke-width=".5" transform="rotate(-12 41.6 151.5)"/><path d="M36 150.4l11 -2.4" stroke="#8a4a2a" stroke-width=".6" opacity=".7"/>`
+      // the fist round the shaft: knuckles to us, four folded fingers stacked, the thumb over them
+      + `<path d="M34 148Q32 140 34 134Q38 130 46 131Q50 133 50 140L48 148z" fill="url(#pbk${u})" stroke="#2a3a30" stroke-width=".5"/>`
+      + `<linearGradient id="pbk${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8c8b0"/><stop offset=".5" stop-color="#889a84"/><stop offset="1" stop-color="#4a5a4c"/></linearGradient>`
+      + [133.4, 137, 140.6, 144.2].map((y, i) => `<path d="M${33.6 + i * .3} ${y}Q${32 + i * .2} ${y + 1.8} ${34 + i * .3} ${y + 3.4}L${44 - i * .4} ${y + 3.2}" stroke="#2a3a30" stroke-width=".45" fill="none"/><path d="M${34 + i * .3} ${y + .6}q-1 1.2 .2 2.2" stroke="#e0ead8" stroke-width=".4" fill="none" opacity=".6"/><path d="M${41 - i * .2} ${y + .4}l1.4 .1" stroke="#e8e0d0" stroke-width=".5" opacity=".7"/>`).join('')
+      + `<path d="M44 132Q50 134 50 140Q46 142 42 140Q40 136 44 132z" fill="#9aaa94" stroke="#2a3a30" stroke-width=".45"/><path d="M43 135q3 .6 5 3" stroke="#4a5a4c" stroke-width=".35" fill="none"/>`
+      + barn(48, 154, 1.5) + chainPts(42, 156, 30, 290, 6, 17);
+    // his left arm (our right) hangs down to the bucket rope; the shackle chained to the ring bolt
+    const armL = `<path d="M140 122Q154 130 156 162L160 200Q158 206 150 204L144 170Q140 146 136 132z" fill="url(#pbj${u})" stroke="#040806" stroke-width=".6"/>`
+      + `<path d="M150 204L158 200L160 214L152 216z" fill="#1e2a24" stroke="#040806" stroke-width=".5"/><rect x="149" y="196" width="12" height="7" rx="1.4" fill="url(#iron${u})" stroke="#020403" stroke-width=".5" transform="rotate(8 155 199.5)"/>`
+      + `<path d="M151 214Q150 222 154 226L160 226Q163 220 161 213z" fill="#7a8a76" stroke="#2a3a30" stroke-width=".5"/>` + chainPts(161, 199, 177, 176, -2, 5);
+    const bucket = `<path d="M156 226q-14 4 -26 0" stroke="#5a4a2a" stroke-width="1.4" fill="none"/><path d="M128 232L134 290H178L184 232z" fill="#1a1a14" stroke="#040806" stroke-width=".6"/>`
+      + [146, 156, 166].map(x => `<path d="M${x} 232l${(x - 156) * .1} 58" stroke="#040806" stroke-width=".6"/>`).join('') + `<path d="M129 240h54M131 262h50" stroke="url(#iron${u})" stroke-width="2.2"/>`
+      + `<ellipse cx="156" cy="232" rx="28" ry="4.2" fill="#24301e" stroke="#040806" stroke-width=".6"/><ellipse cx="156" cy="233" rx="24" ry="2.8" fill="#0a1410"/><path d="M134 233q22 3 44 0" stroke="#9ff0d0" stroke-width=".4" fill="none" opacity=".5"/>`
+      + `<path d="M130 228q2 -6 4 -2M182 228q-2 -6 -4 -2" stroke="#5a4a2a" stroke-width="1.2" fill="none"/>`;
+    // the head: neck, the face ¾ to our left, downcast; barnacles grown into the right cheek (our right), stubble
+    const skinG = `<linearGradient id="pbf${u}" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#c4d4b8"/><stop offset=".45" stop-color="#8a9c84"/><stop offset="1" stop-color="#4a5a4a"/></linearGradient>`;
+    const head = skinG + `<path d="M90 112L92 96L112 96L114 112Q104 118 90 112z" fill="#6a7c66" stroke="#2a3a30" stroke-width=".5"/><path d="M95 100q1 7 0 12M107 99q-1 7 1 13" stroke="#3a4a3c" stroke-width=".5" fill="none"/>`
+      + `<path d="M80 60Q80 54 86 52L114 51Q122 52 122 60L123 72Q123 84 118 92Q112 101 101 103Q90 102 85 95L82 88L78.4 84Q77.6 80 79.6 79L80 72z" fill="url(#pbf${u})" stroke="#2a3a30" stroke-width=".6"/>`
+      // ear, brow, the sockets and heavy lids, bags under the eyes, the nose, a tight down-turned mouth
+      + `<path d="M120 66q5 -2 6 4q1 7 -3 11q-2 2 -4 0" fill="#7a8c74" stroke="#2a3a30" stroke-width=".5"/><path d="M121.6 69q2 1.6 .8 5" stroke="#3a4a3c" stroke-width=".45" fill="none"/>`
+      + `<path d="M82 66Q88 62.6 95 65M100 64.6Q107 62.4 115 65" stroke="#3a4232" stroke-width="1.5" fill="none"/><path d="M82 64.4Q88 61 95 63.4M100 63Q107 60.8 115 63.4" stroke="#c8ccc0" stroke-width=".6" fill="none" opacity=".8"/>`
+      + `<path d="M84 ${ey}Q89 ${ey - 3.4} 94 ${ey}Q89 ${ey + 1.6} 84 ${ey}z" fill="#1e2420"/><path d="M101 ${ey}Q107 ${ey - 3.4} 113 ${ey}Q107 ${ey + 1.6} 101 ${ey}z" fill="#1a201c"/>`
+      + `<circle cx="89.4" cy="${ey + .2}" r="1.1" fill="#9ab8a8"/><circle cx="107.6" cy="${ey + .2}" r="1" fill="#8aa898"/><path d="M84 ${ey - .4}Q89 ${ey - 3.6} 94 ${ey - .4}M101 ${ey - .4}Q107 ${ey - 3.6} 113 ${ey - .4}" stroke="#3a4232" stroke-width=".9" fill="none"/>`
+      + `<path d="M85 ${ey + 3}q4 2.4 8 0M102 ${ey + 3}q5 2.4 10 0M80.6 ${ey - 2}l-2 -1.4M80.6 ${ey}l-2.4 .4" stroke="#4a5a4a" stroke-width=".5" fill="none"/>`
+      + `<path d="M97 66Q96 74 92 81Q90 84 92.6 85.4Q95.6 86.6 98.4 84.6" stroke="#3a4a3c" stroke-width=".7" fill="#9aac92"/><path d="M95.6 70q-1 6 -3.4 10" stroke="#dce6d4" stroke-width=".6" fill="none" opacity=".7"/><ellipse cx="94.6" cy="84.8" rx="1.3" ry=".7" fill="#2a3428"/>`
+      + `<path d="M88 92Q95 90.6 104 92.6" stroke="#2a3428" stroke-width="1" fill="none"/><path d="M88 92q-1.4 1 -1.6 2.6M104 92.6q1.2 .8 1.4 2.4" stroke="#3a4a3c" stroke-width=".5" fill="none"/>`
+      + `<path d="M86 58q8 -2 14 0M88 61q6 -1.4 10 0M104 58q6 -1.6 11 0" stroke="#5a6a54" stroke-width=".5" fill="none"/>`;
+    const sr = R(33);
+    const stubble = Array.from({ length: 120 }, () => { const a = sr() * Math.PI, rr = .7 + sr() * .3, x = 101 + Math.cos(a) * 19 * rr, y = 86 + Math.sin(a) * 15 * rr; return x < 86 && y < 90 ? '' : `<path d="M${f1(x)} ${f1(y)}l${f2(sr() - .5)} .9" stroke="#d8dcd0" stroke-width=".35" opacity="${f2(.4 + sr() * .5)}"/>`; }).join('')
+      + `<path d="M88 90.6Q95 88 104 90.6Q102 89 96 88.6Q90 88.6 88 90.6z" fill="#c8ccc0" opacity=".85"/>`;
+    const cheekBarn = barn(116, 86, 2.1, 20) + barn(119.4, 82, 1.5, 30) + barn(114, 91.4, 1.3, 10) + barn(121, 88, 1.1, 40) + `<path d="M112 84q4 6 10 4" stroke="#3a4a3c" stroke-width=".5" fill="none"/>`;
+    // the knitted cap: rolled brim, ribs, wet and dark green-grey
+    const cap = `<path d="M79 58Q78 40 100 38Q122 38 123 58z" fill="#2e3c34" stroke="#0a120e" stroke-width=".6"/>` + Array.from({ length: 12 }, (_, k) => `<path d="M${f1(82 + k * 3.4)} ${f1(57)}Q${f1(84 + k * 3)} ${f1(46)} ${f1(92 + k * 1.6)} ${f1(39.6)}" stroke="#18221c" stroke-width=".5" fill="none"/>`).join('')
+      + `<path d="M77.6 61Q78 54 82 53L120 52.4Q124.4 53 124.4 60L122.6 63.4Q100 60 79 64z" fill="#3a4a40" stroke="#0a120e" stroke-width=".6"/>` + Array.from({ length: 15 }, (_, k) => `<path d="M${f1(80 + k * 3)} ${f1(53.6)}v${f1(8.8 - Math.abs(k - 7) * .1)}" stroke="#1e2a24" stroke-width=".5"/>`).join('')
+      + `<path d="M84 41Q96 36 108 38" stroke="#9ff0d0" stroke-width=".9" fill="none" opacity=".45"/><path d="M78.6 56Q90 52.6 104 52.8" stroke="#9ff0d0" stroke-width=".7" fill="none" opacity=".4"/>`;
+    const light = glow(u, 94, 74, 40, 40, '#9ff0d0', .18) + gloom(u, 200, 100, 120, 100, .4, '#020604') + gloom(u, 100, 140, 100, 280, .45, '#020604');
+    return [wall + wallBarn + ringBolt + beamL, pike + jacket + armR + armL + bucket + head + stubble + cheekBarn + cap + light];
   },
-
-  // The dead man's chest: on a pale beach the iron-bound chest, lid shut but not quite; red light leaks from the gap,
-  // sand trickles off the lid; coins and the key lie in front of it.
   'Сундук мертвеца': u => {
     const hz = 62;
     const back = haze(u, hz, 128, 30, 11) + `<path d="M40 64q20 -12 60 -8q14 2 24 8z" fill="#5a7a6a"/>` + lit(K.palm ? '' : '', GHOSTLY) + tint(require('./art3.cjs').palm(64, 62, .5) + require('./art3.cjs').palm(84, 60, .44, -1), [.7, .9, .82], [0, .03, .02], .6)
@@ -308,33 +375,102 @@ const SCENES = {
     return [deck0, barrel + coat + wig + hat + sword + web + fog + light];
   },
 
-  // The heart beats: close and from above, the chest open across the whole picture; on the dark velvet inside lies the
-  // heart itself, bound with a strap and a small lock, wet and shining, its beat a soft double outline.
+  // skeleton (picture units 0–280): path B (the original's heart is a ♥ sign standing on the beach with a cardiogram
+  // and notes); the idea: close, from above — an open casket on the sand, a real heart bound with a strap on dark velvet.
+  // Camera: eye 0.33 m above the sand (we kneel close to it), looking level with a shifted frame, so verticals stay
+  // vertical: x = 100 + 104 X / Z, y = 40 + 104 (0.33 − Y) / Z (metres; Z — distance); horizon y=40
+  // light: the pale sun upper left (x 92, y 16) in a green haze; shadows fall right and towards us
+  // ground: the sand from the shore (foam at y 44–47) to us; one small palm far behind on the left, base y 44
+  // casket: 0.30 × 0.20 × 0.16 m, front 0.25 m away: bottom y 177 (contact shadow), front rim y 111, back rim y 79,
+  // x 38–162; the lid hinged at the back rim, opened 100° (top y 34, x 68–132), held by two small chains
+  // heart: lies on the velvet bed (0.12 m) in the middle, y 76–104, 0.14 m wide; a leather strap round it, both ends
+  // tucked under it, a small padlock hanging from the buckle; a soft double red outline — the beat; red glow on the lid
+  // music box: open, on the sand in front, right of centre (Z 0.18–0.205), its lid lying open flat on the sand to the
+  // right; y 195–230, dark, under the glass; nothing of it rises in front of the casket
   'Сердце бьётся': u => {
-    const hz = 34;
-    const back = haze(u, hz, 118, 18, 19) + sand(u, 46, H, '#d8cca8', '#7a705a', 23, '#fff8e8') + `<path d="M0 46q60 -4 120 0t80 -2" stroke="#ffffff" stroke-width="1.4" fill="none" opacity=".8"/>`
-      + tint(require('./art3.cjs').palm(54, 66, .5), [.7, .9, .82], [0, .03, .02], .6);
-    // the chest: the lid raised behind with a pattern inside, the box open, velvet lining
-    const lid = `<path d="M34 86L44 50h112l10 36z" fill="#5a3a1c" stroke="#140a04" stroke-width=".7"/><path d="M40 82L48 54h104l8 28z" fill="#3a1410"/>`
-      + `<g opacity=".6">${[0, 1, 2].map(k => `<path d="M${60 + k * 30} 60q10 8 0 18q-10 -10 0 -18z" fill="none" stroke="#c9a048" stroke-width=".7"/>`).join('')}</g>` + [70, 130].map(x => `<path d="M${x} 50l-2 36" stroke="url(#iron${u})" stroke-width="3"/>`).join('');
-    const box = shadow(u, 92, 136, 72, .5, 6) + `<path d="M30 86h140l-6 46h-128z" fill="url(#oak${u})" stroke="#140a04" stroke-width=".7"/><path d="M36 88h128l-4 10h-120z" fill="#4a0e14"/><path d="M38 96q62 8 124 0l-4 30h-116z" fill="#5a1418"/>`
-      + [56, 100, 144].map(x => `<path d="M${x} 86v46" stroke="url(#iron${u})" stroke-width="3.4"/>`).join('') + `<path d="M30 86h140" stroke="url(#brass${u})" stroke-width="1.6"/>`;
-    // the heart: an organ, not a sign: the great vessels at the top, the coronary veins, a wet shine; bound
-    const hg = uid('pht' + u);
-    const heart = `<radialGradient id="${hg}" cx=".38" cy=".35" r=".75"><stop offset="0" stop-color="#e86a5a"/><stop offset=".55" stop-color="#a8201a"/><stop offset="1" stop-color="#4a0606"/></radialGradient>`
-      + `<path d="M98 80q-4 -8 2 -12q6 2 4 10M108 80q2 -10 10 -12q4 4 -2 12M88 82q-6 -6 -4 -12q6 0 8 10" fill="#8a2a2a" stroke="#3a0606" stroke-width=".5"/>`
-      + `<path d="M74 92q2 -14 22 -12q10 0 14 4q12 -6 22 2q12 10 2 26q-12 14 -32 16q-22 -6 -28 -36z" fill="url(#${hg})" stroke="#3a0606" stroke-width=".7"/>`
-      + `<path d="M106 86q-4 16 -14 32M114 90q4 12 -2 24M92 90q-6 6 -8 14" stroke="#5a0a0a" stroke-width="1.2" fill="none"/><path d="M80 94q8 -10 18 -8" stroke="#ffd0c8" stroke-width="2" fill="none" opacity=".75"/><circle cx="122" cy="96" r="1.6" fill="#ffffff" opacity=".7"/>`
-      + `<path d="M72 106q34 8 66 -4" stroke="#3a2010" stroke-width="5" fill="none"/><path d="M72 104q34 8 66 -4" stroke="#7a5030" stroke-width="1" fill="none"/><rect x="100" y="104" width="8" height="8" rx="1.4" fill="url(#brass${u})" stroke="#5a4010" stroke-width=".4"/>`
-      + `<path d="M74 92q2 -14 22 -12q10 0 14 4q12 -6 22 2q12 10 2 26q-12 14 -32 16q-22 -6 -28 -36z" fill="none" stroke="#ff8a7a" stroke-width="3" opacity=".25" transform="translate(-103 -107) scale(1.06) translate(97.2 101)" filter="url(#soft${u})"/>`
-      + glow(u, 104, 104, 60, 40, '#ff3a2a', .45);
-    const key = shadow(u, 178, 128, 8, .5, 1.6) + `<g transform="translate(172 124) rotate(-10)"><circle r="3" fill="none" stroke="url(#iron${u})" stroke-width="1.4"/><path d="M3 0h12v2.4M12 0v3" stroke="url(#iron${u})" stroke-width="1.4" fill="none"/></g>`;
-    const light = glow(u, 118, 18, 50, 30, '#f4fff0', .25) + gloom(u, 100, 140, 100, 280, .4, '#141a14');
-    return [back + lid, box + heart + key + light];
+    const hz = 40, E = .33, F = 104;
+    const P = (X, Y, Z) => `${f1(100 + F * X / Z)} ${f1(hz + F * (E - Y) / Z)}`;
+    const W = .3, D = .2, Hc = .16, Z0 = .25, Lb = .12;
+    // the sky in a green haze, the pale sun, the sea strip with a far reef, the shore foam
+    const back = sky(u, 0, hz + 1, [[0, '#7a9a92'], [.6, '#b4ccc0'], [1, '#dce8d8']]) + glow(u, 92, 16, 46, 36, '#f4fff0', .75) + `<circle cx="92" cy="16" r="6" fill="#f6fff4"/>`
+      + K.cloudBand(u, 0, 34, '#eef6ee', '#86a49a', 47, 2.25, '0.014 0.08')
+      + grad('phs' + u, [[0, '#5a8a80'], [1, '#2e6058']]) + `<rect y="${hz}" width="200" height="6" fill="url(#phs${u})"/><path d="M0 ${hz + .3}h200" stroke="#e8fff4" stroke-width=".4" opacity=".7"/>`
+      + `<path d="M0 ${hz + 4.6}q20 -1.4 40 0t40 -.4t40 .6t40 -.6t40 .4" stroke="#f4fffa" stroke-width=".8" fill="none" opacity=".85"/><path d="M0 ${hz + 6}q30 -1 60 0t60 .3t80 -.3" stroke="#e8fff4" stroke-width=".5" fill="none" opacity=".6"/>`;
+    // the palm, small and far (base y 44), leaning to the right, crown x 48–69, y 21–32
+    const palmT = `<path d="M55 44.6Q55.4 36 58.6 26" stroke="#3a3a2a" stroke-width="1.6" fill="none"/><path d="M55.6 44q.6 -8 3 -17" stroke="#7a7a5a" stroke-width=".4" fill="none"/>`
+      + [[-10, 4], [-7, -3], [0, -5], [7, -3], [10, 4], [4, 6], [-4, 6]].map(([dx, dy]) => `<path d="M58.6 26q${f1(dx * .5)} ${f1(dy * .6 - 3)} ${dx} ${dy}" stroke="#3a5a40" stroke-width="1.3" fill="none"/>`).join('') + `<ellipse cx="55" cy="44.8" rx="4" ry=".7" fill="#4a5a44" opacity=".5"/>`;
+    // the sand: a gradient, ripples that widen and spread towards us, grains, a shell
+    let sandB = grad('phd' + u, [[0, '#d8d4b0'], [.4, '#c8bc90'], [1, '#8a7a58']]) + `<rect y="${hz + 6}" width="200" height="${280 - hz - 6}" fill="url(#phd${u})"/>`;
+    const sr = R(19);
+    for (let Z = 2.4; Z > .15; Z *= .9) { const y = hz + F * E / Z, w = F * .05 / Z; for (let x = -sr() * w; x < 205; x += w * (1.6 + sr() * 1.4)) sandB += `<path d="M${f1(x)} ${f1(y)}q${f1(w / 2)} ${f1(-w * .12)} ${f1(w)} 0" stroke="${sr() > .5 ? '#fff4d8' : '#6a5a3a'}" stroke-width="${f2(.2 + .04 * w)}" fill="none" opacity="${f2(.25 + sr() * .3)}"/>`; }
+    sandB += Array.from({ length: 90 }, () => { const y = hz + 8 + sr() * 230; return `<circle cx="${f1(sr() * 200)}" cy="${f1(y)}" r="${f2(.15 + (y - hz) * .004 * sr())}" fill="${sr() > .5 ? '#fff8e0' : '#5a4a30'}" opacity="${f2(.3 + sr() * .4)}"/>`; }).join('');
+    // the casket's shadow on the sand (to the right and towards us) and its contact line
+    const sh = `<path d="M${P(-W / 2, 0, Z0)}L${P(W / 2, 0, Z0)}L${P(W / 2 + .07, 0, Z0 - .03)}L${P(-W / 2 + .1, 0, Z0 - .04)}z" fill="#2a2414" opacity=".4" filter="url(#soft${u})"/><path d="M${P(W / 2, 0, Z0)}L${P(W / 2, 0, Z0 + D)}L${P(W / 2 + .07, 0, Z0 + D - .02)}L${P(W / 2 + .07, 0, Z0 - .03)}z" fill="#2a2414" opacity=".35" filter="url(#soft${u})"/>`
+      + `<path d="M${P(-W / 2, 0, Z0)}L${P(W / 2, 0, Z0)}" stroke="#1a140a" stroke-width="2.4" opacity=".7"/>`;
+    // the lid: hinged at the back rim, opened 100°; its inside face (wood, iron straps, a carved rosette, no signs)
+    const a = 100 * Math.PI / 180, LZ = t => Z0 + D - t * Math.cos(a), LY = t => Hc + t * Math.sin(a);
+    const lidP = (lx, t) => P(lx, LY(t), LZ(t));
+    const lidIn = `<path d="M${lidP(-W / 2, 0)}L${lidP(W / 2, 0)}L${lidP(W / 2, D)}L${lidP(-W / 2, D)}z" fill="#3a2414" stroke="#120804" stroke-width=".7"/>`
+      + `<path d="M${lidP(-W / 2 + .012, .012)}L${lidP(W / 2 - .012, .012)}L${lidP(W / 2 - .012, D - .012)}L${lidP(-W / 2 + .012, D - .012)}z" fill="url(#oak${u})" opacity=".75"/>`
+      + [-.1, .1].map(lx => `<path d="M${lidP(lx - .008, 0)}L${lidP(lx + .008, 0)}L${lidP(lx + .008, D)}L${lidP(lx - .008, D)}z" fill="url(#iron${u})" stroke="#0a0a0a" stroke-width=".3"/>`).join('')
+      + (() => { const [cx, cy] = lidP(0, D * .55).split(' ').map(Number); return `<g transform="translate(${cx} ${cy}) scale(1 .9)">${Array.from({ length: 8 }, (_, k) => `<path d="M0 0q2 -4 0 -8.6q-2 4.6 0 8.6z" fill="#6a4424" stroke="#1a0e06" stroke-width=".3" transform="rotate(${k * 45})"/>`).join('')}<circle r="2.2" fill="#2a1608" stroke="#c89a5a" stroke-width=".4"/></g>`; })()
+      + `<path d="M${lidP(-W / 2, D)}L${lidP(W / 2, D)}" stroke="#c89060" stroke-width=".8" opacity=".7"/>`
+      + (() => { const [gx, gy] = lidP(0, D * .45).split(' ').map(Number); return glow(u, gx, gy, 40, 26, '#ff4a3a', .4); })();
+    // the casket body: the inside walls, the velvet bed, then (after the heart) the front wall and the rim
+    const inner = `<path d="M${P(-W / 2, Hc, Z0 + D)}L${P(W / 2, Hc, Z0 + D)}L${P(W / 2, Lb, Z0 + D)}L${P(-W / 2, Lb, Z0 + D)}z" fill="#24140a"/>`
+      + `<path d="M${P(-W / 2, Hc, Z0)}L${P(-W / 2, Hc, Z0 + D)}L${P(-W / 2, Lb, Z0 + D)}L${P(-W / 2, Lb, Z0)}z" fill="#3a2212"/><path d="M${P(W / 2, Hc, Z0)}L${P(W / 2, Hc, Z0 + D)}L${P(W / 2, Lb, Z0 + D)}L${P(W / 2, Lb, Z0)}z" fill="#1e1008"/>`
+      + `<path d="M${P(-W / 2, Lb, Z0)}L${P(W / 2, Lb, Z0)}L${P(W / 2, Lb, Z0 + D)}L${P(-W / 2, Lb, Z0 + D)}z" fill="url(#phv${u})"/>`
+      + `<radialGradient id="phv${u}" cx=".5" cy=".55" r=".6"><stop offset="0" stop-color="#5a1418"/><stop offset=".55" stop-color="#2a0a10"/><stop offset="1" stop-color="#10040a"/></radialGradient>`
+      + [[-.1, .05], [.08, .14], [-.04, .17], [.11, .04]].map(([lx, lz]) => `<path d="M${P(lx - .03, Lb, Z0 + lz)}Q${P(lx, Lb + .006, Z0 + lz + .01)} ${P(lx + .03, Lb, Z0 + lz)}" stroke="#7a2a2a" stroke-width=".6" fill="none" opacity=".5"/>`).join('');
+    // the chains holding the lid: from its sides to the inside walls
+    const stay = s => { const [x0, y0] = lidP(s * (W / 2 - .012), D * .5).split(' ').map(Number), [x1, y1] = P(s * (W / 2 - .012), Hc - .02, Z0 + D * .62).split(' ').map(Number);
+      const n = Math.max(6, Math.round(Math.hypot(x1 - x0, y1 - y0) / 2.2)), ang = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI;
+      return `<path d="M${f1(x0)} ${f1(y0)}L${f1(x1)} ${f1(y1)}" stroke="#1a1a1a" stroke-width=".5" opacity=".6"/>` + Array.from({ length: n }, (_, i) => { const t = (i + .5) / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t + Math.sin(t * Math.PI) * 1.2;
+        return `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(ang)})"><rect x="-1.3" y="${i % 2 ? -.35 : -.7}" width="2.6" height="${i % 2 ? .7 : 1.4}" rx=".6" fill="none" stroke="#2a2a2a" stroke-width=".7"/><rect x="-1.3" y="${i % 2 ? -.35 : -.7}" width="2.6" height="${i % 2 ? .7 : 1.4}" rx=".6" fill="none" stroke="#a8acb0" stroke-width=".3"/></g>`; }).join('')
+        + `<circle cx="${f1(x0)}" cy="${f1(y0)}" r=".9" fill="url(#brass${u})"/><circle cx="${f1(x1)}" cy="${f1(y1)}" r=".9" fill="url(#brass${u})"/>`; };
+    // the heart: a dark red muscle with the aorta and vessels, wet highlights, coronary vessels; bound with a strap
+    const [hx, hy] = P(0, .175, Z0 + D * .5).split(' ').map(Number);
+    const hs = F * .14 / (Z0 + D * .5) / 40; // 40 local units = 0.14 m
+    const heart = `<g transform="translate(${f1(hx)} ${f1(hy + 2)}) scale(${f2(hs)}) rotate(-14)">`
+      + `<radialGradient id="phh${u}" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#d84a40"/><stop offset=".45" stop-color="#9a1e1e"/><stop offset="1" stop-color="#4a0608"/></radialGradient>`
+      + `<filter id="phb${u}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2"/></filter>`
+      + `<path d="M-19 -6Q-22 8 -8 18Q2 26 6 30Q10 22 18 12Q26 0 20 -10Q14 -18 4 -14Q-2 -20 -10 -16Q-18 -13 -19 -6z" fill="none" stroke="#ff5a4a" stroke-width="3" opacity=".45" filter="url(#phb${u})" transform="scale(1.12)"/>`
+      + `<path d="M-19 -6Q-22 8 -8 18Q2 26 6 30Q10 22 18 12Q26 0 20 -10Q14 -18 4 -14Q-2 -20 -10 -16Q-18 -13 -19 -6z" fill="none" stroke="#ff7a5a" stroke-width="1.6" opacity=".35" filter="url(#phb${u})" transform="scale(1.24)"/>`
+      // vessels on top: the aorta arching, the pulmonary trunk, veins
+      + `<path d="M-4 -14Q-6 -26 2 -28Q10 -30 12 -22L9 -20Q8 -25 3 -24Q-1 -22 1 -14z" fill="#b8423a" stroke="#3a0606" stroke-width=".6"/><ellipse cx="10.6" cy="-21" rx="2.2" ry="1.4" fill="#3a0606"/>`
+      + `<path d="M4 -14Q8 -20 14 -18L13 -14Q9 -15 8 -12z" fill="#7a3a5a" stroke="#2a0612" stroke-width=".5"/><path d="M-12 -15Q-16 -22 -12 -24L-9 -22Q-11 -19 -8 -16z" fill="#5a2a4a" stroke="#2a0612" stroke-width=".5"/><ellipse cx="-10.6" cy="-23.2" rx="1.6" ry=".9" fill="#2a0612"/>`
+      + `<path d="M-19 -6Q-22 8 -8 18Q2 26 6 30Q10 22 18 12Q26 0 20 -10Q14 -18 4 -14Q-2 -20 -10 -16Q-18 -13 -19 -6z" fill="url(#phh${u})" stroke="#2a0204" stroke-width=".8"/>`
+      + `<path d="M2 -13Q0 0 4 12Q6 20 6 28" stroke="#5a1010" stroke-width="1.2" fill="none" opacity=".8"/><path d="M2 -13Q0 0 4 12" stroke="#e8c0a0" stroke-width=".5" fill="none" opacity=".5"/>`
+      + `<path d="M-12 -10q2 8 8 14M12 -8q-2 10 -4 18" stroke="#e8d0a0" stroke-width=".7" fill="none" opacity=".45"/><path d="M-12 -10q2 8 8 14" stroke="#3a0606" stroke-width=".4" fill="none" opacity=".5" transform="translate(.6 .6)"/>`
+      + `<path d="M-15 -8q2 -5 7 -6M-13 -3q1 -3 4 -4" stroke="#ffe0d0" stroke-width="1.2" fill="none" opacity=".7"/><circle cx="12" cy="-6" r="1.2" fill="#ffe8e0" opacity=".7"/><circle cx="-6" cy="8" r=".8" fill="#ffd8d0" opacity=".55"/>`
+      // the strap across, ends tucked under the heart on both sides; a buckle with a small padlock hanging from it
+      + `<path d="M-21 2Q-4 -4 22 -2L22 4Q-4 3 -20 8z" fill="#4a2a14" stroke="#1a0a04" stroke-width=".5"/><path d="M-21 2Q-4 -4 22 -2" stroke="#9a6a3a" stroke-width=".5" fill="none"/><path d="M-21 2l-1.4 3.4l1.6 2.6M22 -2l1.4 3l-1.4 3" stroke="#1a0a04" stroke-width=".6" fill="none"/>`
+      + `<path d="M-17 4.6l2 -.2M-12 3.2l2 -.1M10 2.4l2 0M15 2.8l2 0" stroke="#c8a070" stroke-width=".5"/>`
+      + `<rect x="-2.4" y="-2" width="5.2" height="6" rx=".6" fill="none" stroke="url(#iron${u})" stroke-width="1.2"/>`
+      + `<path d="M-1.4 4q0 -3.4 1.6 -3.4q1.6 0 1.6 3.4" stroke="url(#iron${u})" stroke-width="1" fill="none" transform="translate(0 4)"/><rect x="-2.6" y="8" width="5.6" height="4.6" rx=".8" fill="url(#brass${u})" stroke="#4a3410" stroke-width=".4"/><circle cx=".2" cy="10" r=".7" fill="#2a1a08"/><path d="M.2 10v1.6" stroke="#2a1a08" stroke-width=".5"/>`
+      + `</g>`;
+    // the front wall and the rim: planks with iron bands, corner fittings and studs, in its own shade (the sun is behind it)
+    const fl = (lx, ly) => P(lx, ly, Z0);
+    const front = `<path d="M${fl(-W / 2, 0)}L${fl(W / 2, 0)}L${fl(W / 2, Hc)}L${fl(-W / 2, Hc)}z" fill="#3a2212" stroke="#100604" stroke-width=".7"/>`
+      + `<path d="M${fl(-W / 2, 0)}L${fl(W / 2, 0)}L${fl(W / 2, Hc)}L${fl(-W / 2, Hc)}z" fill="url(#oak${u})" opacity=".55"/>`
+      + [.04, .08, .12].map(h => `<path d="M${fl(-W / 2, h)}L${fl(W / 2, h)}" stroke="#140804" stroke-width=".8"/><path d="M${fl(-W / 2, h - .002)}L${fl(W / 2, h - .002)}" stroke="#8a5a34" stroke-width=".35" opacity=".5"/>`).join('')
+      + [-.1, .1].map(lx => `<path d="M${fl(lx - .012, 0)}L${fl(lx + .012, 0)}L${fl(lx + .012, Hc)}L${fl(lx - .012, Hc)}z" fill="url(#iron${u})" stroke="#060606" stroke-width=".4"/>` + K.nails([.02, .06, .1, .14].map(h => fl(lx, h).split(' ').map(Number)), '#0a0a0a', .7)).join('')
+      + [-1, 1].map(s => `<path d="M${fl(s * W / 2, 0)}L${fl(s * (W / 2 - .03), 0)}L${fl(s * (W / 2 - .03), .03)}L${fl(s * W / 2, .03)}zM${fl(s * W / 2, Hc)}L${fl(s * (W / 2 - .03), Hc)}L${fl(s * (W / 2 - .03), Hc - .03)}L${fl(s * W / 2, Hc - .03)}z" fill="url(#brass${u})" stroke="#4a3410" stroke-width=".4"/>`).join('')
+      + `<path d="M${fl(-.03, Hc)}L${fl(.03, Hc)}L${fl(.026, Hc - .045)}L${fl(-.026, Hc - .045)}z" fill="url(#brass${u})" stroke="#4a3410" stroke-width=".4"/><circle cx="${fl(0, Hc - .025).split(' ')[0]}" cy="${fl(0, Hc - .025).split(' ')[1]}" r="1.4" fill="#1a0e04"/>`
+      + `<path d="M${P(-W / 2, Hc, Z0)}L${P(W / 2, Hc, Z0)}L${P(W / 2, Hc, Z0 + D)}L${P(-W / 2, Hc, Z0 + D)}z" fill="none" stroke="#1a0c04" stroke-width="2.6"/><path d="M${P(-W / 2, Hc, Z0)}L${P(W / 2, Hc, Z0)}" stroke="#c89060" stroke-width=".9"/><path d="M${P(-W / 2, Hc, Z0)}L${P(-W / 2, Hc, Z0 + D)}" stroke="#e0b07a" stroke-width=".9" opacity=".8"/>`
+      + `<path d="M${fl(-W / 2, 0)}L${fl(-W / 2, Hc)}" stroke="#e8c090" stroke-width=".8" opacity=".55"/>` + glow(u, hx, hy + 14, 50, 10, '#ff4a3a', .18);
+    // the open music box on the sand in front, right; dark, a brass comb and cylinder, its lid open
+    // its lid opened right over and lying flat on the sand, lining up (nothing rises in front of the casket)
+    const mb = (X0, X1, Zn, Zf, h) => `<path d="M${P(X1, 0, Zn)}L${P(X1 + (X1 - X0), 0, Zn)}L${P(X1 + (X1 - X0), 0, Zf)}L${P(X1, 0, Zf)}z" fill="#2a1a0e" stroke="#080402" stroke-width=".6"/>`
+      + `<path d="M${P(X1 + .006, 0, Zn + .005)}L${P(2 * X1 - X0 - .006, 0, Zn + .005)}L${P(2 * X1 - X0 - .006, 0, Zf - .005)}L${P(X1 + .006, 0, Zf - .005)}z" fill="#5a1418"/>`
+      + `<path d="M${P(X0, 0, Zn)}L${P(X1, 0, Zn)}L${P(X1, h, Zn)}L${P(X0, h, Zn)}z" fill="#1e120a" stroke="#080402" stroke-width=".6"/><path d="M${P(X0, h, Zn)}L${P(X1, h, Zn)}L${P(X1, h, Zf)}L${P(X0, h, Zf)}z" fill="#2a1a0e" stroke="#080402" stroke-width=".6"/>`
+      + `<path d="M${P(X0 + .006, h, Zn + .005)}L${P(X1 - .006, h, Zn + .005)}L${P(X1 - .006, h, Zf - .005)}L${P(X0 + .006, h, Zf - .005)}z" fill="#120a06"/><path d="M${P(X0 + .012, h, Zf - .01)}L${P(X1 - .012, h, Zf - .01)}" stroke="url(#brass${u})" stroke-width="2.4"/>`
+      + Array.from({ length: 8 }, (_, i) => `<path d="M${P(X0 + .014 + i * .0045, h, Zn + .008)}L${P(X0 + .014 + i * .0045, h, Zn + .016)}" stroke="#c8a050" stroke-width=".5"/>`).join('')
+      + `<path d="M${P(X1, h, Zn)}L${P(X1, h, Zf)}" stroke="#8a6a4a" stroke-width=".5"/><path d="M${P(X0, 0, Zn)}L${P(2 * X1 - X0, 0, Zn)}" stroke="#000" stroke-width="1.6" opacity=".45"/>`;
+    const musicBox = `<path d="M${P(.02, 0, .18)}L${P(.15, 0, .18)}L${P(.17, 0, .19)}L${P(.04, 0, .19)}z" fill="#2a2414" opacity=".3" filter="url(#soft${u})"/>` + mb(.02, .07, .18, .205, .03);
+    const light = gloom(u, 100, 150, 100, 280, .3, '#141008');
+    return [back + palmT + sandB, sh + lidIn + inner + stay(-1) + stay(1) + heart + front + musicBox + light];
   },
-
-  // The maelstrom: from above, a funnel of water the width of the picture spirals down to a black pit; the enemy
-  // ship heels over on its slope and slides in; a shot flying from the upper left is blown aside and falls short.
   'Водоворот': u => {
     const hz = 42;
     const back = storm(u, hz, 23) + bolt(96, 2, 36);
@@ -383,4 +519,26 @@ const SCENES = {
 
 const CAM = {};
 for (const k of Object.keys(SCENES)) CAM[k] = { x: 0, y: 0, w: 200 };
-module.exports = { SCENES, CAM };
+// skeletons of the round-2 scenes (docs/tasks/card-art-portrait-2.md): `export.mjs --portrait --skel` checks them.
+// item: [id, x of the left side, y of the base, w, h, support, height in m (on the ground), {edge | bg}]
+const SKEL = {};
+SKEL['Прихлоп Билл'] = { orig: { k: 1.6, tx: -68, ty: 6 }, horizon: 72, eye: 1.6, light: 'narrow green shaft from the grating upper left',
+  items: [
+    ['planking', 0, 280, 200, 263, 'hull side; behind bill, head, pike, bucket, chain-l', { bg: 1 }],
+    ['beam', 0, 17, 200, 17, 'deck beam on the frames', { bg: 1 }],
+    ['ring-bolt', 175, 179, 9, 11, 'bolted into the frame of the planking'],
+    ['bill', 44, 300, 116, 188, 'ground (feet far below the frame), back against the planking; holds pike', { edge: 1 }],
+    ['head', 77, 114, 50, 76, 'on the shoulders of bill (cap top y 38)'],
+    ['pike', 28, 300, 26, 252, 'held by bill, butt on the floor below the frame', { edge: 1 }],
+    ['chain-l', 160, 200, 20, 24, 'from the shackle of bill to ring-bolt'],
+    ['bucket', 128, 290, 56, 64, 'hangs on its rope from the hand of bill', { edge: 1 }]] };
+SKEL['Сердце бьётся'] = { orig: null, horizon: 40, eye: .33, light: 'pale sun upper left, green haze',
+  items: [
+    ['casket', 38, 177, 124, 66, 'ground', .16],
+    ['lid', 68, 79, 64, 45, 'hinged on the back rim of casket, held by two chains; behind heart'],
+    ['heart', 77, 112, 50, 54, 'on the velvet bed inside casket'],
+    ['palm-trunk', 52, 45, 8, 14, 'ground: the sand far behind, at the shore'],
+    ['palm-crown', 48, 32, 21, 11, 'on palm-trunk'],
+    ['sun', 86, 22, 12, 12, 'sky, far behind'],
+    ['music-box', 111, 231, 58, 17, 'ground (its lid lies open flat on the sand)', .03]] };
+module.exports = { SCENES, CAM, SKEL };
