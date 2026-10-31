@@ -33,8 +33,8 @@ const beam = (u, x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${
 const vignette = (u, vh = VH) => `<radialGradient id="pvig${u}" cx=".5" cy=".42" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#140a04" stop-opacity=".45"/></radialGradient><rect width="${W}" height="${vh}" fill="url(#pvig${u})"/>`;
 
 // The ghost ship's deck at full height: green fog over a dark sea, the rail hung with weed, a barnacled deck.
-const ghostDeck = u => sky(u, 0, 100, [[0, '#0b1715'], [.6, '#1f3a34'], [1, '#365a50']])
-  + cloudBand(u, 0, 66, '#7aa094', '#0e1a18', 51, 2.1) + halo(152, 30, 44, '#b8e8d8', .32) + `<circle cx="152" cy="30" r="6" fill="#dff4ec" opacity=".8"/>`
+const ghostDeck = (u, mx = 152, my = 30) => sky(u, 0, 100, [[0, '#0b1715'], [.6, '#1f3a34'], [1, '#365a50']])
+  + cloudBand(u, 0, 66, '#7aa094', '#0e1a18', 51, 2.1) + halo(mx, my, 44, '#b8e8d8', .32) + `<circle cx="${mx}" cy="${my}" r="6" fill="#dff4ec" opacity=".8"/>`
   + `<rect y="80" width="${W}" height="6" fill="#3a3024"/><path d="M0 80h200" stroke="#6a5a44" stroke-width=".6"/>`
   + Array.from({ length: 10 }, (_, k) => `<rect x="${k * 21 + 3}" y="86" width="3.6" height="22" fill="#30281e"/><path d="M${k * 21 + 3.6} 86v22" stroke="#6a5a44" stroke-width=".4"/>`).join('')
   + woodTex(u, 0, 108, W, H - 108, '#3e3428', '#1a140e', '#100b07', 10, false, 9) + `<path d="M0 108h200" stroke="#5a4a36" stroke-width="2.4"/>`
