@@ -32,23 +32,23 @@ const PAL = {
   night: { // Black Pearl: night, the moon, blue steel
     sky: ['#0a1322', '#142640', '#27405c', '#3d5a74'], sea: ['#2e4a64', '#152a40', '#0a1626'],
     cloudLit: '#b9c9de', cloudShade: '#1a2840', fog: '#7f97ad', smoke: '#9aa6b8',
-    key: { type: 'moon', az: 28, el: 26, color: '#d4e2ff', power: .66 }, fill: { color: '#3d5680', power: .4 },
-    shadowTint: '#1c2346', tint: .7, floor: .125 },
+    key: { type: 'moon', az: 28, el: 26, color: '#b9cff6', power: .7 }, fill: { color: '#3d5680', power: .4 },
+    shadowTint: '#1c2346', tint: .7, floor: .125, sat: .74 },
   dusk: { // Queen Anne's Revenge: sunset, fire, red and orange
     sky: ['#2b2440', '#7a3340', '#d9643a', '#ffc070'], sea: ['#d98a52', '#6a3440', '#241a2c'],
     cloudLit: '#ffb478', cloudShade: '#5b3350', fog: '#c98a6a', smoke: '#b89684',
     key: { type: 'sun', az: 290, el: 9, color: '#ffb070', power: .95 }, fill: { color: '#6e4a70', power: .42 },
-    shadowTint: '#33264a', tint: .55, floor: .13 },
+    shadowTint: '#33264a', tint: .55, floor: .13, sat: 1 },
   day: { // Endeavour: day, white and blue with ochre
     sky: ['#3f7fb8', '#6fa8d0', '#b4d2de', '#ecead2'], sea: ['#86b6c4', '#2e7088', '#113a4e'],
     cloudLit: '#ffffff', cloudShade: '#9db2c6', fog: '#dfe8e8', smoke: '#d8d2c6',
     key: { type: 'sun', az: 115, el: 55, color: '#fff3d6', power: 1 }, fill: { color: '#8fb4d8', power: .5 },
-    shadowTint: '#2b4262', tint: .45, floor: .14 },
+    shadowTint: '#2b4262', tint: .45, floor: .14, sat: 1 },
   fog: { // Flying Dutchman: greenish fog
     sky: ['#0c1a18', '#1b3530', '#315348', '#4f7566'], sea: ['#3f6458', '#1b3a34', '#0c1f1c'],
     cloudLit: '#8fb8a8', cloudShade: '#142a26', fog: '#9fd0bc', smoke: '#8aa89c',
     key: { type: 'moon', az: 0, el: 35, color: '#bfe8d6', power: .6 }, fill: { color: '#3a6a5c', power: .46 },
-    shadowTint: '#14302c', tint: .7, floor: .125 },
+    shadowTint: '#14302c', tint: .7, floor: .125, sat: .8 },
 };
 /** Ready light schemes of the decks (copy and change: { ...LIGHTS.pearl, key: { ...LIGHTS.pearl.key, az: 320 } }). */
 const LIGHTS = {
@@ -128,6 +128,9 @@ function makeLight(light = {}, cam = {}) {
   const keyRGB = rgb(key.color), fillRGB = rgb(fill.color);
   const shadowTint = light.shadowTint || (point ? mix('#3d2414', P.shadowTint, .3) : P.shadowTint);
   const st = rgb(shadowTint), lift = st.map(v => v * (.34 / Math.max(.05, luma(st))));
+  // the colour a cast shadow multiplies its support by: the tint lifted to a middle tone, so the shadow darkens and
+  // colours the support but never reaches black
+  const shadowMul = hex(mixA(st.map(v => v * (.4 / Math.max(.05, luma(st)))), [.5, .5, .5], .25));
   const bounce = { sky: fillRGB.map(v => v * (.6 + fill.power)), warm: mixA(keyRGB, rgb('#c8905c'), .55).map(v => v * (.35 + .5 * key.power)) };
   const amb = mixA([1, 1, 1], fillRGB, P.tint).map(v => v * fill.power);
 
@@ -135,10 +138,10 @@ function makeLight(light = {}, cam = {}) {
   const toneA = (kind, I, x = C.cx, y = 140, kk) => {
     const m = MAT[kind] || MAT.oak, base = rgb(m.base), k = kk != null ? kk : at(x, y).k;
     const lit = clamp((I + .1) / 1.1), through = I < 0 && m.trans ? -I * m.trans : 0;
-    const a = pw(I, [[-1, 1], [-.5, .97], [-.1, .76], [.3, 1], [1, 1]]);
+    const a = pw(I, [[-1, 1], [-.5, .95], [-.1, .7], [.3, 1], [1, 1]]);
     const rf = I < -.35 ? (-I - .35) / .65 * (m.reflexK != null ? m.reflexK : .2) : 0, B = bounce[m.reflex || 'warm'];
     let c = base.map((b, i) => b * (keyRGB[i] * key.power * k * (lit + through) + amb[i] * a + B[i] * rf));
-    c = satA(c.map(shoulder), 1 + .22 * (1 - lit));
+    c = satA(c.map(shoulder), (1 + .22 * (1 - lit)) * (point ? Math.max(P.sat, .92) : P.sat));
     const l = luma(c); if (l < P.floor) c = mixA(c, lift, clamp((P.floor - l) / Math.max(1e-3, luma(lift) - l)));
     return c;
   };
@@ -197,7 +200,7 @@ function makeLight(light = {}, cam = {}) {
 
   return { time, haze: light.haze != null ? light.haze : .3, key, fill, rim, locals, cam: C, pal: P, point,
     dx: g.dx, dy: g.dy, dz: g.dz, ux: g.ux, uy: g.uy,
-    keyColor: key.color, lightColor: key.color, fillColor: fill.color, shadowColor: hex(amb), reflexColor: hex(bounce.warm.map(v => clamp(v))), rimColor: rim ? rim.color : null, shadowTint,
+    keyColor: key.color, lightColor: key.color, fillColor: fill.color, shadowColor: hex(amb), reflexColor: hex(bounce.warm.map(v => clamp(v))), rimColor: rim ? rim.color : null, shadowTint, shadowMul,
     source: key.x != null && key.y != null ? { x: key.x, y: key.y } : null, front,
     at, tone, ramp, vanish, keyBase, shadowOf, shadowAt, ellipse, toWorld, toScreen };
 }
@@ -318,7 +321,7 @@ function shadeCyl(u, x1, y1, x2, y2, r, L, kind, o = {}) {
   }
   // rim light: a thin line along the edge on the rim's side
   if (L.rim && o.rim !== false) { const sg = Math.sign(Math.sin(rad(L.rim.az)) * nx) || 1, P = t => [x1 + (x2 - x1) * t + nx * sg * lerp(r1, r2, t) * .93 * (1 + bulge * 4 * t * (1 - t)), y1 + (y2 - y1) * t + ny * sg * lerp(r1, r2, t) * .93 * (1 + bulge * 4 * t * (1 - t))], a = P(.04), b = P(.96), c = P(.5);
-    inner += `<path d="M${f(a[0])} ${f(a[1])}Q${f(2 * c[0] - (a[0] + b[0]) / 2)} ${f(2 * c[1] - (a[1] + b[1]) / 2)} ${f(b[0])} ${f(b[1])}" stroke="${L.rim.color}" stroke-width="${f(clamp(rm * .12, .3, 1.2))}" fill="none" opacity="${f(clamp(L.rim.power * .7))}"/>`; }
+    inner += `<path d="M${f(a[0])} ${f(a[1])}Q${f(2 * c[0] - (a[0] + b[0]) / 2)} ${f(2 * c[1] - (a[1] + b[1]) / 2)} ${f(b[0])} ${f(b[1])}" stroke="${L.rim.color}" stroke-width="${f(clamp(rm * .09, .25, .9))}" fill="none" opacity="${f(clamp(L.rim.power * .55))}"/>`; }
   const loc = localsOver(u, L, mx, my, Math.max(rm, len / 2), fl => `<path d="${body}" fill="${fl}" style="mix-blend-mode:screen"/>`);
   let out = `<defs>${defs}</defs><g style="isolation:isolate"><path d="${body}" fill="url(#${gid})"${m.glass ? ' fill-opacity=".72"' : ''}/><g clip-path="url(#${cid})">${inner}</g>${loc}</g>`;
   if (ow) out += `<path d="${body}" fill="none" stroke="${rp.outline}" stroke-width="${f(ow)}" stroke-linejoin="round"/>`;
@@ -445,19 +448,19 @@ function castShadow(u, L, o) {
   }
   const all = hull(base.concat(tip)), near = hull(base.concat(mid)), len = Math.hypot(s0.x - x, s0.y - y);
   const dist = L.point ? clamp(Math.hypot(L.key.x - x, L.key.y - y) / L.key.radius) : 0;
-  const a0 = (o.opacity != null ? o.opacity : L.point ? .66 - .26 * dist : .56) * (o.onto === 'water' ? .55 : 1);
-  const sdA = clamp(len * .012, .25, .8), sdB = clamp(len * (L.point ? .07 : .045), .8, 5), tint = L.shadowTint;
+  const a0 = (o.opacity != null ? o.opacity : L.point ? .8 - .3 * dist : .78) * (o.onto === 'water' ? .5 : 1);
+  const sdA = clamp(len * .01, .2, .6), sdB = clamp(len * (L.point ? .06 : .03), .6, 4.5), tint = L.shadowMul;
   const xs = all.concat(wall).map(p => p[0]), ys = all.concat(wall).map(p => p[1]), pad = sdB * 4 + 2;
   const bx = Math.max(-80, Math.min(...xs) - pad), by = Math.max(-80, Math.min(...ys) - pad), bw = Math.min(360, Math.max(...xs) + pad) - bx, bh = Math.min(440, Math.max(...ys) + pad) - by;
   const fa = nid('ta', u), fb = nid('tb', u), ga = nid('tg', u), gb = nid('th', u);
   const box = `filterUnits="userSpaceOnUse" x="${f(bx)}" y="${f(by)}" width="${f(bw)}" height="${f(bh)}"`;
-  const ex = lerp(x, s0.x, 1), ey = lerp(y, s0.y, 1);
+  const ex = s0.x, ey = s0.y, far = L.point ? .3 : .55;
   let out = `<defs><filter id="${fa}" ${box}><feGaussianBlur stdDeviation="${f(sdA)}"/></filter><filter id="${fb}" ${box}><feGaussianBlur stdDeviation="${f(sdB)}"/></filter>`
-    + linGrad(ga, x, y, lerp(x, ex, .62), lerp(y, ey, .62), [[0, tint, a0], [.5, tint, a0 * .8], [1, tint, 0]])
-    + linGrad(gb, x, y, ex, ey, [[0, tint, a0 * .5], [.45, tint, a0 * .62], [.85, tint, a0 * .3], [1, tint, a0 * .12]]) + `</defs>`
-    + `<path d="${poly(all)}" fill="url(#${gb})" filter="url(#${fb})"/><path d="${poly(near)}" fill="url(#${ga})" filter="url(#${fa})"/>`;
-  if (wall.length >= 4) out += `<path d="${poly(hull(wall))}" fill="${tint}" opacity="${f(a0 * .42)}" filter="url(#${fb})"/>`;
-  return out;
+    + linGrad(ga, x, y, lerp(x, ex, .6), lerp(y, ey, .6), [[0, tint, a0 * .6], [.5, tint, a0 * .4], [1, tint, 0]])
+    + linGrad(gb, x, y, ex, ey, [[0, tint, a0 * .8], [.5, tint, a0 * .72], [1, tint, a0 * far]]) + `</defs>`
+    + `<g style="mix-blend-mode:multiply"><path d="${poly(all)}" fill="url(#${gb})" filter="url(#${fb})"/><path d="${poly(near)}" fill="url(#${ga})" filter="url(#${fa})"/>`;
+  if (wall.length >= 4) out += `<path d="${poly(hull(wall))}" fill="${tint}" opacity="${f(a0 * .55)}" filter="url(#${fb})"/>`;
+  return out + '</g>';
 }
 
 /** contactShadow(u, x, y, w, L, opts) — the dark seat of a thing on its support: a soft flat ellipse under the foot
