@@ -1,13 +1,13 @@
 // «Анжелика» (Месть, ПРИКАЗ: возьмите 2 карты, затем передайте союзнику 1 карту с руки), variant A of the method
 // trial (docs/progress/print-kit.md «Проба способа»): the first-round scene (portrait.cjs SCENES['Анжелика']) at its
 // best. The captain's cabin at night: the stern window with the moon over the sea, the curtains tied back; on the
-// table the chart with two heavy cutlasses lying crossed on it and a sapphire ring by the candle; her gloved hand
+// table the chart with two heavy cutlasses lying crossed on it; a sapphire ring on her gloved ring finger; her gloved hand
 // comes in from the near left and holds up the sealed letter (blue ribbon, red wax with an anchor) towards the
 // ally's ship in the window — a lantern raised at her stern to answer. A tall candle is the light of the table
 // (shadows fan away from it); the moon through the window is the cold fill.
 // Fixed against the first round: the sabres stood upright in the air — now they lie crossed on the chart with
 // their full volume (flat, bevel and ridge, a flame glint, shell guards, wire-bound grips) and their shadows, one
-// on the other; the ring stood on its edge — it lies by the candle with a spark in the stone; the chart was a sheet
+// on the other; the ring stood on its edge (then lay too small by the candle) — now it is on her ring finger, over the glove; the chart was a sheet
 // standing on a wall — the table top is in perspective and the chart lies on it; the hand is one body from the
 // coat sleeve through the cuff and glove to the thumb on the letter; the moon path is a real glitter on the water.
 'use strict';
@@ -27,7 +27,7 @@ const lightOut = { time: 'night', haze: .35, key: { type: 'moon', x: 118, y: 21,
 const skel = { horizon: HZ, eye: 1.3, light: 'tall candle on the table right (x 166) + the moon through the window (cold fill)', items: [
   ['window', WX, WY + WH, WW, WH, 'stern wall'], ['ally ship', 50, 60, 40, 30, 'sea in the window'], ['sill', WX - 8, 90, WW + 16, 8, 'window frame'],
   ['chart', 32, 142, 112, 40, 'table top'], ['sabres', 80, 136, 80, 36, 'crossed, flat on the chart'],
-  ['arm + hand', -10, 190, 60, 90, 'from the near left edge'], ['letter', 46, 104, 44, 38, 'held in the hand'], ['ring', 154, 124, 12, 8, 'table top by the candle'],
+  ['arm + hand', -10, 190, 60, 90, 'from the near left edge'], ['letter', 46, 104, 44, 38, 'held in the hand'], ['ring', 64, 112, 8, 8, 'on her ring finger, over the glove'],
   ['candle', 166, 140, 22, 50, 'table top'], ['inkwell', 24, 104, 14, 12, 'table top'], ['quill', 12, 104, 22, 44, 'in the inkwell'], ['spyglass', 128, 92, 30, 5, 'on the sill']] };
 
 // a smooth path through points (Catmull-Rom)
@@ -114,38 +114,10 @@ function cutlass(u, L, H, T, o = {}) {
     out += `<defs>${radGrad(cg, c[0] + 1.2, c[1] - 1, w * 1.4, [[0, '#fff2c0', 1], [.25, '#e8b850', 1], [.65, '#a87420', 1], [1, '#4a2e08', 1]])}</defs>`
       + `<path d="${poly(G.cup)}" fill="url(#${cg})" stroke="#3a2406" stroke-width=".5" stroke-linejoin="round"/>`
       + `<path d="M${f(q[0])} ${f(q[1])}L${f(qq[0])} ${f(qq[1])}" stroke="#5a3a0a" stroke-width="1.1" opacity=".6"/>`
-      + [-.75, -.4, .4, .75].map(k => { const p = P(g0 + .4, k * w * 1.05); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".42" fill="#2a1804"/>`; }).join('');
-    const qs = P(g0 + 1.4, -w * 1.25), qt = P(g0 + 3.2, -w * 1.5);   // the short quillon curling toward the blade
-    out += `<path d="M${f(qs[0])} ${f(qs[1])}Q${f(qt[0])} ${f(qt[1])} ${f(P(g0 + 4.4, -w * 1.1)[0])} ${f(P(g0 + 4.4, -w * 1.1)[1])}" stroke="#4a3008" stroke-width="1.6" fill="none" stroke-linecap="round"/>`
-      + `<path d="M${f(qs[0])} ${f(qs[1])}Q${f(qt[0])} ${f(qt[1])} ${f(P(g0 + 4.4, -w * 1.1)[0])} ${f(P(g0 + 4.4, -w * 1.1)[1])}" stroke="#d8a848" stroke-width=".8" fill="none" stroke-linecap="round"/>`; }
+      + [-.75, -.4, .4, .75].map(k => { const p = P(g0 + .4, k * w * 1.05); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".42" fill="#2a1804"/>`; }).join(''); }
   // the pommel
   { const p = P(.4, 0); out += K.shadeSphere(u, p[0], p[1], 2.5, L, 'brass', { outline: .4 }) + K.shadeCyl(u, ...P(-2.4, 0), ...P(-1.6, 0), 1.1, L, 'brass', { outline: .3 }); }
   return out;
-}
-// the ring left on the table: a heavy gold band lying flat (the band's height shows on the near side), a sapphire
-// in a raised bezel on the near side; the candle lights a warm spark on the band and a cold-white star in the stone
-function ringOnTable(u, L, x, y, r, D) {
-  const ry = r * .46, g = nid('rgo', u), gw = nid('rgw', u), sb = nid('rsb', u);
-  let out = K.contactShadow(u, x + .3, y + 1.6, r * 2.6, L, { ry: ry * 1.4, opacity: .65 })
-    + `<defs><filter id="${sb}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation=".6"/></filter></defs>`
-    + `<ellipse cx="${f(x + D[0] * 2.2)}" cy="${f(y + 1 + D[1] * 2.2)}" rx="${f(r * 1.05)}" ry="${f(ry * 1.15)}" fill="none" stroke="#1a0a02" stroke-width="${f(r * .5)}" opacity=".5" filter="url(#${sb})"/>`
-    + `<defs>${linGrad(g, x - r, y, x + r, y, [[0, '#7a4e10', 1], [.35, '#c8902a', 1], [.7, '#f4cc60', 1], [.86, '#fff6d0', 1], [1, '#d8a03a', 1]])}`
-    + `${linGrad(gw, x - r, y, x + r, y, [[0, '#4a2c06', 1], [.6, '#8a5a14', 1], [.85, '#d8a440', 1], [1, '#8a5a14', 1]])}</defs>`;
-  // the outer wall of the band (seen on the near half), then the top of the band
-  out += `<path d="M${f(x - r)} ${f(y)}a${f(r)} ${f(ry)} 0 0 0 ${f(2 * r)} 0v1.3a${f(r)} ${f(ry)} 0 0 1 ${f(-2 * r)} 0z" fill="url(#${gw})" stroke="#3a2004" stroke-width=".35"/>`
-    + `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r)}" ry="${f(ry)}" fill="none" stroke="#3a2004" stroke-width="${f(r * .42)}"/>`
-    + `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r)}" ry="${f(ry)}" fill="none" stroke="url(#${g})" stroke-width="${f(r * .3)}"/>`
-    + `<path d="M${f(x + r * .35)} ${f(y - ry * .95)}q${f(r * .5)} .2 ${f(r * .62)} ${f(ry * .7)}" stroke="#fffbe8" stroke-width=".4" fill="none"/>`
-    + `<circle cx="${f(x + r * .86)}" cy="${f(y + ry * .35)}" r=".55" fill="#fffbe8"/>`;
-  // the bezel and the stone on the near side
-  const sx = x - r * .1, sy = y + ry + .2;
-  out += `<path d="M${f(sx - 2.6)} ${f(sy)}l.4 -1.9h4.4l.4 1.9q-2.6 1.5 -5.2 0z" fill="#b8862e" stroke="#3a2004" stroke-width=".35"/>`
-    + [-2.2, 2.2].map(k => `<path d="M${f(sx + k)} ${f(sy - 1.6)}l${f(-k * .18)} -1.6" stroke="#e8c060" stroke-width=".55" stroke-linecap="round"/>`).join('')
-    + `<path d="M${f(sx - 2.4)} ${f(sy - 1.9)}l1 -1.9h2.8l1 1.9l-2.4 1.5z" fill="#1e4a8a" stroke="#0a1a38" stroke-width=".35"/>`
-    + `<path d="M${f(sx - 1.4)} ${f(sy - 3.8)}h2.8l-.5 1.2h-1.8z" fill="#5a8ad0"/><path d="M${f(sx + 1.4)} ${f(sy - 3.8)}l1 1.9l-1.6 .3z" fill="#9ac4f4"/><path d="M${f(sx - 2.4)} ${f(sy - 1.9)}l2.4 1.5l-.2 -1.4z" fill="#0e2a5a"/>`
-    + `<path d="M${f(sx + .9)} ${f(sy - 3.9)}h2.6M${f(sx + 2.2)} ${f(sy - 5.1)}v2.4" stroke="#ffffff" stroke-width=".3" stroke-linecap="round"/><circle cx="${f(sx + 2.2)}" cy="${f(sy - 3.9)}" r=".45" fill="#ffffff"/>`
-    + `<ellipse cx="${f(sx - .9)}" cy="${f(sy - 1.2)}" rx=".7" ry=".35" fill="#ffb060" opacity=".7"/>`;
-  return out + K.localGlow(u, { x: x + r * .6, y: y, color: '#ffd890', power: .45, radius: r * 2.2 }, { core: false });
 }
 // the sealed letter, drawn in its own frame: origin at the corner she holds (lower left), x along the bottom edge,
 // the letter rises to y = -h. A folded packet: the flap closed down to a point, a blue silk ribbon round it, the
@@ -202,7 +174,7 @@ function gloveArm(u, L, W, a, s) {
     back += `<path d="M${f(a0[0])} ${f(a0[1])}Q${f(a1[0])} ${f(a1[1])} ${f(a2[0])} ${f(a2[1])}" stroke="#12040a" stroke-width="1" fill="none" opacity=".55" stroke-linecap="round"/>`
       + `<path d="M${f(a0[0] + 1)} ${f(a0[1] - .6)}Q${f(a1[0] + 1)} ${f(a1[1] - .6)} ${f(a2[0] + 1)} ${f(a2[1] - .6)}" stroke="#a84a5a" stroke-width=".4" fill="none" opacity=".45"/>`; }
   // the glove: gauntlet, wrist and the back of the hand in one outline; the fingers bend away behind the letter
-  const fingers = [[-4.3, 12.2, -.6], [-1.45, 13, .2], [1.4, 12.2, .9], [4.1, 9.6, 1.5]];
+  const fingers = [[-4.3, 12.2, -.6], [-1.45, 13, .2], [1.4, 12.2, .9], [4.1, 7.6, 1.5]];   // the little finger curls under the sheet
   for (const [y, l, c] of fingers.slice().reverse()) back += `<path d="${pth(P, [[14, y - 1.55], [15 + l * .5, y - 1.5 + c * .4], [15 + l, y - 1.1 + c], [16 + l, y + c], [15 + l, y + 1.2 + c], [15 + l * .5, y + 1.55 + c * .4], [14, y + 1.55]])}" fill="url(#${fn})" stroke="${lv.outline}" stroke-width=".4"/>`;
   const glove = [[-13, -7.6], [-6, -5.8], [-.5, -5.3], [5, -6.5], [10.5, -7.1], [15.4, -6.6], [18.2, -4.6], [19.2, -1.5], [18.9, 1.6], [17.8, 4.6], [15, 6.3], [9, 6.4], [3, 5.6], [-1, 5.2], [-6, 5.8], [-13, 7.8]];
   back += `<path d="${pth(P, glove)}" fill="url(#${gv})" stroke="${lv.outline}" stroke-width=".5"/>`;
@@ -224,7 +196,23 @@ function gloveArm(u, L, W, a, s) {
   thumb += `<path d="${pth(P, th)}" fill="url(#${tg})"/><path d="${pth(P, th.slice(0, 9), false)}" fill="none" stroke="${lv.outline}" stroke-width=".5"/>`;
   { const A = P(9, -7.6), B = P(16, -8.2), C = P(21.5, -6.4); thumb += `<path d="M${f(A[0])} ${f(A[1])}Q${f(B[0])} ${f(B[1])} ${f(C[0])} ${f(C[1])}" stroke="${lv.lit}" stroke-width=".3" stroke-dasharray=".8 .7" fill="none" opacity=".7"/>`; }
   { const A = P(16, -3.6), B = P(21, -2.6), C = P(24, -3.4); thumb += `<path d="M${f(A[0])} ${f(A[1])}Q${f(B[0])} ${f(B[1])} ${f(C[0])} ${f(C[1])}" stroke="#ffe4c0" stroke-width=".55" fill="none" opacity=".6" stroke-linecap="round"/>`; }
-  return { back, thumb, P };
+  // her ring on the ring finger, over the glove: a heavy gold band round the finger just past the knuckle, a sapphire
+  // in a raised bezel on the back of the finger, the candle (on the right) lighting a warm spark in the stone and on the gold
+  const rg = nid('grg', u), rs = nid('grs', u), rx = 20.3, ry = 1.75, sc = s;
+  const band = [P(rx - .55, ry - 1.75), P(rx + .25, ry), P(rx - .55, ry + 1.75)], bd = `M${f(band[0][0])} ${f(band[0][1])}Q${f(band[1][0])} ${f(band[1][1])} ${f(band[2][0])} ${f(band[2][1])}`;
+  const st = P(rx, ry), lt = P(rx + .6, ry + .9);
+  let ring = `<defs>${lg(rg, rx, ry - 1.8, ry + 1.8, [[0, '#5a3606'], [.3, '#b8862a'], [.62, '#f4d070'], [.82, '#fff4c8'], [1, '#c89030']])}`
+    + `<radialGradient id="${rs}" gradientUnits="userSpaceOnUse" cx="${f(st[0] - .6 * sc)}" cy="${f(st[1] - .7 * sc)}" r="${f(2.2 * sc)}"><stop offset="0" stop-color="#bfe0ff"/><stop offset=".35" stop-color="#3a7ad0"/><stop offset=".8" stop-color="#123e86"/><stop offset="1" stop-color="#081a40"/></radialGradient></defs>`;
+  ring += `<path d="${bd}" stroke="#2a1604" stroke-width="${f(1.4 * sc)}" fill="none" stroke-linecap="round"/><path d="${bd}" stroke="url(#${rg})" stroke-width="${f(.92 * sc)}" fill="none" stroke-linecap="round"/>`
+    + `<ellipse cx="${f(st[0])}" cy="${f(st[1])}" rx="${f(2 * sc)}" ry="${f(1.72 * sc)}" transform="rotate(${f(a)} ${f(st[0])} ${f(st[1])})" fill="#c8962e" stroke="#2a1604" stroke-width=".4"/>`
+    + `<ellipse cx="${f(st[0])}" cy="${f(st[1])}" rx="${f(1.5 * sc)}" ry="${f(1.25 * sc)}" transform="rotate(${f(a)} ${f(st[0])} ${f(st[1])})" fill="url(#${rs})" stroke="#061230" stroke-width=".3"/>`
+    + `<path d="M${f(st[0] - 1.1 * sc)} ${f(st[1] - .1 * sc)}q${f(.7 * sc)} ${f(-1 * sc)} ${f(1.7 * sc)} ${f(-.6 * sc)}" stroke="#e8f4ff" stroke-width=".35" fill="none" opacity=".75" stroke-linecap="round"/>`
+    + `<ellipse cx="${f(lt[0])}" cy="${f(lt[1])}" rx="${f(.55 * sc)}" ry="${f(.35 * sc)}" fill="#ffb868" opacity=".8"/>`;
+  { const g = P(rx - .1, ry - 1.7); ring += `<path d="M${f(g[0] - .5)} ${f(g[1] - .2)}q.6 -.6 1.3 -.2" stroke="#fff6d0" stroke-width=".35" fill="none" stroke-linecap="round"/>`; }
+  // the spark: a small four-ray star on the stone toward the candle, and the warm glow round the ring
+  { const q = P(rx + .5, ry + .3); ring += K.localGlow(u, { x: q[0], y: q[1], color: '#ffd890', power: .55, radius: 6 }, { core: false })
+      + `<path d="M${f(q[0] - 2.4)} ${f(q[1])}h4.8M${f(q[0])} ${f(q[1] - 2.4)}v4.8" stroke="#ffffff" stroke-width=".3" stroke-linecap="round" opacity=".95"/><circle cx="${f(q[0])}" cy="${f(q[1])}" r=".55" fill="#ffffff"/>`; }
+  return { back, thumb, ring, P };
 }
 // a glass inkwell with a quill in it
 function inkwell(u, L, x, y, k = 1) {
@@ -332,21 +320,21 @@ module.exports = { name: 'Анжелика', kind: 'deck', status: 'draft', vari
       const B = { H: [152, 134], T: [72, 98], o: { grip: 18, w: 8, bend: 5, side: -1, hot: .3, bevelLit: false } };
       fg += cutlassShadow(u, A.H, A.T, A.o, away(118, 116)) + cutlass(u, L, A.H, A.T, A.o)
         + cutlassShadow(u, B.H, B.T, B.o, away(114, 118)) + cutlass(u, L, B.H, B.T, B.o); }
-    // the inkwell and quill at the back left; the ring by the candle, catching it
-    fg += inkwell(u, L, 26, 104, 1.1) + ringOnTable(u, L, 163, 119, 5, [-.9, -.3]);
+    // the inkwell and quill at the back left
+    fg += inkwell(u, L, 26, 104, 1.1);
     // the captain's gloved hand comes in from the near left and holds the sealed letter up towards the ally's ship
     // in the window: the card she passes on. Fingers behind the sheet, the thumb on its face; the candle on the
     // right lights the glove's lower side and the paper
-    { const Wr = [40.2, 123], ang = -52, hs = 1.4, H = gloveArm(u, L, Wr, ang, hs), C0 = H.P(18, 1), sb = nid('lsh', u);
+    { const Wr = [40.2, 123], ang = -52, hs = 1.4, H = gloveArm(u, L, Wr, ang, hs), C0 = H.P(21.5, 1.8), sb = nid('lsh', u);
       // the shadow the arm throws on the table (away from the candle, to the left)
       fg += `<defs><filter id="${sb}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter><clipPath id="${sb}c"><rect x="0" y="${TB}" width="200" height="${TF - TB}"/></clipPath></defs>`
         + `<g clip-path="url(#${sb}c)"><path d="${pth(frameOf([Wr[0] - 12, Wr[1] + 8], ang, hs), [[-60, -12], [-10, -8], [16, -7], [20, 0], [16, 7], [-10, 8], [-60, 12]])}" fill="#1a0a02" opacity=".4" filter="url(#${sb})"/></g>`;
       fg += H.back;
       // the letter's edge shades the fingers behind it
-      fg += `<g transform="translate(${f(C0[0])} ${f(C0[1])}) rotate(${ang + 38})">`
+      fg += `<g transform="translate(${f(C0[0])} ${f(C0[1])}) rotate(${ang + 42})">`
         + `<path d="M-1.6 1.6L34 1.6L34 -24L-1.6 -24Z" fill="#140802" opacity=".35" filter="url(#${sb})" transform="translate(-1.4 1.6)"/>`
         + sealedLetter(u, 34, 23) + '</g>';
-      fg += H.thumb + K.localGlow(u, { x: C0[0] + 24, y: C0[1] - 14, color: '#ffd8a0', power: .22, radius: 22 }, { core: false }); }
+      fg += H.thumb + H.ring + K.localGlow(u, { x: C0[0] + 24, y: C0[1] - 14, color: '#ffd8a0', power: .22, radius: 22 }, { core: false }); }
     // the candle: its cast shadow on the table, the stick, the light
     fg += K.castShadow(u, L, { x: CAN.x, y: CAN.y, w: 8 * CAN.s, h: 2, horizon: HZ, d: .9 }) + K.candle(u, L, { ...CAN, seed: 4 });
     fg += K.localGlow(u, { x: CAN.x, y: flameY, color: '#ffd080', power: .8, radius: 22 }) + K.localGlow(u, { x: CAN.x, y: flameY + 10, color: '#ffa040', power: .45, radius: 70 }, { core: false })
