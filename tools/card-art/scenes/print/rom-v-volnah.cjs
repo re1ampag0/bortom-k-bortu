@@ -15,7 +15,7 @@ const skel = { horizon: HZ, eye: .6, light: 'warm sun behind the right shoulder:
     ['casks-far', 40, 139, 30, 9, 'two casks on the water in the trough'],
     ['cask-near', 14, 214, 52, 30, 'half under water on the near slope'],
     ['gunwale', 120, 280, 80, 46, 'our boat, from the bottom right edge', { edge: 1 }],
-    ['boathook', 128, 262, 76, 168, 'rests on the gunwale by the oarlock, the hook in the becket of the cask', { edge: 1 }],
+    ['boathook', 128, 280, 70, 204, 'rests in the oarlock on the gunwale, the hook in the becket of the cask', { edge: 1 }],
   ] };
 
 // the swell: its crest line from the left edge (below the horizon: the far sea shows over it) up to the top under
@@ -50,7 +50,7 @@ module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft',
     // the third cask, half under water on the near slope
     fg += nearCask(u, L, show);
     // our boat and the boathook
-    fg += boathook(u, L) + gunwale(u, L);
+    fg += gunwale(u, L) + boathook(u, L) + K.propTube(u, L, 'iron', 'M178.6 245.8C178 242.8 178.2 240.6 179.2 238.6', .9, [178.4, 242]) + K.propTube(u, L, 'iron', 'M186.6 245.2C187.2 242.2 187.2 239.8 186.4 237.8', .9, [186.8, 241.4]);
     return [bg, fg];
   } };
 
@@ -99,7 +99,7 @@ function nearCask(u, L, show) {
 
 /** The boathook: an ash pole lying on our gunwale, the iron head — a spike and a hook — in the cask's becket. */
 function boathook(u, L) {
-  const A = [214, 262], B = [133, 79];
+  const A = [196, 290], B = [133, 79];
   let s = K.shadeCyl(u, A[0], A[1], B[0], B[1], 2.6, L, 'oak', { r2: 1.9, seed: 5 });
   // the iron ferrule, the spike and the hook
   const ax = (B[0] - A[0]), ay = (B[1] - A[1]), l = Math.hypot(ax, ay), ux = ax / l, uy = ay / l, nx = -uy, ny = ux;
@@ -119,8 +119,8 @@ function gunwale(u, L) {
   s += `<path d="M118 280Q150 252 204 236L204 246Q156 262 132 280Z" fill="${top.fill}" stroke="${top.ramp.outline}" stroke-width=".6"/>`;
   s += `<path d="M132 280Q156 262 204 246V280Z" fill="${side.fill}" stroke="${side.ramp.outline}" stroke-width=".6"/>`;
   s += `<path d="M140 280Q162 264 204 252" stroke="${side.ramp.outline}" stroke-width=".5" fill="none" opacity=".6"/><path d="M152 280Q170 268 204 260" stroke="${side.ramp.outline}" stroke-width=".45" fill="none" opacity=".5"/>`;
-  // the oarlock: an iron fork in the gunwale, the boathook rests in it
-  s += K.propTube(u, L, 'iron', 'M181 246C178 238 180 232 186 233M193 243C196 236 193 231 188 232', 1, [186, 238]);
-  s += K.propTube(u, L, 'iron', 'M186 246L187 252', 1.2, [186, 249]);
+  // the oarlock: the stem in the gunwale and the bottom of the fork (the boathook lies in it; the prongs come after)
+  s += K.propTube(u, L, 'iron', 'M182.6 248.6L182.8 254', 1.1, [182.7, 251]);
+  s += K.propTube(u, L, 'iron', 'M178.6 245.6C179.4 249.4 185.6 249 186.6 245', .9, [182.4, 248.4]);
   return s;
 }
