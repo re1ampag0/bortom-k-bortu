@@ -75,6 +75,23 @@ function vortex(u, L, o = {}) {
   const th = nid('vt', u), tb = nid('vb', u);
   out += `<defs><radialGradient id="${th}" cx=".5" cy=".42" r=".55"><stop offset="0" stop-color="${mix(eye, '#0d1822', .5)}"/><stop offset=".55" stop-color="${eye}" stop-opacity=".9"/><stop offset="1" stop-color="${eye}" stop-opacity="0"/></radialGradient>${blur(tb, 1.4, [60, 140, 80, 60])}</defs>`
     + `<ellipse cx="${EYE[0]}" cy="${EYE[1] + 1}" rx="17" ry="11" fill="url(#${th})" filter="url(#${tb})"/>`;
+  // the swells running round the wall: each a light crest towards the rim (up, to the rift's light) over a dark
+  // trough towards the eye, its own length; like the kit's sea, but laid along the contours of the funnel
+  const crestL = mix(mix(L.pal.sea[0], sheen, .4), L.keyColor, .2), trough = mix(deep, L.shadowTint, .3);
+  let swells = '';
+  for (let j = 0; j < 46; j++) {
+    const k = Math.pow((j + R() * .8) / 46, 1.15) * .93, dk = (.006 + .02 * (1 - k)) * (.6 + R() * .8);
+    let t = -Math.PI * 2 * R();
+    for (let m = 0; m < 9; m++) {
+      const dt = (.18 + R() * .5) * (1 - k * .4), t1 = t, t2 = t + dt, n = 8, far = Math.sin((t1 + t2) / 2) < 0;
+      const base = [], up = [], dn = [];
+      for (let i = 0; i <= n; i++) { const tt = lerp(t1, t2, i / n), b = Math.sin(Math.PI * i / n) * dk; base.push(P(k, tt)); up.push(P(Math.max(0, k - b), tt)); dn.push(P(Math.min(1, k + b * 1.3), tt)); }
+      const fade = far ? 1 : .55, opL = (.12 + .3 * (1 - k)) * fade * (.6 + R() * .6), opD = (.1 + .22 * (1 - k)) * fade * (.6 + R() * .6);
+      swells += `<path d="${sp(dn)}${sp(base.slice().reverse()).replace(/^M/, 'L')}Z" fill="${trough}" opacity="${f(opD)}"/><path d="${sp(up)}${sp(base.slice().reverse()).replace(/^M/, 'L')}Z" fill="${crestL}" opacity="${f(opL)}"/>`;
+      t = t2 + (.05 + R() * .4);
+    }
+  }
+  out += swells;
   // spiral bands of foam: each arm runs in from the rim to the eye in less than a turn, its own pitch; a band of
   // foam that thins and dims towards the eye, with loose strands beside it, broken in places
   const fb = nid('vs', u), foamC = mix('#eef6f8', L.keyColor, .2), foamS = mix(foamC, L.pal.sea[1], .5);
@@ -83,7 +100,7 @@ function vortex(u, L, o = {}) {
     const n = 70; let seg = null; const segs = [];
     for (let i = 0; i <= n; i++) {
       const q = i / n, k = lerp(k0, k1, Math.pow(q, .75)), t = t0 + q * turns * 2 * Math.PI, s = Math.sin(t);
-      const p = P(clamp(k + off), t), w = (.35 + 2.4 * (1 - k)) * (1 + 1.1 * Math.max(0, s) * (1 - k)) * (.55 + .45 * Math.sin(q * 13 + a * 3.1) + .25 * Math.sin(q * 31 + a)) * wk;
+      const p = P(clamp(k + off), t), w = (.5 + 3.4 * (1 - k)) * (1 + 1.1 * Math.max(0, s) * (1 - k)) * (.55 + .45 * Math.sin(q * 13 + a * 3.1) + .25 * Math.sin(q * 31 + a)) * wk;
       if (Math.sin(q * brk + a * 1.7) + Math.sin(q * brk * 2.3 + a) * .5 + (R() - .5) * .6 < -.7 || w < .15) { if (seg) segs.push(seg); seg = null; continue; }
       if (!seg) seg = { top: [], bot: [], k: [] };
       // the band lies along the contour: its width across goes along the slope (towards the eye)
@@ -101,7 +118,8 @@ function vortex(u, L, o = {}) {
     strand(a + 7, t0 + .06, turns * .96, k0 + .02, k1 - .05, .35, .028 + R() * .02, .8, brk * 1.4);
     if (R() > .4) strand(a + 13, t0 - .05, turns * 1.03, k0 + .04, k1 - .1, .25, -.03 - R() * .02, .6, brk * 1.8);
   }
-  out += `<defs>${blur(fb, .35, [-40, 30, 280, 280])}</defs><g filter="url(#${fb})">${bands}</g>`;
+  // the foam's edge is torn by noise (moved by up to 1.6 units), not a clean ribbon
+  out += `<defs><filter id="${fb}" filterUnits="userSpaceOnUse" x="-40" y="30" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency="0.35 0.5" numOctaves="2" seed="${(o.seed || 5) + 11}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation=".2"/></filter></defs><g filter="url(#${fb})">${bands}</g>`;
   // the lace between the bands: thin streaks along the contours
   let lace = '';
   for (let i = 0; i < 70; i++) { const k = Math.pow(R(), .8) * .9, t = -Math.PI * 2 * R(), dt = (.08 + R() * .16) * (1 - k * .5), p0 = P(k, t), p1 = P(k + .004, t + dt * .5), p2 = P(k + .008, t + dt);
