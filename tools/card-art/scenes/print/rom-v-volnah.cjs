@@ -20,7 +20,7 @@ const skel = { horizon: HZ, eye: .6, light: 'warm sun behind the right shoulder:
 
 // the swell: its crest line from the left edge (below the horizon: the far sea shows over it) up to the top under
 // the cask and down to the right edge
-const CREST = [[-6, 154], [14, 150], [30, 142], [44, 128], [54, 114], [64, 104], [80, 100], [98, 99], [116, 100], [134, 101], [146, 106], [158, 118], [172, 134], [190, 146], [206, 152]];
+const CREST = [[-6, 151], [20, 149], [36, 145], [48, 137], [56, 125], [64, 112], [74, 104], [88, 100], [100, 99], [114, 100], [130, 101], [142, 104], [151, 112], [159, 124], [168, 136], [182, 144], [206, 148]];
 
 module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
@@ -59,7 +59,7 @@ module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft',
 function crestPath() {
   const P = CREST; let d = `M${P[0][0]} ${P[0][1]}`;
   for (let i = 1; i < P.length; i++) { const a = P[i - 1], b = P[i]; d += `Q${a[0]} ${a[1]} ${((a[0] + b[0]) / 2).toFixed(1)} ${((a[1] + b[1]) / 2).toFixed(1)}`; }
-  return d + `L206 152L206 290L-6 290Z`;
+  return d + `L206 148L206 290L-6 290Z`;
 }
 
 // KIT-CANDIDATE: the crest of a swell on the light — a band of turquoise where the thin top of the wave lets the
@@ -80,7 +80,8 @@ function ripples(u, L) {
   for (let k = 0; k < 9; k++) {
     const off = 7 + k * 8 + k * k * .9, w = .35 + k * .12;
     for (let n = 0; n < 4; n++) {
-      const t0 = R() * .8 + .05, t1 = Math.min(.97, t0 + .06 + R() * .14), a = at(t0, off), m = at((t0 + t1) / 2, off - 1 - R()), b = at(t1, off);
+      const t0 = R() * .8 + .05, t1 = Math.min(.97, t0 + .05 + R() * .1), a = at(t0, off), m = at((t0 + t1) / 2, off - 1 - R()), b = at(t1, off);
+      if (Math.abs(b[1] - a[1]) > Math.abs(b[0] - a[0]) * .3) continue; // only where the slope is gentle: no scratches down the flanks
       out += `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)}Q${m[0].toFixed(1)} ${m[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}" stroke="#bfe6e4" stroke-width="${w.toFixed(2)}" fill="none" opacity="${(.18 + R() * .16).toFixed(2)}" stroke-linecap="round"/>`
         + `<path d="M${a[0].toFixed(1)} ${(a[1] + w * 1.6).toFixed(1)}Q${m[0].toFixed(1)} ${(m[1] + w * 1.6).toFixed(1)} ${b[0].toFixed(1)} ${(b[1] + w * 1.6).toFixed(1)}" stroke="#16323f" stroke-width="${(w * 1.3).toFixed(2)}" fill="none" opacity="${(.14 + R() * .1).toFixed(2)}" stroke-linecap="round"/>`;
     }
@@ -90,7 +91,7 @@ function ripples(u, L) {
 /** The foam lip along the top of the swell where the crest shows against the far sea and the sky. */
 function lip(u, L) {
   let out = '';
-  for (const [x, y, w, sd] of [[18, 149, 12, 51], [29, 142.5, 11, 52], [39, 134, 10, 53], [47, 124, 9, 54], [54, 115, 9, 55], [146, 106.5, 10, 56], [154, 113.5, 10, 57], [162, 122, 11, 58], [171, 132.5, 12, 59], [183, 141.5, 13, 60], [196, 149, 12, 61]])
+  for (const [x, y, w, sd] of [[22, 148.6, 12, 51], [36, 144.6, 11, 52], [47, 137.6, 10, 53], [54, 128, 8, 54], [60, 118, 8, 55], [146, 107.2, 9, 56], [153, 115.4, 9, 57], [160, 125.6, 10, 58], [168, 135.6, 11, 59], [182, 143.6, 13, 60], [198, 147.4, 12, 61]])
     out += K.foam(u, { x, y, w, h: 1.7, L, seed: sd });
   return out;
 }
