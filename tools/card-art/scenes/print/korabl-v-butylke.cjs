@@ -1,13 +1,19 @@
 // «Корабль в бутылке» (Месть, Легенда, ПРИКАЗ: вражеский корабль с Корпусом 3 или меньше тонет. Это не Залп).
 // Blackbeard's cabin at sunset: on the wall shelves his collection — bottles lying in their cradles, a ship in each;
 // on the table the new bottle, big, in its two cradles: inside, on a sea of blue putty, a tiny battered Company ship
-// (scorched holes in her sails), and the captain's hand pushes the cork home into the neck. The candle behind the
-// bottle is the light of the scene: it shines through the glass, lights the little ship from behind and throws the
-// shadows of the bottle and the cradles towards us; the red sunset in the stern window is the rim.
+// (dark torn sails, the foremast snapped, a hole in her side), and the captain's hand — his forearm in the dark coat
+// sleeve from the upper right, thumb and forefinger pinching the cork — pushes the cork home into the neck, along the
+// bottle. A candle stub on the table in front, right of the neck, clear of the bottle, is the light of the scene: it
+// lights the hand and the cork from below and shines into the glass; the red sunset in the stern window is the rim.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
 const H = require('./lib/people.cjs');
+// the enemy in the bottle: the kit's Company ship beaten — dark torn sails with holes, yards askew, the foremast
+// snapped to a stump
+const WRECK = 'endeavour-bottled';
+if (!K.SHIP_SPECS[WRECK]) { const e = K.SHIP_SPECS.endeavour;
+  K.SHIP_SPECS[WRECK] = Object.assign({}, e, { sail: 'ship-sail-coal', cond: 'torn', holeK: 1.2, broken: 1, jibs: 0, masts: e.masts.map((m, i) => i === 0 ? Object.assign({}, m, { H: 56, n: 2, Q: [.5, .9] }) : m) }); }
 const { f, mix, nid, linGrad, radGrad, rng } = K;
 const { woodTex, glow, gloom, motes, tableTop } = PK;
 
@@ -15,15 +21,15 @@ const HZ = 48;                                    // eye level = the sea horizon
 const WX = 128, WY = -4, WW = 68, WH = 70;         // the window glass
 const TB = 104, TF = 150;                         // the table top: back edge, front edge
 const BA = [8, 88], BB = [160, 88], BR = 28;   // the new bottle: the axis (base to mouth), the body radius
-const CAN = { x: 112, y: TB + 2, s: 2.2, len: 22 };
+const CAN = { x: 184, y: 124, s: 1.5, len: 4 };
 const flameY = CAN.y - (3.4 + CAN.len + 3) * CAN.s;
 const light = { time: 'night', haze: .25, key: { type: 'point', x: CAN.x, y: flameY, z: .12, h: .9, gy: CAN.y, color: '#ffb860', power: 1, radius: 140 },
   fill: { color: '#5a3448', power: .38 }, rim: { az: 20, color: '#ff9a60', power: .45 } };
 const lightOut = { time: 'dusk', haze: .45, key: { type: 'sun', x: 146, y: 42, color: '#ffb070', power: .95 }, fill: { color: '#6e4a70', power: .42 } };
-const skel = { horizon: HZ, eye: 1.3, light: 'the candle behind the bottle shoulder + the sunset in the window as the rim', items: [
+const skel = { horizon: HZ, eye: 1.3, light: 'the candle stub on the table right of the neck + the sunset in the window as the rim', items: [
   ['window', WX, WY + WH, WW, WH, 'stern wall'], ['shelf', -2, 50, 124, 6, 'wall brackets'], ['bottles', 2, 50, 118, 18, 'cradles on the shelf'],
-  ['bottle', 8, 116, 156, 56, 'two cradles on the table'], ['ship in it', 20, 102, 60, 38, 'putty sea inside'],
-  ['candle', 104, TB + 2, 16, 62, 'table, behind the bottle'], ['hand', 156, 92, 44, 60, 'from the upper right edge, fist on the cork']] };
+  ['bottle', 8, 116, 156, 56, 'two cradles on the table'], ['ship in it', 40, 102, 34, 22, 'putty sea inside'],
+  ['candle', 174, 124, 20, 18, 'table, right of the neck, under the hand'], ['hand', 158, 100, 50, 56, 'from the upper right edge, pinching the cork']] };
 
 // a smooth path through points
 function smooth(pts, closed = false) { const n = pts.length, g = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))]; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
@@ -35,7 +41,7 @@ function smooth(pts, closed = false) { const n = pts.length, g = i => closed ? p
 // with a string rim. Returns the glass (to draw over what is inside) and the clip of the inside.
 const PROF = [[0, .9], [.025, 1], [.6, 1], [.66, .9], [.74, .5], [.79, .32], [.93, .3], [.945, .38], [.965, .38], [.975, .31], [1, .31]];
 function shipBottle(u, L, A, B, r, o = {}) {
-  const g = K.propLathe(u, L, 'glass', A, B, PROF.map(q => [q[0], q[1] * r]), { ell: .2, opacity: o.opacity || .32, spec: [.04, .62], outline: o.outline || .5 });
+  const g = K.propLathe(u, L, 'glass', A, B, PROF.map(q => [q[0], q[1] * r]), { ell: .2, opacity: o.opacity || .32, spec: o.spec != null ? o.spec : [.04, .62], outline: o.outline || .5 });
   return g;
 }
 // the putty sea inside the bottle: a wavy blue mass along its bottom, white crests painted on
@@ -47,10 +53,6 @@ function puttySea(u, A, B, r, top, seed) {
   s += `<path d="${smooth(pts)}" stroke="#e8f4f8" stroke-width="${f(r * .045)}" stroke-dasharray="${f(r * .5)} ${f(r * .2)} ${f(r * .2)} ${f(r * .3)}" fill="none" stroke-linecap="round" opacity=".7"/>`;
   for (let i = 1; i < n; i += 2) s += `<path d="M${f(pts[i][0] - 3)} ${f(pts[i][1] + 1.6)}q3 -1.6 6 0" stroke="#d8ecf2" stroke-width="${f(r * .025)}" fill="none" opacity=".5"/>`;
   return s;
-}
-// scorched shot holes in a sail: a ragged dark hole with a burnt brown ring
-function holes(list) {
-  return list.map(([x, y, s]) => `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(s * 1.3)}" ry="${f(s)}" fill="#5a3010" opacity=".55"/><path d="M${f(x - s * .8)} ${f(y)}l${f(s * .4)} ${f(-s * .7)}l${f(s * .5)} ${f(s * .2)}l${f(s * .5)} ${f(-s * .3)}l${f(s * .2)} ${f(s * .8)}l${f(-s * .5)} ${f(s * .6)}l${f(-s * .7)} ${f(-s * .1)}Z" fill="#1a0c06"/>`).join('');
 }
 // a cradle for a bottle: an oak block with a round notch on top, standing on (x, y)
 function cradle(u, L, x, y, w, h, notchR, seed) {
@@ -112,48 +114,82 @@ module.exports = { name: 'Корабль в бутылке', kind: 'deck', statu
       bg += `<defs>${linGrad(ed, 0, TF, 0, TF + 6, [[0, '#b07a44', 1], [.35, '#5a3418', 1], [1, '#24120a', 1]])}${linGrad(ap, 0, TF + 6, 0, 280, [[0, '#24140a', 1], [1, '#0c0604', 1]])}</defs>`
         + `<rect x="0" y="${TF}" width="200" height="6" fill="url(#${ed})"/><path d="M0 ${TF}h200" stroke="#d89a5a" stroke-width=".6" opacity=".7"/>`
         + `<rect x="0" y="${TF + 6}" width="200" height="${280 - TF - 6}" fill="url(#${ap})"/>` + woodTex(u, 0, TF + 7, 200, 40, '#2e1a0c', '#1a0e06', '#080402', 17, true, 9); }
-    // the candle behind the bottle (its foot is hidden by the bottle): stick, flame, its light
-    let fg = K.candle(u, L, { ...CAN, seed: 4 });
+    let fg = '';
     // the shadows of the bottle and its cradles fall towards us, away from the candle
     fg += K.castShadow(u, L, { x: 56, y: 122, w: 80, h: 50, horizon: HZ, d: .5, opacity: .55 }) + K.castShadow(u, L, { x: 146, y: 112, w: 12, h: 16, horizon: HZ, d: .5, opacity: .45 });
     // the new bottle on the table: inside, the battered little Company ship on her putty sea
-    { const g = shipBottle(u, L, BA, BB, BR, { opacity: .2, outline: .6 }), wl = BA[1] + 14;
+    { const g = shipBottle(u, L, BA, BB, BR, { opacity: .2, outline: .6, spec: false }), wl = BA[1] + 14;
       // the inside: the far wall of the glass dark, lit by the candle through it
       let inn = `<rect x="0" y="0" width="200" height="280" fill="#2a1408" opacity=".2"/>`;
       inn += puttySea(u, BA, BB, BR, wl, 5);
-      const sc = .34, sx = 52;
-      inn += K.ship(u, L, { kind: 'endeavour', x: sx, y: wl + .5, scale: sc, detail: 'mid', heel: -3, seed: 6 });
-      // her sails holed by the Revenge's shot, a smashed top on the main
-      inn += holes([[sx - 6, wl - 23, 1.2], [sx + 7, wl - 18, 1.4], [sx - 14, wl - 13, 1], [sx + 2, wl - 30, .9], [sx + 13, wl - 27, 1.1]]);
-      inn += `<path d="M${sx - 26} ${wl - 3}q2 -2 4 0" stroke="#1a0c06" stroke-width=".8" fill="none"/>`;
+      // the tiny beaten enemy: half the old size, dark torn sails, the foremast snapped (a splintered stump), a shot
+      // hole in her side with a scorched ring
+      const sc = .19, sx = 56, sh = { kind: WRECK, x: sx, y: wl + .5, scale: sc, detail: 'mid', heel: -4, seed: 6 }, mt = K.shipGeom(WRECK, sh).masts[0].top;
+      inn += K.ship(u, L, sh);
+      inn += `<path d="M${f(mt[0] - .45)} ${f(mt[1] + .6)}l.2 -1.4l.4 .7l.3 -1.2l.4 1l.1 1.2Z" fill="#e0c090"/>`
+        + `<path d="M${f(mt[0] - 1)} ${f(mt[1] - 1.5)}l-3.6 -2.2M${f(mt[0] + .6)} ${f(mt[1] - 1.2)}l2 -3" stroke="#3a2a1a" stroke-width=".4" fill="none"/>`;
+      inn += `<ellipse cx="${sx - 3.4}" cy="${wl - 3.6}" rx="1.5" ry="1.1" fill="#5a3010" opacity=".7"/><path d="M${sx - 4.4} ${wl - 3.7}l.5 -.8l.6 .3l.6 -.4l.3 .9l-.6 .7l-.9 0Z" fill="#0c0604"/>`;
       fg += `<g clip-path="url(#${g.clip})">${inn}</g>` + g.svg;
-      // the glass: the candle's highlight along the top, the bright inner edge, a cold glint at the base
-      const hp = smooth([g.P(.12, -.8), g.P(.28, -.84), g.P(.44, -.83)]);
+      // the glass: the bright edge, and one diagonal glint on the left of the body (a narrow tapered streak)
       fg += `<path d="${g.d}" fill="#c8f0dc" opacity=".08"/><path d="${g.d}" fill="none" stroke="#f0fff6" stroke-width=".8" opacity=".5" stroke-linejoin="round"/>`
-        + `<path d="${hp}" stroke="#fff0d0" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".35"/><path d="${hp}" stroke="#ffffff" stroke-width=".45" fill="none" stroke-linecap="round" opacity=".7"/>`;
-      // the window mirrored in the glass on the shoulder: two small warm panes, bent round the curve
-      { const P = (t, sg) => g.P(t, sg), q = (t0, t1, s0, s1) => { const a = P(t0, s0), b = P(t1, s0 - .04), c = P(t1, s1 - .04), d = P(t0, s1); return `M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}L${f(c[0])} ${f(c[1])}L${f(d[0])} ${f(d[1])}Z`; };
-        fg += `<path d="${q(.5, .53, -.72, -.5)}${q(.54, .57, -.72, -.5)}" fill="#ffd8b0" opacity=".45"/><path d="${q(.5, .53, -.44, -.26)}${q(.54, .57, -.44, -.26)}" fill="#ffb080" opacity=".3"/>`; }
+        + `<path d="M17 81.5L30.5 64.6Q31.6 63.6 31.9 64.6L19.6 82.6Q18 83.6 17 81.5Z" fill="#fffaf0" opacity=".5"/><path d="M18.4 81.4L30.9 65" stroke="#ffffff" stroke-width=".4" stroke-linecap="round" opacity=".7"/>`;
       fg += ''
         + `<path d="${smooth([g.P(.08, .78), g.P(.3, .82), g.P(.55, .8)])}" stroke="#ffb070" stroke-width=".7" fill="none" stroke-linecap="round" opacity=".45"/>`
         + `<ellipse cx="${BA[0] + 2}" cy="${BA[1]}" rx="${f(BR * .2)}" ry="${f(BR * .9)}" fill="none" stroke="#ffd8a8" stroke-width=".6" opacity=".45"/>`
-        + K.localGlow(u, { x: BA[0] + 80, y: BA[1] - 16, color: '#ffd8a0', power: .2, radius: 26 }, { core: false });
+        + K.localGlow(u, { x: BB[0] - 14, y: BB[1] + 4, color: '#ffd8a0', power: .18, radius: 18 }, { core: false });
       // the cradles in front of the shadow (the bottle lies in their notches)
       fg += cradle(u, L, 30, 122, 16, 8, 9, 1) + cradle(u, L, 84, 122, 16, 8, 9, 2) + cradle(u, L, 146, 112, 10, 6, 3.6, 3); }
-    // the cork going in: half of it still out of the neck
-    { const c0 = [BB[0] - 4, BB[1]], c1 = [BB[0] + 5, BB[1]];
-      const ck = nid('ck', u);
-      fg += `<defs>${linGrad(ck, 0, BB[1] - 8, 0, BB[1] + 8, [[0, '#e0b07a', 1], [.3, '#b07a44', 1], [.75, '#6a4020', 1], [1, '#3a200c', 1]])}</defs>`
-        + `<path d="M${c0[0]} ${BB[1] - 7.2}L${c1[0]} ${BB[1] - 7.8}V${BB[1] + 7.8}L${c0[0]} ${BB[1] + 7.2}Z" fill="url(#${ck})" stroke="#2a1606" stroke-width=".4"/>`
-        + `<ellipse cx="${c1[0]}" cy="${BB[1]}" rx="1.6" ry="7.8" fill="#c8945a" stroke="#2a1606" stroke-width=".4"/>`
-        + [[-3, -3], [1, 2], [-1, 5], [2, -5]].map(([dx, dy]) => `<circle cx="${c0[0] + 6 + dx}" cy="${BB[1] + dy}" r=".45" fill="#3a200c" opacity=".6"/>`).join(''); }
-    // the captain's hand comes in from the upper right: a dark leather sleeve with a linen cuff, the fist on the
-    // cork, pushing it home into the neck
-    { const skin = { lit: '#e8a878', half: '#b0704a', shadow: '#5a3022', outline: '#2a1208' }, coat = { lit: '#7a2c22', half: '#4a1812', shadow: '#200806', outline: '#0a0302' },
-        lace = { lit: '#f4e6cc', half: '#c8b496', shadow: '#6a5a46', outline: '#2a2014' }, wr = [173, 75], a = 124;
-      fg += H.cloth(u, { spine: [[220, 34], [199, 55], wr], w: [21, 17, 12.5], tone: coat, lit: -1, folds: true, cuff: { from: .72, tone: lace, k: 1.35, roll: false }, seed: 4 });
-      const h = H.hand(u, { at: wr, a, s: 2.3, m: 1, pose: 'grip', tone: skin, sw: .35 });
-      fg += h.back + h.front + K.localGlow(u, { x: 164, y: 80, color: '#ffc080', power: .22, radius: 14 }, { core: false }); }
+    // the candle stub on the table, in front and right of the neck (clear of the bottle)
+    fg += K.candle(u, L, { ...CAN, seed: 4 });
+    // the cork going in: half of it already in the neck (seen through the glass), half out; a little tapered
+    { const y = BB[1], xi = BB[0] - 7, xo = BB[0] + 7, ck = nid('ck', u);
+      fg += `<defs>${linGrad(ck, 0, y - 9, 0, y + 9, [[0, '#e8bc84', 1], [.3, '#b88050', 1], [.75, '#6a4020', 1], [1, '#3a200c', 1]])}</defs>`
+        + `<path d="M${xi} ${f(y - 7.6)}L${xo} ${f(y - 8.7)}V${f(y + 8.7)}L${xi} ${f(y + 7.6)}Z" fill="url(#${ck})" stroke="#2a1606" stroke-width=".4"/>`
+        + `<rect x="${xi - .5}" y="${f(y - 9)}" width="${BB[0] - xi + .5}" height="18" fill="#c8f0dc" opacity=".12"/>`
+        + `<path d="M${xi - 2} ${f(y - 8.7)}H${BB[0]}M${xi - 2} ${f(y + 8.7)}H${BB[0]}" stroke="#f0fff6" stroke-width=".6" opacity=".55"/>`
+        + `<path d="M${BB[0]} ${f(y - 9)}V${f(y + 9)}" stroke="#2a1a10" stroke-width=".5" opacity=".6"/>`
+        + `<ellipse cx="${xo}" cy="${y}" rx="1.8" ry="8.7" fill="#c8945a" stroke="#2a1606" stroke-width=".4"/>`
+        + [[-3, -3], [1, 2], [-1, 5], [2, -5], [-2, 1]].map(([dx, dy]) => `<circle cx="${BB[0] + 3.5 + dx * .7}" cy="${y + dy}" r=".45" fill="#3a200c" opacity=".6"/>`).join(''); }
+    // the captain's right hand: the forearm in the dark coat sleeve from the upper right edge, a linen ruffle at the
+    // wrist, the back of the hand turned up; the forefinger lies along the top of the cork, the thumb presses its
+    // near side, the other fingers curl with their tips on the cork's end — the whole hand pushes left, along the bottle
+    { const sk = { lit: '#f0b888', half: '#c08058', shadow: '#6a3a26', outline: '#2a1208' }, sp = pts => smooth(pts, true), op = pts => smooth(pts, false);
+      const sg = nid('slv', u), hg = nid('hb', u), fg2 = nid('hf', u), y = BB[1];
+      fg += `<defs>${linGrad(sg, 182, 50, 204, 60, [[0, '#34262a', 1], [.45, '#1c1418', 1], [1, '#08060a', 1]])}`
+        + `${linGrad(hg, 0, y - 16, 0, y + 12, [[0, sk.lit, 1], [.4, sk.half, 1], [.85, sk.shadow, 1], [1, '#d08a5a', 1]])}`
+        + `${linGrad(fg2, 0, y - 13, 0, y - 7, [[0, sk.lit, 1], [.55, sk.half, 1], [1, sk.shadow, 1]])}</defs>`;
+      // the curled middle, ring and little fingers behind: their backs in a row, the tips on the cork's end face
+      for (const [cy, w] of [[83, 4.6], [87.6, 4.4], [91.8, 3.8]]) fg += `<path d="${sp([[184, cy - w / 2 - .6], [176, cy - w / 2 - .4], [170, cy - w / 2], [167.6, cy - w * .3], [167.2, cy + w * .2], [168.6, cy + w / 2], [176, cy + w / 2 + .3], [184, cy + w / 2 + .6]])}" fill="${sk.half}" stroke="${sk.outline}" stroke-width=".4"/>`
+        + `<path d="M${f(170.4)} ${f(cy - w / 2 + .3)}Q${f(168.6)} ${f(cy)} ${f(170)} ${f(cy + w / 2 - .4)}" stroke="${sk.shadow}" stroke-width=".35" fill="none"/>`;
+      // the back of the hand: from the wrist to the knuckles, turned up towards us
+      fg += `<path d="${sp([[184.6, 76.4], [178, 74.2], [172.4, 74.4], [169.2, 76.6], [168.8, 80.6], [171.4, 82.4], [178, 83.4], [183.6, 84.6]])}" fill="url(#${hg})" stroke="${sk.outline}" stroke-width=".45"/>`
+        + `<path d="M171.6 76.2Q170.4 78.4 171.6 80.6M175 75.2Q174.2 77.6 175.4 80.2" stroke="${sk.shadow}" stroke-width=".3" fill="none" opacity=".7"/>`
+        + `<path d="M178 75Q174 74.4 171 75.8" stroke="#ffe0c0" stroke-width=".5" fill="none" opacity=".6" stroke-linecap="round"/>`;
+      // the forefinger along the top of the cork, its tip bent down onto the lip of the neck
+      fg += `<path d="${sp([[171.4, 75], [166, 74.4], [161.8, 74.6], [159.4, 75.8], [158.6, 77.8], [159.4, 79.4], [161.4, 79.2], [166, 79.4], [170.6, 80.4]])}" fill="url(#${fg2})" stroke="${sk.outline}" stroke-width=".45"/>`
+        + `<path d="M166.2 74.8Q165.4 77 166.4 79.2M161.6 75Q160.8 76.8 161.6 78.8" stroke="${sk.shadow}" stroke-width=".3" fill="none" opacity=".7"/>`
+        + `<path d="M159.6 75.6Q160.6 74.8 161.8 75.2L161.4 77.2Q160.2 77.4 159.6 75.6Z" fill="#f4d0b0" opacity=".85"/>`;
+      // the thumb: from the ball of the hand by the wrist, across the near side of the cork, the pad pressing it
+      fg += `<path d="${sp([[185, 86], [180, 90.8], [174, 93.8], [168, 94.8], [164, 94.8], [161.8, 93.4], [161.8, 91.2], [163.6, 90], [167, 89.8], [172, 88.6], [178, 85]])}" fill="url(#${hg})" stroke="${sk.outline}" stroke-width=".45"/>`
+        + `<path d="M167.4 90.4Q166.6 92.4 167.6 94.2" stroke="${sk.shadow}" stroke-width=".3" fill="none" opacity=".7"/>`
+        + `<path d="M162.6 91.4Q163.6 90.4 165.6 90.6L165.4 92.6Q163.4 93 162.6 91.4Z" fill="#f4d0b0" opacity=".85" stroke="#a06a48" stroke-width=".25"/>`
+        + `<path d="${op([[183, 89.2], [176, 93], [168, 94.2]])}" stroke="#ffc890" stroke-width=".6" fill="none" opacity=".7" stroke-linecap="round"/>`;
+      // the linen ruffle at the wrist, out of the cuff, over the wrist
+      { const E = t => [177.8 + 16.4 * t, 76.2 + 7.6 * t], o = [-.42, .91]; let d = '';
+        const e0 = E(0), e1 = E(1); d = `M${f(e0[0] + 1)} ${f(e0[1] - 2)}L${f(e0[0] + o[0])} ${f(e0[1] + o[1])}`;
+        for (let i = 0; i < 5; i++) { const p0 = E(i / 5), q = E((i + 1) / 5), k = 3.4 + (i % 2) * .8; d += `C${f(p0[0] + o[0] * (1 + k))} ${f(p0[1] + o[1] * (1 + k))} ${f(q[0] + o[0] * (1 + k))} ${f(q[1] + o[1] * (1 + k))} ${f(q[0] + o[0])} ${f(q[1] + o[1])}`; }   // round scallops
+        d += `L${f(e1[0] + 1)} ${f(e1[1] - 2)}Z`;
+        fg += `<path d="${d}" fill="#efe4cc" stroke="#6a5a46" stroke-width=".4" stroke-linejoin="round"/>`
+          + [.2, .4, .6, .8].map(t => { const e = E(t); return `<path d="M${f(e[0])} ${f(e[1])}l${f(o[0] * 2.6)} ${f(o[1] * 2.6)}" stroke="#a8967a" stroke-width=".35" stroke-linecap="round"/>`; }).join(''); }
+      // the forearm in the dark coat sleeve, coming down steeply from the upper right edge (out of frame above), folds
+      // across it, the sunset on its outer edge; the broad turned-back cuff with two brass buttons
+      fg += `<path d="M177.8 76.2L197.9 30.3L218 39L194.2 83.8Z" fill="url(#${sg})" stroke="#050304" stroke-width=".6"/>`
+        + [.2, .37, .54, .7].map(t => { const A = [177.8 + 20.1 * t, 76.2 - 45.9 * t], B = [194.2 + 23.8 * (t + .04), 83.8 - 44.8 * (t + .04)], C = [(A[0] + B[0]) / 2 - 1.7, (A[1] + B[1]) / 2 + 3.6];
+          return `<path d="M${f(A[0])} ${f(A[1])}Q${f(C[0])} ${f(C[1])} ${f(B[0])} ${f(B[1])}" stroke="#000" stroke-width="1" fill="none" opacity=".5"/><path d="M${f(A[0] + .3)} ${f(A[1] - 1)}Q${f(C[0] + .3)} ${f(C[1] - 1)} ${f(B[0] + .3)} ${f(B[1] - 1)}" stroke="#7a5a60" stroke-width=".45" fill="none" opacity=".45"/>`; }).join('')
+        + `<path d="M178.4 75.2L198.2 30" stroke="#ff9a60" stroke-width=".7" opacity=".6"/>`
+        + `<path d="M177.2 77L180.9 68.6L199 76.8L194.6 85.2Z" fill="#2a1c20" stroke="#050304" stroke-width=".5"/><path d="M180.9 68.6L199 76.8" stroke="#c9a048" stroke-width=".6" opacity=".8"/><path d="M177.6 76.6L194.4 84.6" stroke="#c9a048" stroke-width=".45" opacity=".6"/>`
+        + [[185.4, 74.8], [190.6, 77.2]].map(([x0, y0]) => K.shadeSphere(u, x0, y0, .9, L, 'brass', { outline: .25 })).join('');
+      fg += K.localGlow(u, { x: 172, y: 96, color: '#ffc080', power: .25, radius: 16 }, { core: false }); }
     // the light: the flame's glow, warm motes, dark corners and the dark under the glass
     fg += K.localGlow(u, { x: CAN.x, y: flameY, color: '#ffd080', power: .85, radius: 24 }) + K.localGlow(u, { x: CAN.x, y: flameY + 12, color: '#ffa040', power: .4, radius: 80 }, { core: false })
       + motes(20, 80, 30, 100, 80, '#ffe0b0', 12)
