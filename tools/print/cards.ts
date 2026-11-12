@@ -131,7 +131,7 @@ export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string,
 export async function fitFaces(ctx: Ctx, specs: FaceSpec[]): Promise<Map<string, Fit>> {
   const page = await ctx.browser.newPage({ viewport: { width: 1200, height: 900 } });
   const html = `<!doctype html><html><head><meta charset="utf-8"><style>${fontCss()}${BASE_CSS}${CARD_CSS}.cd{position:relative;display:inline-block;margin:2mm}</style></head><body>${specs.map(s => faceHtml(ctx, s, null, '')).join('')}</body></html>`;
-  const f = path.join(ROOT, 'out/print/html/_fit.html'); fs.writeFileSync(f, html);
+  const f = path.join(ROOT, `out/print/html/_fit-${process.pid}.html`); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, html);
   await page.goto('file://' + f);
   await page.evaluate(() => document.fonts.ready);
   const res = await page.evaluate(({ maxH, I }) => {
@@ -160,7 +160,7 @@ export async function fitFaces(ctx: Ctx, specs: FaceSpec[]): Promise<Map<string,
     }
     return out;
   }, { maxH: MAX_GLASS, I: FACE.index });
-  await page.close();
+  await page.close(); fs.rmSync(f, { force: true });
   return new Map(Object.entries(res) as [string, Fit][]);
 }
 
@@ -199,9 +199,9 @@ export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Pr
     const fit = fits.get(s.key)!;
     let svg: string;
     if (ctx.opts.noArt) svg = plainSvg();
-    else if (s.sceneName && hasScene(s.sceneName)) svg = portraitSvg(s.sceneName, ctx.opts.draftArt);
-    else if (s.key.startsWith('sea|')) { const c = data.sea.find(x => 'sea|' + x.name === s.key)!; svg = hasScene(c.name) ? portraitSvg(c.name, ctx.opts.draftArt) : seaTempSvg(c.key); }
-    else { const deck = s.key[0] as DeckCode; svg = hasScene(s.name) ? portraitSvg(s.name, ctx.opts.draftArt) : legendTempSvg(deck); }
+    else if (s.sceneName && hasScene(s.sceneName, ctx.opts.draftArt)) svg = portraitSvg(s.sceneName, ctx.opts.draftArt);
+    else if (s.key.startsWith('sea|')) { const c = data.sea.find(x => 'sea|' + x.name === s.key)!; svg = hasScene(c.name, ctx.opts.draftArt) ? portraitSvg(c.name, ctx.opts.draftArt) : seaTempSvg(c.key); }
+    else { const deck = s.key[0] as DeckCode; svg = hasScene(s.name, ctx.opts.draftArt) ? portraitSvg(s.name, ctx.opts.draftArt) : legendTempSvg(deck); }
     art.set(s.key, await makeArt(ctx, s.artKey, svg, { top: CARD.h - G.bottom - fit.h, tint: s.tint }));
   }
   const backs = new Map<string, string>(), crest = new Map<string, string>();

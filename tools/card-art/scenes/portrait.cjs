@@ -274,16 +274,37 @@ const FIRST = new Set(Object.keys(SCENES));
 // and SKEL: the skeleton of a scene (horizon, supports, item boxes) for `export.mjs --portrait --skel`
 const SKEL = {};
 for (const d of ['pearl', 'revenge', 'endeavour', 'dutch']) { const m = require(`./portrait-${d}.cjs`); Object.assign(SCENES, m.SCENES); Object.assign(CAM, m.CAM); Object.assign(SKEL, m.SKEL || {}); }
+// Print scenes (docs/tasks/print-kit.md 4.1): one file per card in scenes/print/<slug>.cjs,
+//   module.exports = { name, kind: 'deck' | 'legend' | 'sea', scene: u => [bg, fg], cam: { x, y, w }, skel, light, status: 'accepted' | 'draft' }.
+// An accepted scene replaces the earlier one (and its CAM and SKEL); a draft only with portrait(name, { draftArt: true }).
+// A broken file of one drawing agent is skipped with a warning and does not break the others.
+const PRINT = {};
+{
+  const fs = require('fs'), path = require('path'), dir = path.join(__dirname, 'print');
+  if (fs.existsSync(dir)) for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.cjs')).sort()) {
+    try {
+      const m = require(path.join(dir, f));
+      if (!m || typeof m.name !== 'string' || typeof m.scene !== 'function') throw new Error('needs { name, scene }');
+      PRINT[m.name + (m.variant && m.variant !== 'a' ? '#' + m.variant : '')] = Object.assign({ file: f }, m);
+    } catch (e) { console.warn(`warning: print scene ${f} skipped: ${e.message}`); }
+  }
+}
+const printScene = (name, opts = {}) => { const m = PRINT[name]; return m && (m.status === 'accepted' || opts.draftArt) ? m : null; };
+/** Is there a picture for the name: an earlier scene, or a print scene that is accepted (or any, with draftArt). */
+const has = (name, draftArt = false) => !!SCENES[name] || !!printScene(name, { draftArt });
 function portrait(name, opts = {}) {
   const u = 'q' + (fid++);
-  const f = SCENES[name]; if (!f) throw new Error('no portrait scene ' + name);
+  const pm = printScene(name, opts);
+  const f = pm ? pm.scene : SCENES[name]; if (!f) throw new Error('no portrait scene ' + name);
   let [bg, fg] = f(u);
   // straight one-segment strokes with a gradient have a zero-size box and vanish: draw them as rects (the deck
-  // scenes rely on it; the six first scenes are left exactly as they were)
-  if (!FIRST.has(name)) { bg = fixLines(bg); fg = fixLines(fg); }
-  const c = opts.cam || CAM[name] || { x: 0, y: 0, w: W }, k = W / c.w, vh = opts.vh || VH;
+  // scenes rely on it; the six first scenes are left exactly as they were; print scenes always)
+  if (pm || !FIRST.has(name)) { bg = fixLines(bg); fg = fixLines(fg); }
+  const c = opts.cam || (pm ? pm.cam : CAM[name]) || { x: 0, y: 0, w: W }, k = W / c.w, vh = opts.vh || VH;
   const cam = b => `<g transform="scale(${k.toFixed(4)}) translate(${-c.x} ${-c.y})">${b}</g>`;
-  const body = opts.layer === 'fg' ? cam(fg) : cam(bg + fg) + (opts.vignette === false ? '' : vignette(u, vh));
+  const body = opts.layer === 'fg' ? cam(fg) : cam(bg + fg) + (opts.vignette === false || (pm && pm.vignette === false) ? '' : vignette(u, vh));
   return `<svg viewBox="0 0 ${W} ${vh}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"><defs>${DEFS(u)}<clipPath id="pc${u}"><rect width="${W}" height="${vh}"/></clipPath></defs><g clip-path="url(#pc${u})">${body}</g></svg>`;
 }
-module.exports = { portrait, backArt, BACKS: Object.keys(BACKS), SCENES: Object.keys(SCENES), SKEL, W, H: VH };
+/** The skeleton of a card: the print scene's when it is in use, else the earlier one. */
+const skelOf = (name, opts = {}) => { const pm = printScene(name, opts); return pm ? pm.skel && Object.assign({ light: pm.light }, pm.skel) : SKEL[name]; };
+module.exports = { portrait, backArt, has, skelOf, PRINT, BACKS: Object.keys(BACKS), SCENES: Object.keys(SCENES), SKEL, W, H: VH };

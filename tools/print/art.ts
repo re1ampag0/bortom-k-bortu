@@ -13,9 +13,11 @@ import { CARD, FACE } from './layout';
 
 const require = createRequire(import.meta.url);
 const P = require(path.join(ROOT, 'tools/card-art/scenes/portrait.cjs')) as {
-  portrait(name: string, opts?: { draftArt?: boolean }): string; backArt(k: string): string; SCENES: string[];
+  portrait(name: string, opts?: { draftArt?: boolean }): string; backArt(k: string): string; SCENES: string[]; has(name: string, draftArt?: boolean): boolean;
+  PRINT: Record<string, { name: string; status?: string; file: string }>;
 };
-export const hasScene = (name: string) => P.SCENES.includes(name);
+export const hasScene = (name: string, draftArt = false) => P.has(name, draftArt);
+export const printScenes = () => P.PRINT;
 export const portraitSvg = (name: string, draftArt = false) => P.portrait(name, { draftArt });
 export const backArtSvg = (k: string) => P.backArt(k);
 

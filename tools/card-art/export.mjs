@@ -4,6 +4,7 @@
 //
 //   node tools/card-art/export.mjs --out <dir> [--scale 3] [--no-frame] [--only "Ядра,Анжелика"] [--svg] [--webp]
 //   node tools/card-art/export.mjs --portrait [--sheet] [--skel] [--guides] [--grid] --out <dir> [--scale 3] [--only …] [--svg]
+//                                  [--draft-art] [--set decks|legends|sea|all]
 //
 // --no-frame  drops the type-coloured frame and corner marks (for print, where the card draws its own frame).
 // --svg       also writes each picture as a standalone .svg next to the .png.
@@ -74,6 +75,14 @@ for (const [deck, list] of Object.entries(data.decks)) for (const c of list) {
   const known = cards.get(c.name);
   if (known) { if (!known.decks.includes(deck)) known.decks.push(deck); continue; }
   cards.set(c.name, { file: slug(c.name) + (webp ? '.webp' : '.png'), type: c.type, decks: [deck] });
+}
+// --set decks|legends|sea|all (default decks, so earlier commands do not fail on scenes that do not exist yet):
+// the Legends and the sea deck have only print scenes (scenes/print/<slug>.cjs)
+const set = opt('--set', 'decks');
+if (set !== 'decks') {
+  if (set === 'legends' || set === 'sea') cards.clear();
+  if (set === 'legends' || set === 'all') for (const [deck, c] of Object.entries(data.legends)) if (!only || only.has(c.name)) cards.set(c.name, { file: slug(c.name) + '.png', type: c.type, decks: [deck], legend: true });
+  if (set === 'sea' || set === 'all') for (const c of data.sea) if (!only || only.has(c.name)) cards.set(c.name, { file: slug(c.name) + '.png', type: 'МОРЕ', decks: ['sea'], sea: true });
 }
 if (!cards.size) { console.error('no cards matched'); process.exit(1); }
 
@@ -157,8 +166,11 @@ export function skelWarnings(sk) {
 }
 
 async function exportPortraits() {
-  const { portrait, SCENES, SKEL } = require('./scenes/portrait.cjs');
-  const have = new Set(SCENES), sheet = args.includes('--sheet'), sc = Number(opt('--scale', '3'));
+  const { portrait: portrait0, has, skelOf, SKEL: SKEL0 } = require('./scenes/portrait.cjs');
+  // --draft-art: take the draft print scenes too (scenes/print/<slug>.cjs with status 'draft')
+  const draftArt = args.includes('--draft-art'), portrait = (name, o = {}) => portrait0(name, { ...o, draftArt });
+  const SKEL = new Proxy({}, { get: (_, name) => typeof name === 'string' ? skelOf(name, { draftArt }) || SKEL0[name] : undefined });
+  const have = { has: name => has(name, draftArt) }, sheet = args.includes('--sheet'), sc = Number(opt('--scale', '3'));
   const skel = args.includes('--skel'), guides = args.includes('--guides'), grid = args.includes('--grid');
   const list = [...cards].filter(([name]) => have.has(name)), missing = [...cards.keys()].filter(n => !have.has(n));
   const browser = await launch();
@@ -220,7 +232,7 @@ async function exportPortraits() {
     const groups = {};
     // --mixed: the listed cards on common sheets in the --only order (a pilot of cards from several decks)
     const mixed = args.includes('--mixed');
-    for (const [name] of (mixed && only ? [...only].filter(n => have.has(n)).map(n => [n]) : list)) { const d = mixed ? 'mix' : full.get(name).deck; (groups[d] ||= []).push(name); }
+    for (const [name] of (mixed && only ? [...only].filter(n => have.has(n) && full.has(n)).map(n => [n]) : list.filter(([n]) => full.has(n)))) { const d = mixed ? 'mix' : full.get(name).deck; (groups[d] ||= []).push(name); }
     for (const [deck, names] of Object.entries(groups)) for (let i = 0; i < names.length; i += 6) {
       const part = names.slice(i, i + 6);
       Object.assign(glass, await layout(sp, part.map(name => cardHtml(name, `url(data:image/png;base64,${pngs.get(name).toString('base64')})`)).join('')));
