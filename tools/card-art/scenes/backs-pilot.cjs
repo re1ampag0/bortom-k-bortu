@@ -37,7 +37,11 @@ function pearl() {
   const po = { kind: 'pearl', x: 100, y: HZ + 6, scale: sc, heel: -2, roll: 6, sails: 'full', wake: true, reflect: true, lights: true, seed: 3 };
   // the moon's kant, as in the first round: the same silhouette in pale moonlight, shifted towards the moon, laid
   // under the ship — it shows only along the edges turned to the moon
-  s += `<g transform="translate(.7 -.55)">${K.shipSilhouette('pearl', Object.assign({}, po, { color: '#c4d4f2', u: u + 'm' }))}</g>`;
+  // (masked to a thin ring round her outline: inside the holes of the sails the sky behind shows, not the pale copy)
+  { const mk = nid('mk', u), dl = nid('dl', u), sil = (c, k) => K.shipSilhouette('pearl', Object.assign({}, po, { color: c, u: u + k }));
+    s += `<defs><filter id="${dl}" filterUnits="userSpaceOnUse" x="-60" y="-60" width="320" height="400"><feMorphology operator="dilate" radius="1"/></filter>`
+      + `<mask id="${mk}" maskUnits="userSpaceOnUse" x="-60" y="-60" width="320" height="400"><g filter="url(#${dl})">${sil('#ffffff', 'd')}</g>${sil('#000000', 'e')}</mask></defs>`
+      + `<g mask="url(#${mk})"><g transform="translate(.7 -.55)">${sil('#c4d4f2', 'm')}</g></g>`; }
   s += K.ship(u, Ls, po);
   // her black: the same silhouette multiplied over her (the holes stay open — the sky shows through them), then the
   // cold kant of the moon (the ship's rim light, kept strong) on the edges turned to it
