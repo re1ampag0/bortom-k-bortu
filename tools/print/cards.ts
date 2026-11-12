@@ -223,7 +223,7 @@ export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Pr
   const backSpecs = new Map<string, BackSpec>(), xmlns = (v: string) => /xmlns=/.test(v.slice(0, 300)) ? v : v.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
   for (const k of [...(Object.keys(DECK_KEY) as DeckCode[]), 'sea' as const]) {
     const kind = k === 'sea' ? 'sea' : DECK_KEY[k], col = k === 'sea' ? SEA.band : DECK_BAND[k], spec = ctx.opts.noArt ? null : backSpec(kind, mode.backs);
-    if (spec) { backSpecs.set(k, spec); backs.set(k, (await makeArt(ctx, `back${mode.backs}-${kind}`, xmlns(spec.svg), null)).url); }
+    if (spec) { backSpecs.set(k, spec); backs.set(k, (await makeArt(ctx, `back${mode.backs}-${kind}`, xmlns(spec.svg), null, spec.bleed ?? 0)).url); }
     else {
       const svg = ctx.opts.noArt ? plainSvg(lighten(col, .2), col) : k === 'sea' ? seaBackSvg() : backArtSvg(kind);
       backs.set(k, (await makeArt(ctx, `back0-${kind}`, fadeEdges(shadeBack(svg), col), null)).url);
@@ -263,7 +263,7 @@ export function itemFace(ctx: Ctx, kit: CardKit, it: Item, pos: string): string 
   }
 }
 /** ground — the colour of the sheet's backs: the reference card's back keeps it along the edge, so a shifted back side shows no light strip on a neighbour. */
-export function backHtml(kit: CardKit, b: BackKind, pos: string, ground = '#3a2c1c'): string {
+export function backHtml(kit: CardKit, b: BackKind, pos: string, ground = '#3a2c1c', edge = [0, 0, 0, 0]): string {
   if (b.back === 'none') return `<div class="sh-blank" style="${pos}"></div>`;
   if (b.back === 'neutral') return `<div class="bk nt" style="${pos}--ground:${ground}"><div class="pp"></div><div class="tt">${esc(TXT.title)}</div><img class="rs" src="${ROSE_URI}" alt=""></div>`;
   const k = b.back === 'sea' ? 'sea' : b.deck, name = b.back === 'sea' ? TXT.seaBackName : DECK_NAME[b.deck], sp = kit.backSpecs.get(k);
@@ -275,7 +275,10 @@ export function backHtml(kit: CardKit, b: BackKind, pos: string, ground = '#3a2c
   const cd = sp.crest ? sp.crest.d * U : 0, crest = sp.crest ? `<img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:${mm(sp.crest.y * U - cd * 45 / 70)};width:${mm(cd * 90 / 70)};height:${mm(cd * 92 / 70)};margin-left:${mm(-cd * 45 / 70)}">` : '';
   const ls = sp.letter ? sp.letter.size * U : 0, letter = !sp.letter ? '' : k === 'sea' ? `<img src="${ROSE_URI}" alt="" style="position:absolute;left:50%;top:${mm(sp.letter.y * U - ls / 2)};width:${mm(ls)};height:${mm(ls)};margin-left:${mm(-ls / 2)}">`
     : `<div style="position:absolute;left:0;right:0;top:${mm(sp.letter.y * U)};transform:translateY(-50%);text-align:center;font:700 ${(ls * 2.835).toFixed(1)}pt/1 'Alegreya SC',serif;color:${ink[1]}">${k}</div>`;
-  return `<div class="bk" style="${pos}--ground:${profiled(sp.ground)}"><img class="art" src="${kit.backs.get(k)}" alt="">${title}${crest}${letter}`
+  // a back with bleed: the picture runs 3 mm past the card on the block's outer sides (edge = left, top, right, bottom), nowhere else
+  const bu = sp.bleed ?? 0, art = bu ? ` style="left:${mm(-bu * U)};top:${mm(-bu * U)};width:${mm(CARD.w + 2 * bu * U)};height:${mm(CARD.h + 2 * bu * U)}"` : '',
+    clip = bu ? `overflow:visible;clip-path:inset(${[1, 2, 3, 0].map(i => mm(-edge[i] * BLEED)).join(' ')});` : '';
+  return `<div class="bk" style="${pos}${clip}--ground:${profiled(sp.ground)}"><img class="art" src="${kit.backs.get(k)}" alt=""${art}>${title}${crest}${letter}`
     + tail(`${mm(sp.name.y * U)};transform:translate(${b.back === 'deck' && b.legend ? '-50%,' : '0,'}-50%);color:${b.back === 'deck' && b.legend ? '#2a180c' : ink[1]}`) + `</div>`;
 }
 
@@ -302,8 +305,9 @@ export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: 
 export function backSheetPage(kit: CardKit, sh: Sheet, dx = 0, dy = 0, label = '', kitOf: (i: number) => CardKit = () => kit, sub = '', bleed = true): PageSpec {
   // the same colour as the edge of the back pictures in the JPEG (after the print profile): no seam between a card and the bleed
   const col = profiled(kit.backSpecs.get(sh.deck)?.ground ?? sheetColor(sh)), b = BLEED_BOX, L = 5, o = 1;
+  const edgeOf = (i: number) => { const s = slot(i); return [+(s.col === 0), +(s.row === 0), +(s.col === GRID.cols - 1), +(s.row === GRID.rows - 1)]; };
   const corner = (x: number, y: number, sx: number, sy: number) => `<path d="M${x + sx * o} ${y}h${sx * L}M${x} ${y + sy * o}v${sy * L}" stroke="#808080" stroke-width=".3" fill="none"/>`;
-  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})">${bleed ? `<div class="sh-bleed" style="background:${col}"></div>` : ''}${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i), col)).join('')}`
+  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})">${bleed ? `<div class="sh-bleed" style="background:${col}"></div>` : ''}${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i), col, edgeOf(i))).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${corner(b.x, b.y, -1, -1)}${corner(b.x + b.w, b.y, 1, -1)}${corner(b.x, b.y + b.h, -1, 1)}${corner(b.x + b.w, b.y + b.h, 1, 1)}</svg></div>`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${arrowUp(GRID.x0 + 1.2, 1.6)}</svg>${sub ? `<div class="sh-sub">${esc(sub)}</div>` : ''}<div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetBack} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div>` };
 }

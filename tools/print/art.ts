@@ -22,13 +22,13 @@ export const printScenes = () => P.PRINT;
 export const portraitSvg = (name: string, draftArt = false) => P.portrait(name, { draftArt });
 export const backArtSvg = (k: string) => P.backArt(k);
 /** The new card backs (tools/card-art/scenes/backs.cjs, three designs): the picture and where the lettering goes, in picture units. */
-export interface BackSpec { svg: string; ground: string; tone: 'dark' | 'light'; title: { y: number } | null; crest: { y: number; d: number } | null; letter: { y: number; size: number } | null; name: { y: number } }
+export interface BackSpec { svg: string; bleed?: number; ground: string; tone: 'dark' | 'light'; title: { y: number } | null; crest: { y: number; d: number } | null; letter: { y: number; size: number } | null; name: { y: number } }
 let B: { back(kind: string, variant: number): BackSpec; variants?: number[] } | null = null;
 try { if (fs.existsSync(path.join(ROOT, 'tools/card-art/scenes/backs.cjs'))) B = require(path.join(ROOT, 'tools/card-art/scenes/backs.cjs')); } catch (e) { console.warn('warning: backs.cjs skipped: ' + (e as Error).message); }
 export const hasBacks = () => !!B;
 /** The designs backs.cjs has drawn so far (its `variants`); without the file — only the first, in the old drawing. */
 export const backVariants = (): (1 | 2 | 3)[] => { const v = (B?.variants ?? (B ? [1, 2, 3] : [1])).filter(n => n === 1 || n === 2 || n === 3) as (1 | 2 | 3)[]; return v.length ? v : [1]; };
-export const backSpec = (kind: string, variant: number): BackSpec | null => { try { return B ? B.back(kind, variant) : null; } catch (e) { console.warn(`warning: back ${kind} v${variant}: ${(e as Error).message}`); return null; } };
+export const backSpec = (kind: string, variant: number): BackSpec | null => {return {...require(path.join(ROOT,'tools/card-art/scenes/backs-pilot.cjs')).draw('pearl'), title:null,crest:null,letter:null,name:{y:260}} as any; try { return B ? B.back(kind, variant) : null; } catch (e) { console.warn(`warning: back ${kind} v${variant}: ${(e as Error).message}`); return null; } };
 
 export const PROFILE_VERSION = 'p8';
 /** The print profile's curve points (review-print 10). */
@@ -78,8 +78,9 @@ export const usedArt = () => used;
  * Rasterises one picture. svg — a 200 × 280 scene (any SVG that fills its box); glass — the text plate's top in mm
  * from the card's top and its tint, or null for a picture without a plate (card backs).
  */
-export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBox | null): Promise<ArtInfo> {
-  const W = ctx.opts.draft ? 400 : 1000, H = W * 1.4, dir = path.join(CACHE, 'art');
+export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBox | null, bleed = 0): Promise<ArtInfo> {
+  // bleed — extra picture units (of 200 × 280) beyond each edge: the raster grows with the same density
+  const uw = 200 + 2 * bleed, uh = 280 + 2 * bleed, W = Math.round((ctx.opts.draft ? 400 : 1000) * uw / 200), H = Math.round((ctx.opts.draft ? 400 : 1000) * 1.4 * uh / 280), dir = path.join(CACHE, 'art');
   fs.mkdirSync(dir, { recursive: true });
   const hash = sha1([normalizeIds(svg), JSON.stringify(glass), W, PROFILE_VERSION, GLASS_TARGET, GLASS_SAT, PROFILE_SAT, CURVE.join(';')].join('|')).slice(0, 12);
   const file = `${key}-${hash}.jpg`, full = path.join(dir, file), meta = full + '.json', url = `../cache/art/${file}`;
@@ -87,12 +88,13 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
   if (fs.existsSync(full) && fs.existsSync(meta)) return { url, file, ...JSON.parse(fs.readFileSync(meta, 'utf8')) };
   if (!page) {
     page = await (await ctx.browser.newContext({ viewport: { width: 200, height: 280 }, deviceScaleFactor: 5 })).newPage();
-    await page.setContent(`<style>html,body{margin:0;background:#101010}#p{width:200px;height:280px;overflow:hidden}#p>svg{display:block;width:200px;height:280px}</style><div id="p"></div>`);
+    await page.setContent(`<style>html,body{margin:0;background:#101010}#p{width:var(--w,200px);height:var(--h,280px);overflow:hidden}#p>svg{display:block;width:var(--w,200px);height:var(--h,280px)}</style><div id="p"></div>`);
   }
+  if (bleed) { await page.setViewportSize({ width: Math.ceil(uw), height: Math.ceil(uh) }); await page.evaluate(([w, h]) => { document.documentElement.style.setProperty('--w', w + 'px'); document.documentElement.style.setProperty('--h', h + 'px'); }, [uw, uh]); }
   await page.evaluate(s => { document.getElementById('p')!.innerHTML = s; }, svg);
   await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll('image')).map(i => (i as unknown as HTMLImageElement).decode?.().catch(() => undefined))));
   await page.waitForTimeout(150); // embedded <image> pieces decode asynchronously
-  const png = await page.screenshot({ clip: { x: 0, y: 0, width: 200, height: 280 } });
+  const png = await page.screenshot({ clip: { x: 0, y: 0, width: uw, height: uh } });
   const k = W / CARD.w, g = FACE.glass;
   const box = glass && { x: Math.round(g.inset * k), y: Math.round(glass.top * k), w: Math.round((CARD.w - 2 * g.inset) * k), h: Math.round((CARD.h - g.bottom - glass.top) * k), r: g.radius * k, tint: glass.tint };
   const res = await page.evaluate(async ({ b64, W, H, box, lut, target, sat, gsat }) => {
