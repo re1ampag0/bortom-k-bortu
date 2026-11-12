@@ -50,6 +50,9 @@ for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
 // above the counter), tumblehome above the widest line by `tumble`; draft — the depth of the keel under the waterline;
 // bilge — the fullness of the section under water (2 — a round bilge, 3 — a flat floor and a hard turn); inner — the
 // paint of the inner side of the bulwark; deckK — the planks of the deck; bottom: 'foul' | 'copper' | 'tar'.
+// The marks of single ships (kit/README.md, «Корабли»): balc, balcD, lanternPost, lanterns, lanternArm, holeK, thruK, topK,
+// topRound, lidIn, cond ('whole' | 'mended' | 'torn' | 'fringe' | 'rags' | 'strips'), ports[].hk, masts[].Q, masts[].noBare,
+// ribs, crest, beakJag, broken.
 const SPECS = {
   // The Black Pearl (2003), by the user's measurements of the profile (report/print-kit/refs/zamery.md; L — the waterline):
   // the longest and lowest hull (the waist 0.14 L, the hull 1.21 L, with the head 1.34 L), a modest sheer; the forecastle
@@ -369,7 +372,7 @@ function build(u, L, o, mode) {
     hull += `<g clip-path="url(#${hc})">${inner}</g>`;
     // the ports: lids with an edge in the light, a shadow under them; guns of different size, some ports empty
     const Rq = R('lids'), hole = col(mix(L.tone(hullK, -1, cen[0], cen[1]), '#17100c', .7)), lidK = sp.bands.length && kind === 'endeavour' ? 'tar' : hullK;
-    const up = dC.uy < 0, edgeHi = topRim > .2 ? rimCol : lite, so = shOff(.42), lidUp = sp.growth ? .3 : 0, frame = sp.growth ? mix(lite, rimCol, .5) : '';   // a worn edge round the hole let pr = '', mz = '';
+    const up = dC.uy < 0, edgeHi = topRim > .2 ? rimCol : lite, so = shOff(.42), lidUp = sp.growth ? .3 : 0, frame = sp.growth ? mix(lite, rimCol, .5) : ''; let pr = '', mz = '';   // frame: a worn edge round the Dutchman's holes
     if (!far) { mz = nid('hm', u); defs += `<radialGradient id="${mz}" cx=".5" cy=".5" r=".55" fx="${f(.5 + .3 * dC.ux)}" fy="${f(.5 + .3 * dC.uy)}"><stop offset="0" stop-color="${tone('iron', If + .45)}"/><stop offset=".3" stop-color="${tone('iron', If - .25)}"/><stop offset="1" stop-color="${tone('iron', -.95)}"/></radialGradient>`; }
     for (const p of ports) { const hw = p.w / 2, hh = p.hh / 2, jit = Rq(), j2 = Rq(), j3 = Rq();
       if (far) { pr += fillP(box(p.X, p.H, p.w, p.hh), hole, ' opacity=".8"'); continue; }
