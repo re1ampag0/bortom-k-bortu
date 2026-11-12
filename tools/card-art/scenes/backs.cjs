@@ -184,7 +184,9 @@ function variant1(kind) {
 }
 
 // ——— the designs; 2 «Гравюра» and 3 «Медальон» are added here as variant2 / variant3 ———
-const VARIANTS = { 1: variant1, 2: kind => require('./backs2.cjs').draw(kind), 3: kind => require('./backs3.cjs').draw(kind) };
+// user's plan 12.11 (night), п. 14: one design per deck — the full-bleed backs of backs4.cjs; the three earlier designs
+// (variant1 above, backs2.cjs, backs3.cjs) dissolve into the ground and are kept in the files, not in the set
+const VARIANTS = { 1: kind => require('./backs4.cjs').draw(kind, variant1) };
 
 function back(kind, variant = 1) {
   if (!GROUND[kind]) throw new Error(`back: unknown kind ${kind}`);
