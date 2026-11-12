@@ -43,7 +43,9 @@ module.exports = { name: 'Обезьянка Джек', variant: 'b', kind: 'dec
     for (let i = 0; i < 4; i++) { const a = at(i, 0), b = at(i, 1); rig += `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#05060a" stroke-width="2.1"/><path d="M${f(a[0] + .8)} ${f(a[1])}L${f(b[0] + .5)} ${f(b[1])}" stroke="#9ab4d8" stroke-width=".45" opacity=".6"/>`; }
     bg += rig;
     // ——— the officer's hand from below: navy sleeve, lace cuff, fingers spread, grabbing at the tail — too late
-    let fg = PK.arm(u, 6, 198, 54, 128, { w0: 22, w1: 12, cloth: '#1c2848', dark: '#070a14', light: '#3a5080', cuff: 'lace', pose: 'open', side: -1, s: 1.9, twist: -20 });
+    const hg = nid('hs', u);
+    let fg = `<defs><linearGradient id="${hg}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8a0a0"/><stop offset=".35" stop-color="#6a5050"/><stop offset="1" stop-color="#2a1c20"/></linearGradient></defs>`
+      + PK.arm(u, 6, 198, 54, 128, { w0: 22, w1: 12, cloth: '#1c2848', dark: '#070a14', light: '#3a5080', cuff: 'lace', pose: 'open', side: -1, s: 1.9, twist: -20, skin: `url(#${hg})` });
     fg += `<path d="M20 186L44 146" stroke="#c9a048" stroke-width="1.4" opacity=".8"/>` + [0, 1, 2].map(i => `<circle cx="${f(26 + i * 6)}" cy="${f(178 - i * 10)}" r="1.2" fill="#d8b058"/>`).join('');
     // ——— the monkey: one silhouette on the moon, rim-lit; red jacket, a long curled tail
     const body = 'M96.6 52.6C93 50 87.4 50.4 85 54.6C82.2 54.4 80 56.8 81.2 59.6C82.4 61.8 84.4 62 85.6 61.4C86.4 63.6 88 65.4 90 66.4'
@@ -53,26 +55,27 @@ module.exports = { name: 'Обезьянка Джек', variant: 'b', kind: 'dec
       + 'C109.4 80.4 109 75 107.6 71C110.6 66 113.8 58 116.4 50L121.2 44.4L118 41.8L112.6 47.6C108.6 54.6 105.4 60.6 103.4 64.4'
       + 'C101.6 62.6 100 61.8 99 61.2C101 59 101.2 55.6 99.8 54C102.6 53.6 104 51 102.8 48.6C101.6 46.6 99 46.6 97.6 48.2Z';
     const tail = 'M88.6 92.4C80 98 72 104 66 112C60 120 62 130 70 132C76 133 80 128 77 123C75 120 71 121 71.4 124.4C70 122 70.6 119 73.4 118.4C79 117.6 82.6 123 80.4 129C77.6 136 66.4 136.6 61.8 129.6C56.4 121.6 61.6 110 70 103C76 98 82 94 86.6 90.8Z';
-    fg += rimmed(tail, '#1a1012', '#c8dcff', -.7, .9) + rimmed(body, '#1e1214', '#d8e8ff', -.8, 1);
+    let mk = rimmed(tail, '#1a1012', '#c8dcff', -.7, .9) + rimmed(body, '#1e1214', '#d8e8ff', -.8, 1);
     // the red jacket over the torso: a deep red, warm buttons; brass on the cuff catches the moon
-    { const jg = nid('jk', u), jd = 'M90.4 66.6C94 64 100 63.4 103.4 64.6C106 68 108 74 107.6 80.4C108 86 107 91 104.6 95.4C100 97.6 94 97.6 90.6 95.6C87.6 92 86.6 86 87.4 80C87 75 88 70 90.4 66.6Z';
-      fg += `<defs>${linGrad(jg, 86, 64, 108, 98, [[0, '#7a1e1e'], [.5, '#4a0e12'], [1, '#26070a']])}</defs><path d="${jd}" fill="url(#${jg})"/>`
-        + `<path d="M97 65L96 96" stroke="#d8a848" stroke-width=".6" opacity=".8"/>` + [72, 79, 86].map(y => `<circle cx="98.4" cy="${y}" r=".75" fill="#f0c860"/>`).join('')
-        + `<path d="M103.6 64.6C106 68 108 74 107.6 80.4" stroke="#e8f0ff" stroke-width=".55" fill="none" opacity=".7"/>`
-        + `<path d="M85.6 79.8L80 78.4M86 80.4L80.8 79.6" stroke="#d8a848" stroke-width=".5" opacity=".6"/>`; }
+    { const jg = nid('jk', u), jd = 'M90 66Q96 62.6 103 64L109.6 54.4L113.2 57.6L107.6 70C108.2 76 108.4 84 106 92L104.4 96.4Q97 99.4 91 96.6L84.4 104.6L81.8 99.4C85.6 94 86.2 88 86.6 82.4L80.8 79.8L81.4 74.4L87.6 70.2Z';
+      mk += `<defs>${linGrad(jg, 112, 56, 84, 98, [[0, '#9a2a26'], [.35, '#6a1418'], [1, '#2a070a']])}</defs><path d="${jd}" fill="url(#${jg})" stroke="#1a0406" stroke-width=".4"/>`
+        + `<path d="M103 64L109.6 54.4L113.2 57.6L107.6 70C108.2 76 108.4 84 106 92" stroke="#e8f0ff" stroke-width=".6" fill="none" opacity=".75"/>`
+        + `<path d="M108.6 57.6L112 60.4M86 71.4L82 76" stroke="#e0b050" stroke-width="1.2"/>`
+        + `<path d="M97.6 65.6L96.4 96.6" stroke="#e0b050" stroke-width=".7" opacity=".8"/>` + [73, 80, 87].map(y => `<circle cx="${f(97.4 - (y - 73) * .04)}" cy="${y}" r=".85" fill="#f0c860"/>`).join('')
+        + `<path d="M93.4 65.2Q96.6 70 98.4 65.2Q97 69.6 95.6 70.6Q94 69 93.4 65.2Z" fill="#e8e4dc"/>`
+        + `<path d="M91 96.6L84.4 104.6M95 97.4L89.6 104" stroke="#2a070a" stroke-width=".6" opacity=".8"/>`; }
     // the face turned to us, a little light from the sky on it: muzzle, eyes catching the moon
     { const fgr = nid('fc', u);
-      fg += `<defs>${radGrad(fgr, 91, 58, 7, [[0, '#8a6a52'], [1, '#3a2418']])}</defs><ellipse cx="90.6" cy="58.4" rx="5.2" ry="4.6" fill="url(#${fgr})"/>`
+      mk += `<defs>${radGrad(fgr, 92, 57, 8, [[0, '#9a7a60'], [1, '#3a2418']])}</defs><ellipse cx="90.6" cy="58.4" rx="5.8" ry="5" fill="url(#${fgr})"/>`
         + `<circle cx="88.6" cy="56.8" r=".85" fill="#0a0604"/><circle cx="92.6" cy="56.6" r=".85" fill="#0a0604"/><circle cx="88.9" cy="56.5" r=".3" fill="#eaf2ff"/><circle cx="92.9" cy="56.3" r=".3" fill="#eaf2ff"/>`
         + `<path d="M88.4 61q2.2 1.4 4.4 0" stroke="#1a0c06" stroke-width=".5" fill="none"/><ellipse cx="90.6" cy="59.6" rx="1.4" ry=".7" fill="#2a1a10"/>`; }
+    fg += `<g transform="translate(95 85) scale(1.22) translate(-95 -80)">${mk}</g>`;
     // ——— the stolen card, high in the paw: an own back pattern, lit by the moon (cool edge to the moon side)
-    fg += PK.cardBack(u, 125, 32, 24, 1.05, 1, '#6a1a1c', '#efe2c0');
-    fg += rimmed('M117.4 46.6C116.6 44 118 41.6 120.6 41.2C122.8 41 124.2 43 123.4 45.2C122.6 47.4 119.2 48.6 117.4 46.6Z', '#24161a', '#d8e8ff', -.5, .5);
+    fg += PK.cardBack(u, 130, 31, 22, 1.2, 1, '#6a1a1c', '#efe2c0');
+    fg += `<g transform="translate(95 85) scale(1.22) translate(-95 -80)">` + rimmed('M117.4 46.6C116.6 44 118 41.6 120.6 41.2C122.8 41 124.2 43 123.4 45.2C122.6 47.4 119.2 48.6 117.4 46.6Z', '#24161a', '#d8e8ff', -.5, .5) + '</g>';
     // ——— the deck rail at the bottom, a lantern on the rail post (dim, far from the action), dark under the glass
     fg += K.bulwark(u, L, { x1: -10, x2: 210, y: 236, h: 40, kind: 'oak', posts: 30, seed: 6 });
     const gl = nid('gl', u);
     fg += `<defs>${linGrad(gl, 0, 170, 0, 290, [[0, '#060810', 0], [.5, '#060810', .45], [1, '#04050a', .8]])}</defs><rect x="-10" y="170" width="220" height="120" fill="url(#${gl})"/>`;
-    // a few hairs of the monkey's fur against the moon's disc
-    for (let i = 0; i < 14; i++) { const a = -2.4 + R() * 1.6, x = 92 + Math.cos(a) * 10, y = 56 + Math.sin(a) * 8; fg += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(a) * 1.4)} ${f(Math.sin(a) * 1.4)}" stroke="#d8e8ff" stroke-width=".3" opacity=".6"/>`; }
     return [bg, fg];
   } };
