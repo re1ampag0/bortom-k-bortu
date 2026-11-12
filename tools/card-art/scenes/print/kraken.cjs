@@ -26,7 +26,7 @@ const skel = { horizon: HZ, eye: 1.5, light: 'the moon behind the fog, behind th
 // side, the dark under side), mottled skin, the suckers along the under side (pale rings with dark mouths, smaller
 // to the tip). lit: +1 | -1 — which edge faces the light. o.from, o.to: the share of the spine to draw (for parts that
 // go behind and in front of something).
-const TS = { lit: '#6f8f74', half: '#3a5444', shadow: '#1a2a22', outline: '#08120c', rim: '#c8ffe4', sucker: '#c8b8a4', mouth: '#4a2a28' };
+const TS = { lit: '#62866a', half: '#324c3e', shadow: '#1a2a22', outline: '#08120c', rim: '#c8ffe4', sucker: '#c8b8a4', mouth: '#4a2a28' };
 function tentacle(u, C, W, o = {}) {
   const T = H.tube(C, W, 10), lit = o.lit || 1, i0 = Math.round((o.from || 0) * T.N), i1 = Math.round((o.to != null ? o.to : 1) * T.N), R = rng(o.seed || 3);
   const band = (a, b) => { const A = T.edge(a * lit, i0, i1), B = T.edge(b * lit, i0, i1).reverse(); return 'M' + [...A, ...B].map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z'; };
@@ -89,22 +89,32 @@ module.exports = { name: 'Кракен', kind: 'deck', status: 'draft', cam: { x
     // spray and splinters where the arm comes down on her bow
     { const R = rng(9); for (let i = 0; i < 18; i++) { const a = -Math.PI * (.1 + R() * .8), d = 4 + R() * 14, x = 76 + Math.cos(a) * d, y = 64 + Math.sin(a) * d * .7, l = 1 + R() * 2.2, r = R() * Math.PI;
       fg += i % 2 ? `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.3 + R() * .5)}" fill="#e0fff0" opacity=".8"/>` : `<path d="M${f(x)} ${f(y)}l${f(Math.cos(r) * l)} ${f(Math.sin(r) * l)}" stroke="#a88a5a" stroke-width=".55" stroke-linecap="round"/>`; } }
-    // the eye: a dome of the beast's skin awash in the foreground, the lid half up, the slit pupil, the glow
-    { const e = EYE, g = nid('ey', u), ir = nid('ir', u), dm = nid('dm', u), w = e.w;
-      fg += `<defs>${radGrad(dm, e.x + 4, e.y - 8, w * 1.4, [[0, '#4a6a54', 1], [.5, '#22382c', 1], [1, '#0e1a14', 1]])}${radGrad(ir, e.x, e.y, w * .42, [[0, '#fbffb0', 1], [.45, '#c8f060', 1], [.8, '#5a9a30', 1], [1, '#1a3a10', 1]])}</defs>`
-        + `<path d="M${e.x - w * 1.5} ${e.y + 7}Q${e.x - w * 1.2} ${e.y - 12} ${e.x} ${e.y - 13}Q${e.x + w * 1.2} ${e.y - 12} ${e.x + w * 1.5} ${e.y + 7}Z" fill="url(#${dm})" stroke="#08120c" stroke-width=".5"/>`
-        + `<path d="M${e.x - w * 1.2} ${e.y - 5}Q${e.x} ${e.y - 15} ${e.x + w * 1.2} ${e.y - 5}" stroke="#c8ffe4" stroke-width=".8" fill="none" opacity=".55"/>`;
-      // wrinkles round the socket
-      for (const k of [1.25, 1.5]) fg += `<path d="M${f(e.x - w * .55 * k)} ${f(e.y + 1)}Q${e.x} ${f(e.y - 9 * k)} ${f(e.x + w * .55 * k)} ${f(e.y + 1)}" stroke="#0e1a14" stroke-width=".6" fill="none" opacity=".7"/>`;
-      fg += K.localGlow(u, { x: e.x, y: e.y - 1, color: '#d8ff80', power: .7, radius: 22 }, { squash: .7 })
-        + `<path d="M${f(e.x - w * .55)} ${e.y}Q${e.x} ${e.y - 9} ${f(e.x + w * .55)} ${e.y}Q${e.x} ${e.y + 5} ${f(e.x - w * .55)} ${e.y}Z" fill="url(#${ir})" stroke="#0a1408" stroke-width=".6"/>`
-        + `<path d="M${e.x - 1.2} ${e.y - 6.4}Q${e.x - 2.6} ${e.y - 1.4} ${e.x - 1.2} ${e.y + 3.2}H${e.x + 1.2}Q${e.x + 2.6} ${e.y - 1.4} ${e.x + 1.2} ${e.y - 6.4}Z" fill="#050805"/>`
-        + `<ellipse cx="${e.x + 4}" cy="${e.y - 4}" rx="1.6" ry=".9" fill="#ffffff" opacity=".85"/>`
-        + `<path d="M${f(e.x - w * .6)} ${e.y - .4}Q${e.x} ${e.y - 10.4} ${f(e.x + w * .6)} ${e.y - .4}" stroke="#0e1a14" stroke-width="1.6" fill="none"/>`;
-      // the sea washing over the lower lid, its own ripples lit by the eye
-      fg += `<path d="M${e.x - w * 1.7} ${e.y + 4}Q${e.x - w * .8} ${e.y + 1.6} ${e.x} ${e.y + 3.4}T${e.x + w * 1.7} ${e.y + 3}V${e.y + 16}H${e.x - w * 1.7}Z" fill="#0e2a24" opacity=".92"/>`
-        + K.foam(u, { x: e.x, y: e.y + 3.4, w: w * 3, h: 2.2, seed: 6, L })
-        + [1.7, 2.6].map((k, i) => `<ellipse cx="${e.x}" cy="${e.y + 6 + i * 3}" rx="${f(w * k)}" ry="${f(1.6 + i)}" fill="none" stroke="#d8ff80" stroke-width=".5" opacity="${f(.45 - i * .15)}"/>`).join(''); }
+    // the eye: a low hump of the beast's head awash in the foreground — bumpy, mottled skin edged by the moon —
+    // a heavy lid half up over the glowing eye with its slit pupil; the sea closes over the hump's foot
+    { const e = EYE, w = e.w, dm = nid('dm', u), ir = nid('ir', u), wt = nid('wt', u), R = rng(31);
+      const hump = [[e.x - 40, e.y + 7], [e.x - 30, e.y - 1], [e.x - 20, e.y - 7], [e.x - 9, e.y - 12], [e.x + 4, e.y - 14], [e.x + 17, e.y - 11], [e.x + 28, e.y - 5], [e.x + 40, e.y + 7]];
+      const sm = pts => { let d = `M${f(pts[0][0])} ${f(pts[0][1])}`; for (let k = 1; k < pts.length; k++) { const p = pts[k - 1], q = pts[k]; d += `Q${f((p[0] + q[0]) / 2 + (R() - .5) * 3)} ${f(Math.min(p[1], q[1]) - 2.4)} ${f(q[0])} ${f(q[1])}`; } return d; };
+      const top = sm(hump);
+      fg += `<defs>${radGrad(dm, e.x + 8, e.y - 14, 46, [[0, '#56745e', 1], [.45, '#2a4034', 1], [1, '#0e1a14', 1]])}${radGrad(ir, e.x, e.y - 1, w * .42, [[0, '#fbffb8', 1], [.4, '#d0f060', 1], [.8, '#5a9a30', 1], [1, '#1a3a10', 1]])}`
+        + `${radGrad(wt, e.x, e.y + 8, 52, [[0, '#183630', .95], [.6, '#1c3a34', .85], [1, '#1c3a34', 0]])}</defs>`
+        + `<path d="${top}V${e.y + 12}H${e.x - 40}Z" fill="url(#${dm})"/>`;
+      // mottled skin and warts
+      for (let k = 0; k < 26; k++) { const x = e.x - 34 + R() * 68, y = e.y - 8 + R() * 14, r = .6 + R() * 1.8; fg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * 1.4)}" ry="${f(r)}" fill="${R() > .45 ? '#0e1a14' : '#7a9a80'}" opacity="${f(.2 + R() * .3)}"/>`; }
+      fg += `<path d="${top}" fill="none" stroke="#d8fff0" stroke-width="1" opacity=".6"/><path d="${top}" fill="none" stroke="#08120c" stroke-width=".5" transform="translate(0 .9)" opacity=".5"/>`;
+      // folds of skin round the socket
+      for (const [k, op] of [[1.3, .7], [1.65, .5], [2, .35]]) fg += `<path d="M${f(e.x - w * .52 * k)} ${f(e.y + 1.5)}Q${e.x} ${f(e.y - 8.5 * k)} ${f(e.x + w * .52 * k)} ${f(e.y + 1.5)}" stroke="#0a140e" stroke-width=".7" fill="none" opacity="${op}"/><path d="M${f(e.x - w * .5 * k)} ${f(e.y + .6)}Q${e.x} ${f(e.y - 9.4 * k)} ${f(e.x + w * .5 * k)} ${f(e.y + .6)}" stroke="#8ab89a" stroke-width=".35" fill="none" opacity="${f(op * .6)}"/>`;
+      // the eye itself: the glow first, then the iris, the slit, the wet glint, the heavy upper lid
+      fg += K.localGlow(u, { x: e.x, y: e.y - 1, color: '#d8ff80', power: .75, radius: 24 }, { squash: .65 })
+        + `<path d="M${f(e.x - w * .55)} ${e.y}Q${e.x} ${e.y - 10} ${f(e.x + w * .55)} ${e.y}Q${e.x} ${e.y + 4.6} ${f(e.x - w * .55)} ${e.y}Z" fill="url(#${ir})" stroke="#0a1408" stroke-width=".6"/>`
+        + `<path d="M${e.x - 1.1} ${e.y - 6.6}Q${e.x - 2.6} ${e.y - 1.6} ${e.x - 1.1} ${e.y + 3}H${e.x + 1.1}Q${e.x + 2.6} ${e.y - 1.6} ${e.x + 1.1} ${e.y - 6.6}Z" fill="#050805"/>`
+        + `<ellipse cx="${e.x + 4.2}" cy="${e.y - 4}" rx="1.7" ry=".9" fill="#ffffff" opacity=".9"/><circle cx="${e.x - 5}" cy="${e.y + 1}" r=".5" fill="#ffffff" opacity=".6"/>`
+        + `<path d="M${f(e.x - w * .62)} ${e.y + .4}Q${e.x - 2} ${e.y - 11.6} ${f(e.x + w * .62)} ${e.y - .2}Q${e.x} ${e.y - 7.4} ${f(e.x - w * .62)} ${e.y + .4}Z" fill="#1a2a20" stroke="#060c08" stroke-width=".5"/>`
+        + `<path d="M${f(e.x - w * .5)} ${e.y - 3}Q${e.x - 2} ${e.y - 11.4} ${f(e.x + w * .5)} ${e.y - 3.4}" stroke="#a8d8b8" stroke-width=".45" fill="none" opacity=".6"/>`;
+      // the sea over the hump's foot: soft at the sides (no edge), foam where the skin breaks the surface, the
+      // eye's light on the ripples
+      fg += `<path d="M${e.x - 60} ${e.y + 5}Q${e.x - 30} ${e.y + 2.6} ${e.x} ${e.y + 4.2}T${e.x + 60} ${e.y + 4}V${e.y + 30}H${e.x - 60}Z" fill="url(#${wt})"/>`
+        + K.foam(u, { x: e.x, y: e.y + 4.4, w: 78, h: 2.4, seed: 6, L })
+        + [1.6, 2.4].map((k, i) => `<ellipse cx="${e.x}" cy="${e.y + 7 + i * 3}" rx="${f(w * k)}" ry="${f(1.5 + i)}" fill="none" stroke="#d8ff80" stroke-width=".5" opacity="${f(.4 - i * .14)}"/>`).join(''); }
     // the fog over it all, the moon's veil, motes; dark below (under the glass)
     fg += K.fog(u, L, { y: 108, h: 40, density: .4, seed: 12 }) + motes(30, 10, 20, 180, 100, '#dffff0', 9);
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 122, 0, 280, [[0, '#040a08', 0], [.3, '#040a08', .5], [1, '#020504', .85]])}</defs><rect x="-10" y="122" width="220" height="170" fill="url(#${gl})"/>`; }
