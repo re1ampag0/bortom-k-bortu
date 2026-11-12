@@ -3,7 +3,8 @@
 //               lantern): the highlight must sit on the source's side in every column, the terminator and the reflex
 //               must read, metal narrow and bright, wood broad and dull, cloth without a highlight;
 //   env       — sky with clouds and the moon or sun, water and foam, three splashes, fog, smoke, fire, three muzzle
-//               flashes, the deck, in the four times of day.
+//               flashes, the deck, in the four times of day;
+//   env2      — the same effects larger, at day and at night side by side.
 // Render: node tools/card-art/kit-sheet.mjs <this file>.
 'use strict';
 const K = require('../index.cjs');
@@ -57,4 +58,14 @@ const env = { w: 400, h: 560, bg: '#222', svg: () => {
     + panel(0, 280, C, 'закат: огонь, дым с подсветкой, вспышки ×3') + panel(200, 280, D, 'туман: туман, горящие обломки, дым, всплеск');
 } };
 
-module.exports = { sheets: { materials, env } };
+// env2 — the same effects at day and at night side by side, larger: cloud, smoke, fire with smoke, foam, splashes
+const env2 = { w: 400, h: 280, bg: '#222', svg: () => {
+  const one = (u, light) => { const L = K.makeLight(light, { horizon: HZ });
+    return K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L) + K.cloud(u, L, { x: 64, y: 58, w: 96, h: 34, seed: 11 }) + K.cloudBank(u, L, { y: HZ - 5, h: 12, x0: 0, x1: 200, n: 4, seed: 12, far: .75 })
+      + K.water(u, L, { horizon: HZ, bottom: 280, swell: .7, seed: 13 }) + K.smoke(u, L, { x: 150, y: 214, w: 44, h: 100, wind: -.45, seed: 14, glow: { color: '#ff9a40', power: .45 } })
+      + K.foam(u, { x: 150, y: 216, w: 40, L, seed: 15 }) + K.fire(u, { x: 150, y: 215, w: 18, h: 24, seed: 16, wind: -.45, fuel: true })
+      + K.splash(u + 'a', { x: 48, y: 186, w: 20, h: 46, seed: 0, L }) + K.splash(u + 'b', { x: 90, y: 236, w: 22, h: 36, seed: 2, L, wind: 1 }) + K.foam(u, { x: 70, y: 262, w: 110, L, seed: 17 }); };
+  return panel(0, 0, one('E2d', K.LIGHTS.endeavour), 'день: облако, дым, огонь, пена, всплески') + panel(200, 0, one('E2n', K.LIGHTS.pearl), 'ночь: то же');
+} };
+
+module.exports = { sheets: { materials, env, env2 } };

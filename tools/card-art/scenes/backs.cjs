@@ -1,6 +1,6 @@
 // tools/card-art/scenes/backs.cjs — the card backs of the print kit (docs/tasks/print-kit.md 4.10), three designs:
 //   1 «Корабль в море» — the deck's ship large in the light of its deck (kit LIGHTS), sky, water, a far detail;
-//   2 «Гравюра» and 3 «Медальон» — later, as their own functions in VARIANTS.
+//   2 «Гравюра» — backs2.cjs, 3 «Медальон» — backs3.cjs (each exports draw(kind) with the same contract).
 // Contract with the print generator (tools/print/art.ts BackSpec, tools/print/cards.ts backHtml):
 //   back(kind, variant) -> { svg, ground, tone, title, crest, letter, name }
 //   kind: 'pearl' | 'revenge' | 'endeavour' | 'dutch' | 'sea'; svg — a full <svg viewBox="0 0 200 280"> (63 x 88 mm);
@@ -169,7 +169,7 @@ function variant1(kind) {
 }
 
 // ——— the designs; 2 «Гравюра» and 3 «Медальон» are added here as variant2 / variant3 ———
-const VARIANTS = { 1: variant1 };
+const VARIANTS = { 1: variant1, 2: kind => require('./backs2.cjs').draw(kind), 3: kind => require('./backs3.cjs').draw(kind) };
 
 function back(kind, variant = 1) {
   if (!GROUND[kind]) throw new Error(`back: unknown kind ${kind}`);

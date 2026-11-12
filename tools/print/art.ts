@@ -38,9 +38,9 @@ export const PROFILE_SAT = 1.02;
 /** The glass keeps its colour (user's decision 12.11, mock-ups V2type / V2ship): the plate is darkened to the target, then its
  *  saturation is raised by this factor — the darkness under the text is solved with it, so the contrast stays. */
 export const GLASS_SAT = 1.2;
-/** Target mean relative luminance under the text. The mock-ups stand at 0.007-0.016 (text 12-16 : 1); 0.026 is as dark as a
- *  laser on matt coated stock still prints without a black slab — text about 11 : 1. */
-export const GLASS_TARGET = 0.026;
+/** Target mean relative luminance under the text. The mock-ups stand at 0.007-0.016 (text 12-16 : 1); 0.02 is as dark as a
+ *  laser on matt coated stock still prints without a black slab — text about 12 : 1. */
+export const GLASS_TARGET = 0.02;
 
 export interface GlassBox { top: number; tint: string }
 export interface ArtInfo { url: string; file: string; dark: number; glassMean: number; glassP95: number }

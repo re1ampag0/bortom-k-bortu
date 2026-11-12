@@ -71,6 +71,11 @@ function lightSide(L, x, y) {
   const l = Math.hypot(ux, uy) || 1; return { ux: ux / l, uy: uy / l, dz: a.dz, back: a.dz < -.2 };
 }
 
+// a smooth path through points (Catmull-Rom as cubic Béziers); closed — back to the first point
+function smoothPath(pts, closed) { const n = pts.length, g = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))]; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
+  for (let i = 0; i < (closed ? n : n - 1); i++) { const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2); d += `C${f(p1[0] + (p2[0] - p0[0]) / 6)} ${f(p1[1] + (p2[1] - p0[1]) / 6)} ${f(p2[0] - (p3[0] - p1[0]) / 6)} ${f(p2[1] - (p3[1] - p1[1]) / 6)} ${f(p2[0])} ${f(p2[1])}`; }
+  return d + (closed ? 'Z' : ''); }
+
 // A soft form of round puffs (cloud, smoke), seen as ONE volume: the puffs only make its outline (their union, torn
 // by noise at the edge); the light and shade are laid over the whole union, so no seam shows between the puffs.
 // cs: [cx, cy, rx, ry/rx]. o.dir — the light's direction in the picture plane; front light: the whole form runs
@@ -96,22 +101,26 @@ function billow(u, L, cs, col, o = {}) {
     + blurFilter(B, box, f(o.seam != null ? o.seam : clamp(rm * .22, .5, 3)))
     + blurFilter(S, box, f(clamp(rm * (back ? .32 : .42), .6, 5)));
   if (o.flat != null) defs += `<clipPath id="${C}"><rect x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(o.flat - box[1])}"/></clipPath>`;
-  if (o.fade) { const [a, b, c, d, a0, a1] = o.fade; defs += linGrad(F, a, b, c, d, [[0, '#fff', a0], [.45, '#fff', lerp(a0, a1, .3)], [1, '#fff', a1]]); }
-  defs += `<mask id="${M}" maskUnits="userSpaceOnUse" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}"><g filter="url(#${E})"><g${o.flat != null ? ` clip-path="url(#${C})"` : ''} fill="${o.fade ? `url(#${F})` : '#fff'}">${shapes}</g></g></mask>`;
+  // the fade is a black veil over the opaque union (not a translucent fill of every puff, whose overlaps would show)
+  if (o.fade) { const [a, b, c, d, a0, a1] = o.fade; defs += linGrad(F, a, b, c, d, [[0, '#000', 1 - a0], [.45, '#000', 1 - lerp(a0, a1, .3)], [1, '#000', 1 - a1]]); }
+  defs += `<mask id="${M}" maskUnits="userSpaceOnUse" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}"><g filter="url(#${E})"><g${o.flat != null ? ` clip-path="url(#${C})"` : ''} fill="#fff">${shapes}</g></g>${o.fade ? `<rect x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}" fill="url(#${F})"/>` : ''}</mask>`;
   // 1. the whole form's tone towards the light
   defs += linGrad(A, cx + ux * ext, cy + uy * ext, cx - ux * ext, cy - uy * ext, back ? [[0, col.mid], [.3, mix(col.shade, col.mid, .5)], [1, mix(col.shade, col.mid, .2)]] : [[0, col.lit], [.45, mix(col.lit, col.mid, .55)], [1, col.mid]]);
   let body = `<rect x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}" fill="url(#${A})"/>`;
-  // 3. lit caps on the swells that face the source; each fades out before its edge, so they melt into one another
-  if (!back && (o.puffs == null || o.puffs > 0)) {
-    defs += `<radialGradient id="${G}" cx="${f(.5 + ux * .16)}" cy="${f(.5 + uy * .16)}" r=".5" fx="${f(.5 + ux * .26)}" fy="${f(.5 + uy * .26)}">${stops([[0, col.knob || col.lit, .95], [.4, col.lit, .6], [1, col.lit, 0]])}</radialGradient>`;
-    const pr = cs.map(q => q[0] * ux + q[1] * uy), pmin = Math.min(...pr), pmax = Math.max(...pr), po = o.puffs != null ? o.puffs : .75;
-    body += `<g filter="url(#${B})">` + cs.map((q, i) => { const t = pmax - pmin > .1 ? (pr[i] - pmin) / (pmax - pmin) : 1, op = po * (.3 + .7 * Math.pow(t, 1.2)); return op > .04 ? el(q, ` fill="url(#${G})" opacity="${f(op)}"`, 1.08) : ''; }).join('') + '</g>';
+  // 3. lit caps on the swells that face the source; each fades out before its edge, so they melt into one another.
+  // Against the light the caps are the thin tops of the swells the light shines through: dimmer, only near the source
+  if (o.puffs == null || o.puffs > 0) {
+    const cc = back ? mix(col.mid, col.rim || col.lit, .45) : col.knob || col.lit, cl = back ? mix(col.mid, col.rim || col.lit, .2) : col.lit;
+    // the cap is its own soft disc moved towards the light, transparent at its rim: it never shows the puff's edge
+    defs += `<radialGradient id="${G}" fx="${f(.5 + ux * .14)}" fy="${f(.5 + uy * .14)}">${stops([[0, cc, .95], [.4, cl, .55], [.75, cl, .16], [1, cl, 0]])}</radialGradient>`;
+    const pr = cs.map(q => q[0] * ux + q[1] * uy), pmin = Math.min(...pr), pmax = Math.max(...pr), po = o.puffs != null ? o.puffs : back ? .55 : .8;
+    body += `<g filter="url(#${B})">` + cs.map((q, i) => { const t = pmax - pmin > .1 ? (pr[i] - pmin) / (pmax - pmin) : 1, cw = o.capFlat != null ? o.capFlat : .3, op = po * (back ? Math.pow(t, 2) : cw + (1 - cw) * Math.pow(t, 1.2)); const [rx, ry] = ex(q); return op > .04 ? el([q[0] + ux * rx * .28, q[1] + uy * ry * .28, q[2], q[3]], ` fill="url(#${G})" opacity="${f(op)}"`, .92) : ''; }).join('') + '</g>';
   }
   // creases: every swell's own side away from the light, very soft, so the swells read without a seam between them
-  if (!back && o.crease !== 0) { const CR = nid('bk', u), kk = o.crease != null ? o.crease : .3;
-    defs += blurFilter(CR, box, f(clamp(rm * .3, .5, 3.5)));
-    body += `<g filter="url(#${CR})" opacity="${f(kk)}">` + cs.filter(q => ex(q)[1] > rm * .7).map(q => { const [rx, ry] = ex(q), k = nid('bn', u);
-      defs += `<mask id="${k}" maskUnits="userSpaceOnUse" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}">${el(q, ' fill="#fff"')}${el([q[0] + ux * ry * .45, q[1] + uy * ry * .45 - ry * .12, q[2], q[3]], ' fill="#000"', 1.02)}</mask>`;
+  if (o.crease !== 0) { const CR = nid('bk', u), kk = o.crease != null ? o.crease : back ? .35 : .45;
+    defs += blurFilter(CR, box, f(clamp(rm * (o.creaseSoft || .2), .4, 4)));
+    body += `<g filter="url(#${CR})" opacity="${f(kk)}">` + cs.filter(q => ex(q)[1] > rm * (o.creaseMin != null ? o.creaseMin : .7)).map(q => { const [rx, ry] = ex(q), k = nid('bn', u);
+      defs += `<mask id="${k}" maskUnits="userSpaceOnUse" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}">${el(q, ' fill="#fff"')}${el([q[0] + ux * ry * .55, q[1] + uy * ry * .55 - ry * .1, q[2], q[3]], ' fill="#000"', 1.02)}</mask>`;
       return `<g mask="url(#${k})">${el(q, ` fill="${col.shade}"`)}</g>`; }).join('') + '</g>'; }
   // 2. the shade: the union moved away from the light and down, blurred — the edge towards the source stays lit
   const sh = rm * (back ? .4 : .62), so = o.shadeOp != null ? o.shadeOp : back ? .7 : .62;
@@ -139,14 +148,14 @@ function cloud(u, L, o = {}) {
   for (let i = 0; i < n; i++) {
     const t = (i + .5) / n + (R() - .5) * .08, env = Math.pow(Math.sin(Math.PI * clamp(t, .03, .97)), .75), ry = h * (.2 + .34 * env * (.65 + .5 * R())), rx = Math.max(step * (.72 + R() * .3), ry);
     const cx = x + (t - .5) * w * .9; cs.push([cx, y - ry * .72 - h * .06, rx, ry / rx]);
-    if (env > .5 && R() > .2 && ry > step * .6) { const r2 = ry * (.6 + R() * .3); cs.push([cx + (R() - .5) * ry, y - ry * 1.3 - r2 * (.25 + R() * .5), r2]); }
+    if (env > .5 && R() > .2 && ry > step * .6) { const r2 = ry * (.6 + R() * .3), k2 = h / w < .3 ? .62 + R() * .2 : .85 + R() * .15; cs.push([cx + (R() - .5) * ry, y - ry * 1.15 - r2 * k2 * (.1 + R() * .4), r2 * (1.1 + (1 - k2) * .6), k2]); } // a swell on top grown into the body; flatter on a flat cloud
   }
   // under a lamp the clouds are lit by the sky from above; otherwise by the source, with the sky adding light from above
   const ls = L.point ? { ux: 0, uy: -1, back: false } : lightSide(L, x, y - h / 2), back = ls.back && L.time !== 'fog';
   const lit = mix(mix(P.cloudLit, L.keyColor, .3), P.sky[3], far * .45), shade = mix(P.cloudShade, P.sky[2], far * .6);
   const col = { lit, mid: mix(lit, shade, back ? .5 : .26), shade, rim: mix(lit, '#ffffff', back ? .35 : .5), knob: mix(lit, '#ffffff', L.time === 'fog' ? 0 : .45) };
-  return billow(u, L, cs, col, { dir: { ux: ls.ux, uy: ls.uy - (back ? .15 : .4) }, back, flat: y, under: lerp(back ? .7 : .62, .35, far), uh: .55, seed: (o.seed || 1) + 3,
-    disp: lerp(2.6, 2, far), blur: lerp(.35, .7, far), seam: clamp(h * lerp(.045, .06, far), .5, 2.2) });
+  return billow(u, L, cs, col, { dir: { ux: ls.ux, uy: ls.uy - (back ? .15 : .4) }, back, flat: y, under: lerp(back ? .7 : .62, .35, far), uh: .55, seed: (o.seed || 1) + 3, crease: lerp(back ? .35 : .45, .06, far), puffs: lerp(back ? .55 : .8, back ? .12 : .45, far), rimOp: lerp(.85, .38, far),
+    disp: lerp(2.8, 2, far), freq: far > .5 ? '0.06 0.12' : '0.075 0.1', blur: lerp(.22, .6, far), seam: clamp(h * lerp(.045, .06, far), .5, 2.2) });
 }
 /** cloudBank(u, L, { y, h, x0, x1, n, seed, far }) — a row of n clouds of different size with undersides near y. */
 function cloudBank(u, L, o = {}) {
@@ -180,22 +189,32 @@ function water(u, L, o = {}) {
     defs += linGrad(g1, 0, y - A, 0, y + th + A, [[0, sheen, .16 * (.5 + t0)], [.3, seaAt(t0), 0], [.62, deep, .3 * (.4 + t0)], [1, deep, 0]]);
     body += `<path d="M${f(a.x0)} ${f(y)}${a.s}L${f(b.x0)} ${f(y + th)}${b.s}Z" fill="url(#${g1})"/>`;
   }
-  // rows of crests: a light crescent on the top of each wave, a dark one under it
-  let d = .8, rows = 0;
-  while (d < H && rows < 90) {
-    const t = d / H, y = hz + d, lam = (4 + (9 + 44 * sw) * t) * (1 + 2.2 * Math.pow(1 - t, 5)), amp = .1 + 2.7 * t * (.35 + sw), base = seaAt(t), light = mix(base, sheen, .62), dark = mix(base, deep, .7);
-    const opL = .1 + .34 * Math.pow(t, .6), opD = .14 + .3 * Math.pow(t, .7), hwp = gx != null ? pathHw(d) * 1.5 : 0;
-    let x = -R() * lam;
+  // crests: a light crescent on the top of each wavelet, a dark trough under it. Not in rows: every crest has its own
+  // height, length, skew and tilt, and a smooth noise in perspective (patches wider and taller near the viewer) makes
+  // rough and calm patches of the wind — the crests grow longer, stronger and denser in the rough ones
+  const NR = rng((o.seed != null ? o.seed : 3) + 101), NG = 11, grid = Array.from({ length: NG * NG }, () => NR());
+  const sm3 = q => q * q * (3 - 2 * q), vn = (p, q) => { const i = Math.floor(p), j = Math.floor(q), fx = sm3(p - i), fy = sm3(q - j), g = (a, b) => grid[((a % NG) + NG) % NG + (((b % NG) + NG) % NG) * NG];
+    return lerp(lerp(g(i, j), g(i + 1, j), fx), lerp(g(i, j + 1), g(i + 1, j + 1), fx), fy); };
+  const patch = (px, dd, tt) => clamp((vn(px / (16 + 70 * tt) + 3.1, dd / (2.5 + 24 * tt)) * .7 + vn(px / (6 + 26 * tt), dd / (1.2 + 9 * tt) + 5.7) * .3 - .2) * 1.6);
+  let d = .6, rows = 0;
+  while (d < H && rows < 160) {
+    const t = d / H, y = hz + d, lam = (4 + (9 + 44 * sw) * t) * (1 + 2.2 * Math.pow(1 - t, 5)), amp = (.1 + 2.7 * t * (.35 + sw)) * (1 + 1.1 * t * t), base = seaAt(t), light = mix(base, sheen, .62), dark = mix(base, deep, .7);
+    const opL = .1 + .36 * Math.pow(t, .6), opD = .14 + .32 * Math.pow(t, .7), hwp = gx != null ? pathHw(d) * 1.5 : 0;
+    // each crest is sharp at its top and melts away below (no flat cut-out lens): a gradient per row of crests
+    const gl = nid('wl', u), gd = nid('wd', u);
+    defs += `<linearGradient id="${gl}" x1="0" y1="0" x2="0" y2="1">${stops([[0, light, 1], [.45, light, .7], [1, light, 0]])}</linearGradient><linearGradient id="${gd}" x1="0" y1="0" x2="0" y2="1">${stops([[0, dark, .5], [.35, dark, 1], [1, dark, .1]])}</linearGradient>`;
+    let x = -R() * lam * 2;
     while (x < w) {
-      const fw = lam * (.5 + R() * .9), gap = lam * (.2 + R() * 1.1), yy = y + (R() - .5) * amp * .8, a = amp * (.7 + R() * .6);
-      if (R() > .2) { // crests near the glitter path catch more light, fading off softly to the sides (no hard band)
+      const pn = patch(x, d, t), fw = lam * (.35 + R() * 1.1) * (.65 + .7 * pn), gap = lam * (.15 + R() * 1.3) * (1.5 - pn);
+      if (R() < .2 + .75 * pn) { // crests near the glitter path catch more light, fading off softly to the sides (no hard band)
+        const yy = y + (R() - .5) * amp * 1.7, a = amp * (.55 + R() * .8) * (.55 + .75 * pn), sk = .3 + R() * .4, tl = (R() - .5) * a * .9, k = .45 + .8 * pn;
         const kq = gx != null ? Math.exp(-Math.pow((x + fw / 2 - gx) / (hwp * (.7 + R() * .6) + .01), 2)) * (1 - .6 * t) : 0;
-        body += `<path d="M${f(x)} ${f(yy + a * .5)}q${f(fw / 2)} ${f(a * 1.5)} ${f(fw)} 0q${f(-fw / 2)} ${f(a * .35)} ${f(-fw)} 0z" fill="${dark}" opacity="${f(opD * (.6 + R() * .4))}"/>`
-          + `<path d="M${f(x)} ${f(yy)}q${f(fw * .45)} ${f(-a * 1.25)} ${f(fw)} 0q${f(-fw * .5)} ${f(-a * .2)} ${f(-fw)} 0z" fill="${kq > .05 ? mix(light, L.keyColor, .5 * kq) : light}" opacity="${f(clamp(opL * (.6 + R() * .5) * (1 + .7 * kq)))}"/>`;
+        body += `<path d="M${f(x)} ${f(yy + a * .1)}q${f(fw * (sk + .08))} ${f(a * (1.3 + R() * .7))} ${f(fw)} ${f(tl)}q${f(-fw * (.92 - sk))} ${f(a * .35)} ${f(-fw)} ${f(-tl)}z" fill="url(#${gd})" opacity="${f(clamp(opD * (.6 + R() * .4) * k))}"/>`
+          + `<path d="M${f(x)} ${f(yy)}q${f(fw * sk)} ${f(-a * (.95 + R() * .45))} ${f(fw)} ${f(tl)}q${f(-fw * (1 - sk) * (.9 + R() * .2))} ${f(-a * (.42 + R() * .25))} ${f(-fw)} ${f(-tl)}z" fill="${kq > .05 ? mix(light, L.keyColor, .5 * kq) : `url(#${gl})`}" opacity="${f(clamp(opL * (.6 + R() * .5) * k * (1 + .7 * kq)))}"/>`;
       }
       x += fw + gap;
     }
-    d += (.8 + 6.4 * t * (.55 + sw * .8)) * (.85 + R() * .3); rows++;
+    d += (.8 + 6.4 * t * (.55 + sw * .8)) * (.55 + R() * .8); rows++;
   }
   // the glitter path under the sun or moon: a halo of soft blots, each row of its own width and offset, narrow at
   // the horizon and dying out unevenly towards the viewer (no straight edge), and broken glints over it
@@ -232,24 +251,41 @@ function foam(u, o = {}) {
   // the tone across the foam: lit at the end towards the source, greyer at the far end
   const tone = (px, k) => mix(shade, lit, clamp(k * (.62 + .38 * clamp(.5 + (px - x) / w * sx * 1.2))));
   const e = nid('fo', u), pad = h * 3 + 4, box = [x - w / 2 - pad, y - h * 2 - pad, w + 2 * pad, h * 4 + 2 * pad];
-  // clumps of different size, sometimes parted by gaps; each clump is a few bubbles of foam
-  let t = R() * .03, under = '', top = '', lace = '', dots = '';
-  while (t < 1) {
-    const env = Math.pow(Math.sin(Math.PI * clamp(t, .02, .98)), .6), cw = w * (.03 + R() * R() * .2), ch = h * (.45 + R() * 1.1) * (.3 + .7 * env), n = 2 + Math.floor(R() * 4);
-    for (let k = 0; k < n; k++) {
-      const bx = x - w / 2 + (t + R() * cw / w) * w, rx = cw * (.25 + R() * .4) + h * .15, ry = Math.max(.25, ch * (.3 + R() * .45)), by = y + (R() - .5) * h * .5 - ry * .2;
-      under += `<ellipse cx="${f(bx)}" cy="${f(by + ry * .3)}" rx="${f(rx)}" ry="${f(ry)}" fill="${tone(bx, .35)}"/>`;
-      top += `<ellipse cx="${f(bx + sx * rx * .14)}" cy="${f(by - ry * .22)}" rx="${f(rx * (.6 + R() * .2))}" ry="${f(ry * (.55 + R() * .2))}" fill="${tone(bx, 1)}"/>`;
+  // the foam lies in pieces of different length parted by gaps; each piece is one band with a lumpy top (clots of
+  // foam grown into it, no separate bubbles) and a flatter bottom; its top catches the light; from it threads of lace
+  // trail out over the water and break off
+  const sp = smoothPath, e2 = nid('fl', u);
+  let t = R() * .02, body = '', top = '', lace = '', dots = '';
+  while (t < .98) {
+    const lw = Math.max(.02, Math.min(1 - t, .06 + R() * R() * .34)), n = Math.max(4, Math.round(lw * w / Math.max(1.1, h * .9))), up = [], lo = [], ph = R() * 9, ph2 = R() * 9;
+    for (let i = 0; i <= n; i++) {
+      const q = i / n, xx = x - w / 2 + (t + q * lw) * w, env = Math.pow(Math.sin(Math.PI * clamp(t + q * lw, .02, .98)), .5) * Math.pow(Math.sin(Math.PI * q), .8);
+      const lump = .7 + .14 * Math.sin(q * 9 + ph) + .1 * Math.sin(q * 21 + ph2) + (R() - .5) * .34;
+      up.push([xx, y - h * (.15 + .85 * env * clamp(lump, .15, 1.2))]); lo.unshift([xx + (R() - .5) * .4, y + h * (.2 + .35 * env * (.6 + R() * .6))]);
     }
-    if (R() > .5) lace += `<ellipse cx="${f(x - w / 2 + t * w)}" cy="${f(y + h * (.2 + R() * .4))}" rx="${f(cw * (1 + R()))}" ry="${f(h * (.12 + R() * .12))}" fill="${tone(x - w / 2 + t * w, .7)}"/>`;
-    if (R() > .45) dots += `<circle cx="${f(x - w / 2 + t * w + (R() - .5) * 3)}" cy="${f(y + h * (.6 + R() * 1.4))}" r="${f(.2 + R() * .3 * h * .5)}" fill="${tone(x - w / 2 + t * w, .8)}" opacity="${f(.35 + R() * .5)}"/>`;
-    if (R() > .62) { const l = 1.5 + R() * w * .14, px = x - w / 2 + t * w; dots += `<path d="M${f(px)} ${f(y + h * (.7 + R()))}q${f(l / 2)} ${f(-.4 - R() * .6)} ${f(l)} 0" stroke="${tone(px, .8)}" stroke-width="${f(.22 + R() * .3)}" fill="none" opacity="${f(.3 + R() * .4)}"/>`; }
-    t += cw / w + (R() < .3 ? R() * .08 : 0);
+    const mx = x - w / 2 + (t + lw / 2) * w;
+    body += `<path d="${sp(up.concat(lo), true)}" fill="${tone(mx, .5)}"/>`;
+    // the lit top: the upper edge and the same edge let down by a part of the thickness
+    top += `<path d="${sp(up.concat(up.slice().reverse().map(([px, py]) => [px, py + (y - py) * (.45 + R() * .2) + h * .08])), true)}" fill="${tone(mx, 1)}"/>`;
+    // holes in the lace: the sea shows through the thicker pieces
+    for (let k = 0, m = lw * w > h * 5 ? Math.floor(R() * (lw * w / (h * 4))) : 0; k < Math.min(m, 4); k++) { const hx = x - w / 2 + (t + (.15 + R() * .7) * lw) * w, hl = h * (.8 + R() * 1.6), ht = h * (.12 + R() * .14), hy = y + h * (.05 + R() * .15);
+      top += `<path d="M${f(hx - hl / 2)} ${f(hy)}q${f(hl / 2)} ${f(-ht)} ${f(hl)} 0q${f(-hl / 2)} ${f(ht * 1.2)} ${f(-hl)} 0z" fill="${mix(sea, sh, .2)}" opacity="${f(.45 + R() * .3)}"/>`; }
+    // lace: streaks of foam lying flat on the water before and behind the piece, tapered at both ends, in broken chains
+    for (let k = 0; k < 1 + Math.floor(R() * 3); k++) {
+      const behind = R() < .35, ly = y + (behind ? -h * (.5 + R() * .7) : h * (.55 + R() * 2.2)), lx = x - w / 2 + (t + R() * lw) * w;
+      let cx0 = lx - w * (.02 + R() * .05);
+      for (let j = 0, m = 1 + Math.floor(R() * 3); j < m; j++) {
+        const ln = w * (.025 + R() * .09) * (behind ? .6 : 1), th = clamp(h * (.1 + R() * .16), .18, .8) * (behind ? .7 : 1), yy = ly + (R() - .5) * h * .3;
+        lace += `<path d="M${f(cx0)} ${f(yy)}q${f(ln * .5)} ${f(-th)} ${f(ln)} ${f((R() - .5) * th)}q${f(-ln * .5)} ${f(th * .8)} ${f(-ln)} ${f(0)}z" fill="${tone(cx0, behind ? .6 : .8)}" opacity="${f(.3 + R() * .4)}"/>`;
+        cx0 += ln + w * (.005 + R() * .025);
+      }
+    }
+    t += lw + (R() < .25 ? .004 + R() * R() * .05 : -lw * (.25 + R() * .2)); // a gap, or the next piece overlaps this one
   }
-  const fr = clamp(.55 / h, .16, .5);
-  return `<defs>${edgeFilter(e, box, (o.seed || 4) + 17, clamp(h * .9, .6, 2.4), `${f(fr)} ${f(clamp(fr * 1.6, .25, .62))}`, .12)}</defs>`
-    + `<ellipse cx="${f(x)}" cy="${f(y + h * .7)}" rx="${f(w * .5)}" ry="${f(h * .7)}" fill="${sh}" opacity=".22"/>`
-    + `<g filter="url(#${e})"><g opacity=".75">${lace}</g>${under}${top}</g>${dots}`;
+  const fr = clamp(.5 / h, .14, .45);
+  return `<defs>${edgeFilter(e, box, (o.seed || 4) + 17, clamp(h * .55, .5, 1.8), `${f(fr)} ${f(clamp(fr * 1.6, .25, .62))}`, .1)}${edgeFilter(e2, box, (o.seed || 4) + 29, clamp(h * .5, .4, 1.4), `${f(fr * 1.4)} ${f(fr * 1.4)}`, 0)}</defs>`
+    + `<ellipse cx="${f(x)}" cy="${f(y + h * .5)}" rx="${f(w * .5)}" ry="${f(h * .6)}" fill="${sh}" opacity=".18"/>`
+    + `<g filter="url(#${e2})">${lace}${dots}</g><g filter="url(#${e})">${body}${top}</g>`;
 }
 
 /**
@@ -287,10 +323,11 @@ function splash(u, o = {}) {
   const sm = (pts, closed) => { const n = pts.length, g = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))]; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
     for (let i = 0; i < (closed ? n : n - 1); i++) { const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2); d += `C${f(p1[0] + (p2[0] - p0[0]) / 6)} ${f(p1[1] + (p2[1] - p0[1]) / 6)} ${f(p2[0] - (p3[0] - p1[0]) / 6)} ${f(p2[1] - (p3[1] - p1[1]) / 6)} ${f(p2[0])} ${f(p2[1])}`; }
     return d + (closed ? 'Z' : ''); };
-  const gid = nid('sg', u), bid = nid('sb', u), mid = nid('sm', u), cid = nid('sc', u), pad = Math.max(w, h) * .8;
+  const gid = nid('sg', u), bid = nid('sb', u), mid = nid('sm', u), cid = nid('sc', u), rid = nid('sr', u), pad = Math.max(w, h) * .8;
   const box = `filterUnits="userSpaceOnUse" x="${f(x - w * 2 - pad)}" y="${f(y - h * 1.4 - pad)}" width="${f(w * 4 + 2 * pad)}" height="${f(h * 1.6 + 2 * pad)}"`;
   const bw = w * .4;
   let defs = linGrad(gid, x + sx * bw, y, x - sx * bw, y, back ? [[0, lit, .95], [.14, mix(lit, shade, .45), .85], [.5, shade, .72], [1, mix(shade, sea, .35), .6]] : [[0, lit, .97], [.35, mix(lit, shade, .3), .9], [.7, shade, .8], [1, mix(shade, sea, .3), .68]])
+    + edgeFilter(rid, [x - w * 2 - pad, y - h * 1.4 - pad, w * 4 + 2 * pad, h * 1.6 + 2 * pad], seed + 31, clamp(w * .12, .8, 2.6), `${f(clamp(2.2 / w, .12, .5))} ${f(clamp(1.6 / w, .1, .4))}`, 0)
     + `<filter id="${bid}" ${box}><feGaussianBlur stdDeviation="${f(clamp(w * .02, .15, .6))}"/></filter><filter id="${mid}" ${box}><feGaussianBlur stdDeviation="${f(clamp(w * .12, .8, 3))}"/></filter>` + softDot(cid);
   let veil = '', backS = '', body = '', hl = '', front = '', drops = '';
   const jet = (p0, c, p1, wd, op, col) => `<path d="M${f(p0[0])} ${f(p0[1])}Q${f(c[0])} ${f(c[1])} ${f(p1[0])} ${f(p1[1])}" stroke="${col}" stroke-width="${f(wd)}" fill="none" stroke-linecap="round" opacity="${f(op)}"/>`;
@@ -299,15 +336,23 @@ function splash(u, o = {}) {
     for (let i = 0; i <= 8; i++) { const t = i / 8, q = bez(p0, c, p1, t), dx = 2 * (1 - t) * (c[0] - p0[0]) + 2 * t * (p1[0] - c[0]), dy = 2 * (1 - t) * (c[1] - p0[1]) + 2 * t * (p1[1] - c[1]), l = Math.hypot(dx, dy) || 1, hw = lerp(w0, w1, Math.pow(t, .8)) / 2;
       A.push([q[0] - dy / l * hw, q[1] + dx / l * hw]); B.unshift([q[0] + dy / l * hw, q[1] - dx / l * hw]); }
     return `<path d="${sm(A.concat(B), true)}" fill="${col}" opacity="${f(op)}"/>`; };
-  const drop = (p, r, op) => { drops += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(r * .8)}" ry="${f(r)}" fill="${(p[0] - x) * sx >= 0 ? lit : far}" opacity="${f(op)}"/>`; if (r > .45) drops += `<circle cx="${f(p[0] + ls.ux * r * .32)}" cy="${f(p[1] + ls.uy * r * .32)}" r="${f(r * .35)}" fill="#ffffff" opacity="${f(op * .85)}"/>`; };
+  // a drop: drawn out along its flight (away from the burst), a rounded head and a tail; only big ones get a glint
+  const drop = (p, r, op) => { const ax = p[0] - x, ay = p[1] - (y - h * .45), an = Math.atan2(ay, ax) * 180 / Math.PI + 90, el = 1 + R() * .7, c = (p[0] - x) * sx >= 0 ? lit : far;
+    drops += `<path transform="translate(${f(p[0])} ${f(p[1])}) rotate(${f(an)})" d="M0 ${f(-r * el)}C${f(r * .5)} ${f(-r * el * .4)} ${f(r * .9)} ${f(r * .25)} 0 ${f(r)}C${f(-r * .9)} ${f(r * .25)} ${f(-r * .5)} ${f(-r * el * .4)} 0 ${f(-r * el)}Z" fill="${c}" opacity="${f(op)}"/>`;
+    if (r > .7) drops += `<ellipse cx="${f(p[0] + ls.ux * r * .3)}" cy="${f(p[1] + ls.uy * r * .3)}" rx="${f(r * .28)}" ry="${f(r * .2)}" fill="#ffffff" opacity="${f(op * .7)}"/>`; };
   // a sheet from p0 to p1 through c: lit if it leans to the source's side; a glint on its lit edge; drops beyond its end
   const sheet = (p0, c, p1, w0, op, nd, toFront = true) => {
-    const toLight = (p1[0] - p0[0]) * sx > 0, col = toLight ? lit : far, s = taper(p0, c, p1, w0, w * .02, op, col)
-      + jet(bez(p0, c, p1, .15), bez(p0, c, p1, .55), bez(p0, c, p1, .92), clamp(w0 * .18, .15, .55), toLight ? .7 : back ? .45 : .2, '#ffffff');
-    const dx = p1[0] - c[0], dy = p1[1] - c[1], l = Math.hypot(dx, dy) || 1;
+    // the sheet does not run out into a needle: it ends blunt, in a ragged clot of water that breaks into drops
+    const toLight = (p1[0] - p0[0]) * sx > 0, col = toLight ? lit : far, w1 = w0 * (.25 + R() * .3), dx = p1[0] - c[0], dy = p1[1] - c[1], l = Math.hypot(dx, dy) || 1;
+    let s = taper(p0, c, p1, w0, w1, op, col) + `<ellipse cx="${f(p1[0] + dx / l * w1 * .3)}" cy="${f(p1[1] + dy / l * w1 * .3)}" rx="${f(w1 * (.7 + R() * .5))}" ry="${f(w1 * (.5 + R() * .3))}" transform="rotate(${f(Math.atan2(dy, dx) * 180 / Math.PI)} ${f(p1[0])} ${f(p1[1])})" fill="${col}" opacity="${f(op * .9)}"/>`;
+    if (toLight && R() > .45) s += jet(bez(p0, c, p1, .2), bez(p0, c, p1, .55), bez(p0, c, p1, .8), clamp(w0 * .16, .15, .5), .45, '#ffffff');
     for (let j = 1; j <= nd; j++) drop([p1[0] + dx / l * w * .09 * j + (R() - .5) * w * .05, p1[1] + dy / l * w * .09 * j + h * .025 * j * j], clamp(w * (.045 - .008 * j) * (.7 + R() * .6), .2, 1.2), .55 + R() * .35);
     if (toFront) front += s; else backS += s;
   };
+  // a ragged mass of thrown water: a closed outline of uneven lobes round (cx, cy), not a ball
+  const mass = (cx, cy, rx, ry, op = .92) => { const n = 9 + Math.floor(R() * 4), pts = [], a0 = R() * 6.3;
+    for (let i = 0; i < n; i++) { const a = a0 + i / n * Math.PI * 2, k = (i % 2 ? .62 : .9) + R() * .4; pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k * (Math.sin(a) > 0 ? .7 : 1)]); }
+    return `<path d="${smoothPath(pts, true)}" fill="url(#${gid})" opacity="${f(op)}"/>`; };
   let top;
   if (v === 0) { // a column that bursts at the top into a crown of spikes of different length
     const ty = y - h * .58, n = 8, Lp = [], Rp = [], cx = t => x + (R() - .5) * w * .02 + sx * w * .03 * t;
@@ -317,16 +362,17 @@ function splash(u, o = {}) {
     body += `<path d="${sm(Lp.concat(rim, Rp), true)}" fill="url(#${gid})"/>`;
     veil += `<path d="${sm(Lp.map(p => [p[0] - w * .1, p[1]]).concat(rim.map(p => [p[0], p[1] - h * .06]), Rp.map(p => [p[0] + w * .1, p[1]])), true)}" fill="${lit}" opacity=".16"/>`;
     const edge = sx > 0 ? Rp.slice().reverse() : Lp; hl += `<path d="${sm(edge.slice(1, n).map(p => [p[0] - sx * w * .035, p[1]]))}" stroke="#ffffff" stroke-width="${f(clamp(w * .03, .25, .8))}" fill="none" opacity="${back ? .85 : .65}" stroke-linecap="round"/>`;
-    for (let i = 0; i < 4; i++) { const t0 = .05 + R() * .3, t1 = t0 + .25 + R() * .3, off = sx * (.15 + R() * .6), p0 = [cx(t0) + off * hw(t0), y - (y - ty) * t0], p1 = [cx(t1) + off * hw(t1), y - (y - ty) * t1];
+    for (let i = 0; i < 2; i++) { const t0 = .05 + R() * .3, t1 = t0 + .25 + R() * .3, off = sx * (.15 + R() * .6), p0 = [cx(t0) + off * hw(t0), y - (y - ty) * t0], p1 = [cx(t1) + off * hw(t1), y - (y - ty) * t1];
       hl += jet(p0, [lerp(p0[0], p1[0], .5), lerp(p0[1], p1[1], .5)], p1, clamp(w * (.015 + R() * .02), .15, .5), .3 + R() * .3, '#ffffff'); }
-    const m = 9;
+    const m = 7;
     for (let k = 0; k < m; k++) { // the spikes fan out from the rim; the middle ones the longest, none alike; they bend over at the ends
       const a = lerp(-1.25, 1.25, k / (m - 1)) + (R() - .5) * .22, b = [x + Math.sin(a) * tw * .75, ty + Math.abs(Math.sin(a)) * h * .05], len = h * (.14 + .3 * Math.pow(Math.cos(a), 2)) * (.6 + R() * .7);
       const tip = [b[0] + Math.sin(a) * len * .95, b[1] - Math.cos(a) * len + len * .3 * Math.sin(a) * Math.sin(a)], c = [b[0] + Math.sin(a) * len * .3, b[1] - Math.cos(a) * len * .8 - len * .12];
-      sheet(b, c, tip, w * (.08 + R() * .07), .85, 1 + Math.floor(R() * 3), Math.abs(a) > .5 || R() > .5);
+      sheet(b, c, tip, w * (.12 + R() * .1), .85, 1 + Math.floor(R() * 3), Math.abs(a) > .5 || R() > .5);
     }
     for (let i = 0; i < 4; i++) { const side = i % 2 ? 1 : -1, st = [x + side * tw * (.45 + R() * .3), ty + h * .02], en = [st[0] + side * w * (.4 + R() * .35), y - h * (.08 + R() * .2)];
       sheet(st, [st[0] + side * w * .32, ty - h * (.05 + R() * .06)], en, w * (.14 + R() * .08), .7, 2, true); }
+    body += mass(x + sx * w * .03, ty - h * .02, tw * .85, h * .09); // the burst at the top of the column
     top = [x, ty - h * .15];
   } else if (v === 1) { // a low ring of jets round a crater, and a thin jet rising from its middle with a drop on it
     const ring = [];
@@ -340,6 +386,7 @@ function splash(u, o = {}) {
     const j0 = [x + (R() - .5) * w * .06, y - h * .12], jt = [x + sx * w * .05 + (R() - .5) * w * .06, y - h * (.82 + R() * .12)];
     front += taper(j0, [lerp(j0[0], jt[0], .3), lerp(j0[1], jt[1], .55)], jt, w * .16, w * .05, .9, mix(lit, shade, .25)) + jet([j0[0] + sx * w * .03, j0[1] - h * .05], [jt[0] + sx * w * .03, lerp(j0[1], jt[1], .5)], [jt[0] + sx * w * .015, jt[1] + h * .04], clamp(w * .02, .15, .45), .7, '#ffffff');
     drop([jt[0], jt[1] - h * .06], clamp(w * .07, .4, 1.6), .9); drop([jt[0] + sx * w * .02, jt[1] - h * .15], clamp(w * .04, .25, 1), .7);
+    body += mass(x, y - h * .12, w * .5, h * .12, .85); // the heaped water over the crater
     top = [x, y - h * .45];
   } else { // a fan of sheets thrown aside by the wind, the spray carried on downwind
     const wd = o.wind ? Math.sign(o.wind) : 1, m = 8;
@@ -348,10 +395,11 @@ function splash(u, o = {}) {
     for (let k = 0; k < m; k++) {
       const q = k / (m - 1), a = wd * (lerp(-.2, 1.05, q) + (R() - .5) * .16), len = h * (1.02 - .5 * q) * (.75 + R() * .35), b = [x + wd * w * lerp(-.18, .3, q) + (R() - .5) * w * .08, y - h * .03];
       const tip = [b[0] + Math.sin(a) * len, b[1] - Math.cos(a) * len * .92 + len * .2 * Math.sin(a) * Math.sin(a)], c = [b[0] + Math.sin(a) * len * .2, b[1] - Math.cos(a) * len * .78 - len * .1];
-      sheet(b, c, tip, w * (.18 + R() * .14) * (1 - .35 * q), k % 3 === 1 ? .62 : .86, 1 + Math.floor(R() * 2), k % 3 !== 1);
+      sheet(b, c, tip, w * (.22 + R() * .16) * (1 - .35 * q), k % 3 === 1 ? .62 : .86, 1 + Math.floor(R() * 2), k % 3 !== 1);
       if (k < 4) veil += jet(tip, [tip[0] + wd * w * .35, tip[1] - h * .05], [tip[0] + wd * w * (.7 + R() * .6), tip[1] + h * (.08 + R() * .18)], clamp(w * (.1 + R() * .1), .7, 3.5), .22, lit);
     }
     for (let i = 0; i < 16; i++) drop([x + wd * w * (.3 + R() * 1.4), y - h * (.25 + R() * .7)], clamp(w * (.012 + R() * .028), .2, .8), .35 + R() * .45);
+    body += mass(x + wd * w * .1, y - h * .14, w * .42, h * .14, .9); // the heap at the root of the fan
     top = [x + wd * w * .3, y - h * .6];
   }
   for (let i = 0; i < 9 + seed % 5; i++) { const a = (R() - .5) * 2.8, dd = w * (.4 + R() * R() * 1.1); drop([top[0] + Math.sin(a) * dd, top[1] - Math.cos(a) * dd * .7 + R() * h * .3], clamp(w * (.012 + R() * R() * .05), .2, 1.1), .4 + R() * .45); }
@@ -359,7 +407,7 @@ function splash(u, o = {}) {
   // against the light the spray glows through on the source's side; with light from the front only a faint mist
   return `<defs>${defs}</defs><ellipse cx="${f(top[0] + sx * w * .3)}" cy="${f(top[1] + h * .1)}" rx="${f(w * (back ? 1.1 : .8))}" ry="${f(h * .42)}" fill="url(#${cid})" opacity="${f(back ? .32 : .1)}"/>`
     + `<ellipse cx="${f(x)}" cy="${f(y + .6)}" rx="${f(rw * 1.25)}" ry="${f(Math.max(.8, rw * .22))}" fill="${mix(sea, L.shadowTint, .3)}" opacity=".45"/>` // the churned dark ring at the foot
-    + `<g filter="url(#${mid})">${veil}</g><g filter="url(#${bid})">${backS}</g>${body}${hl}<g filter="url(#${bid})">${front}</g>${drops}`
+    + `<g filter="url(#${mid})">${veil}</g><g filter="url(#${rid})"><g filter="url(#${bid})">${backS}</g>${body}${hl}<g filter="url(#${bid})">${front}</g></g>${drops}`
     + foam(u, { x, y: y + .4, w: rw * 2.1, h: clamp(w * .1, .8, 2.4), seed: seed + 5, L: o.L });
 }
 
@@ -382,23 +430,25 @@ function fog(u, L, o = {}) {
 function smoke(u, L, o = {}) {
   const x = o.x || 0, y = o.y || 0, w = o.w || 24, h = o.h || 50, wind = o.wind || 0, seed = o.seed != null ? o.seed : 5, R = rng(seed), P = L.pal;
   const at = t => [x + wind * h * .7 * Math.pow(t, 1.5) + Math.sin(t * 4.2 + seed) * w * .07 * t, y - h * Math.pow(t, .92)], wd = t => w * (.09 + .42 * Math.pow(t, .85));
-  const n = Math.max(6, Math.round(5 + h / 7)), cs = [], dw = wind >= 0 ? 1 : -1;
-  for (let i = 0; i < n; i++) {
-    const t = i / (n - 1), [px, py] = at(t), r = wd(t) * (.62 + R() * .3);
-    if (t > .7 && t < 1 && R() < .3) continue; // the top breaks into clumps
-    cs.push([px + (R() - .5) * r * .3, py, r, t < .2 ? 1.35 : .8 + R() * .25]);
-    const k = t < .22 ? 0 : 1 + (R() > .55 ? 1 : 0);
-    for (let j = 0; j < k; j++) { const side = R() < .5 + wind * .3 ? 1 : -1; cs.push([px + side * r * (.45 + R() * .5), py + (R() - .4) * r * .7, r * (.38 + R() * .38), .8 + R() * .3]); }
+  // the puffs overlap by at least a third, so the union is one body with a lobed edge, never a string of beads
+  const cs = [], dw = wind >= 0 ? 1 : -1;
+  for (let t = 0; t <= 1;) {
+    const [px, py] = at(t), big = R(), r = wd(t) * (.5 + Math.pow(big, .6) * .48);
+    cs.push([px + (R() - .5) * wd(t) * .5 * clamp(t * 4), py, r, t < .15 ? 1.45 : t > .8 ? .74 + R() * .16 : .82 + R() * .24]);
+    if (t > .32 && R() > .2) { const side = R() < .5 + wind * .35 ? 1 : -1, r2 = r * (.4 + R() * .45); // a swell on the side, mostly downwind
+      cs.push([px + side * r * (.55 + R() * .35), py + r * (R() - .3) * .6, r2, .8 + R() * .25]); }
+    t += Math.max(.035, r * (.5 + R() * .4) / h); // the next billow overlaps this one by a third to a half
   }
   const [tx, ty] = at(1);
-  for (let i = 0; i < 2 + seed % 2; i++) cs.push([tx + dw * wd(1) * (.75 + R() * .6), ty + wd(1) * (R() - .5) * .7, wd(1) * (.2 + R() * .18), .6 + R() * .3]); // wisps torn off downwind
+  // the top leans and spreads downwind in two or three swells that still touch the column
+  for (let i = 0; i < 2 + seed % 2; i++) { const r = wd(1) * (.42 - i * .08 + R() * .12); cs.push([tx + dw * wd(1) * (.45 + i * .38 + R() * .12), ty + wd(1) * (.08 + i * .1 + (R() - .5) * .2), r, .62 + R() * .2]); }
   const ls = L.point ? Object.assign({}, L.at(x, y - h / 2), { back: L.at(x, y - h / 2).dz < -.2 }) : lightSide(L, x, y - h / 2), back = ls.back, k = DIM[L.time] || 1;
   const lit = back ? mix(L.keyColor, '#ffffff', .2) : scale(mix(P.smoke, L.keyColor, .45), .9 + k * .25), shade = mix(P.smoke, L.shadowTint, back ? .45 : .62);
   let inner = '', defs = '';
   if (o.glow) { const g = nid('sg', u), c = o.glow.color || '#ff9a3a', p = o.glow.power != null ? o.glow.power : .7; defs += radGrad(g, x, y, Math.max(w, h * .6), [[0, c, p], [.4, c, p * .4], [1, c, 0]]); inner = `<rect x="${f(x - w - h)}" y="${f(y - h * 1.2)}" width="${f(2 * (w + h))}" height="${f(h * 1.4)}" fill="url(#${g})"/>`; }
-  const op = o.opacity != null ? o.opacity : back ? .8 : .92;
-  return (defs ? `<defs>${defs}</defs>` : '') + billow(u, L, cs, { lit, mid: mix(lit, shade, back ? .3 : .42), shade, rim: mix(lit, '#ffffff', .3), knob: mix(lit, '#ffffff', .25) },
-    { dir: { ux: ls.ux * .6, uy: ls.uy * .6 - .75 }, back, fade: [x, y, tx, ty - wd(1) * .5, 1, .22], seed: seed + 7, disp: 2.6, freq: '0.06 0.07', blur: .5, opacity: op, inner, seam: clamp(w * .06, .6, 2.6) });
+  const op = o.opacity != null ? o.opacity : back ? .86 : .97;
+  return (defs ? `<defs>${defs}</defs>` : '') + billow(u, L, cs, { lit, mid: mix(lit, shade, back ? .6 : .42), shade, rim: mix(lit, '#ffffff', .3), knob: mix(lit, '#ffffff', .25) },
+    { dir: { ux: ls.ux * .6, uy: ls.uy * .6 - .75 }, back, capFlat: .4, shadeOp: back ? .72 : .7, crease: back ? .5 : .75, creaseMin: .5, creaseSoft: .36, fade: [x, y, tx, ty - wd(1) * .5, 1, .3], seed: seed + 7, disp: 2.6, freq: '0.06 0.07', blur: .5, opacity: op, inner, seam: clamp(w * .06, .6, 2.6) });
 }
 
 /**
@@ -411,22 +461,34 @@ function smoke(u, L, o = {}) {
 function fire(u, o = {}) {
   const x = o.x || 0, y = o.y || 0, w = o.w || 16, h = o.h || 26, seed = o.seed != null ? o.seed : 3, R = rng(seed), wind = o.wind || 0;
   const lean0 = wind * .45 + (R() - .5) * .16, peak = .5 + (R() - .5) * .35 + wind * .12;
+  // a tongue: a wide root, a waist pushed aside by `curl` and a thin tip bent back the other way — an S, not a drop
   const tongue = (cx, by, bw, th, lean, curl) => { const tx = cx + lean * th, ty = by - th, a = .7 + R() * .6, b = .7 + R() * .6;
-    return `M${f(cx - bw)} ${f(by)}C${f(cx - bw * (1.05 + .3 * a))} ${f(by - th * .26 * a)} ${f(cx - bw * .3 + lean * th * .38 + curl)} ${f(by - th * (.48 + .12 * b))} ${f(tx)} ${f(ty)}`
-      + `C${f(cx + bw * .3 + lean * th * .6 - curl * .6)} ${f(by - th * (.5 + .12 * a))} ${f(cx + bw * (1.05 + .3 * b))} ${f(by - th * .24 * b)} ${f(cx + bw)} ${f(by)}Z`; };
+    const mx = cx + lean * th * .45 + curl, my = by - th * (.45 + .1 * a), wl = bw * (.34 + .14 * b), wr = bw * (.34 + .14 * a), tb = -curl * .35;
+    return `M${f(cx - bw)} ${f(by)}C${f(cx - bw * (1.05 + .25 * a))} ${f(by - th * .2)} ${f(mx - wl * 1.5)} ${f(my + th * .14)} ${f(mx - wl)} ${f(my)}`
+      + `C${f(mx - wl * .6)} ${f(my - th * .16)} ${f(tx + tb - bw * .12)} ${f(ty + th * .22)} ${f(tx)} ${f(ty)}`
+      + `C${f(tx + tb + bw * .1)} ${f(ty + th * .2 * b)} ${f(mx + wr * .7)} ${f(my - th * .14)} ${f(mx + wr)} ${f(my)}`
+      + `C${f(mx + wr * 1.5)} ${f(my + th * .14)} ${f(cx + bw * (1.05 + .25 * b))} ${f(by - th * .2)} ${f(cx + bw)} ${f(by)}Z`; };
   // one layer: its own count and places of tongues, the tallest near the peak (off the middle), none alike
-  const layer = (span, h0, h1, n, col, op) => { let s = '';
+  // one layer: its own count and places of tongues, the tallest near the peak (off the middle), none alike; its colour
+  // runs up the tongues from the hot base to the cooler tips, which thin out (no flat fill, no hard tip)
+  const layer = (span, h0, h1, n, cols, op = 1) => { let s = ''; const g = nid('fl', u), top = y - h * h1 * 1.1;
     for (let i = 0; i < n; i++) { const t = (i + .5 + (R() - .5) * .7) / n, env = clamp(1 - Math.abs(t - peak) * 1.6, .12, 1), th = h * lerp(h0, h1, env * (.5 + R() * .6)), bw = w * span / n * (.62 + R() * .5);
       s += `<path d="${tongue(x + (t - .5) * w * span, y + (R() - .3) * h * .02, bw, th, lean0 + (R() - .5) * .34, (R() - .5) * bw * 1.4)}"/>`; }
-    return `<g fill="${col}" opacity="${op}">${s}</g>`; };
+    return `<defs>${linGrad(g, 0, y + h * .02, 0, top, cols)}</defs><g fill="url(#${g})" opacity="${op}">${s}</g>`; };
   let wisps = '';
-  for (let i = 0; i < 2 + seed % 2; i++) { const by = y - h * (.5 + R() * .3), th = h * (.1 + R() * .14); wisps += `<path d="${tongue(x + (peak - .5) * w + lean0 * h * .55 + (R() - .5) * w * .35, by, w * (.035 + R() * .035), th, lean0 * 1.2, 0)}" fill="${i % 2 ? '#e2581a' : '#9a240a'}" opacity="${f(.55 + R() * .3)}"/>`; }
-  const e1 = nid('fe', u), e2 = nid('ff', u), box = [x - w * 1.4, y - h * 1.6, w * 2.8, h * 1.8];
-  const flames = `<defs>${edgeFilter(e1, box, seed + 2, clamp(w * .16, 1.2, 3), '0.1 0.06', .35)}${edgeFilter(e2, box, seed + 5, clamp(w * .09, .8, 1.8), '0.12 0.07', .25)}</defs>`
-    + `<g filter="url(#${e1})">${layer(1.05, .38, 1, 5 + seed % 3, '#8a1c08', .84)}${wisps}</g>`
-    + `<g filter="url(#${e2})">${layer(.86, .3, .78, 4 + seed % 3, '#e2581a', .95)}${layer(.66, .2, .52, 3 + seed % 2, '#ffae2c', 1)}${layer(.46, .12, .32, 3, '#ffe080', 1)}${layer(.3, .05, .15, 2, '#fffbe6', .9)}</g>`;
+  for (let i = 0; i < 2 + seed % 2; i++) { const by = y - h * (.5 + R() * .3), th = h * (.1 + R() * .14); wisps += `<path d="${tongue(x + (peak - .5) * w + lean0 * h * .55 + (R() - .5) * w * .35, by, w * (.035 + R() * .035), th, lean0 * 1.2, 0)}" fill="${i % 2 ? '#e2581a' : '#9a240a'}" opacity="${f(.4 + R() * .3)}"/>`; }
+  const e1 = nid('fe', u), e2 = nid('ff', u), e3 = nid('fh', u), e0 = nid('fs', u), hb = nid('fb', u), box = [x - w * 1.4, y - h * 1.9, w * 2.8, h * 2.1];
+  const flames = `<defs>${edgeFilter(e0, box, seed + 8, clamp(w * .18, 1.4, 3), '0.07 0.05', clamp(w * .07, .8, 2.2))}${edgeFilter(e1, box, seed + 2, clamp(w * .16, 1.2, 3), '0.1 0.06', .4)}${edgeFilter(e2, box, seed + 5, clamp(w * .09, .8, 1.8), '0.12 0.07', clamp(w * .018, .3, .7))}${edgeFilter(e3, box, seed + 6, clamp(w * .06, .6, 1.4), '0.14 0.08', clamp(w * .03, .4, 1.1))}${blurFilter(hb, box, f(clamp(w * .1, .8, 3)))}</defs>`
+    // soot: the tips of the flame go over into dark, soft smoke above the fire
+    + `<g filter="url(#${e0})">${layer(.9, .55, 1.3, 4 + seed % 2, [[0, '#2a1810', 0], [.42, '#2a1810', 0], [.64, '#2e1d16', .62], [.86, '#3a2c26', .32], [1, '#3a2c26', 0]])}</g>`
+    // the mantle: dark red at the edge of the fire, thinning to its tips
+    + `<g filter="url(#${e1})">${layer(1.05, .38, 1, 5 + seed % 3, [[0, '#c4300c', .95], [.5, '#a2240a', .88], [.82, '#701a0a', .55], [1, '#5a140a', .1]])}${wisps}</g>`
+    // the body and the core: orange tongues yellow at the root, a yellow core, a white heart low down glowing out
+    + `<g filter="url(#${e2})">${layer(.86, .3, .78, 4 + seed % 3, [[0, '#ffb43a', 1], [.4, '#f47020', .96], [.78, '#d8460e', .75], [1, '#c0360c', .15]])}</g>`
+    + `<g filter="url(#${e3})">${layer(.66, .2, .52, 3 + seed % 2, [[0, '#fff2a8', 1], [.5, '#ffc640', .95], [1, '#ff9a24', .2]])}${layer(.42, .1, .28, 3, [[0, '#ffffff', 1], [.55, '#fff4c4', .9], [1, '#ffe07a', .2]])}</g>`
+    + `<ellipse cx="${f(x + (peak - .5) * w * .3)}" cy="${f(y - h * .1)}" rx="${f(w * .3)}" ry="${f(h * .13)}" fill="#fffbe6" opacity=".7" filter="url(#${hb})"/>`;
   let sparks = '';
-  for (let i = 0; i < 9 + seed % 5; i++) { const sx = x + (R() - .5) * w * 1.3 + wind * h * .4, sy = y - h * (.65 + R() * .85), l = .6 + R() * 1.6, a = (R() - .5) * .8 + wind * .5; sparks += `<path d="M${f(sx)} ${f(sy)}l${f(Math.sin(a) * l)} ${f(-Math.cos(a) * l)}" stroke="${R() > .5 ? '#ffd98a' : '#ff9a3a'}" stroke-width="${f(.25 + R() * .35)}" stroke-linecap="round" opacity="${f(.45 + R() * .5)}"/>`; }
+  for (let i = 0; i < 9 + seed % 5; i++) { const sx = x + (R() - .5) * w * 1.3 + wind * h * .4, sy = y - h * (.65 + R() * .85), ks = clamp(h / 28, .35, 1.2), l = (.5 + R() * 1.4) * ks, a = (R() - .5) * .8 + wind * .5; sparks += `<path d="M${f(sx)} ${f(sy)}l${f(Math.sin(a) * l)} ${f(-Math.cos(a) * l)}" stroke="${R() > .5 ? '#ffd98a' : '#ff9a3a'}" stroke-width="${f((.2 + R() * .3) * Math.sqrt(ks))}" stroke-linecap="round" opacity="${f(.45 + R() * .5)}"/>`; }
   let under = '', backF = '', frontF = '';
   if (o.fuel) { // a charred patch and burning planks: black, glowing along the edges the fire licks, embers in the cracks
     const cg = nid('fc', u), pg = nid('fp', u), th = clamp(w * .11, 1, 4);
