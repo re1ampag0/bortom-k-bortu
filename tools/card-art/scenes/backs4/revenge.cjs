@@ -72,6 +72,10 @@ function revenge() {
       + `<mask id="${mk}" maskUnits="userSpaceOnUse" x="-60" y="-60" width="320" height="400"><g filter="url(#${dl})">${sil('#ffffff', 'd')}</g>${sil('#000000', 'e')}</mask></defs>`
       + `<g mask="url(#${mk})"><g transform="translate(-.75 -.4)">${sil('#ffc477', 'm')}</g></g>`; }
   s += K.ship(u, Ls, po);
+  // the sails a shade deeper, towards dark red, so they part from the fiery sky: the silhouette in dark red multiplied
+  // over her, clipped above the waist rail (the hull keeps its tones and its kant)
+  { const cl = nid('sc', u); s += `<defs><clipPath id="${cl}"><rect x="-20" y="-20" width="240" height="${HZ - 11 + 20}"/></clipPath></defs>`
+    + `<g clip-path="url(#${cl})" style="mix-blend-mode:multiply" opacity=".55">${K.shipSilhouette('revenge', Object.assign({}, po, { color: '#c4544c', u: u + 's' }))}</g>`; }
   // a bow wave and spray: she runs before the wind
   { const st = [110 + 50 * sc, HZ + 9]; s += K.splash(u, { x: st[0] - 2, y: st[1], w: 15, h: 8, seed: 4, L, wind: 1 }) + K.foam(u, { x: st[0] - 14, y: st[1] + .3, w: 28, h: 1.5, seed: 7, L }); }
   // warm air round the sun over everything (the masts near it melt a little into the light)

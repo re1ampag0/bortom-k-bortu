@@ -1,7 +1,7 @@
 // tools/card-art/scenes/backs4/dutch.cjs — the full-bleed back of the Flying Dutchman deck (backs4.cjs, the user's plan
 // 12.11 п. 14), from the back of the first round (portrait.cjs backArt('dutch')): night in a green haze, the pale moon
-// upper left behind torn clouds, the Dutchman large, heeled away from us so her weed-grown bottom shows — she has just
-// risen from the deep. The moon lights her from behind: a pale green kant along her edges, the sky through the rags of
+// upper left behind torn clouds, the Dutchman large and close, rolled towards us so her deck and the strong tumblehome of
+// her bellied side show, her high stern lifted on a swell. The moon lights her from behind: a pale green kant along her edges, the sky through the rags of
 // her sails; her stern lanterns burn pale green. Shafts of moonlight slant through the mist, a dim far cliff on the
 // right, banks of fog over the water and round her waterline. The zenith and the near water stay dark and calm for
 // the title, the crest and the name. Contract — backs.cjs (see its head); bleed 10 units on every side. No letters.
@@ -39,9 +39,10 @@ function draw() {
   s += K.fog(u, L, { y: HZ - 16, h: 30, density: .55, seed: 4 });
   // the near water darkens: calm under the crest and the name
   { const gw = nid('gw', u); s += `<defs><linearGradient id="${gw}" gradientUnits="userSpaceOnUse" x1="0" y1="196" x2="0" y2="236"><stop offset="0" stop-color="#030a08" stop-opacity="0"/><stop offset="1" stop-color="#030a08" stop-opacity=".72"/></linearGradient></defs><rect x="-20" y="196" width="240" height="110" fill="url(#${gw})"/>`; }
-  // the Dutchman: heeled away from us (her bottom with weed shows), bow down a little, rags of sail full of wind
-  const bx = K.shipBox('dutch', { x: 0, y: 0, scale: 1 }), sc = Math.min(160 / bx.w, 104 / bx.h);
-  const po = { kind: 'dutch', x: 106 - (bx.x0 + bx.x1) / 2 * sc, y: HZ + 8, scale: sc, heel: 2, roll: -8, sails: 'full', wake: true, reflect: true, lights: true, seed: 6 };
+  // the Dutchman, close and large: rolled towards us so her deck and the tumblehome of the bulging side show (the
+  // "pear" that tells her from the long low Pearl), on the slope of a swell with her high stern lifted; rags of sail
+  const bx = K.shipBox('dutch', { x: 0, y: 0, scale: 1 }), sc = Math.min(168 / bx.w, 116 / bx.h);
+  const po = { kind: 'dutch', x: 101 - (bx.x0 + bx.x1) / 2 * sc, y: HZ + 13, scale: sc, heel: 2.5, roll: 16, sails: 'full', wake: true, reflect: true, lights: true, seed: 6 };
   // the moon's kant, as in the pilot: the same silhouette in pale green moonlight, shifted towards the moon, laid under
   // the ship and masked to a thin ring round her outline
   { const mk = nid('mk', u), dl = nid('dl', u), sil = (c, k) => K.shipSilhouette('dutch', Object.assign({}, po, { color: c, u: u + k }));
@@ -50,7 +51,8 @@ function draw() {
       + `<g mask="url(#${mk})"><g transform="translate(-.75 -.55)">${sil('#c8f0dc', 'm')}</g></g>`; }
   s += K.ship(u, L, po);
   // mist round her waterline: she rises out of it
-  s += K.fog(u, L, { y: HZ - 2, h: 22, density: .5, seed: 9 }) + K.fog(u, L, { y: HZ - 40, h: 26, density: .22, seed: 15 });
+  // (the near bank lies below her waterline, so the bulging lower hull stays clear; the high one is thin)
+  s += K.fog(u, L, { y: HZ + 11, h: 18, density: .32, seed: 9 }) + K.fog(u, L, { y: HZ - 40, h: 26, density: .15, seed: 15 });
   // a low green glow on the water about her, the ghost light of the ship
   s += K.localGlow(u, { x: 112, y: HZ + 10, color: '#7fe3c0', power: .2, radius: 80 }, { squash: .25, core: false });
   // night air: the corners darker (no frame: the dark runs past the edge)
