@@ -1,7 +1,7 @@
 // «Буря» (Колода моря): a storm at night. A brig climbs the steep face of a swell, laid over so hard that her deck
 // stands on end; she fires her bow gun at a merchantman on the next crest — and the shot drops into the wave short
 // of her (a white splash beside the target). The horizon itself is tilted (we roll too); the wind tears the gun
-// smoke away; slanting rain; sheet lightning inside the clouds (not a bolt into a mast — that is «Гроза») gives the
+// smoke away; slanting rain; the moon in a rift of the clouds (no lightning: that is «Гроза») gives the
 // cold light, the gun flash and the lanterns of the merchant the warm. Rule: every Залп deals 1 damage less.
 // Briefs: docs/mockups/print/card-briefs.md «Буря», docs/tasks/print-kit-cards.md «Буря».
 'use strict';
@@ -9,7 +9,7 @@ const K = require('../kit/index.cjs');
 const { nid, f, clamp, lerp, rng, mix } = K;
 
 const HZ = 108, TILT = -3.5;   // the series' horizon, rolled with us
-// one key light: the sheet lightning behind the clouds, high and right of the middle, in front of us (cold, back light);
+// one key light: the moon in a rift of the clouds, high and right of the middle, in front of us (cold, back light);
 // the gun flash and the merchant's lanterns are the warm locals
 const light = {
   time: 'night',
@@ -112,17 +112,13 @@ module.exports = {
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     L.pal = Object.assign({}, L.pal, PAL);
-    // ——— the sky: low storm clouds; sheet lightning flickers inside them, a crooked branch between two banks ———
+    // ——— the sky: low storm clouds, the moon looking through a rift between two banks ———
     let bg = K.sky(u, L, { horizon: HZ + 6, stars: false });
-    bg += K.localGlow(u, { x: 126, y: 38, color: '#dfe6ff', power: .95, radius: 70 }, { core: false });
+    bg += K.localGlow(u, { x: 126, y: 38, color: '#dfe6ff', power: .8, radius: 62 }, { core: false });
     bg += K.cloud(u, L, { x: 100, y: 24, w: 230, h: 34, seed: 5 });
     bg += K.cloud(u, L, { x: 190, y: 52, w: 110, h: 34, seed: 41 });
-    { // a crooked branch of sheet lightning: many short segments of different length and turn, two side twigs dying out
-      const R = rng(19), fb = nid('lb', u), bolt = (x, y, x1, y1, n, j) => { const p = [[x, y]]; let o = 0; for (let i = 1; i < n; i++) { const t = i / n, nx = -(y1 - y), ny = x1 - x, l = Math.hypot(nx, ny); o = o * .55 + (R() - .5) * j * (R() < .3 ? 1.6 : .7); const oo = o * Math.sin(Math.PI * t) + (R() - .5) * 1.2; p.push([lerp(x, x1, t + (R() - .5) * .02) + nx / l * oo, lerp(y, y1, t) + ny / l * oo]); } p.push([x1, y1]); return p; };
-      const main = bolt(92, 56, 156, 30, 23, 12), tw1 = bolt(...main[6], main[6][0] + 5, main[6][1] + 11, 6, 3), tw2 = bolt(...main[11], main[11][0] + 9, main[11][1] + 6, 5, 2.5);
-      const D = p => 'M' + p.map(q => f(q[0]) + ' ' + f(q[1])).join('L');
-      bg += `<defs>${blur(fb, 2.2, [60, 0, 130, 90])}</defs><path d="${D(main)}${D(tw1)}${D(tw2)}" stroke="#aebfff" stroke-width="3.4" fill="none" opacity=".5" filter="url(#${fb})"/>`
-        + `<path d="${D(main)}" stroke="#f4f7ff" stroke-width=".5" fill="none" stroke-linejoin="round" opacity=".85"/><path d="${D(tw1)}${D(tw2)}" stroke="#e2e9ff" stroke-width=".3" fill="none" stroke-linejoin="round" opacity=".75"/>`; }
+    // the rift in the clouds: the moon looks through a ragged window and silvers the cloud edges round it
+    bg += K.sunMoon(u, L, { r: 6.5 });
     bg += K.cloud(u, L, { x: 34, y: 66, w: 150, h: 58, seed: 23 });
     bg += K.cloud(u, L, { x: 176, y: 84, w: 96, h: 26, seed: 31, far: .4 });
     bg += K.cloudBank(u, L, { y: HZ - 4, h: 12, x0: -20, x1: 220, n: 5, seed: 12, far: .7 });
@@ -159,8 +155,9 @@ module.exports = {
     // the flight of the shot: a thin smoke trail rising and falling into the wave by the merchant (the miss)
     { const sp = (() => { const tp = [141, 103.6], rr = TILT * Math.PI / 180, c = Math.cos(rr), sn = Math.sin(rr); return [100 + (tp[0] - 100) * c - (tp[1] - HZ) * sn, HZ + (tp[0] - 100) * sn + (tp[1] - HZ) * c]; })();
       const p0 = [m[0] + 14, m[1] - 7], ctl = [126, 64], tl = nid('tl', u), tf = nid('tf', u);
-      fx += `<defs>${lin(tl, p0[0], p0[1], sp[0], sp[1], [[0, '#ece8e0', .1], [.35, '#e2ded6', .75], [1, '#d6d4cd', .35]])}${blur(tf, .5, [p0[0] - 10, 50, 70, 70])}</defs>`
-        + `<path d="M${f(p0[0])} ${f(p0[1])}Q${f(ctl[0])} ${f(ctl[1])} ${f(sp[0])} ${f(sp[1] - 9)}" stroke="url(#${tl})" stroke-width="1.5" fill="none" stroke-linecap="round" filter="url(#${tf})"/>`; }
+      fx += `<defs>${lin(tl, p0[0], p0[1], sp[0], sp[1], [[0, '#ece8e0', .2], [.35, '#eeeae2', .9], [1, '#e0ded8', .6]])}${blur(tf, .5, [p0[0] - 10, 50, 70, 70])}</defs>`
+        + `<path d="M${f(p0[0])} ${f(p0[1])}Q${f(ctl[0])} ${f(ctl[1])} ${f(sp[0])} ${f(sp[1] - 9)}" stroke="url(#${tl})" stroke-width="2.4" fill="none" stroke-linecap="round" filter="url(#${tf})"/>`
+        + `<path d="M${f(p0[0])} ${f(p0[1])}Q${f(ctl[0])} ${f(ctl[1])} ${f(sp[0])} ${f(sp[1] - 9)}" stroke="#fbf8f0" stroke-width=".5" fill="none" stroke-linecap="round" opacity=".7"/>`; }
     // the flash lights the bow, the sails over it and the water under it
     fx += K.localGlow(u, { x: m[0] + 6, y: m[1], color: '#ffb24a', power: .55, radius: 40 }, { core: false }) + K.localGlow(u, { x: m[0] - 4, y: onFace(m[0]) + 2, color: '#ffa040', power: .3, radius: 26 }, { squash: .35, core: false });
     // foam along the tilted waterline and the sea breaking on the raised bow
