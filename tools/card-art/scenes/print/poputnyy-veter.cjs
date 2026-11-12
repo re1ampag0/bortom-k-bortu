@@ -99,22 +99,24 @@ function spindrift(u, L, x, y, len, seed) {
   return s + '</g>';
 }
 
-// a ship's wake on the water along a path (picture points, far end first is the stern): a pale band of churned
-// water widening with distance from the stern and towards the viewer, torn foam on it, broken crests along its edges
+// a ship's wake on the water along a path (picture points, the stern first): a smooth pale band of churned water
+// widening away from the stern and towards the viewer, its two edges drawn as broken lines of foam (the arms of the
+// wake), torn foam only close under the stern
 function wake(u, L, pts, seed, k) {
-  const R = rng(seed), c = mix(L.pal.sea[0], '#ffffff', .62), id = nid('wk', u), bl = nid('wl', u);
-  // resample the path; the width grows along it and with nearness (y below the horizon)
+  const R = rng(seed), c = mix(L.pal.sea[0], '#ffffff', .6), fc = mix('#f4fbff', L.keyColor, .2), id = nid('wk', u), bl = nid('wl', u);
   const pl = []; for (let i = 0; i + 1 < pts.length; i++) for (let j = 0; j < 8; j++) { const t = j / 8; pl.push([lerp(pts[i][0], pts[i + 1][0], t), lerp(pts[i][1], pts[i + 1][1], t)]); }
   pl.push(pts[pts.length - 1]);
   const n = pl.length, wd = i => k * (.6 + 3 * Math.pow(i / n, .8)) * clamp((pl[i][1] - HZ) / 12, .35, 2.5);
   const top = [], bot = [];
-  for (let i = 0; i < n; i++) { const a = pl[Math.max(0, i - 1)], b = pl[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], w = wd(i) * .5;
-    top.push([pl[i][0], pl[i][1] - w * .5]); bot.push([pl[i][0], pl[i][1] + w]); }
+  for (let i = 0; i < n; i++) { const w = wd(i) * .5; top.push([pl[i][0], pl[i][1] - w * .45]); bot.push([pl[i][0], pl[i][1] + w]); }
   const sm = q => { let d = `M${f(q[0][0])} ${f(q[0][1])}`; for (let i = 1; i < q.length; i++) { const m = [(q[i - 1][0] + q[i][0]) / 2, (q[i - 1][1] + q[i][1]) / 2]; d += `Q${f(q[i - 1][0])} ${f(q[i - 1][1])} ${f(m[0])} ${f(m[1])}`; } return d; };
-  const poly = sm(top) + 'L' + sm(bot.reverse()).slice(1);
-  let s = `<defs>${linGrad(id, pl[0][0], pl[0][1], pl[n - 1][0], pl[n - 1][1], [[0, c, .9], [.4, c, .6], [1, c, .22]])}<filter id="${bl}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation=".7"/></filter></defs><path d="${poly}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
-  for (let i = 1; i < n; i += 1 + Math.floor(R() * 2)) { const p = pl[i], w = wd(i), side = R() < .5 ? -1 : 1, fade = 1 - .7 * i / n;
-    if (R() < .9) s += K.foam(u, { x: p[0] + (R() - .5) * 2, y: p[1] + side * w * .14, w: (1.6 + R() * 3) * w, h: Math.max(.25, .18 * w), seed: seed + i * 3, L }).replace('<g', `<g opacity="${f(fade)}"`); }
+  let s = `<defs>${linGrad(id, pl[0][0], pl[0][1], pl[n - 1][0], pl[n - 1][1], [[0, c, .7], [.4, c, .42], [1, c, .14]])}<filter id="${bl}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation=".6"/></filter></defs>`;
+  s += `<path d="${sm(top)}L${sm(bot.slice().reverse()).slice(1)}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
+  // the edges: soft unbroken lines of churned water fading away from the stern, flecks of foam riding on them
+  for (const [q, e] of [[top, 1], [bot, 2]]) { const g = nid('we', u), wob = q.map((p, i) => [p[0], p[1] + Math.sin(i * .9 + seed + e) * .25 * clamp((p[1] - HZ) / 20)]);
+    s += `<defs>${linGrad(g, q[0][0], q[0][1], q[n - 1][0], q[n - 1][1], [[0, fc, .85], [.5, fc, .45], [1, fc, .1]])}</defs><path d="${sm(wob)}" stroke="url(#${g})" stroke-width="${f(.55 * k)}" fill="none" filter="url(#${bl})"/>`;
+    for (let i = 2; i < n; i += 2 + Math.floor(R() * 3)) { const p = wob[i], t = i / n, w = (1 + R() * 2.2) * (.5 + clamp((p[1] - HZ) / 25)); s += `<ellipse cx="${f(p[0] + (R() - .5) * 2)}" cy="${f(p[1])}" rx="${f(w)}" ry="${f(w * .22)}" fill="${fc}" opacity="${f((.75 - .55 * t) * (.5 + R() * .5))}"/>`; } }
+  for (let i = 0; i < 4; i++) { const p = pl[i * 2]; s += K.foam(u, { x: p[0] - 1, y: p[1] + .3, w: 4 + i * 1.5, h: .5, seed: seed + i * 3, L }); }
   return s;
 }
 
