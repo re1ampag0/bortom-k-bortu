@@ -52,7 +52,7 @@ const A = { dir: -1, hip: [126, 101.5], sh: [117, 88.6], head: [111.6, 82.8], hr
   shirt: '#e2d6bc', sash: '#9a2c22', pants: '#3a3e4c', skin: '#c98a5c', hat: 'bandana', hatC: '#a8302a', seed: 3 };
 const B = { dir: -1, hip: [149, 93], sh: [144.4, 79.8], head: [141.4, 74], hr: 3.25, tilt: 10,
   shirt: '#56708e', sash: '#6a4a2a', pants: '#5e5040', skin: '#b4784e', hat: 'cap', hatC: '#2c2e36', seed: 9,
-  legs: [[[[151, 91.5], [152.6, 104], [153, 117]], true], [[[147.6, 92], [147, 104.5], [146.4, 117]], false]] };
+  legs: [[[[151, 91.5], [152.4, 102], [152.8, 111.6]], true], [[[147.6, 92], [147.1, 102.4], [146.6, 111.6]], false]] };
 // the poles: from the hook up through both grips to the butt end
 const POLE_A = { hook: HOOK1, end: [131, 90.6] }, POLE_B = { hook: HOOK2, end: [152, 68] };
 const onPole = (P, x) => { const t = (x - P.hook[0]) / (P.end[0] - P.hook[0]); return lerp2(P.hook, P.end, t); };

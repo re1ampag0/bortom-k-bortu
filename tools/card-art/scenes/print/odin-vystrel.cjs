@@ -15,7 +15,7 @@ const MOON = { x: 158, y: 40 };
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: MOON.x, y: MOON.y, az: 58, el: 30, color: '#cbdaf6', power: .85 }, fill: { color: '#3a5280', power: .42 },
   rim: { az: 40, color: '#d6e6ff', power: .55 }, locals: [{ x: 146, y: 82, color: '#ffc070', power: .35, radius: 10 }] };
 const GUN = { x: 100, y: 107.3, s: 4.2, rot: 11 };                 // rests on the butt and the guard on the rock (y 112)
-const BALL = { x: 29, y: 114.2, r: 4.4 };
+const BALL = { x: 29, y: 114.6, r: 5.2 };
 const skel = { horizon: HZ, eye: 1.2, light: 'the moon upper right (az 58): glint along the barrel, rims; warm lanterns of the enemy',
   items: [
     ['rock', 12, 152, 182, 50, 'sand (sunk in it)'],
@@ -31,8 +31,8 @@ const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const gunP = (lx, ly) => { const a = GUN.rot * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); return [GUN.x + (lx * c - ly * s) * GUN.s, GUN.y + (lx * s + ly * c) * GUN.s]; };
 
 // the flat rock: a top face catching the moon, a front face in shade sunk in the sand, cracks with lit lips
-const TOP = [[12, 113], [18, 107.5], [40, 104.6], [70, 103.2], [110, 102.4], [150, 103.2], [178, 104.8], [192, 108.6], [194, 112.4], [186, 118.6], [150, 121.6], [100, 122.6], [60, 122], [26, 119.6]];
-const FRONT = [[12, 113], [26, 119.6], [60, 122], [100, 122.6], [150, 121.6], [186, 118.6], [194, 112.4], [197, 124], [192, 140], [178, 152], [120, 158], [60, 156], [20, 150], [6, 136], [8, 120]];
+const TOP = [[12, 113], [17, 108.4], [34, 105.6], [52, 104.8], [70, 102.6], [96, 103.4], [122, 101.8], [150, 103.2], [170, 103.6], [184, 106.2], [193, 109.4], [194, 113.4], [184, 118], [160, 120.4], [134, 122.2], [100, 121.6], [76, 123], [50, 121.4], [26, 120]];
+const FRONT = [[12, 113], [26, 120], [50, 121.4], [76, 123], [100, 121.6], [134, 122.2], [160, 120.4], [184, 118], [194, 113.4], [197, 124], [192, 140], [178, 152], [120, 158], [60, 156], [20, 150], [6, 136], [8, 120]];
 function sp(P, closed) {
   const n = P.length, g = i => closed ? P[(i + n) % n] : P[Math.max(0, Math.min(n - 1, i))];
   let d = `M${P2(P[0])}`;
@@ -42,7 +42,7 @@ function sp(P, closed) {
 function rock(u, L) {
   const tg = nid('rt', u), fg = nid('rf', u), tc = nid('rtc', u), fc = nid('rfc', u), R = rng(12);
   const top = sp(TOP, true), front = sp(FRONT, true);
-  const lit = mix('#8e949a', L.keyColor, .3), half = '#62676e', dark = '#2c3038', deep = '#181c24';
+  const lit = mix('#6e747c', L.keyColor, .22), half = '#454a52', dark = '#262a32', deep = '#14181f';
   let s = `<defs>${linGrad(tg, 190, 104, 20, 122, [[0, lit], [.45, mix(lit, half, .55)], [1, half]])}${linGrad(fg, 0, 114, 0, 158, [[0, mix(half, dark, .5)], [.35, dark], [1, deep]])}`
     + `<clipPath id="${tc}"><path d="${top}"/></clipPath><clipPath id="${fc}"><path d="${front}"/></clipPath></defs>`;
   s += `<path d="${front}" fill="url(#${fg})"/>`;
@@ -59,11 +59,11 @@ function rock(u, L) {
   s += `<path d="M64 103.4q4 5 -2 9t2 10" stroke="#20242c" stroke-width=".8" fill="none"/><path d="M64.8 103.6q4 5 -2 9t2 10" stroke="${mix(lit, '#ffffff', .3)}" stroke-width=".35" fill="none" opacity=".5"/>`;
   s += `<path d="M140 103q-3 6 3 10q4 3 1 8" stroke="#20242c" stroke-width=".7" fill="none"/><path d="M140.8 103.2q-3 6 3 10" stroke="${mix(lit, '#ffffff', .3)}" stroke-width=".3" fill="none" opacity=".45"/>`;
   for (const [x, y, w] of [[34, 108, 7], [176, 112, 6], [122, 119, 5], [18, 116, 4]]) s += `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${f(w * .32)}" fill="#7a8a5a" opacity=".22"/>`;
-  { const g = nid('rs', u); s += `<defs>${radGrad(g, 176, 106, 34, [[0, mix(L.keyColor, '#ffffff', .3), .32], [1, L.keyColor, 0]])}</defs><ellipse cx="176" cy="107" rx="34" ry="8" fill="url(#${g})"/>`; }
+  { const g = nid('rs', u); s += `<defs>${radGrad(g, 176, 106, 34, [[0, mix(L.keyColor, '#ffffff', .3), .22], [1, L.keyColor, 0]])}</defs><ellipse cx="176" cy="107" rx="34" ry="8" fill="url(#${g})"/>`; }
   s += '</g>';
   // the edge between top and front catches the moon on the right, goes dull to the left
-  { const g = nid('re', u); s += `<defs>${linGrad(g, 194, 0, 12, 0, [[0, mix(L.keyColor, '#ffffff', .4), .9], [.5, L.keyColor, .45], [1, L.keyColor, .15]])}</defs><path d="${sp(TOP.slice(7).concat([TOP[0]]))}" stroke="url(#${g})" stroke-width=".7" fill="none"/>`; }
-  s += `<path d="${sp(TOP.slice(0, 8))}" stroke="${mix(L.keyColor, '#ffffff', .25)}" stroke-width=".45" fill="none" opacity=".5"/>`;
+  { const g = nid('re', u); s += `<defs>${linGrad(g, 194, 0, 12, 0, [[0, mix(L.keyColor, '#ffffff', .4), .9], [.5, L.keyColor, .45], [1, L.keyColor, .15]])}</defs><path d="${sp(TOP.slice(10).concat([TOP[0]]))}" stroke="url(#${g})" stroke-width=".7" fill="none"/>`; }
+  s += `<path d="${sp(TOP.slice(0, 11))}" stroke="${mix(L.keyColor, '#ffffff', .25)}" stroke-width=".45" fill="none" opacity=".5"/>`;
   return s;
 }
 
@@ -129,10 +129,10 @@ function ballOnVelvet(u, L) {
 
 // the powder horn: a curved cow horn, a turned brass cap on the wide end, a stopper at the tip, a leather strap
 function horn(u, L) {
-  const A = [190, 104.8], Bt = [162.5, 100.6], n = 18, pts = [], bot = [];
+  const A = [192, 110.4], Bt = [166, 107.4], n = 18, pts = [], bot = [];
   for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(A[0], Bt[0], t), y = lerp(A[1], Bt[1], t) - Math.sin(t * Math.PI) * 3.2, r = lerp(4.2, 1.1, Math.pow(t, .8)); pts.push([x, y - r]); bot.push([x, y + r]); }
   const g = K.mat('bone', L, { form: 'cyl', x1: A[0], y1: A[1] - 2, x2: Bt[0], y2: Bt[1] - 2, r: 4.2, u });
-  let s = K.castShadow(u, L, { x: 176, y: 107.6, w: 26, h: 7, horizon: HZ, d: .3 }) + K.contactShadow(u, 177, 107.4, 26, L, { opacity: .7 });
+  let s = K.castShadow(u, L, { x: 179, y: 113.4, w: 26, h: 7, horizon: HZ, d: .3 }) + K.contactShadow(u, 180, 113.4, 26, L, { opacity: .7 });
   s += `<defs>${g.defs}</defs><path d="M${pts.map(P2).join('L')}L${bot.slice().reverse().map(P2).join('L')}Z" fill="${g.fill}" stroke="${g.ramp.outline}" stroke-width=".35"/>`;
   // the horn's growth rings and its dark tip, the cold sheen along the top
   for (let i = 3; i < n - 2; i += 2) { const a = pts[i], b = bot[i]; s += `<path d="M${P2(a)}Q${f(a[0] + .8)} ${f((a[1] + b[1]) / 2)} ${P2(b)}" stroke="${g.ramp.shadow}" stroke-width=".25" fill="none" opacity=".55"/>`; }
@@ -141,7 +141,7 @@ function horn(u, L) {
   s += K.shadeCyl(u, Bt[0] + 1.2, Bt[1] - 3.2 + .2, Bt[0] - 2.4, Bt[1] - 3.4, .9, L, 'brass', { outline: .25 });
   s += K.shadeCyl(u, Bt[0] - 2.2, Bt[1] - 3.4, Bt[0] - 3.8, Bt[1] - 3.5, .7, L, 'oak', { outline: .25, cap: 'round' });
   // the strap: from the cap over the rock, a loop lying behind
-  s += K.propTube(u, L, 'leather', `M${f(A[0] - 1)} ${f(A[1] + 3)}C${f(A[0] - 10)} ${f(A[1] + 6)} 160 106 152 105.2C146 104.6 150 103.4 ${f(Bt[0])} ${f(Bt[1] - 2)}`, .55, [170, 106]);
+  s += K.propTube(u, L, 'leather', `M${f(A[0] - 1)} ${f(A[1] + 3)}C${f(A[0] - 10)} ${f(A[1] + 6)} 170 117 162 116C156 115.4 158 110 ${f(Bt[0] + 1)} ${f(Bt[1] - 1.4)}`, .55, [172, 116]);
   return s;
 }
 
@@ -173,12 +173,13 @@ module.exports = { name: 'Один выстрел', kind: 'deck', status: 'draft
     bg += palm(u, L);
     // the rock, the shadows on its top, the things on it
     let fg = rock(u, L);
-    fg += K.castShadow(u, L, { x: 104, y: 113.4, w: 112, h: 14, horizon: HZ, d: .22 });
+    fg += K.castShadow(u, L, { x: 104, y: 113.4, w: 112, h: 7, horizon: HZ, d: .18, opacity: .7 });
     fg += horn(u, L);
     fg += K.pistol(u, L, { x: GUN.x, y: GUN.y, s: GUN.s, rot: GUN.rot, seed: 4 });
     // the moon along the barrel: one long cold glint, brighter toward the muzzle; on the brass bands, the cock, the butt
     { const a = gunP(-4, -6.95), b = gunP(13.2, -6.7), g = nid('gl', u);
-      fg += `<defs>${linGrad(g, a[0], a[1], b[0], b[1], [[0, '#dfeaff', .1], [.55, '#eef4ff', .75], [.9, '#ffffff', .95], [1, '#ffffff', .4]])}</defs><path d="M${P2(a)}L${P2(b)}" stroke="url(#${g})" stroke-width="1" stroke-linecap="round"/>`;
+      fg += `<defs>${linGrad(g, a[0], a[1], b[0], b[1], [[0, '#dfeaff', .1], [.55, '#eef4ff', .75], [.9, '#ffffff', .95], [1, '#ffffff', .4]])}</defs><path d="M${P2(a)}L${P2(b)}" stroke="url(#${g})" stroke-width="1.5" stroke-linecap="round"/>`;
+      { const a2 = gunP(-3, -5.1), b2 = gunP(12.6, -5.0); fg += `<path d="M${P2(a2)}L${P2(b2)}" stroke="#8aa0c0" stroke-width=".5" opacity=".45" stroke-linecap="round"/>`; }
       const m = gunP(13.4, -5.9); fg += `<ellipse cx="${f(m[0] + .3)}" cy="${f(m[1])}" rx="1.4" ry="${f(.9 * GUN.s)}" transform="rotate(${GUN.rot} ${f(m[0])} ${f(m[1])})" fill="#05070c"/>`;
       for (const [x, y, r] of [[-12.0, 1.7, 1.6], [-4.8, -8.6, .9], [8.1, -6.9, .8], [12.1, -6.9, .8]]) { const p = gunP(x, y); fg += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${r}" fill="#ffffff" opacity=".8"/>` + K.localGlow(u, { x: p[0], y: p[1], color: '#dfeaff', power: .3, radius: r * 4 }); } }
     // a fine engraving on the lock plate and the stock's grain, the touch of wear on the brass
