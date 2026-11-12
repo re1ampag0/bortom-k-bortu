@@ -38,7 +38,7 @@ module.exports = { name: 'Анжелика', variant: 'b', kind: 'deck', status:
     // spanker boom and the foot of a black sail coming into the top. The sun is behind her: the wall is in shadow
     // with a warm rim on the stern edge; the window's light is the second, small, warm source.
     let fg = '';
-    { const wall = 'M148 30C147 52 149 78 154 104C156 116 158 130 160 160L212 160L212 30Z', wg = nid('pw', u), wc = nid('pc', u);
+    { const wall = 'M147.4 30C147 52 149 78 154 104C156 116 158 130 160 160L212 160L212 30Z', wg = nid('pw', u), wc = nid('pc', u);
       bg += `<defs>${linGrad(wg, 148, 0, 212, 0, [[0, '#3a2a2c'], [.12, '#211719'], [.6, '#161014'], [1, '#0c0a0e']])}<clipPath id="${wc}"><path d="${wall}"/></clipPath></defs>`
         + `<path d="${wall}" fill="url(#${wg})"/>`;
       let pl = '';
@@ -55,12 +55,16 @@ module.exports = { name: 'Анжелика', variant: 'b', kind: 'deck', status:
         + `<path d="M158 68Q176 64 196 69" stroke="#2a1608" stroke-width="1.2" fill="none"/>`
         + `<path d="M156 96Q166 106 158 116Q170 108 168 96Z" fill="#2a1a14" stroke="#7a5a32" stroke-width=".5"/>`;
       // a gun port below, its lid hauled up (red inside), the muzzle out — the Pearl is ready for a fight
-      pl += `<path d="M176 112L196 115L196 131L176 128Z" fill="#050304"/><path d="M175 111L196 114L199 98L178 95Z" fill="#6a1612" stroke="#060406" stroke-width=".6"/><path d="M178 96L198 99" stroke="#c0503a" stroke-width=".5" opacity=".6"/>`
-        + `<path d="M178 121.5Q186 120 192 121.6L192 126Q186 127.4 178 126Z" fill="#1a1c20"/><ellipse cx="178.2" cy="123.8" rx="1.6" ry="2.4" fill="#2e3036"/><ellipse cx="178.2" cy="123.8" rx=".8" ry="1.3" fill="#020202"/>`;
+      pl += `<path d="M182 108L196 110L196 121L182 119Z" fill="#050304"/><path d="M181.4 107.4L196 109.4L197.6 98.6L183 96.6Z" fill="#4a1210" stroke="#060406" stroke-width=".6"/>`
+        + `<path d="M183.6 113.6Q189 112.6 194 113.8L194 117Q189 118 183.6 117Z" fill="#1a1c20"/><ellipse cx="183.8" cy="115.3" rx="1.2" ry="1.8" fill="#2e3036"/><ellipse cx="183.8" cy="115.3" rx=".6" ry="1" fill="#020202"/>`;
       // the warm rim on the stern edge facing the sun, and the window's light on the frame round it
       bg += `<g clip-path="url(#${wc})">${pl}</g>` + `<path d="M148 30C147 52 149 78 154 104C156 116 158 130 160 160" stroke="#ffc27a" stroke-width="1.1" fill="none" opacity=".85"/>`
         + `<path d="M149.6 30C148.8 52 150.6 78 155.6 104" stroke="#ffe0a8" stroke-width=".4" fill="none" opacity=".6"/>`;
       bg += K.localGlow(u, { x: 172, y: 70, color: '#ffb050', power: .5, radius: 30 }, { core: false });
+      // the taffrail: a carved rail on turned balusters along the top of the stern, a warm edge to the sun
+      bg += `<path d="M146 31Q178 25 214 28L214 33Q178 30 147.4 36Z" fill="#1a1014" stroke="#060406" stroke-width=".6"/><path d="M146 31Q178 25 214 28" stroke="#d09858" stroke-width=".8" fill="none"/>`
+        + `<path d="M147 22Q178 16 214 19L214 22.6Q178 19.6 147.4 25.4Z" fill="#1e1418" stroke="#060406" stroke-width=".5"/><path d="M147 22Q178 16 214 19" stroke="#ffc27a" stroke-width=".7" fill="none"/>`
+        + [151, 158, 165, 172, 179, 186, 193, 200, 207].map(x => { const y0 = 24.6 - (x - 147) * .06, y1 = 30.4 - (x - 147) * .05; return `<path d="M${x} ${f(y0)}Q${x - 1.3} ${f((y0 + y1) / 2)} ${x} ${f(y1)}Q${x + 1.3} ${f((y0 + y1) / 2)} ${x} ${f(y0)}" fill="#150e12" stroke="#a87a48" stroke-width=".3"/>`; }).join('');
       // the spanker boom over the stern and the foot of the black sail; its sheet rope down to the taffrail
       const sg = nid('bs', u);
       bg += `<defs>${linGrad(sg, 0, -10, 0, 22, [[0, '#0c0a0e'], [1, '#2a2226']])}</defs><path d="M120 -10L214 -10L214 10Q170 16 128 18Z" fill="url(#${sg})"/>`
