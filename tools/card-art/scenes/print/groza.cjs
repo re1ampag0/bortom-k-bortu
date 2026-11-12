@@ -13,7 +13,7 @@ const { nid, f, clamp, lerp, rng, mix } = K;
 const HZ = 110;
 const WAR = { kind: 'warship', x: 104, y: 120, scale: .84, flip: true, sails: 'full', detail: 'near', seed: 11, roll: 4 };
 const STRIKE = K.shipGeom(WAR.kind, WAR).masts[1].top;          // the main truck, the highest point of the three ships
-const BOLT0 = [124, -6];                                       // where the bolt leaves the cloud base (out of frame)
+const BOLT0 = [138, -8];                                       // where the bolt leaves the cloud base (out of frame)
 // the topgallant sail of the main mast: between the yards at .7 and .93 of the mast over the deck (ship.cjs QY[3])
 const TG = (() => { const s = WAR.scale, hD = 15.2, Hm = 100 - hD, y = q => WAR.y - s * (hD + q * Hm); return { x: STRIKE[0] + 1.2, y0: y(.93), y1: y(.7), hw: .078 * 96 * 1.22 * s * .95 }; })();
 const light = {
@@ -34,7 +34,7 @@ const skel = {
     ['near sea', 0, 280, 200, 150, 'rough water under the glass'],
   ],
 };
-const PAL = { sky: ['#0b0c1e', '#191b36', '#2d3058', '#4a4d7a'], sea: ['#4a5a7e', '#1c2846', '#090f20'] };
+const PAL = { sky: ['#07081a', '#12142e', '#23264c', '#3e416e'], sea: ['#4a5a7e', '#1c2846', '#090f20'] };
 
 const lin = (id, x1, y1, x2, y2, st) => `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}">${st.map(([o, c, a]) => `<stop offset="${f(o)}" stop-color="${c}"${a != null ? ` stop-opacity="${f(a)}"` : ''}/>`).join('')}</linearGradient>`;
 const blur = (id, sd, box) => `<filter id="${id}" filterUnits="userSpaceOnUse" x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
@@ -48,17 +48,17 @@ function jag(a, b, R, rough, depth) {
   return jag(a, p, R, rough, depth - 1).concat(jag(p, b, R, rough, depth - 1).slice(1));
 }
 function bolt(u, a, b, seed) {
-  const R = rng(seed), main = jag(a, b, R, .42, 5);
+  const R = rng(seed), main = jag(a, b, R, .48, 5);
   const branches = [];
-  for (const [t, ang, len, w] of [[.22, -38, 18, .5], [.45, 30, 14, .45], [.62, -55, 10, .38], [.35, 48, 9, .3]]) {
+  for (const [t, ang, len, w] of [[.12, -42, 26, .6], [.3, 34, 20, .5], [.55, -50, 14, .42], [.42, 52, 12, .34], [.08, 60, 16, .4]]) {
     const p = main[Math.round(t * (main.length - 1))], dir = Math.atan2(b[1] - a[1], b[0] - a[0]) + ang * Math.PI / 180;
     const e = [p[0] + Math.cos(dir) * len, p[1] + Math.sin(dir) * len];
     branches.push({ pts: jag(p, e, R, .5, 3), w });
   }
   const P = pts => 'M' + pts.map(q => f(q[0]) + ' ' + f(q[1])).join('L');
   const g1 = nid('bh', u), g2 = nid('bg', u), box = [a[0] - 60, a[1] - 20, 130, b[1] - a[1] + 60];
-  let s = `<defs>${blur(g1, 3.2, box)}${blur(g2, .9, box)}</defs>`;
-  const all = [{ pts: main, w: 1.25 }].concat(branches);
+  let s = `<defs>${blur(g1, 4, box)}${blur(g2, .9, box)}</defs>`;
+  const all = [{ pts: main, w: 1.7 }].concat(branches);
   s += `<g filter="url(#${g1})" stroke="#8f84ff" fill="none" stroke-linejoin="round" opacity=".75">${all.map(br => `<path d="${P(br.pts)}" stroke-width="${f(br.w * 6)}"/>`).join('')}</g>`;
   s += `<g filter="url(#${g2})" stroke="#cfd2ff" fill="none" stroke-linejoin="round">${all.map(br => `<path d="${P(br.pts)}" stroke-width="${f(br.w * 2.6)}"/>`).join('')}</g>`;
   s += `<g stroke="#ffffff" fill="none" stroke-linejoin="round" stroke-linecap="round">${all.map((br, i) => `<path d="${P(br.pts)}" stroke-width="${f(br.w * (i ? .7 : .95))}"${i ? ' opacity=".85"' : ''}/>`).join('')}</g>`;
@@ -76,8 +76,9 @@ function burningSail(u, L) {
   s += `<path d="${d}" fill="#2a160c" opacity=".75" transform="translate(${f(cx)} ${f(cy)}) scale(1.35) translate(${f(-cx)} ${f(-cy)})" filter="url(#${ge})"/>`;
   s += `<path d="${d}" fill="${PAL.sky[1]}"/>`;
   s += `<path d="${d}" fill="none" stroke="#ff8a2a" stroke-width="1.1" filter="url(#${ge})"/><path d="${d}" fill="none" stroke="#ffd27a" stroke-width=".4"/>`;
-  s += K.fire(u, { x: cx - 1, y: cy + h * .35, w: w * 1.5, h: h * 2.1, seed: 3, wind: .55, glow: true, pool: false });
-  s += K.fire(u, { x: cx + w * .55, y: TG.y1 - 1, w: w * .7, h: h * 1.1, seed: 8, wind: .6, glow: false, pool: false });
+  s += K.fire(u, { x: cx - 1, y: cy + h * .5, w: w * 2, h: h * 2.8, seed: 3, wind: .55, glow: true, pool: false });
+  s += K.fire(u, { x: cx + w * .7, y: TG.y1 + 1, w: w * 1.1, h: h * 1.6, seed: 8, wind: .6, glow: false, pool: false });
+  s += K.fire(u, { x: cx - w * .8, y: TG.y1 + 2, w: w * .8, h: h * 1.2, seed: 13, wind: .5, glow: false, pool: false });
   // sparks and shreds of burning canvas falling off, drifting downwind
   let sp = '';
   for (let i = 0; i < 26; i++) { const x = cx - 4 + R() * 26, y = cy + R() * 40, r = .25 + R() * .45; sp += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="${R() > .5 ? '#ffd890' : '#ff9a40'}" opacity="${f(.5 + R() * .5)}"/>`; }
@@ -108,12 +109,14 @@ module.exports = {
     L.pal = Object.assign({}, L.pal, PAL);
     // ——— the sky: a low heavy cloud base, its bellies lit violet-white from the flash
     let bg = K.sky(u, L, { horizon: HZ + 4, stars: false });
-    bg += K.localGlow(u, { x: 116, y: 18, color: '#b8b2ff', power: .7, radius: 90 }, { core: false });
+    bg += K.localGlow(u, { x: 120, y: 14, color: '#b8b2ff', power: .8, radius: 100 }, { core: false });
     bg += K.cloud(u, L, { x: 40, y: 30, w: 150, h: 40, seed: 7 });
     bg += K.cloud(u, L, { x: 178, y: 26, w: 120, h: 36, seed: 19 });
     bg += K.cloud(u, L, { x: 18, y: 72, w: 90, h: 30, seed: 23, far: .3 });
     bg += K.cloud(u, L, { x: 190, y: 70, w: 80, h: 26, seed: 29, far: .35 });
     bg += K.cloudBank(u, L, { y: HZ - 3, h: 10, x0: -20, x1: 220, n: 5, seed: 12, far: .7 });
+    // the cloud bellies round the bolt's root, white-violet from the flash
+    bg += K.localGlow(u, { x: 134, y: 4, color: '#e6e4ff', power: .75, radius: 34 }, { core: false });
     // a far second flash in the clouds on the right, faint
     bg += K.localGlow(u, { x: 178, y: 46, color: '#a8a4ff', power: .35, radius: 30 }, { core: false });
     bg += rain(u, L, { x0: -10, x1: 70, y0: 40, y1: HZ, n: 50, seed: 3 }) + rain(u, L, { x0: 150, x1: 210, y0: 50, y1: HZ, n: 34, seed: 5 });
@@ -122,8 +125,8 @@ module.exports = {
     // ——— the two lower ships: reefed, lit only from behind, untouched
     bg += K.ship(u, L, { kind: 'brig', x: 20, y: 114, scale: .5, flip: true, sails: 'reefed', detail: 'mid', seed: 4, lights: true });
     bg += K.foam(u, { x: 20, y: 114.2, w: 34, h: .8, seed: 3, L });
-    bg += K.ship(u, L, { kind: 'merchant', x: 184, y: 113.5, scale: .5, flip: true, sails: 'reefed', detail: 'mid', seed: 8, lights: true });
-    bg += K.foam(u, { x: 184, y: 113.7, w: 36, h: .8, seed: 5, L });
+    bg += K.ship(u, L, { kind: 'merchant', x: 180, y: 113.5, scale: .5, flip: true, sails: 'reefed', detail: 'mid', seed: 8, lights: true });
+    bg += K.foam(u, { x: 180, y: 113.7, w: 36, h: .8, seed: 5, L });
     // ——— the man-of-war: all sail, the tallest masts; the bolt hits her main truck
     let mid = K.ship(u, L, Object.assign({ wake: true }, WAR));
     mid += K.foam(u, { x: WAR.x, y: WAR.y + .3, w: 96, h: 1.2, seed: 9, L });
