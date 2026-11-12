@@ -13,7 +13,7 @@ const MOON = { x: 90, y: 76, r: 31 };
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 34, color: '#c9dcff', power: .8 },
   fill: { color: '#3d5680', power: .4 }, rim: { az: 0, color: '#d8e8ff', power: .8 } };
 const skel = { horizon: HZ, eye: 6, light: 'the full moon behind the monkey (contre-jour)', items: [
-  ['monkey', 70, 36, 52, 76, 'ratlines'], ['card', 116, 18, 18, 22, 'in the paw'], ['hand', 22, 104, 50, 50, 'from the deck below'],
+  ['monkey', 70, 36, 52, 76, 'ratlines'], ['card', 116, 18, 18, 22, 'in the paw'], ['hand', 4, 130, 50, 50, 'arm from the left edge'],
   ['shrouds', 20, -20, 140, 190, 'chains at the rail → masthead'], ['sail', 150, -10, 60, 130, 'yard']] };
 
 function rimmed(d, body, rimCol, dx, dy) {
@@ -45,8 +45,10 @@ module.exports = { name: 'Обезьянка Джек', variant: 'b', kind: 'dec
     // ——— the officer's hand from below: navy sleeve, lace cuff, fingers spread, grabbing at the tail — too late
     const hg = nid('hs', u);
     let fg = `<defs><linearGradient id="${hg}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8a0a0"/><stop offset=".35" stop-color="#6a5050"/><stop offset="1" stop-color="#2a1c20"/></linearGradient></defs>`
-      + PK.arm(u, 6, 198, 54, 128, { w0: 22, w1: 12, cloth: '#1c2848', dark: '#070a14', light: '#3a5080', cuff: 'lace', pose: 'open', side: -1, s: 1.9, twist: -20, skin: `url(#${hg})` });
-    fg += `<path d="M20 186L44 146" stroke="#c9a048" stroke-width="1.4" opacity=".8"/>` + [0, 1, 2].map(i => `<circle cx="${f(26 + i * 6)}" cy="${f(178 - i * 10)}" r="1.2" fill="#d8b058"/>`).join('');
+      + PK.arm(u, -14, 156, 24, 118, { w0: 22, w1: 12, cloth: '#1c2848', dark: '#070a14', light: '#3a5080', cuff: 'lace', pose: 'open', side: -1, s: 1.9, twist: -20, skin: `url(#${hg})` });
+    // the gold braid and buttons along the sleeve (above the glass)
+    { const A = [-14, 156], B = [24, 118], at = t => [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t + 4], p0 = at(.2), p1 = at(.8);
+      fg += `<path d="M${f(p0[0])} ${f(p0[1])}L${f(p1[0])} ${f(p1[1])}" stroke="#c9a048" stroke-width="1.4" opacity=".8"/>` + [.4, .55, .7].map(t => { const p = at(t); return `<circle cx="${f(p[0] + 2)}" cy="${f(p[1] + 2)}" r="1.2" fill="#d8b058"/>`; }).join(''); }
     // ——— the monkey: one silhouette on the moon, rim-lit; red jacket, a long curled tail
     const body = 'M96.6 52.6C93 50 87.4 50.4 85 54.6C82.2 54.4 80 56.8 81.2 59.6C82.4 61.8 84.4 62 85.6 61.4C86.4 63.6 88 65.4 90 66.4'
       + 'C86 68 83 70 80.4 72.6L72 70.4L70.6 74L80 78.6C82 80.6 84.4 81 86.6 80.4C85.8 84.6 86.2 88.6 87.6 92'

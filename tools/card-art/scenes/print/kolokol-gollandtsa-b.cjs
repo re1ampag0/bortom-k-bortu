@@ -61,9 +61,10 @@ module.exports = { name: 'Колокол «Голландца»', variant: 'b', 
     for (let i = 0; i < 30; i++) { const x = -44 + R() * 72, y = 4 + R() * 78, rx = 4 + R() * 11, ry = 2.4 + R() * 7; inn += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="url(#${pg})" transform="rotate(${f(R() * 60 - 30)} ${f(x)} ${f(y)})"/>`; }
     for (let i = 0; i < 9; i++) { const x = -30 + R() * 60, y = 8 + R() * 30, l = 14 + R() * 30; inn += `<path d="M${f(x)} ${f(y)}q${f(R() * 2 - 1)} ${f(l * .5)} ${f(R() * 3 - 1.5)} ${f(l)}" stroke="#6ab898" stroke-width="${f(1 + R() * 1.6)}" fill="none" opacity=".45" stroke-linecap="round"/>`; }
     b += `<g clip-path="url(#${bc})">${inn}</g>`;
-    // the mouth: dark inside with the green glow of the strike; the clapper swung against the left lip
+    // the mouth: dark inside with the green glow of the strike; the clapper hangs inside on its shank, the ball just
+    // under the rim at the centre (it has swung back off the lip)
     b += `<ellipse cx="0" cy="83" rx="46" ry="7" fill="url(#${mo})"/><path d="M-46 83Q0 92 46 83" stroke="#c8b878" stroke-width="1" fill="none"/>`;
-    b += `<path d="M-10 85L-33 89.6" stroke="#0a0e0c" stroke-width="2.6" stroke-linecap="round"/><path d="M-10 84.2L-33 88.8" stroke="#9effd0" stroke-width=".4" opacity=".6"/>` + K.shadeSphere(u, -37, 90, 5.4, L, 'iron', { outline: .4 });
+    b += `<path d="M-1.8 80.6L-2.6 85" stroke="#0a0e0c" stroke-width="2.6" stroke-linecap="round"/><path d="M-1.1 80.6L-1.9 84.6" stroke="#9effd0" stroke-width=".4" opacity=".6"/>` + K.shadeSphere(u, -3, 89.4, 5.2, L, 'iron', { outline: .4 });
     // barnacles and shells along the lip, weed hanging down
     for (let i = 0; i < 16; i++) { const t = -.95 + R() * 1.9, x = t * 44, y = 83.4 - Math.abs(t) * 4 - R() * 9, r = .7 + R() * 1.3;
       b += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r)}" ry="${f(r * .75)}" fill="#7a8070" stroke="#2a3028" stroke-width=".3"/><ellipse cx="${f(x - r * .25)}" cy="${f(y - r * .25)}" rx="${f(r * .45)}" ry="${f(r * .3)}" fill="#c8ccb8" opacity=".8"/><circle cx="${f(x + r * .1)}" cy="${f(y)}" r="${f(r * .22)}" fill="#1a1e18"/>`; }

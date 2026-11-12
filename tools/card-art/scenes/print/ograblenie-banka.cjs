@@ -1,8 +1,8 @@
 // «Ограбление банка» (Жемчужина, ПРИКАЗ: заберите 1 Порох из Трюма противника в свой), variant A of the method trial
 // (docs/progress/print-kit.md «Проба способа»): the first-round scene (portrait-pearl.cjs SCENES['Ограбление банка'])
 // at its best. Night in a colonial port: a breach torn in the bank's ground floor, and the whole safe — with a
-// chunk of the wall still clinging to it — is dragged out over the cobbles by a team of horses (their hindquarters
-// in the picture, the chains taut); coins trickle from the sprung door all the way from the hole; the watchman
+// chunk of the wall still clinging to it — is dragged out over the cobbles by a team of horses (whole, pulling away
+// to the right, heads into the collars, the chains taut to the hames); coins trickle from the sprung door all the way from the hole; the watchman
 // runs up the street with his lantern. The moon over the roofs on the right is the light; the lantern is a warm
 // second one on the left.
 // Fixed against the first round: the horses were stick figures — now they have rumps, hocks, tails and harness, one
@@ -22,7 +22,7 @@ const light = { time: 'night', haze: .35, key: { type: 'moon', x: 174, y: 48, az
   rim: { az: 50, color: '#cfe0ff', power: .5 }, locals: [{ x: GUARD.x + 8, y: GUARD.y - 14, color: '#ffc060', power: .7, radius: 40 }] };
 const skel = { horizon: HZ, eye: 1.6, light: 'the moon over the roofs upper right (from the right, a little behind): lit edges on the right, shadows to the left and towards us; the watchman\'s lantern a warm local light on the left', items: [
   ['facade', -4, ST, 152, 128, 'street'], ['breach', 42, ST, 84, 58, 'facade ground floor'], ['safe', 71, SAFE.y, 54, 52, 'cobbles (castors), wall chunk on its back'],
-  ['horse near', 148, 128, 56, 54, 'cobbles (hooves)'], ['horse far', 160, 122, 44, 44, 'cobbles'], ['chains', 124, 104, 30, 12, 'safe → whippletree'],
+  ['horse near', 143, 129, 56, 40, 'cobbles (hooves)'], ['horse far', 149, 123, 48, 38, 'cobbles'], ['chains', 124, 96, 62, 16, 'safe → swingletree → collars'],
   ['watchman', 10, GUARD.y, 26, 36, 'cobbles'], ['coins', 40, 150, 100, 20, 'cobbles'], ['moon', 166, 56, 16, 16, 'sky']] };
 
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -52,36 +52,49 @@ function cobbles(u, L, y0, y1) {
   }
   return out;
 }
-// one horse seen from the side, its hindquarters in the picture, walking away to the right (the forehand cropped by
-// the frame): rump, tail streaming back, gaskin, hock, cannon, fetlock, hoof; the breeching strap and the trace
+// one draught horse seen from the side, whole, pulling away to the right: the head low and forward into the collar,
+// the near fore reaching, the far fore and the near hind driving back; the collar with its hames round the neck, the
+// back band, the bridle; tail streaming back. (x, y) — the ground under the buttock; lift — the head raised (degrees)
+function limb(pts, ws) {
+  const n = pts.length, L = [], R = [];
+  for (let i = 0; i < n; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+    L.push([pts[i][0] + nx * ws[i] / 2, pts[i][1] + ny * ws[i] / 2]); R.push([pts[i][0] - nx * ws[i] / 2, pts[i][1] - ny * ws[i] / 2]); }
+  return L.concat(R.reverse());
+}
 function horse(u, L, x, y, s, c, o = {}) {
-  const g = nid('hs', u), hl = nid('hl', u), R = rng(o.seed || 3);
-  const P = (lx, ly) => [x + lx * s, y + ly * s];
-  const pd = pts => smooth(pts.map(([a, b]) => P(a, b)));
-  let out = `<defs>${linGrad(g, x, y - 46 * s, x, y, [[0, c[0], 1], [.45, c[1], 1], [1, c[2], 1]])}${linGrad(hl, x, 0, x + 50 * s, 0, [[0, c[2], 1], [.6, c[1], 1], [1, c[0], 1]])}</defs>`;
-  // the far hind leg (darker), reaching forward under the belly
-  const far = [[10, -26], [16, -22], [19, -12], [20, -4], [22, -.4], [26, -.4], [25.4, -3], [23.6, -5], [23, -14], [22, -24], [20, -30]];
-  out += `<path d="${pd(far)}Z" fill="${c[2]}" stroke="#0a0604" stroke-width=".4"/>`;
-  // the body: back line from the croup, the rump's round, the belly running off to the right
-  const body = [[46, -44], [24, -45.6], [10, -43], [2, -38], [-.6, -31], [1.4, -24], [6, -20], [12, -19], [24, -18.6], [40, -18], [56, -19], [56, -44]];
-  out += `<path d="${pd(body)}Z" fill="url(#${g})" stroke="#0a0604" stroke-width=".5"/>`;
-  // the near hind leg, pushing back: gaskin, hock bent backwards, the cannon slanting, the hoof on the cobbles
-  const near = [[2, -33], [-1.6, -25], [-4, -17], [-5.4, -13.4], [-7.4, -7], [-9, -2.6], [-10.2, 0], [-4.8, 0], [-4.4, -2.6], [-2.8, -7], [-1.2, -11.6], [3, -15.4], [9, -19], [15, -22.6], [18, -30]];
-  out += `<path d="${pd(near)}Z" fill="url(#${hl})" stroke="#0a0604" stroke-width=".5"/>`
-    + `<path d="M${f(P(-10.4, -.2)[0])} ${f(P(-10.4, -.2)[1])}L${f(P(-4.4, -.2)[0])} ${f(P(-4.4, -.2)[1])}L${f(P(-5, -2.8)[0])} ${f(P(-5, -2.8)[1])}L${f(P(-9.6, -2.6)[0])} ${f(P(-9.6, -2.6)[1])}Z" fill="#141010" stroke="#000" stroke-width=".3"/>`
-    + `<path d="M${f(P(-9.4, -2.8)[0])} ${f(P(-9.4, -2.8)[1])}q${f(1.2 * s)} ${f(-1.6 * s)} ${f(4.2 * s)} ${f(-.2 * s)}" stroke="${c[0]}" stroke-width="${f(.8 * s)}" fill="none" opacity=".6"/>`;   // feathering at the fetlock
-  // muscles: the round of the quarter and the hock's point catch the moon on the right... a soft lit line on top
-  out += `<path d="${pd([[4, -37], [12, -43], [26, -45], [44, -44]])}" stroke="${o.rim || '#d8e4f8'}" stroke-width="${f(.5 * s)}" fill="none" opacity=".75"/>`
-    + `<path d="${pd([[3, -28], [6, -33], [12, -36]])}" stroke="${c[0]}" stroke-width="${f(.5 * s)}" fill="none" opacity=".6"/>`
-    + `<path d="${pd([[-3, -13], [-1, -16]])}" stroke="${c[0]}" stroke-width="${f(.7 * s)}" fill="none" opacity=".7"/>`;
-  // the tail: a thick dock streaming back and down, strands
-  const t0 = P(2, -40); let tail = '';
-  for (let i = 0; i < 9; i++) { const sw = (i - 4) * .9, len = 22 + R() * 6; tail += `<path d="M${f(t0[0])} ${f(t0[1])}C${f(t0[0] - 8 * s)} ${f(t0[1] - 2 * s + sw)} ${f(t0[0] - 14 * s)} ${f(t0[1] + 6 * s + sw)} ${f(t0[0] - (16 + R() * 4) * s)} ${f(t0[1] + (len * .6 + sw) * s)}" stroke="${i % 3 ? '#140c08' : '#3a2416'}" stroke-width="${f((1.2 - Math.abs(i - 4) * .1) * s)}" fill="none" stroke-linecap="round"/>`; }
-  out += tail;
-  // harness: the breeching strap round the quarters, the hip strap, the trace along the flank, brass studs
-  out += `<path d="${pd([[1, -30], [10, -28], [24, -28], [40, -29]])}" stroke="#1a0e08" stroke-width="${f(2.2 * s)}" fill="none"/><path d="${pd([[1, -30.6], [10, -28.6], [24, -28.6], [40, -29.6]])}" stroke="#6a4428" stroke-width="${f(.5 * s)}" fill="none" opacity=".8"/>`
-    + `<path d="${pd([[22, -45.4], [22.6, -36], [22, -28]])}" stroke="#1a0e08" stroke-width="${f(1.8 * s)}" fill="none"/>`
-    + [[10, -28.4], [24, -28.4], [22.4, -38]].map(([a, b]) => { const p = P(a, b); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.6 * s)}" fill="#d8b050"/>`; }).join('');
+  const g = nid('hs', u), lg = nid('hl', u), R = rng(o.seed || 3), lift = (o.lift || 0) * Math.PI / 180;
+  // the neck and head turn about the neck's base
+  const hp = (lx, ly) => { if (!lift || lx < 37) return [lx, ly]; const dx = lx - 38, dy = ly + 28, c0 = Math.cos(-lift), s0 = Math.sin(-lift); return [38 + dx * c0 - dy * s0, -28 + dx * s0 + dy * c0]; };
+  const P = (lx, ly) => { const q = hp(lx, ly); return [x + q[0] * s, y + q[1] * s]; };
+  const pd = (pts, cl) => smooth(pts.map(([a, b]) => P(a, b)), cl);
+  const leg = (pts, ws, fill) => { const q = pts[pts.length - 1], h0 = P(q[0] - 2.2, 0), h1 = P(q[0] + 2.4, 0), h2 = P(q[0] + 1.8, -2.6), h3 = P(q[0] - 1.8, -2.6);
+    return `<path d="${pd(limb(pts, ws), true)}" fill="${fill}" stroke="#0a0604" stroke-width=".45"/>`
+      + `<path d="M${f(h0[0])} ${f(h0[1])}L${f(h1[0])} ${f(h1[1])}L${f(h2[0])} ${f(h2[1])}L${f(h3[0])} ${f(h3[1])}Z" fill="#141010" stroke="#000" stroke-width=".3"/>`
+      + `<path d="M${f(h3[0])} ${f(h3[1])}q${f(1.8 * s)} ${f(-1.2 * s)} ${f(3.6 * s)} 0" stroke="${c[0]}" stroke-width="${f(.9 * s)}" fill="none" opacity=".5"/>`; };
+  let out = `<defs>${linGrad(g, x + 50 * s, y - 44 * s, x, y - 16 * s, [[0, c[0], 1], [.5, c[1], 1], [1, c[2], 1]])}${linGrad(lg, 0, y - 24 * s, 0, y, [[0, c[1], 1], [1, c[2], 1]])}</defs>`;
+  // the far legs (darker): the far fore driving back, the far hind under the belly
+  out += leg([[34, -22], [33, -12], [30.6, -4.4], [29.6, -1.2]], [7, 4, 3, 3.2], c[2]) + leg([[14, -27], [15.4, -17], [12.4, -10.4], [14, -3.2], [14.8, -1.2]], [9, 6, 3.6, 2.8, 3], c[2]);
+  // the tail streaming back and down from the croup
+  const t0 = P(1.4, -31.6); for (let i = 0; i < 9; i++) { const sw = (i - 4) * .8, len = 20 + R() * 6;
+    out += `<path d="M${f(t0[0])} ${f(t0[1])}C${f(t0[0] - 6 * s)} ${f(t0[1] - 1 * s + sw)} ${f(t0[0] - 9 * s)} ${f(t0[1] + 6 * s + sw)} ${f(t0[0] - (11 + R() * 4) * s)} ${f(t0[1] + (len * .6 + sw) * s)}" stroke="${i % 3 ? '#140c08' : '#3a2416'}" stroke-width="${f((1.1 - Math.abs(i - 4) * .1) * s)}" fill="none" stroke-linecap="round"/>`; }
+  // the body, the neck and the head stretched forward and down into the pull
+  const body = [[1, -32], [6, -35.5], [13, -35], [21, -33], [29, -34.5], [34, -37], [39, -40.5], [44, -42.5], [47.5, -42], [51, -39.5], [55.5, -33], [58.5, -29.6], [58, -27.4], [55, -27], [51.5, -29.4], [47.5, -32], [44, -30], [41, -25], [38.5, -20.5], [32, -18.4], [22, -18], [12, -19], [6, -21], [1.5, -25], [0, -29]];
+  out += `<path d="${pd(body, true)}" fill="url(#${g})" stroke="#0a0604" stroke-width=".5"/>`;
+  // the ears, the eye, the nostril; the mane along the crest
+  out += `<path d="${pd([[45.4, -42.2], [45, -46.6], [47.6, -42.6]], true)}" fill="${c[1]}" stroke="#0a0604" stroke-width=".35"/>`;
+  { const e = P(50.4, -37.6), n = P(57.4, -29.4); out += `<ellipse cx="${f(e[0])}" cy="${f(e[1])}" rx="${f(.9 * s)}" ry="${f(.6 * s)}" fill="#0a0604"/><circle cx="${f(e[0] + .3 * s)}" cy="${f(e[1] - .2 * s)}" r="${f(.25 * s)}" fill="#cfe0ff"/><ellipse cx="${f(n[0])}" cy="${f(n[1])}" rx="${f(.6 * s)}" ry="${f(.4 * s)}" fill="#0a0604"/>`; }
+  for (let i = 0; i < 8; i++) { const t = i / 7, a = P(33 + t * 13, -37 - t * 5.4), b = P(32 + t * 12.4, -33.4 - t * 5); out += `<path d="M${f(a[0])} ${f(a[1])}Q${f(a[0] - 1.6 * s)} ${f((a[1] + b[1]) / 2)} ${f(b[0])} ${f(b[1])}" stroke="#140c08" stroke-width="${f(1.3 * s)}" stroke-linecap="round" fill="none"/>`; }
+  // the near legs: the fore reaching forward, the hind driving back (hock bent behind)
+  out += leg([[37, -22], [41, -12.4], [44.4, -4.6], [45.8, -1.2]], [7.4, 4.2, 3.2, 3.4], `url(#${lg})`) + leg([[5, -28], [8, -18.4], [2, -11.4], [-2, -3.4], [-3, -1.2]], [12, 7.4, 4, 3.2, 3.4], `url(#${lg})`);
+  out += `<path d="${pd([[2, -26], [6, -21], [8.4, -18.6]])}" stroke="${c[0]}" stroke-width="${f(.5 * s)}" fill="none" opacity=".5"/>`;
+  // the moon on the top line: croup, back, crest, poll
+  out += `<path d="${pd([[4, -35], [13, -35.2], [21, -33.2], [29, -34.7], [34, -37.2], [39, -40.7], [44, -42.7]])}" stroke="${o.rim || '#d8e4f8'}" stroke-width="${f(.55 * s)}" fill="none" opacity=".75"/>`;
+  // harness: the bridle, the collar padded round the neck with its brass-tipped hames, the back band, the hame rein
+  out += `<path d="${pd([[48.6, -41.2], [52.6, -33.4], [55.4, -29.6]])}M${pd([[53.6, -32.6], [56.6, -31.2], [58.2, -29.2]]).slice(1)}" stroke="#1a0e08" stroke-width="${f(.9 * s)}" fill="none"/>`;
+  { const cc = P(40.6, -31), ang = -24 - (o.lift || 0) * .6; out += `<g transform="translate(${f(cc[0])} ${f(cc[1])}) rotate(${f(ang)})"><ellipse rx="${f(3.4 * s)}" ry="${f(10.6 * s)}" fill="none" stroke="#1a0e08" stroke-width="${f(3.2 * s)}"/><ellipse rx="${f(3.4 * s)}" ry="${f(10.6 * s)}" fill="none" stroke="#6a4428" stroke-width="${f(1 * s)}" opacity=".8" transform="translate(${f(.5 * s)} ${f(-.4 * s)})"/>`
+      + `<path d="M${f(2.6 * s)} ${f(-11 * s)}Q${f(5.2 * s)} 0 ${f(2.6 * s)} ${f(11 * s)}" stroke="#c9a048" stroke-width="${f(.9 * s)}" fill="none"/><circle cx="${f(2.6 * s)}" cy="${f(-11.6 * s)}" r="${f(.9 * s)}" fill="#e8c46a"/></g>`; }
+  out += `<path d="${pd([[24, -34], [24.6, -26], [24, -18.4]])}" stroke="#1a0e08" stroke-width="${f(1.8 * s)}" fill="none"/>` + [[24.4, -30], [24.4, -23]].map(([a, b]) => { const p = P(a, b); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.6 * s)}" fill="#d8b050"/>`; }).join('')
+    + `<path d="${pd([[55, -30], [46, -37], [38, -38.6], [30, -36.4]])}" stroke="#1a0e08" stroke-width="${f(.6 * s)}" fill="none" opacity=".9"/>`;
   return out;
 }
 // the watchman running up the street from the left, coat flying, lantern swinging forward
@@ -187,14 +200,17 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
         fg += K.localGlow(u, { x: x0 + 4, y: y - 1, color: '#ffc060', power: .5, radius: 7 }); }
       // coins spilling from the door's gap down the front
       { const R = rng(51); for (let i = 0; i < 5; i++) { const cx = x0 + w - 6 + i * 2.6 + R() * 2, cy = y - h * .45 + i * 5.2; fg += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="1.5" ry=".7" fill="#f2c860" stroke="#5a3a0a" stroke-width=".25" transform="rotate(${f(R() * 60 - 30)} ${f(cx)} ${f(cy)})"/>`; } }
-      // the chains: round the safe and to the whippletree behind the horses (taut, straight-ish)
-      fg += K.chain(u, L, [[x0 + w + 2, y - h + 8], [126, y - h + 9], [140, 102], [152, 104]], { link: 2.4, seed: 3 }) + K.chain(u, L, [[x0 + w + 2, y - 16], [130, y - 18], [146, 110], [154, 108]], { link: 2.4, seed: 7 });
-      fg += K.shadeCyl(u, 152, 98, 152, 114, 1.4, L, 'oak', { outline: .35 }); }
-    // the horses: the far one first (darker, a little higher), then the near one, both stepping off to the right
-    fg += K.castShadow(u, L, { x: 176, y: 124, w: 24, h: 40, horizon: HZ, d: .5, opacity: .5 }) + horse(u, L, 168, 123, .82, ['#3a2a20', '#2a1c14', '#140c08'], { seed: 5, rim: '#a8b8d0' });
-    fg += K.castShadow(u, L, { x: 172, y: 128, w: 26, h: 46, horizon: HZ, d: .5, opacity: .55 }) + horse(u, L, 156, 129, 1.02, ['#7a4a2a', '#4a2a16', '#1e120a'], { seed: 3 });
-    // the traces from the whippletree to the near horse's breeching
-    fg += `<path d="M152 104L157 99.4M152 110L160 101" stroke="#1a0e08" stroke-width="1.2"/>`;
+      // the chains: from the safe's straps to the swingletree behind the team (taut, straight-ish)
+      fg += K.chain(u, L, [[x0 + w + 2, y - h + 8], [132, 97], [141, 101]], { link: 2.4, seed: 3 }) + K.chain(u, L, [[x0 + w + 2, y - 16], [132, 112], [141, 112]], { link: 2.4, seed: 7 });
+      fg += K.shadeCyl(u, 141, 98, 141, 115, 1.4, L, 'oak', { outline: .35 }); }
+    // the horses, whole, pulling away to the right: the far one first (darker, a little higher, its head up), then
+    // the near one; from the swingletree the trace chains run along their flanks to the hames of the collars
+    const NH = { x: 146, y: 129, s: .9 }, FH = { x: 152, y: 121, s: .8 };
+    const hm = (H, lx, ly) => [H.x + lx * H.s, H.y + ly * H.s];
+    fg += K.castShadow(u, L, { x: 170, y: 124, w: 40, h: 30, horizon: HZ, d: .5, opacity: .45 }) + horse(u, L, FH.x, FH.y, FH.s, ['#3a2a20', '#2a1c14', '#140c08'], { seed: 5, rim: '#a8b8d0', lift: 24 });
+    { const a = hm(FH, 41.6, -30); fg += K.chain(u, L, [[141, 104], [160, 103.4], [a[0], a[1]]], { link: 1.8, seed: 11 }); }
+    fg += K.castShadow(u, L, { x: 172, y: 129, w: 46, h: 34, horizon: HZ, d: .5, opacity: .55 }) + horse(u, L, NH.x, NH.y, NH.s, ['#7a4a2a', '#4a2a16', '#1e120a'], { seed: 3 });
+    { const a = hm(NH, 41.8, -27.4); fg += K.chain(u, L, [[141, 108], [162, 107.6], [a[0], a[1]]], { link: 1.8, seed: 13 }); }
     // the watchman
     fg += watchman(u, L, GUARD.x, GUARD.y) + K.localGlow(u, { x: GUARD.x + 11.2, y: GUARD.y - 14.5, color: '#ffd080', power: .85, radius: 9 });
     // light: the moon's veil, the dark under the glass

@@ -1,11 +1,10 @@
 // «Анжелика» (Месть, ПРИКАЗ: возьмите 2 карты, затем передайте союзнику 1 карту с руки), variant A of the method
 // trial (docs/progress/print-kit.md «Проба способа»): the first-round scene (portrait.cjs SCENES['Анжелика']) at its
 // best. The captain's cabin at night: the stern window with the moon over the sea, the curtains tied back; on the
-// table the chart, the crossed cutlasses, the ring and a sealed letter she sends to the ally — the ally's ship lies
-// close by in the window with her stern lights lit, a lantern raised to answer. A tall candle is the light of the
+// table the chart with the crossed cutlasses lying on it and the ring; her gloved hand holds the sealed letter up
+// towards the ally — the ally's ship lies close by in the window with her stern lights lit, a lantern raised to answer. A tall candle is the light of the
 // table (shadows fan from under it); the moon through the window is the cold fill.
-// Fixed against the first round: the sabres stood upright in the air — now they lean from the table to the sill
-// with contact shadows; the ring stood on its edge — it lies on the letter; the chart was a sheet standing on a wall —
+// Fixed against the first round: the sabres stood upright in the air — now they lie flat on the chart, crossed; the ring stood on its edge — it lies on the letter; the chart was a sheet standing on a wall —
 // the table top is in perspective and the chart lies on it; the stepped moon path is a real glitter on the water.
 'use strict';
 const K = require('../kit/index.cjs');
@@ -23,8 +22,8 @@ const light = { time: 'night', haze: .25, key: { type: 'point', x: CAN.x, y: fla
 const lightOut = { time: 'night', haze: .35, key: { type: 'moon', x: 118, y: 21, el: 18, color: '#d8e4fa', power: .8 }, fill: { color: '#3d5680', power: .4 } };
 const skel = { horizon: HZ, eye: 1.3, light: 'tall candle on the table right (x 166) + the moon through the window (cold fill)', items: [
   ['window', WX, WY + WH, WW, WH, 'stern wall'], ['ally ship', 50, 60, 40, 30, 'sea in the window'], ['sill', WX - 8, 90, WW + 16, 8, 'window frame'],
-  ['chart', 32, 142, 112, 40, 'table top'], ['sabre L', 66, 146, 50, 68, 'hilt on the chart, tip on the sill'], ['sabre R', 84, 146, 50, 68, 'hilt on the chart, tip on the sill'],
-  ['letter', 120, 124, 30, 12, 'on the chart'], ['ring', 125, 118, 9, 4, 'on the letter'], ['candle', 155, 140, 22, 50, 'table top'],
+  ['chart', 32, 142, 112, 40, 'table top'], ['sabres', 76, 142, 64, 18, 'flat on the chart'],
+  ['hand + letter', 20, 172, 70, 90, 'arm from the near left edge'], ['ring', 124, 118, 9, 4, 'on the chart'], ['candle', 155, 140, 22, 50, 'table top'],
   ['inkwell', 18, 134, 14, 12, 'table top'], ['quill', 24, 134, 18, 40, 'in the inkwell'], ['spyglass', 130, 92, 34, 5, 'on the sill']] };
 
 // a smooth path through points (Catmull-Rom)
@@ -185,21 +184,32 @@ module.exports = { name: 'Анжелика', kind: 'deck', status: 'draft', vari
         // the far edge curls up a little (a roll of paper catching the candle)
         + `<path d="M38 112Q92 107.2 146 108" stroke="${rp.lit}" stroke-width="1.3" fill="none" opacity=".8"/><path d="M38 112.8Q92 108.4 146 109" stroke="${rp.shadow}" stroke-width=".5" fill="none" opacity=".6"/>`;
       fg += dividers(L, 44, 141, -.3); }
-    // the crossed cutlasses: hilts on the near half of the chart, the blades lean back and their points rest on
-    // the sill (contact shadows at the guards and at the points); the blades catch the candle
-    { const S = 1.85; fg += K.castShadow(u, L, { x: 80, y: 141, w: 10, h: 18, horizon: HZ, d: .5, opacity: .5 }) + K.castShadow(u, L, { x: 118, y: 141, w: 10, h: 18, horizon: HZ, d: .5, opacity: .45 });
-      fg += K.contactShadow(u, 68, 142, 10, L, { ry: 1.4, opacity: .7 }) + K.contactShadow(u, 132, 142, 10, L, { ry: 1.4, opacity: .7 })
-        + K.contactShadow(u, 117, 89, 4, L, { ry: .8, opacity: .5 }) + K.contactShadow(u, 83, 89, 4, L, { ry: .8, opacity: .5 });
-      fg += K.sabre(u, L, { x: 95, y: 114, s: S, rot: -50, contact: false, seed: 3 }) + K.sabre(u, L, { x: 105, y: 114, s: S, rot: 50, flip: true, contact: false, seed: 7 }); }
-    // the inkwell and quill on the left, the letter with the ring on it on the right, near the candle
-    fg += inkwell(u, L, 22, 134, 1.35);
-    fg += letter(u, L, 134, 124, 26, 9, -8) + ring(u, L, 129, 116.6, 3.4, .4);
+    // the crossed cutlasses lie flat on the chart (in the table's perspective), hilts towards us, the blades catch the candle
+    { const S = 1.5, C = [108, 133], sq = .5;
+      fg += `<g transform="translate(${C[0]} ${C[1]}) scale(1 ${sq}) translate(${-C[0]} ${-C[1]})">`
+        + K.sabre(u, L, { x: C[0], y: C[1], s: S, rot: -24, seed: 3 }) + K.sabre(u, L, { x: C[0], y: C[1] + 1, s: S, rot: 24, flip: true, seed: 7 }) + '</g>'; }
+    // the inkwell and quill on the left, the ring left on the chart
+    fg += inkwell(u, L, 22, 134, 1.35) + ring(u, L, 128, 115.4, 3.4, .4);
+    // the captain's gloved hand comes in from the near left and holds the sealed letter up towards the ally's ship
+    // in the window: the card she passes on. The candle on the right lights the glove's right side and the paper
+    { const A0 = [-14, 176], W = [62, 124], s = 1.25, twist = -34, ang = Math.atan2(W[1] - A0[1], W[0] - A0[0]) * 180 / Math.PI + twist;
+      const gl = nid('gv', u), pa = nid('lp', u), rp = L.ramp('bone', 64, 96), red = L.ramp('paint-red', 64, 96);
+      fg += `<defs><linearGradient id="${gl}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b07a4a"/><stop offset=".4" stop-color="#6a4024"/><stop offset="1" stop-color="#2a160a"/></linearGradient>`
+        + `${linGrad(pa, -8, 0, 8, 0, [[0, rp.half, 1], [.6, rp.lit, 1], [1, mix(rp.lit, '#fff4d8', .5), 1]])}</defs>`;
+      // the letter, gripped at its corner between the thumb and the fingers (drawn in the hand's frame, under the fingers)
+      fg += `<g transform="translate(${W[0]} ${W[1]}) rotate(${f(ang)}) scale(${s}) translate(23 -9) rotate(10)">`
+        + `<rect x="-10" y="-7" width="20" height="14" rx=".6" fill="url(#${pa})" stroke="${rp.outline}" stroke-width=".45"/>`
+        + `<path d="M-10 -7L0 .4L10 -7" stroke="${rp.shadow}" stroke-width=".45" fill="none" opacity=".7"/><path d="M-9.4 -6.4L0 1L9.4 -6.4" stroke="${rp.lit}" stroke-width=".3" fill="none" opacity=".7"/>`
+        + `<path d="M-.4 1.6q-1.4 3 -3.6 4.6M.4 1.6q.4 3 2.2 5" stroke="${red.half}" stroke-width="1" fill="none" stroke-linecap="round"/>`
+        + `<circle cx="0" cy=".9" r="2.5" fill="${red.half}" stroke="${red.outline}" stroke-width=".35"/><circle cx="0" cy=".9" r="1.5" fill="none" stroke="${red.shadow}" stroke-width=".35"/><path d="M.6 -.6q1 .2 1.4 .9" stroke="${red.lit}" stroke-width=".35" fill="none"/></g>`;
+      fg += K.localGlow(u, { x: 66, y: 92, color: '#ffd8a0', power: .3, radius: 16 }, { core: false });
+      fg += PK.arm(u, A0[0], A0[1], W[0], W[1], { w0: 19, w1: 10, cloth: '#3a1420', dark: '#12040a', light: '#7a2a3a', cuff: '#4a2a14', pose: 'pinch', side: 1, s, twist, skin: `url(#${gl})` }); }
     // a few coins left beside the letter (the price of the passage)
     fg += K.coins(u, L, { x: 150, y: 146, s: .8, n: 4, seed: 6 });
     // the candle: its cast shadow on the table, the stick, the light
     fg += K.castShadow(u, L, { x: CAN.x, y: CAN.y, w: 8 * CAN.s, h: 2, horizon: HZ, d: .9 }) + K.candle(u, L, { ...CAN, seed: 4 });
     fg += K.localGlow(u, { x: CAN.x, y: flameY, color: '#ffd080', power: .8, radius: 22 }) + K.localGlow(u, { x: CAN.x, y: flameY + 10, color: '#ffa040', power: .45, radius: 70 }, { core: false })
-      + glow(u, 100, 112, 30, 12, '#ffd8a0', .18)   // the blades catch the candle
+      + glow(u, 108, 133, 34, 10, '#ffd8a0', .18)   // the blades catch the candle
       + glow(u, 100, 70, 90, 50, '#9ab8e0', .08)     // the moon fills the room a little
       + motes(18, 110, 30, 90, 110, '#ffe0b0', 12)
       + gloom(u, 40, 120, 0, 120, .35) + gloom(u, 100, 170, 100, 280, .5);
