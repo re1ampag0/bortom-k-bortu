@@ -4,11 +4,31 @@
 // Everything is vector: the sheet's line art is one SVG in millimetres, prose is HTML in mm and pt.
 import fs from 'node:fs';
 import path from 'node:path';
-import { bigShip } from '../../../src/ui/game/art/bigShips';
-import { HERE, data, esc, rich, RICH_CSS, type Ctx, type PageSpec, type Part } from '../kit';
+import { createRequire } from 'node:module';
+import { HERE, ROOT, data, esc, rich, RICH_CSS, type Ctx, type PageSpec, type Part } from '../kit';
 import { BOARD, priceOf, trackCells, type Ship } from '../layout';
 import { BRASS, BRASS_DARK, DECK_KEY, INK, PARCHMENT, SEA, TYPE, contrast, darken, lighten } from '../colors';
 import { iconImg } from '../icons';
+
+const require = createRequire(import.meta.url);
+/** The ships of the art kit (tools/card-art/scenes/kit/ship.cjs): the same ships as on the card backs. */
+const K = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as {
+  ship(u: string, L: unknown, o: Record<string, unknown>): string; makeLight(l: unknown, cam: { horizon: number }): unknown;
+  shipBox(kind: string, o: { x: number; y: number; scale: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number }; LIGHTS: Record<string, unknown>;
+};
+/** A board's ship: a transparent picture in plain daylight (the sheet is paper, not a night scene), its bottom edge is the waterline. */
+interface ShipPic { url: string; w: number; h: number }
+async function kitShip(ctx: Ctx, key: string): Promise<ShipPic> {
+  const kind = key === 'dutchman' ? 'dutch' : key, at = { x: 100, y: 180, scale: 1 }, b = K.shipBox(kind, at), m = 3, w = b.w + 2 * m, h = b.h + m, px = 320;
+  const body = K.ship('bo' + kind, K.makeLight(K.LIGHTS.endeavour, { horizon: 170 }), { kind, ...at });
+  const url = await ctx.raster('board-ship-' + kind, `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${Math.round(px * h / w)}" viewBox="${r(b.x0 - m)} ${r(b.top - m)} ${r(w)} ${r(h)}">${body}</svg>`, px, Math.round(px * h / w), 4);
+  return { url, w, h };
+}
+/** The picture fitted into maxW × maxH, centred on cx, standing on the waterline wy (sunk a hair so the wave in front covers the cut). */
+const shipImage = (pic: ShipPic, cx: number, wy: number, maxW: number, maxH: number) => {
+  const k = Math.min(maxW / pic.w, maxH / pic.h), w = pic.w * k, h = pic.h * k;
+  return `<image href="${pic.url}" x="${r(cx - w / 2)}" y="${r(wy - h + k)}" width="${r(w)}" height="${r(h)}"/>`;
+};
 
 export type BoardVariant = 'top' | 'side';
 /** The layout of 03-planshety.pdf. 'side': the picture is 55 mm high on all four boards (39 mm in 'top'), the sheet is
@@ -159,12 +179,12 @@ const medallion = (cx: number, cy: number, R: number, ship: Ship, pal: Pal) =>
   text(cx, cy + pt(21) * 0.31, ship.code, 21, { font: 'Alegreya SC', w: 800, color: CREAM, anchor: 'middle' });
 
 /** 'top': a light sky and a strip of sea across the sheet, the ship on it at the right. */
-function headerTop(ship: Ship, pal: Pal): string {
-  const x = EDGE, y = EDGE, w = PAGE.w - 2 * EDGE, h = HEAD_H.top, id = `bo-h${++UID}`, k = 0.5, wy = y + h - 4.6, sx = x + w - 8 - 60 * k;
+function headerTop(ship: Ship, pal: Pal, pic: ShipPic): string {
+  const x = EDGE, y = EDGE, w = PAGE.w - 2 * EDGE, h = HEAD_H.top, id = `bo-h${++UID}`, wy = y + h - 4.6, sx = x + w - 8 - 30;
   return `<defs><clipPath id="${id}c"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.4"/></clipPath><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset=".2" stop-color="${PAPER}"/><stop offset="1" stop-color="${pal.sky}"/></linearGradient></defs>
 <g clip-path="url(#${id}c)"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#${id}g)"/>
 <rect x="${x}" y="${r(wy - 3.6)}" width="${w}" height="12" fill="${pal.sea[0]}"/><path d="${waves(x, x + w, wy - 1.7, 0.5, 9, 3, y + h)}" fill="${pal.sea[1]}"/>
-${bigShip(DECK_KEY[ship.code], sx, wy, k)}
+${shipImage(pic, sx, wy, 62, h - 6.6)}
 <path d="${waves(x, x + w, wy + 1.1, 0.55, 12, 7, y + h)}" fill="${pal.sea[2]}"/><rect x="${x}" y="${r(y + h - 1.2)}" width="${w}" height="1.2" fill="${pal.ship}"/></g>
 <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.4" fill="none" stroke="${BRASS}" stroke-width=".3"/>${medallion(x + 12, y + 14, 8.4, ship, pal)}`;
 }
@@ -181,11 +201,11 @@ function headerHtml(ship: Ship, pal: Pal, variant: BoardVariant): string {
 <div class="bo-abs bo-title bo-tr" style="right:${EDGE}mm;top:${EDGE + 2.2}mm">${side}${motto}</div>`;
 }
 /** 'side': the picture in the column; the sea stretches to the box, the ship keeps its shape and stands on the same waterline. */
-function shipPicture(ship: Ship, pal: Pal): string {
+function shipPicture(ship: Ship, pal: Pal, pic: ShipPic): string {
   const id = `bo-p${++UID}`;
   return `<div class="bo-pic" style="border-color:${BRASS}">
 <svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset=".15" stop-color="${PAPER}"/><stop offset=".85" stop-color="${pal.sky}"/></linearGradient></defs><rect width="100" height="100" fill="url(#${id})"/><rect y="82" width="100" height="18" fill="${pal.sea[0]}"/><path d="${waves(0, 100, 85.4, 0.8, 9, 2, 100)}" fill="${pal.sea[1]}"/></svg>
-<svg viewBox="0 0 130 84" preserveAspectRatio="xMidYMax meet">${bigShip(DECK_KEY[ship.code], 65, 74, 1)}</svg>
+<svg viewBox="0 0 130 84" preserveAspectRatio="xMidYMax meet">${shipImage(pic, 65, 74, 122, 70)}</svg>
 <svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${waves(0, 100, 90.4, 0.9, 12, 5, 100)}" fill="${pal.sea[2]}"/><rect y="97.6" width="100" height="2.4" fill="${pal.ship}"/></svg>
 </div>`;
 }
@@ -193,12 +213,12 @@ function shipPicture(ship: Ship, pal: Pal): string {
 const tipsBox = (ship: Ship) => `<div class="bo-box bo-how"><div class="bo-h">${esc(fill(TXT.tips, { ship: ship.name }))}</div><ul class="bo-tips">${ship.tips.map(t => `<li>${richNb(t)}</li>`).join('')}</ul></div>`;
 
 /** The right column: (the picture,) the abilities, the Legend, the tips — in the data's words. */
-function column(ctx: Ctx, ship: Ship, pal: Pal, top: number, variant: BoardVariant): string {
+function column(ctx: Ctx, ship: Ship, pal: Pal, top: number, variant: BoardVariant, pic: ShipPic): string {
   const legend = data.legends[ship.code], price = priceOf(legend);
   const icons = [price.powder ? `coin-${price.powder}` : '', price.soul ? `flask-${price.soul}` : ''].filter(Boolean);
   const d = 8.2, iconHtml = icons.map((n, i) => iconImg(ctx, n, COL.w - 3 - d - i * (d + 1.4), 2.2, d)).join('');
   return `<div class="bo-col bo-txt" style="left:${COL.x}mm;top:${r(top)}mm;width:${COL.w}mm;height:${r(BODY_END - top)}mm;--c:${pal.deep}">
-${variant === 'side' ? shipPicture(ship, pal) : ''}
+${variant === 'side' ? shipPicture(ship, pal, pic) : ''}
 <div class="bo-box" style="background:${pal.tint};border-color:${pal.line}"><div class="bo-h">${esc(TXT.abilities)}</div>${ship.abilities.map(a => `<div class="bo-an">${esc(a.name)}</div><div class="bo-p">${richNb(a.text)}</div>`).join('')}</div>
 <div class="bo-box bo-legend">${iconHtml}<div class="bo-lh" style="padding-right:${r(icons.length * (d + 1.4) + 1)}mm"><div class="bo-h">${esc(TXT.legend)}</div><div class="bo-ln">${esc(legend.name)}</div></div><div class="bo-p">${richNb(legend.text)}</div><div class="bo-note">${esc(TXT.legendNote)}</div></div>
 ${variant === 'top' ? tipsBox(ship) : ''}
@@ -211,13 +231,13 @@ function footer(ship: Ship, pal: Pal): string {
   return `<div class="bo-abs bo-foot" style="left:${EDGE}mm;top:${r(FOOT_LINE + 1.5)}mm;width:${PAGE.w - 2 * EDGE}mm"><svg viewBox="-2 -2 4 4">${star(0, 0.1, 2, pal.deep)}</svg>${parts.map(p => `<span>${p}</span>`).join('<i>·</i>')}</div>`;
 }
 
-export function boardPage(ctx: Ctx, ship: Ship, variant: BoardVariant): PageSpec {
-  const pal = palette(ship.color), bodyTop = EDGE + HEAD_H[variant] + BODY_GAP, id = `bo-b${++UID}`;
+export async function boardPage(ctx: Ctx, ship: Ship, variant: BoardVariant): Promise<PageSpec> {
+  const pal = palette(ship.color), bodyTop = EDGE + HEAD_H[variant] + BODY_GAP, id = `bo-b${++UID}`, pic = await kitShip(ctx, DECK_KEY[ship.code]);
   const svg: string[] = [], html: string[] = [];
   // the sheet: parchment inside a frame of the ship colour with a brass hairline
   svg.push(`<defs><radialGradient id="${id}" cx=".5" cy=".5" r=".75"><stop offset=".5" stop-color="${PAPER}"/><stop offset="1" stop-color="${PARCHMENT}"/></radialGradient></defs>
 <rect x="8.5" y="8.5" width="${PAGE.w - 17}" height="${PAGE.h - 17}" rx="3.4" fill="url(#${id})" stroke="${pal.ship}" stroke-width="1"/><rect x="9.6" y="9.6" width="${r(PAGE.w - 19.2)}" height="${r(PAGE.h - 19.2)}" rx="2.4" fill="none" stroke="${BRASS}" stroke-width=".25"/>`);
-  svg.push(variant === 'top' ? headerTop(ship, pal) : headerSide(ship, pal));
+  svg.push(variant === 'top' ? headerTop(ship, pal, pic) : headerSide(ship, pal));
   html.push(headerHtml(ship, pal, variant));
 
   // tracks: spread evenly over the height of the body
@@ -235,7 +255,7 @@ export function boardPage(ctx: Ctx, ship: Ship, variant: BoardVariant): PageSpec
   if (slots.reduce((a, s) => a + s.h, 0) < 40 && variant === 'top') svg.splice(1, 0, rose(MID.x + MID.w / 2, midTop + midH / 2, 34));
   html.push(`<div class="bo-mid bo-txt" style="left:${MID.x}mm;top:${r(midTop)}mm;width:${MID.w}mm;height:${r(midH)}mm;--c:${pal.deep}">${slots.map(slotHtml).join('')}${variant === 'side' ? tipsBox(ship) : ''}</div>`);
 
-  html.push(column(ctx, ship, pal, bodyTop, variant));
+  html.push(column(ctx, ship, pal, bodyTop, variant, pic));
   svg.push(`<line x1="${EDGE}" y1="${FOOT_LINE}" x2="${PAGE.w - EDGE}" y2="${FOOT_LINE}" stroke="${BRASS}" stroke-width=".25"/>`);
   html.push(footer(ship, pal));
   return { html: `<svg class="bo-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html.join('\n')}`, land: true };
@@ -280,5 +300,5 @@ export const BOARD_CSS = `${RICH_CSS}
 `;
 
 export async function build(ctx: Ctx): Promise<Part[]> {
-  return [{ file: '03-planshety', title: TXT.title, css: BOARD_CSS, pages: data.ships.map(ship => boardPage(ctx, ship, BOARD_DEFAULT)) }];
+  return [{ file: '03-planshety', title: TXT.title, css: BOARD_CSS, pages: await Promise.all(data.ships.map(ship => boardPage(ctx, ship, BOARD_DEFAULT))) }];
 }

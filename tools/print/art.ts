@@ -22,9 +22,11 @@ export const portraitSvg = (name: string, draftArt = false) => P.portrait(name, 
 export const backArtSvg = (k: string) => P.backArt(k);
 /** The new card backs (tools/card-art/scenes/backs.cjs, three designs): the picture and where the lettering goes, in picture units. */
 export interface BackSpec { svg: string; ground: string; tone: 'dark' | 'light'; title: { y: number } | null; crest: { y: number; d: number } | null; letter: { y: number; size: number } | null; name: { y: number } }
-let B: { back(kind: string, variant: number): BackSpec } | null = null;
+let B: { back(kind: string, variant: number): BackSpec; variants?: number[] } | null = null;
 try { if (fs.existsSync(path.join(ROOT, 'tools/card-art/scenes/backs.cjs'))) B = require(path.join(ROOT, 'tools/card-art/scenes/backs.cjs')); } catch (e) { console.warn('warning: backs.cjs skipped: ' + (e as Error).message); }
 export const hasBacks = () => !!B;
+/** The designs backs.cjs has drawn so far (its `variants`); without the file — only the first, in the old drawing. */
+export const backVariants = (): (1 | 2 | 3)[] => { const v = (B?.variants ?? (B ? [1, 2, 3] : [1])).filter(n => n === 1 || n === 2 || n === 3) as (1 | 2 | 3)[]; return v.length ? v : [1]; };
 export const backSpec = (kind: string, variant: number): BackSpec | null => { try { return B ? B.back(kind, variant) : null; } catch (e) { console.warn(`warning: back ${kind} v${variant}: ${(e as Error).message}`); return null; } };
 
 export const PROFILE_VERSION = 'p5';

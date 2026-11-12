@@ -7,12 +7,12 @@ import { data, esc, mm, rich, read, HERE, ROOT, RICH_CSS, fontCss, BASE_CSS, typ
 import { BRASS, BRASS_DARK, BRASS_LIGHT, DECK_BAND, DECK_KEY, DECK_NAME, DECK_RIM, DECK_TINT, ON_GLASS, SEA, TYPE, cutColor, darken, lighten, type CardType, type DeckCode } from './colors';
 import { A4, BLEED, BLEED_BOX, CARD, FACE, GRID, backSheet, cutLines, deckSheets, seaSheets, slot, slug, priceOf, type BackKind, type DeckCard, type Item, type SeaCard, type Sheet } from './layout';
 import { iconImg, ROSE_URI, typeIconUri } from './icons';
-import { backArtSvg, backSpec, hasBacks, hasScene, makeArt, plainSvg, portraitSvg, profiled, type ArtInfo, type BackSpec } from './art';
+import { backArtSvg, backSpec, backVariants, hasScene, makeArt, plainSvg, portraitSvg, profiled, type ArtInfo, type BackSpec } from './art';
 import { wxSvg } from '../../src/ui/game/art/wx';
 
 export const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/cards.json'), 'utf8'));
 /** Back designs that exist (docs/tasks/print-kit.md 4.10): 1 «Корабль в море»; 2 and 3 come with stage Б. */
-export const BACK_VARIANTS: (1 | 2 | 3)[] = hasBacks() ? [1, 2, 3] : [1];
+export const BACK_VARIANTS: (1 | 2 | 3)[] = backVariants();
 export interface Mode { glass: 'type' | 'ship'; index: boolean; backs: 1 | 2 | 3 }
 /** What the fitting pass decided for one face: sizes in pt, what stayed on the plate, the plate's height in mm. */
 export interface Fit { name: number; wrap: boolean; tp: number; big: boolean; flavor: boolean; fvBreak: boolean; h: number; over: boolean; idx: number; idxW: number; idxBottom: number }
