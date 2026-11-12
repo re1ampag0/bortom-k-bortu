@@ -21,7 +21,7 @@ export const printScenes = () => P.PRINT;
 export const portraitSvg = (name: string, draftArt = false) => P.portrait(name, { draftArt });
 export const backArtSvg = (k: string) => P.backArt(k);
 
-export const PROFILE_VERSION = 'p4';
+export const PROFILE_VERSION = 'p5';
 /** The print profile's curve points (review-print 10). */
 export const CURVE: [number, number][] = [[0, 20], [32, 46], [64, 76], [128, 134], [192, 194], [255, 255]];
 /** Target mean relative luminance under the text: 0.035-0.07 keeps white text ≥ 7 : 1 without a black slab. */
@@ -98,7 +98,8 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       const bc = document.createElement('canvas'); bc.width = W; bc.height = H;
       const bg = bc.getContext('2d', { willReadFrequently: true })!;
       bg.drawImage(c, 0, 0); // an unblurred copy under the blur keeps the canvas edge from fading to transparent
-      bg.filter = `blur(${(W * 0.0233).toFixed(1)}px) saturate(.6)`; // the hue of the plate comes from the tint, not from the picture bg.drawImage(c, 0, 0);
+      // blurred; less saturated, so the hue of the plate comes from the tint and not from the picture
+      bg.filter = `blur(${(W * 0.0233).toFixed(1)}px) saturate(.6)`; bg.drawImage(c, 0, 0);
       const src = bg.getImageData(box.x, box.y, box.w, box.h).data, dst = g.getImageData(box.x, box.y, box.w, box.h), o = dst.data;
       const lin = Float32Array.from({ length: 256 }, (_, v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
       const tint = [1, 3, 5].map(i => parseInt(box.tint.slice(i, i + 2), 16));

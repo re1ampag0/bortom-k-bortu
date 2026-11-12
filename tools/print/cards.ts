@@ -26,11 +26,11 @@ export const CARD_CSS = `${RICH_CSS}
 .cd .fr2{position:absolute;inset:1.55mm;border:.25mm solid ${BRASS_DARK};box-sizing:border-box}
 .cd .bd{position:absolute;left:0;right:0;bottom:0;height:${mm(FACE.band.h)};background:linear-gradient(rgba(0,0,0,0),var(--band) 26%)}
 .cd .bd span{position:absolute;left:0;right:0;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);text-align:center;font:800 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.14em;color:#f6e7c1;white-space:nowrap}
-.cd .bd i{position:absolute;right:4.4mm;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);font:800 8pt/1 'Alegreya Sans',sans-serif;font-style:normal;letter-spacing:.04em;color:#f6e7c1}
+.cd .bd i{position:absolute;right:4.4mm;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);font:800 9.5pt/1 'Alegreya Sans',sans-serif;font-style:normal;letter-spacing:.04em;color:#f6e7c1}
 .gl{position:absolute;left:${mm(G.inset)};right:${mm(G.inset)};bottom:${mm(G.bottom)};border-radius:${mm(G.radius)};box-sizing:border-box;border:.25mm solid var(--rim);padding:1.9mm 2.1mm 1.7mm;display:flex;flex-direction:column;align-items:center;gap:.95mm;text-align:center;color:${ON_GLASS.text}}
 .nm{font:700 14pt/1 'Alegreya SC',serif;color:${ON_GLASS.name};white-space:nowrap;max-width:100%;overflow:hidden;padding-bottom:.2mm}
 .nm.wrap{white-space:normal;text-wrap:balance;line-height:1.02;overflow:visible}
-.vr{width:19mm;height:.2mm;flex:none;background:linear-gradient(90deg,rgba(226,183,92,0),${BRASS_LIGHT},rgba(226,183,92,0))}
+.vr{width:19mm;height:.26mm;flex:none;background:linear-gradient(90deg,rgba(226,183,92,0),${BRASS_LIGHT},rgba(226,183,92,0))}
 .rb{flex:none;padding:.55mm 3.1mm .85mm;clip-path:polygon(1.7mm 0,calc(100% - 1.7mm) 0,100% 50%,calc(100% - 1.7mm) 100%,1.7mm 100%,0 50%);font:500 7pt/1 'Alegreya Sans',sans-serif;letter-spacing:.05em;white-space:nowrap;color:#fff}
 .rb b{font-weight:800;letter-spacing:.14em}
 .bg{font:800 11pt/1.08 'Alegreya Sans',sans-serif;color:${ON_GLASS.big}}
@@ -68,8 +68,8 @@ export const CARD_CSS = `${RICH_CSS}
 .bk .tt{position:absolute;left:0;right:0;top:9.6mm;text-align:center;font:700 12pt/1 'Alegreya SC',serif;letter-spacing:.14em;color:#f3dc9d}
 .bk .tr{position:absolute;left:50%;top:15.2mm;width:25mm;margin-left:-12.5mm;height:.2mm;background:linear-gradient(90deg,rgba(217,171,82,0),#d9ab52,rgba(217,171,82,0))}
 .bk .cr{position:absolute;left:50%;top:57.4mm;width:18.9mm;height:18.9mm;margin-left:-9.45mm}
-.bk .bn{position:absolute;left:8mm;right:8mm;top:76.6mm;text-align:center;font:700 9.6pt/1.05 'Alegreya SC',serif;color:#fff2d4;letter-spacing:.04em}
-.bk .bl{position:absolute;left:50%;top:76.2mm;transform:translateX(-50%);padding:.7mm 2.4mm .95mm;background:linear-gradient(${BRASS_LIGHT},${BRASS});border:.25mm solid ${BRASS_DARK};border-radius:.8mm;font:800 7pt/1 'Alegreya Sans',sans-serif;letter-spacing:.16em;color:#2a180c}
+.bk .bn{position:absolute;left:9mm;right:9mm;top:74.6mm;text-align:center;font:700 9.6pt/1.05 'Alegreya SC',serif;color:#fff2d4;letter-spacing:.04em}
+.bk .bl{position:absolute;left:50%;top:74.2mm;transform:translateX(-50%);padding:.7mm 2.4mm .95mm;background:linear-gradient(${BRASS_LIGHT},${BRASS});border:.25mm solid ${BRASS_DARK};border-radius:.8mm;font:800 7pt/1 'Alegreya Sans',sans-serif;letter-spacing:.16em;color:#2a180c}
 .bk.nt .pp{position:absolute;inset:10mm;border-radius:5mm;background:linear-gradient(#f4e8c8,#e2cfa0)}
 .bk.nt .tt{top:26mm;left:10mm;right:10mm;color:#5a3c14;font-size:10.5pt;letter-spacing:.08em}
 .bk.nt .rs{position:absolute;left:50%;top:36mm;width:22mm;height:22mm;margin-left:-11mm}
@@ -79,11 +79,14 @@ export const CARD_CSS = `${RICH_CSS}
 .sh-svg{position:absolute;left:0;top:0;width:${mm(A4.w)};height:${mm(A4.h)}}
 .sh-lab{background:#fff;padding:.6mm 1.2mm;margin:-.6mm -1.2mm;position:absolute;left:${mm(GRID.x0)};top:6.2mm;font:700 8pt/1 'Alegreya Sans',sans-serif;color:#555;letter-spacing:.03em;white-space:nowrap}
 .sh-rul{background:#fff;padding:.4mm 0;margin-top:-.4mm;position:absolute;right:${mm(GRID.x0)};top:5.6mm;width:50mm;font:500 6.5pt/1 'Alegreya Sans',sans-serif;color:#555;text-align:center;white-space:nowrap}
+.sh-sub{position:absolute;left:${mm(GRID.x0 + 4)};right:${mm(GRID.x0 + 54)};top:9.4mm;font:500 7pt/1.1 'Alegreya Sans',sans-serif;color:#444;background:#fff}
 .sh-shift{position:absolute;left:0;top:0;width:${mm(A4.w)};height:${mm(A4.h)}}
 `;
 
 const ribbon = (bold: string, rest: string, t: { t: string; td: string }) => `<div class="rb" style="background:linear-gradient(${darken(t.t, .18)},${t.td})"><b>${esc(bold)}</b>${rest ? ' · ' + esc(rest) : ''}</div>`;
 const splitPlan = (text: string): [string, string] => { const [rule, plan = ''] = text.split(/<b>План:<\/b>/); return [rule.replace(/(<br\s*\/?>\s*)+$/, ''), plan.trim()]; };
+/** Short lines (big result, flavour): a dash does not start a line, a number stays with its word. */
+const typo = (t: string) => esc(t).replace(/ (—|–) /g, '\u00a0$1 ').replace(/(\d) (?=[А-ЯЁа-яё])/g, '$1\u00a0');
 const nameStart = (n: string) => n.length <= 10 ? 14 : n.length <= 14 ? 13 : 12;
 
 interface FaceSpec { key: string; name: string; art: string; frame: string; band: string; rim: string; tint: string; bandText: string; copies: number; medal: string; ribbon: string; big: string; text: string; flavor: string; price: { powder: number; soul: number }; legend: boolean; index: boolean; sceneName: string | null; artKey: string }
@@ -107,8 +110,8 @@ export function faceSpec(item: Extract<Item, { kind: 'card' | 'legend' | 'sea' }
 /** The face. fit = null: the measuring pass (everything on the plate, sizes set by the script). */
 export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string, pos = ''): string {
   const [rule, plan] = splitPlan(s.text), tp = fit?.tp ?? 9;
-  const big = s.big && (!fit || fit.big) ? `<div class="bg">${esc(s.big)}</div>` : '';
-  const flavor = s.flavor && (!fit || fit.flavor) ? `<div class="fv">${fit?.fvBreak ? esc(s.flavor).replace(/([.!?…]) /, '$1<br>') : esc(s.flavor)}</div>` : '';
+  const big = s.big && (!fit || fit.big) ? `<div class="bg">${typo(s.big)}</div>` : '';
+  const flavor = s.flavor && (!fit || fit.flavor) ? `<div class="fv">${fit?.fvBreak ? typo(s.flavor).replace(/([.!?…]) /, '$1<br>') : typo(s.flavor)}</div>` : '';
   const P = FACE.price, px = CARD.w - P.right - P.d;
   let price = '', small = '';
   if (s.price.powder) { price += iconImg(ctx, `coin-${s.price.powder}`, px, P.y); }
@@ -118,7 +121,7 @@ export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string,
     if (s.price.powder) small = iconImg(ctx, `coin-${s.price.powder}`, x, y, I.priceD, 'ixp');
     else if (s.price.soul) small = iconImg(ctx, `flask-${s.price.soul}`, x, y - .4, I.priceD, 'ixp');
   }
-  const idx = s.index && s.big ? `<div class="ix"${fit ? ` style="font-size:${fit.idx}pt;width:${mm(fit.idxW)}"` : ''}>${esc(s.big)}</div>` : '';
+  const idx = s.index && s.big ? `<div class="ix"${fit ? ` style="font-size:${fit.idx}pt;width:${mm(fit.idxW)}"` : ''}>${typo(s.big)}</div>` : '';
   const lg = s.legend ? `<div class="lg"><b>${esc(TXT.legendPlate[0])}</b> · ${esc(TXT.legendPlate[1])}</div>` : '';
   return `<div class="cd" data-key="${esc(s.key)}" data-index="${s.index ? 1 : 0}" style="${pos}--frame:${s.frame};--band:${s.band};--rim:${s.rim}">`
     + (artUrl ? `<img class="art" src="${artUrl}" alt="">` : '')
@@ -144,7 +147,10 @@ export async function fitFaces(ctx: Ctx, specs: FaceSpec[]): Promise<Map<string,
       for (; ;) { nm.style.fontSize = name + 'pt'; if (nm.scrollWidth <= nm.clientWidth + .5) break; if (name <= 11) { wrap = true; nm.classList.add('wrap'); break; } name = Math.max(11, name - (name > 12 ? 1 : .5)); }
       // with the fan index the big result leaves the plate first (it stays in the index), else the flavour line
       const index = cd.dataset.index === '1';
-      const steps: [number, boolean, boolean][] = index ? [[9, true, true], [8.5, true, true], [8, true, true], [8, false, true], [8, false, false], [7.5, false, false]] : [[9, true, true], [8.5, true, true], [8, true, true], [8, true, false], [7.5, true, false], [7.5, false, false]];
+      // [text pt, big result, flavour line]: whatever is dropped, the rule text then takes the largest size that fits
+      const steps: [number, boolean, boolean][] = index
+        ? [[9, true, true], [8.5, true, true], [8, true, true], [9, false, true], [8.5, false, true], [8, false, true], [8, true, false], [9, false, false], [8.5, false, false], [8, false, false], [7.5, false, false]]
+        : [[9, true, true], [8.5, true, true], [8, true, true], [9, true, false], [8.5, true, false], [8, true, false], [7.5, true, false], [7.5, false, false]];
       let st = steps[0];
       for (st of steps) {
         tx.style.fontSize = st[0] + 'pt'; if (pl) pl.style.fontSize = st[0] + 'pt';
@@ -260,7 +266,7 @@ export function backHtml(kit: CardKit, b: BackKind, pos: string, ground = '#3a2c
   if (b.back === 'none') return `<div class="sh-blank" style="${pos}"></div>`;
   if (b.back === 'neutral') return `<div class="bk nt" style="${pos}--ground:${ground}"><div class="pp"></div><div class="tt">${esc(TXT.title)}</div><img class="rs" src="${ROSE_URI}" alt=""></div>`;
   const k = b.back === 'sea' ? 'sea' : b.deck, name = b.back === 'sea' ? TXT.seaBackName : DECK_NAME[b.deck];
-  return `<div class="bk" style="${pos}--ground:${profiled(b.back === 'sea' ? SEA.band : DECK_BAND[b.deck])}"><img class="art" src="${kit.backs.get(k)}" alt=""><div class="tt">${esc(TXT.title)}</div><div class="tr"></div><img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:55.3mm;width:18.9mm;height:19.32mm;margin-left:-9.45mm">`
+  return `<div class="bk" style="${pos}--ground:${profiled(b.back === 'sea' ? SEA.band : DECK_BAND[b.deck])}"><img class="art" src="${kit.backs.get(k)}" alt=""><div class="tt">${esc(TXT.title)}</div><div class="tr"></div><img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:53.6mm;width:18.9mm;height:19.32mm;margin-left:-9.45mm">`
     + (b.back === 'deck' && b.legend ? `<div class="bl">${esc(TXT.legendBack)}</div>` : `<div class="bn">${esc(name)}</div>`) + `</div>`;
 }
 
@@ -270,7 +276,7 @@ const sheetColor = (sh: Sheet) => sh.deck === 'sea' ? SEA.band : DECK_BAND[sh.de
 const pos = (i: number) => { const s = slot(i); return `left:${mm(s.x)};top:${mm(s.y)};`; };
 
 /** A sheet of faces: the frame colour bleeds 3 mm past the block; cut lines inside, marks to the sheet's edge; a 50 mm ruler. */
-export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: (i: number) => CardKit = () => kit): PageSpec {
+export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: (i: number) => CardKit = () => kit, sub = ''): PageSpec {
   const col = sheetColor(sh), { inner, marks } = cutLines();
   const ln = (l: { x1: number; y1: number; x2: number; y2: number }, c: string, w: number) => `<path d="M${l.x1} ${l.y1}L${l.x2} ${l.y2}" stroke="${c}" stroke-width="${w}"/>`;
   const rx = A4.w - GRID.x0 - 50;
@@ -281,15 +287,15 @@ export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: 
   return { html: `<div class="sh-bleed" style="background:${col}"></div>${patches}${sh.items.map((it, i) => itemFace(ctx, kitOf(i), it, pos(i))).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${inner.map(l => ln(l, cutColor(col), .25)).join('')}${marks.map(l => ln(l, '#808080', .3)).join('')}`
     + `<path d="M${rx} 10.6H${rx + 50}M${rx} 9.4V11.8M${rx + 50} 9.4V11.8${[10, 20, 30, 40].map(d => `M${rx + d} 10V11.2`).join('')}" stroke="#555" stroke-width=".25" fill="none"/>${arrowUp(GRID.x0 + 1.2, 1.6)}</svg>`
-    + `<div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetFace} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div><div class="sh-rul" style="left:${mm(rx)}">${esc(TXT.ruler)}</div>` };
+    + `<div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetFace} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div><div class="sh-rul" style="left:${mm(rx)}">${esc(TXT.ruler)}</div>${sub ? `<div class="sh-sub">${esc(sub)}</div>` : ''}` };
 }
 /** The sheet of backs behind a face sheet (mirrored columns); dx, dy shift the whole print, seen from the back. No cut lines: cut from the face. */
-export function backSheetPage(kit: CardKit, sh: Sheet, dx = 0, dy = 0, label = '', kitOf: (i: number) => CardKit = () => kit): PageSpec {
+export function backSheetPage(kit: CardKit, sh: Sheet, dx = 0, dy = 0, label = '', kitOf: (i: number) => CardKit = () => kit, sub = '', bleed = true): PageSpec {
   // the same colour as the edge of the back pictures in the JPEG (after the print profile): no seam between a card and the bleed
   const col = profiled(sheetColor(sh)), b = BLEED_BOX, L = 5, o = 1;
   const corner = (x: number, y: number, sx: number, sy: number) => `<path d="M${x + sx * o} ${y}h${sx * L}M${x} ${y + sy * o}v${sy * L}" stroke="#808080" stroke-width=".3" fill="none"/>`;
-  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})"><div class="sh-bleed" style="background:${col}"></div>${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i), col)).join('')}`
+  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})">${bleed ? `<div class="sh-bleed" style="background:${col}"></div>` : ''}${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i), col)).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${corner(b.x, b.y, -1, -1)}${corner(b.x + b.w, b.y, 1, -1)}${corner(b.x, b.y + b.h, -1, 1)}${corner(b.x + b.w, b.y + b.h, 1, 1)}</svg></div>`
-    + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${arrowUp(GRID.x0 + 1.2, 1.6)}</svg><div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetBack} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div>` };
+    + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${arrowUp(GRID.x0 + 1.2, 1.6)}</svg>${sub ? `<div class="sh-sub">${esc(sub)}</div>` : ''}<div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetBack} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div>` };
 }
 export { read };

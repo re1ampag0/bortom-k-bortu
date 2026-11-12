@@ -69,7 +69,7 @@ function puffForm(u, L, cs, col, o = {}) {
   const xs = cs.map(c => [c[0] - c[2], c[0] + c[2]]).flat(), ys = cs.map(c => [c[1] - c[2] * (c[3] || 1), c[1] + c[2] * (c[3] || 1)]).flat();
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), bx = (x0 + x1) / 2, by = (y0 + y1) / 2, ext = Math.max(x1 - x0, y1 - y0) / 2, hh = y1 - y0;
   // clouds under a lamp's point light are lit by the sky, not by the lamp
-  const d = o.skyLight && L.point ? { ux: 0, uy: -1, dz: .3 } : L.at(bx, by), back = d.dz < -.3, g = nid('pg', u), c = nid('pc', u), e = nid('pe', u), b = nid('pb', u), k = nid('pk', u), pad = 8 + (o.pad || 0);
+  const d = o.dir || (o.skyLight && L.point ? { ux: 0, uy: -1, dz: .3 } : L.at(bx, by)), back = d.dz < -.3, g = nid('pg', u), c = nid('pc', u), e = nid('pe', u), b = nid('pb', u), k = nid('pk', u), pad = 8 + (o.pad || 0);
   const circ = (q, ins = 0) => { const ry = q[2] * (q[3] || 1); return q[2] - ins > .2 && ry - ins > .2 ? `<ellipse cx="${f(q[0])}" cy="${f(q[1])}" rx="${f(q[2] - ins)}" ry="${f(ry - ins)}"/>` : ''; };
   const baseEl = (ins = 0) => o.base ? `<ellipse cx="${f(o.base[0])}" cy="${f(o.base[1])}" rx="${f(Math.max(.2, o.base[2] - ins))}" ry="${f(Math.max(.2, o.base[3] - ins * .5))}"/>` : '';
   const shapes = cs.map(q => circ(q)).join('') + baseEl() + (o.extra || '');
@@ -119,7 +119,7 @@ function water(u, L, o = {}) {
   const hz = o.horizon != null ? o.horizon : L.cam.horizon, bot = o.bottom || 280, w = o.w || W, sw = o.swell != null ? o.swell : .5, R = rng(o.seed != null ? o.seed : 3), P = L.pal, H = bot - hz;
   const id = nid('wt', u), cid = nid('wc', u), hid = nid('wh', u);
   const seaAt = t => t < .45 ? mix(P.sea[0], P.sea[1], Math.pow(t / .45, .7)) : mix(P.sea[1], P.sea[2], (t - .45) / .55);
-  const sheen = mix(P.sky[3], L.keyColor, .35), deep = scale(P.sea[2], .8);
+  const sheen = mix(P.sky[3], L.keyColor, .35), deep = scale(P.sea[2], .9);
   const gx = typeof o.glitter === 'number' ? o.glitter : L.source && L.front && o.glitter !== false ? L.source.x : null, el = L.key.el || 30;
   const pathHw = d => 1.4 + d * (.11 + .13 * (1 - el / 90));
   let defs = linGrad(id, 0, hz, 0, bot, [[0, P.sea[0]], [.12, seaAt(.12)], [.45, P.sea[1]], [1, P.sea[2]]]) + `<clipPath id="${cid}"><rect x="0" y="${f(hz)}" width="${w}" height="${f(H)}"/></clipPath>`
@@ -209,24 +209,24 @@ function reflection(u, body, o = {}) {
  */
 function splash(u, o = {}) {
   const x = o.x || 0, y = o.y || 0, w = o.w || 16, h = o.h || 30, seed = o.seed != null ? o.seed : 0, R = rng(seed + 11), L = o.L || FLAT, v = ((seed % 3) + 3) % 3;
-  const white = o.L ? scale(mix('#ffffff', L.keyColor, .3), DIM[L.time] || 1) : '#f6fcff', shade = o.L ? mix(mix(L.pal.sea[1], white, .62), L.shadowTint, .12) : '#8fbccb', dk = o.L ? mix(L.pal.sea[2], white, .12) : '#2f6478';
+  const white = o.L ? scale(mix('#ffffff', L.keyColor, .3), .5 + .5 * (DIM[L.time] || 1)) : '#f6fcff', shade = o.L ? mix(mix(L.pal.sea[1], white, .66), L.shadowTint, .1) : '#8fbccb', la = L.at(x, y), dk = o.L ? mix(L.pal.sea[2], white, .12) : '#2f6478';
   const lean = v === 2 ? .36 : (R() - .5) * .1, cs = [], md = nid('sq', u);
   let streaks = '', drops = '', tx = x, ty = y - h * .7;
   if (v === 1) { // a low wide crown: a ring of short jets leaning outwards round a low heap of foam
-    for (let i = 0; i < 9; i++) { const a = (-72 + i * 18 + (R() - .5) * 8) * Math.PI / 180, hh = h * (.42 + .58 * Math.cos(a)) * (.72 + R() * .36), r = w * (.13 + R() * .05);
-      for (let j = 0; j < 5; j++) { const t = j / 4; cs.push([x + Math.sin(a) * w * (.14 + .44 * t), y - hh * (.12 + .88 * t), r * (1 - .45 * t), 1.3]); } }
-    cs.push([x, y - h * .2, w * .42, .7]); ty = y - h * .6;
+    for (let i = 0; i < 9; i++) { const a = (-72 + i * 18 + (R() - .5) * 8) * Math.PI / 180, hh = h * (.34 + .56 * Math.cos(a)) * (.75 + R() * .3), r = w * (.15 + R() * .05);
+      for (let j = 0; j < 6; j++) { const t = j / 5; cs.push([x + Math.sin(a) * w * (.12 + .46 * t), y - hh * (.1 + .9 * t), r * (1 - .5 * t), 1.3]); } }
+    cs.push([x, y - h * .22, w * .46, .8]); ty = y - h * .55;
   } else { // a column (0) or a column thrown aside (2): narrow at the foot, widest above the middle, a ragged top
     const n = 10;
     for (let i = 0; i < n; i++) { const t = i / (n - 1), r = w * (.17 + .3 * Math.pow(Math.sin(Math.PI * Math.pow(t, 1.3)), .8)) * (.85 + R() * .3); cs.push([x + lean * h * t + (R() - .5) * w * .14, y - h * .84 * t - r * .2, r, 1.15]); }
     tx = x + lean * h * .8;
-    for (let k = 0; k < 4; k++) cs.push([tx + (k - 1.5) * w * .22 + (R() - .5) * w * .1, y - h * (.8 + R() * .2), w * (.09 + R() * .07), 1.5]);
+    for (let k = 0; k < 7; k++) cs.push([tx + (k - 3) * w * .13 + (R() - .5) * w * .08, y - h * (.8 + R() * .16), w * (.1 + R() * .07), 1.4]);
     for (let i = 0; i < 6; i++) { const sx = x + (R() - .5) * w * .4, t1 = .45 + R() * .4; streaks += `<path d="M${f(sx)} ${f(y - h * .06)}Q${f(sx + lean * h * t1 * .3)} ${f(y - h * t1 * .5)} ${f(sx + lean * h * t1 + (R() - .5) * w * .3)} ${f(y - h * t1)}" stroke="${i % 2 ? shade : '#ffffff'}" stroke-width="${f(clamp(w * (.02 + R() * .03), .25, .7))}" fill="none" opacity="${i % 2 ? .45 : .6}" stroke-linecap="round"/>`; }
   }
   for (let i = 0; i < 16 + seed % 5; i++) { const a = (R() - .5) * 2.6 + lean * 1.5, dd = w * (.35 + R() * R() * 1.3), r = clamp(w * (.012 + R() * R() * .07), .22, 1.3); drops += `<circle cx="${f(tx + Math.sin(a) * dd)}" cy="${f(ty - Math.cos(a) * dd * .8 + R() * h * .3)}" r="${f(r)}" fill="${white}" opacity="${f(.5 + R() * .45)}"/>`; }
   const rw = w * (v === 1 ? .8 : .56);
   return `<defs>${softDot(md)}</defs><ellipse cx="${f(tx)}" cy="${f(ty)}" rx="${f(w * .95)}" ry="${f(h * .42)}" fill="url(#${md})" opacity=".16"/><ellipse cx="${f(x)}" cy="${f(y + .6)}" rx="${f(rw)}" ry="${f(Math.max(.8, rw * .2))}" fill="${dk}" opacity=".55"/>`
-    + puffForm(u, L, cs, { lit: white, mid: mix(white, shade, .25), shade, knob: '#ffffff' }, { seed: seed + 3, inner: streaks, disp: 1.8, freq: '0.1 0.06', blur: .25, shade: .5, knob: .6, soft: clamp(w * .07, .5, 1.8), shift: w * .26, pad: h * .3 })
+    + puffForm(u, L, cs, { lit: white, mid: mix(white, shade, .25), shade, knob: '#ffffff' }, { seed: seed + 3, inner: streaks, disp: 1.8, freq: '0.1 0.06', blur: .25, shade: .46, knob: .6, soft: clamp(w * .07, .5, 1.8), shift: w * .22, pad: h * .3, dir: { ux: la.ux * .6, uy: -.8, dz: .4 } }) // spray lets the light through: never a dark body
     + drops + foam(u, { x, y: y + .4, w: rw * 2.1, h: clamp(w * .1, .8, 2.4), seed: seed + 5, L: o.L });
 }
 
@@ -300,12 +300,12 @@ function muzzleFlash(u, o = {}) {
   for (let i = 0; i < 7 + seed % 4; i++) { const r = Ln * (.5 + R() * .75), an = (R() - .5) * (v === 1 ? 1 : .55), l = Ln * (.03 + R() * .06); sparks += `<path d="M${f(Math.cos(an) * r)} ${f(Math.sin(an) * r)}l${f(Math.cos(an) * l)} ${f(Math.sin(an) * l)}" stroke="${R() > .4 ? '#ffe2a0' : '#ff9a3a'}" stroke-width="${f(Ln * (.008 + R() * .012))}" stroke-linecap="round" opacity="${f(.5 + R() * .45)}"/>`; }
   // smoke pushed out round the flame: small puffs at its sides, larger ones ahead, more of it on the upper side
   let puffs = '';
-  if (o.smoke !== false) {
-    const n = 8 + seed % 3, reach = Math.max(...tips.map(t => t[0])) * Ln;
-    for (let i = 0; i < n; i++) { const t = i / (n - 1), side = i % 2 ? -1 : 1, px = Ln * .22 + reach * .7 * t + (R() - .5) * Ln * .06, off = side * (wM * (.75 + .5 * t) + Ln * R() * .05), r = Ln * (.06 + t * .07 + R() * .04);
-      puffs += `<circle cx="${f(px + upx * Ln * .05 * t)}" cy="${f(off + upy * Ln * .05 * t)}" r="${f(r)}"/>`; }
-    for (let i = 0; i < 4; i++) { const an = (i - 1.5) * .34 + (R() - .5) * .2, rr = reach * (.92 + R() * .2), r = Ln * (.1 + R() * .07); puffs += `<circle cx="${f(Math.cos(an) * rr + upx * Ln * .1)}" cy="${f(Math.sin(an) * rr + upy * Ln * .1)}" r="${f(r)}"/>`; }
-    puffs = `<g filter="url(#${se})" fill="url(#${sg})" opacity=".84">${puffs}</g>`;
+  if (o.smoke !== false) { // one billow: puffs overlap along both sides of the flame, close ahead of it and rise a little
+    const reach = Math.max(...tips.map(t => t[0])) * Ln, P = (px, py, r) => { puffs += `<circle cx="${f(px)}" cy="${f(py)}" r="${f(r)}"/>`; };
+    for (const side of [-1, 1]) for (let j = 0; j < 6; j++) { const t = j / 5; P(Ln * .16 + reach * .78 * t + (R() - .5) * Ln * .04 + upx * Ln * .08 * t, side * wM * (.5 + .8 * t) + upy * Ln * .08 * t, Ln * (.065 + .065 * t) * (.85 + R() * .4)); }
+    for (let j = 0; j < 5; j++) { const an = (j - 2) * (v === 1 ? .26 : .15) + (R() - .5) * .08, rr = reach * (.86 + R() * .14); P(Math.cos(an) * rr + upx * Ln * .08, Math.sin(an) * rr + upy * Ln * .08, Ln * (.11 + R() * .05)); }
+    for (let j = 0; j < 3; j++) { const t = .5 + j * .22, q = wM / Ln + .1 + j * .05; P(reach * t + upx * Ln * q, upy * Ln * q, Ln * (.1 + R() * .04)); }
+    puffs = `<g filter="url(#${se})" fill="url(#${sg})" opacity=".8">${puffs}</g>`;
   }
   const box = [-Ln * .5, -Ln * .8, Ln * 2.2, Ln * 1.6];
   return (o.glow === false ? '' : localGlow(u, { x: x + Math.cos(a) * Ln * .32, y: y + Math.sin(a) * Ln * .32, radius: Ln * 1.5, color: '#ffc070', power: .8 }, { core: false }))

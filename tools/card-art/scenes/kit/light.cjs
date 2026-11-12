@@ -30,7 +30,7 @@ const shoulder = v => v > .8 ? .8 + (v - .8) / (1 + (v - .8) / .2) : v;
 // ——— palettes: the time of day of a deck. sky: top -> horizon; sea: at the horizon -> at the viewer ———
 const PAL = {
   night: { // Black Pearl: night, the moon, blue steel
-    sky: ['#0a1322', '#142640', '#27405c', '#3d5a74'], sea: ['#2e4a64', '#152a40', '#0a1626'],
+    sky: ['#101c30', '#172a46', '#27405c', '#3d5a74'], sea: ['#2e4a64', '#172c42', '#0f1d30'],
     cloudLit: '#b9c9de', cloudShade: '#1a2840', fog: '#7f97ad', smoke: '#9aa6b8',
     key: { type: 'moon', az: 28, el: 26, color: '#b9cff6', power: .7 }, fill: { color: '#3d5680', power: .4 },
     shadowTint: '#1c2346', tint: .7, floor: .125, sat: .74 },
@@ -45,7 +45,7 @@ const PAL = {
     key: { type: 'sun', az: 115, el: 55, color: '#fff3d6', power: 1 }, fill: { color: '#8fb4d8', power: .5 },
     shadowTint: '#2b4262', tint: .45, floor: .14, sat: 1 },
   fog: { // Flying Dutchman: greenish fog
-    sky: ['#0c1a18', '#1b3530', '#315348', '#4f7566'], sea: ['#3f6458', '#1b3a34', '#0c1f1c'],
+    sky: ['#122622', '#1c3832', '#315348', '#4f7566'], sea: ['#3f6458', '#1d3c36', '#11261f'],
     cloudLit: '#8fb8a8', cloudShade: '#142a26', fog: '#9fd0bc', smoke: '#8aa89c',
     key: { type: 'moon', az: 0, el: 35, color: '#bfe8d6', power: .6 }, fill: { color: '#3a6a5c', power: .46 },
     shadowTint: '#14302c', tint: .7, floor: .125, sat: .8 },
@@ -261,7 +261,7 @@ function mat(kind, L, o = {}) {
   else if (form === 'sphere') defs = sphGrad(id, kind, L, x1, y1, r).defs;
   else if (form === 'fold') {
     const len = Math.hypot(x2 - x1, y2 - y1) || 1, nx = -(y2 - y1) / len, ny = (x2 - x1) / len, mx = (x1 + x2) / 2, my = (y1 + y2) / 2, d = L.at(mx, my), LN = d.dx * nx + d.dy * ny;
-    const list = Array.from({ length: 9 }, (_, i) => { const t = i / 8, a = Math.sin(t * 2 * Math.PI) * .62, I = LN * a + d.dz * Math.sqrt(1 - a * a) - .16 * (1 - Math.cos(t * 2 * Math.PI)) * (d.dz >= 0 ? 1 : -1); return [t, L.tone(kind, I, mx, my)]; });
+    const list = Array.from({ length: 9 }, (_, i) => { const t = i / 8, a = Math.sin(t * 2 * Math.PI) * .42, I = LN * a + d.dz * Math.sqrt(1 - a * a) + .1 * Math.abs(LN) - .09 * (1 + Math.cos(t * 2 * Math.PI)) * (d.dz >= 0 ? 1 : -1); return [t, L.tone(kind, I, mx, my)]; });
     defs = linGrad(id, mx - nx * r, my - ny * r, mx + nx * r, my + ny * r, list, ' spreadMethod="repeat"');
   } else defs = planeGrad(id, kind, L, [[x1, y1], [x2, y1], [x2, y2], [x1, y2]], o.n || 'front').defs;
   return { defs, fill: `url(#${id})`, id, ramp: L.ramp(kind, (x1 + x2) / 2, (y1 + y2) / 2) };
@@ -448,13 +448,13 @@ function castShadow(u, L, o) {
   }
   const all = hull(base.concat(tip)), near = hull(base.concat(mid)), len = Math.hypot(s0.x - x, s0.y - y);
   const dist = L.point ? clamp(Math.hypot(L.key.x - x, L.key.y - y) / L.key.radius) : 0;
-  const a0 = (o.opacity != null ? o.opacity : L.point ? .8 - .3 * dist : .78) * (o.onto === 'water' ? .5 : 1);
+  const a0 = (o.opacity != null ? o.opacity : L.point ? .92 - .25 * dist : .78) * (o.onto === 'water' ? .5 : 1);
   const sdA = clamp(len * .01, .2, .6), sdB = clamp(len * (L.point ? .06 : .03), .6, 4.5), tint = L.shadowMul;
   const xs = all.concat(wall).map(p => p[0]), ys = all.concat(wall).map(p => p[1]), pad = sdB * 4 + 2;
   const bx = Math.max(-80, Math.min(...xs) - pad), by = Math.max(-80, Math.min(...ys) - pad), bw = Math.min(360, Math.max(...xs) + pad) - bx, bh = Math.min(440, Math.max(...ys) + pad) - by;
   const fa = nid('ta', u), fb = nid('tb', u), ga = nid('tg', u), gb = nid('th', u);
   const box = `filterUnits="userSpaceOnUse" x="${f(bx)}" y="${f(by)}" width="${f(bw)}" height="${f(bh)}"`;
-  const ex = s0.x, ey = s0.y, far = L.point ? .3 : .55;
+  const ex = s0.x, ey = s0.y, far = L.point ? .4 : .55;
   let out = `<defs><filter id="${fa}" ${box}><feGaussianBlur stdDeviation="${f(sdA)}"/></filter><filter id="${fb}" ${box}><feGaussianBlur stdDeviation="${f(sdB)}"/></filter>`
     + linGrad(ga, x, y, lerp(x, ex, .6), lerp(y, ey, .6), [[0, tint, a0 * .6], [.5, tint, a0 * .4], [1, tint, 0]])
     + linGrad(gb, x, y, ex, ey, [[0, tint, a0 * .8], [.5, tint, a0 * .72], [1, tint, a0 * far]]) + `</defs>`
@@ -464,10 +464,11 @@ function castShadow(u, L, o) {
 }
 
 /** contactShadow(u, x, y, w, L, opts) — the dark seat of a thing on its support: a soft flat ellipse under the foot
- *  (x, y) of width w, pushed a little away from the light. opts: ry, opacity. */
+ *  (x, y) of width w, pushed a little away from the light (into the depth when the light comes from our side, at the viewer when
+ *  it comes from behind). opts: ry, opacity. */
 function contactShadow(u, x, y, w, L, o = {}) {
-  const id = nid('cs', u), d = L.at(x, y), rx = w * .56, ry = o.ry != null ? o.ry : Math.max(.7, rx * Math.max(.16, L.ellipse(y)) * .8), c = scale(L.shadowTint, .62), op = o.opacity != null ? o.opacity : .8;
-  return `<defs><radialGradient id="${id}"><stop offset="0" stop-color="${c}" stop-opacity="${f(op)}"/><stop offset=".55" stop-color="${c}" stop-opacity="${f(op * .6)}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient></defs><ellipse cx="${f(x - d.ux * w * .07)}" cy="${f(y + ry * .1)}" rx="${f(rx)}" ry="${f(ry)}" fill="url(#${id})"/>`;
+  const id = nid('cs', u), d = L.at(x, y), rx = w * .56, ry = o.ry != null ? o.ry : Math.max(.7, rx * Math.max(.16, L.ellipse(y)) * .55), c = scale(L.shadowTint, .62), op = o.opacity != null ? o.opacity : .8;
+  return `<defs><radialGradient id="${id}"><stop offset="0" stop-color="${c}" stop-opacity="${f(op)}"/><stop offset=".55" stop-color="${c}" stop-opacity="${f(op * .6)}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient></defs><ellipse cx="${f(x - d.ux * w * .07)}" cy="${f(y + ry * (.1 - .5 * d.dz))}" rx="${f(rx)}" ry="${f(ry)}" fill="url(#${id})"/>`;
 }
 
 /** localGlow(u, loc, opts) — the pool of a local light (a lantern, a candle, a fire, a flash): a warm circle that
