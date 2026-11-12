@@ -18,9 +18,9 @@ const { glow, gloom, motes } = PK;
 
 const HZ = 100;                                   // the sea horizon
 const SX = 45, ST = 12;                           // the flagstaff: x, the truck
-const FX = SX + 1.6, FT = 17, FH = 36, FLN = 104; // the flag: hoist x, hoist top, hoist height, fly length (to the right)
+const FX = SX + 1.6, FT = 15, FH = 42, FLN = 112; // the flag: hoist x, hoist top, hoist height, fly length (to the right)
 const RAIL = 112;                                 // the top of the bulwark (the capping rail)
-const MOON = { x: 124, y: 38 };
+const MOON = { x: 116, y: 40 };
 const LAMP = { x: 74, y: 110.2, s: 1.05 };
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 22, color: '#d4def6', power: .85 },
   fill: { color: '#3d5680', power: .4 }, rim: { az: 12, color: '#c8dcff', power: .6 },
@@ -28,7 +28,7 @@ const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON
 const REV = { kind: 'revenge', x: 104, y: 103, scale: .34, flip: true, sails: 'full', detail: 'mid', lights: true, wake: true, seed: 3 };
 const PRL = { kind: 'pearl', x: 165, y: 106, scale: .44, flip: true, sails: 'full', detail: 'mid', lights: true, wake: true, seed: 4 };
 const HAUL = [SX + 3.4, 97];                      // where the fist holds the hauling part of the halyard
-const HS = 2.05;                                  // the hand's size
+const HS = 2.3;                                  // the hand's size
 const skel = { horizon: HZ, eye: 3, light: 'the moon behind the flag (key) + a lantern on the rail (local, warms the hand)', items: [
   ['flag', FX, FT + FH + 4, FLN, FH + 6, 'staff (halyard)'], ['staff', SX - 2, 136, 4, 124, 'bulwark (iron bands)'],
   ['revenge', 80, 103, 50, 36, 'water'], ['pearl', 131, 106, 69, 46, 'water'], ['lantern', LAMP.x - 6, LAMP.y, 12, 30, 'rail cap'],
@@ -38,7 +38,7 @@ const skel = { horizon: HZ, eye: 3, light: 'the moon behind the flag (key) + a l
 // shot holes and a torn fly that the sky shows through ———
 function bigFlag(u, L) {
   const R = rng(11), N = 40;
-  const w = t => 3.6 * Math.pow(t, .8) * Math.sin(Math.PI * 2 * 1.3 * t - .5);
+  const w = t => 4.6 * Math.pow(t, .75) * Math.sin(Math.PI * 2 * 1.45 * t - .5);
   const dw = t => (w(Math.min(1, t + .01)) - w(Math.max(0, t - .01))) / .02;
   const X = t => FX + FLN * t, Yt = t => FT + w(t) + 2.4 * t * t, Yb = t => FT + FH * (1 - .1 * t) + w(t) + 3.4 * t * t;
   const at = (t, v) => [X(t), lerp(Yt(t), Yb(t), v)];
@@ -52,17 +52,17 @@ function bigFlag(u, L) {
     else fly.push([b[0] - 4 - R() * 7, b[1] + (R() - .5)]); }
   const outline = 'M' + top.map(P).join('L') + 'L' + fly.map(P).join('L') + 'L' + bot.slice().reverse().map(P).join('L') + 'Z';
   // the shot holes (the sky shows through), each a small torn star
-  const holes = [[.64, .26, 1.7], [.79, .68, 2.3], [.22, .8, 1.3], [.9, .36, 1.9], [.42, .14, 1.1]].map(([t, v, r]) => { const c = at(t, v), n = 8, pts = [];
+  const holes = [[.66, .62, 1.5], [.72, .44, 1.1], [.84, .7, 2.3], [.22, .82, 1.3], [.92, .3, 1.9], [.4, .12, 1.1]].map(([t, v, r]) => { const c = at(t, v), n = 8, pts = [];
     for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, rr = r * (i % 2 ? .55 + R() * .3 : 1 + R() * .5); pts.push([c[0] + Math.cos(a) * rr, c[1] + Math.sin(a) * rr * .9]); }
     return { c, r, d: 'M' + pts.map(P).join('L') + 'Z' }; });
   const gid = nid('fg', u), oid = nid('fo', u), cid = nid('fc', u), mid = nid('fm', u), tid = nid('ft', u);
   // fold shading along the fly: the side of a wave turned up to the moon is lighter, the back of it dark
   const stops = [], ostops = [];
-  for (let i = 0; i <= 24; i++) { const t = i / 24, b = .5 + .5 * Math.tanh(-dw(t) * .32);
-    stops.push([t, mix('#07070b', '#454858', b), 1]);
+  for (let i = 0; i <= 24; i++) { const t = i / 24, b = .5 + .5 * Math.tanh(-dw(t) * .45);
+    stops.push([t, mix('#050508', '#555a6e', b), 1]);
     ostops.push(b < .5 ? [t, '#000000', (.5 - b) * 1.1] : [t, '#cfdcf6', (b - .5) * .4]); }
   let s = `<defs>${linGrad(gid, FX, 0, FX + FLN, 0, stops)}${linGrad(oid, FX, 0, FX + FLN, 0, ostops)}`
-    + `${radGrad(tid, MOON.x, MOON.y, 44, [[0, '#a8b8dc', .55], [.35, '#7a88b0', .3], [1, '#5a6890', 0]])}`
+    + `${radGrad(tid, MOON.x, MOON.y, 44, [[0, '#dce6fa', .85], [.18, '#a8b8dc', .55], [.5, '#7080a8', .22], [1, '#5a6890', 0]])}`
     + `<clipPath id="${cid}"><path d="${outline}"/></clipPath>`
     + `<mask id="${mid}" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="140"><rect x="0" y="0" width="200" height="140" fill="#fff"/>${holes.map(h => `<path d="${h.d}" fill="#000"/>`).join('')}</mask></defs>`;
   s += `<g mask="url(#${mid})">`;
@@ -153,10 +153,10 @@ module.exports = { name: 'Поднять флаги!', kind: 'deck', status: 'dr
     // the sailor's right arm from the near left: the rolled linen sleeve, the bare forearm, the fist on the halyard
     { const skin = { lit: '#f0b888', half: '#b97c54', core: '#a46c48', shadow: '#5e3626', outline: '#2a140a' };
       const shirt = { lit: '#e2dccc', half: '#9c9688', shadow: '#3e4050', outline: '#1a1a20' };
-      const W = [HAUL[0] - 6 * HS, HAUL[1]], E = [12, 123];
-      fg += H.cloth(u, { spine: [E, [lerp(E[0], W[0], .5) - .6, lerp(E[1], W[1], .5) - .8], [W[0] + .8, W[1] + .3]], w: [9.6, 8.4, 6.6], tone: skin, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .6, folds: false, capA: true, sw: .4 })
+      const W = [HAUL[0] - 6 * HS, HAUL[1]], E = [17, 119];
+      fg += H.cloth(u, { spine: [E, [lerp(E[0], W[0], .5) - .6, lerp(E[1], W[1], .5) - .8], [W[0] + .8, W[1] + .3]], w: [11.4, 10.2, 7.2], tone: skin, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .6, folds: false, capA: true, sw: .4 })
         + `<path d="M${f(E[0] + 6)} ${f(E[1] - 9)}q4 -2 8 -5M${f(E[0] + 9)} ${f(E[1] - 6.6)}q3 -1 6 -4" stroke="#7a4a30" stroke-width=".35" fill="none" opacity=".6"/>`;
-      fg += H.cloth(u, { spine: [[-16, 152], [-2, 138], [E[0] + 1.6, E[1] - 1.4]], w: [16, 14.6, 13.4], tone: shirt, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .5, cuff: { from: .78, k: 1.1, roll: true }, seed: 4, drapes: 3, sw: .4 });
+      fg += H.cloth(u, { spine: [[-16, 152], [-2, 138], [E[0] + 1.6, E[1] - 1.4]], w: [17, 15.6, 14.6], tone: shirt, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .5, cuff: { from: .78, k: 1.1, roll: true }, seed: 4, drapes: 3, sw: .4 });
       const hd = H.hand(u, { at: W, a: -4, s: HS, m: 1, pose: 'grip', tone: skin, sw: .35 });
       fg += hd.back + hd.front;
       fg += K.localGlow(u, { x: W[0] + 8, y: W[1] + 2, color: '#ffb060', power: .22, radius: 12 }, { core: false }); }
