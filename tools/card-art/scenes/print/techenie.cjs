@@ -240,8 +240,8 @@ function rock(u, L, x, y) {
   s += K.splash(u, { x: x - 8, y: y + .3, w: 9, h: 5, seed: 1, L, wind: 1 }) + K.foam(u, { x: x + 1, y: y + .2, w: 24, h: 1.2, seed: 4, L });
   return s;
 }
-// white water where the stream meets a hull: a bourrelet piled up at (x, y), the foam spilling downstream along the
-// lanes, a curl of an eddy spinning off behind; dir — which way the hull faces the stream (+1: its end points left)
+// white water where the stream meets a hull: a bourrelet piled up at (x, y) (s — its size), the foam spilling
+// downstream along the lanes
 function bourrelet(u, L, x, y, s, seed) {
   const R = rng(seed), c = mix('#ffffff', L.keyColor, .15);
   let o = K.splash(u, { x, y: y + .2, w: 7 * s, h: 3.2 * s, seed: 1 + seed * 3, L, wind: 1 }) + K.foam(u, { x: x + 3 * s, y: y + .4, w: 14 * s, h: 1.6 * s, seed, L });
