@@ -46,7 +46,7 @@ const cap = (t: string) => `<div style="position:absolute;left:0;right:0;top:${m
 const cell = (kit: CardKit, it: Item, x: number, label: string) => `<div style="position:absolute;left:${mm(x)};top:0;width:${mm(W)};height:${mm(H + 6)}">${itemFace(ctx, kit, it, 'left:0;top:0;')}${label ? cap(label) : ''}</div>`;
 const css = CARD_CSS + `html,body{background:#2b2f33}`;
 async function shoot(html: string, w: number, h: number, file: string) {
-  const htmlFile = path.join(HTML_DIR, '_shot.html'); // the art URLs are relative to it
+  const htmlFile = path.join(HTML_DIR, `_shot-${process.pid}-${Date.now()}.html`); // the art URLs are relative to it
   fs.writeFileSync(htmlFile, pageHtml({ title: 'shot', css, pages: [] }).replace('</body>', `<div id="b" style="position:relative;width:${mm(w)};height:${mm(h)};background:#2b2f33">${html}</div></body>`));
   const page = await browser.newPage({ viewport: { width: 1600, height: 1400 }, deviceScaleFactor: k });
   await page.goto('file://' + htmlFile);

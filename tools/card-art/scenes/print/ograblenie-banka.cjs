@@ -185,8 +185,13 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
       bg += `<defs>${radGrad(hg, 84, 112, 46, [[0, '#1a1410', 1], [1, '#040406', 1]])}<clipPath id="${hc}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="url(#${hg})"/>`
         + `<g clip-path="url(#${hc})"><path d="M44 96h80M44 108h80" stroke="#1e160e" stroke-width="1.6"/>`
         + [[48, 92], [56, 91], [62, 92], [102, 92], [110, 91], [50, 104], [104, 104]].map(([x, y], i) => `<path d="M${x} ${y}q2 -4 4 0z" fill="#3a2a18" opacity="${.6 + i % 2 * .2}"/>`).join('')
-        + ingot(u, 72, 96, .9) + ingot(u, 80, 96, .9) + ingot(u, 76, 93.2, .9) + ingot(u, 94, 108, .9) + ingot(u, 101.4, 108, .9)
-        + [[86, 120], [100, 122]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="5" ry="1.6" fill="#9a7a34" opacity=".55"/><path d="M${x - 3} ${y - .6}h6" stroke="#d8bc72" stroke-width=".35" opacity=".6"/>`).join('')
+        // gold in the vault's open left side (the safe hides the rest): a stack of ingots on the upper shelf, a burst
+        // bag and coins on the lower one, a heap on the floor — warmed by the dropped lamp
+        + ingot(u, 54, 96, 1) + ingot(u, 63.6, 96, 1) + ingot(u, 58.8, 92.8, 1)
+        + `<path d="M48 108q-1 -6 3 -8q5 -1 6 3q1 3 -1 5z" fill="#4a3418" stroke="#1a1006" stroke-width=".3"/><path d="M50.6 100.4l1.4 -1.6l1.6 1.4" stroke="#1a1006" stroke-width=".5" fill="none"/>`
+        + [[57.6, 107.4], [60.4, 107.6], [62.8, 107.2], [59, 106.4], [65.2, 107.6]].map(([x, y], i) => `<ellipse cx="${x}" cy="${y}" rx="1.3" ry=".5" fill="${i % 2 ? '#b8954a' : '#8a6a2a'}" stroke="#3a2808" stroke-width=".2"/>`).join('')
+        + `<path d="M56 128q6 -7 13 0z" fill="#7a5c24"/>` + [[58, 125.6], [61.6, 123.8], [64.6, 125.4], [62, 126.8]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="1.4" ry=".55" fill="#c0a050" stroke="#3a2808" stroke-width=".2"/>`).join('')
+        + K.localGlow(u, { x: 58, y: 98, color: '#ffc060', power: .3, radius: 10 }, { core: false })
         + K.localGlow(u, { x: 60, y: 120, color: '#ff9a40', power: .25, radius: 16 }, { core: false }) + `</g>`;
       // the ragged rim: plaster edge, then broken bricks in courses
       const R = rng(12); let rim = '';
