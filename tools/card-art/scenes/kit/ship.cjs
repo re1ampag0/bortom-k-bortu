@@ -99,7 +99,7 @@ const SPECS = {
   merchant: {
     len: 70, free: 7.9, sheer: [2.6, 4.2], tumble: .8, bow: [5.5, 2.6], over: 5.5, counter: .74,
     fc: [-22, 2.2], tiers: [[9, 3.4], [22, 3.6]], taff: 1.6, tw: [1.6, 3.6],
-    hull: 'ship-wood', trim: 'ship-wood', gilt: 0, wales: [], bands: [{ h0: -1, h1: 2.6, mat: 'tar' }, { h0: 4.5, h1: 5.9, mat: 'paint-olive' }, { h0: 6.2, h1: 6.6, mat: 'linen' }], wear: 2.6, bleach: 1, sailVar: 1,
+    hull: 'ship-wood', trim: 'ship-wood', gilt: 0, wales: [], bands: [{ h0: -1, h1: 2.6, mat: 'tar' }, { h0: 4.1, h1: 5.9, mat: 'paint-olive' }, { h0: 6.2, h1: 6.6, mat: 'linen' }], wear: 2.6, bleach: 1, sailVar: 1,
     ports: [], deckPorts: [0, 0, 0], gallery: [6, 1, 3.4], tierWin: 1, lantern: 1,
     beak: [7.5, 1.4, 2.6], sprit: { len: 17, steeve: 28, spritsail: 'set' }, jibs: 0,
     masts: [{ x: -22, H: 62, n: 2, k: 1.05 }, { x: 0, H: 72, n: 2, k: 1.15, rake: 1 }, { x: 21, H: 52, n: 2, k: .72, rake: 2, aft: 'lateen' }],
@@ -656,50 +656,56 @@ function build(u, L, o, mode) {
       growA += `<g clip-path="url(#${wlClip})"><g fill="url(#${bg})">${shells}</g><g fill="${pit}" opacity=".6">${pits}</g></g>`; }
   }
 
-  // ——— life aboard (sp.life — the merchantman): barrels and bales under a net in the waist, the longboat on the
-  // hatch with its oars, the crew as small dark figures (at the helm, hauling in the waist, up the main shrouds), a
-  // lantern on the fore shrouds. All of it stands on the deck behind the bulwark: the rail hides the feet.
+  // ——— life aboard (sp.life — the merchantman): the cargo piled high over the rail (barrels on the forecastle,
+  // bales in the waist under a net and a faded tarpaulin, crates on the quarterdeck), a cargo boom swinging one more
+  // bale over the hatch, two of the crew in light shirts (at the helm against the sky, up the main shrouds against
+  // the sail), a lantern on the fore shrouds. All of it stands on the deck behind the bulwark: the rail hides the feet.
   let lifeBack = '', lifeFront = '';
   if (sp.life && !far && !refl) { const lf = sp.life, Rl = R('life'), deck = X => rail(X) - 1.5;
     const nF = lum([-1, .15, .6]), nA = lum([1, .15, .6]);   // the fore and the aft side of a thing on deck
     const gx3 = (Xa, Xb, km, k = 0) => gr([Xa, 0], [Xb, 0], [[0, tone(km, nF + k)], [.5, tone(km, If + k)], [1, tone(km, nA + k)]]);
-    // barrels standing by the fore mast: bellied staves, two iron hoops, a light chime at the top
-    for (const X of lf.barrels || []) { const H0 = deck(X) + .7, w = .9 + Rl() * .1, h = 2.5 + Rl() * .3, d = 'M' + pp(X - w, H0) + 'Q' + pp(X - w * 1.32, H0 + h / 2) + ' ' + pp(X - w, H0 + h) + 'L' + pp(X + w, H0 + h) + 'Q' + pp(X + w * 1.32, H0 + h / 2) + ' ' + pp(X + w, H0) + 'Z';
+    const sackT = (I, c) => mix(tone('linen', I), c, .72);
+    // barrels on the forecastle, a second one standing on two: bellied staves, iron hoops, a light chime
+    for (const [X, row] of lf.barrels || []) { const w = .9 + Rl() * .1, h = 2.5 + Rl() * .3, H0 = deck(X) + .7 + row * 2.85, d = 'M' + pp(X - w, H0) + 'Q' + pp(X - w * 1.32, H0 + h / 2) + ' ' + pp(X - w, H0 + h) + 'L' + pp(X + w, H0 + h) + 'Q' + pp(X + w * 1.32, H0 + h / 2) + ' ' + pp(X + w, H0) + 'Z';
       lifeBack += fillP(d, gx3(X - w * 1.2, X + w * 1.2, 'oak', -.05)) + strokeP(seg([X - w * 1.2, H0 + h * .28], [X + w * 1.2, H0 + h * .28]) + seg([X - w * 1.16, H0 + h * .74], [X + w * 1.16, H0 + h * .74]), tone('iron', If - .1), .26 * s)
         + strokeP(seg([X - w, H0 + h - .12], [X + w, H0 + h - .12]), tone('oak', If + .5), .16 * s, ' opacity=".8"') + edge(d, 'oak', .6); }
-    // the longboat on the main hatch (on chocks, hidden by the rail): a sheer rising to both ends, a light gunwale, oars across
-    if (lf.boat) { const [a, b] = lf.boat, Hk = deck((a + b) / 2) + 1.9, Hg = Hk + 2.7, mid = (a + b) / 2;
-      const d = 'M' + pp(a, Hg + .55) + 'Q' + pp(mid, Hg - .25) + ' ' + pp(b, Hg + .45) + 'L' + pp(b - .5, Hk + .5) + 'Q' + pp(mid, Hk - .3) + ' ' + pp(a + 1.6, Hk) + 'Q' + pp(a + .2, Hk + .6) + ' ' + pp(a, Hg + .55) + 'Z';
-      lifeBack += fillP(d, gr([0, Hk], [0, Hg + .5], [[0, tone('oak', -.6)], [.6, tone('oak', If - .1)], [1, tone('oak', If + .25)]])) + strokeP('M' + pp(a + .3, Hg - .5) + 'Q' + pp(mid, Hg - 1.25) + ' ' + pp(b - .2, Hg - .55), tone('oak', -.5), .14 * s, ' opacity=".7"')
-        + strokeP('M' + pp(a + .1, Hg + .4) + 'Q' + pp(mid, Hg - .4) + ' ' + pp(b - .05, Hg + .3), tone('linen', If + .1), .4 * s) + edge(d, 'oak', .6)
-        + spar([a + 1.6, Hg + .2], [b + 2.2, Hg + .55], .2, .2, 'oak', { grain: false }) + spar([a + 2.4, Hg + .05], [b + 1.2, Hg + .9], .2, .2, 'oak', { grain: false })
-        + fillP(poly([[b + 1, Hg + .35], [b + 2.6, Hg + .45], [b + 2.5, Hg + .9], [b + 1, Hg + .75]]), tone('oak', If + .2)); }
-    // bales of cloth sewn in sacking, two rows, a net thrown over and lashed down
-    if (lf.bales) { const [a, b] = lf.bales, n = Math.max(1, Math.floor((b - a) / 2.9)), bw = (b - a) / n, bh = 2.5; let all = '', bales = '';
-      const bale = (X0, X1, H0, H1) => { const r = .45; return spl([[X0 + r, H0], [(X0 + X1) / 2, H0 - .05], [X1 - r, H0], [X1, H0 + r], [X1 + .06, (H0 + H1) / 2], [X1, H1 - r], [X1 - r, H1], [(X0 + X1) / 2, H1 + .1], [X0 + r, H1], [X0, H1 - r], [X0 - .06, (H0 + H1) / 2], [X0, H0 + r]], true); };
-      for (let row = 0; row < 2; row++) for (let i = 0; i < n - row; i++) { const X0 = a + i * bw + row * bw / 2 + .06, X1 = X0 + bw - .12, H0 = deck(a) + .6 + row * (bh + .04), d = bale(X0, X1, H0, H0 + bh), sack = mix('#a27a46', '#7e6a4e', Rl());
-        all += d; bales += fillP(d, gr([X0, 0], [X1, 0], [[0, mix(tone('linen', nF - .2), sack, .72)], [.5, mix(tone('linen', If - .1), sack, .72)], [1, mix(tone('linen', nA - .2), sack, .72)]])) + strokeP(seg([X0 + bw * .35, H0 + .1], [X0 + bw * .35, H0 + bh - .1]) + seg([X0 + .1, H0 + bh * .55], [X1 - .1, H0 + bh * .55]), tone('rope', If - .3), .15 * s, ' opacity=".8"') + edge(d, 'linen', .5); }
-      const cid = clipOf(all); let net = ''; const top = deck(a) + .6 + 2 * bh + .2;
-      for (let X = a - 6; X < b + 1; X += .95) net += seg([X, deck(a)], [X + 5, top]) + seg([X + 5, deck(a)], [X, top]);
-      lifeBack += bales + `<g clip-path="url(#${cid})">${strokeP(net, tone('rope', If - .15), .1 * s, ' opacity=".75"')}</g>` + strokeP(seg([a + bw / 2, top - .15], [a - .4, deck(a) + .4]) + seg([b - bw / 2, top - .15], [b + .4, deck(a) + .4]), tone('rope', If - .1), .16 * s); }
-    // the crew: dark small figures; legs below the rail are hidden
-    const man = sil ? C : col(mix(L.tone('tar', -.4, cen[0], cen[1]), '#140e0b', .55));
-    const figure = (X, H0, lean, arms) => { const c = Math.cos(rad(lean)) * 1.15, sn = Math.sin(rad(lean)) * 1.15, P = (dx, dh) => [X + dx * c - dh * sn, H0 + dx * sn + dh * c];
-      const body = poly([P(-.5, 0), P(-.36, 2.1), P(-.44, 3.3), P(.44, 3.3), P(.36, 2.1), P(.5, 0), P(.16, 0), P(0, 1.2), P(-.16, 0)]);
+    const baleD = (X0, X1, H0, H1) => { const r = .45; return spl([[X0 + r, H0], [(X0 + X1) / 2, H0 - .05], [X1 - r, H0], [X1, H0 + r], [X1 + .06, (H0 + H1) / 2], [X1, H1 - r], [X1 - r, H1], [(X0 + X1) / 2, H1 + .1], [X0 + r, H1], [X0, H1 - r], [X0 - .06, (H0 + H1) / 2], [X0, H0 + r]], true); };
+    const bale = (X0, X1, H0, H1) => { const d = baleD(X0, X1, H0, H1), c = mix('#a27a46', '#7e6a4e', Rl()), w = X1 - X0;
+      return { d, svg: fillP(d, gr([X0, 0], [X1, 0], [[0, sackT(nF - .2, c)], [.5, sackT(If - .1, c)], [1, sackT(nA - .2, c)]])) + strokeP(seg([X0 + w * .35, H0 + .1], [X0 + w * .35, H1 - .1]) + seg([X0 + .1, (H0 + H1) / 2 + .2], [X1 - .1, (H0 + H1) / 2 + .2]), tone('rope', If - .3), .15 * s, ' opacity=".8"') + edge(d, 'linen', .5) }; };
+    // the pile in the waist: three rows of bales stepped in, a net over it lashed to the rail, a tarpaulin over one end
+    if (lf.bales) { const [a, b] = lf.bales, bw = 2.9, bh = 2.5, n = Math.max(1, Math.floor((b - a) / bw)), H00 = deck(a) + .6; let all = '', bales = '', topRow = 0;
+      for (let row = 0; row < 3 && n - row > 0; row++) for (let i = 0; i < n - row; i++) { const X0 = a + i * bw + row * bw / 2 + .06, X1 = X0 + bw - .12, H0 = H00 + row * (bh + .04), q2 = bale(X0, X1, H0, H0 + bh); all += q2.d; bales += q2.svg; topRow = row; }
+      const top = H00 + (topRow + 1) * (bh + .04) + .2, cid = clipOf(all); let net = '';
+      for (let X = a - 9; X < b + 1; X += .95) net += seg([X, H00], [X + 7.5, top]) + seg([X + 7.5, H00], [X, top]);
+      lifeBack += bales;
+      if (lf.tarp) { const t0 = a + bw * 1.5, t1 = a + bw * 3.6, tH = H00 + 2 * (bh + .04) + bh + .35, d = 'M' + pp(t0 - .2, tH - .3) + 'Q' + pp((t0 + t1) / 2, tH + .5) + ' ' + pp(t1 + .3, tH - .2) + 'L' + pp(t1 + 1.8, H00 + bh * 1.2) + 'Q' + pp(t1 + 1, H00 + bh * .9) + ' ' + pp(t1 + 1.5, H00 + bh * .3) + 'L' + pp(t1 - .2, H00 + bh * 1.4) + 'L' + pp(t0 + .5, H00 + bh * 2.2) + 'Z';
+        lifeBack += fillP(d, gx3(t0, t1 + 1.8, 'paint-red', -.25)) + fillP(d, mix(tone('canvas', If - .2), '#7e5a40', .7), ' opacity=".7"') + strokeP('M' + pp(t0 + 1.2, tH) + 'Q' + pp(t1 - .5, H00 + bh * 2.4) + ' ' + pp(t1 + 1, H00 + bh * .8), tone('paint-red', -.7), .14 * s, ' opacity=".6"') + edge(d, 'canvas', .5); }
+      lifeBack += `<g clip-path="url(#${cid})">${strokeP(net, tone('rope', If - .15), .1 * s, ' opacity=".75"')}</g>` + strokeP(seg([a + bw / 2, top - .15], [a - .4, deck(a) + .4]) + seg([b - bw, top - .15], [b + .4, deck(a) + .4]), tone('rope', If - .1), .16 * s); }
+    // crates lashed on the quarterdeck
+    for (const [i, X] of (lf.crates || []).entries()) { const H0 = deck(X) + .4 + (i === 2 ? 2.3 : 0), w = 1.3, h = 2.2, d = box(X, H0 + h / 2, w * 2, h);
+      lifeBack += fillP(d, gx3(X - w, X + w, 'pine-deck', -.2)) + strokeP(seg([X - w, H0 + h * .5], [X + w, H0 + h * .5]) + seg([X - w + .3, H0 + .2], [X + w - .3, H0 + h - .2]), tone('oak', -.4), .16 * s, ' opacity=".7"') + edge(d, 'oak', .6); }
+    // the cargo boom: a spar from the main mast over the hatch, a tackle, one more bale hanging in a sling
+    if (lf.boom != null && masts[1]) { const M = masts[1], heel = M.A(.1), X = lf.boom, tip = [X - 1.2, heel[1] + 15.5], ld = [X, deck(X) + 11.8];
+      const q2 = bale(ld[0] - 1.5, ld[0] + 1.5, ld[1], ld[1] + 2.3);
+      lifeBack += spar(heel, tip, .42, .3, sp.spar) + strokeP(seg(tip, M.A(.42)), ropeD, rw(.16)) + strokeP(seg(tip, [X, ld[1] + 3.4]) + seg([X, ld[1] + 3.4], [ld[0] - 1.3, ld[1] + 2.2]) + seg([X, ld[1] + 3.4], [ld[0] + 1.3, ld[1] + 2.2]), ropeL, rw(.15)) + q2.svg; }
+    // the crew: dark figures in light shirts, larger; legs below the rail are hidden
+    const man = sil ? C : col(mix(L.tone('tar', -.4, cen[0], cen[1]), '#140e0b', .55)), shirt = tone('linen', If + .05);
+    const figure = (X, H0, lean, arms) => { const k = 1.5, c = Math.cos(rad(lean)) * k, sn = Math.sin(rad(lean)) * k, P = (dx, dh) => [X + dx * c - dh * sn, H0 + dx * sn + dh * c];
+      const body = poly([P(-.5, 0), P(-.36, 2.1), P(-.44, 3.3), P(.44, 3.3), P(.36, 2.1), P(.5, 0), P(.16, 0), P(0, 1.2), P(-.16, 0)]), torso = poly([P(-.4, 2.05), P(-.47, 3.3), P(.47, 3.3), P(.4, 2.05)]);
       const head = P(0, 3.82), sh = P(0, 3.15);
-      return fillP(body, man) + dot(head[0], head[1], .44) + ` fill="${man}"/>` + fillP(poly([P(-.5, 4.08), P(.5, 4.08), P(.32, 4.36), P(-.32, 4.36)]), man)
-        + strokeP(arms.map(hd => seg(sh, hd)).join(''), man, .36 * s, ' stroke-linecap="round"'); };
+      return fillP(body, man) + fillP(torso, shirt) + edge(torso, 'linen', .5) + dot(head[0], head[1], .44 * k) + ` fill="${man}"/>` + fillP(poly([P(-.5, 4.08), P(.5, 4.08), P(.32, 4.36), P(-.32, 4.36)]), man)
+        + strokeP(arms.map(hd => seg(sh, hd)).join(''), shirt, .5 * s, ' stroke-linecap="round"') + strokeP(arms.map(hd => seg(hd, hd)).join(''), man, .55 * s, ' stroke-linecap="round"'); };
     for (const [pose, X] of lf.crew || []) {
-      if (pose === 'helm') { const H0 = deck(X); lifeBack += figure(X, H0, 0, [[X - 1.3, H0 + 2.4], [X - 1.1, H0 + 2.2]]) + spar([X - 1.6, H0 + 1.4], [X - 1.25, H0 + 2.6], .14, .12, 'oak', { grain: false }); }
-      else if (pose === 'haul') { const H0 = deck(X), hand = [X - 1.6, H0 + 4.3], up = masts[1] ? masts[1].A(.22) : masts[0].A(.22);
-        lifeBack += strokeP(seg(hand, up) + 'M' + pp(...hand) + 'Q' + pp(X + 1.4, H0 + 2.2) + ' ' + pp(X + 2.2, H0 + 1.4), ropeL, rw(.16)) + figure(X, H0, 14, [hand, [hand[0] + .3, hand[1] - .5]]); }
-      else if (pose === 'climb' && shr[X]) { const g = shr[X], t = .3, h = lerp(g.hCh, g.tp[1], t), i0 = Math.floor((g.ns - 1) / 2), x = g.sx(i0, h) + .3;
-        lifeFront += figure(x, h - 1.6, -4, [[g.sx(i0, h + 2) - .3, h + 2.1], [g.sx(i0 + 1, h + 2) + .1, h + 2.1]]); } }
-    // a lantern hung on the fore shrouds low over the rail: brass frame, the glass alight at night
-    if (lf.shroudLamp != null && shr[lf.shroudLamp]) { const g = shr[lf.shroudLamp], h = g.hCh + 5, i0 = Math.floor(g.ns / 2), X = g.sx(i0, h), z = .7, q2 = (a2, b2) => [X + a2 * z, h - 1 + b2 * z];
+      if (pose === 'helm') { const H0 = deck(X) + .3; lifeBack += figure(X, H0, 0, [[X - 1.9, H0 + 3.2], [X - 1.6, H0 + 2.9]]) + spar([X - 2.2, H0 + 1.4], [X - 1.8, H0 + 3.4], .16, .13, 'oak', { grain: false }); }
+      else if (pose === 'climb' && shr[X]) { const g = shr[X], t = .36, h = lerp(g.hCh, g.tp[1], t), i0 = Math.floor((g.ns - 1) / 2), x = g.sx(i0, h) + .3;
+        lifeFront += figure(x, h - 2.3, -4, [[g.sx(i0, h + 3) - .4, h + 3.1], [g.sx(i0 + 1, h + 3) + .1, h + 3.1]]); } }
+    // a lantern hung on the fore shrouds low over the rail; at night it warms the pile, the rail, the foot of the sail, the water
+    if (lf.shroudLamp != null && shr[lf.shroudLamp]) { const g = shr[lf.shroudLamp], h = g.hCh + 5, i0 = Math.floor(g.ns / 2), X = g.sx(i0, h), z = .8, q2 = (a2, b2) => [X + a2 * z, h - 1 + b2 * z];
       const bodyL = poly([q2(-.55, -2.4), q2(.55, -2.4), q2(.8, -.6), q2(-.8, -.6)]), capL = poly([q2(-.85, -.6), q2(.85, -.6), q2(0, .5)]);
       lifeFront += strokeP(seg([X, h], q2(0, .5)), ropeD, rw(.14)) + (sil ? fillP(bodyL + capL, C) : win(bodyL, ...q2(0, -1.5), 1.6 * z, true) + strokeP(bodyL + seg(q2(0, -2.4), q2(0, -.6)), tone('brass', If + .1), .14 * s) + fillP(capL, tone('brass', If + .2)) + fillP(poly([q2(-.6, -2.4), q2(.6, -2.4), q2(.5, -2.75), q2(-.5, -2.75)]), tone('brass', If - .1)));
-      if (lit) glowAt.push([X, h - 1 - 1.5 * z, 10]); }
+      if (lit) glowAt.push([X, h - 1 - 1.5 * z, 14], [X + 6, h + 3, 16], [X + 3, rail(X) - 1, 12]); }
+    // at night the stern windows throw their light on the poop, the mizzen and the water under the counter
+    if (lit) glowAt.push([xAft - 6, hTop + 1, 14], [xAft - 2, 1, 16]);
   }
 
   // far away only the big lines of the rig stay: the back rigging goes pale

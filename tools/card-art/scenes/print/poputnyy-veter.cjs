@@ -10,9 +10,9 @@ const { f, mix, clamp, lerp, rng, nid, linGrad, radGrad } = K;
 
 const HZ = 116;                     // horizon
 const SUN = { x: 34, y: 90 };       // the low morning sun on the left, upwind, under the clouds
-const light = { time: 'day', haze: .12, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffe9b8', power: 1 }, fill: { color: '#8fc0e8', power: .55 } };
-const NEAR = { kind: 'merchant', x: 100, y: 133, scale: 1.02, flip: true, heel: 4, sails: 'full', detail: 'near', wake: true, seed: 9 };
-const FAR = { kind: 'merchant', x: 172, y: 119.5, scale: .46, flip: true, heel: 3, sails: 'full', detail: 'mid', wake: true, seed: 31 };
+const light = { time: 'day', haze: .12, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffdc9a', power: 1 }, fill: { color: '#8fc0e8', power: .5 } };
+const NEAR = { kind: 'merchant', x: 104, y: 134, scale: 1.14, flip: true, heel: 3, sails: 'full', detail: 'near', seed: 9 };
+const FAR = { kind: 'merchant', x: 178, y: 119.6, scale: .48, flip: true, heel: 2.5, sails: 'full', detail: 'mid', seed: 31 };
 const skel = { horizon: HZ, eye: 3, light: 'the low morning sun ahead on the left, upwind: sails glow through, bright edges towards it, shadows on the water towards us and to the right',
   items: [
     ['near', 52, NEAR.y, 108, 92, 'on the water, heeled, running to the right'],
@@ -25,27 +25,29 @@ const skel = { horizon: HZ, eye: 3, light: 'the low morning sun ahead on the lef
 module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
-    L.pal = Object.assign({}, L.pal, { sea: ['#86b6cc', '#3d6f88', '#16323f'], sky: ['#3f7fc6', '#6aa2d8', '#a9cde8', '#f2e6cf'] });
+    L.pal = Object.assign({}, L.pal, { sea: ['#86b6cc', '#3d6f88', '#16323f'], sky: ['#2f6cba', '#5b95d2', '#a6c9e6', '#f6dcb0'] });
     let bg = K.sky(u, L, { horizon: HZ });
     bg += maresTails(u, L);
     bg += K.sunMoon(u, L, { r: 6.5 });
     // cumulus rows driven to the right: long flat clouds, the near ones big and high, smaller towards the horizon
-    for (const [x, y, w, h, sd, fr] of [[118, 30, 58, 13, 11, 0], [180, 40, 40, 10, 4, .1], [64, 50, 40, 9, 6, .25],
-      [140, 66, 44, 9, 7, .35], [200, 78, 30, 7, 9, .5], [98, 84, 34, 7, 15, .55], [12, 74, 30, 6, 18, .45], [150, 100, 34, 5, 23, .8], [66, 104, 28, 4, 25, .85]])
+    for (const [x, y, w, h, sd, fr] of [[126, 46, 92, 20, 11, 0], [30, 36, 58, 13, 4, .05], [206, 60, 54, 12, 6, .15],
+      [80, 82, 54, 10, 7, .35], [168, 92, 44, 8, 9, .45], [10, 96, 36, 6, 15, .6], [118, 106, 34, 5, 23, .8], [196, 108, 26, 4, 25, .85]])
       bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
     bg += K.water(u, L, { horizon: HZ, bottom: 292, swell: .55, seed: 5 });
+    // the shadows of the running clouds on the water: long soft patches, cool, under the glass and in the middle
+    bg += cloudShadows(u, L);
     // whitecaps all over the low sea, small and many far off, fewer and larger near
     bg += whitecaps(u, L);
     // the two wakes crossing behind the ships: the far ship came up from the near line, the near one from the far
-    bg += wake(u, L, [[FAR.x - 17, FAR.y + .6], [130, FAR.y + 1.2], [70, 120.6], [44, 123.4], [22, 130], [-14, 150]], 41, 1.2);
-    bg += wake(u, L, [[NEAR.x - 34, NEAR.y + .4], [48, 132], [28, 128], [8, 123.4], [-14, 120.2]], 43, 1);
+    bg += wake(u, L, [[FAR.x - 19, FAR.y + .4], [140, FAR.y + 1], [76, 122], [52, 125], [34, 130.5], [14, 138], [-14, 152]], 41, 2);
+    bg += wake(u, L, [[NEAR.x - 44, NEAR.y + .2], [50, 133], [34, 129.5], [16, 125], [-14, 121]], 43, 1.8);
     // the far ship, then the near one over it, bow spray at both stems
-    bg += K.ship(u, L, FAR) + K.splash(u, { x: FAR.x + 19, y: FAR.y + .4, w: 5, h: 6, seed: 5, L, wind: 1 });
-    bg += K.ship(u, L, NEAR);
+    bg += K.ship(u, L, FAR) + K.foam(u, { x: FAR.x + 2, y: FAR.y + .3, w: 34, h: .5, L, seed: 7 }) + K.splash(u, { x: FAR.x + 18, y: FAR.y + .4, w: 5, h: 6, seed: 5, L, wind: 1 });
+    bg += K.ship(u, L, NEAR) + K.foam(u, { x: NEAR.x + 6, y: NEAR.y + .4, w: 70, h: 1.1, L, seed: 8 });
     bg += K.splash(u, { x: NEAR.x + 37, y: NEAR.y + .2, w: 13, h: 16, seed: 2, L, wind: 1 });
     // ——— under the glass: a near whitecap breaking downwind, spindrift torn off it
-    let fg = whitecap(u, L, { x: 40, y: 244, w: 84, h: 13, seed: 6, wind: 1 }) + whitecap(u, L, { x: 168, y: 206, w: 56, h: 9, seed: 12, wind: 1 });
-    fg += spindrift(u, L, 70, 232, 60, 7) + spindrift(u, L, 188, 198, 30, 8);
+    let fg = nearSwell(u, L) + whitecap(u, L, { x: 172, y: 196, w: 60, h: 9, seed: 12, wind: 1 });
+    fg += spindrift(u, L, 70, 200, 90, 7) + spindrift(u, L, 194, 189, 30, 8);
     return [bg, fg];
   } };
 
@@ -100,17 +102,42 @@ function spindrift(u, L, x, y, len, seed) {
 // a ship's wake on the water along a path (picture points, far end first is the stern): a pale band of churned
 // water widening with distance from the stern and towards the viewer, torn foam on it, broken crests along its edges
 function wake(u, L, pts, seed, k) {
-  const R = rng(seed), c = mix(L.pal.sea[0], '#ffffff', .4), id = nid('wk', u), bl = nid('wl', u);
+  const R = rng(seed), c = mix(L.pal.sea[0], '#ffffff', .62), id = nid('wk', u), bl = nid('wl', u);
   // resample the path; the width grows along it and with nearness (y below the horizon)
   const pl = []; for (let i = 0; i + 1 < pts.length; i++) for (let j = 0; j < 8; j++) { const t = j / 8; pl.push([lerp(pts[i][0], pts[i + 1][0], t), lerp(pts[i][1], pts[i + 1][1], t)]); }
   pl.push(pts[pts.length - 1]);
-  const n = pl.length, wd = i => k * (.4 + 1.6 * Math.pow(i / n, .7)) * clamp((pl[i][1] - HZ) / 14, .2, 2.6);
+  const n = pl.length, wd = i => k * (.6 + 3 * Math.pow(i / n, .8)) * clamp((pl[i][1] - HZ) / 12, .35, 2.5);
   const top = [], bot = [];
-  for (let i = 0; i < n; i++) { const a = pl[Math.max(0, i - 1)], b = pl[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, w = wd(i) * .22;
-    top.push([pl[i][0] - dy / l * w * 0 , pl[i][1] - w]); bot.push([pl[i][0], pl[i][1] + w]); }
+  for (let i = 0; i < n; i++) { const a = pl[Math.max(0, i - 1)], b = pl[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], w = wd(i) * .5;
+    top.push([pl[i][0], pl[i][1] - w * .5]); bot.push([pl[i][0], pl[i][1] + w]); }
   const poly = top.concat(bot.reverse()).map(p => f(p[0]) + ' ' + f(p[1])).join('L');
-  let s = `<defs>${linGrad(id, pl[0][0], pl[0][1], pl[n - 1][0], pl[n - 1][1], [[0, c, .55], [.35, c, .34], [1, c, .12]])}<filter id="${bl}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation=".7"/></filter></defs><path d="M${poly}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
+  let s = `<defs>${linGrad(id, pl[0][0], pl[0][1], pl[n - 1][0], pl[n - 1][1], [[0, c, .9], [.4, c, .6], [1, c, .22]])}<filter id="${bl}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation=".7"/></filter></defs><path d="M${poly}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
   for (let i = 1; i < n; i += 1 + Math.floor(R() * 2)) { const p = pl[i], w = wd(i), side = R() < .5 ? -1 : 1, fade = 1 - .7 * i / n;
-    if (R() < .75) s += K.foam(u, { x: p[0] + (R() - .5) * 2, y: p[1] + side * w * .14, w: (1.6 + R() * 3) * w, h: Math.max(.25, .18 * w), seed: seed + i * 3, L }).replace('<g', `<g opacity="${f(fade)}"`); }
+    if (R() < .9) s += K.foam(u, { x: p[0] + (R() - .5) * 2, y: p[1] + side * w * .14, w: (1.6 + R() * 3) * w, h: Math.max(.25, .18 * w), seed: seed + i * 3, L }).replace('<g', `<g opacity="${f(fade)}"`); }
   return s;
 }
+
+// the shadows of the clouds racing over the sea: long soft patches stretched along the wind, darker and larger near
+function cloudShadows(u, L) {
+  let s = '';
+  for (const [x, y, rx, ry, op] of [[150, 146, 54, 5, .45], [52, 178, 80, 11, .5], [160, 226, 70, 13, .42], [30, 270, 90, 16, .5]]) {
+    const id = nid('cs', u); s += `<defs>${radGrad(id, 0, 0, 1, [[0, L.shadowMul, op], [.55, L.shadowMul, op * .55], [1, L.shadowMul, 0]])}</defs><ellipse cx="0" cy="0" rx="1" ry="1" transform="translate(${x} ${y}) scale(${rx} ${ry})" fill="url(#${id})" style="mix-blend-mode:multiply"/>`;
+  }
+  return s;
+}
+
+// the back of a big near swell across the bottom of the frame: a dark body rising from the left, its crest running
+// down to the right, lit along the top from the low sun, foam breaking on it and torn off downwind — the dark calm
+// form under the glass
+function nearSwell(u, L) {
+  const P = L.pal, id = nid('ns', u), cr = nid('nc', u), bl = nid('nb', u), body = mix(P.sea[2], L.shadowTint, .25), lit = mix(P.sea[1], mix(P.sea[0], L.keyColor, .35), .5);
+  const crest = 'M-14 206C10 199 34 197 60 200C88 203 112 210 140 220C162 228 186 236 214 240';
+  let s = `<defs>${linGrad(id, 0, 198, 0, 292, [[0, mix(body, P.sea[1], .35), .96], [.25, body, .98], [1, scale2(body, .8), 1]])}${linGrad(cr, 0, 196, 0, 214, [[0, lit, .9], [1, lit, 0]])}<filter id="${bl}" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="1.4"/></filter></defs>`;
+  s += `<path d="${crest}L214 300L-14 300Z" fill="url(#${id})"/>`;
+  s += `<path d="${crest}L214 250C186 246 160 238 138 230C110 220 86 213 60 210C34 207 10 209 -14 214Z" fill="url(#${cr})" filter="url(#${bl})"/>`;
+  // foam along the crest, broken, thicker where the crest is steep on the left; lace sliding down its back
+  for (const [x, y, w, h, sd] of [[8, 201.5, 40, 2.2, 3], [52, 199.4, 34, 2, 5], [92, 205.6, 30, 1.6, 9], [130, 216.4, 26, 1.3, 13], [170, 230, 30, 1.2, 17]]) s += K.foam(u, { x, y, w, h, L, seed: sd });
+  for (const [x, y, w, sd] of [[24, 214, 30, 21], [70, 216, 26, 23], [118, 228, 22, 25], [40, 236, 36, 27], [150, 246, 26, 29]]) s += K.foam(u, { x, y, w, h: .5, L, seed: sd });
+  return s;
+}
+function scale2(hex, k) { return K.scale ? K.scale(hex, k) : hex; }
