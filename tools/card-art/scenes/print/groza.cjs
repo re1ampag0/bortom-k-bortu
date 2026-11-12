@@ -11,7 +11,12 @@ const K = require('../kit/index.cjs');
 const { nid, f, clamp, lerp, rng, mix } = K;
 
 const HZ = 110;
-const WAR = { kind: 'warship', x: 104, y: 120, scale: .84, flip: true, sails: 'full', detail: 'near', seed: 11, roll: 4 };
+// the man-of-war of this card: the kit's warship with a lower foremast (by ~5 scene units), so the main truck is
+// plainly the highest point, and a shorter bowsprit, so her jibs keep clear of the merchantman on the right
+const KIND = 'warship-groza';
+if (!K.SHIP_SPECS[KIND]) { const w = K.SHIP_SPECS.warship;
+  K.SHIP_SPECS[KIND] = Object.assign({}, w, { sprit: Object.assign({}, w.sprit, { len: 21 }), masts: w.masts.map((m, i) => i === 0 ? Object.assign({}, m, { H: m.H - 6 }) : m) }); }
+const WAR = { kind: KIND, x: 104, y: 120, scale: .84, flip: true, sails: 'full', detail: 'near', seed: 11, roll: 4 };
 const STRIKE = K.shipGeom(WAR.kind, WAR).masts[1].top;          // the main truck, the highest point of the three ships
 const BOLT0 = [138, -8];                                       // where the bolt leaves the cloud base (out of frame)
 // the topgallant sail of the main mast: between the yards at .7 and .93 of the mast over the deck (ship.cjs QY[3])
@@ -30,7 +35,7 @@ const skel = {
     ['bolt', 92, 0, 36, 36, 'from the cloud base out of frame to the main truck of the man-of-war'],
     ['warship', 38, WAR.y, 128, 88, 'on the water, full sail, the tallest masts, the topgallant on fire'],
     ['brig', 2, 114, 40, 40, 'on the water, left, reefed, lower masts, behind the warship\'s stern'],
-    ['merchant', 166, 113.5, 40, 38, 'on the water, right, reefed, lower masts'],
+    ['merchant', 176, 114, 40, 38, 'on the water, right, reefed, lower masts'],
     ['near sea', 0, 280, 200, 150, 'rough water under the glass'],
   ],
 };
@@ -76,9 +81,18 @@ function burningSail(u, L) {
   s += `<path d="${d}" fill="#2a160c" opacity=".75" transform="translate(${f(cx)} ${f(cy)}) scale(1.35) translate(${f(-cx)} ${f(-cy)})" filter="url(#${ge})"/>`;
   s += `<path d="${d}" fill="${PAL.sky[1]}"/>`;
   s += `<path d="${d}" fill="none" stroke="#ff8a2a" stroke-width="1.1" filter="url(#${ge})"/><path d="${d}" fill="none" stroke="#ffd27a" stroke-width=".4"/>`;
-  s += K.fire(u, { x: cx - 1, y: cy + h * .5, w: w * 2, h: h * 2.8, seed: 3, wind: .55, glow: true, pool: false });
-  s += K.fire(u, { x: cx + w * .7, y: TG.y1 + 1, w: w * 1.1, h: h * 1.6, seed: 8, wind: .6, glow: false, pool: false });
-  s += K.fire(u, { x: cx - w * .8, y: TG.y1 + 2, w: w * .8, h: h * 1.2, seed: 13, wind: .5, glow: false, pool: false });
+  // the warm light of the fire: a wide soft glow round the flame, the foot of the burning sail and the topsail under it lit
+  s += K.localGlow(u, { x: cx + 3, y: cy - 2, color: '#ff8a2a', power: .9, radius: 20 }, { core: false });
+  s += K.localGlow(u, { x: cx + 1, y: TG.y1 + 7, color: '#ffa040', power: .75, radius: 15 }, { squash: .75, core: false });
+  { const gf = nid('bf', u); s += `<defs>${blur(gf, 1.2, [cx - 30, TG.y1 - 10, 60, 20])}</defs><ellipse cx="${f(cx)}" cy="${f(TG.y1 + .6)}" rx="${f(TG.hw * 1.15)}" ry="1.5" fill="#ffb860" opacity=".8" filter="url(#${gf})" style="mix-blend-mode:screen"/>`
+    + `<ellipse cx="${f(cx + 1)}" cy="${f(TG.y1 + 5)}" rx="${f(TG.hw * 1.1)}" ry="4.5" fill="#ff9a40" opacity=".35" filter="url(#${gf})" style="mix-blend-mode:screen"/>`; }
+  // the flame: unequal masses, the tallest off-centre, ragged tongues
+  s += K.fire(u, { x: cx - 1, y: cy + h * .5, w: w * 2, h: h * 2.8, seed: 3, wind: .55, glow: false, pool: false });
+  s += K.fire(u, { x: cx + w * .7, y: TG.y1 + 1, w: w * 1.1, h: h * 1.9, seed: 8, wind: .75, glow: false, pool: false });
+  s += K.fire(u, { x: cx - w * .8, y: TG.y1 + 2, w: w * .8, h: h * 1.1, seed: 13, wind: .5, glow: false, pool: false });
+  s += K.fire(u, { x: cx + w * .2, y: cy - h * .1, w: w * .9, h: h * 1.5, seed: 17, wind: .9, glow: false, pool: false });
+  // tongues torn off and streaming back downwind (to the right), thinning out
+  for (const [x, y, l, wd, b, sd] of [[cx + 4, cy - h * 1.2, 13, 2.2, -.35, 1], [cx + 6, cy - h * .4, 10, 1.8, -.2, 2], [cx + 2, cy - h * 1.9, 9, 1.4, -.5, 3], [cx + 8, cy + h * .3, 7, 1.3, -.1, 4]]) s += tongue(u, x, y, l, wd, b, sd);
   // sparks and shreds of burning canvas falling off, drifting downwind
   let sp = '';
   for (let i = 0; i < 26; i++) { const x = cx - 4 + R() * 26, y = cy + R() * 40, r = .25 + R() * .45; sp += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="${R() > .5 ? '#ffd890' : '#ff9a40'}" opacity="${f(.5 + R() * .5)}"/>`; }
@@ -86,10 +100,24 @@ function burningSail(u, L) {
   return s + sp;
 }
 
+// a flame tongue torn off downwind: a tapering, wavering blade from (x, y) to the right, rising by bend × length,
+// hot yellow at the root, red and transparent at the tip
+function tongue(u, x, y, len, w, bend, seed) {
+  const R = rng(seed), n = 10, top = [], bot = [], id = nid('tg', u);
+  for (let i = 0; i <= n; i++) { const t = i / n, px = x + len * t, py = y + bend * len * t * t + Math.sin(t * 7 + R() * 2) * .6 * t, hw = w * (1 - t) * (.6 + .4 * Math.sin(t * 9 + seed)) + .05;
+    top.push([px, py - hw]); bot.unshift([px + .3, py + hw * .7]); }
+  const d = 'M' + top.concat(bot).map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'Z';
+  return `<defs>${lin(id, x, y, x + len, y + bend * len, [[0, '#fff2b0'], [.25, '#ffc040'], [.6, '#ff7a1a', .8], [1, '#b02a08', 0]])}</defs><path d="${d}" fill="url(#${id})" style="mix-blend-mode:screen"/>`;
+}
+
 // ——— the strike at the truck: a white star of light, a ring of sparks thrown off
 function impact(u, p) {
   const R = rng(9);
-  let s = K.localGlow(u, { x: p[0], y: p[1], color: '#dcd8ff', power: 1, radius: 16 }) + K.localGlow(u, { x: p[0], y: p[1], color: '#ffffff', power: .9, radius: 5 });
+  // a short blue-white flash on the sky round the strike, a star of thin rays
+  let s = K.localGlow(u, { x: p[0], y: p[1] - 4, color: '#d6e4ff', power: .85, radius: 34 }, { core: false });
+  for (const [a, l, w] of [[-90, 16, .9], [90, 9, .6], [0, 13, .7], [180, 13, .7], [-45, 7, .45], [-135, 7, .45]]) { const r = a * Math.PI / 180, c = Math.cos(r), sn = Math.sin(r), q = [p[0] + c * l, p[1] + sn * l], n = [-sn * w, c * w];
+    s += `<path d="M${f(p[0] + n[0])} ${f(p[1] + n[1])}L${f(q[0])} ${f(q[1])}L${f(p[0] - n[0])} ${f(p[1] - n[1])}Z" fill="#eef4ff" opacity=".8"/>`; }
+  s += K.localGlow(u, { x: p[0], y: p[1], color: '#dcd8ff', power: 1, radius: 16 }) + K.localGlow(u, { x: p[0], y: p[1], color: '#ffffff', power: .9, radius: 5 });
   for (let i = 0; i < 14; i++) { const a = R() * Math.PI * 2, l = 2 + R() * 5; s += `<path d="M${f(p[0] + Math.cos(a) * 1.2)} ${f(p[1] + Math.sin(a) * 1.2)}l${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)}" stroke="#f4f2ff" stroke-width="${f(.2 + R() * .3)}" stroke-linecap="round" opacity="${f(.5 + R() * .5)}"/>`; }
   return s;
 }
@@ -125,8 +153,8 @@ module.exports = {
     // ——— the two lower ships: reefed, lit only from behind, untouched
     bg += K.ship(u, L, { kind: 'brig', x: 20, y: 114, scale: .5, flip: true, sails: 'reefed', detail: 'mid', seed: 4, lights: true });
     bg += K.foam(u, { x: 20, y: 114.2, w: 34, h: .8, seed: 3, L });
-    bg += K.ship(u, L, { kind: 'merchant', x: 180, y: 113.5, scale: .5, flip: true, sails: 'reefed', detail: 'mid', seed: 8, lights: true });
-    bg += K.foam(u, { x: 180, y: 113.7, w: 36, h: .8, seed: 5, L });
+    bg += K.ship(u, L, { kind: 'merchant', x: 191, y: 114, scale: .48, flip: true, sails: 'reefed', detail: 'mid', seed: 8, lights: true });
+    bg += K.foam(u, { x: 191, y: 114.2, w: 34, h: .8, seed: 5, L });
     // ——— the man-of-war: all sail, the tallest masts; the bolt hits her main truck
     let mid = K.ship(u, L, Object.assign({ wake: true }, WAR));
     mid += K.foam(u, { x: WAR.x, y: WAR.y + .3, w: 96, h: 1.2, seed: 9, L });

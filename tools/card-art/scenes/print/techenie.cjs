@@ -11,7 +11,7 @@ const K = require('../kit/index.cjs');
 const { f, mix, clamp, lerp, rng, nid, linGrad } = K;
 
 const HZ = 96;
-const VP = [-70, HZ + .4];          // where the lanes of the current converge: far off on the left horizon
+const VP = [-40, HZ + .4];          // where the lanes of the current converge: off the frame on the left horizon (the lanes run diagonally)
 const light = { time: 'day', key: { type: 'sun', x: 150, y: 28, color: '#fff4dc', power: .85 }, fill: { color: '#a9c9d6', power: .6 }, haze: .4 };
 const NEAR = { kind: 'merchant', x: 92, y: 121, scale: .95, flip: true, seed: 7 };  // bow right, carried right
 const FAR = { kind: 'brig', x: 160, y: 104.5, scale: .44, detail: 'mid', seed: 5 };  // bow left, carried right (stern-first)
@@ -50,25 +50,26 @@ function slackRig(u, L, o) {
   // one hanging sail: the head along the yard (a, b), the foot at the height fy (local), its clews loose
   const sail = (a, b, fy, fw, name) => {
     const r = rng((o.seed || 7) * 31 + name.length * 7 + Math.round(a[0] * 13)), hc = (a[0] + b[0]) / 2, hw = (b[0] - a[0]) / 2, ht = a[1] - fy, n = 14;
-    const lx = t => hc - hw * lerp(.97, fw, Math.pow(t, .8)) + Math.sin(t * 5 + r() * 6) * .25, rx = t => hc + hw * lerp(.97, fw, Math.pow(t, .8)) + Math.sin(t * 6 + r() * 6) * .25;
+    // the leeches hang in, concave, the clews drawn together under the weight of the cloth
+    const lx = t => hc - hw * (lerp(.97, fw, Math.pow(t, .8)) - .07 * Math.sin(Math.PI * t)) + Math.sin(t * 5 + r() * 6) * .25, rx = t => hc + hw * (lerp(.97, fw, Math.pow(t, .8)) - .07 * Math.sin(Math.PI * t)) + Math.sin(t * 6 + r() * 6) * .25;
     const pts = [];
     for (let i = 0; i <= n; i++) { const t = i / n; pts.push(pt(rx(t), a[1] - ht * t)); }
     // the foot: the clews hang lowest, the middle sags in two or three soft scallops
     const sc = 2 + Math.floor(r() * 2), ph = r() * 6;
-    for (let i = 1; i < n; i++) { const t = i / n, X = lerp(rx(1), lx(1), t), H = fy + ht * (.025 + .022 * Math.sin(t * Math.PI * sc + ph) + .075 * Math.sin(Math.PI * t)); pts.push(pt(X, H)); }
+    for (let i = 1; i < n; i++) { const t = i / n, X = lerp(rx(1), lx(1), t), H = fy + ht * (.02 + .04 * Math.abs(Math.sin(t * Math.PI * sc + ph)) + .15 * Math.sin(Math.PI * t)); pts.push(pt(X, H)); }
     for (let i = n; i >= 0; i--) { const t = i / n; pts.push(pt(lx(t), a[1] - ht * t)); }
     const d = smooth(pts), A = pt(hc, a[1]), B = pt(hc, fy), id = nid('sl', u), ci = nid('sc', u);
     // the tone down the sail: a dark band of the yard's shadow, the glow through the body, the foot rolled
     defs += linGrad(id, A[0], A[1], B[0], B[1], [[0, deep], [.08, glow], [.55, mix(glow, ridge, .35)], [.9, glow], [1, deep]]) + `<clipPath id="${ci}"><path d="${d}"/></clipPath>`;
     let inn = '';
     // folds: from points of the head down, of their own width and depth, running out before the foot
-    const nf = Math.max(3, Math.round(hw * 2 / (far ? 4.2 : 2.6)));
+    const nf = Math.max(4, Math.round(hw * 2 / (far ? 3.2 : 1.9)));
     for (let k = 0; k < nf; k++) {
-      const t = (k + .25 + r() * .5) / nf, X = lerp(hc - hw, hc + hw, t), w = (.5 + r() * .9) * (far ? 1.3 : 1), len = ht * (.55 + r() * .45), lean = (t - .5) * hw * -.12 + (r() - .5) * .6;
+      const t = (k + .25 + r() * .5) / nf, X = lerp(hc - hw, hc + hw, t), w = (.45 + r() * .8) * (far ? 1.3 : 1), len = ht * (.78 + r() * .3), lean = (t - .5) * hw * -.12 + (r() - .5) * .6;
       const g = nid('sf', u), p0 = pt(X, a[1] + .2), p1 = pt(X + lean, a[1] - len), m = pt(X + lean * .5 - w, a[1] - len * .5), m2 = pt(X + lean * .5 + w, a[1] - len * .5);
-      defs += linGrad(g, m[0], m[1], m2[0], m2[1], [[0, deep, 0], [.38, deep, .5 + r() * .3], [.62, deep, .2], [1, ridge, 0]]);
+      defs += linGrad(g, m[0], m[1], m2[0], m2[1], [[0, deep, 0], [.38, deep, .75 + r() * .25], [.6, deep, .35], [.8, ridge, .5], [1, ridge, 0]]);
       inn += `<path d="M${P(p0)}Q${P(m)} ${P(p1)}Q${P(m2)} ${P(p0)}Z" fill="url(#${g})"/>`;
-      if (!far && r() > .35) { const q = pt(X + w * 1.1 + lean * .3, a[1] - len * .35); inn += `<path d="M${P(pt(X + w * 1.1, a[1] - .4))}Q${P(q)} ${P(pt(X + w * 1.2 + lean * .7, a[1] - len * .8))}" stroke="${ridge}" stroke-width="${f(.28 * s)}" fill="none" opacity=".55"/>`; }
+      if (!far && r() > .1) { const q = pt(X + w * 1.1 + lean * .3, a[1] - len * .35); inn += `<path d="M${P(pt(X + w * 1.1, a[1] - .4))}Q${P(q)} ${P(pt(X + w * 1.2 + lean * .7, a[1] - len * .8))}" stroke="${ridge}" stroke-width="${f(.36 * s)}" fill="none" opacity=".8"/>`; }
     }
     // seams of the cloths, faint, along the hang
     if (!far) for (let X = hc - hw + 2.3; X < hc + hw - 1; X += 2.3) inn += `<path d="M${P(pt(X, a[1]))}L${P(pt(X + (X - hc) * -.04, fy))}" stroke="${deep}" stroke-width="${f(.12 * s)}" opacity=".3"/>`;
@@ -110,21 +111,24 @@ function slackRig(u, L, o) {
   });
   // the flag on its staff over the tallest mast and the pennant on the fore truck: the kit flies them; here they hang
   const main = flags.reduce((a, b) => b.H > a.H ? b : a), fore = flags[0], z = Lu * s;
-  const cut = [[main.top[0] - dir * .35, main.top[1] - 7.2 * z, -dir * 14 * z, 7.8 * z]];
-  if (fore !== main) cut.push([fore.top[0] - dir * .3, fore.top[1] - 2.2 * z, -dir * 15 * z, 2.7 * z]);
+  const cut = [[main.top[0] - 26 * z, main.top[1] - 9 * z, 52 * z, 9.3 * z]];
+  if (fore !== main) cut.push([fore.top[0] - 22 * z, fore.top[1] - 3.2 * z, 44 * z, 3.5 * z]);
+  const spar = col(L.tone('oak', dz * .6));
   let limp = '';
   { // the flag: hanging from the head of its staff, the stripes run down it, folds across
-    const h0 = [main.top[0] - dir * .15 * s, main.top[1] - 6.4 * z], len = 5.4 * z, wd = 1.9 * z, stripes = [L.tone('ship-flag-red', dz), L.tone('linen', dz), L.tone('water-wet', dz + .2)].map(col), id = nid('fl', u);
+    const h0 = [main.top[0] - dir * .1 * z, main.top[1] - 6.4 * z], len = 5.4 * z, wd = 1.9 * z, stripes = [L.tone('ship-flag-red', dz), L.tone('linen', dz), L.tone('water-wet', dz + .2)].map(col), id = nid('fl', u);
     const sway = t => -dir * (Math.sin(t * 3.1 + 1) * .25 + t * .35) * z;
     const edge = (k) => { const a = []; for (let i = 0; i <= 6; i++) { const t = i / 6; a.push([h0[0] - dir * wd * k * (1 - .25 * t) + sway(t), h0[1] + len * t]); } return a; };
     const Lf = edge(0), Rf = edge(1), d = smooth(Lf.concat(Rf.reverse()));
     defs += linGrad(id, h0[0], h0[1], h0[0] - dir * wd, h0[1], [[0, stripes[0]], [.33, stripes[0]], [.34, stripes[1]], [.66, stripes[1]], [.67, stripes[2]], [1, stripes[2]]]);
     const fd = nid('ff', u); defs += linGrad(fd, h0[0], h0[1], h0[0], h0[1] + len, [[0, deep, .5], [.3, deep, 0], [.55, deep, .35], [.8, deep, 0], [1, deep, .4]]);
+    limp += `<path d="M${P([main.top[0], main.top[1] + .5 * z])}L${P([main.top[0], h0[1] - .4 * z])}" stroke="${spar}" stroke-width="${f(clamp(.5 * z, .15, .6))}"/>`;
     limp += `<path d="${d}" fill="url(#${id})"/><path d="${d}" fill="url(#${fd})"/>` + (far ? '' : `<path d="${d}" fill="none" stroke="${ink}" stroke-width="${f(.2 * Math.sqrt(s))}"/>`);
   }
   if (fore !== main) { // the pennant: a long thin tail down the topmast, twisting
-    const h0 = [fore.top[0] - dir * .2 * s, fore.top[1] - .8 * z], len = 9 * z, a = [], b = [];
+    const h0 = [fore.top[0] - dir * .1 * z, fore.top[1] - .8 * z], len = 9 * z, a = [], b = [];
     for (let i = 0; i <= 8; i++) { const t = i / 8, x = h0[0] - dir * (Math.sin(t * 4.2) * .6 + t * .9) * z, y = h0[1] + len * t, wd = .85 * z * (1 - .85 * t); a.push([x, y]); b.unshift([x - dir * wd, y + .1]); }
+    limp += `<path d="M${P([fore.top[0], fore.top[1] + .4 * z])}L${P([fore.top[0], h0[1] - .3 * z])}" stroke="${spar}" stroke-width="${f(clamp(.45 * z, .15, .5))}"/>`;
     limp += `<path d="${smooth(a.concat(b))}" fill="${col(L.tone('linen', dz * .8))}"/>`;
   }
   return { sails, over, defs, cut, limp, stern: pt(xAft - 1.2, rail(xAft - 1.2) - .6) };
