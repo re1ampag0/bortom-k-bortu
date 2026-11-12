@@ -12,7 +12,7 @@ const HZ = 240, RAIL = 252;   // the eye level is low: we look up the mast; the 
 const MOON = { x: 152, y: 26 };
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#d4e0f6', power: .85 }, fill: { color: '#3a5480', power: .42 },
   rim: { az: 20, color: '#cfe4ff', power: .7 } };
-const SHOT = { x: 52, y: 64, a: -28, r: 5.2, len: 28 };   // the chain shot: middle, angle of the chain, ball radius, ball to ball
+const SHOT = { x: 52, y: 64, a: -28, r: 5.8, len: 30 };   // the chain shot: middle, angle of the chain, ball radius, ball to ball
 const BRK = { x: 64, y: 92 };                               // where the topsail yard snapped
 const skel = { horizon: HZ, eye: 1.7, light: 'moon high right, behind the sails', items: [
   ['chainshot', SHOT.x - 18, SHOT.y, 36, 20, 'in flight'], ['mast', 92, 290, 16, 276, 'deck'], ['topgallant', 22, 90, 156, 40, 'yard'],
@@ -26,7 +26,7 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     const cyl = (x1, y1, x2, y2, r1, r2 = r1, o = {}) => K.shadeCyl(u, x1, y1, x2, y2, r1, L, o.kind || 'oak', Object.assign({ r1, r2, outline: .35 }, o));
     const line = (d, w = .5, c = '#0e0d0c', op = 1) => `<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" opacity="${op}" stroke-linecap="round"/>`;
     // the canvas lit through by the moon behind it: one gradient for every sail, brightest near the moon
-    const sg = nid('sg', u), sgDefs = radGrad(sg, MOON.x, MOON.y, 230, [[0, '#f4f0dc'], [.16, '#dcd8c4'], [.38, '#a8a698'], [.62, '#6c6e6c'], [.85, '#3c4048'], [1, '#262a32']]);
+    const sg = nid('sg', u), sgDefs = radGrad(sg, MOON.x, MOON.y, 230, [[0, '#f6f2de'], [.14, '#e0dcc6'], [.32, '#aeac9c'], [.52, '#74766e'], [.76, '#40444c'], [1, '#22262e']]);
     // sail: top edge on its yard (tl..tr, sagging to the middle), leeches to the clews (bl, br), the foot with a roach;
     // cloths (seams) run down; the reef band under the yard; the belly darkens under the yard and at the foot
     const sail = (P, o = {}) => {
@@ -34,8 +34,10 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
       const d = o.d || `M${f(tl[0])} ${f(tl[1])}Q${f((tl[0] + tr[0]) / 2)} ${f((tl[1] + tr[1]) / 2 - sag)} ${f(tr[0])} ${f(tr[1])}Q${f((tr[0] + br[0]) / 2 + (o.leech || 2))} ${f((tr[1] + br[1]) / 2)} ${f(br[0])} ${f(br[1])}`
         + `Q${f((bl[0] + br[0]) / 2)} ${f((bl[1] + br[1]) / 2 - roach)} ${f(bl[0])} ${f(bl[1])}Q${f((tl[0] + bl[0]) / 2 - (o.leech || 2))} ${f((tl[1] + bl[1]) / 2)} ${f(tl[0])} ${f(tl[1])}Z`;
       const y0 = Math.min(tl[1], tr[1]), y1 = Math.max(bl[1], br[1]), h = y1 - y0;
-      let out = `<defs>${linGrad(bid, 0, y0, 0, y1, [[0, '#0a0c12', .55], [.12, '#0a0c12', .18], [.45, '#0a0c12', 0], [.8, '#0a0c12', .12], [1, '#0a0c12', .4]])}<clipPath id="${id}"><path d="${d}"/></clipPath></defs>`
-        + `<path d="${d}" fill="url(#${sg})"/><g clip-path="url(#${id})"><rect x="-20" y="${f(y0 - 5)}" width="240" height="${f(h + 10)}" fill="url(#${bid})"/>`;
+      const hid = nid('sh', u), x0 = Math.min(tl[0], bl[0]), x1 = Math.max(tr[0], br[0]);
+      let out = `<defs>${linGrad(bid, 0, y0, 0, y1, [[0, '#0a0c12', .55], [.12, '#0a0c12', .18], [.45, '#0a0c12', 0], [.8, '#0a0c12', .12], [1, '#0a0c12', .4]])}`
+        + `${linGrad(hid, x0, 0, x1, 0, [[0, '#0a0c12', .45], [.18, '#0a0c12', .12], [.5, '#0a0c12', 0], [.82, '#0a0c12', .1], [1, '#0a0c12', .35]])}<clipPath id="${id}"><path d="${d}"/></clipPath></defs>`
+        + `<path d="${d}" fill="url(#${sg})"/><g clip-path="url(#${id})"><rect x="-20" y="${f(y0 - 5)}" width="240" height="${f(h + 10)}" fill="url(#${bid})"/><rect x="-20" y="${f(y0 - 5)}" width="240" height="${f(h + 10)}" fill="url(#${hid})"/>`;
       // the cloths: seams from the yard to the foot, fanning with the sail, a little bowed by the wind
       const n = o.cloths || 12;
       for (let i = 1; i < n; i++) { const t = i / n, a = [tl[0] + (tr[0] - tl[0]) * t, tl[1] + (tr[1] - tl[1]) * t - sag * 4 * t * (1 - t)], b = [bl[0] + (br[0] - bl[0]) * t, bl[1] + (br[1] - bl[1]) * t - roach * 4 * t * (1 - t)];
@@ -90,6 +92,11 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     let yards = cyl(-14, 151, 214, 151, 2.4, 2.4, { r1: 1.8, r2: 1.8 }) + K.shadeSphere(u, 103, 151, 3.4, L, 'oak');
     yards += cyl(BRK.x + 1, 92.4, 188, 92.4, 1.9, 1.5) + K.shadeSphere(u, 101, 92.4, 2.7, L, 'oak');
     yards += cyl(48, 53, 154, 53, 1.3, 1.1) + K.shadeSphere(u, 99.6, 53, 1.8, L, 'oak');
+    // the footropes under the yards with their stirrups (the broken arm's footrope hangs slack)
+    for (const [xa, xb, y, dp] of [[BRK.x + 4, 186, 92.4, 5], [50, 152, 53, 3.4], [-12, 212, 151, 6]]) {
+      const n = 5; let d = ''; for (let i = 0; i < n; i++) { const a = xa + (xb - xa) * i / n, b = xa + (xb - xa) * (i + 1) / n; d += `M${f(a)} ${f(y + dp * .6)}Q${f((a + b) / 2)} ${f(y + dp)} ${f(b)} ${f(y + dp * .6)}`; d += `M${f(b)} ${f(y + 1)}L${f(b)} ${f(y + dp * .6)}`; }
+      yards += line(d, .4, '#14110e', .85); }
+    yards += line(`M${BRK.x + 4} ${BRK.y + 3}Q${BRK.x - 6} ${BRK.y + 22} ${BRK.x - 16} ${BRK.y + 12}`, .4, '#14110e', .85);
     // the stub of the broken arm: splintered end, raw wood pale where it tore
     { const bx = BRK.x + 1, by = 92.4; let st = '';
       for (let i = 0; i < 7; i++) { const yy = by - 1.8 + i * .6, l = 1.5 + R() * 4; st += `<path d="M${f(bx)} ${f(yy)}l${f(-l)} ${f((R() - .5) * 1.6)}l${f(l * .8)} .5Z" fill="${i % 2 ? '#e6cc9a' : '#b48a58'}" stroke="#3a2412" stroke-width=".15"/>`; }
@@ -99,12 +106,14 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     yards += line(`M99.6 60L${AR.a[0]} ${AR.a[1] - 1}`, .55, '#14110e');   // the topsail lift, still holding the arm
     yards += cyl(AR.a[0], AR.a[1], AR.b[0], AR.b[1], 1.5, 1.7);
     { let st = ''; for (let i = 0; i < 6; i++) { const l = 1.6 + R() * 3.4, a = Math.atan2(AR.b[1] - AR.a[1], AR.b[0] - AR.a[0]) + (R() - .5) * .9; st += `<path d="M${f(AR.b[0] + (R() - .5) * 2)} ${f(AR.b[1] + (R() - .5) * 2)}l${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)}" stroke="${i % 2 ? '#e6cc9a' : '#b48a58'}" stroke-width=".7" stroke-linecap="round"/>`; } yards += st; }
-    // the strip of topsail still laced to the broken arm: flogging out to the left in the wind, the moon through it
-    { const fl = nid('fl', u), d = `M${AR.a[0] + 1} ${AR.a[1] + 1}L${AR.b[0] - 1} ${AR.b[1] - 1.5}q-8 4 -14 2q-6 6 -12 2q-5 3 -9 -1q-2 -6 2 -10q-3 -5 4 -8q4 -2 6 -6z`;
-      yards += `<defs>${linGrad(fl, AR.a[0], AR.a[1], 6, 128, [[0, '#cfcab6'], [.6, '#8a8a82'], [1, '#4a4e54']])}</defs><path d="${d}" fill="url(#${fl})" stroke="#1a1c22" stroke-width=".5"/>`
-        + line(`M${AR.a[0] - 2} ${AR.a[1] + 6}q-5 8 -2 18M${AR.a[0] + 8} ${AR.a[1] + 12}q-6 6 -6 14`, .4, '#1a1c22', .5)
-        + line('M8 129q-3 4 -1 9M14 131q-2 5 1 10', .6, '#cfcab4', .6); }
-
+    // the strips of topsail still laced to the broken arm: torn into ribbons that stream out to the left in the wind,
+    // frayed at the ends, the moon through the thin canvas
+    { const fl = nid('fl', u), Rs = rng(77); let st = `<defs>${linGrad(fl, AR.a[0], AR.a[1], -6, 120, [[0, '#d6d0ba'], [.55, '#9a988c'], [1, '#5a5e64']])}</defs>`;
+      for (let i = 0; i < 4; i++) { const t = .12 + i * .22, ax = AR.a[0] + (AR.b[0] - AR.a[0]) * t, ay = AR.a[1] + (AR.b[1] - AR.a[1]) * t, w = 2.2 + Rs() * 1.6, len = 16 + Rs() * 12 - i * 2, wv = 2 + Rs() * 2;
+        const ex = ax - len, ey = ay + 4 + i * 2 + Rs() * 3;
+        st += `<path d="M${f(ax)} ${f(ay - w / 2)}Q${f(ax - len * .35)} ${f(ay - wv)} ${f(ax - len * .6)} ${f(ay + 1)}T${f(ex)} ${f(ey - 1)}l-2 1.4l2.4 .6l-1.6 1.6l2.6 -.2Q${f(ax - len * .55)} ${f(ay + w + 2)} ${f(ax)} ${f(ay + w / 2)}Z" fill="url(#${fl})" stroke="#1a1c22" stroke-width=".35"/>`
+          + line(`M${f(ax - 2)} ${f(ay)}Q${f(ax - len * .4)} ${f(ay - wv + 1)} ${f(ax - len * .7)} ${f(ay + 2)}`, .3, '#2a2c30', .5); }
+      yards += st; }
     // ——— the standing rigging over the sails: lower shrouds from the channels to the top, ratlines; topmast shrouds
     // (the left ones parted — their ends curl), the stay of the topgallant, the braces
     let shr = '';
@@ -117,7 +126,7 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     shr += line('M76 129L84 112q2 -3 -1 -5q-3 -1 -2 3M81 129L86 116q1.6 -4 4 -3', .5, '#100e0c');
     shr += line('M99 64L92 78q-3 6 -8 4q-3 -1 -1 -4M99.4 64L95 84q-1 6 -5 8', .5, '#100e0c');
     // the braces and the lifts of the course and the topgallant
-    shr += line('M99 22L50 53M99 22L152 53M101 66L-14 151M101 66L214 151', .4, '#14110e', .85);
+    shr += line('M99 22L50 53M99 22L152 53M101 66L214 151', .4, '#14110e', .85);
     shr += line('M150 54L210 34M52 54L-10 38', .4, '#14110e', .8);
 
     // ——— the Company pennant streaming from the truck to the left, red and white, forked
