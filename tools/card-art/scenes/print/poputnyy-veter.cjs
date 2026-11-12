@@ -11,13 +11,13 @@ const { f, mix, clamp, lerp, rng, nid, linGrad, radGrad } = K;
 const HZ = 116;                     // horizon
 const SUN = { x: 34, y: 90 };       // the low morning sun on the left, upwind, under the clouds
 const light = { time: 'day', haze: .12, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffdc9a', power: 1 }, fill: { color: '#8fc0e8', power: .5 } };
-const NEAR = { kind: 'merchant', x: 98, y: 134, scale: 1.28, flip: true, roll: 8, sails: 'full', detail: 'near', seed: 9 };
-const FAR = { kind: 'merchant', x: 168, y: 119.6, scale: .46, flip: true, roll: 4, sails: 'full', detail: 'mid', seed: 31 };
+const NEAR = { kind: 'merchant', x: 94, y: 136, scale: 1.05, flip: true, roll: 8, sails: 'full', detail: 'near', seed: 9 };
+const FAR = { kind: 'merchant', x: 176, y: 119.4, scale: .4, flip: true, roll: 4, sails: 'full', detail: 'mid', seed: 31 };
 const skel = { horizon: HZ, eye: 3, light: 'the low morning sun ahead on the left, upwind: sails glow through, bright edges towards it, shadows on the water towards us and to the right',
   items: [
-    ['near', 52, NEAR.y, 108, 92, 'on the water, heeled 8° towards us, running to the right'],
-    ['far', 150, FAR.y, 50, 42, 'on the water, ahead and further, running to the right'],
-    ['wakes', -10, 150, 170, 34, 'on the water: the two wakes cross behind the ships'],
+    ['near', 48, NEAR.y, 100, 80, 'on the water, heeled 8° towards us, running to the right'],
+    ['far', 158, FAR.y, 40, 36, 'on the water, higher and to the right, clear of the near one, running to the right'],
+    ['wakes', 0, 138, 160, 20, 'on the water above the glass: the two wakes cross left of the near stern'],
     ['spray', 136, 134, 22, 18, 'thrown up at the near ship\'s stem, carried to the right'],
     ['crest', -10, 250, 110, 40, 'a near whitecap under the glass'],
   ] };
@@ -39,12 +39,12 @@ module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'dr
     // whitecaps all over the low sea, small and many far off, fewer and larger near
     bg += whitecaps(u, L);
     // the two wakes crossing behind the ships: the far ship came up from the near line, the near one from the far
-    bg += wake(u, L, [[FAR.x - 19, FAR.y + .4], [140, FAR.y + 1], [76, 122], [52, 125], [34, 130.5], [14, 138], [-14, 152]], 41, 2);
-    bg += wake(u, L, [[NEAR.x - 49, NEAR.y + .2], [40, 133], [34, 129.5], [16, 125], [-14, 121]], 43, 1.8);
+    bg += wake(u, L, [[FAR.x - 16, FAR.y + .4], [130, 120.6], [70, 123], [48, 126.6], [30, 130.4], [12, 134.6], [-14, 139.6]], 41, 2.4);
+    bg += wake(u, L, [[NEAR.x - 40, NEAR.y + .2], [44, 134.6], [30, 131], [14, 126.4], [-14, 121.4]], 43, 2.2);
     // the far ship, then the near one over it, bow spray at both stems
-    bg += K.ship(u, L, FAR) + K.foam(u, { x: FAR.x + 2, y: FAR.y + .3, w: 34, h: .5, L, seed: 7 }) + K.splash(u, { x: FAR.x + 18, y: FAR.y + .4, w: 5, h: 6, seed: 5, L, wind: 1 });
-    bg += K.ship(u, L, NEAR) + K.foam(u, { x: NEAR.x + 6, y: NEAR.y + .4, w: 80, h: 1.1, L, seed: 8 });
-    bg += K.splash(u, { x: NEAR.x + 48.5, y: NEAR.y + .2, w: 14, h: 18, seed: 2, L, wind: 1 });
+    bg += K.ship(u, L, FAR) + K.foam(u, { x: FAR.x + 2, y: FAR.y + .3, w: 30, h: .5, L, seed: 7 }) + K.splash(u, { x: FAR.x + 15.6, y: FAR.y + .4, w: 4.5, h: 5.5, seed: 5, L, wind: 1 });
+    bg += K.ship(u, L, NEAR) + K.foam(u, { x: NEAR.x + 5, y: NEAR.y + .4, w: 66, h: 1, L, seed: 8 });
+    bg += K.splash(u, { x: NEAR.x + 39.8, y: NEAR.y + .2, w: 12, h: 16, seed: 2, L, wind: 1 });
     // ——— under the glass: a near whitecap breaking downwind, spindrift torn off it
     let fg = nearSwell(u, L) + whitecap(u, L, { x: 172, y: 196, w: 60, h: 9, seed: 12, wind: 1 });
     fg += spindrift(u, L, 46, 196, 90, 7) + spindrift(u, L, 194, 189, 30, 8);
@@ -70,7 +70,7 @@ function whitecaps(u, L) {
   for (let i = 0; i < 26; i++) {
     const t = Math.pow(R(), 1.25), y = HZ + 3 + t * 92, w = 3 + t * 34, h = .5 + t * 5, x = R() * 210 - 5;
     // keep clear of the near ship's hull and its spray (they are drawn over), and of the wakes' crossing
-    if (y < 137 && x > 50 && x < 150) continue;
+    if (y < 140 && x > -10 && x < 150) continue;
     s += whitecap(u, L, { x, y, w, h, seed: 70 + i, wind: 1 });
   }
   return s;
@@ -103,19 +103,19 @@ function spindrift(u, L, x, y, len, seed) {
 // widening away from the stern and towards the viewer, its two edges drawn as broken lines of foam (the arms of the
 // wake), torn foam only close under the stern
 function wake(u, L, pts, seed, k) {
-  const R = rng(seed), c = mix(L.pal.sea[0], '#ffffff', .6), fc = mix('#f4fbff', L.keyColor, .2), id = nid('wk', u), bl = nid('wl', u);
+  const R = rng(seed), c = mix(L.pal.sea[0], '#ffffff', .78), fc = mix('#f8fdff', L.keyColor, .15), id = nid('wk', u), bl = nid('wl', u);
   const pl = []; for (let i = 0; i + 1 < pts.length; i++) for (let j = 0; j < 8; j++) { const t = j / 8; pl.push([lerp(pts[i][0], pts[i + 1][0], t), lerp(pts[i][1], pts[i + 1][1], t)]); }
   pl.push(pts[pts.length - 1]);
   const n = pl.length, wd = i => k * (.6 + 3 * Math.pow(i / n, .8)) * clamp((pl[i][1] - HZ) / 12, .35, 2.5);
   const top = [], bot = [];
   for (let i = 0; i < n; i++) { const w = wd(i) * .5; top.push([pl[i][0], pl[i][1] - w * .45]); bot.push([pl[i][0], pl[i][1] + w]); }
   const sm = q => { let d = `M${f(q[0][0])} ${f(q[0][1])}`; for (let i = 1; i < q.length; i++) { const m = [(q[i - 1][0] + q[i][0]) / 2, (q[i - 1][1] + q[i][1]) / 2]; d += `Q${f(q[i - 1][0])} ${f(q[i - 1][1])} ${f(m[0])} ${f(m[1])}`; } return d; };
-  let s = `<defs>${linGrad(id, pl[0][0], pl[0][1], pl[n - 1][0], pl[n - 1][1], [[0, c, .7], [.4, c, .42], [1, c, .14]])}<filter id="${bl}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation=".6"/></filter></defs>`;
+  let s = `<defs>${linGrad(id, pl[0][0], pl[0][1], pl[n - 1][0], pl[n - 1][1], [[0, c, .92], [.4, c, .7], [1, c, .38]])}<filter id="${bl}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation=".6"/></filter></defs>`;
   s += `<path d="${sm(top)}L${sm(bot.slice().reverse()).slice(1)}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
   // the edges: soft unbroken lines of churned water fading away from the stern, flecks of foam riding on them
   for (const [q, e] of [[top, 1], [bot, 2]]) { const g = nid('we', u), wob = q.map((p, i) => [p[0], p[1] + Math.sin(i * .9 + seed + e) * .25 * clamp((p[1] - HZ) / 20)]);
-    s += `<defs>${linGrad(g, q[0][0], q[0][1], q[n - 1][0], q[n - 1][1], [[0, fc, .85], [.5, fc, .45], [1, fc, .1]])}</defs><path d="${sm(wob)}" stroke="url(#${g})" stroke-width="${f(.55 * k)}" fill="none" filter="url(#${bl})"/>`;
-    for (let i = 2; i < n; i += 3 + Math.floor(R() * 3)) { const p = wob[i], t = i / n, w = (1 + R() * 2.2) * (.5 + clamp((p[1] - HZ) / 25)); s += `<ellipse cx="${f(p[0] + (R() - .5) * 2)}" cy="${f(p[1])}" rx="${f(w * .8)}" ry="${f(Math.max(.18, w * .1))}" fill="${fc}" opacity="${f((.75 - .55 * t) * (.5 + R() * .5))}"/>`; } }
+    s += `<defs>${linGrad(g, q[0][0], q[0][1], q[n - 1][0], q[n - 1][1], [[0, fc, .95], [.5, fc, .75], [1, fc, .4]])}</defs><path d="${sm(wob)}" stroke="url(#${g})" stroke-width="${f(.45 * k)}" fill="none" filter="url(#${bl})"/>`;
+    for (let i = 2; i < n; i += 3 + Math.floor(R() * 3)) { const p = wob[i], t = i / n, w = (1 + R() * 2.2) * (.5 + clamp((p[1] - HZ) / 25)); s += `<ellipse cx="${f(p[0] + (R() - .5) * 2)}" cy="${f(p[1])}" rx="${f(w * .8)}" ry="${f(Math.max(.18, w * .1))}" fill="${fc}" opacity="${f((.95 - .45 * t) * (.6 + R() * .4))}"/>`; } }
   for (let i = 0; i < 4; i++) { const p = pl[i * 2]; s += K.foam(u, { x: p[0] - 1, y: p[1] + .3, w: 4 + i * 1.5, h: .5, seed: seed + i * 3, L }); }
   return s;
 }
