@@ -148,13 +148,16 @@ function becalmed(u, L, o) {
 
 // ——— the current: lanes along rays from VP. y on the ray that reaches yr at x = 200
 const rayY = (yr, x) => VP[1] + (x - VP[0]) * (yr - VP[1]) / (200 - VP[0]);
+const rayThrough = (x, y) => VP[1] + (y - VP[1]) * (200 - VP[0]) / (x - VP[0]);   // the yr of the ray through (x, y)
 const depth = y => Math.max(0, y - HZ);                     // the scale of things on the water at y (0 at the horizon)
 const P2 = p => f(p[0]) + ' ' + f(p[1]);
 // a tapered strip along a ray from x0 to x1, its half-width growing with the depth, a gentle wiggle along it
-function strip(yr, x0, x1, wk, ph, amp) {
+function strip(yr, x0, x1, wk, ph, amp, wedge) {
   const n = 18, top = [], bot = [];
+  x0 = Math.max(x0, VP[0] + 4);
   for (let i = 0; i <= n; i++) {
-    const t = i / n, x = lerp(x0, x1, t), y0 = rayY(yr, x), d = depth(y0), y = y0 + Math.sin(t * 7 + ph) * d * amp, hw = (.05 + d * wk) * Math.pow(Math.sin(Math.PI * clamp(t * 1.05)), .5);
+    const t = i / n, x = lerp(x0, x1, t), y0 = rayY(yr, x), d = depth(y0), y = y0 + Math.sin(t * 7 + ph) * d * amp,
+      hw = (.05 + d * wk) * (wedge ? Math.pow(t, .75) * Math.pow(clamp((1 - t) * 6), .6) * 1.6 : Math.pow(Math.sin(Math.PI * clamp(t * 1.05)), .5));
     top.push([x, y - hw]); bot.unshift([x + d * .04, y + hw]);
   }
   return 'M' + top.concat(bot).map(P2).join('L') + 'Z';
@@ -163,16 +166,17 @@ function lanes(u, L, o) {
   const R = rng(o.seed), foamC = mix('#ffffff', L.keyColor, .2), dark = mix(L.pal.sea[1], L.pal.sea[2], .45), lite = mix(L.pal.sea[0], '#ffffff', .2);
   let back = '', s = '';
   // dark smooth lanes and pale rippled lanes, alternating, laid as wedges between rays
-  for (let i = 0; i < 26; i++) {
-    const t0 = i / 26, t1 = (i + .45 + R() * .35) / 26, ya = HZ + .6 + 210 * Math.pow(t0, 1.7), yb = HZ + .6 + 210 * Math.pow(t1, 1.7);
-    back += `<path d="M${P2(VP)}L210 ${f(rayY(ya, 210))}L210 ${f(rayY(yb, 210))}Z" fill="${i % 2 ? dark : lite}" opacity="${f(i % 2 ? .42 : .24)}"/>`;
+  for (let i = 0; i < 30; i++) {
+    const t0 = i / 30, t1 = (i + .45 + R() * .35) / 30, ya = HZ + .6 + 210 * Math.pow(t0, 1.7), yb = HZ + .6 + 210 * Math.pow(t1, 1.7);
+    back += `<path d="M${P2(VP)}L210 ${f(rayY(ya, 210))}L210 ${f(rayY(yb, 210))}Z" fill="${i % 2 ? dark : lite}" opacity="${f(i % 2 ? .55 : .3)}"/>`;
   }
   // foam streaks: long and thin far off, longer, wider and broken near; each its own length and gap
   for (let i = 0; i < o.n; i++) {
-    const mid = i < o.n * .6, t = mid ? R() : Math.pow(R(), 1.3), yr = mid ? HZ + 2 + 62 * t : HZ + 1 + 230 * t, x0 = -30 + R() * 210, len = 30 + R() * 110 + (mid ? 40 : t * 80), wk = (mid ? .014 : .009) + R() * .016;
-    s += `<path d="${strip(yr, x0, x0 + len, wk, R() * 6, .006)}" fill="${foamC}" opacity="${f(.4 + R() * .45)}"/>`;
-    // a broken chain of short dashes along the same lane, ahead of the streak
-    if (R() > .45) for (let k = 0; k < 3; k++) { const xa = x0 + len + 4 + k * (6 + R() * 10); s += `<path d="${strip(yr, xa, xa + 3 + R() * 6, wk * .8, R() * 6, 0)}" fill="${foamC}" opacity="${f(.2 + R() * .3)}"/>`; }
+    const mid = i < o.n * .6, t = mid ? R() : Math.pow(R(), 1.3), yr = mid ? HZ + 2 + 62 * t : HZ + 1 + 230 * t, x0 = -30 + R() * 210, len = 40 + R() * 110 + (mid ? 40 : t * 80), wk = (mid ? .016 : .012) + R() * .02;
+    // a wedge of foam: a hair far upstream, opening downstream to a broken white head
+    s += `<path d="${strip(yr, x0, x0 + len, wk, R() * 6, .004, true)}" fill="${foamC}" opacity="${f(.55 + R() * .4)}"/>`;
+    // a broken chain of short wedges along the same lane, ahead of the streak
+    if (R() > .35) for (let k = 0; k < 3; k++) { const xa = x0 + len + 3 + k * (5 + R() * 8); s += `<path d="${strip(yr, xa, xa + 4 + R() * 8, wk * .9, R() * 6, 0, true)}" fill="${foamC}" opacity="${f(.3 + R() * .35)}"/>`; }
   }
   return `<g clip-path="url(#${o.clip})">${back}${s}</g>`;
 }
@@ -183,19 +187,42 @@ function eddy(u, L, x, y, r, seed) {
   return `<path d="M${pts.map(P2).join('L')}" stroke="${c}" stroke-width="${f(.25 + r * .05)}" fill="none" opacity=".55" stroke-linecap="round"/>`
     + `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * 1.2)}" ry="${f(r * .3)}" fill="${L.pal.sea[2]}" opacity=".18"/>`;
 }
-// a ribbon of weed streaming along a lane: an olive-brown blade, wavy, twisting (lighter where it turns to the sun),
-// small bladders along it
+// weed streaming along a lane: a clump of two or three limp fronds from one holdfast (upstream), each a thin
+// twisting ribbon that snakes downstream, with blades (leaves) on both sides laid back by the current and small
+// bladders; olive-brown, lighter where a blade turns to the sun. Sizes grow with the depth (perspective).
 function weed(u, L, yr, x0, len, w, seed) {
-  const R = rng(seed), n = 16, top = [], bot = [], ph = R() * 6;
-  for (let i = 0; i <= n; i++) {
-    const t = i / n, x = x0 + len * t, y0 = rayY(yr, x), d = depth(y0), y = y0 + Math.sin(t * 9 + ph) * d * .018, hw = w * d * .02 * (.4 + .6 * Math.abs(Math.sin(t * 5 + ph))) * (1 - .6 * t);
-    top.push([x, y - hw]); bot.unshift([x, y + hw]);
+  const R = rng(seed), y00 = rayY(yr, x0), sc = clamp(depth(y00) / 24, .25, 3) * w / 3.6;
+  const leafC = ['#6e6424', '#86762c', '#5a5420', '#9a8a3a'], dark = '#2a2810';
+  let back = '', front = '';
+  const nf = 2 + Math.floor(R() * 2);
+  for (let k = 0; k < nf; k++) {
+    const lk = len * (.65 + R() * .4), ph = R() * 6, ph2 = R() * 6, side = (k - (nf - 1) / 2) * 1.1, n = 30, c = [];
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, x = x0 + lk * t, y = rayY(yr, x) + side * sc * t * 1.4
+        + (Math.sin(t * 7.5 + ph) * 1.1 + Math.sin(t * 15 + ph2) * .35) * sc * Math.pow(t, .6);
+      c.push([x, y]);
+    }
+    // the stipe: a ribbon twisting (its width swells and narrows), lighter where it shows its face
+    const top = [], bot = [];
+    for (let i = 0; i <= n; i++) { const t = i / n, p = c[i], q = c[Math.min(n, i + 1)], o = c[Math.max(0, i - 1)], dx = q[0] - o[0], dy = q[1] - o[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l,
+      hw = sc * (.18 + .38 * Math.abs(Math.sin(t * 6 + ph))) * (1 - .55 * t); top.push([p[0] + nx * hw, p[1] + ny * hw]); bot.unshift([p[0] - nx * hw, p[1] - ny * hw]); }
+    const id = nid('wd', u), a = c[0], b = c[n];
+    back += `<defs>${linGrad(id, a[0], a[1], b[0], b[1], [[0, '#3e3c16'], [.25, '#7a6a2a'], [.5, '#4c4a1c'], [.75, '#8a7a34'], [1, '#5a5420', .7]])}</defs><path d="${smooth(top.concat(bot))}" fill="url(#${id})" stroke="${dark}" stroke-width="${f(.12 * sc)}" opacity=".95"/>`;
+    // the blades: alternate sides, laid back downstream along the stipe, wavy, of their own length
+    for (let i = 3, sd = 1; i < n - 1; i += 2 + Math.floor(R() * 2), sd = -sd) {
+      const t = i / n, p = c[i], q = c[i + 1], ang = Math.atan2(q[1] - p[1], q[0] - p[0]) + sd * (.45 + R() * .3), ll = sc * (2.2 + R() * 1.6) * (1 - .45 * t), lw = sc * (.45 + R() * .3) * (1 - .3 * t);
+      const ux = Math.cos(ang), uy = Math.sin(ang), vx = -uy, vy = ux, bend = (R() - .5) * .8;
+      const Pq = (s1, h) => [p[0] + ux * ll * s1 + vx * (h + bend * s1 * s1 * ll * .3), p[1] + uy * ll * s1 + vy * (h + bend * s1 * s1 * ll * .3)];
+      const pts = [Pq(0, 0), Pq(.25, lw * .9), Pq(.6, lw), Pq(1, 0), Pq(.6, -lw * .8), Pq(.25, -lw * .7)];
+      const col = leafC[Math.floor(R() * leafC.length)];
+      front += `<path d="${smooth(pts)}" fill="${col}" stroke="${dark}" stroke-width="${f(.1 * sc)}" opacity=".93"/><path d="M${P2(Pq(.05, 0))}Q${P2(Pq(.5, lw * .15))} ${P2(Pq(.9, 0))}" stroke="${dark}" stroke-width="${f(.07 * sc)}" fill="none" opacity=".5"/>`;
+      if (R() > .6) { const bp = Pq(.02, 0); front += `<circle cx="${f(bp[0])}" cy="${f(bp[1])}" r="${f(.28 * sc)}" fill="#9a8a36" stroke="${dark}" stroke-width="${f(.08 * sc)}"/>`; }
+    }
   }
-  const d = 'M' + top.concat(bot).map(P2).join('L') + 'Z', id = nid('wd', u), a = top[0], b = top[n];
-  let s = `<defs>${linGrad(id, a[0], a[1], b[0], b[1], [[0, '#4a4a1e'], [.3, '#7a6a2a'], [.55, '#4c4a1c'], [.8, '#8a7a34'], [1, '#3e3c18', .6]])}</defs><path d="${d}" fill="url(#${id})" stroke="#2a2810" stroke-width=".25" opacity=".92"/>`;
-  for (let k = 0; k < 4; k++) { const t = .1 + R() * .7, p = top[Math.round(t * n)], r = .25 + depth(p[1]) * .012; s += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(r)}" fill="#8a7a30" stroke="#2a2810" stroke-width=".2"/>`; }
-  return s;
+  // the holdfast: a small dark knot where the fronds start, a ripple of foam on its upstream side
+  return back + front + `<ellipse cx="${f(x0)}" cy="${f(y00)}" rx="${f(.7 * sc)}" ry="${f(.45 * sc)}" fill="${dark}" opacity=".85"/>`;
 }
+const weedAt = (u, L, x, y, len, w, seed) => weed(u, L, rayThrough(x, y), x, len, w, seed);
 // the rock in the stream: dark wet stone lit on its left top; the water piles up white on its upstream (left) side and
 // runs off in a long V of foam downstream (right), along the lanes
 function rock(u, L, x, y) {
@@ -208,19 +235,34 @@ function rock(u, L, x, y) {
   s += `<path d="M${P([[-9, -.6], [10, -.6], [10, 0], [-9, 0]])}Z" fill="#1c2a28" opacity=".6"/>`;
   // the downstream V: two foam tails along the lanes, widening, broken
   const c = mix('#ffffff', L.keyColor, .15);
-  for (const [dy, len, wk] of [[-1.2, 40, .03], [1.6, 46, .035], [.2, 30, .02]]) { const yr = rayY(0, 0) + (y + dy - rayY(0, 0)) * (200 - VP[0]) / (x + 8 - VP[0]); s += `<path d="${strip(yr, x + 6, x + 6 + len, wk, 1, .01)}" fill="${c}" opacity=".7"/>`; }
+  for (const [dy, len, wk] of [[-1.2, 40, .03], [1.6, 46, .035], [.2, 30, .02]]) { const yr = rayThrough(x + 8, y + dy); s += `<path d="${strip(yr, x + 6, x + 6 + len, wk, 1, .01)}" fill="${c}" opacity=".7"/>`; }
   // the water piled on the upstream side and the foam round the foot
   s += K.splash(u, { x: x - 8, y: y + .3, w: 9, h: 5, seed: 1, L, wind: 1 }) + K.foam(u, { x: x + 1, y: y + .2, w: 24, h: 1.2, seed: 4, L });
   return s;
 }
+// white water where the stream meets a hull: a bourrelet piled up at (x, y), the foam spilling downstream along the
+// lanes, a curl of an eddy spinning off behind; dir — which way the hull faces the stream (+1: its end points left)
+function bourrelet(u, L, x, y, s, seed) {
+  const R = rng(seed), c = mix('#ffffff', L.keyColor, .15);
+  let o = K.splash(u, { x, y: y + .2, w: 7 * s, h: 3.2 * s, seed: 1 + seed * 3, L, wind: 1 }) + K.foam(u, { x: x + 3 * s, y: y + .4, w: 14 * s, h: 1.6 * s, seed, L });
+  for (let i = 0; i < 6; i++) { const yr = rayThrough(x + 2, y + .8 + (R() - .3) * 2.4 * s); o += `<path d="${strip(yr, x, x + (10 + R() * 18) * s, .05 + R() * .03, R() * 6, .01, true)}" fill="${c}" opacity="${f(.55 + R() * .35)}"/>`; }
+  return o;
+}
+
 // the near ship's churned trail behind her stern (left), lying along the lanes, and the foam along her waterline
 function trail(u, L, o) {
   const R = rng(13), c = mix('#ffffff', L.keyColor, .2), st = o.x - 36 * o.scale;
-  let s = K.foam(u, { x: o.x - 2, y: o.y + .3, w: 74 * o.scale, h: 1.3, seed: 8, L });
-  for (let i = 0; i < 14; i++) { const yr = rayY(0, 0) + (o.y + .5 + (R() - .3) * 4 - rayY(0, 0)) * (200 - VP[0]) / (st - VP[0]), x1 = st - 2 - R() * 6, len = 18 + R() * 40;
+  let s = '';
+  for (let i = 0; i < 14; i++) { const yr = rayThrough(st, o.y + .5 + (R() - .3) * 4), x1 = st - 2 - R() * 6, len = 14 + R() * 26;
     s += `<path d="${strip(yr, x1 - len, x1, .045 + R() * .03, R() * 6, .012)}" fill="${c}" opacity="${f(.55 + R() * .35)}"/>`; }
   s += K.foam(u, { x: st - 6, y: o.y + 1, w: 16, h: 1.5, seed: 21, L });
   return s;
+}
+// the band of foam along the near ship's waterline, thickening towards her bow where the stream piles on her
+function waterlineFoam(u, L, o) {
+  const c = mix('#ffffff', L.keyColor, .15), x0 = o.x - 34 * o.scale, x1 = o.x + 35 * o.scale, n = 24, top = [], bot = [], R = rng(31);
+  for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(x0, x1, t), h = (.5 + 1.3 * t * t) * (.8 + R() * .4); top.push([x, o.y - h * .45]); bot.unshift([x, o.y + h * .8]); }
+  return `<path d="${smooth(top.concat(bot))}" fill="${c}" opacity=".9"/>` + K.foam(u, { x: o.x, y: o.y + .4, w: 70 * o.scale, h: 1.8, seed: 8, L });
 }
 
 module.exports = { name: 'Течение', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
@@ -238,15 +280,19 @@ module.exports = { name: 'Течение', kind: 'sea', status: 'draft', cam: { 
     const cl = nid('cc', u);
     bg += `<defs><clipPath id="${cl}"><rect x="-20" y="${HZ + .3}" width="240" height="${300 - HZ}"/></clipPath></defs>`;
     bg += lanes(u, L, { seed: 3, n: 190, clip: cl });
-    bg += eddy(u, L, 24, 108, 3.5, 1) + eddy(u, L, 128, 104, 2.2, 2) + eddy(u, L, 60, 140, 6, 3);
-    bg += weed(u, L, 150, 0, 40, 3.6, 4) + weed(u, L, 118, 120, 30, 3.6, 5) + weed(u, L, 104, 66, 24, 3.4, 7) + weed(u, L, 150, 128, 44, 4.4, 8) + weed(u, L, 196, 4, 56, 4.4, 9);
+    bg += eddy(u, L, 24, 108, 3.5, 1) + eddy(u, L, 128, 104, 2.2, 2) + eddy(u, L, 40, 136, 5, 3);
+    bg += weedAt(u, L, 2, 126, 34, 3.4, 4) + weedAt(u, L, 112, 104.5, 18, 3.2, 5) + weedAt(u, L, 18, 106, 22, 3.2, 7) + weedAt(u, L, 140, 131, 34, 3.6, 8) + weedAt(u, L, 60, 136, 26, 3.4, 9);
     // ——— the rock, the far ship drifting stern-first, the near ship carried with her trail
     bg += rock(u, L, ROCK.x, ROCK.y);
-    bg += becalmed(u, L, FAR).svg + K.foam(u, { x: FAR.x, y: FAR.y + .2, w: 30, h: .8, seed: 6, L });
+    bg += becalmed(u, L, FAR).svg + K.foam(u, { x: FAR.x, y: FAR.y + .2, w: 30, h: 1, seed: 6, L });
+    // the far ship's stern meets the stream: white water and an eddy spinning off it
+    bg += bourrelet(u, L, FAR.x + 15.6, FAR.y, .55, 2) + eddy(u, L, FAR.x + 6, FAR.y + 2.4, 2.4, 6);
     bg += trail(u, L, NEAR);
     bg += becalmed(u, L, Object.assign({ detail: 'near' }, NEAR)).svg;
-    bg += `<path d="M${f(NEAR.x - 40)} ${NEAR.y + .3}H${f(NEAR.x + 40)}" stroke="${L.shadowTint}" stroke-width=".6" opacity=".45"/>`;
-    // ——— under the glass: weed streaming near, an eddy
-    let fg = weed(u, L, 240, 20, 70, 3.2, 11) + weed(u, L, 300, 110, 80, 3, 12) + weed(u, L, 190, 150, 50, 3, 13) + eddy(u, L, 150, 200, 9, 4);
+    bg += waterlineFoam(u, L, NEAR);
+    // the near ship's bow: the water piles on it and tears round it, eddies spin off under her
+    bg += bourrelet(u, L, NEAR.x + 34 * NEAR.scale, NEAR.y, 1, 1) + eddy(u, L, NEAR.x + 6, NEAR.y + 4.5, 4, 7) + eddy(u, L, NEAR.x - 22, NEAR.y + 3.2, 3, 8);
+    // ——— under the glass: nothing that would stick out from under it
+    let fg = '';
     return [bg, fg];
   } };
