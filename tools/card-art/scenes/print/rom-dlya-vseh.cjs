@@ -10,7 +10,8 @@
 // hand is one body with its arm (sleeve, cuff or bandage, back of the hand, knuckles), the fingers wrap the mug's
 // front and stop short of its far edge, the thumb lies over the index finger; the room was a flat wall — now it has
 // depth; the splash is one body of rum with drops along their flight; the lantern is the one light (warm sides to it,
-// shadows away).
+// shadows away). Second pass: the splash is one low, wide crown wave over the touching rims (it read as two flames),
+// the hands are a little smaller against the mugs.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -27,7 +28,7 @@ const skel = { horizon: HZ, eye: 1.2, light: 'one lantern hanging from the beam 
   ['bulkhead', 66, 92, 68, 56, 'room, depth .34'], ['lantern', 56, 44, 16, 36, 'beam (rope)'], ['port', 160, 97, 26, 27, 'right side'], ['ally ship', 166, 95, 22, 14, 'sea, in the port'],
   ['hammock L', 6, 40, 42, 22, 'beams'], ['hammock R', 146, 40, 50, 22, 'beams'], ['cask', 25, 112, 20, 30, 'deck, left side'], ['shelf + bottles', 16, 64, 30, 16, 'left side'],
   ['bottle', 106, 127, 12, 26, 'table top'], ['tin mug', 66, 104, 28, 34, 'in the left hand'], ['tankard', 106, 102, 30, 34, 'in the right hand'],
-  ['splash', 80, 70, 40, 30, 'in the air over the mugs'], ['arm L', -26, 250, 90, 170, 'from the lower left corner'], ['arm R', 120, 250, 106, 170, 'from the lower right corner']] };
+  ['splash', 80, 78, 40, 22, 'a low crown over the touching rims'], ['arm L', -26, 250, 90, 170, 'from the lower left corner'], ['arm R', 120, 250, 106, 170, 'from the lower right corner']] };
 
 const lerp = (a, b, t) => a + (b - a) * t;
 function smooth(pts, closed = false) { const n = pts.length, g = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))]; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
@@ -75,7 +76,7 @@ const pathM = (M, pts, closed = true) => smooth(pts.map(([x, y]) => M(x, y)), cl
 // its right). The back of the hand lies on the mug's side, the knuckles in a row up its front edge, the four fingers
 // wrap across the front (each a little shorter toward the little finger; none reaches the far edge), the thumb lies
 // over the index finger. `back` goes under the sleeve's cuff, `front` (finger shadows, fingers, thumb) over it.
-function gripHand(u, M, r, H, e, skin, litBack) {
+function gripHand(u, M, r, H, e, skin, litBack, k = .87) {
   const X = (uu, y) => M(e * uu, y), P = pts => smooth(pts.map(([uu, y]) => X(uu, y)), true), t = H * .078;
   const gb = nid('hb', u), gf = nid('hf', u), gt = nid('ht', u);
   const A = X(r + .4 * H, -.5 * H), B = X(r * .3, -.5 * H), T0 = X(0, -.95 * H), T1 = X(0, -.15 * H);
@@ -103,7 +104,9 @@ function gripHand(u, M, r, H, e, skin, litBack) {
   front += `<path d="${P([[r + .22 * H, -.84 * H], [r * .6, -.99 * H], [r * .05, -.98 * H], [-r * .14, -.93 * H], [-r * .12, -.86 * H], [r * .2, -.85 * H], [r * .6, -.83 * H]])}" fill="url(#${gt})" stroke="#3a1e10" stroke-width=".42"/>`;
   { const n = X(-r * .02, -.93 * H); front += `<ellipse cx="${f(n[0])}" cy="${f(n[1])}" rx="${f(t * .7)}" ry="${f(t * .45)}" fill="#f0d4bc" opacity=".8" stroke="#8a5a40" stroke-width=".25"/>`; }
   { const a = X(r * .7, -.96 * H), b = X(r * .1, -.965 * H); front += `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="${skin[0]}" stroke-width=".5" opacity=".7" stroke-linecap="round"/>`; }
-  return { back, front, wrist: X(r + .44 * H, -.5 * H) };
+  // the hand is drawn a little smaller than the mug's own measure (k), round the row of knuckles on the mug's front
+  const ap = X(r * .5, -.55 * H), w = X(r + .44 * H, -.5 * H), g = s => `<g transform="translate(${f(ap[0])} ${f(ap[1])}) scale(${k}) translate(${f(-ap[0])} ${f(-ap[1])})">${s}</g>`;
+  return { back: g(back), front: g(front), wrist: [ap[0] + (w[0] - ap[0]) * k, ap[1] + (w[1] - ap[1]) * k] };
 }
 // a pewter can: a straight dented cylinder, a rolled rim, a scroll handle on side e; lit by the lantern, rum inside
 function tinMug(u, L, M, r, H, e) {
@@ -134,21 +137,38 @@ function hammock(u, L, p, q, sag, w, sleeper) {
   if (sleeper) out += `<path d="M${f(m[0] - (q[0] - p[0]) * .25)} ${f(m[1] - w * .1)}q${f((q[0] - p[0]) * .2)} ${f(-w * .9)} ${f((q[0] - p[0]) * .45)} ${f(-w * .4)}q${f((q[0] - p[0]) * .05)} ${f(w * .4)} 0 ${f(w * .6)}z" fill="#1a120a" opacity=".8"/>`;
   return out;
 }
-// the splash of rum between the two mugs: one body of liquid thrown up from both mouths, translucent amber, lit
-// from the lantern, breaking into drops that fly along curves (stretched along their flight)
+// the splash of rum where the two mugs knock: one low, wide wave thrown up out of both mouths and joined over the
+// point where the rims touch, its top breaking into a crown of short points with a drop on each, its edges curling
+// out over the rims; about half a mug high. Translucent amber, lit from the lantern (upper left): a bright streak
+// along its lit shoulder, glints; drops flung to both sides and falling back, stretched along their flight
 function splash(u, a, b) {
-  const g = nid('rs', u), R = rng(9), top = [(a[0] + b[0]) / 2 + 1, Math.min(a[1], b[1]) - 20];
-  let out = `<defs>${linGrad(g, 0, top[1] + 22, 0, top[1] - 4, [[0, '#5a2206', .95], [.5, '#b0580e', .9], [1, '#f2b050', .85]])}</defs>`;
-  // a sheet of rum thrown up out of each mouth towards the other, meeting in a crown over the mugs
-  const sheet = (m, e) => smooth([[m[0] - e * 4, m[1] + 1], [m[0] - e * 3, m[1] - 8], [top[0] - e * 6, top[1] + 2], [top[0] - e * 1, top[1] - 3], [top[0] + e * 2, top[1] + 4], [m[0] + e * 2, m[1] - 4], [m[0] + e * 3, m[1] + .5]], true);
-  out += `<path d="${sheet(a, 1)}" fill="url(#${g})" stroke="#3a1404" stroke-width=".35"/><path d="${sheet(b, -1)}" fill="url(#${g})" stroke="#3a1404" stroke-width=".35"/>`
-    + `<path d="M${f(a[0] - 2)} ${f(a[1] - 3)}Q${f(a[0] + 1)} ${f(top[1] + 6)} ${f(top[0] - 3)} ${f(top[1] + 1)}M${f(b[0] + 1)} ${f(b[1] - 4)}Q${f(b[0] - 1)} ${f(top[1] + 7)} ${f(top[0] + 2)} ${f(top[1] + 2)}" stroke="#ffe2a8" stroke-width=".6" fill="none" opacity=".8" stroke-linecap="round"/>`;
-  // the crown where they meet: short fingers of rum, each ending in a drop
-  for (let i = 0; i < 6; i++) { const t = (i - 2.5) / 2.5, x0 = top[0] + t * 5, y0 = top[1] + 1 + Math.abs(t) * 2, x1 = x0 + t * 5 + (R() - .5) * 2, y1 = y0 - 5 - R() * 4;
-    out += `<path d="M${f(x0 - .9)} ${f(y0)}Q${f(x1)} ${f((y0 + y1) / 2)} ${f(x1)} ${f(y1)}Q${f(x1 + .4)} ${f((y0 + y1) / 2)} ${f(x0 + .9)} ${f(y0)}Z" fill="#b0580e" stroke="#3a1404" stroke-width=".25"/><circle cx="${f(x1)}" cy="${f(y1 - 1)}" r="${f(.8 + R() * .5)}" fill="#c06a18" stroke="#3a1404" stroke-width=".2"/><circle cx="${f(x1 - .3)}" cy="${f(y1 - 1.3)}" r=".35" fill="#ffe2a8"/>`; }
-  // drops thrown off to the sides and falling back, stretched along their flight
-  for (let i = 0; i < 18; i++) { const e = i % 2 ? 1 : -1, d = 6 + R() * 18, x = top[0] + e * d, y = top[1] - 2 + d * d * .025 + (R() - .5) * 8, r = .45 + R() * 1, ang = e * (20 + d * 2);
-    out += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * 1.8)}" ry="${f(r)}" transform="rotate(${f(ang)} ${f(x)} ${f(y)})" fill="#9a4a0c" stroke="#3a1404" stroke-width=".2"/><circle cx="${f(x - r * .35)}" cy="${f(y - r * .35)}" r="${f(r * .38)}" fill="#ffe0a0" opacity=".9"/>`; }
+  const g = nid('rs', u), gl = nid('rl', u), R = rng(9), cx = (a[0] + b[0]) / 2, y0 = (a[1] + b[1]) / 2, h = 15;
+  let out = `<defs>${linGrad(g, 0, y0 + 2, 0, y0 - h - 2, [[0, '#4a1a04', .96], [.4, '#9a4a0c', .93], [.8, '#dc9434', .9], [1, '#f6c46a', .88]])}`
+    + `${linGrad(gl, cx - 14, 0, cx + 14, 0, [[0, '#ffd890', .5], [.45, '#ffd890', .12], [1, '#ffd890', 0]])}</defs>`;
+  // the body: from the left mouth, the lip curling out over the left rim, up the shoulder to the crown, down the
+  // right shoulder, the right lip, into the right mouth, and back over the point where the rims touch
+  const body = [[a[0] - 1.5, a[1] + 1], [cx - 10, y0 - 2], [cx - 15.5, y0 - 3.6], [cx - 15, y0 - 6.4], [cx - 12.4, y0 - 10.6], [cx - 9, y0 - 14],
+    [cx - 6.2, y0 - 13.2], [cx - 3.2, y0 - 15.2], [cx - .2, y0 - 13.6], [cx + 3, y0 - 15.4], [cx + 6, y0 - 13.4], [cx + 9, y0 - 14.4],
+    [cx + 12.6, y0 - 10.4], [cx + 15.2, y0 - 6.6], [cx + 16, y0 - 3.8], [cx + 10.4, y0 - 2.2], [b[0] + 1.5, b[1] + 1], [cx, y0 - 1.2]];
+  out += `<path d="${smooth(body, true)}" fill="url(#${g})" stroke="#3a1404" stroke-width=".4" stroke-linejoin="round"/>`
+    + `<path d="${smooth(body, true)}" fill="url(#${gl})"/>`;
+  // the thin rim of the crown seen through: a lighter band under the points; the curl of each lip
+  out += `<path d="${smooth([[cx - 11, y0 - 11.2], [cx - 4, y0 - 12.6], [cx + 4, y0 - 12.6], [cx + 11.4, y0 - 11], [cx + 4, y0 - 9.6], [cx - 4, y0 - 9.6]], true)}" fill="#f8c060" opacity=".38"/>`
+    + `<path d="M${f(cx - 15.2)} ${f(y0 - 4.2)}q2.4 1.4 5.6 1.6M${f(cx + 15.6)} ${f(y0 - 4.4)}q-2.4 1.4 -5.4 1.8" stroke="#2a0e02" stroke-width=".5" fill="none" opacity=".6" stroke-linecap="round"/>`;
+  // the crown: uneven short points along the top leaning outward from the middle, the taller ones throwing off a drop
+  for (const [x, y, l, lean, dr] of [[-10.6, -12.8, 2.6, -2.2, 1], [-6.6, -13.6, 1.5, -.9, 0], [-2.9, -14.8, 3.4, -.6, 1], [.4, -13.6, 1.3, .2, 0], [3.3, -15, 2.8, .9, 1], [6.8, -13.6, 1.7, 1.3, 0], [10.2, -12.9, 2.4, 2.3, 1]]) {
+    const x0 = cx + x, yb = y0 + y + .8, x1 = x0 + lean, y1 = yb - l;
+    out += `<path d="M${f(x0 - .85)} ${f(yb)}Q${f(x1 - .15)} ${f((yb + y1) / 2 + .3)} ${f(x1)} ${f(y1)}Q${f(x1 + .15)} ${f((yb + y1) / 2 + .3)} ${f(x0 + .85)} ${f(yb)}Z" fill="#e2a040" stroke="#3a1404" stroke-width=".22"/>`;
+    if (dr) { const r = .55 + l * .06, dx = x1 + lean * .45, dy = y1 - r - 1.1;
+      out += `<circle cx="${f(dx)}" cy="${f(dy)}" r="${f(r)}" fill="#cc7e22" stroke="#3a1404" stroke-width=".2"/><circle cx="${f(dx - .25)}" cy="${f(dy - .25)}" r=".26" fill="#fff0c8"/>`; } }
+  // the light on the liquid: a streak along the lit (left) shoulder and over the crown, a softer one on the right, glints
+  out += `<path d="${smooth([[cx - 13.6, y0 - 5], [cx - 11.6, y0 - 9.6], [cx - 8.4, y0 - 12.4], [cx - 4, y0 - 13]])}" stroke="#fff0c8" stroke-width=".9" fill="none" opacity=".85" stroke-linecap="round"/>`
+    + `<path d="${smooth([[cx + 4.6, y0 - 12.2], [cx + 9.4, y0 - 11.8], [cx + 12.6, y0 - 8.4]])}" stroke="#ffe2a8" stroke-width=".55" fill="none" opacity=".55" stroke-linecap="round"/>`
+    + `<path d="${smooth([[cx - 7, y0 - 4.2], [cx - 3, y0 - 6.4], [cx + 2, y0 - 6.6]])}" stroke="#ffd890" stroke-width=".5" fill="none" opacity=".45" stroke-linecap="round"/>`
+    + [[-10.4, -9.6, .7], [-2, -11.2, .5], [7.6, -10, .45], [-12.8, -4.6, .4]].map(([x, y, r]) => `<circle cx="${f(cx + x)}" cy="${f(y0 + y)}" r="${r}" fill="#ffffff" opacity=".9"/>`).join('');
+  // drops flung to the sides on low arcs and falling back, stretched along their flight
+  for (let i = 0; i < 16; i++) { const e = i % 2 ? 1 : -1, d = 15 + R() * 13, x = cx + e * d, y = y0 - 13 + (d - 15) * (d - 15) * .07 + (R() - .5) * 5, r = .4 + R() * .65, ang = e * (15 + (d - 15) * 4);
+    out += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * 1.8)}" ry="${f(r)}" transform="rotate(${f(ang)} ${f(x)} ${f(y)})" fill="#a8520e" stroke="#3a1404" stroke-width=".2"/><circle cx="${f(x - r * .35)}" cy="${f(y - r * .35)}" r="${f(r * .38)}" fill="#ffe0a0" opacity=".9"/>`; }
   return out;
 }
 
@@ -223,9 +243,9 @@ module.exports = { name: 'Ром для всех', kind: 'deck', status: 'draft'
     const MS = 2.76, ML = mugFrame(80, 104, 16), MR = mugFrame(119.3, 102, -16), rL = 12.6, HL = 30.4, rR = 4.6 * MS, HR = 11 * MS;
     const hL = gripHand(u, ML, rL, HL, -1, ['#f2c8a0', '#c48e64', '#6a3a22'], true), hR = gripHand(u, MR, rR, HR, 1, ['#e4ae84', '#a8714a', '#4a2614'], false);
     fg += tinMug(u, L, ML, rL, HL, -1) + hL.back
-      + arm(u, L, { x0: -26, y0: 250, x1: hL.wrist[0] + 1, y1: hL.wrist[1] + 1, w0: 60, w1: 20, cloth: ['#4a4a56', '#24242c', '#0a0a0e'], cuff: ['#3a3a44', '#101014'], side: -1, seed: 3 }) + hL.front;
+      + arm(u, L, { x0: -26, y0: 250, x1: hL.wrist[0] + 1, y1: hL.wrist[1] + 1, w0: 60, w1: 17.6, cloth: ['#4a4a56', '#24242c', '#0a0a0e'], cuff: ['#3a3a44', '#101014'], side: -1, seed: 3 }) + hL.front;
     fg += K.mug(u, L, { x: 119.3, y: 102, s: MS, rot: -16, fill: 'rum', seed: 4, contact: false }) + hR.back
-      + arm(u, L, { x0: 226, y0: 250, x1: hR.wrist[0] - 1, y1: hR.wrist[1] + 1, w0: 58, w1: 19, cloth: ['#8a5a3a', '#5a341e', '#24120a'], cuff: ['#9a6a44', '#3a2010'], bare: true, side: 1, seed: 5 }) + hR.front;
+      + arm(u, L, { x0: 226, y0: 250, x1: hR.wrist[0] - 1, y1: hR.wrist[1] + 1, w0: 58, w1: 16.8, cloth: ['#8a5a3a', '#5a341e', '#24120a'], cuff: ['#9a6a44', '#3a2010'], bare: true, side: 1, seed: 5 }) + hR.front;
     // the rum leaping up where the rims meet
     { const a = ML(rL * .45, -HL), b = MR(-rR * .45, -HR); fg += splash(u, a, b) + K.localGlow(u, { x: (a[0] + b[0]) / 2, y: Math.min(a[1], b[1]) - 10, color: '#ffc070', power: .35, radius: 26 }, { core: false }); }
     // light: the lantern's warmth, the dark round the edges and under the glass
