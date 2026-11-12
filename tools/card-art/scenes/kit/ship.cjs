@@ -94,7 +94,7 @@ const SPECS = {
   endeavour: {
     len: 104, free: 22.4, sheer: [1.2, 2.2], tumble: .5, bow: [5, 1.7], over: 6.5, counter: .5,
     fc: [-30, .3], tiers: [[16, .8], [34, .8]], taff: .6, tw: [7, 8.5],
-    hull: 'tar', trim: 'ship-ochre', gilt: 1, wales: [], bands: [{ h0: 1.6, h1: 5.1, mat: 'ship-ochre' }, { h0: 6.3, h1: 9.8, mat: 'ship-ochre' }, { h0: 11.3, h1: 14.8, mat: 'ship-ochre' }, { h0: 18.4, h1: 19.9, mat: 'ship-ochre' }],
+    hull: 'tar', trim: 'ship-ochre', gilt: 1, wales: [], bands: [{ h0: 1.4, h1: 5.4, mat: 'ship-ochre' }, { h0: 6.1, h1: 10.1, mat: 'ship-ochre' }, { h0: 11.1, h1: 15.1, mat: 'ship-ochre' }, { h0: 18.2, h1: 20, mat: 'ship-ochre' }],
     ports: [{ h: 3.4, n: 15, x0: -38, x1: 34.8, w: 2 }, { h: 8.1, n: 15, x0: -38, x1: 34.8, w: 2 }, { h: 13.1, n: 15, x0: -38, x1: 34.8, w: 2 }], deckPorts: [10, -44, 44],
     gallery: [12, 3, 3.6], tierWin: 3, lantern: 1, lanterns: 'three', lanternPost: .6, balc: [0, 1], balcD: 2.2,
     beak: [7, 3, 0], sprit: { len: 31, steeve: 25, jib: 14, spritsail: 'set' }, jibs: 3,
@@ -114,7 +114,7 @@ const SPECS = {
     hull: 'ship-drown', trim: 'ship-drown', gilt: 0, wales: [5.6, 12.6, 16.6], bands: [], growth: true, ribs: [1.5, 2.6], crest: [11, 12], beakJag: 1,
     ports: [{ h: 9, n: 10, x0: -30, x1: 22, w: 2.6, hk: 1.3 }], deckPorts: [0, 0, 0],
     gallery: [6, 2, 3.6], galRoof: 3, tierWin: 1, lantern: 0,
-    beak: [17, 7, 4.5], sprit: { len: 33, steeve: 17 }, jibs: 1,
+    beak: [18, 6, 9.5], sprit: { len: 33, steeve: 17 }, jibs: 1,
     masts: [{ x: -27, H: 68, n: 3, k: .9, Q: [.6, .82, .95] }, { x: 4.5, H: 68, n: 3, k: .95, Q: [.6, .82, .95] }, { x: 31.5, H: 56, n: 2, k: .66, aft: 'lateen', lat: [.15, .085, .8], Q: [.6, .86] }], topK: 2.2, topRound: 1,
     spar: 'ship-ghost', yard: 'ship-ghost', sail: 'ship-sail-rot', cond: 'strips', broken: 1, flag: 'pennant', pennant: 'ship-flag-black',
     beam: .25, draft: 9.5, bilge: 3, inner: 'ship-ghost', deckK: 'ship-ghost', bottom: 'foul',   // the Vasa: 11.7 m to ~47.5 m at the waterline; a pear: full below
@@ -369,7 +369,7 @@ function build(u, L, o, mode) {
     hull += `<g clip-path="url(#${hc})">${inner}</g>`;
     // the ports: lids with an edge in the light, a shadow under them; guns of different size, some ports empty
     const Rq = R('lids'), hole = col(mix(L.tone(hullK, -1, cen[0], cen[1]), '#17100c', .7)), lidK = sp.bands.length && kind === 'endeavour' ? 'tar' : hullK;
-    const up = dC.uy < 0, edgeHi = topRim > .2 ? rimCol : lite, so = shOff(.42), lidUp = sp.growth ? .3 : 0, frame = sp.growth ? mix(lite, rimCol, .5) : ''; let pr = '', mz = '';
+    const up = dC.uy < 0, edgeHi = topRim > .2 ? rimCol : lite, so = shOff(.42), lidUp = sp.growth ? .3 : 0, frame = sp.growth ? mix(lite, rimCol, .5) : '';   // a worn edge round the hole let pr = '', mz = '';
     if (!far) { mz = nid('hm', u); defs += `<radialGradient id="${mz}" cx=".5" cy=".5" r=".55" fx="${f(.5 + .3 * dC.ux)}" fy="${f(.5 + .3 * dC.uy)}"><stop offset="0" stop-color="${tone('iron', If + .45)}"/><stop offset=".3" stop-color="${tone('iron', If - .25)}"/><stop offset="1" stop-color="${tone('iron', -.95)}"/></radialGradient>`; }
     for (const p of ports) { const hw = p.w / 2, hh = p.hh / 2, jit = Rq(), j2 = Rq(), j3 = Rq();
       if (far) { pr += fillP(box(p.X, p.H, p.w, p.hh), hole, ' opacity=".8"'); continue; }
@@ -379,7 +379,7 @@ function build(u, L, o, mode) {
           + strokeP(seg(...(up ? tl : bl)), edgeHi, .17 * s, ' opacity=".7"') + strokeP(seg(...(up ? bl : tl)), dark, .2 * s, ' opacity=".75"')
           + strokeP(seg([p.X - lw * .3, p.H - lh * .3], [p.X - lw * .3, p.H + lh * .5]) + seg([p.X + lw * .3, p.H - lh * .3], [p.X + lw * .3, p.H + lh * .5]), tone('iron', If - .1), .15 * s, ' opacity=".8"')
           + strokeP(box(p.X, p.H, lw, lh), ink(lidK), .12 * s, ' opacity=".6"'); continue; }
-      if (frame) pr += strokeP(box(p.X, p.H, p.w + .5, p.hh + .5), frame, .18 * s, ' opacity=".42"');
+      if (frame) pr += strokeP(box(p.X, p.H, p.w + .5, p.hh + .5), frame, .16 * s, ' opacity=".18"');
       pr += fillP(box(p.X, p.H, p.w, p.hh), hole) + strokeP(seg(...(up ? B : T)), edgeHi, .2 * s, ' opacity=".6"') + strokeP(seg(...(up ? T : B)), dark, .16 * s, ' opacity=".7"');
       { // the gun run out: a short barrel out of the port towards the viewer, seen a little from above (and turned with the roll),
         // a lighter swell at the muzzle, the dark bore
@@ -409,7 +409,7 @@ function build(u, L, o, mode) {
     const on = lit && (always || Rw() < .68), k = always ? 1 : .5 + Rw() * .5;
     if (on && !far) { const id = nid('hl', u), p = pt(cx, cy), hot = mix(lightC, lightHot, k), mid = mix(mix(lightC, '#a8521a', .3), lightC, k); defs += `<radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${f(p[0])}" cy="${f(p[1])}" r="${f(r * s)}"><stop offset="0" stop-color="${hot}"/><stop offset=".6" stop-color="${mid}"/><stop offset="1" stop-color="${mix(lightC, '#a8521a', sp.growth ? .2 : .55)}"/></radialGradient>`; return { d: fillP(d, `url(#${id})`), on }; }
     if (on) return { d: fillP(d, col(lightC)), on };
-    if (far) return { d: fillP(d, glassDark), on };
+    if (far || sp.growth) return { d: fillP(d, glassDark), on };   // far away; the Dutchman's broken windows are dark holes
     if (!glassG) { glassG = nid('hq', u); defs += `<linearGradient id="${glassG}" x1="0" y1="0" x2=".5" y2="1"><stop offset="0" stop-color="${mix(skyHi, glassDark, .2)}"/><stop offset=".3" stop-color="${mix(skyHi, glassDark, .55)}"/><stop offset=".36" stop-color="${glassDark}"/><stop offset="1" stop-color="${mix(glassDark, '#04060a', .45)}"/></linearGradient>`; }
     return { d: fillP(d, `url(#${glassG})`), on }; };
   const win = (d, cx, cy, r, always) => glass(d, cx, cy, r, always).d || '';
@@ -514,11 +514,11 @@ function build(u, L, o, mode) {
       if (sp.beakJag) { // the Dutchman's broken head: jagged rails — splinters up and forward along the top, broken knees hanging
         // under it, two long splinters at the snapped end (its own shape, not the film's)
         const Rj = R('jag'), mid = .1 + bk[1] * .22, P = t => [lerp(sA[0], tip[0], t), lerp(sA[1], tip[1], t) - mid * 4 * t * (1 - t)], Q2 = t => [lerp(sB[0], tip[0], t), lerp(sB[1], tip[1] - .5, Math.pow(t, 1.4))]; let jd = '';
-        for (let k = 0, n = 7; k < n; k++) { const t = (k + .5 + (Rj() - .5) * .5) / n, b = P(t), h = (1.6 + Rj() * 2 + t * 2.6) * Lu, ln = (.25 + Rj() * .35) * h, w = (.5 + Rj() * .5) * Lu;
+        for (let k = 0, n = 8; k < n; k++) { const t = (k + .5 + (Rj() - .5) * .5) / n, b = P(t), h = (1.8 + Rj() * 2.2 + t * 3) * Lu, ln = (.25 + Rj() * .35) * h, w = (.5 + Rj() * .5) * Lu;
           jd += poly([[b[0] + w, b[1] - .3], [b[0] - ln * .5 + w * .2, b[1] + h * .55], [b[0] - ln, b[1] + h], [b[0] - w * .4, b[1] - .3]]); }
         for (const [k, hh] of [[0, 7.5], [1, 5]]) { const b = [tip[0] + .4 + k * 1.1, tip[1] + .3], h = hh * Lu * (.8 + Rj() * .3); jd += poly([[b[0] + .7, b[1] - .4], [b[0] - h * .25, b[1] + h * .6], [b[0] - h * .45, b[1] + h], [b[0] - .5, b[1] - .2]]); }
         for (let k = 0; k < 4; k++) { const t = .2 + k * .2 + (Rj() - .5) * .08, b = Q2(t), h = (.9 + Rj() * 1.6) * Lu; jd += poly([[b[0] - .6, b[1] + .3], [b[0] + .2 - h * .2, b[1] - h], [b[0] + .6, b[1] + .3]]); }
-        bow += fillP(jd, gr([0, lo], [0, tip[1] + 4], [[0, tone(hullK, If - .35)], [1, tone(hullK, If + .02)]])); }
+        bow += fillP(jd, gr([0, lo], [0, tip[1] + 4], [[0, tone(hullK, If - .3)], [1, tone(hullK, If + .15)]])); }
       bow += edge(beakD, hullK, .8) + (topRim ? strokeP(spl([[tip[0] - .2, tip[1] + .4], [lerp(tip[0], sA[0], .5), lerp(tip[1], sA[1], .5) - .1 - bk[1] * .22], sA]), rimCol, .3 * s, ` opacity="${f(clamp(topRim * 1.2))}"`) : ''); }
     if (!plain) { let tim = ''; for (const t of [.25, .5, .75]) tim += seg([lerp(R1[0][0], R1[2][0], t), lerp(R1[0][1], R1[2][1], t) + .3], [lerp(R2[0][0], R2[2][0], t), lerp(R2[0][1], R2[2][1], t) - .1]);
       bow += strokeP(tim, tone(sp.trim, If), .28 * s) + strokeP(spl(R1) + spl(R2), sp.gilt ? tone('brass', If + .2) : tone(sp.trim, If + .25), .42 * s) + strokeP(spl(R1), ink(sp.trim), .12 * s, ' opacity=".5"'); }
@@ -813,11 +813,11 @@ function build(u, L, o, mode) {
           X += Math.cos(a) * r * 1.7; H += Math.sin(a) * r * 1.2 - .04; } }
       growA += `<g clip-path="url(#${wlClip})"><g fill="url(#${bg})">${shells}</g><g fill="${pit}" opacity=".6">${pits}</g></g>`;
       // coral in clumps: round lobes and short branches, pale pink, ochre and bone, at the waterline and at the feet of the ribs
-      const cc = [mix(tone('bone', If - .05), '#c48e7e', .42), mix(tone('bone', If - .1), '#b39a58', .38), tone('bone', If - .25)], ncl = Math.round(sp.len / (near ? 5 : 8)); let cor = ['', '', ''], br = '';
+      const cc = [mix(mix(tone('bone', If - .1), '#c48e7e', .42), tone(hullK, If), .35), mix(mix(tone('bone', If - .15), '#b39a58', .38), tone(hullK, If), .35), mix(tone('bone', If - .3), tone(hullK, If), .3)], ncl = Math.round(sp.len / (near ? 6 : 9)); let cor = ['', '', ''], br = '';
       for (let c = 0; c < ncl; c++) { const rb = ribs.length && Rr() < .4 ? ribs[Math.floor(Rr() * ribs.length)] : null, X0 = rb ? rb.X : -hb + 3 + Rr() * (sp.len - 6), H0 = rb ? rb.h0 + Rr() * .6 : .3 + Math.pow(Rr(), 1.4) * 2.6, k = Math.floor(Rr() * 3);
-        for (let j = 0, n = 3 + Math.floor(Rr() * 4); j < n; j++) { const r = (.32 + Rr() * .5) * Lu; cor[k] += dot(X0 + (Rr() - .5) * 2.2 * Lu, Y(H0, X0) + (Rr() - .3) * 1.2 * Lu, r) + '/>'; }
-        if (Rr() < .6) for (let j = 0; j < 2 + Rr() * 2; j++) { const x = X0 + (Rr() - .5) * 1.6, l = (.9 + Rr() * 1.4) * Lu, b2 = (Rr() - .5) * .8; br += 'M' + pp(x, Y(H0, X0) + .3) + 'Q' + pp(x + b2 * .4, Y(H0, X0) + .3 + l * .6) + ' ' + pp(x + b2, Y(H0, X0) + .3 + l); } }
-      growA += `<g clip-path="url(#${wlClip})">` + cor.map((d, i) => d ? `<g fill="${cc[i]}">${d}</g>` : '').join('') + strokeP(br, cc[0], clamp(.32 * s, .15, .7), ' stroke-linecap="round"') + '</g>'; }
+        for (let j = 0, n = 3 + Math.floor(Rr() * 4); j < n; j++) { const r = (.2 + Rr() * .26) * Lu; cor[k] += dot(X0 + (Rr() - .5) * 1.6 * Lu, Y(H0, X0) + (Rr() - .3) * .9 * Lu, r) + '/>'; }
+        if (Rr() < .6) for (let j = 0; j < 2 + Rr() * 2; j++) { const x = X0 + (Rr() - .5) * 1.4, l = (.7 + Rr() * 1) * Lu, b2 = (Rr() - .5) * .8; br += 'M' + pp(x, Y(H0, X0) + .3) + 'Q' + pp(x + b2 * .4, Y(H0, X0) + .3 + l * .6) + ' ' + pp(x + b2, Y(H0, X0) + .3 + l); } }
+      growA += `<g clip-path="url(#${wlClip})">` + cor.map((d, i) => d ? `<g fill="${cc[i]}">${d}</g>` : '').join('') + strokeP(br, cc[0], clamp(.22 * s, .12, .5), ' stroke-linecap="round"') + '</g>'; }
     ZF = null;
   }
 
