@@ -71,45 +71,60 @@ function lightSide(L, x, y) {
   const l = Math.hypot(ux, uy) || 1; return { ux: ux / l, uy: uy / l, dz: a.dz, back: a.dz < -.2 };
 }
 
-// A soft form of round puffs (cloud, smoke), seen as volumes. cs: [cx, cy, rx, ry/rx]. Every puff is shaded as a ball
-// by the light's direction o.dir in the picture plane: front light — a lit cap towards the source and a half tone on
-// the far side; against the light (o.back) — a dark body with a bright rim only on the edge that faces the source.
-// The puffs farther from the light are drawn later, so each lit edge lies over the shaded side of its neighbour and
-// the volumes part. o.flat — y of a flat underside; o.under — how dark the underside is (a band of shade from below);
-// o.fade [x0, y0, x1, y1, a0, a1] — the form thins along that line. The outline is torn by noise in a mask, the
-// seams inside are softened by a slight blur of the shaded puffs.
+// A soft form of round puffs (cloud, smoke), seen as ONE volume: the puffs only make its outline (their union, torn
+// by noise at the edge); the light and shade are laid over the whole union, so no seam shows between the puffs.
+// cs: [cx, cy, rx, ry/rx]. o.dir — the light's direction in the picture plane; front light: the whole form runs
+// lit → half tone away from the source, the union moved away from the light (blurred) lays the shade on the far side
+// and below, the puffs that face the source get soft lit caps that fade into the half tone (no dark ring round them);
+// against the light (o.back): a dark body, a bright crescent only on the edge that faces the source. o.flat — y of a
+// flat underside; o.under — how dark the underside is; o.fade [x0, y0, x1, y1, a0, a1] — the form thins along that
+// line; o.inner — more SVG inside the form (a glow from below).
 function billow(u, L, cs, col, o = {}) {
   const ex = q => [q[2], q[2] * (q[3] || 1)];
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
   for (const q of cs) { const [rx, ry] = ex(q); x0 = Math.min(x0, q[0] - rx); x1 = Math.max(x1, q[0] + rx); y0 = Math.min(y0, q[1] - ry); y1 = Math.max(y1, q[1] + ry); }
   if (o.flat != null) y1 = Math.min(y1, o.flat);
-  const hh = y1 - y0, pad = 8 + (o.pad || 0), box = [x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad];
+  const hh = y1 - y0, ww = x1 - x0, pad = 10 + (o.pad || 0), box = [x0 - pad, y0 - pad, ww + 2 * pad, hh + 2 * pad];
   const dl = Math.hypot(o.dir.ux, o.dir.uy) || 1, ux = o.dir.ux / dl, uy = o.dir.uy / dl, back = !!o.back;
-  const G = nid('bg', u), M = nid('bm', u), E = nid('be', u), B = nid('bb', u), U = nid('bu', u), F = nid('bf', u), C = nid('bc', u);
-  const el = (q, extra = '') => { const [rx, ry] = ex(q); return `<ellipse cx="${f(q[0])}" cy="${f(q[1])}" rx="${f(rx)}" ry="${f(ry)}"${extra}/>`; };
+  const G = nid('bg', u), M = nid('bm', u), E = nid('be', u), B = nid('bb', u), S = nid('bs', u), U = nid('bu', u), F = nid('bf', u), C = nid('bc', u), A = nid('ba', u);
+  const el = (q, extra = '', k = 1) => { const [rx, ry] = ex(q); return `<ellipse cx="${f(q[0])}" cy="${f(q[1])}" rx="${f(rx * k)}" ry="${f(ry * k)}"${extra}/>`; };
   const shapes = cs.map(q => el(q)).join('');
-  let defs = back
-    ? `<radialGradient id="${G}" cx="${f(.5 - ux * .2)}" cy="${f(.5 - uy * .2)}" r=".72">${stops([[0, mix(col.shade, col.mid, .3)], [.6, mix(col.shade, col.mid, .55)], [.85, col.mid], [1, mix(col.mid, col.lit, .5)]])}</radialGradient>`
-    : `<radialGradient id="${G}" cx="${f(.5 + ux * .12)}" cy="${f(.5 + uy * .12)}" r=".62" fx="${f(.5 + ux * .28)}" fy="${f(.5 + uy * .28)}">${stops([[0, col.knob || col.lit], [.3, col.lit], [.72, col.mid], [1, mix(col.mid, col.shade, .45)]])}</radialGradient>`;
-  defs += edgeFilter(E, box, o.seed || 1, o.disp != null ? o.disp : 2.4, o.freq, o.blur != null ? o.blur : .35) + blurFilter(B, box, f(o.seam != null ? o.seam : clamp(hh * .05, .4, 2.5)));
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, ext = Math.max(ww, hh) / 2;
+  // the size of one swell of the form: the shade's shift and softness follow it, not the whole cloud
+  const rs = cs.map(q => ex(q)[1]).sort((a, b) => a - b), rm = rs[Math.floor(rs.length * .6)] || hh / 2;
+  let defs = edgeFilter(E, box, o.seed || 1, o.disp != null ? o.disp : 2.4, o.freq, o.blur != null ? o.blur : .35)
+    + blurFilter(B, box, f(o.seam != null ? o.seam : clamp(rm * .22, .5, 3)))
+    + blurFilter(S, box, f(clamp(rm * (back ? .32 : .42), .6, 5)));
   if (o.flat != null) defs += `<clipPath id="${C}"><rect x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(o.flat - box[1])}"/></clipPath>`;
   if (o.fade) { const [a, b, c, d, a0, a1] = o.fade; defs += linGrad(F, a, b, c, d, [[0, '#fff', a0], [.45, '#fff', lerp(a0, a1, .3)], [1, '#fff', a1]]); }
   defs += `<mask id="${M}" maskUnits="userSpaceOnUse" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}"><g filter="url(#${E})"><g${o.flat != null ? ` clip-path="url(#${C})"` : ''} fill="${o.fade ? `url(#${F})` : '#fff'}">${shapes}</g></g></mask>`;
-  let under = '';
-  if (o.under) { const yb = o.flat != null ? o.flat : y1, yt = yb - hh * (o.uh || .5); defs += linGrad(U, 0, yt, 0, yb, [[0, col.shade, 0], [.6, col.shade, o.under * .55], [1, col.shade, o.under]]); under = `<rect x="${f(box[0])}" y="${f(yt)}" width="${f(box[2])}" height="${f(yb - yt + 1)}" fill="url(#${U})"/>`; }
-  // the whole form's tone towards the light (front: lit → half tone; against the light: a dark body)
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, ext = Math.max(x1 - x0, hh) / 2, A = nid('ba', u);
-  defs += linGrad(A, cx + ux * ext, cy + uy * ext, cx - ux * ext, cy - uy * ext, back ? [[0, col.mid], [.35, mix(col.shade, col.mid, .5)], [1, mix(col.shade, col.mid, .25)]] : [[0, col.lit], [.5, mix(col.lit, col.mid, .5)], [1, col.mid]]);
-  // the rim: the outline minus itself moved away from the light — a crescent only on the edge that faces the source
-  let rim = '';
+  // 1. the whole form's tone towards the light
+  defs += linGrad(A, cx + ux * ext, cy + uy * ext, cx - ux * ext, cy - uy * ext, back ? [[0, col.mid], [.3, mix(col.shade, col.mid, .5)], [1, mix(col.shade, col.mid, .2)]] : [[0, col.lit], [.45, mix(col.lit, col.mid, .55)], [1, col.mid]]);
+  let body = `<rect x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}" fill="url(#${A})"/>`;
+  // 3. lit caps on the swells that face the source; each fades out before its edge, so they melt into one another
+  if (!back && (o.puffs == null || o.puffs > 0)) {
+    defs += `<radialGradient id="${G}" cx="${f(.5 + ux * .16)}" cy="${f(.5 + uy * .16)}" r=".5" fx="${f(.5 + ux * .26)}" fy="${f(.5 + uy * .26)}">${stops([[0, col.knob || col.lit, .95], [.4, col.lit, .6], [1, col.lit, 0]])}</radialGradient>`;
+    const pr = cs.map(q => q[0] * ux + q[1] * uy), pmin = Math.min(...pr), pmax = Math.max(...pr), po = o.puffs != null ? o.puffs : .75;
+    body += `<g filter="url(#${B})">` + cs.map((q, i) => { const t = pmax - pmin > .1 ? (pr[i] - pmin) / (pmax - pmin) : 1, op = po * (.3 + .7 * Math.pow(t, 1.2)); return op > .04 ? el(q, ` fill="url(#${G})" opacity="${f(op)}"`, 1.08) : ''; }).join('') + '</g>';
+  }
+  // creases: every swell's own side away from the light, very soft, so the swells read without a seam between them
+  if (!back && o.crease !== 0) { const CR = nid('bk', u), kk = o.crease != null ? o.crease : .3;
+    defs += blurFilter(CR, box, f(clamp(rm * .3, .5, 3.5)));
+    body += `<g filter="url(#${CR})" opacity="${f(kk)}">` + cs.filter(q => ex(q)[1] > rm * .7).map(q => { const [rx, ry] = ex(q), k = nid('bn', u);
+      defs += `<mask id="${k}" maskUnits="userSpaceOnUse" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}">${el(q, ' fill="#fff"')}${el([q[0] + ux * ry * .45, q[1] + uy * ry * .45 - ry * .12, q[2], q[3]], ' fill="#000"', 1.02)}</mask>`;
+      return `<g mask="url(#${k})">${el(q, ` fill="${col.shade}"`)}</g>`; }).join('') + '</g>'; }
+  // 2. the shade: the union moved away from the light and down, blurred — the edge towards the source stays lit
+  const sh = rm * (back ? .4 : .62), so = o.shadeOp != null ? o.shadeOp : back ? .7 : .62;
+  body += `<g filter="url(#${S})" fill="${col.shade}" opacity="${f(so)}"><g transform="translate(${f(-ux * sh)} ${f(-uy * sh * .7 + sh * .45)})">${shapes}</g></g>`;
+  // 4. the underside: a band of shade up from the flat bottom (or the lowest edge)
+  if (o.under) { const yb = o.flat != null ? o.flat : y1, yt = yb - hh * (o.uh || .5); defs += linGrad(U, 0, yt, 0, yb, [[0, col.shade, 0], [.55, col.shade, o.under * .5], [1, col.shade, o.under]]); body += `<rect x="${f(box[0])}" y="${f(yt)}" width="${f(box[2])}" height="${f(yb - yt + 1)}" fill="url(#${U})"/>`; }
+  // 5. against the light: the outline minus itself moved away from the light — a crescent only on the edge to the source
   if (back && col.rim) { const ins = o.rimW != null ? o.rimW : clamp(hh * .07, .5, 2.4), ro = o.rimOp != null ? o.rimOp : .85;
     const crescent = (k, op) => { const RM = nid('br', u), ER = nid('bq', u);
       defs += edgeFilter(ER, box, o.seed || 1, o.disp != null ? o.disp : 2.4, o.freq, ins * k * .3) + `<mask id="${RM}" maskUnits="userSpaceOnUse" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}"><g filter="url(#${ER})"><g fill="#fff">${shapes}</g><g fill="#000" transform="translate(${f(-ux * ins * k)} ${f(-uy * ins * k)})">${shapes}</g></g></mask>`;
       return `<g mask="url(#${RM})"><rect x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}" fill="${col.rim}" opacity="${f(op)}"/></g>`; };
-    rim = crescent(2.6, ro * .3) + crescent(1, ro * .8); }
-  const sorted = cs.slice().sort((a, b) => (b[0] * ux + b[1] * uy) - (a[0] * ux + a[1] * uy));
-  return `<defs>${defs}</defs><g mask="url(#${M})"${o.opacity != null ? ` opacity="${f(o.opacity)}"` : ''}><g fill="url(#${A})">${shapes}</g>`
-    + `<g filter="url(#${B})" opacity="${f(o.puffs != null ? o.puffs : back ? .4 : .6)}">${sorted.map(q => el(q, ` fill="url(#${G})"`)).join('')}</g>${under}${o.inner || ''}${rim}</g>`;
+    body += crescent(2.6, ro * .3) + crescent(1, ro * .8); }
+  return `<defs>${defs}</defs><g mask="url(#${M})"${o.opacity != null ? ` opacity="${f(o.opacity)}"` : ''}>${body}${o.inner || ''}</g>`;
 }
 
 /**
