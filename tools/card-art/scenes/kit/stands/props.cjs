@@ -31,16 +31,16 @@ const tableScene = (u, L) => P.bulwark(u, L, { x1: 0, x2: 200, y: 160, h: 160, k
 const gun = { x: 96, y: 246, s: 2.1, side: false, seed: 6 };
 const guns = [
   () => { const u = 'GA', L = K.makeLight(NIGHT, { horizon: HZ });
-    return deckScene(u, L) + put(u, L, P.cannon, gun, 64, 44, .5) + put(u, L, P.shotPile, { x: 168, y: 268, s: 1.3, seed: 2 }, 26, 16) + put(u, L, P.shot, { x: 30, y: 272, s: 1.5, seed: 4 }, 9, 9); },
+    return deckScene(u, L) + put(u, L, P.rammer, { x: 92, y: 274, s: 1.5, seed: 2 }, 96, 6, .1) + put(u, L, P.cannon, gun, 64, 44, .5) + put(u, L, P.shotPile, { x: 168, y: 268, s: 1.3, seed: 2 }, 26, 16) + put(u, L, P.shot, { x: 30, y: 272, s: 1.5, seed: 4 }, 9, 9); },
   () => { const u = 'GB', L = K.makeLight(DUSK, { horizon: HZ }), o = Object.assign({}, gun, { recoil: .7, elev: 4, seed: 7 }), m = P.cannon.muzzle(o);
-    return deckScene(u, L, { seed: 3 }) + put(u, L, P.cannon, o, 64, 44, .5) + K.smoke(u, L, { x: m.x + 18, y: m.y - 2, w: 40, h: 60, wind: .6, seed: 3, glow: { color: '#ffb050', power: .4 } }) + K.muzzleFlash(u, { x: m.x, y: m.y, dir: m.dir, len: 40, seed: 2 }) + K.localGlow(u, { x: m.x, y: m.y + 40, color: '#ffc070', power: .55, radius: 60 }, { squash: .35, core: false }); },
+    return deckScene(u, L, { seed: 3 }) + put(u, L, P.rammer, { x: 70, y: 272, s: 1.5, rot: -3, head: 'sponge', seed: 3 }, 96, 6, .1) + put(u, L, P.cannon, o, 64, 44, .5) + K.smoke(u, L, { x: m.x + 18, y: m.y - 2, w: 40, h: 60, wind: .6, seed: 3, glow: { color: '#ffb050', power: .4 } }) + K.muzzleFlash(u, { x: m.x, y: m.y, dir: m.dir, len: 40, seed: 2 }) + K.localGlow(u, { x: m.x, y: m.y + 40, color: '#ffc070', power: .55, radius: 60 }, { squash: .35, core: false }); },
   () => { const u = 'GC', L = K.makeLight(DAY, { horizon: HZ }), side = K.mat('tar', L, { form: 'plane', x1: 0, y1: 70, x2: 200, y2: 250, n: 'front', u });
     let s = K.sky(u, L, { horizon: HZ }) + K.water(u, L, { horizon: HZ, bottom: 280 }) + side.defs + `<path d="M0 70Q100 62 200 70V246Q100 254 0 246Z" fill="${side.fill}" stroke="${side.ramp.outline}" stroke-width=".6"/>`;
     for (let i = 0, y = 82; y < 240; i++, y += 9 + (i % 3) * 1.6) s += `<path d="M0 ${y}Q100 ${y - 7 + y * .03} 200 ${y}" stroke="${side.ramp.outline}" stroke-width=".45" fill="none" opacity=".55"/>`;
     s += K.foam(u, { x: 100, y: 250, w: 200, L, seed: 3 });
     return s + P.gunPort(u, L, { x: 38, y: 180, s: 1.9, open: 0, seed: 1 }) + P.gunPort(u, L, { x: 102, y: 180, s: 1.9, open: .5, seed: 2 }) + P.gunPort(u, L, { x: 164, y: 180, s: 1.9, open: 1, seed: 3 }); },
-  () => { const u = 'GD', lo = { x: 46, y: 118, s: 1.7, hang: 18, lit: true }, loc = P.lantern.local(lo), L = K.makeLight(lamp(loc), { horizon: HZ });
-    return deckScene(u, L, { wallY: 200, wallH: 92, seed: 5 }) + P.gunPort(u, L, { x: 118, y: 180, s: 2.6, inside: true, horizon: HZ, seed: 4 }) + K.localGlow(u, Object.assign({}, loc, { y: 236, radius: 70, power: .4 }), { squash: .3, core: false })
+  () => { const u = 'GD', lo = { x: 40, y: 262, s: 1.7, lit: true }, loc = P.lantern.local(Object.assign({ horizon: HZ }, lo)), L = K.makeLight(lamp(loc), { horizon: HZ });
+    return deckScene(u, L, { wallY: 200, wallH: 92, seed: 5 }) + P.gunPort(u, L, { x: 118, y: 180, s: 2.6, inside: true, horizon: HZ, seed: 4 }) + K.localGlow(u, Object.assign({}, loc, { y: 258, radius: 80, power: .45 }), { squash: .3, core: false })
       + put(u, L, P.shotPile, { x: 112, y: 258, s: 1.5, seed: 5 }, 30, 18) + put(u, L, P.shot, { x: 170, y: 268, s: 1.6, seed: 6 }, 10, 10) + put(u, L, P.shot, { x: 58, y: 272, s: 1.6, seed: 8 }, 10, 10) + P.lantern(u, L, lo) + K.localGlow(u, loc); },
 ];
 
@@ -59,7 +59,7 @@ const stores = [
 
 // ——— sheet 3: on the cabin table ———
 const tableA = (u, L, lit) => put(u, L, P.hourglass, { x: 38, y: 250, s: 2, seed: 1 }, 20, 32) + put(u, L, P.bottle, { x: 62, y: 204, s: 1.7, kind: 'rum', seed: 2 }, 16, 34)
-  + put(u, L, P.candle, { x: 104, y: 200, s: 1.9, lit, seed: 3 }, 16, 30) + put(u, L, P.mug, { x: 150, y: 214, s: 2, fill: 'rum', seed: 4 }, 18, 22) + put(u, L, P.coins, { x: 120, y: 258, s: 2, seed: 5 }, 22, 6)
+  + (lit ? P.candle(u, L, { x: 104, y: 200, s: 1.9, lit, seed: 3 }) : put(u, L, P.candle, { x: 104, y: 200, s: 1.9, lit, seed: 3 }, 16, 30)) + put(u, L, P.mug, { x: 150, y: 214, s: 2, fill: 'rum', seed: 4 }, 18, 22) + put(u, L, P.coins, { x: 120, y: 258, s: 2, seed: 5 }, 22, 6)
   + put(u, L, P.bottle, { x: 168, y: 262, s: 1.6, kind: 'empty', lying: true, flip: true, seed: 6 }, 32, 14, .5);
 const tableB = (u, L) => put(u, L, P.scroll, { x: 72, y: 206, s: 2.4, seed: 1 }, 46, 6, .5) + put(u, L, P.pistol, { x: 146, y: 230, s: 1.9, seed: 2 }, 50, 8, .4)
   + put(u, L, P.sabre, { x: 92, y: 258, s: 1.9, rot: -6, seed: 3 }, 86, 5, .2) + put(u, L, P.coins, { x: 34, y: 246, s: 1.7, n: 5, seed: 7 }, 18, 5);
@@ -68,7 +68,7 @@ const table = [
     return tableScene(u, L) + K.localGlow(u, Object.assign({}, loc, { y: 205, radius: 90, power: .45 }), { squash: .32, core: false }) + tableA(u, L, true) + K.localGlow(u, loc); },
   () => { const u = 'TB', L = K.makeLight(WINDOW, { horizon: HZ }); return tableScene(u, L) + tableA(u, L, false); },
   () => { const u = 'TC', lo = { x: 168, y: 186, s: 1.4, lit: true }, loc = P.lantern.local(Object.assign({ horizon: HZ }, lo)), L = K.makeLight(lamp(loc), { horizon: HZ });
-    return tableScene(u, L) + K.localGlow(u, Object.assign({}, loc, { y: 192, radius: 90, power: .45 }), { squash: .32, core: false }) + tableB(u, L) + put(u, L, P.lantern, lo, 18, 40) + K.localGlow(u, loc); },
+    return tableScene(u, L) + K.localGlow(u, Object.assign({}, loc, { y: 192, radius: 90, power: .45 }), { squash: .32, core: false }) + tableB(u, L) + P.lantern(u, L, lo) + K.localGlow(u, loc); },
   () => { const u = 'TD', L = K.makeLight(DUSK, { horizon: HZ }), lo = { x: 168, y: 186, s: 1.4, lit: false }; return tableScene(u, L) + tableB(u, L) + put(u, L, P.lantern, lo, 18, 40); },
 ];
 
@@ -78,20 +78,21 @@ const harbour = (u, L) => { const a = P.pier.at(L, pierO, .32, .35), c = P.pier.
   return K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L) + K.cloudBank(u, L, { y: HZ - 12, h: 16, x0: 0, x1: 200, n: 4, seed: 6, far: .5 }) + K.water(u, L, { horizon: HZ, bottom: 280 })
     + P.rock(u, L, { x: 26, y: 168, s: 1.4, w: 34, h: 26, wet: true, seed: 3 }) + P.rock(u, L, { x: 176, y: 128, s: .7, w: 30, h: 18, wet: true, seed: 8 })
     + P.pier(u, L, Object.assign({ bollard: false }, pierO)) + put(u, L, P.bollard, { x: a.x, y: a.y, s: a.s * 2.2, rope: true, seed: 2 }, 30 * a.s, 24 * a.s, .5) + put(u, L, P.coil, { x: c.x, y: c.y, s: c.s * 1.6, seed: 4 }, 34 * c.s, 5 * c.s); };
-const rigging = (u, L) => { const an = { x: 38, y: 250, s: 1.4, rot: 14, seed: 2 }, ring = P.anchor.ring(an);
-  return put(u, L, P.anchor, an, 40, 56, .3) + P.chain(u, L, [[ring.x, ring.y], [ring.x + 14, ring.y + 40], [ring.x + 30, 262], [ring.x + 70, 268], [ring.x + 92, 258]], { link: 6, seed: 3 })
-    + put(u, L, P.bell, { x: 150, y: 222, s: 1.65, seed: 4 }, 40, 56, .5) + put(u, L, P.coil, { x: 128, y: 264, s: 1.55, seed: 5 }, 36, 6)
-    + P.rope(u, L, [[96, 200], [80, 214], [92, 232], [70, 244]], { r: 1.4, seed: 6, whip: true }); };
+const rigging = (u, L) => { const an = { x: 46, y: 194, s: 1.45, seed: 2, contact: false }, ring = P.anchor.ring(an); // hung from the rail by a rope through its ring
+  return P.rope(u, L, [[ring.x - 3, 121], [ring.x - 1, ring.y - 2], [ring.x + 2, ring.y - 1], [ring.x + 4, 121]], { r: .9, seed: 9 }) + P.anchor(u, L, an)
+    + P.chain(u, L, [[ring.x + 1, ring.y + 2], [ring.x + 12, ring.y + 8], [ring.x + 30, ring.y + 40], [ring.x + 34, 222], [ring.x + 34, 262], [ring.x + 70, 268], [ring.x + 92, 258]], { link: 6, seed: 3 })
+    + put(u, L, P.bell, { x: 152, y: 232, s: 1.6, seed: 4 }, 40, 56, .5) + put(u, L, P.coil, { x: 128, y: 264, s: 1.55, seed: 5 }, 36, 6)
+    + P.rope(u, L, [[118, 246], [100, 250], [86, 247], [72, 253], [60, 266]], { r: 1.4, seed: 6, whip: true }); };
 const rig = [
   () => { const u = 'RA', L = K.makeLight(K.LIGHTS.sea, { horizon: HZ }); return harbour(u, L); },
   () => { const u = 'RB', L = K.makeLight(NIGHT, { horizon: HZ }); return harbour(u, L); },
-  () => { const u = 'RC', L = K.makeLight(DAY, { horizon: HZ }); return deckScene(u, L, { seed: 9 }) + rigging(u, L); },
-  () => { const u = 'RD', lo = { x: 100, y: 128, s: 1.5, hang: 16, lit: true }, loc = P.lantern.local(lo), L = K.makeLight(lamp(loc), { horizon: HZ });
-    return deckScene(u, L, { seed: 10 }) + K.localGlow(u, Object.assign({}, loc, { y: 236, radius: 80, power: .4 }), { squash: .3, core: false }) + rigging(u, L) + P.lantern(u, L, lo) + K.localGlow(u, loc); },
+  () => { const u = 'RC', L = K.makeLight(DAY, { horizon: HZ }); return deckScene(u, L, { seed: 9, wallY: 200, wallH: 80 }) + rigging(u, L); },
+  () => { const u = 'RD', lo = { x: 98, y: 236, s: 1.5, lit: true }, loc = P.lantern.local(Object.assign({ horizon: HZ }, lo)), L = K.makeLight(lamp(loc), { horizon: HZ });
+    return deckScene(u, L, { seed: 10, wallY: 200, wallH: 80 }) + K.localGlow(u, Object.assign({}, loc, { y: 234, radius: 80, power: .45 }), { squash: .3, core: false }) + rigging(u, L) + P.lantern(u, L, lo) + K.localGlow(u, loc); },
 ];
 
 module.exports = { sheets: {
-  'props-guns': sheet(guns, ['пушка, ночь (луна)', 'выстрел, откат, закат', 'порты снаружи: закрыт / ½ / открыт, день', 'порт изнутри, ядра, фонарь']),
+  'props-guns': sheet(guns, ['пушка, банник, ядра — ночь (луна)', 'выстрел, откат, банник-губка — закат', 'порты снаружи: закрыт / ½ / открыт, день', 'порт изнутри, ядра, фонарь']),
   'props-stores': sheet(stores, ['бочки: ром, порох, вода открытая, лёжа — день', 'бочки — фонарь на палубе', 'сундуки закрыт/открыт, ящик, мешок — закат', 'то же — ночь (луна)']),
   'props-table': sheet(table, ['стол: часы, бутылки, свеча, кружка, монеты — свеча', 'то же — день из окна слева', 'свиток, пистолет, сабля, монеты, фонарь — фонарь', 'то же — закат, фонарь погашен']),
   'props-rig': sheet(rig, ['причал, кнехт с канатом, бухта, камни — день', 'то же — ночь (луна)', 'якорь, цепь, колокол, бухта, канат — день', 'то же — фонарь']),
