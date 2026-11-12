@@ -27,7 +27,7 @@ const skel = { horizon: HZ, eye: 3, light: 'the low morning sun ahead on the lef
     ['crest', -10, 250, 110, 40, 'a near whitecap under the glass'],
   ] };
 
-module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     L.pal = Object.assign({}, L.pal, { sea: ['#86b6cc', '#3d6f88', '#16323f'], sky: ['#2f6cba', '#5b95d2', '#a6c9e6', '#f6dcb0'] });
