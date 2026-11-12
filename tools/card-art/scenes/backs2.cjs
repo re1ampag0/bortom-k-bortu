@@ -19,7 +19,7 @@ const W = 200, H = 280, SAFE = 28.6;
 const INK = { pearl: '#26262a', revenge: '#8e2420', endeavour: '#24497a', dutch: '#2f6b4a', sea: '#16404e' };
 const PAPER = '#f2e9d5';
 // the edge of each deck: parchment tinted towards the deck's colour (the backs differ by paper and line colour)
-const GROUND = { pearl: '#e2ddd2', revenge: '#f0d9c6', endeavour: '#dfe3df', dutch: '#e0e4cc', sea: '#d6e4e0' };
+const GROUND = { pearl: '#ebe1ca', revenge: '#f3d2c0', endeavour: '#d4dfee', dutch: '#d9e6c4', sea: '#c8e6dc' };
 const KINDS = Object.keys(GROUND);
 const f = v => String(+(+v).toFixed(2));
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -80,39 +80,41 @@ function shipParts(sil) {
 }
 
 // how the ships are toned: sails (0 white linen … 1 black cloth), hull (dark of the planking)
-const TONE = { pearl: { sail: .86, hull: .92 }, revenge: { sail: .56, hull: .78 }, endeavour: { sail: .12, hull: .72 }, dutch: { sail: .42, hull: .62 }, brig: { sail: .2, hull: .6 }, merchant: { sail: .2, hull: .5 } };
+const TONE = { pearl: { sail: .86, hull: .92 }, revenge: { sail: .56, hull: .78 }, endeavour: { sail: .3, hull: .72 }, dutch: { sail: .42, hull: .62 }, brig: { sail: .2, hull: .6 }, merchant: { sail: .2, hull: .5 } };
 
-/** Hatching of one sail inside its box: lines down the sail bowed by its belly towards the bow, close on the shade
- *  side (light from the upper left), broken by a light spot on the belly; cross-hatching across the sail along
- *  its curve only in the shade and under the yard; for the dark cloth a third layer on the aft edge. */
+/** Hatching of one sail inside its box, light from the upper left: the shade of a point is the tone of the cloth
+ *  plus its place across the sail (the aft side turns away from the light). Lines run down the sail, bowed by its
+ *  belly towards the bow; in the light they stop (paper), in the half-light they break around the lit belly, in the
+ *  shade they run full length, closer and heavier. A cross-hatch at ~35° along the sail's curve only in the deep
+ *  shade (the aft third) and at the foot; for the dark cloth a third layer on the aft edge. Nothing shorter than a
+ *  fifth of the sail is drawn, so the light side stays clean paper. */
 function sailHatch(bb, T, bow, R) {
   const w = bb.w, h = bb.h, bulge = Math.min(w * .07, 2.4) * bow, sag = Math.min(h * .05, 1.4);
-  let a = '', b = '', c = '';
+  const shadeU = uu => clamp(T * .55 + .62 * Math.pow(uu, 1.3));
+  const A = {}, add = (k, d) => { A[k] = (A[k] || '') + d; };
+  let b = '', c = '';
   const vline = (x, v0, v1, uu) => { const p = []; for (let i = 0; i <= 6; i++) { const v = lerp(v0, v1, i / 6); p.push([x + bulge * Math.sin(Math.PI * clamp(v)) * (1 - .5 * uu), bb.y0 + v * h]); } return pl(p); };
-  for (let x = bb.x0 - .6; x < bb.x1 + .6;) {
-    const uu = clamp((x - bb.x0) / w), sh = clamp(T * .62 + .5 * Math.pow(uu, 1.5) + .14 * (R() - .5));
-    if (sh < .62) { // lit: the line breaks around the belly; the lighter, the wider the gap
-      const top = .14 + .3 * sh + R() * .1, bot = .86 - .34 * sh - R() * .1, gap = (1 - sh) * (.25 + R() * .2);
-      const t1 = top - gap * .4, b0 = bot + gap * .3;   // pieces shorter than ~1/6 of the sail are dropped: no scratches
-      if (t1 > .2) a += vline(x, -.05, t1, uu);
-      if (b0 < .8) a += vline(x, b0, 1.05, uu);
-    } else a += vline(x, -.05, 1.05, uu);
-    x += lerp(3.6, 1.7, sh) * (.85 + R() * .3);
+  for (let x = bb.x0 + R() * .8; x < bb.x1 + .6;) {
+    const uu = clamp((x - bb.x0) / w), sh = clamp(shadeU(uu) + .05 * (R() - .5)), k = sh > .72 ? '.74' : sh > .48 ? '.6' : '.48';
+    if (sh > .6) add(k, vline(x, -.05, 1.05, uu));
+    else if (sh > .22) { const g = (.6 - sh) / .38, half = .12 + .3 * g, t1 = .46 - half + .04 * (R() - .5), b0 = .46 + half * .8 + .04 * (R() - .5);
+      if (t1 > .28) add(k, vline(x, -.05, t1, uu));
+      if (b0 < .76) add(k, vline(x, b0, 1.05, uu)); }
+    x += lerp(4.4, 1.65, sh) * (.9 + R() * .2);
   }
-  // cross-hatching at ~30° along the curve of the sail: in the shade (aft part) and in bands under the yard and at the foot
-  const u0 = clamp(.74 - T * .6), tg = .55 * bow * -1, span = w * Math.abs(tg);
-  for (let c = bb.y0 - span - 1; c < bb.y1 + 1;) {
-    const us = u0 + R() * .12, vf = .68 + R() * .1, vh = .12 + R() * .08; let seg = [];
+  const tg = -.7 * bow, span = w * Math.abs(tg), uS = clamp(.62 - T * .25);
+  for (let cc = bb.y0 - span - 1; cc < bb.y1 + 1;) {
+    const us = uS + R() * .08, vf = .8 + R() * .06; let seg = [];
     const flush = () => { if (seg.length > 3) b += pl(seg); seg = []; };
     for (let x = bb.x0 - 1; x <= bb.x1 + 1.01; x += 1.2) {
-      const uu = (x - bb.x0) / w, yy = (tg > 0 ? c : c + span) + (x - bb.x0) * tg + sag * Math.sin(Math.PI * clamp(uu)), v = (yy - bb.y0) / h;
-      if (uu > us || v > vf || v < vh || T > .75) seg.push([x, yy]); else flush();
+      const uu = (x - bb.x0) / w, yy = (tg > 0 ? cc : cc + span) + (x - bb.x0) * tg + sag * Math.sin(Math.PI * clamp(uu)), v = (yy - bb.y0) / h;
+      if (uu > us || v > vf && shadeU(clamp(uu)) > .3) seg.push([x, yy]); else flush();
     }
     flush();
-    c += lerp(3, 1.8, T) * (.85 + R() * .3);
+    cc += lerp(3.2, 2.1, T) * (.85 + R() * .3);
   }
-  if (T > .6) for (let x = bb.x0 + w * (.5 + R() * .1); x < bb.x1 + h * .6;) { c += pl([[x, bb.y0 - .5], [x + h * .6 * bow, bb.y1 + .5]]); x += 2.2 * (.85 + R() * .3); }
-  return `<path d="${a}" stroke-width="${f(.48 + .22 * T)}"/>` + (b ? `<path d="${b}" stroke-width=".42"/>` : '') + (c ? `<path d="${c}" stroke-width=".42"/>` : '');
+  if (T > .6) for (let x = bb.x0 + w * (.72 + R() * .06); x < bb.x1 + h * .5;) { c += pl([[x, bb.y0 - .5], [x + h * .5 * bow, bb.y1 + .5]]); x += 2.3 * (.85 + R() * .3); }
+  return Object.keys(A).map(k => `<path d="${A[k]}" stroke-width="${k}"/>`).join('') + (b ? `<path d="${b}" stroke-width=".42"/>` : '') + (c ? `<path d="${c}" stroke-width=".42"/>` : '');
 }
 
 /**
@@ -132,14 +134,14 @@ function engraveShip(u, kind, o) {
   const wl = bid('wl', u); defs += `<clipPath id="${wl}"><rect x="-50" y="-50" width="300" height="${f(y0 + 50)}"/></clipPath>`;
   out += `<g clip-path="url(#${wl})" fill="${paper}">` + parts.hull.filter(t => !attr(t, 'stroke')).map(t => t.replace(/ fill="[^"]*"/, '').replace(/ fill-rule="[^"]*"/, '')).join('') + '</g>';
   const bow = -dir;
-  const emit = list => list.map(t => {
+  const emit = (list, flags) => list.map(t => {
     if (t.startsWith('<circle')) return t.replace(/ fill="[^"]*"/, '').replace('<circle', `<circle fill="${ink}"`);
     const d = attr(t, 'd'); if (!d) return '';
     if (attr(t, 'fill') === 'none' || attr(t, 'stroke')) { const sw = Math.max(.4, +(attr(t, 'stroke-width') || .3)); return `<path d="${d}" fill="none" stroke="${ink}" stroke-width="${f(Math.min(sw, .9))}" stroke-linecap="round" opacity=".85"/>`; }
     const bb = bboxOf(d), rule = attr(t, 'fill-rule') || 'nonzero';
-    const ar = areaOf(d); if (Math.min(bb.w, bb.h) > 2 && ar > 7 && ar > bb.w * bb.h * .28) { // a sail (a spar is thin, a flag small)
+    const ar = areaOf(d); if (!flags && Math.min(bb.w, bb.h) > 2 && ar > 7 && ar > bb.w * bb.h * .28) { // a sail (a spar is thin, a flag small)
       const id = bid('sc', u); defs += `<clipPath id="${id}"><path d="${d}" clip-rule="${rule}"/></clipPath>`;
-      return `<path d="${d}" fill="${paper}" fill-rule="${rule}"/><g clip-path="url(#${id})" fill="none" stroke="${ink}" stroke-linecap="round">${sailHatch(bb, tn.sail, bow, R)}</g>`
+      return `<path d="${d}" fill="${paper}" fill-rule="${rule}"/><g clip-path="url(#${id})" fill="none" stroke="${ink}" stroke-linecap="round">${sailHatch(bb, ar < 70 ? Math.min(.2, tn.sail * .3) : tn.sail, bow, R)}</g>`
         + `<path d="${d}" fill="none" fill-rule="${rule}" stroke="${ink}" stroke-width=".55" stroke-linejoin="round"/>`;
     }
     return `<path d="${d}" fill="${ink}" fill-rule="${rule}" stroke="${ink}" stroke-width=".4"/>`; // spars, tops, flags
@@ -157,29 +159,46 @@ function engraveShip(u, kind, o) {
   for (let i = 0; i + 1 < paint.length; i++) tar.push({ h0: paint[i].h1 + .2, h1: paint[i + 1].h0 - .2 });
   const inBand = (h, list, m = 0) => list.some(b => h > b.h0 - m && h < b.h1 + m);
   const along = (h, Xa, Xb) => { const p = []; for (let X = Xa; X < Xb + 2.9; X += 3) p.push(P(Math.min(X, Xb), Y(h, Math.min(X, Xb)))); return pl(p); };
-  let l1 = '', l1b = '', l2 = '', l3 = '', bold = '';
+  // the light from the upper left: xn — 0 at the left end of the hull in the picture, 1 at the right (the shade)
+  const ex0 = P(xStem - 6, 0)[0], ex1 = P(xAft + 4, 0)[0], xn = X => clamp((P(X, 0)[0] - Math.min(ex0, ex1)) / Math.abs(ex1 - ex0));
+  const L1 = {}, put = (k, d) => { L1[k] = (L1[k] || '') + d; };
+  let l2 = '', bold = '', mould = '', stern = '';
   for (let h = -1.2; h < topMax;) {
-    const t = h / sp.free, lit = t > .48 && h < sp.free * 1.02 || h > sp.free * 1.08;
-    if (!inBand(h, paint, .3)) { // a line of the planking broken at a butt or two
+    const t = h / sp.free, lit = t > .48 && h < sp.free * 1.02 || h > sp.free * 1.08, low = h < 3;
+    if (!inBand(h, paint, .3)) { // a line of the planking broken at a butt or two; heavier towards the shade
       let Xa = xStem - 16 - R() * 6; const Xe = xAft + 12;
-      while (Xa < Xe) { const l = 24 + R() * 40, Xb = Math.min(Xe, Xa + l); (lit ? l1b += along(h, Xa, Xb) : l1 += along(h, Xa, Xb)); Xa = Xb + (lit ? 1.6 + R() * 3 : .8 + R()); }
+      while (Xa < Xe) { const l = 22 + R() * 34, Xb = Math.min(Xe, Xa + l), q = xn((Xa + Xb) / 2), k = (lit ? .44 : .56) + (q > .66 ? .2 : q > .33 ? .1 : 0) + (low ? .1 : 0);
+        put(f(k), along(h, Xa, Xb)); Xa = Xb + (lit ? 1.6 + R() * 3 : .8 + R()); }
     }
-    h += (lit ? 2.25 : 1.75) / s * (.85 + R() * .3);
+    h += (lit ? 2.2 : low ? 1.25 : 1.65) / s * (.85 + R() * .3);
   }
   for (const b of tar) for (let h = b.h0 + .3; h < b.h1; h += 1.7 / s * .6) bold += along(h, xStem - 10, xAft + 10);
-  for (const b of paint) l1b += along(b.h0 - .15, xStem - 10, xAft + 10) + along(b.h1 + .15, xStem - 10, xAft + 10);
+  for (const b of paint) put('.46', along(b.h0 - .15, xStem - 10, xAft + 10) + along(b.h1 + .15, xStem - 10, xAft + 10));
   for (const h of sp.wales || []) bold += along(h, xStem - 10, xAft + 10);
-  // cross-hatching: below the widest line (the dark hulls almost to the rail), the stern quarter in full
-  const lim = Math.min(tn.hull > .85 ? .95 : tn.hull > .7 ? .5 : .4, paint.length ? (paint[0].h0 - .4) / sp.free : 1), qX = hb - sp.len * .14;
-  for (let X = xStem - 14 - topMax * .8; X < xAft + 12;) {
-    const stern = X > qX, he = stern ? topMax : sp.free * lim * (.8 + R() * .4), Xe = X + .8 * (he + 2);
-    l2 += pl([P(X, -2), P(Xe, Y(he, Xe))]);
-    X += 1.95 / s * (.85 + R() * .3);
+  // the deck mouldings: the waist's rail, the forecastle, every tier of the stern — the steps of the upper works
+  const tierBase = j => sp.free + sp.tiers.slice(0, j).reduce((a, t) => a + t[1], 0);
+  mould += along(sp.free - .1, xStem, sp.fc[0] - 1) + along(sp.free - .1, sp.tiers[0][0] - 1, xAft + 2);
+  sp.tiers.forEach((t, j) => { if (j) mould += along(tierBase(j) - .1, t[0] - 1, xAft + 2); });
+  // cross-hatching: one diagonal layer, irregular in step and length, rising towards the shade side
+  const lim = Math.min(tn.hull > .85 ? .9 : tn.hull > .7 ? .5 : .42, paint.length ? (paint[0].h0 - .4) / sp.free : 1);
+  const hTopL = Y(tierBase(sp.tiers.length) + sp.taff, xAft), xC = hb + sp.over * .3, hC = Y(sp.free * sp.counter, hb), qX = xC - sp.len * .17;
+  for (let X = xStem - 14 - topMax * .8; X < qX + sp.len * .08;) {
+    const q = xn(X), he = sp.free * Math.min(1, lim + (paint.length ? 0 : .5 * q * q)) * (.75 + R() * .5), h0 = -2 + R() * 1.5, Xe = X + .8 * (he - h0);
+    l2 += pl([P(X, h0), P(Xe, Y(he, Xe))]);
+    X += 2 / s * (.75 + R() * .6);
   }
-  for (let X = xStem - 10; X < xAft + 10;) { const he = 2 + R() * 2.6 + (tn.hull > .85 ? 3 : 0), Xe = X - .95 * (he + 2); l3 += pl([P(X, -2), P(Xe, Y(he, Xe))]); X += 2.1 / s * (.85 + R() * .3); }
+  // the stern quarter turns away: short lines between the planks, ending at staggered places forward (a tone that
+  // fades along the hull, not a box), and two or three lines along the raked edge of the transom
+  { const reach = sp.len * .3, hi = tierBase(sp.tiers.length) + sp.taff;
+    for (let h = -.6; h < hi; h += .95 / s * (.85 + R() * .3)) {
+      const Xb = xAft + 6, Xa = Xb - reach * (.25 + Math.pow(R(), 1.4) * .75);
+      stern += along(h, Xa, Xb);
+    }
+    const ux = xAft - xC, uy = hTopL - hC, ul = Math.hypot(ux, uy), dx = ux / ul, dy = uy / ul;
+    for (const off of [.6, 1.6, 2.9]) { const t = (hTopL - hC) / dy; stern += pl([P(xC - off - dx * 30, hC - dy * 30), P(xC - off + dx * t, hTopL)]); } }
   const hm = bid('hm', u), E = 40;
   defs += `<mask id="${hm}" maskUnits="userSpaceOnUse" x="${-E}" y="${-E}" width="${W + 2 * E}" height="${H + 2 * E}"><g clip-path="url(#${wl})" fill="#fff">` + parts.hull.filter(t => !attr(t, 'stroke')).map(t => t.replace(/ fill="[^"]*"/, '').replace(/ fill-rule="[^"]*"/, '')).join('') + '</g></mask>';
-  out += `<g mask="url(#${hm})" fill="none" stroke="${ink}" stroke-linecap="butt"><path d="${l1}" stroke-width=".7"/><path d="${l1b}" stroke-width=".46"/><path d="${l2}" stroke-width=".5"/><path d="${l3}" stroke-width=".5"/><path d="${bold}" stroke-width=".95"/></g>`;
+  out += `<g mask="url(#${hm})" fill="none" stroke="${ink}" stroke-linecap="butt">${Object.keys(L1).map(k => `<path d="${L1[k]}" stroke-width="${k}"/>`).join('')}<path d="${l2}" stroke-width=".44"/><path d="${stern}" stroke-width=".46"/><path d="${bold}" stroke-width=".95"/><path d="${mould}" stroke-width=".8"/></g>`;
   // outlines of the hull and its parts, the gun ports dark, the weed and shells of the Dutchman as dots
   let hullOut = '';
   parts.hull.forEach((t, i) => {
@@ -190,7 +209,7 @@ function engraveShip(u, kind, o) {
     const bb = bboxOf(d); hullOut += bb.w * bb.h < 6 ? `<path d="${d}" fill="${ink}"/>` : `<path d="${d}" fill="none" stroke="${ink}" stroke-width=".45" stroke-linejoin="round"/>`;
   });
   out += `<g clip-path="url(#${wl})">${hullOut}</g>`;
-  out += emit(parts.after);
+  out += emit(parts.after, true);   // in front: the flags, solid
   return `<defs>${defs}</defs><g>${out}</g>`;
 }
 
@@ -248,12 +267,12 @@ function rose(u, ink, paper, cx, cy, o) {
   const pts = [];
   for (let i = 0; i < 32; i++) { const a = i / 32 * 2 * Math.PI; if (i % 4 === 2) pts.push([a, R3 * (o.s16 || 1), ring * .5, false]); }
   for (let i = 0; i < 32; i++) { const a = i / 32 * 2 * Math.PI; if (i % 8 === 4) pts.push([a, R2, ring * .62, true]); }
-  for (let i = 0; i < 4; i++) { const a = i / 4 * 2 * Math.PI; pts.push([a, R * (i === 0 ? 1.08 : i === 2 ? (o.south || 1) : 1), ring * .7, true]); }
+  for (let i = 0; i < 4; i++) { const a = i / 4 * 2 * Math.PI; pts.push([a, R * (i === 0 ? (o.north || 1.08) : i === 2 ? (o.south || 1) : 1), ring * .7, true]); }
   // the ring with its scale under the points
-  let ringD = `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(ring)}" fill="none" stroke="${ink}" stroke-width=".55"/><circle cx="${f(cx)}" cy="${f(cy)}" r="${f(ring - 2.2)}" fill="none" stroke="${ink}" stroke-width=".45"/>`;
+  let ringD = `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(ring - 1.4)}" fill="none" stroke="${ink}" stroke-width="2.8"/><circle cx="${f(cx)}" cy="${f(cy)}" r="${f(ring + .9)}" fill="none" stroke="${ink}" stroke-width=".45"/>`;
   let blk = '';
-  for (let i = 0; i < 32; i += 2) { const a0 = i / 32 * 2 * Math.PI, a1 = (i + 1) / 32 * 2 * Math.PI, p0 = pt(a0, ring - 1.1), p1 = pt(a1, ring - 1.1); blk += `M${f(p0[0])} ${f(p0[1])}A${f(ring - 1.1)} ${f(ring - 1.1)} 0 0 1 ${f(p1[0])} ${f(p1[1])}`; }
-  ringD += `<path d="${blk}" fill="none" stroke="${ink}" stroke-width="1.2"/>`;
+  for (let i = 0; i < 64; i += 2) { const a0 = i / 64 * 2 * Math.PI, a1 = (i + 1) / 64 * 2 * Math.PI, p0 = pt(a0, ring - 1.4), p1 = pt(a1, ring - 1.4); blk += `M${f(p0[0])} ${f(p0[1])}A${f(ring - 1.4)} ${f(ring - 1.4)} 0 0 1 ${f(p1[0])} ${f(p1[1])}`; }
+  ringD += `<path d="${blk}" fill="none" stroke="${paper}" stroke-width="1"/>`;
   pts.forEach(p => point(...p));
   return under + ringD + out;
 }
@@ -267,16 +286,16 @@ function ribbon(u, ink, paper, cy, x0, x1, hh) {
   const in1 = [], in2 = []; for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(x0 + 2, x1 - 2, t); in1.push([x, yT(t) + 1.5]); in2.push([x, yB(t) - 1.5]); }
   let tails = '', fold = '', hz = '';
   for (const side of [-1, 1]) {
-    const ex = side < 0 ? x0 : x1, t0 = side < 0 ? 0 : 1, yt = yT(t0), yb = yB(t0), drop = hh * .4, out = 6.5, back = 7;
-    const tail = [[ex - side * back, yt + drop], [ex + side * out, yt + drop - .6], [ex + side * (out - 2.2), (yt + yb) / 2 + drop], [ex + side * out, yb + drop + .6], [ex - side * back, yb + drop]];
+    const ex = side < 0 ? x0 : x1, t0 = side < 0 ? 0 : 1, yt = yT(t0), yb = yB(t0), drop = hh * .45, out = 1.2, back = 10;
+    const tail = [[ex - side * back, yt + drop], [ex + side * out, yt + drop - .6], [ex - side * 2.2, (yt + yb) / 2 + drop + 1.2], [ex + side * out, yb + drop + .6], [ex - side * back, yb + drop]];
     tails += pl(tail) + 'Z';
     const fl = [[ex, yb], [ex - side * back, yb + drop], [ex - side * back, yt + drop], [ex, yt]];
     fold += pl(fl) + 'Z';
-    for (let k = 1; k < 6; k++) { const yy = lerp(yt + drop, yb + drop, k / 6); hz += pl([[ex + side * .3, yy - drop * .1], [ex + side * (out - 1.2 - (k === 3 ? 1.6 : 0)), yy + .2]]); }
+    for (let k = 1; k < 5; k++) { const xx = ex - side * (back * k / 5); hz += pl([[xx, yb + .2], [xx - side * 1.2, yb + drop - .3]]); }
   }
   const lightP = K.mix(paper, '#fffdf7', .5);
-  return `<path d="${tails}" fill="${paper}" stroke="${ink}" stroke-width=".55" stroke-linejoin="round"/><path d="${hz}" fill="none" stroke="${ink}" stroke-width=".42"/>`
-    + `<path d="${fold}" fill="${K.mix(paper, ink, .18)}" stroke="${ink}" stroke-width=".5" stroke-linejoin="round"/>`
+  return `<path d="${tails}" fill="${K.mix(paper, ink, .22)}" stroke="${ink}" stroke-width=".55" stroke-linejoin="round"/><path d="${hz}" fill="none" stroke="${ink}" stroke-width=".42"/>`
+    + `<path d="${fold}" fill="${K.mix(paper, ink, .55)}" stroke="${ink}" stroke-width=".5" stroke-linejoin="round"/>`
     + `<path d="${face}" fill="${lightP}" stroke="${ink}" stroke-width=".65" stroke-linejoin="round"/><path d="${pl(in1)}${pl(in2)}" fill="none" stroke="${ink}" stroke-width=".4" opacity=".7"/>`;
 }
 
@@ -285,14 +304,14 @@ const wrap = body => `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000
 // ——— the layout ———
 // Decks: the title on calm paper at the top, the ship in the middle (waterline y 158), engraved water under it,
 // the rose below with the medallion in its centre, the ribbon with the name at the bottom.
-const PLACES = { title: { y: 44 }, crest: { y: 196, d: 28 }, letter: null, name: { y: 234 } };
-const SEA_PLACES = { title: { y: 44 }, crest: { y: 128, d: 30 }, letter: null, name: { y: 234 } };
+const PLACES = { title: { y: 44 }, crest: { y: 203, d: 28 }, letter: null, name: { y: 236 } };
+const SEA_PLACES = { title: { y: 44 }, crest: { y: 128, d: 30 }, letter: null, name: { y: 236 } };
 const WL = 158;
 const SHIPS = {
   pearl: { maxW: 128, maxH: 98, x: 101, flip: false, seed: 11 },
   revenge: { maxW: 124, maxH: 99, x: 99, flip: true, seed: 12 },
   endeavour: { maxW: 132, maxH: 100, x: 104, flip: false, seed: 13 },
-  dutch: { maxW: 126, maxH: 98, x: 98, flip: true, seed: 14 },
+  dutch: { maxW: 126, maxH: 98, x: 100, flip: false, seed: 14 },   // bow left: the high stern on the other side than the Revenge's
 };
 
 function deckBack(kind) {
@@ -300,12 +319,12 @@ function deckBack(kind) {
   const b0 = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), sc = Math.min(o.maxW / b0.w, o.maxH / b0.h), bx = K.shipBox(kind, { x: o.x, y: WL, scale: sc, flip: o.flip });
   const sp = K.SHIP_SPECS[kind], hx0 = o.x - sp.len / 2 * sc, hx1 = o.x + sp.len / 2 * sc;
   let s = parchment(u, g, ink, 3 + KINDS.indexOf(kind));
-  s += rhumbs(u, ink, 100, P.crest.y, 46, [[100, P.title.y, 84, 12], [100, P.name.y, 76, 13]]);
+  s += rhumbs(u, ink, 100, P.crest.y, 46, [[100, P.title.y, 84, 12], [100, P.name.y, 80, 13]]);
   s += waterLines(u, ink, { y: WL, rows: 10, w0: 62, w1: 26, seed: 21 + KINDS.indexOf(kind), hull: [Math.min(hx0, hx1), Math.max(hx0, hx1)] });
-  s += rose(u, ink, paper, 100, P.crest.y, { r: 34, ring: 21, south: .95 });
+  s += rose(u, ink, paper, 100, P.crest.y, { r: 33, ring: 21, north: .98, south: .9 });
   s += engraveShip(u, kind, { x: o.x, y: WL, scale: sc, flip: o.flip, ink, paper, seed: o.seed });
-  s += ribbon(u, ink, paper, P.name.y, 40, 160, 14);
   s += edgeFade(u, g);
+  s += ribbon(u, ink, paper, P.name.y, 33, 167, 13);   // over the fade: its ends stay crisp, 4 units inside the 9 mm line
   return Object.assign({ svg: wrap(s), ground: g, tone: 'light', box: bx }, JSON.parse(JSON.stringify(P)));
 }
 
@@ -329,15 +348,15 @@ function chartWaves(u, ink, paper, y0, rows, seed) {
 function seaBack() {
   const kind = 'sea', u = 'g2se', ink = INK.sea, g = GROUND.sea, paper = K.mix(g, '#fffbf0', .5), P = SEA_PLACES;
   let s = parchment(u, g, ink, 9);
-  s += rhumbs(u, ink, 100, P.crest.y, 70, [[100, P.title.y, 84, 12], [100, P.name.y, 76, 13]]);
+  s += rhumbs(u, ink, 100, P.crest.y, 70, [[100, P.title.y, 84, 12], [100, P.name.y, 80, 13]]);
   s += waterLines(u, ink, { y: 196, rows: 9, w0: 66, w1: 34, seed: 31 });
   s += rose(u, ink, paper, 100, P.crest.y, { r: 56, ring: 22, s16: 1.05 });
   // neutral ships on the chart (not a deck's ship): a fluyt nearer on the right, a brig far on the left
   s += engraveShip(u + 'm', 'merchant', { x: 141, y: 196, scale: .36, flip: true, ink, paper, seed: 3 });
   s += engraveShip(u + 'b', 'brig', { x: 62, y: 195, scale: .24, ink, paper, seed: 4 });
   s += chartWaves(u, ink, paper, 214, 2, 5);
-  s += ribbon(u, ink, paper, P.name.y, 52, 148, 14);
   s += edgeFade(u, g);
+  s += ribbon(u, ink, paper, P.name.y, 46, 154, 13);
   return Object.assign({ svg: wrap(s), ground: g, tone: 'light' }, JSON.parse(JSON.stringify(P)));
 }
 

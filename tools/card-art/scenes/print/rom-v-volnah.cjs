@@ -11,8 +11,8 @@ const skel = { horizon: HZ, eye: .6, light: 'warm sun behind the right shoulder:
   items: [
     ['ship', 14, 127, 38, 37, 'merchant on the water, waterline y 126.6'],
     ['cask', 62, 122, 74, 48, 'on the crest of the swell, a third in the water, tilted'],
-    ['mug', 50, 128, 14, 14, 'floats beside the cask on its cord'],
-    ['casks-far', 40, 139, 30, 9, 'two casks on the water in the trough'],
+    ['mug', 56, 123, 18, 14, 'floats on the slope in front of the cask, tied to its hoop'],
+    ['casks-far', 8, 139, 30, 9, 'two casks on the far water in the trough, left of the swell'],
     ['cask-near', 14, 214, 52, 30, 'half under water on the near slope'],
     ['gunwale', 120, 280, 80, 46, 'our boat, from the bottom right edge', { edge: 1 }],
     ['boathook', 128, 280, 70, 204, 'rests in the oarlock on the gunwale, the hook in the becket of the cask', { edge: 1 }],
@@ -20,7 +20,7 @@ const skel = { horizon: HZ, eye: .6, light: 'warm sun behind the right shoulder:
 
 // the swell: its crest line from the left edge (below the horizon: the far sea shows over it) up to the top under
 // the cask and down to the right edge
-const CREST = [[-6, 152], [18, 149], [38, 144], [52, 134], [62, 121], [72, 112], [86, 109], [100, 108], [114, 109], [128, 107], [140, 111], [152, 120], [166, 128], [186, 132], [206, 134]];
+const CREST = [[-6, 154], [14, 150], [30, 142], [44, 128], [54, 114], [64, 104], [80, 100], [98, 99], [116, 100], [134, 101], [146, 106], [158, 118], [172, 134], [190, 146], [206, 152]];
 
 module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
@@ -29,7 +29,7 @@ module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft',
     bg += K.water(u, L, { horizon: HZ, bottom: 160, swell: .5, seed: 8, glitter: false });
     // the far ship and the two casks in the trough
     bg += K.ship(u, L, { kind: 'merchant', x: 34, y: 126.6, scale: .38, detail: 'far', flip: true, sails: 'reefed', seed: 3 });
-    bg += farCask(u, L, 47, 135.5, .34, 2, -8) + farCask(u, L, 62, 138, .4, 5, 10);
+    bg += farCask(u, L, 15, 133, .3, 2, -8) + farCask(u, L, 30, 136.5, .36, 5, 10) + farCask(u, L, 186, 137, .32, 8, 6);
     // the swell itself: the near sea drawn with its own (high) horizon, cut to the swell's outline
     const swell = id => `<clipPath id="${id}"><path d="${crestPath()}"/></clipPath>`;
     const sid = 'kswl' + u, sea = K.water(u, L, { horizon: 98, bottom: 280, swell: .85, seed: 5, glitter: false });
@@ -37,16 +37,18 @@ module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft',
     // of the near cask — one copy on the picture each time, cut by its own clip
     const seaId = 'kswg' + u, show = `<g clip-path="url(#${sid})"><use href="#${seaId}"/></g>`;
     bg += `<defs>${swell(sid)}<g id="${seaId}">${sea}${crestGlow(u, L)}</g></defs>${show}`;
-    for (const [x, y, w, sd] of [[44, 150, 22, 41], [86, 132, 30, 42], [132, 140, 26, 43], [64, 168, 34, 44], [150, 162, 30, 45], [108, 186, 38, 46]]) bg += K.foam(u, { x, y, w, h: 1.1, L, seed: sd });
-    bg += K.foam(u, { x: 30, y: 146, w: 40, h: 1.6, L, seed: 12 }) + K.foam(u, { x: 168, y: 129.5, w: 50, h: 1.4, L, seed: 13 });
+    bg += ripples(u, L) + lip(u, L);
+    for (const [x, y, w, sd] of [[36, 158, 22, 41], [74, 140, 30, 42], [138, 132, 26, 43], [60, 176, 34, 44], [156, 166, 30, 45], [108, 192, 38, 46]]) bg += K.foam(u, { x, y, w, h: 1.1, L, seed: sd });
     // the cask on the crest: its shadow on the slope to the left, the cask, then the water in front of its lower third
-    const cask = { x: 98, y: 122, s: 2.1, kind: 'rum', lying: true, rot: -8, ell: .5, seed: 7, contact: false };
-    let fg = K.castShadow(u, L, { x: 98, y: 127, w: 66, h: 46, horizon: HZ - 16, onto: 'water', d: .6 });
-    fg += mugOnCord(u, L) + K.barrel(u, L, cask) + becket(u, L);
+    const cask = { x: 98, y: 122, s: 2.1, kind: 'rum', lying: true, rot: -6, ell: .34, seed: 7, contact: false };
+    let fg = K.barrel(u, L, cask) + wet(u, L) + becket(u, L);
     const fid = 'kswf' + u;
-    fg += `<defs><clipPath id="${fid}"><path d="M40 280V116C52 112 60 110 70 111C80 112 88 108 98 109.5C108 111 116 107 126 108C134 108.5 140 110 150 113V280Z"/></clipPath></defs>`
+    fg += `<defs><clipPath id="${fid}"><path d="M36 280V118C46 114 56 110 66 109.5C78 109 88 107 98 108.5C110 110 118 106 128 106.5C136 107 142 108.5 152 111V280Z"/></clipPath></defs>`
       + `<g clip-path="url(#${fid})">${show}</g>`;
+    // the cask's shadow on the slope in front of it, thrown to the left by the sun over our right shoulder
+    fg += `<defs><filter id="kcsb${u}" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="2.2"/></filter></defs><path d="M58 112C66 109 84 110 96 111C92 116 78 121 62 120C56 118 55 114 58 112Z" fill="${L.shadowMul}" style="mix-blend-mode:multiply" opacity=".75" filter="url(#kcsb${u})"/>`;
     fg += K.foam(u, { x: 72, y: 108.5, w: 26, h: 2, L, seed: 21 }) + K.foam(u, { x: 100, y: 108, w: 30, h: 2.4, L, seed: 22 }) + K.foam(u, { x: 128, y: 106.5, w: 22, h: 2, L, seed: 23 });
+    fg += mugOnCord(u, L);
     // the third cask, half under water on the near slope
     fg += nearCask(u, L, show);
     // our boat and the boathook
@@ -57,7 +59,7 @@ module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft',
 function crestPath() {
   const P = CREST; let d = `M${P[0][0]} ${P[0][1]}`;
   for (let i = 1; i < P.length; i++) { const a = P[i - 1], b = P[i]; d += `Q${a[0]} ${a[1]} ${((a[0] + b[0]) / 2).toFixed(1)} ${((a[1] + b[1]) / 2).toFixed(1)}`; }
-  return d + `L206 133L206 290L-6 290Z`;
+  return d + `L206 152L206 290L-6 290Z`;
 }
 
 // KIT-CANDIDATE: the crest of a swell on the light — a band of turquoise where the thin top of the wave lets the
@@ -71,6 +73,35 @@ function crestGlow(u, L) {
     + `<filter id="${id}" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter></defs><path d="${d}Z" fill="url(#${gid})" filter="url(#${id})"/>`;
 }
 
+/** Ripples running along the slope of the swell (parallel to its crest, wider and stronger towards us). */
+function ripples(u, L) {
+  let r = 77, out = ''; const R = () => (r = (r * 16807 + 5) % 2147483647) / 2147483647;
+  const at = (t, off) => { const P = CREST, i = Math.min(P.length - 2, Math.floor(t * (P.length - 1))), f = t * (P.length - 1) - i, a = P[i], b = P[i + 1]; return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f + off]; };
+  for (let k = 0; k < 9; k++) {
+    const off = 7 + k * 8 + k * k * .9, w = .35 + k * .12;
+    for (let n = 0; n < 4; n++) {
+      const t0 = R() * .8 + .05, t1 = Math.min(.97, t0 + .06 + R() * .14), a = at(t0, off), m = at((t0 + t1) / 2, off - 1 - R()), b = at(t1, off);
+      out += `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)}Q${m[0].toFixed(1)} ${m[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}" stroke="#bfe6e4" stroke-width="${w.toFixed(2)}" fill="none" opacity="${(.18 + R() * .16).toFixed(2)}" stroke-linecap="round"/>`
+        + `<path d="M${a[0].toFixed(1)} ${(a[1] + w * 1.6).toFixed(1)}Q${m[0].toFixed(1)} ${(m[1] + w * 1.6).toFixed(1)} ${b[0].toFixed(1)} ${(b[1] + w * 1.6).toFixed(1)}" stroke="#16323f" stroke-width="${(w * 1.3).toFixed(2)}" fill="none" opacity="${(.14 + R() * .1).toFixed(2)}" stroke-linecap="round"/>`;
+    }
+  }
+  return out;
+}
+/** The foam lip along the top of the swell where the crest shows against the far sea and the sky. */
+function lip(u, L) {
+  let out = '';
+  for (const [x, y, w, sd] of [[18, 149, 12, 51], [29, 142.5, 11, 52], [39, 134, 10, 53], [47, 124, 9, 54], [54, 115, 9, 55], [146, 106.5, 10, 56], [154, 113.5, 10, 57], [162, 122, 11, 58], [171, 132.5, 12, 59], [183, 141.5, 13, 60], [196, 149, 12, 61]])
+    out += K.foam(u, { x, y, w, h: 1.7, L, seed: sd });
+  return out;
+}
+/** Wet glints on the cask's upper right (the sun is over our right shoulder): short dabs stretched down the staves. */
+function wet(u, L) {
+  const sp = L.ramp('water-wet', 118, 86).spec; let out = '';
+  for (const [x, y, l, w, o] of [[112, 82, 3.4, .55, .7], [117, 83.5, 2.6, .45, .55], [107, 81, 2.2, .4, .45], [122, 86, 3, .5, .6], [114, 88.5, 1.8, .35, .4]])
+    out += `<path d="M${x} ${y}q.4 ${(l / 2).toFixed(1)} 0 ${l}" stroke="${sp}" stroke-width="${w}" stroke-linecap="round" fill="none" opacity="${o}"/>`;
+  return out;
+}
+
 function farCask(u, L, x, y, s, seed, rot) {
   return K.barrel(u, L, { x, y, s, kind: 'rum', lying: true, rot, ell: .4, seed, contact: false }) + K.foam(u, { x, y: y - .6, w: 30 * s * 1.05, h: .7, L, seed: seed + 30 });
 }
@@ -78,11 +109,12 @@ function farCask(u, L, x, y, s, seed, rot) {
 /** The tin mug on its cord: tied to the hoop of the cask, floating beside it. */
 function mugOnCord(u, L) {
   // a plain tin mug (KIT-CANDIDATE: the kit's mug is a cooper's one): a tinned cylinder, rolled rim, a strap handle
-  const b = [55, 127], t = [58, 115], r = 4.4;
-  let s = K.rope(u, L, [[75, 101], [69, 105], [64, 110], [61.5, 116]], { r: .45, seed: 3 });
-  s += K.propTube(u, L, 'iron', `M${t[0] + 3.6} ${t[1] + 1.5}C${t[0] + 9} ${t[1] + 1} ${b[0] + 9} ${b[1] - 3} ${b[0] + 3.8} ${b[1] - 3.5}`, .7, [t[0] + 7, t[1] + 5]);
-  s += K.shadeCyl(u, b[0], b[1], t[0], t[1], r, L, 'iron', { ell: .42, face: 2, r1: r * .94 });
-  s += K.foam(u, { x: 55.5, y: 124.5, w: 13, h: 1.3, L, seed: 9 });
+  const b = [62, 122], t = [63.5, 110.5], r = 4.8;
+  let s = K.shadeCyl(u, b[0], b[1], t[0], t[1], r, L, 'iron', { ell: .42, face: 2, r1: r * .94 });
+  // the strap handle on the cask's side, the cord from it up to the first hoop of the cask
+  s += K.propTube(u, L, 'iron', `M${t[0] + 4.4} ${t[1] + 2}C${t[0] + 10} ${t[1] + 2.4} ${b[0] + 10.4} ${b[1] - 4.6} ${b[0] + 4.6} ${b[1] - 4}`, .8, [t[0] + 8, t[1] + 5]);
+  s += K.rope(u, L, [[72, 114], [73.5, 110], [74.5, 106], [76, 102]], { r: .5, seed: 3 });
+  s += K.foam(u, { x: 62.5, y: 120.4, w: 14, h: 1.5, L, seed: 9 });
   return s;
 }
 
