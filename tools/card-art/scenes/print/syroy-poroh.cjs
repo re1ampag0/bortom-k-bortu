@@ -21,10 +21,11 @@ const light = { time: 'night', key: { type: 'point', x: WIN.x, y: WIN.y, h: 1.2,
 const skel = { horizon: VY, eye: 1.2, light: 'the lantern behind the light-room window (99, 60) in the far bulkhead; cold grey from the scuttle top left',
   items: [
     ['far bulkhead + window', 50, 113, 101, 80, 'back wall, s .36'],
-    ['deckhead: beams, planks, the burst scuttle', 0, 33, 200, 33, 'ceiling'],
-    ['torrent', 44, 108, 40, 96, 'from the scuttle (s .45–.53) down onto the water'],
+    ['deckhead: beams, planks, the burst scuttle (ragged hole, lid hanging)', 0, 33, 200, 33, 'ceiling; hole x 36–85, y 9–22'],
+    ['torrent', 44, 108, 40, 96, 'from the hole (s .44–.55) down onto the water, curl of foam at the top'],
     ['shelf + 4 dry kegs', 138, 60, 70, 46, 'on knees on the right side, high over the water'],
     ['floating kegs (wet), one burst', 30, 132, 150, 40, 'on the water, s .5–.8'],
+    ['powder stains', 45, 104, 120, 26, 'black swirls on the water round the kegs, y 104–130'],
     ['black mush', 40, 160, 150, 60, 'on the water, from the burst keg towards us'],
   ] };
 
@@ -75,6 +76,23 @@ function mush(u, cx, cy, rx, ry, seed, o = {}) {
   return out;
 }
 
+// the powder dissolving in the water round the kegs: a muddy brown cloud, black swirling streaks with brown-grey rims
+// where they thin (black on black water reads only by its rim), lumps strung along them, the lantern's glints
+function stain(u, cx, cy, rx, ry, seed) {
+  const R = rng(seed), hb = nid('sh', u), sb = nid('ss', u);
+  let out = `<defs>${blur(hb, Math.max(1, ry * .5))}${blur(sb, .35)}</defs><ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(rx * 1.25)}" ry="${f(ry * 1.4)}" fill="#6e583c" opacity=".42" filter="url(#${hb})"/>`;
+  let rim = '', core = '', lumps = '';
+  for (let i = 0; i < 6; i++) { const a0 = R() * Math.PI * 2, sw = 1.4 + R() * 1.6, dir = R() < .5 ? -1 : 1, pts = [];
+    for (let k = 0; k <= 8; k++) { const t = k / 8, a = a0 + dir * sw * t, r = .25 + t * (.75 + R() * .25); pts.push([cx + Math.cos(a) * rx * r, cy + Math.sin(a) * ry * r]); }
+    const d = smooth(pts, false), w = ry * (.32 + R() * .3);
+    rim += `<path d="${d}" stroke-width="${f(w * 1.9)}"/>`; core += `<path d="${d}" stroke-width="${f(w)}"/>`;
+    for (let k = 1; k < 8; k += 2) if (R() < .7) { const q = w * (.5 + R() * .5); lumps += `<ellipse cx="${f(pts[k][0])}" cy="${f(pts[k][1])}" rx="${f(q * 1.3)}" ry="${f(q * .8)}"/>`; } }
+  out += `<g fill="none" stroke-linecap="round" filter="url(#${sb})"><g stroke="#8c7456" opacity=".55">${rim}</g><g stroke="#050404" opacity=".95">${core}</g></g><g fill="#0a0807">${lumps}</g>`;
+  for (let i = 0; i < 4; i++) { const x = cx + (R() - .5) * rx * 1.2, y = cy + (R() - .5) * ry, l = 1 + R() * 1.6;
+    out += `<path d="M${f(x - l)} ${f(y)}q${f(l)} -.4 ${f(l * 2)} 0" stroke="#ffcf8a" stroke-width=".4" fill="none" opacity="${f(.45 + R() * .35)}"/>`; }
+  return out;
+}
+
 module.exports = { name: 'Сырой порох', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VY, eye: 1.2 });
@@ -102,13 +120,23 @@ module.exports = { name: 'Сырой порох', kind: 'sea', status: 'draft', 
     { const w = woodLit(u, 130, WIN.y + 20); bg += `<defs>${w.defs}</defs><path d="${poly([cB[0], cB[1], cF[1], cF[0]])}" fill="url(#${w.id})"/>`;
       for (let X = XL + 16; X < XR; X += 17) { const a = P(X, YC, SB), b = P(X, YC, .9); bg += `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#0b0705" stroke-width=".6" opacity=".75"/>`; } }
     // the scuttle: its coaming broken open, the grey storm light and the sea coming through
-    const hs0 = .45, hs1 = .53, hX0 = -104, hX1 = -44;
+    const hs0 = .44, hs1 = .55, hX0 = -112, hX1 = -30;
     const h00 = P(hX0, YC, hs0), h10 = P(hX1, YC, hs0), h11 = P(hX1, YC, hs1), h01 = P(hX0, YC, hs1);
-    { const g = nid('hg', u);
-      bg += `<defs>${linGrad(g, 0, h01[1], 0, h00[1], [[0, '#9fb3b6'], [1, '#5f7a80']])}</defs><path d="${poly([h00, h10, h11, h01])}" fill="url(#${g})"/>`
-        // the coaming's inner faces, the near one lit grey, a broken board hanging down
-        + `<path d="${poly([h00, h10, [h10[0], h10[1] + 3], [h00[0], h00[1] + 3]])}" fill="#2a1d14"/>`
-        + `<path d="M${f(h10[0] - 3)} ${f(h10[1] + 2)}l4 13l2.2 -.6l-3.4 -12.6Z" fill="#5a3a22"/><path d="M${f(h10[0] - 3)} ${f(h10[1] + 2)}l4 13" stroke="#a8bcbf" stroke-width=".4" opacity=".7"/>`; }
+    { const g = nid('hg', u), Rh = rng(57), jag = [];
+      // the hole torn through the deckhead: broken plank ends along the near and far edges (the planks run to the VP)
+      for (let i = 0; i <= 9; i++) { const t = i / 9; jag.push([lerp(h01[0], h11[0], t) + (Rh() - .5) * 1.2, h01[1] + (i % 2 ? 2.4 : -.3) + Rh() * 1.2]); }
+      jag.push([lerp(h11[0], h10[0], .5) - .8, lerp(h11[1], h10[1], .5)]);
+      for (let i = 0; i <= 9; i++) { const t = i / 9; jag.push([lerp(h10[0], h00[0], t) + (Rh() - .5) * 1.2, h10[1] - (i % 2 ? 2.6 : 0) - Rh() * 1]); }
+      jag.push([lerp(h00[0], h01[0], .5) + 1, lerp(h00[1], h01[1], .5)]);
+      // the inner faces of the broken deck (its thickness), dark, a little below the hole's edge
+      bg += `<path d="${poly(jag.map(([x, y]) => [x, y + 1.6]))}" fill="#1c130c"/>`
+      // the storm through it: grey sky, rain slanting, a green sea cresting over the far edge
+        + `<defs>${linGrad(g, 0, h01[1], 0, h00[1], [[0, '#b6c6c8'], [1, '#6c858b']])}</defs><path d="${poly(jag)}" fill="url(#${g})"/>`
+        + `<path d="M${f(h00[0] - 2)} ${f(h00[1] - 1)}Q${f(h00[0] + 10)} ${f(h00[1] - 9)} ${f(h00[0] + 24)} ${f(h00[1] - 3)}L${f(h00[0] + 22)} ${f(h00[1] + .5)}L${f(h00[0] - 2)} ${f(h00[1] + .5)}Z" fill="#3e6a62" opacity=".9"/>`
+        + `<path d="M${f(h00[0])} ${f(h00[1] - 3)}Q${f(h00[0] + 10)} ${f(h00[1] - 9.5)} ${f(h00[0] + 22)} ${f(h00[1] - 3.6)}" stroke="#e8f2ec" stroke-width="1" fill="none" opacity=".8"/>`
+        + `<g stroke="#dfe9ea" stroke-width=".3" opacity=".45">` + Array.from({ length: 9 }, (_, i) => { const x = 58 + i * 3 + Rh() * 2, y = 10.5 + Rh() * 6; return `<path d="M${f(x)} ${f(y)}l-1.2 4"/>`; }).join('') + '</g>'
+        // the lit splintered ends of the planks round the hole
+        + `<path d="M${jag.map(p => p.map(f).join(' ')).join('L')}Z" stroke="#a8784c" stroke-width=".5" fill="none" opacity=".75"/>`; }
     // the beams: a near face and the underside, lit from the window below and behind
     for (const s of [.41, .6, .8]) {
       const t = .028, d = 9;
@@ -137,7 +165,7 @@ module.exports = { name: 'Сырой порох', kind: 'sea', status: 'draft', 
     bg += side(XL, -1) + side(XR, 1);
 
     // ——— the shelf high on the right side, on two knees, with the dry kegs standing on it
-    { const Xs = 98, Ys = -36, s0 = .42, s1 = 1.1, th = 4;
+    { const Xs = 74, Ys = -36, s0 = .42, s1 = 1.1, th = 4;
       const t0 = P(Xs, Ys, s0), t1 = P(Xs, Ys, s1), w0 = P(XR, Ys, s0), w1 = P(XR, Ys, s1), e0 = P(Xs, Ys + th, s0), e1 = P(Xs, Ys + th, s1);
       bg += `<path d="${poly([t0, w0, w1, t1])}" fill="#7a4c28"/><path d="${poly([t0, t1, e1, e0])}" fill="#3a2414"/><path d="M${f(t0[0])} ${f(t0[1])}L${f(t1[0])} ${f(t1[1])}" stroke="#e0a060" stroke-width=".55" opacity=".8"/>`;
       // the knees under it
@@ -146,7 +174,7 @@ module.exports = { name: 'Сырой порох', kind: 'sea', status: 'draft', 
       const r0 = P(Xs + 2, Ys - 10, s0), r1 = P(Xs + 2, Ys - 10, s1);
       // the dry kegs: tarred, warm-lit on the side towards the window, standing, far ones first
       for (const [s, seed] of [[.46, 3], [.56, 5], [.68, 7], [.83, 9]]) {
-        const [x, y] = P(Xs + 22, Ys, s + .015);
+        const [x, y] = P(Xs + 18, Ys, s + .015);
         bg += K.contactShadow(u, x, y, 26 * s, L) + K.barrel(u, L, { x, y, s: s * 1.42, kind: 'powder', seed });
       }
       bg += `<path d="M${f(r0[0])} ${f(r0[1])}L${f(r1[0])} ${f(r1[1])}" stroke="#5a3820" stroke-width="1.3"/>`;
@@ -180,9 +208,9 @@ module.exports = { name: 'Сырой порох', kind: 'sea', status: 'draft', 
     // right edge by the window; it bursts on the water in foam and throws spray up the side
     { const foot = yW(.5), Rt = rng(31);
       const edge = (t, side) => { // t 0..1 down the fall; side -1 left edge, 1 right edge
-        const y = lerp(h01[1] + 1, foot - 1, t), cx = lerp(58, 74, Math.pow(t, 1.6)), hw = lerp(13, 22, Math.pow(t, 1.3));
-        return [cx + side * hw + Math.sin(t * 13 + side * 2) * 1.6 * t + (Rt() - .5) * 1.4 * t, y]; };
-      const lft = [], rgt = []; for (let i = 0; i <= 12; i++) { lft.push(edge(i / 12, -1)); rgt.unshift(edge(i / 12, 1)); }
+        const y = lerp(14, foot - 1, t), cx = lerp(53, 74, Math.pow(t, 1.6)), hw = lerp(8, 22, Math.pow(t, 1.1));
+        return [cx + side * hw + Math.sin(t * 13 + side * 2) * 1.6 * t + Math.sin(t * 31 + side * 5) * (.5 + 1.1 * t), y]; };
+      const lft = [], rgt = []; for (let i = 0; i <= 20; i++) { const j = (Rt() - .5) * 2.4 * (i / 20); lft.push(edge(i / 20, -1).map((v, k) => k ? v : v - Math.abs(j))); rgt.unshift(edge(i / 20, 1).map((v, k) => k ? v : v + Math.abs(j))); }
       const body = lft.concat(rgt);
       const g = nid('tg', u), gx = nid('tx', u), b = nid('tb', u), b2 = nid('tb', u);
       bg += `<defs>${linGrad(g, 0, 10, 0, foot, [[0, '#7d9c96'], [.3, '#3f6560'], [.75, '#2c4f4b'], [1, '#9db8b0']])}${linGrad(gx, 40, 0, 98, 0, [[0, '#071010', .5], [.4, '#071010', 0], [.78, '#ffb24a', .1], [1, '#ffcf8a', .6]])}${blur(b, .45)}${blur(b2, 1.6)}</defs>`
@@ -193,8 +221,15 @@ module.exports = { name: 'Сырой порох', kind: 'sea', status: 'draft', 
         const a = pt(t0), m = pt((t0 + t1) / 2), c = pt(t1), white = Rt() < .55;
         st += `<path d="M${f(a[0])} ${f(a[1])}Q${f(m[0])} ${f(m[1])} ${f(c[0])} ${f(c[1])}" stroke="${white ? '#eef6f0' : '#183532'}" stroke-width="${f(white ? .5 + Rt() * 1.6 : .6 + Rt() * 1.2)}" fill="none" stroke-linecap="round" opacity="${f(white ? .45 + Rt() * .45 : .5)}"/>`; }
       bg += `<g filter="url(#${b})">${st}</g>`;
-      // the coaming's lip where it pours over: a thick white roll
-      bg += `<path d="M${f(h01[0] + 1)} ${f(h01[1] + 2)}Q${f((h01[0] + h11[0]) / 2)} ${f(h01[1] - 2)} ${f(h11[0] - 1)} ${f(h11[1] + 2)}" stroke="#f2f8f2" stroke-width="3.2" fill="none" stroke-linecap="round" opacity=".85" filter="url(#${b})"/>`;
+      // the torn white fringe of both edges: tatters flung off sideways, finer drops beyond them
+      { let fr = ''; for (let i = 0; i < 46; i++) { const t = .04 + Rt() * .92, sd = Rt() < .5 ? -1 : 1, p = edge(t, sd), o = sd * (.4 + Rt() * 2.6 * (.4 + t)), q = .5 + Rt() * 1.3 * (.5 + t);
+          fr += `<ellipse cx="${f(p[0] + o)}" cy="${f(p[1])}" rx="${f(q * .7)}" ry="${f(q * 1.6)}" transform="rotate(${f(sd * (20 + Rt() * 30))} ${f(p[0] + o)} ${f(p[1])})" opacity="${f(.45 + Rt() * .45)}"/>`;
+          if (Rt() < .6) fr += `<circle cx="${f(p[0] + o * 2.4 + sd * 2)}" cy="${f(p[1] + Rt() * 3)}" r="${f(.25 + Rt() * .4)}" opacity="${f(.5 + Rt() * .4)}"/>`; }
+        bg += `<g fill="#eef6f0" filter="url(#${b})">${fr}</g>`; }
+      // where it pours in at the hole: a curl of foam rolling over itself
+      bg += `<g fill="none" stroke-linecap="round" filter="url(#${b})"><path d="M43 21C41 12 53 8.6 58.6 12.6C62.4 15.4 59.4 20.4 55.6 19C53 18 53.8 15.2 56 15.6" stroke="#1e3a36" stroke-width="3.6" opacity=".5" transform="translate(.8 1)"/>`
+        + `<path d="M43 21C41 12 53 8.6 58.6 12.6C62.4 15.4 59.4 20.4 55.6 19C53 18 53.8 15.2 56 15.6" stroke="#f4faf4" stroke-width="2.6" opacity=".95"/>`
+        + `<path d="M46 23.6C45 16 52 12.6 56.4 14.4" stroke="#cfe2da" stroke-width="1.2" opacity=".8"/><path d="M60.6 14.8C63.4 18.4 62 22 59 23.4" stroke="#eef6f0" stroke-width="1.4" opacity=".75"/></g>`;
       // spray flung off the left edge and up the side, drops in flight
       bg += `<g filter="url(#${b2})" fill="#dfeee8"><ellipse cx="40" cy="${f(foot - 12)}" rx="12" ry="9" opacity=".5"/><ellipse cx="92" cy="${f(foot - 8)}" rx="10" ry="6" opacity=".45"/><ellipse cx="66" cy="${f(foot - 4)}" rx="28" ry="7" opacity=".55"/></g>`;
       for (let i = 0; i < 40; i++) { const a = Math.PI * (1.05 + Rt() * .9), r = 8 + Rt() * 30, x = 70 + Math.cos(a) * r * 1.3, y = foot - 4 + Math.sin(a) * r * .8, q = .3 + Rt() * .8;
@@ -202,10 +237,22 @@ module.exports = { name: 'Сырой порох', kind: 'sea', status: 'draft', 
       bg += K.splash(u, { x: 70, y: foot, w: 56, h: 24, seed: 3, L, wind: 1 }) + K.foam(u, { x: 72, y: foot + 1, w: 66, h: 3.4, seed: 7, L });
       // rings of churned water spreading over the room from the foot
       for (const [rx, o] of [[44, .4], [62, .26], [84, .16]]) bg += `<ellipse cx="72" cy="${f(foot + 3)}" rx="${rx}" ry="${f(rx * .13)}" fill="none" stroke="#d6e6dc" stroke-width=".8" opacity="${o}"/>`;
+      // broken planks hanging from the hole's edge, and the hatch lid torn open, hanging from its hinge on the right
+      { const lid = [h11, h10, [h10[0] + .6, h10[1] + 24 * hs0], [h11[0] + .8, h11[1] + 24 * hs1]], lg = nid('lg', u);
+        bg += `<defs>${linGrad(lg, h11[0], 0, h11[0] + 4, 0, [[0, '#7d8e90'], [.35, '#4a3422'], [1, '#2a1a10']])}</defs><path d="${poly(lid)}" fill="url(#${lg})"/>`
+          + `<path d="M${f(lid[0][0])} ${f(lid[0][1])}L${f(lid[3][0])} ${f(lid[3][1])}" stroke="#b9c8c8" stroke-width=".5" opacity=".7"/>`
+          + [.3, .7].map(t => `<path d="M${f(lerp(lid[0][0], lid[1][0], t))} ${f(lerp(lid[0][1], lid[1][1], t))}L${f(lerp(lid[3][0], lid[2][0], t))} ${f(lerp(lid[3][1], lid[2][1], t))}" stroke="#141010" stroke-width=".7" opacity=".8"/>`).join('')
+          + `<path d="${poly([lid[3], lid[2], [lid[2][0] - .4, lid[2][1] + 1.2], [lid[3][0] - .5, lid[3][1] + 1.4]])}" fill="#120c08"/>`;
+        for (const [x, y, dx, dy, w] of [[39, 10, -3.4, 15, 2.6], [73.6, 11, 3, 13, 2.2], [66.6, 11.6, 1.4, 7, 1.8]]) {
+          const n = [-dy, dx], l = Math.hypot(...n), o = [n[0] / l * w / 2, n[1] / l * w / 2], tip = [x + dx, y + dy];
+          bg += `<path d="${poly([[x - o[0], y - o[1]], [x + o[0], y + o[1]], [tip[0] + o[0] * .6, tip[1] + o[1] * .6 + .8], [tip[0], tip[1] - .6], [tip[0] - o[0], tip[1] - o[1] + 1.2]])}" fill="#4a3020"/>`
+            + `<path d="M${f(x - o[0])} ${f(y - o[1])}L${f(tip[0] - o[0])} ${f(tip[1] - o[1] + 1.2)}" stroke="#a9bcbd" stroke-width=".4" opacity=".7"/>`; } }
       // the grey of the storm through the scuttle: a cold veil, not a second light
       const cv = nid('cv', u);
       bg += `<defs>${linGrad(cv, 0, h01[1], 0, foot, [[0, '#b8cfd2', .16], [1, '#b8cfd2', 0]])}</defs><path d="${poly([h01, h11, [h11[0] + 26, foot], [h01[0] - 14, foot]])}" fill="url(#${cv})"/>`; }
 
+    // ——— the powder leaving the kegs: black swirls and runs in the water round them (above the glass)
+    bg += stain(u, 104, 122, 30, 5.6, 41) + stain(u, 130, 108.5, 14, 3, 43) + stain(u, 150, 125, 15, 3.4, 45) + stain(u, 62, 126, 17, 3.6, 47);
     // ——— the kegs in front of the torrent: one wallowing, one burst with its powder pouring out as black mush
     bg += floating(u, L, { x: 160, wy: yW(.66), s: .8, seed: 13, rot: 10 }, `url(#${wFill})`);
     bg += mush(u, 84, yW(.72) + 3, 26, 5.5, 8, { lean: .3 }) + mush(u, 60, yW(.66) + 2, 9, 2.4, 12);
