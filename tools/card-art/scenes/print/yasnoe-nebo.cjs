@@ -11,10 +11,10 @@ const { f, mix, clamp, lerp, rng, nid, linGrad, radGrad } = K;
 const HZ = 118, WL = 127;          // horizon (our eye, kneeling at the gun); the brig's waterline
 const SIDE = 84;                   // our side seen edge-on: the post's middle x
 const SUN = { x: 126, y: 24 };     // high in the clear sky, between the brig's masts and the price corner
-const AIM = [170, 121.6];          // the brig's midship port the shot flies into
+const AIM = [163, 121.6];          // the brig's midship port the shot flies into
 const light = { time: 'day', haze: .03, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#fffbea', power: 1 }, fill: { color: '#5d9be0', power: .6 } };
 const GUN = { x: 46, y: 133, s: 1.28, turn: .1, elev: -.6, recoil: .35, sideX: 33, seed: 7 };
-const BRIG = { kind: 'brig', x: 172, y: WL, scale: .9, flip: true, sails: 'reefed', detail: 'near', reflect: true, seed: 21 };
+const BRIG = { kind: 'brig', x: 165, y: WL, scale: .84, flip: true, sails: 'reefed', detail: 'near', reflect: true, seed: 21 };
 const skel = { horizon: HZ, eye: 1, light: 'the sun high in front of us over the brig: short shadows towards us and to the left, the glitter path under it; the barrel and the post lit along their tops',
   items: [
     ['gun', 6, GUN.y, 88, 42, 'stands on our deck, the muzzle through the port in the post'],
@@ -37,11 +37,11 @@ module.exports = { name: 'Ясное небо', kind: 'sea', status: 'draft', ca
     // ——— our deck, left of the side: planks running away to the bow, the sky over them through our rigging
     let fg = ourDeck(u, L);
     fg += shrouds(u, L);
-    fg += post(u, L);
     // things on the deck, far to near: the gun, the linstock in its tub, the shot
+    fg += post(u, L);
     fg += K.castShadow(u, L, { x: GUN.x + 6, y: GUN.y, w: 30 * GUN.s, h: 21 * GUN.s, horizon: HZ, d: .5 }) + K.cannon(u, L, GUN);
     // the shot: smoke out of the port rolling towards the brig, the ball half way, dead on its side
-    const m = K.cannon.muzzle(GUN), ball = [lerp(m.x, AIM[0], .5), lerp(m.y, AIM[1], .5)];
+    const m = K.cannon.muzzle(GUN), ball = [lerp(m.x, AIM[0], .38), lerp(m.y, AIM[1], .38)];
     fg += gunSmoke(u, L, m);
     fg += shotTrail(u, L, [m.x + 16, m.y + .8], ball) + K.shadeSphere(u, ball[0], ball[1], 2, L, 'iron', { outline: .4 });
     fg += linstock(u, L, 14, 198);
@@ -90,20 +90,20 @@ function shrouds(u, L) {
   return s;
 }
 
-/** Our side seen edge-on: the rail cap at the top, the port the gun points through, the planking down to the bottom. */
+/** Our side seen edge-on: the cap rail at the top, the planking down to the bottom; the gun stands at it with the
+ *  muzzle run out past the side (the port is turned edge-on and hidden by the barrel). */
 function post(u, L) {
-  const x0 = SIDE - 6, x1 = SIDE + 6, top = 88, pt = 103, pb = 122;
+  const x0 = SIDE - 6, x1 = SIDE + 6, top = 88;
   const faces = [
-    { pts: [[x0, top], [x1, top], [x1 + .4, pt], [x0 - .4, pt]], n: 'left', kind: 'oak', grain: [0, 1] },
-    { pts: [[x0 - .4, pb], [x1 + .4, pb], [x1 + 1.2, 292], [x0 - 1.2, 292]], n: 'left', kind: 'oak', grain: [0, 1] },
+    { pts: [[x0, top], [x1, top], [x1 + 1.2, 292], [x0 - 1.2, 292]], n: 'left', kind: 'oak', grain: [0, 1] },
     // the cap rail: its top catches the high sun
     { pts: [[x0 - 1.6, top - 2.4], [x1 + 1.6, top - 2.4], [x1 + 1.6, top], [x0 - 1.6, top]], n: 'top', kind: 'oak', grain: [1, 0] },
-    // the sill of the port: lit from the sun beyond it
-    { pts: [[x0 - .4, pb - 1.6], [x1 + .4, pb - 1.6], [x1 + .4, pb], [x0 - .4, pb]], n: 'top', kind: 'oak', grain: [1, 0] },
   ];
   let s = K.shadeBox(u, faces, L, 'oak', { seed: 17, outline: .5 });
   // the outer planking's edge: a dark strip of tarred wales on the sea side
-  s += `<path d="M${f(x1 - 1.6)} ${pb}L${f(x1 + 1.2)} ${pb}L${f(x1 + 2.2)} 292L${f(x1 - .6)} 292Z" fill="${L.tone('tar', -.2, x1, 200)}"/>`;
+  s += `<path d="M${f(x1 - 1.8)} ${top}L${f(x1)} ${top}L${f(x1 + 1.2)} 292L${f(x1 - .6)} 292Z" fill="${L.tone('tar', -.2, x1, 200)}"/>`;
+  // the port's sill and lintel seen edge-on: the cut of the planking above and below the barrel
+  s += `<path d="M${f(x0 - .4)} 102.6L${f(x1 + .4)} 102.6M${f(x0 - .6)} 123.6L${f(x1 + .6)} 123.6" stroke="${L.ramp('oak', x0, 110).outline}" stroke-width=".7"/><path d="M${f(x0)} 103.2L${f(x1)} 103.2L${f(x1)} 123L${f(x0)} 123Z" fill="${L.shadowTint}" opacity=".55"/>`;
   for (const y of [140, 176, 214, 252]) s += `<path d="M${f(x0 - .8)} ${y}L${f(x1 + 1.4)} ${y + .4}" stroke="${L.ramp('oak', x0, y).outline}" stroke-width=".5" opacity=".6"/>`;
   return s;
 }

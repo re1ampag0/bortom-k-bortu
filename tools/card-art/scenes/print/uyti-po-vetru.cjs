@@ -11,8 +11,7 @@ const { f, mix, nid, linGrad, radGrad, rng } = K;
 const HZ = 110, WL = 124;   // horizon; the Pearl's waterline
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: 122, y: 54, el: 20, color: '#c8d8f6', power: .8 }, fill: { color: '#3d5680', power: .4 },
   rim: { az: 14, color: '#bfe0ff', power: .6 }, locals: [{ x: 183, y: 109, color: '#ffc070', power: .6, radius: 18 }] };
-const SHIP = { kind: 'pearl', x: 98, y: WL + 4.5, scale: .9, heel: 0, sails: 'full', wake: false, lights: true, seed: 4 };
-const HEEL = -5;   // she drives her bow down before the wind, the masts lean ahead (the group turns round her waterline)
+const SHIP = { kind: 'pearl', x: 98, y: WL, scale: .9, heel: -3, sails: 'full', wake: true, lights: true, seed: 4 };   // roll (heel towards us) — when kit/ship.cjs has it
 const skel = { horizon: HZ, eye: 4, items: [['pearl', 30, WL, 124, 94, 'water'], ['chaser', 176, 111, 24, 18, 'water'],
   ['splash', 164, 127, 13, 24, 'water (astern)'], ['splash2', 182, 131, 9, 11, 'water'], ['splash3', 168, 138, 8, 9, 'water']] };
 
@@ -70,11 +69,16 @@ module.exports = { name: 'Уйти по ветру', kind: 'deck', status: 'draf
         + `<path d="${d}" fill="url(#${g})"/>` + `<path d="M${top.map(p => f(p[0]) + ' ' + f(p[1] + .4)).join('L')}" stroke="${mix(lit, '#ffffff', .4)}" stroke-width=".7" fill="none" opacity=".6"/>`;
       for (let x = -4; x < 206; x += 12 + R() * 16) bg += K.foam(u, { x, y: crest(x) + .6, w: 8 + R() * 14, h: 1.2 + R() * .8, seed: 80 + Math.round(x), L });
       for (let i = 0; i < 40; i++) { const x = R() * 200, y = crest(x) - 1 - R() * 7; bg += `<circle cx="${f(x - R() * 6)}" cy="${f(y)}" r="${f(.25 + R() * .55)}" fill="#e8f2ff" opacity="${f(.3 + R() * .45)}"/>`; }
+      // a nearer crest at the bottom: a lit back, foam along it, spray torn off to the left
+      { const c2 = x => 258 - 6 * Math.sin((x + 90) / 60) - 2.4 * Math.sin(x / 17), g3 = nid('sw', u), pts = Array.from({ length: 23 }, (_, i) => [-10 + i * 10, c2(-10 + i * 10)]);
+        bg += `<defs>${linGrad(g3, 0, 246, 0, 292, [[0, lit, .85], [.2, L.pal.sea[2], .9], [1, dark, 1]])}</defs><path d="M${pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}L210 292L-10 292Z" fill="url(#${g3})"/>`
+          + `<path d="M${pts.map(p => f(p[0]) + ' ' + f(p[1] + .4)).join('L')}" stroke="${mix(lit, '#ffffff', .4)}" stroke-width=".8" fill="none" opacity=".55"/>`;
+        for (let x = -6; x < 206; x += 10 + R() * 14) bg += K.foam(u, { x, y: c2(x) + .7, w: 10 + R() * 16, h: 1.5 + R() * 1, seed: 300 + Math.round(x), L });
+        for (let i = 0; i < 46; i++) { const x = R() * 200, y = c2(x) - 1 - R() * 9; bg += `<circle cx="${f(x - R() * 8)}" cy="${f(y)}" r="${f(.3 + R() * .7)}" fill="#e8f2ff" opacity="${f(.3 + R() * .45)}"/>`; } }
       // the wake running back from her towards us on the right, over the swell
-      for (let t = 0; t < 1; t += .1 + R() * .08) bg += K.foam(u, { x: 158 + t * 46, y: WL + 6 + t * 70, w: 4 + t * 10, h: .6 + t * .8, seed: 120 + Math.round(t * 100), L }); }
-    // the ship, turned round her waterline (bow down, masts ahead) and cut at the water again; foam along her side
-    { const cl = nid('hc', u); bg += `<defs><clipPath id="${cl}"><rect x="-20" y="-20" width="240" height="${WL + 20.6}"/></clipPath></defs><g clip-path="url(#${cl})"><g transform="rotate(${HEEL} ${SHIP.x} ${WL})">${K.ship(u, L, SHIP)}${pennant(u, L, 100.4, 34.6, 52)}</g></g>`; }
-    { const R = rng(71); for (let x = 46; x < 150; x += 7 + R() * 9) bg += K.foam(u, { x, y: WL + .4 + R() * .6, w: 6 + R() * 8, h: .9 + R() * .6, seed: 200 + Math.round(x), L }); }
+      for (let t = 0; t < 1; t += .06 + R() * .05) bg += K.foam(u, { x: 156 + t * 50 + (R() - .5) * 4, y: WL + 6 + t * 74, w: 4 + t * 12, h: .6 + t * .9, seed: 120 + Math.round(t * 100), L });
+      for (let t = 0; t < 1; t += .07 + R() * .06) bg += K.foam(u, { x: 150 + t * 20 + (R() - .5) * 3, y: WL + 8 + t * 80, w: 3 + t * 10, h: .5 + t * .8, seed: 160 + Math.round(t * 100), L }); }
+    bg += K.ship(u, L, SHIP) + pennant(u, L, 100.4, 30.4, 52);
     let fg = '';
     fg += K.splash(u, { x: 170, y: WL + 3, w: 11, h: 24, seed: 3, L, wind: -.3 }) + K.splash(u, { x: 186, y: WL + 7, w: 8, h: 11, seed: 4, L, wind: -.3 })
       + K.splash(u, { x: 172, y: WL + 14, w: 7, h: 9, seed: 5, L, wind: -.3 });

@@ -1,5 +1,5 @@
 // «Попутный ветер» (Колода моря): a fresh, bright morning with a strong even wind from the left. Two merchantmen of
-// one side run before it under all sail, heeled and pitching, bow spray flying, long pennants straight out ahead;
+// one side run before it under all sail (the roll will come from the kit's `roll`), bow spray flying, long pennants straight out ahead;
 // they have just changed places — the near one came up from the far line, the far one from the near — and their
 // wakes cross behind them on the water. Cloud rows and high mares' tails are combed the same way, whitecaps on the
 // low waves, spindrift torn off downwind. Card: changing places (Перестроение) is free for both teams this round.
@@ -11,11 +11,11 @@ const { f, mix, clamp, lerp, rng, nid, linGrad, radGrad } = K;
 const HZ = 116;                     // horizon
 const SUN = { x: 34, y: 90 };       // the low morning sun on the left, upwind, under the clouds
 const light = { time: 'day', haze: .12, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffdc9a', power: 1 }, fill: { color: '#8fc0e8', power: .5 } };
-const NEAR = { kind: 'merchant', x: 104, y: 134, scale: 1.14, flip: true, heel: 3, sails: 'full', detail: 'near', seed: 9 };
-const FAR = { kind: 'merchant', x: 178, y: 119.6, scale: .48, flip: true, heel: 2.5, sails: 'full', detail: 'mid', seed: 31 };
+const NEAR = { kind: 'merchant', x: 104, y: 134, scale: 1.14, flip: true, sails: 'full', detail: 'near', seed: 9 };
+const FAR = { kind: 'merchant', x: 168, y: 119.6, scale: .46, flip: true, sails: 'full', detail: 'mid', seed: 31 };
 const skel = { horizon: HZ, eye: 3, light: 'the low morning sun ahead on the left, upwind: sails glow through, bright edges towards it, shadows on the water towards us and to the right',
   items: [
-    ['near', 52, NEAR.y, 108, 92, 'on the water, heeled, running to the right'],
+    ['near', 52, NEAR.y, 108, 92, 'on the water, running to the right'],
     ['far', 150, FAR.y, 50, 42, 'on the water, ahead and further, running to the right'],
     ['wakes', -10, 150, 170, 34, 'on the water: the two wakes cross behind the ships'],
     ['spray', 136, 134, 22, 18, 'thrown up at the near ship\'s stem, carried to the right'],
@@ -28,7 +28,7 @@ module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'dr
     L.pal = Object.assign({}, L.pal, { sea: ['#86b6cc', '#3d6f88', '#16323f'], sky: ['#2f6cba', '#5b95d2', '#a6c9e6', '#f6dcb0'] });
     let bg = K.sky(u, L, { horizon: HZ });
     bg += maresTails(u, L);
-    bg += K.sunMoon(u, L, { r: 6.5 });
+    bg += K.sunMoon(u, L, { r: 7.5 });
     // cumulus rows driven to the right: long flat clouds, the near ones big and high, smaller towards the horizon
     for (const [x, y, w, h, sd, fr] of [[126, 46, 92, 20, 11, 0], [30, 36, 58, 13, 4, .05], [206, 60, 54, 12, 6, .15],
       [80, 82, 54, 10, 7, .35], [168, 92, 44, 8, 9, .45], [10, 96, 36, 6, 15, .6], [118, 106, 34, 5, 23, .8], [196, 108, 26, 4, 25, .85]])
@@ -110,8 +110,9 @@ function wake(u, L, pts, seed, k) {
   const top = [], bot = [];
   for (let i = 0; i < n; i++) { const a = pl[Math.max(0, i - 1)], b = pl[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], w = wd(i) * .5;
     top.push([pl[i][0], pl[i][1] - w * .5]); bot.push([pl[i][0], pl[i][1] + w]); }
-  const poly = top.concat(bot.reverse()).map(p => f(p[0]) + ' ' + f(p[1])).join('L');
-  let s = `<defs>${linGrad(id, pl[0][0], pl[0][1], pl[n - 1][0], pl[n - 1][1], [[0, c, .9], [.4, c, .6], [1, c, .22]])}<filter id="${bl}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation=".7"/></filter></defs><path d="M${poly}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
+  const sm = q => { let d = `M${f(q[0][0])} ${f(q[0][1])}`; for (let i = 1; i < q.length; i++) { const m = [(q[i - 1][0] + q[i][0]) / 2, (q[i - 1][1] + q[i][1]) / 2]; d += `Q${f(q[i - 1][0])} ${f(q[i - 1][1])} ${f(m[0])} ${f(m[1])}`; } return d; };
+  const poly = sm(top) + 'L' + sm(bot.reverse()).slice(1);
+  let s = `<defs>${linGrad(id, pl[0][0], pl[0][1], pl[n - 1][0], pl[n - 1][1], [[0, c, .9], [.4, c, .6], [1, c, .22]])}<filter id="${bl}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation=".7"/></filter></defs><path d="${poly}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
   for (let i = 1; i < n; i += 1 + Math.floor(R() * 2)) { const p = pl[i], w = wd(i), side = R() < .5 ? -1 : 1, fade = 1 - .7 * i / n;
     if (R() < .9) s += K.foam(u, { x: p[0] + (R() - .5) * 2, y: p[1] + side * w * .14, w: (1.6 + R() * 3) * w, h: Math.max(.25, .18 * w), seed: seed + i * 3, L }).replace('<g', `<g opacity="${f(fade)}"`); }
   return s;
