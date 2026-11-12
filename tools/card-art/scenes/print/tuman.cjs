@@ -42,8 +42,8 @@ module.exports = { name: 'Туман', kind: 'sea', status: 'draft', cam: { x: 0
     // ——— the ghost on the diagonal: far, in the glare, its colours almost the fog's
     // not a ship but its shadow: one grey tone, blurred, sinking into the white towards the sun
     { const b = nid('gs', u), b2 = nid('gs', u);
-      bg += `<defs>${blur(b, 1.5)}${blur(b2, 2.2)}</defs>`
-        + `<g filter="url(#${b})" opacity=".62">${K.shipSilhouette('brig', { x: 176, y: 114, scale: .8, flip: true, sails: 'reefed', seed: 4, color: '#7c878b', u })}</g>`
+      bg += `<defs>${blur(b, 1.25)}${blur(b2, 2.2)}</defs>`
+        + `<g filter="url(#${b})" opacity=".78">${K.shipSilhouette('brig', { x: 176, y: 114, scale: .8, flip: true, sails: 'reefed', seed: 4, color: '#7c878b', u })}</g>`
         // a third, fainter still, far off on the left diagonal
         + `<g filter="url(#${b2})" opacity=".3">${K.shipSilhouette('merchant', { x: 14, y: 112, scale: .52, sails: 'reefed', seed: 12, color: '#8a9496', u })}</g>`; }
     // the fog swallows the ghost: a thick white veil over the right, densest at the sun
@@ -53,7 +53,7 @@ module.exports = { name: 'Туман', kind: 'sea', status: 'draft', cam: { x: 0
         + `<g filter="url(#${b})" fill="${white}">`
         + [[160, 106, 40, 5, .45], [196, 84, 22, 8, .4], [20, 102, 36, 6, .35], [178, 117, 40, 4, .45]].map(([x, y, rx, ry, o]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" opacity="${o}"/>`).join('') + '</g>'; }
     // the ghost's stern lantern: a small warm smudge in the white, the one thing that says «a ship is there»
-    bg += K.localGlow(u, { x: 146, y: 99, color: '#ffb866', power: .8, radius: 14 }, { core: false })
+    bg += K.localGlow(u, { x: 146, y: 99, color: '#ffb866', power: .9, radius: 18 }, { core: false })
       + `<circle cx="146" cy="99" r="1.4" fill="#ffd59a" opacity=".95"/>`;
     // the sun's rays through the fog: pale wedges fanning down-left from the disc, behind the clear ship
     { const b = nid('rb', u); let rays = '';
