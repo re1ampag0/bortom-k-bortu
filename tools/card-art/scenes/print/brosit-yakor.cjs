@@ -2,8 +2,8 @@
 // (portrait-pearl.cjs SCENES['Бросить якорь']): a cut-away over and under the water in a shallow bay. The black ship
 // has let go her anchor at full way and swings round on it: the chain runs taut from the hawse down into the water
 // to the anchor biting into the sand (a furrow where it dragged, a cloud of silt); she heels in the turn, a bow wave
-// at her stem, the arc of her turn on the water behind her; the side that has come round fires at the enemy
-// standing off at an angle on the left (the smoke goes up beyond her, a shot falls by the enemy).
+// at her stem, the white arc of her turn round the chain on the water; the side that has come round fires at the enemy
+// standing off at an angle on the left (flashes at her ports, the smoke thrown towards the enemy, a shot falls by her).
 // The light: a late afternoon sun high on the right; under the water its shafts slant down to the left.
 'use strict';
 const K = require('../kit/index.cjs');
@@ -14,13 +14,15 @@ const light = { time: 'day', haze: .3, key: { type: 'sun', x: 166, y: 16, color:
 const SHIP = { kind: 'pearl', x: 126, y: WL, scale: .82, heel: 2, roll: 9, sails: 'reefed', wake: true, seed: 4 };
 const HAWSE = [83, 77], RING = [57, 104];                         // where the chain leaves the bow; the anchor's ring
 const ANC = { h: 46, rot: 44 };                                    // the anchor lies along the chain, the crown in the sand
+const PORTS = [[107.7, 80.4], [124.1, 79.8], [140.5, 79.2]];      // three ports of her near gun deck (pearl row at X -22, -2, 18)
 const skel = { horizon: HZ, eye: 3, items: [['pearl', 46, WL, 136, 83, 'water'], ['chain', 50, 112, 33, 35, 'hawse -> anchor (taut)'],
-  ['anchor', 0, 146, 56, 46, 'sand'], ['enemy', 14, 65, 22, 14, 'water (far)'], ['arc', 150, 86, 50, 18, 'water'], ['smoke', 96, 73, 50, 36, 'beyond her (far side)']] };
+  ['anchor', 0, 146, 56, 46, 'sand'], ['enemy', 14, 65, 22, 14, 'water (far)'], ['wake', 2, 86, 184, 20, 'water (round the chain)'], ['flashes', 94, 82, 50, 8, 'near ports'], ['smoke', 60, 82, 84, 26, 'ports -> enemy']] };
 
 module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     const R = rng(31);
+    const line2 = (d, w, c, op) => `<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" opacity="${op}" stroke-linecap="round"/>`;
     // ——— above the water: sky, clouds, a low green island far on the right, the bay
     let bg = K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L, { r: 7 });
     for (const [x, y, w, h, sd, fr] of [[40, 30, 56, 10, 4, .1], [120, 18, 40, 7, 9, .2], [188, 52, 34, 6, 6, .5], [76, 58, 44, 5, 13, .6]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
@@ -38,10 +40,10 @@ module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'dra
     // right and round behind her, comes out again beyond her bow and closes in towards the point where the chain
     // went in — she has spun on the spot round her anchor. Fresh and wide at the stern, older and thinner round the
     // far side; wider near us (perspective)
-    { const id = nid('ab', u), C = { x: 92, y: 79, rx: 90, ry: 12 }, th0 = .476, th1 = -3.56, N = 90, foamC = mix(L.pal.sea[0], '#ffffff', .82);
+    { const id = nid('ab', u), C = { x: 96, y: 79, rx: 96, ry: 11 }, th0 = .66, th1 = -3.6, N = 90, foamC = mix(L.pal.sea[0], '#ffffff', .82);
       const P = s => { const th = th0 + (th1 - th0) * s; return [C.x + C.rx * Math.cos(th), C.y + C.ry * Math.sin(th)]; };
       let halo = '', core = '', lip = '';
-      for (let i = 0; i < N; i++) { const s0 = i / N, s1 = (i + 1.2) / N, [x0, y0] = P(s0), [x1, y1] = P(s1), k = Math.max(0, (y0 - HZ) / (WL - HZ)), age = 1 - s0 * .45, w = (.5 + 4.6 * k) * age;
+      for (let i = 0; i < N; i++) { const s0 = i / N, s1 = (i + 1.2) / N, [x0, y0] = P(s0), [x1, y1] = P(s1), k = Math.max(0, (y0 - HZ) / (WL - HZ)), age = 1 - s0 * .45, w = (.7 + 5.2 * k) * age;
         halo += `<path d="M${f(x0)} ${f(y0)}L${f(x1)} ${f(y1)}" stroke-width="${f(w * 1.9)}"/>`; core += `<path d="M${f(x0)} ${f(y0)}L${f(x1)} ${f(y1)}" stroke-width="${f(w)}" opacity="${f(.55 + .4 * age)}"/>`;
         lip += `<path d="M${f(x0)} ${f(y0 + w * .42)}L${f(x1)} ${f(y1 + w * .42)}" stroke-width="${f(Math.max(.25, w * .18))}"/>`; }
       bg += `<defs><filter id="${id}" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="1.1"/></filter></defs>`
@@ -100,10 +102,22 @@ module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'dra
     { const sl = nid('sl', u); let d = `M0 ${WL}`; for (let x = 0; x <= 200; x += 10) d += `Q${x + 5} ${f(WL + (x % 20 ? -1 : 1) * .9)} ${x + 10} ${WL}`;
       fg += `<defs>${linGrad(sl, 0, WL, 0, WL + 6, [[0, '#e8fff8', .55], [1, '#e8fff8', 0]])}</defs><rect x="0" y="${WL}" width="200" height="6" fill="url(#${sl})"/>`
         + `<path d="${d}" stroke="#f4fffc" stroke-width="1.1" fill="none" opacity=".85"/>`; }
-    // the chain above the water: from the hawse to the surface, a splash and a ring of foam where it goes in
+    // the chain above the water: from the hawse straight down to the surface, bar-taut — a dark straight core under
+    // the links, a glint of strain along it; a small V of foam where it cuts the water as she swings
+    fg += line2(`M${HAWSE[0]} ${HAWSE[1]}L${f(IN[0])} ${WL}`, 1.3, '#0c0d10', .9);
     fg += K.chain(u, L, [HAWSE, [(HAWSE[0] + IN[0]) / 2, (HAWSE[1] + IN[1]) / 2], IN], { link: 3.8, seed: 9 });
-    fg += K.splash(u, { x: IN[0], y: WL, w: 9, h: 9, seed: 2, L, wind: -.4 }) + K.foam(u, { x: IN[0], y: WL + .4, w: 12, h: 1.2, seed: 5, L });
-    // the bow wave thrown up as she swings, spray ahead of her stem
-    fg += K.splash(u, { x: 70, y: WL, w: 14, h: 12, seed: 1, L, wind: -.6 });
+    fg += line2(`M${f(HAWSE[0] - .5)} ${f(HAWSE[1] + .6)}L${f(IN[0] - .5)} ${f(WL - .4)}`, .35, '#f4f0e0', .55);
+    fg += K.foam(u, { x: IN[0] + 2, y: WL + .2, w: 9, h: 1, seed: 5, L }) + line2(`M${f(IN[0] - .6)} ${WL - .2}l5 -1.6M${f(IN[0] - .6)} ${WL - .2}l6 .6`, .5, '#ffffff', .8)
+      + K.splash(u, { x: IN[0], y: WL, w: 4, h: 3.4, seed: 2, L, wind: -.4 });
+    // the bow wave: a white roll thrown up and ahead of her stem as she spins, foam spreading round her forefoot
+    fg += K.splash(u, { x: 63, y: WL, w: 17, h: 14, seed: 1, L, wind: -.7 }) + K.foam(u, { x: 64, y: WL - .3, w: 18, h: 1.8, seed: 11, L })
+      + line2(`M${54} ${WL - .6}Q${62} ${WL - 4} ${71} ${WL - 2.6}`, 1.4, '#ffffff', .85);
+    // the side that has come round to the enemy fires: flashes at three ports of her gun deck, the fire and the
+    // smoke thrown out towards the enemy (to the left, over her bow and the water)
+    for (const [i, [x, y]] of PORTS.entries()) {
+      fg += K.smoke(u, L, { x: x - 6, y: y - .5, w: 30, h: 15, wind: -3, seed: 3 + i * 4, opacity: .97, glow: { color: '#ffb050', power: .5 } }); }
+    for (const [i, [x, y]] of PORTS.entries()) { const fb = nid('fb', u);
+      fg += `<defs>${radGrad(fb, x - 1, y, 5, [[0, '#ffffff', 1], [.25, '#fff0b0', 1], [.55, '#ffc040', .85], [1, '#ff7a1e', 0]])}</defs><circle cx="${f(x - 1)}" cy="${f(y)}" r="5" fill="url(#${fb})"/>`
+        + K.muzzleFlash(u, { x: x - .6, y, dir: 172, len: 13, seed: i, smoke: false }); }
     return [bg, fg];
   } };

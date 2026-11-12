@@ -1,7 +1,7 @@
 // «Книппели» (Жемчужина, ЗАРЯД, Залп бьёт по Парусам), refined from the first-round scene
 // (portrait-pearl.cjs SCENES['Книппели']): looking up the mainmast of a Company ship at night. The spinning chain
-// shot — two balls on a short chain — has just snapped the topsail yard's left arm and flies on up past the
-// topgallant; the broken arm hangs from its lift, the topsail is torn off it and flogs, the topmast shrouds have
+// shot — two balls on a short chain — has just snapped the topsail yard's left arm and flies on up through the
+// topgallant, leaving a ragged rent behind it from the balls down to the sail's torn-loose clew; the broken arm hangs from its lift, the topsail is torn off it and flogs, the topmast shrouds have
 // parted, splinters, a block and rope ends fall. The moon high on the right shines through the canvas (the sails
 // glow, the shot and the rigging stand dark on them). Below, under the glass: the course, the rail, a strip of sea.
 'use strict';
@@ -84,7 +84,7 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     // the night sky through it, a lit frayed edge, threads standing out of both edges and bridging the narrow end
     { const Rr = rng(53), P0 = RIP[0], P1 = RIP[1], n = 14, Lt = [], Rt = [];
       const dx = P1[0] - P0[0], dy = P1[1] - P0[1], len = Math.hypot(dx, dy), tx = dx / len, ty = dy / len, nx = -ty, ny = tx;
-      for (let i = 0; i <= n; i++) { const t = i / n, w = .35 + 4.2 * Math.pow(t, 1.3), cx = P0[0] + dx * t + Math.sin(t * 9) * .9 * t, cy = P0[1] + dy * t;
+      for (let i = 0; i <= n; i++) { const t = i / n, w = .7 + 5.4 * Math.pow(t, 1.15), cx = P0[0] + dx * t + Math.sin(t * 9) * .9 * t, cy = P0[1] + dy * t;
         Lt.push([cx + nx * (w + (Rr() - .5) * 1.4 * t), cy + ny * (w + (Rr() - .5) * 1.4 * t)]); Rt.push([cx - nx * (w + (Rr() - .5) * 1.4 * t), cy - ny * (w + (Rr() - .5) * 1.4 * t)]); }
       const pts = Lt.concat(Rt.slice().reverse()), d = 'M' + pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z', rg = nid('rg', u);
       // the canvas pulled away from the rent darkens along it
@@ -163,7 +163,7 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     let shot = '';
     { const { x, y, a, r, len } = SHOT, ca = Math.cos(a * Math.PI / 180), sa = Math.sin(a * Math.PI / 180), h = len / 2;
       const A = [x - ca * h, y - sa * h], B = [x + ca * h, y + sa * h], bl = nid('bl', u), tr = nid('tr', u);
-      shot += `<defs><filter id="${bl}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6"/></filter>${linGrad(tr, RIP[1][0], RIP[1][1], x, y, [[0, '#dfe6ee', 0], [1, '#dfe6ee', .4]])}</defs>`
+      shot += `<defs><filter id="${bl}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6"/></filter>${linGrad(tr, RIP[1][0], RIP[1][1], x, y, [[0, '#dfe6ee', 0], [1, '#dfe6ee', .28]])}</defs>`
         // the trail: up along the rent it tore, from the torn clew to the shot, a soft streak
         + `<path d="M${RIP[1][0] + 2} ${RIP[1][1]}Q${x - 10} ${y + 14} ${x} ${y}" stroke="url(#${tr})" stroke-width="6" fill="none" filter="url(#${bl})"/>`
         // the swept disc: a faint grey ring where the balls have been in this instant
