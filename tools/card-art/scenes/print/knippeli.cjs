@@ -106,13 +106,15 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     yards += line(`M99.6 60L${AR.a[0]} ${AR.a[1] - 1}`, .55, '#14110e');   // the topsail lift, still holding the arm
     yards += cyl(AR.a[0], AR.a[1], AR.b[0], AR.b[1], 1.5, 1.7);
     { let st = ''; for (let i = 0; i < 6; i++) { const l = 1.6 + R() * 3.4, a = Math.atan2(AR.b[1] - AR.a[1], AR.b[0] - AR.a[0]) + (R() - .5) * .9; st += `<path d="M${f(AR.b[0] + (R() - .5) * 2)} ${f(AR.b[1] + (R() - .5) * 2)}l${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)}" stroke="${i % 2 ? '#e6cc9a' : '#b48a58'}" stroke-width=".7" stroke-linecap="round"/>`; } yards += st; }
-    // the strips of topsail still laced to the broken arm: torn into ribbons that stream out to the left in the wind,
-    // frayed at the ends, the moon through the thin canvas
-    { const fl = nid('fl', u), Rs = rng(77); let st = `<defs>${linGrad(fl, AR.a[0], AR.a[1], -6, 120, [[0, '#d6d0ba'], [.55, '#9a988c'], [1, '#5a5e64']])}</defs>`;
-      for (let i = 0; i < 4; i++) { const t = .12 + i * .22, ax = AR.a[0] + (AR.b[0] - AR.a[0]) * t, ay = AR.a[1] + (AR.b[1] - AR.a[1]) * t, w = 2.2 + Rs() * 1.6, len = 16 + Rs() * 12 - i * 2, wv = 2 + Rs() * 2;
-        const ex = ax - len, ey = ay + 4 + i * 2 + Rs() * 3;
-        st += `<path d="M${f(ax)} ${f(ay - w / 2)}Q${f(ax - len * .35)} ${f(ay - wv)} ${f(ax - len * .6)} ${f(ay + 1)}T${f(ex)} ${f(ey - 1)}l-2 1.4l2.4 .6l-1.6 1.6l2.6 -.2Q${f(ax - len * .55)} ${f(ay + w + 2)} ${f(ax)} ${f(ay + w / 2)}Z" fill="url(#${fl})" stroke="#1a1c22" stroke-width=".35"/>`
-          + line(`M${f(ax - 2)} ${f(ay)}Q${f(ax - len * .4)} ${f(ay - wv + 1)} ${f(ax - len * .7)} ${f(ay + 2)}`, .3, '#2a2c30', .5); }
+    // the strips of topsail still laced to the broken arm: torn into narrow ribbons that hang and flog out to the
+    // left in the wind, each wavy, thinning to a frayed end; dimmer than the whole canvas (the moon is far from them)
+    { const fl = nid('fl', u), Rs = rng(77); let st = `<defs>${linGrad(fl, AR.a[0], AR.a[1], 0, 140, [[0, '#b4b0a0'], [.5, '#7c7c74'], [1, '#44484e']])}</defs>`;
+      for (let i = 0; i < 5; i++) { const t = .08 + i * .2, ax = AR.a[0] + (AR.b[0] - AR.a[0]) * t, ay = AR.a[1] + (AR.b[1] - AR.a[1]) * t, w0 = 1.4 + Rs() * 1.4, len = 12 + Rs() * 10, ph = Rs() * 6, n = 10;
+        const C = []; for (let k = 0; k <= n; k++) { const q = k / n; C.push([ax - len * q * .8, ay + len * q * (.45 + i * .06) + Math.sin(q * 7 + ph) * 1.6 * q]); }
+        const top = [], bot = []; C.forEach((c, k) => { const q = k / n, w = w0 * (1 - q * .55); top.push([c[0], c[1] - w / 2]); bot.unshift([c[0] + (Rs() - .5) * .4, c[1] + w / 2]); });
+        const e = C[n]; let fr = ''; for (let k = 0; k < 3; k++) fr += `M${f(e[0])} ${f(e[1] + (k - 1) * .5)}q${f(-1.4 - Rs() * 1.4)} ${f(.4 + Rs())} ${f(-2.6 - Rs() * 2)} ${f(1 + Rs() * 1.6)}`;
+        st += `<path d="M${top.concat(bot).map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z" fill="url(#${fl})" stroke="#1a1c22" stroke-width=".3"/>` + line(fr, .3, '#9a988c', .8)
+          + line(`M${top.map(p => f(p[0]) + ' ' + f(p[1] + .3)).join('L')}`, .25, '#e8e4d0', .35); }
       yards += st; }
     // ——— the standing rigging over the sails: lower shrouds from the channels to the top, ratlines; topmast shrouds
     // (the left ones parted — their ends curl), the stay of the topgallant, the braces
@@ -143,7 +145,7 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
         + `<path d="M${BRK.x - 2} ${BRK.y - 2}Q${x + 8} ${y + 16} ${x} ${y}" stroke="url(#${tr})" stroke-width="7" fill="none" filter="url(#${bl})"/>`
         // the swept disc: a faint grey ring where the balls have been in this instant
         + `<ellipse cx="${x}" cy="${y}" rx="${h + r}" ry="${f((h + r) * .8)}" fill="#c8d0dc" opacity=".12" filter="url(#${bl})"/>`
-        + `<ellipse cx="${x}" cy="${y}" rx="${h}" ry="${f(h * .8)}" fill="none" stroke="#e4eaf2" stroke-width="${f(r * 1.4)}" opacity=".16" filter="url(#${bl})"/>`
+        + `<ellipse cx="${x}" cy="${y}" rx="${h}" ry="${f(h * .8)}" fill="none" stroke="#e4eaf2" stroke-width="${f(r * 1.4)}" opacity=".22" filter="url(#${bl})"/>`
         + `<path d="M${f(x - h - 1)} ${f(y + 6)}a${h + 1} ${f((h + 1) * .8)} 0 0 1 ${f(9)} ${f(-14)}M${f(x + h + 1)} ${f(y - 6)}a${h + 1} ${f((h + 1) * .8)} 0 0 1 ${f(-9)} ${f(14)}" stroke="#eef4fa" stroke-width=".8" fill="none" opacity=".6"/>`;
       shot += K.chain(u, L, [[A[0] + ca * r * .8, A[1] + sa * r * .8], [x, y + 1], [B[0] - ca * r * .8, B[1] - sa * r * .8]], { link: 3.6, seed: 5 });
       for (const [px, py] of [A, B]) shot += K.shadeSphere(u, px, py, r, L, 'iron', { outline: .6 }) + `<circle cx="${f(px - ca * r * .9)}" cy="${f(py - sa * r * .9)}" r="1.1" fill="url(#iron${u})" stroke="#0a0a0a" stroke-width=".3"/>`;
@@ -155,6 +157,7 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     for (let i = 0; i < 24; i++) { const a = -Math.PI * (.2 + R() * 1.1), d = 4 + R() * 26, l = 1.4 + R() * 3.6, rot = a + (R() - .5) * 2, w = .4 + R() * .5;
       const cx = BRK.x + Math.cos(a) * d, cy = BRK.y + Math.sin(a) * d * .8 + (R() > .6 ? 18 * R() : 0), dx = Math.cos(rot) * l / 2, dy = Math.sin(rot) * l / 2, nx = -dy / l * w * 2, ny = dx / l * w * 2;
       fall += `<path d="M${f(cx - dx)} ${f(cy - dy)}L${f(cx + nx)} ${f(cy + ny)}L${f(cx + dx)} ${f(cy + dy)}L${f(cx - nx)} ${f(cy - ny)}Z" fill="${R() > .45 ? '#e8d0a0' : '#a87c4a'}" stroke="#2a180a" stroke-width=".15"/>`; }
+    fall += K.smoke(u, L, { x: BRK.x - 2, y: BRK.y + 3, w: 14, h: 12, wind: -.5, seed: 9, opacity: .4 });
     // the block (falling, tumbling) with a bit of rope, a second smaller one further down
     for (const [bx, by, s, rot] of [[86, 116, 1, 28], [56, 142, .7, -40]]) {
       fall += `<g transform="translate(${bx} ${by}) rotate(${rot}) scale(${s})"><rect x="-3.4" y="-4.4" width="6.8" height="8.8" rx="3" fill="url(#oak${u})" stroke="#140a04" stroke-width=".5"/><circle r="1.5" fill="url(#iron${u})" stroke="#0a0a0a" stroke-width=".3"/><path d="M-2.6 -3.8q2.6 -1.4 5.2 0" stroke="#e0c090" stroke-width=".4" fill="none" opacity=".6"/></g>`

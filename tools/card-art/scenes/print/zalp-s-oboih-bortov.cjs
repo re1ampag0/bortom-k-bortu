@@ -9,16 +9,16 @@ const K = require('../kit/index.cjs');
 const { f, mix, nid, linGrad, radGrad, rng } = K;
 
 const HZ = 72, WL = 130, X = 100;   // horizon; the Pearl's waterline under her stern; her centre line
-const MOON = { x: 30, y: 24 };
+const MOON = { x: 56, y: 30 };
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#d0dcf4', power: .85 }, fill: { color: '#3a5480', power: .42 },
   rim: { az: 340, color: '#cfe4ff', power: .7 }, locals: [{ x: X, y: 76, color: '#ffc070', power: .7, radius: 30 }, { x: 52, y: 106, color: '#ffb050', power: .8, radius: 40 }, { x: 148, y: 106, color: '#ffb050', power: .8, radius: 40 }] };
-const EN = [{ kind: 'endeavour', x: 30, y: 117, scale: .72, flip: true, heel: -3, sq: .5, hit: [38, 110], seed: 5 },
-  { kind: 'dutch', x: 170, y: 117, scale: .8, flip: false, heel: -3, sq: .5, hit: [162, 111], seed: 3 }];
+const EN = [{ kind: 'endeavour', x: 30, y: 117, scale: .72, flip: true, heel: -3, sq: .5, hit: [27, 111], seed: 5 },
+  { kind: 'dutch', x: 170, y: 117, scale: .8, flip: false, heel: -3, sq: .5, hit: [173, 112], seed: 3 }];
 const GUN = [{ x: 66.5, y: 106, dir: 180 }, { x: 133.5, y: 106, dir: 0 }, { x: 69.5, y: 98.5, dir: 184, s: .7 }, { x: 130.5, y: 98.5, dir: -4, s: .7 }];
 const skel = { horizon: HZ, eye: 2.2, light: 'moon ahead left; stern windows and lanterns; the flashes', items: [
   ['pearl', 50, WL, 100, 122, 'water'], ['enemyL', 0, 117, 64, 76, 'water'], ['enemyR', 138, 117, 56, 58, 'water'],
   ['flashL', 44, 106, 22, 12, 'gun'], ['flashR', 134, 106, 22, 12, 'gun'], ['smokeL', 40, 104, 34, 46, 'gun'], ['smokeR', 126, 104, 34, 46, 'gun'],
-  ['hitL', 30, 110, 16, 14, 'enemy side'], ['hitR', 154, 111, 16, 14, 'enemy side']] };
+  ['hitL', 19, 111, 16, 14, 'enemy side'], ['hitR', 165, 112, 16, 14, 'enemy side']] };
 
 // ——— KIT-CANDIDATE (as in yadra.cjs): a hit on a ship's side — the smashed hole, torn plank ends, splinters flying
 // out the way the ball went (dir: +1 to the right, -1 to the left), smoke and dust, the brief light of the impact
@@ -49,14 +49,14 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
     // ——— the two enemies, abeam of her on both sides, seen at a slant: squeezed across, bow to the middle
     for (const e of EN) { const body = K.ship(u, L, { kind: e.kind, x: e.x, y: e.y, scale: e.scale, flip: e.flip, heel: e.heel, sails: 'full', wake: true, lights: true, seed: e.seed });
       bg += `<g transform="translate(${e.x} 0) scale(${e.sq} 1) translate(${-e.x} 0)">${body}</g>`; }
-    for (const [e, d] of [[EN[0], 1], [EN[1], -1]]) bg += hit(u, L, { x: e.hit[0], y: e.hit[1], s: 1.1, dir: -d, seed: 5 + d });
+    for (const [e, d] of [[EN[0], 1], [EN[1], -1]]) bg += hit(u, L, { x: e.hit[0], y: e.hit[1], s: 1.6, dir: -d, seed: 5 + d });
 
     // ——— the smoke of both broadsides: out of each side and up, drifting away into the picture with the wind
-    bg += K.smoke(u, L, { x: 58, y: 106, w: 34, h: 48, wind: .35, seed: 6, opacity: .85, glow: { color: '#ffb050', power: .7 } })
-      + K.smoke(u, L, { x: 142, y: 106, w: 34, h: 48, wind: -.35, seed: 7, opacity: .85, glow: { color: '#ffb050', power: .7 } });
+    bg += K.smoke(u, L, { x: 56, y: 104, w: 40, h: 60, wind: .35, seed: 6, opacity: .95, glow: { color: '#ffb050', power: .9 } })
+      + K.smoke(u, L, { x: 144, y: 104, w: 40, h: 60, wind: -.35, seed: 7, opacity: .95, glow: { color: '#ffb050', power: .9 } });
     // the balls on their way: a soft streak from each muzzle to its target
     { const tb = nid('tb', u); bg += `<defs><filter id="${tb}" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".7"/></filter></defs>`;
-      for (const [a, b] of [[[52, 105.6], [42, 110]], [[148, 105.6], [158, 111]]]) { const g = nid('tg', u); bg += `<defs>${linGrad(g, a[0], a[1], b[0], b[1], [[0, '#f0e6d0', .1], [1, '#f0e6d0', .7]])}</defs><path d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}" stroke="url(#${g})" stroke-width="2.4" stroke-linecap="round" filter="url(#${tb})"/>`; } }
+      for (const [a, b] of [[[44, 106], [31, 110.6]], [[156, 106], [169, 111.6]]]) { const g = nid('tg', u); bg += `<defs>${linGrad(g, a[0], a[1], b[0], b[1], [[0, '#f0e6d0', .1], [1, '#f0e6d0', .7]])}</defs><path d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}" stroke="url(#${g})" stroke-width="2.4" stroke-linecap="round" filter="url(#${tb})"/>`; } }
 
     // ——— the Pearl from astern. Her rig first (behind the stern): the masts in a line, the yards, the black sails
     // seen from behind (bellied away from us, the wind is at her stern), torn; the moon rims their left edges
@@ -65,7 +65,7 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
       const Rs = rng(sd), id = nid('ps', u), cid = nid('pc', u), bite = [];
       for (let i = 0; i <= 12; i++) { const t = i / 12, x = X - w1 + 2 * w1 * t, yy = y1 - 2.4 * Math.sin(t * Math.PI) - (i % 3 === 1 ? 1.4 + Rs() * 2.4 : Rs() * .8); bite.push([x, yy]); }
       const d = `M${X - w0} ${y0}Q${X} ${y0 - 1.6} ${X + w0} ${y0}Q${f(X + (w0 + w1) / 2 + 2.6)} ${f((y0 + y1) / 2)} ${X + w1} ${y1}` + bite.slice().reverse().map(p => `L${f(p[0])} ${f(p[1])}`).join('') + `Q${f(X - (w0 + w1) / 2 - 2.6)} ${f((y0 + y1) / 2)} ${X - w0} ${y0}Z`;
-      let out = `<defs>${linGrad(id, X - w1, 0, X + w1, 0, [[0, mix(sailRamp.lit, '#6a7894', .45)], [.25, mix(sailRamp.lit, '#3a4458', .3)], [.6, sailRamp.half], [1, sailRamp.shadow]])}<clipPath id="${cid}"><path d="${d}"/></clipPath></defs>`
+      let out = `<defs>${linGrad(id, X - w1, 0, X + w1, 0, [[0, mix(sailRamp.lit, '#5a6884', .3)], [.2, sailRamp.lit], [.55, mix(sailRamp.half, '#0c0e16', .3)], [1, mix(sailRamp.shadow, '#06070c', .45)]])}<clipPath id="${cid}"><path d="${d}"/></clipPath></defs>`
         + `<path d="${d}" fill="url(#${id})"/><g clip-path="url(#${cid})">`;
       // the cloths, the belly's shadow under the yard and the light coming through thin canvas near the moon
       for (let i = 1; i < 9; i++) { const t = i / 9, xa = X - w0 + 2 * w0 * t, xb = X - w1 + 2 * w1 * t; out += ln(`M${f(xa)} ${y0}Q${f((xa + xb) / 2 + (t - .5) * 3)} ${f((y0 + y1) / 2)} ${f(xb)} ${y1}`, .4, '#05060a', .7); }
@@ -128,8 +128,18 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
 
     // ——— the fire out of both sides at the same instant: two big flashes, two smaller ones further forward
     let fire = '';
-    for (const g of GUN) { const s = g.s || 1; fire += K.muzzleFlash(u, { x: g.x + (g.dir === 0 || g.dir < 90 ? 1 : -1) * .6, y: g.y, dir: g.dir, len: 20 * s, seed: s < 1 ? 0 : 2, smoke: false })
-      + K.localGlow(u, { x: g.x + (g.dir === 0 || g.dir < 90 ? 6 : -6) * s, y: g.y, color: '#ffc070', power: .8 * s, radius: 16 * s }); }
+    // the blast's smoke thrown out sideways from each side: a roll of puffs growing outwards, lit orange inside
+    { const pg = nid('pp', u), pb = nid('pb', u);
+      fire += `<defs><radialGradient id="${pg}" cx=".46" cy=".4" r=".62"><stop offset="0" stop-color="#ffe2b0"/><stop offset=".35" stop-color="#d8b898" stop-opacity=".95"/><stop offset=".75" stop-color="#8a8e9c" stop-opacity=".8"/><stop offset="1" stop-color="#4a5064" stop-opacity="0"/></radialGradient><filter id="${pb}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".8"/></filter></defs><g filter="url(#${pb})">`;
+      for (const sd of [-1, 1]) { const Rp = rng(sd + 40); for (let i = 0; i < 7; i++) { const t = i / 6, x = X + sd * (36 + t * 17), y = 104 - t * 7 + (Rp() - .5) * 4, r = 3 + t * 5 + Rp() * 1.6;
+        fire += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="url(#${pg})" opacity="${f(.85 - t * .35)}"/>`; } }
+      fire += `</g>`; }
+    // the fire out of both sides at the same instant: two big flashes, two smaller ones further forward, a ball of
+    // flame at each muzzle (white heart, gold, orange edge)
+    for (const g of GUN) { const s = g.s || 1, dx = g.dir === 0 || g.dir < 90 ? 1 : -1, fb = nid('fb', u), cx = g.x + dx * 5 * s;
+      fire += `<defs>${radGrad(fb, cx, g.y, 9 * s, [[0, '#ffffff', 1], [.18, '#fff2b0', 1], [.4, '#ffd040', .95], [.66, '#ff8a1e', .7], [1, '#ff5a10', 0]])}</defs><circle cx="${f(cx)}" cy="${f(g.y)}" r="${f(9 * s)}" fill="url(#${fb})"/>`
+        + K.muzzleFlash(u, { x: g.x + dx * .6, y: g.y, dir: g.dir, len: 23 * s, seed: s < 1 ? 0 : 2, smoke: false })
+        + K.localGlow(u, { x: g.x + dx * 8 * s, y: g.y, color: '#ffc070', power: .9 * s, radius: 22 * s }); }
     // the light of the flashes on the water under them
     fire += K.localGlow(u, { x: 54, y: 124, color: '#ffb050', power: .5, radius: 26 }, { squash: .3, core: false }) + K.localGlow(u, { x: 146, y: 124, color: '#ffb050', power: .5, radius: 26 }, { squash: .3, core: false });
 
