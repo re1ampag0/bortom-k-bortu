@@ -1,7 +1,7 @@
 // «Туман» (Колода моря): white day fog. Straight across from us one warship lies broadside on, sharp and dark, ports
 // open — the only target; off on the diagonal, in the glare of the sun behind the fog, a second ship is all but gone:
 // a grey ghost of masts and one warm stern lantern. The sun is a pale disc in the white upper right, its rays slant
-// down through the fog; the sea is grey-green and dulls into the white. Our rail and its shadowed waist under the glass.
+// down through the fog; the sea is grey-green and dulls into the white; under the glass only the fogged sea (no wood of ours).
 // All round only the one straight ahead may be fired at. Brief: docs/mockups/print/card-briefs.md «Туман».
 // Not night (that is «Чёрные паруса в ночи»), not green (that is the Dutchman's murk): whitish, by day.
 'use strict';
@@ -18,8 +18,6 @@ const skel = { horizon: HZ, eye: 4, light: 'sun behind the fog ahead-right (152,
     ['warship (straight across)', 96, WL, 140, 100, 'water, waterline y 121, broadside to us'],
     ['ghost ship (diagonal)', 172, 112, 70, 54, 'water far off right, in the glare'],
     ['ghost lantern', 150, 100, 6, 6, 'on the ghost ship\'s stern'],
-    ['our rail', 0, 190, 200, 18, 'our side, under the glass'],
-    ['coil', 120, 180, 24, 7, 'on the rail'],
   ] };
 
 const PAL = { sky: ['#8b959a', '#b3babb', '#dbdbd4', '#ecebe3'], sea: ['#d6d6cd', '#76858a', '#283a41'], fog: '#f1efe8', cloudLit: '#f4f2ea', cloudShade: '#a3abae', smoke: '#d9d9d2' };
@@ -43,15 +41,21 @@ module.exports = { name: 'Туман', kind: 'sea', status: 'draft', cam: { x: 0
     // not a ship but its shadow: one grey tone, blurred, sinking into the white towards the sun
     { const b = nid('gs', u), b2 = nid('gs', u);
       bg += `<defs>${blur(b, 1.25)}${blur(b2, 2.2)}</defs>`
-        + `<g filter="url(#${b})" opacity=".78">${K.shipSilhouette('brig', { x: 176, y: 114, scale: .8, flip: true, sails: 'reefed', seed: 4, color: '#7c878b', u })}</g>`
         // a third, fainter still, far off on the left diagonal
         + `<g filter="url(#${b2})" opacity=".3">${K.shipSilhouette('merchant', { x: 14, y: 112, scale: .52, sails: 'reefed', seed: 12, color: '#8a9496', u })}</g>`; }
     // the fog swallows the ghost: a thick white veil over the right, densest at the sun
     { const g = nid('gv', u), b = nid('gb', u);
-      bg += `<defs><radialGradient id="${g}" gradientUnits="userSpaceOnUse" cx="172" cy="62" r="66"><stop offset="0" stop-color="${white}" stop-opacity=".7"/><stop offset=".55" stop-color="${white}" stop-opacity=".32"/><stop offset="1" stop-color="${white}" stop-opacity="0"/></radialGradient>${blur(b, 3)}</defs>`
+      bg += `<defs><radialGradient id="${g}" gradientUnits="userSpaceOnUse" cx="172" cy="62" r="66"><stop offset="0" stop-color="${white}" stop-opacity=".5"/><stop offset=".55" stop-color="${white}" stop-opacity=".22"/><stop offset="1" stop-color="${white}" stop-opacity="0"/></radialGradient>${blur(b, 3)}</defs>`
         + `<ellipse cx="166" cy="80" rx="70" ry="54" fill="url(#${g})"/>`
         + `<g filter="url(#${b})" fill="${white}">`
-        + [[160, 106, 40, 5, .45], [196, 84, 22, 8, .4], [20, 102, 36, 6, .35], [178, 117, 40, 4, .45]].map(([x, y, rx, ry, o]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" opacity="${o}"/>`).join('') + '</g>'; }
+        + [[196, 84, 22, 8, .3], [20, 102, 36, 6, .35], [178, 118, 40, 3, .4]].map(([x, y, rx, ry, o]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" opacity="${o}"/>`).join('') + '</g>'; }
+    // the ghost itself, over the veil: a dark hull and masts at a third of their strength, the small things lost in the blur
+    { const b = nid('gh', u), b2 = nid('gh', u);
+      bg += `<defs>${blur(b, .75)}${blur(b2, 2.4)}</defs>`
+        + `<g filter="url(#${b2})" opacity=".18">${K.shipSilhouette('brig', { x: 176, y: 114, scale: .8, flip: true, sails: 'reefed', seed: 4, color: '#3c464b', u })}</g>`
+        + `<g filter="url(#${b})" opacity=".33">${K.shipSilhouette('brig', { x: 176, y: 114, scale: .8, flip: true, sails: 'reefed', seed: 4, color: '#2c3438', u })}</g>`
+        // a skin of fog lying on her waterline
+        + `<g filter="url(#${b2})" fill="${white}"><ellipse cx="170" cy="115" rx="34" ry="3.4" opacity=".5"/></g>`; }
     // the ghost's stern lantern: a small warm smudge in the white, the one thing that says «a ship is there»
     bg += K.localGlow(u, { x: 146, y: 99, color: '#ffb866', power: .9, radius: 18 }, { core: false })
       + `<circle cx="146" cy="99" r="1.4" fill="#ffd59a" opacity=".95"/>`;
@@ -77,13 +81,10 @@ module.exports = { name: 'Туман', kind: 'sea', status: 'draft', cam: { x: 0
     // the fog is heavier away from the sun: the corners close in grey (the frame filled, the eye kept on the middle)
     { const g = nid('vg', u); bg += `<defs><radialGradient id="${g}" gradientUnits="userSpaceOnUse" cx="120" cy="80" r="150"><stop offset=".45" stop-color="#5d686d" stop-opacity="0"/><stop offset="1" stop-color="#4c565b" stop-opacity=".5"/></radialGradient></defs><rect x="0" y="0" width="200" height="280" fill="url(#${g})"/>`; }
 
-    // ——— our side, under the glass: the bulwark slanting across, its rail and a coil on it; below, the shadowed waist
+    // ——— under the glass: only the fogged sea — no wood of ours at the edges of the plate
     let fg = '';
-    const ang = -4, cx = 100, cy = 186, top = 182;
-    fg += `<g transform="rotate(${ang} ${cx} ${cy})">` + K.bulwark(u, L, { x1: -30, x2: 230, y: top + 74, h: 74, kind: 'oak', posts: 38, seed: 6 })
-      + K.coil(u, L, { x: 128, y: top + 1.6, s: 1.05, turns: 4, tail: true, seed: 3 }) + '</g>';
-    { const id = nid('dk', u), sh = mix(L.shadowTint, '#1d1f20', .5); fg += `<defs>${linGrad(id, 0, 200, 0, 266, [[0, sh, 0], [.45, sh, .6], [1, mix(sh, '#141516', .4), .95]])}</defs><rect x="-10" y="194" width="220" height="96" fill="url(#${id})"/>`; }
-    // a last wisp drifting across our own rail
+    { const id = nid('dk', u), sh = mix(L.shadowTint, '#1d1f20', .5); fg += `<defs>${linGrad(id, 0, 170, 0, 280, [[0, sh, 0], [.5, sh, .35], [1, sh, .6]])}</defs><rect x="-10" y="170" width="220" height="110" fill="url(#${id})"/>`; }
+    // a last wisp drifting low over the water
     { const b = nid('fb', u); fg += `<defs>${blur(b, 3)}</defs><ellipse cx="40" cy="186" rx="60" ry="5" fill="${white}" opacity=".35" filter="url(#${b})"/>`; }
     return [bg, fg];
   } };
