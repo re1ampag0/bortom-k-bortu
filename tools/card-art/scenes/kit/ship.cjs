@@ -26,7 +26,7 @@ const SHIP_MAT = {
   'paint-olive': { base: '#6a7146', spec: { w: .4, op: .12, col: 'warm' }, reflex: 'warm', reflexK: .3, grain: 1 },   // the merchant's faded painted band
   'ship-flag-red': { base: '#c23a2c', spec: null, reflex: 'warm', reflexK: .1, trans: .5 },
   'ship-coal': { base: '#2c2a29', spec: { w: .4, op: .16, col: 'cold' }, reflex: 'sky', reflexK: .45, grain: 1 },   // the Pearl: black worn planking
-  'ship-sail-coal': { base: '#323238', spec: null, reflex: 'sky', reflexK: .12, trans: .5 },                         // the Pearl: black sails, black by day too
+  'ship-sail-coal': { base: '#1c1c21', spec: null, reflex: 'sky', reflexK: .07, trans: .45 },                         // the Pearl: black sails, black by day too
   'ship-sail-crimson': { base: '#7c2520', spec: null, reflex: 'warm', reflexK: .14, trans: .55 },                     // the Revenge: dark red sails
 };
 for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
@@ -61,7 +61,7 @@ const SPECS = {
     gallery: [10.5, 2, 3.8], tierWin: 2, lantern: 2, lanternPost: 1.3, balc: [1], balcD: 2.4,
     beak: [13, 2.2, 5], sprit: { len: 26, steeve: 22, jib: 17 }, jibs: 2,
     masts: [{ x: -36, H: 86, n: 3, k: 1.3 }, { x: 10, H: 94, n: 3, k: 1.42 }, { x: 41, H: 72, n: 2, k: .82, rake: 2.5, aft: 'lateen' }],
-    spar: 'tar', yard: 'tar', sail: 'ship-sail-coal', cond: 'torn', holeK: 1.5, flag: 'jolly', pennant: 'ship-flag-black',
+    spar: 'tar', yard: 'tar', sail: 'ship-sail-coal', cond: 'torn', holeK: 1.5, thruK: .3, flag: 'jolly', pennant: 'ship-flag-black',
     beam: .25, draft: 9, bilge: 2.2, inner: 'ship-red', deckK: 'pine-deck', bottom: 'foul',   // 40 x 10 m (ru-BP, the dossier)
   },
   // Queen Anne's Revenge (2011), by the measurements: a long low waist (0.14 L) and the highest stern of all (0.45 L, 0.50
@@ -513,7 +513,7 @@ function build(u, L, o, mode) {
   // the light through the cloth comes from one source for the whole rig (the moon, the low sun, the glow of the fog):
   // the sails nearer to it shine more; it is one gradient in scene units shared by every sail
   let thruG = '';
-  const thru = () => { if (thruG) return thruG; thruG = nid('ht', u); const Hx = Math.max(...sp.masts.map(m => m.H)), c = pt(0, Hx * .52), R0 = Hx * s, src = [c[0] + dC.ux * R0 * .7, c[1] + dC.uy * R0 * .7], lt = mix(tone(sailK, -1), col(L.keyColor), .4);
+  const thru = () => { if (thruG) return thruG; thruG = nid('ht', u); const Hx = Math.max(...sp.masts.map(m => m.H)), c = pt(0, Hx * .52), R0 = Hx * s, src = [c[0] + dC.ux * R0 * .7, c[1] + dC.uy * R0 * .7], lt = mix(tone(sailK, -1), col(L.keyColor), .4 * (sp.thruK != null ? sp.thruK : 1));   // thruK: a dense dark cloth lets less light through
     defs += `<radialGradient id="${thruG}" gradientUnits="userSpaceOnUse" cx="${f(src[0])}" cy="${f(src[1])}" r="${f(R0 * 1.25)}"><stop offset="0" stop-color="${lt}" stop-opacity=".85"/><stop offset=".38" stop-color="${lt}" stop-opacity=".5"/><stop offset=".75" stop-color="${lt}" stop-opacity=".16"/><stop offset="1" stop-color="${lt}" stop-opacity="0"/></radialGradient>`; return thruG; };
   // a sail on a map S(u, v) -> local point: u — from the fore edge to the aft one, v — from the head to the foot
   const cloth = (S, q) => {
