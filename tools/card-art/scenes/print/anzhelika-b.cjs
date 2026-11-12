@@ -33,17 +33,44 @@ module.exports = { name: 'Анжелика', variant: 'b', kind: 'deck', status:
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .55, seed: 6, glitter: SUN.x });
     // a far third ship on the horizon at the left (the enemy line), small, in the haze
     bg += K.ship(u, L, { kind: 'endeavour', x: 30, y: HZ + 1, scale: .15, detail: 'far', flip: true, seed: 3 });
-    // ——— the «Жемчужина» alongside on the right, close: black sails out of the frame, lanterns in the stern
-    bg += K.ship(u, L, { kind: 'pearl', x: 262, y: 140, scale: 2.1, detail: 'near', wake: true, lights: true, roll: -4, seed: 7 });
-    // ——— the sailor of the Pearl leaning over his rail (a silhouette): bandana, shoulders, the arm to the left
+    // ——— the «Жемчужина» close alongside on the right: her stern quarter fills the right edge (true scale to the
+    // people — the ship is far bigger than the frame): tarred planking, the quarter gallery with a lit window, the
+    // spanker boom and the foot of a black sail coming into the top. The sun is behind her: the wall is in shadow
+    // with a warm rim on the stern edge; the window's light is the second, small, warm source.
     let fg = '';
-    const sail = 'M182 108L180 90C181 84 178 80 172 79C171 73 168 69 163 69C157 69 154 73 154.5 78C155 80 156 82 158 83C153 85 150 87 147 82.5L142 80.2L141 84.5L146 88.5C150 92 154 92 157 90.5L156 108Z';
-    { const sg = nid('sl', u); fg += `<defs>${linGrad(sg, 140, 0, 184, 0, [[0, '#3a2a30'], [.5, '#1a1218'], [1, '#0e0a0e']])}</defs>` + rimmed(u, sail, `url(#${sg})`, '#ffc27a', 1.1, .5); }
-    // his striped shirt catching the sun on the shoulder
-    fg += [86, 91, 96, 101].map(y => `<path d="M${f(160 + (y - 86) * .1)} ${y}q8 -1 18 0" stroke="#c9b8a8" stroke-width="1.1" opacity=".22" fill="none"/>`).join('');
-    // bandana knot tails in the wind (to the left)
-    fg += rimmed(u, 'M155 72Q151 70 148 72Q151 73 154.6 74.2Z', '#8a1c1c', '#ffb070', .5, .4);
-    fg += `<path d="M155 75.6Q160 69.4 168 70.4Q171.6 72 172 76Q164 73.6 155 75.6Z" fill="#8a1c1c"/><path d="M157 72.6Q163 70 168.6 71" stroke="#ff9a6a" stroke-width=".5" fill="none"/>`;
+    { const wall = 'M148 30C147 52 149 78 154 104C156 116 158 130 160 160L212 160L212 30Z', wg = nid('pw', u), wc = nid('pc', u);
+      bg += `<defs>${linGrad(wg, 148, 0, 212, 0, [[0, '#3a2a2c'], [.12, '#211719'], [.6, '#161014'], [1, '#0c0a0e']])}<clipPath id="${wc}"><path d="${wall}"/></clipPath></defs>`
+        + `<path d="${wall}" fill="url(#${wg})"/>`;
+      let pl = '';
+      // planks following the sheer (they rise to the stern), wales darker and thicker, a few nail heads
+      for (let i = 0; i < 16; i++) { const y = 26 + i * 8.6, k = i === 6 || i === 11; pl += `<path d="M146 ${f(y)}Q178 ${f(y + 9)} 214 ${f(y + 16)}" stroke="${k ? '#07050a' : '#0a080c'}" stroke-width="${k ? 3.2 : .7}" fill="none"/>` + (k ? `<path d="M146 ${f(y - 1.4)}Q178 ${f(y + 7.6)} 214 ${f(y + 14.6)}" stroke="#5a4038" stroke-width=".5" fill="none" opacity=".7"/>` : `<path d="M146 ${f(y + .8)}Q178 ${f(y + 9.8)} 214 ${f(y + 16.8)}" stroke="#4a3836" stroke-width=".35" fill="none" opacity=".45"/>`); }
+      for (let i = 0; i < 18; i++) { const x = 156 + (i % 6) * 10 + (i % 2) * 3, y = 40 + Math.floor(i / 6) * 34 + (x - 150) * .3; pl += `<circle cx="${f(x)}" cy="${f(y)}" r=".45" fill="#6a5048" opacity=".6"/>`; }
+      // the quarter gallery: a carved bulge with three windows, the lowest sash open and lit; carved scroll under it
+      const gw = nid('gw', u);
+      pl += `<defs>${radGrad(gw, 171, 70, 18, [[0, '#ffe2a0'], [.5, '#ffb050'], [1, '#a04a18']])}</defs>`
+        + `<path d="M154 44Q176 38 200 46L201 92Q178 86 156 92Z" fill="#1c1216" stroke="#060406" stroke-width=".8"/>`
+        + `<path d="M154 44Q176 38 200 46" stroke="#8a6a3a" stroke-width="1.2" fill="none"/><path d="M156 92Q178 86 201 92" stroke="#8a6a3a" stroke-width="1" fill="none"/>`
+        + `<path d="M158 56Q176 51 196 57L196 84Q176 80 158 85Z" fill="url(#${gw})"/>`
+        + [167, 177, 187].map(x => `<path d="M${x} ${f(54 + (x - 177) * .02)}V${f(83 - (x - 158) * .06)}" stroke="#2a1608" stroke-width="1.6"/>`).join('')
+        + `<path d="M158 68Q176 64 196 69" stroke="#2a1608" stroke-width="1.2" fill="none"/>`
+        + `<path d="M156 96Q166 106 158 116Q170 108 168 96Z" fill="#2a1a14" stroke="#7a5a32" stroke-width=".5"/>`;
+      // a gun port below, its lid hauled up (red inside), the muzzle out — the Pearl is ready for a fight
+      pl += `<path d="M176 112L196 115L196 131L176 128Z" fill="#050304"/><path d="M175 111L196 114L199 98L178 95Z" fill="#6a1612" stroke="#060406" stroke-width=".6"/><path d="M178 96L198 99" stroke="#c0503a" stroke-width=".5" opacity=".6"/>`
+        + `<path d="M178 121.5Q186 120 192 121.6L192 126Q186 127.4 178 126Z" fill="#1a1c20"/><ellipse cx="178.2" cy="123.8" rx="1.6" ry="2.4" fill="#2e3036"/><ellipse cx="178.2" cy="123.8" rx=".8" ry="1.3" fill="#020202"/>`;
+      // the warm rim on the stern edge facing the sun, and the window's light on the frame round it
+      bg += `<g clip-path="url(#${wc})">${pl}</g>` + `<path d="M148 30C147 52 149 78 154 104C156 116 158 130 160 160" stroke="#ffc27a" stroke-width="1.1" fill="none" opacity=".85"/>`
+        + `<path d="M149.6 30C148.8 52 150.6 78 155.6 104" stroke="#ffe0a8" stroke-width=".4" fill="none" opacity=".6"/>`;
+      bg += K.localGlow(u, { x: 172, y: 70, color: '#ffb050', power: .5, radius: 30 }, { core: false });
+      // the spanker boom over the stern and the foot of the black sail; its sheet rope down to the taffrail
+      const sg = nid('bs', u);
+      bg += `<defs>${linGrad(sg, 0, -10, 0, 22, [[0, '#0c0a0e'], [1, '#2a2226']])}</defs><path d="M120 -10L214 -10L214 10Q170 16 128 18Z" fill="url(#${sg})"/>`
+        + `<path d="M128 18Q170 16 214 10" stroke="#e0a868" stroke-width=".7" fill="none" opacity=".8"/><path d="M146 4l5 -3l2 4z" fill="#ffb878" opacity=".55"/>`
+        + K.shadeCyl(u, 104, 21, 214, 13, 2.2, L, 'oak', { seed: 3 }) + `<path d="M138 19L148 31" stroke="#2a1a10" stroke-width=".7"/><path d="M118 20.4L126 0M110 21L104 -10" stroke="#2a1a10" stroke-width=".55"/>`; }
+    // ——— the sailor of the Pearl leaning out of the lit window, his arm down to the letter: a silhouette on the light
+    const sail = 'M187 84L185 74C186 69 183 65 178 64C177 59 174 56 169 56C164 56 160.6 59.4 161 64C161.2 66 162 68 163.4 69C159 71 154 73 150.6 75.4L143 77.4L143.6 82.2L150 82.4C155 82 160 80 165 78L166 84Z';
+    { const sg = nid('sl', u); fg += `<defs>${linGrad(sg, 140, 0, 184, 0, [[0, '#2a1c1c'], [.5, '#160e10'], [1, '#0e0a0e']])}</defs>` + rimmed(u, sail, `url(#${sg})`, '#ffcf8a', 1, .5); }
+    fg += `<path d="M161 61.6Q166 55.4 174 56.4Q177.6 58 178 62Q170 59.6 161 61.6Z" fill="#8a1c1c"/><path d="M163 58.6Q169 56 174.6 57" stroke="#ff9a6a" stroke-width=".5" fill="none"/>`
+      + rimmed(u, 'M161.4 60Q157 58.4 154 60.6Q157 61.6 160.6 62.4Z', '#8a1c1c', '#ffb070', .5, .4);
     // ——— the letter between the two hands: a roll of parchment with a ribbon and a red seal, lit through by the sun
     const lg = nid('lt', u);
     bg += ''; fg += `<defs>${linGrad(lg, 0, 72, 0, 81, [[0, '#fff0c8'], [.45, '#f0c888'], [1, '#8a5a34']])}</defs>`
@@ -53,7 +80,7 @@ module.exports = { name: 'Анжелика', variant: 'b', kind: 'deck', status:
       + `<path d="M134.6 75.6Q135 80 133 84.6M135.6 76Q137 80.4 136.4 85.6" stroke="#8e1e1c" stroke-width="1" fill="none" stroke-linecap="round"/>`
       + `<circle cx="135.2" cy="77.6" r="2" fill="#a01c18" stroke="#4a0806" stroke-width=".35"/><circle cx="134.6" cy="77" r=".6" fill="#ff9a7a" opacity=".8"/>`;
     // the sailor's hand over the far end of the roll (he takes it)
-    fg += rimmed(u, 'M141.6 77Q145.4 75.6 147.6 77.8Q148.8 80.6 146.8 83Q143.4 84 141.2 82.4Q140.4 79.6 141.6 77Z', '#2a1810', '#ffc27a', .5, .35);
+    fg += rimmed(u, 'M141.6 76.6Q145.4 75.2 147.6 77.4Q148.8 80.2 146.8 82.6Q143.4 83.6 141.2 82Q140.4 79.2 141.6 76.6Z', '#2a1810', '#ffc27a', .5, .35);
     // ——— the captain's daughter, contre-jour: one silhouette with a warm rim on the sun's side
     const hair = 'M58.5 36.6C50 40 44 45.6 35.4 45C39.4 48.6 43.6 49 46.4 49.8C40.2 53.6 33 54.2 26.6 52.6C32.4 57.6 41.6 59 50.6 56.6C54 58.6 57.6 60.4 61 58Z';
     const body = 'M76 37.6L77.2 42L78.4 44.2Q80.2 46.4 81.4 47.7Q80.4 48.7 78.8 48.9L79.2 50.3L78.2 51.3L79 52.5Q78.8 54.5 77.6 55.5Q75.4 57 72.8 57.2L71.6 60.4'

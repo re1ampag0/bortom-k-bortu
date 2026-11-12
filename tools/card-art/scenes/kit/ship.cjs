@@ -48,7 +48,7 @@ const SPECS = {
   // nose (no sprit topmast); square sails on the mizzen; black torn sails.
   pearl: {
     len: 104, free: 8.8, sheer: [5.2, 5.6], tumble: .35, bow: [6.5, 1.9], over: 7.5, counter: .78,
-    fc: [-29, 4.2], tiers: [[11, 3.4], [25, 3.4], [38, 2.8]], taff: 1.6, tw: [3.6, 5.6], openRail: 2,
+    fc: [-29, 4.2], tiers: [[11, 3.6], [24, 3.8], [36, 3.2]], taff: 1.6, tw: [3.6, 5.6], openRail: 2,
     hull: 'tar', trim: 'ship-wood', gilt: 0, wales: [3.1, 6.4], bands: [],
     ports: [{ h: 4.4, n: 9, x0: -31, x1: 30, w: 2.1 }], deckPorts: [7, -24, 32],
     gallery: [10.5, 2, 3.8], tierWin: 2, lantern: 1,

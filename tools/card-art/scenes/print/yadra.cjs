@@ -39,7 +39,7 @@ function hit(u, L, o) {
   return out;
 }
 
-module.exports = { name: 'Ядра', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: HZ });
     const m0 = K.cannon.muzzle({ ...GUN, x: 0 }), gun = { ...GUN, x: OUT + 10 - m0.x }, m = K.cannon.muzzle(gun), by = m.y;
@@ -89,9 +89,9 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'draft', cam: { x: 0,
     fg += K.cannon(u, L, { ...gun, breech: false });
     // the flash in front of the muzzle, over its mouth: a saturated ball of fire as in the first round (white heart,
     // gold, orange, a red-orange edge), the tongue of flame along the bore; only right of the muzzle's face
-    { const fb = nid('fb', u), fc = nid('fc', u), cx = m.x + 8;
-      fg += `<defs>${radGrad(fb, cx, m.y, 14, [[0, '#ffffff', 1], [.14, '#fff4b0', 1], [.34, '#ffd040', 1], [.58, '#ff8a1e', .9], [.8, '#ff5a10', .45], [1, '#ff4a08', 0]])}<clipPath id="${fc}"><rect x="${f(m.x - 2.5)}" y="${f(m.y - 30)}" width="60" height="60"/></clipPath></defs>`
-        + `<g clip-path="url(#${fc})"><circle cx="${f(cx)}" cy="${f(m.y)}" r="14" fill="url(#${fb})"/>${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -3, len: 20, seed: 1, smoke: false, glow: false })}</g>`; }
+    { const fb = nid('fb', u), fc = nid('fc', u), cx = m.x + 6.5;
+      fg += `<defs>${radGrad(fb, cx, m.y, 12.5, [[0, '#ffffff', 1], [.14, '#fff4b0', 1], [.34, '#ffd040', 1], [.58, '#ff8a1e', .9], [.8, '#ff5a10', .45], [1, '#ff4a08', 0]])}<clipPath id="${fc}"><rect x="${f(m.x - 2.5)}" y="${f(m.y - 30)}" width="60" height="60"/></clipPath></defs>`
+        + `<g clip-path="url(#${fc})"><circle cx="${f(cx)}" cy="${f(m.y)}" r="12.5" fill="url(#${fb})"/>${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -3, len: 20, seed: 1, smoke: false, glow: false })}</g>`; }
     fg += K.shotPile(u, L, { x: 20, y: 141, s: 1.95, n: 3, seed: 4 });
     fg += `<circle cx="${HX - 9}" cy="${by + 18}" r="2.2" fill="none" stroke="url(#iron${u})" stroke-width="1.3"/>`;
     fg += K.shot(u, L, { x: 66, y: 182, s: 1.4, seed: 8 }) + K.coil(u, L, { x: 86, y: 158, s: .85, seed: 3 });
