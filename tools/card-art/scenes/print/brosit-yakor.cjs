@@ -34,18 +34,22 @@ module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'dra
     // the enemy standing off at an angle, far on the left; our shot falls by her
     bg += `<g data-far="">${K.ship(u, L, { kind: 'endeavour', x: 24, y: HZ + 1.4, scale: .21, detail: 'far', flip: true, seed: 3 })}</g>`
       + K.splash(u, { x: 38, y: HZ + 2, w: 7, h: 11, seed: 3, L }) + K.splash(u, { x: 12, y: HZ + 2.4, w: 5, h: 7, seed: 4, L });
-    // the arc of her turn on the water: from far on the left it sweeps round behind her and in under the stern
-    { const id = nid('ar', u), bl = nid('ab', u), c = mix(L.pal.sea[0], '#ffffff', .6), arc = 'M48 70Q140 68 190 73Q214 78 186 84L170 86';
-      bg += `<defs>${linGrad(id, 48, 0, 200, 0, [[0, c, .15], [.6, c, .5], [1, c, .75]])}<filter id="${bl}" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation=".8"/></filter></defs>`
-        + `<path d="${arc}" stroke="url(#${id})" stroke-width="3.4" fill="none" filter="url(#${bl})"/>`;
-      // foam along the arc: thin far away, thick where it swings in under her stern
-      const P = t => { // a point on the arc (two quadratic pieces), t 0..1
-        const q = (a, b, c, s) => [(1 - s) * (1 - s) * a[0] + 2 * (1 - s) * s * b[0] + s * s * c[0], (1 - s) * (1 - s) * a[1] + 2 * (1 - s) * s * b[1] + s * s * c[1]];
-        return t < .7 ? q([48, 70], [140, 68], [190, 73], t / .7) : q([190, 73], [214, 78], [186, 84], (t - .7) / .3); };
-      for (let t = .02; t < 1; t += .03 + R() * .03) { const [x, y] = P(t), k = (y - HZ) / (WL - HZ); bg += K.foam(u, { x: x + (R() - .5) * 2, y: y + (R() - .5) * k * 1.6, w: 2 + k * 9, h: .3 + k * 1.1, seed: 40 + Math.round(t * 200), L }); } }
-    // the broadside from her far side: flashes and smoke rising beyond her, blown ahead (to the left) with the wind
-    const GUNS = [[100.9, 72.7], [117.3, 72.9], [133.7, 72.3]];   // ports in her far bulwark (shipGeom farRail at X -30, -10, 10)
-    for (const [[x, y], w, h, sd] of [[GUNS[0], 34, 40, 2], [GUNS[1], 30, 34, 5], [GUNS[2], 26, 28, 8]]) bg += K.smoke(u, L, { x: x - 2, y: y + 1, w, h, wind: -.75, seed: sd, opacity: .92, glow: { color: '#ffb050', power: .12 } });
+    // the wake of her turn, plain on the water: a broad white arc that starts under her stern, swings out to the
+    // right and round behind her, comes out again beyond her bow and closes in towards the point where the chain
+    // went in — she has spun on the spot round her anchor. Fresh and wide at the stern, older and thinner round the
+    // far side; wider near us (perspective)
+    { const id = nid('ab', u), C = { x: 92, y: 79, rx: 90, ry: 12 }, th0 = .476, th1 = -3.56, N = 90, foamC = mix(L.pal.sea[0], '#ffffff', .82);
+      const P = s => { const th = th0 + (th1 - th0) * s; return [C.x + C.rx * Math.cos(th), C.y + C.ry * Math.sin(th)]; };
+      let halo = '', core = '', lip = '';
+      for (let i = 0; i < N; i++) { const s0 = i / N, s1 = (i + 1.2) / N, [x0, y0] = P(s0), [x1, y1] = P(s1), k = Math.max(0, (y0 - HZ) / (WL - HZ)), age = 1 - s0 * .45, w = (.5 + 4.6 * k) * age;
+        halo += `<path d="M${f(x0)} ${f(y0)}L${f(x1)} ${f(y1)}" stroke-width="${f(w * 1.9)}"/>`; core += `<path d="M${f(x0)} ${f(y0)}L${f(x1)} ${f(y1)}" stroke-width="${f(w)}" opacity="${f(.55 + .4 * age)}"/>`;
+        lip += `<path d="M${f(x0)} ${f(y0 + w * .42)}L${f(x1)} ${f(y1 + w * .42)}" stroke-width="${f(Math.max(.25, w * .18))}"/>`; }
+      bg += `<defs><filter id="${id}" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="1.1"/></filter></defs>`
+        + `<g filter="url(#${id})" stroke="${foamC}" stroke-linecap="round" fill="none" opacity=".5">${halo}</g>`
+        + `<g stroke="#f6fffc" stroke-linecap="round" fill="none">${core}</g><g stroke="#ffffff" stroke-linecap="round" fill="none" opacity=".9">${lip}</g>`;
+      // churned foam along it: patches and streaks, more and bigger where it is fresh and near
+      for (let s = .01; s < 1; s += .018 + R() * .02) { const [x, y] = P(s), k = Math.max(0, (y - HZ) / (WL - HZ)), age = 1 - s * .45;
+        bg += K.foam(u, { x: x + (R() - .5) * 2, y: y + (R() - .5) * (.6 + k * 1.6), w: (2.4 + k * 10) * age, h: (.3 + k * 1.3) * age, seed: 40 + Math.round(s * 300), L }); } }
 
     // ——— the ship: heeled in the turn, the bow pulled down by the chain, wake and bow wave
     bg += K.ship(u, L, SHIP);

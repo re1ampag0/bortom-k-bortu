@@ -14,6 +14,7 @@ const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON
   rim: { az: 20, color: '#cfe4ff', power: .7 } };
 const SHOT = { x: 52, y: 64, a: -28, r: 5.8, len: 30 };   // the chain shot: middle, angle of the chain, ball radius, ball to ball
 const BRK = { x: 64, y: 92 };                               // where the topsail yard snapped
+const RIP = [[49, 70], [26, 90.5]];                         // the rent in the topgallant: from behind the balls to its clew
 const skel = { horizon: HZ, eye: 1.7, light: 'moon high right, behind the sails', items: [
   ['chainshot', SHOT.x - 18, SHOT.y, 36, 20, 'in flight'], ['mast', 92, 290, 16, 276, 'deck'], ['topgallant', 22, 90, 156, 40, 'yard'],
   ['topsail', -6, 150, 214, 58, 'yard (left arm broken)'], ['brokenArm', 18, 128, 48, 36, 'lift'], ['course', -12, 230, 224, 80, 'yard'],
@@ -78,6 +79,28 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
       rig += `<path d="M${edge.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}" stroke="#fff6dc" stroke-width=".6" fill="none" opacity=".55"/>`; }
     // ——— the topgallant: whole, nearest the moon — the brightest canvas, the shot crosses it
     rig += sail({ tl: [52, 54], tr: [150, 54], bl: [24, 90], br: [178, 90] }, { sag: 1.6, roach: 2.5, cloths: 10 });
+    // the rent the chain shot tore in it: from just behind the balls down along their flight to the lower left corner,
+    // over the broken arm — narrow where the balls went through, gaping and ragged at the clew, which is torn loose;
+    // the night sky through it, a lit frayed edge, threads standing out of both edges and bridging the narrow end
+    { const Rr = rng(53), P0 = RIP[0], P1 = RIP[1], n = 14, Lt = [], Rt = [];
+      const dx = P1[0] - P0[0], dy = P1[1] - P0[1], len = Math.hypot(dx, dy), tx = dx / len, ty = dy / len, nx = -ty, ny = tx;
+      for (let i = 0; i <= n; i++) { const t = i / n, w = .35 + 4.2 * Math.pow(t, 1.3), cx = P0[0] + dx * t + Math.sin(t * 9) * .9 * t, cy = P0[1] + dy * t;
+        Lt.push([cx + nx * (w + (Rr() - .5) * 1.4 * t), cy + ny * (w + (Rr() - .5) * 1.4 * t)]); Rt.push([cx - nx * (w + (Rr() - .5) * 1.4 * t), cy - ny * (w + (Rr() - .5) * 1.4 * t)]); }
+      const pts = Lt.concat(Rt.slice().reverse()), d = 'M' + pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z', rg = nid('rg', u);
+      // the canvas pulled away from the rent darkens along it
+      rig += `<path d="${d}" fill="none" stroke="#0e1016" stroke-width="2.4" stroke-linejoin="round" opacity=".32"/>`
+        + `<defs>${linGrad(rg, P0[0], P0[1], P1[0], P1[1], [[0, '#22304a'], [1, '#141c30']])}</defs><path d="${d}" fill="url(#${rg})"/>`
+        + `<circle cx="${f(P1[0] + 1.5)}" cy="${f(P1[1] - 4)}" r=".45" fill="#e8eeff"/><circle cx="${f(P0[0] - 7)}" cy="${f(P0[1] + 9)}" r=".3" fill="#e8eeff" opacity=".8"/>`;
+      // the frayed edges: lit on the side towards the moon, dark on the other
+      rig += line('M' + Lt.map(p => f(p[0]) + ' ' + f(p[1])).join('L'), .55, '#fff4d8', .75) + line('M' + Rt.map(p => f(p[0]) + ' ' + f(p[1])).join('L'), .5, '#e8e2c8', .55);
+      // loose threads: out of both edges into the gap and hanging down; across the narrow end a few still bridge it
+      for (const [E, s] of [[Lt, -1], [Rt, 1]]) for (let i = 1; i < E.length; i++) for (let k = 0; k < 2; k++) {
+        const [x, y] = E[i], q = i / n, l = 1.2 + Rr() * (2 + q * 3.5), a = Math.atan2(ny * s, nx * s) + (Rr() - .5) * 1.1 + .5;
+        rig += line(`M${f(x)} ${f(y)}q${f(Math.cos(a) * l * .5)} ${f(Math.sin(a) * l * .5 + .3)} ${f(Math.cos(a) * l)} ${f(Math.sin(a) * l + .8 + Rr() * .8)}`, .22 + Rr() * .2, Rr() > .3 ? '#e4dec6' : '#9a968a', .85); }
+      for (let i = 1; i < 5; i++) rig += line(`M${f(Lt[i][0])} ${f(Lt[i][1])}Q${f((Lt[i][0] + Rt[i][0]) / 2)} ${f((Lt[i][1] + Rt[i][1]) / 2 + .8)} ${f(Rt[i][0])} ${f(Rt[i][1])}`, .2, '#e4dec6', .8);
+      // the corner torn loose: a flap of canvas hanging out of the leech, curled, its frayed end flogging down-left
+      rig += `<path d="M${f(Lt[9][0])} ${f(Lt[9][1])}Q22 88 15 97L18 96.4Q19 99 16.6 101L20.6 97.6Q25 93 ${f(Lt[13][0])} ${f(Lt[13][1])}Z" fill="#5c5e5c" stroke="#1a1c22" stroke-width=".35"/>`
+        + line(`M${f(Lt[9][0])} ${f(Lt[9][1])}Q22 88 15 97`, .4, '#e8e2c8', .55) + line('M16.6 101q-1 2 -.4 4M18 96.4q-2 1.6 -2.6 3.8M15 97q-2.2 .6 -3.6 2.6', .25, '#c8c2ac', .8); }
 
     // ——— the masts: lower mast from the deck to the top, topmast to the crosstrees, topgallant to the truck
     let mast = cyl(105, 296, 103, 134, 5.4, 4.4) + cyl(101.5, 142, 100.5, 60, 3.2, 2.5) + cyl(99.6, 68, 99, 16, 1.9, 1.2);
@@ -140,9 +163,9 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     let shot = '';
     { const { x, y, a, r, len } = SHOT, ca = Math.cos(a * Math.PI / 180), sa = Math.sin(a * Math.PI / 180), h = len / 2;
       const A = [x - ca * h, y - sa * h], B = [x + ca * h, y + sa * h], bl = nid('bl', u), tr = nid('tr', u);
-      shot += `<defs><filter id="${bl}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6"/></filter>${linGrad(tr, BRK.x, BRK.y, x, y, [[0, '#dfe6ee', 0], [1, '#dfe6ee', .5]])}</defs>`
-        // the trail: from the break up to the shot, a soft streak
-        + `<path d="M${BRK.x - 2} ${BRK.y - 2}Q${x + 8} ${y + 16} ${x} ${y}" stroke="url(#${tr})" stroke-width="7" fill="none" filter="url(#${bl})"/>`
+      shot += `<defs><filter id="${bl}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6"/></filter>${linGrad(tr, RIP[1][0], RIP[1][1], x, y, [[0, '#dfe6ee', 0], [1, '#dfe6ee', .4]])}</defs>`
+        // the trail: up along the rent it tore, from the torn clew to the shot, a soft streak
+        + `<path d="M${RIP[1][0] + 2} ${RIP[1][1]}Q${x - 10} ${y + 14} ${x} ${y}" stroke="url(#${tr})" stroke-width="6" fill="none" filter="url(#${bl})"/>`
         // the swept disc: a faint grey ring where the balls have been in this instant
         + `<ellipse cx="${x}" cy="${y}" rx="${h + r}" ry="${f((h + r) * .8)}" fill="#c8d0dc" opacity=".12" filter="url(#${bl})"/>`
         + `<ellipse cx="${x}" cy="${y}" rx="${h}" ry="${f(h * .8)}" fill="none" stroke="#e4eaf2" stroke-width="${f(r * 1.4)}" opacity=".22" filter="url(#${bl})"/>`
