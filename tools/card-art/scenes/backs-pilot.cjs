@@ -17,7 +17,7 @@ const PLACES = { title: { y: 30 }, crest: { y: 214, d: 36 }, letter: null, name:
 function pearl() {
   const u = 'bp' + (pearl.n = (pearl.n || 0) + 1);
   // the deck's night light with the moon put into the picture, upper right, behind the ship
-  const base = K.LIGHTS.pearl, light = Object.assign({}, base, { key: { type: base.key.type, color: base.key.color, power: base.key.power, x: 146, y: 70 } });
+  const base = K.LIGHTS.pearl, light = Object.assign({}, base, { key: { type: base.key.type, color: base.key.color, power: base.key.power, x: 132, y: 74 }, fill: Object.assign({}, base.fill, { power: (base.fill.power || .4) * .5 }), rim: Object.assign({}, base.rim, { power: .75 }) });
   const L = K.makeLight(light, { horizon: HZ });
   let s = K.sky(u, L, { horizon: HZ, stars: 90, seed: 4 });
   s += K.sunMoon(u, L, { r: 9 });
@@ -28,8 +28,10 @@ function pearl() {
   s += `<path d="M-14 ${HZ + .5}C0 ${HZ - 7} 10 ${HZ - 10} 20 ${HZ - 9}C28 ${HZ - 13} 36 ${HZ - 12} 42 ${HZ - 6}C48 ${HZ - 4} 54 ${HZ - 2} 60 ${HZ + .5}Z" fill="${K.mix(L.pal.sky[3], '#0b0f1c', .62)}"/>`;
   s += K.water(u, L, { horizon: HZ, bottom: 300, swell: .7, seed: 6 });
   // the Pearl: under all sail, pitching a little bow up on the swell, her wake and her reflection
-  const bx = K.shipBox('pearl', { x: 0, y: 0, scale: 1 }), sc = Math.min(176 / bx.w, 128 / bx.h);
-  s += K.ship(u, L, { kind: 'pearl', x: 100, y: HZ + 6, scale: sc, heel: -2.5, sails: 'full', wake: true, reflect: true, lights: true, seed: 3 });
+  const bx = K.shipBox('pearl', { x: 0, y: 0, scale: 1 }), sc = Math.min(170 / bx.w, 116 / bx.h);
+  // she is lit by the same moon, but seen against it: the cloth and the tarred side stay black, the kant silver
+  const Ls = K.makeLight(Object.assign({}, light, { key: Object.assign({}, light.key, { power: light.key.power * .55 }), fill: Object.assign({}, light.fill, { power: light.fill.power * .6 }), rim: Object.assign({}, light.rim, { power: .9 }) }), { horizon: HZ });
+  s += K.ship(u, Ls, { kind: 'pearl', x: 100, y: HZ + 6, scale: sc, heel: -2.5, sails: 'full', wake: true, reflect: true, lights: true, seed: 3 });
   // night air: the corners of the sky and the near water go a little darker (no frame: the dark runs past the edge)
   const g = nid('vg', u);
   s += `<defs><radialGradient id="${g}" gradientUnits="userSpaceOnUse" cx="118" cy="120" r="210"><stop offset=".55" stop-color="#05070e" stop-opacity="0"/><stop offset="1" stop-color="#05070e" stop-opacity=".42"/></radialGradient></defs><rect x="-10" y="-10" width="220" height="300" fill="url(#${g})"/>`;

@@ -97,7 +97,7 @@ function crestFoam(u, L, pts, o = {}) {
 function rain(u, L, o) {
   const R = rng(o.seed || 9), id = nid('rn', u), fb = nid('rb', u), c = mix(L.pal.sky[2], '#ffffff', .25), dx = o.slant || .35;
   const [x0, x1, y0, y1] = [o.x0, o.x1, o.y0, o.y1];
-  let out = `<defs>${lin(id, 0, y0, 0, y1, [[0, c, .42], [.6, c, .22], [1, c, 0]])}${blur(fb, 2.4, [x0 - 30, y0 - 10, x1 - x0 + 80, y1 - y0 + 20])}</defs>`
+  let out = o.veil === false ? '' : `<defs>${lin(id, 0, y0, 0, y1, [[0, c, .42], [.6, c, .22], [1, c, 0]])}${blur(fb, 2.4, [x0 - 30, y0 - 10, x1 - x0 + 80 + (y1 - y0) * dx, y1 - y0 + 20])}</defs>`
     + `<path d="M${f(x0)} ${f(y0)}L${f(x1)} ${f(y0)}L${f(x1 + (y1 - y0) * dx)} ${f(y1)}L${f(x0 + (y1 - y0) * dx)} ${f(y1)}Z" fill="url(#${id})" filter="url(#${fb})"/>`;
   let st = '';
   for (let i = 0; i < (o.n || 40); i++) {
@@ -181,9 +181,11 @@ module.exports = {
     let yard = `<defs>${cv.defs}</defs><path d="${rag}" fill="${cv.fill}" stroke="${cr.outline}" stroke-width=".3"/>`;
     const wv = nid('wv', u); yard += `<defs>${lin(wv, 0, 196, 0, 205, [[0, L.pal.sea[1], 0], [1, L.pal.sea[2], .75]])}</defs><path d="${rag}" fill="url(#${wv})"/>`;
     yard += K.shadeCyl(u, yd[0][0], yd[0][1], yd[1][0], yd[1][1], 2.6, L, 'oak', { r1: 2.3, r2: 2.8, outline: .5, seed: 7 });
+    const se = yd[1], sr = L.ramp('oak', se[0], se[1]);   // the splintered end of the yard
+    yard += `<path d="M${f(se[0] - .6)} ${f(se[1] - 2.8)}l3.2 -1.4l-1.2 1.6l3.6 .4l-2.6 1.2l3 1.5l-3.6 .2l1.4 1.8l-3.6 -.8Z" fill="${sr.half}" stroke="${sr.outline}" stroke-width=".35"/>`;
     fg += K.contactShadow(u, 69, 194, 74, L, { ry: 3, opacity: .45 }) + yard + K.foam(u, { x: 66, y: 195.5, w: 80, h: 1.3, seed: 33, L });
     // rain in front of everything, thin, the same slant
-    fg += rain(u, L, { x0: -20, x1: 90, y0: 96, y1: 230, n: 40, seed: 12, slant: .38 });
+    fg += rain(u, L, { x0: -20, x1: 90, y0: 96, y1: 230, n: 40, seed: 12, slant: .38, veil: false });
     return [bg + mid + fx, fg];
   },
 };

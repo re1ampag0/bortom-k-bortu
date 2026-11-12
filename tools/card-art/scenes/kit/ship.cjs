@@ -93,15 +93,16 @@ const SPECS = {
   // A neutral merchantman: a small fluyt — a bellied hull, no gun ports, three masts, light sails. A working ship,
   // lived in: weathered planks of different tones and a few fresh ones, an ochre band, mended sails, cargo in the
   // waist (barrels, bales under a net), the longboat on the hatch, a stern lantern and one on the fore shrouds,
-  // three small figures of the crew (helm, waist, shrouds), a plain trade ensign and a long pennant (life below).
+  // three small figures of the crew (helm, waist, shrouds), long plain pennants; low in the water (laden). No side's
+  // colours and no ensign (card-briefs.md «Нейтральные суда»: not a fifth fighter); `ensign: 'trade'` stays available.
   merchant: {
-    len: 70, free: 8.6, sheer: [2.6, 4.2], tumble: .8, bow: [5.5, 2.6], over: 5.5, counter: .74,
+    len: 70, free: 7.9, sheer: [2.6, 4.2], tumble: .8, bow: [5.5, 2.6], over: 5.5, counter: .74,
     fc: [-22, 2.2], tiers: [[9, 3.4], [22, 3.6]], taff: 1.6, tw: [1.6, 3.6],
-    hull: 'ship-wood', trim: 'ship-wood', gilt: 0, wales: [], bands: [{ h0: 3, h1: 4.3, mat: 'tar' }, { h0: 7.2, h1: 8.1, mat: 'paint-ochre' }], wear: 2.6,
+    hull: 'ship-wood', trim: 'ship-wood', gilt: 0, wales: [], bands: [{ h0: 2.7, h1: 3.9, mat: 'tar' }, { h0: 6.6, h1: 7.4, mat: 'tar' }], wear: 2.6,
     ports: [], deckPorts: [0, 0, 0], gallery: [6, 1, 3.4], tierWin: 1, lantern: 1,
     beak: [7.5, 1.4, 2.6], sprit: { len: 17, steeve: 28, spritsail: 'set' }, jibs: 0,
     masts: [{ x: -22, H: 62, n: 2, k: 1.05 }, { x: 0, H: 72, n: 2, k: 1.15, rake: 1 }, { x: 21, H: 52, n: 2, k: .72, rake: 2, aft: 'lateen' }],
-    spar: 'oak', yard: 'ship-wood', sail: 'canvas', cond: 'mended', flag: 'pennant', pennant: 'ship-flag-red', forePennant: 1, ensign: 'trade', ensignK: .5,
+    spar: 'oak', yard: 'ship-wood', sail: 'canvas', cond: 'mended', flag: 'pennant', pennant: 'ship-flag-red', forePennant: 1,
     life: { barrels: [-27.4, -25.5], boat: [-15.4, -6.8], bales: [-6.6, -.5], crew: [['helm', 27.5], ['haul', 11.2], ['climb', 1]], shroudLamp: 0 },
   },
   // A neutral brig: two masts with square sails, a gaff sail on the main, a low flush hull with one white band.

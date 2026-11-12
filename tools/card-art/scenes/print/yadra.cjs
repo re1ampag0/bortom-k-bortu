@@ -17,8 +17,9 @@ const light = { time: 'night', haze: .3, key: { type: 'point', x: 62, y: 29, h: 
 const lightOut = { time: 'day', haze: .3, key: { type: 'sun', x: 154, y: 24, el: 34, color: '#fff0c8', power: .95 }, fill: { color: '#8fb8d8', power: .5 } };
 const GUN = { s: 1.9, y: 138, len: 50, turn: .08, recoil: .2, seed: 6 };
 const skel = { horizon: HZ, eye: 1.7, light: 'lantern on the beam + the flash at the port', items: [
-  ['gun', 48, GUN.y, 84, 46, 'deck'], ['shot', 14, 152, 34, 22, 'deck'], ['lantern', 54, 46, 16, 34, 'beam (rope)'], ['rammer', 8, 140, 16, 120, 'deck, leans on the wall'],
-  ['horn', 36, 80, 14, 30, 'peg'], ['enemy', 140, 106, 66, 70, 'water'], ['hit', 150, 104, 20, 18, 'enemy hull'], ['cask', 86, 214, 24, 26, 'deck'], ['crate', 26, 236, 40, 26, 'deck']] };
+  ['gun', 36, GUN.y, 100, 44, 'deck'], ['shot', 1, 143, 28, 18, 'deck'], ['lantern', 55, 40, 14, 34, 'beam (rope)'], ['rammer', 6, 132, 16, 116, 'deck, leans on the wall'],
+  ['horn', 36, 80, 14, 30, 'peg'], ['enemy', 150, 105, 60, 80, 'water'], ['hit', 172, 108, 20, 16, 'enemy hull'], ['ball', 154, 106, 8, 8, 'in flight'],
+  ['cask', 91, 200, 18, 27, 'deck'], ['crate', 22, 222, 40, 26, 'deck'], ['coil', 77, 158, 18, 5, 'deck']] };
 
 // ——— KIT-CANDIDATE: a hit on a ship's side: the smashed hole with torn plank ends, splinters flying out of it
 // (each a long thin shard, lit on the side of the light, spinning), dust and smoke, small splashes where they fall
@@ -41,7 +42,7 @@ function hit(u, L, o) {
 module.exports = { name: 'Ядра', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: HZ });
-    const m0 = K.cannon.muzzle({ ...GUN, x: 0 }), gun = { ...GUN, x: OUT - 7 - m0.x }, m = K.cannon.muzzle(gun), by = m.y;
+    const m0 = K.cannon.muzzle({ ...GUN, x: 0 }), gun = { ...GUN, x: OUT + 1 - m0.x }, m = K.cannon.muzzle(gun), by = m.y;
     const ph = 24, pt = by - ph / 2;
     // the inside of the hull: frames and planking (first round), the beam overhead, the deck in perspective
     let bg = woodTex(u, 0, 0, HX, FL, '#4e301a', '#26150a', '#120a04', 14, true, 7)
@@ -81,11 +82,11 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'draft', cam: { x: 0,
     // the deck things: shadows fan from under the lantern, then the things, then the light over them
     let fg = '';
     const sh = (x, y, w, h, d) => K.castShadow(u, L, { x, y, w, h, horizon: HZ, d });
-    fg += sh(gun.x - 8, GUN.y, 56, 40, .5) + sh(23, 153, 30, 18) + sh(100, 200, 20 * .9, 30 * .9) + sh(40, 222, 22 * 1.3, 16 * 1.3, .45);
+    fg += sh(gun.x - 8, GUN.y, 56, 40, .5) + sh(15, 143, 28, 17) + sh(100, 200, 20 * .9, 30 * .9) + sh(40, 222, 22 * 1.3, 16 * 1.3, .45);
     // the breeching rope from a ringbolt in the frames to the gun (first round), the gun itself
     fg += rope(`M${HX - 10} ${by + 18}Q${gun.x + 10} ${by + 30} ${gun.x - 30} ${by + 6}`, 1.05);
     fg += K.cannon(u, L, { ...gun, breech: false });
-    fg += K.shotPile(u, L, { x: 23, y: 153, s: 1.6, n: 3, seed: 4 });
+    fg += K.shotPile(u, L, { x: 15, y: 143, s: 1.45, n: 3, seed: 4 });
     fg += `<circle cx="${HX - 9}" cy="${by + 18}" r="2.2" fill="none" stroke="url(#iron${u})" stroke-width="1.3"/>`;
     fg += K.shot(u, L, { x: 66, y: 182, s: 1.4, seed: 8 }) + K.coil(u, L, { x: 86, y: 158, s: .85, seed: 3 });
     fg += K.barrel(u, L, { x: 100, y: 200, s: .9, kind: 'water', open: true, seed: 5 });
