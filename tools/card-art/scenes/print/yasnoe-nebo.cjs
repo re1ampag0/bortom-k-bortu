@@ -11,16 +11,16 @@ const { f, mix, clamp, lerp, rng, nid, linGrad, radGrad } = K;
 const HZ = 118, WL = 127;          // horizon (our eye, kneeling at the gun); the brig's waterline
 const SIDE = 84;                   // our side seen edge-on: the post's middle x
 const SUN = { x: 126, y: 24 };     // high in the clear sky, between the brig's masts and the price corner
-const AIM = [152, 121.4];          // the brig's midship port the shot flies into
+const AIM = [170, 121.6];          // the brig's midship port the shot flies into
 const light = { time: 'day', haze: .03, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#fffbea', power: 1 }, fill: { color: '#5d9be0', power: .6 } };
-const GUN = { x: 40, y: 133, s: 1.28, turn: .1, elev: -.6, recoil: .35, sideX: 33, seed: 7 };
-const BRIG = { kind: 'brig', x: 157, y: WL, scale: .9, flip: true, sails: 'reefed', detail: 'near', reflect: true, seed: 21 };
+const GUN = { x: 46, y: 133, s: 1.28, turn: .1, elev: -.6, recoil: .35, sideX: 33, seed: 7 };
+const BRIG = { kind: 'brig', x: 172, y: WL, scale: .9, flip: true, sails: 'reefed', detail: 'near', reflect: true, seed: 21 };
 const skel = { horizon: HZ, eye: 1, light: 'the sun high in front of us over the brig: short shadows towards us and to the left, the glitter path under it; the barrel and the post lit along their tops',
   items: [
     ['gun', 6, GUN.y, 88, 42, 'stands on our deck, the muzzle through the port in the post'],
     ['post', SIDE - 7, 292, 14, 300, 'our side edge-on: rail, port, planking', { edge: 1 }],
     ['brig', 104, WL, 92, 88, 'on the water, broadside to us, guns run out'],
-    ['headland', 168, 120, 40, 10, 'on the horizon, far'],
+    ['island', 124, 118, 84, 16, 'on the horizon behind the brig, far'],
     ['shot', 8, 214, 40, 26, 'pyramid on the deck'],
     ['linstock', 60, 214, 18, 92, 'stands in a tub on the deck, match smoking'],
   ] };
@@ -31,7 +31,7 @@ module.exports = { name: 'Ясное небо', kind: 'sea', status: 'draft', ca
     L.pal = Object.assign({}, L.pal, { sea: ['#7fb0c8', '#2f5f74', '#16323f'], sky: ['#1a49a2', '#2c69c0', '#69a5df', '#d3e7f3'] });
     // ——— beyond our side: sky, sun, the far headland and sails, the sea, the brig opposite
     let bg = K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L, { r: 7.5 });
-    bg += headland(u, L) + `<g data-far="">${K.ship(u, L, { kind: 'merchant', x: 104, y: 119.2, scale: .14, detail: 'far', flip: true, seed: 4 })}</g>`;
+    bg += headland(u, L);
     bg += K.water(u, L, { horizon: HZ, bottom: 292, swell: .25, seed: 14 });
     bg += K.ship(u, L, BRIG) + K.foam(u, { x: BRIG.x, y: WL + .2, w: 58, h: .9, L, seed: 6 });
     // ——— our deck, left of the side: planks running away to the bow, the sky over them through our rigging
@@ -41,9 +41,9 @@ module.exports = { name: 'Ясное небо', kind: 'sea', status: 'draft', ca
     // things on the deck, far to near: the gun, the linstock in its tub, the shot
     fg += K.castShadow(u, L, { x: GUN.x + 6, y: GUN.y, w: 30 * GUN.s, h: 21 * GUN.s, horizon: HZ, d: .5 }) + K.cannon(u, L, GUN);
     // the shot: smoke out of the port rolling towards the brig, the ball half way, dead on its side
-    const m = K.cannon.muzzle(GUN), ball = [lerp(m.x, AIM[0], .52), lerp(m.y, AIM[1], .52)];
-    fg += K.smoke(u, L, { x: m.x + 5, y: m.y + 5, w: 30, h: 26, wind: .9, seed: 8 });
-    fg += shotTrail(u, L, [m.x + 14, m.y + .6], ball) + K.shadeSphere(u, ball[0], ball[1], 1.7, L, 'iron', { outline: .35 });
+    const m = K.cannon.muzzle(GUN), ball = [lerp(m.x, AIM[0], .5), lerp(m.y, AIM[1], .5)];
+    fg += gunSmoke(u, L, m);
+    fg += shotTrail(u, L, [m.x + 16, m.y + .8], ball) + K.shadeSphere(u, ball[0], ball[1], 2, L, 'iron', { outline: .4 });
     fg += linstock(u, L, 14, 198);
     fg += K.shotPile(u, L, { x: 56, y: 216, s: 1.9, seed: 4 });
     fg += K.coil(u, L, { x: 36, y: 262, s: 2.2, seed: 9, tail: false });
@@ -51,13 +51,16 @@ module.exports = { name: 'Ясное небо', kind: 'sea', status: 'draft', ca
     return [bg, fg];
   } };
 
-/** A far headland on the horizon, sharp in the clear air, with a white tower on the cape. */
+/** A far island on the horizon behind the brig, sharp in the clear air: a long ridge with a peak, its slopes lit
+ *  towards the sun, a white tower on its right cape. */
 function headland(u, L) {
-  const P = L.pal, far = mix(P.sky[3], '#5a8aa4', .5), near = mix(P.sky[3], '#46748c', .62), id = nid('hl', u), y = HZ;
-  let s = `<defs>${linGrad(id, 0, y - 9, 0, y, [[0, far], [1, near]])}</defs>`;
-  s += `<path d="M170 ${y}C173 ${y - 1.2} 176 ${y - 3} 180 ${y - 3.6}C185 ${y - 4.3} 189 ${y - 6.6} 194 ${y - 7.1}C198 ${y - 7.4} 201 ${y - 6.8} 204 ${y - 6.4}L204 ${y}Z" fill="url(#${id})"/>`;
-  s += `<path d="M180 ${y - 3.6}C185 ${y - 4.3} 189 ${y - 6.6} 194 ${y - 7.1}L193.4 ${y - 5.2}C189 ${y - 4.8} 185 ${y - 2.8} 181 ${y - 2.4}Z" fill="${mix(far, '#ffffff', .4)}" opacity=".55"/>`;
-  s += `<path d="M185.4 ${y - 4.6}L185.8 ${y - 10.6}L187.6 ${y - 10.6}L188 ${y - 5.2}Z" fill="${mix('#f4f1e6', P.sky[3], .2)}"/><path d="M186.9 ${y - 10.6}L187.6 ${y - 10.6}L188 ${y - 5.2}L187.2 ${y - 5}Z" fill="${mix('#9fb2bd', P.sky[3], .25)}"/><path d="M185.5 ${y - 10.5}L187.9 ${y - 10.5}L187.5 ${y - 11.8}L185.9 ${y - 11.8}Z" fill="#5a6870"/>`;
+  const P = L.pal, far = mix(P.sky[3], '#5a87a2', .55), near = mix(P.sky[3], '#46728a', .66), id = nid('hl', u), y = HZ;
+  let s = `<defs>${linGrad(id, 0, y - 16, 0, y, [[0, far], [1, near]])}</defs>`;
+  s += `<path d="M124 ${y}C130 ${y - 1.4} 136 ${y - 3.4} 142 ${y - 4.6}C150 ${y - 6.2} 156 ${y - 9.6} 164 ${y - 12.2}C170 ${y - 14} 175 ${y - 15.4} 180 ${y - 14.6}C186 ${y - 13.6} 190 ${y - 10.4} 196 ${y - 8.6}C200 ${y - 7.6} 204 ${y - 7.8} 208 ${y - 7.2}L208 ${y}Z" fill="url(#${id})"/>`;
+  // the slopes towards the sun (left, up) catch the light; the gullies are darker
+  s += `<path d="M142 ${y - 4.6}C150 ${y - 6.2} 156 ${y - 9.6} 164 ${y - 12.2}C170 ${y - 14} 175 ${y - 15.4} 180 ${y - 14.6}L176 ${y - 12.6}C170 ${y - 12.4} 164 ${y - 9.8} 158 ${y - 7.4}C152 ${y - 5.4} 147 ${y - 4.2} 143 ${y - 3.6}Z" fill="${mix(far, '#ffffff', .42)}" opacity=".55"/>`;
+  s += `<path d="M180 ${y - 14.6}C186 ${y - 13.6} 190 ${y - 10.4} 196 ${y - 8.6}L194 ${y - 6}C188 ${y - 7.6} 184 ${y - 10.6} 180 ${y - 14.6}Z" fill="${mix(near, '#1d3a4a', .25)}" opacity=".45"/>`;
+  s += `<path d="M199.4 ${y - 7.6}L199.8 ${y - 13.6}L201.6 ${y - 13.6}L202 ${y - 7.8}Z" fill="${mix('#f4f1e6', P.sky[3], .2)}"/><path d="M200.9 ${y - 13.6}L201.6 ${y - 13.6}L202 ${y - 7.8}L201.2 ${y - 7.7}Z" fill="${mix('#9fb2bd', P.sky[3], .25)}"/><path d="M199.5 ${y - 13.5}L201.9 ${y - 13.5}L201.5 ${y - 14.8}L199.9 ${y - 14.8}Z" fill="#5a6870"/>`;
   return s;
 }
 
@@ -75,10 +78,10 @@ function ourDeck(u, L) {
 
 /** Our main shrouds rising from the chains at the side up and inboard out of the frame, ratlines across. */
 function shrouds(u, L) {
-  const rp = L.ramp('rope', 40, 60), feet = [[SIDE - 2, 84], [SIDE - 2.4, 78], [SIDE - 2.8, 73]], tops = [[-14, -14], [8, -14], [30, -14]];
+  const rp = L.ramp('rope', 40, 60), feet = [[SIDE - 3.4, 83.4], [SIDE, 83.4], [SIDE + 3.4, 83.4]], tops = [[-14, -14], [6, -14], [26, -14]];
   let s = '';
   feet.forEach((a, i) => { const b = tops[i]; s += `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="${rp.outline}" stroke-width="${f(1.25 - i * .2)}" fill="none"/><path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="${rp.lit}" stroke-width=".35" opacity=".6" transform="translate(.35 -.3)" fill="none"/>`;
-    s += K.shadeSphere(u, a[0] - 2, a[1] - 2.2, 2.2 - i * .3, L, 'oak', { outline: .4 }); });
+    s += K.shadeSphere(u, a[0], a[1] - .4, 1.9, L, 'oak', { outline: .4 }); });
   // ratlines: short sagging lines between the shrouds, closer together far up
   for (let t = .12; t < .95; t += .085) {
     const p = feet.map((a, i) => [lerp(a[0], tops[i][0], t), lerp(a[1], tops[i][1], t)]);
@@ -89,7 +92,7 @@ function shrouds(u, L) {
 
 /** Our side seen edge-on: the rail cap at the top, the port the gun points through, the planking down to the bottom. */
 function post(u, L) {
-  const x0 = SIDE - 6, x1 = SIDE + 6, top = 88, pt = 102, pb = 122;
+  const x0 = SIDE - 6, x1 = SIDE + 6, top = 88, pt = 103, pb = 122;
   const faces = [
     { pts: [[x0, top], [x1, top], [x1 + .4, pt], [x0 - .4, pt]], n: 'left', kind: 'oak', grain: [0, 1] },
     { pts: [[x0 - .4, pb], [x1 + .4, pb], [x1 + 1.2, 292], [x0 - 1.2, 292]], n: 'left', kind: 'oak', grain: [0, 1] },
@@ -133,5 +136,13 @@ function shotTrail(u, L, a, b) {
 function sailShadow(u, L) {
   const id = nid('ss', u), bl = nid('sl', u), cid = nid('sc', u);
   return `<defs><clipPath id="${cid}"><rect x="-12" y="${HZ}" width="${SIDE - 6 + 12}" height="${292 - HZ}"/></clipPath><filter id="${bl}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".8"/></filter>${linGrad(id, 0, 150, 0, 292, [[0, L.shadowMul, .9], [1, L.shadowMul, 1]])}</defs>`
-    + `<g clip-path="url(#${cid})"><path d="M-12 168C10 166 40 160 ${SIDE} 146L${SIDE} 292L-12 292Z" fill="url(#${id})" filter="url(#${bl})" style="mix-blend-mode:multiply"/></g>`;
+    + `<path d="M-12 168C10 166 40 160 ${SIDE - 6} 147L${SIDE - 6} 292L-12 292Z" fill="url(#${id})" filter="url(#${bl})" style="mix-blend-mode:multiply"/>`;
+}
+
+/** The smoke of the shot rolling out of the port along the bore: one billow of the kit's smoke laid on its side
+ *  (it grows from the muzzle towards the brig and lifts a little at its far end). */
+function gunSmoke(u, L, m) {
+  const a = 80;  // the smoke's "up" turned to point along the bore, a little above it
+  return K.smoke(u, L, { x: m.x + 3, y: m.y - 1, w: 16, h: 20, wind: .5, seed: 11, opacity: .9 })
+    + `<g transform="translate(${f(m.x - .5)} ${f(m.y + .3)}) rotate(${a})">${K.smoke(u, L, { x: 0, y: 0, w: 26, h: 26, wind: -.2, seed: 8, opacity: 1 })}</g>`;
 }
