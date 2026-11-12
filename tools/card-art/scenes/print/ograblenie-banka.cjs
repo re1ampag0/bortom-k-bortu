@@ -9,21 +9,26 @@
 // hind leg pushing, one swinging; the safe floated in front of the hole — it sits on the cobbles, its feet scrape
 // sparks; the coin column stood in the air — the coins lie in a trail; the cobbles were one stamp in rows — each
 // stone its own, in perspective, wet under the moon; the facade has plaster, brick under it, quoins and a lit corner.
+// Second pass: the stars as in the first round (a warm scatter over the roofs, a few with a cross); the moon is a sharp
+// disc with relief (maria, craters, Tycho's rays), no blurred spot; the light is set by where it stands in the
+// picture (low, a little right, in front of us): long shadows towards us and to the left, rims on the right. More gold,
+// muted: coins in the trail and spilling from the door, ingots on the vault shelves and one fallen on the cobbles.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
 const { f, mix, nid, linGrad, radGrad, rng } = K;
 const { glow, gloom } = PK;
+const MOON = { x: 172, y: 52, r: 7.5 };
 
 const HZ = 100, ST = 128, CORNER = 148;                // eye level; the foot of the facade (the street begins); the building's corner
 const SAFE = { x: 98, y: 127, w: 54, h: 42 };          // the safe: middle of its foot on the cobbles
 const GUARD = { x: 22, y: 128 };
-const light = { time: 'night', haze: .35, key: { type: 'moon', x: 174, y: 48, az: 55, el: 30, color: '#d4e0f6', power: .85 }, fill: { color: '#34486c', power: .4 },
-  rim: { az: 50, color: '#cfe0ff', power: .5 }, locals: [{ x: GUARD.x + 8, y: GUARD.y - 14, color: '#ffc060', power: .7, radius: 40 }] };
-const skel = { horizon: HZ, eye: 1.6, light: 'the moon over the roofs upper right (from the right, a little behind): lit edges on the right, shadows to the left and towards us; the watchman\'s lantern a warm local light on the left', items: [
+const light = { time: 'night', haze: .35, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#d4e0f6', power: .85 }, fill: { color: '#34486c', power: .4 },
+  rim: { az: 30, color: '#cfe0ff', power: .5 }, locals: [{ x: GUARD.x + 8, y: GUARD.y - 14, color: '#ffc060', power: .7, radius: 40 }] };
+const skel = { horizon: HZ, eye: 1.6, light: 'the moon low over the roofs on the right, in front of us (az and el follow from its place in the picture): rims on the right, long shadows towards us and a little to the left; the watchman\'s lantern a warm local light on the left', items: [
   ['facade', -4, ST, 152, 128, 'street'], ['breach', 42, ST, 84, 58, 'facade ground floor'], ['safe', 71, SAFE.y, 54, 52, 'cobbles (castors), wall chunk on its back'],
   ['horse near', 143, 129, 56, 40, 'cobbles (hooves)'], ['horse far', 149, 123, 48, 38, 'cobbles'], ['chains', 124, 96, 62, 16, 'safe → swingletree → collars'],
-  ['watchman', 10, GUARD.y, 26, 36, 'cobbles'], ['coins', 40, 150, 100, 20, 'cobbles'], ['moon', 166, 56, 16, 16, 'sky']] };
+  ['watchman', 10, GUARD.y, 26, 36, 'cobbles'], ['coins', 40, 150, 100, 20, 'cobbles'], ['moon', 164, 44, 16, 16, 'sky']] };
 
 const lerp = (a, b, t) => a + (b - a) * t;
 function smooth(pts, closed = false) { const n = pts.length, g = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))]; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
@@ -115,11 +120,39 @@ function watchman(u, L, x, y) {
   return out;
 }
 
+// the moon: a sharp disc, limb a little darker, the maria where they are on the real moon, craters with a lit rim on
+// the far side from the sun, Tycho's rays; only a faint tight corona (no blurred spot)
+function moonDisc(u, { x, y, r }) {
+  const g = nid('md', u), c = nid('mc', u), h = nid('mh', u), R = rng(83);
+  const blob = (bx, by, rx, ry, sd) => { const q = rng(sd); return smooth(Array.from({ length: 9 }, (_, i) => { const a = i / 9 * Math.PI * 2, k = 1 + (q() - .5) * .45; return [x + (bx + Math.cos(a) * rx * k) * r, y + (by + Math.sin(a) * ry * k) * r]; }), true); };
+  let out = `<defs>${radGrad(g, x - r * .15, y - r * .15, r * 1.05, [[0, '#fbf8ec', 1], [.7, '#ece8d6', 1], [1, '#c8c4b0', 1]])}${radGrad(h, x, y, r * 2.6, [[.36, '#dfe8ff', .22], [.6, '#c8d8f0', .07], [1, '#c8d8f0', 0]])}<clipPath id="${c}"><circle cx="${x}" cy="${y}" r="${r}"/></clipPath></defs>`
+    + `<circle cx="${x}" cy="${y}" r="${f(r * 2.6)}" fill="url(#${h})"/><circle cx="${x}" cy="${y}" r="${r}" fill="url(#${g})"/><g clip-path="url(#${c})">`;
+  // the maria: Imbrium, Serenitatis, Tranquillitatis, Crisium, Procellarum, Nubium, Fecunditatis
+  for (const [bx, by, rx, ry, sd, op] of [[-.24, -.36, .3, .24, 1, .5], [.2, -.3, .17, .16, 2, .5], [.3, -.02, .22, .19, 3, .48], [.7, -.22, .1, .12, 4, .55], [-.56, .06, .28, .44, 5, .4], [-.1, .36, .2, .13, 6, .38], [.5, .26, .12, .19, 7, .42]])
+    out += `<path d="${blob(bx, by, rx, ry, sd)}" fill="#9a9a90" opacity="${op}"/>`;
+  // craters: a dark bowl, a light rim on the lower right
+  for (let i = 0; i < 11; i++) { const a = R() * Math.PI * 2, d = Math.sqrt(R()) * .85, cx = x + Math.cos(a) * d * r, cy = y + Math.sin(a) * d * r, cr = (.04 + R() * .07) * r;
+    out += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(cr)}" fill="#a8a69a" opacity=".7"/><path d="M${f(cx + cr)} ${f(cy)}A${f(cr)} ${f(cr)} 0 0 1 ${f(cx)} ${f(cy + cr)}" stroke="#fffaf0" stroke-width="${f(cr * .45)}" fill="none" opacity=".8"/>`; }
+  // Tycho and Copernicus: bright craters, Tycho's rays
+  const ty = [x - .12 * r, y + .7 * r], co = [x - .36 * r, y - .02 * r];
+  out += [0, 1, 2, 3, 4, 5, 6].map(k => { const a = -Math.PI / 2 + (k - 3) * .5 + (R() - .5) * .2, l = (.5 + R() * .7) * r; return `<path d="M${f(ty[0])} ${f(ty[1])}l${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)}" stroke="#fffaf0" stroke-width="${f(r * .035)}" opacity=".45"/>`; }).join('')
+    + `<circle cx="${f(ty[0])}" cy="${f(ty[1])}" r="${f(r * .07)}" fill="#fffef6"/><circle cx="${f(co[0])}" cy="${f(co[1])}" r="${f(r * .06)}" fill="#f8f4e6" stroke="#b0ae9e" stroke-width="${f(r * .02)}"/>`;
+  // the limb: a crisp edge, a touch darker
+  return out + `</g><circle cx="${x}" cy="${y}" r="${f(r - .15)}" fill="none" stroke="#bab6a2" stroke-width=".3" opacity=".7"/>`;
+}
+// a gold ingot: a trapezoid bar seen from the front and above, muted gold, the moon glinting on its right edge
+function ingot(u, x, y, s, rot = 0) {
+  const g = nid('ig', u), t = nid('it', u);
+  return `<g transform="translate(${f(x)} ${f(y)}) rotate(${rot}) scale(${s})"><defs>${linGrad(g, -5, 0, 5, 0, [[0, '#5a4214', 1], [.55, '#9a7a34', 1], [1, '#c8a656', 1]])}${linGrad(t, 0, -3.6, 0, -2, [[0, '#d8bc72', 1], [1, '#a8883e', 1]])}</defs>`
+    + `<ellipse cx="0" cy=".3" rx="5.6" ry=".8" fill="#08080c" opacity=".6"/><path d="M-5 0L-3.8 -2.4H3.8L5 0Z" fill="url(#${g})" stroke="#3a2808" stroke-width=".25"/>`
+    + `<path d="M-3.8 -2.4L-3 -3.4H3L3.8 -2.4Z" fill="url(#${t})" stroke="#3a2808" stroke-width=".2"/><path d="M3.8 -2.4L5 0" stroke="#f0dca0" stroke-width=".35" opacity=".8"/><path d="M-2.6 -2.9h4" stroke="#7a5a1c" stroke-width=".2"/></g>`;
+}
+
 module.exports = { name: 'Ограбление банка', kind: 'deck', status: 'draft', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 });
     // the sky over the roofs on the right: stars, the moon, a cloud; the far roofs and a palm in silhouette
-    let bg = K.sky(u, L, { horizon: HZ, stars: 40, seed: 6 }) + K.sunMoon(u, L, { r: 6.4 }) + K.cloud(u, L, { x: 184, y: 30, w: 30, h: 5, seed: 7, far: .4 });
+    let bg = K.sky(u, L, { horizon: HZ, stars: false, seed: 6 }) + PK.stars(30, 140, 0, 60, 80, 6) + moonDisc(u, MOON) + K.cloud(u, L, { x: 184, y: 30, w: 30, h: 5, seed: 7, far: .4 });
     bg += `<path d="M${CORNER} 104L156 96L164 98L168 90L184 92L188 86L200 88V${ST}H${CORNER}Z" fill="#141a28"/><rect x="170" y="94" width="3" height="3" fill="#ffc870" opacity=".75"/>`
       + `<path d="M190 ${ST - 26}q1 -14 -2 -24" stroke="#10141e" stroke-width="1.6" fill="none"/>` + [[-1, -.6], [-.8, .2], [.2, -.9], [.9, -.2], [1, .5]].map(([a, b]) => `<path d="M188 78q${f(a * 6)} ${f(b * 4 - 2)} ${f(a * 12)} ${f(b * 6 + 3)}" stroke="#10141e" stroke-width="1.4" fill="none"/>`).join('');
     // the facade: plaster in moonlight from the side (the right edge lit), cracks, the tiled eaves
@@ -152,6 +185,8 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
       bg += `<defs>${radGrad(hg, 84, 112, 46, [[0, '#1a1410', 1], [1, '#040406', 1]])}<clipPath id="${hc}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="url(#${hg})"/>`
         + `<g clip-path="url(#${hc})"><path d="M44 96h80M44 108h80" stroke="#1e160e" stroke-width="1.6"/>`
         + [[48, 92], [56, 91], [62, 92], [102, 92], [110, 91], [50, 104], [104, 104]].map(([x, y], i) => `<path d="M${x} ${y}q2 -4 4 0z" fill="#3a2a18" opacity="${.6 + i % 2 * .2}"/>`).join('')
+        + ingot(u, 72, 96, .9) + ingot(u, 80, 96, .9) + ingot(u, 76, 93.2, .9) + ingot(u, 94, 108, .9) + ingot(u, 101.4, 108, .9)
+        + [[86, 120], [100, 122]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="5" ry="1.6" fill="#9a7a34" opacity=".55"/><path d="M${x - 3} ${y - .6}h6" stroke="#d8bc72" stroke-width=".35" opacity=".6"/>`).join('')
         + K.localGlow(u, { x: 60, y: 120, color: '#ff9a40', power: .25, radius: 16 }, { core: false }) + `</g>`;
       // the ragged rim: plaster edge, then broken bricks in courses
       const R = rng(12); let rim = '';
@@ -170,9 +205,10 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
     // dust from the breach drifting left in the moonlight
     fg += K.smoke(u, L, { x: 52, y: ST - 2, w: 34, h: 26, wind: -.6, seed: 9, opacity: .45 });
     // the coins: a trail from the hole to the safe's sprung door, glinting
-    { const R = rng(31), cg = nid('co', u); fg += `<defs>${linGrad(cg, 0, 0, 3, 0, [[0, '#8a6020', 1], [.5, '#f2c860', 1], [1, '#fff0b0', 1]])}</defs>`;
-      for (let i = 0; i < 26; i++) { const t = R(), x = lerp(50, 132, t) + (R() - .5) * 10, y = ST + 4 + R() * 16 + t * 4, r = 1.1 + (y - ST) * .05;
-        fg += `<ellipse cx="${f(x)}" cy="${f(y + .4)}" rx="${f(r)}" ry="${f(r * .38)}" fill="#3a2a0a"/><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r)}" ry="${f(r * .38)}" fill="url(#${cg})" stroke="#5a3a0a" stroke-width=".2"/>`; } }
+    { const R = rng(31), cg = nid('co', u); fg += `<defs>${linGrad(cg, 0, 0, 3, 0, [[0, '#6a4a18', 1], [.55, '#b8954a', 1], [1, '#e2cc8a', 1]])}</defs>`;
+      for (let i = 0; i < 34; i++) { const t = R(), x = lerp(50, 132, t) + (R() - .5) * 10, y = ST + 4 + R() * 16 + t * 4, r = 1.1 + (y - ST) * .05;
+        fg += `<ellipse cx="${f(x)}" cy="${f(y + .4)}" rx="${f(r)}" ry="${f(r * .38)}" fill="#3a2a0a"/><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r)}" ry="${f(r * .38)}" fill="url(#${cg})" stroke="#4a320a" stroke-width=".2"/>` + (i % 5 === 0 ? `<path d="M${f(x + r * .3)} ${f(y - r * .2)}h${f(r * .6)}" stroke="#fff4d0" stroke-width=".3" opacity=".75"/>` : ''); }
+      fg += ingot(u, 60, ST + 7, 1.15, -8); }
     // the safe: iron box with a chunk of the brick wall still on its back, on castors, chains round it
     { const { x, y, w, h } = SAFE, x0 = x - w / 2, top = y - h - 4;
       fg += K.castShadow(u, L, { x, y, w: w * .9, h: h, horizon: HZ, d: .6, opacity: .6 });
@@ -199,7 +235,7 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
       { const R = rng(41); for (let i = 0; i < 12; i++) { const sx = x0 + 3 + R() * 6, sy = y - R() * 2, l = 2 + R() * 4, a = Math.PI + (R() - .5) * 1.2; fg += `<path d="M${f(sx)} ${f(sy)}l${f(Math.cos(a) * l)} ${f(Math.sin(a) * l - R() * 2)}" stroke="#ffd070" stroke-width=".45" stroke-linecap="round" opacity=".9"/>`; }
         fg += K.localGlow(u, { x: x0 + 4, y: y - 1, color: '#ffc060', power: .5, radius: 7 }); }
       // coins spilling from the door's gap down the front
-      { const R = rng(51); for (let i = 0; i < 5; i++) { const cx = x0 + w - 6 + i * 2.6 + R() * 2, cy = y - h * .45 + i * 5.2; fg += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="1.5" ry=".7" fill="#f2c860" stroke="#5a3a0a" stroke-width=".25" transform="rotate(${f(R() * 60 - 30)} ${f(cx)} ${f(cy)})"/>`; } }
+      { const R = rng(51); for (let i = 0; i < 8; i++) { const cx = x0 + w - 6 + i * 1.8 + R() * 2, cy = y - h * .5 + i * 3.6; fg += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="1.5" ry=".7" fill="${i % 2 ? '#c8a656' : '#a8883e'}" stroke="#4a320a" stroke-width=".25" transform="rotate(${f(R() * 60 - 30)} ${f(cx)} ${f(cy)})"/>`; } }
       // the chains: from the safe's straps to the swingletree behind the team (taut, straight-ish)
       fg += K.chain(u, L, [[x0 + w + 2, y - h + 8], [132, 97], [141, 101]], { link: 2.4, seed: 3 }) + K.chain(u, L, [[x0 + w + 2, y - 16], [132, 112], [141, 112]], { link: 2.4, seed: 7 });
       fg += K.shadeCyl(u, 141, 98, 141, 115, 1.4, L, 'oak', { outline: .35 }); }
@@ -214,6 +250,6 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
     // the watchman
     fg += watchman(u, L, GUARD.x, GUARD.y) + K.localGlow(u, { x: GUARD.x + 11.2, y: GUARD.y - 14.5, color: '#ffd080', power: .85, radius: 9 });
     // light: the moon's veil, the dark under the glass
-    fg += glow(u, 172, 50, 70, 50, '#c8d8f0', .12) + gloom(u, 160, 40, 0, 100, .3, '#04060c') + gloom(u, 100, 140, 100, 280, .62, '#020408');
+    fg += gloom(u, 160, 40, 0, 100, .3, '#04060c') + gloom(u, 100, 140, 100, 280, .62, '#020408');
     return [bg, fg];
   } };
