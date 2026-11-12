@@ -62,14 +62,14 @@ const SPECS = {
   // jib-boom (0.35 L, 22°), a low head with rails; masts at 0.15 / 0.60 / 0.89 from the bow, the mizzen lower with a lateen
   // and one square yard; all black, black torn sails with many holes.
   pearl: {
-    len: 104, free: 14.5, sheer: [2.5, 3], tumble: .35, bow: [8, 1.9], over: 9, counter: .78,
+    len: 104, free: 14.5, sheer: [3.8, 3], tumble: .35, bow: [8, 1.9], over: 9, counter: .78,
     fc: [-41, 2.5], tiers: [[26, 4.6], [40, 4.6]], taff: 2.3, tw: [3.6, 5.6], openRail: 1,
     hull: 'ship-coal', trim: 'tar', gilt: 0, lidIn: 'tar', wales: [5.8, 12.4], bands: [],
     ports: [{ h: 9.4, n: 9, x0: -42, x1: 38, w: 2.6 }, { h: 16.3, n: 3, x0: 26, x1: 42, w: 1.7 }], deckPorts: [0, 0, 0],
     gallery: [10.5, 2, 3.8], tierWin: 2, lantern: 2, lanternPost: 1.3, balc: [1], balcD: 2.4,
     beak: [13, 2.2, 5], sprit: { len: 26, steeve: 22, jib: 17 }, jibs: 2,
     masts: [{ x: -36, H: 86, n: 3, k: 1.3 }, { x: 10, H: 94, n: 3, k: 1.42 }, { x: 41, H: 72, n: 2, k: .82, rake: 2.5, aft: 'lateen' }],
-    spar: 'tar', yard: 'tar', sail: 'ship-sail-coal', cond: 'torn', holeK: 1.5, thruK: .3, flag: 'jolly', pennant: 'ship-flag-black',
+    spar: 'tar', yard: 'tar', sail: 'ship-sail-coal', cond: 'torn', holeK: .72, holeVar: 1, footRag: 1, thruK: .3, flag: 'jolly', pennant: 'ship-flag-black',
     beam: .25, draft: 9, bilge: 2.2, inner: 'ship-red', deckK: 'pine-deck', bottom: 'foul',   // 40 x 10 m (ru-BP, the dossier)
   },
   // Queen Anne's Revenge (2011), by the measurements: a long low waist (0.14 L) and the highest stern of all (0.45 L, 0.50
@@ -595,7 +595,7 @@ function build(u, L, o, mode) {
     defs += `<radialGradient id="${thruG}" gradientUnits="userSpaceOnUse" cx="${f(src[0])}" cy="${f(src[1])}" r="${f(R0 * 1.25)}"><stop offset="0" stop-color="${lt}" stop-opacity=".85"/><stop offset=".38" stop-color="${lt}" stop-opacity=".5"/><stop offset=".75" stop-color="${lt}" stop-opacity=".16"/><stop offset="1" stop-color="${lt}" stop-opacity="0"/></radialGradient>`; return thruG; };
   // a sail on a map S(u, v) -> local point: u — from the fore edge to the aft one, v — from the head to the foot
   const cloth = (S, q) => {
-    const Rr = R(q.name), N = 14, wd = q.wd, ht = q.ht, rough = cond !== 'whole' && cond !== 'mended' && q.tear !== false, mended = cond === 'mended' && q.tear !== false, strips = cond === 'strips' && q.strip !== false, rags = cond === 'rags' || cond === 'strips' && !strips, torn = cond === 'torn', fr = cond === 'fringe';
+    const Rr = R(q.name), N = 14, wd = q.wd, ht = q.ht, rough = cond !== 'whole' && cond !== 'mended' && q.tear !== false, mended = cond === 'mended' && q.tear !== false, strips = cond === 'strips' && q.strip !== false, rags = cond === 'rags' || cond === 'strips' && !strips, torn = cond === 'torn', fr = cond === 'fringe', fRag = torn && sp.footRag && q.foot !== false, hv = torn && sp.holeVar;
     const at0 = (cu, cv) => (du, dv) => S(clamp(cu + du / wd, .025, .975), clamp(cv + dv / ht, .035, .96));
     // the foot of a torn sail: a smooth line cut by tears of different depth, width and slant, with tatters hanging below
     let dvAt = () => 0;
@@ -603,11 +603,14 @@ function build(u, L, o, mode) {
     if (rough && !strips && q.foot !== false) {
       if (fr) for (let i = 0, nt = 11 + Math.floor(Rr() * 5); i < nt; i++) { const w = .012 + Rr() * .02, sk = (Rr() - .5) * .7;   // a fringe: many narrow tongues along the whole foot
         cuts.push([(i + .2 + Rr() * .6) / nt, (.06 + Rr() * .1) * (Rr() < .25 ? 1.5 : 1), w * (1 + sk), w * (1 - sk)]); }
+      else if (fRag) for (let i = 0, nt = 3 + Math.floor(Rr() * 3); i < nt; i++) { const z = Rr(), w = z < .4 ? .05 + Rr() * .07 : .012 + Rr() * .03, sk = (Rr() - .5) * 1.1;   // sp.footRag (the Pearl): bites of every kind — wide shallow scallops and narrow deep slits
+        cuts.push([.06 + Rr() * .88, z < .4 ? .025 + Rr() * .05 : .06 + Rr() * .14, w * (1 + sk), w * (1 - sk)]); }
       else for (let i = 0, nt = rags ? 4 + Math.floor(Rr() * 3) : torn ? 2 + Math.floor(Rr() * 2) : 1 + Math.floor(Rr() * 2); i < nt; i++) { const w = (rags ? .02 : .014) + Rr() * .055, sk = (Rr() - .5) * .9;
         cuts.push([.07 + Rr() * .86, (rags ? .07 + Rr() * .25 : .035 + Rr() * .13) * (Rr() < .3 ? .45 : 1), w * (1 + sk), w * (1 - sk)]); }
-      for (let i = 0, nt = rags ? 2 + Math.floor(Rr() * 3) : torn && Rr() > .5 ? 1 : 0; i < nt; i++) tg.push([.1 + Rr() * .8, .025 + Rr() * (rags ? .09 : .045), .012 + Rr() * .026]);
-      const p1 = Rr() * 6, p2 = Rr() * 6, am = rags ? .02 : .009;
+      for (let i = 0, nt = rags ? 2 + Math.floor(Rr() * 3) : fRag ? 1 + Math.floor(Rr() * 2) : torn && Rr() > .5 ? 1 : 0; i < nt; i++) tg.push([.1 + Rr() * .8, .025 + Rr() * (rags ? .09 : .045), .012 + Rr() * .026]);
+      const p1 = Rr() * 6, p2 = Rr() * 6, am = rags ? .02 : .009, p5 = fRag ? Rr() * 6 : 0;
       dvAt = uu => { let dv = am * (.55 + .45 * Math.sin(uu * 17 + p1)) * (.5 + .5 * Math.sin(uu * 43 + p2));
+        if (fRag) dv += .02 * Math.pow(Math.max(0, Math.sin(uu * 96 + p5)), 3) * (.35 + .65 * Math.abs(Math.sin(uu * 13 + p2)));   // a frayed edge of small notches
         for (const c of cuts) { const x = uu < c[0] ? (c[0] - uu) / c[2] : (uu - c[0]) / c[3]; if (x < 1) dv = Math.max(dv, c[1] * Math.pow(1 - x, 1.6)); }
         for (const t of tg) { const x = Math.abs(uu - t[0]) / t[2]; if (x < 1) dv = Math.min(dv, -t[1] * Math.pow(1 - x * x, .3)); }
         return dv; };
@@ -628,7 +631,7 @@ function build(u, L, o, mode) {
         for (let i = 1; i < nt * 2; i++) { const uu = lerp(ar, al, i / (nt * 2)), dv = i % 2 ? .03 + Rr() * .1 : -(.015 + Rr() * .05); bt.push(S(uu, Math.min(.99, vE + dv)));
           if (near && i % 2) { const p0 = S(uu, Math.min(.99, vE + dv)), ln = .4 + Rr() * 1.6, bb = (Rr() - .5) * .6; fringe += 'M' + pp(...p0) + 'Q' + pp(p0[0] + bb * ln * .4, p0[1] - ln * .55) + ' ' + pp(p0[0] + bb * ln, p0[1] - ln); } }
         dOut += spl(Rt.concat(bt, Lt), true); } }
-    else { const us = []; for (let i = 1, n = Math.max(24, Math.round(wd * 2.2)); i < n; i++) us.push(i / n);
+    else { const us = []; for (let i = 1, n = Math.max(24, Math.round(wd * (fRag ? 4.5 : 2.2))); i < n; i++) us.push(i / n);
       for (const c of cuts) us.push(c[0], c[0] - c[2] * .45, c[0] + c[3] * .45); for (const t of tg) us.push(t[0], t[0] - t[2] * .97, t[0] + t[2] * .97, t[0] - t[2] * .6, t[0] + t[2] * .6);
       const pts = [S(1, 0)]; for (let i = 1; i < N; i++) pts.push(S(1 - wl(i / N, p3), i / N)); pts.push(S(1, 1 - dvAt(1)));
       us.filter(v => v > .012 && v < .988).sort((a, b) => b - a).forEach(uu => pts.push(S(uu, 1 - dvAt(uu))));
@@ -637,13 +640,17 @@ function build(u, L, o, mode) {
     // holes of three kinds, none over another: a ragged round, a rip along the threads, a flap hanging into its tear
     if (rough) { const nH = strips ? 0 : Math.round(wd * ht / (rags ? 90 : torn ? 115 : 240) * (.6 + Rr() * .8) * (sp.holeK || 1)), hs = [];
       for (let tr = 0; hs.length < nH && tr < nH * 8 + 8; tr++) {
-        const r = (rags ? .95 : .75) + Math.pow(Rr(), 2.2) * (rags ? 3 : 2.3), cu = .12 + Rr() * .76, cv = .14 + Rr() * .62;
+        const r = hv ? .45 + Math.pow(Rr(), 1.4) * 3.4 : (rags ? .95 : .75) + Math.pow(Rr(), 2.2) * (rags ? 3 : 2.3), cu = .12 + Rr() * .76, cv = .14 + Rr() * .62;
         if (cv + r * 1.6 / ht > 1 - Math.max(dvAt(cu), dvAt(clamp(cu - r / wd)), dvAt(clamp(cu + r / wd))) - .04 || cu - r * 1.3 / wd < .04 || cu + r * 1.3 / wd > .96 || cv - r * 1.6 / ht < .05) continue;
         if (hs.some(h => Math.hypot((h[0] - cu) * wd, (h[1] - cv) * ht) < (h[2] + r) * 1.3 + .8)) continue;
         hs.push([cu, cv, r]);
         const at = at0(cu, cv), ty = Rr(), hp = [];
-        if (ty < .42) { // a ragged round, longer up and down, its edge chewed
-          const m = 10 + Math.floor(Rr() * 4), rx = r * (.7 + Rr() * .4), ry = r * (1.05 + Rr() * .45), a1 = Rr() * 6, a2 = Rr() * 6;
+        if (hv && ty > .3 && ty < .58) { // sp.holeVar (the Pearl): a jagged tear — an uneven shape of sharp corners, stretched and turned at random
+          const m = 6 + Math.floor(Rr() * 4), a0 = Rr() * 6, el = .55 + Rr() * .9;
+          for (let k = 0; k < m; k++) { const a = a0 + (k + (Rr() - .5) * .8) / m * 2 * Math.PI, rr = r * (.45 + Rr() * .8); hp.push(at(Math.cos(a) * rr * el, Math.sin(a) * rr / el)); }   // every corner at its own distance: no star
+          dHole += poly(hp);
+        } else if (ty < .42) { // a ragged round, longer up and down, its edge chewed
+          const m = 10 + Math.floor(Rr() * 4), rx = r * (hv ? .45 + Rr() * .8 : .7 + Rr() * .4), ry = r * (hv ? .7 + Rr() * .9 : 1.05 + Rr() * .45), a1 = Rr() * 6, a2 = Rr() * 6;
           for (let k = 0; k < m; k++) { const a = (k + (Rr() - .5) * .4) / m * 2 * Math.PI, rr = (1 + .26 * Math.sin(2 * a + a1) + .14 * Math.sin(3 * a + a2)) * (k % 3 === 1 ? .8 + Rr() * .15 : .96 + Rr() * .1); hp.push(at(Math.sin(a) * rx * rr, -Math.cos(a) * ry * rr)); }
           dHole += spl(hp, true);
         } else if (ty < .88 || !near || cond === 'patched') { // a rip: a crooked slit, wide in the middle, pointed at the ends
@@ -687,6 +694,9 @@ function build(u, L, o, mode) {
           const pd = mended ? poly([[-1, -1], [0, -1.15], [1, -1], [1.1, 0], [1, 1], [0, 1.1], [-1, 1], [-1.12, 0]].map(([a, b]) => S(cu + du * (a + (Rr() - .5) * .3), cv + dv * (b + (Rr() - .5) * .3)))) : poly([S(cu - du * (1 + j()), cv - dv * (1 + j())), S(cu + du * (1 + j()), cv - dv * (1 + j())), S(cu + du * (1 + j()), cv + dv * (1 + j())), S(cu - du * (1 + j()), cv + dv * (1 + j()))]);
           const pc = Rr(); inn += fillP(pd, mended ? (pc < .4 ? tone(sailK, Im + .45) : pc < .75 ? mix(tone(sailK, Im - .1), '#8a6a3a', .35) : mix(tone(sailK, Im), '#7a7e70', .4)) : pc > .5 ? tone(sailK, Im + .35) : shade, mended ? ' opacity=".45"' : ' opacity=".5"') + (near ? strokeP(pd, shade, .14 * s, ` stroke-dasharray="${f(.5 * s)} ${f(.4 * s)}" opacity=".8"`) : ''); }
       }
+      if (fRag) for (let i = 0, np = 1 + Math.floor(Rr() * 2.6); i < np; i++) { const cu = .12 + Rr() * .76, dvF = dvAt(cu), cv = .86 - dvF - Rr() * .08, du = (1.2 + Rr() * 2.4) / wd, dv = (1 + Rr() * 1.6) / ht, pc = Rr();   // patches of other cloth sewn along the foot, cut unevenly
+        const pd = poly([[-1, -1], [0, -1.12], [1, -1], [1.08, 0], [1, 1], [0, 1.08], [-1, 1], [-1.1, 0]].map(([a, b]) => S(cu + du * (a + (Rr() - .5) * .35), cv + dv * (b + (Rr() - .5) * .35))));
+        inn += fillP(pd, pc < .5 ? mix(tone(sailK, Im + .45), '#6a6052', .35) : mix(tone(sailK, Im + .2), '#4a3a2a', .4), ' opacity=".6"') + (near ? strokeP(pd, tone(sailK, Im + .6), .14 * s, ` stroke-dasharray="${f(.5 * s)} ${f(.4 * s)}" opacity=".7"`) : ''); }
       if (back && q.mastU != null) { const a = []; for (let i = 0; i <= 6; i++) a.push(S(q.mastU, i / 6)); inn += strokeP(line(a), shade, 1.3 * Lu * s, ' opacity=".2"'); }   // the mast seen through the cloth
     }
     // the turn of the cloth: shadow under the yard, the foot rolled under
