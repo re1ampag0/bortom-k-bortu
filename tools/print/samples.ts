@@ -27,7 +27,7 @@ const CAP = `.cap{position:absolute;font:700 11pt/1.15 'Alegreya Sans',sans-seri
 /** A hand fan of five cards, as the player holds it: every next card covers the one before, the left strip stays seen. */
 function fanPage(ctx: Ctx, kit: CardKit, items: Item[], title: string): PageSpec {
   const fan = (x0: number, y0: number, shift: number, deg: number) => items.map((it, i) => itemFace(ctx, kit, it, `left:${mm(x0 + i * shift)};top:${mm(y0 + Math.abs(i - 2) ** 2 * 1.6)};transform:rotate(${(i - 2) * deg}deg);transform-origin:50% 120%;`)).join('');
-  return { land: true, html: `<div class="tbl" style="position:absolute;inset:0"></div><div class="cap" style="left:14mm;top:10mm">${esc(title)}<small>слева — обычный веер (сдвиг 18 мм), справа — тесный (сдвиг 12 мм); 100 % размера карты</small></div>${fan(24, 66, 18, 5)}${fan(170, 66, 12, 4)}` };
+  return { land: true, html: `<div class="tbl" style="position:absolute;inset:0"></div><div class="cap" style="left:14mm;top:10mm">${esc(title)}<small>слева — обычный веер (сдвиг 18 мм), справа — тесный (сдвиг 12 мм); 100 % размера карты</small></div>${fan(14, 66, 18, 5)}${fan(178, 66, 12, 4)}` };
 }
 
 const CVD = `<svg width="0" height="0" style="position:absolute"><defs>
