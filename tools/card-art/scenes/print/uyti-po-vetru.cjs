@@ -11,7 +11,7 @@ const { f, mix, nid, linGrad, radGrad, rng } = K;
 const HZ = 110, WL = 124;   // horizon; the Pearl's waterline
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: 122, y: 54, el: 20, color: '#c8d8f6', power: .8 }, fill: { color: '#3d5680', power: .4 },
   rim: { az: 14, color: '#bfe0ff', power: .6 }, locals: [{ x: 183, y: 109, color: '#ffc070', power: .6, radius: 18 }] };
-const SHIP = { kind: 'pearl', x: 98, y: WL, scale: .9, heel: -3, sails: 'full', wake: true, lights: true, seed: 4 };   // roll (heel towards us) — when kit/ship.cjs has it
+const SHIP = { kind: 'pearl', x: 98, y: WL, scale: .9, heel: -3, roll: 10, sails: 'full', wake: true, lights: true, seed: 4 };   // roll: heeled towards us, the deck shows
 const skel = { horizon: HZ, eye: 4, items: [['pearl', 30, WL, 124, 94, 'water'], ['chaser', 176, 111, 24, 18, 'water'],
   ['splash', 164, 127, 13, 24, 'water (astern)'], ['splash2', 182, 131, 9, 11, 'water'], ['splash3', 168, 138, 8, 9, 'water']] };
 
@@ -78,7 +78,7 @@ module.exports = { name: 'Уйти по ветру', kind: 'deck', status: 'draf
       // the wake running back from her towards us on the right, over the swell
       for (let t = 0; t < 1; t += .06 + R() * .05) bg += K.foam(u, { x: 156 + t * 50 + (R() - .5) * 4, y: WL + 6 + t * 74, w: 4 + t * 12, h: .6 + t * .9, seed: 120 + Math.round(t * 100), L });
       for (let t = 0; t < 1; t += .07 + R() * .06) bg += K.foam(u, { x: 150 + t * 20 + (R() - .5) * 3, y: WL + 8 + t * 80, w: 3 + t * 10, h: .5 + t * .8, seed: 160 + Math.round(t * 100), L }); }
-    bg += K.ship(u, L, SHIP) + pennant(u, L, 100.4, 30.4, 52);
+    bg += K.ship(u, L, SHIP) + pennant(u, L, 104.2, 33.6, 52);
     let fg = '';
     fg += K.splash(u, { x: 170, y: WL + 3, w: 11, h: 24, seed: 3, L, wind: -.3 }) + K.splash(u, { x: 186, y: WL + 7, w: 8, h: 11, seed: 4, L, wind: -.3 })
       + K.splash(u, { x: 172, y: WL + 14, w: 7, h: 9, seed: 5, L, wind: -.3 });

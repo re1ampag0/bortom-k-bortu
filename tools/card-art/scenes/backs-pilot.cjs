@@ -34,11 +34,14 @@ function pearl() {
   const bx = K.shipBox('pearl', { x: 0, y: 0, scale: 1 }), sc = Math.min(170 / bx.w, 116 / bx.h);
   // she is lit by the same moon, but seen against it: the cloth and the tarred side stay black, the kant silver
   const Ls = K.makeLight(Object.assign({}, light, { key: Object.assign({}, light.key, { power: light.key.power * .55 }), fill: Object.assign({}, light.fill, { power: light.fill.power * .6 }), rim: Object.assign({}, light.rim, { power: .9 }) }), { horizon: HZ });
-  const po = { kind: 'pearl', x: 100, y: HZ + 6, scale: sc, heel: -5, sails: 'full', wake: true, reflect: true, lights: true, seed: 3 };
+  const po = { kind: 'pearl', x: 100, y: HZ + 6, scale: sc, heel: -2, roll: 6, sails: 'full', wake: true, reflect: true, lights: true, seed: 3 };
+  // the moon's kant, as in the first round: the same silhouette in pale moonlight, shifted towards the moon, laid
+  // under the ship — it shows only along the edges turned to the moon
+  s += `<g transform="translate(.7 -.55)">${K.shipSilhouette('pearl', Object.assign({}, po, { color: '#c4d4f2', u: u + 'm' }))}</g>`;
   s += K.ship(u, Ls, po);
   // her black: the same silhouette multiplied over her (the holes stay open — the sky shows through them), then the
   // cold kant of the moon (the ship's rim light, kept strong) on the edges turned to it
-  s += `<g style="mix-blend-mode:multiply" opacity=".62">${K.shipSilhouette('pearl', Object.assign({}, po, { color: '#1c1916', u: u + 's' }))}</g>`;
+  s += `<g style="mix-blend-mode:multiply" opacity=".72">${K.shipSilhouette('pearl', Object.assign({}, po, { color: '#16130f', u: u + 's' }))}</g>`;
   // a bow wave thrown up and spray: she runs fast
   { const st = [100 - 61 * sc, HZ + 6]; s += K.splash(u, { x: st[0] + 2, y: st[1], w: 16, h: 9, seed: 2, L, wind: -1 }) + K.foam(u, { x: st[0] + 14, y: st[1] + .3, w: 30, h: 1.6, seed: 8, L }); }
   // night air: the corners of the sky and the near water go a little darker (no frame: the dark runs past the edge)

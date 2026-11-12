@@ -144,7 +144,7 @@ module.exports = {
     bg += swell(u, L, { top: sTop, bottom: 240, seed: 4, lean: -.5, band: 12, sheenX: 104, sheenW: 26, streaks: 14, slope: Math.tan(ra) * .8, depth: 30,
       ripples: { horizon: 70, bottom: 260, rot: ang, cx: x0, cy: y0, op: .4 } });
     // ——— the brig on the face: heeled, bow up to the right, reefed, her windows lit ———
-    const s = .95, sh = { kind: 'brig', x: x0, y: y0, scale: s, flip: true, heel: ang, sails: 'reefed', detail: 'near', lights: true, seed: 17 };
+    const s = .95, sh = { kind: 'brig', x: x0, y: y0, scale: s, flip: true, heel: ang, sails: 'reefed', detail: 'near', lights: true, seed: 17, roll: 16 };   // laid over towards us by the sea: her deck shows
     const ca = Math.cos(ra), sa = Math.sin(ra), pt = (X, H) => [x0 - s * (X * ca - H * sa), y0 - s * (X * sa + H * ca)];
     let mid = `<g transform="rotate(${ang} ${x0} ${y0})">${K.contactShadow(u, x0, y0 + 1.2, 74, L, { ry: 3.2, opacity: .6 })}</g>`;
     // KIT-CANDIDATE heel: the kit cuts the hull at a level line y = waterline; heeled, the cut must tilt with the hull

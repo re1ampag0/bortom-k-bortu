@@ -1,5 +1,5 @@
 // «Попутный ветер» (Колода моря): a fresh, bright morning with a strong even wind from the left. Two merchantmen of
-// one side run before it under all sail (the roll will come from the kit's `roll`), bow spray flying, long pennants straight out ahead;
+// one side run before it under all sail heeled towards us (kit `roll`), bow spray flying, long pennants straight out ahead;
 // they have just changed places — the near one came up from the far line, the far one from the near — and their
 // wakes cross behind them on the water. Cloud rows and high mares' tails are combed the same way, whitecaps on the
 // low waves, spindrift torn off downwind. Card: changing places (Перестроение) is free for both teams this round.
@@ -11,11 +11,11 @@ const { f, mix, clamp, lerp, rng, nid, linGrad, radGrad } = K;
 const HZ = 116;                     // horizon
 const SUN = { x: 34, y: 90 };       // the low morning sun on the left, upwind, under the clouds
 const light = { time: 'day', haze: .12, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffdc9a', power: 1 }, fill: { color: '#8fc0e8', power: .5 } };
-const NEAR = { kind: 'merchant', x: 98, y: 134, scale: 1.28, flip: true, sails: 'full', detail: 'near', seed: 9 };
-const FAR = { kind: 'merchant', x: 168, y: 119.6, scale: .46, flip: true, sails: 'full', detail: 'mid', seed: 31 };
+const NEAR = { kind: 'merchant', x: 98, y: 134, scale: 1.28, flip: true, roll: 8, sails: 'full', detail: 'near', seed: 9 };
+const FAR = { kind: 'merchant', x: 168, y: 119.6, scale: .46, flip: true, roll: 4, sails: 'full', detail: 'mid', seed: 31 };
 const skel = { horizon: HZ, eye: 3, light: 'the low morning sun ahead on the left, upwind: sails glow through, bright edges towards it, shadows on the water towards us and to the right',
   items: [
-    ['near', 52, NEAR.y, 108, 92, 'on the water, running to the right'],
+    ['near', 52, NEAR.y, 108, 92, 'on the water, heeled 8° towards us, running to the right'],
     ['far', 150, FAR.y, 50, 42, 'on the water, ahead and further, running to the right'],
     ['wakes', -10, 150, 170, 34, 'on the water: the two wakes cross behind the ships'],
     ['spray', 136, 134, 22, 18, 'thrown up at the near ship\'s stem, carried to the right'],
@@ -44,7 +44,7 @@ module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'dr
     // the far ship, then the near one over it, bow spray at both stems
     bg += K.ship(u, L, FAR) + K.foam(u, { x: FAR.x + 2, y: FAR.y + .3, w: 34, h: .5, L, seed: 7 }) + K.splash(u, { x: FAR.x + 18, y: FAR.y + .4, w: 5, h: 6, seed: 5, L, wind: 1 });
     bg += K.ship(u, L, NEAR) + K.foam(u, { x: NEAR.x + 6, y: NEAR.y + .4, w: 80, h: 1.1, L, seed: 8 });
-    bg += K.splash(u, { x: NEAR.x + 42, y: NEAR.y + .2, w: 14, h: 18, seed: 2, L, wind: 1 });
+    bg += K.splash(u, { x: NEAR.x + 48.5, y: NEAR.y + .2, w: 14, h: 18, seed: 2, L, wind: 1 });
     // ——— under the glass: a near whitecap breaking downwind, spindrift torn off it
     let fg = nearSwell(u, L) + whitecap(u, L, { x: 172, y: 196, w: 60, h: 9, seed: 12, wind: 1 });
     fg += spindrift(u, L, 46, 196, 90, 7) + spindrift(u, L, 194, 189, 30, 8);
