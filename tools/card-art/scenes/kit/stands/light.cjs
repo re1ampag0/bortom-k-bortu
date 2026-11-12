@@ -44,17 +44,17 @@ const env = { w: 400, h: 560, bg: '#222', svg: () => {
       + K.water(u, L, { horizon: HZ, bottom: 280, swell: .6 }) + splashes(u, L, 196, 18, 40) + K.foam(u, { x: 100, y: 262, w: 120, L, seed: 2 }); })();
   const B = (() => { const u = 'EB', L = K.makeLight(K.LIGHTS.endeavour, { horizon: HZ });
     return K.sky(u, L, { horizon: HZ }) + K.cloud(u, L, { x: 70, y: 60, w: 80, h: 30, seed: 4 }) + K.cloud(u, L, { x: 160, y: 84, w: 50, h: 16, seed: 5, far: .5 }) + K.cloudBank(u, L, { y: HZ - 4, h: 10, x0: 0, x1: 200, n: 6, seed: 6, far: .8 })
-      + K.water(u, L, { horizon: HZ, bottom: 210, swell: .5 }) + splashes(u, L, 176, 16, 36) + K.deck(u, L, { horizon: HZ, top: 214, bottom: 280 }); })();
+      + K.water(u, L, { horizon: HZ, bottom: 216, swell: .5 }) + splashes(u, L, 172, 16, 36) + K.foam(u, { x: 110, y: 204, w: 110, L, seed: 6 }) + K.deck(u, L, { horizon: HZ, top: 214, bottom: 280 }); })();
   const C = (() => { const u = 'EC', L = K.makeLight(K.LIGHTS.revenge, { horizon: HZ }), fl = [[30, 168, -6], [100, 172, 4], [160, 166, -14]];
     let s = K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L) + K.cloudBank(u, L, { y: HZ - 10, h: 14, x0: 0, x1: 200, n: 4, seed: 7, far: .5 }) + K.water(u, L, { horizon: HZ, bottom: 200 }) + K.deck(u, L, { horizon: HZ, top: 200, bottom: 280 });
-    s += K.smoke(u, L, { x: 70, y: 262, w: 40, h: 90, wind: .5, seed: 4, glow: { color: '#ff9a40', power: .6 } }) + K.fire(u, { x: 70, y: 264, w: 22, h: 34, seed: 3 }) + K.fire(u, { x: 150, y: 270, w: 12, h: 18, seed: 5 });
+    s += K.smoke(u, L, { x: 72, y: 250, w: 40, h: 90, wind: .5, seed: 4, glow: { color: '#ff9a40', power: .6 } }) + K.fire(u, { x: 70, y: 264, w: 22, h: 34, seed: 3, wind: .5, fuel: true }) + K.fire(u, { x: 150, y: 270, w: 12, h: 18, seed: 5, wind: .5, fuel: true });
     fl.forEach(([x, y, d], k) => { s += K.smoke(u + 's' + k, L, { x: x + 14, y: y + 2, w: 26, h: 26, wind: .8, seed: 9 + k, opacity: .8 }) + K.muzzleFlash(u + 'f' + k, { x, y, dir: d, len: 30, seed: k }); });
     return s; })();
   const D = (() => { const u = 'ED', L = K.makeLight(K.LIGHTS.dutchman, { horizon: HZ });
     return K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L) + K.water(u, L, { horizon: HZ, bottom: 280 }) + K.ship(u, L, { kind: 'dutch', x: 130, y: 122, scale: .5, detail: 'far' })
-      + K.fog(u, L, { y: 96, h: 50, seed: 2 }) + K.smoke(u, L, { x: 50, y: 200, w: 30, h: 60, wind: -.3, seed: 8 }) + K.fog(u, L, { y: 180, h: 70, density: .5, seed: 5 }) + K.splash(u, { x: 150, y: 240, w: 20, h: 44, seed: 1, L }); })();
+      + K.fog(u, L, { y: 96, h: 50, seed: 2 }) + K.smoke(u, L, { x: 49, y: 194, w: 30, h: 70, wind: -.3, seed: 8 }) + K.foam(u, { x: 50, y: 202, w: 30, L, seed: 9 }) + K.fire(u, { x: 50, y: 201, w: 12, h: 14, seed: 4, wind: -.3, fuel: true }) + K.fog(u, L, { y: 180, h: 70, density: .5, seed: 5 }) + K.splash(u, { x: 150, y: 240, w: 20, h: 44, seed: 1, L }); })();
   return panel(0, 0, A, 'ночь: луна, облака, зыбь, всплески ×3, пена') + panel(200, 0, B, 'день: облака, вода, всплески ×3, палуба')
-    + panel(0, 280, C, 'закат: огонь, дым с подсветкой, вспышки ×3') + panel(200, 280, D, 'туман: туман, дым, всплеск, дальний корабль');
+    + panel(0, 280, C, 'закат: огонь, дым с подсветкой, вспышки ×3') + panel(200, 280, D, 'туман: туман, горящие обломки, дым, всплеск');
 } };
 
 module.exports = { sheets: { materials, env } };

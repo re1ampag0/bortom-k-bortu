@@ -52,8 +52,10 @@ export async function buildSamples(ctx: Ctx): Promise<void> {
   const beside = async (ref: string, file: string) => {
     const uri = (f: string, mime: string) => `data:${mime};base64,${fs.readFileSync(f).toString('base64')}`, refFile = path.join(ROOT, 'docs/mockups/print', ref);
     if (!fs.existsSync(refFile)) return;
-    const page = await ctx.browser.newPage({ viewport: { width: 1200, height: 800 }, deviceScaleFactor: 1 });
-    await page.setContent(`<body style="margin:0;background:#23272b;font:600 26px sans-serif;color:#eee"><div id="b" style="display:inline-flex;gap:28px;padding:24px"><div><div style="margin:0 0 12px">Эталон (макет ${ref})</div><img src="${uri(refFile, 'image/jpeg')}" style="height:1754px;display:block"></div><div><div style="margin:0 0 12px">Набор сейчас</div><img src="${uri(out(file), 'image/png')}" style="height:1754px;display:block"></div></div>`);
+    // the mock-up is a wide strip of cards (4280 × 1032): its two halves stacked are as wide as the sheet, so the cards come out about the same size
+    const page = await ctx.browser.newPage({ viewport: { width: 1300, height: 800 }, deviceScaleFactor: 1 });
+    const half = (x: string) => `<div style="width:1240px;height:598px;background:url(${uri(refFile, 'image/jpeg')}) ${x} 0/200% 100% no-repeat"></div>`;
+    await page.setContent(`<body style="margin:0;background:#23272b;font:600 24px sans-serif;color:#eee"><div id="b" style="display:inline-block;padding:20px"><div style="margin:0 0 10px">Эталон (макет ${ref})</div>${half('0')}${half('100%')}<div style="margin:18px 0 10px">Набор сейчас</div><img src="${uri(out(file), 'image/png')}" style="width:1240px;display:block"></div>`);
     await page.evaluate(() => Promise.all(Array.from(document.images).map(i => i.decode().catch(() => undefined))));
     await (await page.$('#b'))!.screenshot({ path: out(file) }); await page.close();
   };
