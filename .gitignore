@@ -4,6 +4,7 @@ __pycache__/
 *.log
 test-results/
 playwright-report/
+out/
 dist-server/
 server-data/
 tmp/
