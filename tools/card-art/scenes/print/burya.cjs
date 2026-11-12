@@ -1,36 +1,40 @@
-// «Буря» (Колода моря): a brig on the steep face of a swell, laid over so hard that its bow chasers point into the
-// clouds — in such a sea a broadside hits weaker. Brief: docs/tasks/print-kit-cards.md «Буря». Kit only (kit/README.md).
+// «Буря» (Колода моря): a storm at night. A brig climbs the steep face of a swell, laid over so hard that her deck
+// stands on end; she fires her bow gun at a merchantman on the next crest — and the shot drops into the wave short
+// of her (a white splash beside the target). The horizon itself is tilted (we roll too); the wind tears the gun
+// smoke away; slanting rain; sheet lightning inside the clouds (not a bolt into a mast — that is «Гроза») gives the
+// cold light, the gun flash and the lanterns of the merchant the warm. Rule: every Залп deals 1 damage less.
+// Briefs: docs/mockups/print/card-briefs.md «Буря», docs/tasks/print-kit-cards.md «Буря».
 'use strict';
 const K = require('../kit/index.cjs');
 const { nid, f, clamp, lerp, rng, mix } = K;
 
-const HZ = 122;
-// the key light comes from the rift in the clouds, high and a little right of the middle, in front of us (kit az: 0 —
-// from the depth at the viewer; the brief's 190 "where it flies" = at the viewer): soft light, short shadows towards us
+const HZ = 108, TILT = -3.5;   // the series' horizon, rolled with us
+// one key light: the sheet lightning behind the clouds, high and right of the middle, in front of us (cold, back light);
+// the gun flash and the merchant's lanterns are the warm locals
 const light = {
-  time: 'day',
-  key: { type: 'sun', az: 3, x: 116, y: 32, el: 55, color: '#cfd6d2', power: .6 },
-  fill: { color: '#4a5a5c', power: .5 },
-  rim: { az: 0, color: '#e6ecea', power: .45 },
-  locals: [{ x: 152, y: 100, h: 6, color: '#ffb24a', power: .8, radius: 36 }],
-  haze: .5,
+  time: 'night',
+  key: { type: 'moon', x: 128, y: 34, el: 40, color: '#c9d6f2', power: .62 },
+  fill: { color: '#2a3550', power: .45 },
+  rim: { az: 0, color: '#dfe8ff', power: .55 },
+  locals: [{ x: 124, y: 76, h: 6, color: '#ffb24a', power: .85, radius: 40 }, { x: 170, y: 88, h: 3, color: '#ffc870', power: .5, radius: 18 }],
+  haze: .45,
 };
-// the skeleton: horizon (hidden by the swell), eye 3 m; [id, x, y (base), w, h, support]
 const skel = {
   horizon: HZ, eye: 3,
   items: [
-    ['brig, heel -24', 84, 130, 82, 88, 'swell face (tilted waterline)'],
-    ['bow chasers', 140, 100, 22, 16, 'bow of the brig'],
-    ['shot trails', 160, 86, 40, 36, 'from the muzzles'],
+    ['brig, heel -22', 46, 122, 84, 82, 'swell face (tilted waterline)'],
+    ['bow gun + flash', 118, 70, 18, 14, 'bow of the brig'],
+    ['shot arc', 128, 60, 26, 40, 'from the muzzle into the wave'],
+    ['merchant, lanterns', 150, 102, 40, 34, 'far crest'],
+    ['splash (miss)', 146, 102, 14, 16, 'water beside the merchant'],
     ['near swell', 0, 250, 200, 98, 'sea'],
     ['yard + rag', 34, 206, 76, 20, 'back of the near swell'],
   ],
 };
-
-// the sea series' water (print-kit-cards.md, head): one blue-teal row; the storm's sky is leaden
+// night storm: slate-indigo sky, the sea of the series dimmed (one blue-teal row)
 const PAL = {
-  sky: ['#3b444b', '#56626a', '#7c898d', '#a3acaa'], sea: ['#7c9ba6', '#2f5f74', '#16323f'],
-  cloudLit: '#d3d9d6', cloudShade: '#3a444b', smoke: '#b8b6b0',
+  sky: ['#0d1220', '#1b2438', '#2c3a52', '#45566e'], sea: ['#3d5f74', '#1b3c4e', '#0a1c26'],
+  cloudLit: '#9aa8c4', cloudShade: '#141a28', smoke: '#9a9ca4',
 };
 
 const pts2d = (pts) => pts.map(p => f(p[0]) + ' ' + f(p[1]));
@@ -108,76 +112,78 @@ module.exports = {
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     L.pal = Object.assign({}, L.pal, PAL);
-    // ——— sky: leaden, a rift of light in the clouds over the middle ———
-    let bg = K.sky(u, L, { horizon: HZ + 2 });
-    bg += K.localGlow(u, { x: 116, y: 36, color: '#eef2ec', power: .75, radius: 44 }, { core: false });
-    bg += K.cloudBank(u, L, { y: HZ - 5, h: 13, x0: -20, x1: 220, n: 5, seed: 12, far: .75 });
-    bg += K.cloud(u, L, { x: 184, y: 70, w: 116, h: 48, seed: 31 });
-    bg += K.cloud(u, L, { x: 26, y: 84, w: 136, h: 64, seed: 23 });
-    bg += K.cloud(u, L, { x: 66, y: 24, w: 170, h: 32, seed: 5 });
-    bg += K.cloud(u, L, { x: 178, y: 20, w: 110, h: 28, seed: 41 });
-    bg += rain(u, L, { x0: -12, x1: 48, y0: 80, y1: HZ + 4, n: 70, seed: 3, slant: .38 });
-    bg += rain(u, L, { x0: 156, x1: 208, y0: 64, y1: HZ, n: 46, seed: 8, slant: .38 });
-    // ——— the sea: far rough water, an uneven line of far swells at the horizon ———
-    bg += K.water(u, L, { horizon: HZ, bottom: 280, swell: 1, seed: 5, glitter: false });
-    const farTop = [[-4, HZ + 1], [14, HZ - 1.6], [30, HZ + .6], [48, HZ - 2.4], [66, HZ], [82, HZ - 1.4], [104, HZ + 1.2]];
-    bg += swell(u, L, { top: farTop, bottom: 200, seed: 2, lean: .2, band: 5 });
-    bg += crestFoam(u, L, farTop.slice(1, -1), { seed: 5, h: .6, gap: .5 });
-    // the swell under the brig: its face rises to the right at 24 degrees, the crest just beyond the bow
-    const ang = -24, ra = ang * Math.PI / 180, x0 = 121, y0 = 114;
+    // ——— the sky: low storm clouds; sheet lightning flickers inside them, a crooked branch between two banks ———
+    let bg = K.sky(u, L, { horizon: HZ + 6, stars: false });
+    bg += K.localGlow(u, { x: 126, y: 38, color: '#dfe6ff', power: .95, radius: 70 }, { core: false });
+    bg += K.cloud(u, L, { x: 100, y: 24, w: 230, h: 34, seed: 5 });
+    bg += K.cloud(u, L, { x: 190, y: 52, w: 110, h: 34, seed: 41 });
+    { // a crooked branch of sheet lightning: many short segments of different length and turn, two side twigs dying out
+      const R = rng(19), fb = nid('lb', u), bolt = (x, y, x1, y1, n, j) => { const p = [[x, y]]; let o = 0; for (let i = 1; i < n; i++) { const t = i / n, nx = -(y1 - y), ny = x1 - x, l = Math.hypot(nx, ny); o = o * .55 + (R() - .5) * j * (R() < .3 ? 1.6 : .7); const oo = o * Math.sin(Math.PI * t) + (R() - .5) * 1.2; p.push([lerp(x, x1, t + (R() - .5) * .02) + nx / l * oo, lerp(y, y1, t) + ny / l * oo]); } p.push([x1, y1]); return p; };
+      const main = bolt(92, 56, 156, 30, 23, 12), tw1 = bolt(...main[6], main[6][0] + 5, main[6][1] + 11, 6, 3), tw2 = bolt(...main[11], main[11][0] + 9, main[11][1] + 6, 5, 2.5);
+      const D = p => 'M' + p.map(q => f(q[0]) + ' ' + f(q[1])).join('L');
+      bg += `<defs>${blur(fb, 2.2, [60, 0, 130, 90])}</defs><path d="${D(main)}${D(tw1)}${D(tw2)}" stroke="#aebfff" stroke-width="3.4" fill="none" opacity=".5" filter="url(#${fb})"/>`
+        + `<path d="${D(main)}" stroke="#f4f7ff" stroke-width=".5" fill="none" stroke-linejoin="round" opacity=".85"/><path d="${D(tw1)}${D(tw2)}" stroke="#e2e9ff" stroke-width=".3" fill="none" stroke-linejoin="round" opacity=".75"/>`; }
+    bg += K.cloud(u, L, { x: 34, y: 66, w: 150, h: 58, seed: 23 });
+    bg += K.cloud(u, L, { x: 176, y: 84, w: 96, h: 26, seed: 31, far: .4 });
+    bg += K.cloudBank(u, L, { y: HZ - 4, h: 12, x0: -20, x1: 220, n: 5, seed: 12, far: .7 });
+    bg += rain(u, L, { x0: -14, x1: 54, y0: 62, y1: HZ + 8, n: 80, seed: 3, slant: .38 });
+    bg += rain(u, L, { x0: 150, x1: 212, y0: 60, y1: HZ + 4, n: 50, seed: 8, slant: .38 });
+    // ——— the rolled world: far rough sea, a far crest, the merchantman with her lanterns, the splash of our shot ———
+    let world = `<g transform="translate(-50 0)">${K.water(u, L, { horizon: HZ, bottom: 300, swell: 1, seed: 5, glitter: 176, w: 300 })}</g>`;
+    world += K.ship(u, L, { kind: 'merchant', x: 168, y: 101.5, scale: .5, sails: 'reefed', detail: 'mid', lights: true, seed: 6 });
+    const farTop = [[118, 104.5], [134, 102.6], [150, 103.2], [166, 101.9], [182, 103.4], [204, 102.2]];
+    world += swell(u, L, { top: farTop, bottom: 150, seed: 2, lean: .2, band: 4, streaks: 4, slope: 0, depth: 8 });
+    world += crestFoam(u, L, farTop.slice(0, -1), { seed: 5, h: .7, gap: .35 });
+    // the shot fell short: the splash stands beside the merchantman's bow, her lantern light catches it
+    world += K.splash(u, { x: 141, y: 103.6, w: 14, h: 20, seed: 0, L, wind: 1 }) + K.localGlow(u, { x: 139, y: 98, color: '#ffc870', power: .25, radius: 14 }, { core: false });
+    bg += `<g transform="rotate(${TILT} 100 ${HZ})">${world}</g>`;
+    // the swell under the brig: its face rises to the right, the crest just ahead of her bow
+    const ang = -21, ra = ang * Math.PI / 180, x0 = 78, y0 = 124;
     const onFace = x => y0 + (x - x0) * Math.tan(ra);
-    const sTop = [[-6, onFace(-6) + 3], [24, onFace(24) + 2.4], [50, onFace(50) + 1.2], [76, onFace(76) + .4], [104, onFace(104)], [132, onFace(132)], [158, onFace(158) + .8], [172, 93], [186, 94], [198, 98], [214, 104]];
-    bg += swell(u, L, { top: sTop, bottom: 230, seed: 4, lean: -.5, band: 12, sheenX: 132, sheenW: 30, streaks: 12, slope: Math.tan(ra) * .8, depth: 30,
-      ripples: { horizon: 60, bottom: 260, rot: ang, cx: x0, cy: y0, op: .42 } });
-    // ——— the brig on the face: heeled -24 (bow up to the right), reefed; its shadow on the water below it ———
-    const s = 1.1, sh = { kind: 'brig', x: x0, y: y0, scale: s, flip: true, heel: ang, sails: 'reefed', detail: 'near', seed: 17 };
+    const sTop = [[-6, onFace(-6) + 3], [18, onFace(18) + 2.4], [40, onFace(40) + 1.2], [60, onFace(60) + .4], [84, onFace(84)], [104, onFace(104)], [118, onFace(118) + 1.4], [128, 108], [140, 110.5], [160, 115], [184, 119], [214, 122]];
+    bg += swell(u, L, { top: sTop, bottom: 240, seed: 4, lean: -.5, band: 12, sheenX: 104, sheenW: 26, streaks: 14, slope: Math.tan(ra) * .8, depth: 30,
+      ripples: { horizon: 70, bottom: 260, rot: ang, cx: x0, cy: y0, op: .4 } });
+    // ——— the brig on the face: heeled, bow up to the right, reefed, her windows lit ———
+    const s = .95, sh = { kind: 'brig', x: x0, y: y0, scale: s, flip: true, heel: ang, sails: 'reefed', detail: 'near', lights: true, seed: 17 };
     const ca = Math.cos(ra), sa = Math.sin(ra), pt = (X, H) => [x0 - s * (X * ca - H * sa), y0 - s * (X * sa + H * ca)];
-    let mid = `<g transform="rotate(${ang} ${x0} ${y0})">${K.contactShadow(u, x0, y0 + 1.2, 80, L, { ry: 3.4, opacity: .55 })}</g>`;
-    // without a wake the kit draws a level line at the waterline: the waterline here is tilted, its foam is our own
+    let mid = `<g transform="rotate(${ang} ${x0} ${y0})">${K.contactShadow(u, x0, y0 + 1.2, 74, L, { ry: 3.2, opacity: .6 })}</g>`;
     // KIT-CANDIDATE heel: the kit cuts the hull at a level line y = waterline; heeled, the cut must tilt with the hull
     const wl = [pt(-400, -.2), pt(400, -.2), pt(400, 900), pt(-400, 900)].map(p => f(p[0]) + ' ' + f(p[1])).join('L');
     mid += K.ship(u, L, sh).replace(/<path d="M[-\d.]+ ([-\d.]+)L[-\d.]+ \1" stroke="#[0-9a-f]{6}" stroke-width="[\d.]+" opacity=".45"\/>/, '')
       .replace(/(<clipPath id="khw[^"]+">)<rect x="-400" y="-900" width="1000" height="[\d.]+"\/>/, `$1<path d="M${wl}Z"/>`);
-    // the bow chasers: two iron barrels out of the bow, along the hull and a little higher (30 degrees to the horizon)
-    const el = -30 * Math.PI / 180, gun = [[-29.5, 6.6, 9], [-26, 4.9, 8]];
-    let guns = '', flashes = '';
-    gun.forEach(([X, H, ln], i) => {
-      const a = pt(X, H), b = [a[0] + Math.cos(el) * ln, a[1] + Math.sin(el) * ln];
-      guns += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.2, L, 'iron', { r2: 1, outline: .4, seed: 3 + i });
-      const m = [b[0] + Math.cos(el) * .4, b[1] + Math.sin(el) * .4];
-      flashes += K.muzzleFlash(u, { x: m[0], y: m[1], dir: -30 + (i ? 3 : -2), len: i ? 24 : 32, seed: i ? 1 : 0 });
-      // the trail of the shot: a thin soft streak of smoke along the flight, drifting right with the wind
-      const tl = nid('tl', u), tf = nid('tf', u), q0 = 26 + i * 5, q1 = q0 + 40 + i * 8, p0 = [m[0] + Math.cos(el) * q0, m[1] + Math.sin(el) * q0], p1 = [m[0] + Math.cos(el) * q1 + 2.5, m[1] + Math.sin(el) * q1 + 1.6];
-      flashes += `<defs>${lin(tl, p0[0], p0[1], p1[0], p1[1], [[0, '#ece8e0', .0], [.15, '#ece8e0', .95], [1, '#d6d4cd', .25]])}${blur(tf, .45, [p0[0] - 10, p1[1] - 10, 90, 60])}</defs>`
-        + `<path d="M${f(p0[0])} ${f(p0[1])}Q${f((p0[0] + p1[0]) / 2 + 1)} ${f((p0[1] + p1[1]) / 2 - .6)} ${f(p1[0])} ${f(p1[1])}" stroke="url(#${tl})" stroke-width="${f(1.9 - i * .4)}" fill="none" stroke-linecap="round" filter="url(#${tf})"/>`;
-    });
-    // the gun smoke, carried right past the ship by the wind from the left, lit from inside by the flashes
-    const m0 = pt(-33, 10);
-    flashes = K.smoke(u, L, { x: m0[0] + 6, y: m0[1] - 4, w: 26, h: 26, wind: .9, seed: 6, opacity: .7, glow: { color: '#ffb060', power: .5 } }) + flashes;
-    mid += guns;
+    // the bow gun: an iron barrel out of the bow, pointing up past the merchantman
+    const el = -26 * Math.PI / 180, a = pt(-29, 6.4), b = [a[0] + Math.cos(el) * 9, a[1] + Math.sin(el) * 9], m = [b[0] + Math.cos(el) * .4, b[1] + Math.sin(el) * .4];
+    mid += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.25, L, 'iron', { r2: 1.05, outline: .4, seed: 3 });
+    let fx = K.smoke(u, L, { x: m[0] + 4, y: m[1] - 2, w: 30, h: 22, wind: 1, seed: 6, opacity: .75, glow: { color: '#ffb060', power: .6 } });
+    fx += K.muzzleFlash(u, { x: m[0], y: m[1], dir: -26, len: 21, seed: 0 });
+    // the flight of the shot: a thin smoke trail rising and falling into the wave by the merchant (the miss)
+    { const sp = (() => { const tp = [141, 103.6], rr = TILT * Math.PI / 180, c = Math.cos(rr), sn = Math.sin(rr); return [100 + (tp[0] - 100) * c - (tp[1] - HZ) * sn, HZ + (tp[0] - 100) * sn + (tp[1] - HZ) * c]; })();
+      const p0 = [m[0] + 14, m[1] - 7], ctl = [126, 64], tl = nid('tl', u), tf = nid('tf', u);
+      fx += `<defs>${lin(tl, p0[0], p0[1], sp[0], sp[1], [[0, '#ece8e0', .1], [.35, '#e2ded6', .75], [1, '#d6d4cd', .35]])}${blur(tf, .5, [p0[0] - 10, 50, 70, 70])}</defs>`
+        + `<path d="M${f(p0[0])} ${f(p0[1])}Q${f(ctl[0])} ${f(ctl[1])} ${f(sp[0])} ${f(sp[1] - 9)}" stroke="url(#${tl})" stroke-width="1.5" fill="none" stroke-linecap="round" filter="url(#${tf})"/>`; }
+    // the flash lights the bow, the sails over it and the water under it
+    fx += K.localGlow(u, { x: m[0] + 6, y: m[1], color: '#ffb24a', power: .55, radius: 40 }, { core: false }) + K.localGlow(u, { x: m[0] - 4, y: onFace(m[0]) + 2, color: '#ffa040', power: .3, radius: 26 }, { squash: .35, core: false });
     // foam along the tilted waterline and the sea breaking on the raised bow
-    mid += `<g transform="rotate(${ang} ${x0} ${y0})">${K.foam(u, { x: x0 - 2, y: y0 + .4, w: 74, h: 1.3, seed: 21, L })}</g>`;
+    mid += `<g transform="rotate(${ang} ${x0} ${y0})">${K.foam(u, { x: x0 - 2, y: y0 + .4, w: 70, h: 1.4, seed: 21, L })}</g>`;
     const stem = pt(-34.5, 0);
-    mid += K.splash(u, { x: stem[0], y: stem[1] + 1, w: 11, h: 9, seed: 5, L, wind: 1 });
-    mid += crestFoam(u, L, sTop.slice(7, 10), { seed: 9, h: 1.2, gap: .25 });
-    // ——— the near swell (under the glass): a dark back with lace, the trough between; a broken yard afloat ———
+    mid += K.splash(u, { x: stem[0], y: stem[1] + 1, w: 12, h: 10, seed: 5, L, wind: 1 });
+    mid += crestFoam(u, L, sTop.slice(6, 10), { seed: 9, h: 1.2, gap: .25 });
+    // spray torn off the crest by the wind, flying right
+    { const R = rng(44); let sp = ''; for (let i = 0; i < 36; i++) { const x = 96 + R() * 40, y = 96 + R() * 22, l = 1.5 + R() * 4; sp += `<path d="M${f(x)} ${f(y)}l${f(l)} ${f(l * .22)}" stroke="#dfe8f0" stroke-width="${f(.25 + R() * .4)}" opacity="${f(.25 + R() * .45)}" stroke-linecap="round"/>`; } mid += sp; }
+    // ——— the near swell (under the glass): a dark back with lace, the trough; a broken yard afloat ———
     let fg = '';
     const nTop = [[-8, 168], [16, 160], [40, 155.5], [66, 158], [92, 164], [118, 168], [146, 163], [172, 155], [196, 152], [212, 154]];
-    fg += swell(u, L, { top: nTop, bottom: 284, seed: 8, lean: .3, band: 10, streaks: 10, slope: -.05, depth: 50,
-      ripples: { horizon: 150, bottom: 290, op: .32 } });
+    fg += swell(u, L, { top: nTop, bottom: 284, seed: 8, lean: .3, band: 10, streaks: 10, slope: -.05, depth: 50, ripples: { horizon: 150, bottom: 290, op: .32 } });
     fg += crestFoam(u, L, nTop.slice(1, 4), { seed: 13, h: 1.6, gap: .3, dy: 1.5 }) + crestFoam(u, L, nTop.slice(6, 9), { seed: 14, h: 1.3, gap: .3, dy: 1.5 });
-    // the broken yard lying on the back of the near swell, a rag of its sail spread flat on the water beside it
     const yd = [[34, 196], [104, 189]], cr = L.ramp('canvas', 66, 200);
     const cv = K.mat('canvas', L, { form: 'plane', x1: 40, y1: 196, x2: 96, y2: 210, n: [0, .9, .45], u });
     const rag = 'M44 197C56 195.6 66 194.6 80 193C83 195.6 80 198 85 200.6C77 202.4 72 201 66 204.6C60 202.6 55 205.4 49 203C51 201.4 45 200.2 44 197Z';
-    let yard = `<defs>${cv.defs}</defs><path d="${rag}" fill="${cv.fill}" stroke="${cr.outline}" stroke-width=".3"/>`
-      + `<path d="M54 196.6C55 198.6 53 200.6 56 203.4M68 195.4C69 197.6 67 199.6 70 202.6" fill="none" stroke="${cr.core}" stroke-width=".6" opacity=".5"/>`;
-    // the lower edge of the rag sinks: the water shows through it
+    let yard = `<defs>${cv.defs}</defs><path d="${rag}" fill="${cv.fill}" stroke="${cr.outline}" stroke-width=".3"/>`;
     const wv = nid('wv', u); yard += `<defs>${lin(wv, 0, 196, 0, 205, [[0, L.pal.sea[1], 0], [1, L.pal.sea[2], .75]])}</defs><path d="${rag}" fill="url(#${wv})"/>`;
     yard += K.shadeCyl(u, yd[0][0], yd[0][1], yd[1][0], yd[1][1], 2.6, L, 'oak', { r1: 2.3, r2: 2.8, outline: .5, seed: 7 });
-    const se = yd[1], sr = L.ramp('oak', se[0], se[1]);
-    yard += `<path d="M${f(se[0] - .6)} ${f(se[1] - 2.8)}l3.2 -1.4l-1.2 1.6l3.6 .4l-2.6 1.2l3 1.5l-3.6 .2l1.4 1.8l-3.6 -.8Z" fill="${sr.half}" stroke="${sr.outline}" stroke-width=".35"/>`;
     fg += K.contactShadow(u, 69, 194, 74, L, { ry: 3, opacity: .45 }) + yard + K.foam(u, { x: 66, y: 195.5, w: 80, h: 1.3, seed: 33, L });
-    return [bg + mid + flashes, fg];
+    // rain in front of everything, thin, the same slant
+    fg += rain(u, L, { x0: -20, x1: 90, y0: 96, y1: 230, n: 40, seed: 12, slant: .38 });
+    return [bg + mid + fx, fg];
   },
 };
