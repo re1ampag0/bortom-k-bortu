@@ -15,7 +15,7 @@ const sheet = kind => ({ w: 400, h: 280, bg: '#222', svg: () => {
   const s1 = fit(kind, 176, 128), s2 = fit(kind, 120, 62);
   const big = scene('A' + kind, kind, { horizon: 150, vh: 215, ships: [{ x: 100, y: 160, scale: s1, wake: true, reflect: true, lights: true }] });
   const sil = `<rect width="200" height="133" fill="#e9dfc8"/>` + K.shipSilhouette(kind, { x: 100, y: 110, scale: fit(kind, 170, 96), u: 'S' + kind });
-  const mid = scene('B' + kind, kind, { horizon: 78, vh: 133, ships: [{ x: 118, y: 96, scale: s2 * 1.25, detail: 'mid', flip: true, heel: 4, sails: 'reefed', wake: true, reflect: true }] });
+  const mid = scene('B' + kind, kind, { horizon: 78, vh: 133, ships: [{ x: 118, y: 96, scale: s2 * 1.25, detail: 'mid', flip: true, heel: 0, sails: 'reefed', wake: true, reflect: true }] });
   const far = scene('C' + kind, kind, { horizon: 78, vh: 133, ships: [{ x: 60, y: 81, scale: s2 * .42, detail: 'far' }, { x: 150, y: 84, scale: s2 * .6, detail: 'far', flip: true, sails: 'furled' }] });
   return panel(0, 0, 260, 280, 200, 215, big) + panel(260, 0, 140, 93, 200, 133, sil) + panel(260, 93, 140, 93, 200, 133, mid) + panel(260, 186, 140, 94, 200, 133, far);
 } });

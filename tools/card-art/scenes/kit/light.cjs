@@ -52,7 +52,7 @@ const PAL = {
 };
 /** Ready light schemes of the decks (copy and change: { ...LIGHTS.pearl, key: { ...LIGHTS.pearl.key, az: 320 } }). */
 const LIGHTS = {
-  pearl: { time: 'night', haze: .35, key: { ...PAL.night.key }, fill: { ...PAL.night.fill }, rim: { az: 330, color: '#bfe0ff', power: .5 } },
+  pearl: { time: 'night', haze: .35, key: { ...PAL.night.key, az: 14, el: 20 }, fill: { ...PAL.night.fill }, rim: { az: 14, color: '#bfe0ff', power: .5 } }, // the moon inside the picture, upper right: its halo and glitter path lift the night sky
   revenge: { time: 'dusk', haze: .45, key: { ...PAL.dusk.key }, fill: { ...PAL.dusk.fill } },
   endeavour: { time: 'day', haze: .25, key: { ...PAL.day.key }, fill: { ...PAL.day.fill } },
   dutchman: { time: 'fog', haze: .8, key: { ...PAL.fog.key }, fill: { ...PAL.fog.fill } },
