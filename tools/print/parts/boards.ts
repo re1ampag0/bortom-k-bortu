@@ -9,6 +9,7 @@ import { HERE, ROOT, data, esc, rich, RICH_CSS, type Ctx, type PageSpec, type Pa
 import { BOARD, priceOf, trackCells, type Ship } from '../layout';
 import { BRASS, BRASS_DARK, DECK_KEY, INK, PARCHMENT, SEA, TYPE, contrast, darken, lighten } from '../colors';
 import { iconImg } from '../icons';
+import { makeArt, profiled } from '../art';
 
 const require = createRequire(import.meta.url);
 /** The ships of the art kit (tools/card-art/scenes/kit/ship.cjs): the same ships as on the card backs. */
@@ -16,18 +17,21 @@ const K = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as {
   ship(u: string, L: unknown, o: Record<string, unknown>): string; makeLight(l: unknown, cam: { horizon: number }): unknown;
   shipBox(kind: string, o: { x: number; y: number; scale: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number }; LIGHTS: Record<string, unknown>;
 };
-/** A board's ship: a transparent picture in plain daylight (the sheet is paper, not a night scene), its bottom edge is the waterline. */
-interface ShipPic { url: string; w: number; h: number }
+/** A board's ship: the kit ship in plain daylight on flat parchment — a JPEG through the print profile, like the card pictures
+ *  (a transparent PNG of this size is 600–900 KB in the PDF). The ship stands in the part 0, vy, 200, vh of the 200 × 280 picture;
+ *  the waterline is DIP units above that part's bottom edge. The box behind it must be painted with SHIP_BG. */
+interface ShipPic { url: string; vy: number; vh: number }
+const DIP = 2;
 async function kitShip(ctx: Ctx, key: string): Promise<ShipPic> {
-  const kind = key === 'dutchman' ? 'dutch' : key, at = { x: 100, y: 180, scale: 1 }, b = K.shipBox(kind, at), m = 3, w = b.w + 2 * m, h = b.h + m, px = 320;
-  const body = K.ship('bo' + kind, K.makeLight(K.LIGHTS.endeavour, { horizon: 170 }), { kind, ...at });
-  const url = await ctx.raster('board-ship-' + kind, `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${Math.round(px * h / w)}" viewBox="${r(b.x0 - m)} ${r(b.top - m)} ${r(w)} ${r(h)}">${body}</svg>`, px, Math.round(px * h / w), 4);
-  return { url, w, h };
+  const kind = key === 'dutchman' ? 'dutch' : key, b = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), m = 4, wl = 270, s = Math.min((200 - 2 * m) / b.w, 240 / b.h);
+  const body = K.ship('bo' + kind, K.makeLight(K.LIGHTS.endeavour, { horizon: wl - 10 }), { kind, x: 100 - s * (b.x0 + b.x1) / 2, y: wl, scale: s });
+  const art = await makeArt(ctx, 'board-ship-' + kind, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280"><rect width="200" height="280" fill="${PAPER}"/>${body}</svg>`, null);
+  return { url: art.url, vy: r(wl - s * b.h - m), vh: r(s * b.h + m + DIP) };
 }
-/** The picture fitted into maxW × maxH, centred on cx, standing on the waterline wy (sunk a hair so the wave in front covers the cut). */
+/** The picture fitted into maxW × maxH, centred on cx, standing on the waterline wy; the sea is drawn over its bottom edge. */
 const shipImage = (pic: ShipPic, cx: number, wy: number, maxW: number, maxH: number) => {
-  const k = Math.min(maxW / pic.w, maxH / pic.h), w = pic.w * k, h = pic.h * k;
-  return `<image href="${pic.url}" x="${r(cx - w / 2)}" y="${r(wy - h + k)}" width="${r(w)}" height="${r(h)}"/>`;
+  const k = Math.min(maxW / 200, maxH / pic.vh), w = 200 * k, h = pic.vh * k;
+  return `<svg x="${r(cx - w / 2)}" y="${r(wy - h + DIP * k)}" width="${r(w)}" height="${r(h)}" viewBox="0 ${pic.vy} 200 ${pic.vh}"><image href="${pic.url}" width="200" height="280"/></svg>`;
 };
 
 export type BoardVariant = 'top' | 'side';
@@ -69,6 +73,8 @@ const pt = (n: number) => n * 25.4 / 72;
 const r = (n: number) => Math.round(n * 100) / 100;
 
 // ---- colours ----
+/** Flat parchment behind a board's ship: what the JPEG holds where the picture is painted with PAPER. */
+const SHIP_BG_OF = (paper: string) => profiled(paper);
 const PAPER = '#fdf9ec', CREAM = '#fff8e6', SOFT = '#5a4630', CELL = '#fffdf6', FLOOR = '#ebe2cf';
 const SINK = { fill: '#f6d8cc', line: '#a8442f', text: '#8a2c1a' };
 const FIRE = { fill: '#fdf0e4', line: TYPE['ЗАРЯД'].t, text: TYPE['ЗАРЯД'].td, soft: '#f3c9a8' };
@@ -142,6 +148,7 @@ const MID = { x: LEFT.r - 80, w: 80, gap: 4 };
 interface Slot { h: number; c: { fill: string; line: string; text: string }; title: string; note?: string; art: string }
 /** A titled box of the middle column: its lines are SVG in mm, its lettering HTML. */
 const slotHtml = (s: Slot) => `<div class="bo-slot" style="height:${r(s.h)}mm;color:${s.c.text}"><svg viewBox="0 0 ${MID.w} ${r(s.h)}"><rect x=".2" y=".2" width="${MID.w - 0.4}" height="${r(s.h - 0.4)}" rx="2.2" fill="${s.c.fill}" stroke="${s.c.line}" stroke-width=".4"/>${s.art}</svg><div class="bo-st">${esc(s.title)}</div>${s.note ? `<div class="bo-sn">${esc(nb(s.note))}</div>` : ''}</div>`;
+const SHIP_BG = SHIP_BG_OF(PAPER);
 const dashed = (x: number, y: number, w: number, h: number, color: string) => `<rect x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" rx="2" fill="${PAPER}" stroke="${color}" stroke-width=".35" stroke-dasharray="1.4 1"/>`;
 const FLAME = 'M0 -5.2C2.3 -2.6 4 -0.8 4 1.6a4 4 0 0 1 -8 0c0 -1.7 0.9 -3 2 -4.2c0.3 1.3 0.9 2 1.7 2.1c0.9 -1.4 0.9 -3 0.3 -4.7z';
 /** Three Fire tokens of 20 × 20 mm (PnP p. 8–9) under a two-line reminder of the Fire rule (review-player 3.2). */
@@ -181,11 +188,11 @@ const medallion = (cx: number, cy: number, R: number, ship: Ship, pal: Pal) =>
 /** 'top': a light sky and a strip of sea across the sheet, the ship on it at the right. */
 function headerTop(ship: Ship, pal: Pal, pic: ShipPic): string {
   const x = EDGE, y = EDGE, w = PAGE.w - 2 * EDGE, h = HEAD_H.top, id = `bo-h${++UID}`, wy = y + h - 4.6, sx = x + w - 8 - 30;
-  return `<defs><clipPath id="${id}c"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.4"/></clipPath><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset=".2" stop-color="${PAPER}"/><stop offset="1" stop-color="${pal.sky}"/></linearGradient></defs>
-<g clip-path="url(#${id}c)"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#${id}g)"/>
-<rect x="${x}" y="${r(wy - 3.6)}" width="${w}" height="12" fill="${pal.sea[0]}"/><path d="${waves(x, x + w, wy - 1.7, 0.5, 9, 3, y + h)}" fill="${pal.sea[1]}"/>
+  return `<defs><clipPath id="${id}c"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.4"/></clipPath></defs>
+<g clip-path="url(#${id}c)"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${SHIP_BG}"/>
 ${shipImage(pic, sx, wy, 62, h - 6.6)}
-<path d="${waves(x, x + w, wy + 1.1, 0.55, 12, 7, y + h)}" fill="${pal.sea[2]}"/><rect x="${x}" y="${r(y + h - 1.2)}" width="${w}" height="1.2" fill="${pal.ship}"/></g>
+<rect x="${x}" y="${r(wy - 0.5)}" width="${w}" height="12" fill="${pal.sea[0]}"/><path d="${waves(x, x + w, wy + 0.5, 0.5, 9, 3, y + h)}" fill="${pal.sea[1]}"/>
+<path d="${waves(x, x + w, wy + 1.9, 0.55, 12, 7, y + h)}" fill="${pal.sea[2]}"/><rect x="${x}" y="${r(y + h - 1.2)}" width="${w}" height="1.2" fill="${pal.ship}"/></g>
 <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.4" fill="none" stroke="${BRASS}" stroke-width=".3"/>${medallion(x + 12, y + 14, 8.4, ship, pal)}`;
 }
 /** 'side': a slim header — the medallion, the name, a rule of the ship colour. */
@@ -202,11 +209,9 @@ function headerHtml(ship: Ship, pal: Pal, variant: BoardVariant): string {
 }
 /** 'side': the picture in the column; the sea stretches to the box, the ship keeps its shape and stands on the same waterline. */
 function shipPicture(ship: Ship, pal: Pal, pic: ShipPic): string {
-  const id = `bo-p${++UID}`;
-  return `<div class="bo-pic" style="border-color:${BRASS}">
-<svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset=".15" stop-color="${PAPER}"/><stop offset=".85" stop-color="${pal.sky}"/></linearGradient></defs><rect width="100" height="100" fill="url(#${id})"/><rect y="82" width="100" height="18" fill="${pal.sea[0]}"/><path d="${waves(0, 100, 85.4, 0.8, 9, 2, 100)}" fill="${pal.sea[1]}"/></svg>
+  return `<div class="bo-pic" style="border-color:${BRASS};background:${SHIP_BG}">
 <svg viewBox="0 0 130 84" preserveAspectRatio="xMidYMax meet">${shipImage(pic, 65, 74, 122, 70)}</svg>
-<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${waves(0, 100, 90.4, 0.9, 12, 5, 100)}" fill="${pal.sea[2]}"/><rect y="97.6" width="100" height="2.4" fill="${pal.ship}"/></svg>
+<svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect y="87.6" width="100" height="12.4" fill="${pal.sea[0]}"/><path d="${waves(0, 100, 89.4, 0.8, 9, 2, 100)}" fill="${pal.sea[1]}"/><path d="${waves(0, 100, 92.4, 0.9, 12, 5, 100)}" fill="${pal.sea[2]}"/><rect y="97.6" width="100" height="2.4" fill="${pal.ship}"/></svg>
 </div>`;
 }
 
@@ -300,5 +305,7 @@ export const BOARD_CSS = `${RICH_CSS}
 `;
 
 export async function build(ctx: Ctx): Promise<Part[]> {
-  return [{ file: '03-planshety', title: TXT.title, css: BOARD_CSS, pages: await Promise.all(data.ships.map(ship => boardPage(ctx, ship, BOARD_DEFAULT))) }];
+  const pages: PageSpec[] = [];
+  for (const ship of data.ships) pages.push(await boardPage(ctx, ship, BOARD_DEFAULT)); // one at a time: makeArt has a single raster page
+  return [{ file: '03-planshety', title: TXT.title, css: BOARD_CSS, pages }];
 }
