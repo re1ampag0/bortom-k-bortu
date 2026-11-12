@@ -7,12 +7,14 @@
 const K = require('../kit/index.cjs');
 const { f, mix, clamp, lerp, rng, nid, linGrad } = K;
 // the low sun ahead and to the right (kit az ~20: from the depth, a little right), warm, through the haze
-const light = { time: 'dusk', key: { type: 'sun', x: 157, y: 74, color: '#ffc47a', power: .9 }, fill: { color: '#5c6e92', power: .5 },
+const light = { time: 'dusk', key: { type: 'sun', x: 157, y: 58, color: '#ffc47a', power: .9 }, fill: { color: '#5c6e92', power: .5 },
   rim: { az: 20, color: '#ffe2b4', power: .6 }, haze: .55 };
-const HZ = 121, WL = 127, WF = 123.5;   // horizon; waterlines of the near and the far ship (the glass of a sea card starts at y 129)
+const HZ = 91, WL = 97, WF = 93.5;   // horizon; waterlines of the near and the far ship (the glass of a sea card starts at y 129:
+// the 30 units of glassy water over it carry the mirror of the brig)
+const BX = 104, BS = 1;   // the brig: middle of the waterline, scale (her trucks clear the top and the medal)
 const skel = { horizon: HZ, eye: 2, items: [
-  ['brig (near), limp sails', 30, WL, 128, 104, 'water'], ['smoke column', 25, 124, 30, 92, 'the bow gun of the brig (water at its foot)'],
-  ['far ship', 150, WF, 46, 36, 'water'], ['sun', 150, 81, 14, 14, 'sky'], ['weed', 16, 160, 44, 4, 'water']] };
+  ['brig (near), limp sails', 50, WL, 96, 82, 'water'], ['smoke column', 66, 89, 16, 52, 'the forecastle of the brig (the bow gun)'],
+  ['far ship', 150, WF, 46, 36, 'water'], ['sun', 150, 65, 14, 14, 'sky'], ['weed', 16, 160, 44, 4, 'water']] };
 
 // ——— KIT-CANDIDATE: limp sails of a becalmed ship. kit/ship.cjs draws sails only bellied by the wind (full, reefed)
 // or furled; this hangs slack square sails (and the lateen) from the yards of a ship drawn with sails: 'furled', at
@@ -168,6 +170,49 @@ function weed(u, L, o) {
   return out;
 }
 
+// ——— KIT-CANDIDATE: a column of smoke in a dead calm: it stands straight up from its source, its axis a plumb line;
+// only the edges are lobed (the billows rolling up it), it widens upwards and its top just begins to spread. Lit from
+// the side of the key light, in shade on the other; denser at the foot, thinning upwards. (x, y) — the source.
+function column(u, L, o) {
+  const R = rng(o.seed || 4), x = o.x, y = o.y, h = o.h, w0 = o.w0 || 2.4, w1 = o.w1 || 14, n = 40, ph = R() * 6, ph2 = R() * 6;
+  const hw = t => (lerp(w0, w1, Math.pow(t, 1.25)) / 2) * (1 + .35 * Math.pow(clamp((t - .82) / .18), 2));
+  const lob = (t, p) => 1 + .1 * Math.sin(t * 26 + p) + .05 * Math.sin(t * 57 + p * 2);
+  const left = [], right = [];
+  for (let i = 0; i <= n; i++) { const t = i / n, yy = y - h * t; left.push([x - hw(t) * lob(t, ph), yy]); right.push([x + hw(t) * lob(t, ph2), yy]); }
+  // the top: a rounded crown of three billows
+  const tw = hw(1), crown = [[x + tw * .8, y - h - tw * .35], [x + tw * .3, y - h - tw * .62], [x - tw * .25, y - h - tw * .55], [x - tw * .8, y - h - tw * .3]];
+  const d = smooth([[x + .2, y + .4], ...right.slice(1), ...crown, ...left.slice(1).reverse(), [x - .2, y + .4]]);
+  const P0 = L.pal, side = L.key && L.key.x != null ? Math.sign(L.key.x - x) || 1 : 1;
+  const lit = mix(P0.smoke, L.keyColor, .5), shade = mix(P0.smoke, L.shadowTint, .55), rim = mix(lit, '#ffffff', .35), mid = mix(lit, shade, .45);
+  const g = nid('cg', u), m = nid('cm', u), mg = nid('cmg', u), ci = nid('cc', u), fl = nid('cf', u);
+  const box = [x - w1 * 1.4 - 4, y - h - w1 - 4, w1 * 2.8 + 8, h + w1 + 10];
+  let defs = linGrad(g, x - w1 * .6 * side, 0, x + w1 * .6 * side, 0, [[0, shade], [.45, mid], [.8, lit], [1, rim]])
+    + linGrad(mg, 0, y, 0, y - h - tw, [[0, '#fff', 1], [.55, '#fff', .82], [1, '#fff', .5]])
+    + `<mask id="${m}" maskUnits="userSpaceOnUse" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}"><rect x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}" fill="url(#${mg})"/></mask>`
+    + `<clipPath id="${ci}"><path d="${d}"/></clipPath>`
+    + `<filter id="${fl}" filterUnits="userSpaceOnUse" x="${f(box[0])}" y="${f(box[1])}" width="${f(box[2])}" height="${f(box[3])}"><feTurbulence type="fractalNoise" baseFrequency="0.09 0.05" numOctaves="2" seed="${o.seed || 4}"/><feDisplacementMap in="SourceGraphic" scale="1.2" xChannelSelector="R" yChannelSelector="G"/><feGaussianBlur stdDeviation=".35"/></filter>`;
+  // the billows rolling up the column: each a soft round swelling, lit on the key side, its underside in shade
+  let inn = '';
+  for (let t = .06; t < 1.02; t += .055 + R() * .04) { const yy = y - h * t, r = hw(t) * (.9 + R() * .25), bg = nid('cb', u);
+    defs += `<radialGradient id="${bg}" gradientUnits="userSpaceOnUse" cx="${f(x + side * r * .35)}" cy="${f(yy - r * .3)}" r="${f(r * 1.1)}"><stop offset="0" stop-color="${rim}" stop-opacity=".55"/><stop offset=".55" stop-color="${lit}" stop-opacity=".18"/><stop offset="1" stop-color="${shade}" stop-opacity="0"/></radialGradient>`;
+    inn += `<path d="M${f(x - r)} ${f(yy)}Q${f(x)} ${f(yy + r * .5)} ${f(x + r)} ${f(yy)}" stroke="${shade}" stroke-width="${f(.25 + r * .08)}" fill="none" opacity=".35"/><ellipse cx="${f(x)}" cy="${f(yy - r * .2)}" rx="${f(r)}" ry="${f(r * .62)}" fill="url(#${bg})"/>`; }
+  // the foot: the densest grey, warm from the shot, right at the port
+  inn += `<ellipse cx="${f(x)}" cy="${f(y - 1)}" rx="${f(w0 * .9)}" ry="${f(2.4)}" fill="${mix(shade, '#3a3036', .4)}" opacity=".6"/>`;
+  return `<defs>${defs}</defs><g mask="url(#${m})" opacity="${f(o.opacity != null ? o.opacity : .95)}"><g filter="url(#${fl})"><path d="${d}" fill="url(#${g})"/><g clip-path="url(#${ci})">${inn}</g></g></g>`;
+}
+// ——— KIT-CANDIDATE: a mirror reflection on dead-calm water: the thing turned straight down about its waterline y,
+// whole and crisp (no ripples tear it), a little darker and bluer than the thing, fading out over h units; a few
+// faint long glints across it where the glass catches the sky
+function mirrorOf(u, L, body, y, h, op) {
+  let b = body;
+  for (const id of new Set([...body.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]))) { const n = nid('mr', u); b = b.split(`id="${id}"`).join(`id="${n}"`).split(`url(#${id})`).join(`url(#${n})`).split(`href="#${id}"`).join(`href="#${n}"`); }
+  const wc = L.pal.sea[1], [r0, g0, b0] = [1, 3, 5].map(i => parseInt(wc.slice(i, i + 2), 16) / 255 * .26), fi = nid('mf', u), mk = nid('mk', u), mg = nid('mg', u);
+  const defs = `<filter id="${fi}" filterUnits="userSpaceOnUse" x="-40" y="${f(y - 1)}" width="280" height="${f(h + 4)}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".74 0 0 0 ${f(r0)} 0 .74 0 0 ${f(g0)} 0 0 .76 0 ${f(b0)} 0 0 0 1 0"/><feGaussianBlur stdDeviation=".12 .3"/></filter>`
+    + linGrad(mg, 0, y, 0, y + h, [[0, '#fff', 1], [.45, '#fff', .75], [1, '#fff', 0]])
+    + `<mask id="${mk}" maskUnits="userSpaceOnUse" x="-40" y="${f(y)}" width="280" height="${f(h)}"><rect x="-40" y="${f(y)}" width="280" height="${f(h)}" fill="url(#${mg})"/></mask>`;
+  return `<defs>${defs}</defs><g mask="url(#${mk})" opacity="${f(op)}"><g filter="url(#${fi})"><g transform="translate(0 ${f(2 * y)}) scale(1 -1)">${b}</g></g></g>`;
+}
+
 module.exports = { name: 'Штиль', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });
@@ -178,21 +223,23 @@ module.exports = { name: 'Штиль', kind: 'sea', status: 'draft', cam: { x: 0
     bg += K.water(u, L, { horizon: HZ, bottom: 280, swell: 0, seed: 11, glitter: 157 });
     // the heat haze over the water: a warm band that swallows the horizon
     bg += K.fog(u, L, { y: HZ - 16, h: 22, density: .4, seed: 4 });
-    // mirror water: the reflection is laid twice with ripples in different places, so it reads whole, not in bands
-    const mirror = (body, y, h, op, seed) => `<g data-far="">${K.reflection(u, body, { y, h, L, opacity: op, stretch: 1, seed })}${K.reflection(u, body, { y, h, L, opacity: op * .8, stretch: 1, seed: seed + 13 })}</g>`;
+    // mirror water: no ripple tears the reflection (mirrorOf), it reads whole and sharp
     // the far ship, bow to the left as ours: becalmed in the haze under the sun
     const far = `<g data-far="">${becalmed(u, L, { kind: 'merchant', x: 176, y: WF, scale: .44, detail: 'far', seed: 5 }).svg}</g>`;
-    bg += mirror(far, WF, 34, .36, 8) + far;
+    bg += `<g data-far="">${mirrorOf(u, L, far, WF, 34, .5)}</g>` + far;
     // the near brig: bow to the left, every sail hanging slack
-    const nb = becalmed(u, L, { kind: 'brig', x: 96, y: WL, scale: 1.24, seed: 7 }), near = nb.svg;
-    bg += mirror(near, WL, 100, .55, 6) + near;
-    bg += `<path d="M${f(96 - 52)} ${WL + .3}H${f(96 + 53)}" stroke="${L.shadowTint}" stroke-width=".6" opacity=".5"/>`;
-    // the smoke of the bow gun: it went off a while ago and stands over the water in a straight column, its top just
-    // spreading; lit warm from the right by the low sun; its reflection hangs straight down under it
-    const sm = K.smoke(u, L, { x: 40, y: WL - 3, w: 34, h: 92, seed: 4, wind: 0, opacity: 1 });
-    bg += mirror(sm, WL, 60, .4, 15) + sm;
+    const nb = becalmed(u, L, { kind: 'brig', x: BX, y: WL, scale: BS, seed: 7 }), near = nb.svg;
+    // the smoke of the bow gun: it went off a while ago from the forecastle and stands straight up over the bow in a
+    // plumb column, its top just spreading; lit warm from the right by the low sun; mirrored straight down under it
+    const sm = column(u, L, { x: BX - 31 * BS, y: WL - 8.6 * BS, h: 50, w0: 2.6, w1: 14, seed: 4 });
+    bg += mirrorOf(u, L, near + sm, WL, 70, .82) + near;
+    bg += `<path d="M${f(BX - 35 * BS)} ${WL + .3}H${f(BX + 38 * BS)}" stroke="${L.shadowTint}" stroke-width=".6" opacity=".5"/>`;
+    bg += sm;
+    // the glass of the water: a few long faint glints across the mirror, where it catches the sky
+    { const Rg = rng(23); for (let i = 0; i < 9; i++) { const yy = WL + 2 + Math.pow(Rg(), .8) * 30, x0 = -10 + Rg() * 190, l = 14 + Rg() * 40;
+      bg += `<path d="M${f(x0)} ${f(yy)}h${f(l)}" stroke="${mix(L.pal.sky[3], '#ffffff', .2)}" stroke-width="${f(.15 + Rg() * .2)}" opacity="${f(.12 + Rg() * .18)}"/>`; } }
     // the warm glow of the sun on the slack canvas and the water under it
-    bg += K.localGlow(u, { x: 157, y: 118, color: '#ffc47a', power: .35, radius: 40 }, { squash: .3, core: false });
+    bg += K.localGlow(u, { x: 157, y: 88, color: '#ffc47a', power: .35, radius: 40 }, { squash: .3, core: false });
     // under the glass: a raft of weed in the near water
     bg += weed(u, L, { x: 38, y: 158, w: 44, h: 3.4, seed: 9 });
     return [bg, ''];

@@ -26,7 +26,6 @@ const skel = {
     ['brig, heel -14, roll 12 (bow up, left)', 62, 124, 90, 66, 'foot of the wave (tilted waterline)'],
     ['torn main topgallant', 156, 74, 26, 22, 'flying from the main topgallant yard on two sheets'],
     ['spray falling from the lip', 168, 84, 24, 40, 'from the lip'],
-    ['broken mast + canvas', 14, 246, 84, 18, 'near trough (under the glass)'],
   ],
 };
 
@@ -188,19 +187,12 @@ module.exports = {
     // the warm rim of the hidden sun on the brig's left (the lip's glow) — a soft light on her bow and fore sails
     brig += K.localGlow(u, { x: 96, y: 70, color: '#ffc27a', power: .2, radius: 40 }, { core: false });
 
-    // ——— under the glass: the dark trough, the broken mast with its canvas afloat ———
+    // ——— under the glass: the dark trough (no debris: it showed below the glass, over the deck strip) ———
     let fg = '';
     const sTop = [[-14, 252], [10, 246], [40, 236], [80, 224], [110, 212], [132, 204], [152, 199], [172, 197.5], [192, 200], [214, 205]];
     const sD = sp(sTop) + 'L214 290L-14 290Z', sg = nid('sg', u);
     fg += `<defs>${lin(sg, 0, 196, 0, 290, [[0, mix(L.pal.sea[1], '#9fd6c8', .2)], [.2, L.pal.sea[1]], [1, L.pal.sea[2]]])}</defs><path d="${sD}" fill="url(#${sg})"/>`;
     fg += crestFoam(u, L, sTop.slice(4, 9).map(p => [p[0], p[1] + .8]), { seed: 23, h: 1.6, gap: .25 });
-    const m1 = [16, 247], m2 = [96, 236];
-    const cvm = K.mat('canvas', L, { form: 'plane', x1: 30, y1: 238, x2: 70, y2: 252, n: [0, .9, .45], u }), cr2 = L.ramp('canvas', 50, 245);
-    const rag = 'M30 243.6C40 241 52 240 64 238.6C67 241.6 63 244.6 68 247.4C58 249.6 48 248.2 40 251.6C36 249 31 248 30 243.6Z', wv = nid('wv', u);
-    fg += K.contactShadow(u, 56, 242, 84, L, { ry: 3, opacity: .45 })
-      + `<defs>${cvm.defs}${lin(wv, 0, 242, 0, 252, [[0, L.pal.sea[1], 0], [1, L.pal.sea[2], .7]])}</defs><path d="${rag}" fill="${cvm.fill}" stroke="${cr2.outline}" stroke-width=".3"/><path d="${rag}" fill="url(#${wv})"/>`
-      + K.shadeCyl(u, m1[0], m1[1], m2[0], m2[1], 3.2, L, 'oak', { r1: 3.4, r2: 2.8, outline: .5, seed: 9 })
-      + K.foam(u, { x: 56, y: 242.5, w: 92, h: 1.4, seed: 44, L });
     return [bg + wave + brig, fg];
   },
 };

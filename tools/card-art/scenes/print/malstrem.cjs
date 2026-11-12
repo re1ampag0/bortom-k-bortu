@@ -1,5 +1,6 @@
-// «Мальстрём» (Колода моря): we look down into a giant funnel of water from its near rim. On the far wall two
-// ships circle one after the other, laid over in to the axis (their decks turned to us and the eye); the spiral
+// «Мальстрём» (Колода моря): we look down into a giant funnel of water from its near rim. Down on its left and right
+// walls two ships circle one after the other, heeled with their masts in to the axis (decks turned to us and the
+// eye), foam wakes spiralling in behind them; the spiral
 // arms of foam run down to the black eye; over it a rift in the night clouds lets the moon look straight into the
 // funnel — one cold light, a shaft of it down the axis. The sea itself changes the ships' places.
 // Brief: docs/mockups/print/card-briefs.md «Мальстрём». Kit only (kit/README.md).
@@ -22,16 +23,15 @@ const light = {
 const EYE = [100, 106];
 const C = k => { const q = Math.pow(k, .75); return { cx: 100, cy: lerp(86, EYE[1], k), rx: lerp(175, 13, q), up: lerp(38, 5, q), dn: lerp(260, 7, Math.pow(k, .4)) }; };
 const P = (k, t) => { const c = C(k), s = Math.sin(t); return [c.cx + c.rx * Math.cos(t), c.cy + (s < 0 ? c.up : c.dn) * s]; };
-// the slope of a contour at t on the far half, in degrees (the picture's angle of the water under a ship there)
-const slope = (k, t) => { const a = P(k, t - .01), b = P(k, t + .01); return Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI; };
-const SHIPS = [{ k: .3, t: -.95 }, { k: .36, t: -2.25 }];
+// [0] the merchant on the right wall, [1] the brig on the left wall: well down the slope; heel — masts in to the axis
+const SHIPS = [{ k: .6, t: -.4, heel: 17 }, { k: .66, t: -Math.PI + .3, heel: -18 }];
 // the skeleton: [id, x, y (base), w, h, support]
 const skel = {
   horizon: HZ, eye: 30,
   items: [
     ['rim of the funnel', 0, 52, 200, 8, 'sea (ellipse cy 86, up 38)'],
-    ['merchant A (right), roll 18', 132, 72, 64, 50, 'far wall of the funnel (k .30)'],
-    ['brig B (left), roll 16', 6, 77, 50, 40, 'far wall of the funnel (k .36)'],
+    ['merchant A (right), heel 17 in, roll 20', 127, 92, 64, 50, 'right wall of the funnel (k .60)'],
+    ['brig B (left), heel -18 in, roll 20', 21, 95, 50, 40, 'left wall of the funnel (k .66)'],
     ['eye of the whirlpool', 86, 112, 28, 12, 'bottom of the funnel'],
     ['twisted plank + rope', 36, 232, 54, 14, 'near wall (foam)'],
   ],
@@ -81,6 +81,19 @@ function vortex(u, L, o = {}) {
     + `<ellipse cx="${EYE[0]}" cy="${EYE[1] - 1}" rx="44" ry="17" fill="url(#${th})" opacity=".55" filter="url(#${tb})"/>`
     + `<ellipse cx="${EYE[0]}" cy="${EYE[1] + 1}" rx="19" ry="9" fill="url(#${th})" filter="url(#${tb})"/>`
     + `<ellipse cx="${EYE[0]}" cy="${EYE[1] + 1.4}" rx="9" ry="4.2" fill="${mix(eye, '#050c12', .5)}" filter="url(#${tb})"/>`;
+  // the throat winds: dark spiral arms twist in to the eye over the inner half of the funnel, each with a lit lip on
+  // its outer side, so the bottom reads turning, not a stack of ellipses; the eye under them goes deeper
+  { const wb = nid('vw', u), dark = mix(eye, '#060d14', .3), lip = mix(mix(L.pal.sea[0], sheen, .3), deep, .45);
+    let wh = '';
+    for (let a = 0; a < 5; a++) {
+      const t0 = -Math.PI * (.1 + a * .4) + (R() - .5) * .3, turns = 1.05 + R() * .3, n = 60, top = [], bot = [], edge = [];
+      for (let i = 0; i <= n; i++) { const q = i / n, k = lerp(.42, .985, Math.pow(q, .7)), t = t0 - q * turns * 2 * Math.PI, w = (.012 + .05 * Math.sin(Math.PI * Math.min(1, q * 1.3))) * (1 - q * .35);
+        top.push(P(clamp(k - w * .4), t)); bot.push(P(clamp(k + w), t)); edge.push(P(clamp(k - w * .5), t)); }
+      wh += `<path d="${sp(top)}${sp(bot.slice().reverse()).replace(/^M/, 'L')}Z" fill="${dark}" opacity="${f(.5 + R() * .2)}"/><path d="${sp(edge)}" fill="none" stroke="${lip}" stroke-width=".55" stroke-linecap="round" opacity=".45"/>`;
+    }
+    const tg = nid('vd', u);
+    out += `<defs>${blur(wb, .7, [-20, 60, 240, 120])}<radialGradient id="${tg}" cx=".5" cy=".45" r=".5"><stop offset="0" stop-color="#03080d"/><stop offset=".45" stop-color="${mix(eye, '#03080d', .6)}" stop-opacity=".9"/><stop offset="1" stop-color="${eye}" stop-opacity="0"/></radialGradient></defs><g filter="url(#${wb})">${wh}</g>`
+      + `<ellipse cx="${EYE[0]}" cy="${EYE[1] + .5}" rx="27" ry="11" fill="url(#${tg})" filter="url(#${tb})"/>`; }
   // the swells running round the wall: each a light crest towards the rim (up, to the rift's light) over a dark
   // trough towards the eye, its own length; like the kit's sea, but laid along the contours of the funnel
   const crestL = mix(mix(L.pal.sea[0], sheen, .4), L.keyColor, .2), trough = mix(deep, L.shadowTint, .3);
@@ -171,7 +184,7 @@ module.exports = {
     bg += mist + '</g>';
     { const rf = []; for (let i = 0; i <= 10; i++) rf.push(P(.012, -Math.PI * .72 + i / 10 * Math.PI * .44)); bg += crestFoam(u, L, rf, { seed: 3, h: .8, gap: .35 }); }
 
-    // ——— the two ships on the far wall, heeled in to the axis; a short soft shadow of each down the slope ———
+    // ——— the two ships down on the side walls, heeled in to the axis; a short soft shadow of each down the slope ———
     const shipOn = (o) => {
       const ra = o.heel * Math.PI / 180, ca = Math.cos(ra), sa = Math.sin(ra), d = o.flip ? -1 : 1;
       const pt = (X, H) => [o.x + d * o.scale * (X * ca - H * sa), o.y - o.scale * (X * sa + H * ca)];
@@ -188,9 +201,18 @@ module.exports = {
     };
     // each ship sits on the wall where its contour runs: the picture's angle of the water there is its heel (nose
     // left, so heel = -angle); laid over in to the axis = the deck turned to us
-    const at = (o, i) => { const c = SHIPS[i], p = P(c.k, c.t); return Object.assign({ x: p[0], y: p[1], heel: -slope(c.k, c.t) }, o); };
-    let ships = shipOn(at({ kind: 'brig', scale: .5, roll: 20, seed: 31, detail: 'mid', sx: 1, sy: 1.6, lights: true }, 1));
-    ships += shipOn(at({ kind: 'merchant', scale: .64, roll: 20, seed: 13, detail: 'near', sx: -1, sy: 2, lights: true }, 0));
+    const at = (o, i) => { const c = SHIPS[i], p = P(c.k, c.t); return Object.assign({ x: p[0], y: p[1], heel: c.heel }, o); };
+    // the wakes: two arms of foam run from the stern and wind on down the wall in to the eye (the pull of the funnel),
+    // drawn under the ship, spreading, thinning and dimming away from her
+    const wake = (i, o) => { const c = SHIPS[i], ra = c.heel * Math.PI / 180, st = [o.x + o.scale * 33 * Math.cos(ra), o.y - o.scale * 33 * Math.sin(ra)], fc = mix('#eef6f8', L.keyColor, .2), Rw = rng(o.seed + 2);
+      let w = '';
+      for (const side of [-1, 1]) { const pts = []; for (let j = 0; j <= 16; j++) { const q = j / 16, p = P(clamp(c.k + q * .3 + side * q * .03), c.t + q * 2), b = Math.min(1, q * 4);
+          pts.push([lerp(st[0], p[0], b), lerp(st[1] + side * .4, p[1], b)]); }
+        w += `<path d="${sp(pts)}" fill="none" stroke="${fc}" stroke-width="${f(1.1 * o.scale * 2)}" stroke-linecap="round" opacity=".18"/><path d="${sp(pts.slice(0, 11))}" fill="none" stroke="${fc}" stroke-width="${f(.5 * o.scale * 2)}" stroke-linecap="round" opacity=".55"/>`;
+        for (let j = 2; j < 14; j++) { const p = pts[j]; w += `<ellipse cx="${f(p[0] + (Rw() - .5) * 1.5)}" cy="${f(p[1] + (Rw() - .5) * .8)}" rx="${f(.6 + Rw() * 1.2)}" ry="${f(.25 + Rw() * .3)}" fill="${fc}" opacity="${f((.5 - j * .03) * (.5 + Rw() * .5))}"/>`; } }
+      return w; };
+    const oB = at({ kind: 'brig', scale: .5, roll: 20, seed: 31, detail: 'mid', sx: 1, sy: 1.6, lights: true }, 1), oM = at({ kind: 'merchant', scale: .64, roll: 20, seed: 13, detail: 'near', sx: -1, sy: 2, lights: true }, 0);
+    let ships = wake(1, oB) + wake(0, oM) + shipOn(oB) + shipOn(oM);
 
     // ——— under the glass: the eye, the wide whorls (in the vortex), a twisted plank with a rope end ———
     let fg = '';
