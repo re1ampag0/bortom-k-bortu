@@ -47,12 +47,12 @@ const SPECS = {
   // The Black Pearl (2003): the longest and lowest; one closed row of ports; a slender stern of two tiers; a bare
   // nose (no sprit topmast); square sails on the mizzen; black torn sails.
   pearl: {
-    len: 104, free: 8.2, sheer: [3, 2.4], tumble: .25, bow: [6.5, 1.9], over: 7, counter: .78,
-    fc: [-30, 2.6], tiers: [[17, 4.2], [37, 3.8]], taff: 1.6, tw: [3.2, 4.2], openRail: 1,
+    len: 104, free: 8.8, sheer: [5.2, 5.6], tumble: .35, bow: [6.5, 1.9], over: 7.5, counter: .78,
+    fc: [-29, 4.2], tiers: [[11, 3.4], [25, 3.4], [38, 2.8]], taff: 1.6, tw: [3.6, 5.6], openRail: 2,
     hull: 'tar', trim: 'ship-wood', gilt: 0, wales: [3.1, 6.4], bands: [],
-    ports: [{ h: 4.7, n: 9, x0: -31, x1: 30, w: 2.1, open: .3 }], deckPorts: [7, -24, 32],
-    gallery: [10.5, 1, 4.2], tierWin: 2, lantern: 1,
-    beak: [14, 2.2, 3.2], sprit: { len: 27, steeve: 24 }, jibs: 1,
+    ports: [{ h: 4.4, n: 9, x0: -31, x1: 30, w: 2.1 }], deckPorts: [7, -24, 32],
+    gallery: [10.5, 2, 3.8], tierWin: 2, lantern: 1,
+    beak: [17, 3.4, 4.6], sprit: { len: 27, steeve: 24 }, jibs: 1,
     masts: [{ x: -34, H: 92, n: 3, k: .92 }, { x: 0, H: 104, n: 3, k: 1, rake: 1.2 }, { x: 33, H: 76, n: 2, k: .7, rake: 2.5, lower: true }],
     spar: 'tar', yard: 'tar', sail: 'ship-sail-black', cond: 'torn', flag: 'jolly', pennant: 'ship-flag-black',
     beam: .25, draft: 9, bilge: 2.2, inner: 'ship-red', deckK: 'pine-deck', bottom: 'foul',   // 40 x 10 m (ru-BP, the dossier)
@@ -255,9 +255,11 @@ function build(u, L, o, mode) {
   sp.ports.forEach((row, ri) => { const Rr = R('ports' + ri), pitch = (row.x1 - row.x0) / (row.n - 1), off = ri % 2 ? pitch / 2 : 0; for (let i = 0; i < row.n; i++) { Rr(); const X = row.x0 + i * pitch + off, H = Y(row.h, X), w = row.w || 2, q = Rr(), z = Rr();
     if (X > row.x1 + pitch * .4) continue;
     if (X > gx0 - w && H > gh0 - 3) continue;
-    let st = q < (row.open != null ? row.open : .5) ? 'open' : 'shut'; if (sp.growth) st = z < .2 ? 'gone' : z < .42 ? 'askew' : st;
+    // every lid is open (the user, 12.11): the guns run out; the Dutchman — a few lids lost or hanging on one hinge, the gun still out
+    let st = row.open === 0 ? 'shut' : 'open'; if (sp.growth) st = z < .12 ? 'gone' : z < .3 ? 'askew' : st; void q;
     ports.push({ X, H, w, hh: w * .95, st }); } });
-  const dp = sp.deckPorts; if (dp[0]) for (let i = 0; i < dp[0]; i++) { const X = lerp(dp[1], dp[2], i / Math.max(1, dp[0] - 1)); if (Math.abs(rail(X + 1.6) - rail(X - 1.6)) > .7 || X > gx0 - 1 && rail(X) - 1.6 < gh1 + 2.6) continue; ports.push({ X, H: rail(X) - 1.6, w: 1.5, hh: 1.4, st: 'deck' }); }
+  const dp = sp.deckPorts; if (dp[0]) for (let i = 0; i < dp[0]; i++) { const X = lerp(dp[1], dp[2], i / Math.max(1, dp[0] - 1)); if (Math.abs(rail(X + 1.6) - rail(X - 1.6)) > .7 || X > gx0 - 1 && rail(X) - 1.6 < gh1 + 2.6) continue;
+    if (sp.masts.some(m => X > m.x - 1 && X < m.x + 2.4 + .072 * sp.len * Math.max(.75, Math.min(1.05, m.k)))) continue; ports.push({ X, H: rail(X) - 1.6, w: 1.5, hh: 1.4, st: 'deck' }); }   // deck guns: not under the channels of the shrouds
 
   // ——— the hull's paint ———
   let hull = '';
@@ -351,9 +353,13 @@ function build(u, L, o, mode) {
           + strokeP(box(p.X, p.H, lw, lh), ink(lidK), .12 * s, ' opacity=".6"'); continue; }
       if (frame) pr += strokeP(box(p.X, p.H, p.w + .5, p.hh + .5), frame, .18 * s, ' opacity=".42"');
       pr += fillP(box(p.X, p.H, p.w, p.hh), hole) + strokeP(seg(...(up ? B : T)), edgeHi, .2 * s, ' opacity=".6"') + strokeP(seg(...(up ? T : B)), dark, .16 * s, ' opacity=".7"');
-      if (p.st !== 'gone' && (p.st === 'deck' ? jit > .3 : jit > .2)) { const r = (p.st === 'deck' ? .4 : .5) * (.85 + j3 * .3), mx = p.X + (j2 - .5) * .4, my = p.H - .1 + (j3 - .5) * .2, pm = pt(mx, my);
-        pr += `<circle cx="${f(pm[0])}" cy="${f(pm[1])}" r="${f(r * s)}" fill="url(#${mz})" stroke="${ink('iron')}" stroke-width="${f(.1 * s)}"/>` + dot(mx - dir * dC.ux * r * .12, my + dC.uy * r * .12, r * (.5 + j2 * .14)) + ` fill="${hole}"/>`; }
-      if (p.st === 'open') { const upL = hh * (.6 + jit * .95), lean = (j2 - .5) * .5, lid = [[p.X - hw, p.H + hh], [p.X + hw, p.H + hh], [p.X + hw + lean, p.H + hh + upL], [p.X - hw + lean, p.H + hh + upL]]; // the lid lifted: its inner face in shadow, its edge in light, two lanyards
+      { // the gun run out: a short barrel out of the port towards the viewer, seen a little from above (and turned with the roll),
+        // a lighter swell at the muzzle, the dark bore
+        const dk = p.st === 'deck', r = (dk ? .36 : .46) * (.94 + j3 * .12), Lb = dk ? 1.4 : 1.9, z0 = hullZ(p.X, p.H), mx = p.X + (j2 - .5) * .16, my = p.H + .22,
+          A = [mx, my, z0], Bm = [mx, my - Lb * .24, z0 + Lb];
+        pr += spar(A, Bm, r * .84, r * .76, 'iron', { grain: false }) + dot(Bm[0], Bm[1], r * 1.06, Bm[2]) + ` fill="url(#${mz})" stroke="${tone('iron', If + .2)}" stroke-width="${f(.12 * s)}"/>`
+          + dot(Bm[0] - dir * dC.ux * r * .1, Bm[1] + dC.uy * r * .1, r * .5, Bm[2]) + ` fill="${hole}"/>`; }
+      if (p.st === 'open') { const upL = hh * (.55 + jit * .55), lean = (j2 - .5) * .5, lid = [[p.X - hw, p.H + hh], [p.X + hw, p.H + hh], [p.X + hw + lean, p.H + hh + upL], [p.X - hw + lean, p.H + hh + upL]]; // the lid lifted: its inner face in shadow, its edge in light, two lanyards
         pr += fillP(poly(lid.map(q => [q[0] + so[0], q[1] + so[1]])), shd, ' opacity=".35"') + fillP(poly(lid), gr(lid[0], lid[3], [[0, tone('paint-red', If - .5 + (jit - .5) * .2)], [1, tone('paint-red', If - .25)]]), ` stroke="${ink(lidK)}" stroke-width="${f(.14 * s)}"`)
           + strokeP(seg(lid[3], lid[2]), edgeHi, .2 * s, ' opacity=".7"') + (near ? strokeP(seg([p.X - hw * .6 + lean, p.H + hh + upL], [p.X - hw * .3, p.H + hh + upL + 1]) + seg([p.X + hw * .6 + lean, p.H + hh + upL], [p.X + hw * .3, p.H + hh + upL + 1]), dark, .1 * s, ' opacity=".7"') : ''); }
       if (p.st === 'askew') { const a = (jit - .3) * 1.1, c = Math.cos(a), sn = Math.sin(a), hx = p.X - hw, hy = p.H + hh, q = (x, y) => [hx + x * c - y * sn, hy + x * sn + y * c]; // a lid hanging on one hinge

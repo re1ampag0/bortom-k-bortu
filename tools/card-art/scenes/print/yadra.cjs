@@ -59,9 +59,9 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'draft', cam: { x: 0,
         + K.water(u, Lo, { horizon: HZ, bottom: 290, swell: .5, seed: 4, glitter: 154 })
         + K.ship(u, Lo, { kind: 'endeavour', x: 192, y: 105, scale: .5, detail: 'mid', wake: false, seed: 5 });
       o += hit(u, Lo, { x: 177, y: 100.5, s: 1.3, seed: 5 });
-      o += K.muzzleFlash(u, { x: m.x + 1, y: m.y, dir: -3, len: 11, seed: 1 }) + K.localGlow(u, { x: m.x + 6, y: m.y, color: '#ffd890', power: .9, radius: 28 })
+      o += K.localGlow(u, { x: m.x + 6, y: m.y, color: '#ffd890', power: 1, radius: 40 }) + K.localGlow(u, { x: m.x + 12, y: m.y + 14, color: '#ffb050', power: .5, radius: 26 }, { squash: .35, core: false })
         + K.smoke(u, Lo, { x: OUT + 5, y: by - 3, w: 30, h: 50, wind: -.5, seed: 6, opacity: .85, glow: { color: '#ffb050', power: .6 } })
-        + glow(u, OUT + 6, by, 30, 22, '#ffcf7a', .7) + glow(u, OUT + 4, by, 9, 7, '#fff6d8', .9);
+        + glow(u, OUT + 6, by, 30, 22, '#ffcf7a', .8) + glow(u, OUT + 6, by, 12, 9, '#fff6d8', 1);
       // the next ball on its way from our port, a faint trail behind it
       { const bx = 161, bY = by - 2.6, tr = nid('tr', u), tb = nid('tb', u);
         o += `<defs>${linGrad(tr, OUT + 4, by, bx, bY, [[0, '#e8e2d6', 0], [1, '#e8e2d6', .7]])}<filter id="${tb}" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".7"/></filter></defs>`
@@ -87,6 +87,11 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'draft', cam: { x: 0,
     // the breeching rope from a ringbolt in the frames to the gun (first round), the gun itself
     fg += rope(`M${HX - 10} ${by + 18}Q${gun.x + 10} ${by + 30} ${gun.x - 30} ${by + 6}`, 1.05);
     fg += K.cannon(u, L, { ...gun, breech: false });
+    // the flash in front of the muzzle, over its mouth: a saturated ball of fire as in the first round (white heart,
+    // gold, orange, a red-orange edge), the tongue of flame along the bore; only right of the muzzle's face
+    { const fb = nid('fb', u), fc = nid('fc', u), cx = m.x + 8;
+      fg += `<defs>${radGrad(fb, cx, m.y, 14, [[0, '#ffffff', 1], [.14, '#fff4b0', 1], [.34, '#ffd040', 1], [.58, '#ff8a1e', .9], [.8, '#ff5a10', .45], [1, '#ff4a08', 0]])}<clipPath id="${fc}"><rect x="${f(m.x - 2.5)}" y="${f(m.y - 30)}" width="60" height="60"/></clipPath></defs>`
+        + `<g clip-path="url(#${fc})"><circle cx="${f(cx)}" cy="${f(m.y)}" r="14" fill="url(#${fb})"/>${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -3, len: 20, seed: 1, smoke: false, glow: false })}</g>`; }
     fg += K.shotPile(u, L, { x: 20, y: 141, s: 1.95, n: 3, seed: 4 });
     fg += `<circle cx="${HX - 9}" cy="${by + 18}" r="2.2" fill="none" stroke="url(#iron${u})" stroke-width="1.3"/>`;
     fg += K.shot(u, L, { x: 66, y: 182, s: 1.4, seed: 8 }) + K.coil(u, L, { x: 86, y: 158, s: .85, seed: 3 });

@@ -24,7 +24,7 @@ const skel = { horizon: HZ, eye: 1, light: 'the sun high in front of us over the
     ['shot', 34, 198, 40, 30, 'pyramid on the deck, 92 units/m'],
     ['tub', 6, 164, 20, 28, 'sponge tub on the deck, 60 units/m'],
     ['linstock', 34, 158, 44, 18, 'lies on the deck after the shot, match smoking'],
-    ['coil', 0, 254, 70, 30, 'on the deck under the glass, 150 units/m'],
+    ['coil', 13, 252, 50, 20, 'on the deck under the glass, whole, 150 units/m'],
   ] };
 
 module.exports = { name: 'Ясное небо', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
@@ -48,7 +48,7 @@ module.exports = { name: 'Ясное небо', kind: 'sea', status: 'draft', ca
     fg += shotTrail(u, L, [m.x + 16, m.y + .8], ball) + K.shadeSphere(u, ball[0], ball[1], 2, L, 'iron', { outline: .4 });
     fg += linstock(u, L, 16, 164, 1);
     fg += K.shotPile(u, L, { x: 54, y: 198, s: 2, seed: 4 });
-    fg += K.coil(u, L, { x: 30, y: 256, s: 3.4, seed: 9, tail: false });
+    fg += K.coil(u, L, { x: 38, y: 252, s: 2.3, seed: 9, tail: false });   // whole, clear of the frame's edge
     fg += sailShadow(u, L);
     return [bg, fg];
   } };

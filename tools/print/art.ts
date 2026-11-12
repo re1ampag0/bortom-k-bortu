@@ -28,7 +28,7 @@ try { if (fs.existsSync(path.join(ROOT, 'tools/card-art/scenes/backs.cjs'))) B =
 export const hasBacks = () => !!B;
 /** The designs backs.cjs has drawn so far (its `variants`); without the file — only the first, in the old drawing. */
 export const backVariants = (): (1 | 2 | 3)[] => { const v = (B?.variants ?? (B ? [1, 2, 3] : [1])).filter(n => n === 1 || n === 2 || n === 3) as (1 | 2 | 3)[]; return v.length ? v : [1]; };
-export const backSpec = (kind: string, variant: number): BackSpec | null => {return {...require(path.join(ROOT,'tools/card-art/scenes/backs-pilot.cjs')).draw('pearl'), title:null,crest:null,letter:null,name:{y:260}} as any; try { return B ? B.back(kind, variant) : null; } catch (e) { console.warn(`warning: back ${kind} v${variant}: ${(e as Error).message}`); return null; } };
+export const backSpec = (kind: string, variant: number): BackSpec | null => { try { return B ? B.back(kind, variant) : null; } catch (e) { console.warn(`warning: back ${kind} v${variant}: ${(e as Error).message}`); return null; } };
 
 export const PROFILE_VERSION = 'p8';
 /** The print profile's curve points (review-print 10). */

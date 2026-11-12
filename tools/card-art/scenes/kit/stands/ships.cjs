@@ -50,11 +50,11 @@ sheets['roll-user'] = { w: 600, h: 322, bg: '#1d1d1d', svg: () => { let s = '';
   return s; } };
 // All six ships in one row in ONE scale (the user's sheet «было — стало»): day light, no roll; names in Russian.
 const SIX = ['pearl', 'revenge', 'endeavour', 'dutch', 'merchant', 'brig'], SIX_NAMES = { pearl: '«Чёрная жемчужина»', revenge: '«Месть королевы Анны»', endeavour: '«Индевор»', dutch: '«Летучий голландец»', merchant: 'торговое судно', brig: 'бриг' };
-// Row 2: the hulls of the same panels, 2.2 times closer (the gun ports, the stern, the head).
+// Row 2: the hulls of the same panels, 1.3 times closer (the gun ports, the stern, the head).
 sheets['six'] = { w: 1200, h: 290, bg: '#1d1d1d', svg: () => { const sc = Math.min(...SIX.map(k => fit(k, 194, 126))); let s = '';
-  SIX.forEach((k, c) => { const b = K.shipBox(k, { x: 0, y: 0, scale: sc }), x = 100 - (b.x0 + b.x1) / 2, body = rollPanel('X' + k, k, K.LIGHTS.sea, { x, y: 136, scale: sc }), zw = 200 / 2.2, zh = 120 / 2.2;
+  SIX.forEach((k, c) => { const b = K.shipBox(k, { x: 0, y: 0, scale: sc }), x = 100 - (b.x0 + b.x1) / 2, body = rollPanel('X' + k, k, K.LIGHTS.sea, { x, y: 136, scale: sc }), zw = 200 / 1.3, zh = 120 / 1.3;
     s += panel(c * 200, 16, 200, 150, 200, 150, body)
-      + `<svg x="${c * 200}" y="170" width="200" height="120" viewBox="${100 - zw / 2 + 4} ${136 - zh * .72} ${zw} ${zh}" preserveAspectRatio="xMidYMid slice">${rollPanel('Z' + k, k, K.LIGHTS.sea, { x, y: 136, scale: sc })}</svg><rect x="${c * 200}" y="170" width="200" height="120" fill="none" stroke="#fff" stroke-width="1"/>`
+      + `<svg x="${c * 200}" y="170" width="200" height="120" viewBox="${100 + b.w * .07 - zw / 2} ${148 - zh} ${zw} ${zh}" preserveAspectRatio="xMidYMid slice">${rollPanel('Z' + k, k, K.LIGHTS.sea, { x, y: 136, scale: sc })}</svg><rect x="${c * 200}" y="170" width="200" height="120" fill="none" stroke="#fff" stroke-width="1"/>`
       + `<text x="${c * 200 + 100}" y="11" text-anchor="middle" font-family="DejaVu Sans,sans-serif" font-size="9" fill="#eee">${SIX_NAMES[k]}</text>`; });
   return s; } };
 module.exports = { sheets };
