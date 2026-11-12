@@ -38,6 +38,11 @@ for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
 // depth of its knee at the stem (0 — a cutwater down to the waterline)]; masts: x, H (the truck above the water), n — yards, k — the width of the
 // yards, rake, aft: 'lateen' | 'gaff', lower: a square sail on the lower yard of the mizzen, lat: [fore reach, aft reach,
 // height of the peak] of the lateen yard (default [.105, .11, .64]); galRoof — the height of the gallery's roof (2.1).
+// The third dimension (for the roll): beam — the breadth of the hull to its length at the waterline, so the half-breadth
+// b(X) = beam * len / 2 at the widest section, narrowing to the stem and to the sternpost (the transom keeps ~0.6 of it
+// above the counter), tumblehome above the widest line by `tumble`; draft — the depth of the keel under the waterline;
+// bilge — the fullness of the section under water (2 — a round bilge, 3 — a flat floor and a hard turn); inner — the
+// paint of the inner side of the bulwark; deckK — the planks of the deck; bottom: 'foul' | 'copper' | 'tar'.
 const SPECS = {
   // The Black Pearl (2003): the longest and lowest; one closed row of ports; a slender stern of two tiers; a bare
   // nose (no sprit topmast); square sails on the mizzen; black torn sails.
@@ -50,6 +55,7 @@ const SPECS = {
     beak: [14, 2.2, 3.2], sprit: { len: 27, steeve: 24 }, jibs: 1,
     masts: [{ x: -34, H: 92, n: 3, k: .92 }, { x: 0, H: 104, n: 3, k: 1, rake: 1.2 }, { x: 33, H: 76, n: 2, k: .7, rake: 2.5, lower: true }],
     spar: 'tar', yard: 'tar', sail: 'ship-sail-black', cond: 'torn', flag: 'jolly', pennant: 'ship-flag-black',
+    beam: .25, draft: 9, bilge: 2.2, inner: 'ship-red', deckK: 'pine-deck', bottom: 'foul',   // 40 x 10 m (ru-BP, the dossier)
   },
   // Queen Anne's Revenge (2011): a short hull "stern up": the highest stern of the four, broad, 3.5 tiers; a sprit
   // topmast; a lateen mizzen; dark red sooty hull, red dirty torn sails.
@@ -62,6 +68,7 @@ const SPECS = {
     beak: [12, 2.6, 3.4], sprit: { len: 23, steeve: 30, topmast: 13 }, jibs: 1,
     masts: [{ x: -27, H: 98, n: 3, k: .98 }, { x: 2, H: 110, n: 3, k: 1.06, rake: 1 }, { x: 27, H: 86, n: 2, k: .72, rake: 2, aft: 'lateen' }],
     spar: 'ship-wood', yard: 'tar', sail: 'ship-sail-red', cond: 'patched', flag: 'jolly', pennant: 'ship-flag-red',
+    beam: .26, draft: 8.6, bilge: 2.2, inner: 'paint-red', deckK: 'oak', bottom: 'foul',   // a light frigate, the La Concorde: ~3.8 : 1
   },
   // HMS Endeavour (2007): the biggest; a high even wall of the side with three rows of ports on ochre bands; the
   // forecastle almost level with the waist; a broad stern of middle height with galleries; a gaff mizzen; a long
@@ -75,6 +82,7 @@ const SPECS = {
     beak: [9.5, 3.4, 0], sprit: { len: 30, steeve: 20, jib: 13, spritsail: 'set' }, jibs: 3,
     masts: [{ x: -34, H: 116, n: 4, k: .95 }, { x: 1, H: 127, n: 4, k: 1.04, rake: .8 }, { x: 34, H: 99, n: 3, k: .74, rake: 1.6, aft: 'gaff' }],
     spar: 'paint-ochre', yard: 'tar', sail: 'linen', cond: 'whole', flag: 'pennant', pennant: 'ship-flag-red', ensign: 'company',
+    beam: .28, draft: 14, bilge: 2.5, inner: 'paint-red', deckK: 'pine-deck', bottom: 'copper',   // HMS Victory: 15.8 m to 56.7 m on the gundeck, draught 8.8 m
   },
   // The Flying Dutchman (2006-2007), after a Dutch ship of the 17th century (the fluyt, the Vasa): a "pear" —
   // bellied below, narrow above, a strong tumblehome; two rows of ports; the highest and narrowest stern of all,
@@ -90,6 +98,7 @@ const SPECS = {
     beak: [12, 1.4, 3.6], sprit: { len: 22, steeve: 32, topmast: 12, spritsail: 'set' }, jibs: 1,
     masts: [{ x: -28, H: 92, n: 3, k: .96 }, { x: -1, H: 104, n: 3, k: 1.03, rake: 1.5 }, { x: 24, H: 90, n: 2, k: .66, rake: 3.5, aft: 'lateen', lat: [.15, .085, .8] }],
     spar: 'ship-ghost', yard: 'ship-ghost', sail: 'ship-sail-ghost', cond: 'rags', flag: 'pennant', pennant: 'ship-flag-black',
+    beam: .25, draft: 9.5, bilge: 3, inner: 'ship-ghost', deckK: 'ship-ghost', bottom: 'foul',   // the Vasa: 11.7 m to ~47.5 m at the waterline; a pear: full below
   },
   // A neutral merchantman: a small fluyt — a bellied hull, no gun ports, three masts, light sails. A working ship,
   // lived in: weathered planks of different tones and a few fresh ones, an ochre band, mended sails, cargo in the
@@ -104,6 +113,7 @@ const SPECS = {
     beak: [7.5, 1.4, 2.6], sprit: { len: 17, steeve: 28, spritsail: 'set' }, jibs: 0,
     masts: [{ x: -22, H: 62, n: 2, k: 1.05 }, { x: 0, H: 72, n: 2, k: 1.15, rake: 1 }, { x: 21, H: 52, n: 2, k: .72, rake: 2, aft: 'lateen' }],
     spar: 'oak', yard: 'ship-wood', sail: 'canvas', cond: 'mended', flag: 'pennant', pennant: 'ship-flag-red', forePennant: 1,
+    beam: .23, draft: 7.6, bilge: 3.2, inner: 'paint-ochre', deckK: 'pine-deck', bottom: 'tar',   // a fluyt: 4-5 : 1, a flat floor; laden
     life: { barrels: [[-27.4, 0], [-25.5, 0], [-26.45, 1]], bales: [-16.6, -1.4], tarp: 1, crates: [11.2, 13.9], boom: -9, crew: [['helm', 27.5], ['climb', 1]], shroudLamp: 0 },
   },
   // A neutral brig: two masts with square sails, a gaff sail on the main, a low flush hull with one white band.
@@ -115,6 +125,7 @@ const SPECS = {
     beak: [6, 2.4, 0], sprit: { len: 18, steeve: 22, jib: 8 }, jibs: 2,
     masts: [{ x: -15, H: 70, n: 3, k: 1.35 }, { x: 13, H: 76, n: 3, k: 1.42, rake: 1.5, aft: 'gaff', lower: true }],
     spar: 'oak', yard: 'tar', sail: 'canvas', cond: 'whole', flag: 'pennant', pennant: 'ship-flag-red',
+    beam: .27, draft: 6.6, bilge: 2.2, inner: 'paint-ochre', deckK: 'pine-deck', bottom: 'foul',   // a brig of the 18th century: ~3.7 : 1
   },
 };
 const QY = { 4: [.36, .62, .8, .94], 3: [.4, .7, .93], 2: [.46, .86] }, WY = [.14, .108, .078, .054];
