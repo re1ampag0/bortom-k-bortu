@@ -25,7 +25,7 @@ const light = { time: 'night', haze: .25, key: { type: 'point', x: CAN.x, y: fla
   fill: { color: '#3a5276', power: .4 }, rim: { az: 0, color: '#bcd4f4', power: .35 } };
 const lightOut = { time: 'night', haze: .35, key: { type: 'moon', x: 118, y: 21, el: 18, color: '#d8e4fa', power: .8 }, fill: { color: '#3d5680', power: .4 } };
 const skel = { horizon: HZ, eye: 1.3, light: 'tall candle on the table right (x 166) + the moon through the window (cold fill)', items: [
-  ['window', WX, WY + WH, WW, WH, 'stern wall'], ['ally ship', 50, 60, 40, 30, 'sea in the window'], ['sill', WX - 8, 90, WW + 16, 8, 'window frame'],
+  ['window', WX, WY + WH, WW, WH, 'stern wall'], ['ally ship', 41, 61, 60, 38, 'sea in the window: the Revenge'], ['sill', WX - 8, 90, WW + 16, 8, 'window frame'],
   ['chart', 32, 142, 112, 40, 'table top'], ['sabres', 80, 136, 80, 36, 'crossed, flat on the chart'],
   ['arm + hand', -10, 190, 60, 90, 'from the near left edge'], ['letter', 46, 104, 44, 38, 'held in the hand'], ['ring', 64, 112, 8, 8, 'on her ring finger, over the glove'],
   ['candle', 166, 140, 22, 50, 'table top'], ['inkwell', 24, 104, 14, 12, 'table top'], ['quill', 12, 104, 22, 44, 'in the inkwell'], ['spyglass', 128, 92, 30, 5, 'on the sill']] };
@@ -250,10 +250,11 @@ module.exports = { name: 'Анжелика', kind: 'deck', status: 'draft', vari
     { const cid = nid('win', u); let o = K.sky(u, Lo, { horizon: HZ, stars: 46, seed: 11, top: WY }) + K.sunMoon(u, Lo, { r: 6.4 })
         + K.cloud(u, Lo, { x: 64, y: 22, w: 46, h: 6, seed: 4, far: .35 }) + K.cloud(u, Lo, { x: 168, y: 40, w: 30, h: 4, seed: 9, far: .6 })
         + K.water(u, Lo, { horizon: HZ, bottom: WY + WH + 2, swell: .35, seed: 6, glitter: 118 });
-      o += K.ship(u, Lo, { kind: 'pearl', x: 66, y: HZ + 9, scale: .36, detail: 'mid', sails: 'reefed', lights: true, flip: true, reflect: true, seed: 3 });
-      // her answering lantern raised at the stern: the signal that the letter is awaited
-      o += K.localGlow(u, { x: 81.5, y: HZ - 4, color: '#ffc870', power: .9, radius: 5 }) + `<circle cx="81.5" cy="${HZ - 4}" r=".8" fill="#fff2c0"/>`
-        + K.localGlow(u, { x: 81.5, y: HZ + 12, color: '#ffb050', power: .35, radius: 4 }, { squash: .3, core: false });
+      // the ally is the Revenge (decided with the user): her high overhanging stern with the lanterns on the left
+      o += K.ship(u, Lo, { kind: 'revenge', x: 70, y: HZ + 9, scale: .4, detail: 'mid', sails: 'reefed', lights: true, flip: true, reflect: true, seed: 3 });
+      // her answering lantern raised at the stern on its bracket: the signal that the letter is awaited
+      o += K.localGlow(u, { x: 42, y: HZ - 8, color: '#ffc870', power: .9, radius: 5 }) + `<circle cx="42" cy="${HZ - 8}" r=".8" fill="#fff2c0"/>`
+        + K.localGlow(u, { x: 42, y: HZ + 12, color: '#ffb050', power: .35, radius: 4 }, { squash: .3, core: false });
       bg += `<defs><clipPath id="${cid}"><rect x="${WX}" y="${WY}" width="${WW}" height="${WH}"/></clipPath></defs><rect x="${WX - 7}" y="${WY - 6}" width="${WW + 14}" height="${WH + 13}" rx="3" fill="#24140a"/>`
         + `<g clip-path="url(#${cid})">${o}</g>`;
       // the moonlight and the reflections on the old glass: a faint cool sheen, small panes
