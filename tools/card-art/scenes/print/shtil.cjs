@@ -1,15 +1,18 @@
-// «Штиль» (Колода моря): two ships stand still on mirror water in a white heat haze; the sails hang like rags,
-// the pennants hang down, the reflection lies whole under the near ship. Brief: docs/tasks/print-kit-cards.md «Штиль».
+// «Штиль» (Колода моря): dead calm at the end of a hot day. A brig stands on water like glass, her sails hang in
+// folds from the yards, the flag hangs down the staff; she fired her bow gun a while ago and the smoke still stands
+// over the water in a straight column, not a breath to bend it (the find of the card); the column, the brig and a
+// far ship lie whole in the mirror under them. The low sun ahead, right, through the heat haze: one warm light, the
+// slack canvas glows through. Nobody can move. Brief: docs/mockups/print/card-briefs.md «Штиль».
 'use strict';
 const K = require('../kit/index.cjs');
 const { f, mix, clamp, lerp, rng, nid, linGrad } = K;
-// High sun ahead and a little to the right through the haze (brief: «высокое солнце спереди справа сквозь дымку»;
-// in kit az is where the light comes FROM: 0 — from the depth, so 25 = ahead, a little right). The disc is drawn
-// where the brief puts it (x 146), the shading takes the direction az / el: the sails glow through against it.
-const light = { time: 'day', key: { type: 'sun', az: 25, el: 55, x: 146, y: 62, color: '#fff3d0', power: .8 }, fill: { color: '#bfe3e0', power: .6 }, haze: .6 };
-const HZ = 122, WL = 127, WF = 124;   // horizon; waterlines of the near and the far ship (raised 4 units over the brief: the glass of a sea card starts at y 129)
+// the low sun ahead and to the right (kit az ~20: from the depth, a little right), warm, through the haze
+const light = { time: 'dusk', key: { type: 'sun', x: 157, y: 74, color: '#ffc47a', power: .9 }, fill: { color: '#5c6e92', power: .5 },
+  rim: { az: 20, color: '#ffe2b4', power: .6 }, haze: .55 };
+const HZ = 121, WL = 127, WF = 123.5;   // horizon; waterlines of the near and the far ship (the glass of a sea card starts at y 129)
 const skel = { horizon: HZ, eye: 2, items: [
-  ['ship', 50, WL, 100, 90, 'water'], ['far', 12, WF, 36, 36, 'water'], ['boat', 155, 129, 17, 5, 'water'], ['tow', 148, 128, 9, 24, 'stern, boat'], ['weed', 16, 160, 44, 4, 'water']] };
+  ['brig (near), limp sails', 30, WL, 128, 104, 'water'], ['smoke column', 28, 120, 30, 98, 'the bow gun of the brig (water at its foot)'],
+  ['far ship', 150, WF, 46, 36, 'water'], ['sun', 150, 81, 14, 14, 'sky'], ['weed', 16, 160, 44, 4, 'water']] };
 
 // ——— KIT-CANDIDATE: limp sails of a becalmed ship. kit/ship.cjs draws sails only bellied by the wind (full, reefed)
 // or furled; this hangs slack square sails (and the lateen) from the yards of a ship drawn with sails: 'furled', at
@@ -168,25 +171,28 @@ function weed(u, L, o) {
 module.exports = { name: 'Штиль', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });
-    // the sea series' palette (print-kit-cards: one blue-turquoise water), whitened by the heat haze; sky white-blue
-    L.pal = Object.assign({}, L.pal, { sky: ['#8fb3cc', '#b3cbd8', '#d9e2de', '#eeeadb'], sea: ['#b6cfd4', '#5f91a4', '#1f4656'] });
-    let bg = K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L, { r: 7 });
-    bg += K.fog(u, L, { y: HZ - 34, h: 40, density: .55, seed: 4 });
-    bg += K.water(u, L, { horizon: HZ, bottom: 280, swell: 0, seed: 11 });
+    // a hot evening: deep blue overhead going to amber at the horizon; the sea series' water, holding the sky like glass
+    L.pal = Object.assign({}, L.pal, { sky: ['#2c4870', '#6b7d9c', '#d9a274', '#ffd69c'], sea: ['#e4bc92', '#5c8496', '#1d3e52'], smoke: '#cfc6bc' });
+    let bg = K.sky(u, L, { horizon: HZ, stars: false }) + K.sunMoon(u, L, { r: 6.5 });
+    bg += K.cloud(u, L, { x: 160, y: 30, w: 96, h: 8, seed: 21, far: .55 }) + K.cloud(u, L, { x: 120, y: 48, w: 70, h: 6, seed: 33, far: .7 });
+    bg += K.water(u, L, { horizon: HZ, bottom: 280, swell: 0, seed: 11, glitter: 157 });
+    // the heat haze over the water: a warm band that swallows the horizon
+    bg += K.fog(u, L, { y: HZ - 16, h: 22, density: .4, seed: 4 });
     // mirror water: the reflection is laid twice with ripples in different places, so it reads whole, not in bands
     const mirror = (body, y, h, op, seed) => `<g data-far="">${K.reflection(u, body, { y, h, L, opacity: op, stretch: 1, seed })}${K.reflection(u, body, { y, h, L, opacity: op * .8, stretch: 1, seed: seed + 13 })}</g>`;
-    const far = `<g data-far="">${becalmed(u, L, { kind: 'brig', x: 31, y: WF, scale: .46, detail: 'far', seed: 5 }).svg}</g>`;
-    bg += mirror(far, WF, 34, .32, 8) + far;
-    const nb = becalmed(u, L, { kind: 'merchant', x: 100, y: WL, scale: 1.22, seed: 7 }), near = nb.svg;
-    bg += mirror(near, WL, 96, .5, 6) + near;
-    bg += `<path d="M${f(100 - 45)} ${WL + .3}H${f(100 + 46)}" stroke="${L.shadowTint}" stroke-width=".6" opacity=".55"/>`;
-    // the empty boat on a slack tow astern, a little nearer than the ship, with its own reflection
-    const WB = WL + 1.6, bt = skiff(u, L, { x: 163, y: WB, len: 14 });
-    bg += mirror(bt.svg, WB, 8, .55, 21) + bt.svg + `<path d="M154 ${f(WB + .2)}H172" stroke="${L.shadowTint}" stroke-width=".4" opacity=".5"/>`;
-    const st = nb.stern, bw = bt.bow;
-    // the tow at this distance is a thin line, as the ship's rigging: a slack catenary, almost touching the water
-    const rc = mix(L.tone('rope', L.dz * .5), '#17110d', .3);
-    bg += `<path d="M${f(st[0])} ${f(st[1])}C${f(lerp(st[0], bw[0], .25))} ${f(bw[1] + 1.6)} ${f(lerp(st[0], bw[0], .7))} ${f(bw[1] + 1.4)} ${f(bw[0])} ${f(bw[1])}" stroke="${rc}" stroke-width=".32" fill="none"/>`;
+    // the far ship, bow to the left as ours: becalmed in the haze under the sun
+    const far = `<g data-far="">${becalmed(u, L, { kind: 'merchant', x: 176, y: WF, scale: .44, detail: 'far', seed: 5 }).svg}</g>`;
+    bg += mirror(far, WF, 34, .36, 8) + far;
+    // the near brig: bow to the left, every sail hanging slack
+    const nb = becalmed(u, L, { kind: 'brig', x: 96, y: WL, scale: 1.24, seed: 7 }), near = nb.svg;
+    bg += mirror(near, WL, 100, .55, 6) + near;
+    bg += `<path d="M${f(96 - 52)} ${WL + .3}H${f(96 + 53)}" stroke="${L.shadowTint}" stroke-width=".6" opacity=".5"/>`;
+    // the smoke of the bow gun: it went off a while ago and stands over the water in a straight column, its top just
+    // spreading; lit warm from the right by the low sun; its reflection hangs straight down under it
+    const sm = K.smoke(u, L, { x: 34, y: WL - 3, w: 30, h: 98, seed: 4, wind: 0, opacity: .92 });
+    bg += mirror(sm, WL, 60, .4, 15) + sm;
+    // the warm glow of the sun on the slack canvas and the water under it
+    bg += K.localGlow(u, { x: 157, y: 118, color: '#ffc47a', power: .35, radius: 40 }, { squash: .3, core: false });
     // under the glass: a raft of weed in the near water
     bg += weed(u, L, { x: 38, y: 158, w: 44, h: 3.4, seed: 9 });
     return [bg, ''];
