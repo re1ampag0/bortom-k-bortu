@@ -289,8 +289,8 @@ const PRINT = {};
     } catch (e) { console.warn(`warning: print scene ${f} skipped: ${e.message}`); }
   }
 }
-// PRINT_VARIANT=b renders the variant 'b' of a card where there is one (method trial, docs/progress/print-kit.md).
-const printScene = (name, opts = {}) => { const v = typeof process !== 'undefined' && process.env && process.env.PRINT_VARIANT, m = (v && PRINT[name + '#' + v]) || PRINT[name]; return m && (m.status === 'accepted' || opts.draftArt) ? m : null; };
+// PRINT_VARIANT=b renders the variant 'b' (PRINT_VARIANT=old — the first-round scene) of a card where there is one (method trial, docs/progress/print-kit.md).
+const printScene = (name, opts = {}) => { const v = typeof process !== 'undefined' && process.env && process.env.PRINT_VARIANT, m = v === 'old' ? null : (v && PRINT[name + '#' + v]) || PRINT[name]; return m && (m.status === 'accepted' || opts.draftArt) ? m : null; };
 /** Is there a picture for the name: an earlier scene, or a print scene that is accepted (or any, with draftArt). */
 const has = (name, draftArt = false) => !!SCENES[name] || !!printScene(name, { draftArt });
 function portrait(name, opts = {}) {

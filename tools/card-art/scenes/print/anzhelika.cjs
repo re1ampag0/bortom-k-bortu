@@ -89,7 +89,7 @@ function inkwell(u, L, x, y, k = 1) {
   const q0 = [x + .2, y - 8.5], q1 = [x - 12, y - 42], rp = L.ramp('linen', x - 6, y - 26);
   out += `<path d="M${f(q0[0])} ${f(q0[1])}Q${f(x - 4)} ${f(y - 26)} ${f(q1[0])} ${f(q1[1])}" stroke="${rp.half}" stroke-width=".7" fill="none"/>`;
   const vane = smooth([[x - 2.6, y - 18], [x - 1, y - 28], [x - 4, y - 38], [x - 11.4, y - 42.4], [x - 9.4, y - 33], [x - 6.8, y - 24], [x - 2.6, y - 18]]);
-  out += `<path d="${vane}" fill="${rp.lit}" stroke="${rp.outline}" stroke-width=".3" opacity=".95"/>`;
+  out += `<path d="${vane}" fill="${mix(rp.lit, '#f2e6cc', .6)}" stroke="${rp.outline}" stroke-width=".3" opacity=".95"/><path d="M${f(x - 2.4)} ${f(y - 18)}Q${f(x - 4.6)} ${f(y - 30)} ${f(x - 11.2)} ${f(y - 41.6)}" stroke="#fff8e8" stroke-width=".45" fill="none" opacity=".8"/>`;
   const R = rng(5); for (let i = 0; i < 12; i++) { const t = .15 + i / 13 * .8, sx = lerp(x - 2.4, x - 11.6, t), sy = lerp(y - 18, y - 42, t);
     out += `<path d="M${f(sx)} ${f(sy)}l${f(3 - t * 1.6 + R() * .6)} ${f(-1.6 - R())}" stroke="${rp.shadow}" stroke-width=".22" opacity=".6"/><path d="M${f(sx)} ${f(sy)}l${f(-2.4 + t)} ${f(.6 + R() * .4)}" stroke="${rp.half}" stroke-width=".22" opacity=".6"/>`; }
   return sc + out + '</g>';
@@ -187,10 +187,10 @@ module.exports = { name: 'Анжелика', kind: 'deck', status: 'draft', vari
       fg += dividers(L, 44, 141, -.3); }
     // the crossed cutlasses: hilts on the near half of the chart, the blades lean back and their points rest on
     // the sill (contact shadows at the guards and at the points); the blades catch the candle
-    { const S = 1.62; fg += K.castShadow(u, L, { x: 80, y: 141, w: 10, h: 18, horizon: HZ, d: .5, opacity: .5 }) + K.castShadow(u, L, { x: 118, y: 141, w: 10, h: 18, horizon: HZ, d: .5, opacity: .45 });
+    { const S = 1.85; fg += K.castShadow(u, L, { x: 80, y: 141, w: 10, h: 18, horizon: HZ, d: .5, opacity: .5 }) + K.castShadow(u, L, { x: 118, y: 141, w: 10, h: 18, horizon: HZ, d: .5, opacity: .45 });
       fg += K.contactShadow(u, 68, 142, 10, L, { ry: 1.4, opacity: .7 }) + K.contactShadow(u, 132, 142, 10, L, { ry: 1.4, opacity: .7 })
         + K.contactShadow(u, 117, 89, 4, L, { ry: .8, opacity: .5 }) + K.contactShadow(u, 83, 89, 4, L, { ry: .8, opacity: .5 });
-      fg += K.sabre(u, L, { x: 95, y: 118, s: S, rot: -50, contact: false, seed: 3 }) + K.sabre(u, L, { x: 105, y: 118, s: S, rot: 50, flip: true, contact: false, seed: 7 }); }
+      fg += K.sabre(u, L, { x: 95, y: 114, s: S, rot: -50, contact: false, seed: 3 }) + K.sabre(u, L, { x: 105, y: 114, s: S, rot: 50, flip: true, contact: false, seed: 7 }); }
     // the inkwell and quill on the left, the letter with the ring on it on the right, near the candle
     fg += inkwell(u, L, 22, 134, 1.35);
     fg += letter(u, L, 134, 124, 26, 9, -8) + ring(u, L, 129, 116.6, 3.4, .4);

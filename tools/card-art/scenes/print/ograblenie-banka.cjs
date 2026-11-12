@@ -35,14 +35,16 @@ function smooth(pts, closed = false) { const n = pts.length, g = i => closed ? p
 // and a glitter path under the moon
 function cobbles(u, L, y0, y1) {
   const R = rng(17), g = nid('cb', u);
-  let out = `<defs>${linGrad(g, 0, y0, 0, y1, [[0, '#2a2c36', 1], [1, '#121318', 1]])}</defs><rect x="-5" y="${y0}" width="210" height="${y1 - y0 + 5}" fill="url(#${g})"/>`;
+  // four stone tones, each a gradient over the stone (lit top, darker foot) — the stones differ by tone and shape
+  const sg = [0, 1, 2, 3].map(i => { const id = nid('cs', u), b = mix('#3a3c48', '#5c5e6a', i / 3); return { id, def: `<linearGradient id="${id}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${mix(b, '#8a92a8', .3)}"/><stop offset=".55" stop-color="${b}"/><stop offset="1" stop-color="${mix(b, '#0c0d12', .45)}"/></linearGradient>` }; });
+  let out = `<defs>${linGrad(g, 0, y0, 0, y1, [[0, '#2a2c36', 1], [1, '#121318', 1]])}${sg.map(q => q.def).join('')}</defs><rect x="-5" y="${y0}" width="210" height="${y1 - y0 + 5}" fill="url(#${g})"/>`;
   for (let y = y0 + .6, k = 0; y < y1; k++) {
     const h = 1.6 + (y - HZ) * .085, w = h * (1.7 + R() * .3);
     for (let x = -8 - R() * w; x < 206; x += w * (.95 + R() * .2)) {
       const ww = w * (.8 + R() * .18), hh = h * (.78 + R() * .15), cx = x + ww / 2, cy = y + hh / 2, d = 160 - Math.abs(cx - 170) * .9;   // glitter under the moon (x 170)
       const pts = Array.from({ length: 7 }, (_, i) => { const a = i / 7 * Math.PI * 2, r = 1 + (R() - .5) * .22; return [cx + Math.cos(a) * ww / 2 * r, cy + Math.sin(a) * hh / 2 * r]; });
       const tone = R(), base = mix('#3c3e4a', '#5a5c68', tone), top = mix(base, '#a8b4cc', .25 + Math.max(0, d) / 400);
-      out += `<path d="${smooth(pts, true)}" fill="${base}" stroke="#0c0d12" stroke-width="${f(.25 + h * .03)}"/>`
+      out += `<path d="${smooth(pts, true)}" fill="url(#${sg[Math.floor(tone * 3.999)].id})" stroke="#0c0d12" stroke-width="${f(.25 + h * .03)}"/>`
         + `<path d="M${f(cx - ww * .32)} ${f(cy - hh * .2)}Q${f(cx)} ${f(cy - hh * .52)} ${f(cx + ww * .36)} ${f(cy - hh * .18)}" stroke="${top}" stroke-width="${f(.25 + h * .07)}" fill="none" opacity="${f(.45 + Math.max(0, d) / 300)}" stroke-linecap="round"/>`;
       if (d > 120 && R() > .35) out += `<ellipse cx="${f(cx + ww * .1)}" cy="${f(cy - hh * .22)}" rx="${f(ww * .16)}" ry="${f(hh * .08)}" fill="#e8f0ff" opacity="${f((d - 120) / 80)}"/>`;
     }
@@ -117,7 +119,7 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
       for (let y = 20, k = 0; y < ST; y += 9, k++) { const w = k % 2 ? 9 : 13; bg += `<rect x="${CORNER - w}" y="${y}" width="${w}" height="8.4" fill="#40424e" stroke="#16171e" stroke-width=".4"/><path d="M${CORNER - .5} ${y}v8.4" stroke="#d8e0f0" stroke-width=".9" opacity=".8"/><path d="M${CORNER - w} ${y + .4}h${w}" stroke="#7a7e90" stroke-width=".4" opacity=".6"/>`; }
       // eaves: the roof tiles in a row of half-round ends, each lit on its right
       const tg = nid('tl', u); bg += `<defs>${linGrad(tg, 0, 0, 10, 0, [[0, '#3a1a14', 1], [.6, '#6a3426', 1], [1, '#9a5a40', 1]])}</defs><path d="M-6 0H${CORNER + 4}V15H-6Z" fill="#4a2620"/>`;
-      for (let x = -6; x < CORNER + 4; x += 9.6) bg += `<path d="M${f(x)} 15.6q4.8 -6 9.6 0v-12h-9.6z" fill="url(#${tg})" stroke="#1a0a06" stroke-width=".5"/>`;
+      { const R = rng(71); for (let x = -6; x < CORNER + 4; x += 9.6) { const w = 9.4 + R() * .4, hh = 5.4 + R() * 1.4, dy = (R() - .5) * .8; bg += `<path d="M${f(x)} ${f(15.6 + dy)}q${f(w / 2)} ${f(-hh)} ${f(w)} ${f(-dy * .5)}v-12h${f(-w)}z" fill="url(#${tg})" stroke="#1a0a06" stroke-width=".5"/>`; } }
       bg += `<path d="M-6 16.4H${CORNER + 4}" stroke="#0e0604" stroke-width="1.8"/><path d="M-6 19H${CORNER}" stroke="#000" stroke-width="2.4" opacity=".35"/>`; }
     // the upper floor: two windows (one lit — a sleepy clerk), the balcony on brackets, its wrought rail, the patterned sign
     bg += `<rect x="78" y="24" width="18" height="22" fill="#0c0e16" stroke="#2a2c36" stroke-width="1.6"/><path d="M87 24v22M78 35h18" stroke="#2a2c36" stroke-width=".9"/>`
