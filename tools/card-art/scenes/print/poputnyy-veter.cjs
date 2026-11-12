@@ -47,7 +47,7 @@ module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'dr
     bg += K.splash(u, { x: NEAR.x + 37, y: NEAR.y + .2, w: 13, h: 16, seed: 2, L, wind: 1 });
     // ——— under the glass: a near whitecap breaking downwind, spindrift torn off it
     let fg = nearSwell(u, L) + whitecap(u, L, { x: 172, y: 196, w: 60, h: 9, seed: 12, wind: 1 });
-    fg += spindrift(u, L, 70, 200, 90, 7) + spindrift(u, L, 194, 189, 30, 8);
+    fg += spindrift(u, L, 46, 196, 90, 7) + spindrift(u, L, 194, 189, 30, 8);
     return [bg, fg];
   } };
 
@@ -126,18 +126,19 @@ function cloudShadows(u, L) {
   return s;
 }
 
-// the back of a big near swell across the bottom of the frame: a dark body rising from the left, its crest running
-// down to the right, lit along the top from the low sun, foam breaking on it and torn off downwind — the dark calm
-// form under the glass
+// the back of a big near swell across the bottom of the frame: a dark body with two humps rising from the left, its
+// crest running down to the right; the low sun ahead shines through the thin top of the crest (a teal glow), foam
+// breaks on the humps and is torn off downwind — the dark calm form under the glass
 function nearSwell(u, L) {
-  const P = L.pal, id = nid('ns', u), cr = nid('nc', u), bl = nid('nb', u), body = mix(P.sea[2], L.shadowTint, .25), lit = mix(P.sea[1], mix(P.sea[0], L.keyColor, .35), .5);
-  const crest = 'M-14 206C10 199 34 197 60 200C88 203 112 210 140 220C162 228 186 236 214 240';
-  let s = `<defs>${linGrad(id, 0, 198, 0, 292, [[0, mix(body, P.sea[1], .35), .96], [.25, body, .98], [1, scale2(body, .8), 1]])}${linGrad(cr, 0, 196, 0, 214, [[0, lit, .9], [1, lit, 0]])}<filter id="${bl}" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="1.4"/></filter></defs>`;
-  s += `<path d="${crest}L214 300L-14 300Z" fill="url(#${id})"/>`;
-  s += `<path d="${crest}L214 250C186 246 160 238 138 230C110 220 86 213 60 210C34 207 10 209 -14 214Z" fill="url(#${cr})" filter="url(#${bl})"/>`;
-  // foam along the crest, broken, thicker where the crest is steep on the left; lace sliding down its back
-  for (const [x, y, w, h, sd] of [[8, 201.5, 40, 2.2, 3], [52, 199.4, 34, 2, 5], [92, 205.6, 30, 1.6, 9], [130, 216.4, 26, 1.3, 13], [170, 230, 30, 1.2, 17]]) s += K.foam(u, { x, y, w, h, L, seed: sd });
-  for (const [x, y, w, sd] of [[24, 214, 30, 21], [70, 216, 26, 23], [118, 228, 22, 25], [40, 236, 36, 27], [150, 246, 26, 29]]) s += K.foam(u, { x, y, w, h: .5, L, seed: sd });
+  const P = L.pal, id = nid('ns', u), cr = nid('nc', u), bl = nid('nb', u), eb = nid('ne', u), body = mix(P.sea[2], L.shadowTint, .2), glow = mix(mix(P.sea[1], '#4fae9e', .45), L.keyColor, .12);
+  const crest = 'M-14 214C4 205 24 197 44 198C60 199 70 206 86 206C104 206 118 211 136 220C156 230 182 236 214 238';
+  let s = `<defs>${linGrad(id, 0, 197, 0, 292, [[0, glow, .97], [.12, mix(glow, body, .5), .98], [.4, body, 1], [1, K.scale(body, .75), 1]])}`
+    + `<filter id="${eb}" x="-5%" y="-10%" width="110%" height="120%"><feGaussianBlur stdDeviation=".7"/></filter><filter id="${bl}" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>`;
+  s += `<path d="${crest}L214 300L-14 300Z" fill="url(#${id})" filter="url(#${eb})"/>`;
+  // the lit back of each hump and the shade in the hollow between them
+  s += `<g filter="url(#${bl})"><ellipse cx="34" cy="206" rx="26" ry="5" fill="${mix(glow, '#ffffff', .25)}" opacity=".45"/><ellipse cx="100" cy="212" rx="22" ry="4" fill="${mix(glow, '#ffffff', .2)}" opacity=".35"/><ellipse cx="68" cy="216" rx="16" ry="6" fill="${body}" opacity=".5"/></g>`;
+  // foam on the humps, broken; lace sliding down the back; small whitecaps of the wind waves riding on it
+  for (const [x, y, w, h, sd] of [[30, 198.6, 32, 2.4, 3], [94, 206.4, 24, 1.6, 9], [146, 224.6, 22, 1.2, 13]]) s += K.foam(u, { x, y, w, h, L, seed: sd });
+  for (const [x, y, w, sd] of [[22, 212, 26, 21], [60, 222, 22, 23], [112, 222, 18, 25], [36, 240, 30, 27], [140, 248, 24, 29], [84, 262, 30, 31]]) s += K.foam(u, { x, y, w, h: .45, L, seed: sd });
   return s;
 }
-function scale2(hex, k) { return K.scale ? K.scale(hex, k) : hex; }
