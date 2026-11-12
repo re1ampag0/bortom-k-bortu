@@ -57,4 +57,10 @@ sheets['six'] = { w: 1200, h: 290, bg: '#1d1d1d', svg: () => { const sc = Math.m
       + `<svg x="${c * 200}" y="170" width="200" height="120" viewBox="${100 + b.w * .07 - zw / 2} ${148 - zh} ${zw} ${zh}" preserveAspectRatio="xMidYMid slice">${rollPanel('Z' + k, k, K.LIGHTS.sea, { x, y: 136, scale: sc })}</svg><rect x="${c * 200}" y="170" width="200" height="120" fill="none" stroke="#fff" stroke-width="1"/>`
       + `<text x="${c * 200 + 100}" y="11" text-anchor="middle" font-family="DejaVu Sans,sans-serif" font-size="9" fill="#eee">${SIX_NAMES[k]}</text>`; });
   return s; } };
+// The blind check of the silhouettes: the six ships in one flat tone in one row, in ONE scale, on a light ground.
+sheets['six-sil'] = { w: 1200, h: 190, bg: '#efe6d2', svg: () => { const sc = Math.min(...SIX.map(k => fit(k, 192, 150))); let s = '';
+  SIX.forEach((k, c) => { const b = K.shipBox(k, { x: 0, y: 0, scale: sc });
+    s += K.shipSilhouette(k, { x: c * 200 + 100 - (b.x0 + b.x1) / 2, y: 178, scale: sc, u: 'Q' + k })
+      + `<text x="${c * 200 + 100}" y="13" text-anchor="middle" font-family="DejaVu Sans,sans-serif" font-size="10" fill="#333">${SIX_NAMES[k]}</text>`; });
+  return s; } };
 module.exports = { sheets };

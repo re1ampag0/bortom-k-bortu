@@ -25,6 +25,9 @@ const SHIP_MAT = {
   'ship-flag-black': { base: '#2e2e34', spec: null, reflex: 'sky', reflexK: .1, trans: .3 },
   'paint-olive': { base: '#6a7146', spec: { w: .4, op: .12, col: 'warm' }, reflex: 'warm', reflexK: .3, grain: 1 },   // the merchant's faded painted band
   'ship-flag-red': { base: '#c23a2c', spec: null, reflex: 'warm', reflexK: .1, trans: .5 },
+  'ship-coal': { base: '#2c2a29', spec: { w: .4, op: .16, col: 'cold' }, reflex: 'sky', reflexK: .45, grain: 1 },   // the Pearl: black worn planking
+  'ship-sail-coal': { base: '#323238', spec: null, reflex: 'sky', reflexK: .12, trans: .5 },                         // the Pearl: black sails, black by day too
+  'ship-sail-crimson': { base: '#7c2520', spec: null, reflex: 'warm', reflexK: .14, trans: .55 },                     // the Revenge: dark red sails
 };
 for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
 
@@ -44,30 +47,37 @@ for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
 // bilge — the fullness of the section under water (2 — a round bilge, 3 — a flat floor and a hard turn); inner — the
 // paint of the inner side of the bulwark; deckK — the planks of the deck; bottom: 'foul' | 'copper' | 'tar'.
 const SPECS = {
-  // The Black Pearl (2003): the longest and lowest; one closed row of ports; a slender stern of two tiers; a bare
-  // nose (no sprit topmast); square sails on the mizzen; black torn sails.
+  // The Black Pearl (2003), by the user's measurements of the profile (report/print-kit/refs/zamery.md; L — the waterline):
+  // the longest and lowest hull (the waist 0.14 L, the hull 1.21 L, with the head 1.34 L), a modest sheer; the forecastle
+  // 0.20 L, a stern of moderate height 0.30 L (0.40 with the tall lantern) overhanging 0.11 L, two rows of windows, a
+  // balcony; one even row of 9 ports at a pitch of 0.10 L, two small ports on the quarterdeck; a long bowsprit with a
+  // jib-boom (0.35 L, 22°), a low head with rails; masts at 0.15 / 0.60 / 0.89 from the bow, the mizzen lower with a lateen
+  // and one square yard; all black, black torn sails with many holes.
   pearl: {
-    len: 104, free: 8.8, sheer: [5.2, 5.6], tumble: .35, bow: [6.5, 1.9], over: 7.5, counter: .78,
-    fc: [-29, 4.2], tiers: [[11, 3.6], [24, 3.8], [36, 3.2]], taff: 1.6, tw: [3.6, 5.6], openRail: 2,
-    hull: 'tar', trim: 'ship-wood', gilt: 0, wales: [3.1, 6.4], bands: [],
-    ports: [{ h: 4.4, n: 9, x0: -31, x1: 30, w: 2.1 }], deckPorts: [7, -24, 32],
-    gallery: [10.5, 2, 3.8], tierWin: 2, lantern: 1,
-    beak: [17, 3.4, 4.6], sprit: { len: 27, steeve: 24 }, jibs: 1,
-    masts: [{ x: -34, H: 92, n: 3, k: .92 }, { x: 0, H: 104, n: 3, k: 1, rake: 1.2 }, { x: 33, H: 76, n: 2, k: .7, rake: 2.5, lower: true }],
-    spar: 'tar', yard: 'tar', sail: 'ship-sail-black', cond: 'torn', flag: 'jolly', pennant: 'ship-flag-black',
+    len: 104, free: 14.5, sheer: [2.5, 3], tumble: .35, bow: [8, 1.9], over: 9, counter: .78,
+    fc: [-41, 2.5], tiers: [[26, 4.6], [40, 4.6]], taff: 2.3, tw: [3.6, 5.6], openRail: 1,
+    hull: 'ship-coal', trim: 'tar', gilt: 0, lidIn: 'tar', wales: [5.8, 12.4], bands: [],
+    ports: [{ h: 9.4, n: 9, x0: -42, x1: 38, w: 2.6 }, { h: 16.3, n: 3, x0: 26, x1: 42, w: 1.7 }], deckPorts: [0, 0, 0],
+    gallery: [10.5, 2, 3.8], tierWin: 2, lantern: 2, lanternPost: 1.3, balc: [1], balcD: 2.4,
+    beak: [13, 2.2, 5], sprit: { len: 26, steeve: 22, jib: 17 }, jibs: 2,
+    masts: [{ x: -36, H: 86, n: 3, k: 1.3 }, { x: 10, H: 94, n: 3, k: 1.42 }, { x: 41, H: 72, n: 2, k: .82, rake: 2.5, aft: 'lateen' }],
+    spar: 'tar', yard: 'tar', sail: 'ship-sail-coal', cond: 'torn', holeK: 1.5, flag: 'jolly', pennant: 'ship-flag-black',
     beam: .25, draft: 9, bilge: 2.2, inner: 'ship-red', deckK: 'pine-deck', bottom: 'foul',   // 40 x 10 m (ru-BP, the dossier)
   },
-  // Queen Anne's Revenge (2011): a short hull "stern up": the highest stern of the four, broad, 3.5 tiers; a sprit
-  // topmast; a lateen mizzen; dark red sooty hull, red dirty torn sails.
+  // Queen Anne's Revenge (2011), by the measurements: a long low waist (0.14 L) and the highest stern of all (0.45 L, 0.50
+  // with the lantern) overhanging 0.21 L, rising in three steps from 0.75 L, three tiers of galleries and balconies, big
+  // lanterns on the quarters and one on a curved bracket; the forecastle 0.20 L; one row of 8 ports at 0.10 L, two small in
+  // the stern; the bowsprit 0.30 L at 25° with a sprit topmast and its yard; masts 0.15 / 0.60 / 0.90 with big tops; a dark
+  // hull with red and black bands and gilt mouldings; dark red torn sails with a fringe along the foot.
   revenge: {
-    len: 84, free: 9.6, sheer: [3, 3.4], tumble: .3, bow: [6.5, 2.2], over: 8, counter: .8,
-    fc: [-21, 4.2], tiers: [[2, 5], [17, 4.6], [30, 3.4]], taff: 2, tw: [5.2, 8], openRail: 2,
-    hull: 'ship-red', trim: 'ship-wood', gilt: 1, wales: [], bands: [{ h0: 2.7, h1: 3.9, mat: 'tar' }, { h0: 6.5, h1: 7.5, mat: 'tar' }],
-    ports: [{ h: 5.2, n: 10, x0: -29, x1: 25, w: 2.1, open: .8 }], deckPorts: [5, -16, 14],
-    gallery: [11, 2, 4.2], tierWin: 2, lantern: 1.5,
-    beak: [12, 2.6, 3.4], sprit: { len: 23, steeve: 30, topmast: 13 }, jibs: 1,
-    masts: [{ x: -27, H: 98, n: 3, k: .98 }, { x: 2, H: 110, n: 3, k: 1.06, rake: 1 }, { x: 27, H: 86, n: 2, k: .72, rake: 2, aft: 'lateen' }],
-    spar: 'ship-wood', yard: 'tar', sail: 'ship-sail-red', cond: 'patched', flag: 'jolly', pennant: 'ship-flag-red',
+    len: 84, free: 11.8, sheer: [1.6, 3], tumble: .3, bow: [7, 2.2], over: 13, counter: .8,
+    fc: [-34, 2.4], tiers: [[21, 6], [32, 6], [42, 5.3]], taff: 2, tw: [4.5, 7], openRail: 2,
+    hull: 'tar', trim: 'ship-red', gilt: 1, wales: [5.1], bands: [{ h0: 5.4, h1: 9.9, mat: 'ship-red' }, { h0: 10.9, h1: 11.7, mat: 'ship-red' }, { h0: 15.4, h1: 17.2, mat: 'ship-red' }, { h0: 21.6, h1: 23.2, mat: 'ship-red' }],
+    ports: [{ h: 7.6, n: 8, x0: -32, x1: 29, w: 2.4 }, { h: 13, n: 3, x0: 20, x1: 34, w: 1.8 }], deckPorts: [0, 0, 0],
+    gallery: [10, 3, 4.4], tierWin: 2, lantern: 2.1, lanterns: 'corners', lanternArm: [7, 9, 1.15], balc: [0, 1, 2], balcD: 2.8,
+    beak: [11, 2.6, 3.4], sprit: { len: 31, steeve: 25, topmast: 12, spritsail: 'furled' }, jibs: 1,
+    masts: [{ x: -29, H: 80, n: 3, k: 1.35 }, { x: 8.5, H: 88, n: 3, k: 1.45 }, { x: 33.5, H: 70, n: 2, k: .82, rake: 2, aft: 'lateen' }], topK: 1.35,
+    spar: 'tar', yard: 'tar', sail: 'ship-sail-crimson', cond: 'fringe', flag: 'jolly', pennant: 'ship-flag-red',
     beam: .26, draft: 8.6, bilge: 2.2, inner: 'paint-red', deckK: 'oak', bottom: 'foul',   // a light frigate, the La Concorde: ~3.8 : 1
   },
   // HMS Endeavour (2007): the biggest; a high even wall of the side with three rows of ports on ochre bands; the
@@ -134,7 +144,8 @@ const QY = { 4: [.36, .62, .8, .94], 3: [.4, .7, .93], 2: [.46, .86] }, WY = [.1
  *  the wake and the reflection): for placing it in a scene. */
 function shipBox(kind, o = {}) {
   const sp = SPECS[kind] || SPECS.pearl, s = o.scale || 1, dir = o.flip ? -1 : 1, x = o.x != null ? o.x : 100, y = o.y != null ? o.y : 180;
-  const bs = sp.sprit, reach = Math.cos(rad(bs.steeve)) * (bs.len + (bs.jib || 0)) + (bs.topmast ? .045 * sp.len : 0), fore = -sp.len / 2 - sp.bow[0] + 3.2 - reach, aft = sp.len / 2 + sp.over + sp.tw[1] + (sp.ensign ? 5 : 1);
+  const bs = sp.sprit, reach = Math.cos(rad(bs.steeve)) * (bs.len + (bs.jib || 0)) + (bs.topmast ? .045 * sp.len : 0), fore = -sp.len / 2 - sp.bow[0] + 3.2 - reach, aft0 = sp.len / 2 + sp.over + sp.tw[1] + (sp.ensign ? 5 : 1);
+  const aft = Math.max(aft0, sp.lanternArm ? sp.len / 2 + sp.over + sp.tw[0] + sp.lanternArm[0] + 2 : 0, sp.balc ? sp.len / 2 + sp.over + Math.max(...sp.tw) + (sp.balcD || 2.4) * .7 : 0);   // the bracket of the lantern, the balconies
   const top = Math.max(...sp.masts.map(m => m.H)) + 7, a = x + dir * s * fore, b = x + dir * s * aft;
   return { x0: Math.min(a, b), x1: Math.max(a, b), top: y - s * top, y, w: Math.abs(b - a), h: s * top };
 }
@@ -360,7 +371,7 @@ function build(u, L, o, mode) {
         pr += spar(A, Bm, r * .84, r * .76, 'iron', { grain: false }) + dot(Bm[0], Bm[1], r * 1.06, Bm[2]) + ` fill="url(#${mz})" stroke="${tone('iron', If + .2)}" stroke-width="${f(.12 * s)}"/>`
           + dot(Bm[0] - dir * dC.ux * r * .1, Bm[1] + dC.uy * r * .1, r * .5, Bm[2]) + ` fill="${hole}"/>`; }
       if (p.st === 'open') { const upL = hh * (.55 + jit * .55), lean = (j2 - .5) * .5, lid = [[p.X - hw, p.H + hh], [p.X + hw, p.H + hh], [p.X + hw + lean, p.H + hh + upL], [p.X - hw + lean, p.H + hh + upL]]; // the lid lifted: its inner face in shadow, its edge in light, two lanyards
-        pr += fillP(poly(lid.map(q => [q[0] + so[0], q[1] + so[1]])), shd, ' opacity=".35"') + fillP(poly(lid), gr(lid[0], lid[3], [[0, tone('paint-red', If - .5 + (jit - .5) * .2)], [1, tone('paint-red', If - .25)]]), ` stroke="${ink(lidK)}" stroke-width="${f(.14 * s)}"`)
+        pr += fillP(poly(lid.map(q => [q[0] + so[0], q[1] + so[1]])), shd, ' opacity=".35"') + fillP(poly(lid), gr(lid[0], lid[3], [[0, tone(sp.lidIn || 'paint-red', If - .5 + (jit - .5) * .2)], [1, tone(sp.lidIn || 'paint-red', If - .25)]]), ` stroke="${ink(lidK)}" stroke-width="${f(.14 * s)}"`)
           + strokeP(seg(lid[3], lid[2]), edgeHi, .2 * s, ' opacity=".7"') + (near ? strokeP(seg([p.X - hw * .6 + lean, p.H + hh + upL], [p.X - hw * .3, p.H + hh + upL + 1]) + seg([p.X + hw * .6 + lean, p.H + hh + upL], [p.X + hw * .3, p.H + hh + upL + 1]), dark, .1 * s, ' opacity=".7"') : ''); }
       if (p.st === 'askew') { const a = (jit - .3) * 1.1, c = Math.cos(a), sn = Math.sin(a), hx = p.X - hw, hy = p.H + hh, q = (x, y) => [hx + x * c - y * sn, hy + x * sn + y * c]; // a lid hanging on one hinge
         pr += fillP(poly([q(0, 0), q(p.w, 0), q(p.w, -p.hh), q(0, -p.hh)].map(v => [v[0] + so[0], v[1] + so[1]])), shd, ' opacity=".35"') + fillP(poly([q(0, 0), q(p.w, 0), q(p.w, -p.hh), q(0, -p.hh)]), tone(lidK, If - .15), ` stroke="${ink(lidK)}" stroke-width="${f(.16 * s)}"`) + strokeP(seg(q(0, 0), q(p.w, 0)), edgeHi, .15 * s, ' opacity=".6"'); }
@@ -428,10 +439,28 @@ function build(u, L, o, mode) {
         if (H < gh1 + 2.4 && X > gx0 - 1 || i && Rr() < .35) continue;
         stern += win(w, X, H, 1.6) + strokeP(w + seg([X, H - .85], [X, H + .85]), ink(hullK), .15 * s) + strokeP(seg([X - .95, H + 1], [X + .95, H + 1]), sp.gilt ? tone('brass', If + .4) : tone(sp.trim, If + .3), .22 * s); } });
     // the stern lantern on the taffrail
-    if (sp.lantern && !far) { const z = sp.lantern * Lu * .95, lx = xAft + sp.tw[0] * .5, ly = hTop + arch * .7, q = (a, b) => [lx + a * z + kT * b * z * .5, ly + 1.2 * z + b * z];
+    // lo: { post — a taller stand under it (in its sizes), hang — hung from a point above it, tilt — its lean (the transom's by default), Z }
+    const lantern = (lx, ly, z, lo = {}) => { const tl = lo.tilt != null ? lo.tilt : kT, zz = lo.Z, q = (a, b) => [lx + a * z + tl * b * z * .5, ly + (1.2 + (lo.post || 0)) * z + b * z, zz];
       const bodyL = poly([q(-.5, 0), q(.5, 0), q(.9, 2), q(.55, 2.5), q(-.55, 2.5), q(-.9, 2)]), capL = poly([q(-.75, 2.5), q(.75, 2.5), q(.2, 3.3), q(0, 3.9), q(-.2, 3.3)]);
-      stern += strokeP(seg([lx, ly - .4], q(0, 0)), tone('iron', If), .3 * s);
-      if (sil) stern += fillP(bodyL + capL, C); else { stern += win(bodyL, q(0, 1.2)[0], q(0, 1.2)[1], 1.6 * z, true) + strokeP(bodyL + seg(q(0, 0), q(0, 2.5)) + seg(q(-.7, 1), q(.7, 1)), tone('brass', If + .1), .2 * s) + fillP(capL, tone('brass', If + .2), ` stroke="${ink('brass')}" stroke-width="${f(.16 * s)}"`); if (lit) glowAt.push([q(0, 1.2)[0], q(0, 1.2)[1], 5 * z + 3]); } }
+      stern += lo.hang ? strokeP(seg(q(0, 3.85), lo.hang), tone('iron', If), .22 * s) : strokeP(seg([lx, ly - .4, zz], q(0, 0)), tone('iron', If), (lo.post ? .55 : .3) * s);
+      if (sil) stern += fillP(bodyL + capL, C); else { stern += win(bodyL, q(0, 1.2)[0], q(0, 1.2)[1], 1.6 * z, true) + strokeP(bodyL + seg(q(0, 0), q(0, 2.5)) + seg(q(-.7, 1), q(.7, 1)), tone('brass', If + .1), .2 * s) + fillP(capL, tone('brass', If + .2), ` stroke="${ink('brass')}" stroke-width="${f(.16 * s)}"`); if (lit) glowAt.push([q(0, 1.2)[0], q(0, 1.2)[1], 5 * z + 3]); } };
+    // balconies (the stern walks): a floor out of the transom on brackets, balusters and a hand rail, on the levels sp.balc of the quarter gallery
+    if (sp.balc && !far) { const bD = sp.balcD || 2.4, bH = 1.7, mt = sp.gilt ? 'brass' : sp.trim, Rb = R('balc');
+      for (const j of sp.balc) { const h = gh0 + j * gal[2] - .15, e = transX(h), xa = e + tw(h) * .2, x1 = e + tw(h) + bD, Z0 = 0;
+        const floor = poly([[xa, h - .6, Z0], [x1 + .25, h - .45, Z0], [x1 + .35, h + .12, Z0], [xa, h + .12, Z0]]);
+        const knee = spl([[e + tw(h) * .35, h - 2.6, Z0], [x1 - bD * .55, h - 1.6, Z0], [x1 - .2, h - .55, Z0]], false) + 'L' + pp(x1 - 1.1, h - .55, Z0) + 'L' + pp(e + tw(h) * .35, h - 1.4, Z0) + 'Z';
+        let bal = ''; for (let X = xa + .55; X < x1; X += .72 + Rb() * .06) bal += seg([X, h + .12, Z0], [X, h + bH - .1, Z0]);
+        const hand = poly([[xa, h + bH - .2, Z0], [x1 + .3, h + bH - .1, Z0], [x1 + .3, h + bH + .32, Z0], [xa, h + bH + .25, Z0]]);
+        stern += fillP(knee, tone(sp.trim, lum([0, -.6, .8]))) + edge(knee, sp.trim, .6) + fillP(floor, tone(sp.trim, lum([0, -.4, .9]))) + edge(floor, sp.trim, .6)
+          + strokeP(bal, tone(mt, If + .15), .28 * s) + fillP(hand, tone(mt, If + .3)) + edge(hand, mt, .5)
+          + (plain ? '' : strokeP(seg([x1 + .1, h + .1, Z0], [x1 + .1, h + bH, Z0]), tone(mt, If + .4), .32 * s)); } }
+    if (sp.lantern && !far) { const z = sp.lantern * Lu * .95;
+      if (sp.lanterns === 'corners') { lantern(xAft + sp.tw[0] - .3, hTop + arch * .2 + .1, z); lantern(xAft - .2, hTop + .1, z); }   // big lanterns on both quarters of the taffrail
+      else lantern(xAft + sp.tw[0] * .5, hTop + arch * .7, z, { post: sp.lanternPost });
+      if (sp.lanternArm) { const a = sp.lanternArm, b0 = [xAft + sp.tw[0] * .45, hTop + arch * .6, 0], tip = [xAft + sp.tw[0] + a[0], hTop + a[1], 0], z2 = z * (a[2] || 1);   // a lantern on a curved iron bracket over the stern
+        const arm = 'M' + pp(...b0) + 'C' + pp(b0[0] + .4, b0[1] + a[1] * .9, 0) + ' ' + pp(tip[0] - a[0] * .55, tip[1] + 1.4, 0) + ' ' + pp(...tip);
+        stern += strokeP(arm, tone('iron', If + .1), .55 * s, ' stroke-linecap="round"') + (plain ? '' : strokeP('M' + pp(tip[0] - a[0] * .35, tip[1] + .9, 0) + 'Q' + pp(tip[0] - a[0] * .35 + .9, tip[1] + 2.3, 0) + ' ' + pp(tip[0] - a[0] * .35 + 1.9, tip[1] + 1.1, 0), tone('brass', If + .3), .3 * s));
+        lantern(tip[0], tip[1] - .7 - (1.2 + 3.9) * z2, z2, { hang: tip, tilt: 0, Z: 0 }); } }
   }
   // an open rail with stanchions on the upper tiers; channels of the shrouds come later
   if (sp.openRail != null && !far && sp.tiers[sp.openRail]) { const Xa = sp.tiers[sp.openRail][0] + 1.6, Rr = R('rail'); let posts = '', hand = [];
@@ -488,13 +517,15 @@ function build(u, L, o, mode) {
     defs += `<radialGradient id="${thruG}" gradientUnits="userSpaceOnUse" cx="${f(src[0])}" cy="${f(src[1])}" r="${f(R0 * 1.25)}"><stop offset="0" stop-color="${lt}" stop-opacity=".85"/><stop offset=".38" stop-color="${lt}" stop-opacity=".5"/><stop offset=".75" stop-color="${lt}" stop-opacity=".16"/><stop offset="1" stop-color="${lt}" stop-opacity="0"/></radialGradient>`; return thruG; };
   // a sail on a map S(u, v) -> local point: u — from the fore edge to the aft one, v — from the head to the foot
   const cloth = (S, q) => {
-    const Rr = R(q.name), N = 14, wd = q.wd, ht = q.ht, rough = cond !== 'whole' && cond !== 'mended' && q.tear !== false, mended = cond === 'mended' && q.tear !== false, rags = cond === 'rags', torn = cond === 'torn';
+    const Rr = R(q.name), N = 14, wd = q.wd, ht = q.ht, rough = cond !== 'whole' && cond !== 'mended' && q.tear !== false, mended = cond === 'mended' && q.tear !== false, rags = cond === 'rags', torn = cond === 'torn', fr = cond === 'fringe';
     const at0 = (cu, cv) => (du, dv) => S(clamp(cu + du / wd, .025, .975), clamp(cv + dv / ht, .035, .96));
     // the foot of a torn sail: a smooth line cut by tears of different depth, width and slant, with tatters hanging below
     let dvAt = () => 0;
     const cuts = [], tg = [];
     if (rough && q.foot !== false) {
-      for (let i = 0, nt = rags ? 4 + Math.floor(Rr() * 3) : torn ? 2 + Math.floor(Rr() * 2) : 1 + Math.floor(Rr() * 2); i < nt; i++) { const w = (rags ? .02 : .014) + Rr() * .055, sk = (Rr() - .5) * .9;
+      if (fr) for (let i = 0, nt = 11 + Math.floor(Rr() * 5); i < nt; i++) { const w = .012 + Rr() * .02, sk = (Rr() - .5) * .7;   // a fringe: many narrow tongues along the whole foot
+        cuts.push([(i + .2 + Rr() * .6) / nt, (.06 + Rr() * .1) * (Rr() < .25 ? 1.5 : 1), w * (1 + sk), w * (1 - sk)]); }
+      else for (let i = 0, nt = rags ? 4 + Math.floor(Rr() * 3) : torn ? 2 + Math.floor(Rr() * 2) : 1 + Math.floor(Rr() * 2); i < nt; i++) { const w = (rags ? .02 : .014) + Rr() * .055, sk = (Rr() - .5) * .9;
         cuts.push([.07 + Rr() * .86, (rags ? .07 + Rr() * .25 : .035 + Rr() * .13) * (Rr() < .3 ? .45 : 1), w * (1 + sk), w * (1 - sk)]); }
       for (let i = 0, nt = rags ? 2 + Math.floor(Rr() * 3) : torn && Rr() > .5 ? 1 : 0; i < nt; i++) tg.push([.1 + Rr() * .8, .025 + Rr() * (rags ? .09 : .045), .012 + Rr() * .026]);
       const p1 = Rr() * 6, p2 = Rr() * 6, am = rags ? .02 : .009;
@@ -514,7 +545,7 @@ function build(u, L, o, mode) {
       dOut = 'M' + pp(...S(0, 0)) + 'L' + spl(pts).slice(1) + 'Z'; }
     // holes of three kinds, none over another: a ragged round, a rip along the threads, a flap hanging into its tear
     let dHole = '', flaps = '', fringe = '';
-    if (rough) { const nH = Math.round(wd * ht / (rags ? 90 : torn ? 115 : 240) * (.6 + Rr() * .8)), hs = [];
+    if (rough) { const nH = Math.round(wd * ht / (rags ? 90 : torn ? 115 : 240) * (.6 + Rr() * .8) * (sp.holeK || 1)), hs = [];
       for (let tr = 0; hs.length < nH && tr < nH * 8 + 8; tr++) {
         const r = (rags ? .95 : .75) + Math.pow(Rr(), 2.2) * (rags ? 3 : 2.3), cu = .12 + Rr() * .76, cv = .14 + Rr() * .62;
         if (cv + r * 1.6 / ht > 1 - Math.max(dvAt(cu), dvAt(clamp(cu - r / wd)), dvAt(clamp(cu + r / wd))) - .04 || cu - r * 1.3 / wd < .04 || cu + r * 1.3 / wd > .96 || cv - r * 1.6 / ht < .05) continue;
@@ -540,7 +571,7 @@ function build(u, L, o, mode) {
         if (near && Rr() > .35) for (let k = 0, nk = 2 + Math.floor(Rr() * 4); k < nk; k++) { const x0 = (Rr() - .5) * r * 1.1, y0 = -r * (.6 + Rr() * .3), ln = r * (.25 + Rr() * .7), b = (Rr() - .5) * .5;   // threads hanging into the hole
           fringe += 'M' + pp(...at(x0, y0)) + 'Q' + pp(...at(x0 + b * ln, y0 + ln * .55)) + ' ' + pp(...at(x0 + (b * 1.8 - .1) * ln, y0 + ln)); }
       }
-      if (q.foot !== false && near) for (let k = 0, nf = Math.round(wd * (rags ? .9 : .3)); k < nf; k++) { const uu = .03 + Rr() * .94, p0 = S(uu, 1 - dvAt(uu) - .004), ln = .3 + Math.pow(Rr(), 1.8) * (rags ? 2.2 : 1.2), b = (Rr() - .5) * .8;   // loose threads along the torn foot
+      if (q.foot !== false && near) for (let k = 0, nf = Math.round(wd * (rags || fr ? .9 : .3)); k < nf; k++) { const uu = .03 + Rr() * .94, p0 = S(uu, 1 - dvAt(uu) - .004), ln = .3 + Math.pow(Rr(), 1.8) * (rags || fr ? 2.2 : 1.2), b = (Rr() - .5) * .8;   // loose threads along the torn foot
         fringe += 'M' + pp(...p0) + 'Q' + pp(p0[0] + (b * .4 - .1) * ln, p0[1] - ln * .55) + ' ' + pp(p0[0] + (b - .25) * ln, p0[1] - ln); }
     }
     const d = dOut + dHole;
@@ -610,7 +641,7 @@ function build(u, L, o, mode) {
     // the mast: lower mast, topmast, topgallant mast; the top and the crosstrees
     let mast = spar(phi ? [m.x - Math.tan(rad(m.rake || 0)) * (DBW - 1.5), hD + 1.5 - DBW] : A(0), A(Q[0] + .09), 1.15 * rr, .92 * rr, sp.spar) + spar(A(Q[0] - .005), A(qC != null ? Q[1] + .075 : 1), .78 * rr, .56 * rr, sp.spar);
     if (qC != null) mast += spar(A(Q[1] - .005), A(1), .5 * rr, .28 * rr, sp.spar);
-    const T = A(qT), tw2 = 2.5 * rr, top = poly([[T[0] - tw2 * .82, T[1] - .35 * rr], [T[0] + tw2 * .82, T[1] - .35 * rr], [T[0] + tw2, T[1] + .3 * rr], [T[0] - tw2, T[1] + .3 * rr]]);
+    const T = A(qT), tw2 = 2.5 * rr * (sp.topK || 1), top = poly([[T[0] - tw2 * .82, T[1] - .35 * rr], [T[0] + tw2 * .82, T[1] - .35 * rr], [T[0] + tw2, T[1] + .3 * rr], [T[0] - tw2, T[1] + .3 * rr]]);
     if (phi && !plain) { const hT = T[1] + (phi > 0 ? .3 : -.35) * rr, tf = poly([[T[0] - tw2, hT, -tw2], [T[0] + tw2, hT, -tw2], [T[0] + tw2, hT, tw2], [T[0] - tw2, hT, tw2]]);   // the top seen from above (below)
       mast += fillP(tf, tone(sp.spar === 'paint-ochre' ? 'tar' : sp.spar, lum([0, phi > 0 ? 1 : -1, 0]) - .1)) + edge(tf, sp.spar, .5); }
     mast += fillP(top, tone(sp.spar === 'paint-ochre' ? 'tar' : sp.spar, lum([0, -.5, .8]))) + edge(top, sp.spar, .6) + (plain ? '' : strokeP(seg([T[0] - tw2, T[1] + .3 * rr], [T[0] + tw2, T[1] + .3 * rr]), tone(sp.spar, If + .5), .2 * s, ' opacity=".7"'));
