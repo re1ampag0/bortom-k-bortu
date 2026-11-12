@@ -33,7 +33,8 @@ const TICK = 4;
 
 // ---- geometry of the sheets, mm
 const HOLD_ROW = HOLD.cells * HOLD.cell + (HOLD.cells - 1) * HOLD.gap;            // 190
-const HOLD_BOX = { x: (A4.w - HOLD_ROW) / 2 - 4, y: 28, w: HOLD_ROW + 8, h: 44, cy: 27.5 };
+/** The cut line is 8 mm from the sheet edge; the cells start 2 mm inside it. */
+const HOLD_BOX = { x: (A4.w - HOLD_ROW) / 2 - 2, y: 28, w: HOLD_ROW + 4, h: 44, cy: 27.5, pad: 2, tick: 3 };
 const POWDER = { cols: 8, rows: 3, x: (A4.w - 8 * TOKEN.powder) / 2, y: 130 };
 const FIRE = { cols: 9, rows: 1, x: (A4.w - 9 * TOKEN.fire) / 2, y: 205 };
 /** Markers: 8 in the first row (Ж, М), 9 in the second (И, Г and the Soul marker). */
@@ -45,11 +46,11 @@ const SHIPS = { x: (A4.w - 4 * TOKEN.shipToken) / 2, y: 132 };
 const ships = (): Ship[] => DECKS.map(code => data.ships.find(s => s.code === code)!);
 const R = (n: number) => Math.round(n * 1000) / 1000;
 
-/** Cut lines of a grid cols × rows of cells w × h at (x, y): every line is shared and runs TICK mm past the grid. */
-const gridCuts = (x: number, y: number, cols: number, rows: number, w: number, h: number): string => {
+/** Cut lines of a grid cols × rows of cells w × h at (x, y): every line is shared and runs tick mm past the grid. */
+const gridCuts = (x: number, y: number, cols: number, rows: number, w: number, h: number, tick = TICK): string => {
   let d = '';
-  for (let c = 0; c <= cols; c++) d += `M${R(x + c * w)} ${R(y - TICK)}V${R(y + rows * h + TICK)}`;
-  for (let r = 0; r <= rows; r++) d += `M${R(x - TICK)} ${R(y + r * h)}H${R(x + cols * w + TICK)}`;
+  for (let c = 0; c <= cols; c++) d += `M${R(x + c * w)} ${R(y - tick)}V${R(y + rows * h + tick)}`;
+  for (let r = 0; r <= rows; r++) d += `M${R(x - tick)} ${R(y + r * h)}H${R(x + cols * w + tick)}`;
   return `<path d="${d}" stroke="${CUT}" stroke-width="${CUT_W}" fill="none"/>`;
 };
 const cutLayer = (inner: string) => `<svg class="tk-cut" viewBox="0 0 ${A4.w} ${A4.h}" style="position:absolute;left:0;top:0;width:${A4.w}mm;height:${A4.h}mm">${inner}</svg>`;
@@ -64,16 +65,16 @@ const foot = (n: number, of: number) => `<div class="tk-foot">${esc(fill(TXT.foo
 
 // ---- holds
 function holdHtml(t: HoldText, y: number, rule: string): string {
-  const accent = t.side === 'pirates' ? PIRATES : COMPANY, { w, h, cy } = HOLD_BOX, r = HOLD.cell / 2;
+  const accent = t.side === 'pirates' ? PIRATES : COMPANY, { w, h, cy, pad } = HOLD_BOX, r = HOLD.cell / 2;
   const cells = Array.from({ length: HOLD.cells }, (_, i) => {
-    const cx = 4 + r + i * (HOLD.cell + HOLD.gap);
+    const cx = pad + r + i * (HOLD.cell + HOLD.gap);
     return `<circle cx="${cx}" cy="${cy}" r="${r - 0.175}" fill="${CELL}" stroke="${lighten(accent, 0.3)}" stroke-width=".35" stroke-dasharray="1.3 .9"/>`
-      + `<text x="${cx}" y="${cy + 2.35}" text-anchor="middle" font-family="Alegreya SC" font-weight="700" font-size="7" fill="#dccfae">${i + 1}</text>`;
+      + `<text x="${cx}" y="${cy + 2.35}" text-anchor="middle" font-family="Alegreya SC" font-weight="400" font-size="7" fill="#a08c62">${i + 1}</text>`;
   }).join('');
   return box(HOLD_BOX.x, y, w, h,
     `<svg viewBox="0 0 ${w} ${h}" style="position:absolute;left:0;top:0;width:100%;height:100%">`
-    + `<rect x="2" y="2" width="${w - 4}" height="${h - 4}" rx="2.4" fill="${PAPER}" stroke="${accent}" stroke-width=".6"/>`
-    + `<path d="M5 13.4H${w - 5}" stroke="${lighten(accent, 0.45)}" stroke-width=".25"/>${cells}</svg>`
+    + `<rect x="1" y="1.6" width="${w - 2}" height="${h - 3.2}" rx="2.2" fill="${PAPER}" stroke="${accent}" stroke-width=".6"/>`
+    + `<path d="M3.6 13.4H${w - 3.6}" stroke="${lighten(accent, 0.45)}" stroke-width=".25"/>${cells}</svg>`
     + `<div class="tk-hold-name" style="color:${accent}">${esc(t.name)}</div><div class="tk-hold-rule">${esc(rule)}</div>`,
     'tk-hold');
 }
@@ -140,9 +141,9 @@ function underwaterHtml(): string {
   const g = data.ships.find(s => s.code === 'Г')!, { w, h } = TOKEN.underwater, rules = data.rules as Record<string, number>;
   const wave = (y: number, o: number, sw: number) => `<path d="M-2 ${y}q3.25 -1.5 6.5 0t6.5 0t6.5 0t6.5 0t6.5 0t6.5 0t6.5 0t6.5 0t6.5 0" stroke="#bfe6dc" stroke-width="${sw}" fill="none" opacity="${o}"/>`;
   return box(UNDER.x, UNDER.y, w, h,
-    `<svg viewBox="0 0 ${w} ${h}" style="position:absolute;left:0;top:0;width:100%;height:100%"><defs><linearGradient id="tkSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${lighten(g.color, 0.1)}"/><stop offset="1" stop-color="${darken(g.color, 0.3)}"/></linearGradient></defs>`
-    + `<rect width="${w}" height="${h}" fill="url(#tkSea)"/>${wave(3.1, 0.5, 0.3)}${wave(21.6, 0.38, 0.3)}${wave(23.2, 0.26, 0.3)}`
-    + `<path d="${[3.6, 41.4].map(x => [7, 8.9].map(y => `M${x} ${y}q1.25 -1.1 2.5 0t2.5 0`).join('')).join('')}" stroke="#bfe6dc" stroke-width=".4" fill="none" stroke-linecap="round"/></svg>`
+    `<svg viewBox="0 0 ${w} ${h}" style="position:absolute;left:0;top:0;width:100%;height:100%"><defs><linearGradient id="tkSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${darken(g.color, 0.08)}"/><stop offset="1" stop-color="${darken(g.color, 0.3)}"/></linearGradient></defs>`
+    + `<rect width="${w}" height="${h}" fill="url(#tkSea)"/>${wave(1.5, 0.4, 0.3)}${wave(23.6, 0.4, 0.3)}`
+    + `<path d="${[3.6, 41.4].map(x => [4.1, 5.9].map(y => `M${x} ${y}q1.25 -1.1 2.5 0t2.5 0`).join('')).join('')}" stroke="#bfe6dc" stroke-width=".4" fill="none" stroke-linecap="round"/></svg>`
     + `<div class="tk-uw-t">${esc(TXT.underwater.title)}</div>`
     + `<div class="tk-uw-l">${TXT.underwater.lines.map(l => `<div>${esc(fill(l, { surface: rules.surfaceBonus }))}</div>`).join('')}</div>`,
     'tk-uw');
@@ -160,15 +161,15 @@ function fieldHtml(): string {
   const diag = Math.abs((data.ships[0].diagDamage as { offset: number }).offset);
   const place = (x: number, y: number, c: string) => `<rect x="${x}" y="${y}" width="${slot}" height="${slot}" rx="1.6" fill="${CELL}" stroke="${lighten(c, 0.25)}" stroke-width=".35" stroke-dasharray="1.3 .9"/>`;
   const plate = (y: number, c: string, t: string) => `<rect x="${mid - 13}" y="${y}" width="26" height="5.4" rx="1.1" fill="${c}"/><text x="${mid}" y="${y + 3.85}" text-anchor="middle" font-family="Alegreya SC" font-weight="700" font-size="3.3" letter-spacing=".3" fill="#fff4d8">${esc(t.toUpperCase())}</text>`;
-  const legend = (y: number, t: string) => `<text x="${mid}" y="${y}" text-anchor="middle" font-family="Alegreya Sans" font-weight="500" font-size="2.5" fill="${INK}">${esc(t)}</text>`;
+  const legend = (y: number, t: string) => t.split(/(?<=—) /).map((l, i) => `<text x="${mid}" y="${y + i * 3.6}" text-anchor="middle" font-family="Alegreya Sans" font-weight="500" font-size="3" fill="${INK}">${esc(l)}</text>`).join('');
   const line = '#3a2c1c', dline = '#6a5a44';
   return box(FIELD.x, FIELD.y, w, h,
     `<svg viewBox="0 0 ${w} ${h}" style="position:absolute;left:0;top:0;width:100%;height:100%">`
     + place(xl, yt, COMPANY) + place(xr, yt, COMPANY) + place(xl, yb, PIRATES) + place(xr, yb, PIRATES)
     + arrow(xl + slot / 2, yt + slot + 0.5, xl + slot / 2, yb - 0.5, line, 0.55) + arrow(xr + slot / 2, yt + slot + 0.5, xr + slot / 2, yb - 0.5, line, 0.55)
     + arrow(xl + slot + 0.8, 25, xr - 0.8, 45, dline, 0.45, '1.5 1') + arrow(xr - 0.8, 25, xl + slot + 0.8, 45, dline, 0.45, '1.5 1')
-    + plate(3.2, COMPANY, s.company) + arrow(mid - 6, 13.4, mid + 6, 13.4, line, 0.55) + legend(18, s.front)
-    + arrow(mid - 6, 52.2, mid + 6, 52.2, dline, 0.45, '1.5 1') + legend(56.8, fill(s.diag, { diag }))
+    + plate(3.2, COMPANY, s.company) + arrow(mid - 6, 12.2, mid + 6, 12.2, line, 0.55) + legend(16.7, s.front)
+    + arrow(mid - 6, 49.4, mid + 6, 49.4, dline, 0.45, '1.5 1') + legend(53.9, fill(s.diag, { diag }))
     + plate(h - 3.2 - 5.4, PIRATES, s.pirates) + `</svg>`,
     'tk-field');
 }
@@ -190,7 +191,7 @@ function shipTokensHtml(): string {
 export function tokenPages(ctx: Ctx): PageSpec[] {
   const econ = data.econ as { income: number; first_income: number; cap: number; second_start: number }, rules = data.rules as Record<string, number>;
   const nums = { income: econ.income, first: econ.first_income, cap: econ.cap, start: econ.second_start, firstGame: rules.firstGameSecondStart };
-  const pd = TOKEN.powder, fr = TOKEN.fire, coinD = 16;
+  const pd = TOKEN.powder, fr = TOKEN.fire, coinD = 15;
   const cells = (g: { cols: number; rows: number; x: number; y: number }, size: number, count: number, inner: (i: number) => string) => {
     if (g.cols * g.rows !== count) throw new Error(`token grid ${g.cols} × ${g.rows}, expected ${count}`);
     return box(g.x, g.y, g.cols * size, g.rows * size, Array.from({ length: count }, (_, i) => box((i % g.cols) * size, Math.floor(i / g.cols) * size, size, size, inner(i), 'tk-tok')).join(''), '', `background:${PAPER}`);
@@ -205,7 +206,7 @@ export function tokenPages(ctx: Ctx): PageSpec[] {
     + cap(MARK.x, MARK.y - 8.8, TXT.markers) + markers.html
     + cap(UNDER.x, UNDER.y - 8.8, TXT.underwaterCaption) + underwaterHtml()
     + `<div class="tk-hint">${esc(TXT.hint)}</div>` + foot(1, 2)
-    + cutLayer(gridCuts(HOLD_BOX.x, HOLD_BOX.y, 1, TXT.holds.length, HOLD_BOX.w, HOLD_BOX.h)
+    + cutLayer(gridCuts(HOLD_BOX.x, HOLD_BOX.y, 1, TXT.holds.length, HOLD_BOX.w, HOLD_BOX.h, HOLD_BOX.tick)
       + gridCuts(POWDER.x, POWDER.y, POWDER.cols, POWDER.rows, pd, pd) + gridCuts(FIRE.x, FIRE.y, FIRE.cols, FIRE.rows, fr, fr)
       + markers.cuts + gridCuts(UNDER.x, UNDER.y, 1, 1, TOKEN.underwater.w, TOKEN.underwater.h));
   const s = TXT.scheme, st = TOKEN.shipToken;
@@ -218,18 +219,18 @@ export function tokenPages(ctx: Ctx): PageSpec[] {
 
 export const TOKENS_CSS = `
 .tk-title{position:absolute;left:10mm;top:8mm;font:800 22pt/1 'Alegreya SC',serif;color:${INK};letter-spacing:.01em}
-.tk-tag{position:absolute;right:10mm;top:11.6mm;font:500 8pt/1 'Alegreya Sans',sans-serif;color:#7a6a52;letter-spacing:.09em;text-transform:uppercase}
+.tk-tag{position:absolute;right:10mm;top:11.5mm;font:500 8.5pt/1 'Alegreya Sans',sans-serif;color:#7a6a52;letter-spacing:.09em;text-transform:uppercase}
 .tk-lead{position:absolute;left:10mm;top:17.4mm;font:italic 400 10pt/1.2 Alegreya,serif;color:#4a3a26}
 .tk-cap{position:absolute;font:700 10pt/1.2 Alegreya,serif;color:${INK};white-space:nowrap}
 .tk-foot{position:absolute;left:10mm;top:285mm;font:500 7pt/1 'Alegreya Sans',sans-serif;color:#8a7a62;letter-spacing:.09em;text-transform:uppercase}
 .tk-hint{position:absolute;left:10mm;right:10mm;top:271.5mm;font:italic 400 9.5pt/1.2 Alegreya,serif;color:#4a3a26;text-align:center}
 .tk-hold{background:${PARCHMENT}}
-.tk-hold-name{position:absolute;left:5.2mm;top:5.1mm;font:800 15pt/1 'Alegreya SC',serif;letter-spacing:.03em;white-space:nowrap}
-.tk-hold-rule{position:absolute;right:5.2mm;top:7.3mm;font:500 8.5pt/1 'Alegreya Sans',sans-serif;color:${INK};white-space:nowrap}
+.tk-hold-name{position:absolute;left:3.8mm;top:5.1mm;font:800 15pt/1 'Alegreya SC',serif;letter-spacing:.03em;white-space:nowrap}
+.tk-hold-rule{position:absolute;right:3.8mm;top:7.1mm;font:500 9pt/1 'Alegreya Sans',sans-serif;color:${INK};white-space:nowrap}
 .tk-tok{overflow:hidden}
 .tk-uw{color:#fff}
-.tk-uw-t{position:absolute;left:0;right:0;top:5.1mm;text-align:center;font:800 13pt/1 'Alegreya SC',serif;letter-spacing:.05em;color:#fff}
-.tk-uw-l{position:absolute;left:2mm;right:2mm;top:12.1mm;text-align:center;font:700 6.5pt/1.36 'Alegreya Sans',sans-serif;color:#fff;white-space:nowrap}
+.tk-uw-t{position:absolute;left:0;right:0;top:2.7mm;text-align:center;font:800 12pt/1 'Alegreya SC',serif;letter-spacing:.05em;color:#fff}
+.tk-uw-l{position:absolute;left:2mm;right:2mm;top:7.9mm;text-align:center;font:700 8pt/1.2 'Alegreya Sans',sans-serif;color:#fff;white-space:nowrap}
 .tk-field{background:${PAPER}}
 `;
 

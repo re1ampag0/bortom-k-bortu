@@ -51,7 +51,7 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
       cards++;
       if (Math.abs(c.w - CARD.w) > .1 || Math.abs(c.h - CARD.h) > .1) errors.push(`${c.key}: card is ${c.w.toFixed(2)} × ${c.h.toFixed(2)} mm`);
       if (seen.has(c.key)) continue; seen.add(c.key);
-      const P = FACE.pt, min: Record<string, number> = { name: P.name, big: P.big, text: P.textMin, plan: P.textMin - .5, flavor: P.flavor, ribbon: P.ribbon, band: P.band, planChip: P.plan, index: 6.5, legend: 6.5 };
+      const P = FACE.pt, min: Record<string, number> = { name: P.name, big: P.big, text: P.textMin, plan: P.textMin, flavor: P.flavor, ribbon: P.ribbon, band: P.band, planChip: P.plan, index: 6.5, legend: 6.5 };
       for (const [k, v] of Object.entries(c.pts)) if (v < min[k] - .01) errors.push(`${c.key}: ${k} is ${v.toFixed(2)} pt, less than ${min[k]}`);
       if (c.pts.text < P.text - .01) notes.push(`${c.key}: текст правила ${c.pts.text} pt`);
       if (c.glassTop < FACE.glass.minTop - .2) errors.push(`${c.key}: the glass plate's top is at ${c.glassTop.toFixed(1)} mm, above ${FACE.glass.minTop}`);

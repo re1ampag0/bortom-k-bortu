@@ -34,10 +34,11 @@ export function cutLines(): { inner: Line[]; marks: Line[] } {
 
 /** The card face (mm from the card's own top-left corner). */
 export const FACE = {
-  medal: { x: 4, y: 4, d: 9.2 },
-  price: { right: 4, y: 4, d: 9.2, gap: 1.9 },
+  // the icon's brass ring (0.6 mm) lies outside its 9.2 mm body: the body starts at 4.6, the ring at 4.0
+  medal: { x: 4.6, y: 4.6, d: 9.2 },
+  price: { right: 4.6, y: 4.6, d: 9.2, gap: 1.9 },
   /** fan index (review-player 1.1): the small price on the medal's lower right rim and the plate under the medal */
-  index: { priceD: 5.5, priceCx: 12, priceCy: 12, x: 4, y: 14.7, maxW: 16, maxBottom: 25, alpha: 0.8 },
+  index: { priceD: 5.5, priceCx: 12.6, priceCy: 12.6, x: 4, y: 15.4, maxW: 16, maxBottom: 25, alpha: 0.8 },
   /** the glass text plate: side inset, its bottom above the card's bottom, and how high its top may climb */
   glass: { inset: 3.4, bottom: 10.3, minTop: 40, radius: 2.1 },
   /** the deck strip: 9 mm high, its lettering centred 5 mm above the card's bottom edge */

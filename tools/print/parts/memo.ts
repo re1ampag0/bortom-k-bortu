@@ -85,7 +85,9 @@ export async function build(ctx: Ctx): Promise<Part[]> {
 <div class="me-rule">${hair(W, BRASS, 0.5)}<div style="height:.5mm"></div>${hair(W, BRASS, 0.18)}</div>
 <div class="me-body">${flow}</div><div class="me-types">${types(ctx, ty.rows)}</div></div>`;
   // the cut line between the two memos (SVG, README rule 2)
-  const cut = `<svg style="position:absolute;left:0;top:0;width:297mm;height:210mm" viewBox="0 0 297 210"><line x1="${A5.w}" y1="0" x2="${A5.w}" y2="210" stroke="#8a8a8a" stroke-width=".2" stroke-dasharray="2.4 1.6"/></svg>`;
+  const dash = (y1: number, y2: number) => `<line x1="${A5.w}" y1="${y1}" x2="${A5.w}" y2="${y2}" stroke="#8a8a8a" stroke-width=".2" stroke-dasharray="2.4 1.6"/>`;
+  const cut = `<svg style="position:absolute;left:0;top:0;width:297mm;height:210mm" viewBox="0 0 297 210">${dash(0, 90)}${dash(120, 210)}
+<text transform="translate(${A5.w + 0.85} 105) rotate(-90)" text-anchor="middle" font-family="'Alegreya Sans',sans-serif" font-weight="500" font-size="2.6" letter-spacing=".15" fill="#6a6a6a">разрежьте пополам</text></svg>`;
   console.log(`02-pamyatki: кегль ${fit.fs} pt`);
   return [{ file: '02-pamyatki', title: 'Бортом к борту — 02. Памятки (2 шт., разрезать пополам)', css: css(fit.fs), pages: [{ html: cut + memo(0) + memo(A5.w), land: true }] }];
 }

@@ -105,9 +105,8 @@ export const setFlaskInline = (url: string) => { FLASK_INLINE = url; };
 export function rich(text: string, dark = false): string {
   const col = dark ? ON_GLASS.soul : '#0f6e64';
   const safe = text.replace(/<br\s*\/?>/g, '\n').replace(/<(\/?)b>/g, '\u0001$1b\u0002').replace(/</g, '&lt;').replace(/\u0001/g, '<').replace(/\u0002/g, '>').replace(/\n/g, '<br>');
-  return safe
-    .replace(/(\d+)\s+(Душ[а-яё]*)/g, (_, n, w) => `${n} <img class="s-i" src="${FLASK_INLINE}" alt=""><span class="s-w" style="color:${col}">${w}</span>`)
-    .replace(/(^|[^>\wЀ-ӿ])(Душ[а-яё]*)(?![^<]*<\/span>)/g, (_, p, w) => `${p}<span class="s-w" style="color:${col}">${w}</span>`);
+  return safe.replace(/Это не Залп/g, 'Это\u00a0не\u00a0Залп')
+    .replace(/(?:(\d+)\s+)?(?<![А-Яа-яЁё])(Душ[а-яё]*)/g, (_, n, w) => (n ? `${n}\u00a0<img class="s-i" src="${FLASK_INLINE}" alt="">` : '') + `<span class="s-w" style="color:${col}">${w}</span>`);
 }
 export const RICH_CSS = `.s-i{display:inline-block;height:1.05em;width:auto;vertical-align:-0.2em;margin:0 .12em 0 0}.s-w{font-weight:700}`;
 

@@ -15,10 +15,10 @@ export const DECK_KEY: Record<DeckCode, 'pearl' | 'revenge' | 'endeavour' | 'dut
 
 /** Type colours: t — the ring and ribbon, td — dark, tl — light, tint — the glass «в цвет типа». */
 export const TYPE: Record<CardType, { key: string; t: string; td: string; tl: string; tint: string; when: string }> = {
-  'ЗАРЯД': { key: 'charge', t: '#c4602f', td: '#8a3c1c', tl: '#f0a070', tint: '#3a160a', when: 'к своему Залпу' },
-  'ПРИКАЗ': { key: 'order', t: '#7a5c9c', td: '#4f3868', tl: '#b9a0d8', tint: '#24163a', when: 'в свой ход' },
-  'РЕМОНТ': { key: 'repair', t: '#4a8f56', td: '#2c5e35', tl: '#90d09a', tint: '#0f2a16', when: 'в свой ход' },
-  'РЕАКЦИЯ': { key: 'reaction', t: '#3a7aa2', td: '#1f5070', tl: '#88c0e6', tint: '#0e2238', when: 'в ход противника' }
+  'ЗАРЯД': { key: 'charge', t: '#c4602f', td: '#8a3c1c', tl: '#f0a070', tint: '#4a1a08', when: 'к своему Залпу' },
+  'ПРИКАЗ': { key: 'order', t: '#7a5c9c', td: '#4f3868', tl: '#b9a0d8', tint: '#2c1650', when: 'в свой ход' },
+  'РЕМОНТ': { key: 'repair', t: '#4a8f56', td: '#2c5e35', tl: '#90d09a', tint: '#0c3416', when: 'в свой ход' },
+  'РЕАКЦИЯ': { key: 'reaction', t: '#3a7aa2', td: '#1f5070', tl: '#88c0e6', tint: '#082a4c', when: 'в ход противника' }
 };
 /** The sea deck: its own medal, ribbon, glass and strip. */
 export const SEA = { t: '#2f8a96', td: '#17525c', tl: '#8fd6de', tint: '#08242c', band: '#16404e', rim: '#6fb6c0' };

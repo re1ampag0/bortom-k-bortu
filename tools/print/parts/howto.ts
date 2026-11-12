@@ -29,7 +29,7 @@ const sheetSvg = (inner: string) => `<svg class="hw-svg" viewBox="0 0 ${A4.w} ${
 const arrowUp = (x: number, y: number) => `<path d="M${x} ${y + 3.4}V${y}M${x - 1.1} ${y + 1.2}L${x} ${y}L${x + 1.1} ${y + 1.2}" stroke="#555" stroke-width=".35" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
 const CHECK = `<svg class="hw-ck" viewBox="0 0 10 10"><path d="M1.6 5.5L4.1 8L8.6 2.2" stroke="${BRASS_TEXT}" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const lab = (x: number, y: number, w: number, html: string, cls = '') => `<div class="hw-l ${cls}" style="left:${mm(x)};top:${mm(y)};width:${mm(w)}">${html}</div>`;
-const topLabel = (text: string) => sheetSvg(arrowUp(14.2, 5.6)) + `<div class="hw-top">${esc(text)}</div>`;
+const topLabel = (text: string) => sheetSvg(arrowUp(14.2, 8.4)) + `<div class="hw-top">${esc(text)}</div>`;
 const head = (title: string, lead: string, kicker = true) => `<div class="hw-hd">${kicker ? `<div class="hw-k">${esc(T.kicker)}</div>` : ''}<h1 class="hw-h1">${esc(title)}</h1>${lead ? `<p class="hw-lead">${fmt(lead)}</p>` : ''}</div>`;
 
 const CUT = { w: 34, h: 31.7 };
@@ -70,12 +70,12 @@ function page1(): string {
 
 // ---- p. 2: calibration, the face -------------------------------------------------------------------------------------
 function page2(): string {
-  const t = T.p2, R = { x: (A4.w - 100) / 2, y: 36, len: 100 }, C = { x: (A4.w - CARD.w) / 2, y: 57, ...CARD };
+  const t = T.p2, R = { x: (A4.w - 100) / 2, y: 39.5, len: 100 }, C = { x: (A4.w - CARD.w) / 2, y: 57, ...CARD };
   let svg = '', html = '';
   // the 100 mm ruler: ticks every millimetre, the end ticks' centres are exactly 100 mm apart
   svg += `<path d="M${R.x} ${R.y}H${R.x + R.len}${Array.from({ length: R.len + 1 }, (_, i) => `M${R.x + i} ${R.y}v${i % 10 === 0 ? 4.6 : i % 5 === 0 ? 3.2 : 2}`).join('')}" stroke="#000" stroke-width=".2" fill="none"/>`;
   for (let i = 0; i <= 10; i++) html += lab(R.x + i * 10 - 5, R.y + 5.1, 10, String(i * 10), 'hw-c hw-s');
-  html += lab(R.x - 12, R.y + 9.2, R.len + 24, fmt(t.ruler), 'hw-c');
+  html += lab(R.x - 20, R.y + 8.9, R.len + 40, fmt(t.ruler), 'hw-c');
   // the card outline, exactly 63 × 88, with its dimension lines
   const dx = C.x + 7, dy = C.y + 7, a = 1.3;
   svg += `<rect x="${C.x}" y="${C.y}" width="${C.w}" height="${C.h}" fill="${TINT}" stroke="#000" stroke-width=".2"/>`
@@ -122,7 +122,7 @@ function page3(): string {
   }
   const cells = SHIFT_LETTERS.map((l, i) => `<div class="hw-gc${i === 4 ? ' hw-gm' : ''}"><b>${l}</b>${i === 4 ? `<span>${esc(t.center)}</span>` : `<span class="hw-f">05b-rubashki-${SHIFT_FILE[i]}.pdf</span>`}</div>`).join('');
   html += `<div class="hw-back">`
-    + `<ol class="hw-ol hw-big">${(t.steps as string[]).map((s, i) => `<li><span class="hw-num">${i + 1}</span>${fmt(s)}</li>`).join('')}</ol>`
+    + `<ol class="hw-ol hw-big">${(t.steps as string[]).map((s, i) => `<li><span class="hw-num">${i + 1}</span>${fmt(s)}${i === 2 ? `<div class="hw-auto">${fmt(t.auto)}</div>` : ''}</li>`).join('')}</ol>`
     + `<h2 class="hw-h2">${esc(t.tableH)}</h2><div class="hw-grid">${cells}</div><p class="hw-tol">${fmt(t.tolerance)}</p>`
     + `<ul class="hw-ul">${(t.notes as string[]).map(s => `<li>${CHECK}${fmt(s)}</li>`).join('')}</ul></div>`;
   return topLabel(t.top) + `<div class="hw-cal">${head(t.title, t.lead, false)}</div>` + sheetSvg(svg) + html;
@@ -149,25 +149,25 @@ function page4(): string {
     + sea.map(c => row(c.name, 'sea')).join('') + `<div class="hw-sum hw-sums">${plural(sea.length)}</div></div>`;
   const types = (Object.keys(TYPE) as CardType[]).map(k => `<span class="hw-ty">${icon(k)}${esc(k)}</span>`).join('');
   return `<div class="hw-p">${head(t.title, t.lead)}<div class="hw-types"><span>${esc(t.types)}</span>${types}</div>`
-    + `<div class="hw-cols">${DECKS.map(deckCol).join('')}${seaCol}</div><p class="hw-extra">${fmt(t.extra)}</p></div>`;
+    + `<div class="hw-cols">${DECKS.map(deckCol).join('')}${seaCol}</div><p class="hw-extra">${fmt(t.extra)}</p><p class="hw-ship">${fmt(t.ship)}</p></div>`;
 }
 
 const CSS = `
 .hw-svg{position:absolute;left:0;top:0;width:${mm(A4.w)};height:${mm(A4.h)}}
-.hw-p{position:absolute;left:13mm;right:13mm;top:10mm;bottom:13mm;font:400 10.5pt/1.16 Alegreya,serif;color:${INK}}
+.hw-p{position:absolute;left:13mm;right:13mm;top:9mm;bottom:13mm;font:400 10.5pt/1.15 Alegreya,serif;color:${INK}}
 .hw-p p,.hw-back p{margin:0 0 1.3mm}
 .hw-nb{white-space:nowrap}
 .hw-f{font:700 .93em/1 'Alegreya Sans',sans-serif;white-space:nowrap;color:#1c2a44}
 .hw-k{font:700 8pt/1 'Alegreya Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:${BRASS_TEXT}}
 .hw-h1{font:800 25pt/1 'Alegreya SC',serif;margin:1.2mm 0 0;padding-bottom:1.7mm;border-bottom:.5mm solid ${BRASS};color:${INK}}
 .hw-lead{font:400 10.5pt/1.2 Alegreya,serif;margin:1.8mm 0 0}
-.hw-h2{font:700 12.5pt/1.05 'Alegreya SC',serif;margin:2.3mm 0 1.3mm;padding-bottom:.8mm;border-bottom:.3mm solid ${BRASS};color:${INK}}
+.hw-h2{font:700 12.5pt/1.05 'Alegreya SC',serif;margin:2mm 0 1.2mm;padding-bottom:.8mm;border-bottom:.3mm solid ${BRASS};color:${INK}}
 .hw-first{margin:2.6mm 0 0;padding:2mm 3mm 2.1mm;background:${lighten(BRASS, .84)};border:.4mm solid ${BRASS};border-radius:1.5mm;font-size:11pt}
 .hw-fh{display:inline-block;margin-right:2.4mm;font:800 11.5pt/1 'Alegreya SC',serif;color:${RED}}
-.hw-t{width:100%;border-collapse:collapse;font:400 10.5pt/1.1 Alegreya,serif}
+.hw-t{width:100%;table-layout:fixed;border-collapse:collapse;font:400 10.5pt/1.1 Alegreya,serif}
 .hw-t th{text-align:left;font:700 8pt/1 'Alegreya Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:${BRASS_TEXT};padding:0 2mm 1mm 0}
-.hw-t td{padding:.65mm 2mm .65mm 0;border-top:.3mm solid ${lighten(BRASS, .45)};vertical-align:top}
-.hw-t td:nth-child(1){width:37mm}.hw-t td:nth-child(3){width:22.5mm}.hw-t td:nth-child(4){width:42mm;padding-right:0}
+.hw-t td{padding:.45mm 2mm .45mm 0;border-top:.3mm solid ${lighten(BRASS, .45)};vertical-align:top}
+.hw-t th:nth-child(1){width:36.5mm}.hw-t th:nth-child(3){width:22mm}.hw-t th:nth-child(4){width:31mm}.hw-t td:nth-child(4){padding-right:0}
 .hw-t tr.hw-dx td{background:${lighten(BRASS, .84)}}
 .hw-t tr.hw-no td{color:${MUTED}}
 .hw-pill{display:inline-block;padding:.5mm 1.8mm .6mm;border-radius:.8mm;background:${RED};color:#fff;font:800 8.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.06em;white-space:nowrap}
@@ -180,8 +180,8 @@ const CSS = `
 .hw-cutrow{display:flex;gap:3mm;align-items:flex-start}.hw-cutrow>div{flex:1 1 0}
 .hw-cut{flex:none;width:${mm(CUT.w)};height:${mm(CUT.h)}}
 .hw-r50{display:block;width:52mm;height:4mm;margin:.6mm 0 0}
-.hw-top{position:absolute;left:17mm;top:6.2mm;font:700 8pt/1 'Alegreya Sans',sans-serif;color:#555;letter-spacing:.03em;white-space:nowrap}
-.hw-cal{position:absolute;left:13mm;right:13mm;top:12mm;color:${INK}}
+.hw-top{position:absolute;left:17mm;top:9mm;font:700 8pt/1 'Alegreya Sans',sans-serif;color:#555;letter-spacing:.03em;white-space:nowrap}
+.hw-cal{position:absolute;left:13mm;right:13mm;top:14.5mm;color:${INK}}
 .hw-cal .hw-h1{font-size:20pt}
 .hw-l{position:absolute;font:400 9.5pt/1.2 Alegreya,serif;color:${INK}}
 .hw-c{text-align:center}
@@ -192,7 +192,8 @@ const CSS = `
 .hw-dim.hw-rot{transform:translate(-50%,-50%) rotate(-90deg)}
 .hw-next{position:absolute;box-sizing:border-box;padding:2mm 3mm 2.2mm;border:.4mm solid ${BRASS};border-radius:1.5mm;background:${lighten(BRASS, .84)};font:700 10.5pt/1.2 Alegreya,serif;text-align:center;color:${INK}}
 .hw-sq{display:flex;align-items:center;justify-content:center;font:700 6.5pt/1 'Alegreya Sans',sans-serif;color:#444}
-.hw-back{position:absolute;left:24mm;right:24mm;top:90mm;font:400 11pt/1.2 Alegreya,serif;color:${INK}}
+.hw-auto{margin-top:1.2mm}
+.hw-back{position:absolute;left:24mm;right:24mm;top:83mm;font:400 11pt/1.2 Alegreya,serif;color:${INK}}
 .hw-big li{margin-bottom:2mm}
 .hw-big .hw-num{top:.5mm}
 .hw-grid{display:grid;grid-template-columns:repeat(3,1fr);border:.3mm solid ${BRASS};margin:2.4mm 0 2.2mm}
@@ -218,6 +219,7 @@ const CSS = `
 .hw-lgl{margin-bottom:1.1mm;font:700 8pt/1 'Alegreya Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:${BRASS_TEXT}}
 .hw-sum{margin-top:.6mm;padding-top:1.5mm;border-top:.3mm solid ${BRASS};font:700 10.5pt/1.1 'Alegreya SC',serif}
 .hw-sums{margin-top:1.2mm}
+.hw-ship{margin:1.2mm 0 0 !important;font-size:10pt}
 .hw-extra{margin:5mm 0 0 !important;padding-top:2mm;border-top:.3mm solid ${BRASS};font-size:10pt;color:${INK}}
 `;
 

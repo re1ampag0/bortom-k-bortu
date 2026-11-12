@@ -8,6 +8,7 @@ import { DECK_BAND, DECK_NAME, SEA, type DeckCode } from './colors';
 import { BACK_VARIANTS, CARD_CSS, backHtml, backSheetPage, faceSheet, itemFace, type CardKit, type Mode } from './cards';
 import { defaultMode, kitFor } from './parts/cards';
 import { shotSheet, writePdf } from './pdf';
+import { profiled } from './art';
 
 const card = (deck: DeckCode, name: string): Item => { const c = deckList(data, deck).find(x => x.card.name === name); if (!c) throw new Error(`sample card ${deck} ${name} not found`); return { kind: 'card', deck, card: c.card, copy: 0 }; };
 /** Nine cards: 2–3 of every type, all four decks, «Ядра» from two decks. */
@@ -75,7 +76,7 @@ export async function buildSamples(ctx: Ctx): Promise<void> {
   const row = (kit: CardKit, y: number, label: string) => `<div class="cap" style="left:10mm;top:${mm(y - 6.5)};color:#333">${esc(label)}</div>` + [...DECKS.map(d => ({ back: 'deck' as const, deck: d })), { back: 'sea' as const }, { back: 'deck' as const, deck: 'Ж' as DeckCode, legend: true }, { back: 'neutral' as const }].map((b, i) => backHtml(kit, b, `left:${mm(10 + i * 39.8)};top:${mm(y)};transform:scale(.6);transform-origin:0 0;`)).join('');
   await shot(part('rubashki', [{ land: true, html: BACK_VARIANTS.map((v, i) => row(kitsV.get(v)!, 16 + i * 62, `${VNAME[v]}: четыре колоды, Колода моря, Легенда, «Как читать карту»`)).join('') }], CARD_CSS + CAP), '09-rubashki.png');
   const k1 = kitsV.get(base.backs) ?? kitsV.get(1)!;
-  const cut = (deck: DeckCode, x: number, y: number, s: number) => [0, 1, 2].map(c => `<div style="position:absolute;left:${mm(x + c * (CARD.w + 4))};top:${mm(y)};width:${mm(CARD.w)};height:${mm(CARD.h)};overflow:hidden;outline:.2mm solid #999"><div style="position:absolute;left:${mm(-(BLEED + CARD.w * c) + s)};top:${mm(-BLEED + s)};width:${mm(3 * CARD.w + 2 * BLEED)};height:${mm(CARD.h + 2 * BLEED)};background:${DECK_BAND[deck]}">${[0, 1, 2].map(k => backHtml(k1, { back: 'deck', deck }, `left:${mm(BLEED + k * CARD.w)};top:${mm(BLEED)};`)).join('')}</div></div>`).join('');
+  const cut = (deck: DeckCode, x: number, y: number, s: number) => [0, 1, 2].map(c => `<div style="position:absolute;left:${mm(x + c * (CARD.w + 4))};top:${mm(y)};width:${mm(CARD.w)};height:${mm(CARD.h)};overflow:hidden;outline:.2mm solid #999"><div style="position:absolute;left:${mm(-(BLEED + CARD.w * c) + s)};top:${mm(-BLEED + s)};width:${mm(3 * CARD.w + 2 * BLEED)};height:${mm(CARD.h + 2 * BLEED)};background:${profiled(DECK_BAND[deck])}">${[0, 1, 2].map(k => backHtml(k1, { back: 'deck', deck }, `left:${mm(BLEED + k * CARD.w)};top:${mm(BLEED)};`)).join('')}</div></div>`).join('');
   await shot(part('rubashki-sdvig', [{ html: [0, 1.5, 3].map((s, i) => `<div class="cap" style="left:6mm;top:${mm(5 + i * 97)};color:#333">Рубашки одного ряда листа, оборот сдвинут на ${String(s).replace('.', ',')} мм вправо и вниз — левая, средняя и правая карта</div>${cut(DECKS[i % 4], 6, 11 + i * 97, s)}`).join('') }], CARD_CSS + CAP), '10-rubashki-sdvig.png');
   // 11-14: perception — greyscale, deuteranopia, protanopia, half-dark (review-player 2.1)
   for (const [file, filter] of [['11-vospriyatie-seroe.png', 'grayscale(1)'], ['12-vospriyatie-deyteranopiya.png', 'url(#deu)'], ['13-vospriyatie-protanopiya.png', 'url(#pro)'], ['14-vospriyatie-polutma.png', 'url(#dim)']]) await shot(pType, file, filter);

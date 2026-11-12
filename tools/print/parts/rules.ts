@@ -71,7 +71,7 @@ export function inline(ctx: Ctx, text: string): string {
     .replace(/\{(coin|flask)\}/g, (_, n: 'coin' | 'flask') => inlineIcon(ctx, n));
 }
 const NBSP = '\u00a0';
-export const TEXT_CSS = `*{font-variant-numeric:lining-nums}
+export const TEXT_CSS = `*{font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
 .tx-ic{display:inline-block;position:relative;vertical-align:-0.75mm;margin:0 .25mm}`;
 
 /** A hair line drawn as SVG (README, rule 2): w × stroke mm. */
@@ -211,10 +211,9 @@ export async function build(ctx: Ctx): Promise<Part[]> {
   const heights = await measure(ctx, CSS, CW, pieces.map(p => `<div class="ru-u">${p}</div>`));
   const units: Unit[] = flow.map((b, i) => {
     const next = flow[i + 1]?.kind;
-    // a heading keeps the next block; a short lead-in keeps its list or table; a short first or last item of a list does not stand alone
-    const short = (k: number) => heights[k] <= 2 * LH + 0.5;
-    const keep = b.kind === 'h2' || (b.kind === 'p' && short(i) && (next === 'li' || next === 'table' || next === 'types'))
-      || (b.kind === 'li' && next === 'li' && ((flow[i - 1]?.kind !== 'li' && short(i)) || (flow[i + 2]?.kind !== 'li' && short(i + 1))));
+    // a heading keeps the next block; a lead-in keeps its list or table; a list is cut only with two items or more on each side
+    const keep = b.kind === 'h2' || (b.kind === 'p' && (next === 'li' || next === 'table' || next === 'types'))
+      || (b.kind === 'li' && next === 'li' && (flow[i - 1]?.kind !== 'li' || flow[i + 2]?.kind !== 'li'));
     return { kind: b.kind, html: pieces[i], h: heights[i], keep, top: 0 };
   });
 

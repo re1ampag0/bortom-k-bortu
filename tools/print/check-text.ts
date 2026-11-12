@@ -23,9 +23,10 @@ const HEADERS: { page: number; line: string }[] = [
 ];
 
 /**
- * The only allowed changes of the PnP text. 1–5: descriptions of components that changed with the new cards (no
- * codes and «circles» on them; print-kit-review-player.md 3.8). 6: the Charge ribbon reads as on the cards
- * (print-kit-review-player.md 1.6). «now» must stand in our text exactly once; it is checked as «was».
+ * The only allowed changes of the PnP text. 1–6: descriptions of components that changed with the new cards (no
+ * codes and «circles» on them, the Legend's frame is brass; print-kit-review-player.md 3.8, QUESTIONS.md Q52–Q56,
+ * Q59а). 7: the reference to pages 24–26 of the PnP, which are not printed (Q59б). 8: the Charge ribbon reads as on
+ * the cards (print-kit-review-player.md 1.6, Q57). «now» must stand in our text exactly once; it is checked as «was».
  */
 const REPLACED: { file: 'rules' | 'memo'; was: string; now: string }[] = [
   { file: 'rules', was: '96 карт кораблей: 4 колоды по 24 карты (код в углу: Ж, М, И, Г)', now: '96 карт кораблей: 4 колоды по 24 карты (чья карта — по полосе внизу и букве на рубашке)' },
@@ -33,6 +34,8 @@ const REPLACED: { file: 'rules' | 'memo'; was: string; now: string }[] = [
   { file: 'rules', was: '17 карт Колоды моря (код С)', now: '17 карт Колоды моря (полоса «Колода моря»)' },
   { file: 'rules', was: 'карты с чёрным кружком (число в кружке — стоимость)', now: 'карты с чугунной монетой (число на монете — стоимость)' },
   { file: 'rules', was: 'Бирюзовый кружок — стоимость в Душах «Голландца»', now: 'Бирюзовая склянка — стоимость в Душах «Голландца»' },
+  { file: 'rules', was: 'Легенда (карта в золотой рамке)', now: 'Легенда (карта в латунной рамке)' },
+  { file: 'rules', was: 'Баланс проверен симуляцией (см. конец файла), но боты', now: 'Баланс проверен симуляцией, но боты' },
   { file: 'memo', was: 'ЗАРЯД · вместе с Залпом', now: 'ЗАРЯД · к своему Залпу' }
 ];
 

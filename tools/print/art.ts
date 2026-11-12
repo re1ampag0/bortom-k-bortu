@@ -21,7 +21,7 @@ export const printScenes = () => P.PRINT;
 export const portraitSvg = (name: string, draftArt = false) => P.portrait(name, { draftArt });
 export const backArtSvg = (k: string) => P.backArt(k);
 
-export const PROFILE_VERSION = 'p3';
+export const PROFILE_VERSION = 'p4';
 /** The print profile's curve points (review-print 10). */
 export const CURVE: [number, number][] = [[0, 20], [32, 46], [64, 76], [128, 134], [192, 194], [255, 255]];
 /** Target mean relative luminance under the text: 0.035-0.07 keeps white text ≥ 7 : 1 without a black slab. */
@@ -46,6 +46,12 @@ export function curveLut(): number[] {
     const h = xs[i + 1] - xs[i], t = (v - xs[i]) / h, t2 = t * t, t3 = t2 * t;
     return Math.round(Math.max(0, Math.min(255, (2 * t3 - 3 * t2 + 1) * ys[i] + (t3 - 2 * t2 + t) * h * m[i] + (-2 * t3 + 3 * t2) * ys[i + 1] + (t3 - t2) * h * m[i + 1])));
   });
+}
+
+/** A flat colour after the print profile: what the JPEG holds where the scene was painted with this colour. */
+export function profiled(hex: string): string {
+  const lut = curveLut(), [r, g, b] = [1, 3, 5].map(i => lut[parseInt(hex.slice(i, i + 2), 16)]), y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return '#' + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, y + (v - y) * 1.05))).toString(16).padStart(2, '0')).join('');
 }
 
 let page: Page | null = null;
@@ -92,19 +98,19 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       const bc = document.createElement('canvas'); bc.width = W; bc.height = H;
       const bg = bc.getContext('2d', { willReadFrequently: true })!;
       bg.drawImage(c, 0, 0); // an unblurred copy under the blur keeps the canvas edge from fading to transparent
-      bg.filter = `blur(${(W * 0.0233).toFixed(1)}px) saturate(1.2)`; bg.drawImage(c, 0, 0);
+      bg.filter = `blur(${(W * 0.0233).toFixed(1)}px) saturate(.6)`; // the hue of the plate comes from the tint, not from the picture bg.drawImage(c, 0, 0);
       const src = bg.getImageData(box.x, box.y, box.w, box.h).data, dst = g.getImageData(box.x, box.y, box.w, box.h), o = dst.data;
       const lin = Float32Array.from({ length: 256 }, (_, v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
       const tint = [1, 3, 5].map(i => parseInt(box.tint.slice(i, i + 2), 16));
       // one tint strength over the whole plate; the darkening is solved per horizontal band, so a bright sky under
       // the card's name ends as dark as calm water under the last line
-      const A = 0.5, px = (i: number, f: number) => [src[i] * f * (1 - A) + tint[0] * A, src[i + 1] * f * (1 - A) + tint[1] * A, src[i + 2] * f * (1 - A) + tint[2] * A];
+      const A = 0.6, px = (i: number, f: number) => [src[i] * f * (1 - A) + tint[0] * A, src[i + 1] * f * (1 - A) + tint[1] * A, src[i + 2] * f * (1 - A) + tint[2] * A];
       const lum = (p: number[]) => 0.2126 * lin[Math.min(255, Math.round(p[0]))] + 0.7152 * lin[Math.min(255, Math.round(p[1]))] + 0.0722 * lin[Math.min(255, Math.round(p[2]))];
       const BANDS = 10, bh = box.h / BANDS, fb: number[] = [];
       for (let b = 0; b < BANDS; b++) {
         const y0 = Math.floor(b * bh), y1 = Math.min(box.h, Math.ceil((b + 1) * bh));
         const meanAt = (f: number) => { let s = 0, n = 0; for (let y = y0; y < y1; y += 2) for (let x = 0; x < box.w; x += 3) { s += lum(px((y * box.w + x) * 4, f)); n++; } return s / n; };
-        let lo = 0.05, hi = 1.3;
+        let lo = 0.05, hi = 3.2; // a dark picture is lifted to the target too: no black slab
         if (meanAt(hi) > target) { for (let it = 0; it < 16; it++) { const mid = (lo + hi) / 2; if (meanAt(mid) > target) hi = mid; else lo = mid; } } else lo = hi;
         fb.push(lo);
       }

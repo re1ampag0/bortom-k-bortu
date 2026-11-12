@@ -20,24 +20,29 @@ interface BoardText {
   title: string;
   tracks: Record<'hull' | 'sails' | 'guns' | 'crew' | 'souls', TrackText>;
   abilities: string; legend: string; legendNote: string; tips: string;
-  plans: { title: string; note: string }; fires: { title: string }; underwater: { title: string };
+  plans: { title: string; note: string }; fires: { title: string; note: string }; underwater: { title: string };
   footer: string[];
 }
 const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/boards.json'), 'utf8')) as BoardText;
 const RULES = data.rules as Record<string, number>;
 const fill = (s: string, v: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k: string) => String(v[k] ?? ''));
+/** No line break between a number and its unit, or before a number that ends a phrase: «1 Порох», «максимум 5)». */
+const nb = (s: string) => s.replace(/(\d) (?=[«А-Яа-яЁё])/g, '$1\u00a0').replace(/([А-Яа-яЁё]) (?=\d+[).,;:])/g, '$1\u00a0');
+/** rich() of the data's text with those spaces; the digit, the flask and the word «Души» stay on one line. */
+const richNb = (s: string) => rich(nb(s)).replace(/\d+ <img class="s-i"[^>]*><span class="s-w"[^>]*>[^<]*<\/span>/g, m => `<span class="bo-nb">${m}</span>`);
 
 // ---- geometry, mm ----
 const PAGE = { w: 297, h: 210 };
-/** Content inset; the frame runs outside it (6 and 7.4 mm from the sheet's edge: inside any printer's margins). */
-const EDGE = 10;
-const COL = { x: PAGE.w - EDGE - BOARD.textCol, w: BOARD.textCol };
+/** Content inset. The frame's outer edge is 8 mm from the sheet's edge (printers' margins), its brass hairline at 9.6. */
+const EDGE = 11.2;
+/** The text column, 84 mm (≈ BOARD.textCol): inside the 8 mm frame 274.6 mm are left for the 187 mm track and the column. */
+const COL = { x: PAGE.w - EDGE - (BOARD.textCol - 1), w: BOARD.textCol - 1 };
 /** The track zone: the longest track (13 cells, 187 mm) fills it exactly. */
-const LEFT = { x: EDGE, r: COL.x - 5 };
+const LEFT = { x: EDGE, r: COL.x - 3.6 };
 const HEAD_H: Record<BoardVariant, number> = { top: 42, side: 22 };
-const BODY_GAP = 4.5, BODY_END = 189.5, FOOT_LINE = 192.2;
+const BODY_GAP = 4, BODY_END = 188.6, FOOT_LINE = 191.2;
 /** One track from its top: the label's baseline, the small numbers' baseline, the cells' centre, the height. */
-const TR = { label: 4.3, small: 8.4, cy: 9.3 + BOARD.cell / 2, h: 9.3 + BOARD.cell, soulsExtra: 3.6 };
+const TR = { label: 4.3, small: 8.9, cy: 9.8 + BOARD.cell / 2, h: 9.8 + BOARD.cell, soulsExtra: 3.6 };
 const SLOT_HEAD = 6.6, SLOT_PAD = 3;
 
 const pt = (n: number) => n * 25.4 / 72;
@@ -101,11 +106,11 @@ function trackSvg(x: number, y: number, t: Track, pal: Pal): string {
     const x0 = cx(i), isStart = n === t.start, sink = t.key === 'hull' && n === 0;
     const bg = sink ? SINK.fill : i === 0 ? FLOOR : souls && n > t.start ? lighten(pal.ship, 0.9 - 0.07 * (n - t.start - 1)) : CELL;
     out.push(`<circle cx="${r(x0)}" cy="${r(cy)}" r="${r(isStart ? R - 0.45 : R - 0.2)}" fill="${bg}" stroke="${isStart ? pal.ship : sink ? SINK.line : BRASS_DARK}" stroke-width="${isStart ? 0.9 : 0.4}"/>`);
-    // the same number above the cell: it stays in sight under a marker
-    out.push(text(x0, y + TR.small, String(n), 6.5, { w: 700, color: SOFT, anchor: 'middle' }));
+    // the same number above the cell, 9 pt: the only one in sight under an 11 mm marker
+    out.push(text(x0, y + TR.small, String(n), 9, { w: 700, color: SOFT, anchor: 'middle' }));
     out.push(text(x0, cy + (sink ? 0.1 : pt(9) * 0.33), String(n), 9, { w: isStart ? 800 : 700, color: sink ? SINK.text : INK, anchor: 'middle' }));
     if (sink && T.zero) out.push(text(x0, cy + 3.6, T.zero.toUpperCase(), 6.5, { w: 800, color: SINK.text, anchor: 'middle', ls: '.04em' }));
-    if (isStart && !souls) out.push(`<circle cx="${r(x0 + 4.7)}" cy="${r(cy - 4.7)}" r="2.5" fill="${PAPER}" stroke="${pal.ship}" stroke-width=".35"/>` + star(x0 + 4.7, cy - 4.65, 1.85, pal.deep));
+    if (isStart && !souls) out.push(`<circle cx="${r(x0 + 5.1)}" cy="${r(cy - 4.5)}" r="2.5" fill="${PAPER}" stroke="${pal.ship}" stroke-width=".35"/>` + star(x0 + 5.1, cy - 4.45, 1.85, pal.deep));
     if (isStart && souls && T.start) out.push(text(x0, cy + R + 2.9, T.start, 8, { w: 700, color: pal.deep, anchor: 'middle' }));
   });
   if (souls && T.max) out.push(text(cx(last) + R + 3, cy + pt(9) * 0.33, fill(T.max, { n: t.cells[last] }), 9, { w: 700, color: SOFT }));
@@ -113,17 +118,17 @@ function trackSvg(x: number, y: number, t: Track, pal: Pal): string {
 }
 
 /** The middle column, to the right of the short tracks: places for tokens (and the tips in 'side'). */
-const MID = { x: LEFT.r - 80, w: 80, gap: 5 };
-interface Slot { h: number; c: { fill: string; line: string; text: string }; title: string; note?: string; noteW?: number; art: string }
+const MID = { x: LEFT.r - 80, w: 80, gap: 4 };
+interface Slot { h: number; c: { fill: string; line: string; text: string }; title: string; note?: string; art: string }
 /** A titled box of the middle column: its lines are SVG in mm, its lettering HTML. */
-const slotHtml = (s: Slot) => `<div class="bo-slot" style="height:${r(s.h)}mm;color:${s.c.text}"><svg viewBox="0 0 ${MID.w} ${r(s.h)}"><rect x=".2" y=".2" width="${MID.w - 0.4}" height="${r(s.h - 0.4)}" rx="2.2" fill="${s.c.fill}" stroke="${s.c.line}" stroke-width=".4"/>${s.art}</svg><div class="bo-st">${esc(s.title)}</div>${s.note ? `<div class="bo-sn" style="width:${r(s.noteW ?? MID.w - 2 * SLOT_PAD)}mm">${esc(s.note)}</div>` : ''}</div>`;
+const slotHtml = (s: Slot) => `<div class="bo-slot" style="height:${r(s.h)}mm;color:${s.c.text}"><svg viewBox="0 0 ${MID.w} ${r(s.h)}"><rect x=".2" y=".2" width="${MID.w - 0.4}" height="${r(s.h - 0.4)}" rx="2.2" fill="${s.c.fill}" stroke="${s.c.line}" stroke-width=".4"/>${s.art}</svg><div class="bo-st">${esc(s.title)}</div>${s.note ? `<div class="bo-sn">${esc(nb(s.note))}</div>` : ''}</div>`;
 const dashed = (x: number, y: number, w: number, h: number, color: string) => `<rect x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" rx="2" fill="${PAPER}" stroke="${color}" stroke-width=".35" stroke-dasharray="1.4 1"/>`;
 const FLAME = 'M0 -5.2C2.3 -2.6 4 -0.8 4 1.6a4 4 0 0 1 -8 0c0 -1.7 0.9 -3 2 -4.2c0.3 1.3 0.9 2 1.7 2.1c0.9 -1.4 0.9 -3 0.3 -4.7z';
-/** Three Fire tokens of 20 × 20 mm (PnP p. 8–9). */
+/** Three Fire tokens of 20 × 20 mm (PnP p. 8–9) under a two-line reminder of the Fire rule (review-player 3.2). */
 function firesSlot(): Slot {
-  const s = BOARD.fireSlot, n = RULES.maxFires, gap = 5, x0 = (MID.w - n * s - (n - 1) * gap) / 2;
-  const art = Array.from({ length: n }, (_, i) => { const sx = x0 + i * (s + gap); return dashed(sx, SLOT_HEAD, s, s, FIRE.line) + `<path transform="translate(${r(sx + s / 2)} ${r(SLOT_HEAD + s / 2 + 0.6)}) scale(1.25)" d="${FLAME}" fill="${FIRE.soft}"/>`; }).join('');
-  return { h: SLOT_HEAD + s + SLOT_PAD, c: FIRE, title: fill(TXT.fires.title, { n }), art };
+  const s = BOARD.fireSlot, n = RULES.maxFires, gap = 5, x0 = (MID.w - n * s - (n - 1) * gap) / 2, top = SLOT_HEAD + 8.4;
+  const art = Array.from({ length: n }, (_, i) => { const sx = x0 + i * (s + gap); return dashed(sx, top, s, s, FIRE.line) + `<path transform="translate(${r(sx + s / 2)} ${r(top + s / 2 + 0.6)}) scale(1.25)" d="${FLAME}" fill="${FIRE.soft}"/>`; }).join('');
+  return { h: top + s + SLOT_PAD, c: FIRE, title: fill(TXT.fires.title, { n }), note: TXT.fires.note, art };
 }
 /** The «Под водой» token, 52 × 27 mm. */
 function underwaterSlot(): Slot {
@@ -131,11 +136,9 @@ function underwaterSlot(): Slot {
   const ripples = [0.36, 0.54, 0.72].map((k, i) => `<path d="M${r(sx + 11 + (i % 2) * 4)} ${r(SLOT_HEAD + s.h * k)}${'q2.2 -1.6 4.4 0t4.4 0'.repeat(3)}" fill="none" stroke="${WATER.soft}" stroke-width=".6" stroke-linecap="round"/>`).join('');
   return { h: SLOT_HEAD + s.h + SLOT_PAD, c: WATER, title: TXT.underwater.title, art: dashed(sx, SLOT_HEAD, s.w, s.h, WATER.line) + ripples };
 }
-/** Plans lie beside the board (PnP p. 6): a reminder with small card backs, not a place of the cards' size. */
+/** Plans lie beside the board (PnP p. 6): a caption only — nothing that looks like a place for the cards. */
 function plansSlot(pal: Pal): Slot {
-  const n = RULES.plansMax, cw = 11, ch = cw * 88 / 63, h = ch + 2 * SLOT_PAD;
-  const art = Array.from({ length: n }, (_, i) => dashed(MID.w - SLOT_PAD - (n - i) * cw - (n - 1 - i) * 2.5, SLOT_PAD, cw, ch, pal.deep)).join('');
-  return { h, c: { fill: lighten(pal.ship, 0.94), line: pal.line, text: pal.deep }, title: fill(TXT.plans.title, { n }), note: TXT.plans.note, noteW: MID.w - 2 * SLOT_PAD - n * (cw + 2.5) - 2, art };
+  return { h: 13.4, c: { fill: lighten(pal.ship, 0.94), line: pal.line, text: pal.deep }, title: fill(TXT.plans.title, { n: RULES.plansMax }), note: TXT.plans.note, art: '' };
 }
 /** A pale wind rose for the empty sea of the middle column. */
 function rose(cx: number, cy: number, R: number): string {
@@ -187,7 +190,7 @@ function shipPicture(ship: Ship, pal: Pal): string {
 </div>`;
 }
 
-const tipsBox = (ship: Ship) => `<div class="bo-box bo-how"><div class="bo-h">${esc(fill(TXT.tips, { ship: `«${ship.short}»` }))}</div><ul class="bo-tips">${ship.tips.map(t => `<li>${rich(t)}</li>`).join('')}</ul></div>`;
+const tipsBox = (ship: Ship) => `<div class="bo-box bo-how"><div class="bo-h">${esc(fill(TXT.tips, { ship: ship.name }))}</div><ul class="bo-tips">${ship.tips.map(t => `<li>${richNb(t)}</li>`).join('')}</ul></div>`;
 
 /** The right column: (the picture,) the abilities, the Legend, the tips — in the data's words. */
 function column(ctx: Ctx, ship: Ship, pal: Pal, top: number, variant: BoardVariant): string {
@@ -196,8 +199,8 @@ function column(ctx: Ctx, ship: Ship, pal: Pal, top: number, variant: BoardVaria
   const d = 8.2, iconHtml = icons.map((n, i) => iconImg(ctx, n, COL.w - 3 - d - i * (d + 1.4), 2.2, d)).join('');
   return `<div class="bo-col bo-txt" style="left:${COL.x}mm;top:${r(top)}mm;width:${COL.w}mm;height:${r(BODY_END - top)}mm;--c:${pal.deep}">
 ${variant === 'side' ? shipPicture(ship, pal) : ''}
-<div class="bo-box" style="background:${pal.tint};border-color:${pal.line}"><div class="bo-h">${esc(TXT.abilities)}</div>${ship.abilities.map(a => `<div class="bo-an">${esc(a.name)}</div><div class="bo-p">${rich(a.text)}</div>`).join('')}</div>
-<div class="bo-box bo-legend">${iconHtml}<div class="bo-lh" style="padding-right:${r(icons.length * (d + 1.4) + 1)}mm"><div class="bo-h">${esc(TXT.legend)}</div><div class="bo-ln">${esc(legend.name)}</div></div><div class="bo-p">${rich(legend.text)}</div><div class="bo-note">${esc(TXT.legendNote)}</div></div>
+<div class="bo-box" style="background:${pal.tint};border-color:${pal.line}"><div class="bo-h">${esc(TXT.abilities)}</div>${ship.abilities.map(a => `<div class="bo-an">${esc(a.name)}</div><div class="bo-p">${richNb(a.text)}</div>`).join('')}</div>
+<div class="bo-box bo-legend">${iconHtml}<div class="bo-lh" style="padding-right:${r(icons.length * (d + 1.4) + 1)}mm"><div class="bo-h">${esc(TXT.legend)}</div><div class="bo-ln">${esc(legend.name)}</div></div><div class="bo-p">${richNb(legend.text)}</div><div class="bo-note">${esc(TXT.legendNote)}</div></div>
 ${variant === 'top' ? tipsBox(ship) : ''}
 </div>`;
 }
@@ -213,7 +216,7 @@ export function boardPage(ctx: Ctx, ship: Ship, variant: BoardVariant): PageSpec
   const svg: string[] = [], html: string[] = [];
   // the sheet: parchment inside a frame of the ship colour with a brass hairline
   svg.push(`<defs><radialGradient id="${id}" cx=".5" cy=".5" r=".75"><stop offset=".5" stop-color="${PAPER}"/><stop offset="1" stop-color="${PARCHMENT}"/></radialGradient></defs>
-<rect x="6" y="6" width="${PAGE.w - 12}" height="${PAGE.h - 12}" rx="4" fill="url(#${id})" stroke="${pal.ship}" stroke-width="1"/><rect x="7.4" y="7.4" width="${r(PAGE.w - 14.8)}" height="${r(PAGE.h - 14.8)}" rx="2.8" fill="none" stroke="${BRASS}" stroke-width=".25"/>`);
+<rect x="8.5" y="8.5" width="${PAGE.w - 17}" height="${PAGE.h - 17}" rx="3.4" fill="url(#${id})" stroke="${pal.ship}" stroke-width="1"/><rect x="9.6" y="9.6" width="${r(PAGE.w - 19.2)}" height="${r(PAGE.h - 19.2)}" rx="2.4" fill="none" stroke="${BRASS}" stroke-width=".25"/>`);
   svg.push(variant === 'top' ? headerTop(ship, pal) : headerSide(ship, pal));
   html.push(headerHtml(ship, pal, variant));
 
@@ -253,7 +256,8 @@ export const BOARD_CSS = `${RICH_CSS}
 .bo-slot{position:relative;flex:none;box-sizing:border-box;padding:1.5mm ${SLOT_PAD}mm 0}
 .bo-slot svg{position:absolute;left:0;top:0;width:100%;height:100%}
 .bo-slot div{position:relative}
-.bo-slot .bo-st{font:800 10pt/1.1 'Alegreya SC',serif;letter-spacing:.05em}
+.bo-slot .bo-st{font:800 10pt/1.1 'Alegreya SC',serif;letter-spacing:.05em;white-space:nowrap}
+.bo-nb{white-space:nowrap}
 .bo-slot .bo-sn{font:500 9pt/1.15 'Alegreya Sans',sans-serif;color:${SOFT};margin-top:1.2mm}
 .bo-col{position:absolute;display:flex;flex-direction:column;gap:2.4mm;overflow:hidden}
 .bo-pic{position:relative;flex:0 1 55mm;min-height:0;box-sizing:border-box;border:.3mm solid;border-radius:1.6mm;overflow:hidden}
@@ -270,7 +274,7 @@ export const BOARD_CSS = `${RICH_CSS}
 .bo-tips{margin:.6mm 0 0;padding:0;list-style:none}
 .bo-tips li{position:relative;padding-left:3.2mm;margin-top:.9mm}
 .bo-tips li::before{content:'•';position:absolute;left:.4mm;color:var(--c);font-weight:800}
-.bo-foot{display:flex;justify-content:center;align-items:center;gap:2.2mm;font:500 8.5pt/1.2 'Alegreya Sans',sans-serif;color:${SOFT};white-space:nowrap}
+.bo-foot{display:flex;justify-content:center;align-items:center;gap:2.2mm;font:500 9pt/1.2 'Alegreya Sans',sans-serif;color:${SOFT};white-space:nowrap}
 .bo-foot svg{width:3mm;height:3mm;flex:none;margin-right:-.6mm}
 .bo-foot i{font-style:normal;font-weight:800;color:${BRASS}}
 `;

@@ -5,9 +5,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { data, esc, mm, rich, read, HERE, ROOT, RICH_CSS, fontCss, BASE_CSS, type Ctx, type PageSpec } from './kit';
 import { BRASS, BRASS_DARK, BRASS_LIGHT, DECK_BAND, DECK_KEY, DECK_NAME, DECK_RIM, DECK_TINT, ON_GLASS, SEA, TYPE, cutColor, darken, lighten, type CardType, type DeckCode } from './colors';
-import { A4, BLEED_BOX, CARD, FACE, GRID, backSheet, cutLines, deckSheets, seaSheets, slot, slug, priceOf, type BackKind, type DeckCard, type Item, type SeaCard, type Sheet } from './layout';
+import { A4, BLEED, BLEED_BOX, CARD, FACE, GRID, backSheet, cutLines, deckSheets, seaSheets, slot, slug, priceOf, type BackKind, type DeckCard, type Item, type SeaCard, type Sheet } from './layout';
 import { iconImg, ROSE_URI, typeIconUri } from './icons';
-import { backArtSvg, hasScene, makeArt, plainSvg, portraitSvg, type ArtInfo } from './art';
+import { backArtSvg, hasScene, makeArt, plainSvg, portraitSvg, profiled, type ArtInfo } from './art';
 import { wxSvg } from '../../src/ui/game/art/wx';
 
 export const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/cards.json'), 'utf8'));
@@ -15,7 +15,7 @@ export const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/cards.json')
 export const BACK_VARIANTS: (1 | 2 | 3)[] = [1];
 export interface Mode { glass: 'type' | 'ship'; index: boolean; backs: 1 | 2 | 3 }
 /** What the fitting pass decided for one face: sizes in pt, what stayed on the plate, the plate's height in mm. */
-export interface Fit { name: number; wrap: boolean; tp: number; big: boolean; flavor: boolean; h: number; over: boolean; idx: number; idxW: number; idxBottom: number }
+export interface Fit { name: number; wrap: boolean; tp: number; big: boolean; flavor: boolean; fvBreak: boolean; h: number; over: boolean; idx: number; idxW: number; idxBottom: number }
 
 const G = FACE.glass, MAX_GLASS = CARD.h - G.minTop - G.bottom;
 
@@ -26,7 +26,7 @@ export const CARD_CSS = `${RICH_CSS}
 .cd .fr2{position:absolute;inset:1.55mm;border:.25mm solid ${BRASS_DARK};box-sizing:border-box}
 .cd .bd{position:absolute;left:0;right:0;bottom:0;height:${mm(FACE.band.h)};background:linear-gradient(rgba(0,0,0,0),var(--band) 26%)}
 .cd .bd span{position:absolute;left:0;right:0;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);text-align:center;font:800 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.14em;color:#f6e7c1;white-space:nowrap}
-.cd .bd i{position:absolute;right:4.2mm;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);font:800 6.5pt/1 'Alegreya Sans',sans-serif;font-style:normal;letter-spacing:.04em;color:#f6e7c1}
+.cd .bd i{position:absolute;right:4.4mm;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);font:800 8pt/1 'Alegreya Sans',sans-serif;font-style:normal;letter-spacing:.04em;color:#f6e7c1}
 .gl{position:absolute;left:${mm(G.inset)};right:${mm(G.inset)};bottom:${mm(G.bottom)};border-radius:${mm(G.radius)};box-sizing:border-box;border:.25mm solid var(--rim);padding:1.9mm 2.1mm 1.7mm;display:flex;flex-direction:column;align-items:center;gap:.95mm;text-align:center;color:${ON_GLASS.text}}
 .nm{font:700 14pt/1 'Alegreya SC',serif;color:${ON_GLASS.name};white-space:nowrap;max-width:100%;overflow:hidden;padding-bottom:.2mm}
 .nm.wrap{white-space:normal;text-wrap:balance;line-height:1.02;overflow:visible}
@@ -36,10 +36,11 @@ export const CARD_CSS = `${RICH_CSS}
 .bg{font:800 11pt/1.08 'Alegreya Sans',sans-serif;color:${ON_GLASS.big}}
 .tx{font:500 9pt/1.24 Alegreya,serif;text-wrap:pretty}
 .tx b,.pl b{font-weight:800}
-.pl{display:flex;align-items:baseline;justify-content:center;gap:1.2mm;font:500 8.5pt/1.22 Alegreya,serif}
+.pl{display:flex;align-items:baseline;justify-content:center;gap:1.2mm;font:500 9pt/1.22 Alegreya,serif}
+.pl>div{text-align:left}
 .pl span{flex:none;padding:.35mm 1.2mm .6mm;border-radius:.6mm;background:#1d1d1f;border:.2mm solid rgba(242,214,138,.7);color:#f2d68a;font:800 6pt/1 'Alegreya Sans',sans-serif;letter-spacing:.14em}
 .fv{font:italic 500 7pt/1.18 Alegreya,serif;color:${ON_GLASS.text};border-top:.2mm solid rgba(226,183,92,.55);padding-top:.55mm;width:100%;text-wrap:balance}
-.ix{position:absolute;left:${mm(FACE.index.x)};top:${mm(FACE.index.y)};max-width:${mm(FACE.index.maxW)};box-sizing:border-box;padding:.6mm 1.1mm .8mm;border-radius:1.5mm;background:rgba(14,11,9,${FACE.index.alpha});color:${ON_GLASS.cream};font:700 7pt/1.08 'Alegreya Sans',sans-serif;text-align:left}
+.ix{white-space:normal;position:absolute;left:${mm(FACE.index.x)};top:${mm(FACE.index.y)};max-width:${mm(FACE.index.maxW)};box-sizing:border-box;padding:.6mm 1.1mm .8mm;border-radius:1.5mm;background:rgba(14,11,9,${FACE.index.alpha});color:${ON_GLASS.cream};font:700 7pt/1.08 'Alegreya Sans',sans-serif;text-align:left}
 .lg{position:absolute;left:50%;top:5.2mm;transform:translateX(-50%);padding:.7mm 1.8mm .95mm;background:linear-gradient(${BRASS_LIGHT},${BRASS});border:.25mm solid ${BRASS_DARK};border-radius:.8mm;font:500 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.04em;color:#2a180c;white-space:nowrap}
 .lg b{font-weight:800;letter-spacing:.12em}
 /* the spare card: a parchment plate to write on */
@@ -50,16 +51,16 @@ export const CARD_CSS = `${RICH_CSS}
 .cd.ht{background:linear-gradient(#faf2de,#e6d3a8);color:#33240f}
 .ht .in{position:absolute;inset:4.6mm 4.4mm 4.2mm;display:flex;flex-direction:column;gap:1.15mm}
 .ht h3{margin:0;text-align:center;font:700 11pt/1 'Alegreya SC',serif;color:#2a180c}
-.ht .ld{text-align:center;font:500 7.2pt/1.16 Alegreya,serif;color:#5a4628}
+.ht .ld{text-align:center;font:500 7.8pt/1.14 Alegreya,serif;color:#5a4628}
 .ht .ln{height:.2mm;background:#9b7a45;flex:none}
 .ht .rw{display:flex;align-items:center;gap:1.6mm}
-.ht .rw img{flex:none;width:6.4mm;height:6.4mm;position:static}
+.ht .rw img{flex:none;width:8.4mm;height:8.7mm;margin:-.9mm -.6mm -1.2mm -.9mm;position:static}
 .ht .rw div{display:flex;flex-direction:column;gap:.35mm}
 .ht .rw b{display:block;font:800 7pt/1 'Alegreya Sans',sans-serif;letter-spacing:.12em}
-.ht .rw span{display:block;font:500 7.4pt/1.02 Alegreya,serif}
+.ht .rw span{display:block;font:500 7.8pt/1.02 Alegreya,serif}
 .ht.sea p{font-size:9pt;line-height:1.2}
 .ht.sea .in{gap:1.8mm}
-.ht p{margin:0;font:500 7.3pt/1.17 Alegreya,serif}
+.ht p{margin:0;font:500 8pt/1.17 Alegreya,serif}
 .ht p b{font-weight:800}
 /* backs */
 .bk{position:absolute;width:${mm(CARD.w)};height:${mm(CARD.h)};overflow:hidden;background:var(--ground)}
@@ -69,8 +70,8 @@ export const CARD_CSS = `${RICH_CSS}
 .bk .cr{position:absolute;left:50%;top:57.4mm;width:18.9mm;height:18.9mm;margin-left:-9.45mm}
 .bk .bn{position:absolute;left:8mm;right:8mm;top:76.6mm;text-align:center;font:700 9.6pt/1.05 'Alegreya SC',serif;color:#fff2d4;letter-spacing:.04em}
 .bk .bl{position:absolute;left:50%;top:76.2mm;transform:translateX(-50%);padding:.7mm 2.4mm .95mm;background:linear-gradient(${BRASS_LIGHT},${BRASS});border:.25mm solid ${BRASS_DARK};border-radius:.8mm;font:800 7pt/1 'Alegreya Sans',sans-serif;letter-spacing:.16em;color:#2a180c}
-.bk.nt{background:linear-gradient(#f4e8c8,#e2cfa0)}
-.bk.nt .tt{top:26mm;color:#5a3c14}
+.bk.nt .pp{position:absolute;inset:10mm;border-radius:5mm;background:linear-gradient(#f4e8c8,#e2cfa0)}
+.bk.nt .tt{top:26mm;left:10mm;right:10mm;color:#5a3c14;font-size:10.5pt;letter-spacing:.08em}
 .bk.nt .rs{position:absolute;left:50%;top:36mm;width:22mm;height:22mm;margin-left:-11mm}
 /* sheet furniture */
 .sh-bleed{position:absolute;left:${mm(BLEED_BOX.x)};top:${mm(BLEED_BOX.y)};width:${mm(BLEED_BOX.w)};height:${mm(BLEED_BOX.h)}}
@@ -107,7 +108,7 @@ export function faceSpec(item: Extract<Item, { kind: 'card' | 'legend' | 'sea' }
 export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string, pos = ''): string {
   const [rule, plan] = splitPlan(s.text), tp = fit?.tp ?? 9;
   const big = s.big && (!fit || fit.big) ? `<div class="bg">${esc(s.big)}</div>` : '';
-  const flavor = s.flavor && (!fit || fit.flavor) ? `<div class="fv">${esc(s.flavor)}</div>` : '';
+  const flavor = s.flavor && (!fit || fit.flavor) ? `<div class="fv">${fit?.fvBreak ? esc(s.flavor).replace(/([.!?…]) /, '$1<br>') : esc(s.flavor)}</div>` : '';
   const P = FACE.price, px = CARD.w - P.right - P.d;
   let price = '', small = '';
   if (s.price.powder) { price += iconImg(ctx, `coin-${s.price.powder}`, px, P.y); }
@@ -117,13 +118,13 @@ export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string,
     if (s.price.powder) small = iconImg(ctx, `coin-${s.price.powder}`, x, y, I.priceD, 'ixp');
     else if (s.price.soul) small = iconImg(ctx, `flask-${s.price.soul}`, x, y - .4, I.priceD, 'ixp');
   }
-  const idx = s.index && s.big ? `<div class="ix"${fit ? ` style="font-size:${fit.idx}pt"` : ''}>${esc(s.big)}</div>` : '';
+  const idx = s.index && s.big ? `<div class="ix"${fit ? ` style="font-size:${fit.idx}pt;width:${mm(fit.idxW)}"` : ''}>${esc(s.big)}</div>` : '';
   const lg = s.legend ? `<div class="lg"><b>${esc(TXT.legendPlate[0])}</b> · ${esc(TXT.legendPlate[1])}</div>` : '';
   return `<div class="cd" data-key="${esc(s.key)}" data-index="${s.index ? 1 : 0}" style="${pos}--frame:${s.frame};--band:${s.band};--rim:${s.rim}">`
     + (artUrl ? `<img class="art" src="${artUrl}" alt="">` : '')
     + `<div class="bd"><span>${esc(s.bandText)}</span>${s.copies > 1 ? `<i>×${s.copies}</i>` : ''}</div>`
     + `<div class="gl"${fit ? ` style="height:${mm(fit.h)}"` : ''}><div class="nm${fit?.wrap ? ' wrap' : ''}" style="font-size:${fit?.name ?? nameStart(s.name)}pt">${esc(s.name)}</div><div class="vr"></div>${s.ribbon}${big}`
-    + `<div class="tx" style="font-size:${tp}pt">${rich(rule, true)}</div>${plan ? `<div class="pl" style="font-size:${tp - .5}pt"><span>${esc(TXT.plan)}</span><div>${rich(plan, true)}</div></div>` : ''}${flavor}</div>`
+    + `<div class="tx" style="font-size:${tp}pt">${rich(rule, true)}</div>${plan ? `<div class="pl" style="font-size:${tp}pt"><span>${esc(TXT.plan)}</span><div>${rich(plan, true)}</div></div>` : ''}${flavor}</div>`
     + `<div class="fr"></div>${s.legend ? '<div class="fr2"></div>' : ''}${iconImg(ctx, s.medal, FACE.medal.x, FACE.medal.y)}${small}${idx}${price}${lg}</div>`;
 }
 
@@ -143,20 +144,29 @@ export async function fitFaces(ctx: Ctx, specs: FaceSpec[]): Promise<Map<string,
       for (; ;) { nm.style.fontSize = name + 'pt'; if (nm.scrollWidth <= nm.clientWidth + .5) break; if (name <= 11) { wrap = true; nm.classList.add('wrap'); break; } name = Math.max(11, name - (name > 12 ? 1 : .5)); }
       // with the fan index the big result leaves the plate first (it stays in the index), else the flavour line
       const index = cd.dataset.index === '1';
-      const steps: [number, boolean, boolean][] = index ? [[9, true, true], [8.5, true, true], [8, true, true], [8, false, true], [8, false, false], [7.5, false, false]] : [[9, true, true], [8.5, true, true], [8, true, true], [8, true, false], [8, false, false], [7.5, false, false]];
+      const steps: [number, boolean, boolean][] = index ? [[9, true, true], [8.5, true, true], [8, true, true], [8, false, true], [8, false, false], [7.5, false, false]] : [[9, true, true], [8.5, true, true], [8, true, true], [8, true, false], [7.5, true, false], [7.5, false, false]];
       let st = steps[0];
       for (st of steps) {
-        tx.style.fontSize = st[0] + 'pt'; if (pl) pl.style.fontSize = st[0] - .5 + 'pt';
+        tx.style.fontSize = st[0] + 'pt'; if (pl) pl.style.fontSize = st[0] + 'pt';
         if (bg) bg.style.display = st[1] ? '' : 'none'; if (fv) fv.style.display = st[2] ? '' : 'none';
         if (gl.getBoundingClientRect().height <= maxH * MM + .5) break;
+      }
+      // a two-sentence flavour line breaks between the sentences when that takes no more lines
+      let fvBreak = false;
+      if (fv && st[2] && /[.!?…] /.test(fv.textContent || '')) {
+        const h0 = fv.getBoundingClientRect().height, old = fv.innerHTML;
+        fv.innerHTML = old.replace(/([.!?…]) /, '$1<br>');
+        if (fv.getBoundingClientRect().height <= h0 + .5) fvBreak = true; else fv.innerHTML = old;
       }
       let idx = 7, idxW = 0, idxBottom = 0;
       if (ix) {
         const top = cd.getBoundingClientRect().top, m = () => { const r = ix.getBoundingClientRect(); idxW = r.width / MM; idxBottom = (r.bottom - top) / MM; };
-        m(); if (idxBottom > I.maxBottom || idxW > I.maxW + .01) { idx = 6.5; ix.style.fontSize = '6.5pt'; m(); }
+        // the plate is as wide as its text (a wrapped block would keep the full 16 mm)
+        const snug = () => { ix.style.width = ''; const rg = document.createRange(); rg.selectNodeContents(ix); const cs = getComputedStyle(ix); ix.style.width = Math.ceil(rg.getBoundingClientRect().width + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 1) + 'px'; };
+        snug(); m(); if (idxBottom > I.maxBottom || idxW > I.maxW + .01) { idx = 6.5; ix.style.fontSize = '6.5pt'; snug(); m(); }
       }
       const h = gl.getBoundingClientRect().height / MM;
-      out[cd.dataset.key!] = { name, wrap, tp: st[0], big: !!bg && st[1], flavor: !!fv && st[2], h: Math.ceil(h * 20) / 20, over: h > maxH + .2, idx, idxW, idxBottom };
+      out[cd.dataset.key!] = { name, wrap, tp: st[0], big: !!bg && st[1], flavor: !!fv && st[2], fvBreak, h: Math.ceil(h * 20) / 20, over: h > maxH + .2, idx, idxW, idxBottom };
     }
     return out;
   }, { maxH: MAX_GLASS, I: FACE.index });
@@ -171,7 +181,7 @@ function legendTempSvg(deck: DeckCode): string {
   const uri = 'data:image/svg+xml;base64,' + fs.readFileSync(path.join(ROOT, `src/ui/game/ship-window/art/${ship}-legend.svg`)).toString('base64');
   const c = DECK_BAND[deck];
   return `<svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity="0"/><stop offset="1" stop-color="${darken(c, .45)}"/></linearGradient><linearGradient id="lb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${darken(c, .45)}"/><stop offset="1" stop-color="${darken(c, .7)}"/></linearGradient></defs>`
-    + `<rect width="200" height="280" fill="url(#lb)"/><image href="${uri}" x="0" y="0" width="200" height="132" preserveAspectRatio="xMidYMid slice"/><rect y="96" width="200" height="38" fill="url(#lt)"/><rect y="133" width="200" height="147" fill="url(#lb)"/></svg>`;
+    + `<rect width="200" height="280" fill="url(#lb)"/><image href="${uri}" x="0" y="0" width="200" height="166" preserveAspectRatio="xMidYMid slice"/><rect y="126" width="200" height="41" fill="url(#lt)"/><rect y="166" width="200" height="114" fill="url(#lb)"/></svg>`;
 }
 function seaTempSvg(key: string): string {
   const icon = wxSvg(key, 124, 105).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" x="38" y="14" ');
@@ -185,7 +195,7 @@ function seaBackSvg(): string {
     + `<image href="${ROSE_URI}" x="40" y="46" width="120" height="120" opacity=".92"/></svg>`;
 }
 /** A soft fade of the back's picture into the deck colour towards the edges: no line near the edge, a shifted back shows no white. */
-const fadeEdges = (svg: string, ground: string) => svg.replace(/<\/svg>\s*$/, `<defs><filter id="fe" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter><mask id="fm"><rect x="-40" y="-40" width="280" height="360" fill="#fff"/><rect x="17" y="17" width="166" height="246" rx="16" fill="#000" filter="url(#fe)"/></mask></defs><rect x="-40" y="-40" width="280" height="360" fill="${ground}" mask="url(#fm)"/></svg>`).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+const fadeEdges = (svg: string, ground: string) => svg.replace(/<\/svg>\s*$/, `<defs><filter id="fe" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter><mask id="fm"><rect x="-40" y="-40" width="280" height="360" fill="#fff"/><rect x="33" y="33" width="134" height="214" rx="22" fill="#000" filter="url(#fe)"/></mask></defs><rect x="-40" y="-40" width="280" height="360" fill="${ground}" mask="url(#fm)"/></svg>`).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
 
 export interface CardKit { mode: Mode; fits: Map<string, Fit>; art: Map<string, ArtInfo>; specs: Map<string, FaceSpec>; backs: Map<string, string>; crest: Map<string, string> }
 
@@ -218,19 +228,22 @@ export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Pr
 // the mock-up's dark veils at the top and bottom of a back (under the title and the name), baked into the picture
 const shadeBack = (svg: string) => svg.replace(/<\/svg>\s*$/, `<defs><linearGradient id="vt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient><linearGradient id="vb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".62"/><stop offset="1" stop-color="#000" stop-opacity=".75"/></linearGradient></defs><rect width="200" height="64" fill="url(#vt)"/><rect y="167" width="200" height="113" fill="url(#vb)"/></svg>`);
 
+const HOWTO_FRAME = '#5a3c14';
 function howtoHtml(ctx: Ctx, deck: DeckCode | 'sea', mode: Mode, pos: string): string {
-  const frame = '#5a3c14';
+  const frame = HOWTO_FRAME;
   if (deck === 'sea') {
     const h = TXT.howtoSea;
     return `<div class="cd ht sea" style="${pos}--frame:${frame}"><div class="in"><h3>${esc(h.title)}</h3><div class="ln"></div><div class="rw"><img src="${ctx.icon('medal-sea')}" style="width:9.6mm;height:9.95mm"><span style="font:800 7.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.14em">${esc(TXT.seaBand)}</span></div>${h.lines.map((l: string) => `<p>${l}</p>`).join('')}</div><div class="fr"></div></div>`;
   }
   const h = TXT.howto;
-  const rows = (Object.keys(TYPE) as CardType[]).map(t => `<div class="rw"><img src="${typeIconUri(t)}" alt=""><div><b style="color:${TYPE[t].td}">${t}</b><span>${esc(TYPE[t].when)}</span></div></div>`).join('');
-  return `<div class="cd ht" style="${pos}--frame:${frame}"><div class="in"><h3>${esc(h.title)}</h3><div class="ld">${esc(mode.index ? h.leadIndex : h.leadPlain)}</div><div class="ln"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:.9mm 1.2mm">${rows}</div><div class="ln"></div>${h.lines.map((l: string) => `<p>${rich(l)}</p>`).join('')}</div><div class="fr"></div></div>`;
+  const rows = (['ЗАРЯД', 'ПРИКАЗ', 'РЕМОНТ', 'РЕАКЦИЯ'] as CardType[]).map(t => `<div class="rw"><img src="${ctx.icon('medal-' + TYPE[t].key)}" alt=""><div><b style="color:${TYPE[t].td}">${t}</b><span>${esc(TYPE[t].when)}</span></div></div>`).join('');
+  const pic = (name: string, h: number) => `<img src="${ctx.icon(name)}" alt="" style="display:inline-block;height:${h}mm;width:auto;vertical-align:-${(h * .32).toFixed(2)}mm;margin:-1mm .2mm -1mm 0">`;
+  const line = (l: string) => rich(l).replace('{coin}', pic('coin-1', 5)).replace('{flask}', pic('flask-2', 5.4));
+  return `<div class="cd ht" style="${pos}--frame:${frame}"><div class="in"><h3>${esc(h.title)}</h3><div class="ld">${esc(mode.index ? h.leadIndex : h.leadPlain)}</div><div class="ln"></div><div style="display:grid;grid-template-columns:1fr 1.18fr;gap:1.3mm 1mm;align-items:center">${rows}</div><div class="ln"></div>${h.lines.map((l: string) => `<p>${line(l)}</p>`).join('')}</div><div class="fr"></div></div>`;
 }
 function spareHtml(deck: DeckCode, pos: string): string {
   const c = DECK_BAND[deck];
-  return `<div class="cd" style="${pos}--frame:${c};--band:${c};background:linear-gradient(${lighten(c, .28)},${darken(c, .25)})"><div class="bd"><span>${esc(DECK_NAME[deck].toUpperCase())}</span></div><div class="gl paper" style="height:38mm"><div class="sp">${esc(TXT.spare)}</div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div></div><div class="fr"></div></div>`;
+  return `<div class="cd" style="${pos}--frame:${c};--band:${c};background:linear-gradient(${lighten(c, .28)},${darken(c, .25)})"><div class="bd"><span>${esc(DECK_NAME[deck].toUpperCase())}</span></div><div class="gl paper" style="height:38mm"><div class="sp">${esc(TXT.spare)}</div><div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div></div><svg style="position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}" viewBox="0 0 ${CARD.w} ${CARD.h}"><circle cx="${FACE.medal.x + 4.6}" cy="${FACE.medal.y + 4.6}" r="4.6" fill="#f4e8c8" stroke="#3a220e" stroke-width=".35"/><circle cx="${CARD.w - FACE.price.right - 4.6}" cy="${FACE.price.y + 4.6}" r="4.6" fill="#f4e8c8" stroke="#3a220e" stroke-width=".35" stroke-dasharray="1 .8"/></svg><div class="fr"></div></div>`;
 }
 
 export function itemFace(ctx: Ctx, kit: CardKit, it: Item, pos: string): string {
@@ -242,11 +255,12 @@ export function itemFace(ctx: Ctx, kit: CardKit, it: Item, pos: string): string 
     default: return `<div class="sh-blank" style="${pos}"></div>`;
   }
 }
-export function backHtml(kit: CardKit, b: BackKind, pos: string): string {
+/** ground — the colour of the sheet's backs: the reference card's back keeps it along the edge, so a shifted back side shows no light strip on a neighbour. */
+export function backHtml(kit: CardKit, b: BackKind, pos: string, ground = '#3a2c1c'): string {
   if (b.back === 'none') return `<div class="sh-blank" style="${pos}"></div>`;
-  if (b.back === 'neutral') return `<div class="bk nt" style="${pos}"><div class="tt">${esc(TXT.title)}</div><img class="rs" src="${ROSE_URI}" alt=""></div>`;
-  const k = b.back === 'sea' ? 'sea' : b.deck, ground = b.back === 'sea' ? SEA.band : DECK_BAND[b.deck], name = b.back === 'sea' ? TXT.seaBackName : DECK_NAME[b.deck];
-  return `<div class="bk" style="${pos}--ground:${ground}"><img class="art" src="${kit.backs.get(k)}" alt=""><div class="tt">${esc(TXT.title)}</div><div class="tr"></div><img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:55.3mm;width:18.9mm;height:19.32mm;margin-left:-9.45mm">`
+  if (b.back === 'neutral') return `<div class="bk nt" style="${pos}--ground:${ground}"><div class="pp"></div><div class="tt">${esc(TXT.title)}</div><img class="rs" src="${ROSE_URI}" alt=""></div>`;
+  const k = b.back === 'sea' ? 'sea' : b.deck, name = b.back === 'sea' ? TXT.seaBackName : DECK_NAME[b.deck];
+  return `<div class="bk" style="${pos}--ground:${profiled(b.back === 'sea' ? SEA.band : DECK_BAND[b.deck])}"><img class="art" src="${kit.backs.get(k)}" alt=""><div class="tt">${esc(TXT.title)}</div><div class="tr"></div><img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:55.3mm;width:18.9mm;height:19.32mm;margin-left:-9.45mm">`
     + (b.back === 'deck' && b.legend ? `<div class="bl">${esc(TXT.legendBack)}</div>` : `<div class="bn">${esc(name)}</div>`) + `</div>`;
 }
 
@@ -260,16 +274,21 @@ export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: 
   const col = sheetColor(sh), { inner, marks } = cutLines();
   const ln = (l: { x1: number; y1: number; x2: number; y2: number }, c: string, w: number) => `<path d="M${l.x1} ${l.y1}L${l.x2} ${l.y2}" stroke="${c}" stroke-width="${w}"/>`;
   const rx = A4.w - GRID.x0 - 50;
-  return { html: `<div class="sh-bleed" style="background:${col}"></div>${sh.items.map((it, i) => itemFace(ctx, kitOf(i), it, pos(i))).join('')}`
+  // a Legend (brass) or a reference card (brown) on the block's outer edge: the bleed there takes its frame colour
+  const own = (it: Item) => it.kind === 'legend' ? BRASS : it.kind === 'howto' || it.kind === 'howto-sea' ? HOWTO_FRAME : it.kind === 'empty' ? '#ffffff' : null;
+  const patches = sh.items.map((it, i) => { const c = own(it); if (!c) return ''; const s = slot(i), l = s.col === 0 ? BLEED : 0, r = s.col === GRID.cols - 1 ? BLEED : 0, t = s.row === 0 ? BLEED : 0, b = s.row === GRID.rows - 1 ? BLEED : 0;
+    return l + r + t + b ? `<div style="position:absolute;left:${mm(s.x - l)};top:${mm(s.y - t)};width:${mm(s.w + l + r)};height:${mm(s.h + t + b)};background:${c}"></div>` : ''; }).join('');
+  return { html: `<div class="sh-bleed" style="background:${col}"></div>${patches}${sh.items.map((it, i) => itemFace(ctx, kitOf(i), it, pos(i))).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${inner.map(l => ln(l, cutColor(col), .25)).join('')}${marks.map(l => ln(l, '#808080', .3)).join('')}`
     + `<path d="M${rx} 10.6H${rx + 50}M${rx} 9.4V11.8M${rx + 50} 9.4V11.8${[10, 20, 30, 40].map(d => `M${rx + d} 10V11.2`).join('')}" stroke="#555" stroke-width=".25" fill="none"/>${arrowUp(GRID.x0 + 1.2, 1.6)}</svg>`
     + `<div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetFace} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div><div class="sh-rul" style="left:${mm(rx)}">${esc(TXT.ruler)}</div>` };
 }
 /** The sheet of backs behind a face sheet (mirrored columns); dx, dy shift the whole print, seen from the back. No cut lines: cut from the face. */
 export function backSheetPage(kit: CardKit, sh: Sheet, dx = 0, dy = 0, label = '', kitOf: (i: number) => CardKit = () => kit): PageSpec {
-  const col = sheetColor(sh), b = BLEED_BOX, L = 5, o = 1;
+  // the same colour as the edge of the back pictures in the JPEG (after the print profile): no seam between a card and the bleed
+  const col = profiled(sheetColor(sh)), b = BLEED_BOX, L = 5, o = 1;
   const corner = (x: number, y: number, sx: number, sy: number) => `<path d="M${x + sx * o} ${y}h${sx * L}M${x} ${y + sy * o}v${sy * L}" stroke="#808080" stroke-width=".3" fill="none"/>`;
-  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})"><div class="sh-bleed" style="background:${col}"></div>${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i))).join('')}`
+  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})"><div class="sh-bleed" style="background:${col}"></div>${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i), col)).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${corner(b.x, b.y, -1, -1)}${corner(b.x + b.w, b.y, 1, -1)}${corner(b.x, b.y + b.h, -1, 1)}${corner(b.x + b.w, b.y + b.h, 1, 1)}</svg></div>`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${arrowUp(GRID.x0 + 1.2, 1.6)}</svg><div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetBack} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div>` };
 }
