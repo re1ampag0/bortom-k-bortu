@@ -246,7 +246,7 @@ function barrel(u, L, o = {}) {
   out += hoops(u, L, G, 'iron', at, R, s);
   // the head: the chime (stave ends) round a recessed head, or the open mouth
   const hv = mul(n, Rs), hwv = mul(a, k * Rs), dn = mul(a, -1), dep = 1.5 * s;
-  if (o.open) out += mouth(u, L, E, hv, hwv, mul(dn, s), wood, { inner: .88, depth: lying ? Rs * 2 : (kind === 'powder' ? 3.2 : 4.4) * s, fill: lying ? 'dark' : kind, seed: seedOf(o, 3) }) + rimTicks(L, E, hv, hwv, .88, R, wood);
+  if (o.open) out += mouth(u, L, E, hv, hwv, mul(dn, s), wood, { inner: .88, depth: lying ? Rs * 2 : (kind === 'powder' ? 1.7 : 2.1) * s, fill: lying ? 'dark' : kind, seed: seedOf(o, 3) }) + rimTicks(L, E, hv, hwv, .88, R, wood);
   else {
     const cid = nid('bh', u), hc = add(E, mul(dn, dep)), vi = mul(hv, .88), wi = mul(hwv, .88), n3 = [a[0] * Math.sqrt(1 - k * k), -a[1] * Math.sqrt(1 - k * k), k];
     const hg = mat(wood, L, { form: 'plane', x1: hc[0] - Rs, y1: hc[1] - Rs * Math.max(k, .3), x2: hc[0] + Rs, y2: hc[1] + Rs * Math.max(k, .3), n: n3, u }), wid = nid('bi', u), sid = nid('bs', u);
@@ -358,14 +358,14 @@ function cannon(u, L, o = {}) {
   // ring bolts, the breeching and the tackles
   const ring = (X, Y, r = 1.15) => { const c = C3(X, Y, ZN - .2), v = F.v(r, 0), w = F.v(0, r * 1.15); return tube(u, L, 'iron', ellD(add(c, [0, r * s * .9]), v, w), .3 * s, c) + rivet(L, c, .5 * s); };
   out += ring(-1, 9.6) + ring(11.6, 8.6, .95) + ring(-20, 5.2, .95);
-  if (o.breech !== false) { const slack = 1 - clamp(o.recoil || 0), side = F.p((o.sideX != null ? o.sideX : 22), -10.5), nk = B(-29), rr = .95 * s, rg = C3(-1, 8.4, ZN - .4);
+  if (o.breech !== false) { const slack = 1 - clamp(o.recoil || 0), side = F.p((o.sideX != null ? o.sideX : 22), -10.5), nk = B(-29), rr = .74 * s, rg = C3(-1, 8.4, ZN - .4);
     const up = [add(nk, F.v(-.4, -1.3)), add(nk, F.v(1.2, .9)), mixP(nk, rg, .45), add(mixP(nk, rg, .8), F.v(-.6, .5 * slack)), rg];
     const fw = [rg, add(mixP(rg, side, .33), F.v(0, (2.6 * slack + .2))), add(mixP(rg, side, .7), F.v(0, (2 * slack + .1))), side];
     out += rope(u, L, up, { r: rr, seed: seedOf(o, 6) + 3 }) + rope(u, L, fw, { r: rr, seed: seedOf(o, 6) + 4 }); }
   if (o.tackle !== false) { const rpR = L.ramp('rope', ...C3(0, 6, ZN));
     const pair = (a, b, sag) => { const m = add(mixP(a, b, .5), [0, sag * s]), nn = unit([-(b[1] - a[1]), b[0] - a[0]]); let t = '';
-      for (const e of [-.42, .42]) t += `<path d="M${P2(add(a, mul(nn, e * s)))}Q${P2(add(m, mul(nn, e * s)))} ${P2(add(b, mul(nn, e * s)))}" stroke="${rpR.outline}" stroke-width="${f(.62 * s)}" fill="none"/><path d="M${P2(add(a, mul(nn, e * s)))}Q${P2(add(m, mul(nn, e * s)))} ${P2(add(b, mul(nn, e * s)))}" stroke="${e < 0 ? rpR.lit : rpR.half}" stroke-width="${f(.36 * s)}" fill="none"/>`;
-      const blk = p => { const g = mat('oak', L, { form: 'sphere', x1: p[0], y1: p[1], r: 1.5 * s, u }), an = deg(Math.atan2(b[1] - a[1], b[0] - a[0])); return `<defs>${g.defs}</defs><ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(1.5 * s)}" ry="${f(.95 * s)}" transform="rotate(${f(an)} ${f(p[0])} ${f(p[1])})" fill="${g.fill}" stroke="${g.ramp.outline}" stroke-width=".35"/>`; };
+      for (const e of [-.34, .34]) t += `<path d="M${P2(add(a, mul(nn, e * s)))}Q${P2(add(m, mul(nn, e * s)))} ${P2(add(b, mul(nn, e * s)))}" stroke="${rpR.outline}" stroke-width="${f(.5 * s)}" fill="none"/><path d="M${P2(add(a, mul(nn, e * s)))}Q${P2(add(m, mul(nn, e * s)))} ${P2(add(b, mul(nn, e * s)))}" stroke="${e < 0 ? rpR.half : rpR.core}" stroke-width="${f(.26 * s)}" fill="none"/>`;
+      const blk = p => { const g = mat('oak', L, { form: 'sphere', x1: p[0], y1: p[1], r: 1.2 * s, u }), an = deg(Math.atan2(b[1] - a[1], b[0] - a[0])); return `<defs>${g.defs}</defs><ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(1.2 * s)}" ry="${f(.8 * s)}" transform="rotate(${f(an)} ${f(p[0])} ${f(p[1])})" fill="${g.fill}" stroke="${g.ramp.outline}" stroke-width=".35"/>`; };
       return t + blk(mixP(a, b, .16)) + blk(mixP(a, b, .84)); };
     out += pair(C3(11.6, 7.6, ZN - .4), F.p((o.sideX != null ? o.sideX : 22), -13.5), .6) + pair(C3(-20, 4.4, ZN - .4), F.p(-34, -.9), .5); }
   return out;
@@ -399,11 +399,11 @@ function gunPort(u, L, o = {}) {
   out += linGrad(hid, c[0] + la.ux * w * .4 * s, hole[2][1], c[0] - la.ux * w * .2 * s, hole[0][1], [[0, dark], [.55, mix(dark, deep, .6)], [1, deep]]) + '</defs>';
   out += `<path d="${poly(hole)}" fill="url(#${hid})"/>`;
   { const sill = [F.p(-w / 2, 0), F.p(w / 2, 0), F.p(w / 2 - th * .3, -th * .75), F.p(-w / 2 + th, -th * .75)], jamb = [F.p(-w / 2, 0), F.p(-w / 2 + th, -th * .75), F.p(-w / 2 + th, -h), F.p(-w / 2, -h)];
-    out += `<g clip-path="url(#${cid})">` + shadeBox(u, [{ pts: jamb, n: F.n([.75, 0, .66]) }, { pts: sill, n: F.n([0, .8, .6]) }], L, 'paint-red', { seed: seedOf(o, 8), outline: .3 })
+    out += `<g clip-path="url(#${cid})">` + shadeBox(u, [{ pts: jamb, n: F.n([.75, 0, .66]) }, { pts: sill, n: F.n([0, .8, .6]) }], L, o.wood || 'oak', { seed: seedOf(o, 8), outline: .3 })
       + `<path d="${poly([F.p(-w / 2, -h), F.p(w / 2, -h), F.p(w / 2, -h * (1 - .3 * open) - 1), F.p(-w / 2, -h * (1 - .3 * open) - 1)])}" fill="${dark}" opacity=".6"/></g>`; }
   out += `<path d="${poly(hole)}" fill="none" stroke="${rp.outline}" stroke-width=".6" stroke-linejoin="round"/><path d="M${P2(F.p(-w / 2 - .5, .5))}L${P2(F.p(w / 2 + .5, .5))}" stroke="${rp.lit}" stroke-width=".4" opacity=".5"/>`;
   // the lid
-  const ph = rad(open * 100), kv = o.below != null ? o.below : .35, yf = -h + h * Math.cos(ph) - kv * h * Math.sin(ph), wf = w / 2 * (1 + .1 * Math.sin(ph)), upSide = yf < -h - .2;
+  const ph = rad(open * 100), kv = o.below != null ? o.below : .55, yf = -h + h * Math.cos(ph) - kv * h * Math.sin(ph), wf = w / 2 * (1 + .1 * Math.sin(ph)), upSide = yf < -h - .2;
   const lid = [[-w / 2, -h], [w / 2, -h], [wf, yf], [-wf, yf]], nrm = upSide ? [0, -Math.sin(ph), -Math.cos(ph)] : [0, Math.sin(ph), Math.cos(ph)];
   if (open > .02 && Math.abs(yf + h) > .6 || open <= .02) {
     const face = F.face(lid, nrm, { kind: upSide ? 'paint-red' : kind, grain: [1, 0] }), ed = 1.3 * (upSide ? -1 : 1) * (open > .02 ? 1 : 0);
@@ -435,8 +435,8 @@ function shotPile(u, L, o = {}) {
   const la = L.at(F.x, F.y - r * n), sid = nid('sp', u), W = n * 2 * r;
   let out = seat(u, L, o, F.x, F.y + r * k * (n - 1) * .2, W * 1.08, { ry: Math.max(1, r * k * n * .8) });
   out += `<defs><radialGradient id="${sid}"><stop offset="0" stop-color="${scale(L.shadowTint, .55)}" stop-opacity=".75"/><stop offset=".6" stop-color="${scale(L.shadowTint, .55)}" stop-opacity=".42"/><stop offset="1" stop-color="${scale(L.shadowTint, .55)}" stop-opacity="0"/></radialGradient></defs>`;
-  const gar = o.garland !== false && n > 1, gc = [F.x, F.y - r * .5 - k * r * (n - 1)], gv = [W * .5 + r * .25, 0], gw = [0, (W * .5 + r * .25) * k + r * .1];
-  if (gar) out += tube(u, L, 'rope', halfD(gc, gv, mul(gw, -1)), .8 * s, gc, { cap: 'butt' });
+  const gar = o.garland !== false && n > 1, gc = [F.x, F.y - r * .5 - k * r * (n - 1)], gv = [W * .5 + r * .1, 0], gw = [0, (W * .5 + r * .1) * k + r * .05];
+  if (gar) out += tube(u, L, 'rope', halfD(gc, gv, mul(gw, -1)), .62 * s, gc, { cap: 'butt' });
   const balls = [];
   for (let l = 0; l < n; l++) { const m = n - l; for (let j = m - 1; j >= 0; j--) for (let i = 0; i < m; i++)
     balls.push([F.x + (i - (m - 1) / 2) * 2 * r + (R() - .5) * r * .06, F.y - r - l * r * 1.42 - (j + l * .5) * 2 * r * k * .9, l, j]); }
@@ -447,7 +447,7 @@ function shotPile(u, L, o = {}) {
     void l;
   }
   if (gar) { const pl = []; for (let i = 0; i <= 20; i++) { const t = Math.PI * i / 20; pl.push([gc[0] - gv[0] * Math.cos(t), gc[1] + gw[1] * Math.sin(t)]); }
-    out += tube(u, L, 'rope', halfD(gc, gv, gw), .8 * s, add(gc, gw), { cap: 'butt' }) + layMarks(L, pl, .8 * s, R, add(gc, gw)); }
+    out += tube(u, L, 'rope', halfD(gc, gv, gw), .62 * s, add(gc, gw), { cap: 'butt' }) + layMarks(L, pl, .62 * s, R, add(gc, gw)); }
   return out;
 }
 
@@ -459,7 +459,7 @@ function shotPile(u, L, o = {}) {
 function rope(u, L, pts, o = {}) {
   const r = o.r || 1, R = rng(seedOf(o, 31)), pl = dense(pts, 8), mid = pl[pl.length >> 1], d = smooth(pts);
   let out = tube(u, L, 'rope', d, r, mid, { cap: o.cap || 'butt' }) + layMarks(L, pl, r, R, mid);
-  if (o.whip) for (const [p, q] of [[pts[0], pl[1]], [pts[pts.length - 1], pl[pl.length - 2]]]) { const t = unit(sub(q, p)), a = add(p, mul(t, r * .3)), b = add(p, mul(t, r * 1.5)); out += `<path d="M${P2(a)}L${P2(b)}" stroke="${L.ramp('leather', p[0], p[1]).shadow}" stroke-width="${f(r * 2.2)}"/>`; }
+  if (o.whip) for (const [p, q] of [[pts[0], pl[1]], [pts[pts.length - 1], pl[pl.length - 2]]]) { const t = unit(sub(q, p)), a = add(p, mul(t, r * .5)), b = add(p, mul(t, r * 1.3)); out += `<path d="M${P2(a)}L${P2(b)}" stroke="${L.ramp('leather', p[0], p[1]).core}" stroke-width="${f(r * 2.05)}"/>`; }
   return out;
 }
 /**
@@ -502,8 +502,8 @@ function chain(u, L, pts, o = {}) {
  */
 function anchor(u, L, o = {}) {
   const F = frame(o), q = (o.h || 40) / 40, s = F.s * q, p = (x, y) => F.p(x * q, y * q);
-  const sc = p(0, -34.3), sa = p(7.4, -37.2), sb = p(-7.4, -31.4);
-  const stockHalf = (e, near) => shadeCyl(u, sc[0], sc[1], e[0], e[1], 1.95 * s, L, 'oak', { r1: 1.95 * s, r2: 1.25 * s, ell: near ? .4 : 0, face: near ? 2 : 0, seed: seedOf(o, 14) + (near ? 1 : 0) });
+  const sc = p(0, -34.3), sa = p(10.4, -38.3), sb = p(-10.4, -30.3);
+  const stockHalf = (e, near) => shadeCyl(u, sc[0], sc[1], e[0], e[1], 1.95 * s, L, 'oak', { r1: 2.1 * s, r2: 1.3 * s, ell: near ? .4 : 0, face: near ? 2 : 0, seed: seedOf(o, 14) + (near ? 1 : 0) });
   const hoop = t => { const a = mixP(sc, t > 0 ? sb : sa, Math.abs(t) - .05), b = mixP(sc, t > 0 ? sb : sa, Math.abs(t) + .05); return shadeCyl(u, a[0], a[1], b[0], b[1], lerp(2.05, 1.35, Math.abs(t)) * s, L, 'iron', { outline: .3 }); };
   let out = seat(u, L, o, F.x, F.y, 6 * s, { opacity: .5 }) + stockHalf(sa, false) + hoop(-.45);
   const rc = p(0, -39.9); out += tube(u, L, 'iron', ellD(rc, F.v(2.7 * q, 0), F.v(0, 3 * q)), .55 * s, rc);
@@ -684,7 +684,8 @@ function crate(u, L, o = {}) {
   for (const t of [.3 + R() * .1, .64 + R() * .1]) ln += `M${P2(P(-W + ox * t, -H - oy * t))}L${P2(P(W + ox * t, -H - oy * t))}`;
   out += `<path d="${ln}" stroke="${rp.outline}" stroke-width=".42" fill="none" opacity=".65"/>`;
   const sh = [-la.ux * .7 * s, -la.uy * .7 * s + .25 * s];
-  const batten = (pts, nn, grain) => { const q = pts.map(v => P(v[0], v[1])); return `<path d="${poly(q.map(v => add(v, sh)))}" fill="${L.shadowTint}" opacity=".4"/>` + shadeBox(u, [{ pts: q, n: F.n(nn), grain }], L, wood, { seed: sd + Math.round(pts[0][0] * 3 + pts[0][1]), outline: .45 }); };
+  const cidC = nid('cr', u); out += `<defs><clipPath id="${cidC}"><path d="${poly([P(-W, 0), P(W, 0), P(W + ox, -oy), P(W + ox, -H - oy), P(-W + ox, -H - oy), P(-W, -H)])}"/></clipPath></defs>`;
+  const batten = (pts, nn, grain) => { const q = pts.map(v => P(v[0], v[1])); return `<path d="${poly(q.map(v => add(v, sh)))}" fill="${L.shadowTint}" opacity=".4" clip-path="url(#${cidC})"/>` + shadeBox(u, [{ pts: q, n: F.n(nn), grain }], L, wood, { seed: sd + Math.round(pts[0][0] * 3 + pts[0][1]), outline: .45 }); };
   out += batten([[-7.6, -.5], [-7.6, -3.7], [7.6, -H + .5], [7.6, -H + 3.7]], 'front', F.v(15.2, -(H - 4.2)));
   out += batten([[-W, -H], [-7.8, -H], [-7.8, 0], [-W, 0]], 'front', F.v(0, 1)) + batten([[7.8, -H], [W, -H], [W, 0], [7.8, 0]], 'front', F.v(0, 1));
   const dz = t => [W + ox * t, -oy * t];
@@ -791,9 +792,11 @@ function sabre(u, L, o = {}) {
   const g = mat('iron', L, { form: 'plane', x1: P(-12, 0)[0], y1: P(0, -9)[1], x2: P(23, 0)[0], y2: P(0, .4)[1], n: F.n([0, .3, .95]), u }), rp = g.ramp;
   const bev = F.d('M-12 -.6 Q9 -1.1 20.2 -6 L21.6 -6.2 Q21.6 -5.9 20.6 -5.2 Q9 -.2 -12 .2 Z'), bI = clamp(F.n([0, -.55, .83]).reduce((t, v, i) => t + v * [la.dx, -la.dy, la.dz][i], 0), -1, 1);
   let out = seat(u, L, o, ...P(2, .6), 40 * s, { ry: 1.3 * s, opacity: .6 });
+  const gl = nid('sg', u), g0 = P(0, -3), g1 = P(13.5, -5), gop = .25 + .5 * clamp(L.key.power * la.k);
+  out += `<defs>${linGrad(gl, g0[0], g0[1], g1[0], g1[1], [[0, '#ffffff', 0], [.4, '#ffffff', gop * .5], [.55, '#ffffff', gop], [.62, '#ffffff', gop * .25], [.72, '#ffffff', gop * .7], [.8, '#ffffff', gop * .15], [1, '#ffffff', 0]])}</defs>`;
   out += `<defs>${g.defs}<clipPath id="${cid}"><path d="${bd}"/></clipPath></defs><path d="${bd}" fill="${g.fill}"/><g clip-path="url(#${cid})"><path d="${bev}" fill="${L.tone('iron', bI + .25, mid[0], mid[1])}"/>`
     + `<path d="${F.d('M-11 -1.9 Q5 -2.4 17.5 -6.4')}" stroke="${rp.shadow}" stroke-width="${f(.55 * s)}" fill="none" opacity=".7"/><path d="${F.d('M-11 -1.55 Q5 -2.05 17.5 -6.05')}" stroke="${rp.spec}" stroke-width="${f(.25 * s)}" fill="none" opacity=".6"/>`
-    + `<path d="${poly([P(6.5, -9), P(9.6, -9), P(7, 1), P(3.9, 1)])}" fill="#ffffff" opacity="${f(.2 + .4 * clamp(L.key.power * la.k))}"/><path d="${poly([P(11.2, -9), P(12, -9), P(9.4, 1), P(8.6, 1)])}" fill="#ffffff" opacity="${f(.15 + .3 * clamp(L.key.power * la.k))}"/></g><path d="${bd}" fill="none" stroke="${rp.outline}" stroke-width=".45" stroke-linejoin="round"/>`;
+    + `<path d="${poly([P(1, -10), P(15, -10), P(12, 1.5), P(-2, 1.5)])}" fill="url(#${gl})"/></g><path d="${bd}" fill="none" stroke="${rp.outline}" stroke-width=".45" stroke-linejoin="round"/>`;
   // the hilt
   out += tube(u, L, 'brass', F.d('M-12.6 .9 C-13.4 5.4 -21 5.8 -22.8 1.4'), .62 * s, P(-17, 4.4));
   out += shadeCyl(u, ...P(-13.4, -1.3), ...P(-21.8, -.2), 1.2 * s, L, 'leather', { outline: .4 });
@@ -842,14 +845,14 @@ function hourglass(u, L, o = {}) {
   let out = seat(u, L, o, F.x, F.y + k * 2 * s, 10 * s) + cyl(0, -1.4, 4.9, 'oak', { seed: seedOf(o, 26) });
   { const x = .2 * 4.05, dy = -k * 4.05 * Math.sqrt(1 - .04); out += shadeCyl(u, ...P(x, -1.3 + dy), ...P(x, -H + 1.3 + dy), .48 * s, L, 'oak', { outline: .3, grain: false }); }
   const A = P(0, -1.5), B = P(0, -H + 1.5), prof = [[0, 2.5], [.07, 3.25], [.2, 3.35], [.34, 2.4], [.45, .95], [.5, .46], [.55, .95], [.66, 2.4], [.8, 3.35], [.93, 3.25], [1, 2.5]].map(q => [q[0], q[1] * s]);
-  const g = lathe(u, L, 'glass', A, B, prof, { ell: k, opacity: .34, spec: false, outline: .38 }), C = t => mixP(A, B, t), col = L.tone('paint-ochre', .55, A[0], A[1]), col2 = L.tone('paint-ochre', -.15, A[0], A[1]);
+  const g = lathe(u, L, 'glass', A, B, prof, { ell: k, opacity: .2, spec: false, outline: .38 }), C = t => mixP(A, B, t), col = L.tone('paint-ochre', .55, A[0], A[1]), col2 = L.tone('paint-ochre', -.15, A[0], A[1]);
   const lo = .06 + (1 - sand) * .2, hi = .56 + sand * .3, n = g.n, a = g.a, R4 = 4 * s;
   let sd = `<path d="M${P2(add(C(.005), mul(n, -R4)))}L${P2(add(C(lo * .55), mul(n, -R4 * .78)))}Q${P2(C(lo * 2.4))} ${P2(add(C(lo * .55), mul(n, R4 * .78)))}L${P2(add(C(.005), mul(n, R4)))}L${P2(add(C(-.1), mul(n, R4)))}L${P2(add(C(-.1), mul(n, -R4)))}Z" fill="${col}"/><path d="M${P2(C(lo * 1.3))}L${P2(add(C(lo * .5), mul(n, R4 * .8)))}L${P2(add(C(-.1), mul(n, R4)))}L${P2(C(-.1))}Z" fill="${col2}" opacity=".45"/>`;
   if (sand > .02) sd += `<path d="${poly([add(C(.5), mul(n, -R4)), add(C(.5), mul(n, R4)), add(C(hi), mul(n, R4)), add(C(hi - .03), [0, 0]), add(C(hi), mul(n, -R4))])}" fill="${col}"/><path d="${ellD(C(hi - .012), mul(n, 2.6 * s), mul(a, 2.6 * s * k))}" fill="${col2}" opacity=".5"/><path d="M${P2(C(.5))}L${P2(C(lo * 1.2))}" stroke="${col}" stroke-width="${f(.3 * s)}"/>`;
   out += `<g clip-path="url(#${g.clip})">${sd}</g>` + g.svg;
   const sgL = (g.la.dx * n[0] + g.la.dy * n[1]) >= 0 ? 1 : -1;
   for (const [t0, t1] of [[.1, .3], [.7, .9]]) { const p0 = add(C(t0), mul(n, sgL * 2.1 * s)), p1 = add(C(t1), mul(n, sgL * 2.1 * s)), pm = add(C((t0 + t1) / 2), mul(n, sgL * 2.6 * s)); out += `<path d="M${P2(p0)}Q${P2(pm)} ${P2(p1)}" stroke="#ffffff" stroke-width="${f(.5 * s)}" fill="none" stroke-linecap="round" opacity="${f(.45 + .4 * clamp(L.key.power * g.la.k))}"/><path d="M${P2(add(p0, mul(n, -sgL * 4.4 * s)))}L${P2(add(p1, mul(n, -sgL * 4.4 * s)))}" stroke="${g.rp.lit}" stroke-width="${f(.3 * s)}" stroke-linecap="round" opacity=".35"/>`; }
-  out += `<g clip-path="url(#${g.clip})"><path d="${g.d}" fill="none" stroke="${L.tone('glass', -.9, A[0], A[1])}" stroke-width="${f(1 * s)}" opacity=".4"/></g>`;
+  out += `<g clip-path="url(#${g.clip})"><path d="${g.d}" fill="none" stroke="${L.tone('glass', -.6, A[0], A[1])}" stroke-width="${f(.9 * s)}" opacity=".3"/></g>`;
   return out + post(-.86) + post(.72) + cyl(-H + 1.4, -H, 4.9, 'oak', { seed: seedOf(o, 26) + 1 });
 }
 
@@ -907,7 +910,7 @@ function pierGeo(L, o = {}) {
  * -1..1 across, and the scale there — to stand things on it.
  */
 function pier(u, L, o = {}) {
-  const G = pierGeo(L, o), { hz, y, far, x1, x2, sc, X, yAt } = G, kind = o.kind || 'pine-deck', R = rng(seedOf(o, 28)), sd = seedOf(o, 28), drop = o.drop != null ? o.drop : 24, np = o.piles || 5, ph = o.pileH || 12;
+  const G = pierGeo(L, o), { hz, y, far, x1, x2, sc, X, yAt } = G, kind = o.kind || 'pine-deck', R = rng(seedOf(o, 28)), sd = seedOf(o, 28), drop = o.drop != null ? o.drop : 30, np = o.piles || 5, ph = o.pileH || 12;
   const visR = x2 < G.vx, visL = x1 > G.vx, mid = [X((x1 + x2) / 2, (y + far) / 2), (y + far) / 2], la = L.at(mid[0], mid[1]), rp = L.ramp(kind, mid[0], mid[1]);
   const I = L.point ? -.1 : clamp(-la.dy * .8 + .08, -.2, .9);
   let out = '', after = '';

@@ -7,12 +7,12 @@ import { data, esc, mm, rich, read, HERE, ROOT, RICH_CSS, fontCss, BASE_CSS, typ
 import { BRASS, BRASS_DARK, BRASS_LIGHT, DECK_BAND, DECK_KEY, DECK_NAME, DECK_RIM, DECK_TINT, ON_GLASS, SEA, TYPE, cutColor, darken, lighten, type CardType, type DeckCode } from './colors';
 import { A4, BLEED, BLEED_BOX, CARD, FACE, GRID, backSheet, cutLines, deckSheets, seaSheets, slot, slug, priceOf, type BackKind, type DeckCard, type Item, type SeaCard, type Sheet } from './layout';
 import { iconImg, ROSE_URI, typeIconUri } from './icons';
-import { backArtSvg, hasScene, makeArt, plainSvg, portraitSvg, profiled, type ArtInfo } from './art';
+import { backArtSvg, backSpec, hasBacks, hasScene, makeArt, plainSvg, portraitSvg, profiled, type ArtInfo, type BackSpec } from './art';
 import { wxSvg } from '../../src/ui/game/art/wx';
 
 export const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/cards.json'), 'utf8'));
 /** Back designs that exist (docs/tasks/print-kit.md 4.10): 1 «Корабль в море»; 2 and 3 come with stage Б. */
-export const BACK_VARIANTS: (1 | 2 | 3)[] = [1];
+export const BACK_VARIANTS: (1 | 2 | 3)[] = hasBacks() ? [1, 2, 3] : [1];
 export interface Mode { glass: 'type' | 'ship'; index: boolean; backs: 1 | 2 | 3 }
 /** What the fitting pass decided for one face: sizes in pt, what stayed on the plate, the plate's height in mm. */
 export interface Fit { name: number; wrap: boolean; tp: number; big: boolean; flavor: boolean; fvBreak: boolean; h: number; over: boolean; idx: number; idxW: number; idxBottom: number }
@@ -203,7 +203,7 @@ function seaBackSvg(): string {
 /** A soft fade of the back's picture into the deck colour towards the edges: no line near the edge, a shifted back shows no white. */
 const fadeEdges = (svg: string, ground: string) => svg.replace(/<\/svg>\s*$/, `<defs><filter id="fe" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter><mask id="fm"><rect x="-40" y="-40" width="280" height="360" fill="#fff"/><rect x="33" y="33" width="134" height="214" rx="22" fill="#000" filter="url(#fe)"/></mask></defs><rect x="-40" y="-40" width="280" height="360" fill="${ground}" mask="url(#fm)"/></svg>`).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
 
-export interface CardKit { mode: Mode; fits: Map<string, Fit>; art: Map<string, ArtInfo>; specs: Map<string, FaceSpec>; backs: Map<string, string>; crest: Map<string, string> }
+export interface CardKit { mode: Mode; fits: Map<string, Fit>; art: Map<string, ArtInfo>; specs: Map<string, FaceSpec>; backs: Map<string, string>; crest: Map<string, string>; backSpecs: Map<string, BackSpec> }
 
 /** Fits every face, rasterises every picture (faces with their glass, backs) for one mode. */
 export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Promise<CardKit> {
@@ -222,14 +222,18 @@ export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Pr
   }
   const backs = new Map<string, string>(), crest = new Map<string, string>();
   const crestHtml = (letter: string, col: string) => `<div style="position:absolute;left:10px;top:10px;width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.18),${col} 62%);box-shadow:0 0 0 3px #d9ab52,0 0 0 6px rgba(0,0,0,.5),0 0 0 7.5px rgba(217,171,82,.7),0 6px 12px rgba(0,0,0,.6),inset 0 0 16px rgba(0,0,0,.5);font:700 40px/1 'Alegreya SC',serif;color:#fbe7b0;text-shadow:0 2px 0 rgba(0,0,0,.6)">${letter}<i style="position:absolute;inset:5px;border-radius:50%;border:1px dashed rgba(251,231,176,.55)"></i></div>`;
-  for (const deck of Object.keys(DECK_KEY) as DeckCode[]) {
-    const svg = ctx.opts.noArt ? plainSvg(lighten(DECK_BAND[deck], .2), DECK_BAND[deck]) : backArtSvg(DECK_KEY[deck]);
-    backs.set(deck, (await makeArt(ctx, `back${mode.backs}-${DECK_KEY[deck]}`, fadeEdges(shadeBack(svg), DECK_BAND[deck]), null)).url);
-    crest.set(deck, await ctx.raster(`crest-${DECK_KEY[deck]}`, crestHtml(deck, DECK_BAND[deck]), 90, 92, 6));
+  // the new backs (backs.cjs) bring their own ground colour and lettering places; without them — the earlier picture
+  const backSpecs = new Map<string, BackSpec>(), xmlns = (v: string) => /xmlns=/.test(v.slice(0, 300)) ? v : v.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+  for (const k of [...(Object.keys(DECK_KEY) as DeckCode[]), 'sea' as const]) {
+    const kind = k === 'sea' ? 'sea' : DECK_KEY[k], col = k === 'sea' ? SEA.band : DECK_BAND[k], spec = ctx.opts.noArt ? null : backSpec(kind, mode.backs);
+    if (spec) { backSpecs.set(k, spec); backs.set(k, (await makeArt(ctx, `back${mode.backs}-${kind}`, xmlns(spec.svg), null)).url); }
+    else {
+      const svg = ctx.opts.noArt ? plainSvg(lighten(col, .2), col) : k === 'sea' ? seaBackSvg() : backArtSvg(kind);
+      backs.set(k, (await makeArt(ctx, `back0-${kind}`, fadeEdges(shadeBack(svg), col), null)).url);
+    }
+    crest.set(k, await ctx.raster(`crest-${kind}`, crestHtml(k === 'sea' ? `<img src="${ROSE_URI}" style="width:52px;height:52px">` : k, col), 90, 92, 6));
   }
-  backs.set('sea', (await makeArt(ctx, `back${mode.backs}-sea`, fadeEdges(shadeBack(ctx.opts.noArt ? plainSvg('#2f6f7e', '#0b2c38') : seaBackSvg()), SEA.band), null)).url);
-  crest.set('sea', await ctx.raster('crest-sea', crestHtml(`<img src="${ROSE_URI}" style="width:52px;height:52px">`, SEA.band), 90, 92, 6));
-  return { mode, fits, art, specs, backs, crest };
+  return { mode, fits, art, specs, backs, crest, backSpecs };
 }
 // the mock-up's dark veils at the top and bottom of a back (under the title and the name), baked into the picture
 const shadeBack = (svg: string) => svg.replace(/<\/svg>\s*$/, `<defs><linearGradient id="vt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient><linearGradient id="vb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".62"/><stop offset="1" stop-color="#000" stop-opacity=".75"/></linearGradient></defs><rect width="200" height="64" fill="url(#vt)"/><rect y="167" width="200" height="113" fill="url(#vb)"/></svg>`);
@@ -265,9 +269,17 @@ export function itemFace(ctx: Ctx, kit: CardKit, it: Item, pos: string): string 
 export function backHtml(kit: CardKit, b: BackKind, pos: string, ground = '#3a2c1c'): string {
   if (b.back === 'none') return `<div class="sh-blank" style="${pos}"></div>`;
   if (b.back === 'neutral') return `<div class="bk nt" style="${pos}--ground:${ground}"><div class="pp"></div><div class="tt">${esc(TXT.title)}</div><img class="rs" src="${ROSE_URI}" alt=""></div>`;
-  const k = b.back === 'sea' ? 'sea' : b.deck, name = b.back === 'sea' ? TXT.seaBackName : DECK_NAME[b.deck];
-  return `<div class="bk" style="${pos}--ground:${profiled(b.back === 'sea' ? SEA.band : DECK_BAND[b.deck])}"><img class="art" src="${kit.backs.get(k)}" alt=""><div class="tt">${esc(TXT.title)}</div><div class="tr"></div><img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:53.6mm;width:18.9mm;height:19.32mm;margin-left:-9.45mm">`
-    + (b.back === 'deck' && b.legend ? `<div class="bl">${esc(TXT.legendBack)}</div>` : `<div class="bn">${esc(name)}</div>`) + `</div>`;
+  const k = b.back === 'sea' ? 'sea' : b.deck, name = b.back === 'sea' ? TXT.seaBackName : DECK_NAME[b.deck], sp = kit.backSpecs.get(k);
+  const tail = (y: string) => b.back === 'deck' && b.legend ? `<div class="bl" style="top:${y}">${esc(TXT.legendBack)}</div>` : `<div class="bn" style="top:${y}">${esc(name)}</div>`;
+  if (!sp) return `<div class="bk" style="${pos}--ground:${profiled(b.back === 'sea' ? SEA.band : DECK_BAND[b.deck])}"><img class="art" src="${kit.backs.get(k)}" alt=""><div class="tt">${esc(TXT.title)}</div><div class="tr"></div><img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:53.6mm;width:18.9mm;height:19.32mm;margin-left:-9.45mm">${tail('')}</div>`.replace(/ style="top:"/g, '');
+  // lettering of a new back: places come from the picture (units of 200 × 280 → mm), colours from its tone
+  const U = CARD.h / 280, ink = sp.tone === 'dark' ? ['#f3dc9d', '#fff2d4'] : ['#5a3c14', '#3a2410'];
+  const title = sp.title ? `<div class="tt" style="top:${mm(sp.title.y * U)};transform:translateY(-50%);color:${ink[0]}">${esc(TXT.title)}</div>` : '';
+  const cd = sp.crest ? sp.crest.d * U : 0, crest = sp.crest ? `<img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:${mm(sp.crest.y * U - cd * 45 / 70)};width:${mm(cd * 90 / 70)};height:${mm(cd * 92 / 70)};margin-left:${mm(-cd * 45 / 70)}">` : '';
+  const ls = sp.letter ? sp.letter.size * U : 0, letter = !sp.letter ? '' : k === 'sea' ? `<img src="${ROSE_URI}" alt="" style="position:absolute;left:50%;top:${mm(sp.letter.y * U - ls / 2)};width:${mm(ls)};height:${mm(ls)};margin-left:${mm(-ls / 2)}">`
+    : `<div style="position:absolute;left:0;right:0;top:${mm(sp.letter.y * U)};transform:translateY(-50%);text-align:center;font:700 ${(ls * 2.835).toFixed(1)}pt/1 'Alegreya SC',serif;color:${ink[1]}">${k}</div>`;
+  return `<div class="bk" style="${pos}--ground:${profiled(sp.ground)}"><img class="art" src="${kit.backs.get(k)}" alt="">${title}${crest}${letter}`
+    + tail(`${mm(sp.name.y * U)};transform:translate(${b.back === 'deck' && b.legend ? '-50%,' : '0,'}-50%);color:${b.back === 'deck' && b.legend ? '#2a180c' : ink[1]}`) + `</div>`;
 }
 
 const arrowUp = (x: number, y: number) => `<path d="M${x} ${y + 3.2}V${y}M${x - 1.1} ${y + 1.2}L${x} ${y}L${x + 1.1} ${y + 1.2}" stroke="#555" stroke-width=".35" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -292,7 +304,7 @@ export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: 
 /** The sheet of backs behind a face sheet (mirrored columns); dx, dy shift the whole print, seen from the back. No cut lines: cut from the face. */
 export function backSheetPage(kit: CardKit, sh: Sheet, dx = 0, dy = 0, label = '', kitOf: (i: number) => CardKit = () => kit, sub = '', bleed = true): PageSpec {
   // the same colour as the edge of the back pictures in the JPEG (after the print profile): no seam between a card and the bleed
-  const col = profiled(sheetColor(sh)), b = BLEED_BOX, L = 5, o = 1;
+  const col = profiled(kit.backSpecs.get(sh.deck)?.ground ?? sheetColor(sh)), b = BLEED_BOX, L = 5, o = 1;
   const corner = (x: number, y: number, sx: number, sy: number) => `<path d="M${x + sx * o} ${y}h${sx * L}M${x} ${y + sy * o}v${sy * L}" stroke="#808080" stroke-width=".3" fill="none"/>`;
   return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})">${bleed ? `<div class="sh-bleed" style="background:${col}"></div>` : ''}${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i), col)).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${corner(b.x, b.y, -1, -1)}${corner(b.x + b.w, b.y, 1, -1)}${corner(b.x, b.y + b.h, -1, 1)}${corner(b.x + b.w, b.y + b.h, 1, 1)}</svg></div>`

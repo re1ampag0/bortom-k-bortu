@@ -20,6 +20,12 @@ export const hasScene = (name: string, draftArt = false) => P.has(name, draftArt
 export const printScenes = () => P.PRINT;
 export const portraitSvg = (name: string, draftArt = false) => P.portrait(name, { draftArt });
 export const backArtSvg = (k: string) => P.backArt(k);
+/** The new card backs (tools/card-art/scenes/backs.cjs, three designs): the picture and where the lettering goes, in picture units. */
+export interface BackSpec { svg: string; ground: string; tone: 'dark' | 'light'; title: { y: number } | null; crest: { y: number; d: number } | null; letter: { y: number; size: number } | null; name: { y: number } }
+let B: { back(kind: string, variant: number): BackSpec } | null = null;
+try { if (fs.existsSync(path.join(ROOT, 'tools/card-art/scenes/backs.cjs'))) B = require(path.join(ROOT, 'tools/card-art/scenes/backs.cjs')); } catch (e) { console.warn('warning: backs.cjs skipped: ' + (e as Error).message); }
+export const hasBacks = () => !!B;
+export const backSpec = (kind: string, variant: number): BackSpec | null => { try { return B ? B.back(kind, variant) : null; } catch (e) { console.warn(`warning: back ${kind} v${variant}: ${(e as Error).message}`); return null; } };
 
 export const PROFILE_VERSION = 'p5';
 /** The print profile's curve points (review-print 10). */

@@ -5,7 +5,7 @@
 //   07-more.pdf       sea deck, faces and backs in turn
 import { data, type Ctx, type Part } from '../kit';
 import { deckSheets, seaSheets } from '../layout';
-import { CARD_CSS, backSheetPage, faceSheet, prepareCards, type CardKit, type Mode } from '../cards';
+import { BACK_VARIANTS, CARD_CSS, backSheetPage, faceSheet, prepareCards, type CardKit, type Mode } from '../cards';
 
 const kits = new Map<string, CardKit>();
 /** only — the card keys («Ж|Ядра») a sample needs: a sample in another mode does not rasterise the whole set again. */
@@ -38,6 +38,11 @@ export async function cardParts(ctx: Ctx, which: 'decks' | 'sea'): Promise<Part[
     if (i === 4) continue;
     const dx = (i % 3 - 1) * SHIFT_STEP, dy = (Math.floor(i / 3) - 1) * SHIFT_STEP;
     parts.push({ file: `05b-rubashki-${SHIFT_FILE[i]}`, title: `Бортом к борту — 05б. Рубашки, поправка «${SHIFT_LETTERS[i]}»`, css: CARD_CSS, pages: sheets.map(sh => backSheetPage(kit, sh, dx, dy, `Рубашка · поправка «${SHIFT_LETTERS[i]}» · лист ${sh.n} из ${sh.of} · верх листа`)) });
+  }
+  // the other back designs, one file each (no shift variants for them, review-print 18)
+  for (const v of BACK_VARIANTS) if (v !== kit.mode.backs && !ctx.opts.draft) {
+    const kv = await kitFor(ctx, { ...kit.mode, backs: v });
+    parts.push({ file: `05b-rubashki-v${v}`, title: `Бортом к борту — 05б. Рубашки, вариант ${v}`, css: CARD_CSS, pages: sheets.map(sh => backSheetPage(kv, sh, 0, 0, `Рубашка · вариант ${v} · лист ${sh.n} из ${sh.of} · верх листа`)) });
   }
   return parts;
 }
