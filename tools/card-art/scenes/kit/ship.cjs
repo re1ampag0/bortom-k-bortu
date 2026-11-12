@@ -53,7 +53,7 @@ for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
 // paint of the inner side of the bulwark; deckK — the planks of the deck; bottom: 'foul' | 'copper' | 'tar'.
 // The marks of single ships (kit/README.md, «Корабли»): balc, balcD, lanternPost, lanterns, lanternArm, holeK, thruK, topK,
 // topRound, lidIn, cond ('whole' | 'mended' | 'torn' | 'fringe' | 'rags' | 'strips'), ports[].hk, masts[].Q, masts[].noBare,
-// ribs, crest, beakJag, broken, run, sprit.stays, sprit.sling, masts[].spanker.
+// ribs, crest, beakJag, broken, run, sprit.stays, sprit.sling, masts[].spanker, topRail, sternBow, taffScroll, headCarve, holeVar, footRag.
 const SPECS = {
   // The Black Pearl (2003), by the user's measurements of the profile (report/print-kit/refs/zamery.md; L — the waterline):
   // the longest and lowest hull (the waist 0.14 L, the hull 1.21 L, with the head 1.34 L), a modest sheer; the forecastle
