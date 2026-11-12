@@ -63,11 +63,12 @@ function calm(u, ground, x, y, rx, ry, op) {
 /**
  * swellCrest(u, L, { x, y, w, h, seed, lean }) — one near swell seen from the side: a ridge `w` wide whose crest
  * rises `h` above the water line y; the back lit by the sky, the face in shadow with light through the thin top
- * (на просвет), a lace of foam along the crest and streaks running down the back. lean > 0 — the crest leans right.
+ * (на просвет), a lace of foam along the crest and streaks running down the back. lean > 0 — the crest leans right;
+ * foam (0..1, default 1) — how much of the lace and the streaks is drawn and how big the flecks are.
  * KIT-CANDIDATE: kit/env.cjs has rows of swell but no single near wave.
  */
 function swellCrest(u, L, o) {
-  const x = o.x, y = o.y, w = o.w, h = o.h, R = K.rng(o.seed || 1), lean = o.lean || .2, P = L.pal;
+  const x = o.x, y = o.y, w = o.w, h = o.h, R = K.rng(o.seed || 1), lean = o.lean || .2, P = L.pal, fm = o.foam != null ? o.foam : 1;
   const x0 = x - w / 2, x1 = x + w / 2, px = x + lean * w * .18, py = y - h, th = h * 1.3;
   const sea = P.sea, top = K.mix(sea[0], P.sky[3], .35), face = K.mix(sea[1], sea[2], .35), deep = K.mix(sea[2], L.shadowTint, .25), glow = K.mix(sea[0], '#bfeee0', .45);
   const foam = K.mix('#f6fcff', L.keyColor, .3), g = bid('wv', u), gw = bid('wq', u), bl = bid('wl', u), mk = bid('wm', u), mg = bid('wn', u);
@@ -83,12 +84,12 @@ function swellCrest(u, L, o) {
   // the lit line of the back and the lace of foam on the crest, thicker at the top
   out += `<path d="${ridge}" fill="none" stroke="${K.mix(top, '#ffffff', .4)}" stroke-width=".7" opacity=".7" stroke-linecap="round"/>`;
   let lace = '';
-  for (let i = 0; i < 46; i++) {
-    const t = R(), xx = x0 + w * (.25 + t * .6), near = 1 - Math.min(1, Math.abs(xx - px) / (w * .32)), yy = py + (1 - near) * h * .55 + (R() - .3) * 1.6, r = (.35 + R() * .9) * (.5 + near);
+  for (let i = 0, n = Math.round(46 * fm); i < n; i++) {
+    const t = R(), xx = x0 + w * (.25 + t * .6), near = 1 - Math.min(1, Math.abs(xx - px) / (w * .32)), yy = py + (1 - near) * h * .55 + (R() - .3) * 1.6, r = (.35 + R() * .9) * (.5 + near) * (.4 + .6 * fm);
     if (near <= 0) continue;
     lace += `<ellipse cx="${f(xx)}" cy="${f(yy)}" rx="${f(r * (1.3 + R()))}" ry="${f(r * .6)}" opacity="${f(.45 + R() * .5)}"/>`;
   }
-  for (let i = 0; i < 7; i++) { const sx = px - w * (.05 + R() * .3), sy = py + h * (.25 + R() * .5), l = w * (.08 + R() * .14); lace += `<path d="M${f(sx)} ${f(sy)}q${f(-l / 2)} ${f(h * .12)} ${f(-l)} ${f(h * .28)}" stroke="${foam}" stroke-width="${f(.3 + R() * .35)}" fill="none" opacity="${f(.35 + R() * .3)}"/>`; }
+  for (let i = 0, n = Math.round(7 * fm); i < n; i++) { const sx = px - w * (.05 + R() * .3), sy = py + h * (.25 + R() * .5), l = w * (.08 + R() * .14); lace += `<path d="M${f(sx)} ${f(sy)}q${f(-l / 2)} ${f(h * .12)} ${f(-l)} ${f(h * .28)}" stroke="${foam}" stroke-width="${f(.3 + R() * .35)}" fill="none" opacity="${f(.35 + R() * .3)}"/>`; }
   return out + `<g fill="${foam}" filter="url(#${bl})">${lace}</g></g>`;
 }
 
@@ -97,6 +98,20 @@ function swellCrest(u, L, o) {
 function nightLift(u, hz) {
   const g = bid('nl', u);
   return `<defs><linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${H}"><stop offset="0" stop-color="#5a78a8" stop-opacity=".42"/><stop offset="${f((hz - 40) / H)}" stop-color="#5a78a8" stop-opacity=".1"/><stop offset="${f(hz / H)}" stop-color="#5a78a8" stop-opacity="0"/><stop offset="${f((hz + 30) / H)}" stop-color="#4a6890" stop-opacity=".08"/><stop offset="1" stop-color="#4a6890" stop-opacity=".34"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#${g})" style="mix-blend-mode:screen"/>`;
+}
+
+/** Breaks the even bands of a ship's reflection (kit env.reflection cuts it into full-width rows): the ship's group
+ *  under a mask with short soft dashes of different length in rows y0..y1, so each band of the reflection is torn
+ *  into pieces of different length with the water showing in the breaks. Only the water below y0 is touched. */
+function brokenReflection(u, body, o) {
+  const R = K.rng(o.seed || 1), m = bid('rk', u), bl = bid('rb', u), x0 = o.x0, x1 = o.x1, y0 = o.y0, y1 = o.y1;
+  let cuts = '';
+  for (let y = y0 + R() * .6; y < y1; y += .9 + R() * .9) {
+    const t = (y - y0) / (y1 - y0);   // lower rows: longer breaks, the reflection thins out
+    for (let x = x0 - R() * 20; x < x1; ) { const l = 2.5 + R() * (6 + 12 * t), gap = 5 + R() * (22 - 12 * t);
+      cuts += `<rect x="${f(x)}" y="${f(y)}" width="${f(l)}" height="${f(.5 + R() * (.7 + t * .6))}" rx=".4" opacity="${f(.55 + R() * .45)}"/>`; x += l + gap; }
+  }
+  return `<defs><filter id="${bl}" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation=".35"/></filter><mask id="${m}" maskUnits="userSpaceOnUse" x="-40" y="-40" width="${W + 80}" height="${H + 80}"><rect x="-40" y="-40" width="${W + 80}" height="${H + 80}" fill="#fff"/><g fill="#000" filter="url(#${bl})">${cuts}</g></mask></defs><g mask="url(#${m})">${body}</g>`;
 }
 
 const wrap = body => `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
@@ -112,11 +127,11 @@ const SCENES1 = {
   // the hull, the moon path on the water under the stern; moonlit clouds low over the horizon.
   pearl: u => {
     const light = lightAt('pearl', 146, 78, { rim: { az: 330, color: '#cfe4ff', power: .7 } }), L = K.makeLight(light, { horizon: HZ });
-    const sc = fitShip('pearl', 150, 124);
+    const sc = fitShip('pearl', 138, 114);
     return K.sky(u, L, { horizon: HZ, seed: 12, stars: 60 }) + K.sunMoon(u, L, { r: 8.5 })
       + K.cloudBank(u, L, { y: 132, h: 9, x0: 40, x1: 190, n: 3, seed: 31, far: .75 })
       + K.water(u, L, { horizon: HZ, bottom: 280, swell: .4, seed: 5 }) + nightLift(u, HZ)
-      + K.ship(u, L, { kind: 'pearl', x: 98, y: WL, scale: sc, wake: true, reflect: true, lights: true });
+      + K.ship(u, L, { kind: 'pearl', x: 107, y: WL, scale: sc, wake: true, reflect: true, lights: true });
   },
   // «Месть королевы Анны»: sunset from the left, low warm side light; smoke of a burnt prize rising from behind,
   // carried by the wind over the sky; the ship's bow to the right (the wind is the same for the flags and the smoke).
@@ -127,26 +142,26 @@ const SCENES1 = {
       + K.cloudBank(u, L, { y: 150, h: 11, x0: 10, x1: 190, n: 4, seed: 41, far: .65 })
       + K.water(u, L, { horizon: HZ, bottom: 280, swell: .45, seed: 6 })
       + K.smoke(u, L, { x: 64, y: HZ - 4, w: 46, h: 104, wind: .55, seed: 9, opacity: .62, glow: { color: '#ff8a3a', power: .35 } })
-      + K.ship(u, L, { kind: 'revenge', x: 104, y: WL, scale: sc, flip: true, wake: true, reflect: true, lights: true });
+      + brokenReflection(u, K.ship(u, L, { kind: 'revenge', x: 104, y: WL, scale: sc, flip: true, wake: true, reflect: true, lights: true }), { x0: 30, x1: 176, y0: WL + 3.2, y1: WL + 27, seed: 21 });
   },
   // «Индевор»: day, a high sun from the right (behind the viewer): white full sails lit, short shadows, cumulus.
   endeavour: u => {
     const L = K.makeLight(K.LIGHTS.endeavour, { horizon: HZ });
-    const sc = fitShip('endeavour', 152, 128);
+    const sc = fitShip('endeavour', 139, 117);
     return K.sky(u, L, { horizon: HZ, seed: 14 })
       + K.cloud(u, L, { x: 60, y: 104, w: 70, h: 26, seed: 51, far: .3 }) + K.cloudBank(u, L, { y: 156, h: 14, x0: 0, x1: 200, n: 5, seed: 52, far: .7 })
       + K.water(u, L, { horizon: HZ, bottom: 280, swell: .5, seed: 7 })
-      + K.ship(u, L, { kind: 'endeavour', x: 98, y: WL, scale: sc, wake: true, reflect: true });
+      + brokenReflection(u, K.ship(u, L, { kind: 'endeavour', x: 109, y: WL, scale: sc, wake: true, reflect: true }), { x0: 30, x1: 176, y0: WL + 3.2, y1: WL + 27, seed: 22 });
   },
   // «Летучий голландец»: green fog, a pale moon behind on the left; a fog bank behind the ship and a low one over
   // the water line in front of it; the bow to the right.
   dutch: u => {
-    const light = lightAt('dutchman', 62, 86), L = K.makeLight(light, { horizon: HZ });
-    const sc = fitShip('dutch', 146, 126);
+    const light = lightAt('dutchman', 53, 86), L = K.makeLight(light, { horizon: HZ });
+    const sc = fitShip('dutch', 139, 120);
     return K.sky(u, L, { horizon: HZ, seed: 15 }) + K.sunMoon(u, L, { r: 9 })
       + K.water(u, L, { horizon: HZ, bottom: 280, swell: .35, seed: 8 })
       + K.fog(u, L, { y: HZ - 40, h: 54, density: .7, seed: 3 })
-      + K.ship(u, L, { kind: 'dutch', x: 102, y: WL, scale: sc, flip: true, wake: true, reflect: true, lights: true })
+      + K.ship(u, L, { kind: 'dutch', x: 96, y: WL, scale: sc, flip: true, wake: true, reflect: true, lights: true })
       + K.fog(u, L, { y: WL - 12, h: 30, density: .45, seed: 4 });
   },
   // Колода моря: the open sea without the deck's ship; the sun under a cloud and its path; a merchant fluyt in the
@@ -154,11 +169,11 @@ const SCENES1 = {
   sea: u => {
     const hz = 150, light = lightAt('sea', 138, 96), L = K.makeLight(light, { horizon: hz });
     return K.sky(u, L, { horizon: hz, seed: 16 }) + K.sunMoon(u, L, { r: 7 })
-      + K.cloud(u, L, { x: 132, y: 92, w: 64, h: 20, seed: 61, far: .25 }) + K.cloudBank(u, L, { y: 140, h: 12, x0: 0, x1: 200, n: 5, seed: 62, far: .7 })
+      + K.cloud(u, L, { x: 128, y: 82, w: 64, h: 20, seed: 61, far: .25 }) + K.cloudBank(u, L, { y: 140, h: 12, x0: 0, x1: 200, n: 5, seed: 62, far: .7 })
       + K.water(u, L, { horizon: hz, bottom: 280, swell: .95, seed: 9 })
       + K.ship(u, L, { kind: 'brig', x: 148, y: hz + 1.4, scale: .3, detail: 'far', flip: true })
       + K.ship(u, L, { kind: 'merchant', x: 84, y: 168, scale: .72, detail: 'mid', wake: true, reflect: true, heel: 2 })
-      + swellCrest(u, L, { x: 58, y: 198, w: 70, h: 7, seed: 3, lean: .3 }) + swellCrest(u, L, { x: 150, y: 214, w: 64, h: 6, seed: 4, lean: .2 });
+      + swellCrest(u, L, { x: 56, y: 200, w: 40, h: 2.6, seed: 3, lean: .3, foam: .3 }) + swellCrest(u, L, { x: 150, y: 214, w: 36, h: 2.2, seed: 4, lean: .2, foam: .25 });
   },
 };
 

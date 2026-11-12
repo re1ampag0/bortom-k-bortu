@@ -35,7 +35,8 @@ for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
 // taffrail; tw: [top, bottom] — the width of the transom's visible strip; ports: rows of gun ports;
 // deckPorts: [n, x0, x1] — guns of the open deck; gallery: [length, tiers, tier height]; beak: [length, rise,
 // depth of its knee at the stem (0 — a cutwater down to the waterline)]; masts: x, H (the truck above the water), n — yards, k — the width of the
-// yards, rake, aft: 'lateen' | 'gaff', lower: a square sail on the lower yard of the mizzen.
+// yards, rake, aft: 'lateen' | 'gaff', lower: a square sail on the lower yard of the mizzen, lat: [fore reach, aft reach,
+// height of the peak] of the lateen yard (default [.105, .11, .64]); galRoof — the height of the gallery's roof (2.1).
 const SPECS = {
   // The Black Pearl (2003): the longest and lowest; one closed row of ports; a slender stern of two tiers; a bare
   // nose (no sprit topmast); square sails on the mizzen; black torn sails.
@@ -94,20 +95,20 @@ const SPECS = {
     len: 70, free: 8.6, sheer: [2.6, 4.2], tumble: .8, bow: [5.5, 2.6], over: 5.5, counter: .74,
     fc: [-22, 2.2], tiers: [[9, 3.4], [22, 3.6]], taff: 1.6, tw: [1.6, 3.6],
     hull: 'ship-wood', trim: 'ship-wood', gilt: 0, wales: [], bands: [{ h0: 3, h1: 4.3, mat: 'tar' }, { h0: 7.4, h1: 8.1, mat: 'tar' }],
-    ports: [], deckPorts: [0, 0, 0], gallery: [6, 1, 3.4], tierWin: 1, lantern: .8,
+    ports: [], deckPorts: [0, 0, 0], gallery: [6, 1, 3.4], tierWin: 1, lantern: 0,
     beak: [7.5, 1.4, 2.6], sprit: { len: 17, steeve: 28, spritsail: 'set' }, jibs: 0,
     masts: [{ x: -22, H: 62, n: 2, k: 1.05 }, { x: 0, H: 72, n: 2, k: 1.15, rake: 1 }, { x: 21, H: 52, n: 2, k: .72, rake: 2, aft: 'lateen' }],
-    spar: 'oak', yard: 'ship-wood', sail: 'canvas', cond: 'whole', flag: 'merchant', pennant: 'linen',
+    spar: 'oak', yard: 'ship-wood', sail: 'canvas', cond: 'whole', flag: 'pennant', pennant: 'ship-flag-red',
   },
   // A neutral brig: two masts with square sails, a gaff sail on the main, a low flush hull with one white band.
   brig: {
     len: 66, free: 7.2, sheer: [2, 1.6], tumble: .25, bow: [5.5, 1.6], over: 4.5, counter: .74,
     fc: [-23, 1.2], tiers: [[16, 1.8]], taff: 1, tw: [3, 3.6],
     hull: 'tar', trim: 'ship-wood', gilt: 0, wales: [2.6], bands: [{ h0: 4.2, h1: 6.1, mat: 'linen' }],
-    ports: [{ h: 5.15, n: 8, x0: -22, x1: 22, w: 1.6, open: 1 }], deckPorts: [0, 0, 0], gallery: [5, 1, 2.6], tierWin: 0, lantern: .7,
+    ports: [{ h: 5.15, n: 8, x0: -22, x1: 22, w: 1.6, open: 1 }], deckPorts: [0, 0, 0], gallery: [5, 1, 2.6], tierWin: 0, lantern: 0,
     beak: [6, 2.4, 0], sprit: { len: 18, steeve: 22, jib: 8 }, jibs: 2,
     masts: [{ x: -15, H: 70, n: 3, k: 1.35 }, { x: 13, H: 76, n: 3, k: 1.42, rake: 1.5, aft: 'gaff', lower: true }],
-    spar: 'oak', yard: 'tar', sail: 'canvas', cond: 'whole', flag: 'plain', pennant: 'ship-flag-red',
+    spar: 'oak', yard: 'tar', sail: 'canvas', cond: 'whole', flag: 'pennant', pennant: 'ship-flag-red',
   },
 };
 const QY = { 4: [.36, .62, .8, .94], 3: [.4, .7, .93], 2: [.46, .86] }, WY = [.14, .108, .078, .054];

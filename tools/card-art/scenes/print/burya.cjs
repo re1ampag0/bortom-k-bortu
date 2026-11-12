@@ -9,7 +9,7 @@ const HZ = 122;
 // from the depth at the viewer; the brief's 190 "where it flies" = at the viewer): soft light, short shadows towards us
 const light = {
   time: 'day',
-  key: { type: 'sun', x: 116, y: 32, el: 55, color: '#cfd6d2', power: .6 },
+  key: { type: 'sun', az: 3, x: 116, y: 32, el: 55, color: '#cfd6d2', power: .6 },
   fill: { color: '#4a5a5c', power: .5 },
   rim: { az: 0, color: '#e6ecea', power: .45 },
   locals: [{ x: 152, y: 100, h: 6, color: '#ffb24a', power: .8, radius: 36 }],
@@ -23,7 +23,7 @@ const skel = {
     ['bow chasers', 140, 100, 22, 16, 'bow of the brig'],
     ['shot trails', 160, 86, 40, 36, 'from the muzzles'],
     ['near swell', 0, 250, 200, 98, 'sea'],
-    ['yard + rag', 34, 210, 72, 22, 'back of the near swell'],
+    ['yard + rag', 34, 206, 76, 20, 'back of the near swell'],
   ],
 };
 

@@ -10,7 +10,7 @@ const HZ = 124;
 // glows through, the face is in its own shadow, the shadows of the brig fall at the viewer and to the right.
 const light = {
   time: 'dusk',
-  key: { type: 'sun', x: 34, y: 76, el: 10, color: '#ffc470', power: 1 },
+  key: { type: 'sun', az: 348, x: 34, y: 76, el: 10, color: '#ffc470', power: 1 },
   fill: { color: '#3d6a70', power: .4 },
   rim: { az: 350, color: '#fff0c8', power: .7 },
   haze: .3,
@@ -20,9 +20,9 @@ const skel = {
   horizon: HZ, eye: 2,
   items: [
     ['wave body + crest', 0, 240, 150, 220, 'sea (the wave rises from it)'],
-    ['brig, heel -15 (bow up, left)', 128, 127, 52, 62, 'lower slope of the wave'],
-    ['torn fore topsail', 160, 74, 22, 16, 'flying from the foremast, sheets to the yard'],
-    ['second small crest', 120, 214, 90, 34, 'sea'],
+    ['brig, heel -15 (bow up, left)', 120, 127, 68, 70, 'lower slope of the wave'],
+    ['torn fore topsail', 164, 80, 24, 22, 'flying from the foremast, sheets to the yard'],
+    ['second small crest', 100, 230, 110, 34, 'sea'],
     ['broken mast + canvas', 14, 246, 84, 18, 'on the water'],
   ],
 };
@@ -117,6 +117,10 @@ module.exports = {
     folds += `<path d="M112 84C114 100 124 112 150 122L120 146L60 150L80 110Z" fill="url(#${sk})" filter="url(#${fb})"/>`;
     inside += folds;
     // the kit's ripples on the lower face and the foot, larger towards the viewer
+    // the kit's ripples on the lower face and the foot, fading out up the face (a mask, no edge)
+    const wm = nid('wm', u), wmg = nid('wmg', u);
+    defs += lin(wmg, 0, 80, 0, 170, [[0, '#fff', 0], [1, '#fff', .42]]) + `<mask id="${wm}" maskUnits="userSpaceOnUse" x="-12" y="0" width="230" height="290"><rect x="-12" y="0" width="230" height="290" fill="url(#${wmg})"/></mask>`;
+    inside += `<g mask="url(#${wm})">${K.water(u, L, { horizon: 60, bottom: 300, swell: 1, seed: 61, glitter: false, w: 220 })}</g>`;
     // water draining down the face: long streaks of lace from under the lip down into the face, each its own length
     let streaks = '';
     for (let i = 0; i < 30; i++) {
@@ -149,7 +153,12 @@ module.exports = {
     const wb = nid('wb', u), wbf = nid('wbf', u), fz = foot.slice(2, 10), wbd = sp(fz) + sp(fz.slice().reverse().map(p => [p[0] + 4, p[1] + 7])).replace(/^M/, 'L') + 'Z';
     wave += `<defs>${lin(wb, 0, 130, 0, 236, [[0, mix(lace, L.pal.sea[1], .35), .55], [1, mix(lace, L.pal.sea[1], .5), .35]])}${blur(wbf, 1.6, [-30, 110, 260, 150])}</defs><path d="${wbd}" fill="url(#${wb})" filter="url(#${wbf})"/>`;
     // the foot: churned water where the face meets the trough, in broken patches
-    wave += crestFoam(u, L, foot.slice(2, 10).map(p => [p[0], p[1] - 1]), { seed: 19, h: 1.5, gap: .45 });
+    wave += crestFoam(u, L, foot.slice(2, 10).map(p => [p[0], p[1] - 1]), { seed: 19, h: 1.2, gap: .5 });
+    // patches of white water along the foot, torn and of different size
+    let ww = '';
+    for (let i = 0; i < 16; i++) { const a = along(foot.slice(2, 10), R()), rx = 3 + R() * 5, ry = .5 + R() * .7;
+      ww += `<ellipse cx="${f(a[0] + (R() - .5) * 4)}" cy="${f(a[1] + 1 + R() * 3)}" rx="${f(rx)}" ry="${f(ry)}" transform="rotate(${f(-28 + R() * 10)} ${f(a[0])} ${f(a[1])})" fill="${lace}" opacity="${f(.18 + R() * .3)}"/>`; }
+    const wwf = nid('ww', u); wave += `<defs><filter id="${wwf}" filterUnits="userSpaceOnUse" x="-20" y="110" width="250" height="150"><feTurbulence type="fractalNoise" baseFrequency="0.3 0.4" numOctaves="2" seed="17" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" xChannelSelector="R" yChannelSelector="G"/></filter></defs><g filter="url(#${wwf})">${ww}</g>`;
 
     // ——— the brig at the foot: heeled -15 (bow up, into the wave), reefed; its torn fore topsail flies off ———
     const x0 = 157, y0 = 119.8, s = .74, ang = -15, ra = ang * Math.PI / 180, ca = Math.cos(ra), sa = Math.sin(ra);

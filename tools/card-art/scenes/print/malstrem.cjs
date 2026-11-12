@@ -11,25 +11,25 @@ const HZ = 128; // the line of the eye: hidden by the wall of water (the rim of 
 // to the eye, the water dust over the rim glows; short shadows of the ships, down the slope to the centre
 const light = {
   time: 'dusk',
-  key: { type: 'sun', x: 110, y: 28, el: 70, color: '#b9c6e0', power: .6 },
+  key: { type: 'sun', az: 2, x: 110, y: 28, el: 70, color: '#b9c6e0', power: .6 },
   fill: { color: '#27365a', power: .5 },
   rim: { az: 0, color: '#e4ecff', power: .5 },
   haze: .3,
 };
 // the funnel: contours k = 0 (the rim) .. 1 (the eye) are ellipses; the far half (up) is flat, the near half (down,
 // coming at us) is deep — we look from the wall near us, already slid into the funnel
-const EYE = [100, 170];
-const C = k => ({ cx: lerp(100, EYE[0], k), cy: lerp(120, EYE[1], k), rx: lerp(136, 21, Math.pow(k, .9)), up: lerp(58, 11, Math.pow(k, .8)), dn: lerp(300, 15, Math.pow(k, .5)) });
+const EYE = [100, 133];
+const C = k => ({ cx: lerp(100, EYE[0], k), cy: lerp(120, EYE[1], k), rx: lerp(136, 21, Math.pow(k, .9)), up: lerp(58, 9, Math.pow(k, .8)), dn: lerp(300, 13, Math.pow(k, .5)) });
 const P = (k, t) => { const c = C(k), s = Math.sin(t); return [c.cx + c.rx * Math.cos(t), c.cy + (s < 0 ? c.up : c.dn) * s]; };
 // the skeleton: [id, x, y (base), w, h, support]
 const skel = {
   horizon: HZ, eye: 4,
   items: [
     ['rim of the funnel', 0, 84, 200, 22, 'sea (arc x0 y84 - x100 y62 - x200 y78)'],
-    ['merchant A (near), heel 20', 116, 120, 64, 56, 'far wall of the funnel'],
-    ['merchant B (far), heel -20', 30, 126, 50, 40, 'far wall of the funnel'],
-    ['eye of the whirlpool', 74, 188, 52, 30, 'bottom of the funnel'],
-    ['twisted plank + rope', 120, 238, 70, 22, 'near wall (foam)'],
+    ['merchant A (near), heel 20', 118, 114, 64, 60, 'far wall of the funnel'],
+    ['merchant B (far), heel -20', 38, 120, 50, 40, 'far wall of the funnel'],
+    ['eye of the whirlpool', 78, 146, 44, 26, 'bottom of the funnel'],
+    ['twisted plank + rope', 36, 232, 54, 14, 'near wall (foam)'],
   ],
 };
 // the sea series' water; an indigo dusk sky
@@ -73,7 +73,7 @@ function vortex(u, L, o = {}) {
   const nw = nid('vn', u); out += `<defs>${lin(nw, 0, 150, 0, 280, [[0, L.shadowTint, 0], [.5, L.shadowTint, .3], [1, L.shadowTint, .55]])}</defs><rect x="-10" y="150" width="220" height="140" fill="url(#${nw})"/>`;
   // the throat: the darkest ring and a soft black-blue hole (never black)
   const th = nid('vt', u), tb = nid('vb', u);
-  out += `<defs><radialGradient id="${th}" cx=".5" cy=".42" r=".55"><stop offset="0" stop-color="${mix(eye, '#0d1822', .5)}"/><stop offset=".55" stop-color="${eye}" stop-opacity=".9"/><stop offset="1" stop-color="${eye}" stop-opacity="0"/></radialGradient>${blur(tb, 1.4, [60, 140, 80, 60])}</defs>`
+  out += `<defs><radialGradient id="${th}" cx=".5" cy=".42" r=".55"><stop offset="0" stop-color="${mix(eye, '#0d1822', .5)}"/><stop offset=".55" stop-color="${eye}" stop-opacity=".9"/><stop offset="1" stop-color="${eye}" stop-opacity="0"/></radialGradient>${blur(tb, 1.4, [60, 100, 80, 70])}</defs>`
     + `<ellipse cx="${EYE[0]}" cy="${EYE[1] + 1}" rx="17" ry="11" fill="url(#${th})" filter="url(#${tb})"/>`;
   // the swells running round the wall: each a light crest towards the rim (up, to the rift's light) over a dark
   // trough towards the eye, its own length; like the kit's sea, but laid along the contours of the funnel
@@ -83,10 +83,10 @@ function vortex(u, L, o = {}) {
     const k = Math.pow((j + R() * .8) / 46, 1.15) * .93, dk = (.006 + .02 * (1 - k)) * (.6 + R() * .8);
     let t = -Math.PI * 2 * R();
     for (let m = 0; m < 9; m++) {
-      const dt = (.18 + R() * .5) * (1 - k * .4), t1 = t, t2 = t + dt, n = 8, far = Math.sin((t1 + t2) / 2) < 0;
+      const dt = (.26 + R() * .6) * (1 - k * .4), t1 = t, t2 = t + dt, n = 8, far = Math.sin((t1 + t2) / 2) < 0;
       const base = [], up = [], dn = [];
       for (let i = 0; i <= n; i++) { const tt = lerp(t1, t2, i / n), b = Math.sin(Math.PI * i / n) * dk; base.push(P(k, tt)); up.push(P(Math.max(0, k - b), tt)); dn.push(P(Math.min(1, k + b * 1.3), tt)); }
-      const fade = far ? 1 : .55, opL = (.12 + .3 * (1 - k)) * fade * (.6 + R() * .6), opD = (.1 + .22 * (1 - k)) * fade * (.6 + R() * .6);
+      const fade = far ? .9 : .38, opL = (.1 + .26 * (1 - k)) * fade * (.6 + R() * .6), opD = (.1 + .22 * (1 - k)) * fade * (.6 + R() * .6);
       swells += `<path d="${sp(dn)}${sp(base.slice().reverse()).replace(/^M/, 'L')}Z" fill="${trough}" opacity="${f(opD)}"/><path d="${sp(up)}${sp(base.slice().reverse()).replace(/^M/, 'L')}Z" fill="${crestL}" opacity="${f(opL)}"/>`;
       t = t2 + (.05 + R() * .4);
     }
@@ -169,14 +169,14 @@ module.exports = {
       const st = pt(-37, 0); s += K.splash(u, { x: st[0], y: st[1] + .5, w: 14 * o.scale, h: 10 * o.scale, seed: o.seed % 3 === 0 ? 1 : o.seed, L, wind: -1 });
       return s;
     };
-    let ships = shipOn({ x: 60, y: 121, scale: .5, heel: -20, seed: 31, detail: 'mid', sx: 2, sy: 2 });
-    ships += shipOn({ x: 148, y: 111, scale: .76, heel: 20, seed: 13, detail: 'near', sx: -2, sy: 2.5 });
+    let ships = shipOn({ x: 64, y: 114, scale: .5, heel: -20, seed: 31, detail: 'mid', sx: 2, sy: 2 });
+    ships += shipOn({ x: 150, y: 104, scale: .76, heel: 20, seed: 13, detail: 'near', sx: -2, sy: 2.5 });
 
     // ——— under the glass: the eye, the wide whorls (in the vortex), a twisted plank with a rope end ———
     let fg = '';
-    const pl = [[38, 228], [62, 221], [86, 222.5]], pw = 4.6;
+    const pl = [[38, 228], [62, 222], [86, 223.5]], pw = 3.8;
     // the plank: a board bent along the whorl, its top face lit from above, its edge in shade; grain along it
-    const top = pl.map(p => [p[0], p[1] - pw * .5]), bot = pl.map(p => [p[0] + .6, p[1] + pw * .5]), edge = bot.map(p => [p[0] + .4, p[1] + 1.6]);
+    const top = pl.map(p => [p[0], p[1] - pw * .5]), bot = pl.map(p => [p[0] + .6, p[1] + pw * .5]), edge = bot.map(p => [p[0] + .3, p[1] + .9]);
     const pm = K.mat('oak', L, { form: 'plane', x1: pl[0][0], y1: pl[0][1] - 2, x2: pl[2][0], y2: pl[2][1] + 2, n: [0, .85, .5], u }), pe = K.mat('oak', L, { form: 'plane', x1: pl[0][0], y1: pl[0][1], x2: pl[2][0], y2: pl[2][1] + 3, n: [0, -.2, 1], u }), orp = L.ramp('oak', pl[1][0], pl[1][1]);
     fg += K.contactShadow(u, pl[1][0], pl[1][1] + 3, 44, L, { ry: 2.6, opacity: .45 });
     fg += `<defs>${pm.defs}${pe.defs}</defs><path d="${sp(bot)}${sp(edge.slice().reverse()).replace(/^M/, 'L')}Z" fill="${pe.fill}" stroke="${orp.outline}" stroke-width=".35"/>`
