@@ -121,7 +121,7 @@ export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string,
     if (s.price.powder) small = iconImg(ctx, `coin-${s.price.powder}`, x, y, I.priceD, 'ixp');
     else if (s.price.soul) small = iconImg(ctx, `flask-${s.price.soul}`, x, y - .4, I.priceD, 'ixp');
   }
-  const idx = s.index && s.big ? `<div class="ix"${fit ? ` style="font-size:${fit.idx}pt;width:${mm(fit.idxW)}"` : ''}>${typo(s.big)}</div>` : '';
+  const idx = ''; // the result plate under the medal is gone (user's decision 12.11): the result stays on the glass, the medal keeps the small price
   const lg = s.legend ? `<div class="lg"><b>${esc(TXT.legendPlate[0])}</b> · ${esc(TXT.legendPlate[1])}</div>` : '';
   return `<div class="cd" data-key="${esc(s.key)}" data-index="${s.index ? 1 : 0}" style="${pos}--frame:${s.frame};--band:${s.band};--rim:${s.rim}">`
     + (artUrl ? `<img class="art" src="${artUrl}" alt="">` : '')
@@ -145,12 +145,9 @@ export async function fitFaces(ctx: Ctx, specs: FaceSpec[]): Promise<Map<string,
       const bg = gl.querySelector<HTMLElement>('.bg'), fv = gl.querySelector<HTMLElement>('.fv'), ix = cd.querySelector<HTMLElement>('.ix');
       let name = parseFloat(nm.style.fontSize), wrap = false;
       for (; ;) { nm.style.fontSize = name + 'pt'; if (nm.scrollWidth <= nm.clientWidth + .5) break; if (name <= 11) { wrap = true; nm.classList.add('wrap'); break; } name = Math.max(11, name - (name > 12 ? 1 : .5)); }
-      // with the fan index the big result leaves the plate first (it stays in the index), else the flavour line
-      const index = cd.dataset.index === '1';
-      // [text pt, big result, flavour line]: whatever is dropped, the rule text then takes the largest size that fits
-      const steps: [number, boolean, boolean][] = index
-        ? [[9, true, true], [8.5, true, true], [8, true, true], [9, false, true], [8.5, false, true], [8, false, true], [8, true, false], [9, false, false], [8.5, false, false], [8, false, false], [7.5, false, false]]
-        : [[9, true, true], [8.5, true, true], [8, true, true], [9, true, false], [8.5, true, false], [8, true, false], [7.5, true, false], [7.5, false, false]];
+      // one order for every card (user's decision 12.11): the flavour line goes first, then the text shrinks to 7.5 pt, the big result goes last
+      // [text pt, big result, flavour line]
+      const steps: [number, boolean, boolean][] = [[9, true, true], [8.5, true, true], [8, true, true], [9, true, false], [8.5, true, false], [8, true, false], [7.5, true, false], [7.5, false, false]];
       let st = steps[0];
       for (st of steps) {
         tx.style.fontSize = st[0] + 'pt'; if (pl) pl.style.fontSize = st[0] + 'pt';

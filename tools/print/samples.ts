@@ -2,7 +2,7 @@
 // out/print/obrazcy/*.png at 150 dpi and probnyj-list.pdf — one sheet to print on both sides and judge on paper.
 import fs from 'node:fs';
 import path from 'node:path';
-import { SAMPLES, data, esc, mm, type Ctx, type Part, type PageSpec } from './kit';
+import { ROOT, SAMPLES, data, esc, mm, type Ctx, type Part, type PageSpec } from './kit';
 import { BLEED, CARD, DECKS, deckList, type Item, type Sheet, type Ship } from './layout';
 import { DECK_BAND, DECK_NAME, SEA, type DeckCode } from './colors';
 import { BACK_VARIANTS, CARD_CSS, backHtml, backSheetPage, faceSheet, itemFace, type CardKit, type Mode } from './cards';
@@ -48,14 +48,23 @@ export async function buildSamples(ctx: Ctx): Promise<void> {
   const kitOf = (m: Mode) => JSON.stringify(m) === JSON.stringify(base) ? kitFor(ctx, m) : kitFor(ctx, m, keys);
   const kType = await kitOf({ ...base, glass: 'type', index: true }), kShip = await kitOf({ ...base, glass: 'ship', index: true }), kPlain = await kitOf({ ...base, glass: 'type', index: false });
   const kAll = await kitFor(ctx, base);
-  // 1-3: the glass in the type's colour / the ship's colour; the same sheet without the fan index
-  const pType = part('steklo-tip', [faceSheet(ctx, kType, sheetOf(items), 'Образец · стекло в цвет типа · с индексом для веера')]);
-  await shot(pType, '01-steklo-v-tsvet-tipa.png');
-  await shot(part('steklo-korabl', [faceSheet(ctx, kShip, sheetOf(items), 'Образец · стекло в цвет корабля · с индексом для веера')]), '02-steklo-v-tsvet-korablya.png');
-  await shot(part('bez-indeksa', [faceSheet(ctx, kPlain, sheetOf(items), 'Образец · как в эталоне: без индекса для веера')]), '03-list-bez-indeksa.png');
+  // a glass sample next to the mock-up it follows (docs/mockups/print/V2type.jpg, V2ship.jpg): the user compares them side by side
+  const beside = async (ref: string, file: string) => {
+    const uri = (f: string, mime: string) => `data:${mime};base64,${fs.readFileSync(f).toString('base64')}`, refFile = path.join(ROOT, 'docs/mockups/print', ref);
+    if (!fs.existsSync(refFile)) return;
+    const page = await ctx.browser.newPage({ viewport: { width: 1200, height: 800 }, deviceScaleFactor: 1 });
+    await page.setContent(`<body style="margin:0;background:#23272b;font:600 26px sans-serif;color:#eee"><div id="b" style="display:inline-flex;gap:28px;padding:24px"><div><div style="margin:0 0 12px">Эталон (макет ${ref})</div><img src="${uri(refFile, 'image/jpeg')}" style="height:1754px;display:block"></div><div><div style="margin:0 0 12px">Набор сейчас</div><img src="${uri(out(file), 'image/png')}" style="height:1754px;display:block"></div></div>`);
+    await page.evaluate(() => Promise.all(Array.from(document.images).map(i => i.decode().catch(() => undefined))));
+    await (await page.$('#b'))!.screenshot({ path: out(file) }); await page.close();
+  };
+  // 1-3: the glass in the type's colour / the ship's colour; the same sheet with the plain medal
+  const pType = part('steklo-tip', [faceSheet(ctx, kType, sheetOf(items), 'Образец · стекло в цвет типа · медаль с маленькой ценой')]);
+  await shot(pType, '01-steklo-v-tsvet-tipa.png'); await beside('V2type.jpg', '01-steklo-v-tsvet-tipa.png');
+  await shot(part('steklo-korabl', [faceSheet(ctx, kShip, sheetOf(items), 'Образец · стекло в цвет корабля · медаль с маленькой ценой')]), '02-steklo-v-tsvet-korablya.png'); await beside('V2ship.jpg', '02-steklo-v-tsvet-korablya.png');
+  await shot(part('bez-indeksa', [faceSheet(ctx, kPlain, sheetOf(items), 'Образец · как в эталоне: медаль без маленькой цены')]), '03-list-kak-v-etalone.png');
   // 4-5: the hand fan with and without the index — five cards of one deck
-  await shot(part('veer-indeks', [fanPage(ctx, kType, hand, 'Веер в руке — с индексом (под медалью цена и короткий итог)')], CARD_CSS + CAP), '04-veer-s-indeksom.png');
-  await shot(part('veer-etalon', [fanPage(ctx, kPlain, hand, 'Веер в руке — как в эталоне (только медаль слева, цена справа)')], CARD_CSS + CAP), '05-veer-bez-indeksa.png');
+  await shot(part('veer-indeks', [fanPage(ctx, kType, hand, 'Веер в руке — медаль с маленькой ценой (вариант по умолчанию)')], CARD_CSS + CAP), '04-veer-s-tsenoj.png');
+  await shot(part('veer-etalon', [fanPage(ctx, kPlain, hand, 'Веер в руке — как в эталоне (только медаль слева, цена справа)')], CARD_CSS + CAP), '05-veer-kak-v-etalone.png');
   // 6-7: the ship board, two layouts, by the tightest board — the Dutchman
   try {
     const B = await import('./parts/boards') as unknown as { boardPage?: (ctx: Ctx, ship: Ship, v: 'top' | 'side') => PageSpec | Promise<PageSpec>; BOARD_CSS?: string };

@@ -1,6 +1,7 @@
 // Card pictures for print: an SVG scene → one JPEG in out/print/cache/art, rasterised once.
 // Baked into the JPEG (never CSS filters in the PDF page, review-print 9-10, summary 0а.7):
-//   1. the print profile — the tone curve 0→20, 32→46, 64→76, 128→134, 192→194, 255→255 and saturation +5 %;
+//   1. the print profile for a print shop's colour laser on coated matt stock (user's decision 12.11; the home-inkjet profile lifted
+//      the shadows much more) — the tone curve 0→8, 32→38, 64→68, 128→130, 192→193, 255→255 and saturation +2 %;
 //   2. the smoked glass under the text plate — the picture blurred, darkened to a target luminance and tinted.
 // The text over it stays vector. The cache key is the scene's SVG with ids renumbered in order of appearance
 // (portrait() numbers its ids by a call counter), the glass box, the tint and the size.
@@ -29,11 +30,16 @@ export const hasBacks = () => !!B;
 export const backVariants = (): (1 | 2 | 3)[] => { const v = (B?.variants ?? (B ? [1, 2, 3] : [1])).filter(n => n === 1 || n === 2 || n === 3) as (1 | 2 | 3)[]; return v.length ? v : [1]; };
 export const backSpec = (kind: string, variant: number): BackSpec | null => { try { return B ? B.back(kind, variant) : null; } catch (e) { console.warn(`warning: back ${kind} v${variant}: ${(e as Error).message}`); return null; } };
 
-export const PROFILE_VERSION = 'p5';
+export const PROFILE_VERSION = 'p6';
 /** The print profile's curve points (review-print 10). */
-export const CURVE: [number, number][] = [[0, 20], [32, 46], [64, 76], [128, 134], [192, 194], [255, 255]];
+export const CURVE: [number, number][] = [[0, 8], [32, 38], [64, 68], [128, 130], [192, 193], [255, 255]];
+/** Saturation of the print profile: a print shop's colour laser on coated matt stock needs almost no compensation (an inkjet at home had +5 %). */
+export const PROFILE_SAT = 1.02;
+/** The glass keeps its colour (user's decision 12.11, mock-ups V2type / V2ship): the plate is darkened to the target, then its
+ *  saturation is raised by this factor — the darkness under the text is solved with it, so the contrast stays. */
+export const GLASS_SAT = 1.45;
 /** Target mean relative luminance under the text: 0.035-0.07 keeps white text ≥ 7 : 1 without a black slab. */
-export const GLASS_TARGET = 0.04;
+export const GLASS_TARGET = 0.036;
 
 export interface GlassBox { top: number; tint: string }
 export interface ArtInfo { url: string; file: string; dark: number; glassMean: number; glassP95: number }
@@ -59,7 +65,7 @@ export function curveLut(): number[] {
 /** A flat colour after the print profile: what the JPEG holds where the scene was painted with this colour. */
 export function profiled(hex: string): string {
   const lut = curveLut(), [r, g, b] = [1, 3, 5].map(i => lut[parseInt(hex.slice(i, i + 2), 16)]), y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return '#' + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, y + (v - y) * 1.05))).toString(16).padStart(2, '0')).join('');
+  return '#' + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, y + (v - y) * PROFILE_SAT))).toString(16).padStart(2, '0')).join('');
 }
 
 let page: Page | null = null;
@@ -73,7 +79,7 @@ export const usedArt = () => used;
 export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBox | null): Promise<ArtInfo> {
   const W = ctx.opts.draft ? 400 : 1000, H = W * 1.4, dir = path.join(CACHE, 'art');
   fs.mkdirSync(dir, { recursive: true });
-  const hash = sha1([normalizeIds(svg), JSON.stringify(glass), W, PROFILE_VERSION, GLASS_TARGET].join('|')).slice(0, 12);
+  const hash = sha1([normalizeIds(svg), JSON.stringify(glass), W, PROFILE_VERSION, GLASS_TARGET, GLASS_SAT, PROFILE_SAT, CURVE.join(';')].join('|')).slice(0, 12);
   const file = `${key}-${hash}.jpg`, full = path.join(dir, file), meta = full + '.json', url = `../cache/art/${file}`;
   used.add(file); used.add(file + '.json');
   if (fs.existsSync(full) && fs.existsSync(meta)) return { url, file, ...JSON.parse(fs.readFileSync(meta, 'utf8')) };
@@ -87,7 +93,7 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
   const png = await page.screenshot({ clip: { x: 0, y: 0, width: 200, height: 280 } });
   const k = W / CARD.w, g = FACE.glass;
   const box = glass && { x: Math.round(g.inset * k), y: Math.round(glass.top * k), w: Math.round((CARD.w - 2 * g.inset) * k), h: Math.round((CARD.h - g.bottom - glass.top) * k), r: g.radius * k, tint: glass.tint };
-  const res = await page.evaluate(async ({ b64, W, H, box, lut, target }) => {
+  const res = await page.evaluate(async ({ b64, W, H, box, lut, target, sat, gsat }) => {
     const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     const g = c.getContext('2d', { willReadFrequently: true })!; g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, W, H);
@@ -95,10 +101,10 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
     // share of near-black (Rec.709 Y < 40) above the plate, before the profile
     const rows = box ? box.y : H; let dark = 0;
     for (let i = 0, n = rows * W * 4; i < n; i += 4) if (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2] < 40) dark++;
-    // the print profile: tone curve, then saturation +5 %
+    // the print profile: tone curve, then saturation (PROFILE_SAT)
     for (let i = 0; i < d.length; i += 4) {
       const r = lut[d[i]], gg = lut[d[i + 1]], b = lut[d[i + 2]], y = 0.2126 * r + 0.7152 * gg + 0.0722 * b;
-      d[i] = y + (r - y) * 1.05; d[i + 1] = y + (gg - y) * 1.05; d[i + 2] = y + (b - y) * 1.05;
+      d[i] = y + (r - y) * sat; d[i + 1] = y + (gg - y) * sat; d[i + 2] = y + (b - y) * sat;
     }
     g.putImageData(id, 0, 0);
     let mean = 0, p95 = 0;
@@ -106,14 +112,14 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       const bc = document.createElement('canvas'); bc.width = W; bc.height = H;
       const bg = bc.getContext('2d', { willReadFrequently: true })!;
       bg.drawImage(c, 0, 0); // an unblurred copy under the blur keeps the canvas edge from fading to transparent
-      // blurred; less saturated, so the hue of the plate comes from the tint and not from the picture
-      bg.filter = `blur(${(W * 0.0233).toFixed(1)}px) saturate(.6)`; bg.drawImage(c, 0, 0);
+      // blurred; the picture keeps its colour under the glass
+      bg.filter = `blur(${(W * 0.0233).toFixed(1)}px)`; bg.drawImage(c, 0, 0);
       const src = bg.getImageData(box.x, box.y, box.w, box.h).data, dst = g.getImageData(box.x, box.y, box.w, box.h), o = dst.data;
       const lin = Float32Array.from({ length: 256 }, (_, v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
       const tint = [1, 3, 5].map(i => parseInt(box.tint.slice(i, i + 2), 16));
       // one tint strength over the whole plate; the darkening is solved per horizontal band, so a bright sky under
       // the card's name ends as dark as calm water under the last line
-      const A = 0.6, px = (i: number, f: number) => [src[i] * f * (1 - A) + tint[0] * A, src[i + 1] * f * (1 - A) + tint[1] * A, src[i + 2] * f * (1 - A) + tint[2] * A];
+      const A = 0.6, px = (i: number, f: number) => { const p = [src[i] * f * (1 - A) + tint[0] * A, src[i + 1] * f * (1 - A) + tint[1] * A, src[i + 2] * f * (1 - A) + tint[2] * A], y = 0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]; return p.map(v => Math.max(0, Math.min(255, y + (v - y) * gsat))); };
       const lum = (p: number[]) => 0.2126 * lin[Math.min(255, Math.round(p[0]))] + 0.7152 * lin[Math.min(255, Math.round(p[1]))] + 0.0722 * lin[Math.min(255, Math.round(p[2]))];
       const BANDS = 10, bh = box.h / BANDS, fb: number[] = [];
       for (let b = 0; b < BANDS; b++) {
@@ -137,7 +143,7 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       mean = s / n; let acc = 0; for (let b = 1000; b >= 0; b--) { acc += hist[b]; if (acc >= n * 0.05) { p95 = b / 1000; break; } }
     }
     return { jpeg: c.toDataURL('image/jpeg', 0.9).split(',')[1], dark: dark / (rows * W), glassMean: mean, glassP95: p95 };
-  }, { b64: png.toString('base64'), W, H, box, lut: curveLut(), target: GLASS_TARGET });
+  }, { b64: png.toString('base64'), W, H, box, lut: curveLut(), target: GLASS_TARGET, sat: PROFILE_SAT, gsat: GLASS_SAT });
   const info = { dark: +res.dark.toFixed(4), glassMean: +res.glassMean.toFixed(4), glassP95: +res.glassP95.toFixed(4) };
   fs.writeFileSync(full, Buffer.from(res.jpeg, 'base64')); fs.writeFileSync(meta, JSON.stringify(info));
   return { url, file, ...info };

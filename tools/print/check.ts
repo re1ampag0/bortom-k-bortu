@@ -64,7 +64,7 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
         if (spec.index && paid !== c.smallPrice) errors.push(`${c.key}: the small price on the medal does not match the data`);
         const fit = kit.fits.get(c.key)!;
         if (fit.over) errors.push(`${c.key}: the text does not fit the glass plate even at the minimal sizes`);
-        if (spec.big && !fit.big) notes.push(`${c.key}: крупный итог убран со стекла${spec.index ? ' (остался в индексе)' : ''}`);
+        if (spec.big && !fit.big) notes.push(`${c.key}: крупный итог убран со стекла`);
         if (spec.flavor && !fit.flavor) notes.push(`${c.key}: подпись курсивом убрана`);
       }
       // contrast against the picture under each line (the text is vector, the JPEG has no letters in it)
