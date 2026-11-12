@@ -14,7 +14,7 @@ const skel = { horizon: HZ, eye: 4, items: [
   ['ship', 42, WL, 118, 92, 'water'], ['ghostL', 0, 129, 34, 38, 'water'], ['ghostR', 160, 130, 40, 42, 'water'],
   ['rail', 0, 186, 200, 18, 'our side'], ['coil', 109, 176, 24, 7, 'rail'], ['post', 23, 182, 4, 54, 'rail'], ['lantern', 26, 163, 13, 30, 'post hook']] };
 
-module.exports = { name: 'Туман', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Туман', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4 });
     // grey dawn fog: the sky darker grey above, pale at the sea; the sea grey-blue (the series' water dimmed by fog)

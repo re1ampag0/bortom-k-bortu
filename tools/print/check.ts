@@ -102,7 +102,7 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
   if (contrast(ON_GLASS.cream, '#26262a') < 4.5) errors.push('deck strip lettering: contrast below 4.5 : 1');
   const expected = deckSheets(data).length * 9 + seaSheets(data).flatMap(s => s.items).filter(i => i.kind === 'sea').length;
   const dark = [...kit.art.entries()].map(([k, a]) => ({ card: k, dark: a.dark, glassMean: a.glassMean, glassP95: a.glassP95 })).sort((a, b) => b.dark - a.dark);
-  for (const d of dark) if (d.dark > .3) notes.push(`${d.card}: тёмных пикселей (Y < 40) выше стекла ${(d.dark * 100).toFixed(0)} %`);
+  // the «dark above the glass ≤ 30 %» note is gone: user's decision 12.11 — dark pictures are the game's style, a print shop holds them
   const dir = path.join(ROOT, 'report/print'); fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'check.json'), JSON.stringify({ cards, distinct: seen.size, minContrastMean: +minMean.toFixed(2), minContrastP95: +minP95.toFixed(2), errors, notes, dark, lines: rows }, null, 1));
   console.log(`check: ${cards} card faces on the sheets (${seen.size} distinct, ${expected} slots expected with reference cards), each 63 × 88 mm`);

@@ -92,7 +92,7 @@ for (let n = 0; n < names.length; n++) {
   await pg.context().close();
   // 2. the mock-up of the printed card, 3. the tone sketch and the arm's-length view
   const spec = kit.specs.get(key)!, fit = kit.fits.get(key)!, art = kit.art.get(key)!;
-  if (art.dark > .3) lint.push(`тёмное: ${(art.dark * 100).toFixed(0)} % пикселей выше стекла темнее Y 40 (порог 30 %)`);
+  // no «dark share» warning: dark pictures are the game's style (user's decision 12.11)
   const html = `<!doctype html><html><head><meta charset="utf-8"><style>${fontCss()}${BASE_CSS}${CARD_CSS}body{background:#2a2622}.cd{position:relative}</style></head><body><div id="c" style="display:inline-block">${faceHtml(ctx, spec, fit, art.url)}</div></body></html>`;
   const hf = path.join(ROOT, `out/print/html/_review-${process.pid}.html`); fs.writeFileSync(hf, html);
   const cp = await (await browser.newContext({ viewport: { width: 400, height: 500 }, deviceScaleFactor: 2.5 })).newPage();

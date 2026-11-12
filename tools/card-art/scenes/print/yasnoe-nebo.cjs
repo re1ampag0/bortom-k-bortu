@@ -17,7 +17,7 @@ const skel = { horizon: HZ, eye: 4, light: 'high sun behind the viewer, over the
     ['linstock', 150, 268, 18, 82, 'leans on the right jamb, foot on the deck'],
   ] };
 
-module.exports = { name: 'Ясное небо', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ясное небо', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4 });
     // ——— sky without a cloud, the sea with fine glints all over (no path: the sun is behind us)

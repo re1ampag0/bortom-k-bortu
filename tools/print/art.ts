@@ -30,11 +30,12 @@ export const hasBacks = () => !!B;
 export const backVariants = (): (1 | 2 | 3)[] => { const v = (B?.variants ?? (B ? [1, 2, 3] : [1])).filter(n => n === 1 || n === 2 || n === 3) as (1 | 2 | 3)[]; return v.length ? v : [1]; };
 export const backSpec = (kind: string, variant: number): BackSpec | null => { try { return B ? B.back(kind, variant) : null; } catch (e) { console.warn(`warning: back ${kind} v${variant}: ${(e as Error).message}`); return null; } };
 
-export const PROFILE_VERSION = 'p7';
+export const PROFILE_VERSION = 'p8';
 /** The print profile's curve points (review-print 10). */
-export const CURVE: [number, number][] = [[0, 8], [32, 38], [64, 68], [128, 130], [192, 193], [255, 255]];
+// user's decision 12.11 (evening): no lifting of the shadows and no change of colour — a print shop holds the dark tones
+export const CURVE: [number, number][] = [[0, 0], [64, 64], [128, 128], [192, 192], [255, 255]];
 /** Saturation of the print profile: a print shop's colour laser on coated matt stock needs almost no compensation (an inkjet at home had +5 %). */
-export const PROFILE_SAT = 1.02;
+export const PROFILE_SAT = 1;
 /** The glass keeps its colour (user's decision 12.11, mock-ups V2type / V2ship): the plate is darkened to the target, then its
  *  saturation is raised by this factor — the darkness under the text is solved with it, so the contrast stays. */
 export const GLASS_SAT = 1.2;

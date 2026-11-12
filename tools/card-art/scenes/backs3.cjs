@@ -36,7 +36,7 @@ const pathD = (segs, m = p => p) => segs.map(s => s[0] + s.slice(1).map(p => P(m
 const circ = (cx, cy, r) => `M${f(cx - r)} ${f(cy)}a${f(r)} ${f(r)} 0 1 0 ${f(2 * r)} 0a${f(r)} ${f(r)} 0 1 0 ${f(-2 * r)} 0Z`;
 
 /** Tones of the embossing on a ground: face a shade lighter, the lit bevel lighter, the shadow bevel darker. */
-const embossTones = g => ({ face: mix(g, '#ffffff', .085), hi: mix(g, '#fff6e6', .3), lo: mix(g, '#06080c', .42), deep: mix(g, '#06080c', .25) });
+const embossTones = (g, k = 1) => ({ face: mix(g, '#ffffff', .085 * k), hi: mix(g, '#fff6e6', .3 * k), lo: mix(g, '#06080c', Math.min(.7, .42 * k)), deep: mix(g, '#06080c', .25 * k) });
 
 /**
  * Embossing tone in tone: the shapes (drawn with currentColor) three times — the dark bevel shifted to the lower
@@ -125,24 +125,35 @@ function brassRim(u, L, cx, cy, r0, r1) {
 }
 
 /**
- * A corner plate of brass, pointing to its corner: a pointed leaf with a midrib, two scrolls curling out to the
- * sides, a ball at the base. (cx, cy) — the base; (dx, dy) — the unit direction to the corner. Drawn point by point in
- * picture units, so the light stays at the upper left on all four.
+ * A corner plate of brass: a scallop shell opening towards its corner — a fan of ribs from the hinge, a scalloped
+ * lip, the two ears of the hinge, a rivet in the hinge. (cx, cy) — the hinge; (dx, dy) — the unit direction to the
+ * corner. Drawn point by point in picture units, so the light stays at the upper left on all four.
  */
 function cornerPlate(u, L, cx, cy, dx, dy, s, T) {
   const px = dy, py = -dx, m = ([a, b]) => [cx + (a * dx + b * px) * s, cy + (a * dy + b * py) * s];
-  const leaf = pathD([['M', [-1, 0]], ['C', [1, 4.6], [8, 5.6], [17, 0]], ['C', [8, -5.6], [1, -4.6], [-1, 0]], ['Z']], m);
-  const rib = pathD([['M', [2.4, 0]], ['L', [13, 0]]], m);
-  const scroll = e => pathD([['M', [0, e * 1.6]], ['C', [2.4, e * 6.4], [8.6, e * 8], [8.4, e * 12.6]], ['C', [8.2, e * 16], [3.6, e * 16.6], [2.6, e * 13.8]], ['C', [2, e * 12], [3.8, e * 10.8], [5, e * 12]]], m);
-  const e = 18 * s, g = brassGrad(u, L, cx + dx * 8 * s - e, cy + dy * 8 * s - e, cx + dx * 8 * s + e, cy + dy * 8 * s + e), rp = g.rp;
-  const sc = scroll(1) + scroll(-1), sw = 2.5 * s;
-  const shape = (fill, stroke, extra = '') => `<g ${extra}><path d="${sc}" fill="none" stroke="${stroke}" stroke-width="${f(sw + .9)}" stroke-linecap="round"/><path d="${leaf}" fill="${fill}" stroke="${stroke}" stroke-width=".9" stroke-linejoin="round"/></g>`;
-  const b0 = m([-2.4, 0]), e1 = m([4.6, 12.4]), e2 = m([4.6, -12.4]);
-  return `<defs>${g.defs}</defs>` + shape(T.lo, T.lo, `opacity=".6" transform="translate(.8 1)"`)
-    + shape(rp.outline, rp.outline)
-    + `<path d="${sc}" fill="none" stroke="url(#${g.id})" stroke-width="${f(sw)}" stroke-linecap="round"/><path d="${leaf}" fill="url(#${g.id})"/>`
-    + `<path d="${rib}" fill="none" stroke="${rp.shadow}" stroke-width=".55" stroke-linecap="round"/><path d="${rib}" fill="none" stroke="${rp.spec}" stroke-width=".4" stroke-linecap="round" opacity=".55" transform="translate(-.4 -.45)"/>`
-    + brassBall(u, L, e1[0], e1[1], 1.5 * s) + brassBall(u, L, e2[0], e2[1], 1.5 * s) + brassBall(u, L, b0[0], b0[1], 2.6 * s);
+  const R = 15.5, A = 50 * Math.PI / 180, N = 7, pol = (r, a) => [r * Math.cos(a), r * Math.sin(a)];
+  // the lip: N scallops between the two edge rays of the fan; the fan starts 2.6 off the hinge
+  const a0 = -A, da = 2 * A / N;
+  const segs = [['M', pol(2.6, a0)], ['L', pol(R * .93, a0)]];
+  for (let k = 0; k < N; k++) {
+    const aa = a0 + k * da, ab = aa + da, am = aa + da / 2;
+    segs.push(['C', pol(R * 1.03, aa + da * .1), pol(R * 1.12, am - da * .2), pol(R * 1.1, am)], ['C', pol(R * 1.12, am + da * .2), pol(R * 1.03, ab - da * .1), pol(R * .93, ab)]);
+  }
+  segs.push(['L', pol(2.6, A)], ['C', pol(1.2, A * .4), pol(1.2, -A * .4), pol(2.6, a0)], ['Z']);
+  const shell = pathD(segs, m);
+  // ribs between the scallops, from near the hinge to the lip; the ears: two small wings across the hinge
+  const ribs = [];
+  for (let k = 1; k < N; k++) { const a = a0 + k * da; ribs.push(['M', pol(4.6, a)], ['L', pol(R * .88, a)]); }
+  const rib = pathD(ribs, m);
+  const ear = e => pathD([['M', [1.2, e * 1.4]], ['L', [-2.2, e * 3.2]], ['C', [-3.6, e * 4.6], [-2.4, e * 7], [-.6, e * 6.6]], ['L', [3.4, e * 3.2]], ['Z']], m);
+  const ears = ear(1) + ear(-1);
+  const e = 17 * s, mc = m([7, 0]), g = brassGrad(u, L, mc[0] - e, mc[1] - e, mc[0] + e, mc[1] + e), rp = g.rp, h = m([.6, 0]);
+  return `<defs>${g.defs}</defs><path d="${ears}${shell}" fill="${T.lo}" opacity=".6" transform="translate(.8 1)"/>`
+    + `<path d="${ears}" fill="url(#${g.id})" stroke="${rp.outline}" stroke-width=".55" stroke-linejoin="round"/>`
+    + `<path d="${shell}" fill="url(#${g.id})" stroke="${rp.outline}" stroke-width=".6" stroke-linejoin="round"/>`
+    + `<path d="${rib}" fill="none" stroke="${rp.spec}" stroke-width=".45" stroke-linecap="round" opacity=".5" transform="translate(-.35 -.4)"/>`
+    + `<path d="${rib}" fill="none" stroke="${rp.shadow}" stroke-width=".6" stroke-linecap="round" opacity=".9"/>`
+    + brassBall(u, L, h[0], h[1], 2.2 * s);
 }
 
 /**
@@ -174,12 +185,12 @@ function ropeShapes(S, w) {
 const bez = (p0, p1, p2, p3) => t => { const s = 1 - t; return [0, 1].map(i => s * s * s * p0[i] + 3 * s * s * t * p1[i] + 3 * s * t * t * p2[i] + t * t * t * p3[i]); };
 
 /** A wind star: 8 rays — rr = [north-south, east-west, the diagonals] long, wl wide at the root — halves lit and shaded. */
-function starShapes(rr, wl) {
+function starShapes(rr, wl, cx = CX, cy = CY) {
   let lit = '', shade = '';
   for (let k = 0; k < 8; k++) {
     const a = k * Math.PI / 4 - Math.PI / 2, r = k % 2 ? rr[2] : k % 4 ? rr[1] : rr[0], w = k % 2 ? wl * .75 : wl;
-    const tip = [CX + r * Math.cos(a), CY + r * Math.sin(a)], l = [CX + w * Math.cos(a - Math.PI / 2), CY + w * Math.sin(a - Math.PI / 2)], rt = [CX + w * Math.cos(a + Math.PI / 2), CY + w * Math.sin(a + Math.PI / 2)];
-    lit += `<path d="M${CX} ${CY}L${P(l)}L${P(tip)}Z"/>`; shade += `<path d="M${CX} ${CY}L${P(tip)}L${P(rt)}Z"/>`;
+    const tip = [cx + r * Math.cos(a), cy + r * Math.sin(a)], l = [cx + w * Math.cos(a - Math.PI / 2), cy + w * Math.sin(a - Math.PI / 2)], rt = [cx + w * Math.cos(a + Math.PI / 2), cy + w * Math.sin(a + Math.PI / 2)];
+    lit += `<path d="M${f(cx)} ${f(cy)}L${P(l)}L${P(tip)}Z"/>`; shade += `<path d="M${f(cx)} ${f(cy)}L${P(tip)}L${P(rt)}Z"/>`;
   }
   return { lit, shade };
 }
@@ -198,16 +209,17 @@ function waveRows(x0, x1, y, rows, gap, wl, amp) {
 /** Inside of the medallion: the deck's ship as one dark silhouette on a calm sea; for the sea — a compass rose over waves. */
 function fieldArt(u, kind, ink, mid, rf) {
   if (kind === 'sea') {
-    const rose = starShapes([rf * .82, rf * .82, rf * .5], rf * .14);
+    // the rose a little above the middle, the waves under its south point
+    const cy = CY - rf * .14, rr = rf * .7, rose = starShapes([rr * .92, rr * .92, rr * .56], rf * .12, CX, cy);
     let ticks = '';
-    for (let k = 0; k < 32; k++) { const a = k * Math.PI / 16, r0 = rf * .86, r1 = rf * (k % 4 ? .92 : .97); ticks += `M${P([CX + r0 * Math.cos(a), CY + r0 * Math.sin(a)])}L${P([CX + r1 * Math.cos(a), CY + r1 * Math.sin(a)])}`; }
-    return `<path d="${waveRows(CX - rf, CX + rf, CY + rf * .38, 3, rf * .17, rf * .34, rf * .07)}" fill="none" stroke="${mid}" stroke-width=".9" stroke-linecap="round" opacity=".7"/>`
-      + `<path d="${circ(CX, CY, rf * .86)}" fill="none" stroke="${ink}" stroke-width=".5" opacity=".8"/><path d="${ticks}" stroke="${ink}" stroke-width=".5" opacity=".85"/>`
+    for (let k = 0; k < 32; k++) { const a = k * Math.PI / 16, r0 = rr, r1 = rr * (k % 4 ? 1.06 : 1.12); ticks += `M${P([CX + r0 * Math.cos(a), cy + r0 * Math.sin(a)])}L${P([CX + r1 * Math.cos(a), cy + r1 * Math.sin(a)])}`; }
+    return `<path d="${waveRows(CX - rf, CX + rf, cy + rr * 1.2, 3, rf * .1, rf * .3, rf * .06)}" fill="none" stroke="${mid}" stroke-width=".9" stroke-linecap="round" opacity=".8"/>`
+      + `<path d="${circ(CX, cy, rr)}" fill="none" stroke="${ink}" stroke-width=".5" opacity=".8"/><path d="${ticks}" stroke="${ink}" stroke-width=".5" opacity=".85"/>`
       + `<g fill="${mid}">${rose.lit}</g><g fill="${ink}">${rose.shade}</g>`
-      + `<path d="${circ(CX, CY, rf * .1)}" fill="${ink}"/>`;
+      + `<path d="${circ(CX, cy, rf * .08)}" fill="${ink}"/>`;
   }
-  const b = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), sc = Math.min(rf * 1.56 / b.w, rf * 1.42 / b.h), wl = CY + rf * .5;
-  const x = CX - (b.x0 + b.x1) / 2 * sc, flip = kind === 'revenge' || kind === 'dutch';
+  const b = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), sc = Math.min(rf * 1.74 / b.w, rf * 1.44 / b.h), wl = CY + rf * .5;
+  const x = CX - (b.x0 + b.x1) / 2 * sc, flip = kind === 'revenge'; // «Месть» bow to the right, «Голландец» to the left: the two read apart by shape too
   const xx = flip ? CX + (b.x0 + b.x1) / 2 * sc : x;
   let sil = K.shipSilhouette(kind, { x: xx, y: wl, scale: sc, flip, color: ink, u: 'b3' + u });
   // the rigging of the silhouette is hairline at this size: no line thinner than 0.35 units
@@ -258,7 +270,7 @@ function draw(kind) {
     orn += emboss(T, wv + `<g transform="rotate(180 ${CX} ${CY})">${wv}</g>`);
   } else {
     const a1 = anchorShapes(([x, y]) => [54 + x, CY + y], 110), a2 = anchorShapes(([x, y]) => rot([54 + x, CY + y]), 110);
-    orn = emboss(T, a1.shapes + a2.shapes, a1.detail + a2.detail);
+    orn = emboss(embossTones(g, 1.4), a1.shapes + a2.shapes, a1.detail + a2.detail, .75);
   }
   body += orn + emboss(T, r1.shapes + r2.shapes, r1.detail + r2.detail, .5);
   body += medallion(u, L, kind, g, T);

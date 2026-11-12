@@ -37,7 +37,7 @@ function wakeArm(u, L, a, b, seed) {
   return out;
 }
 
-module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     // the sea series' water (print-kit-cards: one blue-turquoise row)
