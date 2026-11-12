@@ -144,6 +144,10 @@ function build(u, L, o, mode) {
   const kind = SPECS[o.kind] ? o.kind : 'pearl', sp = SPECS[kind];
   const s = o.scale || 1, dir = o.flip ? -1 : 1, x0 = o.x != null ? o.x : 100, y0 = o.y != null ? o.y : 180;
   const ang = rad(o.heel || 0), ca = Math.cos(ang), sa = Math.sin(ang);
+  // the roll (degrees, + towards the viewer): a turn about the long axis on the waterline, H' = H cos - Z sin; then the
+  // heel in the picture's plane as before. Z — across the hull, + towards the viewer, 0 — the middle plane
+  const phi = clamp(+o.roll || 0, -20, 20), cr = Math.cos(rad(phi)), sr = Math.sin(rad(phi)), kR = Math.abs(phi) / 15, DBW = 2.5;   // DBW: the bulwark over the deck
+  let ZF = null;   // the Z of a point given without one: the near side of the hull while the hull is drawn, else 0
   const sil = mode === 'sil', refl = mode === 'refl';
   const det = sil ? 'mid' : refl ? 'far' : (o.detail === 'far' || o.detail === 'mid' ? o.detail : 'near');
   const far = det === 'far', near = det === 'near', plain = sil || far;   // plain: no small things, no outline
@@ -153,32 +157,33 @@ function build(u, L, o, mode) {
   const Lu = sp.len / 100, hb = sp.len / 2;
 
   // local point -> scene point
-  const pt = (X, H) => [x0 + dir * s * (X * ca - H * sa), y0 - s * (X * sa + H * ca)];
-  const pp = (X, H) => { const p = pt(X, H); return f(p[0]) + ' ' + f(p[1]); };
-  const line = pts => 'M' + pts.map(p => pp(p[0], p[1])).join('L');
+  const pt = (X, H, Z) => { if (phi) { const z = Z != null ? Z : ZF ? ZF(X, H) : 0; H = H * cr - z * sr; } return [x0 + dir * s * (X * ca - H * sa), y0 - s * (X * sa + H * ca)]; };
+  const pp = (X, H, Z) => { const p = pt(X, H, Z); return f(p[0]) + ' ' + f(p[1]); };
+  const line = pts => 'M' + pts.map(p => pp(p[0], p[1], p[2])).join('L');
   const poly = pts => line(pts) + 'Z';
-  const seg = (A, B) => 'M' + pp(A[0], A[1]) + 'L' + pp(B[0], B[1]);
-  const sag = (A, B, k) => 'M' + pp(A[0], A[1]) + 'Q' + pp((A[0] + B[0]) / 2, (A[1] + B[1]) / 2 - k) + ' ' + pp(B[0], B[1]);
+  const seg = (A, B) => 'M' + pp(A[0], A[1], A[2]) + 'L' + pp(B[0], B[1], B[2]);
+  const sag = (A, B, k) => 'M' + pp(A[0], A[1], A[2]) + 'Q' + pp((A[0] + B[0]) / 2, (A[1] + B[1]) / 2 - k, A[2] != null && B[2] != null ? (A[2] + B[2]) / 2 : undefined) + ' ' + pp(B[0], B[1], B[2]);
   const spl = (pts, closed) => { // a smooth curve through the points (Catmull-Rom)
     const n = pts.length; if (n < 3) return line(pts) + (closed ? 'Z' : '');
     const g = i => closed ? pts[(i + n) % n] : pts[Math.min(n - 1, Math.max(0, i))];
-    let d = 'M' + pp(pts[0][0], pts[0][1]);
+    let d = 'M' + pp(pts[0][0], pts[0][1], pts[0][2]);
     for (let i = 0; i < (closed ? n : n - 1); i++) { const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2);
-      d += 'C' + pp(p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6) + ' ' + pp(p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6) + ' ' + pp(p2[0], p2[1]); }
+      d += 'C' + pp(p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6, p1[2]) + ' ' + pp(p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6, p2[2]) + ' ' + pp(p2[0], p2[1], p2[2]); }
     return d + (closed ? 'Z' : '');
   };
   const box = (X, H, w, h) => poly([[X - w / 2, H - h / 2], [X + w / 2, H - h / 2], [X + w / 2, H + h / 2], [X - w / 2, H + h / 2]]);
-  const dot = (X, H, r) => { const p = pt(X, H); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(r * s)}"`; };
+  const dot = (X, H, r, Z) => { const p = pt(X, H, Z); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(r * s)}"`; };
 
   // light: the intensity on a local normal [towards the stern, up, at the viewer]; tones go to the sky's tone far away
   const cen = pt(0, sp.free * 2), dC = L.at(cen[0], cen[1]);
-  const lum = n => { const l = Math.hypot(n[0], n[1], n[2]) || 1; return (dir * n[0] * dC.dx - n[1] * dC.dy + n[2] * dC.dz) / l; };
+  const lum = n => { if (phi) n = [n[0], n[1] * cr - n[2] * sr, n[1] * sr + n[2] * cr];   // the normals turn with the roll
+    const l = Math.hypot(n[0], n[1], n[2]) || 1; return (dir * n[0] * dC.dx - n[1] * dC.dy + n[2] * dC.dz) / l; };
   const col = c => sil ? C : air ? mix(c, airC, air) : c;
   const tone = (kindM, I) => sil ? C : col(L.tone(kindM, clamp(I, -1, 1), cen[0], cen[1]));
   const ink = kindM => sil ? C : col(mix(L.tone(kindM, -.1, cen[0], cen[1]), '#1c0f08', .62));
   const back = dC.dz < -.25, If = lum([0, 0, 1]);
   let defs = '';
-  const gr = (A, B, stops) => { if (sil) return C; const id = nid('hg', u), a = pt(A[0], A[1]), b = pt(B[0], B[1]); defs += linGrad(id, a[0], a[1], b[0], b[1], stops); return `url(#${id})`; };
+  const gr = (A, B, stops) => { if (sil) return C; const id = nid('hg', u), a = pt(A[0], A[1], A[2]), b = pt(B[0], B[1], B[2]); defs += linGrad(id, a[0], a[1], b[0], b[1], stops); return `url(#${id})`; };
   const clipOf = d => { const id = nid('hc', u); defs += `<clipPath id="${id}"><path d="${d}" clip-rule="evenodd"/></clipPath>`; return id; };
   const ow = plain ? 0 : clamp(.3 * Math.sqrt(s) + .12, .4, .8);        // the outline of the big forms
   const rw = w => f(clamp(w * s, .1, .5));                                // the width of a rope
@@ -189,12 +194,12 @@ function build(u, L, o, mode) {
   // (the key light itself when it is behind the ship: the kant stays on the side of the moon or the low sun)
   const rimDir = plain ? null : back ? (() => { const l = Math.hypot(dC.ux, dC.uy - .35); return [dC.ux / l, (dC.uy - .35) / l]; })() : L.rim ? (() => { const a = Math.sin(rad(L.rim.az)), l = Math.hypot(a, .55); return [a / l, -.55 / l]; })() : null;
   const rimCol = L.rim ? L.rim.color : mix(L.keyColor, '#ffffff', .3), rimPow = L.rim ? L.rim.power : clamp(L.key.power * .62);
-  const rim = (d, clipId, c, ext, w = .9, k = 1) => { if (!rimDir) return ''; const p = pt(c[0], c[1]), e = ext * s, id = nid('hr', u);
+  const rim = (d, clipId, c, ext, w = .9, k = 1) => { if (!rimDir) return ''; const p = pt(c[0], c[1], c[2]), e = ext * s, id = nid('hr', u);
     defs += linGrad(id, p[0] - rimDir[0] * e * .15, p[1] - rimDir[1] * e * .15, p[0] + rimDir[0] * e, p[1] + rimDir[1] * e, [[0, rimCol, 0], [.5, rimCol, rimPow * .5 * k], [1, rimCol, clamp(rimPow * 1.5 * k)]]);
     return `<path d="${d}" fill="none" stroke="url(#${id})" stroke-width="${f(clamp(w * s, .5, 1.6))}" clip-path="url(#${clipId})"/>`; };
   // a spar: a shaded cylinder near, a flat bar far away
   const spar = (A, B, r1, r2, kindM, opt = {}) => {
-    const p = pt(A[0], A[1]), q = pt(B[0], B[1]);
+    const p = pt(A[0], A[1], A[2]), q = pt(B[0], B[1], B[2]);
     if (plain) { const dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, a1 = Math.max(r1 * s, .1), a2 = Math.max(r2 * s, .1);
       return `<path d="M${f(p[0] + nx * a1)} ${f(p[1] + ny * a1)}L${f(q[0] + nx * a2)} ${f(q[1] + ny * a2)}L${f(q[0] - nx * a2)} ${f(q[1] - ny * a2)}L${f(p[0] - nx * a1)} ${f(p[1] - ny * a1)}Z" fill="${tone(kindM, If * .6)}"/>`; }
     const rm = Math.max(r1, r2) * s;
@@ -212,12 +217,27 @@ function build(u, L, o, mode) {
   const Hs = rail(xStem), hTop = rail(xAft);
   const stemX = h => { const t = h / Hs, p = sp.bow[1]; return -hb - sp.bow[0] * (t < 0 ? t * p * .5 : 1 - Math.pow(1 - Math.min(t, 1), p)); };
   const hC = Y(sp.free * sp.counter, hb), xC = hb + sp.over * .3, kT = (xAft - xC) / (hTop - hC), transX = h => xC + kT * (h - hC);   // the transom's edge
-  const hullPts = [], topPts = [];
-  for (let h = -6; h < Hs - .05; h += .8) hullPts.push([stemX(h), h]);
+  // the third dimension: the half-breadth of the hull at (X, H) — the near side is Z = +hullZ, the far side Z = -hullZ.
+  // Across: tumblehome above the widest line (t0), the bilge and the floor under the water down to the keel at the
+  // draft; along: fine to the stem, a run to the sternpost under the water, the transom (~0.6 of the beam) above the
+  // counter; on the transom's strip (the stern turned to us) Z runs from the near quarter to the far one.
+  const Bh = sp.len * (sp.beam || .25) / 2, Tk = sp.draft || sp.free, pB = sp.bilge || 2.2, rTop = clamp(1 - .2 * sp.tumble, .6, .97);
+  const secW = (X, H) => { if (H < 0) { const q = clamp(-H / Tk); return Math.max(.4 / Bh, .98 * Math.pow(Math.max(0, 1 - Math.pow(q, pB)), 1 / pB)); }
+    const t = Math.min(H / (sp.free + sheer(X)), 1.8), t0 = .42; return t <= t0 ? 1 - .02 * (1 - t / t0) : Math.max(.5, .98 - (.98 - rTop) * Math.pow((t - t0) / (1 - t0), 1.3)); };
+  const lonW = (X, H) => { if (X <= 0) { const xe = stemX(clamp(H, -Tk, Hs)); return xe >= 0 ? 1 : Math.pow(Math.max(0, 1 - Math.pow(clamp(X / xe), 2.3)), .55); }
+    const xe = H >= hC ? transX(H) : lerp(hb - .3, xC, clamp(H / hC)), base = Math.pow(Math.max(0, 1 - Math.pow(clamp(X / xe), 3)), .45);
+    return Math.max(base, H > 0 ? .6 * sm(H / hC) : 0); };
+  const hullZ = (X, H) => { const w = Bh * secW(X, H) * lonW(X, H);
+    if (H > hC && X > transX(H)) { const tw0 = lerp(sp.tw[1], sp.tw[0], clamp((H - hC) / (hTop - hC))); return w * (1 - 2 * clamp((X - transX(H)) / Math.max(.5, tw0))); }
+    return w; };
+  const bR = X => hullZ(X, rail(X));   // the near rail
+  ZF = hullZ;
+  const hullPts = [], topPts = [], hLo = phi ? -Tk - 1 : -6;
+  for (let h = hLo; h < Hs - .05; h += .8) hullPts.push([stemX(h), h]);
   for (let X = xStem; X < xAft - .05; X += .8) topPts.push([X, rail(X)]);
   topPts.push([xAft, hTop]); hullPts.push(...topPts, [xC, hC]);
   for (let i = 1; i <= 6; i++) { const t = i / 6, q = 1 - t; hullPts.push([q * q * xC + 2 * t * q * (hb + sp.over * .02) + t * t * (hb - .3), q * q * hC + 2 * t * q * hC * .74 + t * t * hC * .42]); }
-  hullPts.push([hb - 1.4, -6]);
+  hullPts.push([hb - 1.4, hLo]);
   const hullD = line(hullPts) + 'Z', hullK = sp.hull;
   const strip = (h0, h1, Xa, Xb, step = 2.5) => { const a = [], b = []; for (let X = Xa; X < Xb + step - 1e-6; X += step) { const x = Math.min(X, Xb); a.push([x, Y(h1, x)]); b.unshift([x, Y(h0, x)]); } return poly(a.concat(b)); };
   const along = (h, Xa, Xb, step = 2.5) => { const a = []; for (let X = Xa; X < Xb + step - 1e-6; X += step) { const x = Math.min(X, Xb); a.push([x, Y(h, x)]); } return a; };
@@ -295,6 +315,26 @@ function build(u, L, o, mode) {
     // wet planks at the waterline: darker, with the weed of the Dutchman
     if (sp.bleach) inner += fillP(strip(4.4, topMax + 2, xStem - 3, xAft + 2, 4), gr([0, 4.4], [0, topMax], [[0, '#bcb6a4', 0], [.45, '#bcb6a4', .2], [1, '#cdc7b4', .36]]));   // the upper strakes bleached by sun and salt
     inner += fillP(strip(-1, 1.6, xStem - 3, xAft + 2, 6), gr([0, 0], [0, 1.6], [[0, sp.growth ? tone('ship-weed', -.5) : dark, .6], [1, dark, 0]]));
+    if (phi) { // the roll: the water line moves on the near side
+      const wy = (a, b2) => `<linearGradient id="${a}" gradientUnits="userSpaceOnUse" x1="0" y1="${f(y0 - b2 * s)}" x2="0" y2="${f(y0)}">`;
+      if (phi < 0) { // the near side rises out of the water: the bottom under the old waterline — planking (copper plates), slime and weed, wet sheen
+        const cop = sp.bottom === 'copper', bk = cop ? 'brass' : sp.bottom === 'tar' ? 'tar' : 'ship-weed', slime = cop ? '#3f7a62' : '#4a5a30';
+        const bt = q => { const I = lum([0, -.2 - .95 * q, 1 - .45 * q]); return col(mix(L.tone(bk, clamp(I + .15, -1, 1), cen[0], cen[1]), cop ? '#2c3a2e' : '#26301c', cop ? .2 + q * .3 : .15 + q * .35)); };
+        inner += fillP(strip(-Tk - 1, .15, xStem - 3, xAft + 2, 3), gr([0, -Tk], [0, .15], [[0, bt(1)], [.4, bt(.6)], [.75, bt(.25)], [1, bt(0)]]));
+        if (!far) { const Rb = R('bottom'); let sm = '', sh = '', wd = '';
+          for (let h = -.9; h > -Tk; h -= cop ? .75 : 1.15) { sm += line(along(h, xStem + 1, xAft, 3)); if (cop) for (let X = xStem + 2 + Rb() * 2; X < hb; X += 2.2) sm += seg([X, h], [X, h + .75]); }
+          for (let i = 0; i < 9; i++) { const h = -.5 - Rb() * Math.min(3.2, Tk * .4), X0 = -hb * .8 + Rb() * sp.len * .8, l = 4 + Rb() * 12; sh += line(along(h, X0, X0 + l, 1.5)); }
+          if (!cop) for (let X = xStem + 3; X < xAft - 1; X += .7 + Rb() * 1.1) { const l = .5 + Rb() * 1.8, a = [[X, -.05]]; for (let k = 1; k <= 3; k++) a.push([X + (Rb() - .5) * .5, -l * k / 3]); wd += spl(a); }
+          inner += fillP(strip(-1.8, .2, xStem - 3, xAft + 2, 3), gr([0, -1.8], [0, .2], [[0, slime, 0], [.7, slime, cop ? .3 : .55], [1, mix(slime, '#5d7a3a', .4), cop ? .5 : .75]]))
+            + strokeP(sm, col(mix(bt(.5), '#0c0a08', .45)), clamp(.12 * s, .1, .26), ` opacity="${cop ? .5 : .4}"`) + strokeP(wd, tone('ship-weed', If - .1), clamp(.18 * s, .1, .4), ' opacity=".75" stroke-linecap="round"')
+            + strokeP(sh, col(mix(L.pal.sky[3], '#ffffff', .45)), clamp(.16 * s, .1, .35), ` opacity="${f(.3 + .15 * kR)}" stroke-linecap="round"`)
+            + strokeP(line(along(.12, xStem + 1, xAft, 3)), col(mix(L.tone('bone', If, cen[0], cen[1]), '#9a9a80', .4)), clamp(.22 * s, .12, .45), ' opacity=".55"'); }   // the scum line of the old waterline
+        const id = nid('hw', u); defs += wy(id, 2.4) + `<stop offset="0" stop-color="${reflexC}" stop-opacity="0"/><stop offset="1" stop-color="${reflexC}" stop-opacity=".45"/></linearGradient>`;
+        inner += `<rect x="-400" y="${f(y0 - 2.4 * s)}" width="1000" height="${f(2.4 * s)}" fill="url(#${id})"/>`;
+      } else { // the near side goes deeper: the planks just over the water are wet and dark, the water's reflex under them
+        const id = nid('hw', u), wet = col(mix(L.tone(hullK, -.8, cen[0], cen[1]), '#0c0a08', .4)); defs += wy(id, 2.2) + `<stop offset="0" stop-color="${wet}" stop-opacity="0"/><stop offset=".7" stop-color="${wet}" stop-opacity=".5"/><stop offset="1" stop-color="${reflexC}" stop-opacity=".5"/></linearGradient>`;
+        inner += `<rect x="-400" y="${f(y0 - 2.2 * s)}" width="1000" height="${f(2.2 * s)}" fill="url(#${id})"/>`; }
+    }
     hull += `<g clip-path="url(#${hc})">${inner}</g>`;
     // the ports: lids with an edge in the light, a shadow under them; guns of different size, some ports empty
     const Rq = R('lids'), hole = col(mix(L.tone(hullK, -1, cen[0], cen[1]), '#17100c', .7)), lidK = sp.bands.length && kind === 'endeavour' ? 'tar' : hullK;
@@ -339,7 +379,7 @@ function build(u, L, o, mode) {
     const tA = [xAft, hTop], arch = sp.tw[0] * .32 + .6, hM = (hC + hTop) / 2;
     const trPoly = 'M' + pp(xC, hC) + 'L' + pp(tA[0], tA[1]) + 'Q' + pp(xAft + sp.tw[0] * .5, hTop + arch * 1.5) + ' ' + pp(xAft + sp.tw[0], hTop + arch * .2) + 'L' + pp(xC + sp.tw[1], hC + .5) + 'Z';
     const under = poly([[xC, hC], [xC + sp.tw[1], hC + .5], [hb + sp.tw[1] * .3, hC * .5], [hb - .3, hC * .42], [hb + sp.over * .02, hC * .74]]);
-    const rud = poly([[hb - .4, hC * .5], [hb + 1.5, hC * .46], [hb + 1.1, -6], [hb - 1.4, -6]]);
+    const rud = poly([[hb - .4, hC * .5, 0], [hb + 1.5, hC * .46, 0], [hb + 1.1, -6, 0], [hb - 1.4, -6, 0]]);
     const nT = [.74, .1, .66], nTq = [.42, .1, .9], nTa = [.97, .1, .2];   // the middle of the transom; its edge at the quarter; its far edge
     stern += fillP(rud, tone(hullK, lum(nT) - .35)) + edge(rud, hullK, .7) + fillP(under, gr([xC, hC], [hb, hC * .45], [[0, tone(hullK, -.6)], [1, tone(hullK, -.95)]])) + edge(under, hullK, .7);
     // the transom: a curved face — lighter where it turns to the light, the counter below looks down into its own shadow
@@ -395,6 +435,7 @@ function build(u, L, o, mode) {
   const bs = sp.sprit, B0 = [xStem + 3.2, Hs - .9], bd = [-Math.cos(rad(bs.steeve)), Math.sin(rad(bs.steeve))], Bp = t => [B0[0] + bd[0] * bs.len * t, B0[1] + bd[1] * bs.len * t];
   const nUp = [bd[1], -bd[0]], jOff = 1.08 * Lu, Bend = bs.jib ? [Bp(1)[0] + bd[0] * bs.jib + nUp[0] * jOff, Bp(1)[1] + bd[1] * bs.jib + nUp[1] * jOff] : Bp(1);   // the jib-boom lies on the bowsprit
   let bow = '', bowBack = '';
+  ZF = null;   // the head, the bowsprit: on the middle plane
   {
     const bk = sp.beak, topS = Y(sp.free, xStem) - .5, dep = bk[2] ? bk[2] * Lu : topS - .8, h1 = topS - dep, tip = [xStem - bk[0], topS + bk[1]], sA = [stemX(topS) + .6, topS], sB = [stemX(h1) + .6, h1];
     const lower = bk[2] ? [sB, [lerp(sB[0], tip[0], .45), lerp(sB[1], tip[1], .3)], [lerp(sB[0], tip[0], .8), lerp(sB[1], tip[1], .72)], [tip[0], tip[1] - .5]]
@@ -416,6 +457,7 @@ function build(u, L, o, mode) {
       bowBack += spar(J0, Bend, .46 * Lu, .28 * Lu, sp.spar) + cap(.64, .45 * Lu, -.75 * Lu, jOff + .5 * Lu, 'rope', If - .1) + cap(.995, 1 * Lu, -.8 * Lu, jOff + .62 * Lu, 'tar', If - .05); }   // the heel lashing and the cap (an eselhoofd) at the end of the bowsprit
     if (near) bow += strokeP(seg([B0[0] - 1.2, B0[1] + .9], [B0[0] - 2.6, B0[1] - 2.2]) + seg([B0[0] - 2, B0[1] + 1.4], [B0[0] - 3.4, B0[1] - 1.8]), tone('rope', If - .2), .22 * s);
     if (!plain && kind !== 'merchant') { // the anchor hung from the cathead: a beam out of the bow at the rail, the ring on a short tackle
+      ZF = (X, H) => hullZ(X, H) + .5;
       const z = Lu, cx = xStem + 7.6, ch = rail(cx) - .7, cE = [cx - 1.5 * z, ch + .45 * z], rg = [cE[0] - .1 * z, cE[1] - 2.3 * z], q = (a, b) => [rg[0] + a * z, rg[1] + b * z];
       const so2 = shOff(.9), qs = (a, b) => { const p = q(a, b); return [p[0] + so2[0], p[1] + so2[1]]; }, ir = tone('iron', If - .1), irL = tone('iron', If + .65), hi = [dir * dC.ux * .13, -dC.uy * .13];
       const arms = g => 'M' + pp(...g(-2.7, -5.6)) + 'Q' + pp(...g(-.9, -8.5)) + ' ' + pp(...g(1.3, -6.1));
@@ -426,7 +468,8 @@ function build(u, L, o, mode) {
         + spar(q(-.15, -.4), q(-.55, -7.4), .27 * z, .33 * z, 'iron', { grain: false })
         + strokeP(arms(q), ir, .52 * s, ' stroke-linecap="round"') + strokeP(arms((a, b) => { const p = q(a, b); return [p[0] + hi[0], p[1] + hi[1]]; }), irL, .15 * s, ' stroke-linecap="round" opacity=".7"')
         + fillP(palm(q(-2.7, -5.6), 2.2) + palm(q(1.3, -6.1), .95), gr(q(0, -5.4), q(0, -7.4), [[0, tone('iron', If + .35)], [1, tone('iron', If - .45)]]), ` stroke="${ink('iron')}" stroke-width="${f(.1 * s)}"`)
-        + spar(q(-1.7, -1.25), q(1.4, -.95), .33 * z, .26 * z, 'oak', { bulge: .25 }) + dot(...q(0, .05), .34 * z) + ` fill="none" stroke="${ir}" stroke-width="${f(.17 * s)}"/>` + dot(...q(-.07, .12), .34 * z) + ` fill="none" stroke="${irL}" stroke-width="${f(.06 * s)}" opacity=".7"/>`; }
+        + spar(q(-1.7, -1.25), q(1.4, -.95), .33 * z, .26 * z, 'oak', { bulge: .25 }) + dot(...q(0, .05), .34 * z) + ` fill="none" stroke="${ir}" stroke-width="${f(.17 * s)}"/>` + dot(...q(-.07, .12), .34 * z) + ` fill="none" stroke="${irL}" stroke-width="${f(.06 * s)}" opacity=".7"/>`;
+      ZF = null; }
   }
 
   // ——— masts, yards, sails ———
@@ -537,9 +580,12 @@ function build(u, L, o, mode) {
     const d = spl(a.concat(b, [[c[0] + hw, c[1] - .1]]), false) + 'Z'; let g = '';
     if (!plain) for (let i = 1; i < n; i++) g += seg([b[i][0], c[1] + .2], [b[i][0] + .15, b[i][1] - .1]);
     return fillP(d, gr([c[0], c[1]], [c[0], c[1] - 1.6 * k * Lu], [[0, tone(sailK, lum([0, .6, .8]))], [1, tone(sailK, lum([0, -.7, .7]))]])) + strokeP(g, ink(sailK), .14 * s, ' opacity=".7"') + (ow ? strokeP(d, ink(sailK), Math.max(.25, ow * .6)) : ''); };
-  const sqMap = (hc, hw, fc, fw, bel, roach) => (uu, v) => { const X = lerp(hc[0] + (2 * uu - 1) * hw, fc[0] + (2 * uu - 1) * fw, v), H = lerp(hc[1], fc[1], v), sv = Math.pow(Math.max(0, Math.sin(Math.PI * v)), .85); return [X - bel * sv * (.72 + .6 * (1 - uu)), H + roach * 4 * uu * (1 - uu) * v * v]; };
-  const quadMap = (c00, c10, c01, c11, bel, roach) => (uu, v) => { const a = [lerp(c00[0], c10[0], uu), lerp(c00[1], c10[1], uu)], b = [lerp(c01[0], c11[0], uu), lerp(c01[1], c11[1], uu)]; return [lerp(a[0], b[0], v) - bel * Math.sin(Math.PI * v) * (.25 + .75 * uu), lerp(a[1], b[1], v) + roach * 4 * uu * (1 - uu) * v * v - bel * .25 * Math.sin(Math.PI * v) * uu]; };
-  const nSq = [[-.82, .12, .52], [.28, .12, .94]], nFa = [[-.4, .05, .9], [.3, .05, .94]];
+  const WB = phi ? 1 + .45 * kR : 1;
+  const sqMap = (hc, hw, fc, fw, bel0, roach) => (uu, v) => { const bel = bel0 * WB; const X = lerp(hc[0] + (2 * uu - 1) * hw, fc[0] + (2 * uu - 1) * fw, v), H = lerp(hc[1], fc[1], v), sv = Math.pow(Math.max(0, Math.sin(Math.PI * v)), .85); return [X - bel * sv * (.72 + .6 * (1 - uu)), H + roach * 4 * uu * (1 - uu) * v * v]; };
+  const quadMap = (c00, c10, c01, c11, bel0, roach) => (uu, v) => { const bel = bel0 * WB; const a = [lerp(c00[0], c10[0], uu), lerp(c00[1], c10[1], uu)], b = [lerp(c01[0], c11[0], uu), lerp(c01[1], c11[1], uu)]; return [lerp(a[0], b[0], v) - bel * Math.sin(Math.PI * v) * (.25 + .75 * uu), lerp(a[1], b[1], v) + roach * 4 * uu * (1 - uu) * v * v - bel * .25 * Math.sin(Math.PI * v) * uu]; };
+  // with the roll the wind is strong: the sails tighter and fuller (more curve across), the flags stretched out
+  const nSq = phi ? [[-.82 * (1 + .3 * kR), .12, .52], [.28 * (1 + .45 * kR), .12, .94]] : [[-.82, .12, .52], [.28, .12, .94]], nFa = phi ? [[-.4 * (1 + .4 * kR), .05, .9], [.3 * (1 + .4 * kR), .05, .94]] : [[-.4, .05, .9], [.3, .05, .94]];
+  const rl = (X, dh = 0) => [X, rail(X) + dh, bR(X)];   // a rope belayed at the near rail
 
   const masts = sp.masts.map((m, mi) => { const hD = rail(m.x) - 1.5, Hm = m.H - hD, rk = Math.tan(rad(m.rake || 0)), A = q => [m.x + rk * q * Hm, hD + q * Hm], Q = QY[m.n], qs = Q.slice(), st = [];
     for (let i = 0; i < m.n; i++) { st[i] = i === 0 && m.aft && !m.lower ? 'bare' : set === 'furled' ? 'furl' : set === 'reefed' ? (i === 1 ? 'reef' : 'furl') : 'set';
@@ -555,9 +601,11 @@ function build(u, L, o, mode) {
   const shr = [];   // the shrouds of every mast (channel, spread, top) for the crew and the lanterns of sp.life
   masts.forEach(M => { const { m, A, Q, qs, st, w, qT, qC, rr, hD, Hm } = M, nm = 'm' + M.mi;
     // the mast: lower mast, topmast, topgallant mast; the top and the crosstrees
-    let mast = spar(A(0), A(Q[0] + .09), 1.15 * rr, .92 * rr, sp.spar) + spar(A(Q[0] - .005), A(qC != null ? Q[1] + .075 : 1), .78 * rr, .56 * rr, sp.spar);
+    let mast = spar(phi ? [m.x - Math.tan(rad(m.rake || 0)) * (DBW - 1.5), hD + 1.5 - DBW] : A(0), A(Q[0] + .09), 1.15 * rr, .92 * rr, sp.spar) + spar(A(Q[0] - .005), A(qC != null ? Q[1] + .075 : 1), .78 * rr, .56 * rr, sp.spar);
     if (qC != null) mast += spar(A(Q[1] - .005), A(1), .5 * rr, .28 * rr, sp.spar);
     const T = A(qT), tw2 = 2.5 * rr, top = poly([[T[0] - tw2 * .82, T[1] - .35 * rr], [T[0] + tw2 * .82, T[1] - .35 * rr], [T[0] + tw2, T[1] + .3 * rr], [T[0] - tw2, T[1] + .3 * rr]]);
+    if (phi && !plain) { const hT = T[1] + (phi > 0 ? .3 : -.35) * rr, tf = poly([[T[0] - tw2, hT, -tw2], [T[0] + tw2, hT, -tw2], [T[0] + tw2, hT, tw2], [T[0] - tw2, hT, tw2]]);   // the top seen from above (below)
+      mast += fillP(tf, tone(sp.spar === 'paint-ochre' ? 'tar' : sp.spar, lum([0, phi > 0 ? 1 : -1, 0]) - .1)) + edge(tf, sp.spar, .5); }
     mast += fillP(top, tone(sp.spar === 'paint-ochre' ? 'tar' : sp.spar, lum([0, -.5, .8]))) + edge(top, sp.spar, .6) + (plain ? '' : strokeP(seg([T[0] - tw2, T[1] + .3 * rr], [T[0] + tw2, T[1] + .3 * rr]), tone(sp.spar, If + .5), .2 * s, ' opacity=".7"'));
     if (qC != null) { const c = A(qC); mast += strokeP(seg([c[0] - 1.5 * rr, c[1]], [c[0] + 1.5 * rr, c[1]]), tone(sp.yard, If), .4 * rr * s, ' stroke-linecap="round"'); }
     if (!plain) mast += fillP(box(...A(Q[0] + .085), 2 * rr, .9 * rr), tone('tar', If)) + dot(...A(1.004), .42 * rr) + ` fill="${tone(sp.gilt ? 'brass' : sp.spar, If + .3)}"/>`;
@@ -568,34 +616,36 @@ function build(u, L, o, mode) {
         const hc = [c[0] - .4, c[1] - .5 * rr], fc = i === 0 ? [A(0)[0] - .3, hD + 3.6] : [A(qs[i - 1])[0] - .2, A(qs[i - 1])[1] + .8 * rr], fw = i === 0 ? hw * 1.01 : w[i - 1] * .96, ht = hc[1] - fc[1];
         sails += cloth(sqMap(hc, hw * .95, fc, fw, ht * .135, ht * (i === 0 ? .15 : .09)), { name: nm + 's' + i, wd: hw + fw, ht, nF: nSq[0], nA: nSq[1], mastU: .5 + .2 / hw, reef: st[i] === 'reef' ? [.07, .13] : i === 1 ? [.16, .29] : i === 0 ? [.14] : null });
         if (st[i] === 'reef') sails += furl([c[0] - .3, c[1] - .2 * rr], hw * .93, nm + 'r' + i, .7);
-        if (!far && i === 0) running += seg([fc[0] - fw, fc[1]], [fc[0] - fw - 2.5, rail(fc[0] - fw - 2.5)]) + seg([fc[0] + fw, fc[1]], [fc[0] + fw + 4, rail(fc[0] + fw + 4)]);   // tack and sheet
+        if (!far && i === 0) running += seg([fc[0] - fw, fc[1]], rl(fc[0] - fw - 2.5)) + seg([fc[0] + fw, fc[1]], rl(fc[0] + fw + 4));   // tack and sheet
       } else if (st[i] === 'furl') sails += furl([c[0] - .3, c[1] - .2 * rr], hw * .94, nm + 'f' + i, i === 0 ? 1.25 : 1);
       spars += spar([c[0] - hw, c[1]], [c[0] + hw, c[1]], (.4 - i * .05) * rr, (.4 - i * .05) * rr, sp.yard, { bulge: .4 });
       // lifts from the yardarms to the masthead, braces from the aft yardarm aft and down
       if (!far) { const up = A(Math.min(1, qs[i] + (i + 1 < m.n ? (Q[i + 1] - Q[i]) * .42 : (1 - Q[i]) * .9))); lifts += seg([c[0] - hw, c[1] + .3], up) + seg([c[0] + hw, c[1] + .3], up);
-        const N = masts[M.mi + 1], to = N ? N.A(Math.max(.06, qs[i] * .62 - .1)) : [Math.min(xAft, c[0] + hw + 12 + i * 3), rail(Math.min(xAft, c[0] + hw + 12 + i * 3)) + .2]; running += sag([c[0] + hw, c[1]], to, -1.2); }
+        const N = masts[M.mi + 1], to = N ? N.A(Math.max(.06, qs[i] * .62 - .1)) : rl(Math.min(xAft, c[0] + hw + 12 + i * 3), .2); running += sag([c[0] + hw, c[1]], to, -1.2); }
     }
     // the fore-and-aft sail of the mizzen
     if (m.aft === 'lateen') { const lt = m.lat || [.105, .11, .64], F = [m.x - lt[0] * sp.len * m.k / .7, hD + Hm * .1], Pk = [m.x + lt[1] * sp.len * m.k / .7, hD + Hm * lt[2]], cx = Math.min(xAft + 1, m.x + .13 * sp.len * m.k / .7), Cw = [cx, rail(Math.min(cx, xAft)) + 1.8];
       if (set !== 'furled') sails += cloth(quadMap(F, Pk, F, Cw, 1.6 * Lu, -1.2), { name: nm + 'lat', wd: Pk[0] - F[0], ht: (Pk[1] - Cw[1]) * .7, nF: nFa[0], nA: nFa[1], foot: false });
-      spars += spar(F, Pk, .42 * rr, .26 * rr, sp.yard); if (!far) running += seg(Cw, [cx - 1, rail(Math.min(cx, xAft))]) + seg(Pk, A(Q[1] * .93)) + seg(F, [F[0] + 1.5, rail(F[0] + 1.5)]);
+      spars += spar(F, Pk, .42 * rr, .26 * rr, sp.yard); if (!far) running += seg(Cw, [cx - 1, rail(Math.min(cx, xAft)), bR(Math.min(cx, xAft))]) + seg(Pk, A(Q[1] * .93)) + seg(F, rl(F[0] + 1.5));
     } else if (m.aft === 'gaff') { // the gaff passes under the yardarm of the lower yard, clear of the topsail's clew
       const Lg = .15 * sp.len * m.k / .74, yH = A(Q[0])[1] - 1.3 * Lu, xc = (w[0] + 1.6) / Lg, qt = clamp(Math.min(.38, (yH - Hm * .13 * xc - hD) / Hm), .27, .38), th = A(qt), rise = Math.min(Hm * .13, Math.max(Hm * .05, (yH - th[1]) / xc)), tk = A(.07), Pk = [th[0] + Lg, th[1] + rise], Bm = [tk[0] + .185 * sp.len * m.k / .74, tk[1] + 1.4];
       if (set !== 'furled') sails += cloth(quadMap([th[0] + .6, th[1]], Pk, [tk[0] + .6, tk[1] + .4], [Bm[0] - .5, Bm[1] + .4], -1.3 * Lu, 0), { name: nm + 'gaf', wd: Bm[0] - tk[0], ht: th[1] - tk[1], nF: nFa[0], nA: nFa[1], foot: false, tear: false });
-      spars += spar(th, Pk, .4 * rr, .26 * rr, sp.yard) + spar(tk, Bm, .44 * rr, .3 * rr, sp.yard); if (!far) running += seg(Pk, A(Q[1] * .96)) + seg(Bm, [Math.min(xAft, Bm[0] + 2), rail(Math.min(xAft, Bm[0] + 2))]) + seg([Bm[0] - 1, Bm[1]], A(.36)); }
+      spars += spar(th, Pk, .4 * rr, .26 * rr, sp.yard) + spar(tk, Bm, .44 * rr, .3 * rr, sp.yard); if (!far) running += seg(Pk, A(Q[1] * .96)) + seg(Bm, rl(Math.min(xAft, Bm[0] + 2))) + seg([Bm[0] - 1, Bm[1]], A(.36)); }
     // shrouds with ratlines on a channel, deadeyes and chain plates; backstays
     const ns = m.k > .9 ? 6 : m.k > .8 ? 5 : 4, sprd = .072 * sp.len * Math.max(.75, Math.min(1.05, m.k)), hCh = rail(m.x + sprd * .5) - 1.5, xb = m.x + .9, tp = A(qT - .012), step = sprd / (ns - 1), Rr = R(nm + 'rat');
     const sx = (i, h) => { const b = xb + i * step; return b + (tp[0] + .12 * i - b) * (h - hCh) / (tp[1] - hCh); };
+    // with the roll: the channel stands out of the near side (Z), the shrouds run in to the top (Z of the top's edge)
+    const zCh = bR(xb + sprd / 2) + .9, zTp = tw2 * .7, zs = h => lerp(zCh, zTp, clamp((h - hCh) / (tp[1] - hCh)));
     let ch = '';
-    if (!far) { const cd = poly([[xb - .9, hCh - .28], [xb + sprd + .9, hCh - .28], [xb + sprd + .7, hCh + .22], [xb - .7, hCh + .22]]);
-      ch += (sil ? '' : fillP(poly([[xb - .9, hCh - .28], [xb + sprd + .9, hCh - .28], [xb + sprd + .5, hCh - 1.3], [xb - .5, hCh - 1.3]]), col(mix(L.tone(hullK, -.8, cen[0], cen[1]), '#150d0a', .4)), ' opacity=".4"')) + fillP(cd, tone(sp.trim, lum([0, .5, .8]))) + (ow ? strokeP(cd, ink(sp.trim), .22 * s) : ''); }
-    for (let i = 0; i < ns; i++) { standing += seg([sx(i, hCh), hCh + .2], [tp[0] + .12 * i, tp[1]]); if (near) { thin += seg([sx(i, hCh), hCh - .25], [sx(i, hCh) + .35, hCh - 2.7]); ch += dot(sx(i, hCh + .55), hCh + .55, .3) + ` fill="${ropeD}"/>` + dot(sx(i, hCh + 1.5), hCh + 1.5, .3) + ` fill="${ropeD}"/>`; } }
-    if (!far) for (let h = hCh + 2.6; h < tp[1] - 1.2; h += (near ? 1.45 : 2.5) * (.92 + Rr() * .16)) { const a = sx(0, h), b = sx(ns - 1, h); if (b - a < .5) break; thin += sag([a, h + (Rr() - .5) * .16], [b, h + (Rr() - .5) * .16], .08 + Rr() * .1); }
-    standing += seg([xb + sprd + 1.6, hCh + .2], A(qC != null ? qC : .98)); if (qC != null) standing += seg([xb + sprd + 3, hCh + .2], A(.99));
+    if (!far) { const cd = poly([[xb - .9, hCh - .28, zCh], [xb + sprd + .9, hCh - .28, zCh], [xb + sprd + .7, hCh + .22, zCh], [xb - .7, hCh + .22, zCh]]);
+      ch += (sil ? '' : fillP(poly([[xb - .9, hCh - .28, zCh], [xb + sprd + .9, hCh - .28, zCh], [xb + sprd + .5, hCh - 1.3, zCh - .6], [xb - .5, hCh - 1.3, zCh - .6]]), col(mix(L.tone(hullK, -.8, cen[0], cen[1]), '#150d0a', .4)), ' opacity=".4"')) + fillP(cd, tone(sp.trim, lum([0, .5, .8]))) + (ow ? strokeP(cd, ink(sp.trim), .22 * s) : ''); }
+    for (let i = 0; i < ns; i++) { standing += seg([sx(i, hCh), hCh + .2, zCh], [tp[0] + .12 * i, tp[1], zTp]); if (near) { thin += seg([sx(i, hCh), hCh - .25, zCh - .1], [sx(i, hCh) + .35, hCh - 2.7, zCh - .7]); ch += dot(sx(i, hCh + .55), hCh + .55, .3, zs(hCh + .55)) + ` fill="${ropeD}"/>` + dot(sx(i, hCh + 1.5), hCh + 1.5, .3, zs(hCh + 1.5)) + ` fill="${ropeD}"/>`; } }
+    if (!far) for (let h = hCh + 2.6; h < tp[1] - 1.2; h += (near ? 1.45 : 2.5) * (.92 + Rr() * .16)) { const a = sx(0, h), b = sx(ns - 1, h); if (b - a < .5) break; thin += sag([a, h + (Rr() - .5) * .16, zs(h)], [b, h + (Rr() - .5) * .16, zs(h)], .08 + Rr() * .1); }
+    standing += seg([xb + sprd + 1.6, hCh + .2, zCh], A(qC != null ? qC : .98)); if (qC != null) standing += seg([xb + sprd + 3, hCh + .2, zCh], A(.99));
     if (!far) { const T2 = A(qT), hd = A(qC != null ? qC - .01 : .97); for (let i = 0; i < 3; i++) thin += seg([T2[0] + (.5 + i * .65) * rr, T2[1] + .3 * rr], [hd[0] + .1 * i, hd[1]]);
       thin += seg([T2[0] + tw2 * .9, T2[1] - .3 * rr], A(qT - .07)) + seg([T2[0] - tw2 * .9, T2[1] - .3 * rr], A(qT - .07));
       if (near) for (let h = T2[1] + 2; h < hd[1] - 1.5; h += 1.5) { const k = (h - T2[1]) / (hd[1] - T2[1]); thin += seg([lerp(T2[0] + .5 * rr, hd[0], k), h], [lerp(T2[0] + 1.8 * rr, hd[0] + .2, k), h]); } }
-    rigFront += ch; shr.push({ xb, sprd, hCh, tp, ns, sx });
+    rigFront += ch; shr.push({ xb, sprd, hCh, tp, ns, sx, zs, zCh, zTp, M });
   });
 
   // head sails: jibs on the stays of the fore mast; the sprit topmast and the spritsail
@@ -604,7 +654,7 @@ function build(u, L, o, mode) {
       const tack = n === 1 ? [Bp(.93)[0], Bp(.93)[1] + .5] : !bs.jib ? [Bp(lerp(.6, .97, t))[0], Bp(lerp(.6, .97, t))[1] + .5] : i === 0 ? [Bp(.66)[0], Bp(.66)[1] + .5] : [lerp(Bp(1)[0], Bend[0], i === n - 1 ? .97 : .42), lerp(Bp(1)[1], Bend[1], i === n - 1 ? .97 : .42) + .4];
       const top = F.A(n === 1 ? (F.qC != null ? F.qC : .95) : lerp(F.qC != null ? F.qC - .04 : .8, .96, t)), hf = n === 1 ? .7 : lerp(.74, .6, t), head = [lerp(tack[0], top[0], hf), lerp(tack[1], top[1], hf)];
       const cx = lerp(tack[0], F.m.x, n === 1 ? .6 : lerp(.62, .5, t)), clew = [cx, Math.max(tack[1] + 1.5, (cx > xStem ? rail(cx) : Bp(.2)[1]) + 3 + (n - 1 - i) * 1.2 + Rr() * 1.2)];
-      hs = cloth(quadMap(head, head, tack, clew, 1.3 * Lu, .05 * (clew[0] - tack[0])), { name: 'jib' + i, wd: (clew[0] - tack[0]) * .75, ht: head[1] - tack[1], nF: nFa[0], nA: nFa[1], foot: cond === 'rags' }) + hs; if (!far) running += sag(clew, [clew[0] + 5, rail(clew[0] + 5)], -.4); }
+      hs = cloth(quadMap(head, head, tack, clew, 1.3 * Lu, .05 * (clew[0] - tack[0])), { name: 'jib' + i, wd: (clew[0] - tack[0]) * .75, ht: head[1] - tack[1], nF: nFa[0], nA: nFa[1], foot: cond === 'rags' }) + hs; if (!far) running += sag(clew, rl(clew[0] + 5), -.4); }
     sails = hs + sails;
     if (bs.topmast) { const b = Bp(1), t = [b[0] - .3, b[1] + bs.topmast], yq = [b[0] - .3, b[1] + bs.topmast * .82], hw = .034 * sp.len, kn = poly([[b[0] + 1.4, b[1] - .2], [b[0] - .9, b[1] - .3], [b[0] - .6, b[1] + 2.2]]);
       bowBack += fillP(kn, tone(sp.spar, If - .2)) + spar([b[0] - .3, b[1] - .2], t, .42 * Lu, .26 * Lu, sp.spar) + fillP(poly([[b[0] - 1.7, b[1] + bs.topmast * .36], [b[0] + 1.1, b[1] + bs.topmast * .36], [b[0] + 1.4, b[1] + bs.topmast * .36 + .45], [b[0] - 2, b[1] + bs.topmast * .36 + .45]]), tone(sp.spar, If - .3));
@@ -619,8 +669,9 @@ function build(u, L, o, mode) {
   rigBack += strokeP(lifts, ropeD, rw(.14), ' opacity=".8"'); rigFront += strokeP(standing, ropeD, rw(.22), far ? ' opacity=".5"' : '') + strokeP(thin, ropeD, rw(.14), ' opacity=".85"') + strokeP(running, ropeL, rw(.15), ` opacity="${back ? .5 : .65}"`);
 
   // ——— flags: they fly to the bow, with the wind that fills the sails ———
-  const flagAt = (X0, Ht, fw, fh, design, name) => { const Rr = R(name), ph = Rr() * 6, taper = design === 'pennant' ? 1 : 0, rag = sp.growth || cond === 'torn';
-    const F = (a, b) => [X0 - a * fw * (1 - .05 * b), Ht - b * fh * (1 - taper * a * .97) - taper * a * fh * .2 - .16 * a * a * fh * (taper ? 2.5 : 1) + .09 * fh * (taper ? 1.6 : 1) * Math.sin(a * 7.2 + ph) * Math.pow(a, .6)];
+  const FD = phi ? 1 - .5 * Math.min(1.3, kR) : 1, FWv = phi ? 1 - .45 * Math.min(1.3, kR) : 1;   // the roll: a strong wind — the flags droop less and flutter in shorter waves
+  const flagAt = (X0, Ht, fw0, fh, design, name) => { const Rr = R(name), ph = Rr() * 6, taper = design === 'pennant' ? 1 : 0, rag = sp.growth || cond === 'torn', fw = phi ? fw0 * (1 + .12 * kR) : fw0;
+    const F = (a, b) => [X0 - a * fw * (1 - .05 * b), Ht - b * fh * (1 - taper * a * .97) - taper * a * fh * .2 - .16 * a * a * fh * (taper ? 2.5 : 1) * FD + .09 * fh * (taper ? 1.6 : 1) * Math.sin(a * 7.2 + ph) * Math.pow(a, .6) * FWv];
     const N = 12, pts = []; for (let i = 0; i <= N; i++) pts.push(F(i / N, 0)); if (rag && !taper) for (let i = 1; i < 6; i++) pts.push(F(1 - Rr() * .16, i / 6));
     let lo = N; if (rag && taper) { // a torn pennant: the fly split into tails of different length
       const a1 = .62 + Rr() * .1, a2 = .8 + Rr() * .1; pts.push(F(.97, .35), F(a1, .45), F(a2, .62), F(a1 - .08, .72), F(a1 + .02 + Rr() * .1, 1)); lo = Math.floor((a1 + .02) * N); }
@@ -648,11 +699,12 @@ function build(u, L, o, mode) {
   // ——— growth of the Dutchman: weed hanging from every edge, shells, lumps that break the outline ———
   let growA = '', growB = '';
   if (sp.growth) { const Rr = R('weed'), wk = tone('ship-weed', If - .2), wk2 = tone('ship-weed', If + .25);
-    const strand = (X, H, l) => { const a = [[X, H]]; let x = X; const n = Math.max(2, Math.round(l / 1.2)); for (let i = 1; i <= n; i++) { x += (Rr() - .5) * .7; a.push([x, H - l * i / n]); } return spl(a); };
+    ZF = hullZ;
+    const strand = (X, H, l, Z) => { const a = [[X, H, Z]]; let x = X; const n = Math.max(2, Math.round(l / 1.2)); for (let i = 1; i <= n; i++) { x += (Rr() - .5) * .7; a.push([x, H - l * i / n, Z]); } return spl(a); };
     let w1 = '', w2 = '', lumps = '', shells = '';
     for (let X = xStem - sp.beak[0] + 2; X < xAft; X += 1.6 + Rr() * 3.6) { const top = X < xStem ? Hs - 3 : rail(X); if (Rr() > .45) lumps += dot(X, top - .1 + Rr() * .3, (.35 + Rr() * .75) * Lu) + '/>'; if (X > xStem && Rr() > .3) { const h = sp.wales[Math.floor(Rr() * sp.wales.length)]; (Rr() > .5 ? w1 += strand(X, Y(h, X) - .4, 1 + Rr() * 3.2) : w2 += strand(X, Y(h, X) - .4, .8 + Rr() * 2)); } }
-    for (const t of [.3, .45, .6, .78, .9]) w1 += strand(Bp(t)[0], Bp(t)[1] - .6, 1.5 + Rr() * 4);
-    for (const M of masts) for (let i = 0; i < M.m.n; i++) { const c = M.A(M.qs[i]); for (let k = 0; k < 2 + Rr() * 3; k++) { const X = c[0] + (Rr() * 2 - 1) * M.w[i]; w1 += strand(X, c[1] - .3, 1.2 + Rr() * 4.5); } }
+    for (const t of [.3, .45, .6, .78, .9]) w1 += strand(Bp(t)[0], Bp(t)[1] - .6, 1.5 + Rr() * 4, 0);
+    for (const M of masts) for (let i = 0; i < M.m.n; i++) { const c = M.A(M.qs[i]); for (let k = 0; k < 2 + Rr() * 3; k++) { const X = c[0] + (Rr() * 2 - 1) * M.w[i]; w1 += strand(X, c[1] - .3, 1.2 + Rr() * 4.5, 0); } }
     growB += strokeP(w1, wk, clamp(.24 * s, .12, .5), ' stroke-linecap="round"') + (plain ? '' : strokeP(w2, wk2, clamp(.2 * s, .12, .4), ' stroke-linecap="round"'));
     growA += `<g fill="${tone(hullK, If - .25)}">${lumps}</g>`;
     if (!plain) { // barnacles in uneven clumps: thick at the waterline and under the wales, every one a little cone with its pit
@@ -665,6 +717,7 @@ function build(u, L, o, mode) {
           if (near && r > .2 * Lu) pits += dot(X - dir * dC.ux * r * .18, H + dC.uy * r * .18, r * .2) + '/>';
           X += Math.cos(a) * r * 1.7; H += Math.sin(a) * r * 1.2 - .04; } }
       growA += `<g clip-path="url(#${wlClip})"><g fill="url(#${bg})">${shells}</g><g fill="${pit}" opacity=".6">${pits}</g></g>`; }
+    ZF = null;
   }
 
   // ——— life aboard (sp.life — the merchantman): the cargo piled high over the rail (barrels on the forecastle,
@@ -672,7 +725,7 @@ function build(u, L, o, mode) {
   // bale over the hatch, two of the crew in light shirts (at the helm against the sky, up the main shrouds against
   // the sail), a lantern on the fore shrouds. All of it stands on the deck behind the bulwark: the rail hides the feet.
   let lifeBack = '', lifeFront = '';
-  if (sp.life && !far && !refl) { const lf = sp.life, Rl = R('life'), deck = X => rail(X) - 1.5;
+  if (sp.life && !far && !refl) { const lf = sp.life, Rl = R('life'), deck = X => rail(X) - (phi ? DBW : 1.5);
     const nF = lum([-1, .15, .6]), nA = lum([1, .15, .6]);   // the fore and the aft side of a thing on deck
     const gx3 = (Xa, Xb, km, k = 0) => gr([Xa, 0], [Xb, 0], [[0, tone(km, nF + k)], [.5, tone(km, If + k)], [1, tone(km, nA + k)]]);
     const sackT = (I, c) => mix(tone('linen', I), c, .72);
@@ -701,29 +754,96 @@ function build(u, L, o, mode) {
       lifeBack += spar(heel, tip, .42, .3, sp.spar) + strokeP(seg(tip, M.A(.42)), ropeD, rw(.16)) + strokeP(seg(tip, [X, ld[1] + 3.4]) + seg([X, ld[1] + 3.4], [ld[0] - 1.3, ld[1] + 2.2]) + seg([X, ld[1] + 3.4], [ld[0] + 1.3, ld[1] + 2.2]), ropeL, rw(.15)) + q2.svg; }
     // the crew: dark figures in light shirts, larger; legs below the rail are hidden
     const man = sil ? C : col(mix(L.tone('tar', -.4, cen[0], cen[1]), '#140e0b', .55)), shirt = tone('linen', If + .05);
-    const figure = (X, H0, lean, arms) => { const k = 1.5, c = Math.cos(rad(lean)) * k, sn = Math.sin(rad(lean)) * k, P = (dx, dh) => [X + dx * c - dh * sn, H0 + dx * sn + dh * c];
+    const figure = (X, H0, lean, arms0, Zc) => { const k = 1.5, c = Math.cos(rad(lean)) * k, sn = Math.sin(rad(lean)) * k, P = (dx, dh) => [X + dx * c - dh * sn, H0 + dx * sn + dh * c, Zc], arms = arms0.map(a => [a[0], a[1], Zc]);
       const body = poly([P(-.5, 0), P(-.36, 2.1), P(-.44, 3.3), P(.44, 3.3), P(.36, 2.1), P(.5, 0), P(.16, 0), P(0, 1.2), P(-.16, 0)]), torso = poly([P(-.4, 2.05), P(-.47, 3.3), P(.47, 3.3), P(.4, 2.05)]);
       const head = P(0, 3.82), sh = P(0, 3.15);
-      return fillP(body, man) + fillP(torso, shirt) + edge(torso, 'linen', .5) + dot(head[0], head[1], .44 * k) + ` fill="${man}"/>` + fillP(poly([P(-.5, 4.08), P(.5, 4.08), P(.32, 4.36), P(-.32, 4.36)]), man)
+      return fillP(body, man) + fillP(torso, shirt) + edge(torso, 'linen', .5) + dot(head[0], head[1], .44 * k, Zc) + ` fill="${man}"/>` + fillP(poly([P(-.5, 4.08), P(.5, 4.08), P(.32, 4.36), P(-.32, 4.36)]), man)
         + strokeP(arms.map(hd => seg(sh, hd)).join(''), shirt, .5 * s, ' stroke-linecap="round"') + strokeP(arms.map(hd => seg(hd, hd)).join(''), man, .55 * s, ' stroke-linecap="round"'); };
     for (const [pose, X] of lf.crew || []) {
       if (pose === 'helm') { const H0 = deck(X) + .3; lifeBack += figure(X, H0, 0, [[X - 1.9, H0 + 3.2], [X - 1.6, H0 + 2.9]]) + spar([X - 2.2, H0 + 1.4], [X - 1.8, H0 + 3.4], .16, .13, 'oak', { grain: false }); }
       else if (pose === 'climb' && shr[X]) { const g = shr[X], t = .36, h = lerp(g.hCh, g.tp[1], t), i0 = Math.floor((g.ns - 1) / 2), x = g.sx(i0, h) + .3;
-        lifeFront += figure(x, h - 2.3, -4, [[g.sx(i0, h + 3) - .4, h + 3.1], [g.sx(i0 + 1, h + 3) + .1, h + 3.1]]); } }
+        lifeFront += figure(x, h - 2.3, -4, [[g.sx(i0, h + 3) - .4, h + 3.1], [g.sx(i0 + 1, h + 3) + .1, h + 3.1]], g.zs(h) + .3); } }
     // a lantern hung on the fore shrouds low over the rail; at night it warms the pile, the rail, the foot of the sail, the water
-    if (lf.shroudLamp != null && shr[lf.shroudLamp]) { const g = shr[lf.shroudLamp], h = g.hCh + 5, i0 = Math.floor(g.ns / 2), X = g.sx(i0, h), z = .8, q2 = (a2, b2) => [X + a2 * z, h - 1 + b2 * z];
+    if (lf.shroudLamp != null && shr[lf.shroudLamp]) { const g = shr[lf.shroudLamp], h = g.hCh + 5, i0 = Math.floor(g.ns / 2), X = g.sx(i0, h), z = .8, Zl = g.zs(h) + .2, q2 = (a2, b2) => [X + a2 * z, h - 1 + b2 * z];
+      if (phi) ZF = () => Zl;
       const bodyL = poly([q2(-.55, -2.4), q2(.55, -2.4), q2(.8, -.6), q2(-.8, -.6)]), capL = poly([q2(-.85, -.6), q2(.85, -.6), q2(0, .5)]);
       lifeFront += strokeP(seg([X, h], q2(0, .5)), ropeD, rw(.14)) + (sil ? fillP(bodyL + capL, C) : win(bodyL, ...q2(0, -1.5), 1.6 * z, true) + strokeP(bodyL + seg(q2(0, -2.4), q2(0, -.6)), tone('brass', If + .1), .14 * s) + fillP(capL, tone('brass', If + .2)) + fillP(poly([q2(-.6, -2.4), q2(.6, -2.4), q2(.5, -2.75), q2(-.5, -2.75)]), tone('brass', If - .1)));
-      if (lit) glowAt.push([X, h - 1 - 1.5 * z, 14], [X + 6, h + 3, 16], [X + 3, rail(X) - 1, 12]); }
+      if (lit) glowAt.push([X, h - 1 - 1.5 * z, 14], [X + 6, h + 3, 16], [X + 3, rail(X) - 1, 12]); ZF = null; }
     // at night the stern windows throw their light on the poop, the mizzen and the water under the counter
     if (lit) glowAt.push([xAft - 6, hTop + 1, 14], [xAft - 2, 1, 16]);
   }
 
+  // ——— the roll: towards the viewer the deck shows as a band between the near rail (Z = +b) and the far one (Z = -b),
+  // the inner side of the far bulwark over it, the things on the deck in their own Z; the far shrouds on their channel
+  let deckB = '', rigFar = '';
+  if (phi) {
+    const dH = X => rail(X) - DBW, zI = X => Math.max(0, bR(X) - .35), ZA = bR(xAft), tw0 = sp.tw[0];
+    const nX = Math.max(30, Math.round((xAft - xStem) / 1.1)), Xs = []; for (let i = 0; i <= nX; i++) Xs.push(lerp(xStem + .4, xAft, i / nX));
+    // the far shrouds: the channel stands out of the far side; seen behind the far bulwark
+    if (!far) { let fs = '', ft = '';
+      for (const g of shr) { const zc = -g.zCh, zt = -g.zTp, zs2 = h => -g.zs(h), Rf = R('fs' + g.xb);
+        for (let i = 0; i < g.ns; i++) fs += seg([g.sx(i, g.hCh), g.hCh + .2, zc], [g.tp[0] + .12 * i, g.tp[1], zt]);
+        for (let h = g.hCh + 2.6; h < g.tp[1] - 1.2; h += (near ? 1.6 : 2.6) * (.92 + Rf() * .16)) { const a = g.sx(0, h), b2 = g.sx(g.ns - 1, h); if (b2 - a < .5) break; ft += sag([a, h, zs2(h)], [b2, h, zs2(h)], .08); }
+        const M = g.M; fs += seg([g.xb + g.sprd + 1.6, g.hCh + .2, zc], M.A(M.qC != null ? M.qC : .98)); }
+      rigFar = strokeP(fs, ropeD, rw(.2), ' opacity=".8"') + strokeP(ft, ropeD, rw(.12), ' opacity=".6"'); }
+    if (phi > 0) {
+      const lumD = lum([0, 1, 0]), dk = sp.deckK || 'pine-deck', inK = sp.inner || 'paint-red';
+      const farTop = Xs.map(X => [X, rail(X), -bR(X)]).concat([[xAft + tw0, hTop, -ZA]]), farFoot = Xs.map(X => [X, dH(X), -zI(X)]).concat([[xAft + tw0, dH(xAft), -ZA + .35]]), nearFoot = Xs.map(X => [X, dH(X), zI(X)]);
+      const deckD = poly(farFoot.concat(nearFoot.slice().reverse())), bulwD = poly(farTop.concat(farFoot.slice().reverse()));
+      const tI = If, dkT = I => tone(dk, I), shC = col(mix(L.shadowTint, '#0c0a0a', .35));
+      // the inner side of the far bulwark: its paint in the light of the near side, darker down to the waterway
+      deckB += fillP(bulwD, gr([0, rail(0), -bR(0)], [0, dH(0), -zI(0)], [[0, tone(inK, tI - .05)], [.6, tone(inK, tI - .25)], [1, tone(inK, tI - .55)]]));
+      deckB += fillP(deckD, gr([0, dH(0), -zI(0)], [0, dH(0), zI(0)], [[0, dkT(lumD - .45)], [.18, dkT(lumD - .12)], [1, dkT(lumD + .05)]]));
+      if (!plain) {
+        const Rd = R('deck'); let seams = '', butts = '', posts = '', holes = '', items = [];
+        const bz = Bh * 1.1;
+        for (let z = -bz + .45; z < bz; z += .82) { let run = []; const flush = () => { if (run.length > 1) seams += line(run); run = []; };
+          for (const X of Xs) { if (Math.abs(z) < zI(X) - .15) run.push([X, dH(X), z]); else flush(); } flush();
+          for (let X = xStem + Rd() * 9; X < xAft; X += 6 + Rd() * 9) if (Math.abs(z) < zI(X) - .3) butts += seg([X, dH(X), z], [X, dH(X), z + .82]); }
+        for (let X = xStem + 3; X < xAft; X += 2.1) if (zI(X) > 1) posts += seg([X, rail(X) - .3, -bR(X) + .02], [X, dH(X) + .05, -zI(X)]);
+        // the waterway's shadow along the far bulwark, the cap of the far rail lit from above
+        deckB += fillP(poly(farFoot.slice(0, -1).concat(Xs.map(X => [X, dH(X), -zI(X) + Math.min(1.4, zI(X))]).reverse())), shC, ' opacity=".28"')
+          + strokeP(seams, col(mix(dkT(lumD - .8), '#1a120c', .45)), clamp(.11 * s, .08, .24), ' opacity=".55"') + strokeP(butts, col(mix(dkT(lumD - .8), '#1a120c', .45)), clamp(.1 * s, .08, .2), ' opacity=".45"')
+          + strokeP(posts, tone(inK, tI - .7), clamp(.32 * s, .14, .6), ' opacity=".55"');
+        // the guns of the open deck: ports in the far bulwark, guns on their carriages on both sides
+        const P2 = p => pt(p[0], p[1], p[2]), sp2 = q => 'M' + q.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
+        const hull2 = q => { const a = q.slice().sort((p1, p2) => p1[0] - p2[0] || p1[1] - p2[1]), cx2 = (o2, a2, b2) => (a2[0] - o2[0]) * (b2[1] - o2[1]) - (a2[1] - o2[1]) * (b2[0] - o2[0]), lo = [], up2 = [];
+          for (const p of a) { while (lo.length > 1 && cx2(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+          for (let i = a.length - 1; i >= 0; i--) { const p = a[i]; while (up2.length > 1 && cx2(up2[up2.length - 2], up2[up2.length - 1], p) <= 0) up2.pop(); up2.push(p); } return lo.slice(0, -1).concat(up2.slice(0, -1)); };
+        const box3 = (xa, xb2, ha, hb2, za, zb, km, k = 0) => { const top = poly([[xa, hb2, za], [xb2, hb2, za], [xb2, hb2, zb], [xa, hb2, zb]]), fr = poly([[xa, ha, zb], [xb2, ha, zb], [xb2, hb2, zb], [xa, hb2, zb]]);
+          return fillP(fr, tone(km, lum([0, 0, 1]) + k - .12)) + fillP(top, tone(km, lum([0, 1, 0]) + k)) + strokeP(seg([xa, hb2, zb], [xb2, hb2, zb]), tone(km, lum([0, 1, 0]) + k + .4), .12 * s, ' opacity=".7"') + edge(fr + top, km, .4); };
+        const ring = (X, H, Z, r, n = 18) => { const q = []; for (let i = 0; i < n; i++) { const a = i / n * 2 * Math.PI; q.push([X + r * Math.cos(a), H, Z + r * Math.sin(a)]); } return q; };
+        const cylZ = (X, H, za, zb, r, km) => { const q = []; for (let i = 0; i < 14; i++) { const a = i / 14 * 2 * Math.PI; q.push(P2([X + r * Math.cos(a), H + r * Math.sin(a), za]), P2([X + r * .85 * Math.cos(a), H + r * .85 * Math.sin(a), zb])); }
+          const end = poly(ring(X, H, Math.max(za, zb), r * (za > zb ? 1 : .85), 14).map(p => [p[0], p[1] + (p[2] - Math.max(za, zb)), Math.max(za, zb)]));
+          return fillP(sp2(hull2(q)), gr([X - r, H, za], [X + r, H, za], [[0, tone(km, lum([-1, .4, .2]))], [.55, tone(km, lum([0, 1, .1]) + .1)], [1, tone(km, lum([1, .4, .2]))]])) + fillP(end, tone(km, lum([0, 0, 1]) - .2)) + edge(sp2(hull2(q)), km, .4); };
+        const hole = col(mix(L.tone(inK, -1, cen[0], cen[1]), '#120c0a', .75)), guns = ports.filter(p => p.st === 'deck');
+        for (const p of guns) { const zb2 = -zI(p.X), hp = dH(p.X); holes += poly([[p.X - .75, hp + .55, zb2], [p.X + .75, hp + .55, zb2], [p.X + .75, hp + 1.75, zb2], [p.X - .75, hp + 1.75, zb2]]);
+          for (const sg of [-1, 1]) { const zo = sg * (zI(p.X) - .2), zi = sg * (zI(p.X) - 3.3), lo2 = Math.min(zo, zi), hi2 = Math.max(zo, zi);
+            items.push([sg * (zI(p.X) - 2), box3(p.X - .6, p.X + .6, hp, hp + .75, lo2, hi2, 'oak', -.1) + cylZ(p.X, hp + 1.1, zi + sg * .2, zo + sg * .3, .42, 'iron') + dot(p.X, hp + 1.1, .26, Math.max(zo, zi) + .35) + ` fill="${tone('iron', If - .3)}"/>`]); } }
+        deckB += fillP(holes, hole);
+        // hatches with gratings between the masts; the partners at the foot of every mast; bitts; coils of rope
+        for (let i = 0; i + 1 < masts.length; i++) { const a = masts[i].m.x + 4.5, b2 = masts[i + 1].m.x - 4.5; if (b2 - a < 4) continue; const xa = lerp(a, b2, .18), xb2 = lerp(a, b2, .82), hw2 = Math.min(Bh * .32, 3.4), hh = Math.max(dH(xa), dH(xb2)), h1 = hh + .55;
+          if (Math.abs(dH(xa) - dH(xb2)) > .5) continue;
+          let gl = ''; for (let z = -hw2 + .5; z < hw2; z += .5) gl += seg([xa + .2, h1, z], [xb2 - .2, h1, z]); for (let X = xa + .5; X < xb2; X += .5) gl += seg([X, h1, -hw2 + .2], [X, h1, hw2 - .2]);
+          items.push([0, box3(xa, xb2, hh - .4, h1, -hw2, hw2, 'oak', -.05) + strokeP(gl, col(mix(L.tone('oak', -1, cen[0], cen[1]), '#0c0806', .5)), clamp(.14 * s, .08, .3), ' opacity=".8"')]); }
+        for (const M of masts) { const X = M.m.x, hd = dH(X), r = 1.75 * M.rr;
+          items.push([-.01, fillP(poly(ring(X, hd + .2, 0, r)), tone('oak', lumD - .1)) + edge(poly(ring(X, hd + .2, 0, r)), 'oak', .5)]);
+          if (M.mi < 2) items.push([0, box3(X - 3.6, X - 3, hd, hd + 1.6, -1.9, -1.3, 'oak') + box3(X - 3.55, X - 3.05, hd + .9, hd + 1.3, -1.9, 1.9, 'oak', .05) + box3(X - 3.6, X - 3, hd, hd + 1.6, 1.3, 1.9, 'oak')]);
+          for (const [dz, rc] of [[-2.7, 1], [2.5, .85]]) { const X2 = X + 2.6, Z2 = dz * M.rr; let c3 = ''; for (const k of [1, .74, .5]) c3 += poly(ring(X2, hd + .15, Z2, rc * k));
+            items.push([Z2, fillP(poly(ring(X2, hd + .05, Z2, rc * 1.05)), shC, ' opacity=".35"') + strokeP(c3, tone('rope', lumD - .1), clamp(.28 * s, .12, .6)) + fillP(poly(ring(X2, hd + .15, Z2, rc * .3)), tone('rope', -.8))]); } }
+        items.sort((a, b2) => a[0] - b2[0]); deckB += items.map(a => a[1]).join('');
+      }
+      deckB += strokeP(line(farTop.slice(0, -1)), tone(sp.trim, lumD + .25), .5 * s, ' opacity=".9"') + edge(bulwD, inK, .6);
+    }
+  }
+
   // far away only the big lines of the rig stay: the back rigging goes pale
-  const body = rigBack + bowBack + sails + spars + lifeBack + `<g clip-path="url(#${wlClip})">` + hull + (sil ? '' : rim(hullD, clipOf(hullD), [0, sp.free], sp.len * .6, 1.1)) + (ow ? strokeP(hullD, ink(hullK), ow, ' stroke-linejoin="round"') : '') + stern + bow + '</g>' + growA + rigFront + lifeFront + growB + flags;
+  const body = rigFar + deckB + rigBack + bowBack + sails + spars + lifeBack + `<g clip-path="url(#${wlClip})">` + hull + (sil ? '' : rim(hullD, clipOf(hullD), [0, sp.free], sp.len * .6, 1.1)) + (ow ? strokeP(hullD, ink(hullK), ow, ' stroke-linejoin="round"') : '') + stern + bow + '</g>' + growA + rigFront + lifeFront + growB + flags;
   let svg = `<defs>${defs}</defs>` + body;
   if (sil) svg = svg.replace(/ (?:fill-|stroke-)?opacity="[^"]*"/g, '');
-  return { svg, glowAt, pt, sp, hb, xAft, seed, s, dir, x0, y0, lightC, Lu };
+  ZF = hullZ;   // the glows of the windows sit on the hull
+  return { svg, glowAt, pt, sp, hb, xAft, seed, s, dir, x0, y0, lightC, Lu, phi, kR,
+    geom: { bR, rail, hullZ, Bh, Tk, masts: masts.map(M => ({ x: M.m.x, H: M.m.H, top: pt(...M.A(1), 0) })), nearRail: X => pt(X, rail(X), bR(X)), farRail: X => pt(X, rail(X), -bR(X)) } };
 }
 
 /**
@@ -736,7 +856,9 @@ function build(u, L, o, mode) {
  * lights: light in the stern windows and in the lantern; seed. Returns one <g>.
  */
 function ship(u, L, o = {}) {
-  const b = build(u, L, o, 'color'), { sp, s, dir, x0, y0, hb, seed, Lu } = b, Rr = rng(seed + 77), far = o.detail === 'far';
+  const b = build(u, L, o, 'color'), { sp, s, dir, x0, y0, hb, seed, Lu, phi, kR } = b, Rr = rng(seed + 77), far = o.detail === 'far';
+  // the roll is the wind's work: a higher bow wave, spray, a longer wake, thick foam along the lee side (towards the viewer when phi > 0)
+  const kW = phi ? Math.min(1.35, kR) : 0, lee = phi > 0 ? 1 + 1.3 * kW : phi < 0 ? 1 + .35 * kW : 1;
   const foamC = mul(mix('#f6fcff', L.keyColor, .3), DIM[L.time] || 1), fc = far ? mix(foamC, L.pal.sky[3], .45) : foamC;
   // a closed smooth curve in scene units, and a torn patch of foam round (cx, cy)
   const cspl = pts => { const n = pts.length; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`; for (let i = 0; i < n; i++) { const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
@@ -746,10 +868,10 @@ function ship(u, L, o = {}) {
   if (o.reflect) { const r = build(u, L, o, 'refl'); out += E.reflection(u, r.svg, { y: y0, h: Math.min(Math.max(...sp.masts.map(m => m.H)) * s * .55, 90), L, opacity: far ? .4 : .62, stretch: 1.05, seed: seed % 97 + 3 }); }
   const stern = x0 + dir * s * hb, stem = x0 - dir * s * hb;
   // the dark of the water right under the hull: the waterline reads even where the hull is as dark as the sea
-  if (!far && (o.wake || o.reflect)) { const id = nid('hd', u); out += `<defs><radialGradient id="${id}" cx=".5" cy="0" r=".5"><stop offset="0" stop-color="${L.shadowTint}" stop-opacity=".5"/><stop offset=".6" stop-color="${L.shadowTint}" stop-opacity=".22"/><stop offset="1" stop-color="${L.shadowTint}" stop-opacity="0"/></radialGradient></defs><ellipse cx="${f(x0)}" cy="${f(y0)}" rx="${f(sp.len * s * .56)}" ry="${f(2.6 * s)}" fill="url(#${id})"/>`; }
+  if (!far && (o.wake || o.reflect)) { const id = nid('hd', u); out += `<defs><radialGradient id="${id}" cx=".5" cy="0" r=".5"><stop offset="0" stop-color="${L.shadowTint}" stop-opacity=".5"/><stop offset=".6" stop-color="${L.shadowTint}" stop-opacity=".22"/><stop offset="1" stop-color="${L.shadowTint}" stop-opacity="0"/></radialGradient></defs><ellipse cx="${f(x0)}" cy="${f(y0)}" rx="${f(sp.len * s * .56)}" ry="${f(2.6 * s * (phi ? 1 + .5 * kW : 1))}" fill="url(#${id})"/>`; }
   if (o.wake) { // the wake astern: a band of churned water, narrow under the counter, wider and fainter astern, soft at the edges; torn foam on it
-    const len = sp.len * s * .8, x1 = stern - dir * 7 * s, x2 = stern + dir * len, id = nid('hk', u), fid = nid('hf', u), n = 20, top = [], bot = [], wA = t => (1 + 3.4 * Math.pow(t, .8)) * s;
-    for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(x1, x2, t), wob = Math.sin(t * 9 + seed) * .3 * s * t; top.push([x, y0 - .1 * s + t * .25 * s]); bot.unshift([x, y0 + wA(t) + wob]); }
+    const len = sp.len * s * .8 * (phi ? 1 + .45 * kW : 1), x1 = stern - dir * 7 * s, x2 = stern + dir * len, id = nid('hk', u), fid = nid('hf', u), n = 20, top = [], bot = [], wA = t => (1 + 3.4 * Math.pow(t, .8)) * s;
+    for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(x1, x2, t), wob = Math.sin(t * 9 + seed) * .3 * s * t; top.push([x, y0 - .1 * s + t * .25 * s]); bot.unshift([x, y0 + wA(t) * (phi ? 1 + .35 * kW : 1) + wob]); }
     const pts = top.concat(bot), xa = Math.min(x1, x2) - 4 * s, ya = y0 - 3 * s;
     out += `<defs>${linGrad(id, x1, 0, x2, 0, [[0, fc, 0], [.1, fc, .38], [.28, fc, .24], [.6, fc, .09], [1, fc, 0]])}<filter id="${fid}" filterUnits="userSpaceOnUse" x="${f(xa)}" y="${f(ya)}" width="${f(len + 16 * s)}" height="${f(12 * s)}"><feGaussianBlur stdDeviation="${f(clamp(.75 * s, .3, 2.5))}"/></filter></defs>`
       + `<path d="M${pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z" fill="url(#${id})" filter="url(#${fid})"/>`;
@@ -763,18 +885,26 @@ function ship(u, L, o = {}) {
   out += b.svg;
   if (o.wake) { // the bow wave climbing the stem and running aft along the side, foam along the waterline
     const sh = mix(fc, L.shadowTint, .4), n = far ? 10 : 34; let froth = '', shade = '';
-    for (let i = 0; i < n; i++) { const t = Math.pow(Rr(), 1.5), x = stem + dir * (-2.6 + t * 24) * s, up = 2.1 * s * Math.pow(Math.sin(Math.PI * Math.min(1, t * 2.4 + .1)), 1.4) * (1 - t * .6), y = y0 - Rr() * up + .2 * s, r = (.5 + Rr() * 1.1) * s * (1 - t * .5);
+    for (let i = 0; i < n * (phi ? 1 + kW : 1); i++) { const t = Math.pow(Rr(), 1.5), x = stem + dir * (-2.6 + t * 24) * s, up = 2.1 * s * (phi ? 1 + 1.5 * kW : 1) * Math.pow(Math.sin(Math.PI * Math.min(1, t * 2.4 + .1)), 1.4) * (1 - t * .6), y = y0 - Rr() * up + .2 * s, r = (.5 + Rr() * 1.1) * s * (1 - t * .5);
       froth += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * (1 + Rr() * .8))}" ry="${f(r * .55)}" transform="rotate(${f(-dir * (25 - t * 30) * Rr())} ${f(x)} ${f(y)})"/>`;
       if (i % 3 === 0) shade += `<ellipse cx="${f(x + dir * .4 * s)}" cy="${f(y + r * .5)}" rx="${f(r * 1.3)}" ry="${f(r * .4)}"/>`; }
     out += `<g fill="${sh}" opacity=".45">${shade}</g><g fill="${fc}" opacity=".95">${froth}</g>`;
     if (!far) for (let i = 0; i < 12; i++) out += `<circle cx="${f(stem + dir * (-4.5 + Rr() * 8) * s)}" cy="${f(y0 - Rr() * 3.6 * s)}" r="${f((.12 + Rr() * .24) * s)}" fill="${fc}" opacity="${f(.4 + Rr() * .5)}"/>`;
+    if (phi && !far) { // the bone in her teeth: a sheet of white water thrown up and forward from the stem, spray blown off it
+      const hW = (2.2 + 3.4 * kW) * s, Rs = rng(seed + 991), top2 = [], n2 = 12;
+      for (let i = 0; i <= n2; i++) { const t = i / n2, x = stem + dir * lerp(-3.5, 15, t) * s, hh = hW * Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.6 + .04)), 1.2) * (1 - t * .55) * (.8 + Rs() * .35); top2.push([x, y0 - hh]); }
+      const sheet = `M${f(top2[0][0])} ${f(y0 + .4 * s)}` + top2.map(p => `L${f(p[0])} ${f(p[1])}`).join('') + `L${f(top2[n2][0])} ${f(y0 + .6 * s)}Z`;
+      out += `<path d="${sheet}" fill="${fc}" opacity=".5"/>`;
+      let blobs = ''; for (let i = 0; i < 26 + 30 * kW; i++) { const t = Math.pow(Rs(), 1.3), j = Math.min(n2, Math.round(t * n2)), x = top2[j][0] + (Rs() - .5) * 1.6 * s, y = lerp(top2[j][1], y0, Math.pow(Rs(), 1.6)), r = (.4 + Rs() * 1) * s; blobs += `<path d="${blob(x, y, r * 1.4, r * .7)}" opacity="${f(.55 + Rs() * .4)}"/>`; }
+      for (let i = 0; i < 22 + 40 * kW; i++) { const x = stem + dir * (-6 + Rs() * 14) * s, y = y0 - hW * (.4 + Rs() * 1.1), r = (.1 + Rs() * .22) * s; blobs += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * 1.6)}" ry="${f(r)}" opacity="${f(.35 + Rs() * .5)}"/>`; }
+      out += `<g fill="${fc}">${blobs}</g>`; }
     // the lace along the side: a torn band, thick in the bow wave and thin aft, seldom broken, holes and flecks in it
     const p1 = Rr() * 6, p2 = Rr() * 6, p3 = Rr() * 6, nz = t => .45 * Math.sin(t * 11 + p1) + .3 * Math.sin(t * 29 + p2) + .35 * Math.sin(t * 5 + p3), step = .6 * s, xs0 = stem + dir * 2.5 * s, xs1 = stern - dir * .3 * s, cnt = Math.max(10, Math.round(Math.abs(xs1 - xs0) / step));
     let lace = '', flecks = '', holes = '', seg2 = null;
     const close = () => { if (seg2 && seg2.a.length > 2) lace += cspl(seg2.a.concat(seg2.b.reverse())); seg2 = null; };
     for (let i = 0; i <= cnt; i++) { const t = i / cnt, x = lerp(xs0, xs1, t), v = nz(t * 3);
       if (v < -.78 && t > .15) { close(); continue; }
-      const th = s * (.2 + 1.05 * Math.pow(1 - t, 3)) * (.45 + .4 * (v + 1.1)) * (far ? .8 : 1);
+      const th = s * (.2 + 1.05 * Math.pow(1 - t, 3)) * (.45 + .4 * (v + 1.1)) * (far ? .8 : 1) * lee;
       if (!seg2) seg2 = { a: [], b: [] };
       seg2.a.push([x, y0 - th * (.2 + Rr() * .35)]); seg2.b.push([x + dir * (Rr() - .5) * .4 * s, y0 + th * (.4 + Rr() * .55)]);
       if (!far && th > .45 * s && Rr() > .8) holes += `<path d="${blob(x, y0 + th * .25, (.2 + Rr() * .35) * th, (.12 + Rr() * .12) * th)}"/>`;
@@ -798,4 +928,8 @@ function shipSilhouette(kind, o = {}) {
   return `<g>${build(o.u || 'sil', makeLight(LIGHTS.endeavour), Object.assign({}, o, { kind }), 'sil').svg}</g>`;
 }
 
-module.exports = { ship, shipSilhouette, shipBox, SHIP_SPECS: SPECS };
+/** shipGeom(kind, opts) — the projected key points of the built ship, for checks: { bR(X) — the half-breadth at the
+ *  rail, nearRail(X) / farRail(X) — scene points of the near and the far rail, masts: [{ x, H, top }], phi, s, y0 }. */
+function shipGeom(kind, o = {}) { const b = build(o.u || 'geo', makeLight(LIGHTS.endeavour), Object.assign({}, o, { kind }), 'sil'); return Object.assign({ phi: b.phi, s: b.s, y0: b.y0, x0: b.x0, hb: b.hb }, b.geom); }
+
+module.exports = { ship, shipSilhouette, shipBox, shipGeom, SHIP_SPECS: SPECS };

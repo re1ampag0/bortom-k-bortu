@@ -21,4 +21,24 @@ const sheet = kind => ({ w: 400, h: 280, bg: '#222', svg: () => {
 } });
 const sheets = {};
 for (const k of ['pearl', 'revenge', 'endeavour', 'dutch', 'merchant', 'brig']) sheets['ship-' + k] = sheet(k);
+// The roll (opts.roll, degrees; + towards the viewer): one sheet per ship — row 1 night, row 2 day, roll −15 … 15 and
+// 8 together with heel 4; row 3 flip, the one-tone silhouette, far. Every panel 200 × 150 units.
+const ROLLS = [-15, -8, 0, 8, 15];
+const rollPanel = (u, kind, light, p, o = {}) => { const hz = 96, L = K.makeLight(light, { horizon: hz }), sc = fit(kind, 172, 84) * (o.k || 1);
+  let s = K.sky(u, L, { horizon: hz }) + K.sunMoon(u, L) + K.cloudBank(u, L, { y: hz - 12, h: 14, x0: 0, x1: 200, n: 4, seed: 5, far: .6 }) + K.water(u, L, { horizon: hz, bottom: 150 });
+  if (o.sil) return `<rect width="200" height="150" fill="#e9dfc8"/>` + K.shipSilhouette(kind, Object.assign({ x: 100, y: 120, scale: sc, u }, p));
+  return s + K.ship(u, L, Object.assign({ kind, x: 100, y: 120, scale: sc, wake: true, reflect: true, lights: true }, p)); };
+const tag = (x, y, t) => `<text x="${x + 6}" y="${y + 14}" font-family="DejaVu Sans,sans-serif" font-size="10" fill="#fff" stroke="#000" stroke-width="2.4" paint-order="stroke">${t}</text>`;
+const rollSheet = kind => ({ w: 1200, h: 450, bg: '#222', svg: () => {
+  const night = K.LIGHTS[DECK[kind] === 'endeavour' || DECK[kind] === 'sea' ? 'pearl' : DECK[kind]], day = K.LIGHTS.sea; let s = '';
+  const cell = (c, r, body, t) => { s += panel(c * 200, r * 150, 200, 150, 200, 150, body) + tag(c * 200, r * 150, t); };
+  ROLLS.forEach((rl, c) => { cell(c, 0, rollPanel(`R${kind}n${c}`, kind, night, { roll: rl }), `ночь, roll ${rl}`); cell(c, 1, rollPanel(`R${kind}d${c}`, kind, day, { roll: rl }), `день, roll ${rl}`); });
+  cell(5, 0, rollPanel(`R${kind}nh`, kind, night, { roll: 8, heel: 4 }), 'ночь, roll 8 + heel 4'); cell(5, 1, rollPanel(`R${kind}dh`, kind, day, { roll: 8, heel: 4 }), 'день, roll 8 + heel 4');
+  cell(0, 2, rollPanel(`R${kind}f1`, kind, day, { roll: -15, flip: true }), 'flip, roll −15'); cell(1, 2, rollPanel(`R${kind}f2`, kind, day, { roll: 15, flip: true }), 'flip, roll 15');
+  cell(2, 2, rollPanel(`R${kind}f3`, kind, night, { roll: 8, heel: 4, flip: true }), 'flip, roll 8 + heel 4');
+  cell(3, 2, rollPanel(`R${kind}s1`, kind, day, { roll: 15 }, { sil: true }), 'силуэт, roll 15'); cell(4, 2, rollPanel(`R${kind}s2`, kind, day, { roll: -15 }, { sil: true }), 'силуэт, roll −15');
+  cell(5, 2, rollPanel(`R${kind}far`, kind, day, { roll: 12, detail: 'mid', sails: 'reefed' }, { k: .6 }), 'mid, reefed, roll 12');
+  return s;
+} });
+for (const k of ['pearl', 'revenge', 'endeavour', 'dutch', 'merchant', 'brig']) sheets['roll-' + k] = rollSheet(k);
 module.exports = { sheets };
