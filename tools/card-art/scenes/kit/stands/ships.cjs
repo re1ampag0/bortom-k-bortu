@@ -41,4 +41,11 @@ const rollSheet = kind => ({ w: 1200, h: 450, bg: '#222', svg: () => {
   return s;
 } });
 for (const k of ['pearl', 'revenge', 'endeavour', 'dutch', 'merchant', 'brig']) sheets['roll-' + k] = rollSheet(k);
+// For the user: the Pearl and the merchantman, roll −15 / 0 / +15, labels in Russian.
+sheets['roll-user'] = { w: 600, h: 322, bg: '#1d1d1d', svg: () => { let s = '';
+  const NAMES = { pearl: '«Чёрная жемчужина»', merchant: 'торговое судно' }, RL = [[-15, 'крен от зрителя 15°'], [0, 'без крена'], [15, 'крен на зрителя 15°']];
+  ['pearl', 'merchant'].forEach((k, r) => RL.forEach(([rl, t], c) => { const L = K.LIGHTS.sea;
+    s += panel(c * 200, 14 + r * 160, 200, 146, 200, 146, rollPanel(`U${k}${c}`, k, L, { roll: rl }, { k: 1.08 }))
+      + `<text x="${c * 200 + 100}" y="${10 + r * 160}" text-anchor="middle" font-family="DejaVu Sans,sans-serif" font-size="8" fill="#eee">${NAMES[k]} — ${t}</text>`; }));
+  return s; } };
 module.exports = { sheets };

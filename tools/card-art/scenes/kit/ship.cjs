@@ -60,11 +60,11 @@ const SPECS = {
   // Queen Anne's Revenge (2011): a short hull "stern up": the highest stern of the four, broad, 3.5 tiers; a sprit
   // topmast; a lateen mizzen; dark red sooty hull, red dirty torn sails.
   revenge: {
-    len: 84, free: 9.6, sheer: [3, 3.4], tumble: .3, bow: [6.5, 2.2], over: 10, counter: .8,
-    fc: [-21, 5.4], tiers: [[0, 6.6], [14, 6.6], [26, 6], [36, 3.6]], taff: 2.4, tw: [7, 8.5], openRail: 2,
+    len: 84, free: 9.6, sheer: [3, 3.4], tumble: .3, bow: [6.5, 2.2], over: 8, counter: .8,
+    fc: [-21, 4.2], tiers: [[2, 5], [17, 4.6], [30, 3.4]], taff: 2, tw: [5.2, 8], openRail: 2,
     hull: 'ship-red', trim: 'ship-wood', gilt: 1, wales: [], bands: [{ h0: 2.7, h1: 3.9, mat: 'tar' }, { h0: 6.5, h1: 7.5, mat: 'tar' }],
-    ports: [{ h: 5.2, n: 10, x0: -29, x1: 25, w: 2.1, open: .8 }], deckPorts: [7, -17, 30],
-    gallery: [12, 2, 4.5], tierWin: 2, lantern: 1.5,
+    ports: [{ h: 5.2, n: 10, x0: -29, x1: 25, w: 2.1, open: .8 }], deckPorts: [5, -16, 14],
+    gallery: [11, 2, 4.2], tierWin: 2, lantern: 1.5,
     beak: [12, 2.6, 3.4], sprit: { len: 23, steeve: 30, topmast: 13 }, jibs: 1,
     masts: [{ x: -27, H: 98, n: 3, k: .98 }, { x: 2, H: 110, n: 3, k: 1.06, rake: 1 }, { x: 27, H: 86, n: 2, k: .72, rake: 2, aft: 'lateen' }],
     spar: 'ship-wood', yard: 'tar', sail: 'ship-sail-red', cond: 'patched', flag: 'jolly', pennant: 'ship-flag-red',
@@ -75,9 +75,9 @@ const SPECS = {
   // bowsprit with a jib-boom; white whole sails, the full set.
   endeavour: {
     len: 104, free: 17.5, sheer: [1.5, 2], tumble: .5, bow: [5, 1.7], over: 7, counter: .62,
-    fc: [-28, 1.6], tiers: [[12, 3], [31, 3.6]], taff: 1.4, tw: [6.5, 7.5],
-    hull: 'tar', trim: 'paint-ochre', gilt: 1, wales: [1.9], bands: [{ h0: 3.3, h1: 5.9, mat: 'paint-ochre' }, { h0: 7.7, h1: 10.3, mat: 'paint-ochre' }, { h0: 12.1, h1: 14.7, mat: 'paint-ochre' }],
-    ports: [{ h: 4.6, n: 15, x0: -41, x1: 40, w: 1.9, open: .8 }, { h: 9, n: 15, x0: -42, x1: 41, w: 1.9, open: .85 }, { h: 13.4, n: 14, x0: -41, x1: 40, w: 1.9, open: .9 }], deckPorts: [9, -22, 42],
+    fc: [-28, 1.6], tiers: [[12, 2.8], [31, 3.2]], taff: 1.4, tw: [5.6, 7.5],
+    hull: 'tar', trim: 'paint-ochre', gilt: 1, wales: [2.4], bands: [{ h0: 4, h1: 6.6, mat: 'paint-ochre' }, { h0: 8.3, h1: 10.9, mat: 'paint-ochre' }, { h0: 12.6, h1: 15.2, mat: 'paint-ochre' }],
+    ports: [{ h: 5.3, n: 15, x0: -41, x1: 39, w: 1.9, open: .8 }, { h: 9.6, n: 15, x0: -41, x1: 39, w: 1.9, open: .85 }, { h: 13.9, n: 14, x0: -41, x1: 39, w: 1.9, open: .9 }], deckPorts: [9, -22, 42],
     gallery: [12, 2, 4.4], tierWin: 3, lantern: 1,
     beak: [9.5, 3.4, 0], sprit: { len: 30, steeve: 20, jib: 13, spritsail: 'set' }, jibs: 3,
     masts: [{ x: -34, H: 116, n: 4, k: .95 }, { x: 1, H: 127, n: 4, k: 1.04, rake: .8 }, { x: 34, H: 99, n: 3, k: .74, rake: 1.6, aft: 'gaff' }],
@@ -90,11 +90,11 @@ const SPECS = {
   // broad block of the Revenge), no lantern; a strong sheer; a sprit topmast; a long steep lateen yard;
   // green-brown overgrown hull, rags of sails.
   dutch: {
-    len: 90, free: 11, sheer: [5, 7], tumble: 1.5, bow: [7, 2.6], over: 13, counter: .62,
-    fc: [-28, 3], tiers: [[2, 3.4], [17, 5], [28, 6], [37, 6.5], [45, 6]], taff: 2.6, tw: [1.1, 6.8], openRail: 4,
+    len: 90, free: 11, sheer: [5, 5], tumble: 1.5, bow: [7, 2.6], over: 11, counter: .62,
+    fc: [-28, 3], tiers: [[4, 3.4], [19, 4], [31, 3.8], [40, 3]], taff: 2, tw: [1.6, 6.4], openRail: 3,
     hull: 'ship-ghost', trim: 'ship-ghost', gilt: 0, wales: [3.2, 6.6, 10.1], bands: [], growth: true,
     ports: [{ h: 4.7, n: 10, x0: -30, x1: 26, w: 2, open: .55 }, { h: 8.4, n: 9, x0: -27, x1: 24, w: 1.9, open: .5 }], deckPorts: [4, -24, -6],
-    gallery: [6.5, 3, 3.9], galRoof: 4.6, tierWin: 1, lantern: 0,
+    gallery: [6.5, 2, 3.8], galRoof: 3.6, tierWin: 1, lantern: 0,
     beak: [12, 1.4, 3.6], sprit: { len: 22, steeve: 32, topmast: 12, spritsail: 'set' }, jibs: 1,
     masts: [{ x: -28, H: 92, n: 3, k: .96 }, { x: -1, H: 104, n: 3, k: 1.03, rake: 1.5 }, { x: 24, H: 90, n: 2, k: .66, rake: 3.5, aft: 'lateen', lat: [.15, .085, .8] }],
     spar: 'ship-ghost', yard: 'ship-ghost', sail: 'ship-sail-ghost', cond: 'rags', flag: 'pennant', pennant: 'ship-flag-black',
@@ -107,7 +107,7 @@ const SPECS = {
   // colours and no ensign (card-briefs.md «Нейтральные суда»: not a fifth fighter); `ensign: 'trade'` stays available.
   merchant: {
     len: 70, free: 7.9, sheer: [2.6, 4.2], tumble: .8, bow: [5.5, 2.6], over: 5.5, counter: .74,
-    fc: [-22, 2.2], tiers: [[9, 3.4], [22, 3.6]], taff: 1.6, tw: [1.6, 3.6],
+    fc: [-22, 2.2], tiers: [[9, 3], [23, 3]], taff: 1.4, tw: [1.6, 3.6],
     hull: 'ship-wood', trim: 'ship-wood', gilt: 0, wales: [], bands: [{ h0: -1, h1: 2.6, mat: 'tar' }, { h0: 4.1, h1: 5.9, mat: 'paint-olive' }, { h0: 6.2, h1: 6.6, mat: 'linen' }], wear: 2.6, bleach: 1, sailVar: 1,
     ports: [], deckPorts: [0, 0, 0], gallery: [6, 1, 3.4], tierWin: 1, lantern: 1,
     beak: [7.5, 1.4, 2.6], sprit: { len: 17, steeve: 28, spritsail: 'set' }, jibs: 0,
@@ -252,7 +252,8 @@ function build(u, L, o, mode) {
   // the quarter gallery and the gun ports
   const gal = sp.gallery, gh0 = hC + .7, gh1 = gh0 + gal[1] * gal[2], gx0 = transX(gh0) - gal[0];
   const ports = [];
-  sp.ports.forEach((row, ri) => { const Rr = R('ports' + ri); for (let i = 0; i < row.n; i++) { const X = lerp(row.x0, row.x1, i / (row.n - 1)) + (Rr() - .5) * .3, H = Y(row.h, X), w = row.w || 2, q = Rr(), z = Rr();
+  sp.ports.forEach((row, ri) => { const Rr = R('ports' + ri), pitch = (row.x1 - row.x0) / (row.n - 1), off = ri % 2 ? pitch / 2 : 0; for (let i = 0; i < row.n; i++) { Rr(); const X = row.x0 + i * pitch + off, H = Y(row.h, X), w = row.w || 2, q = Rr(), z = Rr();
+    if (X > row.x1 + pitch * .4) continue;
     if (X > gx0 - w && H > gh0 - 3) continue;
     let st = q < (row.open != null ? row.open : .5) ? 'open' : 'shut'; if (sp.growth) st = z < .2 ? 'gone' : z < .42 ? 'askew' : st;
     ports.push({ X, H, w, hh: w * .95, st }); } });
@@ -353,7 +354,7 @@ function build(u, L, o, mode) {
       if (p.st !== 'gone' && (p.st === 'deck' ? jit > .3 : jit > .2)) { const r = (p.st === 'deck' ? .4 : .5) * (.85 + j3 * .3), mx = p.X + (j2 - .5) * .4, my = p.H - .1 + (j3 - .5) * .2, pm = pt(mx, my);
         pr += `<circle cx="${f(pm[0])}" cy="${f(pm[1])}" r="${f(r * s)}" fill="url(#${mz})" stroke="${ink('iron')}" stroke-width="${f(.1 * s)}"/>` + dot(mx - dir * dC.ux * r * .12, my + dC.uy * r * .12, r * (.5 + j2 * .14)) + ` fill="${hole}"/>`; }
       if (p.st === 'open') { const upL = hh * (.6 + jit * .95), lean = (j2 - .5) * .5, lid = [[p.X - hw, p.H + hh], [p.X + hw, p.H + hh], [p.X + hw + lean, p.H + hh + upL], [p.X - hw + lean, p.H + hh + upL]]; // the lid lifted: its inner face in shadow, its edge in light, two lanyards
-        pr += fillP(poly(lid.map(q => [q[0] + so[0], q[1] + so[1]])), shd, ' opacity=".35"') + fillP(poly(lid), gr(lid[0], lid[3], [[0, tone(lidK, If - .5 + (jit - .5) * .2)], [1, tone(lidK, If - .25)]]), ` stroke="${ink(lidK)}" stroke-width="${f(.14 * s)}"`)
+        pr += fillP(poly(lid.map(q => [q[0] + so[0], q[1] + so[1]])), shd, ' opacity=".35"') + fillP(poly(lid), gr(lid[0], lid[3], [[0, tone('paint-red', If - .5 + (jit - .5) * .2)], [1, tone('paint-red', If - .25)]]), ` stroke="${ink(lidK)}" stroke-width="${f(.14 * s)}"`)
           + strokeP(seg(lid[3], lid[2]), edgeHi, .2 * s, ' opacity=".7"') + (near ? strokeP(seg([p.X - hw * .6 + lean, p.H + hh + upL], [p.X - hw * .3, p.H + hh + upL + 1]) + seg([p.X + hw * .6 + lean, p.H + hh + upL], [p.X + hw * .3, p.H + hh + upL + 1]), dark, .1 * s, ' opacity=".7"') : ''); }
       if (p.st === 'askew') { const a = (jit - .3) * 1.1, c = Math.cos(a), sn = Math.sin(a), hx = p.X - hw, hy = p.H + hh, q = (x, y) => [hx + x * c - y * sn, hy + x * sn + y * c]; // a lid hanging on one hinge
         pr += fillP(poly([q(0, 0), q(p.w, 0), q(p.w, -p.hh), q(0, -p.hh)].map(v => [v[0] + so[0], v[1] + so[1]])), shd, ' opacity=".35"') + fillP(poly([q(0, 0), q(p.w, 0), q(p.w, -p.hh), q(0, -p.hh)]), tone(lidK, If - .15), ` stroke="${ink(lidK)}" stroke-width="${f(.16 * s)}"`) + strokeP(seg(q(0, 0), q(p.w, 0)), edgeHi, .15 * s, ' opacity=".6"'); }
