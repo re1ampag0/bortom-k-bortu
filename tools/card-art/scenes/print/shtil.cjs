@@ -11,7 +11,7 @@ const light = { time: 'dusk', key: { type: 'sun', x: 157, y: 74, color: '#ffc47a
   rim: { az: 20, color: '#ffe2b4', power: .6 }, haze: .55 };
 const HZ = 121, WL = 127, WF = 123.5;   // horizon; waterlines of the near and the far ship (the glass of a sea card starts at y 129)
 const skel = { horizon: HZ, eye: 2, items: [
-  ['brig (near), limp sails', 30, WL, 128, 104, 'water'], ['smoke column', 28, 120, 30, 98, 'the bow gun of the brig (water at its foot)'],
+  ['brig (near), limp sails', 30, WL, 128, 104, 'water'], ['smoke column', 25, 124, 30, 92, 'the bow gun of the brig (water at its foot)'],
   ['far ship', 150, WF, 46, 36, 'water'], ['sun', 150, 81, 14, 14, 'sky'], ['weed', 16, 160, 44, 4, 'water']] };
 
 // ——— KIT-CANDIDATE: limp sails of a becalmed ship. kit/ship.cjs draws sails only bellied by the wind (full, reefed)
@@ -172,7 +172,7 @@ module.exports = { name: 'Штиль', kind: 'sea', status: 'draft', cam: { x: 0
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });
     // a hot evening: deep blue overhead going to amber at the horizon; the sea series' water, holding the sky like glass
-    L.pal = Object.assign({}, L.pal, { sky: ['#2c4870', '#6b7d9c', '#d9a274', '#ffd69c'], sea: ['#e4bc92', '#5c8496', '#1d3e52'], smoke: '#cfc6bc' });
+    L.pal = Object.assign({}, L.pal, { sky: ['#2c4870', '#6b7d9c', '#d9a274', '#ffd69c'], sea: ['#e4bc92', '#5c8496', '#1d3e52'], smoke: '#8c8590' });
     let bg = K.sky(u, L, { horizon: HZ, stars: false }) + K.sunMoon(u, L, { r: 6.5 });
     bg += K.cloud(u, L, { x: 160, y: 30, w: 96, h: 8, seed: 21, far: .55 }) + K.cloud(u, L, { x: 120, y: 48, w: 70, h: 6, seed: 33, far: .7 });
     bg += K.water(u, L, { horizon: HZ, bottom: 280, swell: 0, seed: 11, glitter: 157 });
@@ -189,7 +189,7 @@ module.exports = { name: 'Штиль', kind: 'sea', status: 'draft', cam: { x: 0
     bg += `<path d="M${f(96 - 52)} ${WL + .3}H${f(96 + 53)}" stroke="${L.shadowTint}" stroke-width=".6" opacity=".5"/>`;
     // the smoke of the bow gun: it went off a while ago and stands over the water in a straight column, its top just
     // spreading; lit warm from the right by the low sun; its reflection hangs straight down under it
-    const sm = K.smoke(u, L, { x: 34, y: WL - 3, w: 30, h: 98, seed: 4, wind: 0, opacity: .92 });
+    const sm = K.smoke(u, L, { x: 40, y: WL - 3, w: 34, h: 92, seed: 4, wind: 0, opacity: 1 });
     bg += mirror(sm, WL, 60, .4, 15) + sm;
     // the warm glow of the sun on the slack canvas and the water under it
     bg += K.localGlow(u, { x: 157, y: 118, color: '#ffc47a', power: .35, radius: 40 }, { squash: .3, core: false });
