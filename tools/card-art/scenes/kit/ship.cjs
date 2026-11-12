@@ -31,6 +31,7 @@ const SHIP_MAT = {
   'ship-sail-cream': { base: '#efe7d2', spec: null, reflex: 'warm', reflexK: .16, trans: .65 },                       // the Endeavour: cream-white sails
   'ship-drown': { base: '#686250', spec: null, reflex: 'sky', reflexK: .42, grain: 1 },                                // the Dutchman: faded grey-green-brown wood
   'ship-sail-rot': { base: '#a29e88', spec: null, reflex: 'sky', reflexK: .16, trans: .7 },                           // the Dutchman: grey-beige rotten cloth
+  'ship-iron-drown': { base: '#34352e', spec: null, reflex: 'sky', reflexK: .12 },                                  // the Dutchman's guns: old iron in the shadow of the port
   'ship-sail-crimson': { base: '#7c2520', spec: null, reflex: 'warm', reflexK: .14, trans: .55 },                     // the Revenge: dark red sails
 };
 for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
@@ -52,7 +53,7 @@ for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
 // paint of the inner side of the bulwark; deckK — the planks of the deck; bottom: 'foul' | 'copper' | 'tar'.
 // The marks of single ships (kit/README.md, «Корабли»): balc, balcD, lanternPost, lanterns, lanternArm, holeK, thruK, topK,
 // topRound, lidIn, cond ('whole' | 'mended' | 'torn' | 'fringe' | 'rags' | 'strips'), ports[].hk, masts[].Q, masts[].noBare,
-// ribs, crest, beakJag, broken.
+// ribs, crest, beakJag, broken, run, sprit.stays, sprit.sling, masts[].spanker.
 const SPECS = {
   // The Black Pearl (2003), by the user's measurements of the profile (report/print-kit/refs/zamery.md; L — the waterline):
   // the longest and lowest hull (the waist 0.14 L, the hull 1.21 L, with the head 1.34 L), a modest sheer; the forecastle
@@ -100,9 +101,9 @@ const SPECS = {
     hull: 'tar', trim: 'ship-ochre', gilt: 1, wales: [], bands: [{ h0: 1.4, h1: 5.4, mat: 'ship-ochre' }, { h0: 6.1, h1: 10.1, mat: 'ship-ochre' }, { h0: 11.1, h1: 15.1, mat: 'ship-ochre' }, { h0: 18.2, h1: 20, mat: 'ship-ochre' }],
     ports: [{ h: 3.4, n: 15, x0: -38, x1: 34.8, w: 2 }, { h: 8.1, n: 15, x0: -38, x1: 34.8, w: 2 }, { h: 13.1, n: 15, x0: -38, x1: 34.8, w: 2 }], deckPorts: [10, -44, 44],
     gallery: [12, 3, 3.6], tierWin: 3, lantern: 1, lanterns: 'three', lanternPost: .6, balc: [0, 1], balcD: 2.2,
-    beak: [7, 3, 0], sprit: { len: 31, steeve: 25, jib: 14, spritsail: 'set' }, jibs: 3,
-    masts: [{ x: -31, H: 99, n: 4, k: .95, rake: 3 }, { x: 5, H: 104, n: 4, k: 1.04, rake: 3.5 }, { x: 36.5, H: 88, n: 3, k: .74, rake: 4.5, aft: 'gaff' }],
-    spar: 'ship-ochre', yard: 'tar', sail: 'ship-sail-cream', cond: 'whole', flag: 'pennant', pennant: 'ship-flag-red', ensign: 'company',
+    beak: [7, 3, 0], sprit: { len: 31, steeve: 25, jib: 14, spritsail: 'set', stays: 1, sling: 1 }, jibs: 3,
+    masts: [{ x: -31, H: 99, n: 4, k: .95, rake: 3 }, { x: 5, H: 104, n: 4, k: 1.04, rake: 3.5 }, { x: 36.5, H: 88, n: 3, k: .74, rake: 4.5, aft: 'gaff', spanker: [.2, 1.27, .2, .25] }],
+    spar: 'ship-ochre', yard: 'tar', sail: 'ship-sail-cream', cond: 'whole', flag: 'pennant', pennant: 'ship-flag-red', ensign: 'company', ensignK: .82,
     beam: .28, draft: 14, bilge: 2.5, inner: 'paint-red', deckK: 'pine-deck', bottom: 'copper',   // HMS Victory: 15.8 m to 56.7 m on the gundeck, draught 8.8 m
   },
   // The Flying Dutchman (2006-2007), by the measurements (zamery.md): a short bellied hull, the side 0.21 L (L / side ~ 4.3
@@ -112,8 +113,8 @@ const SPECS = {
   // 0.85 L, 0.75 / 0.75 / 0.62 L high, no rake, big round tops at 0.55 L (the mizzen 0.48), broken yards; rags of sails
   // hanging in vertical strips; a faded grey-green-brown hull grown over with shells, coral and weed.
   dutch: {
-    len: 90, free: 18.5, sheer: [3, 2.5], tumble: 2, bow: [6.5, 2.1], over: 9, counter: .62,
-    fc: [-5, 2.2], tiers: [[18, 2.4], [33, 1.8]], taff: .6, tw: [2.6, 6], openRail: 1,
+    len: 90, free: 18.5, sheer: [4.6, 3.8], tumble: 2.6, bow: [6.5, 2.1], over: 9, counter: .62, run: 1,
+    fc: [-5, 3], tiers: [[18, 3.2], [33, 2.4]], taff: .6, tw: [2.6, 6], openRail: 1,
     hull: 'ship-drown', trim: 'ship-drown', gilt: 0, wales: [5.6, 12.6, 16.6], bands: [], growth: true, ribs: [1.5, 2.6], crest: [11, 12], beakJag: 1,
     ports: [{ h: 9, n: 10, x0: -30, x1: 22, w: 2.6, hk: 1.3 }], deckPorts: [0, 0, 0],
     gallery: [6, 2, 3.6], galRoof: 3, tierWin: 1, lantern: 0,
@@ -244,9 +245,9 @@ function build(u, L, o, mode) {
   // Across: tumblehome above the widest line (t0), the bilge and the floor under the water down to the keel at the
   // draft; along: fine to the stem, a run to the sternpost under the water, the transom (~0.6 of the beam) above the
   // counter; on the transom's strip (the stern turned to us) Z runs from the near quarter to the far one.
-  const Bh = sp.len * (sp.beam || .25) / 2, Tk = sp.draft || sp.free, pB = sp.bilge || 2.2, rTop = clamp(1 - .2 * sp.tumble, .6, .97);
+  const Bh = sp.len * (sp.beam || .25) / 2, Tk = sp.draft || sp.free, pB = sp.bilge || 2.2, rTop = clamp(1 - .2 * sp.tumble, sp.tumble > 2 ? .42 : .6, .97);
   const secW = (X, H) => { if (H < 0) { const q = clamp(-H / Tk); return Math.max(.4 / Bh, .98 * Math.pow(Math.max(0, 1 - Math.pow(q, pB)), 1 / pB)); }
-    const t = Math.min(H / (sp.free + sheer(X)), 1.8), t0 = .42; return t <= t0 ? 1 - .02 * (1 - t / t0) : Math.max(.5, .98 - (.98 - rTop) * Math.pow((t - t0) / (1 - t0), 1.3)); };
+    const t = Math.min(H / (sp.free + sheer(X)), 1.8), t0 = .42; return t <= t0 ? 1 - .02 * (1 - t / t0) : Math.max(sp.tumble > 2 ? .36 : .5, .98 - (.98 - rTop) * Math.pow((t - t0) / (1 - t0), 1.3)); };
   const lonW = (X, H) => { if (X <= 0) { const xe = stemX(clamp(H, -Tk, Hs)); return xe >= 0 ? 1 : Math.pow(Math.max(0, 1 - Math.pow(clamp(X / xe), 2.3)), .55); }
     const xe = H >= hC ? transX(H) : lerp(hb - .3, xC, clamp(H / hC)), base = Math.pow(Math.max(0, 1 - Math.pow(clamp(X / xe), 3)), .45);
     return Math.max(base, H > 0 ? .6 * sm(H / hC) : 0); };
@@ -259,8 +260,12 @@ function build(u, L, o, mode) {
   for (let h = hLo; h < Hs - .05; h += .8) hullPts.push([stemX(h), h]);
   for (let X = xStem; X < xAft - .05; X += .8) topPts.push([X, rail(X)]);
   topPts.push([xAft, hTop]); hullPts.push(...topPts, [xC, hC]);
-  for (let i = 1; i <= 6; i++) { const t = i / 6, q = 1 - t; hullPts.push([q * q * xC + 2 * t * q * (hb + sp.over * .02) + t * t * (hb - .3), q * q * hC + 2 * t * q * hC * .74 + t * t * hC * .42]); }
-  hullPts.push([hb - 1.4, hLo]);
+  // sp.run (the Dutchman): no sternpost step under the counter — one smooth curve from the transom down to the water
+  const qB = (A, B, Cq, t) => { const q = 1 - t; return [q * q * A[0] + 2 * t * q * B[0] + t * t * Cq[0], q * q * A[1] + 2 * t * q * B[1] + t * t * Cq[1]]; };
+  const runC = sp.run ? [[xC, hC], [hb + sp.over * .15, hC * .3], [hb - 2.5, -.6]] : null;
+  if (runC) { for (let i = 1; i <= 10; i++) hullPts.push(qB(...runC, i / 10)); hullPts.push([hb - 3.5, hLo]); }
+  else { for (let i = 1; i <= 6; i++) { const t = i / 6, q = 1 - t; hullPts.push([q * q * xC + 2 * t * q * (hb + sp.over * .02) + t * t * (hb - .3), q * q * hC + 2 * t * q * hC * .74 + t * t * hC * .42]); }
+    hullPts.push([hb - 1.4, hLo]); }
   const hullD = line(hullPts) + 'Z', hullK = sp.hull;
   const strip = (h0, h1, Xa, Xb, step = 2.5) => { const a = [], b = []; for (let X = Xa; X < Xb + step - 1e-6; X += step) { const x = Math.min(X, Xb); a.push([x, Y(h1, x)]); b.unshift([x, Y(h0, x)]); } return poly(a.concat(b)); };
   const along = (h, Xa, Xb, step = 2.5) => { const a = []; for (let X = Xa; X < Xb + step - 1e-6; X += step) { const x = Math.min(X, Xb); a.push([x, Y(h, x)]); } return a; };
@@ -289,7 +294,9 @@ function build(u, L, o, mode) {
   const ribs = [];
   if (sp.ribs) { const r0 = sp.ports[0], pitch = (r0.x1 - r0.x0) / (r0.n - 1), Rr = R('ribs'), xa = xStem + 4, xb = gx0 - 1.2;
     for (let X = r0.x0 - pitch / 2 - Math.ceil((r0.x0 - pitch / 2 - xa) / pitch) * pitch; X < xb; X += pitch) { const z = Rr(), up = z < .2 ? -Rr() * 1.4 : z * sp.ribs[1];
-      ribs.push({ X: X + (Rr() - .5) * .4, w: sp.ribs[0] * Lu * (.85 + Rr() * .3), h0: 2.2 + Rr() * 2.4, h1: rail(X) + up, lean: (Rr() - .5) * .5 }); } }
+      const r = { X: X + (Rr() - .5) * .4, w: sp.ribs[0] * Lu * (.85 + Rr() * .3), h0: 2.2 + Rr() * 2.4, h1: rail(X) + up, lean: (Rr() - .5) * .5 };
+      while (r.h0 < r.h1 - 4 && stemX(r.h0) + .5 > r.X - r.w) r.h0 += .4;   // at the raked stem: the foot on the planking, not hanging in the air ahead of it
+      if (r.h0 < r.h1 - 4) ribs.push(r); } }
   const ribD = r => poly([[r.X - r.w / 2, r.h0], [r.X + r.w / 2, r.h0], [r.X + r.w * .42 + r.lean, r.h1 - .25], [r.X + r.lean * .6, r.h1 + .35], [r.X - r.w * .45 + r.lean, r.h1]]);
 
   // ——— the hull's paint ———
@@ -348,7 +355,8 @@ function build(u, L, o, mode) {
       inner += fillP(poly([[Xb - 4, -7], [Xa + 4, -7], [Xa + 4, 60], [Xb - 4, 60]]), gr([Xa, 0], [Xb, 0], [[0, c, a0], [.45, c, a0 * .45], [1, c, 0]])); } }
     // wet planks at the waterline: darker, with the weed of the Dutchman
     if (sp.bleach) inner += fillP(strip(4.4, topMax + 2, xStem - 3, xAft + 2, 4), gr([0, 4.4], [0, topMax], [[0, '#bcb6a4', 0], [.45, '#bcb6a4', .2], [1, '#cdc7b4', .36]]));   // the upper strakes bleached by sun and salt
-    inner += fillP(strip(-1, 1.6, xStem - 3, xAft + 2, 6), gr([0, 0], [0, 1.6], [[0, sp.growth ? tone('ship-weed', -.5) : dark, .6], [1, dark, 0]]));
+    if (sp.growth) inner += fillP(strip(-1, 3.4, xStem - 3, xAft + 2, 6), gr([0, 0], [0, 3.4], [[0, tone('ship-weed', -.45), .75], [.45, tone('ship-weed', -.3), .4], [1, tone('ship-weed', -.2), 0]]));   // the Dutchman: a green slime belt
+    else inner += fillP(strip(-1, 1.6, xStem - 3, xAft + 2, 6), gr([0, 0], [0, 1.6], [[0, dark, .6], [1, dark, 0]]));
     if (phi) { // the roll: the water line moves on the near side
       const wy = (a, b2) => `<linearGradient id="${a}" gradientUnits="userSpaceOnUse" x1="0" y1="${f(y0 - b2 * s)}" x2="0" y2="${f(y0)}">`;
       if (phi < 0) { // the near side rises out of the water: the bottom under the old waterline — planking (copper plates), slime and weed, wet sheen
@@ -373,7 +381,8 @@ function build(u, L, o, mode) {
     // the ports: lids with an edge in the light, a shadow under them; guns of different size, some ports empty
     const Rq = R('lids'), hole = col(mix(L.tone(hullK, -1, cen[0], cen[1]), '#17100c', .7)), lidK = sp.bands.length && kind === 'endeavour' ? 'tar' : hullK;
     const up = dC.uy < 0, edgeHi = topRim > .2 ? rimCol : lite, so = shOff(.42), lidUp = sp.growth ? .3 : 0, frame = sp.growth ? mix(lite, rimCol, .5) : ''; let pr = '', mz = '';   // frame: a worn edge round the Dutchman's holes
-    if (!far) { mz = nid('hm', u); defs += `<radialGradient id="${mz}" cx=".5" cy=".5" r=".55" fx="${f(.5 + .3 * dC.ux)}" fy="${f(.5 + .3 * dC.uy)}"><stop offset="0" stop-color="${tone('iron', If + .45)}"/><stop offset=".3" stop-color="${tone('iron', If - .25)}"/><stop offset="1" stop-color="${tone('iron', -.95)}"/></radialGradient>`; }
+    const gunK = sp.growth ? 'ship-iron-drown' : 'iron', gunD = sp.growth ? .55 : 0;   // the Dutchman: dark old iron, no cold glint (it read as eyes)
+    if (!far) { mz = nid('hm', u); defs += `<radialGradient id="${mz}" cx=".5" cy=".5" r=".55" fx="${f(.5 + .3 * dC.ux)}" fy="${f(.5 + .3 * dC.uy)}"><stop offset="0" stop-color="${tone(gunK, If + .45 - gunD)}"/><stop offset=".3" stop-color="${tone(gunK, If - .25 - gunD)}"/><stop offset="1" stop-color="${tone(gunK, -.95)}"/></radialGradient>`; }
     for (const p of ports) { const hw = p.w / 2, hh = p.hh / 2, jit = Rq(), j2 = Rq(), j3 = Rq();
       if (far) { pr += fillP(box(p.X, p.H, p.w, p.hh), hole, ' opacity=".8"'); continue; }
       const T = [[p.X - hw, p.H + hh], [p.X + hw, p.H + hh]], B = [[p.X - hw, p.H - hh], [p.X + hw, p.H - hh]];
@@ -388,7 +397,7 @@ function build(u, L, o, mode) {
         // a lighter swell at the muzzle, the dark bore
         const dk = p.st === 'deck', r = (dk ? .36 : .46) * (.94 + j3 * .12), Lb = dk ? 1.4 : 1.9, z0 = hullZ(p.X, p.H), mx = p.X + (j2 - .5) * .16, my = p.H + .22,
           A = [mx, my, z0], Bm = [mx, my - Lb * .24, z0 + Lb];
-        pr += spar(A, Bm, r * .84, r * .76, 'iron', { grain: false }) + dot(Bm[0], Bm[1], r * 1.06, Bm[2]) + ` fill="url(#${mz})" stroke="${tone('iron', If + .2)}" stroke-width="${f(.12 * s)}"/>`
+        pr += spar(A, Bm, r * .84, r * .76, gunK, { grain: false }) + dot(Bm[0], Bm[1], r * 1.06, Bm[2]) + ` fill="url(#${mz})" stroke="${tone(gunK, If + .2 - gunD * 1.3)}" stroke-width="${f(.12 * s)}"/>`
           + dot(Bm[0] - dir * dC.ux * r * .1, Bm[1] + dC.uy * r * .1, r * .5, Bm[2]) + ` fill="${hole}"/>`; }
       if (p.st === 'open') { const upL = hh * (.55 + jit * .55), lean = (j2 - .5) * .5, lid = [[p.X - hw, p.H + hh], [p.X + hw, p.H + hh], [p.X + hw + lean, p.H + hh + upL], [p.X - hw + lean, p.H + hh + upL]]; // the lid lifted: its inner face in shadow, its edge in light, two lanyards
         pr += fillP(poly(lid.map(q => [q[0] + so[0], q[1] + so[1]])), shd, ' opacity=".35"') + fillP(poly(lid), gr(lid[0], lid[3], [[0, tone(sp.lidIn || 'paint-red', If - .5 + (jit - .5) * .2)], [1, tone(sp.lidIn || 'paint-red', If - .25)]]), ` stroke="${ink(lidK)}" stroke-width="${f(.14 * s)}"`)
@@ -419,8 +428,14 @@ function build(u, L, o, mode) {
   {
     const tA = [xAft, hTop], arch = sp.tw[0] * .32 + .6, hM = (hC + hTop) / 2;
     const trPoly = 'M' + pp(xC, hC) + 'L' + pp(tA[0], tA[1]) + 'Q' + pp(xAft + sp.tw[0] * .5, hTop + arch * 1.5) + ' ' + pp(xAft + sp.tw[0], hTop + arch * .2) + 'L' + pp(xC + sp.tw[1], hC + .5) + 'Z';
-    const under = poly([[xC, hC], [xC + sp.tw[1], hC + .5], [hb + sp.tw[1] * .3, hC * .5], [hb - .3, hC * .42], [hb + sp.over * .02, hC * .74]]);
-    const rud = poly([[hb - .4, hC * .5, 0], [hb + 1.5, hC * .46, 0], [hb + 1.1, -6, 0], [hb - 1.4, -6, 0]]);
+    let under, rud;
+    if (runC) { // the smooth counter: its strip beyond the hull's curve, the rudder hung along it down into the water
+      const oC = [[xC + sp.tw[1], hC + .5], [hb + sp.over * .15 + sp.tw[1] * .55, hC * .32], [hb - 2.5 + sp.tw[1] * .22, -.6]], ou = [], inn = [], rd = [];
+      for (let i = 0; i <= 10; i++) { ou.push(qB(...oC, i / 10)); inn.unshift(qB(...runC, i / 10)); }
+      under = poly(ou.concat(inn));
+      for (let i = 4; i <= 10; i++) { const a = qB(...oC, i / 10); rd.push([a[0] - .2, a[1], 0]); } rud = poly(rd.concat([[rd[rd.length - 1][0] - .3, -6, 0], [rd[rd.length - 1][0] - 1.9, -6, 0]], rd.slice().reverse().map(a => [a[0] - 1.6 - .25 * (a[1] / hC), a[1], 0])));
+    } else { under = poly([[xC, hC], [xC + sp.tw[1], hC + .5], [hb + sp.tw[1] * .3, hC * .5], [hb - .3, hC * .42], [hb + sp.over * .02, hC * .74]]);
+      rud = poly([[hb - .4, hC * .5, 0], [hb + 1.5, hC * .46, 0], [hb + 1.1, -6, 0], [hb - 1.4, -6, 0]]); }
     const nT = [.74, .1, .66], nTq = [.42, .1, .9], nTa = [.97, .1, .2];   // the middle of the transom; its edge at the quarter; its far edge
     stern += fillP(rud, tone(hullK, lum(nT) - .35)) + edge(rud, hullK, .7) + fillP(under, gr([xC, hC], [hb, hC * .45], [[0, tone(hullK, -.6)], [1, tone(hullK, -.95)]])) + edge(under, hullK, .7);
     // the transom: a curved face — lighter where it turns to the light, the counter below looks down into its own shadow
@@ -682,9 +697,14 @@ function build(u, L, o, mode) {
     const w = Q.map((_, i) => WY[i] * sp.len * m.k), qT = Q[0] + .035, qC = m.n >= 3 ? Q[1] + .03 : null, rr = Lu * Math.pow(m.k, .6) * (m.n === 2 && sp.len < 80 ? .9 : 1);
     return { m, mi, hD, Hm, A, Q, qs, st, w, qT, qC, rr }; });
   let rigBack = '', sails = '', spars = '', rigFront = '', standing = '', running = '', thin = '', lifts = '';
+  // sprit.stays (the Endeavour): stay j of the jibs — from the fore mast (the topmast head ... the topgallant head) to the
+  // jib-boom (its heel ... its end); every jib's luff lies on its own stay
+  const jibStay = j => { const F = masts[0], t = sp.jibs === 1 ? 1 : j / (sp.jibs - 1), qc = F.qC != null ? F.qC : .8, jb0 = [Bp(1)[0] + nUp[0] * jOff, Bp(1)[1] + nUp[1] * jOff];
+    return [F.A(lerp(qc, .99, t)), [lerp(jb0[0], Bend[0], lerp(.1, .97, t)), lerp(jb0[1], Bend[1], lerp(.1, .97, t))]]; };
   // stays: from every masthead forward and down to the mast ahead or to the bowsprit
   masts.forEach((M, i) => { const P = masts[i - 1], heads = [M.A(M.qT - .01), M.A(M.qC != null ? M.qC : 1), M.A(1)];
-    if (!P) { standing += seg(heads[0], Bp(.5)) + seg(heads[1], Bp(.96)); if (M.qC != null) standing += seg(heads[2], Bend); if (!far) standing += seg(Bp(.72), [stemX(sp.free * .3) - .3, sp.free * .3]); }
+    if (!P && bs.stays) { standing += seg(heads[0], Bp(.5)); for (let j = 0; j < sp.jibs; j++) standing += seg(jibStay(j)[0], jibStay(j)[1]); if (!far) standing += seg(Bp(.72), [stemX(sp.free * .3) - .3, sp.free * .3]); }
+    else if (!P) { standing += seg(heads[0], Bp(.5)) + seg(heads[1], Bp(.96)); if (M.qC != null) standing += seg(heads[2], Bend); if (!far) standing += seg(Bp(.72), [stemX(sp.free * .3) - .3, sp.free * .3]); }
     else { standing += seg(heads[0], P.A(.04)) + seg(heads[1], P.A(P.qT)); if (M.qC != null) standing += seg(heads[2], P.A(P.qC != null ? P.qC : 1)); } });
   rigBack += strokeP(standing, ropeD, rw(.24), far ? ' opacity=".5"' : ' opacity=".9"'); standing = '';
   const shr = [];   // the shrouds of every mast (channel, spread, top) for the crew and the lanterns of sp.life
@@ -726,7 +746,8 @@ function build(u, L, o, mode) {
       if (set !== 'furled') sails += cloth(quadMap(F, Pk, F, Cw, 1.6 * Lu, -1.2), { name: nm + 'lat', wd: Pk[0] - F[0], ht: (Pk[1] - Cw[1]) * .7, nF: nFa[0], nA: nFa[1], foot: false });
       spars += spar(F, Pk, .42 * rr, .26 * rr, sp.yard); if (!far) running += seg(Cw, [cx - 1, rail(Math.min(cx, xAft)), bR(Math.min(cx, xAft))]) + seg(Pk, A(Q[1] * .93)) + seg(F, rl(F[0] + 1.5));
     } else if (m.aft === 'gaff') { // the gaff passes under the yardarm of the lower yard, clear of the topsail's clew
-      const Lg = .15 * sp.len * m.k / .74, yH = A(Q[0])[1] - 1.3 * Lu, xc = (w[0] + 1.6) / Lg, qt = clamp(Math.min(.38, (yH - Hm * .13 * xc - hD) / Hm), .27, .38), th = A(qt), rise = Math.min(Hm * .13, Math.max(Hm * .05, (yH - th[1]) / xc)), tk = A(.07), Pk = [th[0] + Lg, th[1] + rise], Bm = [tk[0] + .185 * sp.len * m.k / .74, tk[1] + 1.4];
+      const spk = m.spanker;   // [throat, gaff length, rise of the peak, boom] — the Endeavour's spanker: the peak passes aft of the crossjack's yardarm
+      const Lg = .15 * sp.len * m.k / .74 * (spk ? spk[1] : 1), yH = A(Q[0])[1] - 1.3 * Lu, xc = (w[0] + 1.6) / Lg, qt = spk ? spk[0] : clamp(Math.min(.38, (yH - Hm * .13 * xc - hD) / Hm), .27, .38), th = A(qt), rise = spk ? Math.min(Hm * spk[2], (yH - th[1]) / xc) : Math.min(Hm * .13, Math.max(Hm * .05, (yH - th[1]) / xc)), tk = A(.07), Pk = [th[0] + Lg, th[1] + rise], Bm = [tk[0] + (spk ? spk[3] : .185) * sp.len * m.k / .74, tk[1] + 1.4];
       if (set !== 'furled') sails += cloth(quadMap([th[0] + .6, th[1]], Pk, [tk[0] + .6, tk[1] + .4], [Bm[0] - .5, Bm[1] + .4], -1.3 * Lu, 0), { name: nm + 'gaf', wd: Bm[0] - tk[0], ht: th[1] - tk[1], nF: nFa[0], nA: nFa[1], foot: false, tear: false });
       spars += spar(th, Pk, .4 * rr, .26 * rr, sp.yard) + spar(tk, Bm, .44 * rr, .3 * rr, sp.yard); if (!far) running += seg(Pk, A(Q[1] * .96)) + seg(Bm, rl(Math.min(xAft, Bm[0] + 2))) + seg([Bm[0] - 1, Bm[1]], A(.36)); }
     // shrouds with ratlines on a channel, deadeyes and chain plates; backstays
@@ -748,7 +769,14 @@ function build(u, L, o, mode) {
 
   // head sails: jibs on the stays of the fore mast; the sprit topmast and the spritsail
   { const F = masts[0], Rr = R('jib'); let hs = '';
-    if (set !== 'furled') for (let i = 0; i < sp.jibs; i++) { const n = sp.jibs, t = n === 1 ? 1 : i / (n - 1);
+    if (set !== 'furled' && bs.stays) { let prev = null;   // from the inner jib out: the luff on its stay, 1.5 times smaller than before; the clew stays just aft of the luff of the jib inside it
+      for (let i = 0; i < sp.jibs; i++) { const [Mt, tack] = jibStay(i), hf = [.44, .43, .4][i] || .4, head = [lerp(tack[0], Mt[0], hf), lerp(tack[1], Mt[1], hf)];
+        const cy = tack[1] + .21 * (head[1] - tack[1]); let cx = head[0] + .1 * (head[0] - tack[0]);
+        if (prev) cx = Math.min(cx, lerp(prev[0][0], prev[1][0], clamp((cy - prev[0][1]) / (prev[1][1] - prev[0][1]))) + 2.5 * Lu);
+        const clew = [cx, cy];
+        hs = cloth(quadMap(head, head, tack, clew, .8 * Lu, .04 * (clew[0] - tack[0])), { name: 'jib' + i, wd: (clew[0] - tack[0]) * .75, ht: head[1] - tack[1], nF: nFa[0], nA: nFa[1], foot: false }) + hs;
+        if (!far) running += sag(clew, rl(xStem + 3 + i * 2.5), -.4); prev = [tack, head]; } }
+    else if (set !== 'furled') for (let i = 0; i < sp.jibs; i++) { const n = sp.jibs, t = n === 1 ? 1 : i / (n - 1);
       const tack = n === 1 ? [Bp(.93)[0], Bp(.93)[1] + .5] : !bs.jib ? [Bp(lerp(.6, .97, t))[0], Bp(lerp(.6, .97, t))[1] + .5] : i === 0 ? [Bp(.66)[0], Bp(.66)[1] + .5] : [lerp(Bp(1)[0], Bend[0], i === n - 1 ? .97 : .42), lerp(Bp(1)[1], Bend[1], i === n - 1 ? .97 : .42) + .4];
       const top = F.A(n === 1 ? (F.qC != null ? F.qC : .95) : lerp(F.qC != null ? F.qC - .04 : .8, .96, t)), hf = n === 1 ? .7 : lerp(.74, .6, t), head = [lerp(tack[0], top[0], hf), lerp(tack[1], top[1], hf)];
       const cx = lerp(tack[0], F.m.x, n === 1 ? .6 : lerp(.62, .5, t)), clew = [cx, Math.max(tack[1] + 1.5, (cx > xStem ? rail(cx) : Bp(.2)[1]) + 3 + (n - 1 - i) * 1.2 + Rr() * 1.2)];
@@ -759,10 +787,12 @@ function build(u, L, o, mode) {
       if (set === 'full') sails = cloth(sqMap([yq[0] - .2, yq[1] - .3], hw * .95, [b[0] - .5, b[1] + bs.topmast * .36 + 1], hw * 1.1, bs.topmast * .07, bs.topmast * .04), { name: 'spt', wd: hw * 2, ht: bs.topmast * .42, nF: nSq[0], nA: nSq[1] }) + sails; else sails = furl(yq, hw * .9, 'sptf', .6) + sails;
       spars += spar([yq[0] - hw, yq[1]], [yq[0] + hw, yq[1]], .3 * Lu, .3 * Lu, sp.yard, { bulge: .3 });
       rigBack += strokeP(seg(t, F.A(F.qC != null ? F.qC : .9)) + seg(t, Bp(.55)), ropeD, rw(.24), far ? ' opacity=".55"' : ''); }
-    if (bs.spritsail) { const hw = .045 * sp.len, tipX = xStem - sp.beak[0], tipH = Y(sp.free, xStem) - .5 + sp.beak[1], ts = clamp((B0[0] - (tipX - 2.4 - hw)) / (-bd[0] * bs.len), .56, .97), c = Bp(ts), yc = [c[0], c[1] - 1.25 * Lu];   // the spritsail hangs ahead of the head, clear of it
+    if (bs.spritsail) { const hw = .045 * sp.len, tipX = xStem - sp.beak[0], tipH = Y(sp.free, xStem) - .5 + sp.beak[1], ts = clamp((B0[0] - (tipX - 2.4 - hw)) / (-bd[0] * bs.len), .56, .97), c = Bp(ts), yc = [c[0], c[1] - (bs.sling ? .95 : 1.25) * Lu];   // the spritsail hangs ahead of the head, clear of it
       const footH = Math.max(1.6, yc[1] - .1 * sp.len, yc[0] + 1.2 + hw > tipX - 1 ? tipH + 1.6 : -9);
       if (bs.spritsail === 'set' && set === 'full') sails = cloth(sqMap([yc[0], yc[1] - .3], hw * .95, [yc[0] + 1.2, footH], hw * .9, 1 * Lu, .6), { name: 'sps', wd: hw * 2, ht: yc[1] - footH, nF: nSq[0], nA: nSq[1] }) + sails; else sails = furl(yc, hw * .92, 'spsf', .7) + sails;
-      spars += spar([yc[0] - hw, yc[1]], [yc[0] + hw, yc[1]], .32 * Lu, .32 * Lu, sp.yard, { bulge: .3 }); if (!far) running += seg([yc[0] - hw * .5, yc[1]], Bp(.7)) + seg([yc[0] + hw * .5, yc[1]], Bp(.42)) + seg([yc[0] - hw, yc[1]], Bp(.95)); }
+      spars += spar([yc[0] - hw, yc[1]], [yc[0] + hw, yc[1]], .32 * Lu, .32 * Lu, sp.yard, { bulge: .3 }); if (!far) running += seg([yc[0] - hw * .5, yc[1]], Bp(.7)) + seg([yc[0] + hw * .5, yc[1]], Bp(.42)) + seg([yc[0] - hw, yc[1]], Bp(.95));
+      if (bs.sling) { // the yard slung to the bowsprit: a sling with its block in the middle, a parrel lashing over the spar
+        spars += strokeP(seg([yc[0] - .35 * Lu, yc[1]], [c[0] - .2 * Lu, c[1]]) + seg([yc[0] + .35 * Lu, yc[1]], [c[0] + .2 * Lu, c[1]]), ropeD, rw(.32)) + fillP(box(yc[0], yc[1] + .45 * Lu, .7 * Lu, .55 * Lu), tone('tar', If)) + fillP(box(c[0], c[1], .55 * Lu, 1.5 * Lu), tone('rope', If - .2)); } }
   }
   rigBack += strokeP(lifts, ropeD, rw(.14), ' opacity=".8"'); rigFront += strokeP(standing, ropeD, rw(.22), far ? ' opacity=".5"' : '') + strokeP(thin, ropeD, rw(.14), ' opacity=".85"') + strokeP(running, ropeL, rw(.15), ` opacity="${back ? .5 : .65}"`);
 
@@ -806,21 +836,32 @@ function build(u, L, o, mode) {
     growB += strokeP(w1, wk, clamp(.24 * s, .12, .5), ' stroke-linecap="round"') + (plain ? '' : strokeP(w2, wk2, clamp(.2 * s, .12, .4), ' stroke-linecap="round"'));
     growA += `<g fill="${tone(hullK, If - .25)}">${lumps}</g>`;
     if (!plain) { // barnacles in uneven clumps: thick at the waterline and under the wales, every one a little cone with its pit
-      const bg = nid('hy', u); defs += `<radialGradient id="${bg}" cx=".5" cy=".5" r=".6" fx="${f(.5 + .32 * dC.ux)}" fy="${f(.5 + .32 * dC.uy)}"><stop offset="0" stop-color="${tone('bone', If + .5)}"/><stop offset=".5" stop-color="${tone('bone', If - .1)}"/><stop offset="1" stop-color="${tone('bone', -.7)}"/></radialGradient>`;
-      const pit = col(mix(tone('ship-ghost', -.9), '#0a1210', .4)), nc = Math.round(sp.len / (near ? 2.2 : 3.6)); let pits = '';
-      for (let c = 0; c < nc; c++) { const X0 = -hb + 2 + Rr() * (sp.len - 4), H0 = Rr() < .65 ? .2 + Math.pow(Rr(), 1.5) * 2.4 : sp.wales[Math.floor(Rr() * sp.wales.length)] - .9 - Rr() * .6, n = 3 + Math.floor(Math.pow(Rr(), 1.6) * 12);
+      const bg = nid('hy', u); defs += `<radialGradient id="${bg}" cx=".5" cy=".5" r=".6" fx="${f(.5 + .32 * dC.ux)}" fy="${f(.5 + .32 * dC.uy)}"><stop offset="0" stop-color="${mix(tone('bone', If + .4), tone(hullK, If + .3), .3)}"/><stop offset=".5" stop-color="${mix(tone('bone', If - .15), tone(hullK, If), .45)}"/><stop offset="1" stop-color="${mix(tone('bone', -.7), tone(hullK, -.8), .5)}"/></radialGradient>`;
+      const pit = col(mix(tone('ship-ghost', -.9), '#0a1210', .4)), nc = Math.round(sp.len / (near ? 1.05 : 1.9)); let pits = '', cast = '';
+      for (let c = 0; c < nc; c++) { const wl = Rr() < .78, X0 = -hb + 1 + Rr() * (sp.len - 2), H0 = wl ? .15 + Math.pow(Rr(), 1.7) * 3.2 : sp.wales[Math.floor(Rr() * sp.wales.length)] - .9 - Rr() * .6, n = (wl ? 5 : 3) + Math.floor(Math.pow(Rr(), 1.4) * (wl ? 16 : 9)), big = wl ? 1.25 - Math.min(.55, H0 * .17) : .8;
         let X = X0, H = Y(H0, X0);
-        for (let k = 0; k < n; k++) { const r = (.13 + Math.pow(Rr(), 2) * .36) * Lu, a = Rr() * 6.28, p = pt(X, H), rx = r * s * (.85 + Rr() * .35), ry = r * s * (.7 + Rr() * .3);
+        if (near) cast += dot(X0 + .4 * n * .12, H - .35, (.5 + n * .09) * big * Lu) + '/>';
+        for (let k = 0; k < n; k++) { const r = (.15 + Math.pow(Rr(), 2.2) * .62) * Lu * big, a = Rr() * 6.28, p = pt(X, H), rx = r * s * (.85 + Rr() * .35), ry = r * s * (.7 + Rr() * .3);
           shells += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(rx)}" ry="${f(ry)}" transform="rotate(${f(Rr() * 180)} ${f(p[0])} ${f(p[1])})" opacity="${f(.6 + Rr() * .35)}"/>`;
           if (near && r > .2 * Lu) pits += dot(X - dir * dC.ux * r * .18, H + dC.uy * r * .18, r * .2) + '/>';
           X += Math.cos(a) * r * 1.7; H += Math.sin(a) * r * 1.2 - .04; } }
-      growA += `<g clip-path="url(#${wlClip})"><g fill="url(#${bg})">${shells}</g><g fill="${pit}" opacity=".6">${pits}</g></g>`;
+      growA += `<g clip-path="url(#${wlClip})">${cast ? `<g fill="${pit}" opacity=".28">${cast}</g>` : ''}<g fill="url(#${bg})">${shells}</g><g fill="${pit}" opacity=".6">${pits}</g></g>`;
       // coral in clumps: round lobes and short branches, pale pink, ochre and bone, at the waterline and at the feet of the ribs
-      const cc = [mix(mix(tone('bone', If - .1), '#c48e7e', .42), tone(hullK, If), .35), mix(mix(tone('bone', If - .15), '#b39a58', .38), tone(hullK, If), .35), mix(tone('bone', If - .3), tone(hullK, If), .3)], ncl = Math.round(sp.len / (near ? 6 : 9)); let cor = ['', '', ''], br = '';
+      const cc = [mix(mix(tone('bone', If - .1), '#c48e7e', .42), tone(hullK, If), .48), mix(mix(tone('bone', If - .15), '#b39a58', .38), tone(hullK, If), .48), mix(tone('bone', If - .3), tone(hullK, If), .45)], ncl = Math.round(sp.len / (near ? 2.6 : 4.5)); let cor = ['', '', ''], br = '';
       for (let c = 0; c < ncl; c++) { const rb = ribs.length && Rr() < .4 ? ribs[Math.floor(Rr() * ribs.length)] : null, X0 = rb ? rb.X : -hb + 3 + Rr() * (sp.len - 6), H0 = rb ? rb.h0 + Rr() * .6 : .3 + Math.pow(Rr(), 1.4) * 2.6, k = Math.floor(Rr() * 3);
-        for (let j = 0, n = 3 + Math.floor(Rr() * 4); j < n; j++) { const r = (.2 + Rr() * .26) * Lu; cor[k] += dot(X0 + (Rr() - .5) * 1.6 * Lu, Y(H0, X0) + (Rr() - .3) * .9 * Lu, r) + '/>'; }
-        if (Rr() < .6) for (let j = 0; j < 2 + Rr() * 2; j++) { const x = X0 + (Rr() - .5) * 1.4, l = (.7 + Rr() * 1) * Lu, b2 = (Rr() - .5) * .8; br += 'M' + pp(x, Y(H0, X0) + .3) + 'Q' + pp(x + b2 * .4, Y(H0, X0) + .3 + l * .6) + ' ' + pp(x + b2, Y(H0, X0) + .3 + l); } }
-      growA += `<g clip-path="url(#${wlClip})">` + cor.map((d, i) => d ? `<g fill="${cc[i]}">${d}</g>` : '').join('') + strokeP(br, cc[0], clamp(.22 * s, .12, .5), ' stroke-linecap="round"') + '</g>'; }
+        const cs = .7 + Rr() * .8; for (let j = 0, n = 4 + Math.floor(Rr() * 6); j < n; j++) { const r = (.24 + Rr() * .42) * Lu * cs; cor[k] += dot(X0 + (Rr() - .5) * 2.2 * Lu * cs, Y(H0, X0) + (Rr() - .3) * 1.2 * Lu * cs, r) + '/>'; }
+        if (Rr() < .7) for (let j = 0; j < 2 + Rr() * 3; j++) { const x = X0 + (Rr() - .5) * 1.8 * cs, l = (.9 + Rr() * 1.4) * Lu * cs, b2 = (Rr() - .5) * .8; br += 'M' + pp(x, Y(H0, X0) + .3) + 'Q' + pp(x + b2 * .4, Y(H0, X0) + .3 + l * .6) + ' ' + pp(x + b2, Y(H0, X0) + .3 + l); } }
+      growA += `<g clip-path="url(#${wlClip})">` + cor.map((d, i) => d ? `<g fill="${cc[i]}">${d}</g>` : '').join('') + strokeP(br, cc[0], clamp(.22 * s, .12, .5), ' stroke-linecap="round"') + '</g>';
+      // weed: clumps of green fronds hanging down the side from the wales, the sills of the ports and the rail, three greens
+      const fr = ['', '', ''], fcol = [tone('ship-weed', If - .5), tone('ship-weed', If - .12), mix(tone('ship-weed', If + .3), '#94a050', .3)], Rf = R('fronds');
+      const frond = (X, H, l, w) => { const n = Math.max(3, Math.round(l / .8)), c = [], sw = (Rf() - .5) * 1.1; let x = X;
+        for (let i = 0; i <= n; i++) { const t = i / n; c.push([x + sw * t * t, H - l * t]); x += (Rf() - .5) * .3; }
+        return spl(c.map((p, i) => [p[0] - w * (1 - .85 * i / n) * .5, p[1]]).concat(c.map((p, i) => [p[0] + w * (1 - .85 * i / n) * .5, p[1]]).reverse()), true); };
+      const clump = (X, H, nMax, l0, l1) => { for (let j = 0, n = 1 + Math.floor(Rf() * nMax); j < n; j++) fr[Math.floor(Rf() * 3)] += frond(X + (Rf() - .5) * 1.6 * Lu, H + Rf() * .25, (l0 + Rf() * (l1 - l0)) * Lu * 1.5, (.42 + Rf() * .55) * Lu); };
+      for (const h of sp.wales) for (let X = xStem + 2 + Rf() * 3; X < xAft - 1; X += 2.2 + Rf() * 4.5) if (Rf() < .75) clump(X, Y(h, X) - .35, 5, 1.4, h < 7 ? 5.5 : 4.2);
+      for (const p of ports) if (p.st !== 'deck' && Rf() < .55) clump(p.X + (Rf() - .5) * p.w * .6, p.H - p.hh / 2 - .1, 3, .9, 3.2);
+      for (let X = xStem + 1.5 + Rf() * 2; X < xAft - 1; X += 3 + Rf() * 5) if (Rf() < .4) clump(X, rail(X) - .4, 3, 1.8, 5.5);
+      growA += `<g clip-path="url(#${wlClip})">` + fr.map((d, i) => d ? `<path d="${d}" fill="${fcol[i]}" opacity="${[.95, .9, .82][i]}"/>` : '').join('') + '</g>'; }
     ZF = null;
   }
 
