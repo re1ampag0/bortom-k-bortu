@@ -279,7 +279,7 @@ const pos = (i: number) => { const s = slot(i); return `left:${mm(s.x)};top:${mm
 export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: (i: number) => CardKit = () => kit, sub = ''): PageSpec {
   const col = sheetColor(sh), { inner, marks } = cutLines();
   const ln = (l: { x1: number; y1: number; x2: number; y2: number }, c: string, w: number) => `<path d="M${l.x1} ${l.y1}L${l.x2} ${l.y2}" stroke="${c}" stroke-width="${w}"/>`;
-  const rx = A4.w - GRID.x0 - 50;
+  const rx = A4.w - GRID.x0 - 50 - 4; // clear of the cut mark at the block's right edge
   // a Legend (brass) or a reference card (brown) on the block's outer edge: the bleed there takes its frame colour
   const own = (it: Item) => it.kind === 'legend' ? BRASS : it.kind === 'howto' || it.kind === 'howto-sea' ? HOWTO_FRAME : it.kind === 'empty' ? '#ffffff' : null;
   const patches = sh.items.map((it, i) => { const c = own(it); if (!c) return ''; const s = slot(i), l = s.col === 0 ? BLEED : 0, r = s.col === GRID.cols - 1 ? BLEED : 0, t = s.row === 0 ? BLEED : 0, b = s.row === GRID.rows - 1 ? BLEED : 0;
