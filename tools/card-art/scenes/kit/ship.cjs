@@ -90,15 +90,19 @@ const SPECS = {
     masts: [{ x: -28, H: 92, n: 3, k: .96 }, { x: -1, H: 104, n: 3, k: 1.03, rake: 1.5 }, { x: 24, H: 90, n: 2, k: .66, rake: 3.5, aft: 'lateen', lat: [.15, .085, .8] }],
     spar: 'ship-ghost', yard: 'ship-ghost', sail: 'ship-sail-ghost', cond: 'rags', flag: 'pennant', pennant: 'ship-flag-black',
   },
-  // A neutral merchantman: a small fluyt — a bellied hull, no gun ports, three masts, light sails.
+  // A neutral merchantman: a small fluyt — a bellied hull, no gun ports, three masts, light sails. A working ship,
+  // lived in: weathered planks of different tones and a few fresh ones, an ochre band, mended sails, cargo in the
+  // waist (barrels, bales under a net), the longboat on the hatch, a stern lantern and one on the fore shrouds,
+  // three small figures of the crew (helm, waist, shrouds), a plain trade ensign and a long pennant (life below).
   merchant: {
     len: 70, free: 8.6, sheer: [2.6, 4.2], tumble: .8, bow: [5.5, 2.6], over: 5.5, counter: .74,
     fc: [-22, 2.2], tiers: [[9, 3.4], [22, 3.6]], taff: 1.6, tw: [1.6, 3.6],
-    hull: 'ship-wood', trim: 'ship-wood', gilt: 0, wales: [], bands: [{ h0: 3, h1: 4.3, mat: 'tar' }, { h0: 7.4, h1: 8.1, mat: 'tar' }],
-    ports: [], deckPorts: [0, 0, 0], gallery: [6, 1, 3.4], tierWin: 1, lantern: 0,
+    hull: 'ship-wood', trim: 'ship-wood', gilt: 0, wales: [], bands: [{ h0: 3, h1: 4.3, mat: 'tar' }, { h0: 7.2, h1: 8.1, mat: 'paint-ochre' }], wear: 2.6,
+    ports: [], deckPorts: [0, 0, 0], gallery: [6, 1, 3.4], tierWin: 1, lantern: 1,
     beak: [7.5, 1.4, 2.6], sprit: { len: 17, steeve: 28, spritsail: 'set' }, jibs: 0,
     masts: [{ x: -22, H: 62, n: 2, k: 1.05 }, { x: 0, H: 72, n: 2, k: 1.15, rake: 1 }, { x: 21, H: 52, n: 2, k: .72, rake: 2, aft: 'lateen' }],
-    spar: 'oak', yard: 'ship-wood', sail: 'canvas', cond: 'whole', flag: 'pennant', pennant: 'ship-flag-red',
+    spar: 'oak', yard: 'ship-wood', sail: 'canvas', cond: 'mended', flag: 'pennant', pennant: 'ship-flag-red', forePennant: 1, ensign: 'trade', ensignK: .62,
+    life: { barrels: [-20.2, -18.3], boat: [-15.5, -4], bales: [1.6, 8.2], crew: [['helm', 27.5], ['haul', -8.6], ['climb', 1]], shroudLamp: 0 },
   },
   // A neutral brig: two masts with square sails, a gaff sail on the main, a low flush hull with one white band.
   brig: {
@@ -242,7 +246,9 @@ function build(u, L, o, mode) {
       // planks of their own tone, fading at the butts; a fibre or two along each; all under the paint of the bands
       for (let X = xa - Rp() * 12; X < xAft; ) { const l = 12 + Rp() * 15, Xs = Math.max(X, xa), Xb = Math.min(xAft + 1, X + l), v = Rp() * 2 - 1;
         if (X > xa + .5) butts += seg([X, Y(h, X) + .06], [X, Y(h2, X) - .06]);
-        if (Math.abs(v) > .3 && Xb - Xs > 3) { const id = nid('hp', u), a = pt(Xs, Y(h, Xs)), b = pt(Xb, Y(h, Xb)), c = v > 0 ? lite : dark, op = Math.abs(v) * (v > 0 ? .075 : .1);
+        // a worn hull (sp.wear): stronger differences, some planks bleached grey, a few fresh light ones fitted in repairs
+        const wz = sp.wear ? Rp() : 1, wc = !sp.wear ? null : wz < .14 ? mix(lite, '#a8a496', .6) : wz < .2 ? mix(lite, '#e0b27a', .5) : null;
+        if ((Math.abs(v) > .3 || wc) && Xb - Xs > 3) { const id = nid('hp', u), a = pt(Xs, Y(h, Xs)), b = pt(Xb, Y(h, Xb)), c = wc || (v > 0 ? lite : dark), op = wc ? .34 + Math.abs(v) * .2 : Math.abs(v) * (v > 0 ? .075 : .1) * (sp.wear || 1);
           defs += linGrad(id, a[0], a[1], b[0], b[1], [[0, c, 0], [.18, c, op], [.8, c, op * (.55 + Rp() * .45)], [1, c, 0]]); pl += fillP(strip(h + .05, h2 - .05, Xs, Xb, 2.5), `url(#${id})`); }
         if (Rp() > .3) { const g0 = Xs + Rp() * (Xb - Xs) * .3, g1 = Xb - Rp() * (Xb - Xs) * .35, gh = lerp(h, h2, .25 + Rp() * .5), ph = Rp() * 6, a = [];
           for (let x = g0; x < g1; x += 1.6) a.push([x, Y(gh, x) + .07 * Math.sin(x * .7 + ph)]); if (a.length > 2) grain += line(a); }
@@ -418,7 +424,7 @@ function build(u, L, o, mode) {
     defs += `<radialGradient id="${thruG}" gradientUnits="userSpaceOnUse" cx="${f(src[0])}" cy="${f(src[1])}" r="${f(R0 * 1.25)}"><stop offset="0" stop-color="${lt}" stop-opacity=".85"/><stop offset=".38" stop-color="${lt}" stop-opacity=".5"/><stop offset=".75" stop-color="${lt}" stop-opacity=".16"/><stop offset="1" stop-color="${lt}" stop-opacity="0"/></radialGradient>`; return thruG; };
   // a sail on a map S(u, v) -> local point: u — from the fore edge to the aft one, v — from the head to the foot
   const cloth = (S, q) => {
-    const Rr = R(q.name), N = 14, wd = q.wd, ht = q.ht, rough = cond !== 'whole' && q.tear !== false, rags = cond === 'rags', torn = cond === 'torn';
+    const Rr = R(q.name), N = 14, wd = q.wd, ht = q.ht, rough = cond !== 'whole' && cond !== 'mended' && q.tear !== false, mended = cond === 'mended' && q.tear !== false, rags = cond === 'rags', torn = cond === 'torn';
     const at0 = (cu, cv) => (du, dv) => S(clamp(cu + du / wd, .025, .975), clamp(cv + dv / ht, .035, .96));
     // the foot of a torn sail: a smooth line cut by tears of different depth, width and slant, with tatters hanging below
     let dvAt = () => 0;
@@ -486,12 +492,12 @@ function build(u, L, o, mode) {
       inn += strokeP(seams, shade, clamp(.15 * s, .12, .3), ` opacity="${back ? .6 : .45}"`);
       if (q.reef) for (const v of q.reef) { const a = []; for (let i = 0; i <= 8; i++) a.push(S(i / 8, v)); inn += strokeP(line(a), shade, .5 * s, ' opacity=".3"');
         if (near) { let rp = ''; for (let i = 1; i < nc * 2; i++) { const p = S(i / (nc * 2), v); rp += seg(p, [p[0] + (Rr() - .5) * .3, p[1] - .8 - Rr() * .4]); } inn += strokeP(rp, shade, .13 * s, ' opacity=".6"'); } }
-      if (rough) { // stains, patches
+      if (rough || mended) { // stains, patches (a mended sail: only stains and patches of other cloth, stitched round)
         const sid = nid('hs', u); defs += `<radialGradient id="${sid}"><stop offset="0" stop-color="${shade}" stop-opacity="1"/><stop offset="1" stop-color="${shade}" stop-opacity="0"/></radialGradient>`;
         for (let i = 0; i < 2 + Math.round(wd * ht / 200); i++) { const p = pt(...S(.1 + Rr() * .8, .1 + Rr() * .8)); inn += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f((2 + Rr() * 4) * s)}" ry="${f((2 + Rr() * 5) * s)}" fill="url(#${sid})" opacity="${f(.2 + Rr() * .3)}"/>`; }
-        const np = cond === 'patched' ? 1 + Math.round(wd * ht / 260) : torn && Rr() > .5 ? 1 : 0;
+        const np = cond === 'patched' ? 1 + Math.round(wd * ht / 260) : mended ? Math.round(wd * ht / 230 + Rr() * 1.4) : torn && Rr() > .5 ? 1 : 0;
         for (let i = 0; i < np; i++) { const cu = .15 + Rr() * .7, cv = .15 + Rr() * .65, du = (1.4 + Rr() * 1.6) / wd, dv = (1.6 + Rr() * 2) / ht, j = () => (Rr() - .5) * .25, pd = poly([S(cu - du * (1 + j()), cv - dv * (1 + j())), S(cu + du * (1 + j()), cv - dv * (1 + j())), S(cu + du * (1 + j()), cv + dv * (1 + j())), S(cu - du * (1 + j()), cv + dv * (1 + j()))]);
-          inn += fillP(pd, Rr() > .5 ? tone(sailK, Im + .35) : shade, ' opacity=".5"') + (near ? strokeP(pd, shade, .14 * s, ` stroke-dasharray="${f(.5 * s)} ${f(.4 * s)}" opacity=".8"`) : ''); }
+          const pc = Rr(); inn += fillP(pd, mended ? (pc < .4 ? tone(sailK, Im + .45) : pc < .75 ? mix(tone(sailK, Im - .1), '#8a6a3a', .35) : mix(tone(sailK, Im), '#7a7e70', .4)) : pc > .5 ? tone(sailK, Im + .35) : shade, mended ? ' opacity=".72"' : ' opacity=".5"') + (near ? strokeP(pd, shade, .14 * s, ` stroke-dasharray="${f(.5 * s)} ${f(.4 * s)}" opacity=".8"`) : ''); }
       }
       if (back && q.mastU != null) { const a = []; for (let i = 0; i <= 6; i++) a.push(S(q.mastU, i / 6)); inn += strokeP(line(a), shade, 1.3 * Lu * s, ' opacity=".2"'); }   // the mast seen through the cloth
     }
@@ -529,6 +535,7 @@ function build(u, L, o, mode) {
     if (!P) { standing += seg(heads[0], Bp(.5)) + seg(heads[1], Bp(.96)); if (M.qC != null) standing += seg(heads[2], Bend); if (!far) standing += seg(Bp(.72), [stemX(sp.free * .3) - .3, sp.free * .3]); }
     else { standing += seg(heads[0], P.A(.04)) + seg(heads[1], P.A(P.qT)); if (M.qC != null) standing += seg(heads[2], P.A(P.qC != null ? P.qC : 1)); } });
   rigBack += strokeP(standing, ropeD, rw(.24), far ? ' opacity=".5"' : ' opacity=".9"'); standing = '';
+  const shr = [];   // the shrouds of every mast (channel, spread, top) for the crew and the lanterns of sp.life
   masts.forEach(M => { const { m, A, Q, qs, st, w, qT, qC, rr, hD, Hm } = M, nm = 'm' + M.mi;
     // the mast: lower mast, topmast, topgallant mast; the top and the crosstrees
     let mast = spar(A(0), A(Q[0] + .09), 1.15 * rr, .92 * rr, sp.spar) + spar(A(Q[0] - .005), A(qC != null ? Q[1] + .075 : 1), .78 * rr, .56 * rr, sp.spar);
@@ -571,7 +578,7 @@ function build(u, L, o, mode) {
     if (!far) { const T2 = A(qT), hd = A(qC != null ? qC - .01 : .97); for (let i = 0; i < 3; i++) thin += seg([T2[0] + (.5 + i * .65) * rr, T2[1] + .3 * rr], [hd[0] + .1 * i, hd[1]]);
       thin += seg([T2[0] + tw2 * .9, T2[1] - .3 * rr], A(qT - .07)) + seg([T2[0] - tw2 * .9, T2[1] - .3 * rr], A(qT - .07));
       if (near) for (let h = T2[1] + 2; h < hd[1] - 1.5; h += 1.5) { const k = (h - T2[1]) / (hd[1] - T2[1]); thin += seg([lerp(T2[0] + .5 * rr, hd[0], k), h], [lerp(T2[0] + 1.8 * rr, hd[0] + .2, k), h]); } }
-    rigFront += ch;
+    rigFront += ch; shr.push({ xb, sprd, hCh, tp, ns, sx });
   });
 
   // head sails: jibs on the stays of the fore mast; the sprit topmast and the spritsail
