@@ -11,7 +11,7 @@ const { f, mix, clamp, lerp, rng, nid, linGrad, radGrad } = K;
 const HZ = 116;                     // horizon
 const SUN = { x: 34, y: 90 };       // the low morning sun on the left, upwind, under the clouds
 const light = { time: 'day', haze: .12, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffdc9a', power: 1 }, fill: { color: '#8fc0e8', power: .5 } };
-const NEAR = { kind: 'merchant', x: 104, y: 134, scale: 1.14, flip: true, sails: 'full', detail: 'near', seed: 9 };
+const NEAR = { kind: 'merchant', x: 98, y: 134, scale: 1.28, flip: true, sails: 'full', detail: 'near', seed: 9 };
 const FAR = { kind: 'merchant', x: 168, y: 119.6, scale: .46, flip: true, sails: 'full', detail: 'mid', seed: 31 };
 const skel = { horizon: HZ, eye: 3, light: 'the low morning sun ahead on the left, upwind: sails glow through, bright edges towards it, shadows on the water towards us and to the right',
   items: [
@@ -40,11 +40,11 @@ module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'dr
     bg += whitecaps(u, L);
     // the two wakes crossing behind the ships: the far ship came up from the near line, the near one from the far
     bg += wake(u, L, [[FAR.x - 19, FAR.y + .4], [140, FAR.y + 1], [76, 122], [52, 125], [34, 130.5], [14, 138], [-14, 152]], 41, 2);
-    bg += wake(u, L, [[NEAR.x - 44, NEAR.y + .2], [50, 133], [34, 129.5], [16, 125], [-14, 121]], 43, 1.8);
+    bg += wake(u, L, [[NEAR.x - 49, NEAR.y + .2], [40, 133], [34, 129.5], [16, 125], [-14, 121]], 43, 1.8);
     // the far ship, then the near one over it, bow spray at both stems
     bg += K.ship(u, L, FAR) + K.foam(u, { x: FAR.x + 2, y: FAR.y + .3, w: 34, h: .5, L, seed: 7 }) + K.splash(u, { x: FAR.x + 18, y: FAR.y + .4, w: 5, h: 6, seed: 5, L, wind: 1 });
-    bg += K.ship(u, L, NEAR) + K.foam(u, { x: NEAR.x + 6, y: NEAR.y + .4, w: 70, h: 1.1, L, seed: 8 });
-    bg += K.splash(u, { x: NEAR.x + 37, y: NEAR.y + .2, w: 13, h: 16, seed: 2, L, wind: 1 });
+    bg += K.ship(u, L, NEAR) + K.foam(u, { x: NEAR.x + 6, y: NEAR.y + .4, w: 80, h: 1.1, L, seed: 8 });
+    bg += K.splash(u, { x: NEAR.x + 42, y: NEAR.y + .2, w: 14, h: 18, seed: 2, L, wind: 1 });
     // ——— under the glass: a near whitecap breaking downwind, spindrift torn off it
     let fg = nearSwell(u, L) + whitecap(u, L, { x: 172, y: 196, w: 60, h: 9, seed: 12, wind: 1 });
     fg += spindrift(u, L, 46, 196, 90, 7) + spindrift(u, L, 194, 189, 30, 8);
@@ -115,7 +115,7 @@ function wake(u, L, pts, seed, k) {
   // the edges: soft unbroken lines of churned water fading away from the stern, flecks of foam riding on them
   for (const [q, e] of [[top, 1], [bot, 2]]) { const g = nid('we', u), wob = q.map((p, i) => [p[0], p[1] + Math.sin(i * .9 + seed + e) * .25 * clamp((p[1] - HZ) / 20)]);
     s += `<defs>${linGrad(g, q[0][0], q[0][1], q[n - 1][0], q[n - 1][1], [[0, fc, .85], [.5, fc, .45], [1, fc, .1]])}</defs><path d="${sm(wob)}" stroke="url(#${g})" stroke-width="${f(.55 * k)}" fill="none" filter="url(#${bl})"/>`;
-    for (let i = 2; i < n; i += 2 + Math.floor(R() * 3)) { const p = wob[i], t = i / n, w = (1 + R() * 2.2) * (.5 + clamp((p[1] - HZ) / 25)); s += `<ellipse cx="${f(p[0] + (R() - .5) * 2)}" cy="${f(p[1])}" rx="${f(w)}" ry="${f(w * .22)}" fill="${fc}" opacity="${f((.75 - .55 * t) * (.5 + R() * .5))}"/>`; } }
+    for (let i = 2; i < n; i += 3 + Math.floor(R() * 3)) { const p = wob[i], t = i / n, w = (1 + R() * 2.2) * (.5 + clamp((p[1] - HZ) / 25)); s += `<ellipse cx="${f(p[0] + (R() - .5) * 2)}" cy="${f(p[1])}" rx="${f(w * .8)}" ry="${f(Math.max(.18, w * .1))}" fill="${fc}" opacity="${f((.75 - .55 * t) * (.5 + R() * .5))}"/>`; } }
   for (let i = 0; i < 4; i++) { const p = pl[i * 2]; s += K.foam(u, { x: p[0] - 1, y: p[1] + .3, w: 4 + i * 1.5, h: .5, seed: seed + i * 3, L }); }
   return s;
 }
