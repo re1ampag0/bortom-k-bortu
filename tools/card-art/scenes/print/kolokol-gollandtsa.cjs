@@ -52,7 +52,7 @@ module.exports = { name: 'Колокол «Голландца»', kind: 'deck', 
     for (const [x, y, w, h, sd, fr] of [[186, 34, 60, 8, 21, .25], [70, 58, 60, 7, 8, .45], [176, 70, 50, 6, 14, .55], [20, 78, 46, 5, 3, .7]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
     bg += K.water(u, L, { horizon: HZ, bottom: 130, swell: .4, seed: 9, glitter: 136 });
     // the two enemies in the fog over the sea (as in variant B): the toll reaches them
-    bg += K.ship(u, L, { kind: 'endeavour', x: 21, y: HZ + 2, scale: .36, detail: 'far', flip: true, lights: true, seed: 4 })
+    bg += K.ship(u, L, { kind: 'endeavour', x: 70, y: HZ + 4, scale: .36, detail: 'far', flip: true, lights: true, seed: 4 })
       + K.ship(u, L, { kind: 'merchant', x: 176, y: HZ + 3, scale: .5, detail: 'far', lights: true, seed: 9 })
       + K.fog(u, L, { y: HZ - 16, h: 30, density: .55, seed: 3 });
     // the bulwark: an old grey rail, weed and barnacles; the deck in perspective, wet with the fog
@@ -74,7 +74,7 @@ module.exports = { name: 'Колокол «Голландца»', kind: 'deck', 
     for (const [x, y, a, s, op] of [[14, 70, -30, .5, .7], [40, 82, 28, .55, .8], [164, 60, -18, .6, .8], [188, 80, 40, .5, .72], [124, 70, -60, .42, .6], [8, 94, 70, .4, .55], [160, 92, 15, .45, .65]])
       bg += `<g opacity="${op}">${PK.cardBack(u, x, y, a, s, .82, '#284a40', '#d8e8d8')}</g>`;
     // one already in the water, half sunk, with a ring of ripples
-    bg += `<g opacity=".6">${PK.cardBack(u, 70, 104, 80, .42, .35, '#284a40', '#c8d8c8')}</g><ellipse cx="70" cy="105" rx="8" ry="1.4" fill="none" stroke="#bfe8d8" stroke-width=".4" opacity=".6"/>`;
+    bg += `<g opacity=".6">${PK.cardBack(u, 34, 106, 80, .42, .35, '#284a40', '#c8d8c8')}</g><ellipse cx="34" cy="107" rx="8" ry="1.4" fill="none" stroke="#bfe8d8" stroke-width=".4" opacity=".6"/>`;
     // puddles on the deck: each its own shape, the bell's toll rings on them, the moon's sheen
     let fg = '';
     for (const [x, y, w, sd] of [[70, 204, 26, 1], [140, 222, 34, 2], [104, 172, 16, 3], [40, 246, 22, 4]]) {
@@ -99,29 +99,45 @@ module.exports = { name: 'Колокол «Голландца»', kind: 'deck', 
     // the headstock on the beam, the bell's yoke irons
     fg += K.shadeBox(u, [{ pts: [[90, BEAM + 1], [110, BEAM + 1], [110, BEAM + 7], [90, BEAM + 7]], n: 'front' }], L, 'oak', { seed: 40 })
       + K.shadeCyl(u, 100, BEAM + 6, 100, BEAM + 10, 2.2, L, 'iron', { outline: .35 });
-    // the bell (kit: cast bronze lathe), swinging on its pivot under the headstock
-    fg += K.bell(u, L, { ...BELL, frame: false, seed: 5 });
+    // the bell (kit: cast bronze lathe), swinging on its pivot under the headstock; under it an opaque bronze
+    // silhouette, so nothing behind (the rings, the fog) shows through the body; the clapper is the scene's own
+    const prof = [[0, 2.3], [.05, 3.2], [.12, 3.65], [.3, 3.9], [.5, 4.2], [.68, 4.75], [.82, 5.5], [.92, 6.2], [.975, 6.55], [1, 6.6]], H = 13;
+    const side = e => prof.map(([t, r]) => [e * r, t * H]), outline = [...side(-1), ...side(1).reverse()], bd = 'M' + outline.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
+    const BT = `translate(${BELL.x} ${BELL.y}) rotate(${BELL.rot}) scale(${BELL.s})`;
+    fg += `<g transform="${BT}"><path d="${bd}" fill="#26342a"/><ellipse cx="0" cy="13" rx="6.6" ry="1.4" fill="#26342a"/></g>`;
+    fg += K.bell(u, L, { ...BELL, frame: false, clapper: false, seed: 5 });
     // patina, weed and barnacles grown on the bronze: in the bell's own frame (crown at 0, mouth at y 13)
-    { const prof = [[0, 2.3], [.05, 3.2], [.12, 3.65], [.3, 3.9], [.5, 4.2], [.68, 4.75], [.82, 5.5], [.92, 6.2], [.975, 6.55], [1, 6.6]], H = 13;
-      const side = e => prof.map(([t, r]) => [e * r, t * H]), outline = [...side(-1), ...side(1).reverse()], d = 'M' + outline.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z', cid = nid('bp', u), pg = nid('pa', u), mo = nid('mo', u);
-      fg += `<g transform="translate(${BELL.x} ${BELL.y}) rotate(${BELL.rot}) scale(${BELL.s})"><defs><clipPath id="${cid}"><path d="${d}"/></clipPath>${linGrad(pg, 0, 0, 0, 13, [[0, '#5ac8a0', .65], [.5, '#3a9a7a', .35], [1, '#2a7a60', .55]])}</defs><g clip-path="url(#${cid})">`
+    { const d = bd, cid = nid('bp', u), pg = nid('pa', u), mo = nid('mo', u), wm = nid('wm', u), mc = nid('mc', u), cg = nid('cg', u), lb = nid('lb', u);
+      fg += `<g transform="${BT}"><defs><clipPath id="${cid}"><path d="${d}"/></clipPath>${linGrad(pg, 0, 0, 0, 13, [[0, '#5ac8a0', .4], [.5, '#3a9a7a', .2], [1, '#2a7a60', .4]])}`
+        + `${linGrad(wm, -6.8, 0, 2, 0, [[0, '#f0a040', .6], [.35, '#e0a048', .38], [.7, '#d8a050', .1], [1, '#d8a050', 0]])}</defs><g clip-path="url(#${cid})">`
+        // the warm brass of the old picture on the left flank and the shoulder: the bronze still bright under the patina
+        + `<rect x="-7" y="-1" width="10" height="15" fill="url(#${wm})"/>`
+        + `<path d="M-2.6 1.4Q-3.1 2.6 -3 4Q-3.2 6.6 -3.8 8.8Q-4.5 10.6 -5.5 11.9" stroke="#ffb850" stroke-width="1.1" fill="none" stroke-linecap="round" opacity=".75"/>`
+        + `<path d="M-2.6 1.4Q-3.1 2.6 -3 4Q-3.2 6.6 -3.8 8.8Q-4.5 10.6 -5.5 11.9" stroke="#fff0c0" stroke-width=".35" fill="none" stroke-linecap="round" opacity=".85"/>`
+        + `<path d="M-2.5 1.1Q-.6 .2 1.8 .8" stroke="#ffc860" stroke-width=".7" fill="none" stroke-linecap="round" opacity=".75"/><path d="M-2.3 1Q-.6 .3 1.4 .7" stroke="#fff4d0" stroke-width=".25" fill="none" opacity=".8"/>`
         + `<path d="M-2.2 1.2Q-1.6 6 -3.6 13M1.4 .6Q2.4 5 1.6 9Q1 11.6 2.4 13M3.4 4Q4.4 8 4.2 13M-4 7Q-5 10 -5.6 13" stroke="url(#${pg})" stroke-width=".9" fill="none" stroke-linecap="round"/>`
-        + `<path d="M-6.6 11.6Q0 12.8 6.6 11.6V13.4H-6.6Z" fill="#3a9a7a" opacity=".45"/><ellipse cx="2.6" cy="9.4" rx="1.6" ry=".8" fill="#4aa888" opacity=".45"/></g>`
-        // we look up into the mouth: the dark inside, the far inner rim catching the moon
-        + `<defs>${radGrad(mo, 0, 13, 6.45, [[0, '#9effd0', .75], [.35, '#1a3a30', 1], [1, '#020605', 1]])}</defs><ellipse cx="0" cy="13" rx="6.45" ry="1.25" fill="url(#${mo})"/><path d="M-6.2 12.8Q0 11.4 6.2 12.8" stroke="#8a7a40" stroke-width=".3" fill="none" opacity=".8"/>`
-        + `<path d="M-6.4 13.1Q0 14.5 6.4 13.1" stroke="#f8e0a0" stroke-width=".3" fill="none" opacity=".7"/></g>`;
+        + `<path d="M-6.6 11.6Q0 12.8 6.6 11.6V13.4H-6.6Z" fill="#3a9a7a" opacity=".45"/><ellipse cx="2.6" cy="9.4" rx="1.6" ry=".8" fill="#3a8a6a" opacity=".35"/></g>`
+        // we look up into the mouth: the dark inside (opaque), the far inner rim catching the moon
+        + `<defs>${radGrad(mo, 0, 13, 6.45, [[0, '#24483c', 1], [.4, '#10241e', 1], [1, '#020605', 1]])}<clipPath id="${mc}"><ellipse cx="0" cy="13" rx="6.45" ry="1.25"/></clipPath>`
+        + `${radGrad(cg, 5.3, 12.5, 1.5, [[0, '#7a8680', 1], [.45, '#2a302c', 1], [1, '#060808', 1]])}<filter id="${lb}" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".35"/></filter></defs>`
+        + `<ellipse cx="0" cy="13" rx="6.45" ry="1.25" fill="url(#${mo})"/><path d="M-6.2 12.8Q0 11.4 6.2 12.8" stroke="#8a7a40" stroke-width=".3" fill="none" opacity=".8"/>`
+        // the clapper: up inside the bell, seen only in the opening of the mouth, against the lip on the right
+        + `<g clip-path="url(#${mc})"><path d="M2.6 11.4L4.9 12.9" stroke="#0a0e0c" stroke-width=".7"/><circle cx="4.9" cy="12.9" r="1.3" fill="url(#${cg})" stroke="#020404" stroke-width=".15"/></g>`
+        // the green ghost-glow runs only along the lip
+        + `<path d="M-6.4 13.1Q0 14.5 6.4 13.1" stroke="#9effd0" stroke-width=".9" fill="none" opacity=".55" filter="url(#${lb})"/>`
+        + `<path d="M-6.4 13.1Q0 14.5 6.4 13.1" stroke="#e0fff0" stroke-width=".3" fill="none" opacity=".75"/></g>`;
       // barnacles and a hank of weed on the waist (drawn in picture units at the bell's points)
       const a = BELL.rot * Math.PI / 180, P = (lx, ly) => [BELL.x + (lx * Math.cos(a) - ly * Math.sin(a)) * BELL.s, BELL.y + (lx * Math.sin(a) + ly * Math.cos(a)) * BELL.s];
       const b1 = P(4.4, 8.6), b2 = P(-3.6, 4.2), w1 = P(5.6, 10.5);
       fg += barnacles(u, b1[0], b1[1], 4, 1.1, 51) + barnacles(u, b2[0], b2[1], 2, .9, 52) + weed(w1[0], w1[1], 14, 3, 53, '#2e6a4a');
       // the clapper strikes the lip on the right (the bell swung to the left): a burst of green light (variant B)
-      const hit = P(6.3, 12.6); fg += K.localGlow(u, { x: hit[0], y: hit[1], color: '#b8ffe0', power: .9, radius: 16 })
+      const hit = P(6.3, 12.6); fg += K.localGlow(u, { x: hit[0], y: hit[1], color: '#b8ffe0', power: .8, radius: 10 }, { squash: .6 })
         + `<path d="M${f(hit[0])} ${f(hit[1] - 1)}l8 -4M${f(hit[0])} ${f(hit[1] + 1)}l9 1M${f(hit[0] - 1)} ${f(hit[1] + 3)}l6 5M${f(hit[0] - 1)} ${f(hit[1] - 3)}l5 -7" stroke="#e8fff4" stroke-width=".6" opacity=".9"/>`;
-      // the lanyard: from the clapper's ring through the mouth, sagging to a cleat on the right post
-      const lr = P(.7, 21.2); fg += K.rope(u, L, [lr, [lr[0] + 14, lr[1] + 10], [lr[0] + 30, lr[1] + 6], [POST[1] - 4.2, 104]], { r: .55, seed: 5 })
+      // the lanyard: from the clapper, hanging out from under the lip, sagging to a cleat on the right post
+      const lr = P(4.7, 13.4); fg += K.rope(u, L, [lr, [lr[0] + 3, lr[1] + 8], [lr[0] + 9, lr[1] + 12.5], [POST[1] - 4.2, 104]], { r: .55, seed: 5 })
         + K.shadeCyl(u, POST[1] - 5.6, 101, POST[1] - 5.6, 107, 1.2, L, 'iron', { outline: .3 }); }
     // light: the moon's veil, the fog over the deck under the glass, the under-glass dark
-    fg += glow(u, 100, 92, 70, 50, '#bff8e0', .12) + motes(26, 10, 40, 180, 100, '#dffff0', 9)
+    fg += glow(u, 100, 124, 80, 34, '#bff8e0', .12) + motes(26, 10, 40, 180, 100, '#dffff0', 9)
       + K.fog(u, L, { y: 150, h: 60, density: .5, seed: 12 });
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 150, 0, 290, [[0, '#040a08', 0], [.4, '#040a08', .45], [1, '#020504', .8]])}</defs><rect x="-10" y="150" width="220" height="140" fill="url(#${gl})"/>`; }
     return [bg, fg];

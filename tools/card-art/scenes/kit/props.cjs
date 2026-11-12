@@ -763,7 +763,7 @@ function sack(u, L, o = {}) {
  * moulding lines, the flared waist and the thick lip (13 high, 13 across the mouth), an iron clapper showing under
  * the mouth, a rope with a knot hanging from it. It hangs in a small oak belfry (two posts with knobs on feet, a
  * headstock), 34 units high; (x, y) — the middle between the feet. frame: false — the bell alone, (x, y) — the top
- * of its crown.
+ * of its crown. clapper: false — no clapper or rope under the mouth (the scene draws its own).
  */
 function bell(u, L, o = {}) {
   const F0 = frame(o), s = F0.s, fr = o.frame !== false, F = fr ? F0 : frame(Object.assign({}, o, { x: F0.p(0, 23.6)[0], y: F0.p(0, 23.6)[1] })), k = ellOf(o, L, F0.y, .16, .34), R = rng(seedOf(o, 22));
@@ -771,7 +771,7 @@ function bell(u, L, o = {}) {
   if (fr) for (const e of [-1, 1]) { const x = e * 11.5; out += seat(u, L, o, ...F.p(x, .2), 8.5 * s) + shadeBox(u, [F.face([[x - 3.6, -2.4], [x + 3.6, -2.4], [x + 4.6, -3.7], [x - 2.6, -3.7]], 'top'), F.face([[x - 3.6, -2.4], [x + 3.6, -2.4], [x + 3.6, 0], [x - 3.6, 0]], 'front')], L, 'oak', { seed: seedOf(o, 22) + e })
     + shadeCyl(u, ...F.p(x + .5, -2.8), ...F.p(x + .5, -30), 1.55 * s, L, 'oak', { ell: k, face: 2, seed: seedOf(o, 22) + e * 3 }) + shadeCyl(u, ...F.p(x + .5, -24.2), ...F.p(x + .5, -25.2), 1.95 * s, L, 'oak', { ell: k, face: 2, grain: false, outline: .35 }) + shadeSphere(u, ...F.p(x + .5, -31.4), 1.9 * s, L, 'oak'); }
   // the clapper and the bell rope hang under the mouth
-  const cl = F.p(.4, -7.9); out += shadeSphere(u, cl[0], cl[1], 1.35 * s, L, 'iron', { outline: .35 }) + rope(u, L, [F.p(.4, -6.8), F.p(.2, -4.6), F.p(.7, -2.6)], { r: .5 * s, seed: seedOf(o, 22) }) + shadeSphere(u, ...F.p(.7, -2.2), .95 * s, L, 'rope', { outline: .3 });
+  const cl = F.p(.4, -7.9); if (o.clapper !== false) out += shadeSphere(u, cl[0], cl[1], 1.35 * s, L, 'iron', { outline: .35 }) + rope(u, L, [F.p(.4, -6.8), F.p(.2, -4.6), F.p(.7, -2.6)], { r: .5 * s, seed: seedOf(o, 22) }) + shadeSphere(u, ...F.p(.7, -2.2), .95 * s, L, 'rope', { outline: .3 });
   out += tube(u, L, 'iron', F.d('M-1.5 -27 L-1.5 -24 Q0 -22.6 1.5 -24 L1.5 -27'), .45 * s, F.p(0, -24));
   const A = F.p(0, -23.6), B = F.p(0, -10.6), mr = 6.6;
   const prof = [[0, 2.3], [.05, 3.2], [.12, 3.65], [.3, 3.9], [.5, 4.2], [.68, 4.75], [.82, 5.5], [.92, 6.2], [.975, 6.55], [1, mr]].map(q => [q[0], q[1] * s]);
