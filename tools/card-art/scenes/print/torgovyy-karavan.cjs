@@ -46,21 +46,24 @@ module.exports = { name: 'Торговый караван', kind: 'sea', status:
     const g = K.shipGeom(NEAR.kind, NEAR);
     // the whip from the main yardarm and the sling of kegs over boat A
     const s = NEAR.scale, railY = g.nearRail(0)[1], hD = railY + 1.5 * s, top = g.masts[1].top, yardY = lerp(hD, top[1], .46), yardX = top[0] - 1 + 11.27 * s;
-    const sling = { x: yardX, top: 101.6 }; BA.x = yardX - 1;
+    // the sling is already down: its kegs stand in the stern half of the boat, the whip still on the hook; the man sits
+    // apart in the bow half, clear of the whip, a hand out to steady the net
+    const sling = { x: yardX, top: 109.6 }; BA.x = yardX - 3.4;
     bg += whip(u, L, [yardX, yardY + .3], sling);
-    bg += boatScene(u, L, BA, (gun, clip) => {
-      const p = gun(.55);
-      return { inside: person(u, L, { hip: [p[0], p[1] - .5], s: .66, dir: 1, lean: -8, reach: [sling.x - .2, sling.top + 8.1], shirt: '#d8d0bc', pants: '#4f4a42', cap: '#3c4a5e' })
-        + K.barrel(u, L, { x: gun(.25)[0], y: gun(.25)[1] + .8, s: .085, kind: 'powder', seed: 3, contact: false }), over: '' };
+    bg += boatScene(u, L, BA, gun => {
+      const p = gun(.3);
+      return { inside: person(u, L, { hip: [p[0], p[1] - .3], s: .66, dir: 1, lean: -4, reach: [sling.x - 3.1, sling.top + 5.4], shirt: '#d8d0bc', pants: '#4f4a42', cap: '#3c4a5e' })
+        + slingBundle(u, L, sling), over: '' };
     });
-    bg += slingBundle(u, L, sling);
     // boat C: away to the right, one man at the oars, kegs fore and aft
     bg += boatScene(u, L, BC, gun => {
       const r = gun(.5), k = BC.len / 14;
-      const man = { hip: [r[0], r[1] + .6], s: 1.05, dir: -1, lean: 12, shirt: '#7c8ea6', pants: '#4a4238', cap: '#6b3e26' };
-      return { inside: K.barrel(u, L, { x: gun(.2)[0], y: gun(.2)[1] + 1.4, s: .16, kind: 'powder', seed: 5, contact: false }) + K.barrel(u, L, { x: gun(.82)[0], y: gun(.82)[1] + 1.4, s: .16, kind: 'powder', seed: 6, contact: false })
-        + K.barrel(u, L, { x: gun(.7)[0], y: gun(.7)[1] + 1.6, s: .13, kind: 'powder', seed: 7, contact: false }) + person(u, L, man),
-        over: oar(u, L, man, [r[0] - 1.2 * man.s, r[1]], BC.y, 8) };
+      // the end of the stroke: leaning back towards the bow, the hands in at his chest, the loom running down past the
+      // thole aft, the blade in the water off the quarter
+      const man = { hip: [r[0], r[1] + .6], s: 1.05, dir: -1, lean: 16, reach: [r[0] - 1.7 * 1.05, r[1] + .6 - 2.5 * 1.05], shirt: '#7c8ea6', pants: '#4a4238', cap: '#6b3e26' };
+      return { inside: keg(u, L, { x: gun(.2)[0], y: gun(.2)[1] + 1.4, s: .16, seed: 5 }) + keg(u, L, { x: gun(.82)[0], y: gun(.82)[1] + 1.4, s: .16, seed: 6 })
+        + keg(u, L, { x: gun(.7)[0], y: gun(.7)[1] + 1.6, s: .13, seed: 7 }) + person(u, L, man),
+        over: oar(u, L, man, [r[0] - 3.3 * man.s, r[1]], BC.y, 8) };
     });
     // boat B: the near boat pulling away to the left, two men at the oars, kegs stacked in the stern sheets and bow
     bg += boatScene(u, L, BB, gun => {
@@ -68,8 +71,8 @@ module.exports = { name: 'Торговый караван', kind: 'sea', status:
       const m1 = { hip: [r1[0], r1[1] + 1.2], s: 1.6, dir: 1, lean: 8, shirt: '#ddd5c2', pants: '#4f4a42', cap: '#3c4a5e', seed: 1 };
       const m2 = { hip: [r2[0], r2[1] + 1.2], s: 1.6, dir: 1, lean: -4, shirt: '#8a6a4a', pants: '#5a6470', cap: '#2e2a26', seed: 2 };
       let inside = '';
-      for (const [t, dy, sd, sc] of [[.1, 2.6, 11, .22], [.74, 2.8, 12, .24], [.87, 2.4, 13, .24], [.97, 2.8, 14, .2]]) { const p = gun(t); inside += K.barrel(u, L, { x: p[0], y: p[1] + dy, s: sc, kind: 'powder', seed: sd, contact: false }); }
-      { const p = gun(.78); inside += K.barrel(u, L, { x: p[0] + 2.4, y: p[1] - 4.4, s: .2, kind: 'powder', lying: true, seed: 15, contact: false }); }
+      for (const [t, dy, sd, sc] of [[.1, 2.6, 11, .22], [.74, 2.8, 12, .24], [.87, 2.4, 13, .24], [.97, 2.8, 14, .2]]) { const p = gun(t); inside += keg(u, L, { x: p[0], y: p[1] + dy, s: sc, seed: sd }); }
+      { const p = gun(.78); inside += keg(u, L, { x: p[0] + 2.4, y: p[1] - 4.4, s: .2, lying: true, seed: 15 }); }
       inside += person(u, L, m1) + person(u, L, m2);
       return { inside, over: oar(u, L, m1, [r1[0] + 1.4, r1[1]], BB.y, 21) + oar(u, L, m2, [r2[0] + 1.4, r2[1]], BB.y, 22) };
     });
@@ -83,14 +86,26 @@ function whip(u, L, a, sl) {
     + `<path d="M${f(a[0] - .7)} ${f(a[1] + .3)}h1.4v1.6h-1.4Z" fill="${L.ramp('oak', a[0], a[1]).core}" stroke="${rp.outline}" stroke-width=".2"/>`
     + `<path d="M${f(sl.x)} ${f(sl.top)}q.6 .5 0 1.1" stroke="${ir.core}" stroke-width=".3" fill="none"/>`;
 }
-// the sling: three tarred kegs in a rope net, its legs gathered on the hook
+// the sling: three powder kegs in a rope net, its legs gathered on the hook
 function slingBundle(u, L, sl) {
   const x = sl.x, y = sl.top + 1.1, rp = L.ramp('rope', x, y + 3);
-  let s = K.barrel(u, L, { x: x - 1.1, y: y + 6.6, s: .09, kind: 'powder', seed: 21, contact: false }) + K.barrel(u, L, { x: x + 1.2, y: y + 6.7, s: .09, kind: 'powder', seed: 22, contact: false })
-    + K.barrel(u, L, { x: x + .1, y: y + 5.3, s: .085, kind: 'powder', seed: 23, contact: false });
+  let s = keg(u, L, { x: x - 1.2, y: y + 6.6, s: .1, seed: 21 }) + keg(u, L, { x: x + 1.3, y: y + 6.7, s: .1, seed: 22 })
+    + keg(u, L, { x: x + .1, y: y + 4.9, s: .09, seed: 23 });
   s += `<path d="M${f(x)} ${f(y)}L${f(x - 2.8)} ${f(y + 6.8)}M${f(x)} ${f(y)}L${f(x + 3.1)} ${f(y + 6.9)}M${f(x)} ${f(y)}L${f(x - .9)} ${f(y + 6.9)}M${f(x)} ${f(y)}L${f(x + 1.3)} ${f(y + 6.9)}`
     + `M${f(x - 2.2)} ${f(y + 5.2)}Q${f(x)} ${f(y + 6)} ${f(x + 2.5)} ${f(y + 5.3)}M${f(x - 2.8)} ${f(y + 6.8)}Q${f(x)} ${f(y + 7.4)} ${f(x + 3.1)} ${f(y + 6.9)}" stroke="${rp.core}" stroke-width=".22" fill="none" opacity=".9"/>`;
   return s;
+}
+
+// ——— a powder keg: a round cask of pale wood with iron hoops (the kit's barrel), a black powder mark burnt on its
+// belly and a short black slow-match curled on the head (standing) or out of the bung (lying)
+function keg(u, L, o) {
+  const s = o.s, x = o.x, y = o.y;
+  let out = K.barrel(u, L, { x, y, s, kind: 'water', lying: o.lying, flip: o.flip, seed: o.seed, contact: false });
+  const c = o.lying ? [x, y - 10.8 * s] : [x, y - 14.5 * s], r = (o.lying ? 3.4 : 3.8) * s;
+  out += `<circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r)}" fill="#14110e" opacity=".85"/><circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r * .42)}" fill="#cdb98e" opacity=".9"/>`;
+  const m = o.lying ? [x - 2 * s, y - 21.4 * s] : [x + 3 * s, y - 31 * s];
+  out += `<path d="M${f(m[0])} ${f(m[1])}q${f(1.2 * s)} ${f(-4.5 * s)} ${f(4.2 * s)} ${f(-4 * s)}q${f(2.6 * s)} ${f(.4 * s)} ${f(2.2 * s)} ${f(-3 * s)}" stroke="#14110e" stroke-width="${f(Math.max(.16, 1.1 * s))}" fill="none" stroke-linecap="round"/>`;
+  return out;
 }
 
 // ——— KIT-CANDIDATE (from «Штиль»): a ship's boat afloat in profile with clinker strakes, a lit gunwale, a sliver of
