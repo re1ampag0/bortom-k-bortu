@@ -13,7 +13,7 @@ const { nid, f } = K;
 const W = 200, H = 280, B = 10;
 const HZ = 168;
 const PLACES = { title: { y: 30 }, crest: { y: 214, d: 36 }, letter: null, name: { y: 248 } };
-const SUN = { x: 40, y: 146 };
+const SUN = { x: 36, y: 146 };
 
 /** A long thin streak of cloud lit from below by the low sun: a soft lens, dark body, a hot lower edge towards the sun. */
 function streak(u, o) {
@@ -62,10 +62,10 @@ function revenge() {
   // the near water goes dark and calm under the crest and the name
   { const gw = nid('gw', u); s += `<defs><linearGradient id="${gw}" gradientUnits="userSpaceOnUse" x1="0" y1="196" x2="0" y2="236"><stop offset="0" stop-color="#14060a" stop-opacity="0"/><stop offset="1" stop-color="#14060a" stop-opacity=".66"/></linearGradient></defs><rect x="-20" y="196" width="240" height="110" fill="url(#${gw})"/>`; }
   // «Месть»: bow to the right, under all sail, the deck towards us, her bow lifting on the swell
-  const bx = K.shipBox('revenge', { x: 0, y: 0, scale: 1 }), sc = Math.min(150 / bx.w, 122 / bx.h);
+  const bx = K.shipBox('revenge', { x: 0, y: 0, scale: 1 }), sc = Math.min(138 / bx.w, 116 / bx.h);
   const Ls = K.makeLight(Object.assign({}, light, { key: Object.assign({}, light.key, { power: .8 }), rim: Object.assign({}, light.rim, { power: .95 }) }), { horizon: HZ });
   Ls.pal = L.pal;
-  const po = { kind: 'revenge', x: 116, y: HZ + 9, scale: sc, flip: true, heel: -2.5, roll: 8, sails: 'full', wake: true, reflect: true, lights: true, seed: 5 };
+  const po = { kind: 'revenge', x: 110, y: HZ + 9, scale: sc, flip: true, heel: -2.5, roll: 8, sails: 'full', wake: true, reflect: true, lights: true, seed: 5 };
   // the sun's hot kant: the silhouette in gold shifted towards the sun, shown only in a thin ring round her outline
   { const mk = nid('mk', u), dl = nid('dl', u), sil = (c, k) => K.shipSilhouette('revenge', Object.assign({}, po, { color: c, u: u + k }));
     s += `<defs><filter id="${dl}" filterUnits="userSpaceOnUse" x="-60" y="-60" width="320" height="400"><feMorphology operator="dilate" radius="1"/></filter>`
@@ -73,7 +73,7 @@ function revenge() {
       + `<g mask="url(#${mk})"><g transform="translate(-.75 -.4)">${sil('#ffc477', 'm')}</g></g>`; }
   s += K.ship(u, Ls, po);
   // a bow wave and spray: she runs before the wind
-  { const st = [116 + 50 * sc, HZ + 9]; s += K.splash(u, { x: st[0] - 2, y: st[1], w: 15, h: 8, seed: 4, L, wind: 1 }) + K.foam(u, { x: st[0] - 14, y: st[1] + .3, w: 28, h: 1.5, seed: 7, L }); }
+  { const st = [110 + 50 * sc, HZ + 9]; s += K.splash(u, { x: st[0] - 2, y: st[1], w: 15, h: 8, seed: 4, L, wind: 1 }) + K.foam(u, { x: st[0] - 14, y: st[1] + .3, w: 28, h: 1.5, seed: 7, L }); }
   // warm air round the sun over everything (the masts near it melt a little into the light)
   s += K.localGlow(u, { x: SUN.x, y: SUN.y, color: '#ffc080', power: .35, radius: 46 }, { core: false });
   // the corners darker; no frame: the dark runs past the edge
