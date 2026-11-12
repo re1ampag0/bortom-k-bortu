@@ -30,16 +30,17 @@ export const hasBacks = () => !!B;
 export const backVariants = (): (1 | 2 | 3)[] => { const v = (B?.variants ?? (B ? [1, 2, 3] : [1])).filter(n => n === 1 || n === 2 || n === 3) as (1 | 2 | 3)[]; return v.length ? v : [1]; };
 export const backSpec = (kind: string, variant: number): BackSpec | null => { try { return B ? B.back(kind, variant) : null; } catch (e) { console.warn(`warning: back ${kind} v${variant}: ${(e as Error).message}`); return null; } };
 
-export const PROFILE_VERSION = 'p6';
+export const PROFILE_VERSION = 'p7';
 /** The print profile's curve points (review-print 10). */
 export const CURVE: [number, number][] = [[0, 8], [32, 38], [64, 68], [128, 130], [192, 193], [255, 255]];
 /** Saturation of the print profile: a print shop's colour laser on coated matt stock needs almost no compensation (an inkjet at home had +5 %). */
 export const PROFILE_SAT = 1.02;
 /** The glass keeps its colour (user's decision 12.11, mock-ups V2type / V2ship): the plate is darkened to the target, then its
  *  saturation is raised by this factor — the darkness under the text is solved with it, so the contrast stays. */
-export const GLASS_SAT = 1.45;
-/** Target mean relative luminance under the text: 0.035-0.07 keeps white text ≥ 7 : 1 without a black slab. */
-export const GLASS_TARGET = 0.036;
+export const GLASS_SAT = 1.2;
+/** Target mean relative luminance under the text. The mock-ups stand at 0.007-0.016 (text 12-16 : 1); 0.026 is as dark as a
+ *  laser on matt coated stock still prints without a black slab — text about 11 : 1. */
+export const GLASS_TARGET = 0.026;
 
 export interface GlassBox { top: number; tint: string }
 export interface ArtInfo { url: string; file: string; dark: number; glassMean: number; glassP95: number }
@@ -119,7 +120,13 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       const tint = [1, 3, 5].map(i => parseInt(box.tint.slice(i, i + 2), 16));
       // one tint strength over the whole plate; the darkening is solved per horizontal band, so a bright sky under
       // the card's name ends as dark as calm water under the last line
-      const A = 0.6, px = (i: number, f: number) => { const p = [src[i] * f * (1 - A) + tint[0] * A, src[i + 1] * f * (1 - A) + tint[1] * A, src[i + 2] * f * (1 - A) + tint[2] * A], y = 0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2]; return p.map(v => Math.max(0, Math.min(255, y + (v - y) * gsat))); };
+      // the glass takes its hue from the tint, not from the picture (layout review 12.11: «Приказ» was blue over a blue sea, and
+      // the ship's colour was lost): the blurred picture keeps its light and shade and 1 − K of its colour, K is the tint's
+      // hue at the pixel's own brightness. A near-neutral tint («Жемчужина») gives a charcoal glass and is not saturated.
+      const luma = (r: number, gr: number, b: number) => 0.2126 * r + 0.7152 * gr + 0.0722 * b;
+      const Yt = Math.max(1, luma(tint[0], tint[1], tint[2])), ts = (Math.max(...tint) - Math.min(...tint)) / Math.max(1, ...tint);
+      const K = ts < 0.3 ? 0.8 : 0.65, gs = ts < 0.3 ? 1 : gsat, hue = tint.map(v => v / Yt), FL = 6;
+      const px = (i: number, f: number) => { const r = src[i] * f, gr = src[i + 1] * f, b = src[i + 2] * f, m = luma(r, gr, b) * K + FL, p = [r * (1 - K) + hue[0] * m, gr * (1 - K) + hue[1] * m, b * (1 - K) + hue[2] * m], y = luma(p[0], p[1], p[2]); return p.map(v => Math.max(0, Math.min(255, y + (v - y) * gs))); };
       const lum = (p: number[]) => 0.2126 * lin[Math.min(255, Math.round(p[0]))] + 0.7152 * lin[Math.min(255, Math.round(p[1]))] + 0.0722 * lin[Math.min(255, Math.round(p[2]))];
       const BANDS = 10, bh = box.h / BANDS, fb: number[] = [];
       for (let b = 0; b < BANDS; b++) {

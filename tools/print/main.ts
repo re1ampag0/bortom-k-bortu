@@ -44,6 +44,8 @@ for (const [prefix, build] of builders) {
   if (opts.only && !opts.only.some(o => o.startsWith(prefix) || prefix.startsWith(o.slice(0, 2)))) continue;
   for (const part of await build()) { if (!want(part.file)) continue; await writePdf(ctx, part); done.push(part); console.log(`${part.file}.pdf — ${part.pages.length} стр.`); }
 }
+// `--only obrazcy` (alone or with part numbers): the sample pictures without the full set
+if (opts.only?.some(o => o.startsWith('obr'))) await (await import('./samples')).buildSamples(ctx);
 // vse.pdf: everything in order, to look through on a screen (not for printing: one- and two-sided pages are mixed)
 if (!opts.only) {
   const main = done.filter(p => !/^05[ab]|^obrazcy/.test(p.file) && !p.file.includes('-v'));
