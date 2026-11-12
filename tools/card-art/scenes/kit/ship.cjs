@@ -150,6 +150,20 @@ const SPECS = {
     spar: 'oak', yard: 'tar', sail: 'canvas', cond: 'whole', flag: 'pennant', pennant: 'ship-flag-red',
     beam: .27, draft: 6.6, bilge: 2.2, inner: 'paint-ochre', deckK: 'pine-deck', bottom: 'foul',   // a brig of the 18th century: ~3.7 : 1
   },
+  // A neutral man-of-war (a frigate / a small ship of the line) for fleets in the distance: a dark hull with one light
+  // band along the lower row of ports, two rows of ports, a straight stem with no head, three tall masts, whole light
+  // sails, plain white pennants. No side's colours (card-briefs.md «Флот на горизонте»: not one of the four decks).
+  warship: {
+    len: 96, free: 16.6, sheer: [2.2, 2.8], tumble: .5, bow: [5, 1.5], over: 6, counter: .55,
+    fc: [-32, .8], tiers: [[18, 1.6], [34, 1.2]], taff: 1, tw: [5, 6.5],
+    hull: 'tar', trim: 'linen', gilt: 0, wales: [2.8], bands: [{ h0: 4.2, h1: 8.2, mat: 'linen' }],
+    ports: [{ h: 5.4, n: 13, x0: -36, x1: 32, w: 1.9 }, { h: 11, n: 13, x0: -36, x1: 32, w: 1.9 }], deckPorts: [0, 0, 0],
+    gallery: [10, 2, 3.6], tierWin: 2, lantern: 1,
+    beak: [2.5, 1, 0], sprit: { len: 28, steeve: 22, jib: 12 }, jibs: 2,
+    masts: [{ x: -28, H: 92, n: 3, k: 1.15, rake: 1.5 }, { x: 4, H: 100, n: 3, k: 1.22, rake: 2 }, { x: 33, H: 80, n: 3, k: .85, rake: 3, aft: 'gaff', spanker: [.2, 1.1, .2, .25] }],
+    spar: 'oak', yard: 'tar', sail: 'canvas', cond: 'whole', flag: 'pennant', pennant: 'linen',
+    beam: .27, draft: 11, bilge: 2.4, inner: 'paint-red', deckK: 'pine-deck', bottom: 'tar',   // a frigate: ~3.7 : 1
+  },
 };
 const QY = { 4: [.36, .62, .8, .94], 3: [.4, .7, .93], 2: [.46, .86] }, WY = [.14, .108, .078, .054];
 
