@@ -69,7 +69,7 @@ const MAT = {
   iron: { base: '#727c82', spec: { w: .15, op: .85, col: 'cold' }, reflex: 'sky', reflexK: .5 },
   brass: { base: '#dcae4a', spec: { w: .13, op: .95, col: 'white', halo: '#ffd27a' }, reflex: 'warm', reflexK: .6 },
   oak: { base: '#ad7740', spec: { w: .5, op: .2, col: 'warm' }, reflex: 'warm', reflexK: .36, grain: 1 },
-  'pine-deck': { base: '#cfa970', spec: { w: .55, op: .16, col: 'warm' }, reflex: 'warm', reflexK: .32, grain: 1 },
+  'pine-deck': { base: '#c4a273', spec: { w: .55, op: .16, col: 'warm' }, reflex: 'warm', reflexK: .32, grain: 1 },
   canvas: { base: '#e3d4ae', spec: null, reflex: 'warm', reflexK: .16, trans: .6 },
   linen: { base: '#f2ecdd', spec: null, reflex: 'sky', reflexK: .16, trans: .7 },
   leather: { base: '#8c5730', spec: { w: .45, op: .22, col: 'warm' }, reflex: 'warm', reflexK: .2 },
@@ -130,7 +130,7 @@ function makeLight(light = {}, cam = {}) {
   const st = rgb(shadowTint), lift = st.map(v => v * (.34 / Math.max(.05, luma(st))));
   // the colour a cast shadow multiplies its support by: the tint lifted to a middle tone, so the shadow darkens and
   // colours the support but never reaches black
-  const shadowMul = hex(mixA(st.map(v => v * (.4 / Math.max(.05, luma(st)))), [.5, .5, .5], .25));
+  const mulL = point ? .27 : .38, shadowMul = hex(mixA(st.map(v => v * (mulL / Math.max(.05, luma(st)))), [mulL, mulL, mulL], .25));
   const bounce = { sky: fillRGB.map(v => v * (.6 + fill.power)), warm: mixA(keyRGB, rgb('#c8905c'), .55).map(v => v * (.35 + .5 * key.power)) };
   const amb = mixA([1, 1, 1], fillRGB, P.tint).map(v => v * fill.power);
 
