@@ -13,7 +13,7 @@ let n = 0;
 /** A back (fresh ids each call) placed at (x, y) with width w; dx, dy — the print shift in card units. */
 const card = (kind, x, y, w, o = {}) => {
   const b = B.back(kind, 1), k = w / 200, c = 'sc' + n++, dx = o.dx || 0, dy = o.dy || 0;
-  const svg = b.svg.replace('<svg ', `<svg x="${f(dx)}" y="${f(dy)}" width="200" height="280" `);
+  const svg = b.svg.replace("<svg ", `<svg x="${f(dx)}" y="${f(dy)}" width="200" height="280" overflow="visible" `);
   let lab = '';
   if (o.lettering) {
     const ink = b.tone === 'dark' ? ['#f3dc9d', '#fff2d4'] : ['#5a3c14', '#3a2410'];
@@ -33,22 +33,23 @@ const card = (kind, x, y, w, o = {}) => {
 const label = (x, y, t) => `<text x="${x}" y="${y}" font-family="DejaVu Sans,sans-serif" font-size="7" fill="#ccc">${t}</text>`;
 
 const sheet = kind => ({ w: 640, h: 420, bg: '#3a3a3a', svg: () => {
-  let s = card(kind, 10, 16, 280) + label(10, 11, 'рубашка, 200 × 280');
+  let s = card(kind, 10, 16, 280) + label(10, 11, 'рубашка, 200 × 280 (63 × 88 мм)');
   s += card(kind, 300, 16, 150, { lettering: true }) + label(300, 11, 'с надписями на местах');
-  s += card(kind, 460, 16, 75, { safe: true }) + label(460, 11, '9 мм (пунктир)');
-  s += card(kind, 545, 16, 75, { grey: true }) + label(545, 11, 'серый');
-  s += card(kind, 300, 236, 120, { lettering: true }) + label(300, 231, 'без сдвига');
-  s += card(kind, 430, 236, 120, { lettering: true, dx: 9.5, dy: 9.5 }) + label(430, 231, 'сдвиг 3 мм вправо-вниз');
-  s += card(kind, 460, 130, 75, { lettering: true, dx: -9.5, dy: -9.5 }) + label(460, 125, 'сдвиг влево-вверх');
-  s += card(kind, 545, 130, 75, { lettering: true, grey: true });
+  s += card(kind, 460, 16, 75, { safe: true }) + label(460, 11, 'пунктир — 9 мм');
+  s += card(kind, 545, 16, 75, { lettering: true, grey: true }) + label(545, 11, 'серый');
+  s += card(kind, 460, 140, 38.4, { lettering: true, grey: true }) + label(460, 135, '120 px: серый и цвет');
+  s += card(kind, 510, 140, 38.4, { lettering: true }) ;
+  s += card(kind, 300, 252, 105, { lettering: true }) + label(300, 247, 'без сдвига');
+  s += card(kind, 415, 252, 105, { lettering: true, dx: 9.5, dy: 9.5 }) + label(415, 247, 'сдвиг 3 мм вправо-вниз');
+  s += card(kind, 530, 252, 105, { lettering: true, dx: -9.5, dy: -9.5 }) + label(530, 247, 'сдвиг 3 мм влево-вверх');
   return s;
 } });
 const sheets = {};
 for (const k of B.KINDS) sheets['back1-' + k] = sheet(k);
-sheets['backs1-all'] = { w: 660, h: 300, bg: '#3a3a3a', svg: () => {
+sheets['backs1-all'] = { w: 660, h: 250, bg: '#3a3a3a', svg: () => {
   let s = '';
   B.KINDS.forEach((k, i) => { s += card(k, 10 + i * 130, 10, 120, { lettering: true }); });
-  B.KINDS.forEach((k, i) => { s += card(k, 10 + i * 130, 190, 60, { lettering: true, grey: true }) + card(k, 75 + i * 130, 190, 55); });
+  B.KINDS.forEach((k, i) => { s += card(k, 10 + i * 130, 190, 40, { lettering: true, grey: true }) + card(k, 55 + i * 130, 190, 40, { lettering: true }) + card(k, 100 + i * 130, 190, 30); });
   return s;
 } };
 module.exports = { sheets };
