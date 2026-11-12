@@ -1,6 +1,6 @@
 // «Один выстрел» (Жемчужина, ЗАРЯД: +1 урон, из Плана +3 и без Реакций), refined from the first-round scene
 // (portrait-pearl.cjs SCENES['Один выстрел']): a moonlit beach, a palm leaning in from the left; on a flat rock at the
-// water's edge lies a flintlock pistol, loaded for one shot, its barrel toward the enemy ship that rides at anchor in
+// water's edge lies a flintlock pistol (the butt on the slab, the barrel on a loose stone), loaded for one shot, its barrel toward the enemy ship that rides at anchor in
 // the moon path; in front of it, on a scrap of red velvet, the one ball kept for it — the treasure, a glint on it;
 // the powder horn behind. One key light: the moon (upper right, a little from the depth): a long cold glint along the
 // barrel, the brass of the butt and the guard, silver edges on the rock and the fronds; the enemy's stern lanterns are
@@ -14,12 +14,13 @@ const MOON = { x: 158, y: 40 };
 // the moon in the picture; its light on the things comes from the right and a little from the depth (az 58)
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: MOON.x, y: MOON.y, az: 58, el: 30, color: '#cbdaf6', power: .85 }, fill: { color: '#3a5280', power: .42 },
   rim: { az: 40, color: '#d6e6ff', power: .55 }, locals: [{ x: 146, y: 82, color: '#ffc070', power: .35, radius: 10 }] };
-const GUN = { x: 100, y: 107.3, s: 4.2, rot: 11 };                 // rests on the butt and the guard on the rock (y 112)
+const GUN = { x: 100, y: 110, s: 4.2, rot: 14 };                   // the butt on the rock (y ~112), the fore-end on a stone
 const BALL = { x: 29, y: 114.6, r: 5.2 };
 const skel = { horizon: HZ, eye: 1.2, light: 'the moon upper right (az 58): glint along the barrel, rims; warm lanterns of the enemy',
   items: [
     ['rock', 12, 152, 182, 50, 'sand (sunk in it)'],
-    ['pistol', 41, 112, 120, 44, 'rock top (butt and guard)'],
+    ['pistol', 41, 112, 120, 44, 'rock top (butt and guard), the barrel on the stone'],
+    ['stone', 131, 116, 26, 10, 'rock top, under the barrel'],
     ['ball on velvet', 15, 121, 26, 15, 'rock top'],
     ['powder horn', 160, 108, 32, 10, 'rock top, behind the muzzle'],
     ['enemy ship', 135, 84.8, 31, 26, 'sea, at anchor in the moon path'],
@@ -127,6 +128,44 @@ function ballOnVelvet(u, L) {
   return s;
 }
 
+// a loose stone on the slab under the barrel: lit on the right (the moon), the barrel lies on its top
+function stone(u, L) {
+  const pts = [[131, 111.4], [133.6, 108.4], [139, 106.75], [145, 107.9], [150.5, 109.9], [155.4, 111.2], [157.2, 113.4], [154, 115.6], [144, 116.4], [135, 115.4]];
+  const g = nid('st', u), cid = nid('stc', u), R = rng(19), lit = mix('#7a8088', L.keyColor, .28), half = '#4a4f58', dark = '#22262e', d = sp(pts, true);
+  let s = K.contactShadow(u, 145, 116, 30, L, { ry: 1.6, opacity: .8 });
+  s += `<defs>${linGrad(g, 157, 107, 133, 116, [[0, lit], [.4, mix(lit, half, .6)], [1, dark]])}<clipPath id="${cid}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="url(#${g})"/>`;
+  s += `<g clip-path="url(#${cid})"><path d="M131 112.6Q144 112 158 111.6" stroke="#181c22" stroke-width=".6" fill="none" opacity=".6"/>`;
+  for (let i = 0; i < 22; i++) { const x = 133 + R() * 23, y = 107 + R() * 9, r = .25 + R() * .6; s += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r)}" ry="${f(r * .5)}" fill="${R() > .4 ? '#2a2e36' : mix(lit, '#ffffff', .25)}" opacity="${f(.25 + R() * .3)}"/>`; }
+  s += `</g><path d="${d}" fill="none" stroke="#14181f" stroke-width=".45"/><path d="${sp(pts.slice(2, 7))}" stroke="${mix(L.keyColor, '#ffffff', .4)}" stroke-width=".55" fill="none" opacity=".75"/>`;
+  return s;
+}
+// the shadows the pistol leaves where it touches (under it): a dark line under the fore-end on the stone, a pool under the guard
+function gunShadows(u, L) {
+  let s = '';
+  { const a = gunP(6.4, -2.75), b = gunP(12.6, -2.75), id = nid('gs', u); s += `<defs><filter id="${id}" x="-10%" y="-200%" width="120%" height="500%"><feGaussianBlur stdDeviation=".7"/></filter></defs><path d="M${P2(a)}L${P2(b)}" stroke="#05070c" stroke-width="2.2" stroke-linecap="round" opacity=".75" filter="url(#${id})"/>`; }
+  { const g = gunP(-4.2, 1.6); s += K.contactShadow(u, g[0] + .6, g[1] + .9, 13, L, { ry: 1.4, opacity: .85 }); }
+  { const g = gunP(-12.3, 4.1); s += K.contactShadow(u, g[0] + .8, g[1] + .2, 12, L, { ry: 1.3, opacity: .85 }); }
+  return s;
+}
+// over the kit pistol: a round muzzle (a turned ring, the dark bore) and a flint cock — the jaws, the flint, the screw
+function gunDetail(u, L) {
+  const rI = L.ramp('iron', ...gunP(0, -6)), Q = pts => pts.map(p => P2(gunP(p[0], p[1]))).join('L');
+  let s = K.shadeCyl(u, ...gunP(12.5, -5.9), ...gunP(13.5, -5.9), 1.12 * GUN.s, L, 'iron', { outline: .35 });
+  { const m = gunP(13.55, -5.9), r = 1.1 * GUN.s;
+    s += `<g transform="rotate(${GUN.rot} ${f(m[0])} ${f(m[1])})"><ellipse cx="${f(m[0])}" cy="${f(m[1])}" rx="${f(r * .5)}" ry="${f(r)}" fill="${rI.half}" stroke="${rI.outline}" stroke-width=".4"/>`
+      + `<path d="M${f(m[0])} ${f(m[1] - r)}A${f(r * .5)} ${f(r)} 0 0 1 ${f(m[0] + r * .48)} ${f(m[1] + r * .2)}" stroke="${mix(L.keyColor, '#ffffff', .5)}" stroke-width=".6" fill="none" opacity=".85"/>`
+      + `<ellipse cx="${f(m[0] + .25)}" cy="${f(m[1] + .2)}" rx="${f(r * .27)}" ry="${f(r * .55)}" fill="#030409"/></g>`; }
+  // the cock: a swan neck from the tumbler up to the lower jaw, the flint in its leather between the jaws, the jaw screw
+  s += `<path d="M${Q([[-6.1, -4.1], [-6.9, -5.5], [-6.7, -6.9], [-6.1, -7.6], [-5.0, -7.4], [-5.5, -6.7], [-5.6, -5.6], [-4.8, -4.3]])}Z" fill="${rI.half}" stroke="${rI.outline}" stroke-width=".4" stroke-linejoin="round"/>`;
+  s += `<path d="M${Q([[-6.6, -6.6], [-6.4, -7.3]])}" stroke="${mix(L.keyColor, '#ffffff', .4)}" stroke-width=".45" opacity=".7"/>`;
+  s += `<path d="M${Q([[-6.3, -7.75], [-3.1, -7.75], [-3.0, -7.15], [-6.2, -7.15]])}Z" fill="${rI.core}" stroke="${rI.outline}" stroke-width=".35"/>`;
+  s += `<path d="M${Q([[-4.4, -8.45], [-3.9, -8.5], [-1.9, -8.25], [-2.3, -7.8], [-4.4, -7.8]])}Z" fill="#6a5a40" stroke="${rI.outline}" stroke-width=".3"/><path d="M${Q([[-3.7, -8.4], [-2.0, -8.2]])}" stroke="#e8dcc0" stroke-width=".3" opacity=".7"/>`;
+  s += `<path d="M${Q([[-5.7, -9.1], [-3.3, -9.1], [-3.2, -8.5], [-5.6, -8.5]])}Z" fill="${rI.half}" stroke="${rI.outline}" stroke-width=".35"/>`;
+  s += K.shadeCyl(u, ...gunP(-4.5, -7.2), ...gunP(-4.5, -10.0), .26 * GUN.s, L, 'iron', { outline: .25 });
+  { const h = gunP(-4.5, -10.15); s += `<ellipse cx="${f(h[0])}" cy="${f(h[1])}" rx="${f(.55 * GUN.s)}" ry="${f(.2 * GUN.s)}" transform="rotate(${GUN.rot} ${f(h[0])} ${f(h[1])})" fill="${rI.lit}" stroke="${rI.outline}" stroke-width=".3"/><path d="M${Q([[-4.9, -10.15], [-4.1, -10.15]])}" stroke="${rI.outline}" stroke-width=".3"/>`; }
+  return s;
+}
+
 // the powder horn: a curved cow horn, a turned brass cap on the wide end, a stopper at the tip, a leather strap
 function horn(u, L) {
   const A = [192, 110.4], Bt = [166, 107.4], n = 18, pts = [], bot = [];
@@ -175,16 +214,17 @@ module.exports = { name: 'Один выстрел', kind: 'deck', status: 'draft
     let fg = rock(u, L);
     fg += K.castShadow(u, L, { x: 104, y: 113.4, w: 112, h: 7, horizon: HZ, d: .18, opacity: .7 });
     fg += horn(u, L);
+    fg += stone(u, L) + gunShadows(u, L);
     fg += K.pistol(u, L, { x: GUN.x, y: GUN.y, s: GUN.s, rot: GUN.rot, seed: 4 });
     // the moon along the barrel: one long cold glint, brighter toward the muzzle; on the brass bands, the cock, the butt
     { const a = gunP(-4, -6.95), b = gunP(13.2, -6.7), g = nid('gl', u);
       fg += `<defs>${linGrad(g, a[0], a[1], b[0], b[1], [[0, '#dfeaff', .1], [.55, '#eef4ff', .75], [.9, '#ffffff', .95], [1, '#ffffff', .4]])}</defs><path d="M${P2(a)}L${P2(b)}" stroke="url(#${g})" stroke-width="1.5" stroke-linecap="round"/>`;
       { const a2 = gunP(-3, -5.1), b2 = gunP(12.6, -5.0); fg += `<path d="M${P2(a2)}L${P2(b2)}" stroke="#8aa0c0" stroke-width=".5" opacity=".45" stroke-linecap="round"/>`; }
-      const m = gunP(13.4, -5.9); fg += `<ellipse cx="${f(m[0] + .3)}" cy="${f(m[1])}" rx="1.4" ry="${f(.9 * GUN.s)}" transform="rotate(${GUN.rot} ${f(m[0])} ${f(m[1])})" fill="#05070c"/>`;
       for (const [x, y, r] of [[-12.0, 1.7, 1.6], [-4.8, -8.6, .9], [8.1, -6.9, .8], [12.1, -6.9, .8]]) { const p = gunP(x, y); fg += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${r}" fill="#ffffff" opacity=".8"/>` + K.localGlow(u, { x: p[0], y: p[1], color: '#dfeaff', power: .3, radius: r * 4 }); } }
     // a fine engraving on the lock plate and the stock's grain, the touch of wear on the brass
     { const p = gunP(-5.6, -4.2), q = gunP(-.8, -4.2); fg += `<path d="M${P2(p)}Q${P2(gunP(-3.2, -3.4))} ${P2(q)}" stroke="#c8d4e4" stroke-width=".3" fill="none" opacity=".55"/>`;
       for (const k of [-1.2, .2, 1.6]) { const a = gunP(-11, k + .4), b = gunP(-6, k - 1.6), c = gunP(4, -3.6 + k * .2); fg += `<path d="M${P2(a)}Q${P2(b)} ${P2(c)}" stroke="#2a1608" stroke-width=".3" fill="none" opacity=".45"/>`; } }
+    fg += gunDetail(u, L);
     fg += ballOnVelvet(u, L);
     // the night over the near sand, a cold breath of the moon on the rock's right
     fg += K.localGlow(u, { x: 178, y: 108, color: '#cbdaf6', power: .22, radius: 40 }, { squash: .4, core: false });
