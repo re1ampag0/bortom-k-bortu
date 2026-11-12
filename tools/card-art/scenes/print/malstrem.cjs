@@ -101,9 +101,10 @@ function vortex(u, L, o = {}) {
     strand(a + 7, t0 + .06, turns * .96, k0 + .02, k1 - .05, .35, .028 + R() * .02, .8, brk * 1.4);
     if (R() > .4) strand(a + 13, t0 - .05, turns * 1.03, k0 + .04, k1 - .1, .25, -.03 - R() * .02, .6, brk * 1.8);
   }
+  out += `<defs>${blur(fb, .35, [-40, 30, 280, 280])}</defs><g filter="url(#${fb})">${bands}</g>`;
   // the lace between the bands: thin streaks along the contours
   let lace = '';
-  for (let i = 0; i < 70; i++) { const k = Math.pow(R(), .8) * .9, t = -Math.PI * 2 * R(), dt = (.08 + R() * .16) * (1 - k * .5), p0 = P(k, t), p1 = P(k + .015, t + dt * .5), p2 = P(k + .03, t + dt);
+  for (let i = 0; i < 70; i++) { const k = Math.pow(R(), .8) * .9, t = -Math.PI * 2 * R(), dt = (.08 + R() * .16) * (1 - k * .5), p0 = P(k, t), p1 = P(k + .004, t + dt * .5), p2 = P(k + .008, t + dt);
     lace += `<path d="M${f(p0[0])} ${f(p0[1])}Q${f(p1[0])} ${f(p1[1])} ${f(p2[0])} ${f(p2[1])}" fill="none" stroke="${foamC}" stroke-width="${f(.2 + R() * .45 * (1 - k))}" stroke-linecap="round" opacity="${f(.12 + R() * .25)}"/>`; }
   out += lace;
   return out;
