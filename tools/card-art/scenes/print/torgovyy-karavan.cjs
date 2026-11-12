@@ -101,7 +101,7 @@ function slingBundle(u, L, sl) {
 function keg(u, L, o) {
   const s = o.s, x = o.x, y = o.y;
   let out = K.barrel(u, L, { x, y, s, kind: 'water', lying: o.lying, flip: o.flip, seed: o.seed, contact: false });
-  const c = o.lying ? [x, y - 10.8 * s] : [x, y - 14.5 * s], r = (o.lying ? 3.4 : 3.8) * s;
+  const c = o.lying ? [x, y - 10.8 * s] : [x, y - 14.5 * s], r = (o.lying ? 3 : 3.2) * s;
   out += `<circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r)}" fill="#14110e" opacity=".85"/><circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r * .42)}" fill="#cdb98e" opacity=".9"/>`;
   const m = o.lying ? [x - 2 * s, y - 21.4 * s] : [x + 3 * s, y - 31 * s];
   out += `<path d="M${f(m[0])} ${f(m[1])}q${f(1.2 * s)} ${f(-4.5 * s)} ${f(4.2 * s)} ${f(-4 * s)}q${f(2.6 * s)} ${f(.4 * s)} ${f(2.2 * s)} ${f(-3 * s)}" stroke="#14110e" stroke-width="${f(Math.max(.16, 1.1 * s))}" fill="none" stroke-linecap="round"/>`;
