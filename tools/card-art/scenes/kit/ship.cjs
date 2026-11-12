@@ -78,14 +78,14 @@ const SPECS = {
   // the stern; the bowsprit 0.30 L at 25° with a sprit topmast and its yard; masts 0.15 / 0.60 / 0.90 with big tops; a dark
   // hull with red and black bands and gilt mouldings; dark red torn sails with a fringe along the foot.
   revenge: {
-    len: 84, free: 11.8, sheer: [1.6, 3], tumble: .3, bow: [7, 2.2], over: 13, counter: .8,
-    fc: [-34, 2.4], tiers: [[21, 6], [32, 6], [42, 5.3]], taff: 2, tw: [4.5, 7], openRail: 2,
+    len: 84, free: 11.8, sheer: [1.6, 3], tumble: .3, bow: [7, 2.2], over: 16, counter: .8, sternBow: .55, taffScroll: 5.5,
+    fc: [-34, 2.4], tiers: [[21, 6], [32, 6], [42, 5.3]], taff: 3.2, tw: [5, 6.5], openRail: 2,
     hull: 'tar', trim: 'ship-red', gilt: 1, wales: [5.1], bands: [{ h0: 5.4, h1: 9.9, mat: 'ship-red' }, { h0: 10.9, h1: 11.7, mat: 'ship-red' }, { h0: 15.4, h1: 17.2, mat: 'ship-red' }, { h0: 21.6, h1: 23.2, mat: 'ship-red' }],
     ports: [{ h: 7.6, n: 8, x0: -32, x1: 29, w: 2.4 }, { h: 13, n: 3, x0: 20, x1: 34, w: 1.8 }], deckPorts: [0, 0, 0],
     gallery: [10, 3, 4.4], tierWin: 2, lantern: 2.1, lanterns: 'corners', lanternArm: [7, 9, 1.15], balc: [0, 1, 2], balcD: 2.8,
-    beak: [11, 2.6, 3.4], sprit: { len: 31, steeve: 25, topmast: 12, spritsail: 'furled' }, jibs: 1,
-    masts: [{ x: -29, H: 80, n: 3, k: 1.35 }, { x: 8.5, H: 88, n: 3, k: 1.45 }, { x: 33.5, H: 70, n: 2, k: .82, rake: 2, aft: 'lateen', noBare: 1 }], topK: 1.35,
-    spar: 'tar', yard: 'tar', sail: 'ship-sail-crimson', cond: 'fringe', flag: 'jolly', pennant: 'ship-flag-red',
+    beak: [11, 2.6, 3.4], headCarve: 1, sprit: { len: 31, steeve: 25, topmast: 12, spritsail: 'furled' }, jibs: 1,
+    masts: [{ x: -29, H: 80, n: 3, k: 1.35 }, { x: 8.5, H: 88, n: 3, k: 1.45 }, { x: 33.5, H: 70, n: 2, k: .82, rake: 2, aft: 'lateen', noBare: 1 }], topK: 2, topRail: 1,
+    spar: 'tar', yard: 'tar', sail: 'ship-sail-crimson', cond: 'fringe', holeK: .55, flag: 'jolly', pennant: 'ship-flag-red',
     beam: .26, draft: 8.6, bilge: 2.2, inner: 'paint-red', deckK: 'oak', bottom: 'foul',   // a light frigate, the La Concorde: ~3.8 : 1
   },
   // HMS Endeavour (2007), a ship of the line, by the measurements (zamery.md): the length at the waterline kept (104),
@@ -240,7 +240,11 @@ function build(u, L, o, mode) {
   const rail = X => Y(baseTop(X), X);
   const Hs = rail(xStem), hTop = rail(xAft);
   const stemX = h => { const t = h / Hs, p = sp.bow[1]; return -hb - sp.bow[0] * (t < 0 ? t * p * .5 : 1 - Math.pow(1 - Math.min(t, 1), p)); };
-  const hC = Y(sp.free * sp.counter, hb), xC = hb + sp.over * .3, kT = (xAft - xC) / (hTop - hC), transX = h => xC + kT * (h - hC);   // the transom's edge
+  const hC = Y(sp.free * sp.counter, hb), xC = hb + sp.over * .3, kT = (xAft - xC) / (hTop - hC), sBw = sp.sternBow || 0;   // the transom's edge
+  // sp.sternBow (the Revenge): the edge bends — the counter nearly upright, the upper tiers lean aft more and more (overhang up and aft)
+  const transX = sBw ? h => { const t = (h - hC) / (hTop - hC); return xC + (xAft - xC) * (t * (1 - sBw) + sBw * t * t); } : h => xC + kT * (h - hC);
+  const kAt = sBw ? h => kT * (1 - sBw + 2 * sBw * clamp((h - hC) / (hTop - hC), 0, 1.2)) : () => kT;   // the slope of the edge at h
+  const sternEdge = sBw ? Array.from({ length: 7 }, (_, i) => { const h = hTop - (hTop - hC) * (i + 1) / 8; return [transX(h), h]; }) : [];
   // the third dimension: the half-breadth of the hull at (X, H) — the near side is Z = +hullZ, the far side Z = -hullZ.
   // Across: tumblehome above the widest line (t0), the bilge and the floor under the water down to the keel at the
   // draft; along: fine to the stem, a run to the sternpost under the water, the transom (~0.6 of the beam) above the
@@ -259,7 +263,7 @@ function build(u, L, o, mode) {
   const hullPts = [], topPts = [], hLo = phi ? -Tk - 1 : -6;
   for (let h = hLo; h < Hs - .05; h += .8) hullPts.push([stemX(h), h]);
   for (let X = xStem; X < xAft - .05; X += .8) topPts.push([X, rail(X)]);
-  topPts.push([xAft, hTop]); hullPts.push(...topPts, [xC, hC]);
+  topPts.push([xAft, hTop]); hullPts.push(...topPts, ...sternEdge, [xC, hC]);
   // sp.run (the Dutchman): no sternpost step under the counter — one smooth curve from the transom down to the water
   const qB = (A, B, Cq, t) => { const q = 1 - t; return [q * q * A[0] + 2 * t * q * B[0] + t * t * Cq[0], q * q * A[1] + 2 * t * q * B[1] + t * t * Cq[1]]; };
   const runC = sp.run ? [[xC, hC], [hb + sp.over * .15, hC * .3], [hb - 2.5, -.6]] : null;
@@ -427,7 +431,8 @@ function build(u, L, o, mode) {
   const win = (d, cx, cy, r, always) => glass(d, cx, cy, r, always).d || '';
   {
     const tA = [xAft, hTop], arch = sp.tw[0] * .32 + .6, hM = (hC + hTop) / 2;
-    const trPoly = 'M' + pp(xC, hC) + 'L' + pp(tA[0], tA[1]) + 'Q' + pp(xAft + sp.tw[0] * .5, hTop + arch * 1.5) + ' ' + pp(xAft + sp.tw[0], hTop + arch * .2) + 'L' + pp(xC + sp.tw[1], hC + .5) + 'Z';
+    const trPoly = sBw ? 'M' + pp(xC, hC) + sternEdge.slice().reverse().map(p => 'L' + pp(p[0], p[1])).join('') + 'L' + pp(tA[0], tA[1]) + 'Q' + pp(xAft + sp.tw[0] * .5, hTop + arch * 1.5) + ' ' + pp(xAft + sp.tw[0], hTop + arch * .2) + sternEdge.map(p => 'L' + pp(p[0] + tw(p[1]), p[1] + .5 * (1 - (p[1] - hC) / (hTop - hC)) + arch * .2 * (p[1] - hC) / (hTop - hC))).join('') + 'L' + pp(xC + sp.tw[1], hC + .5) + 'Z'
+      : 'M' + pp(xC, hC) + 'L' + pp(tA[0], tA[1]) + 'Q' + pp(xAft + sp.tw[0] * .5, hTop + arch * 1.5) + ' ' + pp(xAft + sp.tw[0], hTop + arch * .2) + 'L' + pp(xC + sp.tw[1], hC + .5) + 'Z';
     let under, rud;
     if (runC) { // the smooth counter: its strip beyond the hull's curve, the rudder hung along it down into the water
       const oC = [[xC + sp.tw[1], hC + .5], [hb + sp.over * .15 + sp.tw[1] * .55, hC * .32], [hb - 2.5 + sp.tw[1] * .22, -.6]], ou = [], inn = [], rd = [];
@@ -446,7 +451,7 @@ function build(u, L, o, mode) {
       const levels = [gh0]; for (let j = 1; j < gal[1]; j++) levels.push(gh0 + j * gal[2]); sp.tiers.forEach((t, j) => { const h = Y(tierBase(j + 1), xAft) + .9; if (h > levels[levels.length - 1] + gal[2] * .9 && h < hTop - 2.6) levels.push(h); });
       const top3 = Math.min(levels.length - 1, 3); levels.forEach((h, li) => { const e = transX(h), w = tw(h), row = li < 2 ? li : li === top3 ? 2 : -1, k = [1, .8, .6][row] || 0, wh = Math.min(gal[2] - 1.3, 3.2) * k, n = row < 0 ? 0 : row === 2 || w < 5 ? 1 : 2;
         inn += strokeP(seg([e - 1, h - .5], [e + w + 1, h - .3]), sp.gilt ? tone('brass', lum(nT) + .3) : tone(sp.trim, lum(nT) + .3), .3 * s, ' opacity=".85"');
-        for (let i = 0; i < n; i++) { const span = n === 1 ? .5 : .72 / n, a = e + w * (n === 1 ? .28 : .14 + i * .86 / n), b = a + w * (span - .08), k2 = kT * wh, pw4 = poly([[a, h], [b, h + .08], [b + k2, h + wh], [a + k2, h + wh]]);
+        for (let i = 0; i < n; i++) { const span = n === 1 ? .5 : .72 / n, a = e + w * (n === 1 ? .28 : .14 + i * .86 / n), b = a + w * (span - .08), k2 = kAt(h + wh / 2) * wh, pw4 = poly([[a, h], [b, h + .08], [b + k2, h + wh], [a + k2, h + wh]]);
           inn += win(pw4, (a + b) / 2, h + wh / 2, wh) + strokeP(pw4 + seg([(a + b) / 2, h], [(a + b) / 2 + k2, h + wh]) + (wh > 2 ? seg([a + k2 / 2, h + wh / 2], [b + k2 / 2, h + wh / 2]) : ''), ink(hullK), .16 * s); } });
       inn += strokeP('M' + pp(xAft + .4, hTop - .5) + 'Q' + pp(xAft + sp.tw[0] * .5, hTop + arch * 1.25 - .5) + ' ' + pp(xAft + sp.tw[0] - .3, hTop + arch * .2 - .5), sp.gilt ? tone('brass', lum(nT) + .4) : tone(sp.trim, lum(nT) + .35), .45 * s, ' opacity=".9"');
       if (topRim) inn += strokeP('M' + pp(xAft, hTop - .1) + 'Q' + pp(xAft + sp.tw[0] * .5, hTop + arch * 1.5 - .1) + ' ' + pp(xAft + sp.tw[0], hTop + arch * .2 - .1), rimCol, .4 * s, ` opacity="${f(clamp(topRim * 1.3))}"`);
@@ -492,6 +497,17 @@ function build(u, L, o, mode) {
         stern += fillP(knee, tone(sp.trim, lum([0, -.6, .8]))) + edge(knee, sp.trim, .6) + fillP(floor, tone(sp.trim, lum([0, -.4, .9]))) + edge(floor, sp.trim, .6)
           + strokeP(bal, tone(mt, If + .15), .28 * s) + fillP(hand, tone(mt, If + .3)) + edge(hand, mt, .5)
           + (plain ? '' : strokeP(seg([x1 + .1, h + .1, Z0], [x1 + .1, h + bH, Z0]), tone(mt, If + .4), .32 * s)); } }
+    if (sp.taffScroll) { // the Revenge: a tall carved taffrail over the transom ending aft in a scroll that curls forward under itself (its own carving: no figures, no skulls)
+      const Hq = sp.taffScroll, top0 = hTop + arch * .2, Xf = xAft - 7, rv = Hq * .34, cv = [xAft + sp.tw[0] + rv * .35, hTop + arch * .3 + Hq - rv], Rv = th => rv * (1 - .62 * th / (2.15 * Math.PI));
+      const vp = []; for (let i = 0; i <= 26; i++) { const th = 2.15 * Math.PI * i / 26, a = Math.PI / 2 - th; vp.push([cv[0] + Rv(th) * Math.cos(a), cv[1] + Rv(th) * Math.sin(a)]); }
+      const brd = spl([[Xf, rail(Xf) - .4], [xAft - 4, hTop + Hq * .3], [xAft - .5, hTop + Hq * .62], [xAft + sp.tw[0] * .45, hTop + arch * .3 + Hq - rv * .25], [cv[0], cv[1] + rv]], false)
+        + 'L' + pp(cv[0] - rv * .45, cv[1] - rv * .7) + 'L' + pp(xAft + sp.tw[0] - .3, top0 - .2) + 'L' + pp(xAft - .5, hTop - .6) + 'L' + pp(Xf, rail(Xf) - .6) + 'Z';
+      const gilt = I => sp.gilt ? tone('brass', I) : tone(sp.trim, I);
+      if (sil) stern += fillP(brd, C) + strokeP(spl(vp, false), C, Hq * .2 * s, ' stroke-linecap="round"');
+      else { stern += fillP(brd, gr([0, hTop], [0, hTop + Hq], [[0, tone(hullK, If - .35)], [1, tone(hullK, If + .05)]]));
+        if (!far) { let cv2 = ''; for (let k = 0; k < 3; k++) { const X = xAft - 5.4 + k * 1.9, H = hTop + Hq * (.12 + k * .1); cv2 += 'M' + pp(X - .8, H - .2) + 'Q' + pp(X, H + 1.3) + ' ' + pp(X + .8, H + .3) + 'Q' + pp(X + .4, H - .3) + ' ' + pp(X + .1, H + .3); }   // carved C-scrolls along the board
+          stern += strokeP(cv2, gilt(If + .25), .2 * s) + strokeP(spl([[Xf + .4, rail(Xf) - .1], [xAft - 4, hTop + Hq * .3 + .1], [xAft - .5, hTop + Hq * .62 + .1], [xAft + sp.tw[0] * .45, hTop + arch * .3 + Hq - rv * .25 + .05]], false), gilt(If + .45), .3 * s); }
+        stern += strokeP(spl(vp, false), gilt(If + .3), Hq * .2 * s, ' stroke-linecap="round"') + (far ? '' : strokeP(spl(vp.slice(0, 22), false), gilt(If + .7), Hq * .06 * s, ' stroke-linecap="round" opacity=".8"')); } }
     if (sp.lantern && !far) { const z = sp.lantern * Lu * .95;
       if (sp.lanterns === 'corners' || sp.lanterns === 'three') { lantern(xAft + sp.tw[0] - .3, hTop + arch * .2 + .1, z); lantern(xAft - .2, hTop + .1, z); }   // big lanterns on both quarters of the taffrail
       if (sp.lanterns !== 'corners') lantern(xAft + sp.tw[0] * .5, hTop + arch * .7, z, { post: sp.lanternPost });
@@ -542,6 +558,14 @@ function build(u, L, o, mode) {
       bow += strokeP(tim, tone(sp.trim, If), .28 * s) + strokeP(spl(R1) + spl(R2), sp.gilt ? tone('brass', If + .2) : tone(sp.trim, If + .25), .42 * s) + strokeP(spl(R1), ink(sp.trim), .12 * s, ' opacity=".5"'); }
     // a carved billet at the head: a dark scroll, no figure
     bow += dot(tip[0] - .2, tip[1] + .5, 1.05 * Lu) + ` fill="${tone(hullK, If - .2)}"${ow ? ` stroke="${ink(hullK)}" stroke-width="${f(ow * .7)}"` : ''}/>` + (plain ? '' : strokeP('M' + pp(tip[0] + .5, tip[1] + .3) + 'Q' + pp(tip[0] - .2, tip[1] + 1.4) + ' ' + pp(tip[0] - .8, tip[1] + .5) + 'Q' + pp(tip[0] - .3, tip[1] - .1) + ' ' + pp(tip[0] - .1, tip[1] + .6), sp.gilt ? tone('brass', If + .3) : tone(sp.trim, If + .35), .2 * s));
+    if (sp.headCarve && !plain) { // the Revenge: a gilt head — carved scrolls running along the trailboard of the knee to a big gilt volute at the tip (its own pattern, no figure)
+      const g = I => tone('brass', I), P = t => [lerp(sA[0] + .6, tip[0] + 1.4, t), lerp(sA[1] - dep * .42, tip[1] - .4, Math.pow(t, .8))]; let sc = '', vine = [];
+      for (let k = 0; k <= 8; k++) vine.push(P(k / 8));
+      for (let k = 0; k < 5; k++) { const c = P(.1 + k * .17), r = (.95 - k * .09) * Lu, sg = k % 2 ? -1 : 1;
+        sc += 'M' + pp(c[0] + r * 1.2, c[1] - sg * r * .2) + 'Q' + pp(c[0] + r * .2, c[1] + sg * r * 1.5) + ' ' + pp(c[0] - r * .7, c[1] + sg * r * .3) + 'Q' + pp(c[0] - r * .4, c[1] - sg * r * .5) + ' ' + pp(c[0] + r * .1, c[1] - sg * r * .05); }
+      const vc = [tip[0] + .5, tip[1] - .2], vr = 1.55 * Lu, vp = []; for (let i = 0; i <= 20; i++) { const th = 2 * Math.PI * i / 20, a = Math.PI * .1 + th; vp.push([vc[0] + vr * (1 - .6 * i / 20) * Math.cos(a), vc[1] + vr * (1 - .6 * i / 20) * Math.sin(a)]); }
+      bow += strokeP(spl(vine), g(If - .1), .34 * s) + strokeP(sc, g(If + .35), .22 * s) + strokeP(spl(vp), g(If + .3), .5 * s, ' stroke-linecap="round"') + (near ? strokeP(spl(vp.slice(0, 13)), g(If + .75), .16 * s, ' opacity=".8"') : '')
+        + strokeP(seg([sA[0] + .2, sA[1] - .2], [sB[0] + .4, sB[1] + .4]), g(If + .2), .36 * s); }
     bowBack += spar(B0, Bp(1), .95 * Lu, .62 * Lu, sp.spar);
     if (bs.jib) { const J0 = [Bp(.6)[0] + nUp[0] * jOff, Bp(.6)[1] + nUp[1] * jOff], cap = (t, w, a0, a1, km, I) => { const c = Bp(t), e = [bd[0] * w / 2, bd[1] * w / 2]; return fillP(poly([[c[0] - e[0] + nUp[0] * a0, c[1] - e[1] + nUp[1] * a0], [c[0] + e[0] + nUp[0] * a0, c[1] + e[1] + nUp[1] * a0], [c[0] + e[0] + nUp[0] * a1, c[1] + e[1] + nUp[1] * a1], [c[0] - e[0] + nUp[0] * a1, c[1] - e[1] + nUp[1] * a1]]), tone(km, I)) + edge(poly([[c[0] - e[0] + nUp[0] * a0, c[1] - e[1] + nUp[1] * a0], [c[0] + e[0] + nUp[0] * a0, c[1] + e[1] + nUp[1] * a0], [c[0] + e[0] + nUp[0] * a1, c[1] + e[1] + nUp[1] * a1], [c[0] - e[0] + nUp[0] * a1, c[1] - e[1] + nUp[1] * a1]]), km, .5); };
       bowBack += spar(J0, Bend, .46 * Lu, .28 * Lu, sp.spar) + cap(.64, .45 * Lu, -.75 * Lu, jOff + .5 * Lu, 'rope', If - .1) + cap(.995, 1 * Lu, -.8 * Lu, jOff + .62 * Lu, 'tar', If - .05); }   // the heel lashing and the cap (an eselhoofd) at the end of the bowsprit
@@ -714,10 +738,14 @@ function build(u, L, o, mode) {
     if (qC != null) mast += spar(A(Q[1] - .005), A(1), .5 * rr, .28 * rr, sp.spar);
     const T = A(qT), tw2 = 2.5 * rr * (sp.topK || 1), top = sp.topRound   // a big round top (the Dutchman): a deep bowl with a rail round it
       ? spl([[T[0] - tw2, T[1] + .3 * rr], [T[0] + tw2, T[1] + .3 * rr], [T[0] + tw2 * .92, T[1] - .7 * rr], [T[0] + tw2 * .55, T[1] - 1.45 * rr], [T[0], T[1] - 1.7 * rr], [T[0] - tw2 * .55, T[1] - 1.45 * rr], [T[0] - tw2 * .92, T[1] - .7 * rr]], true)
+      : sp.topRail ? poly([[T[0] - tw2 * .7, T[1] - .7 * rr], [T[0] + tw2 * .7, T[1] - .7 * rr], [T[0] + tw2, T[1] + .3 * rr], [T[0] - tw2, T[1] + .3 * rr]])   // sp.topRail (the Revenge): a deeper top with a rail on it, in front of the sails
       : poly([[T[0] - tw2 * .82, T[1] - .35 * rr], [T[0] + tw2 * .82, T[1] - .35 * rr], [T[0] + tw2, T[1] + .3 * rr], [T[0] - tw2, T[1] + .3 * rr]]);
     if (phi && !plain) { const hT = T[1] + (phi > 0 ? .3 : -.35) * rr, tf = poly([[T[0] - tw2, hT, -tw2], [T[0] + tw2, hT, -tw2], [T[0] + tw2, hT, tw2], [T[0] - tw2, hT, tw2]]);   // the top seen from above (below)
       mast += fillP(tf, tone(/ochre/.test(sp.spar) ? 'tar' : sp.spar, lum([0, phi > 0 ? 1 : -1, 0]) - .1)) + edge(tf, sp.spar, .5); }
-    mast += fillP(top, tone(/ochre/.test(sp.spar) ? 'tar' : sp.spar, lum([0, -.5, .8]))) + edge(top, sp.spar, .6) + (plain ? '' : strokeP(seg([T[0] - tw2, T[1] + .3 * rr], [T[0] + tw2, T[1] + .3 * rr]), tone(sp.spar, If + .5), .2 * s, ' opacity=".7"'));
+    const topSvg = fillP(top, tone(/ochre/.test(sp.spar) ? 'tar' : sp.spar, lum([0, -.5, .8]))) + edge(top, sp.spar, .6) + (plain ? '' : strokeP(seg([T[0] - tw2, T[1] + .3 * rr], [T[0] + tw2, T[1] + .3 * rr]), tone(sp.spar, If + .5), .2 * s, ' opacity=".7"'));
+    if (!sp.topRail) mast += topSvg;
+    else { let po = ''; for (let k = 0; k <= 6; k++) { const X = T[0] - tw2 * .96 + k * tw2 * .96 / 3; po += seg([X, T[1] + .2 * rr], [X, T[1] + 1.3 * rr]); }
+      spars += topSvg + strokeP(po, tone(sp.spar, If - .1), .26 * rr * s) + strokeP(seg([T[0] - tw2, T[1] + 1.3 * rr], [T[0] + tw2, T[1] + 1.3 * rr]), sp.gilt ? tone('brass', If + .2) : tone(sp.spar, If + .1), .34 * rr * s, ' stroke-linecap="round"'); }
     if (sp.topRound) { const Rt = R(nm + 'tr'); let po = ''; for (let k = 0; k <= 6; k++) { const X = T[0] - tw2 * .95 + k * tw2 * .95 / 3, hh = (1.5 + (Rt() < .25 ? -.8 * Rt() : 0)) * rr; po += seg([X, T[1] + .2 * rr], [X, T[1] + hh]); }
       mast += strokeP(po, tone(sp.spar, If - .1), .3 * rr * s) + strokeP(seg([T[0] - tw2 * 1.02, T[1] + 1.45 * rr], [T[0] + tw2 * 1.02, T[1] + 1.5 * rr]), tone(sp.spar, If + .1), .38 * rr * s, ' stroke-linecap="round"'); }
     if (qC != null) { const c = A(qC); mast += strokeP(seg([c[0] - 1.5 * rr, c[1]], [c[0] + 1.5 * rr, c[1]]), tone(sp.yard, If), .4 * rr * s, ' stroke-linecap="round"'); }
