@@ -292,6 +292,8 @@ function gunGeo(o) {
  * trucks, the bed and the quoin under the breech, the breeching rope round the cascabel and tackles as paired
  * lines. The bore is `len` units long (60) at s = 1; the carriage is 35 long and stands on y. elev — degrees up;
  * recoil 0..1 — run back (the breeching goes taut); carriage: false — the barrel alone, (x, y) — its trunnion.
+ * The breeching and the gun tackle end at the ship's side: sideX — its local x (22; put your bulwark there);
+ * side: false — a gun standing free (the breeching lies on the deck, no tackles); breech: false, tackle: false.
  * cannon.muzzle(opts) -> { x, y, dir } for muzzleFlash.
  */
 function cannon(u, L, o = {}) {
@@ -307,18 +309,18 @@ function cannon(u, L, o = {}) {
     const sy = (Rw() - .5) * rs * .5;
     w += `<defs><clipPath id="${cid}"><circle cx="${f(cf[0])}" cy="${f(cf[1])}" r="${f(rs)}"/></clipPath></defs><g clip-path="url(#${cid})">${g}<path d="M${f(cf[0] - rs)} ${f(cf[1] + sy)}L${f(cf[0] + rs)} ${f(cf[1] + sy + (Rw() - .5) * 1.2)}" stroke="${rp.outline}" stroke-width=".4" opacity=".6"/>`
       + `<circle cx="${f(cf[0])}" cy="${f(cf[1])}" r="${f(rs * .88)}" fill="none" stroke="${rp.shadow}" stroke-width="${f(rs * .1)}" opacity=".3"/><ellipse cx="${f(cf[0])}" cy="${f(cf[1] + rs * .92)}" rx="${f(rs * .8)}" ry="${f(rs * .3)}" fill="${L.shadowTint}" opacity=".35"/></g>`;
-    w += `<circle cx="${f(cf[0])}" cy="${f(cf[1])}" r="${f(rs * .44)}" fill="${L.tone('oak', -.3, cf[0], cf[1])}" stroke="${rp.outline}" stroke-width=".35"/>` + shadeSphere(u, cf[0], cf[1], rs * .29, L, 'iron', { outline: .35 });
+    w += `<circle cx="${f(cf[0])}" cy="${f(cf[1])}" r="${f(rs * .4)}" fill="${L.tone('oak', -.3, cf[0], cf[1])}" stroke="${rp.outline}" stroke-width=".35"/>` + shadeSphere(u, cf[0], cf[1], rs * .24, L, 'iron', { outline: .35 });
     const lp = F.v(0, -rs * .42 / s); w += `<path d="M${P2(add(cf, mul(lp, .6)))}L${P2(add(cf, mul(lp, 1.25)))}" stroke="${L.ramp('iron', cf[0], cf[1]).outline}" stroke-width="${f(.6 * s)}" stroke-linecap="round"/>`;
     return w;
   };
   // the cheek's outline (X, Y), from the front bottom, counter-clockwise: front end, steps down to the rear
   const steps = [[14, 14.6], [4, 14.6], [4, 12.3], [-3, 12.3], [-3, 10.2], [-10, 10.2], [-10, 8.2], [-17, 8.2], [-17, 6.3], [-21, 6.3]];
-  const cheek = Z => 'M' + P2(C3(14, 4.6, Z)) + 'L' + steps.map(p => P2(C3(p[0], p[1], Z))).join('L') + `L${P2(C3(-21, 4.2, Z))}L${P2(C3(-18.2, 4.2, Z))}Q${P2(C3(-15, 5.4, Z))} ${P2(C3(-11.6, 4.3, Z))}L${P2(C3(5.2, 4.4, Z))}Q${P2(C3(9, 5.6, Z))} ${P2(C3(12.6, 4.6, Z))}Z`;
+  const cheek = Z => 'M' + P2(C3(14, 3.8, Z)) + 'L' + steps.map(p => P2(C3(p[0], p[1], Z))).join('L') + `L${P2(C3(-21, 3.3, Z))}L${P2(C3(-17.8, 3.3, Z))}Q${P2(C3(-15, 4.7, Z))} ${P2(C3(-12.2, 3.4, Z))}L${P2(C3(5.8, 3.6, Z))}Q${P2(C3(9, 5.2, Z))} ${P2(C3(12.2, 3.8, Z))}Z`;
   const ZN = -7, ZI = -4.2;
   if (car) {
     const w1 = C3(9, 0, ZN - 1.3), w2 = C3(-15, 0, ZN - 1.3);
-    out += seat(u, L, o, w1[0], w1[1], 9.5 * s) + seat(u, L, o, w2[0], w2[1], 8 * s) + seat(u, L, o, ...C3(-3, 0, 0), 36 * s, { opacity: .45, ry: 2.2 * s });
-    out += truck(9, 4.6, 9.6, 7, false) + truck(-15, 3.8, 9.6, 7, false);
+    out += seat(u, L, o, w1[0], w1[1], 8 * s) + seat(u, L, o, w2[0], w2[1], 7 * s) + seat(u, L, o, ...C3(-3, 0, 0), 36 * s, { opacity: .45, ry: 2.2 * s });
+    out += truck(9, 3.9, 9.6, 7, false) + truck(-15, 3.3, 9.6, 7, false);
     out += `<path d="${cheek(4.2)}" fill="${L.tone('oak', -.75, ...C3(0, 9, 4))}" stroke="${L.ramp('oak', ...C3(0, 9, 4)).outline}" stroke-width=".45" stroke-linejoin="round"/>`;
     // axle trees, the bed and the quoin (wedge) with its handle under the breech
     out += shadeBox(u, [{ pts: [C3(-21, 6.3, ZI), C3(-6, 6.3, ZI), C3(-6, 8.4, ZI), C3(-21, 8.4, ZI)], n: F.n('front') }], L, 'oak', { seed: seedOf(o, 6) + 1 });
@@ -328,46 +330,46 @@ function cannon(u, L, o = {}) {
   // the barrel, breech to muzzle: every part is a cylinder of its own, the rings stand proud
   const seg = (x0, x1, r0, r1, extra) => { const p = B(x0), q = B(x1); return shadeCyl(u, p[0], p[1], q[0], q[1], Math.max(r0, r1) * s, L, 'iron', Object.assign({ r1: r0 * s, r2: r1 * s, ell: k, face: 2, outline: .45, seed: seedOf(o, 6) + x0 }, extra)); };
   const cb = B(-31.2), rpI = L.ramp('iron', ...B(0));
-  out += shadeSphere(u, cb[0], cb[1], 2.05 * s, L, 'iron', { outline: .45 }) + seg(-29.8, -28.2, 1.25, 1.5) + seg(-28.4, -26, 2.6, 5.2, { spec: false }) + seg(-26, -24.5, 5.9, 5.9) + seg(-24.5, -10, 5.35, 4.95);
-  { const v0 = B(-21.5, -5.2), v1 = B(-21.5, -6); out += `<ellipse cx="${f(v0[0])}" cy="${f(v0[1])}" rx="${f(1.3 * s)}" ry="${f(.5 * s)}" transform="rotate(${f(F.rot - deg(G.e) * F.fl)} ${f(v0[0])} ${f(v0[1])})" fill="${rpI.core}" stroke="${rpI.outline}" stroke-width=".35"/><circle cx="${f(v1[0])}" cy="${f(v1[1])}" r="${f(.4 * s)}" fill="${rpI.outline}"/>`; } // the vent
-  out += seg(-10, -8.7, 5.4, 5.4) + seg(-8.7, 6, 4.85, 4.45);
-  out += seg(6, 7.2, 4.9, 4.9) + seg(7.2, 27.6, 4.25, 3.2) + seg(26, 26.8, 3.6, 3.6) + seg(27.6, 30.2, 3.2, 3.75, { spec: false }) + seg(30.2, 32.6, 3.75, 4.3) + seg(32.6, 34, 4.3, 3.95);
-  { const mc = B(34), ax = unit(sub(B(34), B(0))), nn = [-ax[1], ax[0]], br = 1.75 * s; // the bore
+  out += shadeSphere(u, cb[0], cb[1], 1.8 * s, L, 'iron', { outline: .45 }) + seg(-29.9, -28.2, 1.1, 1.3) + seg(-28.4, -26, 2.3, 4.5, { spec: false }) + seg(-26, -24.6, 5.1, 5.1) + seg(-24.6, -10, 4.6, 4.25);
+  { const v0 = B(-21.5, -4.5), v1 = B(-21.5, -5.2); out += `<ellipse cx="${f(v0[0])}" cy="${f(v0[1])}" rx="${f(1.3 * s)}" ry="${f(.5 * s)}" transform="rotate(${f(F.rot - deg(G.e) * F.fl)} ${f(v0[0])} ${f(v0[1])})" fill="${rpI.core}" stroke="${rpI.outline}" stroke-width=".35"/><circle cx="${f(v1[0])}" cy="${f(v1[1])}" r="${f(.4 * s)}" fill="${rpI.outline}"/>`; } // the vent
+  out += seg(-10, -8.8, 4.7, 4.7) + seg(-8.8, 6, 4.2, 3.85);
+  out += seg(6, 7.1, 4.25, 4.25) + seg(7.1, 27.8, 3.65, 2.75) + seg(26.2, 26.9, 3.1, 3.1) + seg(27.8, 30.4, 2.75, 3.25, { spec: false }) + seg(30.4, 32.7, 3.25, 3.75) + seg(32.7, 34, 3.75, 3.4);
+  { const mc = B(34), ax = unit(sub(B(34), B(0))), nn = [-ax[1], ax[0]], br = 1.5 * s; // the bore
     out += `<path d="${ellD(mc, mul(nn, br), mul(ax, br * k))}" fill="${mix(rpI.outline, '#0a0806', .55)}"/><path d="${halfD(add(mc, mul(ax, .25 * s)), mul(nn, br * .96), mul(ax, br * k * .96))}" stroke="${rpI.half}" stroke-width="${f(.3 * s)}" fill="none" opacity=".5"/>`; }
   // soot and rust in the hollows behind the rings
-  for (const [xr, rr] of [[-24.3, 5.3], [-8.5, 4.8], [7.4, 4.2], [27, 3.2]]) { const c = B(xr), ax = unit(sub(B(34), B(0))), nn = [-ax[1], ax[0]]; out += `<path d="${halfD(c, mul(nn, rr * s * .97), mul(ax, -rr * s * k))}" stroke="${mix(rpI.outline, '#5a2c14', .35)}" stroke-width="${f(.7 * s)}" fill="none" opacity=".4"/>`; }
-  if (!car) { const tc = B(0, .5, -6.2); return out + disc(u, L, tc, 2.1 * s, 'iron'); }
+  for (const [xr, rr] of [[-24.4, 4.6], [-8.6, 4.2], [7.3, 3.6], [27.1, 2.75]]) { const c = B(xr), ax = unit(sub(B(34), B(0))), nn = [-ax[1], ax[0]]; out += `<path d="${halfD(c, mul(nn, rr * s * .97), mul(ax, -rr * s * k))}" stroke="${mix(rpI.outline, '#5a2c14', .35)}" stroke-width="${f(.7 * s)}" fill="none" opacity=".4"/>`; }
+  if (!car) { const tc = B(0, .5, -6.2); return out + disc(u, L, tc, 1.9 * s, 'iron'); }
   // the near cheek: its face, the treads of the steps and its front end; bolts; the capsquare over the trunnion
-  { const cid = nid('gc', u), fc = [C3(-21, 4, ZN), C3(14, 4, ZN), C3(14, 14.6, ZN), C3(-21, 14.6, ZN)], g = mat('oak', L, { form: 'plane', x1: fc[0][0], y1: fc[2][1], x2: fc[1][0], y2: fc[0][1], n: F.n('front'), u }), rp = g.ramp, la = L.at(...C3(0, 9, ZN));
+  { const cid = nid('gc', u), fc = [C3(-21, 3.2, ZN), C3(14, 3.2, ZN), C3(14, 14.6, ZN), C3(-21, 14.6, ZN)], g = mat('oak', L, { form: 'plane', x1: fc[0][0], y1: fc[2][1], x2: fc[1][0], y2: fc[0][1], n: F.n('front'), u }), rp = g.ramp, la = L.at(...C3(0, 9, ZN));
     let tr = '';
     for (let i = 0; i + 1 < steps.length; i += 2) tr += poly([C3(steps[i][0], steps[i][1], ZN), C3(steps[i + 1][0], steps[i + 1][1], ZN), C3(steps[i + 1][0], steps[i + 1][1], ZI), C3(steps[i][0], steps[i][1], ZI)]);
-    out += `<path d="${tr}" fill="${L.tone('oak', clamp(-la.dy * .9 + .1, -1, 1), ...C3(0, 9, ZN))}" stroke="${rp.outline}" stroke-width=".4" stroke-linejoin="round"/><path d="${poly([C3(14, 4.6, ZN), C3(14, 14.6, ZN), C3(14, 14.6, ZI), C3(14, 4.6, ZI)])}" fill="${L.tone('oak', clamp(la.dx * F.fl, -1, 1), ...C3(14, 9, ZN))}" stroke="${rp.outline}" stroke-width=".4" stroke-linejoin="round"/>`;
+    out += `<path d="${tr}" fill="${L.tone('oak', clamp(-la.dy * .9 + .1, -1, 1), ...C3(0, 9, ZN))}" stroke="${rp.outline}" stroke-width=".4" stroke-linejoin="round"/><path d="${poly([C3(14, 3.8, ZN), C3(14, 14.6, ZN), C3(14, 14.6, ZI), C3(14, 3.8, ZI)])}" fill="${L.tone('oak', clamp(la.dx * F.fl, -1, 1), ...C3(14, 9, ZN))}" stroke="${rp.outline}" stroke-width=".4" stroke-linejoin="round"/>`;
     let gr = ''; const Rg = rng(seedOf(o, 6) + 9);
-    for (let i = 0; i < 12; i++) { const X = -21 + Rg() * 30, Y = 4.8 + Rg() * 9.4, l = 4 + Rg() * 9, a = C3(X, Y, ZN), b = C3(X + l, Y + (Rg() - .5) * .5, ZN), c = C3(X + l / 2, Y + (Rg() - .5) * .9, ZN); gr += `<path d="M${P2(a)}Q${P2(c)} ${P2(b)}" stroke="${i % 3 ? rp.core : rp.lit}" stroke-width=".32" fill="none" opacity="${i % 3 ? .32 : .24}"/>`; }
-    gr += `<path d="M${P2(C3(-21, 8.9, ZN))}L${P2(C3(-4, 9.1, ZN))}L${P2(C3(14, 8.8, ZN))}" stroke="${rp.outline}" stroke-width=".4" fill="none" opacity=".55"/>`; // the cheek is two planks
+    for (let i = 0; i < 12; i++) { const X = -21 + Rg() * 30, Y = 4 + Rg() * 10, l = 4 + Rg() * 9, a = C3(X, Y, ZN), b = C3(X + l, Y + (Rg() - .5) * .5, ZN), c = C3(X + l / 2, Y + (Rg() - .5) * .9, ZN); gr += `<path d="M${P2(a)}Q${P2(c)} ${P2(b)}" stroke="${i % 3 ? rp.core : rp.lit}" stroke-width=".32" fill="none" opacity="${i % 3 ? .32 : .24}"/>`; }
+    gr += `<path d="M${P2(C3(-10, 7.2, ZN))}L${P2(C3(-2, 7.4, ZN))}L${P2(C3(14, 7.1, ZN))}" stroke="${rp.outline}" stroke-width=".4" fill="none" opacity=".55"/>`; // the cheek is two planks
     // the barrel's shadow on the cheek and the dark under the steps
     const sg = nid('gs', u); out += `<defs>${g.defs}<clipPath id="${cid}"><path d="${cheek(ZN)}"/></clipPath>${linGrad(sg, 0, C3(0, 15, ZN)[1], 0, C3(0, 9.5, ZN)[1], [[0, L.shadowTint, .5], [1, L.shadowTint, 0]])}</defs>`;
     out += `<path d="${cheek(ZN)}" fill="${g.fill}"/><g clip-path="url(#${cid})">${gr}<path d="${poly([C3(-21, 16, ZN), C3(14, 16, ZN), C3(14, 9, ZN), C3(-21, 9, ZN)])}" fill="url(#${sg})" opacity="${f(clamp(.35 - la.dy * .5, .2, .8))}"/></g><path d="${cheek(ZN)}" fill="none" stroke="${rp.outline}" stroke-width=".55" stroke-linejoin="round"/>`;
     // worn light edges of the steps on the light's side
     out += `<path d="${line(steps.map(p => C3(p[0], p[1] - .35, ZN)))}" stroke="${mix(rp.lit, '#ffffff', .3)}" stroke-width=".35" fill="none" opacity="${f(clamp(.15 - la.dy * .5, 0, .6))}"/>`;
-    for (const [X, Y] of [[11.4, 12.6], [1, 10.5], [-6.4, 8.6], [-13.4, 6.7], [-19.2, 5.2], [12, 6.2], [-9, 5.6]]) out += rivet(L, C3(X, Y, ZN), .62 * s);
+    for (const [X, Y] of [[11.6, 12.8], [1, 10.6], [-6.4, 8.6], [-13.4, 6.6], [-19.4, 4.8], [12.2, 5.6], [5.6, 5.4], [-9.6, 5]]) out += rivet(L, C3(X, Y, ZN), .62 * s);
   }
-  const tc = B(0, .5, ZN - .8); out += disc(u, L, tc, 2.1 * s, 'iron');
+  const tc = B(0, .5, ZN - .8); out += disc(u, L, tc, 1.9 * s, 'iron');
   { const p = [C3(4.2, 14.9, ZN), C3(5.4, 15, ZN), C3(5.9, 17.2, ZN), C3(8, 18.2, ZN), C3(10.1, 17.2, ZN), C3(10.6, 15, ZN), C3(11.8, 14.9, ZN)]; out += tube(u, L, 'iron', smooth(p), .5 * s, p[3]) + rivet(L, p[0], .5 * s) + rivet(L, p[6], .5 * s); }
-  out += truck(9, 4.6, ZN - 2.6, ZN - .1, true) + truck(-15, 3.8, ZN - 2.6, ZN - .1, true);
+  out += truck(9, 3.9, ZN - 2.6, ZN - .1, true) + truck(-15, 3.3, ZN - 2.6, ZN - .1, true);
   // ring bolts, the breeching and the tackles
   const ring = (X, Y, r = 1.15) => { const c = C3(X, Y, ZN - .2), v = F.v(r, 0), w = F.v(0, r * 1.15); return tube(u, L, 'iron', ellD(add(c, [0, r * s * .9]), v, w), .3 * s, c) + rivet(L, c, .5 * s); };
-  out += ring(-1, 9.6) + ring(11.6, 8.6, .95) + ring(-20, 5.2, .95);
-  if (o.breech !== false) { const slack = 1 - clamp(o.recoil || 0), side = F.p((o.sideX != null ? o.sideX : 22), -10.5), nk = B(-29), rr = .74 * s, rg = C3(-1, 8.4, ZN - .4);
-    const up = [add(nk, F.v(-.4, -1.3)), add(nk, F.v(1.2, .9)), mixP(nk, rg, .45), add(mixP(nk, rg, .8), F.v(-.6, .5 * slack)), rg];
-    const fw = [rg, add(mixP(rg, side, .33), F.v(0, (2.6 * slack + .2))), add(mixP(rg, side, .7), F.v(0, (2 * slack + .1))), side];
-    out += rope(u, L, up, { r: rr, seed: seedOf(o, 6) + 3 }) + rope(u, L, fw, { r: rr, seed: seedOf(o, 6) + 4 }); }
-  if (o.tackle !== false) { const rpR = L.ramp('rope', ...C3(0, 6, ZN));
+  out += ring(-1, 8.6, 1.05) + ring(11.8, 8.4, .9) + ring(-20, 4.9, .9);
+  if (o.breech !== false) { const slack = 1 - clamp(o.recoil || 0), side = F.p((o.sideX != null ? o.sideX : 22), -10.5), nk = B(-29), rr = .74 * s, rg = C3(-1, 7.5, ZN - .4);
+    const up = [add(nk, F.v(.3, -1.2)), add(nk, F.v(-.9, .6)), C3(-23.2, 11.4, ZN - .6), C3(-20.6, 8.4, ZN - .6), add(C3(-11, 6.7, ZN - .5), F.v(0, 1.1 * slack)), rg];
+    const fw = o.side === false ? [rg, C3(1.6, 3.4, ZN - 1.6), C3(6.5, .5, ZN - 3.2), C3(14.5, .3, ZN - 3.6)] : [rg, add(mixP(rg, side, .33), F.v(0, (2.2 * slack + .2))), add(mixP(rg, side, .7), F.v(0, (1.8 * slack + .1))), side];
+    out += rope(u, L, up, { r: rr, seed: seedOf(o, 6) + 3 }) + rope(u, L, fw, { r: rr, seed: seedOf(o, 6) + 4, whip: o.side === false }); }
+  if (o.tackle !== false && o.side !== false) { const rpR = L.ramp('rope', ...C3(0, 6, ZN));
     const pair = (a, b, sag) => { const m = add(mixP(a, b, .5), [0, sag * s]), nn = unit([-(b[1] - a[1]), b[0] - a[0]]); let t = '';
       for (const e of [-.34, .34]) t += `<path d="M${P2(add(a, mul(nn, e * s)))}Q${P2(add(m, mul(nn, e * s)))} ${P2(add(b, mul(nn, e * s)))}" stroke="${rpR.outline}" stroke-width="${f(.5 * s)}" fill="none"/><path d="M${P2(add(a, mul(nn, e * s)))}Q${P2(add(m, mul(nn, e * s)))} ${P2(add(b, mul(nn, e * s)))}" stroke="${e < 0 ? rpR.half : rpR.core}" stroke-width="${f(.26 * s)}" fill="none"/>`;
-      const blk = p => { const g = mat('oak', L, { form: 'sphere', x1: p[0], y1: p[1], r: 1.2 * s, u }), an = deg(Math.atan2(b[1] - a[1], b[0] - a[0])); return `<defs>${g.defs}</defs><ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(1.2 * s)}" ry="${f(.8 * s)}" transform="rotate(${f(an)} ${f(p[0])} ${f(p[1])})" fill="${g.fill}" stroke="${g.ramp.outline}" stroke-width=".35"/>`; };
+      const blk = p => { const g = mat('oak', L, { form: 'sphere', x1: p[0], y1: p[1], r: 1 * s, u }), an = deg(Math.atan2(b[1] - a[1], b[0] - a[0])); return `<defs>${g.defs}</defs><ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(1 * s)}" ry="${f(.66 * s)}" transform="rotate(${f(an)} ${f(p[0])} ${f(p[1])})" fill="${g.fill}" stroke="${g.ramp.outline}" stroke-width=".35"/>`; };
       return t + blk(mixP(a, b, .16)) + blk(mixP(a, b, .84)); };
-    out += pair(C3(11.6, 7.6, ZN - .4), F.p((o.sideX != null ? o.sideX : 22), -13.5), .6) + pair(C3(-20, 4.4, ZN - .4), F.p(-34, -.9), .5); }
+    out += pair(C3(11.8, 7.5, ZN - .4), F.p((o.sideX != null ? o.sideX : 22), -13.5), .6) + pair(C3(-20, 4, ZN - .4), F.p(-34, -.9), .5); }
   return out;
 }
 /** cannon.muzzle(opts) -> { x, y, dir }: the middle of the muzzle's face and the bore's direction (degrees, 0 — to the right, 90 — down) for muzzleFlash. */
@@ -515,6 +517,9 @@ function anchor(u, L, o = {}) {
   out += shadeSphere(u, ...p(0, -.3), 1.75 * s, L, 'iron', { outline: .4 });
   return out + stockHalf(sb, true) + hoop(.45) + hoop(.12);
 }
+
+/** anchor.ring(opts) -> { x, y }: the top of the anchor's ring — where its cable or chain is bent on. */
+anchor.ring = (o = {}) => { const F = frame(o), q = (o.h || 40) / 40, p = F.p(0, -42.6 * q); return { x: p[0], y: p[1] }; };
 
 // ——— light: lantern, candle ———
 /**
