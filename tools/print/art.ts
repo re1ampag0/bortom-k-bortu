@@ -42,6 +42,9 @@ export const GLASS_SAT = 1.2;
 /** Target mean relative luminance under the text. The mock-ups stand at 0.007-0.016 (text 12-16 : 1); 0.02 is as dark as a
  *  laser on matt coated stock still prints without a black slab — text about 12 : 1. */
 export const GLASS_TARGET = 0.02;
+/** A sample knob, not for the set (user's plan 12.11, 13а): PRINT_GLASS_CLEAR=10|20 — a glass about 10 / 20 % more transparent:
+ *  less blur, less tint, a little lighter. The set itself is built with 0. */
+export const GLASS_CLEAR = Math.max(0, Math.min(40, Number(process.env.PRINT_GLASS_CLEAR) || 0)) / 100;
 
 export interface GlassBox { top: number; tint: string }
 export interface ArtInfo { url: string; file: string; dark: number; glassMean: number; glassP95: number }
@@ -82,7 +85,7 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
   // bleed — extra picture units (of 200 × 280) beyond each edge: the raster grows with the same density
   const uw = 200 + 2 * bleed, uh = 280 + 2 * bleed, W = Math.round((ctx.opts.draft ? 400 : 1000) * uw / 200), H = Math.round((ctx.opts.draft ? 400 : 1000) * 1.4 * uh / 280), dir = path.join(CACHE, 'art');
   fs.mkdirSync(dir, { recursive: true });
-  const hash = sha1([normalizeIds(svg), JSON.stringify(glass), W, PROFILE_VERSION, GLASS_TARGET, GLASS_SAT, PROFILE_SAT, CURVE.join(';')].join('|')).slice(0, 12);
+  const hash = sha1([normalizeIds(svg), JSON.stringify(glass), W, PROFILE_VERSION, GLASS_TARGET, GLASS_SAT, PROFILE_SAT, CURVE.join(';'), GLASS_CLEAR].join('|')).slice(0, 12);
   const file = `${key}-${hash}.jpg`, full = path.join(dir, file), meta = full + '.json', url = `../cache/art/${file}`;
   used.add(file); used.add(file + '.json');
   if (fs.existsSync(full) && fs.existsSync(meta)) return { url, file, ...JSON.parse(fs.readFileSync(meta, 'utf8')) };
@@ -97,7 +100,7 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
   const png = await page.screenshot({ clip: { x: 0, y: 0, width: uw, height: uh } });
   const k = W / CARD.w, g = FACE.glass;
   const box = glass && { x: Math.round(g.inset * k), y: Math.round(glass.top * k), w: Math.round((CARD.w - 2 * g.inset) * k), h: Math.round((CARD.h - g.bottom - glass.top) * k), r: g.radius * k, tint: glass.tint };
-  const res = await page.evaluate(async ({ b64, W, H, box, lut, target, sat, gsat }) => {
+  const res = await page.evaluate(async ({ b64, W, H, box, lut, target, sat, gsat, clear }) => {
     const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     const g = c.getContext('2d', { willReadFrequently: true })!; g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, W, H);
@@ -117,7 +120,7 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       const bg = bc.getContext('2d', { willReadFrequently: true })!;
       bg.drawImage(c, 0, 0); // an unblurred copy under the blur keeps the canvas edge from fading to transparent
       // blurred; the picture keeps its colour under the glass
-      bg.filter = `blur(${(W * 0.0233).toFixed(1)}px)`; bg.drawImage(c, 0, 0);
+      bg.filter = `blur(${(W * 0.0233 * (1 - clear * 2.5)).toFixed(1)}px)`; bg.drawImage(c, 0, 0);
       const src = bg.getImageData(box.x, box.y, box.w, box.h).data, dst = g.getImageData(box.x, box.y, box.w, box.h), o = dst.data;
       const lin = Float32Array.from({ length: 256 }, (_, v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
       const tint = [1, 3, 5].map(i => parseInt(box.tint.slice(i, i + 2), 16));
@@ -128,7 +131,7 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       // hue at the pixel's own brightness. A near-neutral tint («Жемчужина») gives a charcoal glass and is not saturated.
       const luma = (r: number, gr: number, b: number) => 0.2126 * r + 0.7152 * gr + 0.0722 * b;
       const Yt = Math.max(1, luma(tint[0], tint[1], tint[2])), ts = (Math.max(...tint) - Math.min(...tint)) / Math.max(1, ...tint);
-      const K = ts < 0.3 ? 0.8 : 0.65, gs = ts < 0.3 ? 1 : gsat, hue = tint.map(v => v / Yt), FL = 6;
+      const K = (ts < 0.3 ? 0.8 : 0.65) * (1 - clear), gs = ts < 0.3 ? 1 : gsat, hue = tint.map(v => v / Yt), FL = 6;
       const px = (i: number, f: number) => { const r = src[i] * f, gr = src[i + 1] * f, b = src[i + 2] * f, m = luma(r, gr, b) * K + FL, p = [r * (1 - K) + hue[0] * m, gr * (1 - K) + hue[1] * m, b * (1 - K) + hue[2] * m], y = luma(p[0], p[1], p[2]); return p.map(v => Math.max(0, Math.min(255, y + (v - y) * gs))); };
       const lum = (p: number[]) => 0.2126 * lin[Math.min(255, Math.round(p[0]))] + 0.7152 * lin[Math.min(255, Math.round(p[1]))] + 0.0722 * lin[Math.min(255, Math.round(p[2]))];
       const BANDS = 10, bh = box.h / BANDS, fb: number[] = [];
@@ -153,7 +156,7 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       mean = s / n; let acc = 0; for (let b = 1000; b >= 0; b--) { acc += hist[b]; if (acc >= n * 0.05) { p95 = b / 1000; break; } }
     }
     return { jpeg: c.toDataURL('image/jpeg', 0.9).split(',')[1], dark: dark / (rows * W), glassMean: mean, glassP95: p95 };
-  }, { b64: png.toString('base64'), W, H, box, lut: curveLut(), target: GLASS_TARGET, sat: PROFILE_SAT, gsat: GLASS_SAT });
+  }, { b64: png.toString('base64'), W, H, box, lut: curveLut(), target: GLASS_TARGET * (1 + GLASS_CLEAR * 3), sat: PROFILE_SAT, gsat: GLASS_SAT, clear: GLASS_CLEAR });
   const info = { dark: +res.dark.toFixed(4), glassMean: +res.glassMean.toFixed(4), glassP95: +res.glassP95.toFixed(4) };
   fs.writeFileSync(full, Buffer.from(res.jpeg, 'base64')); fs.writeFileSync(meta, JSON.stringify(info));
   return { url, file, ...info };
