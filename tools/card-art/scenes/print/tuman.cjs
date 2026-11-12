@@ -12,7 +12,7 @@ const light = { time: 'day', key: { type: 'sun', az: 0, el: 8, color: '#e9e2d0',
 const HZ = 124, WL = 134;   // horizon (no line: the sea goes into the fog); waterline of the middle ship
 const skel = { horizon: HZ, eye: 4, items: [
   ['ship', 42, WL, 118, 92, 'water'], ['ghostL', 0, 129, 34, 38, 'water'], ['ghostR', 160, 130, 40, 42, 'water'],
-  ['rail', 0, 186, 200, 14, 'our deck'], ['coil', 106, 176, 30, 8, 'rail'], ['post', 22, 182, 8, 46, 'rail'], ['lantern', 24, 176, 15, 34, 'post hook']] };
+  ['rail', 0, 186, 200, 18, 'our side'], ['coil', 109, 176, 24, 7, 'rail'], ['post', 23, 182, 4, 54, 'rail'], ['lantern', 26, 163, 13, 30, 'post hook']] };
 
 module.exports = { name: 'Туман', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {

@@ -119,9 +119,9 @@ module.exports = {
     // the kit's ripples on the lower face and the foot, larger towards the viewer
     // water draining down the face: long streaks of lace from under the lip down into the face, each its own length
     let streaks = '';
-    for (let i = 0; i < 22; i++) {
-      const t0 = .14 + R() * .4, a0 = along(under, t0), a = [a0[0] - 3 - R() * 10, a0[1] + R() * 4], len = 14 + R() * 40, bend = 2 + R() * 6, th = .25 + R() * .45, dx = -(3 + R() * 12);
-      streaks += `<path d="M${f(a[0])} ${f(a[1])}c${f(bend * .3)} ${f(len * .35)} ${f(dx * .4)} ${f(len * .7)} ${f(dx)} ${f(len)}c${f(-dx * .3 + th)} ${f(-len * .3)} ${f(-dx * .7 + bend * .3 + th * 2)} ${f(-len * .65)} ${f(-dx + th * 1.6)} ${f(-len)}z" fill="${lace}" opacity="${f(.1 + R() * .24)}"/>`;
+    for (let i = 0; i < 30; i++) {
+      const top = i % 2, a0 = top ? along(back, .45 + R() * .5) : along(under, .14 + R() * .4), a = top ? [a0[0] - R() * 8, a0[1] + 8 + R() * 14] : [a0[0] - 3 - R() * 14, a0[1] + R() * 6], len = 14 + R() * 40, bend = 2 + R() * 6, th = .25 + R() * .45, dx = -(3 + R() * 12);
+      streaks += `<path d="M${f(a[0])} ${f(a[1])}c${f(bend * .3)} ${f(len * .35)} ${f(dx * .4)} ${f(len * .7)} ${f(dx)} ${f(len)}c${f(-dx * .3 + th)} ${f(-len * .3)} ${f(-dx * .7 + bend * .3 + th * 2)} ${f(-len * .65)} ${f(-dx + th * 1.6)} ${f(-len)}z" fill="${lace}" opacity="${f(.07 + R() * .17)}"/>`;
     }
     inside += streaks;
     // the dark foot (under the glass): the wave's base in its own shadow
@@ -145,6 +145,9 @@ module.exports = {
     let drops = '';
     for (let i = 0; i < 22; i++) { const x = 80 + R() * 76, y = yOn(back, Math.min(146, x)) - 1 - R() * 10, l = .4 + R() * .9; drops += `<path d="M${f(x)} ${f(y)}l${f(l)} ${f(-l * .35)}" stroke="${mist}" stroke-width="${f(.3 + R() * .4)}" stroke-linecap="round" opacity="${f(.25 + R() * .4)}"/>`; }
     wave += spray + drops + K.splash(u, { x: 141, y: 33, w: 10, h: 6, seed: 2, L, wind: 1 });
+    // the foot: a band of churned white water along the curve of the foot, then the foam in broken patches
+    const wb = nid('wb', u), wbf = nid('wbf', u), fz = foot.slice(2, 10), wbd = sp(fz) + sp(fz.slice().reverse().map(p => [p[0] + 4, p[1] + 7])).replace(/^M/, 'L') + 'Z';
+    wave += `<defs>${lin(wb, 0, 130, 0, 236, [[0, mix(lace, L.pal.sea[1], .35), .55], [1, mix(lace, L.pal.sea[1], .5), .35]])}${blur(wbf, 1.6, [-30, 110, 260, 150])}</defs><path d="${wbd}" fill="url(#${wb})" filter="url(#${wbf})"/>`;
     // the foot: churned water where the face meets the trough, in broken patches
     wave += crestFoam(u, L, foot.slice(2, 10).map(p => [p[0], p[1] - 1]), { seed: 19, h: 1.5, gap: .45 });
 

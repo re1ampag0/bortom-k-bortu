@@ -12,27 +12,17 @@ const HZ = 120, WL = 127, WF = 123;   // horizon; waterlines of the near and the
 const skel = { horizon: HZ, eye: 3, items: [
   ['ship', 48, WL, 132, 94, 'water'], ['far', 18, WF, 34, 33, 'water'], ['crest', 0, 236, 90, 30, 'water'], ['wake', 0, 200, 60, 70, 'water']] };
 
-// ——— KIT-CANDIDATE: a near swell with a breaking top: a long back rising from the left, the crest, a steeper face
-// downwind in its own shade; the body melts into the sea below (no edge); foam on the crest, spindrift blown off
-function swellCrest(u, L, o) {
-  const R = rng(o.seed || 5), x0 = o.x0, x1 = o.x1, y = o.y, h = o.h, px = o.px, wind = o.wind || 1, P = L.pal;
-  // the top line: a slow rise to the crest at px, a quick fall on the face, then back to the level of the sea
-  const H = X => X < px ? h * Math.pow(Math.sin(Math.PI / 2 * clamp((X - x0) / (px - x0))), 1.8) : h * Math.pow(Math.cos(Math.PI / 2 * clamp((X - px) / (x1 - px))), .9);
-  const top = []; for (let X = x0; X <= x1 + .1; X += (x1 - x0) / 28) top.push([X, y - H(X) + Math.sin(X * .21 + 1) * .5]);
-  top.push([x1 + 40, y + 1], [x1 + 80, y + 2]);   // the face runs out into the sea beyond the edge of the picture
-  const sp = top.map(p => f(p[0]) + ' ' + f(p[1])), crest = y - h;
-  const g = nid('sw', u), m = nid('sm', u), mk = nid('sk', u), face = nid('sf', u);
-  const back = mix(P.sea[1], L.keyColor, .12), dark = mix(P.sea[2], L.shadowTint, .3);
-  let out = `<defs>${linGrad(g, 0, crest, 0, y + 6, [[0, mix(back, P.sea[0], .45)], [.25, back], [.7, P.sea[2]], [1, P.sea[2]]])}`
-    + `${linGrad(face, px, 0, x1, 0, [[0, dark, .0], [.12, dark, .55], [.6, dark, .25], [1, dark, 0]])}`
-    + `${linGrad(m, 0, crest, 0, y + 8, [[0, '#fff', 1], [.7, '#fff', 1], [1, '#fff', 0]])}<mask id="${mk}" maskUnits="userSpaceOnUse" x="${f(x0 - 5)}" y="${f(crest - 5)}" width="${f(x1 - x0 + 90)}" height="${f(h + 20)}"><rect x="${f(x0 - 5)}" y="${f(crest - 5)}" width="${f(x1 - x0 + 90)}" height="${f(h + 20)}" fill="url(#${m})"/></mask></defs>`;
-  const body = `M${f(x0)} ${f(y + 10)}L${sp.join('L')}L${f(x1 + 80)} ${f(y + 10)}Z`;
-  out += `<g mask="url(#${mk})"><path d="${body}" fill="url(#${g})"/><path d="${body}" fill="url(#${face})"/>`;
-  // streaks on the back of the swell, following its slope, lighter on the side of the sun
-  for (let i = 0; i < 8; i++) { const X = lerp(x0 + 6, px - 4, R()), l = 5 + R() * 9, yy = y - H(X) + 2 + R() * Math.min(10, H(X) * .7); out += `<path d="M${f(X - l / 2)} ${f(yy + (H(X - l / 2) - H(X)) * .9)}Q${f(X)} ${f(yy - 1)} ${f(X + l / 2)} ${f(yy - (H(X + l / 2) - H(X)) * .9)}" stroke="${mix(P.sea[0], '#ffffff', .25)}" stroke-width="${f(.35 + R() * .35)}" fill="none" opacity="${f(.2 + R() * .25)}"/>`; }
-  out += '</g>';
-  // the crest breaks: foam along the top, thick at the crest, thinning back; spindrift blown off downwind
-  out += K.foam(u, { x: px - 4, y: crest + 1.6, w: 22, h: 2.4, seed: (o.seed || 5) + 3, L }) + K.foam(u, { x: px - 22, y: y - H(px - 22) + 1.6, w: 14, h: 1.2, seed: (o.seed || 5) + 8, L });
+// ——— KIT-CANDIDATE: a whitecap on a near crest of the kit's sea: the lit back of the crest and the dark trough in
+// front of it as soft blurred lenses (no hard body over the sea), foam breaking along the top, lace sliding down the
+// face and torn off downwind
+function whitecap(u, L, o) {
+  const R = rng(o.seed || 5), x = o.x, y = o.y, w = o.w, h = o.h, wind = o.wind || 1, P = L.pal, bl = nid('wcb', u), g1 = nid('wc1', u), g2 = nid('wc2', u);
+  const back = mix(P.sea[1], mix(P.sea[0], L.keyColor, .3), .45), trough = mix(P.sea[2], L.shadowTint, .4);
+  const lens = (cx, cy, rw, up, dn, sk) => `M${f(cx - rw)} ${f(cy)}C${f(cx - rw * .4)} ${f(cy - up)} ${f(cx + rw * (.2 + sk))} ${f(cy - up * 1.1)} ${f(cx + rw)} ${f(cy)}C${f(cx + rw * .3)} ${f(cy + dn)} ${f(cx - rw * .5)} ${f(cy + dn * .9)} ${f(cx - rw)} ${f(cy)}Z`;
+  let out = `<defs><filter id="${bl}" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="${f(h * .22)}"/></filter>${linGrad(g1, 0, y - h, 0, y + h * .2, [[0, back, 1], [.6, back, .55], [1, back, 0]])}${linGrad(g2, 0, y, 0, y + h * 1.2, [[0, trough, .95], [.5, trough, .6], [1, trough, 0]])}</defs>`;
+  out += `<g filter="url(#${bl})"><path d="${lens(x, y + h * .15, w * .62, h, h * .25, .15)}" fill="url(#${g1})"/><path d="${lens(x + wind * w * .1, y + h * .45, w * .7, h * .2, h * 1.1, -.1)}" fill="url(#${g2})"/></g>`;
+  out += K.foam(u, { x: x + wind * w * .08, y: y - h * .42, w: w * .5, h: h * .2, seed: (o.seed || 5) + 3, L });
+  for (let i = 0; i < 4; i++) { const t = .2 + i * .2 + R() * .1; out += K.foam(u, { x: x + wind * w * (.05 + t * .35) + (R() - .5) * w * .1, y: y - h * .2 + t * h * .7, w: w * (.22 - t * .12) * (.7 + R() * .6), h: h * .08, seed: (o.seed || 5) + 11 + i * 7, L }); }
   return out;
 }
 // the spreading arm of the wake astern (a Kelvin arm): a pale band of churned water widening towards the viewer,
@@ -42,7 +32,7 @@ function wakeArm(u, L, a, b, seed) {
   const nx = -(b[1] - a[1]), ny = b[0] - a[0], nl = Math.hypot(nx, ny), wA = t => 1 + t * 9;
   const P = (t, k) => [lerp(a[0], b[0], t) + nx / nl * wA(t) * k, lerp(a[1], b[1], t) + ny / nl * wA(t) * k];
   const pts = []; for (let i = 0; i <= 10; i++) pts.push(P(i / 10, 1)); for (let i = 10; i >= 0; i--) pts.push(P(i / 10, -1));
-  let out = `<defs>${linGrad(id, a[0], a[1], b[0], b[1], [[0, c, .45], [.5, c, .22], [1, c, 0]])}<filter id="${bl}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.4"/></filter></defs><path d="M${pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
+  let out = `<defs>${linGrad(id, a[0], a[1], b[0], b[1], [[0, c, .3], [.4, c, .12], [1, c, 0]])}<filter id="${bl}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.4"/></filter></defs><path d="M${pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
   for (let t = .1 + R() * .06; t < .95; t += .07 + R() * .2) { const p = P(t, -.9 + R() * 1.1), w = (3 + t * 14) * (.5 + R() * .9); out += K.foam(u, { x: p[0], y: p[1], w, h: (.4 + t * 1.2) * (.7 + R() * .5), seed: seed + Math.round(t * 100), L }); }
   return out;
 }
@@ -65,6 +55,6 @@ module.exports = { name: 'Попутный ветер', kind: 'sea', status: 'dr
     bg += K.ship(u, L, { kind: 'merchant', x: 110, y: WL, scale: 1.3, flip: true, wake: true, seed: 9 });
     // the arm of the wake spreading from the stern towards the viewer, under the glass
     bg += wakeArm(u, L, [52, 129], [-6, 182], 30);
-    bg += swellCrest(u, L, { x0: -14, x1: 120, px: 64, y: 244, h: 22, seed: 6, wind: 1 });
+    bg += whitecap(u, L, { x: 42, y: 232, w: 70, h: 12, seed: 6, wind: 1 });
     return [bg, ''];
   } };

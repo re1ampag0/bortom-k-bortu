@@ -9,7 +9,7 @@ const { f, mix, clamp, lerp, rng, nid, linGrad } = K;
 const light = { time: 'day', key: { type: 'sun', az: 25, el: 55, x: 146, y: 62, color: '#fff3d0', power: .8 }, fill: { color: '#bfe3e0', power: .6 }, haze: .6 };
 const HZ = 122, WL = 127, WF = 124;   // horizon; waterlines of the near and the far ship (raised 4 units over the brief: the glass of a sea card starts at y 129)
 const skel = { horizon: HZ, eye: 2, items: [
-  ['ship', 50, WL, 100, 90, 'water'], ['far', 12, WF, 36, 36, 'water'], ['boat', 146, 138, 30, 6, 'water'], ['weed', 22, 192, 46, 5, 'water']] };
+  ['ship', 50, WL, 100, 90, 'water'], ['far', 12, WF, 36, 36, 'water'], ['boat', 155, 129, 17, 5, 'water'], ['tow', 148, 128, 9, 24, 'stern, boat'], ['weed', 16, 160, 44, 4, 'water']] };
 
 // ——— KIT-CANDIDATE: limp sails of a becalmed ship. kit/ship.cjs draws sails only bellied by the wind (full, reefed)
 // or furled; this hangs slack square sails (and the lateen) from the yards of a ship drawn with sails: 'furled', at
@@ -30,7 +30,7 @@ function slackRig(u, L, o) {
   const cl = K.MAT[sp.sail] ? sp.sail : 'canvas', dz = L.dz;
   // the cloth against the sun: lit through, a little darker where it hangs in folds
   const tn = I => col(L.tone(cl, clamp(I, -1, 1)));
-  const glow = tn(dz * .7), deep = tn(Math.max(-1, dz * 1.55)), ridge = mix(tn(dz * .25), col(L.keyColor), .25), ink = col(mix(L.tone(cl, -.1), '#1c0f08', .62));
+  const glow = mix(tn(dz * .4), col(L.keyColor), .22), deep = tn(Math.max(-1, dz * 1.4)), ridge = mix(tn(dz * .25), col(L.keyColor), .25), ink = col(mix(L.tone(cl, -.1), '#1c0f08', .62));
   const ropeD = col(mix(L.tone('tar', dz * .5), '#17110d', .35));
   let sails = '', over = '', defs = '';
   // one hanging sail: the head along the yard (a, b), the foot at the height fy (local), its clews loose
@@ -71,7 +71,7 @@ function slackRig(u, L, o) {
       sail([c[0] - hw, c[1] - .35 * rr], [c[0] + hw, c[1] - .35 * rr], fy, i === 0 ? .9 : .84, `m${mi}s${i}`);
     }
     if (m.aft === 'lateen') { // the lateen hangs from its slanting yard like a curtain: the aft edge falls straight down, the foot sags to the tack
-      const F = [m.x - .105 * sp.len * m.k / .7, hD + Hm * .1], Pk = [m.x + .11 * sp.len * m.k / .7, hD + Hm * .64], cx = Math.min(xAft - 1.5, Pk[0] - .8), Cw = [cx, rail(cx) + 3];
+      const lt = m.lat || [.105, .11, .64], F = [m.x - lt[0] * sp.len * m.k / .7, hD + Hm * .1], Pk = [m.x + lt[1] * sp.len * m.k / .7, hD + Hm * lt[2]], cx = Math.min(xAft - 1.5, Pk[0] - .8), Cw = [cx, rail(cx) + 3];
       const yd = t => [lerp(F[0], Pk[0], t), lerp(F[1], Pk[1], t) - .35];
       const pts = []; for (let i = 0; i <= 8; i++) pts.push(pt(...yd(i / 8)));
       for (let i = 1; i <= 6; i++) { const t = i / 6; pts.push(pt(lerp(Pk[0] - .3, Cw[0], t) + Math.sin(t * Math.PI) * .5, lerp(Pk[1] - .6, Cw[1], t))); }

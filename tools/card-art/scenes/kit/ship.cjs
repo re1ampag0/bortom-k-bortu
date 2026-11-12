@@ -74,16 +74,19 @@ const SPECS = {
     masts: [{ x: -34, H: 116, n: 4, k: .95 }, { x: 1, H: 127, n: 4, k: 1.04, rake: .8 }, { x: 34, H: 99, n: 3, k: .74, rake: 1.6, aft: 'gaff' }],
     spar: 'paint-ochre', yard: 'tar', sail: 'linen', cond: 'whole', flag: 'pennant', pennant: 'ship-flag-red', ensign: 'company',
   },
-  // The Flying Dutchman (2006-2007): a "pear" — bellied below, narrow above; two rows of ports; a very high stern
-  // narrowing upwards; a strong sheer; a sprit topmast; a lateen mizzen; green-brown overgrown hull, rags of sails.
+  // The Flying Dutchman (2006-2007), after a Dutch ship of the 17th century (the fluyt, the Vasa): a "pear" —
+  // bellied below, narrow above, a strong tumblehome; two rows of ports; the highest and narrowest stern of all,
+  // rising aft in steps and raked aft; a tall narrow quarter gallery of three tiers under a pointed roof (not the
+  // broad block of the Revenge), no lantern; a strong sheer; a sprit topmast; a long steep lateen yard;
+  // green-brown overgrown hull, rags of sails.
   dutch: {
-    len: 92, free: 11.4, sheer: [4.5, 6], tumble: 1, bow: [7, 2.6], over: 9, counter: .7,
-    fc: [-27, 3.4], tiers: [[14, 4.2], [31, 4.6], [43.5, 4.2]], taff: 2, tw: [1.4, 6.5], openRail: 2,
+    len: 90, free: 11, sheer: [5, 7], tumble: 1.5, bow: [7, 2.6], over: 13, counter: .62,
+    fc: [-28, 3], tiers: [[2, 3.4], [17, 5], [28, 6], [37, 6.5], [45, 6]], taff: 2.6, tw: [1.1, 6.8], openRail: 4,
     hull: 'ship-ghost', trim: 'ship-ghost', gilt: 0, wales: [3.2, 6.6, 10.1], bands: [], growth: true,
-    ports: [{ h: 4.7, n: 10, x0: -30, x1: 30, w: 2, open: .55 }, { h: 8.4, n: 9, x0: -27, x1: 28, w: 1.9, open: .5 }], deckPorts: [4, 12, 35],
-    gallery: [8, 1, 4], tierWin: 2, lantern: 1,
-    beak: [11, 1.2, 3.6], sprit: { len: 22, steeve: 32, topmast: 12, spritsail: 'set' }, jibs: 1,
-    masts: [{ x: -29, H: 92, n: 3, k: .96 }, { x: 0, H: 104, n: 3, k: 1.03, rake: 1.5 }, { x: 27, H: 84, n: 2, k: .7, rake: 3, aft: 'lateen' }],
+    ports: [{ h: 4.7, n: 10, x0: -30, x1: 26, w: 2, open: .55 }, { h: 8.4, n: 9, x0: -27, x1: 24, w: 1.9, open: .5 }], deckPorts: [4, -24, -6],
+    gallery: [6.5, 3, 3.9], galRoof: 4.6, tierWin: 1, lantern: 0,
+    beak: [12, 1.4, 3.6], sprit: { len: 22, steeve: 32, topmast: 12, spritsail: 'set' }, jibs: 1,
+    masts: [{ x: -28, H: 92, n: 3, k: .96 }, { x: -1, H: 104, n: 3, k: 1.03, rake: 1.5 }, { x: 24, H: 90, n: 2, k: .66, rake: 3.5, aft: 'lateen', lat: [.15, .085, .8] }],
     spar: 'ship-ghost', yard: 'ship-ghost', sail: 'ship-sail-ghost', cond: 'rags', flag: 'pennant', pennant: 'ship-flag-black',
   },
   // A neutral merchantman: a small fluyt — a bellied hull, no gun ports, three masts, light sails.
@@ -337,18 +340,18 @@ function build(u, L, o, mode) {
     const gx = (h, t) => { const b = transX(h); return b - gal[0] * (1 - .1 * (h - gh0) / (gh1 - gh0)) * (1 - t); };
     const body = poly([[gx(gh0, 0), gh0], [gx(gh0, 1) + .5, gh0], [gx(gh1, 1) + .5, gh1], [gx(gh1, 0), gh1]]);
     const drop = spl([[gx(gh0, 0), gh0], [gx(gh0, .14), gh0 - 1.2], [gx(gh0, .5), gh0 - 2.3], [gx(gh0, .86), gh0 - 1.4], [gx(gh0, 1) + .5, gh0]], false) + 'Z';
-    const roof = spl([[gx(gh1, 0) - .4, gh1], [gx(gh1, .2), gh1 + 1.3], [gx(gh1, .58), gh1 + 2.1], [gx(gh1, .92), gh1 + 1.5], [gx(gh1, 1) + .7, gh1]], false) + 'Z';
+    const rH = sp.galRoof || 2.1, roof = spl([[gx(gh1, 0) - .4, gh1], [gx(gh1, .2), gh1 + rH * .62], [gx(gh1, .58), gh1 + rH], [gx(gh1, .92), gh1 + rH * .71], [gx(gh1, 1) + .7, gh1]], false) + 'Z';
     const gI = t => lum([lerp(-.55, .5, t), .1, .85]);
     if (sil) stern += fillP(body + drop + roof, C); else {
       stern += (far ? '' : fillP(poly([[gx(gh0, 0) - .5, gh0 - 3.4], [gx(gh0, 1), gh0 - 3], [gx(gh0, 1), gh0], [gx(gh0, 0), gh0]]), col(mix(L.tone(hullK, -.8, cen[0], cen[1]), '#150d0a', .4)), ' opacity=".45"'))
         + fillP(drop, tone(sp.trim, lum([0, -.6, .8]))) + edge(drop, sp.trim, .8)
-        + fillP(body, gr([gx(gh0, 0), gh0], [gx(gh0, 1), gh0], [0, .3, .6, 1].map(t => [t, tone(sp.gilt ? sp.trim : hullK, gI(t))]))) + fillP(roof, gr([0, gh1], [0, gh1 + 2.1], [[0, tone(hullK, lum([0, .3, .9]) - .1)], [1, tone(hullK, lum([0, .8, .6]))]]));
+        + fillP(body, gr([gx(gh0, 0), gh0], [gx(gh0, 1), gh0], [0, .3, .6, 1].map(t => [t, tone(sp.gilt ? sp.trim : hullK, gI(t))]))) + fillP(roof, gr([0, gh1], [0, gh1 + rH], [[0, tone(hullK, lum([0, .3, .9]) - .1)], [1, tone(hullK, lum([0, .8, .6]))]]));
       const nw = Math.max(2, Math.round(gal[0] / 4));
       for (let j = 0; j < gal[1]; j++) { const h0 = gh0 + j * gal[2] + .55, h1 = h0 + gal[2] - 1.3;
         for (let i = 0; i < nw; i++) { const t0 = (i + .16) / nw, t1 = (i + .86) / nw, w = poly([[gx(h0, t0), h0], [gx(h0, t1), h0], [gx(h1, t1), h1], [gx(h1, t0), h1]]);
           stern += win(w, (gx(h0, t0) + gx(h1, t1)) / 2, (h0 + h1) / 2, gal[2] * .8) + (far ? '' : strokeP(w + seg([gx(h0, (t0 + t1) / 2), h0], [gx(h1, (t0 + t1) / 2), h1]) + seg([gx((h0 + h1) / 2, t0), (h0 + h1) / 2], [gx((h0 + h1) / 2, t1), (h0 + h1) / 2]), ink(hullK), .16 * s)); }
         if (!far) stern += strokeP(seg([gx(h0 - .55, 0) - .3, h0 - .5], [gx(h0 - .55, 1) + .6, h0 - .5]), sp.gilt ? tone('brass', If + .4) : tone(sp.trim, If + .3), .34 * s) + (sp.gilt ? strokeP(sag([gx(h1, 0), h1 + .3], [gx(h1, .5), h1 + .3], -.35) + sag([gx(h1, .5), h1 + .3], [gx(h1, 1), h1 + .3], -.35), tone('brass', If + .4), .2 * s) : ''); }
-      if (!far) { const Rr = R('roof'); let tiles = ''; for (let i = 1; i < 6; i++) tiles += sag([gx(gh1, i / 6 - .02), gh1 + .15], [gx(gh1, .5 + (i / 6 - .5) * .35), gh1 + 1.9 + Rr() * .15], .2); stern += strokeP(tiles, ink(hullK), .13 * s, ' opacity=".6"') + edge(body, hullK, .8) + edge(roof, hullK, .8); }
+      if (!far) { const Rr = R('roof'); let tiles = ''; for (let i = 1; i < 6; i++) tiles += sag([gx(gh1, i / 6 - .02), gh1 + .15], [gx(gh1, .5 + (i / 6 - .5) * .35), gh1 + rH * .9 + Rr() * .15], .2); stern += strokeP(tiles, ink(hullK), .13 * s, ' opacity=".6"') + edge(body, hullK, .8) + edge(roof, hullK, .8); }
       if (lit) glowAt.push([transX((gh0 + gh1) / 2) - gal[0] * .4, (gh0 + gh1) / 2, gal[0] * 1.2 + gal[1] * 3]);
     }
     // small windows of the upper tiers on the side
@@ -548,7 +551,7 @@ function build(u, L, o, mode) {
         const N = masts[M.mi + 1], to = N ? N.A(Math.max(.06, qs[i] * .62 - .1)) : [Math.min(xAft, c[0] + hw + 12 + i * 3), rail(Math.min(xAft, c[0] + hw + 12 + i * 3)) + .2]; running += sag([c[0] + hw, c[1]], to, -1.2); }
     }
     // the fore-and-aft sail of the mizzen
-    if (m.aft === 'lateen') { const F = [m.x - .105 * sp.len * m.k / .7, hD + Hm * .1], Pk = [m.x + .11 * sp.len * m.k / .7, hD + Hm * .64], cx = Math.min(xAft + 1, m.x + .13 * sp.len * m.k / .7), Cw = [cx, rail(Math.min(cx, xAft)) + 1.8];
+    if (m.aft === 'lateen') { const lt = m.lat || [.105, .11, .64], F = [m.x - lt[0] * sp.len * m.k / .7, hD + Hm * .1], Pk = [m.x + lt[1] * sp.len * m.k / .7, hD + Hm * lt[2]], cx = Math.min(xAft + 1, m.x + .13 * sp.len * m.k / .7), Cw = [cx, rail(Math.min(cx, xAft)) + 1.8];
       if (set !== 'furled') sails += cloth(quadMap(F, Pk, F, Cw, 1.6 * Lu, -1.2), { name: nm + 'lat', wd: Pk[0] - F[0], ht: (Pk[1] - Cw[1]) * .7, nF: nFa[0], nA: nFa[1], foot: false });
       spars += spar(F, Pk, .42 * rr, .26 * rr, sp.yard); if (!far) running += seg(Cw, [cx - 1, rail(Math.min(cx, xAft))]) + seg(Pk, A(Q[1] * .93)) + seg(F, [F[0] + 1.5, rail(F[0] + 1.5)]);
     } else if (m.aft === 'gaff') { // the gaff passes under the yardarm of the lower yard, clear of the topsail's clew
