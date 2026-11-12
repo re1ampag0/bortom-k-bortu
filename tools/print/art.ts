@@ -19,11 +19,11 @@ export const hasScene = (name: string) => P.SCENES.includes(name);
 export const portraitSvg = (name: string, draftArt = false) => P.portrait(name, { draftArt });
 export const backArtSvg = (k: string) => P.backArt(k);
 
-export const PROFILE_VERSION = 'p2';
+export const PROFILE_VERSION = 'p3';
 /** The print profile's curve points (review-print 10). */
 export const CURVE: [number, number][] = [[0, 20], [32, 46], [64, 76], [128, 134], [192, 194], [255, 255]];
 /** Target mean relative luminance under the text: 0.035-0.07 keeps white text ≥ 7 : 1 without a black slab. */
-export const GLASS_TARGET = 0.05;
+export const GLASS_TARGET = 0.04;
 
 export interface GlassBox { top: number; tint: string }
 export interface ArtInfo { url: string; file: string; dark: number; glassMean: number; glassP95: number }
@@ -94,17 +94,25 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       const src = bg.getImageData(box.x, box.y, box.w, box.h).data, dst = g.getImageData(box.x, box.y, box.w, box.h), o = dst.data;
       const lin = Float32Array.from({ length: 256 }, (_, v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
       const tint = [1, 3, 5].map(i => parseInt(box.tint.slice(i, i + 2), 16));
-      const px = (i: number, y: number, f: number) => { const a = 0.4 + 0.32 * y / box.h; return [src[i] * f * (1 - a) + tint[0] * a, src[i + 1] * f * (1 - a) + tint[1] * a, src[i + 2] * f * (1 - a) + tint[2] * a]; };
+      // one tint strength over the whole plate; the darkening is solved per horizontal band, so a bright sky under
+      // the card's name ends as dark as calm water under the last line
+      const A = 0.5, px = (i: number, f: number) => [src[i] * f * (1 - A) + tint[0] * A, src[i + 1] * f * (1 - A) + tint[1] * A, src[i + 2] * f * (1 - A) + tint[2] * A];
       const lum = (p: number[]) => 0.2126 * lin[Math.min(255, Math.round(p[0]))] + 0.7152 * lin[Math.min(255, Math.round(p[1]))] + 0.0722 * lin[Math.min(255, Math.round(p[2]))];
-      const meanAt = (f: number) => { let s = 0, n = 0; for (let y = 0; y < box.h; y += 3) for (let x = 0; x < box.w; x += 3) { s += lum(px((y * box.w + x) * 4, y, f)); n++; } return s / n; };
-      let lo = 0.08, hi = 1.2;
-      if (meanAt(hi) > target) { for (let it = 0; it < 18; it++) { const mid = (lo + hi) / 2; if (meanAt(mid) > target) hi = mid; else lo = mid; } } else lo = hi;
-      const f = lo, cap = 0.12, hist = new Uint32Array(1001); let s = 0, n = 0;
-      for (let y = 0; y < box.h; y++) for (let x = 0; x < box.w; x++) {
+      const BANDS = 10, bh = box.h / BANDS, fb: number[] = [];
+      for (let b = 0; b < BANDS; b++) {
+        const y0 = Math.floor(b * bh), y1 = Math.min(box.h, Math.ceil((b + 1) * bh));
+        const meanAt = (f: number) => { let s = 0, n = 0; for (let y = y0; y < y1; y += 2) for (let x = 0; x < box.w; x += 3) { s += lum(px((y * box.w + x) * 4, f)); n++; } return s / n; };
+        let lo = 0.05, hi = 1.3;
+        if (meanAt(hi) > target) { for (let it = 0; it < 16; it++) { const mid = (lo + hi) / 2; if (meanAt(mid) > target) hi = mid; else lo = mid; } } else lo = hi;
+        fb.push(lo);
+      }
+      const fAt = (y: number) => { const t = Math.max(0, Math.min(BANDS - 1, y / bh - .5)), i = Math.min(BANDS - 2, Math.floor(t)); return fb[i] + (fb[i + 1] - fb[i]) * (t - i); };
+      const cap = 0.085, hist = new Uint32Array(1001); let s = 0, n = 0;
+      for (let y = 0; y < box.h; y++) for (let x = 0, f = fAt(y); x < box.w; x++) {
         // rounded corners of the plate
         const cx = x < box.r ? box.r : x > box.w - box.r ? box.w - box.r : x, cy = y < box.r ? box.r : y > box.h - box.r ? box.h - box.r : y;
         if ((x - cx) ** 2 + (y - cy) ** 2 > box.r * box.r) continue;
-        const i = (y * box.w + x) * 4; let p = px(i, y, f), L = lum(p);
+        const i = (y * box.w + x) * 4; let p = px(i, f), L = lum(p);
         if (L > cap) { const q = (cap / L) ** 0.32; p = p.map(v => v * q); L = lum(p); } // a bright spot (moon, flash) is pressed down, not left under the letters
         o[i] = p[0]; o[i + 1] = p[1]; o[i + 2] = p[2]; s += L; n++; hist[Math.min(1000, Math.round(L * 1000))]++;
       }

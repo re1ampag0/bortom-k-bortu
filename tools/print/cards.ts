@@ -11,6 +11,8 @@ import { backArtSvg, hasScene, makeArt, plainSvg, portraitSvg, type ArtInfo } fr
 import { wxSvg } from '../../src/ui/game/art/wx';
 
 export const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/cards.json'), 'utf8'));
+/** Back designs that exist (docs/tasks/print-kit.md 4.10): 1 «Корабль в море»; 2 and 3 come with stage Б. */
+export const BACK_VARIANTS: (1 | 2 | 3)[] = [1];
 export interface Mode { glass: 'type' | 'ship'; index: boolean; backs: 1 | 2 | 3 }
 /** What the fitting pass decided for one face: sizes in pt, what stayed on the plate, the plate's height in mm. */
 export interface Fit { name: number; wrap: boolean; tp: number; big: boolean; flavor: boolean; h: number; over: boolean; idx: number; idxW: number; idxBottom: number }
@@ -37,7 +39,7 @@ export const CARD_CSS = `${RICH_CSS}
 .pl{display:flex;align-items:baseline;justify-content:center;gap:1.2mm;font:500 8.5pt/1.22 Alegreya,serif}
 .pl span{flex:none;padding:.35mm 1.2mm .6mm;border-radius:.6mm;background:#1d1d1f;border:.2mm solid rgba(242,214,138,.7);color:#f2d68a;font:800 6pt/1 'Alegreya Sans',sans-serif;letter-spacing:.14em}
 .fv{font:italic 500 7pt/1.18 Alegreya,serif;color:${ON_GLASS.text};border-top:.2mm solid rgba(226,183,92,.55);padding-top:.55mm;width:100%;text-wrap:balance}
-.ix{position:absolute;left:${mm(FACE.index.x)};top:${mm(FACE.index.y)};max-width:${mm(FACE.index.maxW)};box-sizing:border-box;padding:.6mm 1.1mm .8mm;border-radius:1.5mm;background:rgba(14,11,9,.7);color:${ON_GLASS.cream};font:700 7pt/1.08 'Alegreya Sans',sans-serif;text-align:left}
+.ix{position:absolute;left:${mm(FACE.index.x)};top:${mm(FACE.index.y)};max-width:${mm(FACE.index.maxW)};box-sizing:border-box;padding:.6mm 1.1mm .8mm;border-radius:1.5mm;background:rgba(14,11,9,${FACE.index.alpha});color:${ON_GLASS.cream};font:700 7pt/1.08 'Alegreya Sans',sans-serif;text-align:left}
 .lg{position:absolute;left:50%;top:5.2mm;transform:translateX(-50%);padding:.7mm 1.8mm .95mm;background:linear-gradient(${BRASS_LIGHT},${BRASS});border:.25mm solid ${BRASS_DARK};border-radius:.8mm;font:500 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.04em;color:#2a180c;white-space:nowrap}
 .lg b{font-weight:800;letter-spacing:.12em}
 /* the spare card: a parchment plate to write on */
@@ -188,9 +190,9 @@ const fadeEdges = (svg: string, ground: string) => svg.replace(/<\/svg>\s*$/, `<
 export interface CardKit { mode: Mode; fits: Map<string, Fit>; art: Map<string, ArtInfo>; specs: Map<string, FaceSpec>; backs: Map<string, string>; crest: Map<string, string> }
 
 /** Fits every face, rasterises every picture (faces with their glass, backs) for one mode. */
-export async function prepareCards(ctx: Ctx, mode: Mode): Promise<CardKit> {
+export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Promise<CardKit> {
   const specs = new Map<string, FaceSpec>();
-  for (const sh of [...deckSheets(data), ...seaSheets(data)]) for (const it of sh.items) if (it.kind === 'card' || it.kind === 'legend' || it.kind === 'sea') { const s = faceSpec(it, mode); if (!specs.has(s.key)) specs.set(s.key, s); }
+  for (const sh of [...deckSheets(data), ...seaSheets(data)]) for (const it of sh.items) if (it.kind === 'card' || it.kind === 'legend' || it.kind === 'sea') { const s = faceSpec(it, mode); if (!specs.has(s.key) && (!only || only.has(s.key))) specs.set(s.key, s); }
   const fits = await fitFaces(ctx, [...specs.values()]);
   const art = new Map<string, ArtInfo>();
   for (const s of specs.values()) {
@@ -254,20 +256,20 @@ const sheetColor = (sh: Sheet) => sh.deck === 'sea' ? SEA.band : DECK_BAND[sh.de
 const pos = (i: number) => { const s = slot(i); return `left:${mm(s.x)};top:${mm(s.y)};`; };
 
 /** A sheet of faces: the frame colour bleeds 3 mm past the block; cut lines inside, marks to the sheet's edge; a 50 mm ruler. */
-export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = ''): PageSpec {
+export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: (i: number) => CardKit = () => kit): PageSpec {
   const col = sheetColor(sh), { inner, marks } = cutLines();
   const ln = (l: { x1: number; y1: number; x2: number; y2: number }, c: string, w: number) => `<path d="M${l.x1} ${l.y1}L${l.x2} ${l.y2}" stroke="${c}" stroke-width="${w}"/>`;
   const rx = A4.w - GRID.x0 - 50;
-  return { html: `<div class="sh-bleed" style="background:${col}"></div>${sh.items.map((it, i) => itemFace(ctx, kit, it, pos(i))).join('')}`
+  return { html: `<div class="sh-bleed" style="background:${col}"></div>${sh.items.map((it, i) => itemFace(ctx, kitOf(i), it, pos(i))).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${inner.map(l => ln(l, cutColor(col), .25)).join('')}${marks.map(l => ln(l, '#808080', .3)).join('')}`
     + `<path d="M${rx} 10.6H${rx + 50}M${rx} 9.4V11.8M${rx + 50} 9.4V11.8${[10, 20, 30, 40].map(d => `M${rx + d} 10V11.2`).join('')}" stroke="#555" stroke-width=".25" fill="none"/>${arrowUp(GRID.x0 + 1.2, 1.6)}</svg>`
     + `<div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetFace} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div><div class="sh-rul" style="left:${mm(rx)}">${esc(TXT.ruler)}</div>` };
 }
 /** The sheet of backs behind a face sheet (mirrored columns); dx, dy shift the whole print, seen from the back. No cut lines: cut from the face. */
-export function backSheetPage(kit: CardKit, sh: Sheet, dx = 0, dy = 0, label = ''): PageSpec {
+export function backSheetPage(kit: CardKit, sh: Sheet, dx = 0, dy = 0, label = '', kitOf: (i: number) => CardKit = () => kit): PageSpec {
   const col = sheetColor(sh), b = BLEED_BOX, L = 5, o = 1;
   const corner = (x: number, y: number, sx: number, sy: number) => `<path d="M${x + sx * o} ${y}h${sx * L}M${x} ${y + sy * o}v${sy * L}" stroke="#808080" stroke-width=".3" fill="none"/>`;
-  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})"><div class="sh-bleed" style="background:${col}"></div>${backSheet(sh.items).map((bk, i) => backHtml(kit, bk, pos(i))).join('')}`
+  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})"><div class="sh-bleed" style="background:${col}"></div>${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i))).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${corner(b.x, b.y, -1, -1)}${corner(b.x + b.w, b.y, 1, -1)}${corner(b.x, b.y + b.h, -1, 1)}${corner(b.x + b.w, b.y + b.h, 1, 1)}</svg></div>`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${arrowUp(GRID.x0 + 1.2, 1.6)}</svg><div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetBack} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div>` };
 }

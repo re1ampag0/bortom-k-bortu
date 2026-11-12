@@ -8,9 +8,10 @@ import { deckSheets, seaSheets } from '../layout';
 import { CARD_CSS, backSheetPage, faceSheet, prepareCards, type CardKit, type Mode } from '../cards';
 
 const kits = new Map<string, CardKit>();
-export async function kitFor(ctx: Ctx, mode: Mode): Promise<CardKit> {
-  const k = JSON.stringify(mode); let kit = kits.get(k);
-  if (!kit) kits.set(k, kit = await prepareCards(ctx, mode));
+/** only — the card keys («Ж|Ядра») a sample needs: a sample in another mode does not rasterise the whole set again. */
+export async function kitFor(ctx: Ctx, mode: Mode, only?: string[]): Promise<CardKit> {
+  const full = JSON.stringify(mode), k = only ? full + only.join() : full; let kit = kits.get(full) ?? kits.get(k);
+  if (!kit) kits.set(k, kit = await prepareCards(ctx, mode, only && new Set(only)));
   return kit;
 }
 export const defaultMode = (ctx: Ctx): Mode => ({ glass: ctx.opts.glass, index: ctx.opts.index, backs: ctx.opts.backs });
@@ -31,10 +32,11 @@ export async function cardParts(ctx: Ctx, which: 'decks' | 'sea'): Promise<Part[
     { file: '05a-lica', title: 'Бортом к борту — 05а. Карты: лица', css: CARD_CSS, pages: faces },
     { file: '05b-rubashki', title: 'Бортом к борту — 05б. Карты: рубашки', css: CARD_CSS, pages: backs }
   ];
-  // the needle fell into cell (cx, cy) of the back side → the back is moved the other way
+  // the needle fell into cell i of the square on the back (row-major, seen from the back): the back's print sits
+  // off to the other side, so the corrected file moves it towards the needle hole
   if (!ctx.opts.draft) for (let i = 0; i < 9; i++) {
     if (i === 4) continue;
-    const dx = -(i % 3 - 1) * SHIFT_STEP, dy = -(Math.floor(i / 3) - 1) * SHIFT_STEP;
+    const dx = (i % 3 - 1) * SHIFT_STEP, dy = (Math.floor(i / 3) - 1) * SHIFT_STEP;
     parts.push({ file: `05b-rubashki-${SHIFT_FILE[i]}`, title: `Бортом к борту — 05б. Рубашки, поправка «${SHIFT_LETTERS[i]}»`, css: CARD_CSS, pages: sheets.map(sh => backSheetPage(kit, sh, dx, dy, `Рубашка · поправка «${SHIFT_LETTERS[i]}» · лист ${sh.n} из ${sh.of} · верх листа`)) });
   }
   return parts;

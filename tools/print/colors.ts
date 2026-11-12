@@ -29,7 +29,7 @@ export const BRASS_DARK = '#3a220e';
 export const PARCHMENT = '#f6ecd4';
 export const INK = '#2a1c0c';
 /** Text on the dark glass: rule text is pure white (paper), cream and gold only from 10 pt up (review-print 9). */
-export const ON_GLASS = { text: '#ffffff', name: '#ffe9b8', big: '#ffd27a', soul: '#8ff0e2', cream: '#f6ecd6' };
+export const ON_GLASS = { text: '#ffffff', name: '#ffe9b8', big: '#ffdc8c', soul: '#8ff0e2', cream: '#f6ecd6' };
 
 const hex = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
 const toHex = (v: number[]) => '#' + v.map(x => Math.round(Math.max(0, Math.min(255, x))).toString(16).padStart(2, '0')).join('');

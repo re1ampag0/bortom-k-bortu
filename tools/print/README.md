@@ -1,0 +1,66 @@
+# tools/print — печатный набор (Print-and-Play)
+
+`npm run print` собирает PDF в `out/print/` (папка не в git) через Chromium (`page.pdf`). Задача — `docs/tasks/print-kit.md`,
+состояние — `docs/progress/print-kit.md`.
+
+В облачном контейнере Chromium стоит отдельно: `CHROMIUM_PATH=/opt/pw-browsers/chromium npm run print`
+(`kit.ts` находит этот путь и сам; `npx playwright install` там не нужен).
+
+## Команды
+
+- `npm run print` — весь набор, образцы в `out/print/obrazcy/`.
+- `npm run print -- --only 03` — одна часть (по номеру файла; можно `--only 05,07`).
+- `--glass type|ship` — оттенок стекла карты: в цвет типа (по умолчанию) или корабля.
+- `--index on|off` — индекс для веера под медалью (по умолчанию on).
+- `--backs 1|2|3` — вариант рубашек.
+- `--draft` — картинки карт 160 dpi, быстро; `--no-art` — без картинок; `--draft-art` — брать и черновые сцены.
+- `--back-shift-x/-y <мм>` — сдвиг рубашек (для разработчика; пользователю — готовые файлы `05b-rubashki-<буква>.pdf`).
+- `--check` — проверка вёрстки в браузере (`report/print/check.json`); `--check-pdf` — проверка PDF через poppler.
+
+## Файлы
+
+| Файл | Что |
+|---|---|
+| `layout.ts` | геометрия в мм, состав листов; чистые функции (их проверяет `tests/print-layout.test.ts`) |
+| `colors.ts` | все цвета набора |
+| `kit.ts` | общее: пути, данные, шрифты, оболочка страницы, `rich()`, `Ctx` |
+| `icons.ts` | значки карты → PNG в кэш (медали типа, монета Пороха, склянка Душ) |
+| `art.ts` | картинка карты → JPEG в кэш: печатный профиль и «стекло» запечены |
+| `cards.ts` | лицо и рубашка карты, листы 3 × 3 |
+| `parts/*.ts` | части набора: по одному модулю на PDF |
+| `text/*` | тексты набора (не в коде) |
+| `check.ts`, `samples.ts` | проверки и листы-образцы |
+
+## Как устроена часть (`parts/<имя>.ts`)
+
+```ts
+import { type Ctx, type Part } from '../kit';
+export async function build(ctx: Ctx): Promise<Part[]> {
+  return [{ file: '03-planshety', title: '…', css: CSS, pages: [{ html: '…', land: true }] }];
+}
+```
+
+- `Part` — один PDF: `file` (имя без `.pdf`), `title`, `css` (свои классы с префиксом части: `bo-`, `tk-`, `ru-`…),
+  `pages` — содержимое листов. Лист — `<section class="sheet">` 210 × 297 мм (`land: true` — 297 × 210), всё внутри —
+  в **мм** и **pt**, обычно `position:absolute`.
+- `ctx.icon('medal-charge' | 'medal-order' | 'medal-repair' | 'medal-reaction' | 'medal-sea' | 'coin' | 'coin-1…4' |
+  'flask' | 'flask-1…5' | 'flask-inline')` — URL готового значка (PNG с прозрачным фоном). Коробка значка больше
+  самого значка (вокруг — тень): ставь через `iconImg(ctx, name, x, y, d)` из `icons.ts` (x, y — левый верхний угол
+  самого значка в мм, d — его ширина в мм).
+- `ctx.raster(name, html, w, h, scale?, css?)` — растрировать свой кусок HTML/SVG размером w × h CSS-px в PNG кэша;
+  возвращает URL. Так делается всё, чему нужны размытые тени, `filter`, конические градиенты.
+- `rich(text, dark?)` — текст из данных (`<b>`, `<br/>`) → HTML; «2 Души» получает склянку и бирюзовое слово.
+  К CSS части добавь `RICH_CSS`.
+- Данные — `data` из `kit.ts` (типы — в `layout.ts`); размеры — из `layout.ts` (`TOKEN`, `HOLD`, `BOARD`, `COUNTS`).
+
+## Правила печатного HTML (иначе PDF распухает или печатается не так)
+
+1. Никаких `filter`, `backdrop-filter`, `mix-blend-mode`, `opacity` у картинок, `box-shadow` и `text-shadow` с
+   размытием: Chromium растрирует их в PDF заново, 300 dpi без сжатия. Нужна тень — запеки через `ctx.raster`.
+2. Тонкие линии (тоньше 0,3 мм) и линии реза — SVG (`stroke-width` в мм), не CSS `border`.
+3. Шрифты — только Alegreya (400, 500, 700, 800, курсив 400/500), Alegreya SC (400, 700, 800), Alegreya Sans (500, 700,
+   800): они встроены. Знаков, которых в них нет (★, стрелки, галочки, ☐), шрифтом не набирать — рисовать SVG.
+4. Одна и та же картинка — одним и тем же URL (тогда в PDF она хранится один раз).
+5. Тексты — в `text/`, числа и тексты карт — из `data/game-data.json`. Правила игры не менять и не додумывать.
+6. Большие площади — светлые (экономия краски); мелкий текст ≥ 6,5 pt, основной ≥ 9–10 pt.
+7. Линии реза жетонов — общие (сетка без промежутков), резать ножницами; ничего важного ближе 2 мм к линии реза.

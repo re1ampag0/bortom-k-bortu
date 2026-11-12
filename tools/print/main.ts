@@ -2,10 +2,10 @@
 //   npm run print [-- --only 05,07] [--glass type|ship] [--index on|off] [--backs 1|2|3] [--draft] [--no-art]
 //                 [--draft-art] [--back-shift-x mm] [--back-shift-y mm] [--no-samples] [--check] [--check-pdf]
 // Writes out/print/*.pdf and the sample pictures out/print/obrazcy/. See tools/print/README.md.
-import fs from 'node:fs';
 import path from 'node:path';
-import { PDFDocument, PDFName, PDFDict } from 'pdf-lib';
-import { OUT, HTML_DIR, launch, makeCtx, pageHtml, type Ctx, type Opts, type Part } from './kit';
+import fs from 'node:fs';
+import { HERE, OUT, SAMPLES, esc, launch, makeCtx, type Opts, type Part } from './kit';
+import { mergePdf, writePdf } from './pdf';
 import { makeIcons } from './icons';
 import { pruneArt } from './art';
 import { cardParts } from './parts/cards';
@@ -22,32 +22,6 @@ const opts: Opts = {
   only: opt('--only', '') ? opt('--only', '').split(',').map(s => s.trim()) : null,
   check: has('--check'), checkPdf: has('--check-pdf'), samples: !has('--no-samples')
 };
-
-/** Writes one PDF; printing hints for viewers: actual size, and long-edge duplex for the two-sided files. */
-export async function writePdf(ctx: Ctx, part: Part, dir = OUT): Promise<string> {
-  const htmlFile = path.join(HTML_DIR, part.file + '.html'), pdfFile = path.join(dir, part.file + '.pdf');
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(htmlFile, pageHtml(part));
-  const page = await ctx.browser.newPage();
-  await page.goto('file://' + htmlFile);
-  const bad = await page.evaluate(async () => { await document.fonts.ready; await Promise.all(Array.from(document.images).map(i => i.decode().catch(() => undefined))); return Array.from(document.images).filter(i => !(i.complete && i.naturalWidth > 0)).map(i => i.src.slice(0, 120)); });
-  if (bad.length) throw new Error(`${part.file}: ${bad.length} picture(s) did not load: ${bad.slice(0, 3).join(', ')}`);
-  const raw = await page.pdf({ preferCSSPageSize: true, printBackground: true });
-  await page.close();
-  const doc = await PDFDocument.load(raw);
-  doc.setTitle(part.title); doc.setAuthor('Бортом к борту'); doc.setLanguage('ru');
-  const prefs = doc.context.obj({ PrintScaling: 'None', ...(part.duplex ? { Duplex: 'DuplexFlipLongEdge' } : {}) });
-  doc.catalog.set(PDFName.of('ViewerPreferences'), prefs as PDFDict);
-  fs.writeFileSync(pdfFile, await doc.save());
-  return pdfFile;
-}
-
-async function mergePdf(files: string[], out: string, title: string) {
-  const doc = await PDFDocument.create();
-  for (const f of files) { const src = await PDFDocument.load(fs.readFileSync(f)); for (const p of await doc.copyPages(src, src.getPageIndices())) doc.addPage(p); }
-  doc.setTitle(title); doc.catalog.set(PDFName.of('ViewerPreferences'), doc.context.obj({ PrintScaling: 'None' }) as PDFDict);
-  fs.writeFileSync(out, await doc.save());
-}
 
 const t0 = Date.now();
 const browser = await launch();
@@ -76,9 +50,14 @@ if (!opts.only) {
   await mergePdf(main.map(p => path.join(OUT, p.file + '.pdf')), path.join(OUT, 'vse.pdf'), 'Бортом к борту — печатный набор (для просмотра)');
   console.log(`vse.pdf — ${main.reduce((n, p) => n + p.pages.length, 0)} стр.`);
   if (opts.samples) await (await import('./samples')).buildSamples(ctx);
+  // index.html for the site (dist/print/): the files in plain words
+  const site = JSON.parse(fs.readFileSync(path.join(HERE, 'text/site.json'), 'utf8')) as { title: string; lead: string; files: string[][]; shift: string; samples: string };
+  const li = (f: string, t: string, n = '') => `<li><a href="${esc(f)}">${esc(t)}</a>${n ? ` <small>— ${esc(n)}</small>` : ''}</li>`;
+  const shifts = fs.readdirSync(OUT).filter(f => /^05b-rubashki-.+\.pdf$/.test(f)).sort(), pngs = fs.existsSync(SAMPLES) ? fs.readdirSync(SAMPLES).filter(f => f.endsWith('.png')).sort() : [];
+  fs.writeFileSync(path.join(OUT, 'index.html'), `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(site.title)}</title><style>body{font:18px/1.5 Georgia,serif;max-width:46em;margin:2em auto;padding:0 1em;color:#2a1c0c;background:#f6ecd4}small{color:#6e5a3c}li{margin:.35em 0}</style></head><body><h1>${esc(site.title)}</h1><p>${esc(site.lead)}</p><ul>${site.files.filter(f => fs.existsSync(path.join(OUT, f[0]))).map(f => li(f[0], f[1], f[2])).join('')}</ul>${shifts.length ? `<p>${esc(site.shift)}</p><ul>${shifts.map(f => li(f, f)).join('')}</ul>` : ''}${pngs.length ? `<p>${esc(site.samples)}</p><ul>${pngs.map(f => li('obrazcy/' + f, f)).join('')}</ul>` : ''}</body></html>`);
   const pruned = pruneArt(); if (pruned) console.log(`cache: removed ${pruned} unused file(s)`);
 }
-if (opts.check) process.exitCode = await (await import('./check')).checkLayout(ctx) ? 0 : 1;
+if (opts.check && !(await (await import('./check')).checkLayout(ctx))) process.exitCode = 1;
 await browser.close();
-if (opts.checkPdf) process.exitCode = (await import('./check')).checkPdf() ? (process.exitCode ?? 0) : 1;
+if (opts.checkPdf && !(await (await import('./check')).checkPdf())) process.exitCode = 1;
 console.log(`готово за ${((Date.now() - t0) / 1000).toFixed(0)} с → ${OUT}`);
