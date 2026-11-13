@@ -65,9 +65,9 @@ function planks(y0, y1, light, dark, seed) {
 // a side port's lid raised almost level, seen from below: a thin board (its underside in shade, the sunset on its
 // edge), the iron strap hinges across it, the lanyards up to the rail
 function raisedLid(u, x, y, s) {
-  const w = 16 * s, h = 14 * s, y0 = y - h, d = 4.4, wf = w / 2 * 1.07, g = nid('ld', u);
+  const w = 16 * s, h = 14 * s, y0 = y - h, d = 6, wf = w / 2 * 1.08, g = nid('ld', u);
   const face = [[x - w / 2, y0], [x + w / 2, y0], [x + wf, y0 - d], [x - wf, y0 - d]];
-  let o = `<defs>${linGrad(g, 0, y0, 0, y0 - d, [[0, '#2a120c', 1], [1, '#6a2c1c', 1]])}</defs>`
+  let o = `<defs>${linGrad(g, 0, y0, 0, y0 - d, [[0, '#3a1a10', 1], [1, '#7a3a24', 1]])}</defs>`
     + `<path d="M${face.map(P2).join('L')}Z" fill="url(#${g})" stroke="#140806" stroke-width=".4"/>`
     + `<path d="M${f(x - w / 2 * 1.03)} ${f(y0 - d * .5)}L${f(x + w / 2 * 1.03)} ${f(y0 - d * .5)}" stroke="#1a0a06" stroke-width=".35" opacity=".7"/>`
     + `<path d="M${f(x - wf)} ${f(y0 - d)}L${f(x + wf)} ${f(y0 - d)}L${f(x + wf)} ${f(y0 - d - 1.3)}L${f(x - wf)} ${f(y0 - d - 1.3)}Z" fill="#3a2214" stroke="#140806" stroke-width=".35"/>`
@@ -123,7 +123,7 @@ module.exports = { name: 'Огонь по орудиям', kind: 'deck', status:
         + `<rect x="${f(x0)}" y="${f(y0)}" width="${f(w)}" height="${f(h)}" fill="url(#${hg})"/><g clip-path="url(#${hc})">`
         + `<rect x="${f(x0)}" y="${f(y0)}" width="${f(w)}" height="5" fill="#0e0604"/><path d="M${f(x0)} ${f(y0 + 5)}H${f(x1)}" stroke="#ff9a50" stroke-width=".5" opacity=".6"/>`
         + [-14, 4, 13].map(x => `<rect x="${px + x}" y="${f(y0 + 5)}" width="3.2" height="${f(h)}" fill="#1a0a06" opacity=".7"/>`).join('')
-        + K.fire(u, { x: px + 4, y: y1 + 2, w: 30, h: 26, seed: 4, wind: -.3, pool: false, glow: false })
+        + K.fire(u, { x: px + 2, y: y1 + 4, w: 36, h: 34, seed: 4, wind: -.3, pool: false, glow: false })
         + K.shadeBox(u, [{ pts: [[px + 2, y1 - 9], [px + 18, y1 - 15], [px + 19, y1 - 11], [px + 3, y1 - 5]], n: 'top', grain: [1, -.4] }, { pts: [[px + 3, y1 - 5], [px + 19, y1 - 11], [px + 19, y1 - 5], [px + 4, y1]], n: 'front', grain: [1, -.4] }], Lf, 'oak', { seed: 3, outline: .45 })
         + `</g>`;
       // the frame's thickness: the left jamb and the sill lit orange by the fire, the lintel dark; the lining round it
@@ -158,7 +158,7 @@ module.exports = { name: 'Огонь по орудиям', kind: 'deck', status:
           + K.shadeCyl(u, br[0] + d[0] * .4 + nx * 5.4, br[1] + d[1] * .4 + ny * 5.4, br[0] + d[0] * .4 + nx * 8, br[1] + d[1] * .4 + ny * 8, 1.6, Lf, 'iron', { outline: .35, ell: .5, face: 2 }); }
       // the flying truck: a solid oak wheel thrown out of the port to the upper right, tumbling — its tread, its face
       // with the grain and the joint of its two halves, the iron-bushed axle hole
-      { const c = [138, 52], r = 7.6, cb = [c[0] + 3, c[1] - 1.8], ell = .56, ang = Math.atan2(c[1] - cb[1], c[0] - cb[0]), wc = nid('wc', u), rp = L.ramp('oak', c[0], c[1]);
+      { const c = [139, 52], r = 8.2, cb = [c[0] + 3.2, c[1] - 1.9], ell = .56, ang = Math.atan2(c[1] - cb[1], c[0] - cb[0]), wc = nid('wc', u), rp = L.ramp('oak', c[0], c[1]);
         hit += K.shadeCyl(u, cb[0], cb[1], c[0], c[1], r, L, 'oak', { ell, face: 2, outline: .5, seed: 9 });
         const eg = `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${f(r * ell)}" ry="${f(r)}" transform="rotate(${f(ang * 180 / Math.PI)} ${f(c[0])} ${f(c[1])})"/>`;
         hit += `<defs><clipPath id="${wc}">${eg}</clipPath></defs><g clip-path="url(#${wc})" transform="rotate(${f(ang * 180 / Math.PI)} ${f(c[0])} ${f(c[1])})">`
@@ -168,9 +168,9 @@ module.exports = { name: 'Огонь по орудиям', kind: 'deck', status:
           + `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${f(1.1 * ell)}" ry="1.1" transform="rotate(${f(ang * 180 / Math.PI)} ${f(c[0])} ${f(c[1])})" fill="#0a0604"/>`; }
       hit += shards(u, L, px + 2, y0 + 10, 30, 34, 11) + shards(u, L, px + 26, y0, 10, 14, 13, -1.4, .3);
       // flames licking out of the top of the port, smoke rolling up over the paint and into the sky
-      hit += K.fire(u, { x: px - 6, y: y0 + 3, w: 18, h: 16, seed: 6, wind: -.4, pool: false })
+      hit += K.fire(u, { x: px - 4, y: y0 + 3, w: 22, h: 20, seed: 6, wind: -.4, pool: false })
         + K.smoke(u, L, { x: px - 6, y: y0 - 6, w: 56, h: 80, wind: -.6, seed: 14, opacity: .8, glow: { color: '#ff8a30', power: .7 } })
-        + K.localGlow(u, { x: FIRE.x, y: FIRE.y - 4, color: '#ff8a30', power: .9, radius: 46 }); }
+        + K.localGlow(u, { x: FIRE.x, y: FIRE.y - 4, color: '#ff8a30', power: .9, radius: 46 }, { core: false }); }
 
     // ——— our ball: from behind us, its trail widening towards us, straight into the smashed port ———
     let shot = '';

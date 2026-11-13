@@ -6,11 +6,14 @@
 // one diving flat, his hat knocked off). Inside, by the gun: the canvas bags of grapeshot, corded like a bunch of grapes.
 // Fixed against the first round: the gun was a sprite slanting up 25° into a window in a flat wall — now the kit's
 // gun level and recoiling in a cut-away (inside: the deck in perspective, the lantern on the beam; the hull in section
-// with the port through it, the lid hauled up outside), the outside on the left so the hit shows in the fan of cards;
-// the target was a flat strip of planks — now her bulwark and rail, the shrouds, her mast and a course with the sun
-// low behind it, and the crew that the card is about; the swarm was a cone of identical dots — now balls of
-// different sizes with streaks, spreading wider with the distance; the bag was a flat sprite — a grape round drawn
-// as it is made (the wooden bottom, the balls bulging the canvas, the cord netting, the spindle at the top).
+// with the port through it), the outside on the left so the hit shows in the fan of cards; the target was a flat strip
+// of planks — now her bulwark and rail, the shrouds, her mast and a course with the sun low behind it, and the crew
+// that the card is about; the swarm was a cone of identical dots — balls of different sizes with streaks.
+// Fixed against the previous draft: the men were flat black cut-outs (one like a log) — now figures with volume
+// (cloth over the body and limbs, heads in profile, hands), dark against the sunset with the flash's orange on their
+// edges; the crouched man bigger on the left, the diver flat, face down, over the rail on the right; the swarm went
+// low under them — it now fans up across them; the corded grape bags read as cages — canvas sacks tied at the neck,
+// as on the first-round card; the red lid on a rope outside our port is gone.
 // Light: outside — the sun low behind the enemy (her side, rail and men in silhouette with a warm rim); the flash of
 // our gun (orange) on her side and our hull; inside — the lantern on the beam (key), the flash at the port.
 'use strict';
@@ -29,31 +32,40 @@ const light = { time: 'night', haze: .3, key: { type: 'point', x: LAMP.x, y: 25,
 const lightOut = { time: 'dusk', haze: .35, key: { type: 'sun', x: 38, y: 97, el: 2, color: '#ffb070', power: .95 }, fill: { color: '#6e4a70', power: .42 },
   locals: [{ x: 70, y: 98, color: '#ffb050', power: .7, radius: 40 }] };
 const skel = { horizon: HZ, eye: 1.7, light: 'outside: the sun low behind the enemy (contre-jour) + our flash; inside: the lantern on the beam', items: [
-  ['enemy bulwark', -10, 150, 96, 59, 'the sea'], ['enemy course', -10, 40, 100, 40, 'her yard (off the top)'], ['man crouched', 48, ER, 22, 26, 'behind her rail'],
-  ['man diving', 12, ER, 26, 30, 'behind her rail'], ['hat', 34, 60, 9, 6, 'in the air'], ['swarm', 10, 104, 70, 34, 'in flight'],
+  ['enemy bulwark', -10, 150, 96, 59, 'the sea'], ['enemy course', -10, 40, 100, 40, 'her yard (off the top)'], ['man crouched', 8, ER, 34, 35, 'behind her rail'],
+  ['man diving', 44, ER - 2, 36, 32, 'in the air over her rail'], ['hat', 40, 50, 12, 6, 'in the air'], ['swarm', 0, 94, 78, 36, 'in flight, at the men\'s height'],
   ['gun', 80, GUN.y, 110, 44, 'deck'], ['grape bags', 104, 124, 32, 22, 'deck'], ['lantern', 146, 36, 13, 30, 'beam (rope)'], ['crate', 160, 150, 30, 22, 'deck']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 
-// ——— KIT-CANDIDATE: a grapeshot round: the wooden bottom, three tiers of balls bulging the canvas bag, the cord
-// netting round it, the wooden spindle and the tie at the top; (x, y) — the middle of the bottom, s — scale (≈ 13 × 19)
+// ——— KIT-CANDIDATE: a grapeshot round as on the first-round card: a canvas bag stuffed with balls on its wooden
+// bottom — the balls bulge the canvas into soft lumps with creases between them, the neck gathered and tied with a
+// cord, the canvas ears flaring over the tie; (x, y) — the middle of the bottom, s — scale (≈ 13 × 20)
 function grape(u, L, o) {
-  const { x, y, s = 1, seed = 3, lying = 0 } = o, R = rng(seed), rp = L.ramp('canvas', x, y - 8 * s), cord = L.ramp('rope', x, y - 8 * s);
-  const ry = 2.1 * s;
+  const { x, y, s = 1, seed = 3 } = o, R = rng(seed), rp = L.ramp('canvas', x, y - 8 * s), cord = L.ramp('rope', x, y - 8 * s), cid = nid('gb', u);
+  const X = dx => x + dx * s, Y = dy => y - dy * s, P = (dx, dy) => [X(dx), Y(dy)];
   let out = K.shadeCyl(u, x, y, x, y - 2 * s, 6.4 * s, L, 'oak', { ell: .32, face: 2, outline: .35, grain: false });
-  // the balls under the canvas, the back ones first; the canvas between them sinks into a darker groove
-  const balls = [];
-  for (let t = 0; t < 3; t++) { const yy = y - 2 * s - (2.4 + t * 4.6) * s; for (const [dx, dz] of [[-3.3, -1], [3.3, -1], [0, 1], [-3.6, .4], [3.6, .4]]) balls.push([x + dx * s + (R() - .5) * .5 * s, yy - dz * .8 * s, dz]); }
-  balls.sort((a, b) => a[2] - b[2]);
-  out += `<path d="M${f(x - 6.2 * s)} ${f(y - 2 * s)}C${f(x - 7 * s)} ${f(y - 9 * s)} ${f(x - 6.6 * s)} ${f(y - 14 * s)} ${f(x - 3.2 * s)} ${f(y - 16.6 * s)}L${f(x + 3.2 * s)} ${f(y - 16.6 * s)}C${f(x + 6.6 * s)} ${f(y - 14 * s)} ${f(x + 7 * s)} ${f(y - 9 * s)} ${f(x + 6.2 * s)} ${f(y - 2 * s)}Z" fill="${rp.shadow}"/>`;
-  for (const [bx, by] of balls) out += K.shadeSphere(u, bx, by, 2.5 * s, L, 'canvas', { outline: .25, spec: false });
-  // the cord: a spiral round the bag and the long lines from the bottom to the top
-  for (let i = 0; i < 4; i++) { const yy = y - 3.6 * s - i * 3.6 * s; out += `<path d="M${f(x - 6.3 * s)} ${f(yy + 1.2 * s)}Q${f(x)} ${f(yy + 3 * s)} ${f(x + 6.3 * s)} ${f(yy - 1.2 * s)}" stroke="${cord.outline}" stroke-width="${f(.7 * s)}" fill="none"/><path d="M${f(x - 6.3 * s)} ${f(yy + .9 * s)}Q${f(x)} ${f(yy + 2.7 * s)} ${f(x + 6.3 * s)} ${f(yy - 1.5 * s)}" stroke="${cord.lit}" stroke-width="${f(.3 * s)}" fill="none" opacity=".8"/>`; }
-  for (const dx of [-3.4, 0, 3.4]) out += `<path d="M${f(x + dx * s)} ${f(y - 2 * s)}Q${f(x + dx * 1.3 * s)} ${f(y - 9 * s)} ${f(x + dx * .5 * s)} ${f(y - 16.4 * s)}" stroke="${cord.outline}" stroke-width="${f(.55 * s)}" fill="none" opacity=".85"/>`;
-  // the gathered top, the tie and the spindle's head
-  out += `<path d="M${f(x - 3.4 * s)} ${f(y - 16.4 * s)}Q${f(x)} ${f(y - 18.6 * s)} ${f(x + 3.4 * s)} ${f(y - 16.4 * s)}L${f(x + 1.4 * s)} ${f(y - 18 * s)}L${f(x - 1.4 * s)} ${f(y - 18 * s)}Z" fill="${rp.half}" stroke="${rp.outline}" stroke-width=".3"/>`
-    + `<path d="M${f(x - 1.8 * s)} ${f(y - 17.6 * s)}h${f(3.6 * s)}" stroke="${cord.core}" stroke-width="${f(.9 * s)}"/>`
-    + K.shadeCyl(u, x, y - 18 * s, x, y - 20.2 * s, 1.1 * s, L, 'oak', { ell: .35, face: 2, outline: .3, grain: false });
+  // the bag's outline: a lump at each tier of balls on either side, slumped a little, narrowing to the neck
+  const jit = () => (R() - .5) * .5;
+  const right = [[6.3, 2], [6.9 + jit(), 4.6], [6.2, 7.2], [6.8 + jit(), 9.6], [6, 12], [5.6 + jit(), 14.2], [3.6, 16.2], [1.5, 17.4]];
+  const left = right.map(([dx, dy]) => [-dx + jit() * .6, dy + jit() * .4]).reverse();
+  const bag = right.concat(left).map(p => P(p[0], p[1])), bd = H.sp(bag, true);
+  out += `<defs><clipPath id="${cid}"><path d="${bd}"/></clipPath></defs><path d="${bd}" fill="${rp.half}"/><g clip-path="url(#${cid})">`;
+  // the canvas body: lit from the lantern's side (upper right), a few soft lumps where the balls press it, creases
+  { const g = nid('gs', u); out += `<defs>${radGrad(g, X(2.6), Y(13), 13 * s, [[0, rp.lit, 1], [.45, rp.half, 1], [1, rp.shadow, 1]])}</defs><path d="${bd}" fill="url(#${g})"/>`; }
+  for (const [dx, dy, r] of [[2.6, 13.4, 2.6], [-2.4, 11, 2.4], [3.4, 7, 2.6], [-1.6, 5, 2.8], [.6, 9.4, 2], [-4, 3.6, 2]]) {
+    const c = P(dx + (R() - .5) * .6, dy + (R() - .5) * .6); out += `<circle cx="${f(c[0] + .5 * s)}" cy="${f(c[1] - .5 * s)}" r="${f(r * .55 * s)}" fill="${rp.lit}" opacity=".28"/><path d="M${f(c[0] - r * .8 * s)} ${f(c[1] + r * .3 * s)}Q${f(c[0])} ${f(c[1] + r * 1.05 * s)} ${f(c[0] + r * .8 * s)} ${f(c[1] + r * .4 * s)}" stroke="${rp.shadow}" stroke-width="${f(.45 * s)}" fill="none" opacity=".55"/>`; }
+  for (let i = 0; i < 5; i++) { const a = P(-4 + R() * 8, 4 + R() * 10), l = (1.6 + R() * 2) * s, an = -Math.PI / 2 + (R() - .5) * 1.2;
+    out += `<path d="M${f(a[0])} ${f(a[1])}q${f(Math.cos(an) * l * .5 + .5)} ${f(Math.sin(an) * l * .5)} ${f(Math.cos(an) * l)} ${f(Math.sin(an) * l)}" stroke="${rp.shadow}" stroke-width="${f(.4 * s)}" fill="none" stroke-linecap="round" opacity=".5"/>`; }
+  out += `<path d="${H.sp(bag.slice(8), false)}" stroke="${rp.shadow}" stroke-width="${f(1.6 * s)}" fill="none" opacity=".45"/></g>`
+    + `<path d="${bd}" fill="none" stroke="${rp.outline}" stroke-width=".45"/>`;
+  // the neck: the canvas gathered in folds above the tie, the ears flaring; the cord wound twice round the neck
+  const ears = [P(-1.6, 17.2), P(-3.4, 19.6), P(-1.6, 19.2), P(-.4, 21), P(.8, 19.4), P(2.8, 20.2), P(1.6, 17.2)];
+  out += `<path d="M${ears.map(P2).join('L')}Z" fill="${rp.half}" stroke="${rp.outline}" stroke-width=".35" stroke-linejoin="round"/>`
+    + `<path d="M${P2(P(-.6, 17.6))}L${P2(P(-1.4, 19.4))}M${P2(P(.6, 17.6))}L${P2(P(.6, 19.4))}" stroke="${rp.shadow}" stroke-width=".35"/>`
+    + `<path d="M${P2(P(-1.9, 17))}Q${P2(P(0, 16.4))} ${P2(P(1.9, 17.2))}M${P2(P(-1.8, 17.9))}Q${P2(P(0, 17.3))} ${P2(P(1.8, 18.1))}" stroke="${cord.outline}" stroke-width="${f(.8 * s)}" fill="none"/>`
+    + `<path d="M${P2(P(-1.9, 17.1))}Q${P2(P(0, 16.5))} ${P2(P(1.9, 17.3))}" stroke="${cord.lit}" stroke-width="${f(.3 * s)}" fill="none" opacity=".8"/>`
+    + `<path d="M${P2(P(1.8, 17.6))}q${f(1.4 * s)} ${f(1.2 * s)} ${f(1 * s)} ${f(3.4 * s)}" stroke="${cord.core}" stroke-width="${f(.5 * s)}" fill="none"/>`;
   return out;
 }
 
@@ -90,24 +102,25 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'draft', cam: {
       const limb = (spine, w, tone, seed, o = {}) => H.cloth(u, { spine, w, tone, lit: litOf(spine), rim: RIM, rimOp: .6, rimW: .4, seed, drapes: 1, foldW: .45, sw: .35, capA: true, capB: true, ...o });
       const hand = (at, a, m, curl = .25) => { const h = H.hand(u, { at, a, s: .52, m, pose: 'open', tone: SK, spread: 14, curl, sw: .25 }); return h.back + h.front; };
       const shoe = (x, y, rot) => `<g transform="rotate(${rot} ${x} ${y})"><path d="M${x - 1.8} ${y + 1.2}Q${x - 2.2} ${y - 1.4} ${x} ${y - 1.5}Q${x + 2.8} ${y - 1.3} ${x + 2.6} ${y + .4}Q${x + 2.4} ${y + 1.5} ${x - 1.8} ${y + 1.2}Z" fill="#100806" stroke="#050303" stroke-width=".3"/><path d="M${x - 1.6} ${y + 1.1}Q${x + 1} ${y + 1.4} ${x + 2.5} ${y + .4}" stroke="#ff9a50" stroke-width=".35" fill="none" opacity=".8"/></g>`;
-      let men = '';
+      let men = '', diver = '', crouch = '';
       // the diver: far arm, far leg, the torso, the near leg, the head, the near arm
-      men += limb([[16, 74.4], [10, 76.8], [3.6, 80]], [3.6, 3.1, 2.6], SH, 3) + hand([3.6, 80], 158, 1, .2);
-      men += limb([[30, 69.6], [37.6, 64.4], [43.6, 58.6]], [5.4, 4.3, 3.3], TR, 4) + shoe(44.6, 57.4, -40);
-      men += limb([[13.4, 77], [21, 75], [31, 71]], [7.4, 8.4, 7.2], SH, 5);
-      men += limb([[31, 72], [40, 68.2], [48.6, 64]], [5.8, 4.6, 3.4], TR, 6) + shoe(49.8, 63.2, -24);
-      men += H.head(u, { c: [9.4, 80.6], r: 3.2, dir: -1, tilt: 48, tone: SK, hairColor: '#1c120c', warm: { color: '#ffa860', op: .55 }, eye: 'half' }).svg;
-      men += limb([[17, 77.6], [10.6, 83.6], [4, 87]], [3.8, 3.3, 2.8], SH, 7) + hand([4, 87], 160, -1, .2);
+      diver += limb([[16, 74.4], [10, 76.8], [3.6, 80]], [3.6, 3.1, 2.6], SH, 3) + hand([3.6, 80], 158, 1, .2);
+      diver += limb([[30, 69.6], [37.6, 64.4], [43.6, 58.6]], [5.4, 4.3, 3.3], TR, 4) + shoe(44.6, 57.4, -40);
+      diver += limb([[13.4, 77], [21, 75], [31, 71]], [7.4, 8.4, 7.2], SH, 5);
+      diver += limb([[31, 72], [40, 68.2], [48.6, 64]], [5.8, 4.6, 3.4], TR, 6) + shoe(49.8, 63.2, -24);
+      diver += H.head(u, { c: [9.4, 80.6], r: 3.2, dir: -1, tilt: 48, tone: SK, hairColor: '#1c120c', warm: { color: '#ffa860', op: .55 }, eye: 'half' }).svg;
+      diver += limb([[17, 77.6], [10.6, 83.6], [4, 87]], [3.8, 3.3, 2.8], SH, 7) + hand([4, 87], 160, -1, .2);
       // the crouched man: far arm (its hand on the back of his head), the thigh, the hunched back, the head, the near arm
-      men += limb([[59, 72.6], [50.6, 75.4], [52.6, 69.8]], [3.6, 3.1, 2.6], SH, 8) + hand([52.6, 69.8], -14, 1, .5);
-      men += limb([[68, 86], [58, 84.2], [60, 96]], [7, 5.6, 4.4], TR, 9);
-      men += limb([[68.4, 88], [67.4, 78.6], [59.6, 72.4]], [8.4, 9.6, 8.4], SH, 10);
-      men += H.head(u, { c: [54, 74.6], r: 3.3, dir: -1, tilt: 34, tone: SK, hairColor: '#2a1a10', warm: { color: '#ffa860', op: .45 }, eye: 'shut' }).svg;
-      men += limb([[61.4, 73.6], [51.4, 79.4], [51.8, 71.4]], [3.9, 3.4, 2.8], SH, 11) + hand([51.8, 71.4], -26, -1, .45);
+      crouch += limb([[59, 72.6], [50.6, 75.4], [52.6, 69.8]], [3.6, 3.1, 2.6], SH, 8) + hand([52.6, 69.8], -14, 1, .5);
+      crouch += limb([[68, 86], [58, 84.2], [60, 96]], [7, 5.6, 4.4], TR, 9);
+      crouch += limb([[68.4, 88], [67.4, 78.6], [59.6, 72.4]], [8.4, 9.6, 8.4], SH, 10);
+      crouch += H.head(u, { c: [54, 74.6], r: 3.3, dir: -1, tilt: 34, tone: SK, hairColor: '#2a1a10', warm: { color: '#ffa860', op: .45 }, eye: 'half' }).svg;
+      crouch += limb([[61.4, 73.6], [51.4, 79.4], [51.8, 71.4]], [3.9, 3.4, 2.8], SH, 11) + hand([51.8, 71.4], -26, -1, .45);
+      men = `<g transform="translate(36 90) scale(1.4) translate(-68 -90)">${crouch}</g><g transform="translate(50.4 80.6) rotate(-15) scale(.88) translate(-9.4 -80.6)">${diver}</g>`;
       o += men;
       // the hat knocked off the diver's head, spinning up
       const sil = '#140a08';
-      o += `<g transform="rotate(-34 27 ${ER - 37})"><path d="M21.4 ${ER - 36}Q27 ${ER - 42} 32.6 ${ER - 36}Q27 ${ER - 34} 21.4 ${ER - 36}Z" fill="${sil}"/><path d="M23 ${ER - 37.4}Q27 ${ER - 41.4} 31 ${ER - 37.4}" stroke="${RIM}" stroke-width=".5" fill="none"/></g>`; }
+      o += `<g transform="rotate(-34 46 ${ER - 44})"><path d="M40.4 ${ER - 43}Q46 ${ER - 49} 51.6 ${ER - 43}Q46 ${ER - 41} 40.4 ${ER - 43}Z" fill="${sil}"/><path d="M42 ${ER - 44.4}Q46 ${ER - 48.4} 50 ${ER - 44.4}" stroke="${RIM}" stroke-width=".5" fill="none"/></g>`; }
     // her bulwark and side close to us: dark against the sun, the cap rail with its lit edge, a wale, a closed port;
     // our flash lights it orange where the swarm strikes
     { const sd = nid('sd', u);
@@ -125,7 +138,7 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'draft', cam: {
     // the swarm: lead balls fanning out of the flash, wider and smaller with the distance, each with a short streak
     { const RS = rng(13), sf = nid('sf', u), mx = m.x - 3, my = by;
       o += `<defs><filter id="${sf}" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation=".5"/></filter></defs>`;
-      for (let i = 0; i < 50; i++) { const a = Math.PI + (.04 + RS() * .52), d = 8 + Math.pow(RS(), .8) * 76, x = mx + Math.cos(a) * d, y = my + Math.sin(a) * d * 1.05, r = .55 + (1 - d / 80) * .6 + RS() * .25, sl = 3 + RS() * 3.5;
+      for (let i = 0; i < 50; i++) { const a = Math.PI + (.08 + RS() * .78), d = 8 + Math.pow(RS(), .8) * 80, x = mx + Math.cos(a) * d, y = my + Math.sin(a) * d * 1.05, r = .55 + (1 - d / 80) * .6 + RS() * .25, sl = 3 + RS() * 3.5;
         o += `<path d="M${f(x - Math.cos(a) * sl)} ${f(y - Math.sin(a) * sl)}L${f(x)} ${f(y)}" stroke="#d8c8b0" stroke-width="${f(r * 1.4)}" opacity=".4" stroke-linecap="round" filter="url(#${sf})"/>`
           + `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="#3a3a3e"/><circle cx="${f(x + r * .3)}" cy="${f(y - r * .3)}" r="${f(r * .35)}" fill="#ffe0b0" opacity=".8"/>`; } }
     // the flash out of our port, the smoke rolling out towards her
