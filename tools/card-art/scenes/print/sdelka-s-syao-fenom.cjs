@@ -318,9 +318,9 @@ module.exports = { name: 'Сделка с Сяо Фэном', kind: 'deck', stat
         + h1.front; }
 
     // ——— the hired captain's hand with the open fan: a red silk sleeve with a gold border from the right edge ———
-    const h2 = handAt(u, { s: 2.6, m: -1, roll: 75, pitch: -4, pose: 'wrap', r: .5, tone: SKIN2, light: [-.62, -.78], sw: .32, palmW: .9, wristW: .8 }, G2, -98, 190);
+    const h2 = handAt(u, { s: 2.8, m: -1, roll: 46, pitch: -4, pose: 'wrap', r: .5, tone: SKIN2, light: [-.62, -.78], sw: .32, palmW: .9, wristW: .8 }, G2, -98, 190);
     let fan = '';
-    { const ax = h2.axis[1] < 0 ? h2.axis : [-h2.axis[0], -h2.axis[1]], piv = [G2[0] - ax[0] * 5.4, G2[1] - ax[1] * 5.4];
+    { const ax = h2.axis[1] < 0 ? h2.axis : [-h2.axis[0], -h2.axis[1]], piv = [G2[0] - ax[0] * 6, G2[1] - ax[1] * 6];
       const a0 = Math.atan2(ax[1], ax[0]), A0 = a0 - 1.32, A1 = a0 + 1.18, r0 = 16.5, r1 = 33.5, N = 18;
       const at = (a, r) => [piv[0] + Math.cos(a) * r, piv[1] + Math.sin(a) * r];
       // the leaf: pleats, each its own tone (folds towards and away from the lamp), a gold band at the edge
@@ -358,6 +358,15 @@ module.exports = { name: 'Сделка с Сяо Фэном', kind: 'deck', stat
         const pts = spine.slice(1).map((p, i, a) => { const q = a[Math.min(a.length - 1, i + 1)], r0 = a[Math.max(0, i - 1)], dx = q[0] - r0[0], dy = q[1] - r0[1], l = Math.hypot(dx, dy) || 1, ww = [17.6, 18.6, 20.4, 22.4][i] / 2;
           return [p[0] - dy / l * ww * o2 * 2, p[1] + dx / l * ww * o2 * 2]; });
         arm2 += ln(H.sp(pts.slice(0, -1).concat([[lerp(pts[pts.length - 2][0], pts[pts.length - 1][0], .8), lerp(pts[pts.length - 2][1], pts[pts.length - 1][1], .8)]])), w, c, op); }
+      // the bend at the elbow: the silk gathers on its inner (upper) side into a shadow and three soft folds
+      // running across the sleeve from it, each with a lit ridge beside its crease
+      { const T = H.tube(spine, [17, 17.6, 18.6, 20.4, 22.4]), sh = nid('sb', u), cl = nid('sc', u), body = T.outline(0, T.N, 1);
+        const strip = T.edge(.98, 8, 20).concat(T.edge(.25, 8, 20).reverse());
+        arm2 += `<defs>${blurF(sh, .9)}<clipPath id="${cl}"><path d="${H.sp(body, true)}"/></clipPath></defs><g clip-path="url(#${cl})">`
+          + `<path d="${H.sp(strip, true)}" fill="#2a0202" opacity=".7" filter="url(#${sh})"/>`;
+        for (const [i, k] of [[10, 1], [13, .85], [17, .7]]) { const c = (a, b, s0, s1, s2) => H.sp([T.at(a, s0), T.at(Math.round((a + b) / 2), s1), T.at(b, s2)]);
+          arm2 += ln(c(i, i + 4, .96, .3 * k, -.4 * k), 1.4, '#320202', .7) + ln(c(i + 1, i + 5, .9, .22 * k, -.42 * k), .6, '#ff9a78', .45); }
+        arm2 += '</g>'; }
       // the border's pattern: small squared spirals in dark thread; a white inner sleeve at the wrist
       const c0 = [W[0] + 3.4, W[1] + .6];
       for (let i = -3; i <= 3; i++) arm2 += `<path d="M${f(c0[0] + i * .15)} ${f(c0[1] + i * 2.1 - .6)}h1v1h-.6" stroke="#5a3008" stroke-width=".3" fill="none" opacity=".8"/>`;

@@ -97,10 +97,14 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'd
     // the mainmast: a tall shaft from the deck, its wedges and fife-rail, shrouds to both rails
     { const z = 9.6, b = P3(0, D, z), t = [b[0], -6], rr = FOC * .3 / z;
       for (const X of [-2.55, 2.55]) for (let i = 0; i < 4; i++) { const c = P3(X, YR, z - .6 + i * .4); deck += ln(`M${P2(c)}L${f(t[0] + (X < 0 ? -1 : 1) * (1 + i * .3))} ${f(8 + i * 3)}`, .35, '#3a2a1a', .75); }
+      // the mast stands in the shade of the mainsail overhead (out of the picture): dark and cool, so it does not
+      // cut the picture in two
+      const mf = nid('mf', u);
       deck += K.castShadow(u, L, { x: b[0], y: b[1], w: rr * 2, h: b[1] - t[1], horizon: HZ, opacity: .5 })
+        + `<defs><filter id="${mf}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".56 .04 .02 0 .02  .03 .58 .04 0 .03  .02 .05 .66 0 .05  0 0 0 1 0"/></filter></defs><g filter="url(#${mf})">`
         + K.shadeCyl(u, b[0], b[1], t[0], t[1], rr, L, 'oak', { outline: .35, r2: rr * .85, seed: 3 })
         + `<path d="M${f(b[0] - rr * 2.6)} ${f(b[1] - 3.4)}h${f(rr * 5.2)}v1.2h${f(-rr * 5.2)}z" fill="#8a6038" stroke="#2a1608" stroke-width=".3"/>`
-        + [-1.8, 1.8].map(dx => K.shadeCyl(u, b[0] + dx * rr, b[1] - 3, b[0] + dx * rr, b[1] - 6.2, .5, L, 'brass', { outline: .2 })).join('')
+        + [-1.8, 1.8].map(dx => K.shadeCyl(u, b[0] + dx * rr, b[1] - 3, b[0] + dx * rr, b[1] - 6.2, .5, L, 'brass', { outline: .2 })).join('') + '</g>'
         // the Company's ensign at the masthead, flying to the right (the wind from the left)
         + (() => { const fx = t[0] + 1, fy = 2; let s = `<path d="M${f(fx)} ${f(fy)}q8 -2 16 1l-.4 9q-8 -2.4 -15.6 0z" fill="#f4ece0"/>`;
           for (let k = 0; k < 5; k += 2) s += `<path d="M${f(fx)} ${f(fy + 1 + k * 1.9)}q8 -2 16 1" stroke="#c0302a" stroke-width="1.8" fill="none" transform="translate(0 ${f(k * .12)})"/>`;
@@ -115,53 +119,91 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'd
         + ln(`M${f(c[0] + 2.4 * s0)} ${f(c[1] + .2 * s0)}q${f(.8 * s0)} ${f(-2.4 * s0)} ${f(2.8 * s0)} ${f(-3)}`, s0 * .8, '#3a3c40')
         + ln(`M${f(c[0] + 2.2 * s0)} ${f(c[1] - .1 * s0)}q${f(1.6 * s0)} ${f(.2 * s0)} ${f(1.9 * s0)} ${f(2.2 * s0)}`, s0 * .3, '#c8ccd0', .7);
       return s; };
-    let hooks = hook(3.2, [-10, 70]) + hook(6.2, [38, 60]);
+    let hooks = hook(2.75, [-10, 76]) + hook(6.2, [38, 60]);
 
-    // ——— the boarders: men in their own shade (their sides face away from the sun), lit only along their left edges
+    // ——— the boarder: one man who got onto our cap rail, thrown back off the bayonets — falling backwards
+    // overboard: the planted foot's heel still on the rail, the body tipped back over the gap, the other leg and his
+    // sword arm flung forwards (his cutlass spinning away up to the right), the other arm reaching back for the rail.
+    // Lit from behind on the left (the sun): his back and the tops of his limbs; his front in his own shade.
     const litSide = (a, b) => ((-(b[1] - a[1])) * LT[0] + (b[0] - a[0]) * LT[1]) >= 0 ? 1 : -1;
-    const tube = (pts, w, tn, rim = '#e8d8c4') => H.cloth(u, { spine: pts, w, tone: tn, lit: litSide(pts[0], pts[pts.length - 1]), rim, rimSide: litSide(pts[0], pts[pts.length - 1]), rimOp: .6, folds: false, sw: .35, capA: true, capB: true });
-    const TROU = { lit: '#6a5a48', half: '#3a3028', shadow: '#1a1410', outline: '#060404' }, SH = { lit: '#9a8c78', half: '#5a5040', shadow: '#2a241c', outline: '#060404' };
-    const SK = { lit: '#b07a58', half: '#7a4c34', shadow: '#3a2014', outline: '#120804' };
-    // pts in local metres: x to the right (towards the marines), y up from the feet; the body leans by `lean` (deg, + back)
-    const pirate = (ft, k, o) => { const M = (x, y) => [ft[0] + x * k, ft[1] - y * k], J = o.j;
-      let s = '';
-      // the far arm and leg first, then the body, then the near ones
-      s += tube([M(...J.hip), M(...J.kneeB), M(...J.footB)], [k * .17, k * .13, k * .09], o.trou || TROU, null) + tube([M(...J.shB), M(...J.elB), M(...J.handB)], [k * .12, k * .1, k * .07], o.shirt || SH, null);
-      s += `<circle cx="${f(M(...J.handB)[0])}" cy="${f(M(...J.handB)[1])}" r="${f(k * .065)}" fill="${SK.half}" stroke="${SK.outline}" stroke-width=".3"/>`;
-      // the torso: the loose shirt, an open waistcoat, the sash
-      const T = [M(J.hip[0] + .1, J.hip[1]), M(J.shF[0] + .06, J.shF[1]), M(J.shB[0] - .08, J.shB[1] + .02), M(J.hip[0] - .14, J.hip[1] - .02)];
-      s += `<path d="${H.sp([T[0], [lerp(T[0][0], T[1][0], .5) + k * .03, lerp(T[0][1], T[1][1], .5)], T[1], T[2], [lerp(T[2][0], T[3][0], .5) - k * .03, lerp(T[2][1], T[3][1], .5)], T[3]], true)}" fill="${(o.shirt || SH).half}" stroke="#060404" stroke-width=".4"/>`
-        + `<path d="M${P2(T[2])}L${P2([lerp(T[2][0], T[1][0], .45), lerp(T[2][1], T[1][1], .45)])}L${P2([lerp(T[3][0], T[0][0], .5), lerp(T[3][1], T[0][1], .5)])}L${P2(T[3])}Z" fill="${o.vest || '#2a2a34'}"/>`
-        + ln(`M${P2(T[2])}L${P2(T[3])}`, .6, '#e8d8c4', .55)
-        + `<path d="M${P2(M(J.hip[0] - .15, J.hip[1] + .02))}L${P2(M(J.hip[0] + .11, J.hip[1] + .02))}L${P2(M(J.hip[0] + .12, J.hip[1] + .12))}L${P2(M(J.hip[0] - .15, J.hip[1] + .12))}Z" fill="${o.sash || '#7a1c18'}"/>`;
-      s += tube([M(...J.hip), M(...J.kneeF), M(...J.footF)], [k * .17, k * .13, k * .09], o.trou || TROU);
-      for (const ft2 of [J.footB, J.footF]) { const p = M(...ft2); s += `<path d="M${f(p[0] - k * .05)} ${f(p[1] - k * .03)}l${f(k * .17)} ${f(k * .01)}l0 ${f(k * .05)}l${f(-k * .18)} 0z" fill="#141010"/>`; }
-      // the head: tilted with the body, a bandana or a hat, a beard
-      const hc = M(...J.head), hr = k * .105;
-      s += `<ellipse cx="${f(hc[0])}" cy="${f(hc[1])}" rx="${f(hr)}" ry="${f(hr * 1.15)}" transform="rotate(${f(o.tilt || 0)} ${P2(hc)})" fill="${SK.half}" stroke="${SK.outline}" stroke-width=".35"/>`
-        + `<g transform="rotate(${f(o.tilt || 0)} ${P2(hc)})">`
-        + `<path d="M${f(hc[0] + hr * .7)} ${f(hc[1] - hr * .1)}l${f(hr * .45)} ${f(hr * .3)}l${f(-hr * .45)} ${f(hr * .15)}z" fill="${SK.half}" stroke="${SK.outline}" stroke-width=".25"/>`
-        + `<path d="M${f(hc[0] - hr * 1.02)} ${f(hc[1] - hr * .1)}Q${f(hc[0] - hr * .8)} ${f(hc[1] - hr * 1.3)} ${f(hc[0] + hr * .9)} ${f(hc[1] - hr * .55)}L${f(hc[0] + hr * .95)} ${f(hc[1] - hr * .25)}Q${f(hc[0])} ${f(hc[1] - hr * .5)} ${f(hc[0] - hr * 1.02)} ${f(hc[1] - hr * .1)}Z" fill="${o.band || '#2a3a5a'}"/>`
-        + `<path d="M${f(hc[0] - hr * 1)} ${f(hc[1] - hr * .3)}l${f(-hr * .8)} ${f(hr * .5)}l${f(hr * .3)} ${f(hr * .2)}z" fill="${o.band || '#2a3a5a'}"/>`
-        + `<path d="M${f(hc[0] - hr * .2)} ${f(hc[1] + hr * .4)}Q${f(hc[0] + hr * .4)} ${f(hc[1] + hr * 1.5)} ${f(hc[0] + hr * .9)} ${f(hc[1] + hr * .3)}Q${f(hc[0] + hr * .3)} ${f(hc[1] + hr * .6)} ${f(hc[0] - hr * .2)} ${f(hc[1] + hr * .4)}Z" fill="#1a1410"/>`
-        + `<circle cx="${f(hc[0] + hr * .45)}" cy="${f(hc[1] - hr * .05)}" r="${f(hr * .12)}" fill="#0a0604"/></g>`
-        + ln(`M${f(hc[0] - hr * .9)} ${f(hc[1] + hr * .5)}a${f(hr)} ${f(hr * 1.1)} 0 0 1 ${f(hr * .3)} ${f(-hr * 1.2)}`, .45, '#f0dcc4', .55);
-      s += tube([M(...J.shF), M(...J.elF), M(...J.handF)], [k * .12, k * .1, k * .07], o.shirt || SH);
-      { const p = M(...J.handF); s += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(k * .07)}" fill="${SK.half}" stroke="${SK.outline}" stroke-width=".3"/>`
-        + (o.open ? [-50, -20, 10].map(a => ln(`M${P2(p)}l${f(Math.cos((a + o.open) * Math.PI / 180) * k * .1)} ${f(Math.sin((a + o.open) * Math.PI / 180) * k * .1)}`, k * .025, SK.half)).join('') : ''); }
-      return s; };
     let brd = '';
-    // on her rail, further: one shrinking back behind his raised arm; one with a pistol, hesitating
-    for (const [z, o] of [[11.5, { vest: '#3a2a1a', band: '#5a1a14', tilt: -6, j: { hip: [-.05, .9], kneeB: [-.2, .48], footB: [-.24, 0], kneeF: [.14, .48], footF: [.1, 0], shB: [-.12, 1.4], shF: [-.04, 1.42], elB: [.06, 1.16], handB: [.32, 1.3], elF: [.14, 1.2], handF: [.42, 1.32], head: [-.1, 1.6] } }],
-      [8.2, { vest: '#2a2a34', band: '#a87a2a', shirt: { lit: '#a8603c', half: '#5a2a1a', shadow: '#2a120a', outline: '#060404' }, tilt: -14, open: -70, j: { hip: [-.08, .86], kneeB: [-.3, .5], footB: [-.3, 0], kneeF: [.12, .48], footF: [.16, 0], shB: [-.26, 1.36], shF: [-.18, 1.38], elB: [-.44, 1.28], handB: [-.5, 1.0], elF: [.04, 1.52], handF: [-.04, 1.78], head: [-.3, 1.56] } }]]) {
-      const k = FOC / z, ft = P3(XE + .1, YE, z); brd += pirate(ft, k, o);
-      if (z > 10) { const p = [ft[0] + .42 * k, ft[1] - 1.32 * k]; brd += ln(`M${P2(p)}l${f(k * .2)} ${f(-k * .02)}`, k * .045, '#141010') + ln(`M${P2(p)}l${f(k * .06)} ${f(k * .08)}`, k * .04, '#4a2a14'); } }
-    // on our cap rail, nearest: thrown back off the bayonet points — the body arched back, one foot off the rail, the
-    // arms flung up, his cutlass spinning out of his hand
-    { const z = 5.6, k = FOC / z, ft = P3(XB - .02, YR, z);
-      brd += pirate(ft, k, { vest: '#1e2a22', band: '#6a1a16', shirt: { lit: '#c8bca8', half: '#7a7062', shadow: '#3a342c', outline: '#060404' }, trou: { lit: '#5a6a80', half: '#2a3444', shadow: '#121820', outline: '#060404' }, tilt: -32, open: -120, j: { hip: [-.2, .84], kneeB: [-.3, .44], footB: [-.08, .02], kneeF: [.12, .72], footF: [.34, .5],
-        shB: [-.5, 1.28], shF: [-.42, 1.3], elB: [-.78, 1.42], handB: [-.9, 1.72], elF: [-.3, 1.62], handF: [-.12, 1.88], head: [-.66, 1.46] } });
-      const cc = [ft[0] + .3 * k, ft[1] - 2.05 * k];
+    { const z = 3.45, k = FOC / z, ft = P3(XB, YR, z), M = (x, y) => [ft[0] + x * k, ft[1] - y * k];
+      const SH = { lit: '#f0e6d4', half: '#b0a28c', shadow: '#5e5244', outline: '#1a140e' };
+      const TR = { lit: '#7a8aa0', half: '#3e4a5e', shadow: '#1a2232', outline: '#06080e' };
+      const LE = { lit: '#8a6444', half: '#3e2818', shadow: '#1a0e06', outline: '#080402' };
+      const SK = { lit: '#e2aa80', half: '#ae7450', core: '#8e5a3a', shadow: '#4e2a1a', outline: '#1a0a04' };
+      const J = { hipC: [-.33, .86], hipF: [-.31, .84], hipB: [-.36, .9], kneeB: [-.29, .5], ankleB: [-.2, .085], kneeF: [-.02, 1.1], ankleF: [.3, 1.18],
+        shF: [-.64, 1.24], elF: [-.38, 1.3], wrF: [-.12, 1.33], shB: [-.6, 1.3], elB: [-.8, 1.08], wrB: [-.84, .83], neck: [-.69, 1.29], head: [-.8, 1.43] };
+      // (the planted heel is 0.2 m to the left in the picture and 0.045 m lower: on the rail line, clear of the nearest marine's face)
+      const V = n => M(...J[n]);
+      const limb = (pts, w, tn, o = {}) => H.cloth(u, Object.assign({ spine: pts, w, tone: tn, lit: litSide(pts[0], pts[pts.length - 1]), rim: '#fff0d8', rimSide: litSide(pts[0], pts[pts.length - 1]), rimOp: .5, seed: 4, drapes: 1, sw: .35, L, capA: true }, o));
+      // a riding boot: the shaft from under the knee to the ankle, its turned-down top, the foot with heel and sole
+      const boot = (knee, ankle, fd) => { const kn = M(...knee), an = M(...ankle), sd = [kn[0] - an[0], kn[1] - an[1]], sl = Math.hypot(...sd), dn = [sd[0] / sl, sd[1] / sl];
+        const fp = [fd[0], -fd[1]], upv = (() => { const d = dn[0] * fp[0] + dn[1] * fp[1], v = [dn[0] - fp[0] * d, dn[1] - fp[1] * d], l = Math.hypot(...v); return [v[0] / l, v[1] / l]; })();
+        const F = (x, y) => [an[0] + (fp[0] * x + upv[0] * y) * k, an[1] + (fp[1] * x + upv[1] * y) * k];
+        const top = [lerp(an[0], kn[0], .66), lerp(an[1], kn[1], .66)], mid = [lerp(an[0], kn[0], .33), lerp(an[1], kn[1], .33)];
+        let b = limb([top, mid, an], [k * .14, k * .12, k * .105], LE, { drapes: 0, folds: false, rimOp: .35 });
+        const foot = [F(-.07, .07), F(-.075, -.03), F(-.06, -.1), F(.16, -.1), F(.22, -.07), F(.235, -.03), F(.19, .0), F(.09, .04), F(.035, .075)], g = nid('bt', u);
+        b += `<defs>${linGrad(g, F(.08, .06)[0], F(.08, .06)[1], F(.08, -.1)[0], F(.08, -.1)[1], [[0, LE.lit], [.45, LE.half], [1, LE.shadow]])}</defs>`
+          + `<path d="${H.sp(foot, true)}" fill="url(#${g})" stroke="${LE.outline}" stroke-width=".35"/>`
+          + `<path d="M${P2(F(-.075, -.085))}L${P2(F(.02, -.085))}L${P2(F(.02, -.125))}L${P2(F(-.07, -.125))}Z" fill="#140a04" stroke="${LE.outline}" stroke-width=".25"/>`
+          + ln(`M${P2(F(.03, -.105))}L${P2(F(.2, -.09))}`, .5, '#5a4030', .8) + ln(`M${P2(F(.0, .05))}Q${P2(F(.12, .03))} ${P2(F(.2, -.01))}`, .45, '#c8a07a', .55)
+          // creases round the ankle, the turned-down top of the shaft (lighter leather) with its own shadow under it
+          + ln(`M${P2(F(-.05, .1))}Q${P2(F(.0, .13))} ${P2(F(.05, .1))}M${P2(F(-.04, .16))}Q${P2(F(.0, .19))} ${P2(F(.05, .16))}`, .3, LE.shadow, .8);
+        const n = [-dn[1], dn[0]], cw = k * .085, t1 = [top[0] - dn[0] * k * .07, top[1] - dn[1] * k * .07];
+        b += `<path d="M${f(top[0] + n[0] * cw)} ${f(top[1] + n[1] * cw)}Q${f(top[0] + dn[0] * k * .03)} ${f(top[1] + dn[1] * k * .03)} ${f(top[0] - n[0] * cw)} ${f(top[1] - n[1] * cw)}L${f(t1[0] - n[0] * cw * 1.08)} ${f(t1[1] - n[1] * cw * 1.08)}Q${f(t1[0] + dn[0] * k * .02)} ${f(t1[1] + dn[1] * k * .02)} ${f(t1[0] + n[0] * cw * 1.08)} ${f(t1[1] + n[1] * cw * 1.08)}Z" fill="#7a5434" stroke="${LE.outline}" stroke-width=".35"/>`
+          + ln(`M${f(t1[0] + n[0] * cw)} ${f(t1[1] + n[1] * cw)}L${f(t1[0] - n[0] * cw)} ${f(t1[1] - n[1] * cw)}`, .4, '#c09068', .6);
+        return b; };
+      // the far arm reaching back for the rail (behind the body), its open hand
+      const hB = H.hand3(u, { at: V('wrB'), a: 98, s: k * .021, m: -1, roll: 40, pose: 'open', spread: 10, tone: SK, light: LT, sw: .3 });
+      brd += limb([V('shB'), V('elB'), V('wrB')], [k * .125, k * .115, k * .1], SH, { cuff: { from: .84, k: 1.18, tone: SH } }) + hB.back + hB.front;
+      // the planted leg: the trouser leg into the boot, the heel on our cap rail
+      brd += limb([V('hipB'), V('kneeB'), M(lerp(J.kneeB[0], J.ankleB[0], .4), lerp(J.kneeB[1], J.ankleB[1], .4))], [k * .17, k * .14, k * .13], TR) + boot(J.kneeB, J.ankleB, [Math.cos(.45), Math.sin(.45)]);
+      // the torso along the hip → shoulder axis: the loose shirt, the open waistcoat over his back and side, the sash
+      { const A = [J.neck[0] - J.hipC[0], J.neck[1] - J.hipC[1]], al = Math.hypot(...A), Fn = [A[1] / al, -A[0] / al];
+        const T = (t, s2) => M(J.hipC[0] + A[0] * t + Fn[0] * s2, J.hipC[1] + A[1] * t + Fn[1] * s2);
+        const out = [T(-.06, .13), T(.25, .155), T(.55, .175), T(.8, .15), T(.95, .08), T(1.02, 0), T(.95, -.12), T(.72, -.16), T(.42, -.13), T(.12, -.145), T(-.08, -.12)], g = nid('tb', u), cl = nid('tc', u);
+        const b0 = T(.5, -.17), f0 = T(.5, .18);
+        brd += `<defs>${linGrad(g, b0[0], b0[1], f0[0], f0[1], [[0, SH.lit], [.35, SH.half], [1, SH.shadow]])}<clipPath id="${cl}"><path d="${H.sp(out, true)}"/></clipPath></defs>`
+          + `<path d="${H.sp(out, true)}" fill="url(#${g})"/><g clip-path="url(#${cl})">`
+          // the shirt's folds pulled across the chest by the flung arm
+          + ln(`M${P2(T(.62, .17))}Q${P2(T(.5, .06))} ${P2(T(.3, .04))}M${P2(T(.75, .15))}Q${P2(T(.66, .08))} ${P2(T(.5, .1))}`, .45, SH.shadow, .6)
+          // the waistcoat: the back and the side, its front edge down the side of the chest
+          + `<path d="M${P2(T(1.05, -.2))}L${P2(T(.96, .05))}Q${P2(T(.62, .07))} ${P2(T(.2, .06))}L${P2(T(.05, .07))}L${P2(T(-.1, -.2))}Z" fill="#26342a"/>`
+          + ln(`M${P2(T(.96, .05))}Q${P2(T(.62, .07))} ${P2(T(.2, .06))}L${P2(T(.05, .07))}`, .55, '#7a8c6a', .7)
+          + ln(`M${P2(T(.9, -.14))}Q${P2(T(.55, -.17))} ${P2(T(.1, -.15))}`, 1.2, '#6a8268', .45)
+          + ln(`M${P2(T(.7, -.02))}Q${P2(T(.5, -.05))} ${P2(T(.3, -.03))}`, .35, '#0e1610', .6)
+          // the sash round the waist
+          + `<path d="M${P2(T(.14, .2))}L${P2(T(.16, -.2))}L${P2(T(-.04, -.2))}L${P2(T(-.04, .2))}Z" fill="#8a1c18"/>`
+          + ln(`M${P2(T(.1, .2))}L${P2(T(.12, -.2))}M${P2(T(.03, .2))}L${P2(T(.05, -.2))}`, .4, '#4a0a08', .7) + ln(`M${P2(T(.14, -.2))}L${P2(T(.14, .0))}`, .6, '#e0605a', .5)
+          + '</g>' + `<path d="${H.sp(out, true)}" fill="none" stroke="${SH.outline}" stroke-width=".4"/>`
+          + ln(H.sp([T(.95, -.125), T(.72, -.165), T(.42, -.135), T(.12, -.15)]), .55, '#fff0d8', .6);
+        // the sash's knotted ends at his front hip, flying with the fall
+        const kn = T(.06, .14);
+        brd += `<path d="M${P2(kn)}Q${f(kn[0] + k * .1)} ${f(kn[1] + k * .06)} ${f(kn[0] + k * .2)} ${f(kn[1] + k * .02)}L${f(kn[0] + k * .19)} ${f(kn[1] + k * .07)}Q${f(kn[0] + k * .1)} ${f(kn[1] + k * .1)} ${P2([kn[0] - k * .01, kn[1] + k * .04])}Z" fill="#7a1612" stroke="#2a0404" stroke-width=".3"/>`
+          + `<path d="M${P2(kn)}Q${f(kn[0] + k * .06)} ${f(kn[1] + k * .12)} ${f(kn[0] + k * .1)} ${f(kn[1] + k * .2)}L${f(kn[0] + k * .05)} ${f(kn[1] + k * .21)}Q${f(kn[0] + k * .02)} ${f(kn[1] + k * .12)} ${P2([kn[0] - k * .02, kn[1] + k * .02])}Z" fill="#8a1c18" stroke="#2a0404" stroke-width=".3"/>`
+          + `<ellipse cx="${f(kn[0])}" cy="${f(kn[1])}" rx="${f(k * .035)}" ry="${f(k * .03)}" fill="#6a1210" stroke="#2a0404" stroke-width=".3"/>`; }
+      // the neck (short), the head thrown back — shouting, eyes wide — long hair under a red head-scarf
+      { const n0 = V('neck'), hc = V('head'), hr = k * .115;
+        brd += ln(`M${P2(n0)}L${P2([lerp(n0[0], hc[0], .75), lerp(n0[1], hc[1], .75)])}`, k * .11 + .7, SK.outline) + ln(`M${P2(n0)}L${P2([lerp(n0[0], hc[0], .75), lerp(n0[1], hc[1], .75)])}`, k * .11, SK.half)
+          + ln(`M${P2([n0[0] - k * .03, n0[1] - k * .02])}L${P2([lerp(n0[0], hc[0], .7) - k * .03, lerp(n0[1], hc[1], .7) - k * .02])}`, k * .03, SK.lit, .5);
+        const hd = H.head(u, { c: hc, r: hr, dir: 1, tilt: -50, tone: SK, detail: true, mouth: .7, eye: 'wide', brow: 'up', beard: 'short', moustache: true, hairColor: '#1a1008',
+          hair: { style: 'long', color: '#1a1008' }, ear: true, warm: { color: '#fff0d8', op: .3 } }), Q = hd.Q;
+        brd += hd.svg;
+        const sc = [Q(.66, -.6), Q(.6, -.86), Q(.36, -1.12), Q(-.14, -1.24), Q(-.62, -1.1), Q(-.98, -.74), Q(-1.1, -.3), Q(-.86, -.34), Q(-.42, -.56), Q(.12, -.62)];
+        brd += `<path d="${H.sp(sc, true)}" fill="#a82420" stroke="#2a0404" stroke-width=".35"/>`
+          + ln(H.sp([Q(.5, -.92), Q(.1, -1.14), Q(-.5, -1.08)]), .7, '#e8625a', .6) + ln(H.sp([Q(.3, -.66), Q(-.3, -.62), Q(-.8, -.42)]), .4, '#4a0806', .7)
+          // the knot at the back of the head, its two tails fluttering
+          + `<ellipse cx="${f(Q(-1.04, -.36)[0])}" cy="${f(Q(-1.04, -.36)[1])}" rx="${f(hr * .18)}" ry="${f(hr * .14)}" fill="#8a1a16" stroke="#2a0404" stroke-width=".3"/>`
+          + `<path d="M${P2(Q(-1.04, -.36))}Q${P2(Q(-1.5, -.5))} ${P2(Q(-1.8, -.2))}L${P2(Q(-1.62, -.06))}Q${P2(Q(-1.4, -.28))} ${P2(Q(-1.04, -.3))}Z" fill="#a82420" stroke="#2a0404" stroke-width=".3"/>`
+          + `<path d="M${P2(Q(-1.04, -.36))}Q${P2(Q(-1.36, -.08))} ${P2(Q(-1.46, .3))}L${P2(Q(-1.3, .32))}Q${P2(Q(-1.24, .0))} ${P2(Q(-1.0, -.3))}Z" fill="#921e1a" stroke="#2a0404" stroke-width=".3"/>`; }
+      // the kicked leg: the trouser leg up and forward, the boot's sole towards the bayonets
+      brd += limb([V('hipF'), V('kneeF'), M(lerp(J.kneeF[0], J.ankleF[0], .45), lerp(J.kneeF[1], J.ankleF[1], .45))], [k * .175, k * .145, k * .135], TR) + boot(J.kneeF, J.ankleF, [-.24, .97]);
+      // the sword arm flung forwards, the hand open: it has just let go of the cutlass
+      const hF = H.hand3(u, { at: V('wrF'), a: -12, s: k * .021, m: 1, roll: 12, pose: 'open', spread: 13, tone: SK, light: LT, sw: .3 });
+      brd += limb([V('shF'), V('elF'), V('wrF')], [k * .13, k * .12, k * .105], SH, { cuff: { from: .84, k: 1.2, tone: SH } }) + hF.back + hF.front;
+      // the cutlass spinning away up to the right, its arcs of motion
+      const cc = [78.3, 39.9];
       brd += `<g transform="rotate(-140 ${P2(cc)})"><path d="M${f(cc[0] - 7)} ${f(cc[1])}q7 -2.2 14 -.5l.3 .9q-7 .3 -14.3 1z" fill="#c8ccd0" stroke="#3a3c40" stroke-width=".3"/><path d="M${f(cc[0] - 7)} ${f(cc[1] - 1.4)}v3.4" stroke="#8a6a30" stroke-width="1"/><path d="M${f(cc[0] - 7)} ${f(cc[1] + .3)}h-3" stroke="#2a1a10" stroke-width="1.1"/></g>`
         + `<path d="M${f(cc[0] - 6)} ${f(cc[1] + 5)}a8 8 0 0 1 2 -10M${f(cc[0] + 6)} ${f(cc[1] - 5)}a8 8 0 0 1 -2 10" stroke="#ffffff" stroke-width=".35" fill="none" opacity=".45"/>`; }
     // ——— the marines: one rank along the rail, the same uniform, muskets levelled, bayonets over the rail ———
@@ -221,9 +263,10 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'd
         + ln(`M${P2(P(-1.5, -.82))}Q${P2(P(-.4, -.38))} ${P2(P(.4, -.5))}L${P2(P(1.18, -1.36))}`, Math.max(.25, hr * .07), '#f0ece2', .9)
         + ln(`M${P2(P(-.8, -1.1))}Q${P2(P(-.5, -1.38))} ${P2(P(0, -1.4))}`, Math.max(.2, hr * .06), '#6a6a78', .7); }
 
-    let ranks = '';
+    let ranks = '', ranksNear = '';
     RANK.forEach((z, i) => { if (z < 2.5) return; const m = marine(z, { seed: i + 2, hair: ['#3a2414', '#1a1210', '#6a4a2a', '#2a1a10'][i % 4], moustache: i === 6, stubble: i === 5 });
-      ranks += K.castShadow(u, L, { x: m.M(0, 0)[0], y: m.M(0, 0)[1], w: m.k * .5, h: m.k * 1.8, horizon: HZ, opacity: .45 }) + m.back + m.body + m.front; });
+      const sv = K.castShadow(u, L, { x: m.M(0, 0)[0], y: m.M(0, 0)[1], w: m.k * .5, h: m.k * 1.8, horizon: HZ, opacity: .45 }) + m.back + m.body + m.front;
+      if (z > 3.45) ranks += sv; else ranksNear += sv; });
 
     // ——— the nearest marine, drawn whole: a lean young face, a stern mouth, under a tricorn with white tape ———
     let near = '';
@@ -236,7 +279,7 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'd
       near += hd.svg + hat.back + hat.front + rimArc(hd, { r: hr, light: LT, color: '#fff4e0', span: 40, opacity: .3 });
       // the musket goes over the near arm's hand; the arm: one sleeve from the shoulder, the navy cuff at the wrist
       const G = M(-.42, 1.105);
-      const h = handAt(u, { s: k * .02, m: 1, roll: 22, pitch: 10, pose: 'wrap', r: 1.1, tone: SKIN, light: LT, sw: .3, palmW: .9, wristW: .8 }, G, -171, -110);
+      const h = handAt(u, { s: k * .023, m: 1, roll: 155, pitch: 10, pose: 'wrap', r: 1.1, tone: SKIN, light: LT, sw: .3, palmW: .9, wristW: .8 }, G, -171, -110);
       const W = h.wrist, sh = M(-.03, 1.42), el = M(-.12, 1.13);
       near += H.cloth(u, { spine: [sh, [lerp(sh[0], el[0], .5) + .4, lerp(sh[1], el[1], .5)], el, [lerp(el[0], W[0], .5), lerp(el[1], W[1], .5) + .6], W], w: [k * .13, k * .12, k * .11, k * .095, k * .085],
         tone: { lit: RED.lit, half: RED.half, shadow: RED.shadow, outline: '#1a0404' }, lit: -1, seed: 6, drapes: 1, sw: .35, L,
@@ -245,5 +288,5 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'd
 
     // ——— the air: haze over the far end, the sun's warmth on the near rank, the deck darkening under the glass ———
     const air = glow(u, 30, 30, 70, 50, '#fff4dc', .12) + gloom(u, 100, 120, 100, 280, .5, '#140c06');
-    return [bg + en + smk, deck + hooks + brd + ranks + near + air];
+    return [bg + en + smk, deck + hooks + ranks + brd + ranksNear + near + air];
   } };
