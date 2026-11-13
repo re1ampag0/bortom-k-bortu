@@ -131,7 +131,7 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'draft
       // the live end: out of the top-left eyelet it rears up, throws one curl over the rip, and lunges down into it,
       // its long whipped head aimed at the next eyelet on the right; green trails behind the head show the strike
       const P0 = EL(52), PE = [ER(48)[0] - 2.2, tipY - 5.4], C = [124, 26];
-      const tip = Array.from({ length: 23 }, (_, i) => { const t = i / 22, a = (1 - t) * (1 - t), b = 2 * t * (1 - t), c = t * t, base = [a * P0[0] + b * C[0] + c * PE[0], a * P0[1] + b * C[1] + c * PE[1]];
+      const tip = Array.from({ length: 41 }, (_, i) => { const t = i / 40, a = (1 - t) * (1 - t), b = 2 * t * (1 - t), c = t * t, base = [a * P0[0] + b * C[0] + c * PE[0], a * P0[1] + b * C[1] + c * PE[1]];
         const w = Math.min(1, Math.max(0, (t - .3) / .36)), ph = Math.PI * 2 * w * w * (3 - 2 * w), rr = 4.6;
         return [base[0] + rr * Math.sin(ph), base[1] - rr * (1 - Math.cos(ph))]; });
       mid += green(tip, 3.6) + K.rope(u, L, tip, { r: 1.15, seed: 14 });

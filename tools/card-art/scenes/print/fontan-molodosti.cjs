@@ -16,7 +16,7 @@ const { f, mix, nid, linGrad, radGrad, rng, lerp } = K;
 const { gloom, motes } = PK;
 
 const HZ = 70, VX = 100;                          // eye level, the vanishing point
-const HOLE = { x: 100, y: 11, rx: 17, ry: 5 };     // the hole in the vault
+const HOLE = { x: 102, y: 12, rx: 16, ry: 3.6 };   // the hole in the vault: sky from y≈8 to y≈15, its stone lip round it
 const LB = 92, LF = 116, LL = 124;                // the ledge: back edge, front edge (its top), the foot of its lip
 const C1 = { x: 76, y: 111, h: 52, s: 1 }, C2 = { x: 127, y: 110, h: 42, s: 1 };   // the chalices: foot centre, height
 const DROP = { x: 76.6, y: 44 };
@@ -66,11 +66,25 @@ module.exports = { name: 'Фонтан молодости', kind: 'deck', status
     // the pool's light thrown up on the back wall: wavering turquoise lines
     for (let i = 0; i < 14; i++) { const x = 24 + R() * 152, y = 50 + R() * 38, l = 6 + R() * 12;
       bg += `<path d="M${f(x)} ${f(y)}q${f(l / 4)} ${f(-1.2)} ${f(l / 2)} 0t${f(l / 2)} 0" stroke="#9ff0e0" stroke-width=".55" fill="none" opacity="${f(.15 + R() * .2)}"/>`; }
-    // the hole in the vault: the sunset sky beyond it, its rim
-    { const g = nid('hl', u);
-      bg += `<defs>${radGrad(g, HOLE.x, HOLE.y, HOLE.rx * 1.3, [[0, '#fff2d0', 1], [.6, '#ffc888', 1], [1, '#e07a4a', 1]])}</defs>`
-        + `<path d="M${HOLE.x - HOLE.rx} ${HOLE.y}C${HOLE.x - HOLE.rx + 2} ${HOLE.y - 6} ${HOLE.x + HOLE.rx - 3} ${HOLE.y - 7} ${HOLE.x + HOLE.rx} ${HOLE.y - 1}C${HOLE.x + HOLE.rx - 2} ${HOLE.y + HOLE.ry + 1} ${HOLE.x - HOLE.rx + 4} ${HOLE.y + HOLE.ry + 2} ${HOLE.x - HOLE.rx} ${HOLE.y}Z" fill="url(#${g})" stroke="#1a100a" stroke-width="1.2"/>`
-        + K.localGlow(u, { x: HOLE.x, y: HOLE.y + 2, color: '#ffd8a0', power: .7, radius: 34 }); }
+    // the hole in the vault: a thick stone lip round it (dark near side, the shaft's far wall lit by the sky), the
+    // sunset sky beyond
+    { const g = nid('hl', u), lg = nid('hw', u), rimg = nid('hr', u), H = HOLE, Rh = rng(31);
+      const ring = (rx, ry, jit, dy = 0) => 'M' + Array.from({ length: 28 }, (_, i) => { const a = i / 28 * Math.PI * 2, j = 1 + (Rh() - .5) * jit; return P2([H.x + Math.cos(a) * rx * j, H.y + dy + Math.sin(a) * ry * j]); }).join('L') + 'Z';
+      const outer = ring(H.rx + 6, H.ry + 4.4, .14), inner = ring(H.rx, H.ry, .08);
+      bg += `<defs>${radGrad(rimg, H.x - 4, H.y + 4, H.rx + 8, [[0, '#b08a68', 1], [.55, '#6a4e3a', 1], [.85, '#3a2a20', 1], [1, '#1e1610', 1]])}`
+        + `${radGrad(g, H.x, H.y - 1, H.rx * 1.2, [[0, '#fff4d8', 1], [.55, '#ffcc8c', 1], [1, '#e8824e', 1]])}`
+        + `${linGrad(lg, 0, H.y - H.ry, 0, H.y + H.ry, [[0, '#7a5a40', 1], [.5, '#d8a070', 1], [1, '#ffd8a8', 1]])}</defs>`
+        + `<path d="${outer}" fill="url(#${rimg})" stroke="#140c08" stroke-width=".6"/>`
+        + `<path d="${inner}" fill="url(#${g})"/>`
+        // the shaft's far wall, seen up through the hole: a lit stone band rising from the far (lower) edge
+        + `<path d="M${H.x - H.rx * .96} ${f(H.y + .4)}Q${H.x} ${f(H.y + H.ry * 1.6)} ${H.x + H.rx * .96} ${f(H.y + .4)}Q${H.x} ${f(H.y + H.ry * .2)} ${H.x - H.rx * .96} ${f(H.y + .4)}Z" fill="url(#${lg})" opacity=".95"/>`
+        + `<path d="M${H.x - H.rx * .8} ${f(H.y + .6)}Q${H.x} ${f(H.y + H.ry * .7)} ${H.x + H.rx * .8} ${f(H.y + .6)}" stroke="#3a2a20" stroke-width=".4" fill="none" opacity=".6"/>`
+        // the near lip: a thick dark edge over the top of the hole, its broken stones; a warm line where the sky touches it
+        + `<path d="M${H.x - H.rx - 1} ${f(H.y + .6)}Q${H.x - H.rx + 1} ${f(H.y - H.ry - 1.4)} ${H.x} ${f(H.y - H.ry - 1)}Q${H.x + H.rx - 1} ${f(H.y - H.ry - 1.4)} ${H.x + H.rx + 1} ${f(H.y + .6)}" stroke="#1a100a" stroke-width="2" fill="none"/>`
+        + `<path d="M${H.x - H.rx + 2} ${f(H.y - .6)}Q${H.x - H.rx + 3} ${f(H.y - H.ry + .2)} ${H.x} ${f(H.y - H.ry + .4)}Q${H.x + H.rx - 3} ${f(H.y - H.ry + .2)} ${H.x + H.rx - 2} ${f(H.y - .6)}" stroke="#ffe0b0" stroke-width=".5" fill="none" opacity=".8"/>`
+        + [[-12, -2.6], [-4, -4.2], [7, -4], [14, -1.8]].map(([dx, dy]) => `<path d="M${f(H.x + dx - 2)} ${f(H.y + dy - .4)}l1.6 -1.6l2.4 .6l.4 1.6" stroke="#0e0806" stroke-width=".5" fill="#2a1e16"/>`).join('')
+        + `<path d="${outer}" fill="none" stroke="#c8a07a" stroke-width=".5" opacity=".35" transform="translate(0 .7)"/>`
+        + K.localGlow(u, { x: H.x, y: H.y + 2, color: '#ffd8a0', power: .65, radius: 34 }); }
     // the far stalactites along the top of the back wall: small; then the middle ones
     for (let i = 0; i < 14; i++) { const x = BW[0] + 6 + i * 12 + (R() - .5) * 6; if (Math.abs(x - HOLE.x) < 14) continue; bg += stal(u, x, BT - 1, 5 + R() * 9, 2.4 + R() * 2, R, '#3a2c24'); }
     // ——— the ledge: its top in perspective, the lip falling to the pool; the pool below ———
@@ -78,13 +92,31 @@ module.exports = { name: 'Фонтан молодости', kind: 'deck', status
       bg += `<defs>${linGrad(pg, 0, LL, 0, 290, [[0, '#2a8a86', 1], [.2, '#0e4a4c', 1], [1, '#04100e', 1]])}</defs><rect x="-5" y="${LL - 2}" width="210" height="${300 - LL}" fill="url(#${pg})"/>`
         + K.localGlow(u, { x: 100, y: LL + 10, color: '#9ff0e0', power: .5, radius: 90 }, { squash: .3, core: false })
         + [0, 1, 2, 3, 4].map(k => `<path d="M-5 ${LL + 4 + k * 5}q25 -1.6 50 0t50 0t50 0t55 0" stroke="#c8fff0" stroke-width="${f(.35 + k * .1)}" fill="none" opacity="${f(.45 - k * .07)}"/>`).join(''); }
-    const top = `M${BW[0] - 6} ${LB}L${BW[1] + 6} ${LB}Q${BW[1] + 18} ${LB + 12} 206 ${LF - 1}L-6 ${LF + 1}Q${BW[0] - 14} ${LB + 12} ${BW[0] - 6} ${LB}Z`;
+    const Re = rng(41), EDGE = Array.from({ length: 30 }, (_, i) => { const x = -6 + i * 212 / 29; return [x, lerp(LF + 1, LF - 1, i / 29) + (i % 29 ? (Re() - .5) * 1.8 : 0)]; });
+    const top = `M${BW[0] - 6} ${LB}L${BW[1] + 6} ${LB}Q${BW[1] + 18} ${LB + 12} ${P2(EDGE[29])}L${EDGE.slice().reverse().map(P2).join('L')}Q${BW[0] - 14} ${LB + 12} ${BW[0] - 6} ${LB}Z`;
     let mid = rockFace(u, top, [-6, LB, 212, LF - LB + 2], '#5a4636', R, 24);
     { const g = nid('lt', u), lg = nid('ll', u);
+      const front = `M${EDGE.map(P2).join('L')}L206 ${LL}Q150 ${LL + 3} 100 ${LL + 1}T-6 ${LL + 1}Z`, eg = nid('le', u), fb = nid('lb', u);
       mid += `<defs>${radGrad(g, 100, 106, 62, [[0, '#ffc890', .55], [.5, '#ffa860', .2], [1, '#ffa860', 0]])}</defs><path d="${top}" fill="url(#${g})"/>`
-        + `<defs>${linGrad(lg, 0, LF, 0, LL, [[0, '#3a2c22', 1], [1, '#12100e', 1]])}</defs><path d="M-6 ${LF + 1}L206 ${LF - 1}L206 ${LL}Q150 ${LL + 3} 100 ${LL + 1}T-6 ${LL + 1}Z" fill="url(#${lg})"/>`
-        + `<path d="M-6 ${LF + 1}L206 ${LF - 1}" stroke="#ffd0a0" stroke-width=".7" opacity=".55"/>`
-        + Array.from({ length: 10 }, (_, i) => { const x = 8 + i * 20 + R() * 8; return `<path d="M${f(x)} ${LF + 1}q-1 ${f(3 + R() * 3)} 0 ${f(6 + R() * 2)}" stroke="#9ff0e0" stroke-width=".4" fill="none" opacity=".35"/>`; }).join(''); }
+        // the top darkens to the back wall; a wet film along the front of it catching the pool's light
+        + `<defs>${linGrad(eg, 0, LB, 0, LF, [[0, '#0a0604', .55], [.45, '#0a0604', .1], [.8, '#9ff0e0', 0], [1, '#9ff0e0', .22]])}</defs><path d="${top}" fill="url(#${eg})"/>`
+        // the front of the slab: dark rock, darker down to the water; an undercut shadow under the bevel
+        + rockFace(u, front, [-6, LF - 2, 212, LL - LF + 4], '#1a1410', R, 14)
+        + `<defs>${linGrad(lg, 0, LF, 0, LL, [[0, '#2a201a', .5], [1, '#060504', .9]])}<filter id="${fb}" x="-5%" y="-100%" width="110%" height="300%"><feGaussianBlur stdDeviation=".9"/></filter></defs>`
+        + `<path d="${front}" fill="url(#${lg})"/>`
+        + `<path d="M${EDGE.map(p => P2([p[0], p[1] + 2.2])).join('L')}" stroke="#000000" stroke-width="2.4" fill="none" opacity=".55" filter="url(#${fb})"/>`
+        // the bevel: a lit rounded lip along the edge, a hard bright line on its crest
+        + `<path d="M${EDGE.map(p => P2([p[0], p[1] - .5])).join('L')}" stroke="#c89a70" stroke-width="1.8" fill="none" stroke-linejoin="round"/>`
+        + `<path d="M${EDGE.map(p => P2([p[0], p[1] - 1])).join('L')}" stroke="#ffe2b8" stroke-width=".7" fill="none" stroke-linejoin="round" opacity=".95"/>`
+        // the water: runnels over the lip and down the front, glossy, a drop hanging at the foot of each, rings below
+        + [[9, 1, 1.2], [22, .45, .8], [27.5, 1, 1.5], [57, .7, 1], [97, 1, 1.4], [103.5, .35, .7], [142, 1, 1.1], [167, .55, .9], [186, 1, 1.3]].map(([x0, k, w]) => {
+          const x = x0 + (R() - .5) * 3, e = EDGE[Math.min(29, Math.max(0, Math.round((x + 6) / 212 * 29)))][1], full = k > .9, len = full ? LL - e + .4 : (LL - e) * k, wob = (R() - .5) * 2;
+          const d = `M${f(x - .4)} ${f(e - 1.2)}Q${f(x + wob * .2)} ${f(e + len * .4)} ${f(x + wob)} ${f(e + len)}`;
+          return `<path d="${d}" stroke="#5ac8bc" stroke-width="${w}" fill="none" opacity=".45" stroke-linecap="round"/><path d="${d}" stroke="#e8fff8" stroke-width="${f(w * .3)}" fill="none" opacity=".7" transform="translate(-.3 0)"/>`
+            + (full ? `<ellipse cx="${f(x + wob)}" cy="${f(LL + 2.6 + R())}" rx="${f(2.4 + w)}" ry=".6" fill="none" stroke="#c8fff0" stroke-width=".3" opacity=".5"/>`
+              : `<circle cx="${f(x + wob)}" cy="${f(e + len + .9)}" r="${f(.5 + w * .25)}" fill="#c8fff0" stroke="#3a9a90" stroke-width=".2"/><circle cx="${f(x + wob - .25)}" cy="${f(e + len + .7)}" r=".22" fill="#ffffff"/>`); }).join('')
+        // the wet shine on the crest: short bright glints along the edge
+        + Array.from({ length: 9 }, (_, i) => { const p = EDGE[2 + i * 3]; return `<path d="M${f(p[0] - 2.4)} ${f(p[1] - 1.3)}L${f(p[0] + 2.4)} ${f(p[1] - 1.3)}" stroke="#f0fff8" stroke-width=".6" stroke-linecap="round" opacity=".75"/>`; }).join(''); }
     // ——— the shaft of light from the hole down onto the ledge ———
     { const g = nid('sf', u), fl = nid('sb', u);
       mid += `<defs>${linGrad(g, 0, HOLE.y, 0, LF, [[0, '#ffe2b0', .7], [.6, '#ffc890', .36], [1, '#ffb070', .2]])}<filter id="${fl}" x="-20%" y="-5%" width="140%" height="110%"><feGaussianBlur stdDeviation="2.4"/></filter></defs>`

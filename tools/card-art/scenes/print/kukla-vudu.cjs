@@ -22,14 +22,14 @@ const CAN = { x: 40, y: 119, s: 2.1, len: 11 };
 const FL = K.candle.local(CAN);              // the flame
 const D = { x: 94, y: 108, s: 1 };           // the doll: the middle of its seat on the table, its scale
 const BOT = { x: 123, y: 96, s: 2.2 };      // the bottle behind it
-const SHK = 1.62;                            // how much bigger the shadow is on the wall (the wall is that much further from the flame)
+const SH = { x: 153, y: 99, sx: .74, sy: .8, skew: -6 };   // the doll's shadow on the back wall, right and behind it: where its seat falls, its scale, its lean away from the flame
 const light = { time: 'night', haze: .3, key: { type: 'point', x: FL.x, y: FL.y, h: .38, gy: CAN.y, color: '#ffb45a', power: 1, radius: 120 },
   fill: { color: '#3a1a30', power: .35 } };
 const skel = { horizon: HZ, eye: .9, light: 'one tallow candle on the table, left (key); dim red-violet fill', items: [
   ['back wall', WL, WB, WR - WL, WB - WT, 'side walls, ceiling'], ['table top', 0, 290, 200, 290 - WB, 'the room'],
   ['candle', CAN.x - 9, CAN.y, 18, 46, 'table top'], ['bottle', BOT.x - 10, BOT.y, 20, 46, 'table top'],
   ['doll', D.x - 34, D.y + 14, 66, 98, 'table top, leaning on the bottle'], ['pins', 66, 98, 60, 60, 'stuck in the doll'],
-  ['vials', 46, 48, 132, 36, 'strings from the ceiling beam'], ['wall shadow', 80, 84, 100, 84, 'projection from the flame onto the back wall']] };
+  ['vials', 46, 48, 132, 36, 'strings from the ceiling beam'], ['wall shadow', 128, 100, 50, 72, 'thrown by the flame onto the back wall, right and behind the doll']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const toward = (p, x) => { const t = (x - VX) / (p[0] - VX); return [x, HZ + (p[1] - HZ) * t]; };   // along the ray from the VP through p, to the abscissa x
@@ -69,14 +69,15 @@ module.exports = { name: 'Кукла вуду', kind: 'deck', status: 'draft', c
       bg += woodTex(u, WL, WT, WR - WL, WB + 30 - WT, '#4c2618', '#26120a', '#0c0503', 11, true, 21)
         + `<defs>${radGrad(g, FL.x + 62, FL.y - 34, 150, [[0, '#ffb060', .6], [.4, '#ff9040', .34], [.75, '#ff8a3a', .1], [1, '#ff8a3a', 0]])}</defs><rect x="${WL}" y="${WT}" width="${WR - WL}" height="${WB + 30 - WT}" fill="url(#${g})"/>`
         + `<path d="M${WL} ${WT}V${WB + 30}M${WR} ${WT}V${WB + 30}" stroke="#080302" stroke-width="1.2"/>`; }
-    // ——— the doll's (and the bottle's) shadow on the back wall: the doll scaled about the flame, soft-edged ———
-    { const cl = nid('ws', u), bl = nid('wb', u), body = Object.values(PARTS).map(p => `<path d="${p.d}"/>`).join('') + SOLES.map(s => `<path d="${ell(...s)}"/>`).join('')
-        + [-150, -120, -95, -70, -45, -25].map(a => { const r = a * Math.PI / 180; return `<path d="M${f(Math.cos(r) * 13)} ${f(-63 + Math.sin(r) * 13)}l${f(Math.cos(r) * 8)} ${f(Math.sin(r) * 9)}" stroke="#000" stroke-width="2"/>`; }).join('')
-        + `<path d="M-4 -34l-11 -16" stroke="#000" stroke-width="1"/><circle cx="-15.5" cy="-51" r="3.6"/>`;
-      const bt = `M${BOT.x - 11} ${BOT.y}V${BOT.y - 26}Q${BOT.x - 10} ${BOT.y - 34} ${BOT.x - 3.4} ${BOT.y - 36}V${BOT.y - 50}H${BOT.x + 3.4}V${BOT.y - 36}Q${BOT.x + 10} ${BOT.y - 34} ${BOT.x + 11} ${BOT.y - 26}V${BOT.y}Z`;
-      bg += `<defs><clipPath id="${cl}"><rect x="${WL}" y="${WT}" width="${WR - WL}" height="${WB - WT}"/></clipPath><filter id="${bl}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.1"/></filter></defs>`
-        + `<g clip-path="url(#${cl})"><g filter="url(#${bl})" opacity=".85" fill="#0a0302"><g transform="translate(${f(FL.x)} ${f(FL.y)}) scale(${SHK}) translate(${f(-FL.x)} ${f(-FL.y)})">`
-        + `<path d="${bt}"/><g transform="translate(${D.x} ${D.y}) scale(${D.s})">${body}</g></g></g></g>`; }
+    // ——— the doll's shadow on the back wall, right and behind it: the candle lights a warm patch of the planks there and
+    // the doll's silhouette (pins and all) stands black in it, leaning away from the flame, soft at the edges ———
+    { const cl = nid('ws', u), bl = nid('wb', u), pg = nid('wp', u), body = Object.values(PARTS).map(p => `<path d="${p.d}"/>`).join('') + SOLES.map(s => `<path d="${ell(...s)}"/>`).join('')
+        + [-150, -120, -95, -70, -45, -25].map(a => { const r = a * Math.PI / 180; return `<path d="M${f(Math.cos(r) * 13)} ${f(-63 + Math.sin(r) * 13)}l${f(Math.cos(r) * 8)} ${f(Math.sin(r) * 9)}" stroke="#000" stroke-width="2.2"/>`; }).join('')
+        + [[[-5, -35], [-.62, -1], 26, 4.6], [[-21, -30], [-.45, -1], 15, 2.6], [[9, -73], [.6, -1], 14, 2.6], [[11, -26], [1, -.32], 15, 2.6]].map(([e, dv, len, r]) => { const l = Math.hypot(...dv), b = [e[0] + dv[0] / l * len, e[1] + dv[1] / l * len]; return `<path d="M${P2(e)}L${P2(b)}" stroke="#000" stroke-width="1.6"/><circle cx="${f(b[0])}" cy="${f(b[1])}" r="${r}"/>`; }).join('');
+      const tf = `translate(${SH.x} ${SH.y}) skewX(${SH.skew}) scale(${SH.sx} ${SH.sy})`;
+      bg += `<defs>${radGrad(pg, SH.x - 4, SH.y - 40, 46, [[0, '#ffb466', .5], [.5, '#ff9a48', .26], [1, '#ff8a3a', 0]])}<clipPath id="${cl}"><rect x="${WL}" y="${WT}" width="${WR - WL}" height="${WB - WT}"/></clipPath><filter id="${bl}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".8"/></filter></defs>`
+        + `<rect x="${WL}" y="${WT}" width="${WR - WL}" height="${WB - WT}" fill="url(#${pg})"/>`
+        + `<g clip-path="url(#${cl})"><g filter="url(#${bl})"><g fill="#040101" opacity=".55" transform="translate(1.6 .6) ${tf} scale(1.06)">${body}</g><g fill="#050101" opacity=".92" transform="${tf}">${body}</g></g></g>`; }
     // the ceiling beam across the room at the top of the back wall: the front face and its underside
     { const y0 = WT - 2, y1 = WT + 5.4; bg += K.shadeBox(u, [{ pts: [[-10, y1], [210, y1], [210, y1 + 2.2], [-10, y1 + 2.2]], n: 'bottom', grain: [1, 0] }, { pts: [[-10, y0], [210, y0], [210, y1], [-10, y1]], n: 'front', grain: [1, 0] }], L, 'oak', { seed: 4, outline: .4 }); }
     // ——— the vials: blown glass on strings from the beam, a cork, something dark inside ———
@@ -90,7 +91,7 @@ module.exports = { name: 'Кукла вуду', kind: 'deck', status: 'draft', c
       o += K.shadeCyl(u, x, top[1] + 1.2 * s, x, top[1] - 1.8 * s, 1.15 * s, L, 'pine-deck', { ell: .3, face: 2, outline: .3, grain: false, seed });
       if (glowC) o += K.localGlow(u, { x: x, y: lerp(lt, bot[1], .5), color: glowC, power: .45, radius: 9 * s }, { core: false });
       return o; };
-    let mid = vial(52, 8, 1, '#7a1410', null, 1) + vial(146, 16, 1.1, '#2e5a2a', '#7aff8a', 2) + vial(170, 4, 1.25, '#a06a1c', null, 4);
+    let mid = vial(62, 8, 1, '#7a1410', null, 1) + vial(146, 16, 1.1, '#2e5a2a', '#7aff8a', 2) + vial(170, 4, 1.25, '#a06a1c', null, 4);
     // ——— the table top: planks to the vanishing point, the candle's pool on them ———
     mid += K.deck(u, L, { horizon: HZ, top: WB, bottom: 290, vx: VX, kind: 'oak', plank: 14, seed: 6 })
       + `<path d="M0 ${WB}H200" stroke="#0a0402" stroke-width="1.6"/>`;
