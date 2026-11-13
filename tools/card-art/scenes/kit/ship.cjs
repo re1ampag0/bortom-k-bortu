@@ -319,7 +319,11 @@ function build(u, L, o, mode) {
 
   // ——— the hull's paint ———
   let hull = '';
-  const wlClip = nid('hw', u); defs += `<clipPath id="${wlClip}"><rect x="${f(x0 - 4000)}" y="${f(y0 - 4000)}" width="8000" height="4000"/></clipPath>`;
+  // the waterline cut: level when upright; heeled, it tilts with the hull (a hair under the waterline) so the hull does not sink at one end
+  const wlClip = nid('hw', u);
+  if (!ang) defs += `<clipPath id="${wlClip}"><rect x="${f(x0 - 4000)}" y="${f(y0 - 4000)}" width="8000" height="4000"/></clipPath>`;
+  else { const E = 4000 / s, hp = (X, H) => [x0 + dir * s * (X * ca - H * sa), y0 - s * (X * sa + H * ca)];
+    defs += `<clipPath id="${wlClip}"><path d="M${[hp(-E, -.2), hp(E, -.2), hp(E, E), hp(-E, E)].map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z"/></clipPath>`; }
   const topRim = rimDir ? clamp(-rimDir[1] * 1.2) * rimPow : 0;                  // how much the upper edges catch the back light
   const shOff = k => [-dir * dC.ux * k, dC.uy * k], shd = sil ? C : col(mix(L.shadowTint, '#0c0a0a', .4));   // a short cast shadow on the side, away from the light
   if (sil) hull += `<path d="${hullD}${ports.map(p => box(p.X, p.H, p.w, p.hh)).join('')}" fill="${C}" fill-rule="evenodd"/>` + (ribs.length ? fillP(ribs.map(ribD).join(''), C) : '');
