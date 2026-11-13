@@ -87,7 +87,7 @@ if (grid && mode === 'compare') {
   for (let p0 = 0, sn = 1; p0 < items.length; p0 += grid, sn++) {
     const part = items.slice(p0, p0 + grid), rows = Math.ceil(part.length / COLS), cols = Math.min(COLS, part.length);
     const html = part.map((it, j) => pair(it, start + p0 + j, (j % COLS) * (PW + PG), Math.floor(j / COLS) * (PH + PG))).join('');
-    await shoot(html, cols * (PW + PG) - PG, rows * (PH + PG) - PG, path.join(out, `${sheet || 'priyomka'}-${sn}.jpg`));
+    await shoot(`<div style="position:absolute;left:${mm(PG)};top:${mm(PG / 2)}">${html}</div>`, cols * (PW + PG) + PG, rows * (PH + PG) + PG / 2, path.join(out, `${sheet || 'priyomka'}-${sn}.jpg`));
   }
 } else if (sheet) { const per = mode === 'compare' ? 2 * W + 2 * GAP + 4 : W + GAP; await shoot(cells.join(''), items.length * per - GAP, H + 6, path.join(out, `${sheet}.png`)); }
 await browser.close();
