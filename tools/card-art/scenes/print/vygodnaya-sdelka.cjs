@@ -133,8 +133,10 @@ module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 
       // the signature line on the right, and on it the red flourish, wet; a drop fallen beside it
       fg += ln(`M${P2(SP(SIGN.a0, SIGN.b))}L${P2(SP(SIGN.a1, SIGN.b))}`, .35, '#3a2a18', .8); }
     // the red signature: a looping hand along the line, ending at the nib
-    const sig = [[.52, -.005], [.55, -.06], [.57, .0], [.6, -.045], [.62, .005], [.66, -.07], [.67, .004], [.7, -.03], [.73, .0], [.76, -.04], [.78, -.012]];
-    const sigP = sig.map(([a, db]) => SP(a, SIGN.b + db));
+    // a cursive hand: a tall capital loop, then a run of small loops (a prolate trochoid) along the line
+    const sigP = [SP(.515, SIGN.b), SP(.53, SIGN.b - .1), SP(.548, SIGN.b - .115), SP(.552, SIGN.b - .06), SP(.54, SIGN.b - .005), SP(.555, SIGN.b - .02)];
+    { const n = 5, a0 = .565, a1 = .78, T = n * 2 * Math.PI;
+      for (let i = 1; i <= 60; i++) { const t = i / 60 * T, a = a0 + (a1 - a0) * t / T - .011 * Math.sin(t), h = (i % 24 < 12 ? .055 : .04) * (1 - Math.cos(t)) / 2; sigP.push(SP(a, SIGN.b - .008 - h)); } }
     const nib = sigP[sigP.length - 1];
     fg += `<path d="${H.sp(sigP)}" stroke="#4a0604" stroke-width="1.05" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".55" transform="translate(.25 .3)"/>`
       + `<path d="${H.sp(sigP)}" stroke="#a8100c" stroke-width=".8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
@@ -153,8 +155,8 @@ module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 
       const hd = H.hand3(u, { ...po, at }), w = hd.wrist, ua = [Math.cos(po.a * Math.PI / 180), Math.sin(po.a * Math.PI / 180)];
       const sleeve = { lit: '#4a4c58', half: '#202228', core: '#18191e', shadow: '#08080a', outline: '#040405' }, cuff = { lit: '#fffaf0', half: '#e6dece', shadow: '#a69e8e', outline: '#5a5448' };
       fg += K.contactShadow(u, tip[0] - 6, tip[1] + 2, 18, L, { ry: 1.6, opacity: .35 });
-      fg += H.cloth(u, { spine: [[-14, w[1] + 18], [lerp(-14, w[0], .5), lerp(w[1] + 18, w[1], .5) + 1], [w[0] - ua[0] * 1.4, w[1] - ua[1] * 1.4]], w: [15, 13, 10.4], tone: sleeve, lit: -1, rim: '#ffcf96', rimSide: -1,
-        cuff: { from: .78, k: 1.2, tone: cuff }, seed: 6, drapes: 3, sw: .4 });
+      fg += H.cloth(u, { spine: [[-14, w[1] + 18], [lerp(-14, w[0], .5), lerp(w[1] + 18, w[1], .5) + 1], [w[0] - ua[0] * 1.4, w[1] - ua[1] * 1.4]], w: [12.4, 10.4, 8], tone: sleeve, lit: -1, rim: '#ffcf96', rimSide: -1,
+        cuff: { from: .88, k: 1.08, tone: cuff }, seed: 6, drapes: 3, sw: .4 });
       // the frill of the shirt over the back of the wrist
       fg += `<path d="M${f(w[0] - 2.6)} ${f(w[1] - 4.2)}q3 1 3.6 3.4q-2.2 .6 -2.6 2.2q2.4 .6 2.8 2.8q-3 .4 -4.6 -1.6z" fill="#f6f0e2" stroke="#7a7466" stroke-width=".3"/>`;
       fg += hd.back + hd.front; }
@@ -163,12 +165,12 @@ module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 
     // flourish, the feather rising over the web of the thumb; the forearm bare to the rolled shirt sleeve ———
     { const qa = -34 * Math.PI / 180, qd = [Math.cos(qa), Math.sin(qa)], nx = -qd[1], ny = qd[0];
       const qp = t => [nib[0] + qd[0] * t, nib[1] + qd[1] * t], pinch = qp(5.4);
-      const so = { a: 212, s: 2.15, m: 1, roll: 40, pitch: 0, pose: 'pinch', thumbFlex: [40, 30, 22], thumbSpread: -12, tone: SKIN, light: [-.8, -.55], sw: .32, palmW: .82, wristW: .72 };
+      const so = { a: 236, s: 2.3, m: 1, roll: 40, pitch: 0, pose: 'pinch', thumbFlex: [40, 30, 22], thumbSpread: -12, tone: SKIN, light: [-.8, -.55], sw: .32, palmW: .82, wristW: .72 };
       const h0 = H.hand3(u, { ...so, at: [0, 0] }), p0 = h0.P(7.6, -1, -2.6), wr = [pinch[0] - p0[0], pinch[1] - p0[1]];
       const hd = H.hand3(u, { ...so, at: wr });
       const shirt = { lit: '#f0e6d0', half: '#c0b294', shadow: '#5a4c3a', outline: '#22180e' };
-      const el = [wr[0] + 26, wr[1] + 16];
-      let arm = H.cloth(u, { spine: [[218, el[1] - 10], [206, el[1] - 4], [el[0] + 4, el[1] + 1]], w: [19, 18, 17.4], tone: shirt, lit: -1, rim: '#a8c0e8', rimSide: 1, rimOp: .4, cuff: { from: .62, k: 1.14, roll: true }, seed: 9, drapes: 2, sw: .4 });
+      const fa = (so.a - 180) * Math.PI / 180, el = [wr[0] + Math.cos(fa) * 31, wr[1] + Math.sin(fa) * 31];   // the forearm: on from the wrist, down to the near edge
+      let arm = H.cloth(u, { spine: [[el[0] + 30, el[1] + 30], [el[0] + 12, el[1] + 10], [el[0] + 2, el[1] + 1.6]], w: [20, 18.6, 17.4], tone: shirt, lit: -1, rim: '#a8c0e8', rimSide: 1, rimOp: .4, cuff: { from: .66, k: 1.14, roll: true }, seed: 9, drapes: 2, sw: .4 });
       arm = H.cloth(u, { spine: [[el[0] + 2, el[1] + .6], [lerp(el[0], wr[0], .5), lerp(el[1], wr[1], .5) - 1], [wr[0] + 1, wr[1] + .4]], w: [11.6, 10.4, 7.6], tone: SKIN, lit: -1, rim: '#a8c0e8', rimSide: 1, rimOp: .45, folds: false, capA: true, sw: .35 })
         + Array.from({ length: 12 }, (_, k) => { const t = .2 + R() * .6, p = [lerp(el[0], wr[0], t), lerp(el[1], wr[1], t) - 2 + R() * 4]; return ln(`M${P2(p)}l${f(-1 - R())} ${f(-.6 + R() * .3)}`, .22, '#4a2a18', .5); }).join('') + arm;
       // the quill: the nib on the paper (wet red), the barrel under the fingers and over the web, the feather up right

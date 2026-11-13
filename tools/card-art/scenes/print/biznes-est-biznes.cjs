@@ -21,7 +21,7 @@ const { gloom, shafts, motes } = PK;
 const VX = 100, VY = 40;                      // the vanishing point (eye level)
 const BW = [12, 188], WT = 58, WF = 72;       // the back wall's sides, the wainscot's top, the desk's far edge
 const WIN = { x0: 34, x1: 146, y0: 2, y1: 55 };
-const SC = { x: 90, y: 116, top: 44, beam: 50, half: 35, pan: 90 };   // the scales: foot, pillar top, beam, pans
+const SC = { x: 90, y: 118, top: 42, beam: 48, half: 39, pan: 92 };   // the scales: foot, pillar top, beam, pans
 const light = { time: 'day', haze: .3, key: { type: 'sun', az: 335, el: 34, color: '#fff2d0', power: .95 }, fill: { color: '#c8a070', power: .5 },
   rim: { az: 0, color: '#fff6dc', power: .5 } };
 const skel = { horizon: VY, eye: 1.4, light: 'sun through the window behind the scales (key, rim) + warm room fill', items: [
@@ -51,7 +51,7 @@ function inkwell(u, L, x, y, k = 1) {
 module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VY, eye: 1.4 });
-    const Lo = K.makeLight({ time: 'day', haze: .35, key: { type: 'sun', x: 128, y: 6, color: '#fff6dc', power: .9 } }, { horizon: 34 });
+    const Lo = K.makeLight({ time: 'day', haze: .12, key: { type: 'sun', x: 128, y: 6, color: '#fff6dc', power: .9 } }, { horizon: 34 });
     const R = rng(29);
     const ln = (d, w = .5, c = '#1a1008', op = 1) => `<path d="${d}" stroke="${c}" stroke-width="${f(w)}" fill="none" opacity="${op}" stroke-linecap="round"/>`;
     const poly = (pts, fill, extra = '') => `<path d="M${pts.map(P2).join('L')}Z" fill="${fill}"${extra}/>`;
@@ -82,7 +82,7 @@ module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', sta
         + K.sky(u, Lo, { horizon: hz, top: y0 }) + K.cloud(u, Lo, { x: 60, y: 20, w: 34, h: 6, seed: 3, far: .4 }) + K.cloud(u, Lo, { x: 132, y: 14, w: 28, h: 5, seed: 8, far: .5 })
         + `<path d="M${x0} ${hz + .2}Q50 ${hz - 4} 66 ${hz - 3}T96 ${hz - .6}V${hz + .4}H${x0}Z" fill="#7a9488" opacity=".8"/>`
         + K.water(u, Lo, { horizon: hz, bottom: y1 + 2, swell: .3, seed: 9, glitter: 128 })
-        + K.ship(u, Lo, { kind: 'endeavour', x: 112, y: 44, scale: .3, sails: 'furled', detail: 'far', seed: 2 })
+        + K.ship(u, Lo, { kind: 'endeavour', x: 112, y: 45, scale: .34, sails: 'furled', detail: 'mid', seed: 2 })
         + K.ship(u, Lo, { kind: 'merchant', x: 58, y: 38.6, scale: .2, sails: 'furled', detail: 'far', flip: true, seed: 4 })
         + `</g>`;
       // the bars and the leading; the glass catching the light; the sill and its shadow
@@ -140,7 +140,7 @@ module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', sta
         + ln(`M${x - half + 1} ${beam - .7}Q${x} ${beam - 2.3} ${x + half - 1} ${beam - .7}`, .4, '#fff4c0', .85)
         + K.shadeSphere(u, x, beam, 2, L, 'brass', { outline: .3 });
       // each pan: three chains from the ring under the beam's end to the rim, the dish, and what lies in it
-      for (const sd of [-1, 1]) { const ex = x + sd * half, rx = 13, ry = 3.4;
+      for (const sd of [-1, 1]) { const ex = x + sd * half, rx = 15.4, ry = 4;
         sc += K.shadeSphere(u, ex + sd * 1, beam, 1.4, L, 'brass', { outline: .25 }) + `<circle cx="${ex + sd}" cy="${beam + 2.4}" r="1" fill="none" stroke="url(#brass${u})" stroke-width=".55"/>`;
         // the far chain first (behind the load), the two near after it
         const ring = [ex + sd, beam + 3.3], rim = [[ex, pan - ry * .9], [ex - rx * .92, pan + .4], [ex + rx * .92, pan + .4]];
@@ -148,20 +148,21 @@ module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', sta
           for (let i = 0; i < n; i++) { const t = (i + .5) / n, cx = lerp(a[0], b[0], t), cy = lerp(a[1], b[1], t); o += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${i % 2 ? .35 : .55}" ry=".85" transform="rotate(${f(Math.atan2(b[0] - a[0], b[1] - a[1]) * -57.3)} ${f(cx)} ${f(cy)})" fill="none" stroke="#7a5a18" stroke-width=".35"/>`; } return o + ln(`M${P2(a)}L${P2(b)}`, .2, '#ffe8a0', .5); };
         sc += chain(ring, rim[0]);
         // the dish: the inside (its far wall lit by the window), the rim, the outside belly under it
-        const bowl = `M${ex - rx} ${pan}Q${ex - rx * .7} ${pan + 6.4} ${ex} ${pan + 6.6}Q${ex + rx * .7} ${pan + 6.4} ${ex + rx} ${pan}Z`;
+        const bowl = `M${ex - rx} ${pan}Q${ex - rx * .7} ${pan + 7.2} ${ex} ${pan + 7.4}Q${ex + rx * .7} ${pan + 7.2} ${ex + rx} ${pan}Z`;
         const gi = nid('pi', u);
         sc += `<defs>${linGrad(gi, 0, pan - ry, 0, pan + ry, [[0, '#fff0b0'], [.4, '#c8962e'], [1, '#6a4a10']])}</defs>`
           + `<ellipse cx="${ex}" cy="${pan}" rx="${rx}" ry="${ry}" fill="url(#${gi})" stroke="#4a3008" stroke-width=".35"/>`;
         // the load
         if (sd < 0) { // two kegs of powder, side by side, the Company's mark painted on each
-          for (const [dx, sd2] of [[-4.6, 3], [4.8, 5]]) { const kx = ex + dx, ky = pan + 1.4;
-            sc += K.barrel(u, L, { x: kx, y: ky, s: .36, kind: 'powder', seed: sd2, contact: false })
-              + `<circle cx="${f(kx)}" cy="${f(ky - 5.4)}" r="1.9" fill="none" stroke="#e8dcc0" stroke-width=".42" opacity=".9"/><path d="M${f(kx)} ${f(ky - 7.1)}v3.4M${f(kx - 1.7)} ${f(ky - 5.4)}h3.4" stroke="#e8dcc0" stroke-width=".42" opacity=".9"/>`; }
+          for (const [dx, sd2] of [[-5.6, 3], [5.8, 5]]) { const kx = ex + dx, ky = pan + 1.8, ks = .5;
+            sc += K.barrel(u, L, { x: kx, y: ky, s: ks, kind: 'powder', seed: sd2, contact: false })
+              + `<circle cx="${f(kx)}" cy="${f(ky - 7.4)}" r="2.6" fill="none" stroke="#efe4c8" stroke-width=".55" opacity=".95"/><path d="M${f(kx)} ${f(ky - 9.8)}v4.8M${f(kx - 2.4)} ${f(ky - 7.4)}h4.8" stroke="#efe4c8" stroke-width=".55" opacity=".95"/>`
+              + `<path d="M${f(kx - 4.6)} ${f(ky - 14.4)}Q${f(kx)} ${f(ky - 16.2)} ${f(kx + 4.6)} ${f(ky - 14.4)}" stroke="#fff4d0" stroke-width=".5" fill="none" opacity=".8"/>`; }
         } else { // a heap of gold: leaning stacks and loose coins, heaped above the rim
-          sc += K.coins(u, L, { x: ex - 4, y: pan + 1, s: .9, n: 7, seed: 11 }) + K.coins(u, L, { x: ex + 4.4, y: pan + 1.6, s: .9, n: 6, seed: 12 }) + K.coins(u, L, { x: ex, y: pan - .6, s: .9, n: 5, seed: 13 }); }
+          sc += K.coins(u, L, { x: ex - 6, y: pan + 1.6, s: 1.15, n: 7, seed: 11 }) + K.coins(u, L, { x: ex + 5.4, y: pan + 2, s: 1.15, n: 7, seed: 12 }) + K.coins(u, L, { x: ex - .6, y: pan, s: 1.15, n: 6, seed: 13 }) + K.coins(u, L, { x: ex + 1, y: pan + 2.4, s: 1.1, n: 4, seed: 14 }); }
         sc += `<path d="${bowl}" fill="url(#brass${u})" stroke="#4a3008" stroke-width=".4"/>`
           + ln(`M${ex - rx + 1} ${pan + .6}Q${ex} ${pan + ry + 1.4} ${ex + rx - 1} ${pan + .6}`, .5, '#fff4c0', .8)
-          + `<path d="M${ex - 2.4} ${pan + 6.4}h4.8l-.8 1.4h-3.2z" fill="url(#brass${u})" stroke="#4a3008" stroke-width=".3"/>`;
+          +  `<path d="M${ex - 2.6} ${pan + 7.2}h5.2l-.8 1.4h-3.6z" fill="url(#brass${u})" stroke="#4a3008" stroke-width=".3"/>`;
         sc += chain(ring, rim[1]) + chain(ring, rim[2]); } }
     // the sun on the brass and gold: rims towards the window
     sc += `<path d="M${SC.x - 1.6} ${SC.y - 9}V${SC.top + 8}" stroke="#fff8d8" stroke-width=".5" opacity=".75"/>`;
@@ -183,7 +184,7 @@ module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', sta
       fg += `<path d="M${P2(at(.52, 1))}q.6 5 -1.4 9l1.4 -.4l.8 1.4" stroke="#b02a1a" stroke-width=".9" fill="none"/>`; }
     fg += K.castShadow(u, L, { x: 184, y: 100, w: 10, h: 10, horizon: VY, d: .9 }) + inkwell(u, L, 184, 100, 1.2);
     // the sun's shafts through the dusty air from the window down onto the desk; motes in them
-    fg += shafts(u, 70, -30, [[60, 120, 92, 124], [104, 118, 132, 112], [24, 104, 44, 112]], '#fff4d0', .14) + motes(26, 50, 60, 90, 50, '#fff4d8', 9);
+    fg += shafts(u, 70, -30, [[60, 120, 92, 124], [104, 118, 132, 112], [24, 104, 44, 112]], '#fff4d0', .2) + motes(26, 50, 60, 90, 50, '#fff4d8', 9);
     // the room darkens to the sides and down under the glass
     fg += gloom(u, 100, 70, 0, 90, .3, '#0a0604') + gloom(u, 100, 70, 200, 90, .3, '#0a0604') + gloom(u, 100, 128, 100, 280, .5, '#040806');
     return [bg + tb, fg];
