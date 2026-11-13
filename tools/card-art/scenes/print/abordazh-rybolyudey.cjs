@@ -11,6 +11,10 @@
 // the water and a claw comes over the rail on the far right; the Dutchman is a ghost in the fog on the horizon.
 // Light: a bright patch of fog behind him (key, contre-jour: green rims on the crest, the shoulders, the blade) and
 // the enemy's lantern on the left (warm, on his face, the claw and the rail).
+// Fix pass after review (verdict-b3): the cutlass fist ×1.33, back of the hand to us, the fingers closed round a
+// thicker grip; a thick dark-edged guard with the knuckle bow closed to the pommel; the scallop lower on the shoulder,
+// half sunk into the coat with a lip and a shadow; the heads in the water left and right bigger and lit (crest, eye
+// glint); the right-edge crab replaced by the right head's whole claw over the rail; the crest's rim along the spines.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -196,7 +200,7 @@ module.exports = { name: 'Абордаж рыболюдей', kind: 'deck', stat
     bg += `<g opacity=".55">${K.ship(u, L, { kind: 'dutch', x: 176, y: HZ + 1, scale: .5, detail: 'far', lights: true, seed: 6 })}</g>` + K.fog(u, L, { y: HZ - 22, h: 30, density: .6, seed: 2 });
     // his crewmates breaking the water beyond the rail: dark fish heads with crests, rings of ripples
     // (left and right: big and lit — a pale crest, the green rim, a yellow eye with a glint, a gill slit, a mouth line)
-    for (const [x, y, s, dir, big] of [[15, 105.6, 1.25, -1, 1], [52, 106.4, .55, -1, 0], [179, 106, 1.3, 1, 1]]) {
+    for (const [x, y, s, dir, big] of [[15, 105.6, 1.25, -1, 1], [52, 106.4, .55, -1, 0], [185, 106, 1.3, 1, 1]]) {
       const hg = nid('wh', u);
       bg += `<g transform="translate(${x} ${y}) scale(${dir * s} ${s})">`
         + (big ? `<defs>${linGrad(hg, -9, -8, 9, 4, [[0, '#5a7a62', 1], [.5, '#2e4a3c', 1], [1, '#14241e', 1]])}</defs>` : '')
@@ -239,8 +243,8 @@ module.exports = { name: 'Абордаж рыболюдей', kind: 'deck', stat
     // the fixed finger hooked over the cap and the movable one under it, black tips biting the inner face
     { const o = `stroke="${SHELL.outline}" stroke-width=".5" stroke-linejoin="round"`, cg = nid('fc', u);
       rail += `<defs>${linGrad(cg, -8, -14, 6, 0, [[0, SHELL.lit, 1], [.45, SHELL.half, 1], [1, SHELL.shadow, 1]])}</defs><g transform="translate(164 ${RAIL})">`
-        + `<path d="M16 -3Q11 -10 3 -10" stroke="${SHELL.outline}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M16 -3Q11 -10 3 -10" stroke="${SHELL.half}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M14 -6.4Q10.4 -11 5 -11.4" stroke="${SHELL.lit}" stroke-width=".8" fill="none" opacity=".7"/>`
-        + `<path d="M10 -9.6l.8 -2.2l1 2M13.4 -7.4l1.4 -1.8l.4 2.2" fill="${SHELL.shadow}" ${o}/>`
+        + `<path d="M14 0Q12 -8 3 -10" stroke="${SHELL.outline}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M14 0Q12 -8 3 -10" stroke="${SHELL.half}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M12.6 -4Q11 -10.4 5 -11.6" stroke="${SHELL.lit}" stroke-width=".8" fill="none" opacity=".7"/>`
+        + `<path d="M8.6 -9.4l.6 -2.2l1.2 1.8M11.6 -5.6l1.6 -1.4l.2 2.2" fill="${SHELL.shadow}" ${o}/>`
         + `<path d="M5 -12.4Q-3 -15 -8 -9Q-10.6 -4.6 -9.6 1.4L-8.2 4.4L-7 .8Q-7.4 -4 -4.6 -6.6Q0 -9 4 -6Z" fill="url(#${cg})" ${o}/>`
         + `<path d="M3 -6Q-1 -5 -3.6 -2.4Q-5.4 0 -5 3.4L-3.8 5L-3 1.6Q-2.6 -1 1 -2.4Z" fill="${SHELL.half}" ${o}/>`
         + `<path d="M-9.6 1.4L-8.2 4.4L-7 .8Z" fill="#140806"/><path d="M-5 3.4L-3.8 5L-3 1.6Z" fill="#140806"/>`

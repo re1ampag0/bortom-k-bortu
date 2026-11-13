@@ -11,6 +11,12 @@
 // to a block on the beam and away along the deckhead — he still hauls. The face is a 3/4 head (head34): drowned
 // grey-green skin, half-shut eyes, the stubble; the bucket and the chains are left out (one subject).
 // Light: the green shaft from the grating upper left (key) on his face, the fist and the rope; the rest in the dark.
+// Fix pass after review (verdict-b3): the sleeve grows from the coat's shoulder corner (its root under the coat, the
+// armhole seam stitched, no closed shoulder), narrows to the wrist, the cuff as wide as the forearm; the fist a quarter
+// smaller, the face's tone, closed round a grip of the rope's radius; the rope thicker, paler, dark-edged, taut on a
+// diagonal to the block (moved off the frame post), the tail hanging clear of the post; the merge reaches his far
+// cheek, the neck and the middle of his body (plank seams and a wood tint, barnacles along the seam); the neck narrower,
+// soft, the chin's shadow on it.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');

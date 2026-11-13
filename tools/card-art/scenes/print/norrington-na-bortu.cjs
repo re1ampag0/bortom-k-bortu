@@ -10,6 +10,11 @@
 // No likeness of any actor: a generic weathered officer, turned 3/4 away to the ship, unshaven.
 // Light: the moon behind the fog upper right (key: his face and fists turned to it, the plank, the Endeavour's side);
 // the green fog (fill); a soft beam from above on the deck.
+// Fix pass after review (verdict-b3): the far half of the coat right of the waistcoat, the far epaulette and the far
+// sleeve out of the far shoulder at the silhouette's edge; he leans back ~13° (upper body about the hips, the legs
+// braced), the head turned more to the rope; sharp-edged mud with splashes, a torn near cuff, frayed fringes; the red
+// tear moved up off the glass with a ragged edge; a visible block top right through which his rope turns into the
+// plank's rope; a flagstaff for the Endeavour's ensign; the queue taken back behind the shoulder (own path, not 'tied').
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
