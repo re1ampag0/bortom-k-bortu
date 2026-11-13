@@ -71,12 +71,27 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'draft
         + `${radGrad(gs, SUN.x, SUN.y, 60, [[0, '#fff0c8', .7], [.25, '#ffd090', .4], [.6, '#ffb070', .12], [1, '#ffb070', 0]])}<clipPath id="${sc}"><path d="${edge}${rip}" clip-rule="evenodd"/></clipPath></defs>`
         + `<path d="${edge}${rip}" fill-rule="evenodd" fill="url(#${g})"/><g clip-path="url(#${sc})"><rect x="0" y="0" width="200" height="100" fill="url(#${gs})"/>`
         // the cloths of the sail: seams down it, a little darker; the belly's soft folds; the reef band across it
-        + Array.from({ length: 13 }, (_, i) => { const x = S.x0 + 6 + i * 12; return `<path d="M${x} ${S.top}Q${f(x + (x - 100) * .04)} 52 ${f(x + (x - 100) * .05)} 90" stroke="#6a3420" stroke-width=".5" fill="none" opacity=".75"/>`; }).join('')
+        + Array.from({ length: 13 }, (_, i) => { const x = S.x0 + 6 + i * 12; return `<path d="M${x} ${S.top}Q${f(x + (x - 100) * .12)} 52 ${f(x + (x - 100) * .06)} 90" stroke="#6a3420" stroke-width=".5" fill="none" opacity=".75"/>`; }).join('')
         + [[44, 8], [72, 10], [128, 10], [158, 8]].map(([x, w]) => `<path d="M${x} ${S.top + 2}Q${x + 2} 50 ${x} 84" stroke="#7a3a24" stroke-width="${w}" fill="none" opacity=".2"/>`).join('')
         + `<path d="M${S.x0 - 1} 31Q100 33 ${S.x1 + 1} 31" stroke="#8a4a2c" stroke-width="2.2" fill="none" opacity=".45"/><path d="M${S.x0} 30Q100 32 ${S.x1} 30" stroke="#ffd8a0" stroke-width=".4" fill="none" opacity=".5"/>`
         // the old shadow of the yard on the canvas, the bolt rope round the edges
-        + `<path d="M${S.x0} ${S.top + 1.6}L${S.x1} ${S.top + 1.6}" stroke="#4a2414" stroke-width="2" opacity=".5"/></g>`
-        + `<path d="${edge}" fill="none" stroke="#5a2e1a" stroke-width="1"/><path d="M${S.f0 + 2} ${S.foot - 1}Q100 ${S.mid - 5} ${S.f1 - 2} ${S.foot - 1}" stroke="#ffd8a8" stroke-width=".5" fill="none" opacity=".7"/>`;
+        + `<path d="M${S.x0} ${S.top + 1.6}L${S.x1} ${S.top + 1.6}" stroke="#4a2414" stroke-width="2" opacity=".5"/>`
+        // the belly: the canvas bellies out between yard and foot — darker towards the leeches, the head and the foot,
+        // curved bands across it following the bulge, the creases from the clews and between the robands
+        + (() => { const vg = nid('sv', u), fb = nid('sb', u), hg = nid('sh', u);
+          return `<defs>${radGrad(vg, 110, 48, 92, [[0, '#3a1810', 0], [.42, '#3a1810', 0], [.72, '#3a1810', .32], [.9, '#2a0e08', .62], [1, '#1e0a06', .8]])}`
+            + `${linGrad(hg, 0, S.top, 0, S.foot, [[0, '#2a1008', .45], [.16, '#2a1008', .1], [.5, '#2a1008', 0], [.78, '#2a1008', .18], [1, '#1e0a06', .55]])}`
+            + `<filter id="${fb}" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>`
+            + `<rect x="0" y="0" width="200" height="100" fill="url(#${hg})"/><rect x="0" y="0" width="200" height="100" fill="url(#${vg})"/>`
+            + [[34, 9, .16], [52, 7, .14], [70, 5, .12]].map(([y, b, o]) => `<path d="M${S.x0 - 4} ${y - b * .6}Q100 ${y + b} ${S.x1 + 4} ${y - b * .6}" stroke="#4a1e10" stroke-width="5" fill="none" opacity="${o}" filter="url(#${fb})"/><path d="M${S.x0 + 10} ${y - b * .6 + 3.4}Q100 ${y + b + 3.4} ${S.x1 - 10} ${y - b * .6 + 3.4}" stroke="#ffe0b0" stroke-width=".7" fill="none" opacity=".22"/>`).join('')
+            // the creases from the clews up into the belly
+            + [[S.f0 + 8, S.foot - 4, 58, 34], [S.f0 + 14, S.foot - 3, 84, 46], [S.f1 - 8, S.foot - 4, 150, 34], [S.f1 - 14, S.foot - 3, 112, 50]].map(([x0, y0, x1, y1]) => `<path d="M${x0} ${y0}Q${f((x0 + x1) / 2 + (x1 > x0 ? -4 : 4))} ${f((y0 + y1) / 2 + 4)} ${x1} ${y1}" stroke="#3a1608" stroke-width="2.2" fill="none" opacity=".34" stroke-linecap="round" filter="url(#${fb})"/><path d="M${x0 + (x1 > x0 ? 1.4 : -1.4)} ${y0 - .6}Q${f((x0 + x1) / 2 + (x1 > x0 ? -2.6 : 2.6))} ${f((y0 + y1) / 2 + 3)} ${x1 + (x1 > x0 ? 1.2 : -1.2)} ${y1 - .6}" stroke="#ffd8a0" stroke-width=".5" fill="none" opacity=".35"/>`).join('')
+            + Array.from({ length: 12 }, (_, i) => { const x = S.x0 + 12 + i * 12; return `<path d="M${x} ${S.top + 2}q-.6 4 .2 8" stroke="#3a1608" stroke-width="1.2" fill="none" opacity=".35"/>`; }).join('')
+            // the shadow along the foot and the dark band inside the edges
+            + `<path d="M${S.f0} ${S.foot - 2}Q100 ${S.mid - 6} ${S.f1} ${S.foot - 2}" stroke="#1e0a06" stroke-width="9" fill="none" opacity=".42" filter="url(#${fb})"/>`
+            + `<path d="${edge}" fill="none" stroke="#2a0e08" stroke-width="7" opacity=".5" filter="url(#${fb})"/>`; })()
+        + `</g>`
+        + `<path d="${edge}" fill="none" stroke="#2a1208" stroke-width="1.7"/><path d="${edge}" fill="none" stroke="#8a5434" stroke-width=".4" opacity=".7"/><path d="M${S.f0 + 2} ${S.foot - 1}Q100 ${S.mid - 5} ${S.f1 - 2} ${S.foot - 1}" stroke="#ffd8a8" stroke-width=".5" fill="none" opacity=".7"/>`;
       // the robands over the yard holding the head of the sail
       for (let x = S.x0 + 6; x < S.x1; x += 12) mid += `<path d="M${x} ${S.top + 1}q1.2 -4 2.4 0" stroke="#3a2010" stroke-width=".7" fill="none"/>`;
       // the rip's frayed edges, lit from behind: hot rims, loose threads
@@ -97,7 +112,7 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'draft
     // the clew ropes: from the outer pins up to the cringles in the foot of the sail, rising in S-bends
     const cr = [[70, 82.6], [156, 83.6]];
     const ropeL = [[PINS[0], FIFE.y - 1], [84, 94], [77, 96], [73, 92], [76, 88.5], [72, 86], cr[0]];
-    const ropeR = [[PINS[3], FIFE.y - 1], [120, 97.5], [130, 98], [139, 95], [145, 90], [151, 86.4], cr[1]];
+    const ropeR = [[PINS[3], FIFE.y - 1], [117, 96.6], [123, 95], [129, 98.4], [134.4, 102], [140.4, 101.4], [144.2, 97], [145, 91.6], [148, 87.4], [152.4, 86.6], cr[1]];
     mid += green(ropeL, 3.4) + green(ropeR, 3.4);
     mid += turns(PINS[0]) + turns(PINS[3]) + turns(PINS[2]);
     mid += K.rope(u, L, ropeL, { r: 1.05, seed: 2 }) + K.rope(u, L, ropeR, { r: 1.05, seed: 3 });
@@ -113,9 +128,23 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'draft
       const up = [[PINS[2], FIFE.y - 1], [109, 95], [116, 93], [119, 88], [127, 86], [ER(80)[0] - .4, 80.4]];
       mid += green(up, 3) + K.rope(u, L, up, { r: 1, seed: 7 });
       eyeL.forEach((y, i) => { const a = EL(y), b = ER(eyeR[i]); mid += `<path d="M${P2(a)}L${P2(b)}" stroke="#000" stroke-width="2.4" opacity=".25" transform="translate(.6 .9)"/>` + K.rope(u, L, [a, [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5) - .3], b], { r: 1.15, seed: 10 + i }); });
-      // the live end: out of the top-left eyelet, lifting up and over, its whipped tip turned to the next eyelet
-      const tip = [EL(52), [ripX(52) - 10, 48], [ripX(46) - 8, 41.6], [ripX(42), 39], [ripX(44) + 8, 41.4], [ER(48)[0] + .8, tipY]];
-      mid += green(tip, 3.4) + K.rope(u, L, tip, { r: 1.15, seed: 14, whip: true }) + K.localGlow(u, { x: ER(48)[0], y: tipY, color: '#8affb0', power: .5, radius: 7 }, { core: false });
+      // the live end: out of the top-left eyelet it rears up, throws one curl over the rip, and lunges down into it,
+      // its long whipped head aimed at the next eyelet on the right; green trails behind the head show the strike
+      const P0 = EL(52), PE = [ER(48)[0] - 2.2, tipY - 5.4], C = [124, 26];
+      const tip = Array.from({ length: 23 }, (_, i) => { const t = i / 22, a = (1 - t) * (1 - t), b = 2 * t * (1 - t), c = t * t, base = [a * P0[0] + b * C[0] + c * PE[0], a * P0[1] + b * C[1] + c * PE[1]];
+        const w = Math.min(1, Math.max(0, (t - .3) / .36)), ph = Math.PI * 2 * w * w * (3 - 2 * w), rr = 4.6;
+        return [base[0] + rr * Math.sin(ph), base[1] - rr * (1 - Math.cos(ph))]; });
+      mid += green(tip, 3.6) + K.rope(u, L, tip, { r: 1.15, seed: 14 });
+      { const q = tip[tip.length - 1], p = tip[tip.length - 3], dv = [q[0] - p[0], q[1] - p[1]], dl = Math.hypot(...dv), v = [dv[0] / dl, dv[1] / dl], n = [-v[1], v[0]];
+        const hd = (k, s2) => [q[0] + v[0] * k + n[0] * s2, q[1] + v[1] * k + n[1] * s2], hg = nid('hd', u);
+        // the head: the whipped end, longer and a little swollen, tapering to a point
+        mid += `<defs>${linGrad(hg, ...hd(0, -1.6), ...hd(0, 1.6), [[0, '#e8c890', 1], [.5, '#9a7040', 1], [1, '#3a2410', 1]])}</defs>`
+          + `<path d="M${P2(hd(-1, -1.15))}C${P2(hd(1.6, -1.8))} ${P2(hd(4.2, -1.4))} ${P2(hd(6.4, 0))}C${P2(hd(4.2, 1.4))} ${P2(hd(1.6, 1.8))} ${P2(hd(-1, 1.15))}Z" fill="url(#${hg})" stroke="#1e1006" stroke-width=".4"/>`
+          + [.6, 1.8, 3].map(k => `<path d="M${P2(hd(k, -1.45))}L${P2(hd(k, 1.45))}" stroke="#3a2010" stroke-width=".45"/>`).join('')
+          + `<path d="M${P2(hd(5.4, 0))}L${P2(hd(6.8, 0))}" stroke="#d8ffe4" stroke-width=".5"/>`
+          + K.localGlow(u, { x: hd(5, 0)[0], y: hd(5, 0)[1], color: '#8affb0', power: .55, radius: 7 }, { core: false });
+        // the strike: short green trails behind the head, fading back along its way
+        for (const [o2, k0, k1, op] of [[-3.2, -3, -10, .7], [3.2, -2.4, -8.6, .55], [-5.6, -6, -11.6, .35]]) mid += `<path d="M${P2(hd(k0, o2))}Q${P2(hd((k0 + k1) / 2, o2 * 1.12))} ${P2(hd(k1, o2 * .9))}" stroke="#aaffc4" stroke-width=".6" fill="none" stroke-linecap="round" opacity="${op}"/>`; }
       // the laced part of the rip pulled shut: a few puckers in the canvas across it
       for (const y of [58, 66, 74]) mid += `<path d="M${f(ripX(y) - 8)} ${y + 1}q4 -1.4 8 0t8 0" stroke="#7a3e26" stroke-width=".4" fill="none" opacity=".6"/>`; }
     // ——— the sword in the deck: the blade, the cup hilt, the grip, the green stone in the pommel ———
