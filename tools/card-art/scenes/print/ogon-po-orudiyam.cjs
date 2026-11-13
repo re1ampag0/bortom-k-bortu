@@ -124,7 +124,7 @@ module.exports = { name: 'Огонь по орудиям', kind: 'deck', status:
             return `<path d="M${f(p[0] - Math.sin(a) * w)} ${f(p[1] + Math.cos(a) * w)}L${P2(q)}L${f(p[0] + Math.sin(a) * w)} ${f(p[1] - Math.cos(a) * w)}Z" fill="${p[1] > hy ? '#e8b878' : '#a06838'}" stroke="#2a1408" stroke-width=".25"/>`; }).join('')
         + `<path d="${hd}" fill="none" stroke="#ff9a40" stroke-width=".6" opacity=".55"/>`;
       // the barrel: thrown up off the carriage, the breech down inside, the chase over the broken sill, muzzle up-left
-      { const br = [hx + 12, hy + 14], mz = [hx - 30, hy - 10];
+      { const br = [hx + 12, hy + 14], mz = [hx - 33, hy - 13];
         hit += K.shadeCyl(u, br[0], br[1], mz[0], mz[1], 6, Lf, 'iron', { r1: 6.8, r2: 4.6, outline: .5, seed: 3 });
         // the reinforce rings and the muzzle swell, its face turned towards us a little: the bore
         const d = [mz[0] - br[0], mz[1] - br[1]], l = Math.hypot(...d), ux = d[0] / l, uy = d[1] / l, nx = -uy, ny = ux, rp = Lf.ramp('iron', hx, hy);
