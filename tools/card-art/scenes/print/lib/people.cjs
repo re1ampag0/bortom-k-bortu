@@ -163,11 +163,209 @@ function hand(u, o) {
   return { back, front, P };
 }
 
+// ——— a jointed hand (3D) ———
+// A small 3D model projected to the picture: the palm as a slab, four fingers with three phalanges each and the
+// thumb with its own three bones (the first one makes the ball of the thumb). Each finger bends at its joints, so a
+// fist round a handle is built by geometry: the fingers walk round the cylinder, the thumb comes round it the other
+// way and lies over the index finger. Pieces are sorted by depth; what lies behind the held thing goes to `back`.
+// o: { at: the wrist, or grip: where the handle's axis should cross the middle finger (then `at` is found);
+//   a: degrees, the direction from the wrist to the knuckles; s: size (1 — a hand of about 9.5 units); m: ±1 mirror
+//   (+1 — the thumb on the frame's −y side, as in hand()); roll: degrees round the hand's own axis — 0 the back of the
+//   hand to us, 90 the thumb side (fist seen from the side), 180 the palm;
+//   pose: 'wrap' (round a cylinder of radius r, default .8 — a hammer handle; 2 — a bottle) | 'fist' | 'open' |
+//   'relaxed' | 'point' | 'scissor' (index and middle straight, pressed together: a card between them) | 'pinch';
+//   flex: [[mcp, pip, dip] × 4] degrees (own pose, index → little), spread (deg), thumbFlex: [cmc, mcp, ip] deg,
+//   thumbSpread (deg, + away from the fingers), tilt (deg: for 'wrap', the handle across the palm runs diagonal);
+//   tone (skin ramp: lit, half, shadow, outline), light: [x, y] screen direction to the light (default up-left),
+//   nails, knuckles (true), sw (outline), backFingers: [0..3, 'thumb'] — pieces to put in `back` (a card between
+//   the fingers: the middle finger behind it) }
+// Returns { back, front, P (local x, y, z → picture), wrist, grip (picture point of the handle axis), axis (unit,
+// along the handle in the picture), r (the handle radius in picture units) }.
+const HFING = [{ k: [4.75, -1.45], l: 4.2, w: 1.1, sp: -1.5 }, { k: [5.0, -.48], l: 4.7, w: 1.14, sp: -.5 },
+  { k: [4.85, .48], l: 4.4, w: 1.08, sp: .5 }, { k: [4.5, 1.38], l: 3.5, w: .94, sp: 1.5 }];
+const HPOSE = {
+  open: { flex: [[4, 6, 4], [4, 6, 4], [5, 7, 4], [6, 8, 5]], spread: 7, thumbFlex: [0, 6, 8], thumbSpread: 4 },
+  relaxed: { flex: [[16, 26, 14], [20, 30, 16], [24, 36, 20], [28, 40, 22]], spread: 3, thumbFlex: [8, 16, 14] },
+  point: { flex: [[0, 4, 2], [78, 100, 60], [80, 100, 60], [80, 96, 56]], spread: 2, thumbFlex: [34, 30, 26], thumbSpread: -16 },
+  scissor: { flex: [[6, 8, 4], [6, 8, 6], [70, 96, 56], [74, 96, 56]], spread: 0, thumbFlex: [22, 24, 18] },
+  pinch: { flex: [[34, 46, 24], [40, 56, 30], [50, 70, 40], [58, 76, 44]], spread: 2, thumbFlex: [34, 22, 18], thumbSpread: -6 }
+};
+function hand3(u, o) {
+  const s = o.s || 1, m = o.m || 1, an = (o.a || 0) * Math.PI / 180, ux = Math.cos(an), uy = Math.sin(an), nx = -uy, ny = ux;
+  const rl = (o.roll || 0) * Math.PI / 180, cr = Math.cos(rl), sr = Math.sin(rl);
+  const tn = o.tone, sw = o.sw || .36, pose = o.pose || 'relaxed', wrap = pose === 'wrap' || pose === 'fist';
+  const r = pose === 'fist' ? .12 : (o.r != null ? o.r : .8), tilt = (o.tilt != null ? o.tilt : 10) * Math.PI / 180;
+  const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sc = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const nrm = a => sc(a, 1 / (Math.hypot(a[0], a[1], a[2]) || 1));
+  // the view: a rotation about the hand's x axis; depth > 0 — towards us
+  const yv = p => p[1] * cr + p[2] * sr, dep = p => -p[1] * sr + p[2] * cr;
+  const VIEW = [0, -sr, cr];
+  let W = o.at || [0, 0];
+  const scr = p => { const y = yv(p); return [W[0] + s * (p[0] * ux + m * y * nx), W[1] + s * (p[0] * uy + m * y * ny)]; };
+  // the handle axis (wrap): along y, tilted so it is nearer the knuckles at the index side; z under the palm
+  const zc = -(.85 + r), axX = y => 4.5 - Math.tan(tilt) * y;
+  if (o.grip) { const g0 = scr([axX(-.48), -.48, zc]); W = [W[0] + o.grip[0] - g0[0], W[1] + o.grip[1] - g0[1]]; }
+  const P = (x, y, z = 0) => scr([x, y, z]);
+  const pr = Object.assign({}, HPOSE[pose] || {}, o);
+  const spread = (pr.spread != null ? pr.spread : 4) * Math.PI / 180;
+  // ——— the digits as chains of 3D joints with widths ———
+  const digits = [];
+  HFING.forEach((F, i) => {
+    const K0 = [F.k[0], F.k[1], -.42], ls = [F.l * .45, F.l * .32, F.l * .26], ws = [F.w, F.w * .92, F.w * .84, F.w * .74];
+    const yaw = (wrap ? -F.sp * 1.5 * Math.PI / 180 : F.sp * spread), d0 = [Math.cos(yaw), Math.sin(yaw), 0];
+    const J = [K0], D = [];
+    if (wrap) {
+      // walk round the handle: each joint on the circle of radius ρ about the axis, in the finger's own plane
+      const C = [axX(K0[1]) - K0[0], zc - K0[2]];   // (along the finger, z) relative to the knuckle
+      const rho = Math.hypot(C[0], C[1]); let th = Math.atan2(-C[1], -C[0]);
+      for (const l of ls) { const st = 2 * Math.asin(Math.min(.999, l / (2 * rho))); th -= st;
+        const t = C[0] + rho * Math.cos(th), z = C[1] + rho * Math.sin(th); J.push(add(K0, add(sc(d0, t), [0, 0, z]))); }
+    } else {
+      const fl = (pr.flex && pr.flex[i]) || [15, 20, 10]; let phi = 0, p = K0;
+      fl.forEach((fd, j) => { phi += fd * Math.PI / 180; const d = add(sc(d0, Math.cos(phi)), [0, 0, -Math.sin(phi)]); p = add(p, sc(d, ls[j])); J.push(p); });
+    }
+    for (let j = 0; j < 3; j++) { const d = nrm(sub(J[j + 1], J[j])), dz = [0, 0, 1], dor = nrm(sub(dz, sc(d, dot(dz, d)))); D.push(dor); }
+    digits.push({ id: i, J, ws, D });
+  });
+  { // the thumb: from the ball of the thumb (the carpal joint), three bones
+    const C0 = [1.05, -1.55, -.78], ls = [2.0, 1.55, 1.25], ws = [1.3, 1.16, 1.06, .96], J = [C0];
+    if (wrap) {
+      // round the handle the other way from the fingers, rising from the palm, its tip over the index finger
+      const ya = [-2.1, -1.7, -.95], ca = [axX(-1.9), zc]; let th = Math.atan2(J[0][2] - ca[1], J[0][0] - ca[0]);
+      const rad = [r + .74, r + 1.2, r + 1.6];
+      ls.forEach((l, j) => { const prev = J[j], dy = ya[j] - prev[1], lxz = Math.sqrt(Math.max(.05, l * l - dy * dy));
+        const rho = rad[j], st = 2 * Math.asin(Math.min(.999, lxz / (2 * rho))); th = j === 0 ? Math.PI - .26 : th + st;
+        J.push([ca[0] + rho * Math.cos(th), ya[j], ca[1] + rho * Math.sin(th)]); });
+    } else {
+      const tf = (pr.thumbFlex || [10, 15, 10]).map(v => v * Math.PI / 180), A = -(40 + (pr.thumbSpread || 0)) * Math.PI / 180;
+      const T0 = nrm([Math.cos(A), Math.sin(A), -.5]), B0 = [.3, 1, -.9], B = nrm(sub(B0, sc(T0, dot(B0, T0))));
+      let phi = 0, p = C0; tf.forEach((fd, j) => { phi += fd; const d = add(sc(T0, Math.cos(phi)), sc(B, Math.sin(phi))); p = add(p, sc(d, ls[j])); J.push(p); });
+    }
+    const D = []; for (let j = 0; j < 3; j++) { const d = nrm(sub(J[j + 1], J[j])), out = [0, -1, .6], dor = nrm(sub(out, sc(d, dot(out, d)))); D.push(dor); }
+    digits.push({ id: 'thumb', J, ws, D });
+  }
+  // ——— drawing ———
+  const Ls = o.light || [-.5, -.86];
+  const lit2 = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; return ((-dy / l) * Ls[0] + (dx / l) * Ls[1]) >= 0 ? 1 : -1; };
+  const nail = o.nail || mix(tn.lit, '#ffffff', .3), crease = mix(tn.shadow, tn.half, .25);
+  const piece = (dg, j0, j1) => {
+    // one continuous tube through joints j0..j1 (a part of a digit that lies wholly in front of or behind the object)
+    const C = [], Wd = []; for (let j = j0; j <= j1; j++) { C.push(scr(dg.J[j])); Wd.push(dg.ws[j] * s); }
+    if (C.length === 2) { C.splice(1, 0, [lerp(C[0][0], C[1][0], .5), lerp(C[0][1], C[1][1], .5)]); Wd.splice(1, 0, lerp(Wd[0], Wd[1], .5)); }
+    for (let k = 1; k < C.length; k++) if (Math.hypot(C[k][0] - C[k - 1][0], C[k][1] - C[k - 1][1]) < .02 * s) C[k] = [C[k][0] + .02 * s, C[k][1]];
+    const T = tube(C, Wd, 5), tip = j1 === 3, out = T.outline(0, T.N, 1, true, true), side = lit2(C[0], C[C.length - 1]);
+    let r2 = `<path d="${sp(out, true)}" fill="${tn.half}"/>`;
+    const strip = (a, b, col, op) => `<path d="${sp(T.edge(a, 0, T.N).concat(T.edge(b, 0, T.N).reverse()), true)}" fill="${col}" opacity="${op}"/>`;
+    r2 += strip(side * .25, side * .95, tn.lit, .55) + strip(-side * .45, -side * 1, tn.shadow, .5);
+    // the joints: on the back of the finger a knuckle (light bump and a few wrinkles), on the inside a crease
+    for (let j = Math.max(j0, 1); j <= Math.min(j1, 2); j++) {
+      const i = Math.round((j - j0) / (j1 - j0) * T.N), facing = dot(dg.D[Math.min(2, j)], VIEW) + dot(dg.D[j - 1], VIEW);
+      const p = T.at(i, -.62), q = T.at(i, .62), c = T.at(i, 0);
+      if (facing > .1) r2 += `<path d="M${f(p[0])} ${f(p[1])}Q${f(c[0] + (c[0] - T.at(Math.max(0, i - 1), 0)[0]) * 1.4)} ${f(c[1] + (c[1] - T.at(Math.max(0, i - 1), 0)[1]) * 1.4)} ${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.16 * s)}" fill="none" opacity=".7"/>`
+        + `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${f(dg.ws[j] * s * .3)}" ry="${f(dg.ws[j] * s * .2)}" fill="${tn.lit}" opacity=".35"/>`;
+      else r2 += `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.2 * s)}" opacity=".8"/>`;
+    }
+    r2 += `<path d="${sp(out, true)}" fill="none" stroke="${tn.outline}" stroke-width="${sw}"/>`;
+    if (tip && o.nails !== false) {
+      const dor = dg.D[2], vis = dot(dor, VIEW);
+      if (vis > .12) { const a3 = dg.J[2], b3 = dg.J[3], w = dg.ws[3], c3 = add(add(sc(a3, .32), sc(b3, .68)), sc(dor, w * .34)), cc = scr(c3);
+        const len = Math.hypot(...[0, 1].map(k => scr(b3)[k] - scr(a3)[k])), ang = Math.atan2(scr(b3)[1] - scr(a3)[1], scr(b3)[0] - scr(a3)[0]) * 180 / Math.PI;
+        r2 += `<ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(Math.max(.18, len * .3))}" ry="${f(w * s * .34 * Math.min(1, vis + .2))}" transform="rotate(${f(ang)} ${f(cc[0])} ${f(cc[1])})" fill="${nail}" stroke="${mix(tn.shadow, tn.half, .3)}" stroke-width="${f(.1 * s)}" opacity=".9"/>`
+          + `<ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(Math.max(.1, len * .12))}" ry="${f(w * s * .1)}" transform="rotate(${f(ang)} ${f(cc[0])} ${f(cc[1])})" fill="#ffffff" opacity=".55"/>`; }
+    }
+    return r2;
+  };
+  const items = [];   // { d: depth, svg, back }
+  const dC = wrap ? dep([axX(-.48), -.48, zc]) : -1e9, backSet = new Set(o.backFingers || []);
+  for (const dg of digits) {
+    // split the chain where it crosses behind the handle (by the depth of each bone's middle)
+    const segBack = [0, 1, 2].map(j => backSet.has(dg.id) || (wrap && dep(sc(add(dg.J[j], dg.J[j + 1]), .5)) < dC));
+    let j = 0;
+    while (j < 3) { let k = j; while (k + 1 < 3 && segBack[k + 1] === segBack[j]) k++;
+      const mids = []; for (let q = j; q <= k; q++) mids.push(dep(sc(add(dg.J[q], dg.J[q + 1]), .5)));
+      items.push({ d: Math.max(...mids), svg: piece(dg, j, k + 1), back: segBack[j], thumb: dg.id === 'thumb' }); j = k + 1; }
+  }
+  // the palm: the back (z 0) and the inside (z −.85) outlines and the ball of the thumb, as one convex body
+  const PB = [[-.4, -1.55], [1.4, -2.05], [3.2, -2.15], [4.6, -1.95], [5.05, -1.0], [5.15, 0], [5.0, .95], [4.6, 1.85], [3.0, 2.05], [1.2, 1.9], [-.4, 1.5]];
+  const pts3 = [...PB.map(p => [p[0], p[1], 0]), ...PB.map(p => [p[0] * .97, p[1] * .95, -.85]), [1.2, -1.9, -1.25], [2.4, -1.6, -1.35], [1.6, 1.4, -1.15]];
+  const hull = (() => { const Q = pts3.map(p => [p[0], yv(p)]).sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr2 = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
+    const lo = [], up = []; for (const p of Q) { while (lo.length > 1 && cr2(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    for (const p of Q.slice().reverse()) { while (up.length > 1 && cr2(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+    return lo.slice(0, -1).concat(up.slice(0, -1)); })();
+  const H2 = hull.map(p => [W[0] + s * (p[0] * ux + m * p[1] * nx), W[1] + s * (p[0] * uy + m * p[1] * ny)]);
+  let palm = '';
+  { const g = nid('h3p', u), cx = H2.reduce((a, p) => a + p[0], 0) / H2.length, cy = H2.reduce((a, p) => a + p[1], 0) / H2.length, R0 = 3.2 * s;
+    palm += `<defs>${linGrad(g, cx + Ls[0] * R0, cy + Ls[1] * R0, cx - Ls[0] * R0, cy - Ls[1] * R0, [[0, tn.lit, 1], [.4, tn.half, 1], [.85, tn.shadow, 1], [1, tn.shadow, 1]])}</defs>`
+      + `<path d="${sp(H2, true)}" fill="url(#${g})" stroke="${tn.outline}" stroke-width="${sw}"/>`;
+    const backVis = cr, palmVis = -cr;
+    if (backVis > .25) {
+      // the back of the hand: tendons fanning from the wrist to the knuckles, the knuckle row in the light
+      for (const F of HFING.slice(0, 3)) { const a0 = P(2.2, F.k[1] * .55, .02), a1 = P(F.k[0] - .5, F.k[1] * .92, .02);
+        palm += `<path d="M${f(a0[0])} ${f(a0[1])}L${f(a1[0])} ${f(a1[1])}" stroke="${tn.lit}" stroke-width="${f(.32 * s)}" opacity="${f(.22 * backVis)}" stroke-linecap="round"/>`; }
+      { const v = [P(1.0, .9, .02), P(2.2, .3, .02), P(3.0, .7, .02), P(3.9, .4, .02)]; palm += `<path d="${sp(v)}" stroke="${mix(tn.shadow, '#6a6a9a', .3)}" stroke-width="${f(.16 * s)}" fill="none" opacity="${f(.22 * backVis)}"/>`; }
+      if (o.knuckles !== false) for (const F of HFING) { const k = P(F.k[0] - .1, F.k[1], 0);
+        palm += `<ellipse cx="${f(k[0])}" cy="${f(k[1])}" rx="${f(.42 * s)}" ry="${f(.3 * s)}" fill="${tn.lit}" opacity="${f(.45 * backVis)}"/>`; }
+    }
+    if (palmVis > .3) for (const L2 of [[[.8, -1.3], [2.4, -.9], [3.4, -1.4]], [[3.6, 1.8], [3.9, .2], [3.7, -1.6]], [[3.0, 1.9], [3.3, .6], [3.0, -.6]]])
+      { const Q2 = L2.map(p => P(p[0], p[1], -.85)); palm += `<path d="${sp(Q2)}" stroke="${tn.shadow}" stroke-width="${f(.14 * s)}" fill="none" opacity="${f(.6 * palmVis)}"/>`; }
+  }
+  // the palm's depth: its nearest face, a little back, so the fingers' roots tuck under its edge
+  const dPalm = Math.max(dep([2.5, 0, 0]), dep([2.5, 0, -.85])) - .35;
+  items.push({ d: dPalm, svg: palm, back: wrap && dPalm < dC, palm: true });
+  items.sort((a, b) => a.d - b.d);
+  let back = '', front = '';
+  for (const it of items) if (it.back) back += it.svg; else front += it.svg;
+  const g1 = scr([axX(-1.6), -1.6, zc]), g2 = scr([axX(1.4), 1.4, zc]), gl = Math.hypot(g2[0] - g1[0], g2[1] - g1[1]) || 1;
+  return { back, front, P, wrist: P(0, 0, -.42), grip: scr([axX(-.48), -.48, zc]), axis: [(g2[0] - g1[0]) / gl, (g2[1] - g1[1]) / gl], r: r * s };
+}
+
+// ——— hair as a mass ———
+// pts: the outline (picture points, closed); o: { r (the head radius: the size of strands), color, outline, seed,
+// n (strands), flow: p → [dx, dy] (the way the hair runs there), sheen: point (the light's band on the mass), light
+// ([x, y] to the light: the lit edge), tufts: indices of pts where a lock breaks the outline, tuftLen (× r), curl }
+function hairMass(u, pts, o) {
+  const r = o.r, R = K.rng(o.seed || 5), col = o.color, hi = o.hi || mix(col, '#f0dcc0', .38), lo = o.lo || mix(col, '#000000', .5);
+  const cid = nid('hm', u), d = sp(pts, true), Lg = o.light || [0, -1];
+  const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  let s = '';
+  // locks breaking the outline: a curved point outwards from the mass
+  for (const i of o.tufts || []) { const p = pts[i % pts.length], q = pts[(i + 1) % pts.length], pp = pts[(i - 1 + pts.length) % pts.length];
+    const tx = q[0] - pp[0], ty = q[1] - pp[1], tl = Math.hypot(tx, ty) || 1, ox = p[0] - cx, oy = p[1] - cy, ol = Math.hypot(ox, oy) || 1;
+    const len = r * (o.tuftLen || .12) * (.7 + R() * .6), w = r * .06, fl = o.flow ? o.flow(p) : [ox / ol, oy / ol], fx = fl[0] * .6 + ox / ol * .4, fy = fl[1] * .6 + oy / ol * .4, fn = Math.hypot(fx, fy) || 1;
+    const e = [p[0] + fx / fn * len, p[1] + fy / fn * len], a = [p[0] - tx / tl * w, p[1] - ty / tl * w], b = [p[0] + tx / tl * w, p[1] + ty / tl * w];
+    s += `<path d="M${f(a[0])} ${f(a[1])}Q${f(lerp(a[0], e[0], .6) + tx / tl * w * .2)} ${f(lerp(a[1], e[1], .6) + ty / tl * w * .2)} ${f(e[0])} ${f(e[1])}Q${f(lerp(b[0], e[0], .4))} ${f(lerp(b[1], e[1], .4))} ${f(b[0])} ${f(b[1])}Z" fill="${col}" stroke="${lo}" stroke-width="${f(r * .02)}"/>`; }
+  s += `<defs><clipPath id="${cid}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="${col}"/><g clip-path="url(#${cid})">`;
+  // the mass in light and shade: a soft lit side towards the light, the far side darker
+  { const g = nid('hl', u), R0 = Math.max(x1 - x0, y1 - y0) * .6;
+    s += `<defs>${linGrad(g, cx + Lg[0] * R0, cy + Lg[1] * R0, cx - Lg[0] * R0, cy - Lg[1] * R0, [[0, hi, .35], [.45, col, 0], [1, lo, .55]])}</defs><path d="${d}" fill="url(#${g})"/>`; }
+  if (o.sheen) { const g = nid('hs', u); s += `<defs>${radGrad(g, o.sheen[0], o.sheen[1], r * .55, [[0, hi, .45], [.6, hi, .15], [1, hi, 0]])}</defs><circle cx="${f(o.sheen[0])}" cy="${f(o.sheen[1])}" r="${f(r * .55)}" fill="url(#${g})"/>`; }
+  // strands: short curved strokes along the flow, dark between the locks and light on them
+  const n = o.n || 30;
+  for (let k = 0; k < n; k++) {
+    const p = [x0 + R() * (x1 - x0), y0 + R() * (y1 - y0)], fl = o.flow ? o.flow(p) : [0, 1], fn = Math.hypot(fl[0], fl[1]) || 1, fx = fl[0] / fn, fy = fl[1] / fn;
+    const len = r * (.18 + R() * .3), bend = (R() - .5) * len * (o.curl ? 1.1 : .35), e = [p[0] + fx * len, p[1] + fy * len], m = [p[0] + fx * len / 2 - fy * bend, p[1] + fy * len / 2 + fx * bend];
+    const near = o.sheen ? Math.hypot(p[0] - o.sheen[0], p[1] - o.sheen[1]) < r * .6 : false, light = R() < (near ? .65 : .3);
+    s += `<path d="M${f(p[0])} ${f(p[1])}Q${f(m[0])} ${f(m[1])} ${f(e[0])} ${f(e[1])}" stroke="${light ? hi : lo}" stroke-width="${f(r * (light ? .022 : .032))}" fill="none" stroke-linecap="round" opacity="${light ? .55 : .5}"/>`;
+  }
+  s += `</g><path d="${d}" fill="none" stroke="${lo}" stroke-width="${f(r * .025)}" opacity=".9"/>`;
+  return s;
+}
+
 // ——— a head in profile ———
 // o: { c, r, dir (1 — facing right, −1 — left), tilt (deg, + nods the face down), tone (skin ramp), warm: { color,
 // op } — the light on the cheek; rim: colour of the edge on the back of the head; mouth (0..1 open), eye: 'open' |
 // 'wide' | 'half', look (deg: + down), brow ('calm' | 'up' | 'frown'), hairColor, beard, stubble, moustache, ear,
-// lips colour; opacity }
+// lips colour; opacity;
+// detail: true — the finer face (off by default, so the scenes drawn before it keep their look): the upper lid as a
+// fold of skin with its crease, the lower lid's wet edge, a tapered brow of hair, the bridge and the ball of the nose
+// lit, the nose wing as a form, shaped lips (the upper darker, the lower with a highlight and a shadow under it), the
+// hollow under the cheekbone, the temple, the jaw's shade, the ear's rim and lobe; with detail, `beard` ('full' |
+// 'short' | 'goatee' | true) and `moustache` are masses of hair with locks;
+// hair: { color, style: 'short' | 'long' | 'tied' (a sailor's queue with a ribbon) | 'curly', ribbon } — the hair as
+// a mass (strands, a sheen on the light side, locks at the edge); hairLight: [x, y] picture direction to the light
+// for the sheen (default up and in front of the face) }
 function head(u, o) {
   const r = o.r, dir = o.dir || 1, tl = (o.tilt || 0) * Math.PI / 180 * dir, ct = Math.cos(tl), st = Math.sin(tl);
   const Q = (a, b) => { const x = a * dir * r, y = b * r; return [o.c[0] + x * ct - y * st, o.c[1] + x * st + y * ct]; };
@@ -191,7 +389,14 @@ function head(u, o) {
   { const e = Q(.62, -.08); s += `<ellipse cx="${f(e[0])}" cy="${f(e[1])}" rx="${f(r * .24)}" ry="${f(r * .14)}" fill="${tn.shadow}" opacity=".45"/>`; }
   s += `<path d="${sp([Q(.36, .16), Q(.6, .24), Q(.8, .2)])}" stroke="${tn.lit}" stroke-width="${f(r * .09)}" fill="none" opacity=".45" stroke-linecap="round"/>`;
   s += `<path d="${sp([Q(.98, .27), Q(.88, .36), Q(.9, .48)])}" stroke="${tn.shadow}" stroke-width="${f(r * .05)}" fill="none" opacity=".7"/>`;
-  if (o.stubble || o.beard) s += `<path d="${sp([Q(.2, .5), Q(.6, .56), Q(.96, .64), Q(.95, .84 + jaw), Q(.8, .93 + jaw * .7), Q(.45, .9 + jaw * .4), Q(.12, .74)], true)}" fill="${hairC}" opacity="${o.beard ? .95 : .3}"/>`;
+  if (o.detail) {
+    // the temple, the hollow under the cheekbone, the jaw turning away, the chin and the cheekbone catching light
+    const soft = (c, rx, ry, col, op, rot = 0) => { const g = nid('hd', u); return `<defs>${radGrad(g, 0, 0, 1, [[0, col, op], [1, col, 0]])}</defs><ellipse cx="0" cy="0" rx="1" ry="1" fill="url(#${g})" transform="translate(${f(c[0])} ${f(c[1])}) rotate(${f(rot * dir + (o.tilt || 0) * dir)}) scale(${f(rx * r)} ${f(ry * r)})"/>`; };
+    s += soft(Q(.36, -.22), .2, .26, tn.shadow, .35) + soft(Q(.5, .4), .3, .1, tn.shadow, .55, -12) + soft(Q(.4, .78), .42, .12, tn.shadow, .45, -20)
+      + soft(Q(.86, .82), .1, .07, tn.lit, .5) + soft(Q(.56, .18), .2, .07, tn.lit, .45, -8);
+    s += `<path d="${sp([Q(.92, -.06), Q(1.02, .06), Q(1.14, .2)])}" stroke="${tn.lit}" stroke-width="${f(r * .05)}" fill="none" opacity=".7" stroke-linecap="round"/>`;
+  }
+  if ((o.stubble || o.beard) && !(o.detail && o.beard)) s += `<path d="${sp([Q(.2, .5), Q(.6, .56), Q(.96, .64), Q(.95, .84 + jaw), Q(.8, .93 + jaw * .7), Q(.45, .9 + jaw * .4), Q(.12, .74)], true)}" fill="${hairC}" opacity="${o.beard ? .95 : .3}"/>`;
   s += '</g>';
   // the profile line lit by the light in front of the face (or the back of the head by a rim)
   if (o.faceLit !== false) s += `<path d="${sp(face.slice(4, 20).map(p => Q(p[0], p[1])))}" stroke="${o.edge || tn.lit}" stroke-width="${f(Math.max(.3, r * .07))}" fill="none" opacity=".8"/>`;
@@ -200,6 +405,13 @@ function head(u, o) {
   // the nose: the wing and the nostril
   s += `<path d="${sp([Q(.96, .12), Q(.9, .2), Q(.94, .28), Q(1.04, .3)])}" stroke="${tn.outline}" stroke-width="${f(r * .045)}" fill="none" opacity=".8"/>`;
   { const n = Q(1.02, .28); s += `<ellipse cx="${f(n[0])}" cy="${f(n[1])}" rx="${f(r * .06)}" ry="${f(r * .03)}" fill="${tn.outline}" opacity=".7"/>`; }
+  if (o.detail) {
+    // the nose wing as a small form: lit on top, a shadow tucked under it; the ball of the nose with a highlight
+    s += `<path d="${sp([Q(.95, .14), Q(1.04, .15), Q(1.08, .24), Q(1.02, .3), Q(.94, .28), Q(.92, .2)], true)}" fill="${tn.half}" opacity=".55"/>`
+      + `<path d="${sp([Q(.93, .27), Q(1.0, .31), Q(1.06, .3)])}" stroke="${tn.shadow}" stroke-width="${f(r * .05)}" fill="none" opacity=".75"/>`
+      + `<path d="${sp([Q(.96, .15), Q(1.03, .16), Q(1.07, .22)])}" stroke="${tn.lit}" stroke-width="${f(r * .03)}" fill="none" opacity=".6"/>`;
+    { const g = Q(1.13, .19); s += `<circle cx="${f(g[0])}" cy="${f(g[1])}" r="${f(r * .028)}" fill="#ffffff" opacity=".45"/>`; }
+  }
   // the mouth: shut (a line and the lips' colour) or open in the song (a dark gap, the teeth's edge)
   if (mo > .05) {
     s += `<path d="${sp([Q(1.04, .47), Q(.95, .5), Q(.86, .52), Q(.95, .54 + jaw * .6), Q(1.0, .57 + jaw)], true)}" fill="#2a0a0c" stroke="${tn.outline}" stroke-width="${f(r * .03)}"/>`;
@@ -209,8 +421,13 @@ function head(u, o) {
   } else {
     s += `<path d="${sp([Q(1.03, .5), Q(.94, .51), Q(.86, .5)])}" stroke="${mix(tn.outline, lips, .3)}" stroke-width="${f(r * .05)}" fill="none"/>`;
     s += `<path d="${sp([Q(1.05, .46), Q(1.0, .49)])}" stroke="${lips}" stroke-width="${f(r * .06)}" fill="none" opacity=".6"/>`;
+    if (o.detail) s += `<path d="${sp([Q(1.06, .44), Q(1.0, .47), Q(.92, .5), Q(.98, .505), Q(1.04, .5)], true)}" fill="${mix(lips, tn.shadow, .25)}" opacity=".8"/>`
+      + `<path d="${sp([Q(1.04, .51), Q(.96, .52), Q(.98, .56), Q(1.04, .565)], true)}" fill="${lips}" opacity=".7"/>`
+      + `<path d="${sp([Q(1.03, .53), Q(1.045, .55)])}" stroke="${mix(lips, '#ffffff', .5)}" stroke-width="${f(r * .025)}" fill="none" opacity=".7" stroke-linecap="round"/>`
+      + `<path d="${sp([Q(.99, .59), Q(.95, .61)])}" stroke="${tn.shadow}" stroke-width="${f(r * .05)}" fill="none" opacity=".6" stroke-linecap="round"/>`
+      + `<path d="${sp([Q(.87, .49), Q(.85, .52)])}" stroke="${tn.shadow}" stroke-width="${f(r * .03)}" fill="none" opacity=".7"/>`;
   }
-  if (o.moustache) s += `<path d="${sp([Q(1.05, .4), Q(.92, .44), Q(.78, .5), Q(.7, .58)])}" stroke="${hairC}" stroke-width="${f(r * .12)}" fill="none" stroke-linecap="round"/>`;
+  if (o.moustache && !o.detail) s += `<path d="${sp([Q(1.05, .4), Q(.92, .44), Q(.78, .5), Q(.7, .58)])}" stroke="${hairC}" stroke-width="${f(r * .12)}" fill="none" stroke-linecap="round"/>`;
   // the eye: the white wedge seen from the side, the iris forward, the upper lid heavy with lashes, the lower lid
   { const look = (o.look || 0) * .004, ey = o.eye || 'open', op = ey === 'wide' ? 1.25 : ey === 'half' ? .55 : 1;
     const top = -.16 - .05 * op, bot = -.07 + .02 * op;
@@ -219,15 +436,67 @@ function head(u, o) {
     { const g = Q(.755, -.135); s += `<circle cx="${f(g[0])}" cy="${f(g[1])}" r="${f(r * .018)}" fill="#ffffff" opacity=".9"/>`; }
     s += `<path d="${sp([Q(.54, -.12), Q(.64, top - .01), Q(.8, -.14)])}" stroke="#1a0c08" stroke-width="${f(r * .06)}" fill="none" stroke-linecap="round"/>`;
     s += `<path d="M${f(Q(.8, -.14)[0])} ${f(Q(.8, -.14)[1])}L${f(Q(.86, -.17)[0])} ${f(Q(.86, -.17)[1])}" stroke="#1a0c08" stroke-width="${f(r * .035)}" stroke-linecap="round"/>`;
-    s += `<path d="${sp([Q(.6, -.07), Q(.7, bot + .005), Q(.78, -.11)])}" stroke="${tn.shadow}" stroke-width="${f(r * .03)}" fill="none" opacity=".8"/>`; }
+    s += `<path d="${sp([Q(.6, -.07), Q(.7, bot + .005), Q(.78, -.11)])}" stroke="${tn.shadow}" stroke-width="${f(r * .03)}" fill="none" opacity=".8"/>`;
+    if (o.detail) {
+      // the upper lid as a fold of skin over the eye, its crease, the shadow it casts on the white; the lower lid's
+      // wet lit edge; the inner corner
+      s += `<path d="${sp([Q(.53, -.12), Q(.62, top - .045), Q(.76, top - .02), Q(.84, -.155), Q(.79, -.14), Q(.66, top - .005), Q(.56, -.115)], true)}" fill="${tn.half}" opacity=".9"/>`
+        + `<path d="${sp([Q(.54, -.15), Q(.63, top - .07), Q(.77, top - .05)])}" stroke="${tn.shadow}" stroke-width="${f(r * .03)}" fill="none" opacity=".85"/>`
+        + `<path d="${sp([Q(.58, -.12), Q(.66, top + .02), Q(.78, -.13)])}" stroke="${tn.shadow}" stroke-width="${f(r * .04)}" fill="none" opacity=".35"/>`
+        + `<path d="${sp([Q(.6, -.065), Q(.7, bot + .015), Q(.78, -.105)])}" stroke="${tn.lit}" stroke-width="${f(r * .022)}" fill="none" opacity=".7"/>`
+        + `<path d="${sp([Q(.62, -.04), Q(.7, bot + .05), Q(.77, -.08)])}" stroke="${tn.shadow}" stroke-width="${f(r * .02)}" fill="none" opacity=".45"/>`;
+    } }
   // the brow
   { const b = o.brow || 'calm', dy = b === 'up' ? -.07 : 0, fr = b === 'frown' ? .06 : 0;
-    s += `<path d="${sp([Q(.46, -.3 + dy), Q(.66, -.36 + dy - fr * .3), Q(.86, -.3 + dy + fr)])}" stroke="${hairC}" stroke-width="${f(r * .1)}" fill="none" stroke-linecap="round"/>`; }
+    if (!o.detail) s += `<path d="${sp([Q(.46, -.3 + dy), Q(.66, -.36 + dy - fr * .3), Q(.86, -.3 + dy + fr)])}" stroke="${hairC}" stroke-width="${f(r * .1)}" fill="none" stroke-linecap="round"/>`;
+    else { // a tapered mass, thick at the inner end, the hairs combed outwards
+      const B = [[.46, -.29 + dy], [.6, -.36 + dy - fr * .3], [.76, -.36 + dy - fr * .1], [.9, -.3 + dy + fr], [.88, -.25 + dy + fr], [.74, -.29 + dy], [.58, -.29 + dy], [.47, -.255 + dy]];
+      s += `<path d="${sp(B.map(p => Q(p[0], p[1])), true)}" fill="${hairC}"/>`;
+      for (let k = 0; k < 7; k++) { const t = .1 + k * .12, a = Q(lerp(.5, .86, t) - .03, lerp(-.27, -.31, t) + dy + fr * t * .8), b = Q(lerp(.5, .86, t) + .05, lerp(-.33, -.34, t) + dy - fr * .2 + fr * t);
+        s += `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="${mix(hairC, '#d8c0a0', .35)}" stroke-width="${f(r * .014)}" opacity=".7"/>`; }
+    } }
   // the ear
   if (o.ear !== false) { const E = [[-.06, -.16], [.1, -.12], [.14, .06], [.06, .26], [-.06, .34], [-.16, .26], [-.18, .02]].map(p => Q(p[0], p[1]));
-    s += `<path d="${sp(E, true)}" fill="${tn.half}" stroke="${tn.outline}" stroke-width="${f(r * .04)}"/><path d="${sp([Q(.04, -.06), Q(.07, .08), Q(0, .2), Q(-.08, .18)])}" stroke="${tn.shadow}" stroke-width="${f(r * .04)}" fill="none"/>`; }
+    s += `<path d="${sp(E, true)}" fill="${tn.half}" stroke="${tn.outline}" stroke-width="${f(r * .04)}"/><path d="${sp([Q(.04, -.06), Q(.07, .08), Q(0, .2), Q(-.08, .18)])}" stroke="${tn.shadow}" stroke-width="${f(r * .04)}" fill="none"/>`;
+    if (o.detail) s += `<path d="${sp([Q(-.04, -.12), Q(.08, -.09), Q(.11, .05), Q(.04, .22)])}" stroke="${tn.lit}" stroke-width="${f(r * .03)}" fill="none" opacity=".6"/>`
+      + `<path d="${sp([Q(-.02, .02), Q(.03, .1), Q(-.03, .16)], true)}" fill="${tn.shadow}" opacity=".55"/>`
+      + `<ellipse cx="${f(Q(-.07, .29)[0])}" cy="${f(Q(-.07, .29)[1])}" rx="${f(r * .05)}" ry="${f(r * .04)}" fill="${mix(tn.half, '#c05040', .2)}" opacity=".6"/>`; }
+  const HL = o.hairLight || [dir * .5, -.86];
+  if (o.detail && o.beard) {
+    const j = p => [p[0], p[1] + (p[1] > .5 ? jaw : 0)];
+    const BD = { full: [[.2, -.08], [.27, .28], [.5, .37], [.74, .42], [.9, .5], [.97, .6], [1.06, .72], [1.07, .92], [.98, 1.08], [.78, 1.15], [.5, 1.05], [.24, .87], [.04, .66], [-.06, .42], [.04, .12], [.1, -.12]],
+      short: [[.2, -.08], [.27, .3], [.5, .4], [.74, .44], [.9, .52], [.97, .6], [1.02, .74], [1.0, .92], [.9, 1.0], [.6, .97], [.3, .82], [.08, .62], [-.02, .4], [.06, .1], [.12, -.1]],
+      goatee: [[.88, .58], [.98, .6], [1.04, .72], [1.04, .92], [.96, 1.04], [.84, 1.02], [.8, .86], [.84, .7]] };
+    const kind = BD[o.beard] ? o.beard : 'full', pts = BD[kind].map(j).map(p => Q(p[0], p[1]));
+    s += hairMass(u, pts, { r, color: hairC, outline: tn.outline, seed: 11, flow: () => [dir * .22 * Math.cos(tl) - Math.sin(tl) * .2, 1], sheen: Q(.62, .62), light: HL,
+      tufts: kind === 'goatee' ? [3, 4, 5] : kind === 'full' ? [7, 8, 9, 10, 11, 12] : [8, 9], tuftLen: kind === 'full' ? .16 : .08, n: kind === 'goatee' ? 12 : 34 });
+  }
+  if (o.detail && (o.moustache || o.beard)) {
+    const M = [[1.07, .37], [.98, .35], [.86, .4], [.76, .5], [.72, .6], [.8, .56], [.9, .5], [1.0, .47], [1.08, .44]].map(p => Q(p[0], p[1]));
+    s += hairMass(u, M, { r, color: hairC, outline: tn.outline, seed: 3, flow: () => [-dir * .7, .7], n: 10, light: HL, sheen: Q(.96, .4), tufts: [4], tuftLen: .06 });
+  }
+  if (o.hair) {
+    const hs = o.hair.style || 'short', hc = o.hair.color || hairC;
+    const front = [[.62, -.72], [.7, -.88]], top = [[.44, -1.1], [-.1, -1.17], [-.62, -1.02], [-.99, -.68], [-1.11, -.22]];
+    const sideShort = [[-1.07, .18], [-.92, .44], [-.68, .54], [-.52, .4], [-.36, .22], [-.24, -.06], [-.1, -.22], [.1, -.24], [.2, -.12], [.23, .1], [.3, .04], [.32, -.3], [.44, -.54]];
+    const sideLong = [[-1.13, .4], [-1.1, .95], [-1.02, 1.45], [-.8, 1.62], [-.62, 1.4], [-.5, 1.0], [-.32, .66], [-.1, .44], [.12, .3], [.24, .08], [.3, -.3], [.44, -.54]];
+    const H0 = (hs === 'long' ? front.concat(top, sideLong) : front.concat(top, sideShort)).map(p => Q(p[0], p[1]));
+    const crown = Q(.66, -.86);
+    if (hs === 'tied') {
+      // the queue: from the nape down the back, bound with a ribbon tied in a bow
+      const T = [[-.78, .3], [-.62, .42], [-.66, .9], [-.74, 1.4], [-.82, 1.52], [-.9, 1.36], [-.9, .9], [-.92, .44]].map(p => Q(p[0], p[1]));
+      s += hairMass(u, T, { r, color: hc, outline: tn.outline, seed: 21, flow: () => [-Math.sin(tl) * .1, 1], n: 10, light: HL, tufts: [4], tuftLen: .12 });
+      const rb = o.hair.ribbon || '#1a1a22', b = Q(-.78, .58), b1 = Q(-.56, .48), b2 = Q(-.62, .74), b3 = Q(-1.0, .5), b4 = Q(-.98, .76);
+      s += `<path d="M${f(b[0])} ${f(b[1])}L${f(b1[0])} ${f(b1[1])}L${f(b2[0])} ${f(b2[1])}ZM${f(b[0])} ${f(b[1])}L${f(b3[0])} ${f(b3[1])}L${f(b4[0])} ${f(b4[1])}Z" fill="${rb}" stroke="${tn.outline}" stroke-width="${f(r * .025)}"/>`
+        + `<ellipse cx="${f(b[0])}" cy="${f(b[1])}" rx="${f(r * .07)}" ry="${f(r * .09)}" fill="${rb}" stroke="${tn.outline}" stroke-width="${f(r * .025)}"/>`;
+    }
+    const tufts = hs === 'curly' ? [1, 2, 3, 4, 5, 6, 7, 8, 9] : hs === 'long' ? [8, 9, 10, 11] : [5, 6, 7, 8, 9];
+    s += hairMass(u, H0, { r, color: hc, outline: tn.outline, seed: 7, n: hs === 'curly' ? 50 : 42, light: HL, sheen: Q(.1, -.9), curl: hs === 'curly',
+      flow: p => { const dx = p[0] - crown[0], dy = p[1] - crown[1], l = Math.hypot(dx, dy) || 1, dn = hs === 'long' ? Math.max(0, (p[1] - o.c[1]) / r) : 0; const v = [dx / l * (1 - dn) , dy / l * (1 - dn) + dn]; return v; },
+      tufts, tuftLen: hs === 'curly' ? .1 : .12 });
+  }
   if (o.opacity != null && o.opacity < 1) s = `<g opacity="${o.opacity}">${s}</g>`;
   return { svg: s, Q };
 }
 
-module.exports = { sp, tube, cloth, hand, head };
+module.exports = { sp, tube, cloth, hand, hand3, head };
