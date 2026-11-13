@@ -16,9 +16,9 @@ const K = require('../kit/index.cjs');
 const { f, mix, nid, linGrad, radGrad, rng } = K;
 
 const HZ = 104;
-const POT = { x: 98, y: 58, r: 13.5, a: -150 };            // the pot: its middle, belly radius, the neck's direction (deg)
-const MZ = { x: 22, y: 120 };                               // the Revenge's bow port: where the pot came from
-const REV = { kind: 'revenge', x: -22, y: 131, scale: 1.3, flip: true, sails: 'full', seed: 7 };
+const POT = { x: 98, y: 58, r: 13.5, a: -165 };            // the pot: its middle, belly radius, the neck's direction (deg)
+const MZ = { x: 30, y: 120 };                               // the Revenge's bow port: where the pot came from
+const REV = { kind: 'revenge', x: -14, y: 131, scale: 1.3, flip: true, sails: 'full', seed: 7 };
 const EN = { kind: 'endeavour', x: 160, y: 113, scale: .6, sails: 'full', seed: 4 };
 const HIT = { x: 150, y: 104 };                             // the fire on her side
 const light = { time: 'dusk', haze: .3, key: { type: 'sun', x: 166, y: 101, color: '#ff9a5a', power: .55 }, fill: { color: '#6e4a70', power: .42 },
@@ -120,7 +120,9 @@ module.exports = { name: 'Греческий огонь', kind: 'deck', status: 
         + Array.from({ length: 10 }, () => { const dx = x + 1 + (R() - .5) * 7, dy = y + 1 + R() * 7; return `<path d="M${f(dx)} ${f(dy)}l${f(-.2)} ${f(.9 + R())}" stroke="#e6eef2" stroke-width=".45" opacity=".75" stroke-linecap="round"/>`; }).join('');
       // steam (pale, hissing up where the water meets the fire) and the black smoke of the fire beside it
       const Ls = Object.assign({}, L, { pal: Object.assign({}, L.pal, { smoke: '#efe6e0' }) });
-      bg += K.smoke(u, L, { x: x - 4, y: y - 6, w: 22, h: 36, wind: -.7, seed: 12, opacity: .8, glow: { color: '#ff8a2a', power: .6 } });
+      // the fire's smoke: pitch-dark, so it stands off her pale canvas
+      const Ld = Object.assign({}, L, { pal: Object.assign({}, L.pal, { smoke: '#241818' }) });
+      bg += K.smoke(u, Ld, { x: x - 4, y: y - 6, w: 22, h: 36, wind: -.7, seed: 12, opacity: .92, glow: { color: '#ff8a2a', power: .45 } });
       bg += K.smoke(u, Ls, { x: x + 3, y: y - 3, w: 14, h: 18, wind: -.4, seed: 15, opacity: .6 }); }
 
     // ——— the Revenge at the left edge: her bow and crimson foresails, the flash and smoke at her bow port
@@ -130,8 +132,11 @@ module.exports = { name: 'Греческий огонь', kind: 'deck', status: 
     Lr.pal = L.pal;
     let rev = K.ship(u, Lr, Object.assign({ wake: true, reflect: true, lights: true }, REV));
     rev += K.localGlow(u, { x: MZ.x + 4, y: MZ.y - 6, color: '#ff9a3a', power: .55, radius: 34 }, { core: false });
-    rev += K.muzzleFlash(u, { x: MZ.x, y: MZ.y, dir: -38, len: 22, seed: 1, smoke: false });
     rev += K.smoke(u, L, { x: MZ.x + 6, y: MZ.y - 4, w: 30, h: 34, wind: -.5, seed: 21, opacity: .85, glow: { color: '#ffa040', power: .8 } });
+    // the flash at the port: big and white-hot, over her smoke and the trail
+    const flash = K.localGlow(u, { x: MZ.x + 6, y: MZ.y - 5, color: '#ffc060', power: .95, radius: 40 }, { core: false })
+      + K.muzzleFlash(u, { x: MZ.x, y: MZ.y, dir: -38, len: 52, seed: 1, smoke: false })
+      + `<circle cx="${f(MZ.x + 1.5)}" cy="${f(MZ.y - 1.2)}" r="3.4" fill="#fff6d8" opacity=".95"/>`;
 
     // ——— the trail: old smoke along the arc from the port, thickening and darker the older it is; nearer the pot it
     // is fire — an orange streak with a yellow core, sparks shed behind
@@ -139,12 +144,12 @@ module.exports = { name: 'Греческий огонь', kind: 'deck', status: 
     { const tb = nid('tb', u), tf = nid('tf', u);
       trail += `<defs><filter id="${tb}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.05"/></filter><filter id="${tf}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".8"/></filter></defs>`;
       let puffs = '', lit = '';
-      for (let i = 0; i < 34; i++) { const t = .04 + i / 34 * .86, [px, py] = arc(t), rr = 1.5 + (1 - t) * 4.6 + R() * 1.1, jx = (R() - .5) * 1.6 * (1 - t), jy = (R() - .5) * 1.6 * (1 - t) - (1 - t) * 3;
-        puffs += `<circle cx="${f(px + jx)}" cy="${f(py + jy)}" r="${f(rr)}" fill="${mix('#4a3430', '#2a1814', t)}" opacity="${f(.38 + t * .4)}"/>`;
-        lit += `<circle cx="${f(px + jx + .6)}" cy="${f(py + jy + rr * .35)}" r="${f(rr * .6)}" fill="#ff8a3a" opacity="${f(.12 + t * t * .5)}"/>`; }
+      for (let i = 0; i < 34; i++) { const t = .04 + i / 34 * .86, [px, py] = arc(t), rr = .8 + (1 - t) * 2.2 + R() * .6, jx = (R() - .5) * .8 * (1 - t), jy = (R() - .5) * .8 * (1 - t) - (1 - t) * 1.5;
+        puffs += `<circle cx="${f(px + jx)}" cy="${f(py + jy)}" r="${f(rr)}" fill="${mix('#9a8680', '#2a1814', t)}" opacity="${f(.1 + t * .6)}"/>`;
+        lit += `<circle cx="${f(px + jx + .4)}" cy="${f(py + jy + rr * .35)}" r="${f(rr * .6)}" fill="#ff8a3a" opacity="${f(.08 + t * t * .5)}"/>`; }
       trail += `<g filter="url(#${tb})">${puffs}${lit}</g>`;
       const pts = Array.from({ length: 13 }, (_, i) => arc(.58 + i / 12 * .4)), line = 'M' + pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L');
-      trail += `<g filter="url(#${tf})"><path d="${line}" stroke="#c83a10" stroke-width="6" fill="none" stroke-linecap="round" opacity=".55"/>`
+      trail += `<g filter="url(#${tf})"><path d="${line}" stroke="#c83a10" stroke-width="4" fill="none" stroke-linecap="round" opacity=".55"/>`
         + `<path d="M${pts.slice(5).map(p => f(p[0]) + ' ' + f(p[1])).join('L')}" stroke="#ff9a2a" stroke-width="4.4" fill="none" stroke-linecap="round" opacity=".95"/>`
         + `<path d="M${pts.slice(9).map(p => f(p[0]) + ' ' + f(p[1])).join('L')}" stroke="#fff0b0" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>`;
       for (let i = 0; i < 26; i++) { const t = .4 + R() * .55, [px, py] = arc(t), d = (R() - .5) * 12; trail += `<circle cx="${f(px + (R() - .5) * 6)}" cy="${f(py + d)}" r="${f(.25 + R() * .45)}" fill="${R() > .5 ? '#ffd98a' : '#ff9a3a'}"/>`; } }
@@ -155,7 +160,9 @@ module.exports = { name: 'Греческий огонь', kind: 'deck', status: 
     { const [mx, my] = pot.mouth;
       flame += K.localGlow(u, { x: mx - 3, y: my - 1, color: '#ffa040', power: .85, radius: 46 }, { core: false });
       // the flame of the rag along the neck's direction, bent back by the rush of air
-      flame += `<g transform="rotate(${f(POT.a + 90)} ${f(mx)} ${f(my)})">${K.fire(u, { x: mx, y: my + 2, w: 11, h: 30, seed: 5, wind: -.3, glow: false, pool: false })}</g>`; }
+      // the tail points back down the arc (the pot flies to the right): along the tangent behind it, not up
+      const [bx, by] = arc(.84), ang = Math.atan2(by - my, bx - mx) * 180 / Math.PI + 90;
+      flame += `<g transform="rotate(${f(ang)} ${f(mx)} ${f(my)})">${K.fire(u, { x: mx, y: my + 2, w: 13, h: 40, seed: 5, wind: 0, glow: false, pool: false })}</g>`; }
     let drops = '';
     for (const [x, y, r, sd] of [[104, 78, 1.5, 1], [110, 87, 1.2, 2], [98, 92, 1.3, 3], [116, 97, .9, 4], [104, 101, .8, 5]]) {
       drops += `<path d="M${x} ${y}q${f(-r * .6)} ${f(-r * 3)} ${f(-r * .2)} ${f(-r * 5.4)}" stroke="#ff8a2a" stroke-width="${f(r * 1.1)}" fill="none" stroke-linecap="round" opacity=".75"/>`
@@ -173,5 +180,5 @@ module.exports = { name: 'Греческий огонь', kind: 'deck', status: 
     { const g = nid('dk', u); dark += `<defs>${linGrad(g, 0, 140, 0, 290, [[0, '#120610', 0], [1, '#120610', .55]])}</defs><rect x="0" y="140" width="200" height="150" fill="url(#${g})"/>`; }
     // the edges of the evening close in round the fire
     { const g = nid('vg', u); dark += `<defs>${radGrad(g, POT.x, POT.y + 20, 150, [[0, '#0a0408', 0], [.45, '#0a0408', 0], [1, '#0a0408', .6]])}</defs><rect x="0" y="0" width="200" height="290" fill="url(#${g})"/>`; }
-    return [bg, sea + rev + trail + drops + pot.svg + flame + dark];
+    return [bg, sea + rev + trail + flash + drops + pot.svg + flame + dark];
   } };

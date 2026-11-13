@@ -23,7 +23,7 @@ const skel = { horizon: HZ, eye: 3, light: 'the wall of fire in front of her (ke
   ['enemy', 38, EN.y, 140, 93, 'water: broadside, bow to the left'],
   ['wall far row', 0, WALL - 5, 200, 40, 'water, against her hull'],
   ['wall near row', 0, WALL, 200, 70, 'water: tall at the sides, low in the middle'],
-  ['bow fire', 56, 100, 24, 26, 'her head and stem'],
+  ['bow fire', 40, 100, 34, 44, 'her head, stem and bowsprit, above the wall'],
   ['slick', 0, 132, 200, 16, 'water towards us: burning patches']] };
 
 module.exports = { name: 'Огненная стена', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
@@ -40,16 +40,18 @@ module.exports = { name: 'Огненная стена', kind: 'deck', status: 'd
     // ——— the ship that fired: broadside behind the wall, lit from below by it
     bg += K.ship(u, L, Object.assign({ wake: false, reflect: false, lights: true }, EN));
     // the smoke of her broadside still hanging along her ports, drifting left
-    for (const [x, y, w, h, sd] of [[92, 98, 24, 16, 3], [124, 98, 26, 15, 6], [154, 97, 20, 13, 9]]) bg += K.smoke(u, Lg, { x, y, w, h, wind: -.7, seed: sd, opacity: .55, glow: { color: '#ff8a3a', power: .45 } });
+    for (const [x, y, w, h, sd] of [[100, 98, 22, 15, 3], [124, 98, 26, 15, 6], [154, 97, 20, 13, 9]]) bg += K.smoke(u, Lg, { x, y, w, h, wind: -.7, seed: sd, opacity: .4, glow: { color: '#ff8a3a', power: .45 } });
     // the wall's light on her side and on the undersides of her sails
     bg += K.localGlow(u, { x: 108, y: 92, color: '#ff8a30', power: .5, radius: 70 }, { squash: .6, core: false })
       + K.localGlow(u, { x: 110, y: 60, color: '#ff9a48', power: .3, radius: 60 }, { core: false });
     // ——— the fire has jumped to her bow: her head and stem burning, the fire climbing her jib
-    bg += K.fire(u, { x: 68, y: 101, w: 10, h: 20, seed: 33, wind: -.2, glow: false, pool: false })
-      + K.fire(u, { x: 60, y: 92, w: 7, h: 13, seed: 36, wind: -.25, glow: false, pool: false })
-      + K.fire(u, { x: 52, y: 84, w: 5, h: 8, seed: 39, wind: -.3, glow: false, pool: false })
-      + K.smoke(u, Ls, { x: 60, y: 82, w: 26, h: 40, wind: -.5, seed: 14, opacity: .75, glow: { color: '#ff7a2a', power: .7 } })
-      + K.localGlow(u, { x: 64, y: 92, color: '#ffa040', power: .7, radius: 26 }, { core: false });
+    // tall tongues standing well above the wall's line there, against a soot-dark cloud behind them that outlines them
+    const Lk = Object.assign({}, L, { pal: Object.assign({}, L.pal, { smoke: '#1a1210' }) });
+    bg += K.smoke(u, Lk, { x: 58, y: 84, w: 34, h: 48, wind: -.45, seed: 14, opacity: .92, glow: { color: '#ff7a2a', power: .35 } })
+      + K.localGlow(u, { x: 60, y: 80, color: '#ffa040', power: .75, radius: 30 }, { core: false })
+      + K.fire(u, { x: 66, y: 100, w: 14, h: 34, seed: 33, wind: -.2, glow: false, pool: false })
+      + K.fire(u, { x: 57, y: 91, w: 11, h: 30, seed: 36, wind: -.25, glow: false, pool: false })
+      + K.fire(u, { x: 48, y: 82, w: 8, h: 22, seed: 39, wind: -.3, glow: false, pool: false });
 
     // ——— the wall. Its pitch smoke first, in columns lit from below, rising out of the top
     let fg = '';
@@ -57,9 +59,16 @@ module.exports = { name: 'Огненная стена', kind: 'deck', status: 'd
       fg += K.smoke(u, Ls, { x, y: WALL - 26, w, h, wind, seed: sd, opacity: .9, glow: { color: '#ff6a20', power: .9 } });
     // the far row: lower and dimmer, against her hull; the slick under it glowing
     fg += K.localGlow(u, { x: 100, y: WALL - 2, color: '#ff8a30', power: .8, radius: 120 }, { squash: .12, core: false });
-    const height = x => { const t = Math.abs(x - 108) / 100; return 13 + 54 * Math.pow(Math.min(1, t * 1.3), 1.5); };   // low in the middle, tall at the sides
+    // low in the middle, tall at the sides; on the left ~10 lower, so the burning bow stands above it
+    const height = x => { const t = Math.abs(x - 108) / 100; return 13 + 54 * Math.pow(Math.min(1, t * 1.3), 1.5) - (x < 60 ? 10 : x < 80 ? (80 - x) / 2 : 0); };
     for (let i = 0; i < 12; i++) { const x = -6 + i * 18.6 + (R() - .5) * 5, h = height(x) * .7 * (.8 + R() * .3);
       fg += K.fire(u, { x, y: WALL - 4, w: 15 + R() * 6, h, seed: 50 + i, wind: (R() - .5) * .3, glow: false, pool: false }); }
+    // the wall's dense body: an opaque band of fire at its foot, so it plainly stands IN FRONT of her hull (the tongues
+    // over it are light, not glass: nothing of the hull shows through below its ragged top)
+    { const g = nid('wb', u), b = nid('wf', u), pts = [];
+      for (let x = -4; x <= 204; x += 4) pts.push([x, WALL + 2 - height(x) * .4 - 10 * Math.max(0, 1 - Math.abs(x - 58) / 22) + Math.sin(x * .7) * 1.6 + Math.sin(x * 1.9) * 1.1]);
+      fg += `<defs>${linGrad(g, 0, WALL - 28, 0, WALL + 4, [[0, '#b83816'], [.5, '#ec7426'], [1, '#ffc458']])}<filter id="${b}" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation=".7"/></filter></defs>`
+        + `<path d="M${pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}L204 ${WALL + 5}L-4 ${WALL + 5}Z" fill="url(#${g})" filter="url(#${b})"/>`; }
     // the near row: taller, wider tongues, the gap in the middle where her hull shows
     for (let i = 0; i < 12; i++) { const x = -4 + i * 18.6 + (R() - .5) * 6, h = height(x) * (.85 + R() * .3);
       fg += K.fire(u, { x, y: WALL + 1 + (R() - .5) * 2, w: 20 + R() * 8, h, seed: 70 + i, wind: (R() - .5) * .35, glow: false, pool: false }); }

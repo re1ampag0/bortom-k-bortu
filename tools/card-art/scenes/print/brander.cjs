@@ -14,9 +14,13 @@ const K = require('../kit/index.cjs');
 const { f, nid, linGrad, radGrad, rng } = K;
 
 const HZ = 106;
-const FS = { kind: 'brig', x: 64, y: 122, scale: 1.0, flip: true, roll: 8, heel: 1.5, sails: 'full', seed: 11 };   // the fireship, bow to the right
-const EN = { kind: 'endeavour', x: 182, y: 111, scale: .52, sails: 'full', seed: 4 };                               // the enemy, bow to the left
-const REV = { kind: 'revenge', x: 13, y: 107.4, scale: .2, flip: true, sails: 'full', detail: 'far', seed: 3 };
+// the fireship: the kit's brig with her canvas burnt to rags — big ragged holes, a bitten foot, broken yards, the
+// cloth scorched grey-brown (a scene-local kind over SHIP_SPECS.brig, as in korabl-v-butylke.cjs)
+const FSK = 'brig-fireship';
+if (!K.SHIP_SPECS[FSK]) K.SHIP_SPECS[FSK] = Object.assign({}, K.SHIP_SPECS.brig, { sail: 'ship-sail-rot', cond: 'torn', holeK: 2.3, holeVar: 1, footRag: 1, broken: 1 });
+const FS = { kind: FSK, x: 64, y: 122, scale: 1.0, flip: true, roll: 8, heel: 1.5, sails: 'full', seed: 11 };   // the fireship, bow to the right
+const EN = { kind: 'endeavour', x: 165, y: 111, scale: .46, sails: 'full', seed: 4 };                               // the enemy, bow to the left
+const REV = { kind: 'revenge', x: 19, y: 107.4, scale: .25, flip: true, sails: 'full', detail: 'far', seed: 3 };
 const FIRE = { x: 66, y: 112 };                                                                                        // the deck fire
 const light = { time: 'dusk', haze: .3, key: { type: 'point', x: FIRE.x, y: FIRE.y - 16, h: 5, gy: 116, color: '#ff9440', power: 1, radius: 150, z: .3 },
   fill: { color: '#4a2a44', power: .38 }, rim: { az: 270, color: '#ffb070', power: .35 } };
@@ -25,8 +29,8 @@ const skel = { horizon: HZ, eye: 4, light: 'the fire on the fireship\'s deck (ke
   ['deck fire', FIRE.x - 22, FIRE.y, 44, 62, 'her deck between the masts'],
   ['barrels', 44, 115, 64, 10, 'her deck at bow and stern'],
   ['smoke column', 40, 70, 160, 74, 'from the fire up out of the top, bending right'],
-  ['enemy', 137, EN.y, 63, 58, 'water'],
-  ['revenge', 0, REV.y, 28, 23, 'water: on the horizon']] };
+  ['enemy', 121, EN.y, 77, 51, 'water'],
+  ['revenge', 0, REV.y, 37, 24, 'water: on the horizon']] };
 
 // a tar barrel on the deck with fire pouring out of its open head (KIT-CANDIDATE: a burning barrel)
 function tarBarrel(u, L, o) {
@@ -48,14 +52,17 @@ module.exports = { name: 'Брандер', kind: 'deck', status: 'draft', cam: {
     bg += K.ship(u, L, Object.assign({ wake: false }, REV));
     bg += K.ship(u, L, Object.assign({ wake: true, reflect: true, lights: true }, EN));
     // the fire's light on the enemy's bow and her sails' side facing it
-    bg += K.localGlow(u, { x: 150, y: 92, color: '#ff9a48', power: .4, radius: 38 }, { core: false });
+    bg += K.localGlow(u, { x: 135, y: 92, color: '#ff9a48', power: .4, radius: 38 }, { core: false });
 
     // ——— the column of fire and pitch smoke, behind her sails: up out of the deck fire, bending right over the enemy
-    const Ls = Object.assign({}, L, { pal: Object.assign({}, L.pal, { smoke: '#4a3430' }) });   // pitch smoke: dark, lit from below
-    bg += K.smoke(u, Ls, { x: FIRE.x + 2, y: FIRE.y - 12, w: 60, h: 92, wind: .95, seed: 8, opacity: .95, glow: { color: '#ff7a2a', power: .9 } });
-    bg += K.smoke(u, Ls, { x: FIRE.x + 24, y: FIRE.y - 30, w: 52, h: 80, wind: 1, seed: 17, opacity: .85, glow: { color: '#ff8a2a', power: .6 } });
-    bg += K.smoke(u, Ls, { x: FIRE.x - 22, y: FIRE.y - 8, w: 30, h: 50, wind: .9, seed: 5, opacity: .8, glow: { color: '#ff7a2a', power: .7 } });
-    bg += K.localGlow(u, { x: FIRE.x + 6, y: FIRE.y - 40, color: '#ff7a2a', power: .55, radius: 60 }, { core: false });
+    const Ls = Object.assign({}, L, { pal: Object.assign({}, L.pal, { smoke: '#1c1412' }) });   // pitch smoke: near black, lit from below
+    bg += K.smoke(u, Ls, { x: FIRE.x + 2, y: FIRE.y - 12, w: 60, h: 92, wind: .95, seed: 8, opacity: .97, glow: { color: '#ff7a2a', power: .55 } });
+    bg += K.smoke(u, Ls, { x: FIRE.x + 24, y: FIRE.y - 30, w: 52, h: 80, wind: 1, seed: 17, opacity: .92, glow: { color: '#ff8a2a', power: .4 } });
+    bg += K.smoke(u, Ls, { x: FIRE.x - 22, y: FIRE.y - 8, w: 30, h: 50, wind: .9, seed: 5, opacity: .9, glow: { color: '#ff7a2a', power: .45 } });
+    bg += K.localGlow(u, { x: FIRE.x + 6, y: FIRE.y - 40, color: '#ff7a2a', power: .35, radius: 50 }, { core: false });
+    // the base of the column, right over the fire: a soot-black mass, the darkest thing in the sky
+    for (const [cx, cy, r] of [[80, 60, 20], [100, 52, 22], [120, 45, 18]]) { const g = nid('sb', u);
+      bg += `<defs>${radGrad(g, cx, cy, r, [[0, '#0c0806', .7], [.6, '#0c0806', .35], [1, '#0c0806', 0]])}</defs><circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${g})"/>`; }
 
     // ——— the fireship: the kit's brig under full sail, running before the wind, nobody aboard
     let fg = K.ship(u, L, Object.assign({ wake: true, reflect: true }, FS));
@@ -64,7 +71,7 @@ module.exports = { name: 'Брандер', kind: 'deck', status: 'draft', cam: {
       + K.fire(u, { x: FIRE.x + 16, y: FIRE.y + 1.5, w: 14, h: 24, seed: 12, wind: .6, glow: false, pool: false })
       + K.fire(u, { x: FIRE.x - 16, y: FIRE.y + 1.5, w: 12, h: 20, seed: 15, wind: .6, glow: false, pool: false });
     // the flames climbing into her courses: fire eating up from the foot of each, a black burnt hole above it
-    for (const [x, y, w, h, sd] of [[58, 100, 16, 30, 21], [93, 102, 13, 22, 24], [70, 76, 8, 12, 27], [98, 80, 6, 9, 29]]) {
+    for (const [x, y, w, h, sd] of [[58, 100, 16, 30, 21], [93, 102, 13, 22, 24], [70, 76, 8, 12, 27], [98, 80, 6, 9, 29], [44, 97, 10, 15, 31], [83, 93, 9, 13, 33], [54, 72, 8, 11, 35], [46, 64, 6, 8, 37], [85, 66, 6, 9, 39], [90, 53, 5, 7, 41]]) {
       fg += `<path d="M${f(x - w * .5)} ${f(y)}q${f(w * .2)} ${f(-h * .7)} ${f(w * .5)} ${f(-h * .9)}q${f(w * .35)} ${f(h * .25)} ${f(w * .5)} ${f(h * .9)}z" fill="#120806" opacity=".85"/>`
         + `<path d="M${f(x - w * .5)} ${f(y)}q${f(w * .2)} ${f(-h * .7)} ${f(w * .5)} ${f(-h * .9)}q${f(w * .35)} ${f(h * .25)} ${f(w * .5)} ${f(h * .9)}" stroke="#ff8a2a" stroke-width=".7" fill="none" stroke-dasharray="2 1.4"/>`
         + K.fire(u, { x, y, w, h, seed: sd, wind: .6, glow: false, pool: false }); }
