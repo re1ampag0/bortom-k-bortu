@@ -80,25 +80,34 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'draft', cam: {
         + `<path d="M-10 -2H90" stroke="#140a08" stroke-width="3.4"/>`; }
     // her shrouds from the rail up to the mast, in silhouette
     { for (const [x0, x1] of [[2, 56], [12, 58], [22, 60]]) o += `<path d="M${x0} ${ER - 2}L${x1} -4" stroke="#140a08" stroke-width="1.1"/>`; }
-    // her men behind the rail, in profile against the sunset with a warm rim on the side of the sun: one diving flat,
-    // head first, away from our port; one crouched, bowed, his hands clamped on his head; a hat knocked off, spinning
-    { const sil = '#140a08', rim = '#ffc080', T = (C, W) => H.sp(H.tube(C, W).outline(0, undefined, 1, true, true), true);
-      const man = [
-        // diving: the arms reaching ahead, the head down, the body and the legs trailing up behind him
-        T([[18, ER - 10], [11, ER - 6.4], [4.4, ER - 2.6]], [3.6, 3, 2.4]), T([[18.6, ER - 9.6], [12.6, ER - 5], [7, ER - 1.4]], [3.4, 2.8, 2.2]),
-        T([[17, ER - 9.4], [24, ER - 13.4], [31, ER - 16]], [8.4, 8, 7.2]),
-        T([[30.6, ER - 16], [38.6, ER - 20], [46, ER - 22]], [6.2, 4.8, 3.6]), T([[29.6, ER - 15], [36.4, ER - 21.6], [41, ER - 28]], [5.8, 4.4, 3.2]),
-        // crouched: the hunched back rising out from behind the rail, the arms bent up to the head
-        T([[66, ER + 3], [64.4, ER - 8], [58.6, ER - 15.4]], [9.4, 9.8, 8.6]),
-        T([[59.4, ER - 16], [55.4, ER - 22.6], [52.4, ER - 18.6]], [3.4, 3, 2.6]), T([[57.6, ER - 15], [49.6, ER - 19.4], [53.6, ER - 17.6]], [3.8, 3.3, 2.8])];
-      let body = man.map(d => `<path d="${d}"/>`).join('')
-        + `<circle cx="11.6" cy="${ER - 4.6}" r="3.7"/><path d="M8.8 ${ER - 2.4}l-1.6 1.8l2.6 .2z"/>`                          // the diver's head, chin tucked
-        + `<circle cx="51.6" cy="${ER - 13.6}" r="3.9"/><path d="M48.2 ${ER - 11.6}l-1.4 2.2l2.8 -.4z"/><path d="M48.6 ${ER - 16}q3 -3.4 7 -1.4l-.4 1.6q-3.4 -1 -6.4 .6z"/>` // the crouched man's head, a knitted cap
-        + `<ellipse cx="46.6" cy="${ER - 22.2}" rx="1.6" ry="2.2" transform="rotate(-30 46.6 ${ER - 22.2})"/><ellipse cx="42" cy="${ER - 28.6}" rx="1.4" ry="2" transform="rotate(-50 42 ${ER - 28.6})"/>`; // the diver's shoes
-      o += `<g fill="${rim}" opacity=".95">${body}</g><g fill="${sil}" transform="translate(.7 .6)">${body}</g>`;
-      // the hat knocked off the diver's head, spinning up; two short streaks behind it
-      o += `<g transform="rotate(-34 30 ${ER - 38})"><path d="M24.4 ${ER - 37}Q30 ${ER - 43} 35.6 ${ER - 37}Q30 ${ER - 35} 24.4 ${ER - 37}Z" fill="${sil}"/><path d="M26 ${ER - 38.4}Q30 ${ER - 42.4} 34 ${ER - 38.4}" stroke="${rim}" stroke-width=".5" fill="none"/></g>`
-        + `<path d="M22 ${ER - 31}q1.6 -2 2.2 -4.4M27 ${ER - 30}q1 -2.2 1 -4.6" stroke="${rim}" stroke-width=".4" fill="none" opacity=".6"/>`; }
+    // her men behind the rail, in profile against the sunset: cloth with volume, dark against the sky, the flash of our
+    // gun (low right) lighting their edges orange, the sun behind them rimming the other side. One dives flat, face
+    // down, head first away from our port, arms out ahead; one has dropped into a crouch, back hunched, both hands
+    // clamped on his head. A hat knocked off the diver, spinning.
+    { const SH = { lit: '#c0703c', half: '#3e241a', shadow: '#170c0a', outline: '#070303' }, TR = { lit: '#90583a', half: '#2a1c1c', shadow: '#0e0808', outline: '#050303' };
+      const SK = { lit: '#e8986a', half: '#7a4430', core: '#643826', shadow: '#2e1810', outline: '#0a0503' }, RIM = '#ffd090', FL = [1, .45];
+      const litOf = sp => { const a = sp[0], b = sp[sp.length - 1]; return (-(b[1] - a[1]) * FL[0] + (b[0] - a[0]) * FL[1]) >= 0 ? 1 : -1; };
+      const limb = (spine, w, tone, seed, o = {}) => H.cloth(u, { spine, w, tone, lit: litOf(spine), rim: RIM, rimOp: .6, rimW: .4, seed, drapes: 1, foldW: .45, sw: .35, capA: true, capB: true, ...o });
+      const hand = (at, a, m, curl = .25) => { const h = H.hand(u, { at, a, s: .52, m, pose: 'open', tone: SK, spread: 14, curl, sw: .25 }); return h.back + h.front; };
+      const shoe = (x, y, rot) => `<g transform="rotate(${rot} ${x} ${y})"><path d="M${x - 1.8} ${y + 1.2}Q${x - 2.2} ${y - 1.4} ${x} ${y - 1.5}Q${x + 2.8} ${y - 1.3} ${x + 2.6} ${y + .4}Q${x + 2.4} ${y + 1.5} ${x - 1.8} ${y + 1.2}Z" fill="#100806" stroke="#050303" stroke-width=".3"/><path d="M${x - 1.6} ${y + 1.1}Q${x + 1} ${y + 1.4} ${x + 2.5} ${y + .4}" stroke="#ff9a50" stroke-width=".35" fill="none" opacity=".8"/></g>`;
+      let men = '';
+      // the diver: far arm, far leg, the torso, the near leg, the head, the near arm
+      men += limb([[16, 74.4], [10, 76.8], [3.6, 80]], [3.6, 3.1, 2.6], SH, 3) + hand([3.6, 80], 158, 1, .2);
+      men += limb([[30, 69.6], [37.6, 64.4], [43.6, 58.6]], [5.4, 4.3, 3.3], TR, 4) + shoe(44.6, 57.4, -40);
+      men += limb([[13.4, 77], [21, 75], [31, 71]], [7.4, 8.4, 7.2], SH, 5);
+      men += limb([[31, 72], [40, 68.2], [48.6, 64]], [5.8, 4.6, 3.4], TR, 6) + shoe(49.8, 63.2, -24);
+      men += H.head(u, { c: [9.4, 80.6], r: 3.2, dir: -1, tilt: 48, tone: SK, hairColor: '#1c120c', warm: { color: '#ffa860', op: .55 }, eye: 'half' }).svg;
+      men += limb([[17, 77.6], [10.6, 83.6], [4, 87]], [3.8, 3.3, 2.8], SH, 7) + hand([4, 87], 160, -1, .2);
+      // the crouched man: far arm (its hand on the back of his head), the thigh, the hunched back, the head, the near arm
+      men += limb([[59, 72.6], [50.6, 75.4], [52.6, 69.8]], [3.6, 3.1, 2.6], SH, 8) + hand([52.6, 69.8], -14, 1, .5);
+      men += limb([[68, 86], [58, 84.2], [60, 96]], [7, 5.6, 4.4], TR, 9);
+      men += limb([[68.4, 88], [67.4, 78.6], [59.6, 72.4]], [8.4, 9.6, 8.4], SH, 10);
+      men += H.head(u, { c: [54, 74.6], r: 3.3, dir: -1, tilt: 34, tone: SK, hairColor: '#2a1a10', warm: { color: '#ffa860', op: .45 }, eye: 'shut' }).svg;
+      men += limb([[61.4, 73.6], [51.4, 79.4], [51.8, 71.4]], [3.9, 3.4, 2.8], SH, 11) + hand([51.8, 71.4], -26, -1, .45);
+      o += men;
+      // the hat knocked off the diver's head, spinning up
+      const sil = '#140a08';
+      o += `<g transform="rotate(-34 27 ${ER - 37})"><path d="M21.4 ${ER - 36}Q27 ${ER - 42} 32.6 ${ER - 36}Q27 ${ER - 34} 21.4 ${ER - 36}Z" fill="${sil}"/><path d="M23 ${ER - 37.4}Q27 ${ER - 41.4} 31 ${ER - 37.4}" stroke="${RIM}" stroke-width=".5" fill="none"/></g>`; }
     // her bulwark and side close to us: dark against the sun, the cap rail with its lit edge, a wale, a closed port;
     // our flash lights it orange where the swarm strikes
     { const sd = nid('sd', u);
@@ -109,14 +118,14 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'draft', cam: {
         + K.localGlow(u, { x: 66, y: ER + 8, color: '#ffb050', power: .7, radius: 34 });
       // the strikes: holes torn in the bulwark, splinters flying out of each, a notch bitten out of the cap rail
       const RH = rng(9);
-      for (const [hx, hy, r] of [[18, ER + 6, 1.6], [34, ER + 3, 1.3], [46, ER + 9, 1.8], [58, ER + 4, 1.4], [70, ER + 7, 1.2], [26, ER + 11, 1.1], [52, ER - 1.4, 1.6]]) {
+      for (const [hx, hy, r] of [[20, ER + 1.4, 1.2], [44, ER - 1.2, 1.5], [70, ER + 1.6, 1.1]]) {
         o += `<circle cx="${hx}" cy="${hy}" r="${f(r + .8)}" fill="#c8884a" opacity=".55"/><circle cx="${hx}" cy="${hy}" r="${r}" fill="#080402"/>`;
         for (let i = 0; i < 6; i++) { const a = -Math.PI + RH() * Math.PI * 1.2 - .2, d = 2 + RH() * 7, l = 1 + RH() * 2.4, x = hx + Math.cos(a) * d, y = hy + Math.sin(a) * d * .8;
           o += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(a + 1) * l)} ${f(Math.sin(a + 1) * l)}" stroke="${RH() > .4 ? '#f0c890' : '#a06a38'}" stroke-width="${f(.5 + RH() * .5)}" stroke-linecap="round"/>`; } } }
     // the swarm: lead balls fanning out of the flash, wider and smaller with the distance, each with a short streak
     { const RS = rng(13), sf = nid('sf', u), mx = m.x - 3, my = by;
       o += `<defs><filter id="${sf}" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation=".5"/></filter></defs>`;
-      for (let i = 0; i < 60; i++) { const a = Math.PI + (-.46 + RS() * .54), d = 8 + Math.pow(RS(), .8) * 70, x = mx + Math.cos(a) * d, y = my + Math.sin(a) * d * 1.05, r = .55 + (1 - d / 80) * .6 + RS() * .25, sl = 3 + RS() * 3.5;
+      for (let i = 0; i < 50; i++) { const a = Math.PI + (.04 + RS() * .52), d = 8 + Math.pow(RS(), .8) * 76, x = mx + Math.cos(a) * d, y = my + Math.sin(a) * d * 1.05, r = .55 + (1 - d / 80) * .6 + RS() * .25, sl = 3 + RS() * 3.5;
         o += `<path d="M${f(x - Math.cos(a) * sl)} ${f(y - Math.sin(a) * sl)}L${f(x)} ${f(y)}" stroke="#d8c8b0" stroke-width="${f(r * 1.4)}" opacity=".4" stroke-linecap="round" filter="url(#${sf})"/>`
           + `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="#3a3a3e"/><circle cx="${f(x + r * .3)}" cy="${f(y - r * .3)}" r="${f(r * .35)}" fill="#ffe0b0" opacity=".8"/>`; } }
     // the flash out of our port, the smoke rolling out towards her
@@ -142,8 +151,7 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'draft', cam: {
       + [12, 40, 66, 140, 172, 204].filter(y => y < pt - 2 || y > pt + ph + 2).map(y => `<path d="M${HX} ${y}h${HW}" stroke="#2a180a" stroke-width=".7"/>`).join('')
       + `<path d="M${HX + HW - 4} -10v${pt + 10}M${HX + HW - 4} ${pt + ph}V290" stroke="#c08a52" stroke-width=".4" opacity=".5"/>`
       + `<path d="M${HX} ${pt}h${HW}M${HX} ${pt + ph}h${HW}" stroke="#0a0502" stroke-width="1.4"/><path d="M${HX} ${pt + ph + 1}h${HW}" stroke="#ffcf7a" stroke-width=".6" opacity=".6"/>`
-      + `<g filter="url(#drop${u})"><path d="M${HX} ${pt}l-5 -21l-4.2 1.2l5 20.6z" fill="url(#oak${u})" stroke="#1a0e06" stroke-width=".6"/><path d="M${HX - 1.6} ${pt - 1}l-4.6 -19" stroke="#8e2420" stroke-width="1.2"/></g>`
-      + `<path d="M${HX - 6} ${pt - 20}L${HX + 3} -10" stroke="#a88a5a" stroke-width=".6"/>`;
+;
 
     // ——— the deck things: shadows from under the lantern, the gun recoiling, the grape rounds by its muzzle ———
     let fg = '';

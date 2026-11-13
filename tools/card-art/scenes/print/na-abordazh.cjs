@@ -117,9 +117,9 @@ module.exports = { name: 'На абордаж!', kind: 'deck', status: 'draft', 
       eye: 'wide', look: [-.6, .3], brow: 'frown', mouth: .55, smile: -.15, hair: { style: 'long', color: '#24160e' }, hairColor: '#24160e', moustache: true, stubble: true, iris: '#3a2a1a' });
     // the rope hand (his left, near): round the rope over his head; the cutlass hand (his right, far) forward and up
     const ROPE0 = [152, -6], GR = [121, 22], ropeAng = Math.atan2(GR[1] - ROPE0[1], GR[0] - ROPE0[0]) * 180 / Math.PI;
-    const hR = handOn(u, { s: .95, m: -1, roll: 24, pitch: 10, pose: 'wrap', r: 1.15, tone: SKIN, light: [-.85, -.4], sw: .26, tilt: 8 }, GR, ropeAng, -70);
+    const hR = handOn(u, { s: 1.05, m: -1, roll: 24, pitch: 10, pose: 'wrap', r: 1.15, tone: SKIN, light: [-.85, -.4], sw: .26, tilt: 8 }, GR, ropeAng, -70);
     const GS = [63, 47], bladeAng = -97;
-    const hS = handOn(u, { s: .95, m: -1, roll: 40, pitch: 8, pose: 'wrap', r: .95, tone: SKIN, light: [-.85, -.4], sw: .26, tilt: 6 }, GS, bladeAng, 180);
+    const hS = handOn(u, { s: 1.05, m: -1, roll: 40, pitch: 8, pose: 'wrap', r: .95, tone: SKIN, light: [-.85, -.4], sw: .26, tilt: 6 }, GS, bladeAng, 180);
     // the far (sabre) arm first: one sleeve from his right shoulder, the elbow out in front, to the cuff
     const shF = [88.5, 52.5], elF = [75, 56.5], shN = [109, 52.5], elN = [116.5, 37.5];
     const sleeve = (sh, el, w, sd, rimSide) => H.cloth(u, { spine: [sh, [lerp(sh[0], el[0], .5), lerp(sh[1], el[1], .5) + .8], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5) + .3], w],
@@ -135,29 +135,29 @@ module.exports = { name: 'На абордаж!', kind: 'deck', status: 'draft', 
         w: [5, 5.8, 6.8], tone: BOOT, lit: -rimSide, rim: RIMC, rimSide: -rimSide, rimOp: .55, seed: sd + 1, drapes: 0, folds: false, sw: .35,
         cuff: { from: .74, k: 1.28, tone: { lit: '#7a5434', half: '#4a2e18', shadow: '#1e1208', outline: '#070302' } } });
       return s; };
-    man += leg([101, 81.5], [83, 88], [76.5, 104], [-1, .38], 11, -1);
-    man += leg([109.5, 82.5], [106, 100], [117.5, 107.5], [-.25, 1], 13, -1);
+    man += leg([101, 81.5], [83.5, 84.5], [78, 101], [-1, .3], 11, -1);
+    man += leg([109.5, 82.5], [97, 95.5], [93.5, 111.5], [-1, .62], 13, -1);
     // the neck (short), under the jaw
     man += `<path d="M89.6 44.6L97.6 44.8L99.4 50.6Q95 52.4 90.6 50.8Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".3"/><path d="M90.4 46.4q3 2.2 7 .4" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".6"/>`;
     // the torso: the linen shirt open at the throat, the dark sleeveless jerkin over it, the sash at the waist
     { const sh = nid('sh', u), ve = nid('ve', u), sa = nid('sa', u);
-      const shirt = [[88, 51], [93.6, 49.4], [98, 57.6], [102.4, 49.4], [109, 50], [112.4, 53.4], [113, 61], [113.4, 70], [114, 78.6], [98.4, 78.6], [96.4, 76], [89.4, 66], [86.8, 58], [86.4, 53.4]];
+      const shirt = [[88, 51], [93.6, 49.4], [98, 57.6], [102.4, 49.4], [109, 50], [112.4, 53.4], [112.6, 61], [111.8, 70], [111.6, 78.6], [98.8, 78.6], [97.2, 76], [90.6, 66], [87.2, 58], [86.4, 53.4]];
       man += `<defs>${linGrad(sh, 86, 0, 114, 0, [[0, '#d8c09c', 1], [.35, '#a68c6c', 1], [1, '#5e4836', 1]])}${linGrad(ve, 86, 0, 114, 0, [[0, '#5a3a28', 1], [.3, '#3a2418', 1], [1, '#1a0e08', 1]])}${linGrad(sa, 0, 76, 0, 85, [[0, '#c03a26', 1], [.5, '#8a1c14', 1], [1, '#4a0c08', 1]])}</defs>`
         + `<path d="M${shirt.map(P2).join('L')}Z" fill="url(#${sh})" stroke="${SHIRT.outline}" stroke-width=".35"/>`
         // the chest in the open collar: skin, the shirt's edges laid back
         + `<path d="M94.4 49.8L98 57L101.6 49.8Q98 51.6 94.4 49.8Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".25"/><path d="M95.8 51.2q2.2 1.4 4.4 0" stroke="${SKIN.shadow}" stroke-width=".35" fill="none" opacity=".6"/>`
         // the jerkin: two panels, its edges apart over the shirt, a lit edge towards the sun
-        + `<path d="M88 51.2L93.4 49.8L96 61L98.2 77.6L96.4 76L89.4 66L86.8 58L86.4 53.4Z" fill="url(#${ve})" stroke="${VEST.outline}" stroke-width=".35"/>`
-        + `<path d="M103 49.8L109 50.2L112.4 53.4L113 61L113.4 70L114 78.4L101.6 78.4L100.6 63Z" fill="url(#${ve})" stroke="${VEST.outline}" stroke-width=".35"/>`
-        + `<path d="M93.4 49.8L96 61L98.2 77.6" stroke="#8a6448" stroke-width=".4" fill="none" opacity=".7"/><path d="M86.4 53.4L86.8 58L89.4 66L96.4 76" stroke="${RIMC}" stroke-width=".7" fill="none" opacity=".75"/>`
+        + `<path d="M88 51.2L93.4 49.8L96 61L98.4 77.6L97.2 76L90.6 66L87.2 58L86.4 53.4Z" fill="url(#${ve})" stroke="${VEST.outline}" stroke-width=".35"/>`
+        + `<path d="M103 49.8L109 50.2L112.4 53.4L112.6 61L111.8 70L111.6 78.4L101.6 78.4L100.6 63Z" fill="url(#${ve})" stroke="${VEST.outline}" stroke-width=".35"/>`
+        + `<path d="M93.4 49.8L96 61L98.2 77.6" stroke="#8a6448" stroke-width=".4" fill="none" opacity=".7"/><path d="M86.4 53.4L87.2 58L90.6 66L97.2 76" stroke="${RIMC}" stroke-width=".7" fill="none" opacity=".75"/>`
         + `<path d="M98.6 60q1.6 4 1 10M99.8 66q.8 5 .2 10" stroke="#6a5240" stroke-width=".35" fill="none" opacity=".7"/>`
         + [55.5, 61, 66.5].map(y => `<circle cx="${f(101.6 + (y - 55) * -.03)}" cy="${y}" r=".55" fill="#c9a048" stroke="#4a3010" stroke-width=".2"/>`).join('')
         // the sash wound round the waist, knotted on the near hip, its ends streaming back in the swing
-        + `<path d="M96.4 75.6Q105 78.4 114.2 77.6L114.8 84.6Q105 86 97.6 83.6Z" fill="url(#${sa})" stroke="#2a0604" stroke-width=".35"/>`
-        + `<path d="M97.2 78.4Q105 80.6 114.4 80M97.4 81Q105 83 114.6 82.4" stroke="#5a0e0a" stroke-width=".35" fill="none" opacity=".8"/><path d="M96.6 76.4Q97.4 80 97.8 83.4" stroke="${RIMC}" stroke-width=".5" fill="none" opacity=".6"/>`
-        + `<path d="M113 79.4q3 -1 4 1.6q-1 2.6 -4 2q-1.4 -1.8 0 -3.6Z" fill="#9a2418" stroke="#2a0604" stroke-width=".3"/>`
-        + `<path d="M116.6 80.6Q122 82 127 79.6Q125 83.4 128.6 86Q122 86.4 116.4 82.6Z" fill="#8a1c14" stroke="#2a0604" stroke-width=".3"/><path d="M116 82.4Q120 87 125.4 91Q121 91 118.8 93.4Q116.4 88 115.2 83.2Z" fill="#6e140e" stroke="#2a0604" stroke-width=".3"/>`
-        + `<path d="M118 81.4Q122 82.8 126 81.2M117 84q3 3.6 6.6 6.2" stroke="#c04030" stroke-width=".35" fill="none" opacity=".7"/>`; }
+        + `<path d="M97 75.6Q104.6 78.4 112 77.6L112.8 84.6Q105 86 98 83.6Z" fill="url(#${sa})" stroke="#2a0604" stroke-width=".35"/>`
+        + `<path d="M97.6 78.4Q105 80.6 112.2 80M97.8 81Q105 83 112.6 82.4" stroke="#5a0e0a" stroke-width=".35" fill="none" opacity=".8"/><path d="M96.6 76.4Q97.4 80 97.8 83.4" stroke="${RIMC}" stroke-width=".5" fill="none" opacity=".6"/>`
+        + `<path d="M111 79.4q3 -1 4 1.6q-1 2.6 -4 2q-1.4 -1.8 0 -3.6Z" fill="#9a2418" stroke="#2a0604" stroke-width=".3"/>`
+        + `<path d="M114.6 80.6Q120 82 125 79.6Q123 83.4 126.6 86Q120 86.4 114.4 82.6Z" fill="#8a1c14" stroke="#2a0604" stroke-width=".3"/><path d="M114 82.4Q118 87 123.4 91Q119 91 116.8 93.4Q114.4 88 113.2 83.2Z" fill="#6e140e" stroke="#2a0604" stroke-width=".3"/>`
+        + `<path d="M116 81.4Q120 82.8 124 81.2M115 84q3 3.6 6.6 6.2" stroke="#c04030" stroke-width=".35" fill="none" opacity=".7"/>`; }
     // the head, its rim of sunset on the side towards the sun; the scarf over the crown, knotted behind, ends flying
     man += hd.svg + rimArc(hd, { r: HEAD.r, light: [.9, .3], color: RIMC, span: 55, opacity: .7 });
     { const Q = hd.Q, dp = hd.depth;
@@ -188,17 +188,17 @@ module.exports = { name: 'На абордаж!', kind: 'deck', status: 'draft', 
       const grip = K.shadeCyl(u, ...at(-4.6, 0), ...at(3.6, 0), .95, L, 'leather', { outline: .3, seed: 4 });
       const pommel = K.shadeSphere(u, ...at(-5.2, 0), 1.2, L, 'brass', { outline: .3 });
       // the blade: back edge straight-ish, the edge bellying, a clipped point; the fuller; the sun along the edge
-      const B = [at(4.4, -1.1), at(14, -1.3), at(24, -.6), at(32, 1.4), at(34.6, 2.6), at(33, .9), at(24, 1.8), at(14, 1.5), at(4.4, 1.1)];
+      const B = [at(4.4, -1.1), at(13, -1.3), at(21.5, -.6), at(28.6, 1.3), at(31, 2.5), at(29.6, .8), at(21.5, 1.8), at(13, 1.5), at(4.4, 1.1)];
       const bid = nid('bl', u), b0 = at(18, -1.5), b1 = at(18, 2);
       const blade = `<defs>${linGrad(bid, b0[0], b0[1], b1[0], b1[1], [[0, '#fff0d8', 1], [.3, '#c8c4c0', 1], [.62, '#6a6866', 1], [1, '#d8d0c8', 1]])}</defs>`
-        + `<path d="M${P2(B[0])}Q${P2(B[1])} ${P2(B[2])}Q${P2(at(29, .2))} ${P2(B[3])}L${P2(B[4])}L${P2(B[5])}Q${P2(at(28, 1.9))} ${P2(B[6])}Q${P2(B[7])} ${P2(B[8])}Z" fill="url(#${bid})" stroke="#2a2420" stroke-width=".3"/>`
-        + `<path d="M${P2(at(5, -.2))}Q${P2(at(14, -.3))} ${P2(at(26, .3))}" stroke="#4a4644" stroke-width=".4" fill="none"/>`
-        + `<path d="M${P2(at(6, 1))}Q${P2(at(16, 1.5))} ${P2(at(30, 1.6))}" stroke="#ffe6c0" stroke-width=".35" fill="none" opacity=".85"/>`;
+        + `<path d="M${P2(B[0])}Q${P2(B[1])} ${P2(B[2])}Q${P2(at(26, .2))} ${P2(B[3])}L${P2(B[4])}L${P2(B[5])}Q${P2(at(25, 1.9))} ${P2(B[6])}Q${P2(B[7])} ${P2(B[8])}Z" fill="url(#${bid})" stroke="#2a2420" stroke-width=".3"/>`
+        + `<path d="M${P2(at(5, -.2))}Q${P2(at(13, -.3))} ${P2(at(23, .3))}" stroke="#4a4644" stroke-width=".4" fill="none"/>`
+        + `<path d="M${P2(at(6, 1))}Q${P2(at(15, 1.5))} ${P2(at(27, 1.6))}" stroke="#ffe6c0" stroke-width=".35" fill="none" opacity=".85"/>`;
       // the shell guard over the fist and the knuckle-bow down the fingers' side to the pommel
       const shell = `<path d="M${P2(at(3.6, -3.2))}Q${P2(at(5.4, 0))} ${P2(at(3.6, 3.4))}L${P2(at(3, 3))}Q${P2(at(4.2, 0))} ${P2(at(3, -2.8))}Z" fill="url(#brass${u})" stroke="#4a3008" stroke-width=".3"/>`;
       const bow = `<path d="M${P2(at(3.4, 2.8))}Q${P2(at(1, 5.6))} ${P2(at(-2.6, 5))}Q${P2(at(-5, 3.4))} ${P2(at(-5.4, .8))}" stroke="#4a3008" stroke-width="1.15" fill="none" stroke-linecap="round"/><path d="M${P2(at(3.4, 2.8))}Q${P2(at(1, 5.6))} ${P2(at(-2.6, 5))}Q${P2(at(-5, 3.4))} ${P2(at(-5.4, .8))}" stroke="#d8b060" stroke-width=".5" fill="none" stroke-linecap="round"/>`;
       sabre = blade + hS.back + grip + pommel + hS.front + shell + bow
-        + glow(u, ...at(30, 1.4), 5, 5, '#ffe0a0', .45); }
+        + glow(u, ...at(27, 1.4), 5, 5, '#ffe0a0', .45); }
     // the near (rope) arm: sleeve up to the cuff, the fist round the rope; the rope's free end flying below the fist
     let ropeArm = K.rope(u, L, [ROPE0, [lerp(ROPE0[0], GR[0], .5) + .6, lerp(ROPE0[1], GR[1], .5)], GR], { r: 1.1, seed: 7 })
       + `<path d="M${P2(ROPE0)}L${P2(GR)}" stroke="${RIMC}" stroke-width=".35" opacity=".5"/>`;
