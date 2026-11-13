@@ -53,10 +53,9 @@ const GRIPS = {
   card(u, L) { const c = [104, 150], tn = skinAt(L, ...c);
     const hd = H.hand3(u, { at: [92, 196], a: -72, s: S, m: -1, roll: 180, pose: 'hold', flex: [[14, 10, 6], [12, 10, 6], [16, 14, 8], [22, 20, 10]], spread: 3, tone: tn, light: litAt(L, ...c), sw: .32,
       backFingers: [0, 1, 2, 3, 'palm'], thumbTo: [6.2, -.9, -1.9] });
-    // the card's lower edge runs from above the little finger's knuckle to below the thumb's tip: the palm and the
-    // fingers' roots show under it, the fingers go on behind it, the thumb lies on its face
-    const kl = hd.joints[3][0], tt = hd.joints[4][3], A0 = [kl[0], kl[1] - 2.2], B0 = [tt[0], tt[1] + 1.6];
-    const a = Math.max(-5 * D, Math.min(30 * D, Math.atan2(B0[1] - A0[1], B0[0] - A0[0]))), ca = Math.cos(a), sa = Math.sin(a), cw = 22, ch = 32, o = [A0[0] - ca * 5, A0[1] - sa * 5];
+    // the card's lower edge just under the thumb's tip, across the fingers' roots: the palm shows under it, the
+    // fingers go on behind it, the thumb's last joint lies on its face
+    const tt = hd.joints[4][3], cw = 22, ch = 32, a = 3 * D, ca = Math.cos(a), sa = Math.sin(a), o = [tt[0] - 8.5, tt[1] + 1.6];
     const Q = [[0, 0], [cw, 0], [cw, -ch], [0, -ch]].map(p => [o[0] + p[0] * ca - p[1] * sa, o[1] + p[0] * sa + p[1] * ca]);
     const card = `<path d="M${Q.map(p => p.map(K.f).join(' ')).join('L')}Z" fill="#efe6d2" stroke="#3a2a1a" stroke-width=".4" stroke-linejoin="round"/>`
       + `<path d="M${Q.map((p, i) => { const q = [Q[(i + 2) % 4][0] - p[0], Q[(i + 2) % 4][1] - p[1]]; return [p[0] + q[0] * .1, p[1] + q[1] * .1].map(K.f).join(' '); }).join('L')}Z" fill="none" stroke="#8a2418" stroke-width=".6"/>`
@@ -64,7 +63,7 @@ const GRIPS = {
     return out(hd, sleeve(u, L, [80, 280], hd.wrist, 3 * S) + hd.back + card + hd.front); },
   // a coin in a pinch: the thumb in front of it, the index finger behind, the other fingers curled
   coin(u, L) { const c = [100, 156], tn = skinAt(L, ...c);
-    const hd = H.hand3(u, { at: [72, 176], a: -28, s: S, m: 1, roll: 96, pitch: 0, pose: 'pinch', flex: [[34, 46, 24], [58, 78, 46], [66, 84, 50], [70, 88, 54]], tone: tn, light: litAt(L, ...c), sw: .32,
+    const hd = H.hand3(u, { at: [72, 176], a: -28, s: S, m: 1, roll: 96, pitch: 0, pose: 'pinch', flex: [[34, 46, 24], [70, 92, 56], [76, 94, 58], [80, 96, 58]], tone: tn, light: litAt(L, ...c), sw: .32,
       backFingers: [0, 1, 2, 3], pinchGap: .5 });
     const it = hd.joints[0][3], tt = hd.joints[4][3], cp = [(it[0] + tt[0]) / 2 + 1.2, (it[1] + tt[1]) / 2 - 1.8], r = 3.4, rp = L.ramp('brass', ...cp), g = K.nid('hc', u), lt = litAt(L, ...cp);
     const coin = `<defs>${K.linGrad(g, cp[0] + lt[0] * r, cp[1] + lt[1] * r, cp[0] - lt[0] * r, cp[1] - lt[1] * r, [[0, rp.spec || rp.lit, 1], [.35, rp.lit, 1], [.75, rp.half, 1], [1, rp.shadow, 1]])}</defs>`
