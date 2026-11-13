@@ -9,8 +9,7 @@
 // its port, the fire filling the opening, smoke spurting from its vent and rolling back in. The bill, coins and
 // quill floated on a crate — now the ledger lies on the keg's head and the hand holds the quill (fingers round it);
 // the brand and the ticks are marks, no letters. Second pass (review): the hand a jointed one in a writing pinch
-// (the thumb and the fingertips on a tilted quill, its nib at the end of the newest tick), the sleeve shown to the
-// elbow; three big ticks; the far guns spread in depth along the side (port 2 and port 4). Light: the flash in the port (key, orange-white), daylight in the
+// (the thumb and the fingertips on a tilted quill, its nib at the end of the newest tick); three big ticks; the far guns spread in depth along the side (port 2 and port 4). Light: the flash in the port (key, orange-white), daylight in the
 // far ports, a lantern under the beams (warm).
 'use strict';
 const K = require('../kit/index.cjs');
@@ -168,11 +167,11 @@ function ledger(u, L, R) {
   return s;
 }
 
-/** The clerk's hand from the right edge: a black sleeve from the elbow (the upper arm out of the frame top right) with a
- *  white cuff and a frill; the hand a jointed one (people.cjs hand3) in a writing pinch — the thumb and the fingertips
+/** The clerk's hand from the right edge: a black sleeve with a
+ *  white cuff and a frill (the elbow on the frame's edge); the hand a jointed one (people.cjs hand3) in a writing pinch — the thumb and the fingertips
  *  holding the quill tilted, its nib on the newest tick, the feather rising up and right past the knuckles. */
 function hand(u, L) {
-  const a = 168, s = 1.6, Rp = [[164, 109.6], [190, 111], [194.6, 124], [165.6, 121.4]];
+  const a = 214, s = 1.3, Rp = [[164, 109.6], [190, 111], [194.6, 124], [165.6, 121.4]];
   const at = (u2, v) => [lerp(lerp(Rp[0][0], Rp[1][0], u2), lerp(Rp[3][0], Rp[2][0], u2), v), lerp(lerp(Rp[0][1], Rp[1][1], u2), lerp(Rp[3][1], Rp[2][1], u2), v)];
   const tk = at(.41, TICKS[TICKS.length - 1]), nib = [tk[0] + 2.7, tk[1] - 3.3];   // the end of the newest tick's stroke
   const qa = -58 * Math.PI / 180, qd = [Math.cos(qa), Math.sin(qa)];                   // the quill's axis: from the nib up and right
@@ -182,12 +181,11 @@ function hand(u, L) {
   const h0 = H.hand3(u, { ...opts, at: [0, 0] }), p0 = h0.P(7.6, -1, -2.6), wr = [pinch[0] - p0[0], pinch[1] - p0[1]];
   const hd = H.hand3(u, { ...opts, at: wr });
   const sleeve = { lit: '#4a4e5a', half: '#22242c', core: '#1a1c22', shadow: '#0a0a0e', outline: '#050506' }, cuff = { lit: '#fffaf0', half: '#e8e0d0', shadow: '#a8a090', outline: '#5a5448' };
-  // the clerk stands to the right: the upper arm down from out of the frame, the elbow bent inside it, the forearm
-  // down and left to the page
-  const el = [193, 92];
-  let o = H.cloth(u, { spine: [[214, 52], [204, 74], el, [lerp(el[0], wr[0], .5) + 1, lerp(el[1], wr[1], .5) - 1], [wr[0] + 1.6, wr[1] - 1]], w: [17, 15.4, 13.6, 11.6, 10.4], tone: sleeve, lit: -1, rim: '#ffcf96', rimSide: -1, cuff: { from: .82, k: 1.16, tone: cuff }, seed: 5, drapes: 3, sw: .4 });
+  // the forearm from the elbow at the right edge (the upper arm out of the frame) up to the wrist
+  const el = [201, 139];
+  let o = H.cloth(u, { spine: [[222, 98], [210, 120], el, [lerp(el[0], wr[0], .55) + 1, lerp(el[1], wr[1], .55)], [wr[0] + 2, wr[1] + 1.2]], w: [17, 15.4, 13.6, 11.6, 10.4], tone: sleeve, lit: -1, rim: '#ffcf96', rimSide: -1, cuff: { from: .82, k: 1.16, tone: cuff }, seed: 5, drapes: 3, sw: .4 });
   // the frill of the shirt falling over the back of the wrist
-  o += `<path d="M${f(wr[0] + 3.4)} ${f(wr[1] - 3.8)}q-3.2 .2 -4.6 2.8q2.2 0 3.2 1.6q-2.4 1 -2.6 3.2q3 -.2 4.4 -2.4z" fill="#f4eee0" stroke="#7a7466" stroke-width=".3"/>`;
+  o += `<path d="M${f(wr[0] + 3.6)} ${f(wr[1] - 4.4)}q-3 1 -4 3.4q2 .4 3 2q-2.4 .6 -3 2.8q3 .4 4.6 -1.4z" fill="#f4eee0" stroke="#7a7466" stroke-width=".3"/>`;
   // the quill: the nib on the page, the barrel up through the pinch and past the knuckles, the feather sweeping up right
   const top = [nib[0] + qd[0] * 26, nib[1] + qd[1] * 26], nx = -qd[1], ny = qd[0];
   const qp = t => [nib[0] + qd[0] * t, nib[1] + qd[1] * t];
