@@ -296,7 +296,7 @@ module.exports = { name: 'Сделка с Сяо Фэном', kind: 'deck', stat
         + coin(sx + 4.2, sy - 3.6, 1.6, -20) + coin(sx + 6.2, sy - 1.8, 1.7, 14); }
     // the Company's hand round the neck of the bag: a navy coat sleeve with a gold-buttoned cuff, a lace ruffle
     const coatT = { lit: '#4a5a8a', half: '#222a48', core: '#1a2038', shadow: '#0a0e1c', outline: '#04060c' };
-    const h1 = handAt(u, { s: 2.6, m: 1, roll: 18, pitch: 6, pose: 'wrap', r: .62, tone: SKIN, light: [.6, -.8], sw: .32, palmW: .92, wristW: .82 }, G1, -86, -4);
+    const h1 = handAt(u, { s: 2.6, m: 1, roll: 52, pitch: 6, pose: 'wrap', r: .62, tone: SKIN, light: [.6, -.8], sw: .32, palmW: .92, wristW: .82 }, G1, -86, -4);
     let arm1 = '';
     { const W = h1.wrist, ua = [W[0] - (W[0] - 8), 0], EL = [W[0] - 22, W[1] + 15];
       void ua;
@@ -333,9 +333,14 @@ module.exports = { name: 'Сделка с Сяо Фэном', kind: 'deck', stat
       fan += glow(u, at(-2.1, 26)[0], at(-2.1, 26)[1], 10, 7, '#ffb070', .25) + ln(`M${P2(at(A1 - .3, r1 + .2))}L${P2(at(A1, r1 + .4))}`, .45, '#b8c8ff', .6); }
     let arm2 = '';
     { const W = h2.wrist, EL = [W[0] + 24, W[1] + 18], silk = { lit: '#e04a34', half: '#a01c14', core: '#7a120c', shadow: '#3a0604', outline: '#1a0202' };
-      arm2 += H.cloth(u, { spine: [[232, 128], [EL[0] + 6, EL[1] + 4], EL, [lerp(EL[0], W[0], .5), lerp(EL[1], W[1], .5) + 1.4], [W[0] + 2, W[1] + .6]], w: [24, 22, 19, 17, 15.4],
-        tone: silk, lit: -1, seed: 9, drapes: 1, sw: .4, foldW: .7,
-        cuff: { from: .9, k: 1.06, tone: { lit: '#f0c860', half: '#b88a2a', shadow: '#5a3a0a', outline: '#2a1a04' } } });
+      // a wide silk sleeve, opening out towards the wrist; smooth silk: no creases, long sheen lines instead
+      const spine = [[232, 128], [EL[0] + 6, EL[1] + 4], EL, [lerp(EL[0], W[0], .5), lerp(EL[1], W[1], .5) + 1.4], [W[0] + 2.4, W[1] + .6]];
+      arm2 += H.cloth(u, { spine, w: [17, 17.6, 18.6, 20.4, 22.4], tone: silk, lit: -1, seed: 9, folds: false, sw: .4,
+        cuff: { from: .93, k: 1.03, tone: { lit: '#e0b450', half: '#a07624', shadow: '#4a3008', outline: '#2a1a04' } } });
+      for (const [o2, c, w, op] of [[-.32, '#ff8a6a', .9, .45], [-.12, '#ffb090', .4, .35], [.3, '#4a0604', 1.1, .45]]) {
+        const pts = spine.slice(1).map((p, i, a) => { const q = a[Math.min(a.length - 1, i + 1)], r0 = a[Math.max(0, i - 1)], dx = q[0] - r0[0], dy = q[1] - r0[1], l = Math.hypot(dx, dy) || 1, ww = [17.6, 18.6, 20.4, 22.4][i] / 2;
+          return [p[0] - dy / l * ww * o2 * 2, p[1] + dx / l * ww * o2 * 2]; });
+        arm2 += ln(H.sp(pts.slice(0, -1).concat([[lerp(pts[pts.length - 2][0], pts[pts.length - 1][0], .8), lerp(pts[pts.length - 2][1], pts[pts.length - 1][1], .8)]])), w, c, op); }
       // the border's pattern: small squared spirals in dark thread; a white inner sleeve at the wrist
       const c0 = [W[0] + 3.4, W[1] + .6];
       for (let i = -3; i <= 3; i++) arm2 += `<path d="M${f(c0[0] + i * .15)} ${f(c0[1] + i * 2.1 - .6)}h1v1h-.6" stroke="#5a3008" stroke-width=".3" fill="none" opacity=".8"/>`;
