@@ -117,5 +117,14 @@ module.exports = { sheets: {
     ['stand', 'walk', 'aim'].forEach((p, i) => { s += panel(i * 400, 280, 400, 444, '20 74 160 178', posed('Q' + i, p), NAMES[p] + ' — крупно'); });
     ['young', 'old', 'woman'].forEach((w, i) => { s += panel(i * 300, 724, 300, 300, '0 0 200 200', headPanel('Hd' + i, w), { young: 'молодой, 3/4', old: 'старый с бородой, 3/4', woman: 'женщина, 3/4' }[w]); });
     s += panel(900, 724, 300, 300, '10 70 180 180', posed('S0', 'saber'), NAMES.saber);
+    return s; } },
+  // the bodies (limbs, joints, clothes, the weight of the pose): four poses in a column, each large (the figure's own
+  // frame) and at the size it has on a card (the panel 125 px wide at --width 470: a figure of ~110 px, as h 100 on a
+  // 250 px card)
+  bodies: { w: 470, h: 1440, bg: '#222', svg: () => {
+    let s = '';
+    ['stand', 'walk', 'haul', 'helm'].forEach((p, i) => { const y = i * 360, body = posed('B' + i, p);
+      s += panel(0, y, 330, 360, { stand: '12 78 180 196', walk: '10 78 180 196', haul: '0 76 200 218', helm: '10 78 180 196' }[p], body, NAMES[p]);
+      s += panel(340, y + 92, 125, 175, '0 0 200 280', posed('C' + i, p), 'карта'); });
     return s; } }
 } };
