@@ -55,4 +55,13 @@ function tricorn(u, hd, o) {
   return { back, front: crown + front, crown };
 }
 
-module.exports = { tricorn };
+// The back-light edge of a head34 head as one unbroken arc on the side away from the light (head34's own `rim` joins
+// hull points that need not be neighbours, so it can cut across the face). hd: head34 result; o: { r, light: [x, y],
+// color, span (degrees each side of the point opposite the light, default 70), width, opacity }
+function rimArc(hd, o) {
+  const c = hd.Q(0, -.12, 0), lt = o.light || [-.5, -.86], a0 = Math.atan2(-lt[1], -lt[0]), sp = (o.span || 70) * Math.PI / 180, P = [];
+  for (let k = 0; k <= 16; k++) { const a = a0 - sp + k / 16 * sp * 2; P.push([c[0] + Math.cos(a) * o.r * .86, c[1] + Math.sin(a) * o.r * 1.02]); }
+  return `<path d="M${P.map(p => `${f(p[0])} ${f(p[1])}`).join('L')}" stroke="${o.color || '#c8dcff'}" stroke-width="${f(o.width || o.r * .06)}" fill="none" stroke-linecap="round" opacity="${o.opacity || .6}"/>`;
+}
+
+module.exports = { tricorn, rimArc };

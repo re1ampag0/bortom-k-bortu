@@ -78,10 +78,11 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
       const out = topE.concat(fly.slice(1, -1), botE.slice().reverse());
       // shadow of the flag thrown faintly on nothing (it is in the air): skip; the cloth body
       flag += `<path d="M${out.map(P2).join('L')}Z" fill="#c8c8cc"/>`;
-      for (let i = 0; i < N; i++) { const t = (i + .5) / N, sl = (wv(t + .02) - wv(t - .02)) / .04, I = Math.max(-1, Math.min(1, sl / 14 + .3));
-        const c = I > 0 ? mix('#d8d8dc', '#fffdf4', I) : mix('#d8d8dc', '#6e7488', -I);
-        const q = [topE[i], topE[i + 1], botE[i + 1], botE[i]]; if (i === N - 1) q.splice(2, 0, ...fly.slice(1, -1).reverse().reverse());
-        flag += `<path d="M${q.map(P2).join('L')}Z" fill="${c}" stroke="${c}" stroke-width=".25"/>`; }
+      // each strip shaded by how its fold turns to the moon, the tone running smoothly across it (no bands)
+      const tone = t => { const sl = (wv(t + .02) - wv(t - .02)) / .04, I = Math.max(-1, Math.min(1, sl / 18 + .35)); return I > 0 ? mix('#e2e2e4', '#fffdf6', I) : mix('#e2e2e4', '#a4aabb', -I); };
+      for (let i = 0; i < N; i++) { const c0 = tone(i / N), c1 = tone((i + 1) / N), g = nid('fl', u), m0 = [lerp(topE[i][0], botE[i][0], .5), lerp(topE[i][1], botE[i][1], .5)], m1 = [lerp(topE[i + 1][0], botE[i + 1][0], .5), lerp(topE[i + 1][1], botE[i + 1][1], .5)];
+        const q = [topE[i], topE[i + 1], botE[i + 1], botE[i]]; if (i === N - 1) q.splice(2, 0, ...fly.slice(1, -1));
+        flag += `<defs>${linGrad(g, m0[0], m0[1], m1[0], m1[1], [[0, c0, 1], [1, c1, 1]])}</defs><path d="M${q.map(P2).join('L')}Z" fill="url(#${g})" stroke="url(#${g})" stroke-width=".3"/>`; }
       // the hoist: a sleeve round the pole, stitched; the edges of the cloth; a few stains and a darn
       flag += `<path d="M${P2(topE[0])}L${P2(topE[1])}L${P2(botE[1])}L${P2(botE[0])}Z" fill="#e8e4d8" stroke="#8a8a90" stroke-width=".3"/>`
         + `<path d="M${topE.map(P2).join('L')}" stroke="#ffffff" stroke-width=".6" fill="none"/><path d="M${botE.map(P2).join('L')}" stroke="#5a6070" stroke-width=".5" fill="none"/>`
@@ -126,7 +127,7 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
       for (const h of [hp, hs]) { const w = h.wrist; man += `<ellipse cx="${f(w[0])}" cy="${f(w[1])}" rx="3.4" ry="4.4" fill="#ece6d6" stroke="#6a6252" stroke-width=".3"/><path d="M${f(w[0] - 2)} ${f(w[1] - 3)}q1 3 0 6M${f(w[0])} ${f(w[1] - 4)}q1 4 0 8" stroke="#a89e88" stroke-width=".3" fill="none"/>`; } }
 
     // ——— the head: sly half-smile, eyes on us; long hair tied back, a short beard; the tricorn over it ———
-    const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 3, tone: SKIN, light: [-.6, -.75], warm: { color: '#ffb46a', op: .16 }, rim: '#cfe0ff',
+    const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 3, tone: SKIN, light: [-.6, -.75], warm: { color: '#ffb46a', op: .16 },
       look: [.35, .05], brow: 'sly', smile: .45, hair: { style: 'tied', color: '#2a1a10', ribbon: '#6a1c18' }, hairColor: '#24160c', beard: 'short', moustache: true, iris: '#3a2416' });
     const hat = tricorn(u, hd, { r: HEAD.r, color: '#16141a', trim: '#a8884a', light: [-.6, -.75], rim: '#a8c0e8', y: -.62 });
     let face = hd.svg + hat.back + hat.front;

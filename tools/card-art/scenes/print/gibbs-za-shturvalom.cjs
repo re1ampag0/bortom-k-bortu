@@ -8,12 +8,13 @@
 // a third rock further off, the moon's path on the sea between them; he keeps his eye on the near rock.
 // Fixed against the first round: the arms were flat tubes from the bottom corners with mitten hands — now jointed hands
 // gripping the handles, sleeves bent at the elbow; the hat on a spoke and the flask on the binnacle become his cap and
-// the flask on his belt. Light: the moon low on the left behind him (key: cold side light and rim on his left, on the
-// rocks' edges, the path on the water); the binnacle lamp, lower right in front (warm fill on his face and hands).
+// the flask on his belt. Light: the moon high on the right behind him (key: cold side light and rim on his left, on
+// the rocks' edges, the path on the water); the binnacle lamp, lower left in front (warm fill on his face and hands).
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
 const H = require('./lib/people.cjs');
+const { rimArc } = require('./lib/hat.cjs');
 const { f, mix, nid, linGrad, radGrad, rng, lerp } = K;
 const { glow, gloom, motes } = PK;
 
@@ -25,11 +26,11 @@ const BIN = { x: 22, y: 124 };                       // the binnacle's lamp (in 
 const HEAD = { c: [100, 37], r: 12.6 };
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 18, color: '#dfe8ff', power: .85 },
   fill: { color: '#34405e', power: .35 }, rim: { az: 330, color: '#cfe0ff', power: .6 }, locals: [{ x: BIN.x, y: BIN.y, color: '#ffbe6a', power: .7, radius: 70 }] };
-const skel = { horizon: HZ, eye: 1.7, light: 'moon low left behind him (key, cold side light and rim) + the binnacle lamp lower right (warm fill)', items: [
+const skel = { horizon: HZ, eye: 1.7, light: 'moon high right behind him (key, cold side light and rim) + the binnacle lamp lower left (warm fill)', items: [
   ['sea stack L', -10, 100, 58, 70, 'sea'], ['sea stack R', 156, 100, 54, 80, 'sea'], ['rock far', 118, 88, 26, 8, 'sea'],
-  ['taffrail', -10, 116, 220, 14, 'deck'], ['Gibbs', 62, 150, 76, 126, 'stands on the deck behind the wheel'],
-  ['wheel', WC[0] - 49, WC[1] + 49, 98, 98, 'on its post'], ['hands', 52, 96, 96, 30, 'on the handles'],
-  ['binnacle', 156, 150, 28, 40, 'deck'], ['flask', 126, 142, 10, 14, 'on his belt']] };
+  ['taffrail', -10, 121, 220, 20, 'deck'], ['Gibbs', 50, 200, 100, 176, 'stands on the deck behind the wheel (drawn at 1, scaled ×1.32 about 100,30)'],
+  ['wheel', 35, 201, 130, 130, 'on its post'], ['hands', 40, 118, 120, 34, 'on the handles'],
+  ['binnacle', 8, 170, 28, 52, 'deck'], ['flask', 134, 182, 14, 18, 'on his belt']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const dirOf = t => [Math.cos(t * Math.PI / 180), Math.sin(t * Math.PI / 180)];
@@ -114,9 +115,9 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
           cuff: { from: .8, k: 1.18, tone: { lit: '#5a4636', half: '#33261c', shadow: '#140e08', outline: '#0a0604' } } }); }); }
 
     // ——— the head: a weathered face turned a little to his right, watching the near rock ———
-    const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .34, dir: -1, nod: -2, tone: SKIN, light: [.85, -.45], warm: { color: '#ffb46a', op: .3 }, rim: '#cfe0ff',
+    const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .34, dir: -1, nod: -2, tone: SKIN, light: [.85, -.45], warm: { color: '#ffb46a', op: .3 },
       look: [-.55, -.05], brow: 'frown', smile: .12, hair: { style: 'short', color: '#9e9a92' }, hairColor: '#8e8a84', moustache: true, stubble: true, iris: '#3a4a5a' });
-    let face = hd.svg;
+    let face = hd.svg + rimArc(hd, { r: HEAD.r, light: [-.9, .35], color: '#cfe0ff', span: 50, opacity: .55 });
     { const Q = hd.Q, dp = hd.depth;
       // grey mutton chops down both cheeks into the moustache (the far one only where it shows)
       for (const sd of [1, -1]) { if (dp(sd * .55, .3, .4) < -.15) continue;
