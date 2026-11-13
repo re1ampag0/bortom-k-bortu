@@ -18,12 +18,12 @@ const { helpers: Hx } = require('./tyazhyolyy-bort.cjs');
 const { f, mix, nid, rng } = K;
 
 const HZ = 98, SUN = { x: 182, y: 50 };
-const REV = { kind: 'revenge', x: 87, y: 118, scale: 1.05, heel: 0, roll: -6, sails: 'full', detail: 'near', lights: true, seed: 7 };
-const ALLY = { kind: 'pearl', x: 190, y: 100.5, scale: .38, sails: 'reefed', detail: 'mid', lights: true, wake: true, seed: 3 };
-const EN = { kind: 'endeavour', x: 24, y: 99.5, scale: .46, flip: true, sails: 'full', detail: 'mid', seed: 4 };
+const REV = { kind: 'revenge', x: 96, y: 118, scale: .95, heel: 0, roll: -6, sails: 'full', detail: 'near', lights: true, seed: 7 };
+const ALLY = { kind: 'pearl', x: 190, y: 100.5, scale: .36, flip: true, sails: 'reefed', detail: 'mid', lights: true, wake: true, seed: 3 };
+const EN = { kind: 'endeavour', x: 23, y: 99.5, scale: .42, flip: true, sails: 'full', detail: 'mid', seed: 4 };
 const light = { time: 'dusk', haze: .35, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffa860', power: .6 }, fill: { color: '#6e4a70', power: .45 },
   rim: { az: 20, color: '#ffc890', power: .55 },
-  locals: [{ x: 70, y: 106, color: '#ffc070', power: .8, radius: 30 }, { x: 30, y: 95, color: '#ffb050', power: .6, radius: 22 }] };
+  locals: [{ x: 70, y: 106, color: '#ffc070', power: .8, radius: 30 }, { x: 18, y: 95, color: '#ffb050', power: .6, radius: 22 }] };
 const skel = { horizon: HZ, eye: 4, light: 'the low sun ahead right behind the Pearl (contre-jour); the enemy\'s flashes; the impacts on the Revenge\'s side', items: [
   ['revenge', 5, 118, 158, 108, 'water: the near swell, waterline y 118 level, laid over away from the blows'],
   ['enemy (Endeavour)', 2, 99.5, 50, 44, 'water on the horizon, left, under the Revenge\'s bowsprit'],
@@ -43,14 +43,14 @@ module.exports = { name: 'Прикрыть бортом', kind: 'deck', status: 
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .6, seed: 5, glitter: SUN.x });
     // ——— the ally beyond, against the sun: whole, quiet, her lanterns lit
     bg += K.ship(u, L, ALLY);
-    { const g = nid('av', u); bg += `<defs><radialGradient id="${g}" cx="${SUN.x}" cy="${SUN.y + 30}" r="46" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffd8a8" stop-opacity=".42"/><stop offset=".6" stop-color="#ffc890" stop-opacity=".22"/><stop offset="1" stop-color="#ffc890" stop-opacity="0"/></radialGradient></defs><rect x="140" y="30" width="60" height="76" fill="url(#${g})"/>`; }
+    { const g = nid('av', u); bg += `<defs><radialGradient id="${g}" cx="${ALLY.x - 4}" cy="${ALLY.y - 14}" r="38" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffd8a8" stop-opacity=".55"/><stop offset=".6" stop-color="#ffc890" stop-opacity=".3"/><stop offset="1" stop-color="#ffc890" stop-opacity="0"/></radialGradient></defs><rect x="140" y="30" width="60" height="76" fill="url(#${g})"/>`; }
     // ——— the shooter far on the left: her side in flashes, the smoke of her salvo rolling out and down the wind
     const Le = Object.assign(K.makeLight(Object.assign({}, light, { haze: .1 }), { horizon: HZ, eye: 4 }), { pal: L.pal });
     bg += K.smoke(u, L, { x: 14, y: 96, w: 30, h: 20, wind: -.8, seed: 3, opacity: .5 }) + K.ship(u, Le, EN);
     const Pe = Hx.sidePt(EN, K.shipGeom(EN.kind, EN)), ep = Hx.portXH(EN.kind, 1);
-    for (const [i, ph, sd] of [[1, 0, 2], [4, .45, 7], [7, .7, 4], [10, .9, 9]]) { const [X, H] = ep[i], m = Pe(X, H - .2, 1.5);
+    for (const [i, ph, sd] of [[8, 0, 2], [10, .45, 7], [12, .7, 4], [14, .9, 9]]) { const [X, H] = ep[i], m = Pe(X, H - .2, 1.5);
       bg += Hx.portFlash(u, Le, { x: m[0], y: m[1], k: .75, phase: ph, seed: sd, dir: 4, len: 8, smokeDir: [.5, -.6], tone: 'grey' }); }
-    const shot = Pe(ep[1][0], ep[1][1] - .2, 1.5);
+    const shot = Pe(ep[8][0], ep[8][1] - .2, 1.5);
 
     // ——— the Revenge between them: broadside, laid over away from the blows, on the slope of the near swell
     const G = K.shipGeom(REV.kind, REV), P = Hx.sidePt(REV, G), ang = Math.atan(tan) * 180 / Math.PI;

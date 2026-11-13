@@ -34,9 +34,9 @@ const skel = { horizon: HZ, eye: 1.6, light: 'the low sun ahead behind the sail 
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 // the rip: half its gap at height y; above LACE it is still open, below it laced shut
-const RIP0 = 25, RIP1 = 78, LACE = 52;
+const RIP0 = 22, RIP1 = 82, LACE = 54;
 const ripX = y => 126 + (y - RIP0) * .06;
-const gap = y => y > LACE ? 1 : Math.sin(Math.PI * (y - RIP0) / (LACE + 6 - RIP0)) * 6 + 1;
+const gap = y => y > LACE ? 1.4 : Math.sin(Math.PI * (y - RIP0) / (LACE + 8 - RIP0)) * 8.5 + 1.4;
 
 module.exports = { name: 'Живые снасти', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
@@ -68,11 +68,11 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'draft
     const rip = 'M' + ripL.map(P2).join('L') + 'L' + ripR.slice().reverse().map(P2).join('L') + 'Z';
     { const g = nid('sl', u), gs = nid('ss', u), sc = nid('sc', u);
       mid += `<defs>${linGrad(g, S.x0, 0, S.x1, 0, [[0, '#8a4a34', 1], [.18, '#c87a4c', 1], [.5, '#f2b878', 1], [.82, '#c87a4c', 1], [1, '#7a4030', 1]])}`
-        + `${radGrad(gs, SUN.x, SUN.y, 70, [[0, '#fff0c8', .9], [.25, '#ffd090', .55], [.6, '#ffb070', .15], [1, '#ffb070', 0]])}<clipPath id="${sc}"><path d="${edge}${rip}" clip-rule="evenodd"/></clipPath></defs>`
+        + `${radGrad(gs, SUN.x, SUN.y, 60, [[0, '#fff0c8', .7], [.25, '#ffd090', .4], [.6, '#ffb070', .12], [1, '#ffb070', 0]])}<clipPath id="${sc}"><path d="${edge}${rip}" clip-rule="evenodd"/></clipPath></defs>`
         + `<path d="${edge}${rip}" fill-rule="evenodd" fill="url(#${g})"/><g clip-path="url(#${sc})"><rect x="0" y="0" width="200" height="100" fill="url(#${gs})"/>`
         // the cloths of the sail: seams down it, a little darker; the belly's soft folds; the reef band across it
-        + Array.from({ length: 13 }, (_, i) => { const x = S.x0 + 6 + i * 12; return `<path d="M${x} ${S.top}Q${f(x + (x - 100) * .04)} 52 ${f(x + (x - 100) * .05)} 90" stroke="#7a3e26" stroke-width=".45" fill="none" opacity=".55"/>`; }).join('')
-        + [[44, 8], [72, 10], [128, 10], [158, 8]].map(([x, w]) => `<path d="M${x} ${S.top + 2}Q${x + 2} 50 ${x} 84" stroke="#7a3a24" stroke-width="${w}" fill="none" opacity=".12"/>`).join('')
+        + Array.from({ length: 13 }, (_, i) => { const x = S.x0 + 6 + i * 12; return `<path d="M${x} ${S.top}Q${f(x + (x - 100) * .04)} 52 ${f(x + (x - 100) * .05)} 90" stroke="#6a3420" stroke-width=".5" fill="none" opacity=".75"/>`; }).join('')
+        + [[44, 8], [72, 10], [128, 10], [158, 8]].map(([x, w]) => `<path d="M${x} ${S.top + 2}Q${x + 2} 50 ${x} 84" stroke="#7a3a24" stroke-width="${w}" fill="none" opacity=".2"/>`).join('')
         + `<path d="M${S.x0 - 1} 31Q100 33 ${S.x1 + 1} 31" stroke="#8a4a2c" stroke-width="2.2" fill="none" opacity=".45"/><path d="M${S.x0} 30Q100 32 ${S.x1} 30" stroke="#ffd8a0" stroke-width=".4" fill="none" opacity=".5"/>`
         // the old shadow of the yard on the canvas, the bolt rope round the edges
         + `<path d="M${S.x0} ${S.top + 1.6}L${S.x1} ${S.top + 1.6}" stroke="#4a2414" stroke-width="2" opacity=".5"/></g>`
@@ -80,6 +80,8 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'draft
       // the robands over the yard holding the head of the sail
       for (let x = S.x0 + 6; x < S.x1; x += 12) mid += `<path d="M${x} ${S.top + 1}q1.2 -4 2.4 0" stroke="#3a2010" stroke-width=".7" fill="none"/>`;
       // the rip's frayed edges, lit from behind: hot rims, loose threads
+      { const open = y => y < LACE + 2, cl = ripL.filter(p => open(p[1])), crr = ripR.filter(p => open(p[1]));
+        mid += `<path d="M${cl.map(P2).join('L')}" stroke="#2a1008" stroke-width="3.2" fill="none" opacity=".75" transform="translate(-1.2 0)" stroke-linejoin="round"/><path d="M${crr.map(P2).join('L')}" stroke="#2a1008" stroke-width="3.2" fill="none" opacity=".75" transform="translate(1.2 0)" stroke-linejoin="round"/>`; }
       mid += `<path d="M${ripL.map(P2).join('L')}" stroke="#fff0c0" stroke-width=".8" fill="none" opacity=".9"/><path d="M${ripR.map(P2).join('L')}" stroke="#fff0c0" stroke-width=".8" fill="none" opacity=".9"/>`;
       for (const [side, pts] of [[-1, ripL], [1, ripR]]) pts.forEach((p, i) => { if (p[1] > LACE - 2 || i % 2) return; const l = 1.4 + R() * 2.2; mid += `<path d="M${P2(p)}q${f(-side * l * .6)} ${f(l * .3)} ${f(-side * l)} ${f(l * .9)}" stroke="#f2c890" stroke-width=".35" fill="none"/>`; }); }
     // ——— the fife rail at the foot of the mast: two posts, the bar, the belaying pins ———
@@ -102,20 +104,20 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'draft
     for (const c of cr) mid += `<circle cx="${c[0]}" cy="${c[1]}" r="1.7" fill="none" stroke="url(#iron${u})" stroke-width=".8"/>`;
     // the lacing rope: up from the pin, in through the lowest eyelet; then over the rip and back through, eyelet by
     // eyelet (the turns behind the canvas hidden); its live end lifts off towards the next eyelet, glowing at the tip
-    { const eyeL = [70, 62, 54], eyeR = [74, 66, 58], tipY = 48;
-      const EL = y => [ripX(y) - 4.2, y], ER = y => [ripX(y) + 4.2, y];
+    { const eyeL = [76, 68, 60], eyeR = [72, 64, 56], tipY = 47;
+      const EL = y => [ripX(y) - 6, y], ER = y => [ripX(y) + 6, y];
       let eyes = '';
-      for (const y of [...eyeL, LACE - 6 + 2]) eyes += `<circle cx="${f(EL(y)[0])}" cy="${y}" r="1.25" fill="#2a1408" stroke="#d8b070" stroke-width=".5"/>`;
-      for (const y of [...eyeR, 50, 78]) eyes += `<circle cx="${f(ER(y)[0])}" cy="${y}" r="1.25" fill="#2a1408" stroke="#d8b070" stroke-width=".5"/>`;
+      for (const y of [...eyeL, 52]) eyes += `<circle cx="${f(EL(y)[0])}" cy="${y}" r="1.25" fill="#2a1408" stroke="#d8b070" stroke-width=".5"/>`;
+      for (const y of [...eyeR, 48, 80]) eyes += `<circle cx="${f(ER(y)[0])}" cy="${y}" r="1.25" fill="#2a1408" stroke="#d8b070" stroke-width=".5"/>`;
       mid += eyes;
-      const up = [[PINS[2], FIFE.y - 1], [109, 95], [116, 93], [119, 88], [126, 85.4], [ER(78)[0] - .4, 78.4]];
+      const up = [[PINS[2], FIFE.y - 1], [109, 95], [116, 93], [119, 88], [127, 86], [ER(80)[0] - .4, 80.4]];
       mid += green(up, 3) + K.rope(u, L, up, { r: 1, seed: 7 });
-      eyeL.forEach((y, i) => { const a = EL(y), b = ER(eyeR[i]); mid += `<path d="M${P2(a)}L${P2(b)}" stroke="#000" stroke-width="2.4" opacity=".25" transform="translate(.6 .9)"/>` + K.rope(u, L, [a, [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5) - .3], b], { r: .95, seed: 10 + i }); });
+      eyeL.forEach((y, i) => { const a = EL(y), b = ER(eyeR[i]); mid += `<path d="M${P2(a)}L${P2(b)}" stroke="#000" stroke-width="2.4" opacity=".25" transform="translate(.6 .9)"/>` + K.rope(u, L, [a, [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5) - .3], b], { r: 1.15, seed: 10 + i }); });
       // the live end: out of the top-left eyelet, lifting up and over, its whipped tip turned to the next eyelet
-      const tip = [EL(54), [ripX(54) - 7, 50], [ripX(50) - 6, 44.6], [ripX(46) + 1, 42.4], [ripX(48) + 5.6, 45.6], [ER(50)[0] + .4, tipY + .4]];
-      mid += green(tip, 3.4) + K.rope(u, L, tip, { r: .95, seed: 14, whip: true }) + K.localGlow(u, { x: ER(50)[0], y: tipY, color: '#8affb0', power: .5, radius: 7 }, { core: false });
+      const tip = [EL(52), [ripX(52) - 10, 48], [ripX(46) - 8, 41.6], [ripX(42), 39], [ripX(44) + 8, 41.4], [ER(48)[0] + .8, tipY]];
+      mid += green(tip, 3.4) + K.rope(u, L, tip, { r: 1.15, seed: 14, whip: true }) + K.localGlow(u, { x: ER(48)[0], y: tipY, color: '#8affb0', power: .5, radius: 7 }, { core: false });
       // the laced part of the rip pulled shut: a few puckers in the canvas across it
-      for (const y of [56, 64, 72]) mid += `<path d="M${f(ripX(y) - 8)} ${y + 1}q4 -1.4 8 0t8 0" stroke="#7a3e26" stroke-width=".4" fill="none" opacity=".6"/>`; }
+      for (const y of [58, 66, 74]) mid += `<path d="M${f(ripX(y) - 8)} ${y + 1}q4 -1.4 8 0t8 0" stroke="#7a3e26" stroke-width=".4" fill="none" opacity=".6"/>`; }
     // ——— the sword in the deck: the blade, the cup hilt, the grip, the green stone in the pommel ———
     { const a = SW.a * Math.PI / 180, v = [Math.sin(a), -Math.cos(a)], n = [Math.cos(a), Math.sin(a)], at = l => [SW.x + v[0] * l, SW.y + v[1] * l];
       mid += K.castShadow(u, L, { x: SW.x, y: SW.y, w: 4, h: 54, horizon: HZ, d: .3 }) + K.contactShadow(u, SW.x, SW.y, 8, L, { ry: 1.2 });

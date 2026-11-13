@@ -83,18 +83,18 @@ function stuckBall(u, L, o) {
     out += `<path d="${sp(outer, true)}${id}" fill="url(#${gl})" fill-rule="evenodd"/>`
       + `<path d="${id}" fill="none" stroke="#0a0503" stroke-width="${f(r * .1)}" opacity=".55"/>`; }
   // the slivers split off along the grain both ways, each its own length and curl; a short few elsewhere round the rim
-  for (let i = 0; i < 9; i++) { const along = i < 7, a = (along ? (i % 2 ? 0 : Math.PI) + (R() - .5) * .55 : R() * Math.PI * 2) + ang * Math.PI / 180;
-    const r0 = r * (1.05 + R() * .2), l = r * (along ? .9 + R() * 1.4 : .45 + R() * .4), w = r * (.16 + R() * .14), cu = (R() - .5) * l * .35;
+  for (let i = 0; i < 7; i++) { const along = i < 4, a = (along ? (i % 2 ? 0 : Math.PI) + (R() - .5) * .55 : R() * Math.PI * 2) + ang * Math.PI / 180;
+    const r0 = r * (1.05 + R() * .2), l = r * (along ? .5 + R() * .9 : .3 + R() * .35), w = r * (.11 + R() * .1), cu = (R() - .5) * l * .35;
     const ax = x + Math.cos(a) * r0, ay = y + Math.sin(a) * r0 * .92, ex = ax + Math.cos(a) * l, ey = ay + Math.sin(a) * l * .92, nx = -Math.sin(a), ny = Math.cos(a);
     const d = `M${f(ax + nx * w)} ${f(ay + ny * w)}Q${f((ax + ex) / 2 + nx * (w * .6 + cu))} ${f((ay + ey) / 2 + ny * (w * .6 + cu))} ${f(ex)} ${f(ey)}Q${f((ax + ex) / 2 - nx * w * .3 + nx * cu)} ${f((ay + ey) / 2 - ny * w * .3 + ny * cu)} ${f(ax - nx * w)} ${f(ay - ny * w)}Z`;
-    const lit = Math.cos(a) * lx + Math.sin(a) * ly > -.3;
+    const lit = Math.cos(a) * lx + Math.sin(a) * ly > .1;
     out += `<path d="${d}" transform="translate(${f(-lx * w * 1.1)} ${f(-ly * w * 1.1)})" fill="#1a0c06" opacity=".45"/><path d="${d}" fill="${lit ? fresh : mid}"/>`; }
   return out;
 }
 // KIT-CANDIDATE a clump of powder smoke rolling out of a port: billows growing along `dir` (a picture vector), rising
 // a little; lit on top, a soft shade under the far billows. tone 'grey' — a duller smoke (far, or the enemy's)
 function portSmoke(u, L, o) {
-  const { x, y, k = 1, n = 5, seed = 1, dir = [-1, 0], rise = .3, op = .9 } = o, R = rng(90 + seed);
+  const { x, y, k = 1, n = 5, seed = 1, dir = [-1, 0], rise = .12, op = .9 } = o, R = rng(90 + seed);
   const c = o.tone === 'grey' ? ['#e2dad4', '#b0a8aa', '#7a7078', '#4e4654'] : ['#fff6ea', '#eadfd4', '#b4a4a8', '#6e5e6a'];
   const pg = nid('ps', u), pd = nid('pq', u), pf = nid('pb', u);
   let sh = '', bl = '';
@@ -115,7 +115,7 @@ function portFlash(u, L, o) {
   let out = '';
   if (o.port && ph < .75) { const g = nid('ph', u); out += `<defs>${radGrad(g, x, y, 1.6 * k, [[0, '#fff4c0'], [.4, '#ffa830'], [1, '#8a2808']])}</defs><path d="M${o.port.map(q => f(q[0]) + ' ' + f(q[1])).join('L')}Z" fill="url(#${g})" opacity="${f(1 - ph * 1.1)}"/>`; }
   out += K.localGlow(u, { x, y, color: '#ffb050', power: .85 - ph * .55, radius: (11 - ph * 6) * k }, { core: false });
-  const smk = portSmoke(u, L, { x: x + sd[0] * k * .6, y: y + sd[1] * k * .6, k: k * (.45 + ph * .75), n: 2 + Math.round(ph * 4), seed, dir: sd, op: .5 + ph * .45, tone: o.tone });
+  const smk = portSmoke(u, L, { x: x + sd[0] * k * .6, y: y + sd[1] * k * .6, k: k * (.4 + ph * .42), n: 2 + Math.round(ph * 3), seed, dir: sd, op: .5 + ph * .45, tone: o.tone });
   const fl = len => K.muzzleFlash(u, { x, y, dir, len, seed, smoke: false, glow: false });
   const heart = s => { const g = nid('pc', u); return `<defs>${radGrad(g, x, y, s, [[0, '#ffffff'], [.35, '#fff0a0'], [.7, '#ffb040', .8], [1, '#ff8020', 0]])}</defs><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(s)}" ry="${f(s * .85)}" fill="url(#${g})"/>`; };
   if (ph < .3) out += smk + fl((o.len || 6) * k) + heart(1.5 * k);

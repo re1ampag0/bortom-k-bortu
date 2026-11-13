@@ -18,7 +18,7 @@ const { f, mix, nid, rng } = K;
 
 const HZ = 100;
 const REV = { kind: 'revenge', x: 70, y: 111, scale: 1.15, flip: true, heel: -3, roll: 6, sails: 'full', detail: 'near', lights: true, seed: 7 };
-const EN = { kind: 'endeavour', x: 177, y: 101, scale: .5, sails: 'full', detail: 'mid', seed: 4 };
+const EN = { kind: 'endeavour', x: 173, y: 101, scale: .5, sails: 'full', detail: 'mid', seed: 4 };
 const HIT = { X: 8, H: 13.5 };   // the smashed rail amidships, burning (local X, H on the Revenge's near side)
 const light = { time: 'dusk', haze: .35, key: { type: 'sun', az: 132, el: 14, color: '#ffb070', power: .9 }, fill: { color: '#6e4a70', power: .42 },
   locals: [{ x: 86, y: 102, color: '#ffb050', power: .8, radius: 50 }, { x: 60, y: 95, color: '#ff8a30', power: .7, radius: 30 }] };
@@ -35,6 +35,7 @@ module.exports = { name: 'Ответный залп', kind: 'deck', status: 'dra
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     L.pal = Object.assign({}, L.pal, { sky: ['#1a0c1e', '#46182c', '#a2402a', '#f0904e'], sea: ['#b05e40', '#44182a', '#120810'], cloudLit: '#f09a60', cloudShade: '#3e1c2e' });
     const Ld = Object.assign({}, L, { pal: Object.assign({}, L.pal, { smoke: '#2a1e22' }) });   // the soot of the hit
+    const Lk = Object.assign({}, L, { keyColor: '#3a2a2a', pal: Object.assign({}, L.pal, { smoke: '#120a0c' }) });   // its dense black core
     const R = rng(29), dir = -1;
     const tan = -dir * Math.tan(REV.heel * Math.PI / 180), wlY = x => REV.y + (x - REV.x) * tan;
     // ——— the dusk ahead: red sky, lit clouds, the sea
@@ -67,6 +68,7 @@ module.exports = { name: 'Ответный залп', kind: 'deck', status: 'dra
       fg += Hx.dent(u, L, { x, y: y + 2, r: 2.2, ang, seed: 3 }) + `<path d="M${f(x - 4)} ${f(y - .6)}l1.6 2.4l1.2 -1.8l1.4 2.6l1.6 -2.2l1.2 2l1.4 -2.4l-.4 3.6h-7.6z" fill="#0c0604"/>`
 ;
       fg += K.smoke(u, Ld, { x: x + 1, y: y - 6, w: 36, h: 82, wind: .35, seed: 5, opacity: .94, glow: { color: '#ff8a30', power: .9 } })
+        + K.smoke(u, Lk, { x: x + 1.5, y: y - 8, w: 26, h: 74, wind: .3, seed: 9, opacity: .9 })
         + K.fire(u, { x: x - .5, y: y + 1.8, w: 17, h: 24, seed: 4, wind: .4, fuel: true }); }
 
     // ——— the answer: her guns go off one after another — one now, the others a moment ago, their flame sinking in
@@ -75,7 +77,7 @@ module.exports = { name: 'Ответный залп', kind: 'deck', status: 'dra
     pxh.forEach(([X, H], i) => { if ([0, 2, 5, 7].includes(i)) return; const [x, y] = P(X, H - .24, 1.9);   // the ports fired earlier: smoke only, drifting off
       fg += Hx.portSmoke(u, L, { x: x + 1, y: y - .5, k: .7 + R() * .2, n: 4, seed: 60 + i, dir: [.95, -.3], op: .7 }); });
     for (const [i, ph, sd] of [[7, .85, 3], [5, .55, 8], [0, .3, 1], [2, 0, 6]]) { const [X, H] = pxh[i], m = P(X, H - .24, 1.9);
-      fg += Hx.portFlash(u, L, { x: m[0], y: m[1], k: 1.15, phase: ph, seed: sd, dir: 8, len: 7, smokeDir: [.95, -.28], port: pq(X, H) }); }
+      fg += Hx.portFlash(u, L, { x: m[0], y: m[1], k: ph ? 1.15 : 1.6, phase: ph, seed: sd, dir: 8, len: 7, smokeDir: [.95, -.28], port: pq(X, H) }); }
     // a few clumps already carried off ahead of her bow, broken up
     fg += Hx.portSmoke(u, L, { x: 121, y: 100, k: .9, n: 3, seed: 81, dir: [1, -.3], op: .6 }) + Hx.portSmoke(u, L, { x: 133, y: 97, k: .7, n: 2, seed: 82, dir: [1, -.3], op: .45 });
     fg += K.localGlow(u, { x: 84, y: 103, color: '#ffb050', power: .4, radius: 40 }, { squash: .2, core: false })
