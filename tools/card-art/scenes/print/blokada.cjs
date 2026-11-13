@@ -111,12 +111,18 @@ module.exports = { name: 'Блокада', kind: 'deck', status: 'draft', cam: {
       // water where the chain dips: a dark ring and a little foam
       for (let i = 1; i < pts.length; i += 4) { const p = pts[i + 1]; if (!p || i === 0) continue; ch += `<ellipse cx="${f(p[0])}" cy="${f(p[1] + .8)}" rx="${f(4 - p[0] / 80)}" ry=".8" fill="#0c2a36" opacity=".35"/>`; }
       ch += K.chain(u, L, pts.slice(0, 6), { link: 3.3, seed: 3 }) + K.chain(u, L, pts.slice(5, 14), { link: 2.6, seed: 4 }) + K.chain(u, L, pts.slice(13), { link: 2.0, seed: 5 });
+      // the sky caught on the upper side of the links, so the chain reads as links and not as one dark band
+      { const d = 'M' + pts.map(p => `${f(p[0])} ${f(p[1] - .7)}`).join('L');
+        ch += `<path d="${d}" stroke="#c4ced6" stroke-width=".55" fill="none" stroke-dasharray="1.4 1.3" stroke-linecap="round" opacity=".6"/>`
+          + `<path d="${d}" stroke="#fff4dc" stroke-width=".35" fill="none" stroke-dasharray=".6 4.4" stroke-dashoffset="1" stroke-linecap="round" opacity=".7"/>`; }
       // the floats: tarred barrels lying across the chain, a third under water, an iron eye on top the chain runs through
       let fl = '';
       for (const [x, y, s] of FL) { const r = 4.4 * s, hl = 7.4 * s, cid = nid('fw', u), body = K.shadeCyl(u, x - hl, y - r * .45, x + hl, y - r * .45, r, L, 'tar', { bulge: .14, ell: .34, face: 1, outline: .35, seed: Math.round(x) })
           + [-.62, -.25, .25, .62].map(t => ln(`M${f(x + hl * t)} ${f(y - r * 1.4)}q${f(r * .2)} ${f(r)} 0 ${f(r * 2)}`, .7 * s, '#4a4e54', .9) + ln(`M${f(x + hl * t + .3)} ${f(y - r * 1.4)}q${f(r * .2)} ${f(r * .6)} ${f(.1)} ${f(r * .9)}`, .3 * s, '#d8dce0', .55)).join('');
         fl += `<defs><clipPath id="${cid}"><rect x="${f(x - hl - 4)}" y="${f(y - r * 3)}" width="${f(hl * 2 + 8)}" height="${f(r * 3)}"/></clipPath></defs><g clip-path="url(#${cid})">${body}</g>`
           + `<ellipse cx="${x}" cy="${f(y + .2)}" rx="${f(hl + 1.6 * s)}" ry="${f(1.3 * s)}" fill="#0e3442" opacity=".45"/>` + K.foam(u, { x, y: y + .3, w: hl * 2 + 4 * s, h: 1.1 * s, seed: Math.round(x) + 1, L })
+          + ln(`M${f(x - hl + 1.2 * s)} ${f(y - r * 1.3)}Q${f(x)} ${f(y - r * 1.62)} ${f(x + hl - 1.2 * s)} ${f(y - r * 1.3)}`, 1.1 * s, '#7a868e', .55)
+          + ln(`M${f(x + hl * .1)} ${f(y - r * 1.5)}Q${f(x + hl * .5)} ${f(y - r * 1.5)} ${f(x + hl * .8)} ${f(y - r * 1.38)}`, .5 * s, '#e8eef2', .6)
           + `<ellipse cx="${x}" cy="${f(y - r * 1.4 - .6 * s)}" rx="${f(1.4 * s)}" ry="${f(1 * s)}" fill="none" stroke="#3a3e44" stroke-width="${f(.7 * s)}"/>`; }
       ch = fl + ch; }
 

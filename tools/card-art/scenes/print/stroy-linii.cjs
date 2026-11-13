@@ -1,7 +1,7 @@
 // «Строй линии» (Индевор, ПРИКАЗ: Перестроение бесплатно; Залпы по диагонали без штрафа), refined from the first-round
 // scene (portrait-endeavour.cjs SCENES['Строй линии']): a bright day, the Company's flagship close on the left with a
-// hoist of signal flags from her main truck down to the head, and behind her the line of battle — four ships in one
-// wake, each smaller and higher, their waterlines and mastheads on two straight lines that meet on the horizon. The
+// hoist of signal flags from her main truck down to the head, and behind her the line of battle — two ships in one
+// wake, each much smaller and higher, well apart, their waterlines and mastheads on two straight lines that meet on the horizon. The
 // next ship astern repeats the signal with a small hoist of her own. Brief's find: the perfect line of ships.
 // Fixed against the first round: the column stood at odd spacings and squeezed by hand — now true perspective (scale
 // and height from one distance step); the flags hung on a line from nowhere — now on a halyard from the main truck
@@ -14,10 +14,12 @@ const { f, nid, linGrad, rng } = K;
 const { gloom } = PK;
 
 const HZ = 80, VX = 214;                      // the horizon; the point the column runs to
-const F0 = { x: 76, y: 112, s: .86 };          // the flagship (bow left)
+const F0 = { x: 66, y: 112, s: .86 };          // the flagship (bow left; her jibs run out past the frame)
 const SUN = { x: 132, y: 24 };
-const STEP = .95;                             // distance step between ships of the line (in flagship distances)
-const LINE = [1, 2, 3, 4].map(i => { const k = 1 / (1 + STEP * i); return { x: VX - (VX - F0.x) * k, y: HZ + (F0.y - HZ) * k, s: F0.s * k, i }; });
+// the ships of the line astern: on the one line from the flagship to the vanishing point, each at the distance
+// (k = scale against the flagship) where her foremast stands clear of the next nearer ship's spanker, so masts never
+// cross another ship's sails and open water shows between the hulls
+const LINE = [.40, .19].map((k, j) => ({ x: VX - (VX - F0.x) * k, y: HZ + (F0.y - HZ) * k, s: F0.s * k, i: j + 1 }));
 const light = { time: 'day', haze: .3, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#fff4d8', power: 1 }, fill: { color: '#8fb8d8', power: .55 }, rim: { az: 20, color: '#fff6e0', power: .5 } };
 const skel = { horizon: HZ, eye: 3, light: 'sun high ahead right over the column', items: [
   ['flagship', F0.x - 76, F0.y, 135, 90, 'sea'], ...LINE.map(p => [`line ${p.i}`, p.x - 74 * p.s, p.y, 130 * p.s, 89 * p.s, 'sea, one wake']),
@@ -63,8 +65,6 @@ module.exports = { name: 'Строй линии', kind: 'deck', status: 'draft',
     { const a = [F0.x + 50 * F0.s, F0.y + 1.5], b = [VX, HZ];
       for (let k = 0; k < 40; k++) { const t = Math.pow(R(), 1.6), x = a[0] + (b[0] - a[0]) * t + (R() - .5) * 3 * (1 - t), y = a[1] + (b[1] - a[1]) * t + (R() - .4) * 2.4 * (1 - t);
         bg += `<path d="M${f(x)} ${f(y)}h${f((2 + R() * 5) * (1 - t * .8))}" stroke="#ffffff" stroke-width="${f(.3 + .5 * (1 - t))}" opacity="${f(.35 + R() * .4)}"/>`; } }
-    // a far haze of the rest of the fleet on the horizon at the column's end
-    for (let i = 0; i < 4; i++) bg += K.ship(u, L, { kind: i % 2 ? 'warship' : 'endeavour', x: VX - 22 + i * 7, y: HZ + .6, scale: .06, detail: 'far', wake: false, seed: 70 + i });
     // ——— the line, far to near: each in the flagship's wake, the same sail, the same heading; a small repeat of the signal
     let mid = '';
     for (const p of LINE.slice().reverse()) {

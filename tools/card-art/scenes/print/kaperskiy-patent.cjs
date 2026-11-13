@@ -3,13 +3,13 @@
 // letter of marque lies open — lines of a fair hand, a broad flourish at its head, the band of small print at its foot
 // with a reading glass over it, and the big red seal of the Company on a ribbon. The Company's striped flag hangs
 // still on its pole behind the table; a candle is the light; a purse and a little stack of gold wait at the side.
-// From the right a pirate's rough hand in a frayed cuff reaches for the quill in the inkwell — to sign.
-// Brief's find: the Company's seal; the hand reaching to sign.
+// On the right the quill stands ready in the inkwell by the empty signature line; behind it two ledgers, in front the
+// Company's desk seal and a stick of sealing wax. Brief's find: the Company's seal; the patent waiting to be signed.
 // Fixed against the first round: the table was a flat green wall and the paper a sticker on it — now a room in 2.5D
 // (back wall, side walls and the tooled leather of the table top running to one vanishing point, the sheet in the
 // same perspective); the seal was a small coin — now a thick wax seal with the Company's cross on a ribbon; the lamp
-// was a modern shaded lamp — now a candle; the hand (from the brief) is added. Light: the candle on the left (key,
-// warm), the dusk window behind (cool, weak).
+// was a modern shaded lamp — now a candle; the desk seal of the first round is back (the pirate's hand was dropped).
+// Light: the candle on the left (key, warm), the dusk window behind (cool, weak).
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -25,13 +25,13 @@ const light = { time: 'night', haze: .2, key: { type: 'point', x: CAN.x, y: flam
   fill: { color: '#3a4a64', power: .38 }, rim: { az: 0, color: '#9ab4d8', power: .25 } };
 // the patent's four corners on the table (far-left, far-right, near-right, near-left): in the table's perspective
 const SH = [[54, 79], [140, 77.4], [156, 121], [38, 123]];
-const INK = { x: 151, y: 95 };
-const WR = [185, 105], HA = 221, HS = 3.9;     // the pirate's wrist, the hand's direction (deg), its size
+const INK = { x: 160, y: 98 };                 // the inkwell with the quill standing in it
+const STP = { x: 183, y: 122 };                // the Company's desk seal
 const skel = { horizon: VY, eye: 1.5, light: 'candle on the table left (key) + dusk window behind (cool fill)', items: [
   ['back wall', BW[0], WF, BW[1] - BW[0], WF, 'floor (hidden by the table)'], ['window', 130, 44, 46, 38, 'back wall'], ['flag', 50, 70, 40, 60, 'pole in a floor stand behind the table'],
   ['table top', -10, 160, 220, 90, 'its far edge y 70'], ['patent', 38, 123, 118, 46, 'table top'], ['seal', 112, 112, 22, 20, 'on the patent, ribbon under it'],
-  ['glass', 52, 116, 30, 14, 'on the patent'], ['candle', 22, 98, 18, 44, 'table top'], ['inkwell + quill', 140, 92, 30, 46, 'table top'],
-  ['hand + sleeve', 150, 130, 70, 50, 'from the near right edge, reaching to the quill'], ['purse + coins', 30, 124, 36, 22, 'table top']] };
+  ['glass', 52, 116, 30, 14, 'on the patent'], ['candle', 22, 98, 18, 44, 'table top'], ['inkwell + quill', 150, 98, 32, 56, 'table top'],
+  ['ledgers', 163, 88, 34, 16, 'table top, back right'], ['desk seal', 175, 122, 16, 33, 'table top'], ['sealing wax', 148, 132, 26, 8, 'table top'], ['purse + coins', 30, 124, 36, 22, 'table top']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 // a point on the sheet: (a across, b down) in 0..1 mapped bilinearly onto its four corners
@@ -168,34 +168,34 @@ module.exports = { name: 'Каперский патент', kind: 'deck', status
     // the candle (the key light) on the left
     fg += K.castShadow(u, L, { x: CAN.x, y: CAN.y, w: 8 * CAN.s, h: 2, horizon: VY, d: .9 }) + K.candle(u, L, { ...CAN, seed: 4 })
       + K.localGlow(u, { x: CAN.x, y: flameY, color: '#ffc070', power: .9, radius: 34 });
-    // the inkwell with the quill (behind the hand)
-    fg += K.castShadow(u, L, { x: INK.x, y: INK.y, w: 9, h: 9, horizon: VY, d: .9 }) + inkwell(u, L, INK.x, INK.y, 1.15);
-
-    // ——— the pirate's arm from the near right: a worn coat sleeve with a turned-back cuff and brass buttons, the
-    // frayed linen shirt cuff under it, the hand open, reaching to the quill (the thumb on our side, the fingers
-    // a little curled); a tarred rope tattoo round the wrist, a dark ring on the middle finger
-    { const a = HA * Math.PI / 180, ua = [Math.cos(a), Math.sin(a)];
-      const skin = { lit: '#f6cca8', half: '#d29a78', core: '#b47a5a', shadow: '#7a4632', outline: '#4a2414' };
-      const coat = { lit: '#7a4430', half: '#4a2618', shadow: '#22100a', outline: '#140804' };
-      const cuffT = { lit: '#8a5236', half: '#5a3020', shadow: '#2a140a', outline: '#140804' };
-      const shirt = { lit: '#efe2c4', half: '#b8a682', shadow: '#5a4a32', outline: '#22180e' };
-      const W = WR, C = [W[0] - ua[0] * 9, W[1] - ua[1] * 9];     // the shirt cuff ends just short of the wrist
-      // the wrist (skin) under the cuffs
-      fg += H.cloth(u, { spine: [[W[0] - ua[0] * 10, W[1] - ua[1] * 10], [W[0] + ua[0] * .8, W[1] + ua[1] * .8]], w: [13.4, 12.6], tone: skin, lit: -1, folds: false, capA: false, sw: .35 });
-      // the tattoo: a band of rope twists round the wrist
-      { const p = [W[0] - ua[0] * 3.6, W[1] - ua[1] * 3.6], n = [-ua[1], ua[0]];
-        for (let k = -2; k <= 2; k++) { const q = [p[0] + n[0] * k * 2, p[1] + n[1] * k * 2]; fg += `<path d="M${f(q[0] - ua[0] * 1.2 - n[0] * .8)} ${f(q[1] - ua[1] * 1.2 - n[1] * .8)}l${f(ua[0] * 2.4 + n[0] * 1.6)} ${f(ua[1] * 2.4 + n[1] * 1.6)}" stroke="#2a3a5a" stroke-width=".7" opacity=".7"/>`; } }
-      // the linen cuff, frayed, then the coat sleeve with its broad cuff and buttons
-      fg += H.cloth(u, { spine: [[W[0] - ua[0] * 22, W[1] - ua[1] * 22], [W[0] - ua[0] * 14, W[1] - ua[1] * 14], [C[0] - ua[0] * -1, C[1] - ua[1] * -1]], w: [19, 18, 17.4], tone: shirt, lit: -1, folds: true, drapes: 2, seed: 4, sw: .35 });
-      { const n = [-ua[1], ua[0]], e = [C[0] + ua[0] * 1, C[1] + ua[1] * 1]; for (let k = -6; k <= 6; k++) { const q = [e[0] + n[0] * k * 1.2, e[1] + n[1] * k * 1.2]; fg += ln(`M${f(q[0])} ${f(q[1])}l${f(ua[0] * (1 + R() * 1.6))} ${f(ua[1] * (1 + R() * 1.6) + (R() - .5))}`, .4, shirt.half, .9); } }
-      fg += H.cloth(u, { spine: [[228, 146], [212, 128], [W[0] - ua[0] * 17, W[1] - ua[1] * 17]], w: [32, 28, 24], tone: coat, lit: -1, folds: true, drapes: 3, seed: 6, sw: .4,
-        cuff: { from: .64, k: 1.18, tone: cuffT, buttons: 1.3 }, L });
-      const hd = H.hand(u, { at: W, a: HA, s: HS, m: -1, pose: 'open', spread: 2, curl: .4, tone: skin, thumb: 'front', thumbA: 10, sw: .32 });
-      fg += hd.back + hd.front;
-      // the ring on the middle finger (between its base and first joint)
-      { const p = hd.P(5.6, -.5); fg += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="1.9" ry="1.1" transform="rotate(${HA + 90} ${f(p[0])} ${f(p[1])})" fill="#2a2a30" stroke="#c9a048" stroke-width=".5"/>`; }
-      // the candle's warm light on the knuckles
-      fg += K.localGlow(u, { x: W[0] - ua[0] * 16, y: W[1] - ua[1] * 16, color: '#ffb860', power: .25, radius: 18 }, { core: false }); }
+    // ——— the right side of the table, far to near: two ledgers stacked at the back, the inkwell with its quill
+    // standing ready, the Company's desk seal (a brass matrix on a turned handle) and a stick of red sealing wax
+    { const book = (x, y, w, h, ox, oy, cover, seed) => { const F = K.boxFaces(x, y, w, h, ox, oy);
+        F[0].kind = 'leather'; F[1].kind = 'linen'; F[1].grain = false; F[2].kind = 'linen'; F[2].grain = false;
+        let o = K.shadeBox(u, F, L, 'leather', { seed, outline: .35 });
+        // the cover's tint, its boards proud of the page block, the gilt band on the top board
+        o += `<path d="M${F[0].pts.map(P2).join('L')}Z" fill="${cover}" opacity=".45"/>`
+          + ln(`M${f(x - .4)} ${f(y - h + .6)}H${f(x + w + .4)}`, .9, cover, .9) + ln(`M${f(x - .4)} ${f(y - .3)}H${f(x + w + .4)}`, .9, cover, .9);
+        for (let k = 1; k < 4; k++) o += ln(`M${f(x + .6)} ${f(y - h + k * h / 4 + .2)}H${f(x + w - .6)}`, .2, '#8a7a58', .7);
+        o += ln(`M${f(x + 3 + ox * .5)} ${f(y - h - oy * .5)}H${f(x + w - 3 + ox * .5)}`, .45, '#c9a048', .8);
+        return o; };
+      fg += K.castShadow(u, L, { x: 182, y: 88, w: 28, h: 9, horizon: VY, d: .5 })
+        + book(166, 88, 31, 4.6, -3.2, 6, '#3a1a10', 1) + book(169, 83.4, 26, 4, -2.8, 5.2, '#1a2a3a', 2); }
+    fg += K.castShadow(u, L, { x: INK.x, y: INK.y, w: 10, h: 10, horizon: VY, d: .9 }) + inkwell(u, L, INK.x, INK.y, 1.25);
+    // the desk seal standing on the table: a brass foot, a turned oak handle swelling to a knob
+    { const x = STP.x, y = STP.y, k = 1.35;
+      fg += K.castShadow(u, L, { x, y, w: 12 * k, h: 24 * k, horizon: VY, d: .9 }) + K.contactShadow(u, x, y, 12 * k, L, { ry: 1.6 * k, opacity: .6 })
+        + `<g transform="translate(${x} ${y}) scale(${k}) translate(${-x} ${-y})">` + K.shadeCyl(u, x, y, x, y - 3.4, 5.6, L, 'brass', { ell: .3, face: 2, outline: .35 })
+        + K.shadeCyl(u, x, y - 3.4, x, y - 5.2, 3.2, L, 'brass', { r1: 4, r2: 2.4, ell: .3, face: 2, outline: .3 })
+        + K.shadeCyl(u, x, y - 5.2, x, y - 17, 1.6, L, 'oak', { r1: 1.7, r2: 2.6, ell: .3, outline: .3, seed: 7 })
+        + `<path d="M${f(x - 2.6)} ${f(y - 12.4)}h5.2M${f(x - 2)} ${f(y - 8.6)}h4" stroke="#1a0e06" stroke-width=".35" opacity=".7"/>`
+        + K.shadeSphere(u, x, y - 20.4, 3.9, L, 'oak', { outline: .3 }) + '</g>'; }
+    // the stick of sealing wax lying in front of it, its burnt end towards the candle
+    { const a = [150, 129.5], b = [172, 126.4], m = K.mat('paint-red', L, { form: 'cyl', x1: a[0], y1: a[1], x2: b[0], y2: b[1], r: 1.7, u });
+      fg += `<path d="M${f(a[0] + 1.6)} ${f(a[1] + 2.2)}L${f(b[0] + 1.6)} ${f(b[1] + 2.2)}" stroke="#06100a" stroke-width="2.6" opacity=".45" stroke-linecap="round"/>`
+        + m.defs + `<path d="M${P2(a)}L${P2(b)}" stroke="${m.fill}" stroke-width="3.4" stroke-linecap="round"/>`
+        + ln(`M${f(a[0] + 2)} ${f(a[1] - 1.1)}L${f(b[0] - 1)} ${f(b[1] - 1.1)}`, .5, '#ff9a80', .6)
+        + `<ellipse cx="${f(a[0] - .4)}" cy="${f(a[1] + .1)}" rx="1.3" ry="1.8" transform="rotate(-8 ${f(a[0])} ${f(a[1])})" fill="#2a0604"/>`; }
 
     // ——— the room darkens away from the candle and down under the glass
     fg += gloom(u, 40, 90, 200, 60, .35, '#050403') + gloom(u, 100, 126, 100, 280, .5, '#030806');
