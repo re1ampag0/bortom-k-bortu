@@ -3,16 +3,15 @@
 // haze, the moon high behind. A dead officer stands close to us, chest up, unmoved: a round shot has just gone
 // clean through his chest — through the ragged hole we see the sky and the sea behind him, and the ball itself
 // flies on away over the rail; grapeshot holes smoulder in his coat. He only touches the brim of his tricorn with
-// bony fingers. At the far rail a second dead officer stands with his hands behind his back, a hole in him too.
+// bony fingers. He stands alone: nothing draws the eye from him (the far officer of round one is left out).
 // Kept: the idea (hit, and nobody falls), the night and the red haze, the moon, the near officer chest up with the
-// hole you look through, the ball flying away, the far officer at the rail, the hand at the hat.
+// hole you look through, the ball flying away, the hand at the hat.
 // Fixed against the first round: the raised arm was a stiff tube with a flat glove — now one sleeve from the shoulder
 // through the elbow to the cuff and a hand (people.cjs hand3) round the brim left of the front corner (a salute); the
 // head was a flat green mask — now a 3/4 head (head34) with sunken cheeks, dark sockets, dull glowing eyes, bared
 // teeth, lank grey hair, the tricorn turned with it (hat.cjs); he is drawn at 110 units/m and zoomed ×1.4 about his
 // point on the horizon (as if 30 % nearer), so he fills the space above the glass; the hole was a ring on the coat
-// — now cut through: the background is drawn again inside it; the far officer was a flat black badge — now a whole man on his own feet on the deck, with his shadow; the rail and the deck
-// share the one eye level with both men. Light: the moon high behind, upper right (key, contre-jour: cold-red rims
+// — now cut through: the background is drawn again inside it; the rail and the deck share his eye level. Light: the moon high behind, upper right (key, contre-jour: cold-red rims
 // on the hair, shoulders and the right edges); the red haze of the sky in front (fill). No blood, no wounds inside.
 'use strict';
 const K = require('../kit/index.cjs');
@@ -25,17 +24,15 @@ const { glow, gloom, motes } = PK;
 const HZ = 112, EYE = 1.2;                         // a low eye: we look up at him
 const MOON = { x: 150, y: 22 };
 const RAIL = { top: 116, foot: 158 };              // the far bulwark ~3.5 m away (38 units/m)
-const HEAD = { c: [107, 61], r: 11 };              // the near officer ~1.2 m away (110 units/m)
+const HEAD = { c: [107, 63.5], r: 11 };            // the near officer ~1.2 m away (110 units/m); the head sits low: a short neck
 const ZOOM = 1.4;                                  // he is drawn at 110 units/m and moved closer: scaled about his point on the horizon
 const TZ = p => [107 + (p[0] - 107) * ZOOM, HZ + (p[1] - HZ) * ZOOM];
 const HOLE = { x: 115.4, y: 103.6, r: 11.6 };      // the shot hole through his chest (in the picture, after the zoom)
 const BALL = { x: 176, y: 100, r: 2.6 };           // the ball flying away behind him
-const FAR = { x: 30, foot: 158, s: 38 };           // the far officer: x, the deck under his feet, units per metre
 const light = { time: 'night', haze: .4, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#ffc8a8', power: .85 },
   fill: { color: '#6a2430', power: .5 }, rim: { az: 330, color: '#ffb08a', power: .7 } };
 const skel = { horizon: HZ, eye: EYE, light: 'the moon high behind, upper left (key, contre-jour) + the red haze in front (fill)', items: [
   ['bulwark', -10, RAIL.foot, 220, RAIL.foot - RAIL.top, 'deck, ~3.5 m behind the near officer', 1.1, { bg: 1 }],
-  ['far officer', 12, FAR.foot, 38, 70, 'deck at the bulwark (his feet, his shadow)', 1.78],
   ['near officer', 54, 280, 100, 250, 'deck (feet off the frame), 1.2 m away', { edge: 1 }],
   ['hand at the hat', 74, 62, 22, 26, 'his raised arm'], ['hole', HOLE.x - 9, HOLE.y + 9, 18, 18, 'through his chest'],
   ['ball', BALL.x - 3, BALL.y + 3, 6, 6, 'in the air behind him, flying away'], ['moon', MOON.x - 8, MOON.y + 8, 16, 16, 'sky']] };
@@ -80,48 +77,11 @@ function background(u, L) {
   return s;
 }
 
-// the far officer at the rail: stockings and buckled shoes, breeches, the coat skirts, his hands behind his back
-// (the elbows out), the epaulettes, a head34 head in a tricorn; dark against the sea with a cold-red rim on the left
-function farOfficer(u, L) {
-  const { x, foot, s } = FAR, P = (dx, h) => [x + dx * s, foot - h * s];
-  const dark = { lit: '#3a2a30', half: '#1e1418', shadow: '#0c0808', outline: '#050304' };
-  let o = K.castShadow(u, L, { x, y: foot, w: .5 * s, h: 1.78 * s, horizon: HZ, d: .5 }) + K.contactShadow(u, x, foot, .55 * s, L, { ry: 1.2 });
-  // the legs: grey stockings from the shoe to the knee, the breeches above; the shoes with a brass buckle
-  for (const sd of [-1, 1]) {
-    const hip = P(sd * .1, .9), knee = P(sd * .1, .5), ank = P(sd * .1, .08);
-    o += H.cloth(u, { spine: [hip, [lerp(hip[0], knee[0], .5), lerp(hip[1], knee[1], .5)], knee], w: [.17 * s, .15 * s, .13 * s], tone: { lit: '#6a5a48', half: '#3a3028', shadow: '#1a1410', outline: '#060404' }, lit: -1, rim: RIMC, rimSide: 1, rimOp: sd > 0 ? .7 : .3, folds: false, sw: .3 });
-    o += H.cloth(u, { spine: [knee, [lerp(knee[0], ank[0], .5), lerp(knee[1], ank[1], .5)], ank], w: [.11 * s, .1 * s, .07 * s], tone: { lit: '#8a8478', half: '#4a4640', shadow: '#22201c', outline: '#060404' }, lit: -1, rim: RIMC, rimSide: 1, rimOp: sd > 0 ? .6 : .25, folds: false, sw: .3 });
-    const toe = [ank[0] + sd * .03 * s - .02 * s, foot - .5];
-    o += `<path d="M${f(ank[0] - .05 * s)} ${f(ank[1] - .5)}Q${f(ank[0] - .08 * s)} ${f(foot - .4)} ${f(ank[0] - .06 * s)} ${f(foot)}L${f(toe[0] + .1 * s)} ${f(foot + .6)}Q${f(toe[0] + .13 * s)} ${f(foot - .8)} ${f(ank[0] + .05 * s)} ${f(ank[1] - .2)}Z" fill="#0c0808" stroke="#030202" stroke-width=".3"/>`
-      + `<rect x="${f(ank[0] - .02 * s)}" y="${f(foot - .07 * s)}" width="${f(.05 * s)}" height="${f(.03 * s)}" fill="#a8803a"/>`;
-  }
-  // the coat: shoulders, the body to the waist, the skirts to the knee, open in front over the waistcoat
-  const coat = [P(-.2, 1.45), P(-.24, 1.38), P(-.25, 1.15), P(-.22, .95), P(-.27, .55), P(-.08, .5), P(-.05, .9), P(.05, .9), P(.08, .5), P(.27, .55), P(.22, .95), P(.25, 1.15), P(.24, 1.38), P(.2, 1.45), P(.06, 1.5), P(-.06, 1.5)];
-  o += `<path d="${smooth(coat, true)}" fill="#140c12" stroke="#050304" stroke-width=".4"/>`
-    + `<path d="M${P2(P(-.05, 1.46))}L${P2(P(-.05, .9))}L${P2(P(.05, .9))}L${P2(P(.05, 1.46))}Z" fill="#3a3428"/>`
-    + `<path d="${smooth([P(.2, 1.45), P(.24, 1.38), P(.25, 1.15), P(.22, .95), P(.27, .55)])}" stroke="${RIMC}" stroke-width=".7" fill="none" opacity=".65"/>`;
-  // the arms: the sleeves bent back, the elbows out, the hands clasped behind (out of sight behind the body)
-  for (const sd of [-1, 1]) o += H.cloth(u, { spine: [P(sd * .2, 1.42), P(sd * .27, 1.2), P(sd * .26, 1.02), P(sd * .14, .96)], w: [.13 * s, .12 * s, .11 * s, .1 * s], tone: { lit: '#3a2a38', half: '#1a1018', shadow: '#0a0608', outline: '#050304' }, lit: -1, rim: RIMC, rimSide: 1, rimOp: sd > 0 ? .7 : .25, folds: false, sw: .3, capA: true });
-  // the hole through his chest: the haze behind shows through
-  { const c = P(.09, 1.25); o += `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="1.8" ry="2" fill="#c8583a"/><ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="1.8" ry="2" fill="none" stroke="#050304" stroke-width=".5"/>`; }
-  // the epaulettes, the neck, the head (3/4, looking out over the sea to the right) and the tricorn
-  for (const sd of [-1, 1]) { const e = P(sd * .19, 1.45); o += `<ellipse cx="${f(e[0])}" cy="${f(e[1])}" rx="${f(.07 * s)}" ry="${f(.025 * s)}" fill="#8a6a2a"/>` + Array.from({ length: 4 }, (_, k) => `<path d="M${f(e[0] - .05 * s + k * .033 * s)} ${f(e[1] + .5)}v${f(.04 * s)}" stroke="#8a6a2a" stroke-width=".45"/>`).join(''); }
-  const hc = P(0, 1.62), r = .11 * s;
-  o += `<path d="M${f(hc[0] - .04 * s)} ${f(hc[1] + .6 * r)}L${f(hc[0] - .045 * s)} ${f(P(0, 1.48)[1])}L${f(hc[0] + .045 * s)} ${f(P(0, 1.48)[1])}L${f(hc[0] + .04 * s)} ${f(hc[1] + .6 * r)}Z" fill="#2a2a20"/>`;
-  const hd = H.head34(u, { c: hc, r, turn: .7, dir: 1, nod: -2, tone: { lit: '#5a6248', half: '#343a2a', core: '#2a2e22', shadow: '#16180e', outline: '#060604' }, light: [-.6, -.8],
-    eye: 'half', white: '#1a1c14', iris: '#c8f07a', brow: 'calm', mouth: .1, hair: { style: 'tied', color: '#5a5a54', ribbon: '#0a0a0c' }, hairColor: '#4a4a44' });
-  const hat = tricorn(u, hd, { r, color: '#0e0a0e', trim: '#8a6a2a', light: [-.6, -.8] });
-  o += hd.svg + hat.back + hat.front + rimArc(hd, { r, light: [-.6, .8], color: RIMC, span: 50, opacity: .6 });
-  // the faint glow of his eyes
-  { const e = hd.Q(.34, -.06, .85); o += glow(u, e[0], e[1], 2.4, 1.6, '#c8f07a', .45); }
-  return o;
-}
-
 module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: EYE });
     L.pal = Object.assign({}, L.pal, { sky: ['#0a0306', '#2a0a10', '#6a1e16', '#b04a2a'], sea: ['#7a2c1c', '#3a1210', '#140606'], cloudLit: '#e88a68', cloudShade: '#2a0a10', smoke: '#5a3a3a' });
-    const bg = background(u, L) + farOfficer(u, L);
+    const bg = background(u, L);
 
     // ——— the near officer ———
     let man = '';
@@ -191,14 +151,18 @@ module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'dra
       { const a = Q(-.17, .64, .93), b = Q(.17, .64, .93); head += `<path d="M${P2(a)}L${P2(b)}" stroke="#cfc6a6" stroke-width="1" opacity=".85"/>` + [-.1, -.03, .04, .11].map(x => { const p = Q(x, .6, .96), q = Q(x, .68, .96); return `<path d="M${P2(p)}L${P2(q)}" stroke="#2a2a20" stroke-width=".25"/>`; }).join(''); }
       head += `<path d="M${P2(Q(.42, -.62, .62))}L${P2(Q(.5, -.42, .66))}L${P2(Q(.44, -.3, .72))}" stroke="${DEAD.shadow}" stroke-width=".35" fill="none" opacity=".8"/>`
         + `<path d="M${P2(Q(-.62, .28, .5))}Q${P2(Q(-.52, .5, .58))} ${P2(Q(-.44, .66, .6))}" stroke="${DEAD.shadow}" stroke-width=".4" fill="none" opacity=".6"/>`; }
-    const hat = tricorn(u, hd, { r: HEAD.r, color: '#120e14', trim: '#c9a048', light: [-.55, -.8], size: 1.5, turnUp: .75 });
+    const HATR = 1.7, HATUP = .75;                     // the brim's reach (wide: a big officer's hat) and how high it is turned up
+    const hat = tricorn(u, hd, { r: HEAD.r, color: '#120e14', trim: '#c9a048', light: [-.55, -.8], size: HATR, turnUp: HATUP });
     // a grapeshot hole through the hat's crown
     const hatHole = (() => { const p = hd.Q(.3, -1.25, .45); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".9" fill="#d0663e" stroke="#050304" stroke-width=".45"/>`; })();
     // ——— his right arm (our left), raised: one sleeve from the shoulder out to the elbow and up to the cuff; his bony
     // fingers round the front of the brim left of the corner, the thumb under it (touching the hat: all is well) ———
-    const E0 = hd.Q(-.708, -1.12, .891), E1 = hd.Q(-.373, -.72, 1.263), brimAng = Math.atan2(E1[1] - E0[1], E1[0] - E0[0]) * 180 / Math.PI, GR = hd.Q(-.57, -.87, 1.09);
+    // points on the brim's outer edge (hat.cjs tricorn's own formula) at t degrees from the front corner
+    const brim = (t, dy = 0) => { t *= Math.PI / 180; const k = Math.pow(Math.sin(1.5 * t), 2), rr = 1 + (HATR - 1) * (1 - k) + .08 * k; return hd.Q(Math.sin(t) * rr, -.68 - HATUP * k + .08 * (1 - k) + dy, Math.cos(t) * rr * .98 - .1); };
+    const E0 = brim(-35), E1 = brim(-15), brimAng = Math.atan2(E1[1] - E0[1], E1[0] - E0[0]) * 180 / Math.PI, GR = brim(-25, .035);
     const hR = handOn(u, { s: 1.9, m: 1, roll: 0, pitch: 10, pose: 'wrap', r: .45, tone: DEADH, light: [-.6, -.7], sw: .3, tilt: 4, fingerW: .82, palmW: .92 }, GR, brimAng, -40);
-    const raisedSleeve = sleeve([86, 87], [64, 77], hR.wrist, -1, .3, 9);
+    // the elbow up at the level of his ear: a short upper arm and forearm (≈ 1.2 head each), no long curve
+    const raisedSleeve = sleeve([86, 87], [73.5, 66], hR.wrist, -1, .3, 9);
     man += epaulette(126, 84, 1, Re) + swordArm + holes;
     man += head + rimArc(hd, { r: HEAD.r, light: [-.4, .9], color: RIMC, span: 40, opacity: .5 }) + hat.back + hR.back + hat.front + hatHole + raisedSleeve + epaulette(88, 85, -1, Re) + hR.front + bony(hR, DEADH, 1.9);
     // the ball beyond him, flying away over the rail: its trail back towards the hole

@@ -30,10 +30,12 @@ const WZ = 4.0, CEIL = 1.8;                            // the ship's side (facin
 const PORT = { X: .65, w: .76, sill: .45, top: 1.3 };  // the port in the side, the gun run out through it
 // the gun in 3D (gun units of 5.5 cm): S — picture units per gun unit at its breech (Z 2.1 m), D0 — the eye's distance
 // to there (2 m), E — the eye's height, gx — its offset to the right; yaw 0: it points straight out, square to the side
-const GU = .055, GUN = { S: F / (2.0 / GU), D0: 2.0 / GU, E: EYE / GU, gx: PORT.X / GU, gd: 0, yaw: 0 };
+// LIFT: the gun is drawn 9 picture units higher at the touchhole (the eye a little lower against it: E − 1.97), so the
+// touchhole and the flare stand well above the glass
+const LIFT = 9, GU = .055, GUN = { S: F / (2.0 / GU), D0: 2.0 / GU, E: EYE / GU - LIFT / (F / (2.0 / GU) * .9238), gx: PORT.X / GU, gd: 0, yaw: 0 };
 // the gunner stands at 1.8 m (100 units/m), left of the gun; he is drawn in his own frame and moved by MAN
 const MAN = [22, 16], HEAD = { c: [58, 32], r: 11 };
-const TOUCH = [166, 105.4];                            // the touchhole on the top of the breech (from the gun's own projection)
+const TOUCH = [166, 105.4 - LIFT];                            // the touchhole on the top of the breech (from the gun's own projection)
 const TL = [TOUCH[0] - MAN[0], TOUCH[1] - MAN[1]];      // the same in the gunner's frame
 const light = { time: 'dusk', haze: .45, key: { type: 'point', x: TOUCH[0], y: TOUCH[1] - 2, h: .95, gy: 172, color: '#ff9a48', power: 1, radius: 90, z: .3 },
   fill: { color: '#4a2a3a', power: .32 }, locals: [{ x: 141, y: 100, color: '#ffb080', power: .4, radius: 60 }] };
@@ -192,16 +194,17 @@ module.exports = { name: 'Зомби у пушек', kind: 'deck', status: 'draf
     { const RS = rng(41); for (let i = 0; i < 22; i++) { const a = -Math.PI * (.1 + RS() * .8), d = 3 + RS() * 14, x = TOUCH[0] + Math.cos(a) * d, y = TOUCH[1] - 2 + Math.sin(a) * d * .9, r = .2 + RS() * .45;
       flare += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(a) * 1.4)} ${f(Math.sin(a) * 1.4)}" stroke="${RS() > .5 ? '#ffe8a0' : '#ffa040'}" stroke-width="${f(r)}" stroke-linecap="round" opacity="${f(.5 + RS() * .5)}"/>`; } }
     // ——— the arms: each one sleeve from the shoulder, torn off below the elbow; the bony forearm; the hand round the staff ———
-    const base = { s: 2.25, pose: 'wrap', r: .9, tone: DEADH, light: [.8, .4], sw: .3, tilt: 6, fingerW: .72, palmW: .9 };
-    const hN = handOn(u, { ...base, m: 1, roll: 10, pitch: 8 }, along(.27), ang, 70);
-    const hF = handOn(u, { ...base, m: 1, roll: 25, pitch: 10 }, along(.6), ang, 70);
+    // thin bony hands: a narrow palm, a narrower wrist, thin fingers; turned so the curled fingers show round the staff
+    const base = { s: 2.1, pose: 'wrap', r: .9, tone: DEADH, light: [.8, .4], sw: .3, tilt: 6, fingerW: .55, palmW: .72, wristW: .6 };
+    const hN = handOn(u, { ...base, m: 1, roll: -60, pitch: 14 }, along(.27), ang, 70);
+    const hF = handOn(u, { ...base, m: 1, roll: -50, pitch: 14 }, along(.6), ang, 70);
     const arm = (sh, el, h, sd) => { const w = h.wrist, tear = [lerp(el[0], w[0], .18), lerp(el[1], w[1], .18)];
-      return H.cloth(u, { spine: [[w[0] * .0 + lerp(el[0], w[0], .1), lerp(el[1], w[1], .1)], [lerp(el[0], w[0], .55), lerp(el[1], w[1], .55)], w], w: [6.6, 5.4, 4.6], tone: DEAD, lit: sd, folds: false, sw: .35 })
+      return H.cloth(u, { spine: [[w[0] * .0 + lerp(el[0], w[0], .1), lerp(el[1], w[1], .1)], [lerp(el[0], w[0], .55), lerp(el[1], w[1], .55)], w], w: [5.2, 4.4, 3.6], tone: DEAD, lit: sd, folds: false, sw: .35 })
         + `<path d="M${P2(lerp2(el, w, .4, -1.6))}L${P2(lerp2(el, w, .9, -.8))}" stroke="${DEAD.shadow}" stroke-width=".45" opacity=".6"/><path d="M${P2(lerp2(el, w, .3, 1.4))}L${P2(lerp2(el, w, .85, .9))}" stroke="${DEAD.lit}" stroke-width=".4" opacity=".5"/>`
-        + H.cloth(u, { spine: [sh, [lerp(sh[0], el[0], .5), lerp(sh[1], el[1], .5)], el, tear], w: [12, 11, 10, 10.4], tone: SHIRT, lit: sd, rim: FIREC, rimSide: 1, rimOp: .45, seed: sd + 9, folds: false, sw: .4, capA: true })
+        + H.cloth(u, { spine: [sh, [lerp(sh[0], el[0], .5), lerp(sh[1], el[1], .5)], el, tear], w: [12.4, 10.2, 8.2, 8.6], tone: SHIRT, lit: sd, rim: FIREC, rimSide: 1, rimOp: .45, seed: sd + 9, folds: false, sw: .4, capA: true, roundA: true })
         + ragged(el, tear); };
     const lerp2 = (a, b, t, o) => { const d = unit([b[0] - a[0], b[1] - a[1]]); return [lerp(a[0], b[0], t) - d[1] * o, lerp(a[1], b[1], t) + d[0] * o]; };
-    const ragged = (el, tear) => { const d = unit([tear[0] - el[0], tear[1] - el[1]]), n = [-d[1], d[0]]; let s = 'M'; for (let i = 0; i <= 8; i++) { const o = -5.6 + i * 1.4, l = (i % 2 ? 2.6 : .4) + (i % 3) * .6; s += `${f(tear[0] + n[0] * o + d[0] * l)} ${f(tear[1] + n[1] * o + d[1] * l)}${i < 8 ? 'L' : ''}`; }
+    const ragged = (el, tear) => { const d = unit([tear[0] - el[0], tear[1] - el[1]]), n = [-d[1], d[0]]; let s = 'M'; for (let i = 0; i <= 8; i++) { const o = -4.2 + i * 1.05, l = (i % 2 ? 2.6 : .4) + (i % 3) * .6; s += `${f(tear[0] + n[0] * o + d[0] * l)} ${f(tear[1] + n[1] * o + d[1] * l)}${i < 8 ? 'L' : ''}`; }
       return `<path d="${s}" stroke="${SHIRT.outline}" stroke-width=".5" fill="none"/>`; };
     // the elbow between the shoulder and the wrist for the arm's two lengths, bent to the side `side` (+1 — below the line)
     const elbow = (sh, w, lu, lf, side) => { const d = Math.hypot(w[0] - sh[0], w[1] - sh[1]), a = Math.min(lu, (d * d + lu * lu - lf * lf) / (2 * d)), hh = Math.sqrt(Math.max(0, lu * lu - a * a)), e = unit([w[0] - sh[0], w[1] - sh[1]]);
@@ -209,7 +212,7 @@ module.exports = { name: 'Зомби у пушек', kind: 'deck', status: 'draf
     const shF = [74, 48], shN = [39, 49];
     const armF = arm(shF, elbow(shF, hF.wrist, 28, 27, 1), hF, 1), armN = arm(shN, elbow(shN, hN.wrist, 29, 28, 1), hN, 1);
     // ——— assemble: the far arm and its hand behind the staff, the body, the head, the near arm in front ———
-    man += neck + head + armF + hF.back + staff + fork + hF.front + bony(hF, DEADH, 2.25) + armN + hN.back + hN.front + bony(hN, DEADH, 2.25);
+    man += neck + head + armF + hF.back + staff + fork + hF.front + bony(hF, DEADH, 1.2) + armN + hN.back + hN.front + bony(hN, DEADH, 1.2);
     man = `<g transform="translate(${MAN[0]} ${MAN[1]})">${man}</g>`;
     // ——— the air: the glow of the flare on him and the gun, the haze of the smoke, the dark round the edges ———
     const air = K.localGlow(u, { x: TOUCH[0], y: TOUCH[1], color: '#ff9a48', power: .5, radius: 60 }, { core: false }) + motes(24, 80, 40, 120, 60, '#ffc890', 7)

@@ -30,9 +30,12 @@ function tube(C, W, n = 7) {
   const at = (i, s, wk = 1) => { const q = S[Math.max(0, Math.min(N, i))]; return [q.p[0] + q.n[0] * q.w / 2 * s * wk, q.p[1] + q.n[1] * q.w / 2 * s * wk]; };
   const idx = t => Math.round(t * N);
   const edge = (s, i0 = 0, i1 = N, wk = 1) => { const a = []; for (let i = i0; i <= i1; i++) a.push(at(i, s, wk)); return a; };
-  const outline = (i0 = 0, i1 = N, wk = 1, capA = false, capB = false) => {
+  // roundA (optional, default false): the start cap as a dome (a rounded shoulder) instead of one point
+  const outline = (i0 = 0, i1 = N, wk = 1, capA = false, capB = false, roundA = false) => {
     const l = edge(-1, i0, i1, wk), r = edge(1, i0, i1, wk).reverse(), P = [];
-    if (capA) { const q = S[i0]; P.push([q.p[0] - q.d[0] * q.w * .42 * wk, q.p[1] - q.d[1] * q.w * .42 * wk]); }
+    if (capA && roundA) { const q = S[i0], h = q.w / 2 * wk, kc = typeof roundA === 'number' ? roundA : .9;
+      for (let k = 1; k < 8; k++) { const ph = Math.PI * (1 - k / 8); P.push([q.p[0] - q.d[0] * Math.sin(ph) * h * kc - q.n[0] * Math.cos(ph) * h, q.p[1] - q.d[1] * Math.sin(ph) * h * kc - q.n[1] * Math.cos(ph) * h]); } }
+    else if (capA) { const q = S[i0]; P.push([q.p[0] - q.d[0] * q.w * .42 * wk, q.p[1] - q.d[1] * q.w * .42 * wk]); }
     P.push(...l);
     if (capB) { const q = S[i1]; P.push([q.p[0] + q.d[0] * q.w * .42 * wk, q.p[1] + q.d[1] * q.w * .42 * wk]); }
     P.push(...r); return P;
@@ -43,11 +46,12 @@ function tube(C, W, n = 7) {
 // ——— cloth (or bare skin) along a limb ———
 // o: { spine, w, tone {lit, half, shadow, outline}, lit: +1|-1 (which edge faces the light), rim (colour of the
 // back-light edge, optional), rimSide (+1|-1, default -lit), folds: true (creases at the bends and a few drapes),
-// cuff: { from (0..1), tone, k (widen) , roll (rolled sleeve lines) }, opacity, seed, capA, capB (round ends) }
+// cuff: { from (0..1), tone, k (widen) , roll (rolled sleeve lines) }, opacity, seed, capA, capB (round ends),
+// roundA (optional: with capA, the start cap a full dome — a rounded shoulder; a number sets its depth, default .9) }
 function cloth(u, o) {
   const T = tube(o.spine, o.w), tn = o.tone, lit = o.lit || 1, cid = nid('pc', u), R = K.rng(o.seed || 7);
   const cutAt = o.cuff ? T.idx(o.cuff.from) : T.N;
-  const body = T.outline(0, cutAt, 1, o.capA, o.capB && !o.cuff);
+  const body = T.outline(0, cutAt, 1, o.capA, o.capB && !o.cuff, o.roundA);
   let s = `<defs><clipPath id="${cid}"><path d="${sp(body, true)}"/></clipPath></defs>`;
   s += `<path d="${sp(body, true)}" fill="${tn.half}"/>`;
   s += `<g clip-path="url(#${cid})">`;
