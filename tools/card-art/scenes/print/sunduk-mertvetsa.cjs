@@ -15,7 +15,7 @@ const { f, mix, nid, linGrad, radGrad, rng } = K;
 const { glow, gloom, motes } = PK;
 
 const HZ = 70, SHORE = 96;                       // the horizon; the foam line on the beach
-const TC = 'translate(4 -1) scale(.96)';         // the chest, its pool and rings: a little smaller and higher (clear of the glass)
+const TC = 'translate(4 -3) scale(.96)';         // the chest, its pool and rings: a little smaller and higher (clear of the glass)
 const C = { x0: 38, y0: 146, W: 100, D: 60, Hb: 40, kx: .42, ky: .27, lip: 6, rho: 15, th: 13 };  // the chest (own units)
 const light = { time: 'fog', haze: .7, key: { type: 'moon', az: 240, el: 34, color: '#cfeee0', power: .7 }, fill: { color: '#2f5a50', power: .5 },
   rim: { az: 300, color: '#d8fff0', power: .3 }, locals: [{ x: 92, y: 98, h: 2, color: '#ff6a3a', power: .85, radius: 70 }] };
@@ -28,7 +28,7 @@ const skel = { horizon: HZ, eye: .9, light: 'a low moon in the fog from the left
 // the chest's own projection (oblique 3/4 like K.chest): x across, z away from us, h up
 const Pc = (x, z, h) => [C.x0 + x + z * C.kx, C.y0 - h - z * C.ky];
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
-const LT = 2.2;                                  // the lid board's front edge, seen under its lip
+const LT = 3;                                  // the lid board's front edge, seen under its lip
 const poly = pts => 'M' + pts.map(P2).join('L') + 'Z';
 const TH = C.th * Math.PI / 180;
 // a point of the lid in its own (z, h) — rotated about the back hinge (z = D, h = Hb) by the lift
@@ -129,9 +129,14 @@ module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 
     fg += K.shadeBox(u, [{ pts: [Pc(Wc, 0, 0), Pc(Wc, D, 0), Pc(Wc, D, Hb), Pc(Wc, 0, Hb)], n: 'right', grain: [C.kx, -C.ky] },
       { pts: [Pc(0, 0, 0), Pc(Wc, 0, 0), Pc(Wc, 0, Hb), Pc(0, 0, Hb)], n: 'front', grain: [1, 0] }], L, 'oak', { seed: 7, outline: .5 });
     for (const h of [13.5, 27]) fg += `<path d="M${P2(Pc(0, 0, h))}L${P2(Pc(Wc, 0, h))}L${P2(Pc(Wc, D, h))}" stroke="#140a04" stroke-width=".6" fill="none" opacity=".7"/><path d="M${P2(Pc(0, 0, h - .6))}L${P2(Pc(Wc, 0, h - .6))}" stroke="#d8c8a0" stroke-width=".3" opacity=".25"/>`;
+    // the waterline: the foot of the body stands in the pool — under the line it is darker and greener, a cold light edge on it
+    { const WL = 3.2;
+      fg += `<path d="${poly([Pc(0, 0, 0), Pc(Wc, 0, 0), Pc(Wc, D, 0), Pc(Wc, D, WL), Pc(Wc, 0, WL), Pc(0, 0, WL)])}" fill="#14302a" opacity=".62"/>`
+        + `<path d="M${P2(Pc(-.6, 0, WL))}Q${P2(Pc(Wc * .3, 0, WL + .5))} ${P2(Pc(Wc * .5, 0, WL))}T${P2(Pc(Wc, 0, WL))}L${P2(Pc(Wc, D * .5, WL + .3))}L${P2(Pc(Wc, D, WL))}" stroke="#d8fff0" stroke-width=".7" fill="none" opacity=".75"/>`; }
     // the inside through the gap: the far wall lit red by what beats in there, hottest left of the middle
-    { const g = nid('in', u), hot = Pc(42, 30, Hb - 4);
-      fg += `<defs>${radGrad(g, hot[0], hot[1], 60, [[0, '#fff0c8', 1], [.16, '#ffb060', 1], [.4, '#f0502a', 1], [.75, '#8a160c', 1], [1, '#3a0604', 1]])}</defs>`
+    { const g = nid('in', u), hot = Pc(Wc / 2, 4, Hb + 3), hx = f(hot[0]), hy = f(hot[1]);
+      fg += `<defs><radialGradient id="${g}" gradientUnits="userSpaceOnUse" cx="${hx}" cy="${hy}" r="54" gradientTransform="translate(${hx} ${hy}) scale(1 .42) translate(-${hx} -${hy})">`
+        + [[0, '#ffffff'], [.1, '#fff2c8'], [.22, '#ffc070'], [.4, '#f0602a'], [.62, '#b0200e'], [.82, '#5a0a06'], [1, '#2a0403']].map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('') + `</radialGradient></defs>`
         + `<path d="${poly([Pc(0, 0, Hb), Pc(Wc, 0, Hb), Pc(Wc, D, Hb), Pl(Wc, 0, Hb), Pl(0, 0, Hb)])}" fill="url(#${g})"/>`
         // the rim boards' top edges catch it
         + `<path d="M${P2(Pc(0, 0, Hb))}L${P2(Pc(Wc, 0, Hb))}L${P2(Pc(Wc, D, Hb))}" stroke="#ffc890" stroke-width="1.1" fill="none" opacity=".9"/>`
@@ -143,15 +148,20 @@ module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 
         faces.push({ pts: [Pl(0, z0, h0), Pl(Wc, z0, h0), Pl(Wc, z1, h1), Pl(0, z1, h1)], n: [0, n[1], -n[0]], grain: [1, 0] }); }
       const nf = lidN(-1, 0); faces.push({ pts: [Pl(0, 0, Hb), Pl(Wc, 0, Hb), Pl(Wc, 0, Hb + C.lip), Pl(0, 0, Hb + C.lip)], n: [0, nf[1], -nf[0]], grain: [1, 0] });
       fg += K.shadeBox(u, faces, L, 'oak', { seed: 9, outline: .5 });
-      // the lid's lower edge and the underside of the lip glow red
-      fg += `<path d="M${P2(Pl(0, 0, Hb))}L${P2(Pl(Wc, 0, Hb))}L${P2(Pl(Wc, D, Hb))}" stroke="#ff7a48" stroke-width="1.2" fill="none" opacity=".85"/>`
-        + `<path d="M${P2(Pl(0, 0, Hb + 1.4))}L${P2(Pl(Wc, 0, Hb + 1.4))}" stroke="#ff8a50" stroke-width="1.6" opacity=".35"/>`; }
+      // the board's own thickness: its front edge under the lip, then its shadow on the top of the glowing slit
+      { const sh = nid('ls', u), bd = nid('lb', u), b0 = Pl(0, 0, Hb), b1 = Pl(0, 0, Hb - LT);
+        fg += `<defs><filter id="${sh}" x="-5%" y="-100%" width="110%" height="300%"><feGaussianBlur stdDeviation="1.1"/></filter>${linGrad(bd, 0, b0[1], 0, b1[1], [[0, '#b08452', 1], [.3, '#6a4220', 1], [.7, '#2a1408', 1], [1, '#140802', 1]])}</defs>`
+          + `<path d="M${P2(Pl(.5, 0, Hb - LT))}L${P2(Pl(Wc, 0, Hb - LT))}L${P2(Pl(Wc, D, Hb - LT))}L${P2(Pl(Wc, D, Hb - LT - 2.6))}L${P2(Pl(Wc, 0, Hb - LT - 2.6))}L${P2(Pl(.5, 0, Hb - LT - 2.6))}Z" fill="#1a0402" opacity=".55" filter="url(#${sh})"/>`
+          + `<path d="${poly([Pl(0, 0, Hb), Pl(Wc, 0, Hb), Pl(Wc, D, Hb), Pl(Wc, D, Hb - LT), Pl(Wc, 0, Hb - LT), Pl(0, 0, Hb - LT)])}" fill="url(#${bd})" stroke="#0e0602" stroke-width=".45"/>`
+          + `<path d="M${P2(Pl(.3, 0, Hb - .25))}L${P2(Pl(Wc, 0, Hb - .25))}L${P2(Pl(Wc, D, Hb - .25))}" stroke="#f0d4a4" stroke-width=".6" fill="none" opacity=".85"/>`
+          // its lower edge catches the red from below
+          + `<path d="M${P2(Pl(0, 0, Hb - LT))}L${P2(Pl(Wc, 0, Hb - LT))}L${P2(Pl(Wc, D, Hb - LT))}" stroke="#ff7a48" stroke-width=".7" fill="none" opacity=".75"/>`; } }
     // the iron: corner angles on the body, three straps up the front and over the arch, rivets
     { const strap = (x, w) => { let o = K.shadeBox(u, [{ pts: [Pc(x - w, 0, 0), Pc(x + w, 0, 0), Pc(x + w, 0, Hb - .2), Pc(x - w, 0, Hb - .2)], n: 'front' }], L, 'iron', { outline: .35 });
         const faces = [];
         for (let i = PROF.length - 2; i >= 1; i--) { const [z0, h0] = PROF[i], [z1, h1] = PROF[i + 1]; if (i === PROF.length - 2) continue; const td = z1 - z0, tv = h1 - h0, l = Math.hypot(td, tv), n = lidN(-tv / l, td / l);
           faces.push({ pts: [Pl(x - w, z0, h0 + .4), Pl(x + w, z0, h0 + .4), Pl(x + w, z1, h1 + .4), Pl(x - w, z1, h1 + .4)], n: [0, n[1], -n[0]] }); }
-        const nf = lidN(-1, 0); faces.push({ pts: [Pl(x - w, -.4, Hb), Pl(x + w, -.4, Hb), Pl(x + w, -.4, Hb + C.lip + .4), Pl(x - w, -.4, Hb + C.lip + .4)], n: [0, nf[1], -nf[0]] });
+        const nf = lidN(-1, 0); faces.push({ pts: [Pl(x - w, -.4, Hb - LT), Pl(x + w, -.4, Hb - LT), Pl(x + w, -.4, Hb + C.lip + .4), Pl(x - w, -.4, Hb + C.lip + .4)], n: [0, nf[1], -nf[0]] });
         o += K.shadeBox(u, faces, L, 'iron', { outline: .35 });
         for (const h of [5, 18, 31]) { const p = Pc(x, 0, h); o += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".9" fill="#2a2e2c"/><circle cx="${f(p[0] - .3)}" cy="${f(p[1] - .3)}" r=".35" fill="#c8d4d0" opacity=".8"/>`; }
         for (const z of [8, 26, 44]) { const k = PROF.findIndex(q => q[0] >= z), q = PROF[k], p = Pl(x, q[0], q[1] + .6); o += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".9" fill="#2a2e2c"/><circle cx="${f(p[0] - .3)}" cy="${f(p[1] - .3)}" r=".35" fill="#c8d4d0" opacity=".8"/>`; }
@@ -178,7 +188,8 @@ module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 
         for (let i = 0; i < 10; i++) { const a = (-90 + i * 36 + 8) * Math.PI / 180, r = i % 2 ? 2.4 : 7; d += (i ? 'L' : 'M') + f(c[0] + Math.cos(a) * r) + ' ' + f(c[1] + Math.sin(a) * r); }
         fg += `<defs>${radGrad(g, c[0] - 2, c[1] - 2, 8, [[0, '#f0a070', 1], [.6, '#c05a38', 1], [1, '#5a2014', 1]])}</defs><path d="${d}Z" fill="url(#${g})" stroke="#3a140a" stroke-width=".45" stroke-linejoin="round"/>`
           + Array.from({ length: 5 }, (_, i) => { const a = (-90 + i * 72 + 8) * Math.PI / 180; return `<path d="M${f(c[0])} ${f(c[1])}L${f(c[0] + Math.cos(a) * 5.6)} ${f(c[1] + Math.sin(a) * 5.6)}" stroke="#ffd0a0" stroke-width=".5" stroke-dasharray=".5 .7" opacity=".7"/>`; }).join(''); }
-      for (const [x, n, l, sd] of [[18, 3, 20, 1], [44, 2, 14, 2], [Wc - 30, 3, 18, 3], [Wc - 2, 2, 22, 4]]) { const p = Pl(x, 0, Hb); fg += weed(p[0], p[1] + .4, l, n, sd, '#2e6a4a'); }
+      for (const [x, n, l, sd] of [[18, 3, 20, 1], [44, 2, 14, 2], [Wc - 30, 3, 18, 3], [Wc - 2, 2, 22, 4]]) { const p = Pl(x, 0, Hb - LT); fg += weed(p[0], p[1] + .4, l, n, sd, '#2e6a4a')
+        + `<g opacity="${f(.75 - Math.abs(x - Wc / 2) / Wc)}" style="mix-blend-mode:screen">${weed(p[0], p[1] + .4, l, n, sd, '#ff7a40')}</g>`; }
       { const p = Pc(Wc, 4, Hb); fg += weed(p[0], p[1], 26, 3, 6, '#2e6a4a'); } }
     // the chains: wrapped round the chest over the lid and under it; taut across the red gap; slack on the sand in front
     for (const [x, sd] of [[30, 3], [72, 4]]) {
@@ -188,8 +199,8 @@ module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 
       // the red light on the links in the gap
       { const a = Pl(x, -.6, Hb + .4), b = Pc(x + 1, -.6, Hb - .4); fg += `<path d="M${P2(a)}L${P2(b)}" stroke="#ff8a50" stroke-width="2.6" opacity=".35" stroke-linecap="round"/>`; } }
     // the loose ends lie slack on the sand, joined by a big padlock
-    fg += K.chain(u, L, [Pc(32, -1, 1), Pc(36, -16, 0), Pc(52, -30, 0), Pc(64, -26, 0)], { link: 5.2, seed: 7 }) + K.chain(u, L, [Pc(74, -1, 1), Pc(74, -14, 0), Pc(70, -24, 0)], { link: 5.2, seed: 8 });
-    { const p = Pc(67, -28, 0), g = K.mat('iron', L, { form: 'sphere', x1: p[0], y1: p[1] + 4, r: 6, u });
+    fg += K.chain(u, L, [Pc(32, -1, 1), Pc(38, -12, 0), Pc(52, -22, 0), Pc(64, -19, 0)], { link: 5.2, seed: 7 }) + K.chain(u, L, [Pc(74, -1, 1), Pc(74, -10, 0), Pc(70, -17, 0)], { link: 5.2, seed: 8 });
+    { const p = Pc(67, -20, 0), g = K.mat('iron', L, { form: 'sphere', x1: p[0], y1: p[1] + 4, r: 6, u });
       fg += K.contactShadow(u, p[0], p[1] + 9, 14, L, { ry: 2, opacity: .7 }) + `<defs>${g.defs}</defs><path d="M${f(p[0] - 3.4)} ${f(p[1] + 1)}V${f(p[1] - 3)}A3.4 3.4 0 0 1 ${f(p[0] + 3.4)} ${f(p[1] - 3)}V${f(p[1] + 1)}" stroke="#2a2e2c" stroke-width="1.6" fill="none"/>`
         + `<path d="M${f(p[0] - 5.4)} ${f(p[1] + 1)}h10.8v6q0 3 -5.4 3t-5.4 -3z" fill="${g.fill}" stroke="#0a0c0a" stroke-width=".5"/><path d="M${f(p[0])} ${f(p[1] + 3.6)}v2.6" stroke="#0a0c0a" stroke-width="1.1"/>`
         + `<path d="M${f(p[0] - 4.6)} ${f(p[1] + 2)}h4" stroke="#c8d4d0" stroke-width=".4" opacity=".6"/>`; }
@@ -202,8 +213,15 @@ module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 
     // sand jolted off the lid by the beat: a few grains in the air over the chest
     { const R = rng(31); for (let i = 0; i < 14; i++) { const p = Pl(10 + R() * 80, 4 + R() * 30, Hb + C.lip + 18 + R() * 10); fg += `<circle cx="${f(p[0])}" cy="${f(p[1] - R() * 8)}" r="${f(.35 + R() * .5)}" fill="#d8d0b0" opacity="${f(.5 + R() * .4)}"/>`; } }
     // ——— the light: the red heat of the gap, its glow in the fog round the lid, the cold veil, the under-glass dark ———
-    { const c = Pl(Wc / 2 - 8, 0, Hb); fg += K.localGlow(u, { x: c[0], y: c[1] + 2, color: '#ff6a3a', power: .7, radius: 34 }, { squash: .35 })
-      + K.localGlow(u, { x: c[0] + 6, y: c[1] - 8, color: '#ff8a5a', power: .3, radius: 70 }, { core: false }); }
+    { const c = Pl(Wc / 2, 0, Hb), rb = nid('ry', u), rg = nid('rg', u);
+      fg += K.localGlow(u, { x: c[0], y: c[1] + 5, color: '#ff6a3a', power: .7, radius: 34 }, { squash: .3 })
+        + K.localGlow(u, { x: c[0] + 4, y: c[1] - 8, color: '#ff8a5a', power: .3, radius: 70 }, { core: false });
+      // three beams out of the slit, up past the lip into the fog over the lid
+      fg += `<defs><filter id="${rb}" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="1.6"/></filter>${linGrad(rg, 0, c[1] + 4, 0, c[1] - 52, [[0, '#ffe0b8', .8], [.4, '#ff9a60', .32], [1, '#ff8a50', 0]])}</defs><g style="mix-blend-mode:screen" filter="url(#${rb})">`
+        + [[-26, -40, 5, 9], [2, -6, 4, 12], [24, 34, 4, 8]].map(([dx, tx, w0, w1]) => `<path d="M${f(c[0] + dx - w0)} ${f(c[1] + 4)}L${f(c[0] + tx - w1)} ${f(c[1] - 52)}H${f(c[0] + tx + w1)}L${f(c[0] + dx + w0)} ${f(c[1] + 4)}Z" fill="url(#${rg})"/>`).join('') + `</g>`
+        // glints of it on the lip's front face and on the iron above the lock
+        + [[-14, 2.6, 7], [6, 3.4, 10], [20, 2.4, 6]].map(([dx, dh, w]) => { const a = Pl(Wc / 2 + dx, -.3, Hb + dh); return `<path d="M${f(a[0])} ${f(a[1])}h${w}" stroke="#ffb080" stroke-width=".7" stroke-linecap="round" opacity=".6"/>`; }).join(''); }
+    fg += '</g>';
     fg += motes(20, 10, 40, 180, 100, '#dffff0', 9) + K.fog(u, L, { y: 160, h: 60, density: .3, seed: 12 });
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 150, 0, 290, [[0, '#040a08', 0], [.4, '#040a08', .45], [1, '#020504', .8]])}</defs><rect x="-10" y="150" width="220" height="140" fill="url(#${gl})"/>`; }
     fg += gloom(u, 100, 120, 0, -20, .25, '#020806');
