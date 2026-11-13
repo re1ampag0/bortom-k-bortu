@@ -3,13 +3,13 @@
 // of ports. The middle port of the upper tier is smashed: the planking round it torn open, the lid hanging by one
 // hinge, and inside the gun is thrown off its carriage — the barrel tipped up and sticking out over the broken sill,
 // the carriage on its side, one truck (wheel) flying out with the splinters, fire behind; the guns either side still
-// run out. Our next ball streaks in from behind us straight into the lower port, at the muzzle in it.
+// run out. Our next ball streaks in from behind us, a torn trail of smoke behind it, straight at the muzzle in the lower port.
 // Fixed against the first round: the hull was a flat brown plank texture and the ports black boxes — now a ship's
 // side with tumblehome (the top leaning away, lighter), a pale band along the upper ports, wales, the channel with
 // its deadeyes, chainplates and shrouds going up into the sunset; the kit's gun ports with their lids and tackles,
 // guns end-on in them; the overturned gun was a sprite upside down in the flames — now the barrel tipped up out of
 // the hole, the carriage on its side, the flying wheel (the brief's find); the ball came in flat from the edge — now
-// from behind us in perspective, its trail widening towards us.
+// from behind us in perspective, its smoke trail widening towards us.
 // Light: the low sun behind us on the left (key: the side glows warm, the wales throw shadows down); the fire in the
 // smashed port (local, orange: lights the hole's edges, the hanging lid and the smoke from below).
 'use strict';
@@ -94,9 +94,9 @@ module.exports = { name: 'Огонь по орудиям', kind: 'deck', status:
 
     // ——— the ports: the upper tier on the pale band (the left and right guns run out), the lower tier ———
     let ports = '';
-    for (const x of [22, 178]) { const y = UP.y + sheer(x); ports += K.gunPort(u, L, { x, y, s: UP.s, open: .95, kind: 'paint-ochre', seed: x });
+    for (const x of [22, 178]) { const y = UP.y + sheer(x); ports += K.gunPort(u, L, { x, y, s: UP.s, open: .72, kind: 'paint-ochre', seed: x });
       ports += muzzleEnd(u, L, x + 1, y - 7 * UP.s, 4.6) + glow(u, x, y - 7 * UP.s, 10, 8, '#000', .2); }
-    { const x = 140, y = DN.y + sheer(x); ports += K.gunPort(u, L, { x, y, s: DN.s, open: .9, kind: 'tar', seed: 9 }) + muzzleEnd(u, L, x - .6, y - 6.6 * DN.s, 4.2); }
+    { const x = 140, y = DN.y + sheer(x); ports += K.gunPort(u, L, { x, y, s: DN.s, open: .72, kind: 'tar', seed: 9 }) + muzzleEnd(u, L, x - .6, y - 6.6 * DN.s, 4.2); }
     { const x = 52, y = DN.y + sheer(x); ports += K.gunPort(u, L, { x, y, s: DN.s, open: 0, kind: 'tar', seed: 11 }); }
 
     // ——— the smashed port: the torn hole, the deck inside lit by the fire, the gun thrown off its carriage ———
@@ -132,6 +132,8 @@ module.exports = { name: 'Огонь по орудиям', kind: 'deck', status:
           hit += `<path d="M${f(c[0] + nx * r)} ${f(c[1] + ny * r)}L${f(c[0] - nx * r)} ${f(c[1] - ny * r)}" stroke="${rp.outline}" stroke-width="1.6"/><path d="M${f(c[0] + nx * r + ux * .8)} ${f(c[1] + ny * r + uy * .8)}L${f(c[0] - nx * r + ux * .8)} ${f(c[1] - ny * r + uy * .8)}" stroke="${rp.lit}" stroke-width=".5" opacity=".6"/>`; }
         hit += `<ellipse cx="${f(mz[0])}" cy="${f(mz[1])}" rx="5.2" ry="3.4" transform="rotate(${f(Math.atan2(uy, ux) * 180 / Math.PI + 90)} ${f(mz[0])} ${f(mz[1])})" fill="${rp.half}" stroke="${rp.outline}" stroke-width=".5"/>`
           + `<ellipse cx="${f(mz[0] + ux * -.2)}" cy="${f(mz[1])}" rx="2.4" ry="1.6" transform="rotate(${f(Math.atan2(uy, ux) * 180 / Math.PI + 90)} ${f(mz[0])} ${f(mz[1])})" fill="#050403"/>`
+          // the sunset on its top where it sticks out of the hole
+          + `<path d="M${f(br[0] + d[0] * .55 + nx * 5.2)} ${f(br[1] + d[1] * .55 + ny * 5.2)}L${f(mz[0] + nx * 4.4)} ${f(mz[1] + ny * 4.4)}" stroke="#ffc890" stroke-width=".9" opacity=".75" stroke-linecap="round"/>`
           // the fire's light along its underside, the trunnion sticking out
           + `<path d="M${f(br[0] - nx * 5.6)} ${f(br[1] - ny * 5.6)}L${f(mz[0] - nx * 4)} ${f(mz[1] - ny * 4)}" stroke="#ff8a30" stroke-width=".9" opacity=".7"/>`
           + K.shadeCyl(u, br[0] + d[0] * .4 + nx * 5.4, br[1] + d[1] * .4 + ny * 5.4, br[0] + d[0] * .4 + nx * 8, br[1] + d[1] * .4 + ny * 8, 1.6, Lf, 'iron', { outline: .35, ell: .5, face: 2 }); }
@@ -143,8 +145,8 @@ module.exports = { name: 'Огонь по орудиям', kind: 'deck', status:
           + `<path d="M${h0[0] + 14} ${h0[1] + 31}l-3 4l-2 -3l-3 4l-2 -4l-3 3" stroke="#e8b878" stroke-width=".6" fill="${rp.half}"/></g>`
           + `<circle cx="${h0[0] + 1}" cy="${h0[1] + 1}" r="1.5" fill="url(#iron${u})"/>`; }
       // the flying wheel: a truck thrown out of the hole to the right, spinning, its axle hole, a trail of splinters
-      { const c = [hx + 42, hy - 6], r = 5.6;
-        hit += `<g transform="rotate(-28 ${c[0]} ${c[1]})">` + K.shadeBox(u, [{ pts: [[c[0] - 1.6, c[1] - r], [c[0] + 1.6, c[1] - r], [c[0] + 1.6, c[1] + r], [c[0] - 1.6, c[1] + r]], n: 'right', grain: [0, 1] }], Lf, 'oak', { seed: 9, outline: .4 })
+      { const c = [hx + 44, hy - 8], r = 7.2;
+        hit += `<g transform="rotate(-28 ${c[0]} ${c[1]})">` + K.shadeBox(u, [{ pts: [[c[0] - 1.6, c[1] - r], [c[0] + 1.6, c[1] - r], [c[0] + 1.6, c[1] + r], [c[0] - 1.6, c[1] + r]], n: 'right', grain: [0, 1] }], L, 'oak', { seed: 9, outline: .4 })
           + `<ellipse cx="${c[0] - 1.6}" cy="${c[1]}" rx="${f(r * .55)}" ry="${r}" fill="#7a4a24" stroke="#1a0c06" stroke-width=".5"/><ellipse cx="${c[0] - 1.6}" cy="${c[1]}" rx="${f(r * .44)}" ry="${f(r * .82)}" fill="none" stroke="#c08a52" stroke-width=".4"/><ellipse cx="${c[0] - 1.6}" cy="${c[1]}" rx="1" ry="1.6" fill="#120804"/></g>`
           + `<path d="M${c[0] - 6} ${c[1] + 4}q-6 3 -12 4" stroke="#e8b878" stroke-width=".8" fill="none" opacity=".5" stroke-dasharray="1.4 1.6"/>`; }
       hit += shards(u, L, hx + 4, hy - 2, 40, 40, 11) + shards(u, L, hx + 30, hy - 12, 12, 18, 13, -1.6, .4);
@@ -155,12 +157,16 @@ module.exports = { name: 'Огонь по орудиям', kind: 'deck', status:
 
     // ——— our ball: from behind us, its trail widening towards us, straight at the muzzle in the lower port ———
     let shot = '';
-    { const b = [138.8, 101.4], tail = [96, 190], tr = nid('tr', u), tb = nid('tb', u), bg2 = nid('bg', u);
-      const d = [tail[0] - b[0], tail[1] - b[1]], l = Math.hypot(...d), nx = -d[1] / l, ny = d[0] / l;
-      shot += `<defs>${linGrad(tr, b[0], b[1], tail[0], tail[1], [[0, '#e8d8c0', .7], [.3, '#b8a490', .25], [.7, '#a89480', 0]])}<filter id="${tb}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.1"/></filter>`
-        + `${radGrad(bg2, b[0] - 1.2, b[1] - 1.4, 5.2, [[0, '#9aa2aa', 1], [.35, '#3e4246', 1], [1, '#0c0d0e', 1]])}</defs>`
-        + `<path d="M${f(b[0] + nx * 2.4)} ${f(b[1] + ny * 2.4)}L${f(tail[0] + nx * 6)} ${f(tail[1] + ny * 6)}L${f(tail[0] - nx * 6)} ${f(tail[1] - ny * 6)}L${f(b[0] - nx * 2.4)} ${f(b[1] - ny * 2.4)}Z" fill="url(#${tr})" filter="url(#${tb})"/>`
-        + `<circle cx="${b[0]}" cy="${b[1]}" r="3.6" fill="url(#${bg2})" stroke="#050505" stroke-width=".35"/><circle cx="${b[0] - 1.3}" cy="${b[1] - 1.3}" r=".75" fill="#fff0d8" opacity=".85"/>`; }
+    { const b = [129.4, 109.6], tail = [104, 150], tb = nid('tb', u), bg2 = nid('bg', u), RT = rng(5);
+      const d = [tail[0] - b[0], tail[1] - b[1]], l = Math.hypot(...d), ux = d[0] / l, uy = d[1] / l, nx = -uy, ny = ux;
+      // a short torn trail of powder smoke behind it, widening towards us, warm on the side of the sun
+      shot += `<defs><filter id="${tb}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation=".9"/></filter>`
+        + `${radGrad(bg2, b[0] - 1.6, b[1] - 1.8, 6.4, [[0, '#a8b0b8', 1], [.3, '#464a50', 1], [1, '#0c0d0e', 1]])}</defs><g filter="url(#${tb})">`
+        + Array.from({ length: 9 }, (_, k) => { const t = (k + 1) / 10, r = 1.6 + t * 6 + RT() * 1.4, o = (RT() - .5) * t * 5; const c = [b[0] + ux * l * t * .8 + nx * o, b[1] + uy * l * t * .8 + ny * o];
+            return `<circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r)}" fill="#5a4a48" opacity="${f(.42 * (1 - t) + .05)}"/><circle cx="${f(c[0] - r * .3)}" cy="${f(c[1] - r * .3)}" r="${f(r * .6)}" fill="#e8a070" opacity="${f(.22 * (1 - t))}"/>`; }).join('') + `</g>`
+        + [-1, 1].map(sd => `<path d="M${f(b[0] + ux * 6 + nx * sd * 2.4)} ${f(b[1] + uy * 6 + ny * sd * 2.4)}l${f(ux * 9)} ${f(uy * 9)}" stroke="#ffe0b0" stroke-width=".5" opacity=".55"/>`).join('')
+        + `<circle cx="${b[0]}" cy="${b[1]}" r="4.4" fill="url(#${bg2})" stroke="#050505" stroke-width=".4"/><circle cx="${b[0] - 1.6}" cy="${b[1] - 1.6}" r=".9" fill="#fff0d8" opacity=".9"/>`
+        + `<path d="M${b[0] - 4.1} ${b[1] + 1}A4.4 4.4 0 0 1 ${b[0] - .8} ${b[1] - 4.3}" stroke="#ffb070" stroke-width=".6" fill="none" opacity=".8"/>`; }
 
     // ——— the sea along her waterline (under the glass), the fire's glow on it ———
     const sea = K.foam(u, { x: 100, y: WL + .6, w: 220, h: 1.6, seed: 3, L })

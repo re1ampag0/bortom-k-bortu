@@ -7,7 +7,7 @@
 // facing us, painted red inside as on the Revenge, deck beams overhead, the deck running to one vanishing point at eye
 // level); the gun was a flat badge — now a truck carriage from behind with the barrel running out of the port; the
 // brazier was a flat bowl with balls lying on top — now a bowl in perspective with the coals heaped in it and the
-// shot sunk in them; the arm was a stiff tube — now one sleeve from the shoulder through the elbow, a leather gauntlet
+// shot sunk in them; the arm was a stiff tube — now one linen sleeve from the shoulder through the elbow, a leather gauntlet
 // whose fingers close round the tongs; the enemy was a sprite with two flames — now the kit's Endeavour hull-up with
 // fire on her deck and the smoke drifting.
 // Light: the brazier is the key (a point light low on the right: orange, hard shadows away from it); the sunset in
@@ -36,8 +36,8 @@ const skel = { horizon: HZ, eye: 1.5, light: 'the brazier, low right (key, orang
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const toward = (p, t) => [lerp(p[0], VX, t), lerp(p[1], HZ, t)];   // a point moved into the depth, towards the VP
-const LEATHER = { lit: '#a8743e', half: '#6a4222', core: '#5a361a', shadow: '#26140a', outline: '#100804' };
-const COAT = { lit: '#8e3a28', half: '#5a1e14', shadow: '#24080a', outline: '#100404' };
+const LEATHER = { lit: '#8e5c32', half: '#5a361c', core: '#4a2c16', shadow: '#22120a', outline: '#0e0604' };
+const SHIRT = { lit: '#f4dcbc', half: '#c49e78', shadow: '#5e4030', outline: '#24140a' };   // a linen sleeve: it reads against the red wall
 
 // ——— KIT-CANDIDATE: a red-hot round shot: white-yellow heart, orange body, a cherry-red edge, its own glow ———
 function hotShot(u, x, y, r, heat = 1) {
@@ -144,8 +144,8 @@ module.exports = { name: 'Калёные ядра', kind: 'deck', status: 'draft
         + K.localGlow(u, { x: bx, y: 130, color: '#ff8a30', power: .55, radius: 46 }, { squash: .3, core: false }); }
 
     // ——— the gunner's arm from the right: one sleeve shoulder -> elbow -> wrist, the gauntlet round the tongs ———
-    { const grip = [175, 69], tg = Math.atan2(BALL[1] - grip[1], BALL[0] - grip[0]) * 180 / Math.PI;   // the tongs' direction (handles -> jaws)
-      const base = { s: 2.05, m: -1, roll: 18, pitch: 14, pose: 'wrap', r: 1.05, tone: LEATHER, light: [-.55, .8], sw: .3, tilt: 4, palmW: 1.08 };
+    { const grip = [171, 68], tg = Math.atan2(BALL[1] - grip[1], BALL[0] - grip[0]) * 180 / Math.PI;   // the tongs' direction (handles -> jaws)
+      const base = { s: 2.25, m: -1, roll: 18, pitch: 14, pose: 'wrap', r: 1.05, tone: LEATHER, light: [-.55, .8], sw: .3, tilt: 4, palmW: 1.08 };
       let a = 250, h;
       for (let k = 0; k < 5; k++) { h = H.hand3(u, { ...base, a, grip }); const ang = Math.atan2(h.axis[1], h.axis[0]) * 180 / Math.PI;
         let d = tg - ang; while (d > 90) d -= 180; while (d < -90) d += 180; a += d; }
@@ -159,11 +159,11 @@ module.exports = { name: 'Калёные ядра', kind: 'deck', status: 'draft
         + [-1, 1].map(sd => `<path d="${rod(sd)}" stroke="#0a0808" stroke-width="2.1" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="${rod(sd)}" stroke="url(#${jg})" stroke-width="1.3" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`).join('')
         + `<path d="M${P2(at(16, -.5))}L${P2(end)}" stroke="#a89890" stroke-width=".4" opacity=".55"/>` + K.shadeSphere(u, piv[0], piv[1], 1.2, L, 'iron', { outline: .3 });
       const ball = hotShot(u, BALL[0], BALL[1], BR_R, 1) + glow(u, BALL[0], BALL[1], 22, 22, '#ffb040', .45);
-      // the sleeve of a dark red coat from the shoulder off the right edge, the elbow down, the forearm to the gauntlet
-      const w = h.wrist, sh = [228, 66], el = [206, 98];
+      // the linen sleeve from the shoulder off the right edge, the elbow down, the forearm to the gauntlet
+      const w = h.wrist, sh = [228, 76], el = [207, 100];
       const arm = H.cloth(u, { spine: [sh, [lerp(sh[0], el[0], .5) + 2, lerp(sh[1], el[1], .5)], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5) + 2], w],
-        w: [21, 19, 16.5, 14, 12.4], tone: COAT, lit: 1, rim: '#ffb070', rimSide: 1, rimOp: .45, seed: 4, drapes: 1, foldW: .8, sw: .4, capA: true,
-        cuff: { from: .74, k: 1.3, tone: LEATHER } });
+        w: [20, 18.4, 16, 13.6, 12], tone: SHIRT, lit: -1, rim: '#ffc890', rimSide: 1, rimOp: .3, seed: 4, drapes: 1, foldW: .8, sw: .4, capA: true,
+        cuff: { from: .8, k: 1.18, tone: LEATHER } });
       fg += ball + tongs;
       fg += arm + h.back + `<path d="M${P2(at(Math.hypot(BALL[0] - grip[0], BALL[1] - grip[1]) - 3, 0))}L${P2(end)}" stroke="#141010" stroke-width="2.6" stroke-linecap="round"/>` + h.front
         + K.localGlow(u, { x: BALL[0] + 6, y: BALL[1] - 2, color: '#ffb050', power: .45, radius: 26 }); }
