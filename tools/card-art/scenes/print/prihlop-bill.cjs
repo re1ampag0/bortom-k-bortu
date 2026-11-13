@@ -27,8 +27,9 @@ const WT = 22, WB = 178, WL = 12, WR = 188;           // the hull side behind hi
 const ZOOM = 1.35, ZO = [134.6, 100];
 const Z = p => [ZO[0] + (p[0] - ZO[0]) * ZOOM, ZO[1] + (p[1] - ZO[1]) * ZOOM];
 const HEAD = { c: [106, 72], r: 12.6 };               // (his units)
-const GRIP = [52, 68];                                // where his fist closes round the rope (his units)
-const BLOCK = [50, 40];                               // the block under the beam (his units)
+const GRIP = [50, 64];                                // where his fist closes round the rope (his units)
+const BLOCK = [69, 40];                               // the block under the beam (his units): the rope runs to it diagonally, off the frame post
+const ROPE_R = 1.9;                                   // the rope's radius (his units); the fist closes round exactly this
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: 80, y: -20, el: 64, color: '#a8f4d4', power: .8 },
   fill: { color: '#16302a', power: .35 }, rim: { az: 330, color: '#9ff0d0', power: .3 } };
 const skel = { horizon: VP[1], eye: 1.6, light: 'a narrow green shaft from the hatch grating upper middle-right (key); the hold dark (skel boxes as drawn before the mirror)', items: [
@@ -38,7 +39,7 @@ const skel = { horizon: VP[1], eye: 1.6, light: 'a narrow green shaft from the h
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const SKIN = { lit: '#bccaa8', half: '#7e9076', core: '#667a60', shadow: '#33422f', outline: '#121a10' };   // drowned grey-green
-const HAND = { lit: '#9cae8e', half: '#6a7c62', core: '#566a50', shadow: '#2c3a28', outline: '#10180e' };
+const HAND = { lit: '#94a486', half: '#627258', core: '#506248', shadow: '#2a3628', outline: '#10180e' };   // the face's tone, a step darker
 const COAT = { lit: '#4e5e52', half: '#28342c', shadow: '#101814', outline: '#040806' };
 const RIMC = '#9ff0d0';
 const toVP = (p, y) => { const k = (y - VP[1]) / (p[1] - VP[1]); return [VP[0] + (p[0] - VP[0]) * k, y]; };   // along the line to the VP, to height y
@@ -74,6 +75,9 @@ function weed(x, y, len, n, seed, col = '#2e5a40') {
       + `<path d="M${f(x0 + .3)} ${f(y)}q${f(sw)} ${f(l * .4)} ${f(sw * .3)} ${f(l * .7)}" stroke="#7ac0a0" stroke-width=".3" fill="none" opacity=".5"/>`; }
   return out;
 }
+// KIT-CANDIDATE: a rope that reads on a dark ground — a dark edge under it, K.rope, a pale lit strand along its top
+const ropeX = (u, L, pts, r, seed) => `<path d="${H.sp(pts)}" stroke="#030604" stroke-width="${f(r * 2 + 1)}" fill="none" stroke-linecap="round"/>` + K.rope(u, L, pts, { r, seed })
+  + `<g transform="translate(${f(-r * .3)} ${f(-r * .35)})"><path d="${H.sp(pts)}" stroke="#d8ecc8" stroke-width="${f(r * .5)}" fill="none" stroke-linecap="round" opacity=".42"/></g>`;
 const drop = (x, y) => `<path d="M${f(x)} ${f(y)}q-.9 1.4 0 2.2q.9 -.8 0 -2.2z" fill="#c8fff0" opacity=".75"/>`;
 
 module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
@@ -124,47 +128,63 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft
     // ——— Bill ———
     let man = '';
     // the coat: his body, the left side (our right) running into the wall — a mask fades it into the planks
-    const coat = [[56, 290], [60, 140], [62, 116], [70, 104], [84, 98], [97, 93], [112, 93], [126, 98], [140, 104], [152, 118], [160, 150], [164, 290]];
+    const coat = [[56, 290], [60, 140], [61, 124], [65, 110], [73, 102], [84, 98], [97, 93], [112, 93], [126, 98], [140, 104], [152, 118], [160, 150], [164, 290]];
     const mk = nid('mk', u), mg = nid('mg', u), cg = nid('cg', u);
-    man += `<defs>${linGrad(mg, 120, 0, 150, 0, [[0, '#ffffff', 1], [1, '#ffffff', 0]])}<mask id="${mk}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${mg})"/></mask>`
+    man += `<defs>${linGrad(mg, 112, 0, 146, 0, [[0, '#ffffff', 1], [1, '#ffffff', 0]])}<mask id="${mk}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${mg})"/></mask>`
       + `${linGrad(cg, 60, 90, 150, 120, [[0, COAT.lit, 1], [.35, COAT.half, 1], [1, COAT.shadow, 1]])}</defs>`;
     let body = `<path d="${H.sp(coat)}Z" fill="url(#${cg})" stroke="${COAT.outline}" stroke-width=".6"/>`;
     // the striped shirt in the V of the coat, the lapels, folds, the shaft's light on the left shoulder
     body += `<path d="M96 94L106 99L114 94L118 130L106 140L94 130Z" fill="#b8b8a4"/><path d="M95 104l20 -1M95 112l21 -1M95 120l22 -1M96 128l20 -1" stroke="#2a3a4a" stroke-width="2.2"/>`
       + `<path d="M96 94L86 134L102 140L106 99ZM114 94L124 134L108 140L106 99Z" fill="#2e3a32" stroke="${COAT.outline}" stroke-width=".5"/>`
-      + `<path d="M84 98Q72 102 66 112" stroke="${RIMC}" stroke-width="1" fill="none" opacity=".5"/><path d="M72 150q4 24 2 50M84 146q8 30 4 60M136 140q-6 30 -2 60" stroke="#040806" stroke-width="1" fill="none" opacity=".7"/>`
+      + `<path d="M84 98Q74 100 67 107" stroke="${RIMC}" stroke-width="1" fill="none" opacity=".5"/>`
+      // the armhole seam: the coat's edge over the sleeve root runs on as a stitched seam (no closed shoulder)
+      + `<path d="M61 124Q62 115 66 109" stroke="#5a7466" stroke-width=".35" fill="none" stroke-dasharray="1 .8" opacity=".7"/><path d="M72 150q4 24 2 50M84 146q8 30 4 60M136 140q-6 30 -2 60" stroke="#040806" stroke-width="1" fill="none" opacity=".7"/>`
       + `<path d="M96 94L86 134" stroke="#7aa898" stroke-width=".6" opacity=".5"/>` + cluster(rng(5), 64, 118, 12, 30, 4, 1.8);
     man += `<g mask="url(#${mk})">${body}</g>`;
     // the crust along the seam where he goes into the wood: barnacles, coral, weed
     let crust = '';
     { const R = rng(31); crust += cluster(R, 116, 96, 14, 30, 9, 2.6) + cluster(R, 124, 128, 14, 40, 8, 2.4) + cluster(R, 132, 104, 18, 10, 5, 2) + coral(130, 96, -60, 7, 3) + coral(126, 134, -20, 6, 4)
-      + weed(130, 100, 22, 3, 8, '#2e5a40') + cluster(R, 120, 170, 14, 40, 6, 2.6); }
+      + weed(130, 100, 22, 3, 8, '#2e5a40') + cluster(R, 120, 170, 14, 40, 6, 2.6)
+      // the seam now runs down the middle of his body: barnacles along it, on the neck and under the jaw
+      + cluster(R, 106, 104, 8, 24, 6, 2.2) + cluster(R, 104, 146, 9, 40, 6, 2.4) + cluster(R, 110, 90, 6, 6, 3, 1.6); }
 
     // the merge (scene units, over the zoomed figure): the strakes of the wall run on over his shoulder and side, the
     // seams bending over the shoulder's swell; wood grain where the coat has turned to wood
     let merge = '';
-    { const cid = nid('mc', u), wid = nid('mw', u), reg = [[118, 90], [130, 94], [144, 102], [156, 116], [166, 150], [170, 240]].map(Z).concat([[WR, 290], [WR, 40], [Z([150, 80])[0], 40]]);
-      merge += `<defs><clipPath id="${cid}"><path d="${H.sp(reg, true)}"/></clipPath><clipPath id="${wid}"><rect x="${WL}" y="${WT}" width="${WR - WL}" height="${290 - WT}"/></clipPath></defs><g clip-path="url(#${wid})"><g clip-path="url(#${cid})">`;
-      const bc = Z([140, 110]);
+    // the region: from his far cheek and temple down the neck and the middle of his body to the floor (his left half)
+    { const cid = nid('mc', u), wid = nid('mw', u), fm = nid('mf', u), fg2 = nid('mfg', u), tg = nid('mt', u);
+      const reg = [[104, 57], [117, 60], [120, 72], [116, 84], [108, 90], [105, 100], [104, 140], [104, 200], [105, 292]].map(Z).concat([[WR + 4, 292], [WR + 4, 30], [Z([112, 50])[0], 30]]);
+      const x0 = Z([100, 0])[0], x1 = Z([109, 0])[0];
+      merge += `<defs><clipPath id="${cid}"><path d="${H.sp(reg, true)}"/></clipPath><clipPath id="${wid}"><rect x="${WL}" y="${WT}" width="${WR - WL}" height="${290 - WT}"/></clipPath>`
+        + `${linGrad(fg2, x0, 0, x1, 0, [[0, '#ffffff', 0], [1, '#ffffff', 1]])}<mask id="${fm}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${fg2})"/></mask>`
+        + `${linGrad(tg, x0, 0, Z([150, 0])[0], 0, [[0, '#24382f', 0], [.5, '#24382f', .35], [1, '#24382f', .6]])}</defs><g clip-path="url(#${wid})"><g clip-path="url(#${cid})"><g mask="url(#${fm})">`
+        + `<rect x="${f(x0)}" y="20" width="${f(WR - x0 + 6)}" height="272" fill="url(#${tg})"/>`;
+      const bc = Z([140, 110]), fc = Z(HEAD.c);
       for (let k = 0, y = WT; y < 290; k++, y += 15.6) {
-        const bow = x => { const dx = (x - bc[0]) / 35, dy = (y - bc[1]) / 54; return 8 * Math.exp(-dx * dx - dy * dy); };
-        const pts = []; for (let x = 100; x <= WR + 4; x += 4) pts.push([x, y + 15.2 - bow(x) * (y < bc[1] - 10 ? -.5 : 1)]);
+        // the seams bow over the shoulder's swell and, a little, round his cheek
+        const bow = x => { const dx = (x - bc[0]) / 35, dy = (y - bc[1]) / 54, ex = (x - fc[0]) / 16, ey = (y - fc[1]) / 18; return 8 * Math.exp(-dx * dx - dy * dy) + 3 * Math.exp(-ex * ex - ey * ey); };
+        const pts = []; for (let x = x0 - 4; x <= WR + 4; x += 3) pts.push([x, y + 15.2 - bow(x) * (y < bc[1] - 10 ? -.5 : 1)]);
         merge += `<path d="${H.sp(pts)}" stroke="#030605" stroke-width="1.3" fill="none"/><path d="${H.sp(pts.map(p => [p[0], p[1] + 1.3]))}" stroke="#5a8a78" stroke-width=".5" fill="none" opacity=".35"/>`; }
-      { const R = rng(9); for (let i = 0; i < 34; i++) { const x = 118 + R() * 60, y = 92 + R() * 190; merge += `<path d="M${f(x)} ${f(y)}q${f(6 + R() * 6)} ${f((R() - .5) * 2)} ${f(12 + R() * 10)} ${f((R() - .5) * 1.4)}" stroke="#3a5a4c" stroke-width=".45" fill="none" opacity=".5"/>`; } }
-      merge += `</g></g>`; }
+      { const R = rng(9); for (let i = 0; i < 44; i++) { const x = x0 + R() * (WR - x0), y = 46 + R() * 240; merge += `<path d="M${f(x)} ${f(y)}q${f(6 + R() * 6)} ${f((R() - .5) * 2)} ${f(12 + R() * 10)} ${f((R() - .5) * 1.4)}" stroke="#3a5a4c" stroke-width=".45" fill="none" opacity=".5"/>`; } }
+      merge += `</g></g></g>`; }
 
     // ——— the free arm (his right, our left): raised, one sleeve to the cuff; the fist round the rope ———
-    const hR = handOn(u, { s: 2.5, m: 1, roll: 24, pitch: 12, pose: 'wrap', r: 1.4, tone: HAND, light: [-.4, -.9], sw: .3, tilt: 28, palmW: .8, fingerW: .9, nails: true }, GRIP, -88, -130);
-    const SH = [80, 104], EL = [58, 97];
-    const sleeve = H.cloth(u, { spine: [SH, [lerp(SH[0], EL[0], .5), lerp(SH[1], EL[1], .5) + 1], EL, [lerp(EL[0], hR.wrist[0], .5) + 1, lerp(EL[1], hR.wrist[1], .5)], hR.wrist], w: [14.6, 13.4, 11.8, 10, 8.8], tone: COAT, lit: 1, rim: RIMC, rimSide: 1, rimOp: .55, seed: 4, drapes: 1, sw: .45, capA: true, roundA: .9,
-      cuff: { from: .9, k: 1.04, tone: { lit: '#3e4c42', half: '#202a24', shadow: '#0c120e', outline: '#040806' } } });
-    // the rope: from the block straight down into his fist, the slack tail below it hanging down past his side
+    // the fist: a quarter smaller than before, the face's tone, the fingers closed round a grip of the rope's own radius,
+    // its axis laid along the rope's diagonal to the block
+    const HS = 1.9, ropeTop = [BLOCK[0] - .4, BLOCK[1] + 7.2], tAx = Math.atan2(ropeTop[1] - GRIP[1], ropeTop[0] - GRIP[0]) * 180 / Math.PI;
+    const hR = handOn(u, { s: HS, m: 1, roll: 24, pitch: 12, pose: 'wrap', r: ROPE_R / HS, tone: HAND, light: [-.4, -.9], sw: .28, tilt: 28, palmW: .8, fingerW: .9, nails: true }, GRIP, tAx, -130);
+    // one sleeve from the coat's shoulder corner (its root under the coat, the armhole seam over it) up to the elbow,
+    // then up to the wrist, narrowing all the way; the cuff as wide as the forearm
+    const SH = [70, 112], EL = [51, 93], W = hR.wrist;
+    const sleeve = H.cloth(u, { spine: [SH, [lerp(SH[0], EL[0], .5) - .6, lerp(SH[1], EL[1], .5) + .6], EL, [lerp(EL[0], W[0], .5) - .8, lerp(EL[1], W[1], .5)], W], w: [15.4, 13.2, 11.2, 9.2, 7.6], tone: COAT, lit: 1, rim: RIMC, rimSide: 1, rimOp: .55, seed: 4, drapes: 1, sw: .45, capA: true, roundA: .9,
+      cuff: { from: .88, k: 1.0, tone: { lit: '#3e4c42', half: '#202a24', shadow: '#0c120e', outline: '#040806' } } });
+    // the rope: taut from the block down the diagonal into his fist and out of it, the slack tail hanging clear of the post
     let v = hR.axis; if (v[1] > 0) v = [-v[0], -v[1]];
-    const g = hR.grip, top = [g[0] + v[0] * 7, g[1] + v[1] * 7], bot = [g[0] - v[0] * 7, g[1] - v[1] * 7];
-    const ropeUp = K.rope(u, L, [[BLOCK[0] + 1, BLOCK[1] + 7], top, g], { r: 1.4, seed: 3 });
-    const ropeDn = K.rope(u, L, [g, bot, [bot[0] + 2, bot[1] + 20], [50, 130], [46, 180], [50, 240], [46, 292]], { r: 1.4, seed: 4 });
+    const g = hR.grip, top = [g[0] + v[0] * 6, g[1] + v[1] * 6], bot = [g[0] - v[0] * 6, g[1] - v[1] * 6];
+    const ropeUp = ropeX(u, L, [ropeTop, top, g], ROPE_R, 3);
+    const ropeDn = ropeX(u, L, [g, bot, [bot[0] - 2.4, bot[1] + 9], [41.4, 104], [42, 150], [40.6, 210], [41.6, 292]], ROPE_R, 4);
     // the block on its strop from an eye bolt in the beam; the hauling part away along the deckhead to the right
-    let block = K.rope(u, L, [[BLOCK[0] - 3, BLOCK[1] - 4], [40, 34], [20, 28], [-30, 20]], { r: 1.2, seed: 5 })
+    let block = ropeX(u, L, [[BLOCK[0] - 3, BLOCK[1] - 4], [56, 33], [30, 27], [-30, 20]], 1.5, 5)
       + K.shadeCyl(u, BLOCK[0], BLOCK[1] - 10, BLOCK[0], BLOCK[1] - 5, 1.2, L, 'iron', { outline: .3 })
       + `<ellipse cx="${BLOCK[0]}" cy="${BLOCK[1] - 11}" rx="2.2" ry="1.2" fill="none" stroke="url(#iron${u})" stroke-width="1"/>`;
     { const bgd = nid('bk', u), x = BLOCK[0], y = BLOCK[1]; block += `<defs>${linGrad(bgd, x - 6, 0, x + 6, 0, [[0, '#8a9c7a', 1], [.35, '#4e5a3e', 1], [1, '#1a2016', 1]])}</defs>`
@@ -176,7 +196,11 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft
     // ——— the head: 3/4 to our left, nodding, half-shut eyes, drowned skin, stubble; the knitted cap ———
     const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 8, tone: SKIN, light: [-.55, -.85], warm: { color: '#9ff0d0', op: .22 },
       eye: 'half', look: [-.3, .2], brow: 'frown', mouth: .05, smile: -.25, lips: '#4a5444', iris: '#8ab0a0', hair: { style: 'short', color: '#8a8c84' }, hairColor: '#8a8c84', beard: 'short', noseL: 1.1 });
-    let face = `<path d="M100 82L100.6 95L114 95L114.6 82Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/><path d="M101 88q6 3 13 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".6"/>`
+    // the neck: narrower than the head, soft sides flaring into the collar, the chin's shadow on it
+    const nkS = nid('nk', u);
+    let face = `<defs>${radGrad(nkS, 106.5, 83.5, 7, [[0, '#0e160c', .8], [1, '#0e160c', 0]])}</defs>`
+      + `<path d="M102.6 81Q103.4 88 101.4 95.4L113.4 95.4Q111.2 88 111.8 81Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/>`
+      + `<ellipse cx="106.8" cy="86.4" rx="6.4" ry="3.6" fill="url(#${nkS})"/><path d="M104 91q3 1.4 6.4 -.2" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".5"/>`
       + hd.svg + rimArc(hd, { r: HEAD.r, light: [-.55, -.85], color: '#1a2a24', span: 50, opacity: .5 });
     { const Q = hd.Q, dp = hd.depth;
       // barnacles grown into his left cheek and jaw (our right), the skin round them darker and lumpy
@@ -206,8 +230,8 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft
       { const n = Q(-.02, .3, 1.12); face += drop(n[0] - .4, n[1] + 1) + glow(u, ...Q(-.4, -.3, .8), 8, 6, '#c8fff0', .18); } }
 
     // ——— assemble: the wall and the merge, the body; the rope, the sleeve and fist; the head ———
-    let fig = man + face + ropeDn + sleeve + hR.back + ropeUp + hR.front + block;
-    { const k = hR.P(4.6, -.4, .2); fig += glow(u, k[0], k[1], 9, 8, '#bff8e0', .22); }
+    let fig = ropeDn + sleeve + man + face + hR.back + ropeUp + hR.front + block;
+    { const k = hR.P(4.6, -.4, .2); fig += glow(u, k[0], k[1], 7, 6, '#bff8e0', .08); }
     // the figure's own crust over the merge (his units, after the merge's planks): barnacles, coral, weed on the seam
     let fg = `<g transform="translate(${ZO[0]} ${ZO[1]}) scale(${ZOOM}) translate(${-ZO[0]} ${-ZO[1]})">${fig}</g>` + merge + `<g transform="translate(${ZO[0]} ${ZO[1]}) scale(${ZOOM}) translate(${-ZO[0]} ${-ZO[1]})">${crust}</g>`;
     // ——— light and air: the shaft's dust, the dark of the hold, the under-glass gloom ———

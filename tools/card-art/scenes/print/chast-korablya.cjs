@@ -21,18 +21,18 @@ const { glow, gloom, motes, woodTex } = PK;
 
 const RAIL = 30, WB = 262;                            // the rail's underside (the wall's top) and the deck line (off the picture)
 const SY = 13.4;                                      // a strake's height
-const HEAD = { c: [104, 64], r: 13 };
-const SH = [80, 94], EL = [50, 86], WR = [24, 72];    // his right arm (our left): shoulder, elbow, wrist
+const HEAD = { c: [110, 60], r: 16 };
+const SH = [80, 100], EL = [52, 136], WR = [42, 94];  // his right arm (our left): shoulder, elbow down at his side, wrist raised
 const light = { time: 'fog', haze: .6, key: { type: 'moon', x: 30, y: -30, el: 50, color: '#cfeee0', power: .7 }, fill: { color: '#1e3a32', power: .4 },
   rim: { az: 300, color: '#bff0dc', power: .3 }, locals: [{ x: 166, y: 62, color: '#9effd0', power: .4, radius: 26 }, { x: 52, y: 122, color: '#9effd0', power: .4, radius: 26 }] };
 const skel = { horizon: HEAD.c[1], eye: 1.6, light: 'the moon in the fog upper left, over the rail (key): lit on the left, shadows down-right; the two souls glow green on the planks', items: [
   ['fog over the rail', 0, 0, 200, RAIL - 6, 'sky'], ['rail', 0, RAIL, 200, 8, 'bulwark top'], ['bulwark planking', 0, WB, 200, WB - RAIL, 'wall, on the deck (off the picture)'],
-  ['sailor', 62, 290, 84, 240, 'stands on the deck (feet off the frame), back to the wall, half grown into it'], ['arm and hand', 8, 100, 80, 44, 'pressed to the planking'],
-  ['soul R', 156, 74, 20, 24, 'sinking into the planks'], ['soul L', 42, 132, 20, 24, 'sinking into the planks'], ['split planks', 168, 100, 32, 60, 'the wall, right edge']] };
+  ['sailor', 62, 290, 100, 250, 'stands on the deck (feet off the frame), back to the wall, half grown into it'], ['arm and hand', 26, 140, 60, 76, 'forearm up, the hand flat on the planking'],
+  ['soul R', 160, 80, 20, 24, 'sinking into the planks'], ['soul L', 8, 124, 20, 24, 'sinking into the planks'], ['split planks', 168, 100, 32, 60, 'the wall, right edge']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const SKIN = { lit: '#c8cfae', half: '#8c9a7e', core: '#728468', shadow: '#3a4a36', outline: '#121a10' };   // pale, sea-cold
-const WOOD = { lit: '#9a8a66', half: '#5e543c', core: '#4a422e', shadow: '#2a2618', outline: '#0e0c06' };     // the face gone to wood
+const WOOD = { lit: '#b0905e', half: '#76583a', core: '#5e442a', shadow: '#2e2014', outline: '#0e0a04' };     // the face gone to wood
 const COAT = { lit: '#4a5a52', half: '#26322c', shadow: '#0e1612', outline: '#040806' };
 const RIMC = '#bff0dc';
 // KIT-CANDIDATE: a barnacle (as in prihlop-bill.cjs)
@@ -88,101 +88,98 @@ module.exports = { name: 'Часть корабля — часть команд�
     // the frames (top timbers) at both edges, darker, with their shadow on the planks
     for (const x of [-4, 192]) wall += `<rect x="${x}" y="${RAIL + 8}" width="12" height="${WB - RAIL}" fill="#1a2018"/><rect x="${x}" y="${RAIL + 8}" width="12" height="${WB - RAIL}" fill="url(#oakH${u})" opacity=".3"/>`
       + `<path d="M${x + .6} ${RAIL + 8}V${WB}" stroke="#8ab0a0" stroke-width=".6" opacity=".4"/><rect x="${x + 12}" y="${RAIL + 8}" width="4" height="${WB - RAIL}" fill="#000" opacity=".3"/>`;
-    // out at the right edge the old wall is still broken: a split plank with the fog through it, a sprung end
-    { const sp = [[164, RAIL + 8 + SY * 3 + 4], [192, RAIL + 8 + SY * 3 + 5.6], [192, RAIL + 8 + SY * 3 + 8], [170, RAIL + 8 + SY * 3 + 7]];
-      wall += `<path d="M${sp.map(P2).join('L')}Z" fill="#5a7a6e"/><path d="M${P2(sp[0])}L${P2(sp[1])}" stroke="#020403" stroke-width=".6"/><path d="M${P2(sp[3])}L${P2(sp[2])}" stroke="#a8c8b8" stroke-width=".4" opacity=".7"/>`;
-      const y2 = RAIL + 8 + SY * 6; wall += `<path d="M176 ${y2 + 2}L192 ${y2 + 1}L192 ${y2 + 5}L180 ${y2 + 4.4}Z" fill="#4a6a5e"/><path d="M178 ${y2 + 2}l-5 -3l3 4z" fill="#3a4434" stroke="#0a0e08" stroke-width=".3"/>`
-        + `<path d="M150 ${y2 + 7}l14 -1M140 ${RAIL + 8 + SY * 5 + 6}l22 1" stroke="#020403" stroke-width=".7"/>`; }
-    // round him the planks are drawn in tight: their seams bend towards him and the grain swirls round (the wall made strong)
-    let pull = '';
-    { const cid = nid('pc', u), c = [112, 120];
-      pull += `<defs><clipPath id="${cid}"><rect x="70" y="${RAIL + 8}" width="104" height="${WB - RAIL}"/></clipPath></defs><g clip-path="url(#${cid})">`;
-      for (let y = RAIL + 8 + SY; y < WB; y += SY) { const pts = []; for (let x = 70; x <= 174; x += 4) { const dx = (x - c[0]) / 34, dy = (y - c[1]) / 60, b = 5 * Math.exp(-dx * dx - dy * dy); pts.push([x, y - .4 + b * Math.sign(c[1] - y)]); }
-        pull += `<path d="${H.sp(pts)}" stroke="#030504" stroke-width="1.1" fill="none"/>`; }
-      const R = rng(12); for (let i = 0; i < 40; i++) { const a = R() * Math.PI * 2, rr = 26 + R() * 40, x = c[0] + Math.cos(a) * rr, y = c[1] + Math.sin(a) * rr * 1.5; pull += `<path d="M${f(x)} ${f(y)}q${f(-Math.sin(a) * 8)} ${f(Math.cos(a) * 8)} ${f(-Math.sin(a) * 16)} ${f(Math.cos(a) * 14)}" stroke="#5a6a52" stroke-width=".4" fill="none" opacity=".45"/>`; }
-      pull += '</g>' + PK.nails([[150, 104], [150, 118], [146, 146], [86, 140], [84, 168]], '#141a12', .7); }
-    wall += pull;
+    // out at the right edge the old wall is still broken: a split strake with the fog showing through, a sprung end
+    { const y = RAIL + 8 + SY * 4, gap = [[174, y + 5.4], [178, y + 4.6], [183, y + 5.6], [188, y + 4.2], [194, y + 5], [194, y + 8.4], [188, y + 9.2], [183, y + 8], [178, y + 9], [174, y + 7.4]];
+      wall += `<path d="M${gap.map(P2).join('L')}Z" fill="#6a8a7e"/><path d="M${gap.slice(0, 5).map(P2).join('L')}" stroke="#020403" stroke-width=".6" fill="none"/><path d="M${gap.slice(5).map(P2).join('L')}" stroke="#a8c8b8" stroke-width=".4" fill="none" opacity=".7"/>`;
+      const y2 = RAIL + 8 + SY * 7; wall += `<path d="M180 ${y2 + 4}L194 ${y2 + 3.4}L194 ${y2 + 7}L184 ${y2 + 6.6}Z" fill="#4a6a5e"/><path d="M181 ${y2 + 4.2}l-6 -3.4l3.4 5z" fill="#3a4434" stroke="#0a0e08" stroke-width=".3"/>`; }
+    // round him the planks are drawn in tight: their seams bend in towards him (the wall made strong), new treenails
+    { const cid = nid('pc', u), c = [112, 116];
+      let pull = `<defs><clipPath id="${cid}"><rect x="60" y="${RAIL + 8}" width="120" height="${WB - RAIL}"/></clipPath></defs><g clip-path="url(#${cid})">`;
+      for (let y = RAIL + 8 + SY; y < WB; y += SY) { const pts = []; for (let x = 60; x <= 180; x += 4) { const dx = (x - c[0]) / 40, dy = (y - c[1]) / 70, b = 4.4 * Math.exp(-dx * dx - dy * dy); pts.push([x, y - .4 + b * Math.sign(c[1] - y)]); }
+        pull += `<path d="${H.sp(pts)}" stroke="#030504" stroke-width="1.2" fill="none"/>`; }
+      wall += pull + '</g>' + [[156, 52], [160, 66], [158, 80], [62, 52], [60, 66]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.1" fill="#4a4a30" stroke="#0a0c06" stroke-width=".3"/><circle cx="${x - .3}" cy="${y - .3}" r=".4" fill="#a8a880"/>`).join(''); }
 
     // ——— the man ———
     let man = '';
     // the coat: shoulders against the wall, the body down out of the picture; his left side (our right) fades into the planks
-    const coat = [[68, 290], [70, 150], [70, 112], [74, 98], [86, 90], [98, 86], [110, 86], [122, 89], [134, 96], [142, 112], [146, 150], [150, 290]];
+    const coat = [[62, 290], [64, 160], [66, 118], [72, 104], [86, 96], [100, 92], [120, 92], [138, 96], [152, 106], [160, 124], [164, 160], [168, 290]];
     const mk = nid('mk', u), mg = nid('mg', u), cg = nid('cg', u);
-    man += `<defs>${linGrad(mg, 118, 0, 148, 0, [[0, '#ffffff', 1], [1, '#ffffff', 0]])}<mask id="${mk}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${mg})"/></mask>`
-      + `${linGrad(cg, 66, 90, 150, 130, [[0, COAT.lit, 1], [.35, COAT.half, 1], [1, COAT.shadow, 1]])}</defs>`;
+    man += `<defs>${linGrad(mg, 134, 0, 166, 0, [[0, '#ffffff', 1], [1, '#ffffff', 0]])}<mask id="${mk}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${mg})"/></mask>`
+      + `${linGrad(cg, 62, 96, 166, 140, [[0, COAT.lit, 1], [.35, COAT.half, 1], [1, COAT.shadow, 1]])}</defs>`;
     let body = `<path d="${H.sp(coat)}Z" fill="url(#${cg})" stroke="${COAT.outline}" stroke-width=".6"/>`;
-    // the open shirt under the coat, the lapels, folds, a sash low down; the light on his right shoulder (our left)
-    body += `<path d="M95 87L104 96L114 87L118 138L104 146L92 138Z" fill="#a8ac98"/><path d="M98 96q6 6 12 0" stroke="#5a6050" stroke-width=".6" fill="none"/>`
-      + `<path d="M95 87L88 132L100 140L104 96ZM114 87L122 132L108 140L104 96Z" fill="#2a3630" stroke="${COAT.outline}" stroke-width=".5"/>`
-      + `<path d="M95 87L88 132" stroke="#7aa898" stroke-width=".6" opacity=".55"/><path d="M76 150q4 30 2 60M88 146q6 36 4 70M134 140q-4 40 -2 70" stroke="#040806" stroke-width="1" fill="none" opacity=".7"/>`
-      + `<path d="M70 176q36 8 78 -2l0 10q-40 10 -78 2z" fill="#4a2018" opacity=".85"/><path d="M70 176q36 8 78 -2" stroke="#8a4a3a" stroke-width=".6" fill="none"/>`;
+    // the open shirt under the coat, the lapels, folds, a sash low down
+    body += `<path d="M100 92L110 104L122 92L127 148L110 158L96 148Z" fill="#a4aa96"/><path d="M103 103q7 7 14 0" stroke="#5a6050" stroke-width=".7" fill="none"/><path d="M110 112v40" stroke="#6a7060" stroke-width=".5" opacity=".6"/>`
+      + `<path d="M100 92L91 144L106 152L110 104ZM122 92L131 144L116 152L110 104Z" fill="#26322c" stroke="${COAT.outline}" stroke-width=".5"/>`
+      + `<path d="M100 92L91 144" stroke="#7aa898" stroke-width=".7" opacity=".55"/><path d="M80 160q4 30 2 60M94 156q6 36 4 70M140 150q-4 40 -2 70" stroke="#040806" stroke-width="1" fill="none" opacity=".7"/>`;
     man += `<g mask="url(#${mk})">${body}</g>`;
     // the neck: about a third of the head, into the open collar
-    man += `<path d="M97 74L98 90Q104 94 111 89L111 74Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/><path d="M98 80q2 6 1 10" stroke="${SKIN.lit}" stroke-width=".8" fill="none" opacity=".5"/><path d="M106 84q3 2 5 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".7"/>`;
+    man += `<path d="M101 74L102 96Q110 101 119 95L119 74Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/><path d="M102.6 82q2 7 1 13" stroke="${SKIN.lit}" stroke-width=".9" fill="none" opacity=".5"/><path d="M112 88q4 3 7 0" stroke="${SKIN.shadow}" stroke-width=".7" fill="none" opacity=".7"/>`;
 
-    // ——— the arm: one sleeve from the shoulder through the elbow to the cuff, pressed along the planks; the open hand
-    // flat on the wood, back to us, finger tips under the strake above ———
-    const hand = H.hand3(u, { at: WR, a: -150, s: 2.15, m: 1, roll: 0, pose: 'open', spread: 6, tone: SKIN, light: [-.5, -.86], sw: .3, palmW: .8, fingerW: .92, nails: true });
-    const sleeve = H.cloth(u, { spine: [SH, [lerp(SH[0], EL[0], .5), lerp(SH[1], EL[1], .5) + .6], EL, [lerp(EL[0], WR[0], .5) + .4, lerp(EL[1], WR[1], .5) + .6], WR], w: [14, 12.4, 11, 9.6, 8.4], tone: COAT, lit: -1, rim: RIMC, rimSide: -1, rimOp: .55, seed: 5, drapes: 1, sw: .45, capA: true, roundA: .9,
+    // ——— the arm: one sleeve from the shoulder down to the elbow at his side, the forearm up along the planks to the
+    // cuff; the open hand flat on the wood beside his head, back to us, the finger tips already sunk into the strake ———
+    const hand = H.hand3(u, { at: WR, a: -97, s: 2.7, m: -1, roll: 0, pose: 'open', spread: 5, tone: SKIN, light: [-.5, -.86], sw: .32, palmW: .8, fingerW: .9, nails: true });
+    const sleeve = H.cloth(u, { spine: [SH, [lerp(SH[0], EL[0], .5) - 1.4, lerp(SH[1], EL[1], .5)], EL, [lerp(EL[0], WR[0], .5) - 1.6, lerp(EL[1], WR[1], .5)], WR], w: [16, 14.4, 13, 11.4, 10], tone: COAT, lit: 1, rim: RIMC, rimSide: 1, rimOp: .55, seed: 5, drapes: 1, sw: .45, capA: true, roundA: .9,
       cuff: { from: .86, k: 1.1, tone: { lit: '#4a5a50', half: '#24302a', shadow: '#0c120e', outline: '#040806' } } });
-    // the plank wrapping the forearm: two bands of wood grown out of the wall, curled round it, nailed; a shadow under each
+    // the strakes grown over the forearm: two bands of the wall's own planking bulging over it, lit on top, their
+    // ends running back into the wall without a break; nails; barnacles on them
     let wrap = '';
-    { const T = (t, s) => { const a = [lerp(EL[0], WR[0], t), lerp(EL[1], WR[1], t)], d = [WR[0] - EL[0], WR[1] - EL[1]], l = Math.hypot(...d), n = [-d[1] / l, d[0] / l]; return [a[0] + n[0] * s, a[1] + n[1] * s]; };
-      for (const [t0, t1, sd] of [[.28, .46, 1], [.6, .76, 2]]) {
-        const a = T(t0, -7.6), b = T(t0 + .05, 7.4), c = T(t1 + .05, 7.4), d = T(t1, -7.6), wg = nid('wg', u), mid0 = T((t0 + t1) / 2, -9.5), mid1 = T((t0 + t1) / 2 + .05, 9.2);
-        wrap += `<path d="M${P2(T(t0 + .02, -7))}L${P2(T(t1 + .02, -7))}L${P2(T(t1 + .07, 8))}L${P2(T(t0 + .07, 8))}Z" fill="#000" opacity=".35"/>`
-          + `<defs>${linGrad(wg, a[0], a[1], b[0], b[1], [[0, '#2a2a1c', 1], [.3, '#7a7656', 1], [.55, '#5a5840', 1], [1, '#1e1e14', 1]])}</defs>`
-          + `<path d="M${P2(a)}Q${P2(mid0)} ${P2(d)}L${P2(c)}Q${P2(mid1)} ${P2(b)}Z" fill="url(#${wg})" stroke="#0a0c06" stroke-width=".45"/>`
-          + `<path d="M${P2(T(t0 + .03, -6))}Q${P2(T((t0 + t1) / 2 + .03, -7.6))} ${P2(T(t1 + .03, -6))}" stroke="#c8d0b0" stroke-width=".4" fill="none" opacity=".6"/>`
-          + [-.3, .3].map(k => { const p = T((t0 + t1) / 2 + .02, k * 10); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".6" fill="#0a0c06"/>`; }).join('')
-          + Array.from({ length: 3 }, (_, i) => `<path d="M${P2(T(t0 + .04 + i * .05, -6.4))}L${P2(T(t0 + .07 + i * .05, 6.4))}" stroke="#2a2a1c" stroke-width=".3" opacity=".5"/>`).join('') + cluster(rng(sd), ...T(t1 - .04, 3), 4, 3, 2, 1.2); } }
-    // coral and barnacles over the wrist and the back of the hand: the sea's growth taking him with the wood
-    const growth = coral(WR[0] + 4, WR[1] + 2, -100, 6, 4, 1.4) + coral(WR[0] + 8, WR[1] - 3, -150, 5, 6, 1.2) + barn(WR[0] + 2, WR[1] + 4, 1.6, 20) + barn(WR[0] + 6, WR[1] + 6, 1.2, -10) + barn(WR[0] - 2, WR[1] - 1, 1.1, 30);
-    // the finger tips under the strake above: its lower edge grown down over them, splintered
-    let tips = '';
-    { const y = RAIL + 8 + SY * 2 - .4, yt = Math.min(...hand.joints.slice(0, 4).map(j => j[j.length - 1][1]));
-      const top = Math.max(y - 13, yt - 1.2), xs = hand.joints.slice(0, 4).map(j => j[j.length - 1][0]), x0 = Math.min(...xs) - 4, x1 = Math.max(...xs) + 4, wg = nid('tp', u);
-      tips += `<defs>${linGrad(wg, 0, top, 0, top + 8, [[0, '#3a4434', 1], [1, '#262e22', 1]])}</defs><path d="M${f(x0 - 6)} ${f(top - 2)}H${f(x1 + 6)}V${f(top + 3)}Q${f(x1 + 2)} ${f(top + 4.4)} ${f(x1)} ${f(top + 5.6)}L${f((x0 + x1) / 2 + 3)} ${f(top + 4)}L${f((x0 + x1) / 2)} ${f(top + 6.4)}L${f(x0 + 2)} ${f(top + 4.6)}Q${f(x0 - 2)} ${f(top + 4)} ${f(x0 - 6)} ${f(top + 3)}Z" fill="url(#${wg})"/>`
-        + `<path d="M${f(x1)} ${f(top + 5.6)}L${f((x0 + x1) / 2 + 3)} ${f(top + 4)}L${f((x0 + x1) / 2)} ${f(top + 6.4)}L${f(x0 + 2)} ${f(top + 4.6)}" stroke="#a8b890" stroke-width=".45" fill="none" opacity=".7"/>`
-        + `<path d="M${f(x0)} ${f(top + 6.6)}H${f(x1)}" stroke="#000" stroke-width="1.6" opacity=".35"/>`; }
+    { const fx = y => lerp(EL[0], WR[0], (EL[1] - y) / (EL[1] - WR[1]));
+      for (const [k, sd] of [[5, 1]]) {
+        const y0 = RAIL + 8 + SY * k, y1 = y0 + SY - .4, x = fx((y0 + y1) / 2), hw = 8.2, wg = nid('wg', u), sg = nid('sg', u);
+        const top = [[x - hw - 5, y0], [x - hw, y0 - .2], [x - hw * .5, y0 - 2.4], [x + hw * .5, y0 - 2.4], [x + hw, y0 - .2], [x + hw + 5, y0]];
+        const bot = [[x + hw + 5, y1], [x + hw, y1 + .4], [x + hw * .5, y1 + 2.6], [x - hw * .5, y1 + 2.6], [x - hw, y1 + .4], [x - hw - 5, y1]];
+        wrap += `<defs>${linGrad(wg, 0, y0 - 2.4, 0, y1 + 2.6, [[0, '#7a8462', 1], [.25, '#4a5440', 1], [.8, '#262e20', 1], [1, '#121810', 1]])}${linGrad(sg, x - hw - 10, 0, x + hw + 10, 0, [[0, '#000', 0], [.2, '#000', 1], [.8, '#000', 1], [1, '#000', 0]])}</defs>`
+          + `<path d="M${P2([x - hw, y1 + 2])}Q${P2([x, y1 + 5.4])} ${P2([x + hw, y1 + 2])}" stroke="#000" stroke-width="2.4" fill="none" opacity=".35"/>`
+          + `<path d="${H.sp(top)}L${H.sp(bot).slice(1)}Z" fill="url(#${wg})"/>`
+          + `<path d="${H.sp(top.slice(1, 5))}" stroke="#c8d8b8" stroke-width=".55" fill="none" opacity=".6"/><path d="${H.sp(bot.slice(1, 5))}" stroke="#030504" stroke-width=".9" fill="none"/>`
+          + Array.from({ length: 4 }, (_, i) => `<path d="M${f(x - hw - 6)} ${f(y0 + 2.6 + i * 2.6)}Q${f(x)} ${f(y0 + .2 + i * 2.8)} ${f(x + hw + 6)} ${f(y0 + 2.6 + i * 2.6)}" stroke="#141a10" stroke-width=".3" fill="none" opacity=".55"/>`).join('')
+          + `<circle cx="${f(x - 3)}" cy="${f(y0 + 4)}" r=".7" fill="#0a0c06"/><circle cx="${f(x + 4)}" cy="${f(y0 + 4.4)}" r=".7" fill="#0a0c06"/>` + cluster(rng(sd), x + 2, y0 + 5, 6, 4, 3, 1.2); } }
+    // coral over the wrist and the back of the hand: the sea's growth taking him with the wood
+    const growth = coral(WR[0] - 4, WR[1] + 6, -150, 6, 4, 1.4) + coral(WR[0] + 6, WR[1] + 4, -40, 5, 6, 1.2) + barn(WR[0] + 3, WR[1] + 1, 1.5, 20) + barn(WR[0] - 2, WR[1] + 3, 1.2, -10);
+    // the finger tips sunk into the strake: the hand fades out into the wood, the fingers' lines run on as grain
+    let handG = '';
+    { const tips = hand.joints.slice(0, 4).map(j => j[j.length - 1]), mids = hand.joints.slice(0, 4).map(j => j[2]), ty = Math.min(...tips.map(p => p[1])), my = Math.max(...mids.map(p => p[1]));
+      const hm = nid('hm', u), hg = nid('hg', u);
+      handG += `<defs>${linGrad(hg, 0, ty, 0, ty + 7, [[0, '#fff', 0], [.45, '#fff', .35], [1, '#fff', 1]])}<mask id="${hm}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${hg})"/></mask></defs>`
+        + `<g mask="url(#${hm})">${hand.back}${hand.front}</g>`;
+      for (const [i, p] of tips.entries()) { const q = mids[i]; handG += `<path d="M${P2(q)}Q${P2([p[0], p[1] + 2])} ${P2([p[0] + (i - 1.5) * .6, p[1] - 6])}" stroke="#141a10" stroke-width=".5" fill="none" opacity=".7"/><path d="M${P2([q[0] - 1, q[1]])}Q${P2([p[0] - 1, p[1] + 2])} ${P2([p[0] - 1, p[1] - 4])}" stroke="#a8b890" stroke-width=".35" fill="none" opacity=".4"/>`; }
+      // where skin meets wood: a ragged dark line across the fingers
+      const xs = tips.map(p => p[0]), yb = ty + 2.6; handG += `<path d="M${f(Math.min(...xs) - 3)} ${f(yb + 1)}l3 -1.4l2.4 1.2l2.6 -1.6l2.6 1.4l2.4 -1.2l2.6 1.4l2.4 -1" stroke="#141a10" stroke-width=".5" fill="none" opacity=".6"/>`; }
 
-    // ——— the head: 3/4 to our left, a young sailor, the eyes nearly closed; the far half gone to wood ———
-    const HO = { c: HEAD.c, r: HEAD.r, turn: .32, dir: -1, nod: 4, light: [-.6, -.8], look: [-.2, .1], brow: 'calm', mouth: 0, smile: 0, noseL: 1.05,
+    // ——— the head: 3/4 to our left, a young sailor, the eyes half shut; the far half gone to wood ———
+    const HO = { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 4, light: [-.6, -.8], look: [-.2, .1], brow: 'calm', mouth: 0, smile: 0, noseL: 1.05,
       hair: { style: 'long', color: '#1a2420' }, hairColor: '#1a2420', beard: 'short' };
     const hd = H.head34(u, { ...HO, tone: SKIN, warm: { color: '#d8fff0', op: .2 }, eye: 'half', lips: '#5a6450', iris: '#7a9a8a' });
-    const hw = H.head34(u, { ...HO, tone: WOOD, eye: 'shut', lips: WOOD.shadow, hair: { style: 'long', color: '#2a2618' }, hairColor: '#2a2618' });
+    const hw = H.head34(u, { ...HO, tone: WOOD, eye: 'shut', lips: WOOD.shadow, hair: { style: 'long', color: '#3a2e1c' }, hairColor: '#3a2e1c', beard: 'short' });
     let face = hd.svg + rimArc(hd, { r: HEAD.r, light: [-.6, -.8], color: '#d8fff0', span: 40, opacity: .35 });
-    // the wood: the same head in wood, masked in from the middle of the face to our right, the grain across it, a seam
     { const Q = hd.Q, mx = Q(0, 0, 1)[0], wm = nid('wm', u), wg = nid('wmg', u), R = rng(8);
       let wood = hw.svg;
       // the grain: lines across the cheek and brow, bending round the eye and the cheekbone
       const eye = Q(.36, -.12, .78), cb = Q(.5, .3, .7);
-      for (let i = 0; i < 16; i++) { const y = HEAD.c[1] - HEAD.r * 1.1 + i * HEAD.r * .15, pts = [];
-        for (let x = mx - 6; x <= HEAD.c[0] + HEAD.r * 1.3; x += 2) { const d1 = Math.hypot(x - eye[0], y - eye[1]), d2 = Math.hypot(x - cb[0], y - cb[1]); pts.push([x, y + (y < eye[1] ? -1 : 1) * 3 * Math.exp(-d1 * d1 / 30) + (y < cb[1] ? -1 : 1) * 2.4 * Math.exp(-d2 * d2 / 40) + (R() - .5) * .3]); }
-        wood += `<path d="${H.sp(pts)}" stroke="${i % 3 ? '#2a2216' : '#14100a'}" stroke-width="${i % 3 ? .3 : .5}" fill="none" opacity=".7"/>`; }
-      // a knot on the cheekbone, the strake's seam across the jaw, a crack running in from the boundary
-      wood += `<ellipse cx="${f(cb[0] + 1)}" cy="${f(cb[1] + 1)}" rx="2.2" ry="1.5" fill="#2a2216"/><ellipse cx="${f(cb[0] + 1)}" cy="${f(cb[1] + 1)}" rx="3.4" ry="2.4" fill="none" stroke="#2a2216" stroke-width=".4"/>`;
-      man += ''; face += `<defs>${linGrad(wg, mx - 2, 0, mx + 7, 0, [[0, '#fff', 0], [1, '#fff', 1]])}<mask id="${wm}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${wg})"/></mask></defs><g mask="url(#${wm})">${wood}</g>`;
+      for (let i = 0; i < 20; i++) { const y = HEAD.c[1] - HEAD.r * 1.15 + i * HEAD.r * .12, pts = [];
+        for (let x = mx - 6; x <= HEAD.c[0] + HEAD.r * 1.4; x += 2) { const d1 = Math.hypot(x - eye[0], y - eye[1]), d2 = Math.hypot(x - cb[0], y - cb[1]); pts.push([x, y + (y < eye[1] ? -1 : 1) * 3.4 * Math.exp(-d1 * d1 / 40) + (y < cb[1] ? -1 : 1) * 2.6 * Math.exp(-d2 * d2 / 50) + (R() - .5) * .3]); }
+        wood += `<path d="${H.sp(pts)}" stroke="${i % 3 ? '#2a1c0e' : '#120a04'}" stroke-width="${i % 3 ? .35 : .6}" fill="none" opacity=".75"/>`; }
+      wood += `<ellipse cx="${f(cb[0] + 1)}" cy="${f(cb[1] + 1)}" rx="2.4" ry="1.6" fill="#2a1c0e"/><ellipse cx="${f(cb[0] + 1)}" cy="${f(cb[1] + 1)}" rx="3.8" ry="2.6" fill="none" stroke="#2a1c0e" stroke-width=".45"/>`;
+      face += `<defs>${linGrad(wg, mx + 1, 0, mx + 6, 0, [[0, '#fff', 0], [1, '#fff', 1]])}<mask id="${wm}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${wg})"/></mask></defs><g mask="url(#${wm})">${wood}</g>`;
       // the line where skin turns to wood: a fine crack with small splits, pale fibres crossing it
-      const crack = []; for (let k = 0; k <= 12; k++) { const t = k / 12, p = Q(lerp(.05, .2, Math.sin(t * 7) * .5 + .5), -1 + t * 2.05, .95); crack.push([p[0] + 2.4, p[1]]); }
-      face += `<path d="${H.sp(crack)}" stroke="#14100a" stroke-width=".55" fill="none" opacity=".75"/>`
-        + crack.filter((_, k) => k % 3 === 1).map(p => `<path d="M${P2(p)}l${f(-2 - R() * 2)} ${f((R() - .5) * 2)}" stroke="#14100a" stroke-width=".35" opacity=".7"/><path d="M${P2([p[0] + .4, p[1] + .6])}l3 .4" stroke="#c8b890" stroke-width=".3" opacity=".6"/>`).join('');
-      // the strake's seam across the far side of the head and on into the wall
-      const sy = RAIL + 8 + SY * 3 - .4, seam = []; for (let x = mx + 2; x <= 150; x += 3) seam.push([x, sy + 2.4 * Math.exp(-Math.pow((x - HEAD.c[0] - 6) / 10, 2))]);
-      face += `<path d="${H.sp(seam)}" stroke="#030504" stroke-width="1" fill="none" opacity=".85"/><path d="${H.sp(seam.map(p => [p[0], p[1] + 1]))}" stroke="#8ab0a0" stroke-width=".4" fill="none" opacity=".3"/>`;
+      const crack = []; for (let k = 0; k <= 12; k++) { const t = k / 12, p = Q(.12 + .08 * Math.sin(t * 7), -1 + t * 2.05, .95); crack.push([p[0] + 3.2, p[1]]); }
+      face += `<path d="${H.sp(crack)}" stroke="#120a04" stroke-width=".6" fill="none" opacity=".75"/>`
+        + crack.filter((_, k) => k % 3 === 1).map(p => `<path d="M${P2(p)}l${f(-2 - R() * 2)} ${f((R() - .5) * 2)}" stroke="#120a04" stroke-width=".35" opacity=".7"/><path d="M${P2([p[0] + .4, p[1] + .6])}l3 .4" stroke="#d8c090" stroke-width=".3" opacity=".6"/>`).join('');
+      // the strake's seam across the far side of the jaw and on into the wall
+      const sy = RAIL + 8 + SY * 3 - .4, seam = []; for (let x = mx + 4; x <= 160; x += 3) seam.push([x, sy + 2.6 * Math.exp(-Math.pow((x - HEAD.c[0] - 8) / 10, 2))]);
+      face += `<path d="${H.sp(seam)}" stroke="#030504" stroke-width="1.1" fill="none" opacity=".85"/><path d="${H.sp(seam.map(p => [p[0], p[1] + 1]))}" stroke="#c8b890" stroke-width=".4" fill="none" opacity=".35"/>`;
       // barnacles on the wooden temple, coral at the jaw, weed in the hair
       const t1 = Q(.86, -.42, .3), j1 = Q(.62, .72, .4);
-      face += barn(t1[0], t1[1], 1.6, 20) + barn(t1[0] + 2.4, t1[1] + 2.6, 1.2, 30) + coral(j1[0] + 1, j1[1] + 2, 20, 4.2, 9, 1) + weed(...Q(-.7, -.7, .4), 10, 2, 11);
-      // the green of the fog on his lit cheek and brow
-      face += glow(u, ...Q(-.4, -.25, .8), 9, 7, '#d8fff0', .16); }
+      face += barn(t1[0], t1[1], 1.8, 20) + barn(t1[0] + 2.6, t1[1] + 2.8, 1.3, 30) + coral(j1[0] + 1, j1[1] + 2, 20, 4.6, 9, 1.1) + weed(...Q(-.7, -.7, .4), 12, 2, 11);
+      face += glow(u, ...Q(-.4, -.25, .8), 10, 8, '#d8fff0', .16); }
 
     // ——— the souls: one sinking into the planks on either side ———
-    const souls = sinkingSoul(u, 166, 72, 2.1) + sinkingSoul(u, 52, 124, 2.1);
+    const souls = sinkingSoul(u, 170, 84, 2.2) + sinkingSoul(u, 16, 132, 2.2);
 
     // ——— assemble ———
-    let fg = man + sleeve + wrap + hand.back + hand.front + growth + tips + face + souls;
+    let fg = man + sleeve + handG + wrap + growth + face + souls;
     // his right shoulder's edge (our right) under the crust where the coat goes into the planks
-    { const R = rng(31); fg += cluster(R, 128, 92, 12, 26, 7, 2.2) + cluster(R, 134, 124, 12, 40, 6, 2.2) + coral(136, 104, -40, 6, 3) + coral(140, 140, -10, 5, 5) + weed(132, 96, 20, 3, 8); }
+    { const R = rng(31); fg += cluster(R, 144, 98, 12, 26, 7, 2.3) + cluster(R, 150, 128, 12, 30, 6, 2.3) + coral(152, 108, -40, 6, 3) + coral(156, 136, -10, 5, 5) + weed(148, 100, 20, 3, 8); }
     // ——— light and air: the moon's light from over the rail, motes, the dark under the glass ———
     fg += glow(u, 70, 50, 70, 50, '#cfeee0', .12) + motes(18, 20, 40, 160, 90, '#dffff0', 4)
       + gloom(u, 40, 60, 210, 120, .4, '#020604') + gloom(u, 100, 130, 100, 280, .55, '#020604');
