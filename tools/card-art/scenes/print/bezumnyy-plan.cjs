@@ -24,7 +24,7 @@ const TF = 86;                                         // the table's far edge
 const CAND = { x: 114, y: 95, s: 1.5, len: 12 };
 const FL = { x: CAND.x + .2, y: CAND.y - (3.4 + CAND.len + 3) * CAND.s };
 const WIN = { x0: 34, x1: 166, y0: 6, y1: 54 };
-const CAP = { c: [74, 50], r: 15 }, SAIL = { c: [158, 56], r: 13 };
+const CAP = { c: [74, 52], r: 15 }, SAIL = { c: [158, 58], r: 13 };
 const MAP = [[64, 92], [164, 90], [176, 130], [58, 134]];   // the chart on the table: far left, far right, near right, near left
 const light = { time: 'night', haze: .2, key: { type: 'point', x: FL.x, y: FL.y, h: .45, gy: CAND.y, color: '#ffbe6a', power: 1, radius: 110 },
   fill: { color: '#3a4664', power: .35 }, rim: { az: 0, color: '#b8ccff', power: .5 } };
@@ -32,7 +32,7 @@ const lightOut = { time: 'night', haze: .2, key: { type: 'moon', x: 112, y: 20, 
 const skel = { horizon: HZ, eye: 1.3, light: 'candle on the table between them (key, warm) + the moon through the stern window behind (cold rim)', items: [
   ['back wall + window', -10, TF, 220, TF, 'the stern'], ['table', -10, 290, 220, 204, 'top from y 86'], ['chart', 58, 134, 118, 44, 'on the table'],
   ['captain', 44, TF, 62, 66, 'behind the table, leaning over it'], ['sailor', 134, TF, 50, 54, 'behind the table'],
-  ['hidden card', 42, 140, 30, 18, 'on the table, half under the chart'], ['right hand', 26, 136, 44, 30, 'on the card'], ['left hand', 104, 120, 34, 22, 'pointing on the chart'],
+  ['hidden card', 22, 122, 40, 30, 'on the table under his palm, half under the chart'], ['right hand', 26, 136, 44, 30, 'on the card'], ['left hand', 104, 120, 34, 22, 'pointing on the chart'],
   ['candle', 104, CAND.y + 2, 20, 46, 'on the table'], ['bottle', 176, 104, 12, 32, 'on the table'], ['dagger', 150, 106, 8, 20, 'driven into the table']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
@@ -88,7 +88,7 @@ module.exports = { name: 'Безумный план', kind: 'deck', status: 'dra
         + Array.from({ length: 4 }, (_, k) => `<path d="M${c - 3 + k * 2} ${64 + k * .6}q1 2 0 4" stroke="#a8a090" stroke-width=".3" fill="none"/>`).join('')
         // the moon's rim on his shoulders, from behind
         + `<path d="M${c - 30} 78Q${c - 26} 68 ${c - 14} 66M${c + 14} 66Q${c + 26} 68 ${c + 30} 78" stroke="#b8ccff" stroke-width=".7" fill="none" opacity=".6"/>`
-        + `<path d="M${c - 6} 50L${c + 6} 50L${c + 7} 63Q${c} 66 ${c - 7} 63Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/>`; }
+        + `<path d="M${c - 4.6} 53L${c + 4.6} 53L${c + 5.6} 63Q${c} 66 ${c - 5.6} 63Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/>`; }
     { const c = SAIL.c[0], g = nid('sc', u), cl = nid('scl', u);
       // the sailor: a striped shirt under an open sleeveless jerkin
       const body = `M${c - 26} 100L${c - 24} 82Q${c - 21} 72 ${c - 11} 70L${c - 5} 67Q${c} 70 ${c + 5} 67L${c + 11} 70Q${c + 21} 72 ${c + 24} 82L${c + 26} 100Z`;
@@ -97,7 +97,7 @@ module.exports = { name: 'Безумный план', kind: 'deck', status: 'dra
         + Array.from({ length: 8 }, (_, k) => `<path d="M${c - 30} ${71 + k * 4}Q${c} ${73 + k * 4} ${c + 30} ${71 + k * 4}" stroke="#2a3a5a" stroke-width="1.6" fill="none"/>`).join('')
         + `<path d="M${c - 30} 66L${c - 8} 68L${c - 10} 100H${c - 30}ZM${c + 30} 66L${c + 8} 68L${c + 10} 100H${c + 30}Z" fill="#4a3220" stroke="#1a0e06" stroke-width=".4"/></g>`
         + `<path d="M${c - 24} 82Q${c - 21} 72 ${c - 11} 70" stroke="#ffc888" stroke-width=".6" fill="none" opacity=".6"/>`
-        + `<path d="M${c - 5} 56L${c + 5} 56L${c + 6} 68Q${c} 71 ${c - 6} 68Z" fill="${SKIN2.half}" stroke="${SKIN2.outline}" stroke-width=".35"/>`; }
+        + `<path d="M${c - 4} 59L${c + 4} 59L${c + 5} 68Q${c} 71 ${c - 5} 68Z" fill="${SKIN2.half}" stroke="${SKIN2.outline}" stroke-width=".35"/>`; }
     // ——— the heads ———
     const ch = H.head34(u, { c: CAP.c, r: CAP.r, turn: .32, dir: 1, nod: 10, tone: SKIN, light: [.8, -.4], warm: { color: '#ffb46a', op: .45 },
       look: [.45, .55], brow: 'sly', smile: .55, hair: { style: 'tied', color: '#2a1a10', ribbon: '#1a2a4a' }, hairColor: '#22140a', beard: 'goatee', moustache: true, iris: '#3a2416' });
@@ -123,8 +123,9 @@ module.exports = { name: 'Безумный план', kind: 'deck', status: 'dra
     // ——— the hidden card: lying on the table, its far end already under the chart's left edge ———
     const hr = H.hand3(u, { at: [34, 116], a: 30, s: 2.3, m: -1, roll: 8, pitch: 6, pose: 'scissor', tone: SKIN, light: [.8, -.5], sw: .3,
       flex: [[6, 6, 4], [4, 6, 4], [60, 80, 50], [66, 84, 50]], thumbFlex: [10, 16, 12], thumbSpread: 4, yaw: [-4, 2, 8, 12] });
-    const tip = hr.P(8.2, -1, -.6), CC = [tip[0] + 7.5, tip[1] + .6];
-    tab += card(u, CC, -62, 1.35, .6);
+    // the card under his palm, big and clear above the glass, its far end already slid under the chart's left edge
+    const CC = [48, 107];
+    tab += card(u, CC, -62, 1.75, .6);
 
     // ——— the chart: a sheet of old paper, rolled at its far and near ends; coasts, the route drawn and crossed out ———
     let chart = '';
@@ -160,11 +161,10 @@ module.exports = { name: 'Безумный план', kind: 'deck', status: 'dra
     let arms = '';
     const hl = H.hand3(u, { at: [114, 112], a: 28, s: 2.3, m: 1, roll: 6, pitch: 8, pose: 'point', tone: SKIN, light: [.1, -1], sw: .3, yaw: [-2, 6, 10, 14] });
     { const sleeve = (s0, el, w, lt) => H.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .5), lerp(s0[1], el[1], .5)], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5)], [w[0], w[1]]],
-        w: [13.6, 12.6, 11.6, 10, 8.6], tone: coat, lit: lt, rim: '#b8ccff', rimSide: -lt, rimOp: .4, seed: 4, drapes: 2, sw: .4,
-        cuff: { from: .74, k: 1.3, tone: { lit: '#4a5a8a', half: '#26305a', shadow: '#0c1022', outline: '#04060e' } } });
-      arms += sleeve([50, 72], [20, 100], hr.wrist, -1) + sleeve([98, 72], [104, 104], hl.wrist, 1);
-      // gold lace on the cuffs, the shirt's frill showing at each wrist
-      for (const h of [hr, hl]) { const w = h.wrist; arms += `<ellipse cx="${f(w[0])}" cy="${f(w[1])}" rx="3.2" ry="4" fill="#f0e8d6" stroke="#6a6050" stroke-width=".3"/><path d="M${f(w[0] - 1.6)} ${f(w[1] - 3)}q1 3 0 6M${f(w[0] + .6)} ${f(w[1] - 3.4)}q1 3.4 0 7" stroke="#a8a090" stroke-width=".3" fill="none"/>`; } }
+        w: [12.6, 11.8, 11, 9.8, 8.6], tone: coat, lit: lt, rim: '#b8ccff', rimSide: -lt, rimOp: .4, seed: 4, drapes: 1, foldW: .8, sw: .4, capA: true,
+        cuff: { from: .86, k: 1.1, tone: { lit: '#4a5a8a', half: '#26305a', shadow: '#0c1022', outline: '#04060e' } } });
+      // one sleeve each, from the shoulder down to the elbow on the table and on to the wrist; a single cuff there
+      arms += sleeve([52, 75], [36, 95], hr.wrist, -1) + sleeve([96, 76], [101, 98], hl.wrist, 1); }
     arms += hr.back + hr.front + hl.back + hl.front;
     // a signet ring on the captain's pointing hand
     { const p = hl.P(5.6, 1.4, -.05); arms += K.shadeSphere(u, p[0], p[1], 1.1, L, 'brass', { outline: .2 }); }

@@ -3,7 +3,7 @@
 // on a pole stuck in the sand, the pirate code, a lantern on the sand. The concept stays (a parley under a white flag,
 // by the pirates' law); the brief's person joins it: a pirate has come ashore and stands at the pole — his right fist
 // round it, the flag streaming over his head; in his left fist the rolled Code with its red seal. He faces us, the
-// enemy he has come to talk to: a sly half-smile, a tricorn, a short beard. Behind him in the bay lies the black ship
+// enemy he has come to talk to: a calm half-smile, a tricorn, a full round beard. Behind him in the bay lies the black ship
 // at anchor — the brief's find: the white flag against her black sails.
 // Fixed against the first round: the flag hung stiff in rigid stripes with nobody to hold it, the book lay flat on a
 // grey blob; now a waving flag with folds turning in the moonlight and a frayed fly, a 3D fist round the pole
@@ -20,14 +20,14 @@ const { glow, gloom, motes } = PK;
 
 const HZ = 100, MOON = { x: 82, y: 30 }, LAMP = { x: 34, y: 150, s: 1.3 };
 const OFF = [16, 14];                                  // the torso is drawn at the origin of the first draft, moved by OFF
-const HEAD = { c: [148, 64], r: 13.6 };
-const G1 = [112, 114], G2 = [174, 110];                // the fists: on the pole, on the scroll
+const HEAD = { c: [148, 67], r: 13.6 };
+const G1 = [100, 125], G2 = [146, 116];                // the fists: on the pole (at his side), on the scroll (before his chest)
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 26, color: '#dfe8ff', power: .9 }, fill: { color: '#34405e', power: .4 },
   rim: { az: 330, color: '#cfe0ff', power: .5 }, locals: [{ x: LAMP.x, y: LAMP.y - 10, color: '#ffbe6a', power: .6, radius: 55 }] };
 const skel = { horizon: HZ, eye: 1.7, light: 'moon behind the flag, upper middle (key: the flag glows, his cold left side, the bay) + lantern on the sand, left (warm, low)', items: [
   ['black ship', 0, 106, 104, 66, 'anchored in the bay'], ['headland', -10, HZ, 80, 8, 'far shore'], ['beach', -10, 280, 220, 162, 'ground from y 118'],
-  ['pole', 104, 210, 20, 204, 'stuck in the sand, held in his right fist'], ['flag', 38, 60, 78, 52, 'on the pole'],
-  ['pirate', 120, 190, 74, 140, 'stands on the beach'], ['scroll', 168, 128, 14, 34, 'in his left fist'], ['lantern', 26, 150, 16, 30, 'on the sand']] };
+  ['pole', 94, 210, 18, 200, 'stuck in the sand, held in his right fist'], ['flag', 50, 60, 54, 48, 'on the pole, clear of the badge'],
+  ['pirate', 120, 190, 74, 140, 'stands on the beach'], ['scroll', 140, 136, 14, 36, 'in his left fist'], ['lantern', 26, 150, 16, 30, 'on the sand']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const SKIN = { lit: '#f0c094', half: '#c4865a', core: '#a46a44', shadow: '#5e3422', outline: '#26120a' };
@@ -62,13 +62,13 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
         + `<path d="M150 128q6 -2 10 1t10 0" stroke="#2a3a24" stroke-width=".9" fill="none"/>`; }
 
     // ——— the pole: an oar-like spar with a ball at the top, through his right fist ———
-    const hp = handAt(u, { s: 2.5, m: 1, roll: 170, pose: 'wrap', r: 1.0, tone: SKIN, light: [-.6, -.75], sw: .32 }, G1, -94, 170);
+    const hp = handAt(u, { s: 2.5, m: 1, roll: 170, pose: 'wrap', r: 1.0, tone: SKIN, light: [-.6, -.75], sw: .32 }, G1, -91, 170);
     const PA = hp.axis[1] < 0 ? hp.axis : [-hp.axis[0], -hp.axis[1]];            // up the pole
     const at = y => { const t = (G1[1] - y) / -PA[1]; return [G1[0] + PA[0] * t, y]; };
-    const top = at(6), base = at(210);
+    const top = at(13), base = at(210);
     // ——— the flag: hoisted from the top of the pole, streaming left over the black sails; folds turning in the moonlight ———
     let flag = '';
-    { const N = 30, len = 74, h0 = at(9), h1 = at(54), A = 3.6, Rf = rng(5);
+    { const N = 30, len = 47, h0 = at(16), h1 = at(57), A = 3.2, Rf = rng(5);
       const wv = t => A * Math.sin(t * Math.PI * 2 * 2.1 - .6) * (.25 + t);           // the wave across the cloth
       const dx = t => -len * t + Math.sin(t * Math.PI * 2 * 2.1 - .6 + 1.4) * 2.2 * t;   // folds bunch the length a little
       const topE = [], botE = [];
@@ -93,7 +93,7 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
       flag += glow(u, lerp(topE[10][0], botE[10][0], .4), lerp(topE[10][1], botE[10][1], .4), 30, 20, '#ffffff', .18); }
     let pole = K.shadeCyl(u, base[0], base[1], top[0], top[1], 1.5, L, 'oak', { r1: 1.8, r2: 1.3, outline: .35, seed: 6 })
       + K.shadeSphere(u, top[0] + PA[0] * 2, top[1] + PA[1] * 2, 2.2, L, 'brass', { outline: .3 })
-      + `<path d="M${f(top[0] - .4)} ${f(top[1] + 4)}L${f(at(56)[0] - .4)} 56" stroke="#3a2a1a" stroke-width=".5" opacity=".6"/>`;   // the halyard
+      + `<path d="M${f(top[0] - .4)} ${f(top[1] + 4)}L${f(at(59)[0] - .4)} 59" stroke="#3a2a1a" stroke-width=".5" opacity=".6"/>`;   // the halyard
 
     // ——— the pirate: coat, waistcoat, shirt; the baldric across his chest ———
     let man = '';
@@ -115,23 +115,23 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
         // the sash at the waist (under the glass), creases
         + `<path d="M107 140Q132 146 162 140L163 150Q132 156 106 150Z" fill="#6a1c18" stroke="#2a0806" stroke-width=".4"/><path d="M110 144Q132 149 160 144" stroke="#8a2c24" stroke-width=".5" fill="none"/>`;
       // the neck
-      man += `<path d="M125 56L139 56L140 70Q132 75 124 70Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M126 64q6 4 12 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".5"/>`;
+      man += `<path d="M127 59L137 59L138.4 70Q132 74 125.6 70Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M128 65q4 3 8 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".5"/>`;
       man += '</g>'; }
     // ——— the arms: the right one bent to the pole on our left, the left one to the scroll on our right ———
     const hs = handAt(u, { s: 2.5, m: -1, roll: 12, pose: 'wrap', r: 1.08, tone: SKIN, light: [-.6, -.75], sw: .32 }, G2, -95, 180);
-    { const sleeve = (s0, el, w, lt, rimOp) => H.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .55), lerp(s0[1], el[1], .55)], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5)], [w[0], w[1]]],
-        w: [14.4, 13.2, 12, 10.6, 9.4], tone: coatT, lit: lt, rim: '#c8d8f4', rimSide: lt, rimOp, seed: 9, drapes: 2, sw: .4,
-        cuff: { from: .78, k: 1.22, tone: { lit: '#3a3a48', half: '#1c1a22', shadow: '#08070a', outline: '#050408' } } });
-      man += sleeve([131, 94], [138, 126], hp.wrist, -1, .55) + sleeve([169, 94], [186, 126], hs.wrist, 1, .2);
-      // lace at the wrists, showing beyond the cuffs
-      for (const h of [hp, hs]) { const w = h.wrist; man += `<ellipse cx="${f(w[0])}" cy="${f(w[1])}" rx="3.4" ry="4.4" fill="#ece6d6" stroke="#6a6252" stroke-width=".3"/><path d="M${f(w[0] - 2)} ${f(w[1] - 3)}q1 3 0 6M${f(w[0])} ${f(w[1] - 4)}q1 4 0 8" stroke="#a89e88" stroke-width=".3" fill="none"/>`; } }
+    // one sleeve each: the upper arm down his side to the elbow, the forearm out to the fist, one cuff at the wrist
+    { const sleeve = (s0, el, w, lt, rimOp) => H.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .5), lerp(s0[1], el[1], .5)], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5)], [w[0], w[1]]],
+        w: [13.6, 12.6, 11.6, 10, 8.8], tone: coatT, lit: lt, rim: '#c8d8f4', rimSide: lt, rimOp, seed: 9, drapes: 1, foldW: .8, sw: .4, capA: true,
+        cuff: { from: .86, k: 1.1, tone: { lit: '#3a3a48', half: '#1c1a22', shadow: '#08070a', outline: '#050408' } } });
+      man += sleeve([131, 96], [130, 130], hp.wrist, -1, .55) + sleeve([168, 96], [175, 128], hs.wrist, 1, .2); }
 
-    // ——— the head: sly half-smile, eyes on us; long hair tied back, a short beard; the tricorn over it ———
+    // ——— the head: a calm half-smile, eyes on us; cropped curly hair, a full round beard, a broad short nose and heavy
+    // straight brows (his own face, unlike Gibbs's); the tricorn over it ———
     const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 3, tone: SKIN, light: [-.6, -.75], warm: { color: '#ffb46a', op: .16 },
-      look: [.35, .05], brow: 'sly', smile: .45, hair: { style: 'tied', color: '#2a1a10', ribbon: '#6a1c18' }, hairColor: '#24160c', beard: 'short', moustache: true, iris: '#3a2416' });
+      look: [.35, .05], brow: 'calm', smile: .25, hair: { style: 'curly', color: '#3a2414' }, hairColor: '#2e1c10', beard: 'full', beardTufts: [], moustache: true, iris: '#5a4a2a',
+      noseW: 1.45, noseL: .72, browW: 1.9, eyeW: .86, eyeH: .85 });
     const hat = tricorn(u, hd, { r: HEAD.r, color: '#16141a', trim: '#a8884a', light: [-.6, -.75], rim: '#a8c0e8', y: -.62 });
     let face = hd.svg + hat.back + hat.front;
-    { const e = hd.Q(-.82, .36, -.1); face += `<circle cx="${f(e[0])}" cy="${f(e[1] + 1)}" r="1.1" fill="none" stroke="url(#brass${u})" stroke-width=".55"/>`; }
 
     // ——— the scroll of the Code: rolled parchment in his left fist, a red ribbon and the seal hanging ———
     let scroll = '';

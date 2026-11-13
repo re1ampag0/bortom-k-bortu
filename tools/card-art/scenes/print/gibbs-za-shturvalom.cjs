@@ -23,14 +23,14 @@ const FIG = { k: 1.32, o: [100, 30] };              // the man and the wheel are
 const WC = [100, 110], RIM = 33, RG = 43;            // the wheel: centre, rim radius, where the fists hold the handles
 const TH = [-144, -36];                              // the two handles he holds (10 spokes: one every 36°)
 const BIN = { x: 22, y: 124 };                       // the binnacle's lamp (in front of the wheel, lower left)
-const HEAD = { c: [100, 37], r: 12.6 };
+const HEAD = { c: [100, 41], r: 12.6 };
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 18, color: '#dfe8ff', power: .85 },
   fill: { color: '#34405e', power: .35 }, rim: { az: 330, color: '#cfe0ff', power: .6 }, locals: [{ x: BIN.x, y: BIN.y, color: '#ffbe6a', power: .7, radius: 70 }] };
 const skel = { horizon: HZ, eye: 1.7, light: 'moon high right behind him (key, cold side light and rim) + the binnacle lamp lower left (warm fill)', items: [
   ['sea stack L', -10, 100, 58, 70, 'sea'], ['sea stack R', 156, 100, 54, 80, 'sea'], ['rock far', 118, 88, 26, 8, 'sea'],
   ['taffrail', -10, 121, 220, 20, 'deck'], ['Gibbs', 50, 200, 100, 176, 'stands on the deck behind the wheel (drawn at 1, scaled ×1.32 about 100,30)'],
   ['wheel', 35, 201, 130, 130, 'on its post'], ['hands', 40, 118, 120, 34, 'on the handles'],
-  ['binnacle', 8, 170, 28, 52, 'deck'], ['flask', 134, 182, 14, 18, 'on his belt']] };
+  ['binnacle', 8, 170, 28, 52, 'deck'], ['flask', 82, 126, 12, 18, 'on his belt']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const dirOf = t => [Math.cos(t * Math.PI / 180), Math.sin(t * Math.PI / 180)];
@@ -96,7 +96,7 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
         // the moon's rim down his left side
         + `<path d="M136 150L134 82Q132 70 121 65" stroke="#c8d8f4" stroke-width=".8" fill="none" opacity=".7"/>`;
       // the neck and the neckerchief knotted at the throat
-      man += `<path d="M93 44L107 44L108 60Q100 64 92 60Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M93 52q7 4 14 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".6"/>`
+      man += `<path d="M95.2 47L104.8 47L106 60Q100 63 94 60Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M95.5 54q4.5 3 9 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".6"/>`
         + `<path d="M91 56Q100 62 109 56L110 60Q100 66 90 60Z" fill="#7a2418" stroke="#2a0806" stroke-width=".35"/><path d="M98 60l-3 9l3 -1l2 3l1 -9z" fill="#8a2a1c" stroke="#2a0806" stroke-width=".3"/><path d="M92 57.4Q100 62.6 108 57.4" stroke="#d8a088" stroke-width=".35" fill="none" opacity=".5"/>`; }
 
     // ——— his hands on the handles: solve each hand's direction so the handle across its fist runs along the spoke ———
@@ -107,22 +107,19 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
       for (let k = 0; k < 4; k++) { h = H.hand3(u, { ...base, a, grip: grips[i] }); const ang = Math.atan2(h.axis[1], h.axis[0]) * 180 / Math.PI;
         let d = t - ang; while (d > 90) d -= 180; while (d < -90) d += 180; a += d; }
       return h; });
-    // the arms: shoulder -> elbow (out and down) -> the wrist; coat sleeves with a turned-back cuff
-    { const sh = [[76, 68], [124, 68]], el = [[54, 116], [146, 116]];
-      hands.forEach((h, i) => { const w = h.wrist, e = el[i], s0 = sh[i], sd = i ? 1 : -1;
-        man += H.cloth(u, { spine: [[s0[0] - sd * 2, s0[1]], [lerp(s0[0], e[0], .55) + sd * 2, lerp(s0[1], e[1], .55)], e, [lerp(e[0], w[0], .55), lerp(e[1], w[1], .55)], [w[0] - sd * .6, w[1] + 1.4]],
-          w: [15.4, 13.8, 12.6, 10.8, 9.2], tone: coat, lit: i ? 1 : -1, rim: '#c8d8f4', rimSide: i ? 1 : -1, rimOp: i ? .55 : .25, seed: 3 + i, drapes: 2, sw: .4,
-          cuff: { from: .8, k: 1.18, tone: { lit: '#5a4636', half: '#33261c', shadow: '#140e08', outline: '#0a0604' } } }); }); }
+    // the arms: one sleeve each, shoulder -> elbow (out to the side, a little down) -> the wrist, the forearm coming in
+    // to the handle; a single turned-back cuff at the wrist
+    { const sh = [[68, 74], [132, 74]], el = [[44, 104], [156, 104]];
+      hands.forEach((h, i) => { const w = h.wrist, e = el[i], s0 = sh[i];
+        man += H.cloth(u, { spine: [s0, [lerp(s0[0], e[0], .5), lerp(s0[1], e[1], .5) + 1], e, [lerp(e[0], w[0], .5), lerp(e[1], w[1], .5) + .6], w],
+          w: [14.2, 13, 11.8, 10.2, 8.8], tone: coat, lit: i ? 1 : -1, rim: '#c8d8f4', rimSide: i ? 1 : -1, rimOp: i ? .55 : .25, seed: 3 + i, drapes: 1, foldW: .8, sw: .4, capA: true,
+          cuff: { from: .86, k: 1.1, tone: { lit: '#5a4636', half: '#33261c', shadow: '#140e08', outline: '#0a0604' } } }); }); }
 
     // ——— the head: a weathered face turned a little to his right, watching the near rock ———
     const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .34, dir: -1, nod: -2, tone: SKIN, light: [.85, -.45], warm: { color: '#ffb46a', op: .3 },
-      look: [-.55, -.05], brow: 'frown', smile: .12, hair: { style: 'short', color: '#9e9a92' }, hairColor: '#8e8a84', moustache: true, stubble: true, iris: '#3a4a5a' });
+      look: [-.55, -.05], brow: 'frown', smile: .12, hair: { style: 'short', color: '#9e9a92' }, hairColor: '#a29d94', beard: 'short', moustache: true, iris: '#3a4a5a' });
     let face = hd.svg + rimArc(hd, { r: HEAD.r, light: [-.9, .35], color: '#cfe0ff', span: 50, opacity: .55 });
     { const Q = hd.Q, dp = hd.depth;
-      // grey mutton chops down both cheeks into the moustache (the far one only where it shows)
-      for (const sd of [1, -1]) { if (dp(sd * .55, .3, .4) < -.15) continue;
-        const pts = [[sd * .76, -.22, .14], [sd * .8, .08, .08], [sd * .76, .4, .08], [sd * .62, .64, .3], [sd * .42, .7, .6], [sd * .32, .64, .74], [sd * .44, .54, .66], [sd * .6, .34, .5], [sd * .68, .04, .38], [sd * .7, -.22, .3]].map(p => Q(...p));
-        face += H.hairMass(u, pts, { r: HEAD.r, color: '#8e8a84', seed: 31 + sd, n: 18, light: [.85, -.45], flow: () => [0, 1], tufts: [2, 3, 4], tuftLen: .08 }); }
       // the knitted watch cap: a soft dome over the crown, a turned-up ribbed band; the moon on its left
       const capPts = []; for (let k = 0; k < 40; k++) { const t = k / 40 * Math.PI * 2; for (const y of [-.52, -.8, -1.05]) { const rr = y === -1.05 ? .55 : y === -.8 ? .92 : 1.0; capPts.push(Q(Math.cos(t) * rr, y, Math.sin(t) * rr * .98 - .08)); } }
       capPts.push(Q(0, -1.3, -.12));
@@ -144,9 +141,10 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
       // a small gold ring in the near ear
       { const e = Q(.84, .34, -.1); face += `<circle cx="${f(e[0])}" cy="${f(e[1] + .8)}" r=".9" fill="none" stroke="url(#brass${u})" stroke-width=".45"/>`; } }
 
-    // ——— the flask on his belt (right hip, below the rim) ———
-    let flask = `<path d="M118 124q4 4 9 7" stroke="#3a2a1a" stroke-width=".7" fill="none"/>`
-      + `<g transform="translate(130 136) rotate(-10)"><path d="M-5 -6Q-6 2 -4 7Q0 9 4 7Q6 2 5 -6Q0 -8 -5 -6Z" fill="url(#silver${u})" stroke="#2a3238" stroke-width=".4"/><rect x="-1.6" y="-9" width="3.2" height="3" fill="#5a6268" stroke="#2a3238" stroke-width=".3"/><path d="M-3 -2q-1 4 0 7" stroke="#ffffff" stroke-width=".5" opacity=".6" fill="none"/><path d="M1 -1l2 2" stroke="#2a3238" stroke-width=".4"/></g>`;
+    // ——— the flask on his belt, hanging at his right hip above the glass (seen between the spokes) ———
+    let flask = `<path d="M84 104Q100 108 116 104L116 107.4Q100 111.4 84 107.4Z" fill="#2a1a0e" stroke="#0a0604" stroke-width=".35"/><rect x="96.6" y="103.6" width="5" height="4.6" rx=".6" fill="none" stroke="url(#brass${u})" stroke-width=".8"/>`
+      + `<path d="M88 107q-1 2 0 3.6" stroke="#3a2a1a" stroke-width=".8" fill="none"/>`
+      + `<g transform="translate(88.4 116) rotate(8)"><path d="M-5 -6Q-6 2 -4 7Q0 9 4 7Q6 2 5 -6Q0 -8 -5 -6Z" fill="url(#silver${u})" stroke="#2a3238" stroke-width=".4"/><rect x="-1.6" y="-9" width="3.2" height="3" fill="#5a6268" stroke="#2a3238" stroke-width=".3"/><path d="M-3 -2q-1 4 0 7" stroke="#ffffff" stroke-width=".5" opacity=".6" fill="none"/><path d="M1 -1l2 2" stroke="#2a3238" stroke-width=".4"/></g>`;
 
     // ——— the wheel: ten spokes running out into turned handles, the oak rim with a brass band, the brass hub ———
     let wheel = '';

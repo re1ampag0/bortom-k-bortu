@@ -524,7 +524,10 @@ function head(u, o) {
 // { color, op } — the light on the near cheek, rim (colour of the edge away from the light), eye: 'open' | 'wide' |
 // 'half' | 'shut', look: [dx, dy] (−1..1), brow: 'calm' | 'up' | 'frown' | 'sly' (one up), mouth (0..1 open), smile
 // (−1..1: + the corners up, a grin), lips, iris, hairColor, hair: { color, style: 'short' | 'long' | 'tied' |
-// 'curly' | 'bald' }, beard: 'full' | 'short' | 'goatee', moustache, ear: false, opacity }
+// 'curly' | 'bald' }, beard: 'full' | 'short' | 'goatee', moustache, ear: false, opacity;
+// optional face shape (default 1 each, the face as before): noseW — the nose's width (wings, nostrils), noseL — how far
+// its tip stands out; browW — the brows' thickness; eyeW, eyeH — the eyes' width and opening; beardTufts — the beard's
+// locks breaking its outline (an array of outline indices; [] for a smooth edge) }
 // Returns { svg, Q (x, y, z in head units → picture), depth (→ + towards us) }.
 function head34(u, o) {
   const r = o.r, dir = o.dir || 1, yaw = (o.turn != null ? o.turn : .45) * 62 * Math.PI / 180 * dir, nod = (o.nod || 0) * Math.PI / 180;
@@ -576,7 +579,7 @@ function head34(u, o) {
     const C3 = [sd * .34, -.06, .8], vis = Math.max(0, depth(sd * .45, 0, .9) / Math.hypot(.45, .9));
     if (vis < .08) continue;
     const c = Q(...C3), ex0 = rot([1, 0, 0]), el = Math.hypot(ex0[0], ex0[1]) || 1, ex = [ex0[0] / el, ex0[1] / el], up = [ex[1], -ex[0]];
-    const w = .14 * r * (.3 + .7 * vis), h = .055 * r * op, at = (a, b) => [c[0] + ex[0] * a + up[0] * b, c[1] + ex[1] * a + up[1] * b];
+    const w = .14 * r * (.3 + .7 * vis) * (o.eyeW || 1), h = .055 * r * op * (o.eyeH || 1), at = (a, b) => [c[0] + ex[0] * a + up[0] * b, c[1] + ex[1] * a + up[1] * b];
     const inn = at(-sd * w, 0), out = at(sd * w, -.01 * r), top = at(sd * w * .1, h * 1.15), bot = at(sd * w * .05, -h * .75);
     const alm = `M${P2(inn)}Q${P2(at(-sd * w * .5, h * 1.3))} ${P2(top)}Q${P2(at(sd * w * .7, h * .9))} ${P2(out)}Q${P2(at(sd * w * .5, -h * .9))} ${P2(bot)}Q${P2(at(-sd * w * .6, -h * .6))} ${P2(inn)}Z`;
     s += soft(at(0, .02 * r), .17 * (.4 + .6 * vis), .1, tn.shadow, .45);
@@ -592,11 +595,11 @@ function head34(u, o) {
       + `<path d="M${P2(at(-sd * w * .6, -h * .75))}Q${P2(at(sd * w * .1, -h * 1.05))} ${P2(at(sd * w * .85, -h * .45))}" stroke="${tn.lit}" stroke-width="${f(r * .018)}" fill="none" opacity=".65"/>`;
     // the brow: a tapered mass over the eye, thick at the nose end
     { const b = o.brow || 'calm', dy = (b === 'up' || (b === 'sly' && sd === dir)) ? -.07 : 0, fr = b === 'frown' ? .05 : 0;
-      const B = [[sd * .1, -.25 + fr, .92], [sd * .3, -.33 + dy, .88], [sd * .52, -.31 + dy, .76], [sd * .6, -.25 + dy, .68], [sd * .5, -.27 + dy, .76], [sd * .3, -.28 + dy, .88], [sd * .12, -.21 + fr, .92]];
+      const bw = ((o.browW || 1) - 1) * .025, B = [[sd * .1, -.25 + fr - bw, .92], [sd * .3, -.33 + dy - bw, .88], [sd * .52, -.31 + dy - bw, .76], [sd * .6, -.25 + dy, .68], [sd * .5, -.27 + dy + bw, .76], [sd * .3, -.28 + dy + bw, .88], [sd * .12, -.21 + fr + bw, .92]];
       s += `<path d="${sp(Qa(B), true)}" fill="${hairC}" stroke="${mix(hairC, '#000', .4)}" stroke-width="${f(r * .01)}"/>`; }
   }
   // ——— the nose: the side away from the light in shade, the lit bridge, the ball with a highlight, the wings ———
-  { const N0 = [0, -.1, .93], T = [0, .33, 1.13], Bs = [0, .42, 1.0], Wl = [-.16, .35, .92], Wr = [.16, .35, .92];
+  { const nW = o.noseW || 1, nL = o.noseL || 1, N0 = [0, -.1, .93], T = [0, .33, .93 + .2 * nL], Bs = [0, .42, .93 + .07 * nL], Wl = [-.16 * nW, .35, .92], Wr = [.16 * nW, .35, .92];
     const shadeSide = (Q(...Wr)[0] - Q(...T)[0]) * Ls[0] > 0 ? -1 : 1, Ws = shadeSide > 0 ? Wr : Wl, Wn = shadeSide > 0 ? Wl : Wr;
     s += `<path d="${sp(Qa([N0, [shadeSide * .08, .1, .98], [shadeSide * .1, .3, 1.02], Ws, [shadeSide * .08, .42, .96], Bs]), true)}" fill="${tn.shadow}" opacity=".45"/>`
       + soft(Q(shadeSide * .12, .48, .95), .16, .05, tn.shadow, .55);
@@ -605,7 +608,7 @@ function head34(u, o) {
     s += `<path d="${sp(Qa([N0, [0, .12, 1.03], T, [0, .38, 1.07], Bs]))}" stroke="${tn.outline}" stroke-width="${f(r * .03)}" fill="none" opacity="${f(Math.min(.8, Math.abs(sY) * 1.6))}"/>`;
     for (const W2 of [Wl, Wr]) { const v = depth(W2[0] * 2, 0, .7); if (v < -.1) continue;
       s += `<path d="${sp(Qa([[W2[0] * .7, .26, 1.0], [W2[0] * 1.05, .3, .93], [W2[0], .41, .92], [W2[0] * .5, .42, .98]]))}" stroke="${tn.outline}" stroke-width="${f(r * .03)}" fill="none" opacity=".75"/>`; }
-    for (const sd of [-1, 1]) { const n = Q(sd * .07, .41, 1.0); s += `<ellipse cx="${f(n[0])}" cy="${f(n[1])}" rx="${f(r * .035 * (.5 + .5 * Math.max(0, depth(sd, 0, 1.5) / 1.8)))}" ry="${f(r * .018)}" fill="${mix(tn.outline, tn.shadow, .3)}" opacity=".85"/>`; }
+    for (const sd of [-1, 1]) { const n = Q(sd * .07 * nW, .41, .93 + .07 * nL); s += `<ellipse cx="${f(n[0])}" cy="${f(n[1])}" rx="${f(r * .035 * nW * (.5 + .5 * Math.max(0, depth(sd, 0, 1.5) / 1.8)))}" ry="${f(r * .018)}" fill="${mix(tn.outline, tn.shadow, .3)}" opacity=".85"/>`; }
     { const g = Q(-shadeSide * .03, .3, 1.12); s += `<circle cx="${f(g[0])}" cy="${f(g[1])}" r="${f(r * .03)}" fill="#ffffff" opacity=".5"/>`; void Wn; } }
   // ——— the mouth ———
   { const cy = .62 - sm * .05, ml = [-.25, cy, .8], mr = [.25, cy, .8], m0 = [0, .62, .97], gap = mo * .1;
@@ -629,7 +632,7 @@ function head34(u, o) {
         [.68, .22, .4], [.56, .4, .56], [.34, .6, .78], [.24, .7, .82], [0, .76 + jw, .93], [-.24, .7, .82], [-.34, .6, .78], [-.56, .4, .56], [-.68, .22, .4]];
     const pts2 = Qa(outer).filter((p, i) => true);
     s += hairMass(u, pts2, { r, color: hairC, outline: tn.outline, seed: 13, n: kind === 'goatee' ? 12 : 40, light: HL, sheen: Q(dir * .3, .9, .6),
-      flow: () => [0, 1], tufts: kind === 'goatee' ? [2, 3, 4] : [2, 3, 4, 5, 6], tuftLen: kind === 'full' ? .14 : .07 });
+      flow: () => [0, 1], tufts: o.beardTufts || (kind === 'goatee' ? [2, 3, 4] : [2, 3, 4, 5, 6]), tuftLen: kind === 'full' ? .14 : .07 });
   }
   if (o.moustache || o.beard) {
     const M = [[0, .46, 1.0], [.18, .5, .92], [.32, .62, .76], [.3, .68, .74], [.18, .58, .9], [0, .55, .99], [-.18, .58, .9], [-.3, .68, .74], [-.32, .62, .76], [-.18, .5, .92]];
