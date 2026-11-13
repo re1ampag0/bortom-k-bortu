@@ -538,8 +538,10 @@ function head(u, o) {
 // 'curly' | 'bald' }, beard: 'full' | 'short' | 'goatee', moustache, ear: false, opacity;
 // optional face shape (default 1 each, the face as before): noseW — the nose's width (wings, nostrils), noseL — how far
 // its tip stands out; browW — the brows' thickness; eyeW, eyeH — the eyes' width and opening; beardTufts — the beard's
-// locks breaking its outline (an array of outline indices; [] for a smooth edge) }
-// Returns { svg, Q (x, y, z in head units → picture), depth (→ + towards us) }.
+// locks breaking its outline (an array of outline indices; [] for a smooth edge); folds: false — no faint fold from
+// the nose to the mouth's corners (on by default); tailApart: true — the tied queue is not in svg but in `tail` (to
+// draw behind the body); jawW — the jaw's and chin's width (default 1; .85–.9 a finer, a woman's jaw) }
+// Returns { svg, Q (x, y, z in head units → picture), depth (→ + towards us), tail ('' unless tailApart) }.
 function head34(u, o) {
   const r = o.r, dir = o.dir || 1, yaw = (o.turn != null ? o.turn : .45) * 62 * Math.PI / 180 * dir, nod = (o.nod || 0) * Math.PI / 180;
   const cY = Math.cos(yaw), sY = Math.sin(yaw), cN = Math.cos(nod), sN = Math.sin(nod);
@@ -557,7 +559,7 @@ function head34(u, o) {
   for (let k = 0; k < 36; k++) { const a = k / 36 * Math.PI * 2, p = sk(a); if (p[1] - sc0[1] < .32 * r) pts.push(p); }
   const jawP = [[-.64, .5, -.14], [.64, .5, -.14], [-.48, .82, .26], [.48, .82, .26], [-.22, .99 + jw, .55], [.22, .99 + jw, .55], [0, 1.03 + jw, .62],
     [-.68, .08, .4], [.68, .08, .4], [-.58, .5, .34], [.58, .5, .34], [-.78, .1, -.05], [.78, .1, -.05]];
-  pts.push(...Qa(jawP));
+  pts.push(...Qa(o.jawW && o.jawW !== 1 ? jawP.map(p => [p[0] * (p[1] > .3 ? o.jawW : 1), p[1], p[2]]) : jawP));
   const hull = (() => { const P = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
     const lo = [], up = []; for (const p of P) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
     for (const p of P.slice().reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
@@ -633,9 +635,15 @@ function head34(u, o) {
       + soft(Q(0, .79 + gap, .88), .13, .04, tn.shadow, .55);
     for (const sd of [-1, 1]) { const a = Q(sd * .26, cy - .01, .78), b = Q(sd * .3, cy - .05 - sm * .03, .74); s += `<path d="M${P2(a)}L${P2(b)}" stroke="${tn.shadow}" stroke-width="${f(r * .02)}" opacity="${f(.4 + Math.max(0, sm) * .4)}" stroke-linecap="round"/>`; }
     if (sm > .2) for (const sd of [-1, 1]) s += `<path d="${sp(Qa([[sd * .2, .4, .88], [sd * .34, .52, .78], [sd * .36, .64, .72]]))}" stroke="${tn.shadow}" stroke-width="${f(r * .025)}" fill="none" opacity=".55"/>`;
+    // the fold from the nose's wing to the mouth's corner, faint on a calm face (folds: false — none): the cheek's
+    // form against the mouth, without it the face reads as a smooth mask
+    else if (o.folds !== false) for (const sd of [-1, 1]) { const v = depth(sd * .3, .5, .8); if (v < .2) continue;
+      s += `<path d="${sp(Qa([[sd * .19, .42, .9], [sd * .3, .53, .8], [sd * .32, .63, .75]]))}" stroke="${tn.shadow}" stroke-width="${f(r * .03)}" fill="none" stroke-linecap="round" opacity="${f(.18 + .12 * Math.min(1, v))}"/>`
+        + `<path d="${sp(Qa([[sd * .22, .43, .9], [sd * .33, .54, .8]]))}" stroke="${tn.lit}" stroke-width="${f(r * .018)}" fill="none" stroke-linecap="round" opacity=".22"/>`; }
     s += `<path d="${sp(Qa([[-.04, .46, .99], [-.03, .54, .98]]))}M${P2(Q(.04, .46, .99))}L${P2(Q(.03, .54, .98))}" stroke="${tn.shadow}" stroke-width="${f(r * .015)}" fill="none" opacity=".45"/>`; }
   // ——— beard, moustache, hair as masses ———
   const HL = Ls;
+  let tailS = '';
   if (o.beard) {
     const ext = o.beard === 'full' ? .16 : .04, kind = o.beard;
     const outer = kind === 'goatee' ? [[-.2, .72, .86], [-.24, .9, .66], [-.16, 1.08 + jw + ext, .58], [0, 1.12 + jw + ext, .6], [.16, 1.08 + jw + ext, .58], [.24, .9, .66], [.2, .72, .86]]
@@ -670,10 +678,10 @@ function head34(u, o) {
       const tail = hairMass(u, qT, { r, color: hc, outline: tn.outline, seed: 21, n: 8, light: HL, flow: () => [0, 1], tufts: [3], tuftLen: .1 })
         + `<path d="M${P2(b)}l${f(-r * .2)} ${f(-r * .1)}l0 ${f(r * .2)}zM${P2(b)}l${f(r * .18)} ${f(-r * .12)}l${f(r * .02)} ${f(r * .2)}z" fill="${rb}" stroke="${tn.outline}" stroke-width="${f(r * .02)}"/>`
         + `<ellipse cx="${f(b[0])}" cy="${f(b[1])}" rx="${f(r * .06)}" ry="${f(r * .08)}" fill="${rb}" stroke="${tn.outline}" stroke-width="${f(r * .02)}"/>`;
-      s = tail + s; }
+      if (o.tailApart) tailS = tail; else s = tail + s; }
   }
-  if (o.opacity != null && o.opacity < 1) s = `<g opacity="${o.opacity}">${s}</g>`;
-  return { svg: s, Q, depth };
+  if (o.opacity != null && o.opacity < 1) { s = `<g opacity="${o.opacity}">${s}</g>`; if (tailS) tailS = `<g opacity="${o.opacity}">${tailS}</g>`; }
+  return { svg: s, Q, depth, tail: tailS };
 }
 
 // ——— a whole figure ———
@@ -694,9 +702,9 @@ const rY = (p, a) => { const c = Math.cos(a), s = Math.sin(a); return [p[0] * c 
 const rZ = (p, a) => { const c = Math.cos(a), s = Math.sin(a); return [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]]; };   // + drops the +x side
 const rotOf = r => p => rY(rX(rZ(p, (r[0] || 0) * DEG), (r[1] || 0) * DEG), (r[2] || 0) * DEG);
 const dv = (fl, ab, sd) => { const F = fl * DEG, A = ab * DEG; return [sd * Math.sin(A), Math.cos(A) * Math.cos(F), Math.cos(A) * Math.sin(F)]; };
-const BONE = { thigh: 1.85, shin: 1.72, ankle: .28, upper: 1.38, fore: 1.05, hand: .7, hipW: .46, shW: .78, shY: -2.02, headY: -3.116 };
+const BONE = { thigh: 1.85, shin: 1.72, ankle: .28, upper: 1.38, fore: 1.05, hand: .7, hipW: .46, shW: .75, shY: -2.02, headY: -3.116 };
 // the torso as rings: [y, rx, rz, z of the centre, share of the chest's turn (1) against the pelvis' (0)]
-const TRING = [[-2.13, .3, .25, -.02, 1], [-2.08, .56, .3, -.04, 1], [-1.96, .8, .38, -.02, 1], [-1.6, .84, .48, .03, 1], [-1.2, .78, .48, .05, 1],
+const TRING = [[-2.3, .27, .24, -.1, 1], [-2.15, .5, .3, -.06, 1], [-1.97, .8, .38, -.02, 1], [-1.6, .84, .48, .03, 1], [-1.2, .78, .48, .05, 1],
   [-.8, .68, .43, .04, .6], [-.42, .72, .44, .02, .2], [-.05, .8, .46, 0, 0], [.25, .72, .42, -.02, 0]];
 // the foot (boot) around the ankle: [forward, up, half-width]
 const FOOT = [[-.21, -.08, .12], [-.18, -.28, .12], [.2, -.28, .15], [.62, -.28, .18], [.97, -.22, .12], [.93, -.08, .13], [.5, .03, .15], [.14, .12, .13], [-.15, .1, .13]];
@@ -736,7 +744,7 @@ const mergeDeep = (a, b) => { if (!b) return a; const out = Array.isArray(a) ? a
   return out; };
 // a tone ramp from a local colour under the scene's light (or a ramp given whole)
 const toneOf = (c, L, dim) => typeof c === 'object' ? c : (() => { const base = mix(c, L.shadowColor || '#20242c', dim);
-  return { lit: mix(mix(base, L.keyColor || '#ffffff', .4), '#ffffff', .08), half: base, core: mix(base, L.shadowColor || '#20242c', .35),
+  return { lit: mix(base, L.keyColor || '#ffffff', .26), half: base, core: mix(base, L.shadowColor || '#20242c', .35),
     shadow: mix(mix(base, L.shadowColor || '#20242c', .5), '#000000', .3), outline: mix(c, '#000000', .82) }; })();
 
 // o: { at: [x, y] — the ground under the pelvis (the lowest sole stands on y), h: the height standing (default 120),
@@ -801,14 +809,15 @@ function figure(u, o) {
   const cShirt = T(dr.shirt != null ? dr.shirt : '#d6cbb2'), cVest = T(dr.vest), cCoat = T(dr.coat), cTrou = T(dr.trousers || '#4a3c30');
   const cBoot = dr.boot === 'bare' ? null : T(dr.boots || '#2a1c14'), cBelt = dr.belt === false ? null : T(dr.belt || '#3a2416'), cSash = T(dr.sash);
   const headC3 = Rt([0, BONE.headY, .04]), hc = pr(headC3), la = L.at(hc[0], hc[1] + 3 * Hh), Lp = [la.ux, la.uy], back = la.dz < -.15;
-  const skin = o.skin || L.ramp('skin', hc[0], hc[1]);
+  // the skin's ramp of the scene light, its terminator softened (the kit's core is for hard things and blackens a face)
+  const skin = o.skin || (() => { const r0 = L.ramp('skin', hc[0], hc[1]); return Object.assign({}, r0, { core: mix(r0.half, r0.shadow, .45) }); })();
   const rimC = o.rim === false ? null : o.rim || L.rimColor || (back ? L.keyColor : null);
   const rimDir = L.rim && L.rim.az != null ? (() => { const x = Math.sin(L.rim.az * DEG), y = -.35, l = Math.hypot(x, y); return [x / l, y / l]; })() : Lp;
   const sideOf = (A, B, v) => { const dx = B[0] - A[0], dy = B[1] - A[1], l = Math.hypot(dx, dy) || 1; return (-dy * v[0] + dx * v[1]) / l >= 0 ? 1 : -1; };
   const sw = Math.max(.25, Hh * .018), P2 = p => `${f(p[0])} ${f(p[1])}`, W = k => k * Hh;
   const limb = (pts3, w, tone, extra) => { const sp = pts3.map(pr);
     return cloth(u, Object.assign({ spine: sp, w: w.map(W), tone, lit: sideOf(sp[0], sp[sp.length - 1], Lp), rim: rimC, rimSide: sideOf(sp[0], sp[sp.length - 1], rimDir),
-      rimOp: .55, tension: true, drapes: 1, foldW: Hh * .045, sw, seed: Math.round(R() * 99) + 1, L }, extra)); };
+      rimOp: .32, rimW: Hh * .025, tension: true, drapes: 1, foldW: Hh * .045, sw, seed: Math.round(R() * 99) + 1, L }, extra)); };
   // ——— the torso's surface: a point at height y, angle th (0 the front, +π/2 the figure's left side) ———
   const ringAt = y => { let i = 0; while (i < TRING.length - 2 && TRING[i + 1][0] < y) i++; const a = TRING[i], b = TRING[i + 1], t = Math.max(0, Math.min(1, (y - a[0]) / (b[0] - a[0])));
     return a.map((v, j) => v + (b[j] - v) * t); };
@@ -829,7 +838,7 @@ function figure(u, o) {
     const g = nid('fgt', u), r = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * .5, st = back ? [[0, tone.half], [.45, tone.core || tone.half], [1, tone.shadow]] : [[0, tone.lit], [.38, tone.half], [.74, tone.core || tone.half], [1, tone.shadow]];
     return `<defs>${linGrad(g, cx + Lp[0] * r * .8, cy + Lp[1] * r * .3, cx - Lp[0] * r * .9, cy - Lp[1] * r * .3, st)}</defs><path d="${sp(pts, true)}" fill="url(#${g})"${key ? ` stroke="${tone.outline}" stroke-width="${f(sw)}"` : ''}/>`; };
   const rimLine = (ol, a = 0, b) => { if (!rimC) return ''; const useR = nP[0] * rimDir[0] + nP[1] * rimDir[1] > 0, ln = (useR ? ol.Rg : ol.Lf).slice(a, b);
-    return ln.length > 1 ? `<path d="${sp(ln)}" stroke="${rimC}" stroke-width="${f(Hh * .04)}" fill="none" opacity=".6" stroke-linecap="round"/>` : ''; };
+    return ln.length > 1 ? `<path d="${sp(ln)}" stroke="${rimC}" stroke-width="${f(Hh * .03)}" fill="none" opacity=".42" stroke-linecap="round"/>` : ''; };
   const stroke = (pts, col, w, op) => `<path d="${sp(pts)}" stroke="${col}" stroke-width="${f(w)}" fill="none" stroke-linecap="round" opacity="${op}"/>`;
   const fold = (pts, tone, w = 1) => stroke(pts, tone.shadow, Hh * .045 * w, .7) + stroke(pts.map(p => [p[0] + Lp[0] * Hh * .03, p[1] + Lp[1] * Hh * .03]), tone.lit, Hh * .022 * w, .45);
   const surfLine = (a, b, n = 6, k = 1.01) => { const out = []; for (let i = 0; i <= n; i++) { const t = i / n, y = lerp(a[0], b[0], t), th = lerp(a[1], b[1], t); if (seen(y, th)) out.push(S2(y, th, k)); } return out; };
@@ -844,7 +853,7 @@ function figure(u, o) {
   }
   // the legs: the far one first; trousers, the boot's shaft with its turned top and ankle creases, the foot
   const drawLeg = k => { const lg = leg[k], top = v3.add(lg.hip, Rp([0, -.32, 0])); let s = '';
-    s += limb([top, v3.lerp(lg.hip, lg.knee, .5), lg.knee, v3.lerp(lg.knee, lg.ankle, .5), lg.ankle], [.8, .66, .5, .46, .34], cTrou, { drapes: 2 });
+    s += limb([top, v3.lerp(lg.hip, lg.knee, .5), lg.knee, v3.lerp(lg.knee, lg.ankle, .3), v3.lerp(lg.knee, lg.ankle, .68), lg.ankle], [.8, .64, .49, .5, .4, .33], cTrou, { drapes: 2 });
     const ft = lg.pts.map(pr), hullP = (() => { const P = ft.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
       const lo = [], up = []; for (const p of P) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
       for (const p of P.slice().reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); })();
@@ -865,9 +874,10 @@ function figure(u, o) {
   // the coat's skirts (knee length): the back panel under the legs, a front panel over each thigh
   const knee = cCoat && dr.coatLen === 'knee';
   if (knee) { const ol = outlineOf([-.3, .25], 1.04), a = ol.Lf[1], b = ol.Rg[1], hem = W(sit ? .5 : 1.6);
-    backS += shade([ol.Lf[0], a, [a[0] - W(.22), a[1] + hem], [lerp(a[0], b[0], .5), a[1] + hem + W(.05)], [b[0] + W(.22), b[1] + hem], b, ol.Rg[0]], cCoat, true); }
+    backS += shade([ol.Lf[0], a, [a[0] - W(.1), a[1] + hem], [lerp(a[0], b[0], .5), a[1] + hem + W(.05)], [b[0] + W(.1), b[1] + hem], b, ol.Rg[0]], cCoat, true);
+    for (const t of [.3, .7]) backS += fold([[lerp(a[0], b[0], t), a[1] + W(.2)], [lerp(a[0], b[0], t) + W(.03), a[1] + hem * .6], [lerp(a[0] - W(.1), b[0] + W(.1), t), a[1] + hem]], cCoat, .8); }
   const panel = k => { const lg = leg[k], sd = lg.sd, w0 = S2(-.3, sd * .28, 1.04), th1 = visTh(-.3, sd * .3, sd * 1.7).pop(), w1 = th1 != null ? S2(-.3, th1, 1.05) : w0;
-    const kp = pr(v3.lerp(lg.hip, lg.knee, sit ? .5 : .72)), hp = pr(lg.hip), dx = kp[0] - hp[0], dy = kp[1] - hp[1], l = Math.hypot(dx, dy) || 1, n = [-dy / l * W(.5), dx / l * W(.5)];
+    const kp = pr(v3.lerp(lg.hip, lg.knee, sit ? .5 : .72)), hp = pr(lg.hip), dx = kp[0] - hp[0], dy = kp[1] - hp[1], l = Math.hypot(dx, dy) || 1, n = [-dy / l * W(.42), dx / l * W(.42)];
     let b0 = [kp[0] + n[0], kp[1] + n[1]], b1 = [kp[0] - n[0], kp[1] - n[1]]; if (Math.hypot(b0[0] - w1[0], b0[1] - w1[1]) < Math.hypot(b1[0] - w1[0], b1[1] - w1[1])) [b0, b1] = [b1, b0];
     const pts = [w0, w1, [lerp(w1[0], b1[0], .5) + (b1[0] - w1[0]) * .04, lerp(w1[1], b1[1], .5)], b1, b0, [lerp(w0[0], b0[0], .5), lerp(w0[1], b0[1], .5)]];
     let s = shade(pts, cCoat, true);
@@ -882,7 +892,7 @@ function figure(u, o) {
   if (knee) legsS += panel(legOrder[0]) + panel(legOrder[1]);
   // ——— the upper body: the outer garment over the torso, the openings, the belt or sash, the folds ———
   const outer = cCoat || cVest || cShirt, botY = cCoat && !knee ? .12 : cVest && !cCoat ? -.3 : -.38;
-  const up = outlineOf(ysOf(-2.13, botY, 9), cCoat ? 1.04 : 1);
+  const up = outlineOf(ysOf(-2.3, botY, 10), cCoat ? 1.04 : 1);
   { const cid = nid('fgc', u);
     bodyS += shade(up.pts, outer, true) + `<defs><clipPath id="${cid}"><path d="${sp(up.pts, true)}"/></clipPath></defs><g clip-path="url(#${cid})">`;
     const vee = (open, y0, y1, k = 1.02) => { const ys = ysOf(y0, y1, 7), l = ys.map(y => S2(y, -open(y), k)), r = ys.map(y => S2(y, open(y), k)); return l.concat(r.reverse()); };
@@ -915,26 +925,31 @@ function figure(u, o) {
       for (const sd of [-1, 1]) { const e = surfLine([-2.13, sd * cOpen(-2.13)], [botY, sd * cOpen(botY)], 8, 1.04); if (e.length > 1) bodyS += stroke(e, cCoat.outline, sw * 1.2, .9);
         if (seen(-1.7, sd * .5)) { const lp = [S2(-2.1, sd * .36, 1.05), S2(-1.62, sd * .66, 1.05), S2(-1.22, sd * .3, 1.05)];
           bodyS += `<path d="${sp(lp, true)}" fill="${mix(cCoat.half, cCoat.lit, .25)}" stroke="${cCoat.outline}" stroke-width="${f(sw)}"/>`; } } }
-    bodyS += '</g>' + rimLine(up, 1, 8);
+    bodyS += '</g>' + rimLine(up, 1, 9);
   }
   // ——— the neck, the collar (or kerchief), the head, the hat ———
-  const neckB = Rt([0, -2.08, .02]), neckT = v3.add(headC3, Rt([0, .5, -.12]));
-  headS += limb([neckB, neckT], [.36, .32], skin, { folds: false, rim: rimC, drapes: 0 });
+  const neckB = Rt([0, -1.98, -.02]), neckT = v3.add(headC3, Rt([0, .3, -.15]));   // its top end inside the jaw
+  const nTone = { lit: skin.half, half: mix(skin.half, skin.shadow, .3), core: mix(skin.half, skin.shadow, .5), shadow: skin.shadow, outline: skin.outline };
+  headS += limb([neckB, neckT], [.44, .38], nTone, { folds: false, rim: rimC, drapes: 0 });
+  { const sOpen = y => Math.max(.02, lerp(.22, 0, (y + 2.3) / .5)), ys = ysOf(-2.3, -1.8, 6), l = ys.map(y => S2(y, -sOpen(y), 1.03)), rr = ys.map(y => S2(y, sOpen(y), 1.03));
+    if (seen(-2.1, 0)) headS += `<path d="${sp(l.concat(rr.reverse()), true)}" fill="${nTone.half}"/><path d="${sp(l)}M${P2(rr[0])}${sp(rr).slice(sp(rr).indexOf('C'))}" stroke="${cShirt.shadow}" stroke-width="${f(sw)}" fill="none" opacity=".8"/>`
+      + stroke(ysOf(-2.05, -1.85, 3).map(y => S2(y, .0, 1.03)), skin.shadow, W(.03), .35); }
   headS += `<path d="${sp([pr(v3.lerp(neckB, neckT, .5)), pr(neckT)])}" stroke="${skin.shadow}" stroke-width="${f(W(.2))}" opacity=".35" stroke-linecap="round"/>`;
   { const col = cShirt, cb = [], ct = [];
-    for (const th of visTh(-2.12, -Math.PI * .55, Math.PI * .55, 14)) { if (Math.abs(th) < .2) continue; cb.push([th, S2(-2.1, th, 1.12)]); ct.push([th, S2(-2.3, th, 1.22)]); }
+    for (const th of visTh(-2.25, -Math.PI * .55, Math.PI * .55, 14)) { if (Math.abs(th) < .2) continue; cb.push([th, S2(-2.2, th, 1.12)]); ct.push([th, S2(-2.4, th, 1.2)]); }
     for (const sd of [-1, 1]) { const a = cb.filter(q => q[0] * sd > 0).map(q => q[1]), b = ct.filter(q => q[0] * sd > 0).map(q => q[1]); if (a.length < 2) continue;
-      const tip = S2(-1.92, sd * .2, 1.1), pts = sd < 0 ? a.concat([tip]).concat(b.reverse()) : [tip].concat(a.reverse()).concat(b);
+      const tip = S2(-2.0, sd * .22, 1.1), pts = sd < 0 ? a.concat([tip]).concat(b.reverse()) : [tip].concat(a.reverse()).concat(b);
       headS += `<path d="${sp(pts, true)}" fill="${col.half}" stroke="${col.outline}" stroke-width="${f(sw)}"/>`; }
     if (dr.kerchief) { const kt = T(dr.kerchief), bd = band(-2.16, -2.02, -1.4, 1.4, 1.1); if (bd) headS += shade(bd, kt, true);
       const c = S2(-2.0, .05, 1.15); headS += `<path d="M${P2(c)}l${f(W(-.12))} ${f(W(.42))}l${f(W(.1))} ${f(W(-.04))}l${f(W(.08))} ${f(W(.12))}l${f(W(.04))} ${f(W(-.46))}z" fill="${kt.half}" stroke="${kt.outline}" stroke-width="${f(sw)}"/>`
         + K.shadeSphere(u, c[0], c[1], W(.07), L, 'linen', { outline: .2 }).replace(/url\(#[^)]+\)/, kt.half); } }
   const hp = Object.assign({}, pose.head || {}), ho = o.head || {};
   const tt = (psi / DEG + ((pose.torso || [])[2] || 0)) / 62 + (hp.turn || 0) + (ho.turn || 0), r = Hh / 2.21;
-  const hd = head34(u, Object.assign({ c: hc, r, tone: skin, light: Lp, hair: { style: 'short', color: '#2a1c12' } }, ho,
-    { turn: Math.min(1.05, Math.abs(tt)), dir: mir * (tt >= 0 ? 1 : -1), nod: (hp.nod || 0) + (ho.nod || 0) }));
+  const hd = head34(u, Object.assign({ c: hc, r, tone: skin, light: Lp, hair: { style: 'short', color: '#2a1c12' }, white: mix('#efe6da', skin.half, .2 + dim) }, ho,
+    { turn: Math.min(1.05, Math.abs(tt)), dir: mir * (tt >= 0 ? 1 : -1), nod: (hp.nod || 0) + (ho.nod || 0), tailApart: true }));
+  if (hd.tail) backS = hd.tail + backS;
   headS += hd.svg;
-  if (rimC) headS += require('./hat.cjs').rimArc(hd, { r, light: [-rimDir[0], -rimDir[1]], color: rimC, span: 55, opacity: .55 });
+  if (rimC) headS += require('./hat.cjs').rimArc(hd, { r, light: [-rimDir[0], -rimDir[1]], color: rimC, span: 40, width: r * .045, opacity: .32 });
   if (o.hat) { const ht = require('./hat.cjs').tricorn(u, hd, Object.assign({ r, light: Lp, rim: rimC }, o.hat)); headS += ht.back + ht.front; }
   // ——— the arms with the hands: behind the body or in front of it, by depth ———
   const hands = {}, wrist = {};
@@ -943,8 +958,8 @@ function figure(u, o) {
     const wp = pr(a.W), ep = pr(a.E), ang = Math.atan2(wp[1] - ep[1], wp[0] - ep[0]) / DEG;
     if (rolled) s += limb([v3.lerp(a.E, a.W, .4), a.W], [.34, .27], skin, { folds: false, drapes: 0 });
     const end = rolled ? v3.lerp(a.E, a.W, .55) : a.W;
-    s += limb([sTop, v3.lerp(a.S, a.E, .5), a.E, v3.lerp(a.E, end, .5), end], coat ? [.52, .46, .41, .37, .31] : [.54, .5, .45, .42, .34], tn,
-      { capA: true, roundA: .8, cuff: coat ? { from: .86, k: 1.1, tone: mix ? { lit: mix(tn.lit, '#ffffff', .1), half: mix(tn.half, tn.lit, .3), core: tn.half, shadow: tn.shadow, outline: tn.outline } : tn } : { from: .88, k: 1.14, roll: rolled }, drapes: 2 });
+    s += limb([sTop, v3.lerp(a.S, a.E, .5), a.E, v3.lerp(a.E, end, .5), end], coat ? [.46, .44, .4, .36, .3] : [.47, .47, .43, .4, .33], tn,
+      { capA: true, roundA: .55, cuff: coat ? { from: .86, k: 1.1, tone: mix ? { lit: mix(tn.lit, '#ffffff', .1), half: mix(tn.half, tn.lit, .3), core: tn.half, shadow: tn.shadow, outline: tn.outline } : tn } : { from: .88, k: 1.14, roll: rolled }, drapes: 2 });
     const hs = Hh * BONE.hand / 9.5, hpose = (o.hands && o.hands[k]) || (pose.hands || {})[k] || 'relaxed';
     const info = { side: k, at: wp, a: ang, s: hs, m: mir, pose: hpose, tone: skin, light: Lp, L, sw: Math.max(.2, sw * .8) };
     const h = o.hand ? o.hand(u, info) : hand3(u, info);
