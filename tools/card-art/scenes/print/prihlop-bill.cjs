@@ -153,18 +153,18 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft
     let merge = '';
     // the region: from his far cheek and temple down the neck and the middle of his body to the floor (his left half)
     { const cid = nid('mc', u), wid = nid('mw', u), fm = nid('mf', u), fg2 = nid('mfg', u), tg = nid('mt', u);
-      const reg = [[104, 57], [117, 60], [120, 72], [116, 84], [108, 90], [105, 100], [104, 140], [104, 200], [105, 292]].map(Z).concat([[WR + 4, 292], [WR + 4, 30], [Z([112, 50])[0], 30]]);
+      const reg = [[101, 56], [117, 59], [121, 72], [117, 85], [106, 91], [104, 100], [104, 140], [104, 200], [105, 292]].map(Z).concat([[WR + 4, 292], [WR + 4, 30], [Z([112, 50])[0], 30]]);
       const x0 = Z([100, 0])[0], x1 = Z([109, 0])[0];
       merge += `<defs><clipPath id="${cid}"><path d="${H.sp(reg, true)}"/></clipPath><clipPath id="${wid}"><rect x="${WL}" y="${WT}" width="${WR - WL}" height="${290 - WT}"/></clipPath>`
         + `${linGrad(fg2, x0, 0, x1, 0, [[0, '#ffffff', 0], [1, '#ffffff', 1]])}<mask id="${fm}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${fg2})"/></mask>`
-        + `${linGrad(tg, x0, 0, Z([150, 0])[0], 0, [[0, '#24382f', 0], [.5, '#24382f', .35], [1, '#24382f', .6]])}</defs><g clip-path="url(#${wid})"><g clip-path="url(#${cid})"><g mask="url(#${fm})">`
+        + `${linGrad(tg, x0, 0, Z([150, 0])[0], 0, [[0, '#24382f', .22], [.5, '#24382f', .42], [1, '#24382f', .6]])}</defs><g clip-path="url(#${wid})"><g clip-path="url(#${cid})"><g mask="url(#${fm})">`
         + `<rect x="${f(x0)}" y="20" width="${f(WR - x0 + 6)}" height="272" fill="url(#${tg})"/>`;
       const bc = Z([140, 110]), fc = Z(HEAD.c);
       for (let k = 0, y = WT; y < 290; k++, y += 15.6) {
         // the seams bow over the shoulder's swell and, a little, round his cheek
         const bow = x => { const dx = (x - bc[0]) / 35, dy = (y - bc[1]) / 54, ex = (x - fc[0]) / 16, ey = (y - fc[1]) / 18; return 8 * Math.exp(-dx * dx - dy * dy) + 3 * Math.exp(-ex * ex - ey * ey); };
         const pts = []; for (let x = x0 - 4; x <= WR + 4; x += 3) pts.push([x, y + 15.2 - bow(x) * (y < bc[1] - 10 ? -.5 : 1)]);
-        merge += `<path d="${H.sp(pts)}" stroke="#030605" stroke-width="1.3" fill="none"/><path d="${H.sp(pts.map(p => [p[0], p[1] + 1.3]))}" stroke="#5a8a78" stroke-width=".5" fill="none" opacity=".35"/>`; }
+        merge += `<path d="${H.sp(pts)}" stroke="#030605" stroke-width="1.5" fill="none"/><path d="${H.sp(pts.map(p => [p[0], p[1] + 1.4]))}" stroke="#7ab09a" stroke-width=".6" fill="none" opacity=".5"/>`; }
       { const R = rng(9); for (let i = 0; i < 44; i++) { const x = x0 + R() * (WR - x0), y = 46 + R() * 240; merge += `<path d="M${f(x)} ${f(y)}q${f(6 + R() * 6)} ${f((R() - .5) * 2)} ${f(12 + R() * 10)} ${f((R() - .5) * 1.4)}" stroke="#3a5a4c" stroke-width=".45" fill="none" opacity=".5"/>`; } }
       merge += `</g></g></g>`; }
 
@@ -198,9 +198,9 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft
       eye: 'half', look: [-.3, .2], brow: 'frown', mouth: .05, smile: -.25, lips: '#4a5444', iris: '#8ab0a0', hair: { style: 'short', color: '#8a8c84' }, hairColor: '#8a8c84', beard: 'short', noseL: 1.1 });
     // the neck: narrower than the head, soft sides flaring into the collar, the chin's shadow on it
     const nkS = nid('nk', u);
-    let face = `<defs>${radGrad(nkS, 106.5, 83.5, 7, [[0, '#0e160c', .8], [1, '#0e160c', 0]])}</defs>`
-      + `<path d="M102.6 81Q103.4 88 101.4 95.4L113.4 95.4Q111.2 88 111.8 81Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/>`
-      + `<ellipse cx="106.8" cy="86.4" rx="6.4" ry="3.6" fill="url(#${nkS})"/><path d="M104 91q3 1.4 6.4 -.2" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".5"/>`
+    let face = `<defs>${radGrad(nkS, 107, 86, 7, [[0, '#0a1208', .95], [1, '#0a1208', 0]])}</defs>`
+      + `<path d="M103.6 81Q104.6 89 102 95.4L113 95.4Q110.6 89 111 81Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/>`
+      + `<ellipse cx="107" cy="86.6" rx="6" ry="4" fill="url(#${nkS})"/><path d="M104 91q3 1.4 6.4 -.2" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".5"/>`
       + hd.svg + rimArc(hd, { r: HEAD.r, light: [-.55, -.85], color: '#1a2a24', span: 50, opacity: .5 });
     { const Q = hd.Q, dp = hd.depth;
       // barnacles grown into his left cheek and jaw (our right), the skin round them darker and lumpy

@@ -235,8 +235,18 @@ module.exports = { name: 'Абордаж рыболюдей', kind: 'deck', stat
     { const id = nid('dk', u); rail += `<defs><clipPath id="${id}"><rect x="-10" y="${FOOT}" width="220" height="${290 - FOOT}"/></clipPath></defs><g clip-path="url(#${id})">${K.deck(u, L, { horizon: HZ, top: FOOT, bottom: 290, vx: 100, kind: 'pine-deck', plank: 14, seed: 8, wet: true })}</g>`; }
     rail += `<path d="M-10 ${RAIL + .4}H210" stroke="${RIMC}" stroke-width=".5" opacity=".45"/>`;
     // the far claw coming over the rail on the right: two black-tipped fingers hooked over the cap
-    rail += `<g transform="translate(173 ${RAIL + 1}) rotate(8) scale(1.1)"><path d="M-8 -2Q-6 -8 0 -9Q6 -8 8 -2L6 4Q0 6 -6 4Z" fill="${SHELL.half}" stroke="${SHELL.outline}" stroke-width=".5"/><path d="M-6 2Q-12 4 -14 10L-11 9Q-8 5 -4 5Z" fill="${SHELL.shadow}" stroke="${SHELL.outline}" stroke-width=".4"/><path d="M-14 10l3 -1l-1 -2z" fill="#140806"/><path d="M-6 -8Q0 -10 6 -7" stroke="${RIMC}" stroke-width=".5" fill="none" opacity=".6"/></g>`
-      + runs([[168, RAIL + 4], [168.4, RAIL + 12], [168, RAIL + 22]], 1, .6);
+    // the right head's claw over the rail, whole in the frame: its forearm segment from the water, the palm with spines,
+    // the fixed finger hooked over the cap and the movable one under it, black tips biting the inner face
+    { const o = `stroke="${SHELL.outline}" stroke-width=".5" stroke-linejoin="round"`, cg = nid('fc', u);
+      rail += `<defs>${linGrad(cg, -8, -14, 6, 0, [[0, SHELL.lit, 1], [.45, SHELL.half, 1], [1, SHELL.shadow, 1]])}</defs><g transform="translate(164 ${RAIL})">`
+        + `<path d="M16 -3Q11 -10 3 -10" stroke="${SHELL.outline}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M16 -3Q11 -10 3 -10" stroke="${SHELL.half}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M14 -6.4Q10.4 -11 5 -11.4" stroke="${SHELL.lit}" stroke-width=".8" fill="none" opacity=".7"/>`
+        + `<path d="M10 -9.6l.8 -2.2l1 2M13.4 -7.4l1.4 -1.8l.4 2.2" fill="${SHELL.shadow}" ${o}/>`
+        + `<path d="M5 -12.4Q-3 -15 -8 -9Q-10.6 -4.6 -9.6 1.4L-8.2 4.4L-7 .8Q-7.4 -4 -4.6 -6.6Q0 -9 4 -6Z" fill="url(#${cg})" ${o}/>`
+        + `<path d="M3 -6Q-1 -5 -3.6 -2.4Q-5.4 0 -5 3.4L-3.8 5L-3 1.6Q-2.6 -1 1 -2.4Z" fill="${SHELL.half}" ${o}/>`
+        + `<path d="M-9.6 1.4L-8.2 4.4L-7 .8Z" fill="#140806"/><path d="M-5 3.4L-3.8 5L-3 1.6Z" fill="#140806"/>`
+        + `<path d="M-6 -11Q-1 -14.6 4.4 -12" stroke="${RIMC}" stroke-width=".6" fill="none" opacity=".7"/><path d="M-1.4 -13.6l.6 -2l1.2 1.8M2.4 -13.4l1 -1.8l.8 2" fill="${SHELL.shadow}" ${o}/>`
+        + `<path d="M-4 -9q2 -1.4 5 -1" stroke="${SHELL.lit}" stroke-width=".6" fill="none" opacity=".6"/></g>`; }
+    rail += runs([[156.6, RAIL + 5], [157, RAIL + 12], [156.6, RAIL + 22]], 1, .6);
     // water pouring off him down the inside of the bulwark, into a spreading puddle on the deck
     rail += [[76, 22, 1.2], [96, 30, 1.6], [112, 16, 1.1], [128, 27, 1.4]].map(([x, l, w], i) => runs([[x, RAIL + 2], [x + (i % 2 ? 1.2 : -1), RAIL + l * .35], [x + (i % 2 ? -.6 : .8), RAIL + l * .7], [x + (i % 2 ? .4 : -.3), RAIL + l]], w, .6)).join('');
     { const R = rng(3), pts = Array.from({ length: 14 }, (_, i) => { const a = i / 14 * Math.PI * 2, r = 1 + (R() - .5) * .3; return [100 + Math.cos(a) * 62 * r, 168 + Math.sin(a) * 10 * r]; });
