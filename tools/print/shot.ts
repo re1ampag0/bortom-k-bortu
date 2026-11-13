@@ -5,6 +5,7 @@
 //   npx vite-node tools/print/shot.ts -- --backs "Ж,М,И,Г,sea" --out … — the backs as printed (backs.cjs variant 1), <code>-back.png and backs.png
 // compare (default) — <slug>.png: the first-round picture | the new scene (draft allowed), side by side, ≤ 1500 px wide;
 // new / old — <slug>-new.png / <slug>-old.png, one card. --sheet <name> — also <name>.png: every card of the run on one sheet.
+// --grid N (compare) — instead of the one-row sheet: numbered «old | new» pairs, 3 across, N a sheet, <sheet>-1.jpg …; --start K — the first number.
 // PRINT_GLASS_CLEAR=10|20 renders a more transparent glass (art.ts); the contrast of the text is printed for each card.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -18,7 +19,7 @@ const args = process.argv.slice(2);
 const opt = (n: string, d: string) => { const i = args.indexOf(n); return i < 0 ? d : args[i + 1]; };
 const names = opt('--names', '').split(',').map(s => s.trim()).filter(Boolean);
 const out = path.resolve(opt('--out', 'report/print-kit/shots')), px = Number(opt('--px', '720')), mode = opt('--mode', 'compare');
-const variant = opt('--variant', ''), sheet = opt('--sheet', ''), backs = opt('--backs', '').split(',').map(s => s.trim()).filter(Boolean);
+const grid = Number(opt('--grid', '0')), variant = opt('--variant', ''), sheet = opt('--sheet', ''), backs = opt('--backs', '').split(',').map(s => s.trim()).filter(Boolean);
 if (!names.length && !backs.length) { console.error('--names "Card,Card" is required'); process.exit(2); }
 
 const itemName = (it: Item) => it.kind === 'card' || it.kind === 'legend' || it.kind === 'sea' ? it.card.name : '';
@@ -67,15 +68,27 @@ for (const [i, it] of items.entries()) {
   const n = itemName(it), s = slug(n);
   const cn = kNew && contrast(kNew, it), co = kOld && contrast(kOld, it);
   if (mode === 'compare') {
+    if (grid) { /* the pairs go on the grid sheets below */ } else {
     const html = cell(kOld!, it, 0, 'было (первый круг)') + cell(kNew!, it, W + GAP, 'стало');
-    await shoot(html, 2 * W + GAP, H + 6, path.join(out, `${s}.png`));
+    await shoot(html, 2 * W + GAP, H + 6, path.join(out, `${s}.png`)); }
   } else {
     const kit = (mode === 'old' ? kOld : kNew)!;
     await shoot(cell(kit, it, 0, ''), W, H, path.join(out, `${s}-${mode}.png`));
   }
-  if (sheet) cells.push(mode === 'compare' ? cell(kOld!, it, i * (2 * W + 2 * GAP + 4), 'было') + cell(kNew!, it, i * (2 * W + 2 * GAP + 4) + W + GAP, 'стало') : cell((mode === 'old' ? kOld : kNew)!, it, i * (W + GAP), (cn ?? co) ? `контраст ${(cn ?? co)!.mean.toFixed(1)} : 1` : ''));
+  if (sheet && !grid) cells.push(mode === 'compare' ? cell(kOld!, it, i * (2 * W + 2 * GAP + 4), 'было') + cell(kNew!, it, i * (2 * W + 2 * GAP + 4) + W + GAP, 'стало') : cell((mode === 'old' ? kOld : kNew)!, it, i * (W + GAP), (cn ?? co) ? `контраст ${(cn ?? co)!.mean.toFixed(1)} : 1` : ''));
   console.log(`${n}: ${[co && `old ${co.mean.toFixed(1)}:1 (p95 ${co.p95.toFixed(1)})`, cn && `new ${cn.mean.toFixed(1)}:1 (p95 ${cn.p95.toFixed(1)})`].filter(Boolean).join(', ')}`);
 }
-if (sheet) { const per = mode === 'compare' ? 2 * W + 2 * GAP + 4 : W + GAP; await shoot(cells.join(''), items.length * per - GAP, H + 6, path.join(out, `${sheet}.png`)); }
+if (grid && mode === 'compare') {
+  // the acceptance sheets: «old | new» pairs, 3 across, `grid` pairs a sheet, numbered from --start; <sheet>-1.jpg, -2, …
+  const PW = 2 * W + GAP, PG = 8, COLS = 3, PH = H + 14, start = Number(opt('--start', '1'));
+  const pair = (it: Item, n: number, x: number, y: number) => `<div style="position:absolute;left:${mm(x)};top:${mm(y)};width:${mm(PW)};height:${mm(PH)}">`
+    + `<div style="position:absolute;left:0;right:0;top:0;font:700 11pt/1.2 'Alegreya Sans',sans-serif;color:#f4e6c4;text-align:center">${n}. ${esc(itemName(it))}</div>`
+    + `<div style="position:absolute;left:0;top:${mm(7)};width:${mm(PW)};height:${mm(H + 6)}">${cell(kOld!, it, 0, 'старая')}${cell(kNew!, it, W + GAP, 'новая')}</div></div>`;
+  for (let p0 = 0, sn = 1; p0 < items.length; p0 += grid, sn++) {
+    const part = items.slice(p0, p0 + grid), rows = Math.ceil(part.length / COLS), cols = Math.min(COLS, part.length);
+    const html = part.map((it, j) => pair(it, start + p0 + j, (j % COLS) * (PW + PG), Math.floor(j / COLS) * (PH + PG))).join('');
+    await shoot(html, cols * (PW + PG) - PG, rows * (PH + PG) - PG, path.join(out, `${sheet || 'priyomka'}-${sn}.jpg`));
+  }
+} else if (sheet) { const per = mode === 'compare' ? 2 * W + 2 * GAP + 4 : W + GAP; await shoot(cells.join(''), items.length * per - GAP, H + 6, path.join(out, `${sheet}.png`)); }
 await browser.close();
 console.log(`→ ${path.relative(process.cwd(), out)}`);
