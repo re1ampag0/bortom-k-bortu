@@ -106,7 +106,7 @@ function captain(u, L) {
   const GR = [lerp(S0[0], S1[0], (S0[1] - 50) / (S0[1] - S1[1])), 50];
   const ropeAng = Math.atan2(S1[1] - S0[1], S1[0] - S0[0]) * 180 / Math.PI;
   const hR = handOn(u, { s: 1.5, m: 1, roll: 20, pitch: 6, pose: 'wrap', r: 1.1, tone: SKIN, light: [.5, .7], sw: .28, tilt: 8, backFingers: [] }, GR, ropeAng, -20);
-  const GS = [55, 99], bladeAng = 166;
+  const GS = [55, 90.5], bladeAng = 158;
   const hS = handOn(u, { s: 1.5, m: -1, roll: 30, pitch: 0, pose: 'wrap', r: .95, tone: SKIN, light: [.5, .7], sw: .28, tilt: 6 }, GS, bladeAng, 70);
 
   s += '<g transform="translate(76 0) scale(.92 1) translate(-76 0)">';
@@ -125,11 +125,16 @@ function captain(u, L) {
   for (const [x0, x1] of [[64, 58], [70, 66], [82, 86], [88, 94]]) s += `<path d="M${x0} 116Q${f((x0 + x1) / 2)} 160 ${x1} 204" stroke="${COAT.shadow}" stroke-width="1" fill="none" opacity=".85"/><path d="M${x0 + .8} 117Q${f((x0 + x1) / 2 + .8)} 160 ${x1 + .8} 204" stroke="${COAT.lit}" stroke-width=".4" fill="none" opacity=".3"/>`;
   s += `<path d="M76 128L75 204" stroke="#000" stroke-width="1.3" opacity=".7"/><path d="M76.8 128L76 204" stroke="${COAT.lit}" stroke-width=".4" opacity=".35"/>`;
   for (const x of [69, 83]) s += K.shadeSphere(u, x, 117.4, 1.15, L, 'brass', { outline: .25 });
+  // the folds the raised right arm pulls across the back: from under the right armpit down to the left, lit on their lower lip
+  for (const [d, w] of [['M100 65Q80 72 58 92', 1.3], ['M100 75Q84 84 64 106', 1.1], ['M100.4 86Q91 93 80 106', .9]])
+    s += `<path d="${d}" stroke="${COAT.shadow}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity=".75"/><path d="${d}" transform="translate(.4 .9)" stroke="${mix(COAT.lit, RIMC, .35)}" stroke-width="${f(w * .4)}" fill="none" stroke-linecap="round" opacity=".45"/>`;
+  // the fire's light along the right edge of the back: a soft warm band inside the edge
+  { const bl = nid('cr', u); s += `<defs><filter id="${bl}" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="1.4"/></filter></defs><path d="${H.sp([[100.6, 58], [101, 70], [99.6, 82], [97.4, 100], [94, 114], [98, 128], [104, 150], [108, 176]])}" stroke="${RIMC}" stroke-width="5" fill="none" opacity=".32" filter="url(#${bl})"/>`; }
   // the fire's glow low on the skirts and on the near edges
   { const g = nid('cw', u); s += `<defs>${radGrad(g, 100, 128, 40, [[0, '#ff8a3a', .35], [1, '#ff8a3a', 0]])}</defs><rect x="40" y="90" width="72" height="120" fill="url(#${g})"/>`; }
   s += '</g>';
   // the rims of the fire round the coat: strong on the right (towards the heart of the fire), weaker on the left
-  s += `<path d="${H.sp([[100.6, 62], [101, 70], [99.6, 82], [97.4, 100], [94, 114], [98, 128], [104, 150], [108, 176]])}" stroke="${RIMC}" stroke-width=".8" fill="none" opacity=".75"/>`;
+  s += `<path d="${H.sp([[100.6, 62], [101, 70], [99.6, 82], [97.4, 100], [94, 114], [98, 128], [104, 150], [108, 176]])}" stroke="${RIMC}" stroke-width="1.1" fill="none" opacity=".9"/>`;
   s += `<path d="${H.sp([[52.6, 82], [55.4, 100], [58.6, 114], [54, 128], [48, 150], [44, 176]])}" stroke="${RIMC}" stroke-width=".65" fill="none" opacity=".7"/>`;
   // ——— the baldric: over his right shoulder, across the back to the left hip, a brass buckle on it ———
   { const B = [[90, 54], [97, 59], [62, 126], [55.6, 121]], g = nid('bd', u);
@@ -141,16 +146,19 @@ function captain(u, L) {
   // ——— his left arm, low: one sleeve from the shoulder to the turned-back cuff, the fist on the hilt ———
   s += sabre(u, L, hS, bladeAng, 'back');
   s += hS.back;
-  s += H.cloth(u, { spine: [[57.4, 63], [54, 72.6], [51, 82], [53, 90.4], lerp2(hS.wrist, [53, 90.4], -.05)], w: [12, 11.2, 10.4, 9.4, 8], tone: COAT, lit: -1, rim: RIMC, rimSide: -1, rimOp: .4, seed: 3, folds: false, sw: .4, capA: true,
+  s += H.cloth(u, { spine: [[57.4, 63], [53, 71.4], [48.6, 78.6], [51.4, 82.6], lerp2(hS.wrist, [51.4, 82.6], -.05)], w: [12, 11.2, 10.4, 9.4, 8], tone: COAT, lit: -1, rim: RIMC, rimSide: -1, rimOp: .4, seed: 3, folds: false, sw: .4, capA: true,
     cuff: { from: .66, k: 1.42, tone: CUFF } });
   // a few soft creases at the bend of the elbow and down the sleeve
-  s += [['M55.4 76.6q-1.6 2.6 -1.2 5.6', .7], ['M56.2 81.2q-1.6 1.4 -1.4 3.6', .55], ['M52.4 66q-1.2 4 -.6 7', .45]].map(([d, w]) => `<path d="${d}" stroke="${COAT.shadow}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity=".8"/>`).join('');
+  s += [['M53.2 75.4q-1.8 2 -1.4 4.6', .7], ['M54.4 79q-1.6 1.2 -1 3.2', .55], ['M53.4 65.6q-1.6 3.4 -1.6 6', .45]].map(([d, w]) => `<path d="${d}" stroke="${COAT.shadow}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity=".8"/>`).join('');
   s += hS.front;
   s += sabre(u, L, hS, bladeAng, 'front');
   // ——— his right arm raised to the shroud ———
   s += hR.back;
   s += H.cloth(u, { spine: [[94.4, 62], [103, 69], [111.4, 74], [118, 67], lerp2(hR.wrist, [118, 67], -.05)], w: [12, 11, 10.2, 9, 8], tone: COAT, lit: 1, rim: RIMC, rimSide: 1, rimOp: .7, seed: 5, folds: false, sw: .4, capA: true,
     cuff: { from: .7, k: 1.4, tone: CUFF } });
+  { const sp0 = [[94.4, 62], [103, 69], [111.4, 74], [118, 67]], ww = [12, 11, 10.2, 9], bl = nid('sr', u);
+    const low = sp0.map((p, i) => { const a = sp0[Math.max(0, i - 1)], b = sp0[Math.min(sp0.length - 1, i + 1)], t = unit([b[0] - a[0], b[1] - a[1]]); let n = [-t[1], t[0]]; if (n[1] < 0) n = [-n[0], -n[1]]; const k = ww[i] / 2 - 1.6; return [p[0] + n[0] * k, p[1] + n[1] * k]; });
+    s += `<defs><filter id="${bl}" x="-30%" y="-50%" width="160%" height="200%"><feGaussianBlur stdDeviation=".9"/></filter></defs><path d="${H.sp(low.slice(1))}" stroke="${RIMC}" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".38" filter="url(#${bl})"/>`; }
   s += [['M106.4 68.6q2.6 .4 4.6 -1.4', .7], ['M108 71.4q2.2 .2 3.8 -1.6', .55], ['M99 63.4q3 2.6 6.4 3', .45]].map(([d, w]) => `<path d="${d}" stroke="${COAT.shadow}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity=".8"/>`).join('');
   s += hR.front;
 
@@ -161,6 +169,17 @@ function captain(u, L) {
   s += `<path d="${H.sp([at(-.5, .7), at(.5, .7), at(.6, 1.5), at(0, 1.62), at(-.6, 1.5)], true)}" fill="${SKIN.shadow}" stroke="${SKIN.outline}" stroke-width=".3"/><path d="${H.sp([at(.5, .74), at(.58, 1.1), at(.6, 1.5)])}" stroke="${RIMC}" stroke-width=".5" fill="none" opacity=".6"/>`;
   // the coat's turned-down collar round the neck
   s += `<path d="M${P2(at(-.86, 1.46))}Q${P2(at(0, 1.3))} ${P2(at(.86, 1.46))}L${P2(at(1.2, 1.9))}Q${P2(at(0, 1.66))} ${P2(at(-1.2, 1.9))}Z" fill="${COAT.half}" stroke="${COAT.outline}" stroke-width=".4"/><path d="M${P2(at(.86, 1.46))}L${P2(at(1.2, 1.9))}" stroke="${RIMC}" stroke-width=".5" opacity=".6"/>`;
+  // ——— the slow-match fuses tucked in his beard (the beard itself hidden by the head): their roots behind the jaw, the
+  // cords sticking out past both sides of the head below the ears, their ends glowing, smoke curling up ———
+  const fuses = [[[-.5, .72], [-1.22, .66], [-1.36, .86]], [[-.4, .9], [-1.08, 1.04], [-1.2, 1.26]], [[.5, .8], [1.2, .78], [1.36, 1.0]]];
+  let embers = '', smk = '';
+  fuses.forEach(([p0, p1, p2], i) => { const p = at(...p0), m1 = at(...p1), q = at(...p2), x = p2[0];
+    s += `<path d="M${P2(p)}Q${P2(m1)} ${P2(q)}" stroke="#20160e" stroke-width=".85" fill="none" stroke-linecap="round"/><path d="M${P2(p)}Q${P2(m1)} ${P2(q)}" stroke="#7a5a3a" stroke-width=".3" fill="none" opacity=".6" transform="translate(0 -.25)"/>`;
+    embers += glow(u, q[0], q[1], 3, 3, '#ff9a3a', .85) + `<circle cx="${f(q[0])}" cy="${f(q[1])}" r=".6" fill="#ffd27a"/><circle cx="${f(q[0])}" cy="${f(q[1])}" r=".28" fill="#fff4d0"/>`;
+    // the smoke: a thin thread up from the ember, out round the brim, widening, curling and drifting off to the right
+    const sd = x > 0 ? 1 : -1, W = [q, [q[0] + sd * 1.2, q[1] - 3.4], [q[0] + sd * 3.6, q[1] - 7], [q[0] + sd * 2 + 1.6, q[1] - 11.4], [q[0] + sd * .4 + 4 + i, q[1] - 14 - i], [q[0] + 8 + i * 2, q[1] - 15.4 - i * 2], [q[0] + 11 + i * 2, q[1] - 19 - i * 2], [q[0] + 17 + i * 3, q[1] - 21 - i * 3]];
+    for (const [w, op, col] of [[3.2, .1, '#bfa49a'], [1.6, .2, '#d8c0b0'], [.5, .4, '#ffd8b8']]) smk += `<path d="${H.sp(W)}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity="${op}"/>`;
+    for (let k = 0; k < 3; k++) { const pp = W[3 + k]; smk += `<ellipse cx="${f(pp[0] + (R() - .5) * 2)}" cy="${f(pp[1])}" rx="${f(2 + k * 1.4)}" ry="${f(1.2 + k * .7)}" fill="#c8b0a4" opacity="${f(.1 - k * .02)}"/>`; } });
   // the jaw and the cheek's edge: a dark sliver under the ear, its rim lit
   { const J = [at(.5, .2), at(.8, .3), at(.78, .64), at(.66, .9), at(.46, .96), at(.4, .6)];
     s += `<path d="${H.sp(J, true)}" fill="${SKIN.shadow}" stroke="${SKIN.outline}" stroke-width=".3"/><path d="${H.sp([at(.8, .32), at(.78, .64), at(.66, .9)])}" stroke="${RIMC}" stroke-width=".55" fill="none" opacity=".8"/>`; }
@@ -168,26 +187,18 @@ function captain(u, L) {
   const hairP = [at(-.88, -.1), at(-.84, -.56), at(-.52, -.92), at(0, -1.04), at(.5, -.94), at(.84, -.58), at(.88, -.1), at(.76, .3), at(.6, .66), at(.34, .9), at(.12, 1.0), at(-.12, 1.0), at(-.36, .9), at(-.62, .66), at(-.8, .3)];
   s += H.hairMass(u, hairP, { r, color: HAIR, seed: 7, n: 46, light: [.5, .5], flow: p => { const dx = c[0] - p[0], dy = c[1] + r - p[1], l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; }, tufts: [1, 13], tuftLen: .1 });
   s += `<path d="${H.sp([at(.84, -.5), at(.88, -.1), at(.76, .3), at(.6, .66), at(.34, .9)])}" stroke="${RIMC}" stroke-width=".55" fill="none" opacity=".7"/>`;
-  // the queue: gathered at the nape, down the back over the collar, bound with a red ribbon half way, the ends hanging
+  // the queue: gathered at the nape, down the back over the collar, bound with a red ribbon wound round it half way
   { const q = [at(-.2, .86), at(.22, .86), at(.26, 1.9), at(.2, 3.2), at(.04, 4.0), at(-.1, 3.2), at(-.2, 1.9)];
     s += H.hairMass(u, q, { r, color: HAIR, seed: 4, n: 14, light: [.5, .4], flow: () => [0, 1], tufts: [3, 4], tuftLen: .12 });
     s += `<path d="${H.sp([at(.24, 1), at(.26, 1.9), at(.2, 3.2), at(.04, 3.9)])}" stroke="${RIMC}" stroke-width=".45" fill="none" opacity=".55"/>`;
     const b = at(.03, 2.3);
-    s += `<path d="M${P2(b)}q-1.4 3 -.6 6.2l.9 -.2q-.6 -3 .4 -5.8zM${P2(b)}q1.6 2.6 1.8 5.8l-.9 0q-.2 -3 -1.4 -5.6z" fill="#8a1a12" stroke="#2a0604" stroke-width=".25"/>`
-      + `<path d="M${f(b[0] - 1.7)} ${f(b[1] - 1.1)}h3.4v2.2h-3.4z" fill="#b02a1c" stroke="#2a0604" stroke-width=".3"/><path d="M${f(b[0] + 1.7)} ${f(b[1] - 1.1)}v2.2" stroke="${RIMC}" stroke-width=".4" opacity=".7"/>`; }
+    // three turns of the ribbon, each a band bowed round the round of the queue, a thin dark gap between them
+    for (const dy of [-1.5, 0, 1.5]) { const y = b[1] + dy, hw = 1.75;
+      s += `<path d="M${f(b[0] - hw)} ${f(y - .6)}Q${f(b[0])} ${f(y - .1)} ${f(b[0] + hw)} ${f(y - .6)}V${f(y + .5)}Q${f(b[0])} ${f(y + 1)} ${f(b[0] - hw)} ${f(y + .5)}Z" fill="#a02618" stroke="#2a0604" stroke-width=".25"/>`
+        + `<path d="M${f(b[0] - hw + .4)} ${f(y - .3)}Q${f(b[0])} ${f(y + .15)} ${f(b[0] + hw - .4)} ${f(y - .3)}" stroke="#d04a30" stroke-width=".3" fill="none" opacity=".7"/><path d="M${f(b[0] + hw)} ${f(y - .6)}V${f(y + .5)}" stroke="${RIMC}" stroke-width=".4" opacity=".7"/>`; } }
   // the near ear, in shade, its rim lit
   { const E = [at(.72, -.02), at(.92, -.08), at(1.0, .14), at(.94, .4), at(.8, .5), at(.72, .34)];
     s += `<path d="${H.sp(E, true)}" fill="${SKIN.core}" stroke="${SKIN.outline}" stroke-width=".3"/><path d="${H.sp([at(.92, -.06), at(1.0, .14), at(.94, .4)])}" stroke="${RIMC}" stroke-width=".5" fill="none" opacity=".85"/><path d="${H.sp([at(.8, .06), at(.88, .2), at(.82, .36)])}" stroke="${SKIN.shadow}" stroke-width=".35" fill="none"/>`; }
-  // ——— the slow-match fuses tucked under the brim: cords hanging past the hair, their ends glowing, smoke curling up ———
-  const fuses = [[-1.02, -.42, 2.1, -12], [-.9, -.5, 1.1, 6], [1.04, -.4, 2.4, 10]];
-  let embers = '', smk = '';
-  fuses.forEach(([x, y, len, a], i) => { const p = at(x, y), q = [p[0] + Math.sin(a * Math.PI / 180) * len * r * .5, p[1] + len * r * .5];
-    s += `<path d="M${P2(p)}Q${f(p[0] + (q[0] - p[0]) * .2 + .5)} ${f((p[1] + q[1]) / 2)} ${P2(q)}" stroke="#20160e" stroke-width=".85" fill="none" stroke-linecap="round"/><path d="M${P2(p)}Q${f(p[0] + (q[0] - p[0]) * .2 + .5)} ${f((p[1] + q[1]) / 2)} ${P2(q)}" stroke="#7a5a3a" stroke-width=".3" fill="none" opacity=".6"/>`;
-    embers += glow(u, q[0], q[1], 3, 3, '#ff9a3a', .85) + `<circle cx="${f(q[0])}" cy="${f(q[1])}" r=".6" fill="#ffd27a"/><circle cx="${f(q[0])}" cy="${f(q[1])}" r=".28" fill="#fff4d0"/>`;
-    // the smoke: a thin thread up from the ember, out round the brim, widening, curling and drifting off to the right
-    const sd = x > 0 ? 1 : -1, W = [q, [q[0] + sd * 1.2, q[1] - 3.4], [q[0] + sd * 3.6, q[1] - 7], [q[0] + sd * 2 + 1.6, q[1] - 11.4], [q[0] + sd * .4 + 4 + i, q[1] - 14 - i], [q[0] + 8 + i * 2, q[1] - 15.4 - i * 2], [q[0] + 11 + i * 2, q[1] - 19 - i * 2], [q[0] + 17 + i * 3, q[1] - 21 - i * 3]];
-    for (const [w, op, col] of [[3.2, .1, '#bfa49a'], [1.6, .2, '#d8c0b0'], [.5, .4, '#ffd8b8']]) smk += `<path d="${H.sp(W)}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity="${op}"/>`;
-    for (let k = 0; k < 3; k++) { const pp = W[3 + k]; smk += `<ellipse cx="${f(pp[0] + (R() - .5) * 2)}" cy="${f(pp[1])}" rx="${f(2 + k * 1.4)}" ry="${f(1.2 + k * .7)}" fill="#c8b0a4" opacity="${f(.1 - k * .02)}"/>`; } });
   { const bl = nid('fb', u); s += `<defs><filter id="${bl}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".35"/></filter></defs><g filter="url(#${bl})">${smk}</g>`; }
   // ——— the tricorn: the felt brim turned up in three, gold braid on its edge ———
   const hat = tricorn(u, hd, { r, color: '#16100f', dark: '#060304', lit: '#5a3a30', trim: '#b08a3a', light: [.45, .6], rim: RIMC, y: -.6, size: 1.56, turnUp: .82, seed: 3 });
@@ -200,7 +211,9 @@ const lerp2 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 // left and down, the fire along its edge. part: 'back' — the blade and the pommel (behind the fingers), 'front' — the guard
 function sabre(u, L, h, bladeAng, part) {
   const v = [Math.cos(bladeAng * Math.PI / 180), Math.sin(bladeAng * Math.PI / 180)], nn = [-v[1], v[0]], g = h.grip;
-  const at = (t, o) => [g[0] + v[0] * t + nn[0] * o, g[1] + v[1] * t + nn[1] * o];
+  const at0 = (t, o) => [g[0] + v[0] * t + nn[0] * o, g[1] + v[1] * t + nn[1] * o];
+  // the blade (t > 6) a little shorter than before, so the point stays inside the picture
+  const at = (t, o) => at0(t > 6 ? 6 + (t - 6) * .84 : t, o);
   if (part === 'back') {
     let s = K.shadeCyl(u, ...at(-5.6, 0), ...at(4.4, 0), 1.1, L, 'leather', { outline: .3, seed: 4 }) + K.shadeSphere(u, ...at(-6.2, 0), 1.4, L, 'brass', { outline: .3 });
     const B = [at(6, -1.2), at(16, -1.5), at(26, -.8), at(34.6, 1.4), at(37.4, 2.8), at(35.6, .9), at(26, 2.1), at(16, 1.7), at(6, 1.2)];

@@ -22,7 +22,9 @@ const { glow, gloom } = PK;
 const HZ = 100;
 const MOON = { x: 154, y: 38 };
 const EN = { kind: 'endeavour', x: 166, y: 102.4, scale: .3, sails: 'full', flip: true, seed: 4 };
-const BOLT = [112.6, 127.4];                                          // the ring bolt in the ledge's flank, right of her tail
+const BOLT = [112.6, 124.6];                                          // the ring bolt in the ledge's flank, right of her tail
+const GROW = { at: [120, 138], k: 1.15 };                            // she and her ledge, 15 % bigger, grown up and left
+const grow = p => [GROW.at[0] + (p[0] - GROW.at[0]) * GROW.k, GROW.at[1] + (p[1] - GROW.at[1]) * GROW.k];
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#ffd2b0', power: .75 },
   fill: { color: '#3a1820', power: .45 }, rim: { az: 60, color: '#ffe0c8', power: .7 } };
 const skel = { horizon: HZ, eye: 2, light: 'the moon low on the right behind the ship (key): her face, breast and held-out arm turned to it; the red night (fill)', items: [
@@ -49,14 +51,19 @@ module.exports = { name: 'Пленная русалка', kind: 'deck', status: 
     // ——— the ship opposite, small on the water under the moon ———
     bg += K.ship(u, L, Object.assign({ wake: false, reflect: true, lights: true }, EN));
     // ——— the rocks: the tall crag behind her, the ledge she sits on in front of it ———
-    let mid = K.rock(u, L, { x: 24, y: 152, w: 96, h: 124, wet: true, seed: 41 });
-    mid += K.rock(u, L, { x: 84, y: 148, w: 84, h: 46, wet: true, seed: 17 });
-    mid += K.foam(u, { x: 50, y: 147.5, w: 150, h: 1.4, L, seed: 9 });
-    // ——— her, the chain, the song ———
+    const crag = K.rock(u, L, { x: 24, y: 152, w: 96, h: 124, wet: true, seed: 41 });
+    let mid = crag;
+    // the moon's light along the crag's crown and its right flank, so it stands off the night sky
+    { const sil = (crag.match(/<path d="([^"]+)" fill="none" stroke="[^"]+" stroke-width=".6" stroke-linejoin="round"\/>/) || [])[1];
+      if (sil) { const g = nid('cm', u), bl = nid('cb', u);
+        mid += `<defs>${linGrad(g, 0, 0, 72, 0, [[0, RIMC, 0], [.42, RIMC, .15], [.8, RIMC, .85], [1, RIMC, 1]])}<filter id="${bl}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.2"/></filter></defs>`
+          + `<path d="${sil}" fill="none" stroke="url(#${g})" stroke-width="3" opacity=".35" filter="url(#${bl})"/><path d="${sil}" fill="none" stroke="url(#${g})" stroke-width=".7" opacity=".85"/>`; } }
+    // ——— her ledge, her, the chain, the song: drawn 15 % bigger round GROW.at ———
     const m = mermaid(u, L);
-    mid += m.svg;
-    mid += song(u, L, m.mouth);
-    mid += fetter(u, L, m);
+    mid += `<g transform="translate(${GROW.at[0]} ${GROW.at[1]}) scale(${GROW.k}) translate(${-GROW.at[0]} ${-GROW.at[1]})">`
+      + K.rock(u, L, { x: 84, y: 148, w: 84, h: 46, wet: true, foam: false, seed: 17 }) + m.svg + fetter(u, L, m) + '</g>';
+    mid += K.foam(u, { x: 50, y: 147.5, w: 150, h: 1.4, L, seed: 9 });
+    mid += song(u, L, grow(m.mouth));
     // the moon's light round her and on the ledge; the night closing in at the bottom and the left
     let fg = K.localGlow(u, { x: 100, y: 70, color: '#ffc8a0', power: .2, radius: 46 }, { core: false });
     fg += gloom(u, 100, 120, 100, 175, .55, '#0a0204') + gloom(u, 60, 0, 0, 0, .35, '#0a0204');
@@ -73,8 +80,8 @@ function mermaid(u, L) {
   // ——— the far arm: from behind her back down to the hand flat on the stone beside her ———
   const fSh = [81, 71.4], fEl = [75.2, 86], fWr = [71.6, 100.2];
   const ft = dim(tone, .3);
-  const fh = H.hand3(u, { at: fWr, a: 168, s: 1.05, m: -1, roll: 6, pitch: 34, pose: 'open', spread: 6, tone: ft, light: [.8, -.5], sw: .26 });
-  o += `<ellipse cx="${f(fWr[0] - 4)}" cy="${f(fWr[1] + 3.4)}" rx="6" ry="1.4" fill="#0a0404" opacity=".45"/>`;
+  const fh = H.hand3(u, { at: fWr, a: 182, s: 1.05, m: -1, roll: 62, pitch: 0, pose: 'open', spread: 3, flex: [[2, 2, 0], [2, 2, 0], [2, 2, 0], [2, 2, 0]], tone: ft, light: [.8, -.5], sw: .26 });
+  o += `<ellipse cx="${f(fWr[0] - 4.6)}" cy="${f(fWr[1] + 1.6)}" rx="6.4" ry="1.2" fill="#0a0404" opacity=".5"/>`;
   o += fh.back;
   o += H.cloth(u, { spine: [fSh, lerp2(fSh, fEl, .5), fEl, lerp2(fEl, fWr, .5), fWr], w: [5, 4.4, 3.7, 3.1, 2.7], tone: ft, lit: -1, folds: false, rim: RIMC, rimSide: -1, rimOp: .45, capA: true });
   o += fh.front;
@@ -109,12 +116,19 @@ function mermaid(u, L) {
   const torso = [[83.4, 64.4], [88.6, 64.6], [91.2, 67.6], [93.2, 72], [94.6, 78], [93.6, 83.6], [91, 88.6], [89.6, 93.6], [91, 99.4], [92.6, 104.6], [78.6, 106], [76.4, 100.6], [78.6, 94.4], [77.4, 87.4], [76.2, 79.4], [77.4, 71.6], [80.2, 66.6]];
   const bid = nid('mb', u), bc = nid('mk', u);
   o += `<defs>${linGrad(bid, 75, 80, 96, 76, [[0, tone.shadow], [.3, tone.core], [.68, tone.half], [1, tone.lit]])}<clipPath id="${bc}"><path d="${sp(torso, true)}"/></clipPath></defs>`;
-  o += `<path d="${sp(torso, true)}" fill="url(#${bid})" stroke="${tone.outline}" stroke-width=".45"/>`;
+  // the outline round her back, breast and hips, but not across the bottom, where she runs on into the tail
+  o += `<path d="${sp(torso, true)}" fill="url(#${bid})"/><path d="${sp(torso.slice(11).concat(torso.slice(0, 11)))}" fill="none" stroke="${tone.outline}" stroke-width=".45"/>`;
   o += `<g clip-path="url(#${bc})">`;
   // the shoulder blade and the ribs in soft shade, the moon on the breastbone; the scales begin at the hips
   o += `<path d="M78.4 74q3 6 1 12" stroke="${tone.shadow}" stroke-width="1.6" fill="none" opacity=".35"/><path d="M86 90q2 3 5 3.4" stroke="${tone.shadow}" stroke-width=".6" fill="none" opacity=".5"/>`;
-  o += `<path d="M74 97.6Q84 95.6 94 98.4V108H74Z" fill="url(#${tg})"/><path d="M74 97.6Q84 95.6 94 98.4" stroke="#ffd8a0" stroke-width=".5" fill="none" opacity=".6"/>`;
-  for (let i = 0; i < 7; i++) { const x = 78 + i * 2.2, y = 97.4 - Math.sin(i / 6 * Math.PI) * .6; o += `<path d="M${f(x - 1.1)} ${f(y)}q1.1 1.4 2.2 0" stroke="#7a3412" stroke-width=".35" fill="none" opacity=".8"/>`; }
+  // the skin turns into the tail over the hips: the tail's colour fades in from the waist down, no edge
+  { const fm = nid('mm', u), fg = nid('mg', u), gw = nid('mw', u);
+    o += `<defs>${linGrad(fg, 0, 89, 0, 103, [[0, '#fff', 0], [.55, '#fff', .55], [1, '#fff', 1]])}<mask id="${fm}" maskUnits="userSpaceOnUse" x="70" y="80" width="30" height="30"><rect x="70" y="80" width="30" height="30" fill="url(#${fg})"/></mask>`
+      + `${radGrad(gw, 98, 102, 16, [[0, '#ffe0b0', .4], [1, '#ffe0b0', 0]])}</defs><g mask="url(#${fm})"><rect x="70" y="86" width="30" height="24" fill="url(#${tg})"/><rect x="70" y="86" width="30" height="24" fill="url(#${gw})"/></g>`; }
+  // and the scales come with it: a few tiny faint ones at the waist, more, bigger and brighter down to the tail
+  for (let row = 0; row < 8; row++) { const y = 91 + row * 1.9, t = row / 7, k = .32 + t * .28;
+    for (let x = 76 + (row % 2) * 1.1 * k * 2; x < 94; x += 2.2 * k * 2) { if (R() > .25 + t * .75) continue;
+      o += `<path d="M${f(x - 1.1 * k)} ${f(y - .3 * k)}q${f(1.1 * k)} ${f(1.4 * k)} ${f(2.2 * k)} 0" stroke="${t < .5 ? '#7a3412' : '#ffd8a0'}" stroke-width="${f(.2 + t * .12)}" fill="none" opacity="${f((.15 + t * .5) * (.6 + R() * .4))}"/>`; } }
   o += '</g>';
   o += `<path d="${sp([[91.2, 67.6], [93.2, 72], [94.6, 78], [93.6, 83.6], [91, 88.6], [89.6, 93.6]])}" stroke="${RIMC}" stroke-width=".6" fill="none" opacity=".8"/>`;
   // the band of shells over the breast, a strand of weed holding them
@@ -142,9 +156,9 @@ function mermaid(u, L) {
   o += `<path d="${sp([hd.Q(-.6, -.6), hd.Q(-.9, -.1), hd.Q(-1.2, .5)])}" stroke="#3a6a44" stroke-width=".9" fill="none" stroke-linecap="round"/><path d="${sp([hd.Q(-.4, -.84), hd.Q(-.92, -.3)])}" stroke="#3a6a44" stroke-width=".7" fill="none"/>`;
 
   // ——— the near arm held out to the ship, palm up ———
-  const nSh = [88.6, 71], nEl = [100.6, 66.4], nWr = [112.6, 60.4];
+  const nSh = [88.6, 71], nEl = [100.4, 68.8], nWr = [112.2, 60.2];
   o += H.cloth(u, { spine: [nSh, lerp2(nSh, nEl, .5), nEl, lerp2(nEl, nWr, .55), nWr], w: [5.6, 4.6, 3.7, 3.1, 2.7], tone, lit: 1, folds: false, rim: RIMC, rimSide: -1, rimOp: .8, capA: true });
-  o += `<path d="M98.6 66.8q2 1.4 4 .6" stroke="${tone.shadow}" stroke-width=".4" fill="none" opacity=".6"/>`;
+  o += `<path d="M98.6 67.4q1.8 .9 3.6 -.4" stroke="${tone.shadow}" stroke-width=".45" fill="none" opacity=".65"/>`;
   const nh = H.hand3(u, { at: nWr, a: -30, s: 1.1, m: -1, roll: 150, pitch: 10, pose: 'open', spread: 9, tone, light: [.8, -.5], sw: .26 });
   o += nh.back + nh.front;
   return { svg: o, mouth: hd.Q(1.04, .52), wrist: nWr, el: nEl };
@@ -153,10 +167,19 @@ function mermaid(u, L) {
 function fetter(u, L, m) {
   const a = lerp2(m.el, m.wrist, .86), d = [m.wrist[0] - m.el[0], m.wrist[1] - m.el[1]], ang = Math.atan2(d[1], d[0]) * 180 / Math.PI;
   let o = `<g transform="translate(${f(a[0])} ${f(a[1])}) rotate(${f(ang)})"><rect x="-1.9" y="-2.2" width="3.8" height="4.4" rx=".7" fill="#2a2626" stroke="#0a0808" stroke-width=".35"/><path d="M-1.6 -2h3.2" stroke="#e8d0c0" stroke-width=".45" opacity=".85"/><circle cx="0" cy="1.6" r=".55" fill="#6a6260"/></g>`;
-  // the ring bolt in the rock: the plate, the eye, the ring
-  o += `<ellipse cx="${BOLT[0]}" cy="${BOLT[1] + 1.2}" rx="3.4" ry="1.2" fill="#0a0404" opacity=".55"/>` + K.shadeSphere(u, BOLT[0], BOLT[1], 1.7, L, 'iron', { outline: .3 });
-  o += `<ellipse cx="${BOLT[0]}" cy="${BOLT[1] - 2.8}" rx="2.2" ry="2.9" fill="none" stroke="#0a0808" stroke-width="1.5"/><ellipse cx="${BOLT[0]}" cy="${BOLT[1] - 2.8}" rx="2.2" ry="2.9" fill="none" stroke="#6a6260" stroke-width=".7"/><path d="M${BOLT[0] + 1.6} ${BOLT[1] - 4.6}q.8 1.6 .2 3" stroke="${RIMC}" stroke-width=".4" fill="none" opacity=".8"/>`;
-  const c0 = [a[0] + .8, a[1] + 2.6], c1 = [BOLT[0], BOLT[1] - 5.4], sag = [lerp(c0[0], c1[0], .5) + 2.4, lerp(c0[1], c1[1], .55)];
+  // the ring bolt in the rock: an iron plate set in the stone with four rivets and a rust stain run down from it, the
+  // eye standing out of the plate, the ring hanging through the eye — and the chain's last link through the ring
+  const B = BOLT, rc = [B[0], B[1] + 3.4], rr = [2.3, 2.7];
+  o += `<path d="M${B[0] - .6} ${B[1] + 2}q-.4 3 .2 6.4M${B[0] + .8} ${B[1] + 2}q.3 2.4 -.2 4.6" stroke="#6a2a10" stroke-width=".9" fill="none" opacity=".35" stroke-linecap="round"/>`;
+  o += `<ellipse cx="${B[0] + .4}" cy="${B[1] + 2.8}" rx="3" ry=".9" fill="#0a0404" opacity=".4"/>`;
+  o += `<g transform="rotate(-8 ${B[0]} ${B[1]})"><rect x="${B[0] - 2.6}" y="${B[1] - 2.4}" width="5.2" height="4.8" rx=".5" fill="#2a2424" stroke="#0a0808" stroke-width=".35"/><path d="M${B[0] - 2.3} ${B[1] - 2.3}h4.8v4.4" stroke="#8a7a72" stroke-width=".3" fill="none" opacity=".7"/>`
+    + [[-1.7, -1.5], [1.7, -1.5], [-1.7, 1.5], [1.7, 1.5]].map(([dx, dy]) => `<circle cx="${B[0] + dx}" cy="${B[1] + dy}" r=".42" fill="#4a4240" stroke="#0a0808" stroke-width=".15"/>`).join('') + '</g>';
+  // the ring (behind the eye's front) and the chain's last link caught round its lower edge
+  const ring = `<ellipse cx="${f(rc[0])}" cy="${f(rc[1])}" rx="${rr[0]}" ry="${rr[1]}" fill="none" stroke="#0a0808" stroke-width="1.5"/><ellipse cx="${f(rc[0])}" cy="${f(rc[1])}" rx="${rr[0]}" ry="${rr[1]}" fill="none" stroke="#6a6260" stroke-width=".7"/><path d="M${f(rc[0] + 1.7)} ${f(rc[1] - 1.8)}q.8 1.6 .2 3" stroke="${RIMC}" stroke-width=".4" fill="none" opacity=".8"/>`;
+  o += ring;
+  // the eye: a short thick loop out of the plate's middle, over the ring's top
+  o += `<ellipse cx="${B[0]}" cy="${B[1] + .5}" rx="1.1" ry="1.3" fill="none" stroke="#0a0808" stroke-width="1.3"/><ellipse cx="${B[0]}" cy="${B[1] + .5}" rx="1.1" ry="1.3" fill="none" stroke="#5a5250" stroke-width=".55"/><path d="M${B[0] + .7} ${B[1] - .3}q.5 .7 .2 1.5" stroke="${RIMC}" stroke-width=".3" fill="none" opacity=".8"/>`;
+  const c0 = [a[0] + .8, a[1] + 2.6], c1 = [rc[0] + rr[0] * .7, rc[1] + rr[1] * .75], sag = [lerp(c0[0], c1[0], .5) + 2.4, lerp(c0[1], c1[1], .55)];
   o += K.chain(u, L, [c0, lerp2(c0, sag, .5), sag, lerp2(sag, c1, .5), c1], { link: 2.4, seed: 6 });
   return o;
 }
