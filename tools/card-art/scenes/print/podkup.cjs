@@ -98,7 +98,7 @@ function hold(u, L, R) {
       + K.smoke(u, L, { x: b[0] - 3.2, y: b[1] + 21, w: 6, h: 26, wind: -.2, seed: 11, opacity: .22 }); }
   // the shaft's light on the floor behind the barrel; the dark closing in on the sides and the far end
   s += K.localGlow(u, { x: 100, y: 122, color: '#fff0d0', power: .4, radius: 50 }, { squash: .3, core: false })
-    + gloom(u, 100, 70, 0, 70, .55, '#030201') + gloom(u, 100, 70, 200, 70, .45, '#030201') + gloom(u, 100, 60, 100, 0, .35, '#030201');
+    + gloom(u, 100, 70, 0, 70, .7, '#030201') + gloom(u, 100, 70, 200, 70, .45, '#030201') + gloom(u, 100, 60, 100, 0, .35, '#030201');
   return s;
 }
 
@@ -115,18 +115,21 @@ function deal(u, L, R) {
     for (const d of [-36, -14, 8, 30]) { const hw = Math.sqrt(1 - Math.pow(d / (rx - 5), 2)) * (ry - 2); s += `<path d="M${x + d} ${f(y - hw)}V${f(y + hw)}" stroke="#2a160a" stroke-width=".55"/>`; }
     s += K.coins(u, L, { x: 132, y: y + 1, s: 1, n: 2, r: 2.4, seed: 9 }); }
 
+  // the hands and the purse a little larger than the room's scale (they are close to us): one group scaled round the deal
+  s += `<g transform="translate(100 92) scale(1.22) translate(-100 -92)">`;
   // ——— the boatswain: the bare forearm from the right edge (the rolled sleeve off the frame), the hand cupped palm up
   const bo = { a: 172, s: 6, m: -1, roll: 25, pitch: 0, pose: 'wrap', r: 2.15, tone: BOS, light: [-.25, -.97], sw: .45, palmW: .86, wristW: .74, fingerW: 1.08 };
   const hb = H.hand3(u, { ...bo, grip: [BOT[0], BOT[1] - 8] });
   const bw = hb.wrist;
-  { const el = [216, 146], sp = [[bw[0] - 2, bw[1]], [lerp(bw[0], el[0], .45), lerp(bw[1], el[1], .45) - 2], el];
+  let fore = '';
+  { const el = [216, 146], sp = [[bw[0] - 1.5, bw[1] + .4], [lerp(bw[0], el[0], .45), lerp(bw[1], el[1], .45) - 2], el];
     s += `<path d="M${f(bw[0])} ${f(bw[1] + 8)}Q160 ${f(bw[1] + 18)} 212 ${f(el[1] + 12)}" stroke="#000" stroke-width="8" opacity=".3" fill="none"/>`;
-    s += H.cloth(u, { spine: sp, w: [13, 16, 19], tone: BOS, lit: -1, folds: false, sw: .45, rim: '#ffe0b0', rimSide: -1, rimOp: .5 });
+    fore += H.cloth(u, { spine: sp, w: [16.4, 17.4, 19.4], tone: BOS, lit: -1, folds: false, sw: .45, rim: '#ffe0b0', rimSide: -1, rimOp: .5 });
     // the hair on the forearm, the tattoo (an anchor and a band of rope), a vein
     for (let k = 0; k < 46; k++) { const t = .1 + R() * .84, x = lerp(sp[0][0], el[0], t), y = lerp(sp[0][1], el[1], t) + (R() - .55) * lerp(10, 15, t);
-      s += `<path d="M${f(x)} ${f(y)}l${f(1.6 + R())} ${f(-.6 - R() * .5)}" stroke="#2a160a" stroke-width=".22" opacity=".6"/>`; }
-    const tx = lerp(sp[0][0], el[0], .5), ty = lerp(sp[0][1], el[1], .5) - 1.5, ang = Math.atan2(el[1] - bw[1], el[0] - bw[0]) * 180 / Math.PI;
-    s += `<g transform="translate(${f(tx)} ${f(ty)}) rotate(${f(ang - 90)}) scale(1)" opacity=".72"><path d="M0 -6v12M-3.4 -3.4h6.8M-5.6 2.6q5.6 7 11.2 0" stroke="#22344a" stroke-width="1.1" fill="none" stroke-linecap="round"/><circle cy="-7.4" r="1.5" fill="none" stroke="#22344a" stroke-width=".9"/><path d="M-5.6 2.6l-1 -1.6M5.6 2.6l1 -1.6" stroke="#22344a" stroke-width=".9"/></g>`
+      fore += `<path d="M${f(x)} ${f(y)}l${f(1.6 + R())} ${f(-.6 - R() * .5)}" stroke="#2a160a" stroke-width=".22" opacity=".6"/>`; }
+    const tx = lerp(sp[0][0], el[0], .4), ty = lerp(sp[0][1], el[1], .4) - 1.5, ang = Math.atan2(el[1] - bw[1], el[0] - bw[0]) * 180 / Math.PI;
+    fore += `<g transform="translate(${f(tx)} ${f(ty)}) rotate(${f(ang - 90)}) scale(1)" opacity=".72"><path d="M0 -6v12M-3.4 -3.4h6.8M-5.6 2.6q5.6 7 11.2 0" stroke="#22344a" stroke-width="1.1" fill="none" stroke-linecap="round"/><circle cy="-7.4" r="1.5" fill="none" stroke="#22344a" stroke-width=".9"/><path d="M-5.6 2.6l-1 -1.6M5.6 2.6l1 -1.6" stroke="#22344a" stroke-width=".9"/></g>`
       + `<path d="M${f(bw[0] + 8)} ${f(bw[1] + 3)}q10 1 20 5" stroke="#7a4a2c" stroke-width=".5" fill="none" opacity=".6"/>`; }
   s += hb.back;
 
@@ -158,10 +161,10 @@ function deal(u, L, R) {
     s += `<path d="M${P2(g1)}Q${f(lerp(g1[0], TIE[0], .5) - 1)} ${f(lerp(g1[1], TIE[1], .5))} ${f(TIE[0] - 1.4)} ${f(TIE[1] - 1)}" stroke="#7a5a14" stroke-width="1.1" fill="none"/><path d="M${P2(g1)}Q${f(lerp(g1[0], TIE[0], .5) - 1)} ${f(lerp(g1[1], TIE[1], .5))} ${f(TIE[0] - 1.4)} ${f(TIE[1] - 1)}" stroke="#e8c060" stroke-width=".45" fill="none"/>`
       + `<path d="M${P2([g1[0] + .8, g1[1] + .2])}Q${f(lerp(g1[0], TIE[0], .5) + 1.6)} ${f(lerp(g1[1], TIE[1], .5) + 1)} ${f(TIE[0] + 1.2)} ${f(TIE[1] - 1)}" stroke="#7a5a14" stroke-width="1.1" fill="none"/><path d="M${P2([g1[0] + .8, g1[1] + .2])}Q${f(lerp(g1[0], TIE[0], .5) + 1.6)} ${f(lerp(g1[1], TIE[1], .5) + 1)} ${f(TIE[0] + 1.2)} ${f(TIE[1] - 1)}" stroke="#f0d070" stroke-width=".4" fill="none"/>`; }
   s += purse(u, L, R);
-  s += ho.front + hb.front;
+  s += ho.front + hb.front + fore;
   // the officer's signet ring on the little finger
   { const p = ho.joints[3][1]; s += K.shadeSphere(u, p[0], p[1], 1.1, L, 'brass', { outline: .25 }); }
-  return s;
+  return s + '</g>';
 }
 
 /** The purse: red velvet gathered at the neck by a gold cord, heavy with coins (their rims press through the cloth),
