@@ -446,7 +446,9 @@ function hand3(u, o) {
         for (const F of HF) { const lens = (dy, wk) => { const L2 = [], R2 = [];
             for (let k = 0; k <= 6; k++) { const t = k / 6, x = lerp(.9, F.k[0] - .6, t), y = lerp(F.k[1] * .32, F.k[1], t) + dy, hw = .17 * F.w * wk * Math.pow(Math.sin(Math.PI * Math.min(.98, t * .62 + .2)), .7) * (.3 + .7 * t);
               L2.push(P(x, y - hw, .02)); R2.push(P(x, y + hw, .02)); } return sp(L2.concat(R2.reverse()), true); };
-          palm += `<path d="${lens(-sg * .2, 1.1)}" fill="${tn.shadow}" opacity="${f(.1 * backVis * detail)}"/><path d="${lens(sg * .02, 1)}" fill="${tn.lit}" opacity="${f(.16 * backVis * detail)}"/>`; }
+          // nested lenses, each faint: the rise fades out to its sides (no hard edge — not a stripe)
+          palm += `<path d="${lens(-sg * .3, 1.7)}" fill="${tn.shadow}" opacity="${f(.05 * backVis * detail)}"/>`
+            + [1.8, 1.1, .55].map(wk => `<path d="${lens(sg * .02, wk)}" fill="${tn.lit}" opacity="${f(.035 * backVis * detail)}"/>`).join(''); }
       }
       if (o.knuckles !== false && !small) for (const F of HF) { const k = P(F.k[0] - .2, F.k[1], 0);
         palm += `<ellipse cx="${f(k[0] + Ls[0] * .1 * s)}" cy="${f(k[1] + Ls[1] * .1 * s)}" rx="${f(.36 * s * F.w)}" ry="${f(.26 * s * F.w)}" fill="${tn.lit}" opacity="${f(.15 * backVis)}"/>`; }
@@ -787,7 +789,7 @@ function head34(u, o) {
   const lips = o.lips || mix(mix(tn.half, tn.core || tn.shadow, .45), '#b4504a', .38);
   // the face's own ramp: the lit side broad and light, the terminator soft, the shade lifted by the bounce (a face
   // is never in black shade under one light); sh — the colour of the soft shadows modelling it
-  const fc = { lit: tn.lit, light: mix(tn.lit, tn.half, .35), half: tn.half, core: mix(tn.half, tn.core || tn.shadow, .55), shadow: mix(tn.shadow, tn.half, .3) }, sh = mix(tn.shadow, tn.core || tn.half, .35);
+  const fc = { lit: mix(tn.lit, '#fff4e6', .08), light: mix(tn.lit, tn.half, .22), half: mix(tn.half, tn.lit, .15), core: mix(tn.half, tn.core || tn.shadow, .55), shadow: mix(tn.shadow, tn.half, .3) }, sh = mix(tn.shadow, tn.core || tn.half, .35);
   const Ls = o.light || [-.5, -.86], mo = o.mouth || 0, sm = o.smile || 0, jw = mo * .14;
   const soft = (c, rx, ry, col, op, rotd = 0) => { const g = nid('h3s', u); return `<defs>${radGrad(g, 0, 0, 1, [[0, col, op], [1, col, 0]])}</defs><ellipse cx="0" cy="0" rx="1" ry="1" fill="url(#${g})" transform="translate(${f(c[0])} ${f(c[1])}) rotate(${f(rotd)}) scale(${f(Math.max(.01, rx * r))} ${f(Math.max(.01, ry * r))})"/>`; };
   const P2 = p => `${f(p[0])} ${f(p[1])}`;
@@ -804,7 +806,7 @@ function head34(u, o) {
     for (const p of P.slice().reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
     return lo.slice(0, -1).concat(up.slice(0, -1)); })();
   const F = sp(hull, true), gid = nid('h3g', u), cid = nid('h3c', u);
-  let s = `<defs>${linGrad(gid, o.c[0] + Ls[0] * r, o.c[1] + Ls[1] * r, o.c[0] - Ls[0] * r, o.c[1] - Ls[1] * r, [[0, fc.lit], [.3, fc.light], [.58, fc.half], [.84, fc.core], [1, fc.shadow]])}<clipPath id="${cid}"><path d="${F}"/></clipPath></defs>`;
+  let s = `<defs>${linGrad(gid, o.c[0] + Ls[0] * r, o.c[1] + Ls[1] * r, o.c[0] - Ls[0] * r, o.c[1] - Ls[1] * r, [[0, fc.lit], [.36, fc.light], [.62, fc.half], [.86, fc.core], [1, fc.shadow]])}<clipPath id="${cid}"><path d="${F}"/></clipPath></defs>`;
   s += `<path d="${F}" fill="url(#${gid})"/><g clip-path="url(#${cid})">`;
   if (o.warm) { const w = Q(dir * .4, .2, .7), g = nid('h3w', u); s += `<defs>${radGrad(g, w[0], w[1], r * .8, [[0, o.warm.color, o.warm.op || .6], [1, o.warm.color, 0]])}</defs><circle cx="${f(w[0])}" cy="${f(w[1])}" r="${f(r * .8)}" fill="url(#${g})"/>`; }
   // the side of the face turned away from us (behind the cheekbone line) in shade; the hollows under the cheekbones,
@@ -1012,18 +1014,18 @@ const rotOf = r => p => rY(rX(rZ(p, (r[0] || 0) * DEG), (r[1] || 0) * DEG), (r[2
 const dv = (fl, ab, sd) => { const F = fl * DEG, A = ab * DEG; return [sd * Math.sin(A), Math.cos(A) * Math.cos(F), Math.cos(A) * Math.sin(F)]; };
 const BONE = { thigh: 1.85, shin: 1.72, ankle: .28, upper: 1.38, fore: 1.05, hand: .7, hipW: .46, shW: .75, shY: -2.02, headY: -3.116 };
 // the torso as rings: [y, rx, rz, z of the centre, share of the chest's turn (1) against the pelvis' (0)]
-const TRING = [[-2.3, .27, .24, -.1, 1], [-2.22, .36, .27, -.08, 1], [-2.12, .55, .32, -.05, 1], [-2.03, .73, .36, -.03, 1], [-1.94, .81, .39, -.02, 1], [-1.6, .84, .48, .03, 1], [-1.2, .78, .48, .05, 1],
+const TRING = [[-2.44, .19, .17, -.17, 1], [-2.3, .27, .24, -.1, 1], [-2.22, .36, .27, -.08, 1], [-2.12, .55, .32, -.05, 1], [-2.03, .73, .36, -.03, 1], [-1.94, .81, .39, -.02, 1], [-1.6, .84, .48, .03, 1], [-1.2, .78, .48, .05, 1],
   [-.8, .68, .43, .04, .6], [-.42, .72, .44, .02, .2], [-.05, .8, .46, 0, 0], [.25, .72, .42, -.02, 0]];
 // the foot (boot) around the ankle: [forward, up, half-width]
 const FOOT = [[-.21, -.08, .12], [-.18, -.28, .12], [.2, -.28, .15], [.62, -.28, .18], [.97, -.22, .12], [.93, -.08, .13], [.5, .03, .15], [.14, .12, .13], [-.15, .1, .13]];
 const FIG_POSES = {
   // standing, the weight on the near leg (contrapposto): the hip on that side up, the shoulders the other way, the far
   // knee loose and the foot turned out; the far hand on the hip
-  stand: { turn: .35, pelvis: [6, 0, 0], torso: [-4, 2, -4], head: { turn: .12, nod: 3 },
-    legs: { R: { thigh: [2, -5], shin: [-1, -3], foot: [0, 10], weight: true }, L: { thigh: [14, 7], shin: [-6, 4], foot: [0, 24] } },
+  stand: { turn: .35, pelvis: [9, 0, 2], torso: [-7, 2, -5], head: { turn: .12, nod: 3 },
+    legs: { R: { thigh: [2, -6], shin: [-1, -3], foot: [0, 10], weight: true }, L: { thigh: [20, 11], shin: [-12, 7], foot: [0, 28] } },
     arms: { R: { upper: [5, 7], fore: [16, 3] }, L: { to: [.9, -.4, .1], pole: [1, -.3, -.7] } }, hands: { R: 'relaxed', L: 'fist' } },
   // walking: the near leg forward on its heel, the far one pushing off its toes; the arms swing against the legs
-  walk: { turn: .72, pelvis: [2, 0, 8], torso: [-1, 5, -8], head: { turn: -.05, nod: 4 },
+  walk: { turn: .72, pelvis: [4, 0, 8], torso: [-3, 5, -8], head: { turn: -.05, nod: 4 },
     legs: { R: { thigh: [24, 2], shin: [14, 0], foot: [14, 6], weight: true }, L: { thigh: [-16, 3], shin: [-40, 0], foot: [-26, 8] } },
     arms: { R: { upper: [-22, 6], fore: [-8, 4] }, L: { upper: [24, 6], fore: [50, -2] } }, hands: { R: 'relaxed', L: 'relaxed' } },
   // hauling on a rope: leaning back against it, the front leg braced, both fists on the rope in front
@@ -1043,8 +1045,9 @@ const FIG_POSES = {
     legs: { R: { thigh: [86, 8], shin: [6, 4], foot: [0, 10], weight: true }, L: { thigh: [82, 10], shin: [-4, 8], foot: [0, 16] } },
     arms: { R: { upper: [30, 8], fore: [84, -16] }, L: { upper: [26, 10], fore: [80, -24] } }, hands: { R: 'relaxed', L: 'relaxed' } },
   // at the wheel: feet apart and braced, the fists on two handles in front at the chest, the elbows out
-  helm: { turn: .2, pelvis: [0, 0, 0], torso: [0, 4, 0], head: { turn: .25, nod: -2 },
-    legs: { R: { thigh: [2, 9], shin: [0, 7], foot: [0, 12], weight: true }, L: { thigh: [-2, 9], shin: [0, 7], foot: [0, 14] } },
+  // (the weight on the near leg: its hip up, the shoulders against it, the far leg loose and out)
+  helm: { turn: .2, pelvis: [7, 0, 5], torso: [-4, 4, -4], head: { turn: .25, nod: -2 },
+    legs: { R: { thigh: [2, -6], shin: [0, -3], foot: [0, 12], weight: true }, L: { thigh: [10, 15], shin: [-5, 9], foot: [0, 22] } },
     arms: { R: { to: [-.6, -1.3, 1.05], pole: [-1, .6, -.3] }, L: { to: [.55, -1.75, 1.05], pole: [1, .6, -.3] } }, hands: { R: 'wrap', L: 'wrap' } }
 };
 const mergeDeep = (a, b) => { if (!b) return a; const out = Array.isArray(a) ? a.slice() : Object.assign({}, a);
@@ -1066,7 +1069,9 @@ const toneOf = (c, L, dim) => typeof c === 'object' ? c : (() => { const base = 
 // rim (colour of the back-light edge; false — none; default L.rimColor), hand: (u, info) => { back, front } (draws a
 // hand; info: { side, at, a, s, m, pose, tone, light, L }), hands: { R, L } (hand poses), handsSeparate: true (the
 // hands are not drawn into svg — draw them yourself round the prop), shadow: false, horizon (with it — a cast
-// shadow), seed }
+// shadow), form (default true: the limbs shaped — thigh, knee, calf, ankle; the deltoid, elbow and forearm; the
+// sleeve full or fitted, the vest's armholes, the hems round the body, the neck into the trapezius; false — the even
+// tubes of before), seed }
 // Returns { svg, layers: { shadow, back, legs, body, head, front }, hands: { R, L } ({ back, front, at, a, … }),
 // wrist: { R, L } ({ at, a, depth }), joints: { R, L } (shoulder, elbow, wrist, hip, knee, ankle, toe, heel),
 // head: head34 result, neck, pelvis, feet: { R, L }, seat (sit: the seat under the buttocks), top, Hh, r }.
@@ -1241,9 +1246,9 @@ function figure(u, o) {
     for (let j = 0; j < 48; j++) { const th = -Math.PI + j / 48 * Math.PI * 2; if (!seen(y, th)) continue; const q = S2(y, th, k), vq = v(q); if (vq > a + m && vq < b - m) H.push([vq, [q[0], q[1] + W(drop) * Math.max(0, Math.cos(th)) ** 2]]); }
     H.sort((p, q) => p[0] - q[0]); return ol.Lf.concat(H.map(h => h[1])).concat(ol.Rg.slice().reverse()); };
   const vestOnly = form && cVest && !cCoat, kVest = y => y < -1.45 ? lerp(.7, 1.01, Math.max(0, Math.min(1, (y + 2.2) / .75))) : 1.01;
-  const up = vestOnly ? outlineOf(ysOf(-2.2, botY, 10), kVest) : outlineOf(ysOf(-2.3, botY, 10), cCoat ? 1.04 : 1);
+  const topY = form ? -2.42 : -2.3, up = vestOnly ? outlineOf(ysOf(-2.2, botY, 10), kVest) : outlineOf(ysOf(topY, botY, 11), cCoat ? 1.04 : 1);
   const upPts = form && (cCoat && !knee || vestOnly) ? hemmed(up, botY, cCoat ? 1.04 : 1.01, .07) : up.pts;
-  { const cid = nid('fgc', u), shirtUp = vestOnly ? outlineOf(ysOf(-2.3, -.38, 10)) : null;
+  { const cid = nid('fgc', u), shirtUp = vestOnly ? outlineOf(ysOf(topY, -.38, 11)) : null;
     if (shirtUp) bodyS += shade(shirtUp.pts, cShirt, true);   // the shirt's shoulders out of the vest's armholes
     bodyS += shade(upPts, outer, true) + `<defs><clipPath id="${cid}">${shirtUp ? `<path d="${sp(shirtUp.pts, true)}"/>` : ''}<path d="${sp(upPts, true)}"/></clipPath></defs><g clip-path="url(#${cid})">`;
     if (shirtUp) for (const sd of [-1, 1]) { const ah = ysOf(-2.15, -1.45, 6).map(y => [y, sd * Math.PI / 2]).filter(q => seen(q[0], q[1] * .85)).map(q => S2(q[0], q[1] * .85, kVest(q[0]) * 1.01));
@@ -1285,7 +1290,7 @@ function figure(u, o) {
   const nTone = { lit: skin.half, half: mix(skin.half, skin.shadow, .3), core: mix(skin.half, skin.shadow, .5), shadow: skin.shadow, outline: skin.outline };
   if (!form) headS += limb([neckB, neckT], [.44, .38], nTone, { folds: false, rim: rimC, drapes: 0 });
   else { // the neck flares into the trapezius at its base; the long muscle from behind the ear to the pit of the neck
-    const nM = v3.lerp(neckB, neckT, .45); headS += limb([neckB, nM, neckT], [.56, .44, .4], nTone, { folds: false, rim: rimC, drapes: 0 });
+    const nM = v3.lerp(neckB, neckT, .45); headS += limb([neckB, nM, neckT], [.5, .41, .39], nTone, { folds: false, rim: rimC, drapes: 0 });
     const far = dep(Rt([1, 0, 0])) < 0 ? 1 : -1, pit = Rt([0, -2.12, .2]), ear = v3.add(headC3, Rt([far * .3, .18, -.06]));
     headS += stroke([pr(v3.lerp(ear, pit, .15)), pr(v3.lerp(ear, pit, .55)), pr(v3.lerp(ear, pit, .9))], skin.shadow, W(.045), .3); }
   { const sOpen = y => Math.max(.02, lerp(.22, 0, (y + 2.3) / .5)), ys = ysOf(-2.3, -1.8, 6), l = ys.map(y => S2(y, -sOpen(y), 1.03)), rr = ys.map(y => S2(y, sOpen(y), 1.03));
@@ -1310,7 +1315,7 @@ function figure(u, o) {
   if (o.hat) { const ht = require('./hat.cjs').tricorn(u, hd, Object.assign({ r, light: Lp, rim: rimC }, o.hat)); headS += ht.back + ht.front; }
   // ——— the arms with the hands: behind the body or in front of it, by depth ———
   const hands = {}, wrist = {};
-  const drawArm = k => { const a = arm[k], sTop = v3.add(a.S, form ? Rt([-a.sd * .05, -.1, 0]) : Rt([0, -.14, 0])), coat = !!cCoat, tn = cCoat || cShirt, rolled = !coat && dr.sleeves === 'rolled';
+  const drawArm = k => { const a = arm[k], sTop = v3.add(a.S, form ? Rt([-a.sd * .07, .02, 0]) : Rt([0, -.14, 0])), coat = !!cCoat, tn = cCoat || cShirt, rolled = !coat && dr.sleeves === 'rolled';
     let s = '';
     const wp = pr(a.W), ep = pr(a.E), ang = Math.atan2(wp[1] - ep[1], wp[0] - ep[0]) / DEG;
     // a bare forearm narrows to the wrist, so the hand grows out of it
@@ -1330,7 +1335,7 @@ function figure(u, o) {
         : rolled ? [[.21, .21, .24, .19], [.25, .26, .3, .22], [.25, .25, .26, .24], [.23, .24, .24, .23], [.24, .24, .24, .24], [.25, .25, .25, .25], [.25, .25, .25, .25]]
           : [[.21, .21, .24, .19], [.25, .26, .3, .22], [.25, .25, .26, .24], [.22, .23, .23, .22], [.25, .25, .25, .24], [.2, .2, .2, .19], [.17, .17, .17, .17]];
       const aw = formW(P3, SLW, armSeg(P3, 3), fr3, la3, { i: 3, k: coat ? .05 : .035 });
-      s += limb(P3, aw, tn, { capA: true, roundA: .5, cuff: cuffO, drapes: 2 });
+      s += limb(P3, aw, tn, { capA: true, roundA: .42, cuff: cuffO, drapes: 2 });
       // the armpit: creases from it into the sleeve, by the side that faces the body
       const sp2 = P3.map(pr), T2 = tube(sp2, aw.map(x => x.map(W))), tc = pr(Rt([0, -1.4, 0])), ms = sideOf(sp2[0], sp2[2], [tc[0] - sp2[0][0], tc[1] - sp2[0][1]]);
       const lift = 1 - Math.max(0, v3.nrm(v3.sub(a.E, a.S))[1]);   // the more the arm is raised, the deeper they run

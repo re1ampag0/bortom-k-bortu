@@ -61,22 +61,23 @@ module.exports = { name: 'Выгодная сделка', variant: 'int', kind: 
     let fg = '';
     // the price: a few gold coins at the far right
     fg += K.coins(u, L, { x: 168, y: 96, s: 1.05, n: 6, seed: 9 });
-    // the inkwell (black ink, not used) and the penknife with its red tip lying before it
+    // the inkwell (black ink, not used)
     { const x = 178, y = 112;
       fg += K.contactShadow(u, x, y, 12, L, { ry: 1.4, opacity: .55 }) + K.shadeCyl(u, x, y, x, y - 6, 4.6, L, 'glass', { r1: 4.8, r2: 3.6, ell: .3, face: 2, outline: .4 })
         + `<path d="M${x - 4.2} ${y - 2}q4.2 1.4 8.4 0v1.6q-4.2 1.6 -8.4 0z" fill="#06080e" opacity=".9"/>` + K.shadeCyl(u, x, y - 6, x, y - 7.8, 2, L, 'brass', { ell: .3, face: 2, outline: .3 }); }
+    // the two sheets under the contract, fanned out from under it (on the table, in its perspective)
+    const sheet = (QW, tone, n) => { const Q = QW.map(PW), g = nid('sh', u); let o = poly(Q.map(p => [p[0] + .8, p[1] + 1.8]), '#0a0603', ' opacity=".45"')
+        + `<defs>${linGrad(g, Q[0][0], Q[0][1], Q[2][0], Q[2][1], [[0, mix(tone, '#ffe8c0', .25)], [1, mix(tone, '#7a6040', .25)]])}</defs>` + poly(Q, `url(#${g})`, ' stroke="#7a6a48" stroke-width=".35"');
+      for (let k = 0; k < n; k++) { const b = .1 + k * .07; o += ln(`M${P2(SP(.1, b, QW))}L${P2(SP(.86 - (k % 3) * .05, b, QW))}`, .4, '#5a4a32', .6); } return o; };
+    fg += sheet(rectW(-.24, 1.08, .17, .27, 10), '#e2d6b6', 10) + sheet(rectW(.22, 1.04, .16, .27, -11), '#e8dcbe', 10);
+    fg += sheet([[40, 90], [104, 84], [96, 146], [22, 150]], '#e2d6b6', 10) + sheet([[110, 86], [170, 92], [178, 150], [104, 142]], '#e8dcbe', 10);
+    // the penknife lies on the right sheet, its red tip toward the inkwell
     { const a = [150, 116], b = [166, 110.4], c = [172.4, 108.2];   // handle a→b, blade b→c
       fg += ln(`M${f(a[0] + 1.4)} ${f(a[1] + 1.8)}L${f(c[0] + 1.4)} ${f(c[1] + 1.8)}`, 2.2, '#0a0603', .45)
         + K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.3, L, 'bone', { r1: 1.2, r2: 1.4, outline: .3, cap: 'round' })
         + `<path d="M${P2(b)}L${f(c[0])} ${f(c[1] - .4)}L${f(c[0] - .4)} ${f(c[1] + .9)}L${f(b[0])} ${f(b[1] + 1.2)}Z" fill="#c8ccd0" stroke="#3a3e44" stroke-width=".3"/>`
         + `<path d="M${f(c[0] - 2.4)} ${f(c[1] + .2)}L${f(c[0])} ${f(c[1] - .4)}L${f(c[0] - .4)} ${f(c[1] + .9)}L${f(c[0] - 2.6)} ${f(c[1] + 1.4)}Z" fill="#8a0a08"/>`
         + `<ellipse cx="${f(c[0] + 1.2)}" cy="${f(c[1] + 1.6)}" rx=".8" ry=".4" fill="#7a0806"/>`; }
-    // the two sheets under the contract, fanned out from under it (on the table, in its perspective)
-    const sheet = (QW, tone, n) => { const Q = QW.map(PW), g = nid('sh', u); let o = poly(Q.map(p => [p[0] + .8, p[1] + 1.8]), '#0a0603', ' opacity=".45"')
-        + `<defs>${linGrad(g, Q[0][0], Q[0][1], Q[2][0], Q[2][1], [[0, mix(tone, '#ffe8c0', .25)], [1, mix(tone, '#7a6040', .25)]])}</defs>` + poly(Q, `url(#${g})`, ' stroke="#7a6a48" stroke-width=".35"');
-      for (let k = 0; k < n; k++) { const b = .1 + k * .07; o += ln(`M${P2(SP(.1, b, QW))}L${P2(SP(.86 - (k % 3) * .05, b, QW))}`, .4, '#5a4a32', .6); } return o; };
-    fg += sheet(rectW(-.3, 1.06, .2, .3, 9), '#e2d6b6', 10) + sheet(rectW(.28, 1.0, .2, .3, -12), '#e8dcbe', 10);
-    fg += sheet([[40, 90], [104, 84], [96, 146], [22, 150]], '#e2d6b6', 10) + sheet([[110, 86], [170, 92], [178, 150], [104, 142]], '#e8dcbe', 10);
     // the contract: its shadow, the sheet lit warm towards the lantern (far left), the head rolled at the far end
     { const g = nid('cg', u), sid = nid('cs', u);
       fg += `<defs><filter id="${sid}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.2"/></filter>${linGrad(g, SH[0][0], SH[0][1], SH[2][0], SH[2][1], [[0, '#fbf1d8'], [.5, '#f0e2c0'], [1, '#d6c49c']])}</defs>`
