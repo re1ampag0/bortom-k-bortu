@@ -22,7 +22,7 @@ const HZ = 96;                                   // the sea horizon = eye level
 const MOON = { x: 142, y: 30 };
 const WX = 84;                                   // the tower's corner (its wall fills the frame left of it)
 const PT = 112, PF = 117;                        // the parapet: the back edge of its top, the front edge
-const LAN = { x: 140, y: 115.4, s: .78 };        // the lantern on the parapet
+const LAN = { x: 150, y: 115.4, s: .78 };        // the lantern on the parapet
 const HEAD = { c: [77, 58], r: 8.6, tilt: 9 };   // Mercer's head (profile, facing right)
 const SCOPE_A = 13;                              // the spyglass: degrees below the horizontal
 const SHIP = { kind: 'pearl', x: 160, y: 99.5, scale: .44, flip: true };   // her stern (the lit windows) towards him
@@ -33,7 +33,7 @@ const SKIN = { lit: '#f0c8a2', half: '#bf8a66', core: '#9c6a4c', shadow: '#5a342
 const skel = { horizon: HZ, eye: 1.6, light: 'moon ahead over the sea (key, rim) + shuttered lantern on the parapet (warm, from below)', items: [
   ['tower wall', 0, PT, WX, PT, 'rampart (behind Mercer)'], ['parapet', 0, 280, 200, 280 - PT, 'rampart'], ['Mercer', 44, PT, 58, 70, 'stands behind the parapet'],
   ['spyglass', 80, 74, 50, 14, 'at his eye, his hand round it'], ['ship', 120, 99.5, 72, 50, 'water, at anchor'], ['notebook', 102, 118, 24, 8, 'parapet top'],
-  ['lantern', 134, 115.4, 12, 22, 'parapet top'], ['shadow', 0, 70, 84, 60, 'tower wall (from the lantern)']] };
+  ['lantern', 144, 115.4, 12, 22, 'parapet top'], ['shadow', 0, 70, 84, 60, 'tower wall (from the lantern)']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const add = (p, d, k = 1) => [p[0] + d[0] * k, p[1] + d[1] * k];
@@ -82,7 +82,7 @@ module.exports = { name: 'Шпион Мерсер', kind: 'deck', status: 'draft
           x += w; }
         tw += ln(`M-2 ${f(y)}H${WX}`, .55, '#0a0c10', .85); y += h; row++; }
       // his shadow, thrown by the lantern on the wall: the same shapes, scaled from the lantern's flame
-      const k = 1.42, T = `translate(${f(LP.x)} ${f(LP.y)}) scale(${k}) translate(${f(-LP.x)} ${f(-LP.y)})`, bl = nid('sb', u);
+      const k = 1.3, T = `translate(${f(LP.x)} ${f(LP.y)}) scale(${k}) translate(${f(-LP.x)} ${f(-LP.y)})`, bl = nid('sb', u);
       tw += `<defs><filter id="${bl}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".55"/></filter></defs>`
         + `<g style="mix-blend-mode:multiply" opacity=".9"><g transform="${T}" filter="url(#${bl})">${silhouette('#14100e')}</g></g>`;
       tw += `<path d="M-2 14H${WX}" stroke="#0a0c10" stroke-width="1.2"/><path d="M-2 15.2H${WX}" stroke="#4a4e58" stroke-width=".5" opacity=".6"/></g>`;

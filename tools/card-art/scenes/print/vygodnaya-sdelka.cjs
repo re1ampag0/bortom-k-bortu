@@ -155,10 +155,13 @@ module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 
       const hd = H.hand3(u, { ...po, at }), w = hd.wrist, ua = [Math.cos(po.a * Math.PI / 180), Math.sin(po.a * Math.PI / 180)];
       const sleeve = { lit: '#4a4c58', half: '#202228', core: '#18191e', shadow: '#08080a', outline: '#040405' }, cuff = { lit: '#fffaf0', half: '#e6dece', shadow: '#a69e8e', outline: '#5a5448' };
       fg += K.contactShadow(u, tip[0] - 6, tip[1] + 2, 18, L, { ry: 1.6, opacity: .35 });
-      fg += H.cloth(u, { spine: [[-14, w[1] + 18], [lerp(-14, w[0], .5), lerp(w[1] + 18, w[1], .5) + 1], [w[0] - ua[0] * 1.4, w[1] - ua[1] * 1.4]], w: [12.4, 10.4, 8], tone: sleeve, lit: -1, rim: '#ffcf96', rimSide: -1,
-        cuff: { from: .88, k: 1.08, tone: cuff }, seed: 6, drapes: 3, sw: .4 });
-      // the frill of the shirt over the back of the wrist
-      fg += `<path d="M${f(w[0] - 2.6)} ${f(w[1] - 4.2)}q3 1 3.6 3.4q-2.2 .6 -2.6 2.2q2.4 .6 2.8 2.8q-3 .4 -4.6 -1.6z" fill="#f6f0e2" stroke="#7a7466" stroke-width=".3"/>`;
+      fg += H.cloth(u, { spine: [[-14, w[1] + 18], [lerp(-14, w[0], .5), lerp(w[1] + 18, w[1], .5) + 1], [w[0] - ua[0] * 1.4, w[1] - ua[1] * 1.4]], w: [12, 9.6, 6.8], tone: sleeve, lit: -1, rim: '#ffcf96', rimSide: -1,
+        cuff: { from: .93, k: 1.06, tone: cuff }, seed: 6, drapes: 3, sw: .4 });
+      // the lace of the shirt falling from the cuff round the wrist: a ruffle of small scallops
+      { const nv = [-ua[1], ua[0]], c0 = [w[0] - ua[0] * .6, w[1] - ua[1] * .6], pts = [];
+        for (let i = 0; i <= 8; i++) { const t = -1 + i / 4, o2 = i % 2 ? 2.2 : .8; pts.push([c0[0] + nv[0] * t * 4.2 + ua[0] * o2, c0[1] + nv[1] * t * 4.2 + ua[1] * o2]); }
+        fg += `<path d="M${P2([c0[0] + nv[0] * 4.2 - ua[0], c0[1] + nv[1] * 4.2 - ua[1]])}L${pts.slice().reverse().map(P2).join('L')}L${P2([c0[0] - nv[0] * 4.2 - ua[0], c0[1] - nv[1] * 4.2 - ua[1]])}Z" fill="#efe8d8" stroke="#7a7466" stroke-width=".3"/>`
+          + [-2, 0, 2].map(t => ln(`M${P2([c0[0] + nv[0] * t * 1.6, c0[1] + nv[1] * t * 1.6])}l${f(ua[0] * 1.4)} ${f(ua[1] * 1.4)}`, .25, '#9a9282', .8)).join(''); }
       fg += hd.back + hd.front; }
 
     // ——— the signing hand from the right: a weathered hand in the writing pinch, the quill's nib at the end of the red
@@ -168,7 +171,7 @@ module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 
       const so = { a: 236, s: 2.3, m: 1, roll: 40, pitch: 0, pose: 'pinch', thumbFlex: [40, 30, 22], thumbSpread: -12, tone: SKIN, light: [-.8, -.55], sw: .32, palmW: .82, wristW: .72 };
       const h0 = H.hand3(u, { ...so, at: [0, 0] }), p0 = h0.P(7.6, -1, -2.6), wr = [pinch[0] - p0[0], pinch[1] - p0[1]];
       const hd = H.hand3(u, { ...so, at: wr });
-      const shirt = { lit: '#f0e6d0', half: '#c0b294', shadow: '#5a4c3a', outline: '#22180e' };
+      const shirt = { lit: '#b0a284', half: '#6e6250', shadow: '#2a2218', outline: '#140e08' };   // the shirt, in the table's shadow
       const fa = (so.a - 180) * Math.PI / 180, el = [wr[0] + Math.cos(fa) * 31, wr[1] + Math.sin(fa) * 31];   // the forearm: on from the wrist, down to the near edge
       let arm = H.cloth(u, { spine: [[el[0] + 30, el[1] + 30], [el[0] + 12, el[1] + 10], [el[0] + 2, el[1] + 1.6]], w: [20, 18.6, 17.4], tone: shirt, lit: -1, rim: '#a8c0e8', rimSide: 1, rimOp: .4, cuff: { from: .66, k: 1.14, roll: true }, seed: 9, drapes: 2, sw: .4 });
       arm = H.cloth(u, { spine: [[el[0] + 2, el[1] + .6], [lerp(el[0], wr[0], .5), lerp(el[1], wr[1], .5) - 1], [wr[0] + 1, wr[1] + .4]], w: [11.6, 10.4, 7.6], tone: SKIN, lit: -1, rim: '#a8c0e8', rimSide: 1, rimOp: .45, folds: false, capA: true, sw: .35 })
@@ -185,6 +188,8 @@ module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 
       fg += arm + hd.back + qs + hd.front; }
 
     // ——— the light: the candle's glow, the dark round it and down under the glass ———
+    // the signer's arm goes down into the dark under the glass: it fades there, so the glass stays even
+    { const g = nid('ad', u); fg += `<defs>${radGrad(g, 190, 168, 46, [[0, '#050302', .8], [.55, '#050302', .55], [1, '#050302', 0]])}</defs><rect x="120" y="128" width="90" height="90" fill="url(#${g})" style="mix-blend-mode:multiply"/>`; }
     fg += K.localGlow(u, { x: CAN.x, y: flameY, color: '#ffc070', power: .95, radius: 38 })
       + gloom(u, 60, 100, 200, 40, .35, '#050302') + gloom(u, 100, 132, 100, 280, .5, '#050302');
     return [bg + tb, fg];

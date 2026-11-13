@@ -155,11 +155,15 @@ module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', sta
         // the load
         if (sd < 0) { // two kegs of powder, side by side, the Company's mark painted on each
           for (const [dx, sd2] of [[-5.6, 3], [5.8, 5]]) { const kx = ex + dx, ky = pan + 1.8, ks = .5;
-            sc += K.barrel(u, L, { x: kx, y: ky, s: ks, kind: 'powder', seed: sd2, contact: false })
-              + `<circle cx="${f(kx)}" cy="${f(ky - 7.4)}" r="2.6" fill="none" stroke="#efe4c8" stroke-width=".55" opacity=".95"/><path d="M${f(kx)} ${f(ky - 9.8)}v4.8M${f(kx - 2.4)} ${f(ky - 7.4)}h4.8" stroke="#efe4c8" stroke-width=".55" opacity=".95"/>`
+            // pale staves and dark hoops read as a keg at this size; the Company's mark burnt into the belly
+            sc += K.barrel(u, L, { x: kx, y: ky, s: ks, kind: 'water', seed: sd2, contact: false })
+              + `<circle cx="${f(kx)}" cy="${f(ky - 7.4)}" r="2.5" fill="none" stroke="#3a1a0a" stroke-width=".6" opacity=".9"/><path d="M${f(kx)} ${f(ky - 9.7)}v4.6M${f(kx - 2.3)} ${f(ky - 7.4)}h4.6" stroke="#3a1a0a" stroke-width=".6" opacity=".9"/>`
               + `<path d="M${f(kx - 4.6)} ${f(ky - 14.4)}Q${f(kx)} ${f(ky - 16.2)} ${f(kx + 4.6)} ${f(ky - 14.4)}" stroke="#fff4d0" stroke-width=".5" fill="none" opacity=".8"/>`; }
         } else { // a heap of gold: leaning stacks and loose coins, heaped above the rim
-          sc += K.coins(u, L, { x: ex - 6, y: pan + 1.6, s: 1.15, n: 7, seed: 11 }) + K.coins(u, L, { x: ex + 5.4, y: pan + 2, s: 1.15, n: 7, seed: 12 }) + K.coins(u, L, { x: ex - .6, y: pan, s: 1.15, n: 6, seed: 13 }) + K.coins(u, L, { x: ex + 1, y: pan + 2.4, s: 1.1, n: 4, seed: 14 }); }
+          // a heap of gold: columns of coins standing in the pan, their tops above the rim, a few leaning on them
+          const coin = (cx, cy) => `<path d="M${f(cx - 2.7)} ${f(cy)}v.8a2.7 .95 0 0 0 5.4 0v-.8z" fill="url(#brass${u})" stroke="#5a3e08" stroke-width=".22"/><ellipse cx="${f(cx)}" cy="${f(cy)}" rx="2.7" ry=".95" fill="#f2cc5a" stroke="#5a3e08" stroke-width=".22"/><path d="M${f(cx - 1.6)} ${f(cy - .3)}q1.6 -.5 3.2 0" stroke="#fff4c0" stroke-width=".3" fill="none"/>`;
+          for (const [dx, dy, n] of [[-7, -.4, 5], [-1.6, -1.2, 8], [4, -.6, 6], [8.6, .4, 3], [-4.4, 1.6, 3], [1.6, 1.8, 4]]) for (let i = 0; i < n; i++) sc += coin(ex + dx + (i % 2 ? .15 : -.1), pan + dy - i * .82);
+          sc += coin(ex + 6.6, pan - 3.6) + coin(ex - 9, pan - .8); }
         sc += `<path d="${bowl}" fill="url(#brass${u})" stroke="#4a3008" stroke-width=".4"/>`
           + ln(`M${ex - rx + 1} ${pan + .6}Q${ex} ${pan + ry + 1.4} ${ex + rx - 1} ${pan + .6}`, .5, '#fff4c0', .8)
           +  `<path d="M${ex - 2.6} ${pan + 7.2}h5.2l-.8 1.4h-3.6z" fill="url(#brass${u})" stroke="#4a3008" stroke-width=".3"/>`;
