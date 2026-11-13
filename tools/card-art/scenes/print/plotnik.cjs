@@ -23,7 +23,7 @@ const LAMP = { x: 86, y: 34, s: 1, hang: 3 };
 const FLAME = { x: 86, y: 34 - 7.5 };
 const SUN = { x: 94, y: 71 };
 const FR = [10, 58, 142, 190];               // the frames (ribs) standing in front of the inner planking
-const PL = [{ y: 37, h: 11.4, c: '#e6bc80', seed: 3 }, { y: 49.2, h: 11.8, c: '#eec68c', seed: 5 }];   // the new planks
+const PL = [{ y: 37, h: 11.4, c: '#e6bc80', seed: 3 }, { y: 55.2, h: 11.8, c: '#eec68c', seed: 5 }];   // the new planks
 const PX0 = 51, PX1 = 149;
 const BREACH = [[66, 44], [74, 40.5], [84, 43], [92, 39.5], [102, 42], [112, 40], [122, 44], [131, 41], [136, 52], [133, 62], [136, 74], [132, 86], [134, 96],
   [124, 100], [112, 96.5], [102, 101], [92, 98], [80, 101], [70, 97], [65, 88], [67.5, 76], [64, 64], [67, 54]];
@@ -33,7 +33,7 @@ const lightOut = { time: 'dusk', haze: .4, key: { type: 'sun', x: SUN.x, y: SUN.
 const GRIP = [150, 73], HEADV = [.22, -.975], HS = 3.5;   // where the fist holds the handle, the handle's direction to the head
 const skel = { horizon: HZ, eye: 1.6, light: 'lantern on a hook under the beams (key) + the low sun through the breach (shafts)', items: [
   ['hull side', -10, WB, 220, WB - WT, 'floor / the deck beams'], ['breach', 64, 101, 72, 62, 'hull side'], ['plank 1', PX0, 48.4, PX1 - PX0, 11.4, 'frames 58 and 142 (nails)'],
-  ['plank 2', PX0, 61, PX1 - PX0, 11.8, 'frames (two nails left, one half driven right)'], ['lantern', 80, 34, 12, 31, 'hook in the deck above'],
+  ['plank 2', PX0, 67, PX1 - PX0, 11.8, 'frames (two nails left, one half driven right)'], ['lantern', 80, 34, 12, 31, 'hook in the deck above'],
   ['hammer', 150, 72, 24, 48, 'in the fist'], ['hand + arm', 150, 90, 60, 34, 'from the near right edge'], ['saw', 18, 86, 26, 40, 'peg on the hull side'],
   ['shavings', 60, 122, 80, 8, 'floor']] };
 
@@ -74,7 +74,7 @@ module.exports = { name: 'Плотник', kind: 'deck', status: 'draft', cam: {
         for (let k = 0; k < 2; k++) { const s = [lerp(p[0], q[0], .25 + k * .5), lerp(p[1], q[1], .25 + k * .5)], len = 3 + R() * 5, w = .6 + R() * .8, ex = s[0] + dx / l * len + (R() - .5) * 2, ey = s[1] + dy / l * len + (R() - .5) * 2 + 1.2;
           bg += `<path d="M${f(s[0] - w)} ${f(s[1])}L${f(ex)} ${f(ey)}L${f(s[0] + w)} ${f(s[1] + w * .4)}Z" fill="${R() > .45 ? '#d8a868' : '#8a5a30'}" stroke="#2a1608" stroke-width=".25"/>`; } } }
     // ——— the frames: stout ribs in front of the planking, their sides turned to the vanishing point; the middle one
-    // broken by the shot (the stub stands up into the breach) ———
+    // shot away below the deck beams (only its head is left above the breach) ———
     const frame = (x, y0, y1, top) => { const w = 9, side = Math.max(1.4, Math.abs(VX - x) * .03), lft = x < VX, fx = lft ? x + w / 2 : x - w / 2 - side;
       let s = K.shadeBox(u, [{ pts: [[fx, y0], [fx + side, y0], [fx + side, y1], [fx, y1]], n: lft ? 'right' : 'left', grain: [0, 1] }, { pts: [[x - w / 2, y0], [x + w / 2, y0], [x + w / 2, y1], [x - w / 2, y1]], n: 'front', grain: [0, 1] }], L, 'oak', { seed: Math.round(x), outline: .5 });
       if (top) s += top;
@@ -82,22 +82,22 @@ module.exports = { name: 'Плотник', kind: 'deck', status: 'draft', cam: {
     let mid = '';
     for (const x of FR) mid += frame(x, WT + 4.6, WB);
     mid += frame(100, WT + 4.6, 40);
-    { const jag = 'M95.5 116L95.5 93L97 89.4L98.2 92L99.6 86.6L101.2 91L102.6 88.4L104.5 92.6L104.5 116Z', g = nid('fr', u);
-      mid += `<defs>${linGrad(g, 95, 0, 105, 0, [[0, '#3a2210', 1], [.5, '#6a4224', 1], [1, '#4a2c14', 1]])}</defs><path d="${jag}" fill="url(#${g})" stroke="#140a04" stroke-width=".5"/>`
-        + `<path d="M97 89.4L98.2 92L99.6 86.6L101.2 91L102.6 88.4L104.5 92.6" stroke="#f0c890" stroke-width=".6" fill="none"/>`
-        + `<path d="M98.6 89l-1.4 -5M101 88l1.6 -6.4M103 89.6l2.4 -4" stroke="#d8a868" stroke-width=".7" stroke-linecap="round"/>`; }
     // ——— the hand saw hanging on a peg on the side, left; its shadow on the planking ———
     { const sx = 30, sy = 52, sh = 'M0 0L5 -1.6L7.4 4L7.4 9.6L2.6 11.4L1 9.4Q3.6 8 3.4 4.8Q3 2 0 2Z';
       mid += `<path d="M${sx - 2} ${sy + 8}L${sx - 9} ${sy + 44}L${sx + 5} ${sy + 46}L${sx + 6.4} ${sy + 9}Z" fill="#000" opacity=".35" transform="translate(-3 3)"/>`
-        + `<circle cx="${sx}" cy="${sy - 1}" r="1.4" fill="url(#oak${u})" stroke="#140a04" stroke-width=".4"/>`
         + `<path d="M${sx - 2} ${sy + 8}L${sx - 9} ${sy + 44}L${sx + 5} ${sy + 46}L${sx + 6.4} ${sy + 9}Z" fill="url(#silver${u})" stroke="#3a4248" stroke-width=".4"/>`
         + Array.from({ length: 12 }, (_, k) => { const t = k / 12, x0 = lerp(sx - 9, sx + 5, t), y0 = lerp(sy + 44, sy + 46, t); return `<path d="M${f(x0)} ${f(y0)}l.6 1.3l.6 -1.2" stroke="#5a6268" stroke-width=".4" fill="none"/>`; }).join('')
         + `<path d="M${sx - 1.4} ${sy + 9}L${sx - 8} ${sy + 42}" stroke="#ffffff" stroke-width=".4" opacity=".6"/>`
-        + `<g transform="translate(${sx - 4} ${sy - 1})"><path d="${sh}" fill="url(#oakH${u})" stroke="#1a0e06" stroke-width=".5" transform="scale(1.35)"/><ellipse cx="5.4" cy="7.4" rx="1.6" ry="2.6" fill="#1a0e06" transform="rotate(10 5.4 7.4)"/></g>`; }
+        + `<g transform="translate(${sx - 4} ${sy - 1})"><path d="${sh}" fill="url(#oakH${u})" stroke="#1a0e06" stroke-width=".5" transform="scale(1.35)"/><ellipse cx="5.4" cy="7.4" rx="1.6" ry="2.6" fill="#1a0e06" transform="rotate(10 5.4 7.4)"/></g>`
+        // the forged nail in the side the saw hangs on: through the grip, the top of the grip resting on its shank
+        + `<path d="M${sx + 1.5} ${sy + 5.2}l1.8 1.2" stroke="#000" stroke-width="1.2" opacity=".4" stroke-linecap="round"/>`
+        + `<path d="M${sx + 1.2} ${sy + 4.8}L${sx + 1.6} ${sy + 5.6}" stroke="url(#iron${u})" stroke-width="1" stroke-linecap="round"/>`
+        + K.shadeSphere(u, sx + 1.2, sy + 4.6, 1.15, L, 'iron', { outline: .3 }); }
     // ——— the new planks over the frames: fresh pine, grain, end grain, knots, shadows under them, the nails ———
-    let planks = '';
+    const pm = nid('pm', u);
+    let planks = `<defs><mask id="${pm}" maskUnits="userSpaceOnUse" x="-10" y="0" width="220" height="140"><rect x="-10" y="0" width="220" height="140" fill="#fff"/><path d="${brD}" fill="#000"/></mask></defs>`;
     for (const p of PL) { const g = nid('pk', u), Rp = rng(p.seed), y0 = p.y, y1 = p.y + p.h;
-      planks += `<path d="M${PX0 - 1} ${f(y1 + .5)}H${PX1 + 1}L${PX1 + 2} ${f(y1 + 4.5)}H${PX0}Z" fill="#000" opacity=".4" filter="url(#drop${u})"/>`;
+      planks += `<path d="M${PX0 - 1} ${f(y1 + .5)}H${PX1 + 1}L${PX1 + 2} ${f(y1 + 4.5)}H${PX0}Z" fill="#000" opacity=".4" filter="url(#drop${u})" mask="url(#${pm})"/>`;
       planks += `<defs>${linGrad(g, 0, y0, 0, y1, [[0, mix(p.c, '#fff4dc', .45), 1], [.2, p.c, 1], [.8, mix(p.c, '#a06a36', .3), 1], [1, mix(p.c, '#6a4220', .5), 1]])}</defs>`
         + `<path d="M${PX0} ${f(y0 + .3)}L${PX1} ${f(y0)}L${PX1 + .4} ${f(y1)}L${PX0 + .2} ${f(y1 + .2)}Z" fill="url(#${g})" stroke="#7a4c20" stroke-width=".5"/>`;
       for (let k = 0; k < 6; k++) { const yy = y0 + 1.6 + k * (p.h - 3) / 5 + (Rp() - .5) * .6, a = (Rp() - .5) * 1.4; planks += `<path d="M${PX0 + 1} ${f(yy)}Q${f(lerp(PX0, PX1, .3 + Rp() * .4))} ${f(yy + a)} ${PX1 - 1} ${f(yy + (Rp() - .5))}" stroke="${mix(p.c, '#8a5420', .55)}" stroke-width="${f(.25 + Rp() * .25)}" fill="none" opacity=".75"/>`; }
@@ -107,9 +107,10 @@ module.exports = { name: 'Плотник', kind: 'deck', status: 'draft', cam: {
         + `<path d="M${PX1 - 1.2} ${f(y0)}L${PX1} ${f(y0)}L${PX1 + .4} ${f(y1)}L${PX1 - .9} ${f(y1)}Z" fill="#b07a42" opacity=".8"/>`; }
     const nail = (x, y) => K.shadeSphere(u, x, y, 1, L, 'iron', { outline: .3 }) + `<circle cx="${f(x + .9)}" cy="${f(y + .9)}" r="1.3" fill="#3a2410" opacity=".35"/>`;
     for (const x of [FR[1], FR[2]]) for (const y of [40.4, 45.2]) planks += nail(x + (y > 43 ? .6 : -.4), y);
-    planks += nail(FR[1] - .4, 52.6) + nail(FR[1] + .6, 57.6) + nail(FR[2] - .6, 52.6);
-    // the third nail, half driven: the shank standing out, its head, chips and dust round it
-    { const nx = FR[2] + .6, ny = 57.8; planks += `<path d="M${nx} ${ny}L${nx + 3.2} ${ny - 2.6}" stroke="url(#iron${u})" stroke-width="1.1" stroke-linecap="round"/><path d="M${nx + .3} ${ny - .6}L${nx + 3} ${ny - 2.8}" stroke="#e8eef2" stroke-width=".3"/>`
+    planks += nail(FR[1] - .4, 58.6) + nail(FR[1] + .6, 63.6) + nail(FR[2] - .6, 58.6);
+    // the third nail, half driven at the edge of the breach (the inner edge of the frame): the shank standing out, its
+    // head, chips and dust round it
+    { const nx = 137.4, ny = 63.6; planks += `<path d="M${nx} ${ny}L${nx + 3.2} ${ny - 2.6}" stroke="url(#iron${u})" stroke-width="1.1" stroke-linecap="round"/><path d="M${nx + .3} ${ny - .6}L${nx + 3} ${ny - 2.8}" stroke="#e8eef2" stroke-width=".3"/>`
       + `<ellipse cx="${nx + 3.5}" cy="${ny - 2.9}" rx="1.6" ry=".9" transform="rotate(-40 ${nx + 3.5} ${ny - 2.9})" fill="url(#iron${u})" stroke="#1a1a1c" stroke-width=".3"/>`
       + `<path d="M${nx - 1.2} ${ny + .6}l-2.6 1.4M${nx + 1.4} ${ny + 1}l1.8 2.2M${nx - .6} ${ny - 1}l-2 -1.8" stroke="#fff0d0" stroke-width=".5" stroke-linecap="round"/>` + motes(8, nx - 6, ny - 5, 12, 10, '#ffe8c0', 6); }
     // ——— the floor: deck planks to the vanishing point; shavings and a split offcut at the foot of the side ———

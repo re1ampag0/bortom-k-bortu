@@ -129,7 +129,7 @@ function shipFlag(u, top, w, h, seed) {
 function fist(u, L, tn) {
   const P = HP, Ps = a => a.map(p => P(p[0], p[1])), pth = (a, c = true) => H.sp(Ps(a), c);
   const g = (id, a, b, st) => { const A = P(a[0], a[1]), B = P(b[0], b[1]); return linGrad(id, A[0], A[1], B[0], B[1], st); };
-  const bk = nid('hb', u), th = nid('ht', u), fid = [0, 1, 2, 3].map(i => nid('hf' + i, u));
+  const bk = nid('hb', u), th = nid('ht', u), fm = nid('hm', u), fmg = nid('hmg', u), fid = [0, 1, 2, 3].map(i => nid('hf' + i, u));
   const fins = [[-4.85, 3.0, 3.3], [-1.85, 3.05, 3.6], [1.1, 2.9, 3.3], [3.85, 2.55, 2.4]];   // [y, width, reach past the rope]
   let s = '<defs>' + g(bk, [7, 5.6], [8, -6.6], [[0, tn.shadow, 1], [.3, tn.core, 1], [.62, tn.half, 1], [1, tn.lit, 1]])
     + g(th, [10, -9.2], [10, -5.8], [[0, tn.lit, 1], [.45, tn.half, 1], [1, tn.shadow, 1]])
@@ -144,9 +144,10 @@ function fist(u, L, tn) {
     s += `<path d="${pth([[11.4, t + .45], [14, t + .35], [x1 - 1.6, t + .45]], false)}" stroke="${tn.lit}" stroke-width=".35" fill="none" opacity=".5"/>`; }
   // the back of the hand: the knuckles stand up along its edge over the bases of the fingers
   const back = [[-3.4, -4.3], [-1, -4.5], [3, -5.3], [7.5, -6.2], [10.6, -6.8], [12.4, -6.3], [13.1, -4.8], [12.6, -3.4], [13.3, -1.9], [12.8, -.4], [13.2, 1.1], [12.6, 2.4], [12.8, 3.9], [12, 5.2], [9.4, 5.6], [5, 5.2], [1, 4.8], [-1, 4.6], [-3.4, 4.4]];
-  s += `<path d="${pth(back)}" fill="url(#${bk})"/><path d="${pth(back.slice(1, -1), false)}" fill="none" stroke="${tn.outline}" stroke-width=".42"/>`;
-  // where the wrist turns into the back of the hand: a soft shade, no seam
-  s += `<path d="${pth([[-1.6, -4.4], [-.6, 0], [-1.6, 4.5]], false)}" stroke="${tn.half}" stroke-width="1.6" fill="none" opacity=".35"/>`;
+  // it grows out of the forearm: faded in over the wrist, so there is no seam
+  { const A = P(-3.4, 0), B = P(2.2, 0), lo = P(-6, -12), hi = P(24, 12);
+    s += `<defs>${linGrad(fmg, A[0], A[1], B[0], B[1], [[0, '#fff', 0], [1, '#fff', 1]])}<mask id="${fm}" maskUnits="userSpaceOnUse" x="0" y="60" width="80" height="70"><rect x="0" y="60" width="80" height="70" fill="url(#${fmg})"/></mask></defs>`; }
+  s += `<g mask="url(#${fm})"><path d="${pth(back)}" fill="url(#${bk})"/><path d="${pth(back.slice(1, -1), false)}" fill="none" stroke="${tn.outline}" stroke-width=".42"/></g>`;
   // the tendons fanning to the knuckles, the knuckles lit, the wrist crease
   for (const [y] of fins) { s += `<path d="${pth([[1.5, y * .35], [7, y * .75], [11.6, y * .98]], false)}" stroke="${tn.shadow}" stroke-width=".3" fill="none" opacity=".35"/>`
     + `<path d="${pth([[2, y * .35 - .4], [7.2, y * .75 - .4], [11.4, y * .98 - .4]], false)}" stroke="${tn.lit}" stroke-width=".25" fill="none" opacity=".3"/>`; }
@@ -196,8 +197,8 @@ module.exports = { name: 'Поднять флаги!', kind: 'deck', status: 'dr
     // the fist closed round the halyard and hauling it down
     { const skin = { lit: '#f0b888', half: '#b97c54', core: '#a46c48', shadow: '#5e3626', outline: '#2a140a' };
       const shirt = { lit: '#e2dccc', half: '#9c9688', shadow: '#3e4050', outline: '#1a1a20' };
-      const E = [18, 125], W = HP(1.2, .2);
-      fg += H.cloth(u, { spine: [E, [lerp(E[0], W[0], .5) - 1, lerp(E[1], W[1], .5) - .4], W], w: [12.4, 11.2, 8.8], tone: skin, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .6, folds: false, capA: true, sw: .4 })
+      const E = [18, 125], W = HP(4, .1);
+      fg += H.cloth(u, { spine: [E, [lerp(E[0], W[0], .5) - 1, lerp(E[1], W[1], .5) - .4], W], w: [12.4, 11.2, 8.6], tone: skin, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .6, folds: false, capA: true, sw: .4 })
         + `<path d="M${f(E[0] + 6)} ${f(E[1] - 10)}q3.4 -2.4 6.6 -6.4M${f(E[0] + 9)} ${f(E[1] - 7.4)}q2.6 -1.6 5 -4.6" stroke="#7a4a30" stroke-width=".35" fill="none" opacity=".6"/>`;
       fg += H.cloth(u, { spine: [[-18, 146], [-2, 136], [E[0] + 1.6, E[1] - 1.4]], w: [17, 15.6, 14.6], tone: shirt, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .5, cuff: { from: .78, k: 1.1, roll: true }, seed: 4, drapes: 3, sw: .4 });
       fg += fist(u, L, skin);
