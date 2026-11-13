@@ -15,13 +15,14 @@ const blurFilter = (id, box, sd) => `<filter id="${id}" filterUnits="userSpaceOn
 const softDot = id => `<radialGradient id="${id}"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>`;
 
 /**
- * sky(u, L, { horizon, stars, seed, top, w, avoid, clear }) — the sky from `top` (0) down to the horizon by L.time: a
+ * sky(u, L, { horizon, stars, density, seed, top, w, avoid, clear }) — the sky from `top` (0) down to the horizon by L.time: a
  * gradient from the zenith to the tone at the horizon (at sunset: the deep zenith, the rose belt, the orange band and
  * the bright strip at the horizon), lighter round the source, stars at night (stars: a number, or false). The stars
  * differ in size and brightness (most faint, a few large ones with rays), crowd to the zenith and dim, warm and
  * vanish towards the horizon; none on the sun or moon or inside its bright halo (`clear` — that radius, by default
  * from a moon of r 8), none inside `avoid` (a list of { x, y, w, h } as given to cloud(): x — the middle, y — the
- * flat underside).
+ * flat underside). `density` — how many stars are drawn per star asked (2.4 by default, 1 — the old sparse sky): the
+ * first `stars` keep their places, the rest are added among them; 3–6 large stars with rays (fewer on a small sky).
  */
 function sky(u, L, o = {}) {
   const hz = o.horizon != null ? o.horizon : L.cam.horizon, w = o.w || W, top = o.top || 0, P = L.pal, id = nid('sk', u), cid = nid('skc', u), R = rng(o.seed != null ? o.seed : 7), dusk = L.time === 'dusk';
@@ -34,31 +35,33 @@ function sky(u, L, o = {}) {
   }
   const s = L.source && L.front ? L.source : null;
   if (s) { // the air glows round the sun or moon and along the horizon under it
-    const g = nid('ska', u), k = L.time === 'dusk' ? .62 : L.time === 'day' ? .5 : L.time === 'fog' ? .34 : .3, c = mix(L.keyColor, P.sky[3], .25);
+    const g = nid('ska', u), k = L.time === 'dusk' ? .7 : L.time === 'day' ? .58 : L.time === 'fog' ? .36 : .38, c = mix(L.keyColor, P.sky[3], .25);
     defs += `<radialGradient id="${g}"><stop offset="0" stop-color="${c}" stop-opacity="${k}"/><stop offset=".4" stop-color="${c}" stop-opacity="${f(k * .4)}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`;
     const gx = clamp(s.x, -60, w + 60);
-    body += `<ellipse cx="${f(gx)}" cy="${f(Math.min(Math.max(s.y, top - 40), hz))}" rx="${L.time === 'fog' ? 120 : 96}" ry="${L.time === 'fog' ? 96 : 78}" fill="url(#${g})"/><ellipse cx="${f(gx)}" cy="${f(hz)}" rx="${L.time === 'dusk' ? 190 : 150}" ry="${L.time === 'dusk' ? 34 : 18}" fill="url(#${g})" opacity="${L.time === 'dusk' ? 1 : .7}"/>`;
+    body += `<ellipse cx="${f(gx)}" cy="${f(Math.min(Math.max(s.y, top - 40), hz))}" rx="${L.time === 'fog' ? 120 : 112}" ry="${L.time === 'fog' ? 96 : 90}" fill="url(#${g})"/><ellipse cx="${f(gx)}" cy="${f(hz)}" rx="${L.time === 'dusk' ? 190 : 150}" ry="${L.time === 'dusk' ? 34 : 18}" fill="url(#${g})" opacity="${L.time === 'dusk' ? 1 : .7}"/>`;
   }
-  const n = o.stars === false ? 0 : typeof o.stars === 'number' ? o.stars : L.time === 'night' ? 70 : 0;
+  const n0 = o.stars === false ? 0 : typeof o.stars === 'number' ? o.stars : L.time === 'night' ? 70 : 0, n = Math.round(n0 * (o.density != null ? o.density : 2.4));
   if (n) {
-    const sd = nid('sks', u), H = hz - top, clear = o.clear != null ? o.clear : 19, avoid = o.avoid || [], cap = Math.max(2, Math.round(n / 14)), night = L.time === 'night';
+    const sd = nid('sks', u), H = hz - top, clear = o.clear != null ? o.clear : 24, avoid = o.avoid || [], night = L.time === 'night';
+    const cap = n0 >= 30 && H > 40 ? clamp(Math.round(n0 / 12), 3, 6) : Math.max(1, Math.round(n0 / 14));
     defs += softDot(sd);
     let big = 0;
     for (let i = 0; i < n; i++) {
       // the same number of draws for every star, so a star skipped below does not move the others
-      const x = R() * w, t = Math.pow(R(), 1.55), y = top + t * H * .97, m = Math.pow(R(), 2.6), kc = R(), ka = R();
-      const ext = Math.pow(clamp((1 - t) / .5), 1.3) * (night ? 1 : clamp(1 - t * 1.5)); // the thick air at the horizon
+      const x = R() * w, t = Math.pow(R(), 1.9), y = top + t * H * .97, m = Math.pow(R(), 2.6), kc = R(), ka = R();
+      const ext = Math.pow(clamp((1 - t) / .55), 1.5) * (night ? 1 : clamp(1 - t * 1.5)); // the thick air at the horizon
       const near = s ? Math.hypot(x - s.x, y - s.y) : 1e3, halo = clamp((near - clear) / (clear * 1.2 + 6));
       const hid = avoid.some(a => Math.abs(x - a.x) < (a.w || 0) / 2 + 2 && y > a.y - (a.h || 0) * 1.25 - 2 && y < a.y + 2);
-      const op = (.34 + .66 * m) * ext * halo;
-      if (op < .06 || hid) continue;
-      const r = .2 + .42 * m, col = mix(['#ffffff', '#dde6ff', '#fff0d6', '#e6edff'][Math.floor(kc * 4)], '#ffd9b0', t * .45);
+      const op = clamp((.6 + .75 * m) * ext * halo);
+      if (op < .07 || hid) continue;
+      const r = .3 + .62 * m, col = mix(['#ffffff', '#dde6ff', '#fff0d6', '#e6edff'][Math.floor(kc * 4)], '#ffd9b0', t * .45);
       body += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="${col}" opacity="${f(op)}"/>`;
-      if (m > .2) body += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r * 3.4)}" fill="url(#${sd})" opacity="${f(op * (.18 + .3 * m))}"/>`;
-      if (m > .6 && op > .45 && big < cap) { // a few large stars with thin rays: a long cross and a short diagonal one
+      if (m > .16) body += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r * 3.2)}" fill="url(#${sd})" opacity="${f(op * (.2 + .3 * m))}"/>`;
+      if (m > .55 && op > .55 && t < .6 && big < cap) { // a few large stars with thin rays: a long cross and a short diagonal one
         big++;
-        const l = 1.6 + 3.2 * m, a = ka * 14 - 7, ray = (len, th, ang, q) => `<path d="M${f(-len)} 0Q0 ${f(-th)} ${f(len)} 0Q0 ${f(th)} ${f(-len)} 0Z" transform="translate(${f(x)} ${f(y)}) rotate(${f(ang)})" fill="${col}" opacity="${f(op * q)}"/>`;
-        body += ray(l, .2, a, .8) + ray(l, .2, a + 90, .8) + ray(l * .42, .14, a + 45, .5) + ray(l * .42, .14, a - 45, .5);
+        const l = 3.2 + 4.6 * m, a = ka * 14 - 7, ray = (len, th, ang, q) => `<path d="M${f(-len)} 0Q0 ${f(-th)} ${f(len)} 0Q0 ${f(th)} ${f(-len)} 0Z" transform="translate(${f(x)} ${f(y)}) rotate(${f(ang)})" fill="${col}" opacity="${f(op * q)}"/>`;
+        body += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r * 4.6)}" fill="url(#${sd})" opacity="${f(op * .24)}"/>`
+          + ray(l, .24, a, .9) + ray(l, .24, a + 90, .9) + ray(l * .42, .16, a + 45, .55) + ray(l * .42, .16, a - 45, .55);
       }
     }
   }
@@ -68,62 +71,63 @@ function sky(u, L, o = {}) {
 /**
  * sunMoon(u, L, { r, seed, phase, lit, rays }) — the disc of the sun or moon with its halo at the key light's place
  * (L.source), where makeLight also puts the source of the scene's light and shadows.
- * Moon: a crisp disc a little darker at the limb, its own grey seas (soft-edged irregular patches, darker cores) and
- * small craters; `phase` 0..1 — the lit share (1, full, by default): the dark part is laid over softly, a faint
+ * Moon: a crisp disc darker at the limb with a two-layer halo (a bright ring hugging the disc and a wide soft glow),
+ * its own grey seas (a few large blurred patches, darker cores; no fine marks) and one bright young crater; `phase` 0..1 — the lit share (1, full, by default): the dark part is laid over softly, a faint
  * earthshine left in it; `lit` — the angle to the lit limb (degrees: 0 — right, 90 — down; 60 by default).
- * Sun: a white-hot disc, the glow, a bright bloom round the disc and soft rays of different length above the horizon
- * (`rays: false` — none; none in fog; fewer and shorter at sunset).
+ * Sun: a white-hot disc, a wide glow, a bright bloom round the disc and soft rays of different length above the horizon
+ * (`rays: false` — none; none in fog; a little fewer and shorter at sunset, but as bright).
  */
 function sunMoon(u, L, o = {}) {
   const s = L.source; if (!s || L.point) return '';
   const moon = L.key.type === 'moon', fog = L.time === 'fog', dusk = L.time === 'dusk', r = o.r || (moon ? 8 : 7), h1 = nid('sm', u), h2 = nid('sn', u), d = nid('sd', u), c = nid('so', u);
-  const hc = mix(L.keyColor, '#ffffff', .3), big = r * (fog ? 13 : dusk ? 11 : moon ? 8 : 10), kb = fog ? .5 : moon ? .36 : .6, R = rng(o.seed != null ? o.seed : 5);
-  const disc = moon ? (fog ? ['#f0fbf2', '#dcefe2', '#bcd8ca', '#9fc4b4'] : ['#fdfbef', '#f4f0dc', '#e4dfc6', '#cdc7ab']) : dusk ? ['#fff6c8', '#ffd27a', '#ff9a4a'] : ['#ffffff', '#fffbe6', '#fff0b8'];
-  let defs = `<radialGradient id="${h1}"><stop offset="0" stop-color="${hc}" stop-opacity="${kb}"/><stop offset=".25" stop-color="${hc}" stop-opacity="${f(kb * .42)}"/><stop offset=".6" stop-color="${hc}" stop-opacity="${f(kb * .12)}"/><stop offset="1" stop-color="${hc}" stop-opacity="0"/></radialGradient>`
+  const hc = mix(L.keyColor, '#ffffff', .3), big = r * (fog ? 13 : dusk ? 14 : moon ? 12 : 13), kb = fog ? .5 : moon ? .4 : .72, R = rng(o.seed != null ? o.seed : 5);
+  const disc = moon ? (fog ? ['#f0fbf2', '#dcefe2', '#bcd8ca', '#9fc4b4'] : ['#fffdf2', '#f6f2de', '#e0dbc0', '#bdb79a']) : dusk ? ['#fff6c8', '#ffd27a', '#ff9a4a'] : ['#ffffff', '#fffbe6', '#fff0b8'];
+  let defs = `<radialGradient id="${h1}"><stop offset="0" stop-color="${hc}" stop-opacity="${kb}"/><stop offset=".14" stop-color="${hc}" stop-opacity="${f(kb * .6)}"/><stop offset=".38" stop-color="${hc}" stop-opacity="${f(kb * .2)}"/><stop offset=".7" stop-color="${hc}" stop-opacity="${f(kb * .05)}"/><stop offset="1" stop-color="${hc}" stop-opacity="0"/></radialGradient>`
     + `<radialGradient id="${h2}"><stop offset="0" stop-color="#ffffff" stop-opacity=".9"/><stop offset=".45" stop-color="${hc}" stop-opacity=".5"/><stop offset="1" stop-color="${hc}" stop-opacity="0"/></radialGradient>`
     + (moon ? radGrad(d, s.x, s.y, r, [[0, disc[0]], [.55, disc[1]], [.9, disc[2]], [1, disc[3]]]) : dusk ? linGrad(d, s.x, s.y - r, s.x, s.y + r, [[0, disc[0]], [.5, disc[1]], [1, disc[2]]]) : radGrad(d, s.x, s.y, r, [[0, disc[0]], [.7, disc[1]], [1, disc[2]]]))
     + `<clipPath id="${c}"><circle cx="${f(s.x)}" cy="${f(s.y)}" r="${f(r)}"/></clipPath>`;
-  let out = `<circle cx="${f(s.x)}" cy="${f(s.y)}" r="${f(big)}" fill="url(#${h1})" style="mix-blend-mode:screen"/><circle cx="${f(s.x)}" cy="${f(s.y)}" r="${f(r * (fog ? 3.4 : 2.3))}" fill="url(#${h2})" style="mix-blend-mode:screen"/>`;
+  let out = `<circle cx="${f(s.x)}" cy="${f(s.y)}" r="${f(big)}" fill="url(#${h1})" style="mix-blend-mode:screen"/><circle cx="${f(s.x)}" cy="${f(s.y)}" r="${f(r * (fog ? 3.4 : moon ? 2.3 : 3))}" fill="url(#${h2})" style="mix-blend-mode:screen"/>`;
+  if (moon && !fog) { // the bright ring of the moon's halo: strong right at the limb, gone within a few radii
+    const hr = nid('sh', u), q = 3.6, e = 1 / q;
+    defs += `<radialGradient id="${hr}">${stops([[0, '#ffffff', .9], [f(e), hc, .5], [f(e * 1.4), hc, .28], [f(e * 2.2), hc, .12], [1, hc, 0]])}</radialGradient>`;
+    out += `<circle cx="${f(s.x)}" cy="${f(s.y)}" r="${f(r * q)}" fill="url(#${hr})" style="mix-blend-mode:screen"/>`;
+  }
   if (!moon) {
     if (o.rays !== false && !fog) { // soft rays of different length, only above the horizon; a bloom round the disc
-      const rg = nid('sr', u), rb = nid('sb', u), rc = nid('sq', u), n = dusk ? 11 : 16, lmax = r * (dusk ? 6 : 9.5), hz = L.cam.horizon, ph = R() * 360;
-      defs += radGrad(rg, s.x, s.y, lmax, [[0, hc, dusk ? .5 : .6], [r / lmax, hc, dusk ? .45 : .52], [.5, hc, dusk ? .12 : .16], [1, hc, 0]])
+      const rg = nid('sr', u), rb = nid('sb', u), rc = nid('sq', u), n = dusk ? 14 : 16, lmax = r * (dusk ? 8.5 : 11), hz = L.cam.horizon, ph = R() * 360, rcol = dusk ? mix(hc, '#fff6dc', .55) : hc;
+      defs += radGrad(rg, s.x, s.y, lmax, [[0, rcol, .78], [r / lmax, rcol, dusk ? .7 : .66], [.5, rcol, dusk ? .24 : .22], [1, rcol, 0]])
         + blurFilter(rb, [s.x - lmax - 4, s.y - lmax - 4, lmax * 2 + 8, lmax * 2 + 8], f(Math.max(.25, r * .05)))
         + `<clipPath id="${rc}"><rect x="${f(s.x - lmax - 4)}" y="${f(s.y - lmax - 4)}" width="${f(lmax * 2 + 8)}" height="${f(Math.max(0, hz - (s.y - lmax - 4)))}"/></clipPath>`;
       let rays = '';
       for (let i = 0; i < n; i++) {
-        const a = (ph + i * 360 / n + (R() - .5) * 360 / n * .5) * Math.PI / 180, len = r * (i % 2 ? 1.6 + R() * 1.8 : 2.8 + R() * 3.2) * (dusk ? .8 : 1), dl = (.1 + R() * .09) * (i % 2 ? .75 : 1);
+        const a = (ph + i * 360 / n + (R() - .5) * 360 / n * .5) * Math.PI / 180, len = r * (i % 2 ? 1.8 + R() * 2 : 3.2 + R() * 3.6), dl = (.13 + R() * .09) * (i % 2 ? .75 : 1);
         const p = (ang, q) => `${f(s.x + Math.cos(ang) * q)} ${f(s.y + Math.sin(ang) * q)}`;
         rays += `<path d="M${p(a - dl, r * .7)}L${p(a, Math.min(len, lmax))}L${p(a + dl, r * .7)}Z" fill="url(#${rg})"/>`;
       }
       out += `<g clip-path="url(#${rc})"><g filter="url(#${rb})" style="mix-blend-mode:screen">${rays}</g></g>`;
     }
-    out += `<circle cx="${f(s.x)}" cy="${f(s.y)}" r="${f(r * 1.35)}" fill="url(#${h2})" style="mix-blend-mode:screen"/>`;
+    out += `<circle cx="${f(s.x)}" cy="${f(s.y)}" r="${f(r * 1.6)}" fill="url(#${h2})" style="mix-blend-mode:screen"/>`;
   }
   out += `<circle cx="${f(s.x)}" cy="${f(s.y)}" r="${f(r)}" fill="url(#${d})"${fog ? ' opacity=".9"' : ''}/>`;
   if (moon) { // the grey seas of the moon: soft irregular patches with darker cores, and small craters
-    const sea = fog ? '#86ab9b' : '#a9a48d', core = fog ? '#7a9e8f' : '#9a957e', sf = nid('sf', u);
-    const blob = (cx, cy, rx, ry, rot, col, op) => { const k = 9, pts = [], cr = Math.cos(rot), sr = Math.sin(rot);
-      for (let i = 0; i < k; i++) { const a = i / k * Math.PI * 2, q = .78 + R() * .4, px = Math.cos(a) * rx * q, py = Math.sin(a) * ry * q; pts.push([s.x + (cx + px * cr - py * sr) * r, s.y + (cy + px * sr + py * cr) * r]); }
+    const sea = fog ? '#7fa595' : '#8e8b79', core = fog ? '#6f9384' : '#77735f', sf = nid('sf', u);
+    const blob = (cx, cy, rx, ry, rot, col, op) => { const k = 8, pts = [], cr = Math.cos(rot), sr = Math.sin(rot);
+      for (let i = 0; i < k; i++) { const a = i / k * Math.PI * 2, q = .84 + R() * .3, px = Math.cos(a) * rx * q, py = Math.sin(a) * ry * q; pts.push([s.x + (cx + px * cr - py * sr) * r, s.y + (cy + px * sr + py * cr) * r]); }
       return `<path d="${smoothPath(pts, true)}" fill="${col}" opacity="${f(op)}"/>`; };
-    // [x, y, rx, ry, rotation] in the disc's radii: a large sea upper left joined to a chain, two round seas on the right, a few small ones below
-    const SEAS = [[-.3, -.26, .36, .27, .5], [-.02, -.36, .2, .16, -.3], [.3, -.1, .26, .3, .2], [.36, .38, .2, .15, -.6], [-.42, .14, .22, .3, .1], [-.08, .2, .2, .13, .7], [.04, .58, .14, .1, 0]];
+    // [x, y, rx, ry, rotation] in the disc's radii: a few large seas — a big one upper left, an ocean down the left
+    // side, a pair on the right and one below; big and blurred, so at the size of a card they read as shading, not marks
+    const SEAS = [[-.3, -.3, .38, .3, .4], [.2, -.3, .26, .22, -.2], [.42, .08, .22, .3, .2], [-.5, .16, .28, .4, .1], [-.06, .42, .26, .17, .5]];
     let seas = '';
     for (const [x0, y0, rx, ry, rt] of SEAS) {
-      const jx = (R() - .5) * .06, jy = (R() - .5) * .06;
-      seas += blob(x0 + jx, y0 + jy, rx * (.92 + R() * .2), ry * (.92 + R() * .2), rt + (R() - .5) * .5, sea, .55 + R() * .25)
-        + blob(x0 + jx + (R() - .5) * rx * .3, y0 + jy + (R() - .5) * ry * .3, rx * .55, ry * .55, rt, core, .35 + R() * .25);
+      const jx = (R() - .5) * .05, jy = (R() - .5) * .05;
+      seas += blob(x0 + jx, y0 + jy, rx * (.94 + R() * .14), ry * (.94 + R() * .14), rt + (R() - .5) * .4, sea, .7 + R() * .2)
+        + blob(x0 + jx, y0 + jy, rx * .5, ry * .5, rt, core, .45 + R() * .2);
     }
-    let craters = '';
-    if (r >= 9) { // a small crater: a darker floor and a light rim on the far side from the light; one bright young crater below
-      for (const [x0, y0, q] of [[.16, -.56, .07], [-.56, -.36, .06], [.58, .1, .05], [-.24, .52, .06], [.12, .06, .045]]) {
-        const cx = s.x + x0 * r, cy = s.y + y0 * r, cr = Math.max(.25, q * r);
-        craters += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(cr)}" fill="${core}" opacity=".45"/><path d="M${f(cx - cr)} ${f(cy)}A${f(cr)} ${f(cr)} 0 0 0 ${f(cx + cr)} ${f(cy)}" fill="none" stroke="${disc[0]}" stroke-width="${f(Math.max(.12, cr * .35))}" opacity=".7"/>`;
-      }
-    }
-    if (r >= 5) craters += `<circle cx="${f(s.x - .14 * r)}" cy="${f(s.y + .7 * r)}" r="${f(Math.max(.22, r * .045))}" fill="#ffffff" opacity=".85"/>`;
-    defs += blurFilter(sf, [s.x - r * 1.5, s.y - r * 1.5, r * 3, r * 3], f(Math.max(.1, r * .035)));
-    out += `<g clip-path="url(#${c})"><g opacity="${fog ? .5 : .66}"><g filter="url(#${sf})">${seas}</g>${craters}</g>`;
+    // one bright young crater below, a soft spot
+    const yc = nid('sy', u), craters = r >= 5 ? `<circle cx="${f(s.x - .14 * r)}" cy="${f(s.y + .7 * r)}" r="${f(Math.max(.4, r * .09))}" fill="url(#${yc})" opacity=".9"/>` : '';
+    if (craters) defs += softDot(yc);
+    defs += blurFilter(sf, [s.x - r * 1.5, s.y - r * 1.5, r * 3, r * 3], f(Math.max(.3, r * .11)));
+    out += `<g clip-path="url(#${c})"><g opacity="${fog ? .6 : .78}"><g filter="url(#${sf})">${seas}</g>${craters}</g>`;
     const ph = o.phase != null ? clamp(o.phase) : 1;
     if (ph < .995) { // the night side: between the dark limb and the terminator (a half-ellipse), soft at the terminator
       const tf = nid('st', u), e = r * (1 - 2 * ph), ang = o.lit != null ? o.lit : 60, dark = mix(P0(L), '#000000', .25);
