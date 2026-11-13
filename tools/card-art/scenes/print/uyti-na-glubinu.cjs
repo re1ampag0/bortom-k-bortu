@@ -8,6 +8,10 @@
 // down; the sea round her turns in a ring of foam with spiral streaks running in to her; the water pours off her
 // raised stern in translucent ribbons that tear into threads and spray; the enemy is a real ship with a flash and
 // smoke; the ball is a real ball with its trail arcing high over her masts, the second ball's column beyond her.
+// Review fix (verdict b5): the stern falls are now 5 thin wavy translucent streams (narrow at the rail, widening
+// into spray at the foam, no flat top); the ball flies low over the right of the foam ring (a cubic arc that clears her
+// stern and drops steeply to the column beyond), not up by the moon; the foam is no longer closed rings — torn arcs
+// and arms twisting in to the centre, a funnel.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -18,7 +22,7 @@ const HZ = 90, SEA = 112;                          // the horizon; the sea where
 const DU = { kind: 'dutch', x: 100, y: 130, scale: 1.2, flip: true, heel: 38, slope: true };   // bow right, down; slope: the kit keeps her whole hull (cut along her own waterline), the scene cuts at the sea
 const EN = { kind: 'endeavour', x: 25, y: HZ + 2.4, scale: .27, flip: true };
 const FUN = { x: 108, y: SEA + 1, rx: 68, ry: 9 };   // the ring of foam round her
-const SHOT = { a: [37, 88.6], c: [112, -40], b: [168, 97] };   // the ball's path: the enemy's port → over her → the sea beyond
+const SHOT = { a: [37, 88.6], c1: [70, 20], c2: [140, 40], b: [168, 97] };   // the ball's path (cubic): the enemy's port → just over her stern → down over the right of the ring → the column beyond
 const light = { time: 'fog', haze: .75, key: { type: 'moon', x: 86, y: 24, el: 30, color: '#d4f4e4', power: .75 }, fill: { color: '#2f5a50', power: .45 },
   rim: { az: 20, color: '#d8fff0', power: .5 }, locals: [{ x: 70, y: 84, color: '#9effd0', power: .4, radius: 30 }] };
 const skel = { horizon: HZ, eye: 2, light: 'the moon in the fog upper left of centre (key, a little behind her) + the green of her lantern and of the deep', items: [
@@ -33,34 +37,30 @@ function pt(o, X, Hh) {
   return [o.x + dx * Math.cos(th) - dy * Math.sin(th), o.y + dx * Math.sin(th) + dy * Math.cos(th)];
 }
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
-const bez = (A, C, B, t) => { const a = 1 - t; return [a * a * A[0] + 2 * a * t * C[0] + t * t * B[0], a * a * A[1] + 2 * a * t * C[1] + t * t * B[1]]; };
+const bez3 = (A, C, D, B, t) => { const a = 1 - t, k = [a * a * a, 3 * a * a * t, 3 * a * t * t, t * t * t]; return [0, 1].map(j => k[0] * A[j] + k[1] * C[j] + k[2] * D[j] + k[3] * B[j]); };
 
-// KIT-CANDIDATE pour: water pouring off a ledge at (x, y0) down to y1: a thin translucent veil (never a solid rod)
-// that narrows fast and curves away (drift), tears into two or three threads, the threads break into beads and drops;
-// a puff of spray where it meets the sea. w — the ribbon's width at the ledge; drift — sideways at the bottom
-function pour(u, L, x, y0, y1, w, seed, o = {}) {
-  const R = rng(seed), h = y1 - y0, drift = o.drift || 0, op = o.op || 1;
+// KIT-CANDIDATE stream: a thin wavy translucent stream of water falling from (x, y0) to y1 — a pointed tip at the
+// ledge (no flat top), narrow there, swelling and bending as it falls, breaking into spray at the bottom.
+// w0 — width near the top, w1 — at the bottom; drift — sideways at the bottom; wav — the wobble
+function stream(u, x, y0, y1, w0, w1, seed, o = {}) {
+  const R = rng(seed), h = y1 - y0, drift = o.drift || 0, op = o.op || 1, wav = o.wav == null ? .7 : o.wav, ph = R() * 6, nw = 1.5 + R();
   if (h < 3) return '';
-  const id = nid('po', u), X = t => x + drift * t * t;      // the fall curves away as it drops
-  let s = `<defs>${linGrad(id, 0, y0, 0, y0 + h * .6, [[0, '#effff8', .34 * op], [.5, '#d8fff0', .2 * op], [1, '#c8f0e4', 0]])}</defs>`;
-  // the sheet: a thin veil from the ledge, narrowing fast, gone by about half the fall
-  const tear = .3 + R() * .15, n = 8, Lp = [], Rp = [];
-  for (let i = 0; i <= n; i++) { const t = i / n * (tear + .12), y = y0 + h * t, k = w * (1 - t / (tear + .14)) / 2 + .1;
-    Lp.push([X(t) - k + Math.sin(i * 1.9 + seed) * w * .06, y]); Rp.unshift([X(t) + k + Math.sin(i * 1.3 + seed) * w * .06, y]); }
-  s += `<path d="M${Lp.concat(Rp).map(P2).join('L')}Z" fill="url(#${id})"/>`;
-  // the lit edge of the veil at the ledge and a couple of fine streaks in it
-  s += `<path d="M${f(x - w / 2)} ${f(y0)}Q${f(x)} ${f(y0 + .6)} ${f(x + w / 2)} ${f(y0)}" stroke="#ffffff" stroke-width=".35" fill="none" opacity="${f(.55 * op)}"/>`;
-  for (let i = 0; i < 2; i++) { const xx = (R() - .5) * w * .6, b = tear * (.6 + R() * .4);
-    s += `<path d="M${f(x + xx)} ${f(y0 + .5)}Q${f(X(b / 2) + xx * .8)} ${f(y0 + h * b / 2)} ${f(X(b) + xx * .5)} ${f(y0 + h * b)}" stroke="#ffffff" stroke-width=".22" fill="none" opacity="${f(.45 * op)}" stroke-linecap="round"/>`; }
-  // the threads it tears into: each its own wobble, thinning, broken into beads, then drops
-  const nt = 2 + Math.floor(R() * 2);
-  for (let j = 0; j < nt; j++) { const sp = (j / (nt - 1 || 1) - .5) * w * .7, t1 = Math.min(.95, tear + .3 + R() * .35), pts = [];
-    for (let i = 0; i <= 8; i++) { const t = lerp(tear, t1, i / 8); pts.push([X(t) + sp * (1 + (t - tear) * 1.5) + Math.sin(i * 1.7 + j * 2) * .3, y0 + h * t]); }
-    for (let i = 0; i < 8; i++) { if (i > 3 && R() < .35) continue; s += `<path d="M${P2(pts[i])}L${P2(pts[i + 1])}" stroke="#e8fff6" stroke-width="${f(Math.max(.14, w * .16 * (1 - i / 9)))}" opacity="${f((.42 - i * .035) * op)}" stroke-linecap="round"/>`; }
-    const e = pts[8]; for (let k = 0; k < 4; k++) { const r = .18 + R() * .3; s += `<ellipse cx="${f(e[0] + (R() - .5) * 1.6)}" cy="${f(e[1] + 1 + k * 2.2 + R())}" rx="${f(r)}" ry="${f(r * 1.8)}" fill="#effff8" opacity="${f(.35 + R() * .35)}"/>`; } }
-  // spray where it lands: a low puff and drops thrown up
-  if (!o.noSplash) {
-    for (let i = 0; i < 7; i++) { const r = .18 + R() * .35; s += `<circle cx="${f(X(1) + (R() - .5) * (w + 7))}" cy="${f(y1 - R() * 6)}" r="${f(r)}" fill="#f0fff8" opacity="${f(.3 + R() * .4)}"/>`; } }
+  const id = nid('st', u), n = 18, C = t => [x + drift * t * t + Math.sin(t * Math.PI * nw + ph) * wav * t, y0 + h * t];
+  const W = t => (t < .08 ? lerp(.15, w0, t / .08) : lerp(w0, w1, Math.pow((t - .08) / .92, 1.4))) / 2;
+  let s = `<defs>${linGrad(id, 0, y0, 0, y1, [[0, '#f4fffa', .42 * op], [.45, '#dcfff2', .3 * op], [.85, '#c8f0e4', .18 * op], [1, '#c8f0e4', .05 * op]])}</defs>`;
+  const Lp = [], Rp = [];
+  for (let i = 0; i <= n; i++) { const t = i / n * .9, c = C(t), k = W(t) * (1 + Math.sin(i * 2.1 + seed) * .12);
+    Lp.push([c[0] - k, c[1]]); Rp.unshift([c[0] + k, c[1]]); }
+  s += `<path d="M${f(x)} ${f(y0)}L${Lp.concat(Rp).map(P2).join('L')}Z" fill="url(#${id})"/>`;
+  // the lit core and a side strand: fine curving lines down the stream, fading
+  for (const [off, sw, oo] of [[-.15, .26, .5], [.3, .16, .35]]) { const pts = [];
+    for (let i = 0; i <= n; i++) { const t = i / n * (.6 + R() * .25), c = C(t); pts.push([c[0] + off * W(t) * 2, c[1]]); }
+    for (let i = 0; i < n; i++) s += `<path d="M${P2(pts[i])}L${P2(pts[i + 1])}" stroke="#ffffff" stroke-width="${f(sw)}" opacity="${f(oo * op * (1 - i / n))}" stroke-linecap="round"/>`; }
+  // the bottom tears into drops and a puff of spray at the foam
+  const e = C(.9);
+  for (let i = 0; i < 9; i++) { const r = .2 + R() * .4, dx = (R() - .5) * (w1 + 3), dy = R() * h * .14;
+    s += `<ellipse cx="${f(e[0] + dx)}" cy="${f(e[1] + dy)}" rx="${f(r)}" ry="${f(r * 1.4)}" fill="#effff8" opacity="${f((.3 + R() * .4) * op)}"/>`; }
+  { const sp = nid('sp', u); s += `<defs>${radGrad(sp, e[0], y1 - 1.5, w1 * .9 + 2, [[0, '#f0fff8', .45 * op], [1, '#d8fff0', 0]])}</defs><ellipse cx="${f(e[0])}" cy="${f(y1 - 1.5)}" rx="${f(w1 * .9 + 2)}" ry="${f(w1 * .5 + 1.2)}" fill="url(#${sp})"/>`; }
   return s;
 }
 
@@ -97,18 +97,23 @@ module.exports = { name: 'Уйти на глубину', kind: 'deck', status: '
         + `<g clip-path="url(#${cut})">${K.ship(u, L, { ...DU, sails: 'full', detail: 'near', lights: true, seed: 4 })}</g>`; }
     // she is soaked: water pours off her raised stern — off the rail, out of the gallery, off the rudder
     let falls = '';
-    for (const [X, Hh, w, sd, dr] of [[44, 21, 4.5, 11, -1.5], [38, 19, 3.4, 12, -1], [31, 17.5, 3, 13, -.8], [24, 16.5, 2.6, 14, -.6], [17, 16, 2.2, 15, -.4], [41, 9, 2.6, 16, -1.8], [46.5, 2, 3.6, 17, -2.2]]) {
-      const p = pt(DU, X, Hh); if (p[1] < SEA - 4) falls += pour(u, L, p[0], p[1], SEA, w, sd, { drift: dr, op: .75 }); }
-    // ——— the ring of foam and the spiral of streaks running in to her ———
+    // 5 streams, each its own width, length and bend: off the rail, out of the gallery port, off the rudder
+    for (const [X, Hh, w0, w1, sd, dr, wv] of [[44, 21, 1.1, 4.8, 11, -3.6, 1.8], [35, 18.3, .7, 3.2, 12, -1.8, 1.4], [26, 16.6, .5, 2.4, 14, -.9, 1.1], [41, 9, .9, 3.8, 16, -2.6, 1.6], [46.5, 2, 1.2, 5.4, 17, -3.4, 1.5]]) {
+      const p = pt(DU, X, Hh); if (p[1] < SEA - 4) falls += stream(u, p[0], p[1], SEA, w0, w1, sd, { drift: dr, op: .85, wav: wv }); }
+    // ——— the foam: no closed ring — torn arcs of the rim, each bending inward, and arms twisting in to the centre ———
     let sea = '';
-    { const ring = (rx, ry, sw, op, dash) => `<ellipse cx="${FUN.x}" cy="${FUN.y}" rx="${rx}" ry="${ry}" fill="none" stroke="#effff8" stroke-width="${sw}" opacity="${op}"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`;
-      // the spiral streaks: arcs of foam winding in towards her, thinning inward
-      for (let a = 0; a < 7; a++) { const t0 = a / 7 * Math.PI * 2 + R() * .4, pts = [];
-        for (let i = 0; i <= 26; i++) { const q = i / 26, t = t0 + q * Math.PI * 1.25, k = lerp(1.02, .35, Math.pow(q, .8)); pts.push([FUN.x + Math.cos(t) * FUN.rx * k, FUN.y + Math.sin(t) * FUN.ry * k]); }
-        for (let i = 0; i < 26; i++) { const q = i / 26; if (Math.sin(q * 9 + a) < -.6) continue;
-          sea += `<path d="M${P2(pts[i])}L${P2(pts[i + 1])}" stroke="#e8fff6" stroke-width="${f(1.3 * (1 - q * .7))}" opacity="${f((.65 - q * .4) * (.6 + R() * .4))}" stroke-linecap="round"/>`; } }
-      sea += ring(FUN.rx, FUN.ry, 1.6, .55) + ring(FUN.rx - 3, FUN.ry - .8, .6, .5, '6 3 10 4') + ring(FUN.rx + 6, FUN.ry + 1.6, .5, .3, '3 6 8 5');
-      for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, x = FUN.x + Math.cos(a) * FUN.rx, y = FUN.y + Math.sin(a) * FUN.ry; sea += K.foam(u, { x, y, w: 14 + R() * 12, h: 1.4, seed: 40 + i, L }); } }
+    { const spir = (t0, span, k0, k1, sw0, sw1, op, gap, ph) => { let o = ''; const N = 30, pts = [];
+        for (let i = 0; i <= N; i++) { const q = i / N, t = t0 + q * span, k = lerp(k0, k1, Math.pow(q, .7)); pts.push([FUN.x + Math.cos(t) * FUN.rx * k, FUN.y + Math.sin(t) * FUN.ry * k]); }
+        for (let i = 0; i < N; i++) { const q = i / N; if (gap && Math.sin(q * gap + ph) < -.55) continue;
+          o += `<path d="M${P2(pts[i])}L${P2(pts[i + 1])}" stroke="#effff8" stroke-width="${f(lerp(sw0, sw1, q))}" opacity="${f(op * (1 - q * .55) * (.7 + R() * .3))}" stroke-linecap="round"/>`; }
+        return { o, pts }; };
+      // the torn rim: 6 arcs with ragged gaps between them, each drifting inward along its length (the start of the twist)
+      for (let a = 0; a < 6; a++) { const t0 = a / 6 * Math.PI * 2 + R() * .35, r = spir(t0, .8 + R() * .3, 1.05 + R() * .05, .7, 1.7, .5, .62, 0, 0); sea += r.o;
+        sea += K.foam(u, { x: r.pts[4][0], y: r.pts[4][1], w: 12 + R() * 8, h: 1.3, seed: 40 + a, L }); }
+      // the arms: 5 streaks winding in towards her, thinning and breaking as they go
+      for (let a = 0; a < 5; a++) { const t0 = a / 5 * Math.PI * 2 + .5 + R() * .3; sea += spir(t0, Math.PI * (1.3 + R() * .25), .92, .1, 1.5, .2, .72, 11, a).o; }
+      // a few loose flecks between the arms
+      for (let i = 0; i < 22; i++) { const t = R() * Math.PI * 2, k = .3 + R() * .7; sea += `<ellipse cx="${f(FUN.x + Math.cos(t) * FUN.rx * k)}" cy="${f(FUN.y + Math.sin(t) * FUN.ry * k)}" rx="${f(.6 + R() * 1.4)}" ry=".25" fill="#effff8" opacity="${f(.25 + R() * .3)}" transform="rotate(${f(Math.cos(t) * 12)} ${f(FUN.x + Math.cos(t) * FUN.rx * k)} ${f(FUN.y + Math.sin(t) * FUN.ry * k)})"/>`; } }
     // where she cuts the surface: churned white water along the line, heaped against her stern
     sea += K.foam(u, { x: 96, y: SEA + .3, w: 76, h: 2.6, seed: 7, L });
     // heaps of churned water against her (low humps of foam, no columns)
@@ -121,15 +126,17 @@ module.exports = { name: 'Уйти на глубину', kind: 'deck', status: '
     // ——— the shot: the second ball has already struck the sea beyond her (a column); the first is in the air,
     // its trail arcing from the enemy's port high over her masts ———
     let shot = '';
-    { const T = .58, pts = []; for (let i = 0; i <= 30; i++) pts.push(bez(SHOT.a, SHOT.c, SHOT.b, i / 30 * T));
+    { const T = .88, B = t => bez3(SHOT.a, SHOT.c1, SHOT.c2, SHOT.b, t), pts = []; for (let i = 0; i <= 34; i++) pts.push(B(i / 34 * T));
       // the trail: a thin streak of disturbed air, fading back towards the gun
-      for (let i = 0; i < 30; i++) { const q = i / 30; shot += `<path d="M${P2(pts[i])}L${P2(pts[i + 1])}" stroke="#effff8" stroke-width="${f(.3 + q * 1.4)}" opacity="${f(.08 + q * .5)}" stroke-linecap="round"/>`; }
-      const b = pts[30], pv = pts[27], ang = Math.atan2(b[1] - pv[1], b[0] - pv[0]);
+      for (let i = 0; i < 34; i++) { const q = i / 34; shot += `<path d="M${P2(pts[i])}L${P2(pts[i + 1])}" stroke="#effff8" stroke-width="${f(.3 + q * 1.4)}" opacity="${f(.08 + q * .5)}" stroke-linecap="round"/>`; }
+      const b = pts[34], pv = pts[31], ang = Math.atan2(b[1] - pv[1], b[0] - pv[0]);
+      // a pale air halo so the iron reads against the rigging and the fog
+      shot += K.localGlow(u, { x: b[0], y: b[1], color: '#e8fff4', power: .4, radius: 6 }, { core: false });
       // speed lines behind the ball and the ball itself, iron, the moon on its top
       for (const o of [-1.2, 0, 1.2]) shot += `<path d="M${f(b[0] - Math.cos(ang) * 10 - Math.sin(ang) * o)} ${f(b[1] - Math.sin(ang) * 10 + Math.cos(ang) * o)}L${f(b[0] - Math.cos(ang) * 2.6 - Math.sin(ang) * o)} ${f(b[1] - Math.sin(ang) * 2.6 + Math.cos(ang) * o)}" stroke="#ffffff" stroke-width=".35" opacity=".6"/>`;
       shot += K.shadeSphere(u, b[0], b[1], 2.4, L, 'iron', { outline: .35 }) + `<path d="M${f(b[0] - 1.6)} ${f(b[1] - 1.2)}a2 2 0 0 1 2.6 -.9" stroke="#e8fff4" stroke-width=".45" fill="none" opacity=".8"/>`;
-      // the ball's own dotted line on to where it will fall: over the empty water, beyond her
-      for (let i = 1; i <= 7; i++) { const p = bez(SHOT.a, SHOT.c, SHOT.b, T + i * .05); shot += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".45" fill="#effff8" opacity="${f(.35 - i * .03)}"/>`; } }
+      // the ball's own dotted line on down to where it will fall: beyond the foam, into the empty water
+      for (let i = 1; i <= 5; i++) { const p = B(T + i * .022); shot += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".45" fill="#effff8" opacity="${f(.4 - i * .05)}"/>`; } }
     // ——— light: the moon's veil, her green lantern's glow on the fog, motes; the under-glass dark ———
     let lt = K.localGlow(u, { x: 86, y: 24, color: '#e8fff4', power: .25, radius: 60 }, { core: false }) + motes(18, 30, 40, 150, 70, '#effff4', 5);
     lt += K.fog(u, L, { y: SEA + 14, h: 24, density: .2, seed: 8 });
