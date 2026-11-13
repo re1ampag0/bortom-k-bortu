@@ -49,8 +49,9 @@ function tricorn(u, hd, o) {
   for (const s of segs) { const e = `<path d="M${P2(s.edge[0])}L${P2(s.edge[1])}" stroke="${o.trim || dark}" stroke-width="${f(r * (o.trim ? .045 : .03))}" stroke-linecap="round"/>`;
     if (s.d < -.15) back += s.svg + e; else front += s.svg + e; }
   // the rim of the far edge (away from the light), when asked
-  if (o.rim) { const E = []; for (let k = 0; k <= 30; k++) { const t = -Math.PI + k / 30 * Math.PI * 2, p = Q(...outer(t)); if ((p[0] - c[0]) * lt[0] + (p[1] - c[1]) * lt[1] < -r * .3) E.push(p); }
-    if (E.length > 1) front += `<path d="M${E.map(P2).join('L')}" stroke="${o.rim}" stroke-width="${f(r * .035)}" fill="none" opacity=".6"/>`; }
+  if (o.rim) { let d = '', prev = null; for (let k = 0; k <= 40; k++) { const t = -Math.PI + k / 40 * Math.PI * 2, p = Q(...outer(t)), ok = (p[0] - c[0]) * lt[0] + (p[1] - c[1]) * lt[1] < -r * .3;
+      if (ok) d += (prev ? 'L' : 'M') + P2(p); prev = ok ? p : null; }
+    if (d) front += `<path d="${d}" stroke="${o.rim}" stroke-width="${f(r * .035)}" fill="none" opacity=".6"/>`; }
   return { back, front: crown + front, crown };
 }
 

@@ -25,7 +25,7 @@ const PT = 112, PF = 117;                        // the parapet: the back edge o
 const LAN = { x: 140, y: 115.4, s: .78 };        // the lantern on the parapet
 const HEAD = { c: [77, 58], r: 8.6, tilt: 9 };   // Mercer's head (profile, facing right)
 const SCOPE_A = 13;                              // the spyglass: degrees below the horizontal
-const SHIP = { kind: 'pearl', x: 164, y: 99.5, scale: .44 };
+const SHIP = { kind: 'pearl', x: 160, y: 99.5, scale: .44, flip: true };   // her stern (the lit windows) towards him
 const LP = K.lantern.local({ ...LAN, horizon: HZ });
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#dfe8ff', power: .85 },
   fill: { color: '#2a3a5c', power: .4 }, rim: { az: 10, color: '#c8dcff', power: .55 }, locals: [LP] };
@@ -67,16 +67,15 @@ module.exports = { name: 'Шпион Мерсер', kind: 'deck', status: 'draft
     let tw = '';
     { const g = nid('tw', u), cid = nid('tc', u);
       tw += `<defs>${linGrad(g, 0, 0, WX, 0, [[0, '#1a1e26'], [.7, '#2a2e36'], [1, '#3a3e48']])}<clipPath id="${cid}"><path d="M-2 14H${WX}V${PT + 2}H-2Z"/></clipPath></defs>`
-        + `<path d="M-2 14H${WX}V${PT + 2}H-2Z" fill="url(#${g})"/>`;
-      // the merlons over the wall-walk of the tower, the sky between them
-      for (const x of [-2, 26, 56]) tw += `<path d="M${x} 14V2H${x + 20}V14Z" fill="#2a2e38"/><path d="M${x} 2.3H${x + 20}" stroke="#a8bcd8" stroke-width=".5" opacity=".5"/>`;
-      tw += `<path d="M-2 14H${WX}" stroke="#0a0c10" stroke-width="1.2"/><path d="M-2 15.2H${WX}" stroke="#4a4e58" stroke-width=".5" opacity=".6"/>`;
+        // the merlons over the wall-walk of the tower, the sky between them
+        + [-2, 26, 56].map(x => `<path d="M${x} 14V2H${x + 20}V14Z" fill="#2a2e38"/><path d="M${x} 2.3H${x + 20}" stroke="#a8bcd8" stroke-width=".5" opacity=".5"/>`).join('')
+        + `<g clip-path="url(#${cid})"><path d="M-2 14H${WX}V${PT + 2}H-2Z" fill="url(#${g})"/>`;
       // the warm pool of the lantern on the wall, then the stones over it
-      tw += `<g clip-path="url(#${cid})">` + K.localGlow(u, { x: 70, y: 76, color: '#ffb060', power: .55, radius: 66 }, { core: false });
+      tw += K.localGlow(u, { x: 66, y: 80, color: '#ffb060', power: .95, radius: 78 }, { core: false }) + K.localGlow(u, { x: 60, y: 60, color: '#ff9a40', power: .5, radius: 44 }, { core: false });
       let y = 16, row = 0;
       while (y < PT + 2) { const h = 7 + R() * 2.4; let x = -2 - (row % 2) * 7 - R() * 4;
         while (x < WX) { const w = 12 + R() * 9, sh = (R() - .5) * .16;
-          tw += `<path d="M${f(x + .5)} ${f(y + .5)}H${f(x + w - .5)}V${f(y + h - .5)}H${f(x + .5)}Z" fill="${mix('#3a3e48', '#141820', R() * .5)}" opacity="${f(.35 + R() * .3)}"/>`
+          tw += `<path d="M${f(x + .5)} ${f(y + .5)}H${f(x + w - .5)}V${f(y + h - .5)}H${f(x + .5)}Z" fill="${mix('#3a3e48', '#141820', R() * .5)}" opacity="${f(.12 + R() * .16)}"/>`
             + ln(`M${f(x + .6)} ${f(y + .7)}H${f(x + w - .8)}`, .35, '#8a8a90', .25 + sh)
             + ln(`M${f(x + w)} ${f(y)}V${f(y + h)}`, .45, '#0c0e12', .8);
           if (R() > .7) tw += ln(`M${f(x + 2 + R() * (w - 4))} ${f(y + 1)}l${f((R() - .5) * 3)} ${f(2 + R() * 3)}`, .25, '#0c0e12', .6);
@@ -84,13 +83,12 @@ module.exports = { name: 'Шпион Мерсер', kind: 'deck', status: 'draft
         tw += ln(`M-2 ${f(y)}H${WX}`, .55, '#0a0c10', .85); y += h; row++; }
       // his shadow, thrown by the lantern on the wall: the same shapes, scaled from the lantern's flame
       const k = 1.42, T = `translate(${f(LP.x)} ${f(LP.y)}) scale(${k}) translate(${f(-LP.x)} ${f(-LP.y)})`, bl = nid('sb', u);
-      tw += `<defs><filter id="${bl}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".9"/></filter></defs>`
-        + `<g transform="${T}" filter="url(#${bl})" opacity=".78">${silhouette('#06070a')}</g>`;
-      tw += `</g>`;
+      tw += `<defs><filter id="${bl}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".55"/></filter></defs>`
+        + `<g style="mix-blend-mode:multiply" opacity=".9"><g transform="${T}" filter="url(#${bl})">${silhouette('#14100e')}</g></g>`;
+      tw += `<path d="M-2 14H${WX}" stroke="#0a0c10" stroke-width="1.2"/><path d="M-2 15.2H${WX}" stroke="#4a4e58" stroke-width=".5" opacity=".6"/></g>`;
       // the corner: the moon's cold light along it, the side of the tower turned to the sea a narrow lit strip
       tw += `<path d="M${WX} 2V${PT + 2}H${WX + 3}V4Z" fill="#4a5466"/><path d="M${WX + 3} 4V${PT + 2}" stroke="#b8cce8" stroke-width=".7" opacity=".75"/>`
-        + `<path d="M${WX - 20} 2H${WX}V14" fill="none" stroke="#0a0c10" stroke-width=".4"/>`
-        + gloom(u, 0, 10, 120, 0, .5, '#04060a'); }
+        + `<path d="M${WX - 20} 2H${WX}V14" fill="none" stroke="#0a0c10" stroke-width=".4"/>`; }
 
     // ——— Mercer ———
     let man = '';
@@ -148,7 +146,7 @@ module.exports = { name: 'Шпион Мерсер', kind: 'deck', status: 'draft
     for (let k = 0; k < 5; k++) { hd = H.hand3(u, { ...ho, a, grip: G }); const ang = Math.atan2(hd.axis[1], hd.axis[0]) * 180 / Math.PI;
       let d = SCOPE_A - ang; while (d > 90) d -= 180; while (d < -90) d += 180; a += d; }
     const W = hd.wrist, ua = [Math.cos(a * Math.PI / 180), Math.sin(a * Math.PI / 180)];
-    const EL = [W[0] - 9, W[1] + 24];
+    const EL = [W[0] - 7.4, W[1] + 19.6];
     let arm = H.cloth(u, { spine: [[92.4, 96], EL, [lerp(EL[0], W[0], .55), lerp(EL[1], W[1], .55)], [W[0] - ua[0] * 1.2, W[1] - ua[1] * 1.2]], w: [9.4, 9, 7.6, 6.4],
       tone: coat, lit: 1, rim: '#b8cce8', rimSide: 1, rimOp: .55, cuff: { from: .74, k: 1.22, tone: { lit: '#3a3a48', half: '#1c1c24', shadow: '#060608', outline: '#020203' } }, seed: 4, drapes: 2, sw: .4 });
     // the linen cuff of the shirt at the wrist, lit by the lantern
@@ -199,7 +197,7 @@ module.exports = { name: 'Шпион Мерсер', kind: 'deck', status: 'draft
     // the lantern on the coping; its door ajar towards the notebook
     const lamp = K.lantern(u, L, { ...LAN, lit: true, seed: 7 }) + K.localGlow(u, { x: LP.x, y: LP.y, color: '#ffc070', power: .85, radius: 20 });
     // ——— the air: the moon's haze, the dark in the corners ———
-    const air = gloom(u, 100, 140, 100, 280, .45, '#02040a') + gloom(u, 0, 0, 0, 0, .35, '#02040a') + motes(10, 128, 96, 24, 16, '#ffd8a0', 5);
+    const air = gloom(u, 100, 140, 100, 280, .45, '#02040a') + motes(10, 128, 96, 24, 16, '#ffd8a0', 5);
     return [bg + tw, man + par + book + lamp + air];
 
     // the outline of the man as one dark shape (for his shadow on the wall)

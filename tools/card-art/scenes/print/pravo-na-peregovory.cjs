@@ -18,15 +18,16 @@ const { tricorn } = require('./lib/hat.cjs');
 const { f, mix, nid, linGrad, radGrad, rng, lerp } = K;
 const { glow, gloom, motes } = PK;
 
-const HZ = 100, MOON = { x: 176, y: 20 }, LAMP = { x: 50, y: 150, s: 1.3 };
-const HEAD = { c: [132, 50], r: 14.5 };
-const G1 = [86, 106], G2 = [153, 98];                  // the fists: on the pole, on the scroll
+const HZ = 100, MOON = { x: 82, y: 30 }, LAMP = { x: 34, y: 150, s: 1.3 };
+const OFF = [16, 14];                                  // the torso is drawn at the origin of the first draft, moved by OFF
+const HEAD = { c: [148, 64], r: 13.6 };
+const G1 = [112, 114], G2 = [174, 110];                // the fists: on the pole, on the scroll
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 26, color: '#dfe8ff', power: .9 }, fill: { color: '#34405e', power: .4 },
-  rim: { az: 60, color: '#cfe0ff', power: .5 }, locals: [{ x: LAMP.x, y: LAMP.y - 10, color: '#ffbe6a', power: .6, radius: 55 }] };
-const skel = { horizon: HZ, eye: 1.7, light: 'moon high right (key: the flag, his cold side, the bay) + lantern on the sand by the pole (warm, from below left)', items: [
-  ['black ship', -8, 106, 102, 66, 'anchored in the bay'], ['headland', -10, HZ, 80, 8, 'far shore'], ['beach', -10, 280, 220, 162, 'ground from y 118'],
-  ['pole', 64, 200, 40, 194, 'stuck in the sand, held in his right fist'], ['flag', 2, 58, 76, 50, 'on the pole'],
-  ['pirate', 104, 170, 62, 136, 'stands on the beach'], ['scroll', 146, 114, 14, 34, 'in his left fist'], ['lantern', 42, 150, 16, 30, 'on the sand']] };
+  rim: { az: 330, color: '#cfe0ff', power: .5 }, locals: [{ x: LAMP.x, y: LAMP.y - 10, color: '#ffbe6a', power: .6, radius: 55 }] };
+const skel = { horizon: HZ, eye: 1.7, light: 'moon behind the flag, upper middle (key: the flag glows, his cold left side, the bay) + lantern on the sand, left (warm, low)', items: [
+  ['black ship', 0, 106, 104, 66, 'anchored in the bay'], ['headland', -10, HZ, 80, 8, 'far shore'], ['beach', -10, 280, 220, 162, 'ground from y 118'],
+  ['pole', 104, 210, 20, 204, 'stuck in the sand, held in his right fist'], ['flag', 38, 60, 78, 52, 'on the pole'],
+  ['pirate', 120, 190, 74, 140, 'stands on the beach'], ['scroll', 168, 128, 14, 34, 'in his left fist'], ['lantern', 26, 150, 16, 30, 'on the sand']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const SKIN = { lit: '#f0c094', half: '#c4865a', core: '#a46a44', shadow: '#5e3422', outline: '#26120a' };
@@ -42,9 +43,9 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
       + K.cloud(u, L, { x: 120, y: 18, w: 44, h: 5, seed: 3, far: .5 }) + K.cloud(u, L, { x: 30, y: 74, w: 34, h: 4, seed: 6, far: .7 });
     // the far headland on the left, low and blue in the haze
     bg += `<path d="M-10 ${HZ}L-10 ${HZ - 7}Q8 ${HZ - 12} 26 ${HZ - 8}Q40 ${HZ - 11} 54 ${HZ - 5}Q66 ${HZ - 3} 74 ${HZ}Z" fill="#1e2a40"/><path d="M-10 ${HZ - 7}Q8 ${HZ - 12} 26 ${HZ - 8}Q40 ${HZ - 11} 54 ${HZ - 5}" stroke="#5a6e90" stroke-width=".4" fill="none" opacity=".6"/>`;
-    bg += K.water(u, L, { horizon: HZ, bottom: 122, swell: .35, seed: 12, glitter: MOON.x - 8 });
+    bg += K.water(u, L, { horizon: HZ, bottom: 122, swell: .35, seed: 12, glitter: MOON.x });
     // the black ship at anchor in the bay, sails half taken in, her stern windows lit; the anchor cable from the bow
-    bg += K.ship(u, L, { kind: 'pearl', x: 46, y: 107, scale: .6, sails: 'reefed', lights: true, reflect: true, detail: 'mid', seed: 5 });
+    bg += K.ship(u, L, { kind: 'pearl', x: 52, y: 107, scale: .6, sails: 'reefed', lights: true, reflect: true, detail: 'mid', seed: 5 });
     bg += `<path d="M-4 104q4 4 8 6" stroke="#0a0c10" stroke-width=".5" fill="none" opacity=".8"/>`;
     // ——— the beach: the wet line of the surf, the sand rising towards us ———
     { const sg = nid('sd', u);
@@ -55,19 +56,19 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
         + `<path d="M-10 124Q50 121 120 124T210 122" stroke="#9aa8b8" stroke-width=".5" fill="none" opacity=".35"/>`;
       for (let k = 0; k < 140; k++) { const y = 124 + R() * 60, x = -10 + R() * 220; bg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.2 + R() * .4)}" fill="${R() > .5 ? '#a89c80' : '#2a2418'}" opacity="${f(.3 + R() * .4)}"/>`; }
       // his footprints from the water
-      for (let k = 0; k < 6; k++) { const x = 118 + (k % 2) * 7 - k * 2, y = 124 + k * 6; bg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(1.4 + k * .3)}" ry="${f(.7 + k * .15)}" fill="#1e1a12" opacity=".5"/>`; }
+      for (let k = 0; k < 6; k++) { const x = 134 + (k % 2) * 7 - k * 2, y = 124 + k * 6; bg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(1.4 + k * .3)}" ry="${f(.7 + k * .15)}" fill="#1e1a12" opacity=".5"/>`; }
       // shells and a tangle of weed on the sand
       bg += [[24, 132], [174, 136], [96, 142]].map(([x, y]) => `<path d="M${x - 2.4} ${y}q2.4 -3.4 4.8 0z" fill="#e0d4b8" stroke="#6a5a40" stroke-width=".3"/><path d="M${x} ${y - 2.4}v2.4M${x - 1.2} ${y - 2}l.6 2M${x + 1.2} ${y - 2}l-.6 2" stroke="#8a7a60" stroke-width=".2"/>`).join('')
         + `<path d="M150 128q6 -2 10 1t10 0" stroke="#2a3a24" stroke-width=".9" fill="none"/>`; }
 
     // ——— the pole: an oar-like spar with a ball at the top, through his right fist ———
-    const hp = handAt(u, { s: 2.5, m: 1, roll: 170, pose: 'wrap', r: 1.0, tone: SKIN, light: [.75, -.65], sw: .32 }, G1, -100, 170);
+    const hp = handAt(u, { s: 2.5, m: 1, roll: 170, pose: 'wrap', r: 1.0, tone: SKIN, light: [-.6, -.75], sw: .32 }, G1, -94, 170);
     const PA = hp.axis[1] < 0 ? hp.axis : [-hp.axis[0], -hp.axis[1]];            // up the pole
     const at = y => { const t = (G1[1] - y) / -PA[1]; return [G1[0] + PA[0] * t, y]; };
-    const top = at(9), base = at(210);
+    const top = at(6), base = at(210);
     // ——— the flag: hoisted from the top of the pole, streaming left over the black sails; folds turning in the moonlight ———
     let flag = '';
-    { const N = 30, len = 70, h0 = at(12), h1 = at(54), A = 3.4, Rf = rng(5);
+    { const N = 30, len = 74, h0 = at(9), h1 = at(54), A = 3.6, Rf = rng(5);
       const wv = t => A * Math.sin(t * Math.PI * 2 * 2.1 - .6) * (.25 + t);           // the wave across the cloth
       const dx = t => -len * t + Math.sin(t * Math.PI * 2 * 2.1 - .6 + 1.4) * 2.2 * t;   // folds bunch the length a little
       const topE = [], botE = [];
@@ -77,7 +78,7 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
       const out = topE.concat(fly.slice(1, -1), botE.slice().reverse());
       // shadow of the flag thrown faintly on nothing (it is in the air): skip; the cloth body
       flag += `<path d="M${out.map(P2).join('L')}Z" fill="#c8c8cc"/>`;
-      for (let i = 0; i < N; i++) { const t = (i + .5) / N, sl = (wv(t + .02) - wv(t - .02)) / .04, I = Math.max(-1, Math.min(1, -sl / 14 + .25));
+      for (let i = 0; i < N; i++) { const t = (i + .5) / N, sl = (wv(t + .02) - wv(t - .02)) / .04, I = Math.max(-1, Math.min(1, sl / 14 + .3));
         const c = I > 0 ? mix('#d8d8dc', '#fffdf4', I) : mix('#d8d8dc', '#6e7488', -I);
         const q = [topE[i], topE[i + 1], botE[i + 1], botE[i]]; if (i === N - 1) q.splice(2, 0, ...fly.slice(1, -1).reverse().reverse());
         flag += `<path d="M${q.map(P2).join('L')}Z" fill="${c}" stroke="${c}" stroke-width=".25"/>`; }
@@ -97,7 +98,8 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
     let man = '';
     const coatT = { lit: '#4a4a58', half: '#24222a', shadow: '#0e0c12', outline: '#050408' };
     { const cg = nid('pc', u), wg = nid('pw', u);
-      man += `<defs>${linGrad(cg, 104, 0, 166, 0, [[0, '#3a2a22', 1], [.25, '#1e1c22', 1], [.75, '#24222c', 1], [1, '#4c5068', 1]])}${linGrad(wg, 0, 70, 0, 150, [[0, '#6a5a3a', 1], [1, '#2a2214', 1]])}</defs>`
+      man += `<g transform="translate(${OFF[0]} ${OFF[1]})">`;
+      man += `<defs>${linGrad(cg, 104, 0, 166, 0, [[0, '#4c5068', 1], [.25, '#24222c', 1], [.75, '#1e1c22', 1], [1, '#3a2a22', 1]])}${linGrad(wg, 0, 70, 0, 150, [[0, '#6a5a3a', 1], [1, '#2a2214', 1]])}</defs>`
         + `<path d="M104 175L107 92Q109 78 121 74L127 68Q132 72 138 68L146 74Q158 78 161 92L164 175Z" fill="url(#${cg})" stroke="#050408" stroke-width=".5"/>`
         + `<path d="M124 70Q132 80 140 70L144 175H120Z" fill="url(#${wg})" stroke="#1a1408" stroke-width=".4"/>`
         + [84, 94, 104, 114].map(y => K.shadeSphere(u, 132.8, y, .95, L, 'brass', { outline: .2 })).join('')
@@ -105,27 +107,28 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
         + `<path d="M125 68Q132 78 139 68L136 84Q132 88 128 84Z" fill="#e8e0cc" stroke="#5a5040" stroke-width=".35"/><path d="M125 68l-3 7l6 1zM139 68l3 7l-6 1z" fill="#f4eee0" stroke="#5a5040" stroke-width=".35"/>`
         // lapels, the moon's rim on his left shoulder and side
         + `<path d="M124 70L118 100L122 108L128 78Z" fill="#141218" stroke="#050408" stroke-width=".35"/><path d="M140 70L146 100L142 108L136 78Z" fill="#2a2834" stroke="#050408" stroke-width=".35"/>`
-        + `<path d="M146 74Q158 78 161 92L164 175" stroke="#c8d8f4" stroke-width=".8" fill="none" opacity=".7"/>`
+        + `<path d="M121 74Q109 78 107 92L104 175" stroke="#c8d8f4" stroke-width=".8" fill="none" opacity=".7"/>`
         // the baldric from his left shoulder down across to his right hip, a brass buckle
         + `<path d="M150 74L156 78L116 150L110 146Z" fill="#3a2414" stroke="#120804" stroke-width=".4"/><path d="M151 75L113 147" stroke="#8a5a30" stroke-width=".3" opacity=".7"/>`
         + `<rect x="128" y="110" width="7" height="6" rx="1" transform="rotate(-60 131.5 113)" fill="none" stroke="url(#brass${u})" stroke-width="1.2"/>`
         // the sash at the waist (under the glass), creases
         + `<path d="M107 140Q132 146 162 140L163 150Q132 156 106 150Z" fill="#6a1c18" stroke="#2a0806" stroke-width=".4"/><path d="M110 144Q132 149 160 144" stroke="#8a2c24" stroke-width=".5" fill="none"/>`;
       // the neck
-      man += `<path d="M125 56L139 56L140 70Q132 75 124 70Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M126 64q6 4 12 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".5"/>`; }
+      man += `<path d="M125 56L139 56L140 70Q132 75 124 70Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M126 64q6 4 12 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".5"/>`;
+      man += '</g>'; }
     // ——— the arms: the right one bent to the pole on our left, the left one to the scroll on our right ———
-    const hs = handAt(u, { s: 2.5, m: -1, roll: 12, pose: 'wrap', r: 1.08, tone: SKIN, light: [.75, -.65], sw: .32 }, G2, -95, 180);
+    const hs = handAt(u, { s: 2.5, m: -1, roll: 12, pose: 'wrap', r: 1.08, tone: SKIN, light: [-.6, -.75], sw: .32 }, G2, -95, 180);
     { const sleeve = (s0, el, w, lt, rimOp) => H.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .55), lerp(s0[1], el[1], .55)], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5)], [w[0], w[1]]],
         w: [14.4, 13.2, 12, 10.6, 9.4], tone: coatT, lit: lt, rim: '#c8d8f4', rimSide: lt, rimOp, seed: 9, drapes: 2, sw: .4,
         cuff: { from: .78, k: 1.22, tone: { lit: '#3a3a48', half: '#1c1a22', shadow: '#08070a', outline: '#050408' } } });
-      man += sleeve([113, 80], [110, 116], hp.wrist, -1, .2) + sleeve([155, 80], [170, 112], hs.wrist, 1, .6);
+      man += sleeve([131, 94], [138, 126], hp.wrist, -1, .55) + sleeve([169, 94], [186, 126], hs.wrist, 1, .2);
       // lace at the wrists, showing beyond the cuffs
       for (const h of [hp, hs]) { const w = h.wrist; man += `<ellipse cx="${f(w[0])}" cy="${f(w[1])}" rx="3.4" ry="4.4" fill="#ece6d6" stroke="#6a6252" stroke-width=".3"/><path d="M${f(w[0] - 2)} ${f(w[1] - 3)}q1 3 0 6M${f(w[0])} ${f(w[1] - 4)}q1 4 0 8" stroke="#a89e88" stroke-width=".3" fill="none"/>`; } }
 
     // ——— the head: sly half-smile, eyes on us; long hair tied back, a short beard; the tricorn over it ———
-    const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .24, dir: -1, nod: 3, tone: SKIN, light: [.75, -.65], warm: { color: '#ffb46a', op: .22 }, rim: '#cfe0ff',
-      look: [.25, .05], brow: 'sly', smile: .45, hair: { style: 'tied', color: '#2a1a10', ribbon: '#6a1c18' }, hairColor: '#24160c', beard: 'short', moustache: true, iris: '#3a2416' });
-    const hat = tricorn(u, hd, { r: HEAD.r, color: '#16141a', trim: '#a8884a', light: [.75, -.65], rim: '#a8c0e8', y: -.62 });
+    const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 3, tone: SKIN, light: [-.6, -.75], warm: { color: '#ffb46a', op: .16 }, rim: '#cfe0ff',
+      look: [.35, .05], brow: 'sly', smile: .45, hair: { style: 'tied', color: '#2a1a10', ribbon: '#6a1c18' }, hairColor: '#24160c', beard: 'short', moustache: true, iris: '#3a2416' });
+    const hat = tricorn(u, hd, { r: HEAD.r, color: '#16141a', trim: '#a8884a', light: [-.6, -.75], rim: '#a8c0e8', y: -.62 });
     let face = hd.svg + hat.back + hat.front;
     { const e = hd.Q(-.82, .36, -.1); face += `<circle cx="${f(e[0])}" cy="${f(e[1] + 1)}" r="1.1" fill="none" stroke="url(#brass${u})" stroke-width=".55"/>`; }
 
@@ -152,7 +155,7 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
 
     // ——— light: the lantern's pool, its warmth up his right side, the moon's cold on the left; the dark below ———
     let fg = K.localGlow(u, { x: LAMP.x, y: LAMP.y - 10, color: '#ffc070', power: .85, radius: 22 })
-      + glow(u, 96, 116, 70, 50, '#ffb060', .12) + glow(u, 168, 60, 40, 60, '#c8d8ff', .08)
+      + glow(u, 70, 120, 70, 50, '#ffb060', .12) + glow(u, 120, 70, 40, 60, '#c8d8ff', .08)
       + motes(14, 0, 60, 90, 40, '#e8f0ff', 3)
       + gloom(u, 100, 132, 100, 280, .5, '#04060a');
     return [bg, flag + man + poleHand + face + scroll + lamp + fg];
