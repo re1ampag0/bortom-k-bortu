@@ -333,7 +333,7 @@ function hairMass(u, pts, o) {
   // locks breaking the outline: a curved point outwards from the mass
   for (const i of o.tufts || []) { const p = pts[i % pts.length], q = pts[(i + 1) % pts.length], pp = pts[(i - 1 + pts.length) % pts.length];
     const tx = q[0] - pp[0], ty = q[1] - pp[1], tl = Math.hypot(tx, ty) || 1, ox = p[0] - cx, oy = p[1] - cy, ol = Math.hypot(ox, oy) || 1;
-    const len = r * (o.tuftLen || .12) * (.7 + R() * .6), w = r * .06, fl = o.flow ? o.flow(p) : [ox / ol, oy / ol], fx = fl[0] * .6 + ox / ol * .4, fy = fl[1] * .6 + oy / ol * .4, fn = Math.hypot(fx, fy) || 1;
+    const len = r * (o.tuftLen || .12) * (.6 + R() * .5), w = r * .09, fl = o.flow ? o.flow(p) : [ox / ol, oy / ol], fx = fl[0] * .6 + ox / ol * .4, fy = fl[1] * .6 + oy / ol * .4, fn = Math.hypot(fx, fy) || 1;
     const e = [p[0] + fx / fn * len, p[1] + fy / fn * len], a = [p[0] - tx / tl * w, p[1] - ty / tl * w], b = [p[0] + tx / tl * w, p[1] + ty / tl * w];
     s += `<path d="M${f(a[0])} ${f(a[1])}Q${f(lerp(a[0], e[0], .6) + tx / tl * w * .2)} ${f(lerp(a[1], e[1], .6) + ty / tl * w * .2)} ${f(e[0])} ${f(e[1])}Q${f(lerp(b[0], e[0], .4))} ${f(lerp(b[1], e[1], .4))} ${f(b[0])} ${f(b[1])}Z" fill="${col}" stroke="${lo}" stroke-width="${f(r * .02)}"/>`; }
   s += `<defs><clipPath id="${cid}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="${col}"/><g clip-path="url(#${cid})">`;
@@ -386,7 +386,7 @@ function head(u, o) {
   s += `<g clip-path="url(#${cid})">`;
   if (o.warm) s += `<rect x="${f(o.c[0] - 2 * r)}" y="${f(o.c[1] - 2 * r)}" width="${f(4 * r)}" height="${f(4 * r)}" fill="url(#${wid})"/>`;
   // the eye socket in shade under the brow, the cheekbone, the line from the nose wing to the mouth
-  { const e = Q(.62, -.08); s += `<ellipse cx="${f(e[0])}" cy="${f(e[1])}" rx="${f(r * .24)}" ry="${f(r * .14)}" fill="${tn.shadow}" opacity=".45"/>`; }
+  { const e = Q(.62, -.08); s += `<ellipse cx="${f(e[0])}" cy="${f(e[1])}" rx="${f(r * .24)}" ry="${f(r * .14)}" fill="${tn.shadow}" opacity="${o.detail ? .22 : .45}"/>`; }
   s += `<path d="${sp([Q(.36, .16), Q(.6, .24), Q(.8, .2)])}" stroke="${tn.lit}" stroke-width="${f(r * .09)}" fill="none" opacity=".45" stroke-linecap="round"/>`;
   s += `<path d="${sp([Q(.98, .27), Q(.88, .36), Q(.9, .48)])}" stroke="${tn.shadow}" stroke-width="${f(r * .05)}" fill="none" opacity=".7"/>`;
   if (o.detail) {
@@ -469,7 +469,7 @@ function head(u, o) {
       goatee: [[.88, .58], [.98, .6], [1.04, .72], [1.04, .92], [.96, 1.04], [.84, 1.02], [.8, .86], [.84, .7]] };
     const kind = BD[o.beard] ? o.beard : 'full', pts = BD[kind].map(j).map(p => Q(p[0], p[1]));
     s += hairMass(u, pts, { r, color: hairC, outline: tn.outline, seed: 11, flow: () => [dir * .22 * Math.cos(tl) - Math.sin(tl) * .2, 1], sheen: Q(.62, .62), light: HL,
-      tufts: kind === 'goatee' ? [3, 4, 5] : kind === 'full' ? [7, 8, 9, 10, 11, 12] : [8, 9], tuftLen: kind === 'full' ? .16 : .08, n: kind === 'goatee' ? 12 : 34 });
+      tufts: kind === 'goatee' ? [3, 4, 5] : kind === 'full' ? [7, 8, 9, 10, 11, 12] : [8, 9], tuftLen: kind === 'full' ? .11 : .06, n: kind === 'goatee' ? 12 : 34 });
   }
   if (o.detail && (o.moustache || o.beard)) {
     const M = [[1.07, .37], [.98, .35], [.86, .4], [.76, .5], [.72, .6], [.8, .56], [.9, .5], [1.0, .47], [1.08, .44]].map(p => Q(p[0], p[1]));
@@ -493,7 +493,7 @@ function head(u, o) {
     const tufts = hs === 'curly' ? [1, 2, 3, 4, 5, 6, 7, 8, 9] : hs === 'long' ? [8, 9, 10, 11] : [5, 6, 7, 8, 9];
     s += hairMass(u, H0, { r, color: hc, outline: tn.outline, seed: 7, n: hs === 'curly' ? 50 : 42, light: HL, sheen: Q(.1, -.9), curl: hs === 'curly',
       flow: p => { const dx = p[0] - crown[0], dy = p[1] - crown[1], l = Math.hypot(dx, dy) || 1, dn = hs === 'long' ? Math.max(0, (p[1] - o.c[1]) / r) : 0; const v = [dx / l * (1 - dn) , dy / l * (1 - dn) + dn]; return v; },
-      tufts, tuftLen: hs === 'curly' ? .1 : .12 });
+      tufts, tuftLen: hs === 'curly' ? .07 : .08 });
   }
   if (o.opacity != null && o.opacity < 1) s = `<g opacity="${o.opacity}">${s}</g>`;
   return { svg: s, Q };
@@ -520,10 +520,12 @@ function head34(u, o) {
   const soft = (c, rx, ry, col, op, rotd = 0) => { const g = nid('h3s', u); return `<defs>${radGrad(g, 0, 0, 1, [[0, col, op], [1, col, 0]])}</defs><ellipse cx="0" cy="0" rx="1" ry="1" fill="url(#${g})" transform="translate(${f(c[0])} ${f(c[1])}) rotate(${f(rotd)}) scale(${f(Math.max(.01, rx * r))} ${f(Math.max(.01, ry * r))})"/>`; };
   const P2 = p => `${f(p[0])} ${f(p[1])}`;
   // ——— the outline: the skull's circle (its upper part) and the jaw, cheekbones and chin, as one convex body ———
-  const sc0 = Q(0, -.18, -.05), R0 = .96 * r, pts = [];
-  for (let k = 0; k < 36; k++) { const a = k / 36 * Math.PI * 2, p = [sc0[0] + Math.cos(a) * R0, sc0[1] + Math.sin(a) * R0]; if (p[1] - sc0[1] < .3 * r) pts.push(p); }
-  const jawP = [[-.72, .48, -.1], [.72, .48, -.1], [-.52, .82, .3], [.52, .82, .3], [-.24, .99 + jw, .55], [.24, .99 + jw, .55], [0, 1.03 + jw, .62],
-    [-.72, .1, .42], [.72, .1, .42], [-.64, .5, .36], [.64, .5, .36], [-.86, .1, 0], [.86, .1, 0]];
+  // the skull: an ellipsoid (narrower than deep), its outline a turned ellipse
+  const sc0 = Q(0, -.2, -.1), RX = Math.hypot(.8 * cY, .96 * sY) * r, RY = .98 * r, R0 = Math.max(RX, RY), pts = [];
+  const sk = (a, k = 1) => [sc0[0] + Math.cos(a) * RX * k, sc0[1] + Math.sin(a) * RY * k];
+  for (let k = 0; k < 36; k++) { const a = k / 36 * Math.PI * 2, p = sk(a); if (p[1] - sc0[1] < .32 * r) pts.push(p); }
+  const jawP = [[-.64, .5, -.14], [.64, .5, -.14], [-.48, .82, .26], [.48, .82, .26], [-.22, .99 + jw, .55], [.22, .99 + jw, .55], [0, 1.03 + jw, .62],
+    [-.68, .08, .4], [.68, .08, .4], [-.58, .5, .34], [.58, .5, .34], [-.78, .1, -.05], [.78, .1, -.05]];
   pts.push(...Qa(jawP));
   const hull = (() => { const P = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
     const lo = [], up = []; for (const p of P) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
@@ -535,7 +537,7 @@ function head34(u, o) {
   if (o.warm) { const w = Q(dir * .4, .2, .7), g = nid('h3w', u); s += `<defs>${radGrad(g, w[0], w[1], r * .8, [[0, o.warm.color, o.warm.op || .6], [1, o.warm.color, 0]])}</defs><circle cx="${f(w[0])}" cy="${f(w[1])}" r="${f(r * .8)}" fill="url(#${g})"/>`; }
   // the side of the face turned away from us (behind the cheekbone line) in shade; the hollows under the cheekbones,
   // the temples, the eye sockets, the jaw's underside; the cheekbone and the chin catching the light
-  { const far = Q(-dir * .7, .25, .2); s += soft(far, .45, .7, tn.shadow, .4 * Math.min(1, Math.abs(sY) * 2)); }
+  { const far = Q(-dir * .62, .25, .2); s += soft(far, .45, .7, tn.shadow, .4 * Math.min(1, Math.abs(sY) * 2)); }
   for (const sd of [-1, 1]) { const v = Math.max(.2, depth(sd * .5, 0, .85) * 1.1);
     s += soft(Q(sd * .56, .44, .45), .2 * v, .1, tn.shadow, .45) + soft(Q(sd * .66, -.3, .45), .16 * v, .2, tn.shadow, .3)
       + soft(Q(sd * .34, -.1, .82), .2 * v, .12, tn.shadow, .4); }
@@ -547,10 +549,10 @@ function head34(u, o) {
   s += `<path d="${F}" fill="none" stroke="${tn.outline}" stroke-width="${f(Math.max(.3, r * .05))}"/>`;
   // ——— the near ear (on the side away from the turn) ———
   if (o.ear !== false) { const sd = -dir, v = depth(sd, 0, -.15); if (v > .12) {
-    const e = [[sd * .92, -.12, -.02], [sd * .99, -.05, -.12], [sd * 1.0, .14, -.16], [sd * .95, .3, -.1], [sd * .9, .34, -.02], [sd * .88, .12, .02]];
+    const e = [[sd * .78, -.12, -.06], [sd * .86, -.05, -.16], [sd * .88, .14, -.2], [sd * .83, .3, -.14], [sd * .78, .34, -.06], [sd * .75, .12, -.02]];
     s += `<path d="${sp(Qa(e), true)}" fill="${tn.half}" stroke="${tn.outline}" stroke-width="${f(r * .035)}"/>`
-      + `<path d="${sp(Qa([[sd * .94, -.06, -.08], [sd * .97, .12, -.12], [sd * .92, .26, -.06]]))}" stroke="${tn.shadow}" stroke-width="${f(r * .04)}" fill="none"/>`
-      + `<path d="${sp(Qa([[sd * .95, -.1, -.08], [sd * 1.0, .04, -.14], [sd * .99, .2, -.14]]))}" stroke="${tn.lit}" stroke-width="${f(r * .025)}" fill="none" opacity=".6"/>`; } }
+      + `<path d="${sp(Qa([[sd * .8, -.06, -.12], [sd * .84, .12, -.16], [sd * .8, .26, -.1]]))}" stroke="${tn.shadow}" stroke-width="${f(r * .04)}" fill="none"/>`
+      + `<path d="${sp(Qa([[sd * .81, -.1, -.12], [sd * .87, .04, -.18], [sd * .86, .2, -.18]]))}" stroke="${tn.lit}" stroke-width="${f(r * .025)}" fill="none" opacity=".6"/>`; } }
   // ——— the eyes ———
   const ey = o.eye || 'open', op = ey === 'wide' ? 1.3 : ey === 'half' ? .55 : ey === 'shut' ? 0 : 1, lk = o.look || [0, 0];
   for (const sd of [-1, 1]) {
@@ -606,8 +608,8 @@ function head34(u, o) {
   if (o.beard) {
     const ext = o.beard === 'full' ? .16 : .04, kind = o.beard;
     const outer = kind === 'goatee' ? [[-.2, .72, .86], [-.24, .9, .66], [-.16, 1.08 + jw + ext, .58], [0, 1.12 + jw + ext, .6], [.16, 1.08 + jw + ext, .58], [.24, .9, .66], [.2, .72, .86]]
-      : [[-.84, .12, .26], [-.82, .48, -.02], [-.58, .88 + ext * .5, .26], [-.28, 1.06 + jw + ext, .52], [0, 1.12 + jw + ext, .6], [.28, 1.06 + jw + ext, .52], [.58, .88 + ext * .5, .26], [.82, .48, -.02], [.84, .12, .26],
-        [.76, .14, .42], [.6, .4, .58], [.34, .6, .78], [.24, .7, .82], [0, .76 + jw, .93], [-.24, .7, .82], [-.34, .6, .78], [-.6, .4, .58], [-.76, .14, .42]];
+      : [[-.74, .2, .22], [-.7, .5, -.06], [-.52, .88 + ext * .5, .24], [-.28, 1.06 + jw + ext, .52], [0, 1.12 + jw + ext, .6], [.28, 1.06 + jw + ext, .52], [.52, .88 + ext * .5, .24], [.7, .5, -.06], [.74, .2, .22],
+        [.68, .22, .4], [.56, .4, .56], [.34, .6, .78], [.24, .7, .82], [0, .76 + jw, .93], [-.24, .7, .82], [-.34, .6, .78], [-.56, .4, .56], [-.68, .22, .4]];
     const pts2 = Qa(outer).filter((p, i) => true);
     s += hairMass(u, pts2, { r, color: hairC, outline: tn.outline, seed: 13, n: kind === 'goatee' ? 12 : 40, light: HL, sheen: Q(dir * .3, .9, .6),
       flow: () => [0, 1], tufts: kind === 'goatee' ? [2, 3, 4] : [2, 3, 4, 5, 6], tuftLen: kind === 'full' ? .14 : .07 });
@@ -619,11 +621,11 @@ function head34(u, o) {
   if (o.hair && o.hair.style !== 'bald') {
     const hs = o.hair.style || 'short', hc = o.hair.color || hairC;
     // the outer edge: the skull's outline over the top between the two sides, a little proud of it (the hair's volume)
-    const L3 = hs === 'long' ? [-.98, .5, -.1] : [-.94, .16, -.12], R3 = [-L3[0], L3[1], L3[2]], pl = Q(...L3), pr = Q(...R3), vol = 1.07;
-    let a0 = Math.atan2(pl[1] - sc0[1], pl[0] - sc0[0]), a1 = Math.atan2(pr[1] - sc0[1], pr[0] - sc0[0]); while (a1 > a0) a1 -= Math.PI * 2;
-    const arc = []; for (let k = 0; k <= 16; k++) { const a = lerp(a0, a1, k / 16); arc.push([sc0[0] + Math.cos(a) * R0 * vol, sc0[1] + Math.sin(a) * R0 * vol]); }
+    const L3 = hs === 'long' ? [-.86, .5, -.14] : [-.8, .16, -.16], R3 = [-L3[0], L3[1], L3[2]], pl = Q(...L3), pr = Q(...R3), vol = 1.07;
+    let a0 = Math.atan2(pl[1] - sc0[1], pl[0] - sc0[0]), a1 = Math.atan2(pr[1] - sc0[1], pr[0] - sc0[0]); while (a1 < a0) a1 += Math.PI * 2;
+    const arc = []; for (let k = 0; k <= 16; k++) arc.push(sk(lerp(a0, a1, k / 16), vol));
     // the hairline: sideburn, temple, forehead (a little peak), the other side
-    const line = Qa([[.84, .16, .3], [.8, -.34, .5], [.5, -.6, .74], [.18, -.66, .82], [0, -.62, .85], [-.18, -.66, .82], [-.5, -.6, .74], [-.8, -.34, .5], [-.84, .16, .3]]);
+    const line = Qa([[.74, .16, .2], [.72, -.34, .44], [.48, -.6, .7], [.18, -.68, .8], [0, -.64, .84], [-.18, -.68, .8], [-.48, -.6, .7], [-.72, -.34, .44], [-.74, .16, .2]]);
     let HP = arc.slice().reverse().concat(line.slice().reverse());   // right side over the top to left, back by the hairline
     HP = arc.concat(line);
     if (hs === 'long') HP = [Q(-1.02, 1.3, -.2), ...arc, Q(1.02, 1.3, -.2), Q(.84, 1.2, .1), ...line, Q(-.84, 1.2, .1)];
@@ -631,8 +633,13 @@ function head34(u, o) {
     s += hairMass(u, HP, { r, color: hc, outline: tn.outline, seed: 9, n: hs === 'curly' ? 60 : 48, light: HL, sheen: Q(-Ls[0] < 0 ? -.3 : .3, -.8, .5), curl: hs === 'curly',
       flow: p => { const dx = p[0] - crown[0], dy = p[1] - crown[1], l = Math.hypot(dx, dy) || 1; return hs === 'long' && p[1] > o.c[1] ? [dx / l * .3, 1] : [dx / l, dy / l]; },
       tufts: hs === 'curly' ? [2, 4, 6, 8, 10, 12, 14] : [1, 3, 15, 16], tuftLen: hs === 'curly' ? .1 : .08 });
-    if (hs === 'tied') { const rb = o.hair.ribbon || '#1a1a22', b = Q(-dir * .7, .6, -.7);
-      s += `<path d="M${P2(b)}l${f(-dir * r * .2)} ${f(-r * .1)}l${f(0)} ${f(r * .2)}zM${P2(b)}l${f(dir * r * .16)} ${f(-r * .12)}l${f(dir * r * .02)} ${f(r * .2)}z" fill="${rb}" stroke="${tn.outline}" stroke-width="${f(r * .02)}"/>`; }
+    if (hs === 'tied') { // the queue hangs down the back, behind the head: drawn under it
+      const rb = o.hair.ribbon || '#1a1a22', q0 = Q(0, .4, -.9), q1 = Q(0, 1.5, -.95), b = Q(0, .62, -.92);
+      const qT = [[q0[0] - r * .1, q0[1]], [q0[0] + r * .1, q0[1]], [q1[0] + r * .05, q1[1]], [q1[0], q1[1] + r * .12], [q1[0] - r * .06, q1[1]]];
+      const tail = hairMass(u, qT, { r, color: hc, outline: tn.outline, seed: 21, n: 8, light: HL, flow: () => [0, 1], tufts: [3], tuftLen: .1 })
+        + `<path d="M${P2(b)}l${f(-r * .2)} ${f(-r * .1)}l0 ${f(r * .2)}zM${P2(b)}l${f(r * .18)} ${f(-r * .12)}l${f(r * .02)} ${f(r * .2)}z" fill="${rb}" stroke="${tn.outline}" stroke-width="${f(r * .02)}"/>`
+        + `<ellipse cx="${f(b[0])}" cy="${f(b[1])}" rx="${f(r * .06)}" ry="${f(r * .08)}" fill="${rb}" stroke="${tn.outline}" stroke-width="${f(r * .02)}"/>`;
+      s = tail + s; }
   }
   if (o.opacity != null && o.opacity < 1) s = `<g opacity="${o.opacity}">${s}</g>`;
   return { svg: s, Q, depth };
