@@ -33,7 +33,7 @@ const light = { time: 'night', haze: .3, key: { type: 'point', x: LAMP.x, y: LAM
 const SKIN = { lit: '#f2c294', half: '#c4865c', core: '#a46a44', shadow: '#5e3422', outline: '#26120a' };
 const SKIN2 = { lit: '#eec08e', half: '#bf8558', core: '#9e6640', shadow: '#5a321e', outline: '#24100a' };
 const ENEMY = P3(-.17, YT, 1.3), JUNK = P3(.2, YT, 1.2), BAG = P3(-.55, YT, 1.08);
-const G1 = [BAG[0] + .4, BAG[1] - 17.6];            // the Company's fist round the neck of the bag
+const G1 = [BAG[0] + .4, BAG[1] - 19.4];            // the Company's fist round the neck of the bag, the fingers on its tie
 const G2 = [160, 84];                               // the captain's fist round the fan's guard sticks
 const skel = { horizon: HZ, eye: .55, light: 'big silk lantern over the table (key, warm) + two far lanterns + the moon through the window (cold rim)', items: [
   ['back wall', 42.6, 86.7, 114.8, 59.8, 'floor (z 4.6)'], ['window', 82, 66.4, 36, 31, 'back wall'], ['screens', 47, 72.3, 106, 38, 'back wall, side walls'],
@@ -296,11 +296,11 @@ module.exports = { name: 'Сделка с Сяо Фэном', kind: 'deck', stat
         + coin(sx + 4.2, sy - 3.6, 1.6, -20) + coin(sx + 6.2, sy - 1.8, 1.7, 14); }
     // the Company's hand round the neck of the bag: a navy coat sleeve with a gold-buttoned cuff, a lace ruffle
     const coatT = { lit: '#4a5a8a', half: '#222a48', core: '#1a2038', shadow: '#0a0e1c', outline: '#04060c' };
-    const h1 = handAt(u, { s: 2.6, m: 1, roll: 52, pitch: 6, pose: 'wrap', r: .62, tone: SKIN, light: [.6, -.8], sw: .32, palmW: .92, wristW: .82 }, G1, -86, -4);
+    const h1 = handAt(u, { s: 3.4, m: 1, roll: 52, pitch: 6, pose: 'wrap', r: .62, tone: SKIN, light: [.6, -.8], sw: .32, palmW: .92, wristW: .82 }, G1, -86, -4);
     let arm1 = '';
     { const W = h1.wrist, ua = [W[0] - (W[0] - 8), 0], EL = [W[0] - 22, W[1] + 15];
       void ua;
-      arm1 += H.cloth(u, { spine: [[-24, 136], [EL[0] - 8, EL[1] + 6], EL, [lerp(EL[0], W[0], .55), lerp(EL[1], W[1], .55) + .6], [W[0] - 1.6, W[1] + .4]], w: [17, 15.4, 14, 12, 10.4],
+      arm1 += H.cloth(u, { spine: [[-24, 136], [EL[0] - 8, EL[1] + 6], EL, [lerp(EL[0], W[0], .55), lerp(EL[1], W[1], .55) + .6], [W[0] - 1.6, W[1] + .4]], w: [17.6, 16.2, 15, 13.4, 12.2],
         tone: coatT, lit: -1, rim: '#8aa0d8', rimSide: 1, rimOp: .45, seed: 5, drapes: 2, sw: .4, L,
         cuff: { from: .72, k: 1.3, buttons: .75, tone: { lit: '#3a4c80', half: '#1a2448', shadow: '#080c1a', outline: '#04060c' } } });
       // the gold braid along the cuff's edge, the lace ruffle out of it over the wrist
@@ -308,13 +308,20 @@ module.exports = { name: 'Сделка с Сяо Фэном', kind: 'deck', stat
       arm1 += `<path d="M${f(c0[0] - .6)} ${f(c0[1] - 7)}Q${f(c0[0] + 1.6)} ${f(c0[1])} ${f(c0[0] - .4)} ${f(c0[1] + 7)}" stroke="#d8a840" stroke-width=".8" fill="none"/>`
         + `<path d="M${f(c0[0] - .2)} ${f(c0[1] - 5.6)}Q${f(c0[0] + 3.4)} ${f(c0[1] - 4)} ${f(c0[0] + 2.6)} ${f(c0[1] - 1)}Q${f(c0[0] + 4.2)} ${f(c0[1] + 1.4)} ${f(c0[0] + 2.4)} ${f(c0[1] + 3)}Q${f(c0[0] + 3.4)} ${f(c0[1] + 5)} ${f(c0[0] + .2)} ${f(c0[1] + 5.8)}Z" fill="#ece6d6" stroke="#6a6252" stroke-width=".3"/>`
         + ln(`M${f(c0[0] + .8)} ${f(c0[1] - 4)}q1.6 1 1.2 3M${f(c0[0] + .9)} ${f(c0[1] + 1)}q1.4 1 1 3.4`, .3, '#a89e88', .9); }
-    arm1 += h1.back + h1.front;
+    // the tie under the fingers: the cord's wrap round the gathered neck and its two ends hanging out of the fist
+    { const n0 = [BAG[0] - 3.2, BAG[1] - 16.9], n1 = [BAG[0] + 3.4, BAG[1] - 17.1];
+      const tf = nid('tf', u);
+      arm1 += h1.back + `<defs><filter id="${tf}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".7 .06 0 0 0  .04 .5 0 0 0  0 .04 .34 0 0  0 0 0 1 0"/></filter></defs><g filter="url(#${tf})">`
+        + K.rope(u, L, [n0, [BAG[0], BAG[1] - 15.9], n1], { r: .7, seed: 31 })
+        + K.rope(u, L, [[BAG[0] + 2.2, BAG[1] - 17], [BAG[0] + 4.6, BAG[1] - 14.4], [BAG[0] + 4.2, BAG[1] - 10.6]], { r: .5, seed: 32, whip: true })
+        + K.rope(u, L, [[BAG[0] + 1.4, BAG[1] - 16.8], [BAG[0] + 2.4, BAG[1] - 13.6], [BAG[0] + 1.2, BAG[1] - 11.2]], { r: .48, seed: 33, whip: true }) + '</g>'
+        + h1.front; }
 
     // ——— the hired captain's hand with the open fan: a red silk sleeve with a gold border from the right edge ———
-    const h2 = handAt(u, { s: 2.6, m: -1, roll: 42, pitch: -4, pose: 'wrap', r: .5, tone: SKIN2, light: [-.62, -.78], sw: .32, palmW: .9, wristW: .8 }, G2, -98, 190);
+    const h2 = handAt(u, { s: 2.6, m: -1, roll: 75, pitch: -4, pose: 'wrap', r: .5, tone: SKIN2, light: [-.62, -.78], sw: .32, palmW: .9, wristW: .8 }, G2, -98, 190);
     let fan = '';
-    { const ax = h2.axis[1] < 0 ? h2.axis : [-h2.axis[0], -h2.axis[1]], piv = [G2[0] - ax[0] * 6.4, G2[1] - ax[1] * 6.4];
-      const a0 = Math.atan2(ax[1], ax[0]), A0 = a0 - 1.32, A1 = a0 + 1.18, r0 = 13, r1 = 31, N = 18;
+    { const ax = h2.axis[1] < 0 ? h2.axis : [-h2.axis[0], -h2.axis[1]], piv = [G2[0] - ax[0] * 5.4, G2[1] - ax[1] * 5.4];
+      const a0 = Math.atan2(ax[1], ax[0]), A0 = a0 - 1.32, A1 = a0 + 1.18, r0 = 16.5, r1 = 33.5, N = 18;
       const at = (a, r) => [piv[0] + Math.cos(a) * r, piv[1] + Math.sin(a) * r];
       // the leaf: pleats, each its own tone (folds towards and away from the lamp), a gold band at the edge
       for (let i = 0; i < N; i++) { const a = lerp(A0, A1, i / N), b = lerp(A0, A1, (i + 1) / N), lit = i % 2 === 0, warm = .5 + .5 * Math.cos((a + b) / 2 - (-2.2));
@@ -327,8 +334,18 @@ module.exports = { name: 'Сделка с Сяо Фэном', kind: 'deck', stat
       // the guard sticks: dark lacquer ribs from the pivot, the outer guards thicker; the rivet
       for (let i = 0; i <= N; i += 2) { const a = lerp(A0, A1, i / N); fan += ln(`M${P2(at(a, 1.2))}L${P2(at(a, r0 + 1))}`, i === 0 || i === N ? .9 : .45, '#1e0804', .95); }
       fan += ln(`M${P2(at(A0, 1.2))}L${P2(at(A0, r1 + .4))}`, .9, '#2a0a06') + ln(`M${P2(at(A1, 1.2))}L${P2(at(A1, r1 + .4))}`, .9, '#2a0a06')
-        + K.shadeSphere(u, piv[0], piv[1], 1.1, L, 'brass', { outline: .25 })
-        + `<path d="M${f(piv[0])} ${f(piv[1] + 1)}q-.6 3 .4 6" stroke="#c89030" stroke-width=".5" fill="none"/><circle cx="${f(piv[0] + .4)}" cy="${f(piv[1] + 7.6)}" r=".8" fill="#e8b040"/>`;
+      // the sticks' heads: the bundle closing under the fist's little finger into a rounded end round the rivet;
+      // the tassel's cord from that end
+      { const nx = -ax[1], ny = ax[0], e = [piv[0] - ax[0] * 2.4, piv[1] - ax[1] * 2.4], b0 = [piv[0] + ax[0] * 2.2, piv[1] + ax[1] * 2.2];
+        fan += `<path d="M${f(b0[0] + nx * 1.9)} ${f(b0[1] + ny * 1.9)}L${f(e[0] + nx * 1.3)} ${f(e[1] + ny * 1.3)}Q${f(e[0] - ax[0] * 1.6)} ${f(e[1] - ax[1] * 1.6)} ${f(e[0] - nx * 1.3)} ${f(e[1] - ny * 1.3)}L${f(b0[0] - nx * 1.9)} ${f(b0[1] - ny * 1.9)}Z" fill="#2a0c06" stroke="#0e0402" stroke-width=".3"/>`
+          + ln(`M${f(b0[0] - nx * 1.2)} ${f(b0[1] - ny * 1.2)}L${f(e[0] - nx * .8)} ${f(e[1] - ny * .8)}`, .35, '#c86a3a', .55)
+          + ln(`M${f(b0[0] + nx * .2)} ${f(b0[1] + ny * .2)}L${f(e[0] + nx * .1)} ${f(e[1] + ny * .1)}M${f(b0[0] + nx * 1)} ${f(b0[1] + ny * 1)}L${f(e[0] + nx * .7)} ${f(e[1] + ny * .7)}`, .2, '#0a0302', .8)
+          + K.shadeSphere(u, piv[0], piv[1], .95, L, 'brass', { outline: .25 })
+          + `<path d="M${f(e[0])} ${f(e[1])}q-.5 2.6 .4 5.2" stroke="#c89030" stroke-width=".5" fill="none"/><circle cx="${f(e[0] + .4)}" cy="${f(e[1] + 5.8)}" r=".8" fill="#e8b040"/>`
+          + ln(`M${f(e[0] + .4)} ${f(e[1] + 6.4)}l-.5 2.2M${f(e[0] + .4)} ${f(e[1] + 6.4)}l.1 2.4M${f(e[0] + .4)} ${f(e[1] + 6.4)}l.6 2.1`, .3, '#e0a838', .9); }
+      // the fist's soft shadow on the sticks and the leaf (the lamp is up and to the left)
+      { const sid = nid('fs', u), c = [lerp(G2[0], h2.wrist[0], .3) + 2.6, lerp(G2[1], h2.wrist[1], .3) + 1.6];
+        fan += `<defs>${blurF(sid, 1.2)}</defs><ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="7" ry="5.4" fill="#1a0402" opacity=".5" filter="url(#${sid})"/>`; }
       // the lamp through the thin silk near its top edge, the moon's thin line on the far edge
       fan += glow(u, at(-2.1, 26)[0], at(-2.1, 26)[1], 10, 7, '#ffb070', .25) + ln(`M${P2(at(A1 - .3, r1 + .2))}L${P2(at(A1, r1 + .4))}`, .45, '#b8c8ff', .6); }
     let arm2 = '';
