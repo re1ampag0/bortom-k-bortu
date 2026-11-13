@@ -175,7 +175,9 @@ module.exports = { helpers, name: 'Тяжёлый борт', kind: 'deck', statu
       const d = sp(top) + 'L210 290L-10 290Z';
       fg += `<defs>${lin(g, 0, 118, 0, 200, [[0, '#a85a44'], [.12, '#5a2a34'], [.5, '#2a1220'], [1, '#100810']])}</defs><path d="${d}" fill="url(#${g})"/>`;
       const nc = nid('nc', u); fg += `<defs><clipPath id="${nc}"><path d="${d}"/></clipPath></defs><g clip-path="url(#${nc})"><g opacity=".45">${K.water(u, L, { horizon: 92, bottom: 290, swell: 1, seed: 31, glitter: false })}</g></g>`;
-      fg += `<g transform="rotate(${f(ang)} ${SH.x} ${SH.y})">${K.foam(u, { x: SH.x, y: SH.y + 1, w: 230, h: 2.2, seed: 21, L })}</g>`; }
+      { const band = (h0, h1) => { const a = [], b = []; for (let X = -46; X <= 46; X += 2) { a.push(P(X, h1)); b.unshift(P(X, h0)); } return 'M' + a.concat(b).map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'Z'; }, bf = nid('bf', u);
+        fg += `<defs>${blur(bf, .5)}</defs><g filter="url(#${bf})"><path d="${band(-.4, 1.7)}" fill="#3a2618" opacity=".82"/><path d="${band(1.5, 2.5)}" fill="#3a2618" opacity=".4"/></g>`; }
+      fg += `<g transform="rotate(${f(ang)} ${SH.x} ${SH.y})">${K.foam(u, { x: SH.x, y: SH.y, w: 230, h: 3.4, seed: 21, L })}</g>`; }
 
     // ——— the hits: two balls stuck in the planking, old dents, the ricochet off the chainplate
     const pts = portXH(SH.kind).map(([X, H]) => ({ X, H, p: P(X, H) }));
@@ -191,18 +193,20 @@ module.exports = { helpers, name: 'Тяжёлый борт', kind: 'deck', statu
         sk += `<path d="M${f(cx - Math.cos(rot) * l / 2)} ${f(cy - Math.sin(rot) * l / 2)}l${f(Math.cos(rot) * l)} ${f(Math.sin(rot) * l)}" stroke="${R() > .5 ? '#e8c088' : '#8a5a2a'}" stroke-width=".55" stroke-linecap="round"/>`; }
       fg += K.localGlow(u, { x, y, color: '#ffd890', power: .9, radius: 20 }) + sk + flying(u, L, x + 4, y - 3, x + 30, y - 26, 3) ; }
 
-    // ——— the answer: her guns have fired, the ports wrapped in smoke rolling out and drifting left; two still flash
-    { const pg = nid('pg', u), pd = nid('pd', u), pf = nid('pf', u);
-      fg += `<defs><radialGradient id="${pg}" cx=".4" cy=".34" r=".66"><stop offset="0" stop-color="#fff4e6"/><stop offset=".45" stop-color="#e8d8cc" stop-opacity=".95"/><stop offset=".8" stop-color="#a89098" stop-opacity=".85"/><stop offset="1" stop-color="#6a5260" stop-opacity="0"/></radialGradient>`
-        + `<radialGradient id="${pd}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#3a2030" stop-opacity=".5"/><stop offset="1" stop-color="#3a2030" stop-opacity="0"/></radialGradient>${blur(pf, .8)}</defs>`;
-      let sh = '', bl = '';
-      pts.forEach((q, i) => { if (i === 0 || i === 4) return; const k = (i === 2 || i === 5 ? 1.2 : 1.6) * (.85 + R() * .3), [x, y] = q.p;
-        for (let j = 0; j < 6; j++) { const bx = x - 1 - j * 3.6 * k + (R() - .5) * 1.4, by = y + 3 - j * .7 * k + (R() - .5) * 1.2, rr = (2.4 + j * 1.1) * k;
-          if (j > 2) sh += `<circle cx="${f(bx + .8)}" cy="${f(by + rr * .5)}" r="${f(rr)}" fill="url(#${pd})"/>`;
-          bl += `<circle cx="${f(bx)}" cy="${f(by)}" r="${f(rr)}" fill="url(#${pg})" opacity="${f(.85 - j * .1)}"/>`; } });
-      fg += sh + `<g filter="url(#${pf})">${bl}</g>`;
-      for (const i of [2, 5]) { const [x, y] = pts[i].p; fg += burst(u, x, y + .6, 2.8, i * 7, -.6); }
-      fg += K.localGlow(u, { x: 110, y: 88, color: '#ffb060', power: .4, radius: 90 }, { squash: .25, core: false }); }
+    // ——— the answer: her guns fire one after another — one now (a long flame out of the hot port), the others a moment
+    // earlier, their flame already sinking in its own clump of smoke rolling out of the port and drifting left
+    const pq = (X, H, w = 2.4, hh = 2.28) => [P(X - w / 2, H - hh / 2), P(X + w / 2, H - hh / 2), P(X + w / 2, H + hh / 2), P(X - w / 2, H + hh / 2)];
+    for (const [i, ph, sd] of [[4, .72, 7], [1, .9, 5], [5, .42, 2], [2, 0, 4]]) { const { X, H } = pts[i], m = P(X, H - .24, 1.9);
+      fg += portFlash(u, L, { x: m[0], y: m[1], k: 2.5, phase: ph, seed: sd, dir: 166, len: 6.5, smokeDir: [-.94, -.3], port: pq(X, H) }); }
+    fg += K.localGlow(u, { x: pts[2].p[0], y: pts[2].p[1] + 4, color: '#ffb060', power: .45, radius: 60 }, { squash: .35, core: false });
+    // the cut of her side in the empty port amidships: the sill and the jamb show the thickness — the outer planking
+    // (tarred), the oak frame (end grain), the red-painted ceiling inside
+    { const { X, H } = pts[3], w = 2.4, hh = 2.28, b0 = H - hh / 2, xl = X - w / 2, q = (pa) => `M${pa.map(v => f(v[0]) + ' ' + f(v[1])).join('L')}Z`;
+      const lay = [[0, .2, '#2c1a10'], [.2, .52, '#a8743e'], [.52, .7, '#8e2c1c']];
+      for (const [t0, t1, c] of lay) fg += `<path d="${q([P(xl + t0 * .8, b0 + t0), P(X + w / 2, b0 + t0), P(X + w / 2, b0 + t1), P(xl + t1 * .8, b0 + t1)])}" fill="${c}"/>`
+        + `<path d="${q([P(xl + t0 * .8, b0 + t0), P(xl + t1 * .8, b0 + t1), P(xl + t1 * .8, H + hh / 2), P(xl + t0 * .8, H + hh / 2)])}" fill="${mix(c, '#000000', .25)}"/>`;
+      for (let j = 0; j < 7; j++) { const xx = xl + .4 + j * .3, a1 = P(xx, b0 + .22), a2 = P(xx + .05, b0 + .5); fg += `<path d="M${f(a1[0])} ${f(a1[1])}L${f(a2[0])} ${f(a2[1])}" stroke="#5a3418" stroke-width=".25" opacity=".7"/>`; }
+      const e0 = P(xl, b0), e1 = P(X + w / 2, b0); fg += `<path d="M${f(e0[0])} ${f(e0[1])}L${f(e1[0])} ${f(e1[1])}" stroke="${L.ramp('oak', X, H).lit}" stroke-width=".45" opacity=".8"/>`; }
 
     // ——— the next ball coming in on its trail from the right edge, the splash of one that fell short
     fg += flying(u, L, 216, 34, 172, 62, 3.2);
