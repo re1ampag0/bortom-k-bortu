@@ -795,8 +795,11 @@ function head34(u, o) {
   // the lips in the skin's own colour, a little redder (the upper in shade, the lower lit)
   const lips = o.lips || mix(mix(tn.half, tn.core || tn.shadow, .45), '#b4504a', .38);
   // the face's own ramp: the lit side broad and light, the terminator soft, the shade lifted by the bounce (a face
-  // is never in black shade under one light); sh — the colour of the soft shadows modelling it
-  const fc = { lit: mix(tn.lit, '#fff4e6', .08), light: mix(tn.lit, tn.half, .22), half: mix(tn.half, tn.lit, .15), core: mix(tn.half, tn.core || tn.shadow, .55), shadow: mix(tn.shadow, tn.half, .3) }, sh = mix(tn.shadow, tn.core || tn.half, .35);
+  // is never in black shade under one light); sh — the colour of the soft shadows modelling it. The light side is the
+  // skin's own colour under more light (its half tone brightened, a little of `lit` in it), not paled toward white or
+  // the ramp's cooler lit stop: a broad pale side reads grey-blue next to a warm candle
+  const upK = (c, k) => K.hex(K.rgb(c).map(v => Math.min(1, v * k)));
+  const fc = { lit: mix(upK(tn.half, 1.28), tn.lit, .35), light: mix(upK(tn.half, 1.14), tn.lit, .2), half: tn.half, core: mix(tn.half, tn.core || tn.shadow, .55), shadow: mix(tn.shadow, tn.half, .3) }, sh = mix(tn.shadow, tn.core || tn.half, .35);
   const Ls = o.light || [-.5, -.86], mo = o.mouth || 0, sm = o.smile || 0, jw = mo * .14;
   const soft = (c, rx, ry, col, op, rotd = 0) => { const g = nid('h3s', u); return `<defs>${radGrad(g, 0, 0, 1, [[0, col, op], [1, col, 0]])}</defs><ellipse cx="0" cy="0" rx="1" ry="1" fill="url(#${g})" transform="translate(${f(c[0])} ${f(c[1])}) rotate(${f(rotd)}) scale(${f(Math.max(.01, rx * r))} ${f(Math.max(.01, ry * r))})"/>`; };
   const P2 = p => `${f(p[0])} ${f(p[1])}`;
@@ -840,7 +843,7 @@ function head34(u, o) {
     for (const [P4, n0] of PL) { const nv = rot(n0), nl = Math.hypot(nv[0], nv[1], nv[2]); if (nv[2] / nl < -.05) continue;
       // (the shade of a plane turned from the light is soft — a lifted shadow, not the ramp's darkest)
       const b = (nv[0] * LV[0] + nv[1] * LV[1] + nv[2] * LV[2]) / nl - .4, op = Math.min(b > 0 ? .45 : .3, Math.abs(b) * .75) * (.55 + .45 * Math.max(0, nv[2] / nl));
-      if (op > .03) g += `<path d="${sp(Qa(P4), true)}" fill="${b > 0 ? tn.lit : sh}" opacity="${f(op)}"/>`; }
+      if (op > .03) g += `<path d="${sp(Qa(P4), true)}" fill="${b > 0 ? fc.lit : sh}" opacity="${f(op)}"/>`; }
     // the cheekbone's own catch of light (soft, low), and the shade under it
     const sd = (Q(.6, .14, .5)[0] - Q(-.6, .14, .5)[0]) * Ls[0] > 0 ? 1 : -1;
     g += `<ellipse cx="${f(Q(sd * .54, .12, .6)[0])}" cy="${f(Q(sd * .54, .12, .6)[1])}" rx="${f(r * .14)}" ry="${f(r * .06)}" fill="${tn.lit}" opacity=".3"/>`;
