@@ -9,6 +9,9 @@
 // ball sits sunk in a crater with its own shadow; the planking is the Endeavour's own: matt ochre strakes with
 // butts and treenails between black wales, a gun port with its lid; the two iron straps that stood like posts are
 // now the chain plates of her channel, slanting up to it; the plank on a tackle (it hung from nowhere) is gone.
+// After the review: the rim one bevel of bare wood all round the break (no pale zigzag on two sides), the torn plank
+// piece with its thickness, a raw end and a soft shadow, no smoke box over the hole, the gun port open (lid raised on
+// its tackle, a gun's muzzle in it), the planking matt and darker to the edges, the channel's shadow along the top.
 // Light: the sun high on the left behind us (key), the blue sky (fill); the sea far below under the glass.
 'use strict';
 const K = require('../kit/index.cjs');
@@ -44,14 +47,15 @@ module.exports = { name: 'Двойная обшивка', kind: 'deck', status: 
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     // the Endeavour's matt ochre, warmer and darker than the ramp's lit lemon at this size
-    const R = rng(41), rO = Object.assign({}, L.ramp('ship-ochre', 100, 60), { lit: '#ecc872', half: '#bc8f38' }), rT = L.ramp('tar', 100, 60), rK = L.ramp('oak', 100, 80), rI = L.ramp('iron', 100, 60);
+    const R = rng(41), rO = Object.assign({}, L.ramp('ship-ochre', 100, 60), { lit: '#cfa458', half: '#9a722e', shadow: '#5e4218' }), rT = L.ramp('tar', 100, 60), rK = L.ramp('oak', 100, 80), rI = L.ramp('iron', 100, 60);
     // ——— the side: the black wales and the ochre strakes (8 units each), each strake of planks with staggered butts,
     // treenails in pairs at the frames, weather streaks running down from the wale
     const W1 = [0, 12], W2 = [122, 136], ST = 8;
     let bg = '';
-    { const g = nid('so', u); bg += `<defs>${linGrad(g, 0, 0, 200, 280, [[0, '#d6aa4c'], [.4, '#bc8f38'], [1, '#7e5c22']])}</defs><rect width="200" height="280" fill="url(#${g})"/>`; }
+    { const g = nid('so', u); bg += `<defs>${linGrad(g, 0, 0, 200, 280, [[0, '#ad8238'], [.35, '#94692a'], [.7, '#6a4a1c'], [1, '#3e2a10']])}</defs><rect width="200" height="280" fill="url(#${g})"/>`; }
     for (let y = W1[1]; y < 280; y += ST) {
       if (y >= W2[0] && y < W2[1]) continue;
+      bg += `<rect x="0" y="${f(y)}" width="200" height="${ST}" fill="${R() > .5 ? '#000' : '#fff2d0'}" opacity="${f(.02 + R() * .07)}"/><rect x="0" y="${f(y + ST - 2.2)}" width="200" height="2.2" fill="#1c1006" opacity=".16"/><rect x="0" y="${f(y + .8)}" width="200" height="1.2" fill="#fff0c8" opacity=".06"/>`;
       bg += `<path d="M0 ${f(y)}H200" stroke="${rO.outline}" stroke-width=".7" opacity=".75"/><path d="M0 ${f(y + .7)}H200" stroke="${rO.lit}" stroke-width=".35" opacity=".55"/>`;
       const off = (y / ST % 3) * 23;
       for (let x = -off; x < 200; x += 68) bg += `<path d="M${f(x)} ${f(y)}v${ST}" stroke="${rO.outline}" stroke-width=".5" opacity=".6"/><path d="M${f(x + .6)} ${f(y)}v${ST}" stroke="${rO.lit}" stroke-width=".3" opacity=".4"/>`;
@@ -69,14 +73,28 @@ module.exports = { name: 'Двойная обшивка', kind: 'deck', status: 
         + `<path d="M0 ${(a + b) / 2}H200" stroke="#000" stroke-width=".4" opacity=".4"/>`;
       for (let x = 12; x < 200; x += 34) bg += `<circle cx="${x}" cy="${f(a + (b - a) * .3)}" r=".8" fill="${rI.half}"/>`;
     }
-    // the gun port on the right: a black frame standing out, the lid shut, two hinges, the sill casting its shadow
-    { const x = 157, y = 30, w = 27, h = 27;
-      bg += `<path d="M${x - 2} ${y + h + 2.6}h${w + 4}" stroke="#000" stroke-width="2.4" opacity=".25"/>`
-        + `<rect x="${x - 2}" y="${y - 2}" width="${w + 4}" height="${h + 4}" fill="${rT.half}"/><path d="M${x - 2} ${y - 1.6}h${w + 4}M${x - 1.6} ${y - 2}v${h + 4}" stroke="${rT.lit}" stroke-width=".7"/>`
-        + `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${mix(rT.half, rT.lit, .25)}"/>`
-        + [y + 7, y + 14, y + 21].map(yy => `<path d="M${x} ${yy}h${w}" stroke="${rT.core}" stroke-width=".5"/>`).join('')
-        + [y + 5, y + h - 6].map(yy => `<path d="M${x - 3} ${yy}h${w * .8}" stroke="${rI.half}" stroke-width="2"/><path d="M${x - 3} ${yy - .6}h${w * .8}" stroke="${rI.lit}" stroke-width=".5"/><circle cx="${f(x + w * .8 - 3)}" cy="${yy}" r="1.2" fill="${rI.half}"/>`).join('')
-        + `<path d="M${x + w / 2 - 3} ${y + h - 2}h6" stroke="${rI.half}" stroke-width="1.6"/>`; }
+    // the gun port on the right, open: the lid raised outwards on its tackle (we see its shaded underside), the port
+    // a black square with the muzzle of a gun in it, the sill lit, the lid's shadow on the planks
+    { const x = 157, y = 31, w = 27, h = 26, cx = x + w / 2, cy = y + h / 2 + 1.5, rL = L.ramp('oak', cx, y);
+      // the frame standing out, its shadow below and to the right
+      bg += `<path d="M${x - 1} ${y + h + 3.4}h${w + 5}v-${h + 4}" stroke="#000" stroke-width="2.6" opacity=".25" fill="none"/>`
+        + `<rect x="${x - 2.4}" y="${y - 2.4}" width="${w + 4.8}" height="${h + 4.8}" fill="${rT.half}"/><path d="M${x - 2.4} ${y - 2}h${w + 4.8}M${x - 2} ${y - 2.4}v${h + 4.8}" stroke="${rT.lit}" stroke-width=".7"/>`;
+      // the opening: deep dark, a little warmer at the back
+      { const gp = nid('gp', u); bg += `<defs>${radGrad(gp, cx, cy, w * .8, [[0, '#1e140c'], [1, '#050302']])}</defs><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#${gp})"/>`; }
+      // the sill (its upper face lit) and the gun's muzzle: the face ring, the swell, the black bore
+      bg += `<path d="M${x} ${y + h - .4}h${w}" stroke="${rL.lit}" stroke-width=".9"/>`
+        + `<ellipse cx="${f(cx + 1)}" cy="${f(cy + 8)}" rx="9" ry="1.6" fill="#000" opacity=".5"/>`
+        + K.shadeSphere(u, cx, cy, 7.2, L, 'iron', { outline: .4 })
+        + `<circle cx="${f(cx)}" cy="${f(cy)}" r="5.2" fill="none" stroke="${rI.shadow}" stroke-width=".7"/><circle cx="${f(cx)}" cy="${f(cy)}" r="3" fill="#060404"/>`
+        + `<path d="M${f(cx - 2.6)} ${f(cy - 1.4)}a3 3 0 0 1 3.6 -1.6" stroke="${rI.half}" stroke-width=".5" fill="none"/><path d="M${f(cx - 6.4)} ${f(cy - 2)}a6.8 6.8 0 0 1 5 -4.8" stroke="${rI.lit}" stroke-width=".6" fill="none" opacity=".8"/>`;
+      // the lid, raised: hinged along the top, its outer edge nearer to us; the underside in shade, planks across it
+      const lid = `M${x - 2.4} ${y - 2.4}L${x + w + 2.4} ${y - 2.4}L${x + w + 4.4} ${y - 13}L${x - 3.6} ${y - 13}Z`;
+      bg += `<path d="${lid}" fill="#000" opacity=".22" transform="translate(2.4 1.2)"/><path d="${lid}" fill="${mix(rT.half, rL.shadow, .5)}" stroke="${rT.core}" stroke-width=".4"/>`
+        + [.33, .66].map(t => `<path d="M${f(x - 2.4 - 1.2 * t)} ${f(y - 2.4 - 10.6 * t)}H${f(x + w + 2.4 + 2 * t)}" stroke="${rT.core}" stroke-width=".45"/>`).join('')
+        + `<path d="M${x - 3.6} ${y - 13.2}H${x + w + 4.4}" stroke="${rL.lit}" stroke-width=".8"/>`
+        + [x + 4, x + w - 4].map(xx => `<path d="M${xx} ${y - 2.6}l-.4 -9.6" stroke="${rI.half}" stroke-width="1.4"/><circle cx="${xx}" cy="${y - 2.4}" r="1.1" fill="${rI.half}"/><circle cx="${xx - .3}" cy="${y - 2.7}" r=".45" fill="${rI.lit}"/>`).join('');
+      // the port tackle: two ropes from the lid's outer corners up to the side above
+      { const rr = L.ramp('rope', cx, y); bg += `<path d="M${x - 2} ${y - 13}L${x + 2} 0M${x + w + 3} ${y - 13}L${x + w - 1} 0" stroke="#000" stroke-width="1.1" opacity=".2" transform="translate(1 .6)"/><path d="M${x - 2} ${y - 13}L${x + 2} 0M${x + w + 3} ${y - 13}L${x + w - 1} 0" stroke="${rr.half}" stroke-width=".7"/><path d="M${x - 2.2} ${y - 13}L${x + 1.8} 0M${x + w + 2.8} ${y - 13}L${x + w - 1.2} 0" stroke="${rr.lit}" stroke-width=".25"/>`; } }
     // the chain plates: slanting iron straps from the channel (above the frame) down the side, bolted at each strake
     for (const [x0, x1] of [[18, 26], [36, 42]]) {
       const ya = 0, yb = 150;
@@ -89,7 +107,7 @@ module.exports = { name: 'Двойная обшивка', kind: 'deck', status: 
     let fg = `<defs><clipPath id="${hid}"><path d="${poly(P)}"/></clipPath><clipPath id="${iid}"><path d="${poly(P, D[0], D[1])}"/></clipPath></defs>`;
     // the walls: the cut end of the outer skin — the left wall in its own shade, the bottom one lit from above
     { const g = nid('hw', u);
-      fg += `<defs>${linGrad(g, C.x - 30, C.y - 20, C.x - 10, C.y + 28, [[0, rK.shadow], [.6, rK.half], [1, rK.lit]])}</defs><g clip-path="url(#${hid})"><rect x="0" y="0" width="200" height="160" fill="url(#${g})"/>`;
+      fg += `<defs>${linGrad(g, C.x - 30, C.y - 20, C.x - 10, C.y + 28, [[0, rK.shadow], [.6, rK.half], [1, mix(rK.half, rK.lit, .35)]])}</defs><g clip-path="url(#${hid})"><rect x="0" y="0" width="200" height="160" fill="url(#${g})"/>`;
       // the end grain of the strakes on the wall: the seams continue into the cut, slanting into the depth
       for (let y = W1[1]; y < 120; y += ST) { const xs = [];
         for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length]; if ((p[1] - y) * (q[1] - y) < 0) xs.push(p[0] + (q[0] - p[0]) * (y - p[1]) / (q[1] - p[1])); }
@@ -130,23 +148,37 @@ module.exports = { name: 'Двойная обшивка', kind: 'deck', status: 
     // the crater's lip in front of the ball's lower edge: crushed wood in shade (the ball sits in it, not on it)
     fg += `<path d="M${BALL.x - BALL.r * .92} ${BALL.y + 4}Q${BALL.x} ${BALL.y + BALL.r * 1.5} ${BALL.x + BALL.r * .92} ${BALL.y + 4}Q${BALL.x} ${BALL.y + BALL.r * 1.12} ${BALL.x - BALL.r * .92} ${BALL.y + 4}Z" fill="${rK.shadow}" opacity=".85"/>`
       + `<path d="M${BALL.x - BALL.r * .9} ${BALL.y + 5}Q${BALL.x} ${BALL.y + BALL.r * 1.46} ${BALL.x + BALL.r * .9} ${BALL.y + 5}" stroke="${rK.lit}" stroke-width=".5" fill="none" opacity=".8"/>`;
-    // one long piece of a broken plank, torn out and hanging from the lower edge, bent towards us: ochre face,
-    // raw wood where it split, its shadow on the side below
-    { const e = P.ends[P.ends.length - 2], x0 = e.xr - 14, y0 = e.y1 - .4;
-      const pc = `M${f(x0)} ${f(y0)}L${f(x0 + 14)} ${f(y0 - .2)}L${f(x0 + 20)} ${f(y0 + 9)}L${f(x0 + 17)} ${f(y0 + 10.4)}L${f(x0 + 15)} ${f(y0 + 8.4)}L${f(x0 + 12.5)} ${f(y0 + 11)}L${f(x0 + 2)} ${f(y0 + 4)}Z`;
-      fg += `<path d="${pc}" fill="#000" opacity=".28" transform="translate(2.6 3)"/><path d="${pc}" fill="${mix(rO.half, rO.lit, .25)}" stroke="${rO.outline}" stroke-width=".3"/>`
-        + `<path d="M${f(x0 + 14)} ${f(y0 - .2)}L${f(x0 + 20)} ${f(y0 + 9)}" stroke="#f4dca0" stroke-width=".9"/><path d="M${f(x0 + 2)} ${f(y0 + 4)}L${f(x0 + 12.5)} ${f(y0 + 11)}" stroke="#f4dca0" stroke-width=".6"/>`
-        + `<path d="M${f(x0 + 3)} ${f(y0 + 2.4)}L${f(x0 + 15)} ${f(y0 + 3.4)}M${f(x0 + 6)} ${f(y0 + 5.8)}L${f(x0 + 16)} ${f(y0 + 7)}" stroke="${rO.shadow}" stroke-width=".3" opacity=".7"/>`; }
+    // one piece of a broken plank, torn out at the lower edge and bent towards us: its painted face (darker at the
+    // root, in the hole's shade), its thickness along the lower edge, the torn end in raw wood, a soft shadow below
+    { const e = P.ends[P.ends.length - 2], x0 = e.xr - 13, y0 = e.y1 - .6;
+      const A = [x0, y0], B = [x0 + 12, y0 - .3], C2 = [x0 + 23, y0 + 7.4], D2 = [x0 + 19.6, y0 + 12.4], E = [x0 + 2.6, y0 + 5.2];
+      const pt = p => `${f(p[0])} ${f(p[1])}`, th = [.7, 1.9];
+      const tip = [[x0 + 22, y0 + 9], [x0 + 23.6, y0 + 10], [x0 + 21.4, y0 + 11], [x0 + 22.2, y0 + 12.6]];
+      const face = `M${pt(A)}L${pt(B)}L${pt(C2)}` + tip.map(p => 'L' + pt(p)).join('') + `L${pt(D2)}L${pt(E)}Z`;
+      const side = `M${pt(E)}L${pt(D2)}L${pt([D2[0] + th[0], D2[1] + th[1]])}L${pt([E[0] + th[0], E[1] + th[1]])}Z`;
+      const g = nid('pk', u);
+      fg += `<defs>${linGrad(g, x0, y0, x0 + 22, y0 + 10, [[0, mix(rO.shadow, '#1c1006', .35)], [.5, rO.half], [1, mix(rO.half, rO.lit, .35)]])}</defs>`;
+      fg += `<path d="${face}" fill="#1c1006" opacity=".2" transform="translate(4.4 6.4)"/><path d="${face}" fill="#1c1006" opacity=".3" transform="translate(2.8 4.2)"/>`
+        + `<path d="${side}" fill="${rK.shadow}" stroke="${rK.outline}" stroke-width=".25"/><path d="M${pt([E[0] + th[0], E[1] + th[1]])}L${pt([D2[0] + th[0], D2[1] + th[1]])}" stroke="#120c08" stroke-width=".4"/>`
+        + `<path d="${face}" fill="url(#${g})" stroke="${rO.outline}" stroke-width=".35"/>`
+        // the torn end: raw wood fibres, the end grain in shade
+        + `<path d="M${pt(C2)}` + tip.map(p => 'L' + pt(p)).join('') + `L${pt(D2)}L${pt([D2[0] + th[0], D2[1] + th[1]])}L${pt([tip[3][0] + .6, tip[3][1] + 1.2])}L${pt([C2[0] + .8, C2[1] + 1])}Z" fill="${rK.half}" stroke="${rK.outline}" stroke-width=".25"/>`
+        + `<path d="M${f(x0 + 21)} ${f(y0 + 9.6)}l3.4 .6M${f(x0 + 20.6)} ${f(y0 + 11.2)}l2.8 1.4" stroke="${rK.shadow}" stroke-width=".3"/>`
+        // the grain along the face and the paint worn at the edge
+        + `<path d="M${f(x0 + 3)} ${f(y0 + 2.2)}L${f(x0 + 17)} ${f(y0 + 6.4)}M${f(x0 + 6)} ${f(y0 + 5)}L${f(x0 + 18)} ${f(y0 + 9.4)}" stroke="${rO.shadow}" stroke-width=".3" opacity=".7"/>`
+        + `<path d="M${pt(B)}L${pt(C2)}" stroke="${mix(rO.lit, rK.lit, .5)}" stroke-width=".45" opacity=".8"/>`; }
     // ——— the broken rim of the outer skin: plank ends split along the grain, bent out towards us (lit edges, ochre
     // faces, raw wood where they tore), cracks running out along the strakes from the hole
-    for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length], a = Math.atan2(p[1] - C.y, p[0] - C.x);
-      // the lit lip of the cut along the lower and right edges, the dark lip on the upper-left
-      const lit = Math.cos(a) * .5 + Math.sin(a) > .1;
-      fg += `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="${lit ? '#e8c880' : rO.outline}" stroke-width="${lit ? .7 : .7}"/>`; }
+    // the rim: a bevel of bare wood all round the break, the same tone everywhere, its shadow cast into the hole
+    // (down right, away from the sun) and a faint lit arris on the outer face
+    fg += `<path d="${poly(P)}" fill="none" stroke="#1c1006" stroke-width="2" opacity=".55" transform="translate(.9 1.1)"/>`
+      + `<path d="${poly(P)}" fill="none" stroke="${mix(rK.half, rO.half, .4)}" stroke-width="1.3" stroke-linejoin="round"/>`
+      + `<path d="${poly(P)}" fill="none" stroke="${rK.shadow}" stroke-width=".4" stroke-linejoin="round" transform="translate(.45 .55)"/>`
+      + `<path d="${poly(P)}" fill="none" stroke="${mix(rO.lit, rK.lit, .5)}" stroke-width=".3" stroke-linejoin="round" opacity=".55" transform="translate(-.5 -.5)"/>`;
     for (const e of P.ends) for (const side of [-1, 1]) {
       const x = side < 0 ? e.xl : e.xr, ym = (e.y0 + e.y1) / 2;
       // loose fibres standing out of the plank's end, along the grain and into the hole
-      for (let k = 0; k < 4; k++) { const yy = e.y0 + 1 + R() * (STK - 2), l = 3 + R() * 7; fg += `<path d="M${f(x + side * 1)} ${f(yy)}q${f(-side * l * .5)} ${f((R() - .5) * 1.4)} ${f(-side * l)} ${f((R() - .3) * 2.4)}" stroke="${R() > .4 ? '#f4dca0' : rK.half}" stroke-width="${f(.35 + R() * .5)}" fill="none" stroke-linecap="round"/>`; }
+      for (let k = 0; k < 4; k++) { const yy = e.y0 + 1 + R() * (STK - 2), l = 3 + R() * 7; fg += `<path d="M${f(x + side * 1)} ${f(yy)}q${f(-side * l * .5)} ${f((R() - .5) * 1.4)} ${f(-side * l)} ${f((R() - .3) * 2.4)}" stroke="${R() > .5 ? mix(rK.half, rK.lit, .5) : rK.shadow}" stroke-width="${f(.35 + R() * .5)}" fill="none" stroke-linecap="round" opacity=".85"/>`; }
     }
     // cracks along the strakes running out of the hole, left and right, and the paint flaked off round the rim
     for (let k = 0; k < 8; k++) { const side = k % 2 ? 1 : -1, e = P.ends[Math.floor(R() * P.ends.length)], y = e.y0 + 1.6 + R() * 4.8, x0 = (side < 0 ? e.xl - 4 : e.xr + 6), l = 10 + R() * 22;
@@ -155,14 +187,15 @@ module.exports = { name: 'Двойная обшивка', kind: 'deck', status: 
       fg += `<path d="M${f(x)} ${f(y)}l${f(1 + R() * 2)} ${f(-.5 + R())}l${f(.6)} ${f(1.2)}z" fill="${rK.lit}" opacity=".75"/>`; }
 
     // ——— the splinters of the outer skin still flying out at us, dust and a little smoke from the strike
-    fg += K.smoke(u, L, { x: C.x + 10, y: C.y + 4, w: 40, h: 46, wind: .5, seed: 7, opacity: .32 });
     for (let k = 0; k < 30; k++) { const a = -Math.PI * .9 + R() * Math.PI * 1.25, d = 30 + R() * 46, cx = C.x + Math.cos(a) * d * 1.15, cy = C.y + Math.sin(a) * d * .85;
       const len = 2 + R() * 7, rot = a + (R() - .5) * 1.4, wd = .35 + R() * .7, dx = Math.cos(rot) * len / 2, dy = Math.sin(rot) * len / 2, nx = -dy / len * wd * 2, ny = dx / len * wd * 2;
       fg += `<path d="M${f(cx - dx + 1.4)} ${f(cy - dy + 1.6)}L${f(cx + dx + 1.4)} ${f(cy + dy + 1.6)}" stroke="#000" stroke-width="${f(wd)}" opacity=".18"/>`
         + `<path d="M${f(cx - dx)} ${f(cy - dy)}L${f(cx + nx)} ${f(cy + ny)}L${f(cx + dx)} ${f(cy + dy)}L${f(cx - nx * .6)} ${f(cy - ny * .6)}Z" fill="${R() > .45 ? rK.lit : rO.lit}" stroke="${rK.outline}" stroke-width=".2"/>`; }
     // the warm sun on the side, the frame's corners darker
-    fg += K.localGlow(u, { x: 60, y: 30, color: '#fff2d0', power: .25, radius: 110 }, { core: false });
-    { const g = nid('vg', u); fg += `<defs>${radGrad(g, 100, 80, 170, [[0, '#0c0806', 0], [.6, '#0c0806', 0], [1, '#0c0806', .5]])}</defs><rect width="200" height="280" fill="url(#${g})"/>`; }
+    fg += K.localGlow(u, { x: 70, y: 46, color: '#ffe6b0', power: .2, radius: 90 }, { core: false });
+    { const g = nid('vg', u); fg += `<defs>${radGrad(g, 92, 70, 150, [[0, '#0c0806', 0], [.35, '#0c0806', .05], [.75, '#0c0806', .42], [1, '#0c0806', .72]])}</defs><rect width="200" height="280" fill="url(#${g})"/>`; }
+    // the shadow of the channel above the frame, falling down the top of the side
+    { const g = nid('ch', u); fg += `<defs>${linGrad(g, 0, 0, 0, 26, [[0, '#0c0806', .55], [1, '#0c0806', 0]])}</defs><rect width="200" height="26" fill="url(#${g})"/>`; }
     // under the glass: the lower wale and the sea far below, the side going dark into it
     { const g = nid('dk', u); fg += `<defs>${linGrad(g, 0, 140, 0, 280, [[0, '#0a0604', 0], [1, '#0a0604', .6]])}</defs><rect x="0" y="140" width="200" height="140" fill="url(#${g})"/>`; }
     return [bg, fg];

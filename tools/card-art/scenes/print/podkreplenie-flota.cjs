@@ -9,6 +9,9 @@
 // men sitting on them), each oar in its rowlock, the blades in the water with a ring of foam; the ships were sprites
 // with the sun in front of them — now the kit's Endeavour at anchor (sails furled, the cable out of the hawse), lit by
 // the sun behind us; the scale between the boat, the men and the ship is one; the sea under the glass is quiet.
+// After the review: the near boat 1.4 times larger and higher (the men no longer a strip: four thwarts, each man
+// outlined, limbs over a dark edge), the stern 10 to the right with the officer standing clear and the flag flying
+// behind him off the stern, the oar rings each of its own size, broken and muted.
 // Light: the sun behind us high on the left (key), the blue sky (fill).
 'use strict';
 const K = require('../kit/index.cjs');
@@ -17,14 +20,14 @@ const { f, nid, linGrad, rng } = K;
 
 const HZ = 84, SWL = 93, SX = 130, SS = .66;   // the horizon; the flagship's waterline, middle, scale
 const light = { time: 'day', haze: .25, key: { type: 'sun', az: 226, el: 34, color: '#fff2d6', power: 1 }, fill: { color: '#8db8e0', power: .5 } };
-const B1 = { x0: 13, x1: 111, y: 125, s: 1.12 };       // the near boat: stern, bow, waterline, scale (men ~12 units sitting)
+const B1 = { x0: 23, x1: 124, y: 121, s: 1.55 };       // the near boat: stern, bow, waterline, scale (men ~19 units sitting)
 const B2 = { x0: 114, x1: 140, y: 95.5, s: .3 };   // the boat alongside under the ladder
 const B3 = { x0: 170, x1: 185, y: 89, s: .17 };  // the far boat coming from the line
 const skel = { horizon: HZ, eye: 2.5, light: 'the sun behind us high on the left', items: [
   ['flagship', 72, SWL, 112, 74, 'water: at anchor, sails furled, bow to the left'],
   ['ladder', 125, 93, 5, 16, 'hangs from her rail (X -2) to the water'],
   ['boat alongside', B2.x0, B2.y, B2.x1 - B2.x0, 8, 'water, under the ladder'],
-  ['near boat', B1.x0, B1.y, B1.x1 - B1.x0, 34, 'water: heading right, towards her side'],
+  ['near boat', B1.x0, B1.y, B1.x1 - B1.x0, 46, 'water: heading right, towards her side'],
   ['far boat', B3.x0, B3.y, B3.x1 - B3.x0, 4, 'water'], ['far line', 6, HZ + .6, 60, 10, 'horizon, hull-down']] };
 
 // a clinker-built longboat in profile, bow to the right, seen a little from above: o = { x0 (stern), x1 (bow), y
@@ -70,34 +73,38 @@ function boat(u, L, o, opts = {}) {
 
 // ——— the same men, drawn small (seated ~12 units at s 1): a rower facing the stern (left) at the catch, a redcoat
 // sitting with his musket upright, the officer standing. (x, y) — the seat. Tones from the scene's light.
+// a limb as a stroke over a dark underlay (so the overlapping men stay apart)
+const OL = '#0a0c12';
+const limb = (d, col, w) => `<path d="${d}" stroke="${OL}" stroke-width="${f(w + .5)}" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`;
 function rower(L, x, y, s, R) {
-  const r = L.ramp('skin', x, y), j = { lit: '#3c5a8c', half: '#24385e', shadow: '#16223c' }, w = L.ramp('linen', x, y);
+  const r = L.ramp('skin', x, y), j = { lit: '#4a6aa0', half: '#26406c', shadow: '#16223c' }, w = L.ramp('linen', x, y);
   return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s)})">`
-    + `<path d="M0 0L-4.6 -1.6L-7 2.6" stroke="${w.half}" stroke-width="2.1" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`   // thigh, shin
-    + `<path d="M-1.2 .6Q-2.6 -4 -4.3 -7.6L-1.4 -8.6Q.8 -4.6 1.4 -.4Z" fill="${j.half}"/><path d="M-4.3 -7.6L-1.4 -8.6" stroke="${j.lit}" stroke-width=".7"/><path d="M-3.4 -7.2Q-2 -4 -1 -.2" stroke="${j.lit}" stroke-width=".5" fill="none"/>`
-    + `<path d="M-3 -7.6Q-5.4 -6.2 -7.4 -4.4" stroke="${j.half}" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="-7.6" cy="-4.2" r=".75" fill="${r.half}"/>`   // arm to the loom
-    + `<circle cx="-3.9" cy="-10" r="1.65" fill="${r.half}"/><path d="M-5.3 -10.4a1.6 1.6 0 0 1 2.4 -1.3" stroke="${r.lit}" stroke-width=".5" fill="none"/>`
+    + limb('M0 0L-4.6 -1.6L-7 2.6', w.half, 2.1) + `<path d="M-.4 -.6L-4.4 -2" stroke="${w.lit}" stroke-width=".5" stroke-linecap="round"/>`   // thigh, shin
+    + `<path d="M-1.2 .6Q-2.6 -4 -4.3 -7.6L-1.4 -8.6Q.8 -4.6 1.4 -.4Z" fill="${j.half}" stroke="${OL}" stroke-width=".3"/><path d="M-4.3 -7.6L-1.4 -8.6" stroke="${j.lit}" stroke-width=".7"/><path d="M-3.4 -7.2Q-2 -4 -1 -.2" stroke="${j.lit}" stroke-width=".5" fill="none"/>`
+    + `<path d="M-.6 -8.2Q.9 -4.4 1.1 -.6" stroke="${j.shadow}" stroke-width=".6" fill="none"/>`
+    + limb('M-3 -7.6Q-5.4 -6.2 -7.4 -4.4', j.half, 1.6) + `<path d="M-3.2 -8Q-5.4 -6.8 -7.2 -5" stroke="${j.lit}" stroke-width=".4" fill="none"/><circle cx="-7.6" cy="-4.2" r=".8" fill="${r.half}" stroke="${OL}" stroke-width=".2"/>`   // arm to the loom
+    + `<path d="M-4.2 -8.6v-.9" stroke="${r.shadow}" stroke-width="1"/><circle cx="-3.9" cy="-10" r="1.65" fill="${r.half}" stroke="${OL}" stroke-width=".25"/><path d="M-5.3 -10.4a1.6 1.6 0 0 1 2.4 -1.3" stroke="${r.lit}" stroke-width=".5" fill="none"/>`
     + `<path d="M-6 -11.2h4.4l-.5 -1.6h-3.4z" fill="#1a1a20"/><path d="M-6 -11.2h4.4" stroke="#f0ece2" stroke-width=".35"/></g>`;
 }
 function redcoat(L, x, y, s) {
   const r = L.ramp('skin', x, y), c = L.ramp('paint-red', x, y), w = L.ramp('linen', x, y), m = L.ramp('oak', x, y);
   return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s)})">`
-    + `<path d="M0 0L3.6 -.6L4.4 3.4" stroke="${w.half}" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`
-    + `<path d="M-1.8 .4Q-2.2 -5 -.8 -8.8L1.8 -8.8Q2.8 -5 2.2 .4Z" fill="${c.half}"/><path d="M-1.6 -.2Q-2 -5 -.8 -8.6" stroke="${c.lit}" stroke-width=".8" fill="none"/>`
+    + limb('M0 0L3.6 -.6L4.4 3.4', w.half, 2)
+    + `<path d="M-1.8 .4Q-2.2 -5 -.8 -8.8L1.8 -8.8Q2.8 -5 2.2 .4Z" fill="${c.half}" stroke="${OL}" stroke-width=".3"/><path d="M-1.6 -.2Q-2 -5 -.8 -8.6" stroke="${c.lit}" stroke-width=".8" fill="none"/>`
     + `<path d="M-1 -8.2L1.9 -1M1.7 -8.4L-1.4 -1.2" stroke="${w.lit}" stroke-width=".55"/>`
     + `<path d="M3.2 3V-15.4" stroke="${m.half}" stroke-width=".8"/><path d="M3.2 -15.4V-18.6" stroke="#dfe6ea" stroke-width=".35"/><path d="M3.2 -3.4V-15" stroke="#6a7378" stroke-width=".3" transform="translate(-.35 0)"/>`
-    + `<path d="M1.6 -6.4L3.2 -5.6" stroke="${c.half}" stroke-width="1.3" stroke-linecap="round"/><circle cx="3.2" cy="-5.6" r=".7" fill="${r.half}"/>`
-    + `<circle cx=".5" cy="-10.6" r="1.6" fill="${r.half}"/><path d="M-.9 -11a1.6 1.6 0 0 1 2.4 -1.2" stroke="${r.lit}" stroke-width=".5" fill="none"/>`
+    + limb('M1.2 -7.6Q1.4 -6 3 -5.6', c.half, 1.3) + `<circle cx="3.2" cy="-5.6" r=".75" fill="${r.half}" stroke="${OL}" stroke-width=".2"/><path d="M2.6 -5.9h1.2" stroke="${m.half}" stroke-width=".35"/>`
+    + `<circle cx=".5" cy="-10.6" r="1.6" fill="${r.half}" stroke="${OL}" stroke-width=".25"/><path d="M-.9 -11a1.6 1.6 0 0 1 2.4 -1.2" stroke="${r.lit}" stroke-width=".5" fill="none"/>`
     + `<path d="M-1.8 -11.6Q.5 -14.4 2.8 -11.6Q.5 -12.4 -1.8 -11.6Z" fill="#141216"/><path d="M-1.8 -11.6Q.5 -12.4 2.8 -11.6" stroke="#f0ece2" stroke-width=".3" fill="none"/></g>`;
 }
 function officer(L, x, y, s) {
   const r = L.ramp('skin', x, y), c = L.ramp('paint-red', x, y), w = L.ramp('linen', x, y);
   return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s)})">`
     + `<path d="M-.8 0V-7M1 0V-7" stroke="${w.half}" stroke-width="1.5"/><path d="M-.8 -2.6V0M1 -2.6V0" stroke="#16141a" stroke-width="1.6"/>`
-    + `<path d="M-2 -6.4Q-2.4 -11 -1.2 -14.4L1.8 -14.4Q3 -11 2.6 -6.4Q.3 -5.8 -2 -6.4Z" fill="${c.half}"/><path d="M-1.9 -7Q-2.2 -11 -1.2 -14.2" stroke="${c.lit}" stroke-width=".8" fill="none"/>`
+    + `<path d="M-2 -6.4Q-2.4 -11 -1.2 -14.4L1.8 -14.4Q3 -11 2.6 -6.4Q.3 -5.8 -2 -6.4Z" fill="${c.half}" stroke="${OL}" stroke-width=".3"/><path d="M-1.9 -7Q-2.2 -11 -1.2 -14.2" stroke="${c.lit}" stroke-width=".8" fill="none"/>`
     + `<path d="M-1.2 -14.2L2 -7.2" stroke="${w.lit}" stroke-width=".5"/><path d="M-2 -7.4h4.6" stroke="#c9a048" stroke-width=".6"/>`
     + `<path d="M-1 -13.6Q-3 -11.6 -2.6 -9" stroke="${c.half}" stroke-width="1.2" fill="none" stroke-linecap="round"/>`
-    + `<circle cx=".4" cy="-16.2" r="1.6" fill="${r.half}"/><path d="M-1 -16.6a1.6 1.6 0 0 1 2.4 -1.2" stroke="${r.lit}" stroke-width=".5" fill="none"/>`
+    + `<circle cx=".4" cy="-16.2" r="1.6" fill="${r.half}" stroke="${OL}" stroke-width=".25"/><path d="M-1 -16.6a1.6 1.6 0 0 1 2.4 -1.2" stroke="${r.lit}" stroke-width=".5" fill="none"/>`
     + `<path d="M-2.2 -17.2Q.4 -20.4 3 -17.2Q.4 -18 -2.2 -17.2Z" fill="#141216"/><path d="M-2.2 -17.2Q.4 -18 3 -17.2" stroke="#c9a048" stroke-width=".35" fill="none"/></g>`;
 }
 // the Company's flag, red and white stripes, flying to the left (the wind blows the flags towards the ships' bows)
@@ -151,24 +158,23 @@ module.exports = { name: 'Подкрепление флота', kind: 'deck', st
     // ——— the near boat: heading right to her side; on each thwart a rower facing the stern at the catch, and beside
     // him a redcoat sitting with his musket upright; the officer standing at the stern under the flag, the coxswain
     // at the tiller. All the oars at one angle, every blade in the water with its ring of foam.
-    const TH = [.3, .43, .56, .69, .82];
+    const TH = [.33, .5, .67, .84];
     const G1 = boatGeom(B1), S = B1.s;
     let fg = '';
     // the far oars: from the far rowlocks out and down beyond the boat (their blades on the water behind her)
-    for (const t of TH) { const a = G1.fgun(t), b = [a[0] + 15, a[1] + 1.4];
-      fg += `<path d="M${f(a[0] - 4)} ${f(a[1] - 3.2)}L${f(b[0])} ${f(b[1])}" stroke="${L.ramp('oak', a[0], a[1]).half}" stroke-width=".8"/>`
-        + `<path d="M${f(b[0] - 1.2)} ${f(b[1] - .5)}l4.4 1.2l-.4 1l-4.4 -1.2z" fill="${L.ramp('oak', b[0], b[1]).lit}"/>`
-        + `<ellipse cx="${f(b[0] + 1.5)}" cy="${f(b[1] + 1)}" rx="4" ry=".9" fill="none" stroke="#ffffff" stroke-width=".4" opacity=".7"/>`; }
+    for (const t of TH) { const a = G1.fgun(t), k = S / 1.12, b = [a[0] + 15 * k, a[1] + 1.4 * k];
+      fg += `<path d="M${f(a[0] - 4 * k)} ${f(a[1] - 3.2 * k)}L${f(b[0])} ${f(b[1])}" stroke="${L.ramp('oak', a[0], a[1]).half}" stroke-width="${f(.8 * k)}"/>`
+        + `<path d="M${f(b[0] - 1.2 * k)} ${f(b[1] - .5 * k)}l${f(4.4 * k)} ${f(1.2 * k)}l${f(-.4 * k)} ${f(k)}l${f(-4.4 * k)} ${f(-1.2 * k)}z" fill="${L.ramp('oak', b[0], b[1]).lit}"/>`
+        + `<ellipse cx="${f(b[0] + 1.5 * k)}" cy="${f(b[1] + k)}" rx="${f(3.4 + R() * 1.6)}" ry=".8" fill="none" stroke="#e8f4f8" stroke-width=".35" stroke-dasharray="${f(1.5 + R() * 2)} ${f(1 + R())}" opacity=".45"/>`; }
     // the men inside: the redcoat beside the rower (further from us, so first), then the rower
     let men = '';
     for (const t of TH) { const a = G1.fgun(t), b = G1.gun(t), sx = a[0] * .55 + b[0] * .45, sy = a[1] * .55 + b[1] * .45;
-      men += redcoat(L, sx + 3.4 * S, sy - .8 * S, .98 * S) + rower(L, sx + .4 * S, sy + 1.2 * S, S); }
+      men += redcoat(L, sx + 4.2 * S, sy - 1.2 * S, .96 * S) + rower(L, sx + .4 * S, sy + 1.2 * S, S); }
     // the stern sheets: the officer, the flagstaff in its socket, the coxswain
-    { const a = G1.gun(.1), b = G1.fgun(.1), ox = (a[0] + b[0]) / 2 + 2 * S, oy = (a[1] + b[1]) / 2 + S;
-      men += rower(L, ox - 4 * S, oy + S, .95 * S).replace(/Q-5.4 -6.2 -7.4 -4.4/, 'Q-2 -5 1 -4.6').replace(/cx="-7.6" cy="-4.2"/, 'cx="1.2" cy="-4.6"');
-      const st = G1.gun(.04), fx = st[0] + 1, fy = st[1] + 1;
-      men += `<path d="M${f(fx)} ${f(fy)}L${f(fx - 1)} ${f(fy - 26 * S)}" stroke="${L.ramp('oak', fx, fy).half}" stroke-width=".8"/><circle cx="${f(fx - 1)}" cy="${f(fy - 26.4 * S)}" r=".8" fill="#e0b040"/>`
-        + companyFlag(u, fx - 1.2, fy - 25.6 * S, 15 * S, 9 * S, 7) + officer(L, ox + 6 * S, oy + 3 * S, 1.02 * S); }
+    { const a = G1.gun(.15), b = G1.fgun(.15), ox = (a[0] + b[0]) / 2, oy = (a[1] + b[1]) / 2 + S;
+      const st = G1.gun(.015), fx = st[0] - .4 * S, fy = st[1] + .6 * S, fh = 19 * S;
+      men += `<path d="M${f(fx)} ${f(fy)}L${f(fx - .8)} ${f(fy - fh)}" stroke="${L.ramp('oak', fx, fy).half}" stroke-width="${f(.55 * S)}"/><circle cx="${f(fx - .8)}" cy="${f(fy - fh - .5)}" r="${f(.55 * S)}" fill="#e0b040"/>`
+        + companyFlag(u, fx - 1, fy - fh + .6, 11 * S, 7 * S, 7) + officer(L, ox + 1.5 * S, oy + 2 * S, 1.02 * S); }
     const b1 = boat(u, L, B1, { thwarts: TH, inside: men });
     fg += b1.svg;
     // the near oars: from the rower's hands over the near rowlock down to the blade in the water ahead of him
@@ -178,10 +184,15 @@ module.exports = { name: 'Подкрепление флота', kind: 'deck', st
         + `<path d="M${f(rl[0] - .8)} ${f(rl[1] - .6)}v1.4M${f(rl[0] + .8)} ${f(rl[1] - .6)}v1.4" stroke="#2a2a2e" stroke-width=".5"/>`;
       // the blade half under the surface, the water heaped and foaming round it
       fg += `<path d="M${f(bx - 2.6)} ${f(by - 2.4)}L${f(bx + 2.4)} ${f(by + 2)}" stroke="${ro.lit}" stroke-width="2" opacity=".55"/>`
-        + `<ellipse cx="${f(bx)}" cy="${f(by)}" rx="5.4" ry="1.3" fill="#e8f6fa" opacity=".5"/><ellipse cx="${f(bx)}" cy="${f(by)}" rx="5.4" ry="1.3" fill="none" stroke="#ffffff" stroke-width=".55"/>`
-        + Array.from({ length: 5 }, () => `<circle cx="${f(bx + (R() - .5) * 8)}" cy="${f(by - R() * 2.4)}" r="${f(.25 + R() * .35)}" fill="#ffffff" opacity=".85"/>`).join(''); }
+        + (() => { const rx = 3.4 + R() * 3.4, ry = rx * (.2 + R() * .08), sx2 = (R() - .5) * 2.4;
+          let w = `<ellipse cx="${f(bx + sx2)}" cy="${f(by + .3)}" rx="${f(rx * .8)}" ry="${f(ry * .9)}" fill="#0e3442" opacity=".25"/>`
+            + `<ellipse cx="${f(bx + sx2)}" cy="${f(by)}" rx="${f(rx)}" ry="${f(ry)}" fill="#d8eef4" opacity="${f(.12 + R() * .14)}"/>`;
+          // a broken ring of foam: two or three arcs, not closed
+          w += `<ellipse cx="${f(bx + sx2)}" cy="${f(by)}" rx="${f(rx)}" ry="${f(ry)}" fill="none" stroke="#eef8fa" stroke-width="${f(.3 + R() * .25)}" stroke-dasharray="${f(2 + R() * 4)} ${f(1.5 + R() * 3)} ${f(1 + R() * 3)} ${f(2 + R() * 3)}" stroke-dashoffset="${f(R() * 10)}" opacity="${f(.4 + R() * .25)}"/>`;
+          w += Array.from({ length: 3 + Math.floor(R() * 4) }, () => `<circle cx="${f(bx + (R() - .5) * rx * 1.6)}" cy="${f(by - R() * 2)}" r="${f(.2 + R() * .3)}" fill="#ffffff" opacity="${f(.4 + R() * .4)}"/>`).join('');
+          return w; })(); }
     // the bow wave and her wake
-    fg += K.foam(u, { x: (B1.x0 + B1.x1) / 2 + 4, y: B1.y + .4, w: 92, h: 1.4, seed: 5, L });
+    fg += K.foam(u, { x: (B1.x0 + B1.x1) / 2 + 4, y: B1.y + .4, w: B1.x1 - B1.x0 - 6, h: 1.6, seed: 5, L });
     { const bx = B1.x1 + 3, by = B1.y; fg += `<path d="M${f(bx - 6)} ${f(by - .4)}q5 -3 9 -1q-2 2 -9 2.6z" fill="#ffffff" opacity=".85"/>` + Array.from({ length: 10 }, () => `<circle cx="${f(bx + R() * 7)}" cy="${f(by - 1 - R() * 3)}" r="${f(.25 + R() * .4)}" fill="#ffffff" opacity=".8"/>`).join(''); }
     // the sea darkens under the glass
     { const g = nid('dk', u); fg += `<defs>${linGrad(g, 0, 136, 0, 290, [[0, '#06141c', 0], [1, '#06141c', .55]])}</defs><rect x="0" y="136" width="200" height="154" fill="url(#${g})"/>`; }
