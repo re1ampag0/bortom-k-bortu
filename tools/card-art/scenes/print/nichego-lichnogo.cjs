@@ -50,7 +50,8 @@ function outside(u, Lo) {
   s += K.water(u, Lo, { horizon: VY, bottom: 90, swell: .4, seed: 7, glitter: 30 });
   // the ship: listing towards us a little, her sails full, the hull opened by the blast; the smoke behind her
   // the smoke of burning tar and canvas is dark: the same light with a sooty smoke colour
-  const Ls = Object.assign({}, Lo, { pal: Object.assign({}, Lo.pal, { smoke: '#3a3430' }) });
+  const Ls0 = K.makeLight({ time: 'day', haze: .35, key: { type: 'sun', az: 150, el: 35, color: '#fff0d8', power: .9 }, fill: { color: '#6a7a8a', power: .4 } }, { horizon: VY, eye: 3 });
+  const Ls = Object.assign({}, Ls0, { pal: Object.assign({}, Ls0.pal, { smoke: '#2e2a28' }) });
   s += K.smoke(u, Ls, { x: SHIP.x + 10, y: 46, w: 70, h: 60, wind: .7, seed: 3, opacity: .9, glow: { color: '#ff8a3a', power: .5 } });
   s += K.ship(u, Lo, { kind: 'pearl', ...SHIP, roll: -6, heel: 2, sails: 'full', detail: 'mid', seed: 9 });
   // fire on her deck and in her rigging, the black smoke rising off it

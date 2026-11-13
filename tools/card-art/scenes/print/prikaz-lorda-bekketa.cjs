@@ -23,7 +23,7 @@ const dY = d => HZ + FOC * EYE / d;              // the deck's y at distance d (
 const BW = 8;                                    // the bulwark's distance (m)
 const BT = HZ + FOC * (EYE - 1.15) / BW, BF = dY(BW);   // the bulwark's top and foot
 const MAST = { x: 43, r: 12.5 };                  // the mainmast near us on the left
-const ALLY = { x: 122, y: 91.4, scale: .24 };    // the allied ship on the horizon
+const ALLY = { x: 124, y: 91.6, scale: .3 };    // the allied ship on the horizon
 // the file: from the nearest (deck distance 1.5 m) to the farthest (7.2 m), on a line to the entry port at the right
 const FILE = [7.2, 5.6, 4.3, 3.2, 2.3, 1.55].map((d, i) => ({ d, y: dY(d), h: FOC * 1.76 / d, x: lerp(188, 104, Math.pow((7.2 - d) / 5.65, .8)), i }));
 const light = { time: 'day', haze: .3, key: { type: 'sun', az: 236, el: 42, color: '#fff4dc', power: 1 }, fill: { color: '#8ab4d8', power: .5 }, rim: { az: 200, color: '#fff8e8', power: .3 } };
@@ -47,14 +47,14 @@ module.exports = { name: 'Приказ лорда Беккета', kind: 'deck',
     bg += K.water(u, L, { horizon: HZ, bottom: BT + 2, swell: .3, seed: 5, glitter: false });
     bg += K.ship(u, L, { kind: 'dutch', x: ALLY.x, y: ALLY.y, scale: ALLY.scale, flip: true, sails: 'full', detail: 'far', seed: 4 });
     { const b = K.shipBox('dutch', { x: ALLY.x, y: ALLY.y, scale: ALLY.scale, flip: true }), top = [ALLY.x + 1, b.top + 4];
-      bg += hoist(u, top, [ALLY.x + 13, ALLY.y - 7], 4, 1.4, 3, .9, 1); }
+      bg += hoist(u, top, [ALLY.x + 15, ALLY.y - 8], 3, 2, 3, .95, 1); }
     // ——— the deck: the bulwark across, the planks in perspective, the entry port at the right ———
     bg += deck(u, L, R);
     // ——— the soldiers, far to near, each with his shadow on the planks ———
     let mid = '';
     for (const p of FILE) mid += K.castShadow(u, L, { x: p.x, y: p.y, w: p.h * .26, h: p.h, horizon: HZ, d: .5, opacity: .7 }) + soldier(u, L, p.x, p.y, p.h, { seed: p.i, step: p.i % 2 });
     // ——— the mast, the ensign, the signal hoist, the order ———
-    let fg = mast(u, L) + ensign(u, L) + hoist(u, [MAST.x + MAST.r - 1, 40], [196, BT + .4], 7, 4.6, 0, 1, 1) + order(u, L, R);
+    let fg = mast(u, L) + ensign(u, L) + hoist(u, [MAST.x + MAST.r - 1, 38], [199, BT - 4], 5, 7.6, 0, 1, 1) + order(u, L, R);
     fg += gloom(u, 100, 130, 100, 280, .45, '#1a0e06') + gloom(u, 200, 40, 120, 60, .12, '#2a3a5a');
     return [bg, mid + fg];
   } };
@@ -138,14 +138,18 @@ function soldier(u, L, x, y, h, o = {}) {
   // the musket at the slope: the barrel rising from behind the left shoulder, the bayonet at its top
   s += `<path d="M-8.6 -44L-13.4 -64" stroke="#5a3418" stroke-width="1.6" stroke-linecap="round"/><path d="M-11.2 -54L-13.6 -64.6" stroke="#9aa4ac" stroke-width=".8"/>`
     + `<path d="M-13.6 -64.6L-15.6 -73.4" stroke="#d8e0e6" stroke-width=".5"/>`;
-  // the neck and the black stock, the head from behind: hair with a short queue in a black ribbon, the ears
-  s += `<path d="M-2 -51.4h4v-2.6h-4z" fill="url(#${gS.id})"/><path d="M-2.6 -50.6h5.2v1.6h-5.2z" fill="#0c0c10"/>`
-    + `<ellipse cx="0" cy="-55.2" rx="3.7" ry="4" fill="#e8e4dc" stroke="#7a766e" stroke-width=".3"/>`
-    + `<path d="M-3.4 -54.4q-.9 1 0 2.4M3.4 -54.4q.9 1 0 2.4" stroke="${SKIN.half}" stroke-width="1" fill="none"/>`
-    + `<path d="M-1.6 -52.8q1.6 .6 3.2 0" stroke="#b8b4ac" stroke-width=".4" fill="none"/><path d="M0 -52.6v3.6" stroke="#d8d4cc" stroke-width="1.4" stroke-linecap="round"/><path d="M-1.2 -51.4h2.4" stroke="#0c0c10" stroke-width="1"/>`;
-  // the tricorn from behind: the cocked back of the brim with its white tape, the crown above
-  s += `<path d="M-6.8 -57.2Q0 -55 6.8 -57.2L5.6 -62.4Q0 -60.6 -5.6 -62.4Z" fill="url(#${gB.id})" ${olB}/><path d="M-6.8 -57.2Q0 -55 6.8 -57.2" stroke="#f0ece4" stroke-width=".7" fill="none"/>`
-    + `<path d="M-5.6 -62.4Q0 -60.6 5.6 -62.4" stroke="#f0ece4" stroke-width=".7" fill="none"/><path d="M-3.4 -61.8q3.4 -2.2 6.8 0" stroke="#3a3a40" stroke-width=".5" fill="none"/>`;
+  // the neck and the black stock, the head from behind: dark hair gathered into a queue tied with a black ribbon,
+  // the ears showing at the sides
+  s += `<path d="M-2.2 -51.6h4.4v-2.4h-4.4z" fill="url(#${gS.id})"/><path d="M-2.8 -50.8h5.6v1.8h-5.6z" fill="#0c0c10"/>`
+    + `<ellipse cx="-3.7" cy="-55" rx="1" ry="1.6" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".25"/><ellipse cx="3.7" cy="-55" rx="1" ry="1.6" fill="${SKIN.shadow}" stroke="${SKIN.outline}" stroke-width=".25"/>`
+    + `<path d="M-3.6 -57.4Q-4 -53.6 -1.4 -52.4Q0 -51.8 1.4 -52.4Q4 -53.6 3.6 -57.4Z" fill="#4a3220" stroke="#1a1008" stroke-width=".3"/>`
+    + `<path d="M-2.4 -57q-.6 2.6 .6 4.2M0 -57.2v4.6M2.4 -57q.6 2.6 -.6 4.2" stroke="#7a5a3a" stroke-width=".35" fill="none" opacity=".8"/>`
+    + `<path d="M0 -53L.3 -47.6" stroke="#3a2416" stroke-width="1.5" stroke-linecap="round"/><path d="M-1.6 -53.4l1.6 .8l1.6 -.8l-.2 1.8l-1.4 -.4l-1.4 .4z" fill="#0c0c10"/>`;
+  // the tricorn from behind: the cocked-up back of the brim with its white tape, its two side corners sticking out
+  s += `<path d="M-9.2 -58.4Q-4 -56 0 -55.8Q4 -56 9.2 -58.4L8 -59.4Q6.4 -62.4 3.6 -63.2Q0 -64 -3.6 -63.2Q-6.4 -62.4 -8 -59.4Z" fill="url(#${gB.id})" ${olB}/>`
+    + `<path d="M-9.2 -58.4Q-4 -56 0 -55.8Q4 -56 9.2 -58.4" stroke="#f0ece4" stroke-width=".7" fill="none"/>`
+    + `<path d="M-8 -59.4Q-6.4 -62.4 -3.6 -63.2Q0 -64 3.6 -63.2Q6.4 -62.4 8 -59.4" stroke="#f0ece4" stroke-width=".55" fill="none" opacity=".9"/>`
+    + `<path d="M-5 -60.4Q0 -58.4 5 -60.4" stroke="#3a3a42" stroke-width=".5" fill="none"/>`;
   return s + '</g>';
 }
 
@@ -234,13 +238,14 @@ function order(u, L, R) {
   // the edges turning away round the mast: a soft shade along both sides
   s += `<path d="M${P2(T(0))}L${P2(Bt(0))}" stroke="#6a5a3a" stroke-width="1.2" opacity=".5"/>`;
   // the dirk through the sheet's head into the mast: the blade's stub, the cross-guard, the grip, the pommel
-  { const p = S(.5, .02), a = -14 * Math.PI / 180, ux = Math.sin(a), uy = -Math.cos(a), q = [p[0] + ux * 12, p[1] + uy * 12];
+  { const p = S(.54, .03), a = 22 * Math.PI / 180, ux = Math.sin(a), uy = -Math.cos(a), q = [p[0] + ux * 15, p[1] + uy * 15];
     s += `<path d="M${f(p[0] + 1)} ${f(p[1] + 1.4)}L${f(q[0] + 2.6)} ${f(q[1] + 1.6)}" stroke="#2a1608" stroke-width="2.4" opacity=".35" stroke-linecap="round"/>`
       + `<path d="M${P2(p)}L${f(p[0] + ux * 2)} ${f(p[1] + uy * 2)}" stroke="#c8d0d6" stroke-width="1.4"/>`
-      + `<path d="M${f(p[0] + ux * 2 - uy * 3.6)} ${f(p[1] + uy * 2 + ux * 3.6)}L${f(p[0] + ux * 2 + uy * 3.6)} ${f(p[1] + uy * 2 - ux * 3.6)}" stroke="#a88430" stroke-width="1.6" stroke-linecap="round"/>`
-      + K.shadeCyl(u, p[0] + ux * 2.6, p[1] + uy * 2.6, p[0] + ux * 10.4, p[1] + uy * 10.4, 1.3, L, 'leather', { outline: .3 })
-      + K.shadeSphere(u, q[0], q[1], 1.9, L, 'brass', { outline: .3 }); }
+      + `<path d="M${f(p[0] + ux * 2 - uy * 4.6)} ${f(p[1] + uy * 2 + ux * 4.6)}L${f(p[0] + ux * 2 + uy * 4.6)} ${f(p[1] + uy * 2 - ux * 4.6)}" stroke="#7a5a18" stroke-width="2.4" stroke-linecap="round"/><path d="M${f(p[0] + ux * 1.6 - uy * 4.2)} ${f(p[1] + uy * 1.6 + ux * 4.2)}L${f(p[0] + ux * 1.6 + uy * 4.2)} ${f(p[1] + uy * 1.6 - ux * 4.2)}" stroke="#f0d070" stroke-width=".7" stroke-linecap="round"/>`
+      + K.shadeCyl(u, p[0] + ux * 2.8, p[1] + uy * 2.8, p[0] + ux * 12.8, p[1] + uy * 12.8, 1.7, L, 'leather', { r1: 1.5, r2: 1.9, outline: .35 })
+      + [5, 8, 11].map(t => `<path d="M${f(p[0] + ux * t - uy * 1.7)} ${f(p[1] + uy * t + ux * 1.7)}L${f(p[0] + ux * t + uy * 1.7)} ${f(p[1] + uy * t - ux * 1.7)}" stroke="#c9a048" stroke-width=".45"/>`).join('')
+      + K.shadeSphere(u, q[0], q[1], 2.5, L, 'brass', { outline: .35 }); }
   return s;
 }
 
-module.exports.parts = { soldier, light, HZ, EYE };
+module.exports.parts = { soldier, order, mast, light, HZ, EYE };
