@@ -35,13 +35,16 @@ const sleeve = (u, L, from, to, w) => { const tn = L.ramp('linen', to[0], to[1])
 const out = (hd, svg) => { const q = hd.joints.flat().concat([hd.wrist]); return { svg, c: [q.reduce((a, p) => a + p[0], 0) / q.length, q.reduce((a, p) => a + p[1], 0) / q.length] }; };
 const S = 2;   // the hand's size: ~19 units from the wrist to the open finger tips, a fist ~12
 const GRIPS = {
-  // a mug held round its body from the right, the back of the hand to us, the fingers round the far side
+  // a mug held round its body from the right, seen a little from the wrist: the knuckles and the fingers' roots on
+  // its face, the fingers going round its far side (their tips hidden by it), the thumb across its face near the rim
   mug(u, L) { const c = [100, 168], tn = skinAt(L, ...c), ms = 1.1, base = [c[0] + 1, 196];
-    const hd = H.hand3(u, { grip: [base[0], base[1] - 6 * ms], a: 196, s: S, m: 1, roll: 8, pose: 'wrap', r: 4.4 * ms / S, tilt: 0, tone: tn, light: litAt(L, ...c), sw: .32 });
+    const hd = H.hand3(u, { grip: [base[0], base[1] - 6 * ms], a: 196, s: S, m: -1, roll: 0, pitch: -28, pose: 'wrap', r: 4.4 * ms / S, tilt: 0, tone: tn, light: litAt(L, ...c), sw: .32,
+      thumbJ: [[1.25, -1.45, -.78], [1.9, -2.5, -1.2], [2.25, -3.15, -1.35], [2.4, -3.6, -1.4]] });   // the thumb up the mug's side, under the rim
     return out(hd, sleeve(u, L, [156, 150], hd.wrist, 3 * S) + hd.back + P.mug(u, L, { x: base[0], y: base[1], s: ms, seed: 3 }) + hd.front); },
-  // a sabre in a fist, the thumb side to us, the blade up
+  // a sabre in a fist, the back of the hand to us and a little from the finger end: the knuckles, the fingers across
+  // the grip and curling round behind it, the blade up
   sabre(u, L) { const c = [100, 160], tn = skinAt(L, ...c);
-    const hd = H.hand3(u, { grip: c, a: -4, s: S, m: 1, roll: 16, pose: 'wrap', r: .75, tone: tn, light: litAt(L, ...c), sw: .32 });
+    const hd = H.hand3(u, { grip: c, a: -4, s: S, m: 1, roll: 16, pitch: 34, pose: 'wrap', r: .75, tone: tn, light: litAt(L, ...c), sw: .32 });
     const ax = hd.axis; let a = Math.atan2(ax[1], ax[0]) / D; if (Math.sin(a * D) > 0) a += 180;
     const gl = [-17.6, -.8], ss = 1.5, cc = Math.cos(a * D), sn = Math.sin(a * D), g = hd.grip;
     const sb = P.sabre(u, L, { x: g[0] - (gl[0] * cc - gl[1] * sn) * ss, y: g[1] - (gl[0] * sn + gl[1] * cc) * ss, s: ss, rot: a, contact: false });
@@ -50,15 +53,19 @@ const GRIPS = {
   card(u, L) { const c = [104, 150], tn = skinAt(L, ...c);
     const hd = H.hand3(u, { at: [92, 196], a: -72, s: S, m: -1, roll: 180, pose: 'hold', flex: [[14, 10, 6], [12, 10, 6], [16, 14, 8], [22, 20, 10]], spread: 3, tone: tn, light: litAt(L, ...c), sw: .32,
       backFingers: [0, 1, 2, 3, 'palm'], thumbTo: [6.2, -.9, -1.9] });
-    const kn = hd.joints[0][0], cw = 22, ch = 32, a = 8 * D, ca = Math.cos(a), sa = Math.sin(a), o = [kn[0] - 6, kn[1] + 3];
+    // the card's lower edge runs from above the little finger's knuckle to below the thumb's tip: the palm and the
+    // fingers' roots show under it, the fingers go on behind it, the thumb lies on its face
+    const kl = hd.joints[3][0], tt = hd.joints[4][3], A0 = [kl[0], kl[1] - 2.2], B0 = [tt[0], tt[1] + 1.6];
+    const a = Math.max(-5 * D, Math.min(30 * D, Math.atan2(B0[1] - A0[1], B0[0] - A0[0]))), ca = Math.cos(a), sa = Math.sin(a), cw = 22, ch = 32, o = [A0[0] - ca * 5, A0[1] - sa * 5];
     const Q = [[0, 0], [cw, 0], [cw, -ch], [0, -ch]].map(p => [o[0] + p[0] * ca - p[1] * sa, o[1] + p[0] * sa + p[1] * ca]);
     const card = `<path d="M${Q.map(p => p.map(K.f).join(' ')).join('L')}Z" fill="#efe6d2" stroke="#3a2a1a" stroke-width=".4" stroke-linejoin="round"/>`
       + `<path d="M${Q.map((p, i) => { const q = [Q[(i + 2) % 4][0] - p[0], Q[(i + 2) % 4][1] - p[1]]; return [p[0] + q[0] * .1, p[1] + q[1] * .1].map(K.f).join(' '); }).join('L')}Z" fill="none" stroke="#8a2418" stroke-width=".6"/>`
-      + `<text x="${K.f(Q[3][0] + 3)}" y="${K.f(Q[3][1] + 8)}" font-family="serif" font-size="7" fill="#8a2418" transform="rotate(8 ${K.f(Q[3][0])} ${K.f(Q[3][1])})">A</text>`;
+      + `<text x="${K.f(Q[3][0] + 3)}" y="${K.f(Q[3][1] + 8)}" font-family="serif" font-size="7" fill="#8a2418" transform="rotate(${K.f(a / D)} ${K.f(Q[3][0])} ${K.f(Q[3][1])})">A</text>`;
     return out(hd, sleeve(u, L, [80, 280], hd.wrist, 3 * S) + hd.back + card + hd.front); },
   // a coin in a pinch: the thumb in front of it, the index finger behind, the other fingers curled
   coin(u, L) { const c = [100, 156], tn = skinAt(L, ...c);
-    const hd = H.hand3(u, { at: [72, 176], a: -28, s: S, m: 1, roll: 100, pitch: 0, pose: 'pinch', tone: tn, light: litAt(L, ...c), sw: .32, backFingers: [0], pinchGap: .5 });
+    const hd = H.hand3(u, { at: [72, 176], a: -28, s: S, m: 1, roll: 96, pitch: 0, pose: 'pinch', flex: [[34, 46, 24], [58, 78, 46], [66, 84, 50], [70, 88, 54]], tone: tn, light: litAt(L, ...c), sw: .32,
+      backFingers: [0, 1, 2, 3], pinchGap: .5 });
     const it = hd.joints[0][3], tt = hd.joints[4][3], cp = [(it[0] + tt[0]) / 2 + 1.2, (it[1] + tt[1]) / 2 - 1.8], r = 3.4, rp = L.ramp('brass', ...cp), g = K.nid('hc', u), lt = litAt(L, ...cp);
     const coin = `<defs>${K.linGrad(g, cp[0] + lt[0] * r, cp[1] + lt[1] * r, cp[0] - lt[0] * r, cp[1] - lt[1] * r, [[0, rp.spec || rp.lit, 1], [.35, rp.lit, 1], [.75, rp.half, 1], [1, rp.shadow, 1]])}</defs>`
       + `<ellipse cx="${K.f(cp[0] - .5)}" cy="${K.f(cp[1] + .2)}" rx="${r * .86}" ry="${r}" fill="${rp.shadow}" stroke="${rp.outline}" stroke-width=".35"/>`
@@ -67,15 +74,16 @@ const GRIPS = {
     return out(hd, sleeve(u, L, [20, 200], hd.wrist, 3 * S) + hd.back + coin + hd.front); },
   // a rope in a fist, the back of the hand to us, the rope across it on a diagonal
   rope(u, L) { const c = [100, 160], tn = skinAt(L, ...c);
-    const hd = H.hand3(u, { grip: c, a: -64, s: S, m: 1, roll: 18, pose: 'wrap', r: .78, tilt: 14, tone: tn, light: litAt(L, ...c), sw: .32 });
+    const hd = H.hand3(u, { grip: c, a: -64, s: S, m: 1, roll: 10, pitch: 34, pose: 'wrap', r: .78, tilt: 8, tone: tn, light: litAt(L, ...c), sw: .32 });
     const g = hd.grip, ax = hd.axis, pt = k => [g[0] + ax[0] * k, g[1] + ax[1] * k];
     const rp = P.rope(u, L, [pt(-60), pt(-20), pt(0), pt(20), pt(60)], { r: 1.25, seed: 4 });
     return out(hd, sleeve(u, L, [70, 280], hd.wrist, 3 * S) + hd.back + rp + hd.front); },
-  // a pistol held at its grip, the barrel to the right, the index finger on the trigger
+  // a pistol held at its grip, the barrel to the right, seen a little from the finger end: the three fingers across
+  // the grip and round behind it, the index finger apart, in the guard, curled round the front of the trigger
   pistol(u, L) { const c = [96, 164], tn = skinAt(L, ...c);
-    const hd = H.hand3(u, { grip: c, a: 20, s: S, m: 1, roll: 12, pose: 'wrap', r: .82, tilt: 6, trigger: true, tone: tn, light: litAt(L, ...c), sw: .32 });
+    const hd = H.hand3(u, { grip: c, a: 20, s: S, m: 1, roll: 12, pitch: 30, pose: 'wrap', r: .82, tilt: 6, trigger: true, tone: tn, light: litAt(L, ...c), sw: .32 });
     const ax = hd.axis; let ga = Math.atan2(ax[1], ax[0]) / D; if (Math.sin(ga * D) < 0) ga += 180;   // the grip axis, pointing down
-    const ps = 1.45, rot = ga - 125.5, gl = [-8.8, -2.6], cc = Math.cos(rot * D), sn = Math.sin(rot * D), g = hd.grip;
+    const ps = 1.45, rot = ga - 125.5, gl = [-7.8, -2.5], cc = Math.cos(rot * D), sn = Math.sin(rot * D), g = hd.grip;
     const pi = P.pistol(u, L, { x: g[0] - (gl[0] * cc - gl[1] * sn) * ps, y: g[1] - (gl[0] * sn + gl[1] * cc) * ps, s: ps, rot, contact: false });
     return out(hd, sleeve(u, L, [30, 196], hd.wrist, 3 * S) + hd.back + pi + hd.front); }
 };

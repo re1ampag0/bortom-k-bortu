@@ -336,7 +336,9 @@ function hand3(u, o) {
     // the piece's own colour by how its back faces the light, sunk a little where it lies behind the others
     const Dm = nrm(dg.D.slice(Math.max(0, j0), j1).reduce((a, d) => add(a, d), [0, 0, 0])), I = dot(vv(Dm), Lv) * .45;
     const base = mix(toneI(I), core, dim);
-    let r2 = `<path d="${sp(outl, true)}" fill="${base}" stroke="${tn.outline}" stroke-width="${f(osw)}" stroke-linejoin="round" paint-order="stroke"/>`;
+    // a soft shade round the piece first: where it lies over a finger behind, the gap between them reads dark
+    let r2 = `<path d="${sp(outl, true)}" fill="none" stroke="${tn.outline}" stroke-width="${f(osw * 1.9)}" stroke-linejoin="round" opacity=".22"/>`
+      + `<path d="${sp(outl, true)}" fill="${base}" stroke="${tn.outline}" stroke-width="${f(osw)}" stroke-linejoin="round" paint-order="stroke"/>`;
     const strip = (a, b, col, op) => `<path d="${sp(T.edge(a, 0, T.N).concat(T.edge(b, 0, T.N).reverse()), true)}" fill="${col}" opacity="${f(op)}"/>`;
     r2 += strip(-side * .1, -side * .95, core, .55) + strip(-side * .42, -side * .84, tn.shadow, .42) + strip(-side * .86, -side * .96, tn.half, .28)
       + strip(side * .18, side * .9, tn.lit, .48) + strip(side * .38, side * .66, mix(tn.lit, '#ffffff', .3), .2 * cl(I + .5));
@@ -408,11 +410,16 @@ function hand3(u, o) {
       // the sleeve's shade on the wrist, fading towards the knuckles
       palm += `<defs>${linGrad(sg, a0[0], a0[1], a1[0], a1[1], [[0, tn.shadow, .6], [1, tn.shadow, 0]])}</defs><path d="${sp(H2, true)}" fill="url(#${sg})"/>`; }
     if (backVis > .25) {
-      // the back of the hand: faint tendons from the wrist to the knuckles, the knuckles in the light
-      for (const F of HF.slice(0, 3)) { const a0 = P(2.2, F.k[1] * .55, .02), a1 = P(F.k[0] - .6, F.k[1] * .92, .02);
-        palm += `<path d="M${f(a0[0])} ${f(a0[1])}L${f(a1[0])} ${f(a1[1])}" stroke="${tn.lit}" stroke-width="${f(.26 * s)}" opacity="${f(.1 * backVis)}" stroke-linecap="round"/>`; }
-      if (o.knuckles !== false) for (const F of HF) { const k = P(F.k[0] - .15, F.k[1], 0);
-        palm += `<ellipse cx="${f(k[0] + Ls[0] * .12 * s)}" cy="${f(k[1] + Ls[1] * .12 * s)}" rx="${f(.4 * s * F.w)}" ry="${f(.28 * s * F.w)}" fill="${tn.lit}" opacity="${f(.26 * backVis)}"/>`; }
+      // the back of the hand: a soft rise in the light (no tendon lines), the knuckles as faint bumps, and between the
+      // knuckles a little shade where the fingers part (the hand reads as fingers, not a mitten)
+      const bc = P(2.5, 0, .02), bx = P(3.9, 0, .02), ba = Math.atan2(bx[1] - bc[1], bx[0] - bc[0]) * 180 / Math.PI, bg = nid('h3b', u);
+      palm += `<defs><radialGradient id="${bg}"><stop offset="0" stop-color="${tn.lit}" stop-opacity="${f(.22 * backVis)}"/><stop offset="1" stop-color="${tn.lit}" stop-opacity="0"/></radialGradient></defs>`
+        + `<ellipse cx="${f(bc[0] + Ls[0] * .5 * s)}" cy="${f(bc[1] + Ls[1] * .5 * s)}" rx="${f(2.2 * s)}" ry="${f(1.5 * s * pw)}" transform="rotate(${f(ba)} ${f(bc[0] + Ls[0] * .5 * s)} ${f(bc[1] + Ls[1] * .5 * s)})" fill="url(#${bg})"/>`;
+      if (o.knuckles !== false) for (const F of HF) { const k = P(F.k[0] - .2, F.k[1], 0);
+        palm += `<ellipse cx="${f(k[0] + Ls[0] * .1 * s)}" cy="${f(k[1] + Ls[1] * .1 * s)}" rx="${f(.36 * s * F.w)}" ry="${f(.26 * s * F.w)}" fill="${tn.lit}" opacity="${f(.15 * backVis)}"/>`; }
+      for (let i = 0; i < 3; i++) { const y = (HF[i].k[1] + HF[i + 1].k[1]) / 2, x0 = Math.min(HF[i].k[0], HF[i + 1].k[0]) + .25, hw = .2 * pw;
+        const A = P(x0 - .75, y, .02), B = P(x0 + .35, y - hw, .02), C = P(x0 + .35, y + hw, .02);
+        palm += `<path d="M${f(A[0])} ${f(A[1])}L${f(B[0])} ${f(B[1])}L${f(C[0])} ${f(C[1])}Z" fill="${tn.shadow}" opacity="${f(.5 * backVis)}" stroke="${tn.shadow}" stroke-width="${f(.12 * s)}" stroke-linejoin="round"/>`; }
     }
     if (palmVis > .3) {
       for (const L2 of [[[.8, -1.3], [2.4, -.9], [3.4, -1.4]], [[3.6, 1.8], [3.9, .2], [3.7, -1.6]], [[3.0, 1.9], [3.3, .6], [3.0, -.6]]])
@@ -474,10 +481,12 @@ function hairMass(u, pts, o) {
         p = [p[0] + (dx + bx * .6) * L0 / st, p[1] + (dy + by * .6) * L0 / st]; P3.push(p); }
       const a = P3[0], b = P3[P3.length - 1], tx = b[0] - a[0], ty = b[1] - a[1], tl = Math.hypot(tx, ty) || 1;
       let nx = -ty / tl, ny = tx / tl; if (nx * lx + ny * ly > 0) { nx = -nx; ny = -ny; }   // n — towards the shade
-      const off = (P, k2) => sp(P.map(q => [q[0] + nx * k2, q[1] + ny * k2]));
-      s += `<path d="${off(P3, 0)}" stroke="${body}" stroke-width="${f(lw)}" fill="none" stroke-linecap="round" opacity=".5"/>`
-        + `<path d="${off(P3, lw * .55)}" stroke="${lo}" stroke-width="${f(lw * .36)}" fill="none" stroke-linecap="round" opacity=".75"/>`
-        + `<path d="${off(P3, -lw * .22)}" stroke="${hi}" stroke-width="${f(lw * .18)}" fill="none" stroke-linecap="round" opacity=".55"/>`;
+      // a tapered band: thin at the root, full in the middle, to a point at the tip
+      const W = P3.map((q, i) => { const t = i / st; return lw * .5 * Math.sin(Math.PI * Math.min(1, .2 + t * .8)) ** .7; });
+      const off = (k2) => P3.map((q, i) => [q[0] + nx * W[i] * k2, q[1] + ny * W[i] * k2]);
+      s += `<path d="${sp(off(1).concat(off(-1).reverse()), true)}" fill="${body}" opacity=".42"/>`
+        + `<path d="${sp(off(1))}" stroke="${lo}" stroke-width="${f(lw * .3)}" fill="none" stroke-linecap="round" opacity=".6"/>`
+        + `<path d="${sp(off(-.3))}" stroke="${hi}" stroke-width="${f(lw * .14)}" fill="none" stroke-linecap="round" opacity=".4"/>`;
     }
   }
   // (opt-in) edgeShade: [[i0, i1], …] — runs of the outline where the mass turns under (over the brow, at the nape,
@@ -683,17 +692,52 @@ function head34(u, o) {
     s += soft(Q(sd * .56, .44, .45), .2 * v, .1, tn.shadow, .45) + soft(Q(sd * .66, -.3, .45), .16 * v, .2, tn.shadow, .3)
       + soft(Q(sd * .34, -.1, .82), .2 * v, .12, tn.shadow, .4); }
   s += soft(Q(0, .98 + jw, .5), .5, .12, tn.shadow, .4) + soft(Q(0, .86 + jw, .66), .14, .07, tn.lit, .45);
-  { const sd = (Q(.6, .14, .5)[0] - Q(-.6, .14, .5)[0]) * Ls[0] > 0 ? 1 : -1; s += soft(Q(sd * .56, .16, .58), .18, .07, tn.lit, .5); }
+  // the planes of the face (forehead, temples, the cheek's front and side, the jaw's side, the chin), each lit or shaded
+  // by how it faces the one light, blurred together — a soft modelling, no hard-edged patch of light by the nose
+  const bf = nid('h3b', u), LV = (() => { const v = [Ls[0], Ls[1], .6], l = Math.hypot(v[0], v[1], v[2]); return v.map(x => x / l); })();
+  s += `<defs><filter id="${bf}" filterUnits="userSpaceOnUse" x="${f(o.c[0] - r * 3)}" y="${f(o.c[1] - r * 3)}" width="${f(r * 6)}" height="${f(r * 6)}"><feGaussianBlur stdDeviation="${f(r * .075)}"/></filter></defs>`;
+  { const PL = [[[[-.36, -.62, .8], [.36, -.62, .8], [.4, -.3, .9], [-.4, -.3, .9]], [0, -.3, 1]], [[[-.2, .82, .78], [.2, .82, .78], [.18, 1.0, .6], [-.18, 1.0, .6]], [0, .5, .9]]];
+    for (const sd of [-1, 1]) PL.push([[[sd * .48, -.6, .62], [sd * .74, -.4, .3], [sd * .78, -.02, .2], [sd * .6, -.2, .62]], [sd * .9, -.25, .4]],
+      [[[sd * .16, .08, .93], [sd * .46, .04, .78], [sd * .42, .4, .78], [sd * .2, .42, .9]], [sd * .3, .1, 1]],
+      [[[sd * .5, -.02, .72], [sd * .74, .04, .4], [sd * .66, .5, .3], [sd * .44, .48, .68]], [sd * .85, .15, .5]],
+      [[[sd * .66, .5, .3], [sd * .5, .86, .3], [sd * .28, .9, .62], [sd * .44, .54, .68]], [sd * .65, .65, .4]]);
+    let g = '';
+    for (const [P4, n0] of PL) { const nv = rot(n0), nl = Math.hypot(nv[0], nv[1], nv[2]); if (nv[2] / nl < -.05) continue;
+      const b = (nv[0] * LV[0] + nv[1] * LV[1] + nv[2] * LV[2]) / nl - .45, op = Math.min(.42, Math.abs(b) * .75) * (.55 + .45 * Math.max(0, nv[2] / nl));
+      if (op > .03) g += `<path d="${sp(Qa(P4), true)}" fill="${b > 0 ? tn.lit : tn.shadow}" opacity="${f(op)}"/>`; }
+    // the cheekbone's own catch of light (soft, low), and the shade under it
+    const sd = (Q(.6, .14, .5)[0] - Q(-.6, .14, .5)[0]) * Ls[0] > 0 ? 1 : -1;
+    g += `<ellipse cx="${f(Q(sd * .54, .12, .6)[0])}" cy="${f(Q(sd * .54, .12, .6)[1])}" rx="${f(r * .14)}" ry="${f(r * .06)}" fill="${tn.lit}" opacity=".3"/>`;
+    s += `<g filter="url(#${bf})">${g}</g>`; }
+  // the hairline (irregular: a small peak, the temples set back, the sideburns) and the hair's shadow on the forehead
+  const HR = K.rng(17 + ((o.hair && o.hair.seed) || 0)), hairOn = o.hair && o.hair.style !== 'bald';
+  const onSkull = (x, y, z) => { const q = 1 - (x / .8) ** 2 - ((y + .2) / .98) ** 2; return y > -.25 ? [x, y, z] : [x, y, Math.max(z, -.1 + .96 * Math.sqrt(Math.max(0, q)) * 1.01)]; };
+  const line3 = [[.74, .16, .2], [.76, -.1, .3], [.7, -.36, .44], [.56, -.56, .6], [.42, -.72, .7], [.28, -.68, .78], [.14, -.66, .82], [0, -.62, .84],
+    [-.14, -.66, .82], [-.28, -.68, .78], [-.42, -.72, .7], [-.56, -.56, .6], [-.7, -.36, .44], [-.76, -.1, .3], [-.74, .16, .2]]
+    .map((p, i, A) => i === 0 || i === A.length - 1 ? p : onSkull(p[0] + (HR() - .5) * .03, p[1] + (HR() - .5) * .05, p[2]));
+  if (hairOn) { const sv = [-Ls[0] * r * .07, Math.max(.07, -Ls[1] * .1) * r], hl = Qa(line3.slice(1, -1)).map(p => [p[0] + sv[0], p[1] + sv[1]]);
+    s += `<path d="${sp(hl)}" stroke="${tn.shadow}" stroke-width="${f(r * .2)}" fill="none" stroke-linecap="round" opacity=".75" filter="url(#${bf})"/>`; }
+  // the beard's outline (a mass of its own: its upper edge below the cheekbone, apart from the sideburn) and the
+  // shade it sits in under the cheekbone
+  const bExt = o.beard === 'full' ? .16 : .04, bOuter = !o.beard ? null : o.beard === 'goatee'
+    ? [[-.2, .72, .86], [-.24, .9, .66], [-.16, 1.08 + jw + bExt, .58], [0, 1.12 + jw + bExt, .6], [.16, 1.08 + jw + bExt, .58], [.24, .9, .66], [.2, .72, .86]]
+    : [[-.74, .3, .16], [-.7, .56, -.04], [-.52, .9 + bExt * .5, .22], [-.28, 1.06 + jw + bExt, .52], [0, 1.12 + jw + bExt, .6], [.28, 1.06 + jw + bExt, .52], [.52, .9 + bExt * .5, .22], [.7, .56, -.04], [.74, .3, .16],
+      [.68, .32, .36], [.56, .46, .56], [.38, .6, .76], [.26, .72, .82], [0, .78 + jw, .93], [-.26, .72, .82], [-.38, .6, .76], [-.56, .46, .56], [-.68, .32, .36]];
+  if (bOuter && o.beard !== 'goatee') { const cl = Qa(bOuter.slice(9)).map(p => [p[0] - Ls[0] * r * .02, p[1] - r * .05]);
+    s += `<path d="${sp(cl)}" stroke="${tn.shadow}" stroke-width="${f(r * .13)}" fill="none" stroke-linecap="round" opacity=".65" filter="url(#${bf})"/>`; }
   if (o.stubble) s += `<path d="${sp(Qa([[-.8, .2, .2], [-.6, .5, .4], [-.3, .66, .78], [0, .74, .92], [.3, .66, .78], [.6, .5, .4], [.8, .2, .2], [.74, .55, -.05], [.5, .88, .32], [0, 1.05 + jw, .62], [-.5, .88, .32], [-.74, .55, -.05]]), true)}" fill="${hairC}" opacity=".22"/>`;
   s += '</g>';
   if (o.rim) { const H2 = hull.filter(p => (p[0] - o.c[0]) * Ls[0] + (p[1] - o.c[1]) * Ls[1] < -.2 * r); if (H2.length > 2) s += `<path d="${sp(H2)}" stroke="${o.rim}" stroke-width="${f(Math.max(.3, r * .07))}" fill="none" opacity=".7"/>`; }
   s += `<path d="${F}" fill="none" stroke="${tn.outline}" stroke-width="${f(Math.max(.3, r * .05))}"/>`;
   // ——— the near ear (on the side away from the turn) ———
+  // (with short, tied or curly hair the ear is drawn over the hair, which lies behind it; long hair covers it)
+  let earS = ''; const earOver = hairOn && o.hair.style !== 'long';
   if (o.ear !== false) { const sd = -dir, v = depth(sd, 0, -.15); if (v > .12) {
     const e = [[sd * .78, -.12, -.06], [sd * .86, -.05, -.16], [sd * .88, .14, -.2], [sd * .83, .3, -.14], [sd * .78, .34, -.06], [sd * .75, .12, -.02]];
-    s += `<path d="${sp(Qa(e), true)}" fill="${tn.half}" stroke="${tn.outline}" stroke-width="${f(r * .035)}"/>`
+    earS += `<path d="${sp(Qa(e), true)}" fill="${tn.half}" stroke="${tn.outline}" stroke-width="${f(r * .035)}"/>`
       + `<path d="${sp(Qa([[sd * .8, -.06, -.12], [sd * .84, .12, -.16], [sd * .8, .26, -.1]]))}" stroke="${tn.shadow}" stroke-width="${f(r * .04)}" fill="none"/>`
       + `<path d="${sp(Qa([[sd * .81, -.1, -.12], [sd * .87, .04, -.18], [sd * .86, .2, -.18]]))}" stroke="${tn.lit}" stroke-width="${f(r * .025)}" fill="none" opacity=".6"/>`; } }
+  if (!earOver) s += earS;
   // ——— the eyes ———
   const ey = o.eye || 'open', op = ey === 'wide' ? 1.3 : ey === 'half' ? .55 : ey === 'shut' ? 0 : 1, lk = o.look || [0, 0];
   for (const sd of [-1, 1]) {
@@ -722,11 +766,14 @@ function head34(u, o) {
   // ——— the nose: the side away from the light in shade, the lit bridge, the ball with a highlight, the wings ———
   { const nW = o.noseW || 1, nL = o.noseL || 1, N0 = [0, -.1, .93], T = [0, .33, .93 + .2 * nL], Bs = [0, .42, .93 + .07 * nL], Wl = [-.16 * nW, .35, .92], Wr = [.16 * nW, .35, .92];
     const shadeSide = (Q(...Wr)[0] - Q(...T)[0]) * Ls[0] > 0 ? -1 : 1, Ws = shadeSide > 0 ? Wr : Wl, Wn = shadeSide > 0 ? Wl : Wr;
-    s += `<path d="${sp(Qa([N0, [shadeSide * .08, .1, .98], [shadeSide * .1, .3, 1.02], Ws, [shadeSide * .08, .42, .96], Bs]), true)}" fill="${tn.shadow}" opacity=".45"/>`
+    // the shade side and the nose's cast shadow on the cheek away from the light: soft-edged (blurred), so the cheek
+    // beside the nose turns gradually instead of a lit wedge cut out by a hard line
+    s += `<g filter="url(#${bf})"><path d="${sp(Qa([N0, [shadeSide * .08, .1, .98], [shadeSide * .1, .3, 1.02], Ws, [shadeSide * .08, .42, .96], Bs]), true)}" fill="${tn.shadow}" opacity=".5"/>`
+      + `<path d="${sp(Qa([[shadeSide * .1, .1, .96], [shadeSide * .22, .2, .9], [shadeSide * .24, .38, .88], [shadeSide * .12, .44, .94]]), true)}" fill="${tn.shadow}" opacity=".28"/>`
+      + `<path d="${sp(Qa([[-shadeSide * .02, -.04, .95], [-shadeSide * .03, .14, 1.04], [-shadeSide * .02, .28, 1.11]]))}" stroke="${tn.lit}" stroke-width="${f(r * .06)}" fill="none" opacity=".45" stroke-linecap="round"/></g>`
       + soft(Q(shadeSide * .12, .48, .95), .16, .05, tn.shadow, .55);
-    s += `<path d="${sp(Qa([[-shadeSide * .02, -.04, .95], [-shadeSide * .03, .14, 1.04], [-shadeSide * .02, .28, 1.11]]))}" stroke="${tn.lit}" stroke-width="${f(r * .04)}" fill="none" opacity=".65" stroke-linecap="round"/>`;
-    // the nose's own edge (the ridge seen against the far cheek when turned)
-    s += `<path d="${sp(Qa([N0, [0, .12, 1.03], T, [0, .38, 1.07], Bs]))}" stroke="${tn.outline}" stroke-width="${f(r * .03)}" fill="none" opacity="${f(Math.min(.8, Math.abs(sY) * 1.6))}"/>`;
+    // the nose's own edge: only the lower part of the ridge, against the far cheek when turned
+    s += `<path d="${sp(Qa([[0, .14, 1.04], T, [0, .38, 1.07], Bs]))}" stroke="${tn.outline}" stroke-width="${f(r * .026)}" fill="none" opacity="${f(Math.min(.6, Math.abs(sY) * 1.2))}"/>`;
     for (const W2 of [Wl, Wr]) { const v = depth(W2[0] * 2, 0, .7); if (v < -.1) continue;
       s += `<path d="${sp(Qa([[W2[0] * .7, .26, 1.0], [W2[0] * 1.05, .3, .93], [W2[0], .41, .92], [W2[0] * .5, .42, .98]]))}" stroke="${tn.outline}" stroke-width="${f(r * .03)}" fill="none" opacity=".75"/>`; }
     for (const sd of [-1, 1]) { const n = Q(sd * .07 * nW, .41, .93 + .07 * nL); s += `<ellipse cx="${f(n[0])}" cy="${f(n[1])}" rx="${f(r * .035 * nW * (.5 + .5 * Math.max(0, depth(sd, 0, 1.5) / 1.8)))}" ry="${f(r * .018)}" fill="${mix(tn.outline, tn.shadow, .3)}" opacity=".85"/>`; }
@@ -752,34 +799,52 @@ function head34(u, o) {
   // ——— beard, moustache, hair as masses ———
   const HL = Ls;
   let tailS = '';
+  // the beard in a tone of its own (beardColor; by default a little darker and warmer than the brows' hairColor), its
+  // top in the cheekbone's shade and its underside turning under the jaw
+  const beardC = o.beardColor || mix(hairC, '#4a3a2a', .22);
   if (o.beard) {
-    const ext = o.beard === 'full' ? .16 : .04, kind = o.beard;
-    const outer = kind === 'goatee' ? [[-.2, .72, .86], [-.24, .9, .66], [-.16, 1.08 + jw + ext, .58], [0, 1.12 + jw + ext, .6], [.16, 1.08 + jw + ext, .58], [.24, .9, .66], [.2, .72, .86]]
-      : [[-.74, .2, .22], [-.7, .5, -.06], [-.52, .88 + ext * .5, .24], [-.28, 1.06 + jw + ext, .52], [0, 1.12 + jw + ext, .6], [.28, 1.06 + jw + ext, .52], [.52, .88 + ext * .5, .24], [.7, .5, -.06], [.74, .2, .22],
-        [.68, .22, .4], [.56, .4, .56], [.34, .6, .78], [.24, .7, .82], [0, .76 + jw, .93], [-.24, .7, .82], [-.34, .6, .78], [-.56, .4, .56], [-.68, .22, .4]];
-    const pts2 = Qa(outer).filter((p, i) => true);
-    s += hairMass(u, pts2, { r, color: hairC, outline: tn.outline, seed: 13, n: kind === 'goatee' ? 12 : 40, light: HL, sheen: Q(dir * .3, .9, .6),
-      flow: () => [0, 1], tufts: o.beardTufts || (kind === 'goatee' ? [2, 3, 4] : [2, 3, 4, 5, 6]), tuftLen: kind === 'full' ? .14 : .07 });
+    const kind = o.beard;
+    s += hairMass(u, Qa(bOuter), { r, color: beardC, outline: tn.outline, seed: 13, n: kind === 'goatee' ? 12 : 40, light: HL, sheen: Q(dir * .3, .9, .6),
+      flow: () => [0, 1], tufts: o.beardTufts || (kind === 'goatee' ? [2, 3, 4] : [2, 3, 4, 5, 6]), tuftLen: kind === 'full' ? .14 : .07,
+      locks: kind === 'goatee' ? 0 : 7, lockLen: kind === 'full' ? .5 : .32, lockW: .11, lockRoots: R2 => { const p = Q((R2() - .5) * 1.2, .5 + R2() * .25, .6); return p; },
+      edgeShade: kind === 'goatee' ? [[2, 4, .12]] : [[9, 17, .2], [1, 7, .2]] });
   }
   if (o.moustache || o.beard) {
     const M = [[0, .46, 1.0], [.18, .5, .92], [.32, .62, .76], [.3, .68, .74], [.18, .58, .9], [0, .55, .99], [-.18, .58, .9], [-.3, .68, .74], [-.32, .62, .76], [-.18, .5, .92]];
-    s += hairMass(u, Qa(M), { r, color: hairC, outline: tn.outline, seed: 4, n: 12, light: HL, flow: p => [(p[0] - Q(0, .5, 1)[0]) > 0 ? .7 : -.7, .7], tufts: [3, 7], tuftLen: .05 });
+    s += hairMass(u, Qa(M), { r, color: o.beard ? mix(beardC, '#000', .12) : hairC, outline: tn.outline, seed: 4, n: 12, light: HL, flow: p => [(p[0] - Q(0, .5, 1)[0]) > 0 ? .7 : -.7, .7], tufts: [3, 7], tuftLen: .05 });
   }
-  if (o.hair && o.hair.style !== 'bald') {
-    const hs = o.hair.style || 'short', hc = o.hair.color || hairC;
-    // the outer edge: the skull's outline over the top between the two sides, a little proud of it (the hair's volume)
-    const L3 = hs === 'long' ? [-.86, .5, -.14] : [-.8, .16, -.16], R3 = [-L3[0], L3[1], L3[2]], pl = Q(...L3), pr = Q(...R3), vol = 1.07;
+  if (hairOn) {
+    const hs = o.hair.style || 'short', hc = o.hair.color || hairC, VOL = o.hair.volume != null ? o.hair.volume : 1;
+    // the outer edge: over the skull with the hair's own volume — more over the forehead, on the crown and at the back
+    // of the head, a little lumpy where the locks lie; it meets the skull at the nape and above the ears
+    const L3 = hs === 'long' ? [-.86, .5, -.14] : [-.8, .16, -.16], R3 = [-L3[0], L3[1], L3[2]], pl = Q(...L3), pr = Q(...R3);
     let a0 = Math.atan2(pl[1] - sc0[1], pl[0] - sc0[0]), a1 = Math.atan2(pr[1] - sc0[1], pr[0] - sc0[0]); while (a1 < a0) a1 += Math.PI * 2;
-    const arc = []; for (let k = 0; k <= 16; k++) arc.push(sk(lerp(a0, a1, k / 16), vol));
-    // the hairline: sideburn, temple, forehead (a little peak), the other side
-    const line = Qa([[.74, .16, .2], [.72, -.34, .44], [.48, -.6, .7], [.18, -.68, .8], [0, -.64, .84], [-.18, -.68, .8], [-.48, -.6, .7], [-.72, -.34, .44], [-.74, .16, .2]]);
-    let HP = arc.slice().reverse().concat(line.slice().reverse());   // right side over the top to left, back by the hairline
-    HP = arc.concat(line);
-    if (hs === 'long') HP = [Q(-1.02, 1.3, -.2), ...arc, Q(1.02, 1.3, -.2), Q(.84, 1.2, .1), ...line, Q(-.84, 1.2, .1)];
-    const crown = Q(0, -.9, .2);
-    s += hairMass(u, HP, { r, color: hc, outline: tn.outline, seed: 9, n: hs === 'curly' ? 60 : 48, light: HL, sheen: Q(-Ls[0] < 0 ? -.3 : .3, -.8, .5), curl: hs === 'curly',
+    const NA = 22, arc = [];
+    for (let k = 0; k <= NA; k++) { const a = lerp(a0, a1, k / NA), ca = Math.cos(a), sa = Math.sin(a), up = Math.max(0, -sa), bk = Math.max(0, -ca * dir), fr = Math.max(0, ca * dir);
+      const ramp = hs === 'long' ? 1 : Math.min(1, Math.min(k, NA - k) / 3);
+      // (long hair lies flat on the crown under its own weight: little lift there, so a scarf or a hat fitted to the
+      // skull still covers it; its volume is in the fall)
+      arc.push(sk(a, 1 + ramp * (VOL * (hs === 'long' ? .06 : .06 + .06 * up + .1 * bk * (.4 + up) + .05 * fr * up) + (HR() - .4) * .03 * (hs === 'curly' ? 2 : hs === 'long' ? 0 : 1)))); }
+    const line = Qa(line3), NL = line.length;
+    let HP = arc.concat(line), lineAt = NA + 1, edge;
+    if (hs === 'long') { // falling past the jaw to the shoulders, full at the sides, the inner edge framing the face
+      const bs = -dir;   // the side of the back of the head: the fuller fall behind the jaw and the neck
+      const side = (sg, a, b) => sg === bs ? Q(sg * a[0], a[1], a[2]) : Q(sg * b[0], b[1], b[2]);
+      const oB = sg => side(sg, [1.06, 1.46, -.36], [.98, 1.38, -.24]), oS = sg => side(sg, [1.15, .82, -.28], [1.1, .8, -.26]);
+      const iB = sg => side(sg, [.76, 1.4, -.04], [.86, 1.3, .06]), iT = sg => side(sg, [.82, .6, .1], [.84, .62, .16]);
+      HP = [oB(-1), oS(-1), ...arc, oS(1), oB(1), iB(1), iT(1), ...line, iT(-1), iB(-1)];
+      lineAt = NA + 7; edge = [[NA + 6, NA + 6 + NL + 1, .18]]; }
+    else edge = [[lineAt + 1, lineAt + NL - 2, .16], dir > 0 ? [0, 3, .2] : [NA - 3, NA, .2]];
+    const crown = Q(0, -.92, .1), tipI = [3, 6, 9, 11].map(i => lineAt + i);
+    s += hairMass(u, HP, { r, color: hc, outline: tn.outline, seed: 9, n: hs === 'curly' ? 60 : 40, light: HL, sheen: Q(-Ls[0] < 0 ? -.3 : .3, -.8, .5), curl: hs === 'curly',
       flow: p => { const dx = p[0] - crown[0], dy = p[1] - crown[1], l = Math.hypot(dx, dy) || 1; return hs === 'long' && p[1] > o.c[1] ? [dx / l * .3, 1] : [dx / l, dy / l]; },
-      tufts: hs === 'curly' ? [2, 4, 6, 8, 10, 12, 14] : [1, 3, 15, 16], tuftLen: hs === 'curly' ? .1 : .08 });
+      tufts: hs === 'curly' ? [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, ...tipI] : hs === 'long' ? [0, 1, NA + 3, NA + 4, ...tipI] : [2, 5, 9, NA - 5, NA - 2, ...tipI],
+      tuftLen: hs === 'curly' ? .1 : .065, edgeShade: edge,
+      locks: hs === 'long' ? 18 : 16, lockLen: hs === 'long' ? .8 : hs === 'curly' ? .4 : .5, lockW: .17,
+      // the locks start all over the mass (not from one point, which reads as spokes), each along the hair's flow
+      lockRoots: (R2, k) => { const a = (k * 2.4 + R2() * .6), d = r * (.18 + .6 * ((k * .618) % 1)); return [crown[0] + Math.cos(a) * d * 1.2, crown[1] + Math.sin(a) * d * .8 + (hs === 'long' ? Math.max(0, Math.sin(a)) * d : 0)]; } });
+    // the parting of long hair: a dark line from the forehead back over the crown
+    if (hs === 'long') { const a = Q(dir * .12, -.66, .82), b = Q(dir * .06, -1.04, .3); s += `<path d="M${P2(a)}Q${P2(Q(dir * .1, -.92, .66))} ${P2(b)}" stroke="${mix(hc, '#000', .55)}" stroke-width="${f(r * .03)}" fill="none" stroke-linecap="round" opacity=".7"/>`; }
     if (hs === 'tied') { // the queue hangs down the back, behind the head: drawn under it
       const rb = o.hair.ribbon || '#1a1a22', q0 = Q(0, .4, -.9), q1 = Q(0, 1.5, -.95), b = Q(0, .62, -.92);
       const qT = [[q0[0] - r * .1, q0[1]], [q0[0] + r * .1, q0[1]], [q1[0] + r * .05, q1[1]], [q1[0], q1[1] + r * .12], [q1[0] - r * .06, q1[1]]];
@@ -788,6 +853,7 @@ function head34(u, o) {
         + `<ellipse cx="${f(b[0])}" cy="${f(b[1])}" rx="${f(r * .06)}" ry="${f(r * .08)}" fill="${rb}" stroke="${tn.outline}" stroke-width="${f(r * .02)}"/>`;
       if (o.tailApart) tailS = tail; else s = tail + s; }
   }
+  if (earOver) s += earS;
   if (o.opacity != null && o.opacity < 1) { s = `<g opacity="${o.opacity}">${s}</g>`; if (tailS) tailS = `<g opacity="${o.opacity}">${tailS}</g>`; }
   return { svg: s, Q, depth, tail: tailS };
 }
