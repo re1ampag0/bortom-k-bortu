@@ -43,12 +43,13 @@ const poly = (P, dx = 0, dy = 0) => 'M' + P.map(p => `${f(p[0] + dx)} ${f(p[1] +
 module.exports = { name: 'Двойная обшивка', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
-    const R = rng(41), rO = L.ramp('ship-ochre', 100, 60), rT = L.ramp('tar', 100, 60), rK = L.ramp('oak', 100, 80), rI = L.ramp('iron', 100, 60);
+    // the Endeavour's matt ochre, warmer and darker than the ramp's lit lemon at this size
+    const R = rng(41), rO = Object.assign({}, L.ramp('ship-ochre', 100, 60), { lit: '#ecc872', half: '#bc8f38' }), rT = L.ramp('tar', 100, 60), rK = L.ramp('oak', 100, 80), rI = L.ramp('iron', 100, 60);
     // ——— the side: the black wales and the ochre strakes (8 units each), each strake of planks with staggered butts,
     // treenails in pairs at the frames, weather streaks running down from the wale
     const W1 = [0, 12], W2 = [122, 136], ST = 8;
     let bg = '';
-    { const g = nid('so', u); bg += `<defs>${linGrad(g, 0, 0, 200, 280, [[0, mix(rO.lit, rO.half, .7)], [.4, mix(rO.half, rO.shadow, .15)], [1, mix(rO.half, rO.shadow, .6)]])}</defs><rect width="200" height="280" fill="url(#${g})"/>`; }
+    { const g = nid('so', u); bg += `<defs>${linGrad(g, 0, 0, 200, 280, [[0, '#d6aa4c'], [.4, '#bc8f38'], [1, '#7e5c22']])}</defs><rect width="200" height="280" fill="url(#${g})"/>`; }
     for (let y = W1[1]; y < 280; y += ST) {
       if (y >= W2[0] && y < W2[1]) continue;
       bg += `<path d="M0 ${f(y)}H200" stroke="${rO.outline}" stroke-width=".7" opacity=".75"/><path d="M0 ${f(y + .7)}H200" stroke="${rO.lit}" stroke-width=".35" opacity=".55"/>`;
@@ -126,25 +127,26 @@ module.exports = { name: 'Двойная обшивка', kind: 'deck', status: 
     fg += K.shadeSphere(u, BALL.x, BALL.y, BALL.r, L, 'iron', { outline: .5 });
     fg += `<path d="M${BALL.x - BALL.r * .96} ${BALL.y + 2}Q${BALL.x} ${BALL.y + 6.4} ${BALL.x + BALL.r * .96} ${BALL.y + 2}" stroke="${rI.core}" stroke-width=".4" fill="none" opacity=".6"/>`
       + `<circle cx="${BALL.x + 5}" cy="${BALL.y + 6}" r="1.4" fill="#6a3a1c" opacity=".55"/><circle cx="${BALL.x - 7}" cy="${BALL.y + 3}" r=".9" fill="#6a3a1c" opacity=".45"/>`;
-    // the crushed rim of the crater in front of the ball's lower edge (the ball sits in it, not on it)
-    for (let k = 0; k < 9; k++) { const a = Math.PI * (.15 + k * .085), x = BALL.x + Math.cos(a) * (BALL.r + .4), y = BALL.y + Math.sin(a) * (BALL.r + .4);
-      fg += `<path d="M${f(x - 1.4)} ${f(y + .6)}l${f(1.4 + R())} ${f(-2 - R() * 1.4)}l${f(1.2 + R())} ${f(2.2)}z" fill="${rK.half}" stroke="${rK.outline}" stroke-width=".2"/>`; }
-
+    // the crater's lip in front of the ball's lower edge: crushed wood in shade (the ball sits in it, not on it)
+    fg += `<path d="M${BALL.x - BALL.r * .92} ${BALL.y + 4}Q${BALL.x} ${BALL.y + BALL.r * 1.5} ${BALL.x + BALL.r * .92} ${BALL.y + 4}Q${BALL.x} ${BALL.y + BALL.r * 1.12} ${BALL.x - BALL.r * .92} ${BALL.y + 4}Z" fill="${rK.shadow}" opacity=".85"/>`
+      + `<path d="M${BALL.x - BALL.r * .9} ${BALL.y + 5}Q${BALL.x} ${BALL.y + BALL.r * 1.46} ${BALL.x + BALL.r * .9} ${BALL.y + 5}" stroke="${rK.lit}" stroke-width=".5" fill="none" opacity=".8"/>`;
+    // one long piece of a broken plank, torn out and hanging from the lower edge, bent towards us: ochre face,
+    // raw wood where it split, its shadow on the side below
+    { const e = P.ends[P.ends.length - 2], x0 = e.xr - 14, y0 = e.y1 - .4;
+      const pc = `M${f(x0)} ${f(y0)}L${f(x0 + 14)} ${f(y0 - .2)}L${f(x0 + 20)} ${f(y0 + 9)}L${f(x0 + 17)} ${f(y0 + 10.4)}L${f(x0 + 15)} ${f(y0 + 8.4)}L${f(x0 + 12.5)} ${f(y0 + 11)}L${f(x0 + 2)} ${f(y0 + 4)}Z`;
+      fg += `<path d="${pc}" fill="#000" opacity=".28" transform="translate(2.6 3)"/><path d="${pc}" fill="${mix(rO.half, rO.lit, .25)}" stroke="${rO.outline}" stroke-width=".3"/>`
+        + `<path d="M${f(x0 + 14)} ${f(y0 - .2)}L${f(x0 + 20)} ${f(y0 + 9)}" stroke="#f4dca0" stroke-width=".9"/><path d="M${f(x0 + 2)} ${f(y0 + 4)}L${f(x0 + 12.5)} ${f(y0 + 11)}" stroke="#f4dca0" stroke-width=".6"/>`
+        + `<path d="M${f(x0 + 3)} ${f(y0 + 2.4)}L${f(x0 + 15)} ${f(y0 + 3.4)}M${f(x0 + 6)} ${f(y0 + 5.8)}L${f(x0 + 16)} ${f(y0 + 7)}" stroke="${rO.shadow}" stroke-width=".3" opacity=".7"/>`; }
     // ——— the broken rim of the outer skin: plank ends split along the grain, bent out towards us (lit edges, ochre
     // faces, raw wood where they tore), cracks running out along the strakes from the hole
     for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length], a = Math.atan2(p[1] - C.y, p[0] - C.x);
       // the lit lip of the cut along the lower and right edges, the dark lip on the upper-left
       const lit = Math.cos(a) * .5 + Math.sin(a) > .1;
-      fg += `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="${lit ? '#f8e4b0' : rO.outline}" stroke-width="${lit ? .9 : .7}"/>`; }
+      fg += `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="${lit ? '#e8c880' : rO.outline}" stroke-width="${lit ? .7 : .7}"/>`; }
     for (const e of P.ends) for (const side of [-1, 1]) {
       const x = side < 0 ? e.xl : e.xr, ym = (e.y0 + e.y1) / 2;
       // loose fibres standing out of the plank's end, along the grain and into the hole
       for (let k = 0; k < 4; k++) { const yy = e.y0 + 1 + R() * (STK - 2), l = 3 + R() * 7; fg += `<path d="M${f(x + side * 1)} ${f(yy)}q${f(-side * l * .5)} ${f((R() - .5) * 1.4)} ${f(-side * l)} ${f((R() - .3) * 2.4)}" stroke="${R() > .4 ? '#f4dca0' : rK.half}" stroke-width="${f(.35 + R() * .5)}" fill="none" stroke-linecap="round"/>`; }
-      // every third end: the plank's broken tongue bent out towards us, its torn face raw wood, its shadow on the wall
-      if (R() < .38) { const l = 9 + R() * 8, tx = x - side * l, ty = ym + (R() - .5) * 3;
-        fg += `<path d="M${f(x)} ${f(e.y0 + .6)}L${f(tx + side * 1.5)} ${f(ty - 1.6)}L${f(tx)} ${f(ty + .6)}L${f(x)} ${f(e.y1 - .6)}Z" fill="#000" opacity=".25" transform="translate(2.2 2.6)"/>`
-          + `<path d="M${f(x)} ${f(e.y0 + .6)}L${f(tx + side * 1.5)} ${f(ty - 1.6)}L${f(tx)} ${f(ty + .6)}L${f(x)} ${f(e.y1 - .6)}Z" fill="${rO.lit}" stroke="${rO.outline}" stroke-width=".3"/>`
-          + `<path d="M${f(tx + side * 1.5)} ${f(ty - 1.6)}L${f(tx)} ${f(ty + .6)}L${f(tx + side * 3)} ${f(ty + 1.4)}Z" fill="#f4dca0"/><path d="M${f(x)} ${f(e.y0 + .9)}L${f(tx + side * 1.5)} ${f(ty - 1.3)}" stroke="#fff6d0" stroke-width=".4"/>`; }
     }
     // cracks along the strakes running out of the hole, left and right, and the paint flaked off round the rim
     for (let k = 0; k < 8; k++) { const side = k % 2 ? 1 : -1, e = P.ends[Math.floor(R() * P.ends.length)], y = e.y0 + 1.6 + R() * 4.8, x0 = (side < 0 ? e.xl - 4 : e.xr + 6), l = 10 + R() * 22;
