@@ -3,12 +3,13 @@
 // hand holds a jar of earth up toward the ghost ship; her captain may not set foot on land, and she shies away.
 // Brief (card-briefs.md): the glass jar of earth big in the raised hand against the green fog; the Dutchman recoils;
 // the warm tone of the earth in the cold green light of Jones. The hand comes in from the lower right over the
-// Pearl's rail, the fingers round the jar; the Dutchman rears and heels away from it (her bow lifts, her weedy bottom
+// Pearl's rail, the hand under the jar; the Dutchman rears and heels away from it (her bow lifts, her weedy bottom
 // shows), a ring of foam where she turned. The key is the moon in the green fog beyond her (cold, upper left): the
 // glass, the glove and the rail take its rim; the earth's warmth is a small local glow that thins the fog and lights
 // the rain round the jar.
 // Fixed against the first round: the hand was a cylinder with a fist under the jar — now a sleeve with its folds,
-// a leather gauntlet cuff and a gloved hand with four fingers round the jar's body, the thumb behind; the jar was
+// a close leather cuff and a gloved hand in contours: the palm under the jar's foot, the thumb up its right side in
+// front, the fingers behind it seen through the thick clear base; the jar was
 // small — now it is the main thing, glass with a thickness, a cloth cap tied with twine, the earth in layers with
 // stones and a root; the ghost ship is the kit's Dutchman, heeled and turned by the rules of her geometry.
 'use strict';
@@ -20,13 +21,13 @@ const { glow, gloom } = PK;
 
 const HZ = 112;
 const JAR = { x: 126, y: 104, w: 46, h: 52 };      // the jar: middle of its bottom, width, body height (the cap above)
-const WR = [151, 99];                              // the wrist
+const WR = [166, 124];                             // the end of the cuff, where the wrist comes out
 const light = { time: 'fog', haze: .7, key: { type: 'moon', x: 76, y: 24, el: 26, color: '#c8f0dc', power: .75 }, fill: { color: '#3a6a5c', power: .46 },
   rim: { az: -20, color: '#d8fff0', power: .55 }, locals: [{ x: JAR.x, y: JAR.y - 22, color: '#ffc880', power: .55, radius: 40 }] };
 const skel = { horizon: HZ, eye: 3, light: 'the moon in the green fog upper left (cold key) + the jar\'s faint warm glow (local)', items: [
   ['dutchman', 8, 118, 112, 64, 'water: heeled away, bow lifted'], ['foam ring', 30, 120, 76, 6, 'water round her'],
-  ['jar', JAR.x - JAR.w / 2, JAR.y, JAR.w, JAR.h + 12, 'held in the hand'], ['hand', 112, 110, 42, 24, 'round the jar, from the wrist'],
-  ['sleeve', 146, 240, 70, 140, 'from the lower right corner'], ['rail', -5, 186, 210, 40, 'the Pearl\'s bulwark, near']] };
+  ['jar', JAR.x - JAR.w / 2, JAR.y, JAR.w, JAR.h + 12, 'held in the hand'], ['hand', 115, 114, 57, 31, 'under the jar from the wrist, the thumb up its right side'],
+  ['sleeve', 155, 262, 65, 140, 'from the lower right corner to the cuff at the wrist'], ['rail', -5, 186, 210, 40, 'the Pearl\'s bulwark, near']] };
 
 // the jar of earth: glass body with a thick rim and base, earth in layers with stones, a root and a sprout, a cloth
 // cap tied with twine over the cork, a paper tag on a string; rain drops on the glass. Returns { body, glass }
@@ -35,13 +36,14 @@ function jar(u, L, o) {
   // the outline: base, straight sides, a round shoulder into the neck, the lip
   const out = `M${f(x - rx + 3)} ${f(y)}Q${f(x - rx)} ${f(y)} ${f(x - rx)} ${f(y - 4)}L${f(x - rx)} ${f(top + 12)}Q${f(x - rx)} ${f(top + 3)} ${f(x - nk)} ${f(top + 1)}L${f(x - nk)} ${f(top - 3)}`
     + `L${f(x + nk)} ${f(top - 3)}L${f(x + nk)} ${f(top + 1)}Q${f(x + rx)} ${f(top + 3)} ${f(x + rx)} ${f(top + 12)}L${f(x + rx)} ${f(y - 4)}Q${f(x + rx)} ${f(y)} ${f(x + rx - 3)} ${f(y)}Z`;
-  const cid = nid('jc', u), eg = nid('je', u), gg = nid('jg', u);
-  let body = `<defs><clipPath id="${cid}"><path d="${out}"/></clipPath>${linGrad(eg, 0, top + 16, 0, y, [[0, '#7a5232', 1], [.3, '#5a3a20', 1], [.65, '#3e2814', 1], [1, '#2a1a0c', 1]])}`
+  const cid = nid('jc', u), iid = nid('ji', u), eg = nid('je', u), gg = nid('jg', u), wl = 2.4, bt = 6;   // wl, bt: the glass wall and the thick base
+  const inner = `M${f(x - rx + wl)} ${f(top)}L${f(x + rx - wl)} ${f(top)}L${f(x + rx - wl)} ${f(y - bt - 1.5)}Q${f(x + rx - wl)} ${f(y - bt)} ${f(x + rx - wl - 2)} ${f(y - bt)}L${f(x - rx + wl + 2)} ${f(y - bt)}Q${f(x - rx + wl)} ${f(y - bt)} ${f(x - rx + wl)} ${f(y - bt - 1.5)}Z`;
+  let body = `<defs><clipPath id="${cid}"><path d="${out}"/></clipPath><clipPath id="${iid}"><path d="${inner}"/></clipPath>${linGrad(eg, 0, top + 16, 0, y, [[0, '#7a5232', 1], [.3, '#5a3a20', 1], [.65, '#3e2814', 1], [1, '#2a1a0c', 1]])}`
     + `${linGrad(gg, x - rx, 0, x + rx, 0, [[0, '#9adcc4', .32], [.18, '#e8fff6', .22], [.5, '#bfe8d8', .06], [.85, '#6aa894', .18], [1, '#2a5a4a', .4]])}</defs>`;
   // behind the glass: the fog seen through it (a little greener), then the earth
   body += `<path d="${out}" fill="#3e6a5c" opacity=".35"/>`;
   const es = top + 17; let surf = `M${f(x - rx - 2)} ${f(es + 2)}`; for (let i = 1; i <= 8; i++) surf += `L${f(x - rx - 2 + i * (w + 4) / 8)} ${f(es + Math.sin(i * 1.7) * 1.4 + (i === 4 ? -1.6 : 0))}`;
-  body += `<g clip-path="url(#${cid})"><path d="${surf}L${f(x + rx + 2)} ${f(y + 2)}L${f(x - rx - 2)} ${f(y + 2)}Z" fill="url(#${eg})"/>`;
+  body += `<g clip-path="url(#${iid})"><path d="${surf}L${f(x + rx + 2)} ${f(y + 2)}L${f(x - rx - 2)} ${f(y + 2)}Z" fill="url(#${eg})"/>`;
   // layers: a dark band of loam, a pale band of sand, the dark again; stones pressed against the glass
   body += `<path d="M${f(x - rx)} ${f(es + 13)}q${f(rx * .6)} 2 ${f(rx)} -.6t${f(rx)} .8" stroke="#a88a5a" stroke-width="2.2" fill="none" opacity=".6"/>`
     + `<path d="M${f(x - rx)} ${f(es + 22)}q${f(rx * .5)} -1.6 ${f(rx)} .4t${f(rx)} -.6" stroke="#1e120a" stroke-width="2.6" fill="none" opacity=".55"/>`;
@@ -55,7 +57,9 @@ function jar(u, L, o) {
   // the glass over it: tinted, darker and greener at the edges (its thickness), the thick base
   let glass = `<path d="${out}" fill="url(#${gg})"/>`
     + `<g clip-path="url(#${cid})"><path d="M${f(x - rx)} ${f(y - 4)}L${f(x - rx)} ${f(top + 12)}" stroke="#1a3a30" stroke-width="2.6" opacity=".5"/><path d="M${f(x + rx)} ${f(y - 4)}L${f(x + rx)} ${f(top + 12)}" stroke="#0e2a22" stroke-width="3" opacity=".6"/>`
-    + `<path d="M${f(x - rx)} ${f(y - 2.2)}H${f(x + rx)}" stroke="#bfe8d8" stroke-width="2.6" opacity=".22"/></g>`
+    + `<path d="M${f(x - rx)} ${f(y - bt / 2)}H${f(x + rx)}" stroke="#bfe8d8" stroke-width="${bt}" opacity=".1"/></g>`
+    // the inside of the thick base: the earth's foot on it, a bright line where the glass ends
+    + `<path d="M${f(x - rx + wl + 1)} ${f(y - bt + .2)}H${f(x + rx - wl - 1)}" stroke="#08140f" stroke-width=".7" opacity=".55"/><path d="M${f(x - rx + wl + 1)} ${f(y - bt + .9)}H${f(x + rx - wl - 1)}" stroke="#e8fff6" stroke-width=".45" opacity=".5"/>`
     + `<path d="${out}" fill="none" stroke="#0e2a22" stroke-width=".6"/>`
     // the moon on the left side: a long highlight and a short one; the warm earth glow on the right side
     + `<path d="M${f(x - rx + 3.4)} ${f(top + 13)}L${f(x - rx + 3.4)} ${f(y - 8)}" stroke="#f2fff8" stroke-width="2" opacity=".55" stroke-linecap="round"/>`
@@ -78,6 +82,50 @@ function jar(u, L, o) {
   return { body, glass };
 }
 
+// the gloved hand that holds the jar up from below, drawn as contours in one piece with the wrist (as the glove in
+// anzhelika.cjs): the palm under the jar's foot — we look up at it from below, so we see the heel and the back of the
+// hand pressed under the glass — the thumb up the jar's right side in front of the glass, its pad on it; the four
+// fingers go away behind the jar and up its far side, seen only through the clear thick base, muted and soft.
+// E — the middle of the cuff's end (the wrist comes out of it), t — the forearm's direction there (toward the hand),
+// hw — the cuff's half width. Returns { behind, front }.
+function holdHand(u, L, J, E, t, hw, tn) {
+  const n = [-t[1], t[0]], at = (k, d = 0) => [E[0] + n[0] * hw * k + t[0] * d, E[1] + n[1] * hw * k + t[1] * d];
+  const Gu = at(.9), Gl = at(-.9), Gu2 = at(.9, -6), Gl2 = at(-.9, -6), y0 = J.y, x0 = J.x;   // the glove's wrist edges, in the cuff and 6 into it
+  const gid = nid('hg', u), tid = nid('ht', u), fid = nid('hf', u), bid = nid('hb', u);
+  // the hand: the wrist out of the cuff up to the jar's foot, along under it, round the heel and back along the underside
+  const hand = [Gu2, Gu, [x0 + 39, y0 + 9.4], [x0 + 31, y0 + 4.6], [x0 + 24, y0 + 1.4], [x0 + 16, y0 - .2], [x0 + 4, y0 - .5], [x0 - 6, y0 - .2], [x0 - 10.5, y0 + 1.6],
+    [x0 - 10.6, y0 + 4.6], [x0 - 6.5, y0 + 7], [x0 + 3, y0 + 8.4], [x0 + 14, y0 + 9.2], [x0 + 23, y0 + 11.6], [x0 + 29, y0 + 15.6], Gl, Gl2];
+  const thumb = [[x0 + 16.5, y0 + .6], [x0 + 21.6, y0 - 1.6], [x0 + 23.6, y0 - 6.5], [x0 + 23.8, y0 - 12.5], [x0 + 22.4, y0 - 17.6], [x0 + 19.6, y0 - 20.6], [x0 + 16.6, y0 - 20.4],
+    [x0 + 15.4, y0 - 17.4], [x0 + 15.8, y0 - 12], [x0 + 15.6, y0 - 6.4], [x0 + 13.6, y0 - 1.6]];
+  const behind = (() => {   // the four fingers behind the jar: from the far edge of the palm up the far side, fanned a little
+    const c = mix(tn.half, '#4e7266', .45), sh = mix(tn.shadow, '#2a4a40', .4), lt = mix(tn.lit, '#9adcc4', .4); let r = '';
+    for (const [bx, tx, ty, w] of [[x0 - 8, x0 - 10.5, y0 - 15, 5], [x0 - 2, x0 - 3.2, y0 - 18, 5.4], [x0 + 4, x0 + 3.8, y0 - 17, 5.4], [x0 + 10, x0 + 11, y0 - 13.5, 5]]) {
+      const by = y0 + 3, dx = tx - bx, dy = ty - by, l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l, nx = -uy, ny = ux, P = (a, b, k = 1) => `${f(bx + ux * a + nx * b * k)} ${f(by + uy * a + ny * b * k)}`;
+      const hw0 = w / 2, hw1 = w * .42;
+      r += `<path d="M${P(0, -hw0)}L${P(l - hw1, -hw1)}Q${P(l + hw1 * .6, -hw1)} ${P(l + hw1 * .6, 0)}Q${P(l + hw1 * .6, hw1)} ${P(l - hw1, hw1)}L${P(0, hw0)}Z" fill="${c}" stroke="${sh}" stroke-width=".4"/>`
+        + `<path d="M${P(0, hw0 * .45)}L${P(l - hw1, hw1 * .5)}" stroke="${sh}" stroke-width="${f(w * .32)}" opacity=".5"/><path d="M${P(1, -hw0 * .55)}L${P(l - hw1, -hw1 * .55)}" stroke="${lt}" stroke-width=".5" opacity=".45"/>`
+        + `<path d="M${P(l * .5, -hw0 * .8)}L${P(l * .5, hw0 * .8)}M${P(l * .78, -hw1 * .8)}L${P(l * .78, hw1 * .8)}" stroke="${sh}" stroke-width=".3" opacity=".6"/>`; }
+    return `<defs><filter id="${bid}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".7"/></filter></defs><g filter="url(#${bid})" opacity=".85">${r}</g>`; })();
+  const P2 = q => f(q[0]) + ' ' + f(q[1]);
+  let front = `<defs>${linGrad(gid, x0, y0 - 1, x0 + 2, y0 + 12, [[0, mix(tn.shadow, '#140a04', .45)], [.35, tn.shadow], [.75, tn.half], [1, mix(tn.half, '#9adcc4', .25)]])}`
+    + `${linGrad(tid, x0 + 15, 0, x0 + 24, 0, [[0, tn.lit], [.35, tn.half], [.8, tn.shadow], [1, mix(tn.shadow, '#140a04', .4)]])}`
+    + `<filter id="${fid}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1"/></filter></defs>`;
+  // the jar's foot casts a soft shadow on the top of the hand; the hand presses the glass (a dark contact line)
+  front += `<path d="${PP.sp(hand, true)}" fill="url(#${gid})" stroke="${tn.outline}" stroke-width=".5"/>`
+    + `<path d="M${f(x0 - 9)} ${f(y0 + 1.2)}Q${f(x0 + 8)} ${f(y0 + 3.6)} ${f(x0 + 26)} ${f(y0 + 3.2)}" stroke="#0a0604" stroke-width="2.4" fill="none" opacity=".35" filter="url(#${fid})"/>`;
+  // the back of the hand seen from below: the tendons toward the far knuckles, the stitching, the wrist crease; the fog's light under it
+  for (const [a, b] of [[[x0 + 26, y0 + 9.6], [x0 + 2, y0 + 5.4]], [[x0 + 27, y0 + 12], [x0 + 4, y0 + 7.2]]]) front += `<path d="M${P2(a)}Q${f((a[0] + b[0]) / 2)} ${f((a[1] + b[1]) / 2 + .6)} ${P2(b)}" stroke="${tn.lit}" stroke-width=".3" stroke-dasharray=".8 .6" fill="none" opacity=".55"/>`;
+  { const a = at(-.8, 3), b = at(.8, 3), m = at(0, 4.2); front += `<path d="M${P2(a)}Q${P2(m)} ${P2(b)}" stroke="${tn.outline}" stroke-width=".45" fill="none" opacity=".6"/>`; }
+  front += `<path d="M${f(x0 - 9.6)} ${f(y0 + 5.6)}Q${f(x0 + 6)} ${f(y0 + 9.4)} ${f(x0 + 25)} ${f(y0 + 13.4)}" stroke="#bfe8d8" stroke-width=".6" fill="none" opacity=".4"/>`;
+  // the thumb: up the jar's right side in front of the glass; the glass darkens round its pad, the moon on its left edge
+  front += `<path d="${PP.sp(thumb.slice(5, 10).map(q => [q[0] - 1.1, q[1] + .3]), false)}" stroke="#06100c" stroke-width="1.6" fill="none" opacity=".35" filter="url(#${fid})"/>`
+    + `<path d="${PP.sp(thumb, true)}" fill="url(#${tid})" stroke="${tn.outline}" stroke-width=".5"/>`
+    + `<path d="M${f(x0 + 16.2)} ${f(y0 - 16.6)}Q${f(x0 + 16.2)} ${f(y0 - 9)} ${f(x0 + 15.4)} ${f(y0 - 4)}" stroke="#d8fff0" stroke-width=".6" fill="none" opacity=".55" stroke-linecap="round"/>`
+    + `<path d="M${f(x0 + 21.6)} ${f(y0 - 15)}Q${f(x0 + 22.6)} ${f(y0 - 9)} ${f(x0 + 21.6)} ${f(y0 - 3)}" stroke="${tn.lit}" stroke-width=".3" stroke-dasharray=".8 .6" fill="none" opacity=".55"/>`
+    + `<path d="M${f(x0 + 16.4)} ${f(y0 - 10.2)}q2.6 1 5.6 .2" stroke="${tn.outline}" stroke-width=".35" fill="none" opacity=".55"/>`;
+  return { behind, front };
+}
+
 module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
@@ -98,17 +146,16 @@ module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'dr
     bg += K.bulwark(u, L, { x1: -6, x2: 206, y: 188, h: 42, kind: 'oak', posts: 30, seed: 3 })
       + `<path d="M-6 146.4h212" stroke="#d8fff0" stroke-width=".5" opacity=".45"/>`;
     let fg = '';
-    // the arm from the lower right corner: a dark coat sleeve folding at the elbow, a leather gauntlet cuff
+    // the arm from the lower right corner: a dark coat sleeve folding at the elbow, ending in a close leather cuff at
+    // the wrist; the glove comes out of the cuff in one line and holds the jar up from below
     const coat = { lit: '#4e6468', half: '#25343a', shadow: '#0f171c', outline: '#060a0c' }, gl = L.ramp('leather', 140, 94);
     const glove = { lit: mix(gl.lit, '#d8fff0', .15), half: gl.half, shadow: gl.shadow, outline: gl.outline };
-    fg += `<g filter="url(#drop${u})">` + PP.cloth(u, { spine: [[214, 250], [190, 184], [166, 130], [WR[0] + 3, WR[1] + 3]], w: [44, 34, 24, 17], tone: coat, lit: -1, rim: '#bfe8d8', rimSide: -1, rimOp: .6,
-      cuff: { from: .78, tone: { lit: mix(gl.lit, '#c8f0dc', .2), half: gl.half, shadow: gl.shadow, outline: gl.outline }, k: 1.22, roll: true }, seed: 5, L }) + '</g>';
-    // the hand round the jar: the palm and thumb behind it, the four fingers across its front
-    const H = PP.hand(u, { at: WR, a: -174, s: 3.7, m: -1, pose: 'open', split: true, thumb: 'back', spread: 3, curl: .45, tone: glove, nails: false });
+    const SPINE = [[216, 262], [197, 204], [181, 152], [WR[0], WR[1]]], CW = 14.4, tl = Math.hypot(WR[0] - 181, WR[1] - 152), TD = [(WR[0] - 181) / tl, (WR[1] - 152) / tl];
+    const Hd = holdHand(u, L, JAR, WR, TD, CW / 2, glove);
     const J = jar(u, L, JAR);
-    fg += H.back + J.body + J.glass + H.front;
-    // the stitching on the glove's back
-    { const a = H.P(1.2, -.6), b = H.P(4.6, -.9), c = H.P(1.2, .7), d = H.P(4.6, .8); fg += `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}M${f(c[0])} ${f(c[1])}L${f(d[0])} ${f(d[1])}" stroke="${gl.lit}" stroke-width=".3" stroke-dasharray=".8 .6" opacity=".6"/>`; }
+    fg += Hd.behind + J.body + J.glass + Hd.front;
+    fg += `<g filter="url(#drop${u})">` + PP.cloth(u, { spine: SPINE, w: [46, 33, 21, CW], tone: coat, lit: -1, rim: '#bfe8d8', rimSide: -1, rimOp: .6,
+      cuff: { from: .86, tone: { lit: mix(gl.lit, '#c8f0dc', .2), half: gl.half, shadow: gl.shadow, outline: gl.outline }, k: 1.04 }, seed: 5, L }) + '</g>';
     // the warmth round the jar and on the glove; the moon fills the air a little
     fg += K.localGlow(u, { x: JAR.x - 2, y: JAR.y - 20, color: '#ffc880', power: .65, radius: 36 }, { core: false })
       + glow(u, 50, 30, 60, 40, '#d8fff0', .12)
