@@ -55,7 +55,7 @@ module.exports = { name: 'Чёрные паруса в ночи', kind: 'deck', 
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     // the sky: deep night, the Milky Way, many stars; the moon behind the cloud bank, its glow round the edges
-    let bg = K.sky(u, L, { horizon: HZ, stars: 170, seed: 61 }) + milkyWay(u) + brightStars(u);
+    let bg = K.sky(u, L, { horizon: HZ, stars: 170, seed: 61, density: 1.2 }) + milkyWay(u) + brightStars(u);
     bg += K.sunMoon(u, L, { r: 6.6 });
     for (const [x, y, w, h, sd, fr] of [[152, 40, 86, 16, 4, 0], [182, 50, 50, 9, 9, .1], [116, 52, 44, 7, 13, .2], [196, 84, 34, 4, 21, .6], [86, 96, 40, 3, 27, .8]])
       bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });

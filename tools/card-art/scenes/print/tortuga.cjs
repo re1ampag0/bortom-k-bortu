@@ -55,7 +55,7 @@ module.exports = { name: 'Тортуга', kind: 'sea', status: 'draft', cam: { 
     const pal = { sky: ['#0a1230', '#18275a', '#2c4480', '#566aa0'], sea: ['#3a5086', '#1a2a50', '#0a1228'] };
     L.pal = Object.assign({}, L.pal, pal); LF.pal = Object.assign({}, LF.pal, pal);
     // ——— far: the sky, the hill with the town's lights, the harbour water, the ships at their moorings
-    let bg = K.sky(u, LF, { horizon: HZ, stars: 60, seed: 9 });
+    let bg = K.sky(u, LF, { horizon: HZ, stars: 60, seed: 9, density: 1 });
     bg += hill(u, LF);
     bg += K.water(u, LF, { horizon: HZ, bottom: QUAY + 2, swell: .1, seed: 6, glitter: false });
     bg += K.ship(u, LF, { kind: 'merchant', x: 96, y: 70, scale: .42, sails: 'furled', detail: 'far', lights: true, seed: 12 });
