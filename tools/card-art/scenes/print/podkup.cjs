@@ -25,7 +25,7 @@ const pr = (X, Y, Z) => [VX + FOC * X / Z, VY + FOC * Y / Z];
 const GR = { x0: -.6, x1: .6, z0: 1.7, z1: 2.9 };        // the grating in the deck overhead
 const light = { time: 'night', haze: .4, key: { type: 'point', x: 100, y: 4, h: 3, gy: 136, color: '#fff0d4', power: 1, radius: 170 },
   fill: { color: '#3a3444', power: .28 }, rim: { az: 0, color: '#ffe8c0', power: .3 } };
-const PP = [88, 52];                                     // the officer's pinch on the drawstring
+const PP = [89, 60];                                     // the officer's pinch on the drawstring (thumb and index pads)
 const TIE = [95, 71];                                    // the purse's neck (the tie)
 const BOT = [98, 106];                                   // the purse's bottom, in the boatswain's palm
 const HEAD = { x: 100, y: 132, rx: 66, ry: 11 };         // the barrel head the deal is struck over
@@ -37,7 +37,7 @@ const skel = { horizon: VY, eye: 1.4, light: 'the shaft of daylight from the gra
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const poly = pts => 'M' + pts.map(P2).join('L') + 'Z';
-const OFF = { lit: '#f6dcc2', half: '#d8ae90', shadow: '#7e563e', outline: '#3a2216' };
+const OFF = { lit: '#f4c49a', half: '#d4946a', shadow: '#86503a', outline: '#2e160c' };   // warm skin, a shade paler than the boatswain's
 const BOS = { lit: '#d8a070', half: '#a86c44', shadow: '#5a301a', outline: '#24120a' };
 
 module.exports = { name: 'Подкуп', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
@@ -118,13 +118,13 @@ function deal(u, L, R) {
   // the hands and the purse a little larger than the room's scale (they are close to us): one group scaled round the deal
   s += `<g transform="translate(100 92) scale(1.22) translate(-100 -92)">`;
   // ——— the boatswain: the bare forearm from the right edge (the rolled sleeve off the frame), the hand cupped palm up
-  const bo = { a: 172, s: 6, m: -1, roll: 25, pitch: 0, pose: 'wrap', r: 2.15, tone: BOS, light: [-.25, -.97], sw: .45, palmW: .86, wristW: .74, fingerW: 1.08 };
+  const bo = { a: 172, s: 5.2, m: -1, roll: 25, pitch: 0, pose: 'wrap', r: 2.45, tone: BOS, light: [-.25, -.97], sw: .45, palmW: .86, wristW: .74, fingerW: 1.08 };
   const hb = H.hand3(u, { ...bo, grip: [BOT[0], BOT[1] - 8] });
   const bw = hb.wrist;
   let fore = '';
   { const el = [216, 146], sp = [[bw[0] - 1.5, bw[1] + .4], [lerp(bw[0], el[0], .45), lerp(bw[1], el[1], .45) - 2], el];
     s += `<path d="M${f(bw[0])} ${f(bw[1] + 8)}Q160 ${f(bw[1] + 18)} 212 ${f(el[1] + 12)}" stroke="#000" stroke-width="8" opacity=".3" fill="none"/>`;
-    fore += H.cloth(u, { spine: sp, w: [16.4, 17.4, 19.4], tone: BOS, lit: -1, folds: false, sw: .45, rim: '#ffe0b0', rimSide: -1, rimOp: .5 });
+    fore += H.cloth(u, { spine: sp, w: [14.4, 15.8, 18.6], tone: BOS, lit: -1, folds: false, sw: .45, rim: '#ffe0b0', rimSide: -1, rimOp: .5 });
     // the hair on the forearm, the tattoo (an anchor and a band of rope), a vein
     for (let k = 0; k < 46; k++) { const t = .1 + R() * .84, x = lerp(sp[0][0], el[0], t), y = lerp(sp[0][1], el[1], t) + (R() - .55) * lerp(10, 15, t);
       fore += `<path d="M${f(x)} ${f(y)}l${f(1.6 + R())} ${f(-.6 - R() * .5)}" stroke="#2a160a" stroke-width=".22" opacity=".6"/>`; }
@@ -134,10 +134,14 @@ function deal(u, L, R) {
   s += hb.back;
 
   // ——— the officer: the navy sleeve from the top-left corner, the gold-laced cuff, the lace; the hand pinching the cord
-  const oo = { a: 22, s: 5.6, m: 1, roll: 60, pitch: 0, pose: 'pinch', tone: OFF, light: [-.25, -.97], sw: .4, palmW: .86, wristW: .8, fingerW: .9,
-    flex: [[10, 70, 30], [20, 50, 30], [25, 55, 30], [12, 24, 12]], thumbJ: [[1.25, -1.25, -.78], [3.0, -2.0, -1.5], [4.6, -2.1, -2.3], [6.0, -1.6, -2.9]] };
-  const ho0 = H.hand3(u, { ...oo, at: [0, 0] }), p0 = ho0.P(6.2, -1.45, -3.0), ho = H.hand3(u, { ...oo, at: [PP[0] - p0[0], PP[1] - p0[1]] });
-  const ow = ho.wrist, ax = [Math.cos(22 * Math.PI / 180), Math.sin(22 * Math.PI / 180)];
+  // seen from the thumb side, the back of the hand up: the index bends down, its pad meets the thumb's pad (the cord
+  // between them), the middle and ring fingers half bent behind, the little finger lifted
+  const OA = 10, PL = [5.58, -1.32, -3.86];   // the hand's direction (deg); the pinch between the pads (local)
+  const oo = { a: OA, s: 5.6, m: -1, roll: 72, pitch: 0, pose: 'pinch', tone: OFF, light: [-.25, -.97], sw: .4, palmW: .86, wristW: .8, fingerW: .82,
+    flex: [[35, 55, 20], [30, 45, 25], [34, 52, 28], [14, 28, 16]], yaw: [0, 3, 6, 11],
+    thumbJ: [[1.25, -1.25, -.78], [2.55, -2.0, -1.75], [3.85, -1.85, -2.75], [5.18, -1.45, -3.78]] };
+  const ho0 = H.hand3(u, { ...oo, at: [0, 0] }), p0 = ho0.P(...PL), ho = H.hand3(u, { ...oo, at: [PP[0] - p0[0], PP[1] - p0[1]] });
+  const ow = ho.wrist, ax = [Math.cos(OA * Math.PI / 180), Math.sin(OA * Math.PI / 180)];
   { const navy = { lit: '#4a5a8a', half: '#222c50', shadow: '#0a0e22', outline: '#04060e' }, cuffT = { lit: '#3a4a7a', half: '#1a2244', shadow: '#080a1a', outline: '#04060e' };
     const w0 = [ow[0] - ax[0] * 2, ow[1] - ax[1] * 2], el = [-24, 16];
     s += H.cloth(u, { spine: [el, [lerp(el[0], w0[0], .5), lerp(el[1], w0[1], .5) - 1], w0], w: [24, 20, 16.6], tone: navy, lit: 1, rim: '#c8d4ff', rimSide: -1, rimOp: .35, seed: 4, drapes: 2,
@@ -160,6 +164,10 @@ function deal(u, L, R) {
   { const g1 = [PP[0] + .4, PP[1] + .6];
     s += `<path d="M${P2(g1)}Q${f(lerp(g1[0], TIE[0], .5) - 1)} ${f(lerp(g1[1], TIE[1], .5))} ${f(TIE[0] - 1.4)} ${f(TIE[1] - 1)}" stroke="#7a5a14" stroke-width="1.1" fill="none"/><path d="M${P2(g1)}Q${f(lerp(g1[0], TIE[0], .5) - 1)} ${f(lerp(g1[1], TIE[1], .5))} ${f(TIE[0] - 1.4)} ${f(TIE[1] - 1)}" stroke="#e8c060" stroke-width=".45" fill="none"/>`
       + `<path d="M${P2([g1[0] + .8, g1[1] + .2])}Q${f(lerp(g1[0], TIE[0], .5) + 1.6)} ${f(lerp(g1[1], TIE[1], .5) + 1)} ${f(TIE[0] + 1.2)} ${f(TIE[1] - 1)}" stroke="#7a5a14" stroke-width="1.1" fill="none"/><path d="M${P2([g1[0] + .8, g1[1] + .2])}Q${f(lerp(g1[0], TIE[0], .5) + 1.6)} ${f(lerp(g1[1], TIE[1], .5) + 1)} ${f(TIE[0] + 1.2)} ${f(TIE[1] - 1)}" stroke="#f0d070" stroke-width=".4" fill="none"/>`; }
+  // the cord's end comes up through the pinch into the loop between the thumb and the index, a knot on it
+  { const a = ho.P(...PL), b = ho.P(4.95, -1.3, -2.9), c = ho.P(4.7, -1.3, -2.45);
+    s += `<path d="M${P2(a)}Q${P2(b)} ${P2(c)}" stroke="#7a5a14" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M${P2(a)}Q${P2(b)} ${P2(c)}" stroke="#f0d070" stroke-width=".4" fill="none"/>`
+      + `<circle cx="${f(c[0])}" cy="${f(c[1])}" r=".95" fill="#c8a040" stroke="#6a4a10" stroke-width=".3"/>`; }
   s += purse(u, L, R);
   s += ho.front + hb.front + fore;
   // the officer's signet ring on the little finger

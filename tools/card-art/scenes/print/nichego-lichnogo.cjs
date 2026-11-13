@@ -29,7 +29,7 @@ const lightOut = { time: 'day', haze: .35, key: { type: 'sun', x: 30, y: 6, colo
 const skel = { horizon: VY, eye: .25, light: 'daylight through the stern windows from behind (key, contre-jour) + the burning ship outside (warm, weak)', items: [
   ['stern windows', 15, 85, 170, 80, 'the back wall at 1.5 m'], ['burning ship', 72, 72, 82, 52, 'the sea outside'], ['table top', -10, 160, 220, 75, 'its far edge at the window (y 85)'],
   ['teacup + saucer', 66, 124, 40, 30, 'table, 0.65 m'], ['steam', 74, 98, 22, 40, 'over the cup'], ['teapot', 128, 102, 36, 34, 'table, 0.9 m'], ['ledger', 132, 134, 60, 22, 'table, front right'],
-  ['curtain', 176, 104, 30, 104, 'hangs at the right of the windows'], ['sealed note', 19, 121, 34, 12, 'table, left']] };
+  ['curtain', 176, 104, 30, 104, 'hangs at the right of the windows'], ['sealed note', 11, 118, 44, 16, 'table, left']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const poly = pts => 'M' + pts.map(P2).join('L') + 'Z';
@@ -136,10 +136,11 @@ function table(u, L, R) {
     s += `<path d="M${f(150.4)} 121.4q.6 8 -1 22" stroke="#a81a14" stroke-width=".7" fill="none"/>`; }
   // ——— a folded note at the left, sealed with the Company's red wax: somebody has been paid for this ———
   { const c = [36, 112], g = nid('nt', u);
+    s += `<g transform="translate(35 105.5) scale(1.27) translate(-36 -112)">`;   // raised and enlarged: the note must read
     s += `<path d="M${c[0] - 15} ${c[1] + 2.6}L${c[0] + 13} ${c[1] + 1.6}L${c[0] + 17} ${c[1] + 10}L${c[0] - 13} ${c[1] + 11.4}Z" fill="#000" opacity=".45"/>`
       + `<defs>${linGrad(g, 0, c[1] - 4, 0, c[1] + 10, [[0, '#fff6e2'], [1, '#c8b896']])}</defs><path d="M${c[0] - 17} ${c[1] + 1}L${c[0] + 11} ${c[1] - .4}L${c[0] + 15} ${c[1] + 8}L${c[0] - 15} ${c[1] + 9.4}Z" fill="url(#${g})" stroke="#8a7a5a" stroke-width=".3"/>`
       + `<path d="M${c[0] - 16} ${c[1] + 5}L${c[0] + 13} ${c[1] + 3.8}" stroke="#a89878" stroke-width=".4"/><path d="M${c[0] - 16.6} ${c[1] + 1.2}L${c[0] - 1} ${c[1] + 5}L${c[0] + 11} ${c[1] - .2}" stroke="#d8c8a8" stroke-width=".4" fill="none"/>`
-      + `<ellipse cx="${c[0] - 1}" cy="${c[1] + 5}" rx="3.6" ry="2" fill="#a81a14" stroke="#4a0806" stroke-width=".35"/><ellipse cx="${c[0] - 1}" cy="${c[1] + 4.8}" rx="2" ry="1" fill="none" stroke="#e86a54" stroke-width=".35"/><path d="M${c[0] - 2.6} ${c[1] + 4.2}q1.6 -1 3 -.6" stroke="#ffc0b0" stroke-width=".4" fill="none"/>`; }
+      + `<ellipse cx="${c[0] - 1}" cy="${c[1] + 5}" rx="3.6" ry="2" fill="#a81a14" stroke="#4a0806" stroke-width=".35"/><ellipse cx="${c[0] - 1}" cy="${c[1] + 4.8}" rx="2" ry="1" fill="none" stroke="#e86a54" stroke-width=".35"/><path d="M${c[0] - 2.6} ${c[1] + 4.2}q1.6 -1 3 -.6" stroke="#ffc0b0" stroke-width=".4" fill="none"/></g>`; }
   // ——— the cup on its saucer, the spoon, the steam ———
   s += cup(u, L);
   return s;

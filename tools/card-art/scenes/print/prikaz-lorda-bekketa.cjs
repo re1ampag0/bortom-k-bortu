@@ -45,9 +45,9 @@ module.exports = { name: 'Приказ лорда Беккета', kind: 'deck',
     let bg = K.sky(u, L, { horizon: HZ });
     for (const [x, y, w, h, sd, fr] of [[150, 26, 60, 9, 4, .25], [40, 58, 46, 6, 7, .5], [176, 64, 40, 5, 2, .6], [96, 78, 50, 4, 9, .75]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
     bg += K.water(u, L, { horizon: HZ, bottom: BT + 2, swell: .3, seed: 5, glitter: false });
-    bg += K.ship(u, L, { kind: 'dutch', x: ALLY.x, y: ALLY.y, scale: ALLY.scale, flip: true, sails: 'full', detail: 'far', seed: 4 });
+    bg += K.ship(u, L, { kind: 'dutch', x: ALLY.x, y: ALLY.y, scale: ALLY.scale, flip: true, sails: 'full', detail: 'mid', air: .12, seed: 4 });   // less haze: the ally must read
     { const b = K.shipBox('dutch', { x: ALLY.x, y: ALLY.y, scale: ALLY.scale, flip: true }), top = [ALLY.x + 1, b.top + 4];
-      bg += hoist(u, top, [ALLY.x + 15, ALLY.y - 8], 3, 2, 3, .95, 1); }
+      bg += hoist(u, top, [ALLY.x + 17, ALLY.y - 7], 3, 3.3, 3, 1, 1); }   // her answering hoist, big enough to read
     // ——— the deck: the bulwark across, the planks in perspective, the entry port at the right ———
     bg += deck(u, L, R);
     // ——— the soldiers, far to near, each with his shadow on the planks ———
@@ -238,7 +238,8 @@ function order(u, L, R) {
   // the edges turning away round the mast: a soft shade along both sides
   s += `<path d="M${P2(T(0))}L${P2(Bt(0))}" stroke="#6a5a3a" stroke-width="1.2" opacity=".5"/>`;
   // the dirk through the sheet's head into the mast: the blade's stub, the cross-guard, the grip, the pommel
-  { const p = S(.54, .03), a = 22 * Math.PI / 180, ux = Math.sin(a), uy = -Math.cos(a), q = [p[0] + ux * 15, p[1] + uy * 15];
+  { const p = S(.6, .05), a = 142 * Math.PI / 180,   // the hilt hangs down to the right, clear of the corner badge
+    ux = Math.sin(a), uy = -Math.cos(a), q = [p[0] + ux * 15, p[1] + uy * 15];
     s += `<path d="M${f(p[0] + 1)} ${f(p[1] + 1.4)}L${f(q[0] + 2.6)} ${f(q[1] + 1.6)}" stroke="#2a1608" stroke-width="2.4" opacity=".35" stroke-linecap="round"/>`
       + `<path d="M${P2(p)}L${f(p[0] + ux * 2)} ${f(p[1] + uy * 2)}" stroke="#c8d0d6" stroke-width="1.4"/>`
       + `<path d="M${f(p[0] + ux * 2 - uy * 4.6)} ${f(p[1] + uy * 2 + ux * 4.6)}L${f(p[0] + ux * 2 + uy * 4.6)} ${f(p[1] + uy * 2 - ux * 4.6)}" stroke="#7a5a18" stroke-width="2.4" stroke-linecap="round"/><path d="M${f(p[0] + ux * 1.6 - uy * 4.2)} ${f(p[1] + uy * 1.6 + ux * 4.2)}L${f(p[0] + ux * 1.6 + uy * 4.2)} ${f(p[1] + uy * 1.6 - ux * 4.2)}" stroke="#f0d070" stroke-width=".7" stroke-linecap="round"/>`
