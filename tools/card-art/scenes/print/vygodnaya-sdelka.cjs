@@ -165,27 +165,34 @@ module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 
       fg += hd.back + hd.front; }
 
     // ——— the signing hand from the right: a weathered hand in the writing pinch, the quill's nib at the end of the red
-    // flourish, the feather rising over the web of the thumb; the forearm bare to the rolled shirt sleeve ———
+    // flourish; the quill runs between the thumb and the index: the index lies along the barrel (in front of it), the
+    // thumb and the middle finger hold it from the other side (behind it, the thumb's tip showing past the barrel), the
+    // barrel rests in the web and rises over the back of the hand; the forearm bare to the rolled shirt sleeve ———
     { const qa = -34 * Math.PI / 180, qd = [Math.cos(qa), Math.sin(qa)], nx = -qd[1], ny = qd[0];
-      const qp = t => [nib[0] + qd[0] * t, nib[1] + qd[1] * t], pinch = qp(5.4);
-      const so = { a: 236, s: 2.3, m: 1, roll: 40, pitch: 0, pose: 'pinch', thumbFlex: [40, 30, 22], thumbSpread: -12, tone: SKIN, light: [-.8, -.55], sw: .32, palmW: .82, wristW: .72 };
-      const h0 = H.hand3(u, { ...so, at: [0, 0] }), p0 = h0.P(7.6, -1, -2.6), wr = [pinch[0] - p0[0], pinch[1] - p0[1]];
-      const hd = H.hand3(u, { ...so, at: wr });
+      const qp = t => [nib[0] + qd[0] * t, nib[1] + qd[1] * t], pinch = qp(4.6);
+      // a: the hand turned so the barrel (local: from the pinch 6, −1.9, −3.1 to the web 4, −1.5, 0) runs along the quill
+      const so = { a: 197, s: 2.3, m: 1, roll: 45, pitch: 0, pose: 'pinch', tone: SKIN, light: [-.8, -.55], sw: .32, palmW: .82, wristW: .72,
+        flex: [[45, 35, 5], [55, 45, 25], [62, 72, 44], [66, 78, 46]], backFingers: [1, 2, 3, 'thumb'],
+        thumbJ: [[1.25, -1.19, -.78], [3.0, -2.6, -1.5], [4.6, -2.7, -2.2], [5.5, -2.5, -3.0]] };
+      const h0 = H.hand3(u, { ...so, at: [0, 0] }), p0 = h0.P(6, -1.9, -3.1), at0 = [pinch[0] - p0[0], pinch[1] - p0[1]];
+      const hd = H.hand3(u, { ...so, at: at0 }), wr = hd.wrist;
       const shirt = { lit: '#b0a284', half: '#6e6250', shadow: '#2a2218', outline: '#140e08' };   // the shirt, in the table's shadow
-      const fa = (so.a - 180) * Math.PI / 180, el = [wr[0] + Math.cos(fa) * 31, wr[1] + Math.sin(fa) * 31];   // the forearm: on from the wrist, down to the near edge
+      const fa = 45 * Math.PI / 180, el = [wr[0] + Math.cos(fa) * 31, wr[1] + Math.sin(fa) * 31];   // the forearm: on from the wrist, down to the near edge
       let arm = H.cloth(u, { spine: [[el[0] + 30, el[1] + 30], [el[0] + 12, el[1] + 10], [el[0] + 2, el[1] + 1.6]], w: [20, 18.6, 17.4], tone: shirt, lit: -1, rim: '#a8c0e8', rimSide: 1, rimOp: .4, cuff: { from: .66, k: 1.14, roll: true }, seed: 9, drapes: 2, sw: .4 });
       arm = H.cloth(u, { spine: [[el[0] + 2, el[1] + .6], [lerp(el[0], wr[0], .5), lerp(el[1], wr[1], .5) - 1], [wr[0] + 1, wr[1] + .4]], w: [11.6, 10.4, 7.6], tone: SKIN, lit: -1, rim: '#a8c0e8', rimSide: 1, rimOp: .45, folds: false, capA: true, sw: .35 })
         + Array.from({ length: 12 }, (_, k) => { const t = .2 + R() * .6, p = [lerp(el[0], wr[0], t), lerp(el[1], wr[1], t) - 2 + R() * 4]; return ln(`M${P2(p)}l${f(-1 - R())} ${f(-.6 + R() * .3)}`, .22, '#4a2a18', .5); }).join('') + arm;
-      // the quill: the nib on the paper (wet red), the barrel under the fingers and over the web, the feather up right
-      const top = qp(40);
-      let qs = ln(`M${P2(nib)}L${P2(top)}`, 1.15, '#5a5040') + ln(`M${P2(nib)}L${P2(top)}`, .72, '#ece2c8') + ln(`M${P2(nib)}L${P2(qp(2.2))}`, .95, '#8a0a08');
+      // the quill: the nib on the paper (wet red); the barrel's lower part goes under the index (between it and the
+      // thumb), from the web up it lies over the back of the hand with the feather, up right
+      const top = qp(40), bar = t0 => ln(`M${P2(qp(t0))}L${P2(top)}`, 1.15, '#5a5040') + ln(`M${P2(qp(t0))}L${P2(top)}`, .72, '#ece2c8');
+      const qLow = bar(0) + ln(`M${P2(nib)}L${P2(qp(2.2))}`, .95, '#8a0a08');
+      let qs = bar(8);
       { const b0 = qp(14), b1 = qp(39.4), m0 = qp(26), w = 3.4;
         qs += `<path d="M${P2(b0)}Q${f(m0[0] + nx * w * 1.2)} ${f(m0[1] + ny * w * 1.2)} ${P2(b1)}Q${f(m0[0] - nx * w * .55)} ${f(m0[1] - ny * w * .55)} ${P2(b0)}Z" fill="#f4eee0" stroke="#a8a090" stroke-width=".3"/>`
           + Array.from({ length: 9 }, (_, k) => { const p = qp(15.6 + k * 2.6), l = 3 - Math.abs(k - 4) * .35; return `<path d="M${P2(p)}l${f(nx * l + qd[0] * 1.4)} ${f(ny * l + qd[1] * 1.4)}" stroke="#c8c0b0" stroke-width=".22"/>`; }).join('')
           + ln(`M${P2(qp(16))}L${P2(qp(38))}`, .3, '#fffaf0', .7); }
       // the drop of blood hanging at the nib
       qs += `<path d="M${f(nib[0] + .4)} ${f(nib[1] - .2)}q.9 1.4 .2 2.2q-.9 .4 -1 -.5q0 -.8 .8 -1.7z" fill="#b0140e" stroke="#4a0604" stroke-width=".15"/><circle cx="${f(nib[0] + .1)}" cy="${f(nib[1] + 1.3)}" r=".22" fill="#ffb0a0"/>`;
-      fg += arm + hd.back + qs + hd.front; }
+      fg += arm + hd.back + qLow + hd.front + qs; }
 
     // ——— the light: the candle's glow, the dark round it and down under the glass ———
     // the signer's arm goes down into the dark under the glass: it fades there, so the glass stays even

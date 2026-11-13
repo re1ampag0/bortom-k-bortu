@@ -22,12 +22,12 @@ const WET0 = 97, WET1 = 120;               // the wet, mirroring band of the bea
 // the sabres: pommel H, the guard at `g` units along, the blade goes into the sand at E
 const SM = { H: [58, 26], E: [126, 113], g: 17, w: 8.4, bend: 7, side: 1 };     // the smith's cutlass (in front)
 const SW = { H: [146, 28], E: [76, 114], g: 16, w: 6.6, bend: 5, side: -1 };    // the lady's sabre (behind)
-const RING = { x: 101, y: 117, r: 5.4 };
+const RING = { x: 101, y: 113.5, r: 8.1 };
 const light = { time: 'dusk', haze: .45, key: { type: 'sun', x: SUN.x, y: SUN.y, el: 2, color: '#ffb070', power: .95 },
   fill: { color: '#6a5a8a', power: .4 }, rim: { az: 0, color: '#ffd0a0', power: .8 } };
 const skel = { horizon: HZ, eye: 1.6, light: 'the setting sun right behind the sabres (contre-jour) + the afterglow of the sky (cold fill)', items: [
   ['smith cutlass', 52, 115, 80, 92, 'driven into the wet sand at 126,113'], ['lady sabre', 72, 116, 80, 90, 'driven into the sand at 76,114, leaning on the cutlass'],
-  ['ring', 95, 120, 12, 6, 'half in the sand between the points'], ['hammer', 18, 126, 34, 12, 'lying on the sand'], ['ribbon', 146, 60, 46, 26, 'tied round the lady\'s grip']] };
+  ['ring', 91, 119, 20, 11, 'half in the sand between the points'], ['hammer', 18, 126, 34, 12, 'lying on the sand'], ['ribbon', 146, 60, 46, 26, 'tied round the lady\'s grip']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const poly = pts => 'M' + pts.map(P2).join('L') + 'Z';
@@ -167,7 +167,11 @@ module.exports = { name: 'Тёрнер и Суонн', kind: 'deck', status: 'dr
         + `<path d="M-6 ${WET1 + 2}Q50 ${WET1 - 2} 100 ${WET1 + 1}T206 ${WET1}V290H-6Z" fill="url(#${g2})"/>`
         // the sun's long streak on the wet sand: a soft column, a few broken glints in it
         + glow(u, SUN.x, WET0 + 9, 9, 13, '#ffd8a0', .55)
-        + Array.from({ length: 6 }, (_, k) => { const y = WET0 + 2 + k * 3.4 + R() * 1.2, w = 3 + k * 1.4 + R() * 3; return `<path d="M${f(SUN.x - w / 2 + (R() - .5) * 4)} ${f(y)}h${f(w)}" stroke="#fff0c8" stroke-width=".55" stroke-linecap="round" opacity="${f(.8 - k * .1)}"/>`; }).join('')
+        // the bright mirror column of the sun down the wet sand: a hot core, widening and fading toward us
+        + (() => { const cg = nid('twl', u); return `<defs>${linGrad(cg, 0, WET0, 0, WET1 + 14, [[0, '#fff0c8', .85], [.35, '#ffd090', .55], [.75, '#ffb070', .2], [1, '#ffb070', 0]])}</defs>`
+          + `<path d="M${SUN.x - 5} ${WET0}L${SUN.x + 5} ${WET0}L${SUN.x + 12} ${WET1 + 14}L${SUN.x - 12} ${WET1 + 14}Z" fill="url(#${cg})" style="mix-blend-mode:screen"/>`; })()
+        + glow(u, SUN.x, WET0 + 14, 14, 20, '#ffc888', .4)
+        + Array.from({ length: 11 }, (_, k) => { const y = WET0 + 2 + k * 2.6 + R() * 1.2, w = 3 + k * 1.3 + R() * 3; return `<path d="M${f(SUN.x - w / 2 + (R() - .5) * 4)} ${f(y)}h${f(w)}" stroke="#fff0c8" stroke-width=".55" stroke-linecap="round" opacity="${f(.8 - k * .1)}"/>`; }).join('')
         // ripple marks in the dry sand, lit on the sun's side
         + Array.from({ length: 16 }, (_, k) => { const y = WET1 + 4 + k * k * .55 + R() * 2, x = -10 + R() * 40, ln = 40 + R() * 80; return `<path d="M${f(x)} ${f(y)}q${f(ln * .25)} -1.4 ${f(ln * .5)} 0t${f(ln * .5)} 0" stroke="#1a100a" stroke-width="${f(.5 + k * .06)}" fill="none" opacity=".5"/><path d="M${f(x)} ${f(y - .6)}q${f(ln * .25)} -1.4 ${f(ln * .5)} 0t${f(ln * .5)} 0" stroke="#c8906a" stroke-width=".35" fill="none" opacity=".45"/>`; }).join('')
         // a thin sheet of the last wave sliding back, its lace edge
@@ -175,9 +179,9 @@ module.exports = { name: 'Тёрнер и Суонн', kind: 'deck', status: 'dr
         + `<path d="M-6 ${WET0 + 6.8}Q30 ${WET0 + 9.8} 70 ${WET0 + 7.8}T150 ${WET0 + 9.8}T206 ${WET0 + 7.8}" stroke="#2a1e24" stroke-width=".5" fill="none" opacity=".4"/>`;
       // two trails of footprints coming to the sabres from the near left and the near right (one a bare heavy boot,
       // the other a slim shoe), shrinking with distance
-      for (const side of [-1, 1]) for (let k = 0; k < 7; k++) { const t = k / 6, y = 160 - t * 44, x = 100 + side * (52 - t * 26) + (k % 2 ? 3 : -3) * (1 - t * .5), s = 1 - t * .55;
+      for (const side of [-1, 1]) for (let k = 0; k < 7; k++) { const t = k / 6, y = 150 - t * 34, x = 100 + side * (50 - t * 22) + (k % 2 ? 3 : -3) * (1 - t * .5), s = 1.25 - t * .55;
         const rx = (side < 0 ? 2.6 : 1.9) * s, ry = (side < 0 ? 1.5 : 1.2) * s;
-        bg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="#120a06" opacity=".55"/><path d="M${f(x - rx)} ${f(y - ry * .3)}q${f(rx)} ${f(-ry * 1.1)} ${f(rx * 2)} 0" stroke="#d8a080" stroke-width="${f(.4 * s)}" fill="none" opacity=".55"/>`; }
+        bg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="#120a06" opacity=".7"/><path d="M${f(x - rx)} ${f(y - ry * .3)}q${f(rx)} ${f(-ry * 1.1)} ${f(rx * 2)} 0" stroke="#d8a080" stroke-width="${f(.4 * s)}" fill="none" opacity=".55"/>`; }
     }
     // ——— the long shadows of the sabres, coming at us from the entries, fanning from the sun ———
     let fg = '';
@@ -188,26 +192,33 @@ module.exports = { name: 'Тёрнер и Суонн', kind: 'deck', status: 'dr
     // ——— the reflections of the sabres in the wet sand, then the sabres: the lady's behind, the smith's in front ———
     const sw = blade(u, SW, .62), sm = blade(u, SM, .58);
     const swAll = sw.svg + ladyHilt(u, L, SW), smAll = sm.svg + smithHilt(u, L, SM);
-    fg += K.reflection(u, swAll, { y: SW.E[1], h: 14, L, opacity: .35, seed: 3 }) + K.reflection(u, smAll, { y: SM.E[1], h: 14, L, opacity: .35, seed: 5 });
+    fg += K.reflection(u, swAll, { y: SW.E[1], h: 22, L, opacity: .62, seed: 3 }) + K.reflection(u, smAll, { y: SM.E[1], h: 22, L, opacity: .62, seed: 5 });
     // each sabre is cut at its own sand entry (the part in the sand hidden)
     const cut = (o, svg) => { const id = nid('tcp', u); return `<defs><clipPath id="${id}"><rect x="-10" y="-10" width="220" height="${f(o.E[1] + 10.4)}"/></clipPath></defs><g clip-path="url(#${id})">${svg}</g>`; };
     fg += cut(SW, swAll) + entry(u, SW);
     // where the lady's blade lies against the smith's: a dark contact under it
     fg += cut(SM, smAll) + entry(u, SM);
     // ——— the ring, half in the sand between the points: a gold band seen from above at an angle, the sun in it ———
-    { const { x, y, r } = RING, k = .5, rg = nid('trg', u), ri = nid('tri', u);
-      fg += `<ellipse cx="${x + 1}" cy="${y + 1.6}" rx="${r + 1.4}" ry="${f(r * k + .8)}" fill="#1a0e08" opacity=".5"/>`
+    { const { x, y, r } = RING, k = .56, ry = r * k, bw = 2, rg = nid('trg', u), ri = nid('tri', u), rh = nid('trh', u);
+      fg += `<ellipse cx="${x + 1}" cy="${f(y + 2)}" rx="${r + 1.6}" ry="${f(ry + 1)}" fill="#1a0e08" opacity=".5"/>`
         + `<defs>${linGrad(rg, x - r, y, x + r, y, [[0, '#7a4a10', 1], [.3, '#e8b040', 1], [.55, '#fff6c8', 1], [.75, '#d89a28', 1], [1, '#5a3408', 1]])}`
-        + linGrad(ri, x - r, y, x + r, y, [[0, '#3a2004', 1], [.5, '#a8701c', 1], [1, '#3a2004', 1]]) + `</defs>`
-        // the far half of the band (its inside face seen), the sand inside, then the near half over it
-        + `<path d="M${f(x - r)} ${f(y)}A${f(r)} ${f(r * k)} 0 0 1 ${f(x + r)} ${f(y)}" stroke="url(#${ri})" stroke-width="2.4" fill="none"/>`
-        + `<ellipse cx="${x}" cy="${f(y + .3)}" rx="${f(r - 1.3)}" ry="${f(r * k - .9)}" fill="#7a5644"/>`
-        + `<path d="M${f(x - r)} ${f(y)}A${f(r)} ${f(r * k)} 0 0 0 ${f(x + r)} ${f(y)}" stroke="url(#${rg})" stroke-width="2.6" fill="none"/>`
-        + `<path d="M${f(x - r + 1)} ${f(y + 1.4)}A${f(r - .6)} ${f(r * k - .4)} 0 0 0 ${f(x + r - 1)} ${f(y + 1.4)}" stroke="#2a1604" stroke-width=".4" fill="none" opacity=".6"/>`
+        + linGrad(ri, x - r, y, x + r, y, [[0, '#2a1604', 1], [.5, '#8a5a14', 1], [1, '#2a1604', 1]])
+        + `<clipPath id="${rh}"><ellipse cx="${x}" cy="${f(y)}" rx="${f(r - bw * .5)}" ry="${f(ry - bw * .5)}"/></clipPath></defs>`
+        // the hole: wet sand seen through it, the band's own shadow on it at the far side, then the band's inner face
+        + `<ellipse cx="${x}" cy="${f(y)}" rx="${f(r - bw * .5)}" ry="${f(ry - bw * .5)}" fill="#7a5848"/>`
+        + `<g clip-path="url(#${rh})"><ellipse cx="${x}" cy="${f(y - 1.4)}" rx="${f(r - .4)}" ry="${f(ry - .6)}" fill="none" stroke="#24140c" stroke-width="2.2" opacity=".75"/>`
+        + `<path d="M${f(x - 3)} ${f(y + 1.2)}h6" stroke="#ffd8a8" stroke-width=".5" stroke-linecap="round" opacity=".7"/></g>`
+        // the far half of the band (its inside face seen, darker), then the near half (the outside face, the sun in it)
+        + `<path d="M${f(x - r)} ${f(y)}A${f(r)} ${f(ry)} 0 0 1 ${f(x + r)} ${f(y)}" stroke="url(#${ri})" stroke-width="${bw}" fill="none"/>`
+        + `<path d="M${f(x - r + .4)} ${f(y - .6)}A${f(r - .4)} ${f(ry - .4)} 0 0 1 ${f(x + r - .4)} ${f(y - .6)}" stroke="#ffd070" stroke-width=".4" fill="none" opacity=".75"/>`
+        + `<path d="M${f(x - r)} ${f(y)}A${f(r)} ${f(ry)} 0 0 0 ${f(x + r)} ${f(y)}" stroke="url(#${rg})" stroke-width="${bw + .8}" fill="none"/>`
+        // the rims: the outer edge dark, the inner edge of the near half a thin bright line, so the band reads as a hoop
+        + `<ellipse cx="${x}" cy="${f(y)}" rx="${f(r + bw * .55)}" ry="${f(ry + bw * .55)}" fill="none" stroke="#2a1604" stroke-width=".45"/>`
+        + `<path d="M${f(x - r + bw * .6)} ${f(y + .3)}A${f(r - bw * .6)} ${f(ry - bw * .6)} 0 0 0 ${f(x + r - bw * .6)} ${f(y + .3)}" stroke="#fff4c8" stroke-width=".45" fill="none" opacity=".9"/>`
         // sand heaped over its near-left edge (half sunk)
-        + `<path d="M${f(x - r - 2.4)} ${f(y + 3)}q2 -3.6 5.6 -1.2q1.6 1.4 3 2.4z" fill="#6a4c3c"/><path d="M${f(x - r - 2)} ${f(y + 2.4)}q2 -3 5 -1.2" stroke="#e0a880" stroke-width=".4" fill="none" opacity=".7"/>`
-        + K.localGlow(u, { x: x + 1.5, y: y + 2.2, color: '#ffe0a0', power: .7, radius: 11 }, { core: false })
-        + `<path d="M${x + 1.5 - 4.6} ${f(y + 2.2)}h9.2M${x + 1.5} ${f(y + 2.2 - 3.4)}v6.8" stroke="#fffaf0" stroke-width=".45" stroke-linecap="round"/><circle cx="${x + 1.5}" cy="${f(y + 2.2)}" r=".8" fill="#fff"/>`; }
+        + `<path d="M${f(x - r - 2.6)} ${f(y + ry + .6)}q2.4 -4 6.4 -1.6q1.8 1.4 3.4 2.6z" fill="#6a4c3c"/><path d="M${f(x - r - 2.2)} ${f(y + ry)}q2.2 -3.2 5.6 -1.4" stroke="#e0a880" stroke-width=".4" fill="none" opacity=".7"/>`
+        + K.localGlow(u, { x: x + 2.4, y: y + ry, color: '#ffe0a0', power: .7, radius: 12 }, { core: false })
+        + `<path d="M${x + 2.4 - 4.8} ${f(y + ry)}h9.6M${x + 2.4} ${f(y + ry - 3.6)}v7.2" stroke="#fffaf0" stroke-width=".45" stroke-linecap="round"/><circle cx="${x + 2.4}" cy="${f(y + ry)}" r=".8" fill="#fff"/>`; }
     // ——— the smith's hammer, dropped on the sand at the left: an ash handle, a forged head, its shadow ———
     { const a = [20, 128], b = [44, 117], hv = [(b[0] - a[0]) / 26.4, (b[1] - a[1]) / 26.4], pv = [-hv[1], hv[0]];
       fg += `<path d="M${f(a[0] + 1)} ${f(a[1] + 2.4)}L${f(b[0] + 2)} ${f(b[1] + 2.6)}L${f(b[0] + 8)} ${f(b[1] + 4)}L${f(b[0] - 6)} ${f(b[1] + 6)}Z" fill="#120a08" opacity=".45" filter="url(#drop${u})"/>`

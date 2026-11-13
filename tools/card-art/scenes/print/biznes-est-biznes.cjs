@@ -34,17 +34,18 @@ const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const toVP = (p, y) => [VX + (p[0] - VX) * (y - VY) / (p[1] - VY), y];
 
 // KIT-CANDIDATE (as in kaperskiy-patent.cjs): a glass inkwell with a quill leaning to the right
-function inkwell(u, L, x, y, k = 1) {
+// qk — the quill's length (1 as before), shortened towards the neck of the inkwell
+function inkwell(u, L, x, y, k = 1, qk = 1) {
   const sc = `<g transform="translate(${x} ${y}) scale(${k}) translate(${-x} ${-y})">`;
   let out = K.shadeCyl(u, x, y, x, y - 6.5, 4.4, L, 'glass', { r1: 4.6, r2: 3.4, ell: .34, face: 2, outline: .4 })
     + `<path d="M${f(x - 4.1)} ${f(y - 2.2)}q4.1 1.4 8.2 0v1.6q-4.1 1.6 -8.2 0z" fill="#0c0f1a" opacity=".85"/>`
     + K.shadeCyl(u, x, y - 6.5, x, y - 8.2, 1.9, L, 'brass', { ell: .34, face: 2, outline: .35 }) + `<ellipse cx="${f(x)}" cy="${f(y - 8.2)}" rx="1.3" ry=".45" fill="#05070c"/>`;
-  const q0 = [x - .2, y - 8.5], q1 = [x - 12, y - 40], rp = L.ramp('linen', x - 6, y - 26);
-  out += `<path d="M${P2(q0)}Q${f(x - 4)} ${f(y - 26)} ${P2(q1)}" stroke="${rp.half}" stroke-width=".7" fill="none"/>`;
-  const vane = [[x - 2.6, y - 18], [x - 1, y - 28], [x - 4, y - 37], [x - 11.4, y - 40.4], [x - 9.4, y - 31], [x - 6.8, y - 23], [x - 2.6, y - 18]];
-  out += `<path d="M${vane.map(P2).join('L')}Z" fill="${mix(rp.lit, '#f6ecd6', .55)}" stroke="${rp.outline}" stroke-width=".3" opacity=".95"/><path d="M${f(x - 2.4)} ${f(y - 18)}Q${f(x - 4.6)} ${f(y - 30)} ${f(x - 11.2)} ${f(y - 39.6)}" stroke="#fffaf0" stroke-width=".45" fill="none" opacity=".8"/>`;
-  const R = rng(5); for (let i = 0; i < 12; i++) { const t = .15 + i / 13 * .8, sx = lerp(x - 2.4, x - 11.2, t), sy = lerp(y - 18, y - 40, t);
-    out += `<path d="M${f(sx)} ${f(sy)}l${f(3 - t * 1.6 + R() * .6)} ${f(-1.6 - R())}" stroke="${rp.shadow}" stroke-width=".22" opacity=".5"/><path d="M${f(sx)} ${f(sy)}l${f(-(2.4 - t))} ${f(.6 + R() * .4)}" stroke="${rp.half}" stroke-width=".22" opacity=".6"/>`; }
+  const q0 = [x - .2, y - 8.5], Q = (px, py) => [q0[0] + (px - q0[0]) * qk, q0[1] + (py - q0[1]) * qk], q1 = Q(x - 12, y - 40), rp = L.ramp('linen', x - 6, y - 26);
+  out += `<path d="M${P2(q0)}Q${P2(Q(x - 4, y - 26))} ${P2(q1)}" stroke="${rp.half}" stroke-width=".7" fill="none"/>`;
+  const vane = [[x - 2.6, y - 18], [x - 1, y - 28], [x - 4, y - 37], [x - 11.4, y - 40.4], [x - 9.4, y - 31], [x - 6.8, y - 23], [x - 2.6, y - 18]].map(p => Q(p[0], p[1]));
+  out += `<path d="M${vane.map(P2).join('L')}Z" fill="${mix(rp.lit, '#f6ecd6', .55)}" stroke="${rp.outline}" stroke-width=".3" opacity=".95"/><path d="M${P2(Q(x - 2.4, y - 18))}Q${P2(Q(x - 4.6, y - 30))} ${P2(Q(x - 11.2, y - 39.6))}" stroke="#fffaf0" stroke-width=".45" fill="none" opacity=".8"/>`;
+  const R = rng(5); for (let i = 0; i < 12; i++) { const t = .15 + i / 13 * .8, [sx, sy] = Q(lerp(x - 2.4, x - 11.2, t), lerp(y - 18, y - 40, t));
+    out += `<path d="M${f(sx)} ${f(sy)}l${f((3 - t * 1.6 + R() * .6) * qk)} ${f((-1.6 - R()) * qk)}" stroke="${rp.shadow}" stroke-width=".22" opacity=".5"/><path d="M${f(sx)} ${f(sy)}l${f(-(2.4 - t) * qk)} ${f((.6 + R() * .4) * qk)}" stroke="${rp.half}" stroke-width=".22" opacity=".6"/>`; }
   return sc + out + '</g>';
 }
 
@@ -156,7 +157,9 @@ module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', sta
         if (sd < 0) { // two kegs of powder, side by side, the Company's mark painted on each
           for (const [dx, sd2] of [[-5.6, 3], [5.8, 5]]) { const kx = ex + dx, ky = pan + 1.8, ks = .5;
             // pale staves and dark hoops read as a keg at this size; the Company's mark burnt into the belly
+            // the hoops a shade darker than the kit's iron, so they part from the brass of the pan
             sc += K.barrel(u, L, { x: kx, y: ky, s: ks, kind: 'water', seed: sd2, contact: false })
+                .replace(/<path d="([^"]+)" fill="url\(#[^)]+\)" stroke="[^"]+" stroke-width="[^"]+" stroke-linejoin="round"\/>/g, (m, d) => `${m}<path d="${d}" fill="#140c06" opacity=".38"/>`)
               + `<circle cx="${f(kx)}" cy="${f(ky - 7.4)}" r="2.5" fill="none" stroke="#3a1a0a" stroke-width=".6" opacity=".9"/><path d="M${f(kx)} ${f(ky - 9.7)}v4.6M${f(kx - 2.3)} ${f(ky - 7.4)}h4.6" stroke="#3a1a0a" stroke-width=".6" opacity=".9"/>`
               + `<path d="M${f(kx - 4.6)} ${f(ky - 14.4)}Q${f(kx)} ${f(ky - 16.2)} ${f(kx + 4.6)} ${f(ky - 14.4)}" stroke="#fff4d0" stroke-width=".5" fill="none" opacity=".8"/>`; }
         } else { // a heap of gold: leaning stacks and loose coins, heaped above the rim
@@ -186,7 +189,7 @@ module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', sta
         for (let k = 0; k < 8; k++) { const b = .14 + k * .1, l = .16 + R() * .14; fg += ln(`M${P2(at(a0 + .02, b))}L${P2(at(a0 + .02 + l, b))}`, .45, '#3a2a1a', .8) + ln(`M${P2(at(a0 + .32, b))}L${P2(at(a0 + .32 + .08 + R() * .06, b))}`, .5, '#2a1a10', .85); } }
       fg += ln(`M${P2(at(.88, .86))}L${P2(at(.98, .86))}`, .5, '#2a1a10', .9) + ln(`M${P2(at(.86, .9))}L${P2(at(.98, .9))}`, .35, '#2a1a10', .9);
       fg += `<path d="M${P2(at(.52, 1))}q.6 5 -1.4 9l1.4 -.4l.8 1.4" stroke="#b02a1a" stroke-width=".9" fill="none"/>`; }
-    fg += K.castShadow(u, L, { x: 184, y: 100, w: 10, h: 10, horizon: VY, d: .9 }) + inkwell(u, L, 184, 100, 1.2);
+    fg += K.castShadow(u, L, { x: 184, y: 100, w: 10, h: 10, horizon: VY, d: .9 }) + inkwell(u, L, 184, 100, 1.2, .67);
     // the sun's shafts through the dusty air from the window down onto the desk; motes in them
     fg += shafts(u, 70, -30, [[60, 120, 92, 124], [104, 118, 132, 112], [24, 104, 44, 112]], '#fff4d0', .2) + motes(26, 50, 60, 90, 50, '#fff4d8', 9);
     // the room darkens to the sides and down under the glass
