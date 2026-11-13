@@ -175,10 +175,11 @@ function hand(u, o) {
 //   pose: 'wrap' (round a cylinder of radius r, default .8 — a hammer handle; 2 — a bottle) | 'fist' | 'open' |
 //   'relaxed' | 'point' | 'scissor' (index and middle straight, pressed together: a card between them) | 'pinch';
 //   flex: [[mcp, pip, dip] × 4] degrees (own pose, index → little), spread (deg), thumbFlex: [cmc, mcp, ip] deg,
-//   thumbSpread (deg, + away from the fingers), tilt (deg: for 'wrap', the handle across the palm runs diagonal);
+//   thumbSpread (deg, + away from the fingers), yaw: [i, m, r, l] (deg, each finger's own sideways angle), tilt (deg: for 'wrap', the handle across the palm runs diagonal);
 //   tone (skin ramp: lit, half, shadow, outline), light: [x, y] screen direction to the light (default up-left),
 //   nails, knuckles (true), sw (outline), backFingers: [0..3, 'thumb'] — pieces to put in `back` (a card between
-//   the fingers: the middle finger behind it) }
+//   the fingers: the middle finger behind it); pitch: degrees round the hand's y — + tips the finger end towards us
+//   (we look down on a fist: the curled fingers show beyond the knuckles) }
 // Returns { back, front, P (local x, y, z → picture), wrist, grip (picture point of the handle axis), axis (unit,
 // along the handle in the picture), r (the handle radius in picture units) }.
 const HFING = [{ k: [4.75, -1.45], l: 4.2, w: 1.1, sp: -1.5 }, { k: [5.0, -.48], l: 4.7, w: 1.14, sp: -.5 },
@@ -192,17 +193,19 @@ const HPOSE = {
 };
 function hand3(u, o) {
   const s = o.s || 1, m = o.m || 1, an = (o.a || 0) * Math.PI / 180, ux = Math.cos(an), uy = Math.sin(an), nx = -uy, ny = ux;
-  const rl = (o.roll || 0) * Math.PI / 180, cr = Math.cos(rl), sr = Math.sin(rl);
+  const rl = (o.roll || 0) * Math.PI / 180, cr = Math.cos(rl), sr = Math.sin(rl), pt = (o.pitch || 0) * Math.PI / 180, cp = Math.cos(pt), spp = Math.sin(pt);
   const tn = o.tone, sw = o.sw || .36, pose = o.pose || 'relaxed', wrap = pose === 'wrap' || pose === 'fist';
   const r = pose === 'fist' ? .12 : (o.r != null ? o.r : .8), tilt = (o.tilt != null ? o.tilt : 10) * Math.PI / 180;
   const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sc = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
   const nrm = a => sc(a, 1 / (Math.hypot(a[0], a[1], a[2]) || 1));
   // the view: a rotation about the hand's x axis; depth > 0 — towards us
-  const yv = p => p[1] * cr + p[2] * sr, dep = p => -p[1] * sr + p[2] * cr;
-  const VIEW = [0, -sr, cr];
+  // pitch first (about the hand's y: + brings the finger end towards us), then roll (about its x)
+  const pz = p => p[0] * spp + p[2] * cp, px = p => p[0] * cp - p[2] * spp;
+  const yv = p => p[1] * cr + pz(p) * sr, dep = p => -p[1] * sr + pz(p) * cr;
+  const VIEW = [spp * cr, -sr, cp * cr];
   let W = o.at || [0, 0];
-  const scr = p => { const y = yv(p); return [W[0] + s * (p[0] * ux + m * y * nx), W[1] + s * (p[0] * uy + m * y * ny)]; };
+  const scr = p => { const y = yv(p), x = px(p); return [W[0] + s * (x * ux + m * y * nx), W[1] + s * (x * uy + m * y * ny)]; };
   // the handle axis (wrap): along y, tilted so it is nearer the knuckles at the index side; z under the palm
   const zc = -(.85 + r), axX = y => 4.5 - Math.tan(tilt) * y;
   if (o.grip) { const g0 = scr([axX(-.48), -.48, zc]); W = [W[0] + o.grip[0] - g0[0], W[1] + o.grip[1] - g0[1]]; }
@@ -213,7 +216,7 @@ function hand3(u, o) {
   const digits = [];
   HFING.forEach((F, i) => {
     const K0 = [F.k[0], F.k[1], -.42], ls = [F.l * .45, F.l * .32, F.l * .26], ws = [F.w, F.w * .92, F.w * .84, F.w * .74];
-    const yaw = (wrap ? -F.sp * 1.5 * Math.PI / 180 : F.sp * spread), d0 = [Math.cos(yaw), Math.sin(yaw), 0];
+    const yaw = (pr.yaw ? pr.yaw[i] * Math.PI / 180 : wrap ? -F.sp * 1.5 * Math.PI / 180 : F.sp * spread), d0 = [Math.cos(yaw), Math.sin(yaw), 0];
     const J = [K0], D = [];
     if (wrap) {
       // walk round the handle: each joint on the circle of radius ρ about the axis, in the finger's own plane
@@ -229,7 +232,7 @@ function hand3(u, o) {
     digits.push({ id: i, J, ws, D });
   });
   { // the thumb: from the ball of the thumb (the carpal joint), three bones
-    const C0 = [1.05, -1.55, -.78], ls = [2.0, 1.55, 1.25], ws = [1.3, 1.16, 1.06, .96], J = [C0];
+    const C0 = [1.25, -1.45, -.78], ls = [1.75, 1.45, 1.2], ws = [1.4, 1.2, 1.08, .96], J = [C0];
     if (wrap) {
       // round the handle the other way from the fingers, rising from the palm, its tip over the index finger
       const ya = [-2.1, -1.7, -.95], ca = [axX(-1.9), zc]; let th = Math.atan2(J[0][2] - ca[1], J[0][0] - ca[0]);
@@ -263,7 +266,7 @@ function hand3(u, o) {
       const i = Math.round((j - j0) / (j1 - j0) * T.N), facing = dot(dg.D[Math.min(2, j)], VIEW) + dot(dg.D[j - 1], VIEW);
       const p = T.at(i, -.62), q = T.at(i, .62), c = T.at(i, 0);
       if (facing > .1) r2 += `<path d="M${f(p[0])} ${f(p[1])}Q${f(c[0] + (c[0] - T.at(Math.max(0, i - 1), 0)[0]) * 1.4)} ${f(c[1] + (c[1] - T.at(Math.max(0, i - 1), 0)[1]) * 1.4)} ${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.16 * s)}" fill="none" opacity=".7"/>`
-        + `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${f(dg.ws[j] * s * .3)}" ry="${f(dg.ws[j] * s * .2)}" fill="${tn.lit}" opacity=".35"/>`;
+        + `<path d="M${f(T.at(i, -.4)[0])} ${f(T.at(i, -.4)[1])}Q${f(c[0])} ${f(c[1])} ${f(T.at(i, .4)[0])} ${f(T.at(i, .4)[1])}" stroke="${tn.lit}" stroke-width="${f(dg.ws[j] * s * .18)}" fill="none" stroke-linecap="round" opacity=".4" transform="translate(${f((c[0] - T.at(Math.max(0, i - 1), 0)[0]) * -.6)} ${f((c[1] - T.at(Math.max(0, i - 1), 0)[1]) * -.6)})"/>`;
       else r2 += `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.2 * s)}" opacity=".8"/>`;
     }
     r2 += `<path d="${sp(out, true)}" fill="none" stroke="${tn.outline}" stroke-width="${sw}"/>`;
@@ -288,8 +291,9 @@ function hand3(u, o) {
   }
   // the palm: the back (z 0) and the inside (z −.85) outlines and the ball of the thumb, as one convex body
   const PB = [[-.4, -1.55], [1.4, -2.05], [3.2, -2.15], [4.6, -1.95], [5.05, -1.0], [5.15, 0], [5.0, .95], [4.6, 1.85], [3.0, 2.05], [1.2, 1.9], [-.4, 1.5]];
-  const pts3 = [...PB.map(p => [p[0], p[1], 0]), ...PB.map(p => [p[0] * .97, p[1] * .95, -.85]), [1.2, -1.9, -1.25], [2.4, -1.6, -1.35], [1.6, 1.4, -1.15]];
-  const hull = (() => { const Q = pts3.map(p => [p[0], yv(p)]).sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr2 = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
+  const TJ = digits[4].J, web = [lerp(TJ[0][0], TJ[1][0], .7), lerp(TJ[0][1], TJ[1][1], .7), lerp(TJ[0][2], TJ[1][2], .7)];
+  const pts3 = [...PB.map(p => [p[0], p[1], 0]), ...PB.map(p => [p[0] * .97, p[1] * .95, -.85]), [1.2, -1.9, -1.25], [2.4, -1.6, -1.35], [1.6, 1.4, -1.15], web];
+  const hull = (() => { const Q = pts3.map(p => [px(p), yv(p)]).sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr2 = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
     const lo = [], up = []; for (const p of Q) { while (lo.length > 1 && cr2(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
     for (const p of Q.slice().reverse()) { while (up.length > 1 && cr2(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
     return lo.slice(0, -1).concat(up.slice(0, -1)); })();
@@ -298,7 +302,7 @@ function hand3(u, o) {
   { const g = nid('h3p', u), cx = H2.reduce((a, p) => a + p[0], 0) / H2.length, cy = H2.reduce((a, p) => a + p[1], 0) / H2.length, R0 = 3.2 * s;
     palm += `<defs>${linGrad(g, cx + Ls[0] * R0, cy + Ls[1] * R0, cx - Ls[0] * R0, cy - Ls[1] * R0, [[0, tn.lit, 1], [.4, tn.half, 1], [.85, tn.shadow, 1], [1, tn.shadow, 1]])}</defs>`
       + `<path d="${sp(H2, true)}" fill="url(#${g})" stroke="${tn.outline}" stroke-width="${sw}"/>`;
-    const backVis = cr, palmVis = -cr;
+    const backVis = cr * cp, palmVis = -cr * cp;
     if (backVis > .25) {
       // the back of the hand: tendons fanning from the wrist to the knuckles, the knuckle row in the light
       for (const F of HFING.slice(0, 3)) { const a0 = P(2.2, F.k[1] * .55, .02), a1 = P(F.k[0] - .5, F.k[1] * .92, .02);
