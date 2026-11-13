@@ -19,20 +19,26 @@ const { rimArc } = require('./lib/hat.cjs');
 const { f, mix, nid, linGrad, radGrad, rng, lerp } = K;
 const { glow, gloom, motes, woodTex } = PK;
 
-const VP = [100, 70];                                 // the vanishing point: his eye level, a little left of his face
-const WT = 22, WB = 178, WL = 22, WR = 178;           // the hull side behind him (the back wall): top, floor line, sides
-const HEAD = { c: [106, 72], r: 12.6 };
-const GRIP = [49, 60];                                // where his fist closes round the rope
-const BLOCK = [48, 24];                               // the block on the beam
-const light = { time: 'night', haze: .3, key: { type: 'moon', x: 40, y: -20, el: 64, color: '#a8f4d4', power: .8 },
+// The scene is drawn with the grating, the block and his free arm on the left and mirrored at the end (the type
+// medallion covers the top left corner; the raised fist and the block go to the free top right).
+const VP = [100, 64];                                 // the vanishing point: his eye level
+const WT = 22, WB = 178, WL = 12, WR = 188;           // the hull side behind him (the back wall): top, floor line, sides
+// Bill is drawn at 1 in his own units and zoomed ×1.35 about ZO (as if a step nearer), so he fills the space over the glass
+const ZOOM = 1.35, ZO = [134.6, 100];
+const Z = p => [ZO[0] + (p[0] - ZO[0]) * ZOOM, ZO[1] + (p[1] - ZO[1]) * ZOOM];
+const HEAD = { c: [106, 72], r: 12.6 };               // (his units)
+const GRIP = [52, 68];                                // where his fist closes round the rope (his units)
+const BLOCK = [50, 40];                               // the block under the beam (his units)
+const light = { time: 'night', haze: .3, key: { type: 'moon', x: 80, y: -20, el: 64, color: '#a8f4d4', power: .8 },
   fill: { color: '#16302a', power: .35 }, rim: { az: 330, color: '#9ff0d0', power: .3 } };
-const skel = { horizon: VP[1], eye: 1.6, light: 'a narrow green shaft from the hatch grating upper left (key); the hold dark', items: [
+const skel = { horizon: VP[1], eye: 1.6, light: 'a narrow green shaft from the hatch grating upper middle-right (key); the hold dark (skel boxes as drawn before the mirror)', items: [
   ['deckhead', 0, WT, 200, WT, 'beams and planks overhead, to the vanishing point'], ['grating', 30, 12, 40, 12, 'deckhead'],
-  ['hull side', WL, WB, WR - WL, WB - WT, 'back wall'], ['Bill', 56, 290, 120, 240, 'stands on the floor (feet off the frame), grown into the hull side on our right'],
-  ['fist and rope', 36, 72, 26, 30, 'rope from the block'], ['block', 42, 30, 12, 16, 'hangs from the beam'], ['floor', -10, 290, 220, 290 - WB, 'floor']] };
+  ['hull side', WL, WB, WR - WL, WB - WT, 'back wall'], ['Bill', 28, 290, 148, 250, 'stands on the floor (feet off the frame), grown into the hull side'],
+  ['fist and rope', 12, 74, 30, 30, 'rope from the block'], ['block', 16, 30, 16, 22, 'hangs from the deckhead'], ['floor', -10, 290, 220, 290 - WB, 'floor']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const SKIN = { lit: '#bccaa8', half: '#7e9076', core: '#667a60', shadow: '#33422f', outline: '#121a10' };   // drowned grey-green
+const HAND = { lit: '#9cae8e', half: '#6a7c62', core: '#566a50', shadow: '#2c3a28', outline: '#10180e' };
 const COAT = { lit: '#4e5e52', half: '#28342c', shadow: '#101814', outline: '#040806' };
 const RIMC = '#9ff0d0';
 const toVP = (p, y) => { const k = (y - VP[1]) / (p[1] - VP[1]); return [VP[0] + (p[0] - VP[0]) * k, y]; };   // along the line to the VP, to height y
@@ -79,19 +85,19 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft
     for (let k = 0, y = WT; y < WB; k++, y += 15.6) bg += woodTex(u, WL, y, WR - WL, 15.6, '#24382f', '#14221c', '#060c0a', 15.6, false, 40 + k)
       + `<path d="M${WL} ${f(y + 15.2)}H${WR}" stroke="#030605" stroke-width="1.1"/><path d="M${WL} ${f(y + .8)}H${WR}" stroke="#5a8a78" stroke-width=".45" opacity=".3"/>`
       + PK.nails([[WL + 14 + (k * 37) % 50, y + 4], [WL + 14 + (k * 37) % 50, y + 11.6], [WL + 104 + (k * 23) % 30, y + 4], [WL + 104 + (k * 23) % 30, y + 11.6]], '#0a1210', .7);
-    for (const x of [30, 160]) bg += `<rect x="${x}" y="${WT}" width="14" height="${WB - WT}" fill="#18281f"/><rect x="${x}" y="${WT}" width="14" height="${WB - WT}" fill="url(#oakH${u})" opacity=".35"/>`
+    for (const x of [16]) bg += `<rect x="${x}" y="${WT}" width="14" height="${WB - WT}" fill="#18281f"/><rect x="${x}" y="${WT}" width="14" height="${WB - WT}" fill="url(#oakH${u})" opacity=".35"/>`
       + `<path d="M${x + .6} ${WT}V${WB}" stroke="#5a8a78" stroke-width=".6" opacity=".45"/><path d="M${x + 13.4} ${WT}V${WB}" stroke="#020403" stroke-width="1.1"/>`;
     // the deckhead: planks parallel to the wall, getting wider towards us; beams across, running to the VP
     { let ch = `<path d="M-10 -10H210V${WT}H-10Z" fill="#101c17"/>`;
       for (let k = 0, y = WT; y > -10; k++) { const y2 = y - (3.2 + k * 1.8); ch += `<path d="M-10 ${f(y2)}H210" stroke="#030605" stroke-width="${f(.6 + k * .2)}"/><path d="M-10 ${f(y2 + .8)}H210" stroke="#3a5a4c" stroke-width=".4" opacity=".35"/>`; y = y2; }
       // the grating: an open square between two beams, upper left — the sky's green light comes through its bars
-      const gA = toVP([40, WT], 4), gB = toVP([72, WT], 4), gC = [72, 14], gD = [40, 14];
+      const gC = [98, 14], gD = [62, 14];
       const gid = nid('gr', u);
       ch += `<defs>${linGrad(gid, 0, 0, 0, 14, [[0, '#e8fff4', 1], [1, '#7ad8b0', 1]])}</defs><path d="M${P2(toVP(gD, 2))}L${P2(toVP(gC, 2))}L${P2(gC)}L${P2(gD)}Z" fill="url(#${gid})"/>`;
-      for (let i = 0; i <= 6; i++) { const x = lerp(40, 72, i / 6); ch += `<path d="M${P2(toVP([x, 14], 2))}L${P2([x, 14])}" stroke="#0a120e" stroke-width="1.3"/>`; }
-      for (const y of [5, 8.5, 11.6]) { const a = toVPx([40, 14], 40), b = toVP([40, 14], y), c = toVP([72, 14], y); ch += `<path d="M${P2(b)}L${P2(c)}" stroke="#0a120e" stroke-width="1.1"/>`; }
+      for (let i = 0; i <= 7; i++) { const x = lerp(62, 98, i / 7); ch += `<path d="M${P2(toVP([x, 14], 2))}L${P2([x, 14])}" stroke="#0a120e" stroke-width="1.3"/>`; }
+      for (const y of [5, 8.5, 11.6]) { const b = toVP([62, 14], y), c = toVP([98, 14], y); ch += `<path d="M${P2(b)}L${P2(c)}" stroke="#0a120e" stroke-width="1.1"/>`; }
       // beams: undersides (trapezoids to the VP) and the side face turned to the centre
-      for (const [x0, x1] of [[-6, 8], [76, 92], [128, 144], [190, 204]]) {
+      for (const [x0, x1] of [[-12, 4], [46, 60], [100, 114], [156, 170], [204, 216]]) {
         const a = [x0, WT], b = [x1, WT], c = toVP(b, -10), d = toVP(a, -10), side = x1 < VP[0] ? 1 : -1, e = side > 0 ? b : a, eTop = toVP(e, -10), dep = 5;
         ch += `<path d="M${P2(a)}L${P2(b)}L${P2(c)}L${P2(d)}Z" fill="#1c2c24"/><path d="M${P2(a)}L${P2(b)}L${P2(c)}L${P2(d)}Z" fill="url(#oak${u})" opacity=".3"/>`
           + `<path d="M${P2(e)}L${P2([e[0], e[1] - dep])}L${P2(toVP([e[0], e[1] - dep], -10))}L${P2(eTop)}Z" fill="#0a120e"/>`
@@ -107,13 +113,13 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft
       fl += `<path d="M-10 ${WB}H210" stroke="#020403" stroke-width="1.4"/>`; bg += fl; }
     // weed hanging from the beams and the deckhead, drops falling; barnacle clusters on the wall
     const RB = rng(21);
-    bg += weed(84, WT, 20, 3, 4) + weed(136, WT, 16, 2, 5) + weed(168, WT, 24, 3, 6) + weed(24, 30, 14, 2, 7)
-      + drop(85, 48) + drop(137, 42) + drop(168.6, 54) + drop(86, 60)
-      + cluster(RB, 150, 34, 22, 26, 7, 2.6) + cluster(RB, 26, 120, 18, 40, 6, 2.8) + cluster(RB, 160, 140, 16, 30, 5, 2.4);
+    bg += weed(107, WT, 20, 3, 4) + weed(160, WT, 16, 2, 5) + weed(40, WT, 18, 2, 6)
+      + drop(108, 48) + drop(161, 42) + drop(40.6, 50) + drop(108.6, 58)
+      + cluster(RB, 150, 32, 22, 22, 7, 2.6) + cluster(RB, 160, 140, 16, 30, 5, 2.4);
     // the green shaft from the grating: down across him to the floor
     { const fsh = nid('sf', u), gsh = nid('sg', u);
       bg += `<defs><filter id="${fsh}" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="5"/></filter>${linGrad(gsh, 0, 0, 0, 200, [[0, '#9ff0d0', .32], [.6, '#9ff0d0', .1], [1, '#9ff0d0', 0]])}</defs>`
-        + `<path d="M40 6L72 6L150 200L84 200Z" fill="url(#${gsh})" filter="url(#${fsh})" style="mix-blend-mode:screen"/>`; }
+        + `<path d="M62 6L98 6L160 200L90 200Z" fill="url(#${gsh})" filter="url(#${fsh})" style="mix-blend-mode:screen"/>`; }
 
     // ——— Bill ———
     let man = '';
@@ -129,41 +135,43 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft
       + `<path d="M84 98Q72 102 66 112" stroke="${RIMC}" stroke-width="1" fill="none" opacity=".5"/><path d="M72 150q4 24 2 50M84 146q8 30 4 60M136 140q-6 30 -2 60" stroke="#040806" stroke-width="1" fill="none" opacity=".7"/>`
       + `<path d="M96 94L86 134" stroke="#7aa898" stroke-width=".6" opacity=".5"/>` + cluster(rng(5), 64, 118, 12, 30, 4, 1.8);
     man += `<g mask="url(#${mk})">${body}</g>`;
-    // the merge: the strakes run on over his shoulder and side, the seams bending over the shoulder's swell
-    { const cid = nid('mc', u), reg = [[118, 90], [130, 94], [144, 102], [156, 116], [166, 150], [170, 290], [200, 290], [200, 80], [150, 80]];
-      let m = `<defs><clipPath id="${cid}"><path d="${H.sp(reg, true)}"/></clipPath></defs><g clip-path="url(#${cid})">`;
-      const fade = nid('fd', u); m += `<defs>${linGrad(fade, 118, 0, 148, 0, [[0, '#ffffff', 0], [1, '#ffffff', 1]])}</defs>`;
-      for (let k = 0, y = WT; y < 290; k++, y += 15.6) {
-        // the bump: seams over the shoulder rise and bow outwards towards us
-        const bow = (x) => { const dx = (x - 140) / 26, dy = (y - 110) / 40; return 6 * Math.exp(-dx * dx - dy * dy); };
-        const pts = []; for (let x = 112; x <= 180; x += 4) pts.push([x, y + 15.2 - bow(x) * (y < 110 ? -.5 : 1)]);
-        m += `<path d="${H.sp(pts)}" stroke="#030605" stroke-width="1.1" fill="none"/><path d="${H.sp(pts.map(p => [p[0], p[1] + 1.2]))}" stroke="#5a8a78" stroke-width=".45" fill="none" opacity=".35"/>`; }
-      // wood grain over the coat where it has turned to wood
-      { const R = rng(9); for (let i = 0; i < 26; i++) { const x = 122 + R() * 46, y = 96 + R() * 190; m += `<path d="M${f(x)} ${f(y)}q${f(6 + R() * 6)} ${f((R() - .5) * 2)} ${f(12 + R() * 10)} ${f((R() - .5) * 1.4)}" stroke="#3a5a4c" stroke-width=".4" fill="none" opacity=".5"/>`; } }
-      m += `</g>`;
-      man += m; }
     // the crust along the seam where he goes into the wood: barnacles, coral, weed
-    { const R = rng(31); man += cluster(R, 116, 96, 14, 30, 9, 2.6) + cluster(R, 124, 128, 14, 40, 8, 2.4) + cluster(R, 132, 104, 18, 10, 5, 2) + coral(130, 96, -60, 7, 3) + coral(126, 134, -20, 6, 4)
+    let crust = '';
+    { const R = rng(31); crust += cluster(R, 116, 96, 14, 30, 9, 2.6) + cluster(R, 124, 128, 14, 40, 8, 2.4) + cluster(R, 132, 104, 18, 10, 5, 2) + coral(130, 96, -60, 7, 3) + coral(126, 134, -20, 6, 4)
       + weed(130, 100, 22, 3, 8, '#2e5a40') + cluster(R, 120, 170, 14, 40, 6, 2.6); }
 
+    // the merge (scene units, over the zoomed figure): the strakes of the wall run on over his shoulder and side, the
+    // seams bending over the shoulder's swell; wood grain where the coat has turned to wood
+    let merge = '';
+    { const cid = nid('mc', u), wid = nid('mw', u), reg = [[118, 90], [130, 94], [144, 102], [156, 116], [166, 150], [170, 240]].map(Z).concat([[WR, 290], [WR, 40], [Z([150, 80])[0], 40]]);
+      merge += `<defs><clipPath id="${cid}"><path d="${H.sp(reg, true)}"/></clipPath><clipPath id="${wid}"><rect x="${WL}" y="${WT}" width="${WR - WL}" height="${290 - WT}"/></clipPath></defs><g clip-path="url(#${wid})"><g clip-path="url(#${cid})">`;
+      const bc = Z([140, 110]);
+      for (let k = 0, y = WT; y < 290; k++, y += 15.6) {
+        const bow = x => { const dx = (x - bc[0]) / 35, dy = (y - bc[1]) / 54; return 8 * Math.exp(-dx * dx - dy * dy); };
+        const pts = []; for (let x = 100; x <= WR + 4; x += 4) pts.push([x, y + 15.2 - bow(x) * (y < bc[1] - 10 ? -.5 : 1)]);
+        merge += `<path d="${H.sp(pts)}" stroke="#030605" stroke-width="1.3" fill="none"/><path d="${H.sp(pts.map(p => [p[0], p[1] + 1.3]))}" stroke="#5a8a78" stroke-width=".5" fill="none" opacity=".35"/>`; }
+      { const R = rng(9); for (let i = 0; i < 34; i++) { const x = 118 + R() * 60, y = 92 + R() * 190; merge += `<path d="M${f(x)} ${f(y)}q${f(6 + R() * 6)} ${f((R() - .5) * 2)} ${f(12 + R() * 10)} ${f((R() - .5) * 1.4)}" stroke="#3a5a4c" stroke-width=".45" fill="none" opacity=".5"/>`; } }
+      merge += `</g></g>`; }
+
     // ——— the free arm (his right, our left): raised, one sleeve to the cuff; the fist round the rope ———
-    const hR = handOn(u, { s: 2.35, m: 1, roll: 24, pitch: 12, pose: 'wrap', r: 1.4, tone: SKIN, light: [-.4, -.9], sw: .3, tilt: 28, palmW: .8, fingerW: .9, nails: true }, GRIP, -88, -150);
-    const SH = [80, 104], EL = [57, 94];
-    const sleeve = H.cloth(u, { spine: [SH, [lerp(SH[0], EL[0], .5), lerp(SH[1], EL[1], .5) + 1], EL, [lerp(EL[0], hR.wrist[0], .5) + 1, lerp(EL[1], hR.wrist[1], .5)], hR.wrist], w: [14.6, 13.4, 12, 10.4, 9.4], tone: COAT, lit: 1, rim: RIMC, rimSide: 1, rimOp: .55, seed: 4, drapes: 1, sw: .45, capA: true, roundA: .9,
-      cuff: { from: .86, k: 1.08, tone: { lit: '#3e4c42', half: '#202a24', shadow: '#0c120e', outline: '#040806' } } });
+    const hR = handOn(u, { s: 2.5, m: 1, roll: 24, pitch: 12, pose: 'wrap', r: 1.4, tone: HAND, light: [-.4, -.9], sw: .3, tilt: 28, palmW: .8, fingerW: .9, nails: true }, GRIP, -88, -130);
+    const SH = [80, 104], EL = [58, 97];
+    const sleeve = H.cloth(u, { spine: [SH, [lerp(SH[0], EL[0], .5), lerp(SH[1], EL[1], .5) + 1], EL, [lerp(EL[0], hR.wrist[0], .5) + 1, lerp(EL[1], hR.wrist[1], .5)], hR.wrist], w: [14.6, 13.4, 11.8, 10, 8.8], tone: COAT, lit: 1, rim: RIMC, rimSide: 1, rimOp: .55, seed: 4, drapes: 1, sw: .45, capA: true, roundA: .9,
+      cuff: { from: .9, k: 1.04, tone: { lit: '#3e4c42', half: '#202a24', shadow: '#0c120e', outline: '#040806' } } });
     // the rope: from the block straight down into his fist, the slack tail below it hanging down past his side
     let v = hR.axis; if (v[1] > 0) v = [-v[0], -v[1]];
     const g = hR.grip, top = [g[0] + v[0] * 7, g[1] + v[1] * 7], bot = [g[0] - v[0] * 7, g[1] - v[1] * 7];
     const ropeUp = K.rope(u, L, [[BLOCK[0] + 1, BLOCK[1] + 7], top, g], { r: 1.4, seed: 3 });
-    const ropeDn = K.rope(u, L, [g, bot, [bot[0] + 2, bot[1] + 20], [44, 130], [40, 180], [44, 240], [40, 292]], { r: 1.4, seed: 4 });
+    const ropeDn = K.rope(u, L, [g, bot, [bot[0] + 2, bot[1] + 20], [50, 130], [46, 180], [50, 240], [46, 292]], { r: 1.4, seed: 4 });
     // the block on its strop from an eye bolt in the beam; the hauling part away along the deckhead to the right
-    let block = K.rope(u, L, [[BLOCK[0] + 5, BLOCK[1] + 1], [96, 14], [150, 6], [210, -2]], { r: 1.2, seed: 5 })
+    let block = K.rope(u, L, [[BLOCK[0] - 3, BLOCK[1] - 4], [40, 34], [20, 28], [-30, 20]], { r: 1.2, seed: 5 })
       + K.shadeCyl(u, BLOCK[0], BLOCK[1] - 10, BLOCK[0], BLOCK[1] - 5, 1.2, L, 'iron', { outline: .3 })
       + `<ellipse cx="${BLOCK[0]}" cy="${BLOCK[1] - 11}" rx="2.2" ry="1.2" fill="none" stroke="url(#iron${u})" stroke-width="1"/>`;
-    { const bgd = nid('bk', u); block += `<defs>${linGrad(bgd, BLOCK[0] - 6, 0, BLOCK[0] + 6, 0, [[0, '#a8c8b0', 1], [.35, '#4a5a44', 1], [1, '#141a14', 1]])}</defs>`
-      + `<ellipse cx="${BLOCK[0]}" cy="${BLOCK[1]}" rx="5.6" ry="8" fill="url(#${bgd})" stroke="#040806" stroke-width=".5"/><path d="M${BLOCK[0] - 5.6} ${BLOCK[1]}Q${BLOCK[0]} ${BLOCK[1] + 2} ${BLOCK[0] + 5.6} ${BLOCK[1]}" stroke="url(#iron${u})" stroke-width="1.1" fill="none"/>`
-      + `<rect x="${BLOCK[0] - 1.4}" y="${BLOCK[1] - 6}" width="2.8" height="12" rx="1.2" fill="#040806"/><circle cx="${BLOCK[0]}" cy="${BLOCK[1] - 3}" r=".9" fill="url(#brass${u})"/>`
-      + barn(BLOCK[0] + 3, BLOCK[1] + 3, 1.4) + barn(BLOCK[0] - 3, BLOCK[1] - 4, 1.1); }
+    { const bgd = nid('bk', u), x = BLOCK[0], y = BLOCK[1]; block += `<defs>${linGrad(bgd, x - 6, 0, x + 6, 0, [[0, '#8a9c7a', 1], [.35, '#4e5a3e', 1], [1, '#1a2016', 1]])}</defs>`
+      // the shell: an oak oval, the iron strop round it, the slot and the sheave's rim, the pin; the rope over the sheave
+      + `<ellipse cx="${x}" cy="${y}" rx="5" ry="7.4" fill="url(#${bgd})" stroke="#040806" stroke-width=".5"/><path d="M${x - 5} ${y - .6}Q${x} ${y + 1.4} ${x + 5} ${y - .6}" stroke="url(#iron${u})" stroke-width="1" fill="none"/>`
+      + `<path d="M${x} ${y - 7.4}V${y + 7.4}" stroke="url(#iron${u})" stroke-width="1.2"/><circle cx="${x}" cy="${y - 2.4}" r="1" fill="url(#brass${u})" stroke="#2a1a08" stroke-width=".2"/>`
+      + `<path d="M${x - 4} ${y - 4}Q${x - 3} ${y - 6.4} ${x - 1} ${y - 6.8}" stroke="#c8e8d0" stroke-width=".5" fill="none" opacity=".6"/>`; }
 
     // ——— the head: 3/4 to our left, nodding, half-shut eyes, drowned skin, stubble; the knitted cap ———
     const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 8, tone: SKIN, light: [-.55, -.85], warm: { color: '#9ff0d0', op: .22 },
@@ -198,13 +206,16 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft
       { const n = Q(-.02, .3, 1.12); face += drop(n[0] - .4, n[1] + 1) + glow(u, ...Q(-.4, -.3, .8), 8, 6, '#c8fff0', .18); } }
 
     // ——— assemble: the wall and the merge, the body; the rope, the sleeve and fist; the head ———
-    let fg = man + face + ropeDn + sleeve + hR.back + ropeUp + hR.front + block;
-    { const k = hR.P(4.6, -.4, .2); fg += glow(u, k[0], k[1], 9, 8, '#bff8e0', .22); }
+    let fig = man + face + ropeDn + sleeve + hR.back + ropeUp + hR.front + block;
+    { const k = hR.P(4.6, -.4, .2); fig += glow(u, k[0], k[1], 9, 8, '#bff8e0', .22); }
+    // the figure's own crust over the merge (his units, after the merge's planks): barnacles, coral, weed on the seam
+    let fg = `<g transform="translate(${ZO[0]} ${ZO[1]}) scale(${ZOOM}) translate(${-ZO[0]} ${-ZO[1]})">${fig}</g>` + merge + `<g transform="translate(${ZO[0]} ${ZO[1]}) scale(${ZOOM}) translate(${-ZO[0]} ${-ZO[1]})">${crust}</g>`;
     // ——— light and air: the shaft's dust, the dark of the hold, the under-glass gloom ———
     { const fsh = nid('sf', u), gsh = nid('sg', u);
       fg += `<defs><filter id="${fsh}" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="6"/></filter>${linGrad(gsh, 0, 0, 0, 200, [[0, '#9ff0d0', .2], [.5, '#9ff0d0', .08], [1, '#9ff0d0', 0]])}</defs>`
-        + `<path d="M40 6L72 6L150 200L84 200Z" fill="url(#${gsh})" filter="url(#${fsh})" style="mix-blend-mode:screen"/>`; }
+        + `<path d="M62 6L98 6L160 200L90 200Z" fill="url(#${gsh})" filter="url(#${fsh})" style="mix-blend-mode:screen"/>`; }
     fg += motes(26, 40, 10, 90, 150, '#dffff0', 9) + glow(u, 90, 70, 50, 50, '#9ff0d0', .12)
       + gloom(u, 200, 100, 120, 100, .45, '#020604') + gloom(u, 100, 140, 100, 280, .55, '#020604');
-    return [bg, fg];
+    const MIR = s => `<g transform="translate(200 0) scale(-1 1)">${s}</g>`;
+    return [MIR(bg), MIR(fg)];
   } };
