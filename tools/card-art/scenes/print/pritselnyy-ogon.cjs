@@ -9,7 +9,10 @@
 // carriage in perspective with its barrel running out of the port; the gunner was a blob with a stiff tube arm — now
 // a figure from behind with a rolled sleeve and a fist round the quoin's handle; the port's red lid hung inside the
 // room — now only its edge shows outside at the top of the opening; the spyglass lay idle on a shelf — now in the
-// officer's hand. Light: daylight through the port (key, from the depth: rims on the gun and the men), a lantern
+// officer's hand. Second pass (review): the enemy nearer — one of her ports with its gun run out, 1.5x larger, stands
+// over the quadrant; the breeching no longer a symmetric moustache (the left leg taut, the right behind the cheek); the
+// gunner's back narrower with shoulder blades, a shorter forearm, the fist on the handle under the breech; the
+// spyglass drawn back from the quadrant, raised, pointing at that port. Light: daylight through the port (key, from the depth: rims on the gun and the men), a lantern
 // under the beams on the left (warm fill).
 'use strict';
 const K = require('../kit/index.cjs');
@@ -46,7 +49,7 @@ module.exports = { name: 'Прицельный огонь', kind: 'deck', status
     const oc = nid('oc', u);
     let out = K.sky(u, Lo, { horizon: HZ, stars: false }) + K.cloud(u, Lo, { x: 96, y: 66, w: 50, h: 6, seed: 4, far: .3 })
       + K.water(u, Lo, { horizon: HZ, bottom: 130, swell: .5, seed: 5, glitter: false })
-      + K.ship(u, Lo, { kind: 'pearl', x: 104.8, y: 110.6, scale: 2.4, sails: 'full', seed: 6 }) + K.foam(u, { x: 100, y: 110.9, w: 100, h: 1.2, seed: 2, L: Lo });
+      + K.ship(u, Lo, { kind: 'pearl', x: 113.2, y: 112.4, scale: 3.6, sails: 'full', seed: 6 }) + K.foam(u, { x: 100, y: 112.7, w: 100, h: 1.4, seed: 2, L: Lo });
     let bg = `<defs><clipPath id="${oc}"><rect x="${px0}" y="${py0}" width="${px1 - px0}" height="${py1 - py0}"/></clipPath></defs><g clip-path="url(#${oc})">${out}`
       // the lifted lid outside: its red underside and edge just showing along the top of the opening, the tackle
       + `<path d="M${px0 - 2} ${py0}L${px1 + 2} ${py0}L${px1 - 1} ${py0 + 3.6}L${px0 + 1} ${py0 + 3.6}Z" fill="#9a2a20"/><path d="M${px0} ${py0 + 3.6}H${px1}" stroke="#4a0a06" stroke-width=".8"/>`
@@ -128,6 +131,10 @@ function gun(u, L) {
       s += `<path d="M${f(q[0] - r)} ${f(q[1])}A${f(r)} ${f(r * .35)} 0 0 0 ${f(q[0] + r)} ${f(q[1])}" stroke="${iron.shadow}" stroke-width="1" fill="none"/><path d="M${f(q[0] - r)} ${f(q[1] - .7)}A${f(r)} ${f(r * .35)} 0 0 0 ${f(q[0] + r)} ${f(q[1] - .7)}" stroke="${iron.lit}" stroke-width=".5" fill="none" opacity=".7"/>`; }
     // daylight along the top of the barrel, from the port
     s += `<path d="M${P2(P(-.6, 13 + 5.2, .1))}L${P2(P(-.4, 13 + 3.6, 1.3))}" stroke="#fff4dc" stroke-width="1.1" opacity=".55" stroke-linecap="round"/>`; }
+  // the breeching, its right leg: from the ringbolt right of the port, down behind the right cheek to the cascabel
+  const cas = P(0, 13, -.1), rb = [[PORT[0] - 7, PORT[3] - 4], [PORT[2] + 7, PORT[3] - 4]];
+  const rope = d => `<path d="${d}" stroke="${rp.outline}" stroke-width="1.9" fill="none"/><path d="${d}" stroke="${rp.core}" stroke-width="1.1" fill="none"/><path d="${d}" stroke="${rp.lit}" stroke-width=".4" fill="none" opacity=".6" transform="translate(0 -.4)"/>`;
+  s += rope(`M${P2(rb[1])}Q${f(cas[0] + 30)} ${f(cas[1] + 4)} ${f(cas[0] + 3)} ${f(cas[1] + 3.4)}`);
   for (const sx of [-1, 1]) {
     const xi = sx * 5.4, xo = sx * 9.6, x0 = Math.min(xi, xo), x1 = Math.max(xi, xo);
     s += box(x0, x1, 1.6, 12.6, .62, 1, 3 + sx) + box(x0, x1, 1.6, 10, .32, .62, 5 + sx) + box(x0, x1, 1.6, 7.4, 0, .32, 7 + sx);
@@ -140,14 +147,13 @@ function gun(u, L) {
   s += box(-12.8, 12.8, 1.6, 3.4, .04, .16, 17, { top: false });
   for (const sx of [-1, 1]) s += truck(sx * 11.6, .08, 2.8, 3.4, 30 + sx);
   // the breeching from the ringbolts in the side round the cascabel, the breech end with its rings and the knob
-  const cas = P(0, 13, -.1), rb = [[PORT[0] - 7, PORT[3] - 4], [PORT[2] + 7, PORT[3] - 4]];
-  const br = `M${P2(rb[0])}Q${f(cas[0] - 22)} ${f(cas[1] + 16)} ${f(cas[0] - 3)} ${f(cas[1] + 3.4)}M${P2(rb[1])}Q${f(cas[0] + 22)} ${f(cas[1] + 16)} ${f(cas[0] + 3)} ${f(cas[1] + 3.4)}`;
   { const c = P(0, 13, 0), r = 5.4 * S;
     s += K.shadeSphere(u, c[0], c[1], r, L, 'iron', { outline: .5 });
     s += `<circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r)}" fill="none" stroke="${iron.outline}" stroke-width=".8"/><circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r * .78)}" fill="none" stroke="${iron.lit}" stroke-width=".5" opacity=".5"/><circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r * .66)}" fill="none" stroke="${iron.shadow}" stroke-width=".7" opacity=".8"/>`
       // the daylight rim round the top of the breech
       + `<path d="M${f(c[0] - r * .9)} ${f(c[1] - r * .42)}A${f(r)} ${f(r)} 0 0 1 ${f(c[0] + r * .9)} ${f(c[1] - r * .42)}" stroke="#fff0d0" stroke-width=".8" fill="none" opacity=".6"/>`; }
-  s += `<path d="${br}" stroke="${rp.outline}" stroke-width="1.9" fill="none"/><path d="${br}" stroke="${rp.core}" stroke-width="1.1" fill="none"/><path d="${br}" stroke="${rp.lit}" stroke-width=".4" fill="none" opacity=".6" transform="translate(0 -.4)"/>`;
+  // its left leg: taut, nearly straight at an angle from the cascabel up to the ringbolt left of the port
+  s += rope(`M${P2(rb[0])}Q${f(lerp(rb[0][0], cas[0] - 3, .5))} ${f(lerp(rb[0][1], cas[1] + 3.4, .5) + 2.2)} ${f(cas[0] - 3)} ${f(cas[1] + 3.4)}`);
   s += K.shadeSphere(u, cas[0], cas[1] + .4, 4.2, L, 'iron', { outline: .45 }) + `<path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 3.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 3.4)}" stroke="${rp.outline}" stroke-width="1.9" fill="none"/><path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 3.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 3.4)}" stroke="${rp.core}" stroke-width="1.1" fill="none"/>`;
   return s;
 }
@@ -158,15 +164,21 @@ function gunner(u, L, R) {
   const sh = tone(L, '#d8ceb8'), wc = tone(L, '#2c3e66'), kc = tone(L, '#a8382a'), rim = '#fff0d4';
   const hc = [30, 90], hr = 7.4;
   // the far (left) arm hangs on his left side, mostly hidden by his back and the glass
-  let s = H.cloth(u, { spine: [[10, 104], [4, 128], [6, 156]], w: [10, 9, 8.4], tone: sh, lit: 1, rim, rimSide: 1, seed: 3, capA: true, drapes: 2 });
+  let s = H.cloth(u, { spine: [[14, 104], [9, 128], [10, 156]], w: [9.4, 8.6, 8], tone: sh, lit: 1, rim, rimSide: 1, seed: 3, capA: true, drapes: 2 });
   // the back: the waistcoat over the shirt, the shoulders broad, narrowing to the waist; the shirt's sleeve tops
   { const g = nid('gb', u);
-    const back = H.sp([[6, 104], [14, 98], [30, 97], [46, 98], [55, 104], [56, 122], [52, 150], [48, 178], [14, 178], [10, 150], [6, 124]], true);
-    s += `<defs>${linGrad(g, 56, 100, 6, 130, [[0, wc.lit], [.3, wc.half], [1, wc.shadow]])}</defs><path d="${back}" fill="url(#${g})" stroke="${wc.outline}" stroke-width=".45"/>`
-      + `<path d="M31 99Q30 130 31 178" stroke="${wc.shadow}" stroke-width=".7" fill="none" opacity=".8"/><path d="M14 112Q30 118 50 110M12 136Q30 142 52 134" stroke="${wc.shadow}" stroke-width=".45" fill="none" opacity=".55"/>`
-      + `<path d="M46 98Q55 102 55 106L56 122" stroke="${rim}" stroke-width=".8" fill="none" opacity=".8"/>`
+    const back = H.sp([[11, 105], [15, 99], [22, 96.6], [31, 96.4], [40, 96.6], [47, 99], [51, 105], [50, 116], [46, 132], [44, 150], [42, 178], [19, 178], [17, 150], [15, 132], [12, 116]], true);
+    const gs = nid('gs', u);
+    s += `<defs>${linGrad(g, 52, 100, 10, 130, [[0, wc.lit], [.3, wc.half], [1, wc.shadow]])}${radGrad(gs, 0, 0, 1, [[0, '#000', .32], [1, '#000', 0]])}</defs><path d="${back}" fill="url(#${g})" stroke="${wc.outline}" stroke-width=".45"/>`
+      // the shoulder blades: two rounded swells under the cloth, lit on the gun's side, a shadow under each, the groove
+      // of the spine between them; the shoulder caps where the sleeves join
+      + `<path d="M35 104Q44 102 47 110Q46 120 38 122Q34 116 35 104Z" fill="${wc.lit}" opacity=".35"/><path d="M38 122Q46 121 48 112" stroke="${wc.shadow}" stroke-width=".9" fill="none" opacity=".75"/>`
+      + `<path d="M27 104Q18 102 15 110Q16 120 24 122Q28 116 27 104Z" fill="${wc.shadow}" opacity=".3"/><path d="M24 122Q16 121 14.5 112" stroke="${wc.shadow}" stroke-width=".9" fill="none" opacity=".8"/>`
+      + `<path d="M31 99Q30.4 120 31 140Q31.4 160 31 178" stroke="${wc.shadow}" stroke-width=".8" fill="none" opacity=".85"/><path d="M32 102Q32.6 120 32 138" stroke="${wc.lit}" stroke-width=".4" fill="none" opacity=".4"/>`
+      + `<path d="M17 136Q31 142 44 135" stroke="${wc.shadow}" stroke-width=".45" fill="none" opacity=".55"/>`
+      + `<path d="M40 97Q49 99 51 105L50 116" stroke="${rim}" stroke-width=".8" fill="none" opacity=".8"/>`
       // the back strap and its buckle across the waist
-      + `<path d="M10 150Q30 154 52 148" stroke="${wc.shadow}" stroke-width="1.2" fill="none"/><rect x="28" y="149.4" width="4" height="2.6" fill="none" stroke="#c8a050" stroke-width=".5"/>`; }
+      + `<path d="M17 150Q31 154 44 148" stroke="${wc.shadow}" stroke-width="1.2" fill="none"/><rect x="29" y="149.6" width="4" height="2.6" fill="none" stroke="#c8a050" stroke-width=".5"/>`; }
   // the neck, the kerchief knotted round it, the back of the head with its queue
   s += `<path d="M24 96Q30 90 37 96L36 100H25Z" fill="${SKIN.shadow}" stroke="${SKIN.outline}" stroke-width=".35"/>`;
   { const g = nid('gk', u); s += `<defs>${linGrad(g, 38, 96, 20, 100, [[0, kc.lit], [1, kc.shadow]])}</defs><path d="M20 99Q30 93 40 99Q38 102 30 102Q22 102 20 99Z" fill="url(#${g})" stroke="${kc.outline}" stroke-width=".35"/>`
@@ -181,13 +193,15 @@ function gunner(u, L, R) {
       + `<path d="M${hc[0]} ${f(hc[1] + hr * .9)}Q${hc[0] + .6} ${hc[1] + 12} ${hc[0] - .4} ${hc[1] + 16}" stroke="#140a06" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
       + `<path d="M${hc[0] - 1.6} ${f(hc[1] + hr * .9 + 1.2)}h3.2l-.4 1.6h-2.4z" fill="#0a0a0c"/>`; }
   // the near (right) arm: the shirt sleeve from the shoulder, rolled to the elbow, the bare forearm to the fist on the quoin
-  const shN = [52, 104], el = [70, 116], wr = [92.4, 123.6], HS = 1.12;
-  const grip = [100, 128.6];                         // the end of the quoin's handle (gun(): P(0, 7.4, -.16))
-  s += H.cloth(u, { spine: [shN, [60, 108], [el[0] + 1, el[1] - 1]], w: [12, 11, 10], tone: sh, lit: 1, rim, rimSide: 1, cuff: { from: .72, k: 1.12, roll: true }, seed: 5, capA: true, drapes: 2 });
+  const shN = [48, 104], el = [71.4, 116.2], HS = 1.12;
+  const grip = [98, 126.8];                          // the quoin's handle under the breech (gun(): P(0, 7.4, -.1))
+  // the fist closes round the handle about 6 units past the wrist (H.hand 'grip'): the wrist is found back from it
+  const ha = ang(el, grip) + 8, wr = [grip[0] - Math.cos(ha * Math.PI / 180) * 6 * HS, grip[1] - Math.sin(ha * Math.PI / 180) * 6 * HS];
+  s += H.cloth(u, { spine: [shN, [59, 108.6], [el[0] + 1, el[1] - 1]], w: [12, 11, 10], tone: sh, lit: 1, rim, rimSide: 1, cuff: { from: .72, k: 1.12, roll: true }, seed: 5, capA: true, drapes: 2 });
   const a = ang(el, wr);
   s += H.cloth(u, { spine: [[el[0] - 1, el[1] - 1], [lerp(el[0], wr[0], .5), lerp(el[1], wr[1], .5) - .8], wr], w: [8.2, 7.4, 5.6], tone: SKIN, lit: 1, rim, rimSide: 1, folds: false, capA: true, sw: .4 });
-  void grip;
-  const hd = H.hand(u, { at: wr, a: a + 26, s: HS, m: 1, pose: 'grip', tone: SKIN, sw: .35 });
+  void a;
+  const hd = H.hand(u, { at: wr, a: ha, s: HS, m: 1, pose: 'grip', tone: SKIN, sw: .35 });
   s += hd.back + hd.front;
   return s;
 }
@@ -200,14 +214,14 @@ function officer(u, L, R) {
   const hc = [164, 60], hr = 7.6;
   let s = '';
   // the far arm (his left), out from behind the chest towards the port: shoulder, elbow, wrist; the spyglass in the fist
-  const shF = [160, 84], elF = [146, 86], wrF = [133.6, 79];
+  const shF = [160, 84], elF = [147, 84.4], wrF = [134.2, 77.2];
   s += H.cloth(u, { spine: [shF, [153, 87], elF, wrF], w: [11, 10, 9, 8], tone: coat, lit: -1, rim, rimSide: -1, cuff: { from: .78, k: 1.25, tone: fac }, seed: 7, capA: true, drapes: 2 });
-  { const t0 = [142, 86.6], t1 = [110, 80.6], d = [t1[0] - t0[0], t1[1] - t0[1]], l = Math.hypot(d[0], d[1]), ux = d[0] / l, uy = d[1] / l, at = k => [t0[0] + ux * l * k, t0[1] + uy * l * k];
+  { const t0 = [142.4, 85.6], t1 = [116.4, 76], d = [t1[0] - t0[0], t1[1] - t0[1]], l = Math.hypot(d[0], d[1]), ux = d[0] / l, uy = d[1] / l, at = k => [t0[0] + ux * l * k, t0[1] + uy * l * k];
     // the spyglass: a leather body, two brass draws (thinner), the objective cell forward, the eyepiece behind
     const seg = (k0, k1, r0, r1, kind) => { const a = at(k0), b = at(k1); return K.shadeCyl(u, a[0], a[1], b[0], b[1], r0, L, kind, { r1: r0, r2: r1, outline: .35 }); };
     s += seg(-.04, .02, 1.3, 1.3, 'brass') + seg(.02, .5, 1.9, 1.9, 'leather') + seg(.5, .54, 2.1, 2.1, 'brass') + seg(.54, .8, 1.6, 1.6, 'brass') + seg(.8, .83, 1.75, 1.75, 'brass') + seg(.83, 1, 1.35, 1.35, 'brass') + seg(.98, 1.02, 1.6, 1.6, 'brass');
     // the fist round the leather body
-    const hd = H.hand(u, { at: wrF, a: 102, s: 1.15, m: 1, pose: 'grip', tone: SKIN, sw: .35 });
+    const hd = H.hand(u, { at: wrF, a: 111, s: 1.15, m: 1, pose: 'grip', tone: SKIN, sw: .35 });
     s += hd.front; }
   // the body: the coat's back and skirt, the chest with the facings and the waistcoat, the buttons
   { const g = nid('ob', u);
