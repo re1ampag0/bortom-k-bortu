@@ -120,7 +120,7 @@ function ladyHilt(u, L, o) {
   // the shell: an oval dish across the blade's root, pierced with a ring of holes, its rim lit
   { const cg = nid('tls', u), c = P(g + .6, .3), pts = Array.from({ length: 22 }, (_, i) => { const a = i / 22 * Math.PI * 2; return P(g + .6 + Math.cos(a) * 3, .3 + Math.sin(a) * w * 1.25); });
     s += `<defs>${radGrad(cg, c[0] + 1.4, c[1] + 1, w * 1.6, [[0, '#fff4c8', 1], [.25, '#f0c060', 1], [.6, '#a87420', 1], [1, '#3a2406', 1]])}</defs><path d="${poly(pts)}" fill="url(#${cg})" stroke="#2a1804" stroke-width=".5" stroke-linejoin="round"/>`
-      + [-.85, -.55, -.25, .35, .65, .95].map(k => { const p = P(g + .6, .3 + k * w * 1.05); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".5" fill="#1a0e04"/>`; }).join('')
+      + [-.75, -.35, .45, .85].map(k => { const p = P(g + .6, .3 + k * w * 1.05); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".5" fill="#1a0e04"/>`; }).join('')
       + `<path d="${smooth(pts.slice(2, 10))}" stroke="#fff6d0" stroke-width=".45" fill="none" opacity=".8"/>`; }
   // the ribbon: tied round the grip's middle, two tails flowing right on the wind, twisting (light and dark sides)
   { const k0 = P(g * .55, 0), rib = (pts, wd, seed) => {
@@ -142,8 +142,9 @@ function ladyHilt(u, L, o) {
     const t2 = [k0, [k0[0] + 5, k0[1] + 6.5], [k0[0] + 11, k0[1] + 8], [k0[0] + 17, k0[1] + 13], [k0[0] + 23, k0[1] + 14], [k0[0] + 29, k0[1] + 18.5]];
     s += rib(t2, 3.2, 2) + rib(t1, 3.6, 5);
     // the knot and the two loops of the bow over the grip
-    s += `<path d="M${f(k0[0] - .5)} ${f(k0[1])}c-3 -5 -7 -3 -6 0c1 3 4 2 6 0z" fill="#b8304e" stroke="#3a0a18" stroke-width=".3"/><path d="M${f(k0[0] + .5)} ${f(k0[1])}c4 -4 8 -1 6 2c-1.5 2 -4.5 1 -6 -2z" fill="#d8486a" stroke="#3a0a18" stroke-width=".3"/>`
-      + `<ellipse cx="${f(k0[0])}" cy="${f(k0[1])}" rx="1.5" ry="1.8" fill="#9a2440" stroke="#3a0a18" stroke-width=".3"/><path d="M${f(k0[0] - 5)} ${f(k0[1] - 2.4)}q2 -1.2 4 .4M${f(k0[0] + 2)} ${f(k0[1] - 1.6)}q2 -1.4 4.4 .2" stroke="#ffc0d0" stroke-width=".35" fill="none" opacity=".8"/>`; }
+    s += [[-1, '#b8304e'], [1, '#d8486a']].map(([sd, c]) => { const d = `M${f(k0[0])} ${f(k0[1])}c${sd * -1} -5 ${sd * 7} -6.4 ${sd * 6.4} -2.4c${sd * -.4} 2.4 ${sd * -4} 3 ${sd * -6.4} 2.4`;
+        return `<path d="${d}" stroke="#3a0a18" stroke-width="2.6" fill="none" stroke-linejoin="round"/><path d="${d}" stroke="${c}" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="${d}" stroke="#ffc0d0" stroke-width=".4" fill="none" opacity=".6" transform="translate(0 -.5)"/>`; }).join('')
+      + `<ellipse cx="${f(k0[0])}" cy="${f(k0[1])}" rx="1.4" ry="1.7" fill="#9a2440" stroke="#3a0a18" stroke-width=".3"/>`; }
   return s;
 }
 
