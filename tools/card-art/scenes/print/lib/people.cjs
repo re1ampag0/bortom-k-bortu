@@ -184,7 +184,7 @@ function hand(u, o) {
 //   (+1 — the thumb on the frame's −y side, as in hand()); roll: degrees round the hand's own axis — 0 the back of the
 //   hand to us, 90 the thumb side (fist seen from the side), 180 the palm;
 //   pose: 'wrap' (round a cylinder of radius r, default .8 — a hammer handle; 2 — a bottle) | 'fist' | 'open' |
-//   'relaxed' | 'point' | 'scissor' (index and middle straight, pressed together: a card between them) | 'pinch';
+//   'relaxed' | 'point' | 'scissor' (index and middle straight, pressed together: a card between them) | 'pinch' | 'hold';
 //   flex: [[mcp, pip, dip] × 4] degrees (own pose, index → little), spread (deg), thumbFlex: [cmc, mcp, ip] deg,
 //   thumbSpread (deg, + away from the fingers), yaw: [i, m, r, l] (deg, each finger's own sideways angle), tilt (deg: for 'wrap', the handle across the palm runs diagonal);
 //   tone (skin ramp: lit, half, shadow, outline), light: [x, y] screen direction to the light (default up-left),
@@ -196,7 +196,17 @@ function hand(u, o) {
 //   cuff); fingerW — the fingers' thickness; trueDorsal (false) — the back of each phalanx turns with its bend (nails
 //   and knuckles right for fingers curled past 90°, e.g. curled fingers seen from the palm side); thumbJ — four local
 //   points [x, y, z], the thumb's joints set by hand (e.g. lying across the palm); thumbOut ([x, y, z], default
-//   [0, −1, .6]) — where the thumb's nail faces }
+//   [0, −1, .6]) — where the thumb's nail faces;
+//   thumbTo ([x, y, z] local) — the thumb's tip brought there (IK on its angles; 'pinch' without an own thumbFlex does
+//   it by default: the thumb's pad against the index finger's pad, pinchGap (.15) apart; thumbTo: false — the old
+//   thumb); trigger: true (wrap) — the index finger off the handle, curled on a trigger in front of it (triggerFlex,
+//   default [2, 50, 22]); backFingers may hold 'palm' (the palm behind a held card); cut (local x) — the wrist end cut
+//   there and left without an outline, with the sleeve's shade on it (figure() passes 0: the hand grows out of the
+//   cuff); lightZ (.55) — the light's share towards us, for the tone of each phalanx by how it faces the light }
+// Drawn: each phalanx a little waisted, the joints full, the knuckle standing out on a bent joint and the skin
+// folding in on its inside, a round pad at the tip; nails (plate, cuticle, glint) on the tips turned to us, pads on
+// the tips seen from the palm; a thick outer contour (the silhouette reads at card size) with thin inner lines; the
+// pieces lying behind the others sunk a little darker.
 // Returns { back, front, P (local x, y, z → picture), wrist, grip (picture point of the handle axis), axis (unit,
 // along the handle in the picture), r (the handle radius in picture units), joints (each digit's joints in the
 // picture, index → little, thumb) }.
@@ -207,7 +217,9 @@ const HPOSE = {
   relaxed: { flex: [[16, 26, 14], [20, 30, 16], [24, 36, 20], [28, 40, 22]], spread: 3, thumbFlex: [8, 16, 14] },
   point: { flex: [[0, 4, 2], [78, 100, 60], [80, 100, 60], [80, 96, 56]], spread: 2, thumbFlex: [34, 30, 26], thumbSpread: -16 },
   scissor: { flex: [[6, 8, 4], [6, 8, 6], [70, 96, 56], [74, 96, 56]], spread: 0, thumbFlex: [22, 24, 18] },
-  pinch: { flex: [[34, 46, 24], [40, 56, 30], [50, 70, 40], [58, 76, 44]], spread: 2, thumbFlex: [34, 22, 18], thumbSpread: -6 }
+  pinch: { flex: [[34, 46, 24], [40, 56, 30], [50, 70, 40], [58, 76, 44]], spread: 2, thumbFlex: [34, 22, 18], thumbSpread: -6 },
+  // a flat thing (a card, a letter) held between the thumb in front and the fingers behind it
+  hold: { flex: [[14, 10, 6], [12, 10, 6], [16, 14, 8], [22, 20, 10]], spread: 3, thumbFlex: [10, 10, 8] }
 };
 function hand3(u, o) {
   const s = o.s || 1, m = o.m || 1, an = (o.a || 0) * Math.PI / 180, ux = Math.cos(an), uy = Math.sin(an), nx = -uy, ny = ux;
@@ -216,7 +228,7 @@ function hand3(u, o) {
   const r = pose === 'fist' ? .12 : (o.r != null ? o.r : .8), tilt = (o.tilt != null ? o.tilt : 10) * Math.PI / 180;
   const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sc = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-  const nrm = a => sc(a, 1 / (Math.hypot(a[0], a[1], a[2]) || 1));
+  const nrm = a => sc(a, 1 / (Math.hypot(a[0], a[1], a[2]) || 1)), cl = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
   // the view: a rotation about the hand's x axis; depth > 0 — towards us
   // pitch first (about the hand's y: + brings the finger end towards us), then roll (about its x)
   const pz = p => p[0] * spp + p[2] * cp, px = p => p[0] * cp - p[2] * spp;
@@ -224,28 +236,32 @@ function hand3(u, o) {
   const VIEW = [spp * cr, -sr, cp * cr];
   let W = o.at || [0, 0];
   const scr = p => { const y = yv(p), x = px(p); return [W[0] + s * (x * ux + m * y * nx), W[1] + s * (x * uy + m * y * ny)]; };
+  // a local direction in the view's frame (screen x, screen y down, depth to us): for the light on each piece
+  const vv = p => { const y = yv(p), x = px(p); return [x * ux + m * y * nx, x * uy + m * y * ny, dep(p)]; };
   // the handle axis (wrap): along y, tilted so it is nearer the knuckles at the index side; z under the palm
   const zc = -(.85 + r), axX = y => 4.5 - Math.tan(tilt) * y;
   if (o.grip) { const g0 = scr([axX(-.48), -.48, zc]); W = [W[0] + o.grip[0] - g0[0], W[1] + o.grip[1] - g0[1]]; }
   const P = (x, y, z = 0) => scr([x, y, z]);
   const pr = Object.assign({}, HPOSE[pose] || {}, o);
-  const pw = o.palmW || 1, ww = o.wristW || 1, fw = o.fingerW || 1;
+  const cut = o.cut != null ? o.cut : null;
+  const pw = o.palmW || 1, ww = o.wristW || (cut != null ? .9 : 1), fw = o.fingerW || 1;
   const HF = pw === 1 && fw === 1 ? HFING : HFING.map(F => Object.assign({}, F, { k: [F.k[0], F.k[1] * pw], w: F.w * fw }));
   const spread = (pr.spread != null ? pr.spread : 4) * Math.PI / 180;
   // ——— the digits as chains of 3D joints with widths ———
   const digits = [];
   HF.forEach((F, i) => {
     const K0 = [F.k[0], F.k[1], -.42], ls = [F.l * .45, F.l * .32, F.l * .26], ws = [F.w, F.w * .92, F.w * .84, F.w * .74];
+    const trig = wrap && i === 0 && o.trigger;   // the index finger off the handle, on a trigger in front of it
     const yaw = (pr.yaw ? pr.yaw[i] * Math.PI / 180 : wrap ? -F.sp * 1.5 * Math.PI / 180 : F.sp * spread), d0 = [Math.cos(yaw), Math.sin(yaw), 0];
     const J = [K0], D = [], PH = [];
-    if (wrap) {
+    if (wrap && !trig) {
       // walk round the handle: each joint on the circle of radius ρ about the axis, in the finger's own plane
       const C = [axX(K0[1]) - K0[0], zc - K0[2]];   // (along the finger, z) relative to the knuckle
       const rho = Math.hypot(C[0], C[1]); let th = Math.atan2(-C[1], -C[0]);
       for (const l of ls) { const st = 2 * Math.asin(Math.min(.999, l / (2 * rho))); th -= st;
         const t = C[0] + rho * Math.cos(th), z = C[1] + rho * Math.sin(th); J.push(add(K0, add(sc(d0, t), [0, 0, z]))); }
     } else {
-      const fl = (pr.flex && pr.flex[i]) || [15, 20, 10]; let phi = 0, p = K0;
+      const fl = trig ? (o.triggerFlex || [2, 50, 22]) : (pr.flex && pr.flex[i]) || [15, 20, 10]; let phi = 0, p = K0;
       fl.forEach((fd, j) => { phi += fd * Math.PI / 180; PH.push(phi); const d = add(sc(d0, Math.cos(phi)), [0, 0, -Math.sin(phi)]); p = add(p, sc(d, ls[j])); J.push(p); });
     }
     for (let j = 0; j < 3; j++) { const d = nrm(sub(J[j + 1], J[j])), dz = [0, 0, 1], dor = nrm(sub(dz, sc(d, dot(dz, d))));
@@ -253,8 +269,12 @@ function hand3(u, o) {
     digits.push({ id: i, J, ws, D });
   });
   { // the thumb: from the ball of the thumb (the carpal joint), three bones
-    const C0 = [1.25, -1.45 * pw, -.78], ls = [1.75, 1.45, 1.2], ws = [1.4, 1.2, 1.08, .96].map(v => v * fw), J = [C0];
-    if (o.thumbJ) { J.length = 0; for (const q of o.thumbJ) J.push(q.slice()); }
+    const C0 = [1.25, -1.45 * pw, -.78], ls = [1.75, 1.45, 1.2], ws = [1.4, 1.2, 1.08, .96].map(v => v * fw);
+    let J = [C0];
+    // its joints from four numbers: the sideways angle A, the lift e (z of the first bone), the bends tf (rad)
+    const chain = (A, e, tf) => { const T0 = nrm([Math.cos(A), Math.sin(A), e]), B0 = [.3, 1, -.9], B = nrm(sub(B0, sc(T0, dot(B0, T0))));
+      const Q = [C0]; let phi = 0, p = C0; tf.forEach((fd, j) => { phi += fd; const d = add(sc(T0, Math.cos(phi)), sc(B, Math.sin(phi))); p = add(p, sc(d, ls[j])); Q.push(p); }); return Q; };
+    if (o.thumbJ) { J = o.thumbJ.map(q => q.slice()); }
     else if (wrap) {
       // round the handle the other way from the fingers, rising from the palm, its tip over the index finger
       const ya = [-2.1 * pw, -1.7 * pw, -.95 * pw], ca = [axX(-1.9), zc]; let th = Math.atan2(J[0][2] - ca[1], J[0][0] - ca[0]);
@@ -263,46 +283,94 @@ function hand3(u, o) {
         const rho = rad[j], st = 2 * Math.asin(Math.min(.999, lxz / (2 * rho))); th = j === 0 ? Math.PI - .26 : th + st;
         J.push([ca[0] + rho * Math.cos(th), ya[j], ca[1] + rho * Math.sin(th)]); });
     } else {
-      const tf = (pr.thumbFlex || [10, 15, 10]).map(v => v * Math.PI / 180), A = -(40 + (pr.thumbSpread || 0)) * Math.PI / 180;
-      const T0 = nrm([Math.cos(A), Math.sin(A), -.5]), B0 = [.3, 1, -.9], B = nrm(sub(B0, sc(T0, dot(B0, T0))));
-      let phi = 0, p = C0; tf.forEach((fd, j) => { phi += fd; const d = add(sc(T0, Math.cos(phi)), sc(B, Math.sin(phi))); p = add(p, sc(d, ls[j])); J.push(p); });
+      const q0 = [-(40 + (pr.thumbSpread || 0)) * Math.PI / 180, -.5, ...(pr.thumbFlex || [10, 15, 10]).map(v => v * Math.PI / 180)];
+      // thumbTo (a local point), or for 'pinch' (without an own thumbFlex) the index finger's tip: the thumb's tip is
+      // brought there (its pad against the finger's pad, pinchGap apart — a coin, a card's edge)
+      let T = o.thumbTo || null;
+      if (!T && pose === 'pinch' && o.thumbTo !== false && !o.thumbFlex) { const it = digits[0].J[3], tb = chain(q0[0], q0[1], q0.slice(2))[3], v = nrm(sub(tb, it));
+        T = add(it, sc(v, (digits[0].ws[3] + ws[3]) * .5 + (o.pinchGap != null ? o.pinchGap : .15))); }
+      if (T) { const lo = [-2.2, -1.6, -.3, -.3, -.3], hi = [.6, 1, 1.6, 1.7, 1.6], q = q0.slice();
+        const cost = v => { const tip = chain(v[0], v[1], v.slice(2))[3], d = sub(tip, T); return dot(d, d) + .015 * v.reduce((a, x, k) => a + (x - q0[k]) * (x - q0[k]), 0); };
+        let c0 = cost(q), st = .25;
+        for (let it = 0; it < 90 && st > .002; it++) { let moved = false;
+          for (let k = 0; k < 5; k++) for (const sg of [1, -1]) { const v = q.slice(); v[k] = cl(v[k] + sg * st, lo[k], hi[k]); const c = cost(v); if (c < c0) { c0 = c; q[k] = v[k]; moved = true; } }
+          if (!moved) st *= .55; }
+        J = chain(q[0], q[1], q.slice(2)); }
+      else J = chain(q0[0], q0[1], q0.slice(2));
     }
     const D = []; for (let j = 0; j < 3; j++) { const d = nrm(sub(J[j + 1], J[j])), out = o.thumbOut || [0, -1, .6], dor = nrm(sub(out, sc(d, dot(out, d)))); D.push(dor); }
     digits.push({ id: 'thumb', J, ws, D });
   }
   // ——— drawing ———
-  const Ls = o.light || [-.5, -.86];
+  const Ls = o.light || [-.5, -.86], Lv = nrm([Ls[0], Ls[1], o.lightZ != null ? o.lightZ : .55]);
   const lit2 = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; return ((-dy / l) * Ls[0] + (dx / l) * Ls[1]) >= 0 ? 1 : -1; };
-  const nail = o.nail || mix(tn.lit, '#ffffff', .3), crease = mix(tn.shadow, tn.half, .25);
-  const piece = (dg, j0, j1) => {
-    // one continuous tube through joints j0..j1 (a part of a digit that lies wholly in front of or behind the object)
-    const C = [], Wd = []; for (let j = j0; j <= j1; j++) { C.push(scr(dg.J[j])); Wd.push(dg.ws[j] * s); }
-    if (C.length === 2) { C.splice(1, 0, [lerp(C[0][0], C[1][0], .5), lerp(C[0][1], C[1][1], .5)]); Wd.splice(1, 0, lerp(Wd[0], Wd[1], .5)); }
-    for (let k = 1; k < C.length; k++) if (Math.hypot(C[k][0] - C[k - 1][0], C[k][1] - C[k - 1][1]) < .02 * s) C[k] = [C[k][0] + .02 * s, C[k][1]];
-    const T = tube(C, Wd, 5), tip = j1 === 3, out = T.outline(0, T.N, 1, true, true), side = lit2(C[0], C[C.length - 1]);
-    let r2 = `<path d="${sp(out, true)}" fill="${tn.half}"/>`;
-    const strip = (a, b, col, op) => `<path d="${sp(T.edge(a, 0, T.N).concat(T.edge(b, 0, T.N).reverse()), true)}" fill="${col}" opacity="${op}"/>`;
-    r2 += strip(side * .25, side * .95, tn.lit, .55) + strip(-side * .45, -side * 1, tn.shadow, .5);
-    // the joints: on the back of the finger a knuckle (light bump and a few wrinkles), on the inside a crease
-    for (let j = Math.max(j0, 1); j <= Math.min(j1, 2); j++) {
-      const i = Math.round((j - j0) / (j1 - j0) * T.N), facing = dot(dg.D[Math.min(2, j)], VIEW) + dot(dg.D[j - 1], VIEW);
-      const p = T.at(i, -.62), q = T.at(i, .62), c = T.at(i, 0);
-      if (facing > .1) r2 += `<path d="M${f(p[0])} ${f(p[1])}Q${f(c[0] + (c[0] - T.at(Math.max(0, i - 1), 0)[0]) * 1.4)} ${f(c[1] + (c[1] - T.at(Math.max(0, i - 1), 0)[1]) * 1.4)} ${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.16 * s)}" fill="none" opacity=".7"/>`
-        + `<path d="M${f(T.at(i, -.4)[0])} ${f(T.at(i, -.4)[1])}Q${f(c[0])} ${f(c[1])} ${f(T.at(i, .4)[0])} ${f(T.at(i, .4)[1])}" stroke="${tn.lit}" stroke-width="${f(dg.ws[j] * s * .18)}" fill="none" stroke-linecap="round" opacity=".25" transform="translate(${f((c[0] - T.at(Math.max(0, i - 1), 0)[0]) * -.6)} ${f((c[1] - T.at(Math.max(0, i - 1), 0)[1]) * -.6)})"/>`;
-      else r2 += `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.2 * s)}" opacity=".8"/>`;
+  const core = tn.core || mix(tn.half, tn.shadow, .5);
+  // a surface facing the light (I = 1), across it (0), away (−1): its local colour
+  const toneI = I => I >= 0 ? mix(tn.half, tn.lit, cl(I) * .72) : mix(tn.half, core, cl(-I) * .85);
+  const nail = o.nail || mix(tn.lit, '#fff4ee', .4), crease = mix(tn.shadow, tn.half, .25), osw = sw * 2.3;
+  const detail = cl((s - .9) / .8);   // small marks (wrinkles, pads) only on hands big enough to show them
+  const piece = (dg, j0, j1, dim) => {
+    // one continuous body through joints j0..j1 (a part of a digit wholly in front of or behind the object): each
+    // bone a little waisted, the joints a little full, the tip a round pad; on a bent joint the knuckle stands out
+    // on the back of the finger and the skin folds in on the inside
+    const C = [], Wd = [], ji = [];
+    for (let j = j0; j <= j1; j++) {
+      ji.push(C.length); C.push(scr(dg.J[j])); Wd.push(dg.ws[j] * s * (j > j0 && j < 3 ? 1.04 : 1));
+      if (j < j1) { const tipB = j === 2; C.push(scr(add(sc(dg.J[j], tipB ? .4 : .5), sc(dg.J[j + 1], tipB ? .6 : .5)))); Wd.push((dg.ws[j] + dg.ws[j + 1]) * .5 * s * (tipB ? 1.02 : .93)); }
     }
-    r2 += `<path d="${sp(out, true)}" fill="none" stroke="${tn.outline}" stroke-width="${sw}"/>`;
-    if (tip && o.nails !== false) {
-      const dor = dg.D[2], vis = dot(dor, VIEW);
-      const sl = Math.hypot(scr(dg.J[3])[0] - scr(dg.J[2])[0], scr(dg.J[3])[1] - scr(dg.J[2])[1]);
-      if (vis > .3 && sl > dg.ws[3] * s * .7) { const a3 = dg.J[2], b3 = dg.J[3], w = dg.ws[3], c3 = add(add(sc(a3, .32), sc(b3, .68)), sc(dor, w * .34)), cc = scr(c3);
-        const len = Math.hypot(...[0, 1].map(k => scr(b3)[k] - scr(a3)[k])), ang = Math.atan2(scr(b3)[1] - scr(a3)[1], scr(b3)[0] - scr(a3)[0]) * 180 / Math.PI;
-        r2 += `<ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(Math.max(.18, len * .3))}" ry="${f(w * s * .34 * Math.min(1, vis + .2))}" transform="rotate(${f(ang)} ${f(cc[0])} ${f(cc[1])})" fill="${nail}" stroke="${mix(tn.shadow, tn.half, .3)}" stroke-width="${f(.1 * s)}" opacity=".9"/>`
-          + `<ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(Math.max(.1, len * .12))}" ry="${f(w * s * .1)}" transform="rotate(${f(ang)} ${f(cc[0])} ${f(cc[1])})" fill="#ffffff" opacity=".55"/>`; }
+    for (let k = 1; k < C.length; k++) if (Math.hypot(C[k][0] - C[k - 1][0], C[k][1] - C[k - 1][1]) < .03 * s) C[k] = [C[k][0] + .03 * s * ux, C[k][1] + .03 * s * uy];
+    const NS = 4, T = tube(C, Wd, NS), tip = j1 === 3, side = lit2(C[0], C[C.length - 1]);
+    const bumps = [];
+    for (let j = Math.max(j0 + 1, 1); j <= Math.min(j1 - 1, 2); j++) {
+      const a = nrm(sub(dg.J[j], dg.J[j - 1])), b = nrm(sub(dg.J[j + 1], dg.J[j])), bend = cl(Math.acos(cl(dot(a, b), -1, 1)) / (75 * Math.PI / 180));
+      if (bend < .05) continue;
+      const i = ji[j - j0] * NS, dd = add(dg.D[j - 1], dg.D[j]), q0 = scr(dg.J[j]), q1 = scr(add(dg.J[j], sc(nrm(dd), .5))), v = [q1[0] - q0[0], q1[1] - q0[1]];
+      const n = T.S[Math.min(T.N, i)].n, pj = (v[0] * n[0] + v[1] * n[1]) / (.5 * s);
+      bumps.push({ i, sd: pj >= 0 ? 1 : -1, k: bend * cl(Math.abs(pj) * 1.3) });
+    }
+    const off = (i, sd) => { let v = 0; for (const b of bumps) { const g = Math.exp(-((i - b.i) * (i - b.i)) / 3.2); v += b.sd === sd ? .13 * b.k * g : -.07 * b.k * Math.exp(-((i - b.i) * (i - b.i)) / 1.4); } return v; };
+    const edgeO = sd => { const a = []; for (let i = 0; i <= T.N; i++) { const q = T.S[i], h = q.w / 2 * (1 + off(i, sd)); a.push([q.p[0] + q.n[0] * h * sd, q.p[1] + q.n[1] * h * sd]); } return a; };
+    const capAt = (i, dir) => { const q = T.S[i], h = q.w / 2, out = []; for (let k = 1; k < 8; k++) { const ph = Math.PI * k / 8;
+      out.push([q.p[0] + q.d[0] * Math.sin(ph) * h * 1.04 * dir - q.n[0] * Math.cos(ph) * h * dir, q.p[1] + q.d[1] * Math.sin(ph) * h * 1.04 * dir - q.n[1] * Math.cos(ph) * h * dir]); } return out; };
+    const outl = [...edgeO(-1), ...capAt(T.N, 1), ...edgeO(1).reverse(), ...capAt(0, -1)];
+    // the piece's own colour by how its back faces the light, sunk a little where it lies behind the others
+    const Dm = nrm(dg.D.slice(Math.max(0, j0), j1).reduce((a, d) => add(a, d), [0, 0, 0])), I = dot(vv(Dm), Lv) * .45;
+    const base = mix(toneI(I), core, dim);
+    let r2 = `<path d="${sp(outl, true)}" fill="${base}" stroke="${tn.outline}" stroke-width="${f(osw)}" stroke-linejoin="round" paint-order="stroke"/>`;
+    const strip = (a, b, col, op) => `<path d="${sp(T.edge(a, 0, T.N).concat(T.edge(b, 0, T.N).reverse()), true)}" fill="${col}" opacity="${f(op)}"/>`;
+    r2 += strip(-side * .1, -side * .95, core, .55) + strip(-side * .42, -side * .84, tn.shadow, .42) + strip(-side * .86, -side * .96, tn.half, .28)
+      + strip(side * .18, side * .9, tn.lit, .48) + strip(side * .38, side * .66, mix(tn.lit, '#ffffff', .3), .2 * cl(I + .5));
+    // the joints: on the back a knuckle catching the light (and a few wrinkles on a big hand), inside a crease
+    for (let j = Math.max(j0, 1); j <= Math.min(j1, 2); j++) {
+      if (j === j0) continue;
+      const i = ji[j - j0] * NS, fc = dot(dg.D[Math.min(2, j)], VIEW) + dot(dg.D[j - 1], VIEW), c = T.at(i, 0), pv = T.at(Math.max(0, i - 1), 0), dv0 = [c[0] - pv[0], c[1] - pv[1]];
+      if (fc > .1) {
+        const hl = T.at(i, side * .3);
+        r2 += `<ellipse cx="${f(hl[0])}" cy="${f(hl[1])}" rx="${f(dg.ws[j] * s * .26)}" ry="${f(dg.ws[j] * s * .17)}" transform="rotate(${f(Math.atan2(dv0[1], dv0[0]) * 180 / Math.PI)} ${f(hl[0])} ${f(hl[1])})" fill="${tn.lit}" opacity="${f(.28 * cl(fc))}"/>`;
+        if (detail > 0) for (const dk of [-1, 1]) { const p = T.at(i + dk, -.42), q = T.at(i + dk, .42), mm = T.at(i + dk * 2, 0);
+          r2 += `<path d="M${f(p[0])} ${f(p[1])}Q${f(mm[0])} ${f(mm[1])} ${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.1 * s)}" fill="none" opacity="${f(.45 * detail * cl(fc))}"/>`; }
+      } else { const p = T.at(i, -.66), q = T.at(i, .66);
+        r2 += `<path d="M${f(p[0])} ${f(p[1])}Q${f(c[0] + dv0[0] * .8)} ${f(c[1] + dv0[1] * .8)} ${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.17 * s)}" fill="none" opacity=".75"/>`; }
+    }
+    if (tip) {
+      const dor = dg.D[2], vis = dot(dor, VIEW), a3 = scr(dg.J[2]), b3 = scr(dg.J[3]), sl = Math.hypot(b3[0] - a3[0], b3[1] - a3[1]), w = dg.ws[3] * s;
+      if (o.nails !== false && vis > .25 && sl > w * .55) {
+        // the nail on the back of the last phalanx: a rounded plate from its middle to the tip, a cuticle, a glint
+        const at3 = t => scr(add(add(sc(dg.J[2], 1 - t), sc(dg.J[3], t)), sc(dor, dg.ws[3] * .42))), e = [(b3[0] - a3[0]) / sl, (b3[1] - a3[1]) / sl], nn = [-e[1], e[0]];
+        const hw = w * .33 * cl(vis + .25), p0 = at3(.42), p1 = at3(1.05), q = (p, k, t) => [p[0] + nn[0] * hw * k + e[0] * t, p[1] + nn[1] * hw * k + e[1] * t];
+        const A = q(p0, -.86, 0), B = q(p0, .86, 0), C1 = q(p1, 1, -hw * .2), C2 = q(p1, -1, -hw * .2), T1 = q(p1, 0, hw * .55), M0 = q(p0, 0, -hw * .5);
+        const P2 = p => `${f(p[0])} ${f(p[1])}`;
+        r2 += `<path d="M${P2(A)}Q${P2(M0)} ${P2(B)}L${P2(C1)}Q${P2(q(p1, 1, hw * .45))} ${P2(T1)}Q${P2(q(p1, -1, hw * .45))} ${P2(C2)}Z" fill="${nail}" stroke="${mix(tn.shadow, tn.half, .3)}" stroke-width="${f(.09 * s)}" opacity="${f(.55 + .4 * cl(vis))}"/>`
+          + `<path d="M${P2(q(p0, -side * m * .3, hw * .5))}L${P2(q(p1, -side * m * .3, -hw * .1))}" stroke="#ffffff" stroke-width="${f(hw * .32)}" stroke-linecap="round" opacity="${f(.3 * cl(vis))}"/>`;
+      } else if (vis < -.3 && detail > 0 && sl > w * .5) {
+        // the pad of the finger tip seen from the palm side
+        const c3 = scr(add(add(sc(dg.J[2], .3), sc(dg.J[3], .7)), sc(dor, -dg.ws[3] * .3)));
+        r2 += `<ellipse cx="${f(c3[0])}" cy="${f(c3[1])}" rx="${f(sl * .32)}" ry="${f(w * .28)}" transform="rotate(${f(Math.atan2(b3[1] - a3[1], b3[0] - a3[0]) * 180 / Math.PI)} ${f(c3[0])} ${f(c3[1])})" fill="${tn.lit}" opacity="${f(.22 * detail)}"/>`;
+      }
     }
     return r2;
   };
-  const items = [];   // { d: depth, svg, back }
+  const specs = [];   // { d: depth, dg, j0, j1, back }
   const dC = wrap ? dep([axX(-.48), -.48, zc]) : -1e9, backSet = new Set(o.backFingers || []);
   for (const dg of digits) {
     // split the chain where it crosses behind the handle (by the depth of each bone's middle)
@@ -310,37 +378,53 @@ function hand3(u, o) {
     let j = dg.id === 'thumb' ? 1 : 0;   // the thumb's first bone is inside the ball of the thumb (the palm's body)
     while (j < 3) { let k = j; while (k + 1 < 3 && segBack[k + 1] === segBack[j]) k++;
       const mids = []; for (let q = j; q <= k; q++) mids.push(dep(sc(add(dg.J[q], dg.J[q + 1]), .5)));
-      items.push({ d: Math.max(...mids), svg: piece(dg, j, k + 1), back: segBack[j], thumb: dg.id === 'thumb' }); j = k + 1; }
+      specs.push({ d: Math.max(...mids), dg, j0: j, j1: k + 1, back: segBack[j] }); j = k + 1; }
   }
-  // the palm: the back (z 0) and the inside (z −.85) outlines and the ball of the thumb, as one convex body
+  const dMax = Math.max(...specs.map(q => q.d)), dMin = Math.min(...specs.map(q => q.d));
+  const items = specs.map(q => ({ d: q.d, back: q.back, svg: piece(q.dg, q.j0, q.j1, dMax - dMin > .3 ? .2 * (dMax - q.d) / (dMax - dMin) : 0) }));
+  // the palm: the back (z 0) and the inside (z −.85) outlines and the ball of the thumb, as one convex body; with
+  // `cut` the wrist end is cut off there (the sleeve's edge) and left without an outline, so the hand comes out of it
   let PB = [[-.4, -1.5], [1.4, -1.95], [3.2, -2.05], [4.4, -1.95], [4.82, -1.2], [4.98, -.4], [4.92, .5], [4.62, 1.35], [4.2, 1.85], [3.0, 2.0], [1.2, 1.85], [-.4, 1.45]];
   if (pw !== 1 || ww !== 1) PB = PB.map(p => [p[0], p[1] * pw * (p[0] < 2.2 ? lerp(ww, 1, Math.max(0, (p[0] + .4) / 2.6)) : 1)]);
+  if (cut != null) PB = PB.map(p => [Math.max(p[0], cut), p[1]]);
   const TJ = digits[4].J, web = [TJ[1][0] + .1, TJ[1][1] + .1, TJ[1][2]], web0 = [lerp(TJ[0][0], TJ[1][0], .5), lerp(TJ[0][1], TJ[1][1], .5) - .35, lerp(TJ[0][2], TJ[1][2], .5)], web1 = [TJ[1][0] - .5, TJ[1][1] - .3, TJ[1][2]];
-  const pts3 = [...PB.map(p => [p[0], p[1], 0]), ...PB.map(p => [p[0] * (p[0] > 4 ? .92 : .97), p[1] * .95, -.85]), [1.2, -1.9 * pw, -1.25], [2.4, -1.6 * pw, -1.35], [1.6, 1.4 * pw, -1.15], web, web0, web1];
-  const hull = (() => { const Q = pts3.map(p => [px(p), yv(p)]).sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr2 = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
+  let pts3 = [...PB.map(p => [p[0], p[1], 0]), ...PB.map(p => [p[0] * (p[0] > 4 ? .92 : .97), p[1] * .95, -.85]), [1.2, -1.9 * pw, -1.25], [2.4, -1.6 * pw, -1.35], [1.6, 1.4 * pw, -1.15], web, web0, web1];
+  if (cut != null) pts3 = pts3.map(p => [Math.max(p[0], cut), p[1], p[2]]);
+  const hull = (() => { const Q = pts3.map(p => [px(p), yv(p), cut != null && p[0] <= cut + 1e-6]).sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr2 = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
     const lo = [], up = []; for (const p of Q) { while (lo.length > 1 && cr2(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
     for (const p of Q.slice().reverse()) { while (up.length > 1 && cr2(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
     return lo.slice(0, -1).concat(up.slice(0, -1)); })();
   const H2 = hull.map(p => [W[0] + s * (p[0] * ux + m * p[1] * nx), W[1] + s * (p[0] * uy + m * p[1] * ny)]);
   let palm = '';
   { const g = nid('h3p', u), cx = H2.reduce((a, p) => a + p[0], 0) / H2.length, cy = H2.reduce((a, p) => a + p[1], 0) / H2.length, R0 = 3.2 * s;
-    palm += `<defs>${linGrad(g, cx + Ls[0] * R0, cy + Ls[1] * R0, cx - Ls[0] * R0, cy - Ls[1] * R0, [[0, tn.lit, 1], [.4, tn.half, 1], [.85, tn.shadow, 1], [1, tn.shadow, 1]])}</defs>`
-      + `<path d="${sp(H2, true)}" fill="url(#${g})" stroke="${tn.outline}" stroke-width="${sw}"/>`;
-    const backVis = cr * cp, palmVis = -cr * cp;
+    const backVis = cr * cp, palmVis = -cr * cp, Ip = dot(vv([0, 0, backVis >= 0 ? 1 : -1]), Lv), dk = c => mix(c, core, cl(-Ip) * .45);
+    palm += `<defs>${linGrad(g, cx + Ls[0] * R0, cy + Ls[1] * R0, cx - Ls[0] * R0, cy - Ls[1] * R0, [[0, dk(tn.lit), 1], [.4, dk(mix(tn.half, tn.lit, cl(Ip) * .3)), 1], [.85, dk(tn.shadow), 1], [1, dk(mix(tn.shadow, tn.half, .25)), 1]])}</defs>`;
+    // the outline: whole, or open across the cut (drawn first and thick, the fill over its inner half)
+    const ci = hull.findIndex((p, i) => p[2] && hull[(i + 1) % hull.length][2]);
+    if (ci >= 0) { const n = H2.length, open = []; for (let k = 1; k <= n; k++) open.push(H2[(ci + k) % n]);
+      palm += `<path d="${sp(open)}" fill="none" stroke="${tn.outline}" stroke-width="${f(osw)}" stroke-linejoin="round"/><path d="${sp(H2, true)}" fill="url(#${g})"/>`; }
+    else palm += `<path d="${sp(H2, true)}" fill="url(#${g})" stroke="${tn.outline}" stroke-width="${f(osw)}" stroke-linejoin="round" paint-order="stroke"/>`;
+    if (cut != null) { const sg = nid('h3c', u), a0 = P(cut, 0), a1 = P(cut + 1.5, 0);
+      // the sleeve's shade on the wrist, fading towards the knuckles
+      palm += `<defs>${linGrad(sg, a0[0], a0[1], a1[0], a1[1], [[0, tn.shadow, .6], [1, tn.shadow, 0]])}</defs><path d="${sp(H2, true)}" fill="url(#${sg})"/>`; }
     if (backVis > .25) {
-      // the back of the hand: tendons fanning from the wrist to the knuckles, the knuckle row in the light
-      for (const F of HF.slice(0, 3)) { const a0 = P(2.2, F.k[1] * .55, .02), a1 = P(F.k[0] - .5, F.k[1] * .92, .02);
-        palm += `<path d="M${f(a0[0])} ${f(a0[1])}L${f(a1[0])} ${f(a1[1])}" stroke="${tn.lit}" stroke-width="${f(.32 * s)}" opacity="${f(.22 * backVis)}" stroke-linecap="round"/>`; }
-      { const v = [P(1.0, .9, .02), P(2.2, .5, .02), P(3.0, .8, .02), P(3.9, .4, .02)]; palm += `<path d="${sp(v)}" stroke="${mix(tn.shadow, '#6a6a9a', .3)}" stroke-width="${f(.16 * s)}" fill="none" opacity="${f(.12 * backVis)}"/>`; }
-      if (o.knuckles !== false) for (const F of HF) { const k = P(F.k[0] - .1, F.k[1], 0);
-        palm += `<ellipse cx="${f(k[0])}" cy="${f(k[1])}" rx="${f(.42 * s)}" ry="${f(.3 * s)}" fill="${tn.lit}" opacity="${f(.45 * backVis)}"/>`; }
+      // the back of the hand: faint tendons from the wrist to the knuckles, the knuckles in the light
+      for (const F of HF.slice(0, 3)) { const a0 = P(2.2, F.k[1] * .55, .02), a1 = P(F.k[0] - .6, F.k[1] * .92, .02);
+        palm += `<path d="M${f(a0[0])} ${f(a0[1])}L${f(a1[0])} ${f(a1[1])}" stroke="${tn.lit}" stroke-width="${f(.26 * s)}" opacity="${f(.1 * backVis)}" stroke-linecap="round"/>`; }
+      if (o.knuckles !== false) for (const F of HF) { const k = P(F.k[0] - .15, F.k[1], 0);
+        palm += `<ellipse cx="${f(k[0] + Ls[0] * .12 * s)}" cy="${f(k[1] + Ls[1] * .12 * s)}" rx="${f(.4 * s * F.w)}" ry="${f(.28 * s * F.w)}" fill="${tn.lit}" opacity="${f(.26 * backVis)}"/>`; }
     }
-    if (palmVis > .3) for (const L2 of [[[.8, -1.3], [2.4, -.9], [3.4, -1.4]], [[3.6, 1.8], [3.9, .2], [3.7, -1.6]], [[3.0, 1.9], [3.3, .6], [3.0, -.6]]])
-      { const Q2 = L2.map(p => P(p[0], p[1], -.85)); palm += `<path d="${sp(Q2)}" stroke="${tn.shadow}" stroke-width="${f(.14 * s)}" fill="none" opacity="${f(.6 * palmVis)}"/>`; }
+    if (palmVis > .3) {
+      for (const L2 of [[[.8, -1.3], [2.4, -.9], [3.4, -1.4]], [[3.6, 1.8], [3.9, .2], [3.7, -1.6]], [[3.0, 1.9], [3.3, .6], [3.0, -.6]]])
+        { const Q2 = L2.map(p => P(p[0], p[1], -.85)); palm += `<path d="${sp(Q2)}" stroke="${tn.shadow}" stroke-width="${f(.12 * s)}" fill="none" opacity="${f(.45 * palmVis)}"/>`; }
+      // the ball of the thumb and the heel of the hand: soft rounds in the light
+      const b1 = P(1.4, -1.0, -1.1), b2 = P(1.2, 1.0, -.95);
+      palm += `<ellipse cx="${f(b1[0])}" cy="${f(b1[1])}" rx="${f(1.1 * s)}" ry="${f(.8 * s)}" fill="${tn.lit}" opacity="${f(.16 * palmVis)}"/><ellipse cx="${f(b2[0])}" cy="${f(b2[1])}" rx="${f(.9 * s)}" ry="${f(.6 * s)}" fill="${tn.lit}" opacity="${f(.1 * palmVis)}"/>`;
+    }
   }
   // the palm's depth: its nearest face, a little back, so the fingers' roots tuck under its edge
   const dPalm = Math.max(dep([2.5, 0, 0]), dep([2.5, 0, -.85])) - .35;
-  items.push({ d: dPalm, svg: palm, back: wrap && dPalm < dC, palm: true });
+  items.push({ d: dPalm, svg: palm, back: backSet.has('palm') || (wrap && dPalm < dC), palm: true });
   items.sort((a, b) => a.d - b.d);
   let back = '', front = '';
   for (const it of items) if (it.back) back += it.svg; else front += it.svg;
@@ -956,12 +1040,19 @@ function figure(u, o) {
   const drawArm = k => { const a = arm[k], sTop = v3.add(a.S, Rt([0, -.14, 0])), coat = !!cCoat, tn = cCoat || cShirt, rolled = !coat && dr.sleeves === 'rolled';
     let s = '';
     const wp = pr(a.W), ep = pr(a.E), ang = Math.atan2(wp[1] - ep[1], wp[0] - ep[0]) / DEG;
-    if (rolled) s += limb([v3.lerp(a.E, a.W, .4), a.W], [.34, .27], skin, { folds: false, drapes: 0 });
-    const end = rolled ? v3.lerp(a.E, a.W, .55) : a.W;
+    // a bare forearm narrows to the wrist, so the hand grows out of it
+    if (rolled) s += limb([v3.lerp(a.E, a.W, .4), v3.lerp(a.E, a.W, .8), a.W], [.34, .26, .2], skin, { folds: false, drapes: 0 });
+    const end = rolled ? v3.lerp(a.E, a.W, .55) : a.W, ck = coat ? 1.1 : 1.14;
     s += limb([sTop, v3.lerp(a.S, a.E, .5), a.E, v3.lerp(a.E, end, .5), end], coat ? [.46, .44, .4, .36, .3] : [.47, .47, .43, .4, .33], tn,
-      { capA: true, roundA: .55, cuff: coat ? { from: .86, k: 1.1, tone: mix ? { lit: mix(tn.lit, '#ffffff', .1), half: mix(tn.half, tn.lit, .3), core: tn.half, shadow: tn.shadow, outline: tn.outline } : tn } : { from: .88, k: 1.14, roll: rolled }, drapes: 2 });
+      { capA: true, roundA: .55, cuff: coat ? { from: .86, k: ck, tone: mix ? { lit: mix(tn.lit, '#ffffff', .1), half: mix(tn.half, tn.lit, .3), core: tn.half, shadow: tn.shadow, outline: tn.outline } : tn } : { from: .88, k: ck, roll: rolled }, drapes: 2 });
+    if (!rolled) {
+      // the cuff's mouth round the wrist: its dark inside, wider the more the forearm points at us
+      const hw = W(coat ? .3 : .33) * ck / 2, fl = v3.len(v3.sub(a.W, a.E)) || 1, dz = (dep(a.W) - dep(a.E)) / fl, ry = hw * Math.max(.2, Math.abs(dz) * (dz > 0 ? .9 : .45));
+      s += `<ellipse cx="${f(wp[0])}" cy="${f(wp[1])}" rx="${f(ry)}" ry="${f(hw * .94)}" transform="rotate(${f(ang)} ${f(wp[0])} ${f(wp[1])})" fill="${mix(tn.shadow, '#000000', .5)}" stroke="${tn.outline}" stroke-width="${f(sw)}"/>`;
+    }
     const hs = Hh * BONE.hand / 9.5, hpose = (o.hands && o.hands[k]) || (pose.hands || {})[k] || 'relaxed';
-    const info = { side: k, at: wp, a: ang, s: hs, m: mir, pose: hpose, tone: skin, light: Lp, L, sw: Math.max(.2, sw * .8) };
+    // the hand comes out of the sleeve: its wrist end is cut at the cuff's edge (a bare forearm: a little inside it)
+    const info = { side: k, at: wp, a: ang, s: hs, m: mir, pose: hpose, tone: skin, light: Lp, L, sw: Math.max(.2, sw * .8), cut: rolled ? -.6 : 0 };
     const h = o.hand ? o.hand(u, info) : hand3(u, info);
     hands[k] = Object.assign({}, h, { at: wp, a: ang }); wrist[k] = { at: wp, a: ang, depth: dep(a.W) };
     if (!o.handsSeparate) s += h.back + h.front;
