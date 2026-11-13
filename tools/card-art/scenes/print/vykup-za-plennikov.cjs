@@ -19,8 +19,8 @@ const { glow, gloom, motes } = PK;
 const HZ = 84, FOC = 140, EYE = .9, ZW = 5;                  // horizon; a low eye over the battery floor; the parapet's distance
 const SUN = { x: 156, y: 72 };
 const REV = { kind: 'revenge', x: 92, y: 88, scale: 1.0, sails: 'furled', seed: 6 };
-const CHEST = { x: 98, y: 121, s: 1.25 }, KEGS = [{ x: 146, y: 116.4, s: .78, seed: 3 }, { x: 166, y: 119.6, s: .84, seed: 7 }];
-const DEED = { x: 52, y: 124, s: 1.35 };
+const CHEST = { x: 96, y: 125, s: 1.7 }, KEGS = [{ x: 149, y: 118.6, s: 1.0, seed: 3 }, { x: 173, y: 122.4, s: 1.08, seed: 7 }];
+const DEED = { x: 46, y: 126.4, s: 1.6 };
 const light = { time: 'dusk', haze: .45, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffb46c', power: .9 },
   fill: { color: '#5e2c3a', power: .48 }, rim: { az: 40, color: '#ffc890', power: .65 } };
 const skel = { horizon: HZ, eye: EYE, light: 'the setting sun low right behind her stern (key, contre-jour) + the sunset sky (fill)', items: [
@@ -103,7 +103,7 @@ module.exports = { name: 'Выкуп за пленников', kind: 'deck', sta
 
     // ——— the things, nearest last: the kegs, the deed under its stone, the chest of gold, spilt coins ———
     let things = '';
-    const shadowTo = (x, y, w, h, d) => K.castShadow(u, L, { x, y, w, h, horizon: HZ, d });
+    const shadowTo = (x, y, w, h, d) => K.castShadow(u, L, { x, y, w, h, horizon: HZ, d, opacity: .7 });
     for (const k of KEGS) things += shadowTo(k.x, k.y, 21 * k.s, 30 * k.s, 1);
     for (const k of KEGS) { things += K.barrel(u, L, { x: k.x, y: k.y, s: k.s, kind: 'powder', seed: k.seed });
       // a red mark painted on the stave: a burst (powder), no letters
@@ -111,26 +111,26 @@ module.exports = { name: 'Выкуп за пленников', kind: 'deck', sta
       things += `<path d="M${f(c[0])} ${f(c[1] - 4 * k.s)}l${f(1.2 * k.s)} ${f(2.6 * k.s)}l${f(2.6 * k.s)} ${f(-.8 * k.s)}l${f(-1.6 * k.s)} ${f(2.2 * k.s)}l${f(2 * k.s)} ${f(2 * k.s)}l${f(-2.8 * k.s)} 0l${f(-1.4 * k.s)} ${f(2.6 * k.s)}l${f(-1 * k.s)} ${f(-2.6 * k.s)}l${f(-2.8 * k.s)} ${f(.4 * k.s)}l${f(1.8 * k.s)} ${f(-2 * k.s)}l${f(-1.6 * k.s)} ${f(-2.2 * k.s)}l${f(2.8 * k.s)} ${f(.6 * k.s)}Z" fill="#a82a1a" opacity=".85"/>`; }
     // the agreement, half unrolled, its seal on a ribbon; a fist-sized stone holding it down
     things += shadowTo(DEED.x, DEED.y, 19 * DEED.s, 3, .5) + K.scroll(u, L, { ...DEED, seal: true, rot: -4, seed: 5 })
-      + shadowTo(DEED.x - 7, DEED.y - 1, 9, 6, 1) + K.rock(u, L, { x: DEED.x - 7, y: DEED.y - .6, w: 9, h: 6.4, seed: 4 });
+      + shadowTo(DEED.x - 9, DEED.y - 1, 11, 7, 1) + K.rock(u, L, { x: DEED.x - 9, y: DEED.y - .6, w: 11, h: 7.6, seed: 4 });
     things += shadowTo(CHEST.x, CHEST.y, 30 * CHEST.s, 17 * CHEST.s, .35) + K.chest(u, L, { ...CHEST, open: true, gold: true, seed: 8 })
-      + K.coins(u, L, { x: 128, y: 125.6, s: 1.15, n: 7, seed: 3 }) + K.coins(u, L, { x: 72, y: 126.4, s: 1, n: 4, seed: 9 });
+      + K.coins(u, L, { x: 134, y: 127.2, s: 1.35, n: 7, seed: 3 }) + K.coins(u, L, { x: 64, y: 127.6, s: 1.2, n: 4, seed: 9 });
     // the gold's glint back at the sun
-    things += K.localGlow(u, { x: CHEST.x + 4, y: CHEST.y - 22, color: '#ffd878', power: .4, radius: 18 }, { core: false });
+    things += K.localGlow(u, { x: CHEST.x + 6, y: CHEST.y - 30, color: '#ffd878', power: .45, radius: 24 }, { core: false });
     // the hook in the left merlon: the empty irons on their chain, the ring of keys
-    { const hk = [10, 78];
-      things += `<rect x="${hk[0] - 2}" y="${hk[1] - 2}" width="4" height="3.4" rx=".6" fill="#241c1a" stroke="#0a0808" stroke-width=".3"/><path d="M${hk[0]} ${hk[1] + 1}q0 4 3 4.4q3 0 3 -3" stroke="#1a1414" stroke-width="1.4" fill="none"/><path d="M${hk[0]} ${hk[1] + 1}q0 4 3 4.4q3 0 3 -3" stroke="#6a5a54" stroke-width=".5" fill="none"/>`;
+    { const hk = [10, 78]; let hs = '';
+      hs += `<rect x="${hk[0] - 2}" y="${hk[1] - 2}" width="4" height="3.4" rx=".6" fill="#241c1a" stroke="#0a0808" stroke-width=".3"/><path d="M${hk[0]} ${hk[1] + 1}q0 4 3 4.4q3 0 3 -3" stroke="#1a1414" stroke-width="1.4" fill="none"/><path d="M${hk[0]} ${hk[1] + 1}q0 4 3 4.4q3 0 3 -3" stroke="#6a5a54" stroke-width=".5" fill="none"/>`;
       const hang = [hk[0] + 3, hk[1] + 5.2];
-      things += K.chain(u, L, [hang, [hang[0] - 1, hang[1] + 6], [hang[0] - 3, hang[1] + 12]], { link: 3, seed: 2 })
+      hs += K.chain(u, L, [hang, [hang[0] - 1, hang[1] + 6], [hang[0] - 3, hang[1] + 12]], { link: 3, seed: 2 })
         + K.chain(u, L, [hang, [hang[0] + 2, hang[1] + 7], [hang[0] + 5, hang[1] + 13]], { link: 3, seed: 4 });
       const cuff = (c, rx, ry, rot, open) => { const id = nid('cf', u), arc = open ? `M${f(c[0] - rx)} ${f(c[1])}A${rx} ${ry} 0 1 1 ${f(c[0] + rx * .2)} ${f(c[1] + ry * .98)}` : `M${f(c[0] - rx)} ${f(c[1])}A${rx} ${ry} 0 1 1 ${f(c[0] - rx)} ${f(c[1] + .01)}`;
         return `<defs>${linGrad(id, c[0] - rx, c[1] - ry, c[0] + rx, c[1] + ry, [[0, '#2a2220', 1], [.6, '#4a3e3a', 1], [1, '#b08a6a', 1]])}</defs><g transform="rotate(${rot} ${f(c[0])} ${f(c[1])})"><path d="${arc}" fill="none" stroke="#080606" stroke-width="2.6"/><path d="${arc}" fill="none" stroke="url(#${id})" stroke-width="1.7"/></g>`
           + K.shadeSphere(u, c[0] - rx * .9, c[1] - ry * .3, .8, L, 'iron', { outline: .15 }); };
-      things += cuff([hang[0] - 3.4, hang[1] + 16], 3, 3.6, 10, false) + cuff([hang[0] + 6, hang[1] + 17], 3, 3.6, -16, true);
+      hs += cuff([hang[0] - 3.4, hang[1] + 16], 3, 3.6, 10, false) + cuff([hang[0] + 6, hang[1] + 17], 3, 3.6, -16, true);
       // the key ring on its own nail, three big keys
       const kr = [hk[0] + 14, hk[1] + 6];
-      things += `<circle cx="${kr[0]}" cy="${kr[1] - 4}" r=".9" fill="#241c1a"/><circle cx="${kr[0]}" cy="${kr[1]}" r="3" fill="none" stroke="#4a3010" stroke-width="1.2"/><circle cx="${kr[0]}" cy="${kr[1]}" r="3" fill="none" stroke="url(#brass${u})" stroke-width=".7"/>`;
-      for (const [a, l] of [[-22, 11], [6, 13], [30, 10]]) things += `<g transform="translate(${kr[0]} ${kr[1] + 3}) rotate(${a})"><circle cx="0" cy="1.6" r="1.6" fill="none" stroke="#4a3010" stroke-width="1"/><circle cx="0" cy="1.6" r="1.6" fill="none" stroke="url(#brass${u})" stroke-width=".55"/>`
-        + `<path d="M0 3.2V${l}" stroke="#4a3010" stroke-width="1.1"/><path d="M0 3.2V${l}" stroke="url(#brass${u})" stroke-width=".55"/><path d="M0 ${l - 2.6}h2.4v1.2h-1.2v1.4h-1.2" fill="url(#brass${u})" stroke="#4a3010" stroke-width=".3"/></g>`; }
+      hs += `<circle cx="${kr[0]}" cy="${kr[1] - 4}" r=".9" fill="#241c1a"/><circle cx="${kr[0]}" cy="${kr[1]}" r="3" fill="none" stroke="#4a3010" stroke-width="1.2"/><circle cx="${kr[0]}" cy="${kr[1]}" r="3" fill="none" stroke="url(#brass${u})" stroke-width=".7"/>`;
+      for (const [a, l] of [[-22, 11], [6, 13], [30, 10]]) hs += `<g transform="translate(${kr[0]} ${kr[1] + 3}) rotate(${a})"><circle cx="0" cy="1.6" r="1.6" fill="none" stroke="#4a3010" stroke-width="1"/><circle cx="0" cy="1.6" r="1.6" fill="none" stroke="url(#brass${u})" stroke-width=".55"/>`
+        + `<path d="M0 3.2V${l}" stroke="#4a3010" stroke-width="1.1"/><path d="M0 3.2V${l}" stroke="url(#brass${u})" stroke-width=".55"/><path d="M0 ${l - 2.6}h2.4v1.2h-1.2v1.4h-1.2" fill="url(#brass${u})" stroke="#4a3010" stroke-width=".3"/></g>`;   things += `<g transform="translate(${hk[0]} ${hk[1]}) scale(1.45) translate(${-hk[0]} ${-hk[1]})">${hs}</g>`; }
 
     // ——— the air: the sun's haze over the wall, motes, the dark coming up from the floor ———
     const air = glow(u, SUN.x, SUN.y + 6, 90, 30, '#ffb070', .18) + motes(16, 120, 60, 80, 40, '#ffe0b0', 7)
