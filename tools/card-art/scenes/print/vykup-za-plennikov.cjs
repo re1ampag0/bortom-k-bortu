@@ -73,8 +73,9 @@ module.exports = { name: 'Выкуп за пленников', kind: 'deck', sta
     // the flagstaff stepped in the right merlon and the governor's flag (its own pattern: a pale field, a blue cross,
     // a gold ring) flying to the left, rippling, lit through from the sun behind
     let flag = '';
-    { const st = pr(3.75, MH, ZW + .25), top = [st[0] + .4, 14];
-      flag += K.shadeCyl(u, st[0], st[1], top[0], top[1], 1.15, L, 'oak', { r1: 1.2, r2: .8, outline: .3, seed: 2 }) + K.shadeSphere(u, top[0], top[1] - 1, 1.6, L, 'brass', { outline: .25 });
+    { const st = pr(3.36, MH, ZW + .25), top = [st[0] + .3, 11];
+      flag += K.shadeCyl(u, st[0], st[1], top[0], top[1], 1.3, L, 'oak', { r1: 1.35, r2: .9, outline: .35, seed: 2 })
+        + `<path d="M${f(st[0] - 1)} ${f(st[1])}L${f(top[0] - .7)} ${f(top[1] + 2)}" stroke="#ffc890" stroke-width=".45" opacity=".7"/>` + K.shadeSphere(u, top[0], top[1] - 1, 1.6, L, 'brass', { outline: .25 });
       const fx0 = top[0] - 1, fy0 = 17, fw = 44, fh = 26, wav = (x, k) => Math.sin((fx0 - x) / fw * Math.PI * 2.2 + k) * 2.2 * ((fx0 - x) / fw);
       const edge = (y) => { const p = []; for (let i = 0; i <= 16; i++) { const x = fx0 - fw * i / 16; p.push([x, y + wav(x, 0) + (fx0 - x) * .06]); } return p; };
       const topE = edge(fy0), botE = edge(fy0 + fh), id = nid('fl', u), body = `M${topE.map(P2).join('L')}L${botE.slice().reverse().map(P2).join('L')}Z`, cid = nid('fc', u);
@@ -110,7 +111,9 @@ module.exports = { name: 'Выкуп за пленников', kind: 'deck', sta
       const c = [k.x - 1.6 * k.s, k.y - 15 * k.s];
       things += `<path d="M${f(c[0])} ${f(c[1] - 4 * k.s)}l${f(1.2 * k.s)} ${f(2.6 * k.s)}l${f(2.6 * k.s)} ${f(-.8 * k.s)}l${f(-1.6 * k.s)} ${f(2.2 * k.s)}l${f(2 * k.s)} ${f(2 * k.s)}l${f(-2.8 * k.s)} 0l${f(-1.4 * k.s)} ${f(2.6 * k.s)}l${f(-1 * k.s)} ${f(-2.6 * k.s)}l${f(-2.8 * k.s)} ${f(.4 * k.s)}l${f(1.8 * k.s)} ${f(-2 * k.s)}l${f(-1.6 * k.s)} ${f(-2.2 * k.s)}l${f(2.8 * k.s)} ${f(.6 * k.s)}Z" fill="#a82a1a" opacity=".85"/>`; }
     // the agreement, half unrolled, its seal on a ribbon; a fist-sized stone holding it down
-    things += shadowTo(DEED.x, DEED.y, 19 * DEED.s, 3, .5) + K.scroll(u, L, { ...DEED, seal: true, rot: -4, seed: 5 })
+    const Ld = Object.assign(K.makeLight({ time: 'day', haze: .1, key: { type: 'sun', az: 170, el: 60, color: '#fff2d8', power: 1 }, fill: { color: '#e8c8a0', power: .7 } }, { horizon: HZ, eye: EYE }), { pal: L.pal });
+    things += shadowTo(DEED.x, DEED.y, 19 * DEED.s, 3, .5) + K.scroll(u, Ld, { ...DEED, seal: true, rot: -4, seed: 5 })
+      + K.localGlow(u, { x: DEED.x + 2, y: DEED.y - 4, color: '#ffe8c0', power: .35, radius: 18 }, { core: false })
       + shadowTo(DEED.x - 9, DEED.y - 1, 11, 7, 1) + K.rock(u, L, { x: DEED.x - 9, y: DEED.y - .6, w: 11, h: 7.6, seed: 4 });
     things += shadowTo(CHEST.x, CHEST.y, 30 * CHEST.s, 17 * CHEST.s, .35) + K.chest(u, L, { ...CHEST, open: true, gold: true, seed: 8 })
       + K.coins(u, L, { x: 134, y: 127.2, s: 1.35, n: 7, seed: 3 }) + K.coins(u, L, { x: 64, y: 127.6, s: 1.2, n: 4, seed: 9 });
@@ -118,7 +121,9 @@ module.exports = { name: 'Выкуп за пленников', kind: 'deck', sta
     things += K.localGlow(u, { x: CHEST.x + 6, y: CHEST.y - 30, color: '#ffd878', power: .45, radius: 24 }, { core: false });
     // the hook in the left merlon: the empty irons on their chain, the ring of keys
     { const hk = [10, 78]; let hs = '';
-      hs += `<rect x="${hk[0] - 2}" y="${hk[1] - 2}" width="4" height="3.4" rx=".6" fill="#241c1a" stroke="#0a0808" stroke-width=".3"/><path d="M${hk[0]} ${hk[1] + 1}q0 4 3 4.4q3 0 3 -3" stroke="#1a1414" stroke-width="1.4" fill="none"/><path d="M${hk[0]} ${hk[1] + 1}q0 4 3 4.4q3 0 3 -3" stroke="#6a5a54" stroke-width=".5" fill="none"/>`;
+      const arm = `M${hk[0]} ${hk[1] + 1}q0 4 3 4.4L${hk[0] + 14} ${hk[1] + 5.4}q2 0 2 -2.6`;
+      hs += `<rect x="${hk[0] - 2}" y="${hk[1] - 2}" width="4" height="3.4" rx=".6" fill="#241c1a" stroke="#0a0808" stroke-width=".3"/><path d="${arm}" stroke="#1a1414" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="${arm}" stroke="#6a5a54" stroke-width=".5" fill="none" stroke-linecap="round"/>`
+        + `<path d="M${hk[0] + 3} ${hk[1] + 4.7}L${hk[0] + 14} ${hk[1] + 4.7}" stroke="#ffc890" stroke-width=".3" opacity=".6"/>`;
       const hang = [hk[0] + 3, hk[1] + 5.2];
       hs += K.chain(u, L, [hang, [hang[0] - 1, hang[1] + 6], [hang[0] - 3, hang[1] + 12]], { link: 3, seed: 2 })
         + K.chain(u, L, [hang, [hang[0] + 2, hang[1] + 7], [hang[0] + 5, hang[1] + 13]], { link: 3, seed: 4 });
@@ -126,9 +131,10 @@ module.exports = { name: 'Выкуп за пленников', kind: 'deck', sta
         return `<defs>${linGrad(id, c[0] - rx, c[1] - ry, c[0] + rx, c[1] + ry, [[0, '#2a2220', 1], [.6, '#4a3e3a', 1], [1, '#b08a6a', 1]])}</defs><g transform="rotate(${rot} ${f(c[0])} ${f(c[1])})"><path d="${arc}" fill="none" stroke="#080606" stroke-width="2.6"/><path d="${arc}" fill="none" stroke="url(#${id})" stroke-width="1.7"/></g>`
           + K.shadeSphere(u, c[0] - rx * .9, c[1] - ry * .3, .8, L, 'iron', { outline: .15 }); };
       hs += cuff([hang[0] - 3.4, hang[1] + 16], 3, 3.6, 10, false) + cuff([hang[0] + 6, hang[1] + 17], 3, 3.6, -16, true);
-      // the key ring on its own nail, three big keys
-      const kr = [hk[0] + 14, hk[1] + 6];
-      hs += `<circle cx="${kr[0]}" cy="${kr[1] - 4}" r=".9" fill="#241c1a"/><circle cx="${kr[0]}" cy="${kr[1]}" r="3" fill="none" stroke="#4a3010" stroke-width="1.2"/><circle cx="${kr[0]}" cy="${kr[1]}" r="3" fill="none" stroke="url(#brass${u})" stroke-width=".7"/>`;
+      // the key ring hung on the end of the same arm, three big keys
+      const kr = [hk[0] + 13.4, hk[1] + 8.2];
+      hs += `<circle cx="${kr[0]}" cy="${kr[1]}" r="3" fill="none" stroke="#4a3010" stroke-width="1.2"/><circle cx="${kr[0]}" cy="${kr[1]}" r="3" fill="none" stroke="url(#brass${u})" stroke-width=".7"/>`
+        + `<path d="M${hk[0] + 12} ${hk[1] + 5.4}L${hk[0] + 15} ${hk[1] + 5.4}" stroke="#1a1414" stroke-width="1.4" stroke-linecap="round"/><path d="M${hk[0] + 12} ${hk[1] + 5.2}L${hk[0] + 15} ${hk[1] + 5.2}" stroke="#6a5a54" stroke-width=".5"/>`;
       for (const [a, l] of [[-22, 11], [6, 13], [30, 10]]) hs += `<g transform="translate(${kr[0]} ${kr[1] + 3}) rotate(${a})"><circle cx="0" cy="1.6" r="1.6" fill="none" stroke="#4a3010" stroke-width="1"/><circle cx="0" cy="1.6" r="1.6" fill="none" stroke="url(#brass${u})" stroke-width=".55"/>`
         + `<path d="M0 3.2V${l}" stroke="#4a3010" stroke-width="1.1"/><path d="M0 3.2V${l}" stroke="url(#brass${u})" stroke-width=".55"/><path d="M0 ${l - 2.6}h2.4v1.2h-1.2v1.4h-1.2" fill="url(#brass${u})" stroke="#4a3010" stroke-width=".3"/></g>`;   things += `<g transform="translate(${hk[0]} ${hk[1]}) scale(1.45) translate(${-hk[0]} ${-hk[1]})">${hs}</g>`; }
 

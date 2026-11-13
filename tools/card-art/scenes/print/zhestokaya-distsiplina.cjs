@@ -18,8 +18,8 @@ const { glow, gloom, motes } = PK;
 
 const HZ = 98, FOC = 140, EYE = 1.7, MOON = { x: 152, y: 40 };
 const MX = 93, MR = 13;                                     // the main mast: its axis and radius (in front of us, z ≈ 3 m)
-const LAMP = { x: 50, y: 74, s: 1.15, hang: 2.6 };          // the lantern's foot; it hangs from the bracket's hook
-const FLAME = { x: 50.2, y: 65.6 };
+const LAMP = { x: 50, y: 77.3, s: 1.15 };                   // the lantern's foot; its bail ring hangs on the bracket's hook
+const FLAME = { x: 50.2, y: 68.9 };
 const light = { time: 'night', haze: .3, key: { type: 'point', x: FLAME.x, y: FLAME.y, h: 1.2, gy: 180, color: '#ffb664', power: 1, radius: 110 },
   fill: { color: '#4a1e2a', power: .4 }, rim: { az: 60, color: '#ff9a7a', power: .55 } };
 const lightSky = { time: 'night', haze: .4, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 30, color: '#ffc8a8', power: .75 }, fill: { color: '#4a1a24', power: .45 } };
@@ -137,8 +137,11 @@ module.exports = { name: 'Жестокая дисциплина', kind: 'deck', 
     { const y0 = 40.2, hx = LAMP.x, x0 = MX - MR + .5;
       lamp += `<path d="M${f(x0)} ${y0}H${f(hx - 1)}" stroke="#0a0808" stroke-width="2.2" stroke-linecap="round"/><path d="M${f(x0)} ${y0 - .4}H${f(hx - 1)}" stroke="#7a6a64" stroke-width=".7"/>`
         + `<path d="M${f(x0)} ${y0 + 9}Q${f(x0 - 12)} ${y0 + 8} ${f(x0 - 18)} ${y0 + 1.4}" stroke="#0a0808" stroke-width="1.5" fill="none"/><path d="M${f(x0 - 18)} ${y0 + 1.4}q-3 -1 -2 -3q2 -1 2.6 1" stroke="#0a0808" stroke-width="1" fill="none"/>`
-        + `<path d="M${f(hx - 1)} ${y0}q-2.2 0 -2.2 2.2q0 2 2 2.2" stroke="#0a0808" stroke-width="1.1" fill="none"/>`;
-      lamp += K.lantern(u, L, { ...LAMP, lit: true, seed: 4 }) + K.localGlow(u, { x: FLAME.x, y: FLAME.y, color: '#ffc070', power: .85, radius: 30 }); }
+        + `<path d="M${f(hx - 1)} ${y0}H${f(hx + 3.4)}" stroke="#0a0808" stroke-width="2.2" stroke-linecap="round"/><path d="M${f(hx - 1)} ${y0 - .4}H${f(hx + 3.4)}" stroke="#7a6a64" stroke-width=".7"/>`;
+      lamp += K.lantern(u, L, { ...LAMP, lit: true, seed: 4 }) + K.localGlow(u, { x: FLAME.x, y: FLAME.y, color: '#ffc070', power: .85, radius: 30 });
+      // the hook: down from the arm's end, round under the ring's top, its point turned up in front of the lantern
+      const hd = `M${f(hx + 2.6)} ${y0 + .6}Q${f(hx + 2.8)} ${y0 + 4.2} ${f(hx)} ${y0 + 4.2}Q${f(hx - 2.4)} ${y0 + 4.2} ${f(hx - 2.2)} ${y0 + 1.8}`;
+      lamp += `<path d="${hd}" stroke="#0a0808" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="${hd}" stroke="#8a7a70" stroke-width=".45" fill="none" stroke-linecap="round" transform="translate(-.25 -.2)"/>`; }
     // the cat on its nail in front of the lit face: the lanyard over the nail, a turned leather handle with a Turk's
     // head at the butt, nine knotted tails hanging in a loose fan, two of them over the band
     let cat = '';
@@ -146,15 +149,18 @@ module.exports = { name: 'Жестокая дисциплина', kind: 'deck', 
       cat += `<circle cx="${nail[0]}" cy="${nail[1]}" r="1.3" fill="#2a2424" stroke="#0a0808" stroke-width=".3"/><circle cx="${nail[0] - .3}" cy="${nail[1] - .3}" r=".45" fill="#c8b0a0" opacity=".7"/>`
         + `<path d="M${nail[0] - .8} ${nail[1] + .6}Q${nail[0] - 3.4} ${nail[1] + 4} ${h0[0] - 1.2} ${h0[1] - .4}M${nail[0] + .8} ${nail[1] + .6}Q${nail[0] + 2.6} ${nail[1] + 4} ${h0[0] + 1.2} ${h0[1] - .4}" stroke="#2a1608" stroke-width=".8" fill="none"/>`;
       cat += K.shadeCyl(u, h0[0], h0[1], h1[0], h1[1], 2.2, L, 'leather', { r1: 1.9, r2: 2.3, outline: .35, seed: 6 });
+      { const hg = nid('hg', u); cat += `<defs>${linGrad(hg, h0[0] - 2.2, 0, h0[0] + 2.6, 0, [[0, '#f0b878', .7], [.35, '#c88a50', .5], [.75, '#8a5a34', .25], [1, '#3a2010', 0]])}</defs>`
+        + `<path d="M${f(h0[0] - 1.8)} ${f(h0[1])}L${f(h1[0] - 2.2)} ${f(h1[1])}L${f(h1[0] + 2.2)} ${f(h1[1])}L${f(h0[0] + 1.8)} ${f(h0[1])}Z" fill="url(#${hg})"/>`
+        + `<path d="M${f(h0[0] - 1.1)} ${f(h0[1] + .6)}L${f(h1[0] - 1.4)} ${f(h1[1] - .4)}" stroke="#ffd8a0" stroke-width=".4" opacity=".6"/>`; }
       for (let i = 0; i < 6; i++) { const y = h0[1] + 3 + i * 2.2; cat += `<path d="M${f(h0[0] - 2)} ${f(y)}l${f(4.2)} ${f(1.2)}" stroke="#1a0c06" stroke-width=".4"/>`; }
       cat += K.shadeSphere(u, h0[0] - .1, h0[1] - .6, 2.4, L, 'leather', { outline: .3 }) + `<path d="M${f(h0[0] - 2)} ${f(h0[1] - 1.2)}q2 1 4 0M${f(h0[0] - 2.2)} ${f(h0[1] - .2)}q2.2 1 4.4 0" stroke="#1a0c06" stroke-width=".35" fill="none"/>`;
       // the tails: from the butt of the handle, each its own length and sway, a knot at two points, frayed ends
       const RT = rng(17);
-      for (let k = 0; k < 9; k++) { const x0 = h1[0] - 1.6 + k * .4, ex = h1[0] - 11 + k * 2.7 + (RT() - .5) * 2, ey = h1[1] + 30 + (RT() - .5) * 6 - Math.abs(k - 4) * 1.2;
+      for (let k = 0; k < 9; k++) { const x0 = h1[0] - 1.6 + k * .4, ex = h1[0] - 13.4 + k * 3.3 + (RT() - .5) * 2, ey = h1[1] + 30 + (RT() - .5) * 6 - Math.abs(k - 4) * 1.2;
         const c = [lerp(x0, ex, .5) + (RT() - .5) * 3, lerp(h1[1], ey, .5)], d = `M${f(x0)} ${f(h1[1] + 1)}Q${P2(c)} ${f(ex)} ${f(ey)}`;
-        cat += `<path d="${d}" stroke="#120804" stroke-width="1.15" fill="none"/><path d="${d}" stroke="#5a3a24" stroke-width=".5" fill="none" opacity=".8" transform="translate(-.3 0)"/>`;
+        cat += `<path d="${d}" stroke="#120804" stroke-width="1.7" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#6e4a2e" stroke-width=".8" fill="none" opacity=".85" transform="translate(-.35 0)"/>`;
         for (const t of [.42, .74]) { const q = [(1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * c[0] + t * t * ex, (1 - t) * (1 - t) * (h1[1] + 1) + 2 * (1 - t) * t * c[1] + t * t * ey];
-          cat += K.shadeSphere(u, q[0], q[1], .95, L, 'leather', { outline: .2 }); }
+          cat += K.shadeSphere(u, q[0], q[1], 1.2, L, 'leather', { outline: .2 }); }
         cat += `<path d="M${f(ex)} ${f(ey)}l${f(-.6)} 1.6M${f(ex)} ${f(ey)}l.5 1.7M${f(ex)} ${f(ey)}l0 1.8" stroke="#3a2414" stroke-width=".3"/>`; }
       cat += `<path d="M${f(h1[0] - 2.4)} ${f(h1[1] - .5)}q2.4 1.4 4.8 0" stroke="#1a0c06" stroke-width=".5" fill="none"/>`;
       // its shadow thrown on the mast by the lantern, to the right
