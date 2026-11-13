@@ -391,7 +391,7 @@ function head(u, o) {
   s += `<g clip-path="url(#${cid})">`;
   if (o.warm) s += `<rect x="${f(o.c[0] - 2 * r)}" y="${f(o.c[1] - 2 * r)}" width="${f(4 * r)}" height="${f(4 * r)}" fill="url(#${wid})"/>`;
   // the eye socket in shade under the brow, the cheekbone, the line from the nose wing to the mouth
-  { const e = Q(.62, -.08); s += `<ellipse cx="${f(e[0])}" cy="${f(e[1])}" rx="${f(r * .24)}" ry="${f(r * .14)}" fill="${tn.shadow}" opacity="${o.detail ? .22 : .45}"/>`; }
+  { const e = Q(.62, -.08); s += `<ellipse cx="${f(e[0])}" cy="${f(e[1])}" rx="${f(r * .24)}" ry="${f(r * .14)}" fill="${tn.shadow}" opacity="${o.detail ? '.22' : '.45'}"/>`; }
   s += `<path d="${sp([Q(.36, .16), Q(.6, .24), Q(.8, .2)])}" stroke="${tn.lit}" stroke-width="${f(r * .09)}" fill="none" opacity=".45" stroke-linecap="round"/>`;
   s += `<path d="${sp([Q(.98, .27), Q(.88, .36), Q(.9, .48)])}" stroke="${tn.shadow}" stroke-width="${f(r * .05)}" fill="none" opacity=".7"/>`;
   if (o.detail) {
