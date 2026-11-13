@@ -2,7 +2,7 @@
 // refined from the first-round scene (portrait-pearl.cjs SCENES['Тиа Дальма']): the witch's hut in the swamp. Jars on
 // strings hang from the beam, a shelf of herbs and pots on the back wall, a round window to the fog and the moon over
 // the mangroves; on the table three sea cards lie face down in a row, two live crabs crawl over them, thrown crab claws,
-// little bones and a string of beads beside. Added from the brief (the find — погода в отражении): a wide wooden bowl
+// little bones beside. Added from the brief (the find — погода в отражении): a wide wooden bowl
 // of water at the back of the table that does not mirror the hut's ceiling but tomorrow's sky — a storm, a fork of
 // lightning, a whitecap.
 // Fixed against the first round: the room was a flat wall with things stuck on it — now a hut in 2.5D (back wall,
@@ -25,15 +25,15 @@ const TB = 84;                                    // the table's back edge
 const WIN = { x: 122, y: 42, r: 14.5 };           // the round window
 const CAND = [{ x: 40, y: 94, s: 1.55, len: 15 }, { x: 55, y: 90, s: 1.2, len: 9 }, { x: 30, y: 98, s: 1.3, len: 6 }];
 const FL = { x: 40.2, y: 94 - 1.55 * (3.4 + 15 + 3) };
-const BOWL = { x: 100, y: 95, rx: 23 };
+const BOWL = { x: 100, y: 89, rx: 25 };
 const CARDS = [{ x: 58, y: 111, a: -6 }, { x: 101, y: 113, a: 2 }, { x: 144, y: 110, a: 7 }];
 const light = { time: 'night', haze: .35, key: { type: 'point', x: FL.x, y: FL.y, h: .45, gy: 94, color: '#ffb860', power: 1, radius: 120 },
   fill: { color: '#3a5a5a', power: .4 }, rim: { az: 30, color: '#b8e0d0', power: .35 }, locals: [{ x: WIN.x, y: WIN.y, color: '#b8e0d0', power: .3, radius: 40 }] };
 const skel = { horizon: HZ, eye: 1.2, light: 'tallow candles at the left back of the table (key, warm) + the moon through the fog in the window (cold fill)', items: [
   ['back wall', BW.x0, BW.y1, BW.x1 - BW.x0, BW.y1 - BW.y0, 'floor'], ['window', WIN.x - WIN.r - 3, WIN.y + WIN.r + 3, 2 * WIN.r + 6, 2 * WIN.r + 6, 'back wall'],
-  ['shelf', 36, 60, 52, 22, 'back wall (two brackets)'], ['beam', -10, 9, 220, 9, 'side walls'], ['jars', 56, 40, 90, 34, 'strings from the beam'],
+  ['shelf', 36, 60, 52, 22, 'back wall (two brackets)'], ['beam', -10, 9, 220, 9, 'side walls'], ['jars', 60, 82, 108, 70, 'strings from the beam'],
   ['table', 0, 280, 200, 280 - TB, 'floor'], ['candles', 22, 98, 40, 34, 'table top'], ['bowl', BOWL.x - BOWL.rx, BOWL.y + 6, BOWL.rx * 2, 14, 'table top'],
-  ['cards', 42, 121, 118, 22, 'table top, face down'], ['crabs', 30, 120, 146, 26, 'on the cards'], ['bones, claws, beads', 14, 130, 180, 20, 'table top']] };
+  ['cards', 42, 121, 118, 22, 'table top, face down'], ['crabs', 30, 120, 146, 26, 'on the cards'], ['bones, claws', 60, 130, 120, 20, 'table top']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const poly = pts => 'M' + pts.map(P2).join('L') + 'Z';
@@ -84,38 +84,40 @@ function crab(u, L, x, y, s, a, o = {}) {
   // the shadow on the support
   { const b = nid('tcb', u); back += `<defs><filter id="${b}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="${f(.9 * s)}"/></filter></defs>`
       + `<ellipse cx="${f(x - lx * 2 * s)}" cy="${f(y - ly * 1.2 * s + 1.4 * s)}" rx="${f(10 * s)}" ry="${f(4.4 * s)}" fill="#0a0402" opacity=".55" filter="url(#${b})"/>`; }
-  // the legs: four a side, bent at the knee, tips on the support
-  const leg = (side, i) => { const ang = (-50 + i * 30) * Math.PI / 180, r0 = [side * 5.4, Math.sin(ang) * -3.2 + .6, 1.4], kn = [side * (10 + i * .3), -Math.sin(ang) * 6.4 + 1, 4.6 - i * .2], tp = [side * (12 + i * .5), -Math.sin(ang) * 8.4 + 2, 0];
-    const A = P(...r0), B = P(...kn), C = P(...tp), wd = (1.9 - i * .12) * s;
-    return `<path d="M${P2(A)}L${P2(B)}L${P2(C)}" stroke="${dark}" stroke-width="${f(wd + .5)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+  // the legs: four pairs, short and thick, from the shell's sides; each a raised thigh and a short shin down to the
+  // tip, the front pair out to the side, the rear pairs swept back (a crab's walking legs, not a spider's)
+  const leg = (side, i) => { const yl = 2.2 - i * 2.3, r0 = [side * 8.4, yl, 1.8], kn = [side * (13 - i * .2), yl - .6 - i * .8, 4.4], tp = [side * (15.6 - i * .3), yl - 1.4 - i * 1.4, 0];
+    const A = P(...r0), B = P(...kn), C = P(...tp), wd = (3 - i * .25) * s;
+    return `<path d="M${P2(A)}L${P2(B)}L${P2(C)}" stroke="${dark}" stroke-width="${f(wd + .7)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
       + `<path d="M${P2(A)}L${P2(B)}L${P2(C)}" stroke="${shell}" stroke-width="${f(wd)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
-      + `<path d="M${P2(A)}L${P2(B)}" stroke="${lit}" stroke-width="${f(wd * .35)}" fill="none" stroke-linecap="round" opacity=".7" transform="translate(${f(lx * .3 * s)} ${f(ly * .3 * s)})"/>`
-      + `<circle cx="${f(B[0])}" cy="${f(B[1])}" r="${f(wd * .55)}" fill="${lit}" opacity=".5"/>`; };
-  for (const sd of [-1, 1]) for (let i = 0; i < 4; i++) back += leg(sd, i);
+      + `<path d="M${P2(A)}L${P2(B)}" stroke="${lit}" stroke-width="${f(wd * .35)}" fill="none" stroke-linecap="round" opacity=".7" transform="translate(${f(lx * .4 * s)} ${f(ly * .4 * s)})"/>`
+      + `<circle cx="${f(B[0])}" cy="${f(B[1])}" r="${f(wd * .42)}" fill="${dark}" opacity=".55"/><path d="M${P2(B)}L${P2(C)}" stroke="#1a0402" stroke-width="${f(wd * .3)}" stroke-linecap="round" opacity=".45"/>`; };
+  for (const sd of [-1, 1]) for (let i = 3; i >= 0; i--) back += leg(sd, i);
   // the claws: an arm in two segments forward and out, the pincer (palm and two fingers); one raised (z up), one low
-  const claw = (side, raise, big) => { const sc = big ? 1.5 : 1.1, sh0 = P(side * 4.6, 3.6, 1.6), el = P(side * 8.4, 7.4, 2 + raise * .5), wr = P(side * 7, 11.6, 2 + raise),
-      tipA = P(side * (4.4 - raise * .2), (15.6 + 1) * 1, 2 + raise * 1.3), tipB = P(side * 2.6, 13.2, 1.6 + raise * .6);
-    let c = `<path d="M${P2(sh0)}L${P2(el)}L${P2(wr)}" stroke="${dark}" stroke-width="${f(2.9 * s)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M${P2(sh0)}L${P2(el)}L${P2(wr)}" stroke="${shell}" stroke-width="${f(2.1 * s)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const claw = (side, raise, big) => { const sc = big ? 1.45 : 1.25, cs = big ? 1.3 : 1.18, C = (px, py, pz) => P(px * cs, py * cs, pz),
+      sh0 = C(side * 4.6, 3.6, 1.6), el = C(side * 8.4, 7.4, 2 + raise * .5), wr = C(side * 7, 11.6, 2 + raise),
+      tipA = C(side * (4.4 - raise * .2), 16.6, 2 + raise * 1.3), tipB = C(side * 2.6, 13.6, 1.6 + raise * .6);
+    let c = `<path d="M${P2(sh0)}L${P2(el)}L${P2(wr)}" stroke="${dark}" stroke-width="${f(3.6 * s)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M${P2(sh0)}L${P2(el)}L${P2(wr)}" stroke="${shell}" stroke-width="${f(2.7 * s)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
     // the palm: a swollen oval along wrist → fingers; the fixed finger and the movable one, slightly open
     const g = nid('tcl', u), mid = [(wr[0] + tipA[0]) / 2, (wr[1] + tipA[1]) / 2], ang = Math.atan2(tipA[1] - wr[1], tipA[0] - wr[0]) * 180 / Math.PI, len = Math.hypot(tipA[0] - wr[0], tipA[1] - wr[1]);
     c += `<defs>${radGrad(g, mid[0] + lx * 1.4 * s, mid[1] + ly * 1.4 * s, 4 * s * sc, [[0, '#ffc08a', 1], [.35, '#e0602e', 1], [.8, '#8a2008', 1], [1, '#3a0802', 1]])}</defs>`
-      + `<ellipse cx="${f(lerp(wr[0], mid[0], .7))}" cy="${f(lerp(wr[1], mid[1], .7))}" rx="${f(len * .42 * sc)}" ry="${f(2.3 * s * sc)}" transform="rotate(${f(ang)} ${f(lerp(wr[0], mid[0], .7))} ${f(lerp(wr[1], mid[1], .7))})" fill="url(#${g})" stroke="${dark}" stroke-width=".35"/>`;
-    const f0 = P(side * (4.6 - raise * .2), 14.2, 2 + raise * 1.1), fA = tipA, fB = tipB;
+      + `<ellipse cx="${f(lerp(wr[0], mid[0], .7))}" cy="${f(lerp(wr[1], mid[1], .7))}" rx="${f(len * .56)}" ry="${f(3.3 * s * sc)}" transform="rotate(${f(ang)} ${f(lerp(wr[0], mid[0], .7))} ${f(lerp(wr[1], mid[1], .7))})" fill="url(#${g})" stroke="${dark}" stroke-width=".35"/>`;
+    const f0 = C(side * (4.6 - raise * .2), 14.2, 2 + raise * 1.1), fA = tipA, fB = tipB;
     c += `<path d="M${P2(f0)}Q${f(lerp(f0[0], fA[0], .5) + side * .6 * s)} ${f(lerp(f0[1], fA[1], .5))} ${P2(fA)}" stroke="${dark}" stroke-width="${f(1.4 * s * sc)}" fill="none" stroke-linecap="round"/><path d="M${P2(f0)}Q${f(lerp(f0[0], fA[0], .5) + side * .6 * s)} ${f(lerp(f0[1], fA[1], .5))} ${P2(fA)}" stroke="#d8582a" stroke-width="${f(.8 * s * sc)}" fill="none" stroke-linecap="round"/>`
       + `<path d="M${P2(f0)}Q${f(lerp(f0[0], fB[0], .5) - side * .8 * s)} ${f(lerp(f0[1], fB[1], .5) + .6 * s)} ${P2(fB)}" stroke="${dark}" stroke-width="${f(1.2 * s * sc)}" fill="none" stroke-linecap="round"/><path d="M${P2(f0)}Q${f(lerp(f0[0], fB[0], .5) - side * .8 * s)} ${f(lerp(f0[1], fB[1], .5) + .6 * s)} ${P2(fB)}" stroke="#c84a20" stroke-width="${f(.7 * s * sc)}" fill="none" stroke-linecap="round"/>`
       + `<circle cx="${f(fA[0])}" cy="${f(fA[1])}" r="${f(.35 * s)}" fill="#1a0602"/><circle cx="${f(fB[0])}" cy="${f(fB[1])}" r="${f(.3 * s)}" fill="#1a0602"/>`;
     return c; };
   out += claw(-1, o.raiseL || 0, o.big === -1) + claw(1, o.raiseR || 0, o.big === 1);
   // the shell: a wide domed oval, wider at the front, with a row of teeth along the front edge and the eyes
-  { const g = nid('tcs', u), pts = []; for (let i = 0; i < 26; i++) { const t = i / 26 * Math.PI * 2, rx = 8.4 + (Math.sin(t) > 0 ? 1 * Math.sin(t) : 0), ry = 6, tooth = Math.sin(t) > .2 ? (i % 2 ? .6 : 0) : 0;
+  { const g = nid('tcs', u), pts = []; for (let i = 0; i < 26; i++) { const t = i / 26 * Math.PI * 2, rx = 9.6 + (Math.sin(t) > 0 ? 1.4 * Math.sin(t) : -.8 * Math.sin(t)), ry = 5.8 - (Math.sin(t) < 0 ? .8 * -Math.sin(t) : 0), tooth = Math.sin(t) > .2 ? (i % 2 ? .6 : 0) : 0;
       pts.push(P(Math.cos(t) * (rx + tooth), Math.sin(t) * (ry + tooth * .6), 2.4)); }
     const c = P(0, 0, 2.4);
     out += `<defs>${radGrad(g, c[0] + lx * 3 * s, c[1] + ly * 2.2 * s - .8 * s, 9 * s, [[0, '#ffc898', 1], [.22, '#f07a40', 1], [.6, '#b03814', 1], [.9, '#5a1406', 1], [1, '#3a0802', 1]])}</defs>`
       + `<path d="${smooth(pts, true)}" fill="url(#${g})" stroke="#2a0602" stroke-width=".45"/>`
       // grooves and bumps on the shell, the speckle
       + `<path d="M${P2(P(-3.6, -2.4, 2.4))}Q${P2(P(0, 0, 3))} ${P2(P(3.6, -2.4, 2.4))}M${P2(P(-2, 2, 2.4))}Q${P2(P(0, .6, 3))} ${P2(P(2, 2, 2.4))}" stroke="#5a1406" stroke-width="${f(.35 * s)}" fill="none" opacity=".7"/>`
-      + Array.from({ length: 9 }, () => { const p = P((R() - .5) * 10, (R() - .5) * 6, 2.8); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.3 * s)}" fill="${R() > .5 ? '#ffd8a8' : '#6a1a08'}" opacity=".6"/>`; }).join('')
-      + `<ellipse cx="${f(c[0] + lx * 2.6 * s)}" cy="${f(c[1] + ly * 1.6 * s - .9 * s)}" rx="${f(2.4 * s)}" ry="${f(1 * s)}" fill="#fff0d8" opacity=".55"/>`;
+      + Array.from({ length: 9 }, () => { const p = P((R() - .5) * 13, (R() - .5) * 6, 2.8); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.3 * s)}" fill="${R() > .5 ? '#ffd8a8' : '#6a1a08'}" opacity=".6"/>`; }).join('')
+      + `<ellipse cx="${f(c[0] + lx * 2.6 * s)}" cy="${f(c[1] + ly * 1.6 * s - .9 * s)}" rx="${f(3 * s)}" ry="${f(1 * s)}" fill="#fff0d8" opacity=".55"/>`;
     for (const sd of [-1, 1]) { const e0 = P(sd * 1.6, 5, 2.6), e1 = P(sd * 2.2, 6.4, 4.4);
       out += `<path d="M${P2(e0)}L${P2(e1)}" stroke="#5a1406" stroke-width="${f(.7 * s)}" stroke-linecap="round"/><circle cx="${f(e1[0])}" cy="${f(e1[1])}" r="${f(.8 * s)}" fill="#0a0202"/><circle cx="${f(e1[0] + lx * .3 * s)}" cy="${f(e1[1] - .3 * s)}" r="${f(.28 * s)}" fill="#fff"/>`; } }
   return back + out;
@@ -132,6 +134,9 @@ function jar(u, L, x, y, s, col, inside = '') {
     + `<ellipse cx="${f(x)}" cy="${f(lv)}" rx="${f(w)}" ry="${f(1.1 * s)}" fill="${mix(col, '#ffffff', .3)}" opacity=".7"/>${inside}`
     + `<rect x="${f(x - w)}" y="${f(lv)}" width="${f(2 * w)}" height="${f(h)}" fill="url(#${g})" opacity=".6"/></g>` + glow(u, x, lv + 3 * s, 7 * s, 6 * s, col, .35)
     + `<path d="${body}" fill="url(#${g})" stroke="#0a1410" stroke-width=".4"/>`
+    // the candles' warm light from below left: a glow on the glass and a hot rim along that side and the base
+    + glow(u, x - w * .35, y + h * .7, w * 1.1, h * .45, '#ffa850', .3)
+    + `<path d="M${f(x - w * .98)} ${f(y + 6.6 * s)}v${f(h - 10.6 * s)}q0 ${f(2 * s)} ${f(w * .4)} ${f(2.3 * s)}h${f(w * .7)}" stroke="#ffb860" stroke-width="${f(.7 * s)}" fill="none" stroke-linecap="round" opacity=".85"/>`
     + `<path d="M${f(x - hs * w * .62)} ${f(y + 6.4 * s)}v${f(h - 10.4 * s)}" stroke="#fff4d8" stroke-width="${f(.6 * s)}" stroke-linecap="round" opacity=".75"/>`
     + `<circle cx="${f(x - hs * w * .5)} " cy="${f(y + 5.6 * s)}" r="${f(.5 * s)}" fill="#fff" opacity=".9"/>`
     + `<rect x="${f(x - w * .5)}" y="${f(y)}" width="${f(w)}" height="${f(2.6 * s)}" rx="${f(.4 * s)}" fill="#7a5430" stroke="#2a1606" stroke-width=".3"/>`
@@ -211,10 +216,13 @@ module.exports = { name: 'Тиа Дальма', kind: 'deck', status: 'draft', c
     let fg = '';
     const beamY = 6;
     fg += K.shadeBox(u, [{ pts: [[-10, beamY + 7], [210, beamY + 7], [210, beamY + 10], [-10, beamY + 10]], n: 'bottom', grain: [1, 0] }, { pts: [[-10, beamY - 6], [210, beamY - 6], [210, beamY + 7], [-10, beamY + 7]], n: 'front', grain: [1, 0] }], L, 'oak', { seed: 5, outline: .5 });
-    { const J = [[62, 26, 1.35, '#d84a2a', ''], [84, 42, 1.1, '#3ab87a', ''], [104, 22, 1.5, '#f0b83a', ''], [140, 62, .85, '#9a5ad0', ''], [150, 30, 1.25, '#3a9ad0', ''], [76, 58, .8, '#9ac83a', '']];
+    // the top of the hut sinks into the dark (the candles are low on the table): the wall, the net and the beam dimmed
+    { const g = nid('ttd', u); fg += `<defs>${linGrad(g, 0, -10, 0, 66, [[0, '#040201', .78], [.55, '#040201', .5], [1, '#040201', 0]])}</defs><rect x="-10" y="-20" width="220" height="86" fill="url(#${g})"/>`
+        + glow(u, WIN.x, WIN.y, WIN.r + 2, WIN.r + 2, '#b8e0d0', .22); }
+    { const J = [[69, 26, 1.35, '#d84a2a', ''], [87, 42, 1.1, '#3ab87a', ''], [104, 22, 1.5, '#f0b83a', ''], [163, 60, .85, '#9a5ad0', ''], [147, 46, 1.25, '#3a9ad0', ''], [76, 58, .8, '#9ac83a', '']];
       for (const [x, y, s, c] of J) fg += `<path d="M${x} ${beamY + 9}V${f(y)}" stroke="#8a7a5a" stroke-width="${f(.3 + s * .15)}"/>`;
       // things floating in the jars: an eye, a little snake, seeds
-      const inside = [`<circle cx="62" cy="42" r="2.4" fill="#e8e0c8"/><circle cx="62.6" cy="42" r="1.1" fill="#2a6a3a"/><circle cx="62.8" cy="42" r=".45" fill="#000"/>`, '', `<path d="M98 42q2 -3 4 0t4 0t4 0" stroke="#3a2a10" stroke-width="1.1" fill="none"/>`, '', `<circle cx="148" cy="46" r=".8" fill="#1a1a10"/><circle cx="151" cy="48" r=".7" fill="#1a1a10"/><circle cx="149" cy="50" r=".8" fill="#1a1a10"/>`, ''];
+      const inside = [`<circle cx="69" cy="42" r="2.4" fill="#e8e0c8"/><circle cx="69.6" cy="42" r="1.1" fill="#2a6a3a"/><circle cx="69.8" cy="42" r=".45" fill="#000"/>`, '', `<path d="M98 42q2 -3 4 0t4 0t4 0" stroke="#3a2a10" stroke-width="1.1" fill="none"/>`, '', `<circle cx="145" cy="62" r=".8" fill="#1a1a10"/><circle cx="148" cy="64" r=".7" fill="#1a1a10"/><circle cx="146" cy="66" r=".8" fill="#1a1a10"/>`, ''];
       J.forEach(([x, y, s, c], i) => { fg += jar(u, L, x, y, s, c, inside[i]); });
       // a bundle of dried herbs and a string of small bones hanging at the left
       fg += `<path d="M24 ${beamY + 9}V28" stroke="#8a7a5a" stroke-width=".4"/>` + Array.from({ length: 9 }, (_, k) => `<path d="M24 28q${f(-4 + k)} ${f(8 + R() * 3)} ${f(-6 + k * 1.5)} ${f(16 + R() * 5)}" stroke="${['#6a7a3a', '#8a7a4a', '#5a6a3a'][k % 3]}" stroke-width=".8" fill="none"/>`).join('')
@@ -231,26 +239,35 @@ module.exports = { name: 'Тиа Дальма', kind: 'deck', status: 'draft', c
         + `<ellipse cx="${x}" cy="${top}" rx="${rx}" ry="${f(ry)}" fill="#4a2c14" stroke="#140a04" stroke-width=".5"/>`
         + `<path d="M${f(x - rx)} ${f(top)}A${rx} ${f(ry)} 0 0 0 ${f(x + rx)} ${f(top)}" stroke="#ffcc90" stroke-width=".6" fill="none" opacity=".75"/>`
         + `<defs><clipPath id="${cp}"><ellipse cx="${x}" cy="${f(top + .5)}" rx="${rx - 1.6}" ry="${f(ry - 1)}"/></clipPath>${linGrad(sg, 0, top - ry, 0, top + ry, [[0, '#0a1016', 1], [.5, '#2a3a44', 1], [1, '#4a5a60', 1]])}</defs>`
-        // the storm in the water: heavy clouds, a fork of lightning lighting them, a whitecap under it (the sky upside down:
-        // the far half of the water shows the low sky, the near half the high clouds)
-        + `<g clip-path="url(#${cp})"><rect x="${x - rx}" y="${f(top - ry)}" width="${2 * rx}" height="${f(2 * ry)}" fill="url(#${sg})"/>`
-        + [[-10, -2, 7, '#3a4a52'], [-2, -3, 8, '#4a5a64'], [8, -1.6, 7, '#3a4650'], [-6, 2, 9, '#1a242c'], [6, 2.6, 8, '#16202a']].map(([dx, dy, r, c]) => `<ellipse cx="${x + dx}" cy="${f(top + dy)}" rx="${r}" ry="${f(r * .32)}" fill="${c}"/>`).join('')
-        + glow(u, x + 1, top - 1, 9, 4, '#c8e4ff', .7) + `<path d="M${x + 4} ${f(top - ry + .5)}l-2.6 2.6l2 .5l-3 3l1.6 .3l-2.4 2.6" stroke="#c8e4ff" stroke-width="1.4" fill="none" stroke-linejoin="round" opacity=".5"/><path d="M${x + 4} ${f(top - ry + .5)}l-2.6 2.6l2 .5l-3 3l1.6 .3l-2.4 2.6" stroke="#ffffff" stroke-width=".6" fill="none" stroke-linejoin="round"/>`
-        + `<ellipse cx="${x + 1}" cy="${f(top - .5)}" rx="8" ry="2" fill="#b8d8f0" opacity=".3"/>`
-        + `<path d="M${x - 12} ${f(top - ry + 1.4)}q4 -1 8 0t8 0" stroke="#a8b8c0" stroke-width=".4" fill="none" opacity=".6"/>`
-        + `<path d="M${x - 6} ${f(top + ry - 1.6)}q6 1 12 0" stroke="#fff" stroke-width=".4" fill="none" opacity=".5"/></g>`
-        + K.localGlow(u, { x: x + 1, y: top, color: '#a8d0f0', power: .45, radius: 16 }, { squash: .4, core: false }); }
+        // the storm in the water, filling the whole bowl: a black thundercloud over the far two thirds, its belly lit by
+        // a big fork of lightning, and under it a curling wave breaking white (tomorrow's sea)
+        + `<g clip-path="url(#${cp})"><rect x="${x - rx}" y="${f(top - ry)}" width="${2 * rx}" height="${f(2 * ry)}" fill="#06090d"/>`
+        + `<path d="M${x - rx} ${f(top + 1.6)}Q${x - 18} ${f(top - .6)} ${x - 13} ${f(top + .8)}Q${x - 9} ${f(top - 1.8)} ${x - 3} ${f(top + .2)}Q${x + 2} ${f(top - 1.4)} ${x + 7} ${f(top + .6)}Q${x + 13} ${f(top - 1.2)} ${x + 17} ${f(top + 1)}Q${x + 21} ${f(top - .2)} ${x + rx} ${f(top + 1.2)}V${f(top - ry)}H${x - rx}Z" fill="#141c24"/>`
+        + [[-14, -3.4, 7, '#2a3844'], [-4, -4, 8, '#34444f'], [8, -3.6, 8, '#2a3844'], [16, -2.6, 6, '#1e2a34']].map(([dx, dy, r, c]) => `<ellipse cx="${x + dx}" cy="${f(top + dy)}" rx="${r}" ry="${f(r * .3)}" fill="${c}"/>`).join('')
+        // the cloud's belly lit round the lightning
+        + glow(u, x + 3, top - .6, 13, 3.6, '#b8dcff', .8)
+        + `<path d="M${x - 6} ${f(top + .2)}Q${x - 2} ${f(top - 1.2)} ${x + 2} ${f(top + .1)}Q${x + 7} ${f(top - 1.3)} ${x + 11} ${f(top + .3)}" stroke="#d8ecff" stroke-width=".6" fill="none" opacity=".75"/>`
+        // the near third: the dark sea, the wave rising and curling over to the left, its white crest and spray
+        + `<path d="M${x - rx} ${f(top + 2.6)}Q${x - 10} ${f(top + 1.6)} ${x} ${f(top + 2.4)}T${x + rx} ${f(top + 2.2)}V${f(top + ry + 1)}H${x - rx}Z" fill="#0e2630"/>`
+        + `<path d="M${x + 16} ${f(top + ry)}Q${x + 8} ${f(top + 1.2)} ${x - 2} ${f(top + 1.4)}Q${x - 9} ${f(top + 1.6)} ${x - 10} ${f(top + 3.4)}Q${x - 8} ${f(top + 4.4)} ${x - 5.6} ${f(top + 3.4)}Q${x - 2} ${f(top + 3.6)} ${x + 2} ${f(top + ry)}Z" fill="#2a5a66"/>`
+        + `<path d="M${x + 14} ${f(top + 3.4)}Q${x + 6} ${f(top + 1)} ${x - 2} ${f(top + 1.3)}Q${x - 9} ${f(top + 1.5)} ${x - 10} ${f(top + 3.4)}Q${x - 8} ${f(top + 4.4)} ${x - 5.6} ${f(top + 3.4)}" stroke="#f4fbff" stroke-width="1.1" fill="none" stroke-linecap="round"/>`
+        + `<path d="M${x - 16} ${f(top + 4.4)}q3 -1.2 6 0M${x + 10} ${f(top + 4.8)}q4 -1 8 0" stroke="#d8eef4" stroke-width=".6" fill="none" stroke-linecap="round" opacity=".75"/>`
+        + [[-1, 0], [2, -.6], [-4, -.4], [5, .2]].map(([dx, dy]) => `<circle cx="${x + dx}" cy="${f(top + .8 + dy)}" r=".45" fill="#fff" opacity=".8"/>`).join('')
+        // the lightning: a fork from the cloud's belly down to the wave's crest, a cold halo round it
+        + (() => { const d = `M${x + 6} ${f(top - ry + .4)}L${x + 2.6} ${f(top - 2.6)}L${x + 5} ${f(top - 2)}L${x + .6} ${f(top + .4)}L${x + 2.6} ${f(top + .6)}L${x - 1.4} ${f(top + 2.4)}`, br = `M${x + 3.6} ${f(top - 2.3)}L${x + 9} ${f(top - .4)}L${x + 8} ${f(top + .8)}`;
+            return `<path d="${d}${br}" stroke="#a8d4ff" stroke-width="2.6" fill="none" stroke-linejoin="round" stroke-linecap="round" opacity=".45"/><path d="${d}" stroke="#ffffff" stroke-width="1.1" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="${br}" stroke="#ffffff" stroke-width=".6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`; })()
+        + `</g>`
+        + K.localGlow(u, { x: x + 3, y: top - 1, color: '#a8d0f0', power: .6, radius: 20 }, { squash: .45, core: false }); }
     // ——— the three sea cards, face down in a row ———
     for (const c of CARDS) fg += seaCard(u, L, c.x, c.y, c.a);
-    // ——— thrown crab claws and little bones by the bowl; the string of beads at the left ———
+    // ——— thrown crab claws and little bones by the bowl ———
     { const claw = (x, y, a, s) => { const g = nid('tcw', u); return `<g transform="translate(${x} ${y}) rotate(${a}) scale(${s} ${f(s * .7)})"><defs>${radGrad(g, -1, -1, 5, [[0, '#ffb07a', 1], [.5, '#c84a20', 1], [1, '#4a1004', 1]])}</defs>`
         + `<path d="M0 0q3 -3 7 -1.4l4 -1.6q-1 2 -3.4 2.8q2.6 .6 4 2.4q-3 .4 -5 -.6q-4 2 -6.6 .4z" fill="url(#${g})" stroke="#2a0602" stroke-width=".35"/><path d="M1 -.6q3 -1.6 5.4 -.8" stroke="#ffd0a8" stroke-width=".4" fill="none" opacity=".7"/></g>`; };
       fg += claw(134, 99, -20, 1.3) + claw(62, 101, 160, 1.1) + claw(158, 102, 30, 1.2);
       const bone = (x, y, a, l) => `<g transform="translate(${x} ${y}) rotate(${a})"><path d="M${-l / 2} 0h${l}" stroke="#4a3a24" stroke-width="2.2" stroke-linecap="round"/><path d="M${-l / 2} 0h${l}" stroke="#e8dcc0" stroke-width="1.5"/>`
         + [-1, 1].map(sd => `<circle cx="${sd * l / 2}" cy="-.8" r="1.1" fill="#e8dcc0" stroke="#4a3a24" stroke-width=".3"/><circle cx="${sd * l / 2}" cy=".8" r="1.1" fill="#e8dcc0" stroke="#4a3a24" stroke-width=".3"/>`).join('') + `<path d="M${-l / 2 + 1} -.5h${l - 2}" stroke="#fff" stroke-width=".4" opacity=".7"/></g>`;
       fg += bone(166, 120, 24, 11) + bone(178, 112, -40, 8) + bone(80, 103, 8, 7);
-      const beads = []; for (let k = 0; k < 16; k++) { const t = k / 15; beads.push([6 + t * 24, 104 + Math.sin(t * 5) * 3 + t * 8]); }
-      fg += `<path d="${smooth(beads)}" stroke="#3a2010" stroke-width=".4" fill="none"/>` + beads.map((p, k) => K.shadeSphere(u, p[0], p[1], 1.5, L, ['paint-red', 'bone', 'coral', 'glass'][k % 4], { outline: .25 })).join(''); }
+    }
     // ——— the crabs: one on the left card raising a claw, one climbing the right card ———
     fg += crab(u, L, 46, 107, 1.1, 24, { raiseL: 3, big: -1, seed: 4 }) + crab(u, L, 158, 112, 1.2, -34, { raiseR: 2, big: 1, seed: 7 });
     // ——— light and air: the candle's warmth, the fog's cold from the window, smoke in the air, the corners dark ———

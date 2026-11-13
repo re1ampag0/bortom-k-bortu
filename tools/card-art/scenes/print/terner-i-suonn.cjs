@@ -168,8 +168,8 @@ module.exports = { name: 'Тёрнер и Суонн', kind: 'deck', status: 'dr
         // the sun's long streak on the wet sand: a soft column, a few broken glints in it
         + glow(u, SUN.x, WET0 + 9, 9, 13, '#ffd8a0', .55)
         // the bright mirror column of the sun down the wet sand: a hot core, widening and fading toward us
-        + (() => { const cg = nid('twl', u); return `<defs>${linGrad(cg, 0, WET0, 0, WET1 + 14, [[0, '#fff0c8', .85], [.35, '#ffd090', .55], [.75, '#ffb070', .2], [1, '#ffb070', 0]])}</defs>`
-          + `<path d="M${SUN.x - 5} ${WET0}L${SUN.x + 5} ${WET0}L${SUN.x + 12} ${WET1 + 14}L${SUN.x - 12} ${WET1 + 14}Z" fill="url(#${cg})" style="mix-blend-mode:screen"/>`; })()
+        + (() => { const cg = nid('twl', u), bl = nid('twb', u); return `<defs>${linGrad(cg, 0, WET0, 0, WET1 + 14, [[0, '#fff0c8', .8], [.35, '#ffd090', .5], [.75, '#ffb070', .18], [1, '#ffb070', 0]])}<filter id="${bl}" x="-60%" y="-10%" width="220%" height="120%"><feGaussianBlur stdDeviation="2.2 1"/></filter></defs>`
+          + `<path d="M${SUN.x - 5} ${WET0}L${SUN.x + 5} ${WET0}L${SUN.x + 12} ${WET1 + 14}L${SUN.x - 12} ${WET1 + 14}Z" fill="url(#${cg})" filter="url(#${bl})" style="mix-blend-mode:screen"/>`; })()
         + glow(u, SUN.x, WET0 + 14, 14, 20, '#ffc888', .4)
         + Array.from({ length: 11 }, (_, k) => { const y = WET0 + 2 + k * 2.6 + R() * 1.2, w = 3 + k * 1.3 + R() * 3; return `<path d="M${f(SUN.x - w / 2 + (R() - .5) * 4)} ${f(y)}h${f(w)}" stroke="#fff0c8" stroke-width=".55" stroke-linecap="round" opacity="${f(.8 - k * .1)}"/>`; }).join('')
         // ripple marks in the dry sand, lit on the sun's side
@@ -185,9 +185,9 @@ module.exports = { name: 'Тёрнер и Суонн', kind: 'deck', status: 'dr
     }
     // ——— the long shadows of the sabres, coming at us from the entries, fanning from the sun ———
     let fg = '';
-    { const sb = nid('tsb', u); fg += `<defs><filter id="${sb}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.2"/></filter></defs><g filter="url(#${sb})" opacity=".55" style="mix-blend-mode:multiply">`;
+    { const sb = nid('tsb', u); fg += `<defs><filter id="${sb}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.2"/></filter></defs><g filter="url(#${sb})" opacity=".78" style="mix-blend-mode:multiply">`;
       for (const o of [SM, SW]) { const e = o.E, dx = e[0] - SUN.x, dy = e[1] - SUN.y, l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l, len = 90;
-        fg += `<path d="M${f(e[0] - 1.6)} ${f(e[1])}L${f(e[0] + ux * len - 4)} ${f(e[1] + uy * len)}L${f(e[0] + ux * len + 4)} ${f(e[1] + uy * len)}L${f(e[0] + 1.6)} ${f(e[1])}Z" fill="#1a0e18"/>`; }
+        fg += `<path d="M${f(e[0] - 1.6)} ${f(e[1])}L${f(e[0] + ux * len - 6)} ${f(e[1] + uy * len)}L${f(e[0] + ux * len + 6)} ${f(e[1] + uy * len)}L${f(e[0] + 1.6)} ${f(e[1])}Z" fill="#1a0e18"/>`; }
       fg += `</g>`; }
     // ——— the reflections of the sabres in the wet sand, then the sabres: the lady's behind, the smith's in front ———
     const sw = blade(u, SW, .62), sm = blade(u, SM, .58);
