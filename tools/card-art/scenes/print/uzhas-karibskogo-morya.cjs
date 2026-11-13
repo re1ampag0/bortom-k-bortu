@@ -125,9 +125,9 @@ function captain(u, L) {
   for (const [x0, x1] of [[64, 58], [70, 66], [82, 86], [88, 94]]) s += `<path d="M${x0} 116Q${f((x0 + x1) / 2)} 160 ${x1} 204" stroke="${COAT.shadow}" stroke-width="1" fill="none" opacity=".85"/><path d="M${x0 + .8} 117Q${f((x0 + x1) / 2 + .8)} 160 ${x1 + .8} 204" stroke="${COAT.lit}" stroke-width=".4" fill="none" opacity=".3"/>`;
   s += `<path d="M76 128L75 204" stroke="#000" stroke-width="1.3" opacity=".7"/><path d="M76.8 128L76 204" stroke="${COAT.lit}" stroke-width=".4" opacity=".35"/>`;
   for (const x of [69, 83]) s += K.shadeSphere(u, x, 117.4, 1.15, L, 'brass', { outline: .25 });
-  // the folds the raised right arm pulls across the back: from under the right armpit down to the left, lit on their lower lip
-  for (const [d, w] of [['M100 65Q80 72 58 92', 1.3], ['M100 75Q84 84 64 106', 1.1], ['M100.4 86Q91 93 80 106', .9]])
-    s += `<path d="${d}" stroke="${COAT.shadow}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity=".75"/><path d="${d}" transform="translate(.4 .9)" stroke="${mix(COAT.lit, RIMC, .35)}" stroke-width="${f(w * .4)}" fill="none" stroke-linecap="round" opacity=".45"/>`;
+  // the folds the raised right arm pulls in the back: from under the right armpit down towards the baldric, lit on the fire's side
+  for (const [d, w] of [['M100.6 64Q93 74 88 84', 1.3], ['M99.8 76Q91 88 84 100', 1.2], ['M98 92Q92 102 87 112', 1]])
+    s += `<path d="${d}" stroke="#000" stroke-width="${f(w * 1.5)}" fill="none" stroke-linecap="round" opacity=".7"/><path d="${d}" transform="translate(.9 .7)" stroke="${mix(COAT.lit, RIMC, .45)}" stroke-width="${f(w * .7)}" fill="none" stroke-linecap="round" opacity=".6"/>`;
   // the fire's light along the right edge of the back: a soft warm band inside the edge
   { const bl = nid('cr', u); s += `<defs><filter id="${bl}" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="1.4"/></filter></defs><path d="${H.sp([[100.6, 58], [101, 70], [99.6, 82], [97.4, 100], [94, 114], [98, 128], [104, 150], [108, 176]])}" stroke="${RIMC}" stroke-width="5" fill="none" opacity=".32" filter="url(#${bl})"/>`; }
   // the fire's glow low on the skirts and on the near edges
@@ -171,7 +171,7 @@ function captain(u, L) {
   s += `<path d="M${P2(at(-.86, 1.46))}Q${P2(at(0, 1.3))} ${P2(at(.86, 1.46))}L${P2(at(1.2, 1.9))}Q${P2(at(0, 1.66))} ${P2(at(-1.2, 1.9))}Z" fill="${COAT.half}" stroke="${COAT.outline}" stroke-width=".4"/><path d="M${P2(at(.86, 1.46))}L${P2(at(1.2, 1.9))}" stroke="${RIMC}" stroke-width=".5" opacity=".6"/>`;
   // ——— the slow-match fuses tucked in his beard (the beard itself hidden by the head): their roots behind the jaw, the
   // cords sticking out past both sides of the head below the ears, their ends glowing, smoke curling up ———
-  const fuses = [[[-.5, .72], [-1.22, .66], [-1.36, .86]], [[-.4, .9], [-1.08, 1.04], [-1.2, 1.26]], [[.5, .8], [1.2, .78], [1.36, 1.0]]];
+  const fuses = [[[-.5, .72], [-1.2, .8], [-1.3, 1.1]], [[-.4, .9], [-1.04, 1.16], [-1.1, 1.46]], [[.5, .8], [1.18, .92], [1.3, 1.24]]];
   let embers = '', smk = '';
   fuses.forEach(([p0, p1, p2], i) => { const p = at(...p0), m1 = at(...p1), q = at(...p2), x = p2[0];
     s += `<path d="M${P2(p)}Q${P2(m1)} ${P2(q)}" stroke="#20160e" stroke-width=".85" fill="none" stroke-linecap="round"/><path d="M${P2(p)}Q${P2(m1)} ${P2(q)}" stroke="#7a5a3a" stroke-width=".3" fill="none" opacity=".6" transform="translate(0 -.25)"/>`;

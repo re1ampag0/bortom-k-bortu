@@ -22,7 +22,7 @@ const { glow, gloom } = PK;
 const HZ = 100;
 const MOON = { x: 154, y: 38 };
 const EN = { kind: 'endeavour', x: 166, y: 102.4, scale: .3, sails: 'full', flip: true, seed: 4 };
-const BOLT = [112.6, 124.6];                                          // the ring bolt in the ledge's flank, right of her tail
+const BOLT = [117.2, 123.4];                                          // the ring bolt in the ledge's flank, right of her tail
 const GROW = { at: [120, 138], k: 1.15 };                            // she and her ledge, 15 % bigger, grown up and left
 const grow = p => [GROW.at[0] + (p[0] - GROW.at[0]) * GROW.k, GROW.at[1] + (p[1] - GROW.at[1]) * GROW.k];
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#ffd2b0', power: .75 },
@@ -179,7 +179,7 @@ function fetter(u, L, m) {
   o += ring;
   // the eye: a short thick loop out of the plate's middle, over the ring's top
   o += `<ellipse cx="${B[0]}" cy="${B[1] + .5}" rx="1.1" ry="1.3" fill="none" stroke="#0a0808" stroke-width="1.3"/><ellipse cx="${B[0]}" cy="${B[1] + .5}" rx="1.1" ry="1.3" fill="none" stroke="#5a5250" stroke-width=".55"/><path d="M${B[0] + .7} ${B[1] - .3}q.5 .7 .2 1.5" stroke="${RIMC}" stroke-width=".3" fill="none" opacity=".8"/>`;
-  const c0 = [a[0] + .8, a[1] + 2.6], c1 = [rc[0] + rr[0] * .7, rc[1] + rr[1] * .75], sag = [lerp(c0[0], c1[0], .5) + 2.4, lerp(c0[1], c1[1], .55)];
+  const c0 = [a[0] + .8, a[1] + 2.6], c1 = [rc[0] - rr[0] * .7, rc[1] + rr[1] * .75], sag = [lerp(c0[0], c1[0], .5) + 1.2, lerp(c0[1], c1[1], .55)];
   o += K.chain(u, L, [c0, lerp2(c0, sag, .5), sag, lerp2(sag, c1, .5), c1], { link: 2.4, seed: 6 });
   return o;
 }
