@@ -142,8 +142,8 @@ module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'dra
       + `<path d="${smooth([[130, 82], [135, 90], [137, 110], [135, 134], [140, 180]])}" stroke="${RIMC}" stroke-width=".9" fill="none" opacity=".55"/>`
       + `<path d="M122 140q4 10 2 22M128 150q2 14 4 30" stroke="#0a0d1a" stroke-width=".7" fill="none" opacity=".6"/>`;
     // the white stock round the neck, the short neck under the jaw
-    man += `<path d="M100 72L101 82L113 82L114 72Z" fill="${DEAD.half}" stroke="${DEAD.outline}" stroke-width=".35"/><path d="M102.6 74q1 4 0 8M111 74q-1 4 0 8" stroke="${DEAD.shadow}" stroke-width=".5" fill="none" opacity=".7"/>`
-      + `<path d="M98.6 79Q107 76.6 115.4 79L114.6 86Q107 88.4 99.4 86Z" fill="#d8d0bc" stroke="#5a5444" stroke-width=".4"/><path d="M103 84q4 3 8 0M105 86q2 3 4 0" stroke="#8a8270" stroke-width=".4" fill="none"/>`;
+    man += `<path d="M101 70L101.6 79L112.4 79L113 70Z" fill="${DEAD.half}" stroke="${DEAD.outline}" stroke-width=".35"/><path d="M103.4 72q.8 3 0 6M110.6 72q-.8 3 0 6" stroke="${DEAD.shadow}" stroke-width=".5" fill="none" opacity=".7"/>`
+      + `<path d="M100.4 77.4Q107 75.6 113.6 77.4L112.8 81.4Q107 83 101.2 81.4Z" fill="#c8c0aa" stroke="#4a4436" stroke-width=".35"/><path d="M104.6 81.6L106.4 88L107.6 88L109.4 81.6Z" fill="#b8b098" stroke="#4a4436" stroke-width=".3"/><path d="M102.6 79.4q4.4 1.6 8.8 0M106.2 83l.6 4" stroke="#7a7262" stroke-width=".35" fill="none"/>`;
     // the torn epaulettes: gold boards on both shoulders, the fringe with strands missing
     const epaulette = (x, y, dir, R) => { let s = `<g transform="rotate(${dir * 14} ${x} ${y})"><path d="M${x - 10} ${y + 1}q10 -6.4 20 0l-1 3.4h-18z" fill="url(#brass${u})" stroke="#3a2808" stroke-width=".4"/><path d="M${x - 9} ${y}q9 -5 18 0" stroke="#fff0c0" stroke-width=".4" fill="none" opacity=".55"/>`;
       for (let k = 0; k < 10; k++) { if (k === 3 || k === 4 || k === 8) continue; s += `<path d="M${f(x - 9 + k * 2)} ${y + 4.2}q${f(dir * .5)} ${f(3 + R() * 2)} ${f(dir * .9)} ${f(5 + R() * 2.4)}" stroke="#c8a040" stroke-width=".85" fill="none"/>`; }
@@ -151,26 +151,27 @@ module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'dra
     const Re = rng(13);
     // ——— the hole through his chest (picture coordinates, over the zoomed figure): the background again inside it,
     // a ragged rim of cloth, the cloth's layers at the edge — dark and dry, nothing inside ———
-    const holePts = []; { const R = rng(21); for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, rr = HOLE.r * (.88 + R() * .2) * (i % 4 === 0 ? 1.07 : 1); holePts.push([HOLE.x + Math.cos(a) * rr, HOLE.y + Math.sin(a) * rr * 1.06]); } }
+    const holePts = []; { const R = rng(21); const ph = R() * 6; for (let i = 0; i < 40; i++) { const a = i / 40 * Math.PI * 2, rr = HOLE.r * (.92 + .07 * Math.sin(a * 3 + ph) + .05 * Math.sin(a * 7 + ph * 2) + (R() - .5) * .08); holePts.push([HOLE.x + Math.cos(a) * rr, HOLE.y + Math.sin(a) * rr * 1.06]); } }
     const hp = 'M' + holePts.map(P2).join('L') + 'Z', hc = nid('hc', u);
     let through = `<defs><clipPath id="${hc}"><path d="${hp}"/></clipPath></defs><g clip-path="url(#${hc})">${background(u, L)}</g>`;
-    through += `<path d="${hp}" fill="none" stroke="#0e0a0c" stroke-width="3.2"/><path d="${hp}" fill="none" stroke="#4a4232" stroke-width="1.1" transform="translate(-.9 -.7)" opacity=".8"/>`
+    through += `<path d="${hp}" fill="none" stroke="#0e0a0c" stroke-width="2"/><path d="${hp}" fill="none" stroke="#4a4232" stroke-width="1.1" transform="translate(-.9 -.7)" opacity=".8"/>`
       + `<path d="${hp}" fill="none" stroke="${RED.half}" stroke-width=".6" transform="translate(1.1 .9)" opacity=".7"/>`;
-    { const R = rng(5); for (let i = 0; i < 24; i++) { const p = holePts[i], d = unit([p[0] - HOLE.x, p[1] - HOLE.y]), l = .8 + R() * 1.4;
+    { const R = rng(5); for (let i = 0; i < 40; i += 2) { const p = holePts[i], d = unit([p[0] - HOLE.x, p[1] - HOLE.y]), l = .8 + R() * 1.4;
       through += `<path d="M${P2(p)}l${f(d[0] * l + (R() - .5) * .8)} ${f(d[1] * l + (R() - .5) * .8)}" stroke="${p[0] < HOLE.x + 2 ? '#c0b490' : '#8a2418'}" stroke-width=".45" opacity=".8"/>`; } }
     through += `<path d="M${f(HOLE.x - 11)} ${f(HOLE.y - 5)}l-4 -3l1.4 5.2z" fill="${BUFF.half}" stroke="${BUFF.outline}" stroke-width=".3"/><path d="M${f(HOLE.x + 10.4)} ${f(HOLE.y + 7)}l4 4.2l-.4 -5.6z" fill="${RED.half}" stroke="${RED.outline}" stroke-width=".3"/>`;
     through += K.smoke(u, L, { x: HOLE.x + 8, y: HOLE.y - 6, w: 18, h: 20, wind: .8, seed: 3, opacity: .3 });
     // grapeshot holes in the coat (figure coordinates): small, the haze glowing through them
     let holes = '';
-    for (const [x, y, r] of [[84, 118, 1.5], [128, 140, 1.6], [86, 136, 1.3], [124, 96, 1.2]]) {
-      holes += `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${f(r * 1.1)}" fill="#d0663e"/><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${f(r * 1.1)}" fill="none" stroke="#06040a" stroke-width=".55"/>`
-        + `<path d="M${f(x - r)} ${y}l-.8 -.6M${f(x + r)} ${f(y + .4)}l.8 .5M${x} ${f(y - r)}l.3 -.8" stroke="#7a7a90" stroke-width=".25"/>`; }
+    for (const [x, y, r] of [[84, 120, 1.5], [129, 140, 1.4]]) {
+      holes += `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${f(r * 1.1)}" fill="#8a3424"/><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${f(r * 1.1)}" fill="none" stroke="#06040a" stroke-width=".55"/>`
+        + `<path d="M${f(x - r)} ${y}l-.8 -.6M${f(x + r)} ${f(y + .4)}l.8 .5M${x} ${f(y - r)}l.3 -.8" stroke="#7a7a90" stroke-width=".25"/>`
+        + `<path d="M${x} ${f(y - r)}q-1.6 -3 .4 -5.6q2 -2.6 .2 -6" stroke="#b8a8a8" stroke-width=".7" fill="none" opacity=".35" stroke-linecap="round"/>`; }
     // ——— his left arm (our right): the sleeve down along his side, the hand on the sword's hilt at his hip ———
     const GH = [139, 151], hiltAng = -58;
     const hH = handOn(u, { s: 2, m: 1, roll: 30, pitch: 6, pose: 'wrap', r: 1, tone: DEADH, light: [-.6, -.7], sw: .3, tilt: 6, fingerW: .82, palmW: .94 }, GH, hiltAng, 120);
     const sleeve = (sh, el, w, sd, rimOp, seed) => H.cloth(u, { spine: [sh, [lerp(sh[0], el[0], .5), lerp(sh[1], el[1], .5)], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5)], w],
-      w: [13, 12, 11, 10, 9.4], tone: COAT, lit: -1, rim: RIMC, rimSide: sd, rimOp, seed, drapes: 0, foldW: .7, sw: .45, capA: true,
-      cuff: { from: .86, k: 1.2, tone: RED } });
+      w: [13, 12, 11, 10, 9.4], tone: COAT, lit: -1, rim: RIMC, rimSide: sd, rimOp, seed, drapes: 0, folds: false, sw: .45, capA: true,
+      cuff: { from: .88, k: 1.12, tone: RED } });
     let swordArm = '';
     { const v = [Math.cos(hiltAng * Math.PI / 180), Math.sin(hiltAng * Math.PI / 180)], nn = [-v[1], v[0]], g = hH.grip, at = (t, o) => [g[0] + v[0] * t + nn[0] * o, g[1] + v[1] * t + nn[1] * o];
       swordArm += K.shadeCyl(u, ...at(-6, 0), ...at(-48, 2), 1.8, L, 'leather', { outline: .35, r2: 1.5 }) + `<path d="M${P2(at(-46, 2))}l${f(-v[0] * 4)} ${f(-v[1] * 4)}" stroke="url(#brass${u})" stroke-width="3.4"/>`;
@@ -193,12 +194,12 @@ module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'dra
     // a grapeshot hole through the hat's crown
     const hatHole = (() => { const p = hd.Q(.3, -1.25, .45); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".9" fill="#d0663e" stroke="#050304" stroke-width=".45"/>`; })();
     // ——— his right arm (our left), raised: one sleeve from the shoulder out to the elbow and up to the cuff; his bony
-    // fingers over the top of the hat's turned-up left side, the thumb behind it (raising the hat an inch) ———
-    const E0 = hd.Q(-1.065, -1.35, .24), E1 = hd.Q(-.83, -1.35, .635), brimAng = Math.atan2(E1[1] - E0[1], E1[0] - E0[0]) * 180 / Math.PI, GR = hd.Q(-.94, -1.38, .43);
-    const hR = handOn(u, { s: 1.9, m: -1, roll: 200, pitch: 12, pose: 'wrap', r: .55, tone: DEADH, light: [-.6, -.7], sw: .3, tilt: 4, fingerW: .82, palmW: .92 }, GR, brimAng, -20);
-    const raisedSleeve = sleeve([86, 87], [62, 90], hR.wrist, -1, .3, 9);
+    // fingers round the front of the brim left of the corner, the thumb under it (touching the hat: all is well) ———
+    const E0 = hd.Q(-.708, -1.12, .891), E1 = hd.Q(-.373, -.72, 1.263), brimAng = Math.atan2(E1[1] - E0[1], E1[0] - E0[0]) * 180 / Math.PI, GR = hd.Q(-.57, -.87, 1.09);
+    const hR = handOn(u, { s: 1.9, m: 1, roll: 0, pitch: 10, pose: 'wrap', r: .45, tone: DEADH, light: [-.6, -.7], sw: .3, tilt: 4, fingerW: .82, palmW: .92 }, GR, brimAng, -40);
+    const raisedSleeve = sleeve([86, 87], [64, 77], hR.wrist, -1, .3, 9);
     man += epaulette(126, 84, 1, Re) + swordArm + holes;
-    man += head.replace(/^/, '') + hat.back + hR.back + hat.front + hatHole + rimArc(hd, { r: HEAD.r, light: [-.55, .8], color: RIMC, span: 45, opacity: .6 }) + epaulette(88, 85, -1, Re) + raisedSleeve + hR.front + bony(hR, DEADH, 1.9);
+    man += head + rimArc(hd, { r: HEAD.r, light: [-.4, .9], color: RIMC, span: 40, opacity: .5 }) + hat.back + hR.back + hat.front + hatHole + raisedSleeve + epaulette(88, 85, -1, Re) + hR.front + bony(hR, DEADH, 1.9);
     // the ball beyond him, flying away over the rail: its trail back towards the hole
     const bt = nid('bt', u);
     const ball = `<defs>${linGrad(bt, BALL.x - 24, BALL.y, BALL.x, BALL.y, [[0, '#ffd8b0', 0], [1, '#ffd8b0', .5]])}</defs><path d="M${f(BALL.x - 24)} ${f(BALL.y + 1.6)}L${f(BALL.x)} ${f(BALL.y - BALL.r * .8)}L${f(BALL.x)} ${f(BALL.y + BALL.r * .8)}L${f(BALL.x - 24)} ${f(BALL.y + 2.6)}Z" fill="url(#${bt})"/>`

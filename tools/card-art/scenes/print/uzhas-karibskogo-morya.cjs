@@ -22,9 +22,9 @@ const { glow, gloom } = PK;
 const HZ = 100;
 const FIRE = { x: 120, y: 106 };                                   // the heart of the burning water ahead
 const EN = { kind: 'endeavour', x: 172, y: 107, scale: .42, sails: 'full', seed: 4 };
-const HEAD = { c: [76, 40], r: 7.4 };
+const HEAD = { c: [76, 40.6], r: 8.8 };
 const RAIL = 126;                                                   // the top of our bulwark
-const FIG = { x: 80, y: 48, s: 1.3 };                               // where his head goes in the picture, and his scale
+const FIG = { x: 80, y: 46, s: 1.42 };                               // where his head goes in the picture, and his scale
 const light = { time: 'dusk', haze: .35, key: { type: 'point', x: FIRE.x, y: FIRE.y - 6, h: 3, gy: FIRE.y + 4, color: '#ff8a3a', power: 1, radius: 170, z: .2 },
   fill: { color: '#3a1420', power: .4 }, rim: { az: 10, color: '#ffb070', power: .6 } };
 const skel = { horizon: HZ, eye: 4, light: 'the burning sea ahead (key, point low on the water, contre-jour on the captain); the red night (fill)', items: [
@@ -105,10 +105,11 @@ function captain(u, L) {
   // the grip on the shroud (his right fist) and the hilt in his left fist
   const GR = [lerp(S0[0], S1[0], (S0[1] - 50) / (S0[1] - S1[1])), 50];
   const ropeAng = Math.atan2(S1[1] - S0[1], S1[0] - S0[0]) * 180 / Math.PI;
-  const hR = handOn(u, { s: 1.25, m: 1, roll: 20, pitch: 6, pose: 'wrap', r: 1.1, tone: SKIN, light: [.5, .7], sw: .28, tilt: 8, backFingers: [] }, GR, ropeAng, -20);
-  const GS = [52, 110], bladeAng = 160;
-  const hS = handOn(u, { s: 1.25, m: -1, roll: 30, pitch: 0, pose: 'wrap', r: .95, tone: SKIN, light: [.5, .7], sw: .28, tilt: 6 }, GS, bladeAng, 70);
+  const hR = handOn(u, { s: 1.5, m: 1, roll: 20, pitch: 6, pose: 'wrap', r: 1.1, tone: SKIN, light: [.5, .7], sw: .28, tilt: 8, backFingers: [] }, GR, ropeAng, -20);
+  const GS = [55, 99], bladeAng = 166;
+  const hS = handOn(u, { s: 1.5, m: -1, roll: 30, pitch: 0, pose: 'wrap', r: .95, tone: SKIN, light: [.5, .7], sw: .28, tilt: 6 }, GS, bladeAng, 70);
 
+  s += '<g transform="translate(76 0) scale(.92 1) translate(-76 0)">';
   // ——— the coat's back: broad shoulders, the waist, the skirts flaring down past the bulwark ———
   const back = [[70, 51], [82, 51], [90, 53.4], [96.6, 57], [100.6, 62], [101, 70], [99.6, 82], [97.4, 100], [94, 114], [98, 128], [104, 150], [108, 176], [110, 204],
     [42, 204], [44, 176], [48, 150], [54, 128], [58.6, 114], [55.4, 100], [52.6, 82], [51.2, 70], [52.4, 62], [57, 56.6], [63, 53.2]];
@@ -129,24 +130,28 @@ function captain(u, L) {
   s += '</g>';
   // the rims of the fire round the coat: strong on the right (towards the heart of the fire), weaker on the left
   s += `<path d="${H.sp([[100.6, 62], [101, 70], [99.6, 82], [97.4, 100], [94, 114], [98, 128], [104, 150], [108, 176]])}" stroke="${RIMC}" stroke-width=".8" fill="none" opacity=".75"/>`;
-  s += `<path d="${H.sp([[52.6, 82], [55.4, 100], [58.6, 114], [54, 128], [48, 150], [44, 176]])}" stroke="${RIMC}" stroke-width=".55" fill="none" opacity=".45"/>`;
+  s += `<path d="${H.sp([[52.6, 82], [55.4, 100], [58.6, 114], [54, 128], [48, 150], [44, 176]])}" stroke="${RIMC}" stroke-width=".65" fill="none" opacity=".7"/>`;
   // ——— the baldric: over his right shoulder, across the back to the left hip, a brass buckle on it ———
   { const B = [[90, 54], [97, 59], [62, 126], [55.6, 121]], g = nid('bd', u);
     s += `<defs>${linGrad(g, 90, 54, 58, 124, [[0, '#6a3a1e', 1], [.5, '#4a2812', 1], [1, '#2a160a', 1]])}</defs><path d="M${B.map(P2).join('L')}Z" fill="url(#${g})" stroke="#0e0604" stroke-width=".4"/>`;
     s += `<path d="M97 59L62 126" stroke="${RIMC}" stroke-width=".5" opacity=".6"/><path d="M91 56L57 122" stroke="#8a5a30" stroke-width=".3" opacity=".6"/>`;
     s += `<rect x="-3" y="-2.6" width="6" height="5.2" rx=".6" fill="none" stroke="url(#brass${u})" stroke-width="1" transform="translate(77.6 89) rotate(-62)"/><path d="M77.6 89l2.4 -1.4" stroke="#d8b060" stroke-width=".5"/>`; }
 
+  s += '</g>';
   // ——— his left arm, low: one sleeve from the shoulder to the turned-back cuff, the fist on the hilt ———
   s += sabre(u, L, hS, bladeAng, 'back');
   s += hS.back;
-  s += H.cloth(u, { spine: [[55.4, 63], [52.6, 74], [50.6, 85], [50.6, 95], lerp2(hS.wrist, [50.6, 95], -.05)], w: [12, 11.2, 10.4, 9.4, 8], tone: COAT, lit: -1, rim: RIMC, rimSide: -1, rimOp: .4, seed: 3, drapes: 2, foldW: .9, sw: .4, capA: true,
+  s += H.cloth(u, { spine: [[57.4, 63], [54, 72.6], [51, 82], [53, 90.4], lerp2(hS.wrist, [53, 90.4], -.05)], w: [12, 11.2, 10.4, 9.4, 8], tone: COAT, lit: -1, rim: RIMC, rimSide: -1, rimOp: .4, seed: 3, folds: false, sw: .4, capA: true,
     cuff: { from: .66, k: 1.42, tone: CUFF } });
+  // a few soft creases at the bend of the elbow and down the sleeve
+  s += [['M55.4 76.6q-1.6 2.6 -1.2 5.6', .7], ['M56.2 81.2q-1.6 1.4 -1.4 3.6', .55], ['M52.4 66q-1.2 4 -.6 7', .45]].map(([d, w]) => `<path d="${d}" stroke="${COAT.shadow}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity=".8"/>`).join('');
   s += hS.front;
   s += sabre(u, L, hS, bladeAng, 'front');
   // ——— his right arm raised to the shroud ———
   s += hR.back;
-  s += H.cloth(u, { spine: [[96, 62], [104, 69], [112.4, 74], [119, 67], lerp2(hR.wrist, [119, 67], -.05)], w: [12, 11, 10.2, 9, 8], tone: COAT, lit: 1, rim: RIMC, rimSide: 1, rimOp: .7, seed: 5, drapes: 2, foldW: .9, sw: .4, capA: true,
+  s += H.cloth(u, { spine: [[94.4, 62], [103, 69], [111.4, 74], [118, 67], lerp2(hR.wrist, [118, 67], -.05)], w: [12, 11, 10.2, 9, 8], tone: COAT, lit: 1, rim: RIMC, rimSide: 1, rimOp: .7, seed: 5, folds: false, sw: .4, capA: true,
     cuff: { from: .7, k: 1.4, tone: CUFF } });
+  s += [['M106.4 68.6q2.6 .4 4.6 -1.4', .7], ['M108 71.4q2.2 .2 3.8 -1.6', .55], ['M99 63.4q3 2.6 6.4 3', .45]].map(([d, w]) => `<path d="${d}" stroke="${COAT.shadow}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity=".8"/>`).join('');
   s += hR.front;
 
   // ——— the head from behind: the neck, the jaw's corner and the ear on the side towards the fire, the hair over the rest ———
@@ -180,7 +185,7 @@ function captain(u, L) {
     s += `<path d="M${P2(p)}Q${f(p[0] + (q[0] - p[0]) * .2 + .5)} ${f((p[1] + q[1]) / 2)} ${P2(q)}" stroke="#20160e" stroke-width=".85" fill="none" stroke-linecap="round"/><path d="M${P2(p)}Q${f(p[0] + (q[0] - p[0]) * .2 + .5)} ${f((p[1] + q[1]) / 2)} ${P2(q)}" stroke="#7a5a3a" stroke-width=".3" fill="none" opacity=".6"/>`;
     embers += glow(u, q[0], q[1], 3, 3, '#ff9a3a', .85) + `<circle cx="${f(q[0])}" cy="${f(q[1])}" r=".6" fill="#ffd27a"/><circle cx="${f(q[0])}" cy="${f(q[1])}" r=".28" fill="#fff4d0"/>`;
     // the smoke: a thin thread up from the ember, out round the brim, widening, curling and drifting off to the right
-    const sd = x > 0 ? 1 : -1, W = [q, [q[0] + sd * 1.4, q[1] - 4], [q[0] + sd * 4.4, q[1] - 9], [q[0] + sd * 4 + 3, q[1] - 15], [q[0] + 2 + i * 3, q[1] - 21 - i], [q[0] + 10 + i * 4, q[1] - 27 - i * 3], [q[0] + 22 + i * 4, q[1] - 30 - i * 4]];
+    const sd = x > 0 ? 1 : -1, W = [q, [q[0] + sd * 1.2, q[1] - 3.4], [q[0] + sd * 3.6, q[1] - 7], [q[0] + sd * 2 + 1.6, q[1] - 11.4], [q[0] + sd * .4 + 4 + i, q[1] - 14 - i], [q[0] + 8 + i * 2, q[1] - 15.4 - i * 2], [q[0] + 11 + i * 2, q[1] - 19 - i * 2], [q[0] + 17 + i * 3, q[1] - 21 - i * 3]];
     for (const [w, op, col] of [[3.2, .1, '#bfa49a'], [1.6, .2, '#d8c0b0'], [.5, .4, '#ffd8b8']]) smk += `<path d="${H.sp(W)}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity="${op}"/>`;
     for (let k = 0; k < 3; k++) { const pp = W[3 + k]; smk += `<ellipse cx="${f(pp[0] + (R() - .5) * 2)}" cy="${f(pp[1])}" rx="${f(2 + k * 1.4)}" ry="${f(1.2 + k * .7)}" fill="#c8b0a4" opacity="${f(.1 - k * .02)}"/>`; } });
   { const bl = nid('fb', u); s += `<defs><filter id="${bl}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".35"/></filter></defs><g filter="url(#${bl})">${smk}</g>`; }
