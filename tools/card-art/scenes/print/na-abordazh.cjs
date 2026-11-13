@@ -1,0 +1,212 @@
+// «На абордаж!» (Месть королевы Анны, ПРИКАЗ: только по кораблю напротив — 2 урона по Команде и 1 по Корпусу; не
+// Залп), refined from the first-round scene (portrait-revenge.cjs SCENES['На абордаж!']): the two sides alongside at
+// sunset, the grapnel lines taut between the rails, a man swinging across on a rope against the sky. Kept: the idea,
+// the sunset, the high side close on the right, the lines from rail to rail, the swing rope from the yard, the sabre.
+// Fixed against the first round: the side was a flat brown wall — now the kit's Revenge alongside (her waist, the
+// port row, the channels and shrouds, the masts going up out of the picture); the three swingers were stick
+// silhouettes without hands or feet — now one boarder, big and whole, mid-swing towards us: his near fist round the
+// rope (people.cjs hand3), the cutlass up in the other fist, one sleeve from shoulder to cuff on each arm, breeches,
+// boots with soles and heels, a red sash and a head scarf; the hooks were bent strokes — now forged four-fluked
+// grapnels biting our rail in the foreground, splinters at the bite. We stand on the enemy's deck: our rail across
+// the bottom. Light: the low sun behind the Revenge's foremast rigging, upper left (key, contre-jour: warm rims on
+// him, the blade and the lines; her side towards us in half shade); the warm haze of the sunset (fill).
+'use strict';
+const K = require('../kit/index.cjs');
+const PK = require('../portrait-kit.cjs');
+const H = require('./lib/people.cjs');
+const { rimArc } = require('./lib/hat.cjs');
+const { f, mix, nid, linGrad, radGrad, rng, lerp } = K;
+const { glow, gloom, motes } = PK;
+
+const HZ = 93, SUN = { x: 34, y: 64 };
+const REV = { kind: 'revenge', x: 124, y: 122, scale: 3, sails: 'reefed', seed: 3 };   // her waist alongside, bow to the left
+const RAIL = 112;                                                                      // the top of our rail (the near side)
+const HEAD = { c: [92, 40], r: 6 };
+const light = { time: 'dusk', haze: .4, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffb46a', power: .9 },
+  fill: { color: '#5a2a34', power: .45 }, rim: { az: 300, color: '#ffc488', power: .6 } };
+const skel = { horizon: HZ, eye: 4.7, light: 'the low sun behind her fore rigging, upper left (key, contre-jour) + the sunset haze (fill)', items: [
+  ['Revenge', -10, 122, 220, 150, 'water alongside: her waist, rail at y≈86, masts out of the top'],
+  ['boarder', 58, 114, 74, 100, 'in the air between the sides, on the rope from her yard'],
+  ['cutlass', 56, 50, 14, 38, 'in his fist'], ['swing rope', 118, 22, 36, 30, 'from above the picture to his fist'],
+  ['grapnel lines', 34, 113, 160, 30, 'her rail -> hooks on our rail'], ['our rail', -10, 140, 220, 28, 'the near side']] };
+
+const P2 = p => `${f(p[0])} ${f(p[1])}`;
+const SKIN = { lit: '#e6ad7c', half: '#ad6c40', core: '#8a5230', shadow: '#4e2a18', outline: '#1e0c06' };
+const SHIRT = { lit: '#ecd8b4', half: '#a48a6a', shadow: '#584232', outline: '#24160c' };
+const VEST = { lit: '#6a4630', half: '#3a2418', shadow: '#1a0e08', outline: '#0a0604' };
+const PANTS = { lit: '#565a6e', half: '#2c2e3c', shadow: '#15161e', outline: '#08080c' };
+const BOOT = { lit: '#6a4428', half: '#34200f', shadow: '#160c05', outline: '#070302' };
+const RIMC = '#ffc080';
+const unit = v => { const l = Math.hypot(v[0], v[1]) || 1; return [v[0] / l, v[1] / l]; };
+
+// a hand round a cylinder whose axis must run at t degrees: turn the hand until its grip axis does
+function handOn(u, base, grip, t, a0) {
+  let a = a0, h;
+  for (let k = 0; k < 6; k++) { h = H.hand3(u, { ...base, a, grip }); const ang = Math.atan2(h.axis[1], h.axis[0]) * 180 / Math.PI;
+    let d = t - ang; while (d > 90) d -= 180; while (d < -90) d += 180; a += d; }
+  return h;
+}
+
+// a boot's foot: A — the ankle, d — towards the toe, the sole on the side of n; sz — the foot's length
+function bootFoot(u, A, d, sz, rimSide) {
+  d = unit(d); let n = [-d[1], d[0]]; if (n[1] < 0) n = [-n[0], -n[1]];
+  const k = sz / 12, P = (x, y) => [A[0] + (d[0] * x + n[0] * y) * k, A[1] + (d[1] * x + n[1] * y) * k];
+  const out = [[-2.6, -2.6], [-3.4, .4], [-3.5, 2.4], [-3, 3.6], [-.6, 3.7], [.2, 3], [2, 2.9], [7, 3.3], [9.4, 3.2], [10.6, 2.4], [10.8, 1.2], [9.8, .1], [7.4, -.6], [3.6, -1.4], [1.6, -2.8]].map(q => P(q[0], q[1]));
+  const id = nid('bt', u), c0 = P(4, -1.4), c1 = P(4, 3.4);
+  let s = `<defs>${linGrad(id, c0[0], c0[1], c1[0], c1[1], [[0, BOOT.lit, 1], [.45, BOOT.half, 1], [1, BOOT.shadow, 1]])}</defs>`
+    + `<path d="M${out.map(P2).join('L')}Z" fill="url(#${id})" stroke="${BOOT.outline}" stroke-width=".4" stroke-linejoin="round"/>`;
+  // the sole and the heel block, darker; the welt line; the toe's shine
+  const sole = [[-3, 3.6], [-.6, 3.7], [.2, 3], [2, 2.9], [7, 3.3], [9.4, 3.2], [10.6, 2.4], [10.2, 2.1], [9.2, 2.6], [7, 2.6], [2, 2.2], [-.6, 2.8], [-3.3, 2.7]].map(q => P(q[0], q[1]));
+  s += `<path d="M${sole.map(P2).join('L')}Z" fill="#0c0603"/>` + `<path d="M${P2(P(-.4, 2.6))}L${P2(P(-.4, 3.7))}" stroke="#2a180c" stroke-width=".35"/>`
+    + `<path d="M${P2(P(6, -.3))}Q${P2(P(9, .2))} ${P2(P(10, 1.4))}" stroke="#c89a70" stroke-width=".5" fill="none" opacity=".55"/>`;
+  if (rimSide) s += `<path d="M${[[-2.6, -2.6], [1.6, -2.8], [3.6, -1.4], [7.4, -.6], [9.8, .1]].map(q => P2(P(q[0], q[1]))).join('L')}" stroke="${RIMC}" stroke-width=".55" fill="none" opacity=".7" stroke-linejoin="round"/>`;
+  return s;
+}
+
+// a grapnel thrown from her side, biting over our rail: the ring and shank up towards her, four flukes over the cap
+function grapnel(u, L, x, y, s, seed) {
+  const R = rng(seed);
+  let out = '';
+  // the two flukes to the sides and the one towards us, hooking down over the cap of our rail; the shank up
+  const fl = (dx, dy, back) => { const a = [x, y], b = [x + dx * .55, y + dy * .2 - 1.2 * s], c = [x + dx, y + dy], tip = [x + dx * 1.08 + (dx < 0 ? -.4 : .4) * s, y + dy - 2.2 * s];
+    return K.rope ? `<path d="M${P2(a)}Q${P2(b)} ${P2(c)}Q${P2([c[0] + dx * .12, c[1] + .4 * s])} ${P2(tip)}" stroke="#0e0c0c" stroke-width="${f(2.3 * s)}" fill="none" stroke-linecap="round" opacity="${back ? .85 : 1}"/>`
+      + `<path d="M${P2(a)}Q${P2(b)} ${P2(c)}Q${P2([c[0] + dx * .12, c[1] + .4 * s])} ${P2(tip)}" stroke="${back ? '#3a3434' : '#5a5050'}" stroke-width="${f(1.3 * s)}" fill="none" stroke-linecap="round"/>`
+      + `<path d="M${P2([a[0] + dx * .1, a[1] - .5 * s])}Q${P2([b[0], b[1] - .5 * s])} ${P2([c[0], c[1] - .6 * s])}" stroke="${RIMC}" stroke-width="${f(.45 * s)}" fill="none" opacity=".6"/>` : ''; };
+  out += fl(4.2 * s, -1.2 * s, true) + fl(-4.6 * s, -1 * s, true);
+  out += K.shadeCyl(u, x, y + .3 * s, x + .4 * s, y - 7.5 * s, .95 * s, L, 'iron', { outline: .3, seed });
+  out += `<circle cx="${f(x + .45 * s)}" cy="${f(y - 9 * s)}" r="${f(1.7 * s)}" fill="none" stroke="#0e0c0c" stroke-width="${f(1.05 * s)}"/><circle cx="${f(x + .45 * s)}" cy="${f(y - 9 * s)}" r="${f(1.7 * s)}" fill="none" stroke="#4a4242" stroke-width="${f(.55 * s)}"/>`;
+  out += fl(-1.6 * s, 5.4 * s, false) + fl(2.4 * s, 5 * s, false);
+  // splinters of the cap rail where the points bit in
+  for (let i = 0; i < 5; i++) { const sx = x + (R() - .5) * 9 * s, sy = y + 3.6 * s + R() * 2 * s; out += `<path d="M${f(sx)} ${f(sy)}l${f((R() - .5) * 3 * s)} ${f(-1 - R() * 2 * s)}" stroke="#e8c49a" stroke-width="${f(.35 * s)}" opacity=".8"/>`; }
+  return out;
+}
+
+module.exports = { name: 'На абордаж!', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+  scene: u => {
+    const L = K.makeLight(light, { horizon: HZ, eye: 4.7 }), R = rng(37);
+    L.pal = Object.assign({}, L.pal, { sky: ['#2a0e18', '#6e2220', '#c8582c', '#f2a458'], sea: ['#c8683a', '#4a1e1e', '#140808'], cloudLit: '#ffb070', cloudShade: '#4a1a22' });
+    // ——— the sunset sky, the sun low behind her fore rigging, clouds lit from below ———
+    let bg = K.sky(u, L, { horizon: HZ, stars: false, seed: 5 }) + K.sunMoon(u, L, { r: 7 });
+    for (const [x, y, w, h, sd, fr] of [[150, 26, 80, 9, 4, .3], [60, 16, 70, 7, 9, .45], [110, 56, 60, 5, 2, .6], [24, 82, 50, 4, 12, .7]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
+    bg += glow(u, SUN.x, SUN.y, 70, 40, '#ffcf8a', .45) + K.water(u, L, { horizon: HZ, bottom: 160, swell: .45, seed: 6, glitter: SUN.x });
+    // ——— the Revenge alongside: her waist, the port row, shrouds and masts going up out of the picture ———
+    bg += K.ship(u, L, Object.assign({ wake: false, lights: true }, REV));
+    const G = K.shipGeom(REV.kind, REV);
+    // the sun's glow through her rigging and the gun smoke drifting from the last broadside between the sides
+    bg += K.localGlow(u, { x: SUN.x, y: SUN.y, color: '#ffb060', power: .5, radius: 44 }, { core: false });
+    const Ls = Object.assign({}, L, { pal: Object.assign({}, L.pal, { smoke: '#8a5a4a' }) });
+    bg += K.smoke(u, Ls, { x: 186, y: 100, w: 46, h: 54, wind: -.5, seed: 9, opacity: .55, glow: { color: '#ff9a50', power: .4 } })
+      + K.smoke(u, Ls, { x: 8, y: 96, w: 30, h: 34, wind: .3, seed: 4, opacity: .4, glow: { color: '#ffb060', power: .5 } });
+
+    // ——— the empty swing ropes of the men already across, hanging from her yards above the picture ———
+    let mid = '';
+    mid += K.rope(u, L, [[172, -4], [170, 20], [164, 46], [160, 58]], { r: .8, seed: 3, whip: true })
+      + K.rope(u, L, [[186, -4], [189, 24], [194, 50], [197, 62]], { r: .75, seed: 5, whip: true });
+    // ——— the grapnel lines: from her rail, taut down to the hooks over ours ———
+    const lines = [[-24, 37], [2, 135], [16, 188]].map(([X, xn]) => ({ a: G.nearRail(X), b: [xn, RAIL - 8.2] }));
+    for (const ln of lines) mid += K.rope(u, L, [ln.a, [lerp(ln.a[0], ln.b[0], .5), lerp(ln.a[1], ln.b[1], .5) + .4], ln.b], { r: .85, seed: Math.round(ln.b[0]) })
+      + `<path d="M${P2(ln.a)}L${P2(ln.b)}" stroke="${RIMC}" stroke-width=".3" opacity=".45"/>`;
+    // ——— our rail across the bottom, and the hooks biting it ———
+    let near = K.bulwark(u, L, { x1: -10, x2: 210, y: 146, h: 34, kind: 'oak', posts: 30, seed: 8 });
+    near += `<path d="M-10 ${RAIL + .2}H210" stroke="${RIMC}" stroke-width=".6" opacity=".55"/>`;
+    for (const ln of lines) near += grapnel(u, L, ln.b[0] - .45 * 1.5, RAIL + 1, 1.5, Math.round(ln.b[0]) + 3);
+
+    // ——— the boarder, mid-swing towards us ———
+    let man = '';
+    const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .5, dir: -1, nod: 6, tone: SKIN, light: [-.85, -.35], warm: { color: '#ffa860', op: .35 },
+      eye: 'wide', look: [-.6, .3], brow: 'frown', mouth: .55, smile: -.15, hair: { style: 'long', color: '#24160e' }, hairColor: '#24160e', moustache: true, stubble: true, iris: '#3a2a1a' });
+    // the rope hand (his left, near): round the rope over his head; the cutlass hand (his right, far) forward and up
+    const ROPE0 = [152, -6], GR = [121, 22], ropeAng = Math.atan2(GR[1] - ROPE0[1], GR[0] - ROPE0[0]) * 180 / Math.PI;
+    const hR = handOn(u, { s: .95, m: -1, roll: 24, pitch: 10, pose: 'wrap', r: 1.15, tone: SKIN, light: [-.85, -.4], sw: .26, tilt: 8 }, GR, ropeAng, -70);
+    const GS = [63, 47], bladeAng = -97;
+    const hS = handOn(u, { s: .95, m: -1, roll: 40, pitch: 8, pose: 'wrap', r: .95, tone: SKIN, light: [-.85, -.4], sw: .26, tilt: 6 }, GS, bladeAng, 180);
+    // the far (sabre) arm first: one sleeve from his right shoulder, the elbow out in front, to the cuff
+    const shF = [88.5, 52.5], elF = [75, 56.5], shN = [109, 52.5], elN = [116.5, 37.5];
+    const sleeve = (sh, el, w, sd, rimSide) => H.cloth(u, { spine: [sh, [lerp(sh[0], el[0], .5), lerp(sh[1], el[1], .5) + .8], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5) + .3], w],
+      w: [7.4, 7, 6.2, 5.2, 4.3], tone: SHIRT, lit: rimSide, rim: RIMC, rimSide, rimOp: .65, seed: sd, drapes: 2, foldW: .7, sw: .35, capA: true,
+      cuff: { from: .84, k: 1.12, tone: { lit: '#f2e2c4', half: '#b8a080', shadow: '#6a5440', outline: '#24160c' } } });
+    man += sleeve(shF, elF, hS.wrist, 3, -1);
+    // the legs: breeches to the knee, boots with a turned-down top to the ankle, the feet; the far (leading) leg first
+    const leg = (hip, knee, ank, toe, sd, rimSide) => {
+      let s = H.cloth(u, { spine: [hip, [lerp(hip[0], knee[0], .5), lerp(hip[1], knee[1], .5) + .6], knee, [lerp(knee[0], ank[0], .12), lerp(knee[1], ank[1], .12)]],
+        w: [10.4, 9.4, 7.6, 7], tone: PANTS, lit: rimSide, rim: RIMC, rimSide, rimOp: .55, seed: sd, drapes: 2, foldW: .7, sw: .35, capA: true });
+      s += bootFoot(u, ank, toe, 12.4, true);
+      s += H.cloth(u, { spine: [ank, [lerp(ank[0], knee[0], .5), lerp(ank[1], knee[1], .5)], [lerp(ank[0], knee[0], .92), lerp(ank[1], knee[1], .92)]],
+        w: [5, 5.8, 6.8], tone: BOOT, lit: -rimSide, rim: RIMC, rimSide: -rimSide, rimOp: .55, seed: sd + 1, drapes: 0, folds: false, sw: .35,
+        cuff: { from: .74, k: 1.28, tone: { lit: '#7a5434', half: '#4a2e18', shadow: '#1e1208', outline: '#070302' } } });
+      return s; };
+    man += leg([101, 81.5], [83, 88], [76.5, 104], [-1, .38], 11, -1);
+    man += leg([109.5, 82.5], [106, 100], [117.5, 107.5], [-.25, 1], 13, -1);
+    // the neck (short), under the jaw
+    man += `<path d="M89.6 44.6L97.6 44.8L99.4 50.6Q95 52.4 90.6 50.8Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".3"/><path d="M90.4 46.4q3 2.2 7 .4" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".6"/>`;
+    // the torso: the linen shirt open at the throat, the dark sleeveless jerkin over it, the sash at the waist
+    { const sh = nid('sh', u), ve = nid('ve', u), sa = nid('sa', u);
+      const shirt = [[88, 51], [93.6, 49.4], [98, 57.6], [102.4, 49.4], [109, 50], [112.4, 53.4], [113, 61], [113.4, 70], [114, 78.6], [98.4, 78.6], [96.4, 76], [89.4, 66], [86.8, 58], [86.4, 53.4]];
+      man += `<defs>${linGrad(sh, 86, 0, 114, 0, [[0, '#d8c09c', 1], [.35, '#a68c6c', 1], [1, '#5e4836', 1]])}${linGrad(ve, 86, 0, 114, 0, [[0, '#5a3a28', 1], [.3, '#3a2418', 1], [1, '#1a0e08', 1]])}${linGrad(sa, 0, 76, 0, 85, [[0, '#c03a26', 1], [.5, '#8a1c14', 1], [1, '#4a0c08', 1]])}</defs>`
+        + `<path d="M${shirt.map(P2).join('L')}Z" fill="url(#${sh})" stroke="${SHIRT.outline}" stroke-width=".35"/>`
+        // the chest in the open collar: skin, the shirt's edges laid back
+        + `<path d="M94.4 49.8L98 57L101.6 49.8Q98 51.6 94.4 49.8Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".25"/><path d="M95.8 51.2q2.2 1.4 4.4 0" stroke="${SKIN.shadow}" stroke-width=".35" fill="none" opacity=".6"/>`
+        // the jerkin: two panels, its edges apart over the shirt, a lit edge towards the sun
+        + `<path d="M88 51.2L93.4 49.8L96 61L98.2 77.6L96.4 76L89.4 66L86.8 58L86.4 53.4Z" fill="url(#${ve})" stroke="${VEST.outline}" stroke-width=".35"/>`
+        + `<path d="M103 49.8L109 50.2L112.4 53.4L113 61L113.4 70L114 78.4L101.6 78.4L100.6 63Z" fill="url(#${ve})" stroke="${VEST.outline}" stroke-width=".35"/>`
+        + `<path d="M93.4 49.8L96 61L98.2 77.6" stroke="#8a6448" stroke-width=".4" fill="none" opacity=".7"/><path d="M86.4 53.4L86.8 58L89.4 66L96.4 76" stroke="${RIMC}" stroke-width=".7" fill="none" opacity=".75"/>`
+        + `<path d="M98.6 60q1.6 4 1 10M99.8 66q.8 5 .2 10" stroke="#6a5240" stroke-width=".35" fill="none" opacity=".7"/>`
+        + [55.5, 61, 66.5].map(y => `<circle cx="${f(101.6 + (y - 55) * -.03)}" cy="${y}" r=".55" fill="#c9a048" stroke="#4a3010" stroke-width=".2"/>`).join('')
+        // the sash wound round the waist, knotted on the near hip, its ends streaming back in the swing
+        + `<path d="M96.4 75.6Q105 78.4 114.2 77.6L114.8 84.6Q105 86 97.6 83.6Z" fill="url(#${sa})" stroke="#2a0604" stroke-width=".35"/>`
+        + `<path d="M97.2 78.4Q105 80.6 114.4 80M97.4 81Q105 83 114.6 82.4" stroke="#5a0e0a" stroke-width=".35" fill="none" opacity=".8"/><path d="M96.6 76.4Q97.4 80 97.8 83.4" stroke="${RIMC}" stroke-width=".5" fill="none" opacity=".6"/>`
+        + `<path d="M113 79.4q3 -1 4 1.6q-1 2.6 -4 2q-1.4 -1.8 0 -3.6Z" fill="#9a2418" stroke="#2a0604" stroke-width=".3"/>`
+        + `<path d="M116.6 80.6Q122 82 127 79.6Q125 83.4 128.6 86Q122 86.4 116.4 82.6Z" fill="#8a1c14" stroke="#2a0604" stroke-width=".3"/><path d="M116 82.4Q120 87 125.4 91Q121 91 118.8 93.4Q116.4 88 115.2 83.2Z" fill="#6e140e" stroke="#2a0604" stroke-width=".3"/>`
+        + `<path d="M118 81.4Q122 82.8 126 81.2M117 84q3 3.6 6.6 6.2" stroke="#c04030" stroke-width=".35" fill="none" opacity=".7"/>`; }
+    // the head, its rim of sunset on the side towards the sun; the scarf over the crown, knotted behind, ends flying
+    man += hd.svg + rimArc(hd, { r: HEAD.r, light: [.9, .3], color: RIMC, span: 55, opacity: .7 });
+    { const Q = hd.Q, dp = hd.depth;
+      const pts = []; for (let k = 0; k < 36; k++) { const t = k / 36 * Math.PI * 2; for (const [y, rr] of [[-.42, 1.04], [-.75, .98], [-1.02, .62]]) pts.push(Q(Math.cos(t) * rr, y, Math.sin(t) * rr - .06)); }
+      pts.push(Q(0, -1.16, -.1));
+      const hull = P => { const S = P.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); const lo = [], up = [];
+        for (const p of S) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+        for (const p of S.slice().reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); };
+      const cap = hull(pts), cg = nid('sc', u), c0 = Q(0, -.8, 0);
+      man += `<defs>${linGrad(cg, c0[0] - 7, c0[1] - 3, c0[0] + 7, c0[1] + 3, [[0, '#d4402a', 1], [.4, '#9a2016', 1], [1, '#4a0a08', 1]])}</defs><path d="M${cap.map(P2).join('L')}Z" fill="url(#${cg})" stroke="#2a0604" stroke-width=".35"/>`;
+      // the hem over the brow, a few folds pulled to the knot, the sun on its crown
+      const hem = []; for (let k = 0; k <= 20; k++) { const t = -Math.PI * .5 + k / 20 * Math.PI; const p = [Math.sin(t) * 1.04, -.42, Math.cos(t) * 1.04 - .06]; if (dp(...p) > -.1) hem.push(Q(...p)); }
+      if (hem.length > 2) man += `<path d="M${hem.map(P2).join('L')}" stroke="#3a0806" stroke-width=".5" fill="none"/>`;
+      for (const [a, b] of [[[.4, -.6, .9], [-.8, -.5, -.6]], [[.7, -.85, .5], [-.7, -.6, -.7]], [[.2, -1, .6], [-.6, -.8, -.75]]]) { const p = Q(...a), q = Q(...b); man += `<path d="M${P2(p)}Q${f((p[0] + q[0]) / 2)} ${f((p[1] + q[1]) / 2 - .6)} ${P2(q)}" stroke="#5a0e0a" stroke-width=".35" fill="none" opacity=".75"/>`; }
+      { const a = Q(-.3, -1.1, .3), b = Q(.6, -.9, .5); man += `<path d="M${P2(a)}Q${f((a[0] + b[0]) / 2)} ${f((a[1] + b[1]) / 2 - 1)} ${P2(b)}" stroke="${RIMC}" stroke-width=".6" fill="none" opacity=".65"/>`; }
+      // the knot at the back of the head and its two ends streaming back (to the right) in the swing
+      const kn = Q(-.05, -.55, -1.02);
+      man += `<path d="M${f(kn[0] - 1.4)} ${f(kn[1] - .8)}q2.2 -1.2 3.2 .6q-.4 2 -2.6 1.8q-1.4 -.8 -.6 -2.4Z" fill="#8a1c14" stroke="#2a0604" stroke-width=".3"/>`
+        + `<path d="M${f(kn[0] + 1.4)} ${f(kn[1] - .4)}Q${f(kn[0] + 6)} ${f(kn[1] - 2.4)} ${f(kn[0] + 10.6)} ${f(kn[1] - .6)}Q${f(kn[0] + 7)} ${f(kn[1] + .6)} ${f(kn[0] + 8.6)} ${f(kn[1] + 2.4)}Q${f(kn[0] + 4)} ${f(kn[1] + 1.4)} ${f(kn[0] + 1.2)} ${f(kn[1] + .8)}Z" fill="#9a2418" stroke="#2a0604" stroke-width=".3"/>`
+        + `<path d="M${f(kn[0] + 1)} ${f(kn[1] + .8)}Q${f(kn[0] + 4.6)} ${f(kn[1] + 3.6)} ${f(kn[0] + 7.6)} ${f(kn[1] + 6.4)}Q${f(kn[0] + 4.4)} ${f(kn[1] + 6)} ${f(kn[0] + 3.4)} ${f(kn[1] + 7.6)}Q${f(kn[0] + 2.4)} ${f(kn[1] + 4)} ${f(kn[0] + .2)} ${f(kn[1] + 1.4)}Z" fill="#701410" stroke="#2a0604" stroke-width=".3"/>`;
+      // a gold ring in the near ear
+      { const e = Q(.84, .34, -.1); if (dp(.84, .34, -.1) > -.2) man += `<circle cx="${f(e[0])}" cy="${f(e[1] + .9)}" r=".8" fill="none" stroke="url(#brass${u})" stroke-width=".4"/>`; } }
+
+    // ——— the cutlass in his far fist: the grip through the fist, the shell guard and knuckle-bow, the curved blade up ———
+    let sabre = '';
+    { const v = [Math.cos(bladeAng * Math.PI / 180), Math.sin(bladeAng * Math.PI / 180)], nn = [-v[1], v[0]], g = hS.grip;
+      const at = (t, o) => [g[0] + v[0] * t + nn[0] * o, g[1] + v[1] * t + nn[1] * o];
+      const grip = K.shadeCyl(u, ...at(-4.6, 0), ...at(3.6, 0), .95, L, 'leather', { outline: .3, seed: 4 });
+      const pommel = K.shadeSphere(u, ...at(-5.2, 0), 1.2, L, 'brass', { outline: .3 });
+      // the blade: back edge straight-ish, the edge bellying, a clipped point; the fuller; the sun along the edge
+      const B = [at(4.4, -1.1), at(14, -1.3), at(24, -.6), at(32, 1.4), at(34.6, 2.6), at(33, .9), at(24, 1.8), at(14, 1.5), at(4.4, 1.1)];
+      const bid = nid('bl', u), b0 = at(18, -1.5), b1 = at(18, 2);
+      const blade = `<defs>${linGrad(bid, b0[0], b0[1], b1[0], b1[1], [[0, '#fff0d8', 1], [.3, '#c8c4c0', 1], [.62, '#6a6866', 1], [1, '#d8d0c8', 1]])}</defs>`
+        + `<path d="M${P2(B[0])}Q${P2(B[1])} ${P2(B[2])}Q${P2(at(29, .2))} ${P2(B[3])}L${P2(B[4])}L${P2(B[5])}Q${P2(at(28, 1.9))} ${P2(B[6])}Q${P2(B[7])} ${P2(B[8])}Z" fill="url(#${bid})" stroke="#2a2420" stroke-width=".3"/>`
+        + `<path d="M${P2(at(5, -.2))}Q${P2(at(14, -.3))} ${P2(at(26, .3))}" stroke="#4a4644" stroke-width=".4" fill="none"/>`
+        + `<path d="M${P2(at(6, 1))}Q${P2(at(16, 1.5))} ${P2(at(30, 1.6))}" stroke="#ffe6c0" stroke-width=".35" fill="none" opacity=".85"/>`;
+      // the shell guard over the fist and the knuckle-bow down the fingers' side to the pommel
+      const shell = `<path d="M${P2(at(3.6, -3.2))}Q${P2(at(5.4, 0))} ${P2(at(3.6, 3.4))}L${P2(at(3, 3))}Q${P2(at(4.2, 0))} ${P2(at(3, -2.8))}Z" fill="url(#brass${u})" stroke="#4a3008" stroke-width=".3"/>`;
+      const bow = `<path d="M${P2(at(3.4, 2.8))}Q${P2(at(1, 5.6))} ${P2(at(-2.6, 5))}Q${P2(at(-5, 3.4))} ${P2(at(-5.4, .8))}" stroke="#4a3008" stroke-width="1.15" fill="none" stroke-linecap="round"/><path d="M${P2(at(3.4, 2.8))}Q${P2(at(1, 5.6))} ${P2(at(-2.6, 5))}Q${P2(at(-5, 3.4))} ${P2(at(-5.4, .8))}" stroke="#d8b060" stroke-width=".5" fill="none" stroke-linecap="round"/>`;
+      sabre = blade + hS.back + grip + pommel + hS.front + shell + bow
+        + glow(u, ...at(30, 1.4), 5, 5, '#ffe0a0', .45); }
+    // the near (rope) arm: sleeve up to the cuff, the fist round the rope; the rope's free end flying below the fist
+    let ropeArm = K.rope(u, L, [ROPE0, [lerp(ROPE0[0], GR[0], .5) + .6, lerp(ROPE0[1], GR[1], .5)], GR], { r: 1.1, seed: 7 })
+      + `<path d="M${P2(ROPE0)}L${P2(GR)}" stroke="${RIMC}" stroke-width=".35" opacity=".5"/>`;
+    const tail = [GR, [GR[0] + 2.6, GR[1] + 5], [GR[0] + 6.6, GR[1] + 9.4], [GR[0] + 11.4, GR[1] + 12.4]];
+    ropeArm += sleeve(shN, elN, hR.wrist, 5, -1) + hR.back + K.rope(u, L, [[GR[0] + 2.2, GR[1] - 2.6], GR, [GR[0] - 1.6, GR[1] + 1.4]], { r: 1.1, seed: 8 }) + hR.front
+      + K.rope(u, L, tail, { r: 1.05, seed: 9, whip: true });
+
+    // ——— the air: the sun's glare, motes, the dark coming up from the deck ———
+    const air = glow(u, 70, 60, 60, 46, '#ffb070', .12) + motes(18, 20, 50, 90, 50, '#ffd8a0', 11) + gloom(u, 100, 70, 0, 10, .25) + gloom(u, 100, 120, 100, 280, .5, '#140608');
+    return [bg, mid + man + sabre + ropeArm + near + air];
+  } };
