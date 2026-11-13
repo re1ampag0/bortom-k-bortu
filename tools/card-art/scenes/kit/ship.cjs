@@ -167,14 +167,76 @@ const SPECS = {
 };
 const QY = { 4: [.36, .62, .8, .94], 3: [.4, .7, .93], 2: [.46, .86] }, WY = [.14, .108, .078, .054];
 
-/** shipBox(kind, { x, y, scale, flip }) -> { x0, x1, top, y, w, h } — the box of the ship in scene units (without
+/** shipBox(kind, { x, y, scale, flip, wind }) -> { x0, x1, top, y, w, h } — the box of the ship in scene units (without
  *  the wake and the reflection): for placing it in a scene. */
 function shipBox(kind, o = {}) {
   const sp = SPECS[kind] || SPECS.pearl, s = o.scale || 1, dir = o.flip ? -1 : 1, x = o.x != null ? o.x : 100, y = o.y != null ? o.y : 180;
   const bs = sp.sprit, reach = Math.cos(rad(bs.steeve)) * (bs.len + (bs.jib || 0)) + (bs.topmast ? .045 * sp.len : 0), fore = -sp.len / 2 - sp.bow[0] + 3.2 - reach, aft0 = sp.len / 2 + sp.over + sp.tw[1] + (sp.ensign ? 5 : 1);
-  const aft = Math.max(aft0, sp.lanternArm ? sp.len / 2 + sp.over + sp.tw[0] + sp.lanternArm[0] + 2 : 0, sp.balc ? sp.len / 2 + sp.over + Math.max(...sp.tw) + (sp.balcD || 2.4) * .7 : 0);   // the bracket of the lantern, the balconies
+  const flyAft = o.wind && Math.sign(o.wind) * dir > 0 && sp.ensign ? sp.len / 2 + sp.over + sp.tw[0] * .92 + 19.5 * (sp.ensignK || 1) : 0;   // the ensign flies astern
+  const aft = Math.max(aft0, flyAft, sp.lanternArm ? sp.len / 2 + sp.over + sp.tw[0] + sp.lanternArm[0] + 2 : 0, sp.balc ? sp.len / 2 + sp.over + Math.max(...sp.tw) + (sp.balcD || 2.4) * .7 : 0);   // the bracket of the lantern, the balconies
   const top = Math.max(...sp.masts.map(m => m.H)) + 7, a = x + dir * s * fore, b = x + dir * s * aft;
   return { x0: Math.min(a, b), x1: Math.max(a, b), top: y - s * top, y, w: Math.abs(b - a), h: s * top };
+}
+
+// ——— flags and pennants (drawn by the builder, and alone by shipFlag): a cloth in the wind on its staff or halyard.
+// The cloth is a sheet with 2–3 travelling folds: the depth of the folds grows from the hoist (held by the halyard) to
+// the fly, the folds lean, the cloth narrows and flutters at its free edge; where a fold turns away from the viewer the
+// cloth is foreshortened, so the design on it (stripes, the skull and bones) bends and squeezes with it. Light: the
+// side of every fold turned to the key light is lighter, the other side darker. g — the drawing context: pt-based
+// paths (line, spl), fillP, strokeP, tone, lum, gr, clipOf, R, pt, sil, far, C, s, ow, ink, rw, ropeL, phi, kR, FD
+// (the droop), FWv (the wave length), fd (the local direction the cloth flies: -1 — to the bow, +1 — to the stern).
+// q: X — the hoist (the staff's side), Ht — its top, fw / fh — length and height, design ('jolly' | 'company' |
+// 'merchant' | 'trade' | 'plain' | 'pennant'), name (the seed), km — the cloth's material, rag — torn, fork — a split
+// (swallow) tail of a pennant, hw — the width of the heading in local units.
+function flagCloth(g, q) {
+  const { sil, far, C, s, fd } = g, Rr = g.R(q.name), ph = Rr() * 6, design = q.design, pen = design === 'pennant', rag = q.rag;
+  const fw = g.phi ? q.fw * (1 + .12 * g.kR) : q.fw, fh = q.fh, FD = g.FD, FWv = g.FWv;
+  const nW = (pen ? 2.9 : 2.3) + Rr() * .5, k2 = 2 * Math.PI * nW / FWv, sl = pen ? .15 : .38, za0 = (pen ? .03 : .052) * FWv;
+  const th = (a, b) => k2 * (a + sl * (b - .5) * fh / fw) - ph;            // the phase of the folds (they lean: the top leads)
+  const za = a => za0 * (.22 + .78 * a);                                   // the depth of the folds, a share of the length
+  const slope = (a, b) => za(a) * k2 * Math.cos(th(a, b));                 // the cloth's slope across the view
+  const qz = a => 1.6 * za(a) * za(a) * k2 / 8;                            // the foreshortening of a fold turned away
+  const xa = (a, b) => a - qz(a) * (Math.sin(2 * th(a, b)) - Math.sin(2 * th(0, b)));
+  const fork = pen && q.fork && !rag, tp = pen ? (fork ? .7 : .97) : .12;   // the narrowing to the fly
+  const F = (a, b) => { const x = xa(a, b) * (1 - .05 * b) + (pen ? 0 : .028 * Math.pow(a, 4) * Math.sin(b * 9.4 + ph * 2));   // the fly edge flutters
+    const H = q.Ht - b * fh * (1 - tp * a) - (pen ? tp * a * fh * .2 : tp * a * fh * .4) - .16 * a * a * fh * (pen ? 2.5 : 1) * FD
+      + (pen ? .15 : .075) * fh * Math.sin(th(a, b) + .9) * Math.pow(a, .65) * FWv;
+    return [q.X + fd * x * fw, H]; };
+  const N = pen ? 30 : 24, pts = []; for (let i = 0; i <= N; i++) pts.push(F(i / N, 0));
+  let lo = N;
+  if (fork) { const nd = .2; pts.push(F(1 - nd, .5)); }
+  else if (rag && !pen) for (let i = 1; i < 6; i++) pts.push(F(1 - Rr() * .16, i / 6));
+  else if (rag && pen) { // a torn pennant: the fly split into tails of different length
+    const a1 = .62 + Rr() * .1, a2 = .8 + Rr() * .1; pts.push(F(.97, .35), F(a1, .45), F(a2, .62), F(a1 - .08, .72), F(a1 + .02 + Rr() * .1, 1)); lo = Math.floor((a1 + .02) * N); }
+  else if (!pen) for (let i = 1; i < 6; i++) pts.push(F(1, i / 6));
+  for (let i = lo; i >= 0; i--) pts.push(F(i / N, 1));
+  const d = g.line(pts) + 'Z', km = q.km;
+  if (sil) return g.fillP(d, C);
+  const n0 = [.2 * fd, 0, .98], I0 = g.lum(n0), cid = g.clipOf(d); let inn = '';
+  const band = (b0, b1, a0, a1, c) => { const p = [], m = 16; for (let i = 0; i <= m; i++) p.push(F(lerp(a0, a1, i / m), b0)); for (let i = m; i >= 0; i--) p.push(F(lerp(a0, a1, i / m), b1)); return g.fillP(g.line(p) + 'Z', c); };
+  if (design === 'company') { const red = g.tone('ship-flag-red', I0); for (let i = 0; i < 7; i++) inn += band(i / 7, (i + .5) / 7, 0, 1, red); inn += band(0, 3 / 7, 0, .38, g.tone('linen', I0)) + band(1.2 / 7, 1.8 / 7, 0, .38, red) + band(0, 3 / 7, .16, .22, red); }
+  else if (design === 'merchant') inn += band(0, 1 / 3, 0, 1, g.tone('ship-flag-red', I0)) + band(2 / 3, 1, 0, 1, g.tone('water-wet', I0 + .2));
+  else if (design === 'trade') inn += band(0, 1, 0, .3, g.tone('ship-flag-red', I0)) + band(.34, .66, .3, 1, g.tone('paint-ochre', I0 + .15));   // a plain trade ensign: a red hoist, an ochre stripe on white
+  else if (design === 'plain') inn += band(.36, .64, 0, 1, g.tone('ship-flag-red', I0));
+  else if (design === 'jolly' && !far) { // the skull and the crossed bones, drawn through F: they bend with the folds
+    const bone = g.tone('bone', I0 + .15), c = (a, b) => F(.5 + a * fh / fw, .47 + b), sk = [];
+    for (let i = 0; i < 14; i++) { const t = i / 14 * 2 * Math.PI; sk.push(c(Math.sin(t) * .2, -.1 + Math.cos(t) * .2 + (Math.cos(t) > .5 ? .03 * Math.cos(t) : 0))); }
+    const boneL = (a0, b0, a1, b1) => { const p = []; for (let i = 0; i <= 6; i++) p.push(c(lerp(a0, a1, i / 6), lerp(b0, b1, i / 6))); return g.line(p); };
+    const knob = (a, b, ea, eb) => [c(a + ea * .03 - eb * .035, b + eb * .03 + ea * .035), c(a + ea * .03 + eb * .035, b + eb * .03 - ea * .035)].map(p => { const P = g.pt(p[0], p[1]); return `<circle cx="${f(P[0])}" cy="${f(P[1])}" r="${f(.052 * fh * s)}"/>`; }).join('');   // the knuckles at the bones' ends
+    inn += g.strokeP(boneL(-.36, .12, .36, .44) + boneL(.36, .12, -.36, .44), bone, .075 * fh * s, ' stroke-linecap="round"')
+      + `<g fill="${bone}">${knob(-.36, .12, -.9, -.4) + knob(.36, .44, .9, .4) + knob(.36, .12, .9, -.4) + knob(-.36, .44, -.9, .4)}</g>`
+      + g.fillP(g.spl(sk, true) + g.line([c(-.12, .04), c(.12, .04), c(.1, .2), c(-.1, .2)]) + 'Z', bone)
+      + g.fillP(g.line([c(-.12, -.12), c(-.03, -.12), c(-.04, -.03), c(-.11, -.03)]) + 'Z' + g.line([c(.12, -.12), c(.03, -.12), c(.04, -.03), c(.11, -.03)]) + 'Z' + g.line([c(0, 0), c(-.03, .06), c(.03, .06)]) + 'Z', g.tone(km, I0))
+      + g.strokeP(g.line([c(-.07, .14), c(-.07, .2)]) + g.line([c(0, .14), c(0, .2)]) + g.line([c(.07, .14), c(.07, .2)]), g.tone(km, I0), .025 * fh * s); }
+  // the heading along the hoist: a doubled strip of cloth, a shade darker, the halyard's toggles at its ends
+  if (!far && q.hw) { const hw = q.hw / fw; inn += band(0, 1, 0, hw, g.tone(km, I0 - .28)); }
+  // the light on the folds: along the cloth, across the leaning folds — lighter where a fold faces the key light
+  const hi = g.tone(km, Math.min(1, I0 + .75)), lo2 = g.tone(km, I0 - 1), st = [], M = 40, ax = 1 / (1 + sl * sl), base = g.lum(n0);
+  for (let i = 0; i <= M; i++) { const a = i / M, sp = slope(a, .5), dI = 1.7 * (g.lum([n0[0] - fd * sp, 0, n0[2]]) - base) + .5 * Math.sin(th(a, .5)) * za(a) / za0;   // the side to the light, the crest out of the trough
+    st.push([xa(a, .5), dI > 0 ? hi : lo2, clamp(dI > 0 ? dI * .8 : -dI * 1.05, 0, dI > 0 ? .55 : .78) * (i ? 1 : .4)]); }
+  const G0 = F(0, .5);   // the gradient's axis is square to the folds, so its offset at the middle of the cloth is a
+  inn += g.fillP(d, g.gr(G0, [G0[0] + fd * fw * ax, G0[1] - sl * fw * ax], st));
+  return g.fillP(d, g.tone(km, I0)) + `<g clip-path="url(#${cid})">${inn}</g>` + (g.ow ? g.strokeP(d, g.ink(km), .28 * s, ' stroke-linejoin="round"') : '');
 }
 
 // ——— the builder: mode 'color' — the ship in light; 'sil' — one flat tone; 'refl' — a simple body for the reflection
@@ -852,33 +914,31 @@ function build(u, L, o, mode) {
   }
   rigBack += strokeP(lifts, ropeD, rw(.14), ' opacity=".8"'); rigFront += strokeP(standing, ropeD, rw(.22), far ? ' opacity=".5"' : '') + strokeP(thin, ropeD, rw(.14), ' opacity=".85"') + strokeP(running, ropeL, rw(.15), ` opacity="${back ? .5 : .65}"`);
 
-  // ——— flags: they fly to the bow, with the wind that fills the sails ———
+  // ——— flags: they fly with the wind (o.wind — its sign in the scene, the same as the smoke's; by default to the bow,
+  // with the wind that fills the sails). Every flag hangs on a halyard: on a staff above the main truck, on the stern
+  // staff (the ensign), on a short stick at the masthead (the pennants); the drawing of the cloth — flagCloth ———
   const FD = phi ? 1 - .5 * Math.min(1.3, kR) : 1, FWv = phi ? 1 - .45 * Math.min(1.3, kR) : 1;   // the roll: a strong wind — the flags droop less and flutter in shorter waves
-  const flagAt = (X0, Ht, fw0, fh, design, name) => { const Rr = R(name), ph = Rr() * 6, taper = design === 'pennant' ? 1 : 0, rag = sp.growth || cond === 'torn', fw = phi ? fw0 * (1 + .12 * kR) : fw0;
-    const F = (a, b) => [X0 - a * fw * (1 - .05 * b), Ht - b * fh * (1 - taper * a * .97) - taper * a * fh * .2 - .16 * a * a * fh * (taper ? 2.5 : 1) * FD + .09 * fh * (taper ? 1.6 : 1) * Math.sin(a * 7.2 + ph) * Math.pow(a, .6) * FWv];
-    const N = 12, pts = []; for (let i = 0; i <= N; i++) pts.push(F(i / N, 0)); if (rag && !taper) for (let i = 1; i < 6; i++) pts.push(F(1 - Rr() * .16, i / 6));
-    let lo = N; if (rag && taper) { // a torn pennant: the fly split into tails of different length
-      const a1 = .62 + Rr() * .1, a2 = .8 + Rr() * .1; pts.push(F(.97, .35), F(a1, .45), F(a2, .62), F(a1 - .08, .72), F(a1 + .02 + Rr() * .1, 1)); lo = Math.floor((a1 + .02) * N); }
-    for (let i = lo; i >= 0; i--) pts.push(F(i / N, 1));
-    const d = line(pts) + 'Z', km = design === 'jolly' ? 'ship-flag-black' : design === 'pennant' ? sp.pennant : 'linen';
-    if (sil) return fillP(d, C);
-    const cid = clipOf(d), I0 = lum([-.2, 0, .98]); let inn = '';
-    const band = (b0, b1, a0, a1, c) => { const p = []; for (let i = 0; i <= 8; i++) p.push(F(lerp(a0, a1, i / 8), b0)); for (let i = 8; i >= 0; i--) p.push(F(lerp(a0, a1, i / 8), b1)); return fillP(poly(p), c); };
-    if (design === 'company') { const red = tone('ship-flag-red', I0); for (let i = 0; i < 7; i++) inn += band(i / 7, (i + .5) / 7, 0, 1, red); inn += band(0, 3 / 7, 0, .38, tone('linen', I0)) + band(1.2 / 7, 1.8 / 7, 0, .38, red) + band(0, 3 / 7, .16, .22, red); }
-    else if (design === 'merchant') inn += band(0, 1 / 3, 0, 1, tone('ship-flag-red', I0)) + band(2 / 3, 1, 0, 1, tone('water-wet', I0 + .2));
-    else if (design === 'trade') inn += band(0, 1, 0, .3, tone('ship-flag-red', I0)) + band(.34, .66, .3, 1, tone('paint-ochre', I0 + .15));   // a plain trade ensign: a red hoist, an ochre stripe on white
-    else if (design === 'plain') inn += band(.36, .64, 0, 1, tone('ship-flag-red', I0));
-    else if (design === 'jolly' && !far) { const bone = tone('bone', I0 + .15), c = (a, b) => F(.5 + a * fh / fw, .47 + b), sk = []; for (let i = 0; i < 12; i++) { const t = i / 12 * 2 * Math.PI; sk.push(c(Math.sin(t) * .2, -.1 + Math.cos(t) * .2)); }
-      inn += strokeP(seg(c(-.36, .12), c(.36, .44)) + seg(c(.36, .12), c(-.36, .44)), bone, .075 * fh * s, ' stroke-linecap="round"') + fillP(spl(sk, true) + poly([c(-.12, .04), c(.12, .04), c(.1, .2), c(-.1, .2)]), bone) + fillP(poly([c(-.12, -.12), c(-.03, -.12), c(-.04, -.03), c(-.11, -.03)]) + poly([c(.12, -.12), c(.03, -.12), c(.04, -.03), c(.11, -.03)]) + poly([c(0, 0), c(-.03, .06), c(.03, .06)]), tone(km, I0)); }
-    const sh = tone(km, I0 - .6), fold = []; for (let i = 0; i <= 8; i++) { const a = i / 8; fold.push([a, sh, clamp(.2 - .26 * Math.cos(a * 7.2 + ph)) * (i ? 1 : .3)]); }
-    inn += fillP(d, gr(F(0, .5), F(1, .5), fold));
-    return fillP(d, tone(km, I0)) + `<g clip-path="url(#${cid})">${inn}</g>` + (ow ? strokeP(d, ink(km), .28 * s, ' stroke-linejoin="round"') : ''); };
+  const fd = o.wind ? Math.sign(o.wind) * dir : -1, rigF = !sil && !far;
+  const FG = { R, line, spl, pt, fillP, strokeP, tone, lum, gr, clipOf, ink, sil, far, C, s, ow, phi, kR, FD, FWv, fd };
+  const flagAt = (Xs, Ht, fw, fh, design, name, off, ex) => flagCloth(FG, Object.assign({ X: Xs + fd * off, Ht, fw, fh, design, name,
+    km: design === 'jolly' ? 'ship-flag-black' : design === 'pennant' ? sp.pennant : 'linen', rag: sp.growth || cond === 'torn', hw: far ? 0 : (design === 'pennant' ? .22 : .3) * Lu }, ex || {}));
+  // the halyard: from the sheave at `top` to the head of the hoist, from its foot down to `bot`; toggles at the corners
+  const halyard = (X, Ht, fh, top, bot) => !rigF ? '' : strokeP(seg(top, [X, Ht]) + seg([X, Ht - fh], bot), ropeL, rw(.13), ' opacity=".9"')
+    + `<g fill="${ropeD}">${dot(X, Ht, .17 * Lu) + '/>' + dot(X, Ht - fh, .17 * Lu) + '/>'}</g>`;
+  const pennantAt = (t, fw, fh, name, ex) => { const X = t[0] + fd * .2, Ht = t[1] + 1.2;   // a pennant on its stick, hoisted to the truck
+    return (rigF ? strokeP(seg([X, Ht + .25 * Lu], [X, Ht - fh - .2 * Lu]), tone(sp.spar, If), rw(.22)) + strokeP(seg([X, Ht + .25 * Lu], [t[0], t[1] - .1]), ropeL, rw(.12), ' opacity=".85"') : '')
+      + flagAt(t[0], Ht, fw, fh, 'pennant', name, .2, ex); };
   let flags = '';
   { const main = masts.reduce((a, b) => b.m.H > a.m.H ? b : a), t = main.A(1), fore = masts[0], z = Lu;
-    if (sp.flag === 'pennant') flags += flagAt(t[0] - .2, t[1] + 1.2, 22 * z, 2.2 * z, 'pennant', 'pen');
-    if (sp.flag === 'pennant' && sp.forePennant && fore !== main) { const ft = fore.A(1); flags += flagAt(ft[0] - .2, ft[1] + 1, 13 * z, 1.6 * z, 'pennant', 'penF'); }
-    else { flags += strokeP(seg(t, [t[0], t[1] + 6.6 * z]), ropeD, rw(.34)) + flagAt(t[0] - .15, t[1] + 6.4 * z, 9.5 * z, 5.6 * z, sp.flag, 'flag'); if (fore !== main) { const ft = fore.A(1); flags += flagAt(ft[0] - .2, ft[1] + 1, 11 * z, 1.7 * z, 'pennant', 'pen'); } }
-    if (sp.ensign) { const k = sp.ensignK || 1, b = [xAft + sp.tw[0] * .92, hTop + .2], e = [b[0] + 4 * k, b[1] + 16 * k]; flags += strokeP(seg(b, e), tone(sp.spar, If), rw(.42 * Math.sqrt(k))) + flagAt(e[0] - .3, e[1] - .3, 15 * k, 9 * k, sp.ensign, 'ens'); } }
+    if (sp.flag === 'pennant') flags += pennantAt(t, 22 * z, 2.2 * z, 'pen', { fork: 1 });
+    if (sp.flag === 'pennant' && sp.forePennant && fore !== main) flags += pennantAt(fore.A(1), 13 * z, 1.6 * z, 'penF');
+    else if (sp.flag !== 'pennant') { const top = [t[0], t[1] + 6.6 * z], Xf = t[0] + fd * .15, Hf = t[1] + 6.4 * z;   // the flag on its staff above the main truck
+      flags += strokeP(seg(t, top), ropeD, rw(.34)) + (rigF ? dot(top[0], top[1] + .1 * z, .34 * z) + ` fill="${tone(sp.spar, If + .2)}"/>` : '');   // the staff and its truck
+      flags += halyard(Xf, Hf, 5.6 * z, [t[0] + fd * .08, top[1]], [t[0] + fd * .08, t[1] + .2]) + flagAt(t[0], Hf, 9.5 * z, 5.6 * z, sp.flag, 'flag', .15);
+      if (fore !== main) flags += pennantAt(fore.A(1), 11 * z, 1.7 * z, 'pen'); }
+    if (sp.ensign) { const k = sp.ensignK || 1, b = [xAft + sp.tw[0] * .92, hTop + .2], e = [b[0] + 4 * k, b[1] + 16 * k], Xe = e[0] + fd * .3, He = e[1] - .3;
+      flags += strokeP(seg(b, e), tone(sp.spar, If), rw(.42 * Math.sqrt(k))) + halyard(Xe, He, 9 * k, [e[0] + fd * .12, e[1]], [lerp(b[0], e[0], .5) + fd * .15, lerp(b[1], e[1], .5)])
+        + flagAt(e[0], He, 15 * k, 9 * k, sp.ensign, 'ens', .3); } }
 
   // ——— growth of the Dutchman: weed hanging from every edge, shells, lumps that break the outline ———
   let growA = '', growB = '';
@@ -1054,7 +1114,8 @@ function build(u, L, o, mode) {
  * (positive: the bow down, the masts lean ahead); sails: 'full' | 'reefed' | 'furled'; detail: 'near' | 'mid' |
  * 'far' (far: no small things and no outline, the tones go to the sky's tone at the horizon); wake: foam at the
  * stem and along the side, the wake astern; reflect: the reflection straight under the ship (env.reflection);
- * lights: light in the stern windows and in the lantern; seed. Returns one <g>.
+ * lights: light in the stern windows and in the lantern; wind: -1 | 1 — the wind's sign in the scene, where the flags
+ * and pennants fly (default: to the bow, with the wind that fills the sails; shipWind(opts) gives it); seed. Returns one <g>.
  */
 function ship(u, L, o = {}) {
   const b = build(u, L, o, 'color'), { sp, s, dir, x0, y0, hb, seed, Lu, phi, kR } = b, Rr = rng(seed + 77), far = o.detail === 'far';
@@ -1120,6 +1181,39 @@ function ship(u, L, o = {}) {
   return `<g>${out}</g>`;
 }
 
+/** shipWind(opts) -> -1 | 1 — the sign of the wind in the scene for a ship drawn with these opts (opts.wind, else to
+ *  the bow: -1 without flip, 1 with flip): pass it to smoke, fire and splash so they drift the same way as the flags. */
+function shipWind(o = {}) { return o.wind ? Math.sign(o.wind) : o.flip ? 1 : -1; }
+
+/**
+ * shipFlag(u, L, opts) — one flag or pennant alone, drawn as on the ship (flagCloth): for stands and close views.
+ * opts: x, y — the head of the hoist in the scene; scale; design: 'jolly' | 'company' | 'merchant' | 'trade' | 'plain'
+ * | 'pennant'; w, h — length and height of the cloth (9.5 × 5.6, a pennant 22 × 2.2); wind: -1 | 1 (-1 — to the left);
+ * color — the pennant's material ('ship-flag-red'); torn; fork — a split tail of a pennant; staff — the length of
+ * the staff under the hoist (0 — none); detail ('far' — no heading and halyard); seed. Returns one <g>.
+ */
+function shipFlag(u, L, o = {}) {
+  const s = o.scale || 1, x0 = o.x || 0, y0 = o.y || 0, design = o.design || 'jolly', pen = design === 'pennant', fd = o.wind > 0 ? 1 : -1, seed = o.seed != null ? o.seed : 7, far = o.detail === 'far';
+  const pt = (X, H) => [x0 + s * X, y0 - s * H], pp = (X, H) => { const p = pt(X, H); return f(p[0]) + ' ' + f(p[1]); };
+  const line = pts => 'M' + pts.map(p => pp(p[0], p[1])).join('L'), seg = (A, B) => line([A, B]);
+  const spl = (pts, closed) => { const n = pts.length, gp = i => closed ? pts[(i + n) % n] : pts[Math.min(n - 1, Math.max(0, i))]; let d = 'M' + pp(...pts[0]);
+    for (let i = 0; i < (closed ? n : n - 1); i++) { const p0 = gp(i - 1), p1 = gp(i), p2 = gp(i + 1), p3 = gp(i + 2); d += 'C' + pp(p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6) + ' ' + pp(p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6) + ' ' + pp(p2[0], p2[1]); }
+    return d + (closed ? 'Z' : ''); };
+  const dC = L.at(x0, y0), lum = n => (n[0] * dC.dx - n[1] * dC.dy + n[2] * dC.dz) / (Math.hypot(n[0], n[1], n[2]) || 1), tone = (k, I) => L.tone(k, clamp(I, -1, 1), x0, y0);
+  let defs = '';
+  const fillP = (d, paint) => `<path d="${d}" fill="${paint}"/>`, strokeP = (d, paint, w, extra = '') => `<path d="${d}" fill="none" stroke="${paint}" stroke-width="${f(w)}"${extra}/>`;
+  const gr = (A, B, stops) => { const id = nid('hg', u), a = pt(A[0], A[1]), b = pt(B[0], B[1]); defs += linGrad(id, a[0], a[1], b[0], b[1], stops); return `url(#${id})`; };
+  const clipOf = d => { const id = nid('hc', u); defs += `<clipPath id="${id}"><path d="${d}" clip-rule="evenodd"/></clipPath>`; return id; };
+  const g = { R: name => rng(seed * 7919 + strHash(name) % 65521), line, spl, pt, fillP, strokeP, tone, lum, gr, clipOf, ink: k => tone(k, -.8), sil: false, far, C: '#000', s, ow: 0, phi: 0, kR: 0, FD: 1, FWv: 1, fd };
+  const w = o.w || (pen ? 22 : 9.5), h = o.h || (pen ? 2.2 : 5.6), If = lum([0, 0, 1]), ropeL = tone('rope', If - .1), ropeD = mix(tone('tar', If * .5), '#17110d', .35), X = fd * (pen ? .2 : .15);
+  let rig = '';
+  if (o.staff) rig += strokeP(seg([0, .3], [0, -h - o.staff]), ropeD, .34 * s) + `<circle cx="${f(x0)}" cy="${f(y0 - .3 * s)}" r="${f(.34 * s)}" fill="${tone('oak', If + .2)}"/>`;
+  if (!far) rig += strokeP(seg([fd * .08, .3], [X, 0]) + seg([X, -h], [fd * .08, -h - (o.staff ? o.staff * .8 : 1.5)]), ropeL, .13 * s, ' opacity=".9"')
+    + `<g fill="${ropeD}"><circle cx="${f(pt(X, 0)[0])}" cy="${f(pt(X, 0)[1])}" r="${f(.17 * s)}"/><circle cx="${f(pt(X, -h)[0])}" cy="${f(pt(X, -h)[1])}" r="${f(.17 * s)}"/></g>`;
+  const cloth = flagCloth(g, { X, Ht: 0, fw: w, fh: h, design, name: 'flag', km: design === 'jolly' ? 'ship-flag-black' : pen ? (o.color || 'ship-flag-red') : 'linen', rag: !!o.torn, fork: o.fork, hw: far ? 0 : pen ? .22 : .3 });
+  return `<g><defs>${defs}</defs>${rig}${cloth}</g>`;
+}
+
 /**
  * shipSilhouette(kind, opts) — the same ship in one flat tone, without colour, flag designs, water and background:
  * for the blind check of the silhouettes. opts: x, y, scale, flip, heel, sails, seed, color ('#1b1d22'), u.
@@ -1133,4 +1227,4 @@ function shipSilhouette(kind, o = {}) {
  *  rail, nearRail(X) / farRail(X) — scene points of the near and the far rail, masts: [{ x, H, top }], phi, s, y0 }. */
 function shipGeom(kind, o = {}) { const b = build(o.u || 'geo', makeLight(LIGHTS.endeavour), Object.assign({}, o, { kind }), 'sil'); return Object.assign({ phi: b.phi, s: b.s, y0: b.y0, x0: b.x0, hb: b.hb }, b.geom); }
 
-module.exports = { ship, shipSilhouette, shipBox, shipGeom, SHIP_SPECS: SPECS };
+module.exports = { ship, shipSilhouette, shipBox, shipGeom, shipFlag, shipWind, SHIP_SPECS: SPECS };
