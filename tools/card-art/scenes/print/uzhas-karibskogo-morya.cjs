@@ -28,9 +28,9 @@ const FIG = { x: 80, y: 46, s: 1.42 };                               // where hi
 const light = { time: 'dusk', haze: .35, key: { type: 'point', x: FIRE.x, y: FIRE.y - 6, h: 3, gy: FIRE.y + 4, color: '#ff8a3a', power: 1, radius: 170, z: .2 },
   fill: { color: '#3a1420', power: .4 }, rim: { az: 10, color: '#ffb070', power: .6 } };
 const skel = { horizon: HZ, eye: 4, light: 'the burning sea ahead (key, point low on the water, contre-jour on the captain); the red night (fill)', items: [
-  ['captain', 40, 200, 90, 176, 'our forecastle, behind the bulwark: seen from behind, head at y 40'],
-  ['shroud', 108, RAIL, 44, 136, 'from the channel up out of the top; his right fist round it'],
-  ['cutlass', 14, 124, 42, 22, 'in his left fist, low'],
+  ['captain', 22, 230, 120, 210, 'our forecastle, in front of the bulwark: seen from behind, his head at (80, 46), drawn at 1.42'],
+  ['shroud', 128, 130, 70, 140, 'from the channel at our rail up out of the top; his right fist round it at about (151, 60)'],
+  ['cutlass', 0, 132, 60, 14, 'in his left fist, low, the blade out to the left'],
   ['enemy', 136, EN.y, 50, 50, 'water: across the fire'],
   ['fires', 0, 118, 200, 24, 'on the water between'],
   ['bulwark', -10, 170, 220, 44, 'the near side']] };
