@@ -25,7 +25,7 @@ const pr = (X, Y, Z) => [VX + FOC * X / Z, VY + FOC * Y / Z];
 const GR = { x0: -.6, x1: .6, z0: 1.7, z1: 2.9 };        // the grating in the deck overhead
 const light = { time: 'night', haze: .4, key: { type: 'point', x: 100, y: 4, h: 3, gy: 136, color: '#fff0d4', power: 1, radius: 170 },
   fill: { color: '#3a3444', power: .28 }, rim: { az: 0, color: '#ffe8c0', power: .3 } };
-const PP = [89, 60];                                     // the officer's pinch on the drawstring (thumb and index pads)
+const PP = [87, 65];                                     // the officer's pinch on the drawstring (thumb and index pads)
 const TIE = [95, 71];                                    // the purse's neck (the tie)
 const BOT = [98, 106];                                   // the purse's bottom, in the boatswain's palm
 const HEAD = { x: 100, y: 132, rx: 66, ry: 11 };         // the barrel head the deal is struck over
@@ -137,7 +137,7 @@ function deal(u, L, R) {
   // seen from the thumb side, the back of the hand up: the index bends down, its pad meets the thumb's pad (the cord
   // between them), the middle and ring fingers half bent behind, the little finger lifted
   const OA = 10, PL = [5.58, -1.32, -3.86];   // the hand's direction (deg); the pinch between the pads (local)
-  const oo = { a: OA, s: 5.6, m: -1, roll: 72, pitch: 0, pose: 'pinch', tone: OFF, light: [-.25, -.97], sw: .4, palmW: .86, wristW: .8, fingerW: .82,
+  const oo = { a: OA, s: 5.0, m: -1, roll: 72, pitch: 0, pose: 'pinch', tone: OFF, light: [-.25, -.97], sw: .4, palmW: .86, wristW: .8, fingerW: .82,
     flex: [[35, 55, 20], [30, 45, 25], [34, 52, 28], [14, 28, 16]], yaw: [0, 3, 6, 11],
     thumbJ: [[1.25, -1.25, -.78], [2.55, -2.0, -1.75], [3.85, -1.85, -2.75], [5.18, -1.45, -3.78]] };
   const ho0 = H.hand3(u, { ...oo, at: [0, 0] }), p0 = ho0.P(...PL), ho = H.hand3(u, { ...oo, at: [PP[0] - p0[0], PP[1] - p0[1]] });

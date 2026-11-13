@@ -45,9 +45,9 @@ module.exports = { name: 'Приказ лорда Беккета', kind: 'deck',
     let bg = K.sky(u, L, { horizon: HZ });
     for (const [x, y, w, h, sd, fr] of [[150, 26, 60, 9, 4, .25], [40, 58, 46, 6, 7, .5], [176, 64, 40, 5, 2, .6], [96, 78, 50, 4, 9, .75]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
     bg += K.water(u, L, { horizon: HZ, bottom: BT + 2, swell: .3, seed: 5, glitter: false });
-    bg += K.ship(u, L, { kind: 'dutch', x: ALLY.x, y: ALLY.y, scale: ALLY.scale, flip: true, sails: 'full', detail: 'mid', air: .12, seed: 4 });   // less haze: the ally must read
+    bg += K.ship(u, L, { kind: 'dutch', x: ALLY.x, y: ALLY.y, scale: ALLY.scale, flip: true, sails: 'full', detail: 'mid', air: .05, seed: 4 });   // less haze: the ally must read
     { const b = K.shipBox('dutch', { x: ALLY.x, y: ALLY.y, scale: ALLY.scale, flip: true }), top = [ALLY.x + 1, b.top + 4];
-      bg += hoist(u, top, [ALLY.x + 17, ALLY.y - 7], 3, 3.3, 3, 1, 1); }   // her answering hoist, big enough to read
+      bg += hoist(u, top, [ALLY.x + 18, ALLY.y - 6], 3, 4, 3, 1, 1); }   // her answering hoist, big enough to read
     // ——— the deck: the bulwark across, the planks in perspective, the entry port at the right ———
     bg += deck(u, L, R);
     // ——— the soldiers, far to near, each with his shadow on the planks ———
