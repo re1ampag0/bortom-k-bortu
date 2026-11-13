@@ -59,7 +59,7 @@ function pour(u, L, x, y0, y1, w, seed, o = {}) {
     for (let i = 0; i < 8; i++) { if (i > 3 && R() < .35) continue; s += `<path d="M${P2(pts[i])}L${P2(pts[i + 1])}" stroke="#e8fff6" stroke-width="${f(Math.max(.14, w * .16 * (1 - i / 9)))}" opacity="${f((.42 - i * .035) * op)}" stroke-linecap="round"/>`; }
     const e = pts[8]; for (let k = 0; k < 4; k++) { const r = .18 + R() * .3; s += `<ellipse cx="${f(e[0] + (R() - .5) * 1.6)}" cy="${f(e[1] + 1 + k * 2.2 + R())}" rx="${f(r)}" ry="${f(r * 1.8)}" fill="#effff8" opacity="${f(.35 + R() * .35)}"/>`; } }
   // spray where it lands: a low puff and drops thrown up
-  if (!o.noSplash) { s += K.foam(u, { x: X(1), y: y1 + .2, w: w * 1.6 + 3, h: 1.2, seed: seed % 9, L });
+  if (!o.noSplash) {
     for (let i = 0; i < 7; i++) { const r = .18 + R() * .35; s += `<circle cx="${f(X(1) + (R() - .5) * (w + 7))}" cy="${f(y1 - R() * 6)}" r="${f(r)}" fill="#f0fff8" opacity="${f(.3 + R() * .4)}"/>`; } }
   return s;
 }
@@ -98,7 +98,7 @@ module.exports = { name: 'Уйти на глубину', kind: 'deck', status: '
     // she is soaked: water pours off her raised stern — off the rail, out of the gallery, off the rudder
     let falls = '';
     for (const [X, Hh, w, sd, dr] of [[44, 21, 4.5, 11, -1.5], [38, 19, 3.4, 12, -1], [31, 17.5, 3, 13, -.8], [24, 16.5, 2.6, 14, -.6], [17, 16, 2.2, 15, -.4], [41, 9, 2.6, 16, -1.8], [46.5, 2, 3.6, 17, -2.2]]) {
-      const p = pt(DU, X, Hh); if (p[1] < SEA - 4) falls += pour(u, L, p[0], p[1], SEA, w, sd, { drift: dr, op: 1.1 }); }
+      const p = pt(DU, X, Hh); if (p[1] < SEA - 4) falls += pour(u, L, p[0], p[1], SEA, w, sd, { drift: dr, op: .75 }); }
     // ——— the ring of foam and the spiral of streaks running in to her ———
     let sea = '';
     { const ring = (rx, ry, sw, op, dash) => `<ellipse cx="${FUN.x}" cy="${FUN.y}" rx="${rx}" ry="${ry}" fill="none" stroke="#effff8" stroke-width="${sw}" opacity="${op}"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`;

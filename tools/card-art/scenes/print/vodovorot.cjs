@@ -18,14 +18,14 @@ const { motes } = PK;
 
 const HZ = 78;
 const EN = { kind: 'endeavour', x: 158, y: 100, scale: .42, heel: 6 };            // bow left, dipping towards the funnel
-const DU = { kind: 'dutch', x: 32, y: 87, scale: .42 };                           // far left, in the rain
+const DU = { kind: 'dutch', x: 34, y: 90, scale: .5 };                           // far left, in the rain
 const V = { x: 94, y: 104, rx: 58, ry: 13 };                                      // the funnel's rim
 const light = { time: 'night', haze: .55, key: { type: 'moon', x: 92, y: 14, el: 40, color: '#d8fff0', power: .7 }, fill: { color: '#20403a', power: .5 },
   rim: { az: 0, color: '#d8fff0', power: .5 }, locals: [{ x: 140, y: 94, color: '#ffb060', power: .45, radius: 26 }] };
 const skel = { horizon: HZ, eye: 3, light: 'the lightning in the clouds over the funnel (key from above, a little behind) + the gun flashes on the right', items: [
   ['funnel', V.x - V.rx, V.y + V.ry, 2 * V.rx, 2 * V.ry + 4, 'the sea between the ships'], ['Endeavour, heel 6', 136, 100, 46, 44, 'the sea right of the funnel'],
-  ['Dutchman', 14, 87, 38, 30, 'far sea left, in the rain'], ['ball 1 + corkscrew trail', 70, 112, 74, 34, 'in the air, over the funnel'],
-  ['ball 2', 112, 100, 6, 6, 'on the far wall of the funnel'], ['ball 3 + splash', 92, 110, 10, 8, 'in the eye'], ['lightning', 82, 46, 16, 46, 'the clouds'],
+  ['Dutchman', 10, 90, 48, 34, 'far sea left, in the rain'], ['ball 1 + corkscrew trail', 70, 112, 74, 34, 'in the air, over the funnel'],
+  ['ball 2', 64, 104, 8, 8, 'on the far wall of the funnel (left)'], ['ball 3 + splash', 92, 110, 10, 8, 'in the eye'], ['lightning', 82, 46, 16, 46, 'the clouds'],
   ['planks', 56, 112, 80, 14, 'on the funnel wall'], ['near sea', 0, 130, 200, 160, 'under the glass']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
@@ -95,9 +95,9 @@ module.exports = { name: 'Водоворот', kind: 'deck', status: 'draft', ca
       fun += `<path d="${sp(Array.from({ length: 25 }, (_, i) => Pf(0, i / 24 * Math.PI)))}" stroke="#effff8" stroke-width="1.6" fill="none" opacity=".6"/>`;
       for (let i = 0; i < 14; i++) { const t = (i + .5) / 14 * Math.PI * 2, p = Pf(0, t), w = 8 + R() * 6 - 4 * Math.abs(Math.cos(t)); fun += K.foam(u, { x: p[0], y: p[1], w, h: Math.sin(t) > 0 ? 1.8 : 1.1, seed: 60 + i, L }); }
       // the sea drawn in towards it: long streaks of foam on the outside, curving in
-      for (let a = 0; a < 6; a++) { const t0 = a / 6 * Math.PI * 2 + R() * .5, pts = [];
-        for (let i = 0; i <= 18; i++) { const q = i / 18, t = t0 - q * 1.9, kk = lerp(1.9, 1.02, Math.pow(q, .8)); pts.push([V.x + Math.cos(t) * V.rx * kk, V.y + Math.sin(t) * V.ry * kk * (Math.sin(t) > 0 ? 1.3 : 1)]); }
-        fun += `<path d="${sp(pts)}" stroke="#d8fff0" stroke-width=".7" fill="none" opacity="${f(.22 + R() * .2)}" stroke-dasharray="${f(14 + R() * 10)} ${f(3 + R() * 4)} ${f(5 + R() * 5)} ${f(2 + R() * 3)}" stroke-linecap="round"/>`; }
+      for (let a = 0; a < 5; a++) { const t0 = a / 5 * Math.PI * 2 + R() * .5, pts = [];
+        for (let i = 0; i <= 18; i++) { const q = i / 18, t = t0 - q * 2.2, kk = lerp(2.5, 1.02, Math.pow(q, .7)); pts.push([V.x + Math.cos(t) * V.rx * kk, V.y + Math.sin(t) * V.ry * kk * (Math.sin(t) > 0 ? 1.3 : 1)]); }
+        fun += `<path d="${sp(pts)}" stroke="#d8fff0" stroke-width=".7" fill="none" opacity="${f(.14 + R() * .14)}" stroke-dasharray="${f(14 + R() * 10)} ${f(3 + R() * 4)} ${f(5 + R() * 5)} ${f(2 + R() * 3)}" stroke-linecap="round"/>`; }
       // broken planks drawn round on the far wall, turned along the flow
       for (const [k, t, l] of [[.3, -2.5, 9], [.55, -.6, 7], [.2, -1.4, 6]]) { const p = Pf(k, t), q = Pf(k, t - .15), a = Math.atan2(q[1] - p[1], q[0] - p[0]) * 180 / Math.PI;
         fun += `<g transform="translate(${P2(p)}) rotate(${f(a)})"><path d="M${-l / 2} -1.1L${l / 2 - 1} -1.2L${l / 2} 0L${l / 2 - .6} 1.1L${-l / 2} 1z" fill="#5a4030" stroke="#1a100a" stroke-width=".3"/><path d="M${-l / 2} -.3H${l / 2 - 1}" stroke="#2a1a10" stroke-width=".25"/><path d="M${-l / 2} -1H${l / 2 - 1}" stroke="#c8e8d8" stroke-width=".25" opacity=".6"/></g>`
@@ -124,15 +124,15 @@ module.exports = { name: 'Водоворот', kind: 'deck', status: 'draft', ca
       const nP = pts.length, end = Math.round(nP * .8);
       for (let i = 0; i < end; i++) { const q = i / end;
         sh += `<path d="M${P2(pts[i])}L${P2(pts[i + 1])}" stroke="#f4fffa" stroke-width="${f(.45 + q * 1.7)}" opacity="${f((.2 + q * .65) * (far[i] ? .45 : 1))}" stroke-linecap="round"/>`; }
-      sh += ball(pts[end], 2.6);
+      sh += ball(pts[end], 3);
       // the rest of its way: faint dots down to the eye
       for (let i = end + 2; i < nP; i += 2) sh += `<circle cx="${f(pts[i][0])}" cy="${f(pts[i][1])}" r=".4" fill="#effff8" opacity=".35"/>`; }
     // ball 2: running round the far wall, low down, its wake a spiral of spray behind it
-    { const k = .5, t = -2.0, b = Pf(k, t);
-      for (let i = 1; i <= 16; i++) { const tt = t + i * .09, kk = k - i * .016, p = Pf(kk, tt), w = 1.8 * (1 - i / 17);
+    { const k = .42, t = -2.75, b = Pf(k, t);
+      for (let i = 1; i <= 16; i++) { const tt = t + i * .09, kk = k - i * .016, p = Pf(kk, tt), w = 2.4 * (1 - i / 17);
         sh += `<ellipse cx="${f(p[0])}" cy="${f(p[1] - w * .4)}" rx="${f(w * 1.3)}" ry="${f(w * .55)}" fill="#effff8" opacity="${f(.65 * (1 - i / 17))}"/>`; }
       for (let i = 0; i < 9; i++) { const r = .2 + R() * .3; sh += `<circle cx="${f(b[0] + 2 + R() * 6)}" cy="${f(b[1] - 1 - R() * 4)}" r="${f(r)}" fill="#effff8" opacity="${f(.4 + R() * .4)}"/>`; }
-      sh += ball([b[0], b[1] - 1.8], 2.1); }
+      sh += ball([b[0], b[1] - 2], 2.4); }
     // ball 3: gone into the eye — a thin jet and a ring of spray where it went under
     { const c1 = C(1), e = [c1.cx + 1, c1.cy - .4];
       sh += `<path d="M${f(e[0] - .4)} ${f(e[1])}q-.5 -3 .2 -6M${f(e[0] + .6)} ${f(e[1])}q.8 -2.4 1.6 -4" stroke="#effff8" stroke-width=".45" fill="none" opacity=".7" stroke-linecap="round"/>`;
