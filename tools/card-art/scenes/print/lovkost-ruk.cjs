@@ -1,16 +1,16 @@
 // «Ловкость рук» (Жемчужина, РЕАКЦИЯ: карта противника после розыгрыша уходит вам в руку), refined from the
 // accepted second-round scene (portrait-pearl.cjs SCENES['Ловкость рук']): a tavern at night, the brick wall with a
 // lantern on an iron bracket and a shelf of bottles, a window on the moonlit harbour, the counter with stacks of coins.
-// Jack's right hand in a lace cuff rises from below with a card caught between the index and the middle finger — the
-// card has just flown from the hand of an enemy officer at the counter. From the first round and the brief we take
-// the find of the two hands: the officer's hand in a red coat sleeve with a blue facing still holds his fan, two cards
-// left and a gap between his fingers where the third was; he has not noticed. The card's path is a blurred streak
+// Jack's hand in a wide lace cuff rises from below with a card caught between the index and the middle finger — the
+// card has just flown from the fan of an enemy officer at the counter. From the first round and the brief we take
+// the find of the two hands: the officer's hand in a red coat sleeve with a blue facing still holds his fan — three
+// cards and a wide gap where the fourth was; he has not noticed. The card's path runs from that gap: a blurred streak
 // with two fading after-images.
 // Fixed against the accepted scene: the hand was hand-drawn flat with stiff straight fingers — now a jointed hand
-// (people.cjs hand3) with knuckles, nails and the ring and little finger curled into the palm, the middle finger
-// behind the card, the index in front; the lace cuff shows above the glass; the card on the counter was a pattern
-// lying flat with nothing to explain the flight — now it is taken from a person; the light: the lantern (key, warm,
-// upper left) and the moon through the window (cold rim on the right edges, a pale patch on the counter).
+// (people.cjs hand3) seen from the palm: slim, narrowing to the wrist, the ring and little finger curled onto the
+// palm with their nails to us, the thumb laid along the palm from the wrist to them; the officer's hand is larger,
+// the fan open with the gap; the light: the lantern (key, warm, upper left) and the moon through the window (cold
+// rim on the right edges, a pale patch on the counter).
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -113,12 +113,15 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
     }
     // ——— the officer's arm on the counter from the right edge: red coat, blue cuff with gilt buttons, a white shirt
     // frill at the wrist; his hand holds the fan — two cards left, a gap between the fingers where the third one was ———
-    let off = '';
-    const OW = [170, 106], OA = 194, OS = 4.8;
+    let off = '', PIV = null;
+    const FAN = [-56, -34, -10, 14], GAP = -10;   // the fan's cards (degrees from upright); the one at GAP is gone
+    const OW = [178, 114], OA = 198, OS = 7.2, OK = 1.36;   // his wrist, the hand's direction and size, the sleeve's scale
     { const red = { lit: '#c84a3a', half: '#8a2a20', shadow: '#3e0e0c', outline: '#1a0606' }, blue = { lit: '#4a5a9a', half: '#26305e', shadow: '#0e1230', outline: '#06081a' };
       const shirt = { lit: '#fff8ec', half: '#d8ccb8', shadow: '#7a6e5e', outline: '#2a2218' };
       const skin = { lit: '#f0c6a0', half: '#c48a64', shadow: '#6a3e2a', outline: '#2a160c' };
-      // the sleeve along the counter and the facing (cuff) turned back, its buttons
+      // the sleeve along the counter and the facing (cuff) turned back, its buttons (drawn at the old size, scaled up
+      // about the old wrist onto the new one)
+      off += `<g transform="translate(${OW[0]} ${OW[1]}) scale(${OK}) translate(-170 -106)">`;
       off += `<path d="M178 ${CT + 18}Q194 ${CT + 21} 214 ${CT + 18}" stroke="#000" stroke-width="7" opacity=".28" fill="none"/>`;
       off += H.cloth(u, { spine: [[218, 116], [196, 112], [178.6, 108.2]], w: [16, 14.6, 13], tone: red, lit: -1, rim: '#b8ccff', rimSide: 1, rimOp: .45, seed: 5, drapes: 2 });
       off += H.cloth(u, { spine: [[184.6, 109.6], [176, 107.2]], w: [16.6, 16], tone: blue, lit: -1, folds: false, sw: .45 })
@@ -128,28 +131,37 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
       { let fr = ''; for (let k = 0; k < 7; k++) { const t = k / 6, y = lerp(100.4, 112.2, t), x = 175.4 + Math.sin(t * Math.PI) * 1.4;
           fr += `<path d="M${f(x)} ${f(y)}q-3.4 ${f(.6 - R() * .4)} -4.4 ${f(1.6)}q2.2 .8 4.4 .2z" fill="${k % 2 ? shirt.half : shirt.lit}" stroke="${shirt.shadow}" stroke-width=".25"/>`; }
         off += fr; }
-      // his hand: the back to us, the fingers loosely bent over the fan, the thumb behind it
-      const hd = H.hand3(u, { at: OW, a: OA, s: OS, m: 1, roll: 24, pitch: 10, pose: 'custom', flex: [[30, 40, 20], [44, 56, 30], [52, 64, 36], [58, 70, 40]], yaw: [-12, 2, 6, 10],
-        thumbFlex: [6, 14, 10], thumbSpread: 10, tone: skin, light: [-.6, -.8], backFingers: ['thumb'], sw: .32 });
-      const pv = hd.P(5.2, -.6, -1.0);
-      off += hd.back + card(u, [pv[0] - 1, pv[1] - 8.6], -8, .72, { shade: .35 }) + card(u, [pv[0] + 4, pv[1] - 7.6], 14, .72, { shade: .2 }) + hd.front;
-      // a gold ring with a stone on his little finger
-      { const p = hd.P(5.4, 1.5, -.9); off += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="1.1" ry=".55" transform="rotate(${OA + 90} ${f(p[0])} ${f(p[1])})" fill="url(#brass${u})" stroke="#4a3208" stroke-width=".2"/>`; }
+      off += `</g>`;
+      // his hand holds the fan as a card player does: the palm towards the backs of the cards (and us), the fingers
+      // curled over the foot of the fan, the thumb behind it on the faces. Three cards and a wide gap in the fan where
+      // the fourth was a moment ago
+      const hd = H.hand3(u, { at: OW, a: OA, s: OS, m: 1, roll: 160, pitch: 0, pose: 'custom', flex: [[46, 66, 40], [52, 72, 44], [58, 78, 46], [62, 84, 50]], yaw: [-6, 0, 4, 8],
+        thumbFlex: [10, 16, 10], thumbSpread: 0, tone: skin, light: [-.6, -.8], backFingers: ['thumb'], trueDorsal: true, sw: .36 });
+      PIV = hd.P(3.3, -.9, -1.2);
+      let fan = '';
+      for (const a of FAN) if (a !== GAP) fan += card(u, [PIV[0] + Math.sin(a * Math.PI / 180) * 19, PIV[1] - Math.cos(a * Math.PI / 180) * 19], a, .96, { shade: .25 + (a + 50) / 300 });
+      off += hd.back + fan + hd.front;
+      // a gold signet ring on his little finger
+      { const p = hd.joints[3][1]; off += K.shadeSphere(u, p[0] + .4, p[1] + .6, 1.3, L, 'brass', { outline: .25 }); }
     }
     // ——— the card's flight from his fan to Jack's fingers: a soft streak and two fading after-images ———
-    const JW = [98, 121], JA = -96, JS = 9.2;
-    const jh = H.hand3(u, { at: JW, a: JA, s: JS, m: 1, roll: 6, pitch: 4, pose: 'scissor', yaw: [-9, 4, 8, 12], thumbSpread: 6, thumbFlex: [0, 14, 12], tone: { lit: '#f6cca6', half: '#d29a72', shadow: '#7a4430', outline: '#3a1c10' },
-      light: [-.62, -.78], backFingers: [1], sw: .5, flex: [[4, 8, 6], [8, 10, 6], [72, 98, 56], [78, 96, 56]] });
-    const CC0 = jh.P(8.6, -1.0, -.42), CA = -12, CSC = 1.56, CC = [CC0[0] + 2, CC0[1] - 12];   // the card: centre, angle, scale
+    // Jack's (left) hand, the palm towards us: a slim hand narrowing to the wrist, the index and middle finger straight
+    // with the card between them, the ring and little finger curled down onto the palm, their nails to us, and the
+    // thumb laid across the palm from the wrist, its tip against the ring finger's nail
+    const JW = [98, 118], JA = -94, JS = 9.2;
+    const jh = H.hand3(u, { at: JW, a: JA, s: JS, m: -1, roll: 172, pitch: 6, pose: 'scissor', yaw: [-8, 5, 4, 8], tone: { lit: '#f6cca6', half: '#d29a72', shadow: '#7a4430', outline: '#3a1c10' },
+      light: [-.62, -.78], backFingers: [1], sw: .5, trueDorsal: true, palmW: .84, wristW: .8, fingerW: .92, flex: [[4, 8, 6], [8, 10, 6], [64, 96, 58], [70, 94, 56]],
+      thumbJ: [[.5, -1.4, -.8], [1.8, -1.05, -1.5], [2.6, -.4, -2.15], [3.15, .3, -2.75]], thumbOut: [0, 0, -1] });
+    const CC0 = jh.P(7.6, -.8, -.42), CA = -12, CSC = 1.56, CC = [CC0[0] + 1, CC0[1] - 14];   // the card: centre, angle, scale
     let fly = '';
-    { const a0 = [150, 84], a1 = [CC[0] + 8, CC[1] + 10], bf = blurF('fl' + u, 1.6), g = nid('fg', u);
+    { const ga = GAP * Math.PI / 180, a0 = [PIV[0] + Math.sin(ga) * 27, PIV[1] - Math.cos(ga) * 27], a1 = [CC[0] + 8, CC[1] + 10], bf = blurF('fl' + u, 1.6), g = nid('fg', u);
       fly += bf + `<defs>${linGrad(g, a0[0], a0[1], a1[0], a1[1], [[0, '#f0dcb0', 0], [1, '#f0dcb0', .5]])}</defs>`
         + `<path d="M${a0[0] - 2} ${a0[1] + 3}Q${f(lerp(a0[0], a1[0], .5) + 10)} ${f(lerp(a0[1], a1[1], .5) + 2)} ${f(a1[0] - 10)} ${f(a1[1] + 4)}L${f(a1[0] + 8)} ${f(a1[1] - 6)}Q${f(lerp(a0[0], a1[0], .5) + 18)} ${f(lerp(a0[1], a1[1], .5) - 8)} ${a0[0] + 3} ${a0[1] - 3}z" fill="url(#${g})" filter="url(#fl${u})"/>`
         + `<g filter="url(#fl${u})">${card(u, [lerp(a0[0], CC[0], .38) + 6, lerp(a0[1], CC[1], .38)], lerp(-70, CA, .38), lerp(.62, CSC, .38), { opacity: .12, shadow: false })}${card(u, [lerp(a0[0], CC[0], .68) + 5, lerp(a0[1], CC[1], .68)], lerp(-70, CA, .68), lerp(.62, CSC, .68), { opacity: .2, shadow: false })}</g>`
         + [[0, 0], [5, 4], [-4, 6]].map(([dx, dy]) => `<path d="M${f(a0[0] - 12 + dx)} ${f(a0[1] - 10 + dy)}q-8 -10 -18 -16" stroke="#fff0d0" stroke-width=".45" fill="none" opacity=".35" stroke-linecap="round"/>`).join(''); }
     // ——— Jack's arm: the dark blue coat sleeve from the bottom, the gold-braided cuff, the lace frills; the hand ———
     let arm = '';
-    { const g = nid('sv', u); arm += `<g transform="translate(0 -8)">`;
+    { const g = nid('sv', u); arm += `<g transform="translate(0 -12)">`;
       arm += `<defs>${linGrad(g, 70, 0, 132, 0, [[0, '#3c4c80', 1], [.38, '#1e2a50', 1], [1, '#080c1e', 1]])}</defs>`
         + `<path d="M76 146Q98 141 122 146L136 290H58z" fill="url(#${g})" stroke="#04060e" stroke-width=".6"/>`
         + `<path d="M64 196q22 -8 50 -2q-20 2 -32 8zM60 236q26 -10 60 -2q-26 2 -42 9z" fill="#04060e" opacity=".45"/><path d="M66 194q22 -7 46 -3M62 234q26 -8 56 -2" stroke="#5a6aa0" stroke-width=".8" fill="none" opacity=".4"/>`;
@@ -160,17 +172,17 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
       // three tiers of lace round the wrist, the top one fine, with its scalloped edge and the holes of the pattern
       const frill = (y0, w0, col, edge, ph, n) => { let d = `M${98 - w0} ${y0 + 3}`; for (let k = 0; k < n; k++) { const x = 98 - w0 + (k + .5) * 2 * w0 / n, yy = y0 - 1.4 - Math.sin(k * 1.7 + ph) * .9; d += `Q${f(x)} ${f(yy - 2)} ${f(x + w0 / n)} ${f(yy + .4)}`; }
         return `<path d="${d}L${98 + w0} ${y0 + 4.6}Q98 ${y0 + 2.4} ${98 - w0} ${y0 + 3}z" fill="${col}" stroke="${edge}" stroke-width=".3"/>`; };
-      arm += frill(138.4, 17, '#e4dcc8', '#8a806a', 0, 13) + frill(135.4, 15.6, '#f2ecdc', '#a0967e', 1.3, 12) + frill(132.2, 14.2, '#fbf7ec', '#b0a690', 2.6, 11)
-        + Array.from({ length: 16 }, (_, k) => `<circle cx="${f(86 + k * 1.6)}" cy="${f(134.6 + (k % 2) * 1.2)}" r=".35" fill="#9a907a" opacity=".7"/>`).join('')
-        + Array.from({ length: 12 }, (_, k) => `<path d="M${f(85 + k * 2.4)} ${f(131.4 + (k % 2) * .5)}q.6 2.4 .1 4.8" stroke="#c4baa4" stroke-width=".3" fill="none"/>`).join('');
+      arm += frill(139.4, 23, '#e4dcc8', '#8a806a', 0, 16) + frill(135.6, 21.4, '#f2ecdc', '#a0967e', 1.3, 15) + frill(131.6, 19.6, '#fbf7ec', '#b0a690', 2.6, 14)
+        + Array.from({ length: 22 }, (_, k) => `<circle cx="${f(81 + k * 1.6)}" cy="${f(134.2 + (k % 2) * 1.2)}" r=".35" fill="#9a907a" opacity=".7"/>`).join('')
+        + Array.from({ length: 16 }, (_, k) => `<path d="M${f(80 + k * 2.4)} ${f(130.8 + (k % 2) * .5)}q.6 2.4 .1 4.8" stroke="#c4baa4" stroke-width=".3" fill="none"/>`).join('');
       arm += `</g>`;
       // the hand over the lace: its back, the middle finger behind the card, the card, then the index finger and thumb
       arm += jh.back + card(u, CC, CA, CSC) + jh.front;
       // rings: a gold band with a red stone on the index finger, a plain one on the ring finger's knuckle
-      { const a = jh.P(5.9, -1.45, -.02), b = jh.P(5.9, -1.45, -.95); const c = [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5)];
+      { const a = jh.P(5.9, -1.22, -.02), b = jh.P(5.9, -1.22, -.95); const c = [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5)];
         arm += `<path d="M${f(c[0] - 5.2)} ${f(c[1] + .6)}Q${f(c[0])} ${f(c[1] + 2.6)} ${f(c[0] + 4.8)} ${f(c[1] + .2)}" stroke="url(#brass${u})" stroke-width="1.7" fill="none" stroke-linecap="round"/>`
           + `<path d="M${f(c[0] - 4.4)} ${f(c[1] + .2)}Q${f(c[0])} ${f(c[1] + 1.9)} ${f(c[0] + 4)} ${f(c[1] - .2)}" stroke="#fff4c0" stroke-width=".4" fill="none"/>`
-          + `<ellipse cx="${f(c[0] - .4)}" cy="${f(c[1] + 1.2)}" rx="1.9" ry="1.5" fill="#8a1420" stroke="#3a0608" stroke-width=".35"/><circle cx="${f(c[0] - 1)}" cy="${f(c[1] + .7)}" r=".55" fill="#ffc0c8"/>`; }
+          ; }
     }
     // ——— light: the lantern's glow and motes, the cold moonlight from the right, the dark round the edges ———
     let fg = K.localGlow(u, { x: FLAME.x, y: FLAME.y, color: '#ffc070', power: .9, radius: 24 })
