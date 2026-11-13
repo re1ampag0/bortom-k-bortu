@@ -18,7 +18,7 @@ const { glow, gloom, motes } = PK;
 
 const HZ = 100;                                   // the sea horizon
 const SX = 45, ST = 12;                           // the flagstaff: x, the truck
-const FX = SX + 1.6, FT = 15, FH = 42, FLN = 103; // the flag: hoist x, hoist top, hoist height, fly length (to the right)
+const FX = SX + 1.6, FT = 15, FH = 42, FLN = 99;  // the flag: hoist x, hoist top, hoist height, fly length (to the right)
 const RAIL = 112;                                 // the top of the bulwark (the capping rail)
 const MOON = { x: 116, y: 40 };
 const LAMP = { x: 74, y: 110.2, s: 1.05 };
@@ -27,8 +27,11 @@ const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON
   locals: [{ x: LAMP.x, y: LAMP.y - 8, color: '#ffc070', power: .75, radius: 42 }] };
 const REV = { kind: 'revenge', x: 104, y: 103, scale: .34, flip: true, sails: 'full', detail: 'mid', lights: true, wake: true, seed: 3 };
 const PRL = { kind: 'pearl', x: 165, y: 106, scale: .44, flip: true, sails: 'full', detail: 'mid', lights: true, wake: true, seed: 4 };
-const HAUL = [SX + 3.4, 97];                      // where the fist holds the hauling part of the halyard
-const HS = 2.3;                                  // the hand's size
+// the fist on the hauling part of the halyard, drawn in the hand's frame: origin the wrist, x toward the knuckles,
+// the thumb on the frame's -y side (on top); the halyard runs through the fist along the knuckle line at x = 15
+const WR = [35.5, 100], WA = -20 * Math.PI / 180;
+const HP = (x, y) => [WR[0] + x * Math.cos(WA) - y * Math.sin(WA), WR[1] + x * Math.sin(WA) + y * Math.cos(WA)];
+const HAUL = HP(15, -6.8), HAUL2 = HP(15, 5.9);   // where the halyard goes into the fist (over the index finger) and comes out
 const skel = { horizon: HZ, eye: 3, light: 'the moon behind the flag (key) + a lantern on the rail (local, warms the hand)', items: [
   ['flag', FX, FT + FH + 4, FLN, FH + 6, 'staff (halyard)'], ['staff', SX - 2, 136, 4, 124, 'bulwark (iron bands)'],
   ['revenge', 80, 103, 50, 36, 'water'], ['pearl', 131, 106, 69, 46, 'water'], ['lantern', LAMP.x - 6, LAMP.y, 12, 30, 'rail cap'],
@@ -48,7 +51,7 @@ function bigFlag(u, L) {
   // the torn fly: tongues of cloth of different length with notches between them
   const fly = [], tips = [];
   for (let k = 1; k < 12; k++) { const v = k / 12, b = at(1, v);
-    if (k % 2) { const tip = [b[0] + 1 + R() * 5 + (k === 5 ? 6 : 0), b[1] + 1.2 + R()]; fly.push(tip); tips.push(tip); }
+    if (k % 2) { const tip = [b[0] + 1 + R() * 5 + (k === 5 ? 3 : 0), b[1] + 1.2 + R()]; fly.push(tip); tips.push(tip); }
     else fly.push([b[0] - 4 - R() * 7, b[1] + (R() - .5)]); }
   const outline = 'M' + top.map(P).join('L') + 'L' + fly.map(P).join('L') + 'L' + bot.slice().reverse().map(P).join('L') + 'Z';
   // the shot holes (the sky shows through), each a small torn star
@@ -104,7 +107,7 @@ function bigFlag(u, L) {
   s += '</g>';
   // round the holes: the frayed, lighter edge of the cloth; threads trail from the tongues of the fly
   for (const h of holes) s += `<path d="${h.d}" fill="none" stroke="#6a7088" stroke-width=".35" opacity=".8"/>`;
-  for (const p of tips) s += `<path d="M${f(p[0])} ${f(p[1])}q${f(2 + R() * 2)} ${f(R() - .2)} ${f(3 + R() * 3)} ${f(.6 + R())}" stroke="#2a2c36" stroke-width=".3" fill="none"/>`;
+  for (const p of tips) s += `<path d="M${f(p[0])} ${f(p[1])}q${f(1 + R())} ${f(.3 + R() * .5)} ${f(2 + R() * 1.4)} ${f(1.2 + R())}" stroke="#2a2c36" stroke-width=".3" fill="none"/>`;
   s += `<path d="M${f(FX)} ${f(FT - .2)}V${f(FT + FH + .2)}" stroke="#b8a888" stroke-width=".9"/><path d="M${f(FX - .3)} ${f(FT)}V${f(FT + FH)}" stroke="#ece2c8" stroke-width=".3" opacity=".7"/>`;
   return s;
 }
@@ -117,6 +120,45 @@ function shipFlag(u, top, w, h, seed) {
   return `<path d="M${pts.map(P).join('L')}L${f(top[0] + w + .8)} ${f(top[1] + 1 + h * .55)}L${bt.slice().reverse().map(P).join('L')}Z" fill="#101016" stroke="#9ab0d0" stroke-width=".25" stroke-opacity=".6"/>`
     + `<circle cx="${f(c[0])}" cy="${f(c[1] - .3)}" r="${f(h * .17)}" fill="#e6dfcc"/><path d="M${f(c[0] - h * .3)} ${f(c[1] - .1)}l${f(h * .6)} ${f(h * .32)}M${f(c[0] - h * .3)} ${f(c[1] + .2)}l${f(h * .6)} ${f(-h * .3)}" stroke="#e6dfcc" stroke-width="${f(h * .09)}"/>`
     + `<path d="M${f(top[0])} ${f(top[1])}V${f(top[1] + h + 3)}" stroke="#8a7a5a" stroke-width=".25"/>`;
+}
+
+// the fist round the halyard (the hand's frame, see HP): the back of the hand with its knuckles, four fingers closed
+// round the rope — their first joints cross in front of it and turn away behind it, each throwing a shade on the next
+// one down — and the thumb on the far side, its tip tucked behind the rope. The lantern on the right warms the
+// knuckles and the bends of the fingers; the moon rims the top.
+function fist(u, L, tn) {
+  const P = HP, Ps = a => a.map(p => P(p[0], p[1])), pth = (a, c = true) => H.sp(Ps(a), c);
+  const g = (id, a, b, st) => { const A = P(a[0], a[1]), B = P(b[0], b[1]); return linGrad(id, A[0], A[1], B[0], B[1], st); };
+  const bk = nid('hb', u), th = nid('ht', u), fid = [0, 1, 2, 3].map(i => nid('hf' + i, u));
+  const fins = [[-4.85, 3.0, 3.3], [-1.85, 3.05, 3.6], [1.1, 2.9, 3.3], [3.85, 2.55, 2.4]];   // [y, width, reach past the rope]
+  let s = '<defs>' + g(bk, [7, 5.6], [8, -6.6], [[0, tn.shadow, 1], [.3, tn.core, 1], [.62, tn.half, 1], [1, tn.lit, 1]])
+    + g(th, [10, -9.2], [10, -5.8], [[0, tn.lit, 1], [.45, tn.half, 1], [1, tn.shadow, 1]])
+    + fins.map(([y, w], i) => g(fid[i], [14, y - w / 2], [14, y + w / 2], [[0, mix(tn.half, tn.lit, .7), 1], [.4, tn.half, 1], [.8, tn.core, 1], [1, tn.shadow, 1]])).join('') + '</defs>';
+  // the fingers, the lowest first: each one's shade falls on the one under it
+  for (let i = fins.length - 1; i >= 0; i--) { const [y, w, e] = fins[i], t = y - w / 2, b = y + w / 2, x1 = 15 + e;
+    if (i < fins.length - 1) s += `<path d="${pth([[10.5, b - .2], [x1 - 1, b + .1], [x1 - .2, b + .5]], false)}" stroke="#1a0a04" stroke-width="1.3" fill="none" opacity=".5" stroke-linecap="round"/>`;
+    s += `<path d="${pth([[10.4, t], [13.5, t - .1], [x1 - 1.4, t + .1], [x1 - .1, y - w * .2], [x1 + .1, y + w * .15], [x1 - .9, b - .05], [13.5, b + .05], [10.4, b]])}" fill="url(#${fid[i]})" stroke="${tn.outline}" stroke-width=".38"/>`;
+    // the bend of the finger turning away behind the rope: the crease of the joint and the lantern's light on it
+    s += `<path d="${pth([[x1 - 2.1, t + .5], [x1 - 1.7, y], [x1 - 2, b - .5]], false)}" stroke="${tn.shadow}" stroke-width=".3" fill="none" opacity=".8"/>`;
+    s += `<path d="${pth([[x1 - 1.2, t + .35], [x1 - .3, y - w * .15], [x1 - .4, y + w * .2]], false)}" stroke="#ffd2a0" stroke-width=".45" fill="none" opacity=".55" stroke-linecap="round"/>`;
+    s += `<path d="${pth([[11.4, t + .45], [14, t + .35], [x1 - 1.6, t + .45]], false)}" stroke="${tn.lit}" stroke-width=".35" fill="none" opacity=".5"/>`; }
+  // the back of the hand: the knuckles stand up along its edge over the bases of the fingers
+  const back = [[-3.4, -4.3], [-1, -4.5], [3, -5.3], [7.5, -6.2], [10.6, -6.8], [12.4, -6.3], [13.1, -4.8], [12.6, -3.4], [13.3, -1.9], [12.8, -.4], [13.2, 1.1], [12.6, 2.4], [12.8, 3.9], [12, 5.2], [9.4, 5.6], [5, 5.2], [1, 4.8], [-1, 4.6], [-3.4, 4.4]];
+  s += `<path d="${pth(back)}" fill="url(#${bk})"/><path d="${pth(back.slice(1, -1), false)}" fill="none" stroke="${tn.outline}" stroke-width=".42"/>`;
+  // where the wrist turns into the back of the hand: a soft shade, no seam
+  s += `<path d="${pth([[-1.6, -4.4], [-.6, 0], [-1.6, 4.5]], false)}" stroke="${tn.half}" stroke-width="1.6" fill="none" opacity=".35"/>`;
+  // the tendons fanning to the knuckles, the knuckles lit, the wrist crease
+  for (const [y] of fins) { s += `<path d="${pth([[1.5, y * .35], [7, y * .75], [11.6, y * .98]], false)}" stroke="${tn.shadow}" stroke-width=".3" fill="none" opacity=".35"/>`
+    + `<path d="${pth([[2, y * .35 - .4], [7.2, y * .75 - .4], [11.4, y * .98 - .4]], false)}" stroke="${tn.lit}" stroke-width=".25" fill="none" opacity=".3"/>`; }
+  for (const [y, w] of fins) s += `<path d="${pth([[12.2, y - w * .38], [13.2, y], [12.3, y + w * .32]], false)}" stroke="#ffd8b0" stroke-width=".5" fill="none" opacity=".65" stroke-linecap="round"/>`;
+    // the thumb from the ball of the hand along the top of the index finger, round the far side of the rope; its shade
+  // on the index finger; the rope passes over its tip
+  s += `<path d="${pth([[5, -5.6], [9, -5.9], [13, -5.9], [16, -6.3]], false)}" stroke="#1a0a04" stroke-width="1.1" fill="none" opacity=".45" stroke-linecap="round"/>`;
+  s += `<path d="${pth([[1, -3.5], [3.4, -6.4], [7.5, -8.4], [11.5, -9], [14.8, -8.7], [16.8, -7.8], [17, -6.8], [15.4, -6.3], [12, -6.4], [8.5, -5.7], [5, -4.3]])}" fill="url(#${th})" stroke="${tn.outline}" stroke-width=".4"/>`;
+  s += `<path d="${pth([[3.6, -6.6], [7.6, -8.4], [11.6, -8.85], [14.4, -8.6]], false)}" stroke="#c8dcff" stroke-width=".35" fill="none" opacity=".55"/>`;
+  s += `<path d="${pth([[11.6, -6.6], [11.9, -7.5], [11.5, -8.4]], false)}" stroke="${tn.shadow}" stroke-width=".25" fill="none" opacity=".7"/>`;
+  s += K.rope(u, L, [P(15.1, -9.8), P(15, -6.6)], { r: .42, seed: 9 });
+  return s;
 }
 
 module.exports = { name: 'Поднять флаги!', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
@@ -142,7 +184,7 @@ module.exports = { name: 'Поднять флаги!', kind: 'deck', status: 'dr
     // to the coil on the cleat; the downhaul from the foot of the hoist to the same cleat
     const RP = { r: .42, seed: 5 };
     fg += K.rope(u, L, [[SX + 2, ST + .6], [FX + .2, FT - .4]], RP);
-    fg += K.rope(u, L, [[SX + 3.6, ST + 1], [HAUL[0], HAUL[1] - 8], HAUL], RP) + K.rope(u, L, [HAUL, [HAUL[0] + .4, 108], [SX + 6, 121]], { ...RP, seed: 6 });
+    fg += K.rope(u, L, [[SX + 3.6, ST + 1], [lerp(SX + 3.6, HAUL[0], .9), HAUL[1] - 9], HAUL], RP) + K.rope(u, L, [HAUL2, [HAUL2[0] + .3, 110], [SX + 6, 121]], { ...RP, seed: 6 });
     fg += K.rope(u, L, [[FX + .2, FT + FH + .4], [SX + 2.2, 80], [SX + 4.4, 121]], { r: .38, seed: 7 });
     fg += `<rect x="${SX + 3}" y="120.4" width="9" height="2" rx="1" fill="url(#oak${u})" stroke="#140a04" stroke-width=".35"/>`
       + K.rope(u, L, [[SX + 6, 121.5], [SX + 4, 126], [SX + 7.4, 132], [SX + 10, 127], [SX + 8.4, 122]], { r: .45, seed: 8 });
@@ -150,16 +192,16 @@ module.exports = { name: 'Поднять флаги!', kind: 'deck', status: 'dr
     // the lantern on the rail cap: its warm pool on the cap and on the hand
     fg += K.lantern(u, L, { ...LAMP, lit: true, seed: 2 }) + K.localGlow(u, { x: LAMP.x, y: LAMP.y - 8, color: '#ffc070', power: .75, radius: 22 })
       + K.localGlow(u, { x: LAMP.x, y: LAMP.y + 1, color: '#ffb050', power: .45, radius: 34 }, { squash: .3, core: false });
-    // the sailor's right arm from the near left: the rolled linen sleeve, the bare forearm, the fist on the halyard
+    // the sailor's right arm from the near left, the elbow a little bent: the rolled linen sleeve, the bare forearm,
+    // the fist closed round the halyard and hauling it down
     { const skin = { lit: '#f0b888', half: '#b97c54', core: '#a46c48', shadow: '#5e3626', outline: '#2a140a' };
       const shirt = { lit: '#e2dccc', half: '#9c9688', shadow: '#3e4050', outline: '#1a1a20' };
-      const W = [HAUL[0] - 6 * HS, HAUL[1]], E = [17, 119];
-      fg += H.cloth(u, { spine: [E, [lerp(E[0], W[0], .5) - .6, lerp(E[1], W[1], .5) - .8], [W[0] + .8, W[1] + .3]], w: [11.4, 10.2, 7.2], tone: skin, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .6, folds: false, capA: true, sw: .4 })
-        + `<path d="M${f(E[0] + 6)} ${f(E[1] - 9)}q4 -2 8 -5M${f(E[0] + 9)} ${f(E[1] - 6.6)}q3 -1 6 -4" stroke="#7a4a30" stroke-width=".35" fill="none" opacity=".6"/>`;
-      fg += H.cloth(u, { spine: [[-16, 152], [-2, 138], [E[0] + 1.6, E[1] - 1.4]], w: [17, 15.6, 14.6], tone: shirt, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .5, cuff: { from: .78, k: 1.1, roll: true }, seed: 4, drapes: 3, sw: .4 });
-      const hd = H.hand(u, { at: W, a: -4, s: HS, m: 1, pose: 'grip', tone: skin, sw: .35 });
-      fg += hd.back + hd.front;
-      fg += K.localGlow(u, { x: W[0] + 8, y: W[1] + 2, color: '#ffb060', power: .22, radius: 12 }, { core: false }); }
+      const E = [18, 125], W = HP(1.2, .2);
+      fg += H.cloth(u, { spine: [E, [lerp(E[0], W[0], .5) - 1, lerp(E[1], W[1], .5) - .4], W], w: [12.4, 11.2, 8.8], tone: skin, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .6, folds: false, capA: true, sw: .4 })
+        + `<path d="M${f(E[0] + 6)} ${f(E[1] - 10)}q3.4 -2.4 6.6 -6.4M${f(E[0] + 9)} ${f(E[1] - 7.4)}q2.6 -1.6 5 -4.6" stroke="#7a4a30" stroke-width=".35" fill="none" opacity=".6"/>`;
+      fg += H.cloth(u, { spine: [[-18, 146], [-2, 136], [E[0] + 1.6, E[1] - 1.4]], w: [17, 15.6, 14.6], tone: shirt, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .5, cuff: { from: .78, k: 1.1, roll: true }, seed: 4, drapes: 3, sw: .4 });
+      fg += fist(u, L, skin);
+      fg += K.localGlow(u, { x: HP(14, 0)[0], y: HP(14, 0)[1], color: '#ffb060', power: .22, radius: 13 }, { core: false }); }
     // the light: the cold of the night over the deck, the dark under the glass
     fg += glow(u, MOON.x, MOON.y, 70, 50, '#c8d8f0', .1) + gloom(u, 100, 118, 100, 280, .55, '#04060c') + gloom(u, 100, 90, 0, 0, .18, '#04060c');
     return [bg, fg];
