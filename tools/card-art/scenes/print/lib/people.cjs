@@ -266,13 +266,14 @@ function hand3(u, o) {
       const i = Math.round((j - j0) / (j1 - j0) * T.N), facing = dot(dg.D[Math.min(2, j)], VIEW) + dot(dg.D[j - 1], VIEW);
       const p = T.at(i, -.62), q = T.at(i, .62), c = T.at(i, 0);
       if (facing > .1) r2 += `<path d="M${f(p[0])} ${f(p[1])}Q${f(c[0] + (c[0] - T.at(Math.max(0, i - 1), 0)[0]) * 1.4)} ${f(c[1] + (c[1] - T.at(Math.max(0, i - 1), 0)[1]) * 1.4)} ${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.16 * s)}" fill="none" opacity=".7"/>`
-        + `<path d="M${f(T.at(i, -.4)[0])} ${f(T.at(i, -.4)[1])}Q${f(c[0])} ${f(c[1])} ${f(T.at(i, .4)[0])} ${f(T.at(i, .4)[1])}" stroke="${tn.lit}" stroke-width="${f(dg.ws[j] * s * .18)}" fill="none" stroke-linecap="round" opacity=".4" transform="translate(${f((c[0] - T.at(Math.max(0, i - 1), 0)[0]) * -.6)} ${f((c[1] - T.at(Math.max(0, i - 1), 0)[1]) * -.6)})"/>`;
+        + `<path d="M${f(T.at(i, -.4)[0])} ${f(T.at(i, -.4)[1])}Q${f(c[0])} ${f(c[1])} ${f(T.at(i, .4)[0])} ${f(T.at(i, .4)[1])}" stroke="${tn.lit}" stroke-width="${f(dg.ws[j] * s * .18)}" fill="none" stroke-linecap="round" opacity=".25" transform="translate(${f((c[0] - T.at(Math.max(0, i - 1), 0)[0]) * -.6)} ${f((c[1] - T.at(Math.max(0, i - 1), 0)[1]) * -.6)})"/>`;
       else r2 += `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="${crease}" stroke-width="${f(.2 * s)}" opacity=".8"/>`;
     }
     r2 += `<path d="${sp(out, true)}" fill="none" stroke="${tn.outline}" stroke-width="${sw}"/>`;
     if (tip && o.nails !== false) {
       const dor = dg.D[2], vis = dot(dor, VIEW);
-      if (vis > .12) { const a3 = dg.J[2], b3 = dg.J[3], w = dg.ws[3], c3 = add(add(sc(a3, .32), sc(b3, .68)), sc(dor, w * .34)), cc = scr(c3);
+      const sl = Math.hypot(scr(dg.J[3])[0] - scr(dg.J[2])[0], scr(dg.J[3])[1] - scr(dg.J[2])[1]);
+      if (vis > .3 && sl > dg.ws[3] * s * .7) { const a3 = dg.J[2], b3 = dg.J[3], w = dg.ws[3], c3 = add(add(sc(a3, .32), sc(b3, .68)), sc(dor, w * .34)), cc = scr(c3);
         const len = Math.hypot(...[0, 1].map(k => scr(b3)[k] - scr(a3)[k])), ang = Math.atan2(scr(b3)[1] - scr(a3)[1], scr(b3)[0] - scr(a3)[0]) * 180 / Math.PI;
         r2 += `<ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(Math.max(.18, len * .3))}" ry="${f(w * s * .34 * Math.min(1, vis + .2))}" transform="rotate(${f(ang)} ${f(cc[0])} ${f(cc[1])})" fill="${nail}" stroke="${mix(tn.shadow, tn.half, .3)}" stroke-width="${f(.1 * s)}" opacity=".9"/>`
           + `<ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(Math.max(.1, len * .12))}" ry="${f(w * s * .1)}" transform="rotate(${f(ang)} ${f(cc[0])} ${f(cc[1])})" fill="#ffffff" opacity=".55"/>`; }
@@ -284,15 +285,15 @@ function hand3(u, o) {
   for (const dg of digits) {
     // split the chain where it crosses behind the handle (by the depth of each bone's middle)
     const segBack = [0, 1, 2].map(j => backSet.has(dg.id) || (wrap && dep(sc(add(dg.J[j], dg.J[j + 1]), .5)) < dC));
-    let j = 0;
+    let j = dg.id === 'thumb' ? 1 : 0;   // the thumb's first bone is inside the ball of the thumb (the palm's body)
     while (j < 3) { let k = j; while (k + 1 < 3 && segBack[k + 1] === segBack[j]) k++;
       const mids = []; for (let q = j; q <= k; q++) mids.push(dep(sc(add(dg.J[q], dg.J[q + 1]), .5)));
       items.push({ d: Math.max(...mids), svg: piece(dg, j, k + 1), back: segBack[j], thumb: dg.id === 'thumb' }); j = k + 1; }
   }
   // the palm: the back (z 0) and the inside (z −.85) outlines and the ball of the thumb, as one convex body
-  const PB = [[-.4, -1.55], [1.4, -2.05], [3.2, -2.15], [4.6, -1.95], [5.05, -1.0], [5.15, 0], [5.0, .95], [4.6, 1.85], [3.0, 2.05], [1.2, 1.9], [-.4, 1.5]];
-  const TJ = digits[4].J, web = [lerp(TJ[0][0], TJ[1][0], .7), lerp(TJ[0][1], TJ[1][1], .7), lerp(TJ[0][2], TJ[1][2], .7)];
-  const pts3 = [...PB.map(p => [p[0], p[1], 0]), ...PB.map(p => [p[0] * .97, p[1] * .95, -.85]), [1.2, -1.9, -1.25], [2.4, -1.6, -1.35], [1.6, 1.4, -1.15], web];
+  const PB = [[-.4, -1.5], [1.4, -1.95], [3.2, -2.05], [4.4, -1.95], [4.82, -1.2], [4.98, -.4], [4.92, .5], [4.62, 1.35], [4.2, 1.85], [3.0, 2.0], [1.2, 1.85], [-.4, 1.45]];
+  const TJ = digits[4].J, web = [TJ[1][0] + .1, TJ[1][1] + .1, TJ[1][2]], web0 = [lerp(TJ[0][0], TJ[1][0], .5), lerp(TJ[0][1], TJ[1][1], .5) - .35, lerp(TJ[0][2], TJ[1][2], .5)], web1 = [TJ[1][0] - .5, TJ[1][1] - .3, TJ[1][2]];
+  const pts3 = [...PB.map(p => [p[0], p[1], 0]), ...PB.map(p => [p[0] * (p[0] > 4 ? .92 : .97), p[1] * .95, -.85]), [1.2, -1.9, -1.25], [2.4, -1.6, -1.35], [1.6, 1.4, -1.15], web, web0, web1];
   const hull = (() => { const Q = pts3.map(p => [px(p), yv(p)]).sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr2 = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
     const lo = [], up = []; for (const p of Q) { while (lo.length > 1 && cr2(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
     for (const p of Q.slice().reverse()) { while (up.length > 1 && cr2(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
@@ -307,7 +308,7 @@ function hand3(u, o) {
       // the back of the hand: tendons fanning from the wrist to the knuckles, the knuckle row in the light
       for (const F of HFING.slice(0, 3)) { const a0 = P(2.2, F.k[1] * .55, .02), a1 = P(F.k[0] - .5, F.k[1] * .92, .02);
         palm += `<path d="M${f(a0[0])} ${f(a0[1])}L${f(a1[0])} ${f(a1[1])}" stroke="${tn.lit}" stroke-width="${f(.32 * s)}" opacity="${f(.22 * backVis)}" stroke-linecap="round"/>`; }
-      { const v = [P(1.0, .9, .02), P(2.2, .3, .02), P(3.0, .7, .02), P(3.9, .4, .02)]; palm += `<path d="${sp(v)}" stroke="${mix(tn.shadow, '#6a6a9a', .3)}" stroke-width="${f(.16 * s)}" fill="none" opacity="${f(.22 * backVis)}"/>`; }
+      { const v = [P(1.0, .9, .02), P(2.2, .5, .02), P(3.0, .8, .02), P(3.9, .4, .02)]; palm += `<path d="${sp(v)}" stroke="${mix(tn.shadow, '#6a6a9a', .3)}" stroke-width="${f(.16 * s)}" fill="none" opacity="${f(.12 * backVis)}"/>`; }
       if (o.knuckles !== false) for (const F of HFING) { const k = P(F.k[0] - .1, F.k[1], 0);
         palm += `<ellipse cx="${f(k[0])}" cy="${f(k[1])}" rx="${f(.42 * s)}" ry="${f(.3 * s)}" fill="${tn.lit}" opacity="${f(.45 * backVis)}"/>`; }
     }

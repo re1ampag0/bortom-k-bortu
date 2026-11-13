@@ -109,7 +109,7 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
         + Array.from({ length: 6 }, (_, k) => `<rect x="${4 + k * 33}" y="${CF + 12}" width="27" height="130" rx="1" fill="#2c180c" stroke="#120804" stroke-width=".8"/><path d="M${5 + k * 33} ${CF + 13}h25" stroke="#6a4224" stroke-width=".5"/>`).join('')
         + `<path d="M-10 250H210" stroke="url(#brass${u})" stroke-width="2.4"/>`;
       // coins: stacks and a few loose, with their shadows, in the lantern light
-      mid += K.coins(u, L, { x: 24, y: 121, n: 7, r: 2.6, seed: 3 }) + K.coins(u, L, { x: 40, y: 117, n: 5, r: 2.4, seed: 8 }) + K.coins(u, L, { x: 52, y: 124, n: 3, r: 2.4, seed: 12 });
+      mid += K.coins(u, L, { x: 22, y: 122, n: 8, r: 3, seed: 3 }) + K.coins(u, L, { x: 38, y: 117, n: 6, r: 2.8, seed: 8 }) + K.coins(u, L, { x: 52, y: 125, n: 4, r: 2.8, seed: 12 });
     }
     // ——— the officer's arm on the counter from the right edge: red coat, blue cuff with gilt buttons, a white shirt
     // frill at the wrist; his hand holds the fan — two cards left, a gap between the fingers where the third one was ———
@@ -129,16 +129,16 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
           fr += `<path d="M${f(x)} ${f(y)}q-3.4 ${f(.6 - R() * .4)} -4.4 ${f(1.6)}q2.2 .8 4.4 .2z" fill="${k % 2 ? shirt.half : shirt.lit}" stroke="${shirt.shadow}" stroke-width=".25"/>`; }
         off += fr; }
       // his hand: the back to us, the fingers loosely bent over the fan, the thumb behind it
-      const hd = H.hand3(u, { at: OW, a: OA, s: OS, m: 1, roll: 24, pitch: 20, pose: 'custom', flex: [[30, 40, 20], [44, 56, 30], [52, 64, 36], [58, 70, 40]], yaw: [-12, 2, 6, 10],
+      const hd = H.hand3(u, { at: OW, a: OA, s: OS, m: 1, roll: 24, pitch: 10, pose: 'custom', flex: [[30, 40, 20], [44, 56, 30], [52, 64, 36], [58, 70, 40]], yaw: [-12, 2, 6, 10],
         thumbFlex: [6, 14, 10], thumbSpread: 10, tone: skin, light: [-.6, -.8], backFingers: ['thumb'], sw: .32 });
       const pv = hd.P(5.2, -.6, -1.0);
-      off += hd.back + card(u, [pv[0] - 2, pv[1] - 12], -8, .72, { shade: .35 }) + card(u, [pv[0] + 3, pv[1] - 11], 14, .72, { shade: .2 }) + hd.front;
+      off += hd.back + card(u, [pv[0] - 1, pv[1] - 8.6], -8, .72, { shade: .35 }) + card(u, [pv[0] + 4, pv[1] - 7.6], 14, .72, { shade: .2 }) + hd.front;
       // a gold ring with a stone on his little finger
       { const p = hd.P(5.4, 1.5, -.9); off += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="1.1" ry=".55" transform="rotate(${OA + 90} ${f(p[0])} ${f(p[1])})" fill="url(#brass${u})" stroke="#4a3208" stroke-width=".2"/>`; }
     }
     // ——— the card's flight from his fan to Jack's fingers: a soft streak and two fading after-images ———
     const JW = [98, 121], JA = -96, JS = 9.2;
-    const jh = H.hand3(u, { at: JW, a: JA, s: JS, m: 1, roll: 6, pitch: 30, pose: 'scissor', yaw: [-9, 4, 8, 12], thumbSpread: 34, thumbFlex: [0, 12, 10], tone: { lit: '#f6cca6', half: '#d29a72', shadow: '#7a4430', outline: '#3a1c10' },
+    const jh = H.hand3(u, { at: JW, a: JA, s: JS, m: 1, roll: 6, pitch: 4, pose: 'scissor', yaw: [-9, 4, 8, 12], thumbSpread: 6, thumbFlex: [0, 14, 12], tone: { lit: '#f6cca6', half: '#d29a72', shadow: '#7a4430', outline: '#3a1c10' },
       light: [-.62, -.78], backFingers: [1], sw: .5, flex: [[4, 8, 6], [8, 10, 6], [72, 98, 56], [78, 96, 56]] });
     const CC0 = jh.P(8.6, -1.0, -.42), CA = -12, CSC = 1.56, CC = [CC0[0] + 2, CC0[1] - 12];   // the card: centre, angle, scale
     let fly = '';
