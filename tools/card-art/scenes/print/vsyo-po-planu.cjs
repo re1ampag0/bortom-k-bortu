@@ -15,13 +15,14 @@ const PK = require('../portrait-kit.cjs');
 const { f, mix, nid, linGrad, radGrad, rng, lerp } = K;
 const { woodTex, glow, gloom, motes } = PK;
 
-const HZ = 46, VX = 100;                        // eye level (the sea horizon in the window), the vanishing point
-const TB = 70;                                  // the table's far edge
-const CANDLE = { x: 160, y: 92, s: 1.35, len: 13, lit: true, seed: 6 };
-const ROUND = { x: 94, y: 119, r: 8.2 };       // the grapeshot round: the middle of the sabot's foot, ball radius
+const HZ = 30, VX = 100;                        // eye level (the sea horizon in the window), the vanishing point
+const TB = 52;                                  // the table's far edge (high: the camera looks down on the table)
+const CANDLE = { x: 162, y: 90, s: 1.35, len: 13, lit: true, seed: 6 };
+const BAG = { x: 96, y: 126 };                  // the grapeshot bag: the middle of its foot on the chart
+const CUT = [[55.5, 102.4], [60.2, 104.8]];    // the slow match's two cut ends: the burnt one (left), the one to the bag
 const light = { time: 'night', haze: .3, key: { type: 'point', ...K.candle.local(CANDLE), color: '#ffbc66', power: 1, radius: 110 },
   fill: { color: '#34405e', power: .35 }, rim: { az: 0, color: '#b0c4ff', power: .45 } };
-const lightOut = { time: 'night', haze: .2, key: { type: 'moon', x: 126, y: 22, el: 22, color: '#e8eeff', power: .8 } };
+const lightOut = { time: 'night', haze: .2, key: { type: 'moon', x: 122, y: 17, el: 22, color: '#e8eeff', power: .8 } };
 const skel = { horizon: HZ, eye: 1.5, light: 'candle on the table, right (key, warm) + the moon through the stern window (rim, fill)', items: [
   ['back wall + stern window', 18, TB, 164, TB, 'the stern, behind the table', { bg: 1 }], ['table top', -10, 290, 220, 220, 'ground: planks to the VP', { edge: 1 }],
   ['chart', 8, 136, 186, 58, 'on the table'], ['grapeshot round', 76, 114, 40, 58, 'stands on the chart (sabot)'], ['tag', 116, 112, 16, 12, 'tied to the spindle, lies on the chart'],
