@@ -37,15 +37,9 @@ function sp(pts, closed) {
   for (let i = 0; i < (closed ? n : n - 1); i++) { const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2); d += `C${f(p1[0] + (p2[0] - p0[0]) / 6)} ${f(p1[1] + (p2[1] - p0[1]) / 6)} ${f(p2[0] - (p3[0] - p1[0]) / 6)} ${f(p2[1] - (p3[1] - p1[1]) / 6)} ${f(p2[0])} ${f(p2[1])}`; }
   return d + (closed ? 'Z' : '');
 }
-// KIT-CANDIDATE heel on a slope (as in «Буря»): the kit cuts the hull at a level line y = waterline; heeled, the cut
-// must tilt with the hull. Also the level foam line under her is dropped (the scene lays its own along the slope).
-function tiltShip(u, L, o) {
-  const s = o.scale, dir = o.flip ? -1 : 1, a = (o.heel || 0) * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
-  const pt = (X, H) => [o.x + dir * s * (X * ca - H * sa), o.y - s * (X * sa + H * ca)];
-  const wl = [pt(-400, -.2), pt(400, -.2), pt(400, 900), pt(-400, 900)].map(p => f(p[0]) + ' ' + f(p[1])).join('L');
-  return K.ship(u, L, o).replace(/<path d="M[-\d.]+ ([-\d.]+)L[-\d.]+ \1" stroke="#[0-9a-f]{6}" stroke-width="[\d.]+" opacity=".45"\/>/, '')
-    .replace(/(<clipPath id="khw[^"]+">)<rect x="[-\d.]+" y="[-\d.]+" width="8000" height="4000"\/>/, `$1<path d="M${wl}Z"/>`);
-}
+// heel on a slope (as in «Буря»): kit `slope` tilts the waterline cut with the heel and drops the level foam line
+// (the scene lays its own along the slope)
+function tiltShip(u, L, o) { return K.ship(u, L, Object.assign({}, o, { slope: true })); }
 // a point on the near side of the kit ship (local X along, H up from the waterline; Z = the hull's half-breadth there),
 // with her roll and heel -> picture point
 function sidePt(o, G) {

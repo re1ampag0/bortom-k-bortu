@@ -140,13 +140,11 @@ module.exports = {
     bg += swell(u, L, { top: sTop, bottom: 240, seed: 4, lean: -.5, band: 12, sheenX: 104, sheenW: 26, streaks: 14, slope: Math.tan(ra) * .8, depth: 30,
       ripples: { horizon: 70, bottom: 260, rot: ang, cx: x0, cy: y0, op: .4 } });
     // ——— the brig on the face: heeled, bow up to the right, reefed, her windows lit ———
-    const s = .95, sh = { kind: 'brig', x: x0, y: y0, scale: s, flip: true, heel: ang, sails: 'reefed', detail: 'near', lights: true, seed: 17, roll: 16 };   // laid over towards us by the sea: her deck shows
+    const s = .95, sh = { kind: 'brig', x: x0, y: y0, scale: s, flip: true, heel: ang, sails: 'reefed', detail: 'near', lights: true, seed: 17, roll: 16, slope: true };   // laid over towards us by the sea: her deck shows
     const ca = Math.cos(ra), sa = Math.sin(ra), pt = (X, H) => [x0 - s * (X * ca - H * sa), y0 - s * (X * sa + H * ca)];
     let mid = `<g transform="rotate(${ang} ${x0} ${y0})">${K.contactShadow(u, x0, y0 + 1.2, 74, L, { ry: 3.2, opacity: .6 })}</g>`;
-    // KIT-CANDIDATE heel: the kit cuts the hull at a level line y = waterline; heeled, the cut must tilt with the hull
-    const wl = [pt(-400, -.2), pt(400, -.2), pt(400, 900), pt(-400, 900)].map(p => f(p[0]) + ' ' + f(p[1])).join('L');
-    mid += K.ship(u, L, sh).replace(/<path d="M[-\d.]+ ([-\d.]+)L[-\d.]+ \1" stroke="#[0-9a-f]{6}" stroke-width="[\d.]+" opacity=".45"\/>/, '')
-      .replace(/(<clipPath id="khw[^"]+">)<rect x="-400" y="-900" width="1000" height="[\d.]+"\/>/, `$1<path d="M${wl}Z"/>`);
+    // on the face of the wave: kit `slope` tilts the waterline cut with the heel and drops the level foam line
+    mid += K.ship(u, L, sh);
     // the bow gun: an iron barrel out of the bow, pointing up past the merchantman
     const el = -26 * Math.PI / 180, a = pt(-29, 6.4), b = [a[0] + Math.cos(el) * 9, a[1] + Math.sin(el) * 9], m = [b[0] + Math.cos(el) * .4, b[1] + Math.sin(el) * .4];
     mid += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.25, L, 'iron', { r2: 1.05, outline: .4, seed: 3 });

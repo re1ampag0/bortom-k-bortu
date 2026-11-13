@@ -188,12 +188,9 @@ module.exports = {
     const shipOn = (o) => {
       const ra = o.heel * Math.PI / 180, ca = Math.cos(ra), sa = Math.sin(ra), d = o.flip ? -1 : 1;
       const pt = (X, H) => [o.x + d * o.scale * (X * ca - H * sa), o.y - o.scale * (X * sa + H * ca)];
-      const wl = [pt(-400, -.2), pt(400, -.2), pt(400, 900), pt(-400, 900)].map(p => f(p[0]) + ' ' + f(p[1])).join('L');
       let s = `<g transform="rotate(${o.flip ? o.heel : -o.heel} ${o.x} ${o.y})">${K.contactShadow(u, o.x + o.sx, o.y + o.sy, 70 * o.scale, L, { ry: 3.6 * o.scale, opacity: .5 })}</g>`;
-      // KIT-CANDIDATE heel: the kit cuts the hull at a level line y = waterline; heeled, the cut must tilt with the hull
-      s += K.ship(u, L, Object.assign({ kind: 'merchant', sails: 'reefed', detail: o.detail }, o))
-        .replace(/<path d="M[-\d.]+ ([-\d.]+)L[-\d.]+ \1" stroke="#[0-9a-f]{6}" stroke-width="[\d.]+" opacity=".45"\/>/, '')
-        .replace(/(<clipPath id="khw[^"]+">)<rect x="-400" y="-900" width="1000" height="[\d.]+"\/>/, `$1<path d="M${wl}Z"/>`);
+      // on the face of the wave: kit `slope` tilts the waterline cut with the heel and drops the level foam line
+      s += K.ship(u, L, Object.assign({ kind: 'merchant', sails: 'reefed', detail: o.detail, slope: true }, o));
       // the bow wave and the foam along the side: the ship runs left round the funnel
       s += `<g transform="rotate(${o.flip ? o.heel : -o.heel} ${o.x} ${o.y})">${K.foam(u, { x: o.x + 1 * o.scale, y: o.y + .3, w: 58 * o.scale, h: 1.6 * o.scale, seed: o.seed + 4, L })}</g>`;
       const st = pt(-37, 0); s += K.splash(u, { x: st[0], y: st[1] + .5, w: 14 * o.scale, h: 10 * o.scale, seed: o.seed % 3 === 0 ? 1 : o.seed, L, wind: -1 });

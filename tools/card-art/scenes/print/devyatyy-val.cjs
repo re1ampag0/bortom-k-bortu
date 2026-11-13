@@ -167,13 +167,10 @@ module.exports = {
     // ——— the brig climbing the foot: heeled -14 (bow up, left, into the wave), rolled 12 at us; reefed ———
     const x0 = 112, y0 = 124, s = .86, ang = -14, roll = 12, ra = ang * Math.PI / 180, ca = Math.cos(ra), sa = Math.sin(ra), cr = Math.cos(roll * Math.PI / 180);
     const pt = (X, H) => [x0 + s * (X * ca - H * cr * sa), y0 - s * (X * sa + H * cr * ca)];
-    const wl = [pt(-400, -.2), pt(400, -.2), pt(400, 900), pt(-400, 900)].map(p => f(p[0]) + ' ' + f(p[1])).join('L');
     let brig = `<g transform="rotate(${-ang} ${x0} ${y0})">${K.contactShadow(u, x0, y0 + 1, 62, L, { ry: 2.8, opacity: .55 })}</g>`;
     // (the nose is left: the picture turns by -heel)
-    // KIT-CANDIDATE heel: the kit cuts the hull at a level line y = waterline; heeled, the cut must tilt with the hull
-    brig += K.ship(u, L, { kind: 'brig', x: x0, y: y0, scale: s, heel: ang, roll, sails: 'reefed', detail: 'near', lights: true, seed: 23 })
-      .replace(/<path d="M[-\d.]+ ([-\d.]+)L[-\d.]+ \1" stroke="#[0-9a-f]{6}" stroke-width="[\d.]+" opacity=".45"\/>/, '')
-      .replace(/(<clipPath id="khw[^"]+">)<rect x="-400" y="-900" width="1000" height="[\d.]+"\/>/, `$1<path d="M${wl}Z"/>`);
+    // on the face of the wave: kit `slope` tilts the waterline cut with the heel and drops the level foam line
+    brig += K.ship(u, L, { kind: 'brig', x: x0, y: y0, scale: s, heel: ang, roll, sails: 'reefed', detail: 'near', lights: true, seed: 23, slope: true });
     brig += `<g transform="rotate(${-ang} ${x0} ${y0})">${K.foam(u, { x: x0 - 2, y: y0 + .4, w: 66, h: 1.5, seed: 12, L })}</g>`;
     const stem = pt(-37, 0);
     brig += K.splash(u, { x: stem[0] + 1, y: stem[1] + .8, w: 13, h: 11, seed: 3, L, wind: 1 });

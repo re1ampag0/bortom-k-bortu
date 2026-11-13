@@ -319,7 +319,10 @@ function build(u, L, o, mode) {
 
   // ——— the hull's paint ———
   let hull = '';
-  const wlClip = nid('hw', u); defs += `<clipPath id="${wlClip}"><rect x="${f(x0 - 4000)}" y="${f(y0 - 4000)}" width="8000" height="4000"/></clipPath>`;
+  // slope: the ship lies on the face of a wave, so the cut at the waterline tilts with the heel (else a level line y = y0)
+  const wlClip = nid('hw', u), wlP = (X, H) => [x0 + dir * s * (X * ca - H * sa), y0 - s * (X * sa + H * ca)];
+  defs += `<clipPath id="${wlClip}">` + (o.slope && o.heel ? `<path d="M${[wlP(-400, -.2), wlP(400, -.2), wlP(400, 900), wlP(-400, 900)].map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z"/>`
+    : `<rect x="${f(x0 - 4000)}" y="${f(y0 - 4000)}" width="8000" height="4000"/>`) + '</clipPath>';
   const topRim = rimDir ? clamp(-rimDir[1] * 1.2) * rimPow : 0;                  // how much the upper edges catch the back light
   const shOff = k => [-dir * dC.ux * k, dC.uy * k], shd = sil ? C : col(mix(L.shadowTint, '#0c0a0a', .4));   // a short cast shadow on the side, away from the light
   if (sil) hull += `<path d="${hullD}${ports.map(p => box(p.X, p.H, p.w, p.hh)).join('')}" fill="${C}" fill-rule="evenodd"/>` + (ribs.length ? fillP(ribs.map(ribD).join(''), C) : '');
@@ -1048,7 +1051,8 @@ function build(u, L, o, mode) {
  * 'dutch' | 'merchant' | 'brig'; x, y — the middle of the waterline in scene units; scale (1: the hull is about
  * 100 units long at the waterline); flip — the bow to the right; heel — degrees, the tilt in the picture's plane
  * (positive: the bow down, the masts lean ahead); sails: 'full' | 'reefed' | 'furled'; detail: 'near' | 'mid' |
- * 'far' (far: no small things and no outline, the tones go to the sky's tone at the horizon); wake: foam at the
+ * 'far' (far: no small things and no outline, the tones go to the sky's tone at the horizon); slope: on the face of a
+ * wave — the waterline cut tilts with the heel, no level foam line (the scene lays its own along the slope); wake: foam at the
  * stem and along the side, the wake astern; reflect: the reflection straight under the ship (env.reflection);
  * lights: light in the stern windows and in the lantern; seed. Returns one <g>.
  */
@@ -1108,7 +1112,7 @@ function ship(u, L, o = {}) {
       if (!far && Rr() > .75) flecks += `<path d="${blob(x + dir * (Rr() - .5) * s, y0 + th + (.35 + Rr() * 1.2) * s, (.25 + Rr() * .75) * s, (.1 + Rr() * .14) * s)}" opacity="${f(.3 + Rr() * .45)}"/>`; }
     close();
     out += `<g fill="${sh}" opacity=".3" transform="translate(0 ${f(.35 * s)})"><path d="${lace}"/></g><g fill="${fc}" opacity=".92"><path d="${lace}"/>${flecks}</g>` + (holes ? `<g fill="${mix(L.pal.sea[1], fc, .25)}" opacity=".55">${holes}</g>` : '');
-  } else if (!far) out += `<path d="M${f(stem - 2 * s)} ${f(y0 + .2 * s)}L${f(stern + 2 * s)} ${f(y0 + .2 * s)}" stroke="${fc}" stroke-width="${f(.35 * s)}" opacity=".45"/>`;
+  } else if (!far && !o.slope) out += `<path d="M${f(stem - 2 * s)} ${f(y0 + .2 * s)}L${f(stern + 2 * s)} ${f(y0 + .2 * s)}" stroke="${fc}" stroke-width="${f(.35 * s)}" opacity=".45"/>`;
   if (o.lights && !far && L.time !== 'day') { // the windows and the lantern light the air round them and the water under the stern (not by day)
     for (const g of b.glowAt) { const p = b.pt(g[0], g[1]); out += localGlow(u, { x: p[0], y: p[1], color: b.lightC, power: .5, radius: g[2] * s }, { core: false }); }
     for (let i = 0; i < 7; i++) { const x = stern + dir * (Rr() * 8 - 7) * s, y = y0 + (1 + i * 1.5 + Rr()) * s, l = (2 + Rr() * 4) * s; out += `<path d="M${f(x)} ${f(y)}q${f(l / 2)} ${f(-.4 * s)} ${f(l)} 0q${f(-l / 2)} ${f(.4 * s)} ${f(-l)} 0z" fill="${b.lightC}" opacity="${f(.5 - i * .055)}"/>`; }
