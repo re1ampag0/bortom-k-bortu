@@ -15,6 +15,7 @@ const { f, mix, nid, linGrad, radGrad, rng } = K;
 const { glow, gloom, motes } = PK;
 
 const HZ = 70, SHORE = 96;                       // the horizon; the foam line on the beach
+const TC = 'translate(4 -1) scale(.96)';         // the chest, its pool and rings: a little smaller and higher (clear of the glass)
 const C = { x0: 38, y0: 146, W: 100, D: 60, Hb: 40, kx: .42, ky: .27, lip: 6, rho: 15, th: 13 };  // the chest (own units)
 const light = { time: 'fog', haze: .7, key: { type: 'moon', az: 240, el: 34, color: '#cfeee0', power: .7 }, fill: { color: '#2f5a50', power: .5 },
   rim: { az: 300, color: '#d8fff0', power: .3 }, locals: [{ x: 92, y: 98, h: 2, color: '#ff6a3a', power: .85, radius: 70 }] };
@@ -27,6 +28,7 @@ const skel = { horizon: HZ, eye: .9, light: 'a low moon in the fog from the left
 // the chest's own projection (oblique 3/4 like K.chest): x across, z away from us, h up
 const Pc = (x, z, h) => [C.x0 + x + z * C.kx, C.y0 - h - z * C.ky];
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
+const LT = 2.2;                                  // the lid board's front edge, seen under its lip
 const poly = pts => 'M' + pts.map(P2).join('L') + 'Z';
 const TH = C.th * Math.PI / 180;
 // a point of the lid in its own (z, h) — rotated about the back hinge (z = D, h = Hb) by the lift
@@ -74,7 +76,7 @@ function palm(x, y, h, lean, col) {
 
 module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
-    const L = K.makeLight(light, { horizon: HZ, eye: .9 });
+    const L = K.makeLight(light, { horizon: HZ, eye: .9 }), Wc0 = C.W, D0 = C.D;
     // ——— the sky: dusk in the green fog, the moon a pale blur low on the left ———
     let bg = K.sky(u, L, { horizon: HZ, stars: 8, seed: 11 }) + glow(u, 62, 40, 70, 44, '#e8fff0', .45) + `<circle cx="62" cy="40" r="6" fill="#f0fff4" opacity=".5"/>`;
     for (const [x, y, w, h, sd, fr] of [[150, 26, 70, 9, 4, .3], [60, 52, 64, 7, 9, .5], [176, 58, 50, 6, 13, .6]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
@@ -96,15 +98,32 @@ module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 
     bg += K.fog(u, L, { y: SHORE - 4, h: 24, density: .35, seed: 6 });
     // the beat: red rings out over the sand round the chest (behind it, so the chest covers their middle), and the
     // red pool of its light on the sand in front
+    bg += `<g transform="${TC}">`;
+    // the tide pool round the chest: a sheet of still water over the sand, the moon's sheen on it, cold ripple lines
+    { const g = nid('pl', u), R = rng(41);
+      bg += `<defs><radialGradient id="${g}" gradientUnits="userSpaceOnUse" cx="100" cy="142" r="104" gradientTransform="translate(100 142) scale(1 .27) translate(-100 -142)"><stop offset="0" stop-color="#4e6a62" stop-opacity=".95"/><stop offset=".55" stop-color="#5a7a70" stop-opacity=".85"/><stop offset=".85" stop-color="#7a9a8c" stop-opacity=".45"/><stop offset="1" stop-color="#7a9a8c" stop-opacity="0"/></radialGradient></defs>`
+        + `<ellipse cx="100" cy="142" rx="104" ry="28" fill="url(#${g})"/>`;
+      for (let i = 0; i < 22; i++) { const y = 122 + R() * 42, x = 10 + R() * 180, w = 6 + R() * 14; if (((x - 100) / 100) ** 2 + ((y - 142) / 26) ** 2 > .9) continue;
+        bg += `<path d="M${f(x)} ${f(y)}h${f(w)}" stroke="#cfeee0" stroke-width=".35" opacity="${f(.2 + R() * .25)}"/>`; }
+      // cold ripples going out from the chest
+      for (const [r, op] of [[66, .45], [78, .3], [92, .18]]) bg += `<ellipse cx="100" cy="140" rx="${r}" ry="${f(r * .3)}" fill="none" stroke="#d8fff0" stroke-width=".5" opacity="${op}"/>`; }
     { const bl = nid('rb', u), cx = 100, cy = 136;
       bg += K.localGlow(u, { x: cx - 4, y: cy + 10, color: '#ff5a32', power: .55, radius: 86 }, { squash: .32, core: false })
         + `<defs><filter id="${bl}" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="1"/></filter></defs><g style="mix-blend-mode:screen">`;
       [[74, .55], [82, .42], [104, .3], [113, .2]].forEach(([r, op], i) => { bg += `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${f(r * .34)}" fill="none" stroke="#ff6a40" stroke-width="${f(2.6 - i * .4)}" opacity="${f(op * .55)}" filter="url(#${bl})"/>`
         + `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${f(r * .34)}" fill="none" stroke="#ffd0a8" stroke-width=".45" opacity="${f(op * .8)}" stroke-dasharray="${f(r * .4)} ${f(r * .1)}"/>`; });
       bg += '</g>'; }
+    bg += '</g>';
 
     // ——— the chest ———
-    let fg = K.castShadow(u, L, { x: 100, y: C.y0 - 6, w: 120, h: 56, horizon: HZ, d: .5, opacity: .6 }) + K.contactShadow(u, 100, C.y0 - 3, 136, L, { ry: 7, opacity: .9 });
+    let fg = `<g transform="${TC}">` + K.castShadow(u, L, { x: 100, y: C.y0 - 6, w: 120, h: 56, horizon: HZ, d: .5, opacity: .45 }) + K.contactShadow(u, 100, C.y0 - 3, 136, L, { ry: 5, opacity: .7 });
+    // the reflection in the pool: the body's foot upside down, short, broken by ripples; a red glimmer of the gap
+    { const g = nid('rf', u), cut = nid('rc', u), m = (x, z, h) => Pc(x, z, -h);
+      fg += `<defs>${linGrad(g, 0, C.y0, 0, C.y0 + 14, [[0, '#2a2014', .75], [1, '#2a2014', 0]])}</defs>`
+        + `<path d="${poly([m(0, 0, 0), m(Wc0, 0, 0), m(Wc0, D0, 0), m(Wc0, D0, 16), m(Wc0, 0, 16), m(0, 0, 16)])}" fill="url(#${g})"/>`;
+      const R = rng(52);
+      for (let i = 0; i < 9; i++) { const y = C.y0 + 1.5 + i * 1.6, x0 = C.x0 - 2 + R() * 8, x1 = C.x0 + Wc0 + 14 - R() * 10; fg += `<path d="M${f(x0)} ${f(y)}H${f(x1)}" stroke="#5a7a70" stroke-width=".55" opacity=".7"/>`; }
+      for (const [x, y, w, op] of [[78, C.y0 + 3, 22, .55], [84, C.y0 + 6.5, 14, .4], [74, C.y0 + 9.5, 10, .3], [104, C.y0 + 5, 8, .3]]) fg += `<path d="M${x} ${f(y)}h${w}" stroke="#ff7a48" stroke-width="1" stroke-linecap="round" opacity="${op}"/>`; }
     const Wc = C.W, D = C.D, Hb = C.Hb;
     // the body: the right end, then the front (planks of oak)
     fg += K.shadeBox(u, [{ pts: [Pc(Wc, 0, 0), Pc(Wc, D, 0), Pc(Wc, D, Hb), Pc(Wc, 0, Hb)], n: 'right', grain: [C.kx, -C.ky] },
