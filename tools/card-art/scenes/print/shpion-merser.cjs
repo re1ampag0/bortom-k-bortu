@@ -84,7 +84,10 @@ module.exports = { name: 'Шпион Мерсер', kind: 'deck', status: 'draft
       // his shadow, thrown by the lantern on the wall: the same shapes, scaled from the lantern's flame
       const k = 1.3, T = `translate(${f(LP.x)} ${f(LP.y)}) scale(${k}) translate(${f(-LP.x)} ${f(-LP.y)})`, bl = nid('sb', u);
       tw += `<defs><filter id="${bl}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".55"/></filter></defs>`
-        + `<g style="mix-blend-mode:multiply" opacity=".9"><g transform="${T}" filter="url(#${bl})">${silhouette('#14100e')}</g></g>`;
+        + `<g style="mix-blend-mode:multiply" opacity=".9"><g transform="${T}" filter="url(#${bl})">${silhouette('#14100e')}</g>`
+        // the spyglass's shadow is mostly behind his hat: a short stub of it out of the shadow's face, right of the
+        // shadow head (above his crown), its far end with the objective's flare going behind the hat
+        + `<g filter="url(#${bl})" fill="#14100e"><path d="M62 32.4L77.4 35.9L77.9 40.5L62 36.2Z"/><path d="M75.2 34.9L78.6 35.6L79.2 41.2L75.8 40.4Z"/></g></g>`;
       tw += `<path d="M-2 14H${WX}" stroke="#0a0c10" stroke-width="1.2"/><path d="M-2 15.2H${WX}" stroke="#4a4e58" stroke-width=".5" opacity=".6"/></g>`;
       // the corner: the moon's cold light along it, the side of the tower turned to the sea a narrow lit strip
       tw += `<path d="M${WX} 2V${PT + 2}H${WX + 3}V4Z" fill="#4a5466"/><path d="M${WX + 3} 4V${PT + 2}" stroke="#b8cce8" stroke-width=".7" opacity=".75"/>`
