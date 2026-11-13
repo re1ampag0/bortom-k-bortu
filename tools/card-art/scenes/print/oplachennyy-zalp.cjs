@@ -8,7 +8,9 @@
 // point, the guns side-on at them, the deck beams overhead, the deck to the bulkhead far away; the near gun fires out of
 // its port, the fire filling the opening, smoke spurting from its vent and rolling back in. The bill, coins and
 // quill floated on a crate — now the ledger lies on the keg's head and the hand holds the quill (fingers round it);
-// the brand and the ticks are marks, no letters. Light: the flash in the port (key, orange-white), daylight in the
+// the brand and the ticks are marks, no letters. Second pass (review): the hand a jointed one in a writing pinch
+// (the thumb and the fingertips on a tilted quill, its nib at the end of the newest tick), the sleeve shown to the
+// elbow; three big ticks; the far guns spread in depth along the side (port 2 and port 4). Light: the flash in the port (key, orange-white), daylight in the
 // far ports, a lantern under the beams (warm).
 'use strict';
 const K = require('../kit/index.cjs');
@@ -38,6 +40,7 @@ const skel = { horizon: HZ, eye: 1.6, light: 'the flash in the near port (key, o
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const poly = pts => 'M' + pts.map(P2).join('L') + 'Z';
+const TICKS = [.3, .54, .78];                       // the rows of the three ticks on the right page (the last one: the nib)
 const SKIN = { lit: '#f0c49a', half: '#c48a62', core: '#ae7650', shadow: '#6a402c', outline: '#2e180c' };
 
 // cam: the frame starts 20 units down — this card's glass is taller (three lines of text), the ledger and the port
@@ -104,8 +107,8 @@ module.exports = { name: 'Оплаченный залп', kind: 'deck', status: 
 
     // ——— the far guns at their ports (run out, waiting), small to the depth ———
     let mid = '';
-    for (const z of [6.85, 4.55]) { const s = GA.s * GA.Z / z, base = pr(0, YF, z)[1], xm = pr(-1.35, 0, z)[0];
-      mid += K.castShadow(u, L, { x: xm + 34 * s, y: base, w: 36 * s, h: 18 * s, horizon: HZ, d: .5 }) + K.cannon(u, L, { x: xm + 42 * s, y: base, s, flip: true, seed: Math.round(z) }); }
+    for (const [z, k, turn] of [[9.15, .9, .25], [4.55, 1, 0]]) { const s = GA.s * GA.Z / z * k, base = pr(0, YF, z)[1], xm = pr(-1.35, 0, z)[0];
+      mid += K.castShadow(u, L, { x: xm + 34 * s, y: base, w: 36 * s, h: 18 * s, horizon: HZ, d: .5 }) + K.cannon(u, L, { x: xm + 42 * s, y: base, s, flip: true, turn, seed: Math.round(z) }); }
     // the far end of the deck in the shade of the smoke: the far guns step back
     { const id = nid('fd', u); mid += `<defs><filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs><ellipse cx="${VX - 14}" cy="${HZ + 24}" rx="34" ry="13" fill="#0c0806" opacity=".35" filter="url(#${id})"/>`; }
     // ——— the near gun: fired, recoiling; smoke from the muzzle back into the deck, a spurt from the vent ———
@@ -153,31 +156,46 @@ function ledger(u, L, R) {
   for (let k = 1; k < 9; k++) { const a = at(Lp, .15, k / 9 - .03), b = at(Lp, .2 + R() * .45, k / 9 - .03); s += `<path d="M${P2(a)}L${P2(b)}" stroke="#3a2a1c" stroke-width=".3" stroke-dasharray="${f(.8 + R())} .4 ${f(.5 + R())} .4" opacity=".8"/>`;
     const c = at(Lp, .73, k / 9 - .03); s += `<path d="M${P2(c)}l1.6 -.1" stroke="#3a2a1c" stroke-width=".3"/>`; }
   for (let k = 1; k < 8; k++) { const a = at(Rp, .52, k / 9 - .03), b = at(Rp, .6 + R() * .3, k / 9 - .03); s += `<path d="M${P2(a)}L${P2(b)}" stroke="#3a2a1c" stroke-width=".3" stroke-dasharray="${f(.8 + R())} .4 ${f(.5 + R())} .4" opacity=".8"/>`;
-    // a tick in the column for every ball fired; the newest (row 7) still wet and glossy
-    const t = at(Rp, .41, k / 9 - .03); s += `<path d="M${f(t[0] - .9)} ${f(t[1] - .4)}l.7 .9l1.6 -1.9" stroke="${k === 7 ? '#0a0604' : '#3a2a1c'}" stroke-width="${k === 7 ? .5 : .35}" fill="none" stroke-linecap="round"/>`; }
+  }
+  // a big tick in the column for every keg of powder paid (three); the newest still wet and glossy
+  TICKS.forEach((v, k) => { const t = at(Rp, .41, v), wet = k === TICKS.length - 1;
+    s += `<path d="M${f(t[0] - 2.2)} ${f(t[1] - 1.2)}l1.5 2.1l3.4 -4.2" stroke="${wet ? '#0a0604' : '#2e2016'}" stroke-width="${wet ? .85 : .7}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+      + (wet ? `<path d="M${f(t[0] - .5)} ${f(t[1] + .5)}l2.2 -2.8" stroke="#8aa0c0" stroke-width=".2" opacity=".7"/>` : ''); });
   // the ribbon, the coins on the left page, the inkwell on the keg's rim behind the book
   s += `<path d="M164.6 110q.4 6 -1 13.6l1.2 -.6l.6 1.4" stroke="#a81a14" stroke-width=".8" fill="none"/>`;
   s += K.coins(u, L, { x: 146, y: 116.8, s: .9, n: 6, seed: 3 });
-  { const ix = 182, iy = 109.6; s += `<path d="M${ix - 3.4} ${iy}q-.6 -4.6 2 -5.2h2.8q2.6 .6 2 5.2z" fill="#14202c" stroke="#05080c" stroke-width=".4"/><ellipse cx="${ix}" cy="${iy - 5.2}" rx="1.8" ry=".6" fill="#05080c"/><path d="M${ix - 2.4} ${iy - 1.6}q.6 -2.4 1.4 -3" stroke="#9ab8d8" stroke-width=".35" fill="none" opacity=".6"/>`; }
+  { const ix = 154, iy = 108.8; s += `<path d="M${ix - 3.4} ${iy}q-.6 -4.6 2 -5.2h2.8q2.6 .6 2 5.2z" fill="#14202c" stroke="#05080c" stroke-width=".4"/><ellipse cx="${ix}" cy="${iy - 5.2}" rx="1.8" ry=".6" fill="#05080c"/><path d="M${ix - 2.4} ${iy - 1.6}q.6 -2.4 1.4 -3" stroke="#9ab8d8" stroke-width=".35" fill="none" opacity=".6"/>`; }
   return s;
 }
 
-/** The clerk's hand from the right edge: a black sleeve with a white cuff and a frill, the fingers round a goose quill,
- *  its nib on the newest tick, the feather up behind the hand. */
+/** The clerk's hand from the right edge: a black sleeve from the elbow (the upper arm out of the frame top right) with a
+ *  white cuff and a frill; the hand a jointed one (people.cjs hand3) in a writing pinch — the thumb and the fingertips
+ *  holding the quill tilted, its nib on the newest tick, the feather rising up and right past the knuckles. */
 function hand(u, L) {
-  const wr = [185.2, 115.1], a = 196, s = 1.2;
+  const a = 168, s = 1.6, Rp = [[164, 109.6], [190, 111], [194.6, 124], [165.6, 121.4]];
+  const at = (u2, v) => [lerp(lerp(Rp[0][0], Rp[1][0], u2), lerp(Rp[3][0], Rp[2][0], u2), v), lerp(lerp(Rp[0][1], Rp[1][1], u2), lerp(Rp[3][1], Rp[2][1], u2), v)];
+  const tk = at(.41, TICKS[TICKS.length - 1]), nib = [tk[0] + 2.7, tk[1] - 3.3];   // the end of the newest tick's stroke
+  const qa = -58 * Math.PI / 180, qd = [Math.cos(qa), Math.sin(qa)];                   // the quill's axis: from the nib up and right
+  const pinch = [nib[0] + qd[0] * 4.4, nib[1] + qd[1] * 4.4];                          // where the thumb and the index hold it
+  const opts = { a, s, m: 1, roll: 50, pitch: 0, pose: 'pinch', thumbFlex: [40, 30, 22], thumbSpread: -12, tone: SKIN, light: [-.7, -.7], sw: .32 };
+  // place the wrist so the pinch (local 7.6, -1, -2.6: between the index tip and the thumb) falls on the quill
+  const h0 = H.hand3(u, { ...opts, at: [0, 0] }), p0 = h0.P(7.6, -1, -2.6), wr = [pinch[0] - p0[0], pinch[1] - p0[1]];
+  const hd = H.hand3(u, { ...opts, at: wr });
   const sleeve = { lit: '#4a4e5a', half: '#22242c', core: '#1a1c22', shadow: '#0a0a0e', outline: '#050506' }, cuff = { lit: '#fffaf0', half: '#e8e0d0', shadow: '#a8a090', outline: '#5a5448' };
-  let o = H.cloth(u, { spine: [[226, 136], [210, 128], [wr[0] + 3, wr[1] + .6]], w: [17, 15, 12], tone: sleeve, lit: -1, rim: '#ffcf96', rimSide: -1, cuff: { from: .74, k: 1.18, tone: cuff }, seed: 5, drapes: 2, sw: .4 });
-  // the frill of the shirt falling over the back of the hand
-  o += `<path d="M${f(wr[0] + 4)} ${f(wr[1] - 5)}q-3 1 -4 3.6q2 .4 3 2.2q-2.4 .6 -3 3q3 .4 4.6 -1.6z" fill="#f4eee0" stroke="#7a7466" stroke-width=".3"/>`;
-  const hd = H.hand(u, { at: wr, a, s, m: 1, pose: 'grip', tone: SKIN, sw: .35 });
-  // the quill across the fist: the nib down on the page at the newest tick, the barrel up through the fingers, the
-  // feather sweeping up and right
-  const g = hd.P(6, 0), ang = (a + 90) * Math.PI / 180, ux = -Math.cos(ang), uy = -Math.sin(ang);   // u: from the fist down to the nib
-  const nib = [g[0] + ux * 6.4, g[1] + uy * 6.4], top = [g[0] - ux * 20, g[1] - uy * 20];
-  const qs = `<path d="M${P2(nib)}L${P2(g)}L${P2(top)}" stroke="#e8dcc0" stroke-width=".8" fill="none" stroke-linecap="round"/><path d="M${P2(nib)}l${f(-ux * 1.6)} ${f(-uy * 1.6)}" stroke="#2a1c10" stroke-width=".7"/>`
-    + `<path d="M${P2([g[0] - ux * 6, g[1] - uy * 6])}Q${f(top[0] + 5)} ${f(top[1] + 6)} ${f(top[0] + 1.6)} ${f(top[1] - 1)}Q${f(top[0] - 2)} ${f(top[1] + 3)} ${P2([g[0] - ux * 7, g[1] - uy * 7])}Z" fill="#f6f0e2" stroke="#a8a090" stroke-width=".3"/>`
-    + Array.from({ length: 6 }, (_, k) => { const t = .3 + k * .12, p = [lerp(g[0] - ux * 6, top[0], t), lerp(g[1] - uy * 6, top[1], t)]; return `<path d="M${P2(p)}l${f(2.6 - k * .2)} ${f(1 - k * .1)}" stroke="#c8c0b0" stroke-width=".2"/>`; }).join('');
+  // the clerk stands to the right: the upper arm down from out of the frame, the elbow bent inside it, the forearm
+  // down and left to the page
+  const el = [193, 92];
+  let o = H.cloth(u, { spine: [[214, 52], [204, 74], el, [lerp(el[0], wr[0], .5) + 1, lerp(el[1], wr[1], .5) - 1], [wr[0] + 1.6, wr[1] - 1]], w: [17, 15.4, 13.6, 11.6, 10.4], tone: sleeve, lit: -1, rim: '#ffcf96', rimSide: -1, cuff: { from: .82, k: 1.16, tone: cuff }, seed: 5, drapes: 3, sw: .4 });
+  // the frill of the shirt falling over the back of the wrist
+  o += `<path d="M${f(wr[0] + 3.4)} ${f(wr[1] - 3.8)}q-3.2 .2 -4.6 2.8q2.2 0 3.2 1.6q-2.4 1 -2.6 3.2q3 -.2 4.4 -2.4z" fill="#f4eee0" stroke="#7a7466" stroke-width=".3"/>`;
+  // the quill: the nib on the page, the barrel up through the pinch and past the knuckles, the feather sweeping up right
+  const top = [nib[0] + qd[0] * 26, nib[1] + qd[1] * 26], nx = -qd[1], ny = qd[0];
+  const qp = t => [nib[0] + qd[0] * t, nib[1] + qd[1] * t];
+  let qs = `<path d="M${P2(nib)}L${P2(top)}" stroke="#5a5040" stroke-width="1.1" stroke-linecap="round"/><path d="M${P2(nib)}L${P2(top)}" stroke="#ece2c8" stroke-width=".7" stroke-linecap="round"/>`
+    + `<path d="M${P2(nib)}L${P2(qp(1.8))}" stroke="#1a1008" stroke-width=".9" stroke-linecap="round"/>`;
+  { const b0 = qp(9), b1 = qp(25.6), w = 2.8, m0 = qp(17);
+    qs += `<path d="M${P2(b0)}Q${f(m0[0] + nx * w * 1.2)} ${f(m0[1] + ny * w * 1.2)} ${P2(b1)}Q${f(m0[0] - nx * w * .6)} ${f(m0[1] - ny * w * .6)} ${P2(b0)}Z" fill="#f6f0e2" stroke="#a8a090" stroke-width=".3"/>`
+      + Array.from({ length: 7 }, (_, k) => { const p = qp(10.5 + k * 2.1); return `<path d="M${P2(p)}l${f(nx * (2.4 - Math.abs(k - 3) * .3) + qd[0] * 1.2)} ${f(ny * (2.4 - Math.abs(k - 3) * .3) + qd[1] * 1.2)}" stroke="#c8c0b0" stroke-width=".22"/>`; }).join(''); }
   o += hd.back + qs + hd.front;
   return o;
 }
