@@ -103,7 +103,7 @@ module.exports = { name: 'Морские наросты', kind: 'deck', status: 
     const path = (pts, closed = true) => sp(pts.map(p => Hp(p[0], p[1])), closed);
     const polar = (th, r) => [Math.cos(th * Math.PI / 180) * r, Math.sin(th * Math.PI / 180) * r];
     // the broken edge: jagged, plank by plank; the open part of the breach is low on the right (GAP: its arc of the rim)
-    const RH = 38, GAP = [12, 92];
+    const RH = 38, GAP = [4, 96];
     const rim = []; { const Rr = rng(11); for (let i = 0; i < 40; i++) { const th = i * 9, r = RH * (.9 + Rr() * .16) * (i % 2 ? .96 : 1.03); rim.push(polar(th, r)); } }
     const inGap = th => th >= GAP[0] && th <= GAP[1];
     let fg = '';
@@ -117,51 +117,57 @@ module.exports = { name: 'Морские наросты', kind: 'deck', status: 
       // the strake seams cut through the raw edge
       for (let y = TOP; y <= BOT; y += 13.6) { const b = (strY(y, BC[0]) - BC[1]); if (Math.abs(b) > RH) continue; const a = Math.sqrt(RH * RH - b * b);
         for (const s of [-1, 1]) { const p = Hp(s * a * .97, b), q = Hp(s * a * .86, b); fg += `<path d="M${P2(p)}L${P2(q)}" stroke="#030805" stroke-width=".7"/>`; } } }
-    // the torn plank ends at the open part: long splinters, some bent in towards the hold, the torn grain pale
-    { const Rs = rng(13);
-      for (let th = GAP[0] + 4; th <= GAP[1] - 2; th += 9) { const p = polar(th, RH * .93), dir = th + 180 + (Rs() - .5) * 30, len = 7 + Rs() * 8, w = 1.4 + Rs() * 1.4, bent = Rs() < .5;
-        const tip = [p[0] + Math.cos(dir * Math.PI / 180) * len, p[1] + Math.sin(dir * Math.PI / 180) * len], nx = -Math.sin(dir * Math.PI / 180), ny = Math.cos(dir * Math.PI / 180);
-        const pts = [[p[0] + nx * w, p[1] + ny * w], [lerp(p[0], tip[0], .6) + nx * w * .5, lerp(p[1], tip[1], .6) + ny * w * .5], tip, [p[0] - nx * w, p[1] - ny * w]].map(q => Hp(q[0], q[1]));
-        fg += `<path d="M${pts.map(P2).join('L')}Z" fill="${bent ? '#4a4030' : '#8a7a56'}" stroke="#0a0e08" stroke-width=".35"/>`
-          + `<path d="M${P2(Hp(p[0], p[1]))}L${P2(Hp(lerp(p[0], tip[0], .85), lerp(p[1], tip[1], .85)))}" stroke="${bent ? '#7a6a4a' : '#d8c898'}" stroke-width=".35" opacity=".8"/>`; } }
+    // the broken planks at the open part: each strake ends in a torn, splintered end (pale raw wood), at its own
+    // length; one is bent in; along the lower edge long splinters of the plank below stick out along the grain
+    { const Rs = rng(13); let k = 0;
+      for (let y = TOP; y < BOT; y += 13.6, k++) { const b0 = strY(y, BC[0]) - BC[1], b1 = strY(y + 13.6, BC[0]) - BC[1], bm = (b0 + b1) / 2;
+        if (Math.abs(bm) >= RH * .92) continue; const ar = Math.sqrt(RH * RH - bm * bm), th = Math.atan2(bm, ar) * 180 / Math.PI; if (!inGap(th)) continue;
+        const h = b1 - b0, aOut = ar * 1.04, aEnd = ar - 4 - Rs() * 5, bent = k % 3 === 1, jag = [[aEnd + 3, b0 + .3], [aEnd + .6, b0 + h * .22], [aEnd - 2.2, b0 + h * .36], [aEnd - .2, b0 + h * .58], [aEnd - 4.2, b0 + h * .78], [aEnd + 1, b1 - .3]];
+        const g = nid('pk', u), pa = Hp(aOut, b0), pb = Hp(aOut, b1);
+        fg += `<defs>${linGrad(g, 0, pa[1], 0, pb[1], bent ? [[0, '#3a4236', 1], [1, '#121a14', 1]] : [[0, '#6a7662', 1], [.2, '#4a5646', 1], [.8, '#2a362e', 1], [1, '#121a14', 1]])}</defs>`
+          + `<path d="M${P2(Hp(aOut, b0 + .3))}L${jag.map(q => P2(Hp(q[0], q[1]))).join('L')}L${P2(Hp(aOut, b1 - .3))}Z" fill="url(#${g})" stroke="#030805" stroke-width=".55"/>`
+          // the torn end: a band of raw wood just behind the break, its fibres lighter
+          + `<path d="M${jag.map(q => P2(Hp(q[0], q[1]))).join('L')}L${jag.slice().reverse().map(q => P2(Hp(q[0] + 2.2, q[1]))).join('L')}Z" fill="${bent ? '#6a5a3c' : '#b49a68'}"/>`
+          + `<path d="M${jag.map(q => P2(Hp(q[0] + .3, q[1]))).join('L')}" stroke="${bent ? '#9a8a64' : '#ecdcae'}" stroke-width=".5" fill="none"/>`;
+        // a few fibres torn out past the end, along the grain
+        for (let j = 0; j < 3; j++) { const bb = b0 + h * (.2 + j * .3) + (Rs() - .5) * 1.4, a0 = aEnd + (Rs() - .5) * 2, l = 2.5 + Rs() * 4;
+          fg += `<path d="M${P2(Hp(a0, bb))}L${P2(Hp(a0 - l, bb + (Rs() - .5) * 1.2))}" stroke="${bent ? '#7a6a4a' : '#c8b48a'}" stroke-width=".55" stroke-linecap="round"/>`; } }
+      for (const [a0, bb, l, w] of [[24, 33, 15, 1.6], [14, 36, 12, 1.4], [31, 27.6, 10, 1.3]]) { const tip = [a0 - l, bb - 2.2];
+        fg += `<path d="M${P2(Hp(a0, bb - w))}L${P2(Hp(a0 - l * .5, bb - w * .9 - .8))}L${P2(Hp(tip[0], tip[1]))}L${P2(Hp(a0, bb + w))}Z" fill="#9a8660" stroke="#0a0e08" stroke-width=".4"/><path d="M${P2(Hp(a0, bb - w * .5))}L${P2(Hp(tip[0] + 1.4, tip[1] + .1))}" stroke="#ecdcae" stroke-width=".45"/>`; } }
     // cracks run out from the breach along and across the planks
     { const Rk = rng(19); for (const th of [30, 140, 200, 260, 330]) { const p = polar(th, RH + 4), d = polar(th + (Rk() - .5) * 30, 1), len = 8 + Rk() * 9;
         fg += `<path d="M${P2(Hp(p[0], p[1]))}L${P2(Hp(p[0] + d[0] * len * .5 + (Rk() - .5) * 3, p[1] + d[1] * len * .5))}L${P2(Hp(p[0] + d[0] * len, p[1] + d[1] * len + (Rk() - .5) * 4))}" stroke="#040a08" stroke-width=".8" fill="none"/>`; } }
     // ——— the growth: grown in from the edges over half the breach ———
-    // the crust closing it: a sheet of coral from the rim, its growth fronts in bands round the gap, its young lumpy
-    // edge at the gap (lighter); the gap is what is left of the breach, low on the right
-    const gapIn = [[3.6, 34], [1, 27], [3.4, 19], [9.6, 12.6], [17, 8.6], [25, 6.4], [32, 7]];
-    const gapRim = []; for (let th = GAP[1] - 3; th >= GAP[0] + 3; th -= 6) gapRim.push(polar(th, RH * .92));
-    { const g = nid('cs', u), Rl = rng(23);
-      // the sheet runs over the rim (all but the gap's arc) and across to the gap's inner edge
+    // the old crust closing it: a mat of coral from the rim (dark, pitted with polyp cups), lighter and pinker
+    // towards its growing front at the gap; the gap is what is left of the breach, low on the right
+    const gapIn = [[-1.5, 37], [-4, 28], [-1.6, 18.6], [4, 10.4], [12.6, 4.6], [22, 1.4], [31, 1.2], [37.6, 4]];
+    { const g = nid('cs', u), Rl = rng(23), gc = Hp(14, 16);
       const k0 = rim.findIndex((_, i) => i * 9 > GAP[1]), pts = [];
       for (let i = 0; i < rim.length; i++) { const j = (k0 + i) % rim.length; if (!inGap(j * 9)) pts.push([rim[j][0] * .97, rim[j][1] * .97]); }
       const cover = [...pts, ...gapIn.slice().reverse()];
-      fg += `<defs>${radGrad(g, BC[0] + 4, BC[1] + 6, 46, [[0, '#a85a4a', 1], [.45, '#7e4a3c', 1], [1, '#4a3428', 1]])}</defs>`
-        + `<path d="${path(cover)}" fill="url(#${g})" stroke="#1a0c08" stroke-width=".5"/>`;
-      // growth bands round the gap
-      for (const r of [10, 18, 27, 36]) { const arc = []; for (let th = 120; th <= 330; th += 10) { const q = polar(th, r); arc.push([18 + q[0] * 1.1, 22 + q[1]]); }
-        fg += `<path d="${path(arc.filter(q => Math.hypot(q[0], q[1]) < RH * .9), false)}" stroke="#3a1e18" stroke-width=".5" fill="none" opacity=".5"/>`; }
-      // polyp texture: small soft bumps, a shade lighter, over the sheet
-      for (let i = 0; i < 70; i++) { const th = Rl() * 360, r = Math.sqrt(Rl()) * RH * .9, q = polar(th, r);
-        if (inGap(th) && r > 12) continue; if (q[0] > 2 && q[1] > 6 && Math.hypot(q[0] - 18, q[1] - 22) < 16) continue;
-        const p = Hp(q[0], q[1]); fg += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(.9 * SQ)}" ry=".9" fill="#c87a62" opacity=".35"/>`; }
-      // the young edge at the gap: a lip of lighter lumps
-      const Rg = rng(29); for (let i = 0; i < gapIn.length - 1; i++) for (let k = 0; k < 3; k++) { const t = k / 3, q = [lerp(gapIn[i][0], gapIn[i + 1][0], t) - 1, lerp(gapIn[i][1], gapIn[i + 1][1], t) - 1], p = Hp(q[0], q[1]), r = 1.3 + Rg() * .8;
-        fg += `<ellipse cx="${f(p[0] + .3)}" cy="${f(p[1] + .8)}" rx="${f(r * SQ)}" ry="${f(r * .8)}" fill="#020806" opacity=".4"/><ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(r * SQ)}" ry="${f(r)}" fill="#e09478"/><ellipse cx="${f(p[0] - .3)}" cy="${f(p[1] - r * .4)}" rx="${f(r * .4 * SQ)}" ry="${f(r * .3)}" fill="#f6c8a8" opacity=".7"/>`; } }
+      fg += `<defs>${radGrad(g, gc[0], gc[1], 44, [[0, '#a8604e', 1], [.32, '#6e4038', 1], [.6, '#3e2e2a', 1], [1, '#262420', 1]])}</defs>`
+        + `<path d="${path(cover)}" fill="url(#${g})" stroke="#140a08" stroke-width=".6"/>`;
+      // polyp cups: small dark pits with a lit lower lip, all over the mat
+      for (let i = 0; i < 80; i++) { const th = Rl() * 360, r = Math.sqrt(Rl()) * RH * .9, q = polar(th, r);
+        if (Math.hypot(q[0] - 14, q[1] - 16) < 22 && q[0] > -5 && q[1] > 0) continue;
+        const p = Hp(q[0], q[1]), rr = .55 + Rl() * .5; fg += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(rr * SQ)}" ry="${f(rr * .8)}" fill="#120a08" opacity=".6"/><path d="M${f(p[0] - rr * SQ)} ${f(p[1] + .2)}q${f(rr * SQ)} ${f(rr * .9)} ${f(rr * 2 * SQ)} 0" stroke="#b07a68" stroke-width=".3" fill="none" opacity=".55"/>`; }
+      // its growing front: a soft lip at the gap, lit on top, its shadow falling into the gap
+      const lip = path(gapIn, false);
+      fg += `<path d="${lip}" stroke="#020403" stroke-width="2.8" fill="none" opacity=".6" transform="translate(.6 1.6)" stroke-linecap="round"/>`
+        + `<path d="${lip}" stroke="#d88a70" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="${lip}" stroke="#f4bca0" stroke-width=".7" fill="none" stroke-linecap="round" transform="translate(-.3 -.7)" opacity=".8"/>`; }
     // the coral, lying on her side: two plates and eight branching heads from the rim, reaching in over the breach;
     // each casts a short shadow down on the planks (the light is overhead). Three colours: coral red, orange, ochre.
-    const CR = { red: ['#d8604c', '#8a2a20', '#f29a84'], orange: ['#e48c48', '#94481a', '#f8c088'], ochre: ['#c8a46a', '#6a5030', '#ecd4a0'] };
+    const CR = { red: ['#d8604c', '#8a2a20', '#f29a84'], orange: ['#e48c48', '#94481a', '#f8c088'], ochre: ['#d0a464', '#6a4a26', '#f0d49c'] };
     const shadowOf = d => `<path d="${d}" fill="#020806" opacity=".45" transform="translate(.8 2.2)" filter="url(#${SHB})"/>`;
     const SHB = nid('shb', u); fg += `<defs><filter id="${SHB}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".7"/></filter></defs>`;
     // the plates: flat fans grown from the rim inwards, wavy growing edges, concentric growth lines
-    for (const [th, rr, span, col] of [[218, 19, 120, 'ochre'], [286, 16, 110, 'ochre']]) {
+    for (const [th, rr, span, col] of [[208, 18, 120, 'ochre'], [276, 15, 110, 'ochre']]) {
       const root = polar(th, RH * .96), facing = th + 180, pts = [root];
       for (let k = 0; k <= 12; k++) { const a = facing - span / 2 + span * k / 12, r = rr * (1 + .07 * Math.sin(k * 2.3)); pts.push([root[0] + Math.cos(a * Math.PI / 180) * r, root[1] + Math.sin(a * Math.PI / 180) * r]); }
       const d = path(pts), c = CR[col], g = nid('pt', u), cp = Hp(root[0], root[1]);
-      fg += shadowOf(d) + `<defs>${radGrad(g, cp[0], cp[1], rr, [[0, c[1], 1], [.55, c[0], 1], [1, c[2], 1]])}</defs><path d="${d}" fill="url(#${g})" stroke="#2a1a0c" stroke-width=".45"/>`;
-      for (const k of [.4, .62, .82]) { const arc = []; for (let j = 1; j < 12; j++) { const a = facing - span / 2 + span * j / 12, r = rr * k * (1 + .07 * Math.sin(j * 2.3)); arc.push([root[0] + Math.cos(a * Math.PI / 180) * r, root[1] + Math.sin(a * Math.PI / 180) * r]); }
-        fg += `<path d="${path(arc, false)}" stroke="${c[1]}" stroke-width=".4" fill="none" opacity=".6"/>`; }
+      fg += shadowOf(d) + `<defs>${radGrad(g, cp[0], cp[1], rr, [[0, c[1], 1], [.5, c[0], 1], [1, c[2], 1]])}</defs><path d="${d}" fill="url(#${g})" stroke="#2a1a0c" stroke-width=".5"/>`;
+      for (const k of [.3, .48, .64, .8, .92]) { const arc = []; for (let j = 1; j < 12; j++) { const a = facing - span / 2 + span * j / 12, r = rr * k * (1 + .07 * k * k * Math.sin(j * 2.3)); arc.push([root[0] + Math.cos(a * Math.PI / 180) * r, root[1] + Math.sin(a * Math.PI / 180) * r]); }
+        fg += `<path d="${path(arc, false)}" stroke="${c[1]}" stroke-width=".55" fill="none" opacity=".55"/><path d="${path(arc, false)}" stroke="${c[2]}" stroke-width=".35" fill="none" opacity=".5" transform="translate(0 -.6)"/>`; }
       // its upper growing edge catches the light
       const up = pts.slice(1).filter(q => q[1] < root[1] + 2); if (up.length > 2) fg += `<path d="${path(up, false)}" stroke="${c[2]}" stroke-width=".6" fill="none" opacity=".8"/>`; }
     // the branching heads: tapered branches forking twice, the tips a lighter tint of their own colour
@@ -169,8 +175,8 @@ module.exports = { name: 'Морские наросты', kind: 'deck', status: 
       const grow = (p, ang, len, r, depth, col) => { const e = [p[0] + Math.cos(ang) * len, p[1] + Math.sin(ang) * len]; segs.push({ p, e, r1: r, r2: r * .72, depth, col });
         if (depth >= 2) return; const s2 = .38 + Rb() * .2;
         grow(e, ang - s2, len * (.66 + Rb() * .1), r * .72, depth + 1, col); grow(e, ang + s2 * (.8 + Rb() * .4), len * (.6 + Rb() * .12), r * .7, depth + 1, col); };
-      for (const [th, aim, len, r, col] of [[200, [10, 14], 15, 2.6, 'red'], [236, [8, 6], 14, 2.5, 'orange'], [268, [12, 10], 13, 2.4, 'red'], [308, [18, 8], 11, 2.2, 'orange'],
-        [345, [24, 6], 8, 2, 'red'], [150, [4, 22], 10, 2.3, 'orange'], [118, [6, 28], 8, 2.1, 'red'], [52, [16, 20], 5.5, 1.6, 'orange']]) {
+      for (const [th, aim, len, r, col] of [[198, [13, 14], 16, 2.7, 'red'], [238, [13, 13], 16, 2.6, 'orange'], [266, [14, 13], 14.5, 2.5, 'red'], [312, [16, 12], 11, 2.3, 'orange'],
+        [348, [18, 12], 6.5, 2, 'red'], [152, [12, 16], 12, 2.4, 'orange'], [122, [10, 18], 8.5, 2.2, 'red'], [48, [12, 14], 4.6, 1.6, 'orange']]) {
         const p = polar(th, RH * .98), a = Math.atan2(aim[1] - p[1], aim[0] - p[0]); grow(p, a, len, r, 0, col); }
       const cap = s => { const dx = s.e[0] - s.p[0], dy = s.e[1] - s.p[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l, pts = [];
         pts.push([s.p[0] + nx * s.r1, s.p[1] + ny * s.r1], [lerp(s.p[0], s.e[0], .5) + nx * (s.r1 + s.r2) / 2, lerp(s.p[1], s.e[1], .5) + ny * (s.r1 + s.r2) / 2], [s.e[0] + nx * s.r2, s.e[1] + ny * s.r2]);
@@ -185,16 +191,17 @@ module.exports = { name: 'Морские наросты', kind: 'deck', status: 
         + segs.map(s => { const lo = [[s.p[0], s.p[1] + s.r1 * .45], [s.e[0], s.e[1] + s.r2 * .45]].map(q => Hp(q[0], q[1])), hi = [[s.p[0], s.p[1] - s.r1 * .45], [s.e[0], s.e[1] - s.r2 * .45]].map(q => Hp(q[0], q[1]));
           return `<path d="M${P2(lo[0])}L${P2(lo[1])}" stroke="${CR[s.col][1]}" stroke-width="${f((s.r1 + s.r2) * .4)}" stroke-linecap="round" opacity=".45"/><path d="M${P2(hi[0])}L${P2(hi[1])}" stroke="${CR[s.col][2]}" stroke-width="${f((s.r1 + s.r2) * .22)}" stroke-linecap="round" opacity=".8"/>`; }).join(''); }
     // the old crust on the rim: a few big lumps, barnacles, mussels, a scallop — fewer and bigger
-    const LUMP = [CR.red, CR.ochre, ['#7aa888', '#2a4a3a', '#b8dcc0']];
+    const LUMP = [[mix(CR.red[0], '#4a5a50', .3), CR.red[1], mix(CR.red[2], '#8aa898', .3)], [mix(CR.ochre[0], '#4a5a50', .3), CR.ochre[1], CR.ochre[2]], ['#6a8a74', '#22382c', '#a8c8b0']];
     const lg = LUMP.map((c, i) => { const id = nid('lp' + i, u); fg += `<defs><radialGradient id="${id}" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="${c[2]}"/><stop offset=".55" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></radialGradient></defs>`; return id; });
     { const Rc = rng(17);
-      for (let i = 0; i < 22; i++) { const th = i * 16.4 + Rc() * 8; if (inGap(th) && Rc() < .6) continue; const q = polar(th, RH + 1 + Rc() * 4), p = Hp(q[0], q[1]), r = 2.2 + Rc() * 1.8;
-        fg += `<ellipse cx="${f(p[0] + .5)}" cy="${f(p[1] + 1.6)}" rx="${f(r * SQ * 1.1)}" ry="${f(r * .8)}" fill="#020806" opacity=".4"/><ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(r * SQ)}" ry="${f(r)}" fill="url(#${lg[i % 3]})" stroke="#0a120e" stroke-width=".3"/>`; }
-      for (const th of [20, 75, 165, 250, 320]) { const q = polar(th, RH + 6), p = Hp(q[0], q[1]); fg += barnacles(u, p[0], p[1], 4, 1.3, 60 + th); }
+      for (let i = 0; i < 14; i++) { const th = i * 25.7 + Rc() * 10; if (inGap(th)) continue; const q = polar(th, RH + 1 + Rc() * 3), p = Hp(q[0], q[1]), r = 1.6 + Rc() * 1.1;
+        fg += `<ellipse cx="${f(p[0] + .5)}" cy="${f(p[1] + 1.4)}" rx="${f(r * SQ * 1.1)}" ry="${f(r * .8)}" fill="#020806" opacity=".4"/><path d="M${f(p[0] - r * SQ)} ${f(p[1] + r * .3)}Q${f(p[0] - r * SQ * .9)} ${f(p[1] - r)} ${f(p[0])} ${f(p[1] - r * .95)}Q${f(p[0] + r * SQ * 1.1)} ${f(p[1] - r * .8)} ${f(p[0] + r * SQ)} ${f(p[1] + r * .4)}Q${f(p[0])} ${f(p[1] + r * .9)} ${f(p[0] - r * SQ)} ${f(p[1] + r * .3)}Z" fill="url(#${lg[i % 3]})" stroke="#0a120e" stroke-width=".3"/>`
+          + `<ellipse cx="${f(p[0] + .2)}" cy="${f(p[1] - r * .25)}" rx="${f(r * .3 * SQ)}" ry="${f(r * .22)}" fill="#1a1010" opacity=".55"/>`; }
+      for (const th of [110, 165, 250, 320]) { const q = polar(th, RH + 6), p = Hp(q[0], q[1]); fg += barnacles(u, p[0], p[1], 4, 1.3, 60 + th); }
       for (const th of [100, 190, 300]) { const q = polar(th, RH + 5), p = Hp(q[0], q[1]); fg += mussel(p[0], p[1], 3.8, th + 90) + mussel(p[0] + 3, p[1] + 1.2, 3.2, th + 70); }
-      for (const [th, r, a, c] of [[60, 4.4, -20, '#f0d8c0'], [228, 4, 160, '#f4e0c8']]) { const q = polar(th, RH + 3), p = Hp(q[0], q[1]); fg += scallop(u, p[0], p[1], r, a, c); } }
+      for (const [th, r, a, c] of [[104, 4.2, -20, '#f0d8c0'], [228, 4, 160, '#f4e0c8']]) { const q = polar(th, RH + 3), p = Hp(q[0], q[1]); fg += scallop(u, p[0], p[1], r, a, c); } }
     // the air of the hold: a short stream of bubbles out of the gap, gone before it reaches the cost mark
-    { const Rq = rng(31), s0 = Hp(18, 20);
+    { const Rq = rng(31), s0 = Hp(16, 18);
       for (let i = 0; i < 11; i++) { const t = i / 10, y = s0[1] - 4 - t * (s0[1] - 52), x = s0[0] + Math.sin(t * 5 + 1) * 3 * t + (Rq() - .5) * 3 + t * 4, r = .6 + Rq() * (.8 + t * 1.2);
         fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="#d8fff4" fill-opacity=".12" stroke="#e8fff8" stroke-width=".35" opacity="${f(.75 - t * .35)}"/><circle cx="${f(x - r * .35)}" cy="${f(y - r * .35)}" r="${f(r * .3)}" fill="#ffffff" opacity=".7"/>`; } }
     // ——— the life round her: a small school far off in the murk, one fish near, weed ———

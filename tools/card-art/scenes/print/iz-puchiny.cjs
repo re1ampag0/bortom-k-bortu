@@ -15,15 +15,15 @@ const PK = require('../portrait-kit.cjs');
 const { f, nid, linGrad, radGrad, rng, mix, lerp } = K;
 const { motes } = PK;
 
-const SY = 60, HZ = 53;                              // the waterline at the lens; the horizon of the far sea above it
-const DU = { kind: 'dutch', x: 96, y: 128, scale: 1.15, flip: true, heel: -9 };   // the drowned Dutchman, bow right, rising
-const ENEMY = { kind: 'endeavour', x: 160, y: HZ + 2.6, scale: .3 };
+const SY = 60, HZ = 55;                              // the waterline at the lens; the horizon of the far sea above it
+const DU = { kind: 'dutch', x: 88, y: 122, scale: 1.07, flip: true, heel: -9 };   // the drowned Dutchman, bow right, rising
+const ENEMY = { kind: 'endeavour', x: 133, y: HZ + 2.6, scale: .3 };
 const light = { time: 'fog', haze: .8, key: { type: 'moon', x: 58, y: 22, el: 32, color: '#d4f2e4', power: .7 }, fill: { color: '#2f5a50', power: .5 },
   rim: { az: 300, color: '#d8fff0', power: .35 }, locals: [{ x: 122, y: 112, color: '#9effd0', power: .6, radius: 40 }] };
 const skel = { horizon: HZ, eye: 0, light: 'the moon low in the fog upper left; under water the light comes down in shafts; green gun flashes in the ports', items: [
-  ['waterline (split)', 0, SY - 3, 200, 6, 'the sea at the lens'], ['enemy', 144, 34, 34, 22, 'far sea'],
-  ['mast tops', 70, 44, 56, 18, 'out of the water, foaming'], ['Dutchman hull', 40, 96, 150, 44, 'under water, rising'],
-  ['flashes + bubble cones', 90, 98, 50, 24, 'her ports'], ['ball rising', 136, 80, 10, 10, 'under water'], ['columns + balls', 90, 26, 64, 36, 'the surface, in the air'],
+  ['waterline (split)', 0, SY - 3, 200, 6, 'the sea at the lens'], ['enemy', 117, 36, 40, 22, 'far sea, clear of the cost badge'],
+  ['mast tops', 60, 44, 56, 18, 'out of the water, foaming'], ['Dutchman hull', 32, 92, 144, 36, 'under water, rising'],
+  ['flashes + bubble columns', 80, 74, 50, 40, 'her ports up to the surface'], ['columns + balls', 74, 30, 52, 30, 'the surface, in the air'],
   ['deep', 0, 140, 200, 140, 'under the glass']] };
 
 // a point of the ship in her own frame (X along the hull, + to the stern; H up from the waterline) → the picture
@@ -46,18 +46,18 @@ function bubbleTrail(p0, c, p1, n, seed, k = 1) {
 // phase 0 — fresh and bright, 1 — just lit, 2 — spent (only bubbles and a faint glow)
 function wetFlash(u, x, y, dir, len, phase, seed) {
   const R = rng(seed), a = dir * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), nx = -uy, ny = ux;
-  const pw = [1, .7, .25][phase];
-  let out = K.localGlow(u, { x: x + ux * len * .3, y: y + uy * len * .3, color: '#8effc8', power: .75 * pw, radius: len * 1.5 }, { core: false });
+  const pw = [1, .85, .25][phase];
+  let out = K.localGlow(u, { x: x + ux * len * .3, y: y + uy * len * .3, color: '#8effc8', power: .9 * pw, radius: len * 1.6 }, { core: false });
   if (phase < 2) {
     // the burst: a few jagged tongues of pale green light along dir, the longest in the middle
     const id = nid('wf', u), fb = nid('wb', u), L2 = len * (phase ? .6 : 1);
     let tongues = '';
-    for (let i = 0; i < 7; i++) { const sp = (R() - .5) * .9 * (i ? 1 : .2), l = L2 * (i ? .35 + R() * .5 : 1), w = len * (.08 + R() * .06);
+    for (let i = 0; i < 7; i++) { const sp = (R() - .5) * .9 * (i ? 1 : .2), l = L2 * (i ? .35 + R() * .5 : 1), w = len * (.1 + R() * .06);
       const ex = x + (ux + nx * sp) * l, ey = y + (uy + ny * sp) * l, mx = x + (ux + nx * sp * .5) * l * .45, my = y + (uy + ny * sp * .5) * l * .45;
       tongues += `<path d="M${f(x + nx * w)} ${f(y + ny * w)}Q${f(mx + nx * w * 1.6)} ${f(my + ny * w * 1.6)} ${f(ex)} ${f(ey)}Q${f(mx - nx * w * 1.6)} ${f(my - ny * w * 1.6)} ${f(x - nx * w)} ${f(y - ny * w)}Z"/>`; }
-    out += `<defs>${radGrad(id, x, y, L2, [[0, '#ffffff', 1], [.2, '#e4fff2', .95], [.5, '#8effc8', .7], [1, '#3adca0', 0]])}<filter id="${fb}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${f(len * .05)}"/></filter></defs>`
+    out += `<defs>${radGrad(id, x, y, L2, [[0, '#ffffff', 1], [.3, '#effff8', 1], [.65, '#a8ffd8', .85], [1, '#5ae8b0', .15]])}<filter id="${fb}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${f(len * .03)}"/></filter></defs>`
       + `<g fill="url(#${id})" filter="url(#${fb})" style="mix-blend-mode:screen">${tongues}</g>`
-      + `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(len * .16)}" ry="${f(len * .12)}" fill="#ffffff" opacity="${f(.9 * pw)}"/>`;
+      + `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(len * .09)}" ry="${f(len * .07)}" fill="#ffffff" opacity="${f(.9 * pw)}"/>`;
   }
   // the churned bubbles round the muzzle, pushed out along dir
   for (let i = 0; i < [26, 18, 30][phase]; i++) { const t = R(), sp = (R() - .5) * (1 + t), d = len * (phase === 2 ? .2 + t * .9 : .5 + t * .9);
@@ -126,21 +126,22 @@ module.exports = { name: 'Из пучины', kind: 'deck', status: 'draft', cam
         ca += `<path d="M${f(x)} ${f(y)}q${f(l / 3)} ${f(-1 - R())} ${f(l * .6)} ${f(R() - .5)}t${f(l * .4)} ${f(.6)}" stroke="#bff8e0" stroke-width="${f(.2 + R() * .35)}" fill="none" opacity="${f(.15 + R() * .25)}"/>`; }
       mid += `<g style="mix-blend-mode:screen" clip-path="url(#${uc})">${ca}</g>`; }
     // the deep under her: she rises out of the dark
-    { const dp = nid('dp', u); mid += `<defs>${linGrad(dp, 0, 132, 0, 200,[[0, '#020c0a', 0], [.5, '#020c0a', .7], [1, '#020a08', .95]])}</defs><rect x="-10" y="128" width="220" height="160" fill="url(#${dp})"/>`; }
+    { const dp = nid('dp', u); mid += `<defs>${linGrad(dp, 0, 124, 0, 180, [[0, '#020c0a', 0], [.35, '#020c0a', .7], [1, '#020a08', .95]])}</defs><rect x="-10" y="120" width="220" height="160" fill="url(#${dp})"/>`; }
     // ——— the guns under water: three ports, three phases; cones of bubbles, the balls rising in trails ———
-    const ports = [-24.2, -12.7, -1.1].map(X => pt(DU, X, 9.6)), aim = -52;
+    const ports = [-24.2, -12.7, -1.1].map(X => pt(DU, X, 9.6));
+    // each gun: flash → a column of bubbles → a column of water on the surface → the ball. The fresh shot (the
+    // forward gun) is just breaking the surface; the one before stands at the head of a tall column; the first has
+    // left its falling column behind and flies at the enemy
+    const COL = [[119, 9, 8, SY - 11], [80, 24, 7, SY - 28], [96, 9, 11, false]];   // [x, height, width, ball y] per gun
     let fx = '';
-    fx += wetFlash(u, ports[0][0], ports[0][1], aim + 4, 24, 0, 3);       // fired last: fresh, the brightest
-    fx += wetFlash(u, ports[1][0], ports[1][1], aim - 4, 14, 1, 7);       // the one before: the flash dying
-    fx += wetFlash(u, ports[2][0], ports[2][1], -84, 16, 2, 11);         // the first: only its cloud of bubbles is left
-    // the trails: the last ball still rising under water; the second at the head of its column; the first long gone
-    const BALL = [141, 86], COL = [[98, SY], [138, SY]];
-    fx += bubbleTrail([ports[0][0] + 6, ports[0][1] - 8], [ports[0][0] + 10, ports[0][1] - 20], [BALL[0] - 1, BALL[1] + 4], 30, 41, .8)
-      + K.localGlow(u, { x: BALL[0], y: BALL[1], color: '#9effd0', power: .35, radius: 9 }, { core: false }) + K.shot(u, L, { x: BALL[0], y: BALL[1] + 2.2, s: .7, contact: false, seed: 1 });
-    fx += bubbleTrail([ports[1][0] + 4, ports[1][1] - 6], [ports[1][0] + 10, ports[1][1] - 34], [COL[1][0], SY + 2], 36, 43, 1);
-    fx += bubbleTrail([ports[2][0], ports[2][1] - 8], [ports[2][0] - 2, ports[2][1] - 30], [COL[0][0], SY + 2], 44, 47, 1.15);
+    fx += wetFlash(u, ports[0][0], ports[0][1], -66, 33, 0, 3);
+    fx += wetFlash(u, ports[1][0], ports[1][1], -98, 21, 1, 7);
+    fx += wetFlash(u, ports[2][0], ports[2][1], -84, 17, 1, 11);
+    fx += bubbleTrail([ports[0][0] + 2, ports[0][1] - 9], [ports[0][0] + 6, ports[0][1] - 30], [COL[0][0], SY + 2], 46, 41, 1.05);
+    fx += bubbleTrail([ports[1][0] - 3, ports[1][1] - 8], [ports[1][0] - 12, ports[1][1] - 26], [COL[1][0], SY + 2], 48, 43, 1.1);
+    fx += bubbleTrail([ports[2][0], ports[2][1] - 8], [ports[2][0] + 4, ports[2][1] - 30], [COL[2][0], SY + 2], 46, 47, 1.15);
     // the surface from below where the balls broke out: a boiling white patch
-    for (const [x] of COL) fx += K.localGlow(u, { x, y: SY + 2, color: '#e8fff6', power: .5, radius: 12 }, { squash: .4, core: false });
+    for (const [x] of COL) fx += K.localGlow(u, { x, y: SY + 2, color: '#e8fff6', power: .55, radius: 12 }, { squash: .4, core: false });
     // fish scattering from the flashes, a few motes in the murk
     { const fish = (x, y, s, d, c) => `<g transform="translate(${f(x)} ${f(y)}) scale(${f(d * s)} ${f(s)})"><path d="M-5 0q3 -2.4 7 -.6l3 -2v5.2l-3 -2q-4 1.8 -7 -.6z" fill="${c}"/><circle cx="-3.4" cy="-.4" r=".4" fill="#e8fff4"/></g>`;
       fx += fish(24, 80, 1.1, -1, '#5a8a80') + fish(14, 88, .9, -1, '#4e7e74') + fish(30, 92, .8, -1, '#4e7e74') + fish(180, 92, 1, 1, '#5a8a80') + fish(190, 84, .8, 1, '#4e7e74'); }
@@ -155,10 +156,11 @@ module.exports = { name: 'Из пучины', kind: 'deck', status: 'draft', cam
     mastX.forEach(([x, up, t], i) => { if (!up) return; top += K.foam(u, { x, y: SY + .2, w: 18, h: 1.8, seed: 60 + i, L }) + K.splash(u, { x: x + 1, y: SY + .6, w: 8, h: 6, seed: 3 + i * 3, L, wind: 0 });
       const R = rng(71 + i); for (let j = 0; j < 12; j++) { const xx = t[0] - 10 + R() * 20, yy = t[1] + 2 + R() * (SY - t[1] - 4), l = 2 + R() * 4; top += `<path d="M${f(xx)} ${f(yy)}v${f(l)}" stroke="#e4fff6" stroke-width="${f(.25 + R() * .3)}" opacity="${f(.35 + R() * .4)}" stroke-linecap="round"/>`; } });
     // the balls tear out of the sea: the second at the head of a tall fresh column; the first one's column falls back
-    top += waterColumn(u, L, COL[1][0], SY + .5, 26, 7, 5, SY - 30) + waterColumn(u, L, COL[0][0], SY + .5, 9, 11, 9, false);
-    // the first ball, high up, flies at the enemy: a thin trail of spray behind it, curving from its column
-    { const tl = nid('tl', u); top += `<defs>${linGrad(tl, 100, 50, 148, 30, [[0, '#e8fff6', 0], [1, '#f4fff8', .85]])}</defs><path d="M100 50Q116 26 146 30" stroke="url(#${tl})" stroke-width="1.3" fill="none" stroke-linecap="round"/>`
-      + K.shot(u, L, { x: 149, y: 32.6, s: .75, contact: false, seed: 4 }); }
+    COL.forEach(([x, h, w, by], i) => { top += waterColumn(u, L, x, SY + .5, h, w, [7, 5, 9][i], by); });
+    // the first ball flies at the enemy: a thin trail of spray from its column, arcing down to her side
+    { const tl = nid('tl', u), a = [COL[2][0] + 2, SY - 9], c = [112, 24], e = [ENEMY.x - 8, HZ - .5];
+      top += `<defs>${linGrad(tl, a[0], a[1], e[0], e[1], [[0, '#e8fff6', 0], [1, '#f4fff8', .85]])}</defs><path d="M${a[0]} ${a[1]}Q${c[0]} ${c[1]} ${f(e[0] - 2.4)} ${f(e[1] - 3.2)}" stroke="url(#${tl})" stroke-width="1.2" fill="none" stroke-linecap="round"/>`
+        + K.shot(u, L, { x: e[0] - 1.6, y: e[1] - 1.4, s: .72, contact: false, seed: 4 }); }
     // the fog's veil low over the sea, the under-glass dark
     top += K.fog(u, L, { y: SY - 12, h: 14, density: .3, seed: 9 });
     { const gl = nid('gl', u); top += `<defs>${linGrad(gl, 0, 146, 0, 290, [[0, '#020806', 0], [.4, '#020806', .5], [1, '#010403', .85]])}</defs><rect x="-10" y="146" width="220" height="144" fill="url(#${gl})"/>`; }

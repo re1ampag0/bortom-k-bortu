@@ -59,7 +59,7 @@ function pour(u, L, x, y0, y1, w, seed, o = {}) {
     for (let i = 0; i < 8; i++) { if (i > 3 && R() < .35) continue; s += `<path d="M${P2(pts[i])}L${P2(pts[i + 1])}" stroke="#e8fff6" stroke-width="${f(Math.max(.14, w * .16 * (1 - i / 9)))}" opacity="${f((.42 - i * .035) * op)}" stroke-linecap="round"/>`; }
     const e = pts[8]; for (let k = 0; k < 4; k++) { const r = .18 + R() * .3; s += `<ellipse cx="${f(e[0] + (R() - .5) * 1.6)}" cy="${f(e[1] + 1 + k * 2.2 + R())}" rx="${f(r)}" ry="${f(r * 1.8)}" fill="#effff8" opacity="${f(.35 + R() * .35)}"/>`; } }
   // spray where it lands: a low puff and drops thrown up
-  if (!o.noSplash) { s += `<g opacity=".8">${K.splash(u, { x: X(1), y: y1 + .3, w: w * 1.2 + 3, h: 2 + w * .4, seed: seed % 9, L, wind: 0 })}</g>`;
+  if (!o.noSplash) { s += K.foam(u, { x: X(1), y: y1 + .2, w: w * 1.6 + 3, h: 1.2, seed: seed % 9, L });
     for (let i = 0; i < 7; i++) { const r = .18 + R() * .35; s += `<circle cx="${f(X(1) + (R() - .5) * (w + 7))}" cy="${f(y1 - R() * 6)}" r="${f(r)}" fill="#f0fff8" opacity="${f(.3 + R() * .4)}"/>`; } }
   return s;
 }
@@ -87,7 +87,7 @@ module.exports = { name: 'Уйти на глубину', kind: 'deck', status: '
     { const cu = nid('cu', u), bl = nid('bu', u), tg = nid('tg', u);
       mid += `<defs><clipPath id="${cu}"><rect x="-10" y="${SEA}" width="220" height="80"/></clipPath><filter id="${bl}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.3"/></filter>`
         + `${linGrad(tg, 0, SEA, 0, SEA + 46, [[0, '#0c2a24', .1], [.5, '#06181a', .35], [1, '#041010', .75]])}</defs>`
-        + `<g clip-path="url(#${cu})"><g filter="url(#${bl})" opacity=".5">${K.shipSilhouette('dutch', { ...DU, color: '#4aa888', u })}</g>`
+        + `<g clip-path="url(#${cu})"><g filter="url(#${bl})" opacity=".75">${K.shipSilhouette('dutch', { ...DU, color: '#5cc8a4', u })}</g>`
         + `<rect x="-10" y="${SEA}" width="220" height="60" fill="url(#${tg})"/></g>`;
       // the ghost-green glow of her drowned lanterns and ports, deep under the hull
       mid += K.localGlow(u, { x: 140, y: 128, color: '#7affc8', power: .35, radius: 26 }, { squash: .4, core: false }); }
@@ -111,7 +111,9 @@ module.exports = { name: 'Уйти на глубину', kind: 'deck', status: '
       for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, x = FUN.x + Math.cos(a) * FUN.rx, y = FUN.y + Math.sin(a) * FUN.ry; sea += K.foam(u, { x, y, w: 14 + R() * 12, h: 1.4, seed: 40 + i, L }); } }
     // where she cuts the surface: churned white water along the line, heaped against her stern
     sea += K.foam(u, { x: 96, y: SEA + .3, w: 76, h: 2.6, seed: 7, L });
-    for (const [x, w, h, sd] of [[60, 16, 9, 4], [84, 12, 6, 1], [118, 14, 8, 2], [140, 10, 6, 5]]) sea += K.splash(u, { x, y: SEA + .5, w, h, seed: sd, L, wind: 0 });
+    // heaps of churned water against her (low humps of foam, no columns)
+    for (const [x, w, sd] of [[60, 18, 4], [86, 14, 1], [116, 16, 2], [140, 12, 5]]) { const hg = nid('hp', u);
+      sea += `<defs>${radGrad(hg, x, SEA + 1, w / 2, [[0, '#f0fff8', .75], [.6, '#d8f8ec', .4], [1, '#c8f0e4', 0]])}</defs><ellipse cx="${x}" cy="${SEA}" rx="${f(w / 2)}" ry="${f(w * .14)}" fill="url(#${hg})"/>` + K.foam(u, { x, y: SEA - .6, w: w * .8, h: 1.8, seed: sd + 20, L }); }
     // bubbles boiling up where the bow went down, weed torn off her
     for (let i = 0; i < 46; i++) { const a = R() * Math.PI * 2, r = 8 + R() * 40, x = 140 + Math.cos(a) * r, y = SEA + 3 + Math.sin(a) * r * .14, rr = .4 + R() * 1.3;
       sea += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rr)}" ry="${f(rr * .55)}" fill="#c8fff0" fill-opacity=".12" stroke="#effff8" stroke-width=".3" opacity="${f(.45 + R() * .4)}"/>`; }
@@ -130,7 +132,7 @@ module.exports = { name: 'Уйти на глубину', kind: 'deck', status: '
       for (let i = 1; i <= 7; i++) { const p = bez(SHOT.a, SHOT.c, SHOT.b, T + i * .05); shot += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".45" fill="#effff8" opacity="${f(.35 - i * .03)}"/>`; } }
     // ——— light: the moon's veil, her green lantern's glow on the fog, motes; the under-glass dark ———
     let lt = K.localGlow(u, { x: 86, y: 24, color: '#e8fff4', power: .25, radius: 60 }, { core: false }) + motes(18, 30, 40, 150, 70, '#effff4', 5);
-    lt += K.fog(u, L, { y: SEA + 6, h: 26, density: .35, seed: 8 });
+    lt += K.fog(u, L, { y: SEA + 14, h: 24, density: .2, seed: 8 });
     { const gl = nid('gl', u); lt += `<defs>${linGrad(gl, 0, 138, 0, 290, [[0, '#04140f', 0], [.35, '#04140f', .5], [1, '#020806', .85]])}</defs><rect x="-10" y="138" width="220" height="152" fill="url(#${gl})"/>`; }
     return [bg, mid + falls + sea + shot + lt];
   } };
