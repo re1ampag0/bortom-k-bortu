@@ -8,6 +8,12 @@
 // (fire is «Калёные ядра») — now the kit's ship lists towards us with a ragged breach in her side at the waterline,
 // splintered planks bent inward, the sea pouring in; the deep reaches for it with drowned ghostly arms (proper
 // hands, each its own gesture), the biggest in front; the Dutchman is a real ship in the fog behind, her gun flashing.
+// Review fix (verdict-b1): the breach read as a mouth with teeth — now 1.5× bigger, forward on her lower side, its
+// edge stepped and uneven (planks broken at different lengths), the torn ends dark brown, bent inward at different
+// angles, only the fresh break at each tip pale; dark sea runs in over the lower lip. She is down by the head 10°
+// (heel 10), the holed side lower. The arms (ghostArm redone): an elbow, broad blurred base melting into mist at the
+// water, a wrist thinner than the forearm, more transparent towards the sea, a light rim; fingers hooked to grab
+// the breach. Four big planks (a port or two long) afloat between the arms.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');

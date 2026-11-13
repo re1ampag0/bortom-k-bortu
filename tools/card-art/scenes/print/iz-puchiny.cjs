@@ -9,6 +9,10 @@
 // Dutchman, tinted by the water in depth, light shafts and caustics on her; the enemy was a black lozenge in the
 // sky — now a real ship on a real surface; the shot came out nowhere — now each trail ends in a column of water
 // with the ball at its head; one flash is a bright fresh burst, one is just lit, one gun is only a cloud of bubbles.
+// Review fix (verdict-b1): the enemy moved left and down (x 133 on a horizon 2 lower), clear of the cost badge, and
+// the first ball's arc now ends at her side; the Dutchman 7 % smaller, raised and moved left, the deep swallowing her
+// bottom, so dark water shows above the glass; the flashes are bigger brighter cones (+35 %, all three lit) and each
+// gun has its own chain — flash → column of bubbles → column of water on the surface → ball (the under-water ball gone).
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
