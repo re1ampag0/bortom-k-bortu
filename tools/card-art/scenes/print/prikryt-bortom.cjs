@@ -18,15 +18,15 @@ const { helpers: Hx } = require('./tyazhyolyy-bort.cjs');
 const { f, mix, nid, rng } = K;
 
 const HZ = 98, SUN = { x: 182, y: 50 };
-const REV = { kind: 'revenge', x: 92, y: 118, scale: 1.05, heel: -4, roll: -6, sails: 'full', detail: 'near', lights: true, seed: 7 };
-const ALLY = { kind: 'pearl', x: 186, y: 100.5, scale: .4, sails: 'full', detail: 'mid', lights: true, wake: true, seed: 3 };
-const EN = { kind: 'endeavour', x: 16, y: 99.5, scale: .34, flip: true, sails: 'full', detail: 'mid', seed: 4 };
+const REV = { kind: 'revenge', x: 87, y: 118, scale: 1.05, heel: 0, roll: -6, sails: 'full', detail: 'near', lights: true, seed: 7 };
+const ALLY = { kind: 'pearl', x: 190, y: 100.5, scale: .38, sails: 'reefed', detail: 'mid', lights: true, wake: true, seed: 3 };
+const EN = { kind: 'endeavour', x: 24, y: 99.5, scale: .46, flip: true, sails: 'full', detail: 'mid', seed: 4 };
 const light = { time: 'dusk', haze: .35, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffa860', power: .6 }, fill: { color: '#6e4a70', power: .45 },
   rim: { az: 20, color: '#ffc890', power: .55 },
-  locals: [{ x: 70, y: 106, color: '#ffc070', power: .8, radius: 30 }, { x: 18, y: 96, color: '#ffb050', power: .6, radius: 18 }] };
+  locals: [{ x: 70, y: 106, color: '#ffc070', power: .8, radius: 30 }, { x: 30, y: 95, color: '#ffb050', power: .6, radius: 22 }] };
 const skel = { horizon: HZ, eye: 4, light: 'the low sun ahead right behind the Pearl (contre-jour); the enemy\'s flashes; the impacts on the Revenge\'s side', items: [
-  ['revenge', 10, 118, 158, 108, 'water: the near swell, waterline y 118 tilted 4° (bow up, left), laid over away from the blows'],
-  ['enemy (Endeavour)', 0, 99.5, 36, 32, 'water on the horizon, left, under the Revenge\'s bowsprit'],
+  ['revenge', 5, 118, 158, 108, 'water: the near swell, waterline y 118 level, laid over away from the blows'],
+  ['enemy (Endeavour)', 2, 99.5, 50, 44, 'water on the horizon, left, under the Revenge\'s bowsprit'],
   ['ally (Pearl)', 160, 100.5, 40, 42, 'water on the horizon, right, half behind the Revenge\'s stern, against the sun'],
   ['hits', 50, 112, 40, 16, 'the Revenge\'s side at her bow quarter, round the forward ports'],
   ['shot trails', 20, 108, 50, 16, 'in the air between the enemy and the Revenge']] };
@@ -43,10 +43,14 @@ module.exports = { name: 'Прикрыть бортом', kind: 'deck', status: 
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .6, seed: 5, glitter: SUN.x });
     // ——— the ally beyond, against the sun: whole, quiet, her lanterns lit
     bg += K.ship(u, L, ALLY);
+    { const g = nid('av', u); bg += `<defs><radialGradient id="${g}" cx="${SUN.x}" cy="${SUN.y + 30}" r="46" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffd8a8" stop-opacity=".42"/><stop offset=".6" stop-color="#ffc890" stop-opacity=".22"/><stop offset="1" stop-color="#ffc890" stop-opacity="0"/></radialGradient></defs><rect x="140" y="30" width="60" height="76" fill="url(#${g})"/>`; }
     // ——— the shooter far on the left: her side in flashes, the smoke of her salvo rolling out and down the wind
-    bg += K.ship(u, L, EN);
-    bg += K.smoke(u, L, { x: 10, y: 97, w: 34, h: 22, wind: -.8, seed: 3, opacity: .85, glow: { color: '#ffb050', power: .8 } });
-    for (const [x, y, s] of [[8, 96.2, 1.2], [17, 96.5, 1.5], [26, 96.1, 1.2]]) bg += Hx.burst(u, x, y, s, Math.round(x), .4) + K.muzzleFlash(u, { x: x + 1, y, dir: 4, len: 9 * s, seed: Math.round(x) % 3, smoke: false });
+    const Le = Object.assign(K.makeLight(Object.assign({}, light, { haze: .1 }), { horizon: HZ, eye: 4 }), { pal: L.pal });
+    bg += K.smoke(u, L, { x: 14, y: 96, w: 30, h: 20, wind: -.8, seed: 3, opacity: .5 }) + K.ship(u, Le, EN);
+    const Pe = Hx.sidePt(EN, K.shipGeom(EN.kind, EN)), ep = Hx.portXH(EN.kind, 1);
+    for (const [i, ph, sd] of [[1, 0, 2], [4, .45, 7], [7, .7, 4], [10, .9, 9]]) { const [X, H] = ep[i], m = Pe(X, H - .2, 1.5);
+      bg += Hx.portFlash(u, Le, { x: m[0], y: m[1], k: .75, phase: ph, seed: sd, dir: 4, len: 8, smokeDir: [.5, -.6], tone: 'grey' }); }
+    const shot = Pe(ep[1][0], ep[1][1] - .2, 1.5);
 
     // ——— the Revenge between them: broadside, laid over away from the blows, on the slope of the near swell
     const G = K.shipGeom(REV.kind, REV), P = Hx.sidePt(REV, G), ang = Math.atan(tan) * 180 / Math.PI;
@@ -63,8 +67,8 @@ module.exports = { name: 'Прикрыть бортом', kind: 'deck', status: 
     // ——— the blows on her bow quarter: two balls already stuck in the planking, a fresh one striking now
     const at = (X, H) => { const [x, y] = P(X, H); return { x, y }; };
     fg += Hx.dent(u, L, { ...at(-10.5, 9.8), r: 1.1, ang, seed: 4 });
-    for (const [X, H, r, sd] of [[-27.6, 3.8, 2.2, 3], [-36.5, 8.6, 2, 5]]) { const b = at(X, H);
-      fg += `<ellipse cx="${f(b.x)}" cy="${f(b.y)}" rx="${f(r * 1.55)}" ry="${f(r * 1.4)}" fill="none" stroke="#e8b070" stroke-width=".7" stroke-dasharray=".9 .5" opacity=".9"/>` + Hx.stuckBall(u, L, { ...b, r, ang, seed: sd, dx: .25, dy: -.2 }) + K.localGlow(u, { x: b.x + .5, y: b.y - .5, color: '#ffc070', power: .55, radius: r * 3.2 }); }
+    const stuck = [[-28, 3.8, 3, 3], [-37, 8.4, 2.8, 5], [-9.5, 3.6, 2.6, 6]];
+    for (const [X, H, r, sd] of stuck) fg += Hx.stuckBall(u, L, { ...at(X, H), r, ang, seed: sd, dx: .25, dy: -.2 });
     const hit = at(-19.2, 10.2);
     { const { x, y } = hit; let sk = '';
       for (let i = 0; i < 30; i++) { const a = Math.PI * (.6 + R() * .9), d = 2 + R() * 15, cx = x + Math.cos(a) * d, cy = y + Math.sin(a) * d * .7 - R() * 2.5, l = 1 + R() * 2.8, rot = R() * 3;
@@ -73,9 +77,9 @@ module.exports = { name: 'Прикрыть бортом', kind: 'deck', status: 
         + K.localGlow(u, { x, y, color: '#ffd890', power: 1, radius: 20 })
         + `<g transform="translate(${f(x)} ${f(y)}) scale(1.5) translate(${f(-x)} ${f(-y)})"><path d="M${f(x)} ${f(y - 4.2)}l1 3.2l3.4 -1.2l-2.2 2.4l3.2 1.4l-3.6 .2l.6 3.4l-2.4 -2.4l-2.2 2.6l.4 -3.4l-3.4 -.6l3 -1.6l-1.8 -2.8l2.8 1.4z" fill="#fff2c0" opacity=".95"/></g>` + sk; }
     // the next balls on their way from the enemy's side, along their trails (low arcs)
-    fg += Hx.flying(u, L, 26, 95, 52, 99.4, 1.6) + Hx.flying(u, L, 24, 97.4, 44, 106, 1.5);
-    for (const [tx, ty] of [[hit.x - 2, hit.y], [at(-27.6, 3.8).x - 2.5, at(-27.6, 3.8).y], [at(-36.5, 8.6).x - 2.5, at(-36.5, 8.6).y]]) { const g = nid('tr', u);
-      fg += `<defs>${Hx.lin(g, 30, 96, tx, ty, [[0, '#f0e4d0', 0], [.5, '#f4ecdc', .45], [1, '#fbf6ec', .85]])}</defs><path d="M30 96Q${f((30 + tx) / 2)} ${f(Math.min(96, ty) - 3)} ${f(tx)} ${f(ty)}" stroke="url(#${g})" stroke-width="1.3" fill="none" stroke-linecap="round"/>`; }
+    fg += Hx.flying(u, L, shot[0] + 4, shot[1] - 1, shot[0] + 16, shot[1] + 1.5, 1.6);
+    for (const [tx, ty] of [[hit.x - 2, hit.y], [at(-28, 3.8).x - 3.5, at(-28, 3.8).y]]) { const g = nid('tr', u), [sx, sy] = [shot[0] + 3, shot[1] - 1];
+      fg += `<defs>${Hx.lin(g, sx, sy, tx, ty, [[0, '#f0e4d0', 0], [.5, '#f4ecdc', .45], [1, '#fbf6ec', .85]])}</defs><path d="M${f(sx)} ${f(sy)}Q${f((sx + tx) / 2)} ${f(Math.min(sy, ty) - 3)} ${f(tx)} ${f(ty)}" stroke="url(#${g})" stroke-width="1.3" fill="none" stroke-linecap="round"/>`; }
     // the impact's light on the water under her bow
     fg += K.localGlow(u, { x: hit.x, y: wlY(hit.x) + 4, color: '#ffb050', power: .4, radius: 22 }, { squash: .3, core: false });
     // under the glass: the near swell darkening
