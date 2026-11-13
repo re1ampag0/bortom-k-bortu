@@ -141,14 +141,14 @@ function gun(u, L) {
   for (const sx of [-1, 1]) s += truck(sx * 11.6, .08, 2.8, 3.4, 30 + sx);
   // the breeching from the ringbolts in the side round the cascabel, the breech end with its rings and the knob
   const cas = P(0, 13, -.1), rb = [[PORT[0] - 7, PORT[3] - 4], [PORT[2] + 7, PORT[3] - 4]];
-  const br = `M${P2(rb[0])}Q${f(cas[0] - 26)} ${f(cas[1] + 10)} ${f(cas[0] - 3)} ${f(cas[1] + 1.6)}M${P2(rb[1])}Q${f(cas[0] + 26)} ${f(cas[1] + 10)} ${f(cas[0] + 3)} ${f(cas[1] + 1.6)}`;
+  const br = `M${P2(rb[0])}Q${f(cas[0] - 22)} ${f(cas[1] + 16)} ${f(cas[0] - 3)} ${f(cas[1] + 3.4)}M${P2(rb[1])}Q${f(cas[0] + 22)} ${f(cas[1] + 16)} ${f(cas[0] + 3)} ${f(cas[1] + 3.4)}`;
   { const c = P(0, 13, 0), r = 5.4 * S;
     s += K.shadeSphere(u, c[0], c[1], r, L, 'iron', { outline: .5 });
     s += `<circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r)}" fill="none" stroke="${iron.outline}" stroke-width=".8"/><circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r * .78)}" fill="none" stroke="${iron.lit}" stroke-width=".5" opacity=".5"/><circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r * .66)}" fill="none" stroke="${iron.shadow}" stroke-width=".7" opacity=".8"/>`
       // the daylight rim round the top of the breech
       + `<path d="M${f(c[0] - r * .9)} ${f(c[1] - r * .42)}A${f(r)} ${f(r)} 0 0 1 ${f(c[0] + r * .9)} ${f(c[1] - r * .42)}" stroke="#fff0d0" stroke-width=".8" fill="none" opacity=".6"/>`; }
-  s += `<path d="${br}" stroke="${rp.outline}" stroke-width="2.4" fill="none"/><path d="${br}" stroke="${rp.half}" stroke-width="1.4" fill="none"/><path d="${br}" stroke="${rp.lit}" stroke-width=".4" fill="none" opacity=".6" transform="translate(0 -.4)"/>`;
-  s += K.shadeCyl(u, cas[0], cas[1] - .2, cas[0], cas[1] + .2, 1.6, L, 'iron', { outline: .3 }) + K.shadeSphere(u, cas[0], cas[1] + .8, 3.6, L, 'iron', { outline: .4 });
+  s += `<path d="${br}" stroke="${rp.outline}" stroke-width="1.9" fill="none"/><path d="${br}" stroke="${rp.core}" stroke-width="1.1" fill="none"/><path d="${br}" stroke="${rp.lit}" stroke-width=".4" fill="none" opacity=".6" transform="translate(0 -.4)"/>`;
+  s += K.shadeSphere(u, cas[0], cas[1] + .4, 4.2, L, 'iron', { outline: .45 }) + `<path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 3.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 3.4)}" stroke="${rp.outline}" stroke-width="1.9" fill="none"/><path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 3.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 3.4)}" stroke="${rp.core}" stroke-width="1.1" fill="none"/>`;
   return s;
 }
 

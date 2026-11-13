@@ -106,6 +106,8 @@ module.exports = { name: 'Оплаченный залп', kind: 'deck', status: 
     let mid = '';
     for (const z of [6.85, 4.55]) { const s = GA.s * GA.Z / z, base = pr(0, YF, z)[1], xm = pr(-1.35, 0, z)[0];
       mid += K.castShadow(u, L, { x: xm + 34 * s, y: base, w: 36 * s, h: 18 * s, horizon: HZ, d: .5 }) + K.cannon(u, L, { x: xm + 42 * s, y: base, s, flip: true, seed: Math.round(z) }); }
+    // the far end of the deck in the shade of the smoke: the far guns step back
+    { const id = nid('fd', u); mid += `<defs><filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs><ellipse cx="${VX - 14}" cy="${HZ + 24}" rx="34" ry="13" fill="#0c0806" opacity=".35" filter="url(#${id})"/>`; }
     // ——— the near gun: fired, recoiling; smoke from the muzzle back into the deck, a spurt from the vent ———
     { const x = MZ + 66.3 * GA.s / 1.7, y = pr(0, YF, GA.Z)[1];
       mid += K.castShadow(u, L, { x: x + 4, y, w: 36 * GA.s, h: 21 * GA.s, horizon: HZ, d: .5 }) + K.cannon(u, L, { x, y, s: GA.s, flip: true, recoil: GA.recoil, seed: 2 });

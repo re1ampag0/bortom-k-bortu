@@ -95,6 +95,8 @@ module.exports = { name: 'Залп всей батареей', kind: 'deck', sta
     // burst its own shape), the upper rows a touch smaller
     for (const p of P) fg += burst(u, p.x, p.y, (p.row === 0 ? .7 : p.row === 1 ? .66 : .6) * (.9 + R() * .22), p.row * 20 + p.i);
     for (const p of P) if (p.i % 3 === 1) fg += K.localGlow(u, { x: p.x, y: p.y, color: '#ffc070', power: .55, radius: 9 });
+    // the three lines of fire read as one band along her side
+    for (const y of [117.6, 123, 128.2]) fg += K.localGlow(u, { x: 106, y, color: '#ffb050', power: .5, radius: 58 }, { squash: .07, core: false });
     // the light of the flashes on the water under her
     fg += K.localGlow(u, { x: 106, y: 152, color: '#ffb050', power: .35, radius: 50 }, { squash: .25, core: false });
 
