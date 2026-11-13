@@ -67,7 +67,7 @@ module.exports = { name: 'Кукла вуду', kind: 'deck', status: 'draft', c
     // the back wall: vertical planks of dark oak warmed by the candle
     { const g = nid('wl', u);
       bg += woodTex(u, WL, WT, WR - WL, WB + 30 - WT, '#4c2618', '#26120a', '#0c0503', 11, true, 21)
-        + `<defs>${radGrad(g, FL.x + 34, FL.y - 26, 165, [[0, '#ffb060', .6], [.35, '#ff9040', .34], [.7, '#ff8a3a', .1], [1, '#ff8a3a', 0]])}</defs><rect x="${WL}" y="${WT}" width="${WR - WL}" height="${WB + 30 - WT}" fill="url(#${g})"/>`
+        + `<defs>${radGrad(g, FL.x + 62, FL.y - 34, 150, [[0, '#ffb060', .6], [.4, '#ff9040', .34], [.75, '#ff8a3a', .1], [1, '#ff8a3a', 0]])}</defs><rect x="${WL}" y="${WT}" width="${WR - WL}" height="${WB + 30 - WT}" fill="url(#${g})"/>`
         + `<path d="M${WL} ${WT}V${WB + 30}M${WR} ${WT}V${WB + 30}" stroke="#080302" stroke-width="1.2"/>`; }
     // ——— the doll's (and the bottle's) shadow on the back wall: the doll scaled about the flame, soft-edged ———
     { const cl = nid('ws', u), bl = nid('wb', u), body = Object.values(PARTS).map(p => `<path d="${p.d}"/>`).join('') + SOLES.map(s => `<path d="${ell(...s)}"/>`).join('')
