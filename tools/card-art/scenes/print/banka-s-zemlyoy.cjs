@@ -21,7 +21,7 @@ const { glow, gloom } = PK;
 
 const HZ = 112;
 const JAR = { x: 126, y: 104, w: 46, h: 52 };      // the jar: middle of its bottom, width, body height (the cap above)
-const WR = [166, 124];                             // the end of the cuff, where the wrist comes out
+const WR = [160, 121];                             // the end of the cuff, where the wrist comes out
 const light = { time: 'fog', haze: .7, key: { type: 'moon', x: 76, y: 24, el: 26, color: '#c8f0dc', power: .75 }, fill: { color: '#3a6a5c', power: .46 },
   rim: { az: -20, color: '#d8fff0', power: .55 }, locals: [{ x: JAR.x, y: JAR.y - 22, color: '#ffc880', power: .55, radius: 40 }] };
 const skel = { horizon: HZ, eye: 3, light: 'the moon in the green fog upper left (cold key) + the jar\'s faint warm glow (local)', items: [
@@ -36,7 +36,7 @@ function jar(u, L, o) {
   // the outline: base, straight sides, a round shoulder into the neck, the lip
   const out = `M${f(x - rx + 3)} ${f(y)}Q${f(x - rx)} ${f(y)} ${f(x - rx)} ${f(y - 4)}L${f(x - rx)} ${f(top + 12)}Q${f(x - rx)} ${f(top + 3)} ${f(x - nk)} ${f(top + 1)}L${f(x - nk)} ${f(top - 3)}`
     + `L${f(x + nk)} ${f(top - 3)}L${f(x + nk)} ${f(top + 1)}Q${f(x + rx)} ${f(top + 3)} ${f(x + rx)} ${f(top + 12)}L${f(x + rx)} ${f(y - 4)}Q${f(x + rx)} ${f(y)} ${f(x + rx - 3)} ${f(y)}Z`;
-  const cid = nid('jc', u), iid = nid('ji', u), eg = nid('je', u), gg = nid('jg', u), wl = 2.4, bt = 6;   // wl, bt: the glass wall and the thick base
+  const cid = nid('jc', u), iid = nid('ji', u), eg = nid('je', u), gg = nid('jg', u), wl = 2.4, bt = 8;   // wl, bt: the glass wall and the thick base
   const inner = `M${f(x - rx + wl)} ${f(top)}L${f(x + rx - wl)} ${f(top)}L${f(x + rx - wl)} ${f(y - bt - 1.5)}Q${f(x + rx - wl)} ${f(y - bt)} ${f(x + rx - wl - 2)} ${f(y - bt)}L${f(x - rx + wl + 2)} ${f(y - bt)}Q${f(x - rx + wl)} ${f(y - bt)} ${f(x - rx + wl)} ${f(y - bt - 1.5)}Z`;
   let body = `<defs><clipPath id="${cid}"><path d="${out}"/></clipPath><clipPath id="${iid}"><path d="${inner}"/></clipPath>${linGrad(eg, 0, top + 16, 0, y, [[0, '#7a5232', 1], [.3, '#5a3a20', 1], [.65, '#3e2814', 1], [1, '#2a1a0c', 1]])}`
     + `${linGrad(gg, x - rx, 0, x + rx, 0, [[0, '#9adcc4', .32], [.18, '#e8fff6', .22], [.5, '#bfe8d8', .06], [.85, '#6aa894', .18], [1, '#2a5a4a', .4]])}</defs>`;
@@ -90,39 +90,43 @@ function jar(u, L, o) {
 // hw — the cuff's half width. Returns { behind, front }.
 function holdHand(u, L, J, E, t, hw, tn) {
   const n = [-t[1], t[0]], at = (k, d = 0) => [E[0] + n[0] * hw * k + t[0] * d, E[1] + n[1] * hw * k + t[1] * d];
-  const Gu = at(.9), Gl = at(-.9), Gu2 = at(.9, -6), Gl2 = at(-.9, -6), y0 = J.y, x0 = J.x;   // the glove's wrist edges, in the cuff and 6 into it
-  const gid = nid('hg', u), tid = nid('ht', u), fid = nid('hf', u), bid = nid('hb', u);
-  // the hand: the wrist out of the cuff up to the jar's foot, along under it, round the heel and back along the underside
-  const hand = [Gu2, Gu, [x0 + 39, y0 + 9.4], [x0 + 31, y0 + 4.6], [x0 + 24, y0 + 1.4], [x0 + 16, y0 - .2], [x0 + 4, y0 - .5], [x0 - 6, y0 - .2], [x0 - 10.5, y0 + 1.6],
-    [x0 - 10.6, y0 + 4.6], [x0 - 6.5, y0 + 7], [x0 + 3, y0 + 8.4], [x0 + 14, y0 + 9.2], [x0 + 23, y0 + 11.6], [x0 + 29, y0 + 15.6], Gl, Gl2];
-  const thumb = [[x0 + 16.5, y0 + .6], [x0 + 21.6, y0 - 1.6], [x0 + 23.6, y0 - 6.5], [x0 + 23.8, y0 - 12.5], [x0 + 22.4, y0 - 17.6], [x0 + 19.6, y0 - 20.6], [x0 + 16.6, y0 - 20.4],
-    [x0 + 15.4, y0 - 17.4], [x0 + 15.8, y0 - 12], [x0 + 15.6, y0 - 6.4], [x0 + 13.6, y0 - 1.6]];
-  const behind = (() => {   // the four fingers behind the jar: from the far edge of the palm up the far side, fanned a little
-    const c = mix(tn.half, '#4e7266', .45), sh = mix(tn.shadow, '#2a4a40', .4), lt = mix(tn.lit, '#9adcc4', .4); let r = '';
-    for (const [bx, tx, ty, w] of [[x0 - 8, x0 - 10.5, y0 - 15, 5], [x0 - 2, x0 - 3.2, y0 - 18, 5.4], [x0 + 4, x0 + 3.8, y0 - 17, 5.4], [x0 + 10, x0 + 11, y0 - 13.5, 5]]) {
-      const by = y0 + 3, dx = tx - bx, dy = ty - by, l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l, nx = -uy, ny = ux, P = (a, b, k = 1) => `${f(bx + ux * a + nx * b * k)} ${f(by + uy * a + ny * b * k)}`;
-      const hw0 = w / 2, hw1 = w * .42;
-      r += `<path d="M${P(0, -hw0)}L${P(l - hw1, -hw1)}Q${P(l + hw1 * .6, -hw1)} ${P(l + hw1 * .6, 0)}Q${P(l + hw1 * .6, hw1)} ${P(l - hw1, hw1)}L${P(0, hw0)}Z" fill="${c}" stroke="${sh}" stroke-width=".4"/>`
-        + `<path d="M${P(0, hw0 * .45)}L${P(l - hw1, hw1 * .5)}" stroke="${sh}" stroke-width="${f(w * .32)}" opacity=".5"/><path d="M${P(1, -hw0 * .55)}L${P(l - hw1, -hw1 * .55)}" stroke="${lt}" stroke-width=".5" opacity=".45"/>`
-        + `<path d="M${P(l * .5, -hw0 * .8)}L${P(l * .5, hw0 * .8)}M${P(l * .78, -hw1 * .8)}L${P(l * .78, hw1 * .8)}" stroke="${sh}" stroke-width=".3" opacity=".6"/>`; }
-    return `<defs><filter id="${bid}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".7"/></filter></defs><g filter="url(#${bid})" opacity=".85">${r}</g>`; })();
-  const P2 = q => f(q[0]) + ' ' + f(q[1]);
-  let front = `<defs>${linGrad(gid, x0, y0 - 1, x0 + 2, y0 + 12, [[0, mix(tn.shadow, '#140a04', .45)], [.35, tn.shadow], [.75, tn.half], [1, mix(tn.half, '#9adcc4', .25)]])}`
-    + `${linGrad(tid, x0 + 15, 0, x0 + 24, 0, [[0, tn.lit], [.35, tn.half], [.8, tn.shadow], [1, mix(tn.shadow, '#140a04', .4)]])}`
+  const Gu = at(.95), Gl = at(-.95), Gu2 = at(.95, -6), Gl2 = at(-.95, -6), y0 = J.y, x0 = J.x;   // the glove's wrist edges at the cuff and 6 into it
+  const gid = nid('hg', u), tid = nid('ht', u), fid = nid('hf', u), bid = nid('hb', u), P2 = q => f(q[0]) + ' ' + f(q[1]);
+  // the hand: the wrist out of the cuff up to the jar's foot, the palm along under it, round the heel's left end and back
+  // along the underside to the wrist — one outline
+  const hand = [Gl2, Gu2, Gu, [x0 + 34, y0 + 8.6], [x0 + 29.5, y0 + 4.4], [x0 + 25.5, y0 + 1.4], [x0 + 20, y0], [x0 + 10, y0 - .3], [x0, y0 - .3], [x0 - 6, y0],
+    [x0 - 9.2, y0 + 1.6], [x0 - 9.4, y0 + 4.2], [x0 - 6.5, y0 + 6.6], [x0, y0 + 8.2], [x0 + 9, y0 + 9], [x0 + 17, y0 + 9.2], [x0 + 22.5, y0 + 10.6], [x0 + 26, y0 + 14.6], Gl];
+  const thumb = [[x0 + 19.5, y0 + 1.2], [x0 + 24.4, y0 - .6], [x0 + 25.4, y0 - 5.6], [x0 + 24.6, y0 - 11.6], [x0 + 22.8, y0 - 16.6], [x0 + 20.2, y0 - 19.4], [x0 + 17.4, y0 - 19.2],
+    [x0 + 16.2, y0 - 16.4], [x0 + 16.6, y0 - 11], [x0 + 16.6, y0 - 5.6], [x0 + 15.6, y0 - 1.4]];
+  const behind = (() => {   // the four fingers behind the jar: from the far edge of the palm up the jar's far side, fanned a little
+    const c = mix(tn.half, '#6a8a74', .12), sh = mix(tn.shadow, '#0e0a06', .45), lt = mix(tn.lit, '#c8f0dc', .2); let r = '';
+    for (const [bx, tx, ty, w] of [[x0 - 5.5, x0 - 7.5, y0 - 16, 5.4], [x0 + .5, x0 - .4, y0 - 19, 5.8], [x0 + 6.5, x0 + 6.6, y0 - 18, 5.8], [x0 + 12.5, x0 + 13.6, y0 - 15, 5.4]]) {
+      const by = y0 + 2, dx = tx - bx, dy = ty - by, l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l, nx = -uy, ny = ux, P = (a, b) => `${f(bx + ux * a + nx * b)} ${f(by + uy * a + ny * b)}`;
+      const hw0 = w / 2, hw1 = w * .44;
+      r += `<path d="M${P(0, -hw0)}L${P(l - hw1, -hw1)}Q${P(l + hw1 * .6, -hw1)} ${P(l + hw1 * .6, 0)}Q${P(l + hw1 * .6, hw1)} ${P(l - hw1, hw1)}L${P(0, hw0)}Z" fill="${c}" stroke="${sh}" stroke-width="1.1"/>`
+        + `<path d="M${P(0, hw0 * .5)}L${P(l - hw1, hw1 * .5)}" stroke="${sh}" stroke-width="${f(w * .34)}" opacity=".55"/><path d="M${P(1, -hw0 * .5)}L${P(l - hw1, -hw1 * .5)}" stroke="${lt}" stroke-width=".6" opacity=".5"/>`
+        + `<path d="M${P(5.5, -hw0 * .85)}L${P(5.5, hw0 * .85)}" stroke="${sh}" stroke-width=".4" opacity=".7"/>`; }
+    return `<defs><filter id="${bid}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".45"/></filter></defs><g filter="url(#${bid})">${r}</g>`; })();
+  let front = `<defs>${linGrad(gid, x0, y0 - 1, x0 + 3, y0 + 11, [[0, mix(tn.shadow, '#140a04', .45)], [.3, tn.shadow], [.72, tn.half], [1, mix(tn.half, '#9adcc4', .25)]])}`
+    + `${linGrad(tid, x0 + 16, 0, x0 + 25, 0, [[0, tn.lit], [.35, tn.half], [.8, tn.shadow], [1, mix(tn.shadow, '#140a04', .4)]])}`
     + `<filter id="${fid}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1"/></filter></defs>`;
-  // the jar's foot casts a soft shadow on the top of the hand; the hand presses the glass (a dark contact line)
   front += `<path d="${PP.sp(hand, true)}" fill="url(#${gid})" stroke="${tn.outline}" stroke-width=".5"/>`
-    + `<path d="M${f(x0 - 9)} ${f(y0 + 1.2)}Q${f(x0 + 8)} ${f(y0 + 3.6)} ${f(x0 + 26)} ${f(y0 + 3.2)}" stroke="#0a0604" stroke-width="2.4" fill="none" opacity=".35" filter="url(#${fid})"/>`;
-  // the back of the hand seen from below: the tendons toward the far knuckles, the stitching, the wrist crease; the fog's light under it
-  for (const [a, b] of [[[x0 + 26, y0 + 9.6], [x0 + 2, y0 + 5.4]], [[x0 + 27, y0 + 12], [x0 + 4, y0 + 7.2]]]) front += `<path d="M${P2(a)}Q${f((a[0] + b[0]) / 2)} ${f((a[1] + b[1]) / 2 + .6)} ${P2(b)}" stroke="${tn.lit}" stroke-width=".3" stroke-dasharray=".8 .6" fill="none" opacity=".55"/>`;
+    // the jar's foot shades the top of the palm
+    + `<path d="M${f(x0 - 8)} ${f(y0 + 1.4)}Q${f(x0 + 6)} ${f(y0 + 3.2)} ${f(x0 + 21)} ${f(y0 + 2.4)}" stroke="#0a0604" stroke-width="2.2" fill="none" opacity=".35" filter="url(#${fid})"/>`;
+  // where the fingers leave the palm and go up behind the jar: the fold of the knuckles, the gaps between the fingers
+  front += `<path d="M${f(x0 - 8.4)} ${f(y0 + 2.6)}Q${f(x0 + 2)} ${f(y0 + 4.4)} ${f(x0 + 15)} ${f(y0 + 2.4)}" stroke="${tn.outline}" stroke-width=".45" fill="none" opacity=".6"/>`
+    + [-2.6, 3.5, 9.5].map(dx => `<path d="M${f(x0 + dx)} ${f(y0 - .2)}q.3 1.8 -.1 3.6" stroke="${tn.outline}" stroke-width=".45" fill="none" opacity=".7"/>`).join('')
+    + [-5.5, .5, 6.5, 12.5].map(dx => `<path d="M${f(x0 + dx - 2)} ${f(y0 + 1)}q2 -.9 4 0" stroke="${tn.lit}" stroke-width=".35" fill="none" opacity=".45"/>`).join('');
+  // the back of the hand seen from below: the stitching toward the knuckles, the crease at the wrist; the fog's light under it
+  for (const [a, b] of [[[x0 + 27, y0 + 9.4], [x0 + 6, y0 + 6]], [[x0 + 26, y0 + 12], [x0 + 8, y0 + 8]]]) front += `<path d="M${P2(a)}Q${f((a[0] + b[0]) / 2)} ${f((a[1] + b[1]) / 2 + .5)} ${P2(b)}" stroke="${tn.lit}" stroke-width=".3" stroke-dasharray=".8 .6" fill="none" opacity=".55"/>`;
   { const a = at(-.8, 3), b = at(.8, 3), m = at(0, 4.2); front += `<path d="M${P2(a)}Q${P2(m)} ${P2(b)}" stroke="${tn.outline}" stroke-width=".45" fill="none" opacity=".6"/>`; }
-  front += `<path d="M${f(x0 - 9.6)} ${f(y0 + 5.6)}Q${f(x0 + 6)} ${f(y0 + 9.4)} ${f(x0 + 25)} ${f(y0 + 13.4)}" stroke="#bfe8d8" stroke-width=".6" fill="none" opacity=".4"/>`;
-  // the thumb: up the jar's right side in front of the glass; the glass darkens round its pad, the moon on its left edge
+  front += `<path d="M${f(x0 - 8.6)} ${f(y0 + 5)}Q${f(x0 + 6)} ${f(y0 + 9.6)} ${f(x0 + 22)} ${f(y0 + 11.2)}" stroke="#bfe8d8" stroke-width=".6" fill="none" opacity=".4"/>`;
+  // the thumb: up the jar's right side in front of the glass, round its edge; the glass darkens round the pad, the moon on its left edge
   front += `<path d="${PP.sp(thumb.slice(5, 10).map(q => [q[0] - 1.1, q[1] + .3]), false)}" stroke="#06100c" stroke-width="1.6" fill="none" opacity=".35" filter="url(#${fid})"/>`
     + `<path d="${PP.sp(thumb, true)}" fill="url(#${tid})" stroke="${tn.outline}" stroke-width=".5"/>`
-    + `<path d="M${f(x0 + 16.2)} ${f(y0 - 16.6)}Q${f(x0 + 16.2)} ${f(y0 - 9)} ${f(x0 + 15.4)} ${f(y0 - 4)}" stroke="#d8fff0" stroke-width=".6" fill="none" opacity=".55" stroke-linecap="round"/>`
-    + `<path d="M${f(x0 + 21.6)} ${f(y0 - 15)}Q${f(x0 + 22.6)} ${f(y0 - 9)} ${f(x0 + 21.6)} ${f(y0 - 3)}" stroke="${tn.lit}" stroke-width=".3" stroke-dasharray=".8 .6" fill="none" opacity=".55"/>`
-    + `<path d="M${f(x0 + 16.4)} ${f(y0 - 10.2)}q2.6 1 5.6 .2" stroke="${tn.outline}" stroke-width=".35" fill="none" opacity=".55"/>`;
+    + `<path d="M${f(x0 + 17)} ${f(y0 - 16)}Q${f(x0 + 17)} ${f(y0 - 9)} ${f(x0 + 16.4)} ${f(y0 - 3)}" stroke="#d8fff0" stroke-width=".6" fill="none" opacity=".55" stroke-linecap="round"/>`
+    + `<path d="M${f(x0 + 22.6)} ${f(y0 - 15)}Q${f(x0 + 23.6)} ${f(y0 - 9)} ${f(x0 + 22.6)} ${f(y0 - 3)}" stroke="${tn.lit}" stroke-width=".3" stroke-dasharray=".8 .6" fill="none" opacity=".55"/>`
+    + `<path d="M${f(x0 + 17)} ${f(y0 - 9.6)}q2.8 1 6 .2" stroke="${tn.outline}" stroke-width=".35" fill="none" opacity=".55"/>`;
   return { behind, front };
 }
 
@@ -135,6 +139,9 @@ module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'dr
     // the Dutchman rears and heels away from the jar: bow up, her weedy bottom to us; foam where she turned
     bg += K.ship(u, L, { kind: 'dutch', x: 62, y: HZ + 6, scale: .8, heel: -8, roll: -14, sails: 'full', lights: true, reflect: true, wake: true, seed: 4 });
     { const fr = rng(19); for (let i = 0; i < 11; i++) { const a = i / 11 * Math.PI * 2, x = 62 + Math.cos(a) * 46, y = HZ + 7 + Math.sin(a) * 4.6; bg += K.foam(u, { x, y, w: 12 + fr() * 8, h: 1.2, seed: 40 + i, L }); } }
+    // the water itself draws back from the jar: low swells running out from under it toward her, their crests lit
+    for (const [rx, op] of [[26, .55], [37, .45], [49, .35]]) { const cx = 134, cy = HZ + 9, ry = rx * .13, a0 = 150 * Math.PI / 180, a1 = 212 * Math.PI / 180, P = a => `${f(cx + Math.cos(a) * rx)} ${f(cy + Math.sin(a) * ry)}`;
+      bg += `<path d="M${P(a0)}A${f(rx)} ${f(ry)} 0 0 1 ${P(a1)}" stroke="#0e2a22" stroke-width="1.4" fill="none" opacity="${f(op * .6)}" transform="translate(.8 .6)"/><path d="M${P(a0)}A${f(rx)} ${f(ry)} 0 0 1 ${P(a1)}" stroke="#d8fff0" stroke-width=".55" fill="none" opacity="${op}"/>`; }
     bg += glow(u, 62, 80, 70, 46, '#9ff0d0', .3);
     // the green fog: a bank over the water, thinner round the jar (its warmth pushes it back)
     bg += K.fog(u, L, { y: HZ - 14, h: 32, density: .45, seed: 3 }) + K.fog(u, L, { y: 58, h: 30, density: .3, seed: 9 });

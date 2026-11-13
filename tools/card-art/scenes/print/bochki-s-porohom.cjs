@@ -100,14 +100,17 @@ function burst(u, L, x, y, r) {
 function bowWall(u, L, beakD) {
   const s = SHIP.scale, hb = SP.len / 2, X2x = X => SHIP.x + s * X, H2y = H => SHIP.y - s * H;
   const Yh = (h, X) => h + SP.sheer[0] * (X / hb) * (X / hb) * Math.min(1.25, Math.max(0, h / SP.free));
-  const pts = h => { const a = []; for (let X = -70; X <= -40; X += 1.5) a.push([X2x(X), H2y(Yh(h, X))]); return a; };
+  const pts = h => { const a = []; for (let X = -70; X <= -38; X += 1.5) a.push([X2x(X), H2y(Yh(h, X))]); return a; };
   const along = h => 'M' + pts(h).map(p => f(p[0]) + ' ' + f(p[1])).join('L');
   const strip = (h0, h1) => along(h1) + 'L' + pts(h0).reverse().map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
-  const TAR = '#3d4152', OCH = '#4e4c46', DK = '#191820', cid = nid('bwc', u), fid = nid('bwf', u);
+  const TAR = '#3d4152', OCH = '#4e4c46', DK = '#191820', cid = nid('bwc', u), fid = nid('bwf', u), fg = nid('bwg', u);
+  // the mask: the whole knee, and past its back edge a band of her side that fades out, so the two meet without a seam
+  // (the head rails, the cathead and the anchor are drawn after this, over it)
+  const side = along(SP.free - .3) + 'L' + f(X2x(-40)) + ' ' + f(H2y(-1)) + 'L' + f(X2x(-70)) + ' ' + f(H2y(-1)) + 'Z';
   const fore = beakD.slice(0, beakD.indexOf('L'));            // the fore edge and the top of the knee (the spline before its straight back)
-  let out = `<defs><clipPath id="${cid}"><path d="${beakD}"/></clipPath><filter id="${fid}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.6"/></filter>`;
-  const bands = SP.bands.map(b => { const id = nid('bwb', u), y0 = H2y(b.h1), y1 = H2y(b.h0); out += linGrad(id, 0, y0, 0, y1, [[0, mix(OCH, '#a89c7c', .22)], [.5, OCH], [1, mix(OCH, '#1c1810', .25)]]); return [b, id]; });
-  out += `</defs><g clip-path="url(#${cid})"><rect x="10" y="10" width="75" height="125" fill="${TAR}"/>`;
+  let out = `<defs>${linGrad(fg, 67, 82, 81.7, 78.9, [[0, '#ffffff', 1], [1, '#ffffff', 0]])}<mask id="${cid}" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="140"><path d="${beakD}" fill="#ffffff"/><path d="${side}" fill="url(#${fg})"/></mask><filter id="${fid}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.6"/></filter>`;
+  const bands = SP.bands.map(b => { const id = nid('bwb', u), y0 = H2y(b.h1), y1 = H2y(b.h0); out += linGrad(id, 0, y0, 0, y1, [[0, mix(OCH, '#a89c7c', .08)], [.5, OCH], [1, mix(OCH, '#1c1810', .15)]]); return [b, id]; });
+  out += `</defs><g mask="url(#${cid})"><rect x="10" y="10" width="110" height="125" fill="${TAR}"/>`;
   for (const [b, id] of bands) out += `<path d="${strip(b.h0, b.h1)}" fill="url(#${id})"/>`;
   let seams = ''; for (let h = 1.1; h < 26; h += 1.25) seams += along(h);
   out += `<path d="${seams}" stroke="${DK}" stroke-width=".3" fill="none" opacity=".4"/>`;

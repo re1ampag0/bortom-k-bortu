@@ -1,8 +1,9 @@
 // «Компас Джека» (Жемчужина, ПРИКАЗ: посмотрите 3 верхние карты колоды — одну в руку, одну в План, третью в сброс),
 // refined from the first-round scene (portrait-pearl.cjs SCENES['Компас Джека']): the captain's table by the stern
 // window at night. The compass lies open on the chart, big and in front: a brass box, the lid thrown back (inside it
-// an engraved sky — stars and a crescent), the card with its rose; the needle does not look to the rose's north
-// (the red lily) but away to the left, and it glows: the glow runs over the chart to the ink cross. Beside it three
+// an engraved sky — stars and a crescent), the card with its rose; the rose's north (the red point and the lily) is at
+// twelve o'clock, and the blued needle does not look to it but plainly aside, to about four o'clock, at the ink cross
+// on the chart beside the compass, and it glows: the glow runs over the bezel and the chart to the cross. Beside it three
 // cards lie face down in a fan, the middle one pushed out. The moon in the window is the one light (cold, from the
 // back right: brass catches it on the rims); the needle's glow is a small warm local light on the dial and the chart.
 // Fixed against the first round: the compass was small and flat on the table — now it is the main thing, a box
@@ -18,16 +19,16 @@ const HZ = 40;                                   // eye level = the sea horizon 
 const WX = 98, WY = 4, WW = 92, WH = 64;         // the stern window's glass (right half of the back wall)
 const TB = 78, TF = 168;                         // the table top: back edge at the wall, front edge
 const C = { x: 82, y: 110, r: 35, k: .5, h: 8 };  // the compass: centre of the dial, radius, squash of the circle, box height
-const CROSS = [24, 128];                          // the ink cross on the chart where the needle points
+const CROSS = [124, 121];                         // the ink cross on the chart where the needle points (about four o'clock on the dial)
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: 160, y: 18, el: 24, color: '#c8d8f6', power: .85 }, fill: { color: '#34486c', power: .45 },
-  rim: { az: 20, color: '#cfe2ff', power: .55 }, locals: [{ x: C.x - 6, y: C.y, color: '#ffd070', power: .55, radius: 40 }] };
+  rim: { az: 20, color: '#cfe2ff', power: .55 }, locals: [{ x: C.x + 10, y: C.y + 3, color: '#ffd070', power: .55, radius: 40 }] };
 const skel = { horizon: HZ, eye: 1.2, light: 'the moon in the stern window (cold, back right) + the needle glow (warm local)', items: [
   ['window', WX, WY + WH, WW, WH, 'stern wall'], ['sill', WX - 6, 76, WW + 12, 6, 'window frame'], ['chart', 8, 150, 150, 58, 'table top'],
   ['compass', C.x - C.r, C.y + C.h + C.r * C.k, C.r * 2, C.r * 2.6, 'on the chart'], ['lid', C.x - C.r, C.y - C.r * C.k, C.r * 2, C.r * 1.7, 'hinged to the box, thrown back'],
-  ['cards', 130, 140, 60, 34, 'table top, face down'], ['bottle', 18, 98, 9, 20, 'table top'], ['cross', 22, 138, 9, 6, 'ink on the chart']] };
+  ['cards', 130, 140, 60, 34, 'table top, face down'], ['bottle', 18, 98, 9, 20, 'table top'], ['cross', 119, 124, 10, 6, 'ink on the chart, right of the compass']] };
 
 // where the needle's gold tip is in the picture (the needle points from the dial's centre to the cross)
-function needleTip() { const cc = [C.x, C.y + .4], d = [CROSS[0] - cc[0], (CROSS[1] - cc[1]) / C.k], l = Math.hypot(d[0], d[1]), len = C.r * .84 * .96 * .86 * .8;
+function needleTip() { const cc = [C.x, C.y + .4], d = [CROSS[0] - cc[0], (CROSS[1] - cc[1]) / C.k], l = Math.hypot(d[0], d[1]), len = C.r * .84 * .96 * .86;
   return [cc[0] + d[0] / l * len, cc[1] + d[1] / l * len * C.k]; }
 const poly = pts => 'M' + pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
 function smooth(pts, closed = false) { const n = pts.length, g = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))]; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
@@ -115,10 +116,10 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
     // the glow of the needle running over the chart to the cross: a soft warm path
     { const gf = nid('gf', u), tip = needleTip();
       fg += `<defs><filter id="${gf}" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="2.6"/></filter><filter id="${gf}s" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation=".7"/></filter></defs>`
-        + `<g style="mix-blend-mode:screen"><path d="M${f(tip[0])} ${f(tip[1])}Q${f(tip[0] - 16)} ${f(tip[1] + 14)} ${CROSS[0] + 2} ${CROSS[1]}" stroke="#ffb838" stroke-width="10" fill="none" opacity=".95" filter="url(#${gf})"/>`
-        + `<path d="M${f(tip[0])} ${f(tip[1])}Q${f(tip[0] - 16)} ${f(tip[1] + 14)} ${CROSS[0] + 2} ${CROSS[1]}" stroke="#fff4c0" stroke-width="2.4" fill="none" opacity="1" stroke-linecap="round" filter="url(#${gf}s)"/></g>`
+        + `<g style="mix-blend-mode:screen"><path d="M${f(tip[0])} ${f(tip[1])}Q${f((tip[0] + CROSS[0]) / 2)} ${f((tip[1] + CROSS[1]) / 2 + 2.4)} ${CROSS[0] - 2} ${CROSS[1]}" stroke="#ffb838" stroke-width="8" fill="none" opacity=".95" filter="url(#${gf})"/>`
+        + `<path d="M${f(tip[0])} ${f(tip[1])}Q${f((tip[0] + CROSS[0]) / 2)} ${f((tip[1] + CROSS[1]) / 2 + 2.4)} ${CROSS[0] - 2} ${CROSS[1]}" stroke="#fff4c0" stroke-width="2" fill="none" opacity="1" stroke-linecap="round" filter="url(#${gf}s)"/></g>`
         + K.localGlow(u, { x: CROSS[0], y: CROSS[1], color: '#ffd870', power: .8, radius: 14 }, { squash: .55 });
-      const R = rng(12); for (let i = 0; i < 22; i++) { const t = R(), x = tip[0] + (CROSS[0] + 2 - tip[0]) * t - Math.sin(t * Math.PI) * 6 + (R() - .5) * 4, y = tip[1] + (CROSS[1] - tip[1]) * t + Math.sin(t * Math.PI) * 4 - R() * 6;
+      const R = rng(12); for (let i = 0; i < 16; i++) { const t = R(), x = tip[0] + (CROSS[0] - 2 - tip[0]) * t + (R() - .5) * 3, y = tip[1] + (CROSS[1] - tip[1]) * t + Math.sin(t * Math.PI) * 1.2 - R() * 4;
         fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.3 + R() * .5)}" fill="#fff2b8" opacity="${f(.4 + R() * .5)}"/>`; } }
     // ——— the compass ———
     const { x: cx, y: cy, r: Rr, k, h: Hb } = C, hy = cy - Rr * k;
@@ -158,8 +159,8 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
     const cc = [cx, cy + 1.6], rc = ri * .96, cid = nid('cc', u);
     fg += `<defs><clipPath id="${cid}"><ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(rc)}" ry="${f(rc * k)}"/></clipPath></defs>`;
     { const pc = nid('pc', u); let d = `<defs>${radGrad(pc, cc[0] - 6, cc[1] + 2, rc * 1.1, [[0, '#fff2cc', 1], [.55, '#e8d6a8', 1], [1, '#a88a58', 1]])}</defs><ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(rc)}" ry="${f(rc * k)}" fill="url(#${pc})"/>`;
-      // the rose in the plane of the card (squashed), north toward the window (up right): the red lily
-      const nA = -62, G = `<g transform="translate(${f(cc[0])} ${f(cc[1])}) scale(1 ${k})">`;
+      // the rose in the plane of the card (squashed), north at twelve o'clock (the far side): the red point and the lily
+      const nA = -90, G = `<g transform="translate(${f(cc[0])} ${f(cc[1])}) scale(1 ${k})">`;
       let rose = '';
       for (let i = 0; i < 72; i++) { const a = i / 72 * Math.PI * 2, r0 = rc * .97, r1 = rc * (i % 6 ? .9 : .84); rose += `<path d="M${f(Math.cos(a) * r0)} ${f(Math.sin(a) * r0)}L${f(Math.cos(a) * r1)} ${f(Math.sin(a) * r1)}" stroke="#4a3018" stroke-width="${i % 6 ? .3 : .5}"/>`; }
       rose += `<circle r="${f(rc * .82)}" fill="none" stroke="#4a3018" stroke-width=".35"/><circle r="${f(rc * .5)}" fill="none" stroke="#4a3018" stroke-width=".25"/>`;
@@ -172,18 +173,24 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
       { const t = nA * Math.PI / 180, x = Math.cos(t) * rc * .9, y = Math.sin(t) * rc * .9; rose += `<g transform="translate(${f(x)} ${f(y)}) rotate(${nA + 90})"><path d="M0 -3.2q1.4 1.6 0 3.6q-1.4 -2 0 -3.6zM0 .4q2.6 -2.6 3 .6q-1.6 -.6 -3 .8zM0 .4q-2.6 -2.6 -3 .6q1.6 -.6 3 .8z" fill="#b82a1e"/></g>`; }
       d += `<g clip-path="url(#${cid})">${G}${rose}</g>`;
       // the warm glow of the needle on the card
-      d += `<ellipse cx="${f(cc[0] - 8)}" cy="${f(cc[1] + 3)}" rx="${f(rc * .8)}" ry="${f(rc * k * .8)}" fill="#ffd060" opacity=".22" style="mix-blend-mode:screen"/></g>`;
+      d += `<ellipse cx="${f(cc[0] + 9)}" cy="${f(cc[1] + 2)}" rx="${f(rc * .8)}" ry="${f(rc * k * .8)}" fill="#ffd060" opacity=".22" style="mix-blend-mode:screen"/></g>`;
       fg += d; }
-    // the needle: blued steel, its pointing half gold and glowing; it points to the cross, not to the lily
-    { const tgt = [CROSS[0] - cc[0], (CROSS[1] - cc[1]) / k], na = Math.atan2(tgt[1], tgt[0]) * 180 / Math.PI, len = rc * .86, gN = nid('gn', u), bl = nid('nb', u);
-      fg += `<defs><filter id="${bl}" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="2.2"/></filter>${linGrad(gN, -len, 0, len, 0, [[0, '#1a2234', 1], [.48, '#4a5a7a', 1], [.52, '#e8b040', 1], [1, '#fff2a0', 1]])}</defs>`
-        + `<g transform="translate(${f(cc[0])} ${f(cc[1] - 1.2)}) scale(1 ${k}) rotate(${f(na + 180)})">`
-        + `<path d="M${f(-len)} 0L0 -3.2L${f(len * .8)} 0L0 3.2Z" fill="#1a1006" opacity=".4" transform="translate(-1.6 4)"/>`
-        + `<path d="M${f(-len)} 0L0 -3.2L${f(len * .8)} 0L0 3.2Z" fill="#ffd060" opacity=".95" filter="url(#${bl})" transform="scale(-1 1.6)"/>`
-        + `<path d="M${f(-len)} 0L0 -3.2L${f(len * .8)} 0L0 3.2Z" fill="url(#${gN})" stroke="#2a1a06" stroke-width=".35" transform="scale(-1 1)"/>`
-        + `<path d="M0 -3.2L${f(-len)} 0" stroke="#fffbe0" stroke-width=".45" opacity=".9"/></g>`
+    // the needle: an arrow of blued steel, long and plain, its head toward the cross (about four o'clock), a short brass
+    // tail; it glows gold toward the cross. The red point and the lily at twelve stay apart from it
+    { const tgt = [CROSS[0] - cc[0], (CROSS[1] - cc[1]) / k], na = Math.atan2(tgt[1], tgt[0]) * 180 / Math.PI, len = rc * .86, tl = len * .55, gN = nid('gn', u), gT = nid('gt', u), bl = nid('nb', u);
+      const head = `M0 -2.4L${f(len * .66)} -1.4L${f(len * .62)} -3.6L${f(len)} 0L${f(len * .62)} 3.6L${f(len * .66)} 1.4L0 2.4Z`, tail = `M0 -2.4L${f(-tl)} -1L${f(-tl - 1.6)} 0L${f(-tl)} 1L0 2.4Z`;
+      fg += `<defs><filter id="${bl}" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="2"/></filter>${linGrad(gN, 0, 0, len, 0, [[0, '#14284e', 1], [.45, '#2c56a8', 1], [.85, '#5a8ae8', 1], [1, '#a8c8ff', 1]])}${linGrad(gT, -tl, 0, 0, 0, [[0, '#5a3e10', 1], [1, '#b88a30', 1]])}</defs>`
+        + `<g transform="translate(${f(cc[0])} ${f(cc[1] - 1.2)}) scale(1 ${k}) rotate(${f(na)})">`
+        + `<path d="${head}${tail}" fill="#1a1006" opacity=".4" transform="translate(-1.4 4)"/>`
+        + `<path d="${head}" fill="#ffc848" opacity=".9" filter="url(#${bl})" transform="translate(3 0) scale(1.1 1.8)"/>`
+        + `<path d="${tail}" fill="url(#${gT})" stroke="#2a1a06" stroke-width=".35"/><path d="${head}" fill="url(#${gN})" stroke="#0a1430" stroke-width=".4"/>`
+        + `<path d="M0 -2.4L${f(len * .66)} -1.4M${f(len * .62)} -3.6L${f(len)} 0" stroke="#e0ecff" stroke-width=".45" opacity=".85"/></g>`
         + K.shadeSphere(u, cc[0], cc[1] - 1.2, 1.8, L, 'brass', { outline: .3 })
-        + K.localGlow(u, { x: needleTip()[0], y: needleTip()[1], color: '#ffe080', power: .9, radius: 13 }); }
+        + K.localGlow(u, { x: needleTip()[0], y: needleTip()[1], color: '#ffe080', power: .9, radius: 12 });
+      // the glow leaves the needle's head over the glass and the bezel toward the cross (the rest runs on the chart, under the box)
+      const tip = needleTip(), g2 = nid('gg', u), q = `M${f(tip[0])} ${f(tip[1])}Q${f((tip[0] + CROSS[0]) / 2)} ${f((tip[1] + CROSS[1]) / 2 + 2.4)} ${CROSS[0] - 2} ${CROSS[1]}`;
+      fg += `<defs><filter id="${g2}" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="1.8"/></filter><filter id="${g2}s" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation=".6"/></filter></defs>`
+        + `<g style="mix-blend-mode:screen"><path d="${q}" stroke="#ffb838" stroke-width="6" fill="none" opacity=".6" filter="url(#${g2})"/><path d="${q}" stroke="#fff4c0" stroke-width="1.3" fill="none" opacity=".75" stroke-linecap="round" filter="url(#${g2}s)"/></g>`; }
     // the glass over the dial: a cool sheen and the moon's highlight on the far side
     fg += `<ellipse cx="${f(cc[0])}" cy="${f(cc[1] - .6)}" rx="${f(rc)}" ry="${f(rc * k)}" fill="#cfe0ff" opacity=".06"/>`
       + `<path d="M${f(cx + rc * .1)} ${f(cy - rc * k * .9)}A${f(rc)} ${f(rc * k)} 0 0 1 ${f(cx + rc * .86)} ${f(cy - rc * k * .3)}" stroke="#eef6ff" stroke-width="1.4" fill="none" opacity=".55"/>`
