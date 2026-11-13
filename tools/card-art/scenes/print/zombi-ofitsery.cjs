@@ -7,12 +7,13 @@
 // Kept: the idea (hit, and nobody falls), the night and the red haze, the moon, the near officer chest up with the
 // hole you look through, the ball flying away, the far officer at the rail, the hand at the hat.
 // Fixed against the first round: the raised arm was a stiff tube with a flat glove — now one sleeve from the shoulder
-// through the elbow to the cuff and a hand (people.cjs hand3) pinching the hat's corner; the head was a flat green
-// mask — now a 3/4 head (head34) with sunken cheeks, dull glowing eyes, grey hair in a queue, the tricorn turned with
-// it (hat.cjs); the hole was a ring on the coat — now cut through: the background is drawn again inside it; the far
-// officer was a flat black badge — now a whole man on his own feet on the deck, with his shadow; the rail and the deck
-// share the one eye level with both men. Light: the moon high behind, upper left (key, contre-jour: cold-red rims on
-// the hats, shoulders and the left edges); the red haze of the sky in front (fill). No blood, no wounds inside.
+// through the elbow to the cuff and a hand (people.cjs hand3) round the brim left of the front corner (a salute); the
+// head was a flat green mask — now a 3/4 head (head34) with sunken cheeks, dark sockets, dull glowing eyes, bared
+// teeth, lank grey hair, the tricorn turned with it (hat.cjs); he is drawn at 110 units/m and zoomed ×1.4 about his
+// point on the horizon (as if 30 % nearer), so he fills the space above the glass; the hole was a ring on the coat
+// — now cut through: the background is drawn again inside it; the far officer was a flat black badge — now a whole man on his own feet on the deck, with his shadow; the rail and the deck
+// share the one eye level with both men. Light: the moon high behind, upper right (key, contre-jour: cold-red rims
+// on the hair, shoulders and the right edges); the red haze of the sky in front (fill). No blood, no wounds inside.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -206,6 +207,5 @@ module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'dra
       + K.shadeSphere(u, BALL.x, BALL.y, BALL.r, L, 'iron', { outline: .3 });
     // ——— the air: the moon's haze, motes, the dark coming up from the deck and the corners ———
     const air = motes(16, 0, 20, 200, 80, '#ffc8a8', 5) + gloom(u, 100, 120, 100, 280, .55, '#0a0204') + gloom(u, 100, 90, -10, 30, .25, '#0a0204') + glow(u, MOON.x, MOON.y + 20, 60, 50, '#ff9070', .12);
-    if (process.env.ZDBG) console.error('hand', hR.wrist, hR.grip, 'GR', GR, 'ang', brimAng, 'sword', hH.wrist);
     return [bg, ball + `<g transform="translate(107 ${HZ}) scale(${ZOOM}) translate(-107 -${HZ})">${man}</g>` + through + air];
   } };
