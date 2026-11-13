@@ -96,10 +96,14 @@ const SPECS = {
   // broad flat stern with three tiers of windows (two of them galleries with balusters) and three lanterns; a short head,
   // the bowsprit 0.30 L at 25°; the tallest masts (0.95 / 1.00 / 0.85 L) at 0.20 / 0.55 / 0.85 from the bow raked 3-5°,
   // a top and crosstrees on each, a gaff mizzen; many cream-white whole sails.
+  // Step 2 (the user's refs, the shooting model): the Nelson chequer — the rows of ports evenly at 0.035 / 0.085 / 0.135 L
+  // and the deck guns at 0.19 L, each row in its own ochre band, black bands of ~0.8 of it between, black under the
+  // lowest one; bigger ports (lids black outside, red inside); balconies on all three tiers of the gallery; wider yards
+  // and staysails between the masts (the model carries them) — the most sail of the four.
   endeavour: {
     len: 104, free: 22.4, sheer: [1.2, 2.2], tumble: .5, bow: [5, 1.7], over: 6.5, counter: .5,
     fc: [-30, .3], tiers: [[16, .8], [34, .8]], taff: .6, tw: [7, 8.5],
-    hull: 'tar', trim: 'ship-ochre', gilt: 1, wales: [], bands: [{ h0: 2, h1: 5.2, mat: 'ship-ochre' }, { h0: 7.2, h1: 10.4, mat: 'ship-ochre' }, { h0: 12.4, h1: 15.6, mat: 'ship-ochre' }, { h0: 18, h1: 21.2, mat: 'ship-ochre' }],
+    hull: 'tar', trim: 'ship-ochre', gilt: 1, wales: [], bands: [{ h0: 2.15, h1: 5.05, mat: 'ship-ochre' }, { h0: 7.35, h1: 10.25, mat: 'ship-ochre' }, { h0: 12.55, h1: 15.45, mat: 'ship-ochre' }, { h0: 18.25, h1: 20.95, mat: 'ship-ochre' }],
     ports: [{ h: 3.6, n: 15, x0: -38, x1: 34.8, w: 2.4 }, { h: 8.8, n: 15, x0: -38, x1: 34.8, w: 2.4 }, { h: 14, n: 15, x0: -38, x1: 34.8, w: 2.4 }], deckPorts: [10, -44, 44], deckPortH: 19.6,
     gallery: [12, 3, 3.6], tierWin: 3, lantern: 1, lanterns: 'three', lanternPost: .6, balc: [0, 1, 2], balcD: 2.2,
     beak: [7, 3, 0], sprit: { len: 31, steeve: 25, jib: 14, spritsail: 'set', stays: 1, sling: 1 }, jibs: 3,
@@ -113,6 +117,9 @@ const SPECS = {
   // jagged rails, the bowsprit 0.35 L at 17°; one row of 10 open holes for ports between bare ribs; masts at 0.20 / 0.55 /
   // 0.85 L, 0.75 / 0.75 / 0.62 L high, no rake, big round tops at 0.55 L (the mizzen 0.48), broken yards; rags of sails
   // hanging in vertical strips; a faded grey-green-brown hull grown over with shells, coral and weed.
+  // Step 2 (the user's refs, the set): the steps of the stern and the forecastle higher (the stern rail 0.38 L, the bow
+  // 0.33 L, the waist 0.21 L), the head raised more; the masts a little taller (0.8 L) with wider yards; the rags dense
+  // (stripDense: many long strips in two rows) — a big and menacing ship; weed hanging from the head and the rail.
   dutch: {
     len: 90, free: 18.5, sheer: [4.6, 3.8], tumble: 2.6, bow: [6.5, 2.1], over: 9, counter: .62, run: 1,
     fc: [-6, 4.4], tiers: [[17, 4.4], [32, 3.6]], taff: .6, tw: [2.6, 6], openRail: 1,
@@ -894,7 +901,7 @@ function build(u, L, o, mode) {
   // sp.staysails (the Endeavour): staysails on the stays between the masts — n per gap (1: the topmast staysail, 2: and the
   // topgallant one, 3: and the lower one); the luff on the stay, the head just under the masthead of the mast aft, the tack
   // over the top of the mast ahead, the clew forward of the mast aft; drawn behind the square sails, they fill the gaps between them
-  if (sp.staysails && set === 'full') { let ss = '';
+  if (sp.staysails && set === 'full' && !sp.broken) { let ss = '';   // not on a wreck with broken yards
     masts.forEach((M, i) => { const P = masts[i - 1]; if (!P) return;
       const st = [[M.A(M.qC != null ? M.qC : 1), P.A(P.qT)], [M.A(1), P.A(P.qC != null ? P.qC : 1)], [M.A(M.qT - .01), P.A(.04)]].slice(0, sp.staysails);
       st.forEach(([S1, S0], j) => { if (j === 1 && M.qC == null) return;
