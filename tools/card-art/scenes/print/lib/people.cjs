@@ -499,4 +499,143 @@ function head(u, o) {
   return { svg: s, Q };
 }
 
-module.exports = { sp, tube, cloth, hand, hand3, head };
+// ——— a head in three-quarter view ———
+// A head turned from full face towards a profile, built on a small 3D model (a skull, the jaw, the eyes, the nose, the
+// mouth, the ears) turned and projected, so the far eye narrows, the nose covers the far cheek and the near ear shows.
+// o: { c, r, turn (0 full face … 1 almost profile; default .45), dir (+1 the face turned to the frame's right), nod
+// (deg, + looks down), tone (skin ramp), light: [x, y] picture direction to the light (default up-left), warm:
+// { color, op } — the light on the near cheek, rim (colour of the edge away from the light), eye: 'open' | 'wide' |
+// 'half' | 'shut', look: [dx, dy] (−1..1), brow: 'calm' | 'up' | 'frown' | 'sly' (one up), mouth (0..1 open), smile
+// (−1..1: + the corners up, a grin), lips, iris, hairColor, hair: { color, style: 'short' | 'long' | 'tied' |
+// 'curly' | 'bald' }, beard: 'full' | 'short' | 'goatee', moustache, ear: false, opacity }
+// Returns { svg, Q (x, y, z in head units → picture), depth (→ + towards us) }.
+function head34(u, o) {
+  const r = o.r, dir = o.dir || 1, yaw = (o.turn != null ? o.turn : .45) * 62 * Math.PI / 180 * dir, nod = (o.nod || 0) * Math.PI / 180;
+  const cY = Math.cos(yaw), sY = Math.sin(yaw), cN = Math.cos(nod), sN = Math.sin(nod);
+  const rot = p => { const x = p[0] * cY + p[2] * sY, z = -p[0] * sY + p[2] * cY; return [x, p[1] * cN + z * sN, -p[1] * sN + z * cN]; };
+  const Q = (x, y, z) => { const q = rot([x, y, z]); return [o.c[0] + q[0] * r, o.c[1] + q[1] * r]; }, depth = (x, y, z) => rot([x, y, z])[2];
+  const Qa = a => a.map(p => Q(p[0], p[1], p[2]));
+  const tn = o.tone, hairC = o.hairColor || (o.hair && o.hair.color) || '#1c120c', lips = o.lips || mix(tn.shadow, '#b04a40', .5);
+  const Ls = o.light || [-.5, -.86], mo = o.mouth || 0, sm = o.smile || 0, jw = mo * .14;
+  const soft = (c, rx, ry, col, op, rotd = 0) => { const g = nid('h3s', u); return `<defs>${radGrad(g, 0, 0, 1, [[0, col, op], [1, col, 0]])}</defs><ellipse cx="0" cy="0" rx="1" ry="1" fill="url(#${g})" transform="translate(${f(c[0])} ${f(c[1])}) rotate(${f(rotd)}) scale(${f(Math.max(.01, rx * r))} ${f(Math.max(.01, ry * r))})"/>`; };
+  const P2 = p => `${f(p[0])} ${f(p[1])}`;
+  // ——— the outline: the skull's circle (its upper part) and the jaw, cheekbones and chin, as one convex body ———
+  const sc0 = Q(0, -.18, -.05), R0 = .96 * r, pts = [];
+  for (let k = 0; k < 36; k++) { const a = k / 36 * Math.PI * 2, p = [sc0[0] + Math.cos(a) * R0, sc0[1] + Math.sin(a) * R0]; if (p[1] - sc0[1] < .3 * r) pts.push(p); }
+  const jawP = [[-.72, .48, -.1], [.72, .48, -.1], [-.52, .82, .3], [.52, .82, .3], [-.24, .99 + jw, .55], [.24, .99 + jw, .55], [0, 1.03 + jw, .62],
+    [-.72, .1, .42], [.72, .1, .42], [-.64, .5, .36], [.64, .5, .36], [-.86, .1, 0], [.86, .1, 0]];
+  pts.push(...Qa(jawP));
+  const hull = (() => { const P = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
+    const lo = [], up = []; for (const p of P) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    for (const p of P.slice().reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+    return lo.slice(0, -1).concat(up.slice(0, -1)); })();
+  const F = sp(hull, true), gid = nid('h3g', u), cid = nid('h3c', u);
+  let s = `<defs>${linGrad(gid, o.c[0] + Ls[0] * r, o.c[1] + Ls[1] * r, o.c[0] - Ls[0] * r, o.c[1] - Ls[1] * r, [[0, tn.lit], [.35, tn.half], [.75, tn.core || tn.half], [1, tn.shadow]])}<clipPath id="${cid}"><path d="${F}"/></clipPath></defs>`;
+  s += `<path d="${F}" fill="url(#${gid})"/><g clip-path="url(#${cid})">`;
+  if (o.warm) { const w = Q(dir * .4, .2, .7), g = nid('h3w', u); s += `<defs>${radGrad(g, w[0], w[1], r * .8, [[0, o.warm.color, o.warm.op || .6], [1, o.warm.color, 0]])}</defs><circle cx="${f(w[0])}" cy="${f(w[1])}" r="${f(r * .8)}" fill="url(#${g})"/>`; }
+  // the side of the face turned away from us (behind the cheekbone line) in shade; the hollows under the cheekbones,
+  // the temples, the eye sockets, the jaw's underside; the cheekbone and the chin catching the light
+  { const far = Q(-dir * .7, .25, .2); s += soft(far, .45, .7, tn.shadow, .4 * Math.min(1, Math.abs(sY) * 2)); }
+  for (const sd of [-1, 1]) { const v = Math.max(.2, depth(sd * .5, 0, .85) * 1.1);
+    s += soft(Q(sd * .56, .44, .45), .2 * v, .1, tn.shadow, .45) + soft(Q(sd * .66, -.3, .45), .16 * v, .2, tn.shadow, .3)
+      + soft(Q(sd * .34, -.1, .82), .2 * v, .12, tn.shadow, .4); }
+  s += soft(Q(0, .98 + jw, .5), .5, .12, tn.shadow, .4) + soft(Q(0, .86 + jw, .66), .14, .07, tn.lit, .45);
+  { const sd = (Q(.6, .14, .5)[0] - Q(-.6, .14, .5)[0]) * Ls[0] > 0 ? 1 : -1; s += soft(Q(sd * .56, .16, .58), .18, .07, tn.lit, .5); }
+  if (o.stubble) s += `<path d="${sp(Qa([[-.8, .2, .2], [-.6, .5, .4], [-.3, .66, .78], [0, .74, .92], [.3, .66, .78], [.6, .5, .4], [.8, .2, .2], [.74, .55, -.05], [.5, .88, .32], [0, 1.05 + jw, .62], [-.5, .88, .32], [-.74, .55, -.05]]), true)}" fill="${hairC}" opacity=".22"/>`;
+  s += '</g>';
+  if (o.rim) { const H2 = hull.filter(p => (p[0] - o.c[0]) * Ls[0] + (p[1] - o.c[1]) * Ls[1] < -.2 * r); if (H2.length > 2) s += `<path d="${sp(H2)}" stroke="${o.rim}" stroke-width="${f(Math.max(.3, r * .07))}" fill="none" opacity=".7"/>`; }
+  s += `<path d="${F}" fill="none" stroke="${tn.outline}" stroke-width="${f(Math.max(.3, r * .05))}"/>`;
+  // ——— the near ear (on the side away from the turn) ———
+  if (o.ear !== false) { const sd = -dir, v = depth(sd, 0, -.15); if (v > .12) {
+    const e = [[sd * .92, -.12, -.02], [sd * .99, -.05, -.12], [sd * 1.0, .14, -.16], [sd * .95, .3, -.1], [sd * .9, .34, -.02], [sd * .88, .12, .02]];
+    s += `<path d="${sp(Qa(e), true)}" fill="${tn.half}" stroke="${tn.outline}" stroke-width="${f(r * .035)}"/>`
+      + `<path d="${sp(Qa([[sd * .94, -.06, -.08], [sd * .97, .12, -.12], [sd * .92, .26, -.06]]))}" stroke="${tn.shadow}" stroke-width="${f(r * .04)}" fill="none"/>`
+      + `<path d="${sp(Qa([[sd * .95, -.1, -.08], [sd * 1.0, .04, -.14], [sd * .99, .2, -.14]]))}" stroke="${tn.lit}" stroke-width="${f(r * .025)}" fill="none" opacity=".6"/>`; } }
+  // ——— the eyes ———
+  const ey = o.eye || 'open', op = ey === 'wide' ? 1.3 : ey === 'half' ? .55 : ey === 'shut' ? 0 : 1, lk = o.look || [0, 0];
+  for (const sd of [-1, 1]) {
+    const C3 = [sd * .34, -.06, .8], vis = Math.max(0, depth(sd * .45, 0, .9) / Math.hypot(.45, .9));
+    if (vis < .08) continue;
+    const c = Q(...C3), ex0 = rot([1, 0, 0]), el = Math.hypot(ex0[0], ex0[1]) || 1, ex = [ex0[0] / el, ex0[1] / el], up = [ex[1], -ex[0]];
+    const w = .14 * r * (.3 + .7 * vis), h = .055 * r * op, at = (a, b) => [c[0] + ex[0] * a + up[0] * b, c[1] + ex[1] * a + up[1] * b];
+    const inn = at(-sd * w, 0), out = at(sd * w, -.01 * r), top = at(sd * w * .1, h * 1.15), bot = at(sd * w * .05, -h * .75);
+    const alm = `M${P2(inn)}Q${P2(at(-sd * w * .5, h * 1.3))} ${P2(top)}Q${P2(at(sd * w * .7, h * .9))} ${P2(out)}Q${P2(at(sd * w * .5, -h * .9))} ${P2(bot)}Q${P2(at(-sd * w * .6, -h * .6))} ${P2(inn)}Z`;
+    s += soft(at(0, .02 * r), .17 * (.4 + .6 * vis), .1, tn.shadow, .45);
+    if (op > 0) { const ic = nid('h3e', u), ir = at(lk[0] * w * .45 + sd * w * .05 * (1 - vis), -lk[1] * h * .4);
+      s += `<defs><clipPath id="${ic}"><path d="${alm}"/></clipPath></defs><path d="${alm}" fill="${o.white || '#efe6da'}"/>`
+        + `<g clip-path="url(#${ic})"><circle cx="${f(ir[0])}" cy="${f(ir[1])}" r="${f(r * .058)}" fill="${o.iris || '#4a2c18'}"/><circle cx="${f(ir[0])}" cy="${f(ir[1])}" r="${f(r * .028)}" fill="#0c0604"/>`
+        + `<path d="M${P2(inn)}Q${P2(top)} ${P2(out)}" stroke="${tn.shadow}" stroke-width="${f(r * .05)}" fill="none" opacity=".45"/></g>`;
+      const g = [ir[0] + Ls[0] * r * .022, ir[1] + Ls[1] * r * .022]; s += `<circle cx="${f(g[0])}" cy="${f(g[1])}" r="${f(r * .016)}" fill="#ffffff" opacity=".95"/>`; }
+    // the upper lid line with lashes, the lid fold and its crease, the lower lid's lit edge
+    s += `<path d="M${P2(inn)}Q${P2(at(-sd * w * .5, h * 1.3))} ${P2(top)}Q${P2(at(sd * w * .7, h * .9))} ${P2(out)}" stroke="#1a0c08" stroke-width="${f(r * .035)}" fill="none" stroke-linecap="round"/>`
+      + `<path d="M${P2(out)}l${f(ex[0] * sd * r * .035 + up[0] * r * .015)} ${f(ex[1] * sd * r * .035 + up[1] * r * .015)}" stroke="#1a0c08" stroke-width="${f(r * .022)}" stroke-linecap="round"/>`
+      + `<path d="M${P2(at(-sd * w * .8, h * .9 + .02 * r))}Q${P2(at(0, h * 1.5 + .04 * r))} ${P2(at(sd * w * 1.05, h * .5 + .015 * r))}" stroke="${tn.shadow}" stroke-width="${f(r * .022)}" fill="none" opacity=".8"/>`
+      + `<path d="M${P2(at(-sd * w * .6, -h * .75))}Q${P2(at(sd * w * .1, -h * 1.05))} ${P2(at(sd * w * .85, -h * .45))}" stroke="${tn.lit}" stroke-width="${f(r * .018)}" fill="none" opacity=".65"/>`;
+    // the brow: a tapered mass over the eye, thick at the nose end
+    { const b = o.brow || 'calm', dy = (b === 'up' || (b === 'sly' && sd === dir)) ? -.07 : 0, fr = b === 'frown' ? .05 : 0;
+      const B = [[sd * .1, -.25 + fr, .92], [sd * .3, -.33 + dy, .88], [sd * .52, -.31 + dy, .76], [sd * .6, -.25 + dy, .68], [sd * .5, -.27 + dy, .76], [sd * .3, -.28 + dy, .88], [sd * .12, -.21 + fr, .92]];
+      s += `<path d="${sp(Qa(B), true)}" fill="${hairC}" stroke="${mix(hairC, '#000', .4)}" stroke-width="${f(r * .01)}"/>`; }
+  }
+  // ——— the nose: the side away from the light in shade, the lit bridge, the ball with a highlight, the wings ———
+  { const N0 = [0, -.1, .93], T = [0, .33, 1.13], Bs = [0, .42, 1.0], Wl = [-.16, .35, .92], Wr = [.16, .35, .92];
+    const shadeSide = (Q(...Wr)[0] - Q(...T)[0]) * Ls[0] > 0 ? -1 : 1, Ws = shadeSide > 0 ? Wr : Wl, Wn = shadeSide > 0 ? Wl : Wr;
+    s += `<path d="${sp(Qa([N0, [shadeSide * .08, .1, .98], [shadeSide * .1, .3, 1.02], Ws, [shadeSide * .08, .42, .96], Bs]), true)}" fill="${tn.shadow}" opacity=".45"/>`
+      + soft(Q(shadeSide * .12, .48, .95), .16, .05, tn.shadow, .55);
+    s += `<path d="${sp(Qa([[-shadeSide * .02, -.04, .95], [-shadeSide * .03, .14, 1.04], [-shadeSide * .02, .28, 1.11]]))}" stroke="${tn.lit}" stroke-width="${f(r * .04)}" fill="none" opacity=".65" stroke-linecap="round"/>`;
+    // the nose's own edge (the ridge seen against the far cheek when turned)
+    s += `<path d="${sp(Qa([N0, [0, .12, 1.03], T, [0, .38, 1.07], Bs]))}" stroke="${tn.outline}" stroke-width="${f(r * .03)}" fill="none" opacity="${f(Math.min(.8, Math.abs(sY) * 1.6))}"/>`;
+    for (const W2 of [Wl, Wr]) { const v = depth(W2[0] * 2, 0, .7); if (v < -.1) continue;
+      s += `<path d="${sp(Qa([[W2[0] * .7, .26, 1.0], [W2[0] * 1.05, .3, .93], [W2[0], .41, .92], [W2[0] * .5, .42, .98]]))}" stroke="${tn.outline}" stroke-width="${f(r * .03)}" fill="none" opacity=".75"/>`; }
+    for (const sd of [-1, 1]) { const n = Q(sd * .07, .41, 1.0); s += `<ellipse cx="${f(n[0])}" cy="${f(n[1])}" rx="${f(r * .035 * (.5 + .5 * Math.max(0, depth(sd, 0, 1.5) / 1.8)))}" ry="${f(r * .018)}" fill="${mix(tn.outline, tn.shadow, .3)}" opacity=".85"/>`; }
+    { const g = Q(-shadeSide * .03, .3, 1.12); s += `<circle cx="${f(g[0])}" cy="${f(g[1])}" r="${f(r * .03)}" fill="#ffffff" opacity=".5"/>`; void Wn; } }
+  // ——— the mouth ———
+  { const cy = .62 - sm * .05, ml = [-.25, cy, .8], mr = [.25, cy, .8], m0 = [0, .62, .97], gap = mo * .1;
+    const upper = [ml, [-.12, .555, .94], [0, .57, .98], [.12, .555, .94], mr, [.12, .615, .95], m0, [-.12, .615, .95]];
+    const lower = [ml, [-.12, .63 + gap, .95], [0, .635 + gap, .97], [.12, .63 + gap, .95], mr, [.13, .7 + gap, .9], [0, .72 + gap, .92], [-.13, .7 + gap, .9]];
+    if (mo > .05) s += `<path d="${sp(Qa([ml, [-.12, .615, .95], m0, [.12, .615, .95], mr, [.12, .63 + gap, .95], [0, .635 + gap, .97], [-.12, .63 + gap, .95]]), true)}" fill="#2a0a0c"/>`
+      + `<path d="${sp(Qa([[-.12, .625, .95], [0, .63, .975], [.12, .625, .95]]))}" stroke="#efe4d8" stroke-width="${f(r * .035)}" fill="none"/>`;
+    s += `<path d="${sp(Qa(upper), true)}" fill="${mix(lips, tn.shadow, .3)}"/><path d="${sp(Qa(lower), true)}" fill="${lips}"/>`
+      + `<path d="${sp(Qa([[-.06, .67 + gap, .95], [.06, .67 + gap, .95]]))}" stroke="${mix(lips, '#ffffff', .45)}" stroke-width="${f(r * .025)}" fill="none" stroke-linecap="round" opacity=".7"/>`
+      + `<path d="${sp(Qa([ml, [-.12, .615, .95], m0, [.12, .615, .95], mr]))}" stroke="${mix(tn.outline, lips, .2)}" stroke-width="${f(r * .025)}" fill="none"/>`
+      + soft(Q(0, .79 + gap, .88), .13, .04, tn.shadow, .55);
+    for (const sd of [-1, 1]) { const a = Q(sd * .26, cy - .01, .78), b = Q(sd * .3, cy - .05 - sm * .03, .74); s += `<path d="M${P2(a)}L${P2(b)}" stroke="${tn.shadow}" stroke-width="${f(r * .02)}" opacity="${f(.4 + Math.max(0, sm) * .4)}" stroke-linecap="round"/>`; }
+    if (sm > .2) for (const sd of [-1, 1]) s += `<path d="${sp(Qa([[sd * .2, .4, .88], [sd * .34, .52, .78], [sd * .36, .64, .72]]))}" stroke="${tn.shadow}" stroke-width="${f(r * .025)}" fill="none" opacity=".55"/>`;
+    s += `<path d="${sp(Qa([[-.04, .46, .99], [-.03, .54, .98]]))}M${P2(Q(.04, .46, .99))}L${P2(Q(.03, .54, .98))}" stroke="${tn.shadow}" stroke-width="${f(r * .015)}" fill="none" opacity=".45"/>`; }
+  // ——— beard, moustache, hair as masses ———
+  const HL = Ls;
+  if (o.beard) {
+    const ext = o.beard === 'full' ? .16 : .04, kind = o.beard;
+    const outer = kind === 'goatee' ? [[-.2, .72, .86], [-.24, .9, .66], [-.16, 1.08 + jw + ext, .58], [0, 1.12 + jw + ext, .6], [.16, 1.08 + jw + ext, .58], [.24, .9, .66], [.2, .72, .86]]
+      : [[-.84, .12, .26], [-.82, .48, -.02], [-.58, .88 + ext * .5, .26], [-.28, 1.06 + jw + ext, .52], [0, 1.12 + jw + ext, .6], [.28, 1.06 + jw + ext, .52], [.58, .88 + ext * .5, .26], [.82, .48, -.02], [.84, .12, .26],
+        [.76, .14, .42], [.6, .4, .58], [.34, .6, .78], [.24, .7, .82], [0, .76 + jw, .93], [-.24, .7, .82], [-.34, .6, .78], [-.6, .4, .58], [-.76, .14, .42]];
+    const pts2 = Qa(outer).filter((p, i) => true);
+    s += hairMass(u, pts2, { r, color: hairC, outline: tn.outline, seed: 13, n: kind === 'goatee' ? 12 : 40, light: HL, sheen: Q(dir * .3, .9, .6),
+      flow: () => [0, 1], tufts: kind === 'goatee' ? [2, 3, 4] : [2, 3, 4, 5, 6], tuftLen: kind === 'full' ? .14 : .07 });
+  }
+  if (o.moustache || o.beard) {
+    const M = [[0, .46, 1.0], [.18, .5, .92], [.32, .62, .76], [.3, .68, .74], [.18, .58, .9], [0, .55, .99], [-.18, .58, .9], [-.3, .68, .74], [-.32, .62, .76], [-.18, .5, .92]];
+    s += hairMass(u, Qa(M), { r, color: hairC, outline: tn.outline, seed: 4, n: 12, light: HL, flow: p => [(p[0] - Q(0, .5, 1)[0]) > 0 ? .7 : -.7, .7], tufts: [3, 7], tuftLen: .05 });
+  }
+  if (o.hair && o.hair.style !== 'bald') {
+    const hs = o.hair.style || 'short', hc = o.hair.color || hairC;
+    // the outer edge: the skull's outline over the top between the two sides, a little proud of it (the hair's volume)
+    const L3 = hs === 'long' ? [-.98, .5, -.1] : [-.94, .16, -.12], R3 = [-L3[0], L3[1], L3[2]], pl = Q(...L3), pr = Q(...R3), vol = 1.07;
+    let a0 = Math.atan2(pl[1] - sc0[1], pl[0] - sc0[0]), a1 = Math.atan2(pr[1] - sc0[1], pr[0] - sc0[0]); while (a1 > a0) a1 -= Math.PI * 2;
+    const arc = []; for (let k = 0; k <= 16; k++) { const a = lerp(a0, a1, k / 16); arc.push([sc0[0] + Math.cos(a) * R0 * vol, sc0[1] + Math.sin(a) * R0 * vol]); }
+    // the hairline: sideburn, temple, forehead (a little peak), the other side
+    const line = Qa([[.84, .16, .3], [.8, -.34, .5], [.5, -.6, .74], [.18, -.66, .82], [0, -.62, .85], [-.18, -.66, .82], [-.5, -.6, .74], [-.8, -.34, .5], [-.84, .16, .3]]);
+    let HP = arc.slice().reverse().concat(line.slice().reverse());   // right side over the top to left, back by the hairline
+    HP = arc.concat(line);
+    if (hs === 'long') HP = [Q(-1.02, 1.3, -.2), ...arc, Q(1.02, 1.3, -.2), Q(.84, 1.2, .1), ...line, Q(-.84, 1.2, .1)];
+    const crown = Q(0, -.9, .2);
+    s += hairMass(u, HP, { r, color: hc, outline: tn.outline, seed: 9, n: hs === 'curly' ? 60 : 48, light: HL, sheen: Q(-Ls[0] < 0 ? -.3 : .3, -.8, .5), curl: hs === 'curly',
+      flow: p => { const dx = p[0] - crown[0], dy = p[1] - crown[1], l = Math.hypot(dx, dy) || 1; return hs === 'long' && p[1] > o.c[1] ? [dx / l * .3, 1] : [dx / l, dy / l]; },
+      tufts: hs === 'curly' ? [2, 4, 6, 8, 10, 12, 14] : [1, 3, 15, 16], tuftLen: hs === 'curly' ? .1 : .08 });
+    if (hs === 'tied') { const rb = o.hair.ribbon || '#1a1a22', b = Q(-dir * .7, .6, -.7);
+      s += `<path d="M${P2(b)}l${f(-dir * r * .2)} ${f(-r * .1)}l${f(0)} ${f(r * .2)}zM${P2(b)}l${f(dir * r * .16)} ${f(-r * .12)}l${f(dir * r * .02)} ${f(r * .2)}z" fill="${rb}" stroke="${tn.outline}" stroke-width="${f(r * .02)}"/>`; }
+  }
+  if (o.opacity != null && o.opacity < 1) s = `<g opacity="${o.opacity}">${s}</g>`;
+  return { svg: s, Q, depth };
+}
+
+module.exports = { sp, tube, cloth, hand, hand3, head, head34, hairMass };
