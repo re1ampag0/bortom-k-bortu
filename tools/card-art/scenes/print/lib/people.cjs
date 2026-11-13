@@ -461,6 +461,30 @@ function hairMass(u, pts, o) {
     const near = o.sheen ? Math.hypot(p[0] - o.sheen[0], p[1] - o.sheen[1]) < r * .6 : false, light = R() < (near ? .65 : .3);
     s += `<path d="M${f(p[0])} ${f(p[1])}Q${f(m[0])} ${f(m[1])} ${f(e[0])} ${f(e[1])}" stroke="${light ? hi : lo}" stroke-width="${f(r * (light ? .022 : .032))}" fill="none" stroke-linecap="round" opacity="${light ? .55 : .5}"/>`;
   }
+  // (opt-in) locks: groups of hair, each a broad lit band along the flow with a dark gap on its side away from the
+  // light, so the mass reads as strands gathered in locks, not a smooth cap. o.locks — how many; o.lockRoots(R, k) —
+  // where lock k starts (default: anywhere in the mass); o.lockLen — length in r (default .7); o.lockW — width in r
+  if (o.locks) {
+    const Ln = Math.hypot(Lg[0], Lg[1]) || 1, lx = Lg[0] / Ln, ly = Lg[1] / Ln, lw = r * (o.lockW || .13), body = mix(col, hi, .3);
+    for (let k = 0; k < o.locks; k++) {
+      let p = o.lockRoots ? o.lockRoots(R, k) : [x0 + R() * (x1 - x0), y0 + R() * (y1 - y0)];
+      const L0 = r * (o.lockLen || .7) * (.7 + R() * .5), st = 6, P3 = [p], bend = (R() - .5) * (o.curl ? 1.4 : .5);
+      for (let i = 0; i < st; i++) { const fl = o.flow ? o.flow(p) : [0, 1], fn = Math.hypot(fl[0], fl[1]) || 1, t = i / st;
+        const dx = fl[0] / fn, dy = fl[1] / fn, bx = -dy * bend * Math.sin(t * Math.PI * (o.curl ? 2 : 1)), by = dx * bend * Math.sin(t * Math.PI * (o.curl ? 2 : 1));
+        p = [p[0] + (dx + bx * .6) * L0 / st, p[1] + (dy + by * .6) * L0 / st]; P3.push(p); }
+      const a = P3[0], b = P3[P3.length - 1], tx = b[0] - a[0], ty = b[1] - a[1], tl = Math.hypot(tx, ty) || 1;
+      let nx = -ty / tl, ny = tx / tl; if (nx * lx + ny * ly > 0) { nx = -nx; ny = -ny; }   // n — towards the shade
+      const off = (P, k2) => sp(P.map(q => [q[0] + nx * k2, q[1] + ny * k2]));
+      s += `<path d="${off(P3, 0)}" stroke="${body}" stroke-width="${f(lw)}" fill="none" stroke-linecap="round" opacity=".5"/>`
+        + `<path d="${off(P3, lw * .55)}" stroke="${lo}" stroke-width="${f(lw * .36)}" fill="none" stroke-linecap="round" opacity=".75"/>`
+        + `<path d="${off(P3, -lw * .22)}" stroke="${hi}" stroke-width="${f(lw * .18)}" fill="none" stroke-linecap="round" opacity=".55"/>`;
+    }
+  }
+  // (opt-in) edgeShade: [[i0, i1], …] — runs of the outline where the mass turns under (over the brow, at the nape,
+  // a beard under the cheekbone and the jaw): a soft dark band inside the edge
+  if (o.edgeShade) { const bf = nid('hb', u), pad = r * 3;
+    s += `<defs><filter id="${bf}" filterUnits="userSpaceOnUse" x="${f(x0 - pad)}" y="${f(y0 - pad)}" width="${f(x1 - x0 + pad * 2)}" height="${f(y1 - y0 + pad * 2)}"><feGaussianBlur stdDeviation="${f(r * .05)}"/></filter></defs>`;
+    for (const [i0, i1, w0] of o.edgeShade) { const run = pts.slice(i0, i1 + 1); if (run.length > 1) s += `<path d="${sp(run)}" stroke="${lo}" stroke-width="${f(r * (w0 || .16))}" fill="none" stroke-linecap="round" opacity=".7" filter="url(#${bf})"/>`; } }
   s += `</g><path d="${d}" fill="none" stroke="${lo}" stroke-width="${f(r * .025)}" opacity=".9"/>`;
   return s;
 }

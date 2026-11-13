@@ -54,7 +54,11 @@ for (const k of Object.keys(SHIP_MAT)) if (!MAT[k]) MAT[k] = SHIP_MAT[k];
 // The marks of single ships (kit/README.md, «Корабли»): balc, balcD, lanternPost, lanterns, lanternArm, holeK, thruK, topK,
 // topRound, lidIn, cond ('whole' | 'mended' | 'torn' | 'fringe' | 'rags' | 'strips'), ports[].hk, masts[].Q, masts[].noBare,
 // ribs, crest, beakJag, broken, run, sprit.stays, sprit.sling, masts[].spanker, topRail, sternBow, taffScroll, headCarve, holeVar, footRag,
-// staysails, deckPortH, stripDense.
+// staysails, deckPortH, stripDense, pear.
+// pear (the Dutchman only): { h, lo, hu, bow, aft, k } — a hull bellied in profile: the stem bulges forward by `bow` and
+// the run under the counter aft by `aft`, most at the height h (the widest line), fading out from -lo below the water and
+// at hu above; the widest line of the shading moves to h, the belly under the ports takes the light (k — strength),
+// the tumbled-in side above it and the bilge under it go into shadow. Without it — the hulls as before.
 const SPECS = {
   // The Black Pearl (2003), by the user's measurements of the profile (report/print-kit/refs/zamery.md; L — the waterline):
   // the longest and lowest hull (the waist 0.14 L, the hull 1.21 L, with the head 1.34 L), a modest sheer; the forecastle
@@ -121,10 +125,11 @@ const SPECS = {
   // 0.33 L, the waist 0.21 L), the head raised more; the masts a little taller (0.8 L) with wider yards; the rags dense
   // (stripDense: many long strips in two rows) — a big and menacing ship; weed hanging from the head and the rail.
   dutch: {
-    len: 90, free: 18.5, sheer: [4.6, 3.8], tumble: 2.6, bow: [6.5, 2.1], over: 9, counter: .62, run: 1,
+    len: 90, free: 20.6, sheer: [4.6, 3.8], tumble: 2.6, bow: [6.5, 2.1], over: 9, counter: .62, run: 1,
     fc: [-6, 4.4], tiers: [[17, 4.4], [32, 3.6]], taff: .6, tw: [2.6, 6], openRail: 1,
-    hull: 'ship-drown', trim: 'ship-drown', gilt: 0, wales: [5.6, 12.6, 16.6], bands: [], growth: true, ribs: [1.5, 2.6], crest: [11, 12], beakJag: 1,
-    ports: [{ h: 9, n: 10, x0: -30, x1: 22, w: 2.6, hk: 1.3 }], deckPorts: [0, 0, 0],
+    hull: 'ship-drown', trim: 'ship-drown', gilt: 0, wales: [4.2, 7.4, 14.4, 18.6], bands: [], growth: true, ribs: [1.5, 2.6], crest: [11, 12], beakJag: 1,
+    pear: { h: 6.4, lo: 5, hu: 16, bow: 6, aft: 7, k: 1 },   // step 2, the verdict: a pear in profile — the belly under the ports, the side tumbling in to the rail
+    ports: [{ h: 11, n: 10, x0: -30, x1: 22, w: 2.6, hk: 1.3 }], deckPorts: [0, 0, 0],
     gallery: [6, 2, 3.6], galRoof: 3, tierWin: 1, lantern: 0,
     beak: [19, 9, 10], sprit: { len: 33, steeve: 17 }, jibs: 1,
     masts: [{ x: -27, H: 72, n: 3, k: 1.08, Q: [.6, .82, .95] }, { x: 4.5, H: 72, n: 3, k: 1.14, Q: [.6, .82, .95] }, { x: 31.5, H: 60, n: 2, k: .78, aft: 'lateen', lat: [.15, .085, .8], Q: [.6, .86] }], topK: 2.2, topRound: 1,
@@ -323,7 +328,8 @@ function build(u, L, o, mode) {
   const baseTop = X => sp.free + sp.fc[1] * (1 - sm((X - sp.fc[0] + 1.4) / 2.8)) + sp.tiers.reduce((a, t) => a + t[1] * sm((X - t[0] + 1.4) / 2.8), 0) + sp.taff * sm((X - xAft + 3.5) / 3.5);
   const rail = X => Y(baseTop(X), X);
   const Hs = rail(xStem), hTop = rail(xAft);
-  const stemX = h => { const t = h / Hs, p = sp.bow[1]; return -hb - sp.bow[0] * (t < 0 ? t * p * .5 : 1 - Math.pow(1 - Math.min(t, 1), p)); };
+  const PR = sp.pear, pearB = PR ? h => PR.bow * (h < PR.h ? sm((h + PR.lo) / (PR.h + PR.lo)) : 1 - sm((h - PR.h) / (PR.hu - PR.h))) : () => 0, pA = PR ? PR.aft : 0;   // the belly of the stem
+  const stemX = h => { const t = h / Hs, p = sp.bow[1]; return -hb - sp.bow[0] * (t < 0 ? t * p * .5 : 1 - Math.pow(1 - Math.min(t, 1), p)) - pearB(h); };
   const hC = Y(sp.free * sp.counter, hb), xC = hb + sp.over * .3, kT = (xAft - xC) / (hTop - hC), sBw = sp.sternBow || 0;   // the transom's edge
   // sp.sternBow (the Revenge): the edge bends — the counter nearly upright, the upper tiers lean aft more and more (overhang up and aft)
   const transX = sBw ? h => { const t = (h - hC) / (hTop - hC); return xC + (xAft - xC) * (t * (1 - sBw) + sBw * t * t); } : h => xC + kT * (h - hC);
@@ -350,8 +356,8 @@ function build(u, L, o, mode) {
   topPts.push([xAft, hTop]); hullPts.push(...topPts, ...sternEdge, [xC, hC]);
   // sp.run (the Dutchman): no sternpost step under the counter — one smooth curve from the transom down to the water
   const qB = (A, B, Cq, t) => { const q = 1 - t; return [q * q * A[0] + 2 * t * q * B[0] + t * t * Cq[0], q * q * A[1] + 2 * t * q * B[1] + t * t * Cq[1]]; };
-  const runC = sp.run ? [[xC, hC], [hb + sp.over * .15, hC * .3], [hb - 2.5, -.6]] : null;
-  if (runC) { for (let i = 1; i <= 10; i++) hullPts.push(qB(...runC, i / 10)); hullPts.push([hb - 3.5, hLo]); }
+  const runC = sp.run ? [[xC, hC], [hb + sp.over * .15 + pA, hC * (pA ? .4 : .3)], [hb - 2.5 + pA * .3, -.6]] : null;   // sp.pear: the run bellies out aft
+  if (runC) { for (let i = 1; i <= 10; i++) hullPts.push(qB(...runC, i / 10)); hullPts.push([hb - 3.5 + pA * .3, hLo]); }
   else { for (let i = 1; i <= 6; i++) { const t = i / 6, q = 1 - t; hullPts.push([q * q * xC + 2 * t * q * (hb + sp.over * .02) + t * t * (hb - .3), q * q * hC + 2 * t * q * hC * .74 + t * t * hC * .42]); }
     hullPts.push([hb - 1.4, hLo]); }
   const hullD = line(hullPts) + 'Z', hullK = sp.hull;
@@ -359,7 +365,7 @@ function build(u, L, o, mode) {
   const along = (h, Xa, Xb, step = 2.5) => { const a = []; for (let X = Xa; X < Xb + step - 1e-6; X += step) { const x = Math.min(X, Xb); a.push([x, Y(h, x)]); } return a; };
   // the side in section: above the widest line (t0) it leans in and looks up at the sky, below it turns under to the
   // keel; the sky lights what looks up, the water throws a cold reflex on what looks down
-  const sideNY = t => { const t0 = .42; return t > t0 ? (.22 + sp.tumble * .55) * Math.pow((t - t0) / (1 - t0), 1.1) : -1.15 * Math.pow((t0 - t) / t0, 1.35); };
+  const sideNY = t => { const t0 = PR ? PR.h / (sp.free + 1) : .42; return t > t0 ? (.22 + sp.tumble * .55) * Math.pow((t - t0) / (1 - t0), 1.1) : -1.15 * Math.pow((t0 - t) / t0, 1.35); };
   const sideI = t => { const ny = sideNY(t); return lum([0, ny, 1]) + .22 * Math.max(0, ny); };
   const reflexC = mix(mix(L.pal.sea[0], L.pal.sky[3], .35), L.fillColor, .3), rfx = t => t < .26 ? .24 * Math.pow(1 - t / .26, 1.6) : 0;
   const sideT = (km, t) => sil ? C : col(mix(L.tone(km, clamp(sideI(t), -1, 1), cen[0], cen[1]), reflexC, rfx(t)));
@@ -445,6 +451,17 @@ function build(u, L, o, mode) {
     // the round of the quarter: lighter or darker than the flat side by the light
     { const n = [.62, 0, .78], dI = lum(n) - If; if (Math.abs(dI) > .04) { const c = dI > 0 ? lite : dark, a0 = dI > 0 ? clamp(dI * .5, 0, .5) : clamp(-dI * .75, 0, .62), Xa = xAft, Xb = hb - sp.len * .1;
       inner += fillP(poly([[Xb - 4, -7], [Xa + 4, -7], [Xa + 4, 60], [Xb - 4, 60]]), gr([Xa, 0], [Xb, 0], [[0, c, a0], [.45, c, a0 * .45], [1, c, 0]])); } }
+    // sp.pear: the belly takes the light on the side of the source, the tumbled-in side above it and the bilge under it
+    // go into shadow (over the base shading, so the hull stands off a dark ground)
+    let pearL = '';
+    if (PR) { const k = PR.k || 1, hm = PR.h, fr = clamp(.6 + .4 * If, .35, 1), DK = col(mix(L.tone(hullK, -.9, cen[0], cen[1]), '#070606', .55));
+      const hi = col(mix(L.tone(hullK, 1, cen[0], cen[1]), L.keyColor, .5)), sx = dir * (dC.ux || 0) < 0 ? -1 : 1, Xn = sx < 0 ? xStem - 6 : xAft + 6, Xf = sx < 0 ? xAft + 6 : xStem - 6;
+      const H = h => clamp(h / topMax), X0 = xStem - 10, X1 = xAft + 8;
+      pearL += fillP(strip(-1, topMax + 2, X0, X1, 3), gr([0, -1], [0, topMax], [[0, DK, .78 * k], [H(hm * .4), DK, .5 * k], [H(hm * .85), DK, 0], [H(hm + 2.6), DK, 0],
+        [H(hm + 4.6), DK, .55 * k], [H(hm + 7), DK, .36 * k], [H(sp.free - 1), DK, .2 * k], [1, DK, .08 * k]]));   // the bilge under the belly; the shadow under the tumblehome
+      pearL += fillP(strip(hm - 3.4, hm + 3.4, X0, X1, 3), gr([0, hm - 3.4], [0, hm + 3.4], [[0, hi, 0], [.45, hi, .62 * k * fr], [.66, hi, .44 * k * fr], [1, hi, 0]]));   // the belly in the light
+      pearL += fillP(strip(hm - 2.6, hm + 2.8, X0, X1, 3), gr([Xn, 0], [Xf, 0], [[0, hi, .36 * k * fr], [.5, hi, .1 * k * fr], [1, hi, 0]]));   // brighter on the side of the source
+      if (!far) pearL += strokeP(line(along(hm + 3.6, X0, X1)), DK, .8 * s, ' opacity=".4"') + strokeP(line(along(hm + 3, X0, X1)), hi, .3 * s, ` opacity="${f(.4 * k * fr)}"`); }   // the crease where the side starts to tumble in
     // wet planks at the waterline: darker, with the weed of the Dutchman
     if (sp.bleach) inner += fillP(strip(4.4, topMax + 2, xStem - 3, xAft + 2, 4), gr([0, 4.4], [0, topMax], [[0, '#bcb6a4', 0], [.45, '#bcb6a4', .2], [1, '#cdc7b4', .36]]));   // the upper strakes bleached by sun and salt
     if (sp.growth) inner += fillP(strip(-1, 3.4, xStem - 3, xAft + 2, 6), gr([0, 0], [0, 3.4], [[0, tone('ship-weed', -.45), .75], [.45, tone('ship-weed', -.3), .4], [1, tone('ship-weed', -.2), 0]]));   // the Dutchman: a green slime belt
@@ -501,6 +518,7 @@ function build(u, L, o, mode) {
     for (const r of ribs) { const d = ribD(r), so2 = shOff(.7), cs = ribD(Object.assign({}, r, { X: r.X + so2[0], h0: r.h0 + so2[1], h1: Math.min(r.h1, rail(r.X)) - .5 }));   // its shadow on the planks, away from the light
       hull += fillP(cs, shd, ' opacity=".34"') + fillP(d, gr([r.X - r.w / 2, 0], [r.X + r.w / 2, 0], [[0, tone(hullK, lum([-.75, .1, .65]) + .05)], [.45, tone(hullK, If + .12)], [1, tone(hullK, lum([.75, .1, .65]) - .05)]]))
         + (far ? '' : strokeP(seg([r.X - r.w * .2, r.h0 + .5], [r.X - r.w * .15 + r.lean * .5, r.h1 - .8]), lite, .14 * s, ' opacity=".3"')); }
+    if (pearL) hull += `<g clip-path="url(#${hc})">${pearL}</g>`;   // sp.pear: over the planks, the ports and the ribs
   }
 
   // ——— the stern: the transom's strip turned to the viewer, the quarter gallery, windows, the lantern ———
@@ -523,7 +541,7 @@ function build(u, L, o, mode) {
       : 'M' + pp(xC, hC) + 'L' + pp(tA[0], tA[1]) + 'Q' + pp(xAft + sp.tw[0] * .5, hTop + arch * 1.5) + ' ' + pp(xAft + sp.tw[0], hTop + arch * .2) + 'L' + pp(xC + sp.tw[1], hC + .5) + 'Z';
     let under, rud;
     if (runC) { // the smooth counter: its strip beyond the hull's curve, the rudder hung along it down into the water
-      const oC = [[xC + sp.tw[1], hC + .5], [hb + sp.over * .15 + sp.tw[1] * .55, hC * .32], [hb - 2.5 + sp.tw[1] * .22, -.6]], ou = [], inn = [], rd = [];
+      const oC = [[xC + sp.tw[1], hC + .5], [hb + sp.over * .15 + pA + sp.tw[1] * .55, hC * (pA ? .42 : .32)], [hb - 2.5 + pA * .3 + sp.tw[1] * .22, -.6]], ou = [], inn = [], rd = [];
       for (let i = 0; i <= 10; i++) { ou.push(qB(...oC, i / 10)); inn.unshift(qB(...runC, i / 10)); }
       under = poly(ou.concat(inn));
       for (let i = 4; i <= 10; i++) { const a = qB(...oC, i / 10); rd.push([a[0] - .2, a[1], 0]); } rud = poly(rd.concat([[rd[rd.length - 1][0] - .3, -6, 0], [rd[rd.length - 1][0] - 1.9, -6, 0]], rd.slice().reverse().map(a => [a[0] - 1.6 - .25 * (a[1] / hC), a[1], 0])));
