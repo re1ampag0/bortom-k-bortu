@@ -208,12 +208,19 @@ function hand(u, o) {
 //   thumb); trigger: true (wrap) — the index finger off the handle, curled on a trigger in front of it (triggerFlex,
 //   default [2, 50, 22]); backFingers may hold 'palm' (the palm behind a held card); cut (local x) — the wrist end cut
 //   there and left without an outline, with the sleeve's shade on it (figure() passes 0: the hand grows out of the
-//   cuff); lightZ (.55) — the light's share towards us, for the tone of each phalanx by how it faces the light }
+//   cuff); lightZ (.55) — the light's share towards us, for the tone of each phalanx by how it faces the light;
+//   lod (12) — the palm's length in the picture (5·s units) under which the hand is drawn simple, or 'small' | 'full'
+//   to force a level; small (1.15) — the simple hand's enlargement (the handle radius in the picture is kept) }
+// The simple level (a hand of a card's figure, under ~24 units long): the palm and the fingers as one mass with a
+// single outer contour, parted by one or two soft shadows where neighbouring fingers touch, the fingers a little
+// thicker, the thumb apart with its own contour and round shading; no nails, wrinkles, knuckle marks or creases.
+// The full level adds soft tendons on the back of the hand, the palm's creases as folds (a lit lip beside each) and
+// finger tips narrowing to a fuller pad.
 // Drawn: each phalanx a little waisted, the joints full, the knuckle standing out on a bent joint and the skin
 // folding in on its inside, a round pad at the tip; nails (plate, cuticle, glint) on the tips turned to us, pads on
 // the tips seen from the palm; a thick outer contour (the silhouette reads at card size) with thin inner lines; the
 // pieces lying behind the others sunk a little darker.
-// Returns { back, front, P (local x, y, z → picture), wrist, grip (picture point of the handle axis), axis (unit,
+// Returns { back, front, small (the level drawn), P (local x, y, z → picture), wrist, grip (picture point of the handle axis), axis (unit,
 // along the handle in the picture), r (the handle radius in picture units), joints (each digit's joints in the
 // picture, index → little, thumb) }.
 const HFING = [{ k: [4.75, -1.45], l: 4.2, w: 1.1, sp: -1.5 }, { k: [5.0, -.48], l: 4.7, w: 1.14, sp: -.5 },
