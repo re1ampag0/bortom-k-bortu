@@ -53,35 +53,74 @@ function sidePt(o, G) {
   return (X, H, dz = 0) => { const Z = G.hullZ(X, Math.max(0, H)) + dz, Hp = H * Math.cos(ph) - Z * Math.sin(ph); return [o.x + dir * s * (X * ca - Hp * sa), o.y - s * (X * sa + Hp * ca)]; };
 }
 // the gun ports of the main row (SHIP_SPECS.revenge.ports[0], the height following the sheer, as ship.cjs lays them)
-function portXH(kind) {
-  const sp = K.SHIP_SPECS[kind], hb = sp.len / 2, row = sp.ports[0], pitch = (row.x1 - row.x0) / (row.n - 1);
+function portXH(kind, ri = 0) {
+  const sp = K.SHIP_SPECS[kind], hb = sp.len / 2, row = sp.ports[ri], pitch = (row.x1 - row.x0) / (row.n - 1);
   const sheer = X => { const t = X / hb; return (t < 0 ? sp.sheer[0] : sp.sheer[1]) * t * t; };
   return Array.from({ length: row.n }, (_, i) => { const X = row.x0 + i * pitch; return [X, row.h + sheer(X) * clamp(row.h / sp.free, 0, 1.25)]; });
 }
 
-// KIT-CANDIDATE a ball stuck in a thick wooden side: the crater of crushed wood (its wall lit on the side away from
-// the light), pale fibres torn out round its rim, cracks running along the grain (angle `ang`), the ball half sunk in it
+// KIT-CANDIDATE a ball stuck in a thick wooden side, sunk in it to half its depth: the shallow bruise of the dent round
+// it (its shade on the side away from the light), the dark crater ring, the iron ball, then over the ball's edge the
+// lip of crushed wood pushed up round it (thicker along the grain `ang`, pale fresh wood on the side to the light) and
+// the split slivers peeling off along the grain — pale wood with their own shadow, no dark cracks
 function stuckBall(u, L, o) {
-  const { x, y, r, ang = 0 } = o, R = rng(o.seed || 1), rp = L.ramp('oak', x, y), cg = nid('cr', u), lx = L.ux, ly = L.uy;
-  let out = `<g transform="rotate(${f(ang)} ${f(x)} ${f(y)})">`;
-  // the dent: a wide shallow bowl, darker on the side towards the light (its wall faces away), lit on the far wall
-  out += `<defs>${radGrad(cg, x - lx * r * .5, y - ly * r * .5, r * 2.6, [[0, '#0a0503'], [.45, '#2a1408'], [.75, mix(rp.half, '#3a1a0a', .4)], [1, rp.half, 0]])}</defs>`
-    + `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * 2.5)}" ry="${f(r * 2.1)}" fill="url(#${cg})"/>`
-    + `<path d="M${f(x + lx * r * 2.2 - r * .9)} ${f(y + ly * r * 1.6 + r * 1.1)}A${f(r * 2.3)} ${f(r * 1.9)} 0 0 0 ${f(x + r * 2.2)} ${f(y - r * .6)}" stroke="${rp.lit}" stroke-width="${f(r * .22)}" fill="none" opacity=".75" stroke-linecap="round"/>`;
-  // cracks along the grain, both ways, each its own length, with a lit lip
-  for (let i = 0; i < 6; i++) { const sd = i % 2 ? 1 : -1, yy = y + (R() - .5) * r * 1.6, l = r * (1.2 + R() * 2.2), x0 = x + sd * r * 1.4;
-    const d = `M${f(x0)} ${f(yy)}l${f(sd * l * .5)} ${f((R() - .5) * .8)}l${f(sd * l * .5)} ${f((R() - .5) * .6)}`;
-    out += `<path d="${d}" stroke="#0c0604" stroke-width="${f(.35 + R() * .3)}" fill="none" stroke-linecap="round"/><path d="${d}" transform="translate(0 ${f(-.4)})" stroke="${rp.lit}" stroke-width=".18" fill="none" opacity=".55"/>`; }
-  // torn fibres standing out of the rim: pale fresh wood
-  out += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * 1.45)}" ry="${f(r * 1.3)}" fill="#1a0c06" opacity=".85"/>`;
-  for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2 + R() * .3, rr = r * (1.2 + R() * .25), l = r * (.22 + R() * .35), w = .18 + R() * .2;
-    const ax = x + Math.cos(a) * rr, ay = y + Math.sin(a) * rr * .9, bx = ax + Math.cos(a + (R() - .5) * .5) * l, by = ay + Math.sin(a + (R() - .5) * .5) * l * .7;
-    const lit = Math.cos(a) * -lx + Math.sin(a) * -ly > 0;
-    out += `<path d="M${f(ax - w)} ${f(ay)}L${f(bx)} ${f(by)}L${f(ax + w)} ${f(ay + w * .5)}Z" fill="${lit ? '#e8b878' : '#8a5428'}"/>`; }
-  out += '</g>';
-  // the ball half sunk: the iron sphere, its shadow in the crater on the side away from the light
-  out += `<ellipse cx="${f(x - lx * r * .35)}" cy="${f(y - ly * r * .35 + r * .2)}" rx="${f(r * 1.08)}" ry="${f(r)}" fill="#050302" opacity=".75"/>`
-    + K.shadeSphere(u, x + (o.dx || 0), y + (o.dy || 0), r, L, 'iron');
+  const { x, y, r, ang = 0 } = o, R = rng(o.seed || 1), rp = L.ramp('oak', x, y), lx = L.ux, ly = L.uy, bx = x + (o.dx || 0), by = y + (o.dy || 0);
+  const gb = nid('cr', u), gl = nid('cl', u), fresh = mix(rp.lit, '#f2dcae', .6), mid = mix(rp.half, '#c4955e', .5), dark = mix(rp.shadow, '#3a200e', .4);
+  // the bruise: the planking pressed in round the hole, its wall towards the light in shade
+  let out = `<defs>${radGrad(gb, x + lx * r * .5, y + ly * r * .5, r * 2.4, [[0, '#120804', .85], [.5, '#2a1408', .55], [1, '#2a1408', 0]])}`
+    + `${linGrad(gl, x + lx * r * 1.4, y + ly * r * 1.4, x - lx * r * 1.4, y - ly * r * 1.4, [[0, fresh], [.45, mid], [1, dark]])}</defs>`
+    + `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * 2.3)}" ry="${f(r * 1.9)}" fill="url(#${gb})" transform="rotate(${f(ang)} ${f(x)} ${f(y)})"/>`;
+  // the crater: a ragged dark ring just round the ball
+  const N = 18, ring = (k0, k1, jit) => Array.from({ length: N }, (_, i) => { const a = i / N * Math.PI * 2, rr = r * (k0 + k1 * Math.pow(Math.abs(Math.cos(a)), 2) + (R() - .5) * jit); return [x + Math.cos(a + ang * Math.PI / 180) * rr, y + Math.sin(a + ang * Math.PI / 180) * rr * .92]; });
+  out += `<path d="${sp(ring(1.18, .12, .14), true)}" fill="#120804"/>`;
+  // the ball, its own shadow cast into the crater on the side away from the light
+  out += `<circle cx="${f(bx - lx * r * .22)}" cy="${f(by - ly * r * .22)}" r="${f(r * 1.04)}" fill="#050302" opacity=".8"/>` + K.shadeSphere(u, bx, by, r, L, 'iron');
+  // the lip over the ball's edge: an outer contour wider along the grain, an inner one in teeth that bite into the ball
+  { const ao = ang * Math.PI / 180, outer = [], inner = [];
+    for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, c = Math.abs(Math.cos(a)), ro = r * (1.12 + .38 * c * c + (R() - .3) * .16), ri = r * (i % 2 ? .8 + R() * .08 : .9 + R() * .06);
+      outer.push([x + Math.cos(a + ao) * ro, y + Math.sin(a + ao) * ro * .92]); inner.push([x + Math.cos(a + ao) * ri, y + Math.sin(a + ao) * ri]); }
+    const id = 'M' + inner.slice().reverse().map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'Z';
+    out += `<path d="${sp(outer, true)}${id}" fill="url(#${gl})" fill-rule="evenodd"/>`
+      + `<path d="${id}" fill="none" stroke="#0a0503" stroke-width="${f(r * .1)}" opacity=".55"/>`; }
+  // the slivers split off along the grain both ways, each its own length and curl; a short few elsewhere round the rim
+  for (let i = 0; i < 9; i++) { const along = i < 7, a = (along ? (i % 2 ? 0 : Math.PI) + (R() - .5) * .55 : R() * Math.PI * 2) + ang * Math.PI / 180;
+    const r0 = r * (1.05 + R() * .2), l = r * (along ? .9 + R() * 1.4 : .45 + R() * .4), w = r * (.16 + R() * .14), cu = (R() - .5) * l * .35;
+    const ax = x + Math.cos(a) * r0, ay = y + Math.sin(a) * r0 * .92, ex = ax + Math.cos(a) * l, ey = ay + Math.sin(a) * l * .92, nx = -Math.sin(a), ny = Math.cos(a);
+    const d = `M${f(ax + nx * w)} ${f(ay + ny * w)}Q${f((ax + ex) / 2 + nx * (w * .6 + cu))} ${f((ay + ey) / 2 + ny * (w * .6 + cu))} ${f(ex)} ${f(ey)}Q${f((ax + ex) / 2 - nx * w * .3 + nx * cu)} ${f((ay + ey) / 2 - ny * w * .3 + ny * cu)} ${f(ax - nx * w)} ${f(ay - ny * w)}Z`;
+    const lit = Math.cos(a) * lx + Math.sin(a) * ly > -.3;
+    out += `<path d="${d}" transform="translate(${f(-lx * w * 1.1)} ${f(-ly * w * 1.1)})" fill="#1a0c06" opacity=".45"/><path d="${d}" fill="${lit ? fresh : mid}"/>`; }
+  return out;
+}
+// KIT-CANDIDATE a clump of powder smoke rolling out of a port: billows growing along `dir` (a picture vector), rising
+// a little; lit on top, a soft shade under the far billows. tone 'grey' — a duller smoke (far, or the enemy's)
+function portSmoke(u, L, o) {
+  const { x, y, k = 1, n = 5, seed = 1, dir = [-1, 0], rise = .3, op = .9 } = o, R = rng(90 + seed);
+  const c = o.tone === 'grey' ? ['#e2dad4', '#b0a8aa', '#7a7078', '#4e4654'] : ['#fff6ea', '#eadfd4', '#b4a4a8', '#6e5e6a'];
+  const pg = nid('ps', u), pd = nid('pq', u), pf = nid('pb', u);
+  let sh = '', bl = '';
+  for (let j = 0; j < n; j++) { const d = (j ? .8 + j * 2.4 : 0) * k * (.9 + R() * .25), rr = (1.5 + j * .95) * k * (.85 + R() * .3);
+    const cx = x + dir[0] * d + (R() - .5) * k, cy = y + dir[1] * d - rise * j * j * .45 * k + (R() - .5) * .8 * k;
+    if (j > 1) sh += `<circle cx="${f(cx + .5 * k)}" cy="${f(cy + rr * .5)}" r="${f(rr)}" fill="url(#${pd})"/>`;
+    bl += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(rr)}" fill="url(#${pg})" opacity="${f(.95 - j * .08)}"/>`;
+    if (j > 1 && R() > .3) { const s = R() > .5 ? 1 : -1, r2 = rr * (.45 + R() * .3); bl += `<circle cx="${f(cx - dir[1] * s * rr * .7)}" cy="${f(cy + dir[0] * s * rr * .6 - rr * .2)}" r="${f(r2)}" fill="url(#${pg})" opacity=".8"/>`; } }
+  return `<defs><radialGradient id="${pg}" cx=".4" cy=".32" r=".68"><stop offset="0" stop-color="${c[0]}"/><stop offset=".45" stop-color="${c[1]}" stop-opacity=".95"/><stop offset=".8" stop-color="${c[2]}" stop-opacity=".85"/><stop offset="1" stop-color="${c[3]}" stop-opacity="0"/></radialGradient>`
+    + `<radialGradient id="${pd}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#3a2030" stop-opacity=".45"/><stop offset="1" stop-color="#3a2030" stop-opacity="0"/></radialGradient>${blur(pf, (.35 * k).toFixed(2))}</defs>`
+    + `<g opacity="${f(op)}">${sh}<g filter="url(#${pf})">${bl}</g></g>`;
+}
+// KIT-CANDIDATE a gun firing out of its port, by `phase` 0..1: 0 — the shot now: the port lit hot inside, a long
+// flame out of the muzzle along `dir` (degrees), a small new puff; .3-.6 — a shorter flame half in its own smoke;
+// over .6 — the flame gone, only a glow inside the clump of smoke. (x, y) — the muzzle; port — its four corners.
+function portFlash(u, L, o) {
+  const { x, y, k = 1, seed = 1, dir = 180 } = o, ph = clamp(o.phase || 0, 0, 1), a = dir * Math.PI / 180, sd = o.smokeDir || [Math.cos(a), Math.sin(a)];
+  let out = '';
+  if (o.port && ph < .75) { const g = nid('ph', u); out += `<defs>${radGrad(g, x, y, 1.6 * k, [[0, '#fff4c0'], [.4, '#ffa830'], [1, '#8a2808']])}</defs><path d="M${o.port.map(q => f(q[0]) + ' ' + f(q[1])).join('L')}Z" fill="url(#${g})" opacity="${f(1 - ph * 1.1)}"/>`; }
+  out += K.localGlow(u, { x, y, color: '#ffb050', power: .85 - ph * .55, radius: (11 - ph * 6) * k }, { core: false });
+  const smk = portSmoke(u, L, { x: x + sd[0] * k * .6, y: y + sd[1] * k * .6, k: k * (.45 + ph * .75), n: 2 + Math.round(ph * 4), seed, dir: sd, op: .5 + ph * .45, tone: o.tone });
+  const fl = len => K.muzzleFlash(u, { x, y, dir, len, seed, smoke: false, glow: false });
+  const heart = s => { const g = nid('pc', u); return `<defs>${radGrad(g, x, y, s, [[0, '#ffffff'], [.35, '#fff0a0'], [.7, '#ffb040', .8], [1, '#ff8020', 0]])}</defs><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(s)}" ry="${f(s * .85)}" fill="url(#${g})"/>`; };
+  if (ph < .3) out += smk + fl((o.len || 6) * k) + heart(1.5 * k);
+  else if (ph < .65) out += fl((o.len || 6) * k * (1 - ph) * .9) + heart(1 * k) + smk;
+  else { const g = nid('pe', u); out += smk + `<defs>${radGrad(g, x + sd[0] * k * 2, y + sd[1] * k * 2, 3 * k, [[0, '#ffb050', .55 * (1.2 - ph)], [1, '#ff8a30', 0]])}</defs><circle cx="${f(x + sd[0] * k * 2)}" cy="${f(y + sd[1] * k * 2)}" r="${f(3 * k)}" fill="url(#${g})" style="mix-blend-mode:screen"/>`; }
   return out;
 }
 // an old shallow dent where a ball glanced off: a bruise in the planking, lit on the far wall, a few split fibres
@@ -114,7 +153,7 @@ function flying(u, L, x0, y0, x1, y1, r) {
 }
 
 // the helpers are shared with «Прикрыть бортом» and «Ответный залп» (the same Revenge, the same hits)
-const helpers = { lin, blur, sp, tiltShip, sidePt, portXH, stuckBall, dent, burst, flying };
+const helpers = { lin, blur, sp, tiltShip, sidePt, portXH, stuckBall, dent, burst, flying, portSmoke, portFlash };
 module.exports = { helpers, name: 'Тяжёлый борт', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });

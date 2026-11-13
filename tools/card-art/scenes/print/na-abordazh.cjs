@@ -63,22 +63,26 @@ function bootFoot(u, A, d, sz, rimSide) {
   return s;
 }
 
-// a grapnel thrown from her side, biting over our rail: the ring and shank up towards her, four flukes over the cap
-function grapnel(u, L, x, y, s, seed) {
-  const R = rng(seed);
+// a grapnel thrown from her side, biting over our rail: the crown on the cap, the shank and its ring leaning back
+// along the line towards her, four barbed flukes — two out to the sides and one towards us hooked down over the cap
+// (the fourth hidden behind the shank). Returns { svg, ring } (the ring: where the line is made fast).
+function grapnel(u, L, x, y, s, seed, toward) {
+  const R = rng(seed), d = unit([toward[0] - x, toward[1] - y]), ring = [x + d[0] * 9 * s, y + d[1] * 9 * s];
   let out = '';
-  // the two flukes to the sides and the one towards us, hooking down over the cap of our rail; the shank up
-  const fl = (dx, dy, back) => { const a = [x, y], b = [x + dx * .55, y + dy * .2 - 1.2 * s], c = [x + dx, y + dy], tip = [x + dx * 1.08 + (dx < 0 ? -.4 : .4) * s, y + dy - 2.2 * s];
-    return K.rope ? `<path d="M${P2(a)}Q${P2(b)} ${P2(c)}Q${P2([c[0] + dx * .12, c[1] + .4 * s])} ${P2(tip)}" stroke="#0e0c0c" stroke-width="${f(2.3 * s)}" fill="none" stroke-linecap="round" opacity="${back ? .85 : 1}"/>`
-      + `<path d="M${P2(a)}Q${P2(b)} ${P2(c)}Q${P2([c[0] + dx * .12, c[1] + .4 * s])} ${P2(tip)}" stroke="${back ? '#3a3434' : '#5a5050'}" stroke-width="${f(1.3 * s)}" fill="none" stroke-linecap="round"/>`
-      + `<path d="M${P2([a[0] + dx * .1, a[1] - .5 * s])}Q${P2([b[0], b[1] - .5 * s])} ${P2([c[0], c[1] - .6 * s])}" stroke="${RIMC}" stroke-width="${f(.45 * s)}" fill="none" opacity=".6"/>` : ''; };
-  out += fl(4.2 * s, -1.2 * s, true) + fl(-4.6 * s, -1 * s, true);
-  out += K.shadeCyl(u, x, y + .3 * s, x + .4 * s, y - 7.5 * s, .95 * s, L, 'iron', { outline: .3, seed });
-  out += `<circle cx="${f(x + .45 * s)}" cy="${f(y - 9 * s)}" r="${f(1.7 * s)}" fill="none" stroke="#0e0c0c" stroke-width="${f(1.05 * s)}"/><circle cx="${f(x + .45 * s)}" cy="${f(y - 9 * s)}" r="${f(1.7 * s)}" fill="none" stroke="#4a4242" stroke-width="${f(.55 * s)}"/>`;
-  out += fl(-1.6 * s, 5.4 * s, false) + fl(2.4 * s, 5 * s, false);
+  const fl = (dx, dy, front) => { const a = [x, y], b = [x + dx * .7, y + dy * .1 - 1.6 * s], c = [x + dx, y + dy], tip = [x + dx * .86, y + dy - 2.6 * s];
+    const d0 = `M${P2(a)}Q${P2(b)} ${P2(c)}Q${P2([c[0] + dx * .14, c[1] + 1 * s])} ${P2([c[0] + dx * .02, c[1] + .4 * s])}L${P2(tip)}`;
+    return `<path d="${d0}" stroke="#0a0808" stroke-width="${f(2.6 * s)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+      + `<path d="${d0}" stroke="${front ? '#56504e' : '#3a3434'}" stroke-width="${f(1.5 * s)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+      + `<path d="M${P2(tip)}l${f(-dx * .12)} ${f(-1.4 * s)}l${f(dx * .22)} ${f(.9 * s)}Z" fill="#6a6260" stroke="#0a0808" stroke-width="${f(.3 * s)}"/>`
+      + `<path d="M${P2([a[0], a[1] - .7 * s])}Q${P2([b[0], b[1] - .7 * s])} ${P2([c[0] - dx * .05, c[1] - .9 * s])}" stroke="${RIMC}" stroke-width="${f(.45 * s)}" fill="none" opacity=".7"/>`; };
+  out += fl(5 * s, 3.4 * s, false) + fl(-5.2 * s, 3.2 * s, false);
+  out += K.shadeCyl(u, x, y + .4 * s, ring[0] - d[0] * 1.6 * s, ring[1] - d[1] * 1.6 * s, 1.05 * s, L, 'iron', { outline: .3, seed });
+  out += `<circle cx="${f(ring[0])}" cy="${f(ring[1])}" r="${f(1.8 * s)}" fill="none" stroke="#0a0808" stroke-width="${f(1.15 * s)}"/><circle cx="${f(ring[0])}" cy="${f(ring[1])}" r="${f(1.8 * s)}" fill="none" stroke="#5a5250" stroke-width="${f(.6 * s)}"/>`
+    + `<path d="M${f(ring[0] - 1.6 * s)} ${f(ring[1] - .8 * s)}A${f(1.8 * s)} ${f(1.8 * s)} 0 0 1 ${f(ring[0] + .6 * s)} ${f(ring[1] - 1.7 * s)}" stroke="${RIMC}" stroke-width="${f(.4 * s)}" fill="none" opacity=".7"/>`;
+  out += fl(-1 * s, 6.4 * s, true);
   // splinters of the cap rail where the points bit in
-  for (let i = 0; i < 5; i++) { const sx = x + (R() - .5) * 9 * s, sy = y + 3.6 * s + R() * 2 * s; out += `<path d="M${f(sx)} ${f(sy)}l${f((R() - .5) * 3 * s)} ${f(-1 - R() * 2 * s)}" stroke="#e8c49a" stroke-width="${f(.35 * s)}" opacity=".8"/>`; }
-  return out;
+  for (let i = 0; i < 6; i++) { const sx = x + (R() - .5) * 11 * s, sy = y + 4 * s + R() * 2 * s; out += `<path d="M${f(sx)} ${f(sy)}l${f((R() - .5) * 3 * s)} ${f(-1 - R() * 2 * s)}" stroke="#e8c49a" stroke-width="${f(.35 * s)}" opacity=".8"/>`; }
+  return { svg: out, ring };
 }
 
 module.exports = { name: 'На абордаж!', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
@@ -103,13 +107,13 @@ module.exports = { name: 'На абордаж!', kind: 'deck', status: 'draft', 
     mid += K.rope(u, L, [[172, -4], [170, 20], [164, 46], [160, 58]], { r: .8, seed: 3, whip: true })
       + K.rope(u, L, [[186, -4], [189, 24], [194, 50], [197, 62]], { r: .75, seed: 5, whip: true });
     // ——— the grapnel lines: from her rail, taut down to the hooks over ours ———
-    const lines = [[-24, 37], [2, 135], [16, 188]].map(([X, xn]) => ({ a: G.nearRail(X), b: [xn, RAIL - 8.2] }));
-    for (const ln of lines) mid += K.rope(u, L, [ln.a, [lerp(ln.a[0], ln.b[0], .5), lerp(ln.a[1], ln.b[1], .5) + .4], ln.b], { r: .85, seed: Math.round(ln.b[0]) })
-      + `<path d="M${P2(ln.a)}L${P2(ln.b)}" stroke="${RIMC}" stroke-width=".3" opacity=".45"/>`;
+    const lines = [[-24, 34], [2, 140], [16, 186]].map(([X, xn]) => { const a = G.nearRail(X), g = grapnel(u, L, xn, RAIL + 1.2, 1.55, xn + 3, a); return { a, b: g.ring, g }; });
+    for (const ln of lines) mid += K.rope(u, L, [ln.a, [lerp(ln.a[0], ln.b[0], .5), lerp(ln.a[1], ln.b[1], .5) + .3], ln.b], { r: 1.15, seed: Math.round(ln.b[0]) })
+      + `<path d="M${P2([ln.a[0], ln.a[1] - .9])}L${P2([ln.b[0], ln.b[1] - .9])}" stroke="${RIMC}" stroke-width=".45" opacity=".7"/>`;
     // ——— our rail across the bottom, and the hooks biting it ———
     let near = K.bulwark(u, L, { x1: -10, x2: 210, y: 146, h: 34, kind: 'oak', posts: 30, seed: 8 });
     near += `<path d="M-10 ${RAIL + .2}H210" stroke="${RIMC}" stroke-width=".6" opacity=".55"/>`;
-    for (const ln of lines) near += grapnel(u, L, ln.b[0] - .45 * 1.5, RAIL + 1, 1.5, Math.round(ln.b[0]) + 3);
+    for (const ln of lines) near += ln.g.svg;
 
     // ——— the boarder, mid-swing towards us ———
     let man = '';
@@ -136,7 +140,7 @@ module.exports = { name: 'На абордаж!', kind: 'deck', status: 'draft', 
         cuff: { from: .74, k: 1.28, tone: { lit: '#7a5434', half: '#4a2e18', shadow: '#1e1208', outline: '#070302' } } });
       return s; };
     man += leg([101, 81.5], [83.5, 84.5], [78, 101], [-1, .3], 11, -1);
-    man += leg([109.5, 82.5], [97, 95.5], [93.5, 111.5], [-1, .62], 13, -1);
+    man += leg([109.5, 82.5], [93, 91], [95.5, 108], [-1, .25], 13, -1);
     // the neck (short), under the jaw
     man += `<path d="M89.6 44.6L97.6 44.8L99.4 50.6Q95 52.4 90.6 50.8Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".3"/><path d="M90.4 46.4q3 2.2 7 .4" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".6"/>`;
     // the torso: the linen shirt open at the throat, the dark sleeveless jerkin over it, the sash at the waist
@@ -208,5 +212,5 @@ module.exports = { name: 'На абордаж!', kind: 'deck', status: 'draft', 
 
     // ——— the air: the sun's glare, motes, the dark coming up from the deck ———
     const air = glow(u, 70, 60, 60, 46, '#ffb070', .12) + motes(18, 20, 50, 90, 50, '#ffd8a0', 11) + gloom(u, 100, 70, 0, 10, .25) + gloom(u, 100, 120, 100, 280, .5, '#140608');
-    return [bg, mid + man + sabre + ropeArm + near + air];
+    return [bg, mid + `<g transform="translate(100 28) scale(1.1) translate(-100 -40)">${man + sabre + ropeArm}</g>` + near + air];
   } };
