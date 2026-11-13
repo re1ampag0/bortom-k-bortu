@@ -18,7 +18,7 @@ const { glow, gloom, motes } = PK;
 
 const HZ = 100;                                   // the sea horizon
 const SX = 45, ST = 12;                           // the flagstaff: x, the truck
-const FX = SX + 1.6, FT = 15, FH = 42, FLN = 112; // the flag: hoist x, hoist top, hoist height, fly length (to the right)
+const FX = SX + 1.6, FT = 15, FH = 42, FLN = 103; // the flag: hoist x, hoist top, hoist height, fly length (to the right)
 const RAIL = 112;                                 // the top of the bulwark (the capping rail)
 const MOON = { x: 116, y: 40 };
 const LAMP = { x: 74, y: 110.2, s: 1.05 };

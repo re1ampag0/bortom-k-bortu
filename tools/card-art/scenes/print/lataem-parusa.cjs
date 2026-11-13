@@ -18,9 +18,9 @@ const { glow, gloom, motes } = PK;
 const HZ = 120;                                         // eye level (we are aloft: the sea is far below, out of the frame)
 const YD = { x1: -6, y1: 21, x2: 206, y2: 14, r: 4.8 }; // the yard
 const yardY = x => lerp(YD.y1, YD.y2, (x - YD.x1) / (YD.x2 - YD.x1));
-const LAMP = { x: 170, y: 57, s: 1.15, hang: 4 };
-const FLAME = { x: 170, y: 57 - 7.5 * 1.15 };
-const MOON = { x: 60, y: 61 };
+const LAMP = { x: 160, y: 57, s: 1.15, hang: 4 };
+const FLAME = { x: 160, y: 57 - 7.5 * 1.15 };
+const MOON = { x: 58, y: 56 };
 // the patch (corners TL, TR, BR, BL) and the fold line of its loose corner: A on the left edge, B on the top edge
 const PT = { TL: [42, 44], TR: [124, 41], BR: [126, 112], BL: [44, 114] }, FA = [42.4, 84], FB = [92, 42.4];
 const light = { time: 'night', haze: .25, key: { type: 'point', x: FLAME.x, y: FLAME.y, h: .4, gy: 140, color: '#ffbe6a', power: 1, radius: 120 },
@@ -28,26 +28,30 @@ const light = { time: 'night', haze: .25, key: { type: 'point', x: FLAME.x, y: F
 const lightSky = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 30, color: '#dfe8fa', power: .8 }, fill: { color: '#3d5680', power: .4 } };
 const skel = { horizon: HZ, eye: 30, light: 'lantern hung from the yard (key) + the moon behind the sail (glow through the canvas, in the hole)', items: [
   ['yard', -6, 26, 212, 12, 'mast (out of frame)'], ['sail', -6, 290, 212, 270, 'yard (robands)'], ['patch', 42, 114, 84, 73, 'sail (sewn on 3 sides)'],
-  ['flap', 42, 84, 50, 42, 'patch (its loose corner)'], ['hole', 50, 104, 60, 56, 'sail, under the patch'], ['lantern', 163, 57, 14, 38, 'yard (lanyard)'],
+  ['flap', 42, 84, 50, 42, 'patch (its loose corner)'], ['hole', 50, 104, 60, 56, 'sail, under the patch'], ['lantern', 153, 57, 14, 38, 'yard (lanyard)'],
   ['hand + arm', -10, 140, 56, 60, 'from the near left edge, needle in the edge of the patch'], ['old patch', 140, 104, 26, 20, 'sail']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
+const LEECH = y => 178 + (y - 16) * .05 + Math.sin((y - 16) / 70) * 3;   // x of the sail's after edge at height y
 // a ragged closed outline round (cx, cy): radii rx, ry, jagged by `j`
 function ragged(R, cx, cy, rx, ry, n, j) { const pts = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, k = 1 - j * .5 + R() * j * (i % 2 ? .6 : 1.2); pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); } return pts; }
 
 module.exports = { name: 'Латаем паруса', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Ls = K.makeLight(lightSky, { horizon: 150 }), R = rng(23);
-    const holeP = ragged(rng(5), 80, 76, 31, 29, 22, .5), holeD = 'M' + holeP.map(P2).join('L') + 'Z';
-    const patchD = `M${P2(PT.TL)}L${P2(PT.TR)}L${P2(PT.BR)}L${P2(PT.BL)}Z`;
+    const holeP = ragged(rng(5), 74, 70, 26, 24, 22, .3), holeD = 'M' + holeP.map(P2).join('L') + 'Z';
+    const patchD = `M${P2(FB)}L${P2(PT.TR)}L${P2(PT.BR)}L${P2(PT.BL)}L${P2(FA)}Z`;   // without the loose corner (folded back)
     // ——— the sail: black canvas hanging from the yard, the lantern's warm pool on it, the moon glowing through ———
     const sg = nid('sl', u), sw = nid('sw', u), sm = nid('sm', u);
     let bg = `<defs>${linGrad(sg, 0, 14, 0, 290, [[0, '#2a2a30', 1], [.35, '#1e1e24', 1], [1, '#0e0e12', 1]])}`
       + `${radGrad(sw, FLAME.x, FLAME.y + 8, 92, [[0, '#8a6a44', .75], [.3, '#5a4632', .45], [.7, '#33291e', .15], [1, '#33291e', 0]])}`
       + `${radGrad(sm, MOON.x + 8, MOON.y + 10, 70, [[0, '#4a5878', .55], [.5, '#2e3a54', .25], [1, '#2e3a54', 0]])}</defs>`
       + `<rect x="-6" y="0" width="212" height="290" fill="url(#${sg})"/><rect x="-6" y="0" width="212" height="290" fill="url(#${sm})"/><rect x="-6" y="0" width="212" height="290" fill="url(#${sw})"/>`;
-    // the cloths of the sail: seams bowing a little (the sail bellies away from us), each a dark line and a lit edge
-    for (let x = 6; x < 206; x += 17) { const b = (x - 100) * .04; bg += `<path d="M${f(x)} ${f(yardY(x) + 3)}Q${f(x + b)} 150 ${f(x + b * 1.6)} 290" stroke="#08080a" stroke-width=".9" fill="none" opacity=".8"/>`
+    // the cloths of the sail: each breadth its own tone (canvas weathered unevenly), the seams bowing with the belly
+    for (let x = -11, i = 0; x < LEECH(150); x += 17, i++) { const b = (x - 70) * .09, g = nid('cl', u), t = R();
+      bg += `<defs>${linGrad(g, x, 0, x + 17, 0, [[0, '#000', .18 + t * .1], [.35, '#8a7a66', .03 + t * .05], [.7, '#000', .05], [1, '#000', .22]])}</defs>`
+        + `<path d="M${f(x)} ${f(yardY(x) + 3)}Q${f(x + b)} 150 ${f(x + b * 1.6)} 290L${f(x + 17 + b * 1.6)} 290Q${f(x + 17 + b)} 150 ${f(x + 17)} ${f(yardY(x) + 3)}Z" fill="url(#${g})"/>`; }
+    for (let x = 6; x < LEECH(150) - 4; x += 17) { const b = (x - 70) * .09; bg += `<path d="M${f(x)} ${f(yardY(x) + 3)}Q${f(x + b)} 150 ${f(x + b * 1.6)} 290" stroke="#08080a" stroke-width=".9" fill="none" opacity=".8"/>`
       + `<path d="M${f(x + 1.1)} ${f(yardY(x) + 3)}Q${f(x + 1.1 + b)} 150 ${f(x + 1.1 + b * 1.6)} 290" stroke="#6a5a48" stroke-width=".35" fill="none" opacity=".45"/>`
       + `<path d="M${f(x - 1.6)} ${f(yardY(x) + 3)}Q${f(x - 1.6 + b)} 150 ${f(x - 1.6 + b * 1.6)} 290" stroke="#000" stroke-width=".3" fill="none" opacity=".4" stroke-dasharray="1 1.2"/>`; }
     // soft folds: the sag between the robands along the head, long creases down from them
@@ -65,8 +69,15 @@ module.exports = { name: 'Латаем паруса', kind: 'deck', status: 'dra
         return s; };
       bg += op([[140, 86], [164, 84], [165, 104], [141, 105]], '#2c2a2c') + op([[4, 120], [26, 118], [28, 142], [3, 143]], '#2a282a') + op([[180, 168], [204, 166], [204, 190], [181, 191]], '#2c2a2c');
       for (const [x, y, r] of [[134, 60, 1], [24, 96, .8], [184, 132, 1.1]]) bg += `<circle cx="${x}" cy="${y}" r="${r}" fill="#9ab0d8" opacity=".7"/><circle cx="${x}" cy="${y}" r="${r + .6}" fill="none" stroke="#3a3a44" stroke-width=".4"/>`; }
+    // the leech: the sail's after edge with its bolt rope; beyond it the night — stars, the sea far below, the
+    // fore topsail of the next mast dim in the distance
+    { const c = nid('nt', u), lp = Array.from({ length: 15 }, (_, i) => { const y = yardY(LEECH(0)) + i * 20; return [LEECH(y), y]; });
+      let night = K.sky(u, Ls, { horizon: 112, stars: 50, seed: 9 }) + K.water(u, Ls, { horizon: 112, bottom: 290, swell: .3, seed: 4, glitter: false })
+        + `<path d="M198 40Q206 70 204 104L214 104L214 40Z" fill="#14161c" opacity=".9"/>`;
+      bg += `<defs><clipPath id="${c}"><path d="M${lp.map(P2).join('L')}L214 290L214 0L${f(LEECH(0))} 0Z"/></clipPath></defs><g clip-path="url(#${c})">${night}</g>`
+        + `<path d="M${lp.map(P2).join('L')}" stroke="#5a4a36" stroke-width="1.8" fill="none"/><path d="M${lp.map(p => P2([p[0] - .5, p[1]])).join('L')}" stroke="#b89a6a" stroke-width=".5" fill="none" opacity=".7"/>`; }
     // scorching round the hole: the canvas browned and blackened outside the patch's edge
-    { const g = nid('sc', u); bg += `<defs>${radGrad(g, 80, 76, 50, [[.55, '#3a2214', .55], [.8, '#2a1a10', .25], [1, '#2a1a10', 0]])}</defs><ellipse cx="80" cy="76" rx="52" ry="48" fill="url(#${g})"/>`; }
+    { const g = nid('sc', u); bg += `<defs>${radGrad(g, 74, 70, 46, [[.55, '#3a2214', .55], [.8, '#2a1a10', .25], [1, '#2a1a10', 0]])}</defs><ellipse cx="74" cy="70" rx="48" ry="44" fill="url(#${g})"/>`; }
     // ——— the hole, seen through the loose corner: the night sky with the moon, the torn and charred canvas ———
     const ocl = nid('oc', u), hcl = nid('hc', u);
     let hole = `<defs><clipPath id="${ocl}"><path d="M${P2(PT.TL)}L${P2(FB)}L${P2(FA)}Z"/></clipPath><clipPath id="${hcl}"><path d="${holeD}"/></clipPath></defs>`;
@@ -74,7 +85,7 @@ module.exports = { name: 'Латаем паруса', kind: 'deck', status: 'dra
       hole += `<g clip-path="url(#${ocl})"><g clip-path="url(#${hcl})">${sky}</g>`;
       // the torn edge: frayed threads, the canvas curled and charred round it
       hole += `<path d="${holeD}" fill="none" stroke="#120c08" stroke-width="2.2"/><path d="${holeD}" fill="none" stroke="#5a3418" stroke-width=".7" opacity=".9"/>`;
-      for (let i = 0; i < holeP.length; i++) { const p = holeP[i], dx = 80 - p[0], dy = 76 - p[1], l = Math.hypot(dx, dy), k = 2 + R() * 3.4;
+      for (let i = 0; i < holeP.length; i++) { const p = holeP[i], dx = 74 - p[0], dy = 70 - p[1], l = Math.hypot(dx, dy), k = 2 + R() * 3.4;
         hole += `<path d="M${f(p[0])} ${f(p[1])}l${f(dx / l * k + (R() - .5) * 1.2)} ${f(dy / l * k + R() * 1.4)}" stroke="#2a2016" stroke-width=".35"/>`; }
       hole += '</g>'; }
     // ——— the patch: new light canvas glowing through with the moon behind it, the hole's shape showing through ———
@@ -95,7 +106,7 @@ module.exports = { name: 'Латаем паруса', kind: 'deck', status: 'dra
       patch += st(FB, PT.TR, 10) + st(PT.TR, PT.BR, 20) + st(PT.BR, PT.BL, 23) + st(PT.BL, FA, 9, .45, 1); }
     // the loose corner, lifted by the wind and folded back over the patch: its back side, a crease at the fold, its shadow
     { const ft = (() => { const d = [FB[0] - FA[0], FB[1] - FA[1]], l = Math.hypot(...d), e = [d[0] / l, d[1] / l], v = [PT.TL[0] - FA[0], PT.TL[1] - FA[1]], pr = v[0] * e[0] + v[1] * e[1], foot = [FA[0] + e[0] * pr, FA[1] + e[1] * pr];
-        return [foot[0] + (foot[0] - PT.TL[0]) * .62, foot[1] + (foot[1] - PT.TL[1]) * .62]; })();
+        return [foot[0] + (foot[0] - PT.TL[0]) * .42, foot[1] + (foot[1] - PT.TL[1]) * .42]; })();
       const flapD = `M${P2(FA)}Q${f(lerp(FA[0], ft[0], .5) - 2)} ${f(lerp(FA[1], ft[1], .5) + 3)} ${P2(ft)}Q${f(lerp(ft[0], FB[0], .5) + 3)} ${f(lerp(ft[1], FB[1], .5) + 1)} ${P2(FB)}Z`, fg2 = nid('fl', u), sh = nid('fs', u);
       patch += `<defs>${linGrad(fg2, FB[0], FB[1], FA[0], FA[1], [[0, '#e8dcbc', 1], [.6, '#c4b694', 1], [1, '#9a8c70', 1]])}<filter id="${sh}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6"/></filter></defs>`
         + `<g clip-path="url(#${pc})"><path d="${flapD}" transform="translate(-3.4 3.6)" fill="#2a1c10" opacity=".55" filter="url(#${sh})"/></g>`
@@ -106,22 +117,26 @@ module.exports = { name: 'Латаем паруса', kind: 'deck', status: 'dra
     // ——— the yard over the head of the sail: the spar, the jackstay, the robands round it ———
     let yard = K.shadeCyl(u, YD.x1, YD.y1, YD.x2, YD.y2, YD.r, L, 'tar', { outline: .4, seed: 3 });
     yard += `<path d="M${YD.x1} ${f(YD.y1 - YD.r - .8)}L${YD.x2} ${f(YD.y2 - YD.r - .8)}" stroke="url(#iron${u})" stroke-width="1"/>`;
-    for (let x = 4; x < 206; x += 12) { const y = yardY(x); yard += `<path d="M${f(x - 1)} ${f(y - YD.r - 1)}Q${f(x + 1.6)} ${f(y)} ${f(x + 1)} ${f(y + YD.r + 4)}" stroke="#7a6a50" stroke-width="1" fill="none"/><path d="M${f(x + .4)} ${f(y - YD.r - 1)}Q${f(x + 3)} ${f(y)} ${f(x + 2.4)} ${f(y + YD.r + 4)}" stroke="#7a6a50" stroke-width="1" fill="none"/><path d="M${f(x - .6)} ${f(y - YD.r)}Q${f(x + 2)} ${f(y)} ${f(x + 1.4)} ${f(y + YD.r + 3)}" stroke="#c8b48a" stroke-width=".3" fill="none" opacity=".7"/>`; }
+    for (let x = 4; x < LEECH(20) - 2; x += 12) { const y = yardY(x); yard += `<path d="M${f(x - 1)} ${f(y - YD.r - 1)}Q${f(x + 1.6)} ${f(y)} ${f(x + 1)} ${f(y + YD.r + 4)}" stroke="#7a6a50" stroke-width="1" fill="none"/><path d="M${f(x + .4)} ${f(y - YD.r - 1)}Q${f(x + 3)} ${f(y)} ${f(x + 2.4)} ${f(y + YD.r + 4)}" stroke="#7a6a50" stroke-width="1" fill="none"/><path d="M${f(x - .6)} ${f(y - YD.r)}Q${f(x + 2)} ${f(y)} ${f(x + 1.4)} ${f(y + YD.r + 3)}" stroke="#c8b48a" stroke-width=".3" fill="none" opacity=".7"/>`; }
+    // the footrope the sailors stand on, slung under the yard on stirrups
+    { const fr = x => yardY(x) + 15 + 4 * Math.sin((x + 6) / 212 * Math.PI * 2.6) ** 2; let d = ''; for (let x = -6; x <= 206; x += 4) d += (x === -6 ? 'M' : 'L') + P2([x, fr(x)]);
+      yard += `<path d="${d}" stroke="#1a140e" stroke-width="2" fill="none"/><path d="${d}" stroke="#8a7656" stroke-width="1.1" fill="none"/><path d="${d}" stroke="#d8c09a" stroke-width=".35" fill="none" opacity=".6" transform="translate(0 -.4)"/>`;
+      for (const x of [30, 96, 162]) yard += `<path d="M${f(x)} ${f(yardY(x) + 3)}L${f(x + 1)} ${f(fr(x + 1))}" stroke="#6a5a40" stroke-width=".8"/>`; }
     // ——— the lantern on its lanyard from the yard ———
     let fg = K.lantern(u, L, { ...LAMP, lit: true, seed: 2 }) + K.localGlow(u, { x: FLAME.x, y: FLAME.y, color: '#ffc070', power: .9, radius: 28 });
     // ——— the sailor's left arm from the near left: the wool sleeve rolled back, the bare forearm, the fist with the needle
     { const skin = { lit: '#f2bc8e', half: '#b77a52', core: '#a26a46', shadow: '#5c3424', outline: '#2a140a' };
       const coat = { lit: '#5a6a8a', half: '#2e3a52', shadow: '#10141e', outline: '#06080c' };
-      const HS = 2.3, a = -50, ua = [Math.cos(a * Math.PI / 180), Math.sin(a * Math.PI / 180)], n = [-ua[1], ua[0]];
-      const tip = [44.6, 97], G = [tip[0] - n[0] * 9, tip[1] - n[1] * 9], W = [G[0] - ua[0] * 6 * HS, G[1] - ua[1] * 6 * HS], E = [W[0] - ua[0] * 25, W[1] - ua[1] * 25 + 3];
+      const HS = 3, a = -50, ua = [Math.cos(a * Math.PI / 180), Math.sin(a * Math.PI / 180)], n = [-ua[1], ua[0]];
+      const tip = [46.5, 99], G = [tip[0] - n[0] * 14, tip[1] - n[1] * 14], W = [G[0] - ua[0] * 6 * HS, G[1] - ua[1] * 6 * HS], E = [W[0] - ua[0] * 30, W[1] - ua[1] * 30 + 3];
       // the thread from the eye of the needle, a loose loop back to the last stitch
-      const eye = [G[0] - n[0] * 5.4, G[1] - n[1] * 5.4];
-      fg += `<path d="M${P2(eye)}C${f(eye[0] - 12)} ${f(eye[1] - 10)} ${f(eye[0] - 16)} ${f(eye[1] + 12)} ${f(eye[0] - 4)} ${f(eye[1] + 16)}S${f(PT.BL[0] - 1)} ${f(PT.BL[1] - 8)} ${f(lerp(PT.BL[0], FA[0], .5) + 1)} ${f(lerp(PT.BL[1], FA[1], .55))}" stroke="#efe4c8" stroke-width=".55" fill="none"/>`;
+      const eye = [G[0] - n[0] * 7.4, G[1] - n[1] * 7.4];
+      fg += `<path d="M${P2(eye)}C${f(eye[0] - 9)} ${f(eye[1] + 6)} ${f(eye[0] - 8)} ${f(eye[1] + 24)} ${f(eye[0] + 2)} ${f(eye[1] + 26)}S${f(PT.BL[0] + 1)} ${f(PT.BL[1] - 2)} ${f(PT.BL[0] + .6)} ${f(PT.BL[1] - 9)}" stroke="#efe4c8" stroke-width=".7" fill="none"/>`;
       // the needle: through the fist, its point going into the edge of the patch
-      fg += `<path d="M${P2(eye)}L${P2(tip)}" stroke="url(#silver${u})" stroke-width="1" stroke-linecap="round"/><path d="M${P2([lerp(eye[0], tip[0], .6), lerp(eye[1], tip[1], .6)])}L${P2(tip)}" stroke="#ffffff" stroke-width=".3" opacity=".8"/>`;
-      fg += H.cloth(u, { spine: [E, [lerp(E[0], W[0], .5), lerp(E[1], W[1], .5) - 1], [W[0] + ua[0] * .6, W[1] + ua[1] * .6]], w: [11.4, 10, 7.2], tone: skin, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .5, folds: false, capA: true, sw: .4 })
+      fg += `<path d="M${P2(eye)}L${P2(tip)}" stroke="url(#silver${u})" stroke-width="1.35" stroke-linecap="round"/><path d="M${P2([lerp(eye[0], tip[0], .6), lerp(eye[1], tip[1], .6)])}L${P2(tip)}" stroke="#ffffff" stroke-width=".3" opacity=".8"/>`;
+      fg += H.cloth(u, { spine: [E, [lerp(E[0], W[0], .5), lerp(E[1], W[1], .5) - 1], [W[0] + ua[0] * .6, W[1] + ua[1] * .6]], w: [15, 13.4, 9.6], tone: skin, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .5, folds: false, capA: true, sw: .4 })
         + `<path d="M${f(E[0] + 9)} ${f(E[1] - 9)}q3 -3 7 -6M${f(E[0] + 11)} ${f(E[1] - 6)}q3 -2 6 -5" stroke="#7a4a30" stroke-width=".35" fill="none" opacity=".55"/>`;
-      fg += H.cloth(u, { spine: [[-22, 160], [-8, 146], [E[0] + ua[0] * 2, E[1] + ua[1] * 2]], w: [18, 16, 14.6], tone: coat, lit: 1, rim: '#9ab4e0', rimSide: -1, rimOp: .5, cuff: { from: .74, k: 1.12, roll: true }, seed: 6, drapes: 3, sw: .4 });
+      fg += H.cloth(u, { spine: [[-22, 160], [-8, 146], [E[0] + ua[0] * 2, E[1] + ua[1] * 2]], w: [21, 19.4, 18], tone: coat, lit: 1, rim: '#9ab4e0', rimSide: -1, rimOp: .5, cuff: { from: .74, k: 1.12, roll: true }, seed: 6, drapes: 3, sw: .4 });
       const hd = H.hand(u, { at: W, a, s: HS, m: 1, pose: 'grip', tone: skin, sw: .35 });
       fg += hd.back + hd.front;
       // the sailmaker's palm: a leather strap round the hand, an iron eye at the heel of the thumb, its stitching
