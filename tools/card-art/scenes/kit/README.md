@@ -306,7 +306,51 @@ fg += K.castShadow(u, L, { x: o.x, y: o.y, w: 30 * o.s, h: 21 * o.s, horizon: HZ
 const lamp = { x: 150, y: 260, s: 1.5 }, L2 = K.makeLight({ time: 'night', key: { type: 'point', ...K.lantern.local({ ...lamp, horizon: HZ }) } }, { horizon: HZ });
 ```
 
+## Люди — `print/lib/people.cjs`
+
+Фигура целиком — **`figure(u, o)`**: скелет 7,5 головы (плечи ≈ 2 головы, локоть на талии, кисть до середины бедра)
+в позе, повёрнут и спроецирован; тело — ткань по трубкам с перекрытием суставов, торс — кольцами, голова — `head34`.
+Поза пишется для фигуры лицом вправо; `dir: -1` зеркалит рисунок (свет не зеркалится). `R` — ближняя сторона, `L` — дальняя.
+- `at: [x, y]` — пол под тазом (нижняя подошва стоит на `y`), `h` — рост стоя (120), `L` — свет сцены (обязателен).
+- `pose`: `'stand'` (вес на ближней ноге, рука на бедре) | `'walk'` | `'haul'` (канат) | `'aim'` (пистолет; дальняя рука
+  низко — сабля) | `'saber'` (к бою) | `'sit'` (за столом) | `'helm'` (у штурвала) или свой объект как в `FIG_POSES`.
+- `adjust` — правки позы: `{ arms: { R: { upper: [сгиб, отвод], fore: [..] } }, legs: { L: { thigh, shin, foot } }, torso:
+  [крен, наклон, поворот] }` (градусы в теле до поворота); рука целью — `{ to: [x, y, z], pole }`; `turn` (0 к нам … 1 профиль).
+- `reach: { R: [x, y], L: [x, y] }` — точки картинки для запястий (IK; так кисти ставят на рукояти штурвала, канат, стол).
+- `dress: { shirt, vest, coat, coatLen: 'hip' | 'knee', trousers, boots, boot: 'high' | 'shoe' | 'bare', belt, sash,
+  kerchief, sleeves: 'rolled' }` — цвета (тон по свету сцены) или готовые рампы; `false` — нет.
+- `head` — опции `head34` (волосы, борода, взгляд…; `turn`, `nod` прибавляются к позе); `hat: { color, trim }` — треуголка;
+  `skin` (рампа; по умолчанию `L.ramp('skin')` с мягким терминатором), `dim`, `rim` (`false` — без контрового), `seed`.
+- Кисти: `hand(u, info)` → `{ back, front }` вместо `hand3`; `info = { side, at, a, s, m, pose, tone, light, L, sw }`;
+  `hands: { R: 'wrap' }` — позы кистей; `handsSeparate: true` — кисти не в `svg`: рисуй `back` + предмет + `front`.
+- Тени: контактные под подошвами; с `horizon` — и падающая. `shadow: false` — без них.
+- Возвращает `{ svg, layers: { shadow, back, legs, body, head, front }, hands, wrist: { R, L } ({ at, a, depth }),
+  joints: { R, L } (shoulder, elbow, wrist, hip, knee, ankle, toe, heel), head (результат head34), seat (для 'sit'), top, Hh }`.
+  Стол, сундук, штурвал кладут между `layers.head` и `layers.front`.
+
+Мелкое: `cloth({ tension: true })` — складки только на сгибах, по глубине сгиба (по умолчанию прежние); `head34` — слабая
+складка нос–рот (`folds: false` — без неё), `jawW` (уже челюсть), `tailApart` (косичка отдельно — за спину). Стенд —
+`stands/people.cjs`.
+
+## Интерьеры — `interior.cjs`
+
+Комната в 2,5D — пол, стены, потолок с балками к одной точке схода, всё в метрах (X вправо, Y вверх от пола, Z вглубь), грани тонируются по нормали к источнику, дальше — темнее. Стенд: `kit/stands/interior.cjs`.
+
+```js
+const s = K.interior.scheme('cabin', { mood: 'lamp' });       // { light, cam, vp, lamps, geom }; mood: 'lamp' (ночь, свой фонарь/очаг — ключ) | 'window' (день из окон, в трюме — из люка) | у таверны ещё 'candles'
+const L = K.makeLight(s.light, s.cam);                       // cam = { horizon: vp[1], cx: vp[0], f, eye } — тот же, что у комнаты (иначе тени не лягут)
+bg += K.interior(u, L, { kind: 'cabin', mood: s.mood, off: ['table'], gloom: false });   // 'cabin' | 'gundeck' | 'hold' | 'tavern'
+const g = K.interior.geom({ kind: 'cabin' }), q = g.at(.3, 3.1, .78);  // своя вещь на столе: { x, y, upm } (ед. картинки на метр)
+fg += K.barrel(u, L, { x: q.x, y: q.y, s: q.upm * .9 / 30 }) + K.interior.gloom(u, L);      // gloom — тёмный низ под стеклом и края, кладётся последним
+```
+Опции: `vp` [x, y], `f`, `eye` (м), `room: { xl, xr, h, d }` (м) или `back: { x0, x1, top, bot }` — задняя стена в картинке; `detail: 'near' | 'mid'`; `seed`;
+`props: false` — пустая комната; `off: [имена]` / `items: { имя: false }` — убрать часть (каюта: windows, panels, bench, shelves, beams, table, chart, chest, lamp;
+палуба: ports, guns, shot, mast, ropes, beams, lamp; трюм: water, ribs, platform, hatch, ladder, barrels, crates, rope, lamp; таверна: hearth, window, shelves,
+counter, candles, barrels, beams); `win: { az, el, color, power } | false` — свет из окон (пятна переплёта на полу и столе, лучи в воздухе); `outside: 'night' | 'day'`.
+Свет — из `L`: точечный ключ — фонарь (`lantern.local`), очаг, люк; солнце — через окна. Новые материалы в `MAT`: `oak-old`, `pine-old`, `stone`, `plaster`, `soot`, `bilge`.
+Основная вещь сцены — выше линии стекла (58 %, y 162): по умолчанию стол, пушки, стойка и люк стоят выше неё.
+
 ## Чего здесь нет
 
-Людей. Из предметов п. 4.3 задачи — книги, карт рубашкой, кошки-крюка. Новые общие детали — с пометкой
+Людей в `kit/` (они в `print/lib/people.cjs`, выше). Из предметов п. 4.3 задачи — книги, карт рубашкой, кошки-крюка. Новые общие детали — с пометкой
 `KIT-CANDIDATE` в своей сцене; в `kit/` их переносит главная сессия.
