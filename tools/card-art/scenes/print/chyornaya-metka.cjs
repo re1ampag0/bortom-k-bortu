@@ -4,10 +4,16 @@
 // the skin, a soot-black blot with a charred, bruised rim, dark veins creeping out of it towards the fingers and the
 // wrist; the hand is wet (he has scrubbed at it: it will not come off), drops run down to the cuff. Behind him — over
 // the rail of his ship, in the green fog — the Flying Dutchman has come for him, her lanterns pale green.
-// Fixed against the first round: the hand was a flat cut-out with a hole in it — now a jointed hand (people.cjs
-// hand3: the palm, the ball of the thumb, three phalanges a finger) on one sleeve with one cuff; the spot is a mark in
+// Fixed against the first round: the hand was a flat cut-out with a hole in it — now a modelled hand (see the
+// review fixes below) on one sleeve with one cuff; the spot is a mark in
 // the skin, not a hole; the empty fog behind is now the rail and the Dutchman's silhouette (the brief).
 // Light: the moon behind the fog, upper right (key, cold, the ship's back light); the Dutchman's green lanterns.
+// Review fixes (verdict b2): the hand3 hand read as a wooden mannequin — the hand is now drawn here with smooth shapes:
+// tapering fingers fanned and slightly bent (the little finger shorter and thinner, the ring finger just below the
+// middle), soft joint creases at two levels, pads instead of a seam at the finger roots, a plump ball of the thumb and a
+// two-phalanx thumb parting at the index finger's root, abducted ~40°; one skin tone (outlined, then refilled, so only
+// the silhouette has a line), shade only in the hollow round the spot. The spot is a soft-edged black blot soaked into
+// the lines of the palm (no cracks); the drops stay. The moon is moved left, clear of the cost mark.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');

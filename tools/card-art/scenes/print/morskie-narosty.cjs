@@ -10,6 +10,11 @@
 // (splinters bent inwards) and the growth is seen growing: an old crust on the rim, branches reaching in, young
 // tips at the gap (the brief: «видно, как они растут по краям дыры»).
 // Light: the surface overhead (key, cold, from above and a little behind); the tips' own faint glow.
+// Review fixes (verdict b2): the dense pink "wreath" in front of the side is gone. The breach and its growth are drawn
+// in the side's own plane (Hp: narrower across, leaning along the strakes); a clear dark breach with torn plank ends and
+// splinters on its open side (low right); a dark old crust grown in from the rim closes the rest, its lighter growing
+// front at the gap; on it two plate corals and eight branching heads (coral red, orange, ochre), lying flat on the side
+// and casting short shadows down; a few bigger lumps, barnacles, mussels on the rim; the bubbles stop below the cost mark.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');

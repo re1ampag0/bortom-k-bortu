@@ -8,6 +8,11 @@
 // is a light (on the lid's edge, the chains, the sand, the fog), not a stroke; the shells and barnacles grow on it
 // (the brief), the chains wrap it; the day haze is now the deck's dusk and green fog; the stray coins are gone.
 // Light: a low moon in the fog from the left (key, cold); the red beat inside the chest (local, warm).
+// Review fixes (verdict b2): the lid has a board edge under its lip (light ridge, dark below, its shadow on the slit);
+// the slit is white-hot at the lock and dark red to the corners, three beams rise out of it and the hanging weed takes
+// its red; the chest stands in a tide pool (a waterline on the body, the foot darker and greener under it, a short
+// broken reflection, cold ripples beside the red ones); the chest group is a little smaller and higher (TC), the slack
+// chain and the padlock closer to it, clear of the glass.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -15,7 +20,7 @@ const { f, mix, nid, linGrad, radGrad, rng } = K;
 const { glow, gloom, motes } = PK;
 
 const HZ = 70, SHORE = 96;                       // the horizon; the foam line on the beach
-const TC = 'translate(4 -3) scale(.96)';         // the chest, its pool and rings: a little smaller and higher (clear of the glass)
+const TC = 'translate(4 -4.5) scale(.96)';         // the chest, its pool and rings: a little smaller and higher (clear of the glass)
 const C = { x0: 38, y0: 146, W: 100, D: 60, Hb: 40, kx: .42, ky: .27, lip: 6, rho: 15, th: 13 };  // the chest (own units)
 const light = { time: 'fog', haze: .7, key: { type: 'moon', az: 240, el: 34, color: '#cfeee0', power: .7 }, fill: { color: '#2f5a50', power: .5 },
   rim: { az: 300, color: '#d8fff0', power: .3 }, locals: [{ x: 92, y: 98, h: 2, color: '#ff6a3a', power: .85, radius: 70 }] };
@@ -199,8 +204,8 @@ module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 
       // the red light on the links in the gap
       { const a = Pl(x, -.6, Hb + .4), b = Pc(x + 1, -.6, Hb - .4); fg += `<path d="M${P2(a)}L${P2(b)}" stroke="#ff8a50" stroke-width="2.6" opacity=".35" stroke-linecap="round"/>`; } }
     // the loose ends lie slack on the sand, joined by a big padlock
-    fg += K.chain(u, L, [Pc(32, -1, 1), Pc(38, -12, 0), Pc(52, -22, 0), Pc(64, -19, 0)], { link: 5.2, seed: 7 }) + K.chain(u, L, [Pc(74, -1, 1), Pc(74, -10, 0), Pc(70, -17, 0)], { link: 5.2, seed: 8 });
-    { const p = Pc(67, -20, 0), g = K.mat('iron', L, { form: 'sphere', x1: p[0], y1: p[1] + 4, r: 6, u });
+    fg += K.chain(u, L, [Pc(32, -1, 1), Pc(38, -12, 0), Pc(52, -20, 0), Pc(64, -16, 0)], { link: 5.2, seed: 7 }) + K.chain(u, L, [Pc(74, -1, 1), Pc(74, -9, 0), Pc(70, -15, 0)], { link: 5.2, seed: 8 });
+    { const p = Pc(67, -17, 0), g = K.mat('iron', L, { form: 'sphere', x1: p[0], y1: p[1] + 4, r: 6, u });
       fg += K.contactShadow(u, p[0], p[1] + 9, 14, L, { ry: 2, opacity: .7 }) + `<defs>${g.defs}</defs><path d="M${f(p[0] - 3.4)} ${f(p[1] + 1)}V${f(p[1] - 3)}A3.4 3.4 0 0 1 ${f(p[0] + 3.4)} ${f(p[1] - 3)}V${f(p[1] + 1)}" stroke="#2a2e2c" stroke-width="1.6" fill="none"/>`
         + `<path d="M${f(p[0] - 5.4)} ${f(p[1] + 1)}h10.8v6q0 3 -5.4 3t-5.4 -3z" fill="${g.fill}" stroke="#0a0c0a" stroke-width=".5"/><path d="M${f(p[0])} ${f(p[1] + 3.6)}v2.6" stroke="#0a0c0a" stroke-width="1.1"/>`
         + `<path d="M${f(p[0] - 4.6)} ${f(p[1] + 2)}h4" stroke="#c8d4d0" stroke-width=".4" opacity=".6"/>`; }
@@ -218,9 +223,7 @@ module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 
         + K.localGlow(u, { x: c[0] + 4, y: c[1] - 8, color: '#ff8a5a', power: .3, radius: 70 }, { core: false });
       // three beams out of the slit, up past the lip into the fog over the lid
       fg += `<defs><filter id="${rb}" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="1.6"/></filter>${linGrad(rg, 0, c[1] + 4, 0, c[1] - 52, [[0, '#ffe0b8', .8], [.4, '#ff9a60', .32], [1, '#ff8a50', 0]])}</defs><g style="mix-blend-mode:screen" filter="url(#${rb})">`
-        + [[-26, -40, 5, 9], [2, -6, 4, 12], [24, 34, 4, 8]].map(([dx, tx, w0, w1]) => `<path d="M${f(c[0] + dx - w0)} ${f(c[1] + 4)}L${f(c[0] + tx - w1)} ${f(c[1] - 52)}H${f(c[0] + tx + w1)}L${f(c[0] + dx + w0)} ${f(c[1] + 4)}Z" fill="url(#${rg})"/>`).join('') + `</g>`
-        // glints of it on the lip's front face and on the iron above the lock
-        + [[-14, 2.6, 7], [6, 3.4, 10], [20, 2.4, 6]].map(([dx, dh, w]) => { const a = Pl(Wc / 2 + dx, -.3, Hb + dh); return `<path d="M${f(a[0])} ${f(a[1])}h${w}" stroke="#ffb080" stroke-width=".7" stroke-linecap="round" opacity=".6"/>`; }).join(''); }
+        + [[-26, -40, 5, 9], [2, -6, 4, 12], [24, 34, 4, 8]].map(([dx, tx, w0, w1]) => `<path d="M${f(c[0] + dx - w0)} ${f(c[1] + 4)}L${f(c[0] + tx - w1)} ${f(c[1] - 52)}H${f(c[0] + tx + w1)}L${f(c[0] + dx + w0)} ${f(c[1] + 4)}Z" fill="url(#${rg})"/>`).join('') + `</g>`; }
     fg += '</g>';
     fg += motes(20, 10, 40, 180, 100, '#dffff0', 9) + K.fog(u, L, { y: 160, h: 60, density: .3, seed: 12 });
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 150, 0, 290, [[0, '#040a08', 0], [.4, '#040a08', .45], [1, '#020504', .8]])}</defs><rect x="-10" y="150" width="220" height="140" fill="url(#${gl})"/>`; }
