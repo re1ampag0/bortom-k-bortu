@@ -137,6 +137,8 @@ module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'dr
       // the neck
       man += `<path d="M94 47L106 47L107.4 59Q100 62 92.6 59Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M95.5 53q4.5 3 9 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".6"/>`
         + `<path d="M95.4 48L95.2 58" stroke="#c8f0dc" stroke-width=".5" opacity=".5"/>`;
+      // rain beaded on the wet shoulders and the waistcoat
+      { const R = rng(33); for (let i = 0; i < 18; i++) { const x = 68 + R() * 64, y = 64 + R() * 14 + Math.abs(x - 100) * .08; man += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.3 + R() * .3)}" fill="#e8fff6" opacity="${f(.45 + R() * .3)}"/>`; } }
       man += '</g>'; }
 
     // ——— his hands round the jar: each hand at a side of the glass, the palm on it, the fingers spread round the
@@ -145,11 +147,13 @@ module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'dr
     const hR = PP.hand3(u, { ...HB, a: 0, pitch: 58, m: 1, grip: [JAR.x, 91] });       // his right hand: on the jar's left side
     const hL = PP.hand3(u, { ...HB, a: 180, pitch: 58, m: -1, grip: [JAR.x, 107] });   // his left hand: on its right side, lower
     // the arms: shirt sleeves, shoulder → elbow (in at his side) → the wrist at the jar's side; a cuff
-    const sleeve = (s0, el, w, lt, rimOp, seed) => PP.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .5) + lt * .8, lerp(s0[1], el[1], .5)], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5) + 1], w],
-      w: [13, 12.2, 11.2, 9.8, 8.4], tone: shirt, lit: lt, rim: '#d8fff0', rimSide: lt, rimOp, seed, drapes: 2, foldW: .9, sw: .4, capA: true,
+    // (the elbow bent round in two points, so the sleeve turns as cloth does, without a corner)
+    const sleeve = (s0, el, w, lt, rimOp, seed) => PP.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .5) + lt * .8, lerp(s0[1], el[1], .5)], [lerp(el[0], s0[0], .14), lerp(el[1], s0[1], .14)],
+      [lerp(el[0], w[0], .22), lerp(el[1], w[1], .22) + 1.2], [lerp(el[0], w[0], .6), lerp(el[1], w[1], .6) + .6], w],
+      w: [13, 12.2, 11.6, 11, 9.8, 8.4], tone: shirt, lit: lt, rim: '#d8fff0', rimSide: lt, rimOp, seed, drapes: 2, foldW: .9, sw: .4, capA: true,
       cuff: { from: .84, k: 1.08, tone: { lit: shirt.lit, half: mix(shirt.half, shirt.shadow, .2), shadow: shirt.shadow, outline: shirt.outline } } });
     const sx = d => 100 + d * TW;
-    man += sleeve([sx(-31), 74], [sx(-38), 97], hR.wrist, -1, .6, 3) + sleeve([sx(31), 74], [sx(38), 102], hL.wrist, 1, .25, 4);
+    man += sleeve([sx(-31), 74], [sx(-36), 104], hR.wrist, -1, .6, 3) + sleeve([sx(31), 74], [sx(38), 110], hL.wrist, 1, .25, 4);
 
     // ——— the head: a weathered face turned to his right (our left), eyes on the ghost ship; lit from below by the jar ———
     const hd = PP.head34(u, { c: HEAD.c, r: HEAD.r, turn: .34, dir: -1, nod: -1, skin: 'dark', tone: SKIN, light: LT, warm: { color: '#ffb868', op: .32 },

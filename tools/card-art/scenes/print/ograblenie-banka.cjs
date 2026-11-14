@@ -234,9 +234,9 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
     // rubble at the foot of the breach, brick bits on the cobbles
     { const R = rng(21); for (let i = 0; i < 16; i++) { const x = 40 + R() * 90, y = ST + 1 + R() * 18, w = 2 + R() * 3.4, a = R() * 180;
         fg += K.contactShadow(u, x, y + 1, w * 1.4, L, { ry: .7, opacity: .5 }) + `<rect x="${f(x - w / 2)}" y="${f(y - w * .3)}" width="${f(w)}" height="${f(w * .55)}" fill="${mix('#6a3626', '#a86a4a', R())}" stroke="#24120a" stroke-width=".3" transform="rotate(${f(a)} ${f(x)} ${f(y)})"/>`; } }
-    // the pick the burglars left leaning on the wall by the breach, its iron head catching the lantern
-    fg += K.contactShadow(u, 36.6, ST, 5, L, { ry: .7, opacity: .6 }) + `<path d="M36.4 ${ST}L40.6 107.6" stroke="#1a0e06" stroke-width="1.5" stroke-linecap="round"/><path d="M36.4 ${ST}L40.6 107.6" stroke="#8a5a30" stroke-width=".9" stroke-linecap="round"/>`
-      + `<path d="M35.2 105.4Q40.4 106 45.6 110.6L45 111.2Q40.6 108 36 107.4Q34.6 107 35.2 105.4Z" fill="#3a3c46" stroke="#0c0c10" stroke-width=".3"/><path d="M36 106.2Q40.6 106.8 45 110.6" stroke="#ffb860" stroke-width=".35" fill="none" opacity=".7"/>`;
+    // the pick the burglars left leaning on the wall at the foot of the breach, against the dust, its iron head catching the lantern
+    fg += K.contactShadow(u, 46.6, ST, 5, L, { ry: .7, opacity: .6 }) + `<path d="M46.4 ${ST}L50.6 107.6" stroke="#1a0e06" stroke-width="1.5" stroke-linecap="round"/><path d="M46.4 ${ST}L50.6 107.6" stroke="#8a5a30" stroke-width=".9" stroke-linecap="round"/>`
+      + `<path d="M45.2 105.4Q50.4 106 55.6 110.6L65 111.2Q50.6 108 46 107.4Q44.6 107 45.2 105.4Z" fill="#3a3c46" stroke="#0c0c10" stroke-width=".3"/><path d="M46 106.2Q50.6 106.8 55 110.6" stroke="#ffb860" stroke-width=".35" fill="none" opacity=".7"/>`;
     // dust from the breach drifting left in the moonlight
     fg += K.smoke(u, L, { x: 52, y: ST - 2, w: 34, h: 26, wind: -.6, seed: 9, opacity: .45 });
     // the coins: a trail from the hole to the safe's sprung door, glinting

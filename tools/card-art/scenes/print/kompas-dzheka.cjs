@@ -201,7 +201,10 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
       + `<path d="M${f(cx - rc * .7)} ${f(cy + rc * k * .2)}q${f(rc * .1)} ${f(rc * k * .4)} ${f(rc * .4)} ${f(rc * k * .62)}" stroke="#ffffff" stroke-width=".6" fill="none" opacity=".3"/>`;
     // the moon's rim on the near edge of the drum and the bezel (brass glint)
     fg += `<path d="M${f(cx + Rr * .3)} ${f(cy - Rr * k * .95)}A${Rr} ${f(Rr * k)} 0 0 1 ${f(cx + Rr)} ${f(cy)}" stroke="#e8f0ff" stroke-width=".7" fill="none" opacity=".8"/>`
-      + `<path d="M${f(cx + Rr * .78)} ${f(cy - Rr * k * .62)}h4M${f(cx + Rr * .78 + 2)} ${f(cy - Rr * k * .62 - 2)}v4" stroke="#ffffff" stroke-width=".4" opacity=".95"/>`;
+      + `<path d="M${f(cx + Rr * .78)} ${f(cy - Rr * k * .62)}h4M${f(cx + Rr * .78 + 2)} ${f(cy - Rr * k * .62 - 2)}v4" stroke="#ffffff" stroke-width=".4" opacity=".95"/>`
+      // the lacquer of the drum's side: a cold upright sheen on its right, a faint one on the left
+      + `<path d="M${f(cx + Rr * .84)} ${f(cy + Rr * k * .56 + .4)}v${f(Hb - 1.2)}" stroke="#c8d8f0" stroke-width=".9" opacity=".45" stroke-linecap="round"/>`
+      + `<path d="M${f(cx - Rr * .7)} ${f(cy + Rr * k * .72 + .4)}v${f(Hb - 1.6)}" stroke="#8a9ab4" stroke-width=".6" opacity=".25" stroke-linecap="round"/>`;
     // light and air: the moon fills the room a little, dust in the beam, the corners and the table front fall dark
     fg += glow(u, 150, 50, 70, 46, '#9ab8e0', .1) + motes(16, 60, 50, 110, 60, '#d8e6ff', 5)
       + gloom(u, 120, 60, 0, 120, .4) + gloom(u, 100, 150, 100, 280, .55) + gloom(u, 120, 90, 200, 180, .25);

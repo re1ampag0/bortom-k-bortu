@@ -167,8 +167,7 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
       scroll += K.shadeCyl(u, t0[0], t0[1], t1[0], t1[1], rr, L, 'linen', { ell: .35, face: 2, outline: .35, grain: false, seed: 4 })
         // the spiral of the roll at its top end, the loose outer edge of the sheet curling out
         + `<ellipse cx="${f(t1[0])}" cy="${f(t1[1])}" rx="${f(rr)}" ry="${f(rr * .4)}" transform="rotate(${f(Math.atan2(n[1], n[0]) * 180 / Math.PI)} ${f(t1[0])} ${f(t1[1])})" fill="#e8dcbc" stroke="#6a5a3a" stroke-width=".35"/>`
-        + `<path d="M${f(t1[0] - n[0] * 1.6)} ${f(t1[1] - n[1] * 1.6 + .2)}q${f(n[0] * 1.6)} -.8 ${f(n[0] * 2.6)} 0q-1 .6 -2 0" stroke="#8a7a58" stroke-width=".3" fill="none"/>`
-        + `<path d="M${f(t0[0] + n[0] * rr)} ${f(t0[1] + n[1] * rr + 3)}q${f(n[0] * 4)} 2 ${f(n[0] * 5)} 7q${f(-n[0] * 2)} -1 ${f(-n[0] * 3.4)} -2z" fill="#efe4c4" stroke="#6a5a3a" stroke-width=".3"/>`;
+        + `<path d="M${f(t1[0] - n[0] * 1.6)} ${f(t1[1] - n[1] * 1.6 + .2)}q${f(n[0] * 1.6)} -.8 ${f(n[0] * 2.6)} 0q-1 .6 -2 0" stroke="#8a7a58" stroke-width=".3" fill="none"/>`;
       // the ribbon round the roll below the fist, the wax seal swinging on its ends
       const rb = [G2[0] + a[0] * 9, G2[1] + a[1] * 9];
       scroll += `<path d="M${f(rb[0] - n[0] * rr)} ${f(rb[1] - n[1] * rr)}L${f(rb[0] + n[0] * rr)} ${f(rb[1] + n[1] * rr)}" stroke="#8a1c18" stroke-width="1.4"/>`
