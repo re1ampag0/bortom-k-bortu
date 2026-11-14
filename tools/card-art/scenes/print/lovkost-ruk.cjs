@@ -130,7 +130,10 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
     const FAN = [-34, -12, 10, 32], GAP = 10;   // the fan's cards (deg either side of the way it opens); the one at GAP is gone
     const OG = [158, 99], OA = -125, OS = 6, OK = 1.36, OCS = 1.2;   // the grip, the hand's direction and size, the sleeve's scale, the cards' scale
     const skin = { lit: '#f0c6a0', half: '#c48a64', shadow: '#6a3e2a', outline: '#2a160c' };
-    const hd = H.hand3(u, { grip: OG, a: OA, s: OS, m: -1, roll: 180, held: 'fan', tone: skin, light: [-.6, -.8], sw: .36, palmW: .96 });
+    // the fingers curl behind the cards (their tips about two thirds up the fan, not above its top edge); the little
+    // finger's tip shows past the fan's right edge, as in a real grip
+    const hd = H.hand3(u, { grip: OG, a: OA, s: OS, m: -1, roll: 180, held: 'fan', tone: skin, light: [-.6, -.8], sw: .36, palmW: .96,
+      flex: [[30, 36, 18], [32, 38, 20], [36, 42, 22], [40, 46, 24]] });
     const OW = [hd.wrist[0] + 1, hd.wrist[1] + .4];
     { const red = { lit: '#c84a3a', half: '#8a2a20', shadow: '#3e0e0c', outline: '#1a0606' }, blue = { lit: '#4a5a9a', half: '#26305e', shadow: '#0e1230', outline: '#06081a' };
       const shirt = { lit: '#fff8ec', half: '#d8ccb8', shadow: '#7a6e5e', outline: '#2a2218' };

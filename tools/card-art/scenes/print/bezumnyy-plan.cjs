@@ -32,7 +32,7 @@ const lightOut = { time: 'night', haze: .2, key: { type: 'moon', x: 112, y: 20, 
 const skel = { horizon: HZ, eye: 1.3, light: 'candle on the table between them (key, warm) + the moon through the stern window behind (cold rim)', items: [
   ['back wall + window', -10, TF, 220, TF, 'the stern'], ['table', -10, 290, 220, 204, 'top from y 86'], ['chart', 58, 134, 118, 44, 'on the table'],
   ['captain', 44, TF, 62, 66, 'behind the table, leaning over it'], ['sailor', 134, TF, 50, 54, 'behind the table'],
-  ['hidden card', 38, 132, 44, 26, 'between his index (on it) and middle finger (under it), its far end under the chart'], ['right hand', 22, 130, 34, 20, 'over the table'], ['deck', 38, 106, 18, 10, 'on the table'], ['left hand', 104, 120, 34, 22, 'pointing on the chart'],
+  ['hidden card', 40, 100, 44, 30, 'held by its near end (palm and fingers under, the thumb on top), its far end under the chart'], ['right hand', 22, 130, 34, 20, 'over the table'], ['deck', 38, 106, 18, 10, 'on the table'], ['left hand', 104, 120, 34, 22, 'pointing on the chart'],
   ['candle', 104, CAND.y + 2, 20, 46, 'on the table'], ['bottle', 176, 104, 12, 32, 'on the table'], ['dagger', 150, 106, 8, 20, 'driven into the table']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
@@ -127,19 +127,16 @@ module.exports = { name: 'Безумный план', kind: 'deck', status: 'dra
       // the moon's pale patch on the table under the window; the candle's warm pool
       tab += `<path d="M44 ${TF + 1}L160 ${TF + 1}L190 ${TF + 26}L30 ${TF + 26}Z" fill="#a8c0f0" opacity=".08"/>` + K.localGlow(u, { x: CAND.x, y: CAND.y + 8, color: '#ffb060', power: .55, radius: 60 }, { squash: .35, core: false }); }
 
-    // ——— the hidden card in his right hand (on our left): the hand palm down just over the table, the ring and little
-    // finger curled under, the index and middle finger out straight; the card between them — the index finger on it
-    // (in front, over the card), the middle finger under it (behind) — its far end already slipped under the chart's
-    // left edge. people.cjs hand3: m 1 (a right hand from his side), roll −53 (the back up, seen from above like the table)
-    const SQ = .6;
-    const hr = H.hand3(u, { at: [27, 117], a: 20, s: 2.75, m: 1, roll: -53, pitch: 0, pose: 'scissor', tone: CSK, light: [.8, -.5], sw: .3,
-      flex: [[-4, 4, 2], [8, 6, 4], [70, 96, 56], [74, 96, 56]], yaw: [1, -2, 8, 12], thumbFlex: [0, 6, 8], thumbSpread: 10, backFingers: [1, 2, 3] });
-    // the card: its plane is the table's (squashed SQ); its long side along the fingers; its near end clamped between
-    // their middle joints
-    const hax = [Math.cos(20 * Math.PI / 180), Math.sin(20 * Math.PI / 180) / SQ], th = Math.atan2(hax[1], hax[0]);
-    const clamp = [(hr.joints[0][1][0] + hr.joints[1][1][0]) / 2, (hr.joints[0][1][1] + hr.joints[1][1][1]) / 2], CS = 1.5, cl0 = 13 * CS - 2.4;
-    // held by its near long edge: the card lies to the far side of the fingers, so the middle finger shows under it
-    const off = 13.5 * CS / 1.5 - 3.4, CC = [clamp[0] + Math.cos(th) * cl0 + Math.sin(th) * off, clamp[1] + (Math.sin(th) * cl0 - Math.cos(th) * off) * SQ];
+    // ——— the hidden card in his right hand (on our left): he holds it as one holds a card — by its near end, the palm
+    // and the fingers under it, the thumb on top — and slides it flat along the table, its far end already slipped under
+    // the chart's left edge. The forearm lies along the hand (the elbow out on the table), the wrist barely bent.
+    // people.cjs hand3 held 'flat': m 1 (his right hand), roll 37 (the thumb side up off the table, the back of the
+    // hand half to us); the card's plane is the table's (squashed SQ), its long side along the hand
+    const SQ = .6, HA = 16;
+    const hr = H.hand3(u, { grip: [44, 116], a: HA, s: 2.6, m: 1, roll: 37, held: 'flat', heldGap: .25, tone: CSK, light: [.8, -.5], sw: .3, palmW: .96 });
+    const th = Math.atan2(Math.sin(hr.gripA * Math.PI / 180) / SQ, Math.cos(hr.gripA * Math.PI / 180)), CS = 1.5, reach = 13 * CS - 3.2;
+    // the card: its near end under the thumb's pad (the grip), the rest away along the hand
+    const CC = [hr.grip[0] + Math.cos(th) * reach, hr.grip[1] + Math.sin(th) * reach * SQ];
     let hidden = hr.back + card(u, CC, th * 180 / Math.PI - 90, CS, SQ);
     // the deck he drew from: a short stack face down by his elbow, the top two cards pushed askew
     for (let k = 0; k < 5; k++) tab += card(u, [47 + k * .1, 102 - k * .7], -96 + (k > 3 ? 9 : k > 2 ? 4 : 0), .95, SQ);
@@ -181,7 +178,7 @@ module.exports = { name: 'Безумный план', kind: 'deck', status: 'dra
         w: [12.6, 11.8, 11, 9.8, 8.6], tone: coat, lit: lt, rim: '#b8ccff', rimSide: -lt, rimOp: .4, seed: 4, drapes: 1, foldW: .8, sw: .4, capA: true,
         cuff: { from: .86, k: 1.1, tone: { lit: '#4a5a8a', half: '#26305a', shadow: '#0c1022', outline: '#04060e' } } });
       // one sleeve each, from the shoulder down to the elbow on the table and on to the wrist; a single cuff there
-      arms += sleeve([52, 75], [16, 100], hr.wrist, -1) + sleeve([96, 76], [101, 98], hl.wrist, 1); }
+      arms += sleeve([52, 75], [12, 102], hr.wrist, -1) + sleeve([96, 76], [101, 98], hl.wrist, 1); }
     arms += hr.front + hl.back + hl.front;
     // a signet ring on the captain's pointing hand
     { const p = hl.P(5.6, 1.4, -.05); arms += K.shadeSphere(u, p[0], p[1], 1.1, L, 'brass', { outline: .2 }); }
