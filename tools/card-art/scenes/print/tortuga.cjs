@@ -279,7 +279,8 @@ function fence(u, L) {
   s += `<path d="M150.8 60.4l1.8 1.4" stroke="#1a1a24" stroke-width="1.2"/>`;
   s += headDressed(u, L, [142.6, 49.4], 8.2, -1, sk, { tricorne: true, moustache: true, brow: 'up' });
   // the near (right) arm out over the barrel: the coat sleeve with its folds, the big turned cuff, a lace ruffle; the
-  // hand holds the two cards up between the thumb (in front) and the fingers (behind)
+  // hand holds the two cards up between the thumb (in front) and the fingers (behind); the thumb lies over the cards
+  // with its pad on their corners, so the fan opens from under it
   const red = (() => { const r = L.ramp('paint-red', 132, 80); return { lit: mix(r.lit, WARM, .25), half: r.half, core: r.core, shadow: r.shadow, outline: r.outline }; })();
   const sh0 = [141, 70], el = [133, 87], wr = [122.8, 80.4];
   s += H.cloth(u, { spine: [sh0, el, wr], w: [9, 8, 7.2], tone: red, lit: 1, rim: mix(red.lit, WARM, .4), rimSide: 1, seed: 12, cuff: { from: .66, k: 1.22, tone: (() => { const r = L.ramp('paint-red', 126, 82); return { lit: mix(r.lit, '#ffb080', .35), half: mix(r.half, '#000', .12), core: r.core, shadow: mix(r.shadow, '#000', .2), outline: r.outline }; })(), buttons: .8 }, L, capA: true, drapes: 4, foldW: 1.4 });
@@ -288,7 +289,7 @@ function fence(u, L) {
     const pts = []; for (let i = 0; i <= 8; i++) { const t = i / 8 * 2 - 1, out = i % 2 ? 1.6 : .4; pts.push([wr[0] + nx * t * 3.8 + ux * out, wr[1] + ny * t * 3.8 + uy * out]); }
     pts.push([wr[0] + nx * 3.4 - ux * .6, wr[1] + ny * 3.4 - uy * .6], [wr[0] - nx * 3.4 - ux * .6, wr[1] - ny * 3.4 - uy * .6]);
     s += `<path d="${sp(pts, true)}" fill="${mix(ln.lit, WARM, .2)}" stroke="${ln.outline}" stroke-width=".35"/>`; }
-  const hn = H.hand(u, { at: [wr[0] - 1, wr[1] - .6], a: -128, s: 1.12, m: -1, pose: 'open', spread: 6, curl: .55, tone: sk, thumb: 'front', thumbA: 14, sw: .42 });
+  const hn = H.hand(u, { at: [wr[0] - 1, wr[1] - .6], a: -128, s: 1.12, m: -1, pose: 'open', spread: 6, curl: .55, tone: sk, thumb: 'front', thumbA: 54, sw: .42 });
   s += hn.back + cards(u, L, [117.4, 75.4]) + hn.front;
   return s;
 }

@@ -188,14 +188,15 @@ function gloveArm(u, L, W, a, s) {
   for (const x of [-10.2, -24.6]) { const pts = [P(x, -9.6), P(x + 1.4, 0), P(x, 10.4)]; const d = `M${f(pts[0][0])} ${f(pts[0][1])}Q${f(pts[1][0])} ${f(pts[1][1])} ${f(pts[2][0])} ${f(pts[2][1])}`;
     back += `<path d="${d}" stroke="#5a3a0a" stroke-width="1.3" fill="none"/><path d="${d}" stroke="#d8b050" stroke-width=".7" fill="none"/><path d="${d}" stroke="#fff0b0" stroke-width=".25" fill="none" stroke-dasharray=".6 .6" opacity=".8"/>`; }
   for (const y of [-3.4, 3.6]) { const p = P(-17.6, y); back += K.shadeSphere(u, p[0], p[1], 1.25, L, 'brass', { outline: .3 }); }
-  // the thumb, over the letter's face: from the ball of the hand round to the pad pressing the paper
-  const th = [[3, -5.4], [7.5, -8.6], [13.5, -9.4], [19.5, -7.6], [23.4, -5.6], [24.8, -3.9], [23.8, -2.4], [20.4, -2.6], [15, -4], [9, -4.4], [4, -2.2]];
+  // the thumb, over the letter's face: from the ball of the hand round to the pad pressing the paper (its pad lies on the
+  // sheet a little in from the edge — the letter is held, not resting on the finger tips)
+  const th = [[3, -5.4], [7.5, -8.6], [13.5, -9.4], [21, -6.6], [26.6, -3.4], [28.2, -1.5], [27.2, -.1], [21.8, -1.9], [15.4, -3.8], [9, -4.4], [4, -2.2]];
   const tg = nid('gth', u);
   let thumb = `<defs>${lg(tg, 14, -10, -2.4, [[0, mix(lv.shadow, '#140a04', .3)], [.45, lv.shadow], [.8, lv.half], [1, lv.lit]])}</defs>`;
-  { const sp = P(20, -2.2); thumb += `<ellipse cx="${f(sp[0] - 1)}" cy="${f(sp[1] + 1.2)}" rx="3.4" ry="1.6" transform="rotate(${f(a)} ${f(sp[0] - 1)} ${f(sp[1] + 1.2)})" fill="#2a1406" opacity=".35"/>`; }
+  { const sp = P(24, -.6); thumb += `<ellipse cx="${f(sp[0] - 1)}" cy="${f(sp[1] + 1.2)}" rx="3.4" ry="1.6" transform="rotate(${f(a)} ${f(sp[0] - 1)} ${f(sp[1] + 1.2)})" fill="#2a1406" opacity=".35"/>`; }
   thumb += `<path d="${pth(P, th)}" fill="url(#${tg})"/><path d="${pth(P, th.slice(0, 9), false)}" fill="none" stroke="${lv.outline}" stroke-width=".5"/>`;
-  { const A = P(9, -7.6), B = P(16, -8.2), C = P(21.5, -6.4); thumb += `<path d="M${f(A[0])} ${f(A[1])}Q${f(B[0])} ${f(B[1])} ${f(C[0])} ${f(C[1])}" stroke="${lv.lit}" stroke-width=".3" stroke-dasharray=".8 .7" fill="none" opacity=".7"/>`; }
-  { const A = P(16, -3.6), B = P(21, -2.6), C = P(24, -3.4); thumb += `<path d="M${f(A[0])} ${f(A[1])}Q${f(B[0])} ${f(B[1])} ${f(C[0])} ${f(C[1])}" stroke="#ffe4c0" stroke-width=".55" fill="none" opacity=".6" stroke-linecap="round"/>`; }
+  { const A = P(9, -7.6), B = P(17, -8), C = P(24.4, -4.6); thumb += `<path d="M${f(A[0])} ${f(A[1])}Q${f(B[0])} ${f(B[1])} ${f(C[0])} ${f(C[1])}" stroke="${lv.lit}" stroke-width=".3" stroke-dasharray=".8 .7" fill="none" opacity=".7"/>`; }
+  { const A = P(17, -3.3), B = P(23.6, -1.4), C = P(27.4, -1.6); thumb += `<path d="M${f(A[0])} ${f(A[1])}Q${f(B[0])} ${f(B[1])} ${f(C[0])} ${f(C[1])}" stroke="#ffe4c0" stroke-width=".55" fill="none" opacity=".6" stroke-linecap="round"/>`; }
   // her ring on the ring finger, over the glove: a heavy gold band round the finger just past the knuckle, a sapphire
   // in a raised bezel on the back of the finger, the candle (on the right) lighting a warm spark in the stone and on the gold
   const rg = nid('grg', u), rs = nid('grs', u), rx = 20.3, ry = 1.75, sc = s;
