@@ -2,7 +2,7 @@
 // Залпа по нему), variant v5. The user: a scrap of paper with a black spot and a torn edge (not a palm with a spot); if
 // a hand holds it, a natural hand. The shot (no hand): night on the doomed ship's deck, the mainmast close on the left;
 // someone from the sea has been here — a scrap torn from a printed page, folded in four, is pinned to the mast by a
-// rusty dagger grown over with barnacles, a strand of weed on its guard, sea water still running down the wood. On the
+// rusty dagger grown over with barnacles, a strand of weed on its guard, still dripping sea water. On the
 // scrap — the black spot, a soot-black blot smudged by a thumb. Over the rail on the right, in the luminous green fog,
 // the Flying Dutchman's dark shape with her green lanterns: Jones has chosen.
 // Light: the moon behind us, high on the right (key, cold) — it lights the paper (the brightest thing, the focus), the
@@ -68,10 +68,6 @@ module.exports = { name: 'Чёрная метка', variant: 'v5', kind: 'deck',
       fg += `<defs>${linGrad(g, MX - MR, 0, MX + MR, 0, [[0, '#0a0c0c', 1], [.5, '#2a3230', 1], [.78, '#6a7a76', 1], [.9, '#b8ccc4', 1], [1, '#3a4442', 1]])}</defs>`
         + `<path d="M${f(a[0] - 1)} ${f(a[1] - h / 2)}Q${f(m[0])} ${f(m[1] - h / 2 + bow * 4)} ${f(b[0] + 1)} ${f(b[1] - h / 2)}L${f(b[0] + 1)} ${f(b[1] + h / 2)}Q${f(m[0])} ${f(m[1] + h / 2 + bow * 4)} ${f(a[0] - 1)} ${f(a[1] + h / 2)}Z" fill="url(#${g})" stroke="#020404" stroke-width=".5"/>`;
       for (const th of [-60, -30, 0, 30, 60]) { const p = onMast(th, y); fg += `<circle cx="${f(p[0])}" cy="${f(p[1] + bow * 4 * Math.cos(th * Math.PI / 180) ** 2)}" r=".9" fill="#1a1e1e"/><circle cx="${f(p[0] - .3)}" cy="${f(p[1] - .3 + bow * 4 * Math.cos(th * Math.PI / 180) ** 2)}" r=".35" fill="#c8dcd4" opacity=".6"/>`; } }
-    // the wet run below the dagger: darker wood with a few bright drops on it, down past the paper
-    { const R = rng(41), p0 = Pp(10, 6); let d = `M${P2(p0)}`; for (let i = 1; i <= 8; i++) { const p = Pp(14 + Math.sin(i) * 2.4, 6 + i * 17); d += `L${P2(p)}`; }
-      fg += `<path d="${d}" stroke="#040806" stroke-width="5" fill="none" opacity=".35" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" stroke="#a8e8d0" stroke-width=".4" fill="none" opacity=".35" transform="translate(1.6 0)"/>`;
-      for (let i = 0; i < 6; i++) { const p = Pp(13 + R() * 3, 60 + R() * 70); fg += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx=".7" ry="1.1" fill="#d8fff0" opacity=".7"/>`; } }
 
     // ——— the paper: a scrap torn from a printed page, folded in four and opened, pinned at its top ———
     { const R = rng(17), hw = PAP.w / 2, H = PAP.h;
@@ -132,32 +128,37 @@ module.exports = { name: 'Чёрная метка', variant: 'v5', kind: 'deck',
           + `<defs>${linGrad(g, a0[0], a0[1], tp[0], tp[1], [[0, '#b8b29a', 1], [1, '#d8d2b8', 1]])}</defs><path d="M${P2(a0)}L${P2(b0)}L${P2(tp)}Z" fill="url(#${g})" stroke="#3a3628" stroke-width=".4" stroke-linejoin="round"/>`
           + `<path d="M${P2(a0)}L${P2(b0)}" stroke="#ffffff" stroke-width=".5" opacity=".6"/>`
           + [.3, .55].map(t => { const p = [a0[0] + (tp[0] - a0[0]) * t + (b0[0] - a0[0]) * .2, a0[1] + (tp[1] - a0[1]) * t + (b0[1] - a0[1]) * .2]; return `<path d="M${P2(p)}l3 -1.6" stroke="#6a6450" stroke-width=".6" opacity=".25"/>`; }).join(''); }
-      // ——— the dagger: through the top of the paper into the mast, its grip out toward us and up to the right;
+      // ——— the dagger: driven at a slant through the top of the paper into the mast, its grip out toward us and up to the right;
       // rusty, the guard crusted with barnacles, a strand of weed hanging off it, dripping ———
-      { const e = Pp(3, 5), dir = [.94, -.34], n = [-dir[1], dir[0]], at = (l, w = 0) => [e[0] + dir[0] * l + n[0] * w, e[1] + dir[1] * l + n[1] * w];
+      { const e = Pp(2, 9), dir = [.62, -.78], n = [-dir[1], dir[0]], at = (l, w = 0) => [e[0] + dir[0] * l + n[0] * w, e[1] + dir[1] * l + n[1] * w];
         const g = nid('dg', u), gg = nid('dh', u);
-        // its shadow on the paper and the mast (down-left)
-        fg += `<path d="M${P2(at(0, -1.2))}L${P2(at(24, -1.6))}L${P2(at(24, 1.6))}L${P2(at(0, 1.2))}Z" fill="#020604" opacity=".45" filter="url(#${sb})" transform="translate(-4 6)"/>`;
-        // the slit in the paper where the blade went in, the wood split a little round it
-        fg += `<path d="M${P2(at(0, -2.8))}L${P2(at(0, 2.8))}" stroke="#0a0806" stroke-width="1.6" stroke-linecap="round"/><path d="M${P2(at(-.6, -3.4))}l-1.4 -1.8M${P2(at(-.6, 3.4))}l-1 2" stroke="#3a3628" stroke-width=".4" opacity=".6"/>`;
-        // the blade's root out of the paper (short — the rest is in the wood), then the guard across it
-        fg += `<defs>${linGrad(g, ...at(0, -2.4), ...at(0, 2.4), [[0, '#c8d4cc', 1], [.4, '#7a8680', 1], [1, '#2a302c', 1]])}${linGrad(gg, ...at(8, -2.4), ...at(8, 2.4), [[0, '#8a6a4a', 1], [.4, '#5a3a22', 1], [1, '#22140a', 1]])}</defs>`
-          + `<path d="M${P2(at(0, -2.2))}L${P2(at(4.6, -2.4))}L${P2(at(4.6, 2.4))}L${P2(at(0, 2.2))}Z" fill="url(#${g})" stroke="#0a0c0a" stroke-width=".35"/>`
-          + `<path d="M${P2(at(.4, -1.6))}L${P2(at(4.4, -1.8))}" stroke="#eef8f2" stroke-width=".4" opacity=".7"/>`
-          + `<path d="M${P2(at(1.8, .2))}l.8 .5M${P2(at(3, -.8))}l.6 .3" stroke="#8a4a1a" stroke-width=".6" opacity=".7"/>`;
+        // its shadow on the paper and the mast (down-left), shortest at the point where the blade goes in
+        fg += `<path d="M${P2(at(0, -.8))}L${P2(at(27, -1.8))}L${P2(at(27, 1.8))}L${P2(at(0, .8))}Z" fill="#020604" opacity=".45" filter="url(#${sb})" transform="translate(-3 5)"/>`;
+        // where the blade went in: the paper pulled into the wood round a dark slit — a short tear at each end of it, a
+        // few creases running out, a pale lip of torn paper on the lit side
+        fg += `<path d="M${P2(at(0, -2.6))}Q${P2(at(-.6, 0))} ${P2(at(0, 2.6))}" stroke="#4a4434" stroke-width="2.6" fill="none" opacity=".35" filter="url(#${pb})"/>`
+          + `<path d="M${P2(at(0, -2))}L${P2(at(0, 2))}" stroke="#050403" stroke-width="1.5" stroke-linecap="round"/>`
+          + `<path d="M${P2(at(0, -2))}l${f(-n[0] * 1.4 - dir[0] * .4)} ${f(-n[1] * 1.4 - dir[1] * .4)}M${P2(at(0, 2))}l${f(n[0] * 1.6 - dir[0] * .3)} ${f(n[1] * 1.6 - dir[1] * .3)}" stroke="#1a1810" stroke-width=".55" stroke-linecap="round"/>`
+          + [[-2.4, -4.6, -3], [2.4, 4.4, -2.6], [-1, -2.6, -5], [1.4, 3.2, -4.6]].map(([w0, w1, l1]) => `<path d="M${P2(at(-.4, w0))}Q${P2(at(l1 * .5, (w0 + w1) / 2 + .6))} ${P2(at(l1, w1))}" stroke="#6a6450" stroke-width=".45" fill="none" opacity=".55"/>`).join('')
+          + `<path d="M${P2(at(.3, 2.2))}L${P2(at(.3, -1.6))}" stroke="#ffffff" stroke-width=".45" opacity=".7"/>`;
+        // the blade out of the paper: a short tapering piece (the rest is in the wood), wider toward the guard
+        fg += `<defs>${linGrad(g, ...at(4, -2.4), ...at(4, 2.4), [[0, '#c8d4cc', 1], [.4, '#7a8680', 1], [1, '#2a302c', 1]])}${linGrad(gg, ...at(14, -2.4), ...at(14, 2.4), [[0, '#8a6a4a', 1], [.4, '#5a3a22', 1], [1, '#22140a', 1]])}</defs>`
+          + `<path d="M${P2(at(0, -1.5))}L${P2(at(7.6, -2.4))}L${P2(at(7.6, 2.4))}L${P2(at(0, 1.5))}Z" fill="url(#${g})" stroke="#0a0c0a" stroke-width=".35"/>`
+          + `<path d="M${P2(at(.6, -1))}L${P2(at(7.4, -1.8))}" stroke="#eef8f2" stroke-width=".4" opacity=".7"/><path d="M${P2(at(.5, 0))}L${P2(at(7.4, 0))}" stroke="#3a423e" stroke-width=".3" opacity=".6"/>`
+          + `<path d="M${P2(at(2.4, .4))}l.8 .5M${P2(at(5, -.9))}l.6 .3M${P2(at(6.2, 1.2))}l.7 .2" stroke="#8a4a1a" stroke-width=".6" opacity=".7"/>`;
         // the guard: a short iron bar with knobbed ends, rusted
-        { const a = at(5.4, -6.4), b = at(5.4, 6.4); fg += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.3, L, 'iron', { outline: .3, cap: 'round' })
-            + `<path d="M${P2(at(5.4, -5))}L${P2(at(5.4, 4))}" stroke="#8a4a1a" stroke-width="1" opacity=".45" stroke-dasharray="1.4 1"/>`
-            + K.shadeSphere(u, ...at(5.4, -7), 1.7, L, 'iron', { outline: .3 }) + K.shadeSphere(u, ...at(5.4, 7), 1.7, L, 'iron', { outline: .3 }); }
+        { const a = at(8.4, -6.4), b = at(8.4, 6.4); fg += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.3, L, 'iron', { outline: .3, cap: 'round' })
+            + `<path d="M${P2(at(8.4, -5))}L${P2(at(8.4, 4))}" stroke="#8a4a1a" stroke-width="1" opacity=".45" stroke-dasharray="1.4 1"/>`
+            + K.shadeSphere(u, ...at(8.4, -7), 1.7, L, 'iron', { outline: .3 }) + K.shadeSphere(u, ...at(8.4, 7), 1.7, L, 'iron', { outline: .3 }); }
         // the grip: wound with rotten cord, a ring pommel
-        fg += `<path d="M${P2(at(6.4, -2))}L${P2(at(19, -1.7))}L${P2(at(19, 1.7))}L${P2(at(6.4, 2))}Z" fill="url(#${gg})" stroke="#0a0604" stroke-width=".35"/>`;
-        for (let l = 7.4; l < 19; l += 1.5) fg += `<path d="M${P2(at(l, -1.9))}L${P2(at(l + .9, 1.9))}" stroke="#1a0e06" stroke-width=".45" opacity=".8"/><path d="M${P2(at(l + .2, -1.9))}L${P2(at(l + .5, -.6))}" stroke="#c8a888" stroke-width=".3" opacity=".6"/>`;
-        { const p = at(21.4, 0); fg += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="2.8" ry="2.4" fill="none" stroke="#3a3e3a" stroke-width="1.5"/><path d="M${f(p[0] - 1)} ${f(p[1] - 2.3)}A2.8 2.4 0 0 1 ${f(p[0] + 2.8)} ${f(p[1])}" stroke="#c8dcd4" stroke-width=".5" fill="none" opacity=".75"/>`; }
+        fg += `<path d="M${P2(at(9.4, -2))}L${P2(at(22, -1.7))}L${P2(at(22, 1.7))}L${P2(at(9.4, 2))}Z" fill="url(#${gg})" stroke="#0a0604" stroke-width=".35"/>`;
+        for (let l = 10.4; l < 22; l += 1.5) fg += `<path d="M${P2(at(l, -1.9))}L${P2(at(l + .9, 1.9))}" stroke="#1a0e06" stroke-width=".45" opacity=".8"/><path d="M${P2(at(l + .2, -1.9))}L${P2(at(l + .5, -.6))}" stroke="#c8a888" stroke-width=".3" opacity=".6"/>`;
+        { const p = at(24.4, 0); fg += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="2.8" ry="2.4" fill="none" stroke="#3a3e3a" stroke-width="1.5"/><path d="M${f(p[0] - 1)} ${f(p[1] - 2.3)}A2.8 2.4 0 0 1 ${f(p[0] + 2.8)} ${f(p[1])}" stroke="#c8dcd4" stroke-width=".5" fill="none" opacity=".75"/>`; }
         // barnacles on the guard and a little up the grip
-        { const Rb = rng(23); for (let i = 0; i < 7; i++) { const p = at(5 + Rb() * 4, -6 + Rb() * 12), r = .7 + Rb() * .7;
+        { const Rb = rng(23); for (let i = 0; i < 7; i++) { const p = at(8 + Rb() * 4, -6 + Rb() * 12), r = .7 + Rb() * .7;
           fg += `<path d="M${f(p[0] - r)} ${f(p[1] + r * .5)}L${f(p[0] - r * .45)} ${f(p[1] - r * .7)}H${f(p[0] + r * .45)}L${f(p[0] + r)} ${f(p[1] + r * .5)}Z" fill="#a8b0a0" stroke="#2a2e26" stroke-width=".2"/><ellipse cx="${f(p[0])}" cy="${f(p[1] - r * .7)}" rx="${f(r * .4)}" ry="${f(r * .16)}" fill="#141812"/>`; } }
         // the weed hanging off the guard's lower end, a drop at its tip
-        { const p = at(5.4, 7.6); fg += `<path d="M${P2(p)}q-1.6 6 .4 11t-1 10" stroke="#1e4a36" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M${f(p[0] + .8)} ${f(p[1])}q1 5 -.6 9" stroke="#2e6a4a" stroke-width=".9" fill="none" stroke-linecap="round"/>`
+        { const p = at(8.4, 7.6); fg += `<path d="M${P2(p)}q-1.6 6 .4 11t-1 10" stroke="#1e4a36" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M${f(p[0] + .8)} ${f(p[1])}q1 5 -.6 9" stroke="#2e6a4a" stroke-width=".9" fill="none" stroke-linecap="round"/>`
           + `<path d="M${f(p[0] - .4)} ${f(p[1] + 1)}q-1.4 6 .4 10.6" stroke="#8ad8b0" stroke-width=".3" fill="none" opacity=".5"/><ellipse cx="${f(p[0] - .8)}" cy="${f(p[1] + 23)}" rx=".8" ry="1.2" fill="#d8fff0" opacity=".8"/>`; } } }
 
     // ——— the air: the cold veil, a few motes; dark under the glass and in the left corner ———

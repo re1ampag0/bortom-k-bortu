@@ -3,7 +3,7 @@
 // The shot: night, on the Pearl's rail; we look down at a small black lacquered box standing on the worn rail cap, the
 // lid thrown back (lined with dark wine velvet, a brass fillet round it), in the box a brass compass under glass. The
 // rose's north — the red lily and the red point — is away from us, to the sea; the blued needle has swung round from
-// it (a faint trace of the swing on the glass) and points at about four o'clock — off toward us, at the one who holds the card.
+// it (a faint trace of the swing on the glass) and points at about half past four, some 130° from north — off toward us, at the one who holds the card.
 // Far below the rail the black sea and the moon's glitter on it; the moon itself is behind us to the right, out of the
 // shot: it lays a cold rim on the brass bezel, the hinges and the lacquer's edges, a sheen on the glass, and the box's
 // long shadow over the rail toward us. The needle's own light is a faint warm glow (magic, not fire).
@@ -20,7 +20,7 @@ const YAW = -20 * Math.PI / 180;                                          // the
 const B = { x: 4.5, z: 4.2, h: 2.8 };                                       // the box: half width, half depth, height (cm)
 const LID = { a: 104 * Math.PI / 180, t: .7 };                            // the lid's opening angle, its thickness
 const CMP = { z: 0, R: 3.95, ri: 3.4, dy: -.45 };                          // the compass: centre, bezel radius, dial radius, dial below the top
-const NEEDLE = 122;                                                       // the needle's bearing, degrees clockwise from the rose's north
+const NEEDLE = 132;                                                       // the needle's bearing, degrees clockwise from the rose's north (kept at twelve in the picture)
 const MOON = (() => { const az = 25 * Math.PI / 180, el = 30 * Math.PI / 180; return [Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)]; })();  // toward the moon (behind, right)
 const light = { time: 'night', haze: .3, key: { type: 'moon', az: 25, el: 30, color: '#c8d8f6', power: .8 }, fill: { color: '#2e4064', power: .45 },
   rim: { az: 25, color: '#d8e6ff', power: .6 }, locals: [{ x: 108, y: 96, color: '#ffd070', power: .4, radius: 30 }] };
@@ -158,33 +158,37 @@ module.exports = { name: 'Компас Джека', variant: 'v5', kind: 'deck',
       fg += `<defs>${linGrad(wl, 0, inn[54][1], 0, inn[18][1], [[0, '#2a1c08', 1], [.5, '#4a3410', 1], [1, '#6a4c18', 1]])}</defs><path d="${poly(inn)}" fill="url(#${wl})"/>`;
       const dc0 = Dp(0, 0);
       fg += `<defs>${radGrad(dg, dc0[0] + 4, dc0[1] + 2, 30, [[0, '#fbf0d4', 1], [.6, '#e8d8b0', 1], [1, '#b89c68', 1]])}<clipPath id="${dc}"><path d="${poly(dial)}"/></clipPath></defs><path d="${poly(dial)}" fill="url(#${dg})"/>`;
-      // the rose, drawn in the dial's plane: degree ticks, two rings, 8 points (north red), the lily over north
+      // the rose, drawn in the dial's plane: degree ticks, two rings, 8 points (north red), the lily over north.
+      // The box is turned, so the rose is turned back in it to keep its north at twelve o'clock in the picture (N0)
+      let N0 = 0, best = 1e9; for (let d = -60; d <= 60; d += .5) { const p = bear(d, CMP.ri), q = Dp(0, 0); if (p[1] < q[1] && Math.abs(p[0] - q[0]) < best) { best = Math.abs(p[0] - q[0]); N0 = d; } }
+      const rb = (deg, r) => bear(N0 + deg, r), NB = N0 + NEEDLE;
       let rose = '';
-      for (let i = 0; i < 64; i++) { const a = i / 64 * 360, r0 = CMP.ri * .97, r1 = CMP.ri * (i % 8 ? .9 : .84); rose += `<path d="M${P2(bear(a, r0))}L${P2(bear(a, r1))}" stroke="#4a3018" stroke-width="${i % 8 ? .3 : .5}"/>`; }
-      rose += `<path d="${poly(Array.from({ length: 64 }, (_, i) => bear(i / 64 * 360, CMP.ri * .8)))}" fill="none" stroke="#4a3018" stroke-width=".3"/>`;
-      const point = (deg, r, w, cl, cd) => { const tp = bear(deg, r), l = bear(deg - 90, w), rr = bear(deg + 90, w), o = Dp(0, 0); return `<path d="${poly([o, l, tp])}" fill="${cd}"/><path d="${poly([o, rr, tp])}" fill="${cl}"/>`; };
+      for (let i = 0; i < 64; i++) { const a = i / 64 * 360, r0 = CMP.ri * .97, r1 = CMP.ri * (i % 8 ? .9 : .84); rose += `<path d="M${P2(rb(a, r0))}L${P2(rb(a, r1))}" stroke="#4a3018" stroke-width="${i % 8 ? .3 : .5}"/>`; }
+      rose += `<path d="${poly(Array.from({ length: 64 }, (_, i) => rb(i / 64 * 360, CMP.ri * .8)))}" fill="none" stroke="#4a3018" stroke-width=".3"/>`;
+      const point = (deg, r, w, cl, cd) => { const tp = rb(deg, r), l = rb(deg - 90, w), rr = rb(deg + 90, w), o = Dp(0, 0); return `<path d="${poly([o, l, tp])}" fill="${cd}"/><path d="${poly([o, rr, tp])}" fill="${cl}"/>`; };
       for (let i = 0; i < 4; i++) rose += point(45 + i * 90, CMP.ri * .5, .3, '#e4d4ac', '#b49a6a');
-      for (let i = 0; i < 4; i++) rose += i === 0 ? point(0, CMP.ri * .84, .62, '#e04030', '#8a1a12') : point(i * 90, CMP.ri * .74, .42, '#d8c49a', '#9a7e52');
+      for (let i = 0; i < 4; i++) rose += i === 0 ? point(0, CMP.ri * .66, .34, '#b8483a', '#7a2a1e') : point(i * 90, CMP.ri * .74, .42, '#d8c49a', '#9a7e52');
       { // the lily over north: three petals in the dial plane
-        const b = CMP.ri * .86, q = (du, dv) => Dp(du, -b + dv);
-        rose += `<path d="M${P2(q(0, -.62))}Q${P2(q(.3, -.2))} ${P2(q(0, .1))}Q${P2(q(-.3, -.2))} ${P2(q(0, -.62))}Z" fill="#b82a1e"/><path d="M${P2(q(0, .05))}Q${P2(q(.5, -.5))} ${P2(q(.6, 0))}Q${P2(q(.3, -.05))} ${P2(q(0, .12))}ZM${P2(q(0, .05))}Q${P2(q(-.5, -.5))} ${P2(q(-.6, 0))}Q${P2(q(-.3, -.05))} ${P2(q(0, .12))}Z" fill="#b82a1e"/>`; }
+        const b = CMP.ri * .84, q = (du, dv) => { const a = N0 * Math.PI / 180, x = du * .65, y = -b + dv * .65; return Dp(x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)); };
+        rose += `<path d="M${P2(q(0, -.62))}Q${P2(q(.3, -.2))} ${P2(q(0, .1))}Q${P2(q(-.3, -.2))} ${P2(q(0, -.62))}Z" fill="#9a3a2a"/><path d="M${P2(q(0, .05))}Q${P2(q(.5, -.5))} ${P2(q(.6, 0))}Q${P2(q(.3, -.05))} ${P2(q(0, .12))}ZM${P2(q(0, .05))}Q${P2(q(-.5, -.5))} ${P2(q(-.6, 0))}Q${P2(q(-.3, -.05))} ${P2(q(0, .12))}Z" fill="#9a3a2a"/>`; }
       fg += `<g clip-path="url(#${dc})">${rose}`;
       // the trace of the swing: a faint arc on the dial from north round to where the needle stopped
-      { const pts = []; for (let a = 8; a <= NEEDLE - 8; a += 4) pts.push(bear(a, CMP.ri * .72)); let d = `M${P2(pts[0])}`; for (const p of pts.slice(1)) d += `L${P2(p)}`;
+      { const pts = []; for (let a = N0 + 10; a <= NB - 10; a += 4) pts.push(bear(a, CMP.ri * .72)); let d = `M${P2(pts[0])}`; for (const p of pts.slice(1)) d += `L${P2(p)}`;
         fg += `<path d="${d}" stroke="#2c56a8" stroke-width="2.4" fill="none" opacity=".22" stroke-linecap="round"/><path d="${d}" stroke="#2c56a8" stroke-width=".6" fill="none" opacity=".6" stroke-dasharray="1.4 1"/>`; }
       // the needle's warm glow on the card
-      fg += `<path d="${poly([Dp(0, 0), bear(NEEDLE - 25, CMP.ri), bear(NEEDLE + 25, CMP.ri)])}" fill="#ffd060" opacity=".22" style="mix-blend-mode:multiply"/></g>`;
-      // the needle: blued steel, its arrow head to NEEDLE, a short brass tail the other way; its shadow on the card
-      { const head = [Dp(0, 0), bear(NEEDLE - 90, .42), bear(NEEDLE - 7, CMP.ri * .6), bear(NEEDLE - 16, CMP.ri * .58), bear(NEEDLE, CMP.ri * .95), bear(NEEDLE + 16, CMP.ri * .58), bear(NEEDLE + 7, CMP.ri * .6), bear(NEEDLE + 90, .42)];
-        const tail = [bear(NEEDLE - 90, .42), bear(NEEDLE + 180 + 9, CMP.ri * .46), bear(NEEDLE + 180, CMP.ri * .52), bear(NEEDLE + 180 - 9, CMP.ri * .46), bear(NEEDLE + 90, .42)];
-        const lift = 1.6, gn = nid('gn', u), bl = nid('nb', u), tip = bear(NEEDLE, CMP.ri * .95), root = Dp(0, 0);
-        fg += `<defs><filter id="${bl}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.8"/></filter>${linGrad(gn, root[0], root[1], tip[0], tip[1], [[0, '#14284e', 1], [.5, '#2c56a8', 1], [.85, '#5a8ae8', 1], [1, '#a8c8ff', 1]])}</defs>`
-          + `<path d="${poly(head.concat(tail.slice(1, 4)))}" fill="#2a1a08" opacity=".35" transform="translate(-1.6 ${lift})"/>`
-          + `<path d="${poly(head)}" fill="#ffc848" opacity=".85" filter="url(#${bl})"/>`
-          + `<path d="${poly(tail)}" fill="#b88a30" stroke="#2a1a06" stroke-width=".3"/><path d="${poly(head)}" fill="url(#${gn})" stroke="#0a1430" stroke-width=".35"/>`
-          + `<path d="M${P2(head[1])}L${P2(head[4])}" stroke="#e0ecff" stroke-width=".4" opacity=".8"/>`
+      fg += `<path d="${poly([Dp(0, 0), bear(NB - 25, CMP.ri), bear(NB + 25, CMP.ri)])}" fill="#ffd060" opacity=".22" style="mix-blend-mode:multiply"/></g>`;
+      // the needle: a long raised arrow of blued steel, darkest at the pivot and white-blue at its point, gold glow round
+      // the head — the end the eye reads; the tail the other way is short, dark and plain
+      { const head = [Dp(0, 0), bear(NB - 90, .46), bear(NB - 6, CMP.ri * .66), bear(NB - 17, CMP.ri * .62), bear(NB, CMP.ri * .97), bear(NB + 17, CMP.ri * .62), bear(NB + 6, CMP.ri * .66), bear(NB + 90, .46)];
+        const tail = [bear(NB - 90, .46), bear(NB + 180 + 12, CMP.ri * .3), bear(NB + 180, CMP.ri * .36), bear(NB + 180 - 12, CMP.ri * .3), bear(NB + 90, .46)];
+        const lift = 1.8, gn = nid('gn', u), bl = nid('nb', u), tip = bear(NB, CMP.ri * .97), root = Dp(0, 0);
+        fg += `<defs><filter id="${bl}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.8"/></filter>${linGrad(gn, root[0], root[1], tip[0], tip[1], [[0, '#0e1c3a', 1], [.45, '#1e3e88', 1], [.8, '#5a8ae8', 1], [1, '#e8f2ff', 1]])}</defs>`
+          + `<path d="${poly(head.concat(tail.slice(1, 4)))}" fill="#2a1a08" opacity=".4" transform="translate(-1.8 ${lift})"/>`
+          + `<path d="${poly(head)}" fill="#ffc848" opacity=".95" filter="url(#${bl})"/>`
+          + `<path d="${poly(tail)}" fill="#3a3e4a" stroke="#0a0c12" stroke-width=".3"/><path d="${poly(head)}" fill="url(#${gn})" stroke="#060c20" stroke-width=".45"/>`
+          + `<path d="M${P2(head[1])}L${P2(head[4])}" stroke="#ffffff" stroke-width=".5" opacity=".85"/>`
           + K.shadeSphere(u, root[0], root[1] - .3, 1.5, L, 'brass', { outline: .3 })
-          + K.localGlow(u, { x: tip[0], y: tip[1], color: '#ffe080', power: .6, radius: 11 }); }
+          + K.localGlow(u, { x: tip[0], y: tip[1], color: '#ffe080', power: .75, radius: 13 }); }
       // the glass: a cool film, the moon's sheen as a curved band on the far right, a sharp glint
       { const gl = ring(CMP.R - .55, B.h + .05), a0 = 300, a1 = 20, arc = []; for (let a = a0; a <= 360 + a1; a += 4) arc.push(bear(a, CMP.ri * .78));
         let d = `M${P2(arc[0])}`; for (const p of arc.slice(1)) d += `L${P2(p)}`;
