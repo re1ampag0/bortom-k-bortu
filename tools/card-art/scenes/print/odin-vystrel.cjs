@@ -197,7 +197,7 @@ module.exports = { name: 'Один выстрел', kind: 'deck', status: 'draft
     bg += K.localGlow(u, { x: 140.8, y: HZ - 2, color: '#ffc070', power: .45, radius: 6 });
     // her stern lanterns in the water: a short broken warm streak straight down under them, and her riding cable
     { const R = rng(31); for (let i = 0; i < 7; i++) { const y = HZ + 1.6 + i * 1.05, w = 2.6 - i * .22 + R() * 1.2; bg += `<path d="M${f(140.8 - w / 2 + (R() - .5) * 1.2)} ${f(y)}h${f(w)}" stroke="#ffc070" stroke-width=".4" opacity="${f(.6 - i * .07)}"/>`; }
-      bg += `<path d="M159.6 ${f(HZ - .6)}q2.4 1 4.4 1.9" stroke="#0c1018" stroke-width=".3" fill="none" opacity=".8"/>`; }
+      bg += `<path d="M165.2 80.6q2.6 1.6 4.8 4.4" stroke="#0c1018" stroke-width=".3" fill="none" opacity=".8"/>`; }
     // the surf: two lines of foam running up the sand, the wet sand mirroring the moon
     const shore = x => SHORE + 1.4 * Math.sin(x / 23) + .8 * Math.sin(x / 9 + 1);
     { const sg = nid('sd', u), wg = nid('ws', u), pts = []; for (let x = -4; x <= 204; x += 4) pts.push([x, shore(x)]);
