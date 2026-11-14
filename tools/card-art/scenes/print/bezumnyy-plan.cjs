@@ -15,7 +15,7 @@
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
 const H = require('./lib/people.cjs');
-const { tricorn, rimArc } = require('./lib/hat.cjs');
+const { tricorn } = require('./lib/hat.cjs');
 const { f, mix, nid, linGrad, radGrad, rng, lerp } = K;
 const { glow, gloom, motes, blurF } = PK;
 
@@ -104,11 +104,17 @@ module.exports = { name: 'Безумный план', kind: 'deck', status: 'dra
       look: [.45, .55], brow: 'sly', smile: .55, hair: { style: 'tied', color: '#2a1a10', ribbon: '#1a2a4a' }, hairColor: '#22140a', beard: 'goatee', moustache: true, iris: '#3a2416' });
     const hat = tricorn(u, ch, { r: CAP.r, color: '#1a1820', trim: '#c8a048', light: [.8, -.4], rim: '#b8ccff', y: -.6 });
     const sh = H.head34(u, { c: SAIL.c, r: SAIL.r, turn: .38, dir: -1, nod: 8, skin: 'dark', tone: SKIN, light: [-.85, -.35], warm: { color: '#ffb46a', op: .45 },
-      look: [-.6, .45], brow: 'up', eye: 'wide', mouth: .4, hair: { style: 'curly', color: '#5a3a1e' }, hairColor: '#4a2e18', stubble: true, iris: '#4a3a24' });
-    back += ch.svg + hat.back + hat.front + sh.svg + rimArc(sh, { r: SAIL.r * 1.12, light: [.3, 1], color: '#b8ccff', span: 60, opacity: .5 });
+      look: [-.6, .45], brow: 'up', eye: 'wide', mouth: .4, hair: { style: 'curly', color: '#5a3a1e' }, hairColor: '#4a2e18', iris: '#4a3a24' });
+    // a red kerchief knotted round the sailor's neck, under his chin (drawn before the head: the jaw over its middle,
+    // the band showing either side and the knot with its ends below the chin)
+    let kerch = '';
+    { const c = SAIL.c[0]; kerch = `<path d="M${c - 7.4} 69Q${c} 73.4 ${c + 7.4} 69L${c + 7.8} 72.4Q${c} 77.4 ${c - 7.8} 72.4Z" fill="#8a2a1c" stroke="#2a0806" stroke-width=".3"/>`
+        + `<path d="M${c - 6.6} 71.6Q${c} 75.6 ${c + 6.6} 71.6" stroke="#4a1008" stroke-width=".35" fill="none" opacity=".7"/>`
+        + `<path d="M${c + .4} 74.4l1.6 6.4l1.8 -4.6z" fill="#7a2418" stroke="#2a0806" stroke-width=".3"/><path d="M${c - .6} 74.6l-2.2 5.4l2.8 -1.8z" fill="#6a1e12" stroke="#2a0806" stroke-width=".3"/>`
+        + `<ellipse cx="${c}" cy="74.6" rx="1.7" ry="1.3" fill="#9a3222" stroke="#2a0806" stroke-width=".3"/><path d="M${c - 1} 74.1q1 -.6 2 0" stroke="#d86a4a" stroke-width=".3" fill="none" opacity=".7"/>`; }
+    back += ch.svg + hat.back + hat.front + kerch + sh.svg;
     { const e = sh.Q(.84, .36, -.1); back += `<circle cx="${f(e[0])}" cy="${f(e[1] + 1)}" r="1.1" fill="none" stroke="url(#brass${u})" stroke-width=".55"/>`; }
-    // a red kerchief knotted round the sailor's neck
-    { const c = SAIL.c[0]; back += `<path d="M${c - 6} 66Q${c} 71 ${c + 6} 66L${c + 6.6} 69Q${c} 74 ${c - 6.6} 69Z" fill="#8a2a1c" stroke="#2a0806" stroke-width=".3"/><path d="M${c + 2} 70l2 6l1.6 -4z" fill="#7a2418" stroke="#2a0806" stroke-width=".3"/>`; }
+
 
     // ——— the table: the top in perspective (planks running to the vanishing point), the edge catching the candle ———
     let tab = '';
@@ -206,7 +212,8 @@ module.exports = { name: 'Безумный план', kind: 'deck', status: 'dra
     // ——— light: the candle's glow, its warmth on both faces; the moon's cold through the window; the dark below ———
     let fg = K.localGlow(u, { x: FL.x, y: FL.y, color: '#ffc070', power: 1, radius: 26 })
       + glow(u, FL.x, FL.y + 10, 90, 50, '#ffb060', .14) + glow(u, 100, 30, 70, 30, '#a8c0ff', .06)
-      + motes(14, 60, 20, 100, 60, '#ffe0b0', 5)
+      // dust in the candle's light (none over the faces: there it read as specks on the skin)
+      + motes(14, 60, 20, 100, 60, '#ffe0b0', 5).replace(/<circle cx="([\d.]+)" cy="([\d.]+)"[^>]*\/>/g, (m, x, y) => [CAP, SAIL].some(h => Math.hypot(x - h.c[0], y - h.c[1]) < h.r * 1.25) ? '' : m)
       + gloom(u, 100, 120, 100, 280, .45) + gloom(u, 100, 60, 0, 60, .25) + gloom(u, 100, 60, 200, 60, .2);
     return [bg, back + tab + hidden + chart + arms + props + fg];
   } };

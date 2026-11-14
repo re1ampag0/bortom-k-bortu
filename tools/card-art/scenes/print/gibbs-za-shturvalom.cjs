@@ -3,7 +3,8 @@
 // spokes, the binnacle beside the wheel, a flask, the moon. The first round stood behind him and showed only two stiff
 // forearms; now we stand forward of the wheel and look aft at him, so the brief's helmsman shows: an older sailor with
 // grey mutton-chop sideburns joined to his moustache, a knitted watch cap, a neckerchief, a worn coat; his fists close
-// round two handles of the wheel (people.cjs hand3, the fingers round the turned grips), the elbows out. Behind him
+// round two handles of the wheel at ten and two (people.cjs hand3, the fingers round the turned grips), the upper arms
+// down along his body, the elbows low and a little out, the forearms forward and up; he leans in over the wheel. Behind him
 // the brief's find — dangerous water passed calmly: two black sea stacks close on both sides with surf at their feet,
 // a third rock further off, the moon's path on the sea between them; he keeps his eye on the near rock.
 // Fixed against the first round: the arms were flat tubes from the bottom corners with mitten hands — now jointed hands
@@ -21,7 +22,7 @@ const { glow, gloom, motes } = PK;
 const HZ = 86, MOON = { x: 150, y: 22 };
 const FIG = { k: 1.32, o: [100, 30] };              // the man and the wheel are drawn at 1, then scaled about o
 const WC = [100, 110], RIM = 33, RG = 43;            // the wheel: centre, rim radius, where the fists hold the handles
-const TH = [-162, -18];                              // the two handles he holds (10 spokes: one every 36°), just above 9 and 3 o'clock
+const TH = [-144, -36];                              // the two handles he holds (10 spokes: one every 36°), at about 10 and 2 o'clock
 const BIN = { x: 22, y: 124 };                       // the binnacle's lamp (in front of the wheel, lower left)
 const HEAD = { c: [100, 41], r: 12.6 };
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 18, color: '#dfe8ff', power: .85 },
@@ -87,7 +88,7 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
       bg += `<defs><clipPath id="${dc}"><rect x="-10" y="${y1 + 3}" width="220" height="${290 - y1}"/></clipPath></defs><g clip-path="url(#${dc})">${K.deck(u, L, { horizon: HZ, top: y1 + 3, bottom: 290, vx: 100, kind: 'oak', plank: 13, seed: 4 })}</g>`; }
 
     // ——— Gibbs: people.cjs figure() at the wheel ('helm': feet apart and braced, the weight on one leg, the fists on two
-    // handles at his chest, the elbows out), turned a little to our left, his eye on the near rock; middle shot (the
+    // handles at ten and two, the elbows down, leaning in), turned a little to our left, his eye on the near rock; middle shot (the
     // wheel and the glass hide him from the hips). His fair, weathered skin under the moon; the binnacle warms his face ———
     const FT = p => [FIG.o[0] + (p[0] - FIG.o[0]) * FIG.k, FIG.o[1] + (p[1] - FIG.o[1]) * FIG.k];   // the wheel's frame → the picture
     const GR = TH.map(t => FT([WC[0] + Math.cos(t * Math.PI / 180) * RG, WC[1] + Math.sin(t * Math.PI / 180) * RG]));   // the held handles' grips
@@ -100,10 +101,10 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
         let d = t - ang; while (d > 90) d -= 180; while (d < -90) d += 180; a += d; }
       return h; };
     const SIDE = { L: 0, R: 1 };   // dir −1: his far (left) arm reaches our left handle, the near (right) one our right
-    const figO = { L, pose: 'helm', at: [100, 272], h: 250, dir: -1, horizon: HZ, skin: H.skinTone('fair', SKIN), dim: .12, seed: 7, handsSeparate: true,
-      adjust: { torso: [-4, 6, -6], arms: { R: { to: [-.6, -1.3, .7], pole: [-.6, .3, -1] }, L: { to: [.55, -1.75, .7], pole: [.6, .3, -1] } } },
+    const figO = { L, pose: 'helm', at: [100, 265], h: 250, dir: -1, horizon: HZ, skin: H.skinTone('fair', SKIN), dim: .12, seed: 7, handsSeparate: true,
+      adjust: { torso: [-8, 13, -8], arms: { R: { to: [-.5, -1.45, 1.25], pole: [-.35, 1, -.15] }, L: { to: [.5, -1.6, 1.25], pole: [.35, 1, -.15] } } },
       dress: { shirt: '#cfc4aa', vest: '#7a2a1c', coat: '#3a281a', coatLen: 'knee', trousers: '#3a3028', boots: '#22160e', kerchief: '#7a2418', belt: '#2a1a10' },
-      head: { turn: .12, nod: -2, look: [-.55, -.05], brow: 'frown', smile: .12, hair: { style: 'short', color: '#9e9a92' }, hairColor: '#a29d94', beard: 'short', moustache: true, iris: '#3a4a5a',
+      head: { turn: .12, nod: 3, look: [-.55, -.1], brow: 'frown', smile: .12, hair: { style: 'short', color: '#9e9a92' }, hairColor: '#a29d94', beard: 'short', moustache: true, iris: '#3a4a5a',
         warm: { color: '#ffb46a', op: .32 } },
       hand: (u2, info) => fist(SIDE[info.side], info) };
     // the wrists reach till each fist's grip lies on its handle
@@ -131,15 +132,16 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
       face += `<path d="M${P2(Q(-.98, -.6, .1))}Q${P2(Q(-.9, -1.1, .1))} ${P2(Q(-.3, -1.3, .1))}" stroke="#c8d8f4" stroke-width=".6" fill="none" opacity=".6"/>`;
       { const e = Q(.84, .34, -.1); if (dp(.84, .34, -.1) > 0) face += `<circle cx="${f(e[0])}" cy="${f(e[1] + .8)}" r=".9" fill="none" stroke="url(#brass${u})" stroke-width=".45"/>`; } }
 
-    // ——— the flask on his belt, at his left hip (our right), seen between the spokes ———
-    let flask = '';
-    { const hp = fig.joints.L.hip[0] > fig.joints.R.hip[0] ? fig.joints.L.hip : fig.joints.R.hip, x = hp[0] + 3, y = hp[1] - 9;
-      flask = `<path d="M${f(x - 1)} ${f(y - 9)}q-1.6 4 0 7" stroke="#3a2a1a" stroke-width=".9" fill="none"/>`
-        + `<g transform="translate(${f(x)} ${f(y)}) rotate(-6)"><path d="M-5 -6Q-6 2 -4 7Q0 9 4 7Q6 2 5 -6Q0 -8 -5 -6Z" fill="url(#silver${u})" stroke="#2a3238" stroke-width=".4"/><rect x="-1.6" y="-9" width="3.2" height="3" fill="#5a6268" stroke="#2a3238" stroke-width=".3"/>`
-        + `<path d="M3.4 -3q1 4 0 8" stroke="#e8f0ff" stroke-width=".55" opacity=".7" fill="none"/><path d="M-3.6 -1q-.6 4 .2 6" stroke="#ffc888" stroke-width=".4" opacity=".4" fill="none"/></g>`; }
-    // the wheel sits in front of him: a shade on his coat behind it, so the oak stands out against the dark
+    // ——— the flask on his belt, at his left hip (our right), seen between the spokes below the three o'clock one ———
+    // the wheel sits in front of him: a shade on his coat behind it, so the oak stands out against the dark (light
+    // enough that his sleeves still read inside the rim)
     const WCp = FT(WC), RIMp = RIM * FIG.k;
-    { const g = nid('ws', u); flask += `<defs>${radGrad(g, WCp[0], WCp[1] - 4, RIMp * 1.45, [[0, '#05070c', .5], [.6, '#05070c', .42], [1, '#05070c', 0]])}</defs><circle cx="${f(WCp[0])}" cy="${f(WCp[1] - 4)}" r="${f(RIMp * 1.45)}" fill="url(#${g})"/>`; }
+    let flask = '';
+    { const g = nid('ws', u); flask += `<defs>${radGrad(g, WCp[0], WCp[1] - 4, RIMp * 1.45, [[0, '#05070c', .36], [.6, '#05070c', .3], [1, '#05070c', 0]])}</defs><circle cx="${f(WCp[0])}" cy="${f(WCp[1] - 4)}" r="${f(RIMp * 1.45)}" fill="url(#${g})"/>`; }
+    { const x = WCp[0] + 27, y = WCp[1] + 10;
+      flask += `<path d="M${f(x - 1.4)} ${f(y - 13)}q-2 5 0 8.6" stroke="#3a2a1a" stroke-width="1" fill="none"/>`
+        + `<g transform="translate(${f(x)} ${f(y)}) rotate(-6) scale(1.2)"><path d="M-5 -6Q-6 2 -4 7Q0 9 4 7Q6 2 5 -6Q0 -8 -5 -6Z" fill="url(#silver${u})" stroke="#2a3238" stroke-width=".4"/><rect x="-1.6" y="-9" width="3.2" height="3" fill="#5a6268" stroke="#2a3238" stroke-width=".3"/>`
+        + `<path d="M3.4 -3q1 4 0 8" stroke="#e8f0ff" stroke-width=".55" opacity=".8" fill="none"/><path d="M-3.6 -1q-.6 4 .2 6" stroke="#ffc888" stroke-width=".4" opacity=".45" fill="none"/></g>`; }
 
     // ——— the wheel: ten spokes running out into turned handles, the oak rim with a brass band, the brass hub ———
     let wheel = '';
@@ -151,11 +153,6 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
     for (let k = 0; k < 10; k++) { const t = TH[0] + k * 36, d = dirOf(t), a = [WC[0] + d[0] * 6, WC[1] + d[1] * 6], b = [WC[0] + d[0] * (RIM + 1), WC[1] + d[1] * (RIM + 1)];
       wheel += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.7, L, 'oak', { r1: 2.1, r2: 1.4, outline: .35, seed: k + 3 });
       if (k !== 0 && k !== 3) wheel += handle(t); }
-    // the king spoke (the one upright when the rudder is amidships, here just left of the top): a Turk's head of
-    // pale line whipped round its handle
-    { const t = TH[0] + 36, d = dirOf(t), nx = -d[1], ny = d[0];
-      for (let j = 0; j < 4; j++) { const c = [WC[0] + d[0] * (40.4 + j * .9), WC[1] + d[1] * (40.4 + j * .9)];
-        wheel += `<path d="M${f(c[0] - nx * 1.9 - d[0] * .5)} ${f(c[1] - ny * 1.9 - d[1] * .5)}L${f(c[0] + nx * 1.9 + d[0] * .5)} ${f(c[1] + ny * 1.9 + d[1] * .5)}" stroke="${j % 2 ? '#a8987a' : '#e0d4b8'}" stroke-width=".75" stroke-linecap="round"/>`; } }
     { const g = K.mat('oak', L, { form: 'cyl', x1: WC[0] - RIM, y1: WC[1], x2: WC[0] + RIM, y2: WC[1], r: RIM, u });
       const arc = (r, a0, a1) => { const p0 = [WC[0] + Math.cos(a0 * Math.PI / 180) * r, WC[1] + Math.sin(a0 * Math.PI / 180) * r], p1 = [WC[0] + Math.cos(a1 * Math.PI / 180) * r, WC[1] + Math.sin(a1 * Math.PI / 180) * r];
         return `M${f(p0[0])} ${f(p0[1])}A${r} ${r} 0 ${Math.abs(a1 - a0) > 180 ? 1 : 0} 1 ${f(p1[0])} ${f(p1[1])}`; };
