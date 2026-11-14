@@ -148,8 +148,11 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     // right topmast shrouds whole; the left ones parted: the lower ends whip up from the top, the upper ones hang
     shr += line('M126 129L102 64M121 129L101.6 64M116 129L101.2 64', .5, '#100e0c');
     for (let k = 0; k < 6; k++) shr += line(`M${f(124 - k * .5)} ${f(124 - k * 11)}L${f(110 - k * 1.2)} ${f(123 - k * 11)}`, .3, '#100e0c', .8);
-    shr += line('M76 129L84 112q2 -3 -1 -5q-3 -1 -2 3M81 129L86 116q1.6 -4 4 -3', .5, '#100e0c');
-    shr += line('M99 64L92 78q-3 6 -8 4q-3 -1 -1 -4M99.4 64L95 84q-1 6 -5 8', .5, '#100e0c');
+    // (whipping S-curves, each parted end frayed into a little brush of strands — not curled hooks)
+    shr += line('M76 129L83 113q1.5 -3.5 -1.2 -6.5q-2.4 -2.6 -1 -6M81 129L86 116q1.8 -4.4 4.6 -5.2q2.6 -.8 3.4 -3.6', .5, '#100e0c');
+    shr += line('M99 64L92 78q-2.4 5 -6.4 6.8q-3 1.4 -4.4 4.6M99.4 64L95 84q-1 6 -5 8', .5, '#100e0c');
+    for (const [x, y, a] of [[80.8, 100.5, -100], [94, 107.2, -60], [81.2, 89.4, 110], [90, 92, 140]]) for (let k = -1; k <= 1; k++) {
+      const r = (a + k * 22) * Math.PI / 180, l = 1.4 + (k === 0 ? .6 : 0); shr += line(`M${x} ${y}l${f(Math.cos(r) * l)} ${f(Math.sin(r) * l)}`, .25, '#3a3028', .9); }
     // the braces and the lifts of the course and the topgallant
     shr += line('M99 22L50 53M99 22L152 53M101 66L214 151', .4, '#14110e', .85);
     shr += line('M150 54L210 34M52 54L-10 38', .4, '#14110e', .8);
@@ -183,12 +186,12 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     // scraps of canvas torn out by the shot, fluttering down along its track (nothing burns: chain shot only tears)
     { const Rs = rng(91);
       for (const [cx, cy, w, rot] of [[38, 100, 4.2, 30], [58, 108, 3.2, -24], [30, 116, 3.6, 62], [70, 120, 2.6, 10], [44, 82, 2.4, -50]]) {
-        const pts = [[-w, -w * .45], [-w * .2, -w * .7], [w, -w * .35], [w * .7, w * .5], [-w * .5, w * .55]].map(([x, y]) => [x + (Rs() - .5) * w * .3, y + (Rs() - .5) * w * .3]);
+        const pts = [[-w, -w * .25], [-w * .1, -w * .5], [w * 1.1, -w * .2], [w * .6, w * .3], [-w * .7, w * .32]].map(([x, y]) => [x + (Rs() - .5) * w * .3, y + (Rs() - .5) * w * .3]);
         const d = 'M' + pts.map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'Z';
-        fall += `<g transform="translate(${cx} ${cy}) rotate(${rot})"><path d="${d}" fill="#a8a69a" stroke="#1a1c22" stroke-width=".25"/>`
+        fall += `<g transform="translate(${cx} ${cy}) rotate(${rot})"><path d="${d}" fill="#6e6e68" stroke="#1a1c22" stroke-width=".25"/>`
           + `<path d="M${f(pts[0][0])} ${f(pts[0][1])}L${f(pts[1][0])} ${f(pts[1][1])}L${f(pts[2][0])} ${f(pts[2][1])}" stroke="#f4eed8" stroke-width=".35" fill="none" opacity=".7"/>`
           + `<path d="M${f(-w * .6)} ${f(-w * .1)}L${f(w * .7)} ${f(-w * .05)}" stroke="#4a4c4e" stroke-width=".25" opacity=".6"/>`
-          + `<path d="M${f(pts[3][0])} ${f(pts[3][1])}q${f(.6)} ${f(1.2)} ${f(.2)} ${f(2.2)}M${f(pts[4][0])} ${f(pts[4][1])}q${f(-.4)} ${f(1)} ${f(.3)} ${f(1.8)}" stroke="#cfcab4" stroke-width=".22" fill="none" opacity=".8"/></g>`; } }
+          + `<path d="M${f(pts[3][0])} ${f(pts[3][1])}L${f(pts[4][0])} ${f(pts[4][1])}" stroke="#bdb8a4" stroke-width=".5" stroke-dasharray=".5 .4" fill="none" opacity=".8"/></g>`; } }
     // the block (falling, tumbling) with a bit of rope, a second smaller one further down
     for (const [bx, by, s, rot] of [[86, 116, 1, 28], [56, 142, .7, -40]]) {
       fall += `<g transform="translate(${bx} ${by}) rotate(${rot}) scale(${s})"><rect x="-3.4" y="-4.4" width="6.8" height="8.8" rx="3" fill="url(#oak${u})" stroke="#140a04" stroke-width=".5"/><circle r="1.5" fill="url(#iron${u})" stroke="#0a0a0a" stroke-width=".3"/><path d="M-2.6 -3.8q2.6 -1.4 5.2 0" stroke="#e0c090" stroke-width=".4" fill="none" opacity=".6"/></g>`

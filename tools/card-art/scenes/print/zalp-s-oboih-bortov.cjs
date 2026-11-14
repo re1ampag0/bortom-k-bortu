@@ -64,8 +64,8 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
     for (const [e, d] of [[EN[0], 1], [EN[1], -1]]) bg += hit(u, L, { x: e.hit[0], y: e.hit[1], s: 1.6, dir: -d, seed: 5 + d, wl: e.y + .4 });
 
     // ——— the smoke of both broadsides: out of each side and up, drifting away into the picture with the wind
-    bg += K.smoke(u, L, { x: 58, y: 104, w: 30, h: 44, wind: .35, seed: 6, opacity: .7, glow: { color: '#ffb050', power: .3 } })
-      + K.smoke(u, L, { x: 142, y: 104, w: 30, h: 44, wind: -.35, seed: 7, opacity: .7, glow: { color: '#ffb050', power: .3 } });
+    bg += K.smoke(u, L, { x: 58, y: 104, w: 30, h: 44, wind: .35, seed: 6, opacity: .7, color: '#8a8c94', glow: { color: '#ffb050', power: .3 } })
+      + K.smoke(u, L, { x: 142, y: 104, w: 30, h: 44, wind: -.35, seed: 7, opacity: .7, color: '#8a8c94', glow: { color: '#ffb050', power: .3 } });
     // the balls on their way: a soft streak from each muzzle to its target
     { const tb = nid('tb', u); bg += `<defs><filter id="${tb}" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".7"/></filter></defs>`;
       for (const [a, b] of [[[48, 106.4], [31, 110.6]], [[152, 106.4], [169, 111.6]]]) { const g = nid('tg', u); bg += `<defs>${linGrad(g, a[0], a[1], b[0], b[1], [[0, '#f0e6d0', .1], [1, '#f0e6d0', .7]])}</defs><path d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}" stroke="url(#${g})" stroke-width="2.4" stroke-linecap="round" filter="url(#${tb})"/>`; } }
@@ -120,8 +120,9 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
       // the wales and the gun deck's line on the sides; the guns run out on both sides
       for (const [y, w] of [[94, 1.2], [104.5, 1.6], [114, 1.2]]) hull += ln(`M${X - 32} ${y}Q${X} ${y + 2} ${X + 32} ${y}`, w, '#07080c', .9) + ln(`M${X - 32} ${y - .8}Q${X - 26} ${y - .3} ${X - 22} ${y - .1}`, .4, '#a8b8d4', .6);
       // each barrel out of its port: the red inside of the raised lid edge-on against the side, the barrel, its swelled mouth
+      let guns = '';
       for (const g of GUN) { const k = g.k, x0 = g.e - g.sd * 1.4 * k;
-        hull += `<rect x="${f(g.e - (g.sd > 0 ? 0 : 1.3 * k))}" y="${f(g.y - 3.6 * k)}" width="${f(1.3 * k)}" height="${f(3.4 * k)}" fill="#7a1e18" opacity=".85"/>`
+        guns += `<rect x="${f(g.e - (g.sd > 0 ? 0 : 1.3 * k))}" y="${f(g.y - 3.6 * k)}" width="${f(1.3 * k)}" height="${f(3.4 * k)}" fill="#7a1e18" opacity=".85"/>`
           + cyl(x0, g.y, g.x, g.y, 1.3 * k, 1.05 * k, 'iron') + `<ellipse cx="${f(g.x)}" cy="${f(g.y)}" rx="${f(.5 * k)}" ry="${f(1.4 * k)}" fill="#1a1a1e"/>`; }
       // the stern: a flat face from the taffrail to the counter, narrower than the hull, gilded carving
       const tr = `M${X - 22} 80L${X + 22} 80L${X + 20} 112Q${X + 12} 120 ${X} 121Q${X - 12} 120 ${X - 20} 112Z`;
@@ -144,7 +145,8 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
       hull += ln(`M${X - 15} 108.6H${X + 15}`, 2.2, '#3a2c18') + ln(`M${X - 15} 107.6H${X + 15}`, .5, '#d8a848', .8);
       // the rudder down the middle into the water, the moon's rim on the left side of the hull
       hull += `<path d="M${X - 2} 110h4l.6 ${WL - 110}h-5.2z" fill="#121216" stroke="#050506" stroke-width=".35"/><path d="M${X - 1.4} 112v${WL - 113}" stroke="#4a5068" stroke-width=".4"/>`
-        + ln(`M${X - 25} 84Q${X - 33} 96 ${X - 33.5} 106Q${X - 33} 120 ${X - 26} ${WL}`, .9, '#c4d4ec', .65);
+        + ln(`M${X - 25} 84Q${X - 33} 96 ${X - 33.5} 106Q${X - 33} 120 ${X - 26} ${WL}`, .9, '#c4d4ec', .65)
+        + guns;   // the barrels over the rim: it runs behind them, not across
       hull += K.localGlow(u, { x: X, y: 94, color: '#ffb050', power: .45, radius: 26 }, { core: false }); }
 
     // ——— the fire out of both sides at the same instant: from every gun run out, a flash at its own muzzle
@@ -152,7 +154,7 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
     // the smoke first: out of each muzzle a train of billows rolling out level towards its enemy, swelling and
     // thinning as it goes, lit warm only next to the fire, cooler grey further out, a darker underside
     { const pg = nid('pp', u), pb = nid('pb', u), pd = nid('pd', u);
-      fire += `<defs><radialGradient id="${pg}" cx=".42" cy=".36" r=".64"><stop offset="0" stop-color="#f4f0ea"/><stop offset=".4" stop-color="#d8d4ce" stop-opacity=".95"/><stop offset=".78" stop-color="#9a9ca6" stop-opacity=".88"/><stop offset="1" stop-color="#6a6e7c" stop-opacity="0"/></radialGradient>`
+      fire += `<defs><radialGradient id="${pg}" cx=".42" cy=".36" r=".64"><stop offset="0" stop-color="#d2cec8"/><stop offset=".4" stop-color="#b2aea8" stop-opacity=".95"/><stop offset=".78" stop-color="#7a7c86" stop-opacity=".9"/><stop offset="1" stop-color="#4e525e" stop-opacity="0"/></radialGradient>`
         + `<radialGradient id="${pd}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#2a2e3c" stop-opacity=".5"/><stop offset="1" stop-color="#2a2e3c" stop-opacity="0"/></radialGradient><filter id="${pb}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".6"/></filter></defs>`;
       for (const sd of [-1, 1]) { let sh = '', bl = '';
         for (const g of GUN.filter(q => q.sd === sd)) { const Rp = rng(40 + g.i * 7 + sd), n = 9;
@@ -162,7 +164,7 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
         fire += sh + `<g filter="url(#${pb})">${bl}</g>`; } }
     // the flashes: each springs from its gun's mouth — a ragged ball of fire sitting on the muzzle (white heart,
     // gold, orange, a dark-red rim) and a white-hot tongue thrown out sideways towards the enemy; its own shape per gun
-    for (const g of GUN) { const k = g.k * 1.9, sd = g.sd, Rf = rng(60 + g.i * 5 + (sd > 0 ? 20 : 0)), fb = nid('fb', u), fw = nid('fw', u), fh = nid('fh', u);
+    for (const g of GUN) { const k = g.k * 2.66, sd = g.sd, Rf = rng(60 + g.i * 5 + (sd > 0 ? 20 : 0)), fb = nid('fb', u), fw = nid('fw', u), fh = nid('fh', u);
       const cx = g.x + sd * 2.4 * k, cy = g.y, n = 6 + (g.i + (sd > 0)) % 2, tw = Rf() * Math.PI;
       const pts = Array.from({ length: n }, (_, j) => { const a = j / n * Math.PI * 2 + tw + (Rf() - .5) * .5, rr = (2.4 + Rf() * 1.3) * k; return [cx + Math.cos(a) * rr * 1.1, cy + Math.sin(a) * rr * .85]; });
       const mid = (p, q) => [cx + ((p[0] + q[0]) / 2 - cx) * .74, cy + ((p[1] + q[1]) / 2 - cy) * .74];
@@ -178,10 +180,11 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
         + K.localGlow(u, { x: g.x + sd * 3 * k, y: g.y, color: '#ffc070', power: .5 * g.k, radius: 11 * k }); }
     // the flashes' light: on her quarters next to the guns, and broken on the water under each side
     for (const sd of [-1, 1]) { const Rw = rng(sd + 77);
-      fire += K.localGlow(u, { x: X + sd * 30, y: 99, color: '#ffb050', power: .35, radius: 14 }, { core: false })
-        + K.localGlow(u, { x: X + sd * 44, y: 125, color: '#ffb050', power: .42, radius: 22 }, { squash: .3, core: false });
-      for (let j = 0; j < 7; j++) { const y = 119 + j * 1.6 + Rw() * .6, x = X + sd * (37 + Rw() * 12 + j * .6), l = 1.2 + Rw() * 2.4 - j * .1;
-        fire += `<path d="M${f(x - l / 2)} ${f(y)}h${f(l)}" stroke="#ffc060" stroke-width=".5" opacity="${f(.5 - j * .04)}" stroke-linecap="round"/>`; } }
+      fire += K.localGlow(u, { x: X + sd * 29, y: 98, color: '#ffb050', power: .5, radius: 18 }, { squash: .8, core: false })
+        + K.localGlow(u, { x: X + sd * 36, y: 97, color: '#ffb050', power: .3, radius: 26 }, { squash: .55, core: false })
+        + K.localGlow(u, { x: X + sd * 42, y: 125, color: '#ffb050', power: .55, radius: 28 }, { squash: .28, core: false });
+      for (let j = 0; j < 10; j++) { const y = 118 + j * 1.3 + Rw() * .6, x = X + sd * (37 + Rw() * 12 + j * .6), l = 1.2 + Rw() * 2.4 - j * .1;
+        fire += `<path d="M${f(x - l / 2)} ${f(y)}h${f(l)}" stroke="#ffc060" stroke-width=".55" opacity="${f(.6 - j * .035)}" stroke-linecap="round"/>`; } }
 
     // ——— the water at her stern: foam at the waterline, the wake spreading back towards us
     let wake = K.foam(u, { x: X, y: WL + .4, w: 58, h: 1.8, seed: 3, L });
