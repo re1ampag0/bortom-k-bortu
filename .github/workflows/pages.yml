@@ -36,6 +36,35 @@ jobs:
         env:
           VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
       - run: npm run build:server
+      # The print-and-play set (docs/tasks/print-kit.md): PDFs as the artifact print-kit and on the site in dist/print/.
+      # A failure here fails a pull request's check, but does not hold back the deployment of the site from main.
+      - uses: actions/cache@v4
+        with:
+          path: out/print/cache
+          key: print-cache-${{ hashFiles('tools/card-art/**', 'tools/print/**', 'data/game-data.json', 'src/ui/game/art/**') }}
+          restore-keys: print-cache-
+      - name: Print kit
+        id: print
+        continue-on-error: ${{ github.event_name != 'pull_request' }}
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y poppler-utils
+          npm run print -- --check --check-pdf
+          npx vite-node tools/print/check-text.ts
+          mkdir -p dist/print
+          cp out/print/*.pdf out/print/index.html dist/print/
+          cp -r out/print/obrazcy dist/print/
+          ls -la dist/print dist/print/obrazcy
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: print-kit
+          path: |
+            out/print/*.pdf
+            out/print/obrazcy/
+          compression-level: 0
+          retention-days: 30
+          if-no-files-found: ignore
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'
         with:

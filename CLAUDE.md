@@ -45,6 +45,7 @@
 - `npm test` — Vitest; один файл: `npx vitest run tests/<file>.test.ts`.
 - `npm run typecheck`, `npm run build`, `npm run build:server`.
 - `npm run sim -- --games 3000 --seed 1` — баланс (Пираты 46,5 %).
+- `npm run print` — печатный набор PDF в `out/print/` (не в git); `tools/print/README.md`. В облаке — `CHROMIUM_PATH=/opt/pw-browsers/chromium`.
 - `npm run e2e` — Playwright; кадры — в `e2e-shots/` (не коммитится).
 - `npm run lan` — игра по Wi-Fi. Развёртывание — `DEPLOY.md`.
 - CI: `.github/workflows/pages.yml` — проверки на каждый PR, выкладка после слияния в `main`.

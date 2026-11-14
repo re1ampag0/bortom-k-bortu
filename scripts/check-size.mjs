@@ -4,7 +4,7 @@
 import { execFileSync } from 'node:child_process';
 import { statSync } from 'node:fs';
 
-const FORBIDDEN = ['docs/screenshots/', 'docs/measurements/', 'report/', 'e2e-shots/', 'test-results/'];
+const FORBIDDEN = ['docs/screenshots/', 'docs/measurements/', 'report/', 'out/', 'e2e-shots/', 'test-results/'];
 const MAX_FILE = 5 * 1024 * 1024; // one file
 const MAX_DOCS = 100 * 1024 * 1024; // the whole docs/ folder
 

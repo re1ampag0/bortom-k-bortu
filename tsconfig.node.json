@@ -20,6 +20,7 @@
     "vite.server.config.ts",
     "playwright.config.ts",
     "scripts/**/*.ts",
+    "tools/print/**/*.ts",
     "e2e/**/*.ts",
     "server/**/*.ts",
     "tests/server*.test.ts"

@@ -4,6 +4,9 @@
 
 - Сайт: https://re1ampag0.github.io/bortom-k-bortu/ — игра на одном экране, против ботов, матч ботов.
 - Игра по сети (каждый со своего устройства): **[DEPLOY.md](DEPLOY.md)** — по Wi-Fi с ноутбука (`npm run lan`) или на своём сервере.
+- **Игра на столе (распечатать и вырезать):** https://re1ampag0.github.io/bortom-k-bortu/print/ — PDF для цветного принтера, A4,
+  масштаб 100 %; начните с `00-kak-pechatat.pdf`. Собирается командой `npm run print` (`tools/print/README.md`); до слияния
+  ветки PDF лежат в проверке PR: вкладка Checks → «Check and publish» → Summary → внизу Artifacts → `print-kit`.
 - Правила — `RULES.md`, техническое задание — `docs/TZ.md`, ход работы — `docs/PROGRESS.md`.
 
 Для разработчиков: `npm ci`, `npm run dev`, `npm test`, `npm run e2e`, `npm run lan` (команды — в `CLAUDE.md`).
