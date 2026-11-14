@@ -162,7 +162,7 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
     const cc = [cx, cy + 1.6], rc = ri * .96, cid = nid('cc', u);
     fg += `<defs><clipPath id="${cid}"><ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(rc)}" ry="${f(rc * k)}"/></clipPath></defs>`;
     { const pc = nid('pc', u); let d = `<defs>${radGrad(pc, cc[0] - 6, cc[1] + 2, rc * 1.1, [[0, '#fff2cc', 1], [.55, '#e8d6a8', 1], [1, '#a88a58', 1]])}</defs><ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(rc)}" ry="${f(rc * k)}" fill="url(#${pc})"/>`;
-      // the rose in the plane of the card (squashed), north at twelve o'clock (the far side): the red point and the lily
+      // the rose in the plane of the card (squashed), north at twelve o'clock (the far side): only the red N marks it
       const nA = -90, G = `<g transform="translate(${f(cc[0])} ${f(cc[1])}) scale(1 ${k})">`;
       let rose = '';
       for (let i = 0; i < 72; i++) { const a = i / 72 * Math.PI * 2, r0 = rc * .97, r1 = rc * (i % 6 ? .9 : .84); rose += `<path d="M${f(Math.cos(a) * r0)} ${f(Math.sin(a) * r0)}L${f(Math.cos(a) * r1)} ${f(Math.sin(a) * r1)}" stroke="#4a3018" stroke-width="${i % 6 ? .3 : .5}"/>`; }
@@ -170,7 +170,7 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
       const pt = (a, r, w) => { const t = a * Math.PI / 180, n = t + Math.PI / 2; return [[Math.cos(t) * r, Math.sin(t) * r], [Math.cos(n) * w, Math.sin(n) * w], [-Math.cos(n) * w, -Math.sin(n) * w]]; };
       for (let i = 0; i < 4; i++) { const [tp, l, r] = pt(nA + 45 + i * 90, rc * .55, 2.4);
         rose += `<path d="M0 0L${f(l[0])} ${f(l[1])}L${f(tp[0])} ${f(tp[1])}Z" fill="#8a6a3a"/><path d="M0 0L${f(r[0])} ${f(r[1])}L${f(tp[0])} ${f(tp[1])}Z" fill="#d8c08a"/>`; }
-      for (let i = 0; i < 4; i++) { const a = nA + i * 90, [tp, l, r] = pt(a, rc * .8, 3.4), col = i === 0 ? ['#7a1a12', '#c83a2a'] : ['#2a2a3a', '#7a7a8a'];
+      for (let i = 0; i < 4; i++) { const a = nA + i * 90, [tp, l, r] = pt(a, rc * .8, 3.4), col = i === 0 ? ['#8a6a3a', '#d8c08a'] : ['#2a2a3a', '#7a7a8a'];   // north as the other petals (no red pointer: the needle is the only arrow)
         rose += `<path d="M0 0L${f(l[0])} ${f(l[1])}L${f(tp[0])} ${f(tp[1])}Z" fill="${col[0]}"/><path d="M0 0L${f(r[0])} ${f(r[1])}L${f(tp[0])} ${f(tp[1])}Z" fill="${col[1]}"/>`; }
       // a red N over north (in the card's plane), on a cream patch over the ticks, so the north reads at a glance
       { const t = nA * Math.PI / 180, x = Math.cos(t) * rc * .9, y = Math.sin(t) * rc * .9;

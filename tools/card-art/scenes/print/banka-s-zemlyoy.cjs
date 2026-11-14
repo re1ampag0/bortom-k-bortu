@@ -24,7 +24,7 @@ const JK = .76;                                     // …drawn at JK round his 
 const MAN = [20, 4];                                // the man (and the jar in his hands) is drawn round x 100, moved by MAN
 const JAR = { x: 100, y: 115, w: JAR0.w * JK, h: JAR0.h * JK };   // the jar in the man's frame
 const HEAD = { c: [100, 40.4], r: 13.8 };
-const TW = .88;                                     // the torso drawn broad round x 100, narrowed to TW
+const TW = .85;                                     // the torso drawn broad round x 100, narrowed to TW
 const light = { time: 'fog', haze: .7, key: { type: 'moon', x: 66, y: 22, el: 26, color: '#c8f0dc', power: .75 }, fill: { color: '#3a6a5c', power: .46 },
   rim: { az: -20, color: '#d8fff0', power: .55 }, locals: [{ x: JAR.x + MAN[0], y: JAR.y + MAN[1] - 22, color: '#ffc880', power: .55, radius: 40 }] };
 const skel = { horizon: HZ, eye: 3, light: 'the moon in the green fog upper left (cold key) + the jar\'s faint warm glow (local, on his hands and face from below)', items: [
@@ -146,14 +146,20 @@ module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'dr
     const jr = JAR.w / 2, hs = 2, HB = { pose: 'wrap', s: hs, r: jr / hs, tone: SKIN, light: LT, sw: .3, roll: 0 };
     const hR = PP.hand3(u, { ...HB, a: 0, pitch: 58, m: 1, grip: [JAR.x, 91] });       // his right hand: on the jar's left side
     const hL = PP.hand3(u, { ...HB, a: 180, pitch: 58, m: -1, grip: [JAR.x, 107] });   // his left hand: on its right side, lower
-    // the arms: shirt sleeves, shoulder → elbow (in at his side) → the wrist at the jar's side; a cuff
-    // (the elbow bent round in two points, so the sleeve turns as cloth does, without a corner)
-    const sleeve = (s0, el, w, lt, rimOp, seed) => PP.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .5) + lt * .8, lerp(s0[1], el[1], .5)], [lerp(el[0], s0[0], .14), lerp(el[1], s0[1], .14)],
-      [lerp(el[0], w[0], .22), lerp(el[1], w[1], .22) + 1.2], [lerp(el[0], w[0], .6), lerp(el[1], w[1], .6) + .6], w],
-      w: [13, 12.2, 11.6, 11, 9.8, 8.4], tone: shirt, lit: lt, rim: '#d8fff0', rimSide: lt, rimOp, seed, drapes: 2, foldW: .9, sw: .4, capA: true,
-      cuff: { from: .84, k: 1.08, tone: { lit: shirt.lit, half: mix(shirt.half, shirt.shadow, .2), shadow: shirt.shadow, outline: shirt.outline } } });
+    // the arms: the shirt sleeve over the upper arm, shoulder → the elbow pressed in at his side (at the jar's foot),
+    // narrowing 10 → 7; then the sleeved forearm up and in to the wrist at the jar's side, the cuff at the wrist. Two
+    // pieces (the forearm over the upper arm's end, its round end the elbow), so the bend gets no fan of creases
+    const sleeve = (s0, el, w, lt, rimOp, seed) => {
+      const ct = { lit: shirt.lit, half: mix(shirt.half, shirt.shadow, .2), shadow: shirt.shadow, outline: shirt.outline };
+      const up = PP.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .5) + lt * .8, lerp(s0[1], el[1], .5)], el], w: [10, 8.8, 7],
+        tone: shirt, lit: lt, rim: '#d8fff0', rimSide: lt, rimOp, seed, tension: true, drapes: 1, foldW: .8, sw: .4, capA: true });
+      const fo = PP.cloth(u, { spine: [el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5)], w], w: [7, 6.6, 6.2],
+        tone: shirt, lit: lt, rim: '#d8fff0', rimSide: lt, rimOp: rimOp * .7, seed: seed + 10, tension: true, drapes: 1, foldW: .8, sw: .4,
+        capA: true, roundA: .8, cuff: { from: .8, k: 1.1, tone: ct } });
+      // the shade of the forearm on the sleeve below the elbow
+      return up + `<ellipse cx="${f(el[0])}" cy="${f(el[1] - 2)}" rx="3.4" ry="2.2" fill="${shirt.shadow}" opacity=".35"/>` + fo; };
     const sx = d => 100 + d * TW;
-    man += sleeve([sx(-31), 74], [sx(-36), 104], hR.wrist, -1, .6, 3) + sleeve([sx(31), 74], [sx(38), 110], hL.wrist, 1, .25, 4);
+    man += sleeve([sx(-31), 74], [sx(-33), 115], hR.wrist, -1, .6, 3) + sleeve([sx(31), 74], [sx(34), 119], hL.wrist, 1, .25, 4);
 
     // ——— the head: a weathered face turned to his right (our left), eyes on the ghost ship; lit from below by the jar ———
     const hd = PP.head34(u, { c: HEAD.c, r: HEAD.r, turn: .34, dir: -1, nod: -1, skin: 'dark', tone: SKIN, light: LT, warm: { color: '#ffb868', op: .32 },
