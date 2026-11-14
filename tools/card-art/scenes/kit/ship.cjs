@@ -128,14 +128,18 @@ const SPECS = {
   // Round 2 (the user): the stern and the bow raised more (file 01: a strong sheer — the stern rail ~0.44 L, the bow
   // ~0.37 L, the waist kept), TWO even rows of open ports with the guns out along the curve of the side (aligned, ribs
   // between them, no lids hanging), ribs along the whole side, weed hanging from the rails, the rags denser.
+  // Round 3 (the user: file 01 shows the bow to the RIGHT, ours looks left — compare it mirrored): ONE stern, high and
+  // wide (the quarterdeck from 0.64 L, three tiers of the quarter gallery, overhanging 0.12 L); the bow LOW and sharp —
+  // the rail rises from the waist only a little and smoothly (~0.05 L, a short low forecastle), no high wall; a long
+  // broken jagged head (0.30 L ahead of the stem) and the bowsprit stick out forward and up (22°); the waist long and low.
   dutch: {
-    len: 90, free: 20.6, sheer: [7.8, 7.5], tumble: 2.6, bow: [6.5, 2.1], over: 9, counter: .62, run: 1,
-    fc: [-6, 5.4], tiers: [[17, 4.8], [32, 4]], taff: .6, tw: [2.6, 6], openRail: 1,
+    len: 90, free: 20.6, sheer: [2, 7.5], tumble: 2.6, bow: [7.5, 2.4], over: 11, counter: .62, run: 1,
+    fc: [-24, 1.6], tiers: [[13, 5], [29, 4.2]], taff: .6, tw: [2.8, 6.4], openRail: 1,
     hull: 'ship-drown', trim: 'ship-drown', gilt: 0, wales: [4.2, 10.3, 16.6, 19.2], bands: [], growth: true, ribs: [1.7, 2.6], ribK: 1, railWeed: 2, crest: [11, 12], beakJag: 1,
     pear: { h: 6.4, lo: 5, hu: 16, bow: 6, aft: 7, k: 1 },   // step 2, the verdict: a pear in profile — the belly under the ports, the side tumbling in to the rail
     ports: [{ h: 7.4, n: 11, x0: -33, x1: 27, w: 2.4, hk: 1.2 }, { h: 13.4, n: 11, x0: -33, x1: 27, w: 2.4, hk: 1.2, off: 0 }], deckPorts: [0, 0, 0], askew: 0,
-    gallery: [6, 2, 3.6], galRoof: 3, tierWin: 1, lantern: 0,
-    beak: [19, 10.5, 10], sprit: { len: 33, steeve: 17 }, jibs: 1,
+    gallery: [8.5, 3, 3.3], galRoof: 3, tierWin: 1, lantern: 0,
+    beak: [27, 9.5, 11], sprit: { len: 37, steeve: 22 }, jibs: 1,
     masts: [{ x: -27, H: 72, n: 3, k: 1.08, Q: [.6, .82, .95] }, { x: 4.5, H: 72, n: 3, k: 1.14, Q: [.6, .82, .95] }, { x: 31.5, H: 60, n: 2, k: .78, aft: 'lateen', lat: [.15, .085, .8], Q: [.6, .86] }], topK: 2.2, topRound: 1,
     spar: 'ship-ghost', yard: 'ship-ghost', sail: 'ship-sail-rot', cond: 'strips', stripDense: 2, broken: 1, flag: 'pennant', pennant: 'ship-flag-black',
     beam: .25, draft: 9.5, bilge: 3, inner: 'ship-ghost', deckK: 'ship-ghost', bottom: 'foul',   // the Vasa: 11.7 m to ~47.5 m at the waterline; a pear: full below
