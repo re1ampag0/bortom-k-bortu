@@ -64,8 +64,8 @@ module.exports = { name: 'Залп с обоих бортов', kind: 'deck', st
     for (const [e, d] of [[EN[0], 1], [EN[1], -1]]) bg += hit(u, L, { x: e.hit[0], y: e.hit[1], s: 1.6, dir: -d, seed: 5 + d, wl: e.y + .4 });
 
     // ——— the smoke of both broadsides: out of each side and up, drifting away into the picture with the wind
-    bg += K.smoke(u, L, { x: 58, y: 104, w: 30, h: 44, wind: .35, seed: 6, opacity: .7, color: '#8a8c94', glow: { color: '#ffb050', power: .3 } })
-      + K.smoke(u, L, { x: 142, y: 104, w: 30, h: 44, wind: -.35, seed: 7, opacity: .7, color: '#8a8c94', glow: { color: '#ffb050', power: .3 } });
+    bg += K.smoke(u, L, { x: 58, y: 104, w: 30, h: 44, wind: .35, seed: 6, opacity: .7, glow: { color: '#ffb050', power: .3 } })
+      + K.smoke(u, L, { x: 142, y: 104, w: 30, h: 44, wind: -.35, seed: 7, opacity: .7, glow: { color: '#ffb050', power: .3 } });
     // the balls on their way: a soft streak from each muzzle to its target
     { const tb = nid('tb', u); bg += `<defs><filter id="${tb}" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".7"/></filter></defs>`;
       for (const [a, b] of [[[48, 106.4], [31, 110.6]], [[152, 106.4], [169, 111.6]]]) { const g = nid('tg', u); bg += `<defs>${linGrad(g, a[0], a[1], b[0], b[1], [[0, '#f0e6d0', .1], [1, '#f0e6d0', .7]])}</defs><path d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}" stroke="url(#${g})" stroke-width="2.4" stroke-linecap="round" filter="url(#${tb})"/>`; } }
