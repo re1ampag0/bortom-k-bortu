@@ -126,5 +126,13 @@ module.exports = { sheets: {
     ['stand', 'walk', 'haul', 'helm'].forEach((p, i) => { const y = i * 360, body = posed('B' + i, p);
       s += panel(0, y, 330, 360, { stand: '12 78 180 196', walk: '10 78 180 196', haul: '0 76 200 218', helm: '10 78 180 196' }[p], body, NAMES[p]);
       s += panel(340, y + 92, 125, 175, '0 0 200 280', posed('C' + i, p), 'карта'); });
+    return s; } },
+  // the feet close up: bare (hauling), the high boot (standing), the buckled shoe, the walk (heel down, toes pushing off)
+  feet: { w: 800, h: 400, bg: '#222', svg: () => {
+    let s = '';
+    const F = [['bare', 'haul', null, 'босые'], ['boot', 'stand', null, 'сапоги'], ['shoe', 'stand', { boot: 'shoe', boots: '#2a1c14' }, 'башмаки'], ['walk', 'walk', null, 'шаг, сапоги']];
+    F.forEach(([id, p, dr, t], i) => { const save = DRESS[p]; if (dr) DRESS[p] = Object.assign({}, save, dr);
+      const body = posed('F' + i, p); DRESS[p] = save;
+      s += panel((i % 2) * 400, Math.floor(i / 2) * 200, 400, 200, '40 214 120 60', body, t); });
     return s; } }
 } };
