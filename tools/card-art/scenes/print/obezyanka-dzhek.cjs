@@ -13,6 +13,9 @@
 // Second pass: the raised arm leaves the coat at the shoulder beside the head (red sleeve to mid-forearm, cuff at
 // the wrist); the candle stub stands on the window sill, so both lights come from the left and the skeleton's
 // shadow falls away from them onto the right wall, darker than before.
+// Step 3 pass (print kit): the table top is a card table — an oak rim round green baize, so it reads apart from the
+// floor boards; the monkey's leavings on the felt (a banana skin, cracked nut shells), the owner's clay pipe and a wine
+// ring by the mug.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -207,11 +210,16 @@ module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'd
     let fg = '';
     { const kL = (T.y0 - vy) / (T.y1 - vy), floorY = vy + (T.y0 - vy) * 2.1;
       for (const s of [-1, 1]) fg += K.shadeCyl(u, tx(T.y0, s) - s * 3, T.y0 + 2, tx(T.y0, s) - s * 3, floorY, 3.2 * kL, L, 'oak', { r1: 3.4 * kL, r2: 2.6 * kL, seed: 3 + s }) + K.contactShadow(u, tx(T.y0, s) - s * 3, floorY, 12, L, { ry: 1.4, opacity: .7 });
-      const tt = nid('tt', u), top = [[tx(T.y0, -1), T.y0], [tx(T.y0, 1), T.y0], [tx(T.y1, 1), T.y1], [tx(T.y1, -1), T.y1]];
-      fg += `<defs>${linGrad(tt, 0, T.y0, 0, T.y1, [[0, '#4a2e16', 1], [1, '#7a4e2a', 1]])}</defs><path d="${q(top)}" fill="url(#${tt})" stroke="#0e0804" stroke-width=".5"/>`;
-      for (let i = 1; i < 7; i++) { const t = i / 7, a = [lerp(top[0][0], top[1][0], t), T.y0], b = [lerp(top[3][0], top[2][0], t), T.y1]; fg += `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#2a1608" stroke-width=".5" opacity=".75"/><path d="M${f(a[0] + .5)} ${f(a[1])}L${f(b[0] + .8)} ${f(b[1])}" stroke="#a87444" stroke-width=".3" opacity=".35"/>`; }
-      { const R = rng(8); for (let i = 0; i < 14; i++) { const t = R(), y = lerp(T.y0 + 2, T.y1 - 2, R()), x = lerp(tx(y, -1), tx(y, 1), t); fg += `<path d="M${f(x)} ${f(y)}q${f(1.6 + R() * 2)} ${f(-.3)} ${f(3 + R() * 4)} ${f(.2)}" stroke="#2a1608" stroke-width=".25" fill="none" opacity=".45"/>`; } }
-      fg += `<path d="M${f(top[0][0])} ${T.y0}H${f(top[1][0])}" stroke="#a87444" stroke-width=".4" opacity=".5"/>`
+      // a card table: a dark oak rim round a top of green baize (the felt sets the table apart from the floor boards)
+      const tt = nid('tt', u), fz = nid('fz', u), top = [[tx(T.y0, -1), T.y0], [tx(T.y0, 1), T.y0], [tx(T.y1, 1), T.y1], [tx(T.y1, -1), T.y1]];
+      const inr = (y, s) => tx(y, s) - s * 3.2 * (y - vy) / (T.y1 - vy), fy0 = T.y0 + 1.5, fy1 = T.y1 - 2.2, felt = [[inr(fy0, -1), fy0], [inr(fy0, 1), fy0], [inr(fy1, 1), fy1], [inr(fy1, -1), fy1]];
+      fg += `<defs>${linGrad(tt, 0, T.y0, 0, T.y1, [[0, '#4a2e16', 1], [1, '#7a4e2a', 1]])}${linGrad(fz, 0, T.y0, 0, T.y1, [[0, '#123022', 1], [.5, '#1c4430', 1], [1, '#24563c', 1]])}</defs><path d="${q(top)}" fill="url(#${tt})" stroke="#0e0804" stroke-width=".5"/>`
+        + `<path d="${q(felt)}" fill="url(#${fz})" stroke="#0a1a10" stroke-width=".45"/><path d="M${f(felt[0][0])} ${f(fy0 + .3)}H${f(felt[1][0])}" stroke="#000" stroke-width=".8" opacity=".35"/>`
+        + `<path d="M${f(top[0][0])} ${T.y0}L${f(top[3][0])} ${T.y1}M${f(top[1][0])} ${T.y0}L${f(top[2][0])} ${T.y1}" stroke="#c08a52" stroke-width=".35" opacity=".45"/>`;
+      // the nap of the felt: a faint stipple, a worn pale patch where the hands rest, a wine ring
+      { const R = rng(8); for (let i = 0; i < 70; i++) { const y = lerp(fy0 + 1, fy1 - 1, R()), x = lerp(inr(y, -1) + 1, inr(y, 1) - 1, R()); fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.18 + R() * .2)}" fill="${R() > .5 ? '#3a6a4c' : '#0a1e14'}" opacity=".45"/>`; }
+        fg += `<ellipse cx="128" cy="119" rx="16" ry="4.6" fill="#4a7a5a" opacity=".16"/><ellipse cx="125" cy="106.6" rx="3.6" ry="1.1" fill="none" stroke="#3a0a10" stroke-width=".5" opacity=".5"/>`; }
+      fg += `<path d="M${f(top[0][0])} ${T.y0}H${f(top[1][0])}" stroke="#d8a060" stroke-width=".6" opacity=".8"/>`
         + K.localGlow(u, { x: 66, y: 104, color: '#ffb050', power: .3, radius: 36 }, { squash: .4, core: false })
         + glow(u, 70, 114, 46, 12, '#a8c0e8', .12);
       // the front edge and the dark apron under it (under the glass)
@@ -230,6 +238,18 @@ module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'd
     // a small open chest of gold on the left, coins spilled from it, stacks of gold in front
     fg += K.castShadow(u, L, { x: 54, y: 118, w: 30 * .62, h: 17 * .62, horizon: HZ, d: .35, opacity: .55 }) + K.chest(u, L, { x: 54, y: 118, s: .62, open: true, gold: true, seed: 4 });
     fg += gold(u, L, 62, 123, 1, 4, 5) + gold(u, L, 70, 125, 7, 3, 1) + gold(u, L, 46, 126, 4, 2, 6) + gold(u, L, 112, 124, 3, 2, 3) + gold(u, L, 140, 125, 4, 2, 2) + gold(u, L, 106, 110, 2, 2, 4);
+    // the monkey's leavings on the felt: a banana skin flopped open, a few cracked nut shells; the owner's clay pipe by the mug
+    { const bx = 127, by = 123.6, pg = nid('bn', u);
+      fg += K.contactShadow(u, bx + 1, by + .8, 13, L, { ry: 1.2, opacity: .55 }) + `<defs>${linGrad(pg, bx - 6, 0, bx + 6, 0, [[0, '#f4d860', 1], [.6, '#d8b030', 1], [1, '#8a6a18', 1]])}</defs>`
+        + [[-1, -14], [1, 12], [.2, -2]].map(([sd, a]) => `<path d="M${bx} ${by}q${f(sd * 2.4)} -1.2 ${f(sd * 5.4)} ${f(-.6 + Math.abs(a) * .02)}q${f(sd * .8)} .9 -.2 1.6q${f(-sd * 3)} .4 ${f(-sd * 5.2)} -.6z" fill="url(#${pg})" stroke="#4a3608" stroke-width=".3" transform="rotate(${a} ${bx} ${by})"/>`).join('')
+        + `<path d="M${bx - 1.4} ${by + .3}q-.4 -2.4 .6 -3.4l1 .4q-.6 1.2 -.2 3z" fill="#e8c848" stroke="#4a3608" stroke-width=".3"/><path d="M${bx - .8} ${by - 3.2}l.5 -.9" stroke="#3a2a08" stroke-width=".6" stroke-linecap="round"/>`
+        + [[bx - 3.4, by - .4], [bx + 2.6, by + .2], [bx + 4.2, by - .6]].map(([x, y]) => `<circle cx="${f(x)}" cy="${f(y)}" r=".3" fill="#5a3a10" opacity=".7"/>`).join(''); }
+    for (const [x, y, a] of [[150, 121.4, 20], [154.6, 123.4, -30], [146, 124.6, 70]]) fg += K.contactShadow(u, x, y + .6, 4, L, { ry: .5, opacity: .5 })
+      + `<g transform="translate(${x} ${y}) rotate(${a})"><path d="M-1.6 0a1.6 1.1 0 0 1 3.2 0z" fill="#a8743a" stroke="#3a2008" stroke-width=".3"/><path d="M-1.6 0h3.2" stroke="#e0b878" stroke-width=".3"/><path d="M-.6 -.6q.6 -.3 1.2 0" stroke="#5a3a14" stroke-width=".25" fill="none"/></g>`;
+    { const x = 132, y = 105; fg += K.contactShadow(u, x + 3, y + .8, 12, L, { ry: .7, opacity: .5 })
+        + `<path d="M${x - 4} ${y + .3}L${x + 6} ${y - .6}" stroke="#2a1a0a" stroke-width="1.3" stroke-linecap="round"/><path d="M${x - 4} ${y + .3}L${x + 6} ${y - .6}" stroke="#e8dcc4" stroke-width=".8" stroke-linecap="round"/>`
+        + `<path d="M${x + 5.4} ${y - .4}q.2 -2.6 1.6 -2.8h1.6q.4 2.4 -.6 3.2q-1.4 .6 -2.6 -.4z" fill="#d8ccb0" stroke="#3a2a14" stroke-width=".3"/><ellipse cx="${x + 7.8}" cy="${y - 3.1}" rx="1" ry=".35" fill="#2a1a0a"/>`
+        + `<path d="M${x - 3} ${y - .2}L${x + 5} ${y - .9}" stroke="#ffffff" stroke-width=".25" opacity=".6"/>`; }
     fg += K.candle(u, L, { ...CS, seed: 2 }) + K.localGlow(u, { x: CS.x + .2, y: CSF + 1, color: '#ffd080', power: .8, radius: 9 })
       + K.localGlow(u, { x: CS.x + 4, y: CSF + 4, color: '#ffa848', power: .45, radius: 34 }, { core: false });   // the warm pool round the window
     // the monkey's shadow on the table (to the right, away from the moon) and the monkey itself

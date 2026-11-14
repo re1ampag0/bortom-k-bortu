@@ -1,7 +1,7 @@
 // «Компас Джека» (Жемчужина, ПРИКАЗ: посмотрите 3 верхние карты колоды — одну в руку, одну в План, третью в сброс),
 // refined from the first-round scene (portrait-pearl.cjs SCENES['Компас Джека']): the captain's table by the stern
-// window at night. The compass lies open on the chart, big and in front: a brass box, the lid thrown back (inside it
-// an engraved sky — stars and a crescent), the card with its rose; the rose's north (the red point and the lily) is at
+// window at night. The compass lies open on the chart, big and in front: a black lacquered box with brass fittings,
+// the lid thrown back (inside it an engraved sky — gold stars and a crescent on black), the card with its rose; the rose's north (the red point and the lily) is at
 // twelve o'clock, and the blued needle does not look to it but plainly aside, to about four o'clock, at the ink cross
 // on the chart beside the compass, and it glows: the glow runs over the bezel and the chart to the cross. Beside it three
 // cards lie face down in a fan, the middle one pushed out. The moon in the window is the one light (cold, from the
@@ -9,6 +9,8 @@
 // Fixed against the first round: the compass was small and flat on the table — now it is the main thing, a box
 // with a thickness, a bezel, glass and a lid; the chart was a sheet over the whole table — now it lies in perspective;
 // the window and the table share one eye level (the sea horizon), the moon lights the table through the window.
+// Step 3 (the user's note): the box and its lid are black (lacquer: the moon slides over them in cold sheens), brass
+// only in the hinge, the ring round the dial and the pivot; a red N at the rose's north, so the needle plainly looks away from it.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -127,11 +129,12 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
     fg += K.castShadow(u, L, { x: cx, y: cy + Hb + Rr * k * .2, w: Rr * 2, h: Hb + 4, horizon: HZ, d: 1 }) + K.contactShadow(u, cx, cy + Hb + Rr * k * .55, Rr * 2.1, L, { ry: 3, opacity: .55 });
     // the lid, thrown back past upright: a brass dish seen from inside; an engraved night sky on it
     { const lc = [cx + 2, hy - Rr * .86 + 1.5], lr = Rr * 1.02, lk = .86, g = nid('ld', u), gi = nid('li', u), ci = nid('lc', u);
-      fg += `<defs>${linGrad(g, lc[0] - lr, lc[1] - lr, lc[0] + lr, lc[1] + lr, [[0, '#4a3410', 1], [.45, '#9a7428', 1], [.7, '#e8c46a', 1], [.85, '#fff0b8', 1], [1, '#8a6420', 1]])}`
-        + `${radGrad(gi, lc[0] + lr * .2, lc[1] - lr * .3, lr * 1.1, [[0, '#3a3a40', 1], [.7, '#1e2028', 1], [1, '#121218', 1]])}<clipPath id="${ci}"><ellipse cx="${f(lc[0])}" cy="${f(lc[1])}" rx="${f(lr * .86)}" ry="${f(lr * lk * .86)}"/></clipPath></defs>`
-        + `<ellipse cx="${f(lc[0] - 1.2)}" cy="${f(lc[1] + 1.6)}" rx="${f(lr)}" ry="${f(lr * lk)}" fill="#3a2608"/>`
-        + `<ellipse cx="${f(lc[0])}" cy="${f(lc[1])}" rx="${f(lr)}" ry="${f(lr * lk)}" fill="url(#${g})" stroke="#2a1a04" stroke-width=".5"/>`
-        + `<ellipse cx="${f(lc[0])}" cy="${f(lc[1])}" rx="${f(lr * .86)}" ry="${f(lr * lk * .86)}" fill="url(#${gi})" stroke="#5a4010" stroke-width=".5"/>`;
+      fg += `<defs>${linGrad(g, lc[0] - lr, lc[1] - lr, lc[0] + lr, lc[1] + lr, [[0, '#050506', 1], [.45, '#141418', 1], [.7, '#2a2c34', 1], [.85, '#7a7e8a', 1], [1, '#0e0e12', 1]])}`
+        + `${radGrad(gi, lc[0] + lr * .2, lc[1] - lr * .3, lr * 1.1, [[0, '#26262c', 1], [.7, '#121318', 1], [1, '#08080a', 1]])}<clipPath id="${ci}"><ellipse cx="${f(lc[0])}" cy="${f(lc[1])}" rx="${f(lr * .86)}" ry="${f(lr * lk * .86)}"/></clipPath></defs>`
+        + `<ellipse cx="${f(lc[0] - 1.2)}" cy="${f(lc[1] + 1.6)}" rx="${f(lr)}" ry="${f(lr * lk)}" fill="#050403"/>`
+        + `<ellipse cx="${f(lc[0])}" cy="${f(lc[1])}" rx="${f(lr)}" ry="${f(lr * lk)}" fill="url(#${g})" stroke="#000000" stroke-width=".5"/>`
+        + `<ellipse cx="${f(lc[0])}" cy="${f(lc[1])}" rx="${f(lr * .86)}" ry="${f(lr * lk * .86)}" fill="url(#${gi})" stroke="#000000" stroke-width=".5"/>`
+        + `<ellipse cx="${f(lc[0])}" cy="${f(lc[1])}" rx="${f(lr * .855)}" ry="${f(lr * lk * .855)}" fill="none" stroke="#c9a048" stroke-width=".35" opacity=".6"/>`;
       // the engraving: stars joined in figures, a crescent, a ring of degree ticks (gold lines on the dark inlay)
       let e = ''; const R = rng(21), st = [];
       for (let i = 0; i < 26; i++) { const a = R() * Math.PI * 2, d = Math.sqrt(R()) * lr * .78; st.push([lc[0] + Math.cos(a) * d, lc[1] + Math.sin(a) * d * lk]); }
@@ -143,23 +146,23 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
       e += `<path d="M${f(lc[0] + lr * .1)} ${f(lc[1] - lr * lk * .8)}Q${f(lc[0] + lr * .72)} ${f(lc[1] - lr * lk * .3)} ${f(lc[0] + lr * .62)} ${f(lc[1] + lr * lk * .4)}" stroke="#c8daf8" stroke-width="2.4" fill="none" opacity=".16"/>`;
       fg += `<g clip-path="url(#${ci})">${e}</g>`
         // the moon on the lid's rim (top right) — the brass glint
-        + `<path d="M${f(lc[0] + lr * .2)} ${f(lc[1] - lr * lk * .98)}A${f(lr)} ${f(lr * lk)} 0 0 1 ${f(lc[0] + lr * .96)} ${f(lc[1] - lr * lk * .2)}" stroke="#fff8e0" stroke-width=".9" fill="none" opacity=".9"/>`
+        + `<path d="M${f(lc[0] + lr * .2)} ${f(lc[1] - lr * lk * .98)}A${f(lr)} ${f(lr * lk)} 0 0 1 ${f(lc[0] + lr * .96)} ${f(lc[1] - lr * lk * .2)}" stroke="#eef4ff" stroke-width=".9" fill="none" opacity=".85"/>`
         + `<path d="M${f(lc[0] + lr * .74)} ${f(lc[1] - lr * lk * .62)}h3.6M${f(lc[0] + lr * .74 + 1.8)} ${f(lc[1] - lr * lk * .62 - 1.8)}v3.6" stroke="#ffffff" stroke-width=".35" opacity=".9"/>`; }
     // the hinge at the back
     fg += K.shadeCyl(u, cx - 7, hy - 1, cx + 9, hy - 1, 1.8, L, 'brass', { outline: .3, ell: .5, face: 2 });
-    // the box: a short brass drum; its top face is the bezel round the dial
-    fg += K.shadeCyl(u, cx, cy + Hb, cx, cy, Rr, L, 'brass', { ell: k, face: 2, outline: .45, grain: false });
-    { const b1 = nid('bz', u); fg += `<defs>${linGrad(b1, cx - Rr, cy - Rr * k, cx + Rr, cy + Rr * k, [[0, '#6a4a14', 1], [.4, '#b88a30', 1], [.62, '#f0cc70', 1], [.75, '#fff2c0', 1], [1, '#7a5418', 1]])}</defs>`
-        + `<ellipse cx="${cx}" cy="${cy}" rx="${Rr}" ry="${f(Rr * k)}" fill="url(#${b1})" stroke="#3a2606" stroke-width=".45"/>`
-        // knurled bezel: little ticks round the top edge
-        + Array.from({ length: 60 }, (_, i) => { const a = i / 60 * Math.PI * 2; return `<path d="M${f(cx + Math.cos(a) * Rr * .97)} ${f(cy + Math.sin(a) * Rr * k * .97)}L${f(cx + Math.cos(a) * Rr * .9)} ${f(cy + Math.sin(a) * Rr * k * .9)}" stroke="#5a3e0e" stroke-width=".25" opacity=".55"/>`; }).join(''); }
+    // the box: a short drum of black lacquer; its top face is the bezel round the dial
+    fg += K.shadeCyl(u, cx, cy + Hb, cx, cy, Rr, L, 'tar', { ell: k, face: 2, outline: .45, grain: false });
+    { const b1 = nid('bz', u); fg += `<defs>${linGrad(b1, cx - Rr, cy - Rr * k, cx + Rr, cy + Rr * k, [[0, '#060607', 1], [.4, '#16161a', 1], [.62, '#30323a', 1], [.75, '#8a8e9a', 1], [1, '#0c0c0e', 1]])}</defs>`
+        + `<ellipse cx="${cx}" cy="${cy}" rx="${Rr}" ry="${f(Rr * k)}" fill="url(#${b1})" stroke="#000000" stroke-width=".45"/>`
+        // a thin brass ring set into the lacquer round the dial
+        + `<ellipse cx="${cx}" cy="${cy}" rx="${f(Rr * .88)}" ry="${f(Rr * k * .88)}" fill="none" stroke="url(#brass${u})" stroke-width="1"/>`; }
     // the well: the inner wall in shadow, then the card
     const ri = Rr * .84;
-    { const w = nid('wl', u); fg += `<defs>${linGrad(w, 0, cy - ri * k, 0, cy + ri * k, [[0, '#2a1c08', 1], [.5, '#5a4012', 1], [1, '#8a6420', 1]])}</defs><ellipse cx="${cx}" cy="${cy}" rx="${f(ri)}" ry="${f(ri * k)}" fill="url(#${w})" stroke="#2a1a04" stroke-width=".4"/>`; }
+    { const w = nid('wl', u); fg += `<defs>${linGrad(w, 0, cy - ri * k, 0, cy + ri * k, [[0, '#060608', 1], [.5, '#16161a', 1], [1, '#2a2a30', 1]])}</defs><ellipse cx="${cx}" cy="${cy}" rx="${f(ri)}" ry="${f(ri * k)}" fill="url(#${w})" stroke="#000000" stroke-width=".4"/>`; }
     const cc = [cx, cy + 1.6], rc = ri * .96, cid = nid('cc', u);
     fg += `<defs><clipPath id="${cid}"><ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(rc)}" ry="${f(rc * k)}"/></clipPath></defs>`;
     { const pc = nid('pc', u); let d = `<defs>${radGrad(pc, cc[0] - 6, cc[1] + 2, rc * 1.1, [[0, '#fff2cc', 1], [.55, '#e8d6a8', 1], [1, '#a88a58', 1]])}</defs><ellipse cx="${f(cc[0])}" cy="${f(cc[1])}" rx="${f(rc)}" ry="${f(rc * k)}" fill="url(#${pc})"/>`;
-      // the rose in the plane of the card (squashed), north at twelve o'clock (the far side): the red point and the lily
+      // the rose in the plane of the card (squashed), north at twelve o'clock (the far side): only the red N marks it
       const nA = -90, G = `<g transform="translate(${f(cc[0])} ${f(cc[1])}) scale(1 ${k})">`;
       let rose = '';
       for (let i = 0; i < 72; i++) { const a = i / 72 * Math.PI * 2, r0 = rc * .97, r1 = rc * (i % 6 ? .9 : .84); rose += `<path d="M${f(Math.cos(a) * r0)} ${f(Math.sin(a) * r0)}L${f(Math.cos(a) * r1)} ${f(Math.sin(a) * r1)}" stroke="#4a3018" stroke-width="${i % 6 ? .3 : .5}"/>`; }
@@ -167,10 +170,11 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
       const pt = (a, r, w) => { const t = a * Math.PI / 180, n = t + Math.PI / 2; return [[Math.cos(t) * r, Math.sin(t) * r], [Math.cos(n) * w, Math.sin(n) * w], [-Math.cos(n) * w, -Math.sin(n) * w]]; };
       for (let i = 0; i < 4; i++) { const [tp, l, r] = pt(nA + 45 + i * 90, rc * .55, 2.4);
         rose += `<path d="M0 0L${f(l[0])} ${f(l[1])}L${f(tp[0])} ${f(tp[1])}Z" fill="#8a6a3a"/><path d="M0 0L${f(r[0])} ${f(r[1])}L${f(tp[0])} ${f(tp[1])}Z" fill="#d8c08a"/>`; }
-      for (let i = 0; i < 4; i++) { const a = nA + i * 90, [tp, l, r] = pt(a, rc * .8, 3.4), col = i === 0 ? ['#7a1a12', '#c83a2a'] : ['#2a2a3a', '#7a7a8a'];
+      for (let i = 0; i < 4; i++) { const a = nA + i * 90, [tp, l, r] = pt(a, rc * .8, 3.4), col = i === 0 ? ['#8a6a3a', '#d8c08a'] : ['#2a2a3a', '#7a7a8a'];   // north as the other petals (no red pointer: the needle is the only arrow)
         rose += `<path d="M0 0L${f(l[0])} ${f(l[1])}L${f(tp[0])} ${f(tp[1])}Z" fill="${col[0]}"/><path d="M0 0L${f(r[0])} ${f(r[1])}L${f(tp[0])} ${f(tp[1])}Z" fill="${col[1]}"/>`; }
-      // the lily over north
-      { const t = nA * Math.PI / 180, x = Math.cos(t) * rc * .9, y = Math.sin(t) * rc * .9; rose += `<g transform="translate(${f(x)} ${f(y)}) rotate(${nA + 90})"><path d="M0 -3.2q1.4 1.6 0 3.6q-1.4 -2 0 -3.6zM0 .4q2.6 -2.6 3 .6q-1.6 -.6 -3 .8zM0 .4q-2.6 -2.6 -3 .6q1.6 -.6 3 .8z" fill="#b82a1e"/></g>`; }
+      // a red N over north (in the card's plane), on a cream patch over the ticks, so the north reads at a glance
+      { const t = nA * Math.PI / 180, x = Math.cos(t) * rc * .9, y = Math.sin(t) * rc * .9;
+        rose += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="4.2" ry="5" fill="#f4e6c0"/><path d="M${f(x - 2.4)} ${f(y + 3.8)}V${f(y - 3.8)}L${f(x + 2.4)} ${f(y + 3.8)}V${f(y - 3.8)}" stroke="#a8201a" stroke-width="1.3" fill="none"/>`; }
       d += `<g clip-path="url(#${cid})">${G}${rose}</g>`;
       // the warm glow of the needle on the card
       d += `<ellipse cx="${f(cc[0] + 9)}" cy="${f(cc[1] + 2)}" rx="${f(rc * .8)}" ry="${f(rc * k * .8)}" fill="#ffd060" opacity=".22" style="mix-blend-mode:screen"/></g>`;
@@ -196,8 +200,11 @@ module.exports = { name: 'Компас Джека', kind: 'deck', status: 'draft
       + `<path d="M${f(cx + rc * .1)} ${f(cy - rc * k * .9)}A${f(rc)} ${f(rc * k)} 0 0 1 ${f(cx + rc * .86)} ${f(cy - rc * k * .3)}" stroke="#eef6ff" stroke-width="1.4" fill="none" opacity=".55"/>`
       + `<path d="M${f(cx - rc * .7)} ${f(cy + rc * k * .2)}q${f(rc * .1)} ${f(rc * k * .4)} ${f(rc * .4)} ${f(rc * k * .62)}" stroke="#ffffff" stroke-width=".6" fill="none" opacity=".3"/>`;
     // the moon's rim on the near edge of the drum and the bezel (brass glint)
-    fg += `<path d="M${f(cx + Rr * .3)} ${f(cy - Rr * k * .95)}A${Rr} ${f(Rr * k)} 0 0 1 ${f(cx + Rr)} ${f(cy)}" stroke="#fff6d8" stroke-width=".7" fill="none" opacity=".85"/>`
-      + `<path d="M${f(cx + Rr * .78)} ${f(cy - Rr * k * .62)}h4M${f(cx + Rr * .78 + 2)} ${f(cy - Rr * k * .62 - 2)}v4" stroke="#ffffff" stroke-width=".4" opacity=".95"/>`;
+    fg += `<path d="M${f(cx + Rr * .3)} ${f(cy - Rr * k * .95)}A${Rr} ${f(Rr * k)} 0 0 1 ${f(cx + Rr)} ${f(cy)}" stroke="#e8f0ff" stroke-width=".7" fill="none" opacity=".8"/>`
+      + `<path d="M${f(cx + Rr * .78)} ${f(cy - Rr * k * .62)}h4M${f(cx + Rr * .78 + 2)} ${f(cy - Rr * k * .62 - 2)}v4" stroke="#ffffff" stroke-width=".4" opacity=".95"/>`
+      // the lacquer of the drum's side: a cold upright sheen on its right, a faint one on the left
+      + `<path d="M${f(cx + Rr * .84)} ${f(cy + Rr * k * .56 + .4)}v${f(Hb - 1.2)}" stroke="#c8d8f0" stroke-width=".9" opacity=".45" stroke-linecap="round"/>`
+      + `<path d="M${f(cx - Rr * .7)} ${f(cy + Rr * k * .72 + .4)}v${f(Hb - 1.6)}" stroke="#8a9ab4" stroke-width=".6" opacity=".25" stroke-linecap="round"/>`;
     // light and air: the moon fills the room a little, dust in the beam, the corners and the table front fall dark
     fg += glow(u, 150, 50, 70, 46, '#9ab8e0', .1) + motes(16, 60, 50, 110, 60, '#d8e6ff', 5)
       + gloom(u, 120, 60, 0, 120, .4) + gloom(u, 100, 150, 100, 280, .55) + gloom(u, 120, 90, 200, 180, .25);

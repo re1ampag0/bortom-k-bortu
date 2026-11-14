@@ -130,7 +130,12 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
     const FAN = [-34, -12, 10, 32], GAP = 10;   // the fan's cards (deg either side of the way it opens); the one at GAP is gone
     const OG = [158, 99], OA = -125, OS = 6, OK = 1.36, OCS = 1.2;   // the grip, the hand's direction and size, the sleeve's scale, the cards' scale
     const skin = { lit: '#f0c6a0', half: '#c48a64', shadow: '#6a3e2a', outline: '#2a160c' };
-    const hd = H.hand3(u, { grip: OG, a: OA, s: OS, m: -1, roll: 180, held: 'fan', tone: skin, light: [-.6, -.8], sw: .36, palmW: .96 });
+    // seen from across the counter: the back of his hand to us (he sees the faces), the four fingers curled over the
+    // backs of the cards, their tips about a third up the fan, the little finger's tip just past its right edge; the
+    // thumb behind, on the faces, hidden by the cards; the back of the hand in front of the fan with the fingers (m 1
+    // keeps the wrist where the sleeve ends)
+    const hd = H.hand3(u, { grip: OG, a: OA, s: OS, m: 1, roll: 0, held: 'fan', frontFingers: [0, 1, 2, 3, 'palm'], tone: skin, light: [-.6, -.8], sw: .36, palmW: .96,
+      flex: [[40, 50, 26], [42, 52, 28], [46, 56, 30], [50, 60, 32]] });
     const OW = [hd.wrist[0] + 1, hd.wrist[1] + .4];
     { const red = { lit: '#c84a3a', half: '#8a2a20', shadow: '#3e0e0c', outline: '#1a0606' }, blue = { lit: '#4a5a9a', half: '#26305e', shadow: '#0e1230', outline: '#06081a' };
       const shirt = { lit: '#fff8ec', half: '#d8ccb8', shadow: '#7a6e5e', outline: '#2a2218' };
@@ -154,9 +159,9 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
       for (const a of FAN) { const d = dir(a);
         if (a === GAP) { GD = [PIV[0] + d[0] * (reach + 7), PIV[1] + d[1] * (reach + 7)]; GR = hd.gripA + 90 + a; continue; }
         fan += card(u, [PIV[0] + d[0] * reach, PIV[1] + d[1] * reach], hd.gripA + 90 + a, OCS, { shade: .25 + (a + 40) / 260 }); }
-      // a gold signet ring on his little finger (behind the cards, where they leave it in sight)
+      // a gold signet ring on his little finger (over the cards, with the fingers)
       const rg = hd.joints[3][1];
-      off += hd.back + K.shadeSphere(u, rg[0], rg[1], 1.2, L, 'brass', { outline: .25 }) + fan + hd.front;
+      off += hd.back + fan + hd.front + K.shadeSphere(u, rg[0], rg[1], 1.2, L, 'brass', { outline: .25 });
     }
     // ——— the card's flight from his fan to Jack's fingers: a soft streak and two fading after-images ———
     // Jack's (left) hand, the palm towards us: a slim hand narrowing to the wrist, the index and middle finger straight

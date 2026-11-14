@@ -22,7 +22,7 @@ const skel = { horizon: HZ, eye: 1.2, light: 'the moon upper right (az 58): glin
     ['pistol', 41, 112, 120, 44, 'rock top (butt and guard), the barrel on the stone'],
     ['stone', 131, 116, 26, 10, 'rock top, under the barrel'],
     ['ball on velvet', 15, 121, 26, 15, 'rock top'],
-    ['powder horn', 160, 108, 32, 10, 'rock top, behind the muzzle'],
+    ['powder horn', 160, 108, 30, 10, 'rock top, behind the muzzle'],
     ['enemy ship', 135, 84.8, 31, 26, 'sea, at anchor in the moon path'],
     ['palm', -8, 170, 110, 160, 'sand, leans in from the left', { edge: 1 }],
     ['bottle', 30, 196, 20, 10, 'sand (half buried)'],
@@ -168,15 +168,15 @@ function gunDetail(u, L) {
 
 // the powder horn: a curved cow horn, a turned brass cap on the wide end, a stopper at the tip, a leather strap
 function horn(u, L) {
-  const A = [192, 110.4], Bt = [166, 107.4], n = 18, pts = [], bot = [];
-  for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(A[0], Bt[0], t), y = lerp(A[1], Bt[1], t) - Math.sin(t * Math.PI) * 3.2, r = lerp(4.2, 1.1, Math.pow(t, .8)); pts.push([x, y - r]); bot.push([x, y + r]); }
+  const A = [188, 110.6], Bt = [166, 107.6], n = 18, pts = [], bot = [];
+  for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(A[0], Bt[0], t), y = lerp(A[1], Bt[1], t) - Math.sin(t * Math.PI) * 3.2, r = lerp(3.9, 1.05, Math.pow(t, .8)); pts.push([x, y - r]); bot.push([x, y + r]); }
   const g = K.mat('bone', L, { form: 'cyl', x1: A[0], y1: A[1] - 2, x2: Bt[0], y2: Bt[1] - 2, r: 4.2, u });
-  let s = K.castShadow(u, L, { x: 179, y: 113.4, w: 26, h: 7, horizon: HZ, d: .3 }) + K.contactShadow(u, 180, 113.4, 26, L, { opacity: .7 });
+  let s = K.castShadow(u, L, { x: 177, y: 113.4, w: 23, h: 6.5, horizon: HZ, d: .3 }) + K.contactShadow(u, 178, 113.4, 23, L, { opacity: .7 });
   s += `<defs>${g.defs}</defs><path d="M${pts.map(P2).join('L')}L${bot.slice().reverse().map(P2).join('L')}Z" fill="${g.fill}" stroke="${g.ramp.outline}" stroke-width=".35"/>`;
   // the horn's growth rings and its dark tip, the cold sheen along the top
   for (let i = 3; i < n - 2; i += 2) { const a = pts[i], b = bot[i]; s += `<path d="M${P2(a)}Q${f(a[0] + .8)} ${f((a[1] + b[1]) / 2)} ${P2(b)}" stroke="${g.ramp.shadow}" stroke-width=".25" fill="none" opacity=".55"/>`; }
   s += `<path d="M${pts.slice(1, n - 1).map(p => P2([p[0], p[1] + .8])).join('L')}" stroke="${mix(L.keyColor, '#ffffff', .5)}" stroke-width=".45" fill="none" opacity=".7"/>`;
-  s += K.shadeCyl(u, A[0] + 1.6, A[1], A[0] - .6, A[1] - .2, 4.6, L, 'brass', { ell: .5, face: 1, outline: .3 });
+  s += K.shadeCyl(u, A[0] + 1.6, A[1], A[0] - .6, A[1] - .2, 4.3, L, 'brass', { ell: .5, face: 1, outline: .3 });
   s += K.shadeCyl(u, Bt[0] + 1.2, Bt[1] - 3.2 + .2, Bt[0] - 2.4, Bt[1] - 3.4, .9, L, 'brass', { outline: .25 });
   s += K.shadeCyl(u, Bt[0] - 2.2, Bt[1] - 3.4, Bt[0] - 3.8, Bt[1] - 3.5, .7, L, 'oak', { outline: .25, cap: 'round' });
   // the strap: from the cap over the rock, a loop lying behind
@@ -195,6 +195,9 @@ module.exports = { name: 'Один выстрел', kind: 'deck', status: 'draft
     bg += `<path d="M168 ${HZ + .4}Q174 ${HZ - 4} 182 ${HZ - 5}Q192 ${HZ - 7.4} 200 ${HZ - 6}V${HZ + .4}Z" fill="${mix(L.pal.sky[3], '#0a1220', .55)}"/>`;
     bg += `<g data-far="">${K.ship(u, L, { kind: 'endeavour', x: 150, y: HZ + .9, scale: .3, detail: 'far', sails: 'furled', lights: true, heel: .6, roll: -4, flip: true, seed: 2 })}</g>`;
     bg += K.localGlow(u, { x: 140.8, y: HZ - 2, color: '#ffc070', power: .45, radius: 6 });
+    // her stern lanterns in the water: a short broken warm streak straight down under them, and her riding cable
+    { const R = rng(31); for (let i = 0; i < 7; i++) { const y = HZ + 1.6 + i * 1.05, w = 2.6 - i * .22 + R() * 1.2; bg += `<path d="M${f(140.8 - w / 2 + (R() - .5) * 1.2)} ${f(y)}h${f(w)}" stroke="#ffc070" stroke-width=".4" opacity="${f(.6 - i * .07)}"/>`; }
+      bg += `<path d="M165.2 80.6q2.6 1.6 4.8 4.4" stroke="#0c1018" stroke-width=".3" fill="none" opacity=".8"/>`; }
     // the surf: two lines of foam running up the sand, the wet sand mirroring the moon
     const shore = x => SHORE + 1.4 * Math.sin(x / 23) + .8 * Math.sin(x / 9 + 1);
     { const sg = nid('sd', u), wg = nid('ws', u), pts = []; for (let x = -4; x <= 204; x += 4) pts.push([x, shore(x)]);

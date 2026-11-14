@@ -56,8 +56,8 @@ function ports() {
 }
 
 // a gun's burst out of a port seen from the side, close to head-on: a ragged ball of fire (white heart, gold, orange,
-// a dark-red rim) a little wider than the port pitch allows only at its spikes, so the rows stay a strict line of
-// separate flashes; a short white blast thrown out towards us and down the wind; two embers of the wad.
+// a dark-red rim; no burning shreds of the wad — the card makes no Fire) a little wider than the port pitch allows only at its spikes, so the rows stay a strict line of
+// separate flashes; a short white blast thrown out towards us and down the wind.
 // k — size, seed — its own shape (spike count, twist, the blast's angle and length)
 function burst(u, x, y, k, seed) {
   const r = rng(70 + seed * 3), g = nid('zb', u), gw = nid('zw', u), gh = nid('zh', u), n = 5 + seed % 3, tw = r() * Math.PI, sq = .8 + r() * .14;
@@ -72,8 +72,7 @@ function burst(u, x, y, k, seed) {
     + `<circle cx="${f(x)}" cy="${f(y)}" r="${f(3.8 * k)}" fill="url(#${gh})"/>`
     + `<path d="M${f(x + nx * .8 * k)} ${f(y + ny * .8 * k)}Q${f(x + bd[0] * BL * .5 + nx * w)} ${f(y + bd[1] * BL * .5 + ny * w)} ${f(tx)} ${f(ty)}Q${f(x + bd[0] * BL * .5 - nx * w)} ${f(y + bd[1] * BL * .5 - ny * w)} ${f(x - nx * .8 * k)} ${f(y - ny * .8 * k)}Z" fill="url(#${gw})"/>`
     + `<path d="${d}" fill="url(#${g})"/>`
-    + `<ellipse cx="${f(x + (r() - .5) * .3)}" cy="${f(y)}" rx="${f(.8 * k)}" ry="${f(.62 * k)}" fill="#fffdf2"/><ellipse cx="${f(x + bd[0] * .9 * k)}" cy="${f(y + bd[1] * .9 * k)}" rx="${f(.5 * k)}" ry="${f(.36 * k)}" fill="#fffbe8" opacity=".85"/>`
-    + Array.from({ length: 2 }, () => `<circle cx="${f(x + (r() - .65) * 7 * k)}" cy="${f(y + (r() - .2) * 4 * k)}" r="${f(.18 + r() * .2)}" fill="#ffd86a"/>`).join('');
+    + `<ellipse cx="${f(x + (r() - .5) * .3)}" cy="${f(y)}" rx="${f(.8 * k)}" ry="${f(.62 * k)}" fill="#fffdf2"/><ellipse cx="${f(x + bd[0] * .9 * k)}" cy="${f(y + bd[1] * .9 * k)}" rx="${f(.5 * k)}" ry="${f(.36 * k)}" fill="#fffbe8" opacity=".85"/>`;
 }
 
 module.exports = { name: 'Залп всей батареей', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
@@ -129,7 +128,9 @@ module.exports = { name: 'Залп всей батареей', kind: 'deck', sta
     // ——— the flashes: EVERY gun at once — each port of the three rows and the guns of the open deck, at the port's
     // own centre (the strict line, even intervals), each burst its own shape; the lower decks carry the heavier guns
     const SIZE = { 0: 1.48, 1: 1.42, 2: 1.36, deck: .95 }, ORD = { deck: 0, 2: 1, 1: 2, 0: 3 };
-    for (const p of P.slice().sort((a, b) => ORD[a.row] - ORD[b.row])) fg += burst(u, p.x, p.y, SIZE[p.row] * (.92 + R() * .16), (p.row === 'deck' ? 3 : p.row) * 17 + p.i);
+    // (step 3, the user: only flashes out of a gun in a port — the open deck's guns stand in the smoke wall over her
+    // side, so their flashes hung in the air above the rows: they fire unseen in the smoke, no flash drawn for them)
+    for (const p of P.slice().sort((a, b) => ORD[a.row] - ORD[b.row])) { const kk = SIZE[p.row] * (.92 + R() * .16); if (p.row !== 'deck') fg += burst(u, p.x, p.y, kk, p.row * 17 + p.i); }
     // the three lines of fire read as one band along her side
     for (const y of [117.2, 122.7, 128.2]) fg += K.localGlow(u, { x: 106, y, color: '#ffb050', power: .3, radius: 58 }, { squash: .07, core: false });
     // the fire mirrored on the water under the lower row: a short broken warm streak under each gun

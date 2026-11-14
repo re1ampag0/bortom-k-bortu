@@ -13,6 +13,11 @@
 // disc with relief (maria, craters, Tycho's rays), no blurred spot; the light is set by where it stands in the
 // picture (low, a little right, in front of us): long shadows towards us and to the left, rims on the right. More gold,
 // muted: coins in the trail and spilling from the door, ingots on the vault shelves and one fallen on the cobbles.
+// Step 3 pass (print kit): the bank's sign is bolted to the wall under the eaves (it hung over the windows), the
+// windows come down behind the balcony rail, a clerk in a nightcap in the lit one; the far horse stands in the side
+// street round the corner (ground under it, the corner hides its tail); the watchman keeps his pose but has form —
+// a coat lit by his lantern, a face in its light, his fist on the lantern's ring; a wanted bill on the wall and the
+// burglars' pick leaning by the breach.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -110,19 +115,29 @@ function horse(u, L, x, y, s, c, o = {}) {
 }
 // the watchman running up the street from the left, coat flying, lantern swinging forward
 function watchman(u, L, x, y) {
-  const c = '#141420', e = '#3a3a4a';
+  const cg = nid('wm', u), lgc = nid('wl', u), sk = nid('ws', u), c = `url(#${cg})`, lc = `url(#${lgc})`, hat = '#0e0e16';
   let out = K.contactShadow(u, x + 1, y, 18, L, { ry: 1.2, opacity: .6 });
+  out += `<defs>${linGrad(cg, x - 8, 0, x + 8, 0, [[0, '#101320', 1], [.55, '#22263a', 1], [1, '#4a3a38', 1]])}${linGrad(lgc, x - 8, 0, x + 9, 0, [[0, '#0c0c12', 1], [1, '#2e2a2e', 1]])}`
+    + `${radGrad(sk, x + 4, y - 32, 4.2, [[0, '#f0b888', 1], [.55, '#b87a52', 1], [1, '#4a2c1e', 1]])}</defs>`;
   out += `<path d="M${x - 3} ${y - 22}C${x - 6} ${y - 18} ${x - 10} ${y - 12} ${x - 12} ${y - 9}L${x - 6} ${y - 10}C${x - 4} ${y - 14} ${x - 2} ${y - 17} ${x} ${y - 19}Z" fill="${c}"/>`     // coat tail flying back
+    + `<path d="M${x - 2} ${y - 13}L${x - 7} ${y - 6}L${x - 10} ${y - 1}L${x - 8} ${y}L${x - 4} ${y - 5}L${x + 1} ${y - 11}Z" fill="${lc}"/>`                                        // back leg
+    + `<path d="M${x + 1} ${y - 13}L${x + 6} ${y - 7}L${x + 6} ${y - .6}L${x + 9.4} ${y - .4}L${x + 9} ${y - 1.8}L${x + 8} ${y - 8}L${x + 4} ${y - 14}Z" fill="${lc}"/>`                    // front leg
+    + `<path d="M${x + 5.6} ${y - 7.4}L${x + 8.2} ${y - 8}" stroke="#6a5a4a" stroke-width=".7"/><path d="M${x + 6} ${y - .6}L${x + 9.4} ${y - .4}" stroke="#05050a" stroke-width="1"/>`   // stocking top, shoe
     + `<path d="M${x - 4} ${y - 24}C${x - 4} ${y - 30} ${x + 4} ${y - 31} ${x + 5} ${y - 25}L${x + 4} ${y - 13}C${x + 1} ${y - 12} ${x - 2} ${y - 12} ${x - 4} ${y - 14}Z" fill="${c}"/>`   // body leaning forward
-    + `<path d="M${x - 2} ${y - 13}L${x - 7} ${y - 6}L${x - 10} ${y - 1}L${x - 8} ${y}L${x - 4} ${y - 5}L${x + 1} ${y - 11}Z" fill="${c}"/>`                                        // back leg
-    + `<path d="M${x + 1} ${y - 13}L${x + 6} ${y - 7}L${x + 6} ${y - .6}L${x + 9.4} ${y - .4}L${x + 9} ${y - 1.8}L${x + 8} ${y - 8}L${x + 4} ${y - 14}Z" fill="${c}"/>`                    // front leg
-    + `<circle cx="${x + 2.4}" cy="${y - 33}" r="2.9" fill="${c}"/><path d="M${x - 2.6} ${y - 34.6}L${x + 7.6} ${y - 35.6}L${x + 5.6} ${y - 38}L${x + 2.6} ${y - 37}L${x - .4} ${y - 38}Z" fill="${c}"/>`   // head, tricorne
-    + `<path d="M${x + 3} ${y - 26}L${x + 9} ${y - 21}L${x + 11} ${y - 18}" stroke="${c}" stroke-width="2" fill="none" stroke-linecap="round"/>`                                        // arm with the lantern
-    + `<path d="M${x - 2} ${y - 26}L${x - 7} ${y - 22}" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>`;
-  // the lantern's light catching the front edges of him
-  out += `<path d="M${x + 5} ${y - 25}L${x + 4} ${y - 14}M${x + 6} ${y - 7}L${x + 6} ${y - 1}M${x + 5} ${y - 34}q.6 1.6 -.6 3" stroke="#ffb050" stroke-width=".5" fill="none" opacity=".8"/>`;
-  // the lantern: a little box with a bright window
-  out += `<path d="M${x + 11} ${y - 18}v1.2" stroke="#2a2a2a" stroke-width=".5"/><rect x="${x + 9.4}" y="${y - 16.8}" width="3.6" height="4.6" rx=".6" fill="#ffd27a" stroke="#3a2a10" stroke-width=".4"/><path d="M${x + 9} ${y - 17}h4.4" stroke="#3a2a10" stroke-width=".6"/>`;
+    + `<path d="M${x - 3.6} ${y - 16.4}C${x - 1} ${y - 15.4} ${x + 2} ${y - 15.6} ${x + 4.3} ${y - 16.6}" stroke="#2a1a10" stroke-width="1.1" fill="none"/><path d="M${x + 2.8} ${y - 16.4}h1" stroke="#c9a048" stroke-width=".7"/>`   // belt, buckle
+    + [y - 26, y - 22.6, y - 19.2].map(by => `<circle cx="${x + 3.6}" cy="${by}" r=".45" fill="#b8954a"/>`).join('')
+    + `<path d="M${x - 2} ${y - 26}L${x - 7} ${y - 22}" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/><circle cx="${x - 7.2}" cy="${y - 21.8}" r=".9" fill="#5a3a28"/>`   // the free arm swinging back, the fist
+    + `<path d="M${x + .2} ${y - 30.2}q1.6 .8 3.4 -.2l-.4 1.6q-1.4 .6 -2.8 0z" fill="#d8d0c0"/>`   // neck stock
+    + `<circle cx="${x + 2.4}" cy="${y - 33}" r="2.9" fill="url(#${sk})"/><path d="M${x + 5} ${y - 33.6}q1.1 .7 .2 1.5" fill="#d89a6a" stroke="#4a2c1e" stroke-width=".2"/>`   // face, nose toward the light
+    + `<circle cx="${x + 3.9}" cy="${y - 34}" r=".32" fill="#140a06"/><path d="M${x + 3.6} ${y - 31.6}h1" stroke="#6a3a26" stroke-width=".3"/><path d="M${x} ${y - 34.2}q-1.4 1.6 -.8 3.6" stroke="#1a120c" stroke-width="1" fill="none"/>`   // eye, mouth, hair at the back
+    + `<path d="M${x - 2.6} ${y - 34.6}L${x + 7.6} ${y - 35.6}L${x + 5.6} ${y - 38}L${x + 2.6} ${y - 37}L${x - .4} ${y - 38}Z" fill="${hat}"/><path d="M${x - 2.6} ${y - 34.6}L${x + 7.6} ${y - 35.6}" stroke="#4a4050" stroke-width=".35"/>`   // tricorne
+    + `<path d="M${x + 3} ${y - 26}L${x + 9} ${y - 21}L${x + 11} ${y - 18.6}" stroke="${c}" stroke-width="2" fill="none" stroke-linecap="round"/>`;                                        // arm with the lantern
+  // the lantern's light catching the front edges of him, the moon's cold rim on his back
+  out += `<path d="M${x + 5} ${y - 25}L${x + 4} ${y - 14}M${x + 6} ${y - 7}L${x + 6} ${y - 1}M${x + 4.6} ${y - 27}l3.8 4" stroke="#ffb050" stroke-width=".55" fill="none" opacity=".85"/>`
+    + `<path d="M${x - 4} ${y - 24}C${x - 4} ${y - 28} ${x - 2} ${y - 30} ${x + .4} ${y - 30.4}" stroke="#8a9ab8" stroke-width=".35" fill="none" opacity=".5"/>`;
+  // the lantern: a little box with a bright window hanging from his fist by its ring
+  out += `<path d="M${x + 11.2} ${y - 18}v1.2" stroke="#2a2a2a" stroke-width=".5"/><rect x="${x + 9.4}" y="${y - 16.8}" width="3.6" height="4.6" rx=".6" fill="#ffd27a" stroke="#3a2a10" stroke-width=".4"/><path d="M${x + 9} ${y - 17}h4.4" stroke="#3a2a10" stroke-width=".6"/>`
+    + `<path d="M${x + 11.2} ${y - 16.8}v4.6" stroke="#3a2a10" stroke-width=".35"/><ellipse cx="${x + 11.1}" cy="${y - 18.6}" rx="1.1" ry=".95" fill="#c08458" stroke="#3a2016" stroke-width=".25"/>`;
   return out;
 }
 
@@ -159,7 +174,7 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 });
     // the sky over the roofs on the right: stars, the moon, a cloud; the far roofs and a palm in silhouette
     let bg = K.sky(u, L, { horizon: HZ, stars: false, seed: 6 }) + PK.stars(30, 140, 0, 60, 80, 6) + moonDisc(u, MOON) + K.cloud(u, L, { x: 184, y: 30, w: 30, h: 5, seed: 7, far: .4 });
-    bg += `<path d="M${CORNER} 104L156 96L164 98L168 90L184 92L188 86L200 88V${ST}H${CORNER}Z" fill="#141a28"/><rect x="170" y="94" width="3" height="3" fill="#ffc870" opacity=".75"/>`
+    bg += `<path d="M${CORNER} 104L156 96L164 98L168 90L184 92L188 86L200 88V${ST}H${CORNER}Z" fill="#141a28"/><rect x="170" y="94" width="3" height="3" fill="#ffc870" opacity=".75"/>${(() => { const sgd = nid('sd', u); return `<defs>${linGrad(sgd, 0, 106, 0, ST, [[0, '#1a2030', 1], [1, '#2a2e3c', 1]])}</defs><path d="M${CORNER} 108.6L200 106.4V${ST}H${CORNER}Z" fill="url(#${sgd})"/><path d="M${CORNER} 108.6L200 106.4" stroke="#05070c" stroke-width=".6"/>` + [111, 114.6, 118.8, 123.4].map(yy => `<path d="M${CORNER} ${yy}L200 ${f(yy - 2.2 * (128 - yy) / 20)}" stroke="#10131c" stroke-width=".4" opacity=".8"/>`).join('') + `<ellipse cx="172" cy="116" rx="16" ry="3.2" fill="#c8d4ec" opacity=".14"/><ellipse cx="174" cy="121" rx="10" ry="1.6" fill="#e8f0ff" opacity=".18"/>`; })()}`
       + `<path d="M190 ${ST - 26}q1 -14 -2 -24" stroke="#10141e" stroke-width="1.6" fill="none"/>` + [[-1, -.6], [-.8, .2], [.2, -.9], [.9, -.2], [1, .5]].map(([a, b]) => `<path d="M188 78q${f(a * 6)} ${f(b * 4 - 2)} ${f(a * 12)} ${f(b * 6 + 3)}" stroke="#10141e" stroke-width="1.4" fill="none"/>`).join('');
     // the facade: plaster in moonlight from the side (the right edge lit), cracks, the tiled eaves
     { const fg0 = nid('fc', u); bg += `<defs>${linGrad(fg0, 0, 0, CORNER, 0, [[0, '#22242e', 1], [.6, '#363846', 1], [1, '#4c4e5e', 1]])}</defs><rect x="-4" y="0" width="${CORNER + 4}" height="${ST}" fill="url(#${fg0})"/>`;
@@ -174,13 +189,19 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
       { const R = rng(71); for (let x = -6; x < CORNER + 4; x += 9.6) { const w = 9.4 + R() * .4, hh = 5.4 + R() * 1.4, dy = (R() - .5) * .8; bg += `<path d="M${f(x)} ${f(15.6 + dy)}q${f(w / 2)} ${f(-hh)} ${f(w)} ${f(-dy * .5)}v-12h${f(-w)}z" fill="url(#${tg})" stroke="#1a0a06" stroke-width=".5"/>`; } }
       bg += `<path d="M-6 16.4H${CORNER + 4}" stroke="#0e0604" stroke-width="1.8"/><path d="M-6 19H${CORNER}" stroke="#000" stroke-width="2.4" opacity=".35"/>`; }
     // the upper floor: two windows (one lit — a sleepy clerk), the balcony on brackets, its wrought rail, the patterned sign
-    bg += `<rect x="78" y="24" width="18" height="22" fill="#0c0e16" stroke="#2a2c36" stroke-width="1.6"/><path d="M87 24v22M78 35h18" stroke="#2a2c36" stroke-width=".9"/>`
-      + `<rect x="108" y="24" width="18" height="22" fill="#e8a850" opacity=".85" stroke="#2a2c36" stroke-width="1.6"/><path d="M117 24v22M108 35h18" stroke="#3a2c1a" stroke-width=".9"/>` + K.localGlow(u, { x: 117, y: 35, color: '#ffb050', power: .4, radius: 14 }, { core: false })
+    bg += `<rect x="78" y="31" width="18" height="20" fill="#0c0e16" stroke="#2a2c36" stroke-width="1.6"/><path d="M87 31v20M78 40h18" stroke="#2a2c36" stroke-width=".9"/>`
+      + `<rect x="108" y="31" width="18" height="20" fill="#e8a850" opacity=".85" stroke="#2a2c36" stroke-width="1.6"/><path d="M110.6 51C110.8 46.6 112 45 114.2 44.8C116.4 45 117.6 46.6 117.8 51Z" fill="#2a1a10"/><circle cx="114.2" cy="41.8" r="2.5" fill="#2a1a10"/><path d="M111.8 41.2Q113 37 117.4 37.6Q119.4 39.6 119.6 42.6" stroke="#2a1a10" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="119.8" cy="43.4" r="1" fill="#2a1a10"/><path d="M117 31v20M108 40h18" stroke="#3a2c1a" stroke-width=".9"/>` + K.localGlow(u, { x: 117, y: 41, color: '#ffb050', power: .4, radius: 14 }, { core: false })
       + `<path d="M58 52h88v3.6h-88z" fill="#3a3a46"/><path d="M58 55.6h88" stroke="#0a0a10" stroke-width="2"/>` + [64, 104, 140].map(x => `<path d="M${x} 55.6l3 6v-6z" fill="#2a2a34"/>`).join('')
       + `<path d="M60 44h84" stroke="#1a1a22" stroke-width="1.3"/>` + Array.from({ length: 14 }, (_, k) => `<path d="M${62 + k * 6} 52v-8" stroke="#1a1a22" stroke-width=".8"/>` + (k % 2 ? `<path d="M${62 + k * 6} 48q3 -3 6 0" stroke="#1a1a22" stroke-width=".5" fill="none"/>` : '')).join('')
       + `<rect x="58" y="56" width="88" height="10" fill="#08080e" opacity=".45"/>`;
-    { const sg = nid('sg', u); bg += `<defs>${linGrad(sg, 0, 30, 0, 46, [[0, '#7a5030', 1], [1, '#3a2210', 1]])}</defs><rect x="68" y="32" width="64" height="12" rx="1.5" fill="url(#${sg})" stroke="#1a0e06" stroke-width=".6"/>`
-        + Array.from({ length: 6 }, (_, k) => `<path d="M${74 + k * 9.4} 38q2.3 -3.4 4.6 0t4.6 0" stroke="#e8c46a" stroke-width=".8" fill="none"/>`).join('') + `<rect x="71" y="34.4" width="58" height="7.2" fill="none" stroke="#c9a048" stroke-width=".5"/><path d="M74 32v-6M126 32v-6" stroke="#2a2a2a" stroke-width=".7"/>`; }
+    { const sg = nid('sg', u); bg += `<defs>${linGrad(sg, 0, 20, 0, 30, [[0, '#7a5030', 1], [1, '#3a2210', 1]])}</defs><rect x="68" y="20.4" width="64" height="9.4" rx="1.5" fill="url(#${sg})" stroke="#1a0e06" stroke-width=".6"/>`
+        + Array.from({ length: 6 }, (_, k) => `<path d="M${74 + k * 9.4} 25.6q2.3 -2.6 4.6 0t4.6 0" stroke="#e8c46a" stroke-width=".8" fill="none"/>`).join('') + `<rect x="71" y="22.2" width="58" height="5.8" fill="none" stroke="#c9a048" stroke-width=".5"/><path d="M68.6 29.6H131.4" stroke="#000" stroke-width="1.2" opacity=".35"/><path d="M131.6 20.6v9" stroke="#c8d4ec" stroke-width=".5" opacity=".6"/>${[69.8, 130.2].map(bx => `<circle cx="${bx}" cy="25.1" r=".7" fill="#1a1a1a"/><circle cx="${bx - .2}" cy="24.9" r=".25" fill="#8a8a8a"/>`).join('')}`; }
+    // a wanted bill pasted on the wall by the breach: a rough face, lines of type (no letters), one corner torn
+    { const pg = nid('wp', u); bg += `<defs>${linGrad(pg, 124, 0, 134, 0, [[0, '#8a8270', 1], [1, '#c8c0a8', 1]])}</defs><g transform="rotate(4 129 72)">`
+        + `<path d="M124 65.4H134V78.6H126.6L124 76Z" fill="url(#${pg})" stroke="#2a2820" stroke-width=".3"/><path d="M124 76L126.6 76.6V78.6" fill="#5a5444" stroke="#2a2820" stroke-width=".25"/>`
+        + `<circle cx="129" cy="70" r="2" fill="none" stroke="#2a2418" stroke-width=".45"/><path d="M126.6 68.4L131.4 68.2L130.4 66.8L128.8 67.2L127.4 66.8Z" fill="#2a2418"/><path d="M128.2 70.6q.8 .5 1.6 0" stroke="#2a2418" stroke-width=".3" fill="none"/>`
+        + `<path d="M125.6 73.4h7M125.6 75h7M127.4 76.8h5" stroke="#3a3428" stroke-width=".45"/><path d="M133.8 65.6V78.4" stroke="#e8eef8" stroke-width=".4" opacity=".7"/>`
+        + [[124.8, 66.2], [133.2, 66.2], [133.2, 77.8]].map(([nx, ny]) => `<circle cx="${nx}" cy="${ny}" r=".35" fill="#1a1a1a"/>`).join('') + '</g>'; }
     // the torn shutter hanging on one hinge by the ground-floor window on the left
     bg += `<rect x="16" y="50" width="20" height="28" fill="#0c0e16" stroke="#2a2c36" stroke-width="1.4"/><path d="M26 50v28" stroke="#2a2c36" stroke-width=".8"/>`
       + `<g transform="rotate(26 36 52)"><rect x="36" y="52" width="10" height="27" fill="#34503e" stroke="#16241a" stroke-width=".6"/>${[0, 1, 2, 3, 4, 5].map(k => `<path d="M37 ${56 + k * 4}h8" stroke="#16241a" stroke-width=".7"/><path d="M37 ${56.7 + k * 4}h8" stroke="#5a7a62" stroke-width=".3"/>`).join('')}</g>`
@@ -213,6 +234,9 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
     // rubble at the foot of the breach, brick bits on the cobbles
     { const R = rng(21); for (let i = 0; i < 16; i++) { const x = 40 + R() * 90, y = ST + 1 + R() * 18, w = 2 + R() * 3.4, a = R() * 180;
         fg += K.contactShadow(u, x, y + 1, w * 1.4, L, { ry: .7, opacity: .5 }) + `<rect x="${f(x - w / 2)}" y="${f(y - w * .3)}" width="${f(w)}" height="${f(w * .55)}" fill="${mix('#6a3626', '#a86a4a', R())}" stroke="#24120a" stroke-width=".3" transform="rotate(${f(a)} ${f(x)} ${f(y)})"/>`; } }
+    // the pick the burglars left leaning on the wall at the foot of the breach, against the dust, its iron head catching the lantern
+    fg += K.contactShadow(u, 46.6, ST, 5, L, { ry: .7, opacity: .6 }) + `<path d="M46.4 ${ST}L50.6 107.6" stroke="#1a0e06" stroke-width="1.5" stroke-linecap="round"/><path d="M46.4 ${ST}L50.6 107.6" stroke="#8a5a30" stroke-width=".9" stroke-linecap="round"/>`
+      + `<path d="M45.2 105.4Q50.4 106 55.6 110.6L55 111.2Q50.6 108 46 107.4Q44.6 107 45.2 105.4Z" fill="#3a3c46" stroke="#0c0c10" stroke-width=".3"/><path d="M46 106.2Q50.6 106.8 55 110.6" stroke="#ffb860" stroke-width=".35" fill="none" opacity=".7"/>`;
     // dust from the breach drifting left in the moonlight
     fg += K.smoke(u, L, { x: 52, y: ST - 2, w: 34, h: 26, wind: -.6, seed: 9, opacity: .45 });
     // the coins: a trail from the hole to the safe's sprung door, glinting
@@ -254,7 +278,7 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
     // the near one; from the swingletree the trace chains run along their flanks to the hames of the collars
     const NH = { x: 141, y: 129, s: .9, lift: -8 }, FH = { x: 147, y: 118, s: .8, lift: 24 };
     const hm = (H, lx, ly) => { const q = bend(lx, ly, H.lift); return [H.x + q[0] * H.s, H.y + q[1] * H.s]; };
-    fg += K.castShadow(u, L, { x: 165, y: 121, w: 40, h: 30, horizon: HZ, d: .5, opacity: .45 }) + horse(u, L, FH.x, FH.y, FH.s, ['#3a2a20', '#2a1c14', '#140c08'], { seed: 5, rim: '#a8b8d0', lift: FH.lift });
+    { const fc = nid('fhc', u); fg += `<defs><clipPath id="${fc}"><rect x="${CORNER}" y="0" width="60" height="300"/></clipPath></defs><g clip-path="url(#${fc})">` + K.castShadow(u, L, { x: 165, y: 121, w: 40, h: 30, horizon: HZ, d: .5, opacity: .45 }) + horse(u, L, FH.x, FH.y, FH.s, ['#3a2a20', '#2a1c14', '#140c08'], { seed: 5, rim: '#a8b8d0', lift: FH.lift }) + '</g>'; }
     { const a = hm(FH, 38.6, -31); fg += K.chain(u, L, [[137, 104], [156, 102.4], [a[0], a[1]]], { link: 1.8, seed: 11 }); }
     fg += K.castShadow(u, L, { x: 167, y: 129, w: 46, h: 34, horizon: HZ, d: .5, opacity: .55 }) + horse(u, L, NH.x, NH.y, NH.s, ['#7a4a2a', '#4a2a16', '#1e120a'], { seed: 3, lift: NH.lift });
     { const a = hm(NH, 38.6, -30); fg += K.chain(u, L, [[137, 108], [158, 107.6], [a[0], a[1]]], { link: 1.8, seed: 13 }); }
