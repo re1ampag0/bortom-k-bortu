@@ -9,6 +9,8 @@
 // glitter, big, cold iron with a sky glint and the fire on its back, a torn smoke trail behind it. Details: smoke
 // out of the vent and blown back in at the port, the linstock with its smouldering match leaning ~15° on the wall by the port (foot by the gun's truck, top in a staple), a leather
 // fire bucket on a peg, dust shaken off the beam, splinters falling into the water by the enemy.
+// Step 3, the user: the flash at the muzzle stays; the burning bits of the wad, the glowing match end, the spark at the
+// vent and the fire-glow at the hit on the enemy's side are gone — the card makes no Fire (brief: «без огня»).
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -27,7 +29,8 @@ const skel = { horizon: HZ, eye: 1.7, light: 'lantern on the beam + the flash at
   ['cask', 91, 200, 18, 27, 'deck'], ['crate', 22, 222, 40, 26, 'deck'], ['coil', 77, 158, 18, 5, 'deck']] };
 
 // ——— KIT-CANDIDATE: a hit on a ship's side: the smashed hole with torn plank ends, splinters flying out of it
-// (each a long thin shard, lit on the side of the light, spinning), dust and smoke, small splashes where they fall
+// (each a long thin shard, lit on the side of the light, spinning), dust and smoke (grey, no fire: the card makes no
+// Fire), small splashes where they fall
 function hit(u, L, o) {
   const R = rng(o.seed || 3), { x, y, s = 1 } = o, rp = L.ramp('oak', x, y);
   let out = `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(4.2 * s)}" ry="${f(3 * s)}" fill="#0c0705"/>`;
@@ -39,8 +42,7 @@ function hit(u, L, o) {
   for (let i = 0; i < 16; i++) { const a = -1.5 + R() * 2.6, d = (5 + R() * 12) * s, len = (1.6 + R() * 3.6) * s, rot = a + (R() - .5) * 1.6, w = (.35 + R() * .45) * s;
     const cx = x + Math.cos(a) * d, cy = y + Math.sin(a) * d * .55 - R() * 2 * s, dx = Math.cos(rot) * len / 2, dy = Math.sin(rot) * len / 2, nx = -dy / len * w * 2, ny = dx / len * w * 2;
     out += `<path d="M${f(cx - dx)} ${f(cy - dy)}L${f(cx + nx)} ${f(cy + ny)}L${f(cx + dx)} ${f(cy + dy)}L${f(cx - nx * .6)} ${f(cy - ny * .6)}Z" fill="${R() > .4 ? '#e2b47a' : '#a06a38'}" stroke="#3a1e0c" stroke-width=".18"/>`; }
-  out += K.smoke(u, L, { x: x + 2 * s, y: y + 1, w: 16 * s, h: 18 * s, wind: .5, seed: (o.seed || 3) + 4, opacity: .75, glow: { color: '#ffb050', power: .3 } });
-  out += K.localGlow(u, { x, y, color: '#ffd890', power: .55, radius: 7 * s });
+  out += K.smoke(u, L, { x: x + 2 * s, y: y + 1, w: 16 * s, h: 18 * s, wind: .5, seed: (o.seed || 3) + 4, opacity: .75 });
   return out;
 }
 
@@ -97,7 +99,7 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x:
         + [-2, 0, 2].map(d => `<circle cx="${x + d * 1.6}" cy="${f(y + 2.9 + Math.abs(d) * -.15)}" r=".32" fill="#d8b070"/>`).join('') + `</g>`; }
     // the linstock leaning on the wall by the port, ~15° off upright: its foot on the deck just right of the gun's near
     // truck, its staff resting in an iron staple on the frame by the hull at the port; an ash staff, the forked brass
-    // head, the slow match wound on it, its end smouldering — a red point with a thread of smoke going straight up
+    // head, the slow match wound on it, its end a grey tip of ash with a thread of smoke going straight up (no fire on the deck)
     { const th = 15, A = th * Math.PI / 180, a = [101.5, 133.5], Ls = 75.5, sn = Math.sin(A), cs = Math.cos(A);
       const P = (t, d = 0) => [a[0] + sn * t + cs * d, a[1] - cs * t + sn * d];       // t along the staff from the foot, d across it (to the right)
       const b = P(Ls), st = P(Ls - 7.2), em = P(Ls + 7.4, -3.8);
@@ -111,8 +113,7 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x:
         + `<path d="M${f(st[0] - 2.4)} ${f(st[1] - .6)}q${f(2.4)} 2.6 ${f(4.8)} .4" stroke="#1a1410" stroke-width="1.1" fill="none" stroke-linecap="round"/>`
         + `<path d="M${f(st[0] - 2.4)} ${f(st[1] - .9)}q${f(2.4)} 2.6 ${f(4.8)} .4" stroke="#8a8a88" stroke-width=".45" fill="none" stroke-linecap="round" opacity=".8"/>`
         + `<circle cx="${f(st[0] - 2.5)}" cy="${f(st[1] - .7)}" r=".55" fill="#2a2420"/><circle cx="${f(st[0] + 2.5)}" cy="${f(st[1] - .3)}" r=".55" fill="#2a2420"/>`
-        + `<circle cx="${f(em[0])}" cy="${f(em[1])}" r=".75" fill="#ff5a1a"/><circle cx="${f(em[0])}" cy="${f(em[1])}" r=".35" fill="#ffd27a"/>`
-        + glow(u, em[0], em[1], 5, 5, '#ff8a3a', .6)
+        + `<circle cx="${f(em[0])}" cy="${f(em[1])}" r=".7" fill="#4a4440"/><circle cx="${f(em[0] - .15)}" cy="${f(em[1] - .2)}" r=".35" fill="#a8a098"/>`
         + `<path d="M${f(em[0])} ${f(em[1] - .8)}c-1 -3 1.6 -4 .4 -7s1.4 -4 .2 -7" stroke="#d8c8b0" stroke-width=".45" fill="none" opacity=".45"/>`; }
     // dust shaken off the beam by the shot, trickling down in the lantern light
     { const Rd = rng(19); for (let i = 0; i < 7; i++) { const x = 74 + Rd() * 44, l = 6 + Rd() * 12;
@@ -126,8 +127,7 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x:
     fg += K.cannon(u, L, { ...gun, breech: false });
     // smoke out of the vent: the gun has just fired — a thread rising from the touch-hole, curling in the lantern light
     { const v = [m.x - 87.9, m.y - 9.9];
-      fg += K.smoke(u, L, { x: v[0], y: v[1], w: 9, h: 24, wind: .25, seed: 12, opacity: .5, glow: { color: '#ffc070', power: .4 } })
-        + `<circle cx="${f(v[0])}" cy="${f(v[1])}" r=".7" fill="#ffb040" opacity=".8"/>`; }
+      fg += K.smoke(u, L, { x: v[0], y: v[1], w: 9, h: 24, wind: .25, seed: 12, opacity: .5, glow: { color: '#ffc070', power: .4 } }); }
     // smoke blown back in through the port, hanging in the frames
     fg += K.smoke(u, L, { x: HX - 4, y: by + 6, w: 18, h: 26, wind: -.6, seed: 15, opacity: .38, glow: { color: '#ffcf7a', power: .5 } });
     // the flash in front of the muzzle, over its mouth: a saturated ball of fire (white heart, gold, orange, a
@@ -142,10 +142,6 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x:
         + `<g clip-path="url(#${fc})">${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -2, len: 38, seed: 4, smoke: true, glow: false })}`
         + `<circle cx="${f(cx)}" cy="${f(m.y)}" r="27" fill="url(#${fh})"/><path d="${d}" fill="url(#${fb})"/>`
         + `${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -3, len: 32, seed: 1, smoke: false, glow: false })}${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -1, len: 18, seed: 0, smoke: false, glow: false })}</g>`; }
-    // burning bits of the wad thrown out of the muzzle: short glowing streaks with a wisp each, falling to the water
-    { const Rs = rng(27); for (let i = 0; i < 9; i++) { const x = m.x + 10 + Rs() * 22, y = m.y - 6 + Rs() * 16, a = (Rs() - .3) * .9, l = 1.2 + Rs() * 2.4;
-        fg += `<path d="M${f(x)} ${f(y)}l${f(-Math.cos(a) * l * 2)} ${f(-Math.sin(a) * l * 2)}" stroke="#c8b8a0" stroke-width=".5" opacity=".35" stroke-linecap="round"/>`
-          + `<path d="M${f(x)} ${f(y)}l${f(-Math.cos(a) * l)} ${f(-Math.sin(a) * l)}" stroke="${Rs() > .4 ? '#ffb040' : '#ff7a20'}" stroke-width="${f(.5 + Rs() * .4)}" stroke-linecap="round"/><circle cx="${f(x)}" cy="${f(y)}" r=".4" fill="#fff0b0"/>`; } }
     // the ball in flight: bursting out of the front of the flash, over the sun's glitter on the water — cold cast iron,
     // the sky's glint on its upper right, the fire's warm light on its back, a torn trail of smoke behind it
     { const bx = 167, bY = m.y - 2.6, r = 4.4, tr = nid('tr', u), tb = nid('tb', u), bg2 = nid('bg', u), bw = nid('bw', u);
