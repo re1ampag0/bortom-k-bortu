@@ -10,10 +10,10 @@ const { f, mix, nid, linGrad, radGrad, rng } = K;
 
 const HZ = 110, WL = 124;   // horizon; the Pearl's waterline
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: 122, y: 54, el: 20, color: '#c8d8f6', power: .8 }, fill: { color: '#3d5680', power: .4 },
-  rim: { az: 14, color: '#bfe0ff', power: .6 }, locals: [{ x: 163, y: 109, color: '#ffc070', power: .6, radius: 18 }] };
+  rim: { az: 14, color: '#bfe0ff', power: .6 }, locals: [{ x: 154, y: 109, color: '#ffc070', power: .6, radius: 18 }] };
 const SHIP = { kind: 'pearl', x: 90, y: WL, scale: .86, heel: -3, roll: 10, sails: 'full', wake: true, lights: true, seed: 4 };   // roll: heeled towards us, the deck shows
-const skel = { horizon: HZ, eye: 4, items: [['pearl', 30, WL, 124, 94, 'water'], ['chaser', 157, 112, 38, 26, 'water (horizon)'],
-  ['splash', 156, 127, 12, 22, 'water (astern)'], ['splash2', 172, 129, 8, 10, 'water'], ['splash3', 162, 136, 7, 9, 'water']] };
+const skel = { horizon: HZ, eye: 4, items: [['pearl', 30, WL, 124, 94, 'water'], ['chaser', 148, 112, 38, 26, 'water (horizon)'],
+  ['splash', 151, 127, 12, 22, 'water (astern)'], ['splash2', 167, 129, 8, 10, 'water'], ['splash3', 157, 136, 7, 9, 'water']] };
 
 // the long pennant from the main truck, streaming ahead of her (to the bow, the way the wind blows)
 function pennant(u, L, x, y, len) {
@@ -46,7 +46,7 @@ module.exports = { name: 'Уйти по ветру', kind: 'deck', status: 'acce
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .8, seed: 7, glitter: 122 });
     // the chaser far astern on the right: her bow guns flash, the smoke goes ahead with the wind
     // (whole in the frame, on the horizon — smaller and paler than her: she is far ahead and pulling away)
-    { const C = { kind: 'endeavour', x: 178, y: HZ + 1.2, scale: .27, detail: 'far', lights: true, seed: 2 }, bx = 178 - 13.6;
+    { const C = { kind: 'endeavour', x: 169, y: HZ + 1.2, scale: .27, detail: 'far', lights: true, seed: 2 }, bx = 169 - 13.6;
       bg += `<g data-far="">${K.ship(u, L, C)}</g>`;
       // her bow chaser: the smoke rolls ahead with the wind (and hangs between them), the flash only at the muzzle
       bg += K.smoke(u, L, { x: bx - 1, y: HZ - 1.6, w: 16, h: 11, wind: -.9, seed: 4, opacity: .55, glow: { color: '#ffb050', power: .4 } })
@@ -87,8 +87,8 @@ module.exports = { name: 'Уйти по ветру', kind: 'deck', status: 'acce
     { const mt = K.shipGeom('pearl', SHIP).masts[1].top; bg += K.ship(u, L, SHIP) + pennant(u, L, mt[0] - .3, mt[1] + 1.2, 50); }
     let fg = '';
     // the chaser's shot falls short — into her wake, where she was a moment ago
-    fg += K.splash(u, { x: 156, y: WL + 3, w: 11, h: 22, seed: 3, L, wind: -.3 }) + K.splash(u, { x: 172, y: WL + 5, w: 8, h: 10, seed: 4, L, wind: -.3 })
-      + K.splash(u, { x: 162, y: WL + 12, w: 7, h: 9, seed: 5, L, wind: -.3 });
+    fg += K.splash(u, { x: 151, y: WL + 3, w: 11, h: 22, seed: 3, L, wind: -.3 }) + K.splash(u, { x: 167, y: WL + 5, w: 8, h: 10, seed: 4, L, wind: -.3 })
+      + K.splash(u, { x: 157, y: WL + 12, w: 7, h: 9, seed: 5, L, wind: -.3 });
     // spray thrown up and blown ahead at the bow, the bow wave
     fg += K.splash(u, { x: 41, y: WL, w: 16, h: 15, seed: 2, L, wind: -1 });
     { const R = rng(17); for (let i = 0; i < 34; i++) { const x = 17 + R() * 30, y = WL - 18 + R() * 18; fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.25 + R() * .6)}" fill="#eaf4ff" opacity="${f(.35 + R() * .5)}"/>`; } }

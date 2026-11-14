@@ -94,8 +94,9 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
       // the frayed edges: lit on the side towards the moon, dark on the other
       rig += line('M' + Lt.map(p => f(p[0]) + ' ' + f(p[1])).join('L'), .55, '#fff4d8', .75) + line('M' + Rt.map(p => f(p[0]) + ' ' + f(p[1])).join('L'), .5, '#e8e2c8', .55);
       // loose threads: out of both edges into the gap and hanging down; across the narrow end a few still bridge it
-      for (const [E, s] of [[Lt, -1], [Rt, 1]]) for (let i = 1; i < E.length; i++) for (let k = 0; k < 2; k++) {
-        const [x, y] = E[i], q = i / n, l = 1.2 + Rr() * (2 + q * 3.5), a = Math.atan2(ny * s, nx * s) + (Rr() - .5) * 1.1 + .5;
+      // (0–3 per segment, at random points along it, of very different length and droop — no regular comb)
+      for (const [E, s] of [[Lt, -1], [Rt, 1]]) for (let i = 1; i < E.length; i++) for (let k = 0, m = Math.floor(Rr() * 3.4); k < m; k++) {
+        const v = Rr(), x = E[i - 1][0] + (E[i][0] - E[i - 1][0]) * v, y = E[i - 1][1] + (E[i][1] - E[i - 1][1]) * v, q = i / n, l = .6 + Math.pow(Rr(), 1.6) * (2.4 + q * 5), a = Math.atan2(ny * s, nx * s) + (Rr() - .5) * 1.8 + .5;
         rig += line(`M${f(x)} ${f(y)}q${f(Math.cos(a) * l * .5)} ${f(Math.sin(a) * l * .5 + .3)} ${f(Math.cos(a) * l)} ${f(Math.sin(a) * l + .8 + Rr() * .8)}`, .22 + Rr() * .2, Rr() > .3 ? '#e4dec6' : '#9a968a', .85); }
       for (let i = 1; i < 5; i++) rig += line(`M${f(Lt[i][0])} ${f(Lt[i][1])}Q${f((Lt[i][0] + Rt[i][0]) / 2)} ${f((Lt[i][1] + Rt[i][1]) / 2 + .8)} ${f(Rt[i][0])} ${f(Rt[i][1])}`, .2, '#e4dec6', .8);
       // the corner torn loose: a flap of canvas hanging out of the leech, curled, its frayed end flogging down-left
@@ -186,12 +187,20 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     // scraps of canvas torn out by the shot, fluttering down along its track (nothing burns: chain shot only tears)
     { const Rs = rng(91);
       for (const [cx, cy, w, rot] of [[38, 100, 4.2, 30], [58, 108, 3.2, -24], [30, 116, 3.6, 62], [70, 120, 2.6, 10], [44, 82, 2.4, -50]]) {
-        const pts = [[-w, -w * .25], [-w * .1, -w * .5], [w * 1.1, -w * .2], [w * .6, w * .3], [-w * .7, w * .32]].map(([x, y]) => [x + (Rs() - .5) * w * .3, y + (Rs() - .5) * w * .3]);
-        const d = 'M' + pts.map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'Z';
-        fall += `<g transform="translate(${cx} ${cy}) rotate(${rot})"><path d="${d}" fill="#6e6e68" stroke="#1a1c22" stroke-width=".25"/>`
-          + `<path d="M${f(pts[0][0])} ${f(pts[0][1])}L${f(pts[1][0])} ${f(pts[1][1])}L${f(pts[2][0])} ${f(pts[2][1])}" stroke="#f4eed8" stroke-width=".35" fill="none" opacity=".7"/>`
+        const top = [[-w, -w * .25], [-w * .1, -w * .5], [w * 1.1, -w * .2]].map(([x, y]) => [x + (Rs() - .5) * w * .3, y + (Rs() - .5) * w * .3]);
+        // the torn lower edge: from the right corner back to the left one in uneven bites — teeth of different
+        // depth and pitch, never a regular saw
+        const a0 = [w * .6 + (Rs() - .5) * w * .3, w * .3], a1 = [-w * .7 + (Rs() - .5) * w * .3, w * .32], rag = [a0];
+        for (let t = 0; t < 1;) { t = Math.min(1, t + .1 + Rs() * .28); const x = a0[0] + (a1[0] - a0[0]) * t, y = a0[1] + (a1[1] - a0[1]) * t;
+          rag.push([x + (Rs() - .5) * w * .12, y + (Rs() > .45 ? w * (.08 + Rs() * .4) : -w * Rs() * .12)]); }
+        const pts = top.concat(rag), d = 'M' + pts.map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'Z';
+        // 2–3 threads hanging from the torn edge, each its own length and droop
+        let th = ''; for (let k = 0, n = 2 + (Rs() > .5 ? 1 : 0); k < n; k++) { const q = rag[1 + Math.floor(Rs() * (rag.length - 2))], l = w * (.5 + Rs() * .9);
+          th += `M${f(q[0])} ${f(q[1])}q${f((Rs() - .5) * l * .6)} ${f(l * .5)} ${f((Rs() - .5) * l * .5)} ${f(l)}`; }
+        fall += `<g transform="translate(${cx} ${cy}) rotate(${rot})"><path d="${d}" fill="#6e6e68" stroke="#1a1c22" stroke-width=".25" stroke-linejoin="round"/>`
+          + `<path d="M${f(top[0][0])} ${f(top[0][1])}L${f(top[1][0])} ${f(top[1][1])}L${f(top[2][0])} ${f(top[2][1])}" stroke="#f4eed8" stroke-width=".35" fill="none" opacity=".7"/>`
           + `<path d="M${f(-w * .6)} ${f(-w * .1)}L${f(w * .7)} ${f(-w * .05)}" stroke="#4a4c4e" stroke-width=".25" opacity=".6"/>`
-          + `<path d="M${f(pts[3][0])} ${f(pts[3][1])}L${f(pts[4][0])} ${f(pts[4][1])}" stroke="#bdb8a4" stroke-width=".5" stroke-dasharray=".5 .4" fill="none" opacity=".8"/></g>`; } }
+          + `<path d="${th}" stroke="#bdb8a4" stroke-width=".22" fill="none" opacity=".85" stroke-linecap="round"/></g>`; } }
     // the block (falling, tumbling) with a bit of rope, a second smaller one further down
     for (const [bx, by, s, rot] of [[86, 116, 1, 28], [56, 142, .7, -40]]) {
       fall += `<g transform="translate(${bx} ${by}) rotate(${rot}) scale(${s})"><rect x="-3.4" y="-4.4" width="6.8" height="8.8" rx="3" fill="url(#oak${u})" stroke="#140a04" stroke-width=".5"/><circle r="1.5" fill="url(#iron${u})" stroke="#0a0a0a" stroke-width=".3"/><path d="M-2.6 -3.8q2.6 -1.4 5.2 0" stroke="#e0c090" stroke-width=".4" fill="none" opacity=".6"/></g>`
