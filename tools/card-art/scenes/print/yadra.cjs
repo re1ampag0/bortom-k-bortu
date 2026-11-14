@@ -123,21 +123,21 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x:
     // red-orange edge) and a wide tongue along the bore with lit smoke round it; only right of the muzzle's face
     { const fb = nid('fb', u), fc = nid('fc', u), fh = nid('fh', u), cx = m.x + 9, Rf = rng(9), n = 8;
       // the ball of fire: lobes of different size round its middle (a ragged edge, not a disc), a soft glow under it
-      const lob = Array.from({ length: n }, (_, j) => { const a = j / n * Math.PI * 2 + .3, rr = 8.5 + Rf() * 5.5; return [cx + Math.cos(a) * rr * 1.1, m.y + Math.sin(a) * rr * .85]; });
+      const lob = Array.from({ length: n }, (_, j) => { const a = j / n * Math.PI * 2 + .3, rr = 10.5 + Rf() * 6; return [cx + Math.cos(a) * rr * 1.1, m.y + Math.sin(a) * rr * .85]; });
       const mid = (p, q) => [cx + ((p[0] + q[0]) / 2 - cx) * .78, m.y + ((p[1] + q[1]) / 2 - m.y) * .78];
       const d = `M${f(mid(lob[n - 1], lob[0])[0])} ${f(mid(lob[n - 1], lob[0])[1])}` + lob.map((p, j) => { const q = mid(p, lob[(j + 1) % n]); return `Q${f(p[0])} ${f(p[1])} ${f(q[0])} ${f(q[1])}`; }).join('') + 'Z';
-      fg += `<defs>${radGrad(fb, cx - 2, m.y, 14, [[0, '#ffffff', 1], [.16, '#fff4b0', 1], [.38, '#ffd040', 1], [.66, '#ff8a1e', .95], [.9, '#f0501a', .85], [1, '#c8380c', .8]])}`
-        + `${radGrad(fh, cx, m.y, 22, [[0, '#ffb050', .7], [.5, '#ff9a40', .3], [1, '#ff9a40', 0]])}<clipPath id="${fc}"><rect x="${f(m.x - 2.5)}" y="${f(m.y - 40)}" width="70" height="80"/></clipPath></defs>`
-        + `<g clip-path="url(#${fc})">${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -2, len: 32, seed: 4, smoke: true, glow: false })}`
-        + `<circle cx="${f(cx)}" cy="${f(m.y)}" r="22" fill="url(#${fh})"/><path d="${d}" fill="url(#${fb})"/>`
-        + `${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -3, len: 27, seed: 1, smoke: false, glow: false })}${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -1, len: 15, seed: 0, smoke: false, glow: false })}</g>`; }
+      fg += `<defs>${radGrad(fb, cx - 2, m.y, 17, [[0, '#ffffff', 1], [.16, '#fff4b0', 1], [.38, '#ffd040', 1], [.66, '#ff8a1e', .95], [.9, '#f0501a', .85], [1, '#c8380c', .8]])}`
+        + `${radGrad(fh, cx, m.y, 27, [[0, '#ffb050', .7], [.5, '#ff9a40', .3], [1, '#ff9a40', 0]])}<clipPath id="${fc}"><rect x="${f(m.x - 2.5)}" y="${f(m.y - 40)}" width="70" height="80"/></clipPath></defs>`
+        + `<g clip-path="url(#${fc})">${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -2, len: 38, seed: 4, smoke: true, glow: false })}`
+        + `<circle cx="${f(cx)}" cy="${f(m.y)}" r="27" fill="url(#${fh})"/><path d="${d}" fill="url(#${fb})"/>`
+        + `${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -3, len: 32, seed: 1, smoke: false, glow: false })}${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -1, len: 18, seed: 0, smoke: false, glow: false })}</g>`; }
     // burning bits of the wad thrown out of the muzzle: short glowing streaks with a wisp each, falling to the water
     { const Rs = rng(27); for (let i = 0; i < 9; i++) { const x = m.x + 10 + Rs() * 22, y = m.y - 6 + Rs() * 16, a = (Rs() - .3) * .9, l = 1.2 + Rs() * 2.4;
         fg += `<path d="M${f(x)} ${f(y)}l${f(-Math.cos(a) * l * 2)} ${f(-Math.sin(a) * l * 2)}" stroke="#c8b8a0" stroke-width=".5" opacity=".35" stroke-linecap="round"/>`
           + `<path d="M${f(x)} ${f(y)}l${f(-Math.cos(a) * l)} ${f(-Math.sin(a) * l)}" stroke="${Rs() > .4 ? '#ffb040' : '#ff7a20'}" stroke-width="${f(.5 + Rs() * .4)}" stroke-linecap="round"/><circle cx="${f(x)}" cy="${f(y)}" r=".4" fill="#fff0b0"/>`; } }
     // the ball in flight: bursting out of the front of the flash, over the sun's glitter on the water — cold cast iron,
     // the sky's glint on its upper right, the fire's warm light on its back, a torn trail of smoke behind it
-    { const bx = 162, bY = m.y - 2.2, r = 4.3, tr = nid('tr', u), tb = nid('tb', u), bg2 = nid('bg', u), bw = nid('bw', u);
+    { const bx = 167, bY = m.y - 2.6, r = 4.4, tr = nid('tr', u), tb = nid('tb', u), bg2 = nid('bg', u), bw = nid('bw', u);
       fg += `<defs>${linGrad(tr, m.x + 14, m.y, bx - r, bY, [[0, '#d8d2c6', 0], [.6, '#d8d2c6', .45], [1, '#e8e2d6', .75]])}<filter id="${tb}" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".8"/></filter>`
         + radGrad(bg2, bx + 1.4, bY - 1.6, r * 1.45, [[0, '#9aa4ac', 1], [.3, '#4a4f54', 1], [.75, '#1a1c1e', 1], [1, '#0a0b0c', 1]])
         + radGrad(bw, bx - r * .9, bY + .4, r * 1.1, [[0, '#ff9a3a', .85], [.5, '#ff7a20', .3], [1, '#ff7a20', 0]]) + `</defs>`
