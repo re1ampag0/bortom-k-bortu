@@ -25,7 +25,7 @@ const PT = 112, PF = 117;                        // the parapet: the back edge o
 const LAN = { x: 150, y: 115.4, s: .78 };        // the lantern on the parapet
 const HEAD = { c: [77, 58], r: 8.6, tilt: 9 };   // Mercer's head (profile, facing right)
 const SCOPE_A = 13;                              // the spyglass: degrees below the horizontal
-const SHIP = { kind: 'pearl', x: 155, y: 99.5, scale: .37, flip: true };   // her stern (the lit windows) towards him; step 3: the whole ship in the frame (shipBox x 130..191)
+const SHIP = { kind: 'pearl', x: 160, y: 99.5, scale: .44, flip: true };   // her stern (the lit windows) towards him
 const LP = K.lantern.local({ ...LAN, horizon: HZ });
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#dfe8ff', power: .85 },
   fill: { color: '#2a3a5c', power: .4 }, rim: { az: 10, color: '#c8dcff', power: .55 }, locals: [LP] };
@@ -197,21 +197,10 @@ module.exports = { name: 'Шпион Мерсер', kind: 'deck', status: 'draft
       const s0 = Pg(-.5, -.1); book += `<path d="M${f(s0[0] - 3.2)} ${f(s0[1] - 1.4)}h6.4l-.8 3.2h-4.8z" fill="none" stroke="#3a3028" stroke-width=".3"/>` + [-2, -.6, .8].map(dx => `<rect x="${f(s0[0] + dx)}" y="${f(s0[1] - .6)}" width=".9" height=".7" fill="#3a3028"/>`).join('') + ln(`M${f(s0[0])} ${f(s0[1] - 1.4)}v-1.6`, .25, '#3a3028');
       for (let i = 0; i < 4; i++) { const p = Pg(.2, -.6 + i * .36); book += ln(`M${P2(p)}h${f(5 + R() * 2)}`, .3, '#3a3028', .8); }
       const p0 = Pg(.3, .7), p1 = Pg(1.3, -.2); book += `<path d="M${P2(p0)}L${P2(p1)}" stroke="#5a3a1a" stroke-width="1" stroke-linecap="round"/><path d="M${P2(p0)}L${P2([lerp(p0[0], p1[0], .08), lerp(p0[1], p1[1], .08)])}" stroke="#1a1410" stroke-width=".8" stroke-linecap="round"/>`; }
-    // step 3 detail: his pocket watch open on the coping by the notebook, its chain trailing — he times the watch
-    // changes aboard her
-    { const c = [131.4, 114.6], rx = 3, ry = 1.5, br = L.ramp('brass', c[0], c[1]);
-      book += K.contactShadow(u, c[0], c[1] + 1, 8, L, { ry: .6, opacity: .5 })
-        + `<ellipse cx="${f(c[0])}" cy="${f(c[1] + .5)}" rx="${rx}" ry="${ry}" fill="${br.shadow}" stroke="${br.outline}" stroke-width=".3"/>`
-        + `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${rx}" ry="${ry}" fill="${br.half}" stroke="${br.outline}" stroke-width=".3"/>`
-        + `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${f(rx * .78)}" ry="${f(ry * .78)}" fill="#f2ead8" stroke="${br.shadow}" stroke-width=".2"/>`
-        + `<path d="M${f(c[0])} ${f(c[1])}l-.2 -.9M${f(c[0])} ${f(c[1])}l1.5 .3" stroke="#1a1410" stroke-width=".25" stroke-linecap="round"/>`
-        // the lid standing open behind it, the bow and the chain to the left over the coping's edge
-        + `<path d="M${f(c[0] - rx)} ${f(c[1] - .2)}Q${f(c[0] - rx * .9)} ${f(c[1] - 3.6)} ${f(c[0])} ${f(c[1] - 3.8)}Q${f(c[0] + rx * .9)} ${f(c[1] - 3.6)} ${f(c[0] + rx)} ${f(c[1] - .2)}Z" fill="${br.lit}" stroke="${br.outline}" stroke-width=".3"/>`
-        + `<path d="M${f(c[0] - rx)} ${f(c[1] + .2)}q-2.4 .6 -3.6 2q-1 1.4 -2.6 1.8" stroke="${br.lit}" stroke-width=".35" stroke-dasharray=".5 .3" fill="none"/>`; }
     // the lantern on the coping; its door ajar towards the notebook
     const lamp = K.lantern(u, L, { ...LAN, lit: true, seed: 7 }) + K.localGlow(u, { x: LP.x, y: LP.y, color: '#ffc070', power: .85, radius: 20 });
     // ——— the air: the moon's haze, the dark in the corners ———
-    const air = gloom(u, 100, 140, 100, 280, .45, '#02040a');   // step 3: no warm motes by the lantern (they read as sparks)
+    const air = gloom(u, 100, 140, 100, 280, .45, '#02040a') + motes(10, 128, 96, 24, 16, '#ffd8a0', 5);
     return [bg + tw, man + par + book + lamp + air];
 
     // the outline of the man as one dark shape (for his shadow on the wall)
