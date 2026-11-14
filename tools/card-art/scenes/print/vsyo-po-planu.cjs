@@ -118,10 +118,11 @@ module.exports = { name: 'Всё по плану', kind: 'deck', status: 'draft'
       low += K.contactShadow(u, 36, 93, 44, L, { opacity: .45 }) + K.rope(u, L, B, { r, seed: 7 }) + K.rope(u, L, A, { r, seed: 8 });
       // the burnt last inch: charred black, grey ash flaking, the ember dying at the very end
       const e = CUT[0], b0 = [48.8, 99.8], ash = nid('as', u), em = nid('em', u);
-      low += `<defs>${linGrad(ash, b0[0], 0, e[0], 0, [[0, '#2a2018', 0], [.25, '#1e1814', 1], [1, '#3a3430', 1]])}${radGrad(em, e[0] + .2, e[1] - .3, 2.4, [[0, '#fff0b8', 1], [.35, '#ff9a3a', 1], [.75, '#b8380e', .9], [1, '#5a1a08', 0]])}</defs>`
+      low += `<defs>${linGrad(ash, b0[0], 0, e[0], 0, [[0, '#2a2018', 0], [.25, '#1e1814', 1], [1, '#3a3430', 1]])}${radGrad(em, e[0] + .2, e[1] - .3, 2.4, [[0, '#ffb070', 1], [.35, '#d8601e', 1], [.75, '#8a2a0c', .85], [1, '#4a1606', 0]])}</defs>`
         + `<path d="M${P2(b0)}L${P2(e)}" stroke="url(#${ash})" stroke-width="${f(r * 2.1)}" stroke-linecap="round"/>`
         + [[50.4, 99.8], [52.2, 101.4], [53.6, 100.7]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r=".42" fill="#8a8680" opacity=".8"/>`).join('')
-        + glow(u, e[0], e[1], 7, 3.4, '#ff8a30', .4) + `<circle cx="${f(e[0] + .2)}" cy="${f(e[1])}" r="1.9" fill="url(#${em})"/>`;
+        + glow(u, e[0], e[1], 4.4, 2.2, '#ff8a30', .22) + `<circle cx="${f(e[0] + .2)}" cy="${f(e[1])}" r="1.35" fill="url(#${em})"/>`
+        + `<path d="M${f(e[0] - .9)} ${f(e[1] - .5)}q.8 -.5 1.6 .1" stroke="#9a948c" stroke-width=".35" fill="none" opacity=".8"/>`;
       // the clean cut of the near piece: the pale fibres of the core, a few strands sprung loose towards the gap
       const c = CUT[1];
       for (let k = 0; k < 6; k++) { const a = Math.PI + .3 - k * .14; low += `<path d="M${P2(c)}l${f(Math.cos(a) * (1.4 + R() * 1.2))} ${f(Math.sin(a) * (1.4 + R() * .9))}" stroke="${R() > .5 ? '#d8bc88' : '#9a7a50'}" stroke-width=".4" stroke-linecap="round"/>`; }
@@ -175,6 +176,14 @@ module.exports = { name: 'Всё по плану', kind: 'deck', status: 'draft'
         + `<circle cx="-5" r="1" fill="#3a2a18"/><circle cx="-5" r=".5" fill="#efe4c8"/><path d="M-2 -2.4l3 1.6l3 -1.6M-2 2.4l3 -1.6l3 1.6" stroke="#2a3a5a" stroke-width=".6" fill="none"/>`
         + `<path d="M-3 -3.4L5 3.4M5 -3.4L-3 3.4" stroke="#a01a10" stroke-width="1.1" stroke-linecap="round"/><path d="M-6.4 -3.8h10.4" stroke="#ffffff" stroke-width=".4" opacity=".7"/></g></g>`;
     }
+    // ——— two balls of the grapeshot rolled loose on the chart (the special charge is here, not in the gun), and the
+    // brass dividers lying open on the chart between the candle and the island ———
+    for (const b of [{ x: 146, y: 114.6, r: 3, seed: 2 }, { x: 65, y: 124.6, r: 3.1, seed: 5 }]) shot += K.castShadow(u, L, { x: b.x, y: b.y, w: b.r * 2, h: b.r * 2, horizon: HZ, d: 1 }) + K.contactShadow(u, b.x, b.y, b.r * 2.2, L) + K.shot(u, L, b);
+    { const hv = [176, 97.6], la = [152.6, 101.6], lb = [157.4, 106.2], g = nid('dv', u);
+      shot += `<path d="M${f(hv[0] + .8)} ${f(hv[1] + 1.2)}L${f(la[0] + .8)} ${f(la[1] + 1.2)}M${f(hv[0] + .8)} ${f(hv[1] + 1.2)}L${f(lb[0] + .8)} ${f(lb[1] + 1.2)}" stroke="#4a3418" stroke-width="1.1" opacity=".35" stroke-linecap="round"/>`
+        + `<defs>${linGrad(g, 0, hv[1] - 1, 0, hv[1] + 1, [[0, '#fff0b0', 1], [.5, '#c89a40', 1], [1, '#6a4a14', 1]])}</defs>`
+        + [la, lb].map(p => `<path d="M${P2(hv)}L${P2(p)}" stroke="#3a2808" stroke-width="1.05" stroke-linecap="round"/><path d="M${P2(hv)}L${f(lerp(hv[0], p[0], .84))} ${f(lerp(hv[1], p[1], .84))}" stroke="url(#${g})" stroke-width=".7" stroke-linecap="round"/><path d="M${f(lerp(hv[0], p[0], .84))} ${f(lerp(hv[1], p[1], .84))}L${P2(p)}" stroke="#b8c0c8" stroke-width=".45" stroke-linecap="round"/>`).join('')
+        + `<circle cx="${hv[0]}" cy="${hv[1]}" r="1.25" fill="url(#brass${u})" stroke="#3a2808" stroke-width=".3"/><circle cx="${f(hv[0] + .3)}" cy="${f(hv[1] - .35)}" r=".35" fill="#fff6c8"/>`; }
     // ——— the dagger standing in the chart right at the cut, leaning a little away from the candle ———
     let dag = '';
     { const DS = 1.15, tip = [58, 99.6], ax = [-.075, -.997], nv = [-ax[1], ax[0]];

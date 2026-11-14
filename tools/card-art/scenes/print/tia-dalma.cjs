@@ -86,12 +86,17 @@ function crab(u, L, x, y, s, a, o = {}) {
       + `<ellipse cx="${f(x - lx * 2 * s)}" cy="${f(y - ly * 1.2 * s + 1.4 * s)}" rx="${f(10 * s)}" ry="${f(4.4 * s)}" fill="#0a0402" opacity=".55" filter="url(#${b})"/>`; }
   // the legs: four pairs, short and thick, from the shell's sides; each a raised thigh and a short shin down to the
   // tip, the front pair out to the side, the rear pairs swept back (a crab's walking legs, not a spider's)
-  const leg = (side, i) => { const yl = 2.2 - i * 2.3, r0 = [side * 8.4, yl, 1.8], kn = [side * (13 - i * .2), yl - .6 - i * .8, 4.4], tp = [side * (15.6 - i * .3), yl - 1.4 - i * 1.4, 0];
-    const A = P(...r0), B = P(...kn), C = P(...tp), wd = (3 - i * .25) * s;
-    return `<path d="M${P2(A)}L${P2(B)}L${P2(C)}" stroke="${dark}" stroke-width="${f(wd + .7)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
-      + `<path d="M${P2(A)}L${P2(B)}L${P2(C)}" stroke="${shell}" stroke-width="${f(wd)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
-      + `<path d="M${P2(A)}L${P2(B)}" stroke="${lit}" stroke-width="${f(wd * .35)}" fill="none" stroke-linecap="round" opacity=".7" transform="translate(${f(lx * .4 * s)} ${f(ly * .4 * s)})"/>`
-      + `<circle cx="${f(B[0])}" cy="${f(B[1])}" r="${f(wd * .42)}" fill="${dark}" opacity=".55"/><path d="M${P2(B)}L${P2(C)}" stroke="#1a0402" stroke-width="${f(wd * .3)}" stroke-linecap="round" opacity=".45"/>`; };
+  // each leg leaves the shell's side at its own angle (the front pair angled forward, the rear pair swept back), so the
+  // eight legs fan round the shell; a raised knee, a shin down to the ankle, a pointed dark tip on the support
+  const leg = (side, i) => { const th = (24 - i * 27) * Math.PI / 180, dx = side * Math.cos(th), dy = Math.sin(th), rr = (a, z) => [r0[0] + dx * a, r0[1] + dy * a - (i > 1 ? (i - 1) * .8 * a / 12 : 0), z];
+    const r0 = [side * 8.2 * Math.cos(th * .8), 4.6 * Math.sin(th * .9) + .4, 1.8];
+    const A = P(...r0), B = P(...rr(5, 5)), C = P(...rr(9.2, 2.2)), D = P(...rr(11.2, 0)), wd = (2.5 - i * .2) * s;
+    const pth = `M${P2(A)}L${P2(B)}L${P2(C)}`;
+    return `<path d="${pth}" stroke="${dark}" stroke-width="${f(wd + .7)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+      + `<path d="${pth}" stroke="${shell}" stroke-width="${f(wd)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+      + `<path d="M${P2(A)}L${P2(B)}" stroke="${lit}" stroke-width="${f(wd * .32)}" fill="none" stroke-linecap="round" opacity=".7" transform="translate(${f(lx * .35 * s)} ${f(ly * .35 * s)})"/>`
+      + `<circle cx="${f(B[0])}" cy="${f(B[1])}" r="${f(wd * .4)}" fill="${dark}" opacity=".5"/><circle cx="${f(C[0])}" cy="${f(C[1])}" r="${f(wd * .32)}" fill="${dark}" opacity=".45"/>`
+      + `<path d="M${P2(C)}L${P2(D)}" stroke="${dark}" stroke-width="${f(wd * .75)}" stroke-linecap="round"/><path d="M${P2(C)}L${P2(D)}" stroke="#d86a3a" stroke-width="${f(wd * .4)}" stroke-linecap="round" opacity=".8"/>`; };
   for (const sd of [-1, 1]) for (let i = 3; i >= 0; i--) back += leg(sd, i);
   // the claws: an arm in two segments forward and out, the pincer (palm and two fingers); one raised (z up), one low
   const claw = (side, raise, big) => { const sc = big ? 1.45 : 1.25, cs = big ? 1.3 : 1.18, C = (px, py, pz) => P(px * cs, py * cs, pz),
@@ -200,8 +205,7 @@ module.exports = { name: 'Тиа Дальма', kind: 'deck', status: 'draft', c
           + Array.from({ length: 6 }, (_, k) => `<path d="M${x - 1 + k * .4} ${y - 6}q${f(-4 + k * 1.6)} ${f(-5 - R() * 3)} ${f(-5 + k * 2)} ${f(-9 - R() * 3)}" stroke="${mix(hc, '#2a3a1a', R() * .4)}" stroke-width=".7" fill="none"/>`).join(''); }
       // a small animal skull, its eye holes dark
       bg += `<path d="M66 ${y}q-1 -6 4 -7q5 -.4 5.4 4.4q.2 2.6 -2 2.6z" fill="#d8ccb0" stroke="#4a3a24" stroke-width=".35"/><circle cx="70" cy="${y - 4}" r="1.1" fill="#1a0e06"/><path d="M73 ${y - 1}h2.6" stroke="#4a3a24" stroke-width=".4"/>`
-        + `<path d="M66.4 ${y - 5.6}q2 -1.6 4.4 -1.2" stroke="#fff4d8" stroke-width=".5" fill="none" opacity=".7"/>`
-        + jar(u, L, 82, y - 12, .7, '#9a3a2a'); }
+        + `<path d="M66.4 ${y - 5.6}q2 -1.6 4.4 -1.2" stroke="#fff4d8" stroke-width=".5" fill="none" opacity=".7"/>`; }
     // ——— the table: planks running back to the vanishing point; its sides receding; the floor beyond, dark ———
     { const tl = [B.x0 + 4, TB], tr = [B.x1 - 4, TB], nl = atY(tl, 290), nr = atY(tr, 290), cp = nid('ttc', u);
       bg += `<rect x="-10" y="${B.y1}" width="220" height="210" fill="#0a0604"/><path d="M${P2(cBL)}L${P2(lBot)}M${P2(cBR)}L${P2(rBot)}" stroke="#1a0e06" stroke-width=".8"/>`
@@ -219,7 +223,7 @@ module.exports = { name: 'Тиа Дальма', kind: 'deck', status: 'draft', c
     // the top of the hut sinks into the dark (the candles are low on the table): the wall, the net and the beam dimmed
     { const g = nid('ttd', u); fg += `<defs>${linGrad(g, 0, -10, 0, 66, [[0, '#040201', .78], [.55, '#040201', .5], [1, '#040201', 0]])}</defs><rect x="-10" y="-20" width="220" height="86" fill="url(#${g})"/>`
         + glow(u, WIN.x, WIN.y, WIN.r + 2, WIN.r + 2, '#b8e0d0', .22); }
-    { const J = [[69, 26, 1.35, '#d84a2a', ''], [87, 42, 1.1, '#3ab87a', ''], [104, 22, 1.5, '#f0b83a', ''], [163, 60, .85, '#9a5ad0', ''], [147, 46, 1.25, '#3a9ad0', ''], [76, 58, .8, '#9ac83a', '']];
+    { const J = [[69, 26, 1.35, '#d84a2a', ''], [87, 36, 1.1, '#3ab87a', ''], [104, 22, 1.5, '#f0b83a', ''], [163, 60, .85, '#9a5ad0', ''], [147, 46, 1.25, '#3a9ad0', ''], [136, 69, .75, '#9ac83a', '']];
       for (const [x, y, s, c] of J) fg += `<path d="M${x} ${beamY + 9}V${f(y)}" stroke="#8a7a5a" stroke-width="${f(.3 + s * .15)}"/>`;
       // things floating in the jars: an eye, a little snake, seeds
       const inside = [`<circle cx="69" cy="42" r="2.4" fill="#e8e0c8"/><circle cx="69.6" cy="42" r="1.1" fill="#2a6a3a"/><circle cx="69.8" cy="42" r=".45" fill="#000"/>`, '', `<path d="M98 42q2 -3 4 0t4 0t4 0" stroke="#3a2a10" stroke-width="1.1" fill="none"/>`, '', `<circle cx="145" cy="62" r=".8" fill="#1a1a10"/><circle cx="148" cy="64" r=".7" fill="#1a1a10"/><circle cx="146" cy="66" r=".8" fill="#1a1a10"/>`, ''];
@@ -253,6 +257,9 @@ module.exports = { name: 'Тиа Дальма', kind: 'deck', status: 'draft', c
         + `<path d="M${x + 14} ${f(top + 3.4)}Q${x + 6} ${f(top + 1)} ${x - 2} ${f(top + 1.3)}Q${x - 9} ${f(top + 1.5)} ${x - 10} ${f(top + 3.4)}Q${x - 8} ${f(top + 4.4)} ${x - 5.6} ${f(top + 3.4)}" stroke="#f4fbff" stroke-width="1.1" fill="none" stroke-linecap="round"/>`
         + `<path d="M${x - 16} ${f(top + 4.4)}q3 -1.2 6 0M${x + 10} ${f(top + 4.8)}q4 -1 8 0" stroke="#d8eef4" stroke-width=".6" fill="none" stroke-linecap="round" opacity=".75"/>`
         + [[-1, 0], [2, -.6], [-4, -.4], [5, .2]].map(([dx, dy]) => `<circle cx="${x + dx}" cy="${f(top + .8 + dy)}" r=".45" fill="#fff" opacity=".8"/>`).join('')
+        // slanting rain under the cloud, and a tiny ship heeled over on the swell to the right — tomorrow's sea
+        + Array.from({ length: 11 }, (_, k) => { const rx0 = x - 20 + k * 3.9; return `<path d="M${f(rx0)} ${f(top - 1.6 + (k % 3) * .4)}l-1.6 ${f(3.6 + (k % 2) * .8)}" stroke="#9ab4c8" stroke-width=".3" opacity=".5"/>`; }).join('')
+        + `<g transform="translate(${x + 13} ${f(top + 2.3)}) rotate(-16)"><path d="M-2.6 0h5.2l-1 1.1h-3.4z" fill="#04080c"/><path d="M0 0v-3.6M-.9 -.4v-2.4" stroke="#04080c" stroke-width=".35"/><path d="M.2 -3.4l1.6 1.2l-1.6 .8zM-.7 -2.6l1.1 .9l-1.1 .5z" fill="#c8d8e4" opacity=".8"/></g>`
         // the lightning: a fork from the cloud's belly down to the wave's crest, a cold halo round it
         + (() => { const d = `M${x + 6} ${f(top - ry + .4)}L${x + 2.6} ${f(top - 2.6)}L${x + 5} ${f(top - 2)}L${x + .6} ${f(top + .4)}L${x + 2.6} ${f(top + .6)}L${x - 1.4} ${f(top + 2.4)}`, br = `M${x + 3.6} ${f(top - 2.3)}L${x + 9} ${f(top - .4)}L${x + 8} ${f(top + .8)}`;
             return `<path d="${d}${br}" stroke="#a8d4ff" stroke-width="2.6" fill="none" stroke-linejoin="round" stroke-linecap="round" opacity=".45"/><path d="${d}" stroke="#ffffff" stroke-width="1.1" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="${br}" stroke="#ffffff" stroke-width=".6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`; })()
@@ -268,10 +275,17 @@ module.exports = { name: 'Тиа Дальма', kind: 'deck', status: 'draft', c
         + [-1, 1].map(sd => `<circle cx="${sd * l / 2}" cy="-.8" r="1.1" fill="#e8dcc0" stroke="#4a3a24" stroke-width=".3"/><circle cx="${sd * l / 2}" cy=".8" r="1.1" fill="#e8dcc0" stroke="#4a3a24" stroke-width=".3"/>`).join('') + `<path d="M${-l / 2 + 1} -.5h${l - 2}" stroke="#fff" stroke-width=".4" opacity=".7"/></g>`;
       fg += bone(166, 120, 24, 11) + bone(178, 112, -40, 8) + bone(80, 103, 8, 7);
     }
+    // ——— small things of hers on the table: a string of glass beads, a black feather; a thread of smoke from the tall candle ———
+    { const bp = []; for (let i = 0; i < 15; i++) { const t = i / 14; bp.push([65 + t * 25, 123.6 + Math.sin(t * 5) * 1.2 - t * 1.6]); }
+      fg += `<path d="${smooth(bp)}" stroke="#2a1a0a" stroke-width=".3" fill="none" opacity=".7"/>` + bp.map(([bx, by], i) => K.contactShadow(u, bx + .5, by + .6, 2.4, L, { ry: .4, opacity: .4 })
+        + `<circle cx="${f(bx)}" cy="${f(by)}" r=".85" fill="${['#c83a2a', '#2a8a7a', '#e8c040', '#1a1a2a'][i % 4]}" stroke="#0a0604" stroke-width=".2"/><circle cx="${f(bx - .3)}" cy="${f(by - .3)}" r=".25" fill="#fff" opacity=".7"/>`).join('');
+      fg += `<g transform="translate(118 104) rotate(-14)">${K.contactShadow(u, 1, 1.2, 14, L, { ry: .8, opacity: .45 })}<path d="M-7 .2Q0 -2.6 7 -.4Q0 1.4 -7 .2Z" fill="#14161c" stroke="#05060a" stroke-width=".25"/><path d="M-8.4 .4L7 -.3" stroke="#6a6a70" stroke-width=".3"/>`
+        + Array.from({ length: 6 }, (_, k) => `<path d="M${-4 + k * 2} ${f(-.3 - (k % 2) * .2)}l1 -1.2" stroke="#2a3040" stroke-width=".25"/>`).join('') + `<path d="M-4 -.8Q1 -2 5.6 -.8" stroke="#5a6a8a" stroke-width=".3" fill="none" opacity=".6"/></g>`;
+      { const sx = FL.x, sy = FL.y - 6; fg += `<path d="M${sx} ${sy}c-1.6 -4 2.4 -6 .6 -10s2 -6 .4 -10s1.8 -5 .2 -9" stroke="#d8ccb8" stroke-width=".55" fill="none" opacity=".28" stroke-linecap="round"/>`; } }
     // ——— the crabs: one on the left card raising a claw, one climbing the right card ———
     fg += crab(u, L, 46, 107, 1.1, 24, { raiseL: 3, big: -1, seed: 4 }) + crab(u, L, 158, 112, 1.2, -34, { raiseR: 2, big: 1, seed: 7 });
     // ——— light and air: the candle's warmth, the fog's cold from the window, smoke in the air, the corners dark ———
-    fg += K.localGlow(u, { x: FL.x, y: FL.y, color: '#ffb860', power: .7, radius: 60 }) + glow(u, 90, 110, 90, 30, '#ffb060', .16)
+    fg += K.localGlow(u, { x: FL.x, y: FL.y, color: '#ffb860', power: .7, radius: 60 }, { core: false }) + glow(u, 90, 110, 90, 30, '#ffb060', .16)
       + glow(u, WIN.x, WIN.y, 30, 30, '#b8e0d0', .2) + motes(18, 30, 30, 140, 70, '#ffe0b0', 13)
       + gloom(u, 100, 60, 210, 30, .45, '#05080a') + gloom(u, 100, 120, 100, 290, .55, '#050302') + gloom(u, 100, 60, 100, -10, .2, '#050302');
     return [bg, fg];

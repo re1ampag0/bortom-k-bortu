@@ -1,33 +1,36 @@
 // «Банка с землёй» (Жемчужина, РЕАКЦИЯ: отмените Залп или карту «Летучего голландца» против «Жемчужины» — даже
-// Кракена), refined from the first-round scene (portrait-pearl.cjs SCENES['Банка с землёй']): in the rain a gloved
-// hand holds a jar of earth up toward the ghost ship; her captain may not set foot on land, and she shies away.
-// Brief (card-briefs.md): the glass jar of earth big in the raised hand against the green fog; the Dutchman recoils;
-// the warm tone of the earth in the cold green light of Jones. The hand comes in from the lower right over the
-// Pearl's rail, the hand under the jar; the Dutchman rears and heels away from it (her bow lifts, her weedy bottom
-// shows), a ring of foam where she turned. The key is the moon in the green fog beyond her (cold, upper left): the
-// glass, the glove and the rail take its rim; the earth's warmth is a small local glow that thins the fog and lights
-// the rain round the jar.
-// Fixed against the first round: the hand was a cylinder with a fist under the jar — now a sleeve with its folds,
-// a close leather cuff and a gloved hand in contours: the palm under the jar's foot, the thumb up its right side in
-// front, the fingers behind it seen through the thick clear base; the jar was
-// small — now it is the main thing, glass with a thickness, a cloth cap tied with twine, the earth in layers with
-// stones and a root; the ghost ship is the kit's Dutchman, heeled and turned by the rules of her geometry.
+// Кракена), refined from the first-round scene (portrait-pearl.cjs SCENES['Банка с землёй']): in the rain on the
+// Pearl's deck the jar of earth faces the ghost ship; her captain may not set foot on land, and she shies away.
+// Brief (card-briefs.md): the glass jar of earth big against the green fog; the Dutchman recoils; the warm tone of the
+// earth in the cold green light of Jones.
+// Step 3 (the user's note): the jar is a charm hugged to the chest — a sailor of the Pearl (his own face, nobody from
+// the film), seen to the waist, presses it to his breastbone with both hands, the fingers spread round the glass from
+// its sides (people.cjs hand3 wrapped round a cylinder the jar's size), the elbows in at his sides; he looks warily
+// at the Dutchman over his right shoulder, who rears and heels away from him (her bow lifts, her weedy bottom shows),
+// a ring of foam where she turned. The key is the moon in the green fog (cold, upper left): the glass, his shirt, his
+// shoulders and the rail take its rim; the earth's warmth is a small local glow that lights his hands and his face
+// from below, thins the fog and lights the rain round the jar. The jar keeps the first pass's drawing (glass with a
+// thickness, a cloth cap tied with twine, the earth in layers with stones, a root and a sprout), drawn smaller.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
 const PP = require('./lib/people.cjs');
-const { f, mix, nid, linGrad, radGrad, rng } = K;
+const { f, mix, nid, linGrad, radGrad, rng, lerp } = K;
 const { glow, gloom } = PK;
 
-const HZ = 112;
-const JAR = { x: 126, y: 104, w: 46, h: 52 };      // the jar: middle of its bottom, width, body height (the cap above)
-const WR = [160, 121];                             // the end of the cuff, where the wrist comes out
-const light = { time: 'fog', haze: .7, key: { type: 'moon', x: 76, y: 24, el: 26, color: '#c8f0dc', power: .75 }, fill: { color: '#3a6a5c', power: .46 },
-  rim: { az: -20, color: '#d8fff0', power: .55 }, locals: [{ x: JAR.x, y: JAR.y - 22, color: '#ffc880', power: .55, radius: 40 }] };
-const skel = { horizon: HZ, eye: 3, light: 'the moon in the green fog upper left (cold key) + the jar\'s faint warm glow (local)', items: [
-  ['dutchman', 8, 118, 112, 64, 'water: heeled away, bow lifted'], ['foam ring', 30, 120, 76, 6, 'water round her'],
-  ['jar', JAR.x - JAR.w / 2, JAR.y, JAR.w, JAR.h + 12, 'held in the hand'], ['hand', 115, 114, 57, 31, 'under the jar from the wrist, the thumb up its right side'],
-  ['sleeve', 155, 262, 65, 140, 'from the lower right corner to the cuff at the wrist'], ['rail', -5, 186, 210, 40, 'the Pearl\'s bulwark, near']] };
+const HZ = 100;
+const JAR0 = { x: 126, y: 104, w: 46, h: 52 };      // the jar as drawn (middle of its bottom, width, body height; the cap above)
+const JK = .76;                                     // …drawn at JK round his chest
+const MAN = [20, 4];                                // the man (and the jar in his hands) is drawn round x 100, moved by MAN
+const JAR = { x: 100, y: 120, w: JAR0.w * JK, h: JAR0.h * JK };   // the jar in the man's frame
+const HEAD = { c: [100, 42], r: 12.6 };
+const light = { time: 'fog', haze: .7, key: { type: 'moon', x: 66, y: 22, el: 26, color: '#c8f0dc', power: .75 }, fill: { color: '#3a6a5c', power: .46 },
+  rim: { az: -20, color: '#d8fff0', power: .55 }, locals: [{ x: JAR.x + MAN[0], y: JAR.y + MAN[1] - 22, color: '#ffc880', power: .55, radius: 40 }] };
+const skel = { horizon: HZ, eye: 3, light: 'the moon in the green fog upper left (cold key) + the jar\'s faint warm glow (local, on his hands and face from below)', items: [
+  ['dutchman', 4, 106, 88, 50, 'water: heeled away, bow lifted'], ['foam ring', 10, 108, 70, 6, 'water round her'],
+  ['rail', -5, 158, 210, 42, 'the Pearl\'s bulwark behind him'], ['sailor', 82, 170, 78, 140, 'stands on the deck, seen to the waist'],
+  ['jar', 120 - JAR.w / 2, 124, JAR.w, JAR.h + 9, 'pressed to his chest'], ['hands', 98, 121, 46, 28, 'round the jar from its sides']] };
+const P2 = p => `${f(p[0])} ${f(p[1])}`;
 
 // the jar of earth: glass body with a thick rim and base, earth in layers with stones, a root and a sprout, a cloth
 // cap tied with twine over the cork, a paper tag on a string; rain drops on the glass. Returns { body, glass }
@@ -82,90 +85,110 @@ function jar(u, L, o) {
   return { body, glass };
 }
 
-// the gloved hand that holds the jar up from below, drawn as contours in one piece with the wrist (as the glove in
-// anzhelika.cjs): the palm under the jar's foot — we look up at it from below, so we see the heel and the back of the
-// hand pressed under the glass — the thumb up the jar's right side in front of the glass, its pad on it; the four
-// fingers go away behind the jar and up its far side, seen only through the clear thick base, muted and soft.
-// E — the middle of the cuff's end (the wrist comes out of it), t — the forearm's direction there (toward the hand),
-// hw — the cuff's half width. Returns { behind, front }.
-function holdHand(u, L, J, E, t, hw, tn) {
-  const n = [-t[1], t[0]], at = (k, d = 0) => [E[0] + n[0] * hw * k + t[0] * d, E[1] + n[1] * hw * k + t[1] * d];
-  const Gu = at(.95), Gl = at(-.95), Gu2 = at(.95, -6), Gl2 = at(-.95, -6), y0 = J.y, x0 = J.x;   // the glove's wrist edges at the cuff and 6 into it
-  const gid = nid('hg', u), tid = nid('ht', u), fid = nid('hf', u), bid = nid('hb', u), P2 = q => f(q[0]) + ' ' + f(q[1]);
-  // the hand: the wrist out of the cuff up to the jar's foot, the palm along under it, round the heel's left end and back
-  // along the underside to the wrist — one outline
-  const hand = [Gl2, Gu2, Gu, [x0 + 34, y0 + 8.6], [x0 + 29.5, y0 + 4.4], [x0 + 25.5, y0 + 1.4], [x0 + 20, y0], [x0 + 10, y0 - .3], [x0, y0 - .3], [x0 - 6, y0],
-    [x0 - 9.2, y0 + 1.6], [x0 - 9.4, y0 + 4.2], [x0 - 6.5, y0 + 6.6], [x0, y0 + 8.2], [x0 + 9, y0 + 9], [x0 + 17, y0 + 9.2], [x0 + 22.5, y0 + 10.6], [x0 + 26, y0 + 14.6], Gl];
-  const thumb = [[x0 + 19.5, y0 + 1.2], [x0 + 24.4, y0 - .6], [x0 + 25.4, y0 - 5.6], [x0 + 24.6, y0 - 11.6], [x0 + 22.8, y0 - 16.6], [x0 + 20.2, y0 - 19.4], [x0 + 17.4, y0 - 19.2],
-    [x0 + 16.2, y0 - 16.4], [x0 + 16.6, y0 - 11], [x0 + 16.6, y0 - 5.6], [x0 + 15.6, y0 - 1.4]];
-  const behind = (() => {   // the four fingers behind the jar: from the far edge of the palm up the jar's far side, fanned a little
-    const c = mix(tn.half, '#6a8a74', .12), sh = mix(tn.shadow, '#0e0a06', .45), lt = mix(tn.lit, '#c8f0dc', .2); let r = '';
-    for (const [bx, tx, ty, w] of [[x0 - 5.5, x0 - 7.5, y0 - 16, 5.4], [x0 + .5, x0 - .4, y0 - 19, 5.8], [x0 + 6.5, x0 + 6.6, y0 - 18, 5.8], [x0 + 12.5, x0 + 13.6, y0 - 15, 5.4]]) {
-      const by = y0 + 2, dx = tx - bx, dy = ty - by, l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l, nx = -uy, ny = ux, P = (a, b) => `${f(bx + ux * a + nx * b)} ${f(by + uy * a + ny * b)}`;
-      const hw0 = w / 2, hw1 = w * .44;
-      r += `<path d="M${P(0, -hw0)}L${P(l - hw1, -hw1)}Q${P(l + hw1 * .6, -hw1)} ${P(l + hw1 * .6, 0)}Q${P(l + hw1 * .6, hw1)} ${P(l - hw1, hw1)}L${P(0, hw0)}Z" fill="${c}" stroke="${sh}" stroke-width="1.1"/>`
-        + `<path d="M${P(0, hw0 * .5)}L${P(l - hw1, hw1 * .5)}" stroke="${sh}" stroke-width="${f(w * .34)}" opacity=".55"/><path d="M${P(1, -hw0 * .5)}L${P(l - hw1, -hw1 * .5)}" stroke="${lt}" stroke-width=".6" opacity=".5"/>`
-        + `<path d="M${P(5.5, -hw0 * .85)}L${P(5.5, hw0 * .85)}" stroke="${sh}" stroke-width=".4" opacity=".7"/>`; }
-    return `<defs><filter id="${bid}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".45"/></filter></defs><g filter="url(#${bid})">${r}</g>`; })();
-  let front = `<defs>${linGrad(gid, x0, y0 - 1, x0 + 3, y0 + 11, [[0, mix(tn.shadow, '#140a04', .45)], [.3, tn.shadow], [.72, tn.half], [1, mix(tn.half, '#9adcc4', .25)]])}`
-    + `${linGrad(tid, x0 + 16, 0, x0 + 25, 0, [[0, tn.lit], [.35, tn.half], [.8, tn.shadow], [1, mix(tn.shadow, '#140a04', .4)]])}`
-    + `<filter id="${fid}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1"/></filter></defs>`;
-  front += `<path d="${PP.sp(hand, true)}" fill="url(#${gid})" stroke="${tn.outline}" stroke-width=".5"/>`
-    // the jar's foot shades the top of the palm
-    + `<path d="M${f(x0 - 8)} ${f(y0 + 1.4)}Q${f(x0 + 6)} ${f(y0 + 3.2)} ${f(x0 + 21)} ${f(y0 + 2.4)}" stroke="#0a0604" stroke-width="2.2" fill="none" opacity=".35" filter="url(#${fid})"/>`;
-  // where the fingers leave the palm and go up behind the jar: the fold of the knuckles, the gaps between the fingers
-  front += `<path d="M${f(x0 - 8.4)} ${f(y0 + 2.6)}Q${f(x0 + 2)} ${f(y0 + 4.4)} ${f(x0 + 15)} ${f(y0 + 2.4)}" stroke="${tn.outline}" stroke-width=".45" fill="none" opacity=".6"/>`
-    + [-2.6, 3.5, 9.5].map(dx => `<path d="M${f(x0 + dx)} ${f(y0 - .2)}q.3 1.8 -.1 3.6" stroke="${tn.outline}" stroke-width=".45" fill="none" opacity=".7"/>`).join('')
-    + [-5.5, .5, 6.5, 12.5].map(dx => `<path d="M${f(x0 + dx - 2)} ${f(y0 + 1)}q2 -.9 4 0" stroke="${tn.lit}" stroke-width=".35" fill="none" opacity=".45"/>`).join('');
-  // the back of the hand seen from below: the stitching toward the knuckles, the crease at the wrist; the fog's light under it
-  for (const [a, b] of [[[x0 + 27, y0 + 9.4], [x0 + 6, y0 + 6]], [[x0 + 26, y0 + 12], [x0 + 8, y0 + 8]]]) front += `<path d="M${P2(a)}Q${f((a[0] + b[0]) / 2)} ${f((a[1] + b[1]) / 2 + .5)} ${P2(b)}" stroke="${tn.lit}" stroke-width=".3" stroke-dasharray=".8 .6" fill="none" opacity=".55"/>`;
-  { const a = at(-.8, 3), b = at(.8, 3), m = at(0, 4.2); front += `<path d="M${P2(a)}Q${P2(m)} ${P2(b)}" stroke="${tn.outline}" stroke-width=".45" fill="none" opacity=".6"/>`; }
-  front += `<path d="M${f(x0 - 8.6)} ${f(y0 + 5)}Q${f(x0 + 6)} ${f(y0 + 9.6)} ${f(x0 + 22)} ${f(y0 + 11.2)}" stroke="#bfe8d8" stroke-width=".6" fill="none" opacity=".4"/>`;
-  // the thumb: up the jar's right side in front of the glass, round its edge; the glass darkens round the pad, the moon on its left edge
-  front += `<path d="${PP.sp(thumb.slice(5, 10).map(q => [q[0] - 1.1, q[1] + .3]), false)}" stroke="#06100c" stroke-width="1.6" fill="none" opacity=".35" filter="url(#${fid})"/>`
-    + `<path d="${PP.sp(thumb, true)}" fill="url(#${tid})" stroke="${tn.outline}" stroke-width=".5"/>`
-    + `<path d="M${f(x0 + 17)} ${f(y0 - 16)}Q${f(x0 + 17)} ${f(y0 - 9)} ${f(x0 + 16.4)} ${f(y0 - 3)}" stroke="#d8fff0" stroke-width=".6" fill="none" opacity=".55" stroke-linecap="round"/>`
-    + `<path d="M${f(x0 + 22.6)} ${f(y0 - 15)}Q${f(x0 + 23.6)} ${f(y0 - 9)} ${f(x0 + 22.6)} ${f(y0 - 3)}" stroke="${tn.lit}" stroke-width=".3" stroke-dasharray=".8 .6" fill="none" opacity=".55"/>`
-    + `<path d="M${f(x0 + 17)} ${f(y0 - 9.6)}q2.8 1 6 .2" stroke="${tn.outline}" stroke-width=".35" fill="none" opacity=".55"/>`;
-  return { behind, front };
-}
-
 module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
+    const JP = [JAR.x + MAN[0], JAR.y + MAN[1]];                    // the jar's foot in the picture
     let bg = K.sky(u, L, { horizon: HZ, stars: false, seed: 4 }) + K.sunMoon(u, L, { r: 6 });
-    for (const [x, y, w, h, sd, fr] of [[150, 22, 90, 12, 3, .1], [30, 56, 70, 9, 8, .3], [176, 70, 60, 8, 12, .35], [96, 90, 80, 6, 5, .55]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
-    bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .6, seed: 12, glitter: 50 });
-    // the Dutchman rears and heels away from the jar: bow up, her weedy bottom to us; foam where she turned
-    bg += K.ship(u, L, { kind: 'dutch', x: 62, y: HZ + 6, scale: .8, heel: -8, roll: -14, sails: 'full', lights: true, reflect: true, wake: true, seed: 4 });
-    { const fr = rng(19); for (let i = 0; i < 11; i++) { const a = i / 11 * Math.PI * 2, x = 62 + Math.cos(a) * 46, y = HZ + 7 + Math.sin(a) * 4.6; bg += K.foam(u, { x, y, w: 12 + fr() * 8, h: 1.2, seed: 40 + i, L }); } }
-    // the water itself draws back from the jar: low swells running out from under it toward her, their crests lit
-    for (const [rx, op] of [[26, .55], [37, .45], [49, .35]]) { const cx = 134, cy = HZ + 9, ry = rx * .13, a0 = 150 * Math.PI / 180, a1 = 212 * Math.PI / 180, P = a => `${f(cx + Math.cos(a) * rx)} ${f(cy + Math.sin(a) * ry)}`;
-      bg += `<path d="M${P(a0)}A${f(rx)} ${f(ry)} 0 0 1 ${P(a1)}" stroke="#0e2a22" stroke-width="1.4" fill="none" opacity="${f(op * .6)}" transform="translate(.8 .6)"/><path d="M${P(a0)}A${f(rx)} ${f(ry)} 0 0 1 ${P(a1)}" stroke="#d8fff0" stroke-width=".55" fill="none" opacity="${op}"/>`; }
-    bg += glow(u, 62, 80, 70, 46, '#9ff0d0', .3);
+    for (const [x, y, w, h, sd, fr] of [[150, 22, 90, 12, 3, .1], [24, 52, 64, 9, 8, .3], [176, 66, 60, 8, 12, .35], [70, 84, 70, 6, 5, .55]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
+    bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .6, seed: 12, glitter: 66 });
+    // the Dutchman rears and heels away from him and his jar: bow up, her weedy bottom to us; foam where she turned
+    bg += K.ship(u, L, { kind: 'dutch', x: 44, y: HZ + 6, scale: .6, heel: -8, roll: -14, sails: 'full', lights: true, reflect: true, wake: true, seed: 4 });
+    { const fr = rng(19); for (let i = 0; i < 11; i++) { const a = i / 11 * Math.PI * 2, x = 44 + Math.cos(a) * 36, y = HZ + 7 + Math.sin(a) * 3.6; bg += K.foam(u, { x, y, w: 10 + fr() * 6, h: 1, seed: 40 + i, L }); } }
+    // the water draws back from the Pearl: low swells running out from her side toward the ghost ship, their crests lit
+    for (const [rx, op] of [[30, .5], [42, .4], [54, .3]]) { const cx = 120, cy = HZ + 10, ry = rx * .12, a0 = 160 * Math.PI / 180, a1 = 205 * Math.PI / 180, P = a => `${f(cx + Math.cos(a) * rx)} ${f(cy + Math.sin(a) * ry)}`;
+      bg += `<path d="M${P(a0)}A${f(rx)} ${f(ry)} 0 0 1 ${P(a1)}" stroke="#0e2a22" stroke-width="1.2" fill="none" opacity="${f(op * .6)}" transform="translate(.8 .6)"/><path d="M${P(a0)}A${f(rx)} ${f(ry)} 0 0 1 ${P(a1)}" stroke="#d8fff0" stroke-width=".5" fill="none" opacity="${op}"/>`; }
+    bg += glow(u, 44, 76, 56, 40, '#9ff0d0', .3);
     // the green fog: a bank over the water, thinner round the jar (its warmth pushes it back)
-    bg += K.fog(u, L, { y: HZ - 14, h: 32, density: .45, seed: 3 }) + K.fog(u, L, { y: 58, h: 30, density: .3, seed: 9 });
-    bg += K.localGlow(u, { x: JAR.x, y: JAR.y - 24, color: '#ffd8a0', power: .5, radius: 50 }, { core: false });
+    bg += K.fog(u, L, { y: HZ - 14, h: 32, density: .45, seed: 3 }) + K.fog(u, L, { y: 54, h: 30, density: .3, seed: 9 });
+    bg += K.localGlow(u, { x: JP[0], y: JP[1] - 24, color: '#ffd8a0', power: .45, radius: 54 }, { core: false });
     // the rain: slanting streaks, far ones pale and thin; near the jar they are lit warm
-    { const R = rng(51); for (let i = 0; i < 110; i++) { const x = R() * 230 - 10, y = R() * 290, l = 5 + R() * 9, d = Math.hypot(x - JAR.x, y - (JAR.y - 24)), near = d < 40;
-        bg += `<path d="M${f(x)} ${f(y)}l${f(-l * .32)} ${f(l)}" stroke="${near ? '#ffdcaa' : '#cfeee2'}" stroke-width="${near ? .55 : .35}" opacity="${f(near ? .8 : .3 + R() * .25)}" stroke-linecap="round"/>`; } }
-    // the Pearl's rail, near (under the glass): wet, the moon on the cap rail
-    bg += K.bulwark(u, L, { x1: -6, x2: 206, y: 188, h: 42, kind: 'oak', posts: 30, seed: 3 })
-      + `<path d="M-6 146.4h212" stroke="#d8fff0" stroke-width=".5" opacity=".45"/>`;
-    let fg = '';
-    // the arm from the lower right corner: a dark coat sleeve folding at the elbow, ending in a close leather cuff at
-    // the wrist; the glove comes out of the cuff in one line and holds the jar up from below
-    const coat = { lit: '#4e6468', half: '#25343a', shadow: '#0f171c', outline: '#060a0c' }, gl = L.ramp('leather', 140, 94);
-    const glove = { lit: mix(gl.lit, '#d8fff0', .15), half: gl.half, shadow: gl.shadow, outline: gl.outline };
-    const SPINE = [[216, 262], [197, 204], [181, 152], [WR[0], WR[1]]], CW = 14.4, tl = Math.hypot(WR[0] - 181, WR[1] - 152), TD = [(WR[0] - 181) / tl, (WR[1] - 152) / tl];
-    const Hd = holdHand(u, L, JAR, WR, TD, CW / 2, glove);
-    const J = jar(u, L, JAR);
-    fg += Hd.behind + J.body + J.glass + Hd.front;
-    fg += `<g filter="url(#drop${u})">` + PP.cloth(u, { spine: SPINE, w: [46, 33, 21, CW], tone: coat, lit: -1, rim: '#bfe8d8', rimSide: -1, rimOp: .6,
-      cuff: { from: .86, tone: { lit: mix(gl.lit, '#c8f0dc', .2), half: gl.half, shadow: gl.shadow, outline: gl.outline }, k: 1.04 }, seed: 5, L }) + '</g>';
-    // the warmth round the jar and on the glove; the moon fills the air a little
-    fg += K.localGlow(u, { x: JAR.x - 2, y: JAR.y - 20, color: '#ffc880', power: .65, radius: 36 }, { core: false })
-      + glow(u, 50, 30, 60, 40, '#d8fff0', .12)
-      + gloom(u, 100, 150, 100, 280, .5, '#04100c') + gloom(u, 120, 120, 0, 0, .2, '#04100c');
+    { const R = rng(51); for (let i = 0; i < 110; i++) { const x = R() * 230 - 10, y = R() * 290, l = 5 + R() * 9, d = Math.hypot(x - JP[0], y - (JP[1] - 24)), near = d < 44;
+        bg += `<path d="M${f(x)} ${f(y)}l${f(-l * .32)} ${f(l)}" stroke="${near ? '#ffdcaa' : '#cfeee2'}" stroke-width="${near ? .5 : .35}" opacity="${f(near ? .7 : .3 + R() * .25)}" stroke-linecap="round"/>`; } }
+    // the Pearl's rail behind him: wet, the moon on the cap rail
+    bg += K.bulwark(u, L, { x1: -6, x2: 206, y: 158, h: 42, kind: 'oak', posts: 30, seed: 3 })
+      + `<path d="M-6 116.4h212" stroke="#d8fff0" stroke-width=".5" opacity=".45"/>`;
+
+    // ——— the sailor, drawn round x 100 and moved by MAN ———
+    const shirtR = L.ramp('linen', 120, 80), shirt = { lit: mix(shirtR.lit, '#e8fff4', .2), half: shirtR.half, shadow: shirtR.shadow, outline: shirtR.outline };
+    const vest = { lit: '#4a5a4c', half: '#2a2c22', shadow: '#121410', outline: '#060806' };
+    const SKIN = PP.skinTone('dark', { L, x: 120, y: 60 });
+    const LT = [-.62, -.72];                                           // to the moon, in the picture
+    let man = '';
+    // the shirt: broad shoulders, loose linen, open at the throat; the waistcoat over it, open in front
+    { const sg = nid('sh', u), vg = nid('vs', u);
+      man += `<defs>${linGrad(sg, 62, 0, 138, 0, [[0, shirt.lit, 1], [.35, shirt.half, 1], [.8, mix(shirt.half, shirt.shadow, .5), 1], [1, shirt.shadow, 1]])}`
+        + `${linGrad(vg, 62, 0, 138, 0, [[0, vest.lit, 1], [.3, vest.half, 1], [1, vest.shadow, 1]])}</defs>`
+        + `<path d="M62 170L64 84Q66 70 78 65L92 59Q100 63 108 59L122 65Q134 70 136 84L138 170Z" fill="url(#${sg})" stroke="${shirt.outline}" stroke-width=".5"/>`
+        // the waistcoat: two panels from the shoulder seams down, a gap of shirt between them (behind the jar)
+        + `<path d="M76 66L90 61Q88 80 92 100L94 170H63L65 86Q67 72 76 66Z" fill="url(#${vg})" stroke="${vest.outline}" stroke-width=".45"/>`
+        + `<path d="M124 66L110 61Q112 80 108 100L106 170H137L135 86Q133 72 124 66Z" fill="url(#${vg})" stroke="${vest.outline}" stroke-width=".45"/>`
+        + `<path d="M90 61Q88 80 92 100" stroke="${vest.lit}" stroke-width=".5" fill="none" opacity=".7"/>`
+        // the open neck of the shirt: the V of skin, the collar's points; a faded blue kerchief knotted at the throat
+        + `<path d="M93 59Q100 64 107 59L103 74Q100 77 97 74Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M97 66q3 3 6 0" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".6"/>`
+        + `<path d="M92 59l-4 9l8 -1zM108 59l4 9l-8 -1z" fill="${shirt.lit}" stroke="${shirt.outline}" stroke-width=".35"/>`
+        + `<path d="M91 56Q100 61 109 56L110 59.6Q100 65 90 59.6Z" fill="#3a5a7a" stroke="#0e1a26" stroke-width=".35"/><path d="M92 57.4Q100 62 108 57.4" stroke="#a8c8d8" stroke-width=".35" fill="none" opacity=".5"/>`
+        + `<path d="M99 60.6l-2.6 7l2.4 -.6l1.6 2.6l1 -7z" fill="#34506e" stroke="#0e1a26" stroke-width=".3"/>`
+        // the seams over the shoulders, the wet cloth clinging in creases; the moon's rim down his right side (our left)
+        + `<path d="M78 65Q80 73 76 81M122 65Q120 73 124 81" stroke="${shirt.shadow}" stroke-width=".5" fill="none" opacity=".8"/>`
+        + `<path d="M64 150L64 84Q66 70 78 65L92 59" stroke="#d8fff0" stroke-width=".8" fill="none" opacity=".75"/>`;
+      // the neck
+      man += `<path d="M95.2 47L104.8 47L106 59Q100 62 94 59Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M95.5 53q4.5 3 9 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".6"/>`
+        + `<path d="M95.4 48L95.2 58" stroke="#c8f0dc" stroke-width=".5" opacity=".5"/>`; }
+
+    // ——— his hands round the jar: each hand at a side of the glass, the palm on it, the fingers spread round the
+    // front toward the middle (hand3 wrapped round a cylinder the jar's radius); the right hand (ours left) higher ———
+    const jr = JAR.w / 2, hs = 2, HB = { pose: 'wrap', s: hs, r: jr / hs, tone: SKIN, light: LT, sw: .3, roll: 0 };
+    const hR = PP.hand3(u, { ...HB, a: 0, pitch: 58, m: 1, grip: [JAR.x, 96] });       // his right hand: on the jar's left side
+    const hL = PP.hand3(u, { ...HB, a: 180, pitch: 58, m: -1, grip: [JAR.x, 112] });   // his left hand: on its right side, lower
+    // the arms: shirt sleeves, shoulder → elbow (in at his side) → the wrist at the jar's side; a cuff
+    const sleeve = (s0, el, w, lt, rimOp, seed) => PP.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .5) + lt * .8, lerp(s0[1], el[1], .5)], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5) + 1], w],
+      w: [14, 13, 12, 10.4, 8.6], tone: shirt, lit: lt, rim: '#d8fff0', rimSide: lt, rimOp, seed, drapes: 2, foldW: .9, sw: .4, capA: true,
+      cuff: { from: .84, k: 1.08, tone: { lit: shirt.lit, half: mix(shirt.half, shirt.shadow, .2), shadow: shirt.shadow, outline: shirt.outline } } });
+    man += sleeve([69, 74], [62, 101], hR.wrist, -1, .6, 3) + sleeve([131, 74], [138, 107], hL.wrist, 1, .25, 4);
+
+    // ——— the head: a weathered face turned to his right (our left), eyes on the ghost ship; lit from below by the jar ———
+    const hd = PP.head34(u, { c: HEAD.c, r: HEAD.r, turn: .34, dir: -1, nod: -1, skin: 'dark', tone: SKIN, light: LT, warm: { color: '#ffb868', op: .32 },
+      look: [-.6, -.02], brow: 'frown', smile: -.12, hair: { style: 'short', color: '#141012' }, hairColor: '#141012', stubble: true, moustache: false, iris: '#2a1a10',
+      noseW: 1.25, noseL: .85, jawW: 1.05 });
+    let face = '';
+    { const Q = hd.Q, dp = hd.depth;
+      // the headscarf's knot and tails behind his head (on our right, away from his face), hanging wet
+      const kn = Q(.15, -.45, -.95), sc = { lit: '#a8423a', half: '#6a1e1a', shadow: '#2e0a08', outline: '#140404' };
+      face += `<path d="M${f(kn[0])} ${f(kn[1])}q4 4 3 12q-1 3 -3.4 2.6q1 -6 -1.6 -12zM${f(kn[0] - 1)} ${f(kn[1] + 1)}q-.6 5 1.6 11q-2.4 1 -3.4 -1q-.4 -6 .4 -9z" fill="${sc.half}" stroke="${sc.outline}" stroke-width=".35"/>`
+        + `<path d="M${f(kn[0] + 1)} ${f(kn[1] + 2)}q2.6 4 2 10" stroke="${sc.shadow}" stroke-width=".5" fill="none" opacity=".7"/>`;
+      face += hd.svg;
+      // the headscarf: a dark red cloth tied tight over the crown, its edge low on the brow; the moon on its left
+      const pts = []; for (let k = 0; k < 40; k++) { const t = k / 40 * Math.PI * 2; for (const [y, rr] of [[-.42, 1.04], [-.78, .98], [-1.02, .62]]) pts.push(Q(Math.cos(t) * rr, y + (Math.sin(t) > .3 ? -.04 : .06), Math.sin(t) * rr * .98 - .08)); }
+      pts.push(Q(0, -1.16, -.12));
+      const hull = P => { const S = P.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); const lo = [], up = [];
+        for (const p of S) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+        for (const p of S.slice().reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); };
+      const cap = hull(pts), cg = nid('hsc', u), c0 = Q(0, -.8, 0);
+      face += `<defs>${linGrad(cg, c0[0] - 12, c0[1] - 8, c0[0] + 12, c0[1] + 6, [[0, sc.lit, 1], [.45, sc.half, 1], [1, sc.shadow, 1]])}</defs><path d="M${cap.map(P2).join('L')}Z" fill="url(#${cg})" stroke="${sc.outline}" stroke-width=".45"/>`;
+      // the folds of the cloth pulled back toward the knot, the hem over the brow
+      for (const t of [-.5, -.1, .3, .7]) { const a = Q(Math.sin(t) * .9, -.5, Math.cos(t) * .9), b = Q(Math.sin(t + .9) * .6, -.95, Math.cos(t + .9) * .5); if (dp(Math.sin(t) * .9, -.5, Math.cos(t) * .9) > 0) face += `<path d="M${P2(a)}Q${f((a[0] + b[0]) / 2)} ${f((a[1] + b[1]) / 2 - 1)} ${P2(b)}" stroke="${sc.shadow}" stroke-width=".45" fill="none" opacity=".7"/>`; }
+      const hem = []; for (let k = 0; k <= 16; k++) { const t = -1.3 + k / 16 * 2.6, q = [Math.sin(t) * 1.04, -.42 + .06, Math.cos(t) * 1.02 - .08]; if (dp(...q) > -.05) hem.push(Q(...q)); }
+      if (hem.length > 2) face += `<path d="M${hem.map(P2).join('L')}" stroke="${sc.lit}" stroke-width=".5" fill="none" opacity=".55"/>`;
+      face += `<path d="M${P2(Q(.98, -.5, .1))}Q${P2(Q(.9, -1.0, .1))} ${P2(Q(.3, -1.18, .1))}" stroke="#d8fff0" stroke-width=".6" fill="none" opacity=".55"/>`;
+      // a gold ring in the near ear
+      { const e = Q(.84, .34, -.1); face += `<circle cx="${f(e[0])}" cy="${f(e[1] + .9)}" r="1" fill="none" stroke="url(#brass${u})" stroke-width=".5"/>`; }
+      // the jar's warmth from below: under the chin, the jaw, the nose's underside
+      face += glow(u, HEAD.c[0] - 2, HEAD.c[1] + 10, 12, 8, '#ffb060', .22); }
+
+    // ——— the jar between his hands ———
+    const J = jar(u, L, JAR0), tr = `translate(${f(JAR.x - JAR0.x * JK)} ${f(JAR.y - JAR0.y * JK)}) scale(${JK})`;
+    let held = hR.back + hL.back + `<g transform="${tr}">${J.body}${J.glass}</g>` + hR.front + hL.front;
+    // the earth's warmth on his fingers and on the shirt round the jar; the jar's shade pressed on his chest
+    held = K.contactShadow(u, JAR.x, JAR.y + 1, JAR.w * 1.1, L, { ry: 2.4, opacity: .4 }) + held
+      + glow(u, JAR.x - 13, 98, 9, 7, '#ffbe70', .22) + glow(u, JAR.x + 13, 113, 9, 7, '#ffbe70', .22);
+    const fgMan = `<g transform="translate(${MAN[0]} ${MAN[1]})">${man}${face}${held}</g>`;
+
+    let fg = fgMan;
+    // the warmth round the jar; the moon fills the air a little; rain in front of him; the dark below
+    fg += K.localGlow(u, { x: JP[0], y: JP[1] - 22, color: '#ffc880', power: .55, radius: 34 }, { core: false })
+      + glow(u, 40, 28, 60, 40, '#d8fff0', .12);
+    { const R = rng(77); for (let i = 0; i < 26; i++) { const x = R() * 220 - 10, y = R() * 150, l = 6 + R() * 8; fg += `<path d="M${f(x)} ${f(y)}l${f(-l * .32)} ${f(l)}" stroke="#d8f4ea" stroke-width=".35" opacity="${f(.22 + R() * .2)}" stroke-linecap="round"/>`; } }
+    fg += gloom(u, 100, 150, 100, 280, .5, '#04100c') + gloom(u, 120, 120, 0, 0, .2, '#04100c');
     return [bg, fg];
   } };

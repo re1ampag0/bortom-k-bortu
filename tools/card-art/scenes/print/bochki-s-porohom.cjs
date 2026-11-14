@@ -12,13 +12,14 @@ const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
 const { f, mix, nid, linGrad, radGrad, rng } = K;
 const { glow, gloom } = PK;
+const P2 = p => `${f(p[0])} ${f(p[1])}`;
 
 const HZ = 114, WL = 132;                          // eye low over the water; the ship's waterline
 const SHIP = { kind: 'endeavour', x: 290, y: WL, scale: 4.2, sails: 'furled', lights: true, reflect: true, detail: 'near', seed: 7 };
 const SP = require('../kit/ship.cjs').SHIP_SPECS.endeavour;   // her lines (read only): the bands and the sheer carried into the head
 const LIFT = 5;                                    // the net hangs this much clear of the water (its foot off the text glass)
-const LAMP = { x: 141, y: 77, s: .78, hang: 9 };   // her own closed lantern, hung from the rail on a lanyard (the warm local)
-const LAMPL = K.lantern.local(Object.assign({ color: '#ffc070', power: .95, radius: 62 }, LAMP));
+const LAMP = { x: 141.5, y: 78, s: .9, hang: 7 };   // her own closed lantern, hung from the rail on a lanyard (the warm local)
+const LAMPL = K.lantern.local(Object.assign({ color: '#ffc070', power: 1.15, radius: 78 }, LAMP));
 const KEGS = [[103, 128, 4], [118, 128.5, 5], [133, 128, 6], [110.5, 106.5, 7], [125.5, 107, 8]].map(k => [k[0], k[1] - LIFT, k[2]]);   // x, base y, seed (lower row first)
 const KS = .8;                                     // keg scale: 24 tall, 15 wide
 const GATHER = [118, 76 - LIFT];                   // where the net is gathered on its line
@@ -27,7 +28,7 @@ const light = { time: 'night', haze: .35, key: { type: 'moon', x: 34, y: 30, el:
 const skel = { horizon: HZ, eye: 1.2, light: 'the moon upper left beyond her bow (cold key) + her closed lantern on the rail right of the net (warm local)', items: [
   ['ship', 60, WL, 140, 100, 'water: bow and fore part, broadside'], ['net + kegs', 93, 126, 50, 55, 'hangs from her rail on a line, clear of the water'],
   ['line', 118, 71, 6, 35, 'from the rail to the net'], ['lantern', 136, 77, 10, 32, 'hangs from her rail on a lanyard'],
-  ['fuse', 80, 127, 24, 18, 'out of the lower left keg\'s bung, hanging out of the net (not lit)'], ['powder', 130, 132, 8, 22, 'trickling from the lower right keg\'s bung']] };
+  ['fuse', 80, 127, 24, 18, 'out of the lower left keg\'s bung, hanging out of the net (not lit)'], ['powder', 126, 88, 8, 46, 'trickling from the upper right keg\'s bung down the lower keg\'s face']] };
 
 // the net over the kegs: a cord mesh hung from the gather point — meridians fanning down round the kegs, rings across
 // them sagging under the weight; each cord dark with a wet light line on it (warm near the flash)
@@ -95,7 +96,7 @@ function portLids(L, svg) {
 // a keg brought up a little: lighter staves (the lantern on them), the iron hoops with a lit edge and their rivets
 function kegHoops(x, y, rot) {
   const H = 30 * KS, r = 9.2 * KS, bulge = .17, rr = t => r * (1 + bulge * 4 * t * (1 - t)), k = .18;
-  let out = `<path d="M${f(x - r)} ${f(y)}C${f(x - rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x - rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x - r)} ${f(y - H)}L${f(x + r)} ${f(y - H)}C${f(x + rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x + rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x + r)} ${f(y)}Z" fill="#f0cc90" opacity=".2"/>`;
+  let out = `<path d="M${f(x - r)} ${f(y)}C${f(x - rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x - rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x - r)} ${f(y - H)}L${f(x + r)} ${f(y - H)}C${f(x + rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x + rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x + r)} ${f(y)}Z" fill="#f0cc90" opacity=".3"/>`;
   for (const t of [.05, .2, .8, .95]) { const q = rr(t), yh = y - H * t, sag = k * q;
     out += `<path d="M${f(x - q)} ${f(yh)}Q${f(x)} ${f(yh + sag * 2)} ${f(x + q)} ${f(yh)}" stroke="#241c16" stroke-width="1.15" fill="none"/>`
       + `<path d="M${f(x - q)} ${f(yh - .45)}Q${f(x)} ${f(yh - .45 + sag * 2)} ${f(x + q)} ${f(yh - .45)}" stroke="#e8d2a4" stroke-width=".32" fill="none" opacity=".75"/>`;
@@ -131,11 +132,23 @@ module.exports = { name: 'Бочки с порохом', kind: 'deck', status: '
     // the mark stencilled on each keg: the broad arrow of the Crown's stores, in black paint
     const brand = (x, y, rot) => `<g transform="rotate(${rot} ${x} ${y}) translate(${x} ${f(y - 30 * KS * .5)}) scale(${f(KS * 1.25)})" opacity=".8"><path d="M0 -3.4V3.2M0 -3.4L-2.6 .2M0 -3.4L2.6 .2" stroke="#1a120a" stroke-width="1" fill="none" stroke-linecap="round"/></g>`;
     const kr = sd => sd % 2 ? 3 : -3, ku = sd => sd % 2 ? -4 : 5;
+    const BUNG = [KEGS[4][0] + 2.6, KEGS[4][1] - 12.6];
     { const cid = nid('kw', u); let kg = '';
       for (const [x, y, sd] of KEGS.slice(0, 3)) kg += K.barrel(u, L, { x, y, s: KS, kind: 'water', seed: sd, rot: kr(sd), contact: false }) + kegHoops(x, y, kr(sd)) + brand(x, y, kr(sd));
       for (const [x, y, sd] of KEGS.slice(3)) kg += K.barrel(u, L, { x, y, s: KS, kind: 'water', seed: sd, rot: ku(sd), contact: false }) + kegHoops(x, y, ku(sd)) + brand(x, y, ku(sd));
       // the bung holes: the left keg's with the fuse in it, the right keg's open (its bung dangles on a cord)
-      for (const [x, y] of [[KEGS[0][0] - 4.2, KEGS[0][1] - 13.4], [KEGS[2][0] + 3.6, KEGS[2][1] - 13]]) kg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="1.25" ry="1" fill="#120c08" stroke="#6a4a2a" stroke-width=".3"/>`;
+      for (const [x, y] of [[KEGS[0][0] - 4.2, KEGS[0][1] - 13.4], BUNG]) kg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="1.25" ry="1" fill="#120c08" stroke="#6a4a2a" stroke-width=".3"/>`;
+      // the spilt powder: the upper right keg's bung hangs on its cord; out of the hole the black grains trickle down
+      // over the lit face of the keg below, through the net and on into the sea — a few grains catch the lantern
+      { const h = BUNG, R = rng(23), yb = WL + 3;
+        kg += `<path d="M${f(h[0] + .9)} ${f(h[1] + .4)}q1.6 2 1.2 4.2" stroke="#3a2a1a" stroke-width=".3" fill="none"/><rect x="${f(h[0] + 1.2)}" y="${f(h[1] + 4.4)}" width="1.6" height="2.2" rx=".5" fill="#8a6a40" stroke="#1a120a" stroke-width=".25" transform="rotate(14 ${f(h[0] + 2)} ${f(h[1] + 5.5)})"/>`;
+        kg += `<path d="M${f(h[0] - .2)} ${f(h[1] + .5)}C${f(h[0] - .6)} ${f(h[1] + 2.2)} ${f(h[0] - .4)} ${f(h[1] + 5)} ${f(h[0] - .3)} ${f(yb)}" stroke="#0e0a08" stroke-width="1.15" fill="none" stroke-linecap="round"/>`;
+        for (let i = 0; i < 70; i++) { const t = R(), y = h[1] + 1 + t * (yb - h[1]), sp = .35 + t * 1.5, x = h[0] - .3 + (R() - .5) * sp * 2;
+          kg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.17 + R() * .17)}" fill="${R() > .72 ? '#c8b08a' : '#0e0a08'}"/>`; }
+        // a little drift of powder caught on the lower keg's top hoop
+        kg += `<path d="M${f(h[0] - 3.4)} ${f(KEGS[2][1] - 22.4)}q3.1 -1.6 6.2 0z" fill="#16100c"/>`;
+        kg += `<ellipse cx="${f(h[0])}" cy="${f(yb + .2)}" rx="6" ry="1" fill="#0a0806" opacity=".5"/>`; }
+      kg += glow(u, 128, 92, 30, 30, '#ffb050', .42);
       fg += `<defs><clipPath id="${cid}"><rect x="0" y="0" width="200" height="${WL + 1.2}"/></clipPath></defs><g clip-path="url(#${cid})">${kg}${net(u, L, GATHER, KEGS)}</g>`;
       // the gather: the net's mouth bound to the line with a seizing
       fg += `<ellipse cx="${GATHER[0]}" cy="${GATHER[1] + 1}" rx="2.6" ry="1.8" fill="#2a2016" stroke="#0e0a06" stroke-width=".4"/><path d="M${GATHER[0] - 2} ${GATHER[1] + .4}h4M${GATHER[0] - 2.2} ${GATHER[1] + 1.6}h4.4" stroke="#c8b48a" stroke-width=".3" opacity=".6"/>`;
@@ -144,16 +157,10 @@ module.exports = { name: 'Бочки с порохом', kind: 'deck', status: '
     // the fuse: a tarred cord out of the lower left keg's bung, out through the mesh, hanging in a loop, its frayed end
     // turned up — not lit
     { const b0 = [KEGS[0][0] - 4.2, KEGS[0][1] - 13.4], pts = [b0, [b0[0] - 3, b0[1] + 2.6], [b0[0] - 7, b0[1] + 10], [b0[0] - 11, b0[1] + 14.6], [b0[0] - 15.6, b0[1] + 13], [b0[0] - 17.4, b0[1] + 9.4]];
-      fg += K.rope(u, L, pts, { r: .55, seed: 6, cap: 'round' });
+      pts.splice(3, 3, [b0[0] - 10, b0[1] + 16.4], [b0[0] - 15, b0[1] + 17.4], [b0[0] - 19.4, b0[1] + 15.6]);
+      fg += K.rope(u, L, pts, { r: .7, seed: 6, cap: 'round' })
+        + `<path d="M${pts.map(P2).join('L')}" stroke="#d8b888" stroke-width=".28" fill="none" opacity=".55" stroke-linejoin="round" transform="translate(.25 -.35)"/>`;
       const e = pts[pts.length - 1]; for (const [dx, dy] of [[-.9, -1.4], [-.2, -1.7], [.6, -1.4]]) fg += `<path d="M${f(e[0])} ${f(e[1])}l${dx} ${dy}" stroke="#7a6448" stroke-width=".25" stroke-linecap="round"/>`; }
-    // the spilt powder: the right keg's bung hangs on its cord; out of the hole the black grains trickle through the net,
-    // down her side into the sea — a few grains catching the lantern, a dark scum spreading on the water under it
-    { const h = [KEGS[2][0] + 3.6, KEGS[2][1] - 13], R = rng(23);
-      fg += `<path d="M${f(h[0] + .9)} ${f(h[1] + .4)}q1.6 2 1.2 4.2" stroke="#3a2a1a" stroke-width=".3" fill="none"/><rect x="${f(h[0] + 1.2)}" y="${f(h[1] + 4.4)}" width="1.6" height="2.2" rx=".5" fill="#6a4a2a" stroke="#1a120a" stroke-width=".25" transform="rotate(14 ${f(h[0] + 2)} ${f(h[1] + 5.5)})"/>`;
-      fg += `<path d="M${f(h[0] + .2)} ${f(h[1] + .6)}C${f(h[0] + 1.6)} ${f(h[1] + 2)} ${f(h[0] + 1.8)} ${f(h[1] + 5)} ${f(h[0] + 1.6)} ${f(WL + 3)}" stroke="#0e0a08" stroke-width=".9" fill="none" stroke-linecap="round"/>`;
-      for (let i = 0; i < 46; i++) { const t = R(), y = h[1] + 1 + t * (WL + 2 - h[1]), sp = .3 + t * 1.6, x = h[0] + 1.4 + (R() - .5) * sp * 2;
-        fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.16 + R() * .16)}" fill="${R() > .7 ? '#8a8072' : '#0e0a08'}"/>`; }
-      fg += `<ellipse cx="${f(h[0] + 2)}" cy="${f(WL + 3.2)}" rx="7" ry="1.1" fill="#0a0806" opacity=".5"/>`; }
     // the lantern's streak on the water under her side
     fg += Array.from({ length: 7 }, (_, i) => { const y = WL + 4 + i * 4.2, w = 4 + i * 2.6; return `<path d="M${f(LAMPL.x - w / 2 + (i % 2) * 2)} ${f(y)}h${f(w)}" stroke="#ffd890" stroke-width="${f(.45 + i * .07)}" stroke-linecap="round" opacity="${f(.5 - i * .05)}"/>`; }).join('');
     // air: the near water falls dark under the glass, the top corners darken a little
