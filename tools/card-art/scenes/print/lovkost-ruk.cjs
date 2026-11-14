@@ -109,19 +109,34 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
         + Array.from({ length: 6 }, (_, k) => `<rect x="${4 + k * 33}" y="${CF + 12}" width="27" height="130" rx="1" fill="#2c180c" stroke="#120804" stroke-width=".8"/><path d="M${5 + k * 33} ${CF + 13}h25" stroke="#6a4224" stroke-width=".5"/>`).join('')
         + `<path d="M-10 250H210" stroke="url(#brass${u})" stroke-width="2.4"/>`;
       // coins: stacks and a few loose, with their shadows, in the lantern light
+      // two dice by the coins (the game was dice before cards), the officer's tankard by his elbow, a wet trail of ale
+      { const die = (x, y, s, a, n) => { const c = Math.cos(a * Math.PI / 180) * s, sn = Math.sin(a * Math.PI / 180) * s, P = (px, py) => `${f(x + px * c - py * sn)} ${f(y + px * sn + py * c)}`;
+          let d = `<path d="M${P(-2, -1)}L${P(2, -1)}L${P(2.6, -2.4)}L${P(-1.4, -2.4)}Z" fill="#fff4e0" stroke="#3a2a1a" stroke-width=".25"/>`
+            + `<path d="M${P(-2, -1)}L${P(2, -1)}L${P(2, 2.2)}L${P(-2, 2.2)}Z" fill="#e8d8bc" stroke="#3a2a1a" stroke-width=".25"/><path d="M${P(2, -1)}L${P(2.6, -2.4)}L${P(2.6, .8)}L${P(2, 2.2)}Z" fill="#a8946e" stroke="#3a2a1a" stroke-width=".25"/>`;
+          const pip = (px, py) => `<circle cx="${f(x + px * c - py * sn)}" cy="${f(y + px * sn + py * c)}" r="${f(.32 * s)}" fill="#2a1a10"/>`;
+          d += (n === 3 ? [[-1, -.2], [0, .6], [1, 1.4]] : [[-1, -.2], [1, -.2], [-1, 1.4], [1, 1.4], [0, .6]]).map(q => pip(...q)).join('') + pip(.3, -1.7);
+          return `<ellipse cx="${f(x + .4)}" cy="${f(y + 2.3 * s)}" rx="${f(3 * s)}" ry="${f(.7 * s)}" fill="#000" opacity=".35"/>` + d; };
+        mid += die(66, 119.6, 1.1, -8, 5) + die(73.4, 123, 1.1, 14, 3); }
+      mid += `<path d="M126 124.6q6 .6 9 -1.2q3 -1 7 -.4" stroke="#a87a48" stroke-width="1.1" fill="none" opacity=".35" stroke-linecap="round"/>`
+        + K.castShadow(u, L, { x: 136, y: 121, w: 9 * 1.25, h: 11 * 1.25, horizon: HZ }) + K.mug(u, L, { x: 136, y: 121, s: 1.25, fill: 'dark', seed: 6 });
       mid += K.coins(u, L, { x: 22, y: 122, n: 8, r: 3, seed: 3 }) + K.coins(u, L, { x: 38, y: 117, n: 6, r: 2.8, seed: 8 }) + K.coins(u, L, { x: 52, y: 125, n: 4, r: 2.8, seed: 12 });
     }
     // ——— the officer's arm on the counter from the right edge: red coat, blue cuff with gilt buttons, a white shirt
     // frill at the wrist; his hand holds the fan — two cards left, a gap between the fingers where the third one was ———
-    let off = '', PIV = null;
-    const FAN = [-56, -34, -10, 14], GAP = -10;   // the fan's cards (degrees from upright); the one at GAP is gone
-    const OW = [178, 114], OA = 198, OS = 7.2, OK = 1.36;   // his wrist, the hand's direction and size, the sleeve's scale
+    let off = '', PIV = null, GD = null, GR = 0;
+    // his hand holds the fan as a card player does (people.cjs hand3 held: 'fan'): the palm and the fingers behind the
+    // cards, the thumb over their corners; the fan opens from under the thumb's pad (the grip) the way the hand points
+    // (gripA). Three cards and a wide gap in the fan where the fourth was a moment ago
+    const FAN = [-34, -12, 10, 32], GAP = 10;   // the fan's cards (deg either side of the way it opens); the one at GAP is gone
+    const OG = [158, 99], OA = -125, OS = 6, OK = 1.36, OCS = 1.2;   // the grip, the hand's direction and size, the sleeve's scale, the cards' scale
+    const skin = { lit: '#f0c6a0', half: '#c48a64', shadow: '#6a3e2a', outline: '#2a160c' };
+    const hd = H.hand3(u, { grip: OG, a: OA, s: OS, m: -1, roll: 180, held: 'fan', tone: skin, light: [-.6, -.8], sw: .36, palmW: .96 });
+    const OW = [hd.wrist[0] + 1, hd.wrist[1] + .4];
     { const red = { lit: '#c84a3a', half: '#8a2a20', shadow: '#3e0e0c', outline: '#1a0606' }, blue = { lit: '#4a5a9a', half: '#26305e', shadow: '#0e1230', outline: '#06081a' };
       const shirt = { lit: '#fff8ec', half: '#d8ccb8', shadow: '#7a6e5e', outline: '#2a2218' };
-      const skin = { lit: '#f0c6a0', half: '#c48a64', shadow: '#6a3e2a', outline: '#2a160c' };
       // the sleeve along the counter and the facing (cuff) turned back, its buttons (drawn at the old size, scaled up
       // about the old wrist onto the new one)
-      off += `<g transform="translate(${OW[0]} ${OW[1]}) scale(${OK}) translate(-170 -106)">`;
+      off += `<g transform="translate(${f(OW[0])} ${f(OW[1])}) scale(${OK}) translate(-170 -106)">`;
       off += `<path d="M178 ${CT + 18}Q194 ${CT + 21} 214 ${CT + 18}" stroke="#000" stroke-width="7" opacity=".28" fill="none"/>`;
       off += H.cloth(u, { spine: [[218, 116], [196, 112], [178.6, 108.2]], w: [16, 14.6, 13], tone: red, lit: -1, rim: '#b8ccff', rimSide: 1, rimOp: .45, seed: 5, drapes: 2 });
       off += H.cloth(u, { spine: [[184.6, 109.6], [176, 107.2]], w: [16.6, 16], tone: blue, lit: -1, folds: false, sw: .45 })
@@ -132,17 +147,16 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
           fr += `<path d="M${f(x)} ${f(y)}q-3.4 ${f(.6 - R() * .4)} -4.4 ${f(1.6)}q2.2 .8 4.4 .2z" fill="${k % 2 ? shirt.half : shirt.lit}" stroke="${shirt.shadow}" stroke-width=".25"/>`; }
         off += fr; }
       off += `</g>`;
-      // his hand holds the fan as a card player does: the palm towards the backs of the cards (and us), the fingers
-      // curled over the foot of the fan, the thumb behind it on the faces. Three cards and a wide gap in the fan where
-      // the fourth was a moment ago
-      const hd = H.hand3(u, { at: OW, a: OA, s: OS, m: 1, roll: 160, pitch: 0, pose: 'custom', flex: [[46, 66, 40], [52, 72, 44], [58, 78, 46], [62, 84, 50]], yaw: [-6, 0, 4, 8],
-        thumbFlex: [10, 16, 10], thumbSpread: 0, tone: skin, light: [-.6, -.8], backFingers: ['thumb'], trueDorsal: true, sw: .36 });
-      PIV = hd.P(3.3, -.9, -1.2);
+      PIV = hd.grip;
+      // the cards: each turned about the grip, its foot corner under the thumb's pad, the backs to us
+      const dir = a => { const t = (hd.gripA + a) * Math.PI / 180; return [Math.cos(t), Math.sin(t)]; }, reach = 13 * OCS - 3.2;
       let fan = '';
-      for (const a of FAN) if (a !== GAP) fan += card(u, [PIV[0] + Math.sin(a * Math.PI / 180) * 19, PIV[1] - Math.cos(a * Math.PI / 180) * 19], a, .96, { shade: .25 + (a + 50) / 300 });
-      off += hd.back + fan + hd.front;
-      // a gold signet ring on his little finger
-      { const p = hd.joints[3][1]; off += K.shadeSphere(u, p[0] + .4, p[1] + .6, 1.3, L, 'brass', { outline: .25 }); }
+      for (const a of FAN) { const d = dir(a);
+        if (a === GAP) { GD = [PIV[0] + d[0] * (reach + 7), PIV[1] + d[1] * (reach + 7)]; GR = hd.gripA + 90 + a; continue; }
+        fan += card(u, [PIV[0] + d[0] * reach, PIV[1] + d[1] * reach], hd.gripA + 90 + a, OCS, { shade: .25 + (a + 40) / 260 }); }
+      // a gold signet ring on his little finger (behind the cards, where they leave it in sight)
+      const rg = hd.joints[3][1];
+      off += hd.back + K.shadeSphere(u, rg[0], rg[1], 1.2, L, 'brass', { outline: .25 }) + fan + hd.front;
     }
     // ——— the card's flight from his fan to Jack's fingers: a soft streak and two fading after-images ———
     // Jack's (left) hand, the palm towards us: a slim hand narrowing to the wrist, the index and middle finger straight
@@ -154,10 +168,10 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft
       thumbJ: [[.5, -1.4, -.8], [1.8, -1.05, -1.5], [2.6, -.4, -2.15], [3.15, .3, -2.75]], thumbOut: [0, 0, -1] });
     const CC0 = jh.P(7.6, -.8, -.42), CA = -12, CSC = 1.56, CC = [CC0[0] + 1, CC0[1] - 14];   // the card: centre, angle, scale
     let fly = '';
-    { const ga = GAP * Math.PI / 180, a0 = [PIV[0] + Math.sin(ga) * 27, PIV[1] - Math.cos(ga) * 27], a1 = [CC[0] + 8, CC[1] + 10], bf = blurF('fl' + u, 1.6), g = nid('fg', u);
+    { const a0 = GD, a1 = [CC[0] + 8, CC[1] + 10], bf = blurF('fl' + u, 1.6), g = nid('fg', u);
       fly += bf + `<defs>${linGrad(g, a0[0], a0[1], a1[0], a1[1], [[0, '#f0dcb0', 0], [1, '#f0dcb0', .5]])}</defs>`
         + `<path d="M${a0[0] - 2} ${a0[1] + 3}Q${f(lerp(a0[0], a1[0], .5) + 10)} ${f(lerp(a0[1], a1[1], .5) + 2)} ${f(a1[0] - 10)} ${f(a1[1] + 4)}L${f(a1[0] + 8)} ${f(a1[1] - 6)}Q${f(lerp(a0[0], a1[0], .5) + 18)} ${f(lerp(a0[1], a1[1], .5) - 8)} ${a0[0] + 3} ${a0[1] - 3}z" fill="url(#${g})" filter="url(#fl${u})"/>`
-        + `<g filter="url(#fl${u})">${card(u, [lerp(a0[0], CC[0], .38) + 6, lerp(a0[1], CC[1], .38)], lerp(-70, CA, .38), lerp(.62, CSC, .38), { opacity: .12, shadow: false })}${card(u, [lerp(a0[0], CC[0], .68) + 5, lerp(a0[1], CC[1], .68)], lerp(-70, CA, .68), lerp(.62, CSC, .68), { opacity: .2, shadow: false })}</g>`
+        + `<g filter="url(#fl${u})">${card(u, [lerp(a0[0], CC[0], .38) + 6, lerp(a0[1], CC[1], .38)], lerp(GR, CA, .38), lerp(.62, CSC, .38), { opacity: .12, shadow: false })}${card(u, [lerp(a0[0], CC[0], .68) + 5, lerp(a0[1], CC[1], .68)], lerp(GR, CA, .68), lerp(.62, CSC, .68), { opacity: .2, shadow: false })}</g>`
         + [[0, 0], [5, 4], [-4, 6]].map(([dx, dy]) => `<path d="M${f(a0[0] - 12 + dx)} ${f(a0[1] - 10 + dy)}q-8 -10 -18 -16" stroke="#fff0d0" stroke-width=".45" fill="none" opacity=".35" stroke-linecap="round"/>`).join(''); }
     // ——— Jack's arm: the dark blue coat sleeve from the bottom, the gold-braided cuff, the lace frills; the hand ———
     let arm = '';
