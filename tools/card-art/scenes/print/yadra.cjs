@@ -7,7 +7,7 @@
 // Step 3 (the user: details, the flash, the ball in flight): the flash a big ball of fire with a wide tongue, lit
 // smoke round it and burning bits of the wad flying out; the ball bursting out of the front of the flash over the sun's
 // glitter, big, cold iron with a sky glint and the fire on its back, a torn smoke trail behind it. Details: smoke
-// out of the vent and blown back in at the port, the linstock with its smouldering match leaning by the port, a leather
+// out of the vent and blown back in at the port, the linstock with its smouldering match leaning ~15° on the wall by the port (foot by the gun's truck, top in a staple), a leather
 // fire bucket on a peg, dust shaken off the beam, splinters falling into the water by the enemy.
 'use strict';
 const K = require('../kit/index.cjs');
@@ -43,6 +43,8 @@ function hit(u, L, o) {
   out += K.localGlow(u, { x, y, color: '#ffd890', power: .55, radius: 7 * s });
   return out;
 }
+
+const sh0 = (u, p) => `<ellipse cx="${f(p[0] + .6)}" cy="${f(p[1] + .3)}" rx="2.2" ry=".6" fill="#0a0502" opacity=".6"/>`;
 
 module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
@@ -93,16 +95,25 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x:
         + `<path d="M${x - 5.1} ${y + 2.6}Q${x} ${y + 3.8} ${x + 5.1} ${y + 2.6}" stroke="#140a04" stroke-width=".5" fill="none"/>`
         + `<path d="M${x - 3.6} ${y - 2}L${x - 3.1} ${y + 8}" stroke="#c08a52" stroke-width=".5" opacity=".55"/>`
         + [-2, 0, 2].map(d => `<circle cx="${x + d * 1.6}" cy="${f(y + 2.9 + Math.abs(d) * -.15)}" r=".32" fill="#d8b070"/>`).join('') + `</g>`; }
-    // the linstock leaning on the frame by the port: an ash staff, the forked brass head, the slow match wound on it,
-    // its end smouldering — a red point with a thread of smoke
-    { const a = [108, 132], b = [116.4, 62];
-      bg += `<g filter="url(#drop${u})"><path d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}" stroke="#7a5430" stroke-width="1.5" stroke-linecap="round"/><path d="M${a[0] - .4} ${a[1]}L${b[0] - .4} ${b[1] + .2}" stroke="#c49a62" stroke-width=".45" opacity=".7"/>`
-        + `<path d="M${b[0] - .2} ${b[1] + 1}l-.4 -3.2l-1.6 -2.6M${b[0] - .2} ${b[1] + 1}l.9 -3l2.2 -2" stroke="#c8a040" stroke-width=".8" fill="none" stroke-linecap="round"/>`
-        + `<path d="M${b[0] - .6} ${b[1] + 3}c-2 1 2 2 0 3c-2 1 2 2 0 3" stroke="#8a7a5a" stroke-width=".9" fill="none"/>`
-        + `<path d="M${b[0] - 2.2} ${b[1] - 4.8}q-1.4 -1 -1.6 -2.6" stroke="#8a7a5a" stroke-width=".7" fill="none"/></g>`
-        + `<circle cx="${b[0] - 3.8}" cy="${b[1] - 7.4}" r=".75" fill="#ff5a1a"/><circle cx="${b[0] - 3.8}" cy="${b[1] - 7.4}" r=".35" fill="#ffd27a"/>`
-        + glow(u, b[0] - 3.8, b[1] - 7.4, 5, 5, '#ff8a3a', .6)
-        + `<path d="M${b[0] - 3.8} ${b[1] - 8.2}c-1 -3 1.6 -4 .4 -7s1.4 -4 .2 -7" stroke="#d8c8b0" stroke-width=".45" fill="none" opacity=".45"/>`; }
+    // the linstock leaning on the wall by the port, ~15° off upright: its foot on the deck just right of the gun's near
+    // truck, its staff resting in an iron staple on the frame by the hull at the port; an ash staff, the forked brass
+    // head, the slow match wound on it, its end smouldering — a red point with a thread of smoke going straight up
+    { const th = 15, A = th * Math.PI / 180, a = [101.5, 133.5], Ls = 75.5, sn = Math.sin(A), cs = Math.cos(A);
+      const P = (t, d = 0) => [a[0] + sn * t + cs * d, a[1] - cs * t + sn * d];       // t along the staff from the foot, d across it (to the right)
+      const b = P(Ls), st = P(Ls - 7.2), em = P(Ls + 7.4, -3.8);
+      bg += sh0(u, a) + `<g filter="url(#drop${u})"><g transform="translate(${f(a[0])} ${f(a[1])}) rotate(${th})">`
+        + `<path d="M0 0V${-Ls}" stroke="#7a5430" stroke-width="1.5" stroke-linecap="round"/><path d="M-.4 0V${-Ls + .2}" stroke="#c49a62" stroke-width=".45" opacity=".7"/>`
+        + `<path d="M-.2 ${-Ls + 1}l-.4 -3.2l-1.6 -2.6M-.2 ${-Ls + 1}l.9 -3l2.2 -2" stroke="#c8a040" stroke-width=".8" fill="none" stroke-linecap="round"/>`
+        + `<path d="M-.6 ${-Ls + 3}c-2 1 2 2 0 3c-2 1 2 2 0 3" stroke="#8a7a5a" stroke-width=".9" fill="none"/>`
+        + `<path d="M-2.2 ${-Ls - 4.8}q-1.4 -1 -1.6 -2.6" stroke="#8a7a5a" stroke-width=".7" fill="none"/>`
+        + `<path d="M-1.4 -.2h2.8" stroke="#2a1606" stroke-width=".9" stroke-linecap="round"/></g></g>`
+        // the staple: an iron loop driven into the frame, over the staff where it rests on the wall
+        + `<path d="M${f(st[0] - 2.4)} ${f(st[1] - .6)}q${f(2.4)} 2.6 ${f(4.8)} .4" stroke="#1a1410" stroke-width="1.1" fill="none" stroke-linecap="round"/>`
+        + `<path d="M${f(st[0] - 2.4)} ${f(st[1] - .9)}q${f(2.4)} 2.6 ${f(4.8)} .4" stroke="#8a8a88" stroke-width=".45" fill="none" stroke-linecap="round" opacity=".8"/>`
+        + `<circle cx="${f(st[0] - 2.5)}" cy="${f(st[1] - .7)}" r=".55" fill="#2a2420"/><circle cx="${f(st[0] + 2.5)}" cy="${f(st[1] - .3)}" r=".55" fill="#2a2420"/>`
+        + `<circle cx="${f(em[0])}" cy="${f(em[1])}" r=".75" fill="#ff5a1a"/><circle cx="${f(em[0])}" cy="${f(em[1])}" r=".35" fill="#ffd27a"/>`
+        + glow(u, em[0], em[1], 5, 5, '#ff8a3a', .6)
+        + `<path d="M${f(em[0])} ${f(em[1] - .8)}c-1 -3 1.6 -4 .4 -7s1.4 -4 .2 -7" stroke="#d8c8b0" stroke-width=".45" fill="none" opacity=".45"/>`; }
     // dust shaken off the beam by the shot, trickling down in the lantern light
     { const Rd = rng(19); for (let i = 0; i < 7; i++) { const x = 74 + Rd() * 44, l = 6 + Rd() * 12;
         bg += `<path d="M${f(x)} 9.6v${f(l)}" stroke="#e8c898" stroke-width="${f(.25 + Rd() * .3)}" stroke-dasharray="${f(.4 + Rd())} ${f(.8 + Rd() * 1.4)}" opacity="${f(.25 + Rd() * .3)}"/>`; } }
