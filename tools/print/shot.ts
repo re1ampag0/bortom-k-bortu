@@ -1,7 +1,8 @@
 // Card faces exactly as in the PDF (frame of the deck, glass in the type's colour), as PNG — for the «old | new» sheets the
 // user judges and for the reviewers (docs/progress/print-kit.md). Not part of the set.
 //   npx vite-node tools/print/shot.ts -- --names "Анжелика,Ром для всех" --out report/print-kit/shots [--px 720]
-//        [--mode compare|new|old] [--variant a|b] [--sheet name]
+//        [--mode compare|new|old] [--variant a|b] [--old-variant s2] [--sheet name]
+// --old-variant v — «old» is the print scene's variant v (step 3: s2 — the scene before the pass) instead of the first-round picture.
 //   npx vite-node tools/print/shot.ts -- --backs "Ж,М,И,Г,sea" --out … — the backs as printed (backs.cjs variant 1), <code>-back.png and backs.png
 // compare (default) — <slug>.png: the first-round picture | the new scene (draft allowed), side by side, ≤ 1500 px wide;
 // new / old — <slug>-new.png / <slug>-old.png, one card. --sheet <name> — also <name>.png: every card of the run on one sheet.
@@ -19,7 +20,7 @@ const args = process.argv.slice(2);
 const opt = (n: string, d: string) => { const i = args.indexOf(n); return i < 0 ? d : args[i + 1]; };
 const names = opt('--names', '').split(',').map(s => s.trim()).filter(Boolean);
 const out = path.resolve(opt('--out', 'report/print-kit/shots')), px = Number(opt('--px', '720')), mode = opt('--mode', 'compare');
-const grid = Number(opt('--grid', '0')), variant = opt('--variant', ''), sheet = opt('--sheet', ''), backs = opt('--backs', '').split(',').map(s => s.trim()).filter(Boolean);
+const grid = Number(opt('--grid', '0')), variant = opt('--variant', ''), oldVariant = opt('--old-variant', ''), sheet = opt('--sheet', ''), backs = opt('--backs', '').split(',').map(s => s.trim()).filter(Boolean);
 if (!names.length && !backs.length) { console.error('--names "Card,Card" is required'); process.exit(2); }
 
 const itemName = (it: Item) => it.kind === 'card' || it.kind === 'legend' || it.kind === 'sea' ? it.card.name : '';
@@ -39,7 +40,7 @@ async function kitAs(v: string, draftArt: boolean): Promise<CardKit> {
   ctx.opts.draftArt = draftArt; const k = await prepareCards(ctx, m, keys);
   if (prev === undefined) delete process.env.PRINT_VARIANT; else process.env.PRINT_VARIANT = prev; return k;
 }
-const kOld = mode === 'new' || backs.length ? null : await kitAs('old', false), kNew = mode === 'old' ? null : await kitAs(variant, true);
+const kOld = mode === 'new' || backs.length ? null : await kitAs(oldVariant || 'old', !!oldVariant), kNew = mode === 'old' ? null : await kitAs(variant, true);
 const lt = luminance(ON_GLASS.text);
 const contrast = (k: CardKit, it: Item) => { const a = k.art.get(keyOf(it))!; return { mean: (lt + .05) / (a.glassMean + .05), p95: (lt + .05) / (a.glassP95 + .05) }; };
 
@@ -69,7 +70,7 @@ for (const [i, it] of items.entries()) {
   const cn = kNew && contrast(kNew, it), co = kOld && contrast(kOld, it);
   if (mode === 'compare') {
     if (grid) { /* the pairs go on the grid sheets below */ } else {
-    const html = cell(kOld!, it, 0, 'было (первый круг)') + cell(kNew!, it, W + GAP, 'стало');
+    const html = cell(kOld!, it, 0, oldVariant ? 'было' : 'было (первый круг)') + cell(kNew!, it, W + GAP, 'стало');
     await shoot(html, 2 * W + GAP, H + 6, path.join(out, `${s}.png`)); }
   } else {
     const kit = (mode === 'old' ? kOld : kNew)!;
