@@ -126,13 +126,14 @@ module.exports = { name: 'Безумный план', kind: 'deck', status: 'dra
     // (in front, over the card), the middle finger under it (behind) — its far end already slipped under the chart's
     // left edge. people.cjs hand3: m 1 (a right hand from his side), roll −53 (the back up, seen from above like the table)
     const SQ = .6;
-    const hr = H.hand3(u, { at: [30, 117], a: 20, s: 2.4, m: 1, roll: -53, pitch: 0, pose: 'scissor', tone: CSK, light: [.8, -.5], sw: .3,
+    const hr = H.hand3(u, { at: [27, 117], a: 20, s: 2.75, m: 1, roll: -53, pitch: 0, pose: 'scissor', tone: CSK, light: [.8, -.5], sw: .3,
       flex: [[-4, 4, 2], [8, 6, 4], [70, 96, 56], [74, 96, 56]], yaw: [1, -2, 8, 12], thumbFlex: [0, 6, 8], thumbSpread: 10, backFingers: [1, 2, 3] });
     // the card: its plane is the table's (squashed SQ); its long side along the fingers; its near end clamped between
     // their middle joints
     const hax = [Math.cos(20 * Math.PI / 180), Math.sin(20 * Math.PI / 180) / SQ], th = Math.atan2(hax[1], hax[0]);
     const clamp = [(hr.joints[0][1][0] + hr.joints[1][1][0]) / 2, (hr.joints[0][1][1] + hr.joints[1][1][1]) / 2], CS = 1.5, cl0 = 13 * CS - 2.4;
-    const CC = [clamp[0] + Math.cos(th) * cl0, clamp[1] + Math.sin(th) * cl0 * SQ];
+    // held by its near long edge: the card lies to the far side of the fingers, so the middle finger shows under it
+    const off = 13.5 * CS / 1.5 - 3.4, CC = [clamp[0] + Math.cos(th) * cl0 + Math.sin(th) * off, clamp[1] + (Math.sin(th) * cl0 - Math.cos(th) * off) * SQ];
     let hidden = hr.back + card(u, CC, th * 180 / Math.PI - 90, CS, SQ);
     // the deck he drew from: a short stack face down by his elbow, the top two cards pushed askew
     for (let k = 0; k < 5; k++) tab += card(u, [47 + k * .1, 102 - k * .7], -96 + (k > 3 ? 9 : k > 2 ? 4 : 0), .95, SQ);

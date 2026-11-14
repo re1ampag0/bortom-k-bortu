@@ -21,7 +21,7 @@ const { glow, gloom, motes } = PK;
 const HZ = 86, MOON = { x: 150, y: 22 };
 const FIG = { k: 1.32, o: [100, 30] };              // the man and the wheel are drawn at 1, then scaled about o
 const WC = [100, 110], RIM = 33, RG = 43;            // the wheel: centre, rim radius, where the fists hold the handles
-const TH = [-144, -36];                              // the two handles he holds (10 spokes: one every 36°)
+const TH = [-162, -18];                              // the two handles he holds (10 spokes: one every 36°), just above 9 and 3 o'clock
 const BIN = { x: 22, y: 124 };                       // the binnacle's lamp (in front of the wheel, lower left)
 const HEAD = { c: [100, 41], r: 12.6 };
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: MOON.x, y: MOON.y, el: 18, color: '#dfe8ff', power: .85 },
@@ -67,6 +67,15 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
       bg += `<path d="M-12 98Q20 95 46 99L48 104H-12z" fill="#05080e" opacity=".6"/><path d="M154 99Q180 95 212 97V104H154z" fill="#05080e" opacity=".6"/>`
         + K.foam(u, { x: 20, y: 99, w: 62, h: 2.2, seed: 6, L }) + K.foam(u, { x: 184, y: 99, w: 60, h: 2.4, seed: 11, L })
         + K.splash(u, { x: 46, y: 99, w: 10, h: 9, seed: 2, L, wind: 1 }) + K.splash(u, { x: 162, y: 99, w: 9, h: 8, seed: 5, L, wind: -1 }); }
+    // ——— our wake: the track we have just come by, a pale band of churned water winding away between the stacks and
+    // narrowing to the horizon (mostly behind him; it shows on his left and far off) ———
+    { const pts = [[104, 103], [84, 99], [64, 95.4], [58, 92.4], [66, 89.8], [80, 88], [92, 87.1]], w = [9, 7.4, 5.2, 3.6, 2.2, 1.2, .5];
+      const side = sg => pts.map((p, i) => { const q = pts[Math.min(i + 1, pts.length - 1)], o = pts[Math.max(i - 1, 0)], dx = q[0] - o[0], dy = q[1] - o[1], l = Math.hypot(dx, dy) || 1;
+        return [p[0] - dy / l * w[i] * .5 * sg, p[1] + dx / l * w[i] * .16 * sg]; });
+      const A = side(1), B = side(-1).reverse(), g = nid('wk', u);
+      bg += `<defs>${linGrad(g, 0, 104, 0, 87, [[0, '#a8bcd8', .3], [1, '#a8bcd8', .08]])}</defs><path d="M${A.map(P2).join('L')}L${B.map(P2).join('L')}Z" fill="url(#${g})"/>`;
+      const Rw = rng(31); for (let i = 0; i < 26; i++) { const t = Rw() * (pts.length - 1.2), k = Math.floor(t), fr = t - k, p = [lerp(pts[k][0], pts[k + 1][0], fr), lerp(pts[k][1], pts[k + 1][1], fr)], ww = lerp(w[k], w[k + 1], fr);
+        const x = p[0] + (Rw() - .5) * ww, y = p[1] + (Rw() - .5) * ww * .2; bg += `<path d="M${f(x)} ${f(y)}h${f(.6 + ww * .28 * Rw())}" stroke="#e8f0ff" stroke-width="${f(.25 + ww * .03)}" opacity="${f(.35 + Rw() * .35)}"/>`; } }
     // ——— the stern: the taffrail across behind him, balusters, the cap rail catching the moon ———
     { const y0 = 104, y1 = 118;
       bg += `<rect x="-10" y="${y0}" width="220" height="${y1 - y0 + 4}" fill="#1a110a"/>`;
@@ -85,14 +94,15 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
     const HR = 1.9 * FIG.k;   // a handle's radius in the picture
     // each fist round its handle: the hand's direction solved so the handle across the fist runs along its spoke
     const fist = (i, info) => { const t = TH[i], base = { s: info.s, m: i ? -1 : 1, roll: 14, pitch: 18, pose: 'wrap', r: HR / info.s, tone: info.tone, light: [.8, -.55], sw: .3, tilt: 6, cut: info.cut };
-      let a = info.a, h;
+      // an overhand grip: the hand comes over its handle from above (the forearm forward from the elbow, out and back)
+      let a = Math.sin((t + 90) * Math.PI / 180) > 0 ? t + 90 : t - 90, h;
       for (let k = 0; k < 4; k++) { h = H.hand3(u, { ...base, a, at: info.at }); const ang = Math.atan2(h.axis[1], h.axis[0]) * 180 / Math.PI;
         let d = t - ang; while (d > 90) d -= 180; while (d < -90) d += 180; a += d; }
       return h; };
     const SIDE = { L: 0, R: 1 };   // dir −1: his far (left) arm reaches our left handle, the near (right) one our right
-    const figO = { L, pose: 'helm', at: [100, 257], h: 232, dir: -1, horizon: HZ, skin: 'fair', seed: 7, handsSeparate: true,
-      adjust: { torso: [-4, 6, -6] },
-      dress: { shirt: '#cfc4aa', vest: '#6a2a1c', coat: '#4a3a2c', coatLen: 'knee', trousers: '#3a3028', boots: '#22160e', kerchief: '#7a2418', belt: '#2a1a10' },
+    const figO = { L, pose: 'helm', at: [100, 272], h: 250, dir: -1, horizon: HZ, skin: H.skinTone('fair', SKIN), dim: .12, seed: 7, handsSeparate: true,
+      adjust: { torso: [-4, 6, -6], arms: { R: { to: [-.6, -1.3, .7], pole: [-.6, .3, -1] }, L: { to: [.55, -1.75, .7], pole: [.6, .3, -1] } } },
+      dress: { shirt: '#cfc4aa', vest: '#7a2a1c', coat: '#3a281a', coatLen: 'knee', trousers: '#3a3028', boots: '#22160e', kerchief: '#7a2418', belt: '#2a1a10' },
       head: { turn: .12, nod: -2, look: [-.55, -.05], brow: 'frown', smile: .12, hair: { style: 'short', color: '#9e9a92' }, hairColor: '#a29d94', beard: 'short', moustache: true, iris: '#3a4a5a',
         warm: { color: '#ffb46a', op: .32 } },
       hand: (u2, info) => fist(SIDE[info.side], info) };
@@ -123,7 +133,7 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
 
     // ——— the flask on his belt, at his left hip (our right), seen between the spokes ———
     let flask = '';
-    { const hp = fig.joints.L.hip[0] > fig.joints.R.hip[0] ? fig.joints.L.hip : fig.joints.R.hip, x = hp[0] + 3, y = hp[1] - 3;
+    { const hp = fig.joints.L.hip[0] > fig.joints.R.hip[0] ? fig.joints.L.hip : fig.joints.R.hip, x = hp[0] + 3, y = hp[1] - 9;
       flask = `<path d="M${f(x - 1)} ${f(y - 9)}q-1.6 4 0 7" stroke="#3a2a1a" stroke-width=".9" fill="none"/>`
         + `<g transform="translate(${f(x)} ${f(y)}) rotate(-6)"><path d="M-5 -6Q-6 2 -4 7Q0 9 4 7Q6 2 5 -6Q0 -8 -5 -6Z" fill="url(#silver${u})" stroke="#2a3238" stroke-width=".4"/><rect x="-1.6" y="-9" width="3.2" height="3" fill="#5a6268" stroke="#2a3238" stroke-width=".3"/>`
         + `<path d="M3.4 -3q1 4 0 8" stroke="#e8f0ff" stroke-width=".55" opacity=".7" fill="none"/><path d="M-3.6 -1q-.6 4 .2 6" stroke="#ffc888" stroke-width=".4" opacity=".4" fill="none"/></g>`; }
@@ -136,8 +146,8 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
     // a handle's back light: the moon behind him, high on the right, lines its upper edge; the binnacle warms its face
     const handleRim = (t) => { const d = dirOf(t), a = [WC[0] + d[0] * (RIM + 3), WC[1] + d[1] * (RIM + 3)], b = [WC[0] + d[0] * 49.6, WC[1] + d[1] * 49.6], nx = -d[1], ny = d[0], sg = (nx * .55 - ny * .85) > 0 ? 1 : -1;
       return `<path d="M${f(a[0] + nx * sg * 1.45)} ${f(a[1] + ny * sg * 1.45)}L${f(b[0] + nx * sg * 1.3)} ${f(b[1] + ny * sg * 1.3)}" stroke="#e4eeff" stroke-width=".55" opacity=".85" stroke-linecap="round"/>`; };
-    const handle = (t) => { const d = dirOf(t), a = [WC[0] + d[0] * (RIM + 2), WC[1] + d[1] * (RIM + 2)], b = [WC[0] + d[0] * 50, WC[1] + d[1] * 50];
-      return K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.9, L, 'oak', { r1: 1.5, r2: 1.6, bulge: .3, cap: 'round', outline: .35, seed: Math.round(t + 400) }) + handleRim(t); };
+    const handle = (t, held) => { const d = dirOf(t), a = [WC[0] + d[0] * (RIM + 2), WC[1] + d[1] * (RIM + 2)], b = [WC[0] + d[0] * 50, WC[1] + d[1] * 50];
+      return K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.9, L, 'oak', { r1: 1.5, r2: 1.6, bulge: .3, cap: 'round', outline: .35, seed: Math.round(t + 400) }) + (held ? '' : handleRim(t)); };
     for (let k = 0; k < 10; k++) { const t = TH[0] + k * 36, d = dirOf(t), a = [WC[0] + d[0] * 6, WC[1] + d[1] * 6], b = [WC[0] + d[0] * (RIM + 1), WC[1] + d[1] * (RIM + 1)];
       wheel += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.7, L, 'oak', { r1: 2.1, r2: 1.4, outline: .35, seed: k + 3 });
       if (k !== 0 && k !== 3) wheel += handle(t); }
@@ -166,7 +176,7 @@ module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', sta
     const WG = (s) => `<g transform="translate(${FIG.o[0]} ${FIG.o[1]}) scale(${FIG.k}) translate(${-FIG.o[0]} ${-FIG.o[1]})">${s}</g>`;
     // the two handles in his fists: the back of each fist, the handle, the fingers round it
     let fists = '';
-    for (const k of ['L', 'R']) { const h = fig.hands[k]; fists += h.back + WG(handle(TH[SIDE[k]])) + h.front; }
+    for (const k of ['L', 'R']) { const h = fig.hands[k]; fists += h.back + WG(handle(TH[SIDE[k]], true)) + h.front; }
     // the knuckles catch the binnacle's warmth on the left fist, the moon on the right one
     { const k0 = fig.hands.L.P(4.6, -.4, .2), k1 = fig.hands.R.P(4.6, -.4, .2);
       fists += glow(u, k0[0], k0[1], 10, 8, '#ffbe6a', .2) + glow(u, k1[0], k1[1], 9, 7, '#c8d8ff', .14); }
