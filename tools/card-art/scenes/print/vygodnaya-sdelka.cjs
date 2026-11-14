@@ -1,3 +1,4 @@
+// Variant 'room' since 14.11: the user chose the kit-interior scene (vygodnaya-sdelka-int.cjs); this one is kept to go back to.
 // «Выгодная сделка» (Индевор, ПРИКАЗ: возьмите 3 карты), refined from the first-round scene (portrait-endeavour.cjs
 // SCENES['Выгодная сделка']): night in the stern cabin, the candle on the table. A long contract lies across the table
 // — its head still rolled at the far end, lines and lines of a fair hand, two more sheets of it fanned out under it.
@@ -39,7 +40,7 @@ const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const SP = (a, b, Q = SH) => { const t = [lerp(Q[0][0], Q[1][0], a), lerp(Q[0][1], Q[1][1], a)], d = [lerp(Q[3][0], Q[2][0], a), lerp(Q[3][1], Q[2][1], a)]; return [lerp(t[0], d[0], b), lerp(t[1], d[1], b)]; };
 const toVP = (p, y) => [VX + (p[0] - VX) * (y - VY) / (p[1] - VY), y];
 
-module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Выгодная сделка', variant: 'room', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VY, eye: 1.3 });
     const Lo = K.makeLight({ time: 'night', haze: .3, key: { type: 'moon', x: 134, y: 18, color: '#e8eeff', power: .8 } }, { horizon: 36 });

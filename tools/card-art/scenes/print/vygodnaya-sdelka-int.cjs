@@ -5,7 +5,7 @@
 // the contract and the sheets under it are laid in the room's space (interior.geom: real rectangles in perspective).
 // One light: the cabin's lantern hanging between the table and the windows (the scheme's key); the moon in the stern
 // windows a weak cool fill. The candle of the base scene is gone, the lantern takes its place (decided without the user).
-// Not in the set: status 'draft', PRINT_VARIANT=int / shot.ts --variant int.
+// In the set since 14.11 (the user chose the new interior); the earlier room is variant 'room' in vygodnaya-sdelka.cjs.
 'use strict';
 const K = require('../kit/index.cjs');
 const H = require('./lib/people.cjs');
@@ -38,7 +38,7 @@ const P2 = p => `${f(p[0])} ${f(p[1])}`;
 // a point on a sheet: a across, b down from its far edge, interpolated on the table (true perspective)
 const SP = (a, b, Q = CW) => { const t = [lerp(Q[0][0], Q[1][0], a), lerp(Q[0][1], Q[1][1], a)], d = [lerp(Q[3][0], Q[2][0], a), lerp(Q[3][1], Q[2][1], a)]; return PW([lerp(t[0], d[0], b), lerp(t[1], d[1], b)]); };
 
-module.exports = { name: 'Выгодная сделка', variant: 'int', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, SCH.cam);
     const R = rng(41);
