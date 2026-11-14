@@ -13,6 +13,9 @@
 // Second pass: the raised arm leaves the coat at the shoulder beside the head (red sleeve to mid-forearm, cuff at
 // the wrist); the candle stub stands on the window sill, so both lights come from the left and the skeleton's
 // shadow falls away from them onto the right wall, darker than before.
+// Step 3 pass (print kit): the table top is a card table — an oak rim round green baize, so it reads apart from the
+// floor boards; the monkey's leavings on the felt (a banana skin, cracked nut shells), the owner's clay pipe and a wine
+// ring by the mug.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');

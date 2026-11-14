@@ -22,14 +22,15 @@ const HZ = 100;
 const JAR0 = { x: 126, y: 104, w: 46, h: 52 };      // the jar as drawn (middle of its bottom, width, body height; the cap above)
 const JK = .76;                                     // …drawn at JK round his chest
 const MAN = [20, 4];                                // the man (and the jar in his hands) is drawn round x 100, moved by MAN
-const JAR = { x: 100, y: 120, w: JAR0.w * JK, h: JAR0.h * JK };   // the jar in the man's frame
-const HEAD = { c: [100, 42], r: 12.6 };
+const JAR = { x: 100, y: 115, w: JAR0.w * JK, h: JAR0.h * JK };   // the jar in the man's frame
+const HEAD = { c: [100, 40.4], r: 13.8 };
+const TW = .88;                                     // the torso drawn broad round x 100, narrowed to TW
 const light = { time: 'fog', haze: .7, key: { type: 'moon', x: 66, y: 22, el: 26, color: '#c8f0dc', power: .75 }, fill: { color: '#3a6a5c', power: .46 },
   rim: { az: -20, color: '#d8fff0', power: .55 }, locals: [{ x: JAR.x + MAN[0], y: JAR.y + MAN[1] - 22, color: '#ffc880', power: .55, radius: 40 }] };
 const skel = { horizon: HZ, eye: 3, light: 'the moon in the green fog upper left (cold key) + the jar\'s faint warm glow (local, on his hands and face from below)', items: [
   ['dutchman', 4, 106, 88, 50, 'water: heeled away, bow lifted'], ['foam ring', 10, 108, 70, 6, 'water round her'],
   ['rail', -5, 158, 210, 42, 'the Pearl\'s bulwark behind him'], ['sailor', 82, 170, 78, 140, 'stands on the deck, seen to the waist'],
-  ['jar', 120 - JAR.w / 2, 124, JAR.w, JAR.h + 9, 'pressed to his chest'], ['hands', 98, 121, 46, 28, 'round the jar from its sides']] };
+  ['jar', 120 - JAR.w / 2, 119, JAR.w, JAR.h + 9, 'pressed to his chest'], ['hands', 98, 116, 46, 28, 'round the jar from its sides']] };
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 
 // the jar of earth: glass body with a thick rim and base, earth in layers with stones, a root and a sprout, a cloth
@@ -115,8 +116,9 @@ module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'dr
     const SKIN = PP.skinTone('dark', { L, x: 120, y: 60 });
     const LT = [-.62, -.72];                                           // to the moon, in the picture
     let man = '';
-    // the shirt: broad shoulders, loose linen, open at the throat; the waistcoat over it, open in front
+    // the shirt: shoulders, loose linen, open at the throat; the waistcoat over it, open in front
     { const sg = nid('sh', u), vg = nid('vs', u);
+      man += `<g transform="translate(100 0) scale(${TW} 1) translate(-100 0)">`;
       man += `<defs>${linGrad(sg, 62, 0, 138, 0, [[0, shirt.lit, 1], [.35, shirt.half, 1], [.8, mix(shirt.half, shirt.shadow, .5), 1], [1, shirt.shadow, 1]])}`
         + `${linGrad(vg, 62, 0, 138, 0, [[0, vest.lit, 1], [.3, vest.half, 1], [1, vest.shadow, 1]])}</defs>`
         + `<path d="M62 170L64 84Q66 70 78 65L92 59Q100 63 108 59L122 65Q134 70 136 84L138 170Z" fill="url(#${sg})" stroke="${shirt.outline}" stroke-width=".5"/>`
@@ -133,19 +135,21 @@ module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'dr
         + `<path d="M78 65Q80 73 76 81M122 65Q120 73 124 81" stroke="${shirt.shadow}" stroke-width=".5" fill="none" opacity=".8"/>`
         + `<path d="M64 150L64 84Q66 70 78 65L92 59" stroke="#d8fff0" stroke-width=".8" fill="none" opacity=".75"/>`;
       // the neck
-      man += `<path d="M95.2 47L104.8 47L106 59Q100 62 94 59Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M95.5 53q4.5 3 9 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".6"/>`
-        + `<path d="M95.4 48L95.2 58" stroke="#c8f0dc" stroke-width=".5" opacity=".5"/>`; }
+      man += `<path d="M94 47L106 47L107.4 59Q100 62 92.6 59Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".35"/><path d="M95.5 53q4.5 3 9 0" stroke="${SKIN.shadow}" stroke-width=".6" fill="none" opacity=".6"/>`
+        + `<path d="M95.4 48L95.2 58" stroke="#c8f0dc" stroke-width=".5" opacity=".5"/>`;
+      man += '</g>'; }
 
     // ——— his hands round the jar: each hand at a side of the glass, the palm on it, the fingers spread round the
     // front toward the middle (hand3 wrapped round a cylinder the jar's radius); the right hand (ours left) higher ———
     const jr = JAR.w / 2, hs = 2, HB = { pose: 'wrap', s: hs, r: jr / hs, tone: SKIN, light: LT, sw: .3, roll: 0 };
-    const hR = PP.hand3(u, { ...HB, a: 0, pitch: 58, m: 1, grip: [JAR.x, 96] });       // his right hand: on the jar's left side
-    const hL = PP.hand3(u, { ...HB, a: 180, pitch: 58, m: -1, grip: [JAR.x, 112] });   // his left hand: on its right side, lower
+    const hR = PP.hand3(u, { ...HB, a: 0, pitch: 58, m: 1, grip: [JAR.x, 91] });       // his right hand: on the jar's left side
+    const hL = PP.hand3(u, { ...HB, a: 180, pitch: 58, m: -1, grip: [JAR.x, 107] });   // his left hand: on its right side, lower
     // the arms: shirt sleeves, shoulder → elbow (in at his side) → the wrist at the jar's side; a cuff
     const sleeve = (s0, el, w, lt, rimOp, seed) => PP.cloth(u, { spine: [s0, [lerp(s0[0], el[0], .5) + lt * .8, lerp(s0[1], el[1], .5)], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5) + 1], w],
-      w: [14, 13, 12, 10.4, 8.6], tone: shirt, lit: lt, rim: '#d8fff0', rimSide: lt, rimOp, seed, drapes: 2, foldW: .9, sw: .4, capA: true,
+      w: [13, 12.2, 11.2, 9.8, 8.4], tone: shirt, lit: lt, rim: '#d8fff0', rimSide: lt, rimOp, seed, drapes: 2, foldW: .9, sw: .4, capA: true,
       cuff: { from: .84, k: 1.08, tone: { lit: shirt.lit, half: mix(shirt.half, shirt.shadow, .2), shadow: shirt.shadow, outline: shirt.outline } } });
-    man += sleeve([69, 74], [62, 101], hR.wrist, -1, .6, 3) + sleeve([131, 74], [138, 107], hL.wrist, 1, .25, 4);
+    const sx = d => 100 + d * TW;
+    man += sleeve([sx(-31), 74], [sx(-38), 97], hR.wrist, -1, .6, 3) + sleeve([sx(31), 74], [sx(38), 102], hL.wrist, 1, .25, 4);
 
     // ——— the head: a weathered face turned to his right (our left), eyes on the ghost ship; lit from below by the jar ———
     const hd = PP.head34(u, { c: HEAD.c, r: HEAD.r, turn: .34, dir: -1, nod: -1, skin: 'dark', tone: SKIN, light: LT, warm: { color: '#ffb868', op: .32 },
@@ -181,7 +185,7 @@ module.exports = { name: 'Банка с землёй', kind: 'deck', status: 'dr
     let held = hR.back + hL.back + `<g transform="${tr}">${J.body}${J.glass}</g>` + hR.front + hL.front;
     // the earth's warmth on his fingers and on the shirt round the jar; the jar's shade pressed on his chest
     held = K.contactShadow(u, JAR.x, JAR.y + 1, JAR.w * 1.1, L, { ry: 2.4, opacity: .4 }) + held
-      + glow(u, JAR.x - 13, 98, 9, 7, '#ffbe70', .22) + glow(u, JAR.x + 13, 113, 9, 7, '#ffbe70', .22);
+      + glow(u, JAR.x - 13, 93, 9, 7, '#ffbe70', .22) + glow(u, JAR.x + 13, 108, 9, 7, '#ffbe70', .22);
     const fgMan = `<g transform="translate(${MAN[0]} ${MAN[1]})">${man}${face}${held}</g>`;
 
     let fg = fgMan;

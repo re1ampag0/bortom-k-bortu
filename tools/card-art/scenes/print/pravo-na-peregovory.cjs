@@ -10,6 +10,9 @@
 // (people.cjs hand3, palm side, the fingers over the wood) and another round the scroll. Light: the moon high on the
 // right (key: the flag glows, the cold side of his face and coat, the path on the bay); the lantern on the sand by the
 // pole (warm, from below on his right side).
+// Step 3: his own olive skin; the longboat he rowed ashore in, pulled up on the wet sand with its oars shipped and its
+// painter run up the beach to a driftwood stake, his footprints from it to the pole; the boat's shadow and the moon on
+// its gunwale.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -30,7 +33,8 @@ const skel = { horizon: HZ, eye: 1.7, light: 'moon behind the flag, upper middle
   ['pirate', 120, 190, 74, 140, 'stands on the beach'], ['scroll', 140, 136, 14, 36, 'in his left fist'], ['lantern', 26, 150, 16, 30, 'on the sand']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
-const SKIN = { lit: '#f0c094', half: '#c4865a', core: '#a46a44', shadow: '#5e3422', outline: '#26120a' };
+const SKIN0 = { lit: '#f0c094', half: '#c4865a', core: '#a46a44', shadow: '#5e3422', outline: '#26120a' };
+const SKIN = H.skinTone('olive', SKIN0);   // his own olive skin under the scene's light
 // a hand placed so the handle across its fist runs at the angle t (deg), through the point g
 function handAt(u, base, g, t, a0) { let a = a0, h; for (let k = 0; k < 5; k++) { h = H.hand3(u, { ...base, a, grip: g }); const ang = Math.atan2(h.axis[1], h.axis[0]) * 180 / Math.PI;
   let d = t - ang; while (d > 90) d -= 180; while (d < -90) d += 180; a += d; } return h; }
@@ -55,8 +59,31 @@ module.exports = { name: 'Право на переговоры', kind: 'deck', s
         + K.foam(u, { x: 40, y: 119.4, w: 100, h: 1.4, seed: 4, L }) + K.foam(u, { x: 160, y: 118.6, w: 90, h: 1.2, seed: 8, L })
         + `<path d="M-10 124Q50 121 120 124T210 122" stroke="#9aa8b8" stroke-width=".5" fill="none" opacity=".35"/>`;
       for (let k = 0; k < 140; k++) { const y = 124 + R() * 60, x = -10 + R() * 220; bg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.2 + R() * .4)}" fill="${R() > .5 ? '#a89c80' : '#2a2418'}" opacity="${f(.3 + R() * .4)}"/>`; }
-      // his footprints from the water
-      for (let k = 0; k < 6; k++) { const x = 134 + (k % 2) * 7 - k * 2, y = 124 + k * 6; bg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(1.4 + k * .3)}" ry="${f(.7 + k * .15)}" fill="#1e1a12" opacity=".5"/>`; }
+      // his footprints from the boat up the beach
+      for (let k = 0; k < 7; k++) { const x = 94 + k * 7 + (k % 2) * 2.4, y = 125 + k * 4.4 + (k % 2) * 1.2; bg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(1.3 + k * .28)}" ry="${f(.6 + k * .14)}" fill="#1e1a12" opacity=".5"/>`; }
+      // ——— the longboat he came in: pulled up on the wet sand, bow up the beach, oars shipped; the painter to a stake ———
+      { const wd = { lit: '#8a7458', half: '#4a3a28', shadow: '#1e160c', outline: '#0a0604' }, hg = nid('lb', u), ig = nid('li', u);
+        bg += `<defs>${linGrad(hg, 0, 118, 0, 129, [[0, wd.half, 1], [.5, mix(wd.half, wd.shadow, .5), 1], [1, wd.shadow, 1]])}${linGrad(ig, 50, 0, 88, 0, [[0, '#1a120a', 1], [1, '#2e2216', 1]])}</defs>`
+          // its shadow on the sand (the moon is high behind it: short, toward us)
+          + `<ellipse cx="70" cy="129.4" rx="21" ry="1.8" fill="#0e0c08" opacity=".55"/>`
+          // the inside (we look a little down into it), the far gunwale, a thwart across
+          + `<path d="M51 120.6Q52 118 56 117.6Q70 117 86.4 118.4Q88.6 119 89 120.2Q70 122.4 51 120.6Z" fill="url(#${ig})" stroke="${wd.outline}" stroke-width=".35"/>`
+          + `<path d="M56 117.6Q70 117 86.4 118.4" stroke="#c8d8f4" stroke-width=".45" fill="none" opacity=".6"/>`
+          + `<path d="M66 118.8l1.4 2.6h4.2l-1.2 -2.8z" fill="${wd.lit}" stroke="${wd.outline}" stroke-width=".3"/>`
+          // two oars shipped along it, their blades out over the stern
+          + `<path d="M85 119.4L46 117.4M84 120.2L44.6 119.6" stroke="#6a5438" stroke-width=".9" stroke-linecap="round"/><path d="M85 119.4L46 117.4" stroke="#b8c4d8" stroke-width=".3" opacity=".6"/>`
+          + `<path d="M48 116.6l-6 -.6q-1.6 .9 0 2l6 .4z" fill="#6a5438" stroke="${wd.outline}" stroke-width=".3"/><path d="M46.6 119l-6 .2q-1.4 1 0 1.8l6 -.3z" fill="#5a4630" stroke="${wd.outline}" stroke-width=".3"/>`
+          // the near side: planks (clinker laps), the stern's transom on the left, the stem up the beach on the right
+          + `<path d="M51 120.6Q70 122.4 89 120.2Q88 124.4 82 127.6Q70 129 58 128Q52.4 126.4 51 120.6Z" fill="url(#${hg})" stroke="${wd.outline}" stroke-width=".4"/>`
+          + `<path d="M52 123.2Q70 125 87.4 123M54 125.8Q70 127.4 84.8 125.8" stroke="${wd.outline}" stroke-width=".35" fill="none" opacity=".7"/>`
+          + `<path d="M52 123.4Q70 125.2 87.4 123.2" stroke="${wd.lit}" stroke-width=".3" fill="none" opacity=".45"/>`
+          + `<path d="M51 120.6Q70 122.4 89 120.2" stroke="#d8e4f4" stroke-width=".55" fill="none" opacity=".75"/>`
+          + `<path d="M89 120.2l1 -1.2" stroke="${wd.half}" stroke-width="1.1" stroke-linecap="round"/>`
+          // wet sand darker round its keel, a few ripples of foam reaching its stern
+          + `<path d="M50 128.4Q70 130.6 86 128.6" stroke="#2a2418" stroke-width="1.2" fill="none" opacity=".45"/>`
+          // the painter from the stem up the sand to a stake of driftwood
+          + `<path d="M90 119.4Q100 124 110 123.4" stroke="#8a7a5a" stroke-width=".45" fill="none"/>`
+          + `<path d="M110.4 124.4L111.6 118.6" stroke="#5a4a34" stroke-width="1.2" stroke-linecap="round"/><path d="M110.8 124.2L112 118.6" stroke="#b8c4d8" stroke-width=".3" opacity=".5"/>`; }
       // shells and a tangle of weed on the sand
       bg += [[24, 132], [174, 136], [96, 142]].map(([x, y]) => `<path d="M${x - 2.4} ${y}q2.4 -3.4 4.8 0z" fill="#e0d4b8" stroke="#6a5a40" stroke-width=".3"/><path d="M${x} ${y - 2.4}v2.4M${x - 1.2} ${y - 2}l.6 2M${x + 1.2} ${y - 2}l-.6 2" stroke="#8a7a60" stroke-width=".2"/>`).join('')
         + `<path d="M150 128q6 -2 10 1t10 0" stroke="#2a3a24" stroke-width=".9" fill="none"/>`; }

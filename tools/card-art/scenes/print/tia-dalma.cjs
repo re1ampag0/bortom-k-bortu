@@ -13,6 +13,10 @@
 // cluster of tallow candles on the table is the one warm light (the cards, crabs and bowl lit from the left).
 // Light: the candles at the left back of the table (key, warm); the moon through the fog in the window (cold fill);
 // the bowl's storm a faint cold glow of its own.
+// Step 3 pass (print kit): the crabs' eight legs fan round the shell (front pair forward, rear pair swept back,
+// pointed tips) instead of four stacked ribbons; the tall candle shows its flame (no white glow blob); the jar that
+// stood on the shelf behind a hanging one is gone, the hanging ones hang clear of the shelf; rain and a tiny heeled
+// ship in the bowl's storm; a string of glass beads, a black feather, a thread of candle smoke on the table.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
