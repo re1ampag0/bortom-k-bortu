@@ -4,6 +4,11 @@
 // the next ball already on its way. Inside: one hanging lantern is the light of the deck (shadows fan from under
 // it), the flash at the port is a second, brief warm light on the muzzle and the frames. Kit gun, shot pile,
 // lantern, deck, cask and crate in the manner of the first round (dark hold, warm light, full frame).
+// Step 3 (the user: details, the flash, the ball in flight): the flash a big ball of fire with a wide tongue, lit
+// smoke round it and burning bits of the wad flying out; the ball bursting out of the front of the flash over the sun's
+// glitter, big, cold iron with a sky glint and the fire on its back, a torn smoke trail behind it. Details: smoke
+// out of the vent and blown back in at the port, the linstock with its smouldering match leaning by the port, a leather
+// fire bucket on a peg, dust shaken off the beam, splinters falling into the water by the enemy.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -62,11 +67,9 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x:
       o += K.localGlow(u, { x: m.x + 6, y: m.y, color: '#ffd890', power: 1, radius: 40 }) + K.localGlow(u, { x: m.x + 12, y: m.y + 14, color: '#ffb050', power: .5, radius: 26 }, { squash: .35, core: false })
         + K.smoke(u, Lo, { x: OUT + 5, y: by - 3, w: 30, h: 50, wind: -.5, seed: 6, opacity: .85, glow: { color: '#ffb050', power: .6 } })
         + glow(u, OUT + 6, by, 30, 22, '#ffcf7a', .8) + glow(u, OUT + 6, by, 12, 9, '#fff6d8', 1);
-      // the next ball on its way from our port, a faint trail behind it
-      { const bx = 161, bY = by - 2.6, tr = nid('tr', u), tb = nid('tb', u);
-        o += `<defs>${linGrad(tr, OUT + 4, by, bx, bY, [[0, '#e8e2d6', 0], [1, '#e8e2d6', .7]])}<filter id="${tb}" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".7"/></filter></defs>`
-          + `<path d="M${OUT + 4} ${f(by)}L${bx} ${f(bY)}" stroke="url(#${tr})" stroke-width="5" stroke-linecap="round" filter="url(#${tb})"/>`
-          + `<defs>${radGrad(tb + 'g', bx + 1.1, bY - 1.3, 4.8, [[0, '#8a949c', 1], [.35, '#3a3e42', 1], [1, '#0c0d0e', 1]])}</defs><circle cx="${bx}" cy="${f(bY)}" r="3.4" fill="url(#${tb}g)" stroke="#050505" stroke-width=".35"/><circle cx="${bx + 1.2}" cy="${f(bY - 1.3)}" r=".75" fill="#eef6ff" opacity=".85"/>`; }
+      // splinters falling round the enemy's side raise small splashes; the flash warms the water under the port
+      o += K.splash(u, { x: 172, y: 106.5, w: 3, h: 4, seed: 4, L: Lo }) + K.splash(u, { x: 183, y: 107.5, w: 2.4, h: 3, seed: 8, L: Lo })
+        + K.localGlow(u, { x: 152, y: 118, color: '#ffb050', power: .45, radius: 22 }, { squash: .3, core: false });
       bg += `<defs><clipPath id="${id}"><rect x="${OUT}" y="-10" width="${210 - OUT}" height="300"/></clipPath></defs><g clip-path="url(#${id})">${o}</g>`; }
     // the hull in section: thick frames and planking, the port cut through it, the lid hauled up outside (first round)
     bg += `<path d="M${HX} -10h${HW}v${pt + 10}h${-HW}zM${HX} ${pt + ph}h${HW}V290h${-HW}z" fill="url(#oakH${u})" stroke="#140a04" stroke-width=".8"/>`
@@ -80,6 +83,29 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x:
       + `<path d="M42 50v8" stroke="#2a1a0a" stroke-width=".8"/><circle cx="42" cy="49" r="1.2" fill="url(#iron${u})"/>`
       + `<g filter="url(#drop${u})"><path d="M38 58q-6 10 2 20q4 4 9 2l1 -3q-6 -2 -8 -8q-2 -6 2 -11z" fill="#e8d6aa" stroke="#6a5a3a" stroke-width=".5"/><path d="M45.5 60q-4 8 -1 14q2 4 5 4" stroke="#fff4dc" stroke-width=".7" fill="none" opacity=".7"/><path d="M39 72q4 4 9 4" stroke="#b89a6a" stroke-width=".5" fill="none"/><path d="M48 78l3 -1" stroke="#3a2a14" stroke-width="1.6"/></g>`
       + motes(26, 0, 10, HX, 128, '#ffd8a0', 8);
+    // a leather fire bucket on a peg on the frame right of the lantern: tapered, a rolled rim, a rope bail over the peg
+    { const bk = nid('bk', u), x = 96, y = 40;
+      bg += `<path d="M${x} ${y - 9}v3" stroke="#2a1a0a" stroke-width=".8"/><circle cx="${x}" cy="${y - 9.4}" r="1.1" fill="#5a3a1c"/>`
+        + `<defs>${linGrad(bk, x - 6, 0, x + 6, 0, [[0, '#7a4a26'], [.35, '#5a3418'], [1, '#1e1006']])}</defs>`
+        + `<g filter="url(#drop${u})"><path d="M${x - 5.4} ${y - 4}q5.4 -8 10.8 0" stroke="#b89a6a" stroke-width=".7" fill="none"/>`
+        + `<path d="M${x - 5.6} ${y - 4}L${x - 4.6} ${y + 9}Q${x} ${y + 10.4} ${x + 4.6} ${y + 9}L${x + 5.6} ${y - 4}Z" fill="url(#${bk})" stroke="#140a04" stroke-width=".4"/>`
+        + `<ellipse cx="${x}" cy="${y - 4}" rx="5.8" ry="1.3" fill="#2a1608" stroke="#8a5a30" stroke-width=".7"/>`
+        + `<path d="M${x - 5.1} ${y + 2.6}Q${x} ${y + 3.8} ${x + 5.1} ${y + 2.6}" stroke="#140a04" stroke-width=".5" fill="none"/>`
+        + `<path d="M${x - 3.6} ${y - 2}L${x - 3.1} ${y + 8}" stroke="#c08a52" stroke-width=".5" opacity=".55"/>`
+        + [-2, 0, 2].map(d => `<circle cx="${x + d * 1.6}" cy="${f(y + 2.9 + Math.abs(d) * -.15)}" r=".32" fill="#d8b070"/>`).join('') + `</g>`; }
+    // the linstock leaning on the frame by the port: an ash staff, the forked brass head, the slow match wound on it,
+    // its end smouldering — a red point with a thread of smoke
+    { const a = [108, 132], b = [116.4, 62];
+      bg += `<g filter="url(#drop${u})"><path d="M${a[0]} ${a[1]}L${b[0]} ${b[1]}" stroke="#7a5430" stroke-width="1.5" stroke-linecap="round"/><path d="M${a[0] - .4} ${a[1]}L${b[0] - .4} ${b[1] + .2}" stroke="#c49a62" stroke-width=".45" opacity=".7"/>`
+        + `<path d="M${b[0] - .2} ${b[1] + 1}l-.4 -3.2l-1.6 -2.6M${b[0] - .2} ${b[1] + 1}l.9 -3l2.2 -2" stroke="#c8a040" stroke-width=".8" fill="none" stroke-linecap="round"/>`
+        + `<path d="M${b[0] - .6} ${b[1] + 3}c-2 1 2 2 0 3c-2 1 2 2 0 3" stroke="#8a7a5a" stroke-width=".9" fill="none"/>`
+        + `<path d="M${b[0] - 2.2} ${b[1] - 4.8}q-1.4 -1 -1.6 -2.6" stroke="#8a7a5a" stroke-width=".7" fill="none"/></g>`
+        + `<circle cx="${b[0] - 3.8}" cy="${b[1] - 7.4}" r=".75" fill="#ff5a1a"/><circle cx="${b[0] - 3.8}" cy="${b[1] - 7.4}" r=".35" fill="#ffd27a"/>`
+        + glow(u, b[0] - 3.8, b[1] - 7.4, 5, 5, '#ff8a3a', .6)
+        + `<path d="M${b[0] - 3.8} ${b[1] - 8.2}c-1 -3 1.6 -4 .4 -7s1.4 -4 .2 -7" stroke="#d8c8b0" stroke-width=".45" fill="none" opacity=".45"/>`; }
+    // dust shaken off the beam by the shot, trickling down in the lantern light
+    { const Rd = rng(19); for (let i = 0; i < 7; i++) { const x = 74 + Rd() * 44, l = 6 + Rd() * 12;
+        bg += `<path d="M${f(x)} 9.6v${f(l)}" stroke="#e8c898" stroke-width="${f(.25 + Rd() * .3)}" stroke-dasharray="${f(.4 + Rd())} ${f(.8 + Rd() * 1.4)}" opacity="${f(.25 + Rd() * .3)}"/>`; } }
     // the deck things: shadows fan from under the lantern, then the things, then the light over them
     let fg = '';
     const sh = (x, y, w, h, d) => K.castShadow(u, L, { x, y, w, h, horizon: HZ, d });
@@ -87,11 +113,41 @@ module.exports = { name: 'Ядра', kind: 'deck', status: 'accepted', cam: { x:
     // the breeching rope from a ringbolt in the frames to the gun (first round), the gun itself
     fg += rope(`M${HX - 10} ${by + 18}Q${gun.x + 10} ${by + 30} ${gun.x - 30} ${by + 6}`, 1.05);
     fg += K.cannon(u, L, { ...gun, breech: false });
-    // the flash in front of the muzzle, over its mouth: a saturated ball of fire as in the first round (white heart,
-    // gold, orange, a red-orange edge), the tongue of flame along the bore; only right of the muzzle's face
-    { const fb = nid('fb', u), fc = nid('fc', u), cx = m.x + 6.5;
-      fg += `<defs>${radGrad(fb, cx, m.y, 12.5, [[0, '#ffffff', 1], [.14, '#fff4b0', 1], [.34, '#ffd040', 1], [.58, '#ff8a1e', .9], [.8, '#ff5a10', .45], [1, '#ff4a08', 0]])}<clipPath id="${fc}"><rect x="${f(m.x - 2.5)}" y="${f(m.y - 30)}" width="60" height="60"/></clipPath></defs>`
-        + `<g clip-path="url(#${fc})"><circle cx="${f(cx)}" cy="${f(m.y)}" r="12.5" fill="url(#${fb})"/>${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -3, len: 20, seed: 1, smoke: false, glow: false })}</g>`; }
+    // smoke out of the vent: the gun has just fired — a thread rising from the touch-hole, curling in the lantern light
+    { const v = [m.x - 87.9, m.y - 9.9];
+      fg += K.smoke(u, L, { x: v[0], y: v[1], w: 9, h: 24, wind: .25, seed: 12, opacity: .5, glow: { color: '#ffc070', power: .4 } })
+        + `<circle cx="${f(v[0])}" cy="${f(v[1])}" r=".7" fill="#ffb040" opacity=".8"/>`; }
+    // smoke blown back in through the port, hanging in the frames
+    fg += K.smoke(u, L, { x: HX - 4, y: by + 6, w: 18, h: 26, wind: -.6, seed: 15, opacity: .38, glow: { color: '#ffcf7a', power: .5 } });
+    // the flash in front of the muzzle, over its mouth: a saturated ball of fire (white heart, gold, orange, a
+    // red-orange edge) and a wide tongue along the bore with lit smoke round it; only right of the muzzle's face
+    { const fb = nid('fb', u), fc = nid('fc', u), fh = nid('fh', u), cx = m.x + 9, Rf = rng(9), n = 8;
+      // the ball of fire: lobes of different size round its middle (a ragged edge, not a disc), a soft glow under it
+      const lob = Array.from({ length: n }, (_, j) => { const a = j / n * Math.PI * 2 + .3, rr = 8.5 + Rf() * 5.5; return [cx + Math.cos(a) * rr * 1.1, m.y + Math.sin(a) * rr * .85]; });
+      const mid = (p, q) => [cx + ((p[0] + q[0]) / 2 - cx) * .78, m.y + ((p[1] + q[1]) / 2 - m.y) * .78];
+      const d = `M${f(mid(lob[n - 1], lob[0])[0])} ${f(mid(lob[n - 1], lob[0])[1])}` + lob.map((p, j) => { const q = mid(p, lob[(j + 1) % n]); return `Q${f(p[0])} ${f(p[1])} ${f(q[0])} ${f(q[1])}`; }).join('') + 'Z';
+      fg += `<defs>${radGrad(fb, cx - 2, m.y, 14, [[0, '#ffffff', 1], [.16, '#fff4b0', 1], [.38, '#ffd040', 1], [.66, '#ff8a1e', .95], [.9, '#f0501a', .85], [1, '#c8380c', .8]])}`
+        + `${radGrad(fh, cx, m.y, 22, [[0, '#ffb050', .7], [.5, '#ff9a40', .3], [1, '#ff9a40', 0]])}<clipPath id="${fc}"><rect x="${f(m.x - 2.5)}" y="${f(m.y - 40)}" width="70" height="80"/></clipPath></defs>`
+        + `<g clip-path="url(#${fc})">${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -2, len: 32, seed: 4, smoke: true, glow: false })}`
+        + `<circle cx="${f(cx)}" cy="${f(m.y)}" r="22" fill="url(#${fh})"/><path d="${d}" fill="url(#${fb})"/>`
+        + `${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -3, len: 27, seed: 1, smoke: false, glow: false })}${K.muzzleFlash(u, { x: m.x, y: m.y, dir: -1, len: 15, seed: 0, smoke: false, glow: false })}</g>`; }
+    // burning bits of the wad thrown out of the muzzle: short glowing streaks with a wisp each, falling to the water
+    { const Rs = rng(27); for (let i = 0; i < 9; i++) { const x = m.x + 10 + Rs() * 22, y = m.y - 6 + Rs() * 16, a = (Rs() - .3) * .9, l = 1.2 + Rs() * 2.4;
+        fg += `<path d="M${f(x)} ${f(y)}l${f(-Math.cos(a) * l * 2)} ${f(-Math.sin(a) * l * 2)}" stroke="#c8b8a0" stroke-width=".5" opacity=".35" stroke-linecap="round"/>`
+          + `<path d="M${f(x)} ${f(y)}l${f(-Math.cos(a) * l)} ${f(-Math.sin(a) * l)}" stroke="${Rs() > .4 ? '#ffb040' : '#ff7a20'}" stroke-width="${f(.5 + Rs() * .4)}" stroke-linecap="round"/><circle cx="${f(x)}" cy="${f(y)}" r=".4" fill="#fff0b0"/>`; } }
+    // the ball in flight: bursting out of the front of the flash, over the sun's glitter on the water — cold cast iron,
+    // the sky's glint on its upper right, the fire's warm light on its back, a torn trail of smoke behind it
+    { const bx = 162, bY = m.y - 2.2, r = 4.3, tr = nid('tr', u), tb = nid('tb', u), bg2 = nid('bg', u), bw = nid('bw', u);
+      fg += `<defs>${linGrad(tr, m.x + 14, m.y, bx - r, bY, [[0, '#d8d2c6', 0], [.6, '#d8d2c6', .45], [1, '#e8e2d6', .75]])}<filter id="${tb}" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation=".8"/></filter>`
+        + radGrad(bg2, bx + 1.4, bY - 1.6, r * 1.45, [[0, '#9aa4ac', 1], [.3, '#4a4f54', 1], [.75, '#1a1c1e', 1], [1, '#0a0b0c', 1]])
+        + radGrad(bw, bx - r * .9, bY + .4, r * 1.1, [[0, '#ff9a3a', .85], [.5, '#ff7a20', .3], [1, '#ff7a20', 0]]) + `</defs>`
+        + `<path d="M${f(m.x + 14)} ${f(m.y - .6)}Q${f(bx - 9)} ${f(bY + 1.6)} ${f(bx - r * .6)} ${f(bY)}" stroke="url(#${tr})" stroke-width="5.4" fill="none" stroke-linecap="round" filter="url(#${tb})"/>`
+        + `<path d="M${f(bx - 16)} ${f(bY - 3.2)}h9M${f(bx - 18)} ${f(bY + 3.4)}h10M${f(bx - 13)} ${f(bY + .2)}h5" stroke="#f4eee4" stroke-width=".4" opacity=".55"/>`
+        + `<circle cx="${bx}" cy="${f(bY)}" r="${r}" fill="url(#${bg2})" stroke="#050505" stroke-width=".4"/>`
+        + `<circle cx="${bx}" cy="${f(bY)}" r="${r}" fill="url(#${bw})"/>`
+        + `<path d="M${f(bx - r * .7)} ${f(bY - r * .2)}q${f(r * .7)} ${f(r * .25)} ${f(r * 1.3)} ${f(-r * .1)}" stroke="#2c2e30" stroke-width=".35" fill="none" opacity=".8"/>`
+        + `<ellipse cx="${f(bx + 1.5)}" cy="${f(bY - 1.7)}" rx="1.1" ry=".75" fill="#eef6ff" opacity=".9" transform="rotate(-30 ${f(bx + 1.5)} ${f(bY - 1.7)})"/>`
+        + `<circle cx="${f(bx + 2.6)}" cy="${f(bY - 2.6)}" r=".3" fill="#ffffff"/>`; }
     fg += K.shotPile(u, L, { x: 20, y: 141, s: 1.95, n: 3, seed: 4 });
     fg += `<circle cx="${HX - 9}" cy="${by + 18}" r="2.2" fill="none" stroke="url(#iron${u})" stroke-width="1.3"/>`;
     fg += K.shot(u, L, { x: 66, y: 182, s: 1.4, seed: 8 }) + K.coil(u, L, { x: 86, y: 158, s: .85, seed: 3 });

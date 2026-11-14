@@ -206,7 +206,11 @@ function hand(u, o) {
 //   thumbTo ([x, y, z] local) — the thumb's tip brought there (IK on its angles; 'pinch' without an own thumbFlex does
 //   it by default: the thumb's pad against the index finger's pad, pinchGap (.15) apart; thumbTo: false — the old
 //   thumb); trigger: true (wrap) — the index finger off the handle, curled on a trigger in front of it (triggerFlex,
-//   default [2, 50, 22]); backFingers may hold 'palm' (the palm behind a held card); cut (local x) — the wrist end cut
+//   default [2, 50, 22]); backFingers may hold 'palm' (the palm behind a held card);
+//   held: 'fan' | 'flat' — a flat thing between the thumb and the fingers: pose 'hold' by default, the thumb's pad
+//   brought over the index finger's palm side (heldGap, .3 — the thing's thickness), `back` all but frontFingers
+//   (default ['thumb']), and the result adds grip (the point under the thumb's pad: a fan's pivot; o.grip then places
+//   the hand so this point lands there) and gripA (deg: the way a fan held there opens); cut (local x) — the wrist end cut
 //   there and left without an outline, with the sleeve's shade on it (figure() passes 0: the hand grows out of the
 //   cuff); lightZ (.55) — the light's share towards us, for the tone of each phalanx by how it faces the light;
 //   lod (12) — the palm's length in the picture (5·s units) under which the hand is drawn simple, or 'small' | 'full'
