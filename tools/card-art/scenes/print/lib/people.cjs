@@ -242,7 +242,7 @@ function hand3(u, o) {
   const kS = small ? (o.small != null ? o.small : 1.15) : 1, s = s0 * kS;
   const m = o.m || 1, an = (o.a || 0) * Math.PI / 180, ux = Math.cos(an), uy = Math.sin(an), nx = -uy, ny = ux;
   const rl = (o.roll || 0) * Math.PI / 180, cr = Math.cos(rl), sr = Math.sin(rl), pt = (o.pitch || 0) * Math.PI / 180, cp = Math.cos(pt), spp = Math.sin(pt);
-  const tn = o.tone, sw = o.sw || .36, pose = o.pose || 'relaxed', wrap = pose === 'wrap' || pose === 'fist';
+  const tn = o.tone, sw = o.sw || .36, pose = o.pose || (o.held ? 'hold' : 'relaxed'), wrap = pose === 'wrap' || pose === 'fist';
   const r = pose === 'fist' ? .12 : (o.r != null ? o.r : .8) / kS, tilt = (o.tilt != null ? o.tilt : 10) * Math.PI / 180;
   const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sc = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -258,7 +258,7 @@ function hand3(u, o) {
   const vv = p => { const y = yv(p), x = px(p); return [x * ux + m * y * nx, x * uy + m * y * ny, dep(p)]; };
   // the handle axis (wrap): along y, tilted so it is nearer the knuckles at the index side; z under the palm
   const zc = -(.85 + r), axX = y => 4.5 - Math.tan(tilt) * y;
-  if (o.grip) { const g0 = scr([axX(-.48), -.48, zc]); W = [W[0] + o.grip[0] - g0[0], W[1] + o.grip[1] - g0[1]]; }
+  if (o.grip && !o.held) { const g0 = scr([axX(-.48), -.48, zc]); W = [W[0] + o.grip[0] - g0[0], W[1] + o.grip[1] - g0[1]]; }
   const P = (x, y, z = 0) => scr([x, y, z]);
   const pr = Object.assign({}, HPOSE[pose] || {}, o);
   const cut = o.cut != null ? o.cut : null;
@@ -307,6 +307,10 @@ function hand3(u, o) {
       let T = o.thumbTo || null;
       if (!T && pose === 'pinch' && o.thumbTo !== false && !o.thumbFlex) { const it = digits[0].J[3], tb = chain(q0[0], q0[1], q0.slice(2))[3], v = nrm(sub(tb, it));
         T = add(it, sc(v, (digits[0].ws[3] + ws[3]) * .5 + (o.pinchGap != null ? o.pinchGap : .15))); }
+      // held (without an own thumbFlex): the thumb's pad over the index finger's first phalanx, on its palm side, the
+      // held thing's thickness (heldGap, .3) between them — nearer the knuckle for a fan (its corners in the palm)
+      if (!T && o.held && o.thumbTo !== false && !o.thumbFlex) { const ix = digits[0], t = o.held === 'fan' ? .35 : .6;
+        T = sub(add(sc(ix.J[0], 1 - t), sc(ix.J[1], t)), sc(ix.D[0], (ix.ws[1] + ws[3]) * .5 + (o.heldGap != null ? o.heldGap : .3))); }
       if (T) { const lo = [-2.2, -1.6, -.3, -.3, -.3], hi = [.6, 1, 1.6, 1.7, 1.6], q = q0.slice();
         const cost = v => { const tip = chain(v[0], v[1], v.slice(2))[3], d = sub(tip, T); return dot(d, d) + .015 * v.reduce((a, x, k) => a + (x - q0[k]) * (x - q0[k]), 0); };
         let c0 = cost(q), st = .25;
@@ -319,6 +323,12 @@ function hand3(u, o) {
     const D = []; for (let j = 0; j < 3; j++) { const d = nrm(sub(J[j + 1], J[j])), out = o.thumbOut || [0, -1, .6], dor = nrm(sub(out, sc(d, dot(out, d)))); D.push(dor); }
     digits.push({ id: 'thumb', J, ws, D });
   }
+  // held (a flat thing between the thumb and the fingers): the grip is where the thumb's pad presses it — a card fan's
+  // pivot; with o.grip the hand is moved so this point lands there
+  let heldG = null;
+  if (o.held) { const tj = digits[4].J, td = digits[4].D[2], tw = digits[4].ws[3];
+    heldG = sub(add(sc(tj[2], .45), sc(tj[3], .55)), sc(td, tw * .5));
+    if (o.grip) { const g0 = scr(heldG); W = [W[0] + o.grip[0] - g0[0], W[1] + o.grip[1] - g0[1]]; } }
   // ——— drawing ———
   const Ls = o.light || [-.5, -.86], Lv = nrm([Ls[0], Ls[1], o.lightZ != null ? o.lightZ : .55]);
   const lit2 = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; return ((-dy / l) * Ls[0] + (dx / l) * Ls[1]) >= 0 ? 1 : -1; };
@@ -401,7 +411,9 @@ function hand3(u, o) {
     return { svg: r2 };
   };
   const specs = [];   // { d: depth, dg, j0, j1, back }
-  const dC = wrap ? dep([axX(-.48), -.48, zc]) : -1e9, backSet = new Set(o.backFingers || []);
+  // held: everything behind the thing except the front digits (frontFingers, default the thumb)
+  const frontSet = new Set(o.frontFingers || ['thumb']);
+  const dC = wrap ? dep([axX(-.48), -.48, zc]) : -1e9, backSet = new Set(o.backFingers || (o.held ? [0, 1, 2, 3, 'thumb', 'palm'].filter(k => !frontSet.has(k)) : []));
   for (const dg of digits) {
     // split the chain where it crosses behind the handle (by the depth of each bone's middle)
     const segBack = [0, 1, 2].map(j => backSet.has(dg.id) || (wrap && dep(sc(add(dg.J[j], dg.J[j + 1]), .5)) < dC));
@@ -504,7 +516,10 @@ function hand3(u, o) {
       if (bk) back = out; else front = out; }
   }
   const g1 = scr([axX(-1.6), -1.6, zc]), g2 = scr([axX(1.4), 1.4, zc]), gl = Math.hypot(g2[0] - g1[0], g2[1] - g1[1]) || 1;
-  return { back, front, small, P, wrist: P(0, 0, -.42), grip: scr([axX(-.48), -.48, zc]), axis: [(g2[0] - g1[0]) / gl, (g2[1] - g1[1]) / gl], r: r * s, joints: digits.map(dg => dg.J.map(q => scr(q))) };
+  // held: grip — the thumb pad's point (a fan's pivot), gripA — the direction (deg) from the wrist over the knuckles,
+  // the way a fan held there opens
+  const kq = P(4.9, 0, -.42), wq = P(0, 0, -.42), heldR = heldG ? { grip: scr(heldG), gripA: Math.atan2(kq[1] - wq[1], kq[0] - wq[0]) * 180 / Math.PI } : {};
+  return { back, front, small, P, wrist: wq, grip: scr([axX(-.48), -.48, zc]), ...heldR, axis: [(g2[0] - g1[0]) / gl, (g2[1] - g1[1]) / gl], r: r * s, joints: digits.map(dg => dg.J.map(q => scr(q))) };
 }
 
 // ——— a sleeve's mouth round the wrist, with volume ———
@@ -1022,12 +1037,22 @@ const rY = (p, a) => { const c = Math.cos(a), s = Math.sin(a); return [p[0] * c 
 const rZ = (p, a) => { const c = Math.cos(a), s = Math.sin(a); return [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]]; };   // + drops the +x side
 const rotOf = r => p => rY(rX(rZ(p, (r[0] || 0) * DEG), (r[1] || 0) * DEG), (r[2] || 0) * DEG);
 const dv = (fl, ab, sd) => { const F = fl * DEG, A = ab * DEG; return [sd * Math.sin(A), Math.cos(A) * Math.cos(F), Math.cos(A) * Math.sin(F)]; };
-const BONE = { thigh: 1.85, shin: 1.72, ankle: .28, upper: 1.38, fore: 1.05, hand: .7, hipW: .46, shW: .75, shY: -2.02, headY: -3.116 };
+const BONE = { thigh: 1.85, shin: 1.72, ankle: .28, upper: 1.38, fore: 1.05, hand: .7, hipW: .46, shW: .75, shY: -2.02, headY: -2.97 };
 // the torso as rings: [y, rx, rz, z of the centre, share of the chest's turn (1) against the pelvis' (0)]
 const TRING = [[-2.44, .19, .17, -.17, 1], [-2.3, .27, .24, -.1, 1], [-2.22, .36, .27, -.08, 1], [-2.12, .55, .32, -.05, 1], [-2.03, .73, .36, -.03, 1], [-1.94, .81, .39, -.02, 1], [-1.6, .84, .48, .03, 1], [-1.2, .78, .48, .05, 1],
   [-.8, .68, .43, .04, .6], [-.42, .72, .44, .02, .2], [-.05, .8, .46, 0, 0], [.25, .72, .42, -.02, 0]];
 // the foot (boot) around the ankle: [forward, up, half-width]
 const FOOT = [[-.21, -.08, .12], [-.18, -.28, .12], [.2, -.28, .15], [.62, -.28, .18], [.97, -.22, .12], [.93, -.08, .13], [.5, .03, .15], [.14, .12, .13], [-.15, .1, .13]];
+// the foot as drawn, stations from the heel to the toes: [forward, top, the sole on the outer side, on the inner side,
+// the outer half width, the inner one]. Bare: the round heel, the ankle, the instep falling to the ball, the arch
+// lifted on the inner side, the toes (the big toe longest, on the inner side). Boot: the heel block and the raised
+// waist of the sole, the toe box, the counter round the heel.
+const FOOT_BARE = [[-.215, -.15, -.22, -.22, .06, .06], [-.2, -.02, -.265, -.265, .095, .095], [-.14, .1, -.28, -.28, .115, .115], [-.04, .14, -.28, -.26, .125, .12],
+  [.08, .13, -.28, -.22, .135, .125], [.22, .08, -.28, -.19, .145, .135], [.38, -.01, -.28, -.19, .16, .145], [.52, -.1, -.28, -.24, .17, .155], [.63, -.155, -.28, -.28, .17, .16],
+  [.74, -.185, -.28, -.28, .13, .16], [.84, -.195, -.28, -.28, .07, .15], [.9, -.205, -.278, -.278, .02, .12], [.93, -.225, -.27, -.27, -.01, .08]];
+const FOOT_BOOT = [[-.245, -.17, -.25, -.25, .07, .07], [-.225, -.02, -.28, -.28, .11, .11], [-.15, .16, -.28, -.28, .13, .13], [-.04, .2, -.28, -.28, .135, .135],
+  [.03, .2, -.28, -.28, .14, .135], [.075, .17, -.2, -.2, .145, .135], [.25, .07, -.205, -.205, .155, .14], [.45, -.04, -.255, -.255, .175, .155], [.6, -.1, -.28, -.28, .19, .165],
+  [.76, -.13, -.28, -.28, .17, .165], [.87, -.155, -.28, -.28, .12, .14], [.935, -.19, -.275, -.275, .05, .08], [.96, -.225, -.255, -.255, .0, .02]];
 const FIG_POSES = {
   // standing, the weight on the near leg (contrapposto): the hip on that side up, the shoulders the other way, the far
   // knee loose and the foot turned out; the far hand on the hip
@@ -1191,6 +1216,60 @@ function figure(u, o) {
     for (const k of ['R', 'L']) { const lg = leg[k]; if (lg.sole < ground - .06) continue; const pp = lg.pts.filter(q => q[1] > ground - .06).map(pr), xs = pp.map(q => q[0]);
       shadowS += K.contactShadow(u, (Math.min(...xs) + Math.max(...xs)) / 2, at[1] + Hh * .02, Math.max(W(.5), Math.max(...xs) - Math.min(...xs) + W(.2)), L, { ry: W(.09), opacity: .7 }); }
   }
+  // ——— the foot: stations along it (FOOT_BARE / FOOT_BOOT: forward, top, the sole's height on the outer and the inner
+  // side, the outer and inner half width), each a cross-section; the solid is the union of the hulls of neighbouring
+  // sections, so the heel, the arch, the instep, the toes and the boot's heel block keep their (concave) silhouette ———
+  const footPt = (lg, x, up, s) => v3.add(lg.ankle, v3.add(v3.add(v3.sc(lg.F, x), v3.sc(lg.U, up)), v3.sc(lg.S, s * lg.sd)));
+  const footSt = (tbl, n = 4) => { const out = [], m = tbl.length, g = i => tbl[Math.max(0, Math.min(m - 1, i))];
+    for (let i = 0; i < m - 1; i++) for (let j = 0; j < n; j++) { const t = j / n, t2 = t * t, t3 = t2 * t;
+      out.push(tbl[i].map((_, c) => { const p0 = g(i - 1)[c], p1 = g(i)[c], p2 = g(i + 1)[c], p3 = g(i + 2)[c], m1 = (p2 - p0) / 2, m2 = (p3 - p1) / 2;
+        return (2 * t3 - 3 * t2 + 1) * p1 + (t3 - 2 * t2 + t) * m1 + (-2 * t3 + 3 * t2) * p2 + (t3 - t2) * m2; })); }
+    return out.concat([tbl[m - 1]]); };
+  const footSec = (lg, q) => { const [x, t, bl, bm, wl, wm] = q, hl = t - bl, hm = t - bm;
+    return [[wl * .72, bl], [wl, bl + hl * .32], [wl * .68, t - hl * .14], [(wl - wm) * .2, t], [-wm * .68, t - hm * .14], [-wm, bm + hm * .32], [-wm * .72, bm]].map(([s, up]) => pr(footPt(lg, x, up, s))); };
+  const hull2 = P0 => { const P = P0.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
+    const lo = [], up = []; for (const p of P) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    for (const p of P.slice().reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); };
+  // the solid: the outline under the union (one stroked path), the fill over it (one path, nonzero: no seams)
+  const footSolid = (lg, st, tone) => { const secs = st.map(q => footSec(lg, q)), pcs = []; for (let i = 0; i < secs.length - 1; i++) pcs.push(hull2(secs[i].concat(secs[i + 1])));
+    const d = pcs.map(p => 'M' + p.map(P2).join('L') + 'Z').join(''), all = [].concat(...pcs), xs = all.map(p => p[0]), ys = all.map(p => p[1]);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2, r = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * .5, g = nid('fft', u);
+    const stp = back ? [[0, tone.half], [.45, tone.core || tone.half], [1, tone.shadow]] : [[0, tone.lit], [.38, tone.half], [.74, tone.core || tone.half], [1, tone.shadow]];
+    return `<defs>${linGrad(g, cx + Lp[0] * r * .8, cy + Lp[1] * r * .3, cx - Lp[0] * r * .9, cy - Lp[1] * r * .3, stp)}</defs>`
+      + `<path d="${d}" fill="${tone.outline}" stroke="${tone.outline}" stroke-width="${f(sw * 1.3)}" stroke-linejoin="round"/><path d="${d}" fill="url(#${g})"/>`; };
+  // a line on the foot's surface: [x, up, s] in the foot's frame (s + the outer side)
+  const footLine = (lg, pts, col, w, op) => stroke(pts.map(q => pr(footPt(lg, q[0], q[1], q[2]))), col, W(w), op);
+  const footVal = (st, x, c) => { for (let i = 0; i < st.length - 1; i++) if (x <= st[i + 1][0]) { const a = st[i], b = st[i + 1]; return lerp(a[c], b[c], (x - a[0]) / ((b[0] - a[0]) || 1)); } return st[st.length - 1][c]; };
+  const drawFoot = (lg, tone) => { const nearS = dep(v3.add(lg.ankle, lg.S)) > dep(v3.sub(lg.ankle, lg.S)) ? 1 : -1, nl = nearS * lg.sd;   // nl: +1 the outer side is near
+    const nw = (st, x) => nl > 0 ? footVal(st, x, 4) : footVal(st, x, 5), nb = (st, x) => nl > 0 ? footVal(st, x, 2) : footVal(st, x, 3);
+    let s = '';
+    if (!cBoot) { // bare: the heel's round, the arch on the inner side, the instep falling to the toes, five toes and the ankle bones
+      const st = footSt(FOOT_BARE); s += footSolid(lg, st, tone);
+      s += footLine(lg, [[-.2, -.22, nl * .06], [-.21, -.12, nl * .07], [-.16, .02, nl * .08]], tone.lit, .03, .3);   // the heel's round in the light
+      if (nl < 0) s += footLine(lg, [.06, .2, .38, .55].map(x => [x, nb(st, x) + .02, -nw(st, x) * .95]), tone.shadow, .045, .3);   // the arch's hollow
+      else s += footLine(lg, [.1, .35, .62].map(x => [x, -.25, nw(st, x) * .98]), tone.shadow, .03, .3);   // the outer edge, the sole turning under
+      s += footLine(lg, [[.12, .04, 0], [.36, -.06, 0], [.58, -.14, 0]], tone.lit, .035, .35);   // the instep's ridge in the light
+      for (const [x, sg] of [[.85, -.05], [.82, .02], [.79, .07], [.75, .11]]) s += footLine(lg, [[x - .02, footVal(st, x - .02, 1) + .004, sg], [x + .025, footVal(st, x + .025, 1) + .002, sg]], tone.shadow, .02, .5);
+      { const nb2 = pr(footPt(lg, .885, footVal(st, .885, 1) - .012, -.07)); s += `<ellipse cx="${f(nb2[0])}" cy="${f(nb2[1])}" rx="${f(W(.035))}" ry="${f(W(.022))}" fill="${tone.lit}" opacity=".5"/>`; }
+      { const mb = pr(footPt(lg, nl > 0 ? -.04 : .01, nl > 0 ? -.02 : .04, nl * .125)); s += `<ellipse cx="${f(mb[0])}" cy="${f(mb[1])}" rx="${f(W(.055))}" ry="${f(W(.05))}" fill="${tone.lit}" opacity=".28"/>`
+        + `<path d="M${P2([mb[0] - W(.05), mb[1] + W(.04)])}Q${P2([mb[0], mb[1] + W(.08)])} ${P2([mb[0] + W(.05), mb[1] + W(.04)])}" stroke="${tone.shadow}" stroke-width="${f(W(.025))}" fill="none" opacity=".45"/>`; }
+      return s; }
+    const shoe = dr.boot === 'shoe', st = footSt(FOOT_BOOT.map(q => shoe ? [q[0], Math.min(q[1], q[0] < .45 ? lerp(-.07, -.03, (q[0] + .24) / .69) : q[1])].concat(q.slice(2)) : q));
+    if (shoe) { const sk = T(dr.stockings || '#cfc6ae'); s += footSolid(lg, footSt(FOOT_BARE.filter(q => q[0] < .5)), sk); }
+    s += footSolid(lg, st, tone);
+    // the sole: a darker band along the bottom, its welt catching the light; the heel block stacked under the heel
+    const sole = st.filter(q => q[0] >= .06).map(q => [q[0], nb(st, q[0]), nl * nw(st, q[0]) * .8]), top2 = sole.map(q => [q[0], q[1] + .05, q[2] * 1.06]);
+    s += `<path d="${'M' + sole.concat(top2.reverse()).map(q => P2(pr(footPt(lg, ...q)))).join('L') + 'Z'}" fill="${tone.outline}" opacity=".7"/>`;
+    s += footLine(lg, top2.slice().reverse(), tone.lit, .022, .45);
+    const hb = [[-.23, -.24], [-.22, -.28], [.04, -.28], [.07, -.2], [.06, -.18], [-.22, -.18]].map(([x, up]) => pr(footPt(lg, x, up, nl * footVal(st, Math.max(-.2, x), nl > 0 ? 4 : 5) * .85)));
+    s += `<path d="M${hb.map(P2).join('L')}Z" fill="${tone.outline}" opacity=".6"/>` + footLine(lg, [[-.21, -.235, nl * .1], [.05, -.235, nl * .11]], tone.lit, .018, .3);
+    // the toe cap's shine, the crease across the vamp, the upper's seam
+    s += footLine(lg, [[.68, footVal(st, .68, 1) - .02, nl * .06], [.8, footVal(st, .8, 1) - .02, nl * .06], [.89, footVal(st, .89, 1) - .02, nl * .03]], tone.lit, .04, .4);
+    s += footLine(lg, [-.6, -.25, 0, .25, .6].map(sg => [.4, footVal(st, .4, 1) - .01 - Math.abs(sg) * .04, sg * (sg > 0 ? footVal(st, .4, 4) : footVal(st, .4, 5))]), tone.shadow, .025, .5);
+    if (shoe) { // the opening's edge round the ankle, the tongue, the buckle
+      s += footLine(lg, [-.22, -.12, 0, .12, .24].map(x => [x, footVal(st, x, 1) - .005, nl * nw(st, x) * .72]), tone.outline, .04, .8);
+      const bq = pr(footPt(lg, .3, footVal(st, .3, 1) + .01, 0)); s += K.shadeSphere(u, bq[0], bq[1], W(.06), L, 'brass', { outline: .2 }); }
+    return s; };
   // the legs: the far one first; trousers, the boot's shaft with its turned top and ankle creases, the foot
   const drawLeg = k => { const lg = leg[k], top = v3.add(lg.hip, Rp([0, -.32, 0])); let s = '';
     const thT = t => v3.lerp(lg.hip, lg.knee, t), shT = t => v3.lerp(lg.knee, lg.ankle, t), fr3 = Rp([0, 0, 1]), la3 = Rp([lg.sd, 0, 0]);
@@ -1211,13 +1290,9 @@ function figure(u, o) {
         s += stroke([T2.at(T2.idx(.03), ms * .8), T2.at(T2.idx(.11), ms * .3), T2.at(T2.idx(.2), -ms * .1)], cTrou.shadow, W(.04), .5)
           + stroke([T2.at(T2.idx(.07), ms * .9), T2.at(T2.idx(.18), ms * .55), T2.at(T2.idx(.3), ms * .35)], cTrou.shadow, W(.03), .4); }
     }
-    const ft = lg.pts.map(pr), hullP = (() => { const P = ft.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o2, a, b) => (a[0] - o2[0]) * (b[1] - o2[1]) - (a[1] - o2[1]) * (b[0] - o2[0]);
-      const lo = [], up = []; for (const p of P) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
-      for (const p of P.slice().reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); })();
-    const fTone = cBoot || skin, nearS = dep(v3.add(lg.ankle, lg.S)) > dep(v3.sub(lg.ankle, lg.S)) ? 1 : -1;
-    s += shade(hullP, fTone, true);
-    const solePts = FOOT.filter(q => q[1] < -.2).map(q => pr(v3.add(lg.ankle, v3.add(v3.add(v3.sc(lg.F, q[0]), v3.sc(lg.U, q[1] + .02)), v3.sc(lg.S, q[2] * nearS)))));
-    if (cBoot) s += stroke(solePts, fTone.outline, W(.06), .9) + stroke(solePts.map(p => [p[0], p[1] - W(.05)]), fTone.lit, W(.02), .4);
+    // the foot: bare and in shoes under the trousers' hem (drawn before them), the boot's foot under its shaft
+    const fTone = cBoot || skin;
+    if (cBoot && dr.boot !== 'shoe') s += drawFoot(lg, fTone); else s = drawFoot(lg, fTone) + s;
     if (cBoot && dr.boot !== 'shoe') { const kA = (t) => v3.lerp(lg.knee, lg.ankle, t);
       if (!form) s += limb([kA(.12), kA(.55), v3.add(lg.ankle, v3.sc(lg.U, -.06))], [.56, .5, .44], cBoot, { drapes: 1 });
       else { const P3 = [kA(.12), kA(.3), kA(.6), v3.add(lg.ankle, v3.sc(lg.U, -.06))];   // the shaft round the calf, in to the ankle
@@ -1227,7 +1302,6 @@ function figure(u, o) {
       const sp2 = [kA(.6), kA(.78), lg.ankle].map(pr), T2 = tube(sp2, [W(.5), W(.47), W(.44)]);
       for (const t of [.35, .6, .85]) { const i = T2.idx(t), a = T2.at(i, -.9), b = T2.at(i, .9), m = T2.at(Math.min(T2.N, i + 1), (R() - .5) * .3);
         s += `<path d="M${P2(a)}Q${P2(m)} ${P2(b)}" stroke="${fTone.shadow}" stroke-width="${f(W(.035))}" fill="none" opacity=".75"/>`; } }
-    if (dr.boot === 'shoe' && cBoot) { const b = pr(v3.add(lg.ankle, v3.add(v3.sc(lg.F, .42), v3.sc(lg.U, .02)))); s += K.shadeSphere(u, b[0], b[1], W(.06), L, 'brass', { outline: .2 }); }
     return s; };
   const legOrder = ['R', 'L'].sort((a, b) => dep(v3.lerp(leg[a].hip, leg[a].ankle, .5)) - dep(v3.lerp(leg[b].hip, leg[b].ankle, .5)));
   // the coat's skirts (knee length): the back panel under the legs, a front panel over each thigh
@@ -1298,9 +1372,9 @@ function figure(u, o) {
   // ——— the neck, the collar (or kerchief), the head, the hat ———
   const neckB = Rt([0, -1.98, -.02]), neckT = v3.add(headC3, Rt([0, .3, -.15]));   // its top end inside the jaw
   const nTone = { lit: skin.half, half: mix(skin.half, skin.shadow, .3), core: mix(skin.half, skin.shadow, .5), shadow: skin.shadow, outline: skin.outline };
-  if (!form) headS += limb([neckB, neckT], [.44, .38], nTone, { folds: false, rim: rimC, drapes: 0 });
+  if (!form) headS += limb([neckB, neckT], [.5, .42], nTone, { folds: false, rim: rimC, drapes: 0 });
   else { // the neck flares into the trapezius at its base; the long muscle from behind the ear to the pit of the neck
-    const nM = v3.lerp(neckB, neckT, .45); headS += limb([neckB, nM, neckT], [.5, .41, .39], nTone, { folds: false, rim: rimC, drapes: 0 });
+    const nM = v3.lerp(neckB, neckT, .45); headS += limb([neckB, nM, neckT], [.6, .46, .42], nTone, { folds: false, rim: rimC, drapes: 0 });
     const far = dep(Rt([1, 0, 0])) < 0 ? 1 : -1, pit = Rt([0, -2.12, .2]), ear = v3.add(headC3, Rt([far * .3, .18, -.06]));
     headS += stroke([pr(v3.lerp(ear, pit, .15)), pr(v3.lerp(ear, pit, .55)), pr(v3.lerp(ear, pit, .9))], skin.shadow, W(.045), .3); }
   { const sOpen = y => Math.max(.02, lerp(.22, 0, (y + 2.3) / .5)), ys = ysOf(-2.3, -1.8, 6), l = ys.map(y => S2(y, -sOpen(y), 1.03)), rr = ys.map(y => S2(y, sOpen(y), 1.03));
