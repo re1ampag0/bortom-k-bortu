@@ -89,12 +89,24 @@ module.exports = { name: 'Прицельный огонь', kind: 'deck', status
         + `<path d="M${f(q[0] - 1)} ${f(q[1] + .2)}H${f(q[0] + r + 1)}" stroke="${br.outline}" stroke-width=".9"/>`; }
     // chalk marks on the left cheek: the tally of the elevation
     mid += `<path d="M77.6 131.4v4.2M79.4 131.2v4.2M81.2 131v4.2M83 130.8v4.2" stroke="#f2ece0" stroke-width=".55" opacity=".8"/>`;
+    // step 3 details: the rammer and sponge on their hooks above the port, the gunner's slate with the table of
+    // elevations on a nail by the lantern, the sponge tub by the right truck
+    mid += K.rammer(u, L, { x: 112, y: 41, s: 1.05, head: 'both', seed: 4, contact: false });
+    for (const x of [86, 138]) mid += `<path d="M${x} 34.6v4.4q0 2.6 -2.4 2.6" stroke="#141414" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M${x - .4} 35v3.6" stroke="#8a8a8a" stroke-width=".3"/>`;
+    { const x0 = 19, y0 = 46, w = 22, h = 15;
+      mid += `<path d="M${x0 + w / 2} ${y0 - 4}L${x0 + 3} ${y0}M${x0 + w / 2} ${y0 - 4}L${x0 + w - 3} ${y0}" stroke="#2a1c10" stroke-width=".4"/>` + K.shadeSphere(u, x0 + w / 2, y0 - 4.2, .7, L, 'iron', { outline: .2 })
+        + `<rect x="${x0 + .6}" y="${y0 + .8}" width="${w}" height="${h}" fill="#000" opacity=".35"/>`
+        + `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#8a5c34" stroke="#1e1006" stroke-width=".45"/><rect x="${x0 + 1.6}" y="${y0 + 1.6}" width="${w - 3.2}" height="${h - 3.2}" fill="#3a3e42"/>`
+        + `<path d="M${x0 + 1.6} ${y0 + 4.2}H${x0 + w - 1.6}M${x0 + 8} ${y0 + 1.6}V${y0 + h - 1.6}M${x0 + 14} ${y0 + 1.6}V${y0 + h - 1.6}" stroke="#d8d4cc" stroke-width=".3" opacity=".75"/>`
+        + Array.from({ length: 9 }, (_, k) => { const c = k % 3, r = Math.floor(k / 3), x = x0 + 2.6 + c * 6.2, y = y0 + 6.6 + r * 2.5; return `<path d="M${f(x)} ${f(y)}h${f(2.2 + ((k * 7) % 3) * .6)}" stroke="#ece8e0" stroke-width=".42" stroke-dasharray="${f(.6 + (k % 2) * .4)} .4" opacity=".8"/>`; }).join('')
+        + `<path d="M${x0 + w - 1.4} ${y0 + h}l1.6 3.2" stroke="#f2eee6" stroke-width=".9" stroke-linecap="round"/>`; }
+    mid += K.barrel(u, L, { x: 144.6, y: 142.4, s: .42, kind: 'water', open: true, seed: 8 });
 
     // ——— the gunner, his back to us, easing the quoin; the officer pointing with his spyglass, the book in hand ———
     const fg = gunner(u, L, R) + `<g transform="translate(0 6)">${officer(u, L, R)}</g>`;
     // ——— the lantern under the beam, daylight shafts from the port, dust, the dark round the edges ———
     let air = K.lantern(u, L, { ...LAMP, lit: true, seed: 5 }) + K.localGlow(u, { x: LAMP.x, y: LAMP.y - 7, color: '#ffc070', power: .8, radius: 22 });
-    air += shafts(u, VX, 90, [[60, 290, 100, 290], [104, 290, 140, 290]], '#fff0d0', .07) + motes(26, 70, 76, 60, 50, '#fff0d0', 7)
+    air += shafts(u, VX, 90, [[60, 290, 100, 290], [104, 290, 140, 290]], '#fff0d0', .07) + `<g opacity=".55">${motes(10, 60, 100, 80, 26, '#fff0d0', 7)}</g>`
       + gloom(u, 100, 80, 0, 20, .3) + gloom(u, 100, 80, 200, 20, .25) + gloom(u, 100, 130, 100, 280, .55);
     return [bg, mid + fg + air];
   } };
@@ -193,11 +205,11 @@ function gunner(u, L, R) {
       + `<path d="M${hc[0]} ${f(hc[1] + hr * .9)}Q${hc[0] + .6} ${hc[1] + 12} ${hc[0] - .4} ${hc[1] + 16}" stroke="#140a06" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
       + `<path d="M${hc[0] - 1.6} ${f(hc[1] + hr * .9 + 1.2)}h3.2l-.4 1.6h-2.4z" fill="#0a0a0c"/>`; }
   // the near (right) arm: the shirt sleeve from the shoulder, rolled to the elbow, the bare forearm to the fist on the quoin
-  const shN = [48, 104], el = [71.4, 116.2], HS = 1.12;
+  const shN = [48, 104], el = [67.6, 120.4], HS = 1.12;   // step 3: the elbow lower, the upper arm angled down, not out level
   const grip = [98, 126.8];                          // the quoin's handle under the breech (gun(): P(0, 7.4, -.1))
   // the fist closes round the handle about 6 units past the wrist (H.hand 'grip'): the wrist is found back from it
   const ha = ang(el, grip) + 8, wr = [grip[0] - Math.cos(ha * Math.PI / 180) * 6 * HS, grip[1] - Math.sin(ha * Math.PI / 180) * 6 * HS];
-  s += H.cloth(u, { spine: [shN, [59, 108.6], [el[0] + 1, el[1] - 1]], w: [12, 11, 10], tone: sh, lit: 1, rim, rimSide: 1, cuff: { from: .72, k: 1.12, roll: true }, seed: 5, capA: true, drapes: 2 });
+  s += H.cloth(u, { spine: [shN, [57.4, 111.4], [el[0] + 1, el[1] - 1]], w: [12, 11, 10], tone: sh, lit: 1, rim, rimSide: 1, cuff: { from: .72, k: 1.12, roll: true }, seed: 5, capA: true, drapes: 2 });
   const a = ang(el, wr);
   s += H.cloth(u, { spine: [[el[0] - 1, el[1] - 1], [lerp(el[0], wr[0], .5), lerp(el[1], wr[1], .5) - .8], wr], w: [8.2, 7.4, 5.6], tone: SKIN, lit: 1, rim, rimSide: 1, folds: false, capA: true, sw: .4 });
   void a;
