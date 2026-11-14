@@ -10,10 +10,10 @@ const { f, mix, nid, linGrad, radGrad, rng } = K;
 
 const HZ = 110, WL = 124;   // horizon; the Pearl's waterline
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: 122, y: 54, el: 20, color: '#c8d8f6', power: .8 }, fill: { color: '#3d5680', power: .4 },
-  rim: { az: 14, color: '#bfe0ff', power: .6 }, locals: [{ x: 183, y: 109, color: '#ffc070', power: .6, radius: 18 }] };
-const SHIP = { kind: 'pearl', x: 98, y: WL, scale: .9, heel: -3, roll: 10, sails: 'full', wake: true, lights: true, seed: 4 };   // roll: heeled towards us, the deck shows
-const skel = { horizon: HZ, eye: 4, items: [['pearl', 30, WL, 124, 94, 'water'], ['chaser', 176, 111, 24, 18, 'water'],
-  ['splash', 164, 127, 13, 24, 'water (astern)'], ['splash2', 182, 131, 9, 11, 'water'], ['splash3', 168, 138, 8, 9, 'water']] };
+  rim: { az: 14, color: '#bfe0ff', power: .6 }, locals: [{ x: 163, y: 109, color: '#ffc070', power: .6, radius: 18 }] };
+const SHIP = { kind: 'pearl', x: 90, y: WL, scale: .86, heel: -3, roll: 10, sails: 'full', wake: true, lights: true, seed: 4 };   // roll: heeled towards us, the deck shows
+const skel = { horizon: HZ, eye: 4, items: [['pearl', 30, WL, 124, 94, 'water'], ['chaser', 157, 112, 38, 26, 'water (horizon)'],
+  ['splash', 156, 127, 12, 22, 'water (astern)'], ['splash2', 172, 129, 8, 10, 'water'], ['splash3', 162, 136, 7, 9, 'water']] };
 
 // the long pennant from the main truck, streaming ahead of her (to the bow, the way the wind blows)
 function pennant(u, L, x, y, len) {
@@ -30,7 +30,7 @@ function pennant(u, L, x, y, len) {
 function spume(u, L, n, seed) {
   const R = rng(seed); let out = '';
   for (let i = 0; i < n; i++) { const y = HZ + 6 + Math.pow(R(), 1.4) * 150, k = (y - HZ) / 150, x = R() * 210 - 5, w = 3 + k * 16;
-    if (x > 28 && x < 160 && y < WL + 8) continue;
+    if (x > 22 && x < 152 && y < WL + 8) continue;
     out += `<path d="M${f(x)} ${f(y)}q${f(-w * .4)} ${f(-1 - k * 2)} ${f(-w)} ${f(-.4)}" stroke="#e8f2ff" stroke-width="${f(.4 + k * 1.1)}" fill="none" opacity="${f(.35 + R() * .35)}" stroke-linecap="round"/>`
       + `<path d="M${f(x - w)} ${f(y - .6)}q${f(-4 - k * 8)} ${f(-.6)} ${f(-8 - k * 14)} ${f(-1.6 - k * 2)}" stroke="#e8f2ff" stroke-width="${f(.25 + k * .5)}" fill="none" opacity="${f(.12 + R() * .14)}" stroke-linecap="round"/>`; }
   return out;
@@ -45,16 +45,21 @@ module.exports = { name: 'Уйти по ветру', kind: 'deck', status: 'acce
       bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .8, seed: 7, glitter: 122 });
     // the chaser far astern on the right: her bow guns flash, the smoke goes ahead with the wind
-    bg += `<g data-far="">${K.ship(u, L, { kind: 'endeavour', x: 194, y: HZ + 1.2, scale: .2, detail: 'far', lights: true, seed: 2 })}</g>`;
-    bg += K.smoke(u, L, { x: 183, y: HZ - 1.5, w: 18, h: 14, wind: -.9, seed: 4, opacity: .6, glow: { color: '#ffb050', power: .5 } })
-      + K.muzzleFlash(u, { x: 183, y: HZ - 1, dir: 182, len: 6, seed: 2 }) + K.localGlow(u, { x: 183, y: HZ - .5, color: '#ffc070', power: .55, radius: 9 });
+    // (whole in the frame, on the horizon — smaller and paler than her: she is far ahead and pulling away)
+    { const C = { kind: 'endeavour', x: 178, y: HZ + 1.2, scale: .27, detail: 'far', lights: true, seed: 2 }, bx = 178 - 13.6;
+      bg += `<g data-far="">${K.ship(u, L, C)}</g>`;
+      // her bow chaser: the smoke rolls ahead with the wind (and hangs between them), the flash only at the muzzle
+      bg += K.smoke(u, L, { x: bx - 1, y: HZ - 1.6, w: 16, h: 11, wind: -.9, seed: 4, opacity: .55, glow: { color: '#ffb050', power: .4 } })
+        + K.muzzleFlash(u, { x: bx, y: HZ - 1.4, dir: 184, len: 5, seed: 2 }) + K.localGlow(u, { x: bx, y: HZ - 1, color: '#ffc070', power: .5, radius: 8 });
+      // the flash in the water under her bow
+      bg += `<path d="M${f(bx - 4)} ${f(HZ + 2)}h8" stroke="#ffc070" stroke-width=".5" opacity=".45"/>`; }
     // the wake she leaves astern, the shot falling into it: the columns stand where she has just been
-    bg += K.foam(u, { x: 172, y: WL + 3, w: 40, h: 1.6, seed: 12, L }) + K.foam(u, { x: 190, y: WL + 7, w: 30, h: 1.4, seed: 14, L });
+    bg += K.foam(u, { x: 165, y: WL + 3, w: 40, h: 1.6, seed: 12, L }) + K.foam(u, { x: 184, y: WL + 7, w: 30, h: 1.4, seed: 14, L });
     // her wake: two arms of churned water spreading astern to the right and towards us, foam along them
     { const id = nid('wk', u), bl = nid('wb', u), c = mix(L.pal.sea[0], '#dfeaff', .35);
-      bg += `<defs>${linGrad(id, 150, 125, 205, 140, [[0, c, .55], [1, c, .08]])}<filter id="${bl}" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="1.2"/></filter></defs>`
-        + `<path d="M148 ${WL + .5}Q178 ${WL + 1} 206 ${WL + 3}L206 ${WL + 22}Q176 ${WL + 9} 148 ${WL + 2.5}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
-      const R = rng(41); for (let t = .05; t < 1; t += .08 + R() * .1) { bg += K.foam(u, { x: 150 + t * 56, y: WL + 1 + t * 2.4 + (R() - .5), w: 4 + t * 8, h: .5 + t * .7, seed: 50 + Math.round(t * 90), L }) + K.foam(u, { x: 150 + t * 56, y: WL + 3 + t * 18 + (R() - .5) * 2, w: 3 + t * 9, h: .5 + t * .9, seed: 70 + Math.round(t * 90), L }); } }
+      bg += `<defs>${linGrad(id, 142, 125, 205, 140, [[0, c, .55], [1, c, .08]])}<filter id="${bl}" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="1.2"/></filter></defs>`
+        + `<path d="M141 ${WL + .5}Q174 ${WL + 1} 206 ${WL + 3}L206 ${WL + 22}Q172 ${WL + 9} 141 ${WL + 2.5}Z" fill="url(#${id})" filter="url(#${bl})"/>`;
+      const R = rng(41); for (let t = .05; t < 1; t += .08 + R() * .1) { bg += K.foam(u, { x: 143 + t * 60, y: WL + 1 + t * 2.4 + (R() - .5), w: 4 + t * 8, h: .5 + t * .7, seed: 50 + Math.round(t * 90), L }) + K.foam(u, { x: 143 + t * 60, y: WL + 3 + t * 18 + (R() - .5) * 2, w: 3 + t * 9, h: .5 + t * .9, seed: 70 + Math.round(t * 90), L }); } }
     bg += spume(u, L, 46, 21);
     // whitecaps on the near crests, their spray torn off to the left by the wind (under the glass, calm and dark)
     for (const [x, y, w] of [[30, 166, 18], [118, 180, 22], [176, 192, 20]]) bg += K.foam(u, { x, y, w, h: .9 + w * .025, seed: Math.round(x + y), L }) + K.foam(u, { x: x - w * .5, y: y - 1.2, w: w * .4, h: .7, seed: Math.round(x * 3 + y), L });
@@ -76,15 +81,17 @@ module.exports = { name: 'Уйти по ветру', kind: 'deck', status: 'acce
         for (let x = -6; x < 206; x += 10 + R() * 14) bg += K.foam(u, { x, y: c2(x) + .7, w: 10 + R() * 16, h: 1.5 + R() * 1, seed: 300 + Math.round(x), L });
         for (let i = 0; i < 46; i++) { const x = R() * 200, y = c2(x) - 1 - R() * 9; bg += `<circle cx="${f(x - R() * 8)}" cy="${f(y)}" r="${f(.3 + R() * .7)}" fill="#e8f2ff" opacity="${f(.3 + R() * .45)}"/>`; } }
       // the wake running back from her towards us on the right, over the swell
-      for (let t = 0; t < 1; t += .06 + R() * .05) bg += K.foam(u, { x: 156 + t * 50 + (R() - .5) * 4, y: WL + 6 + t * 74, w: 4 + t * 12, h: .6 + t * .9, seed: 120 + Math.round(t * 100), L });
-      for (let t = 0; t < 1; t += .07 + R() * .06) bg += K.foam(u, { x: 150 + t * 20 + (R() - .5) * 3, y: WL + 8 + t * 80, w: 3 + t * 10, h: .5 + t * .8, seed: 160 + Math.round(t * 100), L }); }
-    bg += K.ship(u, L, SHIP) + pennant(u, L, 104.2, 33.6, 52);
+      for (let t = 0; t < 1; t += .06 + R() * .05) bg += K.foam(u, { x: 149 + t * 54 + (R() - .5) * 4, y: WL + 6 + t * 74, w: 4 + t * 12, h: .6 + t * .9, seed: 120 + Math.round(t * 100), L });
+      for (let t = 0; t < 1; t += .07 + R() * .06) bg += K.foam(u, { x: 143 + t * 22 + (R() - .5) * 3, y: WL + 8 + t * 80, w: 3 + t * 10, h: .5 + t * .8, seed: 160 + Math.round(t * 100), L }); }
+    // the long pennant flies from the main truck itself (under the flag staff), streaming ahead to the bow
+    { const mt = K.shipGeom('pearl', SHIP).masts[1].top; bg += K.ship(u, L, SHIP) + pennant(u, L, mt[0] - .3, mt[1] + 1.2, 50); }
     let fg = '';
-    fg += K.splash(u, { x: 170, y: WL + 3, w: 11, h: 24, seed: 3, L, wind: -.3 }) + K.splash(u, { x: 186, y: WL + 7, w: 8, h: 11, seed: 4, L, wind: -.3 })
-      + K.splash(u, { x: 172, y: WL + 14, w: 7, h: 9, seed: 5, L, wind: -.3 });
+    // the chaser's shot falls short — into her wake, where she was a moment ago
+    fg += K.splash(u, { x: 156, y: WL + 3, w: 11, h: 22, seed: 3, L, wind: -.3 }) + K.splash(u, { x: 172, y: WL + 5, w: 8, h: 10, seed: 4, L, wind: -.3 })
+      + K.splash(u, { x: 162, y: WL + 12, w: 7, h: 9, seed: 5, L, wind: -.3 });
     // spray thrown up and blown ahead at the bow, the bow wave
-    fg += K.splash(u, { x: 46, y: WL, w: 16, h: 15, seed: 2, L, wind: -1 });
-    { const R = rng(17); for (let i = 0; i < 34; i++) { const x = 22 + R() * 30, y = WL - 18 + R() * 18; fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.25 + R() * .6)}" fill="#eaf4ff" opacity="${f(.35 + R() * .5)}"/>`; } }
+    fg += K.splash(u, { x: 41, y: WL, w: 16, h: 15, seed: 2, L, wind: -1 });
+    { const R = rng(17); for (let i = 0; i < 34; i++) { const x = 17 + R() * 30, y = WL - 18 + R() * 18; fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.25 + R() * .6)}" fill="#eaf4ff" opacity="${f(.35 + R() * .5)}"/>`; } }
     fg += K.localGlow(u, { x: 140, y: 150, color: '#9ab8e0', power: .18, radius: 70 }, { squash: .3, core: false });
     return [bg, fg];
   } };

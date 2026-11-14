@@ -180,7 +180,15 @@ module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam:
     for (let i = 0; i < 24; i++) { const a = -Math.PI * (.2 + R() * 1.1), d = 4 + R() * 26, l = 1.4 + R() * 3.6, rot = a + (R() - .5) * 2, w = .4 + R() * .5;
       const cx = BRK.x + Math.cos(a) * d, cy = BRK.y + Math.sin(a) * d * .8 + (R() > .6 ? 18 * R() : 0), dx = Math.cos(rot) * l / 2, dy = Math.sin(rot) * l / 2, nx = -dy / l * w * 2, ny = dx / l * w * 2;
       fall += `<path d="M${f(cx - dx)} ${f(cy - dy)}L${f(cx + nx)} ${f(cy + ny)}L${f(cx + dx)} ${f(cy + dy)}L${f(cx - nx)} ${f(cy - ny)}Z" fill="${R() > .45 ? '#e8d0a0' : '#a87c4a'}" stroke="#2a180a" stroke-width=".15"/>`; }
-    fall += K.smoke(u, L, { x: BRK.x - 2, y: BRK.y + 3, w: 14, h: 12, wind: -.5, seed: 9, opacity: .4 });
+    // scraps of canvas torn out by the shot, fluttering down along its track (nothing burns: chain shot only tears)
+    { const Rs = rng(91);
+      for (const [cx, cy, w, rot] of [[38, 100, 4.2, 30], [58, 108, 3.2, -24], [30, 116, 3.6, 62], [70, 120, 2.6, 10], [44, 82, 2.4, -50]]) {
+        const pts = [[-w, -w * .45], [-w * .2, -w * .7], [w, -w * .35], [w * .7, w * .5], [-w * .5, w * .55]].map(([x, y]) => [x + (Rs() - .5) * w * .3, y + (Rs() - .5) * w * .3]);
+        const d = 'M' + pts.map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'Z';
+        fall += `<g transform="translate(${cx} ${cy}) rotate(${rot})"><path d="${d}" fill="#a8a69a" stroke="#1a1c22" stroke-width=".25"/>`
+          + `<path d="M${f(pts[0][0])} ${f(pts[0][1])}L${f(pts[1][0])} ${f(pts[1][1])}L${f(pts[2][0])} ${f(pts[2][1])}" stroke="#f4eed8" stroke-width=".35" fill="none" opacity=".7"/>`
+          + `<path d="M${f(-w * .6)} ${f(-w * .1)}L${f(w * .7)} ${f(-w * .05)}" stroke="#4a4c4e" stroke-width=".25" opacity=".6"/>`
+          + `<path d="M${f(pts[3][0])} ${f(pts[3][1])}q${f(.6)} ${f(1.2)} ${f(.2)} ${f(2.2)}M${f(pts[4][0])} ${f(pts[4][1])}q${f(-.4)} ${f(1)} ${f(.3)} ${f(1.8)}" stroke="#cfcab4" stroke-width=".22" fill="none" opacity=".8"/></g>`; } }
     // the block (falling, tumbling) with a bit of rope, a second smaller one further down
     for (const [bx, by, s, rot] of [[86, 116, 1, 28], [56, 142, .7, -40]]) {
       fall += `<g transform="translate(${bx} ${by}) rotate(${rot}) scale(${s})"><rect x="-3.4" y="-4.4" width="6.8" height="8.8" rx="3" fill="url(#oak${u})" stroke="#140a04" stroke-width=".5"/><circle r="1.5" fill="url(#iron${u})" stroke="#0a0a0a" stroke-width=".3"/><path d="M-2.6 -3.8q2.6 -1.4 5.2 0" stroke="#e0c090" stroke-width=".4" fill="none" opacity=".6"/></g>`
