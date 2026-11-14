@@ -115,8 +115,13 @@ module.exports = { name: 'Оплаченный залп', kind: 'deck', status: 
       mid += K.castShadow(u, L, { x: x + 4, y, w: 36 * GA.s, h: 21 * GA.s, horizon: HZ, d: .5 }) + K.cannon(u, L, { x, y, s: GA.s, flip: true, recoil: GA.recoil, seed: 2 });
       mid += K.smoke(u, L, { x: MZ + 6, y: FL.y - 2, w: 34, h: 30, wind: .55, seed: 7, opacity: .7, glow: { color: '#ffb050', power: .8 } });
       const vx = x + 34, vy = 99;
-      mid += K.smoke(u, L, { x: vx, y: vy, w: 16, h: 34, wind: .25, seed: 9, opacity: .75, glow: { color: '#ffb050', power: .6 } })
-        + K.muzzleFlash(u, { x: vx, y: vy, dir: -92, len: 9, seed: 0, smoke: false }) + K.localGlow(u, { x: vx, y: vy - 2, color: '#ffd080', power: .7, radius: 8 }); }
+      // step 3: only a thin wisp from the vent, no fire there — the flash is at the muzzle in the port only
+      mid += `<g opacity=".7">${K.smoke(u, L, { x: vx, y: vy, w: 10, h: 26, wind: .25, seed: 9, opacity: .6, glow: { color: '#ffb050', power: .3 } })}</g>`; }
+    // step 3 details: two more kegs branded with the Company's mark rolled up against the far side, waiting their turn
+    for (const [X, Z, sd] of [[1.7, 8.4, 11], [2.15, 7.5, 12]]) { const p = pr(X, YF, Z), ks = 60 / Z / 30;
+      mid += K.castShadow(u, L, { x: p[0], y: p[1], w: 21 * ks, h: 30 * ks, horizon: HZ, d: 1 }) + K.barrel(u, L, { x: p[0], y: p[1], s: ks, kind: 'powder', seed: sd });
+      const c = [p[0] - .4 * ks * 2, p[1] - 17 * ks], r = 5.6 * ks;
+      mid += `<g opacity=".8"><circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r)}" fill="none" stroke="#0e0604" stroke-width="${f(Math.max(.3, ks))}"/><path d="M${f(c[0] - r * .66)} ${f(c[1])}h${f(r * 1.32)}M${f(c[0])} ${f(c[1] - r * .66)}v${f(r * 1.32)}" stroke="#0e0604" stroke-width="${f(Math.max(.25, ks * .9))}"/></g>`; }
 
     // ——— the keg (powder, branded) with the ledger open on its head; coins on the page; the clerk's hand ticking ———
     let fg = K.castShadow(u, L, { x: KEG.x, y: KEG.y, w: 21 * KEG.s, h: 30 * KEG.s, horizon: HZ, d: 1 }) + K.barrel(u, L, { x: KEG.x, y: KEG.y, s: KEG.s, kind: 'powder', seed: 4 });
@@ -129,9 +134,9 @@ module.exports = { name: 'Оплаченный залп', kind: 'deck', status: 
     fg += hand(u, L);
     // ——— the lantern under a beam; the flash's light over the deck; smoke haze; the dark round the edges ———
     let air = K.lantern(u, L, { ...LAMP, lit: true, seed: 6 }) + K.localGlow(u, { x: LAMP.x, y: LAMP.y - 8, color: '#ffc070', power: .75, radius: 18 });
-    { const Rs = rng(5); air += Array.from({ length: 22 }, () => { const x = FL.x + 2 + Rs() * 40, y = FL.y - 16 + Rs() * 30, l = .8 + Rs() * 2; return `<path d="M${f(x)} ${f(y)}l${f(l)} ${f(-l * .3)}" stroke="${Rs() > .5 ? '#ffe9a0' : '#ffb050'}" stroke-width="${f(.3 + Rs() * .3)}" stroke-linecap="round"/>`; }).join(''); }
+    // step 3: no sparks or burning bits flying in over the deck — the fire stays at the muzzle, in the port
     air += K.localGlow(u, { x: FL.x - 2, y: FL.y - 6, color: '#ffd890', power: 1, radius: 30 }) + K.localGlow(u, { x: FL.x + 6, y: FL.y - 4, color: '#ffc070', power: .95, radius: 60 }) + K.localGlow(u, { x: FL.x + 30, y: 136, color: '#ffa850', power: .45, radius: 60 }, { squash: .3, core: false })
-      + shafts(u, FL.x, FL.y, [[100, 290, 150, 290]], '#ffc080', .06) + motes(24, 80, 70, 70, 60, '#ffd8a0', 5)
+      + shafts(u, FL.x, FL.y, [[100, 290, 150, 290]], '#ffc080', .06)
       + gloom(u, 100, 100, 210, 20, .25) + gloom(u, 100, 130, 100, 280, .55);
     return [bg, mid + fg + air];
   } };
@@ -163,7 +168,12 @@ function ledger(u, L, R) {
   // the ribbon, the coins on the left page, the inkwell on the keg's rim behind the book
   s += `<path d="M164.6 110q.4 6 -1 13.6l1.2 -.6l.6 1.4" stroke="#a81a14" stroke-width=".8" fill="none"/>`;
   s += K.coins(u, L, { x: 146, y: 116.8, s: .9, n: 6, seed: 3 });
-  { const ix = 154, iy = 108.8; s += `<path d="M${ix - 3.4} ${iy}q-.6 -4.6 2 -5.2h2.8q2.6 .6 2 5.2z" fill="#14202c" stroke="#05080c" stroke-width=".4"/><ellipse cx="${ix}" cy="${iy - 5.2}" rx="1.8" ry=".6" fill="#05080c"/><path d="M${ix - 2.4} ${iy - 1.6}q.6 -2.4 1.4 -3" stroke="#9ab8d8" stroke-width=".35" fill="none" opacity=".6"/>`; }
+  // step 3: the inkwell a squat square bottle of green glass with a brass cap ring and the light of the flash on its left edge
+  { const ix = 154, iy = 109.2, w = 3.2, h = 4.4;
+    s += `<ellipse cx="${ix}" cy="${iy}" rx="${w + .8}" ry=".9" fill="#000" opacity=".4"/>`
+      + `<path d="M${ix - w} ${iy}V${iy - h + .8}Q${ix - w} ${iy - h} ${ix - w + .8} ${iy - h}H${ix + w - .8}Q${ix + w} ${iy - h} ${ix + w} ${iy - h + .8}V${iy}Z" fill="#1c3a30" stroke="#050a08" stroke-width=".35"/>`
+      + `<path d="M${ix - w + .3} ${iy - .4}V${iy - h + 1}" stroke="#ffd89a" stroke-width=".5" opacity=".8"/><path d="M${ix - w + 1.2} ${iy - 1}H${ix + w - .6}" stroke="#05080a" stroke-width="1.4" opacity=".5"/>`
+      + `<rect x="${ix - 1.3}" y="${iy - h - 1.4}" width="2.6" height="1.5" fill="#b08a40" stroke="#3a2a10" stroke-width=".25"/><ellipse cx="${ix}" cy="${iy - h - 1.4}" rx="1.3" ry=".4" fill="#05080c"/>`; }
   return s;
 }
 

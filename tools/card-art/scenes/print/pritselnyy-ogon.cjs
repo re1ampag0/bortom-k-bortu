@@ -93,7 +93,7 @@ module.exports = { name: 'Прицельный огонь', kind: 'deck', status
     // elevations on a nail by the lantern, the sponge tub by the right truck
     mid += K.rammer(u, L, { x: 112, y: 41, s: 1.05, head: 'both', seed: 4, contact: false });
     for (const x of [86, 138]) mid += `<path d="M${x} 34.6v4.4q0 2.6 -2.4 2.6" stroke="#141414" stroke-width="1" fill="none" stroke-linecap="round"/><path d="M${x - .4} 35v3.6" stroke="#8a8a8a" stroke-width=".3"/>`;
-    { const x0 = 19, y0 = 46, w = 22, h = 15;
+    { const x0 = 17, y0 = 62, w = 21, h = 13.6;   // under the cost badges, clear of the gunner's head
       mid += `<path d="M${x0 + w / 2} ${y0 - 4}L${x0 + 3} ${y0}M${x0 + w / 2} ${y0 - 4}L${x0 + w - 3} ${y0}" stroke="#2a1c10" stroke-width=".4"/>` + K.shadeSphere(u, x0 + w / 2, y0 - 4.2, .7, L, 'iron', { outline: .2 })
         + `<rect x="${x0 + .6}" y="${y0 + .8}" width="${w}" height="${h}" fill="#000" opacity=".35"/>`
         + `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#8a5c34" stroke="#1e1006" stroke-width=".45"/><rect x="${x0 + 1.6}" y="${y0 + 1.6}" width="${w - 3.2}" height="${h - 3.2}" fill="#3a3e42"/>`
