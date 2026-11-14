@@ -17,7 +17,7 @@ const light = { time: 'night', haze: .4, key: { type: 'moon', x: MOON.x, y: MOON
 const PEARL = { kind: 'pearl', x: 107, y: WL, scale: .84, flip: true, sails: 'full', heel: 1.2, roll: -5, seed: 4 };
 const ENEMY = { kind: 'endeavour', x: 17, y: HZ + .9, scale: .26, flip: true, detail: 'far', lights: true, sails: 'reefed', roll: 4, seed: 2 };
 // the enemy group is drawn for her at x 17, scale .26 and then set a little smaller and right, whole inside the frame
-const EN_T = `translate(19 ${HZ + .9}) scale(${.24 / .26}) translate(-17 ${-(HZ + .9)})`;
+const EN_T = `translate(23 ${HZ + .9}) scale(${.24 / .26}) translate(-17 ${-(HZ + .9)})`;
 const skel = { horizon: HZ, eye: 3, light: 'the moon behind the cloud bank upper right: silver rims only; the enemy\'s flashes and lanterns warm, far left',
   items: [
     ['pearl', 52, WL, 136, 85, 'water (bow right, all sail, the jib inside the frame)'],
@@ -67,7 +67,7 @@ module.exports = { name: 'Чёрные паруса в ночи', kind: 'deck', 
     // the enemy far left: her lanterns, her bow guns flashing to the right, the smoke drifting away with the wind
     let en = `<g data-far="">${K.ship(u, L, ENEMY)}</g>`;
     en += K.smoke(u, L, { x: 21, y: HZ - 2.4, w: 18, h: 12, wind: .6, seed: 5, opacity: .55, glow: { color: '#ffb050', power: .7 } });
-    bg += `<g transform="translate(2 0)">${warmStreaks(u)}</g>`;
+    bg += `<g transform="translate(6 0)">${warmStreaks(u)}</g>`;
     // her warm lights: the stern lantern, the lit stern windows, two open gun ports
     for (const [x, y, r] of [[4.6, HZ - 6.2, .7], [6.4, HZ - 2.6, .55], [11, HZ - 1, .45], [26.5, HZ - 1.1, .45]]) en += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="#ffd890"/>` + K.localGlow(u, { x, y, color: '#ffb050', power: .55, radius: r * 6 });
     // the broadside fires from her side, flat over the water toward nothing

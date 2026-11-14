@@ -37,13 +37,13 @@ function net(u, L, G, kegs) {
   // the bag: a short neck at the gather, full round the kegs, a rounded bottom sagging under them
   const env = `M${f(G0 - 2)} ${G1}C${f(x0 - 1)} ${f(G1 + 6)} ${f(x0 - 5)} ${f(yb - 12)} ${f(x0 + 3)} ${f(yb)}Q${G0} ${f(yb + 5)} ${f(x1 - 3)} ${f(yb)}C${f(x1 + 5)} ${f(yb - 12)} ${f(x1 + 1)} ${f(G1 + 6)} ${f(G0 + 2)} ${G1}Z`, cid = nid('nc', u);
   // the mesh: two families of cords crossing in diamonds, each sagging a little
-  let d = ''; for (let c = -90; c <= 90; c += 5.6) for (const sg of [1, -1]) { const ax = G0 + c - sg * 50, ay = G1 - 6, bx = G0 + c + sg * 50, by = G1 + 94;
+  let d = ''; for (let c = -90; c <= 90; c += 11.2) for (const sg of [1, -1]) { const ax = G0 + c - sg * 50, ay = G1 - 6, bx = G0 + c + sg * 50, by = G1 + 94;
     d += `M${f(ax)} ${f(ay)}Q${f((ax + bx) / 2 - sg * 2)} ${f((ay + by) / 2 + 2)} ${f(bx)} ${f(by)}`; }
   // the cords from the gather to the bag's mouth
   let neck = ''; for (let i = 0; i < 6; i++) { const t = i / 5, bx = x0 + 2 + (x1 - x0 - 4) * t; neck += `M${G0} ${G1}Q${f(G0 + (bx - G0) * .7)} ${f(G1 + 4)} ${f(bx)} ${f(G1 + 14)}`; }
-  return `<defs><clipPath id="${cid}"><path d="${env}"/></clipPath></defs><g clip-path="url(#${cid})"><path d="${d}" stroke="#1a140c" stroke-width=".75" fill="none" opacity=".7"/>`
-    + `<path d="${d}" stroke="#e8d098" stroke-width=".3" fill="none" opacity=".55" transform="translate(-.25 -.25)"/>`
-    + `<path d="${neck}" stroke="#1a140c" stroke-width=".8" fill="none" opacity=".75"/><path d="${neck}" stroke="#e8d098" stroke-width=".3" fill="none" opacity=".5"/></g>`;
+  return `<defs><clipPath id="${cid}"><path d="${env}"/></clipPath></defs><g clip-path="url(#${cid})"><path d="${d}" stroke="#1a140c" stroke-width=".7" fill="none" opacity=".5"/>`
+    + `<path d="${d}" stroke="#c8b07a" stroke-width=".25" fill="none" opacity=".28" transform="translate(-.25 -.25)"/>`
+    + `<path d="${neck}" stroke="#1a140c" stroke-width=".75" fill="none" opacity=".55"/><path d="${neck}" stroke="#c8b07a" stroke-width=".25" fill="none" opacity=".3"/></g>`;
 }
 
 // her head as part of her side: the kit draws the knee of the head as a dark separate shape in front of the painted wall
@@ -98,7 +98,7 @@ function kegHoops(x, y, rot) {
   const H = 30 * KS, r = 9.2 * KS, bulge = .17, rr = t => r * (1 + bulge * 4 * t * (1 - t)), k = .18;
   let out = `<path d="M${f(x - r)} ${f(y)}C${f(x - rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x - rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x - r)} ${f(y - H)}L${f(x + r)} ${f(y - H)}C${f(x + rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x + rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x + r)} ${f(y)}Z" fill="#f0cc90" opacity=".3"/>`;
   for (const t of [.05, .2, .8, .95]) { const q = rr(t), yh = y - H * t, sag = k * q;
-    out += `<path d="M${f(x - q)} ${f(yh)}Q${f(x)} ${f(yh + sag * 2)} ${f(x + q)} ${f(yh)}" stroke="#241c16" stroke-width="1.15" fill="none"/>`
+    out += `<path d="M${f(x - q)} ${f(yh)}Q${f(x)} ${f(yh + sag * 2)} ${f(x + q)} ${f(yh)}" stroke="#1a140e" stroke-width="1.5" fill="none"/>`
       + `<path d="M${f(x - q)} ${f(yh - .45)}Q${f(x)} ${f(yh - .45 + sag * 2)} ${f(x + q)} ${f(yh - .45)}" stroke="#e8d2a4" stroke-width=".32" fill="none" opacity=".75"/>`;
     for (const v of [-.62, 0, .62]) { const px = x + v * q, py = yh + sag * (1 - v * v); out += `<circle cx="${f(px)}" cy="${f(py)}" r=".34" fill="#f2e2bc" stroke="#1a120c" stroke-width=".12" opacity=".9"/>`; } }
   return `<g transform="rotate(${rot} ${x} ${y})">${out}</g>`;
@@ -142,11 +142,11 @@ module.exports = { name: 'Бочки с порохом', kind: 'deck', status: '
       // over the lit face of the keg below, through the net and on into the sea — a few grains catch the lantern
       { const h = BUNG, R = rng(23), yb = WL + 3;
         kg += `<path d="M${f(h[0] + .9)} ${f(h[1] + .4)}q1.6 2 1.2 4.2" stroke="#3a2a1a" stroke-width=".3" fill="none"/><rect x="${f(h[0] + 1.2)}" y="${f(h[1] + 4.4)}" width="1.6" height="2.2" rx=".5" fill="#8a6a40" stroke="#1a120a" stroke-width=".25" transform="rotate(14 ${f(h[0] + 2)} ${f(h[1] + 5.5)})"/>`;
-        kg += `<path d="M${f(h[0] - .2)} ${f(h[1] + .5)}C${f(h[0] - .6)} ${f(h[1] + 2.2)} ${f(h[0] - .4)} ${f(h[1] + 5)} ${f(h[0] - .3)} ${f(yb)}" stroke="#0e0a08" stroke-width="1.15" fill="none" stroke-linecap="round"/>`;
-        for (let i = 0; i < 70; i++) { const t = R(), y = h[1] + 1 + t * (yb - h[1]), sp = .35 + t * 1.5, x = h[0] - .3 + (R() - .5) * sp * 2;
+        kg += `<path d="M${f(h[0] - .2)} ${f(h[1] + .5)}C${f(h[0] - .6)} ${f(h[1] + 2.2)} ${f(h[0] - .4)} ${f(h[1] + 5)} ${f(h[0] - .3)} ${f(yb)}" stroke="#0a0706" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+        for (let i = 0; i < 110; i++) { const t = R(), y = h[1] + 1 + t * (yb - h[1]), sp = 1.1 + t * 1.8, x = h[0] - .3 + (R() - .5) * sp * 2;
           kg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.17 + R() * .17)}" fill="${R() > .72 ? '#c8b08a' : '#0e0a08'}"/>`; }
         // a little drift of powder caught on the lower keg's top hoop
-        kg += `<path d="M${f(h[0] - 3.4)} ${f(KEGS[2][1] - 22.4)}q3.1 -1.6 6.2 0z" fill="#16100c"/>`;
+        kg += `<path d="M${f(h[0] - 6.4)} ${f(KEGS[2][1] - 22)}q3 -3.6 6.4 -3.8q3.4 .2 6.4 3.8z" fill="#0e0a08"/><path d="M${f(h[0] - 4)} ${f(KEGS[2][1] - 24)}q2.6 -2 5 -.6" stroke="#8a7a62" stroke-width=".3" fill="none" opacity=".7"/>`;
         kg += `<ellipse cx="${f(h[0])}" cy="${f(yb + .2)}" rx="6" ry="1" fill="#0a0806" opacity=".5"/>`; }
       kg += glow(u, 128, 92, 30, 30, '#ffb050', .42);
       fg += `<defs><clipPath id="${cid}"><rect x="0" y="0" width="200" height="${WL + 1.2}"/></clipPath></defs><g clip-path="url(#${cid})">${kg}${net(u, L, GATHER, KEGS)}</g>`;
@@ -158,8 +158,8 @@ module.exports = { name: 'Бочки с порохом', kind: 'deck', status: '
     // turned up — not lit
     { const b0 = [KEGS[0][0] - 4.2, KEGS[0][1] - 13.4], pts = [b0, [b0[0] - 3, b0[1] + 2.6], [b0[0] - 7, b0[1] + 10], [b0[0] - 11, b0[1] + 14.6], [b0[0] - 15.6, b0[1] + 13], [b0[0] - 17.4, b0[1] + 9.4]];
       pts.splice(3, 3, [b0[0] - 10, b0[1] + 16.4], [b0[0] - 15, b0[1] + 17.4], [b0[0] - 19.4, b0[1] + 15.6]);
-      fg += K.rope(u, L, pts, { r: .7, seed: 6, cap: 'round' })
-        + `<path d="M${pts.map(P2).join('L')}" stroke="#d8b888" stroke-width=".28" fill="none" opacity=".55" stroke-linejoin="round" transform="translate(.25 -.35)"/>`;
+      fg += `<path d="M${pts.map(P2).join('L')}" stroke="#0a0604" stroke-width="2.6" fill="none" opacity=".6" stroke-linejoin="round" stroke-linecap="round"/>` + K.rope(u, L, pts, { r: 1, seed: 6, cap: 'round' })
+        + `<path d="M${pts.map(P2).join('L')}" stroke="#f0d0a0" stroke-width=".4" fill="none" opacity=".8" stroke-linejoin="round" transform="translate(.25 -.35)"/>`;
       const e = pts[pts.length - 1]; for (const [dx, dy] of [[-.9, -1.4], [-.2, -1.7], [.6, -1.4]]) fg += `<path d="M${f(e[0])} ${f(e[1])}l${dx} ${dy}" stroke="#7a6448" stroke-width=".25" stroke-linecap="round"/>`; }
     // the lantern's streak on the water under her side
     fg += Array.from({ length: 7 }, (_, i) => { const y = WL + 4 + i * 4.2, w = 4 + i * 2.6; return `<path d="M${f(LAMPL.x - w / 2 + (i % 2) * 2)} ${f(y)}h${f(w)}" stroke="#ffd890" stroke-width="${f(.45 + i * .07)}" stroke-linecap="round" opacity="${f(.5 - i * .05)}"/>`; }).join('');
