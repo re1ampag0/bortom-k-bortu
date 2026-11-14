@@ -27,7 +27,7 @@ const SHIP_MAT = {
   'ship-flag-red': { base: '#c23a2c', spec: null, reflex: 'warm', reflexK: .1, trans: .5 },
   'ship-coal': { base: '#2c2a29', spec: { w: .4, op: .16, col: 'cold' }, reflex: 'sky', reflexK: .45, grain: 1 },   // the Pearl: black worn planking
   'ship-sail-coal': { base: '#1c1c21', spec: null, reflex: 'sky', reflexK: .07, trans: .45 },                         // the Pearl: black sails, black by day too
-  'ship-ochre': { base: '#ecce70', spec: null, reflex: 'warm', reflexK: .22, grain: 1 },                            // the Endeavour: matt yellow ochre
+  'ship-ochre': { base: '#f4d04a', spec: null, reflex: 'warm', reflexK: .22, grain: 1 },                            // the Endeavour: matt yellow ochre, juicier and nearer yellow (14.11), not darker
   'ship-tar-light': { base: '#57514a', spec: { w: .4, op: .2, col: 'cold' }, reflex: 'sky', reflexK: .5, grain: 1 },   // the Endeavour: her black bands a shade lighter than tar
   'ship-sail-cream': { base: '#efe7d2', spec: null, reflex: 'warm', reflexK: .16, trans: .65 },                       // the Endeavour: cream-white sails
   'ship-drown': { base: '#686250', spec: null, reflex: 'sky', reflexK: .42, grain: 1 },                                // the Dutchman: faded grey-green-brown wood
