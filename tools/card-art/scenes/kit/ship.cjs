@@ -404,6 +404,7 @@ function build(u, L, o, mode) {
   // ——— the hull's paint ———
   let hull = '';
   // the waterline cut: level when upright; heeled, it tilts with the hull (a hair under the waterline) so the hull does not sink at one end
+  // (o.slope — a ship on the face of a wave: also no level foam line, the scene lays its own along the slope)
   const wlClip = nid('hw', u);
   if (!ang) defs += `<clipPath id="${wlClip}"><rect x="${f(x0 - 4000)}" y="${f(y0 - 4000)}" width="8000" height="4000"/></clipPath>`;
   else { const E = 4000 / s, hp = (X, H) => [x0 + dir * s * (X * ca - H * sa), y0 - s * (X * sa + H * ca)];
@@ -1233,7 +1234,7 @@ function ship(u, L, o = {}) {
       if (!far && Rr() > .75) flecks += `<path d="${blob(x + dir * (Rr() - .5) * s, y0 + th + (.35 + Rr() * 1.2) * s, (.25 + Rr() * .75) * s, (.1 + Rr() * .14) * s)}" opacity="${f(.3 + Rr() * .45)}"/>`; }
     close();
     out += `<g fill="${sh}" opacity=".3" transform="translate(0 ${f(.35 * s)})"><path d="${lace}"/></g><g fill="${fc}" opacity=".92"><path d="${lace}"/>${flecks}</g>` + (holes ? `<g fill="${mix(L.pal.sea[1], fc, .25)}" opacity=".55">${holes}</g>` : '');
-  } else if (!far) out += `<path d="M${f(stem - 2 * s)} ${f(y0 + .2 * s)}L${f(stern + 2 * s)} ${f(y0 + .2 * s)}" stroke="${fc}" stroke-width="${f(.35 * s)}" opacity=".45"/>`;
+  } else if (!far && !o.slope) out += `<path d="M${f(stem - 2 * s)} ${f(y0 + .2 * s)}L${f(stern + 2 * s)} ${f(y0 + .2 * s)}" stroke="${fc}" stroke-width="${f(.35 * s)}" opacity=".45"/>`;
   if (o.lights && !far && L.time !== 'day') { // the windows and the lantern light the air round them and the water under the stern (not by day)
     for (const g of b.glowAt) { const p = b.pt(g[0], g[1]); out += localGlow(u, { x: p[0], y: p[1], color: b.lightC, power: .5, radius: g[2] * s }, { core: false }); }
     for (let i = 0; i < 7; i++) { const x = stern + dir * (Rr() * 8 - 7) * s, y = y0 + (1 + i * 1.5 + Rr()) * s, l = (2 + Rr() * 4) * s; out += `<path d="M${f(x)} ${f(y)}q${f(l / 2)} ${f(-.4 * s)} ${f(l)} 0q${f(-l / 2)} ${f(.4 * s)} ${f(-l)} 0z" fill="${b.lightC}" opacity="${f(.5 - i * .055)}"/>`; }
