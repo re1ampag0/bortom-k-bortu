@@ -36,7 +36,10 @@ const REPLACED: { file: 'rules' | 'memo'; was: string; now: string }[] = [
   { file: 'rules', was: 'Бирюзовый кружок — стоимость в Душах «Голландца»', now: 'Бирюзовая склянка — стоимость в Душах «Голландца»' },
   { file: 'rules', was: 'Легенда (карта в золотой рамке)', now: 'Легенда (карта в латунной рамке)' },
   { file: 'rules', was: 'Баланс проверен симуляцией (см. конец файла), но боты', now: 'Баланс проверен симуляцией, но боты' },
-  { file: 'memo', was: 'ЗАРЯД · вместе с Залпом', now: 'ЗАРЯД · к своему Залпу' }
+  { file: 'memo', was: 'ЗАРЯД · вместе с Залпом', now: 'ЗАРЯД · к своему Залпу' },
+  // 9–10: one memo per ship instead of one per team (the print-kit boards-and-memos task): four memos in the set
+  { file: 'rules', was: '2 памятки', now: '4 памятки' },
+  { file: 'memo', was: 'Бортом к борту · одна на команду', now: 'Бортом к борту · одна на корабль' }
 ];
 
 const squash = (s: string) => s.replace(/\s+/g, ' ').trim();
