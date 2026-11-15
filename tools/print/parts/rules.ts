@@ -101,6 +101,11 @@ const CW = (PAGE.w - 2 * PAGE.mx - PAGE.gap) / 2;
 const HEAD = darken(BRASS, 0.5), TINT = lighten(BRASS, 0.9), KEY = lighten(BRASS, 0.78);
 const FS = 10, LH = 4.3; // body text: pt and line height in mm
 
+/** The classes of diagram() (the memo's setup sheet uses them too). */
+export const DIAGRAM_CSS = `.ru-dg svg{display:block}
+.ru-lg{display:flex;flex-direction:column;align-items:center;gap:.5mm;margin-top:1.6mm;font:italic 400 9.5pt/4.2mm Alegreya,serif}
+.ru-lg span{display:flex;align-items:center;gap:2mm;width:52mm;white-space:nowrap}`;
+
 const CSS = `${TEXT_CSS}
 .ru-u{display:flow-root;font:400 ${FS}pt/${LH}mm Alegreya,serif;color:${INK}}
 .ru-u i{font-style:italic}
@@ -122,9 +127,7 @@ const CSS = `${TEXT_CSS}
 .ru-tv{flex:1;padding:1.3mm 0 1.3mm 2.6mm}
 .ru-ty .ru-tk{position:relative;width:32mm;min-height:9.6mm;padding-left:11.4mm;font-size:9pt}
 .ru-md{position:absolute;left:2mm;top:50%;width:7.4mm;height:7.4mm;margin-top:-3.7mm}
-.ru-dg svg{display:block}
-.ru-lg{display:flex;flex-direction:column;align-items:center;gap:.5mm;margin-top:1.6mm;font:italic 400 9.5pt/4.2mm Alegreya,serif}
-.ru-lg span{display:flex;align-items:center;gap:2mm;width:52mm;white-space:nowrap}
+${DIAGRAM_CSS}
 .ru-h1{position:absolute;left:${PAGE.mx}mm;top:11.5mm;margin:0;font:800 31pt/12mm 'Alegreya SC',serif;letter-spacing:.01em;color:${BRASS_DARK}}
 .ru-run{position:absolute;top:9.6mm;font:700 8.5pt/4mm 'Alegreya SC',serif;letter-spacing:.08em;color:${darken(BRASS, 0.3)}}
 .ru-foot{position:absolute;top:${PAGE.h - 12.2}mm;font:500 8pt/4mm 'Alegreya Sans',sans-serif;letter-spacing:.04em;color:${darken(BRASS, 0.3)}}
@@ -132,7 +135,7 @@ const CSS = `${TEXT_CSS}
 `;
 
 /** The scheme of page 2 of the PnP: two rows of two boards; a solid arrow — the ship opposite, a dashed one — the diagonal. */
-function diagram(rows: string[][]): string {
+export function diagram(rows: string[][]): string {
   const [top, upper, lower, bottom, legend] = rows;
   if (!legend || upper.length !== 2 || lower.length !== 2 || legend.length !== 2) throw new Error('rules.md: «::: diagram» needs 5 lines: side, two ships, two ships, side, two legend texts');
   const W = CW, bw = 30, bh = 10.5, xs = [8, W - 8 - bw], y1 = 5.6, y2 = 30.4, H = y2 + bh + 5.4;
