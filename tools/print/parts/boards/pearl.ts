@@ -18,7 +18,7 @@ const TAR = { base: '#221c18', seam: '#0b0807', grain: '#362d27', nails: '#5f524
 const BAND = '#120e0c', HAIR = '#a8813f';
 const BRASS = { light: '#f3d68c', mid: '#bf9241', dark: '#5e4214' };
 const PAPER = { light: '#eadbb6', dark: '#d2ba88', line: '#9c8556', edge: '#6b4a22', ink: '#4a3520' };
-const DIM = '#fbf6e8', DIM_K = 0.88;
+const DIM = '#fff9ea', DIM_K = 0.9;
 const ROPE = { color: '#a88a5c', dark: '#3e3020' };
 
 /** a laid rope along a path (any SVG path in mm): body, twist, a dark under-edge */
@@ -66,10 +66,11 @@ async function sideArt(g: Geo): Promise<string> {
   const mx = ux(186), my = uy(44);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-b} ${-b} ${W} ${Hh}"><defs>` +
     `<linearGradient id="pksky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1322"/><stop offset=".45" stop-color="#18294a"/><stop offset="1" stop-color="#3a5878"/></linearGradient>` +
+    `<filter id="pklift" x="0" y="0" width="1" height="1" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR type="gamma" exponent=".58"/><feFuncG type="gamma" exponent=".58"/><feFuncB type="gamma" exponent=".6"/></feComponentTransfer></filter>` +
     `<radialGradient id="pkmoon" cx="${r(mx)}" cy="${r(my)}" r="120" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#dce8ff" stop-opacity=".75"/><stop offset=".12" stop-color="#9fb8dc" stop-opacity=".45"/><stop offset=".5" stop-color="#4c6890" stop-opacity=".18"/><stop offset="1" stop-color="#4c6890" stop-opacity="0"/></radialGradient></defs>` +
-    `<rect x="${-b}" y="${-b}" width="${W}" height="${Hh}" fill="url(#pksky)"/>${stars}<rect x="${-b}" y="${-b}" width="${W}" height="${Hh}" fill="url(#pkmoon)"/>` +
+    `<g filter="url(#pklift)"><rect x="${-b}" y="${-b}" width="${W}" height="${Hh}" fill="url(#pksky)"/>${stars}<rect x="${-b}" y="${-b}" width="${W}" height="${Hh}" fill="url(#pkmoon)"/>` +
     `<circle cx="${r(mx)}" cy="${r(my)}" r="9" fill="#f2f5ff"/><circle cx="${r(mx + 2.5)}" cy="${r(my - 1.5)}" r="2.2" fill="#c9d3e6" fill-opacity=".6"/><circle cx="${r(mx - 3)}" cy="${r(my + 2.6)}" r="1.5" fill="#c9d3e6" fill-opacity=".5"/>` +
-    body + `</svg>`;
+    body + `</g></svg>`;
   const url = await g.art('board-pearl-side', svg, b), id = `${g.uid}pc`, vg = `${g.uid}pv`;
   // a soft vignette over the JPEG (an SVG layer, no CSS): the eye stays on the rows and the open ports
   return `<defs><clipPath id="${id}"><rect x="${r(P.x)}" y="${r(P.y)}" width="${r(P.w)}" height="${r(P.h)}" rx="2.2"/></clipPath>` +
@@ -216,7 +217,7 @@ async function wreckPearl(w: WreckGeo): Promise<Layers> {
   out.push(`<path d="${reef}" fill="#16303d" fill-opacity=".85" filter="url(#pwsoft)"/>`);
   // shafts of light from the surface, from the upper right
   let rays = '';
-  for (let i = 0; i < 7; i++) { const x0 = 120 + i * 28 + R() * 12, wd = 5 + R() * 10, dx = -48 - R() * 14; rays += `<path d="M${P2(x0, A.y - 6)}L${P2(x0 + wd, A.y - 6)}L${P2(x0 + wd * 2.4 + dx, 196)}L${P2(x0 + dx, 196)}Z" fill="url(#pwray)" fill-opacity="${r(0.35 + R() * 0.4)}"/>`; }
+  for (let i = 0; i < 7; i++) { const x0 = 120 + i * 28 + R() * 12, wd = 5 + R() * 10, dx = -48 - R() * 14; rays += `<path d="M${P2(x0, A.y - 6)}L${P2(x0 + wd, A.y - 6)}L${P2(x0 + wd * 2.4 + dx, 196)}L${P2(x0 + dx, 196)}Z" fill="url(#pwray)" fill-opacity="${r(0.55 + R() * 0.45)}"/>`; }
   out.push(`<g filter="url(#pwblur)">${rays}</g>`);
   // the wreck: listing away (the fouled bottom up), down by the head, the hull cut by the sand
   const s = 1.9;   // scene units per ship unit: the hull ~178 mm long
@@ -234,11 +235,11 @@ async function wreckPearl(w: WreckGeo): Promise<Layers> {
   out.push(rip + caus);
   // the things she lost: a gun off its carriage, shot, a chest burst open, the anchor, a coil, a bottle
   const prop = (name: string, o: Record<string, unknown>) => kf(K, name)(u, L, o);
-  out.push(prop('anchor', { x: ux(36), y: uy(185), s: 0.95, rot: 104, seed: 3 }));
+  out.push(prop('anchor', { x: ux(34), y: uy(186), s: 0.68, rot: 104, seed: 3 }));
   out.push(prop('cannon', { x: ux(78), y: uy(188), s: 0.62, rot: -7, carriage: false, seed: 5, contact: true }));
   for (const [x, y] of [[101, 191], [107, 193], [96, 194.5], [232, 192]]) out.push(prop('shot', { x: ux(x), y: uy(y), s: 0.85, seed: Math.round(x) }));
-  out.push(prop('coil', { x: ux(212), y: uy(186), s: 0.85, seed: 7 }));
-  out.push(prop('chest', { x: ux(255), y: uy(190), s: 0.95, open: 0.55, gold: true, seed: 9 }));
+  out.push(prop('coil', { x: ux(214), y: uy(187), s: 0.7, seed: 7 }));
+  out.push(prop('chest', { x: ux(254), y: uy(191), s: 0.78, open: 0.55, gold: true, seed: 9 }));
   out.push(prop('bottle', { x: ux(132), y: uy(193), s: 0.75, lying: true, kind: 'empty', rot: 12, seed: 2 }));
   out.push(prop('rock', { x: ux(20), y: uy(197), w: 26, h: 12, seed: 4 }) + prop('rock', { x: ux(283), y: uy(196), w: 22, h: 14, seed: 8 }));
   // weed off the rail and the floor, swaying the same way
@@ -246,6 +247,8 @@ async function wreckPearl(w: WreckGeo): Promise<Layers> {
   const strand = (x: number, y: number, h: number, c: string, wd: number) => { let d = `M${P2(x, y)}`, cx = x; for (let t = 1; t <= 4; t++) { const ny = y - h * t / 4, nx = x + Math.sin(t * 1.3 + x) * 2.2 + t * 0.9; d += `Q${P2(cx + (t % 2 ? 2.4 : -2.4), y - h * (t - 0.5) / 4)} ${P2(nx, ny)}`; cx = nx; } return `<path d="${d}" fill="none" stroke="${c}" stroke-width="${r(wd / k)}" stroke-linecap="round" stroke-opacity=".85"/>`; };
   for (let i = 0; i < 22; i++) { const x = A.x + 6 + R() * (A.w - 12); weed += strand(x, sand(x) + 1 + R() * 3, 6 + R() * 14, R() < 0.5 ? '#2f4a2c' : '#435a30', 0.5 + R() * 0.6); }
   out.push(weed);
+  // the water between us and the floor: the things lie in it, not on the glass
+  out.push(`<rect x="${-b}" y="${-b}" width="${W}" height="${H}" fill="#13293a" fill-opacity=".2"/>`);
   // bubbles from the stern windows, rising out of the picture
   let bub = '';
   for (let i = 0; i < 26; i++) { const t = R(), x = 236 + Math.sin(t * 9) * 4 + R() * 8, y = 140 - t * 128, rr = 0.25 + R() * 0.9; bub += `<circle cx="${r(ux(x))}" cy="${r(uy(y))}" r="${r(rr / k)}" fill="#cfeef5" fill-opacity=".12" stroke="#e4f7fb" stroke-width=".3" stroke-opacity=".55"/>`; }
