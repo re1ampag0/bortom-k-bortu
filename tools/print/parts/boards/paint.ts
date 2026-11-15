@@ -115,8 +115,8 @@ export async function engraving(g: Geo, o: ShipOpts & { paper: string; ink: stri
 }
 /** The back: the ship lying on the sea floor, heeled over, its masts broken off by the picture's top; sand and murk. */
 export async function wreckArt(w: WreckGeo, o: { water: [string, string]; sand: string; sandDark: string; light?: Record<string, unknown>; heel?: number }): Promise<string> {
-  const A = w.zones.art, kind = w.kind, K = w.kit, k = A.w / 200, b = 0, box = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), s = 150 / box.w;
-  const floor = A.h / k * 0.72, L = K.makeLight(o.light ?? K.LIGHTS.dutchman, { horizon: 10 });
+  const A = w.zones.art, kind = w.kind, K = w.kit, k = A.w / 200, b = 0, box = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), s = 120 / box.w;
+  const floor = A.h / k * 0.86, L = K.makeLight(o.light ?? K.LIGHTS.dutchman, { horizon: 10 });
   const body = K.ship('bo2w' + kind, L, { kind, x: 112, y: floor + 6, scale: s, sails: 'furled', heel: o.heel ?? 16, seed: 23 });
   const Rr = rng(5); let sand = '';
   for (let i = 0; i < 40; i++) sand += `<ellipse cx="${r(Rr() * 200)}" cy="${r(floor + 4 + Rr() * 30)}" rx="${r(2 + Rr() * 6)}" ry="${r(0.4 + Rr())}" fill="${o.sandDark}" fill-opacity=".35"/>`;

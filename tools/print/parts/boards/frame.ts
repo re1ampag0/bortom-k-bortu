@@ -29,7 +29,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { HERE, ROOT, data, esc, rich, type Ctx } from '../../kit';
-import { BOARD, TOKEN, priceOf, trackCells, type Ship } from '../../layout';
+import { BOARD, priceOf, trackCells, type Ship } from '../../layout';
 import { BRASS, BRASS_DARK, DECK_KEY, INK, PARCHMENT, TYPE, SEA, contrast, darken, lighten } from '../../colors';
 import { iconImg } from '../../icons';
 import { makeArt } from '../../art';
@@ -310,16 +310,11 @@ function checkPal(pal: Pal, who: string) {
 }
 
 let UID = 0;
-const loaded = new Map<ShipKey, ShipMaterial>();
-async function materialOf(key: ShipKey): Promise<ShipMaterial> {
-  if (!loaded.has(key)) loaded.set(key, (await import(`./${key}.ts`) as { material: ShipMaterial }).material);
-  return loaded.get(key)!;
-}
 const artOf = (ctx: Ctx) => async (key: string, svg: string, bleed = 0) => (await makeArt(ctx, key, svg, null, bleed)).url;
 
 /** One face of a board in concept a or b. */
-export async function framePage(ctx: Ctx, ship: Ship, concept: Concept): Promise<{ html: string; css: string }> {
-  const key = DECK_KEY[ship.code], mat = await materialOf(key), base = basePalette(ship.color), pal = mat.palette ? mat.palette(base) : base;
+export async function framePage(ctx: Ctx, ship: Ship, concept: Concept, mat: ShipMaterial): Promise<{ html: string; css: string }> {
+  const key = DECK_KEY[ship.code], base = basePalette(ship.color), pal = mat.palette ? mat.palette(base) : base;
   checkPal(pal, `${key} ${concept}`);
   const g: Geo = { ...layout(ship, concept, pal, `b${concept}${++UID}`), kit: KIT, art: artOf(ctx) };
   const L = await (concept === 'a' ? mat.a(g) : mat.b(g));
@@ -349,12 +344,12 @@ export function rulesLine(prefix: string): string {
 }
 const W = { m: 12 };
 export function wreckLayout(ship: Ship, pal: Pal, uid: string): Omit<WreckGeo, 'kit' | 'art'> {
-  const title = { x: W.m + 4, y: W.m + 3, w: 180, h: 20 }, text = { x: W.m + 4, y: 40, w: 160, h: 112 }, side = { x: 188, y: 40, w: PAGE.w - W.m - 4 - 188, h: 112 };
-  const slots = [0, 1].map(i => ({ x: side.x + 3, y: side.y + 10 + i * 19, w: BOARD.cell, h: BOARD.cell }));
-  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], pal, uid, page: PAGE, zones: { title, text, side, art: { x: W.m, y: 150, w: PAGE.w - 2 * W.m, h: PAGE.h - W.m - 150 } }, slots, boxes: [title, text, side] };
+  const title = { x: W.m + 4, y: W.m + 4, w: 150, h: 19 }, text = { x: W.m + 4, y: 41, w: 162, h: 104 }, side = { x: 186, y: 41, w: PAGE.w - W.m - 4 - 186, h: 104 };
+  const slots = [0, 1].map(i => ({ x: side.x + 1, y: side.y + 8 + i * 17, w: BOARD.cell, h: BOARD.cell }));
+  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], pal, uid, page: PAGE, zones: { title, text, side, art: { x: W.m, y: W.m, w: PAGE.w - 2 * W.m, h: PAGE.h - 2 * W.m } }, slots, boxes: [title, text, side] };
 }
-export async function wreckPage(ctx: Ctx, ship: Ship): Promise<{ html: string; css: string }> {
-  const key = DECK_KEY[ship.code], mat = await materialOf(key), base = basePalette(ship.color), pal = mat.palette ? mat.palette(base) : base;
+export async function wreckPage(ctx: Ctx, ship: Ship, mat: ShipMaterial): Promise<{ html: string; css: string }> {
+  const base = basePalette(ship.color), pal = mat.palette ? mat.palette(base) : base;
   const w: WreckGeo = { ...wreckLayout(ship, pal, `bw${++UID}`), kit: KIT, art: artOf(ctx) };
   const L = await mat.wreck(w), sec = rulesSection(TXT.wreck.section), z = w.zones;
   const svg = [L.under ?? '', ...w.boxes.map(b => `<rect x="${r(b.x - 2)}" y="${r(b.y - 2)}" width="${r(b.w + 4)}" height="${r(b.h + 4)}" rx="2.4" fill="${pal.field}" stroke="${pal.fieldLine}" stroke-width=".3"/>`),
