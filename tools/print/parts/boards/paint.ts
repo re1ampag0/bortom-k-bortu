@@ -124,3 +124,40 @@ export async function wreckArt(w: WreckGeo, o: { water: [string, string]; sand: 
   const url = await w.art(`board-wreck-${kind}`, svg, b), id = `${w.uid}wa`, H = A.h / k;
   return `<defs><clipPath id="${id}"><rect x="${r(A.x)}" y="${r(A.y)}" width="${r(A.w)}" height="${r(A.h)}" rx="2.4"/></clipPath></defs><g clip-path="url(#${id})"><svg x="${r(A.x)}" y="${r(A.y)}" width="${r(A.w)}" height="${r(A.h)}" viewBox="0 0 200 ${r(H)}" preserveAspectRatio="none"><image href="${url}" width="200" height="280"/></svg></g>`;
 }
+
+// ---- a simple material from a few colours (the placeholders of the four ships; a real material may use any of this) ----
+import type { Layers, ShipMaterial } from './frame';
+export interface SimpleCfg {
+  /** A: the wood round the picture and the frame band */ wood: { base: string; seam: string; grain: string; nails?: string };
+  band: string; hair: string;
+  sky: [string, string]; sea: [string, string]; light?: Record<string, unknown>; focus?: number; sails?: string;
+  /** the dimming layer over the picture under the rows */ dim: string; dimOpacity?: number;
+  /** B: the chart and its brass */ chart: { paper: string; line: string; coast: string }; brass: { light: string; mid: string; dark: string };
+  note: string; noteLine: string; pin: string; extraA?(g: Geo): string; extraB?(g: Geo): string;
+  /** the back */ wreck: { water: [string, string]; sand: string; sandDark: string; light?: Record<string, unknown> };
+}
+export function simpleMaterial(c: SimpleCfg): ShipMaterial {
+  return {
+    async a(g: Geo): Promise<Layers> {
+      const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 };
+      const under = sheet(g, { band: c.band, line: c.hair, ground: c.wood.base, w: 1.2 }) + planks(F, { ...c.wood, h: 10.5, seed: g.ship.hull * 7 }) +
+        await closeUp(g, { sky: c.sky, sea: c.sea, light: c.light, focus: c.focus, sails: c.sails }) + dimBands(g, c.dim, c.dimOpacity ?? 0.86) + (c.extraA ? c.extraA(g) : '');
+      return { under, css: `${g.scope} .bo2-box{box-shadow:.5mm .7mm 0 rgba(0,0,0,.35)}` };
+    },
+    async b(g: Geo): Promise<Layers> {
+      const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 }, br = c.brass;
+      const rulers = g.rows.map((rw, i) => brassRuler(rw.x0 - 1.2, rw.cells[0].y - 1.2, rw.x1 - rw.x0 + 2.4, 15.4, { ...br, id: `${g.uid}br${i}` })).join('');
+      const mf = g.zones.midFree, rose = mf ? compass(mf.x + mf.w / 2, mf.y + mf.h / 2, Math.min(mf.w, mf.h) / 2 - 3, { line: c.chart.line, fill: c.chart.paper, accent: c.band }) : '';
+      const under = sheet(g, { band: c.band, line: c.hair, ground: c.chart.paper, w: 1.2 }) + chart(F, { ...c.chart, rose: [158, 120], seed: g.ship.hull }) + rose + rulers + (c.extraB ? c.extraB(g) : '');
+      const engr = await engraving(g, { paper: c.note, ink: '#3a2a18', frame: br.mid, frameDark: br.dark, light: c.light });
+      const s = g.scope;
+      const css = `${s} .bo2-box{background:${c.note};border-color:${c.noteLine};box-shadow:.5mm .8mm 0 rgba(60,40,10,.22)}${s} .bo2-ab{transform:rotate(-.35deg)}${s} .bo2-legend{transform:rotate(.4deg)}` +
+        `${s} .bo2-box::before{content:'';position:absolute;left:50%;top:-1.2mm;width:2.6mm;height:2.6mm;margin-left:-1.3mm;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0,${c.pin} 45%,${mix(c.pin, '#000000', 0.5)} 100%)}`;
+      return { under, css, engraving: engr };
+    },
+    async wreck(w: WreckGeo): Promise<Layers> {
+      const under = await wreckArt(w, c.wreck);
+      return { under };
+    }
+  };
+}

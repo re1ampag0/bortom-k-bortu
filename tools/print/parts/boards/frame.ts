@@ -249,11 +249,12 @@ function slotsSvg(g: Omit<Geo, 'kit' | 'art'>): string {
   return out.join('');
 }
 
-/** the light fields of the frame: everything read during play stands on them */
+/** the light fields of the frame: everything read during play stands on them (the right column's boxes are HTML) */
 function fieldsSvg(g: Omit<Geo, 'kit' | 'art'>): string {
   const pal = g.pal, f = (b: Rect, pad = 1.2) => `<rect x="${r(b.x - pad)}" y="${r(b.y - pad)}" width="${r(b.w + 2 * pad)}" height="${r(b.h + 2 * pad)}" rx="2" fill="${pal.field}" stroke="${pal.fieldLine}" stroke-width=".3"/>`;
-  const fire = g.boxes[0], st = g.zones.strip;
-  return [f(fire), ...g.boxes.slice(1).filter(b => b.w < 60).map(b => f(b, 0.8)), f({ x: st.x, y: st.y - 0.4, w: st.w, h: st.h + 0.8 }, 0.6), f({ x: g.zones.mid.x, y: g.zones.mid.y - 0.4, w: g.zones.mid.w, h: 5.6 }, 0.6)].join('');
+  const [fire, ...rest] = g.boxes, z = g.zones, m = z.mid;
+  return [f(fire, 0), ...rest.filter(b => b.w < 60).map(b => f(b, 0)), f(z.header, 0.4), f({ x: z.strip.x, y: z.strip.y - 0.6, w: z.strip.w, h: z.strip.h + 1.2 }, 0.6),
+    f({ x: z.footer.x + 30, y: z.footer.y - 0.2, w: z.footer.w - 60, h: z.footer.h + 0.4 }, 0.6), f({ x: m.x, y: m.y - 0.6, w: m.w, h: 5.6 }, 0.4)].join('');
 }
 
 const medallion = (cx: number, cy: number, R: number, ship: Ship, pal: Pal) =>
