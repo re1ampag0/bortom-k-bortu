@@ -20,7 +20,7 @@
 // Layers (all optional): under — SVG in page mm painted first (background, the ship picture, the dimming layer over the
 // JPEG — a rect with fill-opacity, never CSS opacity/filter on images); over — SVG painted after the frame's lines, under
 // the HTML text (pins, rivets, knots — never over a number or a word); css — extra CSS for the HTML boxes (.bo2-box,
-// .bo2-col, …; no filter, no blurred shadows); engraving — B only: SVG inside the picture box at the bottom of the right
+// .bo2-col, …, every rule scoped with g.scope; no filter, no blurred shadows); engraving — B only: SVG inside the picture box at the bottom of the right
 // column, in the viewBox 0 0 ENGRAVING.w ENGRAVING.h (it is scaled down to the room that is left).
 // Shared painting helpers (the close-up of the ship, the engraving, wood, rope, brass, the chart) are in paint.ts.
 // The back «Затонул»: wreck(w) gets WreckGeo (zones: title, text, side, art; slots: the two «за союзника» cells).
@@ -56,7 +56,7 @@ export interface Kit {
   LIGHTS: Record<string, unknown>; SHIP_SPECS: Record<string, { len: number; ports?: { h: number }[] }>;
   [k: string]: unknown;
 }
-interface GeoBase { ship: Ship; key: ShipKey; kind: string; pal: Pal; uid: string; page: { w: number; h: number }; kit: Kit; art(key: string, svg: string, bleed?: number): Promise<string> }
+interface GeoBase { ship: Ship; key: ShipKey; kind: string; pal: Pal; uid: string; /** the CSS class round the page: scope every rule of Layers.css with it */ scope: string; page: { w: number; h: number }; kit: Kit; art(key: string, svg: string, bleed?: number): Promise<string> }
 export interface Geo extends GeoBase {
   concept: Concept;
   zones: { header: Rect; tracks: Rect; mid: Rect; col: Rect; strip: Rect; footer: Rect; picture: Rect; midFree: Rect | null };
@@ -173,7 +173,7 @@ export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omi
   const reX = RIGHT - 3 * CP - BOARD.cell;
   for (let i = 0; i <= 3; i++) slots.push({ kind: 'reactions', n: i, x: reX + i * CP, y: cy0, w: BOARD.cell, h: BOARD.cell });
   boxes.push(Z.header, st, Z.footer);
-  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], concept, pal, uid, page: PAGE, zones: { ...Z, mid, midFree }, rows, slots, boxes };
+  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], scope: `.bo2-${DECK_KEY[ship.code]}`, concept, pal, uid, page: PAGE, zones: { ...Z, mid, midFree }, rows, slots, boxes };
 }
 
 // ---- SVG pieces of the skeleton ----
@@ -324,7 +324,7 @@ export async function framePage(ctx: Ctx, ship: Ship, concept: Concept, mat: Shi
   svg.push(ICON.arrow(m.x + 2.8, m.y + 4.6, 'up', 4.6, pal.deep, 0.5));
   svg.push(L.over ?? '');
   const html = [headerHtml(ship, pal), midHtml(g), columnHtml(ctx, g, concept === 'b' ? L.engraving ?? '' : undefined), stripHtml(g), footerHtml(ship)];
-  return { html: `<svg class="bo2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html.join('\n')}`, css: L.css ?? '' };
+  return { html: `<div class="bo2 bo2-${key}"><svg class="bo2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html.join('\n')}</div>`, css: L.css ?? '' };
 }
 
 // ---- the back «Затонул» ----
@@ -346,7 +346,7 @@ const W = { m: 12 };
 export function wreckLayout(ship: Ship, pal: Pal, uid: string): Omit<WreckGeo, 'kit' | 'art'> {
   const title = { x: W.m + 4, y: W.m + 4, w: 150, h: 19 }, text = { x: W.m + 4, y: 41, w: 162, h: 104 }, side = { x: 186, y: 41, w: PAGE.w - W.m - 4 - 186, h: 104 };
   const slots = [0, 1].map(i => ({ x: side.x + 1, y: side.y + 8 + i * 17, w: BOARD.cell, h: BOARD.cell }));
-  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], pal, uid, page: PAGE, zones: { title, text, side, art: { x: W.m, y: W.m, w: PAGE.w - 2 * W.m, h: PAGE.h - 2 * W.m } }, slots, boxes: [title, text, side] };
+  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], scope: `.bo2-${DECK_KEY[ship.code]}`, pal, uid, page: PAGE, zones: { title, text, side, art: { x: W.m, y: W.m, w: PAGE.w - 2 * W.m, h: PAGE.h - 2 * W.m } }, slots, boxes: [title, text, side] };
 }
 export async function wreckPage(ctx: Ctx, ship: Ship, mat: ShipMaterial): Promise<{ html: string; css: string }> {
   const base = basePalette(ship.color), pal = mat.palette ? mat.palette(base) : base;
@@ -360,10 +360,11 @@ export async function wreckPage(ctx: Ctx, ship: Ship, mat: ShipMaterial): Promis
   const html = `<div class="bo2-abs bo2-wt" style="left:${r(z.title.x + 21)}mm;top:${r(z.title.y + 1)}mm"><div class="bo2-wn" style="color:${pal.deep}">${esc(TXT.wreck.title)}</div><div class="bo2-cap">${esc(ship.name)} · ${esc(ship.captain)}</div></div>
 <div class="bo2-abs bo2-wtext bo2-txt" style="${at(z.text)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.section)}</div>${sec.p.map(p => `<p>${md(p)}</p>`).join('')}<ul>${sec.li.map(l => `<li>${md(l)}</li>`).join('')}</ul><p class="bo2-wq">${md(rulesLine(TXT.wreck.captainLine))}</p></div>
 <div class="bo2-abs bo2-wside bo2-txt" style="${at(z.side)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.free)}</div>${side}<div class="bo2-wl" style="top:${r(w.slots[1].y + 17 - z.side.y)}mm"><p>${esc(TXT.wreck.clear)}</p>${jones ? `<p><b>${esc(TXT.wreck.jones)}</b> ${esc(jones)}</p>` : ''}</div></div>`;
-  return { html: `<svg class="bo2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html}`, css: L.css ?? '' };
+  return { html: `<div class="bo2 bo2-${w.key}"><svg class="bo2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html}</div>`, css: L.css ?? '' };
 }
 
 export const FRAME_CSS = `
+.bo2{position:absolute;inset:0}
 .bo2-svg{position:absolute;left:0;top:0;width:297mm;height:210mm}
 .bo2-abs{position:absolute}
 .bo2-name{font:800 27pt/1 Alegreya,serif;white-space:nowrap}

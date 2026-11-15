@@ -30,6 +30,8 @@ export interface Opts {
   check: boolean;
   checkPdf: boolean;
   samples: boolean;
+  /** 03-planshety.pdf: the board concept, 'a' «у борта» (default) or 'b' «стол капитана» */
+  board?: 'a' | 'b';
 }
 export interface PageSpec { html: string; land?: boolean }
 /** One PDF: its file name (without .pdf), CSS of its own, pages; duplex — printed on both sides: true — flip on the long edge,
