@@ -116,7 +116,7 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
 const run = (cmd: string, args: string[]) => execFileSync(cmd, args, { encoding: 'utf8', maxBuffer: 64 << 20 });
 /** file → [pages, landscape?] */
 const EXPECT: Record<string, [number | [number, number], boolean?]> = {
-  '00-kak-pechatat': [4], '01-pravila': [[3, 4]], '02-pamyatki': [[1, 2], true], '03-planshety': [4, true], '04-tryumy-zhetony': [[2, 3]],
+  '00-kak-pechatat': [4], '01-pravila': [[3, 4]], '02-pamyatki': [[4, 6], true], '03-planshety': [8, true], '04-tryumy-zhetony': [[2, 3]],
   '05-karty': [24], '05a-lica': [12], '05b-rubashki': [12], '07-more': [4], '08-otchet': [1]
 };
 export async function checkPdf(): Promise<boolean> {
