@@ -5,13 +5,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { HERE, ROOT, data, esc, rich, RICH_CSS, type Ctx, type PageSpec, type Part } from '../kit';
+import { HERE, ROOT, SAMPLES, data, esc, rich, RICH_CSS, type Ctx, type PageSpec, type Part } from '../kit';
 import { BOARD, priceOf, trackCells, type Ship } from '../layout';
 import { BRASS, BRASS_DARK, DECK_KEY, INK, PARCHMENT, SEA, TYPE, contrast, darken, lighten } from '../colors';
 import { iconImg } from '../icons';
 import { makeArt, profiled } from '../art';
 import { writePdf } from '../pdf';
-import { SAMPLES } from '../kit';
 import { FRAME_CSS, framePage, wreckPage, type Concept, type ShipKey, type ShipMaterial } from './boards/frame';
 import { material as pearl } from './boards/pearl';
 import { material as revenge } from './boards/revenge';
@@ -72,7 +71,7 @@ const EDGE = 11.2;
 const COL = { x: PAGE.w - EDGE - (BOARD.textCol - 1), w: BOARD.textCol - 1 };
 /** The track zone: the longest track (13 cells, 187 mm) fills it exactly. */
 const LEFT = { x: EDGE, r: COL.x - 3.6 };
-const HEAD_H: Record<BoardVariant, number> = { top: 42, side: 22 };
+const HEAD_H: Record<'top' | 'side', number> = { top: 42, side: 22 };
 const BODY_GAP = 4, BODY_END = 188.6, FOOT_LINE = 191.2;
 /** One track from its top: the label's baseline, the small numbers' baseline, the cells' centre, the height. */
 const TR = { label: 4.3, small: 8.9, cy: 9.8 + BOARD.cell / 2, h: 9.8 + BOARD.cell, soulsExtra: 3.6 };

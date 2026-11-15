@@ -1,7 +1,7 @@
 // Shared painting helpers for the board materials (tools/print/parts/boards/<ship>.ts). Pure SVG strings in page mm,
 // except closeUp(), engraving() and wreckArt(), which bake the kit ship into a JPEG through the print profile (g.art).
 // Nothing here is read during play: the frame (frame.ts) draws the cells, numbers and words on top.
-import { ENGRAVING, type Geo, type Rect, type WreckGeo } from './frame';
+import { ENGRAVING, type Geo, type Layers, type Rect, type ShipMaterial, type WreckGeo } from './frame';
 
 const r = (n: number) => Math.round(n * 100) / 100;
 const hex = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
@@ -71,7 +71,7 @@ export function compass(cx: number, cy: number, R: number, o: { line: string; fi
 /** The dimming layer over the JPEG under every track row and text field (A): one rect per band, fill-opacity only. */
 export function dimBands(g: Geo, fill: string, opacity = 0.86, pad = 1.6): string {
   const bands = g.rows.map(rw => rw.band), out: string[] = [];
-  for (const b of bands) out.push(`<rect x="${r(b.x - pad)}" y="${r(b.y - pad)}" width="${r(b.w + 2 * pad + 1)}" height="${r(b.h + 2 * pad)}" rx="2.2" fill="${fill}" fill-opacity="${opacity}"/>`);
+  for (const b of bands) out.push(`<rect x="${r(b.x - pad)}" y="${r(b.y - pad)}" width="${r(b.w + 2 * pad)}" height="${r(b.h + 2 * pad)}" rx="2.2" fill="${fill}" fill-opacity="${opacity}"/>`);
   return out.join('');
 }
 
@@ -114,19 +114,20 @@ export async function engraving(g: Geo, o: ShipOpts & { paper: string; ink: stri
     `<svg x="${r(ix)}" y="${r(iy)}" width="${r(iw)}" height="${r(ih)}" viewBox="0 ${r(top)} 200 ${r(h)}"><image href="${url}" width="200" height="280"/></svg>`;
 }
 /** The back: the ship lying on the sea floor, heeled over, its masts broken off by the picture's top; sand and murk. */
-export async function wreckArt(w: WreckGeo, o: { water: [string, string]; sand: string; sandDark: string; light?: Record<string, unknown>; heel?: number }): Promise<string> {
-  const A = w.zones.art, kind = w.kind, K = w.kit, k = A.w / 200, b = 0, box = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), s = 120 / box.w;
-  const floor = A.h / k * 0.86, L = K.makeLight(o.light ?? K.LIGHTS.dutchman, { horizon: 10 });
-  const body = K.ship('bo2w' + kind, L, { kind, x: 112, y: floor + 6, scale: s, sails: 'furled', heel: o.heel ?? 16, seed: 23 });
+export async function wreckArt(w: WreckGeo, o: { water: [string, string]; sand: string; sandDark: string; light?: Record<string, unknown>; heel?: number; k?: number }): Promise<string> {
+  // k mm per scene unit; the bleed widens the 200 × 280 scene to the art's width at the same density (≈ 140 ppi at 0.9)
+  const A = w.zones.art, kind = w.kind, K = w.kit, k = o.k ?? 0.9, b = Math.ceil(Math.max(0, (A.w / k - 200) / 2)) + 1, box = K.shipBox(kind, { x: 0, y: 0, scale: 1 });
+  const W = 200 + 2 * b, H = 280 + 2 * b, vh = A.h / k, floor = -b + vh * 0.86, s = 150 / box.w * (A.w / k) / 200;
+  const L = K.makeLight(o.light ?? K.LIGHTS.dutchman, { horizon: -b + 10 });
+  const body = K.ship('bo2w' + kind, L, { kind, x: -b + W * 0.58, y: floor + 6, scale: s, sails: 'furled', heel: o.heel ?? 16, seed: 23 });
   const Rr = rng(5); let sand = '';
-  for (let i = 0; i < 40; i++) sand += `<ellipse cx="${r(Rr() * 200)}" cy="${r(floor + 4 + Rr() * 30)}" rx="${r(2 + Rr() * 6)}" ry="${r(0.4 + Rr())}" fill="${o.sandDark}" fill-opacity=".35"/>`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280"><defs><linearGradient id="bo2wat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${o.water[0]}"/><stop offset="1" stop-color="${o.water[1]}"/></linearGradient></defs><rect width="200" height="280" fill="url(#bo2wat)"/>${body}<path d="M0 ${r(floor + 4)}q50 -5 100 -1t100 1V280H0Z" fill="${o.sand}"/>${sand}<rect width="200" height="280" fill="${o.water[1]}" fill-opacity=".28"/></svg>`;
-  const url = await w.art(`board-wreck-${kind}`, svg, b), id = `${w.uid}wa`, H = A.h / k;
-  return `<defs><clipPath id="${id}"><rect x="${r(A.x)}" y="${r(A.y)}" width="${r(A.w)}" height="${r(A.h)}" rx="2.4"/></clipPath></defs><g clip-path="url(#${id})"><svg x="${r(A.x)}" y="${r(A.y)}" width="${r(A.w)}" height="${r(A.h)}" viewBox="0 0 200 ${r(H)}" preserveAspectRatio="none"><image href="${url}" width="200" height="280"/></svg></g>`;
+  for (let i = 0; i < 60; i++) sand += `<ellipse cx="${r(-b + Rr() * W)}" cy="${r(floor + 4 + Rr() * 30)}" rx="${r(2 + Rr() * 6)}" ry="${r(0.4 + Rr())}" fill="${o.sandDark}" fill-opacity=".35"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-b} ${-b} ${W} ${H}"><defs><linearGradient id="bo2wat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${o.water[0]}"/><stop offset="1" stop-color="${o.water[1]}"/></linearGradient></defs><rect x="${-b}" y="${-b}" width="${W}" height="${H}" fill="url(#bo2wat)"/>${body}<path d="M${-b} ${r(floor + 4)}q${r(W / 4)} -5 ${r(W / 2)} -1t${r(W / 2)} 1V${H}H${-b}Z" fill="${o.sand}"/>${sand}<rect x="${-b}" y="${-b}" width="${W}" height="${H}" fill="${o.water[1]}" fill-opacity=".28"/></svg>`;
+  const url = await w.art(`board-wreck-${kind}`, svg, b), id = `${w.uid}wa`;
+  return `<defs><clipPath id="${id}"><rect x="${r(A.x)}" y="${r(A.y)}" width="${r(A.w)}" height="${r(A.h)}" rx="2.4"/></clipPath></defs><g clip-path="url(#${id})"><image href="${url}" x="${r(A.x)}" y="${r(A.y)}" width="${r(W * k)}" height="${r(H * k)}" preserveAspectRatio="none"/></g>`;
 }
 
 // ---- a simple material from a few colours (the placeholders of the four ships; a real material may use any of this) ----
-import type { Layers, ShipMaterial } from './frame';
 export interface SimpleCfg {
   /** A: the wood round the picture and the frame band */ wood: { base: string; seam: string; grain: string; nails?: string };
   band: string; hair: string;
@@ -141,14 +142,14 @@ export function simpleMaterial(c: SimpleCfg): ShipMaterial {
     async a(g: Geo): Promise<Layers> {
       const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 };
       const under = sheet(g, { band: c.band, line: c.hair, ground: c.wood.base, w: 1.2 }) + planks(F, { ...c.wood, h: 10.5, seed: g.ship.hull * 7 }) +
-        await closeUp(g, { sky: c.sky, sea: c.sea, light: c.light, focus: c.focus, sails: c.sails }) + dimBands(g, c.dim, c.dimOpacity ?? 0.86) + (c.extraA ? c.extraA(g) : '');
+        await closeUp(g, { sky: c.sky, sea: c.sea, light: c.light, focus: c.focus, sails: c.sails }) + (c.extraA ? c.extraA(g) : '') + dimBands(g, c.dim, c.dimOpacity ?? 0.86);
       return { under, css: `${g.scope} .bo2-box{box-shadow:.5mm .7mm 0 rgba(0,0,0,.35)}` };
     },
     async b(g: Geo): Promise<Layers> {
       const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 }, br = c.brass;
-      const rulers = g.rows.map((rw, i) => brassRuler(rw.x0 - 1.2, rw.cells[0].y - 1.2, rw.x1 - rw.x0 + 2.4, 15.4, { ...br, id: `${g.uid}br${i}` })).join('');
+      const rulers = g.rows.map((rw, i) => brassRuler(rw.x0 - 1.2, rw.cells[0].y - 1.2, rw.cells[rw.cells.length - 1].x + rw.cells[0].w - rw.x0 + 2.4, 15.4, { ...br, id: `${g.uid}br${i}` })).join('');
       const mf = g.zones.midFree, rose = mf ? compass(mf.x + mf.w / 2, mf.y + mf.h / 2, Math.min(mf.w, mf.h) / 2 - 3, { line: c.chart.line, fill: c.chart.paper, accent: c.band }) : '';
-      const under = sheet(g, { band: c.band, line: c.hair, ground: c.chart.paper, w: 1.2 }) + chart(F, { ...c.chart, rose: [158, 120], seed: g.ship.hull }) + rose + rulers + (c.extraB ? c.extraB(g) : '');
+      const under = sheet(g, { band: c.band, line: c.hair, ground: c.chart.paper, w: 1.2 }) + chart(F, { ...c.chart, rose: [158, 120], seed: g.ship.hull }) + (c.extraB ? c.extraB(g) : '') + rose + rulers;
       const engr = await engraving(g, { paper: c.note, ink: '#3a2a18', frame: br.mid, frameDark: br.dark, light: c.light });
       const s = g.scope;
       const css = `${s} .bo2-box{background:${c.note};border-color:${c.noteLine};box-shadow:.5mm .8mm 0 rgba(60,40,10,.22)}${s} .bo2-ab{transform:rotate(-.35deg)}${s} .bo2-legend{transform:rotate(.4deg)}` +

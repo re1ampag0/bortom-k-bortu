@@ -67,13 +67,14 @@ export async function buildSamples(ctx: Ctx): Promise<void> {
   // 4-5: the hand fan with and without the index — five cards of one deck
   await shot(part('veer-indeks', [fanPage(ctx, kType, hand, 'Веер в руке — медаль с маленькой ценой (вариант по умолчанию)')], CARD_CSS + CAP), '04-veer-s-tsenoj.png');
   await shot(part('veer-etalon', [fanPage(ctx, kPlain, hand, 'Веер в руке — как в эталоне (только медаль слева, цена справа)')], CARD_CSS + CAP), '05-veer-kak-v-etalone.png');
-  // 6-7: the ship board, two layouts, by the tightest board — the Dutchman
+  // 6-8: the ship board of the tightest ship — the Dutchman — as it was ('side'), concept A «у борта», concept B «стол капитана»
   try {
-    const B = await import('./parts/boards') as unknown as { boardPage?: (ctx: Ctx, ship: Ship, v: 'top' | 'side') => PageSpec | Promise<PageSpec>; BOARD_CSS?: string };
+    const B = await import('./parts/boards') as unknown as { boardPage?: (ctx: Ctx, ship: Ship, v: 'side' | 'a' | 'b') => PageSpec | Promise<PageSpec>; BOARD_CSS?: string };
     const dutch = data.ships.find(s => s.code === 'Г')!;
     if (B.boardPage && B.BOARD_CSS) {
-      await shot(part('planshet-sverhu', [await B.boardPage(ctx, dutch, 'top')], B.BOARD_CSS), '06-planshet-kartinka-sverhu.png');
-      await shot(part('planshet-sprava', [await B.boardPage(ctx, dutch, 'side')], B.BOARD_CSS), '07-planshet-kartinka-sprava.png');
+      await shot(part('planshet-kak-bylo', [await B.boardPage(ctx, dutch, 'side')], B.BOARD_CSS), '06-planshet-kak-bylo.png');
+      await shot(part('planshet-a', [await B.boardPage(ctx, dutch, 'a')], B.BOARD_CSS), '07-planshet-a-u-borta.png');
+      await shot(part('planshet-b', [await B.boardPage(ctx, dutch, 'b')], B.BOARD_CSS), '07-planshet-b-stol-kapitana.png');
     }
   } catch (e) { console.warn('samples: boards skipped — ' + (e as Error).message); }
   // 8: the token sheet

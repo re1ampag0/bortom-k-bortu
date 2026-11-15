@@ -7,7 +7,8 @@
 // (each function may be async). The frame owns everything that is read during play: cells, numbers, labels, slots,
 // the light text fields, the HTML text. A material only paints around and under it, and gets all the geometry in g:
 //   g.zones   — header, tracks, mid (middle column), col (right column), strip (counters), footer, picture (A: the
-//               close-up's area), midFree (the empty rest of the middle column, null if none) — Rect in mm;
+//               close-up's area), midFree (the empty rest of the middle column, null if none), engraving (B: where the
+//               frame puts Layers.engraving — the free middle column; null: at the bottom of the right column) — mm;
 //   g.rows    — every track row: key, top, label baseline, number baseline, cy, x0…x1 and band (the rect that holds
 //               label, numbers, cells, thresholds and extra cells), cells[] (n, cx, cy, x, y, w, h, start);
 //   g.slots   — every slot rect: 'fire' ×3, 'underwater', 'surfaced', 'volley' (+ 'volley2' on the Dutchman),
@@ -59,7 +60,7 @@ export interface Kit {
 interface GeoBase { ship: Ship; key: ShipKey; kind: string; pal: Pal; uid: string; /** the CSS class round the page: scope every rule of Layers.css with it */ scope: string; page: { w: number; h: number }; kit: Kit; art(key: string, svg: string, bleed?: number): Promise<string> }
 export interface Geo extends GeoBase {
   concept: Concept;
-  zones: { header: Rect; tracks: Rect; mid: Rect; col: Rect; strip: Rect; footer: Rect; picture: Rect; midFree: Rect | null };
+  zones: { header: Rect; tracks: Rect; mid: Rect; col: Rect; strip: Rect; footer: Rect; picture: Rect; midFree: Rect | null; engraving: Rect | null };
   rows: RowGeo[]; slots: SlotGeo[]; boxes: Rect[];
 }
 export interface WreckGeo extends GeoBase { zones: { title: Rect; text: Rect; side: Rect; art: Rect }; slots: Rect[]; boxes: Rect[] }
@@ -147,7 +148,9 @@ export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omi
     let x1 = cells[cells.length - 1].x + BOARD.cell;
     if (d.key === 'guns') for (let i = 0; i < volleyCount(ship); i++) { const sx = x1 + (i ? 2.5 : 5); slots.push({ kind: i ? 'volley2' : 'volley', x: sx, y: y + ROW.cellTop, w: BOARD.cell, h: BOARD.cell }); x1 = sx + BOARD.cell; }
     const under = d.key !== 'hull' ? ROW.under : 0;
-    rows.push({ key: d.key, top: y, labelY: y + ROW.label, numY: y + ROW.num, cy: y + ROW.cellTop + BOARD.cell / 2, x0, x1, cells, start: d.start, band: { x: x0, y, w: x1 - x0, h: ROW.h + under } });
+    // the band holds the label line, the notes and the start label too: up to the middle column (the Hull: its own row)
+    const bandR = d.key === 'hull' ? x1 : MIDX - 2.5;
+    rows.push({ key: d.key, top: y, labelY: y + ROW.label, numY: y + ROW.num, cy: y + ROW.cellTop + BOARD.cell / 2, x0, x1, cells, start: d.start, band: { x: x0, y, w: bandR - x0, h: ROW.h + under } });
     y += rowH(d) + gap;
   }
   const hullTop = rows.find(rw => rw.key === 'hull')!.top;
@@ -165,7 +168,9 @@ export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omi
     slots.push({ kind: 'surfaced', x: MIDX, y: my, w: u.w, h: u.h }); boxes.push({ x: MIDX + u.w, y: my, w: MIDW - u.w, h: u.h });
     my += u.h;
   }
-  const midFree = mid.y + mid.h - my > 12 ? { x: MIDX, y: my + 2, w: MIDW, h: mid.y + mid.h - my - 2 } : null;
+  let midFree: Rect | null = mid.y + mid.h - my > 12 ? { x: MIDX, y: my + 2, w: MIDW, h: mid.y + mid.h - my - 2 } : null, engraving: Rect | null = null;
+  // B: the engraving takes the free middle column when it is big enough, else the rest of the right column
+  if (concept === 'b' && midFree && midFree.h >= 40) { engraving = midFree; midFree = null; }
   // the bottom strip: «Осталось карт» 6…0 and «Реакций» 0…3, pitch 14 (an 11 mm marker in a 13 mm cell)
   const st = Z.strip, cy0 = st.y + st.h - BOARD.cell, CP = 14;
   const cardsX = st.x + 45;
@@ -173,7 +178,7 @@ export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omi
   const reX = RIGHT - 3 * CP - BOARD.cell;
   for (let i = 0; i <= 3; i++) slots.push({ kind: 'reactions', n: i, x: reX + i * CP, y: cy0, w: BOARD.cell, h: BOARD.cell });
   boxes.push(Z.header, st, Z.footer);
-  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], scope: `.bo2-${DECK_KEY[ship.code]}`, concept, pal, uid, page: PAGE, zones: { ...Z, mid, midFree }, rows, slots, boxes };
+  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], scope: `.bo2-${DECK_KEY[ship.code]}`, concept, pal, uid, page: PAGE, zones: { ...Z, mid, midFree, engraving }, rows, slots, boxes };
 }
 
 // ---- SVG pieces of the skeleton ----
@@ -198,7 +203,7 @@ export const ICON = {
 
 function rowSvg(row: RowGeo, pal: Pal): string {
   const T = TXT.tracks[row.key], out: string[] = [], souls = row.key === 'souls', nameSize = 12;
-  const nameEnd = row.x0 + tw(T.name.toUpperCase(), nameSize, 0.6);
+  const nameEnd = row.x0 + tw(T.name.toUpperCase(), nameSize, 0.72);
   out.push(text(row.x0, row.labelY, T.name, nameSize, { font: 'Alegreya SC', w: 800, color: pal.deep, ls: '.03em' }));
   // «старт · выше не восстанавливать» on the label line over the start cell; on the Souls track only «старт» (no ceiling)
   const sc = row.cells.find(c => c.start)!, startText = souls ? T.start ?? '' : TXT.start, sw = tw(startText, 8, 0.48);
@@ -206,6 +211,8 @@ function rowSvg(row: RowGeo, pal: Pal): string {
   if (sx + sw > (row.key === 'hull' ? Z.tracks.x + Z.tracks.w : MIDX - 2)) { sx = sc.x + sc.w; anchor = 'end'; }
   out.push(text(sx, row.labelY, startText, 8, { w: 800, color: pal.deep, anchor }));
   const noteX = nameEnd + 2.5, noteW = tw(T.note, 9, 0.47), startLeft = anchor === 'end' ? sx - sw : sx;
+  // the Souls: how they are spent, on the label line after «старт»
+  if (souls && T.spend) out.push(text(sx + sw + 4, row.labelY, T.spend, 8, { w: 700, color: pal.soft }));
   if (T.note && noteX + noteW < startLeft - 2.5) out.push(text(noteX, row.labelY, T.note, 9, { color: pal.soft }));
   else if (T.note) { const nx = row.x1 + 3; if (nx + noteW < MIDX - 1) out.push(text(nx, row.cy + pt(9) * 0.33, T.note, 9, { color: pal.soft })); }
   for (const c of row.cells) {
@@ -221,7 +228,6 @@ function rowSvg(row: RowGeo, pal: Pal): string {
     const last = row.cells[row.cells.length - 1], k = row.cells.find(c => c.n === 3);
     if (T.max) out.push(text(last.x + last.w + 2.5, row.cy + pt(9) * 0.33, fill(T.max, { n: last.n }), 9, { w: 700, color: pal.soft }));
     if (k && T.kraken) out.push(text(k.x + 0.3, k.y + BOARD.cell + 3.1, fill(T.kraken, { n: 3 }), 8, { w: 800, color: pal.deep }));
-    if (T.spend) out.push(text(row.x0 + 0.3, row.cells[0].y + BOARD.cell + 3.1, T.spend, 8, { w: 700, color: pal.soft }));
   }
   return out.join('');
 }
@@ -285,15 +291,15 @@ function columnHtml(ctx: Ctx, g: Omit<Geo, 'kit' | 'art'>, engraving: string | u
   const iconHtml = icons.map((n, i) => iconImg(ctx, n, c.w - 3 - d - i * (d + 1.2) - 9, 1.8, d)).join('');
   const leg = `<div class="bo2-box bo2-legend">${iconHtml}<div class="bo2-lh" style="padding-right:${r(icons.length * (d + 1.2) + 10)}mm"><div class="bo2-h">${esc(TXT.legend.title)} · ${esc(legend.name)}</div><div class="bo2-p">${esc(legend.big)}</div></div><div class="bo2-note">${esc(TXT.legend.note)}</div><svg class="bo2-legarrow" viewBox="0 0 10 4">${ICON.arrow(0.5, 2, 'right', 9, darken(BRASS, 0.35), 0.5)}</svg></div>`;
   const powder = `<div class="bo2-box bo2-powder">${iconImg(ctx, 'coin', 2.6, 1.2, 5.2)}<span>${esc(TXT.powder)}</span></div>`;
-  const pic = engraving != null ? `<div class="bo2-pic"><svg viewBox="0 0 ${ENGRAVING.w} ${ENGRAVING.h}" preserveAspectRatio="xMidYMid meet">${engraving}</svg></div>` : '';
+  const pic = engraving != null && !g.zones.engraving ? `<div class="bo2-pic"><svg viewBox="0 0 ${ENGRAVING.w} ${ENGRAVING.h}" preserveAspectRatio="xMidYMid meet">${engraving}</svg></div>` : '';
   return `<div class="bo2-col bo2-txt" style="${at(c)};--c:${pal.deep};--f:${pal.field};--fl:${pal.fieldLine};--ink:${pal.ink};--soft:${pal.soft}">
 <div class="bo2-box bo2-ab"><div class="bo2-h">${esc(TXT.abilities)}</div>${ab}${heart}</div>${plans}${leg}${powder}${pic}</div>`;
 }
 function stripHtml(g: Omit<Geo, 'kit' | 'art'>): string {
   const st = g.zones.strip, cards = g.slots.filter(s => s.kind === 'cards'), re = g.slots.filter(s => s.kind === 'reactions'), c0 = cards[0], c6 = cards[cards.length - 1];
   return `<div class="bo2-abs bo2-strip" style="left:${r(st.x + 0.6)}mm;top:${r(st.y)}mm;width:${r(c0.x - st.x - 2)}mm"><b>${esc(TXT.cards.title)}</b> ${esc(nb(TXT.cards.start))}</div>
-<div class="bo2-abs bo2-strip" style="left:${r(c6.x + c6.w + 2)}mm;top:${r(st.y + 3)}mm;width:${r(re[0].x - c6.x - c6.w - 9)}mm">${esc(nb(TXT.cards.down))}</div>
-<div class="bo2-abs bo2-strip" style="left:${r(re[0].x - 41)}mm;top:${r(st.y)}mm;width:39mm"><b>${esc(TXT.reactions.title)}</b> ${esc(nb(TXT.reactions.note))}</div>`;
+<div class="bo2-abs bo2-strip" style="left:${r(c6.x + c6.w + 2)}mm;top:${r(st.y + 3.4)}mm;width:${r(re[0].x - 42 - c6.x - c6.w - 4)}mm">${esc(nb(TXT.cards.down))}</div>
+<div class="bo2-abs bo2-strip" style="left:${r(re[0].x - 40)}mm;top:${r(st.y)}mm;width:38.5mm"><b>${esc(TXT.reactions.title)}</b> ${esc(nb(TXT.reactions.note))}</div>`;
 }
 function footerHtml(ship: Ship): string {
   const diag = (ship.diagDamage as { offset: number } | undefined)?.offset ?? 0;
@@ -323,6 +329,8 @@ export async function framePage(ctx: Ctx, ship: Ship, concept: Concept, mat: Shi
   // the pointers to the sheet's edge: effects — up across the header, the Legend — to the right
   const m = g.zones.mid;
   svg.push(ICON.arrow(m.x + 2.8, m.y + 4.6, 'up', 4.6, pal.deep, 0.5));
+  const E = g.zones.engraving;
+  if (E && L.engraving) svg.push(`<svg x="${r(E.x)}" y="${r(E.y)}" width="${r(E.w)}" height="${r(E.h)}" viewBox="0 0 ${ENGRAVING.w} ${ENGRAVING.h}" preserveAspectRatio="xMidYMid meet">${L.engraving}</svg>`);
   svg.push(L.over ?? '');
   const html = [headerHtml(ship, pal), midHtml(g), columnHtml(ctx, g, concept === 'b' ? L.engraving ?? '' : undefined), stripHtml(g), footerHtml(ship)];
   return { html: `<div class="bo2 bo2-${key}"><svg class="bo2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html.join('\n')}</div>`, css: L.css ?? '' };
@@ -345,7 +353,7 @@ export function rulesLine(prefix: string): string {
 }
 const W = { m: 12 };
 export function wreckLayout(ship: Ship, pal: Pal, uid: string): Omit<WreckGeo, 'kit' | 'art'> {
-  const title = { x: W.m + 4, y: W.m + 4, w: 150, h: 19 }, text = { x: W.m + 4, y: 41, w: 162, h: 104 }, side = { x: 186, y: 41, w: PAGE.w - W.m - 4 - 186, h: 104 };
+  const title = { x: W.m + 4, y: W.m + 4, w: 150, h: 19 }, text = { x: W.m + 4, y: 41, w: 162, h: 64 }, side = { x: 186, y: 41, w: PAGE.w - W.m - 4 - 186, h: 64 };
   const slots = [0, 1].map(i => ({ x: side.x + 1, y: side.y + 8 + i * 17, w: BOARD.cell, h: BOARD.cell }));
   return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], scope: `.bo2-${DECK_KEY[ship.code]}`, pal, uid, page: PAGE, zones: { title, text, side, art: { x: W.m, y: W.m, w: PAGE.w - 2 * W.m, h: PAGE.h - 2 * W.m } }, slots, boxes: [title, text, side] };
 }
@@ -359,7 +367,7 @@ export async function wreckPage(ctx: Ctx, ship: Ship, mat: ShipMaterial): Promis
   const jones = ship.abilities.map(a => a.text.match(/Если «Индевор» утонул[^<]*?до старта\./)?.[0]).find(Boolean);
   const side = [`<div class="bo2-al" style="top:${r(w.slots[0].y - z.side.y)}mm">${esc(TXT.wreck.ally[0])}</div>`, `<div class="bo2-al" style="top:${r(w.slots[1].y - z.side.y)}mm">${esc(TXT.wreck.ally[1])}</div>`].join('');
   const html = `<div class="bo2-abs bo2-wt" style="left:${r(z.title.x + 21)}mm;top:${r(z.title.y + 1)}mm"><div class="bo2-wn" style="color:${pal.deep}">${esc(TXT.wreck.title)}</div><div class="bo2-cap">${esc(ship.name)} · ${esc(ship.captain)}</div></div>
-<div class="bo2-abs bo2-wtext bo2-txt" style="${at(z.text)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.section)}</div>${sec.p.map(p => `<p>${md(p)}</p>`).join('')}<ul>${sec.li.map(l => `<li>${md(l)}</li>`).join('')}</ul><p class="bo2-wq">${md(rulesLine(TXT.wreck.captainLine))}</p></div>
+<div class="bo2-abs bo2-wtext bo2-txt" style="${at(z.text)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.section)}</div>${sec.p.map(p => `<p>${md(p)}</p>`).join('')}<ul>${sec.li.map(l => `<li>${md(l)}</li>`).join('')}</ul><p class="bo2-wq">${md(rulesLine(TXT.wreck.captainLine)).replace(/ \((Q\d+)/g, '\u00a0($1')}</p></div>
 <div class="bo2-abs bo2-wside bo2-txt" style="${at(z.side)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.free)}</div>${side}<div class="bo2-wl" style="top:${r(w.slots[1].y + 17 - z.side.y)}mm"><p>${esc(TXT.wreck.clear)}</p>${jones ? `<p><b>${esc(TXT.wreck.jones)}</b> ${esc(jones)}</p>` : ''}</div></div>`;
   return { html: `<div class="bo2 bo2-${w.key}"><svg class="bo2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html}</div>`, css: L.css ?? '' };
 }
