@@ -50,7 +50,7 @@ export const FACE = {
 /** Tokens, holds, boards (review-print 13-14, review-player 3.1, summary 0а.8). */
 export const TOKEN = { powder: 20, fire: 20, marker: 11, underwater: { w: 50, h: 25 }, shipToken: 30 };
 export const HOLD = { cells: 8, cell: 22, gap: 2 };
-export const BOARD = { cell: 13, pitch: 14.5, textCol: 85, fireSlot: 20, underwaterSlot: { w: 52, h: 27 } };
+export const BOARD = { cell: 13, pitch: 14.5, textCol: 85, fireSlot: 23, underwaterSlot: { w: 52, h: 27 } };
 export const COUNTS = { powder: 24, fire: 9, markers: 17 };
 
 const T: Record<string, string> = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
