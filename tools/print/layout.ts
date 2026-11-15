@@ -52,6 +52,17 @@ export const TOKEN = { powder: 20, fire: 20, marker: 11, underwater: { w: 50, h:
 export const HOLD = { cells: 8, cell: 22, gap: 2 };
 export const BOARD = { cell: 13, pitch: 14.5, textCol: 85, fireSlot: 23, underwaterSlot: { w: 52, h: 27 } };
 export const COUNTS = { powder: 24, fire: 9, markers: 17 };
+/**
+ * 04, pages 2–3 (docs/tasks/print-kit-boards.md, step 5): the «Схема боя» at the centre of the table and the identical marks.
+ * field — the 2 × 2 battle field, nest — a place for a ship token (TOKEN.shipToken) with 2 mm all round; seaCard, seaDeck,
+ * effects — the three places under the field side by side, sharing their borders (a card of 63 mm lies in a 62 mm place,
+ * 0.5 mm over each border); cell — a cell for one mark (TOKEN.marker) on the holds and the phase path; marks — identical
+ * 11 mm squares, spareMarks more of them, marksPerRow in a row.
+ */
+export const TABLE = {
+  field: { w: 190, h: 100 }, nest: 34, seaCard: { w: 66, h: 91 }, seaDeck: { w: 62, h: 91 }, effects: { w: 62, h: 91 },
+  cell: 13, marks: 36, spareMarks: 12, marksPerRow: 12
+};
 
 const T: Record<string, string> = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
 /** The same slug as tools/card-art/export.mjs. */

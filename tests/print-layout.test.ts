@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import raw from '../data/game-data.json';
 import {
-  A4, BACK_CLEAR, BLEED, BLEED_BOX, BLOCK, BOARD, CARD, COUNTS, DECKS, FACE, FRAME, GRID, HOLD, SAFE, TOKEN,
+  A4, BACK_CLEAR, BLEED, BLEED_BOX, BLOCK, BOARD, CARD, COUNTS, DECKS, FACE, FRAME, GRID, HOLD, SAFE, TABLE, TOKEN,
   backOf, backSheet, backSlotOf, cutLines, deckList, deckSheets, priceOf, seaSheets, slot, slug, trackCells, trackWidth,
   type GameData
 } from '../tools/print/layout';
@@ -139,5 +139,16 @@ describe('print layout: tokens, holds, boards', () => {
     for (const s of data.ships) for (const k of ['hull', 'sails', 'guns', 'crew'] as const) expect(trackCells(s[k])[trackCells(s[k]).length - 1]).toBe(s[k]);
     const dutch = data.ships.find(s => s.code === 'Г')!;
     expect(trackCells(dutch.souls!)).toEqual([0, 1, 2, 3, 4, 5]); expect(dutch.start_souls).toBe(1);
+  });
+  it('the «Схема боя» and the marks (sheet 04, pages 2–3)', () => {
+    expect(TABLE.field).toEqual({ w: 190, h: 100 }); expect(TABLE.field.w).toBeLessThanOrEqual(A4.w - 2 * 10);
+    expect(TABLE.nest).toBe(34); expect(TABLE.nest).toBeGreaterThanOrEqual(TOKEN.shipToken + 4);
+    expect(2 * TABLE.nest).toBeLessThan(TABLE.field.h); expect(4 * TABLE.nest).toBeLessThan(TABLE.field.w);
+    expect(TABLE.seaCard).toEqual({ w: 66, h: 91 }); expect(TABLE.seaCard.w).toBeGreaterThanOrEqual(CARD.w + 3); expect(TABLE.seaCard.h).toBeGreaterThanOrEqual(CARD.h + 3);
+    for (const p of [TABLE.seaDeck, TABLE.effects]) { expect(p.w).toBeGreaterThanOrEqual(CARD.w - 1); expect(p.h).toBeGreaterThanOrEqual(CARD.h + 3); }
+    expect(TABLE.seaDeck.w + TABLE.seaCard.w + TABLE.effects.w).toBeLessThanOrEqual(TABLE.field.w);
+    expect(TABLE.cell).toBe(BOARD.cell); expect(TABLE.cell).toBeGreaterThanOrEqual(TOKEN.marker + 2);
+    expect(TABLE.marks).toBe(36); expect((TABLE.marks + TABLE.spareMarks) % TABLE.marksPerRow).toBe(0);
+    expect(TABLE.marksPerRow * TOKEN.marker).toBeLessThanOrEqual(A4.w - 2 * 10);
   });
 });
