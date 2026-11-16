@@ -73,14 +73,14 @@ const PROPS_CO: Prop[] = [
 ];
 export const SEA: Record<ShipKey, Sea> = {
   pearl: {
-    light: 'pearl', water: ['#2f587a', '#13283f', '#060e19'], glow: '#c4e2ff', rays: 0.5, haze: ['#1c3c5a', 0.26], back: ['#4a7ea4', 0.6],
-    sand: ['#a7b2ba', '#66737f', '#2a3541'], far: '#203a52', fish: ['#a9c6dc', 0.62], coral: ['#7d6590', '#5a7a9a', '#9a6470'], weed: ['#2c5a4c', '#3e6e5c', '#24463e'],
+    light: 'pearl', water: ['#3a6a90', '#1f3d5c', '#1a3049'], glow: '#c4e2ff', rays: 0.5, haze: ['#1c3c5a', 0.26], back: ['#4a7ea4', 0.6],
+    sand: ['#a7b2ba', '#6e7b87', '#3e4a56'], far: '#203a52', fish: ['#a9c6dc', 0.62], coral: ['#7d6590', '#5a7a9a', '#9a6470'], weed: ['#2c5a4c', '#3e6e5c', '#24463e'],
     rag: '#26262b', ship: { x: 168, y: 185, scale: 1.85, roll: -18, tilt: 10, brk: [0.36, 0.5, 0.42], fall: { mast: 1, rot: 116, dx: 0, dy: 10 }, bow: 17, stern: -6 },
     bed: 197, props: PROPS, seed: 11
   },
   revenge: {
-    light: 'revenge', water: ['#7a4630', '#3a2018', '#140908'], glow: '#ffd2a0', rays: 0.42, haze: ['#4a2418', 0.32], back: ['#b0683e', 0.4],
-    sand: ['#c99e78', '#8d5d42', '#43261a'], far: '#4a2a1e', fish: ['#2a120c', 0.58], coral: ['#c4523a', '#d88a52', '#8e3434'], weed: ['#5e5a26', '#74702e', '#40401c'],
+    light: 'revenge', water: ['#8c5638', '#55301f', '#3a2016'], glow: '#ffd2a0', rays: 0.42, haze: ['#4a2418', 0.32], back: ['#b0683e', 0.4],
+    sand: ['#c99e78', '#93644a', '#5a3626'], far: '#4a2a1e', fish: ['#2a120c', 0.58], coral: ['#c4523a', '#d88a52', '#8e3434'], weed: ['#5e5a26', '#74702e', '#40401c'],
     rag: '#6a1c16', ship: { x: 160, y: 185, scale: 2.08, roll: -18, tilt: 10, brk: [0.36, 0.5, 0.42], fall: { mast: 1, rot: 116, dx: 0, dy: 10 }, bow: 17, stern: -6 },
     bed: 197, props: PROPS, seed: 23
   },
@@ -91,8 +91,8 @@ export const SEA: Record<ShipKey, Sea> = {
     bed: 197, props: PROPS_CO, seed: 37
   },
   dutch: {
-    light: 'dutchman', water: ['#6a9c84', '#28503f', '#0b1d17'], glow: '#dcf6e6', rays: 0.58, haze: ['#2c5446', 0.16], back: ['#b2e0c6', 0.72],
-    sand: ['#b2b896', '#727e62', '#2e3a30'], far: '#3a6252', fish: ['#c4dccc', 0.62], coral: ['#7c9c6a', '#a0aa6c', '#5e8a7c'], weed: ['#3e7a3c', '#62984e', '#2c5230'],
+    light: 'dutchman', water: ['#78aa92', '#356452', '#1c3a2e'], glow: '#dcf6e6', rays: 0.58, haze: ['#2c5446', 0.16], back: ['#b2e0c6', 0.72],
+    sand: ['#b2b896', '#7a866a', '#45523f'], far: '#3a6252', fish: ['#c4dccc', 0.62], coral: ['#7c9c6a', '#a0aa6c', '#5e8a7c'], weed: ['#3e7a3c', '#62984e', '#2c5230'],
     rag: '#8a8670', shells: true, ship: { x: 168, y: 185, scale: 2.05, roll: -18, tilt: 10, brk: [0.36, 0.5, 0.42], fall: { mast: 1, rot: 116, dx: 0, dy: 10 }, bow: 17, stern: -6 },
     bed: 197, props: PROPS, seed: 41
   }
@@ -245,7 +245,7 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates): string {
 <linearGradient id="wSand" gradientUnits="userSpaceOnUse" x1="0" y1="150" x2="0" y2="210"><stop offset="0" stop-color="${sea.sand[0]}"/><stop offset=".3" stop-color="${sea.sand[1]}"/><stop offset="1" stop-color="${sea.sand[2]}"/></linearGradient>
 <linearGradient id="wKeel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix('#4a4632', sea.weed[2], .35)}"/><stop offset=".45" stop-color="${mix('#262618', sea.weed[2], .3)}"/><stop offset="1" stop-color="#0e100c"/></linearGradient>
 <radialGradient id="wBack" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${sea.back[0]}" stop-opacity="${sea.back[1]}"/><stop offset=".6" stop-color="${sea.back[0]}" stop-opacity="${sea.back[1] * 0.45}"/><stop offset="1" stop-color="${sea.back[0]}" stop-opacity="0"/></radialGradient>
-<radialGradient id="wVig" cx=".5" cy=".42" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></radialGradient>
+<radialGradient id="wVig" cx=".5" cy=".42" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></radialGradient>
 <filter id="wB2" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="2.2"/></filter>
 <filter id="wB1" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".9"/></filter>
 <filter id="wB05" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".45"/></filter>
