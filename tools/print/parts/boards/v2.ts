@@ -171,8 +171,14 @@ const PTRG = { arrow: 3.7, medal: 10, text: 14.6, size: 8.5, rMedal: 5.6, rText:
 const ptrW = (s: string) => PTRG.text + W(s, PTRG.size, PTR) + PAD + 0.4;
 /** the Fires plate: the title's baseline, the slots' top, the height */
 const FIRE = { title: 5.2, slot: 6.8, h: 6.8 + BOARD.fireSlot + 1.3 };
-/** the Dutchman's dive plate (one nest for the two-sided token «Под водой» / «Всплыл»), in the middle beside the Guns */
-const DIVE_H = 58, DIVE_W = 75.5;
+/** the Dutchman's dive plate (one nest for the two-sided token «Под водой» / «Всплыл»), in the middle beside the Guns.
+ *  Boards v7, item 3: under the nest only the row of the two titles (with their icons) and «turn it over» between them —
+ *  the words of each side are on the token itself (sheet 04); the plate as tall as the nest and that row, as wide as the
+ *  wider of the two */
+const DIVE = { top: 2.4, rim: 1.7, row: 2.4, flip: 9.2, gap: 2.2, foot: 8.8 };
+const DIVE_ROW = () => 2 * 6.6 + W(TXT.underwater.title, 10, LABEL) + W(TXT.surfaced.title, 10, LABEL) + 2 * DIVE.gap + DIVE.flip;
+const DIVE_H = DIVE.top + BOARD.underwaterSlot.h + 2 * DIVE.rim + DIVE.row + DIVE.foot;
+const DIVE_W = () => Math.max(BOARD.underwaterSlot.w + 2 * DIVE.rim + 2 * 4, DIVE_ROW() + 2 * PAD + 1);
 /** the Dutchman's Souls (drawn as flasks on a shelf, soulsRowSvg), from the top of their case: the numbers' baseline, the
  *  cork's top, the cell's top (the flask's shoulders above it), the flask's foot on the shelf, the baseline of the line
  *  under the shelf (the name, «Кракен: 3 Души», «максимум 5»), the height; the pitch of the flasks, the glass beside a cell.
@@ -222,7 +228,7 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
   let dutch: Rect | null = null;
   if (souls) {
     const w = mk(souls, 0).w, sr = mk(souls, midBottom - SOUL.h, Math.max(mx, MID_R - w)); rows.push(sr);
-    dutch = { x: mx, y: sr.y - GAP - DIVE_H, w: DIVE_W, h: DIVE_H };
+    dutch = { x: mx, y: sr.y - GAP - DIVE_H, w: DIVE_W(), h: DIVE_H };
     midBottom = dutch.y - GAP;
   }
   const cardsBottom = midBottom;
@@ -483,11 +489,12 @@ function firesSvg(b: Rect, id: string, L: Look, pal: Pal): string {
 /** the Dutchman's dive plate (boards v5, item 8): one nest for the two-sided token (face «Под водой», back «Всплыл»: diving —
  *  laid face up; surfacing — turned over; at the end of the turn — taken off). The nest: a brass frame with rivets and
  *  photo-corners round water — the surface and its light at the top, light shafts, engraved depth, the Dutchman's
- *  shadow deep down, bubbles rising from it, the token's outline. Under it the two sides side by side, each with its icon
- *  in a brass medallion, and between them a small drawing «turn it over» (a token with a lifted corner, an arrow over it). */
+ *  shadow deep down, bubbles rising from it, the token's outline. Under it one row: the two sides' titles, each with its
+ *  icon in a brass medallion, and between them a small drawing «turn it over» (a token with a lifted corner, an arrow over
+ *  it); what each side does is written on the token (sheet 04). */
 function dutchSvg(b: Rect, id: string, L: Look, pal: Pal): string {
-  const out = [slip('dutch', b, id, L)], u = BOARD.underwaterSlot, rim = 1.7, [bl, , bd] = L.brass, g = `${id}dv`;
-  const fw = u.w + 2 * rim, fh = u.h + 2 * rim, fx = b.x + (b.w - fw) / 2, fy = b.y + 2.4, nx = fx + rim, ny = fy + rim;
+  const out = [slip('dutch', b, id, L)], u = BOARD.underwaterSlot, rim = DIVE.rim, [bl, , bd] = L.brass, g = `${id}dv`;
+  const fw = u.w + 2 * rim, fh = u.h + 2 * rim, fx = b.x + (b.w - fw) / 2, fy = b.y + DIVE.top, nx = fx + rim, ny = fy + rim;
   const ink = '#1d4e4a', foam = '#f2fffb';
   out.push(`<defs><linearGradient id="${g}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3f3ee"/><stop offset=".16" stop-color="#bfe0d9"/><stop offset=".6" stop-color="#8fc3bb"/><stop offset="1" stop-color="#5f9c95"/></linearGradient>` +
     `<clipPath id="${g}c"><rect x="${r(nx)}" y="${r(ny)}" width="${u.w}" height="${u.h}" rx="1"/></clipPath></defs>`);
@@ -529,17 +536,17 @@ function dutchSvg(b: Rect, id: string, L: Look, pal: Pal): string {
     out.push(`<path d="M${r(X)} ${r(Y)}h${r(dx * a)}L${r(X)} ${r(Y + dy * a)}Z" fill="url(#${id}br)" stroke="${bd}" stroke-width=".22"/>`);
     out.push(`<circle cx="${r(X - dx * rim * 0.5)}" cy="${r(Y - dy * rim * 0.5)}" r=".45" fill="${bl}" stroke="${bd}" stroke-width=".15"/>`);
   }
-  // the two sides: the icon in a brass medallion, the title, the words; between them «turn it over»
-  const FLIP = 11, cw = (b.w - 2 * PAD - FLIP) / 2, y0 = fy + fh + 1.8;
+  // the two sides in one row: the icon in a brass medallion and the title; between them «turn it over» (the words of each
+  // side are on the token)
+  const y0 = fy + fh + DIVE.row, x0 = b.x + (b.w - DIVE_ROW()) / 2;
+  let xs = x0;
   [TXT.underwater, TXT.surfaced].forEach((t, i) => {
-    const cx0 = i ? b.x + b.w - PAD - cw : b.x + PAD, mcx = cx0 + 2.7, mcy = y0 + 2.75;
+    const mcx = xs + 2.7, mcy = y0 + 2.75;
     out.push(`<circle cx="${r(mcx + 0.25)}" cy="${r(mcy + 0.35)}" r="2.7" fill="#1a0e04" fill-opacity=".3"/><circle data-plate="dutch-${i}-icon" cx="${r(mcx)}" cy="${r(mcy)}" r="2.7" fill="url(#${id}brh)" stroke="${bd}" stroke-width=".2"/><circle cx="${r(mcx)}" cy="${r(mcy)}" r="2.15" fill="${i ? L.cell : '#dcefe9'}" stroke="${bd}" stroke-width=".15"/>${icon(i ? 'surfaced' : 'underwater', mcx, mcy, 3.5, L.tone)}`);
-    out.push(text(cx0 + 6.6, y0 + 4.1, t.title, 10, { ...LABEL, color: pal.deep, in: 'dutch' }));
-    const lines: string[] = [''];
-    for (const wd of nb(t.note).replace(/ — /g, '\u00a0—\u00a0').split(' ')) { const tryL = (lines[lines.length - 1] + ' ' + wd).trim(); if (W(tryL, 8, CAP_O) > cw - 0.4 && lines[lines.length - 1]) lines.push(wd); else lines[lines.length - 1] = tryL; }
-    lines.forEach((l, j) => out.push(text(cx0 + 0.2, y0 + 8.7 + j * 3.95, l, 8, { ...CAP_O, color: L.ink, in: 'dutch' })));
+    out.push(text(xs + 6.6, y0 + 4.1, t.title, 10, { ...LABEL, color: pal.deep, in: 'dutch' }));
+    xs += 6.6 + W(t.title, 10, LABEL) + DIVE.gap;
+    if (!i) { out.push(flipSvg(xs + DIVE.flip / 2, y0 + 3.9, pal.deep, L)); xs += DIVE.flip + DIVE.gap; }
   });
-  out.push(flipSvg(b.x + b.w / 2, y0 + 8.4, pal.deep, L));
   return out.join('');
 }
 /** «turn it over», drawn: a small token, its corner lifted to show the other side, a curved arrow over it */

@@ -58,8 +58,9 @@ const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/tokens.json'), 'utf
   marksPage: { title: string; lead: string; ships: string; marks: string; uses: string[]; sweep: string };
   strips: { title: string; lead: string };
 };
-/** the two sides of the dive token on the boards (text/boards.json → frame): its back is «Всплыл» */
-const BTXT = (JSON.parse(fs.readFileSync(path.join(HERE, 'text/boards.json'), 'utf8')) as { frame: { surfaced: { title: string; note: string } } }).frame;
+/** the two sides of the dive token (text/boards.json → frame): the words of each side moved here from the Dutchman's board
+ *  (boards v7, item 3) — the face «Под водой», the back «Всплыл» */
+const BTXT = (JSON.parse(fs.readFileSync(path.join(HERE, 'text/boards.json'), 'utf8')) as { frame: { underwater: { title: string; note: string }; surfaced: { title: string; note: string } } }).frame;
 const fill = (s: string, v: Record<string, number | string>) => s.replace(/\{(\w+)\}/g, (_, k: string) => String(v[k] ?? `{${k}}`));
 
 // ---- colours of this part
@@ -322,14 +323,20 @@ async function diveArt(ctx: Ctx): Promise<{ face: string; back: string }> {
 }
 /** the pair on the sheet at (x, y): the two pictures, a brass frame round each side, the words; the cut round the pair
  *  (grey, ticks past it) and the fold between them (dashed, in the margins only) */
+/** the words of a side: groups of lines, a little gap between the groups */
+const block = (groups: string[][]) => groups.map((g, i) => `<span style="display:block${i ? ';margin-top:.6mm' : ''}">${g.map(l => esc(l).replace(/ — /g, '\u00a0— ')).join('<br>')}</span>`).join('');
+/** a line of the board's words: a line break after each comma (the comma kept) */
+const byComma = (s: string) => s.split(', ').map((l, i, a) => i < a.length - 1 ? l + ',' : l);
 function diveHtml(id: string, x: number, y: number, art: { face: string; back: string } | null): { svg: string; html: string; cuts: string } {
   const { w, h } = TOKEN.underwater, bl = DIVE_BLEED, rules = data.rules as Record<string, number>, svg: string[] = [], html: string[] = [];
   const g = data.ships.find(s => s.code === 'Г')!;
   if (art) svg.push(`<image href="${art.face}" x="${R(x - bl)}" y="${R(y - bl)}" width="${R(w + bl)}" height="${R(h + 2 * bl)}" preserveAspectRatio="none"/><image href="${art.back}" x="${R(x + w)}" y="${R(y - bl)}" width="${R(w + bl)}" height="${R(h + 2 * bl)}" preserveAspectRatio="none"/>`);
   else svg.push(`<rect x="${R(x - bl)}" y="${R(y - bl)}" width="${R(2 * w + 2 * bl)}" height="${R(h + 2 * bl)}" fill="${darken(g.color, 0.38)}"/>`);
   const sides = [
-    { pid: 'uw', ic: 'underwater' as const, title: TXT.underwater.title, sc: false, lines: TXT.underwater.lines.slice(0, 2).map(l => esc(fill(l, { surface: rules.surfaceBonus }))).join('<br>') },
-    { pid: 'uw-back', ic: 'surfaced' as const, title: BTXT.surfaced.title, sc: true, lines: BTXT.surfaced.note.replace(/ — /g, '\u00a0— ') }
+    // the words of each side that stood on the board (boards v7, item 3): a line at each « · » and after each comma, a
+    // little gap between «how she dives» and what holds while she is under (the face's two old lines)
+    { pid: 'uw', ic: 'underwater' as const, title: BTXT.underwater.title, sc: false, lines: block([BTXT.underwater.note.split(' · ').flatMap(byComma), TXT.underwater.lines.slice(0, 2).map(l => fill(l, { surface: rules.surfaceBonus }))]) },
+    { pid: 'uw-back', ic: 'surfaced' as const, title: BTXT.surfaced.title, sc: true, lines: block(BTXT.surfaced.note.split(' · ').map(byComma)) }
   ];
   sides.forEach((sd, i) => {
     const x0 = x + i * w, rd = 2.7, icx = x0 + 3.9 + rd, ty = y + 5.9, fr = 1.7;
@@ -339,7 +346,7 @@ function diveHtml(id: string, x: number, y: number, art: { face: string; back: s
       + `<defs><clipPath id="${id}uwc${i}"><circle cx="${r(icx)}" cy="${r(ty)}" r="${r(rd - 0.5)}"/></clipPath></defs>`
       + `<g>${brassRing(`${sd.pid}-icon`, icx, ty, rd, 0.5, id, '#e5eee7')}<g clip-path="url(#${id}uwc${i})">${icon(sd.ic, icx, ty + 0.3, 5.2, TONE.verdigris)}</g></g>`);
     html.push(wordAt(sd.pid, icx + rd + 1.6, ty, sd.title, { font: 'Alegreya SC', w: 800, size: 12, lh: 5, ls: '.05em', color: CREAM }));
-    html.push(word(sd.pid, x0 + 4.1, y + 9.1, sd.lines, i ? { w: 700, size: 7.6, lh: 3.05, color: CREAM, width: 25.5, name: 'всплыл: правила' } : { w: 700, size: 8, lh: 3.35, color: CREAM, name: 'под водой: правила' }));
+    html.push(word(sd.pid, x0 + 4.1, y + 9.1, sd.lines, { w: 700, size: 7.6, lh: 3.0, color: CREAM, name: i ? 'всплыл: правила' : 'под водой: правила' }));
   });
   const T = TICK, d = `M${R(x)} ${R(y - T)}V${R(y + h + T)}M${R(x + 2 * w)} ${R(y - T)}V${R(y + h + T)}M${R(x - T)} ${R(y)}H${R(x + 2 * w + T)}M${R(x - T)} ${R(y + h)}H${R(x + 2 * w + T)}`;
   const fold = `M${R(x + w)} ${R(y - 3.4)}V${R(y - 0.8)}M${R(x + w)} ${R(y + h + 0.8)}V${R(y + h + T)}`;
