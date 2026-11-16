@@ -9,7 +9,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { PDFDocument, PDFName, PDFDict } from 'pdf-lib';
 import { CACHE, HTML_DIR, OUT, ROOT, data, type Ctx } from './kit';
-import { CARD, FACE, deckSheets, seaSheets } from './layout';
+import { CARD, FACE, deckSheets, legendSheets, seaSheets } from './layout';
 import { ON_GLASS, TYPE, SEA, contrast, darken, luminance } from './colors';
 import { defaultMode, kitFor } from './parts/cards';
 import { checkSheets, checkStrokes } from './check-layout';
@@ -23,6 +23,7 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
   const page = await ctx.browser.newPage({ viewport: { width: 900, height: 1200 } });
   const seen = new Set<string>();
   let minMean = 99, minP95 = 99, cards = 0;
+  const legendMin = new Map<string, number>(); // the Legends' lowest line contrast (their golden glass, dark ink)
   for (const file of ['05a-lica', '07-more']) {
     const f = path.join(HTML_DIR, file + '.html');
     if (!fs.existsSync(f)) { errors.push(`${file}.html is missing: build the cards first (npm run print)`); continue; }
@@ -71,7 +72,7 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
       // contrast against the picture under each line (the text is vector, the JPEG has no letters in it)
       if (!c.art || ctx.opts.noArt) continue;
       const b64 = fs.readFileSync(path.join(HTML_DIR, c.art)).toString('base64');
-      const stats: { mean: number; p95: number }[] = await page.evaluate(async ({ b64, lines, W, H, A }) => {
+      const stats: { mean: number; p95: number; p05: number }[] = await page.evaluate(async ({ b64, lines, W, H, A }) => {
         const img = new Image(); img.src = 'data:image/jpeg;base64,' + b64; await img.decode();
         const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight;
         const g = cv.getContext('2d', { willReadFrequently: true })!; g.drawImage(img, 0, 0);
@@ -85,15 +86,18 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
             ls.push(0.2126 * lin(r) + 0.7152 * lin(gg) + 0.0722 * lin(b));
           }
           ls.sort((a, b) => a - b);
-          return { mean: ls.reduce((a, b) => a + b, 0) / ls.length, p95: ls[Math.floor(ls.length * .95)] };
+          return { mean: ls.reduce((a, b) => a + b, 0) / ls.length, p95: ls[Math.floor(ls.length * .95)], p05: ls[Math.floor(ls.length * .05)] };
         });
       }, { b64, lines: c.lines, W: CARD.w, H: CARD.h, A: FACE.index.alpha });
       c.lines.forEach((l, i) => {
         const m = l.color.match(/\d+/g)!.map(Number), lt = luminance('#' + m.slice(0, 3).map(v => v.toString(16).padStart(2, '0')).join(''));
-        const cMean = (lt + .05) / (stats[i].mean + .05), cP95 = (lt + .05) / (stats[i].p95 + .05);
+        // light text on a dark glass: the worst is the lightest 5 % under it; dark ink on a light glass (the Legend's): the darkest 5 %
+        const darkInk = lt < stats[i].mean, cMean = darkInk ? (stats[i].mean + .05) / (lt + .05) : (lt + .05) / (stats[i].mean + .05),
+          cP95 = darkInk ? (stats[i].p05 + .05) / (lt + .05) : (lt + .05) / (stats[i].p95 + .05);
         minMean = Math.min(minMean, cMean); minP95 = Math.min(minP95, cP95);
-        rows.push({ card: c.key, line: l.cls, pt: l.pt, bgMean: +stats[i].mean.toFixed(4), bgP95: +stats[i].p95.toFixed(4), contrastMean: +cMean.toFixed(2), contrastP95: +cP95.toFixed(2) });
-        if (cMean < 7 || cP95 < 4.5) errors.push(`${c.key}: ${l.cls} contrast ${cMean.toFixed(1)} : 1 on the mean background, ${cP95.toFixed(1)} : 1 on its lightest 5 %`);
+        rows.push({ card: c.key, line: l.cls, pt: l.pt, ink: darkInk ? 'dark' : 'light', bgMean: +stats[i].mean.toFixed(4), bgP95: +stats[i].p95.toFixed(4), bgP05: +stats[i].p05.toFixed(4), contrastMean: +cMean.toFixed(2), contrastP95: +cP95.toFixed(2) });
+        if (cMean < 7 || cP95 < 4.5) errors.push(`${c.key}: ${l.cls} contrast ${cMean.toFixed(1)} : 1 on the mean background, ${cP95.toFixed(1)} : 1 on its ${darkInk ? 'darkest' : 'lightest'} 5 %`);
+        if (c.key.includes('|') && kit.specs.get(c.key)?.legend) legendMin.set(c.key, Math.min(legendMin.get(c.key) ?? 99, cMean));
       });
     }
   }
@@ -129,12 +133,13 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
   // ribbons: white lettering on the type colour
   for (const [name, t] of [...Object.entries(TYPE), ['МОРЕ', SEA] as const]) { const c = contrast('#ffffff', darken(t.t, .18)); rows.push({ ribbon: name, contrast: +c.toFixed(2) }); if (c < 4.5) errors.push(`ribbon ${name}: contrast ${c.toFixed(2)} : 1`); }
   if (contrast(ON_GLASS.cream, '#26262a') < 4.5) errors.push('deck strip lettering: contrast below 4.5 : 1');
-  const expected = deckSheets(data).length * 9 + seaSheets(data).flatMap(s => s.items).filter(i => i.kind === 'sea').length;
+  const expected = deckSheets(data).length * 9 + legendSheets(data).flatMap(s => s.items).filter(i => i.kind === 'legend').length + seaSheets(data).flatMap(s => s.items).filter(i => i.kind === 'sea').length;
   const dark = [...kit.art.entries()].map(([k, a]) => ({ card: k, dark: a.dark, glassMean: a.glassMean, glassP95: a.glassP95 })).sort((a, b) => b.dark - a.dark);
   // the «dark above the glass ≤ 30 %» note is gone: user's decision 12.11 — dark pictures are the game's style, a print shop holds them
   const dir = path.join(ROOT, 'report/print'); fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'check.json'), JSON.stringify({ cards, distinct: seen.size, minContrastMean: +minMean.toFixed(2), minContrastP95: +minP95.toFixed(2), errors, notes, dark, lines: rows }, null, 1));
   console.log(`check: ${cards} card faces on the sheets (${seen.size} distinct, ${expected} slots expected with reference cards), each 63 × 88 mm`);
+  if (legendMin.size) console.log(`check: Legends, lowest line contrast on the golden glass — ${[...legendMin].map(([k, v]) => `${k} ${v.toFixed(2)} : 1`).join(', ')} (need ≥ 7)`);
   console.log(`check: contrast of text lines — min ${minMean.toFixed(2)} : 1 on the mean background (need ≥ 7), min ${minP95.toFixed(2)} : 1 on the lightest 5 % (need ≥ 4.5)`);
   console.log(`check: ${notes.length} note(s), ${errors.length} error(s) → report/print/check.json`);
   for (const n of notes) console.log('  note: ' + n);
@@ -147,7 +152,7 @@ const run = (cmd: string, args: string[]) => execFileSync(cmd, args, { encoding:
 /** with the first page of every file — the 50 mm square (control.ts) — and its blank back in the two-sided files */
 const EXPECT: Record<string, [number | [number, number], boolean?]> = {
   '00-kak-pechatat': [5], '01-pravila': [[4, 5]], '02-pamyatki': [[6, 8], true], '03-planshety': [10, true], '04-tryumy-zhetony': [[3, 4]], '04b-skhema-boya': [2, true],
-  '05-karty': [26], '05a-lica': [13], '05b-rubashki': [13], '07-more': [6], '08-otchet': [2]
+  '05-karty': [26], '05a-lica': [14], '05b-rubashki': [14], '06-legendy': [4], '07-more': [6], '08-otchet': [2]
 };
 export async function checkPdf(): Promise<boolean> {
   const errors: string[] = [], table: string[] = [];
@@ -159,14 +164,14 @@ export async function checkPdf(): Promise<boolean> {
     const info = run('pdfinfo', ['-l', '999', full]);
     const pages = Number(/Pages:\s+(\d+)/.exec(info)?.[1] ?? 0);
     table.push(`${f.padEnd(28)} ${String(pages).padStart(3)} стр. ${(size / 1048576).toFixed(1).padStart(6)} МБ`);
-    const exp = EXPECT[base] ?? (base.startsWith('05b-rubashki-') ? [13] : undefined);
+    const exp = EXPECT[base] ?? (/^05b-rubashki-v/.test(base) ? [13] : base.startsWith('05b-rubashki-') ? [14] : undefined);
     if (exp) { const [n, land] = exp; if (Array.isArray(n) ? pages < n[0] || pages > n[1] : pages !== n) errors.push(`${f}: ${pages} pages, expected ${Array.isArray(n) ? n.join('–') : n}`);
       for (const m of info.matchAll(/Page\s+(\d+) size:\s+([\d.]+) x ([\d.]+) pts/g)) { const w = +m[2] * 25.4 / 72, h = +m[3] * 25.4 / 72, [ew, eh] = land ? [297, 210] : [210, 297]; if (Math.abs(w - ew) > .5 || Math.abs(h - eh) > .5) errors.push(`${f}: page ${m[1]} is ${w.toFixed(1)} × ${h.toFixed(1)} mm, expected ${ew} × ${eh}`); } }
     if (size > 60 * 1048576) errors.push(`${f}: ${(size / 1048576).toFixed(0)} MB — over 60 MB, some picture is not a JPEG`);
     const fonts = run('pdffonts', [full]).split('\n').slice(2).filter(Boolean);
     for (const l of fonts) { if (/Type 3/.test(l)) errors.push(`${f}: Type 3 font: ${l.trim()}`); if (!/Alegreya/.test(l)) errors.push(`${f}: a font that is not Alegreya: ${l.trim()}`); if (!/\byes\s+(yes|no)\s+(yes|no)\s+\d+\s+\d+\s*$/.test(l)) errors.push(`${f}: font not embedded: ${l.trim()}`); }
     // images: page num type width height color comp bpc enc interp object ID x-ppi y-ppi size ratio
-    const cardFile = /^(05|07)/.test(base);
+    const cardFile = /^(05|06|07)/.test(base);
     for (const l of run('pdfimages', ['-list', full]).split('\n').slice(2).filter(Boolean)) {
       const c = l.trim().split(/\s+/), [type, w, h, enc, xppi] = [c[2], +c[3], +c[4], c[8], +c[12]], sz = c[14] ?? '';
       const bytes = /M$/.test(sz) ? parseFloat(sz) * 1048576 : /K$/.test(sz) ? parseFloat(sz) * 1024 : parseFloat(sz);
@@ -180,7 +185,7 @@ export async function checkPdf(): Promise<boolean> {
     const doc = await PDFDocument.load(fs.readFileSync(path.join(OUT, f))), vp = doc.catalog.lookupMaybe(PDFName.of('ViewerPreferences'), PDFDict);
     const scaling = vp?.get(PDFName.of('PrintScaling'))?.toString(), duplex = vp?.get(PDFName.of('Duplex'))?.toString();
     if (scaling !== '/None') errors.push(`${f}: no /PrintScaling /None`);
-    if (/^(05-karty|07-more)\.pdf$/.test(f) && duplex !== '/DuplexFlipLongEdge') errors.push(`${f}: no /Duplex /DuplexFlipLongEdge`);
+    if (/^(05-karty|06-legendy|07-more)\.pdf$/.test(f) && duplex !== '/DuplexFlipLongEdge') errors.push(`${f}: no /Duplex /DuplexFlipLongEdge`);
   }
   console.log(table.join('\n'));
   console.log(`check-pdf: ${files.length} PDF, ${errors.length} error(s)`);

@@ -195,9 +195,9 @@ module.exports = { name: 'Зомби у пушек', kind: 'deck', status: 'acce
       flare += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(a) * 1.4)} ${f(Math.sin(a) * 1.4)}" stroke="${RS() > .5 ? '#ffe8a0' : '#ffa040'}" stroke-width="${f(r)}" stroke-linecap="round" opacity="${f(.5 + RS() * .5)}"/>`; } }
     // ——— the arms: each one sleeve from the shoulder, torn off below the elbow; the bony forearm; the hand round the staff ———
     // thin bony hands: a narrow palm, a narrower wrist, thin fingers; turned so the curled fingers show round the staff
-    const base = { s: 2.1, pose: 'wrap', r: .9, tone: DEADH, light: [.8, .4], sw: .3, tilt: 6, fingerW: .55, palmW: .72, wristW: .6 };
-    const hN = handOn(u, { ...base, m: 1, roll: -60, pitch: 14 }, along(.27), ang, 70);
-    const hF = handOn(u, { ...base, m: 1, roll: -50, pitch: 14 }, along(.6), ang, 70);
+    const base = { s: 2.3, lod: 'full', pose: 'wrap', r: .6, tone: DEADH, light: [.8, .4], sw: .3, tilt: 6, fingerW: .8, palmW: .82, wristW: .66 };
+    const hN = handOn(u, { ...base, m: 1, roll: 16, pitch: 34 }, along(.27), ang, 70);
+    const hF = handOn(u, { ...base, m: 1, roll: 16, pitch: 34 }, along(.6), ang, 70);
     const arm = (sh, el, h, sd) => { const w = h.wrist, tear = [lerp(el[0], w[0], .18), lerp(el[1], w[1], .18)];
       return H.cloth(u, { spine: [[w[0] * .0 + lerp(el[0], w[0], .1), lerp(el[1], w[1], .1)], [lerp(el[0], w[0], .55), lerp(el[1], w[1], .55)], w], w: [5.2, 4.4, 3.6], tone: DEAD, lit: sd, folds: false, sw: .35 })
         + `<path d="M${P2(lerp2(el, w, .4, -1.6))}L${P2(lerp2(el, w, .9, -.8))}" stroke="${DEAD.shadow}" stroke-width=".45" opacity=".6"/><path d="M${P2(lerp2(el, w, .3, 1.4))}L${P2(lerp2(el, w, .85, .9))}" stroke="${DEAD.lit}" stroke-width=".4" opacity=".5"/>`
@@ -276,6 +276,7 @@ function gun(u, L) {
   // between the cheeks: the transom, the bed, the quoin with its handle
   s += box(-5.4, 5.4, 3, 5.8, 11, 14.5, 9) + box(-4.6, 4.6, 5.8, 7, 1.5, 12, 13) + box(-2.8, 2.8, 7, 8.8, .6, 6, 15);
   { const a = P(0, 7.9, .6), b = P(0, 7.9, -1.4); s += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.1 * scl(0, 7.9, 0), L, 'oak', { ell: .5, face: 2, outline: .35 }); }
+  s += box(5.2, 9.8, 12.6, 13.5, 21.6, 24.6, 31, 'iron');                                     // the far capsquare, behind the barrel
   // the barrel: from the breech (towards us) to the muzzle out beyond the port
   const zb = 0, zm = 44, B = P(0, 13, zb), M = P(0, 13, zm);
   { const ax = Nw([0, 0, 1]), q = Wd(0, 13, zb), v = [-q[0], E - q[1], -D0 - q[2]], lv = Math.hypot(...v), ell = Math.abs(ax[0] * v[0] + ax[1] * v[1] + ax[2] * v[2]) / lv;
@@ -291,8 +292,8 @@ function gun(u, L) {
     s += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.2 * scl(0, 13, -1), L, 'iron', { outline: .35 }) + K.shadeSphere(u, c[0], c[1], 1.7 * scl(0, 13, -3.8), L, 'iron', { outline: .4 }); }
   // the near cheek (front step first), the iron capsquares over the trunnions, the near trucks
   for (const [z0, z1, h, sd] of [[16, 27, 12.6, 4], [8, 16, 10.4, 6], [0, 8, 8.4, 8]]) s += box(-9.6, -5.4, 2.6, h, z0, z1, sd);
-  for (const sx of [-1, 1]) s += box(sx > 0 ? 5.2 : -9.8, sx > 0 ? 9.8 : -5.2, 12.6, 13.5, 21.6, 24.6, 30 + sx, 'iron');
-  for (const [z, y] of [[3, 5.6], [11, 7], [20, 8.8], [24, 6.4]]) { const b = P(-9.65, y, z); s += K.shadeSphere(u, b[0], b[1], .55 * scl(-9.6, y, z) * .6, L, 'iron', { outline: .25 }); }
+  s += box(-9.8, -5.2, 12.6, 13.5, 21.6, 24.6, 29, 'iron');
+  for (const [z, y] of [[3, 5.6], [11, 7], [20, 8.8], [24, 6.4]]) { const b = P(-9.65, y, z); s += K.shadeSphere(u, b[0], b[1], .3 * scl(-9.6, y, z) * .6, L, 'iron', { outline: .2 }); }
   s += truck(-11.6, 22.5, 4.4, 3, 23) + truck(-11.6, 2.8, 4, 3, 24);
   return { svg: s, muzzle: P(0, 13, zm), P };
 }

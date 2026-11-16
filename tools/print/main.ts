@@ -40,6 +40,7 @@ const builders: [string, () => Promise<Part[]>][] = [
   ['03', async () => (await import('./parts/boards')).build(ctx)],
   ['04', async () => (await import('./parts/tokens')).build(ctx)],
   ['05', async () => cardParts(ctx, 'decks')],
+  ['06', async () => cardParts(ctx, 'legends')],
   ['07', async () => cardParts(ctx, 'sea')],
   ['08', async () => (await import('./parts/report')).build(ctx)]
 ];

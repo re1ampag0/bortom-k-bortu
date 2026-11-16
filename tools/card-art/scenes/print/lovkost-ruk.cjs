@@ -163,10 +163,12 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'accep
     // with the card between them, the ring and little finger curled down onto the palm, their nails to us, and the
     // thumb laid across the palm from the wrist, its tip against the ring finger's nail
     const JW = [98, 118], JA = -94, JS = 9.2;
-    const jh = H.hand3(u, { at: JW, a: JA, s: JS, m: -1, roll: 172, pitch: 6, pose: 'scissor', yaw: [-8, 5, 4, 8], tone: { lit: '#f6cca6', half: '#d29a72', shadow: '#7a4430', outline: '#3a1c10' },
-      light: [-.62, -.78], backFingers: [1], sw: .5, trueDorsal: true, palmW: .84, wristW: .8, fingerW: .92, flex: [[4, 8, 6], [8, 10, 6], [64, 96, 58], [70, 94, 56]],
-      thumbJ: [[.5, -1.4, -.8], [1.8, -1.05, -1.5], [2.6, -.4, -2.15], [3.15, .3, -2.75]], thumbOut: [0, 0, -1] });
-    const CC0 = jh.P(7.6, -.8, -.42), CA = -12, CSC = 1.56, CC = [CC0[0] + 1, CC0[1] - 14];   // the card: centre, angle, scale
+    const P_ = JSON.parse(process.env.LRP || "{}"), FLX = P_.flx || [[40, 70, 40], [38, 72, 40], [40, 74, 42], [44, 76, 44]], THJ = P_.thj || [[1.25, -1.2, -.78], [2.4, -1.3, -1.4], [3.6, -1.1, -1.9], [4.6, -.9, -2.2]], CAx = P_.ca != null ? P_.ca : -8, CSCx = P_.csc || 1.56, CDX = P_.cdx || 0, CDY = P_.cdy || 0;
+    const jh = H.hand3(u, { at: JW, a: JA, s: JS, m: -1, roll: 172, pitch: 6, yaw: [-4, -1, 2, 6], tone: { lit: '#f6cca6', half: '#d29a72', shadow: '#7a4430', outline: '#3a1c10' },
+      light: [-.62, -.78], backFingers: ['thumb', 'palm'], sw: .5, trueDorsal: true, palmW: .84, wristW: .8, fingerW: .92, flex: FLX,
+      thumbJ: THJ, thumbOut: [0, 1, -.4] });
+    const CB = (() => { const q = [0, 1, 2, 3].map(i => jh.joints[i][P_.cj != null ? P_.cj : 0]); return [(q[0][0] + q[3][0]) / 2, (q[0][1] + q[3][1]) / 2]; })();
+    const CA = CAx, CSC = CSCx, CC = [CB[0] + 13 * CSC * Math.sin(CA * Math.PI / 180) + CDX, CB[1] - 13 * CSC * Math.cos(CA * Math.PI / 180) + CDY];   // the card: centre, angle, scale
     let fly = '';
     { const a0 = GD, a1 = [CC[0] + 8, CC[1] + 10], bf = blurF('fl' + u, 1.6), g = nid('fg', u);
       fly += bf + `<defs>${linGrad(g, a0[0], a0[1], a1[0], a1[1], [[0, '#f0dcb0', 0], [1, '#f0dcb0', .5]])}</defs>`
@@ -192,6 +194,7 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'accep
       arm += `</g>`;
       // the hand over the lace: its back, the middle finger behind the card, the card, then the index finger and thumb
       arm += jh.back + card(u, CC, CA, CSC) + jh.front;
+      if (process.env.DBG) arm += [0,1,2,3,4].map(i => jh.joints[i].map((q, j) => `<circle cx="${f(q[0])}" cy="${f(q[1])}" r=".8" fill="${['red','lime','blue','yellow','cyan'][i]}"/>`).join('')).join('');
       // rings: a gold band with a red stone on the index finger, a plain one on the ring finger's knuckle
       { const a = jh.P(5.9, -1.22, -.02), b = jh.P(5.9, -1.22, -.95); const c = [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5)];
         arm += `<path d="M${f(c[0] - 5.2)} ${f(c[1] + .6)}Q${f(c[0])} ${f(c[1] + 2.6)} ${f(c[0] + 4.8)} ${f(c[1] + .2)}" stroke="url(#brass${u})" stroke-width="1.7" fill="none" stroke-linecap="round"/>`

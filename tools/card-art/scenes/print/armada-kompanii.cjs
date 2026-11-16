@@ -14,17 +14,17 @@ const { f, mix, nid, linGrad, radGrad, rng } = K;
 const { glow, shafts } = PK;
 
 const HZ = 116;
-const SUN = { x: 100, y: 66 };
+const SUN = { x: 100, y: 60 };
 // perspective from low on the water (the eye ≈ 6 m up): a ship's scale grows with its waterline's depth below the
-// horizon, .13 per unit — the whole fleet stands on a narrow band of sea under the horizon and towers over it
-const sc = y => .13 * (y - HZ);
+// horizon, .16 per unit — the whole fleet stands on a narrow band of sea under the horizon and towers over it
+const sc = y => .16 * (y - HZ);
 const light = { time: 'dusk', haze: .45, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffe0a0', power: 1 }, fill: { color: '#6f7ea8', power: .45 },
   rim: { az: 0, color: '#fff0c8', power: .8 } };
 // the lines of the fleet from the horizon toward us: [depth below the horizon, number, first x, step, firing]
-const LINES = [[.5, 26, -3, 8, 0], [1.1, 15, -6, 14.5, 0], [1.9, 9, -2, 25, 1], [2.8, 6, 4, 38, 1], [3.8, 4, 22, 52, 1]];
+const LINES = [[.45, 28, -3, 7.5, 0], [1, 17, -6, 13, 0], [1.8, 11, -4, 20, 1], [2.7, 8, 2, 28, 1], [3.6, 5, 8, 46, 1]];
 // the two nearest ships at the edges, cut by the frame (bow left: a stern quarter on the left, a bow on the right)
-const WL = { x: -26, y: HZ + 6.6 }, WR = { x: 232, y: HZ + 6.6 };
-const PEARL = { x: 58, y: HZ + 4.9 }, REV = { x: 146, y: HZ + 4.7 };   // nearer than the firing line, smaller ships (≈ .58 of a first-rate)
+const WL = { x: -18, y: HZ + 6 }, WR = { x: 226, y: HZ + 6 };
+const PEARL = { x: 56, y: HZ + 4.5 }, REV = { x: 148, y: HZ + 4.4 };   // nearer than the firing line, smaller ships (≈ .55 of a first-rate)
 const skel = { horizon: HZ, eye: 6, light: 'the low sun straight ahead behind the fleet (back light: lit edges toward the sun, shadows toward us)', items: [
   ['horizon haze of topsails', 0, HZ + .6, 200, 6, 'sea, far', 60, { bg: 1 }], ['lines 2-4', 0, HZ + 2.9, 200, 32, 'sea', 60, { bg: 1 }],
   ['firing line', 0, HZ + 3.8, 200, 42, 'sea, broadside toward us and the pirates', 60, { bg: 1 }], ['smoke', 0, HZ + 4, 200, 30, 'over the water in front of the firing line'],
@@ -58,10 +58,12 @@ function broadside(u, L, R, ship, s, rows, o = {}) {
   for (const [h, n, x0, x1] of rows) for (let k = 0; k < n; k++) {
     if (R() < (o.skip || .25)) continue;
     const lx = x0 + (x1 - x0) * k / (n - 1), px = ship.x + lx * s, py = ship.y - h * s - .2 * s, sz = s * (3 + R() * 3.4) * (o.k || 1);
-    smoke += K.smoke(u, L, { x: px - sz * .8, y: py + sz * 1.1, w: sz * 6.5, h: sz * 5.2, wind: -.7, seed: Math.floor(R() * 999), opacity: .85 });
-    flash += K.localGlow(u, { x: px, y: py, color: '#ffd080', power: .9, radius: sz * 3.4 }, { core: false })
-      + Array.from({ length: 6 }, (_, j) => { const an = j * Math.PI / 3 + R() * .8, l = sz * (.6 + R() * .7); return `<path d="M${f(px)} ${f(py)}l${f(Math.cos(an) * l)} ${f(Math.sin(an) * l * .75)}" stroke="#ffe9a0" stroke-width="${f(sz * .14)}" stroke-linecap="round"/>`; }).join('')
-      + `<ellipse cx="${f(px)}" cy="${f(py)}" rx="${f(sz * .5)}" ry="${f(sz * .38)}" fill="#fff8d8"/>`;
+    smoke += K.smoke(u, L, { x: px - sz * .8, y: py + sz * 1.1, w: sz * 6.5, h: sz * 5.2, wind: -.7, seed: Math.floor(R() * 999), opacity: .62 });
+    // fired toward us: a starburst — a soft hot glow, short spikes of different length, a white core
+    flash += glow(u, f(px), f(py), f(sz * 3.2), f(sz * 2.6), '#ffc868', .95)
+      + Array.from({ length: 7 }, (_, j) => { const an = j * 2 * Math.PI / 7 + R() * .6, l = sz * (.8 + R() * 1.1), w = sz * .22; const c = Math.cos(an), sn = Math.sin(an) * .8;
+        return `<path d="M${f(px - sn * w)} ${f(py + c * w)}L${f(px + c * l)} ${f(py + sn * l)}L${f(px + sn * w)} ${f(py - c * w)}Z" fill="#ffe8a0" opacity=".95"/>`; }).join('')
+      + `<circle cx="${f(px)}" cy="${f(py)}" r="${f(sz * .42)}" fill="#fffdf0"/>`;
   }
   return { smoke, flash };
 }
@@ -95,8 +97,8 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
     for (let i = 0; i < 14; i++) { const x = 20 + R() * 160, y = HZ - 4 + R() * 7; mid += `<path d="M${f(x)} ${f(y)}l${f(.8 + R())} ${f(-1.2 - R() * .6)}" stroke="#fff4d0" stroke-width=".4" opacity=".4"/><circle cx="${f(x)}" cy="${f(y)}" r=".5" fill="#1a1410"/>`; }
     // the pirates under fire, running left before the wind: splashes round them, splinters off the hulls
     mid += K.splash(u, { x: 30, y: HZ + 4.2, w: 7, h: 11, seed: 0, L, wind: -.4 }) + K.splash(u, { x: 102, y: HZ + 4.2, w: 6, h: 10, seed: 2, L, wind: -.4 }) + K.splash(u, { x: 176, y: HZ + 4.4, w: 7, h: 11, seed: 1, L, wind: -.4 });
-    mid += K.ship(u, L, { kind: 'revenge', x: REV.x, y: REV.y, scale: sc(REV.y) * .58, detail: 'mid', roll: -6, heel: -2, wake: true, seed: 4 });
-    mid += K.ship(u, L, { kind: 'pearl', x: PEARL.x, y: PEARL.y, scale: sc(PEARL.y) * .58, detail: 'mid', roll: -6, heel: -3, wake: true, seed: 3 });
+    mid += K.ship(u, L, { kind: 'revenge', x: REV.x, y: REV.y, scale: sc(REV.y) * .55, detail: 'mid', roll: -6, heel: -2, wake: true, seed: 4 });
+    mid += K.ship(u, L, { kind: 'pearl', x: PEARL.x, y: PEARL.y, scale: sc(PEARL.y) * .55, detail: 'mid', roll: -6, heel: -3, wake: true, seed: 3 });
     mid += K.splash(u, { x: 46, y: HZ + 7.4, w: 9, h: 13, seed: 3, L, wind: -.4 }) + K.splash(u, { x: 134, y: HZ + 7, w: 8, h: 12, seed: 4, L, wind: -.4 }) + K.splash(u, { x: 92, y: HZ + 8.4, w: 6, h: 9, seed: 5, L, wind: -.4 });
     // hits: splinters off the Pearl's quarter and the Revenge's side, a puff where the shot went in
     for (const [hx, hy, sd] of [[80, HZ + 1.6, 9], [162, HZ + 1.6, 11]]) { const Rh = rng(sd);

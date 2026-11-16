@@ -35,6 +35,8 @@ const skel = { horizon: HZ, eye: 30, light: 'lantern hung from the yard (key) + 
   ['hand + arm', -10, 140, 56, 60, 'from the near left edge, needle in the edge of the patch'], ['old patch', 140, 104, 26, 20, 'sail']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
+// the needle (from its point in the patch's edge to the eye: angle, length, where it is pinched) and the hand holding it
+const NEEDLE = { a: -112, len: 11, pinch: 7.4, ha: -18, s: 2.6, roll: 55, tf: [40, 30, 22], pp: [7.6, -1, -2.6] };
 const LEECH = y => 178 + (y - 16) * .05 + Math.sin((y - 16) / 70) * 3;   // x of the sail's after edge at height y
 // a ragged closed outline round (cx, cy): radii rx, ry, jagged by `j`
 function ragged(R, cx, cy, rx, ry, n, j) { const pts = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, k = 1 - j * .5 + R() * j * (i % 2 ? .6 : 1.2); pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); } return pts; }
@@ -130,22 +132,33 @@ module.exports = { name: 'Латаем паруса', kind: 'deck', status: 'acc
     // ——— the sailor's left arm from the near left: the wool sleeve rolled back, the bare forearm, the fist with the needle
     { const skin = { lit: '#f2bc8e', half: '#b77a52', core: '#a26a46', shadow: '#5c3424', outline: '#2a140a' };
       const coat = { lit: '#5a6a8a', half: '#2e3a52', shadow: '#10141e', outline: '#06080c' };
-      const HS = 3, a = -50, ua = [Math.cos(a * Math.PI / 180), Math.sin(a * Math.PI / 180)], n = [-ua[1], ua[0]];
-      const tip = SH([46.5, 99]), G = [tip[0] - n[0] * 14, tip[1] - n[1] * 14], W = [G[0] - ua[0] * 6 * HS, G[1] - ua[1] * 6 * HS], E = [W[0] - ua[0] * 30, W[1] - ua[1] * 30 + 3];
-      // the thread from the eye of the needle, a loose loop back to the last stitch
-      const eye = [G[0] - n[0] * 7.4, G[1] - n[1] * 7.4];
-      fg += `<path d="M${P2(eye)}C${f(eye[0] - 9)} ${f(eye[1] + 6)} ${f(eye[0] - 8)} ${f(eye[1] + 24)} ${f(eye[0] + 2)} ${f(eye[1] + 26)}S${f(SH(PT.BL)[0] + 1)} ${f(SH(PT.BL)[1] - 2)} ${f(SH(PT.BL)[0] + .6)} ${f(SH(PT.BL)[1] - 9)}" stroke="#efe4c8" stroke-width=".7" fill="none"/>`;
-      // the needle: through the fist, its point going into the edge of the patch
-      fg += `<path d="M${P2(eye)}L${P2(tip)}" stroke="url(#silver${u})" stroke-width="1.35" stroke-linecap="round"/><path d="M${P2([lerp(eye[0], tip[0], .6), lerp(eye[1], tip[1], .6)])}L${P2(tip)}" stroke="#ffffff" stroke-width=".3" opacity=".8"/>`;
+      // (review: the needle went through the fist and the thread came from under the hand) — now the needle is pinched
+      // between the pads of the thumb and the index finger (a jointed hand, people.cjs hand3, 'pinch'), its point in
+      // the edge of the patch, its eye standing clear above the pinch with the thread running out of it
+      const tip = SH([46.5, 99]), NA = NEEDLE.a * Math.PI / 180, nd = [Math.cos(NA), Math.sin(NA)];   // nd: from the point to the eye
+      const at = t => [tip[0] + nd[0] * t, tip[1] + nd[1] * t], pinch = at(NEEDLE.pinch), eye = at(NEEDLE.len);
+      const opts = { a: NEEDLE.ha, s: NEEDLE.s, m: 1, roll: NEEDLE.roll, pitch: 0, pose: 'pinch', thumbFlex: NEEDLE.tf, thumbSpread: -10, tone: skin, light: [.7, -.7], sw: .34 };
+      const h0 = H.hand3(u, { ...opts, at: [0, 0] }), p0 = h0.P(...NEEDLE.pp), W = [pinch[0] - p0[0], pinch[1] - p0[1]];
+      const hd = H.hand3(u, { ...opts, at: W }), ua = [Math.cos(NEEDLE.ha * Math.PI / 180), Math.sin(NEEDLE.ha * Math.PI / 180)];
+      const E = [W[0] - ua[0] * 30, W[1] - ua[1] * 30 + 3];
+      // the thread out of the eye of the needle, a loose loop down past the hand back to the last stitch
+      const ln = SH(PT.BL);
+      fg += `<path d="M${P2(eye)}C${f(eye[0] + 5)} ${f(eye[1] - 4)} ${f(eye[0] + 7)} ${f(eye[1] + 6)} ${f(eye[0] + 3.4)} ${f(eye[1] + 12)}S${f(ln[0] + 1)} ${f(ln[1] - 2)} ${f(ln[0] + .6)} ${f(ln[1] - 9)}" stroke="#efe4c8" stroke-width=".7" fill="none"/>`;
       fg += H.cloth(u, { spine: [E, [lerp(E[0], W[0], .5), lerp(E[1], W[1], .5) - 1], [W[0] + ua[0] * .6, W[1] + ua[1] * .6]], w: [15, 13.4, 9.6], tone: skin, lit: 1, rim: '#c8dcff', rimSide: -1, rimOp: .5, folds: false, capA: true, sw: .4 })
         + `<path d="M${f(E[0] + 9)} ${f(E[1] - 9)}q3 -3 7 -6M${f(E[0] + 11)} ${f(E[1] - 6)}q3 -2 6 -5" stroke="#7a4a30" stroke-width=".35" fill="none" opacity=".55"/>`;
       fg += H.cloth(u, { spine: [[-22, 160], [-8, 146], [E[0] + ua[0] * 2, E[1] + ua[1] * 2]], w: [21, 19.4, 18], tone: coat, lit: 1, rim: '#9ab4e0', rimSide: -1, rimOp: .5, cuff: { from: .74, k: 1.12, roll: true }, seed: 6, drapes: 3, sw: .4 });
-      const hd = H.hand(u, { at: W, a, s: HS, m: 1, pose: 'grip', tone: skin, sw: .35 });
-      fg += hd.back + hd.front;
+      // the needle between the back of the hand (the index finger behind it) and the front (the thumb's pad over it):
+      // a steel shank, the oval eye at its top end with the thread through it
+      const nperp = [-nd[1], nd[0]];
+      const needle = `<path d="M${P2(eye)}L${P2(tip)}" stroke="#2a2e36" stroke-width="1.15" stroke-linecap="round"/><path d="M${P2(eye)}L${P2(tip)}" stroke="url(#silver${u})" stroke-width=".8" stroke-linecap="round"/>`
+        + `<path d="M${P2(at(NEEDLE.len - 2.6))}L${P2(tip)}" stroke="#ffffff" stroke-width=".22" opacity=".8"/>`
+        + `<ellipse cx="${f(at(NEEDLE.len - .9)[0])}" cy="${f(at(NEEDLE.len - .9)[1])}" rx=".55" ry=".16" transform="rotate(${f(NEEDLE.a)} ${P2(at(NEEDLE.len - .9))})" fill="#1a1c22"/>`;
+      fg += hd.back + needle + hd.front;
       // the sailmaker's palm: a leather strap round the hand, an iron eye at the heel of the thumb, its stitching
-      const Q = hd.P, strap = [Q(.8, -2.5), Q(3.8, -2.6), Q(4.1, 2.5), Q(.9, 2.3)];
+      const Q = (x, y) => hd.P(x, y, 0), strap = [Q(.8, -2.5), Q(3.8, -2.6), Q(4.1, 2.5), Q(.9, 2.3)];
       fg += `<path d="M${strap.map(P2).join('L')}Z" fill="#6a3e1e" stroke="#22120a" stroke-width=".4"/><path d="M${P2(Q(1.1, -2.2))}L${P2(Q(1.2, 2))}M${P2(Q(3.6, -2.2))}L${P2(Q(3.8, 2.2))}" stroke="#c89a62" stroke-width=".35" stroke-dasharray=".9 .7"/>`
-        + `<path d="M${P2(Q(1.4, -2.4))}L${P2(Q(3.5, -2.5))}" stroke="#a87448" stroke-width=".5" opacity=".8"/>` + K.shadeSphere(u, ...Q(2.4, -2.9), 1, L, 'iron', { outline: .3 });
+        + `<path d="M${P2(Q(1.4, -2.4))}L${P2(Q(3.5, -2.5))}" stroke="#a87448" stroke-width=".5" opacity=".8"/>`;
+      const G = pinch;
       fg += K.localGlow(u, { x: G[0] + 4, y: G[1] - 2, color: '#ffb060', power: .18, radius: 14 }, { core: false }); }
     // the light: the lantern's pool, motes in it, the dark corners and the dark under the glass
     fg += glow(u, FLAME.x - 20, FLAME.y + 20, 120, 110, '#ffb050', .16) + motes(14, 120, 30, 80, 70, '#ffe0b0', 5)

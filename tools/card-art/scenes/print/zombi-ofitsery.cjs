@@ -160,7 +160,13 @@ module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'acc
     // points on the brim's outer edge (hat.cjs tricorn's own formula) at t degrees from the front corner
     const brim = (t, dy = 0) => { t *= Math.PI / 180; const k = Math.pow(Math.sin(1.5 * t), 2), rr = 1 + (HATR - 1) * (1 - k) + .08 * k; return hd.Q(Math.sin(t) * rr, -.68 - HATUP * k + .08 * (1 - k) + dy, Math.cos(t) * rr * .98 - .1); };
     const E0 = brim(-35), E1 = brim(-15), brimAng = Math.atan2(E1[1] - E0[1], E1[0] - E0[0]) * 180 / Math.PI, GR = brim(-25, .035);
-    const hR = handOn(u, { s: 1.9, m: 1, roll: 0, pitch: 10, pose: 'wrap', r: .45, tone: DEADH, light: [-.6, -.7], sw: .3, tilt: 4, fingerW: .82, palmW: .92 }, GR, brimAng, -40);
+    // an open hand (drawn at full detail: each finger its own shape), the fingers straight and a little apart, the
+    // middle finger's tip set on the brim; the thumb along the side of the hand
+    const HA = +(process.env.ZA || -50), HROLL = +(process.env.ZR || 160);
+    const handAt = W => H.hand3(u, { at: W, a: HA, s: 1.9, m: 1, roll: HROLL, pitch: 0, pose: 'open', spread: 6, flex: [[8, 8, 6], [6, 8, 6], [8, 10, 6], [10, 12, 8]],
+      thumbFlex: [16, 12, 10], thumbSpread: -10, tone: DEADH, light: [-.6, -.7], sw: .34, lod: 'full', fingerW: .88, palmW: .92 });
+    const TIP = brim(-22, .02), mt0 = handAt([0, 0]).joints[1][3];
+    const hR = handAt([TIP[0] - mt0[0], TIP[1] - mt0[1]]);
     // the elbow up at the level of his ear: a short upper arm and forearm (≈ 1.2 head each), no long curve
     const raisedSleeve = sleeve([86, 87], [73.5, 66], hR.wrist, -1, .3, 9);
     man += epaulette(126, 84, 1, Re) + swordArm + holes;

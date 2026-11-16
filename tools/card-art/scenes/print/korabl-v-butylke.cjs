@@ -17,10 +17,10 @@ const { f, mix, lerp, nid, linGrad, radGrad, rng } = K;
 const { woodTex } = PK;
 
 const HZ = 96;                                    // eye level = the sea horizon in the window, just over the bottle's sea
-const SUN = { x: 60, y: 80 };
+const SUN = { x: 60, y: 84 };
 const BA = [6, 101], BB = [172, 74], BR = 25;     // the bottle: the axis (base to mouth), the body's radius
-const SEA = 104;                                  // the level of the sea inside the bottle (level: the bottle tilts, the water does not)
-const VX = 44;                                    // the whirlpool's axis
+const SEA = 101;                                  // the level of the sea inside the bottle (level: the bottle tilts, the water does not)
+const VX = 38;                                    // the whirlpool's axis
 const light = { time: 'dusk', haze: .45, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffc080', power: 1 }, fill: { color: '#6a3a3a', power: .45 },
   rim: { az: 0, color: '#ffb060', power: .9 } };
 const skel = { horizon: HZ, eye: 1.6, light: 'the setting sun in the stern window right behind the bottle (back light): the glass burns at its edges, rays fan out; the fist rim-lit', items: [
@@ -53,7 +53,7 @@ module.exports = { name: 'Корабль в бутылке', kind: 'deck', statu
     const g = K.propLathe(u, L, 'glass', BA, BB, PROF.map(q => [q[0], q[1] * BR]), { ell: .16, opacity: .26, spec: false, outline: .6 });
     // the fist: its params set so that the neck's axis runs through the grip
     const S = 6.6, grip = onAxis(.8), hd = H.hand3(u, { grip, a: -105 + Math.atan2(AU[1], AU[0]) * 180 / Math.PI + 9.3, s: S, m: 1, roll: 10, pitch: 34, pose: 'wrap', r: PROF[8][1] * BR / S, tilt: 6,
-      tone: skinRamp(L, grip), light: [-1, -.15], sw: .42, lod: 'full' });
+      tone: skinRamp(L, grip), light: [-1, -.15], lightZ: -.15, sw: .42, lod: 'full' });
     // the arm under the fist: the coat sleeve from the wrist down out of the frame, the gold-laced cuff, the ruffle
     fg += sleeve(u, L, hd);
     fg += hd.back;
@@ -64,13 +64,15 @@ module.exports = { name: 'Корабль в бутылке', kind: 'deck', statu
     fg += `<path d="${g.d}" fill="none" stroke="#ffe2b0" stroke-width="1.3" opacity=".55" stroke-linejoin="round"/><path d="${g.d}" fill="none" stroke="#fff6e0" stroke-width=".5" opacity=".9" stroke-linejoin="round"/>`
       + glassGlints(u);
     fg += cork(u, L);
-    fg += hd.front;
+    fg += hd.front + ruffle(u, hd);
     // the light over everything: a few short bright rays from the sun through the glass, the bloom of the sun in it
     fg += rays(u, SUN, 90, [[-160, 2], [-120, 2.5], [-75, 2], [-30, 2.5], [15, 2], [60, 2.5], [110, 2], [140, 2.5]], '#fff0d0', .2, 1.4)
       + K.localGlow(u, { x: SUN.x, y: SUN.y, color: '#fff0c8', power: .5, radius: 20 });
     // dust in the sunbeams
     { const R = rng(17); for (let i = 0; i < 46; i++) { const x = R() * 200, y = 10 + R() * 120, d = Math.hypot(x - SUN.x, y - SUN.y);
       fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.2 + R() * .45)}" fill="#ffe6c0" opacity="${f(Math.max(.1, .7 - d / 180) * (.5 + R() * .5))}"/>`; } }
+    // a heavy vignette: the corners of the cabin dark, the light gathered on the bottle and the sun
+    { const vg = nid('vg', u); fg += `<defs>${radGrad(vg, SUN.x + 30, SUN.y + 2, 140, [[0, '#000', 0], [.32, '#000', 0], [.62, '#1a0606', .5], [1, '#0a0202', .88]])}</defs><rect x="-10" y="-10" width="220" height="300" fill="url(#${vg})"/>`; }
     // under the text glass: the dark of the cabin
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 132, 0, 280, [[0, '#0c0604', 0], [.25, '#0c0604', .5], [1, '#060302', .9]])}</defs><rect x="-10" y="132" width="220" height="160" fill="url(#${gl})"/>`; }
     return [bg, fg];
@@ -111,29 +113,36 @@ function windowFrame(u) {
 // its whirlpool, the ship sliding down its wall, the spray whirling round above
 function inside(u, L) {
   let s = `<rect x="0" y="0" width="200" height="160" fill="#ffd8a0" opacity=".08"/>`;
-  const R = rng(5), ys = SEA, x0 = BA[0] - 4, x1 = 130, th = [VX + 2, ys + 15];
+  const R = rng(5), ys = SEA, x0 = BA[0] - 4, x1 = 130, th = [VX + 2, ys + 14.5];
   // the sea, lit through from behind: bright green-gold under the surface, deep teal below
   const sg = nid('bs', u); s += `<defs>${linGrad(sg, 0, ys - 1, 0, ys + 20, [[0, '#9ad0b0', 1], [.18, '#3a8a86', 1], [.6, '#16505a', 1], [1, '#0a2a34', 1]])}</defs>`
     + `<rect x="${x0}" y="${ys}" width="${x1 - x0}" height="30" fill="url(#${sg})"/>`;
-  // the whirlpool: a hollow in the surface — the far wall seen down to the throat, darker, swirled with foam
-  const rw = 30, wall = nid('bw', u), fun = `M${VX - rw} ${ys}C${VX - rw * .55} ${ys + 1} ${VX - 7} ${ys + 4} ${th[0] - 1.6} ${th[1]}L${th[0] + 1.6} ${th[1]}C${VX + 9} ${ys + 4} ${VX + rw * .55} ${ys + 1} ${VX + rw} ${ys}Z`;
-  s += `<defs>${linGrad(wall, 0, ys, 0, th[1], [[0, '#2c6e72', 1], [.5, '#174a54', 1], [1, '#06161e', 1]])}</defs><path d="${fun}" fill="url(#${wall})"/>`;
-  for (let k = 0; k < 8; k++) { const d = k / 8, rx = rw * Math.pow(1 - d, 1.25), cy = ys + d * 15 * .96, ry = 2.4 * (1 - d) + .3, cx = VX + d * 2;
-    const a0 = Math.PI * (1.04 + R() * .1), a1 = Math.PI * (1.96 - R() * .1), P = a => `${f(cx + Math.cos(a) * rx)} ${f(cy + Math.sin(a) * ry)}`;
-    s += `<path d="M${P(a0)}A${f(rx)} ${f(ry)} 0 0 1 ${P(a1)}" stroke="#e8fff4" stroke-width="${f(.25 + (1 - d) * .4)}" stroke-dasharray="${f(2 + R() * 4)} ${f(1 + R() * 2)}" fill="none" opacity="${f(.35 + (1 - d) * .4)}"/>`; }
+  // the whirlpool: a hollow in the surface — the far wall seen down to the throat, dark, swirled with foam; its two
+  // walls edged with white water, so it reads as a funnel
+  const rw = 31, wall = nid('bw', u), fun = `M${VX - rw} ${ys}C${VX - rw * .5} ${ys + .6} ${VX - 6} ${ys + 4} ${th[0] - 1.2} ${th[1]}L${th[0] + 1.2} ${th[1]}C${VX + 8} ${ys + 4} ${VX + rw * .5} ${ys + .6} ${VX + rw} ${ys}Z`;
+  s += `<defs>${linGrad(wall, 0, ys, 0, th[1], [[0, '#2a6a6e', 1], [.35, '#103e48', 1], [1, '#020a10', 1]])}</defs><path d="${fun}" fill="url(#${wall})"/>`;
+  for (let k = 0; k < 9; k++) { const d = k / 9, rx = rw * Math.pow(1 - d, 1.6), cy = ys + d * 14, ry = 2.6 * (1 - d) + .3, cx = VX + d * 2;
+    const a0 = Math.PI * (1.02 + R() * .08), a1 = Math.PI * (1.98 - R() * .08), P = a => `${f(cx + Math.cos(a) * rx)} ${f(cy + Math.sin(a) * ry)}`;
+    s += `<path d="M${P(a0)}A${f(rx)} ${f(ry)} 0 0 1 ${P(a1)}" stroke="#eafff6" stroke-width="${f(.35 + (1 - d) * .6)}" stroke-dasharray="${f(3 + R() * 5)} ${f(1 + R() * 1.6)}" fill="none" opacity="${f(.45 + (1 - d) * .45)}"/>`; }
+  s += `<path d="M${VX - rw} ${ys}C${VX - rw * .5} ${ys + .6} ${VX - 6} ${ys + 4} ${th[0] - 1.2} ${th[1]}M${th[0] + 1.2} ${th[1]}C${VX + 8} ${ys + 4} ${VX + rw * .5} ${ys + .6} ${VX + rw} ${ys}" stroke="#f4fffa" stroke-width=".8" fill="none" opacity=".85"/>`;
+  // spray whirling round above the hollow: bands of white water and drops, wider and fainter as they rise; the back
+  // halves behind the ship, the front halves over her
+  const bands = [[-2.5, 30, 3.4, .75, 1.6], [-8, 34, 4, .55, 1.3], [-14, 37, 4.4, .4, 1.1], [-21, 36, 4.2, .26, .9]], bl = nid('sb', u);
+  s += `<defs><filter id="${bl}" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation=".35"/></filter></defs>`;
+  const band = (front) => { let o = ''; for (const [dy, rx, ry, op, sw] of bands) { const cy = ys + dy, a0 = front ? .06 : 1.06, a1 = front ? .94 : 1.94;
+      for (let i = 0; i < 4; i++) { const b0 = Math.PI * lerp(a0, a1, i / 4 + R() * .05), b1 = Math.PI * lerp(a0, a1, (i + .7 + R() * .2) / 4), P = a => `${f(VX + Math.cos(a) * rx)} ${f(cy + Math.sin(a) * ry)}`;
+        o += `<path d="M${P(b0)}A${rx} ${ry} 0 0 ${front ? 1 : 1} ${P(b1)}" stroke="#f6fffa" stroke-width="${f(sw * (front ? 1 : .7))}" fill="none" stroke-linecap="round" opacity="${f(op * (front ? 1 : .6))}"/>`; }
+      for (let i = 0; i < 18; i++) { const a = Math.PI * lerp(a0, a1, R()), px = VX + Math.cos(a) * rx, py = cy + Math.sin(a) * ry + (R() - .5) * 2, l = .8 + R() * 2, tx = -Math.sin(a), ty = Math.cos(a) * ry / rx;
+        o += `<path d="M${f(px)} ${f(py)}l${f(tx * l)} ${f(ty * l)}" stroke="#f4fff8" stroke-width="${f(.3 + R() * .5)}" stroke-linecap="round" opacity="${f(op * (.5 + R() * .5))}"/>`; } }
+    return `<g filter="url(#${bl})">${o}</g>`; };
+  s += band(false);
   // the ship: on the right wall of the whirlpool, her bow down into it, heeled with the wall's slope
-  const sl = Math.atan2(th[1] - ys, (VX + rw) - th[0]) * 180 / Math.PI, sx = VX + 15, sy = ys + (VX + rw - sx) * (th[1] - ys) / (VX + rw - th[0]);
-  s += K.ship(u, L, { kind: WRECK, x: sx, y: sy + .4, scale: .21, heel: sl * .9, detail: 'mid', seed: 6 });
-  // the near rim of the hollow: a ring of foam in front of her keel, and the sea's surface either side of it
-  s += `<path d="M${VX - rw} ${ys}Q${VX} ${ys + 3.4} ${VX + rw} ${ys}" stroke="#f0fff8" stroke-width=".9" fill="none" opacity=".8"/>`
-    + K.foam(u, { x: VX + 2, y: ys + 2.2, w: rw * 1.9, h: 1.4, seed: 21, L }) + K.foam(u, { x: 96, y: ys + .4, w: 40, h: .9, seed: 22, L });
+  const sl = Math.atan2(th[1] - ys, (VX + rw) - th[0]) * 180 / Math.PI, sx = VX + 17, sy = ys + (VX + rw - sx) * (th[1] - ys) / (VX + rw - th[0]);
+  s += K.ship(u, L, { kind: WRECK, x: sx, y: sy + .4, scale: .28, heel: sl * .9, detail: 'mid', seed: 6 });
+  // the near rim of the hollow: white water in front of her keel, and the sea's surface either side of it
+  s += K.foam(u, { x: VX + 2, y: ys + 1.6, w: rw * 1.9, h: 1.6, seed: 21, L }) + K.foam(u, { x: 96, y: ys + .4, w: 40, h: .9, seed: 22, L });
   s += `<path d="M${x0} ${ys}H${VX - rw}M${VX + rw} ${ys}H${x1}" stroke="#d8fff0" stroke-width=".6" opacity=".7"/>`;
-  // spray whirling round above the hollow: broken rings of drops, wider and fainter as they rise, the front halves over
-  // the ship
-  for (const [dy, rx, ry, op] of [[-3, 32, 4, .7], [-9, 36, 5, .5], [-16, 38, 5.5, .32], [-23, 36, 5, .2]]) { const cy = ys + dy;
-    for (let i = 0; i < 26; i++) { const a = Math.PI * (.08 + R() * .84), px = VX + Math.cos(a) * rx, py = cy + Math.sin(a) * ry, l = .8 + R() * 2.2, tx = -Math.sin(a), ty = Math.cos(a) * ry / rx;
-      s += `<path d="M${f(px)} ${f(py)}l${f(tx * l)} ${f(ty * l)}" stroke="#f4fff8" stroke-width="${f(.3 + R() * .45)}" stroke-linecap="round" opacity="${f(op * (.5 + R() * .5))}"/>`; }
-    s += `<path d="M${f(VX - rx)} ${f(cy)}A${rx} ${ry} 0 0 0 ${f(VX + rx)} ${f(cy)}" stroke="#f4fff8" stroke-width=".5" stroke-dasharray="3 2 1 3" fill="none" opacity="${f(op * .7)}"/>`; }
+  s += band(true);
   // drops thrown up on the inside of the glass
   for (let i = 0; i < 30; i++) { const t = R() * .52, k = (R() - .5) * 1.8 * BR, p = onAxis(t, k); if (p[1] > ys - 2) continue;
     s += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.25 + R() * .5)}" fill="#f6fffa" opacity="${f(.4 + R() * .4)}"/>`; }
@@ -171,22 +180,30 @@ function sleeve(u, L, hd) {
   const w = hd.wrist, dir = [w[0] - hd.grip[0], w[1] - hd.grip[1]], dl = Math.hypot(dir[0], dir[1]), e = [dir[0] / dl, dir[1] / dl], n = [-e[1], e[0]];
   const at = (t, k) => [w[0] + e[0] * t + n[0] * k, w[1] + e[1] * t + n[1] * k];
   const coat = { lit: '#4a3840', half: '#251a20', shadow: '#0e080c', outline: '#030203' };
-  let s = H.cloth(u, { spine: [at(8, 0), at(60, 1), at(140, 3)], w: [17, 19, 21], tone: coat, lit: n[0] < 0 ? 1 : -1, folds: true, drapes: 2, sw: .5, tension: true, L, seed: 4 });
+  let s = H.cloth(u, { spine: [at(8, 0), at(60, 1), at(140, 3)], w: [24, 27, 30], tone: coat, lit: n[0] < 0 ? 1 : -1, folds: true, drapes: 2, sw: .5, tension: true, L, seed: 4 });
   // the sun on the sleeve's left edge
-  { const a = at(10, -8.8), b = at(140, -11); s += `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#ff9a50" stroke-width=".8" opacity=".75"/>`; }
+  { const a = at(10, -12.2), b = at(140, -15.2); s += `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#ff9a50" stroke-width=".8" opacity=".75"/>`; }
   // the cuff: a broad band turned back, darker red-black, gold lace on both edges, two buttons
-  { const c0 = 6, c1 = 22, q = [at(c0, -10.4), at(c1, -11.2), at(c1, 11.2), at(c0, 10.4)], cg = nid('cf', u);
+  { const c0 = 3, c1 = 19, q = [at(c0, -13.4), at(c1, -14.2), at(c1, 14.2), at(c0, 13.4)], cg = nid('cf', u);
     s += `<defs>${linGrad(cg, q[0][0], q[0][1], q[3][0], q[3][1], [[0, '#5a2a2a', 1], [.4, '#2a1214', 1], [1, '#120708', 1]])}</defs>`
       + `<path d="M${q.map(p => `${f(p[0])} ${f(p[1])}`).join('L')}Z" fill="url(#${cg})" stroke="#050203" stroke-width=".5"/>`
-      + [[c0 + 1, 10.4], [c1 - 1, 11.2]].map(([t, k]) => { const a = at(t, -k + .3), b = at(t, k - .3); return `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#d8a848" stroke-width="1.1"/><path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#ffe090" stroke-width=".35" opacity=".8"/>`; }).join('')
-      + [-4, 3].map(k => { const p = at((c0 + c1) / 2, k); return K.shadeSphere(u, p[0], p[1], 1.3, L, 'brass', { outline: .3 }); }).join(''); }
+      + [[c0 + 1, 13.4], [c1 - 1, 14.2]].map(([t, k]) => { const a = at(t, -k + .3), b = at(t, k - .3); return `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#d8a848" stroke-width="1.1"/><path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#ffe090" stroke-width=".35" opacity=".8"/>`; }).join('')
+      + [-5, 4].map(k => { const p = at((c0 + c1) / 2, k); return K.shadeSphere(u, p[0], p[1], 1.3, L, 'brass', { outline: .3 }); }).join(''); }
+  return s;
+}
+
+// the linen ruffle out of the cuff, falling over the wrist (drawn over the hand)
+function ruffle(u, hd) {
+  const w = hd.wrist, dir = [w[0] - hd.grip[0], w[1] - hd.grip[1]], dl = Math.hypot(dir[0], dir[1]), e = [dir[0] / dl, dir[1] / dl], n = [-e[1], e[0]];
+  const at = (t, k) => [w[0] + e[0] * t + n[0] * k, w[1] + e[1] * t + n[1] * k];
+  let s = '';
   // the ruffle: scallops of linen out of the cuff, round the wrist
-  { let d = ''; const t0 = 5, A = at(t0, -9.5), B = at(t0, 9.5); d = `M${f(A[0])} ${f(A[1])}`;
-    for (let i = 0; i < 5; i++) { const p0 = at(t0, -9.5 + 19 * i / 5), p1 = at(t0, -9.5 + 19 * (i + 1) / 5), k = 4.2 + (i % 2) * 1.2, c0 = [p0[0] - e[0] * k, p0[1] - e[1] * k], c1 = [p1[0] - e[0] * k, p1[1] - e[1] * k];
+  { let d = ''; const t0 = 2.4, A = at(t0, -11), B = at(t0, 11); d = `M${f(A[0])} ${f(A[1])}`;
+    for (let i = 0; i < 5; i++) { const p0 = at(t0, -11 + 22 * i / 5), p1 = at(t0, -11 + 22 * (i + 1) / 5), k = 4.2 + (i % 2) * 1.2, c0 = [p0[0] - e[0] * k, p0[1] - e[1] * k], c1 = [p1[0] - e[0] * k, p1[1] - e[1] * k];
       d += `C${f(c0[0])} ${f(c0[1])} ${f(c1[0])} ${f(c1[1])} ${f(p1[0])} ${f(p1[1])}`; }
     d += `L${f(B[0])} ${f(B[1])}Z`;
     s += `<path d="${d}" fill="#e8dcc4" stroke="#5a4a36" stroke-width=".4" stroke-linejoin="round"/>`
-      + [-5.7, -1.9, 1.9, 5.7].map(k => { const p = at(t0, k), q = at(t0 - 3, k); return `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="#a8967a" stroke-width=".35" stroke-linecap="round"/>`; }).join('')
-      + (() => { const a = at(t0 - 3.6, -9.5), b = at(t0 + 1, -9.5); return `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#fff0d0" stroke-width=".6" opacity=".8"/>`; })(); }
+      + [-6.6, -2.2, 2.2, 6.6].map(k => { const p = at(t0, k), q = at(t0 - 3, k); return `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="#a8967a" stroke-width=".35" stroke-linecap="round"/>`; }).join('')
+      + (() => { const a = at(t0 - 3.6, -11), b = at(t0 + 1, -11); return `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#fff0d0" stroke-width=".6" opacity=".8"/>`; })(); }
   return s;
 }
