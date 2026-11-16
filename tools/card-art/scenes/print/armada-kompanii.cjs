@@ -7,6 +7,8 @@
 // broadside — a row of flashes, smoke rolling out lit from behind; the two pirate ships, small in the middle of it all,
 // black sails and red, are dark against the sun path, shot falling round them, splinters off their hulls, a sail torn.
 // Everything sails left with the wind (the flags and the smoke go left): one wind, one sun, one horizon.
+// Every ship is the kit's model (K.ship), as on the deck backs: the Company's fleet all «Индевор»-class, the pirates near
+// enough for the full detail (user's decision 16.11).
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -24,7 +26,7 @@ const light = { time: 'dusk', haze: .45, key: { type: 'sun', x: SUN.x, y: SUN.y,
 const LINES = [[.45, 28, -3, 7.5, 0], [1, 17, -6, 13, 0], [1.8, 11, -4, 20, 1], [2.7, 8, 2, 28, 1], [3.6, 5, 8, 46, 1]];
 // the two nearest ships at the edges, cut by the frame (bow left: a stern quarter on the left, a bow on the right)
 const WL = { x: -18, y: HZ + 6 }, WR = { x: 226, y: HZ + 6 };
-const PEARL = { x: 56, y: HZ + 4.5 }, REV = { x: 148, y: HZ + 4.4 };   // nearer than the firing line, smaller ships (≈ .55 of a first-rate)
+const PEARL = { x: 56, y: HZ + 4.5 }, REV = { x: 141, y: HZ + 4.4 };   // nearer than the firing line, smaller ships (≈ .55 of a first-rate)
 const skel = { horizon: HZ, eye: 6, light: 'the low sun straight ahead behind the fleet (back light: lit edges toward the sun, shadows toward us)', items: [
   ['horizon haze of topsails', 0, HZ + .6, 200, 6, 'sea, far', 60, { bg: 1 }], ['lines 2-4', 0, HZ + 2.9, 200, 32, 'sea', 60, { bg: 1 }],
   ['firing line', 0, HZ + 3.8, 200, 42, 'sea, broadside toward us and the pirates', 60, { bg: 1 }], ['smoke', 0, HZ + 4, 200, 30, 'over the water in front of the firing line'],
@@ -83,8 +85,8 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
     const flags = [];
     LINES.forEach(([dep, n, x0, step, fire], li) => {
       let ships = '', smoke = '', flash = '';
-      for (let i = 0; i < n; i++) { const x = x0 + i * step + (R() - .5) * step * .3, y = HZ + dep + (R() - .5) * dep * .12, s = sc(y), kind = (i + li) % 3 === 1 ? 'warship' : 'endeavour';
-        ships += K.ship(u, L, { kind, x, y, scale: s, detail: s < .25 ? 'far' : 'mid', wake: s > .15, seed: 30 + li * 40 + i });
+      for (let i = 0; i < n; i++) { const x = x0 + i * step + (R() - .5) * step * .3, y = HZ + dep + (R() - .5) * dep * .12, s = sc(y), kind = 'endeavour';
+        ships += K.ship(u, L, { kind, x, y, scale: s, detail: s < .25 ? 'far' : s < .45 ? 'mid' : 'near', wake: s > .15, lights: s > .3, seed: 30 + li * 40 + i });
         if (li === LINES.length - 1) flags.push({ x, y, s, kind, seed: 30 + li * 40 + i });
         if (fire) { const b = broadside(u, L, R, { x, y }, s, kind === 'warship' ? [[4, 13, -36, 30], [9.5, 13, -36, 30]] : [[3.6, 15, -38, 34.8], [8.8, 15, -38, 34.8], [14, 15, -38, 34.8]], { skip: .3, k: 1.5 });
           smoke += b.smoke; flash += b.flash; } }
@@ -105,18 +107,18 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
     for (let i = 0; i < 14; i++) { const x = 20 + R() * 160, y = HZ - 4 + R() * 7; mid += `<path d="M${f(x)} ${f(y)}l${f(.8 + R())} ${f(-1.2 - R() * .6)}" stroke="#fff4d0" stroke-width=".4" opacity=".4"/><circle cx="${f(x)}" cy="${f(y)}" r=".5" fill="#1a1410"/>`; }
     // the pirates under fire, running left before the wind: splashes round them, splinters off the hulls
     mid += K.splash(u, { x: 30, y: HZ + 4.2, w: 7, h: 11, seed: 0, L, wind: -.4 }) + K.splash(u, { x: 102, y: HZ + 4.2, w: 6, h: 10, seed: 2, L, wind: -.4 }) + K.splash(u, { x: 176, y: HZ + 4.4, w: 7, h: 11, seed: 1, L, wind: -.4 });
-    mid += K.ship(u, L, { kind: 'revenge', x: REV.x, y: REV.y, scale: sc(REV.y) * .55, detail: 'mid', roll: -6, heel: -2, wake: true, seed: 4 });
-    mid += K.ship(u, L, { kind: 'pearl', x: PEARL.x, y: PEARL.y, scale: sc(PEARL.y) * .55, detail: 'mid', roll: -6, heel: -3, wake: true, seed: 3 });
+    mid += K.ship(u, L, { kind: 'revenge', x: REV.x, y: REV.y, scale: sc(REV.y) * .7, detail: 'near', roll: -6, heel: -2, wake: true, lights: true, seed: 4 });
+    mid += K.ship(u, L, { kind: 'pearl', x: PEARL.x, y: PEARL.y, scale: sc(PEARL.y) * .7, detail: 'near', roll: -6, heel: -3, wake: true, lights: true, seed: 3 });
     mid += K.splash(u, { x: 46, y: HZ + 7.4, w: 9, h: 13, seed: 3, L, wind: -.4 }) + K.splash(u, { x: 134, y: HZ + 7, w: 8, h: 12, seed: 4, L, wind: -.4 }) + K.splash(u, { x: 92, y: HZ + 8.4, w: 6, h: 9, seed: 5, L, wind: -.4 });
     // hits: splinters off the Pearl's quarter and the Revenge's side, a puff where the shot went in
-    for (const [hx, hy, sd] of [[80, HZ + 1.6, 9], [162, HZ + 1.6, 11]]) { const Rh = rng(sd);
+    for (const [hx, hy, sd] of [[80, HZ + 1.6, 9], [155, HZ + 1.6, 11]]) { const Rh = rng(sd);
       for (let i = 0; i < 12; i++) { const a = -Math.PI * (.1 + Rh() * .8), d = 1 + Rh() * 5.5, x = hx + Math.cos(a) * d, y = hy + Math.sin(a) * d, l = .6 + Rh() * 1.2, r = Rh() * Math.PI;
         mid += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(r) * l)} ${f(Math.sin(r) * l)}" stroke="#2a1a10" stroke-width=".4" stroke-linecap="round"/>`; }
       mid += K.smoke(u, L, { x: hx, y: hy, w: 6, h: 6, wind: -.6, seed: sd, opacity: .55 }); }
     // the two nearest ships at the edges, cut by the frame: their sails glow through, up to the top of the card
     let fg = '';
-    fg += K.ship(u, L, { kind: 'endeavour', x: WL.x, y: WL.y, scale: sc(WL.y), detail: 'near', wake: true, seed: 140 });
-    fg += K.ship(u, L, { kind: 'endeavour', x: WR.x, y: WR.y, scale: sc(WR.y), detail: 'near', wake: true, seed: 141 });
+    fg += K.ship(u, L, { kind: 'endeavour', x: WL.x, y: WL.y, scale: sc(WL.y), detail: 'near', wake: true, lights: true, seed: 140 });
+    fg += K.ship(u, L, { kind: 'endeavour', x: WR.x, y: WR.y, scale: sc(WR.y), detail: 'near', wake: true, lights: true, seed: 141 });
     // the sun's warmth over the near sea and the giants' bows; the haze between us and them
     fg += glow(u, SUN.x, HZ + 6, 70, 12, '#ffcf80', .18);
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 132, 0, 280, [[0, '#101828', 0], [.3, '#101828', .45], [1, '#080c18', .8]])}</defs><rect x="-10" y="132" width="220" height="160" fill="url(#${gl})"/>`; }
