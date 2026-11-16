@@ -10,9 +10,9 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
 import { HERE, ROOT, data, esc, fontCss, rich, RICH_CSS, type Ctx, type PageSpec } from '../../kit';
-import { BOARD, trackCells, type Ship } from '../../layout';
+import { BOARD, TOKEN, trackCells, type Ship } from '../../layout';
 import { DECK_KEY } from '../../colors';
-import { CHART_NOTES, chartPoint, chartSvg, landGrid, landIn, type ChartOpts, type ChartReport, type ChartStyle, type Rect } from '../../map/chart';
+import { CHART_NOTES, chartPoint, chartSvg, landGrid, landIn, sheetEdge, type ChartOpts, type ChartReport, type ChartStyle, type Rect } from '../../map/chart';
 import { rasterJpeg } from '../../map/raster';
 import { centerFor } from '../../map/proj';
 import { icon, iconSvg, TONE, type IconName, type IconTone } from '../icons';
@@ -51,8 +51,11 @@ const ORDER: TrackKey[] = ['sails', 'souls', 'crew', 'guns', 'hull'];
 const ROW = { label: 6.3, num: 11.6, cell: 12.6, cap: 28.7, h: 31.25 };
 /** the name of a track (13 pt small capitals) */
 const LABEL_PT = 13;
-/** the plates keep GAP of the chart between them (check-layout: PLATE_GAP) and EDGE from the sheet's edge (EDGE_GAP) */
-const GAP = 3, EDGE = 5;
+/** the chart's sheet: its torn edge INSET mm in from the paper's edge (the tears bite TORN.in further) */
+const INSET = 1.1;
+/** the plates keep GAP of the chart between them (check-layout: PLATE_GAP) and EDGE from the sheet's edge: SHEET_GAP from
+ *  the torn edge's innermost line (the frame of the sheet: nothing lies on it or beyond it) */
+const GAP = 3, EDGE = sheetEdge(INSET);
 /** the header's top (its rolls stand 0.5 mm over it), the first row under the header (its rolls + GAP) */
 const HEAD_Y = EDGE + 0.5, TOP = HEAD_Y + 26.4 + 0.5 + GAP;
 const X0 = 13.5, PAD = 2.6, ROW_GAP = GAP, BOTTOM = 210 - EDGE, MID_R = 211.5 - GAP;
@@ -172,7 +175,10 @@ function headerW(ship: Ship): number {
 const PTRG = { arrow: 3.7, medal: 10, text: 14.6, size: 8.5, rMedal: 5.6, rText: 10.2, rArrow: 9 };
 const ptrW = (s: string) => PTRG.text + W(s, PTRG.size, PTR) + PAD + 0.4;
 /** the Fires plate: the title's baseline, the slots' top, the height */
-const FIRE = { title: 5.2, slot: 6.8, h: 6.8 + BOARD.fireSlot + 1.3 };
+/** a Fire's slot: the 20 mm token with 0.5 mm round it (BOARD.fireSlot 23 left no room for the Fires in the left column
+ *  once the plates keep 5 mm from the sheet's torn edge) */
+const FIRE_SLOT = TOKEN.fire + 1;
+const FIRE = { title: 5.2, slot: 6.8, h: 6.8 + FIRE_SLOT + 1 };
 /** the Dutchman's dive plate (one nest for the two-sided token «Под водой» / «Всплыл»), in the middle beside the Guns.
  *  Boards v7, item 3: under the nest only the row of the two titles (with their icons) and «turn it over» between them —
  *  the words of each side are on the token itself (sheet 04); the plate as tall as the nest and that row, as wide as the
@@ -207,11 +213,11 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
   const rows: Row[] = [];
   short.forEach((d, i) => rows.push(mk(d, TOP + i * (ROW.h + ROW_GAP))));
   const hullRow = mk(hull, BOTTOM - ROW.h); rows.push(hullRow);
-  const fires = { x: X0, y: 0, w: 3 * BOARD.fireSlot + 2 * 3 + 2 * PAD, h: FIRE.h };
+  const fires = { x: X0, y: 0, w: 3 * FIRE_SLOT + 2 * 3 + 2 * PAD, h: FIRE.h };
   const shortEnd = TOP + short.length * (ROW.h + ROW_GAP), firesLeft = shortEnd + fires.h <= hullRow.y - GAP;
   if (firesLeft) fires.y = shortEnd;
   const leftR = Math.max(...rows.filter(rw => rw.key !== 'hull' && rw.key !== 'souls').map(rw => rw.x + rw.w), firesLeft ? fires.x + fires.w : 0);
-  const header: Rect = { x: 12, y: HEAD_Y, w: headerW(ship), h: HEAD.h };
+  const header: Rect = { x: Math.max(12, EDGE + 3.2), y: HEAD_Y, w: headerW(ship), h: HEAD.h };
   // «Эффекты на корабле» — a pointer slip of its own right of the header (its rolls stand 3.2 mm out), level with its top,
   // the arrow up to the sheet's top edge, where the cards go (boards v6, item 4: not stacked with the Plans any more)
   const px = header.x + header.w + 3.2 + GAP, effects: Rect = { x: px, y: HEAD_Y, w: Math.min(NEST.x - GAP - px, ptrW(TXT.effects)), h: 11 };
@@ -238,7 +244,22 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
   const reW = 2 * PAD + 7.4 + Math.max(...TXT.reactions.title.split(' ').map(t => W(t, 11, LABEL))) + 3 + 3 * 14 + C;
   const reactions = counters === 'board' ? { x: MID_R - reW, y: cards!.y - GAP - 20.5, w: reW, h: 20.5 } : null;
   const winBottom = reactions ? reactions.y - GAP : midBottom;
-  const window = winBottom - y >= 30 ? { x: mx, y, w: mw, h: winBottom - y } : null;
+  // the ship's window: under the Fires across the middle or, when the Fires stand in the middle, beside them at its left
+  // (the Dutchman's middle is full: the dive nest and the Souls fill its foot) — the one that holds the larger ship
+  // (the Dutchman's middle is full: the dive nest and the Souls fill its foot), cut above any row of the left column it
+  // would reach into
+  const cands: Rect[] = [{ x: mx, y, w: mw, h: winBottom - y }];
+  if (!firesLeft) {
+    const left = rows.filter(rw => rw.key !== 'hull' && rw.key !== 'souls');
+    for (const y1 of [winBottom, ...left.map(rw => rw.y - GAP)]) {
+      if (y1 <= TOP) continue;
+      const x0 = Math.max(X0, ...left.filter(rw => rw.y < y1 + GAP).map(rw => rw.x + rw.w + GAP));
+      cands.push({ x: x0, y: TOP, w: fires.x - GAP - x0, h: Math.min(y1, winBottom) - TOP });
+    }
+  }
+  const room = (b: Rect) => b.w >= 30 && b.h >= 30 ? Math.min(b.w, b.h * 1.25) : 0;
+  const best = cands.reduce((a, b) => room(b) > room(a) ? b : a);
+  const window = room(best) > 0 ? best : null;
   return { rows, header, effects, plans, fires, dutch, cards, reactions, window, log };
 }
 
@@ -478,7 +499,7 @@ function pointerSvg(pid: string, b: Rect, words: string, ic: IconName, id: strin
 }
 /** the Fires: three 23 mm places, brass-rimmed, a faint fire on deck inside */
 function firesSvg(b: Rect, id: string, L: Look, pal: Pal): string {
-  const out = [slip('fires', b, id, L)], s = BOARD.fireSlot, y0 = b.y + FIRE.slot;
+  const out = [slip('fires', b, id, L)], s = FIRE_SLOT, y0 = b.y + FIRE.slot;
   out.push(ico('fire', b.x + PAD + 2.4, b.y + 3.5, 4.4, L.tone, 'fires-icon') + text(b.x + PAD + 6.2, b.y + FIRE.title, fill(TXT.fires.title, { n: RULES.maxFires }), 10, { ...LABEL, color: pal.deep, in: 'fires' }));
   for (let i = 0; i < RULES.maxFires; i++) {
     const x = b.x + PAD + i * (s + 3);
@@ -661,7 +682,7 @@ export async function boardV2(ctx: Ctx, ship: Ship, counters: Counters): Promise
   const calm: Rect[] = [plan.header, NEST, plan.effects, plan.log, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: rw.h })),
     ...[plan.plans, plan.cards, plan.reactions, plan.dutch].filter((b): b is Rect => !!b)];
   const view = { w: PAGE.w, h: PAGE.h, mmPerDeg: L.mmPerDeg, center: [0, 0] as [number, number], anchor: place.anchor };
-  const base: ChartOpts = { style: L.chart, ...view, inset: 3.2, seed: 5 + ship.code.charCodeAt(0) % 17, calm, roses: [{ x: place.rose[0], y: place.rose[1], r: place.rose[2] }], folds: { x: [PAGE.w / 2 + 12], y: [PAGE.h / 2 + 6] } };
+  const base: ChartOpts = { style: L.chart, ...view, inset: INSET, seed: 5 + ship.code.charCodeAt(0) % 17, calm, roses: [{ x: place.rose[0], y: place.rose[1], r: place.rose[2] }], folds: { x: [PAGE.w / 2 + 12], y: [PAGE.h / 2 + 6] } };
   const at = (lon: number, lat: number) => chartPoint({ ...view, center: centerOf(view) }, lon, lat);
   const notes = L.notes ? L.notes(at, place) : {};
   // the marks the ship keeps clear of: the rose, the cross, the notes (as the chart lays them)
@@ -685,7 +706,8 @@ export async function boardV2(ctx: Ctx, ship: Ship, counters: Counters): Promise
   } else if (place.ship[2] > 0) SHIP_CHECK.push({ board: `${ship.name} (${counters})`, issues: plan.window ? ['no open water for the ship in the window'] : [] });
   const jpg = await rasterJpeg(ctx.browser, `board2-${key}-${counters}`, svgChart, PAGE.w, PAGE.h, ctx.opts.draft ? 150 : 240);
   const face = faceSvg(ctx, ship, counters, plan, id, L, pal);
-  return { html: `<div class="v2 v2-${key}"><svg class="v2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${defsOf(id, L)}<image href="${jpg.url}" x="0" y="0" width="${PAGE.w}" height="${PAGE.h}" preserveAspectRatio="none"/>${face.svg}</svg>\n${face.html}</div>`, css: '' };
+  // the chart (the sheet with its frame) and the torn edge's outline for check-layout: everything else lies inside it
+  return { html: `<div class="v2 v2-${key}"><svg class="v2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${defsOf(id, L)}<image data-sheet-art="1" href="${jpg.url}" x="0" y="0" width="${PAGE.w}" height="${PAGE.h}" preserveAspectRatio="none"/><path data-sheet-edge="1" d="${report.edge ?? ''}" fill="none" stroke="none"/>${face.svg}</svg>\n${face.html}</div>`, css: '' };
 }
 const centerOf = (v: { w: number; h: number; mmPerDeg: number; anchor: { lon: number; lat: number; x: number; y: number } }) => centerFor(v.anchor.lon, v.anchor.lat, v.anchor.x, v.anchor.y, v.w, v.h, v.mmPerDeg);
 

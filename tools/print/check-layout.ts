@@ -11,6 +11,10 @@
 //     data-frame="<frame>" (a circle: within its radius; anything else, e.g. the rect of a nest's plate: within its box),
 //     a stroked outline counted with half its stroke width — the ribbon of a header, the drawing of a medallion, the flags
 //     of a battle nest on the scheme (04b).
+// on every sheet with a frame (a path marked data-sheet-edge: the torn edge of the chart's paper, map/chart.ts):
+//   - nothing but the frame itself (the picture marked data-sheet-art, and what holds it) reaches out of that outline —
+//     every element's box, its corners and the middles of its sides, lies inside it;
+//   - every outer plate keeps ≥ SHEET_GAP (5 mm) of the paper from the outline.
 // Used by `npm run print -- --check` (check.ts) and on its own:
 //   npx vite-node tools/print/check-layout-cli.ts [-- 03-planshety 04-tryumy-zhetony 02-pamyatki]
 // Exit code 1 and the element names on an error.
@@ -19,6 +23,7 @@ import path from 'node:path';
 import type { Browser } from '@playwright/test';
 import { HTML_DIR } from './kit';
 import { MIN_STROKE } from './strokes';
+import { SHEET_GAP } from './map/chart';
 
 export const LAYOUT_FILES = ['03-planshety', '04-tryumy-zhetony', '04b-skhema-boya', '02-pamyatki'];
 /** the sheets whose plates lie on a picture: the plates keep PLATE_GAP between them and EDGE_GAP from the sheet's edge */
@@ -36,7 +41,7 @@ export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promi
       await page.goto('file://' + f);
       await page.evaluate(async () => { await document.fonts.ready; await Promise.all(Array.from(document.images).map(i => i.decode().catch(() => undefined))); });
       const gaps = GAP_FILES.includes(file) ? { plate: PLATE_GAP, edge: EDGE_GAP } : null;
-      const res: { issues: Issue[]; words: number } = await page.evaluate((gaps) => {
+      const res: { issues: Issue[]; words: number } = await page.evaluate(({ gaps, sheetGap }) => {
         const MM = 96 / 25.4, issues: Issue[] = []; let words = 0;
         const sheets = Array.from(document.querySelectorAll<HTMLElement>('section.sheet'));
         sheets.forEach((sh, si) => {
@@ -76,6 +81,36 @@ export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promi
                 if (d < gaps.plate - 0.01) issues.push({ page: si + 1, msg: d < 0 ? `plates «${ka}» and «${kb}» overlap (${(-d).toFixed(2)} mm)` : `plates «${ka}» and «${kb}» are ${d.toFixed(2)} mm apart (need ≥ ${gaps.plate})` });
               }
             });
+          }
+          // the frame of the sheet: the torn edge of the paper; everything inside it, the plates SHEET_GAP from it
+          const edge = sh.querySelector<SVGPathElement>('path[data-sheet-edge]');
+          if (edge && edge.getAttribute('d')) {
+            const em = edge.getScreenCTM(), inv = em ? DOMMatrix.fromMatrix(em).inverse() : null;
+            const inside = (x: number, y: number) => { const q = new DOMPoint(o.left + x * MM, o.top + y * MM).matrixTransform(inv!); return edge.isPointInFill(new DOMPoint(q.x, q.y)); };
+            const art = sh.querySelector('[data-sheet-art]');
+            const nameOf = (e: Element) => { const w = e.closest('[data-name],[data-deco],[data-icon],[data-plate],[data-in]'); return (w ? (w.getAttribute('data-name') ?? w.getAttribute('data-deco') ?? w.getAttribute('data-icon') ?? w.getAttribute('data-plate') ?? w.getAttribute('data-in')) + ' — ' : '') + e.tagName.toLowerCase() + (e.getAttribute('class') ? '.' + e.getAttribute('class') : ''); };
+            const out = new Map<string, number>();
+            for (const e of Array.from(sh.querySelectorAll('*'))) {
+              if (e === edge || e === art || e.contains(edge) || (art && e.contains(art)) || e.closest('defs,clipPath,mask,pattern,symbol,marker,style,title')) continue;
+              if (e instanceof SVGElement && !(e instanceof SVGGraphicsElement)) continue;
+              const q = e.getBoundingClientRect(); if (q.width < 0.5 && q.height < 0.5) continue;
+              const st = getComputedStyle(e); if (st.display === 'none' || st.visibility === 'hidden') continue;
+              const b = R(e), xs = [b.x, b.x + b.w / 2, b.x + b.w], ys = [b.y, b.y + b.h / 2, b.y + b.h];
+              let worst = 0;
+              for (const x of xs) for (const y of ys) if (!(x === xs[1] && y === ys[1]) && !inside(x, y)) worst++;
+              if (worst) { const k = nameOf(e); out.set(k, (out.get(k) ?? 0) + 1); }
+            }
+            for (const [k, n] of out) issues.push({ page: si + 1, msg: `«${k}» reaches out of the sheet's frame (the torn edge)${n > 1 ? ` — ${n} elements` : ''}` });
+            // the outline's points (densified) and the distance from each outer plate to them
+            const L = edge.getTotalLength(), pts: { x: number; y: number }[] = [];
+            for (let t = 0; t <= L; t += 0.4) { const p = edge.getPointAtLength(t), q = new DOMPoint(p.x, p.y).matrixTransform(em!); pts.push({ x: (q.x - o.left) / MM, y: (q.y - o.top) / MM }); }
+            const all = [...P].filter(([, b]) => b.w > 0.01 && b.h > 0.01);
+            const outer = all.filter(([k, b]) => !all.some(([k2, b2]) => k2 !== k && holds(b2, b) && !(holds(b, b2) && k2 > k)));
+            for (const [k, b] of outer) {
+              let d = 1e9;
+              for (const p of pts) { const dx = Math.max(b.x - p.x, 0, p.x - b.x - b.w), dy = Math.max(b.y - p.y, 0, p.y - b.y - b.h); d = Math.min(d, Math.hypot(dx, dy)); }
+              if (d < sheetGap - 0.05) issues.push({ page: si + 1, msg: `plate «${k}» is ${d.toFixed(2)} mm from the sheet's torn edge (need ≥ ${sheetGap})` });
+            }
           }
           // the ornaments inside their frames
           const frames = new Map<string, Element>();
@@ -137,7 +172,7 @@ export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promi
           }
         });
         return { issues, words };
-      }, gaps);
+      }, { gaps, sheetGap: SHEET_GAP });
       words += res.words;
       for (const i of res.issues) errors.push(`${file} p.${i.page}: ${i.msg}`);
     }

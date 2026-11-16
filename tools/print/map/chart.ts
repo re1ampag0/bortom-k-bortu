@@ -34,7 +34,8 @@ export interface ChartOpts {
   seed?: number;
   /** where the board lays its plates: the chart is calmed under them (paler, fewer lines) */
   calm?: Rect[];
-  /** the sheet lies on a table: its torn edge this far inside the box (0 — the chart fills the box, no edge) */
+  /** the sheet lies on a table: its torn edge this far inside the box (0 — the chart fills the box, no edge); the tears
+   *  bite at most TORN.in further in (the frame of the sheet: whatever lies on it keeps SHEET_GAP from its innermost line) */
   inset?: number;
   /** the wind roses (mm); the first is large, the others small */
   roses?: { x: number; y: number; r: number }[];
@@ -53,7 +54,16 @@ export interface ChartOpts {
   /** filled by chartSvg: where the labels and the marks (roses, the cross, the notes) went — for the checks */
   report?: ChartReport;
 }
-export interface ChartReport { labels: { text: string; box: Rect }[]; marks: { kind: string; box: Rect }[] }
+export interface ChartReport { labels: { text: string; box: Rect }[]; marks: { kind: string; box: Rect }[]; edge?: string }
+/** the torn edge: its wander and tears are held between `out` mm outwards and `in` mm inwards of the inset line */
+export const TORN = { in: 0.7, out: 0.8 };
+/** the plates on a sheet keep this much of the paper from its torn edge (check-layout: SHEET_GAP) */
+export const SHEET_GAP = 5;
+/** how far from the box's edge the plates may come on a chart with this inset: the torn edge's innermost line + SHEET_GAP */
+export const sheetEdge = (inset: number) => inset + TORN.in + SHEET_GAP;
+/** the Endeavour's gilt neatline: just inside the torn edge's innermost line; her chart is drawn inside it, the paper
+ *  between it and the torn edge is a plain margin */
+export const neatline = (inset: number) => inset + TORN.in + 0.6;
 
 interface Look { paper: string; paper2: string; land: string; ink: string; coast: string; wash: string; sea: string; seaK: number; rhumb: [string, string, string]; note: string; table: string; wear: number; stains: number; vignette: number }
 const LOOK: Record<ChartStyle, Look> = {
@@ -273,7 +283,7 @@ function tornPath(x: number, y: number, w: number, h: number, rnd: () => number,
   const side = (x0: number, y0: number, x1: number, y1: number) => {
     const L = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(L / step), nx = -(y1 - y0) / L, ny = (x1 - x0) / L;
     let drift = 0;
-    for (let i = 0; i < n; i++) { const t = i / n; drift = drift * 0.8 + (rnd() - 0.5) * amp * 0.9; const j = drift + (rnd() < 0.08 ? (rnd() - 0.2) * amp * 2.2 : 0); pts.push(`${r(x0 + (x1 - x0) * t + nx * j)} ${r(y0 + (y1 - y0) * t + ny * j)}`); }
+    for (let i = 0; i < n; i++) { const t = i / n; drift = drift * 0.8 + (rnd() - 0.5) * amp * 0.9; const j = Math.min(TORN.in, Math.max(-TORN.out, drift + (rnd() < 0.08 ? (rnd() - 0.2) * amp * 2.2 : 0))); pts.push(`${r(x0 + (x1 - x0) * t + nx * j)} ${r(y0 + (y1 - y0) * t + ny * j)}`); }
   };
   side(x, y, x + w, y); side(x + w, y, x + w, y + h); side(x + w, y + h, x, y + h); side(x, y + h, x, y);
   return 'M' + pts.join('L') + 'Z';
@@ -285,8 +295,13 @@ export function chartSvg(o0: ChartOpts): string {
   const L = LOOK[o.style], rnd = rng(o.seed ?? 7), W = o.w, H = o.h, id = `ch${o.style}${o.seed ?? 7}`, calm = o.calm ?? [], inset = o.inset ?? 0;
   const rings = landRings(o), land = ringPath(rings), field = coastField(rings), mm = toMm(o), k = o.mmPerDeg / 26; // k ≈ 1 at a whole-sheet chart
   const out: string[] = [], defs: string[] = [];
-  const sheet = inset > 0 ? tornPath(inset, inset, W - 2 * inset, H - 2 * inset, rnd, o.style === 'revenge' ? 1.6 : 1.1) : `M0 0H${W}V${H}H0Z`;
+  // the tears' wander scaled to the room TORN leaves them (it was drawn for tears 1.6 mm deep)
+  const sheet = inset > 0 ? tornPath(inset, inset, W - 2 * inset, H - 2 * inset, rnd, (o.style === 'revenge' ? 1.6 : 1.1) * TORN.in / 1.6) : `M0 0H${W}V${H}H0Z`;
   defs.push(`<clipPath id="${id}sh"><path d="${sheet}"/></clipPath><clipPath id="${id}ld"><path d="${land}"/></clipPath>`);
+  if (o.report) o.report.edge = sheet;
+  // the Endeavour's chart lies inside its gilt neatline (the margin round it is plain paper)
+  const neat = o.style === 'endeavour' && inset > 0 ? neatline(inset) + 1.4 : 0;
+  if (neat) defs.push(`<clipPath id="${id}nt"><rect x="${r(neat)}" y="${r(neat)}" width="${r(W - 2 * neat)}" height="${r(H - 2 * neat)}"/></clipPath>`);
   // paper: grain, mottling, a darker rim; the table round the sheet
   defs.push(`<filter id="${id}grain" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse"><feTurbulence type="fractalNoise" baseFrequency="1.8" numOctaves="2" seed="${(o.seed ?? 7) + 1}"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -.9 .55"/></filter>`);
   const [mr, mg, mb] = [1, 3, 5].map(i => (parseInt(L.paper2.slice(i, i + 2), 16) / 255).toFixed(3));
@@ -301,6 +316,7 @@ export function chartSvg(o0: ChartOpts): string {
   // a pale sea wash near the coasts (Endeavour: a clear blue; the others: a faded tone)
   out.push(`<path d="${land}" fill="none" stroke="${L.sea}" stroke-opacity="${L.seaK}" stroke-width="${r(14 * k)}" stroke-linejoin="round" filter="url(#${id}soft)"/>`);
   out.push(`<rect width="${W}" height="${H}" fill="${L.paper2}" filter="url(#${id}mott)" opacity="${r(0.45 * L.wear + 0.2)}"/>`);
+  if (neat) out.push(`<g clip-path="url(#${id}nt)">`);
   // rhumb lines from the roses
   const roses = o.roses ?? [];
   let rh = ['', '', ''];
@@ -386,6 +402,8 @@ export function chartSvg(o0: ChartOpts): string {
   }
   const hit = (b: Rect, list: Rect[]) => list.some(q => b.x < q.x + q.w && b.x + b.w > q.x && b.y < q.y + q.h && b.y + b.h > q.y);
   const onLand = (b: Rect) => { for (let i = 0; i <= 14; i++) for (let j = 0; j <= 4; j++) if (field.land({ x: b.x + b.w * i / 14, y: b.y + b.h * j / 4 })) return true; return false; };
+  // a label stays clear of the torn edge (and inside the Endeavour's neatline)
+  const lm = Math.max(3, inset > 0 ? inset + TORN.in + 1 : 0, neat ? neat + 1 : 0);
   for (const lb of TXT.labels) {
     if (skip.has(lb.text)) continue;
     const p0 = o.labelsAt?.[lb.text] ?? mm(lb.lon + (lb.dx ?? 0), lb.lat + (lb.dy ?? 0));
@@ -405,7 +423,7 @@ export function chartSvg(o0: ChartOpts): string {
     const tries: [number, number][] = [[0, 0]]; for (const d of [1, 2, 3, 4, 5]) for (const dx of [0, -0.3, 0.3, -0.6, 0.6]) tries.push([dx, -d], [dx, d]); for (const dx of [-0.3, 0.3, -0.6, 0.6]) tries.splice(1, 0, [dx, 0]);
     for (const [dx, dy] of tries) {
       const q = { x: p0.x + dx * wide, y: p0.y + dy * st.s * 1.2 }, b = boxAt(q);
-      if (hit(b, obst) || hit(b, placed) || (sea && onLand(b)) || b.x < 3 || b.x + b.w > W - 3 || b.y < 3 || b.y + b.h > H - 3) continue;
+      if (hit(b, obst) || hit(b, placed) || (sea && onLand(b)) || b.x < lm || b.x + b.w > W - lm || b.y < lm || b.y + b.h > H - lm) continue;
       p = q; placed.push(b); o.report?.labels.push({ text: lb.text, box: b }); break;
     }
     if (!p) { if (o.labelsAt?.[lb.text]) console.warn(`warning: chart label «${lb.text}» found no free place near ${JSON.stringify(p0)}`); continue; }
@@ -443,6 +461,7 @@ export function chartSvg(o0: ChartOpts): string {
   for (const nt of o.note ?? []) out.push(`<text x="${r(nt.x)}" y="${r(nt.y)}" transform="rotate(${nt.rot ?? -4} ${r(nt.x)} ${r(nt.y)})" font-family="Alegreya" font-style="italic" font-weight="500" font-size="${r(nt.size ?? 4.2)}" fill="none" stroke="${L.paper}" stroke-width=".9" stroke-opacity=".85" stroke-linejoin="round">${nt.text}</text><text x="${r(nt.x)}" y="${r(nt.y)}" transform="rotate(${nt.rot ?? -4} ${r(nt.x)} ${r(nt.y)})" font-family="Alegreya" font-style="italic" font-weight="500" font-size="${r(nt.size ?? 4.2)}" fill="${L.note}" fill-opacity=".88">${nt.text}</text>`);
   // the calm under the board's plates: paper laid softly over the busy chart
   for (const b of calm) out.push(`<rect x="${r(b.x - 0.6)}" y="${r(b.y - 0.6)}" width="${r(b.w + 1.2)}" height="${r(b.h + 1.2)}" rx="2" fill="${L.paper}" opacity=".5" filter="url(#${id}soft2)"/>`);
+  if (neat) out.push('</g>');
   // the life of the sheet
   out.push(sheetLife(o, L, id, rnd));
   out.push(`<rect width="${W}" height="${H}" fill="#000" filter="url(#${id}grain)" opacity="${r(0.12 + 0.08 * L.wear)}"/>`);
@@ -482,7 +501,7 @@ function edgeOf(o: ChartOpts, sheet: string, L: Look, id: string, rnd: () => num
   const out: string[] = [], W = o.w, H = o.h;
   out.push(`<path d="${sheet}" fill="none" stroke="#3a2410" stroke-opacity=".35" stroke-width="2.4" filter="url(#${id}soft2)" clip-path="url(#${id}sh)"/>`);
   if (o.style === 'revenge') out.push(`<g clip-path="url(#${id}sh)"><path d="${sheet}" fill="none" stroke="#1a0a04" stroke-width="5" opacity=".75" filter="url(#${id}blot)"/><path d="${sheet}" fill="none" stroke="#6a2a0c" stroke-width="10" opacity=".35" filter="url(#${id}blot)"/></g>`);
-  if (o.style === 'endeavour') { const m = (o.inset ?? 0) + 3.5; out.push(`<rect x="${m}" y="${m}" width="${r(W - 2 * m)}" height="${r(H - 2 * m)}" fill="none" stroke="#a8812e" stroke-width=".9"/><rect x="${m + 1.4}" y="${m + 1.4}" width="${r(W - 2 * m - 2.8)}" height="${r(H - 2 * m - 2.8)}" fill="none" stroke="#1f2a3a" stroke-width=".25"/>`); }
+  if (o.style === 'endeavour') { const m = neatline(o.inset ?? 0); out.push(`<rect x="${m}" y="${m}" width="${r(W - 2 * m)}" height="${r(H - 2 * m)}" fill="none" stroke="#a8812e" stroke-width=".9"/><rect x="${m + 1.4}" y="${m + 1.4}" width="${r(W - 2 * m - 2.8)}" height="${r(H - 2 * m - 2.8)}" fill="none" stroke="#1f2a3a" stroke-width=".25"/>`); }
   if (o.style === 'dutch') {
     let b = '';
     for (let i = 0; i < 70; i++) {
