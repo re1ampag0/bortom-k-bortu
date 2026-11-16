@@ -58,7 +58,7 @@ export function hullAgeDefs(): string {
     `<feColorMatrix in="t" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.4 0 0 0 -.2" result="a0"/><feComponentTransfer in="a0" result="a"><feFuncA type="table" tableValues="${table}"/></feComponentTransfer>` +
     `<feFlood flood-color="${color}"/><feComposite in2="a" operator="in"/></filter>`;
   return noise('wChar0', 'fractalNoise', '.09 .16', 4, 3, '0 0 .1 .6 1 1', '#060403') +
-    noise('wChar1', 'turbulence', '.55 .9', 2, 9, '0 0 0 0 0 .2 .7 1', '#8a8278') +
+    noise('wChar1', 'turbulence', '.55 .9', 2, 9, '0 0 0 0 0 .2 .7 1', '#4e4640') +
     noise('wPeel', 'fractalNoise', '.07 .2', 4, 5, '0 0 0 .3 .85 1', '#a4aca6');
 }
 
@@ -74,7 +74,7 @@ export function charSvg(x0: number, y0: number, x1: number, y1: number, R: () =>
       if (R() < 0.18) ash += `M${f(x + 0.2)} ${f(y + 0.25)}h${f(0.3 + R() * 0.9)}`;
     }
   }
-  return `<path d="${cr}" fill="none" stroke="#050302" stroke-width=".18" stroke-opacity="${f(0.6 * k)}" stroke-linecap="round"/><path d="${ash}" fill="none" stroke="#a09688" stroke-width=".2" stroke-opacity="${f(0.35 * k)}" stroke-linecap="round"/>`;
+  return `<path d="${cr}" fill="none" stroke="#050302" stroke-width=".18" stroke-opacity="${f(0.6 * k)}" stroke-linecap="round"/><path d="${ash}" fill="none" stroke="#645a50" stroke-width=".2" stroke-opacity="${f(0.35 * k)}" stroke-linecap="round"/>`;
 }
 
 export type PropKind = 'anchor' | 'cannon' | 'shot' | 'bottle' | 'pistol' | 'sabre' | 'barrel' | 'chest' | 'crate' | 'rock' | 'chain' | 'coins' | 'bell' |

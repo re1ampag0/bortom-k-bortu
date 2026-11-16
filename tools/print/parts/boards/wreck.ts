@@ -70,6 +70,9 @@ interface Sea {
   glow: string; rays: number;
   /** the water between the eye and the wreck: colour and strength; the lighter water behind the wreck (its silhouette reads) */
   haze: [string, number]; back: [string, number];
+  /** a dark hull on dark water (the Revenge): a soft glow of lighter water right behind the hull, the hull darkened towards
+   *  a silhouette and a rim of light along its upper edges (each colour, strength), so that it reads from afar */
+  halo?: [string, number]; dark?: [string, number]; rim?: [string, number];
   /** the sand: lit crest, body, shade */
   sand: [string, string, string];
   /** fish colour and opacity; corals (muted: they are old and under water); weed; the rags of the sails */
@@ -128,6 +131,7 @@ export const SEA: Record<ShipKey, Sea> = {
   // thing on the floor (no two the same drawing), a piece of her red side among them
   revenge: {
     light: 'revenge', water: ['#a4583a', '#6a3022', '#461a12'], glow: '#ffcc96', rays: 0.42, haze: ['#501e14', 0.18], back: ['#c46a48', 0.58],
+    halo: ['#e8a47c', 0.62], dark: ['#1a0c08', 0.42], rim: ['#ffd4a4', 0.9],
     sand: ['#dab08a', '#ac7c5c', '#66402e'], fish: ['#2a120c', 0.58], coral: ['#a8645a', '#b07a5e', '#8a5048'], weed: ['#5e5a2e', '#6e6a36', '#464222'],
     rag: '#3a1612', hz: 150,
     ship: {
@@ -703,6 +707,12 @@ ${hullG}${fallG}
   out.push(`<g filter="url(#wB05)">${school({ x: W - 96, y: H - 34, w: 80, h: 12 }, 16, 2.4, sea, R, 1)}</g>`);
   // the shadow of the hull on the floor behind it, to the right (the light is above, a little to the left and behind us)
   out.push(`<g clip-path="url(#wFloorC)"><polygon points="${poly(hull.map(q => [q[0] + 12, q[1] + (q[1] - crestMax) * -0.15 - 3] as P))}" fill="#000" fill-opacity=".34" filter="url(#wB3)"/></g>`);
+  // the lighter water right behind a dark hull: a soft glow round its body, its stumps and its stern post
+  if (sea.halo) {
+    const up = hull.map(q => [q[0], q[1] - 7] as P);
+    out.push(`<filter id="wHalo" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PAGE.h}"><feGaussianBlur stdDeviation="5"/></filter>` +
+      `<g filter="url(#wHalo)" opacity="${f(sea.halo[1])}" fill="${sea.halo[0]}" stroke="${sea.halo[0]}" stroke-width="12" stroke-linejoin="round"><polygon points="${poly(hull)}"/><polygon points="${poly(up)}"/></g>`);
+  }
   // the fallen top lies behind the hull; its shadow on the sand under its tip
   const fallMounds = () => {
     if (!fall || !S.fall) return '';
@@ -726,14 +736,14 @@ ${hullG}${fallG}
   // and coralline crust low on the side, rust run from the bolts along the waterline
   const burnt = S.burnt ?? 0, fade = S.fade ?? 0, growth = S.growth ?? 0;
   let age = '';
-  if (burnt) age += `<rect width="${W}" height="${PAGE.h}" fill="#4a3a32" opacity="${f(burnt * 0.35)}"/><g mask="url(#wCharM)"><rect width="${W}" height="${PAGE.h}" fill="#1a1210" opacity="${f(burnt * 0.2)}"/><rect width="${W}" height="${PAGE.h}" filter="url(#wChar0)" opacity="${f(burnt * 0.8)}"/>${inShip(charSvg(stem - 6 * s, hullTop - 30, xEnd + 2, S.y + 2, RD, burnt))}<rect width="${W}" height="${PAGE.h}" filter="url(#wChar1)" opacity="${f(burnt * 0.5)}"/></g>`;
+  if (burnt) age += `<rect width="${W}" height="${PAGE.h}" fill="#2a1e1a" opacity="${f(burnt * 0.45)}"/><g mask="url(#wCharM)"><rect width="${W}" height="${PAGE.h}" fill="#1a1210" opacity="${f(burnt * 0.2)}"/><rect width="${W}" height="${PAGE.h}" filter="url(#wChar0)" opacity="${f(burnt * 0.8)}"/>${inShip(charSvg(stem - 6 * s, hullTop - 30, xEnd + 2, S.y + 2, RD, burnt))}<rect width="${W}" height="${PAGE.h}" filter="url(#wChar1)" opacity="${f(burnt * 0.5)}"/></g>`;
   if (fade) {
     let planks = '';
     for (let y = deck - 6 * s; y < S.y + draft; y += 1.25 * s) { planks += `M${f(stem - 10)} ${f(y)}H${f(xEnd + 4)}`; }
     let butts = ''; for (let i = 0; i < 70; i++) { const x = stem + RD() * (xEnd - stem), y = deck - 6 * s + Math.floor(RD() * 20) * 1.25 * s; butts += `M${f(x)} ${f(y)}v${f(1.25 * s)}`; }
     age += `<rect width="${W}" height="${PAGE.h}" fill="${mix('#8e9a98', sea.haze[0], 0.3)}" opacity="${f(fade * 0.24)}"/><rect width="${W}" height="${PAGE.h}" filter="url(#wPeel)" opacity="${f(fade * 0.35)}"/>`;
     age += `<mask id="wPeelM" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PAGE.h}"><rect width="${W}" height="${PAGE.h}" filter="url(#wPeel)"/></mask>` +
-      `<g mask="url(#wPeelM)" opacity="${f(Math.min(1, fade * 1.05))}"><rect width="${W}" height="${PAGE.h}" fill="${burnt ? '#5a4e46' : '#8a8274'}"/>${inShip(`<path d="${planks}" stroke="#2e2820" stroke-width="${f(0.22 * s)}" stroke-opacity=".75"/><path d="${butts}" stroke="#2e2820" stroke-width="${f(0.2 * s)}" stroke-opacity=".6"/>`)}</g>`;
+      `<g mask="url(#wPeelM)" opacity="${f(Math.min(1, fade * 1.05))}"><rect width="${W}" height="${PAGE.h}" fill="${burnt ? '#3a302b' : '#8a8274'}"/>${inShip(`<path d="${planks}" stroke="#2e2820" stroke-width="${f(0.22 * s)}" stroke-opacity=".75"/><path d="${butts}" stroke="#2e2820" stroke-width="${f(0.2 * s)}" stroke-opacity=".6"/>`)}</g>`;
   }
   const railPts: P[] = []; for (let X = -sp.len / 2 + 2; X <= (xAft < xEnd ? (xAft - S.x) / s : sp.len / 2); X += 2) railPts.push(rot(geom.nearRail(X) as P));
   age += `<path d="${spline(railPts.map(q => [q[0], q[1] + 0.6] as P))}" fill="none" stroke="${mix(mix(sd1, sd0, 0.4), '#8c887a', 0.3)}" stroke-width="${f(0.6 * s)}" stroke-opacity=".55" filter="url(#wB02)"/>`;
@@ -755,6 +765,11 @@ ${hullG}${fallG}
   // the hull in the water: darker down to the sand, the water between us and it (no caustics on it: the net of light lies
   // on the sand); the reef: the floor's own colour taken into it
   out.push(`<g mask="url(#wSilM)"><rect width="${W}" height="${PAGE.h}" fill="url(#wAO)"/><rect width="${W}" height="${PAGE.h}" fill="${sea.haze[0]}" fill-opacity="${f(sea.haze[1] * (S.reef ? 0.4 : 1))}"/>${S.reef ? `<rect width="${W}" height="${PAGE.h}" fill="${mix('#1a2a20', sea.weed[2], 0.3)}" fill-opacity=".32"/>` : ''}</g>`);
+  // a dark hull darkened towards a silhouette; then the rim of light along its upper edges (the light from above, a little
+  // from the left): the silhouette less itself moved down and right
+  if (sea.dark) out.push(`<g mask="url(#wSilM)"><rect width="${W}" height="${PAGE.h}" fill="${sea.dark[0]}" fill-opacity="${f(sea.dark[1])}"/></g>`);
+  if (sea.rim) out.push(`<filter id="wRim" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PAGE.h}" color-interpolation-filters="sRGB"><feOffset in="SourceAlpha" dx=".3" dy=".85" result="o"/><feComposite in="SourceAlpha" in2="o" operator="out" result="e"/><feGaussianBlur in="e" stdDeviation=".16" result="b"/><feComposite in="b" in2="SourceAlpha" operator="in" result="r"/><feFlood flood-color="${sea.rim[0]}"/><feComposite in2="r" operator="in"/></filter>` +
+    `<g opacity="${f(sea.rim[1])}">${sil('wRim')}</g>`);
   // the floor taking the hull in: sand drifted up its side from the bank (soft, uneven), lumps of silt along the rail,
   // the seams opened between the planks here and there
   const upS = cp.filter(q => q[0] > stemP[0] - 4 && q[0] < sternP[0] + 4);
