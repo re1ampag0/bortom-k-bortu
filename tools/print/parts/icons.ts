@@ -865,7 +865,7 @@ const EXTENT: Partial<Record<IconName, [number, number, number, number]>> = {
   sails: [1, -1, 99, 100], crew: [2, 8, 98, 102], guns: [1, 33, 101, 99], hull: [0.5, 5, 99.5, 99],
   powder: [13, 1, 98.5, 98.5], souls: [20, 1, 82, 96], reaction: [0, 5, 93, 101], once: [10, 1, 94, 99], legend: [17, 1, 83, 96],
   effects: [1.5, 1.8, 98.3, 93.3], underwater: [1, 3, 99, 99], surfaced: [0, 1, 99, 99], volley: [0, 5, 97, 100],
-  fire: [1, 2.3, 98.8, 97.8], sinking: [1, 7.8, 98.8, 96.8], legendJack: [1.8, 4.3, 98.8, 97.2],
+  fire: [1, 2.3, 98.8, 97.8], sinking: [1, 7.8, 98.8, 96.8], legendJack: [2.3, 2.3, 97.7, 97.7],
 };
 function fitted(name: IconName, body: string): string {
   const e = EXTENT[name];

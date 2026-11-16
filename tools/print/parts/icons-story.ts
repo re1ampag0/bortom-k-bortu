@@ -421,108 +421,96 @@ function spout(k: K, bx: number, by: number, w: number, h: number, seed: number)
 }
 
 function legendJack(k: K): string {
-  // «Jack slips away»: night, a full moon; the Pearl, black sails torn, heeled hard over and shipping water, seen from
-  // astern as she slips away between the enemy ships; the balls meant for her throw up columns of water in the empty sea
-  // she has just left; far off on the horizon the enemies' guns flash
-  const H = 57;
-  const vig = circ(50, 50, 47.5);
+  // «Jack slips away»: one big plain silhouette that reads at 7.6 mm as a ship — the Pearl seen from the side, heeled hard
+  // over and running before the wind under her black sails, a full moon behind her; the balls meant for her throw up
+  // columns of white water in the sea round her. All of it inside the round vignette (r 47.5)
+  const H = 60, vig = circ(50, 50, 47.5);
   let o = '';
   // the night sky: close horizontal lines, left open round the moon
-  const mx = 25, my = 21, mr = 10;
+  const mx = 21, my = 25, mr = 10.5;
   let sky = '';
-  for (let yy = 4.6; yy < H - 0.5; yy += k.small ? 3 : 2.2) sky += `M0 ${f(yy)}L100 ${f(yy)}`;
-  o += `<g clip-path="${k.clip(`M0 0L100 0L100 ${H}L0 ${H}Z` + circ(mx, my, mr + 4.4))}"><g clip-path="${k.clip(vig)}">${k.S(sky, 0.85)}</g></g>`;
-  // the moon: a lit disc, shaded at the lower right, a few seas; a cloud drifting under it; stars
+  for (let yy = 4.6; yy < H - 0.5; yy += k.small ? 3.2 : 2.2) sky += `M0 ${f(yy)}L100 ${f(yy)}`;
+  o += `<g clip-path="${k.clip(`M0 0L100 0L100 ${H}L0 ${H}Z` + circ(mx, my, mr + 3.6))}">${k.S(sky, k.small ? 1.1 : 0.85)}</g>`;
+  // the moon: a lit disc shaded at the lower right, a few seas
   o += k.shape(circ(mx, my, mr), {
-    fill: 'light', sw: 1.6,
-    h: [{ a: 45, g: 2.2, w: 0.7, r: outside(circ(mx - 2.6, my - 2.6, mr * 1.02)) }],
-    inner: k.fine(k.F(circ(mx - 3, my - 1.4, 2.4, 1.8) + circ(mx + 2.6, my + 2.4, 1.8, 1.4) + circ(mx + 1.4, my - 4, 1.2, 0.9), 'mid')),
+    fill: 'light', sw: 1.8,
+    h: [{ a: 45, g: 2.2, w: 0.7, r: outside(circ(mx - 2.8, my - 2.8, mr * 1.02)) }],
+    inner: k.fine(k.F(circ(mx - 3, my - 1.4, 2.4, 1.8) + circ(mx + 2.8, my + 2.6, 1.9, 1.4) + circ(mx + 1.6, my - 4.2, 1.2, 0.9), 'mid')),
   });
-  o += k.fine(k.shape('M8 36C8 33 11 31.6 14 32.6C15.4 29.6 20 29 22.4 31.4C24.6 29.4 29 30 30 32.8C33 32 36.4 33.4 36 36Z', { fill: 'light', sw: 1.2, h: [{ a: 0, g: 1.3, w: 0.6, r: rect(0, 34.4, 100, 3) }] }));
-  for (const [x, y, r] of [[46, 8, 1.4], [58, 18, 1], [10, 22, 1], [80, 8, 1.3], [44, 30, 0.9], [90, 30, 1]]) o += k.fine(k.F(star(x, y, 4, r * 0.4, r * 2, 0), 'paper'));
-  // the enemies on the horizon, their guns flashing toward the gap
-  o += ship(k, 7.6, H + 0.6, 0.1, false) + ship(k, 46, H + 0.3, 0.07, false);
-  for (const [x, y, r] of [[13.6, H - 1.6, 1.6], [42.4, H - 1.2, 1.2]]) o += k.shape(star(x, y, 8, r * 0.5, r * 1.6, 0), { fill: 'light', sw: 0.9 });
-  // the sea: dark, ruled, a path of moonlight under the moon
+  for (const [x, y, r] of [[44, 9, 1.4], [84, 18, 1.2], [8, 44, 1], [92, 40, 1]]) o += k.fine(k.F(star(x, y, 4, r * 0.4, r * 2, 0), 'paper'));
+  // the sea: ruled, a path of moonlight under the moon
   let sea = '';
-  for (let yy = H + 1.6, i = 0; yy < 99; yy += 1.7 + i * 0.22, i++) sea += `M0 ${f(yy)}L100 ${f(yy)}`;
+  for (let yy = H + 1.6, i = 0; yy < 99; yy += 1.8 + i * 0.25, i++) sea += `M0 ${f(yy)}L100 ${f(yy)}`;
   let path = '';
-  for (let yy = H + 2, i = 0; yy < 92; yy += 2.6 + i * 0.3, i++) {
-    const w = 2 + i * 0.9, c = mx + Math.sin(i * 1.7) * 1.4;
+  for (let yy = H + 2, i = 0; yy < 80; yy += 2.6 + i * 0.3, i++) {
+    const w = 2 + i * 0.8, c = mx + Math.sin(i * 1.7) * 1.2;
     path += `M${f(c - w)} ${f(yy)}L${f(c - w * 0.25)} ${f(yy)}M${f(c + w * 0.1)} ${f(yy)}L${f(c + w)} ${f(yy)}`;
   }
-  o += `<g clip-path="${k.clip(vig)}">` + k.shape(`M0 ${H}L100 ${H}L100 100L0 100Z`, { fill: 'mid', sw: 0, inner: k.S(sea, 0.9) + k.S(path, 1.5, 'light') }) + '</g>';
-  const hw = Math.sqrt(47.5 ** 2 - (H - 50) ** 2);
-  o += k.S(`M${f(50 - hw)} ${H}L${f(50 + hw)} ${H}`, 1.2);
-  // the far splash
-  o += spout(k, 32, 64, 2, 9, 4);
-  // the Pearl, from astern, heeled over to starboard, her wake behind her
-  o += k.S('M38 84Q46 82 52 82M44 88Q50 86 56 85.4', 1.4, 'light');
-  o += `<g clip-path="${k.clip('M0 0L100 0L100 77.4L40 81.6L0 81.6Z')}">` + g('translate(53 80) rotate(17) scale(0.7)', pearl(k)) + '</g>';
-  // the sea washing over her lee side
-  o += k.shape('M60 80.4C63 77.4 68 77 71 78.6C74 75.6 79 75 82 77.2C85 74.6 90 74.6 92 77C94.6 76.6 96.4 78 95.6 80C84 82.2 70 82.4 60 80.4Z', { fill: 'light', sw: 1.5, h: [{ a: 0, g: 1.3, w: 0.6, r: rect(0, 79, 100, 4) }] });
-  for (const [x, y, r, a] of [[90, 71, 1.1, -50], [95, 73.4, 0.9, -20], [84, 70.6, 0.9, -80], [76, 72, 0.8, -100]]) o += drop(k, x, y, r, a);
-  // the near splashes, in the empty water she has just left, and a ball still falling
-  o += spout(k, 40, 92, 3.8, 22, 2) + spout(k, 20, 87, 5.6, 38, 1);
-  o += k.fine(k.S('M45 41L50 49.4M43.4 42.6L47.6 49.8', 0.8)) + k.shape(circ(51.4, 52, 1.8), { fill: 'ink', sw: 0.8 });
-  return o;
+  o += k.shape(`M0 ${H}L100 ${H}L100 100L0 100Z`, { fill: 'mid', sw: 0, inner: k.S(sea, k.small ? 1.1 : 0.9) + k.fine(k.S(path, 1.5, 'light')) });
+  o += k.S(`M0 ${H}L100 ${H}`, 1.2);
+  // a far column of water on the horizon, behind her
+  o += k.fine(spout(k, 88, H + 3, 1.6, 8, 4));
+  // the Pearl: bow to the right, pitched up on a sea and heeled (her rig leaning to leeward); cut at the waterline
+  const wl = 70, cut = (x: number) => wl + 0.8 + (54 - x) * 0.0875;
+  o += `<g clip-path="${k.clip(`M0 0L100 0L100 ${f(cut(100))}L0 ${f(cut(0))}Z`)}">` + g(`translate(54 ${wl}) rotate(-5) scale(0.82)`, pearl(k)) + '</g>';
+  // the sea breaking white at her bow, a streak of foam along her side, her wake astern
+  o += k.S(`M25 ${f(cut(25) - 0.4)}L72 ${f(cut(72) - 0.4)}`, 1.6, 'light');
+  o += k.shape(`M64 ${f(cut(64) + 0.6)}C68 ${f(cut(68) - 0.6)} 72 ${f(cut(72) - 2)} 75 ${f(cut(75) - 3.4)}C77 ${f(cut(77) - 2)} 79 ${f(cut(79) - 0.8)} 81 ${f(cut(81) + 0.4)}C75 ${f(cut(75) + 1.4)} 69 ${f(cut(69) + 1.6)} 64 ${f(cut(64) + 0.6)}Z`, { fill: 'light', sw: 1.2 });
+  for (const [x, y, r, a] of [[78.6, cut(79) - 5, 1, -40], [81.6, cut(82) - 2.6, 0.8, -10]]) o += drop(k, x, y, r, a);
+  o += k.S(`M22 ${f(cut(22) + 0.6)}Q14 ${f(cut(14) + 1.4)} 5 ${f(cut(5) + 0.6)}M23 ${f(cut(23) + 2.6)}Q15 ${f(cut(15) + 4.4)} 6 ${f(cut(6) + 4.4)}`, 1.4, 'light');
+  // the columns of water round her: one astern, one ahead of her bow, one under her quarter, a ball still falling
+  o += spout(k, 15, 93, 5.2, 29, 2) + spout(k, 86, 91, 4.4, 25, 1) + spout(k, 52, 96, 3.4, 17, 3);
+  o += k.fine(k.S('M31 76L35 82.4M29.4 77.4L32.6 82.6', 0.8)) + k.shape(circ(36.2, 84.4, 1.7), { fill: 'ink', sw: 0.8 });
+  // everything inside the round vignette, its rim a fine ring
+  return `<g clip-path="${k.clip(vig)}">${o}</g>` + k.S(circ(50, 50, 47.2), 1);
 }
 
-/** the Pearl seen from astern on her starboard quarter, upright, the waterline at the stern post at (0, 0): the moonlit
- *  transom with two tiers of windows and the taffrail lantern, the dark side running away to the bow, three masts,
- *  black sails torn and holed, the ensign streaming */
+/** the Pearl from the side, bow to the right, the waterline at y = 0 under her mainmast: a long black hull with a high
+ *  stern castle, a light wale and a row of ports, a bowsprit and jib; three masts leaning to leeward (she is heeled), black
+ *  square sails with ragged feet, the moonlit leech of each; a black pennant at the main truck */
 function pearl(k: K): string {
   let o = '';
-  // a black square sail [left x, right x, yard y, foot y], its foot ragged, a hole, the moonlit leech and the yard
-  const sail = (x0: number, x1: number, y0: number, y1: number, tear: number) => {
-    const w = x1 - x0, b = w * 0.06, n = 6;
+  // the rig leans: a shear about the waterline (the trucks go forward and to leeward)
+  const P = (x: number, y: number) => pp([x - y * 0.2, y]);
+  // a black square sail on mast x: yard at y0, foot at y1, half width w; its foot ragged, the moonlit leech on the left
+  const sail = (x: number, y0: number, y1: number, w: number, tear: number) => {
+    const n = 5, b = w * 0.14;
     let foot = '';
     for (let i = n; i >= 0; i--) {
-      const u = i / n, x = x0 + u * w, rag = (i * 7 + tear) % 3 === 0 ? 3.4 : (i * 5 + tear) % 4 === 0 ? -1.6 : 0.6;
-      foot += `L${f(x)} ${f(y1 - Math.sin(u * Math.PI) * 2.4 + (i > 0 && i < n ? rag : 0))}`;
+      const u = i / n, rag = (i * 7 + tear) % 3 === 0 ? 2.6 : (i * 5 + tear) % 4 === 0 ? -1.2 : 0.4;
+      foot += `L${P(x - w + u * 2 * w, y1 - Math.sin(u * Math.PI) * 1.6 + (i > 0 && i < n ? rag : 0))}`;
     }
-    const d = `M${f(x0)} ${f(y0)}L${f(x1)} ${f(y0)}C${f(x1 + b)} ${f(y0 + (y1 - y0) * 0.4)} ${f(x1 + b)} ${f(y0 + (y1 - y0) * 0.7)} ${f(x1)} ${f(y1)}` + foot +
-      `C${f(x0 - b)} ${f(y0 + (y1 - y0) * 0.7)} ${f(x0 - b)} ${f(y0 + (y1 - y0) * 0.4)} ${f(x0)} ${f(y0)}Z`;
-    const hx = x0 + w * (0.3 + (tear % 3) * 0.18), hy = y0 + (y1 - y0) * 0.45, hs = Math.min(1.4, (y1 - y0) / 10);
-    const hole = `M${f(hx)} ${f(hy - 2.6 * hs)}L${f(hx + 2.2 * hs)} ${f(hy - 0.6 * hs)}L${f(hx + 1.2 * hs)} ${f(hy + 2.4 * hs)}L${f(hx - 1.6 * hs)} ${f(hy + 1.6 * hs)}L${f(hx - 2 * hs)} ${f(hy - 0.8 * hs)}Z`;
+    const d = `M${P(x - w, y0)}L${P(x + w, y0)}C${P(x + w + b, y0 + (y1 - y0) * 0.4)} ${P(x + w + b, y0 + (y1 - y0) * 0.75)} ${P(x + w, y1)}` + foot +
+      `C${P(x - w - b, y0 + (y1 - y0) * 0.75)} ${P(x - w - b, y0 + (y1 - y0) * 0.4)} ${P(x - w, y0)}Z`;
     return k.shape(d, {
-      fill: 'ink', sw: 2,
-      inner: k.S(`M${f(x0 + 1.8)} ${f(y0 + 2)}Q${f(x0 - b * 0.3)} ${f((y0 + y1) / 2)} ${f(x0 + 1.8)} ${f(y1 - 2.6)}`, 2, 'light') +
-        k.fine(k.S(`M${f(x0 + w * 0.36)} ${f(y0)}Q${f(x0 + w * 0.34)} ${f((y0 + y1) / 2)} ${f(x0 + w * 0.36)} ${f(y1 - 2)}M${f(x0 + w * 0.68)} ${f(y0)}Q${f(x0 + w * 0.7)} ${f((y0 + y1) / 2)} ${f(x0 + w * 0.68)} ${f(y1 - 2)}`, 1, 'mid')) +
-        (tear === 2 ? k.fine(k.shape(hole, { fill: 'mid', sw: 1, h: [{ a: 0, g: 2.2, w: 0.8 }] })) : ''),
-    }) + k.shape(`M${f(x0 - 2.4)} ${f(y0 - 1.6)}L${f(x1 + 2.4)} ${f(y0 - 1.6)}L${f(x1 + 2.4)} ${f(y0 + 1.2)}L${f(x0 - 2.4)} ${f(y0 + 1.2)}Z`, { fill: 'mid', sw: 1.4 });
+      fill: 'ink', sw: 1.6,
+      inner: k.S(`M${P(x - w + 1.6, y0 + 1.4)}Q${P(x - w - b * 0.2, (y0 + y1) / 2)} ${P(x - w + 1.6, y1 - 2)}`, k.small ? 2.2 : 1.6, 'light') +
+        k.fine(k.S(`M${P(x - w * 0.2, y0 + 1)}Q${P(x - w * 0.24, (y0 + y1) / 2)} ${P(x - w * 0.2, y1 - 1.6)}M${P(x + w * 0.42, y0 + 1)}Q${P(x + w * 0.46, (y0 + y1) / 2)} ${P(x + w * 0.42, y1 - 1.6)}`, 0.8, 'mid')),
+    }) + k.S(`M${P(x - w - 1.4, y0)}L${P(x + w + 1.4, y0)}`, k.small ? 2.2 : 1.6);
   };
-  const mast = (x: number, y0: number, y1: number) => k.shape(rect(x - 1.5, y1, 3, y0 - y1), { fill: 'mid', sw: 1.4 });
-  const pennant = (x: number, y: number) => k.shape(`M${x} ${y}L${x + 10} ${y + 1.6}L${x} ${y + 3.2}Z`, { fill: 'ink', sw: 1 });
-  // stays and shrouds (fine)
-  o += k.fine(k.S('M34 -72L57 -27M16 -86L34 -72M-6 -68L16 -86M-18 -32L-6 -66M36 -22L16 -84M50 -18L34 -70', 1));
-  // the bowsprit
-  o += k.shape('M44 -19L58 -28L59.4 -25.6L46 -15Z', { fill: 'mid', sw: 1.4 });
-  // the foremast (furthest), the mainmast, the mizzen (nearest)
-  o += mast(34, -22, -72) + sail(24, 44, -68, -55, 1) + sail(22, 46, -51, -32, 2) + pennant(34, -74);
-  o += mast(16, -28, -88) + sail(8, 24, -84, -73, 0) + sail(4, 28, -69, -54, 2) + sail(1, 31, -50, -33, 1) + pennant(16, -90);
-  o += mast(-6, -32, -70) + sail(-15, 3, -66, -54, 2) + sail(-18, 6, -50, -36, 0);
-  // the side running away to the bow: dark, the wale and the rail catching the moon, a row of ports
-  o += k.shape('M2 -33L42 -21L48 -15L44 -6L1 -3Z', {
-    fill: 'mid', sw: 2,
-    h: [{ a: 0, g: 1.7, w: 0.8 }, { a: 60, g: 2, w: 0.8, r: 'M0 -14L60 -8L60 4L0 4Z' }],
-    inner: k.S('M2 -30L43 -18.4', 1.6, 'light') + k.S('M1.6 -15L46 -9.6', 1.4, 'light') + k.F([7, 16, 25, 33].map((x, i) => rect(x, -26 + i * 2.4, 4 - i * 0.4, 3.6 - i * 0.3)).join(''), 'ink'),
+  const mast = (x: number, top: number) => k.S(`M${P(x, -8)}L${P(x, top)}`, k.small ? 2.6 : 2);
+  // stays (fine)
+  o += k.fine(k.S(`M${P(-1, -60)}L${P(19, -52)}M${P(19, -52)}L48 -21M${P(-1, -60)}L${P(-24, -48)}M${P(-24, -48)}L-38 -17`, 0.8));
+  // the bowsprit and the jib
+  o += k.S('M30 -13L49 -22', k.small ? 2.6 : 2) + k.shape(`M47 -21L${P(19, -47)}L31 -14Z`, { fill: 'ink', sw: 1.4, inner: k.S(`M44.6 -20.2L${P(19.6, -44)}`, k.small ? 2 : 1.4, 'light') });
+  // the masts and sails: the mizzen (aft), the main, the fore
+  o += mast(-24, -48) + sail(-24, -44, -33, 6.6, 1) + sail(-24, -31, -16, 8.4, 2);
+  o += mast(-1, -60) + sail(-1, -56, -43, 9, 0) + sail(-1, -41, -16, 12.4, 2);
+  o += mast(19, -52) + sail(19, -48, -37, 7.6, 2) + sail(19, -35, -16, 10, 1);
+  // a black pennant streaming forward from the main truck, the ensign at the stern
+  o += k.shape(`M${P(-1, -60)}L${P(12, -58)}L${P(-1, -56)}Z`, { fill: 'ink', sw: 1 });
+  o += k.S(`M-37 -16L${P(-41, -26)}`, 1.2) + k.shape(`M${P(-41, -26)}L${P(-52, -27)}L${P(-49, -24)}L${P(-51.6, -21.6)}L${P(-41.4, -22)}Z`, { fill: 'ink', sw: 1.1 });
+  // the hull: a high stern castle (left), the waist, a raised forecastle and the curved stem (right)
+  const hull = 'M-40 -17L-30 -17L-28 -12Q0 -9.4 24 -11.6L26 -14.6L34 -14.6C35 -8 30 -1 20 2L-26 2C-33 0.6 -36.4 -5 -37.6 -10L-40 -17Z';
+  let ports = '';
+  for (let x = -22; x <= 18; x += 5.6) ports += rect(x, -7.6 + Math.abs(x) * 0.02, 2.2, 2);
+  o += k.shape(hull, {
+    fill: 'ink', sw: 1.6,
+    inner: k.S('M-38.4 -13.4L-29 -13.4L-27.4 -9Q0 -6.8 25.4 -9.2L33 -9.8', k.small ? 2.4 : 1.4, 'light') +
+      k.fine(k.S('M-36 -4.4Q0 -3 26 -4.6', 1.2, 'mid') + k.F(ports, 'light') + k.F(rect(-38.4, -16, 1.6, 2) + rect(-35.6, -16, 1.6, 2), 'light')),
   });
-  // the transom, lit by the moon: two tiers of windows, the carved counter, the rudder
-  const tr = 'M-18 -34Q-8 -37.4 2 -34L1 -5Q-4 0 -9 0Q-14 0 -16 -5Z';
-  let win = '';
-  for (const x of [-15.6, -10.8, -6, -1.2]) win += rect(x, -30, 3.4, 5);
-  for (const x of [-13.6, -8.6, -3.6]) win += rect(x, -20.4, 3.4, 4.4);
-  o += k.shape(tr, {
-    fill: 'light', sw: 2.2,
-    h: [{ a: 90, g: 1.8, w: 0.8, r: rect(-6, -40, 12, 44) }, { a: 0, g: 1.6, w: 0.7, r: rect(-20, -12, 30, 14) }],
-    inner: k.S('M-18 -23.6L2 -23.6M-17 -14.4L1.4 -14.4', 1.4) + k.F(win, 'ink') + k.fine(k.S('M-15 -9L0 -9M-13 -5L-1 -5', 0.8)),
-  });
-  o += k.shape('M-19 -37.6Q-8 -41.4 3 -37.6L3 -34Q-8 -37.8 -19 -34Z', { fill: 'mid', sw: 1.6, inner: k.S('M-18 -36Q-8 -39.6 2 -36', 1, 'light') });
-  o += k.shape('M-10 -38.4L-8 -43.4L-6 -38.4Z', { fill: 'light', sw: 1 }) + k.S('M-8 -43.4L-8 -45.6', 1);
-  o += k.shape('M-10 0L-7.6 0L-8 7L-10.4 7Z', { fill: 'ink', sw: 1 });
-  // the ensign streaming from the taffrail
-  o += k.S('M2 -36L4.6 -48', 1.2) + k.shape('M4.6 -48L17 -51.4L14 -47.4L16.6 -43.4L5.2 -43.6Z', { fill: 'ink', sw: 1.2 });
+  // the taffrail lantern
+  o += k.fine(k.shape('M-41.6 -17L-40.6 -21L-39.4 -21L-38.4 -17Z', { fill: 'light', sw: 0.9 }));
   return o;
 }
 
