@@ -1,6 +1,6 @@
 // «Русалки» (Колода моря): a still evening in the lilac afterglow, the full moon low over a cluster of black rocks off our bow. On the rocks
 // the wild mermaids sing: one sits on the crown of the big rock, her face to us in profile and her mouth open in the
-// song, one hand on her breast, the other held out to the sailor; another lies on the low rock singing too; a third
+// song, one hand held out to the sailor; another lies on the low rock singing too; a third
 // flips her tail by the rocks. The song goes over the water to the ship in shimmering rings and a few notes. A sailor
 // has already leapt off the bow — caught diving head first down towards them, body leaning to the rocks, knees and
 // elbows bent, hands reaching, his face rapt and his mouth open; below him the splash of the man who went before.
@@ -9,6 +9,9 @@
 // faces had no features — now the people are drawn as contours (lib/people.cjs: sleeves with folds and cuffs, hands
 // with fingers, heads in profile with eye, brow, nose, mouth); the bow has a rail cap, shaded strakes, a channel with
 // deadeyes for the shrouds; the anchor is gone.
+// Third pass (print review): the mermaids were grey mannequins with seams at the neck and the shoulders — now each
+// body (neck, shoulders, torso, near arm) is one shape with one outline, sea-pale living skin, detailed faces, long
+// wet hair over the shoulders, the skin turning into the tail under fine scales.
 // Brief: docs/mockups/print/card-briefs.md «Русалки».
 'use strict';
 const K = require('../kit/index.cjs');
@@ -113,8 +116,8 @@ function scaleFringe(T, pts, s, dir) {
       o += `<path d="M${f(x - nx * r)} ${f(y - ny * r)}Q${f(x - dx * r * 1.6)} ${f(y - dy * r * 1.6)} ${f(x + nx * r)} ${f(y + ny * r)}Z" fill="${mix(T.tail, T.tailLit, .5)}" stroke="${mix(T.tail, T.out, .4)}" stroke-width=".12" opacity="${row ? .45 : .85}"/>`; } });
   return o;
 }
-// she sits on the crown of the rock facing left (towards our ship), singing to it: the head lifted, the mouth open, one
-// hand on her breast, the other held out to the sailor; the tail runs down the right side of the rock to the sea
+// she sits on the crown of the rock facing left (towards our ship), singing to it: the head lifted, the mouth open, the far
+// arm hangs behind her, the near one is held out to the sailor; the tail runs down the right side of the rock to the sea
 function mermaidSitting(u, L, x, y, s) {
   const T = mermaidTones(L, x, y), P = (a, b) => [x + a * s, y + b * s], Q = arr => arr.map(p => P(p[0], p[1])), tn = T.tone;
   let o = '';
@@ -131,11 +134,7 @@ function mermaidSitting(u, L, x, y, s) {
   // the hair down her back, behind the body: a long wet mass from the crown to the waist
   const backHair = Q([[-1.6, -21.6], [.6, -21.8], [2.4, -20.2], [3.4, -17.4], [4.2, -14], [4.8, -10.4], [5.6, -6.8], [6.4, -3.6], [5, -3.4], [4.2, -5.6], [3.6, -8.6], [2.8, -12], [1.6, -15.4], [0, -18]]);
   o += `<path d="${sp(backHair, true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
-  // the far arm, behind the body: the elbow forward of the waist, the forearm up to the hand laid on her breast
-  const farT = { lit: mix(tn.lit, tn.half, .3), half: mix(tn.half, tn.core, .35), core: mix(tn.core, tn.shadow, .3), shadow: tn.shadow, outline: tn.outline };
-  { const w = limb(Q([[-1.4, -11.6], [-2.6, -8], [-4.6, -6.2], [-4.6, -8], [-4.2, -8.8]]), [1.6 * s, 1.4 * s, 1.15 * s, 1 * s, .9 * s]);
-    o += `<path d="${sp(w, true)}" fill="${farT.half}" stroke="${tn.outline}" stroke-width=".35"/>`; }
-  const farHand = H.hand(u, { at: P(-4.4, -8.4), a: -70, s: .34 * s, m: -1, pose: 'open', spread: 3, curl: .45, tone: farT, thumb: 'back', sw: .25 });
+  // (the far arm hangs behind her body, out of sight)
   // the body: neck, shoulders and torso in one shape, the near arm held out to the sailor grown from the shoulder
   const torso = Q([[-1.9, -16.8], [-2.1, -15.2], [-2.7, -13.9], [-3.4, -12.8], [-3.9, -10.9], [-4.1, -9.7], [-3.4, -8.5], [-2.6, -6.2], [-2.8, -3.6], [-3.6, -.4], [-3.4, 1.8], [0, 2.2], [3.3, 1.6], [3.3, -1.4], [2.1, -5.2], [2.7, -8.8], [3.3, -11.4], [2.8, -13.2], [1.5, -14.3], [.8, -15.6], [.6, -17.2], [-.8, -17.6]]);
   const sh = P(-.9, -13.1), el = P(-5.8, -14.1), wr = P(-10.2, -15.5);
@@ -152,7 +151,7 @@ function mermaidSitting(u, L, x, y, s) {
     + `<path d="${sp(Q([[-2, -16.4], [-1.2, -15.4]]))}" stroke="${tn.shadow}" stroke-width="${f(.9 * s)}" fill="none" opacity=".55"/>`
     + `<path d="${sp(Q([[-6, -13.2], [-9.6, -14.6]]))}" stroke="${tn.core}" stroke-width="${f(.7 * s)}" fill="none" opacity=".5"/>`
     + `<path d="${sp(Q([[1.6, -13.8], [2.8, -11.6], [2.6, -8], [2.2, -5]]))}" stroke="#ffffff" stroke-width="${f(.7 * s)}" fill="none" opacity=".35"/>`);
-  o += hn.front + farHand.back + farHand.front;
+  o += hn.front;
   o += `<path d="${sp(Q([[1.5, -14.3], [2.8, -13.2], [3.3, -11.4], [2.9, -8.8], [2.5, -5.2]]))}" stroke="${T.rim}" stroke-width=".5" fill="none" opacity=".75"/>`;
   o += `<path d="${sp(Q([[-.4, -13.9], [-3.2, -14.8], [-6.2, -14.9]]))}" stroke="${T.rim}" stroke-width=".4" fill="none" opacity=".55"/>`;
   // the skin turns into the tail under a fringe of fine scales
@@ -163,7 +162,7 @@ function mermaidSitting(u, L, x, y, s) {
   o += hd.svg;
   // the hair over the crown and the back of the head, and a long wet lock over the near shoulder down her breast
   o += `<path d="${sp(Q([[-2.6, -21], [-1.4, -22], [.4, -22.1], [1.8, -21.2], [2.6, -19.4], [3, -17], [2.4, -14.8], [1.2, -14.8], [.7, -16.6], [.4, -18.2], [-.2, -19.4], [-1, -20.2], [-2, -20.4]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
-  o += `<path d="${sp(Q([[-.2, -19.8], [.6, -17.6], [.6, -15.4], [-.4, -13.6], [-1.6, -11.6], [-2.2, -9.4], [-2.4, -7.2], [-3, -6.4], [-3, -8.6], [-2.6, -10.8], [-1.6, -13], [-.6, -15], [-.6, -17.6]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
+  o += `<path d="${sp(Q([[-.2, -19.8], [.6, -17.6], [.6, -15.4], [-.4, -13.6], [-1.6, -11.6], [-2.1, -9.4], [-2.3, -7.4], [-2.7, -5.6], [-2.9, -7.6], [-2.7, -10.2], [-1.6, -13], [-.6, -15], [-.6, -17.6]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
   for (const k of [0, 1, 2]) o += `<path d="${sp(Q([[-.8 + k * .8, -21.6], [.4 + k * .8, -19.4], [1.6 + k * .7, -16], [3 + k * .6, -11 + k], [4.2 + k * .5, -6 + k * .4]]))}" stroke="${T.hairHi}" stroke-width=".3" fill="none" opacity=".7"/>`;
   o += `<path d="${sp(Q([[0, -18.4], [.2, -16], [-.8, -13.6], [-1.9, -11], [-2.4, -8]]))}" stroke="${T.hairHi}" stroke-width=".3" fill="none" opacity=".7"/>`;
   o += `<path d="${sp(Q([[.4, -21.8], [1.8, -20.8], [2.6, -18.6], [3.4, -15], [4.2, -11], [5, -7.6], [6.2, -4]]))}" stroke="${T.rim}" stroke-width=".5" fill="none" opacity=".7"/>`;
