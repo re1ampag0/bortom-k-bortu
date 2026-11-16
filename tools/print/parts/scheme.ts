@@ -19,6 +19,7 @@ import { chartSvg, type Rect } from '../map/chart';
 import { rasterJpeg } from '../map/raster';
 import { icon, TONE, type IconName } from './icons';
 import { brassDisc } from './tokens-art';
+import { sideRibbonSvg } from './boards/emblem';
 import { measureMissing, widthOf, type TO } from './boards/frame';
 import { TOKEN } from '../layout';
 
@@ -166,15 +167,12 @@ function nestSvg(side: Side, i: number): string {
   return out.join('');
 }
 /** the side's name between its two nests: a dark plate with a brass rule */
+/** the side's name between its two nests: the scroll of the board headers (parts/boards/emblem.ts), larger — the side's
+ *  colour in its edges and swallow tails, the word letter-spaced on the paper face with lozenges */
 function namePlate(side: Side): { svg: string; box: Rect } {
-  const sd = SIDE[side], size = 11, so: TO = { font: 'Alegreya SC', w: 800, ls: '.12em' }, word = sd.name.toUpperCase();
-  const tw = W(word, size, so), cy = NY[side] + NEST.size / 2, cx = (NX[0] + NEST.size + NX[1]) / 2, w = tw + 10, h = 8.6, b = { x: cx - w / 2, y: cy - h / 2, w, h };
-  return {
-    box: b,
-    svg: shadow(b, 1.3, 0.3) + `<rect data-plate="name-${side}" x="${r(b.x)}" y="${r(b.y)}" width="${r(w)}" height="${h}" rx="1.3" fill="${sd.plate}" stroke="${LOOK.brass[2]}" stroke-width=".3"/>` +
-      `<rect x="${r(b.x + 0.8)}" y="${r(b.y + 0.8)}" width="${r(w - 1.6)}" height="${r(h - 1.6)}" rx=".8" fill="none" stroke="${LOOK.brass[1]}" stroke-width=".3"/>` +
-      text(cx + pt(size) * 0.06, cy + pt(size) * 0.33, word, size, { ...so, color: '#fff4d8', anchor: 'middle', in: `name-${side}` })
-  };
+  const sd = SIDE[side], cy = NY[side] + NEST.size / 2, cx = (NX[0] + NEST.size + NX[1]) / 2;
+  const rb = sideRibbonSvg(sd.name.toUpperCase(), side, cx, cy, { id: `${ID}-${side}`, size: 13, plate: `name-${side}` });
+  return { box: rb.box, svg: rb.svg };
 }
 /** the part of the segment a→b outside the rect c (Liang–Barsky): 0, 1 or 2 pieces */
 function cutOut(a: { x: number; y: number }, b: { x: number; y: number }, c: Rect | null): [number, number][] {
