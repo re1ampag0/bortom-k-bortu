@@ -45,7 +45,7 @@ export const CARD_CSS = `${RICH_CSS}
 .lg{position:absolute;white-space:nowrap}
 /* the Legend («ЛЕГЕНДА»): engraved gold frame (SVG), golden glass baked into the picture, dark ink, the medallion, the ship's ribbon */
 .cd.lgd .lgf{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
-.cd.lgd .gl{left:${mm(LG.glass.inset)};right:${mm(LG.glass.inset)};bottom:${mm(LG.glass.bottom)};border:.35mm solid ${LEGEND.glass.rim};color:${LEGEND.ink.text}}
+.cd.lgd .gl{left:${mm(LG.glass.inset)};right:${mm(LG.glass.inset)};bottom:${mm(LG.glass.bottom)};padding:1.8mm 1.5mm 1.5mm;border:.35mm solid ${LEGEND.glass.rim};color:${LEGEND.ink.text}}
 .cd.lgd .gl::before{content:'';position:absolute;inset:.55mm;border:.2mm solid rgba(122,82,8,.55);border-radius:${mm(G.radius - .5)};pointer-events:none}
 .cd.lgd .nm{color:${LEGEND.ink.name};font-weight:800;text-shadow:-.13mm -.13mm 0 ${LEGEND.ink.light},.17mm .22mm 0 #a8700e}
 .cd.lgd .vr{width:28mm;height:.3mm;background:linear-gradient(90deg,rgba(92,58,6,0),${LEGEND.frame.line},rgba(92,58,6,0))}
