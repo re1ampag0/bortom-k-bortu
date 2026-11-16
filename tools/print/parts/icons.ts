@@ -700,8 +700,8 @@ const DRAW: Record<IconName, (k: K) => string> = {
 };
 
 /** The three phases of a round: one medallion with the chart's scale border (a ring of alternate dark and light bars),
- *  sea below, and the subject breaking out of it so that it still shows round an 11 mm marker laid on the icon:
- *  the compass points (Sea), the black flag (Pirates), the striped ensign of the Company. */
+ *  sea below, and the subject inside the ring: the compass rose over a breaking wave (Sea), the black flag (Pirates), the
+ *  striped ensign of the Company. Everything stays inside the circle (50, 56) r 35 (the battle scheme checks it). */
 function phase(k: K, kind: 'sea' | 'pirates' | 'company'): string {
   const cx = 50, cy = 56, R = 35;
   let bars = '';
@@ -719,11 +719,11 @@ function phase(k: K, kind: 'sea' | 'pirates' | 'company'): string {
   });
   if (kind === 'sea') {
     // the compass rose behind a breaking wave; its points break the border on three sides
-    o += compass(k, 50, 44, 42, 22);
+    o += compass(k, 50, 49, 21, 11);
     const wave = 'M14 86C18 70 30 58 46 56C60 54 70 62 68 70C66 76 58 76 57 71C56 67 60 65 62.5 67C60 62 52 63 50 70C48 80 58 88 76 88C82 86 88 82 92 80L92 96L10 96Z';
     let curls = '';
     for (const d of [4, 8, 12]) curls += `M${f(16 + d * 0.4)} ${f(88)}C${f(20 + d * 0.5)} ${f(74 + d)} ${f(32 + d * 0.3)} ${f(62 + d)} ${f(46)} ${f(59 + d)}`;
-    o += `<g clip-path="${k.clip(circ(cx, cy, R - 5) + rect(0, 0, 100, 60))}">` + k.shape(wave, {
+    o += `<g clip-path="${k.clip(circ(cx, cy, R - 5.4))}">` + k.shape(wave, {
       fill: 'mid', sw: 2.2,
       h: [{ a: -30, g: 2.3 }, { a: 40, g: 2.6, r: rect(0, 78, 100, 30) }],
       hi: 'M46 57.6C58 56 67 61 67 68C64 63 56 59.5 46 59.6Z',
@@ -732,12 +732,14 @@ function phase(k: K, kind: 'sea' | 'pirates' | 'company'): string {
     for (const [x, y, r] of [[70, 56, 1.6], [74, 60, 1.2], [64, 53, 1.3], [78, 66, 1.1]]) o += k.shape(circ(x, y, r), { fill: 'light', sw: 1 });
     return o;
   }
-  // a flag staff from below the medallion up past its top, a flag flying to the right over the border
+  // a flag on its staff, drawn large (staff at x 27, the fly at x 95) and then scaled into the ring; the staff runs down
+  // into the sea and is cut by the ring
   const top = (x: number) => 9 + 3.2 * Math.sin(((x - 27) / 66) * Math.PI * 2.2) * ((x - 27) / 66) - (x - 27) * 0.02;
   const H = 38, droop = (x: number) => (x - 27) * 0.1;
   const X1 = kind === 'pirates' ? 95 : 96;
   const edge = (y0: number, dy = 0): Pt[] => { const p: Pt[] = []; for (let x = 28; x <= X1 + 0.1; x += (X1 - 28) / 12) p.push([x, top(x) + y0 + droop(x) * (y0 / H) + dy]); return p; };
   const tE = edge(0), bE = edge(H);
+  const s = 0.56, inRing = (d: string) => `<g clip-path="${k.clip(circ(cx, cy, R - 5.4))}"><g transform="translate(${f(31 - 24 * s)} ${f(34 - 0.5 * s)}) scale(${s})">${d}</g></g>` + k.S(circ(cx, cy, R - 5), 1.6);
   let fly = '';
   if (kind === 'pirates') {
     const a = tE[tE.length - 1], b = bE[bE.length - 1];
@@ -751,27 +753,27 @@ function phase(k: K, kind: 'sea' | 'pirates' | 'company'): string {
     folds += rect(x0, 0, x1 - x0, 100);
   }
   // the staff and its finial, the halyard
-  o += k.shape('M24.5 6L29.5 6L28.5 98L25.5 98Z', { fill: 'mid', sw: 2, h: k.cyl(24.5, 29.5) });
-  if (kind === 'pirates') o += k.shape('M27 0.5L30 6.5L24 6.5Z', { fill: 'mid', sw: 1.6, h: [{ a: 90, g: 1.3, r: rect(27, 0, 4, 8) }] });
-  else o += k.shape(circ(27, 4, 3), { fill: 'mid', sw: 1.6, h: k.round(27, 4, 3).slice(0, 1), hi: circ(26, 3, 0.9) });
+  let fl = k.shape('M24.5 6L29.5 6L28.5 98L25.5 98Z', { fill: 'mid', sw: 2, h: k.cyl(24.5, 29.5) });
+  if (kind === 'pirates') fl += k.shape('M27 0.5L30 6.5L24 6.5Z', { fill: 'mid', sw: 1.6, h: [{ a: 90, g: 1.3, r: rect(27, 0, 4, 8) }] });
+  else fl += k.shape(circ(27, 4, 3), { fill: 'mid', sw: 1.6, h: k.round(27, 4, 3).slice(0, 1), hi: circ(26, 3, 0.9) });
   if (kind === 'pirates') {
     // the black flag, ragged at the fly, with a shot hole; a skull of our own over two crossed cutlasses
-    let fl = '';
-    for (let i = 0; i < 3; i++) { const x = 27 + (66 / 2.2) * (i + 0.05) + 4; fl += `M${f(x)} ${f(top(x) + 3)}C${f(x + 2)} ${f(top(x) + 14)} ${f(x - 1)} ${f(top(x) + 26)} ${f(x + 1.5)} ${f(top(x) + H - 2)}`; }
-    o += k.shape(flag + circ(80, 22, 1.6) + circ(86, 34, 1.1), { fill: 'ink', sw: 2, inner: k.S(fl, 1.5, 'mid') });
+    let rip = '';
+    for (let i = 0; i < 3; i++) { const x = 27 + (66 / 2.2) * (i + 0.05) + 4; rip += `M${f(x)} ${f(top(x) + 3)}C${f(x + 2)} ${f(top(x) + 14)} ${f(x - 1)} ${f(top(x) + 26)} ${f(x + 1.5)} ${f(top(x) + H - 2)}`; }
+    fl += k.shape(flag + circ(80, 22, 1.6) + circ(86, 34, 1.1), { fill: 'ink', sw: 2, inner: k.S(rip, 1.5, 'mid') });
     const blade = (s: number) => {
       // a curved cutlass across the flag; s = 1 from lower left to upper right, -1 mirrored about x = 58
       const X = (x: number) => (s > 0 ? x : 116 - x);
       return k.shape(`M${X(44)} 41.4C${X(55)} 39.4 ${X(67)} 33 ${X(77)} 21C${X(76)} 28 ${X(66)} 38 ${X(45)} 45.4Z`, { fill: 'light', sw: 1.4 }) +
         k.shape(`M${X(41)} 41L${X(47)} 46L${X(46)} 47.4L${X(40)} 42.4Z`, { fill: 'light', sw: 1.2 }) + k.S(`M${X(43)} 47Q${X(38)} 48 ${X(39)} 43`, 1.4, 'light');
     };
-    o += blade(1) + blade(-1);
-    o += k.shape('M58 14C51.5 14 48 18.4 48 23.6C48 27.4 50 29.6 52.6 30.6L53 34L63 34L63.4 30.6C66 29.6 68 27.4 68 23.6C68 18.4 64.5 14 58 14Z', {
+    fl += blade(1) + blade(-1);
+    fl += k.shape('M58 14C51.5 14 48 18.4 48 23.6C48 27.4 50 29.6 52.6 30.6L53 34L63 34L63.4 30.6C66 29.6 68 27.4 68 23.6C68 18.4 64.5 14 58 14Z', {
       fill: 'light', sw: 1.4,
       h: [{ a: 50, g: 1.8, w: 0.8, fine: true, r: outside(circ(56, 21, 9.6)) }],
       inner: k.F(circ(54, 24, 2.6, 2.3) + circ(62, 24, 2.6, 2.3) + 'M58 27L56.6 30L59.4 30Z', 'ink') + k.S('M55 31.4L55 34M57 31.6L57 34M59 31.6L59 34M61 31.4L61 34', 0.9),
     });
-    return o;
+    return o + inRing(fl);
   }
   // the Company's ensign: red and white stripes, a canton with a cross
   const n = 9, cantonX = 52, cantonN = 5;
@@ -788,13 +790,13 @@ function phase(k: K, kind: 'sea' | 'pirates' | 'company'): string {
   // the ensign from reading as a modern flag
   const cb = bbox(canton), sw2 = 2.2, band = (x0: number, y0: number, x1: number, y1: number) => { const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy), nx = -dy / l * sw2, ny = dx / l * sw2; return `M${f(x0 + nx)} ${f(y0 + ny)}L${f(x1 + nx)} ${f(y1 + ny)}L${f(x1 - nx)} ${f(y1 - ny)}L${f(x0 - nx)} ${f(y0 - ny)}Z`; };
   const saltire = band(cb[0] - 2, cb[1] - 2, cb[2] + 2, cb[3] + 2) + band(cb[0] - 2, cb[3] + 2, cb[2] + 2, cb[1] - 2);
-  o += k.shape(flag, {
+  fl += k.shape(flag, {
     fill: 'light', sw: 2,
     mid: red,
     h: [{ a: 80, g: 2.4, w: 0.8, r: folds }],
     inner: k.shape(canton, { fill: 'light', sw: 1.2, inner: k.shape(saltire, { fill: 'mid', sw: 0.7 }) + k.shape(cross, { fill: 'mid', sw: 1 }) + k.hatch({ a: 80, g: 2.4, w: 0.8, r: folds }, bbox(canton)) }),
   });
-  return o;
+  return o + inRing(fl);
 }
 
 /** the measured ink extent of the icons that touch the edge of their box (contours included, small and large mode):
@@ -804,7 +806,6 @@ const EXTENT: Partial<Record<IconName, [number, number, number, number]>> = {
   powder: [13, 1, 98.5, 98.5], souls: [20, 1, 82, 96], reaction: [0, 5, 93, 101], once: [10, 1, 94, 99], legend: [17, 1, 83, 96],
   effects: [1, 2, 99, 91], underwater: [1, 3, 99, 99], surfaced: [0, 1, 99, 99], volley: [0, 5, 97, 100],
   fire: [1, 2.3, 98.8, 97.8], sinking: [1, 7.8, 98.8, 96.8], legendJack: [1.8, 4.3, 98.8, 97.2],
-  phaseSea: [7, 1, 93, 93], phasePirates: [13, -1, 98, 100], phaseCompany: [13, 0, 98, 100],
 };
 function fitted(name: IconName, body: string): string {
   const e = EXTENT[name];

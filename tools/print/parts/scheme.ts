@@ -259,9 +259,11 @@ function slotSvg(p: Place, x: number): string {
 
 // ---- the left column ----
 /** where the drawn medallion of each phase icon lies in its 100-unit box: the circle (50, 56) r 35 of icons.ts phase(),
- *  moved by icons.ts fitted() with the EXTENT of that icon (kept in step with icons.ts by hand) */
+ *  moved by icons.ts fitted() with the EXTENT of that icon (kept in step with icons.ts by hand). The phase icons now keep
+ *  all their drawing inside that circle and have no EXTENT, so fitted() leaves them in place: the extent here is the
+ *  circle's own (ring and contour) */
 const MEDALLION: Record<'phaseSea' | 'phasePirates' | 'phaseCompany', [number, number, number, number]> = {
-  phaseSea: [7, 1, 93, 93], phasePirates: [13, -1, 98, 100], phaseCompany: [13, 0, 98, 100]
+  phaseSea: [14, 20, 86, 92], phasePirates: [14, 20, 86, 92], phaseCompany: [14, 20, 86, 92]
 };
 function medallion(name: keyof typeof MEDALLION): { x: number; y: number; R: number } {
   const e = MEDALLION[name], [x0, y0, x1, y1] = [e[0] - 0.5, e[1] - 0.5, e[2] + 0.5, e[3] + 0.5], lo = 2.5, hi = 97.5;
