@@ -46,18 +46,17 @@ export const CARD_CSS = `${RICH_CSS}
 /* the Legend («ЛЕГЕНДА»): engraved gold frame (SVG), golden glass baked into the picture, dark ink, the medallion, the ship's ribbon */
 .cd.lgd .lgf{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
 .cd.lgd .gl{left:${mm(LG.glass.inset)};right:${mm(LG.glass.inset)};bottom:${mm(LG.glass.bottom)};padding:1.8mm 1.5mm 1.5mm;border:.35mm solid ${LEGEND.glass.rim};color:${LEGEND.ink.text}}
-.cd.lgd .gl::before{content:'';position:absolute;inset:.55mm;border:.2mm solid rgba(122,82,8,.55);border-radius:${mm(G.radius - .5)};pointer-events:none}
-.cd.lgd .nm{color:${LEGEND.ink.name};font-weight:800;text-shadow:-.13mm -.13mm 0 ${LEGEND.ink.light},.17mm .22mm 0 #a8700e}
-.cd.lgd .vr{width:28mm;height:.3mm;background:linear-gradient(90deg,rgba(92,58,6,0),${LEGEND.frame.line},rgba(92,58,6,0))}
+.cd.lgd .nm{color:${LEGEND.ink.name};text-shadow:0 .14mm 0 ${LEGEND.ink.light}}
+.cd.lgd .vr{width:22mm;height:.26mm;background:linear-gradient(90deg,rgba(92,58,6,0),${LEGEND.frame.line},rgba(92,58,6,0))}
 .cd.lgd .bg{color:${LEGEND.ink.big}}
 .cd.lgd .fv{color:${LEGEND.ink.text};border-top-color:rgba(92,58,6,.6)}
 .cd.lgd .s-w{color:${LEGEND.ink.soul} !important}
-.cd.lgd .bd{left:${mm(LG.ribbon.x - LG.ribbon.tail)};width:${mm(LG.ribbon.w + 2 * LG.ribbon.tail)};top:${mm(LG.ribbon.y)};bottom:auto;height:${mm(LG.ribbon.h + 1)};background:none}
+.cd.lgd .bd{left:${mm(LG.ribbon.x)};width:${mm(LG.ribbon.w)};top:${mm(LG.ribbon.y)};bottom:auto;height:${mm(LG.ribbon.h)};background:none}
 .cd.lgd .bd svg{position:absolute;left:0;top:0;width:100%;height:100%}
 .cd.lgd .bd span{bottom:auto;top:${mm(LG.ribbon.h / 2)};transform:translateY(-50%);color:#fff2d0}
-.cd.lgd .lg{left:50%;top:${mm(LG.medallion.cy - LG.medallion.h / 2)};width:${mm(LG.medallion.w)};height:${mm(LG.medallion.h)};transform:translateX(-50%);padding:0;background:none;border:0;border-radius:0;font:italic 500 6.5pt/1 Alegreya,serif;color:#f8e6b8;letter-spacing:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.45mm}
+.cd.lgd .lg{left:50%;top:${mm(LG.medallion.cy - LG.medallion.h / 2)};width:${mm(LG.medallion.w)};height:${mm(LG.medallion.h)};transform:translateX(-50%);padding:0;background:none;border:0;border-radius:0;font:italic 500 6.5pt/1 Alegreya,serif;color:#f8e6b8;letter-spacing:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3mm}
 .cd.lgd .lg svg{position:absolute;left:0;top:0;width:100%;height:100%}
-.cd.lgd .lg b{position:relative;font:800 7.5pt/1 'Alegreya SC',serif;font-style:normal;letter-spacing:.13em;margin-right:-.13em;color:#ffe08a}
+.cd.lgd .lg b{position:relative;font:800 7pt/1 'Alegreya SC',serif;font-style:normal;letter-spacing:.13em;margin-right:-.13em;color:#ffe08a}
 .cd.lgd .lg i{position:relative;font-style:italic}
 /* the spare card: a parchment plate to write on */
 .gl.paper{background:linear-gradient(#faf2de,#e8d6ac);border-color:${BRASS};color:#6e5a3c;justify-content:flex-start}
@@ -104,7 +103,7 @@ const ribbon = (bold: string, rest: string, t: { t: string; td: string }) => `<d
 const splitPlan = (text: string): [string, string] => { const [rule, plan = ''] = text.split(/<b>План:<\/b>/); return [rule.replace(/(<br\s*\/?>\s*)+$/, ''), plan.trim()]; };
 /** Short lines (big result, flavour): a dash does not start a line, a number stays with its word. */
 const typo = (t: string) => esc(t).replace(/ (—|–) /g, '\u00a0$1 ').replace(/(\d) (?=[А-ЯЁа-яё])/g, '$1\u00a0');
-const nameStart = (n: string, legend = false) => legend ? (n.length <= 10 ? 16 : n.length <= 14 ? 15.5 : 15) : n.length <= 10 ? 14 : n.length <= 14 ? 13 : 12;
+const nameStart = (n: string, legend = false) => legend ? (n.length <= 10 ? 15.5 : n.length <= 14 ? 15 : 14.5) : n.length <= 10 ? 14 : n.length <= 14 ? 13 : 12;
 
 interface FaceSpec { key: string; name: string; art: string; frame: string; band: string; rim: string; tint: string; bandText: string; copies: number; medal: string; ribbon: string; big: string; text: string; flavor: string; price: { powder: number; soul: number }; legend: boolean; index: boolean; sceneName: string | null; artKey: string }
 
@@ -128,68 +127,30 @@ export function faceSpec(item: Extract<Item, { kind: 'card' | 'legend' | 'sea' }
 // ——— the Legend: frame, medallion, ribbon, back (own SVG, units mm) ———
 const n2 = (v: number) => String(Math.round(v * 100) / 100);
 const LF = LEGEND.frame;
-/** The engraved gold frame of a Legend face: a flat gold edge (the cut forgives a miss), two engraved rails with a twisted
- *  rope between them, a rosette in every corner and a lozenge in the middle of each long side. */
+/** The gold frame of a Legend face, calm: a flat gold band (the cut forgives a miss), one fine engraved line along it with
+ *  small notched corners and a dot in each, a dark hairline on its inner edge. */
 const LEGEND_FRAME_SVG = (() => {
-  const W = CARD.w, H = CARD.h, F = LG.frame, a = 1.1, b = F - .45, c = (a + b) / 2;
-  // a rope along a side of length len (local x along the side, y across from the edge inwards): slanted twists
-  const rope = (len: number, from: number, to: number, gaps: [number, number][] = []) => {
-    let d = '', h = '';
-    for (let x = from; x + .8 <= to; x += .95) {
-      if (gaps.some(([g0, g1]) => x + .8 > g0 && x < g1)) continue;
-      d += `M${n2(x)} ${n2(b - .25)}L${n2(x + .8)} ${n2(a + .25)}`;
-      h += `M${n2(x - .2)} ${n2(b - .45)}L${n2(x + .45)} ${n2(a + .55)}`;
-    }
-    void len;
-    return `<path d="${d}" stroke="${LF.deep}" stroke-width=".38" stroke-linecap="round" fill="none"/><path d="${h}" stroke="${LF.light}" stroke-width=".16" stroke-linecap="round" fill="none"/>`;
-  };
-  const side = (len: number, tf: string, gaps: [number, number][] = []) => `<g transform="${tf}">${rope(len, F + .3, len - F - .3, gaps)}</g>`;
-  const mid = H / 2;
-  const rosette = (x: number, y: number) => `<g transform="translate(${n2(x)} ${n2(y)})"><circle r="1.25" fill="${LF.deep}"/>`
-    + [0, 90, 180, 270].map(r => `<ellipse cx="0" cy="-.62" rx=".38" ry=".62" fill="${LF.light}" transform="rotate(${r + 45})"/>`).join('')
-    + `<circle r=".42" fill="${LF.mid}" stroke="${LF.line}" stroke-width=".16"/></g>`;
-  const lozenge = (x: number, y: number) => `<path d="M${n2(x)} ${n2(y - 1.5)}L${n2(x + .95)} ${n2(y)}L${n2(x)} ${n2(y + 1.5)}L${n2(x - .95)} ${n2(y)}Z" fill="${LF.deep}" stroke="${LF.light}" stroke-width=".16"/><circle cx="${n2(x)}" cy="${n2(y)}" r=".32" fill="${LF.light}"/>`;
-  const ring = `M0 0H${W}V${H}H0Z M${F} ${F + 1}Q${F} ${F} ${F + 1} ${F}H${W - F - 1}Q${W - F} ${F} ${W - F} ${F + 1}V${H - F - 1}Q${W - F} ${H - F} ${W - F - 1} ${H - F}H${F + 1}Q${F} ${H - F} ${F} ${H - F - 1}Z`;
-  const rail = (o: number) => `M${n2(o)} ${n2(o)}H${n2(W - o)}V${n2(H - o)}H${n2(o)}Z`;
-  return `<svg class="lgf" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lgf-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${LF.light}"/><stop offset=".3" stop-color="${LF.mid}"/><stop offset=".55" stop-color="${LF.light}"/><stop offset=".8" stop-color="${LF.mid}"/><stop offset="1" stop-color="${LF.deep}"/></linearGradient></defs>`
-    + `<path d="${ring}" fill-rule="evenodd" fill="${LF.mid}"/>`
-    // the channel between the rails carries the metal sheen; the edge outside stays flat (the bleed has its colour)
-    + `<path d="${rail(a)} ${rail(F)}" fill-rule="evenodd" fill="url(#lgf-g)"/>`
-    + side(W, 'translate(0 0)') + side(W, `translate(${W} ${H}) rotate(180)`)
-    + side(H, `translate(0 ${H}) rotate(-90)`, [[mid - 2.2, mid + 2.2]]) + side(H, `translate(${W} 0) rotate(90)`, [[mid - 2.2, mid + 2.2]])
-    + `<path d="${rail(a)}" fill="none" stroke="${LF.line}" stroke-width=".22"/><path d="${rail(b)}" fill="none" stroke="${LF.line}" stroke-width=".22"/>`
-    + `<path d="M${F} ${F + 1}Q${F} ${F} ${F + 1} ${F}H${W - F - 1}Q${W - F} ${F} ${W - F} ${F + 1}V${H - F - 1}Q${W - F} ${H - F} ${W - F - 1} ${H - F}H${F + 1}Q${F} ${H - F} ${F} ${H - F - 1}Z" fill="none" stroke="${LF.line}" stroke-width=".3"/>`
-    + [[c, c], [W - c, c], [c, H - c], [W - c, H - c]].map(([x, y]) => rosette(x, y)).join('') + lozenge(c, mid) + lozenge(W - c, mid)
-    + `</svg>`;
+  const W = CARD.w, H = CARD.h, F = LG.frame, o = 1.05, r = 1.1, i = F;
+  const rail = `M${o + r} ${o}H${W - o - r}A${r} ${r} 0 0 0 ${W - o} ${o + r}V${H - o - r}A${r} ${r} 0 0 0 ${W - o - r} ${H - o}H${o + r}A${r} ${r} 0 0 0 ${o} ${H - o - r}V${o + r}A${r} ${r} 0 0 0 ${o + r} ${o}Z`;
+  const ring = `M0 0H${W}V${H}H0Z M${i} ${i + 1}Q${i} ${i} ${i + 1} ${i}H${W - i - 1}Q${W - i} ${i} ${W - i} ${i + 1}V${H - i - 1}Q${W - i} ${H - i} ${W - i - 1} ${H - i}H${i + 1}Q${i} ${H - i} ${i} ${H - i - 1}Z`;
+  const inner = `M${i} ${i + 1}Q${i} ${i} ${i + 1} ${i}H${W - i - 1}Q${W - i} ${i} ${W - i} ${i + 1}V${H - i - 1}Q${W - i} ${H - i} ${W - i - 1} ${H - i}H${i + 1}Q${i} ${H - i} ${i} ${H - i - 1}Z`;
+  return `<svg class="lgf" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><path d="${ring}" fill-rule="evenodd" fill="${LF.mid}"/>`
+    + `<path d="${rail}" fill="none" stroke="${LF.deep}" stroke-width=".2"/>`
+    + [[o, o], [W - o, o], [o, H - o], [W - o, H - o]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".38" fill="${LF.deep}"/>`).join('')
+    + `<path d="${inner}" fill="none" stroke="${LF.line}" stroke-width=".25"/></svg>`;
 })();
 
-/** The «Легенда · раз за игру» medallion: an oval with a laurel wreath on its gold rim, a dark field for the words. */
+/** The «Легенда · раз за игру» plate: a plain oval, a thin gold rim round a dark field. */
 const MEDALLION_SVG = (() => {
-  const { w, h } = LG.medallion, rx = w / 2, ry = h / 2, cx = rx, cy = ry;
-  const at = (k: number, t: number) => [cx + rx * k * Math.sin(t), cy - ry * k * Math.cos(t)];
-  // the wreath: two branches rising from the bottom to the top, leaves pointing up along the rim
-  let leaves = '';
-  const N = 15;
-  for (const sgn of [1, -1]) for (let i = 0; i < N; i++) {
-    const t = Math.PI - sgn * (i + .7) * (Math.PI - .3) / N, [x, y] = at(.86, t), [x2, y2] = at(.86, t - sgn * .05);
-    const ang = Math.atan2(y2 - y, x2 - x) * 180 / Math.PI + (i % 2 ? 22 : -22) * sgn;
-    leaves += `<ellipse cx="${n2(x)}" cy="${n2(y)}" rx=".72" ry=".3" transform="rotate(${n2(ang)} ${n2(x)} ${n2(y)})" fill="${LF.deep}"/>`;
-  }
-  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lgm-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${LF.light}"/><stop offset=".5" stop-color="${LF.mid}"/><stop offset="1" stop-color="${LF.deep}"/></linearGradient>`
-    + `<radialGradient id="lgm-f" cx=".5" cy=".35" r=".7"><stop offset="0" stop-color="#6a2410"/><stop offset="1" stop-color="#2e0c04"/></radialGradient></defs>`
-    + `<ellipse cx="${cx}" cy="${cy}" rx="${n2(rx - .05)}" ry="${n2(ry - .05)}" fill="url(#lgm-g)" stroke="${LF.line}" stroke-width=".25"/>${leaves}`
-    + `<ellipse cx="${cx}" cy="${cy}" rx="${n2(rx - 1.75)}" ry="${n2(ry - 1.6)}" fill="url(#lgm-f)" stroke="${LF.line}" stroke-width=".3"/>`
-    + `<ellipse cx="${cx}" cy="${cy}" rx="${n2(rx - 2.2)}" ry="${n2(ry - 2.05)}" fill="none" stroke="${LF.mid}" stroke-width=".16"/></svg>`;
+  const { w, h } = LG.medallion, rx = w / 2, ry = h / 2;
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><ellipse cx="${rx}" cy="${ry}" rx="${n2(rx - .15)}" ry="${n2(ry - .15)}" fill="${LF.mid}" stroke="${LF.line}" stroke-width=".25"/>`
+    + `<ellipse cx="${rx}" cy="${ry}" rx="${n2(rx - .85)}" ry="${n2(ry - .8)}" fill="#3a1408" stroke="${LF.line}" stroke-width=".2"/></svg>`;
 })();
 
-/** The ship's ribbon at the bottom of a Legend: a band in the ship's colour with forked tails folded behind it. */
+/** The ship's ribbon at the bottom of a Legend: a plain band in the ship's colour with fine gold edges. */
 function ribbonSvg(col: string): string {
-  const { w, h, tail } = LG.ribbon, W = w + 2 * tail, dk = darken(col, .45), x0 = tail, x1 = tail + w, d = 1;
-  const tailL = `M${x0 + 1.2} ${d}H0L${n2(tail * .45)} ${n2(d + h / 2)}L0 ${h + d}H${x0 + 1.2}Z`;
-  const tailR = `M${x1 - 1.2} ${d}H${W}L${n2(W - tail * .45)} ${n2(d + h / 2)}L${W} ${h + d}H${x1 - 1.2}Z`;
-  return `<svg viewBox="0 0 ${W} ${h + 1}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="${tailL}${tailR}" fill="${dk}" stroke="${LF.deep}" stroke-width=".25"/>`
-    + `<path d="M${x0} ${d}L${x0 + .9} 0M${x1} ${d}L${x1 - .9} 0" stroke="${dk}" stroke-width=".25"/><path d="M${x0} 0V${h}H${x1}V0Z" fill="${col}" stroke="${LF.mid}" stroke-width=".3"/>`
-    + `<path d="M${x0 + .6} .55H${x1 - .6}M${x0 + .6} ${n2(h - .55)}H${x1 - .6}" stroke="${LF.mid}" stroke-width=".18" fill="none"/></svg>`;
+  const { w, h } = LG.ribbon;
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><rect x=".15" y=".15" width="${n2(w - .3)}" height="${n2(h - .3)}" rx=".6" fill="${col}" stroke="${LF.mid}" stroke-width=".3"/></svg>`;
 }
 
 /** The Legend's back: gold on a dark ground (the same dark at every edge — the sheet's bleed), an ornamental frame no closer

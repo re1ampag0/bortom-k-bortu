@@ -174,11 +174,11 @@ module.exports = { name: 'Часть корабля — часть команд�
       const cs = pt(.52, -3.8); wrap += coral(cs[0], cs[1], -165, 6, 4, 1.25) + cluster(rng(7), ...pt(.22, 5.4), 3, 3, 2, 1.1);
       // weed creeping from the planking down over the back of his hand and up his sleeve (the ship taking him in)
       { const RW = rng(17);
-        for (const [o, t0, t1, ph] of [[-5.2, .98, .34, 0], [-1, 1.02, .5, 1.7], [3.6, .96, .2, 3.1], [6.4, .9, .56, 4.4]]) {
-          const pts = []; for (let k = 0; k <= 10; k++) { const t = lerp(t0, t1, k / 10); pts.push(pt(t, o + Math.sin(ph + k * .9) * 1.3)); }
-          wrap += `<path d="${H.sp(pts)}" stroke="#14301f" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="${H.sp(pts)}" stroke="#2e6a48" stroke-width=".95" fill="none" stroke-linecap="round"/>`
+        for (const [o, t0, t1, ph] of [[-8.6, 1.06, .36, 0], [-4.4, 1.0, .54, 1.7], [5.8, 1.0, .3, 3.1]]) {
+          const pts = []; for (let k = 0; k <= 10; k++) { const t = lerp(t0, t1, k / 10); pts.push(pt(t, o * (1 - .45 * k / 10) + Math.sin(ph + k * .7) * .9)); }
+          wrap += `<path d="${H.sp(pts)}" stroke="#14301f" stroke-width="1.25" fill="none" stroke-linecap="round"/><path d="${H.sp(pts)}" stroke="#3a7a54" stroke-width=".8" fill="none" stroke-linecap="round"/>`
             + `<path d="${H.sp(pts.map(p => [p[0] - .3, p[1] - .3]))}" stroke="#8ad0a8" stroke-width=".3" fill="none" opacity=".55"/>`;
-          for (let k = 2; k < 10; k += 3) { const p = pts[k], sd = RW() < .5 ? -1 : 1; wrap += `<path d="M${P2(p)}q${f(sd * 1.6)} ${f(-1.4)} ${f(sd * 3.2)} ${f(-.6)}" stroke="#2e6a48" stroke-width=".7" fill="none" stroke-linecap="round"/>`; } } } }
+          for (let k = 3; k < 10; k += 4) { const p = pts[k], sd = RW() < .5 ? -1 : 1; wrap += `<path d="M${P2(p)}q${f(sd * 1.6)} ${f(-1.4)} ${f(sd * 3.2)} ${f(-.6)}" stroke="#2e6a48" stroke-width=".7" fill="none" stroke-linecap="round"/>`; } } } }
     const growth = barn(WR[0] - 3, WR[1] + 4, 1.3, -10);
     // the finger tips turn to wood: the same hand in the brown of the wooden half of his face, shown from the middle
     // joints up, the grain running along each finger to its tip

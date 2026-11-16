@@ -132,8 +132,10 @@ function mermaidSitting(u, L, x, y, s) {
   const backHair = Q([[-1.6, -21.6], [.6, -21.8], [2.4, -20.2], [3.4, -17.4], [4.2, -14], [4.8, -10.4], [5.6, -6.8], [6.4, -3.6], [5, -3.4], [4.2, -5.6], [3.6, -8.6], [2.8, -12], [1.6, -15.4], [0, -18]]);
   o += `<path d="${sp(backHair, true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
   // the far arm, behind the body: the elbow forward of the waist, the forearm up to the hand laid on her breast
-  { const w = limb(Q([[-1.4, -11.6], [-2.6, -8], [-4.6, -6.4], [-4.6, -8.4], [-4, -10]]), [1.6 * s, 1.4 * s, 1.15 * s, 1 * s, .85 * s]);
-    o += `<path d="${sp(w, true)}" fill="${mix(tn.half, tn.shadow, .35)}" stroke="${tn.outline}" stroke-width=".35"/>`; }
+  const farT = { lit: mix(tn.lit, tn.half, .3), half: mix(tn.half, tn.core, .35), core: mix(tn.core, tn.shadow, .3), shadow: tn.shadow, outline: tn.outline };
+  { const w = limb(Q([[-1.4, -11.6], [-2.6, -8], [-4.6, -6.2], [-4.6, -8], [-4.2, -8.8]]), [1.6 * s, 1.4 * s, 1.15 * s, 1 * s, .9 * s]);
+    o += `<path d="${sp(w, true)}" fill="${farT.half}" stroke="${tn.outline}" stroke-width=".35"/>`; }
+  const farHand = H.hand(u, { at: P(-4.4, -8.4), a: -70, s: .34 * s, m: -1, pose: 'open', spread: 3, curl: .45, tone: farT, thumb: 'back', sw: .25 });
   // the body: neck, shoulders and torso in one shape, the near arm held out to the sailor grown from the shoulder
   const torso = Q([[-1.9, -16.8], [-2.1, -15.2], [-2.7, -13.9], [-3.4, -12.8], [-3.9, -10.9], [-4.1, -9.7], [-3.4, -8.5], [-2.6, -6.2], [-2.8, -3.6], [-3.6, -.4], [-3.4, 1.8], [0, 2.2], [3.3, 1.6], [3.3, -1.4], [2.1, -5.2], [2.7, -8.8], [3.3, -11.4], [2.8, -13.2], [1.5, -14.3], [.8, -15.6], [.6, -17.2], [-.8, -17.6]]);
   const sh = P(-.9, -13.1), el = P(-5.8, -14.1), wr = P(-10.2, -15.5);
@@ -150,7 +152,7 @@ function mermaidSitting(u, L, x, y, s) {
     + `<path d="${sp(Q([[-2, -16.4], [-1.2, -15.4]]))}" stroke="${tn.shadow}" stroke-width="${f(.9 * s)}" fill="none" opacity=".55"/>`
     + `<path d="${sp(Q([[-6, -13.2], [-9.6, -14.6]]))}" stroke="${tn.core}" stroke-width="${f(.7 * s)}" fill="none" opacity=".5"/>`
     + `<path d="${sp(Q([[1.6, -13.8], [2.8, -11.6], [2.6, -8], [2.2, -5]]))}" stroke="#ffffff" stroke-width="${f(.7 * s)}" fill="none" opacity=".35"/>`);
-  o += hn.front;
+  o += hn.front + farHand.back + farHand.front;
   o += `<path d="${sp(Q([[1.5, -14.3], [2.8, -13.2], [3.3, -11.4], [2.9, -8.8], [2.5, -5.2]]))}" stroke="${T.rim}" stroke-width=".5" fill="none" opacity=".75"/>`;
   o += `<path d="${sp(Q([[-.4, -13.9], [-3.2, -14.8], [-6.2, -14.9]]))}" stroke="${T.rim}" stroke-width=".4" fill="none" opacity=".55"/>`;
   // the skin turns into the tail under a fringe of fine scales
