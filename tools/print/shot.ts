@@ -2,7 +2,8 @@
 // user judges and for the reviewers (docs/progress/print-kit.md). Not part of the set.
 //   npx vite-node tools/print/shot.ts -- --names "Анжелика,Ром для всех" --out report/print-kit/shots [--px 720]
 //        [--mode compare|new|old] [--variant a|b] [--sheet name]
-//   npx vite-node tools/print/shot.ts -- --backs "Ж,М,И,Г,sea" --out … — the backs as printed (backs.cjs variant 1), <code>-back.png and backs.png
+//   npx vite-node tools/print/shot.ts -- --backs "Ж,М,И,Г,sea,L:Ж" --out … — the backs as printed (backs.cjs variant 1), <code>-back.png and backs.png;
+//        L:<deck> — the back of that deck's Legend (legend-<deck>-back.png)
 // compare (default) — <slug>.png: the first-round picture | the new scene (draft allowed), side by side, ≤ 1500 px wide;
 // new / old — <slug>-new.png / <slug>-old.png, one card. --sheet <name> — also <name>.png: every card of the run on one sheet.
 // --grid N (compare) — instead of the one-row sheet: numbered «old | new» pairs, 3 across, N a sheet, <sheet>-1.jpg …; --start K — the first number.
@@ -10,7 +11,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { HTML_DIR, data, esc, launch, makeCtx, mm, pageHtml, type Ctx, type Opts } from './kit';
-import { CARD, deckSheets, seaSheets, type Item } from './layout';
+import { CARD, backOf, deckSheets, seaSheets, type BackKind, type Item } from './layout';
+import type { DeckCode } from './colors';
 import { CARD_CSS, backHtml, itemFace, prepareCards, type CardKit } from './cards';
 import { makeIcons } from './icons';
 import { ON_GLASS, luminance } from './colors';
@@ -58,8 +60,11 @@ async function shoot(html: string, w: number, h: number, file: string) {
 fs.mkdirSync(out, { recursive: true });
 if (backs.length) {
   fs.mkdirSync(out, { recursive: true });
-  const kit = kNew!, cellB = (b: string, x: number) => `<div style="position:absolute;left:${mm(x)};top:0">${backHtml(kit, b === 'sea' ? { back: 'sea' } : { back: 'deck', deck: b as 'Ж' | 'М' | 'И' | 'Г' }, 'left:0;top:0;')}</div>`;
-  for (const b of backs) await shoot(cellB(b, 0), W, H, path.join(out, `${b === 'sea' ? 'sea' : slug(b)}-back.png`));
+  // a code: Ж … Г — the deck's back, sea — the sea deck's, L:Ж … L:Г — the back of that deck's Legend (as it lies behind it on its sheet)
+  const kindOf = (b: string): BackKind => b === 'sea' ? { back: 'sea' } : b.startsWith('L:') ? backOf({ kind: 'legend', deck: b.slice(2) as DeckCode, card: data.legends[b.slice(2) as DeckCode] }) : { back: 'deck', deck: b as DeckCode };
+  const fileOf = (b: string) => b === 'sea' ? 'sea' : b.startsWith('L:') ? 'legend-' + slug(b.slice(2)) : slug(b);
+  const kit = kNew!, cellB = (b: string, x: number) => `<div style="position:absolute;left:${mm(x)};top:0">${backHtml(kit, kindOf(b), 'left:0;top:0;')}</div>`;
+  for (const b of backs) await shoot(cellB(b, 0), W, H, path.join(out, `${fileOf(b)}-back.png`));
   await shoot(backs.map((b, i) => cellB(b, i * (W + GAP))).join(''), backs.length * (W + GAP) - GAP, H, path.join(out, 'backs.png'));
   await browser.close(); console.log(`→ ${path.relative(process.cwd(), out)}`); process.exit(0);
 }
