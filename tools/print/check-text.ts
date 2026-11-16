@@ -39,7 +39,10 @@ const REPLACED: { file: 'rules' | 'memo'; was: string; now: string }[] = [
   { file: 'memo', was: 'ЗАРЯД · вместе с Залпом', now: 'ЗАРЯД · к своему Залпу' },
   // 9–10: one memo per ship instead of one per team (the print-kit boards-and-memos task): four memos in the set
   { file: 'rules', was: '2 памятки', now: '4 памятки' },
-  { file: 'memo', was: 'Бортом к борту · одна на команду', now: 'Бортом к борту · одна на корабль' }
+  { file: 'memo', was: 'Бортом к борту · одна на команду', now: 'Бортом к борту · одна на корабль' },
+  // 11–12: the board has a nest for the Legend card (the boards v2 task, the user's request): it lies on the board, not beside it
+  { file: 'rules', was: 'Положите Легенду каждого корабля открытой рядом с его планшетом', now: 'Положите Легенду каждого корабля открытой на его планшет' },
+  { file: 'rules', was: 'с начала игры лежит открытой рядом с планшетом', now: 'с начала игры лежит открытой на планшете' }
 ];
 
 const squash = (s: string) => s.replace(/\s+/g, ' ').trim();

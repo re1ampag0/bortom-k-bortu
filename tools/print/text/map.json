@@ -1,0 +1,40 @@
+{
+  "_": "The lettering of the sea chart under the boards (tools/print/map/chart.ts). Real places only, names as on 17th–18th century Spanish and English charts; the big Russian names over them. lon/lat in degrees; kind: ru — the big Russian name, old — the period name under it, sea — a sea name, town — a town with its sign, small — a strait or a lesser island. to: a second point the lettering is laid along.",
+  "labels": [
+    { "kind": "ru", "text": "Эспаньола", "lon": -71.25, "lat": 19.08, "to": [-70.2, 18.95] },
+    { "kind": "old", "text": "Isla Española", "lon": -71.0, "lat": 18.72, "to": [-70.2, 18.62] },
+    { "kind": "ru", "text": "Тортуга", "lon": -72.8, "lat": 20.27 },
+    { "kind": "old", "text": "Tortuga", "lon": -72.8, "lat": 20.41 },
+    { "kind": "ru", "text": "Куба", "lon": -79.4, "lat": 22.02, "to": [-78.0, 21.62] },
+    { "kind": "old", "text": "Isla de Cuba", "lon": -79.0, "lat": 21.62, "to": [-77.8, 21.28] },
+    { "kind": "ru", "text": "Ямайка", "lon": -77.32, "lat": 18.3 },
+    { "kind": "old", "text": "Iamaica", "lon": -77.32, "lat": 18.12 },
+    { "kind": "old", "text": "Puerto Rico", "lon": -66.45, "lat": 18.24 },
+    { "kind": "sea", "text": "Mar del Norte", "lon": -70.0, "lat": 23.4 },
+    { "kind": "sea", "text": "Mar del Caribe", "lon": -73.5, "lat": 15.2 },
+    { "kind": "old", "text": "Islas Lucayas", "lon": -76.6, "lat": 25.35 },
+    { "kind": "small", "text": "Bahama", "lon": -78.6, "lat": 26.95 },
+    { "kind": "old", "text": "La Florida", "lon": -81.3, "lat": 26.3 },
+    { "kind": "old", "text": "Tierra Firme", "lon": -71.2, "lat": 10.95 },
+    { "kind": "small", "text": "Islas de Barlovento", "lon": -62.4, "lat": 15.4, "to": [-62.0, 13.6] },
+    { "kind": "small", "text": "Paso de los Vientos", "lon": -74.35, "lat": 20.15, "to": [-73.55, 19.75] },
+    { "kind": "small", "text": "Isla de Mona", "lon": -67.9, "lat": 17.9 },
+    { "kind": "small", "text": "la Gonave", "lon": -73.05, "lat": 18.63 },
+    { "kind": "small", "text": "Isla de Pinos", "lon": -82.85, "lat": 21.4 },
+    { "kind": "town", "text": "Port Royal", "lon": -76.84, "lat": 17.94, "dx": 0.15, "dy": -0.28 },
+    { "kind": "town", "text": "S. Domingo", "lon": -69.9, "lat": 18.47, "dx": 0.1, "dy": -0.25 },
+    { "kind": "town", "text": "la Hauana", "lon": -82.36, "lat": 23.13, "dx": 0, "dy": 0.32 },
+    { "kind": "town", "text": "S. Iuan", "lon": -66.1, "lat": 18.47, "dx": 0.05, "dy": 0.3 },
+    { "kind": "town", "text": "S. Iago", "lon": -75.83, "lat": 20.02, "dx": 0, "dy": -0.25 },
+    { "kind": "town", "text": "Cartagena", "lon": -75.53, "lat": 10.42, "dx": 0.2, "dy": -0.28 }
+  ],
+  "title": "Carta de las Islas de Barlovento y Mar del Norte",
+  "titleRu": "Карибское море",
+  "scale": "Escala de Leguas",
+  "notes": {
+    "pearl": ["здесь Пороху не жалеть", "уйти по ветру"],
+    "revenge": ["здесь Пороху не жалеть", "пленных не брать"],
+    "endeavour": [],
+    "dutch": []
+  }
+}
