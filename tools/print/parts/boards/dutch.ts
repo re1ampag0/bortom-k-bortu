@@ -3,9 +3,12 @@
 // course, the Souls as glass flasks, the Crew on the rail, the Guns in the open ports of the upper tier (the kit's ports
 // are laid at the cells' pitch for this picture only), the Hull on the planking. A wisp of a soul runs from the Souls
 // to the Crew and the Hull (the frame prints the words). The back: her wreck on the sea floor in the same style.
-// The interface is at the top of frame.ts; the helpers in paint.ts. B stays the simple material for now.
+// B — the captain's table drowned on the sea floor: a waterlogged sea chart, tarnished brass rulers under the Guns and the
+// Hull, knotted lines under the Sails and the Crew, the Souls as flasks on a sea-worn shelf, the engraving in a barnacled
+// brass frame, notes pinned on the chart, dividers and shells beside the engraving.
+// The interface is at the top of frame.ts; the helpers in paint.ts.
 import type { Geo, Layers, Pal, Rect, ShipMaterial, WreckGeo } from './frame';
-import { mix, planks, rng, sheet, simpleMaterial, wreckArt } from './paint';
+import { brassRuler, chart, compass, engraving, mix, planks, rng, rope, sheet, wreckArt } from './paint';
 
 const r = (n: number) => Math.round(n * 100) / 100;
 
@@ -191,10 +194,8 @@ const CFG = {
   wood: { base: C.wood, seam: C.woodSeam, grain: C.woodGrain, nails: C.nails }, band: C.band, hair: C.hair,
   sky: ['#a9c4bc', '#dfe9e2'] as [string, string], sea: ['#3d6e66', '#173832'] as [string, string], focus: 0, sails: 'full',
   chart: { paper: '#e8eadb', line: '#a9bfb2', coast: '#cbd6c0' }, brass: { light: '#e0d39a', mid: '#a89448', dark: '#4e4418' },
-  note: '#fbfcf4', noteLine: '#8fb8a8', pin: '#2C6658',
   wreck: { water: ['#3a6a62', '#0f2a26'] as [string, string], sand: '#a6a488', sandDark: '#5e6250' }
 };
-const simple = simpleMaterial(CFG);
 
 async function faceA(g: Geo): Promise<Layers> {
   const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 };
@@ -225,10 +226,132 @@ async function back(w: WreckGeo): Promise<Layers> {
   return { under };
 }
 
+// ---- B: the drowned captain's table ----
+const T = {
+  paper: '#e1e9dc', chartLine: '#a2bbae', coast: '#d8e2d2', stain: '#d6dfcd', stainLine: '#b2c1a6',
+  brass: { light: '#d8cf96', mid: '#9a9150', dark: '#424420' }, verd: ['#5f9f88', '#7dbca3', '#4b8571'],
+  rope: '#a3a07a', ropeDark: '#3f4531', ring: '#8fa596',
+  shelf: '#2a4a42', shelfTop: '#4f7a6c', shelfDark: '#0f221d',
+  note: '#f6f8ef', noteLine: '#93b5a6', pin: '#6f9a82', pinDark: '#22392f', shadow: '#0c2420',
+  shell: '#efe2cc', shellLine: '#9c7f62', conch: '#e7c7a4', ink: '#173630'
+};
+
+/** verdigris on tarnished brass: soft blotches along a bar */
+function verdigris(R: () => number, x: number, y: number, w: number, h: number, n: number): string {
+  let out = '';
+  for (let i = 0; i < n; i++) { const cx = x + R() * w, cy = y + R() * h, rx = 0.8 + R() * 2.4; out += `<ellipse cx="${r(cx)}" cy="${r(cy)}" rx="${r(rx)}" ry="${r(Math.min(h / 2, rx * (0.4 + R() * 0.4)))}" fill="${T.verd[i % 3]}" fill-opacity="${r(0.45 + R() * 0.35)}"/>`; }
+  return out;
+}
+/** a tarnished brass ruler under a row: the cells stand on it, it shows between them and at its ends */
+function oldRuler(g: Geo, key: string, i: number): string {
+  const rw = g.rows.find(x => x.key === key);
+  if (!rw) return '';
+  const c0 = rw.cells[0], cl = rw.cells[rw.cells.length - 1], x = rw.x0 - 1.4, y = c0.y - 0.7, w = cl.x + cl.w + 2.2 - x, h = c0.h + 1.6, R = rng(60 + i);
+  return brassRuler(x, y, w, h, { ...T.brass, id: `${g.uid}or${i}` }) + verdigris(R, x + 0.5, y + 0.4, w - 1, h - 0.8, Math.round(w / 6)) + barnacles(R, x + w - 1.2, y + h - 2, 4, 1.4, 0.55);
+}
+/** a knotted line behind a row (a sounding line): from an iron ring on the frame's band to a whipped end */
+function line(g: Geo, key: string): { under: string; over: string } {
+  const rw = g.rows.find(x => x.key === key);
+  if (!rw) return { under: '', over: '' };
+  const cy = rw.cy, cl = rw.cells[rw.cells.length - 1], x2 = cl.x + cl.w + 1.6, o = { color: T.rope, dark: T.ropeDark, w: 1.7 };
+  const ring = `<circle cx="9.9" cy="${r(cy)}" r="1.15" fill="none" stroke="${T.ring}" stroke-width=".55"/>`;
+  const whip = `<path d="M${r(x2 - 1.2)} ${r(cy - 0.95)}v1.9M${r(x2 - 0.6)} ${r(cy - 0.95)}v1.9" stroke="${T.ropeDark}" stroke-width=".35"/><path d="M${r(x2)} ${r(cy)}l.8 -.5M${r(x2)} ${r(cy)}l.9 .1M${r(x2)} ${r(cy)}l.7 .6" stroke="${T.rope}" stroke-width=".3" stroke-linecap="round"/>`;
+  const knots = rw.cells.slice(1).map((c, j) => {
+    const kx = (rw.cells[j].x + rw.cells[j].w + c.x) / 2;
+    return `<g transform="translate(${r(kx)} ${r(cy)})"><ellipse rx="1.3" ry="1.65" fill="${T.rope}" stroke="${T.ropeDark}" stroke-width=".28"/><path d="M-1.1 -.7q1.1 -.4 2.2 .3M-1.15 .2q1.15 -.45 2.3 .35M-.9 1q.9 -.3 1.8 .2" fill="none" stroke="${T.ropeDark}" stroke-width=".22" stroke-linecap="round"/></g>`;
+  }).join('');
+  return { under: rope(10.6, cy, x2, cy, o) + ring + whip, over: knots };
+}
+/** the sea-worn shelf the Souls' flasks stand on */
+function shelf(g: Geo): string {
+  const rw = g.rows.find(x => x.key === 'souls');
+  if (!rw) return '';
+  const c0 = rw.cells[0], cl = rw.cells[rw.cells.length - 1], x = rw.x0 - 1.2, y = c0.y + c0.h - 1.4, w = cl.x + cl.w + 2.2 - x, h = 2.5, R = rng(71);
+  return `<rect x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${h}" rx=".5" fill="${T.shelf}" stroke="${T.shelfDark}" stroke-width=".3"/><path d="M${r(x + 0.4)} ${r(y + 0.45)}H${r(x + w - 0.4)}" stroke="${T.shelfTop}" stroke-width=".45" stroke-linecap="round"/>` +
+    `<path d="M${r(x + 8)} ${r(y + 1.5)}q14 .4 30 -.1M${r(x + 46)} ${r(y + 1.7)}q12 -.3 26 .2" fill="none" stroke="${C.woodGrain}" stroke-width=".25"/>` +
+    barnacles(R, x + w - 1.6, y + 1.2, 4, 1.2, 0.5) + barnacles(R, x + 1.6, y + 1.4, 2, 0.8, 0.45) + strand(R, x + w - 0.8, y + h - 0.2, 3.8, 1, C.weed[1], 0.45);
+}
+/** a tide mark on the waterlogged chart: a pale blot with a darker ring */
+function tideMark(R: () => number, cx: number, cy: number, rx: number, ry: number): string {
+  let d = '';
+  const n = 14;
+  for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2, k = 0.86 + R() * 0.24; d += `${i ? 'L' : 'M'}${r(cx + Math.cos(a) * rx * k)} ${r(cy + Math.sin(a) * ry * k)}`; }
+  return `<path d="${d}Z" fill="${T.stain}" fill-opacity=".55" stroke="${T.stainLine}" stroke-width=".35" stroke-linejoin="round"/>`;
+}
+/** tarnished brass dividers lying on the chart */
+function dividers(x: number, y: number, k: number): string {
+  const leg = (ex: number, ey: number) => `<path d="M${r(x)} ${r(y)}L${r(ex)} ${r(ey)}" stroke="${T.brass.dark}" stroke-width="${r(1.5 * k)}" stroke-linecap="round"/><path d="M${r(x)} ${r(y)}L${r(ex)} ${r(ey)}" stroke="${T.brass.mid}" stroke-width="${r(1 * k)}" stroke-linecap="round"/><path d="M${r(x)} ${r(y)}L${r(x + (ex - x) * 0.7)} ${r(y + (ey - y) * 0.7)}" stroke="${T.brass.light}" stroke-width="${r(0.3 * k)}" stroke-linecap="round"/>`;
+  const R = rng(83);
+  return `<g>${leg(x + 9 * k, y + 19 * k)}${leg(x + 16 * k, y + 15 * k)}<circle cx="${r(x)}" cy="${r(y)}" r="${r(1.9 * k)}" fill="${T.brass.mid}" stroke="${T.brass.dark}" stroke-width=".3"/><circle cx="${r(x)}" cy="${r(y)}" r="${r(0.6 * k)}" fill="${T.brass.dark}"/>${verdigris(R, x - 1 * k, y + 1 * k, 8 * k, 6 * k, 4)}</g>`;
+}
+/** a scallop shell (hinge at the bottom) */
+function scallop(x: number, y: number, s: number, rot: number): string {
+  let ribs = '';
+  for (let i = 0; i < 9; i++) { const a = -Math.PI * 0.86 + i * Math.PI * 0.72 / 8; ribs += `M0 0L${r(Math.cos(a) * 5 * s)} ${r(Math.sin(a) * 5 * s)}`; }
+  const fan = `M0 0L${r(Math.cos(-Math.PI * 0.88) * 5.2 * s)} ${r(Math.sin(-Math.PI * 0.88) * 5.2 * s)}A${r(5.2 * s)} ${r(5.2 * s)} 0 0 1 ${r(Math.cos(-Math.PI * 0.12) * 5.2 * s)} ${r(Math.sin(-Math.PI * 0.12) * 5.2 * s)}Z`;
+  return `<g transform="translate(${r(x)} ${r(y)}) rotate(${rot})"><path d="${fan}" fill="${T.shell}" stroke="${T.shellLine}" stroke-width=".3" stroke-linejoin="round"/><path d="${ribs}" stroke="${T.shellLine}" stroke-width=".22"/><path d="M${r(-1.4 * s)} ${r(0.2 * s)}h${r(2.8 * s)}l${r(-0.5 * s)} ${r(-1.1 * s)}h${r(-1.8 * s)}Z" fill="${T.shell}" stroke="${T.shellLine}" stroke-width=".25"/></g>`;
+}
+/** a conch: a cone with a spiral */
+function conch(x: number, y: number, s: number, rot: number): string {
+  return `<g transform="translate(${r(x)} ${r(y)}) rotate(${rot}) scale(${s})"><path d="M0 -4C2.6 -3.4 3.6 -1 3 1.2C2.4 3 .6 4 -.4 6.4L-1.2 3.2C-2.8 2.4 -3.4 .2 -2.4 -1.8C-1.8 -3.2 -1 -3.9 0 -4Z" fill="${T.conch}" stroke="${T.shellLine}" stroke-width=".3" stroke-linejoin="round"/>` +
+    `<path d="M-2.2 -1.4q2.2 -1.2 4.8 .2M-2.3 .6q2.4 -.7 5 .4M-1.3 2.6q1.6 -.4 3.4 .2" fill="none" stroke="${T.shellLine}" stroke-width=".22"/><path d="M-.2 -4q-.8 -1 .2 -1.6q.9 .5 .2 1.6" fill="${T.conch}" stroke="${T.shellLine}" stroke-width=".22"/></g>`;
+}
+/** a pin in a note (Layers.over: only on an edge of a field, where no word stands) */
+const pin = (x: number, y: number) => `<circle cx="${r(x + 0.35)}" cy="${r(y + 0.45)}" r="1.2" fill="${T.shadow}" fill-opacity=".35"/><circle cx="${r(x)}" cy="${r(y)}" r="1.15" fill="${T.pin}" stroke="${T.pinDark}" stroke-width=".3"/><circle cx="${r(x - 0.35)}" cy="${r(y - 0.35)}" r=".35" fill="#ffffff" fill-opacity=".8"/>`;
+
+async function faceB(g: Geo): Promise<Layers> {
+  const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 }, W = g.page.w, R = rng(91), z = g.zones, s = g.scope;
+  const crew = g.rows.find(rw => rw.key === 'crew'), guns = g.rows.find(rw => rw.key === 'guns');
+  // the rose sits in the free chart right of the Crew (between its label line and the Guns' label)
+  const rose: [number, number] = crew && guns ? [z.mid.x - 14, (crew.labelY + 1 + guns.labelY - 3.4) / 2] : [158, 120];
+  const roseR = crew && guns ? Math.min(9.5, (guns.labelY - 3.4 - crew.labelY - 1) / 2) : 0;
+  const stains = tideMark(R, 86, 72, 13, 6) + tideMark(R, 160, 96, 30, 22) + tideMark(R, 70, 140, 16, 5) + tideMark(R, 254, 158, 26, 9);
+  const soundings = [0, 1, 2].map(i => `<path d="M${r(60 + i * 9)} 31${'q3 -1.2 6 0t6 0'.repeat(8)}" fill="none" stroke="${T.chartLine}" stroke-width=".25" stroke-dasharray="1.6 1"/>`).join('');
+  // the free rest of the right column, round the engraving: dividers on the left, shells and a coral on the right
+  // (the column's boxes are HTML on top: if they grow, they cover these, never the other way round)
+  const cb = z.col.y + z.col.h;
+  const table = dividers(205, cb - 19, 0.95) + scallop(273, cb - 4.5, 1.05, -14) + conch(282.5, cb - 7, 0.85, 24) + coral(R, 266, cb - 0.6, 9, C.coral[0]) + barnacles(R, 279, cb - 1.4, 4, 1.6, 0.55) + star(214, cb - 3, 2.2, 0.4, C.coral[4]);
+  // the frame's light fields lie on the chart as notes: a hard shadow under each
+  const m = z.mid, fire = g.boxes[0], side = g.boxes.filter(b => b.w < 60 && b !== fire), st = z.strip, ft = z.footer;
+  const shadowed = [fire, ...side, { x: z.header.x - 0.4, y: z.header.y - 0.4, w: z.header.w + 0.8, h: z.header.h + 0.8 }, { x: st.x - 0.6, y: st.y - 1.2, w: st.w + 1.2, h: st.h + 2.4 },
+    { x: ft.x + 29.4, y: ft.y - 0.8, w: ft.w - 58.8, h: ft.h + 1.6 }, { x: m.x - 0.4, y: m.y - 1, w: m.w + 0.8, h: 6.4 }];
+  const shadows = shadowed.map(b => `<rect x="${r(b.x + 0.6)}" y="${r(b.y + 0.8)}" width="${r(b.w)}" height="${r(b.h)}" rx="2" fill="${T.shadow}" fill-opacity=".3"/>`).join('');
+  // the sea-worn edge: barnacles along the band, crusts in the corners, weed and a little reef at the bottom corners
+  let edge = '';
+  for (let i = 0; i < 90; i++) { const t = R(), side4 = Math.floor(R() * 4), x = side4 < 2 ? 9 + t * (W - 18) : side4 === 2 ? 9.2 : W - 9.2, y = side4 < 2 ? (side4 ? 200.9 : 9.5) : 9 + t * 192; edge += barnacle(side4 === 2 ? 9.5 : side4 === 3 ? W - 9.5 : x, y, 0.3 + R() * 0.4, R() * 180); }
+  for (const [x, y, n, sp] of [[10.5, 10.5, 10, 3.2], [W - 10.5, 10.5, 10, 3.2], [11.5, 198, 12, 4], [W - 11.5, 198, 14, 4.5]] as const) edge += barnacles(R, x, y, n, sp);
+  for (let i = 0; i < 6; i++) edge += kelp(R, 14 + i * 4 + R() * 2, 197.5, 4.5 + R() * 3, 0.55, -1, C.weed[i % 4]);
+  for (let i = 0; i < 6; i++) edge += kelp(R, W - 36 + i * 4 + R() * 2, 197.5, 4.5 + R() * 3, 0.55, -1, C.weed[(i + 2) % 4]);
+  edge += coral(R, 34, 197.4, 6.5, C.coral[1]) + coral(R, W - 16, 197.4, 6, C.coral[3]) + scallop(25, 195.6, 0.55, 18) + star(W - 27, 195.4, 1.7, 0.9, C.coral[4]);
+  // the rim of the drowned table between the band and the chart: dark sea-worn wood (no word stands there)
+  const H = g.page.h, rim = `<path d="M12 8.5H${W - 12}A3.5 3.5 0 0 1 ${W - 8.5} 12V${H - 12}A3.5 3.5 0 0 1 ${W - 12} ${H - 8.5}H12A3.5 3.5 0 0 1 8.5 ${H - 12}V12A3.5 3.5 0 0 1 12 8.5Z` +
+    `M12.4 10.5A1.9 1.9 0 0 0 10.5 12.4V${H - 12.4}A1.9 1.9 0 0 0 12.4 ${H - 10.5}H${W - 12.4}A1.9 1.9 0 0 0 ${W - 10.5} ${H - 12.4}V12.4A1.9 1.9 0 0 0 ${W - 12.4} 10.5Z" fill="${C.wood}" fill-rule="evenodd"/>` +
+    `<rect x="10.5" y="10.5" width="${W - 21}" height="${H - 21}" rx="1.9" fill="none" stroke="${C.hair}" stroke-width=".25" stroke-opacity=".8"/>`;
+  const L1 = line(g, 'sails'), L2 = line(g, 'crew');
+  const under = sheet(g, { band: C.band, line: C.hair, ground: T.paper, w: 1.6 }) + chart(F, { paper: T.paper, line: T.chartLine, coast: T.coast, rose, seed: 13 }) + soundings + stains + rim +
+    (roseR > 4 ? compass(rose[0], rose[1], roseR, { line: '#5d8274', fill: T.paper, accent: g.pal.ship }) : '') + shadows + table + edge +
+    L1.under + L2.under + oldRuler(g, 'guns', 0) + oldRuler(g, 'hull', 1) + shelf(g);
+  // pins: at the top right corner of the frame's SVG notes (no words there); the flasks in the Souls' cells as in A
+  const over = [fire, ...side].map(b => pin(b.x + b.w - 2.6, b.y + 0.2)).join('') + L1.over + L2.over + flasks(g);
+  // the engraving: the Dutchman in sea-green ink, a tarnished brass frame with verdigris, barnacles and a strand of weed
+  const E = { w: 84, h: 52 }, RE = rng(97);
+  const engr = await engraving(g, { paper: '#eef1e4', ink: T.ink, frame: T.brass.mid, frameDark: T.brass.dark, light: g.kit.LIGHTS.dutchman as Record<string, unknown>, sails: 'full', seed: 5 }) +
+    verdigris(RE, 1, 0.8, E.w - 2, 1.6, 9) + verdigris(RE, 1, E.h - 2.4, E.w - 2, 1.6, 9) + verdigris(RE, 0.8, 3, 1.6, E.h - 6, 4) + verdigris(RE, E.w - 2.4, 3, 1.6, E.h - 6, 4) +
+    barnacles(RE, 3.4, 3.4, 6, 2.4, 1.3) + barnacles(RE, E.w - 3.6, E.h - 3.6, 7, 2.8, 1.4) + barnacles(RE, E.w - 3, 3, 3, 1.6, 1.1) +
+    kelp(RE, 4, E.h - 0.6, 12, 1.1, -1, C.weed[0]) + kelp(RE, 7, E.h - 0.6, 9, 0.9, -1, C.weed[2]);
+  // the notes of the right column: sea-glass paper, a hard shadow, a slight tilt, a pin in the top right corner
+  // (CSS: Layers.over lies under the HTML boxes); the Legend keeps the frame's brass card, pinned in the middle
+  const pinCss = `content:'';position:absolute;top:.5mm;width:2.4mm;height:2.4mm;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffffff 0,${T.pin} 40%,${T.pinDark} 100%)`;
+  const css = `${s} .bo2-box:not(.bo2-legend){background:${T.note};border-color:${T.noteLine}}${s} .bo2-box{box-shadow:.6mm .8mm 0 rgba(12,36,32,.32)}` +
+    `${s} .bo2-ab{transform:rotate(-.3deg)}${s} .bo2-powder{transform:rotate(.45deg)}${s} .bo2-legend{transform:rotate(-.25deg)}` +
+    `${s} .bo2-box::before{${pinCss};right:2.4mm}${s} .bo2-legend::before{right:auto;left:50%;margin-left:-1.2mm}`;
+  return { under, over, css, engraving: engr };
+}
+
 export const material: ShipMaterial = {
   /** a sea-glass field, teal-black ink: the words still ≥ 7 : 1 */
   palette(base: Pal): Pal { return { ...base, field: '#f6f8ef', fieldLine: '#93b5a6', ink: '#12231f', soft: '#30463f', cell: '#fdfdf7' }; },
   a: faceA,
-  b: simple.b,
+  b: faceB,
   wreck: back
 };
