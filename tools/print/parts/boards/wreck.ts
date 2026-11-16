@@ -32,8 +32,8 @@ const K = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as {
   castShadow(u: string, L: unknown, o: { x: number; y: number; w: number; h: number; horizon: number; d?: number; opacity?: number }): string;
   makeLight(l: unknown, cam: { horizon: number }): unknown; LIGHTS: Record<string, { key: Record<string, unknown> } & Record<string, unknown>>;
   shipBox(kind: string, o: { x: number; y: number; scale: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number };
-  shipGeom(kind: string, o: Record<string, unknown>): { masts: { x: number; H: number; top: P }[]; nearRail(X: number): number[] };
-  SHIP_SPECS: Record<string, { len: number; free: number; draft: number; over: number; bow: number[] }>;
+  shipGeom(kind: string, o: Record<string, unknown>): { masts: { x: number; H: number; top: P }[]; nearRail(X: number): number[]; farRail(X: number): number[] };
+  SHIP_SPECS: Record<string, { len: number; free: number; draft: number; over: number; bow: number[]; tw: number[] }>;
 };
 
 // ---- the look of each ship's sea floor ----
@@ -317,6 +317,12 @@ function clearOfRules(key: ShipKey, S: Sea['ship'], rules: Rect, len: number): n
   }
   return dy;
 }
+/** the shadows of a thing on the sand, from its drawn box: a dark contact shadow whose top edge is the thing's bottom, and a
+ *  softer cast shadow, both shifted a little to the right and down (the light comes from above, a little from the left) */
+function shadowsOf(p: Placed): { cx: number; cy: number; rx: number; ry: number; op: number; blur: string }[] {
+  const b = p.box, w = b.x1 - b.x0, h = b.y1 - b.y0, cx = (b.x0 + b.x1) / 2, r1 = Math.max(0.6, Math.min(1.6, h * 0.1)), r2 = Math.max(1, Math.min(3, h * 0.2));
+  return [{ cx: cx + w * 0.18, cy: b.y1 + r2 - 0.2, rx: w * 0.56, ry: r2, op: 0.2, blur: 'wB1' }, { cx: cx + w * 0.05, cy: b.y1 + r1 - 0.2, rx: w * 0.5, ry: r1, op: 0.38, blur: 'wB05' }];
+}
 /** the whole sea-floor picture (mm), to be rasterised, and its geometry */
 export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[]): { svg: string; geo: Geo } {
   const R = rng(sea.seed), sp = K.SHIP_SPECS[key], u = `wr${key}`, H = sea.hz, W = PAGE.w;
@@ -363,14 +369,24 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[])
     const d: P = [S.fall.side * Math.cos(a), Math.sin(a)], tip: P = [F[0] + d[0] * Lp, F[1] + d[1] * Lp], th = Math.atan2(d[0], -d[1]) * 180 / Math.PI;
     fall = { tip, ty: S.fall.ty };
     fallG = `<clipPath id="wFallC"><rect x="-10" y="-10" width="${W + 20}" height="${f(S.fall.ty + 10.6)}"/></clipPath>` +
-      `<g id="wFallG" clip-path="url(#wFallC)"><g transform="translate(${f(F[0])} ${f(F[1])}) rotate(${f(th)}) scale(.42 1) translate(${f(-mx[i])} ${f(-yb[i])})"><g clip-path="url(#wHigh)"><use href="#${u}Body"/></g></g></g>`;
+      `<g id="wFallG" clip-path="url(#wFallC)"><g transform="translate(${f(F[0])} ${f(F[1])}) rotate(${f(th)}) translate(${f(-mx[i])} ${f(-yb[i])})"><g clip-path="url(#wHigh)"><use href="#${u}Body"/></g></g></g>`;
   }
   const jag = (i: number): P[] => [[mx[i] - 2.4 * s, yb[i] + 0.7 * s], [mx[i] - 1.1 * s, yb[i] - 1.7 * s], [mx[i] - 0.2 * s, yb[i] + 1 * s], [mx[i] + 0.8 * s, yb[i] - 1.2 * s], [mx[i] + 2.4 * s, yb[i] + 0.5 * s]];
-  const xL = stem - 80, xR = stern + 80, low: P[] = [[xL, S.y + 80], [xL, yb[0] - 3 * s]];
-  masts.forEach((_, i) => low.push(...jag(i)));
-  low.push([xR, yb[yb.length - 1] - 3 * s], [xR, S.y + 80]);
+  // what is kept of the kit ship: the bow and the bowsprit, each stump to its jagged break with the shrouds under it (a
+  // tent from the break down to the rail), between the masts and aft only the hull to a little over its rail (no loose
+  // yards or gaffs floating over the deck, no ensign: it would fly as in a wind)
+  const railAt = (x: number) => { const X = Math.max(-sp.len / 2, Math.min(sp.len / 2, (x - S.x) / s)); return Math.min(geom.nearRail(X)[1], geom.farRail(X)[1]) - 3.5 * s; };
+  const xL = stem - 80, xEnd = stern + (sp.over + Math.max(...sp.tw)) * s + 0.3, low: P[] = [[xL, S.y + 80], [xL, yb[0] - 3 * s], ...jag(0)];
+  const along2 = (xa: number, xb: number) => { for (let x = xa; x < xb; x += 3) low.push([x, railAt(x)]); low.push([xb, railAt(xb)]); };
+  for (let i = 0; i < masts.length - 1; i++) {
+    const xa = mx[i] + 13 * s, xb = mx[i + 1] - 13 * s;
+    if (xa < xb) along2(xa, xb); else low.push([(mx[i] + mx[i + 1]) / 2, Math.max(railAt((mx[i] + mx[i + 1]) / 2), (yb[i] + yb[i + 1]) / 2)]);
+    low.push(...jag(i + 1));
+  }
+  along2(Math.min(mx[masts.length - 1] + 13 * s, xEnd - 1), xEnd);
+  low.push([xEnd, S.y + 80]);
   let high = '';
-  if (S.fall) { const i = S.fall.mast, hw = 26 * s, topY = masts[i].top[1] - 12 * s, j = jag(i); high = `<clipPath id="wHigh"><polygon points="${poly([[mx[i] - hw, topY], [mx[i] + hw, topY], [mx[i] + hw, j[4][1]], ...[...j].reverse(), [mx[i] - hw, j[0][1]]])}"/></clipPath>`; }
+  if (S.fall) { const i = S.fall.mast, hw = 2.6 * s, topY = masts[i].top[1] - 12 * s, j = jag(i); high = `<clipPath id="wHigh"><polygon points="${poly([[mx[i] - hw, topY], [mx[i] + hw, topY], [mx[i] + hw, j[4][1]], ...[...j].reverse(), [mx[i] - hw, j[0][1]]])}"/></clipPath>`; }
   // the hull: the fouled bottom under the old waterline with the rudder, then the kit's ship cut at the breaks
   let foul = '';
   for (let i = 0; i < 26; i++) { const x = stem + 8 * s + R() * (stern - stem - 14 * s), y = S.y + R() * draft * 0.8; foul += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(0.6 + R() * 1.6)}" ry="${f(0.4 + R() * 0.9)}" fill="${sea.weed[i % 3]}" fill-opacity=".55"/>`; }
@@ -538,9 +554,8 @@ ${hullG}${fallG}
   const lip = (x: number, y: number, w: number) => `<path d="M${f(x - w / 2)} ${f(y + 0.5)}C${f(x - w / 3)} ${f(y - 1.1)} ${f(x + w / 3)} ${f(y - 1.2)} ${f(x + w / 2)} ${f(y + 0.5)}Z" fill="url(#wFloor)"/><path d="M${f(x - w / 2.6)} ${f(y - 0.2)}C${f(x - w / 4)} ${f(y - 0.95)} ${f(x + w / 4)} ${f(y - 1.05)} ${f(x + w / 2.6)} ${f(y - 0.2)}" fill="none" stroke="${sd0}" stroke-width=".3" stroke-opacity=".6"/>`;
   [...props].sort((a, b) => a.y - b.y).forEach((p, n) => {
     const b = p.box, w = b.x1 - b.x0, h = b.y1 - b.y0, cx = (b.x0 + b.x1) / 2;
-    out.push(K.castShadow(`${u}c${n}`, L, { x: cx, y: p.y, w, h: Math.max(2, h), horizon: H, d: 0.5, opacity: 0.55 }));
-    out.push(`<ellipse cx="${f(cx + w * 0.06)}" cy="${f(p.y - 0.1)}" rx="${f(w * 0.52)}" ry="${f(Math.max(0.6, h * 0.12))}" fill="#000" fill-opacity=".32" filter="url(#wB05)"/>`);
-    out.push(propSvg(p, `${u}p${n}`, L, p.ax, p.ay, p.seed));
+    for (const sh of shadowsOf(p)) out.push(`<ellipse cx="${f(sh.cx)}" cy="${f(sh.cy)}" rx="${f(sh.rx)}" ry="${f(sh.ry)}" fill="#000" fill-opacity="${sh.op}" filter="url(#${sh.blur})"/>`);
+    out.push(propSvg(p, `${u}p${n}`, L, p.ax, p.ay, p.seed, false));
     if (p.kind !== 'shot' && p.kind !== 'rock') out.push(lip(cx + w * 0.12, p.y + 0.25, Math.min(26, w * 0.42)));
   });
   // corals in the corners, by the buried bow and past the stern; tall weed close to the eye at the edges
@@ -588,6 +603,10 @@ function physics(g: Geo, plates: Rect[]): string[] {
     if (Math.abs(b.y1 - p.y) > 1) issues.push(`${name(p)}: its bottom is ${(b.y1 - p.y).toFixed(1)} mm off its foot on the sand`);
     let worst = 0; for (let x = Math.max(0, b.x0 + 1); x <= Math.min(PAGE.w, b.x1 - 1); x += 1) worst = Math.max(worst, g.floorTop(x) - p.y);
     if (worst > 0.5) issues.push(`${name(p)}: its foot is ${worst.toFixed(1)} mm above the sand (hangs in the water or stands on the hull)`);
+    for (const sh of shadowsOf(p)) {
+      if (Math.abs(sh.cy - sh.ry - b.y1) > 0.3) issues.push(`${name(p)}: its shadow starts ${(sh.cy - sh.ry - b.y1).toFixed(1)} mm from its bottom`);
+      if (sh.cx < (b.x0 + b.x1) / 2) issues.push(`${name(p)}: its shadow falls to the left (the light is from the left)`);
+    }
     let hit = 0; for (let x = b.x0; x <= b.x1; x += 0.8) for (let y = b.y0; y <= b.y1; y += 0.8) if (seen([x, y])) hit++;
     if (hit > 2) issues.push(`${name(p)}: overlaps the hull`);
   }
