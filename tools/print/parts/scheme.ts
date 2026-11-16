@@ -3,8 +3,8 @@
 // the battle lies in the open sea of the Mar del Norte and Tortuga with Hispaniola shows between the plates):
 //   - top right: the battle — 2 brass nests of the Company (the far row) facing 2 nests of the Pirates (the near row),
 //     each with an opening of 33 mm for the ship token 30 × 30 mm, a flag of the side at each nest, the side's name plate
-//     between its two nests; engraved rhumb lines with barbed heads from nest to nest, the captain's ink notes
-//     «напротив — полный урон», «по диагонали −1» on small paper patches;
+//     between its two nests; the two diagonals as engraved rhumb lines with barbed heads, the captain's ink note
+//     «по диагонали −1» once, on a small paper patch where they cross (no note and no rule between the nests opposite);
 //   - bottom right: three slim brass frames for whole cards (opening 64 × 89 mm) under the battle's nests: the sea deck,
 //     the sea card, «Эффекты этого хода», a parchment tab on each with the name and one line;
 //   - the left column: the title, the phase of the round (three round medallions on brass seats ≥ 13 mm for the 11 mm mark,
@@ -26,7 +26,7 @@ export const SCHEME_FILE = '04b-skhema-boya';
 
 interface SchemeText {
   partTitle: string; title: string; tag: string; lead: string; phase: { title: string; sub: string; steps: string[] }; company: string; pirates: string;
-  front: string[]; diag: string; joint: string[]; seaDeck: { title: string; lines: string[] }; seaCard: { title: string; lines: string[] };
+  diag: string; joint: string[]; seaDeck: { title: string; lines: string[] }; seaCard: { title: string; lines: string[] };
   effects: { title: string; cards: string[] }; long: { title: string; text: string };
 }
 const S = (JSON.parse(fs.readFileSync(path.join(HERE, 'text/tokens.json'), 'utf8')) as { scheme: SchemeText }).scheme;
@@ -209,8 +209,8 @@ function edgePoint(c: { x: number; y: number }, p: { x: number; y: number }, b: 
 function battleSvg(): { svg: string; plates: Rect[] } {
   const out: string[] = [], plates: Rect[] = [], diag = Math.abs((data.ships[0].diagDamage as { offset: number }).offset);
   for (const side of ['company', 'pirates'] as Side[]) for (const i of [0, 1]) { out.push(nestSvg(side, i)); plates.push(nestBox(side, i)); }
-  // the captain's ink notes on paper patches: «по диагонали −1» on the crossing of the diagonals, «напротив — полный урон»
-  // by the left course
+  // the captain's ink note on a paper patch, once: «по диагонали −1» on the crossing of the diagonals (the nests straight
+  // opposite need no note: the user took «напротив — полный урон» and its rules off the scheme)
   const nsize = 9.5, no: TO2 = { font: 'Alegreya', w: 500, italic: true, color: NOTE_INK }, em = pt(nsize), pad = 1.9;
   const c00 = nestC('company', 0), c01 = nestC('company', 1), c10 = nestC('pirates', 0), c11 = nestC('pirates', 1);
   const X = { x: (c00.x + c11.x) / 2, y: (c00.y + c11.y) / 2 }, dWord = fill(S.diag, { diag }), dw = W(dWord, nsize, no);
@@ -220,15 +220,6 @@ function battleSvg(): { svg: string; plates: Rect[] } {
   for (const [p, q] of [[c00, c11], [c01, c10]]) out.push(course(edgePoint(p, q, nestBox('company', p === c00 ? 0 : 1), gap), edgePoint(q, p, nestBox('pirates', q === c11 ? 1 : 0), gap), '1.8 1', dBox));
   out.push(patch('note-diag', dBox) + text(X.x, X.y + em * 0.33, dWord, nsize, { ...no, anchor: 'middle', in: 'note-diag' }));
   plates.push(dBox);
-  const f0 = S.front[0], f1 = S.front[1], fw = Math.max(W(f0, nsize, no), W(f1, nsize, no)), mid = (NY.company + NEST.size + NY.pirates) / 2, lh = em * 1.08;
-  // «напротив»: a solid brass rule with heads at both ends between the two nests of each pair, the note beside it on the
-  // side of the field's middle (both pairs)
-  for (const i of [0, 1]) {
-    const a = nestC('company', i), bw = fw + 2 * pad + 0.4, fBox = { x: i ? a.x - 2.4 - bw : a.x + 2.4, y: mid - lh / 2 - em * 0.62 - pad, w: bw, h: lh + em * 1.24 + 2 * pad };
-    out.push(course({ x: a.x, y: NY.company + NEST.size + gap }, { x: a.x, y: NY.pirates - gap }, '', null, '#8a6a2a', 1.1, 1.25));
-    out.push(patch(`note-front-${i}`, fBox) + text(fBox.x + bw / 2, mid - lh / 2 + em * 0.33, `${f0}\n${f1}`, nsize, { ...no, anchor: 'middle', lh, in: `note-front-${i}`, name: `${f0} ${f1}` }));
-    plates.push(fBox);
-  }
   for (const side of ['company', 'pirates'] as Side[]) { const np = namePlate(side); out.push(np.svg); plates.push(np.box); }
   return { svg: out.join('\n'), plates };
 }
@@ -291,7 +282,8 @@ function phaseSvg(y: number): { svg: string; box: Rect } {
     const c = xs[i], m = medallion(names[i]), S2 = MED.d / (2 * m.R / 100), bx = c - (m.x / 100 - 0.5) * S2, by = cy - (m.y / 100 - 0.5) * S2;
     // the seat: a brass ring a little wider than the drawn medallion, its shadow down-right; the mark lies on it
     out.push(`<circle cx="${r(c + 0.45)}" cy="${r(cy + 0.65)}" r="${r(seat)}" fill="#1a0e04" fill-opacity=".3"/>` + brassDisc(c, cy, seat, MED.rim, `phase-seat-${i}`));
-    out.push(ico(names[i], bx, by, S2, `phase-icon-${i}`));
+    // the drawing stays inside its medallion's circle (check-layout: data-deco inside data-frame)
+    out.push(`<circle data-frame="phase-${i}" cx="${r(c)}" cy="${r(cy)}" r="${r(R + 0.3)}" fill="none" stroke="none"/><g data-deco="phase-${i}" data-name="${esc(p.steps[i])}">${ico(names[i], bx, by, S2, `phase-icon-${i}`).replace(/^<rect data-plate="[^"]*"[^>]*\/>/, '')}</g>` + plateRect(`phase-icon-${i}`, { x: bx - S2 / 2, y: by - S2 / 2, w: S2, h: S2 }));
     // the step under its medallion: one or two lines («Ходят» over the side)
     const words = p.steps[i].split(' '), lines = words.length > 1 ? [words[0], words.slice(1).join(' ')] : words;
     out.push(text(c, capTop + pt(capS) * 0.95, lines.join('\n'), capS, { font: 'Alegreya', w: 700, color: colors[i], anchor: 'middle', lh: capLh, in: 'phase', name: p.steps[i] }));

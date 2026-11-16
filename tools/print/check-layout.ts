@@ -83,27 +83,53 @@ export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promi
             if (!f) { issues.push({ page: si + 1, msg: `ornament of «${k}»: no data-frame «${k}»` }); continue; }
             const fb = R(f), circ = f instanceof SVGCircleElement;
             const cx = fb.x + fb.w / 2, cy = fb.y + fb.h / 2, rr = Math.min(fb.w, fb.h) / 2;
-            const pts: { x: number; y: number }[] = [];
+            const pts: { x: number; y: number; e?: Element }[] = [];
             const geo = [d, ...Array.from(d.querySelectorAll('*'))];
+            // a clipped shape shows only where all its clips (each in the user space of the element that names it) let it
+            type Clip = { shapes: SVGGeometryElement[]; inv: DOMMatrix };
+            const clipsOf = (g: Element): Clip[] => {
+              const cs: Clip[] = [];
+              for (let a: Element | null = g; a && a !== d.parentElement; a = a.parentElement) {
+                const id = (a.getAttribute('clip-path') ?? '').match(/url\(#([^)]+)\)/)?.[1], cp = id ? document.getElementById(id) : null, hm = a instanceof SVGGraphicsElement ? a.getScreenCTM() : null;
+                if (cp && hm) cs.push({ shapes: Array.from(cp.querySelectorAll('*')).filter((e): e is SVGGeometryElement => e instanceof SVGGeometryElement), inv: DOMMatrix.fromMatrix(hm).inverse() });
+              }
+              return cs;
+            };
+            const shows = (q: DOMPoint, cs: Clip[]) => cs.every(c => c.shapes.some(sh => {
+              const t = sh.transform.baseVal.consolidate(), lp = q.matrixTransform(t ? DOMMatrix.fromMatrix(t.matrix).inverse().multiply(c.inv) : c.inv);
+              const rule = sh.getAttribute('clip-rule') ?? getComputedStyle(sh).getPropertyValue('clip-rule'), old = sh.getAttribute('fill-rule');
+              if (rule) sh.setAttribute('fill-rule', rule);
+              const inn = sh.isPointInFill(new DOMPoint(lp.x, lp.y));
+              if (old == null) sh.removeAttribute('fill-rule'); else sh.setAttribute('fill-rule', old);
+              return inn;
+            }));
+            const sample = (g: SVGGeometryElement, m: DOMMatrix) => {
+              const cs = clipsOf(g);
+              let len = 0; try { len = g.getTotalLength(); } catch { len = 0; }
+              const n = Math.max(8, Math.min(400, Math.ceil(len / 0.5)));
+              for (let i = 0; i <= n; i++) {
+                const p = g.getPointAtLength(len * i / n), q = new DOMPoint(p.x, p.y).matrixTransform(m);
+                if (cs.length && !shows(q, cs)) continue;
+                pts.push({ x: (q.x - o.left) / MM, y: (q.y - o.top) / MM, e: g });
+              }
+            };
             for (const g of geo) {
+              // only what is painted: not the shapes of defs, clip paths, masks, patterns; not unpainted shapes
+              if (g.closest('defs,clipPath,mask,pattern,symbol,marker')) continue;
+              const st = getComputedStyle(g);
+              if (st.display === 'none' || st.visibility === 'hidden' || (st.fill === 'none' && st.stroke === 'none')) continue;
               if (g instanceof SVGGeometryElement) {
-                const m = g.getScreenCTM(); if (!m) continue;
-                let len = 0; try { len = g.getTotalLength(); } catch { len = 0; }
-                const n = Math.max(8, Math.min(400, Math.ceil(len / 0.5)));
-                for (let i = 0; i <= n; i++) {
-                  const p = g.getPointAtLength(len * i / n), q = new DOMPoint(p.x, p.y).matrixTransform(m);
-                  pts.push({ x: (q.x - o.left) / MM, y: (q.y - o.top) / MM });
-                }
+                const m = g.getScreenCTM(); if (m) sample(g, m);
               } else if (g instanceof SVGTextElement || g instanceof SVGImageElement) {
                 const b = R(g); pts.push({ x: b.x, y: b.y }, { x: b.x + b.w, y: b.y }, { x: b.x, y: b.y + b.h }, { x: b.x + b.w, y: b.y + b.h });
               }
             }
-            let worst = 0;
+            let worst = 0, we: Element | undefined;
             for (const p of pts) {
               const out = circ ? Math.hypot(p.x - cx, p.y - cy) - rr : Math.max(fb.x - p.x, p.x - fb.x - fb.w, fb.y - p.y, p.y - fb.y - fb.h);
-              worst = Math.max(worst, out);
+              if (out > worst) { worst = out; we = p.e; }
             }
-            if (worst > 0.15) issues.push({ page: si + 1, msg: `an ornament of «${k}» (${d.getAttribute('data-name') ?? d.tagName}) runs ${worst.toFixed(2)} mm out of its frame` });
+            if (worst > 0.15) issues.push({ page: si + 1, msg: `an ornament of «${k}» (${d.getAttribute('data-name') ?? d.tagName}) runs ${worst.toFixed(2)} mm out of its frame${we ? ` (${we.outerHTML.slice(0, 90)})` : ''}` });
           }
         });
         return { issues, words };
