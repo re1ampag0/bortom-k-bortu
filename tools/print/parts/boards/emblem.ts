@@ -386,7 +386,9 @@ export function emblemSvg(key: ShipKey, cx: number, cy: number, R: number, o: Em
   const size = o.size ?? 19, { base, box } = letterBox(o.letter, size, cx, cy);
   const plate = o.plate ? `<rect data-plate="${o.plate}" x="${f(box.x - 1.65)}" y="${f(box.y - 1.65)}" width="${f(box.w + 3.3)}" height="${f(box.h + 3.3)}" fill="none" stroke="none"/>` : '';
   const dark = key === 'pearl' ? '#0a0806' : mix(o.solid, '#000000', 0.6);
-  const letter = `<text${o.plate ? ` data-in="${o.plate}"` : ''} x="${f(cx)}" y="${f(base)}" font-family="Alegreya SC" font-weight="800" font-size="${f(pt(size))}" fill="${CREAM}" stroke="${dark}" stroke-width="${f(pt(size) * 0.07)}" stroke-linejoin="round" paint-order="stroke" text-anchor="middle">${esc(o.letter)}</text>`;
+  // the dark outline as eight filled copies round the letter (a stroked text would be set as a Type 3 font in the PDF)
+  const halo = pt(size) * 0.035, glyph = (x: number, y: number, fill: string, attr = '') => `<text${attr} x="${f(x)}" y="${f(y)}" font-family="Alegreya SC" font-weight="800" font-size="${f(pt(size))}" fill="${fill}" text-anchor="middle">${esc(o.letter)}</text>`;
+  const letter = Array.from({ length: 8 }, (_, i) => glyph(cx + halo * Math.cos(i * Math.PI / 4), base + halo * Math.sin(i * Math.PI / 4), dark)).join('') + glyph(cx, base, CREAM, o.plate ? ` data-in="${o.plate}"` : '');
   return `<g${o.deco ? ` data-deco="${o.deco}"` : ''}><defs>${d.defs.join('')}</defs><g transform="translate(${f(cx)} ${f(cy)}) scale(${f(R / 10)})">${body}</g>${plate}${letter}</g>`;
 }
 
