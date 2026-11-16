@@ -277,11 +277,10 @@ module.exports = { name: 'Течение', kind: 'sea', status: 'accepted', cam:
     bg += lanes(u, L, { seed: 3, n: 190, clip: cl });
     bg += eddy(u, L, 24, 108, 3.5, 1) + eddy(u, L, 128, 104, 2.2, 2) + eddy(u, L, 40, 136, 5, 3);
     bg += weedAt(u, L, 2, 126, 34, 3.4, 4) + weedAt(u, L, 112, 104.5, 18, 3.2, 5) + weedAt(u, L, 18, 106, 22, 3.2, 7) + weedAt(u, L, 140, 131, 34, 3.6, 8) + weedAt(u, L, 60, 136, 26, 3.4, 9);
-    // ——— the rock, the far ship drifting stern-first, the near ship carried with her trail
-    bg += rock(u, L, ROCK.x, ROCK.y);
+    // ——— the far ship carried left on the far reach, the near ship carried right with her trail: they pass
     bg += becalmed(u, L, FAR).svg + K.foam(u, { x: FAR.x, y: FAR.y + .2, w: 30, h: 1, seed: 6, L });
-    // the far ship's stern meets the stream: white water and an eddy spinning off it
-    bg += bourrelet(u, L, FAR.x + 15.6, FAR.y, .55, 2) + eddy(u, L, FAR.x + 6, FAR.y + 2.4, 2.4, 6);
+    // the far ship's stern meets the stream (it runs left there): white water and an eddy spinning off it
+    bg += bourrelet(u, L, FAR.x + 15.6, FAR.y, .55, 2, -1) + eddy(u, L, FAR.x + 6, FAR.y + 2.4, 2.4, 6);
     bg += trail(u, L, NEAR);
     bg += becalmed(u, L, Object.assign({ detail: 'near' }, NEAR)).svg;
     bg += waterlineFoam(u, L, NEAR);
