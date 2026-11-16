@@ -13,6 +13,7 @@ import { CARD, FACE, deckSheets, legendSheets, seaSheets } from './layout';
 import { ON_GLASS, TYPE, SEA, contrast, darken, luminance } from './colors';
 import { defaultMode, kitFor } from './parts/cards';
 import { checkSheets, checkStrokes } from './check-layout';
+import { LB_FRAME, checkLegendShips } from './legend-back';
 
 interface Line { cls: string; x: number; y: number; w: number; h: number; color: string; pt: number }
 interface CardDom { key: string; w: number; h: number; glassTop: number; glassOver: number; lines: Line[]; pts: Record<string, number>; art: string; ix: { w: number; bottom: number } | null; smallPrice: boolean; bigPrice: boolean }
@@ -130,6 +131,11 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
     console.log(`check: wreck physics — ${WRECK_CHECK.length} back(s), ${bad.length} issue(s)`);
     for (const e of bad) console.log('  ERROR: ' + e);
   }
+  // the Legend backs: each ship stays inside the thin gold frame, with air (legend-back.ts)
+  { const lp = await ctx.browser.newPage(), lb = await checkLegendShips(lp); await lp.close();
+    errors.push(...lb.errors);
+    console.log(`check: Legend backs, ship vs the gold frame (inner edge ${LB_FRAME.w} mm from the cut, need ≥ ${LB_FRAME.gap} mm of air) — 4 backs, ${lb.errors.length} error(s)`);
+    for (const l of lb.lines) console.log('  ' + l); }
   // ribbons: white lettering on the type colour
   for (const [name, t] of [...Object.entries(TYPE), ['МОРЕ', SEA] as const]) { const c = contrast('#ffffff', darken(t.t, .18)); rows.push({ ribbon: name, contrast: +c.toFixed(2) }); if (c < 4.5) errors.push(`ribbon ${name}: contrast ${c.toFixed(2)} : 1`); }
   if (contrast(ON_GLASS.cream, '#26262a') < 4.5) errors.push('deck strip lettering: contrast below 4.5 : 1');

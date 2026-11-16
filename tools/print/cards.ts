@@ -9,6 +9,7 @@ import { A4, BLEED, BLEED_BOX, CARD, FACE, GRID, backSheet, cutLines, deckSheets
 import { iconImg, ROSE_URI, typeIconUri } from './icons';
 import { backArtSvg, backSpec, backVariants, hasScene, makeArt, plainSvg, portraitSvg, profiled, type ArtInfo, type BackSpec } from './art';
 import { wxSvg } from '../../src/ui/game/art/wx';
+import { LB_DX, LB_FILL, LB_FRAME_SVG, LB_GOLD, LEGEND_BACK_CREST, shiftBack } from './legend-back';
 
 export const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/cards.json'), 'utf8'));
 /** Back designs that exist (docs/tasks/print-kit.md 4.10): 1 «Корабль в море»; 2 and 3 come with stage Б. */
@@ -87,8 +88,9 @@ export const CARD_CSS = `${RICH_CSS}
 .bk.nt .pp{position:absolute;inset:10mm;border-radius:5mm;background:linear-gradient(#f4e8c8,#e2cfa0)}
 .bk.nt .tt{top:26mm;left:10mm;right:10mm;color:#5a3c14;font-size:10.5pt;letter-spacing:.08em}
 .bk.nt .rs{position:absolute;left:50%;top:36mm;width:22mm;height:22mm;margin-left:-11mm}
-/* the Legend's back: gold on dark, its own SVG */
-.bk.lgb svg{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
+/* the Legend's back: its deck's back, «ЛЕГЕНДА» in gold, the thin gold frame from the cut on through the bleed */
+.bk.lgb .lbf{position:absolute;left:${mm(-BLEED)};top:${mm(-BLEED)};width:${mm(CARD.w + 2 * BLEED)};height:${mm(CARD.h + 2 * BLEED)}}
+.bk.lgb .tt{text-shadow:0 .22mm 0 rgba(0,0,0,.55)}
 /* sheet furniture */
 .sh-bleed{position:absolute;left:${mm(BLEED_BOX.x)};top:${mm(BLEED_BOX.y)};width:${mm(BLEED_BOX.w)};height:${mm(BLEED_BOX.h)}}
 .sh-blank{position:absolute;width:${mm(CARD.w)};height:${mm(CARD.h)};background:#fff}
@@ -150,59 +152,8 @@ function bandSvg(col: string): string {
     + `<rect y=".6" width="${W}" height=".22" fill="${LF.line}"/></svg>`;
 }
 
-/** The Legend's back (user's decision 16.11): one look with the deck backs — inside a gold frame the deck back's own picture
- *  (its ship large in its deck's light, backs.cjs), «ЛЕГЕНДА» big in gold over it on top, the ship's name at the bottom; no
- *  game title, no medallion. Outside the frame (no closer than BACK_CLEAR to the edge) only the flat dark ground: the
- *  same at every edge of the four, the bleed of the Legend sheet's back side — a shifted back shows no neighbour's colour. */
-const LB = { x0: 9, y0: 9, x1: CARD.w - 9, y1: CARD.h - 9, r: 3.2 };
-/** The frame's outline at offset o inward (mm): the corners cut in a quarter circle. */
-const lbFrame = (o: number) => { const { x0, y0, x1, y1, r } = LB;
-  return `M${x0 + o + r} ${y0 + o}H${x1 - o - r}A${r} ${r} 0 0 0 ${x1 - o} ${y0 + o + r}V${y1 - o - r}A${r} ${r} 0 0 0 ${x1 - o - r} ${y1 - o}H${x0 + o + r}A${r} ${r} 0 0 0 ${x0 + o} ${y1 - o - r}V${y0 + o + r}A${r} ${r} 0 0 0 ${x0 + o + r} ${y0 + o}Z`; };
-/** The picture of a Legend back (rastered with the art, 200 × 280 units): the dark ground, the deck back's picture inside
- *  the frame — cropped round its ship (src, units of the deck back) so the ship fills the window — darkened under the
- *  lettering at the top and the bottom. */
-const LB_SRC: Record<DeckCode, [number, number, number]> = { 'Ж': [104, 146, 172], 'М': [102, 146, 162], 'И': [104, 146, 168], 'Г': [100, 146, 176] };
-function legendBackArt(deck: DeckCode, deckBack: string): string {
-  const B = LEGEND.back, sx = 200 / CARD.w, sy = 280 / CARD.h, { x0, y0, x1, y1 } = LB, wx = (x1 - x0) * sx, wy = (y1 - y0) * sy;
-  const [cx, cy, w] = LB_SRC[deck], h = w * wy / wx, inner = deckBack.replace(/^\s*<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
-  const id = 'lba' + DECK_KEY[deck];
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280"><defs><clipPath id="${id}c"><path d="${lbFrame(0)}" transform="scale(${n2(sx)} ${n2(sy)})"/></clipPath>`
-    + `<linearGradient id="${id}v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${B.edge}" stop-opacity=".88"/><stop offset=".2" stop-color="${B.edge}" stop-opacity=".35"/><stop offset=".3" stop-color="${B.edge}" stop-opacity="0"/>`
-    + `<stop offset=".74" stop-color="${B.edge}" stop-opacity="0"/><stop offset=".86" stop-color="${B.edge}" stop-opacity=".55"/><stop offset="1" stop-color="${B.edge}" stop-opacity=".9"/></linearGradient></defs>`
-    + `<rect x="-10" y="-10" width="220" height="300" fill="${B.edge}"/><g clip-path="url(#${id}c)">`
-    + `<svg x="${n2(x0 * sx)}" y="${n2(y0 * sy)}" width="${n2(wx)}" height="${n2(wy)}" viewBox="${n2(cx - w / 2)} ${n2(cy - h / 2)} ${n2(w)} ${n2(h)}" preserveAspectRatio="xMidYMid slice">${inner}</svg>`
-    + `<rect x="0" y="${n2(y0 * sy)}" width="200" height="${n2(wy)}" fill="url(#${id}v)"/></g></svg>`;
-}
-/** The gold over the picture: the frame (a heavy rule, a fine one inside, rosettes in the cut corners), «ЛЕГЕНДА», laurel
- *  dividers, the ship's name. Units mm. */
-const legendBacks = new Map<DeckCode, string>();
-function legendBackSvg(deck: DeckCode): string {
-  const done = legendBacks.get(deck); if (done) return done;
-  const W = CARD.w, H = CARD.h, B = LEGEND.back, id = 'lgb' + DECK_KEY[deck], { x0, y0, x1, y1 } = LB, cx = W / 2;
-  const gold = `url(#${id}-g)`;
-  const corner = (x: number, y: number, sx: number, sy: number) => `<g transform="translate(${x} ${y}) scale(${sx} ${sy})"><path d="M.2 2.6Q1.6 1.6 2.6 .2" stroke="${B.gold}" stroke-width=".3" fill="none"/><circle cx="1" cy="1" r=".75" fill="${B.gold}"/><circle cx="1" cy="1" r=".3" fill="${B.edge}"/>`
-    + `<path d="M3.6 1.1q1.8 -.2 3 .9q-1.6 .3 -3 -.9ZM1.1 3.6q-.2 1.8 .9 3q.3 -1.6 -.9 -3Z" fill="${B.gold}"/></g>`;
-  // a divider: a lozenge between two laurel sprigs (a stem, pointed leaves in pairs growing outwards)
-  const leaf = (x: number, y: number, ang: number, len = 1.9, w = .62) => `<path d="M0 0Q${n2(len * .45)} ${-w} ${len} 0Q${n2(len * .45)} ${w} 0 0Z" fill="${B.gold}" transform="translate(${n2(x)} ${n2(y)}) rotate(${n2(ang)})"/>`;
-  const sprig = (y: number, s: number) => `<path d="M${n2(cx + s * 2.6)} ${y}Q${n2(cx + s * 9)} ${n2(y + .5)} ${n2(cx + s * 16)} ${n2(y - .4)}" stroke="${B.gold}" stroke-width=".28" fill="none"/>`
-    + [0, 1, 2, 3].map(i => { const x = cx + s * (4.2 + i * 3), yy = y + .25 - i * .12, out = s > 0 ? 0 : 180; return leaf(x, yy, out - s * 32) + leaf(x + s * .6, yy, out + s * 32); }).join('') + leaf(cx + s * 16, y - .4, s > 0 ? -8 : 188, 1.6, .5);
-  const divider = (y: number) => sprig(y, -1) + sprig(y, 1) + `<path d="M${cx} ${y - 1.3}L${cx + 1.5} ${y}L${cx} ${y + 1.3}L${cx - 1.5} ${y}Z" fill="${B.gold}"/><circle cx="${cx}" cy="${y}" r=".38" fill="${B.edge}"/>`;
-  // the lettering: a dark offset under it (no blur) and a light edge above, the gold gradient on top
-  const word = (t: string, y: number, size: number, ls: number, w = 800) => [[.32, .4, '#000'], [-.14, -.14, B.goldLight], [0, 0, gold]].map(([dx, dy, f]) =>
-    `<text x="${n2(cx + +dx)}" y="${n2(y + +dy)}" text-anchor="middle" font-family="Alegreya SC" font-weight="${w}" font-size="${n2(size * 25.4 / 72)}" letter-spacing="${ls}em" fill="${f}"${f === '#000' ? ' fill-opacity=".8"' : ''}>${esc(t)}</text>`).join('');
-  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><defs>`
-    + `<linearGradient id="${id}-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${B.goldLight}"/><stop offset=".55" stop-color="${B.gold}"/><stop offset="1" stop-color="${B.goldDeep}"/></linearGradient></defs>`
-    + `<path d="${lbFrame(0)}" fill="none" stroke="${gold}" stroke-width=".8"/><path d="${lbFrame(1.6)}" fill="none" stroke="${B.gold}" stroke-width=".25"/>`
-    + corner(x0, y0, 1, 1) + corner(x1, y0, -1, 1) + corner(x0, y1, 1, -1) + corner(x1, y1, -1, -1)
-    + word(TXT.legendBack, 19.6, 19.5, .08) + divider(23.6)
-    + divider(70.2) + word(DECK_NAME[deck], 75.4, 8.6, .04, 700)
-    + `</svg>`;
-  legendBacks.set(deck, svg); return svg;
-}
-/** The colour of a Legend back's edge: the bleed of the Legend sheet's back side. */
-export const LEGEND_BACK_EDGE = LEGEND.back.edge;
-const legendBackHtml = (kit: CardKit, deck: DeckCode, pos: string) => { const art = kit.legendBacks.get(deck);
-  return `<div class="bk lgb" style="${pos}--ground:${LEGEND.back.edge}">${art ? `<img class="art" src="${art}" alt="">` : ''}${legendBackSvg(deck)}</div>`; };
+/** The colour of a Legend back's edge: the frame's gold, the bleed of the Legend sheet's back side (legend-back.ts). */
+export const LEGEND_BACK_EDGE = LB_GOLD;
 
 /** The face. fit = null: the measuring pass (everything on the plate, sizes set by the script). */
 export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string, pos = ''): string {
@@ -329,7 +280,8 @@ export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Pr
       const svg = ctx.opts.noArt ? plainSvg(lighten(col, .2), col) : k === 'sea' ? seaBackSvg() : backArtSvg(kind);
       backs.set(k, (await makeArt(ctx, `back0-${kind}`, fadeEdges(shadeBack(svg), col), null)).url);
     }
-    if (spec && k !== 'sea') legendBacks.set(k, (await makeArt(ctx, `legend-back-${kind}`, legendBackArt(k, xmlns(spec.svg)), null)).url);
+    // the Legend's back: the deck back's own picture; moved (LB_DX) only where the ship would touch the gold frame
+    if (spec && k !== 'sea') legendBacks.set(k, LB_DX[k] ? (await makeArt(ctx, `legend-back-${kind}`, shiftBack(xmlns(spec.svg), LB_DX[k], LB_FILL[k]), null, spec.bleed ?? 0)).url : backs.get(k)!);
     crest.set(k, await ctx.raster(`crest-${kind}`, crestHtml(k === 'sea' ? `<img src="${ROSE_URI}" style="width:52px;height:52px">` : k, col), 90, 92, 6));
   }
   return { mode, fits, art, specs, backs, crest, backSpecs, legendBacks };
@@ -367,21 +319,24 @@ export function itemFace(ctx: Ctx, kit: CardKit, it: Item, pos: string): string 
 /** ground — the colour of the sheet's backs: the reference card's back keeps it along the edge, so a shifted back side shows no light strip on a neighbour. */
 export function backHtml(kit: CardKit, b: BackKind, pos: string, ground = '#3a2c1c', edge = [0, 0, 0, 0]): string {
   if (b.back === 'none') return `<div class="sh-blank" style="${pos}"></div>`;
-  if (b.back === 'deck' && b.legend) return legendBackHtml(kit, b.deck, pos);
   if (b.back === 'neutral') return `<div class="bk nt" style="${pos}--ground:${ground}"><div class="pp"></div><div class="tt">${esc(TXT.title)}</div><img class="rs" src="${ROSE_URI}" alt=""></div>`;
+  // a Legend's back (user's decision 16.11, second round): the back of its deck as it is — «ЛЕГЕНДА» in gold for the title,
+  // the medallion if LEGEND_BACK_CREST, the thin gold frame (legend-back.ts); the gold is its ground and bleed
+  const L = b.back === 'deck' && b.legend;
   const k = b.back === 'sea' ? 'sea' : b.deck, name = b.back === 'sea' ? TXT.seaBackName : DECK_NAME[b.deck], sp = kit.backSpecs.get(k);
+  if (L && !sp) return `<div class="bk lgb" style="${pos}--ground:${LB_GOLD}"><div class="tt" style="color:${LEGEND.back.gold}">${esc(TXT.legendBack)}</div>${LB_FRAME_SVG}</div>`;
   const tail = (y: string) => `<div class="bn" style="top:${y}">${esc(name)}</div>`;
   if (!sp) return `<div class="bk" style="${pos}--ground:${profiled(b.back === 'sea' ? SEA.band : DECK_BAND[b.deck])}"><img class="art" src="${kit.backs.get(k)}" alt=""><div class="tt">${esc(TXT.title)}</div><div class="tr"></div><img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:53.6mm;width:18.9mm;height:19.32mm;margin-left:-9.45mm">${tail('')}</div>`.replace(/ style="top:"/g, '');
   // lettering of a new back: places come from the picture (units of 200 × 280 → mm), colours from its tone
   const U = CARD.h / 280, ink = sp.tone === 'dark' ? ['#f3dc9d', '#fff2d4'] : ['#5a3c14', '#3a2410'];
-  const title = sp.title ? `<div class="tt" style="top:${mm(sp.title.y * U)};transform:translateY(-50%);color:${ink[0]}">${esc(TXT.title)}</div>` : '';
-  const cd = sp.crest ? sp.crest.d * U : 0, crest = sp.crest ? `<img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:${mm(sp.crest.y * U - cd * 45 / 70)};width:${mm(cd * 90 / 70)};height:${mm(cd * 92 / 70)};margin-left:${mm(-cd * 45 / 70)}">` : '';
+  const title = sp.title ? `<div class="tt" style="top:${mm(sp.title.y * U)};transform:translateY(-50%);color:${L ? LEGEND.back.gold : ink[0]}">${esc(L ? TXT.legendBack : TXT.title)}</div>` : '';
+  const cd = sp.crest ? sp.crest.d * U : 0, crest = sp.crest && (!L || LEGEND_BACK_CREST) ? `<img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:${mm(sp.crest.y * U - cd * 45 / 70)};width:${mm(cd * 90 / 70)};height:${mm(cd * 92 / 70)};margin-left:${mm(-cd * 45 / 70)}">` : '';
   const ls = sp.letter ? sp.letter.size * U : 0, letter = !sp.letter ? '' : k === 'sea' ? `<img src="${ROSE_URI}" alt="" style="position:absolute;left:50%;top:${mm(sp.letter.y * U - ls / 2)};width:${mm(ls)};height:${mm(ls)};margin-left:${mm(-ls / 2)}">`
     : `<div style="position:absolute;left:0;right:0;top:${mm(sp.letter.y * U)};transform:translateY(-50%);text-align:center;font:700 ${(ls * 2.835).toFixed(1)}pt/1 'Alegreya SC',serif;color:${ink[1]}">${k}</div>`;
   // a back with bleed: the picture runs 3 mm past the card on the block's outer sides (edge = left, top, right, bottom), nowhere else
   const bu = sp.bleed ?? 0, art = bu ? ` style="left:${mm(-bu * U)};top:${mm(-bu * U)};width:${mm(CARD.w + 2 * bu * U)};height:${mm(CARD.h + 2 * bu * U)}"` : '',
     clip = bu ? `overflow:visible;clip-path:inset(${[1, 2, 3, 0].map(i => mm(-edge[i] * BLEED)).join(' ')});` : '';
-  return `<div class="bk" style="${pos}${clip}--ground:${profiled(sp.ground)}"><img class="art" src="${kit.backs.get(k)}" alt=""${art}>${title}${crest}${letter}`
+  return `<div class="bk${L ? ' lgb' : ''}" style="${pos}${clip}--ground:${L ? LB_GOLD : profiled(sp.ground)}"><img class="art" src="${(L && kit.legendBacks.get(b.deck)) || kit.backs.get(k)}" alt=""${art}>${L ? LB_FRAME_SVG : ''}${title}${crest}${letter}`
     + tail(`${mm(sp.name.y * U)};transform:translateY(-50%);color:${ink[1]}`) + `</div>`;
 }
 
@@ -409,7 +364,7 @@ export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: 
 /** The sheet of backs behind a face sheet (mirrored columns); dx, dy shift the whole print, seen from the back. No cut lines: cut from the face. */
 export function backSheetPage(kit: CardKit, sh: Sheet, dx = 0, dy = 0, label = '', kitOf: (i: number) => CardKit = () => kit, sub = '', bleed = true): PageSpec {
   // the same colour as the edge of the back pictures in the JPEG (after the print profile): no seam between a card and the bleed
-  const col = sh.deck === 'legend' ? LEGEND.back.edge : profiled(kit.backSpecs.get(sh.deck)?.ground ?? sheetColor(sh)), b = BLEED_BOX, L = 5, o = 1;
+  const col = sh.deck === 'legend' ? LB_GOLD : profiled(kit.backSpecs.get(sh.deck)?.ground ?? sheetColor(sh)), b = BLEED_BOX, L = 5, o = 1;
   // an empty slot is white on the back too, its bleed as well (no dark strip round a blank card place)
   const blanks = bleedPatches(backSheet(sh.items).map(bk => bk.back === 'none' ? '#ffffff' : null));
   const edgeOf = (i: number) => { const s = slot(i); return [+(s.col === 0), +(s.row === 0), +(s.col === GRID.cols - 1), +(s.row === GRID.rows - 1)]; };
