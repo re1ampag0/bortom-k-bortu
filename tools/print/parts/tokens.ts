@@ -210,7 +210,26 @@ function markerArt(x: number, y: number, color: string, field: string): string {
     + `<rect x="${R(x + 1.3)}" y="${R(y + 1.3)}" width="${R(m - 2.6)}" height="${R(m - 2.6)}" rx=".8" fill="${field}" stroke="${bd}" stroke-width=".2"/>`
     + `<path d="M${R(x + 1.75)} ${R(y + m - 2.2)}V${R(y + 2.1)}Q${R(x + 1.75)} ${R(y + 1.75)} ${R(x + 2.1)} ${R(y + 1.75)}H${R(x + m - 2.2)}" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width=".25" stroke-linecap="round"/>`;
 }
-function markersHtml(): { svg: string; html: string; cuts: string } {
+/** the new marker, like the new ship token in small: a brass rim; above, the ship's picture (the token's raster, its sails
+ *  over the sky); below, a band in the ship's colour under a brass line; over the seam a brass medallion with the letter —
+ *  the letter is what is read from across the table, the ship is the ornament. The Soul marker in pair: a sea-green
+ *  band, pale rays in the sky, the soul flask in the medallion. */
+const MEDAL = { cy: 6.45, R: 3.25, band: 5.9 };
+function markerNew(x: number, y: number, pic: string | null, band: string, sky: string, uid: string): string {
+  const m = TOKEN.marker, [bl, bm, bd] = LOOK.brass, a = 0.6, b = m - 0.6, k = 1.4, f0 = 1.2, f1 = m - 1.2;
+  let o = `<rect x="${R(x)}" y="${R(y)}" width="${m}" height="${m}" fill="${band}"/>`
+    + `<rect x="${R(x + a)}" y="${R(y + a)}" width="${R(b - a)}" height="${R(b - a)}" rx="${k}" fill="${bm}" stroke="${bd}" stroke-width=".2"/>`
+    + `<path d="M${R(x + a + 0.35)} ${R(y + b - k)}V${R(y + a + k)}Q${R(x + a + 0.35)} ${R(y + a + 0.35)} ${R(x + a + k)} ${R(y + a + 0.35)}H${R(x + b - k)}" fill="none" stroke="${bl}" stroke-width=".42" stroke-linecap="round"/>`
+    + `<path d="M${R(x + a + k)} ${R(y + b - 0.32)}H${R(x + b - k)}Q${R(x + b - 0.32)} ${R(y + b - 0.32)} ${R(x + b - 0.32)} ${R(y + b - k)}V${R(y + a + k)}" fill="none" stroke="${bd}" stroke-opacity=".4" stroke-width=".36" stroke-linecap="round"/>`
+    + `<defs><clipPath id="mk${uid}"><rect x="${R(x + f0)}" y="${R(y + f0)}" width="${R(f1 - f0)}" height="${R(MEDAL.band - f0)}" rx=".6"/></clipPath></defs>`
+    + `<rect x="${R(x + f0)}" y="${R(y + f0)}" width="${R(f1 - f0)}" height="${R(f1 - f0)}" rx=".7" fill="${band}" stroke="${bd}" stroke-width=".2"/>`
+    + `<g clip-path="url(#mk${uid})"><rect x="${R(x + f0)}" y="${R(y + f0)}" width="${R(f1 - f0)}" height="${R(MEDAL.band - f0)}" fill="${sky}"/>`;
+  if (pic) { const w = f1 - f0, h = w * PIC.h / PIC.w; o += `<image href="${pic}" x="${R(x + f0)}" y="${R(y + MEDAL.band + 0.1 - h * (PIC.h - 1.4) / PIC.h)}" width="${R(w)}" height="${R(h)}" preserveAspectRatio="none"/>`; }
+  else for (let i = 0; i < 9; i++) { const t = -Math.PI * (0.08 + 0.84 * i / 8); o += `<path d="M${R(x + m / 2)} ${R(y + MEDAL.cy)}L${R(x + m / 2 + 7 * Math.cos(t))} ${R(y + MEDAL.cy + 7 * Math.sin(t))}" stroke="#3f9a88" stroke-opacity=".45" stroke-width=".28"/>`; }
+  o += `</g><rect x="${R(x + f0)}" y="${R(y + MEDAL.band - 0.2)}" width="${R(f1 - f0)}" height=".45" fill="${bl}"/><rect x="${R(x + f0)}" y="${R(y + MEDAL.band + 0.25)}" width="${R(f1 - f0)}" height=".15" fill="${bd}"/>`;
+  return o;
+}
+function markersHtml(pics: Record<string, string> | null): { svg: string; html: string; cuts: string } {
   const m = TOKEN.marker, list = ships().flatMap(s => Array.from({ length: 4 }, () => s)), n = MARK.perRow;
   if (list.length + 1 !== COUNTS.markers) throw new Error(`markers: ${list.length + 1}, expected ${COUNTS.markers}`);
   const pos = (i: number) => ({ x: MARK.x + (i < n ? i : i - n) * m, y: MARK.y + (i < n ? 0 : m) });
@@ -218,11 +237,17 @@ function markersHtml(): { svg: string; html: string; cuts: string } {
   const html: string[] = [];
   list.forEach((s, i) => {
     const p = pos(i), pid = `marker-${i}`;
-    svg += markerArt(p.x, p.y, s.color, deepOf(s.color)) + `<rect data-plate="${pid}" x="${R(p.x)}" y="${R(p.y)}" width="${m}" height="${m}" fill="none"/>`;
-    html.push(capWord(pid, p.x + m / 2, p.y + m / 2, s.code, LETTER.cap, { color: CREAM, maxW: LETTER.maxW }));
+    if (pics) {
+      svg += markerNew(p.x, p.y, pics[s.code], deepOf(s.color), PAPER, String(i)) + brassRing(`${pid}-medal`, p.x + m / 2, p.y + MEDAL.cy, MEDAL.R, 0.55, 'mk', deepOf(s.color));
+      html.push(capWord(`${pid}-medal`, p.x + m / 2, p.y + MEDAL.cy, s.code, MEDAL.R * 1.02, { color: CREAM, maxW: MEDAL.R * 1.3, inset: 0.9, name: `${s.code} (маркер)` }));
+    } else {
+      svg += markerArt(p.x, p.y, s.color, deepOf(s.color)) + `<rect data-plate="${pid}" x="${R(p.x)}" y="${R(p.y)}" width="${m}" height="${m}" fill="none"/>`;
+      html.push(capWord(pid, p.x + m / 2, p.y + m / 2, s.code, LETTER.cap, { color: CREAM, maxW: LETTER.maxW }));
+    }
   });
   const soul = pos(list.length);
-  svg += markerArt(soul.x, soul.y, '#d9efe8', '#eef8f4') + ico('souls', soul.x + m / 2, soul.y + m / 2 + 0.1, 7.4, SOUL_TONE, 'marker-soul');
+  svg += pics ? markerNew(soul.x, soul.y, null, '#2f7a6c', '#e6f6f1', 'soul') + brassRing('marker-soul-medal', soul.x + m / 2, soul.y + MEDAL.cy, MEDAL.R, 0.55, 'mk', '#eef8f4') + ico('souls', soul.x + m / 2, soul.y + MEDAL.cy + 0.05, 4.9, SOUL_TONE, 'marker-soul')
+    : markerArt(soul.x, soul.y, '#d9efe8', '#eef8f4') + ico('souls', soul.x + m / 2, soul.y + m / 2 + 0.1, 7.4, SOUL_TONE, 'marker-soul');
   // the outline with its ticks: grey; the lines between two dark markers: light
   const x = MARK.x, y = MARK.y, w = (list.length + 1 - n) * m, h = 2 * m, w1 = n * m;
   let d = '', light = '';
@@ -314,7 +339,7 @@ function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean): 
   const cFire = caption('cap-fire', FIRE.x, FIRE.y, fill(TXT.fire, { n: COUNTS.fire }), ico('fire', capSign(FIRE.x, FIRE.y).cx, capSign(FIRE.x, FIRE.y).cy, 4.8, TONE.red));
   s1.push(cFire.svg, tokenGrid(id1, FIRE, fr, COUNTS.fire, (i, x, y) => coinToken(id1, `fr${i}`, x, y, fr, FIRE_FIELD, icon('fire', x + fr / 2, y + fr / 2 + 0.3, 13.2, TONE.red))));
   h1.push(cFire.html);
-  const mk = markersHtml(), sg = capSign(MARK.x, MARK.y);
+  const mk = markersHtml(pics), sg = capSign(MARK.x, MARK.y);
   const cMark = caption('cap-markers', MARK.x, MARK.y, TXT.markers,
     `<rect x="${r(sg.cx - 2.3)}" y="${r(sg.cy - 2.3)}" width="4.6" height="4.6" rx=".8" fill="url(#${id1}brh)" stroke="${LOOK.brass[2]}" stroke-width=".2"/><rect x="${r(sg.cx - 1.6)}" y="${r(sg.cy - 1.6)}" width="3.2" height="3.2" rx=".4" fill="${deepOf(data.ships.find(s => s.code === 'М')!.color)}"/>`);
   s1.push(cMark.svg, mk.svg); h1.push(cMark.html, mk.html);
