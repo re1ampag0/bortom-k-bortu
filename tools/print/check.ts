@@ -102,6 +102,14 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
   const lay = await checkSheets(ctx.browser);
   errors.push(...lay.errors);
   console.log(`check: lettering of 02, 03, 04 — ${lay.words} words, ${lay.errors.length} error(s)`);
+  // the ship on each board's chart stands in open water (boards v4, item 3): only when 03 was built in this run
+  const { SHIP_CHECK } = await import('./parts/boards/v2');
+  if (SHIP_CHECK.length) {
+    const bad = SHIP_CHECK.flatMap(c => c.issues.map(i => `ship on the chart, ${c.board}: ${i}`));
+    errors.push(...bad);
+    console.log(`check: ship on the chart — ${SHIP_CHECK.length} board(s), ${bad.length} error(s)`);
+    for (const e of bad) console.log('  ERROR: ' + e);
+  }
   // ribbons: white lettering on the type colour
   for (const [name, t] of [...Object.entries(TYPE), ['МОРЕ', SEA] as const]) { const c = contrast('#ffffff', darken(t.t, .18)); rows.push({ ribbon: name, contrast: +c.toFixed(2) }); if (c < 4.5) errors.push(`ribbon ${name}: contrast ${c.toFixed(2)} : 1`); }
   if (contrast(ON_GLASS.cream, '#26262a') < 4.5) errors.push('deck strip lettering: contrast below 4.5 : 1');

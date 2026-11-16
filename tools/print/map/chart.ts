@@ -50,7 +50,10 @@ export interface ChartOpts {
   skip?: string[];
   /** folds of the sheet: x positions of vertical folds and y of horizontal ones (mm) */
   folds?: { x?: number[]; y?: number[] };
+  /** filled by chartSvg: where the labels and the marks (roses, the cross, the notes) went — for the checks */
+  report?: ChartReport;
 }
+export interface ChartReport { labels: { text: string; box: Rect }[]; marks: { kind: string; box: Rect }[] }
 
 interface Look { paper: string; paper2: string; land: string; ink: string; coast: string; wash: string; sea: string; seaK: number; rhumb: [string, string, string]; note: string; table: string; wear: number; stains: number; vignette: number }
 const LOOK: Record<ChartStyle, Look> = {
@@ -376,6 +379,11 @@ export function chartSvg(o0: ChartOpts): string {
   if (o.cartouche) obst.push(grow(o.cartouche, 3.5));
   if (o.scale) obst.push({ x: o.scale.x - 3, y: o.scale.y - 4, w: (o.mmPerDeg / Math.cos(o.center[1] * Math.PI / 180)) * 2 + 6, h: 9.5 });
   for (const nt of o.note ?? []) obst.push({ x: nt.x - 1, y: nt.y - (nt.size ?? 4.2), w: nt.text.length * (nt.size ?? 4.2) * 0.42 + 2, h: (nt.size ?? 4.2) * 1.5 });
+  if (o.report) {
+    roses.forEach(ro => o.report!.marks.push({ kind: 'rose', box: { x: ro.x - ro.r, y: ro.y - ro.r, w: 2 * ro.r, h: 2 * ro.r } }));
+    if (o.cross) o.report.marks.push({ kind: 'cross', box: { x: o.cross.x - 5.5, y: o.cross.y - 5.5, w: 11, h: 11 } });
+    for (const nt of o.note ?? []) o.report.marks.push({ kind: 'note', box: { x: nt.x - 1, y: nt.y - (nt.size ?? 4.2), w: nt.text.length * (nt.size ?? 4.2) * 0.42 + 2, h: (nt.size ?? 4.2) * 1.5 } });
+  }
   const hit = (b: Rect, list: Rect[]) => list.some(q => b.x < q.x + q.w && b.x + b.w > q.x && b.y < q.y + q.h && b.y + b.h > q.y);
   const onLand = (b: Rect) => { for (let i = 0; i <= 14; i++) for (let j = 0; j <= 4; j++) if (field.land({ x: b.x + b.w * i / 14, y: b.y + b.h * j / 4 })) return true; return false; };
   for (const lb of TXT.labels) {
@@ -398,7 +406,7 @@ export function chartSvg(o0: ChartOpts): string {
     for (const [dx, dy] of tries) {
       const q = { x: p0.x + dx * wide, y: p0.y + dy * st.s * 1.2 }, b = boxAt(q);
       if (hit(b, obst) || hit(b, placed) || (sea && onLand(b)) || b.x < 3 || b.x + b.w > W - 3 || b.y < 3 || b.y + b.h > H - 3) continue;
-      p = q; placed.push(b); break;
+      p = q; placed.push(b); o.report?.labels.push({ text: lb.text, box: b }); break;
     }
     if (!p) { if (o.labelsAt?.[lb.text]) console.warn(`warning: chart label «${lb.text}» found no free place near ${JSON.stringify(p0)}`); continue; }
     // a halo of paper under the words keeps them clear of the hatching
@@ -495,4 +503,33 @@ ${TXT.title.split(' y ').map((t, i, a) => `<text x="${x + w / 2}" y="${r(y + h *
 
 export const CHART_NOTES = TXT.notes;
 /** where a place (lon, lat) falls in the box of a chart, mm */
+/** How much land lies in a rect of the chart (mm): the points of a 0.75 mm grid on land plus the coast's vertices inside
+ *  it. 0 — the rect is all open water (the ship on a board stands only there; check.ts). */
+export function landIn(o0: ChartOpts, b: Rect): number {
+  const o: ChartOpts = o0.anchor ? { ...o0, center: centerFor(o0.anchor.lon, o0.anchor.lat, o0.anchor.x, o0.anchor.y, o0.w, o0.h, o0.mmPerDeg) } : o0;
+  const key = `${o.w},${o.h},${o.mmPerDeg},${o.center.join(',')}`;
+  let f = FIELDS.get(key); if (!f) { const rings = landRings(o); f = { rings, field: coastField(rings) }; FIELDS.set(key, f); }
+  let n = 0;
+  for (let x = b.x; x <= b.x + b.w + 1e-6; x += 0.75) for (let y = b.y; y <= b.y + b.h + 1e-6; y += 0.75) if (f.field.land({ x, y })) n++;
+  for (const ring of f.rings) for (const q of ring) if (q.x >= b.x && q.x <= b.x + b.w && q.y >= b.y && q.y <= b.y + b.h) n++;
+  return n;
+}
+const FIELDS = new Map<string, { rings: Pt[][]; field: ReturnType<typeof coastField> }>();
+/** The land of an area as a grid (step mm) with a summed table: count(rect) — the land cells under a rect, at once (the
+ *  search for the ship's place tries thousands of rects). A cell is land if its centre is on land or a coast vertex is in it. */
+export function landGrid(o0: ChartOpts, area: Rect, step = 0.75): (b: Rect) => number {
+  const o: ChartOpts = o0.anchor ? { ...o0, center: centerFor(o0.anchor.lon, o0.anchor.lat, o0.anchor.x, o0.anchor.y, o0.w, o0.h, o0.mmPerDeg) } : o0;
+  const rings = landRings(o), field = coastField(rings), nx = Math.ceil(area.w / step), ny = Math.ceil(area.h / step);
+  const g = new Uint8Array(nx * ny);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) if (field.land({ x: area.x + (i + 0.5) * step, y: area.y + (j + 0.5) * step })) g[j * nx + i] = 1;
+  for (const ring of rings) for (const q of ring) { const i = Math.floor((q.x - area.x) / step), j = Math.floor((q.y - area.y) / step); if (i >= 0 && j >= 0 && i < nx && j < ny) g[j * nx + i] = 1; }
+  const S = new Int32Array((nx + 1) * (ny + 1));
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) S[(j + 1) * (nx + 1) + i + 1] = g[j * nx + i] + S[j * (nx + 1) + i + 1] + S[(j + 1) * (nx + 1) + i] - S[j * (nx + 1) + i];
+  return (b: Rect) => {
+    const i0 = Math.max(0, Math.floor((b.x - area.x) / step)), j0 = Math.max(0, Math.floor((b.y - area.y) / step));
+    const i1 = Math.min(nx, Math.ceil((b.x + b.w - area.x) / step)), j1 = Math.min(ny, Math.ceil((b.y + b.h - area.y) / step));
+    if (i1 <= i0 || j1 <= j0) return 0;
+    return S[j1 * (nx + 1) + i1] - S[j0 * (nx + 1) + i1] - S[j1 * (nx + 1) + i0] + S[j0 * (nx + 1) + i0];
+  };
+}
 export const chartPoint = (o: Pick<ChartOpts, 'w' | 'h' | 'center' | 'mmPerDeg'>, lon: number, lat: number): Pt => toMm(o as ChartOpts)(lon, lat);
