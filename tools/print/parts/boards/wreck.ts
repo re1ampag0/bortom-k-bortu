@@ -120,12 +120,13 @@ export const SEA: Record<ShipKey, Sea> = {
       { kind: 'plank', x: 266, y: 206.5, s: 1.2, rot: 2, sink: 0.3, opt: { len: 30, th: 5 }, drift: 0.3, name: 'plank' }
     ], seed: 11
   },
+  // (her water warm red-brown, the colour of her flag, darker with the depth)
   // the Revenge burnt and went down by the head: charred black from the waist aft (the red paint left in dull patches at
   // the bow), the stern castle fallen in with the sternpost standing up out of it, three burnt stumps of different heights
   // with slanting breaks, the mainmast fallen across the sand, long burn holes along her side; a bank of sand over her side
   revenge: {
-    light: 'revenge', water: ['#946040', '#5c3624', '#40241a'], glow: '#ffd2a0', rays: 0.42, haze: ['#4a2418', 0.28], back: ['#b8724a', 0.4],
-    sand: ['#dab28c', '#ac7f60', '#664430'], fish: ['#2a120c', 0.58], coral: ['#a8645a', '#b07a5e', '#8a5048'], weed: ['#5e5a2e', '#6e6a36', '#464222'],
+    light: 'revenge', water: ['#a4583a', '#6a3022', '#461a12'], glow: '#ffcc96', rays: 0.42, haze: ['#501e14', 0.28], back: ['#c46a48', 0.4],
+    sand: ['#dab08a', '#ac7c5c', '#66402e'], fish: ['#2a120c', 0.58], coral: ['#a8645a', '#b07a5e', '#8a5048'], weed: ['#5e5a2e', '#6e6a36', '#464222'],
     rag: '#3a1612', hz: 150,
     ship: {
       ...SHIP0, x: 176, y: 180, scale: 2.0, roll: 5, tilt: 7, brk: [0.27, 0.17, 0.13], bow: 13, stern: -2, sprit: 3, aft: 16, fall: { mast: 0, side: -1, ty: 199, front: true },
