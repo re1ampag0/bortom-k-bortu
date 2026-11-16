@@ -200,7 +200,7 @@ export function compass(k: K, cx: number, cy: number, R: number, r: number): str
 
 export function cardBack(k: K, x: number, y: number, w: number, h: number, kind: 'lattice' | 'sea'): string {
   const inn = rrect(x + 3.6, y + 3.6, w - 7.2, h - 7.2, 1.8), cx = x + w / 2, cy = y + h / 2;
-  let o = k.shape(rrect(x, y, w, h, 3.6), { fill: 'light', sw: 2.2 });
+  let o = k.shape(rrect(x, y, w, h, 3.6), { fill: 'light', sw: 2.2, inner: k.fine(k.S(rrect(x + 1.8, y + 1.8, w - 3.6, h - 3.6, 2.4), 0.6)) });
   if (kind === 'lattice') {
     o += k.shape(inn, { fill: 'mid', sw: 1.2, h: [{ a: 50, g: 3.4, w: 0.9 }, { a: -50, g: 3.4, w: 0.9 }] });
     o += k.shape(circ(cx, cy, w * 0.2), { fill: 'light', sw: 1.2 }) + compass(k, cx, cy, w * 0.17, w * 0.09);

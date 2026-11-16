@@ -37,6 +37,14 @@ export const ICON_TITLES: Partial<Record<IconName, string>> = {
   ...STORY_TITLES,
 };
 
+/** a band of sea from x0 to x1 with n whole waves on top at y, closed down to `bottom` (stays inside the box) */
+function seaBand(y: number, amp: number, len: number, x0 = 3, x1 = 97, bottom = 97): string {
+  const n = Math.max(1, Math.round((x1 - x0) / len)), l = (x1 - x0) / n;
+  let d = `M${f(x0)} ${f(bottom)}L${f(x0)} ${f(y)}`;
+  for (let i = 0; i < n; i++) d += `Q${f(x0 + l * (i + 0.5))} ${f(y + amp)} ${f(x0 + l * (i + 1))} ${f(y)}`;
+  return d + `L${f(x1)} ${f(bottom)}Z`;
+}
+
 // ---------------------------------------------------------------- the icons
 
 const DRAW: Record<IconName, (k: K) => string> = {
@@ -47,8 +55,9 @@ const DRAW: Record<IconName, (k: K) => string> = {
   sails(k) {
     // a course and a topsail seen 3/4 from the front: heads straight on the yards, leeches bowed out, feet arching up,
     // seams curving with the belly, the right half in shade
-    let o = k.shape('M52 3L74 6L68 8.4L75 11L52 11.5Z', { fill: 'light', sw: 1.5, h: [{ a: 0, g: 2, r: rect(48, 8.4, 40, 6) }] });
-    o += k.shape(rect(47.5, 3, 5, 95), { fill: 'mid', sw: 2, h: [{ a: 90, g: 1.6, r: rect(50.2, 0, 5, 100) }] });
+    let o = k.shape('M52 3Q58 2.6 63 4.6Q68 6.4 74 6L68 8.4L75 11Q68 11.6 63 10.2Q58 9 52 11.5Z', { fill: 'light', sw: 1.5, h: [{ a: 0, g: 2, r: rect(48, 8.4, 40, 6) }, { a: 80, g: 1.6, w: 0.8, fine: true, r: rect(62, 0, 8, 14) }] });
+    o += k.shape(rect(47.5, 3, 5, 95), { fill: 'mid', sw: 2, h: k.cyl(47.5, 52.5, 90, 1.6), hi: rect(48.4, 4, 0.9, 90) });
+    o += k.fine(k.S('M50 5L21 10.5M50 5L79 10.5M50 37L5 41M50 37L95 41', 0.8));
     o += k.shape(circ(50, 3.2, 2.6), { fill: 'light', sw: 1.6 });
     const sail = (x0: number, x1: number, y0: number, y1: number, arch: number, bulge: number) => {
       const w = x1 - x0, cx = (x0 + x1) / 2, h = y1 - y0;
@@ -59,17 +68,21 @@ const DRAW: Record<IconName, (k: K) => string> = {
         const xt = cx + (u * w) / 2, xb = cx + (u * (w + bulge * 0.8)) / 2, yb = y1 - arch * (1 - u * u);
         seams += `M${f(xt)} ${f(y0)}Q${f(xt + u * bulge * 1.6)} ${f(y0 + h * 0.55)} ${f(xb)} ${f(yb)}`;
       }
+      let reef = '', reefKnots = '';
+      for (let x = x0 + 4; x < x1 - 2; x += 4.4) { reef += `M${f(x)} ${f(y0 + 4)}L${f(x + 0.4)} ${f(y0 + 7.4)}`; reefKnots += circ(x, y0 + 4, 0.7); }
       const shadeR = `M${f(cx + 2)} 0Q${f(cx + 2 + bulge * 1.2)} ${f(y0 + h * 0.5)} ${f(cx + 2)} 100L110 100L110 0Z`;
       const deepR = `M${f(x1 - w * 0.12)} 0Q${f(x1 - w * 0.12 + bulge * 1.4)} ${f(y0 + h * 0.5)} ${f(x1 - w * 0.12)} 100L110 100L110 0Z`;
       return k.shape(d, {
         fill: 'light',
         mid: shadeR,
         h: [{ a: 80, g: 2.5, r: shadeR }, { a: -20, g: 2.5, r: deepR }, { a: 2, g: 2.6, w: 0.9, r: `M0 ${f(y1 - arch * 2.4)}Q${f(cx)} ${f(y1 - arch * 4.2)} 110 ${f(y1 - arch * 2.4)}L110 110L0 110Z` }],
-        inner: k.S(seams, 1.1) + k.S(`M${f(x0 + w * 0.12)} ${f(y0 + 3)}Q${f(x0 + w * 0.06 - bulge * 0.3)} ${f(y0 + h * 0.5)} ${f(x0 + w * 0.1)} ${f(y1 - 4)}`, 1.6, 'light'),
+        inner: k.S(seams, 1.1) + k.S(`M${f(x0 + w * 0.12)} ${f(y0 + 3)}Q${f(x0 + w * 0.06 - bulge * 0.3)} ${f(y0 + h * 0.5)} ${f(x0 + w * 0.1)} ${f(y1 - 4)}`, 1.6, 'light') +
+          k.fine(k.S(reef, 0.9) + k.F(reefKnots, 'ink') + k.S(d, 3, 'mid')),
       });
     };
-    const yard = (x0: number, x1: number, y: number) =>
-      k.shape(`M${x0} ${f(y)}Q50 ${f(y - 2.6)} ${x1} ${f(y)}L${x1} ${f(y + 4.4)}Q50 ${f(y + 6.4)} ${x0} ${f(y + 4.4)}Z`, { fill: 'mid', sw: 2.2, h: [{ a: 0, g: 1.4, w: 0.8, r: rect(0, y + 2.6, 100, 6) }] });
+    const yard = (x0: number, x1: number, y: number) => k.fine(k.S(`M${x0 + 3} ${f(y + 5)}Q50 ${f(y + 10.5)} ${x1 - 3} ${f(y + 5)}`, 0.9)) +
+      k.shape(`M${x0} ${f(y)}Q50 ${f(y - 2.6)} ${x1} ${f(y)}L${x1} ${f(y + 4.4)}Q50 ${f(y + 6.4)} ${x0} ${f(y + 4.4)}Z`, { fill: 'mid', sw: 2.2, h: [{ a: 0, g: 1.4, w: 0.8, r: rect(0, y + 2.6, 100, 6) }], hi: `M${x0 + 2} ${f(y + 0.4)}Q50 ${f(y - 1.8)} ${x1 - 2} ${f(y + 0.4)}L${x1 - 2} ${f(y + 1.4)}Q50 ${f(y - 0.8)} ${x0 + 2} ${f(y + 1.4)}Z`,
+        inner: k.fine(k.S(`M${x0 + 6} ${f(y)}L${x0 + 6} ${f(y + 5)}M${x1 - 6} ${f(y)}L${x1 - 6} ${f(y + 5)}M44 ${f(y - 1)}L44 ${f(y + 6)}M56 ${f(y - 1)}L56 ${f(y + 6)}`, 1.2)) });
     o += sail(28, 72, 14.5, 35, 3.4, 4) + yard(20, 80, 10.5);
     o += sail(12, 88, 45, 86, 6.5, 7.5) + yard(3, 97, 40.5);
     o += k.S('M7.5 86L3 98M92.5 86L97 98M24.4 35L13 41M75.6 35L87 41', 1.4);
@@ -79,9 +92,9 @@ const DRAW: Record<IconName, (k: K) => string> = {
   crew(k) {
     let o = k.shape('M4 100C6 84 18 76 34 72L42 68L58 68L66 72C82 76 94 84 96 100Z', {
       fill: 'mid',
-      h: [{ a: 60, g: 2.6, r: rect(52, 60, 50, 40) }, { a: -30, g: 2.6, r: poly(76, 60, 100, 60, 100, 100, 70, 100) }, { a: 60, g: 3.6, w: 0.8, r: rect(0, 60, 24, 40) }],
+      h: [{ a: 60, g: 2.6, r: rect(52, 60, 50, 40) }, { a: -30, g: 2.6, r: poly(76, 60, 100, 60, 100, 100, 70, 100) }, { a: 15, g: 2.6, w: 0.8, fine: true, r: poly(84, 70, 100, 70, 100, 100, 80, 100) }, { a: 60, g: 3.6, w: 0.8, r: rect(0, 60, 24, 40) }],
       hi: 'M12 93C16 85 22 80 31 77L33 80C25 83 19 88 16 95Z',
-      inner: k.S('M42 69L35 100M58 69L65 100', 1.5),
+      inner: k.S('M42 69L35 100M58 69L65 100', 1.5) + k.fine(k.S('M20 82C24 88 25 94 24 100M80 82C76 88 75 94 76 100M70 78C73 84 74 90 73 96', 0.9) + k.S('M40.5 74L37.5 88M41 76L39 82', 1, 'light')),
     });
     for (const [x, y] of [[38.4, 84], [37, 94], [61.6, 84], [63, 94]]) o += k.shape(circ(x, y, 1.5), { fill: 'light', sw: 1 });
     o += k.shape('M42 68L50 92L58 68Z', { fill: 'light', sw: 1.6, h: [{ a: 0, g: 3.2, w: 1.3 }] });
@@ -98,7 +111,8 @@ const DRAW: Record<IconName, (k: K) => string> = {
         k.S('M50 45L48 53.5L51 54.5', 1.3) + k.S('M45 58Q50 60.5 55 58', 1.5),
     });
     o += k.F('M36.5 36C35 43 35.5 50 37.5 55L39.5 50L39 38Z', 'ink') + k.F('M63.5 36C65 43 64.5 50 62.5 55L60.5 50L61 38Z', 'ink');
-    o += k.shape('M30 25C30 5 70 5 70 25Z', { fill: 'mid', h: [{ a: 30, g: 2.2 }, { a: -40, g: 2.4, r: rect(50, 0, 50, 30) }] });
+    o += k.fine(k.shape('M60 54C66 56 70 60 69 66L64 64C64 60 62 57 59 56Z', { fill: 'ink', sw: 0 }));
+    o += k.shape('M30 25C30 5 70 5 70 25Z', { fill: 'mid', h: [{ a: 30, g: 2.2 }, { a: -40, g: 2.4, r: rect(50, 0, 50, 30) }, { a: 0, g: 2.4, w: 0.8, fine: true, r: rect(58, 0, 20, 30) }], hi: 'M36 20C36 12 42 8 47 7.4C41 10 38.6 15 38.6 21Z' });
     o += k.shape('M8 33C14 22 26 18 35 20C41 21 46 24 50 24C54 24 59 21 65 20C74 18 86 22 92 33C80 28 62 30 50 41C38 30 20 28 8 33Z', {
       fill: 'mid',
       h: [{ a: 30, g: 2.4 }, { a: -35, g: 2.4, r: rect(50, 0, 50, 50) }],
@@ -109,12 +123,15 @@ const DRAW: Record<IconName, (k: K) => string> = {
   },
 
   guns(k) {
-    // carriage cheek, axletree, trucks, quoin, then the barrel on top
-    let o = k.shape(rect(12, 80, 66, 6), { fill: 'mid', sw: 1.8, h: [{ a: 0, g: 1.6 }] });
+    // cast shadow on the deck, the breeching rope, carriage cheek, axletree, trucks, quoin, then the barrel on top
+    let o = k.shade('M10 97.5Q14 92 30 92L84 92Q96 93 97 97.5Z', 45, 1.5);
+    o += rope(k, 4, 74, 12, 76, 2.4) + k.fine(k.shape(circ(89, 92.5, 3.6), { fill: 'mid', sw: 1.3, h: k.round(89, 92.5, 3.6), hi: circ(88, 91.4, 1) }) + k.shape(circ(93.6, 94, 3.4), { fill: 'mid', sw: 1.3, h: k.round(93.6, 94, 3.4), hi: circ(92.6, 93, 1) }));
+    o += k.shape(rect(12, 80, 66, 6), { fill: 'mid', sw: 1.8, h: [{ a: 0, g: 1.6 }] });
     o += k.shape('M8 84L8 75L18 75L18 69L30 69L30 63L44 63L46 58L68 55L78 58L80 84Z', {
       fill: 'mid',
       h: [{ a: 0, g: 2.3, w: 0.9 }, { a: 50, g: 2.4, r: rect(0, 74, 100, 20) }, { a: -40, g: 2.6, r: rect(70, 50, 30, 40) }],
       hi: 'M18.8 70L29.2 70L29.2 71.2L18.8 71.2ZM30.8 64L43.4 64L43.4 65.2L30.8 65.2ZM9 76L17.2 76L17.2 77.2L9 77.2Z',
+      inner: k.fine(k.S(grain(9, 66, 79, 83, 4, 0.7, 5), 0.8)),
     });
     for (const [x, y] of [[38, 71], [56, 70], [70, 64], [24, 77]]) o += k.shape(circ(x, y, 1.5), { fill: 'light', sw: 1 });
     o += k.shape('M16 69L35 69L35 63.5L18 66Z', { fill: 'light', sw: 1.6, h: [{ a: 0, g: 1.6, r: rect(0, 67, 100, 3) }] });
@@ -153,18 +170,21 @@ const DRAW: Record<IconName, (k: K) => string> = {
     };
     const outer = side(O1, O2), inner = side(I1, I2);
     // the sea under the waterline, outside the hull only
-    let o = k.shape(rect(0, 60, 100, 40), { fill: "none", sw: 0, h: [{ a: 0, g: 5.6, w: 1 }] });
-    o += k.shape(inner + 'Z', { fill: 'light', sw: 0 });
+    let o = k.shape(rect(2, 60, 96, 38), { fill: "none", sw: 0, h: [{ a: 0, g: 5.6, w: 1 }], inner: k.fine(k.S(scallops(2, 98, 66.6, 6, 2) + scallops(5, 98, 77.8, 6, 2) + scallops(2, 98, 89, 6, 2), 0.9)) });
+    o += k.shape(inner + 'Z', { fill: 'light', sw: 0, h: [{ a: 0, g: 3, w: 0.7, fine: true, r: rect(0, 62, 100, 40) }] });
+    // the hold: two casks and a sack on the lower deck
+    o += k.fine(k.shape(circ(36, 66, 4.4, 5), { fill: 'mid', sw: 1.4, h: k.round(36, 66, 4.4, 5), inner: k.S('M31.6 63.4L40.4 63.4M31.6 68.6L40.4 68.6', 1.1) }) +
+      k.shape(circ(63.6, 66.6, 4, 4.6), { fill: 'mid', sw: 1.4, h: k.round(63.6, 66.6, 4, 4.6), inner: k.S('M59.6 64.2L67.6 64.2M59.6 69L67.6 69', 1.1) }));
     // decks, knees, pillar, keelson — solid, so they read as one figure at 8 mm
-    const beam = (y: number, x0: number) => k.shape(rect(x0, y, 100 - 2 * x0, 5), { fill: 'mid', sw: 2, h: [{ a: 45, g: 3 }] });
+    const beam = (y: number, x0: number) => k.shape(rect(x0, y, 100 - 2 * x0, 5), { fill: 'mid', sw: 2, h: [{ a: 45, g: 3 }], hi: rect(x0, y, 100 - 2 * x0, 1.2), inner: k.fine(k.S(`M${x0 + 12} ${y}L${x0 + 12} ${y + 5}M${x0 + 30} ${y}L${x0 + 30} ${y + 5}M${100 - x0 - 20} ${y}L${100 - x0 - 20} ${y + 5}`, 0.9)) });
     o += beam(22, 18) + beam(46, 13);
     for (const s of [1, -1]) {
       const X = (x: number) => (s > 0 ? x : 100 - x);
       o += k.shape(poly(X(19), 27, X(30), 27, X(18), 38), { fill: 'ink', sw: 1.2 });
       o += k.shape(poly(X(15), 51, X(27), 51, X(15.5), 62), { fill: 'ink', sw: 1.2 });
     }
-    o += k.shape(rect(47.5, 27, 5, 19), { fill: 'mid', sw: 1.8 });
-    o += k.shape(rect(47, 51, 6, 22), { fill: 'mid', sw: 1.8 });
+    o += k.shape(rect(47.5, 27, 5, 19), { fill: 'mid', sw: 1.8, h: k.cyl(47.5, 52.5, 90, 1.6) });
+    o += k.shape(rect(47, 51, 6, 22), { fill: 'mid', sw: 1.8, h: k.cyl(47, 53, 90, 1.6) });
     o += k.shape(rect(38, 72, 24, 6), { fill: 'mid', sw: 2, h: [{ a: 45, g: 3 }] });
     // the cut wall: hatched like a section, the frames as a few strong ticks
     let ticks = '';
@@ -196,7 +216,7 @@ const DRAW: Record<IconName, (k: K) => string> = {
     });
     let o = smoke(15, 22, 11, 8, 6, 1) + smoke(30, 12, 22, 9.5, 9, 2);
     // the mast with its top, the stay to the bowsprit, the shrouds
-    o += k.S('M57 8L96 33', 1.3) + k.S('M48 14L36 56M56 14L72 52', 1.4);
+    o += k.S('M57 8L94 32', 1.3) + k.S('M48 14L36 56M56 14L72 52', 1.4);
     o += k.shape(rect(50.5, 3, 5, 58), { fill: 'mid', sw: 2, h: k.cyl(50.5, 55.5) });
     o += k.shape(rect(49.5, 2.5, 7, 3.4), { fill: 'mid', sw: 1.6 });
     o += k.shape('M37 25L69 13.5L70 16.5L38 28Z', { fill: 'mid', sw: 1.8, h: [{ a: -20, g: 1.4, r: 'M37 28L70 16L70 20L37 32Z' }] });
@@ -228,7 +248,7 @@ const DRAW: Record<IconName, (k: K) => string> = {
       inner: k.S(strakes, 1.4) + k.shape(qd(Q(12)) + qr(Q(16.5)) + 'Z', { fill: 'mid', sw: 1.8, h: [{ a: 40, g: 1.7 }, { a: -40, g: 1.9 }], inner: k.S(qd(Q(13)), 1.3, 'light') }),
     });
     o += k.shape(qd(Q(-2, 89)) + qr(Q(1.6, 89.6)) + 'Z', { fill: 'mid', sw: 2, inner: k.S(qd(Q(-1.4, 89)), 1.2, 'light') });
-    o += k.shape('M83 47L96 30L98 32.5L86 49.5Z', { fill: 'mid', sw: 1.8, h: [{ a: 55, g: 1.5, r: 'M84 49L98 32L100 36L86 52Z' }] });
+    o += k.shape('M83 47L94.5 31.5L96.5 34L86 49.5Z', { fill: 'mid', sw: 1.8, h: [{ a: 55, g: 1.5, r: 'M84 49L97 33L100 36L86 52Z' }] });
     let ports = '';
     for (const [t, fire] of [[0.2, 0], [0.47, 2], [0.72, 1]] as const) {
       const [x, y, a] = on(9.6, t);
@@ -242,7 +262,7 @@ const DRAW: Record<IconName, (k: K) => string> = {
       inner: k.shape('M44 70C43 65 47 62 46 57C50 60 51 66 50 70Z', { fill: 'light', sw: 1.2 }),
     }) + '</g>';
     // the sea, with the fire mirrored in it
-    o += k.shape(waveLine(86, 3, 10, -4, 104, 3) + 'L104 98L-4 98L-4 86Z', {
+    o += k.shape(seaBand(86, 3, 10), {
       fill: 'mid', sw: 2.2,
       h: [{ a: 0, g: 2.2 }, { a: -20, g: 2.8, fine: true, r: rect(56, 88, 50, 12) }],
       inner: k.S('M12 90L22 90M30 91L44 91M20 94L30 94M48 90.5L58 90.5M38 95L46 95', 1.6, 'light'),
@@ -355,13 +375,14 @@ const DRAW: Record<IconName, (k: K) => string> = {
       const x = 70 + ((i * 37) % 26), y = 92 + ((i * 53) % 7) - Math.abs(83 - x) * 0.25;
       grains += circ(x, y, 0.65);
     }
-    let o = k.shape('M66 96Q82 84 98 96Z', { fill: 'mid', sw: 1.6, inner: k.F(grains, 'ink') });
+    let o = k.shade('M30 94Q46 99 70 95.6L72 91Q52 95 30 94Z', 45, 1.4);
+    o += k.shape('M66 96Q82 84 97 96Z', { fill: 'mid', sw: 1.6, inner: k.F(grains, 'ink') });
     o += k.F(circ(66, 97, 0.8) + circ(62.5, 96.5, 0.6) + circ(59, 97.4, 0.7), 'ink');
     o += k.shape('M20 22C13 40 13 68 20 86C20 89.9 30.7 93 44 93C57.3 93 68 89.9 68 86C75 68 75 40 68 22Z', {
       fill: 'mid',
       h: [{ a: 0, g: 2.4, r: 'M64 0L100 0L100 100L64 100C71 70 71 40 64 0Z' }, { a: 60, g: 3.4, w: 0.8, r: 'M0 0L24 0C18 40 18 70 24 100L0 100Z' }],
       hi: band(-0.6, -0.48),
-      inner: k.S(staves, 1.1) + k.S(contour, 0.9),
+      inner: k.S(staves, 1.1) + k.S(contour, 0.9) + k.fine(k.S(grain(24, 40, 62, 66, 7, 0.9, 4), 0.7) + k.shape(circ(38, 52, 3.2, 2.4), { fill: 'mid', sw: 1.1, h: [{ a: 45, g: 1.2 }] })),
     });
     for (const yc of [28, 35.5, 70, 77.5]) {
       const w = 24 + 5.25 * (1 - ((yc + 1.6 - 54) / 32) ** 2);
@@ -378,23 +399,24 @@ const DRAW: Record<IconName, (k: K) => string> = {
     });
     o += k.F(circ(48, 21.5, 2.4, 1.2), 'ink');
     o += k.S('M48 21C49 12 58 15 61 9C62.5 6 65 4.5 68 5', 1.9);
-    o += k.F(star(69.5, 4.6, 6, 1.4, 4.6, 10), 'ink') + k.F(circ(69.5, 4.6, 1.2), 'light');
+    o += k.F(star(69.5, 5, 6, 1.4, 4.4, 10), 'ink') + k.F(circ(69.5, 5, 1.2), 'light') + k.fine(k.F(star(75, 9.5, 4, 0.4, 1.6, 0) + star(64, 2.8, 4, 0.3, 1.2, 45) + star(76, 3.4, 4, 0.3, 1.2, 20), 'ink'));
     return o;
   },
 
   souls(k) {
     const glass = 'M42 20L58 20L58 38C70 41 78 51 78 64C78 79.5 65.5 92 50 92C34.5 92 22 79.5 22 64C22 51 30 41 42 38Z';
     const glow = star(50, 66, 16, 15.5, 24, -90);
-    let o = k.shape('M41 3L59 3L57 16L43 16Z', {
+    let o = k.shade('M30 92Q50 99 82 93.4Q80 89 70 88Q54 94 30 92Z', 45, 1.4);
+    o += k.shape('M41 3L59 3L57 16L43 16Z', {
       fill: 'mid', sw: 2, h: [{ a: 90, g: 1.8, r: rect(51, 0, 10, 20) }, { a: 0, g: 2.6, w: 0.8 }],
-      inner: k.S('M44 5L45 14', 1.6, 'light'),
+      inner: k.S('M44 5L45 14', 1.6, 'light') + k.fine(k.F(circ(48, 7, 0.6) + circ(53, 10, 0.5) + circ(50.6, 13, 0.6), 'ink')),
     });
     o += k.shape(glass, {
       fill: 'mid',
       h: [{ a: 45, g: 2.4, r: outside(glow) }, { a: -45, g: 2.6, r: outside(glow) }],
       hi: glow,
       inner: k.S('M29 58C31 49 37 44 43 42', 3.2, 'light') + k.F(circ(28.5, 66, 1.6), 'light') + k.S('M45 22L45 36', 2.2, 'light') +
-        k.S('M74 64C74 77 63 88 50 88', 1.2, 'light'),
+        k.S('M74 64C74 77 63 88 50 88', 1.2, 'light') + k.fine(k.S('M33 78C36 83 41 86 46 87.4', 1.6, 'light') + k.S('M30 52C33 47 37 44 41 42.6', 0.8)),
     });
     o += k.shape('M50 82C41 80 39 71 45 67C51 63 50 57 44 56C51 50 61 54 59 62C58 68 52 70 54 75C56 78 60 77 61 74C62 79 56 83 50 82Z', {
       fill: 'light', sw: 1.6, inner: k.S('M48 78C44 75 45 70 49 68M55 60C55 57 52 56 50 56', 1),
@@ -422,7 +444,7 @@ const DRAW: Record<IconName, (k: K) => string> = {
     o += k.shape(circ(cx, cy, 30), {
       fill: 'mid',
       h: [{ a: -45, g: 2.2 }, { a: 45, g: 2.2, r: outside(circ(cx - 9, cy - 9, 34)) }],
-      inner: k.F(studs, 'light') + k.S(studs, 0.9),
+      inner: k.F(studs, 'light') + k.S(studs, 0.9) + k.fine(k.S(`M${pp(at(cx, cy, 28.4, 200))}Q${pp(at(cx, cy, 31, 225))} ${pp(at(cx, cy, 28.4, 250))}`, 1.6, 'light')),
     });
     o += k.shape(circ(cx, cy, 25.5), {
       fill: 'light',
@@ -445,9 +467,10 @@ const DRAW: Record<IconName, (k: K) => string> = {
       fill: 'light',
       mid: poly(88, 26, 88, 78, 54, 50),
       h: [{ a: 30, g: 2.3, r: poly(88, 26, 88, 78, 54, 50) }, { a: -60, g: 3.2, w: 0.9, r: poly(12, 78, 88, 78, 50, 54) }, { a: 90, g: 4, w: 0.8, r: poly(12, 26, 12, 78, 44, 52) }],
-      inner: k.S('M12 26L50 56L88 26M12 78L44 52M88 78L56 50', 1.4),
+      inner: k.S('M12 26L50 56L88 26M12 78L44 52M88 78L56 50', 1.4) + k.S('M14 27.6L50 55.6', 1.2, 'light') +
+        k.fine(k.S('M17 66Q19 64 21 66T25 66T29 66M17 71Q19 69 21 71T25 71T29 71T33 71', 0.9) + k.shape(poly(88, 30, 88, 78, 66, 60), { fill: 'none', sw: 0, h: [{ a: -30, g: 2.6, w: 0.7 }] })),
     });
-    o += k.shape('M46 60L38 82L42.5 80L45 85L51 62Z', { fill: 'mid', sw: 1.6, h: [{ a: 70, g: 1.6 }] });
+    o += k.shape('M46 60L38 82L42.5 80L45 85L51 62Z', { fill: 'mid', sw: 1.6, h: [{ a: 70, g: 1.6 }], inner: k.fine(k.S('M45.6 64L41 78', 1, 'light')) });
     o += k.shape('M54 60L62 82L57.5 80L55 85L49 62Z', { fill: 'mid', sw: 1.6, h: [{ a: -70, g: 1.5 }, { a: 20, g: 2 }] });
     const sealPts: number[] = [];
     for (let i = 0; i < 36; i++) sealPts.push(...at(50, 53, i % 2 ? 11.2 : 12.4, i * 10));
@@ -460,19 +483,20 @@ const DRAW: Record<IconName, (k: K) => string> = {
   },
 
   once(k) {
-    let o = k.shape(rect(18, 3, 64, 6), { fill: 'mid', sw: 2, h: [{ a: 0, g: 1.5, r: rect(0, 6.5, 100, 4) }, { a: 0, g: 3, w: 0.8 }] });
+    let o = k.shape(rect(18, 3, 64, 6), { fill: 'mid', sw: 2, h: [{ a: 0, g: 1.5, r: rect(0, 6.5, 100, 4) }], hi: rect(19, 3.6, 62, 1), inner: k.fine(k.S(grain(18, 3.6, 82, 6.6, 2, 0.5, 2), 0.7) + k.F(circ(22, 6, 0.9) + circ(78, 6, 0.9), 'ink')) });
+    o += k.S('M18 6C12 6 10 10 12 13C14 15 17 13 15.6 11', 2) + k.S('M82 6C88 6 90 10 88 13C86 15 83 13 84.4 11', 2);
     o += k.S(circ(50, 14, 4.6), 2.6) + k.shape(rect(46, 17, 8, 4), { fill: 'mid', sw: 1.6 });
     let ribs = '';
     for (let u = 0.32; u < 1.0; u += 0.085 - (u - 0.3) * 0.06) ribs += `M${f(50 + 12 * u)} 20C${f(50 + 18 * u)} 31 ${f(50 + 18 * u)} 52 ${f(50 + 33 * u)} 72`;
     const hib = (u0: number, u1: number) => `M${f(50 + 12 * u0)} 20C${f(50 + 18 * u0)} 31 ${f(50 + 18 * u0)} 52 ${f(50 + 33 * u0)} 72L${f(50 + 33 * u1)} 72C${f(50 + 18 * u1)} 52 ${f(50 + 18 * u1)} 31 ${f(50 + 12 * u1)} 20Z`;
     o += k.shape('M38 21C38 17 62 17 62 21C66 23 68 30 68 40C68 54 72 64 82 72L18 72C28 64 32 54 32 40C32 30 34 23 38 21Z', {
       fill: 'mid',
-      h: [{ a: 0, g: 2.2, r: 'M70 0L100 0L100 100L82 100C72 70 68 50 70 0Z' }, { a: 75, g: 3.6, w: 0.8, r: rect(0, 0, 38, 100) }],
-      hi: hib(-0.62, -0.44),
+      h: [{ a: 0, g: 2.2, r: 'M70 0L100 0L100 100L82 100C72 70 68 50 70 0Z' }, { a: 80, g: 2.6, w: 0.8, r: 'M60 0L100 0L100 100L74 100C64 70 60 50 60 0Z' }, { a: 40, g: 2.6, w: 0.7, fine: true, r: 'M64 0L100 0L100 100L78 100C68 70 64 50 64 0Z' }, { a: 75, g: 3.6, w: 0.8, r: rect(0, 0, 38, 100) }],
+      hi: hib(-0.62, -0.44) + hib(-0.3, -0.24),
       inner: k.S(ribs, 0.95) + k.S('M33 33.5Q50 38 67 33.5M33 36.5Q50 41 67 36.5M30 58Q50 63.5 70 58', 1.3),
     });
     o += k.shape('M16 71Q50 79 84 71L85 76.5Q50 85.5 15 76.5Z', { fill: 'mid', sw: 2.2, h: [{ a: 80, g: 1.6 }, { a: 0, g: 1.8, r: rect(50, 70, 50, 20) }], inner: k.S('M18 73.6Q50 81 82 73.6', 1, 'light') });
-    o += k.S('M50 84L50 92', 1.8);
+    o += k.S('M50 84L50 92', 1.8) + k.F('M22 74.6Q50 82 78 74.6Q50 79 22 74.6Z', 'ink');
     o += k.shape(circ(50, 84, 4), { fill: 'mid', sw: 1.8, h: [{ a: 45, g: 1.5, r: outside(circ(48.6, 82.6, 4)) }], hi: circ(48.6, 82.6, 1.3) });
     o += k.shape(circ(50, 94.5, 3, 3.4), { fill: 'mid', sw: 1.6, h: [{ a: 50, g: 1.4 }, { a: -50, g: 1.6 }] });
     o += k.S('M87 33C93 41 93 55 87 62', 2.8) + k.S('M88.2 29.8L86 31.6M88.2 65.2L86 63.4', 1.4);
@@ -489,13 +513,13 @@ const DRAW: Record<IconName, (k: K) => string> = {
   },
 
   legend(k) {
-    let o = k.shape('M18 2L34 2L56 40L46 44Z', { fill: 'mid', sw: 2, h: [{ a: 60, g: 2.4, w: 0.9 }], inner: k.S('M26 2L51 42', 3.4, 'light') + k.S('M23 2L48 43M29 2L54 41', 0.9) });
-    o += k.shape('M66 2L82 2L54 44L44 40Z', { fill: 'mid', sw: 2, h: [{ a: -60, g: 1.9 }, { a: 30, g: 2.6 }], inner: k.S('M74 2L49 42', 3.4, 'light') + k.S('M71 2L46 41M77 2L52 43', 0.9) });
+    let o = k.shape('M18 3L34 3L56 40L46 44Z', { fill: 'mid', sw: 2, h: [{ a: 60, g: 2.4, w: 0.9 }, { a: 0, g: 2.4, w: 0.7, fine: true, r: rect(0, 26, 100, 20) }], inner: k.S('M26 3L51 42', 3.4, 'light') + k.S('M23 3L48 43M29 3L54 41', 0.9) });
+    o += k.shape('M66 3L82 3L54 44L44 40Z', { fill: 'mid', sw: 2, h: [{ a: -60, g: 1.9 }, { a: 30, g: 2.6 }], inner: k.S('M74 3L49 42', 3.4, 'light') + k.S('M71 3L46 41M77 3L52 43', 0.9) });
     o += k.S(circ(50, 38.5, 4.2), 2.8);
     const cx = 50, cy = 66;
     let beads = '';
     for (let i = 0; i < 28; i++) beads += circ(...at(cx, cy, 24.4, i * (360 / 28)), 1.05);
-    o += k.shape(circ(cx, cy, 27.5), { fill: 'mid', h: [{ a: -45, g: 2.2 }, { a: 45, g: 2.2, r: outside(circ(cx - 8, cy - 8, 31)) }], inner: k.F(beads, 'light') });
+    o += k.shape(circ(cx, cy, 27.5), { fill: 'mid', h: [{ a: -45, g: 2.2 }, { a: 45, g: 2.2, r: outside(circ(cx - 8, cy - 8, 31)) }, { a: 0, g: 2.4, w: 0.7, fine: true, r: outside(circ(cx - 10, cy - 10, 34)) }], inner: k.F(beads, 'light') + k.fine(k.S(`M${pp(at(cx, cy, 26, 195))}Q${pp(at(cx, cy, 29.5, 225))} ${pp(at(cx, cy, 26, 255))}`, 1.4, 'light')) });
     o += k.shape(circ(cx, cy, 22), {
       fill: 'light',
       h: [{ a: 45, g: 2.6, w: 0.9, r: outside(circ(cx - 4, cy - 4, 22.5)) }],
@@ -509,7 +533,7 @@ const DRAW: Record<IconName, (k: K) => string> = {
     const board = (d: string, a: number) => k.shape(d, {
       fill: 'mid',
       h: [{ a, g: 2.6, w: 0.9 }, { a: 0, g: 1.8, r: rect(0, 56, 100, 6) }, { a: 0, g: 1.8, r: rect(0, 82, 100, 8) }],
-      inner: k.S('M4 40Q30 37 50 40.5Q72 44 96 39M4 46Q24 44 40 47Q58 49 78 45.5L96 45M4 68Q30 65 52 68Q74 71 96 66M4 76Q26 74 44 77.5Q66 80 96 74', 0.9, 'ink') +
+      inner: k.S('M4 40Q30 37 50 40.5Q72 44 96 39M4 46Q24 44 40 47Q58 49 78 45.5L96 45M4 68Q30 65 52 68Q74 71 96 66M4 76Q26 74 44 77.5Q66 80 96 74', 0.9, 'ink') + k.fine(k.S(grain(4, 49, 96, 56, 2, 0.6, 7) + grain(4, 79, 96, 86, 2, 0.6, 9), 0.7)) + k.S('M5 36.6L96 34.6M5 62.6L96 61.6', 1.2, 'light') +
         k.S(circ(74, 77, 4.2, 2.2) + circ(74, 77, 2, 1), 1),
     });
     let o = board('M3 36L97 34L96 61L4 62Z', 2) + board('M4 62L96 61L97 88L3 89Z', -2);
@@ -522,6 +546,7 @@ const DRAW: Record<IconName, (k: K) => string> = {
       inner: k.shape(circ(55, 30, 4), { fill: 'light', sw: 1.1 }) + k.shape('M35 44L43 34L49 40L54 36L63 44Z', { fill: 'mid', sw: 1.1, h: [{ a: -45, g: 1.6 }] }),
     });
     c += k.S('M36 50L62 50M36 55L59 55M36 60L62 60M36 65L54 65M36 71L48 71', 1.3);
+    c += k.shape('M67 70L67 74.8Q67 78 63.8 78L59 78Q62.6 76 62.6 73.4Q65 73 67 70Z', { fill: 'mid', sw: 1.4, h: [{ a: 45, g: 1.3 }] });
     o += `<g transform="rotate(7 49 47)">${c}</g>`;
     o += k.S('M45 34L60 39.5', 3.4, 'mid') + k.S('M42 31.6L40 30M43 36.6L41.4 38.6M47.4 36.8L48.4 39', 1);
     let d = k.shape('M0 -2.6L12 -3L12 3L0 2.6Z', { fill: 'light', sw: 1.6, h: [{ a: 0, g: 1.3, r: rect(0, 0.2, 20, 5) }] });
@@ -555,7 +580,9 @@ const DRAW: Record<IconName, (k: K) => string> = {
         k.shape(wave, { fill: 'mid', sw: 2, h: [{ a: -30, g: 2.2 }, { a: 40, g: 2.4, r: rect(0, 62, 100, 30) }], hi: 'M58 39.6C67 38.4 72 44 70 51C68.6 47 64 42 58 41.6Z', inner: k.S(curls, 1, 'light') }) +
         k.F(foam, 'light') + k.S(foam, 0.9) + k.S(scallops(29, 72, 80, 6, 2.6), 1.2),
     });
-    c += k.F(circ(39, 25, 4.6), 'light') + k.S(circ(39, 25, 4.6), 1.1);
+    let rays = '';
+    for (let i = 0; i < 12; i++) rays += `M${pp(at(39, 25, 6.4, i * 30))}L${pp(at(39, 25, i % 2 ? 8.2 : 9.6, i * 30))}`;
+    c += k.F(circ(39, 25, 4.6), 'light') + k.S(circ(39, 25, 4.6), 1.1) + k.fine(k.S(rays, 0.9));
     return `<g transform="rotate(-6 50 50)">${c}</g>`;
   },
 
@@ -569,11 +596,10 @@ const DRAW: Record<IconName, (k: K) => string> = {
     m += k.shape('M33 26L67 26L63 33L37 33Z', { fill: 'mid', h: [{ a: 0, g: 1.6, r: rect(0, 29, 100, 6) }, { a: 70, g: 2.2, r: rect(56, 20, 20, 20) }], hi: rect(34.5, 27, 30, 1.4) });
     let o = `<g transform="rotate(14 50 70)">${m}</g>`;
     const ghost = `<g transform="rotate(14 50 70)">${k.S('M47 44L47 100M53 44L53 100', 1.2, 'light', 'stroke-dasharray="3 2.4"')}</g>`;
-    const top = waveLine(46, 5.4, 11, -6, 106, 2);
-    o += k.shape(top + 'L106 106L-6 106Z', {
+    o += k.shape(seaBand(46, 5.4, 11), {
       fill: 'mid', sw: 2.2,
-      h: [{ a: 0, g: 2.4 }, { a: -25, g: 2.6, r: rect(0, 72, 100, 30) }],
-      inner: ghost + k.S(waveLine(54, 3, 9, -6, 106, 6), 1.4, 'light') + k.S(waveLine(62, 2.4, 13, -6, 106), 1, 'light'),
+      h: [{ a: 0, g: 2.4 }, { a: -25, g: 2.6, r: rect(0, 72, 100, 30) }, { a: 25, g: 2.8, w: 0.7, fine: true, r: rect(0, 84, 100, 20) }],
+      inner: ghost + k.fine(k.S('M14 52L8 92M24 54L20 92M80 52L86 92', 2.2, 'mid')) + k.S(waveLine(54, 3, 9, -6, 106, 6), 1.4, 'light') + k.S(waveLine(62, 2.4, 13, -6, 106), 1, 'light'),
     });
     o += k.S('M44 49.5C44 52.5 68 52.5 68 49.5M36 51C36 56 76 56 76 51', 1.2, 'light');
     for (const [x, y, r] of [[40, 62, 3], [44, 71, 1.8], [34, 79, 4], [62, 64, 2.4], [66, 75, 3.4], [58, 86, 2], [45, 90, 2.6], [30, 92, 1.6], [72, 92, 1.8]]) o += bubble(k, x, y, r);
@@ -610,10 +636,10 @@ const DRAW: Record<IconName, (k: K) => string> = {
         k.S('M30 58C32 63 30 67 33 72M44 48C46 55 44.6 61 47 68M58 38C60 45 58.6 51 61 58M70 30C72 36 71 41 73 46', 1.7, 'light'),
     });
     o += k.S('M77 18L79 14.5', 2.4);
-    o += k.shape(waveLine(72, 6, 12, -6, 106, 3) + 'L106 106L-6 106Z', {
+    o += k.shape(seaBand(72, 6, 12), {
       fill: 'mid', sw: 2.2,
-      h: [{ a: 0, g: 2.4 }, { a: -25, g: 2.6, r: rect(0, 86, 100, 20) }],
-      inner: k.S(waveLine(80, 3, 10, -6, 106, 7), 1.3, 'light'),
+      h: [{ a: 0, g: 2.4 }, { a: -25, g: 2.6, r: rect(0, 86, 100, 20) }, { a: 25, g: 2.8, w: 0.7, fine: true, r: rect(0, 90, 100, 20) }],
+      inner: k.S(waveLine(80, 3, 10, -6, 106, 7), 1.3, 'light') + k.fine(k.S(waveLine(88, 2, 8, -6, 106, 3), 0.9, 'light')),
     });
     for (const d of ['M16 74C12 62 6 56 1 54C9 53 16 58 20 67L24 74Z', 'M62 72C68 58 80 50 92 50C84 55 76 62 70 74Z', 'M38 74C34 64 32 56 34 47C39 55 43 63 46 72Z', 'M54 72C56 64 60 59 66 56C63 61 61 67 61 73Z'])
       o += k.shape(d, { fill: 'light', sw: 1.6, h: [{ a: 60, g: 2.2, w: 0.8, r: rect(0, 66, 100, 10) }] });
@@ -708,13 +734,34 @@ function phase(k: K, kind: 'sea' | 'pirates' | 'company'): string {
   const ce = (y: number) => { const e = edge(y).filter(q => q[0] < cantonX - 1); return [...e, [cantonX, top(cantonX) + y + droop(cantonX) * (y / H)] as Pt]; };
   const cross = curve(ce(cy0 / 2 - 2.8)) + curve(ce(cy0 / 2 + 2.8).reverse(), 'L') + 'Z' + `M37.2 0L42.8 0L42.8 ${f(top(40) + cy0 + 1)}L37.2 ${f(top(40) + cy0 + 1)}Z`;
   const canton = curve(ce(0)) + curve(ce(cy0).reverse(), 'L') + 'Z';
+  // the 18th-century Company ensign has the Union in the canton (1707–1801): the saltire under the cross — it also keeps
+  // the ensign from reading as a modern flag
+  const cb = bbox(canton), sw2 = 2.2, band = (x0: number, y0: number, x1: number, y1: number) => { const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy), nx = -dy / l * sw2, ny = dx / l * sw2; return `M${f(x0 + nx)} ${f(y0 + ny)}L${f(x1 + nx)} ${f(y1 + ny)}L${f(x1 - nx)} ${f(y1 - ny)}L${f(x0 - nx)} ${f(y0 - ny)}Z`; };
+  const saltire = band(cb[0] - 2, cb[1] - 2, cb[2] + 2, cb[3] + 2) + band(cb[0] - 2, cb[3] + 2, cb[2] + 2, cb[1] - 2);
   o += k.shape(flag, {
     fill: 'light', sw: 2,
     mid: red,
     h: [{ a: 80, g: 2.4, w: 0.8, r: folds }],
-    inner: k.shape(canton, { fill: 'light', sw: 1.2, inner: k.shape(cross, { fill: 'mid', sw: 1 }) + k.hatch({ a: 80, g: 2.4, w: 0.8, r: folds }, bbox(canton)) }),
+    inner: k.shape(canton, { fill: 'light', sw: 1.2, inner: k.shape(saltire, { fill: 'mid', sw: 0.7 }) + k.shape(cross, { fill: 'mid', sw: 1 }) + k.hatch({ a: 80, g: 2.4, w: 0.8, r: folds }, bbox(canton)) }),
   });
   return o;
+}
+
+/** the measured ink extent of the icons that touch the edge of their box (contours included, small and large mode):
+ *  icon() shrinks and shifts each so that it keeps a margin of 2.5 inside 0..100 */
+const EXTENT: Partial<Record<IconName, [number, number, number, number]>> = {
+  sails: [1, -1, 99, 100], crew: [2, 8, 98, 102], guns: [1, 33, 101, 99], hull: [0.5, 5, 99.5, 99], fire: [0, 0, 99, 99],
+  powder: [13, 1, 98.5, 98.5], souls: [20, 1, 82, 96], reaction: [0, 5, 93, 101], once: [10, 1, 94, 99], legend: [17, 1, 83, 96],
+  effects: [1, 2, 99, 91], underwater: [1, 3, 99, 99], surfaced: [0, 1, 99, 99], sinking: [1, 6, 99, 97], volley: [0, 5, 97, 100],
+  phaseSea: [7, 1, 93, 93], phasePirates: [13, -1, 98, 100], phaseCompany: [13, 0, 98, 100],
+};
+function fitted(name: IconName, body: string): string {
+  const e = EXTENT[name];
+  if (!e) return body;
+  const [x0, y0, x1, y1] = [e[0] - 0.5, e[1] - 0.5, e[2] + 0.5, e[3] + 0.5], lo = 2.5, hi = 97.5;
+  const s = Math.min(1, (hi - lo) / (x1 - x0), (hi - lo) / (y1 - y0));
+  const place = (a: number, b: number) => { const c = (a + b) / 2, h = (s * (b - a)) / 2; return Math.min(Math.max(c, lo + h), hi - h) - s * c; };
+  return `<g transform="translate(${f(place(x0, x1))} ${f(place(y0, y1))}) scale(${f(Math.round(s * 1e4) / 1e4)})">${body}</g>`;
 }
 
 // ---------------------------------------------------------------- API
@@ -722,7 +769,7 @@ function phase(k: K, kind: 'sea' | 'pirates' | 'company'): string {
 /** An icon as an SVG <g> placed in a parent SVG whose units are mm: centre (cx, cy), size s mm (box s×s). */
 export function icon(name: IconName, cx: number, cy: number, s: number, tone: IconTone = TONE.sepia): string {
   const k = new K(tone, s < 11);
-  const body = DRAW[name](k);
+  const body = fitted(name, DRAW[name](k));
   const sc = String(Math.round((s / 100) * 1e5) / 1e5);
   return `<g transform="translate(${f(cx - s / 2)} ${f(cy - s / 2)}) scale(${sc})" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">` +
     (k.defs.length ? `<defs>${k.defs.join('')}</defs>` : '') + body + '</g>';
