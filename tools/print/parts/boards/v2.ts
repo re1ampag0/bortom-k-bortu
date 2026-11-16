@@ -47,14 +47,21 @@ const C = BOARD.cell;
 const ORDER: TrackKey[] = ['sails', 'souls', 'crew', 'guns', 'hull'];
 /** one row from the top of its slip: label baseline, number baseline, cell top, caption baseline, height (the words' boxes
  *  — ascent to descent — keep 1.5 mm from the slip's edge and clear of each other) */
-const ROW = { label: 6.6, num: 12.0, cell: 13.0, cap: 29.1, h: 31.8 };
-const X0 = 13.5, PAD = 2.6, ROW_GAP = 0.6, TOP = 37.6, BOTTOM = 200, MID_R = 208.3;
-const NEST = { x: 217.5, y: 12, w: 66, h: 91 };
-/** the mark at the top edge: the cards with a lasting effect on this ship lie over the board's top edge, above it */
-const TAG = { cx: 148.5, y: 3.4, h: 7.4 };
+const ROW = { label: 6.3, num: 11.6, cell: 12.6, cap: 28.7, h: 31.25 };
+/** the name of a track (13 pt small capitals) */
+const LABEL_PT = 13;
+/** the plates keep GAP of the chart between them (check-layout: PLATE_GAP) and EDGE from the sheet's edge (EDGE_GAP) */
+const GAP = 3, EDGE = 5;
+/** the header's top (its rolls stand 0.5 mm over it), the first row under the header (its rolls + GAP) */
+const HEAD_Y = EDGE + 0.5, TOP = HEAD_Y + 26.4 + 0.5 + GAP;
+const X0 = 13.5, PAD = 2.6, ROW_GAP = GAP, BOTTOM = 210 - EDGE, MID_R = 211.5 - GAP;
+const NEST = { x: 217.5, y: HEAD_Y, w: 66, h: 91 };
 /** the header (a cartouche of an old chart): its height, the medallion's centre from the left, the text column's start */
 const HEAD = { y: 11.1, h: 26.4, med: 12.4, col: 27 };
-const LOG = { x: 211.5, y: 104.5, w: 75.5, h: 95.5 };
+/** the log under the Legend's nest (the Dutchman's — in the middle, see layoutV2: its right column holds the dive nest) */
+const LOG = { x: 211.5, y: NEST.y + NEST.h + GAP, w: 75.5, h: BOTTOM - (NEST.y + NEST.h + GAP) };
+const LOG_DUTCH = { x: MID_R - 75.5, y: HEAD_Y + 11 + GAP, w: 75.5, h: 95.5 };
+const logBox = (ship: Ship) => ship.souls != null ? LOG_DUTCH : LOG;
 /** the log's ruled lines: line height, the body size, the pad over the first line (baseline = top + LH/2 + 0.33 em) */
 const LOGT = { lh: 4.1, size: 9.3, top: 3.4, side: 7.2 };
 /** the log's type, measured in the browser: the largest size (9.3 pt down to 7.6 pt, line height 1.25 em) at which the
@@ -62,18 +69,18 @@ const LOGT = { lh: 4.1, size: 9.3, top: 3.4, side: 7.2 };
 const LOGFIT = new Map<string, { size: number; lh: number; h: number }>();
 async function fitLog(ctx: Ctx, ship: Ship, inner: (lt: { size: number; lh: number }) => string): Promise<void> {
   if (LOGFIT.has(ship.code)) return;
-  const page = await ctx.browser.newPage(), width = LOG.w - 2 * LOGT.side, room = LOG.h - LOGT.top - 4;
+  const LB = logBox(ship), page = await ctx.browser.newPage(), width = LB.w - 2 * LOGT.side, room = LB.h - LOGT.top - 4;
   try {
     for (let size = 9.3; size >= 7.6; size = Math.round((size - 0.1) * 10) / 10) {
       const lh = Math.round(pt(size) * 1.25 * 100) / 100, lt = { size, lh };
       await page.setContent(`<!doctype html><meta charset="utf-8"><style>${fontCss()}${RICH_CSS}${V2_CSS}</style><div class="v2-log" style="position:absolute;left:0;top:0;width:${width}mm;--lh:${lh}mm;--fs:${size}pt;--lift-h:0mm;--lift-n:0mm">${inner(lt)}</div>`);
       await page.evaluate(async () => { await document.fonts.ready; });
       const hpx = await page.evaluate(() => (document.querySelector('.v2-log') as HTMLElement).scrollHeight), hmm = hpx * 25.4 / 96;
-      if (hmm <= room - 3 || size <= 7.6) { LOGFIT.set(ship.code, { size, lh, h: Math.min(LOG.h, Math.max(50, LOGT.top + hmm + 4 + lh)) }); return; }
+      if (hmm <= room - 3 || size <= 7.6) { LOGFIT.set(ship.code, { size, lh, h: Math.min(LB.h, Math.max(50, LOGT.top + hmm + 4 + lh)) }); return; }
     }
   } finally { await page.close(); }
 }
-const logType = (ship: Ship) => LOGFIT.get(ship.code) ?? { size: LOGT.size, lh: LOGT.lh, h: LOG.h };
+const logType = (ship: Ship) => LOGFIT.get(ship.code) ?? { size: LOGT.size, lh: LOGT.lh, h: logBox(ship).h };
 /** the story icons: one by each ability in the log, one under each Legend card (seen once it is played) */
 const ABILITY_ICON: Record<string, IconName> = {
   'Безумный план': 'madPlan', 'Быстрее ветра': 'swiftWind', 'Греческий огонь': 'greekFire', 'Меч Тритона': 'tritonSword',
@@ -133,7 +140,7 @@ const SINK_O: TO = { font: 'Alegreya', italic: true, w: 500, ls: '.02em' }; // i
 interface Cell { n: number; x: number; y: number; start: boolean }
 interface Row { key: TrackKey; x: number; y: number; w: number; cells: Cell[]; start: number; volley: { x: number; y: number }[] }
 interface Plan {
-  rows: Row[]; header: Rect; plans: Rect | null; fires: Rect; dutch: Rect | null; cards: Rect | null; reactions: Rect | null;
+  rows: Row[]; header: Rect; effects: Rect; plans: Rect | null; fires: Rect; dutch: Rect | null; cards: Rect | null; reactions: Rect | null; log: Rect;
   /** the free part of the middle where the chart shows and the ship sails (null: no room) */
   window: Rect | null;
 }
@@ -155,46 +162,56 @@ function headerW(ship: Ship): number {
   return HEAD.col + Math.max(W(ship.name, 24, NAME_O), W(ship.captain, 10, CAPT_O), W(ship.motto, 8.5, MOTTO_O)) + 4.5;
 }
 const ptrW = (s: string) => 13.2 + W(s, 8.5, PTR) + PAD;
+/** the Fires plate: the title's baseline, the slots' top, the height */
+const FIRE = { title: 5.2, slot: 6.8, h: 6.8 + BOARD.fireSlot + 1.3 };
+/** the Dutchman's dive plate (one nest for the two-sided token «Под водой» / «Всплыл»), in the right column under the nest */
+const DIVE_H = 60;
 function layoutV2(ship: Ship, counters: Counters): Plan {
-  const pitch = ship.souls != null ? 13.6 : 14, defs = trackDefs(ship), short = defs.filter(d => d.key !== 'hull'), hull = defs.find(d => d.key === 'hull')!;
-  const mk = (d: { key: TrackKey; cells: number[]; start: number }, y: number): Row => {
-    const cells = d.cells.map((n, i) => ({ n, x: X0 + PAD + i * pitch, y: y + ROW.cell, start: n === d.start }));
+  const dutchShip = ship.souls != null, pitch = dutchShip ? 13.6 : 14, defs = trackDefs(ship);
+  const short = defs.filter(d => d.key !== 'hull' && d.key !== 'souls'), hull = defs.find(d => d.key === 'hull')!, souls = defs.find(d => d.key === 'souls');
+  const mk = (d: { key: TrackKey; cells: number[]; start: number }, y: number, x0 = X0): Row => {
+    const cells = d.cells.map((n, i) => ({ n, x: x0 + PAD + i * pitch, y: y + ROW.cell, start: n === d.start }));
     const volley: { x: number; y: number }[] = [];
     let x1 = cells[cells.length - 1].x + C;
-    if (d.key === 'guns') for (let i = 0; i < (ship.souls != null ? 2 : 1); i++) {
+    if (d.key === 'guns') for (let i = 0; i < (dutchShip ? 2 : 1); i++) {
       const vx = x1 + (i ? 9 : 6); volley.push({ x: vx, y: y + ROW.cell });
       // the caption over a Volley cell may stand wider than the cell: the slip takes it in
       x1 = Math.max(vx + C, vx + C / 2 + W(volleyCap(ship, i), 8.5, NUM) / 2, i ? 0 : vx + C / 2 + W(volleyCost(ship), 8, CAP_O) / 2);
     }
-    const T = TXT.tracks[d.key], label = PAD + 9.6 + W(T.name, 14, LABEL) + (T.note ? 2.4 + W(T.note, 9, NOTE_O) : 0);
+    const T = TXT.tracks[d.key], label = PAD + 9.6 + W(T.name, LABEL_PT, LABEL) + (T.note ? 2.4 + W(T.note, 9, NOTE_O) : 0);
     let cap = 0;
-    if (d.key === 'souls') cap = Math.max(T.max ? W(fill(T.max, { n: d.cells[d.cells.length - 1] }), 8, CAP_O) : 0);
-    return { key: d.key, x: X0, y, w: Math.max(x1 - X0 + PAD, label + PAD, cap), cells, start: d.start, volley };
+    if (d.key === 'souls') cap = PAD + (T.kraken ? W(fill(T.kraken, { n: 3 }), 8, NUM) : 0) + 4 + (T.max ? W(fill(T.max, { n: d.cells[d.cells.length - 1] }), 8, CAP_O) : 0) + PAD;
+    return { key: d.key, x: x0, y, w: Math.max(x1 - x0 + PAD, label + PAD, cap), cells, start: d.start, volley };
   };
   const rows: Row[] = [];
   short.forEach((d, i) => rows.push(mk(d, TOP + i * (ROW.h + ROW_GAP))));
   const hullRow = mk(hull, BOTTOM - ROW.h); rows.push(hullRow);
-  const fires = { x: X0, y: 0, w: 3 * BOARD.fireSlot + 2 * 3 + 2 * PAD, h: 7.3 + BOARD.fireSlot + 1.6 };
-  const shortEnd = TOP + short.length * (ROW.h + ROW_GAP), firesLeft = shortEnd + fires.h <= hullRow.y - ROW_GAP;
+  // the Dutchman's Souls: at the very bottom, right of the Hull (drawn as flasks — not to be taken for the other tracks)
+  if (souls) rows.push(mk(souls, BOTTOM - ROW.h, hullRow.x + hullRow.w + 2 * GAP));
+  const fires = { x: X0, y: 0, w: 3 * BOARD.fireSlot + 2 * 3 + 2 * PAD, h: FIRE.h };
+  const shortEnd = TOP + short.length * (ROW.h + ROW_GAP), firesLeft = shortEnd + fires.h <= hullRow.y - GAP;
   if (firesLeft) fires.y = shortEnd;
-  const leftR = Math.max(...rows.filter(rw => rw.key !== 'hull').map(rw => rw.x + rw.w), firesLeft ? fires.x + fires.w : 0);
-  const header: Rect = { x: 12, y: HEAD.y, w: headerW(ship), h: HEAD.h };
-  const px = header.x + header.w + 3.5, pw = Math.min(NEST.x - 3.5 - px, ptrW(fill(TXT.plans, { n: RULES.plansMax })));
-  // the middle, between the left column and the right one, above the Hull (where the Hull is shorter, down to the bottom)
-  const mx = leftR + 3.5, mw = MID_R - mx, midBottom = hullRow.y - 1.5;
+  const leftR = Math.max(...rows.filter(rw => rw.key !== 'hull' && rw.key !== 'souls').map(rw => rw.x + rw.w), firesLeft ? fires.x + fires.w : 0);
+  const header: Rect = { x: 12, y: HEAD_Y, w: headerW(ship), h: HEAD.h };
+  // «Эффекты на корабле» and «Планы» — two pointer slips right of the header (its rolls stand 3.2 mm out), the arrow up to the
+  // sheet's top edge; the effects level with the header's top, the Plans level with its bottom
+  const px = header.x + header.w + 3.2 + GAP, pw = Math.min(NEST.x - GAP - px, Math.max(ptrW(TXT.effects), ship.code === 'Ж' ? ptrW(fill(TXT.plans, { n: RULES.plansMax })) : 0));
+  const effects: Rect = { x: px, y: HEAD_Y, w: pw, h: 11 };
+  const plans: Rect | null = ship.code === 'Ж' ? { x: px, y: HEAD_Y + HEAD.h - 11, w: pw, h: 11 } : null;
+  // the middle, between the left column and the right one, above the Hull
+  const mx = leftR + GAP, mw = MID_R - mx, midBottom = hullRow.y - GAP;
   let y = TOP;
-  if (!firesLeft) { fires.x = MID_R - fires.w; fires.y = y; y += fires.h + 1.5; }
-  let dutch: Rect | null = null;
-  if (ship.souls != null) { dutch = { x: MID_R - 107, y, w: 107, h: 43.8 }; y += dutch.h + 1.5; }
+  if (!firesLeft) { fires.x = MID_R - fires.w; fires.y = y; y += fires.h + GAP; }
+  const lt = logType(ship);
+  const log: Rect = dutchShip ? { ...LOG_DUTCH, y: Math.max(TOP, y), h: lt.h } : { ...LOG, h: lt.h };
+  if (dutchShip) y = log.y + log.h + GAP;
+  const dutch: Rect | null = dutchShip ? { x: LOG.x, y: NEST.y + NEST.h + GAP, w: LOG.w, h: DIVE_H } : null;
   const cards = counters === 'board' ? { x: MID_R - (2 * PAD + 6 * 14 + C), y: midBottom - 26.5, w: 2 * PAD + 6 * 14 + C, h: 26.5 } : null;
   const reW = 2 * PAD + 7.4 + Math.max(...TXT.reactions.title.split(' ').map(t => W(t, 11, LABEL))) + 3 + 3 * 14 + C;
-  const reactions = counters === 'board' ? { x: MID_R - reW, y: cards!.y - 1.5 - 20.5, w: reW, h: 20.5 } : null;
-  const winBottom = reactions ? reactions.y - 1.5 : midBottom;
+  const reactions = counters === 'board' ? { x: MID_R - reW, y: cards!.y - GAP - 20.5, w: reW, h: 20.5 } : null;
+  const winBottom = reactions ? reactions.y - GAP : midBottom;
   const window = winBottom - y >= 30 ? { x: mx, y, w: mw, h: winBottom - y } : null;
-  return {
-    rows, header, fires, dutch, cards, reactions, window,
-    plans: ship.code === 'Ж' ? { x: px, y: 12, w: pw, h: 11 } : null
-  };
+  return { rows, header, effects, plans, fires, dutch, cards, reactions, window, log };
 }
 
 // ---- SVG pieces ----
@@ -253,8 +270,8 @@ function rowSvg(rw: Row, id: string, L: Look, pal: Pal, ship: Ship): string {
   out.push(slip(pid, { x: rw.x, y: rw.y, w: rw.w, h: ROW.h }, id, L));
   out.push(ico(ICON_TRACK[rw.key], rw.x + PAD + 3.4, rw.y + 4.4, 6.4, L.tone, `${pid}-icon`));
   const nx = rw.x + PAD + 9.6;
-  out.push(text(nx, rw.y + ROW.label, T.name, 14, { ...LABEL, color: pal.deep, in: pid }));
-  if (T.note) out.push(text(nx + W(T.name, 14, LABEL) + 2.4, rw.y + ROW.label, T.note, 9, { ...NOTE_O, color: L.soft, in: pid }));
+  out.push(text(nx, rw.y + ROW.label, T.name, LABEL_PT, { ...LABEL, color: pal.deep, in: pid }));
+  if (T.note) out.push(text(nx + W(T.name, LABEL_PT, LABEL) + 2.4, rw.y + ROW.label, T.note, 9, { ...NOTE_O, color: L.soft, in: pid }));
   for (const cl of rw.cells) {
     const cid = `${pid}-c${cl.n}`, cx = cl.x + C / 2;
     out.push(text(cx, rw.y + ROW.num, String(cl.n), 11, { ...NUM, color: cl.start ? pal.deep : L.ink, anchor: 'middle', deco: under69(cl.n), in: pid }));
@@ -351,8 +368,8 @@ function pointerSvg(pid: string, b: Rect, words: string, ic: IconName, id: strin
 }
 /** the Fires: three 23 mm places, brass-rimmed, a faint fire on deck inside */
 function firesSvg(b: Rect, id: string, L: Look, pal: Pal): string {
-  const out = [slip('fires', b, id, L)], s = BOARD.fireSlot, y0 = b.y + 7.3;
-  out.push(ico('fire', b.x + PAD + 2.6, b.y + 3.9, 4.6, L.tone, 'fires-icon') + text(b.x + PAD + 6.6, b.y + 5.6, fill(TXT.fires.title, { n: RULES.maxFires }), 11, { ...LABEL, color: pal.deep, in: 'fires' }));
+  const out = [slip('fires', b, id, L)], s = BOARD.fireSlot, y0 = b.y + FIRE.slot;
+  out.push(ico('fire', b.x + PAD + 2.4, b.y + 3.5, 4.4, L.tone, 'fires-icon') + text(b.x + PAD + 6.2, b.y + FIRE.title, fill(TXT.fires.title, { n: RULES.maxFires }), 10, { ...LABEL, color: pal.deep, in: 'fires' }));
   for (let i = 0; i < RULES.maxFires; i++) {
     const x = b.x + PAD + i * (s + 3);
     out.push(`<rect x="${r(x + 0.4)}" y="${r(y0 + 0.5)}" width="${s}" height="${s}" rx="2.2" fill="#1a0e04" fill-opacity=".3"/><rect data-plate="fires-${i}" x="${r(x)}" y="${r(y0)}" width="${s}" height="${s}" rx="2.2" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".22"/>`);
@@ -361,21 +378,21 @@ function firesSvg(b: Rect, id: string, L: Look, pal: Pal): string {
   }
   return out.join('');
 }
-/** the Dutchman's two token places side by side: «Под водой» → «Всплыл», each with its rule above */
+/** the Dutchman's dive plate: one nest for the two-sided token (face «Под водой», back «Всплыл»: diving — laid face up;
+ *  surfacing — turned over; at the end of the turn — taken off), and under it what each side means */
 function dutchSvg(b: Rect, id: string, L: Look, pal: Pal): string {
-  const out = [slip('dutch', b, id, L)], u = BOARD.underwaterSlot, y0 = b.y + 15.4;
+  const out = [slip('dutch', b, id, L)], u = BOARD.underwaterSlot, nx = b.x + (b.w - u.w) / 2, ny = b.y + 3;
+  out.push(`<rect data-plate="dutch-nest" x="${r(nx)}" y="${r(ny)}" width="${u.w}" height="${u.h}" rx="2" fill="${mix(L.cell, '#2f8a96', 0.14)}" stroke="${L.brass[2]}" stroke-width=".35"/>`);
+  out.push(`<g opacity=".3">${icon('underwater', nx + u.w / 2, ny + u.h / 2, 18, L.tone)}</g>`);
+  let y = ny + u.h + 2;
   [TXT.underwater, TXT.surfaced].forEach((t, i) => {
-    const x = b.x + 1.5 + i * u.w, pid = `dutch-${i}`;
-    out.push(ico(i ? 'surfaced' : 'underwater', x + 3.6, b.y + 4.2, 4.6, L.tone, `${pid}-icon`) + text(x + 7.4, b.y + 5.9, t.title, 10.5, { ...LABEL, color: pal.deep, in: 'dutch' }));
-    const words = nb(t.note).split(' '), lines: string[] = [''];
-    for (const wd of words) { const tryL = (lines[lines.length - 1] + ' ' + wd).trim(); if (W(tryL, 8, CAP_O) > u.w - 4.4 && lines[lines.length - 1]) lines.push(wd); else lines[lines.length - 1] = tryL; }
-    lines.slice(0, 2).forEach((l, j) => out.push(text(x + 1.2, b.y + 10.3 + j * 3.95, l, 8, { ...CAP_O, color: L.ink, in: 'dutch' })));
-    out.push(`<rect data-plate="${pid}" x="${r(x)}" y="${r(y0)}" width="${u.w}" height="${u.h}" rx="${i ? '0 2' : '2'}" fill="${mix(L.cell, '#2f8a96', 0.12)}" stroke="${L.brass[2]}" stroke-width=".35"/>`);
-    out.push(`<g opacity=".3">${icon(i ? 'surfaced' : 'underwater', x + u.w / 2, y0 + u.h / 2, 18, L.tone)}</g>`);
+    const pid = `dutch-${i}`;
+    out.push(ico(i ? 'surfaced' : 'underwater', b.x + PAD + 2.4, y + 2.6, 4.4, L.tone, `${pid}-icon`) + text(b.x + PAD + 6.2, y + 4.2, t.title, 10, { ...LABEL, color: pal.deep, in: 'dutch' }));
+    const words = nb(t.note).split(' '), lines: string[] = [''], wmax = b.w - 2 * PAD - 3;
+    for (const wd of words) { const tryL = (lines[lines.length - 1] + ' ' + wd).trim(); if (W(tryL, 8, CAP_O) > wmax && lines[lines.length - 1]) lines.push(wd); else lines[lines.length - 1] = tryL; }
+    lines.forEach((l, j) => out.push(text(b.x + PAD + 1, y + 8.4 + j * 4, l, 8, { ...CAP_O, color: L.ink, in: 'dutch' })));
+    y += 8.4 + (lines.length - 1) * 4 + 2.2;
   });
-  // the token moves from «Под водой» to «Всплыл»
-  const ax = b.x + 1.5 + u.w, ay = y0 + u.h / 2;
-  out.push(`<circle cx="${r(ax)}" cy="${r(ay)}" r="2.6" fill="${L.paper}" stroke="${pal.deep}" stroke-width=".35"/><path d="M${r(ax - 1.3)} ${r(ay)}H${r(ax + 1.2)}M${r(ax + 0.2)} ${r(ay - 1)}L${r(ax + 1.3)} ${r(ay)}L${r(ax + 0.2)} ${r(ay + 1)}" stroke="${pal.deep}" stroke-width=".45" fill="none" stroke-linecap="round"/>`);
   return out.join('');
 }
 /** counters on a brass ruler: windows cut through the brass, the number engraved over each; the title on top or left */
@@ -396,35 +413,9 @@ function rulerSvg(pid: string, b: Rect, title: string, ic: IconName, nums: numbe
   return out.join('');
 }
 /** the nest of the Legend card: brass photo-corners in the 1.5 mm margin; under the card, what shows once it is played */
-/** the mark at the top edge (it replaces the full-width brass shelf): a card with a lasting effect on this ship lies over
- *  the board's top edge, above the mark, until its term ends. A parchment ribbon whose ends fold back into swallow tails,
- *  engraved arrows up at both ends of the words (of two variants — the other, a cartouche between two compass needles,
- *  said «up» less plainly). In the middle of the sheet, or right of the header when that would meet it (left — the
- *  header's right edge + 3.5 mm). Returns the svg and the mark's rect. */
-function tagSvg(words: string, id: string, L: Look, pal: Pal, left: number): { svg: string; box: Rect } {
-  const size = 8.6, so: TO = { font: 'Alegreya SC', w: 800, ls: '.05em' }, tw = W(words, size, so), y = TAG.y, h = TAG.h, cy = y + h / 2, out: string[] = [];
-  const line = L.paperLine, ink = pal.deep, shade = mix(L.note, '#5a4024', 0.3), back = mix(L.note, '#5a4024', 0.45);
-  const arrow = (ax: number, y0: number, y1: number, k = 1) => `<path d="M${r(ax)} ${r(y1)}V${r(y0 + 0.4)}M${r(ax - 1.3 * k)} ${r(y0 + 1.9 * k)}L${r(ax)} ${r(y0 + 0.2)}L${r(ax + 1.3 * k)} ${r(y0 + 1.9 * k)}" fill="none" stroke="${ink}" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round"/>`;
-  {
-    const pad = 9, bw = tw + 2 * pad, tail = 7.5, drop = 1.6, bx = Math.max(TAG.cx, left + tail + bw / 2) - bw / 2, cx = bx + bw / 2;
-    out.push(`<path d="M${r(bx - tail)} ${r(y + drop + 0.9)}H${r(bx + bw + tail)}L${r(bx + bw + tail - 2)} ${r(cy + drop + 0.9)}L${r(bx + bw + tail)} ${r(y + h + drop + 0.9)}H${r(bx - tail)}L${r(bx - tail + 2)} ${r(cy + drop + 0.9)}Z" fill="#1a0e04" fill-opacity=".22" transform="translate(.4 0)"/>`);
-    for (const sd of [-1, 1]) {
-      const ex = sd < 0 ? bx : bx + bw, ox = ex + sd * tail;
-      // the tail behind, lower, notched; the fold that turns the band back into it
-      out.push(`<path d="M${r(ex - sd * 2.4)} ${r(y + drop)}H${r(ox)}L${r(ox - sd * 2)} ${r(cy + drop)}L${r(ox)} ${r(y + h + drop)}H${r(ex - sd * 2.4)}Z" fill="${shade}" stroke="${line}" stroke-width=".25"/>`);
-      out.push(`<path d="M${r(ox - sd * 0.9)} ${r(y + drop + 1.2)}H${r(ex + sd * 0.4)}M${r(ox - sd * 0.9)} ${r(y + h + drop - 1.2)}H${r(ex + sd * 0.4)}" stroke="${line}" stroke-width=".13" stroke-opacity=".6"/>`);
-      out.push(`<path d="M${r(ex)} ${r(y + h)}L${r(ex)} ${r(y + h + drop)}L${r(ex - sd * 2.4)} ${r(y + h + drop)}Z" fill="${back}" stroke="${line}" stroke-width=".2"/>`);
-    }
-    out.push(`<rect data-plate="tag" x="${r(bx)}" y="${r(y)}" width="${r(bw)}" height="${h}" fill="${L.note}" stroke="${line}" stroke-width=".3"/>`);
-    out.push(`<path d="M${r(bx + 0.8)} ${r(y + 0.9)}H${r(bx + bw - 0.8)}M${r(bx + 0.8)} ${r(y + h - 0.9)}H${r(bx + bw - 0.8)}" stroke="${line}" stroke-width=".15" stroke-opacity=".7"/>`);
-    for (const ax of [bx + pad / 2 - 0.4, bx + bw - pad / 2 + 0.4]) out.push(arrow(ax, y + 1.25, y + h - 1.25));
-    out.push(text(cx, cy + 0.335 * pt(size), words, size, { ...so, color: ink, anchor: 'middle', in: 'tag' }));
-    return { svg: out.join(''), box: { x: bx - tail, y, w: bw + 2 * tail, h: h + drop } };
-  }
-}
 function nestSvg(b: Rect, id: string, L: Look, pal: Pal, legendName: string): string {
   const out: string[] = [], m = 1.5, cx = b.x + b.w / 2;
-  out.push(`<rect x="${r(b.x + 0.5)}" y="${r(b.y + 0.7)}" width="${b.w}" height="${b.h}" rx="2.6" fill="#1a0e04" fill-opacity=".3"/><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="2.6" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".3"/>`);
+  out.push(`<rect x="${r(b.x + 0.5)}" y="${r(b.y + 0.7)}" width="${b.w}" height="${b.h}" rx="2.6" fill="#1a0e04" fill-opacity=".3"/><rect data-plate="nest" x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="2.6" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".3"/>`);
   out.push(`<rect data-plate="nest" x="${r(b.x + m)}" y="${r(b.y + m)}" width="${r(b.w - 2 * m)}" height="${r(b.h - 2 * m)}" rx="2.4" fill="${mix(L.paper, '#5a4024', 0.1)}" stroke="${L.brass[2]}" stroke-width=".3"/>`);
   out.push(`<rect x="${r(b.x + m + 3)}" y="${r(b.y + m + 3)}" width="${r(b.w - 2 * m - 6)}" height="${r(b.h - 2 * m - 6)}" rx="1.4" fill="none" stroke="${L.paperLine}" stroke-width=".3" stroke-dasharray="1.6 1.1" stroke-opacity=".7"/>`);
   out.push(`<g opacity=".85">${icon(LEGEND_ICON[legendName] ?? 'legend', cx, b.y + b.h * 0.36, 32, L.tone)}</g>`);
@@ -500,7 +491,7 @@ export async function boardV2(ctx: Ctx, ship: Ship, counters: Counters): Promise
   layoutV2(ship, counters); faceSvg(ctx, ship, counters, layoutV2(ship, counters), id, L, pal);
   await measureMissing(ctx);
   const plan = layoutV2(ship, counters), place = counters === 'board' ? L.board : L.strip, kind = key;
-  const calm: Rect[] = [plan.header, NEST, tagSvg(TXT.effects, id, L, pal, plan.header.x + plan.header.w + 3.5).box, { ...LOG, h: logType(ship).h }, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h })),
+  const calm: Rect[] = [plan.header, NEST, plan.effects, plan.log, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h })),
     ...[plan.plans, plan.cards, plan.reactions, plan.dutch].filter((b): b is Rect => !!b)];
   const view = { w: PAGE.w, h: PAGE.h, mmPerDeg: L.mmPerDeg, center: [0, 0] as [number, number], anchor: place.anchor };
   const base: ChartOpts = { style: L.chart, ...view, inset: 3.2, seed: 5 + ship.code.charCodeAt(0) % 17, calm, roses: [{ x: place.rose[0], y: place.rose[1], r: place.rose[2] }], folds: { x: [PAGE.w / 2 + 12], y: [PAGE.h / 2 + 6] } };
@@ -533,7 +524,9 @@ function faceSvg(ctx: Ctx, ship: Ship, counters: Counters, plan: Plan, id: strin
   void ctx; void counters;
   const legend = data.legends[ship.code], svg: string[] = [];
   svg.push(headerSvg(plan.header, ship, pal, L, id));
-  svg.push(tagSvg(TXT.effects, id, L, pal, plan.header.x + plan.header.w + 3.5).svg);
+  // the header with its rolls is one plate for the gaps (check-layout)
+  svg.push(plateRect('header', { x: plan.header.x - 3.2, y: plan.header.y - 0.5, w: plan.header.w + 6.4, h: plan.header.h + 1 }));
+  svg.push(pointerSvg('effects', plan.effects, TXT.effects, 'effects', id, L, pal));
   if (plan.plans) svg.push(pointerSvg('plans', plan.plans, fill(TXT.plans, { n: RULES.plansMax }), 'plan', id, L, pal));
   for (const rw of plan.rows) svg.push(rowSvg(rw, id, L, pal, ship));
   svg.push(firesSvg(plan.fires, id, L, pal));
@@ -542,9 +535,9 @@ function faceSvg(ctx: Ctx, ship: Ship, counters: Counters, plan: Plan, id: strin
   if (plan.reactions) svg.push(rulerSvg('reactions', plan.reactions, TXT.reactions.title, 'reaction', [0, 1, 2, 3], true, id, L));
   svg.push(nestSvg(NEST, id, L, pal, legend.name));
   // the abilities in the log: one line height for every line (headings too), so the baselines stay on the ruled lines
-  const lt = logType(ship), log = { ...LOG, h: lt.h };
+  const lt = logType(ship), log = plan.log;
   svg.push(logSvg(log, L, lt));
-  const html = `<div class="v2-abs v2-log" data-in="log" data-name="журнал особенностей" style="left:${LOG.x + LOGT.side}mm;top:${LOG.y + LOGT.top}mm;width:${LOG.w - 2 * LOGT.side}mm;height:${r(lt.h - LOGT.top - 4)}mm;--c:${pal.deep};--ink:${L.ink};--soft:${L.soft};--lh:${lt.lh}mm;--fs:${lt.size}pt;--lift-h:${r(-0.33 * (pt(11.5) - pt(lt.size)))}mm;--lift-n:${r(-0.33 * (pt(10) - pt(lt.size)))}mm">${logInner(ship, L, id)}</div>`;
+  const html = `<div class="v2-abs v2-log" data-in="log" data-name="журнал особенностей" style="left:${log.x + LOGT.side}mm;top:${log.y + LOGT.top}mm;width:${log.w - 2 * LOGT.side}mm;height:${r(lt.h - LOGT.top - 4)}mm;--c:${pal.deep};--ink:${L.ink};--soft:${L.soft};--lh:${lt.lh}mm;--fs:${lt.size}pt;--lift-h:${r(-0.33 * (pt(11.5) - pt(lt.size)))}mm;--lift-n:${r(-0.33 * (pt(10) - pt(lt.size)))}mm">${logInner(ship, L, id)}</div>`;
   return { svg: svg.join('\n'), html };
 }
 function logInner(ship: Ship, L: Look, id: string): string {
