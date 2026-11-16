@@ -4,8 +4,10 @@
 //   - top right: the battle — 2 brass nests of the Company (the far row) facing 2 nests of the Pirates (the near row),
 //     each with an opening of 33 mm for the ship token 30 × 30 mm (the side's flag faint in it, under the token) and, on
 //     its outer side, a wing of the same brass plate with a niche where the side's flag stands (nothing of a nest's drawing
-//     leaves its plate: data-frame / data-deco, check-layout), the side's name plate between its two nests; the two diagonals as engraved rhumb lines with barbed heads, the captain's ink note
-//     «по диагонали −1» once, on a small paper patch where they cross (no note and no rule between the nests opposite);
+//     leaves its plate: data-frame / data-deco, check-layout), the side's name plate
+//     between its two nests; engraved course lines with a dart at both ends: one straight down between the nests opposite
+//     in each pair (no words on it), the two diagonals dashed, the captain's ink note «по диагонали −1» once, on a small
+//     paper patch where they cross;
 //   - bottom right: three slim brass frames for whole cards (opening 64 × 89 mm) under the battle's nests: the sea deck,
 //     the sea card, «Эффекты этого хода», a parchment tab on each with the name and one line;
 //   - the left column: the title, the phase of the round (three round medallions on brass seats ≥ 13 mm for the 11 mm mark,
@@ -271,18 +273,44 @@ function cutOut(a: { x: number; y: number }, b: { x: number; y: number }, c: Rec
   if (t0 >= t1) return [[0, 1]];
   return [[0, t0], [t1, 1]].filter(([u, v]) => v - u > 0.02) as [number, number][];
 }
-/** an engraved rhumb line between two nests: a barbed head at both ends (the fire goes both ways), dashed for the
- *  diagonal; a soft band of paper under it so it reads over the chart; cut where a note's patch lies on it */
-function course(a: { x: number; y: number }, b: { x: number; y: number }, dash: string, cut: Rect | null, ink = NOTE_INK, sw = 0.4, hdk = 1): string {
-  const len = Math.hypot(b.x - a.x, b.y - a.y), ux = (b.x - a.x) / len, uy = (b.y - a.y) / len, hd = 2.6;
+/** the head of a course line, as on an old chart: a slender dart (a sting) with concave flanks and swept barbs, its tip at
+ *  (x, y) pointing along (ux, uy); engraved — one half cut solid in ink, the other left in paper with an ink edge, a fine
+ *  rib down the middle. Returns the head and the paper halo under it */
+function dart(x: number, y: number, ux: number, uy: number, hd = 3.1, hw = 1.15, ink = NOTE_INK): { halo: string; head: string } {
+  const at = (a: number, n: number) => `${r(x - ux * a - uy * n)} ${r(y - uy * a + ux * n)}`, nk = hd * 0.62;
+  const half = (sg: number) => `M${at(0, 0)}Q${at(hd * 0.5, sg * hw * 0.3)} ${at(hd, sg * hw)}L${at(nk, 0)}Z`;
+  const whole = `M${at(0, 0)}Q${at(hd * 0.5, hw * 0.3)} ${at(hd, hw)}L${at(nk, 0)}L${at(hd, -hw)}Q${at(hd * 0.5, -hw * 0.3)} ${at(0, 0)}Z`;
+  return {
+    halo: `<path d="${whole}" fill="${LOOK.halo}" fill-opacity=".75" stroke="${LOOK.halo}" stroke-opacity=".75" stroke-width=".9" stroke-linejoin="round"/>`,
+    head: `<path d="${half(1)}" fill="${ink}"/><path d="${half(-1)}" fill="${LOOK.patch}"/>` +
+      `<path d="${whole}" fill="none" stroke="${ink}" stroke-width=".14" stroke-linejoin="round"/><path d="M${at(nk, 0)}L${at(0.5, 0)}" stroke="${ink}" stroke-width=".1"/>`
+  };
+}
+/** a lozenge on a course line at (x, y) along (ux, uy): half ink, half paper, as the marks on a chart's rhumbs */
+function lozenge(x: number, y: number, ux: number, uy: number, l = 1.3, w = 0.6, ink = NOTE_INK): { halo: string; head: string } {
+  const at = (a: number, n: number) => `${r(x + ux * a - uy * n)} ${r(y + uy * a + ux * n)}`;
+  const whole = `M${at(-l, 0)}L${at(0, w)}L${at(l, 0)}L${at(0, -w)}Z`;
+  return {
+    halo: `<path d="${whole}" fill="${LOOK.halo}" fill-opacity=".75" stroke="${LOOK.halo}" stroke-opacity=".75" stroke-width=".9" stroke-linejoin="round"/>`,
+    head: `<path d="M${at(-l, 0)}L${at(0, w)}L${at(l, 0)}Z" fill="${ink}"/><path d="M${at(-l, 0)}L${at(0, -w)}L${at(l, 0)}Z" fill="${LOOK.patch}"/><path d="${whole}" fill="none" stroke="${ink}" stroke-width=".13" stroke-linejoin="round"/>`
+  };
+}
+/** an engraved course line between two nests, the fire going both ways: a fine ink line with a dart at each end, dashed
+ *  for the diagonal; a lozenge on its middle when it is whole (mid); a soft halo of paper under the line and its heads so
+ *  it reads over the chart; cut where a note's patch lies on it */
+function course(a: { x: number; y: number }, b: { x: number; y: number }, dash: string, cut: Rect | null, mid = false, ink = NOTE_INK): string {
+  const len = Math.hypot(b.x - a.x, b.y - a.y), ux = (b.x - a.x) / len, uy = (b.y - a.y) / len, hd = 3.1;
   const P = (t: number) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
   let d = '';
   for (const [u, v] of cutOut(a, b, cut)) {
     const p = P(u), q = P(v), s0 = u === 0 ? hd * 0.6 : 0.6, s1 = v === 1 ? hd * 0.6 : 0.6;
     d += `M${r(p.x + ux * s0)} ${r(p.y + uy * s0)}L${r(q.x - ux * s1)} ${r(q.y - uy * s1)}`;
   }
-  return `<path d="${d}" stroke="${LOOK.halo}" stroke-opacity=".7" stroke-width="1.5" fill="none" stroke-linecap="round"/>` +
-    `<path d="${d}" stroke="${ink}" stroke-width="${sw}" fill="none"${dash ? ` stroke-dasharray="${dash}"` : ''}/>${barb(a.x, a.y, -ux, -uy, 2.6 * hdk, 1.05 * hdk, ink)}${barb(b.x, b.y, ux, uy, 2.6 * hdk, 1.05 * hdk, ink)}`;
+  const marks = [dart(a.x, a.y, -ux, -uy, hd, 1.15, ink), dart(b.x, b.y, ux, uy, hd, 1.15, ink)];
+  if (mid) marks.push(lozenge((a.x + b.x) / 2, (a.y + b.y) / 2, ux, uy, 1.3, 0.6, ink));
+  return `<path d="${d}" stroke="${LOOK.halo}" stroke-opacity=".35" stroke-width="2.2" fill="none" stroke-linecap="round"/>` +
+    `<path d="${d}" stroke="${LOOK.halo}" stroke-opacity=".7" stroke-width="1.1" fill="none" stroke-linecap="round"/>` + marks.map(m => m.halo).join('') +
+    `<path d="${d}" stroke="${ink}" stroke-width=".3" fill="none"${dash ? ` stroke-dasharray="${dash}"` : ''}/>` + marks.map(m => m.head).join('');
 }
 /** the point where the segment from the centre c towards p leaves the nest box (plus a gap) */
 function edgePoint(c: { x: number; y: number }, p: { x: number; y: number }, b: Rect, gap: number): { x: number; y: number } {
@@ -293,7 +321,7 @@ function battleSvg(): { svg: string; plates: Rect[] } {
   const out: string[] = [], plates: Rect[] = [], diag = Math.abs((data.ships[0].diagDamage as { offset: number }).offset);
   for (const side of ['company', 'pirates'] as Side[]) for (const i of [0, 1]) { out.push(nestSvg(side, i)); plates.push(nestPlate(side, i)); }
   // the captain's ink note on a paper patch, once: «по диагонали −1» on the crossing of the diagonals (the nests straight
-  // opposite need no note: the user took «напротив — полный урон» and its rules off the scheme)
+  // opposite have a course line and no note: the user took the words «напротив — полный урон» off the scheme)
   const nsize = 9.5, no: TO2 = { font: 'Alegreya', w: 500, italic: true, color: NOTE_INK }, em = pt(nsize), pad = 1.9;
   const c00 = nestC('company', 0), c01 = nestC('company', 1), c10 = nestC('pirates', 0), c11 = nestC('pirates', 1);
   const X = { x: (c00.x + c11.x) / 2, y: (c00.y + c11.y) / 2 }, dWord = fill(S.diag, { diag }), dw = W(dWord, nsize, no);
@@ -303,6 +331,8 @@ function battleSvg(): { svg: string; plates: Rect[] } {
   for (const [p, q] of [[c00, c11], [c01, c10]]) out.push(course(edgePoint(p, q, nestBox('company', p === c00 ? 0 : 1), gap), edgePoint(q, p, nestBox('pirates', q === c11 ? 1 : 0), gap), '1.8 1', dBox));
   out.push(patch('note-diag', dBox) + text(X.x, X.y + em * 0.33, dWord, nsize, { ...no, anchor: 'middle', in: 'note-diag' }));
   plates.push(dBox);
+  // straight opposite, in each pair: a whole course line from the Company's nest down to the Pirates' one, a lozenge on it
+  for (const i of [0, 1]) { const c = nestC('company', i); out.push(course({ x: c.x, y: NY.company + NEST.size + gap }, { x: c.x, y: NY.pirates - gap }, '', null, true)); }
   for (const side of ['company', 'pirates'] as Side[]) { const np = namePlate(side); out.push(np.svg); plates.push(np.box); }
   return { svg: out.join('\n'), plates };
 }
