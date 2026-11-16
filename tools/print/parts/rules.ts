@@ -120,6 +120,7 @@ const CSS = `${TEXT_CSS}
 .ru-bt{margin-bottom:.9mm;font:800 8.5pt/4mm 'Alegreya Sans',sans-serif;letter-spacing:.07em;text-transform:uppercase;color:${darken(BRASS, 0.35)}}
 .ru-add{background:#fff;border:.5mm solid ${BRASS};border-radius:1.2mm;padding:2.4mm 3mm 2.8mm}
 .ru-add>.ru-u+.ru-u{margin-top:1.1mm}
+.ru-add .ru-u{font-size:9pt;line-height:3.85mm}
 .ru-at{margin-bottom:1.2mm;font:700 12.5pt/5mm 'Alegreya SC',serif;letter-spacing:.02em;color:${HEAD}}
 .ru-note{border-left:.7mm solid ${BRASS};padding:.2mm 0 .2mm 2.8mm}
 .ru-tr{display:flex;align-items:stretch}
