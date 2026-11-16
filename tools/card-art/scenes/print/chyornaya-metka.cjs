@@ -140,10 +140,10 @@ module.exports = { name: 'Чёрная метка', kind: 'deck', status: 'accep
     // words scrawled in ink; a thin shadow of the curl on the skin. A thing handed to him, not a mark in the skin. ———
     { const c = [1.2, -22], r = 9, R = rng(17), out = [], sb3 = nid('ps', u), soot = nid('pk', u), pg = nid('pp', u);
       // the cut edge: a circle cut with a knife — short straight cuts, a little out of round
-      for (let i = 0; i < 15; i++) { const a = (i + R() * .4) / 15 * Math.PI * 2, rr = r * (1 + (R() - .5) * .1); out.push([c[0] + Math.cos(a) * rr, c[1] + Math.sin(a) * rr * .96]); }
+      for (let i = 0; i < 20; i++) { const a = (i + R() * .4) / 20 * Math.PI * 2, rr = r * (1 + (R() - .5) * .1); out.push([c[0] + Math.cos(a) * rr, c[1] + Math.sin(a) * rr * .96]); }
       const P = q => 'M' + q.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
       // the curl: a segment of the disc at its upper right is folded back over the face
-      const A = [c[0] - r * .2, c[1] - r * 1.02], B = [c[0] + r * .97, c[1] - r * .36];                    // the fold line (tilted)
+      const A = [c[0] - r * .31, c[1] - r * .97], B = [c[0] + r * .99, c[1] - r * .2];                     // the fold line (tilted)
       const side = p => (B[0] - A[0]) * (p[1] - A[1]) - (B[1] - A[1]) * (p[0] - A[0]);                    // < 0: beyond the fold
       const flat = out.filter(p => side(p) >= 0), cut = out.filter(p => side(p) < 0);
       // where the outline crosses the fold line: the two ends of the crease
@@ -178,7 +178,7 @@ module.exports = { name: 'Чёрная метка', kind: 'deck', status: 'accep
         const nx = -uy, ny = ux;
         for (let k = 0; k < 8; k++) { const o = .8 + k * 1.1, L0 = [A[0] + nx * o - ux * 3, A[1] + ny * o - uy * 3], L1 = [L0[0] + ux * (dl + 6), L0[1] + uy * (dl + 6)];
           hand += `<path d="M${f(L0[0])} ${f(L0[1])}L${f(L1[0])} ${f(L1[1])}" stroke="#8a806c" stroke-width=".34" stroke-dasharray="${f(1.4 + R())} .5 ${f(.7 + R() * .8)} .6" opacity=".75"/>`; }
-        hand += `<path d="M${f(fc[0] - 3.4)} ${f(fc[1] + .2)}q.8 -1.6 1.6 0t1.6 0q.5 -1.4 1.2 -.3l.5 .4q.9 -1.6 1.8 -.1q.6 -1 1.3 0" stroke="#1a1008" stroke-width=".5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="rotate(${f(Math.atan2(uy, ux) * 180 / Math.PI)} ${f(fc[0])} ${f(fc[1])})"/>`;
+        hand += `<path d="M${f(fc[0] - 3.2)} ${f(fc[1] + .3)}q.6 -1.2 1.2 0t1.2 0q.4 -1 .9 -.2l.4 .3q.7 -1.2 1.4 -.1q.5 -.8 1 0" stroke="#1a1008" stroke-width=".45" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="rotate(${f(Math.atan2(uy, ux) * 180 / Math.PI)} ${f(fc[0])} ${f(fc[1])})"/>`;
         // the crease shaded, the moon catching the curl's far edge
         hand += `<path d="M${f(ends[0].p[0])} ${f(ends[0].p[1])}L${f(ends[1].p[0])} ${f(ends[1].p[1])}" stroke="#5a4a34" stroke-width="1.4" opacity=".35" filter="url(#${sb3})"/></g>`; }
       hand += `<path d="M${f(ends[0].p[0])} ${f(ends[0].p[1])}L${f(ends[1].p[0])} ${f(ends[1].p[1])}" stroke="#2a2016" stroke-width=".35" opacity=".8"/>`; }
