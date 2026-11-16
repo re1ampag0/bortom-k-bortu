@@ -12,13 +12,13 @@
 // with 1.5 mm to spare and touches no other block and no other plate (icons, cells, number discs, medals).
 import fs from 'node:fs';
 import path from 'node:path';
-import { HERE, data, esc, type Ctx, type Part } from '../kit';
+import { HERE, data, esc, fontCss, type Ctx, type Part } from '../kit';
 import { BRASS, BRASS_DARK, DECK_KEY, INK, TYPE, contrast, darken, lighten, type CardType } from '../colors';
 import { BOARD, type Ship } from '../layout';
 import { iconImg } from '../icons';
 import { icon, TONE, type IconName, type IconTone } from './icons';
 import { basePalette } from './boards/frame';
-import { DIAGRAM_CSS, TEXT_CSS, diagram, hair, inline, loadText, measure, parse, type Block } from './rules';
+import { DIAGRAM_CSS, TEXT_CSS, diagram, inline, loadText, measure, parse, type Block } from './rules';
 
 interface Labels {
   partTitle: string; cut: string;
@@ -33,9 +33,14 @@ const L = JSON.parse(fs.readFileSync(path.join(HERE, 'text/memo-ships.json'), 'u
 
 const SHEET_W = 297, A5 = { w: 148.5, h: 210, pad: 7 };
 const W = A5.w - 2 * A5.pad, H = A5.h - 2 * A5.pad; // 134.5 × 196
-const BAND = { face: 16.4, back: 12.5, setup: 12.5 }, PANEL_GAP = 1.8, PX = 3, PY = 2; // the cartouches; the slip under them
+const BAND = { face: 16.4, back: 12, setup: 12.5 }, PANEL_GAP = 1.2, PX = 3, PY = 1.8; // the cartouches; the slip under them
 const IW = W - 2 * PX, KEYW = 28.5, CELL = BOARD.cell; // the inner width; the column of section names; the tick cell (13 mm: an 11 mm marker fits)
-const KEY_IC = 5; // the engraved icon of a section, mm
+const KEY_IC = 5;
+/** the column of section names: the tinted strip reaches STRIP_OUT mm into the panel's margin, its words keep KPAD mm from
+ *  its right edge, the strip stops KGAP mm before the text; the names are KEY_UP pt larger than the text */
+const STRIP_OUT = 1.4, KPAD = 1, KGAP = 1.5, IC_GAP = 1.1, KEY_UP = 2, SEP = 0.4;
+const KEY_W = KEYW - KGAP - KPAD, KEY_W1 = KEY_W - KEY_IC - IC_GAP; // the words' width: under the icon, beside it
+const keyPt = (fs: number) => fs + KEY_UP, keyLh = (fs: number) => r(keyPt(fs) * 1.2 * 0.3528); // the engraved icon of a section, mm
 const SIZES = [10.5, 10, 9.5, 9], SETUP_SIZES = [12, 11.5, 11, ...SIZES]; // pt; never below 9
 const CREAM = '#fff8e6', G0 = 0.6, GMAX = 2.4; // the space above and below a section: at least G0, the spare room shared up to GMAX
 const r = (n: number) => Math.round(n * 100) / 100;
@@ -53,7 +58,8 @@ const LOOKS: Record<'pearl' | 'revenge' | 'endeavour' | 'dutch' | 'back', Look> 
 };
 
 // ---- colours: the ship colour is the accent (keys, discs, the name); the text stands on the light paper of the slip ----
-interface Pal { head: string; disc: string; field: string; line: string; chip: string; look: Look }
+/** strip — the light band of the ship's colour under the column of section names */
+interface Pal { head: string; disc: string; field: string; strip: string; line: string; chip: string; look: Look }
 function check(fg: string, bg: string, min: number, what: string) {
   const c = contrast(fg, bg);
   if (c < min) throw new Error(`memo: ${what} — contrast ${c.toFixed(2)} : 1, need ≥ ${min}`);
@@ -61,11 +67,12 @@ function check(fg: string, bg: string, min: number, what: string) {
 const hex = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
 const mix = (a: string, b: string, k: number) => '#' + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * k).toString(16).padStart(2, '0')).join('');
 function palette(color: string, look: Look, what: string, head0?: string): Pal {
-  const field = look.cell, base = basePalette(color);
+  const field = look.cell, base = basePalette(color), strip = mix(field, color, 0.1);
   let head = head0 ?? base.deep, disc = base.solid;
-  for (let k = 0.05; contrast(head, field) < 7 && k < 0.9; k += 0.05) head = darken(head0 ?? color, k); // keys are small bold type: 7 : 1, not only 4.5
+  for (let k = 0.05; contrast(head, strip) < 7 && k < 0.9; k += 0.05) head = darken(head0 ?? color, k); // keys are bold type on the strip: 7 : 1, not only 4.5
   for (let k = 0.05; contrast(CREAM, disc) < 7 && k < 0.9; k += 0.05) disc = darken(color, k);
-  const pal = { head, disc, field, line: mix(look.noteLine, field, 0.15), chip: mix(field, '#ffffff', 0.55), look };
+  const pal = { head, disc, field, strip, line: mix(look.noteLine, field, 0.15), chip: mix(field, '#ffffff', 0.55), look };
+  check(head, strip, 7, `${what}: headings on the strip`);
   check(INK, field, 7, `${what}: text on the field`); check(INK, pal.chip, 7, `${what}: text on a chip`); check(INK, look.paper, 7, `${what}: text on the cartouche`);
   check(head, field, 7, `${what}: headings`); check(head, look.paper, 4.5, `${what}: the name on the cartouche`); check(look.soft, look.paper, 4.5, `${what}: soft words on the cartouche`);
   check(CREAM, disc, 7, `${what}: the number discs`);
@@ -88,7 +95,7 @@ const boltSvg = (size: number, color: string, cls: string, plate = '') =>
   `<svg class="${cls}"${plate ? ` data-plate="${plate}"` : ''} style="width:${size}mm;height:${size}mm;color:${color}" viewBox="0 0 24 24">${BOLT}</svg>`;
 /** a section's icon: a box of KEY_IC mm marked as a plate, the words keep clear of it */
 function keyIcon(old: string, pal: Pal, plate: string): string {
-  const s = KEY_IC, open = `<svg class="me-ic" data-plate="${plate}" style="width:${s}mm;height:${s}mm"`;
+  const s = KEY_IC, open = `<svg class="me-ic" data-plate="${plate}"`;
   if (old === 'nocannon') // «это не Залп»: the cannon struck through, a line of the field under the red stroke
     return `${open} viewBox="0 0 ${s} ${s}">${icon('guns', s / 2, s / 2, s, pal.look.tone)}<path d="M.5 .7L${s - 0.5} ${s - 0.7}" stroke="${pal.field}" stroke-width="1.1" stroke-linecap="round"/><path d="M.5 .7L${s - 0.5} ${s - 0.7}" stroke="#9a1f14" stroke-width=".5" stroke-linecap="round"/></svg>`;
   if (ENGRAVED[old]) return `${open} viewBox="0 0 ${s} ${s}">${icon(ENGRAVED[old], s / 2, s / 2, s, pal.look.tone)}</svg>`;
@@ -139,11 +146,14 @@ const CSS = `${TEXT_CSS}
 .me-panel{position:absolute;left:0;width:${W}mm;box-sizing:border-box;padding:${PY}mm ${PX}mm}
 .me-m{position:relative;font:400 var(--fs)/var(--lh) Alegreya,serif;color:${INK}}
 .me-m b{font-weight:700}
-.me-sec{display:flex;align-items:flex-start;padding:var(--g) 0}
-.me-key{flex:none;display:flex;align-items:flex-start;gap:1.1mm;width:${KEYW}mm;box-sizing:border-box;padding:0 1.5mm 0 0;font:800 max(9pt, calc(var(--fs) - 1pt))/var(--lh) 'Alegreya Sans',sans-serif;letter-spacing:.01em;color:var(--h)}
-.me-kt{flex:1;min-width:0}
-.me-ic{flex:none;display:block;margin-top:calc((var(--lh) - ${KEY_IC}mm) / 2)}
-.me-val{flex:1;min-width:0}
+.me-sec{display:flex;align-items:stretch}
+.me-key{flex:none;width:${KEYW + STRIP_OUT - KGAP}mm;margin:0 ${KGAP}mm 0 -${STRIP_OUT}mm;box-sizing:border-box;padding:var(--g) ${KPAD}mm var(--g) ${STRIP_OUT}mm;background:var(--t);font:800 var(--kf)/var(--kl) 'Alegreya Sans',sans-serif;color:var(--h)}
+.me-kr{display:flex;align-items:center;gap:${IC_GAP}mm}
+.me-kt{flex:1;min-width:0;white-space:nowrap}
+.me-kt2{white-space:normal}
+.me-ic{flex:none;display:block;width:min(${KEY_IC}mm, calc(var(--kl) - .2mm));height:min(${KEY_IC}mm, calc(var(--kl) - .2mm));margin:max(.1mm, calc((var(--kl) - ${KEY_IC}mm) / 2)) 0}
+.me-val{flex:1;min-width:0;padding:var(--g) 0}
+.me-sep{display:block;margin-left:-${STRIP_OUT}mm}
 .me-p{margin:0}
 .me-p+.me-p,.me-li+.me-p,.me-sub+.me-p,.me-path+.me-p{margin-top:var(--a)}
 .me-li{position:relative;padding-left:4.6mm}
@@ -175,9 +185,9 @@ const CSS = `${TEXT_CSS}
 .me-ship{padding:1.3mm 2.2mm 1.4mm}
 .me-more{margin-top:calc(var(--a) * .5);font-style:italic}
 .me-grid{display:flex;flex-wrap:wrap}
-.me-ty{position:relative;width:50%;height:10mm;box-sizing:border-box;padding:2.6mm 0 0 11.6mm;font:500 10pt/4.8mm Alegreya,serif;white-space:nowrap}
+.me-ty{position:relative;width:50%;height:9.2mm;box-sizing:border-box;padding:2.2mm 0 0 11.6mm;font:500 10pt/4.8mm Alegreya,serif;white-space:nowrap}
 .me-ty b{font:800 10pt/4.8mm 'Alegreya Sans',sans-serif;letter-spacing:.05em}
-.me-md{position:absolute;left:.6mm;top:.8mm;width:8.4mm;height:8.4mm}
+.me-md{position:absolute;left:.6mm;top:.4mm;width:8.4mm;height:8.4mm}
 .me-types{padding-top:var(--g)}
 .su-num{position:absolute;left:0;top:0;display:block;width:var(--lh);height:var(--lh)}
 .su-li{position:relative;padding-left:calc(var(--lh) + 2.2mm)}
@@ -236,7 +246,7 @@ function pathOf(html: string, pal: Pal): string {
   return `<div class="me-path">${steps[0]}${ARROW(pal.head)}${sign}${ARROW(pal.head)}${steps[1]}${ARROW(pal.head)}${steps[2]}</div>`;
 }
 
-function sectionHtml(ctx: Ctx, s: Section, pal: Pal, i: number): string {
+function sectionHtml(ctx: Ctx, s: Section, pal: Pal, i: number, fs: number): string {
   const ic = L.icons[s.key];
   if (!ic) throw new Error(`memo-ships.json: no icon for the section «${s.key}» (icon + word)`);
   let parts = s.parts.slice();
@@ -248,7 +258,40 @@ function sectionHtml(ctx: Ctx, s: Section, pal: Pal, i: number): string {
   if (s.key === L.ticks.section)
     val = `<div class="me-split"><div class="me-main">${val}</div><div class="me-tk"><div class="me-tkt" ${IN}>${esc(L.ticks.title)}</div><div class="me-tkr">${L.ticks.items.map((t, j) => `<div class="me-tc">${cellSvg(`@P-tick${j}`, pal.look)}<div ${IN}>${esc(t)}</div></div>`).join('')}</div></div></div>`;
   if (s.key === L.ship.section) val = `<div class="me-ship" data-plate="@P-ship">${val.replace(/data-in="@P-panel"/g, 'data-in="@P-ship"')}</div>`;
-  return `<div class="me-sec"><div class="me-key">${keyIcon(ic, pal, `@P-ic${i}`)}<span class="me-kt" ${IN}>${inline(ctx, s.key)}</span></div><div class="me-val">${val}</div></div>`;
+  // the name: as many words as fit beside the icon, the rest under it in the whole column («ХОД / ПРОТИВНИКА»)
+  const words = inline(ctx, s.key).split(' '), size = keyPt(fs);
+  let n = 0;
+  while (n < words.length && keyWidth(words.slice(0, n + 1).join(' '), size) <= KEY_W1) n++;
+  const first = words.slice(0, n).join(' '), rest = words.slice(n).join(' ');
+  const key = `<div class="me-kr">${keyIcon(ic, pal, `@P-ic${i}`)}${first ? `<span class="me-kt" ${IN}>${first}</span>` : ''}</div>${rest ? `<div class="me-kt2" ${IN}>${rest}</div>` : ''}`;
+  return `<div class="me-sec"><div class="me-key">${key}</div><div class="me-val">${val}</div></div>`;
+}
+/** the separator between sections: across the strip and the text */
+const sepHtml = (pal: Pal) => `<svg class="me-sep" style="width:${IW + STRIP_OUT}mm;height:${SEP}mm" viewBox="0 0 ${IW + STRIP_OUT} ${SEP}"><rect width="${IW + STRIP_OUT}" height="${SEP}" fill="${pal.look.noteLine}"/></svg>`;
+
+// the widths of the section names, measured in the browser on the real font (measureKeys) before the sides are built
+const KEY_WIDTH = new Map<string, number>();
+function keyWidth(html: string, size: number): number {
+  const v = KEY_WIDTH.get(`${size}|${html}`);
+  if (v == null) throw new Error(`memo: the width of «${html}» at ${size} pt was not measured`);
+  return v;
+}
+async function measureKeys(ctx: Ctx, keys: string[], sizes: number[]): Promise<void> {
+  const items: { k: string; html: string; size: number }[] = [];
+  for (const key of keys) {
+    const w = inline(ctx, key).split(' ');
+    for (const size of sizes) for (let n = 1; n <= w.length; n++) { const html = w.slice(0, n).join(' '); items.push({ k: `${size}|${html}`, html, size }); }
+  }
+  const page = await ctx.browser.newPage();
+  try {
+    await page.setContent(`<!doctype html><meta charset="utf-8"><style>${fontCss()}</style><div id="m"></div>`);
+    const mm = await page.evaluate(async (list) => {
+      await document.fonts.ready;
+      const box = document.getElementById('m')!;
+      return list.map(it => { const s = document.createElement('span'); s.style.cssText = `font:800 ${it.size}pt 'Alegreya Sans';white-space:nowrap`; s.innerHTML = it.html; box.appendChild(s); const w = s.getBoundingClientRect().width * 25.4 / 96; s.remove(); return w; });
+    }, items.map(({ html, size }) => ({ html, size })));
+    items.forEach((it, i) => KEY_WIDTH.set(it.k, mm[i]));
+  } finally { await page.close(); }
 }
 
 /** The four card types with their medals; the words are the ribbons of the cards (colors.ts) — the text file must say the same. */
@@ -260,12 +303,12 @@ function typesHtml(ctx: Ctx, rows: string[][], pal: Pal): string {
     check(t.td, pal.field, 4.5, `card type ${name}`);
     return `<div class="me-ty"><span class="me-md" data-plate="@P-md${i}">${iconImg(ctx, `medal-${t.key}`, 0, 0, 8.4)}</span><span ${IN}><b style="color:${t.td}">${name}</b> · ${inline(ctx, when)}</span></div>`;
   });
-  return `<div class="me-types">${hair(IW, pal.line, 0.3)}<div class="me-grid">${cells.join('')}</div></div>`;
+  return `<div class="me-types">${sepHtml(pal)}<div class="me-grid">${cells.join('')}</div></div>`;
 }
 
 /** The flow of one side and its vars (--g: space around a section, --a: between paragraphs). */
 const flowDiv = (inner: string, pal: Pal, fs: number, g: number) =>
-  `<div class="me-m" style="--fs:${fs}pt;--lh:${lhOf(fs)}mm;--g:${g.toFixed(2)}mm;--a:${Math.min(1.4, g * 0.9).toFixed(2)}mm;--h:${pal.head};--l:${pal.line};--c:${pal.chip};--b:${pal.disc};--lb:${pal.look.noteLine}">${inner}</div>`;
+  `<div class="me-m" style="--fs:${fs}pt;--lh:${lhOf(fs)}mm;--g:${g.toFixed(2)}mm;--a:${Math.min(1.4, g * 0.9).toFixed(2)}mm;--h:${pal.head};--l:${pal.line};--c:${pal.chip};--b:${pal.disc};--lb:${pal.look.noteLine};--t:${pal.strip};--kf:${keyPt(fs)}pt;--kl:${keyLh(fs)}mm">${inner}</div>`;
 
 /** The largest type size at which `inner(fs)` fits `room` mm; the spare room is shared between the n gaps (the space
  *  between paragraphs grows with the gap, so the gap is found by measuring: the largest that still fits). */
@@ -353,18 +396,19 @@ export async function build(ctx: Ctx): Promise<Part[]> {
   // the back: the same for all four memos, in brass and sepia
   const backPal = palette(BRASS, LOOKS.back, 'back', darken(BRASS, 0.55));
   backPal.disc = BRASS_DARK; check(CREAM, backPal.disc, 7, 'back: the medallion');
-  const backIn = back.sections.map((s, i) => sectionHtml(ctx, s, backPal, i)).join(hair(IW, backPal.line, 0.2)) + typesHtml(ctx, back.types!, backPal);
-  const backFit = await fit(ctx, 'the back of the memo', PANEL_ROOM(BAND.back), back.sections.length + 1, (fs, g) => flowDiv(backIn, backPal, fs, g));
+  await measureKeys(ctx, [...face.sections, ...back.sections].map(s => s.key).concat(L.ship.section), [...new Set(SIZES.map(keyPt))]);
+  const backIn = (fs: number) => back.sections.map((s, i) => sectionHtml(ctx, s, backPal, i, fs)).join(sepHtml(backPal)) + typesHtml(ctx, back.types!, backPal);
+  const backFit = await fit(ctx, 'the back of the memo', PANEL_ROOM(BAND.back), back.sections.length + 1, (fs, g) => flowDiv(backIn(fs), backPal, fs, g));
   const backBand = plainBand(L.back.title, L.back.sub, BAND.back, backPal);
-  const backSide = (x: number, p: string) => sideHtml(x, p, backBand, BAND.back, backPal, flowDiv(backIn, backPal, backFit.fs, backFit.g));
+  const backSide = (x: number, p: string) => sideHtml(x, p, backBand, BAND.back, backPal, flowDiv(backIn(backFit.fs), backPal, backFit.fs, backFit.g));
 
   // the faces: one per ship
   const faces: ((x: number, p: string) => string)[] = [];
   for (const ship of data.ships as Ship[]) {
     const look = LOOKS[DECK_KEY[ship.code]], pal = palette(ship.color, look, ship.name);
     const sections = [...face.sections, { key: L.ship.section, parts: [`<p class="me-p" ${IN}>${inline(ctx, lineOf(ship.name))}</p><p class="me-p me-more" ${IN}>${inline(ctx, L.ship.more)}</p>`], afterLi: false }];
-    const inner = sections.map((s, i) => sectionHtml(ctx, s, pal, i)).join(hair(IW, pal.line, 0.2));
-    const f = await fit(ctx, `the face of the memo ${ship.name}`, PANEL_ROOM(BAND.face), sections.length, (fs, g) => flowDiv(inner, pal, fs, g));
+    const inner = (fs: number) => sections.map((s, i) => sectionHtml(ctx, s, pal, i, fs)).join(sepHtml(pal));
+    const f = await fit(ctx, `the face of the memo ${ship.name}`, PANEL_ROOM(BAND.face), sections.length, (fs, g) => flowDiv(inner(fs), pal, fs, g));
     // the cartouche: the letter in the brass medallion (on its optical centre), the name and «side · captain», the title
     const R = 6.1, size = 16, hh = BAND.face - 0.7, my = hh / 2;
     const letter = `<text data-in="@P-medal" x="@MX" y="${r(my + 0.34 * pt(size))}" text-anchor="middle" font-family="'Alegreya SC',serif" font-weight="800" font-size="${r(pt(size))}" fill="${CREAM}">${esc(ship.code)}</text>`;
@@ -373,7 +417,7 @@ export async function build(ctx: Ctx): Promise<Part[]> {
       `<div class="me-cap" data-in="@P-head" style="left:${r(tx)}mm;top:${r(hh - 2 - 4.4)}mm;color:${look.soft}"><b style="color:${pal.head}">${esc(ship.side)}</b> · ${esc(ship.captain)}</div>` +
       `<div class="me-tt" data-in="@P-head" style="right:${r(rx)}mm;top:2.2mm">${inline(ctx, title.text)}</div>` +
       `<div class="me-ts" data-in="@P-head" style="right:${r(rx)}mm;top:${r(hh - 2 - 4.4)}mm;color:${look.soft}">${inline(ctx, sub.text)}</div>`;
-    faces.push((x, p) => sideHtml(x, p, band, BAND.face, pal, flowDiv(inner, pal, f.fs, f.g)));
+    faces.push((x, p) => sideHtml(x, p, band, BAND.face, pal, flowDiv(inner(f.fs), pal, f.fs, f.g)));
     console.log(`02-pamyatki: ${ship.name} — лицо ${f.fs} pt`);
   }
   console.log(`02-pamyatki: оборот «${L.back.title}» — ${backFit.fs} pt`);
