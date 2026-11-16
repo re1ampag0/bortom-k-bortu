@@ -1,8 +1,9 @@
 // 04 — the two holds and the tokens (docs/tasks/print-kit.md 3.6 with review-print 13–14 and review-player 3.1, 3.5,
 // 3.7, 3.9; docs/tasks/print-kit-boards.md step 5). Portrait A4, one side.
 //   sheet 1: «Трюм Пиратов», «Трюм Компании» (8 cells Ø 22 mm each and the cells «Перестроение», «Совместный залп +1»),
-//            Powder × 24, Fire × 9, track markers × 17, «Под водой»
-//   sheet 2: four ship tokens 30 × 30 mm and the identical marks 11 × 11 mm (TABLE.marks and TABLE.spareMarks)
+//            Powder × 24, Fire × 9, track markers × 17
+//   sheet 2: four ship tokens 30 × 30 mm, the identical marks 11 × 11 mm (TABLE.marks and TABLE.spareMarks) and the
+//            two-sided dive token «Под водой» / «Всплыл» as a pair to fold and glue (diveHtml)
 //   sheet 3 (--counters strip): the four counter strips (parts/boards/v2.ts counterStripsPage)
 // The «Схема боя» is a landscape sheet of its own: parts/scheme.ts → 04b-skhema-boya.pdf.
 // The look is the world of the boards v2 and the battle scheme (parts/tokens-art.ts): parchment slips, brass rims and
@@ -31,7 +32,9 @@ const require = createRequire(import.meta.url);
 /** the kit ships (tools/card-art/scenes/kit): the same ships as on the card backs and the boards (--tokens new) */
 const KIT = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as {
   ship(u: string, L: unknown, o: Record<string, unknown>): string; makeLight(l: unknown, cam: { horizon: number }): unknown;
-  shipBox(kind: string, o: { x: number; y: number; scale: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number }; LIGHTS: Record<string, unknown>;
+  shipBox(kind: string, o: { x: number; y: number; scale: number; flip?: boolean }): { x0: number; x1: number; top: number; y: number; w: number; h: number }; LIGHTS: Record<string, unknown>;
+  shipGeom(kind: string, o: Record<string, unknown>): { hb: number; nearRail(X: number): [number, number] };
+  splash(u: string, o: Record<string, unknown>): string; foam(u: string, o: Record<string, unknown>): string; sky(u: string, L: unknown, o: Record<string, unknown>): string; water(u: string, L: unknown, o: Record<string, unknown>): string;
 };
 /** the picture part of a ship token (above its band), mm */
 const PIC = { w: 30, h: 21.4 };
@@ -50,11 +53,13 @@ async function kitTokenPics(ctx: Ctx): Promise<Record<string, string>> {
 interface HoldText { side: 'pirates' | 'company'; name: string; rule: string }
 const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/tokens.json'), 'utf8')) as {
   partTitle: string; title: string; lead: string; hint: string; footer: string; holds: HoldText[];
-  powder: string; fire: string; markers: string; underwaterCaption: string; underwater: { title: string; lines: string[] };
+  powder: string; fire: string; markers: string; underwaterCaption: string; underwaterFold: string; underwater: { title: string; lines: string[] };
   page: string; holdCells: { regroup: string[]; joint: string[] };
   marksPage: { title: string; lead: string; ships: string; marks: string; uses: string[]; sweep: string };
   strips: { title: string; lead: string };
 };
+/** the two sides of the dive token on the boards (text/boards.json → frame): its back is «Всплыл» */
+const BTXT = (JSON.parse(fs.readFileSync(path.join(HERE, 'text/boards.json'), 'utf8')) as { frame: { surfaced: { title: string; note: string } } }).frame;
 const fill = (s: string, v: Record<string, number | string>) => s.replace(/\{(\w+)\}/g, (_, k: string) => String(v[k] ?? `{${k}}`));
 
 // ---- colours of this part
@@ -82,9 +87,8 @@ const HOLD_BOX = { x: (A4.w - HOLD_ROW) / 2 - 2, y: 28, w: HOLD_ROW + 4, h: 46, 
 const CAP = 8.8, GAP = 5;
 const POWDER = { cols: 8, rows: 3, x: (A4.w - 8 * TOKEN.powder) / 2, y: HOLD_BOX.y + 2 * HOLD_BOX.h + GAP + CAP };
 const FIRE = { cols: 9, rows: 1, x: (A4.w - 9 * TOKEN.fire) / 2, y: POWDER.y + 3 * TOKEN.powder + GAP + CAP };
-/** Markers: 8 in the first row (Ж, М), 9 in the second (И, Г and the Soul marker). */
-const MARK = { x: 11, y: FIRE.y + TOKEN.fire + GAP + CAP, perRow: 8 };
-const UNDER = { x: 124, y: MARK.y };
+/** Markers: 8 in the first row (Ж, М), 9 in the second (И, Г and the Soul marker), centred (the dive token is on sheet 2). */
+const MARK = { x: (A4.w - 9 * TOKEN.marker) / 2, y: FIRE.y + TOKEN.fire + GAP + CAP, perRow: 8 };
 // sheet 2
 const SHIPS = { x: (A4.w - 4 * TOKEN.shipToken) / 2, y: 42 };
 const MARKS = { cols: TABLE.marksPerRow, rows: (TABLE.marks + TABLE.spareMarks) / TABLE.marksPerRow, x: (A4.w - TABLE.marksPerRow * TOKEN.marker) / 2, y: SHIPS.y + TOKEN.shipToken + GAP + 4 + CAP };
@@ -258,24 +262,88 @@ function markersHtml(pics: Record<string, string> | null): { svg: string; html: 
   return { svg, html: html.join(''), cuts: `<path d="${d}" stroke="${CUT}" stroke-width="${CUT_W}" fill="none"/><path d="${light}" stroke="${CUT_ON_DARK}" stroke-width="${CUT_W}" fill="none"/>` };
 }
 
-// ---- «Под водой»: the Dutchman's sea, a brass frame, the icon in a parchment roundel ----
-function underwaterHtml(id: string): { svg: string; html: string } {
-  const g = data.ships.find(s => s.code === 'Г')!, { w, h } = TOKEN.underwater, { x, y } = UNDER, rules = data.rules as Record<string, number>;
-  const wave = (yy: number, sw: number) => `<path d="M${x + 1.5} ${R(yy)}q2.95 -1.3 5.9 0${'t5.9 0'.repeat(7)}" stroke="#bfe6dc" stroke-width="${sw}" stroke-opacity=".4" fill="none"/>`;
-  const sea = `<linearGradient id="${id}sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${deepOf(darken(g.color, 0.05))}"/><stop offset="1" stop-color="${darken(g.color, 0.38)}"/></linearGradient>`;
-  const tO: WO = { font: 'Alegreya SC', w: 800, size: 12, lh: 5, ls: '.05em', color: CREAM };
-  const tw = W(TXT.underwater.title, 12, { font: 'Alegreya SC', w: 800, ls: '.05em' }), rd = 2.6, gw = 2 * rd + 1.8 + tw, gx = x + (w - gw) / 2, ty = y + 5;
-  const icx = gx + rd;
-  const svg = `<defs>${sea}<clipPath id="${id}uwc"><circle cx="${r(icx)}" cy="${r(ty)}" r="${r(rd - 0.5)}"/></clipPath></defs>`
-    + `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#${id}sea)"/>${wave(y + 22.9, 0.3)}`
-    + `<rect data-plate="uw" x="${r(x + 0.9)}" y="${r(y + 0.9)}" width="${r(w - 1.8)}" height="${r(h - 1.8)}" rx="1" fill="none" stroke="${LOOK.brass[1]}" stroke-width=".45"/>`
-    + `<rect x="${r(x + 1.45)}" y="${r(y + 1.45)}" width="${r(w - 2.9)}" height="${r(h - 2.9)}" rx=".7" fill="none" stroke="${LOOK.brass[0]}" stroke-opacity=".55" stroke-width=".16"/>`
-    + [[2.6, 2.6], [w - 2.6, 2.6], [2.6, h - 2.6], [w - 2.6, h - 2.6]].map(([dx, dy]) => rivet(x + dx, y + dy, 0.5)).join('')
-    + `<g>${brassRing('uw-icon', icx, ty, rd, 0.5, id, '#e5eee7')}<g clip-path="url(#${id}uwc)">${icon('underwater', icx, ty + 0.4, 5.4, TONE.verdigris)}</g></g>`;
-  const lines = TXT.underwater.lines.map(l => esc(fill(l, { surface: rules.surfaceBonus }))).join('<br>');
-  const html = wordAt('uw', gx + 2 * rd + 1.8, ty, TXT.underwater.title, tO)
-    + word('uw', x + w / 2, y + 8, lines, { w: 700, size: 8, lh: 3.35, color: CREAM, anchor: 'middle', align: 'center', name: 'под водой: правила' });
-  return { svg, html };
+// ---- «Под водой» / «Всплыл»: one two-sided token of the Dutchman, printed as a fold-over pair (face | back) ----
+// Why a pair to fold and not a back page: sheet 04 is printed on one side (its lead says so), a copy shop's duplex is off by
+// 1–2 mm (on a 50 × 25 token the back's frame would run off its edge), a back page would cost a sheet for one token; the
+// pair has its two halves on the same side of the sheet, so they meet exactly at the fold, and glued it is twice as thick
+// — it is turned over every time the Dutchman surfaces. Both halves are upright: folded along the short edge, the back
+// reads upright when the token is turned over side to side (as the boards are, DuplexFlipShortEdge). The art runs BLEED
+// mm past the outer cut; nothing that matters is closer than 2 mm to a cut or to the fold.
+const DIVE_BLEED = 1.5;
+/** the art of a side: scene units (4 per mm, the kit's scale: 200 × 100 a side) */
+const DU = 4;
+/** the two sides as JPEGs: the face under water (the Dutchman deep in the green dark, light shafts from the surface,
+ *  bubbles rising), the back surfacing (the Dutchman bursting up through the fog-green sea, bow high, water pouring
+ *  off her rails and out of her ports, spray at the stem) */
+async function diveArt(ctx: Ctx): Promise<{ face: string; back: string }> {
+  const b = DIVE_BLEED * DU, W0 = 200, H0 = 100, dpi = ctx.opts.draft ? 300 : 600;
+  let q = 11; const rnd = () => (q = (q * 16807) % 2147483647) / 2147483647;
+  // the face: the sea from the surface down, the ship, a veil of water over her, shafts of light, bubbles
+  const Lf = KIT.makeLight(KIT.LIGHTS.dutchman, { horizon: 10 }), fx = 146, fwl = H0 + 8;
+  let shafts = '', bubbles = '', motes = '';
+  for (const [x0, w, op] of [[40, 10, 0.16], [78, 16, 0.12], [118, 8, 0.18], [150, 14, 0.12], [185, 9, 0.14]]) shafts += `<path d="M${x0} 9h${w}l${-w * 0.5 - 26} ${H0 + 10}h${-w * 1.6}Z" fill="#c8fff0" opacity="${op}"/>`;
+  for (const [bx0, n, sp] of [[fx - 18, 9, 1], [fx + 6, 8, 1.1], [fx + 30, 6, 0.9], [96, 5, 0.8]]) for (let i = 0; i < n; i++) {
+    const t = (i + rnd() * 0.7) / n, y = fwl - 30 - t * (fwl - 48), x = bx0 + Math.sin(t * 6 + bx0) * 4 * sp + (rnd() - 0.5) * 3, br = 0.9 + (1 - t) * 2.4 * (0.5 + rnd() * 0.7);
+    bubbles += `<circle cx="${R(x)}" cy="${R(y)}" r="${R(br)}" fill="#dffff6" fill-opacity=".22" stroke="#e8fffa" stroke-opacity=".8" stroke-width=".45"/><circle cx="${R(x - br * 0.35)}" cy="${R(y - br * 0.38)}" r="${R(br * 0.3)}" fill="#ffffff" fill-opacity=".9"/>`;
+  }
+  for (let i = 0; i < 70; i++) motes += `<circle cx="${R(-b + rnd() * (W0 + 2 * b))}" cy="${R(14 + rnd() * (H0 - 8))}" r="${R(0.25 + rnd() * 0.5)}" fill="#bff5e6" opacity="${R(0.2 + rnd() * 0.4)}"/>`;
+  let surf = `M${-b} 9`, surf2 = `M${-b} 11.5`;
+  for (let x = -b; x < W0 + b; x += 12) { surf += 'q3 -2.4 6 0t6 0'; surf2 += 'q3 -1.4 6 0t6 0'; }
+  const face = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-b} ${-b} ${W0 + b} ${H0 + 2 * b}">`
+    + `<defs><linearGradient id="dvf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5aa59a"/><stop offset=".14" stop-color="#2f7470"/><stop offset=".55" stop-color="#16403f"/><stop offset="1" stop-color="#081d20"/></linearGradient>`
+    + `<linearGradient id="dvv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f8a84" stop-opacity=".42"/><stop offset=".45" stop-color="#1d5653" stop-opacity=".34"/><stop offset="1" stop-color="#061a1c" stop-opacity=".6"/></linearGradient>`
+    + `<filter id="dvb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter><filter id="dvs" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".35"/></filter></defs>`
+    + `<rect x="${-b}" y="${-b}" width="${W0 + 2 * b}" height="${H0 + 2 * b}" fill="url(#dvf)"/>`
+    + `<g filter="url(#dvs)">${KIT.ship('dvf', Lf, { kind: 'dutch', x: fx, y: fwl, scale: 0.82, flip: true, heel: 4, sails: 'reefed', detail: 'mid' })}</g>`
+    + `<rect x="${-b}" y="${-b}" width="${W0 + 2 * b}" height="${H0 + 2 * b}" fill="url(#dvv)"/>`
+    + `<g filter="url(#dvb)">${shafts}</g>${motes}${bubbles}`
+    + `<rect x="${-b}" y="${-b}" width="${W0 + 2 * b}" height="${9 + b}" fill="#bfe8dc" opacity=".55"/>`
+    + `<path d="${surf}" fill="none" stroke="#effffa" stroke-width="1.2" opacity=".85"/><path d="${surf2}" fill="none" stroke="#d6fff4" stroke-width=".6" opacity=".5"/></svg>`;
+  // the back: the fog-green sky and sea, the ship rising bow first, water pouring off her, foam and spray at the waterline
+  const hz = 58, bwl = 76, bx = 160, Lb = KIT.makeLight(KIT.LIGHTS.dutchman, { horizon: hz });
+  const o = { kind: 'dutch', x: bx, y: bwl, scale: 0.68, flip: true, heel: -9, sails: 'reefed', detail: 'mid', wake: true };
+  const g = KIT.shipGeom('dutch', o), hb = g.hb;
+  let pour = '';
+  for (let i = 0; i < 15; i++) {
+    const X = -hb * 0.8 + (i + rnd() * 0.9) / 15 * hb * 1.6, [x, y0] = g.nearRail(X), port = rnd() < 0.35, y = port ? y0 + 3 + rnd() * 4 : y0 + 0.8;
+    const len = bwl - y + 1, wob = (rnd() - 0.5) * 2, wd = 0.35 + rnd() * 0.8, cut = 0.35 + rnd() * 0.4, op = 0.35 + rnd() * 0.4;
+    pour += `<path d="M${R(x)} ${R(y)}q${R(wob * 0.3)} ${R(len * cut * 0.5)} ${R(wob * 0.5)} ${R(len * cut)}" fill="none" stroke="#e6fff7" stroke-width="${R(wd)}" stroke-linecap="round" opacity="${R(op + 0.2)}"/>`
+      + `<path d="M${R(x + wob * 0.55)} ${R(y + len * (cut + 0.08))}q${R(wob * 0.3)} ${R(len * (0.9 - cut) * 0.5)} ${R(wob * 0.6)} ${R(len * (0.92 - cut))}" fill="none" stroke="#e6fff7" stroke-width="${R(wd * 0.8)}" stroke-linecap="round" opacity="${R(op)}" stroke-dasharray="${R(1 + rnd() * 2)} ${R(0.6 + rnd())}"/>`;
+    for (let k = 0; k < 2; k++) pour += `<circle cx="${R(x + wob + (rnd() - 0.5) * 3)}" cy="${R(y + rnd() * len)}" r="${R(0.25 + rnd() * 0.45)}" fill="#e6fff7" opacity=".6"/>`;
+  }
+  pour += KIT.foam('dvb', { x: g.nearRail(0)[0], y: bwl + 0.6, w: hb * 2 * 0.68 + 8, h: 2.2, seed: 6, L: Lb });
+  const splashes = [[g.nearRail(-hb * 0.95)[0], 12, 18, 1], [g.nearRail(hb * 0.7)[0], 10, 12, 2], [g.nearRail(0)[0], 14, 9, 4]]
+    .map(([x, w, h, sd]) => KIT.splash('dvb' + sd, { x, y: bwl + 1, w, h, seed: sd, L: Lb, wind: 1 })).join('');
+  const back = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 ${-b} ${W0 + b} ${H0 + 2 * b}"><g transform="translate(${-b} 0)">`
+    + KIT.sky('dvb', Lb, { horizon: hz, top: -b, w: W0 + 2 * b + 2 * b, stars: false }) + KIT.water('dvb', Lb, { horizon: hz, bottom: H0 + b, w: W0 + 3 * b, seed: 5, glitter: false })
+    + `</g>${KIT.ship('dvb', Lb, o)}${pour}${splashes}</svg>`;
+  const wmm = (W0 + b) / DU, hmm = (H0 + 2 * b) / DU;
+  return { face: (await rasterJpeg(ctx.browser, 'dive-face', face, wmm, hmm, dpi, 0.92)).url, back: (await rasterJpeg(ctx.browser, 'dive-back', back, wmm, hmm, dpi, 0.92)).url };
+}
+/** the pair on the sheet at (x, y): the two pictures, a brass frame round each side, the words; the cut round the pair
+ *  (grey, ticks past it) and the fold between them (dashed, in the margins only) */
+function diveHtml(id: string, x: number, y: number, art: { face: string; back: string } | null): { svg: string; html: string; cuts: string } {
+  const { w, h } = TOKEN.underwater, bl = DIVE_BLEED, rules = data.rules as Record<string, number>, svg: string[] = [], html: string[] = [];
+  const g = data.ships.find(s => s.code === 'Г')!;
+  if (art) svg.push(`<image href="${art.face}" x="${R(x - bl)}" y="${R(y - bl)}" width="${R(w + bl)}" height="${R(h + 2 * bl)}" preserveAspectRatio="none"/><image href="${art.back}" x="${R(x + w)}" y="${R(y - bl)}" width="${R(w + bl)}" height="${R(h + 2 * bl)}" preserveAspectRatio="none"/>`);
+  else svg.push(`<rect x="${R(x - bl)}" y="${R(y - bl)}" width="${R(2 * w + 2 * bl)}" height="${R(h + 2 * bl)}" fill="${darken(g.color, 0.38)}"/>`);
+  const sides = [
+    { pid: 'uw', ic: 'underwater' as const, title: TXT.underwater.title, sc: false, lines: TXT.underwater.lines.slice(0, 2).map(l => esc(fill(l, { surface: rules.surfaceBonus }))).join('<br>') },
+    { pid: 'uw-back', ic: 'surfaced' as const, title: BTXT.surfaced.title, sc: true, lines: BTXT.surfaced.note.replace(/ — /g, '\u00a0— ') }
+  ];
+  sides.forEach((sd, i) => {
+    const x0 = x + i * w, rd = 2.7, icx = x0 + 3.9 + rd, ty = y + 5.9, fr = 1.7;
+    svg.push(`<rect data-plate="${sd.pid}" x="${r(x0 + fr)}" y="${r(y + fr)}" width="${r(w - 2 * fr)}" height="${r(h - 2 * fr)}" rx="1" fill="none" stroke="${LOOK.brass[1]}" stroke-width=".42"/>`
+      + `<rect x="${r(x0 + fr + 0.55)}" y="${r(y + fr + 0.55)}" width="${r(w - 2 * fr - 1.1)}" height="${r(h - 2 * fr - 1.1)}" rx=".7" fill="none" stroke="${LOOK.brass[0]}" stroke-opacity=".6" stroke-width=".15"/>`
+      + [[fr + 0.9, fr + 0.9], [w - fr - 0.9, fr + 0.9], [fr + 0.9, h - fr - 0.9], [w - fr - 0.9, h - fr - 0.9]].map(([dx, dy]) => rivet(x0 + dx, y + dy, 0.42)).join('')
+      + `<defs><clipPath id="${id}uwc${i}"><circle cx="${r(icx)}" cy="${r(ty)}" r="${r(rd - 0.5)}"/></clipPath></defs>`
+      + `<g>${brassRing(`${sd.pid}-icon`, icx, ty, rd, 0.5, id, '#e5eee7')}<g clip-path="url(#${id}uwc${i})">${icon(sd.ic, icx, ty + 0.3, 5.2, TONE.verdigris)}</g></g>`);
+    html.push(wordAt(sd.pid, icx + rd + 1.6, ty, sd.title, { font: 'Alegreya SC', w: 800, size: 12, lh: 5, ls: '.05em', color: CREAM }));
+    html.push(word(sd.pid, x0 + 4.1, y + 9.1, sd.lines, i ? { w: 700, size: 7.6, lh: 3.05, color: CREAM, width: 25.5, name: 'всплыл: правила' } : { w: 700, size: 8, lh: 3.35, color: CREAM, name: 'под водой: правила' }));
+  });
+  const T = TICK, d = `M${R(x)} ${R(y - T)}V${R(y + h + T)}M${R(x + 2 * w)} ${R(y - T)}V${R(y + h + T)}M${R(x - T)} ${R(y)}H${R(x + 2 * w + T)}M${R(x - T)} ${R(y + h)}H${R(x + 2 * w + T)}`;
+  const fold = `M${R(x + w)} ${R(y - 3.4)}V${R(y - 0.8)}M${R(x + w)} ${R(y + h + 0.8)}V${R(y + h + T)}`;
+  return { svg: svg.join(''), html: html.join(''), cuts: `<path d="${d}" stroke="${CUT}" stroke-width="${CUT_W}" fill="none"/><path d="${fold}" stroke="${LOOK.brass[2]}" stroke-width=".3" stroke-dasharray="1 .7" fill="none"/>` };
 }
 
 // ---- ship tokens ----
@@ -324,7 +392,7 @@ function marksHtml(id: string): { svg: string; cuts: string } {
 const markIcon = (pid: string, d: number, id: string) => `<svg data-plate="${pid}" viewBox="0 0 ${TOKEN.marker} ${TOKEN.marker}" style="width:${d}mm;height:${d}mm;flex:none;display:block">${markArt(TOKEN.marker / 2, TOKEN.marker / 2, id)}</svg>`;
 
 // ---- pages
-function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean): PageSpec[] {
+function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean, dive: { face: string; back: string } | null): PageSpec[] {
   const econ = data.econ as { income: number; first_income: number; cap: number; second_start: number }, rules = data.rules as Record<string, number>;
   const nums = { income: econ.income, first: econ.first_income, cap: econ.cap, start: econ.second_start, firstGame: rules.firstGameSecondStart };
   const pd = TOKEN.powder, fr = TOKEN.fire, of = strips ? 3 : 2, page = (n: number) => fill(TXT.page, { n, of });
@@ -343,15 +411,12 @@ function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean): 
   const cMark = caption('cap-markers', MARK.x, MARK.y, TXT.markers,
     `<rect x="${r(sg.cx - 2.3)}" y="${r(sg.cy - 2.3)}" width="4.6" height="4.6" rx=".8" fill="url(#${id1}brh)" stroke="${LOOK.brass[2]}" stroke-width=".2"/><rect x="${r(sg.cx - 1.6)}" y="${r(sg.cy - 1.6)}" width="3.2" height="3.2" rx=".4" fill="${deepOf(data.ships.find(s => s.code === 'М')!.color)}"/>`);
   s1.push(cMark.svg, mk.svg); h1.push(cMark.html, mk.html);
-  const uw = underwaterHtml(id1), su = capSign(UNDER.x - 6.6, UNDER.y);
-  const cUw = caption('cap-underwater', UNDER.x - 6.6, UNDER.y, TXT.underwaterCaption, ico('underwater', su.cx, su.cy, 4.8, TONE.verdigris));
-  s1.push(cUw.svg, uw.svg); h1.push(cUw.html, uw.html);
   s1.push(plateRect('hint', { x: 10, y: 272, w: 190, h: 7.4 }));
   h1.push(wordAt('hint', A4.w / 2, 275.7, TXT.hint, { font: 'Alegreya', italic: true, w: 400, size: 9.5, lh: 4, color: '#3f2f1c', anchor: 'middle' }));
   const page1 = head(id1 + 'h', TXT.title, TXT.lead, page(1)) + pageSvg(s1.join('\n')) + h1.join('\n') + foot(1, of)
     + cutLayer(gridCuts(HOLD_BOX.x, HOLD_BOX.y, 1, TXT.holds.length, HOLD_BOX.w, HOLD_BOX.h, HOLD_BOX.tick)
       + gridCuts(POWDER.x, POWDER.y, POWDER.cols, POWDER.rows, pd, pd) + gridCuts(FIRE.x, FIRE.y, FIRE.cols, FIRE.rows, fr, fr)
-      + mk.cuts + gridCuts(UNDER.x, UNDER.y, 1, 1, TOKEN.underwater.w, TOKEN.underwater.h));
+      + mk.cuts);
 
   // sheet 2
   const id2 = 'tk2', mp = TXT.marksPage, st = TOKEN.shipToken, s2: string[] = [defs(id2)], h2: string[] = [];
@@ -368,8 +433,15 @@ function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean): 
   h2.push(`<div class="tk-uses-r" style="left:${r(ub.x)}mm;top:${r(ub.y + 2.6)}mm;width:${r(ub.w)}mm">`
     + mp.uses.map((u, i) => `<span>${markIcon(`use-${i}`, 4.6, id2)}<span data-in="uses" class="tk-use">${esc(u)}</span></span>`).join('') + `</div>`);
   h2.push(wordAt('uses', A4.w / 2, ub.y + 11.1, mp.sweep, { font: 'Alegreya', italic: true, w: 500, size: 9.5, lh: 4, color: LOOK.ink, anchor: 'middle' }));
+  // the dive token of the Dutchman: a pair to cut out, fold and glue (diveHtml), how to make it under the pair
+  const dx = (A4.w - 2 * TOKEN.underwater.w) / 2, dy = ub.y + ub.h + GAP + CAP + 2, su = capSign(dx, dy);
+  const cUw = caption('cap-underwater', dx, dy, TXT.underwaterCaption, ico('underwater', su.cx, su.cy, 4.8, TONE.verdigris)), dv = diveHtml(id2, dx, dy, dive);
+  s2.push(cUw.svg, dv.svg); h2.push(cUw.html, dv.html);
+  const fb: Rect = { x: dx - 6, y: dy + TOKEN.underwater.h + TICK + 2.5, w: 2 * TOKEN.underwater.w + 12, h: 11.4 };
+  s2.push(plateRect('dive-fold', fb));
+  h2.push(word('dive-fold', A4.w / 2, fb.y + 1.6, TXT.underwaterFold, { font: 'Alegreya', italic: true, w: 500, size: 9.5, lh: 4.1, color: LOOK.ink, anchor: 'middle', align: 'center', width: fb.w - 3.4, style: 'text-wrap:balance' }));
   const page2 = head(id2 + 'h', mp.title, mp.lead, page(2)) + pageSvg(s2.join('\n')) + h2.join('\n') + foot(2, of)
-    + cutLayer(gridCuts(SHIPS.x, SHIPS.y, ships().length, 1, st, st) + marks.cuts);
+    + cutLayer(gridCuts(SHIPS.x, SHIPS.y, ships().length, 1, st, st) + marks.cuts + dv.cuts);
 
   const out: PageSpec[] = [{ html: page1 }, { html: page2 }];
   // concept B with the counters off the board: the four strips «Осталось карт» / «Реакций сыграно» (cut along the lines)
@@ -378,9 +450,10 @@ function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean): 
 }
 /** the sheets of part 04: a dry run collects the words to measure, the browser measures them, then the real run */
 export async function tokenPages(ctx: Ctx, pics: Record<string, string> | null = null, strips = false): Promise<PageSpec[]> {
-  pages(ctx, pics, strips);
+  const dive = await diveArt(ctx);
+  pages(ctx, pics, strips, dive);
   await measureMissing(ctx);
-  return pages(ctx, pics, strips);
+  return pages(ctx, pics, strips, dive);
 }
 
 export const TOKENS_CSS = `${ART_CSS}
