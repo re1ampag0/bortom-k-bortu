@@ -3,7 +3,7 @@
 // Our gun has just fired out of the port at point-blank range: the enemy's bulwark is right there, a ship's length
 // away; the swarm of lead balls fans out of the flash and rakes her rail — splinters, holes in the planks and in her
 // backlit course — and her men behind the rail throw themselves down (one crouched with his hands clamped on his head,
-// one diving flat, his hat knocked off). Inside, by the gun: the canvas bags of grapeshot, corded like a bunch of grapes.
+// one on her rail thrown over backwards, his hat knocked off). Inside, by the gun: the canvas bags of grapeshot, corded like a bunch of grapes.
 // Fixed against the first round: the gun was a sprite slanting up 25° into a window in a flat wall — now the kit's
 // gun level and recoiling in a cut-away (inside: the deck in perspective, the lantern on the beam; the hull in section
 // with the port through it), the outside on the left so the hit shows in the fan of cards; the target was a flat strip
@@ -14,6 +14,9 @@
 // edges; the crouched man bigger on the left, the diver flat, face down, over the rail on the right; the swarm went
 // low under them — it now fans up across them; the corded grape bags read as cages — canvas sacks tied at the neck,
 // as on the first-round card; the red lid on a rope outside our port is gone.
+// Review fix: the diver (two raised legs with shoes, one hand — no body) is now a whole man knocked back off her rail;
+// the barrel crossed the hull as if through the wall — now the port is a clear hole round it (the far cheek lit by the
+// flash, the lid swung up outside) and the muzzle stands well out of it.
 // Light: outside — the sun low behind the enemy (her side, rail and men in silhouette with a warm rim); the flash of
 // our gun (orange) on her side and our hull; inside — the lantern on the beam (key), the flash at the port.
 'use strict';
@@ -33,7 +36,7 @@ const lightOut = { time: 'dusk', haze: .35, key: { type: 'sun', x: 38, y: 97, el
   locals: [{ x: 70, y: 98, color: '#ffb050', power: .7, radius: 40 }] };
 const skel = { horizon: HZ, eye: 1.7, light: 'outside: the sun low behind the enemy (contre-jour) + our flash; inside: the lantern on the beam', items: [
   ['enemy bulwark', -10, 150, 96, 59, 'the sea'], ['enemy course', -10, 40, 100, 40, 'her yard (off the top)'], ['man crouched', 8, ER, 34, 35, 'behind her rail'],
-  ['man diving', 44, ER - 2, 36, 32, 'in the air over her rail'], ['hat', 40, 50, 12, 6, 'in the air'], ['swarm', 0, 94, 78, 36, 'in flight, at the men\'s height'],
+  ['man knocked back', 44, ER - 2, 30, 58, 'his feet leaving her rail'], ['hat', 46, 34, 12, 6, 'in the air'], ['swarm', 0, 94, 78, 36, 'in flight, at the men\'s height'],
   ['gun', 80, GUN.y, 110, 44, 'deck'], ['grape bags', 104, 124, 32, 22, 'deck'], ['lantern', 146, 36, 13, 30, 'beam (rope)'], ['crate', 160, 150, 30, 22, 'deck']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
@@ -95,7 +98,7 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'accepted', cam
     // her men behind the rail, in profile against the sunset: cloth with volume, dark against the sky, the flash of our
     // gun (low right) lighting their edges orange, the sun behind them rimming the other side. One dives flat, face
     // down, head first away from our port, arms out ahead; one has dropped into a crouch, back hunched, both hands
-    // clamped on his head. A hat knocked off the diver, spinning.
+    // clamped on his head. (Review: the diver read as severed limbs — now a whole figure knocked back, below.)
     { const SH = { lit: '#c0703c', half: '#3e241a', shadow: '#170c0a', outline: '#070303' }, TR = { lit: '#90583a', half: '#2a1c1c', shadow: '#0e0808', outline: '#050303' };
       const SK = { lit: '#e8986a', half: '#7a4430', core: '#643826', shadow: '#2e1810', outline: '#0a0503' }, RIM = '#ffd090', FL = [1, .45];
       const litOf = sp => { const a = sp[0], b = sp[sp.length - 1]; return (-(b[1] - a[1]) * FL[0] + (b[0] - a[0]) * FL[1]) >= 0 ? 1 : -1; };

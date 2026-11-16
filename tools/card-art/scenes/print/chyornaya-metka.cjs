@@ -1,19 +1,20 @@
 // «Чёрная метка» (Летучий голландец, ПРИКАЗ: выбранный вражеский корабль до конца хода получает +2 урона от
 // каждого Залпа по нему), method A: the first-round scene (portrait-dutch.cjs SCENES['Чёрная метка']) at its best.
-// A sailor's right hand held up to us, palm open, fingers up; in the middle of the palm the black spot — burnt into
-// the skin, a soot-black blot with a charred, bruised rim, dark veins creeping out of it towards the fingers and the
-// wrist; the hand is wet (he has scrubbed at it: it will not come off), drops run down to the cuff. Behind him — over
-// the rail of his ship, in the green fog — the Flying Dutchman has come for him, her lanterns pale green.
+// A sailor's right hand held up to us, palm open, fingers up; in the middle of the palm the black spot — as in
+// Stevenson, a round scrap cut out of a page, its face blackened with soot, the printed page and a scrawl on its back
+// (its edge has curled up and shows it); the hand is wet (he has scrubbed at it), and the wet scrap clings to the palm.
+// Behind him — over the rail of his ship, in the green fog — the Flying Dutchman has come for him, her lanterns pale green.
 // Fixed against the first round: the hand was a flat cut-out with a hole in it — now a modelled hand (see the
-// review fixes below) on one sleeve with one cuff; the spot is a mark in
-// the skin, not a hole; the empty fog behind is now the rail and the Dutchman's silhouette (the brief).
+// review fixes below) on one sleeve with one cuff; the empty fog behind is now the rail and the Dutchman's silhouette (the brief).
 // Light: the moon behind the fog, upper right (key, cold, the ship's back light); the Dutchman's green lanterns.
 // Review fixes (verdict b2): the hand3 hand read as a wooden mannequin — the hand is now drawn here with smooth shapes:
 // tapering fingers fanned and slightly bent (the little finger shorter and thinner, the ring finger just below the
 // middle), soft joint creases at two levels, pads instead of a seam at the finger roots, a plump ball of the thumb and a
 // two-phalanx thumb parting at the index finger's root, abducted ~40°; one skin tone (outlined, then refilled, so only
-// the silhouette has a line), shade only in the hollow round the spot. The spot is a soft-edged black blot soaked into
-// the lines of the palm (no cracks); the drops stay. The moon is moved left, clear of the cost mark.
+// the silhouette has a line), shade only in the hollow of the palm; the drops stay. The moon is moved left, clear of
+// the cost mark.
+// Print review fix: the spot was a black mark in the skin of the palm (a recognisable film shot) — now it is the
+// paper scrap of the book (cut from a page, sooted, writing on the back), lying on the palm, not in the skin.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -29,7 +30,7 @@ const light = { time: 'fog', haze: .8, key: { type: 'moon', x: 128, y: 22, el: 3
   rim: { az: 20, color: '#d8fff0', power: .45 }, locals: [{ x: 160, y: 92, color: '#9effc8', power: .35, radius: 30 }] };
 const skel = { horizon: HZ, eye: 1.7, light: 'the moon in the fog upper right (key, back light for the ship); the Dutchman\'s green lanterns', items: [
   ['Dutchman', 118, HZ + 2, 82, 84, 'sea, in the fog behind the rail'], ['rail', 0, DK, 200, DK - RAIL + 4, 'the bulwark of his ship'],
-  ['hand', 60, 118, 76, 100, 'his arm, up from below'], ['black spot', 84, 104, 26, 22, 'in the palm'], ['sleeve, cuff', 70, 290, 46, 172, 'from the bottom edge to the wrist'],
+  ['hand', 60, 118, 76, 100, 'his arm, up from below'], ['black spot', 88, 104, 20, 20, 'a round scrap of sooted paper stuck to the palm, its edge curled'], ['sleeve, cuff', 70, 290, 46, 172, 'from the bottom edge to the wrist'],
   ['drops', 80, 122, 36, 40, 'down the wrist']] };
 const SKIN = { lit: '#e4c2a0', half: '#b68e6e', shadow: '#5e4434', outline: '#22140c' };
 
@@ -134,20 +135,53 @@ module.exports = { name: 'Чёрная метка', kind: 'deck', status: 'accep
     for (const D of [...fingers, thumb]) { const t = D.tip, k = D.W[D.W.length - 1] / 2; hand += `<ellipse cx="${f(t[0] - D.u[0] * k * .6 + .6)}" cy="${f(t[1] - D.u[1] * k * .6)}" rx="${f(k * .5)}" ry="${f(k * .75)}" transform="rotate(${f(Math.atan2(D.u[1], D.u[0]) * 180 / Math.PI + 90)} ${f(t[0] - D.u[0] * k * .6 + .6)} ${f(t[1] - D.u[1] * k * .6)})" fill="#f2d2b2" opacity=".35" filter="url(#${sb2})"/>`; }
     { const t = thumb.tip, n = [-thumb.u[1], thumb.u[0]], k = thumb.W[thumb.W.length - 1] / 2, c = [t[0] - thumb.u[0] * 2.4 - n[0] * k * .78, t[1] - thumb.u[1] * 2.4 - n[1] * k * .78];
       hand += `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx=".7" ry="2.2" transform="rotate(${f(Math.atan2(thumb.u[1], thumb.u[0]) * 180 / Math.PI + 90)} ${f(c[0])} ${f(c[1])})" fill="#ecd0bc" stroke="#7a5440" stroke-width=".25" opacity=".85"/>`; }
-    // ——— the black spot: soaked into the skin in the middle of the palm — a soft-edged blot, the black run out
-    // along the lines of the palm and into the fine creases round it ———
-    { const c = [1.2, -21.5], R = rng(17), pts = [], mk = nid('mk', u), mg = nid('mg', u), b1 = nid('bk', u), b2 = nid('bl', u);
-      for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2, r = 6.6 * (1 + (R() - .5) * .42); pts.push([c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r * .92]); }
-      hand += `<defs><filter id="${b1}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6"/></filter><filter id="${b2}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation=".75"/></filter>`
-        + `${radGrad(mg, c[0], c[1], 14, [[0, '#ffffff', 1], [.4, '#ffffff', .75], [1, '#ffffff', 0]])}<mask id="${mk}" maskUnits="userSpaceOnUse" x="-40" y="-70" width="80" height="90"><rect x="-40" y="-70" width="80" height="90" fill="url(#${mg})"/></mask></defs>`
-        // the stain's shadow in the skin round it (a grey-violet bruise), then the ink in the lines, then the blot
-        + `<ellipse cx="${c[0]}" cy="${c[1] + .5}" rx="12" ry="11" fill="#2a1620" opacity=".55" filter="url(#${b1})"/>`
-        + `<g mask="url(#${mk})" filter="url(#${sb2})"><path d="M-14.6 -36.5C-6.5 -31 -6.8 -12 -4.2 4M-14.2 -35.5C-4 -30.5 7 -28.5 15.6 -22.5M17.6 -33C9 -37.6 1 -36.4 -7.4 -42" stroke="#060404" stroke-width=".85" fill="none" stroke-linecap="round"/>`
-        + Array.from({ length: 9 }, (_, i) => { const a = i / 9 * Math.PI * 2 + R() * .5, r0 = 5.5, r1 = 8.5 + R() * 3.5, m = (R() - .5) * 3;
-          return `<path d="M${f(c[0] + Math.cos(a) * r0)} ${f(c[1] + Math.sin(a) * r0)}Q${f(c[0] + Math.cos(a) * (r0 + r1) / 2 - Math.sin(a) * m)} ${f(c[1] + Math.sin(a) * (r0 + r1) / 2 + Math.cos(a) * m)} ${f(c[0] + Math.cos(a) * r1)} ${f(c[1] + Math.sin(a) * r1)}" stroke="#1a0e10" stroke-width="${f(.25 + R() * .2)}" fill="none" opacity=".45"/>`; }).join('') + `</g>`
-        + `<path d="${sp(pts, true)}" fill="#0a0606" opacity=".8" filter="url(#${b1})" transform="translate(${f(c[0] * -.2)} ${f(c[1] * -.2)}) scale(1.2)"/>`
-        + `<path d="${sp(pts, true)}" fill="#030202" filter="url(#${b2})"/>`
-        + `<path d="${sp(pts.map(p => [c[0] + (p[0] - c[0]) * .55 - .8, c[1] + (p[1] - c[1]) * .55 - .6]), true)}" fill="#000000" filter="url(#${b2})"/>`; }
+    // ——— the black spot: a small round scrap of paper cut out of a page, its face blackened with soot, stuck flat to
+    // his wet palm; its upper edge has lifted and curled back, showing the printed page on the other side with a few
+    // words scrawled in ink; a thin shadow of the curl on the skin. A thing handed to him, not a mark in the skin. ———
+    { const c = [1.2, -22], r = 8.4, R = rng(17), out = [], sb3 = nid('ps', u), soot = nid('pk', u), pg = nid('pp', u);
+      // the cut edge: a circle cut with a knife — short straight cuts, a little out of round
+      for (let i = 0; i < 15; i++) { const a = (i + R() * .4) / 15 * Math.PI * 2, rr = r * (1 + (R() - .5) * .1); out.push([c[0] + Math.cos(a) * rr, c[1] + Math.sin(a) * rr * .96]); }
+      const P = q => 'M' + q.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
+      // the curl: a segment of the disc at its upper right is folded back over the face
+      const A = [c[0] - r * .5, c[1] - r * .9], B = [c[0] + r * .98, c[1] - r * .02];                      // the fold line (tilted)
+      const side = p => (B[0] - A[0]) * (p[1] - A[1]) - (B[1] - A[1]) * (p[0] - A[0]);                    // < 0: beyond the fold
+      const flat = out.filter(p => side(p) >= 0), cut = out.filter(p => side(p) < 0);
+      // where the outline crosses the fold line: the two ends of the crease
+      const ends = []; for (let i = 0; i < out.length; i++) { const p = out[i], q = out[(i + 1) % out.length], sp0 = side(p), sq = side(q);
+        if ((sp0 >= 0) !== (sq >= 0)) { const t = sp0 / (sp0 - sq); ends.push({ i, p: [lerp(p[0], q[0], t), lerp(p[1], q[1], t)], into: sq < 0 }); } }
+      ends.sort((x, y) => (y.into ? 1 : 0) - (x.into ? 1 : 0));                 // ends[0]: flat → cut, ends[1]: cut → flat
+      // the flat part in outline order, closed along the crease
+      const flatPoly = []; { let i = ends[1].i; flatPoly.push(ends[1].p); for (let k = 1; k <= out.length; k++) { const p = out[(i + k) % out.length]; if (side(p) >= 0) flatPoly.push(p); else break; } flatPoly.push(ends[0].p); }
+      // the curled-back flap: the cut-off part mirrored over the fold line, lifted (shortened towards the crease)
+      const dx = B[0] - A[0], dy = B[1] - A[1], dl = Math.hypot(dx, dy), ux = dx / dl, uy = dy / dl;
+      const refl = p => { const vx = p[0] - A[0], vy = p[1] - A[1], t = vx * ux + vy * uy, px = A[0] + ux * t, py = A[1] + uy * t; return [px + (px - p[0]) * .85, py + (py - p[1]) * .85]; };
+      const flapPoly = [ends[0].p]; { let i = ends[0].i; for (let k = 1; k <= out.length; k++) { const p = out[(i + k) % out.length]; if (side(p) < 0) flapPoly.push(refl(p)); else break; } } flapPoly.push(ends[1].p);
+      hand += `<defs><filter id="${sb3}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation=".6"/></filter>`
+        + `${radGrad(soot, c[0] - 1, c[1] + 1, r * 1.05, [[0, '#121010', 1], [.6, '#1c1915', 1], [.88, '#36322a', 1], [1, '#6a6254', 1]])}`
+        + `${linGrad(pg, ends[0].p[0], ends[0].p[1], c[0] + r * .2, c[1] - r * .9, [[0, '#b8ac90', 1], [.5, '#e6dcc2', 1], [1, '#f2ead6', 1]])}</defs>`
+        // its shadow on the palm: thin round the flat part, wider under the lifted flap
+        + `<path d="${P(flatPoly)}" fill="#2a160c" opacity=".45" transform="translate(-.7 .9)" filter="url(#${sb3})"/>`
+        + `<path d="${P(cut)}" fill="#2a160c" opacity=".35" transform="translate(-1.2 1.6)" filter="url(#${sb3})"/>`
+        // the sooted face, the soot thinner at the very edge where the paper shows grey
+        + `<path d="${P(flatPoly)}" fill="url(#${soot})" stroke="#0a0806" stroke-width=".7" stroke-linejoin="round"/>`
+        // the cut edge: the white core of the paper shows round the sooted face
+        + `<path d="${P(flatPoly)}" fill="none" stroke="#a49a86" stroke-width=".3" stroke-linejoin="round"/>`;
+      // smudges of the soot: a darker rub and a lighter scuff, a few fibres along the cut edge
+      hand += `<ellipse cx="${f(c[0] - 1.5)}" cy="${f(c[1] + 2.4)}" rx="3.4" ry="2.4" fill="#000000" opacity=".55" filter="url(#${sb3})"/>`
+        + `<path d="M${f(c[0] + 2)} ${f(c[1] + 4.6)}q2 -1 3.6 -.4" stroke="#5a544a" stroke-width=".5" fill="none" opacity=".5" filter="url(#${sb3})"/>`;
+      for (let i = 0; i < flatPoly.length - 1; i += 2) { const p = flatPoly[i]; hand += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".22" fill="#7a7266" opacity=".7"/>`; }
+      // the flap: the page's back, pale and printed, the crease shaded, writing in ink across it
+      const fc = flapPoly.reduce((a, p) => [a[0] + p[0] / flapPoly.length, a[1] + p[1] / flapPoly.length], [0, 0]);
+      hand += `<path d="${P(flapPoly)}" fill="url(#${pg})" stroke="#5a4a34" stroke-width=".3" stroke-linejoin="round"/>`;
+      { const cid = nid('pf', u); hand += `<defs><clipPath id="${cid}"><path d="${P(flapPoly)}"/></clipPath></defs><g clip-path="url(#${cid})">`;
+        // printed lines of the page (grey, even), then a scrawl in ink over them (dark, uneven), parallel to the crease
+        const nx = -uy, ny = ux;
+        for (let k = 0; k < 8; k++) { const o = .8 + k * 1.1, L0 = [A[0] + nx * o - ux * 3, A[1] + ny * o - uy * 3], L1 = [L0[0] + ux * (dl + 6), L0[1] + uy * (dl + 6)];
+          hand += `<path d="M${f(L0[0])} ${f(L0[1])}L${f(L1[0])} ${f(L1[1])}" stroke="#8a806c" stroke-width=".34" stroke-dasharray="${f(1.4 + R())} .5 ${f(.7 + R() * .8)} .6" opacity=".75"/>`; }
+        hand += `<path d="M${f(fc[0] - 3.4)} ${f(fc[1] + .2)}q.8 -1.6 1.6 0t1.6 0q.5 -1.4 1.2 -.3l.5 .4q.9 -1.6 1.8 -.1q.6 -1 1.3 0" stroke="#1a1008" stroke-width=".5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="rotate(${f(Math.atan2(uy, ux) * 180 / Math.PI)} ${f(fc[0])} ${f(fc[1])})"/>`;
+        // the crease shaded, the moon catching the curl's far edge
+        hand += `<path d="M${f(ends[0].p[0])} ${f(ends[0].p[1])}L${f(ends[1].p[0])} ${f(ends[1].p[1])}" stroke="#5a4a34" stroke-width="1.4" opacity=".35" filter="url(#${sb3})"/></g>`; }
+      hand += `<path d="M${f(ends[0].p[0])} ${f(ends[0].p[1])}L${f(ends[1].p[0])} ${f(ends[1].p[1])}" stroke="#2a2016" stroke-width=".35" opacity=".8"/>`; }
     // ——— the water: a wet sheen on the palm and fingers, drops running down to the cuff ———
     { const R = rng(29);
       for (const [x, y, l] of [[-12, -6, 9], [12.6, -4, 11], [-3, -2, 7], [16, -24, 8]]) hand += `<path d="M${x} ${y}q.6 ${f(l * .5)} -.3 ${l}" stroke="#e8fff6" stroke-width=".55" fill="none" opacity=".55"/><ellipse cx="${f(x - .3)}" cy="${f(y + l + .9)}" rx=".8" ry="1.2" fill="#f0fff8" opacity=".75"/>`;

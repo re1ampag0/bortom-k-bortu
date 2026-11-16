@@ -30,8 +30,11 @@ const WZ = 4.0, CEIL = 1.8;                            // the ship's side (facin
 const PORT = { X: .65, w: .76, sill: .45, top: 1.3 };  // the port in the side, the gun run out through it
 // the gun in 3D (gun units of 5.5 cm): S — picture units per gun unit at its breech (Z 2.1 m), D0 — the eye's distance
 // to there (2 m), E — the eye's height, gx — its offset to the right; yaw 0: it points straight out, square to the side
-// LIFT: the gun is drawn 9 picture units higher at the touchhole (the eye a little lower against it: E − 1.97), so the
-// touchhole and the flare stand well above the glass
+// LIFT: the gun is drawn 4 picture units higher at the touchhole (the eye a little lower against it), so the touchhole,
+// the flare and the cascabel stand above the glass while the barrel still climbs to the port (review: at 9 it lay flat
+// along the wall). Review fix: the carriage's near side is its -X side (we stand to the gun's left) — it was drawn as
+// the far one, so the right cheek and trucks covered the breech and the round end read as a muzzle pointing into the
+// ship; now the breech, its base ring and the cascabel knob face us and the barrel runs away out through the port.
 const LIFT = 4, GU = .055, GUN = { S: F / (2.0 / GU), D0: 2.0 / GU, E: EYE / GU - LIFT / (F / (2.0 / GU) * .9238), gx: PORT.X / GU, gd: 0, yaw: 0 };
 // the gunner stands at 1.8 m (100 units/m), left of the gun; he is drawn in his own frame and moved by MAN
 const MAN = [22, 16], HEAD = { c: [58, 32], r: 11 };
@@ -283,8 +286,14 @@ function gun(u, L) {
   const zb = 0, zm = 44, B = P(0, 13, zb), M = P(0, 13, zm);
   { const ax = Nw([0, 0, 1]), q = Wd(0, 13, zb), v = [-q[0], E - q[1], -D0 - q[2]], lv = Math.hypot(...v), ell = Math.abs(ax[0] * v[0] + ax[1] * v[1] + ax[2] * v[2]) / lv;
     s += K.shadeCyl(u, B[0], B[1], M[0], M[1], 4.2 * scl(0, 13, zb), L, 'iron', { r1: 4.3 * scl(0, 13, zb), r2: 2.8 * scl(0, 13, zm), ell, face: 1, outline: .5 });
-    s += band(1.2, 4.6, 1.4, iron.outline) + band(1.6, 4.6, .5, iron.lit, .6);
-    for (const [z, r] of [[9, 4.1], [18, 3.8], [30, 3.3], [42, 3.1]]) s += band(z, r + .25, 1.1, iron.shadow) + band(z + .5, r + .25, .45, iron.lit, .55);
+    // the rings, kept inside the barrel's outline (looking down its axis their far sides would hang below it)
+    { const r1 = 2.8 * scl(0, 13, zm), r2 = 4.3 * scl(0, 13, zb), d = [M[0] - B[0], M[1] - B[1]], l = Math.hypot(...d), t = [d[0] / l, d[1] / l], n = [-t[1], t[0]], bc = nid('bb', u), e = .4;
+      const q = [[B[0] + n[0] * (r2 + e) - t[0] * r2, B[1] + n[1] * (r2 + e) - t[1] * r2], [M[0] + n[0] * (r1 + e) + t[0] * r1, M[1] + n[1] * (r1 + e) + t[1] * r1],
+        [M[0] - n[0] * (r1 + e) + t[0] * r1, M[1] - n[1] * (r1 + e) + t[1] * r1], [B[0] - n[0] * (r2 + e) - t[0] * r2, B[1] - n[1] * (r2 + e) - t[1] * r2]];
+      s += `<defs><clipPath id="${bc}"><path d="M${q.map(P2).join('L')}Z"/></clipPath></defs><g clip-path="url(#${bc})">`
+        + band(1.2, 4.6, 1.4, iron.outline) + band(1.6, 4.6, .5, iron.lit, .6);
+      for (const [z, r] of [[9, 4.1], [18, 3.8], [30, 3.3], [42, 3.1]]) s += band(z, r + .25, 1.1, iron.shadow) + band(z + .5, r + .25, .45, iron.lit, .55);
+      s += '</g>'; }
     // the breech's face: the base ring's moulding, the sunset on the barrel's top, the brazier on its near flank
     { const c = P(0, 13, -.2), r = 4.3 * scl(0, 13, 0); s += `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${f(r * .6)}" ry="${f(r * .6 * Math.max(ell, .3))}" transform="rotate(${f(Math.atan2(gZ[1], gZ[0]) * 180 / Math.PI + 90)} ${f(c[0])} ${f(c[1])})" fill="none" stroke="${iron.shadow}" stroke-width=".6" opacity=".7"/>`; }
     s += `<path d="M${P2(P(-.5, 17, 3))}L${P2(P(-.4, 15.7, 40))}" stroke="#ffd0a0" stroke-width=".9" opacity=".45" stroke-linecap="round"/>`

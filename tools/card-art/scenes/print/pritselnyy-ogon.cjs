@@ -149,8 +149,14 @@ function gun(u, L) {
   { const a = P(0, 13, 1.32), b = P(0, 13, .02);
     s += K.shadeCyl(u, a[0], a[1], b[0], b[1], RB * S, L, 'iron', { r1: RM * S * kAt(0, 13, 1.32), r2: RB * S * kAt(0, 13, .02), ell: .3, outline: .5 });
     // the muzzle's swell out beyond the port, the reinforcing rings along the barrel
-    s += band(1.26, rM(1.26) + .5, 1.4, iron.outline) + band(1.27, rM(1.26) + .5, .5, iron.lit, .6);
-    for (const z of [.3, .62, .95]) s += band(z, rB(z) + .35, 1.2, iron.shadow) + band(z + .012, rB(z) + .35, .5, iron.lit, .65);
+    // (kept inside the barrel's outline: seen nearly down the axis their far sides would hang outside it)
+    { const r1 = RM * S * kAt(0, 13, 1.32), r2 = RB * S * kAt(0, 13, .02), d = [a[0] - b[0], a[1] - b[1]], l = Math.hypot(...d), t = [d[0] / l, d[1] / l], n = [-t[1], t[0]], bc = nid('bb', u), e = .5;
+      const q = [[b[0] + n[0] * (r2 + e), b[1] + n[1] * (r2 + e)], [a[0] + n[0] * (r1 + e) + t[0] * 2, a[1] + n[1] * (r1 + e) + t[1] * 2],
+        [a[0] - n[0] * (r1 + e) + t[0] * 2, a[1] - n[1] * (r1 + e) + t[1] * 2], [b[0] - n[0] * (r2 + e), b[1] - n[1] * (r2 + e)]];
+      s += `<defs><clipPath id="${bc}"><path d="M${q.map(P2).join('L')}Z"/></clipPath></defs><g clip-path="url(#${bc})">`
+        + band(1.26, rM(1.26) + .5, 1.4, iron.outline) + band(1.27, rM(1.26) + .5, .5, iron.lit, .6);
+      for (const z of [.3, .62, .95]) s += band(z, rB(z) + .35, 1.2, iron.shadow) + band(z + .012, rB(z) + .35, .5, iron.lit, .65);
+      s += '</g>'; }
     // daylight along the top of the barrel, from the port
     s += `<path d="M${P2(P(.6, 13 + RB * .96, .12))}L${P2(P(.5, 13 + RM * .96, 1.26))}" stroke="#fff4dc" stroke-width="1.1" opacity=".55" stroke-linecap="round"/>`; }
   function rM(z) { return rB(z); }
@@ -181,7 +187,7 @@ function gun(u, L) {
   { const n0 = P(0, 13, -.07), k = kAt(0, 13, -.17);
     s += K.shadeCyl(u, n0[0], n0[1], cas[0], cas[1], 1.5 * S * k, L, 'iron', { ell: .8, face: 2, outline: .4 })
       + `<path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 2.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 2.4)}" stroke="${rp.outline}" stroke-width="1.9" fill="none"/><path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 2.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 2.4)}" stroke="${rp.core}" stroke-width="1.1" fill="none"/>`
-      + K.shadeSphere(u, cas[0] + .4, cas[1] - .6, 2.4 * S * k * .9, L, 'iron', { outline: .45 }); }
+      + K.shadeSphere(u, cas[0] + .4, cas[1] - .6, 1.8 * S * k * .9, L, 'iron', { outline: .45 }); }
   return { svg: s, P };
 }
 
