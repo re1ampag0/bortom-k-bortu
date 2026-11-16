@@ -100,7 +100,7 @@ export async function buildSamples(ctx: Ctx): Promise<void> {
   const pTrial: Part = { file: 'probnyj-list', title: 'Бортом к борту — пробный лист (печатать с двух сторон)', css: CARD_CSS, duplex: true, pages: [
     faceSheet(ctx, kType, trial, 'Пробный лист · лицо · верх листа', i => i >= 6 ? kAll : i >= 3 ? kShip : kType, 'Ряд 1 — стекло в цвет типа. Ряд 2 — те же карты, стекло в цвет корабля: что нравится больше? Ряд 3 — самые тёмные картинки: видны ли детали в тенях, читается ли текст?'),
     backSheetPage(k1, trial, 0, 0, 'Пробный лист · оборот · верх листа', backKit, BACK_VARIANTS.length > 1 ? 'По ряду на вариант рубашки: какой нравится больше? Совпали ли рубашки с лицами (сдвиг до 3 мм — норма)? Не просвечивает ли лицо?' : 'Совпали ли рубашки с лицами (сдвиг до 3 мм — норма)? Не просвечивает ли лицо сквозь бумагу? Другие варианты рубашек появятся позже.', false)] };
-  await writePdf(ctx, pTrial, SAMPLES); made.push('probnyj-list.pdf');
+  await writePdf(ctx, pTrial, SAMPLES, false); made.push('probnyj-list.pdf');
   console.log(`obrazcy/: ${made.join(', ')}`);
   void SEA; void DECK_NAME;
 }

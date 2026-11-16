@@ -4,12 +4,15 @@ import path from 'node:path';
 import { PDFDocument, PDFName, PDFDict } from 'pdf-lib';
 import { OUT, HTML_DIR, pageHtml, type Ctx, type Part } from './kit';
 import { floorStrokes } from './strokes';
+import { controlPages } from './control';
 
 /** Writes one PDF; printing hints for viewers: actual size, and duplex for the two-sided files (long or short edge). */
-export async function writePdf(ctx: Ctx, part: Part, dir = OUT): Promise<string> {
+/** control — the first page with the 50 mm square (not on the one-sheet trial print of the samples) */
+export async function writePdf(ctx: Ctx, part: Part, dir = OUT, control = true): Promise<string> {
   const htmlFile = path.join(HTML_DIR, part.file + '.html'), pdfFile = path.join(dir, part.file + '.pdf');
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(htmlFile, pageHtml(part));
+  // the first page: the 50 mm square to check the printer's scale (control.ts); a blank back after it in a two-sided file
+  fs.writeFileSync(htmlFile, pageHtml(control ? { ...part, pages: [...controlPages(part), ...part.pages] } : part));
   const page = await ctx.browser.newPage();
   await page.goto('file://' + htmlFile);
   const bad = await page.evaluate(async () => { await document.fonts.ready; await Promise.all(Array.from(document.images).map(i => i.decode().catch(() => undefined))); return Array.from(document.images).filter(i => !(i.complete && i.naturalWidth > 0)).map(i => i.src.slice(0, 120)); });
