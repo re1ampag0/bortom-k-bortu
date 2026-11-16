@@ -102,25 +102,30 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'accepted', cam
       const limb = (spine, w, tone, seed, o = {}) => H.cloth(u, { spine, w, tone, lit: litOf(spine), rim: RIM, rimOp: .6, rimW: .4, seed, drapes: 1, foldW: .45, sw: .35, capA: true, capB: true, ...o });
       const hand = (at, a, m, curl = .25) => { const h = H.hand(u, { at, a, s: .52, m, pose: 'open', tone: SK, spread: 14, curl, sw: .25 }); return h.back + h.front; };
       const shoe = (x, y, rot) => `<g transform="rotate(${rot} ${x} ${y})"><path d="M${x - 1.8} ${y + 1.2}Q${x - 2.2} ${y - 1.4} ${x} ${y - 1.5}Q${x + 2.8} ${y - 1.3} ${x + 2.6} ${y + .4}Q${x + 2.4} ${y + 1.5} ${x - 1.8} ${y + 1.2}Z" fill="#100806" stroke="#050303" stroke-width=".3"/><path d="M${x - 1.6} ${y + 1.1}Q${x + 1} ${y + 1.4} ${x + 2.5} ${y + .4}" stroke="#ff9a50" stroke-width=".35" fill="none" opacity=".8"/></g>`;
-      let men = '', diver = '', crouch = '';
-      // the diver: far arm, far leg, the torso, the near leg, the head, the near arm
-      diver += limb([[16, 74.4], [10, 76.8], [3.6, 80]], [3.6, 3.1, 2.6], SH, 3) + hand([3.6, 80], 158, 1, .2);
-      diver += limb([[30, 69.6], [37.6, 64.4], [43.6, 58.6]], [5.4, 4.3, 3.3], TR, 4) + shoe(44.6, 57.4, -40);
-      diver += limb([[13.4, 77], [21, 75], [31, 71]], [7.4, 8.4, 7.2], SH, 5);
-      diver += limb([[31, 72], [40, 68.2], [48.6, 64]], [5.8, 4.6, 3.4], TR, 6) + shoe(49.8, 63.2, -24);
-      diver += H.head(u, { c: [9.4, 80.6], r: 3.2, dir: -1, tilt: 48, tone: SK, hairColor: '#1c120c', warm: { color: '#ffa860', op: .55 }, eye: 'half' }).svg;
-      diver += limb([[17, 77.6], [10.6, 83.6], [4, 87]], [3.8, 3.3, 2.8], SH, 7) + hand([4, 87], 160, -1, .2);
+      let men = '', crouch = '';
       // the crouched man: far arm (its hand on the back of his head), the thigh, the hunched back, the head, the near arm
       crouch += limb([[59, 72.6], [50.6, 75.4], [52.6, 69.8]], [3.6, 3.1, 2.6], SH, 8) + hand([52.6, 69.8], -14, 1, .5);
       crouch += limb([[68, 86], [58, 84.2], [60, 96]], [7, 5.6, 4.4], TR, 9);
       crouch += limb([[68.4, 88], [67.4, 78.6], [59.6, 72.4]], [8.4, 9.6, 8.4], SH, 10);
       crouch += H.head(u, { c: [54, 74.6], r: 3.3, dir: -1, tilt: 34, tone: SK, hairColor: '#2a1a10', warm: { color: '#ffa860', op: .45 }, eye: 'half' }).svg;
       crouch += limb([[61.4, 73.6], [51.4, 79.4], [51.8, 71.4]], [3.9, 3.4, 2.8], SH, 11) + hand([51.8, 71.4], -26, -1, .45);
-      men = `<g transform="translate(36 90) scale(1.4) translate(-68 -90)">${crouch}</g><g transform="translate(50.4 80.6) rotate(-15) scale(.88) translate(-9.4 -80.6)">${diver}</g>`;
+      men = `<g transform="translate(36 90) scale(1.4) translate(-68 -90)">${crouch}</g>`;
+      // the man knocked back: he stood on her rail by the shrouds, ready to board, facing our port; the swarm took him
+      // in the chest — his feet leave the rail, the whole body (head, torso, both arms and legs) goes over backwards,
+      // the arms flung forward, the head snapped back, the hat off. A whole figure (people.cjs), dark against the sunset
+      const KB = [60, ER - 2.6], KA = -26;
+      const kb = H.figure(u, { L: Lo, at: KB, h: 62, dir: 1, turn: .72, seed: 5, shadow: false, dim: .55, rim: RIM,
+        pose: { turn: .72, pelvis: [0, -12, 4], torso: [0, -26, -4], head: { turn: 0, nod: -22 },
+          legs: { R: { thigh: [34, 6], shin: [-6, 2], foot: [6, 8], weight: true }, L: { thigh: [8, 10], shin: [-18, 4], foot: [-20, 14], plant: false } },
+          arms: { R: { upper: [96, 14], fore: [112, 4] }, L: { upper: [84, 26], fore: [100, 12] } }, hands: { R: 'relaxed', L: 'relaxed' } },
+        skin: SK, dress: { shirt: SH, vest: { lit: '#7a3a22', half: '#2a1410', shadow: '#100606', outline: '#050202' }, trousers: TR, boots: '#120a08', boot: 'shoe', belt: '#1a0e08', kerchief: '#6a1a12' },
+        head: { hair: { style: 'short', color: '#1c120c' }, hairColor: '#1c120c', mouth: .6, brow: 'frown', warm: { color: '#ffa860', op: .5 } } });
+      men += `<g transform="rotate(${KA} ${KB[0]} ${KB[1]})">${kb.svg}</g>`;
       o += men;
-      // the hat knocked off the diver's head, spinning up
-      const sil = '#140a08';
-      o += `<g transform="rotate(-34 46 ${ER - 44})"><path d="M40.4 ${ER - 43}Q46 ${ER - 49} 51.6 ${ER - 43}Q46 ${ER - 41} 40.4 ${ER - 43}Z" fill="${sil}"/><path d="M42 ${ER - 44.4}Q46 ${ER - 48.4} 50 ${ER - 44.4}" stroke="${RIM}" stroke-width=".5" fill="none"/></g>`; }
+      // the hat knocked off his head, spinning up and back
+      const sil = '#140a08', hc = (() => { const a = KA * Math.PI / 180, t = kb.head.Q(0, -1, 0), dx = t[0] - KB[0], dy = t[1] - KB[1];
+        return [KB[0] + dx * Math.cos(a) - dy * Math.sin(a) - 5, KB[1] + dx * Math.sin(a) + dy * Math.cos(a) - 6]; })();
+      o += `<g transform="translate(${f(hc[0] - 46)} ${f(hc[1] - (ER - 44))}) rotate(-34 46 ${ER - 44})"><path d="M40.4 ${ER - 43}Q46 ${ER - 49} 51.6 ${ER - 43}Q46 ${ER - 41} 40.4 ${ER - 43}Z" fill="${sil}"/><path d="M42 ${ER - 44.4}Q46 ${ER - 48.4} 50 ${ER - 44.4}" stroke="${RIM}" stroke-width=".5" fill="none"/></g>`; }
     // her bulwark and side close to us: dark against the sun, the cap rail with its lit edge, a wale, a closed port;
     // our flash lights it orange where the swarm strikes
     { const sd = nid('sd', u);

@@ -167,7 +167,7 @@ module.exports = { name: 'Вербовка утопленников', kind: 'dec
         + glow(u, x + 2, y + hgt + 2, 10, 10, '#ffd890', .45) + glow(u, x, y + 10, 16, 16, '#e8fff0', .2); }
     // the arm from the port: a dark old sleeve with a wide frayed cuff, barnacled; a long pale hand round the roller
     const GIV = { lit: '#9aa898', half: '#5e6c5c', core: '#4e5c4c', shadow: '#24302a', outline: '#0a100c' };
-    const hG = handOn(u, { s: 2.1, m: 1, roll: 0, pitch: 0, pose: 'wrap', r: .75, tone: GIV, light: [.1, -1], sw: .3, tilt: 0, palmW: .8, fingerW: .9, nails: true }, [DOC.x + 3, DOC.y], 0, 115);
+    const hG = handOn(u, { s: 2.6, lod: 'full', m: 1, roll: 168, pitch: 0, pose: 'wrap', r: .5, tone: GIV, light: [.1, -1], sw: .3, tilt: 0, palmW: .8, fingerW: .9, nails: true }, [DOC.x + 3, DOC.y], 0, 115);
     const armG = H.cloth(u, { spine: [[(PORT2.x1 + PORT2.x2) / 2 + 1, PORT2.y2 - 4], [lerp((PORT2.x1 + PORT2.x2) / 2, hG.wrist[0], .5) + 1.4, lerp(PORT2.y2 - 4, hG.wrist[1], .5)], hG.wrist], w: [9.4, 8.4, 6.8],
       tone: { lit: '#4a3a2e', half: '#2a2018', shadow: '#0e0a06', outline: '#030202' }, lit: 1, rim: RIMC, rimSide: -1, rimOp: .5, seed: 9, drapes: 0, sw: .4,
       cuff: { from: .62, k: 1.3, tone: { lit: '#6a5a40', half: '#3a2e1e', shadow: '#140e08', outline: '#040302' } } })

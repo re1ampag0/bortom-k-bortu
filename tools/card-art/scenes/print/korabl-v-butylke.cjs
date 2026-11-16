@@ -16,11 +16,11 @@ if (!K.SHIP_SPECS[WRECK]) { const e = K.SHIP_SPECS.endeavour;
 const { f, mix, lerp, nid, linGrad, radGrad, rng } = K;
 const { woodTex } = PK;
 
-const HZ = 96;                                    // eye level = the sea horizon in the window, just over the bottle's sea
-const SUN = { x: 60, y: 84 };
+const HZ = 82;                                    // eye level = the sea horizon in the window, just over the bottle's sea
+const SUN = { x: 62, y: 76 };
 const BA = [6, 101], BB = [172, 74], BR = 25;     // the bottle: the axis (base to mouth), the body's radius
-const SEA = 101;                                  // the level of the sea inside the bottle (level: the bottle tilts, the water does not)
-const VX = 38;                                    // the whirlpool's axis
+const SEA = 100;                                  // the level of the sea inside the bottle (level: the bottle tilts, the water does not)
+const VX = 36;                                    // the whirlpool's axis
 const light = { time: 'dusk', haze: .45, key: { type: 'sun', x: SUN.x, y: SUN.y, color: '#ffc080', power: 1 }, fill: { color: '#6a3a3a', power: .45 },
   rim: { az: 0, color: '#ffb060', power: .9 } };
 const skel = { horizon: HZ, eye: 1.6, light: 'the setting sun in the stern window right behind the bottle (back light): the glass burns at its edges, rays fan out; the fist rim-lit', items: [
@@ -67,7 +67,7 @@ module.exports = { name: 'Корабль в бутылке', kind: 'deck', statu
     fg += hd.front + ruffle(u, hd);
     // the light over everything: a few short bright rays from the sun through the glass, the bloom of the sun in it
     fg += rays(u, SUN, 90, [[-160, 2], [-120, 2.5], [-75, 2], [-30, 2.5], [15, 2], [60, 2.5], [110, 2], [140, 2.5]], '#fff0d0', .2, 1.4)
-      + K.localGlow(u, { x: SUN.x, y: SUN.y, color: '#fff0c8', power: .5, radius: 20 });
+      + K.localGlow(u, { x: SUN.x, y: SUN.y, color: '#fff0c8', power: .7, radius: 26 });
     // dust in the sunbeams
     { const R = rng(17); for (let i = 0; i < 46; i++) { const x = R() * 200, y = 10 + R() * 120, d = Math.hypot(x - SUN.x, y - SUN.y);
       fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.2 + R() * .45)}" fill="#ffe6c0" opacity="${f(Math.max(.1, .7 - d / 180) * (.5 + R() * .5))}"/>`; } }
@@ -113,38 +113,48 @@ function windowFrame(u) {
 // its whirlpool, the ship sliding down its wall, the spray whirling round above
 function inside(u, L) {
   let s = `<rect x="0" y="0" width="200" height="160" fill="#ffd8a0" opacity=".08"/>`;
-  const R = rng(5), ys = SEA, x0 = BA[0] - 4, x1 = 130, th = [VX + 2, ys + 14.5];
-  // the sea, lit through from behind: bright green-gold under the surface, deep teal below
-  const sg = nid('bs', u); s += `<defs>${linGrad(sg, 0, ys - 1, 0, ys + 20, [[0, '#9ad0b0', 1], [.18, '#3a8a86', 1], [.6, '#16505a', 1], [1, '#0a2a34', 1]])}</defs>`
-    + `<rect x="${x0}" y="${ys}" width="${x1 - x0}" height="30" fill="url(#${sg})"/>`;
-  // the whirlpool: a hollow in the surface — the far wall seen down to the throat, dark, swirled with foam; its two
-  // walls edged with white water, so it reads as a funnel
-  const rw = 31, wall = nid('bw', u), fun = `M${VX - rw} ${ys}C${VX - rw * .5} ${ys + .6} ${VX - 6} ${ys + 4} ${th[0] - 1.2} ${th[1]}L${th[0] + 1.2} ${th[1]}C${VX + 8} ${ys + 4} ${VX + rw * .5} ${ys + .6} ${VX + rw} ${ys}Z`;
-  s += `<defs>${linGrad(wall, 0, ys, 0, th[1], [[0, '#2a6a6e', 1], [.35, '#103e48', 1], [1, '#020a10', 1]])}</defs><path d="${fun}" fill="url(#${wall})"/>`;
-  for (let k = 0; k < 9; k++) { const d = k / 9, rx = rw * Math.pow(1 - d, 1.6), cy = ys + d * 14, ry = 2.6 * (1 - d) + .3, cx = VX + d * 2;
-    const a0 = Math.PI * (1.02 + R() * .08), a1 = Math.PI * (1.98 - R() * .08), P = a => `${f(cx + Math.cos(a) * rx)} ${f(cy + Math.sin(a) * ry)}`;
-    s += `<path d="M${P(a0)}A${f(rx)} ${f(ry)} 0 0 1 ${P(a1)}" stroke="#eafff6" stroke-width="${f(.35 + (1 - d) * .6)}" stroke-dasharray="${f(3 + R() * 5)} ${f(1 + R() * 1.6)}" fill="none" opacity="${f(.45 + (1 - d) * .45)}"/>`; }
-  s += `<path d="M${VX - rw} ${ys}C${VX - rw * .5} ${ys + .6} ${VX - 6} ${ys + 4} ${th[0] - 1.2} ${th[1]}M${th[0] + 1.2} ${th[1]}C${VX + 8} ${ys + 4} ${VX + rw * .5} ${ys + .6} ${VX + rw} ${ys}" stroke="#f4fffa" stroke-width=".8" fill="none" opacity=".85"/>`;
+  const R = rng(5), x0 = BA[0] - 4, x1 = 132, sb = SEA - 4.4, sf = SEA + 4.4, C = [VX + 1, SEA + .6], rx = 29, ry = 5.4;
+  // the sea: its side seen through the near glass (lit through from behind: green-gold under the surface, deep teal
+  // below) and its surface from a little above — a band from the far glass to the near one, gold with the sun
+  const bd = nid('bd', u), sfc = nid('bf', u);
+  s += `<defs>${linGrad(bd, 0, sf, 0, sf + 22, [[0, '#7ab8a0', 1], [.15, '#2e7a7a', 1], [.6, '#124650', 1], [1, '#08222c', 1]])}${linGrad(sfc, 0, sb, 0, sf, [[0, '#f0c890', 1], [.35, '#9ab89a', 1], [1, '#3a8682', 1]])}</defs>`
+    + `<rect x="${x0}" y="${sf}" width="${x1 - x0}" height="30" fill="url(#${bd})"/><rect x="${x0}" y="${sb}" width="${x1 - x0}" height="${sf - sb}" fill="url(#${sfc})"/>`
+    + `<path d="M${x0} ${sb}H${x1}" stroke="#fff0d0" stroke-width=".5" opacity=".8"/><path d="M${x0} ${sf}H${x1}" stroke="#d8fff0" stroke-width=".5" opacity=".6"/>`;
+  // the sun's glitter on the surface beyond the whirlpool
+  for (let i = 0; i < 16; i++) { const x = SUN.x + 8 + (R() - .5) * 30, y = sb + .6 + R() * 2.4; if (Math.hypot((x - C[0]) / rx, (y - C[1]) / ry) < 1.15) continue;
+    s += `<path d="M${f(x)} ${f(y)}h${f(1 + R() * 3)}" stroke="#fff4d8" stroke-width=".45" opacity="${f(.5 + R() * .4)}"/>`; }
+  // the whirlpool: a hollow in the surface — its far wall seen into, darkening to the black eye; spiral arms of foam
+  // winding in to the eye
+  const wg = nid('bw', u);
+  s += `<defs>${radGrad(wg, C[0] + 1, C[1] + 1.4, rx, [[0, '#000608', 1], [.25, '#06202a', 1], [.65, '#1a5a62', 1], [1, '#3a8a86', 1]])}</defs>`
+    + `<ellipse cx="${f(C[0])}" cy="${f(C[1])}" rx="${rx}" ry="${ry}" fill="url(#${wg})" transform="translate(${f(C[0])} ${f(C[1])}) scale(1 1) translate(${f(-C[0])} ${f(-C[1])})"/>`;
+  // (the radial gradient is round: squash it onto the ellipse with a second, flattened copy)
+  { const wg2 = nid('bw', u); s += `<defs><radialGradient id="${wg2}" cx="${f(C[0] + 1)}" cy="${f(C[1] + 1)}" r="${rx}" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 ${f(C[1] + 1)}) scale(1 ${f(ry / rx)}) translate(0 ${f(-(C[1] + 1))})"><stop offset="0" stop-color="#000306"/><stop offset=".3" stop-color="#05202a"/><stop offset=".7" stop-color="#1c5e64"/><stop offset="1" stop-color="#3e8c86"/></radialGradient></defs>`
+    + `<ellipse cx="${f(C[0])}" cy="${f(C[1])}" rx="${rx}" ry="${ry}" fill="url(#${wg2})"/>`; }
+  for (let k = 0; k < 4; k++) { const th0 = k * Math.PI / 2 + .3; let prev = null;
+    for (let i = 0; i <= 24; i++) { const t = i / 24, th = th0 + t * Math.PI * 2.1, r = 1 - t * .92, p = [C[0] + 1 * t + Math.cos(th) * rx * r, C[1] + 1.4 * t + Math.sin(th) * ry * r];
+      if (prev) s += `<path d="M${f(prev[0])} ${f(prev[1])}L${f(p[0])} ${f(p[1])}" stroke="#eafff6" stroke-width="${f(.3 + (1 - t) * 1.2)}" stroke-linecap="round" opacity="${f(.35 + (1 - t) * .6)}"/>`;
+      prev = p; } }
+  s += `<ellipse cx="${f(C[0])}" cy="${f(C[1])}" rx="${rx}" ry="${ry}" fill="none" stroke="#f0fff8" stroke-width=".7" opacity=".7"/>`;
   // spray whirling round above the hollow: bands of white water and drops, wider and fainter as they rise; the back
   // halves behind the ship, the front halves over her
-  const bands = [[-2.5, 30, 3.4, .75, 1.6], [-8, 34, 4, .55, 1.3], [-14, 37, 4.4, .4, 1.1], [-21, 36, 4.2, .26, .9]], bl = nid('sb', u);
+  const bands = [[-2.8, 31, 5.8, .95, 1.8], [-8.5, 33, 6.4, .75, 1.5], [-15, 34, 6.8, .5, 1.2], [-22, 32, 6.4, .3, .9]], bl = nid('sb', u);
   s += `<defs><filter id="${bl}" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation=".35"/></filter></defs>`;
-  const band = (front) => { let o = ''; for (const [dy, rx, ry, op, sw] of bands) { const cy = ys + dy, a0 = front ? .06 : 1.06, a1 = front ? .94 : 1.94;
-      for (let i = 0; i < 4; i++) { const b0 = Math.PI * lerp(a0, a1, i / 4 + R() * .05), b1 = Math.PI * lerp(a0, a1, (i + .7 + R() * .2) / 4), P = a => `${f(VX + Math.cos(a) * rx)} ${f(cy + Math.sin(a) * ry)}`;
-        o += `<path d="M${P(b0)}A${rx} ${ry} 0 0 ${front ? 1 : 1} ${P(b1)}" stroke="#f6fffa" stroke-width="${f(sw * (front ? 1 : .7))}" fill="none" stroke-linecap="round" opacity="${f(op * (front ? 1 : .6))}"/>`; }
-      for (let i = 0; i < 18; i++) { const a = Math.PI * lerp(a0, a1, R()), px = VX + Math.cos(a) * rx, py = cy + Math.sin(a) * ry + (R() - .5) * 2, l = .8 + R() * 2, tx = -Math.sin(a), ty = Math.cos(a) * ry / rx;
+  const band = (front) => { let o = ''; for (const [dy, bx, by, op, sw] of bands) { const cy = C[1] + dy, a0 = front ? .06 : 1.06, a1 = front ? .94 : 1.94;
+      for (let i = 0; i < 4; i++) { const b0 = Math.PI * lerp(a0, a1, i / 4 + R() * .05), b1 = Math.PI * lerp(a0, a1, (i + .7 + R() * .2) / 4), P = a => `${f(C[0] + Math.cos(a) * bx)} ${f(cy + Math.sin(a) * by)}`;
+        o += `<path d="M${P(b0)}A${bx} ${by} 0 0 1 ${P(b1)}" stroke="#f6fffa" stroke-width="${f(sw * (front ? 1 : .7))}" fill="none" stroke-linecap="round" opacity="${f(op * (front ? 1 : .6))}"/>`; }
+      for (let i = 0; i < 18; i++) { const a = Math.PI * lerp(a0, a1, R()), px = C[0] + Math.cos(a) * bx, py = cy + Math.sin(a) * by + (R() - .5) * 2, l = .8 + R() * 2, tx = -Math.sin(a), ty = Math.cos(a) * by / bx;
         o += `<path d="M${f(px)} ${f(py)}l${f(tx * l)} ${f(ty * l)}" stroke="#f4fff8" stroke-width="${f(.3 + R() * .5)}" stroke-linecap="round" opacity="${f(op * (.5 + R() * .5))}"/>`; } }
     return `<g filter="url(#${bl})">${o}</g>`; };
   s += band(false);
-  // the ship: on the right wall of the whirlpool, her bow down into it, heeled with the wall's slope
-  const sl = Math.atan2(th[1] - ys, (VX + rw) - th[0]) * 180 / Math.PI, sx = VX + 17, sy = ys + (VX + rw - sx) * (th[1] - ys) / (VX + rw - th[0]);
-  s += K.ship(u, L, { kind: WRECK, x: sx, y: sy + .4, scale: .28, heel: sl * .9, detail: 'mid', seed: 6 });
-  // the near rim of the hollow: white water in front of her keel, and the sea's surface either side of it
-  s += K.foam(u, { x: VX + 2, y: ys + 1.6, w: rw * 1.9, h: 1.6, seed: 21, L }) + K.foam(u, { x: 96, y: ys + .4, w: 40, h: .9, seed: 22, L });
-  s += `<path d="M${x0} ${ys}H${VX - rw}M${VX + rw} ${ys}H${x1}" stroke="#d8fff0" stroke-width=".6" opacity=".7"/>`;
+  // the ship: caught on the near right of the rim, swung round with it, her bow down into the hollow, heeled with her
+  // masts in towards the axis
+  const sx = C[0] + rx * .74, sy = C[1] + ry * .6;
+  s += K.ship(u, L, { kind: WRECK, x: sx, y: sy, scale: .27, heel: 16, roll: 12, detail: 'mid', seed: 6 });
+  s += K.foam(u, { x: sx + 2, y: sy + .4, w: 30, h: 1.6, seed: 21, L });
   s += band(true);
   // drops thrown up on the inside of the glass
-  for (let i = 0; i < 30; i++) { const t = R() * .52, k = (R() - .5) * 1.8 * BR, p = onAxis(t, k); if (p[1] > ys - 2) continue;
+  for (let i = 0; i < 30; i++) { const t = R() * .52, k = (R() - .5) * 1.8 * BR, p = onAxis(t, k); if (p[1] > SEA - 6) continue;
     s += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.25 + R() * .5)}" fill="#f6fffa" opacity="${f(.4 + R() * .4)}"/>`; }
   return s;
 }

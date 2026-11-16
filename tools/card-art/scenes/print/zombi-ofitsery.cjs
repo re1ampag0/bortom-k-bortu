@@ -9,7 +9,9 @@
 // Fixed against the first round: the raised arm was a stiff tube with a flat glove — now one sleeve from the shoulder
 // through the elbow to the cuff and a hand (people.cjs hand3) round the brim left of the front corner (a salute); the
 // head was a flat green mask — now a 3/4 head (head34) with sunken cheeks, dark sockets, dull glowing eyes, bared
-// teeth, lank grey hair, the tricorn turned with it (hat.cjs); he is drawn at 110 units/m and zoomed ×1.4 about his
+// teeth, lank grey hair, the tricorn turned with it (hat.cjs). Print review: the hand round the brim read as a
+// mitten with bone-like fan lines — now an open hand at full detail, palm to us, five countable fingers, the middle
+// finger's tip on the brim (a salute), no tendon lines; he is drawn at 110 units/m and zoomed ×1.4 about his
 // point on the horizon (as if 30 % nearer), so he fills the space above the glass; the hole was a ring on the coat
 // — now cut through: the background is drawn again inside it; the rail and the deck share his eye level. Light: the moon high behind, upper right (key, contre-jour: cold-red rims
 // on the hair, shoulders and the right edges); the red haze of the sky in front (fill). No blood, no wounds inside.
@@ -55,10 +57,10 @@ function handOn(u, base, grip, t, a0) {
   return h;
 }
 // the knuckles and tendons over a hand3 hand: what makes it read as bony (no wounds — just skin over bone)
-function bony(h, tn, k = 1) {
+function bony(h, tn, k = 1, tendons = true) {
   let s = '';
   for (const J of h.joints) for (let j = 1; j < J.length - 1; j++) s += `<circle cx="${f(J[j][0])}" cy="${f(J[j][1])}" r="${f(.42 * k)}" fill="${tn.lit}" opacity=".55"/><circle cx="${f(J[j][0] + .25 * k)}" cy="${f(J[j][1] + .3 * k)}" r="${f(.3 * k)}" fill="${tn.shadow}" opacity=".5"/>`;
-  for (const J of h.joints.slice(0, 4)) s += `<path d="M${P2(h.wrist)}L${P2(J[0])}" stroke="${tn.shadow}" stroke-width="${f(.3 * k)}" opacity=".45"/>`;
+  if (tendons) for (const J of h.joints.slice(0, 4)) s += `<path d="M${P2(h.wrist)}L${P2(J[0])}" stroke="${tn.shadow}" stroke-width="${f(.3 * k)}" opacity=".45"/>`;
   return s;
 }
 
@@ -156,13 +158,12 @@ module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'acc
     // a grapeshot hole through the hat's crown
     const hatHole = (() => { const p = hd.Q(.3, -1.25, .45); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r=".9" fill="#d0663e" stroke="#050304" stroke-width=".45"/>`; })();
     // ——— his right arm (our left), raised: one sleeve from the shoulder out to the elbow and up to the cuff; his bony
-    // fingers round the front of the brim left of the corner, the thumb under it (touching the hat: all is well) ———
+    // fingers at the brim left of the corner in a salute, the palm to us (touching the hat: all is well) ———
     // points on the brim's outer edge (hat.cjs tricorn's own formula) at t degrees from the front corner
     const brim = (t, dy = 0) => { t *= Math.PI / 180; const k = Math.pow(Math.sin(1.5 * t), 2), rr = 1 + (HATR - 1) * (1 - k) + .08 * k; return hd.Q(Math.sin(t) * rr, -.68 - HATUP * k + .08 * (1 - k) + dy, Math.cos(t) * rr * .98 - .1); };
-    const E0 = brim(-35), E1 = brim(-15), brimAng = Math.atan2(E1[1] - E0[1], E1[0] - E0[0]) * 180 / Math.PI, GR = brim(-25, .035);
     // an open hand (drawn at full detail: each finger its own shape), the fingers straight and a little apart, the
     // middle finger's tip set on the brim; the thumb along the side of the hand
-    const HA = +(process.env.ZA || -50), HROLL = +(process.env.ZR || 160);
+    const HA = -50, HROLL = 160;           // up to the right, the palm turned to us (a salute)
     const handAt = W => H.hand3(u, { at: W, a: HA, s: 1.9, m: 1, roll: HROLL, pitch: 0, pose: 'open', spread: 6, flex: [[8, 8, 6], [6, 8, 6], [8, 10, 6], [10, 12, 8]],
       thumbFlex: [16, 12, 10], thumbSpread: -10, tone: DEADH, light: [-.6, -.7], sw: .34, lod: 'full', fingerW: .88, palmW: .92 });
     const TIP = brim(-22, .02), mt0 = handAt([0, 0]).joints[1][3];
@@ -170,7 +171,7 @@ module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'acc
     // the elbow up at the level of his ear: a short upper arm and forearm (≈ 1.2 head each), no long curve
     const raisedSleeve = sleeve([86, 87], [73.5, 66], hR.wrist, -1, .3, 9);
     man += epaulette(126, 84, 1, Re) + swordArm + holes;
-    man += head + rimArc(hd, { r: HEAD.r, light: [-.4, .9], color: RIMC, span: 40, opacity: .5 }) + hat.back + hR.back + hat.front + hatHole + raisedSleeve + epaulette(88, 85, -1, Re) + hR.front + bony(hR, DEADH, 1.9);
+    man += head + rimArc(hd, { r: HEAD.r, light: [-.4, .9], color: RIMC, span: 40, opacity: .5 }) + hat.back + hR.back + hat.front + hatHole + raisedSleeve + epaulette(88, 85, -1, Re) + hR.front + bony(hR, DEADH, 1.9, false);
     // the ball beyond him, flying away over the rail: its trail back towards the hole
     const bt = nid('bt', u);
     const ball = `<defs>${linGrad(bt, BALL.x - 24, BALL.y, BALL.x, BALL.y, [[0, '#ffd8b0', 0], [1, '#ffd8b0', .5]])}</defs><path d="M${f(BALL.x - 24)} ${f(BALL.y + 1.6)}L${f(BALL.x)} ${f(BALL.y - BALL.r * .8)}L${f(BALL.x)} ${f(BALL.y + BALL.r * .8)}L${f(BALL.x - 24)} ${f(BALL.y + 2.6)}Z" fill="url(#${bt})"/>`

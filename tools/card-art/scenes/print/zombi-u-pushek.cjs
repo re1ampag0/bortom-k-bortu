@@ -195,9 +195,11 @@ module.exports = { name: 'Зомби у пушек', kind: 'deck', status: 'acce
       flare += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(a) * 1.4)} ${f(Math.sin(a) * 1.4)}" stroke="${RS() > .5 ? '#ffe8a0' : '#ffa040'}" stroke-width="${f(r)}" stroke-linecap="round" opacity="${f(.5 + RS() * .5)}"/>`; } }
     // ——— the arms: each one sleeve from the shoulder, torn off below the elbow; the bony forearm; the hand round the staff ———
     // thin bony hands: a narrow palm, a narrower wrist, thin fingers; turned so the curled fingers show round the staff
-    const base = { s: 2.3, lod: 'full', pose: 'wrap', r: .6, tone: DEADH, light: [.8, .4], sw: .3, tilt: 6, fingerW: .8, palmW: .82, wristW: .66 };
-    const hN = handOn(u, { ...base, m: 1, roll: 16, pitch: 34 }, along(.27), ang, 70);
-    const hF = handOn(u, { ...base, m: 1, roll: 16, pitch: 34 }, along(.6), ang, 70);
+    // (the back of each hand to us, seen a little from the finger end: the knuckles over the staff, the four bony
+    // fingers across its near side and curling under it, the thumb round its far side)
+    const base = { s: 2.3, lod: 'full', pose: 'wrap', r: .6, tone: DEADH, light: [.8, .4], sw: .3, tilt: 6, fingerW: .9, palmW: .8, wristW: .66 };
+    const hN = handOn(u, { ...base, m: 1, roll: 16, pitch: 50 }, along(.27), ang, 70);
+    const hF = handOn(u, { ...base, m: 1, roll: 16, pitch: 50 }, along(.6), ang, 70);
     const arm = (sh, el, h, sd) => { const w = h.wrist, tear = [lerp(el[0], w[0], .18), lerp(el[1], w[1], .18)];
       return H.cloth(u, { spine: [[w[0] * .0 + lerp(el[0], w[0], .1), lerp(el[1], w[1], .1)], [lerp(el[0], w[0], .55), lerp(el[1], w[1], .55)], w], w: [5.2, 4.4, 3.6], tone: DEAD, lit: sd, folds: false, sw: .35 })
         + `<path d="M${P2(lerp2(el, w, .4, -1.6))}L${P2(lerp2(el, w, .9, -.8))}" stroke="${DEAD.shadow}" stroke-width=".45" opacity=".6"/><path d="M${P2(lerp2(el, w, .3, 1.4))}L${P2(lerp2(el, w, .85, .9))}" stroke="${DEAD.lit}" stroke-width=".4" opacity=".5"/>`
@@ -258,7 +260,7 @@ function gun(u, L) {
     return `<path d="M${hull(fv.concat(fb)).map(P2).join('L')}Z" fill="${rp.shadow}" stroke="${rp.outline}" stroke-width=".45"/>`
       + K.shadeBox(u, [{ pts: fv, n: toKit([outerSeen ? sg : -sg, 0, 0]), grain: gZ }], L, 'oak', { seed, outline: .45 })
       + `<path d="M${P2(P(Xv, r * 1.7, Zc - r * .7))}L${P2(P(Xv, r * .3, Zc + r * .7))}" stroke="${rp.outline}" stroke-width=".35" opacity=".6"/>`
-      + K.shadeSphere(u, c[0], c[1], .9 * scl(Xv, r, Zc), L, 'iron', { outline: .3 }); };
+      + K.shadeSphere(u, c[0], c[1], .5 * scl(Xv, r, Zc), L, 'iron', { outline: .3 }); };
   // the rings round the barrel: the half of each circle that faces us
   const band = (Z, r, w, col, op = 1) => { let d = '', on = false;
     for (let i = 0; i <= 36; i++) { const a = i / 36 * Math.PI * 2, n = [Math.cos(a), Math.sin(a), 0], p = P(r * n[0], 13 + r * n[1], Z), v = seen(n, [r * n[0], 13 + r * n[1], Z]);

@@ -36,7 +36,7 @@ const skel = { horizon: HZ, eye: 30, light: 'lantern hung from the yard (key) + 
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 // the needle (from its point in the patch's edge to the eye: angle, length, where it is pinched) and the hand holding it
-const NEEDLE = { a: -112, len: 11, pinch: 7.4, ha: -18, s: 2.6, roll: 55, tf: [40, 30, 22], pp: [7.6, -1, -2.6] };
+const NEEDLE = { a: -142, len: 12.5, pinch: 9, ha: -30, s: 3, roll: 55, pad: .6 };
 const LEECH = y => 178 + (y - 16) * .05 + Math.sin((y - 16) / 70) * 3;   // x of the sail's after edge at height y
 // a ragged closed outline round (cx, cy): radii rx, ry, jagged by `j`
 function ragged(R, cx, cy, rx, ry, n, j) { const pts = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, k = 1 - j * .5 + R() * j * (i % 2 ? .6 : 1.2); pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); } return pts; }
@@ -137,8 +137,9 @@ module.exports = { name: 'Латаем паруса', kind: 'deck', status: 'acc
       // the edge of the patch, its eye standing clear above the pinch with the thread running out of it
       const tip = SH([46.5, 99]), NA = NEEDLE.a * Math.PI / 180, nd = [Math.cos(NA), Math.sin(NA)];   // nd: from the point to the eye
       const at = t => [tip[0] + nd[0] * t, tip[1] + nd[1] * t], pinch = at(NEEDLE.pinch), eye = at(NEEDLE.len);
-      const opts = { a: NEEDLE.ha, s: NEEDLE.s, m: 1, roll: NEEDLE.roll, pitch: 0, pose: 'pinch', thumbFlex: NEEDLE.tf, thumbSpread: -10, tone: skin, light: [.7, -.7], sw: .34 };
-      const h0 = H.hand3(u, { ...opts, at: [0, 0] }), p0 = h0.P(...NEEDLE.pp), W = [pinch[0] - p0[0], pinch[1] - p0[1]];
+      const opts = { a: NEEDLE.ha, s: NEEDLE.s, m: 1, roll: NEEDLE.roll, pitch: 0, pose: 'pinch', thumbSpread: -10, backFingers: [0, 1, 2, 3], tone: skin, light: [.7, -.7], sw: .34 };
+      const h0 = H.hand3(u, { ...opts, at: [0, 0] }), ti = h0.joints[0][h0.joints[0].length - 1], tt = h0.joints[4][h0.joints[4].length - 1];
+      const th = h0.joints[4], tq = th[th.length - 2], p0 = [lerp(tq[0], tt[0], NEEDLE.pad), lerp(tq[1], tt[1], NEEDLE.pad)], W = [pinch[0] - p0[0], pinch[1] - p0[1]];   // the thumb's pad lands on the needle
       const hd = H.hand3(u, { ...opts, at: W }), ua = [Math.cos(NEEDLE.ha * Math.PI / 180), Math.sin(NEEDLE.ha * Math.PI / 180)];
       const E = [W[0] - ua[0] * 30, W[1] - ua[1] * 30 + 3];
       // the thread out of the eye of the needle, a loose loop down past the hand back to the last stitch
