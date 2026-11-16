@@ -17,6 +17,8 @@
 // plank's rope; a flagstaff for the Endeavour's ensign; the queue taken back behind the shoulder (own path, not 'tied').
 // Review fix (print): the near (lower) fist re-rolled (roll 28 → 0) so the four fingers wrap over the rope in front and
 // the rope runs inside the grip, out under the little finger.
+// User's request (print choice): his powdered wig lies on the cask in front of the hat (the hat set back to the right),
+// the queue with its black bow hanging over the rim.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -42,7 +44,7 @@ const skel = { horizon: HZ, eye: 1.7, light: 'the moon behind the fog upper righ
   ['Endeavour', -10, END.y, 220, 120, 'water alongside, beyond our rail (her waterline behind it), masts out of the top'],
   ['hole and plank', HOLE.x - 16, HOLE.y + 10, 34, 22, 'her side; the plank hangs on its rope'], ['rope', 100, 96, 110, 96, 'his fists -> tackle out of the frame -> the plank'],
   ['Norrington', 42, 224, 96, 190, 'stands on our deck, leaning back on the rope'], ['cask', 4, 164, 38, 46, 'our deck, by the bulwark'],
-  ['hat', 4, 122, 36, 14, 'on the cask'], ['sword', 34, 164, 14, 58, 'leans on the cask'], ['bulwark', -10, FOOT, 220, FOOT - RAIL, 'deck']] };
+  ['hat', 15, 118, 32, 14, 'on the cask, back right'], ['wig', 6, 122, 20, 11, 'on the cask, front left; queue over the rim'], ['sword', 34, 164, 14, 58, 'leans on the cask'], ['bulwark', -10, FOOT, 220, FOOT - RAIL, 'deck']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const unit = v => { const l = Math.hypot(v[0], v[1]) || 1; return [v[0] / l, v[1] / l]; };
@@ -75,6 +77,56 @@ function weed(x, y, len, n, seed, col = '#3e7a5a') {
   for (let i = 0; i < n; i++) { const x0 = x + (R() - .5) * 4, l = len * (.6 + R() * .5), sw = (R() - .5) * 5;
     out += `<path d="M${f(x0)} ${f(y)}q${f(sw)} ${f(l * .4)} ${f(sw * .3)} ${f(l * .7)}t${f(-sw * .4)} ${f(l * .3)}" stroke="${col}" stroke-width="${f(.6 + R() * .7)}" fill="none" stroke-linecap="round" opacity=".85"/>`; }
   return out;
+}
+// his powdered officer's wig lying on the cask (own drawing): seen from the side, the front to the right; a smooth
+// crown brushed back from the forehead, two rolled curls over the ear, the back hair gathered at the nape into a queue
+// bound with a black ribbon bow; the queue hangs over the cask's front rim. Grey-white powder gone dusty, lit from
+// above by the moon in the fog (lit top, cool green-grey underside), a thin fog rim on the crown, contact shadow.
+function wig(u, x, y, s) {
+  const g = nid('wg', u), gq = nid('wq', u), W = { lit: '#c4ccbe', top: '#a2ac9f', half: '#7c877d', sh: '#56625a', deep: '#38443d', ol: '#141a17' }, R = rng(41);
+  let o = `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s)})"><defs>${linGrad(g, 5, -11, -5, 0, [[0, W.lit, 1], [.45, W.top, 1], [.8, W.half, 1], [1, W.sh, 1]])}`
+    + `${linGrad(gq, -12, -2, -9, 0, [[0, W.sh, 1], [.5, W.top, 1], [1, W.half, 1]])}</defs>`
+    + `<ellipse cx=".4" cy=".7" rx="11.6" ry="1.7" fill="#020806" opacity=".5"/>`;
+  // the queue: from the nape over the rim and down the staves, a curled tip; its wrapping in black ribbon below the bow
+  const qa = [[-7.6, -4.2], [-10.4, -1.6], [-11.6, 3.2], [-11, 8.6], [-12.2, 12.6]], qw = [3.4, 3.2, 2.8, 2.3, 1.6];
+  const side = (k) => qa.map((p, i) => { const q = qa[Math.min(i + 1, qa.length - 1)], r = qa[Math.max(i - 1, 0)], dx = q[0] - r[0], dy = q[1] - r[1], n = Math.hypot(dx, dy);
+    return [p[0] - dy / n * qw[i] / 2 * k, p[1] + dx / n * qw[i] / 2 * k]; });
+  const A = side(1), B = side(-1).reverse();
+  o += `<path d="M${A.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Q-12.8 14.6 -11 14.4L${B.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z" fill="url(#${gq})" stroke="${W.ol}" stroke-width=".35" stroke-linejoin="round"/>`
+    + `<path d="M-11 14.4q1.6 -.4 1.2 -1.8q-.6 -.8 -1.4 -.2" stroke="${W.sh}" stroke-width=".5" fill="none"/>`
+    + [[-11.2, 4.6], [-11.1, 6.6], [-11, 8.6]].map(([qx, qy]) => `<path d="M${f(qx - 1.3)} ${f(qy - .5)}q1.3 1 2.6 0" stroke="#0c0e10" stroke-width=".7" fill="none"/>`).join('')
+    + `<path d="M-10.4 -.4q-.4 3 -.6 6" stroke="${W.lit}" stroke-width=".35" fill="none" opacity=".6"/>`;
+  // the crown: a low dome, flatter where it lies, its edge broken into soft locks; the front edge (hairline) on the right
+  const dome = []; for (let i = 0; i <= 14; i++) { const a = Math.PI * (1 + i / 14), rx = i < 7 ? 9.8 : 9.9, ry = 10.6 + (i > 8 ? -.6 : 0);
+    dome.push([.2 + Math.cos(a) * rx, Math.sin(a) * ry * (i === 0 || i === 14 ? 0 : 1)]); }
+  let crown = `M${f(dome[0][0])} 0`;
+  for (let i = 1; i < dome.length; i++) { const p0 = dome[i - 1], p1 = dome[i], mx = (p0[0] + p1[0]) / 2 - .2, my = (p0[1] + p1[1]) / 2, n = Math.hypot(mx - .2, my) || 1, k = .55 + R() * .45;
+    crown += `Q${f(mx + (mx - .2) / n * k)} ${f(my + my / n * k)} ${f(p1[0])} ${f(p1[1])}`; }
+  crown += 'Z';
+  o += `<path d="${crown}" fill="${W.ol}" transform="translate(0 .1) scale(1.03)"/>` + H.hairMass(u, dome, { r: 11, color: W.top, hi: W.lit, lo: W.sh, outline: W.ol, seed: 9, n: 46, flow: (p) => [-1, .1 + p[1] * -.02], sheen: [4, -8], light: [.25, -1], locks: 7, lockLen: .55, lockW: .16 })
+    + `<path d="${crown}" fill="url(#${g})" opacity=".45" stroke="${W.ol}" stroke-width=".4" stroke-linejoin="round"/>`
+    + `<path d="M9.8 0C9 -.8 8.6 -1.8 8.8 -3" stroke="${W.deep}" stroke-width=".5" fill="none"/>`
+    // the hair combed back from the forehead: a raised roll along the hairline and wavy strands running back
+    + `<path d="M9.4 -3.6C9.2 -6.6 7.2 -9.2 3.6 -10.2" stroke="${W.lit}" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".75"/>`
+    + `<path d="M8.2 -3.2C7.8 -5.8 6.2 -8 3.4 -9" stroke="${W.half}" stroke-width=".4" fill="none"/>`;
+  for (let i = 0; i < 6; i++) { const yy = -9.2 + i * 1.05, x0 = 6.2 - i * .5;
+    o += `<path d="M${f(x0)} ${f(yy)}q-2.2 -.7 -4.4 .1t-4.4 ${f(.4 + i * .2)}t-${f(2.6 - i * .2)} ${f(1.4 + i * .2)}" stroke="${i < 2 ? W.half : W.sh}" stroke-width=".3" fill="none" opacity=".8"/>`; }
+  // the curls over the ear: two rows of tight grey-white curls, the upper row behind; each a little spiral, lit on top
+  for (const [cx, cy, r, tl] of [[-4.8, -5.6, 1.35, -14], [-2, -6.4, 1.5, -6], [.9, -6, 1.25, 4], [-5.6, -2.6, 1.55, -8], [-2.6, -2.9, 1.7, 2], [.6, -2.4, 1.45, 8], [3.4, -2.2, 1.2, 12]]) {
+    const ex = r * 1.22;
+    o += `<g transform="rotate(${tl} ${f(cx)} ${f(cy)})"><ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(ex)}" ry="${f(r)}" fill="${W.top}" stroke="${W.deep}" stroke-width=".28"/>`
+      + `<path d="M${f(cx - ex * .75)} ${f(cy - r * .5)}A${f(ex * .9)} ${f(r * .9)} 0 0 1 ${f(cx + ex * .8)} ${f(cy - r * .3)}" stroke="${W.lit}" stroke-width=".5" fill="none" stroke-linecap="round" opacity=".9"/>`
+      + `<path d="M${f(cx - ex * .8)} ${f(cy + r * .45)}A${f(ex * .9)} ${f(r * .9)} 0 0 0 ${f(cx + ex * .7)} ${f(cy + r * .6)}" stroke="${W.sh}" stroke-width=".55" fill="none" stroke-linecap="round"/>`
+      + `<path d="M${f(cx + ex * .5)} ${f(cy + r * .15)}C${f(cx + ex * .4)} ${f(cy - r * .6)} ${f(cx - ex * .6)} ${f(cy - r * .5)} ${f(cx - ex * .5)} ${f(cy + r * .2)}C${f(cx - ex * .4)} ${f(cy + r * .6)} ${f(cx + ex * .15)} ${f(cy + r * .5)} ${f(cx + ex * .1)} ${f(cy)}" stroke="${W.half}" stroke-width=".3" fill="none"/></g>`; }
+  // the black ribbon bow at the nape: two loops and two tails falling along the queue
+  o += `<path d="M-8.6 -3.4C-11.6 -6.8 -14.6 -5.4 -13.4 -3.2C-12.6 -1.8 -10.4 -2.4 -8.6 -3.4Z" fill="#0c0e10" stroke="#000" stroke-width=".25"/>`
+    + `<path d="M-8.6 -3.4C-9.6 -7.2 -7.4 -9 -6.2 -7.2C-5.4 -5.8 -7 -4.4 -8.6 -3.4Z" fill="#14181a" stroke="#000" stroke-width=".25"/>`
+    + `<path d="M-8.8 -3.2C-10.2 -.6 -9.8 2.4 -8.4 4.8L-7.4 4.2C-8.6 2 -8.8 -.2 -8 -2.8Z" fill="#0c0e10"/><path d="M-9.2 -3C-11.6 -1 -13.6 1.6 -14.4 4.4L-13.4 4.8C-12.6 2.4 -11 .2 -8.6 -2.4Z" fill="#101416"/>`
+    + `<ellipse cx="-8.7" cy="-3.3" rx="1.2" ry="1" fill="#1a2022"/><path d="M-12.8 -4.6q1 -1 2.4 -.6M-7.6 -7.2q.6 1 .2 2" stroke="#4a5a56" stroke-width=".3" fill="none"/>`;
+  // dust in the powder and the fog's rim along the top of the crown
+  for (let i = 0; i < 16; i++) { const a = Math.PI * (1.05 + R() * .9), rr = 2 + R() * 7; o += `<circle cx="${f(Math.cos(a) * rr * 1.1)}" cy="${f(-4.6 + Math.sin(a) * rr * .7)}" r="${f(.18 + R() * .22)}" fill="#7a7664" opacity=".55"/>`; }
+  o += `<path d="M-8.4 -5.6C-7.6 -9.4 -3.8 -11 .4 -11C4.6 -11 7.8 -9 9.2 -6.2" stroke="${RIMC}" stroke-width=".45" fill="none" opacity=".55"/>`;
+  return o + '</g>';
 }
 // mud on the cloth: soft irregular blotches
 // soft smears (on the skin)
@@ -125,10 +177,12 @@ module.exports = { name: 'Норрингтон на борту', kind: 'deck', s
     const CK = { x: 22, y: 162, s: 1.4 };
     let cask = K.castShadow(u, L, { x: CK.x, y: CK.y, w: 30, h: 42, horizon: HZ, d: .6, opacity: .5 }) + K.barrel(u, L, { x: CK.x, y: CK.y, s: CK.s, kind: 'rum', seed: 5 })
       + barnacles(u, 10, 146, 3, .9, 21) + weed(34, 126, 10, 2, 22);
-    { const top = CK.y - 30 * CK.s; // the hat lying on the head of the cask, its gold edge tarnished, a cobweb from it to the cask
-      cask += `<g transform="translate(${CK.x + 1} ${f(top + 1)})"><ellipse cx="0" cy="2" rx="17" ry="3.4" fill="#000" opacity=".35"/><path d="M-18 1Q0 -14 18 1Q8 5 0 5Q-8 5 -18 1Z" fill="#141620" stroke="#06080c" stroke-width=".5"/>`
+    { const top = CK.y - 30 * CK.s; // the hat lying on the head of the cask (set back to the right, behind the wig), its gold edge
+      // tarnished; his powdered wig in front of it on the left, the queue over the rim; a cobweb from them to the cask
+      cask += `<g transform="translate(${CK.x + 10} ${f(top - .4)}) scale(.88)"><ellipse cx="0" cy="2" rx="17" ry="3.4" fill="#000" opacity=".35"/><path d="M-18 1Q0 -14 18 1Q8 5 0 5Q-8 5 -18 1Z" fill="#141620" stroke="#06080c" stroke-width=".5"/>`
         + `<path d="M-18 1Q0 -14 18 1" stroke="#9a8040" stroke-width="1.2" fill="none"/><path d="M-10 -5Q0 -12 10 -5" stroke="#1e2028" stroke-width="4" fill="none"/><path d="M-12 -4Q0 -11 12 -4" stroke="${RIMC}" stroke-width=".4" fill="none" opacity=".6"/>`
         + `<circle cx="-2" cy="-8" r="2.2" fill="#2a3060" stroke="#9a8040" stroke-width=".6"/></g>`
+        + wig(u, CK.x - 3.5, top + 1.6, .9)
         + `<path d="M8 ${f(top + 2)}L4 ${f(top + 16)}M8 ${f(top + 2)}L10 ${f(top + 18)}M5.6 ${f(top + 8)}q2.6 1 4.2 -.4M4.8 ${f(top + 12)}q3 1.2 5.2 -.2" stroke="#e8f8f0" stroke-width=".25" fill="none" opacity=".6"/>`; }
     cask += `<g transform="translate(41 ${CK.y + 1}) rotate(-12)">${K.shadeCyl(u, 0, 0, 0, -44, .9, L, 'iron', { outline: .3 })}<path d="M-4 -44h8" stroke="url(#brass${u})" stroke-width="1.6"/><path d="M-3.4 -44q-3 -6 3 -9" stroke="url(#brass${u})" stroke-width="1" fill="none"/>`
       + `<rect x="-1.4" y="-54" width="2.8" height="10" rx=".9" fill="#d8d0bc" stroke="#3a3428" stroke-width=".3"/><circle cy="-55" r="1.8" fill="url(#brass${u})"/></g>`;
