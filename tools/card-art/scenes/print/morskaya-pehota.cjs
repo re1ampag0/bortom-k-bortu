@@ -203,7 +203,7 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'a
       const hF = H.hand3(u, { at: V('wrF'), a: -12, s: k * .021, m: 1, roll: 12, pose: 'open', spread: 13, tone: SK, light: LT, sw: .3 });
       brd += limb([V('shF'), V('elF'), V('wrF')], [k * .13, k * .12, k * .105], SH, { cuff: { from: .84, k: 1.2, tone: SH } }) + hF.back + hF.front;
       // the cutlass spinning away up to the right, its arcs of motion
-      const cc = [78.3, 39.9];
+      const cc = [58.5, 15.5];   // (higher than before: clear of the bayonets of the shouldered muskets and of her mainmast)
       brd += `<g transform="rotate(-140 ${P2(cc)})"><path d="M${f(cc[0] - 7)} ${f(cc[1])}q7 -2.2 14 -.5l.3 .9q-7 .3 -14.3 1z" fill="#c8ccd0" stroke="#3a3c40" stroke-width=".3"/><path d="M${f(cc[0] - 7)} ${f(cc[1] - 1.4)}v3.4" stroke="#8a6a30" stroke-width="1"/><path d="M${f(cc[0] - 7)} ${f(cc[1] + .3)}h-3" stroke="#2a1a10" stroke-width="1.1"/></g>`
         + `<path d="M${f(cc[0] - 6)} ${f(cc[1] + 5)}a8 8 0 0 1 2 -10M${f(cc[0] + 6)} ${f(cc[1] - 5)}a8 8 0 0 1 -2 10" stroke="#ffffff" stroke-width=".35" fill="none" opacity=".45"/>`; }
     // ——— the marines: one rank along the rail, the same uniform, muskets levelled, bayonets over the rail ———

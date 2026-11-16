@@ -39,7 +39,7 @@ const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const RIPS = [{ x: 128, sl: .05, y0: 24, y1: 82, lace: 52, max: 10, st: 8, e: 5.5, seed: 1 },
   { x: 58, sl: -.04, y0: 38, y1: 78, lace: 62, max: 6, st: 6, e: 4.5, seed: 2 }];
 const ripX = (Rp, y) => Rp.x + (y - Rp.y0) * Rp.sl;
-const gap = (Rp, y) => y >= Rp.lace ? 1.4 : 1.4 + Rp.max * Math.pow(Math.max(0, Math.sin(Math.PI * (y - Rp.y0) / (Rp.lace - Rp.y0))), .85);
+const gap = (Rp, y) => y >= Rp.lace ? 1.4 : 1.4 + Rp.max * Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow((y - Rp.y0) / (Rp.lace - Rp.y0), 1.5))), 1.1);
 const EL = (Rp, y) => [ripX(Rp, y) - Math.max(Rp.e, gap(Rp, y) + 3.4), y], ER = (Rp, y) => [ripX(Rp, y) + Math.max(Rp.e, gap(Rp, y) + 3.4), y];
 // a smooth path through the points (Catmull-Rom, as kit rope draws it): for the dark silhouette under a rope
 function smooth(pts) { const n = pts.length, g = i => pts[Math.max(0, Math.min(n - 1, i))]; let d = 'M' + P2(pts[0]);
@@ -72,7 +72,7 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'accep
     const S = SAIL;
     const edge = `M${S.x0} ${S.top}L${S.x1} ${S.top}Q${S.x1 + 4} 52 ${S.f1} ${S.foot}Q100 ${S.mid - 4} ${S.f0} ${S.foot}Q${S.x0 - 4} 52 ${S.x0} ${S.top}Z`;
     const RE = RIPS.map(Rp => { const ys = []; for (let y = Rp.y0; y <= Rp.y1; y += 1.5) ys.push(y);
-      const jag = y => (rng(Math.round(y * 7) + Rp.seed * 1000)() - .5) * (y < Rp.lace ? 1.6 : .5);
+      const jag = y => (rng(Math.round(y * 7) + Rp.seed * 1000)() - .5) * (y < Rp.lace ? 2.4 : .5);
       const l = ys.map(y => [ripX(Rp, y) - gap(Rp, y) + jag(y), y]), r = ys.map(y => [ripX(Rp, y) + gap(Rp, y) + jag(y + .7), y]);
       return { Rp, l, r, d: 'M' + l.map(P2).join('L') + 'L' + r.slice().reverse().map(P2).join('L') + 'Z' }; });
     const rip = RE.map(e => e.d).join('');

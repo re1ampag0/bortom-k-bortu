@@ -58,9 +58,9 @@ function broadside(u, L, R, ship, s, rows, o = {}) {
   for (const [h, n, x0, x1] of rows) for (let k = 0; k < n; k++) {
     if (R() < (o.skip || .25)) continue;
     const lx = x0 + (x1 - x0) * k / (n - 1), px = ship.x + lx * s, py = ship.y - h * s - .2 * s, sz = s * (3 + R() * 3.4) * (o.k || 1);
-    smoke += K.smoke(u, L, { x: px - sz * .8, y: py + sz * 1.1, w: sz * 6.5, h: sz * 5.2, wind: -.7, seed: Math.floor(R() * 999), opacity: .62 });
+    smoke += K.smoke(u, L, { x: px - sz * .8, y: py + sz * 1.1, w: sz * 6.5, h: sz * 5.2, wind: -.7, seed: Math.floor(R() * 999), opacity: .5 });
     // fired toward us: a starburst — a soft hot glow, short spikes of different length, a white core
-    flash += glow(u, f(px), f(py), f(sz * 3.2), f(sz * 2.6), '#ffc868', .95)
+    flash += glow(u, f(px), f(py), f(sz * 2.6), f(sz * 2.1), '#ffb850', .8)
       + Array.from({ length: 7 }, (_, j) => { const an = j * 2 * Math.PI / 7 + R() * .6, l = sz * (.8 + R() * 1.1), w = sz * .22; const c = Math.cos(an), sn = Math.sin(an) * .8;
         return `<path d="M${f(px - sn * w)} ${f(py + c * w)}L${f(px + c * l)} ${f(py + sn * l)}L${f(px + sn * w)} ${f(py - c * w)}Z" fill="#ffe8a0" opacity=".95"/>`; }).join('')
       + `<circle cx="${f(px)}" cy="${f(py)}" r="${f(sz * .42)}" fill="#fffdf0"/>`;

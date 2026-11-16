@@ -43,16 +43,16 @@ const GRIP = [50, 66];                                // where his fist closes r
 const VIAL_R = 2.3;                                   // the vial's body radius (his units); the fist closes round exactly this
 const VIAL_A = -86;                                   // the vial's axis (deg, up)
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: 80, y: -20, el: 64, color: '#b8f8dc', power: .95 },
-  fill: { color: '#1e3a32', power: .45 }, rim: { az: 330, color: '#9ff0d0', power: .3 }, locals: [{ x: 150, y: 40, color: '#9effd0', power: .6, radius: 40 }] };
+  fill: { color: '#1e3a32', power: .45 }, rim: { az: 330, color: '#9ff0d0', power: .3 } };
 const skel = { horizon: VP[1], eye: 1.6, light: 'a narrow green shaft from the hatch grating upper middle-right (key); the hold dark (skel boxes as drawn before the mirror)', items: [
   ['deckhead', 0, WT, 200, WT, 'beams and planks overhead, to the vanishing point'], ['grating', 30, 12, 40, 12, 'deckhead'],
-  ['hull side', WL, WB, WR - WL, WB - WT, 'back wall'], ['Bill', 28, 290, 148, 250, 'stands on the floor (feet off the frame), grown into the hull side'],
-  ['fist and rope', 12, 74, 30, 30, 'rope from the block'], ['block', 16, 30, 16, 22, 'hangs from the deckhead'], ['floor', -10, 290, 220, 290 - WB, 'floor']] };
+  ['hull side', WL, WB, WR - WL, WB - WT, 'back wall'], ['Bill', 28, 290, 148, 250, 'stands on the floor (feet off the frame), in front of the hull side'],
+  ['fist and vial', 8, 70, 30, 44, 'held up in his fist'], ['floor', -10, 290, 220, 290 - WB, 'floor']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
-const SKIN = { lit: '#bccaa8', half: '#7e9076', core: '#667a60', shadow: '#33422f', outline: '#121a10' };   // drowned grey-green
-const HAND = { lit: '#94a486', half: '#627258', core: '#506248', shadow: '#2a3628', outline: '#10180e' };   // the face's tone, a step darker
-const COAT = { lit: '#4e5e52', half: '#28342c', shadow: '#101814', outline: '#040806' };
+const SKIN = { lit: '#e2e0c4', half: '#aaa88a', core: '#8e8e72', shadow: '#4c5240', outline: '#1a1c12' };   // an old sailor's pale, sea-cold skin
+const HAND = { lit: '#d0ceb2', half: '#989878', core: '#7e8066', shadow: '#40463a', outline: '#16180e' };   // the face's tone, a step darker
+const COAT = { lit: '#667868', half: '#36463c', shadow: '#141c18', outline: '#040806' };
 const RIMC = '#9ff0d0';
 const toVP = (p, y) => { const k = (y - VP[1]) / (p[1] - VP[1]); return [VP[0] + (p[0] - VP[0]) * k, y]; };   // along the line to the VP, to height y
 const toVPx = (p, x) => { const k = (x - VP[0]) / (p[0] - VP[0]); return [x, VP[1] + (p[1] - VP[1]) * k]; };

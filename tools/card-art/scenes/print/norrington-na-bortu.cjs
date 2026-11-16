@@ -15,6 +15,8 @@
 // braced), the head turned more to the rope; sharp-edged mud with splashes, a torn near cuff, frayed fringes; the red
 // tear moved up off the glass with a ragged edge; a visible block top right through which his rope turns into the
 // plank's rope; a flagstaff for the Endeavour's ensign; the queue taken back behind the shoulder (own path, not 'tied').
+// Review fix (print): the near (lower) fist re-rolled (roll 28 → 0) so the four fingers wrap over the rope in front and
+// the rope runs inside the grip, out under the little finger.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -141,7 +143,8 @@ module.exports = { name: 'Норрингтон на борту', kind: 'deck', s
     const base = { s: 2.25, pose: 'wrap', r: 1.15, tone: SKIN, light: [.6, -.8], sw: .3, palmW: .8, fingerW: .9, nails: true };
     const RA = Math.atan2(G2[1] - G1[1], G2[0] - G1[0]) * 180 / Math.PI;     // the rope's direction between the fists
     const hF = handOn(u, { ...base, m: 1, roll: 18, pitch: 10, tilt: 10 }, G2, RA, -30);
-    const hN = handOn(u, { ...base, m: 1, roll: 28, pitch: 14, tilt: 8 }, G1, RA, -20);
+    // the near fist rolled so its fingers wrap over the rope towards us (review fix: the rope ran over the fist, not inside the grip)
+    const hN = handOn(u, { ...base, m: 1, roll: 0, pitch: 14, tilt: 8 }, G1, RA, -20);
     const sleeve = (sh, el, w, sd, lit, rimOp) => H.cloth(u, { spine: [sh, [lerp(sh[0], el[0], .5), lerp(sh[1], el[1], .5) + 1], el, [lerp(el[0], w[0], .5), lerp(el[1], w[1], .5) + .6], w],
       w: [13.4, 12.4, 11.2, 9.8, 8.8], tone: COAT, lit, rim: RIMC, rimSide: lit, rimOp, seed: sd, drapes: 1, sw: .45, capA: true, roundA: .9, cuff: { from: .84, k: 1.1, tone: CUFF } });
     // the far arm from the far shoulder at the edge of his silhouette, forward to the far fist (its root under the far half of the coat)
