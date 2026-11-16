@@ -78,7 +78,8 @@ module.exports = { name: 'Прицельный огонь', kind: 'deck', status
       + `<path d="M-10 ${WB}H210" stroke="#0a0502" stroke-width="1.3"/>` + K.localGlow(u, { x: VX, y: WB + 8, color: '#fff0d0', power: .4, radius: 50 }, { squash: .3, core: false }); }
 
     // ——— the gun: a truck carriage from behind, the barrel out through the port ———
-    let mid = gun(u, L);
+    const G = gun(u, L);
+    let mid = G.svg;
     // the brass quadrant standing on the barrel at the breech: a quarter disc with its scale, the plumb line and bob
     { const q = [100, 95.2], r = 12, br = L.ramp('brass', q[0], q[1] - 5);
       mid += `<path d="M${P2(q)}L${f(q[0] + r)} ${f(q[1])}A${r} ${r} 0 0 0 ${f(q[0])} ${f(q[1] - r)}Z" fill="${br.half}" stroke="${br.outline}" stroke-width=".45"/>`
@@ -88,7 +89,7 @@ module.exports = { name: 'Прицельный огонь', kind: 'deck', status
         + `<path d="M${f(q[0] + .6)} ${f(q[1] - .6)}L${f(q[0] + 6.4)} ${f(q[1] - 6.6)}" stroke="#1a1410" stroke-width=".3"/>` + K.shadeSphere(u, q[0] + 6.6, q[1] - 6.9, .8, L, 'brass', { outline: .2 })
         + `<path d="M${f(q[0] - 1)} ${f(q[1] + .2)}H${f(q[0] + r + 1)}" stroke="${br.outline}" stroke-width=".9"/>`; }
     // chalk marks on the left cheek: the tally of the elevation
-    mid += `<path d="M77.6 131.4v4.2M79.4 131.2v4.2M81.2 131v4.2M83 130.8v4.2" stroke="#f2ece0" stroke-width=".55" opacity=".8"/>`;
+    mid += [0, 1, 2, 3].map(i => { const a = G.P(-9.6, 4.4, .06 + i * .055), b = G.P(-9.6, 6.2, .06 + i * .055); return `<path d="M${P2(a)}L${P2(b)}" stroke="#f2ece0" stroke-width=".55" opacity=".8"/>`; }).join('');
 
     // ——— the gunner, his back to us, easing the quoin; the officer pointing with his spyglass, the book in hand ———
     const fg = gunner(u, L, R) + `<g transform="translate(0 6)">${officer(u, L, R)}</g>`;
@@ -101,61 +102,87 @@ module.exports = { name: 'Прицельный огонь', kind: 'deck', status
 
 /** The gun from behind and a little above (after flot-na-gorizonte.cjs gunFromBehind, scaled): a truck carriage —
  *  the oak cheeks stepped down towards us, the transom, the bed and the quoin with its handle, the axletrees and four
- *  low trucks; the barrel from its breech (base ring, cascabel) running away out through the port; the breeching. */
+ *  low trucks; the barrel from its breech (base ring, cascabel) running away out through the port; the breeching.
+ *  Review fix: seen straight down its axis the barrel hid behind its own round breech (a gong at 250 px) — now the gun
+ *  is trained a little to the left (YAW, about the breech: the diagonal shot the card allows) and the barrel slimmer,
+ *  so its length runs up-left out of the port in perspective, rings and all; the breech a dome with a base ring and
+ *  the cascabel's neck and knob standing out towards us, the breeching through it. Gun space: X across, Y up (gun
+ *  units), Z 0 (rear) … 1 (front of the carriage, at the side) as before; the depth behind it is a true perspective
+ *  (D0 gun units from the eye to the breech), so the turned carriage shows its left cheek's outer face. */
+const YAW = -14, D0 = 73, RB = 4.4, RM = 2.9;
 function gun(u, L) {
-  const { Y0, Y1, S } = GUN;
-  const P = (X, Y, Z) => { const yg = lerp(Y0, Y1, Z), k = (yg - HZ) / (Y0 - HZ); return [VX + X * S * k, yg - Y * S * k]; };
+  const { Y0, Y1, S } = GUN, KZ = (Y0 - Y1) / (Y0 - HZ), HC = (Y0 - HZ) / S, yw = YAW * Math.PI / 180, cY = Math.cos(yw), sY = Math.sin(yw);
+  // gun space -> the world (x across, y up, w: depth beyond the breech) turned about the breech -> the picture
+  const Wd = (X, Y, Z) => { const w = D0 * (1 / (1 - KZ * Z) - 1); return [X * cY + w * sY, Y, -X * sY + w * cY]; };
+  const kOf = W => D0 / (D0 + W[2]);
+  const P = (X, Y, Z) => { const W = Wd(X, Y, Z), k = kOf(W); return [VX + W[0] * S * k, HZ + (Y0 - HZ) * k - W[1] * S * k]; };
+  const kAt = (X, Y, Z) => kOf(Wd(X, Y, Z));
+  const nW = n => [n[0] * cY + n[2] * sY, n[1], -n[0] * sY + n[2] * cY];                  // a gun-space normal in the world
+  const seen = (n, c) => { const m = nW(n), W = Wd(...c); return m[0] * -W[0] + m[1] * (HC - W[1]) + m[2] * (-D0 - W[2]) > 0; };
+  const kit = n => { const m = nW(n); return [m[0], m[1], -m[2]]; };                         // -> the kit's (z towards us)
   const iron = L.ramp('iron', VX, 100), rp = L.ramp('rope', VX, 110);
-  let s = K.contactShadow(u, VX, Y0 + 1, 70, L, { ry: 3, opacity: .7 }) + `<ellipse cx="${VX}" cy="${f(Y0 - 4)}" rx="34" ry="10" fill="#000" opacity=".28" filter="url(#drop${u})"/>`;
-  const box = (x0, x1, y0, y1, z0, z1, seed, skip = {}) => {
-    const F = [];
-    if (!skip.top) F.push({ pts: [P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1)], n: 'top', grain: [0, -1] });
-    const cx = (x0 + x1) / 2;
-    if (cx > .5) F.push({ pts: [P(x0, y0, z0), P(x0, y1, z0), P(x0, y1, z1), P(x0, y0, z1)], n: 'left', grain: [0, -1] });
-    else if (cx < -.5) F.push({ pts: [P(x1, y0, z0), P(x1, y1, z0), P(x1, y1, z1), P(x1, y0, z1)], n: 'right', grain: [0, -1] });
-    F.push({ pts: [P(x0, y0, z0), P(x1, y0, z0), P(x1, y1, z0), P(x0, y1, z0)], n: 'front', grain: [1, 0] });
-    return K.shadeBox(u, F, L, 'oak', { seed, outline: .45 });
+  let s = K.contactShadow(u, VX - 4, Y0 + 1, 70, L, { ry: 3, opacity: .7 }) + `<ellipse cx="${VX - 4}" cy="${f(Y0 - 4)}" rx="34" ry="10" fill="#000" opacity=".28" filter="url(#drop${u})"/>`;
+  // a box in gun space: the faces we can see (z grows away from us: the z0 face is the one towards us)
+  const box = (x0, x1, y0, y1, z0, z1, seed, skip = {}, kind = 'oak') => {
+    const xm = (x0 + x1) / 2, ym = (y0 + y1) / 2, zm = (z0 + z1) / 2, F = [], gZ = (() => { const a = P(xm, ym, z0), b = P(xm, ym, z1); return [b[0] - a[0], b[1] - a[1]]; })();
+    const add = (pts, n, c, grain) => { if (seen(n, c)) F.push({ pts: pts.map(q => P(...q)), n: kit(n), grain }); };
+    if (!skip.top) add([[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], [0, 1, 0], [xm, y1, zm], gZ);
+    add([[x0, y0, z0], [x0, y1, z0], [x0, y1, z1], [x0, y0, z1]], [-1, 0, 0], [x0, ym, zm], gZ);
+    add([[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]], [1, 0, 0], [x1, ym, zm], gZ);
+    add([[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0]], [0, 0, -1], [xm, ym, z0], [1, 0]);
+    return K.shadeBox(u, F, L, kind, { seed, outline: .45 });
   };
-  const truck = (X, Z, r, th, seed) => { const c = P(X, r, Z), k = (lerp(Y0, Y1, Z) - HZ) / (Y0 - HZ), w = th * S * k, h = r * S * k, oak = L.ramp('oak', c[0], c[1]);
+  const truck = (X, Z, r, th, seed) => { const c = P(X, r, Z), k = kAt(X, r, Z), w = th * S * k, h = r * S * k, oak = L.ramp('oak', c[0], c[1]);
     return K.shadeBox(u, [{ pts: [[c[0] - w / 2, c[1] - h * .96], [c[0] + w / 2, c[1] - h * .96], [c[0] + w / 2, c[1] + h], [c[0] - w / 2, c[1] + h]], n: 'front', grain: [0, 1] }], L, 'oak', { seed, outline: .4 })
       + `<ellipse cx="${f(c[0])}" cy="${f(c[1] - h * .96)}" rx="${f(w / 2)}" ry="${f(w * .22)}" fill="${oak.lit}" stroke="${oak.outline}" stroke-width=".35"/>`
       + `<path d="M${f(c[0] - w / 2)} ${f(c[1] + h * .3)}h${f(w)}M${f(c[0] - w / 2)} ${f(c[1] - h * .35)}h${f(w)}" stroke="${oak.shadow}" stroke-width=".4" opacity=".7"/>`
       + K.shadeSphere(u, c[0], c[1] - h * .1, w * .28, L, 'iron', { outline: .3 }); };
+  // a ring round the barrel at Z: the part of the circle that faces us
+  const band = (Z, r, w, col, op = 1) => { let d = '', on = false;
+    for (let i = 0; i <= 48; i++) { const a = i / 48 * Math.PI * 2, n = [Math.cos(a), Math.sin(a), 0], c = [r * n[0], 13 + r * n[1], Z];
+      if (seen(n, c)) { d += `${on ? 'L' : 'M'}${P2(P(...c))}`; on = true; } else on = false; }
+    return d ? `<path d="${d}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity="${op}"/>` : ''; };
+  const rB = Z => RB + (RM - RB) * Z / 1.32;                                                  // the barrel's radius along it
   s += box(-9.4, 9.4, 2.2, 4.4, .78, .9, 11, { top: true });
   for (const sx of [-1, 1]) s += truck(sx * 11, .84, 3, 3, 20 + sx);
   // the barrel's chase runs away from us out of the port (drawn before the cheeks, it lies between them)
-  { const a = P(0, 13, 1.32), b = P(0, 13, .02), ka = (lerp(Y0, Y1, 1.32) - HZ) / (Y0 - HZ);
-    s += K.shadeCyl(u, a[0], a[1], b[0], b[1], 5.4 * S, L, 'iron', { r1: 3.4 * S * ka, r2: 5.4 * S, ell: .3, outline: .5 });
-    { const m = P(0, 13, 1.32); s += `<ellipse cx="${f(m[0])}" cy="${f(m[1])}" rx="${f(3.9 * S * ka)}" ry="${f(1.4 * S * ka)}" fill="${iron.core}" stroke="${iron.outline}" stroke-width=".4"/>`; }
-    for (const z of [.35, .7, 1.05]) { const q = P(0, 13, z), kq = (lerp(Y0, Y1, z) - HZ) / (Y0 - HZ), r = (5.4 - z * 1.6) * S * kq;
-      s += `<path d="M${f(q[0] - r)} ${f(q[1])}A${f(r)} ${f(r * .35)} 0 0 0 ${f(q[0] + r)} ${f(q[1])}" stroke="${iron.shadow}" stroke-width="1" fill="none"/><path d="M${f(q[0] - r)} ${f(q[1] - .7)}A${f(r)} ${f(r * .35)} 0 0 0 ${f(q[0] + r)} ${f(q[1] - .7)}" stroke="${iron.lit}" stroke-width=".5" fill="none" opacity=".7"/>`; }
+  { const a = P(0, 13, 1.32), b = P(0, 13, .02);
+    s += K.shadeCyl(u, a[0], a[1], b[0], b[1], RB * S, L, 'iron', { r1: RM * S * kAt(0, 13, 1.32), r2: RB * S * kAt(0, 13, .02), ell: .3, outline: .5 });
+    // the muzzle's swell out beyond the port, the reinforcing rings along the barrel
+    s += band(1.26, rM(1.26) + .5, 1.4, iron.outline) + band(1.27, rM(1.26) + .5, .5, iron.lit, .6);
+    for (const z of [.3, .62, .95]) s += band(z, rB(z) + .35, 1.2, iron.shadow) + band(z + .012, rB(z) + .35, .5, iron.lit, .65);
     // daylight along the top of the barrel, from the port
-    s += `<path d="M${P2(P(-.6, 13 + 5.2, .1))}L${P2(P(-.4, 13 + 3.6, 1.3))}" stroke="#fff4dc" stroke-width="1.1" opacity=".55" stroke-linecap="round"/>`; }
+    s += `<path d="M${P2(P(.6, 13 + RB * .96, .12))}L${P2(P(.5, 13 + RM * .96, 1.26))}" stroke="#fff4dc" stroke-width="1.1" opacity=".55" stroke-linecap="round"/>`; }
+  function rM(z) { return rB(z); }
   // the breeching, its right leg: from the ringbolt right of the port, down behind the right cheek to the cascabel
-  const cas = P(0, 13, -.1), rb = [[PORT[0] - 7, PORT[3] - 4], [PORT[2] + 7, PORT[3] - 4]];
+  const cas = P(0, 13, -.17), rb = [[PORT[0] - 7, PORT[3] - 4], [PORT[2] + 7, PORT[3] - 4]];
   const rope = d => `<path d="${d}" stroke="${rp.outline}" stroke-width="1.9" fill="none"/><path d="${d}" stroke="${rp.core}" stroke-width="1.1" fill="none"/><path d="${d}" stroke="${rp.lit}" stroke-width=".4" fill="none" opacity=".6" transform="translate(0 -.4)"/>`;
   s += rope(`M${P2(rb[1])}Q${f(cas[0] + 30)} ${f(cas[1] + 4)} ${f(cas[0] + 3)} ${f(cas[1] + 3.4)}`);
-  for (const sx of [-1, 1]) {
+  // the cheeks: the far (right) one first, the near (left) one, its outer face to us now, last
+  for (const sx of [1, -1]) {
     const xi = sx * 5.4, xo = sx * 9.6, x0 = Math.min(xi, xo), x1 = Math.max(xi, xo);
     s += box(x0, x1, 1.6, 12.6, .62, 1, 3 + sx) + box(x0, x1, 1.6, 10, .32, .62, 5 + sx) + box(x0, x1, 1.6, 7.4, 0, .32, 7 + sx);
     for (const [Y, Z] of [[3.4, 0], [5.8, 0], [8.6, .32], [11, .62]]) { const b = P((x0 + x1) / 2, Y, Z); s += K.shadeSphere(u, b[0], b[1], .5 * S * .6, L, 'iron', { outline: .25 }); }
-    { const a = P(x0 - .2, 12.9, .62), b = P(x1 + .2, 12.9, .8); s += `<rect x="${f(a[0])}" y="${f(b[1] - 1.4)}" width="${f(b[0] - a[0])}" height="${f(a[1] - b[1] + 2)}" fill="${iron.core}" stroke="${iron.outline}" stroke-width=".35"/>`; }
+    s += box(x0 - .2, x1 + .2, 12.6, 13.4, .62, .8, 40 + sx, {}, 'iron');                   // the capsquare over the trunnion
   }
   // the transom, the bed under the breech and the quoin on it, its handle towards us
   s += box(-5.4, 5.4, 1.6, 5.2, .34, .5, 9) + box(-4.6, 4.6, 5.2, 6.6, .05, .4, 13) + box(-2.8, 2.8, 6.6, 8.2, -.02, .2, 15);
   { const a = P(0, 7.4, -.02), b = P(0, 7.4, -.16); s += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.6, L, 'oak', { r1: 1.6, r2: 1.9, ell: .6, face: 2, outline: .35 }); }
   s += box(-12.8, 12.8, 1.6, 3.4, .04, .16, 17, { top: false });
   for (const sx of [-1, 1]) s += truck(sx * 11.6, .08, 2.8, 3.4, 30 + sx);
-  // the breeching from the ringbolts in the side round the cascabel, the breech end with its rings and the knob
-  { const c = P(0, 13, 0), r = 5.4 * S;
-    s += K.shadeSphere(u, c[0], c[1], r, L, 'iron', { outline: .5 });
-    s += `<circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r)}" fill="none" stroke="${iron.outline}" stroke-width=".8"/><circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r * .78)}" fill="none" stroke="${iron.lit}" stroke-width=".5" opacity=".5"/><circle cx="${f(c[0])}" cy="${f(c[1])}" r="${f(r * .66)}" fill="none" stroke="${iron.shadow}" stroke-width=".7" opacity=".8"/>`
-      // the daylight rim round the top of the breech
-      + `<path d="M${f(c[0] - r * .9)} ${f(c[1] - r * .42)}A${f(r)} ${f(r)} 0 0 1 ${f(c[0] + r * .9)} ${f(c[1] - r * .42)}" stroke="#fff0d0" stroke-width=".8" fill="none" opacity=".6"/>`; }
+  // the breech: the dome behind the base ring, lit along its top from the port; the base ring's moulding
+  { const c = P(0, 13, 0), r = RB * S * kAt(0, 13, 0);
+    s += K.shadeSphere(u, c[0], c[1], r, L, 'iron', { outline: .5 })
+      + band(.02, RB + .3, 1.6, iron.outline) + band(.025, RB + .3, .6, iron.lit, .55)
+      + `<path d="M${f(c[0] - r * .86)} ${f(c[1] - r * .5)}A${f(r)} ${f(r)} 0 0 1 ${f(c[0] + r * .7)} ${f(c[1] - r * .72)}" stroke="#fff0d0" stroke-width=".8" fill="none" opacity=".6"/>`; }
   // its left leg: taut, nearly straight at an angle from the cascabel up to the ringbolt left of the port
   s += rope(`M${P2(rb[0])}Q${f(lerp(rb[0][0], cas[0] - 3, .5))} ${f(lerp(rb[0][1], cas[1] + 3.4, .5) + 2.2)} ${f(cas[0] - 3)} ${f(cas[1] + 3.4)}`);
-  s += K.shadeSphere(u, cas[0], cas[1] + .4, 4.2, L, 'iron', { outline: .45 }) + `<path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 3.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 3.4)}" stroke="${rp.outline}" stroke-width="1.9" fill="none"/><path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 3.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 3.4)}" stroke="${rp.core}" stroke-width="1.1" fill="none"/>`;
-  return s;
+  // the cascabel: the neck out of the dome, the knob towards us, the breeching looped round the neck
+  { const n0 = P(0, 13, -.07), k = kAt(0, 13, -.17);
+    s += K.shadeCyl(u, n0[0], n0[1], cas[0], cas[1], 1.5 * S * k, L, 'iron', { ell: .8, face: 2, outline: .4 })
+      + `<path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 2.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 2.4)}" stroke="${rp.outline}" stroke-width="1.9" fill="none"/><path d="M${f(cas[0] - 3.4)} ${f(cas[1] + 2.4)}Q${f(cas[0])} ${f(cas[1] + 5.2)} ${f(cas[0] + 3.4)} ${f(cas[1] + 2.4)}" stroke="${rp.core}" stroke-width="1.1" fill="none"/>`
+      + K.shadeSphere(u, cas[0] + .4, cas[1] - .6, 2.4 * S * k * .9, L, 'iron', { outline: .45 }); }
+  return { svg: s, P };
 }
 
 /** The gunner: his back to us on the left, bent to the gun; the near (right) arm, sleeve rolled, reaches down over the

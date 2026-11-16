@@ -14,6 +14,12 @@
 // perspective with stanchions and a cap rail; the hooks bite on the cap rail with their lines taut to the enemy.
 // Light: the afternoon sun high on the left behind us (key: the marines' near sides, the white belts, the steel);
 // the sky (fill); the enemy's side faces away from the sun — dark, the boarders lit only along their left edges.
+// Print review: the marines were identical copies, almost none with arms, muskets hanging at the belt and running into
+// the backs of the men nearer to us, legs black tubes — now only the nearest man levels his bayonet over the rail at
+// the boarder (nobody stands in front of him); the rank behind him shoulders arms: each musket sloped on the left
+// shoulder behind the hat, the butt in the near fist at the end of a bent sleeve with its navy cuff, each man his own
+// slope, stride, step and head; legs with breeches bent at the knee, shaped black gaiters (garter strap, buttons) and
+// buckled shoes on the deck; the boarder's flung cutlass moved up, clear of the bayonets and of her mainmast.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -35,7 +41,7 @@ const LT = [-.75, -.66];                            // picture direction to the 
 const skel = { horizon: HZ, eye: EYE, light: 'sun high on the left behind us (key) + sky (fill); the enemy in her own shadow', items: [
   ['deck', 0, 280, 200, 190, 'our ship'], ['port bulwark', -10, 290, 130, 214, 'deck, from the left edge to the bow (vp 128, 72)'],
   ['enemy side + rigging', -10, 100, 140, 100, 'water, lashed alongside (her rail y ~74)'], ['marines', 30, 165, 100, 100, 'deck: one rank, X −1.3 m, z 2–12 m'],
-  ['bayonets', -10, 112, 120, 40, 'muskets in their hands, over our rail'], ['boarder on the rail', 22, 88, 50, 52, 'our cap rail (z 4.4), thrown back'],
+  ['bayonets', -10, 112, 120, 40, 'the nearest man\'s musket levelled over our rail; the rank\'s muskets shouldered, bayonets up'], ['boarder on the rail', 22, 88, 50, 52, 'our cap rail (z 4.4), thrown back'],
   ['boarders behind', 60, 75, 46, 32, 'the enemy rail'], ['hooks', 18, 96, 70, 14, 'bite on our cap rail, lines to the enemy'], ['mainmast', 122, 95, 12, 95, 'deck']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
