@@ -74,15 +74,18 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
     const R = rng(17);
     let bg = K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L, { r: 6.5, rays: false });
     for (const [x, y, w, h, sd, fr] of [[40, 30, 80, 8, 4, .2], [166, 40, 64, 7, 7, .3], [118, 52, 50, 5, 2, .5]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
-    bg += glow(u, SUN.x, SUN.y + 8, 120, 46, '#ffd890', .55);
+    { const vg = nid('vg', u); bg += `<defs>${linGrad(vg, 0, 0, 0, HZ, [[0, '#1a1030', .75], [.45, '#2a1838', .25], [1, '#2a1838', 0]])}</defs><rect x="-10" y="-10" width="220" height="${HZ + 10}" fill="url(#${vg})"/>`; }
+    bg += glow(u, SUN.x, SUN.y + 8, 120, 46, '#ffd890', .6) + glow(u, SUN.x, SUN.y, 30, 26, '#fff4d0', .8);
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .5, seed: 5, glitter: SUN.x });
     // the fleet from the horizon toward us, line behind line, each bigger; the nearer three lines fire one broadside
     // toward us and the pirates — a flash at every port but a few, smoke rolling out of each and drifting left
     let fleet = '';
+    const flags = [];
     LINES.forEach(([dep, n, x0, step, fire], li) => {
       let ships = '', smoke = '', flash = '';
       for (let i = 0; i < n; i++) { const x = x0 + i * step + (R() - .5) * step * .3, y = HZ + dep + (R() - .5) * dep * .12, s = sc(y), kind = (i + li) % 3 === 1 ? 'warship' : 'endeavour';
         ships += K.ship(u, L, { kind, x, y, scale: s, detail: s < .25 ? 'far' : 'mid', wake: s > .15, seed: 30 + li * 40 + i });
+        if (li === LINES.length - 1) flags.push({ x, y, s, kind, seed: 30 + li * 40 + i });
         if (fire) { const b = broadside(u, L, R, { x, y }, s, kind === 'warship' ? [[4, 13, -36, 30], [9.5, 13, -36, 30]] : [[3.6, 15, -38, 34.8], [8.8, 15, -38, 34.8], [14, 15, -38, 34.8]], { skip: .3, k: 1.5 });
           smoke += b.smoke; flash += b.flash; } }
       fleet += ships + smoke + flash;
@@ -91,6 +94,11 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
         + shafts(u, SUN.x, SUN.y, [[-40, 50, -40, 80], [-30, 150, 0, 170], [40, 180, 62, 180], [140, 180, 165, 175], [230, 130, 240, 160], [240, 50, 240, 70],
           [20, -20, 45, -30], [150, -30, 178, -20], [-30, 0, -40, 20], [230, 0, 240, 22]], '#fff0c0', .24);
     });
+    // the Company's colours over the nearest line: the same striped ensign on every mainmast, big enough to read
+    { const S = require('../kit/ship.cjs');
+      flags.forEach((p, i) => { const t = S.shipGeom(p.kind, { x: p.x, y: p.y, scale: p.s, seed: p.seed, detail: 'mid' }).masts[1].top;
+        fleet += `<path d="M${f(t[0])} ${f(t[1] + 1)}V${f(t[1] - 3.4)}" stroke="#2a1c10" stroke-width=".6"/><circle cx="${f(t[0])}" cy="${f(t[1] - 3.8)}" r=".6" fill="#c89a40"/>`
+          + ensign(u, t[0], t[1] - 3, 15, 8.6, i * 1.3); }); }
     bg += fleet;
     let mid = '';
     // the shot in flight toward the pirates: dark specks with faint trails out of the smoke
@@ -109,11 +117,6 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
     let fg = '';
     fg += K.ship(u, L, { kind: 'endeavour', x: WL.x, y: WL.y, scale: sc(WL.y), detail: 'near', wake: true, seed: 140 });
     fg += K.ship(u, L, { kind: 'endeavour', x: WR.x, y: WR.y, scale: sc(WR.y), detail: 'near', wake: true, seed: 141 });
-    // their great ensigns, streaming left from staffs over a truck
-    { const S = require('../kit/ship.cjs');
-      for (const [G, sd, w, ph, m] of [[WL, 140, 30, 0, 2], [WR, 141, 30, 1.7, 0]]) { const t = S.shipGeom('endeavour', { x: G.x, y: G.y, scale: sc(G.y), seed: sd, detail: 'near' }).masts[m].top;
-        fg += `<path d="M${f(t[0])} ${f(t[1] + 1)}V${f(t[1] - 5)}" stroke="#2a1c10" stroke-width="1"/><circle cx="${f(t[0])}" cy="${f(t[1] - 5.6)}" r=".9" fill="#c89a40"/>`
-          + ensign(u, t[0], t[1] - 4.4, w, w * .58, ph); } }
     // the sun's warmth over the near sea and the giants' bows; the haze between us and them
     fg += glow(u, SUN.x, HZ + 6, 80, 14, '#ffcf80', .3);
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 132, 0, 280, [[0, '#101828', 0], [.3, '#101828', .45], [1, '#080c18', .8]])}</defs><rect x="-10" y="132" width="220" height="160" fill="url(#${gl})"/>`; }

@@ -137,7 +137,7 @@ module.exports = { name: 'Кракен', kind: 'deck', status: 'accepted', cam: 
     // rail and down her near side into the water (they go on under her keel)
     // the left arm whips up high and comes down over her bow, its end wrapped along her near side; the right one,
     // lower and thicker, comes in across the sea and clamps her quarter, over the rail and down into the water
-    const armL = [[2, 146], [8, 118], [4, 94], [8, 70], [20, 50], [38, 38], [56, 36], [68, 44], [74, 58], [76, 74], [77, 90], [76.6, 100], [74.6, 107], [78, 112.6], [88, 115], [98, 113.4], [104, 109.4], [102.6, 104.6], [99, 104.4]];
+    const armL = [[2, 146], [8, 118], [5, 96], [10, 76], [22, 58], [38, 48], [56, 46], [68, 52], [74, 64], [76, 78], [77, 90], [76.6, 100], [74.6, 107], [78, 112.6], [88, 115], [98, 113.4], [104, 109.4], [102.6, 104.6], [99, 104.4]];
     const wL = [30, 27, 24, 21, 18, 15.5, 13.5, 12.4, 11.6, 11, 10.4, 9.8, 9.2, 8.4, 7.4, 6.2, 4.6, 2.8, 1.2];
     const armR = [[204, 146], [196, 120], [186, 106], [172, 98], [156, 95], [142, 97], [134.6, 101.6], [131.4, 108], [131, 114], [131.4, 121]];
     const wR = [34, 30, 26, 22, 19, 16.5, 14.6, 13.4, 12.8, 12.4];
