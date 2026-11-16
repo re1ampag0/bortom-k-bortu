@@ -58,19 +58,19 @@ export function grapnel(id: string, R: () => number, rope: boolean): string {
   const barb = (x: number, y: number, a: number, k = 1) => `<path d="M${f(x)} ${f(y)}l${f(Math.cos(a) * 1.6 * k)} ${f(Math.sin(a) * 1.6 * k)}l${f(-Math.sin(a) * 0.9 * k)} ${f(Math.cos(a) * 0.9 * k)}Z" fill="#2c2926" stroke="${dark}" stroke-width=".14"/>`;
   let out = `<defs>${lin(id + 'i', [[0, '#77736c'], [0.4, '#45413c'], [1, '#161412']], 0, 0, 1, 1)}</defs>`;
   // the prong behind (dark, thin), the shank, the prongs in profile, the crown, the prong towards us
-  out += `<path d="M.3 -3.4C1.4 -5.2 2.4 -6.6 2.2 -8.6" fill="none" stroke="#0e0d0c" stroke-width=".9" stroke-linecap="round"/>${barb(2.1, -8.4, -2.1, 0.7)}`;
+  out += `<path d="M.3 -3.4C1.8 -5.6 3.4 -7.6 3.2 -10.4" fill="none" stroke="#0e0d0c" stroke-width="1.1" stroke-linecap="round"/>${barb(3.1, -10.2, -2.1, 0.9)}`;
   out += `<path d="M-.6 -3.2L-.48 -15H.48L.6 -3.2Z" fill="${iron}" stroke="${dark}" stroke-width=".2"/>`;
   out += `<ellipse cx="0" cy="-16.7" rx="1.55" ry="1.75" fill="none" stroke="${dark}" stroke-width="1"/><ellipse cx="0" cy="-16.7" rx="1.55" ry="1.75" fill="none" stroke="#5e5a54" stroke-width=".45" stroke-dasharray="2.2 1.4"/>`;
-  out += prong('M-.2 -3C-3.2 -2.2 -6.2 -3.4 -6.8 -7.6', 1.2) + barb(-6.85, -7.4, -1.9) + prong('M.2 -3C3.2 -2.2 6.2 -3.4 6.8 -7.6', 1.2) + barb(6.85, -7.4, -1.25);
+  out += prong('M-.2 -3C-4.4 -1.9 -8.4 -3.6 -9.2 -9.6', 1.5) + barb(-9.25, -9.4, -1.9, 1.3) + prong('M.2 -3C4.4 -1.9 8.4 -3.6 9.2 -9.6', 1.5) + barb(9.25, -9.4, -1.25, 1.3);
   out += `<circle cx="0" cy="-3" r="1.3" fill="${iron}" stroke="${dark}" stroke-width=".2"/>`;
-  out += prong('M-.3 -2.4C-1 -.9 -2.2 -.4 -3.2 -1.3', 1.25) + `<path d="M-3.6 -1L-2.6 -2.7L-2.4 -1Z" fill="#2c2926" stroke="${dark}" stroke-width=".14"/>`;
+  out += prong('M-.3 -2.4C-1.2 -.6 -3 -.2 -4.4 -1.6', 1.45) + `<path d="M-5 -1.1L-3.7 -3.4L-3.4 -1.1Z" fill="#2c2926" stroke="${dark}" stroke-width=".14"/>`;
   // rust: blooms on the crown and the prongs, streaks down the shank
   out += `<path d="M-.2 -6v2.4M.2 -11v1.8" stroke="#8a4a20" stroke-width=".35" stroke-opacity=".7"/><circle cx="-4.6" cy="-3.4" r=".55" fill="#8a4a20" fill-opacity=".7"/><circle cx="5.2" cy="-4" r=".45" fill="#a0582a" fill-opacity=".6"/><circle cx=".5" cy="-3.3" r=".5" fill="#7a3c18" fill-opacity=".7"/>`;
   if (rope) {
     // the stub: thick and dark at the eye, rotting to loose strands, drooping down to the sand at the right
-    const d = 'M1.2 -17.4C3.6 -19.8 7.4 -19 8.6 -15.6C9.5 -13 9.2 -9 10.8 -6.2';
+    const d = 'M1.2 -17.4C3.4 -19.4 6.2 -18.8 6.8 -16.6C7.3 -14.8 6.8 -13.8 7.6 -12.4';
     out += `<path d="${d}" fill="none" stroke="#2c241a" stroke-width="1.5" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#6e6250" stroke-width="1"/><path d="${d}" fill="none" stroke="#3a3024" stroke-width="1" stroke-dasharray=".4 .6"/>`;
-    for (let i = 0; i < 7; i++) { const a = 1.2 + (R() - 0.5) * 1.6, l = 1.6 + R() * 2.4; out += `<path d="M10.8 -6.2q${f(Math.cos(a) * l * 0.5 + (R() - 0.5))} ${f(Math.sin(a) * l * 0.5)} ${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)}" fill="none" stroke="${R() < 0.5 ? '#6e6250' : '#4a3e2e'}" stroke-width="${f(0.18 + R() * 0.16)}" stroke-linecap="round"/>`; }
+    for (let i = 0; i < 7; i++) { const a = 1.2 + (R() - 0.5) * 1.6, l = 1.2 + R() * 1.8; out += `<path d="M7.6 -12.4q${f(Math.cos(a) * l * 0.5 + (R() - 0.5))} ${f(Math.sin(a) * l * 0.5)} ${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)}" fill="none" stroke="${R() < 0.5 ? '#6e6250' : '#4a3e2e'}" stroke-width="${f(0.18 + R() * 0.16)}" stroke-linecap="round"/>`; }
     out += `<path d="M5.6 -19.1l.5 1.1M8.3 -16.6l.9 .5" stroke="#9a8c70" stroke-width=".25" stroke-opacity=".7"/>`;
   }
   return out;
