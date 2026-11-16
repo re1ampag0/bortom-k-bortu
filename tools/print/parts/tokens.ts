@@ -49,6 +49,7 @@ const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/tokens.json'), 'utf
     effects: { title: string; cards: string[] }; long: { title: string; cards: string[]; text: string };
   };
   marksPage: { title: string; lead: string; ships: string; marks: string; uses: string[]; sweep: string };
+  strips: { title: string; lead: string };
 };
 const fill = (s: string, v: Record<string, number | string>) => s.replace(/\{(\w+)\}/g, (_, k: string) => String(v[k] ?? `{${k}}`));
 
@@ -306,9 +307,9 @@ function shipTokensHtml(pics: Record<string, string> | null): string {
     // new: the kit ship fills the picture; the letter moves into the band, left of the name, off the sails
     if (pics) return `<rect x="${x}" y="0" width="${t}" height="${t}" fill="${PAPER}"/><image href="${pics[s.code]}" x="${x}" y="0" width="${PIC.w}" height="${PIC.h}" preserveAspectRatio="none"/><rect x="${x}" y="21.4" width="${t}" height="${t - 21.4}" fill="${s.color}"/>`
       + `<path d="M${x} 21.4H${x + t}" stroke="${BRASS_LIGHT}" stroke-width=".35"/>`
-      + `<circle cx="${x + 4.3}" cy="25.7" r="3.1" fill="${darken(s.color, 0.25)}" stroke="${BRASS_LIGHT}" stroke-width=".3"/>`
-      + `<text x="${x + 4.3}" y="27.1" text-anchor="middle" font-family="Alegreya SC" font-weight="800" font-size="4.1" fill="#fff4d8">${esc(s.code)}</text>`
-      + `<text x="${x + t / 2 + 3.4}" y="26.85" text-anchor="middle" font-family="Alegreya SC" font-weight="700" font-size="3.5" letter-spacing=".12" fill="#fff4d8">${esc(s.nick)}</text>`;
+      + `<circle cx="${x + 3.9}" cy="25.7" r="2.9" fill="${darken(s.color, 0.25)}" stroke="${BRASS_LIGHT}" stroke-width=".3"/>`
+      + `<text x="${x + 3.9}" y="27.1" text-anchor="middle" font-family="Alegreya SC" font-weight="800" font-size="3.9" fill="#fff4d8">${esc(s.code)}</text>`
+      + `<text x="${x + 18.3}" y="26.85" text-anchor="middle" font-family="Alegreya SC" font-weight="700" font-size="${Math.min(3.4, 19 / (s.nick.length * 0.62))}" letter-spacing=".08" fill="#fff4d8">${esc(s.nick)}</text>`;
     return `<rect x="${x}" y="0" width="${t}" height="${t}" fill="${PAPER}"/><rect x="${x}" y="21.4" width="${t}" height="${t - 21.4}" fill="${s.color}"/>`
       + `<path d="M${x} 21.4H${x + t}" stroke="${BRASS_LIGHT}" stroke-width=".35"/>`
       + bigShip(DECK_KEY[s.code], x + 16.2, 20.2, 0.172)
@@ -343,10 +344,10 @@ function marksHtml(): { html: string; cuts: string } {
 const markIcon = (d: number) => `<svg viewBox="0 0 ${TOKEN.marker} ${TOKEN.marker}" style="width:${mm(d)};height:${mm(d)};flex:none;display:inline-block;vertical-align:middle">${markSvg(0, 0)}</svg>`;
 
 // ---- pages
-export function tokenPages(ctx: Ctx, pics: Record<string, string> | null = null): PageSpec[] {
+export function tokenPages(ctx: Ctx, pics: Record<string, string> | null = null, strips = false): PageSpec[] {
   const econ = data.econ as { income: number; first_income: number; cap: number; second_start: number }, rules = data.rules as Record<string, number>;
   const nums = { income: econ.income, first: econ.first_income, cap: econ.cap, start: econ.second_start, firstGame: rules.firstGameSecondStart };
-  const pd = TOKEN.powder, fr = TOKEN.fire, coinD = 15, of = 3, page = (n: number) => fill(TXT.page, { n, of });
+  const pd = TOKEN.powder, fr = TOKEN.fire, coinD = 15, of = strips ? 4 : 3, page = (n: number) => fill(TXT.page, { n, of });
   const cells = (g: { cols: number; rows: number; x: number; y: number }, size: number, count: number, inner: (i: number) => string) => {
     if (g.cols * g.rows !== count) throw new Error(`token grid ${g.cols} × ${g.rows}, expected ${count}`);
     return box(g.x, g.y, g.cols * size, g.rows * size, Array.from({ length: count }, (_, i) => box((i % g.cols) * size, Math.floor(i / g.cols) * size, size, size, inner(i), 'tk-tok')).join(''), '', `background:${PAPER}`);
@@ -373,7 +374,10 @@ export function tokenPages(ctx: Ctx, pics: Record<string, string> | null = null)
     + cap(SHIPS.x, SHIPS.y - CAP, fill(mp.ships, { n: ships().length })) + shipTokensHtml(pics)
     + cap(MARKS.x, MARKS.y - CAP, fill(mp.marks, { n: TABLE.marks, spare: TABLE.spareMarks })) + marks.html + uses + foot(3, of)
     + cutLayer(gridCuts(SHIPS.x, SHIPS.y, ships().length, 1, st, st) + marks.cuts);
-  return [{ html: page1 }, { html: page2 }, { html: page3 }];
+  const pages: PageSpec[] = [{ html: page1 }, { html: page2 }, { html: page3 }];
+  // concept B with the counters off the board: the four strips «Осталось карт» / «Реакций сыграно» (cut along the lines)
+  if (strips) pages.push(counterStripsPage(head(TXT.strips.title, TXT.strips.lead, page(4)), foot(4, of)));
+  return pages;
 }
 
 export const TOKENS_CSS = `
@@ -410,8 +414,6 @@ export const TOKENS_CSS = `
 
 export async function build(ctx: Ctx): Promise<Part[]> {
   const pics = (ctx.opts.tokens ?? 'new') === 'new' ? await kitTokenPics(ctx) : null;
-  const pages = tokenPages(ctx, pics);
-  // concept B with the counters off the board: the four strips «Осталось карт» / «Реакций сыграно» (cut along the lines)
-  if ((ctx.opts.board ?? 'b') === 'b' && ctx.opts.counters === 'strip') pages.push(counterStripsPage());
+  const pages = tokenPages(ctx, pics, (ctx.opts.board ?? 'b') === 'b' && ctx.opts.counters === 'strip');
   return [{ file: '04-tryumy-zhetony', title: TXT.partTitle, css: TOKENS_CSS, pages }];
 }

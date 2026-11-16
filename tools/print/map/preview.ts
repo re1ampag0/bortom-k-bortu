@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { launch } from '../kit';
 import { chartPoint, chartSvg, type ChartStyle } from './chart';
-import { rasterJpeg } from './raster';
+import { chartLabelIssues, rasterJpeg } from './raster';
 
 const args = process.argv.slice(2), opt = (n: string, d: string) => { const i = args.indexOf(n); return i < 0 ? d : args[i + 1]; };
 const style = opt('--style', 'plain') as ChartStyle, dpi = Number(opt('--dpi', '110')), out = opt('--out', 'out/print/obrazcy/karta.jpg');
@@ -22,6 +22,9 @@ const svg = chartSvg({
 });
 const browser = await launch();
 const res = await rasterJpeg(browser, 'map-preview-' + style, svg, W, H, dpi);
+const issues = await chartLabelIssues(browser, svg, W, H);
+console.log(`chart lettering: ${issues.length ? issues.join('; ') : 'no overlaps'}`);
+if (issues.length) process.exitCode = 1;
 await browser.close();
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.copyFileSync(res.file, out);

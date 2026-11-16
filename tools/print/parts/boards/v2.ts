@@ -1,19 +1,22 @@
 // 03 — the ship boards, concept B v2 «стол капитана» (boards v2 task): the whole sheet is one engraved sea chart of the
 // Caribbean (tools/print/map/chart.ts) with the ship drawn on it; what is read during play lies on plates over the chart:
-// paper slips for the tracks, a brass ruler for the counters, a pinned log-book note for the abilities, a nest for the Legend
-// card (63 × 88 + 1.5 mm round it). The chart is calmed under every plate. The cells, numbers and words are vector.
-// counters 'board' — «Осталось карт» and «Реакций сыграно» on a brass ruler on the board; 'strip' — on a separate strip
-// per player (counterStripsPage, sheet 04), the room goes to the ship.
+// paper slips for the tracks, brass rulers for the counters, a pinned log-book page for the abilities, a nest for the Legend
+// card (63 × 88 + 1.5 mm round it). The chart is calmed only under the plates; the cells, numbers and words are vector.
+// counters 'board' — «Осталось карт» and «Реакций сыграно» on brass rulers on the board; 'strip' — on a strip per player
+// (counterStripsPage, sheet 04) and the room goes to the chart and the ship.
+// Every plate is marked data-plate, every word data-in="<its plate>": tools/print/check-layout.ts checks that each word lies
+// inside its plate with 1.5 mm to spare and touches no other word and no other plate (cells, icons, slots).
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
 import { HERE, ROOT, data, esc, rich, type Ctx, type PageSpec } from '../../kit';
 import { BOARD, trackCells, type Ship } from '../../layout';
 import { DECK_KEY } from '../../colors';
-import { chartPoint, chartSvg, type ChartOpts, type ChartStyle, type Rect } from '../../map/chart';
+import { CHART_NOTES, chartPoint, chartSvg, type ChartOpts, type ChartStyle, type Rect } from '../../map/chart';
 import { rasterJpeg } from '../../map/raster';
+import { centerFor } from '../../map/proj';
 import { icon, iconSvg, TONE, type IconName, type IconTone } from '../icons';
-import { basePalette, type Pal, type ShipKey, type TrackKey } from './frame';
+import { basePalette, measureMissing, widthOf, type Pal, type ShipKey, type TO, type TrackKey } from './frame';
 
 export type Counters = 'board' | 'strip';
 const require = createRequire(import.meta.url);
@@ -22,12 +25,12 @@ const K = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as {
   shipBox(kind: string, o: { x: number; y: number; scale: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number }; LIGHTS: Record<string, unknown>;
 };
 
-// ---- texts (boards.json: frame — the words of concept B, v2 — what is new) ----
+// ---- texts (boards.json → frame) ----
 interface FrameText {
   tracks: Record<TrackKey, { name: string; note: string; zero?: string; flip?: string; start?: string; max?: string; kraken?: string; spend?: string }>;
   start: string; volley: string[]; effects: string; fires: { title: string; note: string }; underwater: { title: string; note: string }; surfaced: { title: string; note: string };
   abilities: string; once: string; heart: Record<string, string>; plans: string; legend: { title: string; note: string; played: string };
-  cards: { title: string }; reactions: { title: string }; strips: { lead: string };
+  cards: { title: string }; reactions: { title: string };
 }
 const TXT = (JSON.parse(fs.readFileSync(path.join(HERE, 'text/boards.json'), 'utf8')) as { frame: FrameText }).frame;
 const RULES = data.rules as Record<string, number>;
@@ -39,61 +42,86 @@ const richNb = (s: string) => rich(nb(s));
 const PAGE = { w: 297, h: 210 };
 const r = (n: number) => Math.round(n * 100) / 100;
 const pt = (n: number) => n * 25.4 / 72;
-/** a rough width of a line of text (mm): the plates are sized with it, so it errs wide */
-const tw = (s: string, size: number, k = 0.5) => s.length * pt(size) * k;
+const C = BOARD.cell;
 const ORDER: TrackKey[] = ['sails', 'souls', 'crew', 'guns', 'hull'];
-/** one row from the top of its plate: label baseline, ruler (numbers) baseline, cell top, caption baseline, plate height */
-const ROW = { label: 6.4, num: 11.2, cell: 12.8, cap: 29, h: 31 };
-const X0 = 13.5, PAD = 2.6;
-const LEGEND_NEST = { x: 217, y: 12, w: 66, h: 91 };
-const NOTE = { x: 212.5, y: 110.5, w: 74, h: 87.5 };
+/** one row from the top of its slip: label baseline, number baseline, cell top, caption baseline, height (the words' boxes
+ *  — ascent to descent — keep 1.5 mm from the slip's edge and clear of each other) */
+const ROW = { label: 6.6, num: 12.0, cell: 13.0, cap: 29.1, h: 31.8 };
+const X0 = 13.5, PAD = 2.6, ROW_GAP = 0.6, TOP = 37.6, BOTTOM = 200, MID_R = 208.3;
+const NEST = { x: 217.5, y: 11.5, w: 66, h: 91 };
+const LOG = { x: 211.5, y: 104.5, w: 75.5, h: 95.5 };
+/** the log's ruled lines: line height, the body size, the pad over the first line (baseline = top + LH/2 + 0.33 em) */
+const LOGT = { lh: 4.1, size: 9.3, top: 3.4, side: 7.2 };
+/** the log's type: the largest size (9.3 pt down to 8 pt) at which the ship's words fit, line height 1.25 em */
+function logType(ship: Ship): { size: number; lh: number } {
+  const width = LOG.w - 2 * LOGT.side - 0.5, room = LOG.h - LOGT.top - 1.8, f: TO = { font: 'Alegreya', w: 500 };
+  const blocks = [...ship.abilities.map(a => a.text.replace(/<[^>]+>/g, '')), TXT.heart[ship.code]?.replace(/<[^>]+>/g, '') ?? '', ship.souls != null ? `${TXT.tracks.souls.name}: ${TXT.tracks.souls.spend}` : ''].filter(Boolean);
+  for (let size = 9.3; size >= 8; size = Math.round((size - 0.1) * 10) / 10) {
+    const lh = Math.round(pt(size) * 1.25 * 100) / 100;
+    let lines = 1 + ship.abilities.length; // the heading, a name line per ability
+    for (const t of blocks) lines += Math.ceil(W(t, size, f) * 1.2 / width) + 1;
+    lines += 2 * ship.abilities.filter(a => /раз в ход/i.test(a.text)).length; // the «раз в ход» cell narrows three lines
+    if ((lines - 1) * lh <= room) return { size, lh };
+  }
+  return { size: 8, lh: Math.round(pt(8) * 1.25 * 100) / 100 };
+}
 const ICON_TRACK: Record<TrackKey, IconName> = { sails: 'sails', souls: 'souls', crew: 'crew', guns: 'guns', hull: 'hull' };
 
 // ---- the look of each ship: which part of the chart, how it is kept, the plates and the inks ----
+type ShipPlace = { anchor: { lon: number; lat: number; x: number; y: number }; ship: [number, number, number, number]; rose: [number, number, number]; labels?: Record<string, { x: number; y: number }>; note?: [number, number] };
 interface Look {
-  chart: ChartStyle; center: [number, number]; mmPerDeg: number; tone: IconTone;
+  chart: ChartStyle; mmPerDeg: number; tone: IconTone; board: ShipPlace; strip: ShipPlace;
   paper: string; paperLine: string; ink: string; soft: string; cell: string; cellDeep: string;
-  brass: [string, string, string]; note: string; noteLine: string; pin: string;
-  /** the ship on the chart: centre x, waterline y (mm) in 'board' and in 'strip' and its biggest width */
-  ship: { board: [number, number, number, number]; strip: [number, number, number, number] };
-  extra?: (o: ChartOpts, at: (lon: number, lat: number) => { x: number; y: number }) => Partial<ChartOpts>;
+  brass: [string, string, string]; note: string; noteLine: string; margin: string; pin: string;
+  notes?: (at: (lon: number, lat: number) => { x: number; y: number }, p: ShipPlace) => Partial<ChartOpts>;
 }
 const LOOKS: Record<ShipKey, Look> = {
   pearl: {
-    chart: 'pearl', center: [-73.55, 21.7], mmPerDeg: 50, tone: TONE.sepia,
+    chart: 'pearl', mmPerDeg: 42, tone: TONE.sepia,
+    board: { anchor: { lon: -72.78, lat: 20.12, x: 186, y: 60 }, ship: [133, 72, 60, 36], rose: [113, 104, 8], labels: { 'Isla Española': { x: 176, y: 97 } }, note: [111, 89] },
+    strip: { anchor: { lon: -72.78, lat: 20.12, x: 186, y: 58 }, ship: [133, 74, 66, 40], rose: [116, 150, 12], labels: { 'Isla Española': { x: 176, y: 110 }, Tortuga: { x: 186, y: 47 } }, note: [111, 92] },
     paper: '#f1e4c2', paperLine: '#5a4024', ink: '#2a1c0c', soft: '#4f3d28', cell: '#f7eed6', cellDeep: '#e3d1a6',
-    brass: ['#f3d68c', '#c4954a', '#5e4214'], note: '#f4ead0', noteLine: '#b9a47a', pin: '#7a1c14',
-    ship: { board: [153, 99, 104, 70], strip: [153, 150, 110, 118] },
-    extra: (o, at) => {
-      const t = at(-72.8, 20.12);
-      return { cross: { x: t.x - 6, y: t.y - 1 }, course: [{ x: 120, y: 111 }, { x: 160, y: 108 }, { x: 205, y: 112 }], note: [{ x: 128, y: 107.5, text: 'здесь Пороху не жалеть', rot: -3, size: 4.2 }] };
-    }
+    brass: ['#f3d68c', '#c4954a', '#5e4214'], note: '#f4ead0', noteLine: '#b9a47a', margin: '#b0503a', pin: '#7a1c14',
+    notes: (at, p) => { const t = at(-72.78, 20.12); return { cross: { x: t.x + 2, y: t.y + 1 }, note: p.note ? [{ x: p.note[0], y: p.note[1], text: CHART_NOTES.pearl[0], rot: -6, size: 4 }] : [] }; }
   },
   revenge: {
-    chart: 'revenge', center: [-75.6, 18.6], mmPerDeg: 40, tone: TONE.red,
+    chart: 'revenge', mmPerDeg: 36, tone: TONE.red,
+    board: { anchor: { lon: -76.8, lat: 18.1, x: 170, y: 92 }, ship: [140, 62, 64, 34], rose: [196, 48, 9] },
+    strip: { anchor: { lon: -76.8, lat: 18.1, x: 170, y: 110 }, ship: [148, 70, 76, 44], rose: [120, 150, 12] },
     paper: '#f2e2c0', paperLine: '#5a2416', ink: '#2e1a10', soft: '#4f3326', cell: '#f8ecd2', cellDeep: '#e6cca0',
-    brass: ['#f3d68c', '#c4954a', '#5e4214'], note: '#f5e8cc', noteLine: '#c4a07a', pin: '#1a1a1a',
-    ship: { board: [152, 103, 108, 76], strip: [152, 150, 110, 120] }
+    brass: ['#f3d68c', '#c4954a', '#5e4214'], note: '#f5e8cc', noteLine: '#c4a07a', margin: '#9a1f14', pin: '#1a1a1a'
   },
   endeavour: {
-    chart: 'endeavour', center: [-77.0, 18.1], mmPerDeg: 52, tone: TONE.navy,
+    chart: 'endeavour', mmPerDeg: 40, tone: TONE.navy,
+    board: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 96 }, ship: [140, 66, 64, 36], rose: [198, 46, 9] },
+    strip: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 120 }, ship: [148, 72, 76, 44], rose: [120, 154, 12] },
     paper: '#f8f1de', paperLine: '#1f2a3a', ink: '#1a2232', soft: '#33405a', cell: '#fbf6e8', cellDeep: '#e6dcc0',
-    brass: ['#f6dc94', '#c99a46', '#5e4214'], note: '#fbf6e6', noteLine: '#a8b8cc', pin: '#a8812e',
-    ship: { board: [152, 103, 108, 76], strip: [152, 150, 110, 120] }
+    brass: ['#f6dc94', '#c99a46', '#5e4214'], note: '#fbf6e6', noteLine: '#a8b8cc', margin: '#a03a2a', pin: '#a8812e'
   },
   dutch: {
-    chart: 'dutch', center: [-70.6, 18.2], mmPerDeg: 44, tone: TONE.verdigris,
+    chart: 'dutch', mmPerDeg: 36, tone: TONE.verdigris,
+    board: { anchor: { lon: -68.0, lat: 18.4, x: 190, y: 100 }, ship: [0, 0, 0, 0], rose: [200, 50, 8] },
+    strip: { anchor: { lon: -68.0, lat: 18.4, x: 190, y: 150 }, ship: [158, 150, 80, 40], rose: [196, 118, 9] },
     paper: '#e9e4c8', paperLine: '#22322a', ink: '#1c2620', soft: '#33443a', cell: '#f0ecd6', cellDeep: '#d4d0b0',
-    brass: ['#d8cf98', '#8f8a52', '#3a3a22'], note: '#ecebd4', noteLine: '#9aa890', pin: '#2a3a32',
-    ship: { board: [152, 103, 108, 76], strip: [152, 150, 110, 120] }
+    brass: ['#d8cf98', '#8f8a52', '#3a3a22'], note: '#ecebd4', noteLine: '#9aa890', margin: '#4a6a58', pin: '#2a3a32'
   }
 };
+
+// ---- measured words ----
+const W = (s: string, size: number, o: TO = {}) => widthOf(s, size, o);
+const LABEL: TO = { font: 'Alegreya SC', w: 800, ls: '.03em' }, NOTE_O: TO = { font: 'Alegreya', italic: true, w: 500 }, NUM: TO = { w: 800 }, CAP_O: TO = { font: 'Alegreya', italic: true, w: 500 };
+const PTR: TO = { w: 800 };
 
 // ---- the layout ----
 interface Cell { n: number; x: number; y: number; start: boolean }
 interface Row { key: TrackKey; x: number; y: number; w: number; cells: Cell[]; start: number; volley: { x: number; y: number }[] }
-interface Plan { rows: Row[]; header: Rect; effects: Rect; fires: Rect; plans: Rect | null; cards: Rect | null; reactions: Rect | null; ship: [number, number, number, number] }
-function trackDefs(ship: Ship): { key: TrackKey; cells: number[]; start: number }[] {
+interface Plan {
+  rows: Row[]; header: Rect; effects: Rect; plans: Rect | null; fires: Rect; dutch: Rect | null; cards: Rect | null; reactions: Rect | null;
+  /** the free part of the middle where the chart shows and the ship sails (null: no room) */
+  window: Rect | null;
+}
+const volleyCap = (ship: Ship, i: number) => fill(TXT.volley[i], { cost: Number(ship.volleyCost), coin: '' }).replace(/\s+/g, ' ').trim();
+function trackDefs(ship: Ship) {
   const t: Partial<Record<TrackKey, { key: TrackKey; cells: number[]; start: number }>> = {
     hull: { key: 'hull', cells: trackCells(ship.hull), start: ship.hull },
     sails: { key: 'sails', cells: trackCells(ship.sails), start: ship.sails },
@@ -103,39 +131,66 @@ function trackDefs(ship: Ship): { key: TrackKey; cells: number[]; start: number 
   if (ship.souls != null) t.souls = { key: 'souls', cells: trackCells(ship.souls), start: ship.start_souls ?? 0 };
   return ORDER.map(k => t[k]).filter((x): x is { key: TrackKey; cells: number[]; start: number } => !!x);
 }
-function layoutV2(ship: Ship, counters: Counters, look: Look): Plan {
-  const defs = trackDefs(ship), short = defs.filter(d => d.key !== 'hull'), hull = defs.find(d => d.key === 'hull')!;
-  const rows: Row[] = [];
+/** the header's width from its words: the medallion, the name and the side tag, the captain, the motto */
+function headerW(ship: Ship): number {
+  const name = W(ship.name, 25, { font: 'Alegreya', w: 800 }), side = W(ship.side, 8, { w: 800, ls: '.14em' }) + 8.2;
+  return Math.max(23 + name + 5 + side + 3, 23 + W(ship.captain, 11, { font: 'Alegreya', italic: true }) + 3, 23 + W(ship.motto, 9, { font: 'Alegreya', italic: true, w: 400 }) + 3);
+}
+const ptrW = (s: string) => 13.2 + W(s, 8.5, PTR) + PAD;
+function layoutV2(ship: Ship, counters: Counters): Plan {
+  const pitch = ship.souls != null ? 13.6 : 14, defs = trackDefs(ship), short = defs.filter(d => d.key !== 'hull'), hull = defs.find(d => d.key === 'hull')!;
   const mk = (d: { key: TrackKey; cells: number[]; start: number }, y: number): Row => {
-    const cells = d.cells.map((n, i) => ({ n, x: X0 + PAD + i * BOARD.pitch, y: y + ROW.cell, start: n === d.start }));
+    const cells = d.cells.map((n, i) => ({ n, x: X0 + PAD + i * pitch, y: y + ROW.cell, start: n === d.start }));
     const volley: { x: number; y: number }[] = [];
-    let x1 = cells[cells.length - 1].x + BOARD.cell;
-    if (d.key === 'guns') for (let i = 0; i < (ship.souls != null ? 2 : 1); i++) { const vx = x1 + (i ? 9 : 6); volley.push({ x: vx, y: y + ROW.cell }); x1 = vx + BOARD.cell; }
-    const T = TXT.tracks[d.key], label = 9 + tw(T.name, 14, 0.66) + (T.note ? 3 + tw(T.note, 9, 0.46) : 0);
-    return { key: d.key, x: X0, y, w: Math.max(x1 - X0 + PAD, label + PAD), cells, start: d.start, volley };
+    let x1 = cells[cells.length - 1].x + C;
+    if (d.key === 'guns') for (let i = 0; i < (ship.souls != null ? 2 : 1); i++) {
+      const vx = x1 + (i ? 9 : 6); volley.push({ x: vx, y: y + ROW.cell });
+      // the caption over a Volley cell may stand wider than the cell: the slip takes it in
+      x1 = Math.max(vx + C, vx + C / 2 + (W(volleyCap(ship, i), 8.5, NUM) + (i ? 0 : 4.2)) / 2);
+    }
+    const T = TXT.tracks[d.key], label = PAD + 9.6 + W(T.name, 14, LABEL) + (T.note ? 2.4 + W(T.note, 9, NOTE_O) : 0);
+    let cap = 0;
+    if (d.key === 'souls') cap = Math.max(T.max ? W(fill(T.max, { n: d.cells[d.cells.length - 1] }), 8, CAP_O) : 0);
+    return { key: d.key, x: X0, y, w: Math.max(x1 - X0 + PAD, label + PAD, cap), cells, start: d.start, volley };
   };
-  const top = 36, hullY = 166.5, gap = short.length > 3 ? 0 : 1;
-  short.forEach((d, i) => rows.push(mk(d, top + i * (ROW.h + gap))));
-  rows.push(mk(hull, hullY));
-  const lastShort = rows[short.length - 1], firesY = lastShort.y + ROW.h + 2;
+  const rows: Row[] = [];
+  short.forEach((d, i) => rows.push(mk(d, TOP + i * (ROW.h + ROW_GAP))));
+  const hullRow = mk(hull, BOTTOM - ROW.h); rows.push(hullRow);
+  const fires = { x: X0, y: 0, w: 3 * BOARD.fireSlot + 2 * 3 + 2 * PAD, h: 7.3 + BOARD.fireSlot + 1.6 };
+  const shortEnd = TOP + short.length * (ROW.h + ROW_GAP), firesLeft = shortEnd + fires.h <= hullRow.y - ROW_GAP;
+  if (firesLeft) fires.y = shortEnd;
+  const leftR = Math.max(...rows.filter(rw => rw.key !== 'hull').map(rw => rw.x + rw.w), firesLeft ? fires.x + fires.w : 0);
+  const header: Rect = { x: 12, y: 11.5, w: headerW(ship), h: 25.1 };
+  const px = header.x + header.w + 3.5, pw = Math.min(NEST.x - 3.5 - px, Math.max(ptrW(TXT.effects), ship.code === 'Ж' ? ptrW(fill(TXT.plans, { n: RULES.plansMax })) : 0));
+  // the middle, between the left column and the right one, above the Hull (where the Hull is shorter, down to the bottom)
+  const mx = leftR + 3.5, mw = MID_R - mx, midBottom = hullRow.y - 1.5;
+  let y = TOP;
+  if (!firesLeft) { fires.x = MID_R - fires.w; fires.y = y; y += fires.h + 1.5; }
+  let dutch: Rect | null = null;
+  if (ship.souls != null) { dutch = { x: MID_R - 107, y, w: 107, h: 43.8 }; y += dutch.h + 1.5; }
+  const cards = counters === 'board' ? { x: MID_R - (2 * PAD + 6 * 14 + C), y: midBottom - 26.5, w: 2 * PAD + 6 * 14 + C, h: 26.5 } : null;
+  const reW = 2 * PAD + 7.4 + Math.max(...TXT.reactions.title.split(' ').map(t => W(t, 11, LABEL))) + 3 + 3 * 14 + C;
+  const reactions = counters === 'board' ? { x: MID_R - reW, y: cards!.y - 1.5 - 20.5, w: reW, h: 20.5 } : null;
+  const winBottom = reactions ? reactions.y - 1.5 : midBottom;
+  const window = winBottom - y >= 30 ? { x: mx, y, w: mw, h: winBottom - y } : null;
   return {
-    rows,
-    header: { x: 12, y: 11.5, w: 140, h: 22 },
-    effects: { x: 154, y: 12.5, w: Math.min(60, 22 + tw(TXT.effects, 8.5, 0.5)), h: 12 },
-    fires: { x: X0, y: firesY, w: 3 * BOARD.fireSlot + 2 * 3 + 2 * PAD, h: 8.8 + BOARD.fireSlot + 2.2 },
-    plans: ship.code === 'Ж' ? { x: NOTE.x + 2, y: NOTE.y + NOTE.h - 14, w: NOTE.w - 4, h: 11 } : null,
-    cards: counters === 'board' ? { x: 99, y: 116.5, w: 110, h: 27.5 } : null,
-    reactions: counters === 'board' ? { x: 99, y: 146, w: 110, h: 18.5 } : null,
-    ship: counters === 'board' ? look.ship.board : look.ship.strip
+    rows, header, fires, dutch, cards, reactions, window,
+    effects: { x: px, y: 11.5, w: pw, h: 11 },
+    plans: ship.code === 'Ж' ? { x: px, y: 23.5, w: pw, h: 11 } : null
   };
 }
 
 // ---- SVG pieces ----
 let UID = 0;
-interface TO { font?: string; w?: number; color?: string; anchor?: 'start' | 'middle' | 'end'; ls?: string; italic?: boolean; deco?: string; op?: number }
-const text = (x: number, y: number, s: string, size: number, o: TO = {}) =>
-  `<text x="${r(x)}" y="${r(y)}" font-family="${o.font ?? 'Alegreya Sans'}" font-weight="${o.w ?? 500}"${o.italic ? ' font-style="italic"' : ''} font-size="${r(pt(size))}" fill="${o.color ?? '#2a1c0c'}"${o.op != null ? ` fill-opacity="${o.op}"` : ''}${o.anchor ? ` text-anchor="${o.anchor}"` : ''}${o.ls ? ` letter-spacing="${o.ls}"` : ''}${o.deco ? ` text-decoration="${o.deco}"` : ''}>${esc(s)}</text>`;
+interface TO2 extends TO { color?: string; op?: number; in?: string; name?: string }
+const text = (x: number, y: number, s: string, size: number, o: TO2 = {}) =>
+  `<text${o.in ? ` data-in="${o.in}"` : ''}${o.name ? ` data-name="${esc(o.name)}"` : ''} x="${r(x)}" y="${r(y)}" font-family="${o.font ?? 'Alegreya Sans'}" font-weight="${o.w ?? 500}"${o.italic ? ' font-style="italic"' : ''} font-size="${r(pt(size))}" fill="${o.color ?? '#2a1c0c'}"${o.op != null ? ` fill-opacity="${o.op}"` : ''}${o.anchor ? ` text-anchor="${o.anchor}"` : ''}${o.ls ? ` letter-spacing="${o.ls}"` : ''}${o.deco ? ` text-decoration="${o.deco}"` : ''}>${esc(s)}</text>`;
 const under69 = (n: number) => n === 6 || n === 9 ? 'underline' : undefined;
+const plateRect = (id: string, b: Rect, extra = '') => `<rect data-plate="${id}" x="${r(b.x)}" y="${r(b.y)}" width="${r(b.w)}" height="${r(b.h)}" fill="none" stroke="none"${extra}/>`;
+/** an icon that the words must keep clear of */
+const ico = (name: IconName, cx: number, cy: number, s: number, tone: IconTone, id: string) => `<rect data-plate="${id}" x="${r(cx - s / 2)}" y="${r(cy - s / 2)}" width="${s}" height="${s}" fill="none"/>${icon(name, cx, cy, s, tone)}`;
+const hex = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+const mix = (a: string, b: string, k: number) => '#' + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * k).toString(16).padStart(2, '0')).join('');
 
 /** shared gradients of a page */
 function defsOf(id: string, L: Look): string {
@@ -148,69 +203,28 @@ function defsOf(id: string, L: Look): string {
 <linearGradient id="${id}paper" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${L.paper}"/><stop offset="1" stop-color="${mix(L.paper, '#8a6a3a', 0.08)}"/></linearGradient>
 </defs>`;
 }
-const hex = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
-const mix = (a: string, b: string, k: number) => '#' + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * k).toString(16).padStart(2, '0')).join('');
-
-/** a slip of paper pasted on the chart: a soft shadow, a double ink rule, corners a little worn */
-function slip(b: Rect, id: string, L: Look, o: { rule?: boolean } = {}): string {
-  return `<rect x="${r(b.x + 0.5)}" y="${r(b.y + 0.7)}" width="${r(b.w)}" height="${r(b.h)}" rx="1.4" fill="#1a0e04" fill-opacity=".28"/>` +
-    `<rect x="${r(b.x)}" y="${r(b.y)}" width="${r(b.w)}" height="${r(b.h)}" rx="1.4" fill="url(#${id}paper)" stroke="${L.paperLine}" stroke-opacity=".55" stroke-width=".25"/>` +
-    (o.rule === false ? '' : `<rect x="${r(b.x + 1.1)}" y="${r(b.y + 1.1)}" width="${r(b.w - 2.2)}" height="${r(b.h - 2.2)}" rx=".8" fill="none" stroke="${L.paperLine}" stroke-opacity=".7" stroke-width=".18"/>`);
+/** a slip of parchment pasted on the chart, a little translucent (the chart under it is calmed): a soft shadow, a double rule */
+function slip(pid: string, b: Rect, id: string, L: Look, rule = true): string {
+  return `<rect x="${r(b.x + 0.5)}" y="${r(b.y + 0.7)}" width="${r(b.w)}" height="${r(b.h)}" rx="1.4" fill="#1a0e04" fill-opacity=".24"/>` +
+    `<rect data-plate="${pid}" x="${r(b.x)}" y="${r(b.y)}" width="${r(b.w)}" height="${r(b.h)}" rx="1.4" fill="url(#${id}paper)" fill-opacity=".9" stroke="${L.paperLine}" stroke-opacity=".55" stroke-width=".25"/>` +
+    (rule ? `<rect x="${r(b.x + 1)}" y="${r(b.y + 1)}" width="${r(b.w - 2)}" height="${r(b.h - 2)}" rx=".8" fill="none" stroke="${L.paperLine}" stroke-opacity=".6" stroke-width=".18"/>` : '');
 }
-/** a cell: a brass rim round a recessed well of paper, its number large and pale inside (an 11 mm marker covers it; the
- *  number on the ruler above stays in sight) */
-function cellSvg(x: number, y: number, n: number | null, id: string, L: Look, o: { start?: boolean; startColor?: string; icon?: IconName; tint?: string } = {}): string {
-  const c = BOARD.cell, out = [`<rect x="${r(x + 0.35)}" y="${r(y + 0.5)}" width="${c}" height="${c}" rx="1.8" fill="#1a0e04" fill-opacity=".3"/>`,
-    `<rect x="${r(x)}" y="${r(y)}" width="${c}" height="${c}" rx="1.8" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".22"/>`,
-    `<rect x="${r(x + 0.85)}" y="${r(y + 0.85)}" width="${r(c - 1.7)}" height="${r(c - 1.7)}" rx="1.1" fill="${o.tint ?? `url(#${id}well)`}" stroke="${L.brass[2]}" stroke-width=".2"/>`];
-  if (o.start) out.push(`<rect x="${r(x + 0.3)}" y="${r(y + 0.3)}" width="${r(c - 0.6)}" height="${r(c - 0.6)}" rx="1.6" fill="none" stroke="${o.startColor ?? L.ink}" stroke-width=".7"/>`);
-  if (o.icon) out.push(`<g opacity=".32">${icon(o.icon, x + c / 2, y + c / 2, 8.4, L.tone)}</g>`);
-  if (n != null) out.push(text(x + c / 2 + 0.22, y + c / 2 + 2.85 + 0.22, String(n), 22, { font: 'Alegreya', w: 800, color: '#ffffff', anchor: 'middle', op: 0.55 }) + text(x + c / 2, y + c / 2 + 2.85, String(n), 22, { font: 'Alegreya', w: 800, color: L.ink, anchor: 'middle', op: 0.2 }));
+/** a cell: a brass rim round a clean recessed well (an 11 mm marker lies in it; its number stands above) */
+function cellSvg(pid: string, x: number, y: number, id: string, L: Look, o: { start?: boolean; startColor?: string; icon?: IconName; tint?: string } = {}): string {
+  const out = [`<rect x="${r(x + 0.35)}" y="${r(y + 0.5)}" width="${C}" height="${C}" rx="1.8" fill="#1a0e04" fill-opacity=".3"/>`,
+    `<rect data-plate="${pid}" x="${r(x)}" y="${r(y)}" width="${C}" height="${C}" rx="1.8" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".22"/>`,
+    `<rect x="${r(x + 0.85)}" y="${r(y + 0.85)}" width="${r(C - 1.7)}" height="${r(C - 1.7)}" rx="1.1" fill="${o.tint ?? `url(#${id}well)`}" stroke="${L.brass[2]}" stroke-width=".2"/>`];
+  if (o.start) out.push(`<rect x="${r(x + 0.3)}" y="${r(y + 0.3)}" width="${r(C - 0.6)}" height="${r(C - 0.6)}" rx="1.6" fill="none" stroke="${o.startColor ?? L.ink}" stroke-width=".7"/>`);
+  if (o.icon) out.push(`<g opacity=".3">${icon(o.icon, x + C / 2, y + C / 2, 8.6, L.tone)}</g>`);
   return out.join('');
 }
 /** Hull 0: a hole torn through the chart — dark water under ragged paper — and «тонет» on it */
-function holeSvg(x: number, y: number, id: string, word: string): string {
-  const c = BOARD.cell, cx = x + c / 2, cy = y + c / 2, pts: string[] = [];
-  for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2, R = 5.5 + (i % 3 === 0 ? 0.9 : i % 2 ? -0.5 : 0.3); pts.push(`${r(cx + R * Math.cos(a) * 1.06)} ${r(cy + R * Math.sin(a))}`); }
-  return `<path d="M${pts.join('L')}Z" fill="#d9c49a" stroke="#6b4a22" stroke-width=".35" transform="translate(.4 .4)" opacity=".7"/><path d="M${pts.join('L')}Z" fill="url(#${id}hole)" stroke="#f3e6c4" stroke-width=".55" stroke-linejoin="round"/>` +
-    `<path d="M${r(cx - 3.6)} ${r(cy + 2.6)}q1.2 -.8 2.4 0t2.4 0t2.4 0" fill="none" stroke="#6f9aa6" stroke-width=".3" stroke-opacity=".7"/>` +
-    text(cx, cy + 1.1, word, 8.5, { w: 800, color: '#f6ead0', anchor: 'middle' });
-}
-
-/** a row: the slip, the icon and the name, the ruler with the numbers (the start one with a star), the cells, the caption */
-function rowSvg(rw: Row, id: string, L: Look, pal: Pal, ship: Ship, powderIcon: boolean): string {
-  const T = TXT.tracks[rw.key], out: string[] = [], c = BOARD.cell, souls = rw.key === 'souls';
-  out.push(slip({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h }, id, L));
-  out.push(icon(ICON_TRACK[rw.key], rw.x + PAD + 3.6, rw.y + ROW.label - 1.9, 7.4, L.tone));
-  out.push(text(rw.x + PAD + 8.6, rw.y + ROW.label, T.name, 14, { font: 'Alegreya SC', w: 800, color: pal.deep, ls: '.03em' }));
-  if (T.note) out.push(text(rw.x + PAD + 8.6 + tw(T.name, 14, 0.66) + 2.4, rw.y + ROW.label, T.note, 9, { font: 'Alegreya', italic: true, color: L.soft }));
-  // the ruler: a hairline over the cells, a tick and the number at each cell; the start: a star before its number
-  const first = rw.cells[0], last = rw.cells[rw.cells.length - 1], ry = rw.y + ROW.num + 0.9;
-  out.push(`<path d="M${r(first.x + c / 2)} ${r(ry)}H${r(last.x + c / 2)}" stroke="${L.ink}" stroke-width=".2" stroke-opacity=".6"/>`);
-  for (const cl of rw.cells) {
-    out.push(`<path d="M${r(cl.x + c / 2)} ${r(ry - 0.7)}V${r(ry + 0.7)}" stroke="${L.ink}" stroke-width=".25"/>`);
-    out.push(text(cl.x + c / 2, rw.y + ROW.num - 0.2, String(cl.n), 9, { w: 800, color: cl.start ? pal.deep : L.ink, anchor: 'middle', deco: under69(cl.n) }));
-    if (cl.start && !souls) out.push(star(cl.x + c / 2 - 3.6, rw.y + ROW.num - 1.25, 1.35, pal.deep));
-    const sink = rw.key === 'hull' && cl.n === 0;
-    out.push(sink ? cellSvg(cl.x, cl.y, null, id, L) + holeSvg(cl.x, cl.y, id, T.zero ?? '') : cellSvg(cl.x, cl.y, cl.n, id, L, { start: cl.start, startColor: pal.deep, tint: souls && cl.n > rw.start ? mix(L.cell, pal.ship, 0.08 + 0.05 * (cl.n - rw.start)) : undefined }));
-  }
-  // the Volley cells: «Залп дан · 1 [keg] Порох» above, the keg faint inside
-  rw.volley.forEach((v, i) => {
-    const cap = fill(TXT.volley[i], { cost: Number(ship.volleyCost), coin: '' }).replace(/\s+/g, ' ').trim();
-    const [a, b = ''] = cap.split(/(?<=\d)\s/);
-    if (i === 0 && powderIcon) {
-      const wa = tw(a, 8.5, 0.5), wb = tw(b, 8.5, 0.5), tot = wa + 4 + wb, x0 = v.x + c / 2 - tot / 2;
-      out.push(text(x0, rw.y + ROW.num - 0.2, a, 8.5, { w: 800, color: pal.deep }) + icon('powder', x0 + wa + 2, rw.y + ROW.num - 1.4, 3.6, L.tone) + text(x0 + wa + 4, rw.y + ROW.num - 0.2, b, 8.5, { w: 800, color: pal.deep }));
-    } else out.push(text(v.x + c / 2, rw.y + ROW.num - 0.2, cap, 8.5, { w: 800, color: pal.deep, anchor: 'middle' }));
-    out.push(cellSvg(v.x, v.y, null, id, L, { icon: 'powder' }));
-  });
-  // the caption line: the threshold under the lowest cell (the Hull: «переверните планшет»)
-  const capY = rw.y + ROW.cap, zero = rw.key === 'hull' ? T.flip : souls ? undefined : T.zero;
-  if (zero) out.push(text(first.x + 0.3, capY, zero, 8, { w: 800, italic: false, color: rw.key === 'hull' ? '#7e2614' : pal.deep }));
-  if (souls && T.max) out.push(text(last.x + c + 2.4, rw.y + ROW.cell + c / 2 + 1, fill(T.max, { n: last.n }), 9, { w: 700, color: L.soft }));
-  // the key of the star, once: on the Hull's caption line under its start cell
-  if (rw.key === 'hull') { const s = rw.cells.find(cl => cl.start)!; out.push(star(s.x + c - tw(TXT.start, 7.5, 0.47) - 3.2, capY - 1.05, 1.2, pal.deep) + text(s.x + c, capY, TXT.start, 7.5, { italic: true, font: 'Alegreya', color: L.soft, anchor: 'end' })); }
-  return out.join('');
+function holeSvg(pid: string, x: number, y: number, id: string, word: string): string {
+  const cx = x + C / 2, cy = y + C / 2, pts: string[] = [];
+  for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2, R = 5.6 + (i % 3 === 0 ? 0.6 : i % 2 ? -0.4 : 0.2); pts.push(`${r(cx + R * Math.cos(a) * 1.04)} ${r(cy + R * Math.sin(a))}`); }
+  return `<path d="M${pts.join('L')}Z" fill="url(#${id}hole)" stroke="#f3e6c4" stroke-width=".55" stroke-linejoin="round"/>` +
+    `<path d="M${r(cx - 3.6)} ${r(cy + 3.3)}q1.2 -.8 2.4 0t2.4 0t2.4 0" fill="none" stroke="#6f9aa6" stroke-width=".3" stroke-opacity=".7"/>` +
+    text(cx, cy + 1.1, word, 8.5, { w: 800, color: '#f6ead0', anchor: 'middle', in: pid });
 }
 function star(cx: number, cy: number, R: number, color: string): string {
   const p: string[] = [];
@@ -218,174 +232,240 @@ function star(cx: number, cy: number, R: number, color: string): string {
   return `<polygon points="${p.join(' ')}" fill="${color}"/>`;
 }
 
-/** the header: a cartouche with the medallion, the name, the captain, the motto and the side */
-function headerSvg(b: Rect, ship: Ship, pal: Pal, L: Look): string {
-  const { x, y, w, h } = b, out: string[] = [];
-  out.push(`<path d="M${x + 5} ${y}H${x + w - 5}C${x + w - 1.5} ${y} ${x + w} ${y + 2.4} ${x + w + 2.6} ${y + 1.6}C${x + w + 0.8} ${y + h / 2} ${x + w + 0.8} ${y + h / 2} ${x + w + 2.6} ${y + h - 1.6}C${x + w} ${y + h - 2.4} ${x + w - 1.5} ${y + h} ${x + w - 5} ${y + h}H${x + 5}C${x + 1.5} ${y + h} ${x} ${y + h - 2.4} ${x - 2.6} ${y + h - 1.6}C${x - 0.8} ${y + h / 2} ${x - 0.8} ${y + h / 2} ${x - 2.6} ${y + 1.6}C${x} ${y + 2.4} ${x + 1.5} ${y} ${x + 5} ${y}Z" fill="#1a0e04" fill-opacity=".28" transform="translate(.5 .7)"/>`);
-  out.push(`<path d="M${x + 5} ${y}H${x + w - 5}C${x + w - 1.5} ${y} ${x + w} ${y + 2.4} ${x + w + 2.6} ${y + 1.6}C${x + w + 0.8} ${y + h / 2} ${x + w + 0.8} ${y + h / 2} ${x + w + 2.6} ${y + h - 1.6}C${x + w} ${y + h - 2.4} ${x + w - 1.5} ${y + h} ${x + w - 5} ${y + h}H${x + 5}C${x + 1.5} ${y + h} ${x} ${y + h - 2.4} ${x - 2.6} ${y + h - 1.6}C${x - 0.8} ${y + h / 2} ${x - 0.8} ${y + h / 2} ${x - 2.6} ${y + 1.6}C${x} ${y + 2.4} ${x + 1.5} ${y} ${x + 5} ${y}Z" fill="${L.paper}" stroke="${L.paperLine}" stroke-width=".4"/>`);
-  out.push(`<rect x="${x + 2}" y="${y + 1.8}" width="${w - 4}" height="${h - 3.6}" rx="1" fill="none" stroke="${L.paperLine}" stroke-width=".18" stroke-opacity=".8"/>`);
-  const mx = x + 11, my = y + h / 2;
-  out.push(`<circle cx="${mx}" cy="${my}" r="8.6" fill="url(#${UIDS.cur}brh)" stroke="${L.brass[2]}" stroke-width=".3"/><circle cx="${mx}" cy="${my}" r="7.2" fill="${pal.solid}"/><circle cx="${mx}" cy="${my}" r="6.4" fill="none" stroke="#fff8e6" stroke-width=".22" stroke-opacity=".7"/>`);
-  out.push(text(mx, my + pt(20) * 0.33, ship.code, 20, { font: 'Alegreya SC', w: 800, color: '#fff8e6', anchor: 'middle' }));
-  out.push(text(x + 22.5, y + 9.4, ship.name, 25, { font: 'Alegreya', w: 800, color: pal.deep }));
-  out.push(text(x + 22.5, y + 15, ship.captain, 11.5, { font: 'Alegreya', w: 500, italic: true, color: L.ink }));
-  out.push(text(x + 22.5, y + 19.6, ship.motto, 9.5, { font: 'Alegreya', w: 400, italic: true, color: L.soft }));
-  const sw = tw(ship.side, 8, 0.72) + 4, sx = x + w - 3 - sw;
-  out.push(`<path d="M${r(sx)} ${y + 3.4}h${r(sw)}l-1.4 2.3l1.4 2.3h${r(-sw)}l1.4 -2.3z" fill="${pal.solid}"/>` + text(sx + sw / 2, y + 7.1, ship.side, 8, { w: 800, color: '#fff8e6', anchor: 'middle', ls: '.14em' }));
+/** a row: the slip, the icon and the name (and its note), the numbers over the cells (the start one after a star), the
+ *  cells, the caption line */
+function rowSvg(rw: Row, id: string, L: Look, pal: Pal, ship: Ship): string {
+  const T = TXT.tracks[rw.key], pid = `row-${rw.key}`, out: string[] = [], souls = rw.key === 'souls';
+  out.push(slip(pid, { x: rw.x, y: rw.y, w: rw.w, h: ROW.h }, id, L));
+  out.push(ico(ICON_TRACK[rw.key], rw.x + PAD + 3.4, rw.y + 4.4, 6.4, L.tone, `${pid}-icon`));
+  const nx = rw.x + PAD + 9.6;
+  out.push(text(nx, rw.y + ROW.label, T.name, 14, { ...LABEL, color: pal.deep, in: pid }));
+  if (T.note) out.push(text(nx + W(T.name, 14, LABEL) + 2.4, rw.y + ROW.label, T.note, 9, { ...NOTE_O, color: L.soft, in: pid }));
+  for (const cl of rw.cells) {
+    const cid = `${pid}-c${cl.n}`, cx = cl.x + C / 2;
+    out.push(text(cx, rw.y + ROW.num, String(cl.n), 11, { ...NUM, color: cl.start ? pal.deep : L.ink, anchor: 'middle', deco: under69(cl.n), in: pid }));
+    if (cl.start) out.push(star(cx - W(String(cl.n), 11, NUM) / 2 - 2.1, rw.y + ROW.num - 1.35, 1.35, pal.deep));
+    const sink = rw.key === 'hull' && cl.n === 0;
+    out.push(sink ? cellSvg(cid, cl.x, cl.y, id, L) + holeSvg(cid, cl.x, cl.y, id, T.zero ?? '') : cellSvg(cid, cl.x, cl.y, id, L, { start: cl.start, startColor: pal.deep, tint: souls && cl.n > rw.start ? mix(L.cell, pal.ship, 0.08 + 0.05 * (cl.n - rw.start)) : undefined }));
+  }
+  // the Volley cells: «Залп дан · 1 [keg] Порох» over the first, «по Сердцу» over the second, a faint keg inside
+  rw.volley.forEach((v, i) => {
+    const cap = volleyCap(ship, i), cx = v.x + C / 2, y = rw.y + ROW.num - 0.3;
+    if (i === 0) {
+      const [a, b = ''] = cap.split(/(?<=\d)\s/), wa = W(a, 8.5, NUM), wb = W(b, 8.5, NUM), tot = wa + 4.2 + wb, x0 = cx - tot / 2;
+      out.push(text(x0, y, a, 8.5, { ...NUM, color: pal.deep, in: pid }) + ico('powder', x0 + wa + 2.1, y - 1.1, 3.4, L.tone, `${pid}-keg`) + text(x0 + wa + 4.2, y, b, 8.5, { ...NUM, color: pal.deep, in: pid }));
+    } else out.push(text(cx, y, cap, 8.5, { ...NUM, color: pal.deep, anchor: 'middle', in: pid }));
+    out.push(cellSvg(`${pid}-v${i}`, v.x, v.y, id, L, { icon: 'powder' }));
+  });
+  // the caption line: the threshold under the lowest cell; the Souls: «Кракен» under 3, «максимум» under the last
+  const capY = rw.y + ROW.cap, first = rw.cells[0], last = rw.cells[rw.cells.length - 1], zero = rw.key === 'hull' ? T.flip : souls ? undefined : T.zero;
+  if (zero) out.push(text(first.x + 0.3, capY, zero, 8, { w: 800, color: rw.key === 'hull' ? '#7e2614' : pal.deep, in: pid }));
+  if (souls) {
+    const k = rw.cells.find(c => c.n === 3);
+    if (k && T.kraken) out.push(text(k.x + C / 2, capY, fill(T.kraken, { n: 3 }), 8, { w: 800, color: pal.deep, anchor: 'middle', in: pid }));
+    if (T.max) out.push(text(last.x + C, capY, fill(T.max, { n: last.n }), 8, { ...CAP_O, color: L.soft, anchor: 'end', in: pid }));
+  }
+  // the key of the star, once: on the Hull's caption line, right
+  if (rw.key === 'hull') { const s = rw.cells.find(c => c.start)!, wk = W(TXT.start, 8, CAP_O); out.push(star(s.x + C - wk - 2.2, capY - 1.1, 1.25, pal.deep) + text(s.x + C, capY, TXT.start, 8, { ...CAP_O, color: L.soft, anchor: 'end', in: pid })); }
   return out.join('');
 }
-const UIDS = { cur: '' };
 
-/** a pointer to the sheet's edge, written in ink: an icon, the words, an arrow */
-function pointerSvg(b: Rect, words: string, ic: IconName, dir: 'up' | 'down' | 'right', id: string, L: Look, pal: Pal): string {
-  const out = [slip(b, id, L, { rule: false })], ax = dir === 'right' ? b.x + b.w - 6 : b.x + 4.6, ay = b.y + b.h / 2;
-  out.push(icon(ic, b.x + (dir === 'right' ? 4.4 : 11.2), ay, 6.8, L.tone));
-  out.push(text(b.x + (dir === 'right' ? 9 : 15.8), ay + 1.2, words, 8.5, { w: 800, color: pal.deep }));
-  const A = (x1: number, y1: number, x2: number, y2: number) => { const a = Math.atan2(y2 - y1, x2 - x1), h = 1.8; return `<path d="M${r(x1)} ${r(y1)}L${r(x2)} ${r(y2)}" stroke="${pal.deep}" stroke-width=".55" stroke-linecap="round"/><path d="M${r(x2)} ${r(y2)}L${r(x2 - h * Math.cos(a - 0.45))} ${r(y2 - h * Math.sin(a - 0.45))}M${r(x2)} ${r(y2)}L${r(x2 - h * Math.cos(a + 0.45))} ${r(y2 - h * Math.sin(a + 0.45))}" stroke="${pal.deep}" stroke-width=".55" stroke-linecap="round"/>`; };
-  out.push(dir === 'up' ? A(ax, b.y + b.h - 2.4, ax, b.y + 1.8) : dir === 'down' ? A(ax, b.y + 2.4, ax, b.y + b.h - 1.8) : A(b.x + b.w - 10, ay, b.x + b.w - 2, ay));
+/** the header: a cartouche with the medallion, the name and the side, the captain, the motto */
+function headerSvg(b: Rect, ship: Ship, pal: Pal, L: Look, id: string): string {
+  const { x, y, w, h } = b, out: string[] = [];
+  const shape = `M${x + 5} ${y}H${x + w - 5}C${x + w - 1.5} ${y} ${x + w} ${y + 2.4} ${x + w + 2.2} ${y + 1.6}C${x + w + 0.6} ${y + h / 2} ${x + w + 0.6} ${y + h / 2} ${x + w + 2.2} ${y + h - 1.6}C${x + w} ${y + h - 2.4} ${x + w - 1.5} ${y + h} ${x + w - 5} ${y + h}H${x + 5}C${x + 1.5} ${y + h} ${x} ${y + h - 2.4} ${x - 2.2} ${y + h - 1.6}C${x - 0.6} ${y + h / 2} ${x - 0.6} ${y + h / 2} ${x - 2.2} ${y + 1.6}C${x} ${y + 2.4} ${x + 1.5} ${y} ${x + 5} ${y}Z`;
+  out.push(`<path d="${shape}" fill="#1a0e04" fill-opacity=".26" transform="translate(.5 .7)"/><path d="${shape}" fill="${L.paper}" stroke="${L.paperLine}" stroke-width=".4"/>`);
+  out.push(plateRect('header', b) + `<rect x="${x + 1.6}" y="${y + 1.4}" width="${w - 3.2}" height="${h - 2.8}" rx="1" fill="none" stroke="${L.paperLine}" stroke-width=".18" stroke-opacity=".8"/>`);
+  const mx = x + 11, my = y + h / 2;
+  out.push(`<g data-plate="header-medal"><circle cx="${mx}" cy="${my}" r="8.4" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".3"/><circle cx="${mx}" cy="${my}" r="7" fill="${pal.solid}"/><circle cx="${mx}" cy="${my}" r="6.2" fill="none" stroke="#fff8e6" stroke-width=".22" stroke-opacity=".7"/></g>`);
+  out.push(text(mx, my + pt(20) * 0.33, ship.code, 20, { font: 'Alegreya SC', w: 800, color: '#fff8e6', anchor: 'middle', in: 'header-medal' }));
+  out.push(text(x + 23, y + 10.6, ship.name, 25, { font: 'Alegreya', w: 800, color: pal.deep, in: 'header' }));
+  out.push(text(x + 23, y + 17.8, ship.captain, 11, { font: 'Alegreya', w: 500, italic: true, color: L.ink, in: 'header' }));
+  out.push(text(x + 23, y + 22.45, ship.motto, 9, { font: 'Alegreya', w: 400, italic: true, color: L.soft, in: 'header' }));
+  const sw = W(ship.side, 8, { w: 800, ls: '.14em' }) + 8.2, sx = x + w - 3 - sw, sy = y + 2.6;
+  out.push(`<path d="M${r(sx)} ${sy}h${r(sw)}l-1.6 3.4l1.6 3.4h${r(-sw)}l1.6 -3.4z" fill="${pal.solid}"/>` + plateRect('header-side', { x: sx, y: sy, w: sw, h: 6.8 }) + text(sx + sw / 2 + 0.5, sy + 4.6, ship.side, 8, { w: 800, color: '#fff8e6', anchor: 'middle', ls: '.14em', in: 'header-side' }));
   return out.join('');
 }
-/** the Fires: three 23 mm places, each a scorched recess with a faint flame */
+
+/** a pointer to the sheet's edge, written in ink: the arrow, the icon, the words (in two lines when the slip is short) */
+function pointerSvg(pid: string, b: Rect, words: string, ic: IconName, id: string, L: Look, pal: Pal): string {
+  const out = [slip(pid, b, id, L, false)], ax = b.x + 3.4, ay = b.y + b.h / 2, tx = b.x + 13.2;
+  out.push(`<path d="M${r(ax)} ${r(b.y + b.h - 2.2)}V${r(b.y + 2)}M${r(ax - 1.3)} ${r(b.y + 3.8)}L${r(ax)} ${r(b.y + 2)}L${r(ax + 1.3)} ${r(b.y + 3.8)}" stroke="${pal.deep}" stroke-width=".55" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
+  out.push(ico(ic, b.x + 8.6, ay, 5.4, L.tone, `${pid}-icon`));
+  if (tx + W(words, 8.5, PTR) <= b.x + b.w - PAD) out.push(text(tx, ay + 1.25, words, 8.5, { ...PTR, color: pal.deep, in: pid }));
+  else { const cut = words.lastIndexOf(' ', Math.ceil(words.length / 2) + 4), [l1, l2] = [words.slice(0, cut), words.slice(cut + 1)]; out.push(text(tx, ay - 0.6, l1, 8.5, { ...PTR, color: pal.deep, in: pid }) + text(tx, ay + 3.05, l2, 8.5, { ...PTR, color: pal.deep, in: pid })); }
+  return out.join('');
+}
+/** the Fires: three 23 mm places, brass-rimmed, a faint fire on deck inside */
 function firesSvg(b: Rect, id: string, L: Look, pal: Pal): string {
-  const out = [slip(b, id, L)], s = BOARD.fireSlot, y0 = b.y + 8.8;
-  out.push(icon('fire', b.x + PAD + 3.6, b.y + 4.2, 6.4, L.tone) + text(b.x + PAD + 8.6, b.y + 6, fill(TXT.fires.title, { n: RULES.maxFires }), 11, { font: 'Alegreya SC', w: 800, color: pal.deep, ls: '.03em' }));
+  const out = [slip('fires', b, id, L)], s = BOARD.fireSlot, y0 = b.y + 7.3;
+  out.push(ico('fire', b.x + PAD + 2.6, b.y + 3.9, 4.6, L.tone, 'fires-icon') + text(b.x + PAD + 6.6, b.y + 5.6, fill(TXT.fires.title, { n: RULES.maxFires }), 11, { ...LABEL, color: pal.deep, in: 'fires' }));
   for (let i = 0; i < RULES.maxFires; i++) {
     const x = b.x + PAD + i * (s + 3);
-    out.push(`<rect x="${r(x + 0.4)}" y="${r(y0 + 0.5)}" width="${s}" height="${s}" rx="2.2" fill="#1a0e04" fill-opacity=".3"/><rect x="${r(x)}" y="${r(y0)}" width="${s}" height="${s}" rx="2.2" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".22"/>`);
+    out.push(`<rect x="${r(x + 0.4)}" y="${r(y0 + 0.5)}" width="${s}" height="${s}" rx="2.2" fill="#1a0e04" fill-opacity=".3"/><rect data-plate="fires-${i}" x="${r(x)}" y="${r(y0)}" width="${s}" height="${s}" rx="2.2" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".22"/>`);
     out.push(`<rect x="${r(x + 1)}" y="${r(y0 + 1)}" width="${r(s - 2)}" height="${r(s - 2)}" rx="1.4" fill="${mix(L.cell, '#c4602f', 0.1)}" stroke="${L.brass[2]}" stroke-width=".2"/>`);
-    out.push(`<g opacity=".38">${icon('fire', x + s / 2, y0 + s / 2, 15, L.tone)}</g>`);
+    out.push(`<g opacity=".34">${icon('fire', x + s / 2, y0 + s / 2, 15.5, L.tone)}</g>`);
   }
   return out.join('');
 }
-/** the counters on a brass ruler: windows cut through the brass, the number engraved over each */
-function rulerSvg(b: Rect, title: string, ic: IconName, nums: number[], labelLeft: boolean, id: string, L: Look): string {
-  const [bl, bm, bd] = L.brass, out: string[] = [], CP = 14, c = BOARD.cell;
-  out.push(`<rect x="${r(b.x + 0.5)}" y="${r(b.y + 0.7)}" width="${b.w}" height="${b.h}" rx="1.6" fill="#1a0e04" fill-opacity=".35"/><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="1.6" fill="url(#${id}br)" stroke="${bd}" stroke-width=".3"/>`);
-  out.push(`<rect x="${r(b.x + 1)}" y="${r(b.y + 1)}" width="${r(b.w - 2)}" height="${r(b.h - 2)}" rx="1" fill="none" stroke="${bd}" stroke-width=".2" stroke-opacity=".8"/><rect x="${r(b.x + 1.25)}" y="${r(b.y + 1.25)}" width="${r(b.w - 2.5)}" height="${r(b.h - 2.5)}" rx=".9" fill="none" stroke="${bl}" stroke-width=".15" stroke-opacity=".9"/>`);
-  for (const sx of [b.x + 2.6, b.x + b.w - 2.6]) out.push(`<circle cx="${r(sx)}" cy="${r(b.y + b.h / 2)}" r=".9" fill="${bl}" stroke="${bd}" stroke-width=".2"/><path d="M${r(sx - 0.6)} ${r(b.y + b.h / 2 - 0.3)}l1.2 .6" stroke="${bd}" stroke-width=".22"/>`);
-  const n = nums.length, x0 = b.x + b.w - 5 - (n - 1) * CP - c, cy = b.y + b.h - 2.6 - c, ink = '#2a1a08';
-  const ty = labelLeft ? b.y + b.h / 2 + 1.4 : b.y + 6.2, tx = b.x + 5.6 + 6.6;
-  out.push(icon(ic, b.x + 5.6 + 2.4, ty - 1.6, 6.2, { ...L.tone, ink, paper: bm }));
-  if (labelLeft) { const [a, bb = ''] = title.split(' '); out.push(text(tx, ty - 2.4, a, 11, { font: 'Alegreya SC', w: 800, color: ink }) + text(tx, ty + 2, bb, 11, { font: 'Alegreya SC', w: 800, color: ink })); }
-  else out.push(text(tx, ty, title, 11, { font: 'Alegreya SC', w: 800, color: ink }));
+/** the Dutchman's two token places side by side: «Под водой» → «Всплыл», each with its rule above */
+function dutchSvg(b: Rect, id: string, L: Look, pal: Pal): string {
+  const out = [slip('dutch', b, id, L)], u = BOARD.underwaterSlot, y0 = b.y + 15.4;
+  [TXT.underwater, TXT.surfaced].forEach((t, i) => {
+    const x = b.x + 1.5 + i * u.w, pid = `dutch-${i}`;
+    out.push(ico(i ? 'surfaced' : 'underwater', x + 3.6, b.y + 4.2, 4.6, L.tone, `${pid}-icon`) + text(x + 7.4, b.y + 5.9, t.title, 10.5, { ...LABEL, color: pal.deep, in: 'dutch' }));
+    const words = nb(t.note).split(' '), lines: string[] = [''];
+    for (const wd of words) { const tryL = (lines[lines.length - 1] + ' ' + wd).trim(); if (W(tryL, 8, CAP_O) > u.w - 4.4 && lines[lines.length - 1]) lines.push(wd); else lines[lines.length - 1] = tryL; }
+    lines.slice(0, 2).forEach((l, j) => out.push(text(x + 1.2, b.y + 10.3 + j * 3.95, l, 8, { ...CAP_O, color: L.ink, in: 'dutch' })));
+    out.push(`<rect data-plate="${pid}" x="${r(x)}" y="${r(y0)}" width="${u.w}" height="${u.h}" rx="${i ? '0 2' : '2'}" fill="${mix(L.cell, '#2f8a96', 0.12)}" stroke="${L.brass[2]}" stroke-width=".35"/>`);
+    out.push(`<g opacity=".3">${icon(i ? 'surfaced' : 'underwater', x + u.w / 2, y0 + u.h / 2, 18, L.tone)}</g>`);
+  });
+  // the token moves from «Под водой» to «Всплыл»
+  const ax = b.x + 1.5 + u.w, ay = y0 + u.h / 2;
+  out.push(`<circle cx="${r(ax)}" cy="${r(ay)}" r="2.6" fill="${L.paper}" stroke="${pal.deep}" stroke-width=".35"/><path d="M${r(ax - 1.3)} ${r(ay)}H${r(ax + 1.2)}M${r(ax + 0.2)} ${r(ay - 1)}L${r(ax + 1.3)} ${r(ay)}L${r(ax + 0.2)} ${r(ay + 1)}" stroke="${pal.deep}" stroke-width=".45" fill="none" stroke-linecap="round"/>`);
+  return out.join('');
+}
+/** counters on a brass ruler: windows cut through the brass, the number engraved over each; the title on top or left */
+function rulerSvg(pid: string, b: Rect, title: string, ic: IconName, nums: number[], labelLeft: boolean, id: string, L: Look): string {
+  const [bl, bm, bd] = L.brass, out: string[] = [], CP = 14, ink = '#2a1a08';
+  out.push(`<rect x="${r(b.x + 0.5)}" y="${r(b.y + 0.7)}" width="${r(b.w)}" height="${b.h}" rx="1.6" fill="#1a0e04" fill-opacity=".35"/><rect data-plate="${pid}" x="${r(b.x)}" y="${r(b.y)}" width="${r(b.w)}" height="${b.h}" rx="1.6" fill="url(#${id}br)" stroke="${bd}" stroke-width=".3"/>`);
+  out.push(`<rect x="${r(b.x + 0.9)}" y="${r(b.y + 0.9)}" width="${r(b.w - 1.8)}" height="${r(b.h - 1.8)}" rx="1" fill="none" stroke="${bd}" stroke-width=".2" stroke-opacity=".8"/>`);
+  const n = nums.length, x0 = b.x + b.w - PAD - (n - 1) * CP - C, cy = b.y + b.h - 1.5 - C;
+  const ty = labelLeft ? b.y + b.h / 2 : b.y + 5.8, tx = b.x + PAD + 6.6;
+  out.push(ico(ic, b.x + PAD + 2.4, labelLeft ? ty : b.y + 3.9, 4.8, { ...L.tone, ink, paper: bm }, `${pid}-icon`));
+  if (labelLeft) { const [a, bb = ''] = title.split(' '); out.push(text(tx, ty - 1.3, a, 11, { ...LABEL, color: ink, in: pid }) + text(tx, ty + 4.1, bb, 11, { ...LABEL, color: ink, in: pid })); }
+  else out.push(text(tx, ty, title, 11, { ...LABEL, color: ink, in: pid }));
   nums.forEach((v, i) => {
     const x = x0 + i * CP;
-    out.push(text(x + c / 2 + 0.15, cy - 1.15 + 0.15, String(v), 9.5, { w: 800, color: bl, anchor: 'middle', deco: under69(v) }) + text(x + c / 2, cy - 1.15, String(v), 9.5, { w: 800, color: ink, anchor: 'middle', deco: under69(v) }));
-    // a window: dark bevel above-left, light below-right, the paper of the chart inside
-    out.push(`<rect x="${r(x)}" y="${r(cy)}" width="${c}" height="${c}" rx="1.3" fill="${bd}"/><rect x="${r(x + 0.5)}" y="${r(cy + 0.5)}" width="${r(c - 0.5)}" height="${r(c - 0.5)}" rx="1.1" fill="${bl}"/><rect x="${r(x + 0.5)}" y="${r(cy + 0.5)}" width="${r(c - 1)}" height="${r(c - 1)}" rx="1" fill="url(#${id}well)"/>`);
-    out.push(text(x + c / 2, cy + c / 2 + 2.6, String(v), 20, { font: 'Alegreya', w: 800, color: L.ink, anchor: 'middle', op: 0.18 }));
+    out.push(text(x + C / 2, cy - 0.9, String(v), 11, { ...NUM, color: ink, anchor: 'middle', deco: under69(v), in: pid }));
+    out.push(`<rect x="${r(x)}" y="${r(cy)}" width="${C}" height="${C}" rx="1.3" fill="${bd}"/><rect x="${r(x + 0.5)}" y="${r(cy + 0.5)}" width="${r(C - 0.5)}" height="${r(C - 0.5)}" rx="1.1" fill="${bl}"/><rect data-plate="${pid}-w${v}" x="${r(x + 0.5)}" y="${r(cy + 0.5)}" width="${r(C - 1)}" height="${r(C - 1)}" rx="1" fill="url(#${id}well)"/>`);
   });
   return out.join('');
 }
 /** the nest of the Legend card: brass photo-corners in the 1.5 mm margin; under the card, what shows once it is played */
 function nestSvg(b: Rect, id: string, L: Look, pal: Pal, legendName: string): string {
-  const out: string[] = [], m = 1.5, cw = b.w - 2 * m, ch = b.h - 2 * m, cx = b.x + b.w / 2;
+  const out: string[] = [], m = 1.5, cx = b.x + b.w / 2;
   out.push(`<rect x="${r(b.x + 0.5)}" y="${r(b.y + 0.7)}" width="${b.w}" height="${b.h}" rx="2.6" fill="#1a0e04" fill-opacity=".3"/><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="2.6" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".3"/>`);
-  out.push(`<rect x="${r(b.x + m)}" y="${r(b.y + m)}" width="${r(cw)}" height="${r(ch)}" rx="2.4" fill="${mix(L.paper, '#5a4024', 0.1)}" stroke="${L.brass[2]}" stroke-width=".3"/>`);
-  out.push(`<rect x="${r(b.x + m + 3)}" y="${r(b.y + m + 3)}" width="${r(cw - 6)}" height="${r(ch - 6)}" rx="1.4" fill="none" stroke="${L.paperLine}" stroke-width=".3" stroke-dasharray="1.6 1.1" stroke-opacity=".7"/>`);
-  out.push(`<g opacity=".45">${icon('legend', cx, b.y + b.h * 0.4, 26, L.tone)}</g>`);
-  out.push(text(cx, b.y + b.h * 0.64, TXT.legend.played, 13, { font: 'Alegreya SC', w: 800, color: pal.deep, anchor: 'middle', ls: '.03em' }));
-  out.push(text(cx, b.y + b.h * 0.64 + 5.4, `«${legendName}»`, 10, { font: 'Alegreya', w: 500, italic: true, color: L.soft, anchor: 'middle' }));
-  // the photo-corners: in the margin and 4 mm over the card's corners
+  out.push(`<rect data-plate="nest" x="${r(b.x + m)}" y="${r(b.y + m)}" width="${r(b.w - 2 * m)}" height="${r(b.h - 2 * m)}" rx="2.4" fill="${mix(L.paper, '#5a4024', 0.1)}" stroke="${L.brass[2]}" stroke-width=".3"/>`);
+  out.push(`<rect x="${r(b.x + m + 3)}" y="${r(b.y + m + 3)}" width="${r(b.w - 2 * m - 6)}" height="${r(b.h - 2 * m - 6)}" rx="1.4" fill="none" stroke="${L.paperLine}" stroke-width=".3" stroke-dasharray="1.6 1.1" stroke-opacity=".7"/>`);
+  out.push(`<g opacity=".45">${icon('legend', cx, b.y + b.h * 0.38, 26, L.tone)}</g>`);
+  out.push(text(cx, b.y + b.h * 0.64, TXT.legend.played, 13, { ...LABEL, color: pal.deep, anchor: 'middle', in: 'nest' }));
+  out.push(text(cx, b.y + b.h * 0.64 + 5.6, `«${legendName}»`, 10, { font: 'Alegreya', w: 500, italic: true, color: L.soft, anchor: 'middle', in: 'nest' }));
   for (const [sx, sy] of [[0, 0], [1, 0], [0, 1], [1, 1]] as const) {
     const X = sx ? b.x + b.w : b.x, Y = sy ? b.y + b.h : b.y, dx = sx ? -1 : 1, dy = sy ? -1 : 1, a = 7.5;
     out.push(`<path d="M${r(X)} ${r(Y)}h${r(dx * a)}L${r(X)} ${r(Y + dy * a)}Z" fill="url(#${id}br)" stroke="${L.brass[2]}" stroke-width=".25"/>`);
   }
+  // the tag beside the nest, read upwards: «Легенда · один раз за игру» on a brass label
+  const s = `${TXT.legend.title} · ${TXT.legend.note.split('·').pop()!.trim()}`, h = W(s, 8, { w: 800 }) + 2 * 3, tw2 = 6.8, x = b.x - 1.2 - tw2, y = b.y + b.h - h - 4;
+  out.push(`<rect x="${r(x + 0.4)}" y="${r(y + 0.6)}" width="${tw2}" height="${r(h)}" rx="1" fill="#1a0e04" fill-opacity=".3"/><rect data-plate="nest-tag" x="${r(x)}" y="${r(y)}" width="${tw2}" height="${r(h)}" rx="1" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".25"/>`);
+  out.push(`<text data-in="nest-tag" x="${r(x + tw2 / 2 + 1.05)}" y="${r(y + h / 2)}" transform="rotate(-90 ${r(x + tw2 / 2 + 1.05)} ${r(y + h / 2)})" font-family="Alegreya Sans" font-weight="800" font-size="${r(pt(8))}" fill="#2a1a08" text-anchor="middle">${esc(s)}</text>`);
   return out.join('');
 }
-/** the tag over the nest: «Легенда · один раз за игру» */
-const nestTag = (b: Rect, pal: Pal, L: Look) => {
-  const s = `${TXT.legend.title} · ${TXT.legend.note.split('·').pop()!.trim()}`, w = tw(s, 8, 0.48) + 6, x = b.x + b.w / 2 - w / 2, y = b.y + b.h + 1.2;
-  return `<rect x="${r(x)}" y="${r(y)}" width="${r(w)}" height="4.6" rx="1" fill="${L.paper}" stroke="${L.paperLine}" stroke-width=".2"/>` + text(b.x + b.w / 2, y + 3.3, s, 8, { w: 800, color: pal.deep, anchor: 'middle' });
-};
-/** the abilities: a page of the ship's log pinned to the chart (the paper — SVG; the words — HTML) */
-function noteSvg(b: Rect, L: Look): string {
+/** the abilities: a page of the ship's log pinned to the chart; the ruled lines lie exactly under the baselines of the HTML */
+function logSvg(b: Rect, L: Look, lt: { size: number; lh: number }): string {
   const { x, y, w, h } = b, pts: string[] = [];
-  for (let i = 0; i <= 24; i++) { const xx = x + w - (w * i) / 24; pts.push(`${r(xx)} ${r(y + h - (i % 2 ? 0.7 : 0) - (i % 5 === 0 ? 0.4 : 0))}`); }
-  const paper = `M${x} ${y}H${x + w}V${y + h}L${pts.join('L')}Z`;
+  for (let i = 0; i <= 24; i++) pts.push(`${r(x + w - (w * i) / 24)} ${r(y + h - (i % 2 ? 0.7 : 0) - (i % 5 === 0 ? 0.4 : 0))}`);
+  const paper = `M${x} ${y}H${x + w}V${y + h}L${pts.join('L')}Z`, base = y + LOGT.top + lt.lh / 2 + 0.33 * pt(lt.size) + 0.35;
   let lines = '';
-  for (let yy = y + 11.4; yy < y + h - 2; yy += 3.95) lines += `M${x + 3} ${r(yy)}H${x + w - 3}`;
-  return `<path d="${paper}" fill="#1a0e04" fill-opacity=".3" transform="translate(.7 .9)"/><path d="${paper}" fill="${L.note}" stroke="${L.paperLine}" stroke-opacity=".5" stroke-width=".2"/>` +
-    `<path d="${lines}" stroke="${L.noteLine}" stroke-width=".15" stroke-opacity=".7"/><path d="M${x + 9} ${y}V${y + h}" stroke="#b0503a" stroke-width=".2" stroke-opacity=".55"/>` +
-    `<circle cx="${r(x + w / 2)}" cy="${r(y + 2.2)}" r="1.5" fill="${L.pin}"/><circle cx="${r(x + w / 2 - 0.45)}" cy="${r(y + 1.8)}" r=".45" fill="#fff" fill-opacity=".5"/>`;
+  for (let yy = base; yy < y + h - 1.6; yy += lt.lh) lines += `M${x + 2.5} ${r(yy)}H${x + w - 2.5}`;
+  return `<path d="${paper}" fill="#1a0e04" fill-opacity=".3" transform="translate(.7 .9)"/><path data-plate="log" d="${paper}" fill="${L.note}" stroke="${L.paperLine}" stroke-opacity=".5" stroke-width=".2"/>` +
+    `<path d="${lines}" stroke="${L.noteLine}" stroke-width=".16" stroke-opacity=".8"/><path d="M${x + LOGT.side - 1.4} ${y}V${y + h}" stroke="${L.margin}" stroke-width=".22" stroke-opacity=".6"/>` +
+    `<circle cx="${r(x + w / 2)}" cy="${r(y + 1.7)}" r="1.3" fill="${L.pin}"/><circle cx="${r(x + w / 2 - 0.4)}" cy="${r(y + 1.35)}" r=".4" fill="#fff" fill-opacity=".5"/>`;
 }
 
 // ---- the chart under it all ----
-/** the ship on the chart: the kit ship, a pool of calm paper under it, engraved swell along its waterline */
+/** the ship on the chart: the kit ship, a faint pool of paper under it, engraved swell along its waterline */
 function shipOnChart(kind: string, cx: number, wy: number, maxW: number, maxH: number, L: Look): string {
+  if (maxW <= 0) return '';
   const b = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), s = Math.min(maxW / b.w, maxH / b.h);
   const body = K.ship('v2' + kind, K.makeLight(K.LIGHTS.endeavour, { horizon: wy - 4 }), { kind, x: cx - s * (b.x0 + b.x1) / 2, y: wy, scale: s });
-  const w = b.w * s, h = b.h * s, ink = L.ink;
+  const w = b.w * s, h = b.h * s;
   let swell = '';
-  for (let i = 0; i < 4; i++) { const y = wy + 0.8 + i * 1.5, x0 = cx - w * (0.62 - i * 0.07), x1 = cx + w * (0.62 - i * 0.07); let d = `M${r(x0)} ${r(y)}`; for (let x = x0; x < x1; x += 3) d += `q.75 -.55 1.5 0t1.5 0`; swell += `<path d="${d}" fill="none" stroke="${ink}" stroke-width="${r(0.28 - i * 0.04)}" stroke-opacity="${r(0.8 - i * 0.16)}"/>`; }
-  return `<defs><filter id="v2pool${kind}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.2"/></filter></defs><ellipse cx="${r(cx)}" cy="${r(wy - h * 0.4)}" rx="${r(w * 0.62)}" ry="${r(h * 0.62)}" fill="#f6ecd0" opacity=".42" filter="url(#v2pool${kind})"/>${body}${swell}`;
+  for (let i = 0; i < 4; i++) { const y = wy + 0.8 + i * 1.4, x0 = cx - w * (0.6 - i * 0.08), x1 = cx + w * (0.6 - i * 0.08); let d = `M${r(x0)} ${r(y)}`; for (let x = x0; x < x1; x += 3) d += `q.75 -.55 1.5 0t1.5 0`; swell += `<path d="${d}" fill="none" stroke="${L.ink}" stroke-width="${r(0.28 - i * 0.04)}" stroke-opacity="${r(0.8 - i * 0.16)}"/>`; }
+  return `<defs><filter id="v2pool${kind}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter></defs><ellipse cx="${r(cx)}" cy="${r(wy - h * 0.42)}" rx="${r(w * 0.56)}" ry="${r(h * 0.56)}" fill="${L.paper}" opacity=".28" filter="url(#v2pool${kind})"/>${body}${swell}`;
+}
+function shipRect(kind: string, p: ShipPlace): Rect | null {
+  const [cx, wy, mw, mh] = p.ship; if (mw <= 0) return null;
+  const b = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), s = Math.min(mw / b.w, mh / b.h);
+  return { x: cx - b.w * s / 2, y: wy - b.h * s, w: b.w * s, h: b.h * s + 3 };
 }
 
 /** One face of a board, concept B v2. */
 export async function boardV2(ctx: Ctx, ship: Ship, counters: Counters): Promise<{ html: string; css: string }> {
-  const key = DECK_KEY[ship.code] as ShipKey, L = LOOKS[key], pal = basePalette(ship.color), id = `v2${++UID}`, plan = layoutV2(ship, counters, L);
-  UIDS.cur = id;
-  const legend = data.legends[ship.code];
-  // the plates the chart is calmed under
-  const calm: Rect[] = [plan.header, LEGEND_NEST, NOTE, plan.effects, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h })), ...[plan.plans, plan.cards, plan.reactions].filter((b): b is Rect => !!b)];
-  const view = { w: PAGE.w, h: PAGE.h, center: L.center, mmPerDeg: L.mmPerDeg }, at = (lon: number, lat: number) => chartPoint(view, lon, lat);
-  const [sx, sy, sw, sh] = plan.ship, kind = key === 'dutch' ? 'dutch' : key;
-  const base: ChartOpts = { style: L.chart, ...view, inset: 3.2, seed: 5 + ship.code.charCodeAt(0) % 17, calm, roses: [{ x: 108, y: 44, r: 11 }], folds: { x: [PAGE.w / 2 + 12], y: [PAGE.h / 2 + 6] } };
-  const opts: ChartOpts = { ...base, ...(L.extra ? L.extra(base, at) : {}) };
+  const key = DECK_KEY[ship.code] as ShipKey, L = LOOKS[key], pal = basePalette(ship.color), id = `v2${++UID}`;
+  // the widths come from the browser: a dry run collects the strings, then the real layout
+  layoutV2(ship, counters); faceSvg(ctx, ship, counters, layoutV2(ship, counters), id, L, pal);
+  await measureMissing(ctx);
+  const plan = layoutV2(ship, counters), place = counters === 'board' ? L.board : L.strip, kind = key;
+  const calm: Rect[] = [plan.header, NEST, { x: NEST.x, y: NEST.y + NEST.h, w: NEST.w, h: 8 }, LOG, plan.effects, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h })),
+    ...[plan.plans, plan.cards, plan.reactions, plan.dutch].filter((b): b is Rect => !!b)];
+  const view = { w: PAGE.w, h: PAGE.h, mmPerDeg: L.mmPerDeg, center: [0, 0] as [number, number], anchor: place.anchor };
+  const sr = plan.window ? shipRect(kind, place) : null;
+  const base: ChartOpts = { style: L.chart, ...view, inset: 3.2, seed: 5 + ship.code.charCodeAt(0) % 17, calm, avoid: sr ? [sr] : [], roses: [{ x: place.rose[0], y: place.rose[1], r: place.rose[2] }], folds: { x: [PAGE.w / 2 + 12], y: [PAGE.h / 2 + 6] } };
+  const at = (lon: number, lat: number) => chartPoint({ ...view, center: centerOf(view) }, lon, lat);
+  const opts: ChartOpts = { ...base, labelsAt: place.labels, ...(L.notes ? L.notes(at, place) : {}) };
   let svgChart = chartSvg(opts);
-  svgChart = svgChart.replace(/<\/svg>$/, shipOnChart(kind, sx, sy, sw, sh, L) + '</svg>');
+  if (sr) svgChart = svgChart.replace(/<\/svg>$/, shipOnChart(kind, ...place.ship, L) + '</svg>');
   const jpg = await rasterJpeg(ctx.browser, `board2-${key}-${counters}`, svgChart, PAGE.w, PAGE.h, ctx.opts.draft ? 150 : 240);
-
-  const svg: string[] = [defsOf(id, L)];
-  svg.push(`<image href="${jpg.url}" x="0" y="0" width="${PAGE.w}" height="${PAGE.h}" preserveAspectRatio="none"/>`);
-  svg.push(headerSvg(plan.header, ship, pal, L));
-  svg.push(pointerSvg(plan.effects, TXT.effects, 'effects', 'up', id, L, pal));
-
-  for (const rw of plan.rows) svg.push(rowSvg(rw, id, L, pal, ship, true));
-  svg.push(firesSvg(plan.fires, id, L, pal));
-  if (plan.cards) svg.push(rulerSvg(plan.cards, TXT.cards.title, 'cards', [6, 5, 4, 3, 2, 1, 0], false, id, L));
-  if (plan.reactions) svg.push(rulerSvg(plan.reactions, TXT.reactions.title, 'reaction', [0, 1, 2, 3], true, id, L));
-  svg.push(nestSvg(LEGEND_NEST, id, L, pal, legend.name), nestTag(LEGEND_NEST, pal, L));
-  svg.push(noteSvg(NOTE, L));
-  if (plan.plans) svg.push(pointerSvg(plan.plans, fill(TXT.plans, { n: RULES.plansMax }), 'plan', 'right', id, L, pal));
-
-  // the abilities in the log: the words in HTML
-  const ab = ship.abilities.map(a => { const once = /раз в ход/i.test(a.text); return `<div class="v2-an"><span>${esc(a.name)}</span>${once ? `<i>${iconSvg('once', 5, L.tone)}${esc(TXT.once)}</i>` : ''}</div><div class="v2-p">${richNb(a.text)}</div>${once ? `<div class="v2-tick">${onceCell(L)}</div>` : ''}`; }).join('');
-  const heart = TXT.heart[ship.code] ? `<div class="v2-p v2-heart">${richNb(TXT.heart[ship.code])}</div>` : '';
-  const html = `<div class="v2-abs v2-log" style="left:${NOTE.x + 10.4}mm;top:${NOTE.y + 4.6}mm;width:${NOTE.w - 13}mm;height:${NOTE.h - 7 - (plan.plans ? 15 : 0)}mm;--c:${pal.deep};--ink:${L.ink};--soft:${L.soft}"><div class="v2-h">${esc(TXT.abilities)}</div>${ab}${heart}</div>`;
-  return { html: `<div class="v2 v2-${key}"><svg class="v2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html}</div>`, css: '' };
+  const face = faceSvg(ctx, ship, counters, plan, id, L, pal);
+  return { html: `<div class="v2 v2-${key}"><svg class="v2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${defsOf(id, L)}<image href="${jpg.url}" x="0" y="0" width="${PAGE.w}" height="${PAGE.h}" preserveAspectRatio="none"/>${face.svg}</svg>\n${face.html}</div>`, css: '' };
 }
-/** the «раз в ход» cell beside an ability: a 13 mm cell like the tracks' */
-const onceCell = (L: Look) => `<svg viewBox="0 0 13 13" style="width:13mm;height:13mm"><rect x=".2" y=".2" width="12.6" height="12.6" rx="1.8" fill="${L.brass[1]}" stroke="${L.brass[2]}" stroke-width=".25"/><rect x="1" y="1" width="11" height="11" rx="1.1" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".2"/></svg>`;
+const centerOf = (v: { w: number; h: number; mmPerDeg: number; anchor: { lon: number; lat: number; x: number; y: number } }) => centerFor(v.anchor.lon, v.anchor.lat, v.anchor.x, v.anchor.y, v.w, v.h, v.mmPerDeg);
 
+function faceSvg(ctx: Ctx, ship: Ship, counters: Counters, plan: Plan, id: string, L: Look, pal: Pal): { svg: string; html: string } {
+  void ctx; void counters;
+  const legend = data.legends[ship.code], svg: string[] = [];
+  svg.push(headerSvg(plan.header, ship, pal, L, id));
+  svg.push(pointerSvg('effects', plan.effects, TXT.effects, 'effects', id, L, pal));
+  if (plan.plans) svg.push(pointerSvg('plans', plan.plans, fill(TXT.plans, { n: RULES.plansMax }), 'plan', id, L, pal));
+  for (const rw of plan.rows) svg.push(rowSvg(rw, id, L, pal, ship));
+  svg.push(firesSvg(plan.fires, id, L, pal));
+  if (plan.dutch) svg.push(dutchSvg(plan.dutch, id, L, pal));
+  if (plan.cards) svg.push(rulerSvg('cards', plan.cards, TXT.cards.title, 'cards', [6, 5, 4, 3, 2, 1, 0], false, id, L));
+  if (plan.reactions) svg.push(rulerSvg('reactions', plan.reactions, TXT.reactions.title, 'reaction', [0, 1, 2, 3], true, id, L));
+  svg.push(nestSvg(NEST, id, L, pal, legend.name));
+  const lt = logType(ship);
+  svg.push(logSvg(LOG, L, lt));
+  // the abilities in the log: one line height for every line (headings too), so the baselines stay on the ruled lines
+  const ab = ship.abilities.map(a => { const once = /раз в ход/i.test(a.text); return `${once ? `<div class="v2-tick">${onceCell(L, id)}</div>` : ''}<div class="v2-an"><span>${esc(a.name)}</span>${once ? `<i>${iconSvg('once', 3.6, L.tone)}${esc(TXT.once)}</i>` : ''}</div><div class="v2-p">${richNb(a.text)}</div>`; }).join('');
+  const extra = [TXT.heart[ship.code] ?? '', ship.souls != null && TXT.tracks.souls.spend ? `<b>${esc(TXT.tracks.souls.name)}:</b> ${esc(TXT.tracks.souls.spend)}` : ''].filter(Boolean).map(t => `<div class="v2-p">${richNb(t)}</div>`).join('');
+  const html = `<div class="v2-abs v2-log" data-in="log" data-name="журнал особенностей" style="left:${LOG.x + LOGT.side}mm;top:${LOG.y + LOGT.top}mm;width:${LOG.w - 2 * LOGT.side}mm;height:${r(LOG.h - LOGT.top - 1.8)}mm;--c:${pal.deep};--ink:${L.ink};--soft:${L.soft};--lh:${lt.lh}mm;--fs:${lt.size}pt;--lift-h:${r(-0.33 * (pt(11.5) - pt(lt.size)))}mm;--lift-n:${r(-0.33 * (pt(10) - pt(lt.size)))}mm"><div class="v2-h">${esc(TXT.abilities)}</div>${ab}${extra}</div>`;
+  return { svg: svg.join('\n'), html };
+}
+/** the «раз в ход» cell beside an ability: a 13 mm cell like the tracks', floated right in the log */
+const onceCell = (L: Look, id: string) => `<svg viewBox="0 0 13 13" style="width:13mm;height:13mm;display:block"><rect x=".2" y=".2" width="12.6" height="12.6" rx="1.8" fill="${L.brass[1]}" stroke="${L.brass[2]}" stroke-width=".25"/><rect x="1" y="1" width="11" height="11" rx="1.1" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".2"/></svg>`.replace('url(#' + id, 'url(#' + id);
+
+/** every line of the log has one line height (--lh), so the baselines stay on the ruled lines; a heading's larger size sits
+ *  its baseline 0.33·Δem lower in the same line box and is lifted back (--lift-h, --lift-n) */
 export const V2_CSS = `
 .v2{position:absolute;inset:0}
 .v2-svg{position:absolute;left:0;top:0;width:297mm;height:210mm}
 .v2-abs{position:absolute}
-.v2-log{font:500 9.4pt/3.95mm Alegreya,serif;color:var(--ink);overflow:hidden}
-.v2-h{font:italic 800 12pt/1.1 Alegreya,serif;color:var(--c);margin-bottom:1.4mm}
-.v2-an{display:flex;align-items:center;gap:1.4mm;font:800 10pt/3.95mm 'Alegreya SC',serif;letter-spacing:.04em;color:var(--c)}
+.v2-log{font:500 var(--fs) Alegreya,serif;line-height:var(--lh);color:var(--ink);overflow:hidden}
+.v2-log *{line-height:var(--lh)}
+.v2-h{font:italic 800 11.5pt Alegreya,serif;color:var(--c);position:relative;top:var(--lift-h)}
+.v2-an{display:flex;align-items:baseline;gap:1.4mm;font:800 10pt 'Alegreya SC',serif;letter-spacing:.04em;color:var(--c);position:relative;top:var(--lift-n)}
 .v2-an span{flex:1}
-.v2-an i{display:flex;align-items:center;gap:.8mm;font:italic 500 9pt/1 Alegreya,serif;letter-spacing:0;color:var(--soft)}
-.v2-p{margin:0 0 2.6mm}
+.v2-an i{display:inline-flex;align-items:center;gap:.8mm;font:italic 500 var(--fs) Alegreya,serif;letter-spacing:0;color:var(--soft)}
+.v2-an i svg{width:3.4mm;height:3.4mm}
+.v2-p{margin:0 0 var(--lh)}
+.v2-p:last-child{margin-bottom:0}
 .v2-p b{font-weight:800}
-.v2-tick{margin:-3mm 0 1mm}
-.v2-heart{border-top:.2mm solid var(--soft);padding-top:1mm}
+.v2-tick{float:right;width:13mm;height:calc(var(--lh) * 3.4);margin:0 0 0 2mm}
 `;
 
 /** Sheet 04 with counters 'strip' (portrait like the rest of 04): four strips, one per ship, cut along the dashed lines
  *  (a runner of the same size can replace one later): the letter, «Осталось карт» 6…0, «Реакций сыграно» 0…3. */
-export const STRIP = { w: 190, h: 32, gap: 8 };
-export function counterStripsPage(): PageSpec {
-  const W = 210, H = 297, x0 = (W - STRIP.w) / 2, y0 = 40, out: string[] = [];
-  out.push(text(x0, 22, `${TXT.cards.title} · ${TXT.reactions.title}`, 20, { font: 'Alegreya SC', w: 800 }) + text(x0, 30, TXT.strips.lead, 10, { font: 'Alegreya', italic: true, color: '#4a3a26' }));
+export const STRIP = { w: 190, h: 31.5, gap: 9 };
+export function counterStripsPage(head: string, foot: string): PageSpec {
+  const Wp = 210, Hp = 297, x0 = (Wp - STRIP.w) / 2, y0 = 34, out: string[] = [];
   data.ships.forEach((ship, i) => {
     const key = DECK_KEY[ship.code] as ShipKey, L = LOOKS[key], pal = basePalette(ship.color), id = `v2s${i}`, y = y0 + i * (STRIP.h + STRIP.gap);
     out.push(defsOf(id, L));
-    out.push(`<rect x="${x0}" y="${y}" width="${STRIP.w}" height="${STRIP.h}" fill="${L.paper}" stroke="#8c8c8c" stroke-width=".25" stroke-dasharray="2 1.4"/>`);
-    out.push(`<circle cx="${x0 + 9}" cy="${y + STRIP.h / 2}" r="6.8" fill="url(#${id}brh)"/><circle cx="${x0 + 9}" cy="${y + STRIP.h / 2}" r="5.6" fill="${pal.solid}"/>` + text(x0 + 9, y + STRIP.h / 2 + pt(16) * 0.33, ship.code, 16, { font: 'Alegreya SC', w: 800, color: '#fff8e6', anchor: 'middle' }));
-    out.push(rulerSvg({ x: x0 + 18, y: y + 1.5, w: 105, h: STRIP.h - 3 }, TXT.cards.title, 'cards', [6, 5, 4, 3, 2, 1, 0], false, id, L));
-    out.push(rulerSvg({ x: x0 + 125, y: y + 1.5, w: 63.5, h: STRIP.h - 3 }, TXT.reactions.title, 'reaction', [0, 1, 2, 3], false, id, L));
+    out.push(`<rect data-plate="strip-${i}" x="${x0}" y="${y}" width="${STRIP.w}" height="${STRIP.h}" fill="${L.paper}" stroke="#8c8c8c" stroke-width=".25" stroke-dasharray="2 1.4"/>`);
+    out.push(`<g data-plate="strip-${i}-medal"><circle cx="${x0 + 9}" cy="${y + STRIP.h / 2}" r="6.8" fill="url(#${id}brh)"/><circle cx="${x0 + 9}" cy="${y + STRIP.h / 2}" r="5.6" fill="${pal.solid}"/></g>` + text(x0 + 9, y + STRIP.h / 2 + pt(16) * 0.33, ship.code, 16, { font: 'Alegreya SC', w: 800, color: '#fff8e6', anchor: 'middle', in: `strip-${i}-medal` }));
+    out.push(rulerSvg(`strip-${i}-cards`, { x: x0 + 18, y: y + 2.5, w: 2 * PAD + 6 * 14 + C, h: 26.5 }, TXT.cards.title, 'cards', [6, 5, 4, 3, 2, 1, 0], false, id, L));
+    out.push(rulerSvg(`strip-${i}-re`, { x: x0 + STRIP.w - 2 - (2 * PAD + 3 * 14 + C + 8), y: y + 2, w: 2 * PAD + 3 * 14 + C + 8, h: 26.5 }, TXT.reactions.title, 'reaction', [0, 1, 2, 3], false, id, L));
   });
-  return { html: `<style>${V2_CSS}</style><svg class="v2-svg" style="width:210mm;height:297mm" viewBox="0 0 ${W} ${H}">${out.join('\n')}</svg>` };
+  return { html: `<style>${V2_CSS}</style>${head}<svg class="v2-svg" style="width:210mm;height:297mm" viewBox="0 0 ${Wp} ${Hp}">${out.join('\n')}</svg>${foot}` };
 }

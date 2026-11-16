@@ -1,5 +1,5 @@
 // Checks of the printed set (docs/tasks/print-kit.md 3.10, review-repo 18, review-print 9, 11):
-//   --check      layout in the browser: every card 63.0 × 88.0 mm, nothing overflows the glass plate, font sizes,
+//   --check      layout in the browser (+ check-layout.ts: the lettering of the boards, 04 and the memos): every card 63.0 × 88.0 mm, nothing overflows the glass plate, font sizes,
 //                the fan index box, and the contrast of every text line against the baked glass under it
 //                → report/print/check.json; false on an error.
 //   --check-pdf  the PDFs with poppler (pdfinfo, pdffonts, pdfimages): pages, A4, fonts embedded and only Alegreya,
@@ -12,6 +12,7 @@ import { CACHE, HTML_DIR, OUT, ROOT, data, type Ctx } from './kit';
 import { CARD, FACE, deckSheets, seaSheets } from './layout';
 import { ON_GLASS, TYPE, SEA, contrast, darken, luminance } from './colors';
 import { defaultMode, kitFor } from './parts/cards';
+import { checkSheets } from './check-layout';
 
 interface Line { cls: string; x: number; y: number; w: number; h: number; color: string; pt: number }
 interface CardDom { key: string; w: number; h: number; glassTop: number; glassOver: number; lines: Line[]; pts: Record<string, number>; art: string; ix: { w: number; bottom: number } | null; smallPrice: boolean; bigPrice: boolean }
@@ -97,6 +98,10 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
     }
   }
   await page.close();
+  // the lettering of the boards, sheet 04 and the memos: every word inside its plate, nothing touching (check-layout.ts)
+  const lay = await checkSheets(ctx.browser);
+  errors.push(...lay.errors);
+  console.log(`check: lettering of 02, 03, 04 — ${lay.words} words, ${lay.errors.length} error(s)`);
   // ribbons: white lettering on the type colour
   for (const [name, t] of [...Object.entries(TYPE), ['МОРЕ', SEA] as const]) { const c = contrast('#ffffff', darken(t.t, .18)); rows.push({ ribbon: name, contrast: +c.toFixed(2) }); if (c < 4.5) errors.push(`ribbon ${name}: contrast ${c.toFixed(2)} : 1`); }
   if (contrast(ON_GLASS.cream, '#26262a') < 4.5) errors.push('deck strip lettering: contrast below 4.5 : 1');

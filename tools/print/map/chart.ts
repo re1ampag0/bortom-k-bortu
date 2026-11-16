@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { project } from './proj';
+import { centerFor, project } from './proj';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MAP = JSON.parse(fs.readFileSync(path.join(HERE, 'caribbean.json'), 'utf8')) as { w: number; h: number; land: number[][] };
@@ -25,6 +25,12 @@ export interface ChartOpts {
   w: number; h: number;
   /** the part of the chart: its centre (lon, lat) and how many mm one degree of longitude takes */
   center: [number, number]; mmPerDeg: number;
+  /** instead of centre: put the place (lon, lat) at the point (x, y) mm of the box */
+  anchor?: { lon: number; lat: number; x: number; y: number };
+  /** a label moved to a point of the box (mm) where it shows between the plates */
+  labelsAt?: Record<string, Pt>;
+  /** more rects the lettering keeps clear of (the ship drawn over the chart) */
+  avoid?: Rect[];
   seed?: number;
   /** where the board lays its plates: the chart is calmed under them (paler, fewer lines) */
   calm?: Rect[];
@@ -117,6 +123,7 @@ function coastField(rings: Pt[][]) {
     }
   };
 }
+const grow = (b: Rect, d: number): Rect => ({ x: b.x - d, y: b.y - d, w: b.w + 2 * d, h: b.h + 2 * d });
 const inRects = (q: Pt, rs: Rect[], pad = 0) => rs.some(b => q.x > b.x - pad && q.x < b.x + b.w + pad && q.y > b.y - pad && q.y < b.y + b.h + pad);
 
 // ---- engraved pieces ----
@@ -126,8 +133,12 @@ function hill(x: number, y: number, b: number, h: number, ink: string, paper: st
   const pts: string[] = [];
   for (let i = 0; i <= 20; i++) { const t = -1 + i / 10; pts.push(`${r(x + t * b / 2)} ${r(prof(t))}`); }
   const out = [`<path d="M${pts.join('L')}Z" fill="${paper}" stroke="${ink}" stroke-width="${r(0.12 + b * 0.012)}" stroke-linejoin="round"/>`];
+  // the shaded flank: a light wash of ink right of the ridge under the hachures
+  const sh: string[] = [];
+  for (let i = 0; i <= 10; i++) { const t = pk + (i / 10) * (1 - pk); sh.push(`${r(x + t * b / 2)} ${r(prof(t))}`); }
+  out.push(`<path d="M${r(x + pk * b / 2)} ${r(y)}L${sh.join('L')}Z" fill="${ink}" fill-opacity=".16"/>`);
   let d = '';
-  const n = Math.max(4, Math.round(b * 1.5));
+  const n = Math.max(5, Math.round(b * 2.2));
   for (let i = 0; i < n; i++) {
     const t = pk + 0.04 + (i / n) * (0.96 - pk), top = prof(t), len = (y - top) * (0.55 + 0.4 * (1 - i / n)), xx = x + t * b / 2;
     d += `M${r(xx)} ${r(top + 0.12)}Q${r(xx + b * 0.02)} ${r(top + len * 0.5)} ${r(xx + b * 0.05)} ${r(top + len)}`;
@@ -217,7 +228,8 @@ function tornPath(x: number, y: number, w: number, h: number, rnd: () => number,
 }
 
 /** The chart as one SVG in mm (viewBox 0 0 w h). */
-export function chartSvg(o: ChartOpts): string {
+export function chartSvg(o0: ChartOpts): string {
+  const o: ChartOpts = o0.anchor ? { ...o0, center: centerFor(o0.anchor.lon, o0.anchor.lat, o0.anchor.x, o0.anchor.y, o0.w, o0.h, o0.mmPerDeg) } : o0;
   const L = LOOK[o.style], rnd = rng(o.seed ?? 7), W = o.w, H = o.h, id = `ch${o.style}${o.seed ?? 7}`, calm = o.calm ?? [], inset = o.inset ?? 0;
   const rings = landRings(o), land = ringPath(rings), field = coastField(rings), mm = toMm(o), k = o.mmPerDeg / 26; // k ≈ 1 at a whole-sheet chart
   const out: string[] = [], defs: string[] = [];
@@ -273,7 +285,7 @@ export function chartSvg(o: ChartOpts): string {
   }
   out.push(`<g font-family="Old Standard TT" font-style="italic" font-size="1.55" fill="${L.ink}" fill-opacity=".75" text-anchor="middle">${snd}</g>`);
   // land: the paper a little lighter, a hand-coloured wash along the coast inside, fine hatching
-  out.push(`<path d="${land}" fill="${L.land}"/>`);
+  out.push(`<path data-land="1" d="${land}" fill="${L.land}"/>`);
   out.push(`<g clip-path="url(#${id}ld)"><path d="${land}" fill="none" stroke="${L.wash}" stroke-opacity=".55" stroke-width="${r(3.2 * Math.max(0.7, k))}" stroke-linejoin="round" filter="url(#${id}soft2)"/>`);
   out.push(`<path d="${land}" fill="none" stroke="${L.ink}" stroke-opacity=".5" stroke-width="${r(1.2 * Math.max(0.7, k))}" stroke-dasharray=".08 .42" stroke-linejoin="round"/></g>`);
   // the coast: a fine line and a heavier shadow line to the lower right
@@ -283,12 +295,12 @@ export function chartSvg(o: ChartOpts): string {
   for (const rg of RANGES) {
     const P = rg.map(([lo, la]) => mm(lo, la));
     for (let i = 0; i < P.length - 1; i++) {
-      const a = P[i], b = P[i + 1], len = Math.hypot(b.x - a.x, b.y - a.y), step = 2.3 * Math.max(0.6, Math.min(1.5, k));
+      const a = P[i], b = P[i + 1], len = Math.hypot(b.x - a.x, b.y - a.y), step = 2.6 * Math.max(0.85, Math.min(1.5, k));
       for (let t = 0; t < len; t += step * (0.7 + rnd() * 0.6)) {
         const q = { x: a.x + (b.x - a.x) * t / len + (rnd() - 0.5) * 2.2 * k, y: a.y + (b.y - a.y) * t / len + (rnd() - 0.5) * 2 * k };
         if (!field.land(q)) continue;
-        const sz = (3.4 + rnd() * 2.6) * Math.max(0.6, Math.min(1.5, k));
-        hills.push({ x: q.x, y: q.y, b: sz, h: sz * (0.5 + rnd() * 0.3) });
+        const big = rnd(), sz = (2.8 + big * big * 6.5) * Math.max(0.85, Math.min(1.5, k));
+        hills.push({ x: q.x, y: q.y, b: sz, h: sz * (0.38 + rnd() * 0.42) });
       }
     }
   }
@@ -297,46 +309,70 @@ export function chartSvg(o: ChartOpts): string {
     const q = { x: rnd() * W, y: rnd() * H };
     if (!field.land(q) || inRects(q, calm, 1)) continue;
     const d = field.dist(q, 12);
-    if (d > 2.6 * Math.max(0.7, Math.min(2, k)) && rnd() < 0.16 && !hills.some(hh => Math.hypot(hh.x - q.x, (hh.y - q.y) * 1.6) < hh.b * 1.1)) { const sz = (2.2 + rnd() * 1.8) * Math.max(0.6, Math.min(1.6, k)); hills.push({ x: q.x, y: q.y, b: sz, h: sz * 0.42 }); }
+    if (d > 2.6 * Math.max(0.7, Math.min(2, k)) && rnd() < 0.16 && !hills.some(hh => Math.hypot(hh.x - q.x, (hh.y - q.y) * 1.6) < hh.b * 1.1)) { const sz = (2 + rnd() * 2.6) * Math.max(0.85, Math.min(1.6, k)); hills.push({ x: q.x, y: q.y, b: sz, h: sz * (0.3 + rnd() * 0.25) }); }
     else if (d > 1.2 && rnd() < 0.22 && !trees.some(t => Math.hypot(t.x - q.x, t.y - q.y) < 2)) trees.push(q);
   }
   hills.sort((a, b) => a.y - b.y);
   out.push(hills.filter(hh => !inRects(hh, calm, 1)).map(hh => hill(hh.x, hh.y, hh.b, hh.h, L.ink, L.land, rnd)).join(''));
   out.push(trees.filter(q => !hills.some(hh => Math.abs(hh.x - q.x) < hh.b * 0.6 && q.y < hh.y + 1 && q.y > hh.y - hh.h - 1)).map(q => tree(q.x, q.y, 1.5 * Math.max(0.7, Math.min(1.7, k)), L.ink, L.land)).join(''));
-  // lettering
-  const skip = new Set(o.skip ?? []);
+  // lettering: each label takes the first free place near its spot (clear of the roses, the ships, the cartouche, the scale,
+  // the notes, the plates and the other labels; a label in the sea keeps off the land); a label with no free place is left out
+  const skip = new Set(o.skip ?? []), placed: Rect[] = [], obst: Rect[] = [...calm.map(b => grow(b, 1.5)), ...(o.avoid ?? [])];
+  roses.forEach(ro => obst.push({ x: ro.x - ro.r, y: ro.y - ro.r, w: 2 * ro.r, h: 2 * ro.r }));
+  if (o.cross) obst.push({ x: o.cross.x - 5.5, y: o.cross.y - 5.5, w: 11, h: 11 });
+  for (const sp of o.ships ?? []) obst.push({ x: sp.x - 8.6 * sp.s, y: sp.y - 11 * sp.s, w: 17.2 * sp.s, h: 12.6 * sp.s });
+  if (o.serpent) obst.push({ x: o.serpent.x - 13 * o.serpent.s, y: o.serpent.y - 12 * o.serpent.s, w: 27 * o.serpent.s, h: 13.6 * o.serpent.s });
+  if (o.whale) obst.push({ x: o.whale.x - 14.5 * o.whale.s, y: o.whale.y - 10 * o.whale.s, w: 24 * o.whale.s, h: 11.6 * o.whale.s });
+  if (o.cartouche) obst.push(grow(o.cartouche, 3.5));
+  if (o.scale) obst.push({ x: o.scale.x - 3, y: o.scale.y - 4, w: (o.mmPerDeg / Math.cos(o.center[1] * Math.PI / 180)) * 2 + 6, h: 9.5 });
+  for (const nt of o.note ?? []) obst.push({ x: nt.x - 1, y: nt.y - (nt.size ?? 4.2), w: nt.text.length * (nt.size ?? 4.2) * 0.42 + 2, h: (nt.size ?? 4.2) * 1.5 });
+  const hit = (b: Rect, list: Rect[]) => list.some(q => b.x < q.x + q.w && b.x + b.w > q.x && b.y < q.y + q.h && b.y + b.h > q.y);
+  const onLand = (b: Rect) => { for (let i = 0; i <= 14; i++) for (let j = 0; j <= 4; j++) if (field.land({ x: b.x + b.w * i / 14, y: b.y + b.h * j / 4 })) return true; return false; };
   for (const lb of TXT.labels) {
     if (skip.has(lb.text)) continue;
-    const p = mm(lb.lon + (lb.dx ?? 0), lb.lat + (lb.dy ?? 0));
-    if (p.x < -10 || p.x > W + 10 || p.y < -5 || p.y > H + 5) continue;
-    const ang = lb.to ? (() => { const q = mm(lb.to[0], lb.to[1]); return Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI; })() : 0;
+    const p0 = o.labelsAt?.[lb.text] ?? mm(lb.lon + (lb.dx ?? 0), lb.lat + (lb.dy ?? 0));
+    if (p0.x < -10 || p0.x > W + 10 || p0.y < -5 || p0.y > H + 5) continue;
+    const ang = lb.to ? (() => { const q = mm(lb.to[0], lb.to[1]); return Math.atan2(q.y - p0.y, q.x - p0.x) * 180 / Math.PI; })() : 0;
     const kz = Math.max(0.85, Math.min(2.4, k));
     const st = {
-      old: { f: 'Old Standard TT', w: 400, it: true, s: 4.6 * Math.min(kz, 1.5), ls: 0.5 * kz, op: 0.9 },
+      old: { f: 'Old Standard TT', w: 400, it: true, s: 4.6 * Math.min(kz, 1.2), ls: 0.4 * Math.min(kz, 1.2), op: 0.9 },
       sea: { f: 'Old Standard TT', w: 400, it: true, s: 6 * Math.max(0.85, Math.min(1.4, k)), ls: 2.2, op: 0.7 },
       town: { f: 'Old Standard TT', w: 400, it: true, s: 2.6 * Math.max(0.9, Math.min(1.8, k)), ls: 0.1, op: 0.9 },
       small: { f: 'Old Standard TT', w: 400, it: true, s: 2.2 * Math.max(0.9, Math.min(1.8, k)), ls: 0.25, op: 0.8 }
     }[lb.kind];
-    if (lb.kind === 'town') { const t = mm(lb.lon, lb.lat); out.push(town(t.x, t.y, 1.6 * Math.max(0.8, Math.min(1.8, k)), L.ink, L.land)); }
-    if (inRects(p, calm, 2)) continue;
+    if (lb.kind === 'town') { const t = mm(lb.lon, lb.lat); out.push(town(t.x, t.y, 1.6 * Math.max(0.8, Math.min(1.8, k)), L.ink, L.land)); obst.push({ x: t.x - 2.2 * k, y: t.y - 3 * k, w: 4.4 * k, h: 3.4 * k }); }
+    const wide = lb.text.length * st.s * 0.53 + (lb.text.length - 1) * st.ls + 1, sea = !field.land(o.labelsAt?.[lb.text] ?? mm(lb.lon, lb.lat));
+    const boxAt = (p: Pt): Rect => { const a = ang * Math.PI / 180, c = Math.abs(Math.cos(a)), sn = Math.abs(Math.sin(a)), hw = wide / 2, hh = st.s * 0.62, cy = p.y - st.s * 0.3; return { x: p.x - hw * c - hh * sn - 0.6, y: cy - hw * sn - hh * c - 0.6, w: 2 * (hw * c + hh * sn) + 1.2, h: 2 * (hw * sn + hh * c) + 1.2 }; };
+    let p: Pt | null = null;
+    const tries: [number, number][] = [[0, 0]]; for (const d of [1, 2, 3, 4, 5]) for (const dx of [0, -0.3, 0.3, -0.6, 0.6]) tries.push([dx, -d], [dx, d]); for (const dx of [-0.3, 0.3, -0.6, 0.6]) tries.splice(1, 0, [dx, 0]);
+    for (const [dx, dy] of tries) {
+      const q = { x: p0.x + dx * wide, y: p0.y + dy * st.s * 1.2 }, b = boxAt(q);
+      if (hit(b, obst) || hit(b, placed) || (sea && onLand(b)) || b.x < 3 || b.x + b.w > W - 3 || b.y < 3 || b.y + b.h > H - 3) continue;
+      p = q; placed.push(b); break;
+    }
+    if (!p) { if (o.labelsAt?.[lb.text]) console.warn(`warning: chart label «${lb.text}» found no free place near ${JSON.stringify(p0)}`); continue; }
     // a halo of paper under the words keeps them clear of the hatching
-    const t = `<text x="${r(p.x)}" y="${r(p.y)}" transform="rotate(${r(ang)} ${r(p.x)} ${r(p.y)})" text-anchor="middle" font-family="${st.f}" font-weight="${st.w}"${st.it ? ' font-style="italic"' : ''} font-size="${r(st.s)}" letter-spacing="${r(st.ls)}"`;
-    out.push(`${t} fill="none" stroke="${L.land}" stroke-opacity=".8" stroke-width="${r(st.s * 0.22)}" stroke-linejoin="round">${lb.text}</text>${t} fill="${L.ink}" fill-opacity="${st.op}">${lb.text}</text>`);
+    const t = `<text data-lbl="${lb.text}"${sea ? ' data-sea="1"' : ''} x="${r(p.x)}" y="${r(p.y)}" transform="rotate(${r(ang)} ${r(p.x)} ${r(p.y)})" text-anchor="middle" font-family="${st.f}" font-weight="${st.w}"${st.it ? ' font-style="italic"' : ''} font-size="${r(st.s)}" letter-spacing="${r(st.ls)}"`;
+    out.push(`${t.replace(/ data-lbl="[^"]*"| data-sea="1"/g, '')} fill="none" stroke="${L.land}" stroke-opacity=".8" stroke-width="${r(st.s * 0.22)}" stroke-linejoin="round">${lb.text}</text>${t} fill="${L.ink}" fill-opacity="${st.op}">${lb.text}</text>`);
   }
   // roses, ships, the monster
-  roses.forEach((ro, i) => out.push(rose(ro.x, ro.y, ro.r, { ...L, rhumb: i ? [L.ink, L.ink, L.ink] : L.rhumb })));
-  for (const s of o.ships ?? []) out.push(shipGlyph(s.x, s.y, s.s, !!s.flip, { ...L, paper: L.paper }));
-  if (o.serpent) out.push(serpent(o.serpent.x, o.serpent.y, o.serpent.s, !!o.serpent.flip, L));
-  if (o.whale) out.push(whale(o.whale.x, o.whale.y, o.whale.s, !!o.whale.flip, L));
+  roses.forEach((ro, i) => out.push(`<g data-obst="rose">${rose(ro.x, ro.y, ro.r, { ...L, rhumb: i ? [L.ink, L.ink, L.ink] : L.rhumb })}</g>`));
+  for (const s of o.ships ?? []) out.push(`<g data-obst="ship">${shipGlyph(s.x, s.y, s.s, !!s.flip, { ...L, paper: L.paper })}</g>`);
+  if (o.serpent) out.push(`<g data-obst="serpent">${serpent(o.serpent.x, o.serpent.y, o.serpent.s, !!o.serpent.flip, L)}</g>`);
+  if (o.whale) out.push(`<g data-obst="whale">${whale(o.whale.x, o.whale.y, o.whale.s, !!o.whale.flip, L)}</g>`);
   // a scale of leagues: 20 leagues to a degree of latitude
   if (o.scale) {
-    const lat = o.center[1], per = (o.mmPerDeg / Math.cos(lat * Math.PI / 180)) / 20, n = 40, len = per * n, x0 = o.scale.x, y0 = o.scale.y;
+    const lat = o.center[1], per = (o.mmPerDeg / Math.cos(lat * Math.PI / 180)) / 20, n = 40, len = per * n;
+    // the scale takes the first place near its spot that is all sea
+    let x0 = o.scale.x, y0 = o.scale.y;
+    const cand: [number, number][] = []; for (let dy = 0; dy > -H * 0.6; dy -= 8) for (let dx = 0; dx > -W * 0.7; dx -= 12) cand.push([dx, dy]);
+    for (const [dx, dy] of cand) { const b = { x: o.scale.x + dx - 3, y: o.scale.y + dy - 4, w: len + 6, h: 9.5 }; if (!onLand(b) && !hit(b, placed) && !hit(b, obst.filter(q => q.h !== 9.5))) { x0 = o.scale.x + dx; y0 = o.scale.y + dy; break; } }
     let seg = '';
     for (let i = 0; i < n / 5; i++) seg += `<rect x="${r(x0 + i * per * 5)}" y="${r(y0)}" width="${r(per * 5)}" height="1.1" fill="${i % 2 ? L.paper : L.ink}" stroke="${L.ink}" stroke-width=".15"/>`;
     const nums = [0, 10, 20, 30, 40].map(v => `<text x="${r(x0 + v * per)}" y="${r(y0 - 0.9)}">${v}</text>`).join('');
-    out.push(`${seg}<g font-family="Old Standard TT" font-size="2" fill="${L.ink}" text-anchor="middle">${nums}</g><text x="${r(x0 + len / 2)}" y="${r(y0 + 4)}" font-family="Old Standard TT" font-style="italic" font-size="2.6" fill="${L.ink}" text-anchor="middle" letter-spacing=".4">${TXT.scale}</text>`);
+    out.push(`<g data-obst="scale" data-sea="1">${seg}<g font-family="Old Standard TT" font-size="2" fill="${L.ink}" text-anchor="middle">${nums}</g><text x="${r(x0 + len / 2)}" y="${r(y0 + 4)}" font-family="Old Standard TT" font-style="italic" font-size="2.6" fill="${L.ink}" text-anchor="middle" letter-spacing=".4">${TXT.scale}</text></g>`);
   }
-  if (o.cartouche) out.push(cartouche(o.cartouche, L, id));
+  if (o.cartouche) out.push(`<g data-obst="cartouche">${cartouche(o.cartouche, L, id)}</g>`);
   // the captain's notes: a course in ink, a cross, words in a quick hand
   if (o.course && o.course.length > 1) {
     const c = o.course; let d = `M${r(c[0].x)} ${r(c[0].y)}`;
@@ -345,7 +381,7 @@ export function chartSvg(o: ChartOpts): string {
     const head = `M${r(z.x - 3 * Math.cos(ang - 0.4))} ${r(z.y - 3 * Math.sin(ang - 0.4))}L${r(z.x)} ${r(z.y)}L${r(z.x - 3 * Math.cos(ang + 0.4))} ${r(z.y - 3 * Math.sin(ang + 0.4))}`;
     out.push(`<g filter="url(#${id}soft2)" opacity=".85"><path d="${d}" fill="none" stroke="${L.note}" stroke-width=".55" stroke-dasharray="2.6 1.6" stroke-linecap="round"/><path d="${head}" fill="none" stroke="${L.note}" stroke-width=".6" stroke-linecap="round"/></g>`);
   }
-  if (o.cross) { const { x, y } = o.cross; out.push(`<g opacity=".9"><path d="M${x - 2.6} ${y - 2.6}L${x + 2.6} ${y + 2.6}M${x + 2.6} ${y - 2.4}L${x - 2.4} ${y + 2.6}" stroke="${L.note}" stroke-width=".8" stroke-linecap="round"/><circle cx="${x}" cy="${y}" r="4.4" fill="none" stroke="${L.note}" stroke-width=".35" stroke-dasharray="1.4 .8"/></g>`); }
+  if (o.cross) { const { x, y } = o.cross; out.push(`<g data-obst="cross" opacity=".9"><path d="M${x - 2.6} ${y - 2.6}L${x + 2.6} ${y + 2.6}M${x + 2.6} ${y - 2.4}L${x - 2.4} ${y + 2.6}" stroke="${L.note}" stroke-width=".8" stroke-linecap="round"/><circle cx="${x}" cy="${y}" r="4.4" fill="none" stroke="${L.note}" stroke-width=".35" stroke-dasharray="1.4 .8"/></g>`); }
   for (const nt of o.note ?? []) out.push(`<text x="${r(nt.x)}" y="${r(nt.y)}" transform="rotate(${nt.rot ?? -4} ${r(nt.x)} ${r(nt.y)})" font-family="Alegreya" font-style="italic" font-weight="500" font-size="${r(nt.size ?? 4.2)}" fill="${L.note}" fill-opacity=".88">${nt.text}</text>`);
   // the calm under the board's plates: paper laid softly over the busy chart
   for (const b of calm) out.push(`<rect x="${r(b.x - 0.6)}" y="${r(b.y - 0.6)}" width="${r(b.w + 1.2)}" height="${r(b.h + 1.2)}" rx="2" fill="${L.paper}" opacity=".5" filter="url(#${id}soft2)"/>`);
@@ -377,9 +413,9 @@ function sheetLife(o: ChartOpts, L: Look, id: string, rnd: () => number): string
   for (let i = 0; i < Math.round(6 * L.wear); i++) out.push(`<ellipse cx="${r(rnd() * W)}" cy="${r(rnd() * H)}" rx="${r(6 + rnd() * 16)}" ry="${r(3 + rnd() * 7)}" fill="#fff8e8" opacity="${r(0.07 + rnd() * 0.08)}" filter="url(#${id}blot)"/>`);
   if (o.style === 'pearl') for (let i = 0; i < 3; i++) out.push(`<ellipse cx="${r(rnd() * W)}" cy="${r(rnd() * H)}" rx="${r(5 + rnd() * 9)}" ry="${r(2 + rnd() * 3)}" fill="#1a1a1a" opacity=".07" filter="url(#${id}blot)" transform="rotate(${r(rnd() * 60 - 30)})"/>`);
   if (o.style === 'dutch') {
-    // tide marks: wavy bands of salt and a green bloom from the lower edge
-    for (let i = 0; i < 3; i++) { const y = H * (0.55 + i * 0.13 + rnd() * 0.05); out.push(`<path d="M0 ${r(y)}Q${r(W * 0.25)} ${r(y - 6)} ${r(W * 0.5)} ${r(y)}T${W} ${r(y - 2)}" fill="none" stroke="#e8f0dc" stroke-width="${r(1 + rnd())}" opacity=".35" filter="url(#${id}blot)"/>`); }
-    out.push(`<rect x="0" y="${r(H * 0.72)}" width="${W}" height="${r(H * 0.3)}" fill="#3e6a45" opacity=".16" filter="url(#${id}blot)"/>`);
+    // tide marks: irregular blooms of salt and weed, not bands
+    for (let i = 0; i < 7; i++) { const x = rnd() * W, y = rnd() * H, R = 6 + rnd() * 14; out.push(`<ellipse cx="${r(x)}" cy="${r(y)}" rx="${r(R * (1 + rnd()))}" ry="${r(R * 0.7)}" fill="none" stroke="${i % 2 ? '#e8f0dc' : '#3e6a45'}" stroke-width="${r(0.6 + rnd())}" opacity="${r(0.2 + rnd() * 0.15)}" filter="url(#${id}blot)"/>`); }
+    for (let i = 0; i < 5; i++) out.push(`<ellipse cx="${r(rnd() * W)}" cy="${r(H * (0.75 + rnd() * 0.3))}" rx="${r(20 + rnd() * 40)}" ry="${r(8 + rnd() * 14)}" fill="#3e6a45" opacity="${r(0.07 + rnd() * 0.07)}" filter="url(#${id}blot)"/>`);
   }
   return out.join('');
 }

@@ -190,7 +190,7 @@ export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omi
 }
 
 // ---- SVG pieces of the skeleton ----
-interface TO { font?: string; w?: number; color?: string; anchor?: 'start' | 'middle' | 'end'; ls?: string; italic?: boolean; deco?: string }
+export interface TO { font?: string; w?: number; color?: string; anchor?: 'start' | 'middle' | 'end'; ls?: string; italic?: boolean; deco?: string }
 const text = (x: number, y: number, s: string, size: number, o: TO = {}) =>
   `<text x="${r(x)}" y="${r(y)}" font-family="${o.font ?? 'Alegreya Sans'}" font-weight="${o.w ?? 500}"${o.italic ? ' font-style="italic"' : ''} font-size="${r(pt(size))}" fill="${o.color ?? INK}"${o.anchor ? ` text-anchor="${o.anchor}"` : ''}${o.ls ? ` letter-spacing="${o.ls}"` : ''}${o.deco ? ` text-decoration="${o.deco}"` : ''}>${esc(s)}</text>`;
 const cellRect = (c: Rect, fillC: string, line: string, sw = 0.4) => `<rect x="${r(c.x + sw / 2)}" y="${r(c.y + sw / 2)}" width="${r(c.w - sw)}" height="${r(c.h - sw)}" rx="2" fill="${fillC}" stroke="${line}" stroke-width="${sw}"/>`;
@@ -212,13 +212,13 @@ export const ICON = {
 // ---- measured words: A's plates hug them. Widths come from the browser on the real fonts (measureMissing), the
 // rough estimate stands in only until then ----
 const WID = new Map<string, number>(), MISS = new Set<string>();
-function widthOf(s: string, size: number, o: TO = {}): number {
+export function widthOf(s: string, size: number, o: TO = {}): number {
   const k = JSON.stringify([o.font ?? 'Alegreya Sans', o.w ?? 500, size, o.ls ?? '', o.italic ? 1 : 0, s]), v = WID.get(k);
   if (v != null) return v;
   MISS.add(k);
   return tw(s, size, /SC/.test(o.font ?? '') ? 0.72 : 0.5);
 }
-async function measureMissing(ctx: Ctx): Promise<void> {
+export async function measureMissing(ctx: Ctx): Promise<void> {
   const keys = [...MISS].filter(k => !WID.has(k));
   MISS.clear();
   if (!keys.length) return;
