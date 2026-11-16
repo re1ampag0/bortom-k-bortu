@@ -136,8 +136,8 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
     errors.push(...lb.errors);
     console.log(`check: Legend backs, ship vs the gold frame (inner edge ${LB_FRAME.w} mm from the cut, need ≥ ${LB_FRAME.gap} mm of air) — 4 backs, ${lb.errors.length} error(s)`);
     for (const l of lb.lines) console.log('  ' + l); }
-  // the Legend backs' lettering: every letter from its own face (Alegreya SC; Rubik Wet Paint for PRINT_LEGEND_FONT=wet)
-  { const lp = await ctx.browser.newPage(), lf = await checkLegendFont(lp); await lp.close();
+  // the Legend backs' lettering (outlines): every letter has its own glyph in its face (Alegreya SC; Rubik Wet Paint for PRINT_LEGEND_FONT=wet)
+  { const lf = checkLegendFont();
     errors.push(...lf.errors);
     console.log(`check: Legend backs, lettering glyphs (no fallback) — ${lf.errors.length} error(s)`);
     for (const l of lf.lines) console.log('  ' + l); }

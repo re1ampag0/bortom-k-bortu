@@ -3,20 +3,21 @@
 // place of the game's title and a thin gold frame along the card edge. The frame runs from the cut (and on through the
 // bleed, like the frame of a face) LB_FRAME.w mm inwards; a shifted back shows a wider or narrower gold edge, never a
 // neighbour's colour. It must not touch the ship: checkLegendShips measures every ship against its inner edge.
+import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import opentype from 'opentype.js';
 import path from 'node:path';
 import type { Page } from 'playwright';
-import { ROOT, fontCss } from './kit';
+import { ROOT } from './kit';
 import { BLEED, CARD } from './layout';
 import { DECK_KEY, DECK_NAME, darken, lighten, type DeckCode } from './colors';
 
 const require = createRequire(import.meta.url);
 /** The medallion with the deck's letter on a Legend back, as on the deck back; PRINT_LEGEND_CREST=off renders without. */
 export const LEGEND_BACK_CREST = process.env.PRINT_LEGEND_CREST !== 'off';
-/** The face of a Legend back's lettering (user's request 16.11, third round, «надписи крутым злобным шрифтом»): 'wet' —
- *  Rubik Wet Paint, gold dripping off the letters (variant B, printed); PRINT_LEGEND_FONT=classic renders variant A,
- *  Alegreya SC as on every other back, for a comparison. */
-export const LEGEND_BACK_FONT: LegendFont = process.env.PRINT_LEGEND_FONT === 'classic' ? 'classic' : 'wet';
+/** The face of a Legend back's lettering (user's decision 16.11, third round: variant A): 'classic' — Alegreya SC as on
+ *  every other back (printed); PRINT_LEGEND_FONT=wet renders variant B, Rubik Wet Paint, gold dripping off the letters. */
+export const LEGEND_BACK_FONT: LegendFont = process.env.PRINT_LEGEND_FONT === 'wet' ? 'wet' : 'classic';
 /** The gold frame: w — from the cut to its inner edge (mm); corner — how far the corner ornaments reach along each edge
  *  from the corner (they lie in the sky and the near water, away from the ship); gap — the least air between the ship
  *  and the frame (--check). */
@@ -103,12 +104,46 @@ export function lbStar(cx: number, cy: number, R: number): string {
  *  display face, PRINT_LEGEND_FONT): place and size of «ЛЕГЕНДА» (size, the word's length — textLength, so the stars beside
  *  it always stand at the same air) and of the ship's name. */
 export const LB_TYPE = {
-  classic: { family: `'Alegreya SC',serif`, weight: 700, title: { size: 4.25, len: 22.4, cap: .62 }, name: { size: 3.39, cap: .5, spacing: .04 } },
-  wet: { family: `'Rubik Wet Paint',sans-serif`, weight: 400, title: { size: 4.6, len: 24.6, cap: .7 }, name: { size: 3.1, cap: .72, spacing: .02 } }
+  classic: { family: `'Alegreya SC',serif`, file: 'alegreya-sc/files/alegreya-sc-%s-700-normal.woff', weight: 700, title: { size: 4.25, len: 22.4, cap: .62 }, name: { size: 3.39, cap: .5, spacing: .04 } },
+  wet: { family: `'Rubik Wet Paint',sans-serif`, file: 'rubik-wet-paint/files/rubik-wet-paint-%s-400-normal.woff', weight: 400, title: { size: 4.6, len: 24.6, cap: .7 }, name: { size: 3.1, cap: .72, spacing: .02 } }
 } as const;
 export type LegendFont = keyof typeof LB_TYPE;
 /** The stars beside «ЛЕГЕНДА»: R — the long points, gap — the air between the word and a star's point (mm). */
 export const LB_STAR = { R: 3.1, gap: 1.3 };
+
+/** The faces as outlines (opentype.js reads the @fontsource WOFF files, cyrillic and latin subsets): the lettering goes to the
+ *  PDF as paths, not as a font — Chromium would turn gradient-filled text into Type 3 fonts (check-pdf forbids them), and
+ *  no display face is embedded at all. A letter neither subset has stops the build: no fallback is ever drawn. */
+const faces = new Map<LegendFont, opentype.Font[]>();
+function facesOf(font: LegendFont): opentype.Font[] {
+  let f = faces.get(font);
+  if (!f) faces.set(font, f = ['cyrillic', 'latin'].map(sub => { const b = fs.readFileSync(path.join(ROOT, 'node_modules/@fontsource', LB_TYPE[font].file.replace('%s', sub))); return opentype.parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); }));
+  return f;
+}
+/** The glyphs of s in that face, each with its font (a letter neither subset has throws). */
+export function glyphsOf(font: LegendFont, s: string): { f: opentype.Font; g: opentype.Glyph }[] {
+  return [...s].map(c => {
+    const f = facesOf(font).find(f => f.charToGlyphIndex(c) > 0);
+    if (!f) throw new Error(`Legend back lettering: ${LB_TYPE[font].family} has no glyph for «${c}» (U+${c.codePointAt(0)!.toString(16).toUpperCase()})`);
+    return { f, g: f.charToGlyph(c) };
+  });
+}
+/** s as one SVG path, centred on cx, baseline y, size (em, in the drawing's units); spacing — extra em between letters, or
+ *  len — the whole word stretched to that width by its gaps (as textLength, lengthAdjust spacing). Kerning within a face.
+ *  top / bottom — the face's ascent and descent: the box a gradient spans, as it spanned the text before. */
+export function outline(font: LegendFont, s: string, cx: number, y: number, size: number, o: { spacing?: number; len?: number } = {}): { d: string; top: number; bottom: number } {
+  const gl = glyphsOf(font, s), adv: number[] = [];
+  gl.forEach(({ f, g }, i) => { const k = i && gl[i - 1].f === f ? f.getKerningValue(gl[i - 1].g, g) : 0; adv.push(((i ? k : 0) + (g.advanceWidth ?? 0)) * size / f.unitsPerEm); });
+  const natural = adv.reduce((a, b) => a + b, 0), gap = o.len != null && gl.length > 1 ? (o.len - natural) / (gl.length - 1) : (o.spacing ?? 0) * size;
+  let x = cx - (natural + gap * (gl.length - 1)) / 2; const parts: string[] = [];
+  gl.forEach(({ f, g }, i) => { if (i) x += gap; const k = i && gl[i - 1].f === f ? f.getKerningValue(gl[i - 1].g, g) * size / f.unitsPerEm : 0; parts.push(g.getPath(x + k, y, size).toPathData(2)); x += adv[i]; });
+  const f0 = facesOf(font)[0];
+  return { d: parts.join(''), top: y - f0.ascender / f0.unitsPerEm * size, bottom: y - f0.descender / f0.unitsPerEm * size };
+}
+/** A vertical gradient over y0…y1 (user space), its own id per span: the outline's gradient as the text's was. */
+const vGrad = (id: string, y0: number, y1: number, stops: [number, string][]) => `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="${n2(y0)}" x2="0" y2="${n2(y1)}">${stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`;
+const TEXT_STOPS = (M: typeof LB_METAL): [number, string][] => [[0, M.hi], [.3, M.light], [.48, M.mid], [.5, M.warm], [.72, M.mid], [.9, M.light], [1, M.deep]];
+const NAME_STOPS: [number, string][] = [[0, '#fffdf2'], [.45, '#fff0c0'], [.55, '#ffe08a'], [1, '#f2c45a']];
 
 /** «ЛЕГЕНДА» with a compass star on each side and the ship's name — one SVG over the card (units mm). The metal
  *  gradient fills the letters, a dark engraved edge (stroke behind the fill) and a hard offset shadow (no blur) lift them
@@ -116,15 +151,15 @@ export const LB_STAR = { R: 3.1, gap: 1.3 };
 export function legendLetteringSvg(name: string, titleY: number, nameY: number, font: LegendFont): string {
   const T = LB_TYPE[font], M = LB_METAL, W = CARD.w, t = T.title, nm = T.name;
   const tb = titleY + t.size * t.cap / 2, nb = nameY + nm.size * nm.cap / 2, sx = t.len / 2 + LB_STAR.gap + LB_STAR.R;
-  const esc = (v: string) => v.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-  const txt = (s: string, y: number, size: number, extra: string) => `<text x="${W / 2}" y="${n2(y)}" text-anchor="middle" font-family="${T.family}" font-weight="${T.weight}" font-size="${size}" ${extra}>${esc(s)}</text>`;
-  const title = 'ЛЕГЕНДА', len = `textLength="${t.len}" lengthAdjust="spacing"`;
-  return `<svg class="lbl" viewBox="0 0 ${W} ${CARD.h}" ${ns}>${METAL_DEFS}`
-    + txt(title, tb + .3, t.size, `${len} fill="#000" fill-opacity=".55"`)
-    + txt(title, tb, t.size, `${len} fill="url(#lbm-text)" stroke="${M.edge}" stroke-width=".34" paint-order="stroke" stroke-linejoin="round"`)
+  const ti = outline(font, 'ЛЕГЕНДА', W / 2, tb, t.size, { len: t.len }), na = outline(font, name, W / 2, nb, nm.size, { spacing: nm.spacing });
+  const gt = `lbm-t${Math.round(ti.top * 100)}-${Math.round(ti.bottom * 100)}`, gn = `lbm-n${Math.round(na.top * 100)}-${Math.round(na.bottom * 100)}`;
+  const word = (d: string, dy: number, extra: string) => `<path d="${d}"${dy ? ` transform="translate(0 ${dy})"` : ''} ${extra}/>`;
+  return `<svg class="lbl" viewBox="0 0 ${W} ${CARD.h}" ${ns}>${METAL_DEFS}<defs>${vGrad(gt, ti.top, ti.bottom, TEXT_STOPS(M))}${vGrad(gn, na.top, na.bottom, NAME_STOPS)}</defs>`
+    + word(ti.d, .3, `fill="#000" fill-opacity=".55"`)
+    + word(ti.d, 0, `fill="url(#${gt})" stroke="${M.edge}" stroke-width=".34" paint-order="stroke" stroke-linejoin="round"`)
     + lbStar(W / 2 - sx, titleY, LB_STAR.R) + lbStar(W / 2 + sx, titleY, LB_STAR.R)
-    + txt(name, nb + .26, nm.size, `letter-spacing="${nm.spacing}em" fill="#000" fill-opacity=".6"`)
-    + txt(name, nb, nm.size, `letter-spacing="${nm.spacing}em" fill="url(#lbm-name)" stroke="${M.edge}" stroke-width=".3" paint-order="stroke" stroke-linejoin="round"`)
+    + word(na.d, .26, `fill="#000" fill-opacity=".6"`)
+    + word(na.d, 0, `fill="url(#${gn})" stroke="${M.edge}" stroke-width=".3" paint-order="stroke" stroke-linejoin="round"`)
     + `</svg>`;
 }
 
@@ -141,7 +176,7 @@ const CREST_SIGN: Record<DeckCode, string> = {
  *  with a gloss, a dashed engraved line and the deck's four gold signs on it, the letter in gold with a dark edge. Raster: the soft
  *  shadows are baked here. */
 export function legendCrestHtml(deck: DeckCode, col: string, font: LegendFont): string {
-  const M = LB_METAL, T = LB_TYPE[font], C = 45, st = (a: [number, string][]) => a.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('');
+  const M = LB_METAL, C = 45, L = outline(font, deck, C, C + (font === 'wet' ? 14 : 13), font === 'wet' ? 38 : 40), st = (a: [number, string][]) => a.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('');
   const beads = Array.from({ length: 40 }, (_, i) => i).map(i => { const a = i * Math.PI / 20; return `<circle cx="${n2(C + 39.3 * Math.sin(a))}" cy="${n2(C - 39.3 * Math.cos(a))}" r="1.25"/>`; }).join('');
   const signs = [0, 90, 180, 270].map(a => `<g transform="translate(${n2(C + 28.3 * Math.sin(a * Math.PI / 180))} ${n2(C - 28.3 * Math.cos(a * Math.PI / 180))}) scale(1.3)">${CREST_SIGN[deck]}</g>`).join('');
   // the dashed engraved line round the enamel, broken where a sign stands
@@ -152,7 +187,7 @@ export function legendCrestHtml(deck: DeckCode, col: string, font: LegendFont): 
     + `<linearGradient id="v" x1="0" y1="0" x2="0" y2="1">${st([[0, M.deep], [.5, M.warm], [1, M.light]])}</linearGradient>`
     + `<radialGradient id="e" cx=".5" cy=".38" r=".62">${st([[0, lighten(col, .28)], [.55, col], [.85, darken(col, .35)], [1, darken(col, .6)]])}</radialGradient>`
     + `<radialGradient id="g" cx=".5" cy=".2" r=".55">${st([[0, 'rgba(255,255,255,.34)'], [1, 'rgba(255,255,255,0)']])}</radialGradient>`
-    + `<linearGradient id="t" x1="0" y1="0" x2="0" y2="1">${st([[0, M.hi], [.35, M.light], [.5, M.mid], [.52, M.warm], [.8, M.light], [1, M.mid]])}</linearGradient>`
+    + `<linearGradient id="t" gradientUnits="userSpaceOnUse" x1="0" y1="${n2(L.top)}" x2="0" y2="${n2(L.bottom)}">${st([[0, M.hi], [.35, M.light], [.5, M.mid], [.52, M.warm], [.8, M.light], [1, M.mid]])}</linearGradient>`
     + `<radialGradient id="b" cx=".35" cy=".3" r=".8">${st([[0, '#fffbe6'], [.5, M.light], [1, M.deep]])}</radialGradient>`
     + `<filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.8"/></filter>`
     + `<filter id="l" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.3" stdDeviation=".8" flood-color="#000" flood-opacity=".7"/></filter></defs>`
@@ -164,7 +199,7 @@ export function legendCrestHtml(deck: DeckCode, col: string, font: LegendFont): 
     + `<ellipse cx="${C}" cy="${C - 13}" rx="24" ry="14" fill="url(#g)"/>`
     + `<path d="${dashes}" fill="none" stroke="${M.light}" stroke-opacity=".65" stroke-width=".9" stroke-dasharray="2.2 1.6"/>`
     + `<g fill="${M.light}" stroke="${M.edge}" stroke-width=".3" stroke-linejoin="round" filter="url(#l)">${signs}</g>`
-    + `<text x="${C}" y="${C + (font === 'wet' ? 14 : 13)}" text-anchor="middle" font-family="${T.family}" font-weight="${T.weight}" font-size="${font === 'wet' ? 38 : 40}" fill="url(#t)" stroke="${M.edge}" stroke-width="2" paint-order="stroke" stroke-linejoin="round" filter="url(#l)">${deck}</text>`
+    + `<path d="${L.d}" fill="url(#t)" stroke="${M.edge}" stroke-width="2" paint-order="stroke" stroke-linejoin="round" filter="url(#l)"/>`
     + `</svg>`;
 }
 
@@ -223,21 +258,15 @@ export async function checkLegendShips(page: Page, dxOf: Record<DeckCode, number
 }
 
 /** --check: every letter of a Legend back's lettering (both faces: «ЛЕГЕНДА», the deck letters, the ships' names and the
- *  test set Л Е Г Н Д А Ж Ч Ё Ы Й in both cases) comes from that face, not a fallback: its width must not change when the
- *  fallback after it does (monospace vs serif). */
-export async function checkLegendFont(page: Page): Promise<{ errors: string[]; lines: string[] }> {
+ *  test set Л Е Г Н Д А Ж Ч Ё Ы Й in both cases) has its own glyph with an outline in that face's files — the paths are
+ *  drawn from these glyphs, so a missing one would stop the build; here it is reported for both faces at once. */
+export function checkLegendFont(): { errors: string[]; lines: string[] } {
   const set = [...new Set([...'ЛЕГЕНДАЖЧЁЫЙ', ...'ЛЕГЕНДАЖЧЁЫЙ'.toLowerCase(), ...Object.keys(DECK_KEY), ...Object.values(DECK_NAME).join('')])].filter(c => c.trim());
-  await page.setContent(`<style>${fontCss()}</style><span id="a"></span>`);
   const errors: string[] = [], lines: string[] = [];
-  for (const [key, T] of Object.entries(LB_TYPE)) {
-    const fam = T.family.split(',')[0];
-    const bad = await page.evaluate(async ([fam, w, chars]) => {
-      const el = document.getElementById('a')!; el.style.fontWeight = String(w); el.style.fontSize = '100px';
-      await document.fonts.load(`${w} 100px ${fam}`, chars.join('')); await document.fonts.ready;
-      const width = (c: string, fb: string) => { el.style.fontFamily = `${fam},${fb}`; el.textContent = c; return el.getBoundingClientRect().width; };
-      return chars.filter(c => Math.abs(width(c, 'monospace') - width(c, 'serif')) > .01 || !document.fonts.check(`${w} 100px ${fam}`, c));
-    }, [fam, T.weight, set] as [string, number, string[]]);
-    lines.push(`${key} (${fam}): ${set.length} letters, ${bad.length ? 'FALLBACK for ' + bad.join(' ') : 'all from the face'}`);
+  for (const key of Object.keys(LB_TYPE) as LegendFont[]) {
+    const fam = LB_TYPE[key].family.split(',')[0], bad: string[] = [];
+    for (const c of set) { try { const [{ g }] = glyphsOf(key, c); if (!g.path.commands.length) bad.push(c); } catch { bad.push(c); } }
+    lines.push(`${key} (${fam}): ${set.length} letters, ${bad.length ? 'NO GLYPH for ' + bad.join(' ') : 'all outlined from the face\'s own glyphs'}`);
     if (bad.length) errors.push(`Legend back lettering ${key}: ${fam} has no glyph for ${bad.join(' ')}`);
   }
   return { errors, lines };
