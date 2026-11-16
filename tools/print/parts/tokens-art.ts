@@ -61,9 +61,9 @@ export const ico = (name: IconName, cx: number, cy: number, s: number, tone: Ico
   (pid ? `<rect data-plate="${pid}" x="${r(cx - s / 2)}" y="${r(cy - s / 2)}" width="${r(s)}" height="${r(s)}" fill="none"/>` : '') +
   (op < 1 ? `<g opacity="${op}">${icon(name, cx, cy, s, tone)}</g>` : icon(name, cx, cy, s, tone));
 /** a square cell: a brass rim (flat paint, lit from the upper left) round a clean recessed well (a mark lies in it) */
-export function brassCell(pid: string, x: number, y: number, s: number, _id: string, o: { inner?: string; tint?: string; rx?: number } = {}): string {
+export function brassCell(pid: string, x: number, y: number, s: number, _id: string, o: { inner?: string; tint?: string; rx?: number; shadow?: boolean } = {}): string {
   const rx = o.rx ?? 1.8, [bl, bm, bd] = LOOK.brass, e = 0.4, wr = Math.max(0.6, rx - 0.7);
-  return `<rect x="${r(x + 0.35)}" y="${r(y + 0.5)}" width="${s}" height="${s}" rx="${rx}" fill="#1a0e04" fill-opacity=".28"/>` +
+  return (o.shadow === false ? '' : `<rect x="${r(x + 0.35)}" y="${r(y + 0.5)}" width="${s}" height="${s}" rx="${rx}" fill="#1a0e04" fill-opacity=".28"/>`) +
     `<rect data-plate="${pid}" x="${r(x)}" y="${r(y)}" width="${s}" height="${s}" rx="${rx}" fill="${bm}" stroke="${bd}" stroke-width=".22"/>` +
     `<path d="M${r(x + e)} ${r(y + s - rx)}V${r(y + rx)}Q${r(x + e)} ${r(y + e)} ${r(x + rx)} ${r(y + e)}H${r(x + s - rx)}" fill="none" stroke="${bl}" stroke-width=".5" stroke-linecap="round"/>` +
     `<path d="M${r(x + rx)} ${r(y + s - e)}H${r(x + s - rx)}Q${r(x + s - e)} ${r(y + s - e)} ${r(x + s - e)} ${r(y + s - rx)}V${r(y + rx)}" fill="none" stroke="${bd}" stroke-opacity=".4" stroke-width=".4" stroke-linecap="round"/>` +

@@ -66,6 +66,8 @@ const CUT_ON_DARK = '#e6e1d6';  // the same lines between two dark tokens
 const CUT_W = 0.25;
 /** numbers in empty hold cells: decoration, seen until a token covers them */
 const FAINT = '#9a8458';
+/** the field of the Fire coin: warm red-orange, so Fire and the cream Powder coins differ from across the table */
+const FIRE_FIELD = '#ec8a52';
 /** the engraved icons: sepia on parchment, the fire in red, the Souls in teal */
 const SOUL_TONE: IconTone = { ink: '#0f3a33', mid: '#3f9a88', light: '#e6f6f1', paper: '#cfeee6' };
 /** How far a cut line runs past its grid into the margin. */
@@ -310,7 +312,7 @@ function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean): 
   s1.push(cPow.svg, tokenGrid(id1, POWDER, pd, COUNTS.powder, (i, x, y) => coinToken(id1, `pw${i}`, x, y, pd, WELL, icon('powder', x + pd / 2 + 0.2, y + pd / 2 + 0.1, 11.6, TONE.sepia))));
   h1.push(cPow.html);
   const cFire = caption('cap-fire', FIRE.x, FIRE.y, fill(TXT.fire, { n: COUNTS.fire }), ico('fire', capSign(FIRE.x, FIRE.y).cx, capSign(FIRE.x, FIRE.y).cy, 4.8, TONE.red));
-  s1.push(cFire.svg, tokenGrid(id1, FIRE, fr, COUNTS.fire, (i, x, y) => coinToken(id1, `fr${i}`, x, y, fr, mix(LOOK.cell, '#d8743a', 0.16), icon('fire', x + fr / 2, y + fr / 2 + 0.3, 13.2, TONE.red))));
+  s1.push(cFire.svg, tokenGrid(id1, FIRE, fr, COUNTS.fire, (i, x, y) => coinToken(id1, `fr${i}`, x, y, fr, FIRE_FIELD, icon('fire', x + fr / 2, y + fr / 2 + 0.3, 13.2, TONE.red))));
   h1.push(cFire.html);
   const mk = markersHtml(), sg = capSign(MARK.x, MARK.y);
   const cMark = caption('cap-markers', MARK.x, MARK.y, TXT.markers,

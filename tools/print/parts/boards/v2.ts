@@ -16,6 +16,7 @@ import { CHART_NOTES, chartPoint, chartSvg, type ChartOpts, type ChartStyle, typ
 import { rasterJpeg } from '../../map/raster';
 import { centerFor } from '../../map/proj';
 import { icon, iconSvg, TONE, type IconName, type IconTone } from '../icons';
+import { CREAM, brassCell, capWord, deepOf } from '../tokens-art';
 import { basePalette, measureMissing, widthOf, type Pal, type ShipKey, type TO, type TrackKey } from './frame';
 
 export type Counters = 'board' | 'strip';
@@ -487,18 +488,52 @@ export const V2_CSS = `
 /** Sheet 04 with counters 'strip' (portrait like the rest of 04): four strips, one per ship, cut along the dashed lines
  *  (a runner of the same size can replace one later): the letter, «Осталось карт» 6…0, «Реакций сыграно» 0…3. */
 export const STRIP = { w: 190, h: 31.5, gap: 9 };
+/** sheet 04, page 3: a strip per player, cut along the dashed line. A light parchment ground (as the holds of page 1); the
+ *  ship's letter in a brass-rimmed medallion like the track markers; two parchment panels of one height with brass edges
+ *  and a 2.5 mm gap, «Осталось карт» (6 … 0) and «Реакций сыграно» (0 … 3), the cells centred under their title. Nothing,
+ *  shadows included, comes closer than 3 mm to the dashed line. The words are HTML boxes from parts/tokens-art.ts. */
 export function counterStripsPage(head: string, foot: string): PageSpec {
-  const Wp = 210, Hp = 297, x0 = (Wp - STRIP.w) / 2, y0 = 34, out: string[] = [];
+  const Wp = 210, Hp = 297, x0 = (Wp - STRIP.w) / 2, y0 = 34, out: string[] = [], html: string[] = [], SAFE = 3, CP = 14, GAP = 2.5;
+  const medal = { x: x0 + SAFE, s: 14 }, px0 = medal.x + medal.s + 2.5, px1 = x0 + STRIP.w - SAFE - 0.5, ph = 24.4, pt0 = 3.2;
+  const need = (n: number) => (n - 1) * CP + C + 2 * PAD, room = px1 - px0 - GAP, extra = room - need(7) - need(4);
+  const panels = [
+    { key: 'cards', title: TXT.cards.title, ic: 'cards' as IconName, nums: [6, 5, 4, 3, 2, 1, 0], w: need(7) + extra * 0.6 },
+    { key: 're', title: TXT.reactions.title, ic: 'reaction' as IconName, nums: [0, 1, 2, 3], w: need(4) + extra * 0.4 }
+  ];
+  const TCAP = 2.45, tem = TCAP / 0.655, tpt = tem * 72 / 25.4;
   data.ships.forEach((ship, i) => {
     const key = DECK_KEY[ship.code] as ShipKey, L = LOOKS[key], pal = basePalette(ship.color), id = `v2s${i}`, y = y0 + i * (STRIP.h + STRIP.gap);
     out.push(defsOf(id, L));
-    out.push(`<rect data-plate="strip-${i}" x="${x0}" y="${y}" width="${STRIP.w}" height="${STRIP.h}" fill="${L.paper}" stroke="#8c8c8c" stroke-width=".25" stroke-dasharray="2 1.4"/>`);
-    out.push(`<g data-plate="strip-${i}-medal"><circle cx="${x0 + 9}" cy="${y + STRIP.h / 2}" r="6.8" fill="url(#${id}brh)"/><circle cx="${x0 + 9}" cy="${y + STRIP.h / 2}" r="5.6" fill="${pal.solid}"/></g>` + text(x0 + 9, y + STRIP.h / 2 + pt(16) * 0.33, ship.code, 16, { font: 'Alegreya SC', w: 800, color: '#fff8e6', anchor: 'middle', in: `strip-${i}-medal` }));
-    out.push(rulerSvg(`strip-${i}-cards`, { x: x0 + 18, y: y + 2.5, w: 2 * PAD + 6 * 14 + C, h: 26.5 }, TXT.cards.title, 'cards', [6, 5, 4, 3, 2, 1, 0], false, id, L));
-    out.push(rulerSvg(`strip-${i}-re`, { x: x0 + STRIP.w - 2 - (2 * PAD + 3 * 14 + C + 8), y: y + 2, w: 2 * PAD + 3 * 14 + C + 8, h: 26.5 }, TXT.reactions.title, 'reaction', [0, 1, 2, 3], false, id, L));
+    out.push(`<rect data-plate="strip-${i}" x="${x0}" y="${y}" width="${STRIP.w}" height="${STRIP.h}" fill="${GROUND_LIGHT}" stroke="#8c8c8c" stroke-width=".25" stroke-dasharray="2 1.4"/>`);
+    // the medallion: a brass rim round a field of the ship's colour, the letter large and light
+    const my = y + (STRIP.h - medal.s) / 2, mid = `strip-${i}-medal`, deep = deepOf(ship.color);
+    out.push(brassCell(mid, medal.x, my, medal.s, id, { tint: deep, rx: 1.8, shadow: false }));
+    html.push(capWord(mid, medal.x + medal.s / 2, my + medal.s / 2, ship.code, 6.6, { color: CREAM, maxW: 8.4 }));
+    let x = px0;
+    for (const p of panels) {
+      const pid = `strip-${i}-${p.key}`, b = { x, y: y + pt0, w: p.w, h: ph }, cx = x + p.w / 2;
+      out.push(`<rect x="${r(b.x + 0.45)}" y="${r(b.y + 0.6)}" width="${r(b.w)}" height="${r(b.h)}" rx="1.6" fill="#1a0e04" fill-opacity=".2"/>` +
+        `<rect data-plate="${pid}" x="${r(b.x)}" y="${r(b.y)}" width="${r(b.w)}" height="${r(b.h)}" rx="1.6" fill="${L.paper}" stroke="${L.brass[1]}" stroke-width=".7"/>` +
+        `<rect x="${r(b.x + 0.9)}" y="${r(b.y + 0.9)}" width="${r(b.w - 1.8)}" height="${r(b.h - 1.8)}" rx="1" fill="none" stroke="${L.brass[2]}" stroke-opacity=".55" stroke-width=".18"/>`);
+      // the title with its icon, centred over the cells
+      const tw = W(p.title, tpt, { font: 'Alegreya SC', w: 800 }), iw = 4.6, gw = iw + 1.6 + tw, gx = cx - gw / 2, ty = b.y + 1.7 + (TCAP + 0.6) / 2;
+      out.push(ico(p.ic, gx + iw / 2, ty, iw, L.tone, `${pid}-icon`));
+      html.push(capWord(pid, gx + iw + 1.6 + tw / 2, ty, p.title, TCAP, { color: pal.deep }));
+      // the cells, the number over each (6 and 9 underlined: the strip is read from across the table too)
+      const n = p.nums.length, c0 = cx - ((n - 1) * CP + C) / 2, cy = b.y + 9.6, ny = b.y + 7.7;
+      p.nums.forEach((v, k) => {
+        const xx = c0 + k * CP;
+        out.push(brassCell(`${pid}-w${v}`, xx, cy, C, id, {}));
+        html.push(capWord(pid, xx + C / 2, ny, String(v), TCAP, { color: L.ink }));
+        if (v === 6 || v === 9) out.push(`<path d="M${r(xx + C / 2 - 0.9)} ${r(ny + 1.75)}H${r(xx + C / 2 + 0.9)}" stroke="${L.ink}" stroke-width=".3"/>`);
+      });
+      x += p.w + GAP;
+    }
   });
-  return { html: `<style>${V2_CSS}</style>${head}<svg class="v2-svg" style="width:210mm;height:297mm" viewBox="0 0 ${Wp} ${Hp}">${out.join('\n')}</svg>${foot}` };
+  return { html: `<style>${V2_CSS}</style>${head}<svg class="v2-svg" style="width:210mm;height:297mm" viewBox="0 0 ${Wp} ${Hp}">${out.join('\n')}</svg>${html.join('')}${foot}` };
 }
+/** the light parchment of the strips: the ground of the holds on sheet 04, page 1 */
+const GROUND_LIGHT = '#f8f0dc';
 
 // used by the back «Затонул» v3 (wreck.ts)
 export { LOOKS, cellSvg, defsOf, ico, text, type Look };
