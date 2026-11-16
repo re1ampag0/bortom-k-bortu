@@ -60,10 +60,9 @@ const NEST = { x: 217.5, y: HEAD_Y, w: 66, h: 91 };
 /** the header (a cartouche of an old chart): its height, the emblem's centre from the left, the text column's start, the
  *  emblem's centre from the top and its radius, the letter's and the side's type (pt) */
 const HEAD = { y: 11.1, h: 26.4, med: 17.3, col: 33, my: 12.1, R: 6.9, letter: 19, side: 7 };
-/** the log under the Legend's nest (the Dutchman's — in the middle, see layoutV2: its right column holds the dive nest) */
+/** the log under the Legend's nest, on every board (the Dutchman's too: its dive nest and Souls stand in the middle) */
 const LOG = { x: 211.5, y: NEST.y + NEST.h + GAP, w: 75.5, h: BOTTOM - (NEST.y + NEST.h + GAP) };
-const LOG_DUTCH = { x: MID_R - 75.5, y: HEAD_Y + 11 + GAP, w: 75.5, h: 95.5 };
-const logBox = (ship: Ship) => ship.souls != null ? LOG_DUTCH : LOG;
+const logBox = (ship: Ship) => { void ship; return LOG; };
 /** the log's ruled lines: line height, the body size, the pad over the first line (baseline = top + LH/2 + 0.33 em) */
 const LOGT = { lh: 4.1, size: 9.3, top: 3.4, side: 7.2 };
 /** the log's type, measured in the browser: the largest size (9.3 pt down to 7.6 pt, line height 1.25 em) at which the
@@ -126,7 +125,7 @@ const LOOKS: Record<ShipKey, Look> = {
   dutch: {
     chart: 'dutch', mmPerDeg: 36, tone: TONE.verdigris,
     board: { anchor: { lon: -68.0, lat: 18.4, x: 190, y: 100 }, ship: [0, 0, 0, 0], rose: [200, 50, 8] },
-    strip: { anchor: { lon: -68.0, lat: 18.4, x: 186, y: 64 }, ship: [152, 154, 70, 34], rose: [200, 128, 7] },
+    strip: { anchor: { lon: -68.0, lat: 18.4, x: 186, y: 120 }, ship: [156, 60, 70, 34], rose: [195, 99, 7] },
     paper: '#e9e4c8', paperLine: '#22322a', ink: '#1c2620', soft: '#33443a', cell: '#f0ecd6', cellDeep: '#d4d0b0',
     brass: ['#d8cf98', '#8f8a52', '#3a3a22'], note: '#ecebd4', noteLine: '#9aa890', margin: '#4a6a58', pin: '#2a3a32'
   }
@@ -168,12 +167,13 @@ const PTRG = { arrow: 3.7, medal: 10, text: 14.6, size: 8.5 };
 const ptrW = (s: string) => PTRG.text + W(s, PTRG.size, PTR) + PAD + 0.4;
 /** the Fires plate: the title's baseline, the slots' top, the height */
 const FIRE = { title: 5.2, slot: 6.8, h: 6.8 + BOARD.fireSlot + 1.3 };
-/** the Dutchman's dive plate (one nest for the two-sided token «Под водой» / «Всплыл»), in the right column under the nest */
-const DIVE_H = 58;
+/** the Dutchman's dive plate (one nest for the two-sided token «Под водой» / «Всплыл»), in the middle beside the Guns */
+const DIVE_H = 58, DIVE_W = 75.5;
 /** the Dutchman's Souls (drawn as flasks on a shelf, soulsRowSvg), from the top of their case: the numbers' baseline, the
- *  cork's top, the cell's top (the flask's shoulders above it), the flask's foot on the shelf, the caption's baseline, the
- *  height; the pitch of the flasks, the glass beside a cell */
-const SOUL = { num: 11.6, cork: 12.7, cell: 21.6, foot: 36, cap: 40.6, h: 43.2, pitch: 16.6, side: 1.2 };
+ *  cork's top, the cell's top (the flask's shoulders above it), the flask's foot on the shelf, the baseline of the line
+ *  under the shelf (the name, «Кракен: 3 Души», «максимум 5»), the height; the pitch of the flasks, the glass beside a cell.
+ *  Boards v6: the name moved from a line of its own over the flasks to the line under the shelf — the case 39.6 mm, not 43.2 */
+const SOUL = { num: 5.6, cork: 6.7, cell: 15.6, foot: 30, cap: 36.2, h: 39.6, pitch: 16.6, side: 1.2 };
 function layoutV2(ship: Ship, counters: Counters): Plan {
   const dutchShip = ship.souls != null, pitch = dutchShip ? 13.6 : 14, defs = trackDefs(ship);
   const short = defs.filter(d => d.key !== 'hull' && d.key !== 'souls'), hull = defs.find(d => d.key === 'hull')!, souls = defs.find(d => d.key === 'souls');
@@ -195,9 +195,6 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
   const rows: Row[] = [];
   short.forEach((d, i) => rows.push(mk(d, TOP + i * (ROW.h + ROW_GAP))));
   const hullRow = mk(hull, BOTTOM - ROW.h); rows.push(hullRow);
-  // the Dutchman's Souls: at the very bottom, right of the Hull (drawn as flasks — not to be taken for the other tracks)
-  if (souls) rows.push(mk(souls, BOTTOM - SOUL.h, hullRow.x + hullRow.w + 2 * GAP));
-  const soulsRow = rows.find(rw => rw.key === 'souls');
   const fires = { x: X0, y: 0, w: 3 * BOARD.fireSlot + 2 * 3 + 2 * PAD, h: FIRE.h };
   const shortEnd = TOP + short.length * (ROW.h + ROW_GAP), firesLeft = shortEnd + fires.h <= hullRow.y - GAP;
   if (firesLeft) fires.y = shortEnd;
@@ -209,22 +206,26 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
   const effects: Rect = { x: px, y: HEAD_Y, w: pw, h: 11 };
   const plans: Rect | null = ship.code === 'Ж' ? { x: px, y: HEAD_Y + HEAD.h - 11, w: pw, h: 11 } : null;
   // the middle, between the left column and the right one, above the Hull
-  const mx = leftR + GAP, mw = MID_R - mx, midBottom = hullRow.y - GAP;
-  let y = TOP;
+  const mx = leftR + GAP, mw = MID_R - mx;
+  let y = TOP, midBottom = hullRow.y - GAP;
   if (!firesLeft) { fires.x = MID_R - fires.w; fires.y = y; y += fires.h + GAP; }
-  const lt = logType(ship);
-  const log: Rect = dutchShip ? { ...LOG_DUTCH, y: Math.max(TOP, y), h: lt.h } : { ...LOG, h: lt.h };
-  if (dutchShip) y = log.y + log.h + GAP;
-  const dutch: Rect | null = dutchShip ? { x: LOG.x, y: NEST.y + NEST.h + GAP, w: LOG.w, h: DIVE_H } : null;
-  // the Souls' case stands taller than the Hull: the rulers (counters on the board) keep above it
-  const cardsBottom = soulsRow ? Math.min(midBottom, soulsRow.y - GAP) : midBottom;
+  // the log under the Legend's nest on every board (boards v6, item 1: the Dutchman's too)
+  const log: Rect = { ...LOG, h: logType(ship).h };
+  // the Dutchman (boards v6, item 1): the left column as on the other boards; his Souls (drawn as flasks — not to be taken
+  // for the other tracks) at the foot of the middle, right over the Hull's right half, against the right column; the dive
+  // nest over them at the middle's left, beside the Guns and their two Volley cells; the ship sails above, in open water
+  let dutch: Rect | null = null;
+  if (souls) {
+    const w = mk(souls, 0).w, sr = mk(souls, midBottom - SOUL.h, Math.max(mx, MID_R - w)); rows.push(sr);
+    dutch = { x: mx, y: sr.y - GAP - DIVE_H, w: DIVE_W, h: DIVE_H };
+    midBottom = dutch.y - GAP;
+  }
+  const cardsBottom = midBottom;
   const cards = counters === 'board' ? { x: MID_R - (2 * PAD + 6 * 14 + C), y: cardsBottom - 26.5, w: 2 * PAD + 6 * 14 + C, h: 26.5 } : null;
   const reW = 2 * PAD + 7.4 + Math.max(...TXT.reactions.title.split(' ').map(t => W(t, 11, LABEL))) + 3 + 3 * 14 + C;
   const reactions = counters === 'board' ? { x: MID_R - reW, y: cards!.y - GAP - 20.5, w: reW, h: 20.5 } : null;
   const winBottom = reactions ? reactions.y - GAP : midBottom;
-  // the ship's window ends left of the Souls' case where the case rises into it
-  const winR = soulsRow && soulsRow.y < winBottom ? Math.min(mx + mw, soulsRow.x - GAP) : mx + mw;
-  const window = winBottom - y >= 30 ? { x: mx, y, w: winR - mx, h: winBottom - y } : null;
+  const window = winBottom - y >= 30 ? { x: mx, y, w: mw, h: winBottom - y } : null;
   return { rows, header, effects, plans, fires, dutch, cards, reactions, window, log };
 }
 
@@ -324,6 +325,8 @@ const SOUL_INK = { title: '#e2f5ee', num: '#f2ead0', start: '#8af0d8', cap: '#d6
 function soulsRowSvg(rw: Row, id: string, L: Look, pal: Pal): string {
   const T = TXT.tracks.souls, pid = 'row-souls', out: string[] = [], { x, y, w, h } = rw, [bl, , bd] = L.brass;
   const last = rw.cells[rw.cells.length - 1], max = last.n, bw = C + 2 * SOUL.side, u = `${id}so`;
+  // the flask is drawn in its own measures (the cork's top 12.7, the cell's top 21.6, the foot 36), lifted by D into the case
+  const D = 21.6 - SOUL.cell, FOOT = SOUL.foot + D, CORK = SOUL.cork + D;
   // the case: a shadow, the brass, the dark glass panel with an engraved rule; two faint reflections across the glass
   const px = x + 1.1, py = y + 1.1, pw = w - 2.2, ph = h - 2.2;
   out.push(`<defs><linearGradient id="${u}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#24443e"/><stop offset=".55" stop-color="#16302b"/><stop offset="1" stop-color="#0c1c19"/></linearGradient>` +
@@ -344,31 +347,31 @@ function soulsRowSvg(rw: Row, id: string, L: Look, pal: Pal): string {
   // the shelf the flasks stand on: a brass ledge with a lit top edge
   const sy = y + SOUL.foot;
   out.push(`<rect x="${r(px)}" y="${r(sy)}" width="${r(pw)}" height="1.3" fill="url(#${id}br)"/><path d="M${r(px)} ${r(sy + 0.12)}H${r(px + pw)}" stroke="#fff3c8" stroke-opacity=".6" stroke-width=".18"/><path d="M${r(px)} ${r(sy + 1.35)}H${r(px + pw)}" stroke="#050b0a" stroke-opacity=".6" stroke-width=".25"/>`);
-  // the name in a brass medallion's company, as on the other tracks
-  const mx = x + PAD + 2.9, my = y + 4.6;
+  // the name in a brass medallion's company, as on the other tracks — on the line under the shelf, left
+  const mx = x + PAD + 2.9, my = y + SOUL.cap - 1.55;
   out.push(`<circle cx="${r(mx + 0.3)}" cy="${r(my + 0.4)}" r="3" fill="#000" fill-opacity=".35"/><circle data-plate="${pid}-icon" cx="${r(mx)}" cy="${r(my)}" r="3" fill="url(#${id}brh)" stroke="${bd}" stroke-width=".22"/><circle cx="${r(mx)}" cy="${r(my)}" r="2.62" fill="none" stroke="${bd}" stroke-width=".3" stroke-dasharray=".01 .55" stroke-linecap="round"/><circle cx="${r(mx)}" cy="${r(my)}" r="2.3" fill="#e6f4ee" stroke="${bd}" stroke-width=".18"/>${icon('souls', mx, my, 3.8, TONE.verdigris)}`);
-  out.push(text(x + PAD + 7.6, y + ROW.label, T.name, LABEL_PT, { ...LABEL, color: SOUL_INK.title, in: pid }));
+  out.push(text(x + PAD + 7.6, y + SOUL.cap, T.name, LABEL_PT, { ...LABEL, color: SOUL_INK.title, in: pid }));
   // the flasks
   const motes = [[0, 19.3], [-2.9, 20.4], [2.9, 20.3], [-5.3, 20.9], [5.3, 20.8]];
   for (const cl of rw.cells) {
-    const cx = cl.x + C / 2, k = cl.n / max, gx0 = cx - bw / 2, gx1 = cx + bw / 2, Y = (v: number) => r(y + v);
-    const glass = `M${r(cx - 1.75)} ${Y(15.8)}V${Y(17.4)}C${r(cx - 1.75)} ${Y(18.9)} ${r(gx0)} ${Y(18.5)} ${r(gx0)} ${Y(20.3)}V${Y(SOUL.foot - 1.4)}Q${r(gx0)} ${Y(SOUL.foot)} ${r(gx0 + 1.4)} ${Y(SOUL.foot)}H${r(gx1 - 1.4)}Q${r(gx1)} ${Y(SOUL.foot)} ${r(gx1)} ${Y(SOUL.foot - 1.4)}V${Y(20.3)}C${r(gx1)} ${Y(18.5)} ${r(cx + 1.75)} ${Y(18.9)} ${r(cx + 1.75)} ${Y(17.4)}V${Y(15.8)}Z`;
-    out.push(`<ellipse cx="${r(cx + 0.4)}" cy="${Y(SOUL.foot + 0.15)}" rx="${r(bw / 2 + 0.3)}" ry=".45" fill="#050b0a" fill-opacity=".55"/>`);
+    const cx = cl.x + C / 2, k = cl.n / max, gx0 = cx - bw / 2, gx1 = cx + bw / 2, Y = (v: number) => r(y + v - D);
+    const glass = `M${r(cx - 1.75)} ${Y(15.8)}V${Y(17.4)}C${r(cx - 1.75)} ${Y(18.9)} ${r(gx0)} ${Y(18.5)} ${r(gx0)} ${Y(20.3)}V${Y(FOOT - 1.4)}Q${r(gx0)} ${Y(FOOT)} ${r(gx0 + 1.4)} ${Y(FOOT)}H${r(gx1 - 1.4)}Q${r(gx1)} ${Y(FOOT)} ${r(gx1)} ${Y(FOOT - 1.4)}V${Y(20.3)}C${r(gx1)} ${Y(18.5)} ${r(cx + 1.75)} ${Y(18.9)} ${r(cx + 1.75)} ${Y(17.4)}V${Y(15.8)}Z`;
+    out.push(`<ellipse cx="${r(cx + 0.4)}" cy="${Y(FOOT + 0.15)}" rx="${r(bw / 2 + 0.3)}" ry=".45" fill="#050b0a" fill-opacity=".55"/>`);
     out.push(`<path d="${glass}" fill="url(#${u}f${cl.n})" stroke="${SOUL_INK.glass}" stroke-opacity=".8" stroke-width=".22"/>`);
     // the lip of the neck, the cork with its twine
     out.push(`<rect x="${r(cx - 2.35)}" y="${Y(15.05)}" width="4.7" height=".95" rx=".4" fill="${mix('#2b4b46', SOUL_INK.glow, 0.15 + 0.55 * k)}" stroke="${SOUL_INK.glass}" stroke-opacity=".85" stroke-width=".2"/>`);
-    out.push(`<path d="M${r(cx - 1.75)} ${Y(SOUL.cork + 0.35)}Q${r(cx)} ${Y(SOUL.cork - 0.25)} ${r(cx + 1.75)} ${Y(SOUL.cork + 0.35)}L${r(cx + 1.45)} ${Y(15.3)}H${r(cx - 1.45)}Z" fill="url(#${u}cork)" stroke="#3a2410" stroke-width=".16"/>`);
+    out.push(`<path d="M${r(cx - 1.75)} ${Y(CORK + 0.35)}Q${r(cx)} ${Y(CORK - 0.25)} ${r(cx + 1.75)} ${Y(CORK + 0.35)}L${r(cx + 1.45)} ${Y(15.3)}H${r(cx - 1.45)}Z" fill="url(#${u}cork)" stroke="#3a2410" stroke-width=".16"/>`);
     out.push(`<path d="M${r(cx - 1.2)} ${Y(13.7)}h.5M${r(cx + 0.2)} ${Y(14.3)}h.6M${r(cx - 0.4)} ${Y(13.3)}h.3" stroke="#4a2e14" stroke-width=".18" stroke-linecap="round"/><path d="M${r(cx - 2.2)} ${Y(15.55)}Q${r(cx)} ${Y(16.05)} ${r(cx + 2.2)} ${Y(15.55)}M${r(cx + 2.1)} ${Y(15.6)}q.5 .5 .25 1.4M${r(cx + 2.1)} ${Y(15.6)}q.85 .3 .95 1.1" fill="none" stroke="#d9c79a" stroke-width=".22" stroke-linecap="round"/>`);
     // the souls rising in the shoulders: as many motes as the count, each a bright core in a soft halo
-    motes.slice(0, cl.n).forEach(([dx, yy], j) => { const mx2 = cx + dx, my2 = y + yy, sd = j % 2 ? -1 : 1;
+    motes.slice(0, cl.n).forEach(([dx, yy], j) => { const mx2 = cx + dx, my2 = y + yy - D, sd = j % 2 ? -1 : 1;
       out.push(`<circle cx="${r(mx2)}" cy="${r(my2)}" r=".8" fill="${SOUL_INK.glow}" fill-opacity=".4"/>` +
         `<path d="M${r(mx2 - 0.36)} ${r(my2)}A.36 .36 0 0 0 ${r(mx2 + 0.36)} ${r(my2)}C${r(mx2 + 0.36)} ${r(my2 - 0.45)} ${r(mx2 + sd * 0.5)} ${r(my2 - 0.7)} ${r(mx2 + sd * 0.15)} ${r(my2 - 1.25)}C${r(mx2 - sd * 0.3)} ${r(my2 - 0.75)} ${r(mx2 - 0.36)} ${r(my2 - 0.4)} ${r(mx2 - 0.36)} ${r(my2)}Z" fill="#eafff9"/>`); });
     // the glass's thickness: an inner contour, the thick foot, a shade down the right side
-    out.push(`<path d="M${r(gx0 + 0.5)} ${Y(20.6)}V${Y(SOUL.foot - 1.5)}Q${r(gx0 + 0.5)} ${Y(SOUL.foot - 0.6)} ${r(gx0 + 1.5)} ${Y(SOUL.foot - 0.6)}H${r(gx1 - 1.5)}Q${r(gx1 - 0.5)} ${Y(SOUL.foot - 0.6)} ${r(gx1 - 0.5)} ${Y(SOUL.foot - 1.5)}V${Y(20.6)}" fill="none" stroke="${SOUL_INK.glass}" stroke-opacity=".35" stroke-width=".14"/>` +
-      `<path d="M${r(gx1 - 0.55)} ${Y(21.2)}V${Y(SOUL.foot - 1.6)}" stroke="#04100e" stroke-opacity=".45" stroke-width=".3" stroke-linecap="round"/>` +
-      `<path d="M${r(cx - 4)} ${Y(SOUL.foot - 0.3)}Q${r(cx)} ${Y(SOUL.foot - 1)} ${r(cx + 4)} ${Y(SOUL.foot - 0.3)}" fill="none" stroke="#f0fffa" stroke-opacity=".3" stroke-width=".18"/>`);
+    out.push(`<path d="M${r(gx0 + 0.5)} ${Y(20.6)}V${Y(FOOT - 1.5)}Q${r(gx0 + 0.5)} ${Y(FOOT - 0.6)} ${r(gx0 + 1.5)} ${Y(FOOT - 0.6)}H${r(gx1 - 1.5)}Q${r(gx1 - 0.5)} ${Y(FOOT - 0.6)} ${r(gx1 - 0.5)} ${Y(FOOT - 1.5)}V${Y(20.6)}" fill="none" stroke="${SOUL_INK.glass}" stroke-opacity=".35" stroke-width=".14"/>` +
+      `<path d="M${r(gx1 - 0.55)} ${Y(21.2)}V${Y(FOOT - 1.6)}" stroke="#04100e" stroke-opacity=".45" stroke-width=".3" stroke-linecap="round"/>` +
+      `<path d="M${r(cx - 4)} ${Y(FOOT - 0.3)}Q${r(cx)} ${Y(FOOT - 1)} ${r(cx + 4)} ${Y(FOOT - 0.3)}" fill="none" stroke="#f0fffa" stroke-opacity=".3" stroke-width=".18"/>`);
     // the light on the glass: the left side and the left shoulder
-    out.push(`<path d="M${r(gx0 + 0.6)} ${Y(21)}V${Y(SOUL.foot - 1.2)}M${r(cx - 1.25)} ${Y(16.2)}V${Y(17.3)}C${r(cx - 1.3)} ${Y(18.4)} ${r(gx0 + 1.2)} ${Y(18.5)} ${r(gx0 + 0.65)} ${Y(19.9)}" fill="none" stroke="#f0fffa" stroke-opacity=".5" stroke-width=".28" stroke-linecap="round"/>`);
+    out.push(`<path d="M${r(gx0 + 0.6)} ${Y(21)}V${Y(FOOT - 1.2)}M${r(cx - 1.25)} ${Y(16.2)}V${Y(17.3)}C${r(cx - 1.3)} ${Y(18.4)} ${r(gx0 + 1.2)} ${Y(18.5)} ${r(gx0 + 0.65)} ${Y(19.9)}" fill="none" stroke="#f0fffa" stroke-opacity=".5" stroke-width=".28" stroke-linecap="round"/>`);
     // the cell in the glass, its number over the cork (the start one after a star)
     out.push(cellSvg(`${pid}-c${cl.n}`, cl.x, cl.y, id, L, { start: cl.start, startColor: pal.deep }));
     out.push(text(cx, y + SOUL.num, String(cl.n), 11, { ...NUM, color: cl.start ? SOUL_INK.start : SOUL_INK.num, anchor: 'middle', in: pid }));
