@@ -146,12 +146,13 @@ module.exports = { name: 'Морские наросты', kind: 'deck', status: 
       const lip = path(gapIn, false);
       fg += `<path d="${lip}" stroke="#2a0e08" stroke-width="2.6" fill="none" opacity=".35" transform="translate(.6 1.4)" stroke-linecap="round"/>`
         + `<path d="${lip}" stroke="#d88a70" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="${lip}" stroke="#f4bca0" stroke-width=".7" fill="none" stroke-linecap="round" transform="translate(-.3 -.7)" opacity=".8"/>`;
-      // the plug is living coral, not a smooth lid: knobs of young polyps all over it (lit on top), a shell and two mussels settled on it
+      // the plug is living coral, not a smooth lid: star-coral cups of young polyps all over it (rims lit on top), a shell and two mussels settled on it
       const inPlug = (x, y) => { let c = false; for (let i = 0, j = plug.length - 1; i < plug.length; j = i++) { const [xi, yi] = plug[i], [xj, yj] = plug[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
       const Rp = rng(29); let knobs = 0;
       for (let i = 0; i < 400 && knobs < 34; i++) { const q = [Rp() * 40, Rp() * 40]; if (!inPlug(q[0], q[1])) continue; knobs++;
-        const p = Hp(q[0], q[1]), r = .9 + Rp() * 1.3, c = Rp() > .5 ? ['#f6c4aa', '#c46a58', '#fff0e4'] : ['#f2a888', '#a85040', '#ffe2cc'];
-        fg += `<ellipse cx="${f(p[0] + .3)}" cy="${f(p[1] + r * .7)}" rx="${f(r * SQ * 1.1)}" ry="${f(r * .5)}" fill="#5a2018" opacity=".4"/><ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(r * SQ * 1.05)}" ry="${f(r * .85)}" fill="${c[0]}" stroke="${c[1]}" stroke-width=".3"/><ellipse cx="${f(p[0] - r * .15)}" cy="${f(p[1] - r * .35)}" rx="${f(r * .35)}" ry="${f(r * .22)}" fill="${c[2]}" opacity=".8"/><circle cx="${f(p[0])}" cy="${f(p[1] + r * .1)}" r="${f(r * .18)}" fill="${c[1]}" opacity=".7"/>`; }
+        // a star-coral cup: a low crater in the plug's own tone, its dark open mouth, the rim lit on top — no glossy beads
+        const p = Hp(q[0], q[1]), r = .9 + Rp() * 1.2, c = Rp() > .5 ? ['#e2967e', '#9a4638', '#f6c0a6'] : ['#d8846c', '#8a3a2e', '#f0b094'];
+        fg += `<ellipse cx="${f(p[0] + .3)}" cy="${f(p[1] + r * .45)}" rx="${f(r * SQ * 1.1)}" ry="${f(r * .45)}" fill="#6a2a20" opacity=".3"/><ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(r * SQ * 1.05)}" ry="${f(r * .7)}" fill="${c[0]}" stroke="${c[1]}" stroke-width=".3"/><ellipse cx="${f(p[0])}" cy="${f(p[1] + r * .08)}" rx="${f(r * SQ * .55)}" ry="${f(r * .35)}" fill="${c[1]}"/><path d="M${f(p[0] - r * SQ)} ${f(p[1] - r * .05)}q${f(r * SQ)} ${f(-r * .75)} ${f(r * SQ * 2)} 0" stroke="${c[2]}" stroke-width=".35" fill="none" opacity=".85"/>`; }
       { const p = Hp(29, 27), m = Hp(9, 32); fg += scallop(u, p[0], p[1], 3.6, 15, '#f4e0c8') + mussel(m[0], m[1], 3.4, 20) + mussel(m[0] + 2.6, m[1] + 1, 3, 0); } }
     // the coral, lying on her side: two plates and eight branching heads from the rim, reaching in over the breach;
     // each casts a short shadow down on the planks (the light is overhead). Three colours: coral red, orange, ochre.

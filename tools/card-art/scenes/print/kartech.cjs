@@ -113,8 +113,8 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'accepted', cam
       // the man knocked back: he stood on her rail by the shrouds, ready to board, facing our port; the swarm took him
       // in the chest — his feet leave the rail, the whole body (head, torso, both arms and legs) goes over backwards,
       // the arms flung forward, the head snapped back, the hat off. A whole figure (people.cjs), dark against the sunset
-      const KB = [60, ER - 2.6], KA = -26;
-      const kb = H.figure(u, { L: Lo, at: KB, h: 62, dir: 1, turn: .72, seed: 5, shadow: false, dim: .55, rim: RIM,
+      const KB = [67, ER - 2.6], KA = -10;
+      const kb = H.figure(u, { L: Lo, at: KB, h: 58, dir: 1, turn: .72, seed: 5, shadow: false, dim: .55, rim: RIM,
         pose: { turn: .72, pelvis: [0, -12, 4], torso: [0, -26, -4], head: { turn: 0, nod: -22 },
           legs: { R: { thigh: [34, 6], shin: [-6, 2], foot: [6, 8], weight: true }, L: { thigh: [8, 10], shin: [-18, 4], foot: [-20, 14], plant: false } },
           arms: { R: { upper: [96, 14], fore: [112, 4] }, L: { upper: [84, 26], fore: [100, 12] } }, hands: { R: 'relaxed', L: 'relaxed' } },
@@ -122,9 +122,9 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'accepted', cam
         head: { hair: { style: 'short', color: '#1c120c' }, hairColor: '#1c120c', mouth: .6, brow: 'frown', warm: { color: '#ffa860', op: .5 } } });
       men += `<g transform="rotate(${KA} ${KB[0]} ${KB[1]})">${kb.svg}</g>`;
       o += men;
-      // the hat knocked off his head, spinning up and back
+      // the hat knocked off his head, spinning up (clear of the type medal in the top left corner)
       const sil = '#140a08', hc = (() => { const a = KA * Math.PI / 180, t = kb.head.Q(0, -1, 0), dx = t[0] - KB[0], dy = t[1] - KB[1];
-        return [KB[0] + dx * Math.cos(a) - dy * Math.sin(a) - 5, KB[1] + dx * Math.sin(a) + dy * Math.cos(a) - 6]; })();
+        return [KB[0] + dx * Math.cos(a) - dy * Math.sin(a) + 3, KB[1] + dx * Math.sin(a) + dy * Math.cos(a) - 8]; })();
       o += `<g transform="translate(${f(hc[0] - 46)} ${f(hc[1] - (ER - 44))}) rotate(-34 46 ${ER - 44})"><path d="M40.4 ${ER - 43}Q46 ${ER - 49} 51.6 ${ER - 43}Q46 ${ER - 41} 40.4 ${ER - 43}Z" fill="${sil}"/><path d="M42 ${ER - 44.4}Q46 ${ER - 48.4} 50 ${ER - 44.4}" stroke="${RIM}" stroke-width=".5" fill="none"/></g>`; }
     // her bulwark and side close to us: dark against the sun, the cap rail with its lit edge, a wale, a closed port;
     // our flash lights it orange where the swarm strikes

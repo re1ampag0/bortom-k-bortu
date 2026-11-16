@@ -81,17 +81,39 @@ function farShore(u, L) {
   return `<path d="M44 ${y}C54 ${y - 2} 62 ${y - 5} 72 ${y - 5.6}C80 ${y - 6} 86 ${y - 3.4} 96 ${y - 3}C104 ${y - 2.6} 110 ${y - 1.4} 118 ${y}Z" fill="${c}" opacity=".85"/>`;
 }
 
-// ——— the mermaids: seen against the moon, dark bodies with a silver edge towards it; the tail scaled and green ———
+// ——— the mermaids: living women, sea-pale skin warmed a little, the moon behind them edging the hair and the shoulders;
+// each body (neck, shoulders, torso, the near arm) is one shape with one outline, so no seams at the neck or the
+// shoulder; the hair long and wet over the shoulders; the tail scaled and green, the skin turning into it under a
+// fringe of fine scales ———
 function mermaidTones(L, x, y) {
-  const sk = L.ramp('skin', x, y);
-  return { skin: mix(sk.shadow, '#1a2236', .35), skinLit: mix(sk.half, '#c8d4ee', .35), tail: '#163a3c', tailLit: '#4f9a8c', hair: '#120c10', rim: '#eef3ff', out: '#0a0e18',
-    // pearly skin, a little cold in the moonlight, kept light enough for the face to read against the moon
-    tone: { lit: '#eef2fa', half: '#a6b2c6', core: '#97a4ba', shadow: '#55607a', outline: '#0a0e18' } };
+  return { tail: '#163a3c', tailLit: '#4f9a8c', hair: '#1a0e0e', hairHi: '#5a3a34', rim: '#f2f0ff', out: '#2a1820',
+    // sea-pale living skin: a warm light, rosy half tone, cool lilac shadow from the evening sky
+    tone: { lit: '#f8e8de', half: '#e2c4b8', core: '#c8a49e', shadow: '#8e7286', outline: '#2a1820' } };
+}
+/** One body from several closed shapes: one outline round all of them (drawn under), one fill over (no inner seams). */
+function oneBody(shapes, fill, out, w) {
+  const d = shapes.map(P => sp(P, true));
+  return { under: d.map(x => `<path d="${x}" fill="${out}" stroke="${out}" stroke-width="${f(w * 2)}" stroke-linejoin="round"/>`).join(''),
+    over: d.map(x => `<path d="${x}" fill="${fill}"/>`).join(''), clip: d.map(x => `<path d="${x}"/>`).join('') };
+}
+const limb = (spine, w) => { const T = H.tube(spine, w); return T.outline(0, T.N, 1, true, true, true); };
+/** Soft shading inside a body: blurred strokes clipped to it. */
+function softIn(u, clip, strokes) {
+  const cid = nid('mc', u), bid = nid('mf', u);
+  return `<defs><clipPath id="${cid}">${clip}</clipPath><filter id="${bid}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation=".7"/></filter></defs><g clip-path="url(#${cid})"><g filter="url(#${bid})">${strokes}</g></g>`;
+}
+/** Where the skin turns into the tail: a band of small overlapping scales along the line pts, fading up into the skin. */
+function scaleFringe(T, pts, s) {
+  let o = '';
+  for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1];
+    for (let k = 0; k < 3; k++) { const t = (k + .5) / 3, x = lerp(a[0], b[0], t), y = lerp(a[1], b[1], t), r = .55 * s;
+      o += `<path d="M${f(x - r)} ${f(y)}q${f(r)} ${f(-r * 1.5)} ${f(2 * r)} 0z" fill="${mix(T.tail, T.tailLit, .45)}" stroke="${T.out}" stroke-width=".18" opacity=".9"/>`; } }
+  return o;
 }
 // she sits on the crown of the rock facing left (towards our ship), singing to it: the head lifted, the mouth open, one
 // hand on her breast, the other held out to the sailor; the tail runs down the right side of the rock to the sea
 function mermaidSitting(u, L, x, y, s) {
-  const T = mermaidTones(L, x, y), P = (a, b) => [x + a * s, y + b * s], Q = arr => arr.map(p => P(p[0], p[1]));
+  const T = mermaidTones(L, x, y), P = (a, b) => [x + a * s, y + b * s], Q = arr => arr.map(p => P(p[0], p[1])), tn = T.tone;
   let o = '';
   // the tail: from the hip down the rock's right flank, the fin spread on the wet stone near the water
   const tail = Q([[-3, -1], [2, -2.4], [7, -.6], [11.4, 4], [13, 10], [12.4, 16], [10.4, 21.6], [12.6, 26.4], [17.6, 28.6], [13.2, 30], [9, 27.6], [6.2, 30.8], [7.4, 25], [8.4, 19.6], [8.6, 13.6], [6.8, 8], [2.6, 3.6], [-3.4, 2.4]]);
@@ -103,58 +125,77 @@ function mermaidSitting(u, L, x, y, s) {
     o += `<path d="M${f(q[0] - .9 * s)} ${f(q[1])}q${f(.9 * s)} ${f(1.1 * s)} ${f(1.8 * s)} 0" stroke="${T.tailLit}" stroke-width=".3" fill="none" opacity="${f(.25 + R() * .3)}"/>`; }
   o += `<path d="${sp(Q([[2, -2.4], [7, -.6], [11.4, 4], [13, 10], [12.4, 16], [10.4, 21.6]]))}" stroke="${T.rim}" stroke-width=".6" fill="none" opacity=".75"/>`;
   o += `<path d="${sp(Q([[12.6, 26.4], [17.6, 28.6]]))}" stroke="${T.rim}" stroke-width=".45" fill="none" opacity=".6"/>`;
-  // the hair falling down her back behind the shoulders (the far part, under the torso)
-  o += `<path d="${sp(Q([[.6, -19.6], [2.6, -17.6], [3.6, -14], [4.6, -10], [5.6, -6.4], [6.8, -3.4], [4.8, -4], [3.4, -7.4], [2, -11], [.4, -14.6]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
-  // the torso: slim waist, the back towards the moon
-  const torso = Q([[-3.6, 1], [-3.2, -4.4], [-3.8, -8.6], [-3.4, -12.6], [-1.6, -14.2], [1.4, -14.4], [3.2, -13], [3.4, -9.4], [2.4, -6], [2.8, -2], [3, 1]]);
-  const bid = nid('mb', u);
-  o += `<defs>${linGrad(bid, x - 4 * s, y - 8 * s, x + 4 * s, y - 9 * s, [[0, T.tone.lit], [.35, T.tone.half], [.8, T.tone.shadow], [1, T.skinLit]])}</defs>`;
-  o += `<path d="${sp(torso, true)}" fill="url(#${bid})" stroke="${T.out}" stroke-width=".45"/>`;
-  o += `<path d="${sp(Q([[-3.8, .4], [-.4, -.6], [3.2, .2]]))}" stroke="#2f6a5e" stroke-width="${f(1.3 * s)}" fill="none" stroke-linecap="round"/>`;
-  o += `<path d="${sp(Q([[3.2, -13], [3.4, -9.4], [2.4, -6], [2.8, -2]]))}" stroke="${T.rim}" stroke-width=".55" fill="none" opacity=".8"/>`;
-  // the neck and the head lifted in the song, in profile to the left
-  o += H.cloth(u, { spine: Q([[-.4, -13.6], [-.9, -16.4]]), w: [2.1 * s, 1.7 * s], tone: T.tone, lit: 1, folds: false });
-  const hd = H.head(u, { c: P(-1.2, -18.8), r: 2.7 * s, dir: -1, tilt: -14, tone: T.tone, faceLit: true, edge: mix(T.tone.lit, '#ffd8a8', .25), warm: { color: '#e8c8b8', op: .35 }, rim: T.rim,
-    mouth: .85, eye: 'half', brow: 'up', hairColor: T.hair, ear: false, iris: '#1c3a3a', lips: '#7a3a48', white: '#d8dce6' });
+  // the hair down her back, behind the body: a long wet mass from the crown to the waist
+  const backHair = Q([[-1.6, -21.6], [.6, -21.8], [2.4, -20.2], [3.4, -17.4], [4.2, -14], [4.8, -10.4], [5.6, -6.8], [6.4, -3.6], [5, -3.4], [4.2, -5.6], [3.6, -8.6], [2.8, -12], [1.6, -15.4], [0, -18]]);
+  o += `<path d="${sp(backHair, true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
+  // the far arm, behind the body: the elbow forward of the waist, the forearm up to the hand laid on her breast
+  { const w = limb(Q([[-1.4, -11.6], [-2.6, -8], [-4.6, -6.4], [-4.6, -8.4], [-4, -10]]), [1.6 * s, 1.4 * s, 1.15 * s, 1 * s, .85 * s]);
+    o += `<path d="${sp(w, true)}" fill="${mix(tn.half, tn.shadow, .35)}" stroke="${tn.outline}" stroke-width=".35"/>`; }
+  // the body: neck, shoulders and torso in one shape, the near arm held out to the sailor grown from the shoulder
+  const torso = Q([[-1.9, -16.8], [-2.1, -15.2], [-2.7, -13.9], [-3.4, -12.8], [-3.9, -10.9], [-4.1, -9.7], [-3.5, -8.5], [-3.0, -6.2], [-3.2, -3.4], [-3.6, -.2], [-3.2, 1.6], [0, 2], [3.1, 1.4], [3.0, -1.6], [2.5, -5.2], [2.9, -8.8], [3.3, -11.4], [2.8, -13.2], [1.5, -14.3], [.8, -15.6], [.6, -17.2], [-.8, -17.6]]);
+  const sh = P(-.9, -13.1), el = P(-5.8, -14.1), wr = P(-10.2, -15.5);
+  const arm = limb([P(.6, -12.4), sh, el, wr], [2.9 * s, 2.6 * s, 1.55 * s, 1.05 * s]);
+  const gid = nid('mb', u);
+  o += `<defs>${linGrad(gid, x - 4 * s, y - 12 * s, x + 3.4 * s, y - 9 * s, [[0, tn.half], [.45, tn.lit], [.8, tn.half], [1, tn.core]])}</defs>`;
+  const B = oneBody([torso, arm], `url(#${gid})`, tn.outline, .24);
+  const hn = H.hand(u, { at: wr, a: Math.atan2(wr[1] - el[1], wr[0] - el[0]) * 180 / Math.PI - 8, s: .36 * s, m: -1, pose: 'open', spread: 13, curl: .2, tone: tn, thumb: 'front', sw: .3 });
+  o += B.under + hn.back + B.over;
+  // the form: the shade under the arm and down the front of the chest and the belly, the throat under the jaw; the
+  // moon on the back of the shoulder and down the spine
+  o += softIn(u, B.clip, `<path d="${sp(Q([[-3.2, -12.4], [-2, -11.2], [-1.6, -9]]))}" stroke="${tn.shadow}" stroke-width="${f(1.1 * s)}" fill="none" opacity=".5"/>`
+    + `<path d="${sp(Q([[-3.6, -10.6], [-3.4, -7.6], [-3.4, -4], [-3.6, 0]]))}" stroke="${tn.core}" stroke-width="${f(1 * s)}" fill="none" opacity=".6"/>`
+    + `<path d="${sp(Q([[-2, -16.4], [-1.2, -15.4]]))}" stroke="${tn.shadow}" stroke-width="${f(.9 * s)}" fill="none" opacity=".55"/>`
+    + `<path d="${sp(Q([[-6, -13.2], [-9.6, -14.6]]))}" stroke="${tn.core}" stroke-width="${f(.7 * s)}" fill="none" opacity=".5"/>`
+    + `<path d="${sp(Q([[1.6, -13.8], [2.8, -11.6], [2.6, -8], [2.2, -5]]))}" stroke="#ffffff" stroke-width="${f(.7 * s)}" fill="none" opacity=".35"/>`);
+  o += hn.front;
+  o += `<path d="${sp(Q([[1.5, -14.3], [2.8, -13.2], [3.3, -11.4], [2.9, -8.8], [2.5, -5.2]]))}" stroke="${T.rim}" stroke-width=".5" fill="none" opacity=".75"/>`;
+  o += `<path d="${sp(Q([[-.4, -13.9], [-3.2, -14.8], [-6.2, -14.9]]))}" stroke="${T.rim}" stroke-width=".4" fill="none" opacity=".55"/>`;
+  // the skin turns into the tail under a fringe of fine scales
+  o += scaleFringe(T, Q([[-3.5, 1.2], [-1, 1.5], [1.4, 1.4], [3.1, 1]]), s);
+  // the head lifted in the song, in profile to the left
+  const hd = H.head(u, { c: P(-1.2, -18.8), r: 2.7 * s, dir: -1, tilt: -14, tone: tn, detail: true, faceLit: true, edge: mix(tn.lit, '#ffe6cc', .4), warm: { color: '#f0b8a8', op: .3 }, rim: T.rim,
+    mouth: .7, eye: 'half', brow: 'up', hairColor: T.hair, ear: false, iris: '#1c3a3a', lips: '#b0505a', white: '#e8e2e0' });
   o += hd.svg;
-  // the hair over the crown and behind the ear, wet strands with the moon on them
-  o += `<path d="${sp(Q([[-1.9, -21.6], [-.6, -22.1], [1, -21.6], [2, -19.8], [2.8, -17.4], [3.4, -14.2], [2.2, -14.6], [1.4, -16.4], [.9, -18.2], [.2, -19.8], [-1, -20.9]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
-  o += `<path d="${sp(Q([[.6, -21.2], [1.8, -19.6], [2.6, -17.4], [3.6, -14], [4.6, -10], [5.6, -6.4], [6.8, -3.4]]))}" stroke="${T.rim}" stroke-width=".55" fill="none" opacity=".7"/>`;
-  for (const k of [0, 1, 2]) o += `<path d="${sp(Q([[-.6 + k * .7, -21.4], [.4 + k * .8, -18.4], [1.6 + k * .7, -15], [3 + k * .7, -10 + k]]))}" stroke="#3a4660" stroke-width=".3" fill="none" opacity=".6"/>`;
-  // the far arm: the hand laid on her breast
-  o += H.cloth(u, { spine: Q([[1.4, -13], [2.4, -9.2], [-.6, -9.8]]), w: [1.5 * s, 1.15 * s, .85 * s], tone: T.tone, lit: -1, folds: false, rim: T.rim, rimSide: -1, capA: true });
-  o += H.hand(u, { at: P(-.6, -9.8), a: Math.atan2(-1.2, -2.4) * 180 / Math.PI, s: .3 * s, m: 1, pose: 'open', spread: 3, curl: .35, tone: T.tone, thumb: 'back', sw: .3 }).back;
-  // the near arm held out to the sailor, the open hand turned up to him
-  const sh = P(-2.6, -13.2), el = P(-6.8, -13.8), wr = P(-10.8, -15.8);
-  o += H.cloth(u, { spine: [sh, el, wr], w: [1.6 * s, 1.15 * s, .82 * s], tone: T.tone, lit: -1, folds: false, rim: T.rim, rimSide: -1, capA: true });
-  const hn = H.hand(u, { at: wr, a: Math.atan2(wr[1] - el[1], wr[0] - el[0]) * 180 / Math.PI - 8, s: .36 * s, m: -1, pose: 'open', spread: 13, curl: .2, tone: T.tone, thumb: 'front', sw: .3 });
-  o += hn.back + hn.front;
+  // the hair over the crown and the back of the head, and a long wet lock over the near shoulder down her breast
+  o += `<path d="${sp(Q([[-2.6, -21], [-1.4, -22], [.4, -22.1], [1.8, -21.2], [2.6, -19.4], [3, -17], [2.4, -14.8], [1.2, -14.8], [.8, -16.4], [.4, -18.2], [-.4, -19.6], [-1.6, -20.4]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
+  o += `<path d="${sp(Q([[-.2, -19.8], [.6, -17.6], [.6, -15.4], [-.4, -13.6], [-1.6, -11.6], [-2.2, -9.4], [-2.4, -7.2], [-3, -6.4], [-3, -8.6], [-2.6, -10.8], [-1.6, -13], [-.6, -15], [-.6, -17.6]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
+  for (const k of [0, 1, 2]) o += `<path d="${sp(Q([[-.8 + k * .8, -21.6], [.4 + k * .8, -19.4], [1.6 + k * .7, -16], [3 + k * .6, -11 + k], [4.2 + k * .5, -6 + k * .4]]))}" stroke="${T.hairHi}" stroke-width=".3" fill="none" opacity=".7"/>`;
+  o += `<path d="${sp(Q([[0, -18.4], [.2, -16], [-.8, -13.6], [-1.9, -11], [-2.4, -8]]))}" stroke="${T.hairHi}" stroke-width=".3" fill="none" opacity=".7"/>`;
+  o += `<path d="${sp(Q([[.4, -21.8], [1.8, -20.8], [2.6, -18.6], [3.4, -15], [4.2, -11], [5, -7.6], [6.2, -4]]))}" stroke="${T.rim}" stroke-width=".5" fill="none" opacity=".7"/>`;
   return { svg: o, mouth: hd.Q(1.02, .52) };
 }
 // she lies along the low rock, propped on her left elbow, facing left and singing; the tail goes over the edge into the sea
 function mermaidLying(u, L, x, y, s) {
-  const T = mermaidTones(L, x, y), P = (a, b) => [x + a * s, y + b * s], Q = arr => arr.map(p => P(p[0], p[1]));
+  const T = mermaidTones(L, x, y), P = (a, b) => [x + a * s, y + b * s], Q = arr => arr.map(p => P(p[0], p[1])), tn = T.tone;
   const tid = nid('ml', u);
   let o = `<defs>${linGrad(tid, x, y - 4, x + 20, y + 4, [[0, T.tail], [1, mix(T.tail, T.tailLit, .5)]])}</defs>`;
-  const tail = Q([[0, -3.4], [6, -4], [12, -3.2], [17, -1.2], [20.4, 2.4], [22, 7], [21, 10], [19.6, 6.2], [17, 3.2], [12, 1.4], [6, 1.4], [0, 1]]);
+  const tail = Q([[-.6, -3.4], [6, -4], [12, -3.2], [17, -1.2], [20.4, 2.4], [22, 7], [21, 10], [19.6, 6.2], [17, 3.2], [12, 1.4], [6, 1.4], [-.6, 1.2]]);
   o += `<path d="${sp(tail, true)}" fill="url(#${tid})" stroke="${T.out}" stroke-width=".4"/>`;
   o += `<path d="${sp(Q([[0, -3.4], [6, -4], [12, -3.2], [17, -1.2], [20.4, 2.4], [22, 7]]))}" stroke="${T.rim}" stroke-width=".5" fill="none" opacity=".7"/>`;
-  // her hair down her back, her torso raised on the elbow
-  o += `<path d="${sp(Q([[-8.2, -12.4], [-6.6, -11.4], [-5.4, -8.8], [-3.6, -6.4], [-.6, -4.4], [-3.4, -3.8], [-6.2, -6], [-7.6, -8.6]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
-  o += `<path d="${sp(Q([[1, 1], [-4, 1.2], [-7.4, .4], [-9.6, -2.6], [-9.4, -6], [-7.4, -7.4], [-4.4, -5.6], [-1.6, -3.6], [1, -3.4]]), true)}" fill="${T.tone.half}" stroke="${T.out}" stroke-width=".4"/>`;
-  o += `<path d="${sp(Q([[-7.4, -7.4], [-4.4, -5.6], [-1.6, -3.6], [1, -3.4]]))}" stroke="${T.rim}" stroke-width=".45" fill="none" opacity=".7"/>`;
-  // the propped arm: the upper arm down to the elbow on the stone, the forearm forward, the hand flat on the rock
-  const sh = P(-8.6, -5.8), el = P(-10.2, .2), wr = P(-14, .1);
-  o += H.cloth(u, { spine: [sh, el, wr], w: [1.5 * s, 1.1 * s, .8 * s], tone: T.tone, lit: 1, folds: false, capA: true });
-  const hn = H.hand(u, { at: wr, a: 182, s: .3 * s, m: 1, pose: 'open', spread: 5, curl: .12, tone: T.tone, thumb: 'back', sw: .3 });
-  o += hn.back;
+  // the body: neck, shoulders and the torso raised on the elbow in one shape, the propped arm grown from the shoulder
+  const torso = Q([[-10.7, -8.4], [-10.6, -6.8], [-10.4, -5.2], [-10.6, -3.4], [-9.8, -1.4], [-7.6, .2], [-4, .9], [-.2, 1.4], [1.4, 1.2], [1.4, -1.2], [.8, -3.4], [-1.8, -3.5], [-4.6, -5], [-6.6, -6.8], [-7.8, -8.4], [-8.8, -9.6], [-10, -9.8]]);
+  const sh = P(-8.6, -5.6), el = P(-10, .3), wr = P(-14, .2);
+  const arm = limb([P(-7.4, -6.4), sh, el, wr], [2.6 * s, 2.3 * s, 1.45 * s, 1 * s]);
+  const gid = nid('mb', u);
+  o += `<defs>${linGrad(gid, x - 10 * s, y + 1 * s, x - 4 * s, y - 7 * s, [[0, tn.core], [.4, tn.half], [.85, tn.lit], [1, tn.half]])}</defs>`;
+  const B = oneBody([torso, arm], `url(#${gid})`, tn.outline, .24);
+  const hn = H.hand(u, { at: wr, a: 182, s: .3 * s, m: 1, pose: 'open', spread: 5, curl: .12, tone: tn, thumb: 'back', sw: .3 });
+  o += B.under + hn.back + B.over;
+  o += softIn(u, B.clip, `<path d="${sp(Q([[-9.6, -3], [-8, -.8], [-5, .4], [-1, 1]]))}" stroke="${tn.shadow}" stroke-width="${f(1.1 * s)}" fill="none" opacity=".55"/>`
+    + `<path d="${sp(Q([[-9.2, -4.6], [-9.6, -1.6]]))}" stroke="${tn.shadow}" stroke-width="${f(.8 * s)}" fill="none" opacity=".5"/>`
+    + `<path d="${sp(Q([[-10.2, -8.4], [-9.8, -7.2]]))}" stroke="${tn.shadow}" stroke-width="${f(.8 * s)}" fill="none" opacity=".5"/>`
+    + `<path d="${sp(Q([[-7.4, -7.6], [-4.6, -5.4], [-1.6, -3.8]]))}" stroke="#ffffff" stroke-width="${f(.6 * s)}" fill="none" opacity=".35"/>`);
+  o += `<path d="${sp(Q([[-7.8, -8.4], [-6.6, -6.8], [-4.6, -5], [-1.8, -3.5], [.8, -3.4]]))}" stroke="${T.rim}" stroke-width=".45" fill="none" opacity=".7"/>`;
+  o += scaleFringe(T, Q([[.8, -3.4], [1.3, -1.2], [1.4, 1.2]]), s * .9);
   // the neck and the head in profile to the left, lifted in the song
-  o += H.cloth(u, { spine: Q([[-8.4, -6.4], [-9.2, -8.6]]), w: [1.9 * s, 1.6 * s], tone: T.tone, lit: 1, folds: false });
-  const hd = H.head(u, { c: P(-9.8, -10.8), r: 2.4 * s, dir: -1, tilt: -22, tone: T.tone, edge: mix(T.tone.lit, '#ffd8a8', .25), warm: { color: '#e8c8b8', op: .3 }, rim: T.rim,
-    mouth: .8, eye: 'half', brow: 'up', hairColor: T.hair, ear: false, iris: '#1c3a3a', lips: '#7a3a48', white: '#d8dce6' });
+  const hd = H.head(u, { c: P(-9.8, -10.8), r: 2.4 * s, dir: -1, tilt: -22, tone: tn, detail: true, edge: mix(tn.lit, '#ffe6cc', .4), warm: { color: '#f0b8a8', op: .28 }, rim: T.rim,
+    mouth: .65, eye: 'half', brow: 'up', hairColor: T.hair, ear: false, iris: '#1c3a3a', lips: '#b0505a', white: '#e8e2e0' });
   o += hd.svg;
-  o += `<path d="${sp(Q([[-10.2, -13.4], [-8.8, -13.4], [-7.4, -12.2], [-6.8, -10.4], [-6.4, -8.8], [-7.6, -9.4], [-8.2, -10.8], [-9.2, -12.4]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
-  o += `<path d="${sp(Q([[-8.8, -13.4], [-7.4, -12.2], [-6.6, -10.2], [-5.4, -8.8], [-3.6, -6.4], [-.6, -4.4]]))}" stroke="${T.rim}" stroke-width=".45" fill="none" opacity=".7"/>`;
+  // the hair: over the crown and the back of the head, down the nape and along her back; a lock over the shoulder
+  o += `<path d="${sp(Q([[-11, -13.4], [-9.6, -14], [-8, -13.4], [-7, -11.8], [-6.2, -9.6], [-4.6, -7.6], [-2.4, -6], [.2, -4.8], [-2.2, -4.6], [-4.8, -5.8], [-7, -7.6], [-8, -9.2], [-8.8, -11], [-10, -12.4]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
+  o += `<path d="${sp(Q([[-8.4, -10.6], [-8.4, -8.6], [-8.8, -6.6], [-9.4, -4.6], [-9.8, -2.6], [-10.6, -2.2], [-10.2, -4.4], [-9.6, -6.6], [-9.2, -8.8]]), true)}" fill="${T.hair}" stroke="${T.out}" stroke-width=".3"/>`;
+  for (const k of [0, 1]) o += `<path d="${sp(Q([[-10 + k, -13.6], [-8.2 + k * .6, -12], [-6.6 + k * .6, -9.4], [-4 + k * .6, -7 + k * .3], [-1 + k * .4, -5.2 + k * .2]]))}" stroke="${T.hairHi}" stroke-width=".3" fill="none" opacity=".7"/>`;
+  o += `<path d="${sp(Q([[-9.6, -14], [-8, -13.4], [-7, -11.8], [-6.2, -9.6], [-4.6, -7.6], [-2.4, -6], [.2, -4.8]]))}" stroke="${T.rim}" stroke-width=".45" fill="none" opacity=".7"/>`;
   return { svg: o, mouth: hd.Q(1.02, .52) };
 }
 // the song: from each open mouth rings of shimmering light spread over the water towards the ship, broken into short

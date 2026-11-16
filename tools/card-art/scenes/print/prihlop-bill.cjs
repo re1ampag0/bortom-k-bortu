@@ -52,7 +52,7 @@ const skel = { horizon: VP[1], eye: 1.6, light: 'a narrow green shaft from the h
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const SKIN = { lit: '#e2e0c4', half: '#aaa88a', core: '#8e8e72', shadow: '#4c5240', outline: '#1a1c12' };   // an old sailor's pale, sea-cold skin
 const HAND = { lit: '#d0ceb2', half: '#989878', core: '#7e8066', shadow: '#40463a', outline: '#16180e' };   // the face's tone, a step darker
-const COAT = { lit: '#667868', half: '#36463c', shadow: '#141c18', outline: '#040806' };
+const COAT = { lit: '#7c907e', half: '#46584c', shadow: '#1c2620', outline: '#040806' };
 const RIMC = '#9ff0d0';
 const toVP = (p, y) => { const k = (y - VP[1]) / (p[1] - VP[1]); return [VP[0] + (p[0] - VP[0]) * k, y]; };   // along the line to the VP, to height y
 const toVPx = (p, x) => { const k = (x - VP[0]) / (p[0] - VP[0]); return [x, VP[1] + (p[1] - VP[1]) * k]; };
@@ -84,13 +84,13 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
     // ——— the hold in 2.5D: the hull side (back wall), the deckhead with beams, the bulkheads at the sides, the floor ———
     let bg = `<rect x="-10" y="-10" width="220" height="300" fill="#0a1410"/>`;
     // the hull side: wet strakes, a line of nails at each butt, the frames (ribs) standing on it
-    for (let k = 0, y = WT; y < WB; k++, y += 15.6) bg += woodTex(u, WL, y, WR - WL, 15.6, '#24382f', '#14221c', '#060c0a', 15.6, false, 40 + k)
+    for (let k = 0, y = WT; y < WB; k++, y += 15.6) bg += woodTex(u, WL, y, WR - WL, 15.6, '#3a5646', '#22362c', '#0a1410', 15.6, false, 40 + k)
       + `<path d="M${WL} ${f(y + 15.2)}H${WR}" stroke="#030605" stroke-width="1.1"/><path d="M${WL} ${f(y + .8)}H${WR}" stroke="#5a8a78" stroke-width=".45" opacity=".3"/>`
       + PK.nails([[WL + 14 + (k * 37) % 50, y + 4], [WL + 14 + (k * 37) % 50, y + 11.6], [WL + 104 + (k * 23) % 30, y + 4], [WL + 104 + (k * 23) % 30, y + 11.6]], '#0a1210', .7);
     for (const x of [16]) bg += `<rect x="${x}" y="${WT}" width="14" height="${WB - WT}" fill="#18281f"/><rect x="${x}" y="${WT}" width="14" height="${WB - WT}" fill="url(#oakH${u})" opacity=".35"/>`
       + `<path d="M${x + .6} ${WT}V${WB}" stroke="#5a8a78" stroke-width=".6" opacity=".45"/><path d="M${x + 13.4} ${WT}V${WB}" stroke="#020403" stroke-width="1.1"/>`;
     // the deckhead: planks parallel to the wall, getting wider towards us; beams across, running to the VP
-    { let ch = `<path d="M-10 -10H210V${WT}H-10Z" fill="#101c17"/>`;
+    { let ch = `<path d="M-10 -10H210V${WT}H-10Z" fill="#1a2c24"/>`;
       for (let k = 0, y = WT; y > -10; k++) { const y2 = y - (3.2 + k * 1.8); ch += `<path d="M-10 ${f(y2)}H210" stroke="#030605" stroke-width="${f(.6 + k * .2)}"/><path d="M-10 ${f(y2 + .8)}H210" stroke="#3a5a4c" stroke-width=".4" opacity=".35"/>`; y = y2; }
       // the grating: an open square between two beams, upper left — the sky's green light comes through its bars
       const gC = [98, 14], gD = [62, 14];
@@ -101,12 +101,12 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
       // beams: undersides (trapezoids to the VP) and the side face turned to the centre
       for (const [x0, x1] of [[-12, 4], [46, 60], [100, 114], [156, 170], [204, 216]]) {
         const a = [x0, WT], b = [x1, WT], c = toVP(b, -10), d = toVP(a, -10), side = x1 < VP[0] ? 1 : -1, e = side > 0 ? b : a, eTop = toVP(e, -10), dep = 5;
-        ch += `<path d="M${P2(a)}L${P2(b)}L${P2(c)}L${P2(d)}Z" fill="#1c2c24"/><path d="M${P2(a)}L${P2(b)}L${P2(c)}L${P2(d)}Z" fill="url(#oak${u})" opacity=".3"/>`
+        ch += `<path d="M${P2(a)}L${P2(b)}L${P2(c)}L${P2(d)}Z" fill="#2a4034"/><path d="M${P2(a)}L${P2(b)}L${P2(c)}L${P2(d)}Z" fill="url(#oak${u})" opacity=".3"/>`
           + `<path d="M${P2(e)}L${P2([e[0], e[1] - dep])}L${P2(toVP([e[0], e[1] - dep], -10))}L${P2(eTop)}Z" fill="#0a120e"/>`
           + `<path d="M${P2(a)}L${P2(d)}" stroke="${side > 0 ? '#5a8a78' : '#020403'}" stroke-width=".6" opacity=".6"/><path d="M${P2(a)}L${P2(b)}" stroke="#020403" stroke-width=".8"/>`; }
       bg += ch; }
     // the bulkheads at the sides: vertical boards running into depth
-    for (const [x0, xw] of [[WL, -12], [WR, 212]]) { let s = `<path d="M${x0} ${WT}L${P2(toVPx([x0, WT], xw))}L${P2(toVPx([x0, WB], xw))}L${x0} ${WB}Z" fill="#0e1813"/>`;
+    for (const [x0, xw] of [[WL, -12], [WR, 212]]) { let s = `<path d="M${x0} ${WT}L${P2(toVPx([x0, WT], xw))}L${P2(toVPx([x0, WB], xw))}L${x0} ${WB}Z" fill="#18281f"/>`;
       for (let i = 1; i < 4; i++) { const x = lerp(x0, xw, Math.pow(i / 4, .8)); const t = toVPx([x0, WT], x), b = toVPx([x0, WB], x); s += `<path d="M${P2(t)}L${P2(b)}" stroke="#030605" stroke-width=".9"/><path d="M${f(t[0] + (xw < 0 ? .8 : -.8))} ${f(t[1])}L${f(b[0] + (xw < 0 ? .8 : -.8))} ${f(b[1])}" stroke="#4a7a68" stroke-width=".4" opacity=".3"/>`; }
       bg += s + `<path d="M${x0} ${WT}V${WB}" stroke="#020403" stroke-width="1.2"/>`; }
     // the floor: planks running to the VP, wet, under the glass
@@ -119,7 +119,7 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
       + cluster(RB, 150, 32, 22, 22, 7, 2.6) + cluster(RB, 160, 140, 16, 30, 5, 2.4);
     // the green shaft from the grating: down across him to the floor (brighter: the key on his face and shoulders)
     { const fsh = nid('sf', u), gsh = nid('sg', u);
-      bg += `<defs><filter id="${fsh}" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="5"/></filter>${linGrad(gsh, 0, 0, 0, 200, [[0, '#9ff0d0', .46], [.6, '#9ff0d0', .16], [1, '#9ff0d0', 0]])}</defs>`
+      bg += `<defs><filter id="${fsh}" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="5"/></filter>${linGrad(gsh, 0, 0, 0, 200, [[0, '#b0f6dc', .62], [.6, '#9ff0d0', .22], [1, '#9ff0d0', 0]])}</defs>`
         + `<path d="M62 6L98 6L160 200L90 200Z" fill="url(#${gsh})" filter="url(#${fsh})" style="mix-blend-mode:screen"/>`; }
 
     // ——— Bill: an old sailor of the Dutchman, standing in front of the hull side (not grown into it) ———
@@ -215,10 +215,12 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
     let fg = `<g transform="translate(${ZO[0]} ${ZO[1]}) scale(${ZOOM}) translate(${-ZO[0]} ${-ZO[1]})">${fig}</g>`;
     // ——— light and air: the shaft's dust, the dark of the hold, the under-glass gloom ———
     { const fsh = nid('sf', u), gsh = nid('sg', u);
-      fg += `<defs><filter id="${fsh}" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="6"/></filter>${linGrad(gsh, 0, 0, 0, 200, [[0, '#9ff0d0', .24], [.5, '#9ff0d0', .1], [1, '#9ff0d0', 0]])}</defs>`
+      fg += `<defs><filter id="${fsh}" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="6"/></filter>${linGrad(gsh, 0, 0, 0, 200, [[0, '#b0f6dc', .32], [.5, '#9ff0d0', .14], [1, '#9ff0d0', 0]])}</defs>`
         + `<path d="M62 6L98 6L160 200L90 200Z" fill="url(#${gsh})" filter="url(#${fsh})" style="mix-blend-mode:screen"/>`; }
-    fg += motes(26, 40, 10, 90, 150, '#dffff0', 9) + glow(u, 90, 70, 50, 50, '#9ff0d0', .16)
-      + gloom(u, 200, 100, 120, 100, .3, '#020604') + gloom(u, 100, 140, 100, 280, .5, '#020604');
+    fg += motes(26, 40, 10, 90, 150, '#dffff0', 9) + glow(u, 90, 70, 50, 50, '#9ff0d0', .22)
+      // the vial's light round his raised fist, on the wall, the sleeve and his face
+      + glow(u, ...Z(hR.grip), 70, 70, '#9effd0', .3)
+      + gloom(u, 200, 100, 120, 100, .18, '#020604') + gloom(u, 100, 140, 100, 280, .5, '#020604');
     const MIR = s => `<g transform="translate(200 0) scale(-1 1)">${s}</g>`;
     return [MIR(bg), MIR(fg)];
   } };

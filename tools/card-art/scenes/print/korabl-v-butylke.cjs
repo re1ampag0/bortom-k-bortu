@@ -1,7 +1,7 @@
 // «Корабль в бутылке» (Месть, Легенда, ПРИКАЗ: вражеский корабль с Корпусом 3 или меньше тонет. Это не Залп).
 // A poster: Blackbeard's cabin, the great stern window ablaze with the setting sun. His fist (the black coat sleeve,
 // the broad gold-laced cuff, a linen ruffle) comes up from below and raises a big corked bottle by its neck against
-// the sun — the sun stands right behind the glass, the glass burns at its edges and rays fan out through the cabin.
+// the sun — the sun stands right behind the glass, the glass glows at its edges, a few soft rays reach into the cabin.
 // Inside, a living storm: the sea in the bottle (level, though the bottle tilts) is torn by a whirlpool, and a
 // battered little Company ship (torn sails, the foremast snapped) slides bow first down its wall, spray whirling round
 // the glass above it — she sinks into his collection. No fire anywhere: only the sun.
@@ -38,13 +38,13 @@ module.exports = { name: 'Корабль в бутылке', kind: 'deck', statu
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 });
     // ——— the window: the sky on fire, the sun low over the sea, a long glitter path ———
-    let bg = K.sky(u, L, { horizon: HZ, stars: false, seed: 11 }) + K.localGlow(u, { x: SUN.x, y: SUN.y, color: '#ffb060', power: .6, radius: 120 }, { core: false })
+    let bg = K.sky(u, L, { horizon: HZ, stars: false, seed: 11 }) + K.localGlow(u, { x: SUN.x, y: SUN.y, color: '#ffb060', power: .4, radius: 100 }, { core: false })
       + K.sunMoon(u, L, { r: 10 });
     for (const [x, y, w, h, sd, fr] of [[150, 22, 80, 8, 4, .2], [20, 36, 60, 6, 9, .35], [130, 58, 50, 5, 2, .5], [190, 74, 40, 4, 6, .65], [6, 70, 34, 4, 3, .7]])
       bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
     bg += K.water(u, L, { horizon: HZ, bottom: 160, swell: .5, seed: 6, glitter: SUN.x });
     // rays from the sun: long soft blades fanning out over the whole window and the cabin
-    bg += rays(u, SUN, 260, [[-172, 4], [-150, 3], [-128, 5], [-104, 3], [-82, 5], [-58, 3.5], [-34, 5], [-12, 3], [10, 4], [168, 3]], '#ffd8a0', .2, 3);
+    bg += rays(u, SUN, 230, [[-150, 3.5], [-104, 3], [-58, 3.5], [-14, 3], [168, 3]], '#ffd8a0', .11, 3);
     // the stern window's frame: heavy dark mullions and a transom, the sun on their edges; the dark wall above and the
     // sill below
     bg += windowFrame(u);
@@ -61,18 +61,17 @@ module.exports = { name: 'Корабль в бутылке', kind: 'deck', statu
     fg += `<g clip-path="url(#${g.clip})">${inside(u, L)}</g>`;
     fg += g.svg;
     // the glass against the sun: the outline burning, an inner bright line, the far wall's glow round the sun
-    fg += `<path d="${g.d}" fill="none" stroke="#ffe2b0" stroke-width="1.3" opacity=".55" stroke-linejoin="round"/><path d="${g.d}" fill="none" stroke="#fff6e0" stroke-width=".5" opacity=".9" stroke-linejoin="round"/>`
+    fg += `<path d="${g.d}" fill="none" stroke="#ffe2b0" stroke-width="1" opacity=".32" stroke-linejoin="round"/><path d="${g.d}" fill="none" stroke="#fff6e0" stroke-width=".5" opacity=".7" stroke-linejoin="round"/>`
       + glassGlints(u);
     fg += cork(u, L);
     fg += hd.front + ruffle(u, hd);
-    // the light over everything: a few short bright rays from the sun through the glass, the bloom of the sun in it
-    fg += rays(u, SUN, 90, [[-160, 2], [-120, 2.5], [-75, 2], [-30, 2.5], [15, 2], [60, 2.5], [110, 2], [140, 2.5]], '#fff0d0', .2, 1.4)
-      + K.localGlow(u, { x: SUN.x, y: SUN.y, color: '#fff0c8', power: .7, radius: 26 });
+    // the bloom of the sun in the glass
+    fg += K.localGlow(u, { x: SUN.x, y: SUN.y, color: '#fff0c8', power: .4, radius: 18 });
     // dust in the sunbeams
-    { const R = rng(17); for (let i = 0; i < 46; i++) { const x = R() * 200, y = 10 + R() * 120, d = Math.hypot(x - SUN.x, y - SUN.y);
+    { const R = rng(17); for (let i = 0; i < 18; i++) { const x = R() * 200, y = 10 + R() * 120, d = Math.hypot(x - SUN.x, y - SUN.y);
       fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.2 + R() * .45)}" fill="#ffe6c0" opacity="${f(Math.max(.1, .7 - d / 180) * (.5 + R() * .5))}"/>`; } }
     // a heavy vignette: the corners of the cabin dark, the light gathered on the bottle and the sun
-    { const vg = nid('vg', u); fg += `<defs>${radGrad(vg, SUN.x + 30, SUN.y + 2, 140, [[0, '#000', 0], [.32, '#000', 0], [.62, '#1a0606', .5], [1, '#0a0202', .88]])}</defs><rect x="-10" y="-10" width="220" height="300" fill="url(#${vg})"/>`; }
+    { const vg = nid('vg', u); fg += `<defs>${radGrad(vg, SUN.x + 30, SUN.y + 2, 140, [[0, '#000', 0], [.36, '#000', 0], [.66, '#1a0606', .35], [1, '#0a0202', .72]])}</defs><rect x="-10" y="-10" width="220" height="300" fill="url(#${vg})"/>`; }
     // under the text glass: the dark of the cabin
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 132, 0, 280, [[0, '#0c0604', 0], [.25, '#0c0604', .5], [1, '#060302', .9]])}</defs><rect x="-10" y="132" width="220" height="160" fill="url(#${gl})"/>`; }
     return [bg, fg];
@@ -138,12 +137,12 @@ function inside(u, L) {
   s += `<ellipse cx="${f(C[0])}" cy="${f(C[1])}" rx="${rx}" ry="${ry}" fill="none" stroke="#f0fff8" stroke-width=".7" opacity=".7"/>`;
   // spray whirling round above the hollow: bands of white water and drops, wider and fainter as they rise; the back
   // halves behind the ship, the front halves over her
-  const bands = [[-2.8, 31, 5.8, .95, 1.8], [-8.5, 33, 6.4, .75, 1.5], [-15, 34, 6.8, .5, 1.2], [-22, 32, 6.4, .3, .9]], bl = nid('sb', u);
+  const bands = [[-2.8, 31, 5.8, .75, 1.4], [-9, 33, 6.4, .45, 1.1]], bl = nid('sb', u);
   s += `<defs><filter id="${bl}" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation=".35"/></filter></defs>`;
   const band = (front) => { let o = ''; for (const [dy, bx, by, op, sw] of bands) { const cy = C[1] + dy, a0 = front ? .06 : 1.06, a1 = front ? .94 : 1.94;
       for (let i = 0; i < 4; i++) { const b0 = Math.PI * lerp(a0, a1, i / 4 + R() * .05), b1 = Math.PI * lerp(a0, a1, (i + .7 + R() * .2) / 4), P = a => `${f(C[0] + Math.cos(a) * bx)} ${f(cy + Math.sin(a) * by)}`;
         o += `<path d="M${P(b0)}A${bx} ${by} 0 0 1 ${P(b1)}" stroke="#f6fffa" stroke-width="${f(sw * (front ? 1 : .7))}" fill="none" stroke-linecap="round" opacity="${f(op * (front ? 1 : .6))}"/>`; }
-      for (let i = 0; i < 18; i++) { const a = Math.PI * lerp(a0, a1, R()), px = C[0] + Math.cos(a) * bx, py = cy + Math.sin(a) * by + (R() - .5) * 2, l = .8 + R() * 2, tx = -Math.sin(a), ty = Math.cos(a) * by / bx;
+      for (let i = 0; i < 9; i++) { const a = Math.PI * lerp(a0, a1, R()), px = C[0] + Math.cos(a) * bx, py = cy + Math.sin(a) * by + (R() - .5) * 2, l = .8 + R() * 2, tx = -Math.sin(a), ty = Math.cos(a) * by / bx;
         o += `<path d="M${f(px)} ${f(py)}l${f(tx * l)} ${f(ty * l)}" stroke="#f4fff8" stroke-width="${f(.3 + R() * .5)}" stroke-linecap="round" opacity="${f(op * (.5 + R() * .5))}"/>`; } }
     return `<g filter="url(#${bl})">${o}</g>`; };
   s += band(false);
@@ -154,7 +153,7 @@ function inside(u, L) {
   s += K.foam(u, { x: sx + 2, y: sy + .4, w: 30, h: 1.6, seed: 21, L });
   s += band(true);
   // drops thrown up on the inside of the glass
-  for (let i = 0; i < 30; i++) { const t = R() * .52, k = (R() - .5) * 1.8 * BR, p = onAxis(t, k); if (p[1] > SEA - 6) continue;
+  for (let i = 0; i < 12; i++) { const t = R() * .52, k = (R() - .5) * 1.8 * BR, p = onAxis(t, k); if (p[1] > SEA - 6) continue;
     s += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.25 + R() * .5)}" fill="#f6fffa" opacity="${f(.4 + R() * .4)}"/>`; }
   return s;
 }
@@ -170,7 +169,7 @@ function glassGlints(u) {
   // the shoulder: a bright curve
   { const a = onAxis(.6, -BR * .78), b = onAxis(.58, BR * .8), m = onAxis(.62, 0); s += `<path d="M${f(a[0])} ${f(a[1])}Q${f(m[0] + 3)} ${f(m[1])} ${f(b[0])} ${f(b[1])}" stroke="#ffeacc" stroke-width=".6" fill="none" opacity=".55"/>`; }
   // the sun's own glare in the glass: a soft white spot on the body where the sun is behind it
-  s += K.localGlow(u, { x: SUN.x + 2, y: SUN.y - 1, color: '#fffbe8', power: .3, radius: 12 }, { core: false });
+  s += K.localGlow(u, { x: SUN.x + 2, y: SUN.y - 1, color: '#fffbe8', power: .2, radius: 12 }, { core: false });
   return s;
 }
 

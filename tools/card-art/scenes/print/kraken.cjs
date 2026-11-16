@@ -119,20 +119,20 @@ module.exports = { name: 'Кракен', kind: 'deck', status: 'accepted', cam: 
     // the sky: night, the moon low behind the beast's crown, its halo and the god rays fanning out from behind it
     let bg = K.sky(u, L, { horizon: HZ, stars: 40, seed: 5 }) + K.sunMoon(u, L, { r: 10 });
     for (const [x, y, w, h, sd, fr] of [[40, 22, 70, 8, 3, .3], [176, 30, 50, 6, 8, .4]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
-    bg += glow(u, MOON.x, MOON.y, 120, 90, '#bff8e0', .4);
-    bg += shafts(u, MOON.x, MOON.y, [[-20, -10, -30, 20], [0, -40, 30, -40], [60, -40, 90, -40], [170, -40, 200, -40], [240, -20, 240, 10], [240, 50, 240, 80], [-40, 50, -40, 80]], '#d8fff0', .28);
+    bg += glow(u, MOON.x, MOON.y, 110, 80, '#bff8e0', .28);
+    bg += shafts(u, MOON.x, MOON.y, [[-20, -10, -30, 20], [0, -40, 30, -40], [60, -40, 90, -40], [170, -40, 200, -40], [240, -20, 240, 10], [240, 50, 240, 80], [-40, 50, -40, 80]], '#d8fff0', .12);
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .7, seed: 9, glitter: MOON.x });
-    bg += beastHead(u, L) + glow(u, MOON.x, MOON.y + 2, 26, 18, '#f0fff8', .75);
+    bg += beastHead(u, L) + glow(u, MOON.x, MOON.y + 2, 22, 16, '#f0fff8', .5);
     // where the head comes out of the sea: foam, and the mist over the water
     bg += K.foam(u, { x: 100, y: HZ + 3.6, w: 190, h: 2.4, seed: 3, L }) + K.fog(u, L, { y: HZ - 10, h: 18, density: .45, seed: 3 });
     let mid = '';
     // the sea turning round her: broken rings of foam in perspective, streaks
-    { const R = rng(13); for (let k = 0; k < 4; k++) { const rx = 56 + k * 14, ry = 3.6 + k * 1.6, cy = SHIP.y + 1 + k * .8;
+    { const R = rng(13); for (let k = 0; k < 3; k++) { const rx = 56 + k * 14, ry = 3.6 + k * 1.6, cy = SHIP.y + 1 + k * .8;
       for (let j = 0; j < 7; j++) { const a0 = R() * Math.PI * 2, a1 = a0 + .4 + R() * .7, p = a => [100 + Math.cos(a) * rx, cy + Math.sin(a) * ry];
         const A = p(a0), B = p(a1); mid += `<path d="M${f(A[0])} ${f(A[1])}A${f(rx)} ${f(ry)} 0 0 1 ${f(B[0])} ${f(B[1])}" stroke="#d8fff0" stroke-width="${f(.5 + R() * .7)}" fill="none" opacity="${f(.35 + R() * .3)}" stroke-linecap="round"/>`; } } }
     mid += K.ship(u, L, { ...SHIP, detail: 'mid', wake: false, lights: true }) + K.foam(u, { x: SHIP.x, y: SHIP.y + 1, w: 100, h: 3.4, seed: 4, L });
     // her men flung off the deck by the blow
-    mid += flung(90, 72, 1.3, -30, 1) + flung(114, 58, 1.2, 60, 2) + flung(144, 80, 1.15, 160, 3);
+    mid += flung(92, 70, 1.25, -30, 1) + flung(140, 80, 1.15, 160, 3);
     // the two arms: out of the near sea at the edges, arched high over her, down on her bow and her quarter, over the
     // rail and down her near side into the water (they go on under her keel)
     // the left arm whips up high and comes down over her bow, its end wrapped along her near side; the right one,
@@ -142,7 +142,7 @@ module.exports = { name: 'Кракен', kind: 'deck', status: 'accepted', cam: 
     const armR = [[204, 146], [196, 120], [186, 106], [172, 98], [156, 95], [142, 97], [134.6, 101.6], [131.4, 108], [131, 114], [131.4, 121]];
     const wR = [34, 30, 26, 22, 19, 16.5, 14.6, 13.4, 12.8, 12.4];
     const PAL = { lit: '#2c4a42', half: '#14262a', shadow: '#060e10', rim: '#e8fff6', sucker: '#9a8c80', mouth: '#2a1818', spot: '#04090a', fleck: '#3e6058' };
-    let fg = tentacle(u, armL, wL, { lit: 1, seed: 8, blur: 1.6, rimW: 1.4, pal: PAL, step: 3, suckR: .12 }) + tentacle(u, armR, wR, { lit: -1, seed: 6, blur: 1.6, rimW: 1.4, pal: PAL, step: 3, suckR: .12 });
+    let fg = tentacle(u, armL, wL, { lit: 1, seed: 8, blur: 1.6, rimW: 1.4, pal: PAL, step: 4, suckR: .12 }) + tentacle(u, armR, wR, { lit: -1, seed: 6, blur: 1.6, rimW: 1.4, pal: PAL, step: 4, suckR: .12 });
     // where they bite: the rail smashed, the planks of her side cracked under each arm, splinters and spray
     for (const [hx, hy, sd] of [[76, 104, 9], [132, 104, 17]]) { const R = rng(sd);
       fg += `<path d="M${f(hx - 8)} ${f(hy + 1)}L${f(hx - 6.5)} ${f(hy - .6)}L${f(hx - 5.4)} ${f(hy + 1.6)}M${f(hx + 5.2)} ${f(hy + 1.2)}L${f(hx + 6.6)} ${f(hy - .8)}L${f(hx + 8)} ${f(hy + 1.4)}" stroke="#050403" stroke-width=".8" fill="none"/>`
@@ -152,9 +152,9 @@ module.exports = { name: 'Кракен', kind: 'deck', status: 'accepted', cam: 
       fg += K.splash(u, { x: hx, y: SHIP.y + 1, w: 16, h: 12, seed: sd, L, wind: 0 }); }
     // the arms come up out of the sea in a burst of spray; the water streams off them
     fg += K.splash(u, { x: 12, y: 132, w: 34, h: 20, seed: 2, L, wind: -.3 }) + K.splash(u, { x: 188, y: 132, w: 34, h: 20, seed: 1, L, wind: .3 });
-    { const R = rng(29); for (const [C, sgn] of [[armL, 1], [armR, -1]]) for (let i = 0; i < 44; i++) { const k = 1 + Math.floor(R() * 6), p = C[k], x = p[0] + sgn * (6 + R() * 8), y = p[1] + R() * 10;
+    { const R = rng(29); for (const [C, sgn] of [[armL, 1], [armR, -1]]) for (let i = 0; i < 14; i++) { const k = 1 + Math.floor(R() * 6), p = C[k], x = p[0] + sgn * (6 + R() * 8), y = p[1] + R() * 10;
       fg += `<path d="M${f(x)} ${f(y)}l${f(sgn * .2)} ${f(1.4 + R() * 2)}" stroke="#d8fff0" stroke-width="${f(.3 + R() * .3)}" stroke-linecap="round" opacity="${f(.4 + R() * .4)}"/>`; } }
-    fg += motes(30, 10, 30, 180, 90, '#dffff0', 9);
+    fg += motes(10, 10, 30, 180, 90, '#dffff0', 9);
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 128, 0, 280, [[0, '#040a08', 0], [.3, '#040a08', .5], [1, '#020504', .85]])}</defs><rect x="-10" y="128" width="220" height="170" fill="url(#${gl})"/>`; }
     return [bg + mid, fg];
   } };

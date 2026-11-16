@@ -3,7 +3,7 @@
 // sunk — down by the stern, heeled towards us, the sea over her quarter rail and on her deck — yet every rag of sail
 // drawing, her bow up and throwing spray at us: she is running out of the trap to the right. The waning moon stands
 // behind her stern, over the trap: her torn sails glow through and are edged with its light, rays fan out through the
-// gun smoke and over her, the moon's path runs through the splashes where she was. Behind her on the left the trap: a wall of gun smoke on the horizon, the enemies' broadsides flashing in
+// gun smoke, the moon's path runs through the splashes where she was. Behind her on the left the trap: a wall of gun smoke on the horizon, the enemies' broadsides flashing in
 // it (the Endeavour on the left, the Dutchman behind), a grove of shot splashes on the empty spot where she was and
 // her wake running out of it. No fire on any ship: only the muzzle flashes.
 'use strict';
@@ -33,16 +33,16 @@ const skel = { horizon: HZ, eye: 1, light: 'the full moon low behind the Pearl\'
 module.exports = { name: 'Джек ускользает', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1 });
-    let bg = K.sky(u, L, { horizon: HZ, stars: 60, seed: 8, clear: 30 });
+    let bg = K.sky(u, L, { horizon: HZ, stars: 40, seed: 8, clear: 30 });
     // a wide cold bloom round the moon, then the disc
-    bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#9ab8ff', power: .5, radius: 110 }, { core: false }) + K.sunMoon(u, L, { r: 8, phase: .78, lit: 200 });
+    bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#9ab8ff', power: .3, radius: 80 }, { core: false }) + K.sunMoon(u, L, { r: 8, phase: .78, lit: 200 });
     // a thin torn cloud racing across the moon's lower half (it is the moon: waning, half veiled)
     bg += K.cloud(u, L, { x: MOON.x + 6, y: MOON.y + 4.5, w: 34, h: 2.6, seed: 27, far: .2 });
     // torn low clouds racing to the right, their edges lit by the moon
     for (const [x, y, w, h, sd, fr] of [[170, 26, 70, 9, 31, .1], [22, 34, 56, 8, 12, .15], [150, 70, 50, 6, 17, .35], [36, 80, 44, 5, 9, .55], [188, 92, 40, 4, 23, .7]])
       bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
     // rays from the moon: long soft blades fanning out over the whole sky (behind the ship)
-    bg += rays(u, MOON, 220, [[-170, 5], [-150, 4], [-128, 6], [-106, 3.5], [-84, 5], [-62, 4], [-40, 6], [-18, 3.5], [4, 5], [24, 4], [150, 4], [172, 5]], '#cfe0ff', .2, 3);
+    bg += rays(u, MOON, 200, [[-150, 4], [-110, 3.5], [-70, 4], [-30, 3.5], [8, 4], [164, 3.5]], '#cfe0ff', .11, 3);
     bg += K.water(u, L, { horizon: HZ, bottom: 292, swell: .85, seed: 6, glitter: MOON.x });
     // the trap behind her: a wall of gun smoke along the horizon on the left, the enemies in it firing at the spot
     bg += K.smoke(u, L, { x: 10, y: 109, w: 60, h: 36, wind: .7, seed: 3, opacity: .75, glow: { color: '#ffa040', power: .6 } });
@@ -65,8 +65,7 @@ module.exports = { name: 'Джек ускользает', kind: 'deck', status: 
       bg += K.foam(u, { x: 100, y: SINK + .3, w: 150, h: 2.4, seed: 14, L }) + K.foam(u, { x: 70, y: SINK + 1.8, w: 70, h: 1.4, seed: 15, L }); }
     bg += awash(u, L, g);
     // the moon through the rigging: a second set of short bright rays over the ship, as if through the holes in her sails
-    bg += rays(u, MOON, 70, [[-160, 2.5], [-120, 2], [-95, 3], [-60, 2], [-25, 2.5], [10, 2], [40, 2.5], [75, 2], [110, 2.5], [140, 2]], '#e8f0ff', .22, 1.6);
-    bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#e0ecff', power: .45, radius: 22 });
+    bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#e0ecff', power: .25, radius: 18 });
     // her bow up and running: a big bow wave thrown forward and up, sheets of spray blown at us and to the right
     { const st = g.nearRail(-56); bg += bowWave(u, L, st[0] + 2, SINK + .4); }
     // smoke from a hit on her quarter, torn off to the right low over the water
@@ -108,7 +107,7 @@ function spot(u, L) {
   for (const [dx, dy, w] of [[-12, -2, 12], [6, -3, 14], [-4, 2, 20], [12, 3, 12]]) s += K.foam(u, { x: SPOT.x + dx, y: SPOT.y + dy, w, h: 1, seed: Math.round(R() * 99), L });
   for (const [dx, dy, w, h, sd] of [[-10, -4, 7, 13, 0], [8, -5, 6, 11, 4], [0, -2, 10, 22, 3], [-16, 0, 8, 12, 1], [14, 1, 8, 15, 2], [-5, 4, 9, 13, 5]])
     s += K.splash(u, { x: SPOT.x + dx, y: SPOT.y + dy, w, h, seed: sd, L, wind: .4 });
-  for (let i = 0; i < 34; i++) { const x = SPOT.x + (R() - .5) * 38, y = SPOT.y - 4 - R() * 20; s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.2 + R() * .45)}" fill="#e8f2ff" opacity="${f(.25 + R() * .45)}"/>`; }
+  for (let i = 0; i < 18; i++) { const x = SPOT.x + (R() - .5) * 38, y = SPOT.y - 4 - R() * 20; s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.2 + R() * .45)}" fill="#e8f2ff" opacity="${f(.25 + R() * .45)}"/>`; }
   return s;
 }
 
@@ -123,7 +122,7 @@ function awash(u, L, g) {
       s += `<path d="M${f(p[0])} ${f(p[1] + .5)}Q${f(p[0] - sl * .2)} ${f(p[1] + l * .55)} ${f(x2)} ${f(p[1] + l)}" stroke="#dfeaff" stroke-width="${f(wd)}" fill="none" opacity="${f(.3 + R() * .35)}" stroke-linecap="round"/>`; } }
   for (const [X, w, h, sd] of [[22, 10, 5, 41], [31, 13, 8, 42], [40, 10, 6, 43]]) { const p = g.nearRail(X); s += K.splash(u, { x: p[0], y: p[1] + 1.2, w, h, seed: sd, L, wind: -.6 }); }
   { const a = g.nearRail(16), b = g.nearRail(44); s += K.foam(u, { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 + .6, w: Math.abs(b[0] - a[0]) + 6, h: 2.8, seed: 47, L }); }
-  for (let i = 0; i < 30; i++) { const p = g.nearRail(-20 + R() * 66); s += `<circle cx="${f(p[0] + (R() - .5) * 3)}" cy="${f(p[1] - R() * 4)}" r="${f(.2 + R() * .5)}" fill="#eaf4ff" opacity="${f(.35 + R() * .45)}"/>`; }
+  for (let i = 0; i < 16; i++) { const p = g.nearRail(-20 + R() * 66); s += `<circle cx="${f(p[0] + (R() - .5) * 3)}" cy="${f(p[1] - R() * 4)}" r="${f(.2 + R() * .5)}" fill="#eaf4ff" opacity="${f(.35 + R() * .45)}"/>`; }
   return s;
 }
 
@@ -134,7 +133,7 @@ function bowWave(u, L, x, y) {
   const R = rng(61), gid = nid('bw', u);
   let s = `<defs>${linGrad(gid, 0, y - 18, 0, y + 1, [[0, '#f4f8ff', .95], [.45, '#c4d4ea', .85], [1, '#7a90b0', .7]])}</defs>`;
   // the sheets: [forward reach, height, thickness]
-  for (const [fw, h, th, op] of [[30, 17, 5, .7], [22, 12, 4, .9], [14, 7, 3, 1]]) {
+  for (const [fw, h, th, op] of [[22, 12, 4, .85], [14, 7, 3, 1]]) {
     const top = [x + fw * .55, y - h], tip = [x + fw, y - h * .55], d = `M${f(x - 2)} ${f(y)}C${f(x)} ${f(y - h * .6)} ${f(top[0] - fw * .3)} ${f(top[1])} ${f(top[0])} ${f(top[1])}`
       + `C${f(top[0] + fw * .25)} ${f(top[1])} ${f(tip[0])} ${f(tip[1] - 2)} ${f(tip[0])} ${f(tip[1])}`
       + `C${f(tip[0] - th)} ${f(tip[1] - 1)} ${f(top[0] + 1)} ${f(top[1] + th)} ${f(x + fw * .4)} ${f(y - h * .3)}Q${f(x + fw * .7)} ${f(y - 1)} ${f(x + fw * .9)} ${f(y)}Z`;
@@ -151,7 +150,7 @@ function bowWave(u, L, x, y) {
 function spray(u, x0, y0) {
   const R = rng(51), bl = nid('sb', u);
   let near = '', far = '';
-  for (let i = 0; i < 26; i++) { const vx = 10 + R() * 30, vy = -(6 + R() * 16), n = 5 + Math.floor(R() * 5), big = R() > .7;
+  for (let i = 0; i < 12; i++) { const vx = 10 + R() * 30, vy = -(6 + R() * 16), n = 5 + Math.floor(R() * 5), big = R() > .7;
     for (let k = 1; k <= n; k++) { const t = k / n * (.6 + R() * .6), x = x0 + vx * t, y = y0 + vy * t + 16 * t * t;
       if (R() < .35) continue;
       const dx = vx, dy = vy + 32 * t, l = Math.hypot(dx, dy), len = (big ? 1.6 : .9) + R() * 1.2, r = big ? .55 + R() * .5 : .25 + R() * .35;

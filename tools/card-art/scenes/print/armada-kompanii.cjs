@@ -60,7 +60,7 @@ function broadside(u, L, R, ship, s, rows, o = {}) {
     const lx = x0 + (x1 - x0) * k / (n - 1), px = ship.x + lx * s, py = ship.y - h * s - .2 * s, sz = s * (3 + R() * 3.4) * (o.k || 1);
     smoke += K.smoke(u, L, { x: px - sz * .8, y: py + sz * 1.1, w: sz * 6.5, h: sz * 5.2, wind: -.7, seed: Math.floor(R() * 999), opacity: .5 });
     // fired toward us: a starburst — a soft hot glow, short spikes of different length, a white core
-    flash += glow(u, f(px), f(py), f(sz * 2.6), f(sz * 2.1), '#ffb850', .8)
+    flash += glow(u, f(px), f(py), f(sz * 2.2), f(sz * 1.8), '#ffb850', .65)
       + Array.from({ length: 7 }, (_, j) => { const an = j * 2 * Math.PI / 7 + R() * .6, l = sz * (.8 + R() * 1.1), w = sz * .22; const c = Math.cos(an), sn = Math.sin(an) * .8;
         return `<path d="M${f(px - sn * w)} ${f(py + c * w)}L${f(px + c * l)} ${f(py + sn * l)}L${f(px + sn * w)} ${f(py - c * w)}Z" fill="#ffe8a0" opacity=".95"/>`; }).join('')
       + `<circle cx="${f(px)}" cy="${f(py)}" r="${f(sz * .42)}" fill="#fffdf0"/>`;
@@ -74,8 +74,8 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
     const R = rng(17);
     let bg = K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L, { r: 6.5, rays: false });
     for (const [x, y, w, h, sd, fr] of [[40, 30, 80, 8, 4, .2], [166, 40, 64, 7, 7, .3], [118, 52, 50, 5, 2, .5]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
-    { const vg = nid('vg', u); bg += `<defs>${linGrad(vg, 0, 0, 0, HZ, [[0, '#1a1030', .75], [.45, '#2a1838', .25], [1, '#2a1838', 0]])}</defs><rect x="-10" y="-10" width="220" height="${HZ + 10}" fill="url(#${vg})"/>`; }
-    bg += glow(u, SUN.x, SUN.y + 8, 120, 46, '#ffd890', .6) + glow(u, SUN.x, SUN.y, 30, 26, '#fff4d0', .8);
+    { const vg = nid('vg', u); bg += `<defs>${linGrad(vg, 0, 0, 0, HZ, [[0, '#1a1030', .5], [.45, '#2a1838', .15], [1, '#2a1838', 0]])}</defs><rect x="-10" y="-10" width="220" height="${HZ + 10}" fill="url(#${vg})"/>`; }
+    bg += glow(u, SUN.x, SUN.y + 8, 120, 46, '#ffd890', .6) ;
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .5, seed: 5, glitter: SUN.x });
     // the fleet from the horizon toward us, line behind line, each bigger; the nearer three lines fire one broadside
     // toward us and the pirates — a flash at every port but a few, smoke rolling out of each and drifting left
@@ -91,8 +91,8 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
       fleet += ships + smoke + flash;
       if (li === 1) fleet += K.fog(u, L, { y: HZ - 6, h: 8, density: .35, seed: 3 })
         // the god rays from the sun, between the masts, through the haze and the smoke
-        + shafts(u, SUN.x, SUN.y, [[-40, 50, -40, 80], [-30, 150, 0, 170], [40, 180, 62, 180], [140, 180, 165, 175], [230, 130, 240, 160], [240, 50, 240, 70],
-          [20, -20, 45, -30], [150, -30, 178, -20], [-30, 0, -40, 20], [230, 0, 240, 22]], '#fff0c0', .24);
+        // a few soft rays from the sun, through the haze
+        + shafts(u, SUN.x, SUN.y, [[20, -20, 45, -30], [150, -30, 178, -20], [-30, 0, -40, 20], [230, 0, 240, 22]], '#fff0c0', .12);
     });
     // the Company's colours over the nearest line: the same striped ensign on every mainmast, big enough to read
     { const S = require('../kit/ship.cjs');
@@ -118,7 +118,7 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
     fg += K.ship(u, L, { kind: 'endeavour', x: WL.x, y: WL.y, scale: sc(WL.y), detail: 'near', wake: true, seed: 140 });
     fg += K.ship(u, L, { kind: 'endeavour', x: WR.x, y: WR.y, scale: sc(WR.y), detail: 'near', wake: true, seed: 141 });
     // the sun's warmth over the near sea and the giants' bows; the haze between us and them
-    fg += glow(u, SUN.x, HZ + 6, 80, 14, '#ffcf80', .3);
+    fg += glow(u, SUN.x, HZ + 6, 70, 12, '#ffcf80', .18);
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 132, 0, 280, [[0, '#101828', 0], [.3, '#101828', .45], [1, '#080c18', .8]])}</defs><rect x="-10" y="132" width="220" height="160" fill="url(#${gl})"/>`; }
     return [bg + mid, fg];
   } };
