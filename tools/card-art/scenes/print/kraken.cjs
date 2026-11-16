@@ -30,8 +30,9 @@ const skel = { horizon: HZ, eye: 4, light: 'the moon behind the crown of the bea
 // side, the dark under side), mottled skin, the suckers along the under side (pale rings with dark mouths, smaller
 // to the tip). lit: +1 | -1 — which edge faces the light. o.from, o.to: the share of the spine to draw (for parts that
 // go behind and in front of something).
-const TS = { lit: '#62866a', half: '#324c3e', shadow: '#1a2a22', outline: '#08120c', rim: '#c8ffe4', sucker: '#c8b8a4', mouth: '#4a2a28' };
+const TS0 = { lit: '#62866a', half: '#324c3e', shadow: '#1a2a22', outline: '#08120c', rim: '#c8ffe4', sucker: '#c8b8a4', mouth: '#4a2a28' };
 function tentacle(u, C, W, o = {}) {
+  const TS = Object.assign({}, TS0, o.pal || {});
   const T = H.tube(C, W, 10), lit = o.lit || 1, i0 = Math.round((o.from || 0) * T.N), i1 = Math.round((o.to != null ? o.to : 1) * T.N), R = rng(o.seed || 3);
   const band = (a, b) => { const A = T.edge(a * lit, i0, i1), B = T.edge(b * lit, i0, i1).reverse(); return 'M' + [...A, ...B].map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z'; };
   const out0 = T.outline(i0, i1, 1, false, i1 === T.N), d = 'M' + out0.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z', cid = nid('tc', u), bl = nid('tb', u);
@@ -48,7 +49,7 @@ function tentacle(u, C, W, o = {}) {
   s += `<path d="${d}" fill="none" stroke="${TS.outline}" stroke-width=".45" opacity=".8"/>`;
   // suckers along the under side
   if (o.suckers !== false) for (let i = i0 + 1; i < i1; i += (o.step || 2)) { const q = T.S[i]; if (q.w < 1.6) continue; const p = T.at(i, .74 * lit), r = q.w * .16, a = Math.atan2(q.d[1], q.d[0]) * 180 / Math.PI;
-    s += `<g transform="translate(${f(p[0])} ${f(p[1])}) rotate(${f(a)})"><ellipse rx="${f(r * 1.15)}" ry="${f(r * .8)}" fill="${TS.sucker}" stroke="${TS.outline}" stroke-width=".25"/><ellipse cx="${f(r * .1)}" rx="${f(r * .55)}" ry="${f(r * .36)}" fill="${TS.mouth}"/><path d="M${f(-r)} ${f(-r * .5)}q${f(r)} ${f(-r * .5)} ${f(r * 2)} 0" stroke="#f4ece0" stroke-width="${f(r * .2)}" fill="none" opacity=".6"/></g>`; }
+    s += `<g transform="translate(${f(p[0])} ${f(p[1])}) rotate(${f(a)})"><ellipse rx="${f(r * 1.15)}" ry="${f(r * .8)}" fill="${TS.sucker}" opacity=".85"/><ellipse cx="${f(r * .1)}" rx="${f(r * .55)}" ry="${f(r * .36)}" fill="${TS.mouth}"/><path d="M${f(-r)} ${f(-r * .5)}q${f(r)} ${f(-r * .5)} ${f(r * 2)} 0" stroke="#f4ece0" stroke-width="${f(r * .2)}" fill="none" opacity=".6"/></g>`; }
   return s;
 }
 // a sailor flung through the air: a small dark contour (body, head, flailing arms and legs), the moon on his edge
@@ -68,10 +69,10 @@ const smooth = (P, close) => { let d = `M${f(P[0][0])} ${f(P[0][1])}`; for (let 
 // the rim blazing along the crown and fading down the flanks; ridges and folds, warts and old scars, barnacles at the
 // waterline; two eyes with heavy lids and bar pupils, glowing
 function beastHead(u, L) {
-  const C = [[6, HZ + 4], [10, 98], [14, 86], [20, 74], [28, 62], [38, 52], [52, 42], [70, 34], [92, 29], [114, 28], [134, 32], [152, 40], [166, 52], [176, 66], [184, 80], [190, 94], [194, HZ + 4]];
+  const C = [[6, HZ + 4], [10, 98], [14, 86], [20, 74], [28, 62], [38, 52], [52, 42], [68, 33], [88, 26], [110, 22], [130, 25], [148, 33], [162, 46], [174, 62], [184, 78], [190, 94], [194, HZ + 4]];
   const top = smooth(C), d = top + 'Z', id = nid('bh', u), cl = nid('bc', u), bl = nid('bb', u), rg = nid('br', u), sh = nid('bs', u);
   const R = rng(41);
-  let s = `<defs>${linGrad(id, 0, 28, 0, HZ + 4, [[0, '#2c4a42', 1], [.35, '#18302a', 1], [1, '#0a1612', 1]])}${radGrad(rg, MOON.x - 6, MOON.y + 4, 70, [[0, '#6a9a88', .55], [.5, '#3a6056', .22], [1, '#3a6056', 0]])}`
+  let s = `<defs>${linGrad(id, 0, 28, 0, HZ + 4, [[0, '#1e3832', 1], [.35, '#10221e', 1], [1, '#060f0c', 1]])}${radGrad(rg, MOON.x - 6, MOON.y + 4, 70, [[0, '#6a9a88', .55], [.5, '#3a6056', .22], [1, '#3a6056', 0]])}`
     + `<clipPath id="${cl}"><path d="${d}"/></clipPath>${blurF(bl, 1.6)}${blurF(sh, .7)}</defs>`;
   s += `<path d="${d}" fill="url(#${id})"/><g clip-path="url(#${cl})"><rect x="0" y="0" width="200" height="${HZ + 6}" fill="url(#${rg})"/>`;
   // the inner glow under the rim: the moonlight through the thin skin of the crown
@@ -121,7 +122,7 @@ module.exports = { name: 'Кракен', kind: 'deck', status: 'accepted', cam: 
     bg += glow(u, MOON.x, MOON.y, 120, 90, '#bff8e0', .4);
     bg += shafts(u, MOON.x, MOON.y, [[-20, -10, -30, 20], [0, -40, 30, -40], [60, -40, 90, -40], [170, -40, 200, -40], [240, -20, 240, 10], [240, 50, 240, 80], [-40, 50, -40, 80]], '#d8fff0', .28);
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .7, seed: 9, glitter: MOON.x });
-    bg += beastHead(u, L);
+    bg += beastHead(u, L) + glow(u, MOON.x, MOON.y + 2, 26, 18, '#f0fff8', .75);
     // where the head comes out of the sea: foam, and the mist over the water
     bg += K.foam(u, { x: 100, y: HZ + 3.6, w: 190, h: 2.4, seed: 3, L }) + K.fog(u, L, { y: HZ - 10, h: 18, density: .45, seed: 3 });
     let mid = '';
@@ -129,16 +130,23 @@ module.exports = { name: 'Кракен', kind: 'deck', status: 'accepted', cam: 
     { const R = rng(13); for (let k = 0; k < 4; k++) { const rx = 56 + k * 14, ry = 3.6 + k * 1.6, cy = SHIP.y + 1 + k * .8;
       for (let j = 0; j < 7; j++) { const a0 = R() * Math.PI * 2, a1 = a0 + .4 + R() * .7, p = a => [100 + Math.cos(a) * rx, cy + Math.sin(a) * ry];
         const A = p(a0), B = p(a1); mid += `<path d="M${f(A[0])} ${f(A[1])}A${f(rx)} ${f(ry)} 0 0 1 ${f(B[0])} ${f(B[1])}" stroke="#d8fff0" stroke-width="${f(.5 + R() * .7)}" fill="none" opacity="${f(.35 + R() * .3)}" stroke-linecap="round"/>`; } } }
+    // two smaller arms out of the sea between the beast and her, curling: there are more of them
+    mid += tentacle(u, [[154, HZ + 5], [158, 92], [160, 80], [154, 72], [147, 74], [148, 80], [152, 79]], [9, 7.5, 6, 4.4, 3, 1.8, .8], { lit: -1, seed: 4, step: 2, blur: .8, rimW: .7, pal: { lit: '#2e5248', half: '#162a26', shadow: '#081210', rim: '#d0fff0', sucker: '#8a8072' } })
+      + tentacle(u, [[44, HZ + 5], [40, 94], [42, 84], [50, 80], [54, 86], [49, 88]], [8, 6.5, 5, 3.2, 1.8, .7], { lit: 1, seed: 2, step: 2, blur: .8, rimW: .7, pal: { lit: '#2e5248', half: '#162a26', shadow: '#081210', rim: '#d0fff0', sucker: '#8a8072' } })
+      + K.foam(u, { x: 154, y: HZ + 5, w: 16, h: 1.6, seed: 11, L }) + K.foam(u, { x: 44, y: HZ + 5, w: 14, h: 1.6, seed: 12, L });
     mid += K.ship(u, L, { ...SHIP, detail: 'mid', wake: false, lights: true }) + K.foam(u, { x: SHIP.x, y: SHIP.y + 1, w: 100, h: 3.4, seed: 4, L });
     // her men flung off the deck by the blow
     mid += flung(90, 74, 1, -30, 1) + flung(112, 62, .95, 60, 2) + flung(138, 84, .9, 160, 3);
     // the two arms: out of the near sea at the edges, arched high over her, down on her bow and her quarter, over the
     // rail and down her near side into the water (they go on under her keel)
-    const armL = [[0, 146], [6, 116], [10, 90], [16, 66], [28, 48], [44, 38], [60, 38], [70, 46], [75, 60], [77, 76], [78, 92], [77.5, 104], [76.5, 113], [76, 121]], wL = [30, 28, 25, 22, 19, 16, 14, 12.5, 11, 10, 9.5, 9, 8.6, 8];
-    const armR = [[200, 146], [194, 116], [190, 90], [184, 66], [172, 48], [156, 38], [140, 38], [130, 46], [126, 60], [125, 76], [125, 92], [125.5, 104], [126, 113], [126.5, 121]], wR = [30, 28, 25, 22, 19, 16, 14, 12.5, 11, 10, 9.5, 9, 8.6, 8];
-    let fg = tentacle(u, armL, wL, { lit: -1, seed: 8, blur: 1.6, rimW: 1.2 }) + tentacle(u, armR, wR, { lit: 1, seed: 6, blur: 1.6, rimW: 1.2 });
+    const armL = [[2, 146], [8, 118], [6, 92], [14, 70], [30, 56], [48, 52], [62, 58], [70, 70], [74, 84], [76, 97], [74.5, 106], [78, 112.6], [88, 115], [98, 113.4], [104, 109.4], [102.6, 104.6], [99, 104.4]];
+    const wL = [30, 27, 24, 21, 18, 15.5, 13.5, 12, 11, 10, 9.4, 8.6, 7.6, 6.4, 4.8, 3, 1.4];
+    const armR = [[200, 146], [192, 116], [194, 88], [188, 62], [176, 44], [160, 35], [144, 37], [134, 47], [128, 62], [126.4, 78], [127, 93], [128.4, 104], [130, 112], [131, 121]];
+    const wR = [30, 28, 25, 22, 19, 16.5, 14.5, 13, 12, 11, 10.4, 10, 9.6, 9.4];
+    const PAL = { lit: '#3c6456', half: '#1c3430', shadow: '#0a1614', rim: '#e0fff2', sucker: '#a89888', mouth: '#3a2220' };
+    let fg = tentacle(u, armL, wL, { lit: 1, seed: 8, blur: 1.6, rimW: 1.3, pal: PAL, step: 3 }) + tentacle(u, armR, wR, { lit: -1, seed: 6, blur: 1.6, rimW: 1.3, pal: PAL, step: 3 });
     // where they bite: the rail smashed, the planks of her side cracked under each arm, splinters and spray
-    for (const [hx, hy, sd] of [[77, 104, 9], [125.5, 106, 17]]) { const R = rng(sd);
+    for (const [hx, hy, sd] of [[76, 104, 9], [129, 106, 17]]) { const R = rng(sd);
       fg += `<path d="M${f(hx - 8)} ${f(hy + 1)}L${f(hx - 6.5)} ${f(hy - .6)}L${f(hx - 5.4)} ${f(hy + 1.6)}M${f(hx + 5.2)} ${f(hy + 1.2)}L${f(hx + 6.6)} ${f(hy - .8)}L${f(hx + 8)} ${f(hy + 1.4)}" stroke="#050403" stroke-width=".8" fill="none"/>`
         + `<path d="M${f(hx - 6.5)} ${f(hy - .6)}l-.6 -2.4M${f(hx + 6.6)} ${f(hy - .8)}l.8 -2.6" stroke="#d8b07a" stroke-width=".5" stroke-linecap="round"/>`;
       for (let i = 0; i < 16; i++) { const a = -Math.PI * (.05 + R() * .9), dd = 5 + R() * 12, x = hx + Math.cos(a) * dd, y = hy - 4 + Math.sin(a) * dd * .8, l = .8 + R() * 1.8, r = R() * Math.PI;

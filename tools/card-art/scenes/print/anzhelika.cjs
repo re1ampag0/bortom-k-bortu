@@ -160,6 +160,7 @@ function sealedLetter(u, w, h) {
 // the hand's frame (origin the wrist, x toward the fingers, the thumb on the -y side). Returns { back, thumb, P }:
 // `back` (sleeve, cuff, glove, fingers) goes under the letter, `thumb` over it.
 function gloveArm(u, L, W, a, s) {
+  const AP_ = JSON.parse(process.env.AP || '{}');
   const P = frameOf(W, a, s), lv = { lit: '#f0cc9c', half: '#c0905c', shadow: '#7a4e2c', outline: '#2a1608' };   // buff riding leather
   const sl = nid('gsl', u), cf = nid('gcf', u), gv = nid('ggv', u), fn = nid('gfn', u);
   const across = (x, y0, y1, stops) => { const A = P(x, y0), B = P(x, y1); return `x1="${f(A[0])}" y1="${f(A[1])}" x2="${f(B[0])}" y2="${f(B[1])}"`; };
@@ -174,7 +175,7 @@ function gloveArm(u, L, W, a, s) {
     back += `<path d="M${f(a0[0])} ${f(a0[1])}Q${f(a1[0])} ${f(a1[1])} ${f(a2[0])} ${f(a2[1])}" stroke="#12040a" stroke-width="1" fill="none" opacity=".55" stroke-linecap="round"/>`
       + `<path d="M${f(a0[0] + 1)} ${f(a0[1] - .6)}Q${f(a1[0] + 1)} ${f(a1[1] - .6)} ${f(a2[0] + 1)} ${f(a2[1] - .6)}" stroke="#a84a5a" stroke-width=".4" fill="none" opacity=".45"/>`; }
   // the glove: gauntlet, wrist and the back of the hand in one outline; the fingers bend away behind the letter
-  const fingers = [[-4.3, 12.2, -.6], [-1.45, 13, .2], [1.4, 12.2, .9], [4.1, 7.6, 1.5]];   // the little finger curls under the sheet
+  const fingers = [[-4.3, 12.2, -.6], [-1.45, 13, .2], [1.4, 12.2, .9], [4.1, 9.6, 1.5]];   // the little finger curls under the sheet
   for (const [y, l, c] of fingers.slice().reverse()) back += `<path d="${pth(P, [[14, y - 1.55], [15 + l * .5, y - 1.5 + c * .4], [15 + l, y - 1.1 + c], [16 + l, y + c], [15 + l, y + 1.2 + c], [15 + l * .5, y + 1.55 + c * .4], [14, y + 1.55]])}" fill="url(#${fn})" stroke="${lv.outline}" stroke-width=".4"/>`;
   const glove = [[-13, -7.6], [-6, -5.8], [-.5, -5.3], [5, -6.5], [10.5, -7.1], [15.4, -6.6], [18.2, -4.6], [19.2, -1.5], [18.9, 1.6], [17.8, 4.6], [15, 6.3], [9, 6.4], [3, 5.6], [-1, 5.2], [-6, 5.8], [-13, 7.8]];
   back += `<path d="${pth(P, glove)}" fill="url(#${gv})" stroke="${lv.outline}" stroke-width=".5"/>`;
@@ -190,7 +191,7 @@ function gloveArm(u, L, W, a, s) {
   for (const y of [-3.4, 3.6]) { const p = P(-17.6, y); back += K.shadeSphere(u, p[0], p[1], 1.25, L, 'brass', { outline: .3 }); }
   // the thumb, over the letter's face: from the ball of the hand round to the pad pressing the paper (its pad lies on the
   // sheet a little in from the edge — the letter is held, not resting on the finger tips)
-  const th = [[3, -5.4], [7.5, -8.6], [13.5, -9.4], [21, -6.6], [26.6, -3.4], [28.2, -1.5], [27.2, -.1], [21.8, -1.9], [15.4, -3.8], [9, -4.4], [4, -2.2]];
+  const th = AP_.th || [[3, -5.4], [7.5, -8.4], [12.5, -9.2], [17.5, -8.2], [22, -6.4], [25, -4.8], [25.8, -3.4], [25, -2.4], [21.5, -2.6], [16.5, -3.6], [10, -4.2], [4, -2.2]];
   const tg = nid('gth', u);
   let thumb = `<defs>${lg(tg, 14, -10, -2.4, [[0, mix(lv.shadow, '#140a04', .3)], [.45, lv.shadow], [.8, lv.half], [1, lv.lit]])}</defs>`;
   { const sp = P(24, -.6); thumb += `<ellipse cx="${f(sp[0] - 1)}" cy="${f(sp[1] + 1.2)}" rx="3.4" ry="1.6" transform="rotate(${f(a)} ${f(sp[0] - 1)} ${f(sp[1] + 1.2)})" fill="#2a1406" opacity=".35"/>`; }
@@ -199,7 +200,7 @@ function gloveArm(u, L, W, a, s) {
   { const A = P(17, -3.3), B = P(23.6, -1.4), C = P(27.4, -1.6); thumb += `<path d="M${f(A[0])} ${f(A[1])}Q${f(B[0])} ${f(B[1])} ${f(C[0])} ${f(C[1])}" stroke="#ffe4c0" stroke-width=".55" fill="none" opacity=".6" stroke-linecap="round"/>`; }
   // her ring on the ring finger, over the glove: a heavy gold band round the finger just past the knuckle, a sapphire
   // in a raised bezel on the back of the finger, the candle (on the right) lighting a warm spark in the stone and on the gold
-  const rg = nid('grg', u), rs = nid('grs', u), rx = 20.3, ry = 1.75, sc = s;
+  const rg = nid('grg', u), rs = nid('grs', u), rx = AP_.rx || 19.4, ry = 1.75, sc = s;
   const band = [P(rx - .55, ry - 1.75), P(rx + .25, ry), P(rx - .55, ry + 1.75)], bd = `M${f(band[0][0])} ${f(band[0][1])}Q${f(band[1][0])} ${f(band[1][1])} ${f(band[2][0])} ${f(band[2][1])}`;
   const st = P(rx, ry), lt = P(rx + .6, ry + .9);
   let ring = `<defs>${lg(rg, rx, ry - 1.8, ry + 1.8, [[0, '#5a3606'], [.3, '#b8862a'], [.62, '#f4d070'], [.82, '#fff4c8'], [1, '#c89030']])}`

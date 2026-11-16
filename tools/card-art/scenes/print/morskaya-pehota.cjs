@@ -251,11 +251,14 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'a
       } else {
         // shoulder arms: the near arm hanging nearly straight, the elbow a little out, the fist cupping the butt; the
         // musket resting in the hollow of the shoulder, sloped back, the bayonet up behind the hat
-        const th = (o.slope != null ? o.slope : 8) * Math.PI / 180, dv = [Math.sin(th), Math.cos(th)], nv = [-dv[1], dv[0]], B = [-.15, .88];
+        const th = (o.slope != null ? o.slope : 9) * Math.PI / 180, dv = [Math.sin(th), Math.cos(th)], nv = [-dv[1], dv[0]], B = [-.03, .88];
         const A = (t, s2 = 0) => M(B[0] + dv[0] * t + nv[0] * s2, B[1] + dv[1] * t + nv[1] * s2);
-        const hand = M(-.15, .9), el = M(-.09 - (o.elbow || 0), 1.15);
-        front += limbC(M(-.04, 1.42), el, M(-.14, .96), k * .105, RL, sw)
-          + ln(`M${P2(M(-.135, 1.0))}L${P2(M(-.145, .95))}`, k * .115, NAVY.half);
+        const el = M(-.15 - (o.elbow || 0), 1.17), sh = M(-.04, 1.42), wr = M(-.045, .97);
+        // the sleeve's shadow on the coat behind it, the sleeve (elbow out in front, so the arm reads apart from the
+        // musket and the coat), the navy cuff at the wrist
+        front += ln(`M${P2(sh)}Q${P2([el[0] + k * .03, el[1] + k * .02])} ${P2([wr[0] + k * .03, wr[1]])}`, k * .1, '#3a0806', .45)
+          + limbC(sh, el, wr, k * .11, RL, sw)
+          + ln(`M${P2(M(-.06, 1.02))}L${P2(M(-.045, .955))}`, k * .12, NAVY.half) + ln(`M${P2(M(-.075, 1.02))}L${P2(M(-.06, .96))}`, k * .03, NAVY.lit, .8);
         // the stock (butt, wrist, fore-end), the lock, the barrel along it, the ramrod pipe, the bayonet
         const mg = nid('mk', u), s0 = A(.5, -.06), s1 = A(.5, .06);
         front += `<defs>${linGrad(mg, s0[0], s0[1], s1[0], s1[1], [[0, '#4a2a12'], [.5, '#8a5a2e'], [1, '#b07c44']])}</defs>`
@@ -267,9 +270,10 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'a
           + `<path d="M${P2(A(1.6, .016))}L${P2(A(1.98, 0))}L${P2(A(1.6, -.012))}Z" fill="#b8c0c8" stroke="#3a3e44" stroke-width="${f(sw * .7)}"/>`
           + ln(`M${P2(A(1.6, .012))}L${P2(A(1.98, 0))}`, Math.max(.2, k * .005), '#ffffff', .9);
         // the fist under the butt: the fingers round its toe in front, the thumb along the far side
-        front += `<path d="${H.sp([M(-.2, .93), M(-.17, .87), M(-.1, .86), M(-.08, .91), M(-.11, .95), M(-.17, .96)], true)}" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width="${f(sw * .7)}"/>`
-          + (k > 14 ? ln(`M${P2(M(-.18, .9))}L${P2(M(-.1, .895))}M${P2(M(-.18, .875))}L${P2(M(-.11, .87))}`, Math.max(.15, k * .004), SKIN.outline, .6) : '')
-          + ln(`M${P2(M(-.19, .94))}Q${P2(M(-.2, .9))} ${P2(M(-.17, .87))}`, Math.max(.2, k * .008), SKIN.lit, .7);
+        const X = (x, y) => M(x + .12, y);
+        front += `<path d="${H.sp([X(-.2, .93), X(-.17, .87), X(-.1, .86), X(-.08, .91), X(-.11, .95), X(-.17, .96)], true)}" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width="${f(sw * .7)}"/>`
+          + (k > 14 ? ln(`M${P2(X(-.18, .9))}L${P2(X(-.1, .895))}M${P2(X(-.18, .875))}L${P2(X(-.11, .87))}`, Math.max(.15, k * .004), SKIN.outline, .6) : '')
+          + ln(`M${P2(X(-.19, .94))}Q${P2(X(-.2, .9))} ${P2(X(-.17, .87))}`, Math.max(.2, k * .008), SKIN.lit, .7);
       }
       // the head (profile, facing left) and the tricorn, unless the caller draws them
       if (!o.ownHead) { const hc = M(-.08, 1.62), hr = k * .105;
@@ -317,8 +321,8 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'a
     let ranks = '', ranksNear = '';
     // each man of the rank his own way of standing: the slope of his musket, his stride, a step forward, the elbow, the head
     // (the slope kept small: a musket sloped further would cross the faces of the men behind him)
-    const POSE = [{ slope: 6, st: .9, tilt: 2 }, { slope: 11, st: 1.2, step: 1, tilt: 8, elbow: .03 }, { slope: 3, st: .8, tilt: -4 }, { slope: 9, st: 1.1, tilt: 6, elbow: .05 },
-      { slope: 5, st: 1.3, step: 1, tilt: -2 }, { slope: 10, st: .95, tilt: 10, elbow: .02 }, { slope: 4, st: 1.15, step: 1, tilt: 0, elbow: .04 }, { slope: 7, st: .9, tilt: 5 }];
+    const POSE = [{ slope: 9, st: .9, tilt: 2 }, { slope: 13, st: 1.2, step: 1, tilt: 8, elbow: .03 }, { slope: 7, st: .8, tilt: -4 }, { slope: 12, st: 1.1, tilt: 6, elbow: .05 },
+      { slope: 8, st: 1.3, step: 1, tilt: -2 }, { slope: 11, st: .95, tilt: 10, elbow: .02 }, { slope: 7, st: 1.15, step: 1, tilt: 0, elbow: .04 }, { slope: 9, st: .9, tilt: 5 }];
     RANK.forEach((z, i) => { if (z < 2.5) return; const m = marine(z, Object.assign({ seed: i + 2, hair: ['#3a2414', '#1a1210', '#6a4a2a', '#2a1a10'][i % 4], moustache: i === 6, stubble: i === 5 }, POSE[i]));
       const sv = K.castShadow(u, L, { x: m.M(0, 0)[0], y: m.M(0, 0)[1], w: m.k * .5, h: m.k * 1.8, horizon: HZ, opacity: .45 }) + m.back + m.body + m.front;
       if (z > 3.45) ranks += sv; else ranksNear += sv; });

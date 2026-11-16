@@ -1,15 +1,17 @@
 // «Живые снасти» (Месть королевы Анны, РЕМОНТ: восстановите 2 Паруса своему кораблю или кораблю союзника), refined
 // from the first-round scene (portrait-revenge.cjs SCENES['Живые снасти']): sunset on the deck of the Revenge, no men
-// on it. A broadsword stands driven into the planks, the green stone in its pommel glowing; a green glow runs over
-// the deck from it to the fife rail at the foot of the mast, and there the ropes rise off the belaying pins by
-// themselves, like snakes, and go to work on the torn mainsail: one laces the rip shut (the lower half already
-// closed, its live end lifting to the next eyelet), two haul the foot of the sail taut.
+// on it. The ropes have come alive by themselves: off the belaying pins of the fife rail at the foot of the mast they
+// rise in S-bends like vines and go to work on the torn mainsail: two of them lace two rips shut (the lower part of
+// each already stitched, the live end rearing up and lunging at the next eyelet), one hauls the foot of the sail taut.
 // Fixed against the first round: the deck was a flat strip with a flat wall — now the deck in 2.5D, looking forward
 // along it: the planks and both bulwarks run to the bow, the sea and the low sun ahead; the sail hung in the air —
 // now it is bent to the yard on the mast; the ropes were loops in the air — now each starts wound on its pin and
 // ends at work on the sail; the brief's find is added: the rip in the sail being laced by the rope itself.
-// Light: the low sun ahead, behind the sail (key, contre-jour: the canvas glows through, the rip blazes); the green
-// stone a small cold local light.
+// Print review: the broadsword standing on its tip with a green ray from its pommel read as a film prop and at
+// 250 px the living rope did not read — the sword, its stone and the green trail are gone; the rips are wider, a
+// second rip is laced on the left, the ropes are thicker and stand dark against the glowing canvas (contre-jour),
+// the live ends coil like vines and leave short motion strokes; no magic glow.
+// Light: the low sun ahead, behind the sail (key, contre-jour: the canvas glows through, the rips blaze).
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -24,19 +26,26 @@ const STEM = [100, 97];                        // where the bulwarks meet at the
 const MAST = { x: 100, foot: 114 };
 const FIFE = { x0: 82, x1: 118, y: 102 };      // the fife rail's top bar
 const PINS = [87, 95, 105, 113];
-const SW = { x: 34, y: 123, a: 5 };            // the sword: where the blade enters the deck, its lean
 const light = { time: 'dusk', haze: .45, key: { type: 'sun', x: SUN.x, y: SUN.y, el: 5, color: '#ffb46a', power: .95 }, fill: { color: '#6e4a70', power: .45 },
-  rim: { az: 0, color: '#ffd0a0', power: .7 }, locals: [{ x: SW.x, y: 70, color: '#7aff9a', power: .4, radius: 26 }] };
-const skel = { horizon: HZ, eye: 1.6, light: 'the low sun ahead behind the sail (key, contre-jour) + the sword stone (green local)', items: [
+  rim: { az: 0, color: '#ffd0a0', power: .7 } };
+const skel = { horizon: HZ, eye: 1.6, light: 'the low sun ahead behind the sail (key, contre-jour)', items: [
   ['sail', SAIL.f0, SAIL.foot, SAIL.f1 - SAIL.f0, SAIL.foot - SAIL.top, 'bent to the yard'], ['yard', 8, YD + 3, 184, 6, 'mast'],
-  ['mast', MAST.x - 4, MAST.foot, 8, MAST.foot + 10, 'deck'], ['rip', 120, 78, 14, 54, 'sail'], ['fife rail', FIFE.x0, MAST.foot, FIFE.x1 - FIFE.x0, 14, 'deck round the mast'],
-  ['ropes', 66, 104, 92, 30, 'from the pins to the sail'], ['bulwarks', -10, 150, 220, 54, 'deck sides, meeting at the bow'], ['sword', SW.x - 8, SW.y, 16, 56, 'driven into the deck']] };
+  ['mast', MAST.x - 4, MAST.foot, 8, MAST.foot + 10, 'deck'], ['rip A', 116, 82, 30, 58, 'sail'], ['rip B', 48, 78, 20, 40, 'sail'], ['fife rail', FIFE.x0, MAST.foot, FIFE.x1 - FIFE.x0, 14, 'deck round the mast'],
+  ['ropes', 56, 104, 100, 60, 'from the pins to the sail'], ['bulwarks', -10, 150, 220, 54, 'deck sides, meeting at the bow']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
-// the rip: half its gap at height y; above LACE it is still open, below it laced shut
-const RIP0 = 22, RIP1 = 82, LACE = 54;
-const ripX = y => 126 + (y - RIP0) * .06;
-const gap = y => y > LACE ? 1.4 : Math.sin(Math.PI * (y - RIP0) / (LACE + 8 - RIP0)) * 8.5 + 1.4;
+// the rips: centre line x + (y − y0)·sl from y0 (its top) to y1; below `lace` laced shut (the edges pulled together),
+// above it a lens-shaped opening, widest `max` each side; eyelets every `st` down both edges, `e` from the centre
+const RIPS = [{ x: 128, sl: .05, y0: 24, y1: 82, lace: 52, max: 10, st: 8, e: 5.5, seed: 1 },
+  { x: 58, sl: -.04, y0: 38, y1: 78, lace: 62, max: 6, st: 6, e: 4.5, seed: 2 }];
+const ripX = (Rp, y) => Rp.x + (y - Rp.y0) * Rp.sl;
+const gap = (Rp, y) => y >= Rp.lace ? 1.4 : 1.4 + Rp.max * Math.pow(Math.max(0, Math.sin(Math.PI * (y - Rp.y0) / (Rp.lace - Rp.y0))), .85);
+const EL = (Rp, y) => [ripX(Rp, y) - Math.max(Rp.e, gap(Rp, y) + 3.4), y], ER = (Rp, y) => [ripX(Rp, y) + Math.max(Rp.e, gap(Rp, y) + 3.4), y];
+// a smooth path through the points (Catmull-Rom, as kit rope draws it): for the dark silhouette under a rope
+function smooth(pts) { const n = pts.length, g = i => pts[Math.max(0, Math.min(n - 1, i))]; let d = 'M' + P2(pts[0]);
+  for (let i = 0; i < n - 1; i++) { const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2);
+    d += `C${P2([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6])} ${P2([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6])} ${P2(p2)}`; }
+  return d; }
 
 module.exports = { name: 'Живые снасти', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
@@ -62,10 +71,11 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'accep
     // ——— the sail: canvas glowing with the sun behind it, the rip cut out of it ———
     const S = SAIL;
     const edge = `M${S.x0} ${S.top}L${S.x1} ${S.top}Q${S.x1 + 4} 52 ${S.f1} ${S.foot}Q100 ${S.mid - 4} ${S.f0} ${S.foot}Q${S.x0 - 4} 52 ${S.x0} ${S.top}Z`;
-    const ys = []; for (let y = RIP0; y <= RIP1; y += 1.5) ys.push(y);
-    const jag = y => (rng(Math.round(y * 7))() - .5) * (y < LACE ? 1.6 : .5);
-    const ripL = ys.map(y => [ripX(y) - gap(y) + jag(y), y]), ripR = ys.map(y => [ripX(y) + gap(y) + jag(y + .7), y]);
-    const rip = 'M' + ripL.map(P2).join('L') + 'L' + ripR.slice().reverse().map(P2).join('L') + 'Z';
+    const RE = RIPS.map(Rp => { const ys = []; for (let y = Rp.y0; y <= Rp.y1; y += 1.5) ys.push(y);
+      const jag = y => (rng(Math.round(y * 7) + Rp.seed * 1000)() - .5) * (y < Rp.lace ? 1.6 : .5);
+      const l = ys.map(y => [ripX(Rp, y) - gap(Rp, y) + jag(y), y]), r = ys.map(y => [ripX(Rp, y) + gap(Rp, y) + jag(y + .7), y]);
+      return { Rp, l, r, d: 'M' + l.map(P2).join('L') + 'L' + r.slice().reverse().map(P2).join('L') + 'Z' }; });
+    const rip = RE.map(e => e.d).join('');
     { const g = nid('sl', u), gs = nid('ss', u), sc = nid('sc', u);
       mid += `<defs>${linGrad(g, S.x0, 0, S.x1, 0, [[0, '#8a4a34', 1], [.18, '#c87a4c', 1], [.5, '#f2b878', 1], [.82, '#c87a4c', 1], [1, '#7a4030', 1]])}`
         + `${radGrad(gs, SUN.x, SUN.y, 60, [[0, '#fff0c8', .7], [.25, '#ffd090', .4], [.6, '#ffb070', .12], [1, '#ffb070', 0]])}<clipPath id="${sc}"><path d="${edge}${rip}" clip-rule="evenodd"/></clipPath></defs>`
@@ -95,10 +105,11 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'accep
       // the robands over the yard holding the head of the sail
       for (let x = S.x0 + 6; x < S.x1; x += 12) mid += `<path d="M${x} ${S.top + 1}q1.2 -4 2.4 0" stroke="#3a2010" stroke-width=".7" fill="none"/>`;
       // the rip's frayed edges, lit from behind: hot rims, loose threads
-      { const open = y => y < LACE + 2, cl = ripL.filter(p => open(p[1])), crr = ripR.filter(p => open(p[1]));
+      for (const { Rp, l: ripL, r: ripR } of RE) {
+      { const open = y => y < Rp.lace + 2, cl = ripL.filter(p => open(p[1])), crr = ripR.filter(p => open(p[1]));
         mid += `<path d="M${cl.map(P2).join('L')}" stroke="#2a1008" stroke-width="3.2" fill="none" opacity=".75" transform="translate(-1.2 0)" stroke-linejoin="round"/><path d="M${crr.map(P2).join('L')}" stroke="#2a1008" stroke-width="3.2" fill="none" opacity=".75" transform="translate(1.2 0)" stroke-linejoin="round"/>`; }
       mid += `<path d="M${ripL.map(P2).join('L')}" stroke="#fff0c0" stroke-width=".8" fill="none" opacity=".9"/><path d="M${ripR.map(P2).join('L')}" stroke="#fff0c0" stroke-width=".8" fill="none" opacity=".9"/>`;
-      for (const [side, pts] of [[-1, ripL], [1, ripR]]) pts.forEach((p, i) => { if (p[1] > LACE - 2 || i % 2) return; const l = 1.4 + R() * 2.2; mid += `<path d="M${P2(p)}q${f(-side * l * .6)} ${f(l * .3)} ${f(-side * l)} ${f(l * .9)}" stroke="#f2c890" stroke-width=".35" fill="none"/>`; }); }
+      for (const [side, pts] of [[-1, ripL], [1, ripR]]) pts.forEach((p, i) => { if (p[1] > Rp.lace - 2 || i % 2) return; const l = 1.4 + R() * 2.2; mid += `<path d="M${P2(p)}q${f(-side * l * .6)} ${f(l * .3)} ${f(-side * l)} ${f(l * .9)}" stroke="#f2c890" stroke-width=".35" fill="none"/>`; }); } }
     // ——— the fife rail at the foot of the mast: two posts, the bar, the belaying pins ———
     { const box = (x0, y0, x1, y1, d) => K.shadeBox(u, [{ pts: [[x0, y0], [x1, y0], [x1 - d * .4, y0 - d], [x0 + d * .4, y0 - d]], n: 'top', grain: [1, 0] }, { pts: [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], n: 'front', grain: [1, 0] }], L, 'oak', { seed: Math.round(x0), outline: .4 });
       mid += K.contactShadow(u, MAST.x, MAST.foot + 1, 50, L, { ry: 2.4 });
@@ -106,70 +117,56 @@ module.exports = { name: 'Живые снасти', kind: 'deck', status: 'accep
       mid += box(FIFE.x0 - 2, FIFE.y + 3.4, FIFE.x1 + 2, FIFE.y + 6.6, 2.4);
       for (const x of PINS) mid += K.shadeCyl(u, x, FIFE.y + 11, x, FIFE.y - 4, 1.1, L, 'oak', { r1: .8, r2: 1.2, outline: .3, seed: x }) + K.shadeSphere(u, x, FIFE.y - 4.4, 1.5, L, 'oak', { outline: .3 }); }
     // ——— the live ropes: each wound on its pin in figure eights, then rising by itself to the sail ———
-    const turns = x => { let o = ''; for (let k = 0; k < 3; k++) { const y = FIFE.y - 1.6 + k * 1.3; o += K.rope(u, L, [[x - 2.6, y + .8], [x, y - .4], [x + 2.6, y + .8]], { r: .7, seed: x + k }); } return o; };
-    const green = (pts, w) => { const fl = nid('gf', u); let d = `M${P2(pts[0])}`; for (let i = 1; i < pts.length; i++) d += `L${P2(pts[i])}`;
-      return `<defs><filter id="${fl}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.4"/></filter></defs><path d="${d}" stroke="#6aff96" stroke-width="${w}" fill="none" opacity=".35" filter="url(#${fl})" stroke-linejoin="round" style="mix-blend-mode:screen"/>`; };
-    // the clew ropes: from the outer pins up to the cringles in the foot of the sail, rising in S-bends
-    const cr = [[70, 82.6], [156, 83.6]];
-    const ropeL = [[PINS[0], FIFE.y - 1], [84, 94], [77, 96], [73, 92], [76, 88.5], [72, 86], cr[0]];
-    const ropeR = [[PINS[3], FIFE.y - 1], [117, 96.6], [123, 95], [129, 98.4], [134.4, 102], [140.4, 101.4], [144.2, 97], [145, 91.6], [148, 87.4], [152.4, 86.6], cr[1]];
-    mid += green(ropeL, 3.4) + green(ropeR, 3.4);
+    // against the canvas glowing from behind a rope on our side is dark: each gets a dark silhouette under it first
+    const turns = x => { let o = ''; for (let k = 0; k < 3; k++) { const y = FIFE.y - 1.6 + k * 1.3; o += K.rope(u, L, [[x - 2.6, y + .8], [x, y - .4], [x + 2.6, y + .8]], { r: .8, seed: x + k }); } return o; };
+    const RR = 1.45;                               // the live ropes' radius
+    const sil = (pts, r) => `<path d="${smooth(pts)}" stroke="#1a0a04" stroke-width="${f(r * 2 + 1.1)}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`;
+    const live = (pts, r, seed) => sil(pts, r) + K.rope(u, L, pts, { r, seed });
+    // motion strokes: short light arcs beside a moving bend of a rope (pts: the bend's points), on side ±1
+    const swish = (pts, side, k = 2.6) => { let o = ''; for (const [off, op] of [[k, .75], [k + 1.8, .45]]) { const q = pts.map((p, i) => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], v = [b[0] - a[0], b[1] - a[1]], l = Math.hypot(...v) || 1; return [p[0] - v[1] / l * off * side, p[1] + v[0] / l * off * side]; });
+      o += `<path d="${smooth(q)}" stroke="#fff2d0" stroke-width=".55" fill="none" stroke-linecap="round" opacity="${op}"/>`; } return o; };
+    // the clew rope: from the outer right pin up to the cringle in the foot of the sail, rising in S-bends, hauling it taut
+    const cr = [156, 83.6];
+    const ropeR = [[PINS[3], FIFE.y - 1], [117, 96.6], [123, 95], [129, 98.4], [134.4, 102], [140.4, 101.4], [144.2, 97], [145, 91.6], [148, 87.4], [152.4, 86.6], cr];
     mid += turns(PINS[0]) + turns(PINS[3]) + turns(PINS[2]);
-    mid += K.rope(u, L, ropeL, { r: 1.05, seed: 2 }) + K.rope(u, L, ropeR, { r: 1.05, seed: 3 });
-    for (const c of cr) mid += `<circle cx="${c[0]}" cy="${c[1]}" r="1.7" fill="none" stroke="url(#iron${u})" stroke-width=".8"/>`;
-    // the lacing rope: up from the pin, in through the lowest eyelet; then over the rip and back through, eyelet by
-    // eyelet (the turns behind the canvas hidden); its live end lifts off towards the next eyelet, glowing at the tip
-    { const eyeL = [76, 68, 60], eyeR = [72, 64, 56], tipY = 47;
-      const EL = y => [ripX(y) - 6, y], ER = y => [ripX(y) + 6, y];
-      let eyes = '';
-      for (const y of [...eyeL, 52]) eyes += `<circle cx="${f(EL(y)[0])}" cy="${y}" r="1.25" fill="#2a1408" stroke="#d8b070" stroke-width=".5"/>`;
-      for (const y of [...eyeR, 48, 80]) eyes += `<circle cx="${f(ER(y)[0])}" cy="${y}" r="1.25" fill="#2a1408" stroke="#d8b070" stroke-width=".5"/>`;
-      mid += eyes;
-      const up = [[PINS[2], FIFE.y - 1], [109, 95], [116, 93], [119, 88], [127, 86], [ER(80)[0] - .4, 80.4]];
-      mid += green(up, 3) + K.rope(u, L, up, { r: 1, seed: 7 });
-      eyeL.forEach((y, i) => { const a = EL(y), b = ER(eyeR[i]); mid += `<path d="M${P2(a)}L${P2(b)}" stroke="#000" stroke-width="2.4" opacity=".25" transform="translate(.6 .9)"/>` + K.rope(u, L, [a, [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5) - .3], b], { r: 1.15, seed: 10 + i }); });
-      // the live end: out of the top-left eyelet it rears up, throws one curl over the rip, and lunges down into it,
-      // its long whipped head aimed at the next eyelet on the right; green trails behind the head show the strike
-      const P0 = EL(52), PE = [ER(48)[0] - 2.2, tipY - 5.4], C = [124, 26];
+    mid += live(ropeR, RR, 3) + `<circle cx="${cr[0]}" cy="${cr[1]}" r="1.8" fill="none" stroke="url(#iron${u})" stroke-width=".9"/>` + swish(ropeR.slice(3, 7), 1);
+    // each rip laced by its own rope: up from a pin and in through the lowest eyelet on the right; then over the rip and
+    // back through, eyelet by eyelet (the turns behind the canvas hidden); its live end comes out of the top laced
+    // eyelet on the left, rears up in a coil and lunges at the next eyelet on the right
+    const lace = (Rp, up, scl, seed) => {
+      const rightY = []; for (let y = Rp.y1 - 2; y > Rp.lace + .1; y -= Rp.st) rightY.push(y);
+      const leftY = rightY.map(y => y - Rp.st / 2), top = leftY[leftY.length - 1], next = top - Rp.st / 2;
+      let o = '';
+      // the eyelets: the laced ones, and the empty ones still waiting up the open edges
+      const eye = p => `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(1.3 * scl + .1)}" fill="#2a1408" stroke="#e8c080" stroke-width=".5"/>`;
+      for (const y of leftY) o += eye(EL(Rp, y));
+      for (const y of rightY) o += eye(ER(Rp, y));
+      for (let y = top - Rp.st; y > Rp.y0 + 2; y -= Rp.st) o += eye(EL(Rp, y));
+      for (let y = next; y > Rp.y0 + 2; y -= Rp.st) o += eye(ER(Rp, y));
+      // the rope up from its pin to the lowest eyelet
+      o += live([...up, ER(Rp, rightY[0])], RR, seed) + swish(up.slice(1, 4), -1);
+      // the stitches over the rip: from each left eyelet up to the next right one
+      leftY.slice(0, -1).forEach((y, i) => { const a = EL(Rp, y), b = ER(Rp, rightY[i + 1]), m = [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5) - .3];
+        o += `<path d="M${P2(a)}L${P2(b)}" stroke="#1a0a04" stroke-width="${f(RR * 2 + 1.1)}" stroke-linecap="round" opacity=".85"/>` + K.rope(u, L, [a, m, b], { r: RR, seed: seed + 10 + i }); });
+      // the live end: out of the top left eyelet it rears up, throws one curl over the rip and lunges at the next eyelet
+      const P0 = EL(Rp, top), tg = ER(Rp, next), PE = [tg[0] - 2.4 * scl, tg[1] - 5.4 * scl], C = [P0[0] + 1, P0[1] - 26 * scl];
       const tip = Array.from({ length: 41 }, (_, i) => { const t = i / 40, a = (1 - t) * (1 - t), b = 2 * t * (1 - t), c = t * t, base = [a * P0[0] + b * C[0] + c * PE[0], a * P0[1] + b * C[1] + c * PE[1]];
-        const w = Math.min(1, Math.max(0, (t - .3) / .36)), ph = Math.PI * 2 * w * w * (3 - 2 * w), rr = 4.6;
+        const w = Math.min(1, Math.max(0, (t - .3) / .36)), ph = Math.PI * 2 * w * w * (3 - 2 * w), rr = 4.8 * scl;
         return [base[0] + rr * Math.sin(ph), base[1] - rr * (1 - Math.cos(ph))]; });
-      mid += green(tip, 3.6) + K.rope(u, L, tip, { r: 1.15, seed: 14 });
+      o += live(tip, RR, seed + 4);
       { const q = tip[tip.length - 1], p = tip[tip.length - 3], dv = [q[0] - p[0], q[1] - p[1]], dl = Math.hypot(...dv), v = [dv[0] / dl, dv[1] / dl], n = [-v[1], v[0]];
-        const hd = (k, s2) => [q[0] + v[0] * k + n[0] * s2, q[1] + v[1] * k + n[1] * s2], hg = nid('hd', u);
-        // the head: the whipped end, longer and a little swollen, tapering to a point
-        mid += `<defs>${linGrad(hg, ...hd(0, -1.6), ...hd(0, 1.6), [[0, '#e8c890', 1], [.5, '#9a7040', 1], [1, '#3a2410', 1]])}</defs>`
-          + `<path d="M${P2(hd(-1, -1.15))}C${P2(hd(1.6, -1.8))} ${P2(hd(4.2, -1.4))} ${P2(hd(6.4, 0))}C${P2(hd(4.2, 1.4))} ${P2(hd(1.6, 1.8))} ${P2(hd(-1, 1.15))}Z" fill="url(#${hg})" stroke="#1e1006" stroke-width=".4"/>`
-          + [.6, 1.8, 3].map(k => `<path d="M${P2(hd(k, -1.45))}L${P2(hd(k, 1.45))}" stroke="#3a2010" stroke-width=".45"/>`).join('')
-          + `<path d="M${P2(hd(5.4, 0))}L${P2(hd(6.8, 0))}" stroke="#d8ffe4" stroke-width=".5"/>`
-          + K.localGlow(u, { x: hd(5, 0)[0], y: hd(5, 0)[1], color: '#8affb0', power: .55, radius: 7 }, { core: false });
-        // the strike: short green trails behind the head, fading back along its way
-        for (const [o2, k0, k1, op] of [[-3.2, -3, -10, .7], [3.2, -2.4, -8.6, .55], [-5.6, -6, -11.6, .35]]) mid += `<path d="M${P2(hd(k0, o2))}Q${P2(hd((k0 + k1) / 2, o2 * 1.12))} ${P2(hd(k1, o2 * .9))}" stroke="#aaffc4" stroke-width=".6" fill="none" stroke-linecap="round" opacity="${op}"/>`; }
-      // the laced part of the rip pulled shut: a few puckers in the canvas across it
-      for (const y of [58, 66, 74]) mid += `<path d="M${f(ripX(y) - 8)} ${y + 1}q4 -1.4 8 0t8 0" stroke="#7a3e26" stroke-width=".4" fill="none" opacity=".6"/>`; }
-    // ——— the sword in the deck: the blade, the cup hilt, the grip, the green stone in the pommel ———
-    { const a = SW.a * Math.PI / 180, v = [Math.sin(a), -Math.cos(a)], n = [Math.cos(a), Math.sin(a)], at = l => [SW.x + v[0] * l, SW.y + v[1] * l];
-      mid += K.castShadow(u, L, { x: SW.x, y: SW.y, w: 4, h: 54, horizon: HZ, d: .3 }) + K.contactShadow(u, SW.x, SW.y, 8, L, { ry: 1.2 });
-      const b0 = at(0), b1 = at(36), g = nid('bl', u), hw = 2.1;
-      mid += `<defs>${linGrad(g, b0[0] - n[0] * hw, b0[1] - n[1] * hw, b0[0] + n[0] * hw, b0[1] + n[1] * hw, [[0, '#4a4248', 1], [.45, '#a49aa0', 1], [.55, '#e8dcd0', 1], [1, '#5a4e50', 1]])}</defs>`
-        + `<path d="M${P2([b0[0] - n[0] * hw * .7, b0[1] - n[1] * hw * .7])}L${P2([b1[0] - n[0] * hw, b1[1] - n[1] * hw])}L${P2([b1[0] + n[0] * hw, b1[1] + n[1] * hw])}L${P2([b0[0] + n[0] * hw * .7, b0[1] + n[1] * hw * .7])}Z" fill="url(#${g})" stroke="#1e1a1c" stroke-width=".4"/>`
-        + `<path d="M${P2(at(2))}L${P2(at(34))}" stroke="#3a3236" stroke-width=".5"/><path d="M${P2([b0[0] + n[0] * hw * .7, b0[1]])}L${P2([b1[0] + n[0] * hw, b1[1] + n[1] * hw])}" stroke="#ffe0b0" stroke-width=".45" opacity=".8"/>`;
-      // the splintered planks round the blade
-      mid += `<path d="M${SW.x - 4} ${SW.y + .6}l2.6 -1.4l1 1.2M${SW.x + 4} ${SW.y + .8}l-2.4 -1.6l-.8 1.4" stroke="#f0c88a" stroke-width=".45" fill="none"/>`;
-      // the cup guard and the quillons, brass
-      const gc = at(37.5);
-      mid += K.shadeCyl(u, gc[0] - 8, gc[1] + .6, gc[0] + 8, gc[1] - .6, 1.1, L, 'brass', { r1: 1.3, r2: 1.3, cap: 'round', outline: .35 })
-        + `<path d="M${f(gc[0] - 6.4)} ${f(gc[1] - .6)}Q${f(gc[0])} ${f(gc[1] + 6.6)} ${f(gc[0] + 6.4)} ${f(gc[1] - .6)}Q${f(gc[0])} ${f(gc[1] + 2)} ${f(gc[0] - 6.4)} ${f(gc[1] - .6)}Z" fill="url(#brass${u})" stroke="#4a3010" stroke-width=".4"/>`;
-      const g0 = at(39), g1 = at(49);
-      mid += K.shadeCyl(u, g0[0], g0[1], g1[0], g1[1], 1.5, L, 'leather', { r1: 1.6, r2: 1.4, outline: .35 })
-        + Array.from({ length: 6 }, (_, i) => { const p = at(40 + i * 1.6); return `<path d="M${f(p[0] - 1.5)} ${f(p[1] + .5)}L${f(p[0] + 1.5)} ${f(p[1] - .5)}" stroke="#d8b060" stroke-width=".35"/>`; }).join('');
-      const st = at(52.6);
-      mid += K.shadeCyl(u, g1[0], g1[1], st[0], st[1] + 2.2, 1.4, L, 'brass', { r1: 1.6, r2: 1.2, outline: .3 });
-      { const sg = nid('st', u); mid += `<defs>${radGrad(sg, st[0] - 1, st[1] - 1.2, 4.2, [[0, '#eaffe8', 1], [.3, '#6aff96', 1], [.75, '#1a8a46', 1], [1, '#063a1a', 1]])}</defs><circle cx="${f(st[0])}" cy="${f(st[1])}" r="3.2" fill="url(#${sg})" stroke="#042a12" stroke-width=".4"/><circle cx="${f(st[0] - 1)}" cy="${f(st[1] - 1.2)}" r=".7" fill="#ffffff"/>`; }
-      mid += K.localGlow(u, { x: st[0], y: st[1], color: '#7aff9a', power: .75, radius: 20 }); }
-    // the green trail over the deck from the sword to the fife rail, along a seam of the planks
-    { const fl = nid('tf', u), d = `M${SW.x + 3} ${SW.y - .4}C60 121 78 116 ${PINS[0] - 1} ${MAST.foot + 1}`;
-      mid += `<defs><filter id="${fl}" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="1.3"/></filter></defs><path d="${d}" stroke="#6aff96" stroke-width="3" fill="none" opacity=".55" filter="url(#${fl})" style="mix-blend-mode:screen"/><path d="${d}" stroke="#e8fff0" stroke-width=".6" fill="none" opacity=".75"/>`; }
+        const hd = (k, s2) => [q[0] + v[0] * k * scl + n[0] * s2 * scl, q[1] + v[1] * k * scl + n[1] * s2 * scl], hg = nid('hd', u);
+        // the head: the whipped end, a little swollen, tapering to a point aimed at the eyelet
+        o += `<defs>${linGrad(hg, ...hd(0, -1.8), ...hd(0, 1.8), [[0, '#e8c890', 1], [.5, '#9a7040', 1], [1, '#3a2410', 1]])}</defs>`
+          + `<path d="M${P2(hd(-1, -1.5))}C${P2(hd(1.8, -2.2))} ${P2(hd(4.6, -1.7))} ${P2(hd(7, 0))}C${P2(hd(4.6, 1.7))} ${P2(hd(1.8, 2.2))} ${P2(hd(-1, 1.5))}Z" fill="url(#${hg})" stroke="#1a0a04" stroke-width=".55"/>`
+          + [.6, 1.9, 3.2].map(k => `<path d="M${P2(hd(k, -1.75))}L${P2(hd(k, 1.75))}" stroke="#3a2010" stroke-width=".5"/>`).join('');
+        // the strike: short light strokes behind the head, fading back along its way
+        for (const [o2, k0, k1, op] of [[-3.4, -3, -10, .8], [3.4, -2.4, -8.6, .6], [-5.8, -6, -11.6, .4]]) o += `<path d="M${P2(hd(k0, o2))}Q${P2(hd((k0 + k1) / 2, o2 * 1.12))} ${P2(hd(k1, o2 * .9))}" stroke="#fff2d0" stroke-width=".65" fill="none" stroke-linecap="round" opacity="${op}"/>`; }
+      // the laced part pulled shut: a few puckers in the canvas across it
+      for (const y of leftY.slice(0, -1)) o += `<path d="M${f(ripX(Rp, y) - Rp.e - 2)} ${f(y + 1.6)}q${f(Rp.e * .7)} -1.4 ${f(Rp.e * 1.4)} 0t${f(Rp.e * 1.4)} 0" stroke="#7a3e26" stroke-width=".45" fill="none" opacity=".6"/>`;
+      return o; };
+    mid += lace(RIPS[1], [[PINS[0], FIFE.y - 1], [83, 95], [76, 97.4], [70.4, 93.6], [69.6, 87], [64.6, 81.4]], .75, 21);
+    mid += lace(RIPS[0], [[PINS[2], FIFE.y - 1], [109, 95], [116, 93], [120, 88], [128, 86.4]], 1, 7);
     // ——— the air: the low sun's haze round the sail, motes, the dark coming in from the edges ———
     let fg = K.localGlow(u, { x: SUN.x, y: SUN.y + 30, color: '#ffc080', power: .25, radius: 90 }, { core: false }) + motes(18, 20, 40, 160, 60, '#ffe0b0', 9)
       + gloom(u, 100, 60, 0, 0, .35, '#2a0e14') + gloom(u, 100, 60, 200, 0, .35, '#2a0e14') + gloom(u, 100, 100, 100, 220, .5, '#1a0a10');
