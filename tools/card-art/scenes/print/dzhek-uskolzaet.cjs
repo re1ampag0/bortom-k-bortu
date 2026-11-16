@@ -2,8 +2,8 @@
 // корабли местами). A poster: the camera low at the waterline, the Black Pearl huge across the upper half, almost
 // sunk — down by the stern, heeled towards us, the sea over her quarter rail and on her deck — yet every rag of sail
 // drawing, her bow up and throwing spray at us: she is running out of the trap to the right. The full moon stands
-// right behind her rigging: the torn sails glow through, the moon shines through the holes, rays fan out through the
-// gun smoke. Behind her on the left the trap: a wall of gun smoke on the horizon, the enemies' broadsides flashing in
+// behind her stern, over the trap: her torn sails glow through and are edged with its light, rays fan out through the
+// gun smoke and over her, the moon's path runs through the splashes where she was. Behind her on the left the trap: a wall of gun smoke on the horizon, the enemies' broadsides flashing in
 // it (the Endeavour on the left, the Dutchman behind), a grove of shot splashes on the empty spot where she was and
 // her wake running out of it. No fire on any ship: only the muzzle flashes.
 'use strict';
@@ -11,18 +11,18 @@ const K = require('../kit/index.cjs');
 const { f, lerp, rng, nid, linGrad, radGrad } = K;
 
 const HZ = 104;
-const MOON = { x: 87, y: 44 };
+const MOON = { x: 30, y: 60 };
 const SPOT = { x: 34, y: 112 };     // where she was: the converging fire falls here
 const WL = 124;                     // the kit's waterline of the Pearl
 const SINK = 118.6;                 // the sea's level on her: 5.4 units over the kit's waterline — down to her lower ports
 const light = { time: 'night', haze: .4, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#d4e2ff', power: .95 }, fill: { color: '#3a5280', power: .42 },
-  rim: { az: 0, color: '#d8ecff', power: .85 }, locals: [{ x: 14, y: 100, color: '#ffb050', power: .45, radius: 24 }] };
-const PEARL = { kind: 'pearl', x: 102, y: WL, scale: 1.06, flip: true, roll: 18, heel: -8, sails: 'full', wake: true, lights: true, detail: 'near', seed: 4, wind: 1 };
+  rim: { az: -30, color: '#d8ecff', power: .85 }, locals: [{ x: 14, y: 100, color: '#ffb050', power: .45, radius: 24 }] };
+const PEARL = { kind: 'pearl', x: 110, y: WL, scale: 1.03, flip: true, roll: 18, heel: -8, sails: 'full', wake: true, lights: true, detail: 'near', seed: 4, wind: 1 };
 const ENDV = { kind: 'endeavour', x: 6, y: 108, scale: .3, flip: true, sails: 'reefed', detail: 'mid', lights: true, seed: 2 };
 const DUTCH = { kind: 'dutch', x: 52, y: 105.6, scale: .16, sails: 'reefed', detail: 'far', lights: true, seed: 5 };
-const skel = { horizon: HZ, eye: 1, light: 'the full moon right behind the Pearl\'s rigging (back light): her sails glow through and rays fan out through the smoke; gun flashes on the left',
+const skel = { horizon: HZ, eye: 1, light: 'the full moon low behind the Pearl\'s stern, over the trap (back light from the left): her sails glow through and are edged, rays fan out through the smoke; gun flashes on the left',
   items: [
-    ['pearl', 20, WL, 178, 104, 'water: heeled 18° to us, down by the stern 8° (the bow up), sunk 5.4 units deeper (the sea at SINK), the sea over her quarter rail, running right'],
+    ['pearl', 38, WL, 170, 104, 'water: heeled 18° to us, down by the stern 8° (the bow up), sunk 5.4 units deeper (the sea at SINK), the sea over her quarter rail, running right'],
     ['endeavour', -18, ENDV.y, 44, 29, 'water, far left in the smoke, broadside firing'],
     ['dutchman', 40, DUTCH.y, 24, 13, 'water, far behind the spot, in the smoke, firing'],
     ['splashes', 14, 116, 42, 26, 'water: the empty spot'],

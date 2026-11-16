@@ -104,7 +104,7 @@ const ribbon = (bold: string, rest: string, t: { t: string; td: string }) => `<d
 const splitPlan = (text: string): [string, string] => { const [rule, plan = ''] = text.split(/<b>План:<\/b>/); return [rule.replace(/(<br\s*\/?>\s*)+$/, ''), plan.trim()]; };
 /** Short lines (big result, flavour): a dash does not start a line, a number stays with its word. */
 const typo = (t: string) => esc(t).replace(/ (—|–) /g, '\u00a0$1 ').replace(/(\d) (?=[А-ЯЁа-яё])/g, '$1\u00a0');
-const nameStart = (n: string, legend = false) => legend ? (n.length <= 10 ? 17 : n.length <= 14 ? 16 : 15) : n.length <= 10 ? 14 : n.length <= 14 ? 13 : 12;
+const nameStart = (n: string, legend = false) => legend ? (n.length <= 10 ? 16 : n.length <= 14 ? 15.5 : 15) : n.length <= 10 ? 14 : n.length <= 14 ? 13 : 12;
 
 interface FaceSpec { key: string; name: string; art: string; frame: string; band: string; rim: string; tint: string; bandText: string; copies: number; medal: string; ribbon: string; big: string; text: string; flavor: string; price: { powder: number; soul: number }; legend: boolean; index: boolean; sceneName: string | null; artKey: string }
 
