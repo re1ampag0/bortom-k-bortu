@@ -106,6 +106,10 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
   const st = await checkStrokes(ctx.browser);
   errors.push(...st.errors);
   console.log(`check: line widths of 03, 04, 04b — ${st.strokes} strokes, thinnest ${st.thinnest.toFixed(3)} mm, ${st.errors.length} error(s)`);
+  // only «ёлочки» in the text of the sheets (check-quotes.ts)
+  const { checkQuotes } = await import('./check-quotes'), qu = checkQuotes();
+  errors.push(...qu.errors);
+  console.log(`check: quotes in ${qu.files} sheet files — ${qu.errors.length} error(s)`);
   // the ship on each board's chart stands in open water (boards v4, item 3): only when 03 was built in this run
   const { SHIP_CHECK } = await import('./parts/boards/v2');
   if (SHIP_CHECK.length) {
