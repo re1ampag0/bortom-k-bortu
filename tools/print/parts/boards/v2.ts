@@ -48,7 +48,9 @@ const ORDER: TrackKey[] = ['sails', 'souls', 'crew', 'guns', 'hull'];
  *  — ascent to descent — keep 1.5 mm from the slip's edge and clear of each other) */
 const ROW = { label: 6.6, num: 12.0, cell: 13.0, cap: 29.1, h: 31.8 };
 const X0 = 13.5, PAD = 2.6, ROW_GAP = 0.6, TOP = 37.6, BOTTOM = 200, MID_R = 208.3;
-const NEST = { x: 217.5, y: 11.5, w: 66, h: 91 };
+const NEST = { x: 217.5, y: 12, w: 66, h: 91 };
+/** the shelf along the top edge: the cards with a lasting effect lie over the board's top edge, above this brass bar */
+const SHELF = { x: 12, y: 3.5, w: 271.5, h: 7.6 };
 const LOG = { x: 211.5, y: 104.5, w: 75.5, h: 95.5 };
 /** the log's ruled lines: line height, the body size, the pad over the first line (baseline = top + LH/2 + 0.33 em) */
 const LOGT = { lh: 4.1, size: 9.3, top: 3.4, side: 7.2 };
@@ -121,7 +123,7 @@ const PTR: TO = { w: 800 };
 interface Cell { n: number; x: number; y: number; start: boolean }
 interface Row { key: TrackKey; x: number; y: number; w: number; cells: Cell[]; start: number; volley: { x: number; y: number }[] }
 interface Plan {
-  rows: Row[]; header: Rect; effects: Rect; plans: Rect | null; fires: Rect; dutch: Rect | null; cards: Rect | null; reactions: Rect | null;
+  rows: Row[]; header: Rect; plans: Rect | null; fires: Rect; dutch: Rect | null; cards: Rect | null; reactions: Rect | null;
   /** the free part of the middle where the chart shows and the ship sails (null: no room) */
   window: Rect | null;
 }
@@ -165,8 +167,8 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
   const shortEnd = TOP + short.length * (ROW.h + ROW_GAP), firesLeft = shortEnd + fires.h <= hullRow.y - ROW_GAP;
   if (firesLeft) fires.y = shortEnd;
   const leftR = Math.max(...rows.filter(rw => rw.key !== 'hull').map(rw => rw.x + rw.w), firesLeft ? fires.x + fires.w : 0);
-  const header: Rect = { x: 12, y: 11.5, w: headerW(ship), h: 25.1 };
-  const px = header.x + header.w + 3.5, pw = Math.min(NEST.x - 3.5 - px, Math.max(ptrW(TXT.effects), ship.code === 'Ж' ? ptrW(fill(TXT.plans, { n: RULES.plansMax })) : 0));
+  const header: Rect = { x: 12, y: 12, w: headerW(ship), h: 25.1 };
+  const px = header.x + header.w + 3.5, pw = Math.min(NEST.x - 3.5 - px, ptrW(fill(TXT.plans, { n: RULES.plansMax })));
   // the middle, between the left column and the right one, above the Hull (where the Hull is shorter, down to the bottom)
   const mx = leftR + 3.5, mw = MID_R - mx, midBottom = hullRow.y - 1.5;
   let y = TOP;
@@ -180,8 +182,7 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
   const window = winBottom - y >= 30 ? { x: mx, y, w: mw, h: winBottom - y } : null;
   return {
     rows, header, fires, dutch, cards, reactions, window,
-    effects: { x: px, y: 11.5, w: pw, h: 11 },
-    plans: ship.code === 'Ж' ? { x: px, y: 23.5, w: pw, h: 11 } : null
+    plans: ship.code === 'Ж' ? { x: px, y: 12, w: pw, h: 11 } : null
   };
 }
 
@@ -348,6 +349,29 @@ function rulerSvg(pid: string, b: Rect, title: string, ic: IconName, nums: numbe
   return out.join('');
 }
 /** the nest of the Legend card: brass photo-corners in the 1.5 mm margin; under the card, what shows once it is played */
+/** the shelf along the top edge: a brass bar, the words engraved in the middle, arrows up along it — a card with a lasting
+ *  effect on this ship lies over the board's top edge, above the bar, until its term ends */
+function shelfSvg(b: Rect, words: string, id: string, L: Look): string {
+  const out: string[] = [], { x, y, w, h } = b, cy = y + h / 2, ink = '#2a1a08', size = 9.2, so: TO = { font: 'Alegreya SC', w: 800, ls: '.06em' };
+  const tw = W(words, size, so), iw = 5.6, gap = 2.2, gw = iw + gap + tw, gx = x + (w - gw) / 2;
+  out.push(`<rect x="${r(x + 0.5)}" y="${r(y + 0.8)}" width="${r(w)}" height="${r(h)}" rx="1.6" fill="#1a0e04" fill-opacity=".32"/>`);
+  out.push(`<rect data-plate="shelf" x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" rx="1.6" fill="url(#${id}br)" stroke="${L.brass[2]}" stroke-width=".3"/>`);
+  out.push(`<path d="M${r(x + 1.4)} ${r(y + 0.55)}H${r(x + w - 1.4)}" stroke="#fff6d8" stroke-opacity=".55" stroke-width=".3"/><rect x="${r(x + 1)}" y="${r(y + 1)}" width="${r(w - 2)}" height="${r(h - 2)}" rx="1" fill="none" stroke="${L.brass[2]}" stroke-opacity=".7" stroke-width=".18"/>`);
+  // the words in a sunken panel, the icon before them
+  const px = gx - 3.2, pw = gw + 6.4;
+  out.push(`<rect x="${r(px)}" y="${r(y + 1.2)}" width="${r(pw)}" height="${r(h - 2.4)}" rx=".9" fill="${L.brass[0]}" fill-opacity=".55" stroke="${L.brass[2]}" stroke-width=".22"/>`);
+  out.push(ico('effects', gx + iw / 2, cy, iw, { ...L.tone }, 'shelf-icon'));
+  out.push(text(gx + iw + gap, cy + 0.335 * pt(size) - 0.02, words, size, { ...so, color: ink, in: 'shelf' }));
+  // engraved arrows up, evenly along both wings; rivets at the ends
+  const arrow = (ax: number) => `<path d="M${r(ax)} ${r(y + h - 1.5)}V${r(y + 1.9)}M${r(ax - 1.5)} ${r(y + 3.5)}L${r(ax)} ${r(y + 1.7)}L${r(ax + 1.5)} ${r(y + 3.5)}" fill="none" stroke="${ink}" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="M${r(ax + 0.35)} ${r(y + h - 1.5)}V${r(y + 2.4)}" stroke="#fff6d8" stroke-opacity=".45" stroke-width=".22"/>`;
+  for (const [a0, a1] of [[x + 9, px - 4], [px + pw + 4, x + w - 9]]) {
+    const n = Math.max(1, Math.round((a1 - a0) / 24)), step = (a1 - a0) / n;
+    for (let i = 0; i <= n; i++) out.push(arrow(a0 + i * step));
+  }
+  for (const rx of [x + 3.4, x + w - 3.4]) out.push(`<circle cx="${r(rx)}" cy="${r(cy)}" r="1.05" fill="${L.brass[1]}" stroke="${L.brass[2]}" stroke-width=".25"/><path d="M${r(rx - 0.7)} ${r(cy)}H${r(rx + 0.7)}" stroke="${L.brass[2]}" stroke-width=".25"/>`);
+  return out.join('');
+}
 function nestSvg(b: Rect, id: string, L: Look, pal: Pal, legendName: string): string {
   const out: string[] = [], m = 1.5, cx = b.x + b.w / 2;
   out.push(`<rect x="${r(b.x + 0.5)}" y="${r(b.y + 0.7)}" width="${b.w}" height="${b.h}" rx="2.6" fill="#1a0e04" fill-opacity=".3"/><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="2.6" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".3"/>`);
@@ -360,10 +384,6 @@ function nestSvg(b: Rect, id: string, L: Look, pal: Pal, legendName: string): st
     const X = sx ? b.x + b.w : b.x, Y = sy ? b.y + b.h : b.y, dx = sx ? -1 : 1, dy = sy ? -1 : 1, a = 7.5;
     out.push(`<path d="M${r(X)} ${r(Y)}h${r(dx * a)}L${r(X)} ${r(Y + dy * a)}Z" fill="url(#${id}br)" stroke="${L.brass[2]}" stroke-width=".25"/>`);
   }
-  // the tag beside the nest, read upwards: «Легенда · один раз за игру» on a brass label
-  const s = `${TXT.legend.title} · ${TXT.legend.note.split('·').pop()!.trim()}`, h = W(s, 8, { w: 800 }) + 2 * 3, tw2 = 6.8, x = b.x - 1.2 - tw2, y = b.y + b.h - h - 4;
-  out.push(`<rect x="${r(x + 0.4)}" y="${r(y + 0.6)}" width="${tw2}" height="${r(h)}" rx="1" fill="#1a0e04" fill-opacity=".3"/><rect data-plate="nest-tag" x="${r(x)}" y="${r(y)}" width="${tw2}" height="${r(h)}" rx="1" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".25"/>`);
-  out.push(`<text data-in="nest-tag" x="${r(x + tw2 / 2 + 1.05)}" y="${r(y + h / 2)}" transform="rotate(-90 ${r(x + tw2 / 2 + 1.05)} ${r(y + h / 2)})" font-family="Alegreya Sans" font-weight="800" font-size="${r(pt(8))}" fill="#2a1a08" text-anchor="middle">${esc(s)}</text>`);
   return out.join('');
 }
 /** the abilities: a page of the ship's log pinned to the chart; the ruled lines lie exactly under the baselines of the HTML */
@@ -403,7 +423,7 @@ export async function boardV2(ctx: Ctx, ship: Ship, counters: Counters): Promise
   layoutV2(ship, counters); faceSvg(ctx, ship, counters, layoutV2(ship, counters), id, L, pal);
   await measureMissing(ctx);
   const plan = layoutV2(ship, counters), place = counters === 'board' ? L.board : L.strip, kind = key;
-  const calm: Rect[] = [plan.header, NEST, { x: NEST.x - 9, y: NEST.y, w: 9, h: NEST.h }, { ...LOG, h: logType(ship).h }, plan.effects, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h })),
+  const calm: Rect[] = [plan.header, NEST, SHELF, { ...LOG, h: logType(ship).h }, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h })),
     ...[plan.plans, plan.cards, plan.reactions, plan.dutch].filter((b): b is Rect => !!b)];
   const view = { w: PAGE.w, h: PAGE.h, mmPerDeg: L.mmPerDeg, center: [0, 0] as [number, number], anchor: place.anchor };
   const sr = plan.window ? shipRect(kind, place) : null;
@@ -422,7 +442,7 @@ function faceSvg(ctx: Ctx, ship: Ship, counters: Counters, plan: Plan, id: strin
   void ctx; void counters;
   const legend = data.legends[ship.code], svg: string[] = [];
   svg.push(headerSvg(plan.header, ship, pal, L, id));
-  svg.push(pointerSvg('effects', plan.effects, TXT.effects, 'effects', id, L, pal));
+  svg.push(shelfSvg(SHELF, TXT.effects, id, L));
   if (plan.plans) svg.push(pointerSvg('plans', plan.plans, fill(TXT.plans, { n: RULES.plansMax }), 'plan', id, L, pal));
   for (const rw of plan.rows) svg.push(rowSvg(rw, id, L, pal, ship));
   svg.push(firesSvg(plan.fires, id, L, pal));

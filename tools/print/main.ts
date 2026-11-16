@@ -23,7 +23,7 @@ const opts: Opts = {
   only: opt('--only', '') ? opt('--only', '').split(',').map(s => s.trim()) : null,
   check: has('--check'), checkPdf: has('--check-pdf'), samples: !has('--no-samples'),
   board: opt('--board', 'b') === 'a' ? 'a' : 'b',
-  counters: opt('--counters', 'board') === 'strip' ? 'strip' : 'board',
+  counters: opt('--counters', 'strip') === 'board' ? 'board' : 'strip',
   tokens: opt('--tokens', 'new') === 'old' ? 'old' : 'new'
 };
 

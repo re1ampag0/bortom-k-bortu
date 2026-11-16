@@ -247,7 +247,7 @@ function footer(ship: Ship, pal: Pal): string {
 
 /** One face of a board; in 'a' and 'b' the material's own CSS goes with the page. */
 export async function boardPage(ctx: Ctx, ship: Ship, variant: BoardVariant): Promise<PageSpec> {
-  if (variant === 'b') return withCss(await boardV2(ctx, ship, ctx.opts.counters ?? 'board'));
+  if (variant === 'b') return withCss(await boardV2(ctx, ship, ctx.opts.counters ?? 'strip'));
   if (variant === 'a') return withCss(await framePage(ctx, ship, variant, MATERIALS[DECK_KEY[ship.code]]));
   const pal = palette(ship.color), bodyTop = EDGE + HEAD_H[variant] + BODY_GAP, id = `bo-b${++UID}`, pic = await kitShip(ctx, DECK_KEY[ship.code]);
   const svg: string[] = [], html: string[] = [];

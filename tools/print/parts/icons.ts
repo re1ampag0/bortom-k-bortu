@@ -32,6 +32,12 @@ const pp = (p: Pt) => `${f(p[0])} ${f(p[1])}`;
 const rad = (a: number) => (a * Math.PI) / 180;
 const at = (cx: number, cy: number, r: number, a: number): Pt => [cx + r * Math.cos(rad(a)), cy + r * Math.sin(rad(a))];
 
+function bz(p: Pt[], t: number): Pt {
+  const m = 1 - t;
+  const a = m * m * m, b = 3 * m * m * t, c = 3 * m * t * t, e = t * t * t;
+  return [a * p[0][0] + b * p[1][0] + c * p[2][0] + e * p[3][0], a * p[0][1] + b * p[1][1] + c * p[2][1] + e * p[3][1]];
+}
+
 function circ(cx: number, cy: number, rx: number, ry = rx): string {
   const c = 0.5523, kx = rx * c, ky = ry * c;
   return `M${f(cx - rx)} ${f(cy)}C${f(cx - rx)} ${f(cy - ky)} ${f(cx - kx)} ${f(cy - ry)} ${f(cx)} ${f(cy - ry)}` +
@@ -288,41 +294,39 @@ const DRAW: Record<IconName, (k: K) => string> = {
   },
 
   hull(k) {
-    // the ship's body in profile: stern castle left, bow right, two wales, a row of gun ports, the sea in front
-    const strake = (d: number) => `M2 ${f(36 + d)}Q55 ${f(48 + d)} 100 ${f(33 + d)}`;
-    const band = (d0: number, d1: number) => strake(d0) + `L100 ${f(33 + d1)}Q55 ${f(48 + d1)} 2 ${f(36 + d1)}Z`;
-    const yAt = (x: number, d: number) => { const t = (x - 2) / 98; return (1 - t) ** 2 * (36 + d) + 2 * t * (1 - t) * (48 + d) + t * t * (33 + d); };
-    let o = '';
-    for (const [x, y, h] of [[21, 9, 13], [55, 30, 16], [77, 25, 12]]) o += k.shape(rect(x, y, 4.6, h), { fill: 'mid', sw: 1.8, h: [{ a: 90, g: 1.5, r: rect(x + 2.4, 0, 4, 100) }] });
-    o += k.shape(poly(86, 31, 99, 22, 100, 25.5, 90, 35), { fill: 'mid', sw: 1.6 });
-    const hull = 'M6 18L31 18L32 30L35 32Q60 45 84 32L84 28L94 28C99 42 99 58 95 72Q56 88 17 80L12 64L5 24Z';
-    let ports = '';
-    for (const x of [26, 36, 46, 56, 66, 76]) {
-      const y = yAt(x, 12.5);
-      ports += k.shape(rect(x - 2.5, y - 2.2, 5, 4.4), { fill: 'ink', sw: 0 }) + k.S(`M${f(x - 3)} ${f(y - 3.4)}L${f(x + 3)} ${f(y - 3.4)}`, 1.3, 'light');
+    // the hull in section (as before, df77e0e), drawn for 8 mm: a thick cut wall, two decks, knees, one pillar, the keel,
+    // the waterline; few lines, wide hatching, so it does not turn to mud when small
+    const O1: Pt[] = [[18, 8], [10, 22], [4, 36], [5, 50]], O2: Pt[] = [[5, 50], [6, 66], [28, 84], [46, 88]];
+    const I1: Pt[] = [[27, 8], [20, 23], [14.5, 36], [15, 50]], I2: Pt[] = [[15, 50], [16, 61], [33, 74], [46, 77]];
+    const mir = (s: Pt[]) => s.map(([x, y]) => [100 - x, y] as Pt);
+    const side = (a: Pt[], b: Pt[]) => {
+      const ma = mir(a), mb = mir(b);
+      return `M${pp(a[0])}C${pp(a[1])} ${pp(a[2])} ${pp(a[3])}C${pp(b[1])} ${pp(b[2])} ${pp(b[3])}L${pp(mb[3])}` +
+        `C${pp(mb[2])} ${pp(mb[1])} ${pp(mb[0])}C${pp(ma[2])} ${pp(ma[1])} ${pp(ma[0])}`;
+    };
+    const outer = side(O1, O2), inner = side(I1, I2);
+    // the sea under the waterline, outside the hull only
+    let o = k.shape(rect(0, 60, 100, 40), { fill: "none", sw: 0, h: [{ a: 0, g: 5.6, w: 1 }] });
+    o += k.shape(inner + 'Z', { fill: 'light', sw: 0 });
+    // decks, knees, pillar, keelson — solid, so they read as one figure at 8 mm
+    const beam = (y: number, x0: number) => k.shape(rect(x0, y, 100 - 2 * x0, 5), { fill: 'mid', sw: 2, h: [{ a: 45, g: 3 }] });
+    o += beam(22, 18) + beam(46, 13);
+    for (const s of [1, -1]) {
+      const X = (x: number) => (s > 0 ? x : 100 - x);
+      o += k.shape(poly(X(19), 27, X(30), 27, X(18), 38), { fill: 'ink', sw: 1.2 });
+      o += k.shape(poly(X(15), 51, X(27), 51, X(15.5), 62), { fill: 'ink', sw: 1.2 });
     }
-    let win = '';
-    for (const x of [9.5, 15.5, 21.5]) win += rect(x, 23, 4, 4.6);
-    o += k.shape(hull, {
-      fill: 'mid',
-      hi: 'M6 18L31 18L32 30L35 32Q60 45 84 32L84 28L94 28L95 33Q60 50 35 36L32 34L7 34Z',
-      h: [
-        { a: -35, g: 2.4, r: strake(20) + 'L100 100L0 100Z' },
-        { a: 45, g: 2.4, r: strake(28) + 'L100 100L0 100Z' },
-        { a: 0, g: 3, w: 0.8, r: rect(0, 0, 100, 60) },
-      ],
-      inner: k.S(strake(3) + strake(9) + strake(24) + strake(29) + 'M6 34L32 34M31 18L33 34', 1) +
-        k.shape(band(5, 8.5), { fill: 'mid', sw: 1.3, h: [{ a: 45, g: 1.4 }, { a: -45, g: 1.6 }] }) +
-        k.shape(band(16.5, 20), { fill: 'mid', sw: 1.3, h: [{ a: 45, g: 1.4 }, { a: -45, g: 1.6 }] }) +
-        k.F(win, 'ink') + k.S('M8 21.5L30 21.5M8 29.5L30 29.5', 1.3) + ports + k.S('M95 33C99 46 98 60 94 72', 1.4, 'light'),
-    });
-    o += k.shape(circ(9, 14.5, 2.4, 3.2), { fill: 'light', sw: 1.4 });
-    o += k.shape(waveLine(72, 5.4, 11, -6, 106, 1) + 'L106 106L-6 106Z', {
-      fill: 'mid', sw: 2.2,
-      h: [{ a: 0, g: 2.3 }, { a: -25, g: 2.6, r: rect(0, 86, 100, 20) }],
-      inner: k.S(waveLine(80, 3, 9, -6, 106, 5), 1.3, 'light') + k.S(waveLine(89, 2.4, 12, -6, 106), 1, 'light'),
-    });
-    o += k.S('M92 71C96 66 100 66 101 69M86 73C90 69 92 70 93 72', 1.4);
+    o += k.shape(rect(47.5, 27, 5, 19), { fill: 'mid', sw: 1.8 });
+    o += k.shape(rect(47, 51, 6, 22), { fill: 'mid', sw: 1.8 });
+    o += k.shape(rect(38, 72, 24, 6), { fill: 'mid', sw: 2, h: [{ a: 45, g: 3 }] });
+    // the cut wall: hatched like a section, the frames as a few strong ticks
+    let ticks = '';
+    for (const [A, B] of [[O1, I1], [O2, I2], [mir(O1), mir(I1)], [mir(O2), mir(I2)]] as Pt[][][])
+      for (const t of [0.25, 0.75]) ticks += `M${pp(bz(A, t))}L${pp(bz(B, t))}`;
+    o += k.shape(outer + 'Z' + inner + 'Z', { fill: 'mid', sw: 0, h: [{ a: 45, g: 3 }], inner: k.S(ticks, 1.6) });
+    o += k.shape(rect(43.5, 85, 13, 12), { fill: 'ink', sw: 2 });
+    o += k.S(outer, k.cw) + k.S(inner, 2.4) + k.S('M17.5 8L27.5 8M82.5 8L72.5 8', 2.6);
+    o += k.S('M2 60L13 60M87 60L98 60', 2, 'ink', 'stroke-dasharray="4 2.6"');
     return o;
   },
 
