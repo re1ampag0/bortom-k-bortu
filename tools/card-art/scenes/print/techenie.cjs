@@ -19,8 +19,8 @@ const HZ = 96;
 // right, far reach to the left). Projected: x = 100 + X·KP/Z, y = HZ + KP/Z
 const LOOP = { Xc: -1.5, Zc: 25, A: 10.1, B: 14, KP: 300, r0: .55, r1: 1.45 };
 const light = { time: 'day', key: { type: 'sun', x: 150, y: 28, color: '#fff4dc', power: .85 }, fill: { color: '#a9c9d6', power: .6 }, haze: .4 };
-const NEAR = { kind: 'merchant', x: 92, y: 121, scale: .95, flip: true, seed: 7 };  // bow right, carried right on the near reach
-const FAR = { kind: 'brig', x: 172, y: 104.5, scale: .44, detail: 'mid', seed: 5 };  // bow left, carried left on the far reach
+const NEAR = { kind: 'merchant', x: 88, y: 121, scale: .95, flip: true, seed: 7 };  // bow right, carried right on the near reach
+const FAR = { kind: 'brig', x: 174, y: 104.5, scale: .44, detail: 'mid', seed: 5 };  // bow left, carried left on the far reach
 const skel = { horizon: HZ, eye: 2.5, light: 'the hazy sun high on the right ahead: soft light, sails lit through, short shadows towards us and left',
   items: [
     ['near ship', 36, NEAR.y, 96, 76, 'on the water, slack sails, carried right on the near reach of the current'],
@@ -244,13 +244,13 @@ function bourrelet(u, L, x, y, s, seed, wind = 1) {
   return o;
 }
 
-// the near ship's churned trail behind her stern (left), lying along the lanes, and the foam along her waterline
-function trail(u, L, o) {
-  const R = rng(13), c = mix('#ffffff', L.keyColor, .2), st = o.x - 36 * o.scale;
+// a ship's churned trail behind her stern, lying upstream along the loop (k: its size — the far ship's is smaller)
+function trail(u, L, o, k = 1, seed = 13) {
+  const R = rng(seed), c = mix('#ffffff', L.keyColor, .2), back = o.flip ? -1 : 1, st = o.x + back * 36 * o.scale;
   let s = '';
-  for (let i = 0; i < 14; i++) { const len = 14 + R() * 26;
-    s += `<path d="${flowFrom(st - 2 - R() * 6, o.y + .5 + (R() - .3) * 4, -len, .045 + R() * .03, R() * 6, .012)}" fill="${c}" opacity="${f(.55 + R() * .35)}"/>`; }
-  s += K.foam(u, { x: st - 6, y: o.y + 1, w: 16, h: 1.5, seed: 21, L });
+  for (let i = 0; i < 14; i++) { const len = (14 + R() * 26) * k;
+    s += `<path d="${flowFrom(st + back * (2 + R() * 6) * k, o.y + .5 * k + (R() - .3) * 4 * k, -len, .045 + R() * .03, R() * 6, .012)}" fill="${c}" opacity="${f(.55 + R() * .35)}"/>`; }
+  s += K.foam(u, { x: st + back * 6 * k, y: o.y + k, w: 16 * k, h: 1.5 * k, seed: seed + 8, L });
   return s;
 }
 // the band of foam along the near ship's waterline, thickening towards her bow where the stream piles on her
@@ -278,9 +278,9 @@ module.exports = { name: 'Течение', kind: 'sea', status: 'accepted', cam:
     bg += eddy(u, L, 24, 108, 3.5, 1) + eddy(u, L, 128, 104, 2.2, 2) + eddy(u, L, 40, 136, 5, 3);
     bg += weedAt(u, L, 2, 126, 34, 3.4, 4) + weedAt(u, L, 112, 104.5, 18, 3.2, 5) + weedAt(u, L, 18, 106, 22, 3.2, 7) + weedAt(u, L, 140, 131, 34, 3.6, 8) + weedAt(u, L, 60, 136, 26, 3.4, 9);
     // ——— the far ship carried left on the far reach, the near ship carried right with her trail: they pass
-    bg += becalmed(u, L, FAR).svg + K.foam(u, { x: FAR.x, y: FAR.y + .2, w: 30, h: 1, seed: 6, L });
-    // the far ship's stern meets the stream (it runs left there): white water and an eddy spinning off it
-    bg += bourrelet(u, L, FAR.x + 15.6, FAR.y, .55, 2, -1) + eddy(u, L, FAR.x + 6, FAR.y + 2.4, 2.4, 6);
+    // the far ship: her trail behind her stern (right), white water at her bow (left) — she goes left
+    bg += trail(u, L, FAR, .45, 17) + becalmed(u, L, FAR).svg + K.foam(u, { x: FAR.x, y: FAR.y + .2, w: 30, h: 1, seed: 6, L });
+    bg += bourrelet(u, L, FAR.x - 15.2, FAR.y, .55, 2, -1) + eddy(u, L, FAR.x + 8, FAR.y + 2.4, 2.4, 6);
     bg += trail(u, L, NEAR);
     bg += becalmed(u, L, Object.assign({ detail: 'near' }, NEAR)).svg;
     bg += waterlineFoam(u, L, NEAR);
