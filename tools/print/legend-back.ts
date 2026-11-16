@@ -6,16 +6,17 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import type { Page } from 'playwright';
-import { ROOT } from './kit';
+import { ROOT, fontCss } from './kit';
 import { BLEED, CARD } from './layout';
-import { DECK_KEY, darken, lighten, type DeckCode } from './colors';
+import { DECK_KEY, DECK_NAME, darken, lighten, type DeckCode } from './colors';
 
 const require = createRequire(import.meta.url);
 /** The medallion with the deck's letter on a Legend back, as on the deck back; PRINT_LEGEND_CREST=off renders without. */
 export const LEGEND_BACK_CREST = process.env.PRINT_LEGEND_CREST !== 'off';
-/** The face of a Legend back's lettering (user's request 16.11, third round): 'classic' — Alegreya SC (variant A),
- *  'wet' — Rubik Wet Paint (variant B, «злобный шрифт»); PRINT_LEGEND_FONT renders the other for a comparison. */
-export const LEGEND_BACK_FONT: LegendFont = process.env.PRINT_LEGEND_FONT === 'wet' ? 'wet' : 'classic';
+/** The face of a Legend back's lettering (user's request 16.11, third round, «надписи крутым злобным шрифтом»): 'wet' —
+ *  Rubik Wet Paint, gold dripping off the letters (variant B, printed); PRINT_LEGEND_FONT=classic renders variant A,
+ *  Alegreya SC as on every other back, for a comparison. */
+export const LEGEND_BACK_FONT: LegendFont = process.env.PRINT_LEGEND_FONT === 'classic' ? 'classic' : 'wet';
 /** The gold frame: w — from the cut to its inner edge (mm); corner — how far the corner ornaments reach along each edge
  *  from the corner (they lie in the sky and the near water, away from the ship); gap — the least air between the ship
  *  and the frame (--check). */
@@ -212,6 +213,32 @@ export async function checkLegendShips(page: Page, dxOf: Record<DeckCode, number
     lines.push(`${deck}: ship ${b.x0.toFixed(2)}–${b.x1.toFixed(2)} × ${b.y0.toFixed(2)}–${b.y1.toFixed(2)} mm, frame inner edge ${w} mm — air ${Object.entries(side).map(([k, v]) => `${k} ${v.toFixed(2)}`).join(', ')}${inCorner ? ', IN A CORNER ORNAMENT' : ''}`);
     if (min < gap) errors.push(`Legend back ${deck}: the ship ${min < 0 ? 'crosses' : 'comes within ' + min.toFixed(2) + ' mm of'} the gold frame on the ${worst} (${min.toFixed(2)} mm, need ≥ ${gap})`);
     if (inCorner) errors.push(`Legend back ${deck}: the ship reaches into a corner ornament of the frame`);
+    // the stars beside «ЛЕГЕНДА» (and the word) stay above the ship: their lowest point against her highest
+    const Bk = require(path.join(ROOT, 'tools/card-art/scenes/backs.cjs')), ty = Bk.back(DECK_KEY[deck], 1).title.y * CARD.h / 280;
+    const starLow = ty + LB_STAR.R, air = b.y0 - starLow;
+    lines.push(`${deck}: stars by «ЛЕГЕНДА» down to ${starLow.toFixed(2)} mm — ${air.toFixed(2)} mm above the ship`);
+    if (air < gap) errors.push(`Legend back ${deck}: the stars by «ЛЕГЕНДА» come within ${air.toFixed(2)} mm of the ship (need ≥ ${gap})`);
+  }
+  return { errors, lines };
+}
+
+/** --check: every letter of a Legend back's lettering (both faces: «ЛЕГЕНДА», the deck letters, the ships' names and the
+ *  test set Л Е Г Н Д А Ж Ч Ё Ы Й in both cases) comes from that face, not a fallback: its width must not change when the
+ *  fallback after it does (monospace vs serif). */
+export async function checkLegendFont(page: Page): Promise<{ errors: string[]; lines: string[] }> {
+  const set = [...new Set([...'ЛЕГЕНДАЖЧЁЫЙ', ...'ЛЕГЕНДАЖЧЁЫЙ'.toLowerCase(), ...Object.keys(DECK_KEY), ...Object.values(DECK_NAME).join('')])].filter(c => c.trim());
+  await page.setContent(`<style>${fontCss()}</style><span id="a"></span>`);
+  const errors: string[] = [], lines: string[] = [];
+  for (const [key, T] of Object.entries(LB_TYPE)) {
+    const fam = T.family.split(',')[0];
+    const bad = await page.evaluate(async ([fam, w, chars]) => {
+      const el = document.getElementById('a')!; el.style.fontWeight = String(w); el.style.fontSize = '100px';
+      await document.fonts.load(`${w} 100px ${fam}`, chars.join('')); await document.fonts.ready;
+      const width = (c: string, fb: string) => { el.style.fontFamily = `${fam},${fb}`; el.textContent = c; return el.getBoundingClientRect().width; };
+      return chars.filter(c => Math.abs(width(c, 'monospace') - width(c, 'serif')) > .01 || !document.fonts.check(`${w} 100px ${fam}`, c));
+    }, [fam, T.weight, set] as [string, number, string[]]);
+    lines.push(`${key} (${fam}): ${set.length} letters, ${bad.length ? 'FALLBACK for ' + bad.join(' ') : 'all from the face'}`);
+    if (bad.length) errors.push(`Legend back lettering ${key}: ${fam} has no glyph for ${bad.join(' ')}`);
   }
   return { errors, lines };
 }

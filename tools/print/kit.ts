@@ -69,7 +69,9 @@ const FONTS: [family: string, pkg: string, weight: number, style: 'normal' | 'it
   ['Alegreya', 'alegreya', 400, 'normal'], ['Alegreya', 'alegreya', 500, 'normal'], ['Alegreya', 'alegreya', 700, 'normal'], ['Alegreya', 'alegreya', 800, 'normal'],
   ['Alegreya', 'alegreya', 400, 'italic'], ['Alegreya', 'alegreya', 500, 'italic'],
   ['Alegreya SC', 'alegreya-sc', 400, 'normal'], ['Alegreya SC', 'alegreya-sc', 700, 'normal'], ['Alegreya SC', 'alegreya-sc', 800, 'normal'],
-  ['Alegreya Sans', 'alegreya-sans', 500, 'normal'], ['Alegreya Sans', 'alegreya-sans', 700, 'normal'], ['Alegreya Sans', 'alegreya-sans', 800, 'normal']
+  ['Alegreya Sans', 'alegreya-sans', 500, 'normal'], ['Alegreya Sans', 'alegreya-sans', 700, 'normal'], ['Alegreya Sans', 'alegreya-sans', 800, 'normal'],
+  // the sinister display face of the Legend backs' lettering, variant B (legend-back.ts, LEGEND_BACK_FONT) — nowhere else
+  ['Rubik Wet Paint', 'rubik-wet-paint', 400, 'normal']
 ];
 const RANGE = {
   cyrillic: 'U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116',
