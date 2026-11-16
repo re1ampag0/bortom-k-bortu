@@ -2,8 +2,9 @@
 // Caribbean (tools/print/map/chart.ts, the plain keeping of the stand-alone preview, moved a little east and north so
 // the battle lies in the open sea of the Mar del Norte and Tortuga with Hispaniola shows between the plates):
 //   - top right: the battle — 2 brass nests of the Company (the far row) facing 2 nests of the Pirates (the near row),
-//     each with an opening of 33 mm for the ship token 30 × 30 mm, a flag of the side at each nest, the side's name plate
-//     between its two nests; the two diagonals as engraved rhumb lines with barbed heads, the captain's ink note
+//     each with an opening of 33 mm for the ship token 30 × 30 mm (the side's flag faint in it, under the token) and, on
+//     its outer side, a wing of the same brass plate with a niche where the side's flag stands (nothing of a nest's drawing
+//     leaves its plate: data-frame / data-deco, check-layout), the side's name plate between its two nests; the two diagonals as engraved rhumb lines with barbed heads, the captain's ink note
 //     «по диагонали −1» once, on a small paper patch where they cross (no note and no rule between the nests opposite);
 //   - bottom right: three slim brass frames for whole cards (opening 64 × 89 mm) under the battle's nests: the sea deck,
 //     the sea card, «Эффекты этого хода», a parchment tab on each with the name and one line;
@@ -126,47 +127,131 @@ function frame(pid: string, b: Rect, rim: number, rx: number, well: string): str
 const barb = (x: number, y: number, ux: number, uy: number, hd = 2.6, hw = 1.05, ink = NOTE_INK) =>
   `<path d="M${r(x)} ${r(y)}L${r(x - ux * hd - uy * hw)} ${r(y - uy * hd + ux * hw)}L${r(x - ux * hd * 0.62)} ${r(y - uy * hd * 0.62)}L${r(x - ux * hd + uy * hw)} ${r(y - uy * hd - ux * hw)}Z" fill="${ink}"/>`;
 
-// ---- the flags of the sides (own drawings): Pirates — black with crossed sabres; Company — red and white stripes ----
-/** a flag on a staff: the foot of the staff (x, y), the flag flies to dir (±1); h — the staff's height */
-function flag(side: Side, x: number, y: number, dir: 1 | -1, h = 12, pid?: string): string {
-  const fw = h * 0.62, fh = h * 0.42, top = y - h + 0.6, x1 = x + dir * fw, wave = (yy: number) => `Q${r(x + dir * fw * 0.5)} ${r(yy - fh * 0.16)} ${r(x1)} ${r(yy + fh * 0.06)}`;
-  const outline = `M${r(x)} ${r(top)}${wave(top)}L${r(x1)} ${r(top + fh + fh * 0.06)}Q${r(x + dir * fw * 0.5)} ${r(top + fh - fh * 0.16)} ${r(x)} ${r(top + fh)}Z`;
-  const clip = `${ID}fl${Math.round(x * 10)}${Math.round(y * 10)}`;
-  let body = '';
-  if (side === 'pirates') {
-    const cx = x + dir * fw * 0.52, cy = top + fh * 0.5, s = fh * 0.34;
-    body = `<path d="${outline}" fill="#181512"/>` +
-      `<path d="M${r(cx - s)} ${r(cy - s)}Q${r(cx)} ${r(cy - s * 0.2)} ${r(cx + s)} ${r(cy + s)}M${r(cx + s)} ${r(cy - s)}Q${r(cx)} ${r(cy - s * 0.2)} ${r(cx - s)} ${r(cy + s)}" fill="none" stroke="#f3ead6" stroke-width="${r(h * 0.035)}" stroke-linecap="round"/>` +
-      `<path d="M${r(cx - s * 0.75)} ${r(cy + s * 0.45)}l${r(s * 0.5)} ${r(s * 0.3)}M${r(cx + s * 0.75)} ${r(cy + s * 0.45)}l${r(-s * 0.5)} ${r(s * 0.3)}" stroke="#f3ead6" stroke-width="${r(h * 0.03)}" stroke-linecap="round"/>`;
-  } else {
-    let stripes = '';
-    for (let i = 0; i < 7; i += 2) stripes += `<rect x="${r(Math.min(x, x1) - 1)}" y="${r(top - 1 + i * (fh + 2) / 7)}" width="${r(fw + 2)}" height="${r((fh + 2) / 7)}" fill="#a8261c"/>`;
-    const cw = fw * 0.4, ch = fh * 0.5, cx0 = dir > 0 ? x : x - cw;
-    body = `<clipPath id="${clip}"><path d="${outline}"/></clipPath><path d="${outline}" fill="#f6efe0"/><g clip-path="url(#${clip})">${stripes}` +
-      `<rect x="${r(cx0)}" y="${r(top - 1)}" width="${r(cw)}" height="${r(ch + 1)}" fill="#f6efe0"/><path d="M${r(cx0 + cw / 2)} ${r(top - 1)}V${r(top + ch)}M${r(cx0)} ${r(top + ch * 0.55)}H${r(cx0 + cw)}" stroke="#a8261c" stroke-width="${r(fh * 0.12)}"/></g>`;
+// ---- the flags of the sides (own drawings): Company — red and white stripes, a red cross in the white canton; Pirates —
+// black, a skull over two crossed sabres. A flag on its staff: the cloth waves (it is drawn flat in (u, v) and bent), its
+// folds shaded and hatched like an engraving, its shadow cast down-right; a turned staff with a gilt finial and a halyard ----
+let flagSeq = 0;
+/** a flag: the staff at x from foot to top, the cloth fw × fh flying to dir (±1) from just under the finial */
+function flag(side: Side, x: number, foot: number, top: number, dir: 1 | -1, fw: number, fh: number): string {
+  const id = `${ID}fl${flagSeq++}`, sw = Math.max(0.42, fh * 0.075), fin = sw * 1.05, y0 = top + fin * 2 + 0.25;
+  const k = 2.1 * Math.PI, amp = fh * 0.085;
+  // the wave: none at the hoist, growing to the fly; the fly droops a little
+  const lift = (u: number) => amp * Math.sin(u * k - 0.5) * Math.min(1, u * 2.6) + u * u * fh * 0.05;
+  const slope = (u: number) => Math.cos(u * k - 0.5) * Math.min(1, u * 2.6);
+  const X = (u: number) => x + dir * (sw * 0.5 + u * fw), Y = (u: number, v: number) => y0 + v * fh + lift(u);
+  const P = (u: number, v: number) => `${r(X(u))} ${r(Y(u, v))}`;
+  /** the cloth between u0..u1, v0..v1, bent with the wave */
+  const region = (u0: number, u1: number, v0: number, v1: number) => {
+    const n = Math.max(2, Math.ceil((u1 - u0) * 24)), us = Array.from({ length: n + 1 }, (_, i) => u0 + (u1 - u0) * i / n);
+    return 'M' + us.map(u => P(u, v0)).join('L') + 'L' + us.reverse().map(u => P(u, v1)).join('L') + 'Z';
+  };
+  const cloth = region(0, 1, 0, 1);
+  const dark = side === 'pirates', out: string[] = [];
+  // the shadow of the cloth and of the staff on what lies under them
+  out.push(`<path d="${cloth}" transform="translate(${r(fh * 0.07)} ${r(fh * 0.11)})" fill="#1a0e04" fill-opacity=".24"/>`);
+  out.push(`<path d="M${r(x + sw * 0.6)} ${r(foot)}V${r(top + fin)}" stroke="#1a0e04" stroke-opacity=".2" stroke-width="${r(sw)}"/>`);
+  // the field
+  let field = '';
+  if (dark) field = `<path d="${cloth}" fill="#1b1714"/>`;
+  else {
+    const n = 9, cu = 0.42, cv = 5 / n, tb = fh * 0.1;
+    field = `<path d="${cloth}" fill="#f4ecdb"/>`;
+    for (let i = 0; i < n; i += 2) field += `<path d="${region(i * 2 < n * 2 * cv - 0.01 ? cu : 0, 1, i / n, (i + 1) / n)}" fill="#a8261c"/>`;
+    // the canton: white, a red cross upright through it, a fine edge
+    const cx = cu / 2, cy = cv / 2, du = tb / fw / 2, dv = tb / fh / 2;
+    field += `<path d="${region(0, cu, 0, cv)}" fill="#f6f0e2" stroke="#7c1d15" stroke-width=".08"/>` +
+      `<path d="${region(cx - du, cx + du, 0, cv)}${region(0, cu, cy - dv, cy + dv)}" fill="#a8261c"/>`;
   }
-  return `<g${pid ? ` data-plate="${pid}"` : ''}>${body}<path d="${outline}" fill="none" stroke="#1a120a" stroke-width=".16"/>` +
-    `<path d="M${r(x)} ${r(y)}V${r(top - 0.4)}" stroke="#3a2412" stroke-width="${r(Math.max(0.3, h * 0.04))}" stroke-linecap="round"/><circle cx="${r(x)}" cy="${r(top - 0.6)}" r="${r(h * 0.045)}" fill="${LOOK.brass[1]}" stroke="${LOOK.brass[2]}" stroke-width=".12"/></g>`;
+  // the emblem of the Pirates: a skull over two crossed sabres, bent a little with the cloth under it
+  let emblem = '';
+  if (dark) {
+    const uc = 0.56, vc = 0.48, s = fh * 0.3, tilt = Math.atan2(slope(uc) * amp * k, fw) * 90 / Math.PI, bone = '#efe6d0', ink = '#1b1714';
+    // two sabres crossed behind the skull, points up: a curved blade from the hilt (lower left) to the point (upper right),
+    // a crossguard, a knuckle-bow, the grip and its pommel; the second mirrored, each edged dark where they cross
+    const bq = (t: number, a: number, c: number, e: number) => (1 - t) * (1 - t) * a + 2 * t * (1 - t) * c + t * t * e;
+    const edge = (sg: number) => Array.from({ length: 13 }, (_, j) => {
+      const t = j / 12, x = bq(t, -0.62, 0.22, 0.86), y = bq(t, 0.78, 0.22, -0.88), dx = 2 * (1 - t) * 0.84 + 2 * t * 0.64, dy = 2 * (1 - t) * -0.56 + 2 * t * -1.1, l = Math.hypot(dx, dy), w = 0.095 * (1 - t ** 6);
+      return `${r(x - dy / l * w * sg)} ${r(y + dx / l * w * sg)}`;
+    });
+    const blade = `M${edge(1).join('L')}L${edge(-1).reverse().join('L')}Z`, hilt = 'M-.75 .63L-.51 .97M-.63 .8L-.88 .97M-.51 .97Q-.66 1.13 -.9 1';
+    const sabre = (m: 1 | -1) => `<g transform="scale(${m} 1)"><path d="${blade}" fill="${bone}" stroke="${ink}" stroke-width=".1" stroke-linejoin="round"/>` +
+      `<path d="${hilt}" fill="none" stroke="${ink}" stroke-width=".3" stroke-linecap="round"/><path d="${hilt}" fill="none" stroke="${bone}" stroke-width=".14" stroke-linecap="round"/><circle cx="-.92" cy="1" r=".1" fill="${bone}" stroke="${ink}" stroke-width=".05"/></g>`;
+    // the skull over them: the brow, the cheeks, the jaw; deep eyes, the nose, the teeth
+    const skull = `<g transform="translate(0 -.2) scale(.74)"><path d="M-.5 -.28C-.5 -.74 -.26 -.98 0 -.98C.26 -.98 .5 -.74 .5 -.28C.5 -.06 .4 .04 .32 .1L.3 .34Q0 .44 -.3 .34L-.32 .1C-.4 .04 -.5 -.06 -.5 -.28Z" fill="${bone}" stroke="${ink}" stroke-width=".1"/>` +
+      `<ellipse cx="-.2" cy="-.3" rx=".15" ry=".17" fill="${ink}"/><ellipse cx=".2" cy="-.3" rx=".15" ry=".17" fill="${ink}"/><path d="M0 -.1L-.07 .04H.07Z" fill="${ink}"/>` +
+      `<path d="M-.15 .2V.36M0 .21V.38M.15 .2V.36" stroke="${ink}" stroke-width=".05"/><path d="M-.36 -.62Q-.2 -.86 .06 -.88" fill="none" stroke="#fffaf0" stroke-width=".07" stroke-linecap="round"/></g>`;
+    emblem = `<g transform="translate(${P(uc, vc)}) rotate(${r(dir * tilt)}) scale(${r(s)})">${sabre(1)}${sabre(-1)}${skull}</g>`;
+  }
+  // the folds: strips across the cloth darkened where it turns away from the light, lightened where it faces it; the
+  // deep folds hatched like an engraving (ink lines on the light cloth, light lines on the black)
+  let folds = '', hatch = '';
+  const N = 28, hg = 0.42 / fw;
+  for (let i = 0; i < N; i++) {
+    const u0 = i / N, u1 = (i + 1) / N, s = slope((u0 + u1) / 2) * dir;
+    if (s > 0.12) folds += `<path d="${region(u0, u1 + 0.002, 0, 1)}" fill="#1a0e04" fill-opacity="${r((dark ? 0.35 : 0.24) * s)}"/>`;
+    else if (s < -0.12) folds += `<path d="${region(u0, u1 + 0.002, 0, 1)}" fill="#fff8ea" fill-opacity="${r((dark ? 0.16 : 0.2) * -s)}"/>`;
+  }
+  for (let u = hg; u < 1; u += hg) {
+    const s = slope(u) * dir;
+    if (!dark && s > 0.6) hatch += `M${P(u, 0)}L${P(u, 1)}`;
+    if (dark && s < -0.6) hatch += `M${P(u, 0.04)}L${P(u, 0.96)}`;
+  }
+  const hatchEl = hatch ? `<path d="${hatch}" fill="none" stroke="${dark ? '#f3ead6' : '#3a1a10'}" stroke-opacity="${dark ? 0.32 : 0.45}" stroke-width=".07"/>` : '';
+  out.push(`<clipPath id="${id}"><path d="${cloth}"/></clipPath><g clip-path="url(#${id})">${field}${emblem}${folds}${hatchEl}</g>`);
+  out.push(`<path d="${cloth}" fill="none" stroke="#1a120a" stroke-width=".14" stroke-linejoin="round"/>`);
+  // the halyard: from the head and the foot of the cloth down the staff to a cleat
+  const cl = foot - (foot - y0) * 0.38, hx = x - dir * sw * 0.75;
+  out.push(`<path d="M${P(0, 0.02)}L${r(hx)} ${r(y0 + fh * 0.4)}L${r(hx)} ${r(cl)}M${P(0, 0.98)}L${r(hx + dir * 0.1)} ${r(y0 + fh * 1.3)}" fill="none" stroke="#5a4024" stroke-width=".07"/>`);
+  // the staff: turned wood, lit on its left; a brass socket at the foot, a cleat, a gilt ball and spike at the top
+  out.push(`<path d="M${r(x)} ${r(foot)}V${r(top + fin)}" stroke="#4a2c14" stroke-width="${r(sw)}"/><path d="M${r(x - sw * 0.2)} ${r(foot - 0.3)}V${r(top + fin + 0.3)}" stroke="#b98a52" stroke-width="${r(sw * 0.3)}" stroke-linecap="round"/>`);
+  out.push(`<rect x="${r(hx - sw * 0.5)}" y="${r(cl - 0.18)}" width="${r(sw * 1.2)}" height=".36" rx=".12" fill="${LOOK.brass[1]}" stroke="${LOOK.brass[2]}" stroke-width=".06"/>`);
+  out.push(`<rect x="${r(x - sw * 0.9)}" y="${r(foot - sw * 1.6)}" width="${r(sw * 1.8)}" height="${r(sw * 1.6)}" rx="${r(sw * 0.3)}" fill="${LOOK.brass[1]}" stroke="${LOOK.brass[2]}" stroke-width=".08"/>`);
+  out.push(`<path d="M${r(x)} ${r(top)}L${r(x + fin * 0.45)} ${r(top + fin * 0.9)}L${r(x - fin * 0.45)} ${r(top + fin * 0.9)}Z" fill="${LOOK.brass[1]}" stroke="${LOOK.brass[2]}" stroke-width=".06"/>` +
+    `<circle cx="${r(x)}" cy="${r(top + fin * 1.4)}" r="${r(fin * 0.62)}" fill="${LOOK.brass[1]}" stroke="${LOOK.brass[2]}" stroke-width=".08"/><circle cx="${r(x - fin * 0.2)}" cy="${r(top + fin * 1.22)}" r="${r(fin * 0.2)}" fill="#fff6d8" fill-opacity=".8"/>`);
+  return out.join('');
 }
 
 // ---- the battle ----
+/** the opening of a nest: the brass square round the 33 mm opening */
 const nestBox = (side: Side, i: number): Rect => ({ x: NX[i], y: NY[side], w: NEST.size, h: NEST.size });
 const nestC = (side: Side, i: number) => { const b = nestBox(side, i); return { x: b.x + b.w / 2, y: b.y + b.h / 2 }; };
-/** the flag at a nest: on a pin by the nest's outer upper corner */
-const FLAG = { h: 13, off: 2.4, foot: 15 };
-const flagBox = (side: Side, i: number): Rect => { const b = nestBox(side, i), fw = FLAG.h * 0.62 + 0.6; return { x: i === 0 ? b.x - FLAG.off - fw : b.x + b.w + FLAG.off - 0.6, y: b.y + FLAG.foot - FLAG.h - 0.5, w: fw + 0.6, h: FLAG.h + 0.8 }; };
+/** the whole brass plate of a nest: the opening's square and, on its outer side, a wing with a niche at the top where the
+ *  side's flag stands, a compass star engraved in the brass under it */
+const NICHE = 14, NICHE_H = 19.5;
+const nestPlate = (side: Side, i: number): Rect => { const b = nestBox(side, i); return { x: i === 0 ? b.x - NICHE : b.x, y: b.y, w: b.w + NICHE, h: b.h }; };
+/** a compass star engraved in brass: eight points, each half cut deep (dark) and half bright, a ring round it */
+function brassStar(cx: number, cy: number, R: number): string {
+  const dk = LOOK.brass[2], lt = '#fff1c8', out: string[] = [`<circle cx="${r(cx)}" cy="${r(cy)}" r="${r(R * 0.74)}" fill="none" stroke="${dk}" stroke-width=".16"/><circle cx="${r(cx + 0.1)}" cy="${r(cy + 0.12)}" r="${r(R * 0.74)}" fill="none" stroke="${lt}" stroke-opacity=".5" stroke-width=".1"/>`];
+  for (let j = 0; j < 8; j++) {
+    const a = j * Math.PI / 4 - Math.PI / 2, L = j % 2 ? R * 0.62 : R, w = j % 2 ? R * 0.14 : R * 0.2;
+    const T = [cx + Math.cos(a) * L, cy + Math.sin(a) * L], A = [cx + Math.cos(a - Math.PI / 2) * w, cy + Math.sin(a - Math.PI / 2) * w], B = [cx + Math.cos(a + Math.PI / 2) * w, cy + Math.sin(a + Math.PI / 2) * w];
+    out.push(`<path d="M${r(cx)} ${r(cy)}L${r(T[0])} ${r(T[1])}L${r(A[0])} ${r(A[1])}Z" fill="${dk}"/><path d="M${r(cx)} ${r(cy)}L${r(T[0])} ${r(T[1])}L${r(B[0])} ${r(B[1])}Z" fill="${lt}" fill-opacity=".55" stroke="${dk}" stroke-width=".08" stroke-linejoin="round"/>`);
+  }
+  return out.join('') + `<circle cx="${r(cx)}" cy="${r(cy)}" r="${r(R * 0.09)}" fill="${LOOK.brass[0]}" stroke="${dk}" stroke-width=".08"/>`;
+}
+const nicheBox = (side: Side, i: number): Rect => { const b = nestBox(side, i), m = NEST.rim; return { x: i === 0 ? b.x - NICHE + m : b.x + b.w, y: b.y + m, w: NICHE - m, h: NICHE_H }; };
 function nestSvg(side: Side, i: number): string {
-  const b = nestBox(side, i), m = NEST.rim, o = NEST.size - 2 * m, t = NEST.token, g = (o - t) / 2, sd = SIDE[side];
-  const out = [frame(`nest-${side}-${i}`, b, m, 2.4, sd.tint)];
-  // where the token lies: a fine dashed square; the side's flag faint in the well (seen while the nest is empty)
+  const b = nestBox(side, i), p = nestPlate(side, i), nb = nicheBox(side, i), m = NEST.rim, t = NEST.token, g = (b.w - 2 * m - t) / 2, sd = SIDE[side], rx = 2.4;
+  const well = (w: Rect, fill: string, rr: number) => `<rect x="${r(w.x)}" y="${r(w.y)}" width="${r(w.w)}" height="${r(w.h)}" rx="${rr}" fill="${fill}" stroke="${LOOK.brass[2]}" stroke-width=".28"/>`;
+  const out = [shadow(p, rx, 0.32),
+    `<rect data-plate="nest-${side}-${i}" x="${r(p.x)}" y="${r(p.y)}" width="${r(p.w)}" height="${r(p.h)}" rx="${rx}" fill="url(#${ID}brh)" stroke="${LOOK.brass[2]}" stroke-width=".3"/>`,
+    `<path d="M${r(p.x + rx)} ${r(p.y + 0.35)}H${r(p.x + p.w - rx)}" stroke="#fff6d8" stroke-opacity=".6" stroke-width=".25"/>`,
+    // the opening for the ship token (the side's tint) and the niche of the flag (a recessed paper well)
+    well({ x: b.x + m, y: b.y + m, w: b.w - 2 * m, h: b.h - 2 * m }, sd.tint, 1.5), well(nb, mix(sd.tint, LOOK.cell, 0.45), 1.2)];
+  // the frame of the nest for check-layout: the flags and drawings of the nest stay inside it
+  out.push(`<rect data-frame="nest-${side}-${i}" x="${r(p.x)}" y="${r(p.y)}" width="${r(p.w)}" height="${r(p.h)}" fill="none" stroke="none"/>`);
+  // where the token lies: a fine dashed square
   out.push(`<rect x="${r(b.x + m + g)}" y="${r(b.y + m + g)}" width="${t}" height="${t}" rx=".8" fill="none" stroke="${LOOK.paperLine}" stroke-opacity=".55" stroke-width=".22" stroke-dasharray="1.4 1"/>`);
-  out.push(`<g opacity=".3">${flag(side, b.x + b.w / 2 - 6, b.y + b.h / 2 + 9.5, 1, 19)}</g>`);
-  for (const [dx, dy] of [[1.25, 1.25], [b.w - 1.25, 1.25], [1.25, b.h - 1.25], [b.w - 1.25, b.h - 1.25]]) out.push(rivet(b.x + dx, b.y + dy, 0.62));
-  const outer = i === 0 ? -1 : 1, fx = i === 0 ? b.x - FLAG.off : b.x + b.w + FLAG.off;
-  out.push(flag(side, fx, b.y + FLAG.foot, outer as 1 | -1, FLAG.h, `flag-${side}-${i}`));
+  const outer = (i === 0 ? -1 : 1) as 1 | -1, c = nestC(side, i);
+  out.push(`<g data-deco="nest-${side}-${i}" data-name="флаги гнезда: ${sd.name} ${i + 1}">` +
+    // the side's flag faint in the well, under the token (seen while the nest is empty)
+    `<g opacity=".3">${flag(side, c.x - 7.6, c.y + 11.5, c.y - 12, 1, 15.4, 10.4)}</g>` +
+    // the side's flag in its niche: the staff by the outer edge, the cloth flying toward the opening
+    flag(side, outer < 0 ? nb.x + 1.5 : nb.x + nb.w - 1.5, nb.y + nb.h - 1.2, nb.y + 1.2, (-outer) as 1 | -1, nb.w - 2.9, (nb.w - 2.9) * 0.72) +
+    brassStar(nb.x + nb.w / 2, (nb.y + nb.h + b.y + b.h - m) / 2, Math.min(nb.w / 2 - 0.6, (b.y + b.h - m - nb.y - nb.h) / 2 - 0.6)) + '</g>');
+  for (const [dx, dy] of [[1.25, 1.25], [p.w - 1.25, 1.25], [1.25, p.h - 1.25], [p.w - 1.25, p.h - 1.25]]) out.push(rivet(p.x + dx, p.y + dy, 0.62));
   return out.join('');
 }
-/** the side's name between its two nests: a dark plate with a brass rule */
 /** the side's name between its two nests: the scroll of the board headers (parts/boards/emblem.ts), larger — the side's
  *  colour in its edges and swallow tails, the word letter-spaced on the paper face with lozenges */
 function namePlate(side: Side): { svg: string; box: Rect } {
@@ -206,7 +291,7 @@ function edgePoint(c: { x: number; y: number }, p: { x: number; y: number }, b: 
 }
 function battleSvg(): { svg: string; plates: Rect[] } {
   const out: string[] = [], plates: Rect[] = [], diag = Math.abs((data.ships[0].diagDamage as { offset: number }).offset);
-  for (const side of ['company', 'pirates'] as Side[]) for (const i of [0, 1]) { out.push(nestSvg(side, i)); plates.push(nestBox(side, i)); }
+  for (const side of ['company', 'pirates'] as Side[]) for (const i of [0, 1]) { out.push(nestSvg(side, i)); plates.push(nestPlate(side, i)); }
   // the captain's ink note on a paper patch, once: «по диагонали −1» on the crossing of the diagonals (the nests straight
   // opposite need no note: the user took «напротив — полный урон» and its rules off the scheme)
   const nsize = 9.5, no: TO2 = { font: 'Alegreya', w: 500, italic: true, color: NOTE_INK }, em = pt(nsize), pad = 1.9;
@@ -367,12 +452,10 @@ async function schemePage(ctx: Ctx): Promise<string> {
   places().forEach((p, i) => { svg.push(slotSvg(p, SLOT_XS[i])); calm.push({ x: SLOT_XS[i], y: SLOT_Y - TAB.h, w: SLOT.w, h: SLOT.h + TAB.h }); });
 
   // the chart under it all: calmed under the plates, its lettering off them and off the battle's courses
-  const flags: Rect[] = [];
-  for (const side of ['company', 'pirates'] as Side[]) for (const i of [0, 1]) flags.push(flagBox(side, i));
   const courses = { x: NX[0], y: NY.company, w: NX[1] + NEST.size - NX[0], h: NY.pirates + NEST.size - NY.company };
   const chart = chartSvg({
     style: 'plain', w: PAGE.w, h: PAGE.h, center: [0, 0], mmPerDeg: VIEW.mmPerDeg, anchor: VIEW.anchor, inset: VIEW.inset, seed: 11,
-    calm, avoid: [...flags, courses],
+    calm, avoid: [courses],
     roses: [{ x: 41, y: 146, r: 12 }],
     ships: [{ x: 30, y: 118, s: 0.6 }]
   });

@@ -8,8 +8,9 @@
 //     between them, and every plate keeps ≥ 5 mm from the edge of the sheet;
 // on every sheet the ornaments:
 //   - every outline of an element marked data-deco="<frame>" (sampled along its path) lies inside the element marked
-//     data-frame="<frame>" (a circle: within its radius; anything else: within its box) — the ribbon of a header, the
-//     drawing of a medallion.
+//     data-frame="<frame>" (a circle: within its radius; anything else, e.g. the rect of a nest's plate: within its box),
+//     a stroked outline counted with half its stroke width — the ribbon of a header, the drawing of a medallion, the flags
+//     of a battle nest on the scheme (04b).
 // Used by `npm run print -- --check` (check.ts) and on its own:
 //   npx vite-node tools/print/check-layout-cli.ts [-- 03-planshety 04-tryumy-zhetony 02-pamyatki]
 // Exit code 1 and the element names on an error.
@@ -83,7 +84,7 @@ export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promi
             if (!f) { issues.push({ page: si + 1, msg: `ornament of «${k}»: no data-frame «${k}»` }); continue; }
             const fb = R(f), circ = f instanceof SVGCircleElement;
             const cx = fb.x + fb.w / 2, cy = fb.y + fb.h / 2, rr = Math.min(fb.w, fb.h) / 2;
-            const pts: { x: number; y: number; e?: Element }[] = [];
+            const pts: { x: number; y: number; e?: Element; pad?: number }[] = [];
             const geo = [d, ...Array.from(d.querySelectorAll('*'))];
             // a clipped shape shows only where all its clips (each in the user space of the element that names it) let it
             type Clip = { shapes: SVGGeometryElement[]; inv: DOMMatrix };
@@ -104,13 +105,15 @@ export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promi
               return inn;
             }));
             const sample = (g: SVGGeometryElement, m: DOMMatrix) => {
-              const cs = clipsOf(g);
+              const cs = clipsOf(g), st = getComputedStyle(g);
+              // a stroked outline reaches half its width beyond the path (in mm on the sheet)
+              const pad = st.stroke !== 'none' ? (parseFloat(st.strokeWidth) || 0) * Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) / MM / 2 : 0;
               let len = 0; try { len = g.getTotalLength(); } catch { len = 0; }
               const n = Math.max(8, Math.min(400, Math.ceil(len / 0.5)));
               for (let i = 0; i <= n; i++) {
                 const p = g.getPointAtLength(len * i / n), q = new DOMPoint(p.x, p.y).matrixTransform(m);
                 if (cs.length && !shows(q, cs)) continue;
-                pts.push({ x: (q.x - o.left) / MM, y: (q.y - o.top) / MM, e: g });
+                pts.push({ x: (q.x - o.left) / MM, y: (q.y - o.top) / MM, e: g, pad });
               }
             };
             for (const g of geo) {
@@ -126,7 +129,7 @@ export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promi
             }
             let worst = 0, we: Element | undefined;
             for (const p of pts) {
-              const out = circ ? Math.hypot(p.x - cx, p.y - cy) - rr : Math.max(fb.x - p.x, p.x - fb.x - fb.w, fb.y - p.y, p.y - fb.y - fb.h);
+              const out = (circ ? Math.hypot(p.x - cx, p.y - cy) - rr : Math.max(fb.x - p.x, p.x - fb.x - fb.w, fb.y - p.y, p.y - fb.y - fb.h)) + (p.pad ?? 0);
               if (out > worst) { worst = out; we = p.e; }
             }
             if (worst > 0.15) issues.push({ page: si + 1, msg: `an ornament of «${k}» (${d.getAttribute('data-name') ?? d.tagName}) runs ${worst.toFixed(2)} mm out of its frame${we ? ` (${we.outerHTML.slice(0, 90)})` : ''}` });
