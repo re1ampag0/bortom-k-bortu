@@ -1,6 +1,7 @@
 // The print-and-play set: HTML → PDF with Chromium (docs/tasks/print-kit.md, stage А).
 //   npm run print [-- --only 05,07] [--glass type|ship] [--index on|off] [--backs 1|2|3] [--draft] [--no-art]
 //                 [--draft-art] [--back-shift-x mm] [--back-shift-y mm] [--no-samples] [--check] [--check-pdf] [--board a|b]
+//                 [--counters board|strip] [--tokens old|new]
 // Writes out/print/*.pdf and the sample pictures out/print/obrazcy/. See tools/print/README.md.
 import path from 'node:path';
 import fs from 'node:fs';
@@ -21,7 +22,9 @@ const opts: Opts = {
   backShiftX: Number(opt('--back-shift-x', '0')), backShiftY: Number(opt('--back-shift-y', '0')),
   only: opt('--only', '') ? opt('--only', '').split(',').map(s => s.trim()) : null,
   check: has('--check'), checkPdf: has('--check-pdf'), samples: !has('--no-samples'),
-  board: opt('--board', 'a') === 'b' ? 'b' : 'a'
+  board: opt('--board', 'b') === 'a' ? 'a' : 'b',
+  counters: opt('--counters', 'board') === 'strip' ? 'strip' : 'board',
+  tokens: opt('--tokens', 'new') === 'old' ? 'old' : 'new'
 };
 
 const t0 = Date.now();

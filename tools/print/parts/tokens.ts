@@ -13,6 +13,30 @@ import { A4, COUNTS, DECKS, HOLD, TABLE, TOKEN, type Ship } from '../layout';
 import { BRASS, BRASS_DARK, BRASS_LIGHT, DECK_KEY, INK, PARCHMENT, darken, lighten } from '../colors';
 import { iconImg } from '../icons';
 import { bigShip } from '../../../src/ui/game/art/bigShips';
+import { createRequire } from 'node:module';
+import { ROOT } from '../kit';
+import { rasterJpeg } from '../map/raster';
+import { counterStripsPage } from './boards/v2';
+
+const require = createRequire(import.meta.url);
+/** the kit ships (tools/card-art/scenes/kit): the same ships as on the card backs and the boards (--tokens new) */
+const KIT = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as {
+  ship(u: string, L: unknown, o: Record<string, unknown>): string; makeLight(l: unknown, cam: { horizon: number }): unknown;
+  shipBox(kind: string, o: { x: number; y: number; scale: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number }; LIGHTS: Record<string, unknown>;
+};
+/** the picture part of a ship token (above its band), mm */
+const PIC = { w: 30, h: 21.4 };
+/** a kit ship on the token's paper, a JPEG of PIC (no CSS filters in the PDF) */
+async function kitTokenPics(ctx: Ctx): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  for (const s of ships()) {
+    const kind = DECK_KEY[s.code], b = KIT.shipBox(kind, { x: 0, y: 0, scale: 1 }), m = 1.2, wl = PIC.h - 1.4, k = Math.min((PIC.w - 2 * m) / b.w, (wl - m) / b.h);
+    const body = KIT.ship('tk' + kind, KIT.makeLight(KIT.LIGHTS.endeavour, { horizon: wl - 2 }), { kind, x: PIC.w / 2 - k * (b.x0 + b.x1) / 2, y: wl, scale: k });
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PIC.w} ${PIC.h}"><rect width="${PIC.w}" height="${PIC.h}" fill="${PAPER}"/>${body}<path d="M1 ${wl + 0.5}q1.2 -.6 2.4 0${'t2.4 0'.repeat(11)}" fill="none" stroke="#6f8a96" stroke-width=".25"/></svg>`;
+    out[s.code] = (await rasterJpeg(ctx.browser, 'token-ship-' + kind, svg, PIC.w, PIC.h, ctx.opts.draft ? 300 : 600, 0.92)).url;
+  }
+  return out;
+}
 
 interface HoldText { side: 'pirates' | 'company'; name: string; rule: string }
 const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/tokens.json'), 'utf8')) as {
@@ -275,10 +299,16 @@ function longHtml(): string {
   const l = TXT.scheme.long;
   return `<div class="tk-long" style="left:${mm(FIELD.x)};top:${mm(LONG.y)};width:${mm(TABLE.field.w)}">${ico('lasting', 7, INK, 1.6)}<div><b>${esc(l.title)}.</b> ${esc(fill(l.text, { cards: l.cards.map(cardName).join(', ') }))}</div></div>`;
 }
-function shipTokensHtml(): string {
+function shipTokensHtml(pics: Record<string, string> | null): string {
   const t = TOKEN.shipToken, list = ships();
   const one = (s: Ship, i: number) => {
     const x = i * t;
+    // new: the kit ship fills the picture; the letter moves into the band, left of the name, off the sails
+    if (pics) return `<rect x="${x}" y="0" width="${t}" height="${t}" fill="${PAPER}"/><image href="${pics[s.code]}" x="${x}" y="0" width="${PIC.w}" height="${PIC.h}" preserveAspectRatio="none"/><rect x="${x}" y="21.4" width="${t}" height="${t - 21.4}" fill="${s.color}"/>`
+      + `<path d="M${x} 21.4H${x + t}" stroke="${BRASS_LIGHT}" stroke-width=".35"/>`
+      + `<circle cx="${x + 4.3}" cy="25.7" r="3.1" fill="${darken(s.color, 0.25)}" stroke="${BRASS_LIGHT}" stroke-width=".3"/>`
+      + `<text x="${x + 4.3}" y="27.1" text-anchor="middle" font-family="Alegreya SC" font-weight="800" font-size="4.1" fill="#fff4d8">${esc(s.code)}</text>`
+      + `<text x="${x + t / 2 + 3.4}" y="26.85" text-anchor="middle" font-family="Alegreya SC" font-weight="700" font-size="3.5" letter-spacing=".12" fill="#fff4d8">${esc(s.nick)}</text>`;
     return `<rect x="${x}" y="0" width="${t}" height="${t}" fill="${PAPER}"/><rect x="${x}" y="21.4" width="${t}" height="${t - 21.4}" fill="${s.color}"/>`
       + `<path d="M${x} 21.4H${x + t}" stroke="${BRASS_LIGHT}" stroke-width=".35"/>`
       + bigShip(DECK_KEY[s.code], x + 16.2, 20.2, 0.172)
@@ -313,7 +343,7 @@ function marksHtml(): { html: string; cuts: string } {
 const markIcon = (d: number) => `<svg viewBox="0 0 ${TOKEN.marker} ${TOKEN.marker}" style="width:${mm(d)};height:${mm(d)};flex:none;display:inline-block;vertical-align:middle">${markSvg(0, 0)}</svg>`;
 
 // ---- pages
-export function tokenPages(ctx: Ctx): PageSpec[] {
+export function tokenPages(ctx: Ctx, pics: Record<string, string> | null = null): PageSpec[] {
   const econ = data.econ as { income: number; first_income: number; cap: number; second_start: number }, rules = data.rules as Record<string, number>;
   const nums = { income: econ.income, first: econ.first_income, cap: econ.cap, start: econ.second_start, firstGame: rules.firstGameSecondStart };
   const pd = TOKEN.powder, fr = TOKEN.fire, coinD = 15, of = 3, page = (n: number) => fill(TXT.page, { n, of });
@@ -340,7 +370,7 @@ export function tokenPages(ctx: Ctx): PageSpec[] {
   const uses = `<div class="tk-uses" style="left:${mm(MARKS.x)};top:${mm(MARKS.y + MARKS.rows * TOKEN.marker + TICK + 3)};width:${mm(MARKS.cols * TOKEN.marker)}">`
     + `<div class="tk-uses-r">${mp.uses.map(u => `<span>${markIcon(4.4)}${esc(u)}</span>`).join('')}</div><div>${esc(mp.sweep)}</div></div>`;
   const page3 = head(mp.title, mp.lead, page(3))
-    + cap(SHIPS.x, SHIPS.y - CAP, fill(mp.ships, { n: ships().length })) + shipTokensHtml()
+    + cap(SHIPS.x, SHIPS.y - CAP, fill(mp.ships, { n: ships().length })) + shipTokensHtml(pics)
     + cap(MARKS.x, MARKS.y - CAP, fill(mp.marks, { n: TABLE.marks, spare: TABLE.spareMarks })) + marks.html + uses + foot(3, of)
     + cutLayer(gridCuts(SHIPS.x, SHIPS.y, ships().length, 1, st, st) + marks.cuts);
   return [{ html: page1 }, { html: page2 }, { html: page3 }];
@@ -379,5 +409,9 @@ export const TOKENS_CSS = `
 `;
 
 export async function build(ctx: Ctx): Promise<Part[]> {
-  return [{ file: '04-tryumy-zhetony', title: TXT.partTitle, css: TOKENS_CSS, pages: tokenPages(ctx) }];
+  const pics = (ctx.opts.tokens ?? 'new') === 'new' ? await kitTokenPics(ctx) : null;
+  const pages = tokenPages(ctx, pics);
+  // concept B with the counters off the board: the four strips «Осталось карт» / «Реакций сыграно» (cut along the lines)
+  if ((ctx.opts.board ?? 'b') === 'b' && ctx.opts.counters === 'strip') pages.push(counterStripsPage());
+  return [{ file: '04-tryumy-zhetony', title: TXT.partTitle, css: TOKENS_CSS, pages }];
 }

@@ -13,8 +13,8 @@ import { project } from './proj';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MAP = JSON.parse(fs.readFileSync(path.join(HERE, 'caribbean.json'), 'utf8')) as { w: number; h: number; land: number[][] };
-interface Label { kind: 'ru' | 'old' | 'sea' | 'town' | 'small'; text: string; lon: number; lat: number; to?: [number, number]; dx?: number; dy?: number }
-const TXT = JSON.parse(fs.readFileSync(path.join(HERE, '../text/map.json'), 'utf8')) as { labels: Label[]; title: string; titleRu: string; scale: string; notes: Record<string, string[]> };
+interface Label { kind: 'old' | 'sea' | 'town' | 'small'; text: string; lon: number; lat: number; to?: [number, number]; dx?: number; dy?: number }
+const TXT = JSON.parse(fs.readFileSync(path.join(HERE, '../text/map.json'), 'utf8')) as { labels: Label[]; title: string; scale: string; notes: Record<string, string[]> };
 
 export type ChartStyle = 'pearl' | 'revenge' | 'endeavour' | 'dutch' | 'plain';
 export interface Rect { x: number; y: number; w: number; h: number }
@@ -312,8 +312,7 @@ export function chartSvg(o: ChartOpts): string {
     const ang = lb.to ? (() => { const q = mm(lb.to[0], lb.to[1]); return Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI; })() : 0;
     const kz = Math.max(0.85, Math.min(2.4, k));
     const st = {
-      ru: { f: 'Alegreya SC', w: 700, it: false, s: 7.2 * kz, ls: 1.2 * kz, op: 0.9 },
-      old: { f: 'Old Standard TT', w: 400, it: true, s: 3.4 * kz, ls: 0.35 * kz, op: 0.85 },
+      old: { f: 'Old Standard TT', w: 400, it: true, s: 4.6 * Math.min(kz, 1.5), ls: 0.5 * kz, op: 0.9 },
       sea: { f: 'Old Standard TT', w: 400, it: true, s: 6 * Math.max(0.85, Math.min(1.4, k)), ls: 2.2, op: 0.7 },
       town: { f: 'Old Standard TT', w: 400, it: true, s: 2.6 * Math.max(0.9, Math.min(1.8, k)), ls: 0.1, op: 0.9 },
       small: { f: 'Old Standard TT', w: 400, it: true, s: 2.2 * Math.max(0.9, Math.min(1.8, k)), ls: 0.25, op: 0.8 }
@@ -349,7 +348,7 @@ export function chartSvg(o: ChartOpts): string {
   if (o.cross) { const { x, y } = o.cross; out.push(`<g opacity=".9"><path d="M${x - 2.6} ${y - 2.6}L${x + 2.6} ${y + 2.6}M${x + 2.6} ${y - 2.4}L${x - 2.4} ${y + 2.6}" stroke="${L.note}" stroke-width=".8" stroke-linecap="round"/><circle cx="${x}" cy="${y}" r="4.4" fill="none" stroke="${L.note}" stroke-width=".35" stroke-dasharray="1.4 .8"/></g>`); }
   for (const nt of o.note ?? []) out.push(`<text x="${r(nt.x)}" y="${r(nt.y)}" transform="rotate(${nt.rot ?? -4} ${r(nt.x)} ${r(nt.y)})" font-family="Alegreya" font-style="italic" font-weight="500" font-size="${r(nt.size ?? 4.2)}" fill="${L.note}" fill-opacity=".88">${nt.text}</text>`);
   // the calm under the board's plates: paper laid softly over the busy chart
-  for (const b of calm) out.push(`<rect x="${r(b.x - 1.5)}" y="${r(b.y - 1.5)}" width="${r(b.w + 3)}" height="${r(b.h + 3)}" rx="3" fill="${L.paper}" opacity=".62" filter="url(#${id}soft)"/>`);
+  for (const b of calm) out.push(`<rect x="${r(b.x - 0.6)}" y="${r(b.y - 0.6)}" width="${r(b.w + 1.2)}" height="${r(b.h + 1.2)}" rx="2" fill="${L.paper}" opacity=".5" filter="url(#${id}soft2)"/>`);
   // the life of the sheet
   out.push(sheetLife(o, L, id, rnd));
   out.push(`<rect width="${W}" height="${H}" fill="#000" filter="url(#${id}grain)" opacity="${r(0.12 + 0.08 * L.wear)}"/>`);
@@ -405,8 +404,7 @@ function cartouche(b: Rect, L: Look, id: string): string {
   const { x, y, w, h } = b;
   return `<g><path d="M${x + 6} ${y}H${x + w - 6}C${x + w - 2} ${y} ${x + w} ${y + 3} ${x + w + 3} ${y + 2}C${x + w + 1} ${y + h / 2} ${x + w + 1} ${y + h / 2} ${x + w + 3} ${y + h - 2}C${x + w} ${y + h - 3} ${x + w - 2} ${y + h} ${x + w - 6} ${y + h}H${x + 6}C${x + 2} ${y + h} ${x} ${y + h - 3} ${x - 3} ${y + h - 2}C${x - 1} ${y + h / 2} ${x - 1} ${y + h / 2} ${x - 3} ${y + 2}C${x} ${y + 3} ${x + 2} ${y} ${x + 6} ${y}Z" fill="${L.paper}" stroke="${L.ink}" stroke-width=".5"/>
 <rect x="${x + 3}" y="${y + 2.4}" width="${w - 6}" height="${h - 4.8}" rx="1.2" fill="none" stroke="${L.ink}" stroke-width=".2"/>
-<text x="${x + w / 2}" y="${y + h * 0.48}" text-anchor="middle" font-family="Alegreya SC" font-weight="700" font-size="${r(h * 0.3)}" letter-spacing="1" fill="${L.ink}">${TXT.titleRu}</text>
-<text x="${x + w / 2}" y="${y + h * 0.78}" text-anchor="middle" font-family="Old Standard TT" font-style="italic" font-size="${r(h * 0.14)}" fill="${L.ink}">${TXT.title}</text></g>`;
+${TXT.title.split(' y ').map((t, i, a) => `<text x="${x + w / 2}" y="${r(y + h * (a.length > 1 ? 0.45 + i * 0.3 : 0.6))}" text-anchor="middle" font-family="Old Standard TT" font-style="italic" font-size="${r(h * 0.2)}" fill="${L.ink}">${i ? 'y ' : ''}${t}</text>`).join('')}</g>`;
 }
 
 export const CHART_NOTES = TXT.notes;

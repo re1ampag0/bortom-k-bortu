@@ -1,14 +1,10 @@
 {
-  "_": "The lettering of the sea chart under the boards (tools/print/map/chart.ts). Real places only, names as on 17th–18th century Spanish and English charts; the big Russian names over them. lon/lat in degrees; kind: ru — the big Russian name, old — the period name under it, sea — a sea name, town — a town with its sign, small — a strait or a lesser island. to: a second point the lettering is laid along.",
+  "_": "The lettering of the sea chart under the boards (tools/print/map/chart.ts). Real places only, names as on 17th–18th century Spanish and English charts; lon/lat in degrees; kind: old — the name of an island, sea — a sea name, town — a town with its sign, small — a strait or a lesser island. to: a second point the lettering is laid along.",
   "labels": [
-    { "kind": "ru", "text": "Эспаньола", "lon": -71.25, "lat": 19.08, "to": [-70.2, 18.95] },
-    { "kind": "old", "text": "Isla Española", "lon": -71.0, "lat": 18.72, "to": [-70.2, 18.62] },
-    { "kind": "ru", "text": "Тортуга", "lon": -72.8, "lat": 20.27 },
-    { "kind": "old", "text": "Tortuga", "lon": -72.8, "lat": 20.41 },
-    { "kind": "ru", "text": "Куба", "lon": -79.4, "lat": 22.02, "to": [-78.0, 21.62] },
-    { "kind": "old", "text": "Isla de Cuba", "lon": -79.0, "lat": 21.62, "to": [-77.8, 21.28] },
-    { "kind": "ru", "text": "Ямайка", "lon": -77.32, "lat": 18.3 },
-    { "kind": "old", "text": "Iamaica", "lon": -77.32, "lat": 18.12 },
+    { "kind": "old", "text": "Isla Española", "lon": -71.15, "lat": 18.98, "to": [-70.2, 18.86] },
+    { "kind": "old", "text": "Tortuga", "lon": -72.8, "lat": 20.3 },
+    { "kind": "old", "text": "Isla de Cuba", "lon": -79.1, "lat": 21.85, "to": [-77.9, 21.5] },
+    { "kind": "old", "text": "Iamaica", "lon": -77.32, "lat": 18.2 },
     { "kind": "old", "text": "Puerto Rico", "lon": -66.45, "lat": 18.24 },
     { "kind": "sea", "text": "Mar del Norte", "lon": -70.0, "lat": 23.4 },
     { "kind": "sea", "text": "Mar del Caribe", "lon": -73.5, "lat": 15.2 },
@@ -29,7 +25,6 @@
     { "kind": "town", "text": "Cartagena", "lon": -75.53, "lat": 10.42, "dx": 0.2, "dy": -0.28 }
   ],
   "title": "Carta de las Islas de Barlovento y Mar del Norte",
-  "titleRu": "Карибское море",
   "scale": "Escala de Leguas",
   "notes": {
     "pearl": ["здесь Пороху не жалеть", "уйти по ветру"],

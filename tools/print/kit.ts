@@ -30,8 +30,12 @@ export interface Opts {
   check: boolean;
   checkPdf: boolean;
   samples: boolean;
-  /** 03-planshety.pdf: the board concept, 'a' «у борта» (default) or 'b' «стол капитана» */
+  /** 03-planshety.pdf: the board concept, 'b' «стол капитана» (default, v2 — the sea chart) or 'a' «у борта» */
   board?: 'a' | 'b';
+  /** concept B: «Осталось карт» / «Реакций сыграно» on the board ('board', default) or on strips on sheet 04 ('strip') */
+  counters?: 'board' | 'strip';
+  /** sheet 04: the ship tokens — 'new' (the kit ships of the backs and boards, default) or 'old' (the site's ships) */
+  tokens?: 'old' | 'new';
 }
 export interface PageSpec { html: string; land?: boolean }
 /** One PDF: its file name (without .pdf), CSS of its own, pages; duplex — printed on both sides: true — flip on the long edge,
