@@ -155,12 +155,12 @@ export const SEA: Record<ShipKey, Sea> = {
   // across the bow into the sand, the mizzen snapped short; her cargo — the Company's crates, the gold — spilled
   endeavour: {
     light: 'endeavour', water: ['#86d0d2', '#3c94a4', '#1f6474'], glow: '#fffbe8', rays: 0.5, haze: ['#4a9cac', 0.15], back: ['#b4e6e6', 0.5],
-    sand: ['#f6e8c4', '#d8be8c', '#94805e'], fish: ['#f4c64c', 0.9], coral: ['#c8907a', '#c8a47a', '#a8808e'], weed: ['#5a8a4a', '#6a9a56', '#466e3c'],
+    sand: ['#f8ecca', '#e3cea4', '#98846a'], fish: ['#f4c64c', 0.9], coral: ['#c8907a', '#c8a47a', '#a8808e'], weed: ['#5a8a4a', '#6a9a56', '#466e3c'],
     rag: '#a29a82', hz: 150,
     ship: {
       ...SHIP0, x: 194, y: 182, scale: 1.25, roll: -12, tilt: 6, brk: [0.3, 0.6, 0.22], bow: 14, stern: 3, sprit: 6, fall: { mast: 0, side: -1, ty: 180 },
       holes: [{ X: -24, t: 0.62, r: 1.5, kind: 'shot' }, { X: -12, t: 0.35, r: 2.6, kind: 'breach' }],
-      fade: 1, growth: 1.3, rags: 1.2, yards: [1], slack: 1.6, torn: 2, rot: 8, grime: 0.3,
+      fade: 1, growth: 1.3, rags: 1.2, yards: [1], slack: 1.6, torn: 2, rot: 8, grime: 0.14,
       split: { X: 18, dx: 13, drop: 2.5, rot: 13 }, drifts: [[176, 9, 4]]
     },
     props: [
@@ -646,6 +646,7 @@ ${hullAgeDefs()}
 ${cau('wCauF', 0.12, 0.36, sea.seed, '1 .4 .08 0 0 0 0 0 0 0 0 0', H, PAGE.h - H)}
 ${cau('wCauN', 0.042, 0.105, sea.seed + 7, '1 .55 .18 0 0 0 0 0 0 0 0 0', H, PAGE.h - H)}
 ${grain('wGrainD', 1.7, sea.seed + 3, '0 0 0 0 0 .5 1', sd2)}
+<filter id="wAlg" filterUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PAGE.h}" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".11 .26" numOctaves="4" seed="${sea.seed + 11}" result="t"/><feColorMatrix in="t" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -.25" result="a0"/><feComponentTransfer in="a0" result="a"><feFuncA type="table" tableValues="0 0 0 .35 .9 1"/></feComponentTransfer><feFlood flood-color="${mix(sea.weed[2], '#4a3e22', 0.35)}"/><feComposite in2="a" operator="in"/></filter>
 ${grain('wGrainL', 2.3, sea.seed + 5, '0 0 0 0 0 0 .6 1', mix(sd0, '#ffffff', 0.2))}
 <g id="${u}Body">${body}</g>
 <clipPath id="wLow"><polygon points="${poly(low)}"/></clipPath>${high}${parts}
@@ -699,17 +700,17 @@ ${hullG}${fallG}
   const fallMounds = () => {
     if (!fall || !S.fall) return '';
     const F = rot([mx[S.fall.mast], deck]); let o2 = '';
-    for (const t of [0.58, 0.76, 0.9]) {
+    for (const t of [0.5, 0.66, 0.8, 0.93]) {
       const x = F[0] + (fall.tip[0] - F[0]) * t, y = F[1] + (fall.tip[1] - F[1]) * t;
       if (y < floorTop(x) + 1) continue;
-      const w = 4 + R() * 4, h = 1.6 + R() * 1.4, d = `M${f(x - w)} ${f(y + 1.6)}C${f(x - w * 0.5)} ${f(y - h)} ${f(x + w * 0.4)} ${f(y - h * 0.9)} ${f(x + w)} ${f(y + 1.6)}Z`;
+      const w = 6 + R() * 4, h = 3 + R() * 1.4, d = `M${f(x - w)} ${f(y + 1.6)}C${f(x - w * 0.5)} ${f(y - h)} ${f(x + w * 0.4)} ${f(y - h * 0.9)} ${f(x + w)} ${f(y + 1.6)}Z`;
       o2 += `<clipPath id="wFm${Math.round(t * 100)}"><path d="${d}"/></clipPath><path d="${d}" fill="url(#wFloor)"/><g clip-path="url(#wFm${Math.round(t * 100)})"><use href="#wNearFloor"/></g><path d="M${f(x - w * 0.8)} ${f(y - h * 0.2)}Q${f(x - w * 0.3)} ${f(y - h)} ${f(x + w * 0.3)} ${f(y - h * 0.85)}" fill="none" stroke="${sd0}" stroke-width=".35" stroke-opacity=".55"/>`;
     }
     const t = 0.42, x = F[0] + (fall.tip[0] - F[0]) * t, y = F[1] + (fall.tip[1] - F[1]) * t;
     return o2 + rag(x - 4, y + 0.6, 9, 5.5, mix(sea.rag, sea.haze[0], sea.haze[1]), R, 0.7, 0.8, (fall.tip[1] - F[1]) / (fall.tip[0] - F[0]), false);
   };
   const fallSvg = () => fall ? `<ellipse cx="${f(fall.tip[0] - S.fall!.side * 10)}" cy="${f(fall.ty + 0.8)}" rx="16" ry="1.6" fill="#000" fill-opacity=".35" filter="url(#wB1)"/><use href="#wFallG" filter="url(#wDesat)"/>` +
-    `<path d="M${f(fall.tip[0] - 5)} ${f(fall.ty + 0.9)}C${f(fall.tip[0] - 3)} ${f(fall.ty - 1.2)} ${f(fall.tip[0] + 3)} ${f(fall.ty - 1.4)} ${f(fall.tip[0] + 5)} ${f(fall.ty + 0.9)}Z" fill="url(#wFloor)"/>` + fallMounds() : '';
+    `<path d="M${f(fall.tip[0] - 5)} ${f(fall.ty + 0.9)}C${f(fall.tip[0] - 3)} ${f(fall.ty - 1.2)} ${f(fall.tip[0] + 3)} ${f(fall.ty - 1.4)} ${f(fall.tip[0] + 5)} ${f(fall.ty + 0.9)}Z" fill="url(#wFloor)"/>` : '';
   if (fall && !S.fall!.front) out.push(fallSvg());
   // ---- the wreck ----
   out.push(`<g filter="url(#wSolid)"><use href="#wHullG"/></g><use href="#wHullG" filter="url(#wDesat)"/>`);
@@ -751,7 +752,7 @@ ${hullG}${fallG}
   // the seams opened between the planks here and there
   const upS = cp.filter(q => q[0] > stemP[0] - 4 && q[0] < sternP[0] + 4);
   let creep = `<rect width="${W}" height="${PAGE.h}" fill="${mix(mix(sd2, '#3a3a2c', 0.4), sea.weed[2], 0.25)}" opacity="${f(S.grime ?? 0.15)}"/><path d="${spline(upS.map(q => [q[0], q[1] - 3.2] as P))}" fill="none" stroke="${mix(sd1, sd2, 0.25)}" stroke-width="6.5" stroke-opacity="${S.reef ? 0.5 : 0.36}" filter="url(#wB2)"/>`;
-  creep += `<rect width="${W}" height="${PAGE.h}" filter="url(#wPeel)" opacity="${f(0.12 + growth * 0.06)}"/>`;
+  creep += `<rect width="${W}" height="${PAGE.h}" filter="url(#wPeel)" opacity="${f(0.12 + growth * 0.06)}"/><rect width="${W}" height="${PAGE.h}" filter="url(#wAlg)" opacity="${f(Math.min(0.5, 0.18 + growth * 0.2) * (burnt > 0.5 ? 0.5 : 1))}"/>`;
   let gaps = '';
   for (let i = 0; i < 22; i++) { const X = -sp.len / 2 + 8 + RD() * (sp.len - 16), q = geom.nearRail(X) as P, t = 0.15 + RD() * 0.65, y = S.y + t * (q[1] - S.y); if (q[0] > xAft - 3 * s) continue; gaps += `<path d="M${f(q[0])} ${f(y)}h${f((1.5 + RD() * 5) * s * 0.6)}" stroke="#050403" stroke-width="${f(0.32 * s)}" stroke-opacity=".8"/>`; }
   let lumps = '';
@@ -877,6 +878,9 @@ ${hullG}${fallG}
   }
   out.push(`<defs><g id="wNearFloor"><g filter="url(#wB2)">${dunes}</g><g filter="url(#wB02)">${rip}</g><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wGrainD)" opacity=".5"/><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wGrainL)" opacity=".55"/>` +
     `<g mask="url(#wFarM)"><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wCauF)" opacity=".22"/></g><g mask="url(#wNearM)"><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wCauN)" opacity=".26"/></g></g></defs><g mask="url(#wFloorM)"><use href="#wNearFloor"/></g>`);
+
+  // the drifts over the fallen top lie on the near floor's texture (else its outline shows through them)
+  out.push(fallMounds());
 
   // ---- what lies on the near floor ----
   const taken: Box[] = props.map(p => p.box);
