@@ -141,8 +141,9 @@ function trackDefs(ship: Ship): TrackDef[] {
   if (ship.souls != null) t.souls = { key: 'souls', cells: trackCells(ship.souls), start: ship.start_souls ?? 0 };
   return ORDER.map(k => t[k]).filter((x): x is TrackDef => !!x);
 }
-// the Souls carry «Кракен» under their cells, the Hull (the last row) «переверните планшет» under its cell 0
-const rowH = (d: TrackDef) => ROW.h + (d.key === 'souls' ? ROW.under + 0.6 : d.key === 'hull' ? ROW.under : 0);
+// every row carries a caption line under its cells (thresholds, notes, «Кракен», «переверните планшет»): the gaps are
+// spread between whole bands, so the caption under one row never crowds the label of the next (review of 16.11)
+const rowH = (d: TrackDef) => ROW.h + ROW.under + (d.key === 'souls' ? 0.6 : 0);
 const volleyCount = (ship: Ship) => ship.souls != null ? 2 : 1;
 
 export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omit<Geo, 'kit' | 'art'> {
