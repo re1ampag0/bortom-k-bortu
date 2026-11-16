@@ -6,6 +6,9 @@
 // gun smoke, the moon's path runs through the splashes where she was. Behind her on the left the trap: a wall of gun smoke on the horizon, the enemies' broadsides flashing in
 // it (the Endeavour on the left, the Dutchman behind), a grove of shot splashes on the empty spot where she was and
 // her wake running out of it. No fire on any ship: only the muzzle flashes.
+// Refined (user's decision 16.11): a stronger moon (brighter bloom and rays, a stronger rim on her sails), a pale
+// moonlit cloud bank and glow behind her sails so the black ship reads against the sky, higher spray at her bow and
+// along her side.
 'use strict';
 const K = require('../kit/index.cjs');
 const { f, lerp, rng, nid, linGrad, radGrad } = K;
@@ -15,8 +18,8 @@ const MOON = { x: 30, y: 60 };
 const SPOT = { x: 34, y: 112 };     // where she was: the converging fire falls here
 const WL = 124;                     // the kit's waterline of the Pearl
 const SINK = 118.6;                 // the sea's level on her: 5.4 units over the kit's waterline — down to her lower ports
-const light = { time: 'night', haze: .4, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#d4e2ff', power: .95 }, fill: { color: '#3a5280', power: .42 },
-  rim: { az: -30, color: '#d8ecff', power: .85 }, locals: [{ x: 14, y: 100, color: '#ffb050', power: .45, radius: 24 }] };
+const light = { time: 'night', haze: .4, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#dae6ff', power: 1 }, fill: { color: '#3a5280', power: .42 },
+  rim: { az: -30, color: '#e0f0ff', power: 1 }, locals: [{ x: 14, y: 100, color: '#ffb050', power: .45, radius: 24 }] };
 const PEARL = { kind: 'pearl', x: 110, y: WL, scale: 1.03, flip: true, roll: 18, heel: -8, sails: 'full', wake: true, lights: true, detail: 'near', seed: 4, wind: 1 };
 const ENDV = { kind: 'endeavour', x: 6, y: 108, scale: .3, flip: true, sails: 'reefed', detail: 'mid', lights: true, seed: 2 };
 const DUTCH = { kind: 'dutch', x: 52, y: 105.6, scale: .16, sails: 'reefed', detail: 'far', lights: true, seed: 5 };
@@ -35,14 +38,16 @@ module.exports = { name: 'Джек ускользает', kind: 'deck', status: 
     const L = K.makeLight(light, { horizon: HZ, eye: 1 });
     let bg = K.sky(u, L, { horizon: HZ, stars: 40, seed: 8, clear: 30 });
     // a wide cold bloom round the moon, then the disc
-    bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#9ab8ff', power: .3, radius: 80 }, { core: false }) + K.sunMoon(u, L, { r: 8, phase: .78, lit: 200 });
+    bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#9ab8ff', power: .42, radius: 95 }, { core: false }) + K.sunMoon(u, L, { r: 8, phase: .78, lit: 200 });
     // a thin torn cloud racing across the moon's lower half (it is the moon: waning, half veiled)
     bg += K.cloud(u, L, { x: MOON.x + 6, y: MOON.y + 4.5, w: 34, h: 2.6, seed: 27, far: .2 });
     // torn low clouds racing to the right, their edges lit by the moon
     for (const [x, y, w, h, sd, fr] of [[170, 26, 70, 9, 31, .1], [22, 34, 56, 8, 12, .15], [150, 70, 50, 6, 17, .35], [36, 80, 44, 5, 9, .55], [188, 92, 40, 4, 23, .7]])
       bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
     // rays from the moon: long soft blades fanning out over the whole sky (behind the ship)
-    bg += rays(u, MOON, 200, [[-150, 4], [-110, 3.5], [-70, 4], [-30, 3.5], [8, 4], [164, 3.5]], '#cfe0ff', .11, 3);
+    bg += rays(u, MOON, 200, [[-150, 4], [-110, 3.5], [-70, 4], [-30, 3.5], [8, 4], [164, 3.5]], '#cfe0ff', .15, 3);
+    // behind her sails: a pale moonlit cloud bank and a soft glow of the sky, so the black ship stands out against it
+    bg += K.cloud(u, L, { x: 128, y: 58, w: 120, h: 9, seed: 33, far: .3 }) + K.localGlow(u, { x: 118, y: 66, color: '#8ea8dc', power: .2, radius: 70 }, { core: false });
     bg += K.water(u, L, { horizon: HZ, bottom: 292, swell: .85, seed: 6, glitter: MOON.x });
     // the trap behind her: a wall of gun smoke along the horizon on the left, the enemies in it firing at the spot
     bg += K.smoke(u, L, { x: 10, y: 109, w: 60, h: 36, wind: .7, seed: 3, opacity: .75, glow: { color: '#ffa040', power: .6 } });
@@ -67,7 +72,8 @@ module.exports = { name: 'Джек ускользает', kind: 'deck', status: 
     // the moon through the rigging: a second set of short bright rays over the ship, as if through the holes in her sails
     bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#e0ecff', power: .25, radius: 18 });
     // her bow up and running: a big bow wave thrown forward and up, sheets of spray blown at us and to the right
-    { const st = g.nearRail(-56); bg += bowWave(u, L, st[0] + 2, SINK + .4); }
+    { const st = g.nearRail(-56); bg += bowWave(u, L, st[0] + 2, SINK + .4) + K.splash(u, { x: st[0] - 4, y: SINK + 1, w: 22, h: 20, seed: 6, L, wind: .7 })
+      + [[-30, 10, 8, 7], [0, 12, 9, 8], [26, 9, 7, 9]].map(([X, w, h, sd]) => { const p = g.nearRail(X); return K.splash(u, { x: p[0], y: SINK + .8, w, h, seed: sd, L, wind: .6 }); }).join(''); }
     // smoke from a hit on her quarter, torn off to the right low over the water
     { const q = g.nearRail(40); bg += K.smoke(u, L, { x: q[0], y: q[1] - 1, w: 20, h: 16, wind: .9, seed: 13, opacity: .45 }); }
     let fg = '';
