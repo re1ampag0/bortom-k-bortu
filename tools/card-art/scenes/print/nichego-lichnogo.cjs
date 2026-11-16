@@ -23,7 +23,7 @@ const WT = pr(0, YT, ZW)[1];                        // the table's far edge agai
 const CUP = { x: 84, y: 118, s: 1 };                // the saucer's centre on the table
 const POT = { x: 146, y: 102 };                     // the teapot's foot
 const SHIP = { x: 118, y: 73, scale: .56 };          // the pirate ship outside
-const HOLES = [[106, 65.6, .52, 9], [120, 65, .46, 3], [133, 64.4, .4, 6]];   // x, y, size, seed of the three shot holes in her side
+const HOLES = [[106, 65.4, .62, 9], [121, 64.8, .54, 3], [134, 64.2, .48, 6]];   // x, y, size, seed of the three shot holes in her side
 const light = { time: 'day', haze: .3, key: { type: 'sun', az: 15, el: 28, color: '#fff2dc', power: 1 }, fill: { color: '#5a4a44', power: .42 },
   rim: { az: 10, color: '#fff4e0', power: .8 } };
 const lightOut = { time: 'day', haze: .35, key: { type: 'sun', x: 30, y: 6, color: '#fff4d8', power: 1 }, fill: { color: '#8ab4d4', power: .5 } };
@@ -56,8 +56,8 @@ function outside(u, Lo) {
   // the spray of a shot that fell short, under her bow
   s += K.splash(u, { x: 94, y: 71.4, w: 8, h: 7, seed: 4, L: Lo, wind: .3 });
   // broken planks and splinters thrown out from her side, some falling into the sea
-  { const Rs = rng(12); for (let k = 0; k < 18; k++) { const [hx, hy] = HOLES[k % 3], a = Math.PI * (-.85 + Rs() * 1.1), d = 4 + Rs() * 6, l = 1 + Rs() * 2.2, x = hx + Math.cos(a) * d, y = hy - 1 + Math.sin(a) * d * .8, r = Rs() * Math.PI;
-    s += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(r) * l)} ${f(Math.sin(r) * l)}" stroke="${k % 3 ? '#3a2614' : '#c8a070'}" stroke-width="${f(.4 + Rs() * .4)}" stroke-linecap="round"/>`; }
+  { const Rs = rng(12); for (let k = 0; k < 24; k++) { const [hx, hy] = HOLES[k % 3], a = Math.PI * (-.85 + Rs() * 1.1), d = 4 + Rs() * 6, l = 1 + Rs() * 2.2, x = hx + Math.cos(a) * d, y = hy - 1 + Math.sin(a) * d * .8, r = Rs() * Math.PI;
+    s += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(r) * l)} ${f(Math.sin(r) * l)}" stroke="${k % 2 ? '#3a2614' : '#e0b880'}" stroke-width="${f(.4 + Rs() * .4)}" stroke-linecap="round"/>`; }
   }
   { const Lg = Object.assign({}, Lo, { pal: Object.assign({}, Lo.pal, { smoke: '#a8a8a4' }) });
     s += K.smoke(u, Lg, { x: 88, y: 70, w: 24, h: 12, wind: -.7, seed: 6, opacity: .4 }); }
