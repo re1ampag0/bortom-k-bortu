@@ -181,32 +181,14 @@ module.exports = { name: 'Часть корабля — часть команд�
       handG += `<defs>${linGrad(hg, 0, yw + 4, 0, yw - 3, [[0, '#fff', 0], [.5, '#fff', .6], [1, '#fff', 1]])}<mask id="${hm}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${hg})"/></mask></defs>`
         + `<g mask="url(#${hm})">${wood}</g>`; }
 
-    // ——— the head: 3/4 to our left, a young sailor, the eyes half shut; the far half gone to wood ———
+    // ——— the head: 3/4 to our left, a young sailor, calm, the eyes half shut — his face his own (fix pass: no wood in it) ———
     const HO = { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 4, light: [-.6, -.8], look: [-.2, .1], brow: 'calm', mouth: 0, smile: 0, noseL: 1.05,
       hair: { style: 'long', color: '#1a2420' }, hairColor: '#1a2420', beard: 'short' };
     const hd = H.head34(u, { ...HO, tone: SKIN, warm: { color: '#d8fff0', op: .2 }, eye: 'half', lips: '#5a6450', iris: '#7a9a8a' });
-    const hw = H.head34(u, { ...HO, tone: WOOD, eye: 'shut', lips: WOOD.shadow, hair: { style: 'long', color: '#3a2e1c' }, hairColor: '#3a2e1c', beard: 'short' });
     let face = hd.svg + rimArc(hd, { r: HEAD.r, light: [-.6, -.8], color: '#d8fff0', span: 40, opacity: .35 });
-    { const Q = hd.Q, mx = Q(0, 0, 1)[0], wm = nid('wm', u), wg = nid('wmg', u), R = rng(8);
-      let wood = hw.svg;
-      // the grain: lines across the cheek and brow, bending round the eye and the cheekbone
-      const eye = Q(.36, -.12, .78), cb = Q(.5, .3, .7);
-      for (let i = 0; i < 20; i++) { const y = HEAD.c[1] - HEAD.r * 1.15 + i * HEAD.r * .12, pts = [];
-        for (let x = mx - 6; x <= HEAD.c[0] + HEAD.r * 1.4; x += 2) { const d1 = Math.hypot(x - eye[0], y - eye[1]), d2 = Math.hypot(x - cb[0], y - cb[1]); pts.push([x, y + (y < eye[1] ? -1 : 1) * 3.4 * Math.exp(-d1 * d1 / 40) + (y < cb[1] ? -1 : 1) * 2.6 * Math.exp(-d2 * d2 / 50) + (R() - .5) * .3]); }
-        wood += `<path d="${H.sp(pts)}" stroke="${i % 3 ? '#2a1c0e' : '#120a04'}" stroke-width="${i % 3 ? .35 : .6}" fill="none" opacity=".75"/>`; }
-      wood += `<ellipse cx="${f(cb[0] + 1)}" cy="${f(cb[1] + 1)}" rx="2.4" ry="1.6" fill="#2a1c0e"/><ellipse cx="${f(cb[0] + 1)}" cy="${f(cb[1] + 1)}" rx="3.8" ry="2.6" fill="none" stroke="#2a1c0e" stroke-width=".45"/>`;
-      face += `<defs>${linGrad(wg, mx + 1, 0, mx + 6, 0, [[0, '#fff', 0], [1, '#fff', 1]])}<mask id="${wm}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${wg})"/></mask></defs><g mask="url(#${wm})">${wood}</g>`;
-      // the line where skin turns to wood: a fine crack with small splits, pale fibres crossing it
-      const crack = []; for (let k = 0; k <= 12; k++) { const t = k / 12, p = Q(.12 + .08 * Math.sin(t * 7), -1 + t * 2.05, .95); crack.push([p[0] + 3.2, p[1]]); }
-      face += `<path d="${H.sp(crack)}" stroke="#120a04" stroke-width=".6" fill="none" opacity=".75"/>`
-        + crack.filter((_, k) => k % 3 === 1).map(p => `<path d="M${P2(p)}l${f(-2 - R() * 2)} ${f((R() - .5) * 2)}" stroke="#120a04" stroke-width=".35" opacity=".7"/><path d="M${P2([p[0] + .4, p[1] + .6])}l3 .4" stroke="#d8c090" stroke-width=".3" opacity=".6"/>`).join('');
-      // the strake's seam across the far side of the jaw and on into the wall
-      const sy = RAIL + 8 + SY * 2 - .4, seam = []; for (let x = mx + 6; x <= 160; x += 3) seam.push([x, sy + 1.2 * Math.exp(-Math.pow((x - HEAD.c[0] - 8) / 10, 2))]);
-      face += `<path d="${H.sp(seam)}" stroke="#030504" stroke-width=".6" fill="none" opacity=".6"/><path d="${H.sp(seam.map(p => [p[0], p[1] + .7]))}" stroke="#c8b890" stroke-width=".3" fill="none" opacity=".3"/>`;
-      // barnacles on the wooden temple, coral at the jaw, weed in the hair
-      const t1 = Q(.86, -.42, .3), j1 = Q(.62, .72, .4);
-      face += barn(t1[0], t1[1], 1.8, 20) + barn(t1[0] + 2.6, t1[1] + 2.8, 1.3, 30) + coral(j1[0] + 1, j1[1] + 2, 20, 4.6, 9, 1.1) + weed(...Q(-.7, -.7, .4), 12, 2, 11);
-      face += glow(u, ...Q(-.4, -.25, .8), 10, 8, '#d8fff0', .16); }
+    { const Q = hd.Q;
+      // a strand of weed caught in his hair, the moon's light on the brow
+      face += weed(...Q(-.7, -.7, .4), 12, 2, 11) + glow(u, ...Q(-.4, -.25, .8), 10, 8, '#d8fff0', .16); }
 
     // ——— the souls: one sinking into the planks on either side ———
     const souls = sinkingSoul(u, 170, 84, 2.2) + sinkingSoul(u, 16, 132, 2.2);
