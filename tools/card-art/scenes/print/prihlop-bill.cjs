@@ -17,6 +17,12 @@
 // diagonal to the block (moved off the frame post), the tail hanging clear of the post; the merge reaches his far
 // cheek, the neck and the middle of his body (plank seams and a wood tint, barnacles along the seam); the neck narrower,
 // soft, the chin's shadow on it.
+// Fix pass after the print review: the man grown into the planking with a barnacle-covered face read as a film
+// character, and at card size the picture was dark. Now he is simply an old sailor of the Dutchman standing in front
+// of the hull side — the coat whole (no planks over him, no fade into the wall), sea-worn (a patch, a few barnacles on
+// the shoulders and the cap, a strand of weed), the face clean and lit. The card's action: his raised fist holds up a
+// glass vial with a glowing soul in it (the Soul he gives); the vial's green light is a second key on his face and
+// hand. The rope and the block are gone (one subject); the shaft and the face light are brighter.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -33,11 +39,11 @@ const WT = 22, WB = 178, WL = 12, WR = 188;           // the hull side behind hi
 const ZOOM = 1.35, ZO = [134.6, 100];
 const Z = p => [ZO[0] + (p[0] - ZO[0]) * ZOOM, ZO[1] + (p[1] - ZO[1]) * ZOOM];
 const HEAD = { c: [106, 72], r: 12.6 };               // (his units)
-const GRIP = [50, 64];                                // where his fist closes round the rope (his units)
-const BLOCK = [69, 40];                               // the block under the beam (his units): the rope runs to it diagonally, off the frame post
-const ROPE_R = 1.9;                                   // the rope's radius (his units); the fist closes round exactly this
-const light = { time: 'night', haze: .3, key: { type: 'moon', x: 80, y: -20, el: 64, color: '#a8f4d4', power: .8 },
-  fill: { color: '#16302a', power: .35 }, rim: { az: 330, color: '#9ff0d0', power: .3 } };
+const GRIP = [50, 66];                                // where his fist closes round the vial (his units)
+const VIAL_R = 2.3;                                   // the vial's body radius (his units); the fist closes round exactly this
+const VIAL_A = -86;                                   // the vial's axis (deg, up)
+const light = { time: 'night', haze: .3, key: { type: 'moon', x: 80, y: -20, el: 64, color: '#b8f8dc', power: .95 },
+  fill: { color: '#1e3a32', power: .45 }, rim: { az: 330, color: '#9ff0d0', power: .3 }, locals: [{ x: 150, y: 40, color: '#9effd0', power: .6, radius: 40 }] };
 const skel = { horizon: VP[1], eye: 1.6, light: 'a narrow green shaft from the hatch grating upper middle-right (key); the hold dark (skel boxes as drawn before the mirror)', items: [
   ['deckhead', 0, WT, 200, WT, 'beams and planks overhead, to the vanishing point'], ['grating', 30, 12, 40, 12, 'deckhead'],
   ['hull side', WL, WB, WR - WL, WB - WT, 'back wall'], ['Bill', 28, 290, 148, 250, 'stands on the floor (feet off the frame), grown into the hull side'],
