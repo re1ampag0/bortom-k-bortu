@@ -14,7 +14,7 @@
 // hull free.
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { ROOT, esc, fontCss, type Ctx } from '../../kit';
+import { ROOT, esc, fontCss, rich, type Ctx } from '../../kit';
 import { type Ship } from '../../layout';
 import { DECK_KEY } from '../../colors';
 import { rasterJpeg } from '../../map/raster';
@@ -1005,7 +1005,8 @@ const LI_ICONS: IconName[] = ['cards', 'volley', 'reaction', 'sails'];
 function noteParts(ship: Ship): { icon: IconName; html: string } | null {
   const clear = FTXT.wreck.clear[ship.code] ?? FTXT.wreck.clear._, jones = jonesLine(ship), ps: string[] = [];
   if (clear) ps.push(`<p>${esc(clear)}</p>`);
-  if (jones) ps.push(`<p><b>${esc(FTXT.wreck.jones)}</b> ${esc(noRef(jones))}</p>`);
+  // the typography of the cards (no break after a one-letter word, before a dash): kit.ts rich()
+  if (jones) ps.push(`<p><b>${esc(FTXT.wreck.jones)}</b> ${rich(noRef(jones))}</p>`);
   if (!ps.length) return null;
   return { icon: jones ? 'heartChest' : /«Под водой»/.test(clear) ? 'underwater' : 'plan', html: ps.join('') };
 }
