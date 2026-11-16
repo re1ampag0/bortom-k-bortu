@@ -59,10 +59,12 @@ function broadside(u, L, R, ship, s, rows, o = {}) {
   let flash = '', smoke = '';
   for (const [h, n, x0, x1] of rows) for (let k = 0; k < n; k++) {
     if (R() < (o.skip || .25)) continue;
-    const lx = x0 + (x1 - x0) * k / (n - 1), px = ship.x + lx * s, py = ship.y - h * s - .2 * s, sz = s * (3 + R() * 3.4) * (o.k || 1);
-    smoke += K.smoke(u, L, { x: px - sz * .8, y: py + sz * 1.1, w: sz * 6.5, h: sz * 5.2, wind: -.7, seed: Math.floor(R() * 999), opacity: .5 });
+    const lx = x0 + (x1 - x0) * k / (n - 1), px = ship.x + lx * s, py = ship.y - h * s - .2 * s, sz = s * (3 + R() * 3.4) * (o.k || 1) * (o.low ? .55 : 1);
+    // the near lines (o.low): the smoke a thin low bank along the waterline, so their ochre-and-black sides stay clear
+    smoke += o.low ? K.smoke(u, L, { x: px - sz * 1.2, y: ship.y + s * .6, w: sz * 6, h: sz * 1.6, wind: -.9, seed: Math.floor(R() * 999), opacity: .3 })
+      : K.smoke(u, L, { x: px - sz * .8, y: py + sz * 1.1, w: sz * 6.5, h: sz * 5.2, wind: -.7, seed: Math.floor(R() * 999), opacity: .5 });
     // fired toward us: a starburst — a soft hot glow, short spikes of different length, a white core
-    flash += glow(u, f(px), f(py), f(sz * 2.2), f(sz * 1.8), '#ffb850', .65)
+    flash += glow(u, f(px), f(py), f(sz * 2.2), f(sz * 1.8), '#ffb850', o.low ? .4 : .65)
       + Array.from({ length: 7 }, (_, j) => { const an = j * 2 * Math.PI / 7 + R() * .6, l = sz * (.8 + R() * 1.1), w = sz * .22; const c = Math.cos(an), sn = Math.sin(an) * .8;
         return `<path d="M${f(px - sn * w)} ${f(py + c * w)}L${f(px + c * l)} ${f(py + sn * l)}L${f(px + sn * w)} ${f(py - c * w)}Z" fill="#ffe8a0" opacity=".95"/>`; }).join('')
       + `<circle cx="${f(px)}" cy="${f(py)}" r="${f(sz * .42)}" fill="#fffdf0"/>`;
@@ -74,6 +76,9 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 6 });
     const R = rng(17);
+    // the near Company ships (the two nearest lines and the giants at the edges) in their full colours, as on the deck back
+    // and the board: the same sun, but the bright sunset sky and the sun path on the water fill their shadow side
+    const Ln = K.makeLight({ ...light, haze: .2, fill: { color: '#d8c4b0', power: .62 } }, { horizon: HZ, eye: 6 });
     let bg = K.sky(u, L, { horizon: HZ }) + K.sunMoon(u, L, { r: 6.5, rays: false });
     for (const [x, y, w, h, sd, fr] of [[40, 30, 80, 8, 4, .2], [166, 40, 64, 7, 7, .3], [118, 52, 50, 5, 2, .5]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
     { const vg = nid('vg', u); bg += `<defs>${linGrad(vg, 0, 0, 0, HZ, [[0, '#1a1030', .5], [.45, '#2a1838', .15], [1, '#2a1838', 0]])}</defs><rect x="-10" y="-10" width="220" height="${HZ + 10}" fill="url(#${vg})"/>`; }
@@ -86,9 +91,9 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
     LINES.forEach(([dep, n, x0, step, fire], li) => {
       let ships = '', smoke = '', flash = '';
       for (let i = 0; i < n; i++) { const x = x0 + i * step + (R() - .5) * step * .3, y = HZ + dep + (R() - .5) * dep * .12, s = sc(y), kind = 'endeavour';
-        ships += K.ship(u, L, { kind, x, y, scale: s, detail: s < .25 ? 'far' : s < .45 ? 'mid' : 'near', wake: s > .15, lights: s > .3, seed: 30 + li * 40 + i });
+        ships += K.ship(u, li >= 3 ? Ln : L, { kind, x, y, scale: s, detail: s < .25 ? 'far' : s < .45 ? 'mid' : 'near', wake: s > .15, lights: s > .3, seed: 30 + li * 40 + i });
         if (li === LINES.length - 1) flags.push({ x, y, s, kind, seed: 30 + li * 40 + i });
-        if (fire) { const b = broadside(u, L, R, { x, y }, s, kind === 'warship' ? [[4, 13, -36, 30], [9.5, 13, -36, 30]] : [[3.6, 15, -38, 34.8], [8.8, 15, -38, 34.8], [14, 15, -38, 34.8]], { skip: .3, k: 1.5 });
+        if (fire) { const b = broadside(u, L, R, { x, y }, s, kind === 'warship' ? [[4, 13, -36, 30], [9.5, 13, -36, 30]] : [[3.6, 15, -38, 34.8], [8.8, 15, -38, 34.8], [14, 15, -38, 34.8]], { skip: .3, k: 1.5, low: li >= 3 });
           smoke += b.smoke; flash += b.flash; } }
       fleet += ships + smoke + flash;
       if (li === 1) fleet += K.fog(u, L, { y: HZ - 6, h: 8, density: .35, seed: 3 })
@@ -117,8 +122,8 @@ module.exports = { name: 'Армада Компании', kind: 'deck', status: 
       mid += K.smoke(u, L, { x: hx, y: hy, w: 6, h: 6, wind: -.6, seed: sd, opacity: .55 }); }
     // the two nearest ships at the edges, cut by the frame: their sails glow through, up to the top of the card
     let fg = '';
-    fg += K.ship(u, L, { kind: 'endeavour', x: WL.x, y: WL.y, scale: sc(WL.y), detail: 'near', wake: true, lights: true, seed: 140 });
-    fg += K.ship(u, L, { kind: 'endeavour', x: WR.x, y: WR.y, scale: sc(WR.y), detail: 'near', wake: true, lights: true, seed: 141 });
+    fg += K.ship(u, Ln, { kind: 'endeavour', x: WL.x, y: WL.y, scale: sc(WL.y), detail: 'near', wake: true, lights: true, seed: 140 });
+    fg += K.ship(u, Ln, { kind: 'endeavour', x: WR.x, y: WR.y, scale: sc(WR.y), detail: 'near', wake: true, lights: true, seed: 141 });
     // the sun's warmth over the near sea and the giants' bows; the haze between us and them
     fg += glow(u, SUN.x, HZ + 6, 70, 12, '#ffcf80', .18);
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 132, 0, 280, [[0, '#101828', 0], [.3, '#101828', .45], [1, '#080c18', .8]])}</defs><rect x="-10" y="132" width="220" height="160" fill="url(#${gl})"/>`; }
