@@ -47,7 +47,7 @@ export const FACE = {
    *  dark ink, the «Легенда · раз за игру» plate breaking the top frame, the ship's colour only as a ribbon with its name
    *  at the bottom. frame — the gold band's width; glass — side inset and bottom (the top climbs no higher than
    *  glass.minTop above); medallion — the oval plate's centre and size; ribbon — its box */
-  legend: { frame: 2.7, glass: { inset: 3.8, bottom: 9.5 }, medallion: { cy: 5.6, w: 21, h: 8.4 }, ribbon: { x: 10, y: 80, w: 43, h: 4.8 } },
+  legend: { frame: 2.7, glass: { inset: 3.8, bottom: 9.1 }, medallion: { cy: 5.6, w: 21, h: 8.4 }, ribbon: { x: 10, y: 80.3, w: 43, h: 4.8 } },
   /** minimal font sizes, pt (review-print 9) */
   pt: { name: 11, ribbon: 6.5, big: 10, text: 8, textMin: 7.5, flavor: 7, band: 6.5, plan: 6 }
 };

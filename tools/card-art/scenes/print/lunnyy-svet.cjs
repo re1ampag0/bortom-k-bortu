@@ -1,35 +1,37 @@
-// «Лунный свет» (Колода моря): a silver full moon rises huge behind the waist of a ship; on the deck two sailors
-// fight in front of its disc. In its light their flesh turns to smoke and the bones show through — skulls, ribs,
-// the long bones of the arms and legs. One lunges and runs the other through: the sabre passes clean through his
-// chest and out of his back, and he only grins and raises his own blade. The moon is over everyone: both men are
-// cursed alike. Card: for the whole round damage to Команда is 1 less (cutlasses do not take the men).
-// Not «Зомби-офицеры» (the dead of the Revenge): here it is the moonlight that does it, to all.
-// Second pass (review): they were bare skeletons with stick limbs — now they are sailors whose shirts, trousers,
-// bandanas and faces have gone thin as smoke, the skeleton glowing through (lib/people.cjs contours, see-through);
-// bony fingers round the hilts, shoes in a fencer's stance with their shadows; ripples and sparks where the blade
-// goes in and out of him (it passes through, no harm); the moon's seas paler and its craters small.
+// «Лунный свет» (Колода моря): a silver full moon rises huge over the sea; we are crouched on the deck of a ship
+// under fire, by her bulwark. Two sailors sit low with their backs to the planking, knees up, heads well under the
+// rail, while the enemy's musketry winks on a ship far out on the moonlit sea: a ball has just struck the rail cap
+// over the left man's head and thrown up a spray of splinters — and nobody is hit. Card: for the whole round damage
+// to Команда is 1 less (in the moonlight the men are hard to hit and keep under cover).
+// Print review fix: the two sailors were cursed men whose bones glowed through their see-through bodies (bandanas,
+// skulls) — directly the cursed crew of a well-known film. Now they are ordinary men taking cover; no skeletons,
+// nothing see-through. The moon, the sea, the mast and shrouds, the coil and the hat on the deck are kept.
 // Brief: docs/mockups/print/card-briefs.md «Лунный свет».
 'use strict';
 const K = require('../kit/index.cjs');
 const H = require('./lib/people.cjs');
 const { f, mix, clamp, lerp, rng, nid, linGrad, radGrad } = K;
 
-const HZ = 102;                    // horizon over the far rail
-const RAIL = 109;                  // the top of the far bulwark's rail
-const DECK = 118;                  // where the far bulwark meets the deck
-const MOON = { x: 104, y: 58, r: 36 };
+const HZ = 96;                     // horizon over the rail
+const EYE = 1.1;                   // we crouch by the bulwark too
+const DECK = 145;                  // where the bulwark meets the deck (≈ 45 units/m there)
+const RAIL = 101;                  // the top of the rail cap (the bulwark ≈ 1 m)
+const MOON = { x: 104, y: 52, r: 36 };
+const HIT = [70, RAIL - 1];        // where the ball strikes the rail cap
 const light = {
   time: 'night', haze: .3,
   key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#dfe8ff', power: .9 },
-  fill: { color: '#1b2a48', power: .4 },
+  fill: { color: '#1b2a48', power: .45 },
   rim: { az: 0, color: '#f4f7ff', power: .8 },
 };
-const skel = { horizon: HZ, eye: 1.7, light: 'the full moon right behind the two men: they stand dark against its disc with silver edges, their bones glowing through; long shadows run from their feet towards us over the deck',
+const skel = { horizon: HZ, eye: EYE, light: 'the full moon low over the sea behind the bulwark: the men under it in its shadow, silver edges on their heads and shoulders, the rail cap lit along its top',
   items: [
-    ['moon', 68, 94, 72, 72, 'a huge disc low over the sea behind the far rail'],
-    ['attacker', 30, 126, 70, 64, 'lunging to the right, 37 units/m, the sabre through the other\'s chest'],
-    ['defender', 102, 127, 46, 74, 'on his feet, the blade through him and out of his back, his own sabre raised'],
-    ['bulwark', -12, DECK, 224, 12, 'the far side of the deck across the frame, the sea over it'],
+    ['moon', 68, 88, 72, 72, 'a huge disc low over the sea'],
+    ['enemy', 20, HZ + 1, 22, 16, 'a ship far out on the sea, musket flashes along her rail'],
+    ['bulwark', -12, DECK, 224, DECK - RAIL, 'our bulwark across the frame, the sea over it'],
+    ['splinters', HIT[0] - 10, HIT[1] + 2, 20, 16, 'a ball strikes the rail cap over the left man'],
+    ['man left', 40, 149, 46, 40, 'sitting against the bulwark, knees up, head under the rail, ≈ 45 units/m'],
+    ['man right', 116, 149, 46, 40, 'sitting against the bulwark, hunched over his knees, head down'],
     ['mast', 176, 292, 14, 300, 'the mainmast on the right, shrouds to the rail'],
     ['coil', 30, 250, 50, 20, 'under the glass on the deck'],
   ] };
@@ -43,47 +45,28 @@ function sp(P, closed) {
 }
 const lerp2 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 
-// the two men: joints of the attacker (lunging right) and of the defender (facing left)
-const A = {
-  head: [75, 69.6], hr: 4.5, neck: [72.4, 74.6], shF: [71, 77.6], shN: [72.6, 78.4], hip: [62, 96],
-  elN: [83.6, 80.2], wrN: [94, 81.6], fistN: [96.6, 81.6],
-  elF: [61, 71], wrF: [54.4, 63.4], fistF: [52.6, 61.4],
-  knN: [76.4, 106], anN: [82, 122.4], toeN: [89.6, 125.4], heelN: [80.4, 125],
-  knF: [48.4, 108.4], anF: [37.4, 120.2], toeF: [40.6, 124.4], heelF: [35.2, 122.6],
-};
-const D = {
-  head: [118.4, 68.2], hr: 4.5, neck: [120, 73.4], shF: [122.4, 76.8], shN: [120.4, 77.6], hip: [124, 96.4],
-  elN: [114.4, 89.4], wrN: [114.6, 100.4], fistN: [114.8, 103],
-  elF: [131.6, 68.4], wrF: [129.6, 57.4], fistF: [129.2, 55],
-  knN: [115, 110.4], anN: [111, 124.6], toeN: [104, 127], heelN: [113.2, 127.2],
-  knF: [130.4, 110.6], anF: [134, 122.6], toeF: [138.4, 125.6], heelF: [132.8, 124.2],
-};
-const TIP = [134.4, 82.8];          // the point of the attacker's sabre, out of the defender's back
-const DTIP = [140.6, 30.6];         // the point of the defender's raised sabre
-
 module.exports = { name: 'Лунный свет', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
-    const L = K.makeLight(light, { horizon: HZ, eye: 1.7 });
+    const L = K.makeLight(light, { horizon: HZ, eye: EYE });
     L.pal = Object.assign({}, L.pal, { sky: ['#05081a', '#0c1430', '#1a2a4c', '#34486a'], sea: ['#5a7090', '#1e3048', '#0a1424'] });
     let bg = K.sky(u, L, { horizon: HZ, stars: 50, seed: 3 });
     bg += moonDisc(u, MOON);
     bg += K.cloud(u, L, { x: 36, y: 34, w: 60, h: 12, seed: 6, far: .3 }) + K.cloud(u, L, { x: 176, y: 44, w: 52, h: 10, seed: 9, far: .4 });
     bg += K.water(u, L, { horizon: HZ, bottom: RAIL + 4, swell: .15, seed: 7, glitter: MOON.x });
-    // ——— the ship: the far bulwark across the frame, the deck running to us, the mast and its shrouds
+    // ——— the enemy far out on the moonlit sea, the flashes of her muskets along her rail
+    bg += K.ship(u, L, { kind: 'warship', x: 30, y: HZ + .9, scale: .17, flip: false, sails: 'reefed', detail: 'far', seed: 6 });
+    for (const [x, y, d, sd] of [[24, HZ - 1.2, 8, 1], [29, HZ - 1.3, -4, 2], [34, HZ - 1.1, 4, 0], [38.5, HZ - 1, 12, 1]])
+      bg += K.muzzleFlash(u, { x, y, dir: d, len: 2, seed: sd, smoke: false, glow: false }) + K.localGlow(u, { x, y, color: '#ffd8a0', power: .45, radius: 3 }, { core: false });
+    // ——— our ship: the deck running to us, the bulwark across the frame, the mast and its shrouds
     bg += K.deck(u, L, { horizon: HZ, top: DECK, bottom: 292, vx: 104, seed: 5, plank: 26, wet: true });
-    bg += bulwark(u, L);
     bg += mastAndShrouds(u, L);
-    // the moonlight lies on the deck in a long pale path between the men's shadows
-    bg += K.localGlow(u, { x: 104, y: 150, color: '#c8d8f4', power: .25, radius: 80 }, { squash: .3, core: false });
-    // ——— the two men, their shadows towards us; the attacker first, then his blade, then the man it runs through
-    let fg = K.castShadow(u, L, { x: 62, y: 124, w: 22, h: 58, horizon: HZ }) + K.castShadow(u, L, { x: 122, y: 126, w: 18, h: 60, horizon: HZ });
-    const ca = cursed(u, L, A, { facing: 1, sword: { arm: 'N', fist: A.fistN, tip: TIP }, colors: { shirt: '#b4bed2', pants: '#2c3a5c', skin: '#9c98a4', band: '#8a3030' }, freeF: { da: -14, spread: 16, curl: .2, m: -1 }, brow: 'frown', mouth: .2 });
-    const cd = cursed(u, L, D, { facing: -1, sword: { arm: 'F', fist: D.fistF, tip: DTIP }, colors: { shirt: '#8e9cb8', pants: '#3c3248', skin: '#9c98a4', band: '#2c5478' }, freeN: { spread: 6, curl: .5 }, brow: 'up', mouth: .35 });
-    fg += ca.svg + sabre(u, L, A.fistN, TIP, 1) + ca.hand;
-    fg += cd.svg;
-    // the blade seen faintly through his body, the point bright out of his back; ripples and sparks where it passes
-    fg += bladeInside(u, L);
-    fg += sabre(u, L, D.fistF, DTIP, -1) + cd.hand;
+    bg += bulwark(u, L);
+    // the moonlight lies on the deck in a long pale path between the men
+    bg += K.localGlow(u, { x: 104, y: 170, color: '#c8d8f4', power: .22, radius: 70 }, { squash: .3, core: false });
+    // ——— the two men sitting with their backs to the bulwark; their shadows short under them
+    let fg = crew(u, L);
+    // ——— the ball strikes the rail cap over the left man: a gouge, splinters thrown up and out, wood dust
+    fg += strike(u, L, HIT);
     fg += K.coil(u, L, { x: 40, y: 246, s: 2.4, seed: 4, tail: false });
     fg += hatOnDeck(u, L, 160, 214);
     return [bg, fg];
@@ -103,14 +86,12 @@ function moonDisc(u, { x, y, r }) {
   return s + `</g><circle cx="${x}" cy="${y}" r="${f(r - .2)}" fill="none" stroke="#c4c6b8" stroke-width=".4" opacity=".7"/>`;
 }
 
-/** The far bulwark across the frame seen from inside: the rail cap lit along its top by the moon behind, the
- *  planking dark, stanchions, a gunport closed; the waterway along the deck. */
+/** Our bulwark across the frame seen from the deck: the kit's planking and stanchions, in the moon's shadow (it is
+ *  behind the bulwark), the rail cap lit along its top. */
 function bulwark(u, L) {
-  const oak = L.ramp('oak', 100, 112), id = nid('bk', u);
-  let s = `<defs>${linGrad(id, 0, RAIL, 0, DECK, [[0, mix(oak.shadow, '#0a1020', .45)], [1, mix(oak.shadow, '#05080e', .65)]])}</defs><path d="M-12 ${RAIL}H212V${DECK + .6}H-12Z" fill="url(#${id})"/>`;
-  for (let x = -6; x < 212; x += 15.5) s += `<path d="M${f(x)} ${RAIL + 1.2}h2.2v${f(DECK - RAIL - 1.2)}h-2.2Z" fill="${mix(oak.shadow, '#04060c', .55)}"/><path d="M${f(x + 2.2)} ${RAIL + 1.2}v${f(DECK - RAIL - 1.2)}" stroke="${mix(oak.core, '#c8d8f4', .3)}" stroke-width=".3" opacity=".4"/>`;
-  s += `<path d="M-12 ${RAIL - 1.6}H212V${RAIL + 1.2}H-12Z" fill="${mix(oak.core, '#1a2234', .5)}" stroke="${oak.outline}" stroke-width=".4"/><path d="M-12 ${RAIL - 1.4}H212" stroke="#dfe8ff" stroke-width=".6" opacity=".75"/>`;
-  s += `<path d="M-12 ${DECK}H212" stroke="#05070c" stroke-width="1.2" opacity=".7"/>`;
+  let s = K.bulwark(u, L, { x1: -12, x2: 212, y: DECK, h: DECK - RAIL, kind: 'oak', posts: 9, seed: 3 });
+  s += `<rect x="-12" y="${RAIL + 1}" width="224" height="${DECK - RAIL - 1}" fill="#1a2440" opacity=".55" style="mix-blend-mode:multiply"/>`;
+  s += `<path d="M-12 ${RAIL + .2}H212" stroke="#dfe8ff" stroke-width=".7" opacity=".7"/>`;
   return s;
 }
 /** The mainmast on the right edge rising out of the deck; its shrouds come down to the rail. */
@@ -126,130 +107,45 @@ function mastAndShrouds(u, L) {
   return s;
 }
 
-// ——— the cursed men: in the moonlight their clothes and flesh turn thin as smoke — the shirt, the trousers, the
-// bandana and the face are still there, half see-through, and the skeleton glows through them, brighter where the
-// moon is behind. Drawn as contours (lib/people.cjs): sleeves with folds and cuffs, trousers, shoes in a fencer's
-// stance; the bony hands close their fingers round the hilts. Joints J (see A and D), facing 1 — right, −1 — left.
-// Returns { svg, hand }: the sword hand goes over the hilt, after the sabre is drawn.
-const ang = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
-const BONE = '#f2f4ea';
-function cursed(u, L, J0, o) {
-  const dir = o.facing, rim = '#e8f0ff', HS = .56;
-  // the sword hand: the grip runs along the blade through the fist, the fingers wrap it, the wrist sits above it
-  const sw = o.sword, beta = ang(sw.fist, sw.tip), a = beta + 90, wr = [sw.fist[0] - 6.1 * HS * Math.cos(a * Math.PI / 180), sw.fist[1] - 6.1 * HS * Math.sin(a * Math.PI / 180)];
-  const J = Object.assign({}, J0, sw.arm === 'N' ? { wrN: wr } : { wrF: wr });
-  const ch = lerp2(J.shF, J.shN, .5), hip = J.hip, ax = hip[0] - ch[0], ay = hip[1] - ch[1], al = Math.hypot(ax, ay), nx = -ay / al, ny = ax / al;
-  const T = (t, s) => [lerp(ch[0], hip[0], t) + nx * s, lerp(ch[1], hip[1], t) + ny * s];
-  const C = o.colors, tone = (c, k = .5) => ({ lit: mix(c, '#eef3ff', .55), half: c, core: c, shadow: mix(c, '#04060e', k), outline: '#05070e' });
-  const shirt = tone(C.shirt), pants = tone(C.pants), skin = tone(C.skin, .45), band = tone(C.band), shoe = tone('#141826', .3);
-  const lit = dir;   // the moon is behind them: the edge away from us; the near side faces us in shade
-  let flesh = '';
-  // the far arm and the far leg, then the shirt, the near leg, the near arm; the head
-  const armPart = (sh, el, w, free) => H.cloth(u, { spine: [sh, el, w], w: [5.4, 4.6, 3.6], tone: shirt, lit: -lit, rim, rimSide: -lit, cuff: { from: .84, k: 1.14 }, seed: 3, capA: true, drapes: 2 });
-  const legPart = (hp, kn, an, k) => H.cloth(u, { spine: [hp, kn, an], w: [8.6 * k, 6.2 * k, 5 * k], tone: pants, lit: -lit, rim, rimSide: -lit, cuff: { from: .9, k: 1.06 }, seed: 5, capA: true, drapes: 2 });
-  const shoeP = (an, toe, heel) => { const d = ang(heel, toe) * Math.PI / 180, ux = Math.cos(d), uy = Math.sin(d), l = Math.hypot(toe[0] - heel[0], toe[1] - heel[1]), up = [0, -1];
-    const P = (t, h) => [heel[0] + ux * l * t, heel[1] + uy * l * t - h];
-    return `<path d="${sp([P(-.06, .2), P(.3, -.15), P(.8, -.1), P(1.06, .3), P(1.02, 1.3), P(.7, 2), P(.42, 2.8), [an[0] + 1.4 * dir, an[1] - .6], [an[0] - 1.6 * dir, an[1] - .4], P(-.08, 1.8)], true)}" fill="${shoe.half}" stroke="${shoe.outline}" stroke-width=".4"/>`
-      + `<path d="M${f(P(0, 0)[0])} ${f(P(0, 0)[1])}L${f(P(1, 0)[0])} ${f(P(1, 0)[1])}" stroke="#05070e" stroke-width=".9"/>`; };
-  const freeHand = (wrist, elb, ao = {}) => { const h = H.hand(u, Object.assign({ at: wrist, a: ang(elb, wrist) + (ao.da || 0), s: HS, m: ao.m || 1, pose: 'open', spread: 10, curl: .35, tone: skin, thumb: 'front', sw: .3 }, ao)); return h.back + h.front; };
-  // far side
-  if (sw.arm === 'F') flesh += armPart(J.shF, J.elF, J.wrF); else flesh += armPart(J.shF, J.elF, J.wrF) + freeHand(J.wrF, J.elF, o.freeF || {});
-  flesh += shoeP(J.anF, J.toeF, J.heelF) + legPart(J.hip, J.knF, J.anF, .95);
-  // the shirt over the chest, loose, tucked into the trousers under a sash
-  const torso = sp([T(-.12, -7 * dir), T(.3, -7.2 * dir), T(.66, -6 * dir), T(1.08, -7.2), T(1.08, 7.2), T(.66, 5.8 * dir), T(.3, 7.8 * dir), T(-.12, 6.6 * dir)], true);
-  { const g = nid('ts', u), a0 = T(.5, -8 * dir), a1 = T(.5, 8 * dir);
-    flesh += `<defs>${linGrad(g, a0[0], a0[1], a1[0], a1[1], [[0, shirt.lit], [.3, shirt.half], [1, shirt.shadow]])}</defs><path d="${torso}" fill="url(#${g})" stroke="${shirt.outline}" stroke-width=".4"/>`;
-    for (const [t0, s0, t1, s1] of [[.1, 2 * dir, .6, -1 * dir], [.2, 5 * dir, .8, 2 * dir], [.05, -3 * dir, .5, -5 * dir]]) { const p = T(t0, s0), q = T(t1, s1), m = T((t0 + t1) / 2, (s0 + s1) / 2 + 1.4 * dir); flesh += `<path d="M${f(p[0])} ${f(p[1])}Q${f(m[0])} ${f(m[1])} ${f(q[0])} ${f(q[1])}" stroke="${shirt.shadow}" stroke-width=".55" fill="none" opacity=".7"/>`; }
-    const p = T(-.02, -1.4 * dir), q = T(.24, 3.8 * dir); flesh += `<path d="M${f(p[0])} ${f(p[1])}L${f(T(.18, .6 * dir)[0])} ${f(T(.18, .6 * dir)[1])}L${f(q[0])} ${f(q[1])}" stroke="${shirt.shadow}" stroke-width=".5" fill="none"/>`; }
-  flesh += H.cloth(u, { spine: [T(.86, 0), T(1.0, 0)], w: [15, 15.4], tone: band, lit: -lit, folds: false });
-  flesh += shoeP(J.anN, J.toeN, J.heelN) + legPart(J.hip, J.knN, J.anN, 1);
-  // the neck and the head: a face in profile, see-through, the bandana knotted behind
-  flesh += H.cloth(u, { spine: [J.neck, lerp2(J.neck, J.head, .55)], w: [3.6, 3.2], tone: skin, lit: -lit, folds: false });
-  const hd = H.head(u, { c: [J.head[0] + .2 * dir, J.head[1] + .3], r: J.hr * 1.05, dir, tone: skin, faceLit: false, rim, warm: { color: '#cfe0ff', op: .45 }, mouth: o.mouth || 0, eye: 'open', brow: o.brow || 'frown', hairColor: '#1a1e2a', stubble: true, white: '#dfe6f2', iris: '#0a0e18' });
-  let headL = hd.svg;
-  { const Q = hd.Q, id = nid('bd', u);
-    const a0 = Q(-1, 0), a1 = Q(.8, -.8);
-    headL += `<defs>${linGrad(id, a0[0], a0[1], a1[0], a1[1], [[0, band.shadow], [.6, band.half], [1, band.lit]])}</defs><path d="${sp([Q(-1.06, .12), Q(-1.0, -.6), Q(-.5, -1.1), Q(.3, -1.12), Q(.84, -.72), Q(.62, -.54), Q(0, -.66), Q(-.5, -.34), Q(-.74, .16)], true)}" fill="url(#${id})" stroke="${band.outline}" stroke-width=".4"/>`
-      + `<path d="${sp([Q(-.92, -.26), Q(-1.7, .1), Q(-2.3, .7), Q(-1.8, .6), Q(-1.6, .4), Q(-1.7, 1.1), Q(-1.0, .5)], true)}" fill="${band.shadow}" stroke="${band.outline}" stroke-width=".35"/>`; }
-  flesh += headL;
-  // the near arm (the free one of the defender reaches back down; the attacker's carries the sabre)
-  if (sw.arm === 'N') flesh += armPart(J.shN, J.elN, J.wrN); else flesh += armPart(J.shN, J.elN, J.wrN) + freeHand(J.wrN, J.elN, o.freeN || {});
-  // a ghost of the sword hand's flesh round the grip
-  const fh = H.hand(u, { at: wr, a, s: HS, m: 1, pose: 'grip', tone: skin, sw: .3 });
-  // the cold glow round the figure, the see-through flesh and clothes, the bones glowing through, the silver edges
-  const glow = nid('cg', u);
-  let s = `<defs><filter id="${glow}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter></defs>`;
-  s += `<g filter="url(#${glow})" opacity=".3"><path d="${torso}" fill="#9ab4e8"/>${bones(u, J, dir, T, true)}</g>`;
-  s += `<g opacity=".6">${flesh}</g>`;
-  s += bones(u, J, dir, T);
-  // the face over the skull again, thin: the eye, the brow, the nose and the mouth read, the skull glows through
-  s += `<g opacity=".42">${headL}</g>`;
-  s += `<g fill="none" stroke="${rim}" opacity=".5" stroke-width=".5"><path d="${torso}"/></g>`;
-  // the sword hand: the ghost of the flesh, then the finger bones wrapped round the grip, glowing
-  const bh = H.hand(u, { at: wr, a, s: HS, m: 1, pose: 'grip', tone: skin, bone: true, boneColor: BONE });
-  const free = [];
-  const hand = `<g opacity=".5">${fh.front}</g>` + `<g filter="url(#${glow})" opacity=".55">${bh.front}</g>` + bh.front;
-  // the free hand's bones
-  const fw = sw.arm === 'N' ? [J.wrF, J.elF, o.freeF || {}] : [J.wrN, J.elN, o.freeN || {}];
-  const fb = H.hand(u, Object.assign({ at: fw[0], a: ang(fw[1], fw[0]) + (fw[2].da || 0), s: HS, m: fw[2].m || 1, pose: 'open', spread: 10, curl: .35, tone: skin, bone: true, boneColor: BONE, thumb: 'front' }, fw[2]));
-  s += `<g filter="url(#${glow})" opacity=".55">${fb.back}${fb.front}</g>${fb.back}${fb.front}`;
-  // the shadows of the feet on the deck: each shoe sits on its own dark contact patch
-  let sh = '';
-  for (const [h, t] of [[J.heelF, J.toeF], [J.heelN, J.toeN]]) sh += K.contactShadow(u, (h[0] + t[0]) / 2, Math.max(h[1], t[1]) + .3, Math.abs(t[0] - h[0]) + 6, L, { ry: 1.4, opacity: .85 });
-  return { svg: sh + s, hand };
-}
-// the bones showing through: a skull with dark sockets and a grin, the spine, the ribs round the chest, the pelvis,
-// the long bones of the arms and legs, the small bones of the feet in the shoes (the hands are drawn with the hands)
-function bones(u, J, dir, T, plain) {
-  const bc = BONE, gid = nid('bg', u), b = (a, c, w) => `<path d="M${f(a[0])} ${f(a[1])}L${f(c[0])} ${f(c[1])}" stroke="${bc}" stroke-width="${f(w)}" stroke-linecap="round"/>`;
-  const knob = (p, r) => `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(r)}" fill="${bc}"/>`;
-  const pair = (a, c, w, gap) => { const dx = c[0] - a[0], dy = c[1] - a[1], l = Math.hypot(dx, dy), nx = -dy / l * gap, ny = dx / l * gap; return b([a[0] + nx, a[1] + ny], [c[0] + nx * .6, c[1] + ny * .6], w) + b([a[0] - nx, a[1] - ny], [c[0] - nx * .6, c[1] - ny * .6], w * .8); };
+// ——— the crew: two sailors sitting on the deck with their backs against the bulwark (people.cjs figure(), ≈ 38
+// units/m here: 1.8 m ≈ 70), knees drawn up, heads below the rail. The moon behind them: faces and fronts in the
+// shade, silver edges on the heads and shoulders. The left one looks up at the splinters over him, his arms round his
+// knees; the right one hunches over his knees, arms round his shins, head down, his hat pulled low.
+const SIT_A = { turn: .3, sit: true, pelvis: [0, -8, 0], torso: [0, -2, -4], head: { turn: .25, nod: -20 },
+  legs: { R: { thigh: [140, 10], shin: [-18, 4], foot: [0, 10], weight: true }, L: { thigh: [130, 16], shin: [-30, 6], foot: [0, 16] } },
+  arms: { R: { to: [-.35, -1.05, 1.3], pole: [-1, -.6, .2] }, L: { to: [.75, -1.2, .75], pole: [1, -.2, -.6] } }, hands: { R: 'relaxed', L: 'relaxed' } };
+const SIT_B = { turn: .45, sit: true, pelvis: [0, -4, 0], torso: [0, 16, 4], head: { turn: -.1, nod: 24 },
+  legs: { R: { thigh: [150, 6], shin: [-14, 2], foot: [0, 8], weight: true }, L: { thigh: [146, 10], shin: [-10, 4], foot: [0, 12] } },
+  arms: { R: { to: [-.05, -.85, 1.3], pole: [-1, -.2, .4] }, L: { to: [.2, -.85, 1.3], pole: [1, -.2, .4] } }, hands: { R: 'fist', L: 'fist' } };
+function crew(u, L) {
+  const at = [[62, DECK + 4], [140, DECK + 4]];
+  const a = H.figure(nid('ca', u), { L, at: at[0], h: 81, dir: 1, pose: SIT_A, seed: 4, dim: .35,
+    dress: { shirt: '#c8c0ac', vest: '#4a2a1a', trousers: '#3a3a4a', boots: '#1a1410', boot: 'shoe', belt: '#2a1a10' },
+    skin: 'tan', head: { hair: { style: 'short', color: '#2a1a10' }, hairColor: '#2a1a10', brow: 'up', mouth: .25, eye: 'open', stubble: true } });
+  const b = H.figure(nid('cb', u), { L, at: at[1], h: 81, dir: -1, pose: SIT_B, seed: 7, dim: .35,
+    dress: { shirt: '#9aa4b8', trousers: '#4a3a30', boot: 'bare', kerchief: '#5a3a2a', belt: '#1a120c' },
+    skin: 'olive', head: { hair: { style: 'short', color: '#1a1410' }, hairColor: '#1a1410', beard: true, brow: 'frown' }, hat: { color: '#1c1a20' } });
+  // the dark of the bulwark's foot behind and under them
   let s = '';
-  s += b(J.shF, J.elF, 1.3) + pair(J.elF, J.wrF, .75, .55) + b(J.hip, J.knF, 1.6) + pair(J.knF, J.anF, .9, .6);
-  s += b(J.shN, J.elN, 1.4) + pair(J.elN, J.wrN, .8, .6) + b(J.hip, J.knN, 1.7) + pair(J.knN, J.anN, .95, .65);
-  for (const p of [J.elF, J.elN, J.knF, J.knN]) s += knob(p, 1.05);
-  for (const [a, t1, t2] of [[J.anF, J.toeF, J.heelF], [J.anN, J.toeN, J.heelN]]) { s += b(a, [t2[0], t2[1] - .8], .9); for (const k of [-.5, 0, .5]) s += b(a, [t1[0] - (t1[0] - a[0]) * .1, t1[1] - .8 + k * .5], .5); }
-  for (let t = 0; t <= 1.001; t += .09) { const p = T(t, -1.8 * dir * Math.sin(t * Math.PI) * .6); s += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx=".95" ry=".7" fill="${bc}"/>`; }
-  for (let i = 0; i < 6; i++) { const t = .1 + i * .075, back = T(t, -1.6 * dir), front = T(t + .1, (4.6 - i * .25) * dir), mid = T(t - .02, (2.4) * dir);
-    s += `<path d="M${f(back[0])} ${f(back[1])}Q${f(mid[0])} ${f(mid[1] - 1.6)} ${f(front[0])} ${f(front[1])}" stroke="${bc}" stroke-width=".85" fill="none" stroke-linecap="round"/>`; }
-  { const a = T(.08, 4.2 * dir), c = T(.48, 3.6 * dir); s += b(a, c, 1.1); }
-  s += b(T(.02, -1.6 * dir), T(-.04, 4.4 * dir), .9);
-  { const p = T(.97, 0); s += `<path d="${sp([[p[0] - 4.2, p[1] - 2.6], [p[0], p[1] - 1], [p[0] + 4.2, p[1] - 2.6], [p[0] + 3, p[1] + 1.6], [p[0], p[1] + 2.6], [p[0] - 3, p[1] + 1.6]], true)}" fill="${bc}" opacity=".9"/><ellipse cx="${f(p[0])}" cy="${f(p[1] + .4)}" rx="1.6" ry="1.1" fill="#1a2238"/>`; }
-  const h = [J.head[0] + .2 * dir, J.head[1] + .3], r = J.hr * .9, Q = (a, c) => [h[0] + dir * a * r, h[1] + c * r];
-  s += `<path d="${sp([Q(-.86, .28), Q(-.92, -.36), Q(-.5, -.88), Q(.2, -.98), Q(.74, -.66), Q(.94, -.12), Q(.98, .26), Q(.84, .42), Q(.9, .66), Q(.64, .82), Q(.2, .74), Q(-.28, .62)], true)}" fill="${bc}"/>`;
-  if (plain) return s;
-  s += `<ellipse cx="${f(Q(.5, -.06)[0])}" cy="${f(Q(.5, -.06)[1])}" rx="${f(r * .24)}" ry="${f(r * .22)}" fill="#0a0e1c" opacity=".85"/><path d="${sp([Q(.86, .2), Q(.96, .36), Q(.8, .36)], true)}" fill="#0a0e1c" opacity=".85"/>`;
-  s += `<path d="M${pts([Q(.36, .62), Q(.82, .6)]).join('L')}" stroke="#2a3048" stroke-width=".35"/>`;
-  for (let i = 0; i < 4; i++) { const p = Q(.42 + i * .12, .6); s += `<path d="M${f(p[0])} ${f(p[1] - .5)}v1" stroke="#2a3048" stroke-width=".25"/>`; }
-  return `<defs><filter id="${gid}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.1"/></filter></defs><g filter="url(#${gid})" opacity=".6">${s}</g><g opacity=".82">${s}</g>`;
+  for (const [x, y] of at) s += K.contactShadow(u, x, y - 1, 34, L, { ry: 3, opacity: .7 });
+  return s + a.svg + b.svg;
 }
-/** A cutlass from the fist to the point: the wrapped grip through the fist, the pommel, the brass guard, the curved
- *  blade with a bright edge towards the moon. */
-function sabre(u, L, h, tip, side) {
-  const dx = tip[0] - h[0], dy = tip[1] - h[1], l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l, nx = -uy * side, ny = ux * side;
-  const g = [h[0] + ux * 2, h[1] + uy * 2], m = [lerp(g[0], tip[0], .55) + nx * 1.4, lerp(g[1], tip[1], .55) + ny * 1.4];
-  let s = `<path d="M${f(h[0] - ux * 2.2)} ${f(h[1] - uy * 2.2)}L${f(g[0])} ${f(g[1])}" stroke="#2a1a10" stroke-width="1.5" stroke-linecap="round"/>`
-    + K.shadeSphere(u, h[0] - ux * 2.6, h[1] - uy * 2.6, .85, L, 'brass', { outline: .25 });
-  s += `<path d="M${f(g[0] + nx * .9)} ${f(g[1] + ny * .9)}Q${f(m[0] + nx * 1)} ${f(m[1] + ny * 1)} ${f(tip[0])} ${f(tip[1])}Q${f(m[0] - nx * .6)} ${f(m[1] - ny * .6)} ${f(g[0] - nx * .7)} ${f(g[1] - ny * .7)}Z" fill="#9aa6b8" stroke="#2a3040" stroke-width=".35"/>`;
-  s += `<path d="M${f(g[0] + nx * .7)} ${f(g[1] + ny * .7)}Q${f(m[0] + nx * .8)} ${f(m[1] + ny * .8)} ${f(tip[0])} ${f(tip[1])}" stroke="#f4f8ff" stroke-width=".5" fill="none"/>`;
-  s += `<path d="M${f(h[0] + ux * 1.8 + nx * 2.4)} ${f(h[1] + uy * 1.8 + ny * 2.4)}Q${f(h[0] + ux * 3)} ${f(h[1] + uy * 3)} ${f(h[0] + ux * 1.8 - nx * 2.4)} ${f(h[1] + uy * 1.8 - ny * 2.4)}" stroke="${L.ramp('brass', h[0], h[1]).core}" stroke-width="1.1" fill="none"/>`;
-  return s;
-}
-/** Over the defender's body the blade shows faintly through him; where it goes in at his chest and out of his back
- *  the moonlit flesh ripples like water round it and throws a few cold sparks — it passes through, no harm done. */
-function bladeInside(u, L) {
-  const cid = nid('bi', u), a = [113, 82], b = TIP, gid = nid('rp', u);
-  let s = `<defs><clipPath id="${cid}"><rect x="${a[0]}" y="70" width="${f(b[0] - a[0])}" height="24"/></clipPath><filter id="${gid}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation=".6"/></filter></defs><g clip-path="url(#${cid})" opacity=".55">${sabre(u, L, A.fistN, TIP, 1)}</g>`;
-  s += `<path d="M127.6 82.6L${f(TIP[0])} ${f(TIP[1])}" stroke="#f4f8ff" stroke-width=".6" opacity=".9"/>`;
-  // the ripples: thin rings round the blade at the entry and the exit, seen edge-on (tall narrow ellipses), and sparks
-  let rp = '';
-  for (const [x, y] of [[114.6, 82.1], [127.4, 82.5]]) {
-    for (const [rx, ry, op] of [[.9, 1.8, .95], [1.6, 3.4, .7], [2.3, 5, .45], [3, 6.6, .25]]) rp += `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="none" stroke="#e6f0ff" stroke-width=".4" opacity="${op}"/>`;
-    const R = rng(Math.round(x));
-    for (let i = 0; i < 6; i++) { const t = R() * Math.PI * 2, d = 2.4 + R() * 3.6, px = x + Math.cos(t) * d * .7, py = y + Math.sin(t) * d, k = .5 + R() * .7;
-      rp += `<path d="M${f(px - k)} ${f(py)}h${f(2 * k)}M${f(px)} ${f(py - k)}v${f(2 * k)}" stroke="#ffffff" stroke-width=".25" stroke-linecap="round" opacity="${f(.6 + R() * .4)}"/>`; }
-  }
-  s += `<g filter="url(#${gid})">${rp}</g>${rp}`;
+/** The ball's strike on the rail cap: a ragged gouge bitten out of the cap, splinters of every size thrown up and
+ *  out (pale fresh wood inside, dark weathered outside, lit by the moon on top), a puff of wood dust. */
+function strike(u, L, [x, y]) {
+  const R = rng(23), oak = L.ramp('oak', x, y), dust = nid('dd', u);
+  // the gouge: a dark bite out of the cap's top, pale torn wood round its lips
+  let s = `<path d="M${f(x - 3.4)} ${f(y - .9)}L${f(x - 2)} ${f(y + .4)}L${f(x - .6)} ${f(y - .2)}L${f(x + .6)} ${f(y + 1.2)}L${f(x + 2.2)} ${f(y + .2)}L${f(x + 3.6)} ${f(y - .9)}Z" fill="#06080e"/>`
+    + `<path d="M${f(x - 3.4)} ${f(y - .9)}L${f(x - 2)} ${f(y + .4)}L${f(x - .6)} ${f(y - .2)}L${f(x + .6)} ${f(y + 1.2)}L${f(x + 2.2)} ${f(y + .2)}L${f(x + 3.6)} ${f(y - .9)}" stroke="#d8c4a0" stroke-width=".35" fill="none"/>`;
+  // the wood dust: a soft pale puff over the hit, lit by the moon
+  s += `<defs><filter id="${dust}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4"/></filter></defs>`
+    + `<ellipse cx="${f(x + .5)}" cy="${f(y - 3.6)}" rx="6.5" ry="4" fill="#b8bcc4" opacity=".35" filter="url(#${dust})"/>`
+    + `<ellipse cx="${f(x + .3)}" cy="${f(y - 2.2)}" rx="3" ry="2" fill="#c8ccd2" opacity=".4" filter="url(#${dust})"/>`;
+  // the splinters: pale fresh wood torn out of the cap, thin wedges flying up and out from the hit, the long ones
+  // first; each with a dark edge so it reads against the sky
+  for (let i = 0; i < 18; i++) { const a = (-170 + R() * 160) * Math.PI / 180, d = 2.5 + R() * (i < 7 ? 6 : 10), l = .7 + R() * (i < 7 ? 2.6 : 1.1), w = .22 + R() * .3,
+    cx = x + Math.cos(a) * d, cy = y - 1 + Math.sin(a) * d * .85, rot = a * 180 / Math.PI + (R() - .5) * 40;
+    s += `<path d="M${f(-l)} 0L${f(-l * .2)} ${f(-w)}L${f(l)} 0L${f(-l * .1)} ${f(w)}Z" fill="${R() > .35 ? '#cfc4ae' : '#8a7a62'}" stroke="#3a2a1a" stroke-width=".14" transform="translate(${f(cx)} ${f(cy)}) rotate(${f(rot)})"/>`; }
   return s;
 }
 /** A knocked-off hat lying on the deck in the moonlight, under the glass. */

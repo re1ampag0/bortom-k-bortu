@@ -1,7 +1,8 @@
 // «Штиль» (Колода моря): dead calm at the end of a hot day. A brig stands on water like glass, her sails hang in
-// folds from the yards, the flag hangs down the staff; she fired her bow gun a while ago and the smoke still stands
-// over the water in a straight column, not a breath to bend it (the find of the card); the column, the brig and a
-// far ship lie whole in the mirror under them. The low sun ahead, right, through the heat haze: one warm light, the
+// folds from the yards, the pennants hang dead down the topmasts; the brig and a far ship lie whole in the mirror
+// under them. Review fix (print-kit): the smoke column of her bow gun is gone (it read as a fire or a waterspout),
+// and the kit's pennants no longer fly — they were only partly cut out (a red tail streamed in the air) and a
+// striped flag hung from no staff; now each pennant hangs limp from its stick. The low sun ahead, right, through the heat haze: one warm light, the
 // slack canvas glows through. Nobody can move. Brief: docs/mockups/print/card-briefs.md «Штиль».
 'use strict';
 const K = require('../kit/index.cjs');
@@ -13,7 +14,7 @@ const HZ = 91, WL = 97, WF = 93.5;   // horizon; waterlines of the near and the 
 // the 30 units of glassy water over it carry the mirror of the brig)
 const BX = 104, BS = 1;   // the brig: middle of the waterline, scale (her trucks clear the top and the medal)
 const skel = { horizon: HZ, eye: 2, items: [
-  ['brig (near), limp sails', 50, WL, 96, 82, 'water'], ['smoke column', 66, 89, 16, 52, 'the forecastle of the brig (the bow gun)'],
+  ['brig (near), limp sails', 50, WL, 96, 82, 'water'],
   ['far ship', 150, WF, 46, 36, 'water'], ['sun', 150, 65, 14, 14, 'sky'], ['weed', 16, 160, 44, 4, 'water']] };
 
 // ——— KIT-CANDIDATE: limp sails of a becalmed ship. kit/ship.cjs draws sails only bellied by the wind (full, reefed)
@@ -99,24 +100,34 @@ function slackRig(u, L, o) {
     over += `<path d="${sh}" stroke="${ropeD}" stroke-width="${f(clamp(.22 * s, .1, .5))}" fill="none"${far ? ' opacity=".5"' : ''}/>` + (rat ? `<path d="${rat}" stroke="${ropeD}" stroke-width="${f(clamp(.14 * s, .1, .5))}" fill="none" opacity=".85"/>` : '');
     flags.push({ mi, top: pt(...A(1)), H: m.H });
   });
-  // the flag on its staff over the tallest mast and the pennant on the fore truck: the kit flies them; here they hang
-  const main = flags.reduce((a, b) => b.H > a.H ? b : a), fore = flags[0], z = Lu * s;
-  const cut = [[main.top[0] - dir * .35, main.top[1] - 7.2 * z, -dir * 14 * z, 7.8 * z]];
-  if (fore !== main) cut.push([fore.top[0] - dir * .3, fore.top[1] - 2.2 * z, -dir * 15 * z, 2.7 * z]);
+  // the flag on its staff over the tallest mast and the pennants: the kit flies them; here they hang. A ship with a
+  // pennant at the main (the brig, the fluyt) has no flagstaff: the long pennant on its stick at the truck is cut out
+  // whole (its forked tail too) and hangs straight down the topmast instead, the stick left standing
+  const main = flags.reduce((a, b) => b.H > a.H ? b : a), fore = flags[0], z = Lu * s, pen = sp.flag === 'pennant', foreP = fore !== main && (!pen || sp.forePennant);
+  const cut = pen ? [[main.top[0] - dir * .31 * s, main.top[1] - 1.9 * s, -dir * 25 * z, 1.9 * s + 1.5 * z]]
+    : [[main.top[0] - dir * .35, main.top[1] - 7.2 * z, -dir * 14 * z, 7.8 * z]];
+  if (foreP) cut.push(pen ? [fore.top[0] - dir * .31 * s, fore.top[1] - 1.9 * s, -dir * 16 * z, 1.9 * s + 1.4 * z] : [fore.top[0] - dir * .3, fore.top[1] - 2.2 * z, -dir * 15 * z, 2.7 * z]);
   let limp = '';
-  { // the flag: hanging from the head of its staff, the stripes run down it, folds across
-    const h0 = [main.top[0] - dir * .15 * s, main.top[1] - 6.4 * z], len = 5.4 * z, wd = 1.9 * z, stripes = [L.tone('ship-flag-red', dz), L.tone('linen', dz), L.tone('water-wet', dz + .2)].map(col), id = nid('fl', u);
-    const sway = t => -dir * (Math.sin(t * 3.1 + 1) * .25 + t * .35) * z;
-    const edge = (k) => { const a = []; for (let i = 0; i <= 6; i++) { const t = i / 6; a.push([h0[0] - dir * wd * k * (1 - .25 * t) + sway(t), h0[1] + len * t]); } return a; };
-    const Lf = edge(0), Rf = edge(1), d = smooth(Lf.concat(Rf.reverse()));
-    defs += linGrad(id, h0[0], h0[1], h0[0] - dir * wd, h0[1], [[0, stripes[0]], [.33, stripes[0]], [.34, stripes[1]], [.66, stripes[1]], [.67, stripes[2]], [1, stripes[2]]]);
-    const fd = nid('ff', u); defs += linGrad(fd, h0[0], h0[1], h0[0], h0[1] + len, [[0, deep, .5], [.3, deep, 0], [.55, deep, .35], [.8, deep, 0], [1, deep, .4]]);
-    limp += `<path d="${d}" fill="url(#${id})"/><path d="${d}" fill="url(#${fd})"/>` + (far ? '' : `<path d="${d}" fill="none" stroke="${ink}" stroke-width="${f(.2 * Math.sqrt(s))}"/>`);
-  }
-  if (fore !== main) { // the pennant: a long thin tail down the topmast, twisting
-    const h0 = [fore.top[0] - dir * .2 * s, fore.top[1] - .8 * z], len = 9 * z, a = [], b = [];
-    for (let i = 0; i <= 8; i++) { const t = i / 8, x = h0[0] - dir * (Math.sin(t * 4.2) * .6 + t * .9) * z, y = h0[1] + len * t, wd = .85 * z * (1 - .85 * t); a.push([x, y]); b.unshift([x - dir * wd, y + .1]); }
-    limp += `<path d="${smooth(a.concat(b))}" fill="${col(L.tone('linen', dz * .8))}"/>`;
+  // a pennant hanging dead from the head of its stick: a narrow tail straight down along the topmast, a slow half twist
+  // in it (narrower where it turns edge on), the side to the sun lighter
+  const hang = (h0, len, wd, km) => { const a = [], b = [];
+    for (let i = 0; i <= 10; i++) { const t = i / 10, x = h0[0] - dir * (.12 * Math.sin(t * 3.4) + .1 * t) * z * 2, y = h0[1] + len * t, w = wd * (1 - .82 * t) * (.55 + .45 * Math.abs(Math.cos(t * 2.6))); a.push([x, y]); b.unshift([x - dir * w, y + .05]); }
+    const d = smooth(a.concat(b));
+    return `<path d="${d}" fill="${col(L.tone(km, dz * .6))}"/><path d="M${a.map(P).join('L')}" stroke="${col(L.tone(km, Math.min(1, dz + .5)))}" stroke-width="${f(.12 * Math.sqrt(s))}" fill="none" opacity=".7"/>`; };
+  if (pen) {
+    limp += hang([main.top[0] - dir * .3 * s, main.top[1] - 1.2 * s], 11 * z, 1.5 * z, sp.pennant || 'ship-flag-red');
+    if (foreP) limp += hang([fore.top[0] - dir * .3 * s, fore.top[1] - 1.2 * s], 8 * z, 1.2 * z, sp.pennant || 'ship-flag-red');
+  } else {
+    { // the flag: hanging from the head of its staff, the stripes run down it, folds across
+      const h0 = [main.top[0] - dir * .15 * s, main.top[1] - 6.4 * z], len = 5.4 * z, wd = 1.9 * z, stripes = [L.tone('ship-flag-red', dz), L.tone('linen', dz), L.tone('water-wet', dz + .2)].map(col), id = nid('fl', u);
+      const sway = t => -dir * (Math.sin(t * 3.1 + 1) * .25 + t * .35) * z;
+      const edge = (k) => { const a = []; for (let i = 0; i <= 6; i++) { const t = i / 6; a.push([h0[0] - dir * wd * k * (1 - .25 * t) + sway(t), h0[1] + len * t]); } return a; };
+      const Lf = edge(0), Rf = edge(1), d = smooth(Lf.concat(Rf.reverse()));
+      defs += linGrad(id, h0[0], h0[1], h0[0] - dir * wd, h0[1], [[0, stripes[0]], [.33, stripes[0]], [.34, stripes[1]], [.66, stripes[1]], [.67, stripes[2]], [1, stripes[2]]]);
+      const fd = nid('ff', u); defs += linGrad(fd, h0[0], h0[1], h0[0], h0[1] + len, [[0, deep, .5], [.3, deep, 0], [.55, deep, .35], [.8, deep, 0], [1, deep, .4]]);
+      limp += `<path d="${d}" fill="url(#${id})"/><path d="${d}" fill="url(#${fd})"/>` + (far ? '' : `<path d="${d}" fill="none" stroke="${ink}" stroke-width="${f(.2 * Math.sqrt(s))}"/>`);
+    }
+    if (foreP) limp += hang([fore.top[0] - dir * .2 * s, fore.top[1] - .8 * z], 9 * z, .85 * z, 'linen');
   }
   return { sails, over, defs, cut, limp, stern: pt(xAft - 1.2, rail(xAft - 1.2) - .6) };
 }
@@ -229,12 +240,9 @@ module.exports = { name: 'Штиль', kind: 'sea', status: 'accepted', cam: { x
     bg += `<g data-far="">${mirrorOf(u, L, far, WF, 34, .5)}</g>` + far;
     // the near brig: bow to the left, every sail hanging slack
     const nb = becalmed(u, L, { kind: 'brig', x: BX, y: WL, scale: BS, seed: 7 }), near = nb.svg;
-    // the smoke of the bow gun: it went off a while ago from the forecastle and stands straight up over the bow in a
-    // plumb column, its top just spreading; lit warm from the right by the low sun; mirrored straight down under it
-    const sm = column(u, L, { x: BX - 31 * BS, y: WL - 8.6 * BS, h: 50, w0: 2.6, w1: 14, seed: 4 });
-    bg += mirrorOf(u, L, near + sm, WL, 70, .82) + near;
+    // (review fix: no smoke over her — the column of the bow gun read as a fire or a waterspout; nothing stirs)
+    bg += mirrorOf(u, L, near, WL, 70, .82) + near;
     bg += `<path d="M${f(BX - 35 * BS)} ${WL + .3}H${f(BX + 38 * BS)}" stroke="${L.shadowTint}" stroke-width=".6" opacity=".5"/>`;
-    bg += sm;
     // the glass of the water: a few long faint glints across the mirror, where it catches the sky
     { const Rg = rng(23); for (let i = 0; i < 9; i++) { const yy = WL + 2 + Math.pow(Rg(), .8) * 30, x0 = -10 + Rg() * 190, l = 14 + Rg() * 40;
       bg += `<path d="M${f(x0)} ${f(yy)}h${f(l)}" stroke="${mix(L.pal.sky[3], '#ffffff', .2)}" stroke-width="${f(.15 + Rg() * .2)}" opacity="${f(.12 + Rg() * .18)}"/>`; } }
