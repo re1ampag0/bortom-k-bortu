@@ -160,10 +160,10 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
 
 const run = (cmd: string, args: string[]) => execFileSync(cmd, args, { encoding: 'utf8', maxBuffer: 64 << 20 });
 /** file → [pages, landscape?] */
-/** with the first page of every file — the 50 mm square (control.ts) — and its blank back in the two-sided files */
+/** the 50 mm square page (control.ts) only in 00 (the user's decision 16.11: fewer sheets); --control puts it back in every file */
 const EXPECT: Record<string, [number | [number, number], boolean?]> = {
-  '00-kak-pechatat': [5], '01-pravila': [[4, 5]], '02-pamyatki': [[6, 8], true], '03-planshety': [10, true], '04-tryumy-zhetony': [[3, 4]], '04b-skhema-boya': [2, true],
-  '05-karty': [26], '05a-lica': [14], '05b-rubashki': [14], '06-legendy': [4], '07-more': [6], '08-otchet': [2]
+  '00-kak-pechatat': [5], '01-pravila': [[3, 4]], '02-pamyatki': [[4, 6], true], '03-planshety': [8, true], '04-tryumy-zhetony': [[2, 3]], '04b-skhema-boya': [1, true],
+  '05-karty': [24], '05a-lica': [13], '05b-rubashki': [13], '06-legendy': [2], '07-more': [4], '08-otchet': [1]
 };
 export async function checkPdf(): Promise<boolean> {
   const errors: string[] = [], table: string[] = [];
@@ -175,7 +175,7 @@ export async function checkPdf(): Promise<boolean> {
     const info = run('pdfinfo', ['-l', '999', full]);
     const pages = Number(/Pages:\s+(\d+)/.exec(info)?.[1] ?? 0);
     table.push(`${f.padEnd(28)} ${String(pages).padStart(3)} стр. ${(size / 1048576).toFixed(1).padStart(6)} МБ`);
-    const exp = EXPECT[base] ?? (/^05b-rubashki-v/.test(base) ? [13] : base.startsWith('05b-rubashki-') ? [14] : undefined);
+    const exp = EXPECT[base] ?? (/^05b-rubashki-v/.test(base) ? [12] : base.startsWith('05b-rubashki-') ? [13] : undefined);
     if (exp) { const [n, land] = exp; if (Array.isArray(n) ? pages < n[0] || pages > n[1] : pages !== n) errors.push(`${f}: ${pages} pages, expected ${Array.isArray(n) ? n.join('–') : n}`);
       for (const m of info.matchAll(/Page\s+(\d+) size:\s+([\d.]+) x ([\d.]+) pts/g)) { const w = +m[2] * 25.4 / 72, h = +m[3] * 25.4 / 72, [ew, eh] = land ? [297, 210] : [210, 297]; if (Math.abs(w - ew) > .5 || Math.abs(h - eh) > .5) errors.push(`${f}: page ${m[1]} is ${w.toFixed(1)} × ${h.toFixed(1)} mm, expected ${ew} × ${eh}`); } }
     if (size > 60 * 1048576) errors.push(`${f}: ${(size / 1048576).toFixed(0)} MB — over 60 MB, some picture is not a JPEG`);

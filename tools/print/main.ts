@@ -6,7 +6,7 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { HERE, OUT, SAMPLES, esc, launch, makeCtx, type Opts, type Part } from './kit';
-import { mergePdf, writePdf } from './pdf';
+import { mergePdf, writePdf, withControl } from './pdf';
 import { makeIcons } from './icons';
 import { pruneArt } from './art';
 import { cardParts } from './parts/cards';
@@ -47,7 +47,7 @@ const builders: [string, () => Promise<Part[]>][] = [
 const done: Part[] = [];
 for (const [prefix, build] of builders) {
   if (opts.only && !opts.only.some(o => o.startsWith(prefix) || prefix.startsWith(o.slice(0, 2)))) continue;
-  for (const part of await build()) { if (!want(part.file)) continue; await writePdf(ctx, part); done.push(part); console.log(`${part.file}.pdf — ${part.pages.length + (part.duplex ? 2 : 1)} стр. (с проверочной)`); }
+  for (const part of await build()) { if (!want(part.file)) continue; await writePdf(ctx, part); done.push(part); console.log(`${part.file}.pdf — ${part.pages.length + (withControl(part.file) ? (part.duplex ? 2 : 1) : 0)} стр.${withControl(part.file) ? ' (с проверочной)' : ''}`); }
 }
 // `--only obrazcy` (alone or with part numbers): the sample pictures without the full set
 if (opts.only?.some(o => o.startsWith('obr'))) await (await import('./samples')).buildSamples(ctx);

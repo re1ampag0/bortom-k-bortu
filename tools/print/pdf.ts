@@ -7,8 +7,10 @@ import { floorStrokes } from './strokes';
 import { controlPages } from './control';
 
 /** Writes one PDF; printing hints for viewers: actual size, and duplex for the two-sided files (long or short edge). */
-/** control — the first page with the 50 mm square (not on the one-sheet trial print of the samples) */
-export async function writePdf(ctx: Ctx, part: Part, dir = OUT, control = true): Promise<string> {
+/** control — the first page with the 50 mm square: only in 00 by default (the user's decision 16.11: fewer sheets; the trial
+ *  print and the calibration in 00 check the scale), in every file with --control; never on the trial print of the samples */
+export const withControl = (file: string) => file === '00-kak-pechatat' || process.argv.includes('--control');
+export async function writePdf(ctx: Ctx, part: Part, dir = OUT, control = withControl(part.file)): Promise<string> {
   const htmlFile = path.join(HTML_DIR, part.file + '.html'), pdfFile = path.join(dir, part.file + '.pdf');
   fs.mkdirSync(dir, { recursive: true });
   // the first page: the 50 mm square to check the printer's scale (control.ts); a blank back after it in a two-sided file
