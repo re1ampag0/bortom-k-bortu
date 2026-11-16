@@ -138,12 +138,12 @@ module.exports = { name: 'Чёрная метка', kind: 'deck', status: 'accep
     // ——— the black spot: a small round scrap of paper cut out of a page, its face blackened with soot, stuck flat to
     // his wet palm; its upper edge has lifted and curled back, showing the printed page on the other side with a few
     // words scrawled in ink; a thin shadow of the curl on the skin. A thing handed to him, not a mark in the skin. ———
-    { const c = [1.2, -22], r = 8.4, R = rng(17), out = [], sb3 = nid('ps', u), soot = nid('pk', u), pg = nid('pp', u);
+    { const c = [1.2, -22], r = 9, R = rng(17), out = [], sb3 = nid('ps', u), soot = nid('pk', u), pg = nid('pp', u);
       // the cut edge: a circle cut with a knife — short straight cuts, a little out of round
       for (let i = 0; i < 15; i++) { const a = (i + R() * .4) / 15 * Math.PI * 2, rr = r * (1 + (R() - .5) * .1); out.push([c[0] + Math.cos(a) * rr, c[1] + Math.sin(a) * rr * .96]); }
       const P = q => 'M' + q.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
       // the curl: a segment of the disc at its upper right is folded back over the face
-      const A = [c[0] - r * .5, c[1] - r * .9], B = [c[0] + r * .98, c[1] - r * .02];                      // the fold line (tilted)
+      const A = [c[0] - r * .2, c[1] - r * 1.02], B = [c[0] + r * .97, c[1] - r * .36];                    // the fold line (tilted)
       const side = p => (B[0] - A[0]) * (p[1] - A[1]) - (B[1] - A[1]) * (p[0] - A[0]);                    // < 0: beyond the fold
       const flat = out.filter(p => side(p) >= 0), cut = out.filter(p => side(p) < 0);
       // where the outline crosses the fold line: the two ends of the crease
