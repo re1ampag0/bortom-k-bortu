@@ -24,15 +24,15 @@ interface Rect { x: number; y: number; w: number; h: number }
 type KitFn = (u: string, L: unknown, o: Record<string, unknown>) => string;
 const require = createRequire(import.meta.url);
 const K = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as {
-  ship: KitFn; anchor: KitFn; cannon: KitFn; shot: KitFn; chest: KitFn; bottle: KitFn; rock: KitFn;
+  ship: KitFn; anchor: KitFn; cannon: KitFn; shot: KitFn; chest: KitFn; bottle: KitFn; rock: KitFn; barrel: KitFn; crate: KitFn;
   makeLight(l: unknown, cam: { horizon: number }): unknown; LIGHTS: Record<string, { key: Record<string, unknown> } & Record<string, unknown>>;
   shipBox(kind: string, o: { x: number; y: number; scale: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number };
-  shipGeom(kind: string, o: Record<string, unknown>): { masts: { x: number; H: number; top: P }[] };
+  shipGeom(kind: string, o: Record<string, unknown>): { masts: { x: number; H: number; top: P }[]; nearRail(X: number): number[] };
   SHIP_SPECS: Record<string, { len: number; free: number; draft: number }>;
 };
 
 // ---- the look of each ship's sea floor ----
-type PropKind = 'anchor' | 'cannon' | 'chest' | 'shot' | 'bottle' | 'rock';
+type PropKind = 'anchor' | 'cannon' | 'chest' | 'shot' | 'bottle' | 'rock' | 'barrel' | 'crate';
 interface Prop { kind: PropKind; x: number; dy: number; s: number; rot?: number }
 interface Sea {
   /** the kit's light of the deck (LIGHTS key), turned to come from above */
@@ -62,6 +62,15 @@ const PROPS: Prop[] = [
   { kind: 'rock', x: 286, dy: 5, s: 0.8 },
   { kind: 'chest', x: 258, dy: 12, s: 0.88, rot: -4 }
 ];
+/** the Company's floor: crates and a lying cask instead of the pirates' chest and bottle */
+const PROPS_CO: Prop[] = [
+  { kind: 'anchor', x: 30, dy: 13, s: 0.95, rot: 74 },
+  { kind: 'shot', x: 98, dy: 13, s: 1.15 }, { kind: 'shot', x: 105.5, dy: 15.5, s: 1.15 },
+  { kind: 'cannon', x: 150, dy: 10, s: 0.72, rot: -5 },
+  { kind: 'barrel', x: 205, dy: 13, s: 0.62, rot: -8 },
+  { kind: 'rock', x: 288, dy: 5, s: 0.8 },
+  { kind: 'crate', x: 236, dy: 11, s: 0.95, rot: 6 }, { kind: 'crate', x: 256, dy: 15, s: 0.8, rot: -4 }
+];
 export const SEA: Record<ShipKey, Sea> = {
   pearl: {
     light: 'pearl', water: ['#2f587a', '#13283f', '#060e19'], glow: '#c4e2ff', rays: 0.5, haze: ['#1c3c5a', 0.26], back: ['#4a7ea4', 0.6],
@@ -76,14 +85,14 @@ export const SEA: Record<ShipKey, Sea> = {
     bed: 197, props: PROPS, seed: 23
   },
   endeavour: {
-    light: 'endeavour', water: ['#6ab4c2', '#2b7088', '#0f3646'], glow: '#fff6dc', rays: 0.45, haze: ['#3a8096', 0.26], back: ['#8ccad4', 0.45],
-    sand: ['#efdeb2', '#c4a878', '#6e5a40'], far: '#4a8a98', fish: ['#f0c24a', 0.85], coral: ['#e2765a', '#f0b25e', '#c45a8a'], weed: ['#4c7c3a', '#5e9046', '#365c2c'],
-    rag: '#d8ccaa', ship: { x: 168, y: 185, scale: 1.85, roll: -18, tilt: 10, brk: [0.36, 0.5, 0.42], fall: { mast: 1, rot: 116, dx: 0, dy: 10 }, bow: 17, stern: -6 },
-    bed: 197, props: PROPS, seed: 37
+    light: 'endeavour', water: ['#86d0d2', '#3c94a4', '#185a6c'], glow: '#fffbe8', rays: 0.5, haze: ['#4a9cac', 0.15], back: ['#b4e6e6', 0.5],
+    sand: ['#f6e8c4', '#d8be8c', '#8c7452'], far: '#64a8b2', fish: ['#f4c64c', 0.9], coral: ['#e8785a', '#f2b45e', '#c85c8e'], weed: ['#4e8a3c', '#62a04a', '#386830'],
+    rag: '#e2d6b4', ship: { x: 140, y: 185, scale: 1.72, roll: -18, tilt: 9, brk: [0.36, 0.5, 0.42], fall: { mast: 1, rot: 116, dx: 0, dy: 10 }, bow: 17, stern: -6 },
+    bed: 197, props: PROPS_CO, seed: 37
   },
   dutch: {
-    light: 'dutchman', water: ['#4a7866', '#1e3e34', '#0a1b16'], glow: '#d4f2e2', rays: 0.4, haze: ['#244a3e', 0.28], back: ['#5e8e78', 0.45],
-    sand: ['#a4ae92', '#6a765e', '#2e3a30'], far: '#284a3e', fish: ['#b0ccbc', 0.58], coral: ['#6c8c6a', '#8c9c6a', '#5a7a74'], weed: ['#3a6a3a', '#5a8a4a', '#2a4a2c'],
+    light: 'dutchman', water: ['#6a9c84', '#28503f', '#0b1d17'], glow: '#dcf6e6', rays: 0.58, haze: ['#2c5446', 0.16], back: ['#b2e0c6', 0.72],
+    sand: ['#b2b896', '#727e62', '#2e3a30'], far: '#3a6252', fish: ['#c4dccc', 0.62], coral: ['#7c9c6a', '#a0aa6c', '#5e8a7c'], weed: ['#3e7a3c', '#62984e', '#2c5230'],
     rag: '#8a8670', shells: true, ship: { x: 168, y: 185, scale: 2.05, roll: -18, tilt: 10, brk: [0.36, 0.5, 0.42], fall: { mast: 1, rot: 116, dx: 0, dy: 10 }, bow: 17, stern: -6 },
     bed: 197, props: PROPS, seed: 41
   }
@@ -210,9 +219,19 @@ function shell(x: number, y: number, s: number, rot: number, kind: number): stri
 
 // ---- the scene ----
 interface Plates { title: Rect; rules: Rect; col: Rect }
+/** how far to lower the ship so that its whole side (the rail with the bulwark over it) shows under the rules page */
+function clearOfRules(key: ShipKey, S: Sea['ship'], rules: Rect, len: number): number {
+  const g = K.shipGeom(key, { kind: key, x: S.x, y: S.y, scale: S.scale, roll: S.roll }), a = -S.tilt * Math.PI / 180, need = rules.y + rules.h + 11;
+  let dy = 0;
+  for (let X = -len / 2; X <= len / 2; X += 3) {
+    const [x, y] = g.nearRail(X), px = S.x + (x - S.x) * Math.cos(a) - (y - S.y) * Math.sin(a), py = S.y + (x - S.x) * Math.sin(a) + (y - S.y) * Math.cos(a);
+    if (px < rules.x + rules.w + 6) dy = Math.max(dy, need - py);
+  }
+  return dy;
+}
 /** the whole sea-floor picture (mm), to be rasterised */
 export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates): string {
-  const R = rng(sea.seed), S = sea.ship, s = S.scale, sp = K.SHIP_SPECS[key], u = `wr${key}`;
+  const R = rng(sea.seed), sp = K.SHIP_SPECS[key], u = `wr${key}`, S = { ...sea.ship, y: sea.ship.y + clearOfRules(key, sea.ship, pl.rules, sp.len) }, s = S.scale;
   const base = K.LIGHTS[sea.light], L = K.makeLight({ ...base, key: { ...base.key, az: 160, el: 64 } }, { horizon: 150 });
   const out: string[] = [];
   const [w0, w1, w2] = sea.water;
@@ -294,8 +313,10 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates): string {
     const i = S.fall.mast, a = S.fall.rot * Math.PI / 180, b0: P = [mx[i] + S.fall.dx, yb[i] + S.fall.dy], at = (d: number): P => [b0[0] + Math.sin(a) * d, b0[1] - Math.cos(a) * d];
     for (const [d, x, sag] of [[22, 0.55, 6], [36, 0.75, 9], [48, 0.95, 4]] as const) ship.push(rope(at(d * s), [S.x + x * hl, deck - 1.5 * s + x * 2 * s], sag, 0.38));
   }
+  // shells grown on the side (the Dutchman)
+  if (sea.shells) { let sh = ''; for (let i = 0; i < 24; i++) { const x = stem + 10 * s + R() * (stern - stem - 18 * s), y = S.y - 1 - R() * (S.y - deck) * 0.85; sh += shell(x, y, 0.3 + R() * 0.25, (R() - 0.5) * 80, i % 4 === 0 ? 1 : 0); } ship.push(`<g opacity=".6">${sh}</g>`); }
   // weed along the rail and on the hull, swaying up
-  for (let i = 0; i < 9; i++) { const x = stem + 14 * s + (i / 8) * (stern - stem - 26 * s) + (R() - 0.5) * 8; ship.push(kelp(x, deck + 2 + R() * 3, 6 + R() * 10, sea.weed[i % 3], R, 0.1, 1.4)); }
+  for (let i = 0, nw = sea.shells ? 18 : 9; i < nw; i++) { const x = stem + 14 * s + (i / (nw - 1)) * (stern - stem - 26 * s) + (R() - 0.5) * 8; ship.push(kelp(x, deck + 2 + R() * 3, 6 + R() * 10, sea.weed[i % 3], R, 0.1, 1.4)); }
   const tilt = -S.tilt, ra = tilt * Math.PI / 180;
   const rot = (p: P): P => [S.x + (p[0] - S.x) * Math.cos(ra) - (p[1] - S.y) * Math.sin(ra), S.y + (p[0] - S.x) * Math.sin(ra) + (p[1] - S.y) * Math.cos(ra)];
   out.push(`<g transform="rotate(${f(tilt)} ${f(S.x)} ${f(S.y)})">${ship.join('')}</g>`);
@@ -355,6 +376,8 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates): string {
     else if (p.kind === 'cannon') out.push(K.cannon(uu, L, { ...o2, carriage: false }), lip(p.x - 6, p.y + 0.6, 30));
     else if (p.kind === 'chest') out.push(K.chest(uu, L, { ...o2, open: 0.85, gold: true }), lip(p.x, p.y + 0.6, 30 * p.s));
     else if (p.kind === 'shot') out.push(K.shot(uu, L, o2), lip(p.x, p.y + 0.4, 7 * p.s));
+    else if (p.kind === 'barrel') out.push(K.barrel(uu, L, { ...o2, kind: 'powder', lying: true }), lip(p.x, p.y + 0.6, 30 * p.s));
+    else if (p.kind === 'crate') out.push(K.crate(uu, L, o2), lip(p.x + 4 * p.s, p.y + 0.6, 34 * p.s));
     else if (p.kind === 'bottle') out.push(K.bottle(uu, L, { ...o2, lying: true }), lip(p.x, p.y + 0.4, 12 * p.s));
     else out.push(K.rock(uu, L, { ...o2, w: 24, h: 15, foam: false }));
   }
