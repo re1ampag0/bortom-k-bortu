@@ -22,6 +22,9 @@ const G = FACE.glass, MAX_GLASS = CARD.h - G.minTop - G.bottom, LG = FACE.legend
 const LF = LEGEND.frame;
 /** The look of the Legend's ship band (bandSvg): 'ship' or 'black'; PRINT_LEGEND_BAND overrides it for a comparison. */
 export const LEGEND_BAND: 'ship' | 'black' = process.env.PRINT_LEGEND_BAND === 'ship' ? 'ship' : 'black';
+/** The top of a Legend face (user's decision 16.11): 'none' — no plate (printed); 'small' — a small gold plate «ЛЕГЕНДА»
+ *  (without «раз за игру»), PRINT_LEGEND_PLATE=small renders it for a comparison. */
+export const LEGEND_PLATE: 'none' | 'small' = process.env.PRINT_LEGEND_PLATE === 'small' ? 'small' : 'none';
 const LEGEND_BAND_BLACK = '#17110b', LEGEND_BAND_INK = { ship: '#fff2d0', black: LEGEND.back.gold };
 
 export const CARD_CSS = `${RICH_CSS}
@@ -57,7 +60,7 @@ export const CARD_CSS = `${RICH_CSS}
 .cd.lgd .bd{height:${mm(LG.band.top)};background:none}
 .cd.lgd .bd svg{position:absolute;left:0;top:0;width:100%;height:100%}
 .cd.lgd .bd span{bottom:${mm((LG.frame + LG.band.top - .6) / 2)};color:${LEGEND_BAND_INK[LEGEND_BAND]}}
-.cd.lgd .lg{left:50%;top:${mm(LG.plate.top)};transform:translateX(-50%);padding:.75mm 2mm 1mm;background:linear-gradient(${LF.light},${LF.mid} 55%,${darken(LF.mid, .12)});border:.3mm solid ${LF.line};border-radius:.8mm;font:500 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.04em;color:${LEGEND.ink.text}}
+.cd.lgd .lg{left:50%;top:${mm(LG.plate.top)};transform:translateX(-50%);padding:.6mm 1.7mm .8mm;background:linear-gradient(${LF.light},${LF.mid} 55%,${darken(LF.mid, .12)});border:.3mm solid ${LF.line};border-radius:.8mm;font:500 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.04em;color:${LEGEND.ink.text}}
 .cd.lgd .lg b{font-weight:800;letter-spacing:.12em}
 /* the spare card: a parchment plate to write on */
 .gl.paper{background:linear-gradient(#faf2de,#e8d6ac);border-color:${BRASS};color:#6e5a3c;justify-content:flex-start}
@@ -128,16 +131,16 @@ export function faceSpec(item: Extract<Item, { kind: 'card' | 'legend' | 'sea' }
 
 // ——— the Legend: frame, medallion, ribbon, back (own SVG, units mm) ———
 const n2 = (v: number) => String(Math.round(v * 100) / 100);
-/** The gold frame of a Legend face, calm: a flat gold band (the cut forgives a miss), one fine engraved line along it with
- *  small notched corners and a dot in each, a dark hairline on its inner edge. */
+/** The gold frame of a Legend face, calm and thin (LG.frame): a flat gold band (the cut forgives a miss), one fine engraved
+ *  line along it with small rounded corners and a dot in each, a dark hairline on its inner edge. */
 const LEGEND_FRAME_SVG = (() => {
-  const W = CARD.w, H = CARD.h, F = LG.frame, o = 1.05, r = 1.1, i = F;
+  const W = CARD.w, H = CARD.h, F = LG.frame, o = F * .45, r = .9, i = F;
   const rail = `M${o + r} ${o}H${W - o - r}A${r} ${r} 0 0 0 ${W - o} ${o + r}V${H - o - r}A${r} ${r} 0 0 0 ${W - o - r} ${H - o}H${o + r}A${r} ${r} 0 0 0 ${o} ${H - o - r}V${o + r}A${r} ${r} 0 0 0 ${o + r} ${o}Z`;
   const ring = `M0 0H${W}V${H}H0Z M${i} ${i + 1}Q${i} ${i} ${i + 1} ${i}H${W - i - 1}Q${W - i} ${i} ${W - i} ${i + 1}V${H - i - 1}Q${W - i} ${H - i} ${W - i - 1} ${H - i}H${i + 1}Q${i} ${H - i} ${i} ${H - i - 1}Z`;
   const inner = `M${i} ${i + 1}Q${i} ${i} ${i + 1} ${i}H${W - i - 1}Q${W - i} ${i} ${W - i} ${i + 1}V${H - i - 1}Q${W - i} ${H - i} ${W - i - 1} ${H - i}H${i + 1}Q${i} ${H - i} ${i} ${H - i - 1}Z`;
   return `<svg class="lgf" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><path d="${ring}" fill-rule="evenodd" fill="${LF.mid}"/>`
     + `<path d="${rail}" fill="none" stroke="${LF.deep}" stroke-width=".2"/>`
-    + [[o, o], [W - o, o], [o, H - o], [W - o, H - o]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".38" fill="${LF.deep}"/>`).join('')
+    + [[o, o], [W - o, o], [o, H - o], [W - o, H - o]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".3" fill="${LF.deep}"/>`).join('')
     + `<path d="${inner}" fill="none" stroke="${LF.line}" stroke-width=".25"/></svg>`;
 })();
 
@@ -170,7 +173,7 @@ export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string,
     else if (s.price.soul) small = iconImg(ctx, `flask-${s.price.soul}`, x, y - .4, I.priceD, 'ixp');
   }
   const idx = ''; // the result plate under the medal is gone (user's decision 12.11): the result stays on the glass, the medal keeps the small price
-  const L = s.legend, lg = L ? `<div class="lg"><b>${esc(TXT.legendPlate[0].toUpperCase())}</b> · ${esc(TXT.legendPlate[1])}</div>` : '';
+  const L = s.legend, lg = L && LEGEND_PLATE === 'small' ? `<div class="lg"><b>${esc(TXT.legendPlate[0].toUpperCase())}</b></div>` : '';
   const band = L ? `<div class="bd">${bandSvg(s.band)}<span>${esc(s.bandText)}</span></div>` : `<div class="bd"><span>${esc(s.bandText)}</span>${s.copies > 1 ? `<i>×${s.copies}</i>` : ''}</div>`;
   return `<div class="cd${L ? ' lgd' : ''}" data-key="${esc(s.key)}" data-index="${s.index ? 1 : 0}" data-maxh="${L ? MAX_GLASS_LEGEND : MAX_GLASS}" style="${pos}--frame:${s.frame};--band:${s.band};--rim:${s.rim}">`
     + (artUrl ? `<img class="art" src="${artUrl}" alt="">` : '')
