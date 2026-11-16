@@ -4,8 +4,8 @@
 // and the shot passes over her and only throws up a column of water beyond. Brief (card-briefs.md «Уйти на глубину»):
 // where the ship was — foam and a funnel, the shot flies over empty water. Find: the empty place.
 // Fixed against the first round: the old ship was a pasted picture with no water on her — now the kit's Dutchman,
-// bow right and already deep, cut by the sea; under the surface her drowned hull still shows, green and dim, going
-// down; the sea round her turns in a ring of foam with spiral streaks running in to her; the water pours off her
+// bow right and already deep, cut by the sea; under the surface the dark hollow she draws down
+// (the drowned hull once drawn there is gone: at card size it read as a smudge); the sea round her turns in a ring of foam with spiral streaks running in to her; the water pours off her
 // raised stern in translucent ribbons that tear into threads and spray; the enemy is a real ship with a flash and
 // smoke; the ball is a real ball with its trail arcing high over her masts, the second ball's column beyond her.
 // Review fix (verdict b5): the stern falls are now 5 thin wavy translucent streams (narrow at the rail, widening
@@ -27,7 +27,7 @@ const light = { time: 'fog', haze: .75, key: { type: 'moon', x: 86, y: 24, el: 3
   rim: { az: 20, color: '#d8fff0', power: .5 }, locals: [{ x: 70, y: 84, color: '#9effd0', power: .4, radius: 30 }] };
 const skel = { horizon: HZ, eye: 2, light: 'the moon in the fog upper left of centre (key, a little behind her) + the green of her lantern and of the deep', items: [
   ['Dutchman, flip, heel 38 (bow down)', 58, SEA, 126, 60, 'the sea: cut at y 112, the rest under water'],
-  ['drowned hull', 90, 150, 80, 36, 'under the surface, dim green'], ['ring of foam + spiral', 48, 124, 132, 18, 'the sea round her'],
+  ['ring of foam + spiral', 48, 124, 132, 18, 'the sea round her'],
   ['falls off the stern', 52, SEA, 36, 34, 'from her stern rail down to the sea'], ['enemy', 12, 92, 28, 30, 'far sea left, firing'],
   ['ball + trail', 37, 90, 150, 70, 'in the air, high over her masts'], ['column of water', 162, 97, 12, 22, 'the sea beyond her (behind her foremast)'], ['near sea', 0, 130, 200, 160, 'under the glass']] };
 
@@ -83,14 +83,8 @@ module.exports = { name: 'Уйти на глубину', kind: 'deck', status: '
     let mid = '';
     { const hw = nid('hw', u); mid += `<defs>${radGrad(hw, FUN.x, FUN.y + 2, 70, [[0, '#04120e', .85], [.55, '#082420', .55], [1, '#0a2a24', 0]])}</defs>`
       + `<ellipse cx="${FUN.x}" cy="${FUN.y + 2}" rx="${FUN.rx + 8}" ry="${FUN.ry + 6}" fill="url(#${hw})"/>`; }
-    // ——— the drowned part of her under the surface: the same ship, dim green, blurred by the water, sinking ———
-    { const cu = nid('cu', u), bl = nid('bu', u), tg = nid('tg', u);
-      mid += `<defs><clipPath id="${cu}"><rect x="-10" y="${SEA}" width="220" height="80"/></clipPath><filter id="${bl}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.3"/></filter>`
-        + `${linGrad(tg, 0, SEA, 0, SEA + 46, [[0, '#0c2a24', .1], [.5, '#06181a', .35], [1, '#041010', .75]])}</defs>`
-        + `<g clip-path="url(#${cu})"><g filter="url(#${bl})" opacity=".75">${K.shipSilhouette('dutch', { ...DU, color: '#5cc8a4', u })}</g>`
-        + `<rect x="-10" y="${SEA}" width="220" height="60" fill="url(#${tg})"/></g>`;
-      // the ghost-green glow of her drowned lanterns and ports, deep under the hull
-      mid += K.localGlow(u, { x: 140, y: 128, color: '#7affc8', power: .35, radius: 26 }, { squash: .4, core: false }); }
+    // (review fix, print: the drowned hull under the surface — first a green silhouette with sails and ports, then a dark
+    // hull — read at card size as a smudge across the sea; it is gone: under the foam only the dark hollow she draws down)
     // ——— the Dutchman: above the sea only her stern and her slanting masts ———
     { const cut = nid('ct', u);
       mid += `<defs><clipPath id="${cut}"><rect x="-10" y="-10" width="220" height="${SEA + 10}"/></clipPath></defs>`

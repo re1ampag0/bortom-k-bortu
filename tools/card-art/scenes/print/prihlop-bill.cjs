@@ -38,9 +38,9 @@ const WT = 22, WB = 178, WL = 12, WR = 188;           // the hull side behind hi
 // Bill is drawn at 1 in his own units and zoomed ×1.35 about ZO (as if a step nearer), so he fills the space over the glass
 const ZOOM = 1.35, ZO = [134.6, 100];
 const Z = p => [ZO[0] + (p[0] - ZO[0]) * ZOOM, ZO[1] + (p[1] - ZO[1]) * ZOOM];
-const HEAD = { c: [106, 72], r: 12.6 };               // (his units)
+const HEAD = { c: [106, 75.5], r: 12.6 };               // (his units)
 const GRIP = [50, 66];                                // where his fist closes round the vial (his units)
-const VIAL_R = 2.3;                                   // the vial's body radius (his units); the fist closes round exactly this
+const VIAL_R = 2.9;                                   // the vial's body radius (his units); the fist closes round exactly this
 const VIAL_A = -86;                                   // the vial's axis (deg, up)
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: 80, y: -20, el: 64, color: '#b8f8dc', power: .95 },
   fill: { color: '#1e3a32', power: .45 }, rim: { az: 330, color: '#9ff0d0', power: .3 } };
@@ -125,7 +125,7 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
     // ——— Bill: an old sailor of the Dutchman, standing in front of the hull side (not grown into it) ———
     let man = '';
     // the coat: his body, whole; the far arm hangs at his side inside the coat's outline
-    const coat = [[56, 290], [60, 140], [61, 124], [65, 110], [73, 102], [84, 98], [97, 93], [112, 93], [126, 98], [140, 104], [152, 118], [160, 150], [164, 290]];
+    const coat = [[56, 290], [60, 140], [61, 124], [65, 110], [73, 102], [84, 98], [97, 93], [112, 93], [124, 97], [134, 103], [141, 113], [145, 132], [148, 290]];
     const cg = nid('cg', u);
     man += `<defs>${linGrad(cg, 60, 90, 150, 120, [[0, COAT.lit, 1], [.35, COAT.half, 1], [1, COAT.shadow, 1]])}</defs>`;
     let body = `<path d="${H.sp(coat)}Z" fill="url(#${cg})" stroke="${COAT.outline}" stroke-width=".6"/>`;
@@ -137,12 +137,12 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
       + `<path d="M61 124Q62 115 66 109" stroke="#5a7466" stroke-width=".35" fill="none" stroke-dasharray="1 .8" opacity=".7"/><path d="M72 150q4 24 2 50M84 146q8 30 4 60M136 140q-6 30 -2 60" stroke="#040806" stroke-width="1" fill="none" opacity=".7"/>`
       + `<path d="M96 94L86 134" stroke="#7aa898" stroke-width=".6" opacity=".5"/>`
       // the far arm hanging inside the coat: the sleeve's seam from the shoulder down, a fold at the elbow
-      + `<path d="M146 112Q141 140 143 176M143 150q4 3 8 1" stroke="#040806" stroke-width=".9" fill="none" opacity=".75"/>`
+      + `<path d="M137 108Q133 140 135 176M135 150q4 3 8 1" stroke="#040806" stroke-width=".9" fill="none" opacity=".75"/>`
       // sea-worn: a patch on the far chest with coarse stitches, a frayed lapel edge
-      + `<path d="M126 108L137 110L136 121L125 120Z" fill="#4a4436" stroke="#0a0a06" stroke-width=".4"/><path d="M126.6 108.8L136.2 110.6L135.4 120.2L125.6 119.2Z" fill="none" stroke="#a89c78" stroke-width=".35" stroke-dasharray=".9 .9" opacity=".8"/>`
-      + `<path d="M118 128l1.4 2.4M120 133l1.6 2M121.6 137l1.2 2.2" stroke="#1a221c" stroke-width=".45" opacity=".8"/>`
+      + `<path d="M120 110L130 112L129 123L119 122Z" fill="#4a4436" stroke="#0a0a06" stroke-width=".4"/><path d="M120.6 110.8L129.2 112.6L128.4 122.2L119.6 121.2Z" fill="none" stroke="#a89c78" stroke-width=".35" stroke-dasharray=".9 .9" opacity=".8"/>`
+      + `<path d="M117 128l1.4 2.4M118.6 133l1.6 2M120 137l1.2 2.2" stroke="#1a221c" stroke-width=".45" opacity=".8"/>`
       // a few barnacles on the shoulders (the flavour: overgrown with shells, still serving), a strand of weed
-      + cluster(rng(5), 64, 118, 10, 16, 3, 1.5) + cluster(rng(6), 138, 104, 10, 6, 3, 1.4) + weed(146, 108, 14, 1, 12, '#2e5a40');
+      + cluster(rng(5), 64, 118, 10, 16, 3, 1.5) + cluster(rng(6), 128, 99, 8, 5, 3, 1.3) + weed(138, 106, 14, 1, 12, '#2e5a40');
     man += body;
 
     // ——— the free arm (his right, our left): raised, one sleeve to the cuff; the fist round the soul vial ———
@@ -157,12 +157,12 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
     // the vial: a glass phial upright in his fist — a long body, a sloping shoulder, the neck, a cork; the glowing soul
     // inside (bright green-white liquid with a pale wisp curling in it), the glass edge dark, a highlight on the lit side
     let v = hR.axis; if (v[1] > 0) v = [-v[0], -v[1]];
-    const g = hR.grip, nv = [-v[1], v[0]], R = VIAL_R, at = (t, o) => [g[0] + v[0] * t + nv[0] * o, g[1] + v[1] * t + nv[1] * o];
+    const g = hR.grip, nv = [-v[1], v[0]], R = VIAL_R, kl = 1.3, at = (t, o) => [g[0] + v[0] * t * kl + nv[0] * o, g[1] + v[1] * t * kl + nv[1] * o];
     let vial = '', vglow = '';
     { const out = `M${P2(at(-7, -R))}Q${P2(at(-9.6, -R))} ${P2(at(-9.6, 0))}Q${P2(at(-9.6, R))} ${P2(at(-7, R))}L${P2(at(6, R))}C${P2(at(8, R))} ${P2(at(8.4, R * .44))} ${P2(at(9.6, R * .44))}L${P2(at(12.4, R * .44))}`
         + `L${P2(at(12.4, -R * .44))}L${P2(at(9.6, -R * .44))}C${P2(at(8.4, -R * .44))} ${P2(at(8, -R))} ${P2(at(6, -R))}Z`;
       const cid = nid('vc', u), gg = nid('vg', u), lq = nid('vl', u), c = at(-2, 0);
-      vial += `<defs><clipPath id="${cid}"><path d="${out}"/></clipPath>${linGrad(gg, ...at(0, -R), ...at(0, R), [[0, '#d8fff0', .7], [.25, '#3a8a72', .5], [.75, '#1e5a4a', .55], [1, '#06201a', .9]])}`
+      vial += `<defs><clipPath id="${cid}"><path d="${out}"/></clipPath>${linGrad(gg, ...at(0, -R), ...at(0, R), [[0, '#e8fff6', .55], [.18, '#3a8a72', .12], [.7, '#1e5a4a', .1], [1, '#06201a', .7]])}`
         + `${radGrad(lq, c[0], c[1], R * 4.2, [[0, '#ffffff', 1], [.35, '#b8ffe6', 1], [.75, '#4ee0b0', 1], [1, '#1a9a78', 1]])}</defs>`
         + `<path d="${out}" fill="#0a2a22"/>`
         + `<g clip-path="url(#${cid})"><path d="M${P2(at(-11, -R - 1))}L${P2(at(4.4, -R - 1))}L${P2(at(4.4, R + 1))}L${P2(at(-11, R + 1))}Z" fill="url(#${lq})"/>`
@@ -177,16 +177,16 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
         + `<path d="M${P2(at(12.1, -R * .58))}L${P2(at(12.1, R * .58))}L${P2(at(13, R * .58))}L${P2(at(13, -R * .58))}Z" fill="#2a6a58" stroke="#03120c" stroke-width=".35"/>`
         + `<path d="M${P2(at(13, -R * .46))}L${P2(at(13, R * .46))}L${P2(at(15.4, R * .4))}L${P2(at(15.4, -R * .4))}Z" fill="#8a6a42" stroke="#1a1006" stroke-width=".35"/><path d="M${P2(at(13.4, -R * .3))}L${P2(at(15, -R * .26))}" stroke="#d8b888" stroke-width=".4" opacity=".7"/>`;
       // its light: on the fist, the sleeve's cuff and his face (screen, over them)
-      vglow += glow(u, ...at(-1, 0), 22, 22, '#9effd0', .32) + glow(u, ...at(-1, 0), 7, 9, '#e8fff6', .5); }
+      vglow += glow(u, ...at(-1, 0), 28, 28, '#9effd0', .42) + glow(u, ...at(-2, 0), 8, 12, '#f0fff8', .55); }
 
     // ——— the head: 3/4 to our left, turned to the vial he holds up, open weary eyes, stubble; the knitted cap ———
     const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 2, tone: SKIN, light: [-.55, -.85], warm: { color: '#bff8e0', op: .3 },
       eye: 'open', look: [-.7, -.35], brow: 'calm', mouth: .05, smile: .1, lips: '#7a6a58', iris: '#6a8a80', hair: { style: 'short', color: '#a8aaa2' }, hairColor: '#a8aaa2', beard: 'short', noseL: 1.1 });
     // the neck: narrower than the head, soft sides flaring into the collar, the chin's shadow on it
     const nkS = nid('nk', u);
-    let face = `<defs>${radGrad(nkS, 107, 86, 7, [[0, '#1a2016', .8], [1, '#1a2016', 0]])}</defs>`
-      + `<path d="M103.6 81Q104.6 89 102 95.4L113 95.4Q110.6 89 111 81Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/>`
-      + `<ellipse cx="107" cy="86.6" rx="6" ry="4" fill="url(#${nkS})"/><path d="M104 91q3 1.4 6.4 -.2" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".5"/>`
+    let face = `<defs>${radGrad(nkS, 107, 88.6, 6, [[0, '#1a2016', .8], [1, '#1a2016', 0]])}</defs>`
+      + `<path d="M103.4 84Q104.4 90.6 102 95.4L113 95.4Q110.8 90.6 111.2 84Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/>`
+      + `<ellipse cx="107" cy="88.8" rx="5.6" ry="3.2" fill="url(#${nkS})"/><path d="M104 92.4q3 1.2 6.4 -.2" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".5"/>`
       + hd.svg + rimArc(hd, { r: HEAD.r, light: [-.55, -.85], color: '#1a2a24', span: 50, opacity: .4 });
     { const Q = hd.Q, dp = hd.depth;
       // the knitted cap: a dome over the crown, a turned-up ribbed band (built as in gibbs-za-shturvalom.cjs)
