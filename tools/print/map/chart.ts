@@ -127,6 +127,55 @@ const grow = (b: Rect, d: number): Rect => ({ x: b.x - d, y: b.y - d, w: b.w + 2
 const inRects = (q: Pt, rs: Rect[], pad = 0) => rs.some(b => q.x > b.x - pad && q.x < b.x + b.w + pad && q.y > b.y - pad && q.y < b.y + b.h + pad);
 
 // ---- engraved pieces ----
+/** a mountain of an engraved range: two or three sharp peaks of different height on one ragged profile; every peak has its
+ *  ridge running down to the foot, left of it the lit face (bare paper, a few short strokes), right of it the shaded face
+ *  hatched down the slope (light from the upper left) */
+let MNT = 0;
+function mountain(x: number, y: number, b: number, h: number, ink: string, paper: string, rnd: () => number): string {
+  const n = b > 7 ? 3 : b > 4.2 ? 2 : 1, peaks: { t: number; h: number }[] = [];
+  for (let i = 0; i < n; i++) peaks.push({ t: n === 1 ? (rnd() - 0.5) * 0.3 : -0.5 + (i + 0.5) / n + (rnd() - 0.5) * 0.18, h: i === 0 && n > 1 ? 0.55 + rnd() * 0.25 : 0.62 + rnd() * 0.38 });
+  const top = peaks.reduce((a, q) => (q.h > a.h ? q : a)); top.h = 1;
+  // the key points: the feet, the peaks, the saddles between; then two levels of jag between them
+  let key: [number, number][] = [[-1, 0]];
+  peaks.forEach((q, i) => {
+    if (i) { const a = peaks[i - 1]; key.push([(a.t + q.t) / 2 + (rnd() - 0.5) * 0.08, Math.min(a.h, q.h) * (0.6 + rnd() * 0.18)]); }
+    else key.push([q.t - (q.t + 1) * 0.55, q.h * (0.36 + rnd() * 0.18)]);
+    // a blunt summit: two shoulders just under the peak
+    const sp = 0.07 + rnd() * 0.05;
+    key.push([q.t - sp, q.h * (0.86 + rnd() * 0.06)], [q.t, q.h], [q.t + sp * 0.8, q.h * (0.84 + rnd() * 0.06)]);
+  });
+  const last = peaks[peaks.length - 1]; key.push([last.t + (1 - last.t) * 0.5, last.h * (0.32 + rnd() * 0.18)], [1, 0]);
+  for (let lev = 0; lev < 1; lev++) {
+    const nk: [number, number][] = [key[0]];
+    for (let i = 1; i < key.length; i++) { const [a, c] = [key[i - 1], key[i]]; nk.push([(a[0] + c[0]) / 2 + (rnd() - 0.5) * 0.04, (a[1] + c[1]) / 2 + (rnd() - 0.5) * 0.05 * Math.abs(c[1] - a[1] + 0.3)], c); }
+    key = nk;
+  }
+  const P = key.map(([t, v]) => [x + t * b / 2, y - Math.max(0, v) * h] as [number, number]);
+  const prof = (xx: number) => { for (let i = 1; i < P.length; i++) if (xx <= P[i][0]) { const [a, c] = [P[i - 1], P[i]], k = (xx - a[0]) / Math.max(1e-6, c[0] - a[0]); return a[1] + (c[1] - a[1]) * k; } return y; };
+  const sw = r(0.11 + b * 0.011), hw = r(0.05 + b * 0.0055);
+  const out = [`<path d="M${P.map(p => `${r(p[0])} ${r(p[1])}`).join('L')}Z" fill="${paper}" stroke="${ink}" stroke-width="${sw}" stroke-linejoin="miter"/>`];
+  let hatch = '', ridges = '', lit = '';
+  peaks.forEach((q, i) => {
+    const px = x + q.t * b / 2, py = y - q.h * h, foot = px + b * (0.06 + rnd() * 0.06), bend = px + (foot - px) * 0.35 + b * 0.03;
+    const end = i < peaks.length - 1 ? x + ((q.t + peaks[i + 1].t) / 2) * b / 2 : x + b / 2;
+    const id = `mnt${++MNT}`;
+    // the shaded face: the ridge down to the foot, along the foot, up the profile back to the peak
+    let face = `M${r(px)} ${r(py)}Q${r(bend)} ${r(py + (y - py) * 0.5)} ${r(foot)} ${r(y)}L${r(end)} ${r(y)}`;
+    for (const p of P.slice().reverse()) if (p[0] < end && p[0] > px) face += `L${r(p[0])} ${r(p[1])}`;
+    face += 'Z';
+    out.push(`<clipPath id="${id}"><path d="${face}"/></clipPath><path d="${face}" fill="${ink}" fill-opacity=".14"/>`);
+    let d = '';
+    const step = Math.max(0.3, b * 0.045);
+    for (let xx = px + step * 0.5; xx < end; xx += step) { const t0 = prof(xx); d += `M${r(xx)} ${r(t0)}L${r(xx + b * 0.025)} ${r(t0 + (y - t0) * (0.75 + rnd() * 0.25))}`; }
+    hatch += `<path d="${d}" clip-path="url(#${id})" stroke="${ink}" stroke-width="${hw}" fill="none" stroke-linecap="round"/>`;
+    ridges += `M${r(px)} ${r(py)}Q${r(bend)} ${r(py + (y - py) * 0.5)} ${r(foot)} ${r(y - (y - py) * 0.12)}`;
+    // the lit face: two or three short strokes under the ridge's left side
+    for (let k = 1; k <= 2; k++) { const xx = px - b * 0.06 * k - b * 0.03, t0 = prof(xx); if (y - t0 > h * 0.25) lit += `M${r(xx)} ${r(t0 + 0.15)}l${r(-b * 0.015)} ${r((y - t0) * 0.28)}`; }
+  });
+  out.push(hatch, `<path d="${ridges}" stroke="${ink}" stroke-width="${r(0.08 + b * 0.008)}" fill="none" stroke-linecap="round"/>`, `<path d="${lit}" stroke="${ink}" stroke-width="${hw}" stroke-opacity=".7" fill="none" stroke-linecap="round"/>`);
+  out.push(`<path d="M${r(x - b * 0.55)} ${r(y + 0.1)}h${r(b * 1.1)}" stroke="${ink}" stroke-width="${r(0.05 + b * 0.005)}" stroke-opacity=".5"/>`);
+  return out.join('');
+}
 /** a hill: a rounded hump with its peak a little off-centre, hachures down the shaded right flank (light from the upper left) */
 function hill(x: number, y: number, b: number, h: number, ink: string, paper: string, rnd: () => number): string {
   const pk = (rnd() - 0.5) * 0.3, prof = (t: number) => { const u = t < pk ? (t - pk) / (1 + pk) : (t - pk) / (1 - pk); return y - h * Math.pow(Math.max(0, 1 - u * u), 0.85); };
@@ -291,7 +340,7 @@ export function chartSvg(o0: ChartOpts): string {
   // the coast: a fine line and a heavier shadow line to the lower right
   out.push(`<path d="${land}" transform="translate(.16 .2)" fill="none" stroke="${L.coast}" stroke-width=".34" stroke-linejoin="round"/><path d="${land}" fill="none" stroke="${L.coast}" stroke-width=".2" stroke-linejoin="round"/>`);
   // hills: along the ranges, then a few on the high ground of every island; trees on the low ground
-  const hills: { x: number; y: number; b: number; h: number }[] = [];
+  const hills: { x: number; y: number; b: number; h: number; m?: boolean }[] = [];
   for (const rg of RANGES) {
     const P = rg.map(([lo, la]) => mm(lo, la));
     for (let i = 0; i < P.length - 1; i++) {
@@ -299,8 +348,9 @@ export function chartSvg(o0: ChartOpts): string {
       for (let t = 0; t < len; t += step * (0.7 + rnd() * 0.6)) {
         const q = { x: a.x + (b.x - a.x) * t / len + (rnd() - 0.5) * 2.2 * k, y: a.y + (b.y - a.y) * t / len + (rnd() - 0.5) * 2 * k };
         if (!field.land(q)) continue;
-        const big = rnd(), sz = (2.8 + big * big * 6.5) * Math.max(0.85, Math.min(1.5, k));
-        hills.push({ x: q.x, y: q.y, b: sz, h: sz * (0.38 + rnd() * 0.42) });
+        // the ranges: engraved mountains, the height varies a lot (a crest in the middle of a range, foothills at its ends)
+        const mid = 1 - Math.abs((i + t / len) / (P.length - 1) - 0.5) * 1.3, big = rnd(), sz = (3 + big * big * 6 + mid * 2.2) * Math.max(0.85, Math.min(1.5, k));
+        hills.push({ x: q.x, y: q.y, b: sz, h: sz * (0.3 + mid * 0.14 + rnd() * 0.26), m: true });
       }
     }
   }
@@ -313,7 +363,7 @@ export function chartSvg(o0: ChartOpts): string {
     else if (d > 1.2 && rnd() < 0.22 && !trees.some(t => Math.hypot(t.x - q.x, t.y - q.y) < 2)) trees.push(q);
   }
   hills.sort((a, b) => a.y - b.y);
-  out.push(hills.filter(hh => !inRects(hh, calm, 1)).map(hh => hill(hh.x, hh.y, hh.b, hh.h, L.ink, L.land, rnd)).join(''));
+  out.push(hills.filter(hh => !inRects(hh, calm, 1)).map(hh => (hh.m ? mountain : hill)(hh.x, hh.y, hh.b, hh.h, L.ink, L.land, rnd)).join(''));
   out.push(trees.filter(q => !hills.some(hh => Math.abs(hh.x - q.x) < hh.b * 0.6 && q.y < hh.y + 1 && q.y > hh.y - hh.h - 1)).map(q => tree(q.x, q.y, 1.5 * Math.max(0.7, Math.min(1.7, k)), L.ink, L.land)).join(''));
   // lettering: each label takes the first free place near its spot (clear of the roses, the ships, the cartouche, the scale,
   // the notes, the plates and the other labels; a label in the sea keeps off the land); a label with no free place is left out

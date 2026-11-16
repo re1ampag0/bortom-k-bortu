@@ -458,7 +458,8 @@ function faceSvg(ctx: Ctx, ship: Ship, counters: Counters, plan: Plan, id: strin
 }
 function logInner(ship: Ship, L: Look, id: string): string {
   const ab = ship.abilities.map(a => { const once = /раз в ход/i.test(a.text); return `${once ? `<div class="v2-tick">${onceCell(L, id)}</div>` : ''}<div class="v2-an"><span>${esc(a.name)}</span>${once ? `<i>${esc(TXT.once)}</i>` : ''}</div><div class="v2-p">${richNb(a.text)}</div>`; }).join('');
-  const extra = [TXT.heart[ship.code] ?? '', ship.souls != null && TXT.tracks.souls.spend ? `<b>${esc(TXT.tracks.souls.name)}:</b> ${esc(TXT.tracks.souls.spend)}` : ''].filter(Boolean).map(t => `<div class="v2-p">${richNb(t)}</div>`).join('');
+  // «Души: в свой ход 1 Душа = 1 Корпус или 1 Команда» is not repeated here: «Вечная служба» already says it
+  const extra = [TXT.heart[ship.code] ?? ''].filter(Boolean).map(t => `<div class="v2-p">${richNb(t)}</div>`).join('');
   return `<div class="v2-h">${esc(TXT.abilities)}</div>${ab}${extra}`;
 }
 /** the «раз в ход» cell beside an ability: a 13 mm cell like the tracks', floated right in the log */
