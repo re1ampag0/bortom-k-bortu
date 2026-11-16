@@ -117,7 +117,7 @@ export function carriage(id: string, R: () => number): string {
 /** a barrel lying on its side: weathered staves, rusted hoops with rivets, the head towards us. broken — the head stove
  *  in (a ragged hole into the dark), a stave sprung, the black powder run out on the sand; foreign — another ship's
  *  cask: a band of faded paint and a branded mark on the bilge */
-export function keg(id: string, R: () => number, kind: 'broken' | 'foreign' | 'whole'): string {
+export function keg(id: string, R: () => number, kind: 'broken' | 'foreign' | 'whole' | 'powder'): string {
   const L0 = -10, L1 = 9, Rr = 6.2, bul = 0.9;
   const top = (x: number) => -Rr - bul * (1 - Math.pow((x - (L0 + L1) / 2) / ((L1 - L0) / 2), 2)) - Rr;
   const bot = (x: number) => -top(x) - 2 * Rr;
@@ -138,6 +138,7 @@ export function keg(id: string, R: () => number, kind: 'broken' | 'foreign' | 'w
   const hoop = (x: number, w: number) => `<path d="M${f(x)} ${f(top(x) - 0.1)}Q${f(x + 0.3)} ${f((top(x) + bot(x)) / 2)} ${f(x)} ${f(bot(x) + 0.1)}" fill="none" stroke="#2a1a10" stroke-width="${f(w + 0.3)}"/><path d="M${f(x)} ${f(top(x) - 0.1)}Q${f(x + 0.3)} ${f((top(x) + bot(x)) / 2)} ${f(x)} ${f(bot(x) + 0.1)}" fill="none" stroke="#6e3e1e" stroke-width="${f(w)}"/>` +
     `<circle cx="${f(x + 0.15)}" cy="${f(top(x) + 2.2)}" r=".3" fill="#1a0e08"/><circle cx="${f(x + 0.28)}" cy="${f((top(x) + bot(x)) / 2)}" r=".3" fill="#1a0e08"/><path d="M${f(x + 0.3)} ${f((top(x) + bot(x)) / 2 + 0.4)}v${f(1.5 + R() * 2)}" stroke="#8a4a20" stroke-width=".4" stroke-opacity=".55"/>`;
   for (const x of [L0 + 1.4, L0 + 3.6, L1 - 3.6, L1 - 1.4]) inner += hoop(x, 0.85);
+  if (kind === 'powder' || kind === 'broken') inner += powderMark(-1.4, -6.2, 2.5);
   if (kind === 'broken') {
     // a stave sprung out of the bilge
     inner += `<path d="M-6 ${f(top(-6) + 0.2)}L4.5 ${f(top(4.5) - 2.6)}L5 ${f(top(5) - 1.6)}L-5.6 ${f(top(-5.6) + 1.2)}Z" fill="#3a2e22" stroke="#120c08" stroke-width=".15"/>`;
@@ -204,7 +205,7 @@ export function coCrate(id: string, R: () => number, state: 'whole' | 'burst', n
   let gr = ''; for (let i = 0; i < 14; i++) { const y = -H + 1 + R() * (H - 2), x0 = -W + R() * W, l = 3 + R() * 9; gr += `M${f(x0)} ${f(y)}h${f(l)}`; }
   out += `<path d="${gr}" stroke="#3e3426" stroke-width=".12" stroke-opacity=".5"/>`;
   // the mark, stencilled in faded red-brown, half worn off
-  out += coMark(-0.6, -H * 0.58, 4.6, '#5a2418', 0.62);
+  out += coMark(-0.6, -H * 0.58, 4.6, '#9a2a1c', 0.88);
   out += `<g fill="none" stroke="#5a2418" stroke-opacity=".55" stroke-width=".55" stroke-linecap="round"><path d="M-3.6 -3.4v-2.6l1.8 2.6v-2.6M-.8 -3.9a.8 1 0 1 0 1.6 0a.8 1 0 1 0 -1.6 0"/><path d="M${n === 7 ? 'M2.2 -6H4.2L2.8 -3.2' : 'M2.2 -5.6Q3.2 -6.6 4 -5.6Q3.4 -4.6 2.4 -3.3H4.2'}"/></g>`;
   // corner battens and the iron corner straps, rusted, nails
   for (const x of [-W, W - 2]) out += `<rect x="${x}" y="${-H}" width="2" height="${H}" fill="${x < 0 ? wood[0] : wood[1]}" fill-opacity=".7" stroke="#1e160e" stroke-width=".18"/>`;
@@ -250,9 +251,10 @@ export function ingots(id: string, R: () => number, n = 3): string {
 /** loose coins run out over the sand: big enough to read — a raised rim, a cross-and-star struck in the face, the edge
  *  of each; most lie tilted showing their face, some stand on edge, one leans on another */
 export function coinSpill(id: string, R: () => number, n = 10, w = 18): string {
-  let out = `<defs>${lin(id + 'c', [[0, '#fff0a8'], [0.45, '#e2b44a'], [1, '#8a6018']], 0, 0, 1, 1)}${lin(id + 'e', [[0, '#b08428'], [1, '#5a3c0c']])}</defs>`;
+  let shine = 0;
+  let out = `<defs>${lin(id + 'c', [[0, '#ecd890'], [0.45, '#c09a46'], [1, '#76561c']], 0, 0, 1, 1)}${lin(id + 'e', [[0, '#b08428'], [1, '#5a3c0c']])}</defs>`;
   const cs: [number, number, number, number][] = [];
-  for (let i = 0; i < n; i++) { const t = n > 1 ? i / (n - 1) : 0.5, x = -w / 2 + t * w + (R() - 0.5) * 2, y = -0.3 - R() * 1.6 - Math.sin(t * Math.PI) * 1.2, tilt = R(); cs.push([x, y, tilt, (R() - 0.5) * 50]); }
+  for (let i = 0; i < n; i++) { const t = n > 1 ? i / (n - 1) : 0.5, x = -w / 2 + t * w + (R() - 0.5) * 3, y = 0.6 - R() * 3.2 - Math.sin(t * Math.PI) * 0.8, tilt = R() < 0.1 ? R() * 0.15 : 0.2 + R() * 0.3; cs.push([x, y, tilt, (R() - 0.5) * 60]); }
   cs.sort((a, b) => a[1] - b[1]);
   const r = 2.2;
   for (const [x, y, tilt, a] of cs) {
@@ -264,7 +266,7 @@ export function coinSpill(id: string, R: () => number, n = 10, w = 18): string {
     out += `<g transform="rotate(${f(a * 0.25)} ${f(x)} ${f(y)})"><ellipse cx="${f(x)}" cy="${f(y + 0.35)}" rx="${r}" ry="${f(ry)}" fill="url(#${id}e)"/><ellipse cx="${f(x)}" cy="${f(y)}" rx="${r}" ry="${f(ry)}" fill="url(#${id}c)" stroke="#5a3e10" stroke-width=".14"/>` +
       `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r * 0.76)}" ry="${f(ry * 0.76)}" fill="none" stroke="#8a6420" stroke-width=".16"/>` +
       `<path d="M${f(x)} ${f(y - ry * 0.5)}V${f(y + ry * 0.5)}M${f(x - r * 0.45)} ${f(y)}H${f(x + r * 0.45)}" stroke="#8a6420" stroke-width=".22"/><circle cx="${f(x - r * 0.3)}" cy="${f(y - ry * 0.3)}" r=".18" fill="#8a6420"/><circle cx="${f(x + r * 0.3)}" cy="${f(y + ry * 0.3)}" r=".18" fill="#8a6420"/>` +
-      `<path d="M${f(x - r * 0.75)} ${f(y - ry * 0.35)}Q${f(x - r * 0.2)} ${f(y - ry * 0.95)} ${f(x + r * 0.45)} ${f(y - ry * 0.8)}" fill="none" stroke="#fffbe0" stroke-width=".22" stroke-opacity=".75"/></g>`;
+      (shine++ < 3 ? `<path d="M${f(x - r * 0.75)} ${f(y - ry * 0.35)}Q${f(x - r * 0.2)} ${f(y - ry * 0.95)} ${f(x + r * 0.45)} ${f(y - ry * 0.8)}" fill="none" stroke="#fffbe0" stroke-width=".22" stroke-opacity=".75"/>` : '') + `</g>`;
   }
   return out;
 }
@@ -290,8 +292,8 @@ export function epaulette(id: string, R: () => number): string {
   out += `<path d="M-2.8 -4.4L-1.6 -7.6H1.6L2.8 -4.4Z" fill="url(#${id}r)" stroke="#2e1008" stroke-width=".18"/><path d="M-2.1 -5.4H2.1M-1.8 -6.6H1.8" stroke="#d8b860" stroke-width=".35" stroke-opacity=".75"/><ellipse cx="0" cy="-7.7" rx="1" ry=".7" fill="url(#${id}p)" stroke="#2e2008" stroke-width=".15"/>`;
   // the fringe: thick twisted cords fanned out round the front half of the crescent, each curling at its end
   let fr = '';
-  for (let i = 0; i < 38; i++) {
-    const t = i / 37, a = Math.PI * (0.03 + t * 0.94), x0 = -Math.cos(a) * 5.7, y0 = -3.2 + Math.sin(a) * 1.5, l = 2.2 + R() * 0.8, dx = -Math.cos(a) * l * 0.7, dy = Math.sin(a) * l * 0.7;
+  for (let i = 0; i < 52; i++) {
+    const t = i / 51, a = Math.PI * (-0.16 + t * 1.32), x0 = -Math.cos(a) * 5.7, y0 = -3.2 + Math.sin(a) * 1.5, l = 2.2 + R() * 0.8, dx = -Math.cos(a) * l * 0.7, dy = Math.sin(a) * l * 0.7;
     const e: P = [x0 + dx, Math.min(-0.2, y0 + dy)];
     fr += `<path d="M${f(x0)} ${f(y0)}Q${f(x0 + dx * 0.6)} ${f(y0 + dy * 0.2)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="#3e2c0c" stroke-width=".72" stroke-linecap="round"/><path d="M${f(x0)} ${f(y0)}Q${f(x0 + dx * 0.6)} ${f(y0 + dy * 0.2)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="url(#${id}f)" stroke-width=".48" stroke-linecap="round"/>` +
       `<path d="M${f(x0)} ${f(y0)}Q${f(x0 + dx * 0.6)} ${f(y0 + dy * 0.2)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="#5a400e" stroke-width=".48" stroke-dasharray=".18 .3"/>`;
@@ -306,7 +308,7 @@ export function epaulette(id: string, R: () => number): string {
 export function button(id: string): string {
   return `<defs>${rad(id + 'b', [[0, '#f4dc94'], [0.55, '#b08a3a'], [1, '#4a3410']], 0.35, 0.3, 0.8)}</defs><path d="M2.6 -1.4h1.4v1.2h-1.4Z" fill="#6a4a18"/>` +
     `<ellipse cx="0" cy="-1.6" rx="2.8" ry="1.6" fill="url(#${id}b)" stroke="#3a2808" stroke-width=".15"/><ellipse cx="0" cy="-1.7" rx="2.1" ry="1.15" fill="none" stroke="#6a4a18" stroke-width=".18" stroke-dasharray=".3 .2"/>` +
-    `<path d="M0 -2.55L.3 -1.95L.95 -1.9L.45 -1.55L.6 -1L0 -1.3L-.6 -1L-.45 -1.55L-.95 -1.9L-.3 -1.95Z" fill="#5a4014"/>`;
+    `<g fill="none" stroke="#4a3010" stroke-width=".2" stroke-linecap="round"><path d="M0 -2.45V-.95M-.55 -2.15H.55M-.75 -1.45Q-.6 -.85 0 -.85Q.6 -.85 .75 -1.45"/><circle cx="0" cy="-2.6" r=".18"/></g>`;
 }
 
 // ---- the Dutchman's floor: other ships' wreckage, shells ----
@@ -392,3 +394,151 @@ export function board(id: string, R: () => number, len: number, th: number, pain
   out += `<rect x="${f(L0 + 1.2)}" y="${f(-th * 0.62)}" width="1.1" height="1.1" fill="#2a1a10"/><path d="M${f(L0 + 1.75)} ${f(-th * 0.62 + 1.1)}v${f(th * 0.4)}" stroke="#8a4a20" stroke-width=".4" stroke-opacity=".6"/>`;
   return out;
 }
+
+// ---- round 3: own drawings in place of the kit's (they did not read on the floor) ----
+const IRON = (id: string) => lin(id, [[0, '#7c776e'], [0.35, '#4c4842'], [1, '#141210']]);
+/** a bar of iron (a stroke) with its dark edge and a light line along its top */
+const ironBar = (d: string, w: number, fill: string, hi = '#a8a294') => `<path d="${d}" fill="none" stroke="#0e0c0a" stroke-width="${f(w + 0.4)}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${fill}" stroke-width="${f(w)}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${hi}" stroke-width="${f(w * 0.24)}" stroke-opacity=".5" stroke-linecap="round" transform="translate(${f(-w * 0.12)} ${f(-w * 0.26)})"/>`;
+/** an anchor fallen on its side, the shape everyone knows: the ring, the stock across the shank with a ball at each
+ *  end, the shank, the crown bent round in a half circle into the two arms, an arrow-head fluke on each; it rests on its
+ *  ring, the lower end of its stock and the lower fluke dug into the sand (the scene tilts it so) */
+export function anchor2(id: string): string {
+  const ir = `url(#${id}i)`;
+  let o = `<defs>${IRON(id + 'i')}${lin(id + 'f', [[0, '#6e6a62'], [0.5, '#3a3732'], [1, '#121110']], 0, 0, 1, 1)}</defs>`;
+  const fluke = (pp: P[]) => `<path d="${poly(pp)}" fill="url(#${id}f)" stroke="#0e0c0a" stroke-width=".25" stroke-linejoin="round"/>`;
+  // the stock: an iron bar across the shank near the ring, a ball at each end
+  o += ironBar('M-11.4 -15.2L-10.6 1', 1.2, ir) + `<circle cx="-11.45" cy="-15.9" r="1" fill="url(#${id}f)" stroke="#0e0c0a" stroke-width=".22"/><circle cx="-10.55" cy="1.7" r="1" fill="url(#${id}f)" stroke="#0e0c0a" stroke-width=".22"/>`;
+  // the arms: the crown bent round in a half circle, open towards the ring; the flukes
+  o += ironBar('M8.6 -14.2C13.6 -13.4 16 -10.4 16 -7C16 -3.6 13.6 -.6 8.6 .2', 2, ir);
+  o += fluke([[5.6, -15.2], [10.8, -17.2], [10.2, -12.2]]) + fluke([[5.6, 1.2], [10.8, 3.2], [10.2, -1.8]]);
+  o += `<path d="M6.4 -14.9L10.3 -16.4M6.4 .9L10.3 2.4" stroke="#a8a294" stroke-width=".28" stroke-opacity=".5"/>`;
+  // the shank, thicker at the crown
+  o += `<path d="M-16 -7.7L14.6 -8.3Q16.3 -7 14.6 -5.7L-16 -6.3Z" fill="${ir}" stroke="#0e0c0a" stroke-width=".25"/><path d="M-15.6 -7.5L14 -8" stroke="#aaa496" stroke-width=".35" stroke-opacity=".5"/>`;
+  // the ring through the eye
+  o += `<circle cx="-18.4" cy="-7" r="2.2" fill="none" stroke="#0e0c0a" stroke-width="1.15"/><circle cx="-18.4" cy="-7" r="2.2" fill="none" stroke="#5e5a52" stroke-width=".62"/><path d="M-20.2 -8.2A2.2 2.2 0 0 1 -17.4 -9" fill="none" stroke="#a8a294" stroke-width=".22" stroke-opacity=".6"/>`;
+  return o;
+}
+/** a flintlock pistol lying on its side: the barrel with its muzzle ring and brass bands, the stock, the lock plate with
+ *  the cock (its jaws) and the frizzen, the curved grip ending in a brass butt cap, the trigger in its guard */
+export function pistol2(id: string): string {
+  let o = `<defs>${IRON(id + 'i')}${lin(id + 'w', [[0, '#8a5a34'], [0.4, '#5e3a1e'], [1, '#26160a']])}${lin(id + 'b', [[0, '#e8c47a'], [0.4, '#a47c3a'], [1, '#3e2a10']])}</defs>`;
+  // the grip and the stock: one piece of walnut
+  o += `<path d="M-.4 -4.7L-5.2 -4.9C-7.4 -4.8 -9.4 -4 -11.4 -2.5C-12.6 -1.6 -13.4 -.5 -13.5 .4C-13.4 1.3 -12.4 1.6 -11.4 1C-9.8 .1 -8 -1 -6 -1.9C-4.6 -2.4 -2.4 -2.5 9 -2.4C9.6 -2.5 9.7 -3.4 9 -3.5L-.4 -3.5Z" fill="url(#${id}w)" stroke="#140a04" stroke-width=".22"/>`;
+  o += `<path d="M-5.6 -4.5C-7.6 -4.2 -9.8 -3.2 -11.6 -1.8" fill="none" stroke="#c49060" stroke-width=".3" stroke-opacity=".5"/>`;
+  // the butt cap, the ramrod under the barrel
+  o += `<path d="M-12.4 -1.6C-13.9 -1 -14.3 .9 -13 1.6C-12.2 2 -11.4 1.5 -11.2 .9Z" fill="url(#${id}b)" stroke="#2e1e08" stroke-width=".2"/>`;
+  o += `<path d="M-.6 -2.9H8.6" stroke="#2a1a0e" stroke-width=".42"/><circle cx="8.8" cy="-2.9" r=".32" fill="url(#${id}b)"/>`;
+  // the barrel, its muzzle ring, the bands
+  o += `<path d="M-1 -5.6H11.4L11.8 -5.9H12.6V-3.3H11.8L11.4 -3.6H-1Z" fill="url(#${id}i)" stroke="#0e0c0a" stroke-width=".2"/><path d="M-.6 -5.3H11.2" stroke="#b0aa9a" stroke-width=".26" stroke-opacity=".55"/><ellipse cx="12.6" cy="-4.6" rx=".35" ry="1.25" fill="#2a2724"/><ellipse cx="12.7" cy="-4.6" rx=".18" ry=".55" fill="#050404"/>`;
+  for (const x of [3.4, 7.2]) o += `<rect x="${x}" y="-5.85" width=".75" height="3.6" rx=".2" fill="url(#${id}b)" stroke="#2e1e08" stroke-width=".14"/>`;
+  // the lock: the plate, the frizzen and its spring, the cock with its jaws holding the flint
+  o += `<path d="M-5 -4.6H-.8Q-.3 -4.1 -.8 -3.4H-5Q-5.5 -4 -5 -4.6Z" fill="url(#${id}i)" stroke="#0e0c0a" stroke-width=".18"/>`;
+  o += `<path d="M-1.4 -4.6L-1.2 -6.9L-.5 -6.7L-.8 -4.6Z" fill="#3a3632" stroke="#0e0c0a" stroke-width=".16"/>`;
+  o += `<path d="M-3.6 -4.4C-3.9 -5.4 -4.6 -6 -4.4 -6.9C-4.2 -7.6 -3.4 -7.7 -3 -7.4L-2.2 -7.5L-2.3 -6.9L-3.1 -6.8C-3.6 -6.4 -3.3 -5.6 -2.8 -4.4Z" fill="url(#${id}i)" stroke="#0e0c0a" stroke-width=".18"/><rect x="-2.6" y="-7.75" width=".9" height=".5" fill="#6a6660" stroke="#0e0c0a" stroke-width=".1"/>`;
+  // the trigger guard and the trigger
+  o += `<path d="M-1.6 -2.4C-1.4 -.4 -5.6 -.1 -6.6 -1.9" fill="none" stroke="#2e1e08" stroke-width=".7" stroke-linecap="round"/><path d="M-1.6 -2.4C-1.4 -.4 -5.6 -.1 -6.6 -1.9" fill="none" stroke="url(#${id}b)" stroke-width=".42" stroke-linecap="round"/>`;
+  o += `<path d="M-3.4 -2.4Q-3.3 -1.4 -4 -1" fill="none" stroke="#1a1816" stroke-width=".38" stroke-linecap="round"/>`;
+  return o;
+}
+/** a squat «onion» bottle of dark green glass: the round flattened belly, the short neck with its string rim, the cork
+ *  still in; the glass lit on its shoulder, a pale bloom of age on it */
+export function onionBottle(id: string): string {
+  return `<defs>${rad(id + 'g', [[0, '#5e8a4a'], [0.45, '#2c4e26'], [1, '#0c1a0a']], 0.32, 0.3, 0.85)}${lin(id + 'n', [[0, '#3c6430'], [1, '#0e1c0c']], 0, 0, 1, 0)}</defs>` +
+    `<path d="M-1.05 -7.6C-1.3 -6.5 -5.2 -5.8 -5.5 -2.7C-5.6 -.6 -3.6 0 0 0C3.6 0 5.6 -.6 5.5 -2.7C5.2 -5.8 1.3 -6.5 1.05 -7.6Z" fill="url(#${id}g)" stroke="#071006" stroke-width=".22"/>` +
+    `<path d="M-1.05 -7.5L-.95 -10.8H.95L1.05 -7.5Z" fill="url(#${id}n)" stroke="#071006" stroke-width=".2"/><rect x="-1.3" y="-10.6" width="2.6" height=".6" rx=".25" fill="#2c4a24" stroke="#071006" stroke-width=".16"/>` +
+    `<path d="M-.75 -10.8L-.7 -11.9Q0 -12.3 .7 -11.9L.75 -10.8Z" fill="#6a4e30" stroke="#24180c" stroke-width=".16"/>` +
+    `<path d="M-4.2 -4.1C-3.6 -5.4 -2.2 -5.9 -1.2 -6.1" fill="none" stroke="#d8ecc8" stroke-width=".45" stroke-opacity=".75" stroke-linecap="round"/><path d="M-.55 -10.2V-8.2" stroke="#d8ecc8" stroke-width=".25" stroke-opacity=".6"/>` +
+    `<path d="M2.6 -1.2C3.8 -1.6 4.6 -2.4 4.7 -3.3" fill="none" stroke="#8ab47a" stroke-width=".3" stroke-opacity=".5"/><ellipse cx="1.2" cy="-3.6" rx="2.6" ry="1.4" fill="#c8d4b8" fill-opacity=".12"/>`;
+}
+/** a curved sabre lying flat: the blade with its back and fuller, the clipped point, the brass guard — the knuckle bow
+ *  and the quillon —, the grip wrapped in wire, the pommel cap */
+export function sabre2(id: string): string {
+  let o = `<defs>${lin(id + 's', [[0, '#c4c6c0'], [0.45, '#7a7c78'], [1, '#2c2e2c']])}${lin(id + 'b', [[0, '#e8c47a'], [0.4, '#a47c3a'], [1, '#3e2a10']])}</defs>`;
+  o += `<path d="M.4 -1.5Q14 -2.2 25.6 -5.2L28 -6.4Q25.4 -3.4 14.2 -.2Q7 1 .4 .5Z" fill="url(#${id}s)" stroke="#121412" stroke-width=".2" stroke-linejoin="round"/>`;
+  o += `<path d="M1.6 -.9Q12 -1.4 22 -3.9" fill="none" stroke="#2c2e2c" stroke-width=".28" stroke-opacity=".8"/><path d="M1.6 -.55Q12 -1 22 -3.5" fill="none" stroke="#e8eae4" stroke-width=".16" stroke-opacity=".6"/>`;
+  // the grip: leather wound with wire, a little curved
+  o += `<path d="M-.4 -1.4L-6.6 -1.7Q-7.2 -.4 -6.6 .9L-.4 .6Z" fill="#2a1c12" stroke="#0e0804" stroke-width=".18"/>`;
+  for (let x = -6; x < -.6; x += 0.7) o += `<path d="M${f(x)} -1.6L${f(x + 0.45)} .75" stroke="#b49a6a" stroke-width=".16" stroke-opacity=".7"/>`;
+  // the pommel cap, the knuckle bow from it to the guard, the quillon curled at the back
+  o += `<path d="M-6.5 -1.9Q-8.4 -1.8 -8.2 -.3Q-8 1.1 -6.5 1Z" fill="url(#${id}b)" stroke="#2e1e08" stroke-width=".18"/>`;
+  o += `<path d="M.1 1C-.6 3.4 -6 3.6 -7.6 .9" fill="none" stroke="#2e1e08" stroke-width=".85" stroke-linecap="round"/><path d="M.1 1C-.6 3.4 -6 3.6 -7.6 .9" fill="none" stroke="url(#${id}b)" stroke-width=".52" stroke-linecap="round"/>`;
+  o += `<path d="M-.5 -2.6L.9 -2.5L1 1.6L-.4 1.6Z" fill="url(#${id}b)" stroke="#2e1e08" stroke-width=".18"/><path d="M.3 -2.5C.4 -3.6 1.4 -3.9 1.8 -3.2" fill="none" stroke="url(#${id}b)" stroke-width=".5" stroke-linecap="round"/>`;
+  return o;
+}
+/** a chain lying along the points (scene mm): oval links, one seen flat (its hole showing), the next on edge, dark iron
+ *  with a little light on the upper edge of each; link — the length of a link */
+export function chain2(id: string, pp: P[], link: number): string {
+  const L: P[] = []; let acc = 0;
+  for (let i = 0; i < pp.length - 1; i++) { const [a, b] = [pp[i], pp[i + 1]], d = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let t = acc; t < d; t += link * 0.78) L.push([a[0] + (b[0] - a[0]) * t / d, a[1] + (b[1] - a[1]) * t / d]); acc = (acc + Math.ceil((d - acc) / (link * 0.78)) * link * 0.78) - d; }
+  let back = '', front = '';
+  L.forEach((c, i) => {
+    const n = L[Math.min(L.length - 1, i + 1)], p0 = L[Math.max(0, i - 1)], a = Math.atan2(n[1] - p0[1], n[0] - p0[0]) * 180 / Math.PI, tr = `translate(${f(c[0])} ${f(c[1])}) rotate(${f(a)})`;
+    if (i % 2 === 0) front += `<g transform="${tr}"><ellipse rx="${f(link * 0.5)}" ry="${f(link * 0.31)}" fill="none" stroke="#0c0a08" stroke-width="${f(link * 0.24)}"/><ellipse rx="${f(link * 0.5)}" ry="${f(link * 0.31)}" fill="none" stroke="url(#${id}i)" stroke-width="${f(link * 0.15)}"/><path d="M${f(-link * 0.32)} ${f(-link * 0.3)}Q0 ${f(-link * 0.4)} ${f(link * 0.32)} ${f(-link * 0.3)}" fill="none" stroke="#a09a8c" stroke-width="${f(link * 0.05)}" stroke-opacity=".55"/></g>`;
+    else back += `<g transform="${tr}"><rect x="${f(-link * 0.52)}" y="${f(-link * 0.12)}" width="${f(link * 1.04)}" height="${f(link * 0.24)}" rx="${f(link * 0.12)}" fill="url(#${id}i)" stroke="#0c0a08" stroke-width="${f(link * 0.05)}"/></g>`;
+  });
+  return `<defs>${IRON(id + 'i')}</defs>${back}${front}`;
+}
+/** a ship's bell: the crown with its ear (the loop it hung by), the shoulder, two incised bands, the waist flaring to the
+ *  thick lip; the mouth turned a little to us — the dark inside and the clapper hanging in it */
+export function bell2(id: string): string {
+  const body = 'M-3.4 -12.2C-3.6 -13.6 3.6 -13.6 3.4 -12.2C3.7 -9 4.1 -5.4 5.3 -2.6C5.9 -1.3 6.6 -.7 7 -.2L-7 -.2C-6.6 -.7 -5.9 -1.3 -5.3 -2.6C-4.1 -5.4 -3.7 -9 -3.4 -12.2Z';
+  return `<defs>${lin(id + 'b', [[0, '#e6c070'], [0.3, '#b08636'], [0.7, '#6a4a1a'], [1, '#2a1a06']], 0, 0, 1, 0)}${lin(id + 'm', [[0, '#120c04'], [1, '#3a2a12']])}</defs>` +
+    `<path d="M-1.7 -13.2C-2 -16.4 2 -16.4 1.7 -13.2" fill="none" stroke="#2a1a06" stroke-width="1.25"/><path d="M-1.7 -13.2C-2 -16.4 2 -16.4 1.7 -13.2" fill="none" stroke="url(#${id}b)" stroke-width=".8"/>` +
+    `<path d="${body}" fill="url(#${id}b)" stroke="#2a1a06" stroke-width=".22"/>` +
+    `<path d="M-3.6 -10.4Q0 -9.9 3.6 -10.4M-3.7 -9.6Q0 -9.1 3.7 -9.6M-5.6 -2.4Q0 -1.6 5.6 -2.4M-6.2 -1.5Q0 -.7 6.2 -1.5" fill="none" stroke="#3a2608" stroke-width=".22"/>` +
+    `<path d="M-3 -11.6C-3.2 -8.6 -3.6 -5.4 -4.6 -2.8" fill="none" stroke="#fff0c0" stroke-width=".45" stroke-opacity=".55" stroke-linecap="round"/>` +
+    `<ellipse cx="0" cy="-.2" rx="7" ry="1.9" fill="url(#${id}m)" stroke="#2a1a06" stroke-width=".22"/><ellipse cx="0" cy="-.2" rx="6.3" ry="1.45" fill="#0a0602"/>` +
+    `<path d="M0 -1.6V.4" stroke="#4a3412" stroke-width=".45"/><circle cx="0" cy=".7" r=".85" fill="#6a4a1a" stroke="#2a1a06" stroke-width=".15"/>`;
+}
+/** a piece of another ship's side: planks in her own colours (a band of paint over the bare wood), a gun port with its
+ *  lid hanging open, the frames sticking out of both broken ends */
+export function sidePiece(id: string, R: () => number, paint: string, band: string): string {
+  const w = 26, h = 10.5;
+  let o = `<defs>${lin(id + 'w', [[0, '#7e6e56'], [0.5, '#54483a'], [1, '#2a2218']])}<clipPath id="${id}k"><path d="M-13 -${h}L13 -${h - 0.6}L13.4 0L-13.2 0Z"/></clipPath></defs>`;
+  const L: P[] = [[-13, -h], ...jag([-13, -h], [-13.2, 0], 6, 1.2, R), [-13.2, 0]], Rr: P[] = [[13.4, 0], ...jag([13.4, 0], [13, -h + 0.6], 6, 1.2, R), [13, -h + 0.6]];
+  // the frames standing out of the broken ends
+  for (const x of [-14.6, -12.6, 12.8, 14.8]) o += `<path d="M${f(x - 0.5)} 0L${f(x - 0.4)} ${f(-h - 1.6 - R() * 2)}L${f(x + 0.2)} ${f(-h - 0.8 - R() * 2)}L${f(x + 0.5)} 0Z" fill="#3a2e22" stroke="#120c08" stroke-width=".15"/>`;
+  o += `<path d="${poly([...L, ...Rr])}" fill="url(#${id}w)" stroke="#120c08" stroke-width=".22"/>`;
+  let inner = `<rect x="-14" y="${f(-h + 1.4)}" width="28" height="3.2" fill="${paint}" fill-opacity=".8"/><rect x="-14" y="${f(-h + 4.6)}" width="28" height=".9" fill="${band}" fill-opacity=".85"/>`;
+  for (let y = -h + 1.3; y < 0; y += 1.3) inner += `<path d="M-14 ${f(y)}H14" stroke="#1a140e" stroke-width=".18" stroke-opacity=".75"/>`;
+  inner += `<path d="M-14 -${f(h - 0.3)}H14" stroke="#c8b898" stroke-width=".3" stroke-opacity=".45"/>`;
+  for (let i = 0; i < 9; i++) { const x = -12 + R() * 24, y = -h + 1 + Math.floor(R() * 7) * 1.3; inner += `<path d="M${f(x)} ${f(y)}v1.3" stroke="#1a140e" stroke-width=".16"/>`; }
+  o += `<g clip-path="url(#${id}k)">${inner}</g>`;
+  // the gun port: the dark square, its frame, the lid hanging open from its upper hinge
+  o += `<rect x="-2.4" y="${f(-h + 2.2)}" width="4.6" height="4.4" fill="#0a0806" stroke="#2a2218" stroke-width=".35"/>`;
+  o += `<path d="M-2.4 ${f(-h + 2.2)}L2.4 ${f(-h + 2.1)}L3.4 ${f(-h - 1.6)}L-1.6 ${f(-h - 2.2)}Z" fill="${paint}" stroke="#120c08" stroke-width=".2"/><path d="M-1.4 ${f(-h - 1.2)}L2.6 ${f(-h - 0.7)}" stroke="#1a140e" stroke-width=".18"/>`;
+  return o;
+}
+/** a point of a cubic Bézier */
+const bez = (c: P[], t: number): P => { const u = 1 - t; return [0, 1].map(k => u * u * u * c[0][k] + 3 * u * u * t * c[1][k] + 3 * u * t * t * c[2][k] + t * t * t * c[3][k]) as P; };
+/** a tapering shape along a cubic Bézier: w0 wide at its start, w1 at its end */
+function taper(c: P[], w0: number, w1: number): string {
+  const L: P[] = [], Rt: P[] = [];
+  for (let i = 0; i <= 18; i++) {
+    const t = i / 18, p = bez(c, t), q = bez(c, Math.min(1, t + 0.01)), r0 = bez(c, Math.max(0, t - 0.01)), dx = q[0] - r0[0], dy = q[1] - r0[1], d = Math.hypot(dx, dy) || 1, w = (w0 + (w1 - w0) * t) / 2;
+    L.push([p[0] - dy / d * w, p[1] + dx / d * w]); Rt.push([p[0] + dy / d * w, p[1] - dx / d * w]);
+  }
+  return poly([...L, ...Rt.reverse()]);
+}
+/** a grappling hook standing on its points: a thin shank with the eye at its head and the rope knotted to it, four slim
+ *  hooks curving up from the crown (one behind, one towards us), each tapering to a sharp point turned in */
+export function grapnel3(id: string, R: () => number): string {
+  const ir = `url(#${id}i)`;
+  const hook = (c: P[], w: number, fill: string) => `<path d="${taper(c, w, 0.12)}" fill="${fill}" stroke="#0e0c0a" stroke-width=".2" stroke-linejoin="round"/>`;
+  let o = `<defs>${IRON(id + 'i')}</defs>`;
+  o += hook([[0, -2.4], [-0.6, -3.8], [-1.8, -6.4], [-0.9, -9.4]], 0.8, '#1a1816');
+  o += `<path d="M-.45 -2.6L-.38 -16.2H.38L.45 -2.6Z" fill="${ir}" stroke="#0e0c0a" stroke-width=".2"/><path d="M-.2 -3V-15.8" stroke="#a8a294" stroke-width=".14" stroke-opacity=".5"/>`;
+  o += `<circle cx="0" cy="-17.5" r="1.35" fill="none" stroke="#0e0c0a" stroke-width=".95"/><circle cx="0" cy="-17.5" r="1.35" fill="none" stroke="#5e5a52" stroke-width=".5"/>`;
+  o += hook([[0, -2.5], [-5.2, -1.4], [-9.4, -3.6], [-8.4, -10.4]], 1.15, ir) + hook([[0, -2.5], [5.2, -1.4], [9.4, -3.6], [8.4, -10.4]], 1.15, ir);
+  o += `<ellipse cx="0" cy="-2.5" rx="1.15" ry=".95" fill="${ir}" stroke="#0e0c0a" stroke-width=".2"/>`;
+  o += hook([[0, -2.2], [0.8, -0.4], [2.8, 0.4], [3.6, -2.6]], 1, ir);
+  // the rope: knotted to the eye, slack, down to the sand at the right and lying on it, frayed at its end
+  const d = 'M-1.1 -18.2C-3.6 -19.4 -5.6 -17.6 -5.2 -15C-4.8 -12.6 -11.2 -11 -12.4 -6.6C-13 -4 -12.6 -1.2 -14.6 -.3';
+  o += `<path d="${d}" fill="none" stroke="#241c12" stroke-width=".95" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#7a6a50" stroke-width=".55"/><path d="${d}" fill="none" stroke="#3a3024" stroke-width=".55" stroke-dasharray=".3 .5"/>`;
+  o += `<path d="M-.6 -19.2C.4 -19.8 1.8 -19.4 1.6 -18.2C1.4 -17.4 .2 -17.6 -.2 -18.4" fill="none" stroke="#4a3e2e" stroke-width=".55"/>`;
+  for (let i = 0; i < 6; i++) { const a = (R() - 0.5) * 0.8, l = 0.8 + R() * 1.4; o += `<path d="M-14.6 -.3l${f(-Math.cos(a) * l)} ${f(Math.sin(a) * l * 0.4)}" stroke="${R() < 0.5 ? '#7a6a50' : '#4a3e2e'}" stroke-width="${f(0.14 + R() * 0.12)}" stroke-linecap="round"/>`; }
+  return o;
+}
+/** a burnt-in powder mark: a ring, a flame of three tongues in it, a bar under it */
+export const powderMark = (x: number, y: number, r: number) => `<g transform="translate(${f(x)} ${f(y)})" fill="none" stroke="#120a04" stroke-opacity=".8" stroke-width="${f(r * 0.16)}"><circle r="${f(r)}"/>` +
+  `<path d="M0 ${f(r * 0.5)}C${f(-r * 0.55)} ${f(r * 0.3)} ${f(-r * 0.45)} ${f(-r * 0.2)} 0 ${f(-r * 0.7)}C${f(r * 0.05)} ${f(-r * 0.3)} ${f(r * 0.5)} ${f(-r * 0.1)} ${f(r * 0.3)} ${f(-r * 0.45)}C${f(r * 0.6)} ${f(r * 0.1)} ${f(r * 0.4)} ${f(r * 0.45)} 0 ${f(r * 0.5)}Z" fill="#120a04" fill-opacity=".75"/><path d="M${f(-r * 0.55)} ${f(r * 0.68)}H${f(r * 0.55)}"/></g>`;

@@ -14,7 +14,7 @@
 // A new kind: add its name to PropKind and an entry { mat, draw } to PROP_DEFS (draw at o.x, o.y with o.s, o.rot; own
 // drawings use own(o, …) — a local frame with the foot at 0, 0, x right, y down, 1 = 1 mm at s = 1).
 import type { Page } from '@playwright/test';
-import { board, button, canvas, carriage, gun, coCrate, coinSpill, conch, epaulette, grapnel as grapnel2, ingots, keg, mastYard, shellBed, shotHeap, spyglass, wheel } from './wreck-things';
+import { anchor2, bell2, board, button, canvas, carriage, chain2, gun, coCrate, coinSpill, conch, epaulette, grapnel3, ingots, keg, mastYard, onionBottle, pistol2, sabre2, shellBed, shotHeap, sidePiece, spyglass, wheel } from './wreck-things';
 
 export type P = [number, number];
 export interface Box { x0: number; y0: number; x1: number; y1: number }
@@ -29,7 +29,7 @@ export interface Kit {
 export type AgeMat = 'iron' | 'brass' | 'wood' | 'char' | 'bone' | 'clay' | 'leather' | 'glass' | 'stone' | 'gold';
 const AGE: Record<AgeMat, { b: [string, number, number][]; streak?: string; fouling: number }> = {
   iron: { b: [['#8a4a22', 0.48, 0.42], ['#2e241c', 0.38, 0.75]], streak: '#9a5426', fouling: 1 },
-  brass: { b: [['#4f9078', 0.68, 0.5], ['#2c4a3a', 0.4, 0.9]], streak: '#4f8a70', fouling: 0.8 },
+  brass: { b: [['#4f9078', 0.34, 0.5], ['#2c4a3a', 0.26, 0.9]], streak: '#4f8a70', fouling: 0.6 },
   wood: { b: [['#a8a490', 0.25, 0.3], ['#1e1610', 0.5, 0.65]], fouling: 1 },
   char: { b: [['#6a645c', 0.4, 0.55], ['#0c0a08', 0.45, 0.4]], fouling: 0.6 },
   bone: { b: [['#7a5a32', 0.42, 0.45], ['#3e3322', 0.3, 0.9]], fouling: 0.5 },
@@ -79,13 +79,15 @@ export function charSvg(x0: number, y0: number, x1: number, y1: number, R: () =>
 
 export type PropKind = 'anchor' | 'cannon' | 'shot' | 'bottle' | 'pistol' | 'sabre' | 'barrel' | 'chest' | 'crate' | 'rock' | 'chain' | 'coins' | 'bell' |
   'skull' | 'firePot' | 'compass' | 'mapCase' | 'grapnel' | 'plank' | 'beam' | 'spar' | 'staves' |
-  'gun' | 'shotHeap' | 'carriage' | 'keg' | 'canvas' | 'coCrate' | 'ingots' | 'coinSpill' | 'spyglass' | 'epaulette' | 'button' | 'wheel' | 'mastYard' | 'conch' | 'shellBed' | 'board';
+  'gun' | 'shotHeap' | 'carriage' | 'keg' | 'canvas' | 'coCrate' | 'ingots' | 'coinSpill' | 'spyglass' | 'epaulette' | 'button' | 'wheel' | 'mastYard' | 'conch' | 'shellBed' | 'board' | 'sidePiece';
 /** a thing on the floor: (x, y) — the middle of it where it enters the sand (mm); sink — the share of its height under the
  *  sand; s — scale; rot — degrees (clockwise); heap — the drifts against its sides (1 — by its size); drift — a bank of
  *  sand drifted over one end of it (minus — the left end, plus — the right; |drift| — the share of its width it covers),
  *  driftH — the bank's height (a share of the thing's height, 0.5); stuck — it stands stuck in the sand by one end (a
- *  blade, a spar driven in): its foot need not lie along the sand; opt — the kind's own */
-export interface PropSpec { kind: PropKind; x: number; y: number; s?: number; rot?: number; sink?: number; flip?: boolean; heap?: number; drift?: number; driftH?: number; stuck?: boolean; opt?: Record<string, unknown>; name?: string }
+ *  blade, a spar driven in): its foot need not lie along the sand; rests — it rests on points of itself (an anchor on its
+ *  ring, stock and fluke, a grapnel on its hooks): it must touch the sand at two places at least, far apart; opt — the
+ *  kind's own */
+export interface PropSpec { kind: PropKind; x: number; y: number; s?: number; rot?: number; sink?: number; flip?: boolean; heap?: number; drift?: number; driftH?: number; stuck?: boolean; rests?: boolean; opt?: Record<string, unknown>; name?: string }
 export interface DrawO { x: number; y: number; s: number; rot: number; flip: boolean; seed: number; opt: Record<string, unknown> }
 export interface Env { u: string; L: unknown; K: Kit }
 interface PropDef { mat: AgeMat; draw(e: Env, o: DrawO): string }
@@ -149,18 +151,18 @@ export function holeSvg(x: number, y: number, r: number, kind: 'shot' | 'breach'
     return out.join('');
   }
   // burnt through: a long ragged hole along the strakes (the fire ran along the planks), its edges eaten round and charred
-  // — no splinters: a wide black rim cracked like alligator skin, a ring of rusty-orange scale where the fire stopped,
-  // a halo of soot round it; inside the dark, the charred frames
+  // — no splinters: a wide black rim cracked like alligator skin, grey-brown scale and ash where the fire stopped (long
+  // cold: no glow), a halo of soot round it; inside the dark, the charred frames, silt settled in its lower lip
   const id = `hc${Math.round(x * 10)}${Math.round(y * 10)}`;
   const lobe = (rx: number, ry: number, n: number, k: number, ph: number): P[] => Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2, q = 1 + k * Math.sin(a * 3 + ph) + k * 0.6 * Math.sin(a * 5 + ph * 2) + (R() - 0.5) * k * 0.8; return [x + Math.cos(a) * rx * q, y + Math.sin(a) * ry * q]; });
   const round = (p: P[]) => { const m = (a: P, b: P): P => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; let d = `M${f(m(p[p.length - 1], p[0])[0])} ${f(m(p[p.length - 1], p[0])[1])}`; p.forEach((q, i) => { const e = m(q, p[(i + 1) % p.length]); d += `Q${f(q[0])} ${f(q[1])} ${f(e[0])} ${f(e[1])}`; }); return d + 'Z'; };
   const ph = R() * 6, soot = lobe(r * 3.1, r * 1.35, 24, 0.28, ph), scale = lobe(r * 2.5, r * 1.05, 24, 0.3, ph), rim = lobe(r * 2.2, r * 0.9, 24, 0.3, ph), core = lobe(r * 1.7, r * 0.6, 22, 0.36, ph + 0.7);
-  out.push(`<path d="${round(soot)}" fill="#120e0c" fill-opacity=".5" filter="url(#wB05)"/><path d="${round(scale)}" fill="#9a5226" fill-opacity=".3" filter="url(#wB02)"/><path d="${round(rim)}" fill="#0e0a08"/>`);
+  out.push(`<path d="${round(soot)}" fill="#120e0c" fill-opacity=".5" filter="url(#wB05)"/><path d="${round(scale)}" fill="#6a6056" fill-opacity=".32" filter="url(#wB02)"/><path d="${round(rim)}" fill="#0e0a08"/>`);
   out.push(`<clipPath id="${id}r"><path d="${round(rim)}"/></clipPath><g clip-path="url(#${id}r)">${charSvg(x - r * 2.4, y - r, x + r * 2.4, y + r, R, 1.6)}</g>`);
-  for (let i = 0; i < 18; i++) { const a = R() * Math.PI * 2, d2 = 0.95 + R() * 0.3; out.push(`<circle cx="${f(x + Math.cos(a) * r * 2.3 * d2)}" cy="${f(y + Math.sin(a) * r * 0.95 * d2)}" r="${f(0.1 + R() * r * 0.09)}" fill="${R() < 0.5 ? '#b86a30' : '#7a4020'}" fill-opacity="${f(0.4 + R() * 0.45)}"/>`); }
+  for (let i = 0; i < 18; i++) { const a = R() * Math.PI * 2, d2 = 0.95 + R() * 0.3; out.push(`<circle cx="${f(x + Math.cos(a) * r * 2.3 * d2)}" cy="${f(y + Math.sin(a) * r * 0.95 * d2)}" r="${f(0.1 + R() * r * 0.09)}" fill="${R() < 0.5 ? '#7a7266' : '#3e3a34'}" fill-opacity="${f(0.35 + R() * 0.4)}"/>`); }
   // inside: the dark, one or two frames burnt to stubs of different heights
   let fr = ''; for (const t of [-0.55, 0.35].slice(0, 1 + Math.floor(R() * 2))) { const xx = x + t * r * 1.6, hh = r * (0.3 + R() * 0.5); fr += `<path d="M${f(xx)} ${f(y + r)}V${f(y + r * 0.6 - hh)}l${f(r * 0.12)} ${f(-r * 0.2)}l${f(r * 0.1)} ${f(r * 0.25)}V${f(y + r)}Z" fill="#1e140c"/><path d="M${f(xx + 0.05)} ${f(y + r)}V${f(y + r * 0.6 - hh)}" stroke="#5a4e44" stroke-width="${f(r * 0.05)}"/>`; }
-  out.push(`<clipPath id="${id}"><path d="${round(core)}"/></clipPath><path d="${round(core)}" fill="#030202"/><g clip-path="url(#${id})">${fr}</g>`);
+  out.push(`<clipPath id="${id}"><path d="${round(core)}"/></clipPath><path d="${round(core)}" fill="#100e0c"/><g clip-path="url(#${id})">${fr}<ellipse cx="${f(x + r * 0.2)}" cy="${f(y + r * 0.75)}" rx="${f(r * 1.8)}" ry="${f(r * 0.45)}" fill="#7a6e5c" fill-opacity=".75"/><path d="M${f(x - r * 1.2)} ${f(y + r * 0.42)}Q${f(x)} ${f(y + r * 0.25)} ${f(x + r * 1.4)} ${f(y + r * 0.4)}" fill="none" stroke="#a89a80" stroke-width="${f(r * 0.06)}" stroke-opacity=".6"/></g>`);
   out.push(`<path d="${round(core)}" fill="none" stroke="#4a4038" stroke-width="${f(r * 0.05)}" stroke-opacity=".6"/>`);
   return out.join('');
 }
@@ -205,9 +207,17 @@ function firePot(id: string, R: () => number, state: string): string {
     const J: P[] = [[-4.75, -6.4], ...jag([-4.75, -6.4], [4.75, -3.6], 6, 1.1, R), [4.75, -3.6]];
     const lower = `M-4.75 -6.4L${pts(J.slice(1)).replace(/ /g, 'L')}C5 -2.4 4.4 -.4 1.6 0L-1.6 0C-4.4 -.4 -5 -3.4 -4.75 -6.4Z`;
     const far: P[] = J.map(([x, y], i) => [x * 0.86, y - 1.6 - Math.sin((i / (J.length - 1)) * Math.PI) * 0.5]);
-    return clay + `<path d="M${pts([...J, ...far.reverse()]).replace(/ /g, 'L')}Z" fill="url(#${id}i)"/>` +
+    return clay + `<path d="M3.6 -.3C5.6 -1.2 8.6 -1 10.6 -.6C11.6 -.4 11.2 .2 9.6 .3C7.4 .5 5 .4 3.6 -.3Z" fill="#120c08" fill-opacity=".85"/><path d="M5 -.55Q7.4 -1 9.6 -.6" fill="none" stroke="#8a8478" stroke-width=".2" stroke-opacity=".55"/>` + `<path d="M${pts([...J, ...far.reverse()]).replace(/ /g, 'L')}Z" fill="url(#${id}i)"/>` +
       `<clipPath id="${id}k"><path d="${lower}"/></clipPath><g clip-path="url(#${id}k)"><path d="${body}" fill="url(#${id}c)"/>${band}${knobs}</g><path d="${lower}" fill="none" stroke="#3a1a0c" stroke-width=".2"/>` +
       `<polyline points="${pts(J)}" fill="none" stroke="#ecb890" stroke-width=".35"/>`;
+  }
+  if (state === 'sealed') {
+    // whole, its mouth stopped with a cap of pitch, the cord tied round the neck, the wick of twisted rag hanging out
+    const wick = 'M.3 -12.6C1.6 -13.6 3 -13.2 3.6 -11.6C4.1 -10.2 4.6 -9.2 5.6 -8.8';
+    return clay + `<path d="${body}" fill="url(#${id}c)" stroke="#3a1a0c" stroke-width=".2"/>${band}${knobs}` +
+      `<path d="M-1.6 -10.4Q0 -9.8 1.6 -10.4M-1.6 -9.9Q0 -9.3 1.6 -9.9" fill="none" stroke="#6a5a40" stroke-width=".42"/><path d="M1.5 -10.1l.9 1.4M1.6 -10l1.3 .9" stroke="#6a5a40" stroke-width=".3" stroke-linecap="round"/>` +
+      `<path d="M-1.9 -11C-2 -12.4 -1.2 -13 0 -13C1.2 -13 2 -12.4 1.9 -11Z" fill="#1c1410" stroke="#0a0604" stroke-width=".18"/><path d="M-1.2 -12.4Q-.4 -12.9 .6 -12.7" fill="none" stroke="#6a5a4a" stroke-width=".2" stroke-opacity=".7"/>` +
+      `<path d="${wick}" fill="none" stroke="#2a221a" stroke-width=".85" stroke-linecap="round"/><path d="${wick}" fill="none" stroke="#a89878" stroke-width=".5" stroke-dasharray=".4 .3"/><path d="M5.6 -8.8l.5 .6M5.6 -8.8l.7 -.1" stroke="#8a7a5a" stroke-width=".2"/>`;
   }
   const chip: P[] = [[1.6, -9.5], [3.5, -8.4], ...jag([3.5, -8.4], [1.3, -7.2], 3, 0.6, R), [1.3, -7.2]];
   return clay + `<path d="${body}" fill="url(#${id}c)" stroke="#3a1a0c" stroke-width=".2"/>${band}${knobs}` +
@@ -225,14 +235,16 @@ function compass(id: string): string {
     rose += `<path d="M${f(s1[0])} ${f(s1[1] - 3.2)}L${f(t[0])} ${f(t[1] - 3.2)}L${f(s2[0])} ${f(s2[1] - 3.2)}Z" fill="${i % 2 ? '#8a7a5a' : i === 0 ? '#5e3a2a' : '#3a3428'}" fill-opacity=".7"/>`;
   }
   let ticks = ''; for (let i = 0; i < 32; i++) { const a = (i * Math.PI) / 16; ticks += `M${f(Math.sin(a) * 3.3)} ${f(-3.2 - Math.cos(a) * 1.75)}L${f(Math.sin(a) * 3.6)} ${f(-3.2 - Math.cos(a) * 1.9)}`; }
-  return `<defs>${lin(id + 'b', [[0, '#e0bc72'], [0.35, '#a47c3a'], [1, '#3e2a10']], 0, 0, 1, 0)}${lin(id + 'r', [[0, '#f2d48a'], [1, '#7a5a26']], 0, 0, 1, 1)}</defs>` +
+  return `<defs>${lin(id + 'b', [[0, '#e0bc72'], [0.35, '#a47c3a'], [1, '#3e2a10']], 0, 0, 1, 0)}${lin(id + 'r', [[0, '#f2d48a'], [1, '#7a5a26']], 0, 0, 1, 1)}${lin(id + 'l', [[0, '#c8a056'], [0.5, '#8a6428'], [1, '#3e2a10']], 0, 0, 1, 1)}</defs>` +
+    // the lid standing open behind, on its hinge at the back of the rim: its rim and the darker inside
+    `<path d="M-.9 -5.3L-.9 -5.9H.9L.9 -5.3Z" fill="#5a4018" stroke="#2e1e08" stroke-width=".12"/><ellipse cx=".4" cy="-7.4" rx="4.3" ry="2.3" transform="rotate(-5 .4 -7.4)" fill="url(#${id}l)" stroke="#2e1e08" stroke-width=".2"/><ellipse cx=".45" cy="-7.35" rx="3.5" ry="1.7" transform="rotate(-5 .45 -7.35)" fill="#6a4c1c" stroke="#2e1e08" stroke-width=".15"/><path d="M-2.6 -8.8Q-.6 -9.7 1.8 -9.4" fill="none" stroke="#f0d08a" stroke-width=".25" stroke-opacity=".6"/>` +
     `<path d="M-4.5 -3.2L-4.1 -1.1A4.1 1.1 0 0 0 4.1 -1.1L4.5 -3.2Z" fill="url(#${id}b)" stroke="#2e1e08" stroke-width=".18"/>` +
     `<path d="M-4.3 -2.2A4.3 1.1 0 0 0 4.3 -2.2" fill="none" stroke="#f0d08a" stroke-width=".22" stroke-opacity=".6"/>` +
     `<ellipse cx="0" cy="-3.2" rx="4.5" ry="2.4" fill="url(#${id}r)" stroke="#2e1e08" stroke-width=".18"/><ellipse cx="0" cy="-3.2" rx="3.75" ry="1.98" fill="#cfc3a2" stroke="#4a3412" stroke-width=".2"/>` +
     `<path d="${ticks}" stroke="#4a3e2a" stroke-width=".1"/>${rose}<path d="M-2.4 -2.4L.3 -3.5L2.6 -3.9L-.2 -2.9Z" fill="#1e1a14"/><circle cx="0" cy="-3.2" r=".28" fill="#a47c3a"/>` +
     `<path d="M-3.4 -2.6C-1.8 -1.3 1.8 -1.2 3.5 -2.4C2 -1.7 -1.6 -1.6 -3.4 -2.6Z" fill="#b8a888" fill-opacity=".9"/>` +
     // the glass gone milky, a crust of growth in it, cracked through from a blow at the right
-    `<ellipse cx="0" cy="-3.2" rx="3.75" ry="1.98" fill="#a8ae9c" fill-opacity=".5"/><ellipse cx="-1.4" cy="-3.6" rx="1.6" ry=".7" fill="#c4c8b6" fill-opacity=".35"/><ellipse cx="1.8" cy="-2.6" rx="1.2" ry=".5" fill="#5a6a48" fill-opacity=".35"/>` +
+    `<ellipse cx="0" cy="-3.2" rx="3.75" ry="1.98" fill="#a8ae9c" fill-opacity=".14"/><ellipse cx="-1.4" cy="-3.6" rx="1.6" ry=".7" fill="#c4c8b6" fill-opacity=".35"/><ellipse cx="1.8" cy="-2.6" rx="1.2" ry=".5" fill="#5a6a48" fill-opacity=".35"/>` +
     `<path d="M2.2 -3.3L-.9 -4.8L-2.6 -4.6M2.2 -3.3L3.3 -4.6M2.2 -3.3L.6 -1.5M2.2 -3.3L3.4 -2.1M.4 -4.1L-.4 -2.6" fill="none" stroke="#f2f2ea" stroke-width=".13" stroke-opacity=".75"/><path d="M2.2 -3.3L-.9 -4.8M2.2 -3.3L.6 -1.5" fill="none" stroke="#1e2018" stroke-width=".1" stroke-opacity=".6" transform="translate(.12 .1)"/>` +
     `<circle cx="-4.65" cy="-3.1" r=".45" fill="#8a6428" stroke="#2e1e08" stroke-width=".12"/><circle cx="4.65" cy="-3.1" r=".45" fill="#5a4018" stroke="#2e1e08" stroke-width=".12"/>`;
 }
@@ -304,27 +316,28 @@ function staves(id: string, R: () => number): string {
 
 // ---- the kinds ----
 export const PROP_DEFS: Record<PropKind, PropDef> = {
-  anchor: { mat: 'iron', draw: (e, o) => e.K.anchor(e.u, e.L, { ...o, contact: false }) },
+  anchor: { mat: 'iron', draw: (e, o) => own(o, anchor2(e.u + 'an')) },
   cannon: { mat: 'iron', draw: (e, o) => e.K.cannon(e.u, e.L, { ...o, carriage: false, contact: false }) },
   shot: { mat: 'iron', draw: (e, o) => e.K.shot(e.u, e.L, { ...o, contact: false }) },
-  bottle: { mat: 'glass', draw: (e, o) => e.K.bottle(e.u, e.L, { ...o, lying: o.opt.lying !== false, kind: o.opt.kind ?? 'rum', contact: false }) },
-  pistol: { mat: 'iron', draw: (e, o) => e.K.pistol(e.u, e.L, { ...o, contact: false }) },
-  sabre: { mat: 'iron', draw: (e, o) => e.K.sabre(e.u, e.L, { ...o, contact: false }) },
+  bottle: { mat: 'glass', draw: (e, o) => own(o, onionBottle(e.u + 'bo')) },
+  pistol: { mat: 'iron', draw: (e, o) => own(o, pistol2(e.u + 'pi')) },
+  sabre: { mat: 'iron', draw: (e, o) => own(o, sabre2(e.u + 'sa')) },
   barrel: { mat: 'wood', draw: (e, o) => e.K.barrel(e.u, e.L, { ...o, kind: o.opt.kind ?? 'powder', lying: o.opt.lying !== false, contact: false }) },
   chest: { mat: 'wood', draw: (e, o) => e.K.chest(e.u, e.L, { ...o, open: o.opt.open ?? 0.85, gold: o.opt.gold ?? true, contact: false }) },
   crate: { mat: 'wood', draw: (e, o) => e.K.crate(e.u, e.L, { ...o, contact: false }) },
   rock: { mat: 'stone', draw: (e, o) => e.K.rock(e.u, e.L, { ...o, w: 24, h: 15, foam: false, contact: false }) },
   coins: { mat: 'gold', draw: (e, o) => e.K.coins(e.u, e.L, { ...o, n: o.opt.n ?? 7, contact: false }) },
-  bell: { mat: 'brass', draw: (e, o) => e.K.bell(e.u, e.L, { ...o, frame: false, contact: false }) },
+  bell: { mat: 'brass', draw: (e, o) => own(o, bell2(e.u + 'be')) },
   /** opt.pts — the chain's path relative to (x, y), in mm */
-  chain: { mat: 'iron', draw: (e, o) => e.K.chain(e.u, e.L, ((o.opt.pts as P[]) ?? [[-12, 0], [12, 0]]).map(([x, y]): P => [o.x + x * o.s, o.y + y * o.s]), { link: 4.4 * o.s, seed: o.seed }) },
+  chain: { mat: 'iron', draw: (e, o) => chain2(e.u + 'ch', ((o.opt.pts as P[]) ?? [[-12, 0], [12, 0]]).map(([x, y]): P => [o.x + x * o.s, o.y + y * o.s]), 4 * o.s) },
   skull: { mat: 'bone', draw: (e, o) => own(o, skull(e.u + 'sk', rng(o.seed))) },
   /** opt.state: 'cracked' | 'broken' | 'shards' */
   firePot: { mat: 'clay', draw: (e, o) => own(o, firePot(e.u + 'fp', rng(o.seed), String(o.opt.state ?? 'cracked'))) },
   compass: { mat: 'brass', draw: (e, o) => own(o, compass(e.u + 'cp')) },
   mapCase: { mat: 'leather', draw: (e, o) => own(o, mapCase(e.u + 'mc')) },
   /** opt.rope: a rotten stub of line on the eye */
-  grapnel: { mat: 'iron', draw: (e, o) => own(o, grapnel2(e.u + 'gr', rng(o.seed), !!o.opt.rope)) },
+  grapnel: { mat: 'iron', draw: (e, o) => own(o, grapnel3(e.u + 'gr', rng(o.seed))) },
+  sidePiece: { mat: 'wood', draw: (e, o) => own(o, sidePiece(e.u + 'sp', rng(o.seed), String(o.opt.paint ?? '#8a3a2a'), String(o.opt.band ?? '#c8a050'))) },
   /** opt.len, opt.th, opt.charred */
   plank: { mat: 'wood', draw: (e, o) => own(o, timber(e.u + 'pl', rng(o.seed), { len: Number(o.opt.len ?? 30), th: Number(o.opt.th ?? 2.6), kind: 'plank', charred: !!o.opt.charred })) },
   beam: { mat: 'char', draw: (e, o) => own(o, timber(e.u + 'bm', rng(o.seed), { len: Number(o.opt.len ?? 34), th: 4.2, kind: 'beam', charred: o.opt.charred !== false })) },
@@ -409,16 +422,16 @@ export function placeProp(spec: PropSpec, i: number, occ0: Occ, seed: number): P
   }
   if (xa === Infinity) { xa = spec.x - 0.5; xb = spec.x + 0.5; }
   const size = Math.max(1, Math.min(h, w * 0.7)), k = spec.heap ?? 1;
-  const hl = Math.min(2.6, 0.5 + size * 0.14) * k, hr = hl * 0.62, wl = 2.2 + size * 0.55, wr = 1.6 + size * 0.4, cl = Math.min((xb - xa) * 0.3, 0.8 + size * 0.2), cr = cl * 0.7;
-  const ph = R() * 6, lumps = Array.from({ length: 6 }, () => [R(), R() * 0.35] as P);
-  const dr = spec.drift ?? 0, dw = Math.abs(dr) * w, dH = (spec.driftH ?? 0.5) * (ys - box.y0);
+  const hl = Math.min(1.5, 0.35 + size * 0.08) * k, hr = hl * 0.7, wl = 1.4 + size * 0.3, wr = 1.1 + size * 0.24, cl = Math.min((xb - xa) * 0.3, 0.8 + size * 0.2), cr = cl * 0.7;
+  const ph = R() * 6, lumps = Array.from({ length: 5 }, () => [R(), R() * 0.25] as P);
+  const dr = spec.drift ?? 0, dw = Math.abs(dr) * w, dH = Math.min(3, (spec.driftH ?? 0.35) * (ys - box.y0));
   const sand = (x: number) => {
     let y = ys + Math.sin(x * 1.3 + ph) * 0.12;
     if (x < xa) y -= hl * smooth((x - (xa - wl)) / wl);
     else if (x < xa + cl) y -= hl * (1 - smooth((x - xa) / cl)) * 0.9 + hl * 0.1;
     if (x > xb) y -= hr * smooth(((xb + wr) - x) / wr);
     else if (x > xb - cr) y -= hr * (1 - smooth((xb - x) / cr)) * 0.9 + hr * 0.1;
-    if (x >= xa && x <= xb) for (const [t, a] of lumps) { const c = xa + t * (xb - xa); y -= a * Math.exp(-Math.pow((x - c) / 1.2, 2)); }
+    if (x >= xa && x <= xb) for (const [t, a] of lumps) { const c = xa + t * (xb - xa); y -= a * Math.exp(-Math.pow((x - c) / 1.8, 2)); }
     if (dr) {
       // the bank over one end: full height over the covered share, a soft fall towards the middle and outwards
       const e = dr > 0 ? box.x1 : box.x0, inn = dr > 0 ? -1 : 1, u = (x - e) * inn;   // u: mm from the end inwards
@@ -428,7 +441,7 @@ export function placeProp(spec: PropSpec, i: number, occ0: Occ, seed: number): P
     return y;
   };
   const m0 = Math.min(xa - wl, dr < 0 ? box.x0 - dH * 2.2 - 2 : Infinity) - 0.5, m1 = Math.max(xb + wr, dr > 0 ? box.x1 + dH * 2.2 + 2 : -Infinity) + 0.5, mBottom = Math.max(box.y1, ys) + 2.6;
-  const sx = Math.max(xa, (xa + xb) / 2), sx1 = xb + Math.min(8, 0.3 * h + 1.2), ry = Math.max(0.5, Math.min(1.8, 0.1 * h + 0.3));
+  const sx = Math.max((xa + xb) / 2, xb - Math.min(2, 0.2 * (xb - xa))), sx1 = xb + Math.min(3.5, 0.14 * h + 0.9), ry = Math.max(0.5, Math.min(0.8, 0.04 * h + 0.35));
   const shadow = { cx: (sx + sx1) / 2, cy: ys + ry - 0.1, rx: (sx1 - sx) / 2, ry };
   const top: P[] = [];
   for (let ii = 0; ii < occ.w; ii++) for (let jj = 0; jj < occ.h; jj++) if (occ.a[jj * occ.w + ii]) { const x = occ.x0 + (ii + 0.5) * CELL, y = occ.y0 + jj * CELL; if (y < sand(x) - 0.3) top.push([x, y]); break; }
@@ -444,8 +457,8 @@ export interface FloorPaint {
   depth(y: number): number;
 }
 /** a barnacle: a little whitish volcano — an uneven dome, its slit-mouth at the top, lit at the upper left */
-export const barnacle = (x: number, y: number, r: number) => `<path d="M${f(x - r)} ${f(y + r * 0.3)}C${f(x - r * 0.9)} ${f(y - r * 0.5)} ${f(x - r * 0.4)} ${f(y - r * 0.75)} ${f(x)} ${f(y - r * 0.72)}C${f(x + r * 0.5)} ${f(y - r * 0.7)} ${f(x + r)} ${f(y - r * 0.3)} ${f(x + r * 0.95)} ${f(y + r * 0.35)}Z" fill="#b8b2a0" stroke="#5a5446" stroke-width="${f(Math.max(0.05, r * 0.1))}" stroke-opacity=".7"/>` +
-  `<path d="M${f(x - r * 0.3)} ${f(y - r * 0.5)}Q${f(x)} ${f(y - r * 0.35)} ${f(x + r * 0.3)} ${f(y - r * 0.52)}" fill="none" stroke="#3a362c" stroke-width="${f(r * 0.16)}" stroke-opacity=".75"/><path d="M${f(x - r * 0.7)} ${f(y)}Q${f(x - r * 0.6)} ${f(y - r * 0.5)} ${f(x - r * 0.25)} ${f(y - r * 0.62)}" fill="none" stroke="#ece6d4" stroke-width="${f(r * 0.18)}" stroke-opacity=".7"/>`;
+export const barnacle = (x: number, y: number, r: number) => `<path d="M${f(x - r)} ${f(y + r * 0.3)}C${f(x - r * 0.9)} ${f(y - r * 0.5)} ${f(x - r * 0.4)} ${f(y - r * 0.75)} ${f(x)} ${f(y - r * 0.72)}C${f(x + r * 0.5)} ${f(y - r * 0.7)} ${f(x + r)} ${f(y - r * 0.3)} ${f(x + r * 0.95)} ${f(y + r * 0.35)}Z" fill="#8e897a" stroke="#4a463a" stroke-width="${f(Math.max(0.05, r * 0.1))}" stroke-opacity=".6"/>` +
+  `<path d="M${f(x - r * 0.3)} ${f(y - r * 0.5)}Q${f(x)} ${f(y - r * 0.35)} ${f(x + r * 0.3)} ${f(y - r * 0.52)}" fill="none" stroke="#3a362c" stroke-width="${f(r * 0.16)}" stroke-opacity=".75"/><path d="M${f(x - r * 0.7)} ${f(y)}Q${f(x - r * 0.6)} ${f(y - r * 0.5)} ${f(x - r * 0.25)} ${f(y - r * 0.62)}" fill="none" stroke="#c8c2b0" stroke-width="${f(r * 0.16)}" stroke-opacity=".45"/>`;
 /** the current runs to the right: everything that grows on the floor leans and streams that way */
 export const CURRENT = 1;
 /** a frond of weed growing from (x, y): a tapering ribbon bent over by the current, a lighter midrib */
@@ -513,79 +526,128 @@ export const coralCrust = (x: number, y: number, r: number, c: string, R: () => 
   for (let i = 0; i < 5; i++) o += `<circle cx="${f(x + (R() - 0.5) * r * 2.4)}" cy="${f(y + (R() - 0.6) * r * 0.9)}" r="${f(r * (0.2 + R() * 0.2))}" fill="${mix(c, '#ffffff', 0.25)}" fill-opacity=".8"/>`;
   return o;
 };
-/** the SVG of one placed thing (in the scene, mm); body — its drawing at the nominal anchor */
+/** a sponge of a few tubes standing up from (x, y), their mouths open at the top */
+export function tubeSponge(x: number, y: number, h: number, c: string, R: () => number): string {
+  let o = ''; const n = 2 + Math.floor(R() * 3), dark = mix(c, '#000000', 0.45), light = mix(c, '#ffffff', 0.25);
+  for (let i = 0; i < n; i++) {
+    const l = h * (0.45 + R() * 0.55), r = h * (0.09 + R() * 0.05), x0 = x + (i - (n - 1) / 2) * r * 1.9 + (R() - 0.5) * r, lean = CURRENT * (R() - 0.2) * l * 0.18, tx = x0 + lean;
+    o += `<path d="M${f(x0 - r)} ${f(y)}Q${f(x0 - r + lean * 0.4)} ${f(y - l * 0.6)} ${f(tx - r * 1.1)} ${f(y - l)}L${f(tx + r * 1.1)} ${f(y - l)}Q${f(x0 + r + lean * 0.4)} ${f(y - l * 0.6)} ${f(x0 + r)} ${f(y)}Z" fill="${c}" stroke="${dark}" stroke-width=".12"/>` +
+      `<ellipse cx="${f(tx)}" cy="${f(y - l)}" rx="${f(r * 1.1)}" ry="${f(r * 0.42)}" fill="${dark}"/><path d="M${f(x0 - r * 0.5)} ${f(y - 0.2)}Q${f(x0 - r * 0.5 + lean * 0.4)} ${f(y - l * 0.6)} ${f(tx - r * 0.6)} ${f(y - l + 0.3)}" fill="none" stroke="${light}" stroke-width="${f(r * 0.35)}" stroke-opacity=".6"/>`;
+  }
+  return o;
+}
+/** an anemone: a short column, a crown of tentacles swaying with the current */
+export function anemone(x: number, y: number, h: number, c: string, R: () => number): string {
+  const dark = mix(c, '#000000', 0.4), light = mix(c, '#ffffff', 0.35), cw = h * 0.22, top = y - h * 0.35;
+  let o = `<path d="M${f(x - cw)} ${f(y)}C${f(x - cw * 1.1)} ${f(top + h * 0.1)} ${f(x - cw * 1.3)} ${f(top)} ${f(x)} ${f(top)}C${f(x + cw * 1.3)} ${f(top)} ${f(x + cw * 1.1)} ${f(top + h * 0.1)} ${f(x + cw)} ${f(y)}Z" fill="${dark}"/>`;
+  const n = 9 + Math.floor(R() * 5);
+  for (let i = 0; i < n; i++) {
+    const a = -1.2 + (i / (n - 1)) * 2.4, l = h * (0.45 + R() * 0.3), e: P = [x + Math.sin(a) * l + CURRENT * l * 0.25, top - Math.cos(a) * l * 0.8];
+    o += `<path d="M${f(x + Math.sin(a) * cw)} ${f(top)}Q${f(x + Math.sin(a) * l * 0.6)} ${f(top - Math.cos(a) * l * 0.6)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="${i % 2 ? c : light}" stroke-width="${f(Math.max(0.18, h * 0.05))}" stroke-linecap="round"/>`;
+  }
+  return o;
+}
+/** a small sea fan grown on a thing */
+export function smallFan(x: number, y: number, h: number, c: string, R: () => number): string {
+  let o = ''; const n = 7, tilt = CURRENT * 0.25 + (R() - 0.5) * 0.4;
+  for (let i = 0; i < n; i++) { const a = tilt - 0.9 + (i / (n - 1)) * 1.8, l = h * (0.7 + R() * 0.3); o += `<path d="M${f(x)} ${f(y)}Q${f(x + Math.sin(a) * l * 0.4)} ${f(y - Math.cos(a) * l * 0.5)} ${f(x + Math.sin(a) * l)} ${f(y - Math.cos(a) * l)}" fill="none" stroke="${c}" stroke-width=".26" stroke-linecap="round"/>`; }
+  for (let kk = 1; kk <= 3; kk++) { const rr = h * kk / 3.6, ps: P[] = []; for (let i = 0; i <= 8; i++) { const a = tilt - 0.9 + (i / 8) * 1.8; ps.push([x + Math.sin(a) * rr, y - Math.cos(a) * rr]); } o += `<path d="M${pts(ps).replace(/ /g, 'L')}" fill="none" stroke="${c}" stroke-width=".14" stroke-opacity=".8"/>`; }
+  return o;
+}
+/** mussels: a cluster of dark blue-black shells */
+export function mussels(x: number, y: number, r: number, R: () => number): string {
+  let o = ''; const n = 3 + Math.floor(R() * 4);
+  for (let i = 0; i < n; i++) {
+    const cx = x + (R() - 0.5) * r * 3, cy = y + (R() - 0.5) * r, a = (R() - 0.5) * 120, rr = r * (0.6 + R() * 0.5);
+    o += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(rr)}" ry="${f(rr * 0.45)}" transform="rotate(${f(a)} ${f(cx)} ${f(cy)})" fill="#1e2228" stroke="#0a0c10" stroke-width=".08"/><path d="M${f(cx - rr * 0.5)} ${f(cy - rr * 0.1)}q${f(rr * 0.5)} ${f(-rr * 0.25)} ${f(rr)} 0" transform="rotate(${f(a)} ${f(cx)} ${f(cy)})" fill="none" stroke="#6a7a8a" stroke-width=".1" stroke-opacity=".7"/>`;
+  }
+  return o;
+}
+/** what has grown on a thing: none — bare (the stains only), shells — barnacles and mussels, weed — fronds from its top,
+ *  silt — a thick layer of sand on it, coral — one small coral of one of four forms (a sprig, a fan, tubes, an anemone) */
+export type Growth = 'none' | 'shells' | 'weed' | 'silt' | 'coral';
+const GROWTHS: Growth[] = ['coral', 'none', 'shells', 'silt', 'weed', 'shells', 'none', 'coral', 'silt'];
+/** the SVG of one placed thing (in the scene, mm); body — its drawing at the nominal anchor. The thing is cut at the sand
+ *  line (what is under it is not seen: the floor itself shows there, one floor, no patch over it); the sand heaped
+ *  against its sides and a lip of sand over its edge lie over it; a short dark shade where it meets the sand */
 export function propSvg(p: Placed, body: string, paint: FloorPaint): string {
-  const id = `wp${p.i}`, b = p.box, R = rng(p.seed * 13 + 5), w = b.x1 - b.x0, h = b.y1 - b.y0, a = AGE[p.mat], k = paint.depth(p.ys), [sd0, sd1, sd2] = paint.sand;
+  const id = `wp${p.i}`, b = p.box, R = rng(p.seed * 13 + 5), w = b.x1 - b.x0, h = b.y1 - b.y0, a = AGE[p.mat], k = paint.depth(p.ys), [sd0, sd1] = paint.sand;
   const pad = 1.5, bx = b.x0 - pad, by = b.y0 - pad, bw = w + 2 * pad, bh = h + 2 * pad;
+  const growth: Growth = (p.spec.opt?.growth as Growth | undefined) ?? (p.mat === 'gold' ? (p.i % 2 ? 'none' : 'silt') : GROWTHS[(p.i * 4 + p.seed) % GROWTHS.length]);
+  const top: P[] = []; for (let x = p.m0; x <= p.m1 + 0.01; x += 0.3) top.push([x, p.sand(x)]);
+  const X0 = Math.min(bx, p.m0) - 20, X1 = Math.max(bx + bw, p.m1) + 20;
+  const aboveD = `M${f(X0)} ${f(by - 30)}H${f(X1)}V${f(p.ys)}L${pts([...top].reverse()).replace(/ /g, 'L')}L${f(X0)} ${f(p.ys)}Z`;
+  const band = `M${f(X0)} ${f(p.ys - 1.6)}L${pts(top.map(([x, y]) => [x, y - 1.6] as P)).replace(/ /g, 'L')}L${f(X1)} ${f(p.ys - 1.6)}V${f(p.ys + 0.35)}L${pts([...top].reverse().map(([x, y]) => [x, y + 0.35] as P)).replace(/ /g, 'L')}L${f(X0)} ${f(p.ys + 0.35)}Z`;
   const out: string[] = [`<defs><g id="${id}">${p.dx || p.dy ? `<g transform="translate(${f(p.dx)} ${f(p.dy)})">${body}</g>` : body}</g>` +
-    `<mask id="${id}m" maskUnits="userSpaceOnUse" x="${f(bx)}" y="${f(by)}" width="${f(bw)}" height="${f(bh)}"><use href="#${id}" filter="url(#wWhite)"/></mask></defs>`, `<use href="#${id}"/>`];
+    `<mask id="${id}m" maskUnits="userSpaceOnUse" x="${f(bx)}" y="${f(by)}" width="${f(bw)}" height="${f(bh)}"><use href="#${id}" filter="url(#wWhite)"/></mask><clipPath id="${id}a"><path d="${aboveD}"/></clipPath>` +
+    `<clipPath id="${id}b"><path d="${band}"/></clipPath></defs>`];
+  // the shade it throws on the sand right at its foot: its own outline a little to the right and down, only in a narrow
+  // band along the sand line (where it comes close to the sand); a short dark shadow at its base
+  out.push(`<g clip-path="url(#${id}b)"><use href="#${id}" filter="url(#wBlack)" transform="translate(.55 .4)" opacity=".34"/></g>`);
+  const s = p.shadow;
+  out.push(`<ellipse cx="${f(s.cx)}" cy="${f(s.cy)}" rx="${f(s.rx)}" ry="${f(s.ry)}" fill="#000" fill-opacity=".24" filter="url(#wB05)"/>`);
+  const thing: string[] = [`<use href="#${id}"/>`];
   // its age, on its own pixels only
   let age = '';
   a.b.forEach(([, op], j) => { age += `<rect x="${f(bx)}" y="${f(by)}" width="${f(bw)}" height="${f(bh)}" filter="url(#wAge-${p.mat}${j})" opacity="${op}"/>`; });
   const cells: P[] = []; cellsOf(p.occ, (x, y) => { if (y < p.sand(x) - 0.4) cells.push([x, y]); });
   const inside = (x: number, y: number, m: number) => [[0, 0], [m, 0], [-m, 0], [0, m], [0, -m]].every(([u, v]) => occAt(p.occ, x + u, y + v));
-  // rust and verdigris run down from the upper edges; on iron pits eaten into it with a rim of orange
   if (a.streak) for (const [x, y] of p.top.filter(() => R() < (p.mat === 'iron' ? 0.13 : 0.07))) age += `<path d="M${f(x)} ${f(y + 0.3)}q${f((R() - 0.5) * 0.4)} ${f(1 + R() * 2)} ${f((R() - 0.5) * 0.3)} ${f(2 + R() * 4.5)}" stroke="${a.streak}" stroke-width="${f(0.25 + R() * 0.4)}" stroke-opacity=".5" fill="none" stroke-linecap="round"/>`;
   if (p.mat === 'iron') for (let n = 0; n < Math.min(40, w * h * 0.03) && cells.length; n++) { const [x, y] = cells[Math.floor(R() * cells.length)], r = 0.12 + R() * 0.22; if (inside(x, y, r * 1.6)) age += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r * 1.6)}" fill="#a85a26" fill-opacity=".45"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="#140c08" fill-opacity=".75"/>`; }
-  // silt: a grey-beige layer settled on every upper face (thick on the flat tops, a film down the sides), a fine dust
+  // silt settled on its upper faces: a crisp sandy layer (thick on «silt» things), a fine dust
+  const silt = mix(mix(sd1, sd0, 0.5), '#a09070', 0.15);
   if (p.top.length > 2) {
     let d = '', prev: P | null = null;
-    for (const q of p.top) { d += (prev && Math.abs(q[1] - prev[1]) < 0.9 ? 'L' : 'M') + `${f(q[0])} ${f(q[1] + 0.5)}`; prev = q; }
-    const silt = mix(mix(sd1, sd0, 0.35), '#8c887a', 0.3);
-    age += `<path d="${d}" fill="none" stroke="${silt}" stroke-width="${f(Math.min(2.6, 1.1 + h * 0.07))}" stroke-opacity=".6" stroke-linejoin="round" filter="url(#wB05)"/>`;
-    age += `<path d="${d}" fill="none" stroke="${mix(silt, sd0, 0.5)}" stroke-width="${f(Math.min(0.9, 0.4 + h * 0.025))}" stroke-opacity=".55" stroke-linejoin="round" transform="translate(0 -.15)" filter="url(#wB02)"/>`;
+    for (const q of p.top) { d += (prev && Math.abs(q[1] - prev[1]) < 0.9 ? 'L' : 'M') + `${f(q[0])} ${f(q[1] + 0.35)}`; prev = q; }
+    const th = growth === 'silt' ? Math.min(2.2, 0.9 + h * 0.07) : Math.min(1, 0.4 + h * 0.03);
+    age += `<path d="${d}" fill="none" stroke="${silt}" stroke-width="${f(th)}" stroke-opacity="${growth === 'silt' ? 0.85 : 0.5}" stroke-linejoin="round" filter="url(#wB02)"/>`;
+    if (growth === 'silt') age += `<path d="${d}" fill="none" stroke="${mix(silt, '#ffffff', 0.2)}" stroke-width=".25" stroke-opacity=".7" transform="translate(0 -.25)"/>`;
   }
-  for (let n = 0; n < w * h * 0.08; n++) { const x = b.x0 + R() * w, y = b.y0 + R() * h * 0.7; age += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(0.05 + R() * 0.07)}" fill="${sd1}" fill-opacity="${f(0.25 + R() * 0.3)}"/>`; }
-  // barnacles in little clusters, more on the lower half; a crust of coralline here and there
-  // (inside its outline: a cell and its neighbours covered; more of them low, near the sand, where the larvae settle)
-  const nC = Math.round(Math.min(9, (w * h) / 45 + 1) * a.fouling);
+  for (let n = 0; n < w * h * 0.06; n++) { const x = b.x0 + R() * w, y = b.y0 + R() * h * 0.7; age += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(0.05 + R() * 0.07)}" fill="${sd1}" fill-opacity="${f(0.25 + R() * 0.3)}"/>`; }
+  // barnacles: a few on most things, clusters and mussels on «shells» things, more of them low (where the larvae settle)
+  const nC = Math.round(Math.min(9, (w * h) / 45 + 1) * a.fouling * (growth === 'shells' ? 1.4 : growth === 'none' || growth === 'silt' ? 0.3 : 0.6));
   for (let n = 0; n < nC && cells.length; n++) {
     let c = cells[Math.floor(R() * cells.length)]; for (let t = 0; t < 2; t++) { const d = cells[Math.floor(R() * cells.length)]; if (d[1] > c[1]) c = d; }
     const r0 = (0.25 + R() * 0.3) * Math.min(1.3, 0.55 + h / 20), m = 2 + Math.floor(R() * 4);
-    if (R() < 0.35 && inside(c[0], c[1], r0 * 2)) age += `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${f(r0 * 3)}" ry="${f(r0 * 1.6)}" fill="${paint.coral ? mix(paint.coral[2], '#c4b4ac', 0.4) : '#c4a4a0'}" fill-opacity=".35"/>`;
+    if (growth === 'shells' && R() < 0.35 && inside(c[0], c[1], r0 * 2)) age += mussels(c[0], c[1], r0 * 1.4, R);
     for (let j = 0; j < m; j++) { const x = c[0] + (R() - 0.5) * r0 * 5, y = c[1] + (R() - 0.5) * r0 * 3, r = r0 * (0.55 + R() * 0.6); if (inside(x, y, r * 0.9)) age += barnacle(x, y, r); }
   }
-  // the water between: paler and bluer with distance (no caustics on the things: the light net lies on the sand)
-  age += `<rect x="${f(bx)}" y="${f(by)}" width="${f(bw)}" height="${f(bh)}" fill="${paint.haze}" opacity="${f(0.05 + (1 - k) * 0.22)}"/>`;
-  out.push(`<g mask="url(#${id}m)">${age}</g>`);
-  // corals and shells settled on the bigger things (on their upper outline, standing up out of it)
-  if (paint.coral && a.fouling >= 0.5 && w * h > 70 && p.top.length > 6) {
-    let cg = ''; const n = (p.spec.opt?.coral as number | undefined) ?? (R() < 0.6 ? 1 : 2);
-    for (let i = 0; i < n; i++) { const q = p.top[Math.floor((0.15 + R() * 0.7) * p.top.length)]; const c = mix(paint.coral[i % paint.coral.length], paint.haze, 0.12);
-      cg += R() < 0.55 ? coralSprig(q[0], q[1] + 0.5, 2.6 + R() * Math.min(4, h * 0.25), c, R) : coralCrust(q[0], q[1] + 0.4, 0.7 + R() * 0.6, c, R); }
-    out.push(cg);
+  // the water between: paler with distance
+  age += `<rect x="${f(bx)}" y="${f(by)}" width="${f(bw)}" height="${f(bh)}" fill="${paint.haze}" opacity="${f(0.04 + (1 - k) * 0.3)}"/>`;
+  // the line where it goes in: a dark crevice on its own pixels just over the sand
+  const enter = top.filter(([x]) => x >= p.xa - 0.3 && x <= p.xb + 0.3);
+  if (enter.length > 1) age += `<path d="M${pts(enter.map(([x, y]) => [x, y - 0.25] as P)).replace(/ /g, 'L')}" fill="none" stroke="#000" stroke-opacity=".45" stroke-width=".5" filter="url(#wB02)"/>`;
+  thing.push(`<g mask="url(#${id}m)">${age}</g>`);
+  // what has grown on it, standing up from its upper outline
+  const hz = (c: string) => mix(c, paint.haze, 0.12 + (1 - k) * 0.25);
+  const pick = () => p.top[Math.floor((0.12 + R() * 0.76) * p.top.length)];
+  if (p.top.length > 6 && paint.coral && growth === 'coral') {
+    const q = pick(), c = hz(paint.coral[(p.i + p.seed) % paint.coral.length]), hh = 2.2 + R() * Math.min(4.5, h * 0.3), form = (p.i + p.seed) % 4;
+    thing.push(form === 0 ? coralSprig(q[0], q[1] + 0.5, hh, c, R) : form === 1 ? smallFan(q[0], q[1] + 0.4, hh * 1.1, c, R) : form === 2 ? tubeSponge(q[0], q[1] + 0.5, hh, c, R) : anemone(q[0], q[1] + 0.4, hh * 0.9, c, R));
   }
-  // the sand over its buried part: the floor's own paint, clipped to the mound; the drifts lit at their crests
-  const top: P[] = []; for (let x = p.m0; x <= p.m1 + 0.01; x += 0.4) top.push([x, p.sand(x)]);
-  const mound = `M${f(p.m0)} ${f(p.mBottom)}L${pts(top).replace(/ /g, 'L')}L${f(p.m1)} ${f(p.mBottom)}Z`;
-  // (it fades out under the thing's lowest point, so its foot leaves no edge on the floor)
-  const fy0 = Math.max(p.ys, b.y1) + 0.2;
-  out.push(`<defs><linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="0" y1="${f(fy0)}" x2="0" y2="${f(p.mBottom)}"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>` +
-    `<mask id="${id}f" maskUnits="userSpaceOnUse" x="${f(p.m0 - 1)}" y="${f(b.y0 - 12)}" width="${f(p.m1 - p.m0 + 2)}" height="${f(p.mBottom - b.y0 + 14)}"><rect x="${f(p.m0 - 1)}" y="${f(b.y0 - 12)}" width="${f(p.m1 - p.m0 + 2)}" height="${f(p.mBottom - b.y0 + 14)}" fill="url(#${id}g)"/></mask></defs>` +
-    `<clipPath id="${id}c"><path d="${mound}"/></clipPath><g mask="url(#${id}f)"><path d="${mound}" fill="${paint.floor}"/><g clip-path="url(#${id}c)"><use href="#${paint.ripples}"/></g></g>`);
-  const crest = (from: number, to: number) => { const q = top.filter(([x]) => x >= from && x <= to); return q.length > 1 ? `M${pts(q).replace(/ /g, 'L')}` : ''; };
-  // the crest of the drifts and the bank: lit a little on the side towards the light, shaded on the far side
-  out.push(`<path d="${crest(p.m0 + 0.5, p.m1 - 0.5)}" fill="none" stroke="${mix(sd0, sd1, 0.25)}" stroke-width=".4" stroke-opacity=".55" transform="translate(-.15 .25)" filter="url(#wB02)"/>`);
-  // silt settled at its foot: the sand's colour rising a little up its side from the sand line
-  out.push(`<g mask="url(#${id}m)"><path d="${crest(p.m0, p.m1)}" fill="none" stroke="${sd1}" stroke-width="${f(Math.min(2.6, 0.9 + h * 0.09))}" stroke-opacity=".5" filter="url(#wB05)"/></g>`);
-  // the crevice where it goes in, and its shadow on the sand, falling right and down from its base
-  out.push(`<path d="${crest(p.xa - 0.2, p.xb + 0.2)}" fill="none" stroke="#000" stroke-opacity=".28" stroke-width="${f(Math.min(0.8, 0.35 + h * 0.025))}" transform="translate(0 .3)" filter="url(#wB02)"/>`);
-  const s = p.shadow;
-  out.push(`<ellipse cx="${f(s.cx)}" cy="${f(s.cy)}" rx="${f(s.rx)}" ry="${f(s.ry)}" fill="#000" fill-opacity=".24" filter="url(#wB05)"/>`);
-  // weed rooted at its foot (where the sand gathers) and now and then on it, streaming with the current
-  const kinds: WeedKind[] = ['grass', 'bush', 'ribbon', 'lettuce'], wc = (n: number) => mix(paint.weed[n % paint.weed.length], paint.haze, 0.35);
-  if (p.spec.opt?.weed !== false && R() < 0.75) {
-    const n = 1 + (w > 16 ? 1 : 0), side = R() < 0.5;
-    let wd = '';
-    for (let i = 0; i < n; i++) { const x = (i === 0) === side ? p.xa - 0.4 - R() * 1.2 : p.xb + 0.3 + R(); wd += weed(kinds[Math.floor(R() * kinds.length)], x, p.sand(x) + 0.3, 2.4 + R() * Math.min(5, 1.5 + h * 0.35), wc(i + p.i), R); }
-    out.push(wd);
+  if (p.top.length > 4 && growth === 'weed') {
+    const n = 1 + (w > 14 ? 1 : 0);
+    for (let i = 0; i < n; i++) { const q = pick(); thing.push(weed(i ? 'grass' : 'ribbon', q[0], q[1] + 0.5, 2 + R() * Math.min(5, 1 + h * 0.35), hz(paint.weed[(p.i + i) % paint.weed.length]), R)); }
   }
-  if (a.fouling >= 0.5 && p.top.length > 4 && R() < 0.35) {
-    let wd = ''; const q = p.top[Math.floor(R() * p.top.length)];
-    wd += weed(R() < 0.5 ? 'ribbon' : 'grass', q[0], q[1] + 0.5, 1.6 + R() * Math.min(4, 1 + h * 0.25), wc(p.i + 2), R);
-    out.push(wd);
+  out.push(`<g clip-path="url(#${id}a)">${thing.join('')}</g>`);
+  // the sand heaped against its sides and over its edge: the floor's own paint, a little lighter (lit), the crest lit
+  const heap = top.filter(([x, y]) => y < p.ys - 0.05 || (x >= p.xa && x <= p.xb));
+  if (heap.length > 2) {
+    const h0 = heap[0][0], h1 = heap[heap.length - 1][0], lip = 0.5;
+    const d = `M${f(h0)} ${f(p.ys + lip)}L${pts(heap).replace(/ /g, 'L')}L${f(h1)} ${f(p.ys + lip)}Z`;
+    out.push(`<defs><linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="0" y1="${f(p.ys - 0.1)}" x2="0" y2="${f(p.ys + lip)}"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>` +
+      `<mask id="${id}f" maskUnits="userSpaceOnUse" x="${f(h0 - 1)}" y="${f(b.y0 - 6)}" width="${f(h1 - h0 + 2)}" height="${f(p.ys - b.y0 + 8)}"><rect x="${f(h0 - 1)}" y="${f(b.y0 - 6)}" width="${f(h1 - h0 + 2)}" height="${f(p.ys - b.y0 + 8)}" fill="url(#${id}g)"/></mask></defs>` +
+      `<clipPath id="${id}h"><path d="${d}"/></clipPath><g mask="url(#${id}f)"><path d="${d}" fill="${paint.floor}"/><g clip-path="url(#${id}h)"><use href="#${paint.ripples}"/></g><path d="${d}" fill="${sd0}" fill-opacity=".08"/></g>`);
+    out.push(`<path d="M${pts(heap.map(([x, y]) => [x - 0.1, y + 0.12] as P)).replace(/ /g, 'L')}" fill="none" stroke="${mix(sd0, '#ffffff', 0.15)}" stroke-width=".3" stroke-opacity=".6" filter="url(#wB02)"/>`);
+    let gr = ''; for (const [x, y] of heap) if (R() < 0.3) gr += `<circle cx="${f(x + (R() - 0.5) * 0.3)}" cy="${f(y + 0.25 + R() * 0.3)}" r="${f(0.06 + R() * 0.08)}" fill="${R() < 0.5 ? paint.sand[2] : sd0}" fill-opacity=".6"/>`;
+    out.push(gr);
   }
-  void sd2;
+  // now and then weed rooted at its foot, streaming with the current (not on every thing)
+  const kinds: WeedKind[] = ['grass', 'bush', 'ribbon', 'lettuce'], wc = (n: number) => mix(paint.weed[n % paint.weed.length], paint.haze, 0.25 + (1 - k) * 0.25);
+  if (p.spec.opt?.weed !== false && growth !== 'weed' && R() < 0.3) {
+    const x = R() < 0.5 ? p.xa - 0.4 - R() * 1.2 : p.xb + 0.3 + R();
+    out.push(weed(kinds[(p.i + p.seed) % 4], x, p.sand(x) + 0.3, 2.4 + R() * Math.min(5, 1.5 + h * 0.35), wc(p.i), R));
+  }
   return out.join('');
 }
 
@@ -603,7 +665,8 @@ export function propIssues(ps: Placed[], floorTop: (x: number) => number, onHull
     cellsOf(p.occ, (x, y) => { if (y < p.sand(x)) { above++; seen.add(`${Math.round(x / 0.4)},${Math.round(y / 0.4)}`); if (onHull([x, y])) hull++; } else under++; });
     vis.push(seen);
     const all = above + under;
-    if (under / all < 0.04) out.push(`${name(p)}: stands on the sand, not in it (${(100 * under / all).toFixed(1)} % under the sand line, need ≥ 4 %)`);
+    const need = p.box.y1 - p.box.y0 > 4 ? 0.08 : 0.04;
+    if (under / all < need) out.push(`${name(p)}: stands on the sand, not in it (${(100 * under / all).toFixed(1)} % under the sand line, need ≥ ${100 * need} %)`);
     if (above / all < 0.25) out.push(`${name(p)}: buried (only ${(100 * above / all).toFixed(1)} % above the sand, need ≥ 25 %)`);
     if (p.xb - p.xa < 0.6) out.push(`${name(p)}: does not meet the sand line`);
     let bad = 0; for (let x = p.xa; x <= p.xb; x += 0.5) if (p.ys < floorTop(x) + 0.4 || onHull([x, p.ys - 0.3])) bad++;
@@ -615,19 +678,26 @@ export function propIssues(ps: Placed[], floorTop: (x: number) => number, onHull
     if (s.rx < 0.5) out.push(`${name(p)}: no shadow at its base`);
     // it rests on the sand along its length: the bottom of each column of it reaches the sand (a long thing tilted up
     // out of the sand, a keg standing on its rim over the floor, a timber held up by one end — they float)
-    if (!p.spec.stuck) {
-      const cols = new Map<number, number>();
-      cellsOf(p.occ, (x, y) => { const c = Math.round(x / CELL); cols.set(c, Math.max(cols.get(c) ?? -Infinity, y)); });
-      let touch = 0, n = 0, x0 = Infinity, x1 = -Infinity;
-      for (const [c, yb] of cols) { const x = c * CELL; n++; if (yb >= p.sand(x) - 1.3) { touch++; x0 = Math.min(x0, x); x1 = Math.max(x1, x); } }
-      const W = p.box.x1 - p.box.x0;
-      if (W > 6 && (x1 - x0 < 0.5 * W || touch < 0.3 * n)) out.push(`${name(p)}: floats over the sand (only x ${x0.toFixed(0)}…${x1.toFixed(0)} of ${p.box.x0.toFixed(0)}…${p.box.x1.toFixed(0)} rests on it)`);
+    // the whole lower edge, column by column: where its bottom is within 0.9 mm of the sand it rests on it
+    const cols = new Map<number, number>();
+    cellsOf(p.occ, (x, y) => { const c = Math.round(x / CELL); cols.set(c, Math.max(cols.get(c) ?? -Infinity, y)); });
+    const cs = [...cols.entries()].sort((a, b) => a[0] - b[0]).map(([c, yb]) => [c * CELL, yb >= p.sand(c * CELL) - 0.9] as [number, boolean]);
+    const W = p.box.x1 - p.box.x0, on = cs.filter(c => c[1]), x0 = on.length ? on[0][0] : NaN, x1 = on.length ? on[on.length - 1][0] : NaN;
+    let gap = 0, run = 0; for (const [, t] of cs) { run = t ? 0 : run + CELL; gap = Math.max(gap, run); }
+    const groups = cs.reduce((n, c, i) => n + (c[1] && (i === 0 || !cs[i - 1][1]) ? 1 : 0), 0);
+    if (p.spec.rests) {
+      // it rests on points of itself: two places at least, far apart (it does not balance on one)
+      if (groups < 2 || x1 - x0 < 0.4 * W) out.push(`${name(p)}: does not rest on two places far apart (${groups} place(s) on the sand over x ${x0.toFixed(0)}…${x1.toFixed(0)} of ${p.box.x0.toFixed(0)}…${p.box.x1.toFixed(0)})`);
+    } else if (!p.spec.stuck && W > 6) {
+      // it lies on the sand along its length: most of its lower edge on the sand, no long stretch held up over it
+      if (!on.length || x1 - x0 < 0.6 * W || on.length < 0.45 * cs.length || gap > Math.max(4, 0.3 * W)) out.push(`${name(p)}: floats over the sand (${(100 * on.length / Math.max(1, cs.length)).toFixed(0)} % of its lower edge on the sand, over x ${x0.toFixed(0)}…${x1.toFixed(0)} of ${p.box.x0.toFixed(0)}…${p.box.x1.toFixed(0)}; the longest stretch over it ${gap.toFixed(1)} mm)`);
     }
     if (hull > 6) out.push(`${name(p)}: overlaps the hull`);
   }
+  // two things may overlap only when one lies clearly in front of the other (its base nearer by 2 mm or more: drawn later)
   ps.forEach((a, i) => ps.slice(i + 1).forEach((b, jj) => {
     const B = vis[i + 1 + jj]; let n = 0; for (const c of vis[i]) if (B.has(c)) n++;
-    if (n > 3) out.push(`${name(a)} and ${name(b)} overlap (${n} cells)`);
+    if (n > 3 && Math.abs(a.ys - b.ys) < 2) out.push(`${name(a)} and ${name(b)} overlap (${n} cells)`);
   }));
   return out;
 }

@@ -22,7 +22,7 @@ import { iconSvg, type IconName, type IconTone } from '../icons';
 import { TXT as FTXT, basePalette, jonesLine, md, measureMissing, noRef, rulesLine, rulesSection, widthOf, type Pal, type ShipKey, type ShipMaterial, type TO } from './frame';
 import { LOOKS, defsOf, ico, text, type Look } from './v2';
 import { emblemSvg } from './emblem';
-import { PROP_DEFS, ageDefs, barnacle, charSvg, coralCrust, coralSprig, holeSvg, hullAgeDefs, jagLine, measureProps, placeProp, propIssues, propSvg, weed, type Kit, type Placed, type PropSpec, type WeedKind } from './wreck-props';
+import { PROP_DEFS, ageDefs, anemone, barnacle, charSvg, coralCrust, coralSprig, holeSvg, smallFan, tubeSponge, hullAgeDefs, jagLine, measureProps, placeProp, propIssues, propSvg, weed, type Kit, type Placed, type PropSpec, type WeedKind } from './wreck-props';
 
 type P = [number, number];
 interface Rect { x: number; y: number; w: number; h: number }
@@ -58,6 +58,8 @@ interface Ruin {
   keep?: number; sprit?: number; aft?: number; holes?: Hole[]; burnt?: number; charFrom?: number; fade?: number; growth?: number; rags?: number;
   slant?: boolean; tent?: number; yards?: number[]; tear?: number; slack?: number; torn?: number; rot?: number;
   split?: { X: number; dx: number; drop: number; rot: number }; drifts?: [number, number, number][]; reef?: boolean;
+  /** grime: a film of silt and growth dulling the whole hull, the paint's bands no more clean (0..1) */
+  grime?: number;
 }
 interface Sea {
   /** the kit's light of the deck (LIGHTS key), turned to come from above, a little from the left */
@@ -90,32 +92,32 @@ export const SEA: Record<ShipKey, Sea> = {
   // along her side, some with the planks stove out; the mainsail half torn off, hanging from one yardarm
   pearl: {
     light: 'pearl', water: ['#43769c', '#24486a', '#1d3852'], glow: '#c4e2ff', rays: 0.5, haze: ['#1c3c5a', 0.24], back: ['#4f86ac', 0.55],
-    sand: ['#b4bec6', '#7d8a95', '#465462'], fish: ['#a9c6dc', 0.62], coral: ['#7a6e86', '#6a7a8a', '#86707a'], weed: ['#3a5e52', '#4e6e5e', '#2e4a42'],
+    sand: ['#cbc3aa', '#968f7b', '#58574c'], fish: ['#a9c6dc', 0.62], coral: ['#7a6e86', '#6a7a8a', '#86707a'], weed: ['#3a5e52', '#4e6e5e', '#2e4a42'],
     rag: '#5a5a62', hz: 150,
     ship: {
-      ...SHIP0, x: 196, y: 178, scale: 1.5, roll: -20, tilt: 15, brk: [0.2, 0.42, 0.17], bow: 26, stern: -5, sprit: 4, fall: { mast: 0, side: -1, ty: 175 },
-      holes: [{ X: -26, t: 0.5, r: 1.0, kind: 'shot' }, { X: -15, t: 0.68, r: 2.2, kind: 'shot' }, { X: -6, t: 0.34, r: 0.8, kind: 'shot' }, { X: 4, t: 0.58, r: 1.5, kind: 'shot' },
-        { X: 12, t: 0.3, r: 1.1, kind: 'shot' }, { X: 20, t: 0.72, r: 0.9, kind: 'shot' }, { X: 31, t: 0.45, r: 3.2, kind: 'breach' }],
+      ...SHIP0, x: 196, y: 178, scale: 1.5, roll: -20, tilt: 15, brk: [0.2, 0.3, 0.24], bow: 26, stern: -5, sprit: 4, fall: { mast: 0, side: -1, ty: 175 },
+      holes: [{ X: -25, t: 0.5, r: 1.9, kind: 'shot' }, { X: -14, t: 0.64, r: 2.8, kind: 'shot' }, { X: -4, t: 0.36, r: 1.4, kind: 'shot' }, { X: 6, t: 0.58, r: 2.4, kind: 'shot' },
+        { X: 16, t: 0.4, r: 1.8, kind: 'shot' }, { X: 31, t: 0.45, r: 4.2, kind: 'breach' }],
       fade: 1, growth: 1, rags: 1, slant: false, tent: 6, tear: 1, slack: 2.2, torn: 3, rot: 6, drifts: [[150, 9, 5], [236, 12, 4]]
     },
     props: [
-      // the back row, near the hull (farther, smaller)
-      { kind: 'bottle', x: 52, y: 186, s: 0.9, rot: -50, sink: 0.42, opt: { lying: false }, name: 'rum bottle (upright)', drift: -0.3 },
-      { kind: 'grapnel', x: 106, y: 191, s: 0.95, rot: 8, sink: 0.14, stuck: true, drift: 0.25, name: 'grappling hook (resting on its prongs)' },
-      { kind: 'canvas', x: 132, y: 191, s: 1.1, sink: 0.25, opt: { color: '#3a3a40' }, name: 'scrap of sail' },
-      { kind: 'mastYard', x: 270, y: 190, s: 0.6, rot: 1, sink: 0.3, opt: { sail: '#3a3a40' }, name: 'mizzen top with its yard' },
-      // the middle: the big things
-      { kind: 'gun', x: 158, y: 199, s: 1.15, rot: -2, sink: 0.26, drift: -0.18, driftH: 0.55, name: 'cannon' },
-      { kind: 'carriage', x: 195, y: 197, s: 1.05, rot: 4, sink: 0.3, name: 'broken gun carriage' },
-      { kind: 'barrel', x: 246, y: 199, s: 0.62, rot: -4, sink: 0.32, opt: { kind: 'rum' }, drift: -0.25, name: 'rum cask' },
-      // the front row (nearer)
-      { kind: 'anchor', x: 28, y: 205, s: 0.9, rot: 98, sink: 0.3, name: 'anchor' },
-      { kind: 'compass', x: 66, y: 206, s: 2.1, rot: -12, sink: 0.32, name: 'compass' },
-      { kind: 'shotHeap', x: 94, y: 207.5, s: 1.3, sink: 0.22, opt: { n: 5 }, name: 'round shot' },
-      { kind: 'pistol', x: 124, y: 208, s: 1.25, rot: 0, sink: 0.36, drift: -0.3, name: 'pistol' },
-      { kind: 'mapCase', x: 174, y: 208, s: 1.5, rot: -3, sink: 0.25, name: 'map case' },
-      { kind: 'grapnel', x: 220, y: 208, s: 1.2, rot: -6, sink: 0.12, stuck: true, opt: { rope: true }, name: 'grappling hook (resting on its prongs)' },
-      { kind: 'plank', x: 262, y: 207, s: 1.2, rot: 2, sink: 0.3, opt: { len: 30, th: 5 }, drift: 0.3, name: 'plank' }
+      // the far things by the hull: smaller, paler
+      { kind: 'bottle', x: 50, y: 184, s: 0.8, rot: -16, sink: 0.4, name: 'rum bottle (upright)' },
+      { kind: 'grapnel', x: 104, y: 186.5, s: 0.78, rot: 6, sink: 0.12, rests: true, name: 'grappling hook (resting on its prongs)' },
+      { kind: 'canvas', x: 136, y: 189, s: 1.0, sink: 0.25, opt: { color: '#3a3a40' }, name: 'scrap of sail' },
+      { kind: 'mastYard', x: 272, y: 190, s: 0.6, rot: 3, sink: 0.42, opt: { sail: '#3a3a40' }, name: 'mizzen top with its yard' },
+      // the middle
+      { kind: 'anchor', x: 28, y: 197, s: 0.95, rot: -2, sink: 0.15, rests: true, name: 'anchor (on its ring, stock and fluke)' },
+      { kind: 'gun', x: 158, y: 198.5, s: 1.1, rot: -2, sink: 0.3, drift: -0.18, name: 'cannon' },
+      { kind: 'carriage', x: 198, y: 196, s: 1.0, rot: 4, sink: 0.3, name: 'broken gun carriage' },
+      { kind: 'keg', x: 246, y: 197.5, s: 0.62, rot: -3, sink: 0.3, opt: { kind: 'whole' }, drift: -0.2, name: 'rum cask' },
+      // the near things: larger, clearer
+      { kind: 'compass', x: 70, y: 205.5, s: 2.0, rot: -8, sink: 0.26, name: 'compass' },
+      { kind: 'shotHeap', x: 99, y: 207.5, s: 1.2, sink: 0.22, opt: { n: 5 }, name: 'round shot' },
+      { kind: 'pistol', x: 130, y: 207.5, s: 1.35, rot: 7, sink: 0.3, name: 'pistol' },
+      { kind: 'mapCase', x: 178, y: 207, s: 1.45, rot: -5, sink: 0.25, name: 'map case' },
+      { kind: 'grapnel', x: 222, y: 206, s: 1.15, rot: -6, sink: 0.12, rests: true, name: 'grappling hook (resting on its prongs)' },
+      { kind: 'plank', x: 266, y: 206.5, s: 1.2, rot: 2, sink: 0.3, opt: { len: 30, th: 5 }, drift: 0.3, name: 'plank' }
     ], seed: 11
   },
   // the Revenge burnt and went down by the head: charred black from the waist aft (the red paint left in dull patches at
@@ -126,26 +128,26 @@ export const SEA: Record<ShipKey, Sea> = {
     sand: ['#dab28c', '#ac7f60', '#664430'], fish: ['#2a120c', 0.58], coral: ['#a8645a', '#b07a5e', '#8a5048'], weed: ['#5e5a2e', '#6e6a36', '#464222'],
     rag: '#3a1612', hz: 150,
     ship: {
-      ...SHIP0, x: 176, y: 180, scale: 2.0, roll: 5, tilt: 7, brk: [0.36, 0.17, 0.13], bow: 13, stern: -2, sprit: 3, aft: 16, fall: { mast: 0, side: -1, ty: 199, front: true },
+      ...SHIP0, x: 176, y: 180, scale: 2.0, roll: 5, tilt: 7, brk: [0.27, 0.17, 0.13], bow: 13, stern: -2, sprit: 3, aft: 16, fall: { mast: 0, side: -1, ty: 199, front: true },
       holes: [{ X: -10, t: 0.5, r: 2.6, kind: 'burn' }, { X: 4, t: 0.62, r: 2.0, kind: 'burn' }, { X: 13, t: 0.4, r: 1.6, kind: 'burn' }],
-      burnt: 0.85, charFrom: -14, fade: 0.25, growth: 0.45, rags: 0, slant: true, drifts: [[118, 13, 6], [214, 10, 4]]
+      burnt: 0.85, charFrom: -14, fade: 0.6, growth: 0.7, rags: 0, slant: true, rot: 7, drifts: [[108, 9, 5], [140, 7, 3], [186, 12, 5], [236, 8, 3.5]]
     },
     props: [
-      // the back row (farther, smaller)
-      { kind: 'spar', x: 222, y: 194, s: 1.1, rot: -1, sink: 0.32, opt: { len: 38, th: 4.2, charred: true, rig: true }, name: 'bowsprit (snapped, charred)' },
-      { kind: 'sabre', x: 30, y: 193, s: 0.9, rot: 62, sink: 0.35, stuck: true, name: 'sabre (stuck in the sand)' },
-      { kind: 'firePot', x: 128, y: 196, s: 1.3, rot: -4, sink: 0.35, opt: { state: 'broken' }, name: 'broken fire pot' },
-      { kind: 'beam', x: 268, y: 199, s: 1, rot: 2, sink: 0.35, opt: { len: 30 }, drift: -0.25, name: 'charred timber' },
-      // the front row
-      { kind: 'anchor', x: 30, y: 206, s: 0.85, rot: 96, sink: 0.32, name: 'anchor' },
-      { kind: 'chain', x: 66, y: 206.5, s: 1.1, sink: 0.45, opt: { pts: [[-14, -1], [-7, 1.2], [0, 2], [7, 0.6], [14, 1.8]] }, name: 'chain', drift: 0.3, driftH: 0.7 },
-      { kind: 'skull', x: 90, y: 207, s: 1.45, rot: -8, sink: 0.38, name: 'skull' },
-      { kind: 'firePot', x: 112, y: 205, s: 1.7, rot: 12, sink: 0.3, opt: { state: 'cracked' }, name: 'fire pot' },
-      { kind: 'firePot', x: 136, y: 208, s: 1.7, opt: { state: 'shards' }, sink: 0.32, name: 'fire pot shards' },
-      { kind: 'keg', x: 166, y: 206.5, s: 1.3, rot: -2, sink: 0.2, opt: { kind: 'broken' }, name: 'powder keg (stove in)' },
+      // the far things: smaller, paler
+      { kind: 'spar', x: 222, y: 193, s: 1.0, rot: -1, sink: 0.32, opt: { len: 38, th: 4.2, charred: true, rig: true }, name: 'bowsprit (snapped, charred)' },
+      { kind: 'keg', x: 186, y: 196.5, s: 0.8, rot: 3, sink: 0.3, opt: { kind: 'powder' }, name: 'powder keg' },
+      { kind: 'firePot', x: 132, y: 195.5, s: 1.15, rot: -4, sink: 0.35, opt: { state: 'broken' }, name: 'broken fire pot' },
+      { kind: 'beam', x: 268, y: 197, s: 1, rot: 2, sink: 0.35, opt: { len: 30 }, drift: -0.25, name: 'charred timber' },
+      // the near things
+      { kind: 'sabre', x: 30, y: 206, s: 1.15, rot: 116, sink: 0.34, stuck: true, name: 'sabre (stuck in the sand)' },
+      { kind: 'chain', x: 66, y: 207, s: 1.45, sink: 0.4, opt: { pts: [[-13, 1.6], [-7, 0], [0, 0.8], [7, -0.4], [13, 1.4]] }, name: 'chain', drift: 0.25, driftH: 0.6 },
+      { kind: 'skull', x: 92, y: 207, s: 1.45, rot: -8, sink: 0.32, name: 'skull' },
+      { kind: 'firePot', x: 113, y: 205, s: 1.6, rot: 10, sink: 0.26, opt: { state: 'sealed' }, name: 'fire pot (sealed, its wick)' },
+      { kind: 'firePot', x: 138, y: 208, s: 1.6, opt: { state: 'shards' }, sink: 0.32, name: 'fire pot shards' },
+      { kind: 'keg', x: 166, y: 206.5, s: 1.3, rot: -2, sink: 0.22, opt: { kind: 'broken' }, name: 'powder keg (stove in)' },
       { kind: 'staves', x: 205, y: 207, s: 1.3, rot: 2, sink: 0.35, name: 'burst powder keg' },
-      { kind: 'sabre', x: 238, y: 208, s: 0.82, rot: -3, sink: 0.3, drift: 0.25, name: 'sabre' },
-      { kind: 'skull', x: 276, y: 207.5, s: 1.1, rot: 14, sink: 0.5, name: 'skull' }
+      { kind: 'sabre', x: 236, y: 207.5, s: 1.0, rot: 9, sink: 0.24, name: 'sabre' },
+      { kind: 'skull', x: 274, y: 207, s: 1.25, rot: 6, sink: 0.3, name: 'skull' }
     ], seed: 23
   },
   // the Endeavour blew up and broke her back: the after part torn off and settled stern down a span away, the decks
@@ -154,31 +156,32 @@ export const SEA: Record<ShipKey, Sea> = {
   endeavour: {
     light: 'endeavour', water: ['#86d0d2', '#3c94a4', '#1f6474'], glow: '#fffbe8', rays: 0.5, haze: ['#4a9cac', 0.15], back: ['#b4e6e6', 0.5],
     sand: ['#f6e8c4', '#d8be8c', '#94805e'], fish: ['#f4c64c', 0.9], coral: ['#c8907a', '#c8a47a', '#a8808e'], weed: ['#5a8a4a', '#6a9a56', '#466e3c'],
-    rag: '#d8ccaa', hz: 150,
+    rag: '#a29a82', hz: 150,
     ship: {
       ...SHIP0, x: 194, y: 182, scale: 1.25, roll: -12, tilt: 6, brk: [0.3, 0.6, 0.22], bow: 14, stern: 3, sprit: 6, fall: { mast: 0, side: -1, ty: 180 },
       holes: [{ X: -24, t: 0.62, r: 1.5, kind: 'shot' }, { X: -12, t: 0.35, r: 2.6, kind: 'breach' }],
-      fade: 0.8, growth: 0.8, rags: 0.8, yards: [1], slack: 1.6, torn: 2, rot: 3,
+      fade: 1, growth: 1.3, rags: 1.2, yards: [1], slack: 1.6, torn: 2, rot: 8, grime: 0.3,
       split: { X: 18, dx: 13, drop: 2.5, rot: 13 }, drifts: [[176, 9, 4]]
     },
     props: [
-      // the back row
-      { kind: 'coCrate', x: 30, y: 186, s: 0.75, rot: -7, sink: 0.24, opt: { state: 'whole', n: 2 }, name: 'Company crate', drift: -0.25 },
-      { kind: 'gun', x: 110, y: 187, s: 0.85, rot: -2, sink: 0.3, name: 'cannon' },
-      { kind: 'spyglass', x: 146, y: 191, s: 1.1, rot: 4, sink: 0.3, name: 'spyglass' },
+      // the far things
+      { kind: 'coCrate', x: 32, y: 186, s: 0.72, rot: -7, sink: 0.24, opt: { state: 'whole', n: 2 }, name: 'Company crate', drift: -0.25 },
+      { kind: 'gun', x: 108, y: 187.5, s: 0.95, rot: -5, sink: 0.42, opt: { len: 52 }, name: 'cannon (half buried)' },
+      { kind: 'carriage', x: 140, y: 189, s: 0.85, rot: 3, sink: 0.3, name: 'gun carriage with its truck' },
       // the middle
-      { kind: 'coinSpill', x: 118, y: 199, s: 1.0, sink: 0.15, opt: { n: 6, w: 14 }, name: 'coins' },
-      { kind: 'epaulette', x: 176, y: 199, s: 1.8, rot: 4, sink: 0.08, opt: { coral: 0 }, name: 'epaulette' },
-      { kind: 'gun', x: 230, y: 197, s: 0.9, rot: 2, sink: 0.3, drift: 0.2, name: 'cannon' },
-      // the front row
-      { kind: 'anchor', x: 26, y: 206, s: 0.85, rot: 100, sink: 0.3, name: 'anchor' },
+      { kind: 'coinSpill', x: 120, y: 199, s: 1.0, sink: 0.2, opt: { n: 6, w: 14 }, name: 'coins' },
+      { kind: 'epaulette', x: 178, y: 200, s: 1.8, rot: 4, sink: 0.1, opt: { growth: 'none' }, name: 'epaulette' },
+      { kind: 'button', x: 194, y: 203.5, s: 2.4, sink: 0.25, opt: { growth: 'none' }, name: 'uniform button' },
+      { kind: 'gun', x: 236, y: 197, s: 0.8, rot: 4, sink: 0.55, opt: { len: 40 }, drift: 0.25, name: 'cannon (buried to the muzzle)' },
+      // the near things
+      { kind: 'anchor', x: 30, y: 206, s: 0.95, rot: -2, sink: 0.15, rests: true, name: 'anchor (on its ring, stock and fluke)' },
       { kind: 'coCrate', x: 72, y: 207, s: 1.1, rot: 6, sink: 0.22, opt: { state: 'burst', n: 7 }, name: 'Company crate (burst)' },
-      { kind: 'coinSpill', x: 104, y: 208.5, s: 1.3, sink: 0.15, opt: { n: 9, w: 20 }, name: 'coins (spilled from the crate)' },
-      { kind: 'ingots', x: 136, y: 208, s: 1.5, sink: 0.32, opt: { n: 3 }, name: 'gold ingots' },
-      { kind: 'button', x: 150, y: 200, s: 1.6, sink: 0.25, name: 'uniform button' },
-      { kind: 'gun', x: 188, y: 207.5, s: 1.2, rot: 1, sink: 0.26, name: 'cannon' },
-      { kind: 'ingots', x: 234, y: 207.5, s: 1.3, sink: 0.33, opt: { n: 2 }, drift: 0.3, name: 'gold ingots' },
-      { kind: 'coCrate', x: 272, y: 206.5, s: 0.95, rot: -5, sink: 0.26, opt: { state: 'whole', n: 7 }, name: 'Company crate', drift: 0.2 }
+      { kind: 'coinSpill', x: 101, y: 208.5, s: 1.25, sink: 0.22, opt: { n: 11, w: 22 }, name: 'coins (spilled from the crate)' },
+      { kind: 'ingots', x: 131, y: 208, s: 1.3, sink: 0.42, opt: { n: 3 }, name: 'gold ingots' },
+      { kind: 'spyglass', x: 159, y: 209, s: 1.2, rot: -4, sink: 0.22, name: 'spyglass' },
+      { kind: 'gun', x: 214, y: 206.5, s: 1.1, rot: 2, sink: 0.26, opt: { len: 46 }, name: 'cannon' },
+      { kind: 'ingots', x: 254, y: 208, s: 1.2, sink: 0.5, opt: { n: 2 }, drift: 0.3, name: 'gold ingots (half buried)' },
+      { kind: 'coCrate', x: 278, y: 206, s: 0.95, rot: -5, sink: 0.26, opt: { state: 'whole', n: 7 }, name: 'Company crate', drift: 0.2 }
     ], seed: 37
   },
   // the Dutchman did not break: she sank whole and the sea took her in — her hull grown over with shells, corals and
@@ -186,28 +189,29 @@ export const SEA: Record<ShipKey, Sea> = {
   // yards; round her the wreckage of other ships she took down
   dutch: {
     light: 'dutchman', water: ['#7eb098', '#3a6a58', '#22423a'], glow: '#dcf6e6', rays: 0.58, haze: ['#2c5446', 0.16], back: ['#b2e0c6', 0.66],
-    sand: ['#bcc2a0', '#86927a', '#4c5a46'], fish: ['#c4dccc', 0.62], coral: ['#8a9a72', '#a49c74', '#94786e'], weed: ['#3e7a3c', '#5a8c4a', '#2c5230'],
+    sand: ['#cec7a2', '#9b967a', '#5a5c46'], fish: ['#c4dccc', 0.62], coral: ['#8a9a72', '#a49c74', '#94786e'], weed: ['#3e7a3c', '#5a8c4a', '#2c5230'],
     rag: '#8a8670', hz: 150,
     ship: {
-      ...SHIP0, x: 192, y: 181, scale: 1.4, roll: -10, tilt: 3, brk: [0.93, 0.93, 0.93], bow: 13, stern: 9, sprit: undefined,
-      holes: [], fade: 0.4, growth: 1.6, rags: 1.3, yards: [0, 1, 2], slack: 1.3, torn: 1, reef: true, drifts: [[110, 12, 6], [196, 14, 5], [250, 10, 5]]
+      ...SHIP0, x: 192, y: 181, scale: 1.4, roll: -10, tilt: 8, brk: [0.93, 0.93, 0.93], bow: 13, stern: 12, sprit: undefined,
+      holes: [], fade: 0.4, growth: 1.6, rags: 1.3, yards: [0, 1, 2], slack: 1.3, torn: 1, reef: true, drifts: [[108, 8, 5], [132, 6, 2.5], [170, 9, 4], [206, 12, 6], [246, 7, 3], [266, 9, 6]]
     },
     props: [
-      // the back row
-      { kind: 'mastYard', x: 44, y: 189, s: 0.88, rot: -1, sink: 0.35, opt: { sail: '#7a7a68' }, drift: 0.2, name: 'a mast with its yard (another ship\'s)' },
-      { kind: 'keg', x: 262, y: 193, s: 0.85, rot: -6, sink: 0.3, opt: { kind: 'foreign' }, name: 'another ship\'s barrel' },
+      // the far things: other ships' wreckage
+      { kind: 'mastYard', x: 52, y: 188, s: 0.85, rot: -1, sink: 0.35, opt: { sail: '#7a7a68' }, drift: 0.2, name: 'a mast with its yard (another ship\'s)' },
+      { kind: 'sidePiece', x: 136, y: 192, s: 0.95, rot: -4, sink: 0.3, opt: { paint: '#8a3a2a', band: '#c8a050' }, name: 'piece of another ship\'s side (a gun port)' },
+      { kind: 'keg', x: 262, y: 193, s: 0.8, rot: -6, sink: 0.42, opt: { kind: 'foreign' }, name: 'another ship\'s barrel' },
       // the middle
-      { kind: 'wheel', x: 78, y: 196, s: 1.25, rot: -12, sink: 0.36, stuck: true, name: 'ship\'s wheel' },
-      { kind: 'board', x: 146, y: 199, s: 1.1, rot: 2, sink: 0.3, opt: { len: 30, th: 4.4, paint: '#7a3a34' }, name: 'board of another ship (red paint)' },
-      { kind: 'chain', x: 220, y: 199, s: 1.25, sink: 0.45, opt: { pts: [[-14, 0.6], [-6, -1.2], [2, 1], [10, -0.4], [16, 1.4]] }, drift: -0.25, driftH: 0.8, name: 'chain' },
-      // the front row
-      { kind: 'anchor', x: 26, y: 206, s: 0.85, rot: 104, sink: 0.32, name: 'anchor' },
-      { kind: 'conch', x: 62, y: 207.5, s: 1.3, rot: -6, sink: 0.3, name: 'conch' },
-      { kind: 'chest', x: 108, y: 207, s: 0.78, rot: -5, sink: 0.26, opt: { open: 0, gold: false }, drift: 0.2, name: 'chest' },
-      { kind: 'shellBed', x: 146, y: 207.5, s: 1.3, rot: 3, sink: 0.3, name: 'shells on a timber' },
-      { kind: 'bell', x: 180, y: 207, s: 1.15, rot: -24, sink: 0.3, name: 'ship\'s bell (on its side)' },
-      { kind: 'board', x: 226, y: 207, s: 1.15, rot: -3, sink: 0.3, opt: { len: 34, th: 4.8, paint: '#3e5a7a' }, drift: 0.22, name: 'board of another ship (blue paint)' },
-      { kind: 'barrel', x: 270, y: 206, s: 0.6, rot: 4, sink: 0.33, opt: { kind: 'water' }, drift: -0.3, name: 'water cask' }
+      { kind: 'wheel', x: 98, y: 199, s: 1.2, rot: -12, sink: 0.36, stuck: true, name: 'ship\'s wheel' },
+      { kind: 'bell', x: 178, y: 200, s: 1.2, rot: -24, sink: 0.28, name: 'ship\'s bell (on its side)' },
+      { kind: 'board', x: 226, y: 199, s: 1.1, rot: 3, sink: 0.3, opt: { len: 32, th: 4.6, paint: '#3e5a7a' }, drift: 0.22, name: 'board of another ship (blue paint)' },
+      // the near things
+      { kind: 'anchor', x: 28, y: 205, s: 0.95, rot: -2, sink: 0.15, rests: true, name: 'anchor (on its ring, stock and fluke)' },
+      { kind: 'chain', x: 64, y: 208, s: 1.55, sink: 0.38, opt: { pts: [[-16, 0.4], [-9, 1.6], [-2, 0.2], [5, 1.4], [12, 0.2], [17, 1.6]] }, drift: 0.25, driftH: 0.7, name: 'chain' },
+      { kind: 'chest', x: 112, y: 207, s: 0.78, rot: -5, sink: 0.26, opt: { open: 0, gold: false }, drift: 0.2, name: 'chest' },
+      { kind: 'shellBed', x: 150, y: 207.5, s: 1.3, rot: 3, sink: 0.3, name: 'shells on a timber' },
+      { kind: 'conch', x: 191, y: 208, s: 1.3, rot: -6, sink: 0.3, name: 'conch' },
+      { kind: 'gun', x: 234, y: 207, s: 1.1, rot: -3, sink: 0.4, opt: { len: 44 }, name: 'cannon (another ship\'s)' },
+      { kind: 'bottle', x: 272, y: 206.5, s: 1.0, rot: 76, sink: 0.46, name: 'bottle' }
     ], seed: 41
   }
 };
@@ -575,13 +579,13 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
     const c = (S.burnt ?? 0) > 0.4 ? ['#16100c', '#4a3c30'] : ['#3a2c1e', '#8a7458'];
     dmg += `<path d="M${poly(brkL).replace(/ /g, 'L')}L${f(xEnd)} ${f(brkY(xEnd) + 3 * s)}L${f(xAft)} ${f(brkY(xAft) + 3 * s)}Z" fill="#0a0806" opacity=".8"/>`;
     for (let x = xAft + 1.2 * s; x < xT - 0.8 * s; x += (2.4 + RD() * 1.2) * s) {
-      const y0 = brkY(x) + 1.2 * s, hgt = (2 + RD() * 5) * s, w = 0.8 * s, lean = (RD() - 0.3) * 1.4 * s, top: P = [x + lean, y0 - hgt];
+      const y0 = brkY(x) + 1.2 * s, hgt = (1.2 + RD() * 2.8) * s, w = 0.8 * s, lean = (RD() - 0.3) * 1.4 * s, top: P = [x + lean, y0 - hgt];
       frames += `<path d="M${f(x - w / 2)} ${f(y0)}L${f(top[0] - w / 2)} ${f(top[1] + 0.6 * s)}L${f(top[0] - w * 0.1)} ${f(top[1])}L${f(top[0] + w * 0.15)} ${f(top[1] + 0.9 * s)}L${f(top[0] + w / 2)} ${f(top[1] + 0.4 * s)}L${f(x + w / 2)} ${f(y0)}Z" fill="${c[0]}"/>` +
         `<path d="M${f(x - w / 2 + 0.15)} ${f(y0)}L${f(top[0] - w / 2 + 0.15)} ${f(top[1] + 0.7 * s)}" stroke="${c[1]}" stroke-width="${f(0.22 * s)}" stroke-opacity=".8"/>`;
     }
     for (const [x, y] of brkL.filter((_, i) => i % 2)) frames += `<path d="M${f(x)} ${f(y)}l${f((RD() - 0.2) * 2.2 * s)} ${f(-(0.8 + RD()) * s)}l${f(0.5 * s)} ${f(0.6 * s)}Z" fill="${c[0]}"/>`;
     // the sternpost: the stern's backbone, standing up bare out of the fallen-in stern, leaning aft, its head burnt to a point
-    const sx = stern + 0.5 * s, sy0 = S.y + draft * 0.6, sy1 = railAt(xAft) - 1 * s;
+    const sx = stern + 0.5 * s, sy0 = S.y + draft * 0.6, sy1 = S.y - 3.5 * s;
     frames += `<path d="M${f(sx - 0.9 * s)} ${f(sy0)}L${f(sx + 1.6 * s)} ${f(sy1 + 0.8 * s)}L${f(sx + 2.1 * s)} ${f(sy1 - 0.6 * s)}L${f(sx + 2.5 * s)} ${f(sy1 + 1.4 * s)}L${f(sx + 1 * s)} ${f(sy0)}Z" fill="${c[0]}"/><path d="M${f(sx - 0.6 * s)} ${f(sy0)}L${f(sx + 1.7 * s)} ${f(sy1 + 1 * s)}" stroke="${c[1]}" stroke-width="${f(0.25 * s)}"/>`;
   }
   // rotten gaps in the bulwark: dark ragged notches along the rail, the planks gone between the stanchions
@@ -602,6 +606,11 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
     `<filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="${f(y0)}" width="${W}" height="${f(h)}" color-interpolation-filters="sRGB"><feTurbulence type="turbulence" baseFrequency="${fx} ${fy}" numOctaves="1" seed="${seed}" result="t"/>` +
     `<feColorMatrix in="t" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0" result="a0"/><feComponentTransfer in="a0" result="a"><feFuncA type="table" tableValues="${table}"/></feComponentTransfer>` +
     `<feFlood flood-color="${sea.glow}" result="c"/><feComposite in="c" in2="a" operator="in"/></filter>`;
+  /** the grain of the sand: fine specks of one colour */
+  const grain = (id: string, fr: number, seed: number, table: string, color: string) =>
+    `<filter id="${id}" filterUnits="userSpaceOnUse" x="0" y="${f(H)}" width="${W}" height="${f(PAGE.h - H)}" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="${fr}" numOctaves="2" seed="${seed}" result="t"/>` +
+    `<feColorMatrix in="t" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -.25" result="a0"/><feComponentTransfer in="a0" result="a"><feFuncA type="table" tableValues="${table}"/></feComponentTransfer>` +
+    `<feFlood flood-color="${color}"/><feComposite in2="a" operator="in"/></filter>`;
   const stoneC = mix(sd2, '#5c5a56', 0.35);
   // the char runs from charFrom aft: soot only before it
   const cx0 = S.x + (S.charFrom ?? -sp.len) * s;
@@ -611,9 +620,9 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
 <linearGradient id="wRay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sea.glow}" stop-opacity="1"/><stop offset=".55" stop-color="${sea.glow}" stop-opacity=".35"/><stop offset="1" stop-color="${sea.glow}" stop-opacity="0"/></linearGradient>
 <linearGradient id="wTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
 <mask id="wTopM" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="30"><rect width="${W}" height="30" fill="url(#wTop)"/></mask>
-<linearGradient id="wFloor" gradientUnits="userSpaceOnUse" x1="0" y1="${H - 1}" x2="0" y2="${PAGE.h}"><stop offset="0" stop-color="${fog}"/><stop offset=".12" stop-color="${mix(fog, sd2, 0.45)}"/><stop offset=".34" stop-color="${mix(sd1, fog, 0.25)}"/><stop offset=".6" stop-color="${sd1}"/><stop offset=".82" stop-color="${mix(sd1, sd0, 0.22)}"/><stop offset="1" stop-color="${mix(sd1, sd2, 0.2)}"/></linearGradient>
+<linearGradient id="wFloor" gradientUnits="userSpaceOnUse" x1="0" y1="${H - 1}" x2="0" y2="${PAGE.h}"><stop offset="0" stop-color="${fog}"/><stop offset=".12" stop-color="${mix(fog, sd2, 0.45)}"/><stop offset=".34" stop-color="${mix(sd1, fog, 0.25)}"/><stop offset=".6" stop-color="${sd1}"/><stop offset=".82" stop-color="${mix(sd1, sd0, 0.3)}"/><stop offset="1" stop-color="${mix(sd1, sd0, 0.42)}"/></linearGradient>
 <linearGradient id="wFade" gradientUnits="userSpaceOnUse" x1="0" y1="${H}" x2="0" y2="${H + 22}"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>
-<linearGradient id="wNearG" gradientUnits="userSpaceOnUse" x1="0" y1="${H + 18}" x2="0" y2="${H + 34}"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>
+<linearGradient id="wNearG" gradientUnits="userSpaceOnUse" x1="0" y1="${H + 18}" x2="0" y2="${PAGE.h}"><stop offset="0" stop-color="#000"/><stop offset="${f(16 / (PAGE.h - H - 18))}" stop-color="#fff"/><stop offset="1" stop-color="#5a5a5a"/></linearGradient>
 <linearGradient id="wFarG" gradientUnits="userSpaceOnUse" x1="0" y1="${H + 18}" x2="0" y2="${H + 34}"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
 <linearGradient id="wKeel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix('#4a4632', sea.weed[2], .35)}"/><stop offset=".45" stop-color="${mix('#262618', sea.weed[2], .3)}"/><stop offset="1" stop-color="#0e100c"/></linearGradient>
 <linearGradient id="wAO" gradientUnits="userSpaceOnUse" x1="0" y1="${f(hullTop)}" x2="0" y2="${f(crestMax)}"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".5" stop-color="#000" stop-opacity=".06"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></linearGradient>
@@ -631,10 +640,13 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
 <filter id="wB05" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".45"/></filter>
 <filter id="wB02" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".22"/></filter>${ageDefs()}
 ${hullAgeDefs()}
+<filter id="wSolid" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB"><feComponentTransfer in="SourceAlpha" result="a"><feFuncA type="table" tableValues="0 1 1 1 1"/></feComponentTransfer><feFlood flood-color="${mix('#1e1c16', sea.weed[2], 0.3)}"/><feComposite in2="a" operator="in"/></filter>
 <filter id="wWhite" x="-5%" y="-5%" width="110%" height="110%"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/></filter>
 <filter id="wBlack" x="-5%" y="-5%" width="110%" height="110%"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/></filter>
 ${cau('wCauF', 0.12, 0.36, sea.seed, '1 .4 .08 0 0 0 0 0 0 0 0 0', H, PAGE.h - H)}
-${cau('wCauN', 0.065, 0.16, sea.seed + 7, '1 .5 .14 0 0 0 0 0 0 0 0 0', H, PAGE.h - H)}
+${cau('wCauN', 0.042, 0.105, sea.seed + 7, '1 .55 .18 0 0 0 0 0 0 0 0 0', H, PAGE.h - H)}
+${grain('wGrainD', 1.7, sea.seed + 3, '0 0 0 0 0 .5 1', sd2)}
+${grain('wGrainL', 2.3, sea.seed + 5, '0 0 0 0 0 0 .6 1', mix(sd0, '#ffffff', 0.2))}
 <g id="${u}Body">${body}</g>
 <clipPath id="wLow"><polygon points="${poly(low)}"/></clipPath>${high}${parts}
 ${hullG}${fallG}
@@ -684,11 +696,23 @@ ${hullG}${fallG}
   // the shadow of the hull on the floor behind it, to the right (the light is above, a little to the left and behind us)
   out.push(`<g clip-path="url(#wFloorC)"><polygon points="${poly(hull.map(q => [q[0] + 12, q[1] + (q[1] - crestMax) * -0.15 - 3] as P))}" fill="#000" fill-opacity=".34" filter="url(#wB3)"/></g>`);
   // the fallen top lies behind the hull; its shadow on the sand under its tip
+  const fallMounds = () => {
+    if (!fall || !S.fall) return '';
+    const F = rot([mx[S.fall.mast], deck]); let o2 = '';
+    for (const t of [0.58, 0.76, 0.9]) {
+      const x = F[0] + (fall.tip[0] - F[0]) * t, y = F[1] + (fall.tip[1] - F[1]) * t;
+      if (y < floorTop(x) + 1) continue;
+      const w = 4 + R() * 4, h = 1.6 + R() * 1.4, d = `M${f(x - w)} ${f(y + 1.6)}C${f(x - w * 0.5)} ${f(y - h)} ${f(x + w * 0.4)} ${f(y - h * 0.9)} ${f(x + w)} ${f(y + 1.6)}Z`;
+      o2 += `<clipPath id="wFm${Math.round(t * 100)}"><path d="${d}"/></clipPath><path d="${d}" fill="url(#wFloor)"/><g clip-path="url(#wFm${Math.round(t * 100)})"><use href="#wNearFloor"/></g><path d="M${f(x - w * 0.8)} ${f(y - h * 0.2)}Q${f(x - w * 0.3)} ${f(y - h)} ${f(x + w * 0.3)} ${f(y - h * 0.85)}" fill="none" stroke="${sd0}" stroke-width=".35" stroke-opacity=".55"/>`;
+    }
+    const t = 0.42, x = F[0] + (fall.tip[0] - F[0]) * t, y = F[1] + (fall.tip[1] - F[1]) * t;
+    return o2 + rag(x - 4, y + 0.6, 9, 5.5, mix(sea.rag, sea.haze[0], sea.haze[1]), R, 0.7, 0.8, (fall.tip[1] - F[1]) / (fall.tip[0] - F[0]), false);
+  };
   const fallSvg = () => fall ? `<ellipse cx="${f(fall.tip[0] - S.fall!.side * 10)}" cy="${f(fall.ty + 0.8)}" rx="16" ry="1.6" fill="#000" fill-opacity=".35" filter="url(#wB1)"/><use href="#wFallG" filter="url(#wDesat)"/>` +
-    `<path d="M${f(fall.tip[0] - 5)} ${f(fall.ty + 0.9)}C${f(fall.tip[0] - 3)} ${f(fall.ty - 1.2)} ${f(fall.tip[0] + 3)} ${f(fall.ty - 1.4)} ${f(fall.tip[0] + 5)} ${f(fall.ty + 0.9)}Z" fill="url(#wFloor)"/>` : '';
+    `<path d="M${f(fall.tip[0] - 5)} ${f(fall.ty + 0.9)}C${f(fall.tip[0] - 3)} ${f(fall.ty - 1.2)} ${f(fall.tip[0] + 3)} ${f(fall.ty - 1.4)} ${f(fall.tip[0] + 5)} ${f(fall.ty + 0.9)}Z" fill="url(#wFloor)"/>` + fallMounds() : '';
   if (fall && !S.fall!.front) out.push(fallSvg());
   // ---- the wreck ----
-  out.push(`<use href="#wHullG" filter="url(#wDesat)"/>`);
+  out.push(`<g filter="url(#wSolid)"><use href="#wHullG"/></g><use href="#wHullG" filter="url(#wDesat)"/>`);
   // the age of the hull, on its own pixels: charred (black blotches, grey ash in the cracks) from the waist aft, the paint
   // dulled, washed out and peeling to the grey wood in patches (the planks show in them), silt along the rail, barnacles
   // and coralline crust low on the side, rust run from the bolts along the waterline
@@ -723,6 +747,16 @@ ${hullG}${fallG}
   // the hull in the water: darker down to the sand, the water between us and it (no caustics on it: the net of light lies
   // on the sand); the reef: the floor's own colour taken into it
   out.push(`<g mask="url(#wSilM)"><rect width="${W}" height="${PAGE.h}" fill="url(#wAO)"/><rect width="${W}" height="${PAGE.h}" fill="${sea.haze[0]}" fill-opacity="${f(sea.haze[1] * (S.reef ? 0.4 : 1))}"/>${S.reef ? `<rect width="${W}" height="${PAGE.h}" fill="${mix('#1a2a20', sea.weed[2], 0.3)}" fill-opacity=".32"/>` : ''}</g>`);
+  // the floor taking the hull in: sand drifted up its side from the bank (soft, uneven), lumps of silt along the rail,
+  // the seams opened between the planks here and there
+  const upS = cp.filter(q => q[0] > stemP[0] - 4 && q[0] < sternP[0] + 4);
+  let creep = `<rect width="${W}" height="${PAGE.h}" fill="${mix(mix(sd2, '#3a3a2c', 0.4), sea.weed[2], 0.25)}" opacity="${f(S.grime ?? 0.15)}"/><path d="${spline(upS.map(q => [q[0], q[1] - 3.2] as P))}" fill="none" stroke="${mix(sd1, sd2, 0.25)}" stroke-width="6.5" stroke-opacity="${S.reef ? 0.5 : 0.36}" filter="url(#wB2)"/>`;
+  creep += `<rect width="${W}" height="${PAGE.h}" filter="url(#wPeel)" opacity="${f(0.12 + growth * 0.06)}"/>`;
+  let gaps = '';
+  for (let i = 0; i < 22; i++) { const X = -sp.len / 2 + 8 + RD() * (sp.len - 16), q = geom.nearRail(X) as P, t = 0.15 + RD() * 0.65, y = S.y + t * (q[1] - S.y); if (q[0] > xAft - 3 * s) continue; gaps += `<path d="M${f(q[0])} ${f(y)}h${f((1.5 + RD() * 5) * s * 0.6)}" stroke="#050403" stroke-width="${f(0.32 * s)}" stroke-opacity=".8"/>`; }
+  let lumps = '';
+  for (let i = 1; i < railPts.length - 1; i++) { if (RD() < 0.4) continue; const [x, y] = railPts[i], w = 1.2 + RD() * 3.5; lumps += `<path d="M${f(x - w)} ${f(y + 0.7)}Q${f(x - w * 0.2)} ${f(y - 0.5 - RD() * 0.9)} ${f(x + w)} ${f(y + 0.7)}Z" fill="${mix(mix(sd1, sd0, 0.35), sea.haze[0], 0.25)}" fill-opacity=".85"/>`; }
+  out.push(`<g mask="url(#wSilM)">${creep}</g>`, inShip(`<g clip-path="url(#wLow)">${gaps}</g>`), lumps);
   const hz = (c: string) => mix(c, sea.haze[0], sea.haze[1]);
   // rigging from the stumps down to the rail, slack, some ropes parted and hanging loose (burnt away on a burnt ship: a
   // stub or two); rags of sail on the spar stubs, their torn feet fringed; the sail of `tear` half torn off; on masts
@@ -764,14 +798,15 @@ ${hullG}${fallG}
     const X = -sp.len / 2 + 8 + (i / (nW - 1)) * (sp.len - 16) + (R() - 0.5) * 6, q = geom.nearRail(X) as P, onRail = R() < 0.5;
     if (xAft < xEnd && q[0] > xAft) continue;
     const y = onRail ? q[1] + 0.5 : S.y + (0.15 + R() * 0.5) * (q[1] - S.y);
-    hullW.push(onRail && S.reef ? hangWeed(q[0], y, 4 + R() * 9, hz(sea.weed[i % 3]), R) : weed(WK[(i + (onRail ? 0 : 2)) % 4], q[0], y, (2.5 + R() * 4) * (S.reef ? 1.5 : 1), hz(sea.weed[i % 3]), R));
+    hullW.push(onRail && (S.reef || R() < 0.55) ? hangWeed(q[0], y, (S.reef ? 4 : 2.5) + R() * (S.reef ? 9 : 6), hz(sea.weed[i % 3]), R) : weed(WK[(i + (onRail ? 0 : 2)) % 4], q[0], y, (2.5 + R() * 4) * (S.reef ? 1.5 : 1), hz(sea.weed[i % 3]), R));
   }
   if (S.reef) {
     // in clumps: a coral head with shells and a sponge round it, here and there along the side, more of them low
-    for (let i = 0; i < 24; i++) {
-      const X = -sp.len / 2 + 6 + (i + R() * 0.8) / 24 * (sp.len - 10), q = geom.nearRail(X) as P, y0 = S.y + (0.05 + Math.pow(R(), 1.3) * 0.85) * (q[1] - S.y);
-      for (let j = 0; j < 6; j++) { const x = q[0] + (R() - 0.5) * 9 * s * 0.6, y = y0 + (R() - 0.5) * 4 * s * 0.6, c = hz(coral[(i + j) % 3]), k2 = (i + j) % 4;
-        hullW.push(k2 === 0 ? coralSprig(x, y, (4.4 + R() * 4) * s * 0.7, c, R) : k2 === 1 ? coralCrust(x, y, (1.3 + R() * 1.3) * s * 0.6, c, R) : k2 === 2 ? shell(x, y, (0.5 + R() * 0.35) * s * 0.7, (R() - 0.5) * 80, j % 2) : domeCoral(x, y + 0.4, (1.6 + R() * 1.5) * s * 0.6, (1.2 + R() * 1) * s * 0.6, c, R, `wHd${i}${j}`)); }
+    for (let i = 0; i < 22; i++) {
+      const X = -sp.len / 2 + 6 + R() * (sp.len - 10), q = geom.nearRail(X) as P, y0 = S.y + (0.05 + Math.pow(R(), 0.8) * 0.8) * (q[1] - S.y), sz = 0.5 + R() * 1.1, n = 2 + Math.floor(R() * 5 * sz);
+      for (let j = 0; j < n; j++) { const x = q[0] + (R() - 0.5) * 9 * s * 0.6 * sz, y = y0 + (R() - 0.5) * 4 * s * 0.6 * sz, c = hz(coral[(i + j) % 3]), k2 = Math.floor(R() * 7), z = sz * (0.6 + R() * 0.6);
+        hullW.push(k2 === 0 ? coralSprig(x, y, (4 + R() * 3) * s * 0.6 * z, c, R) : k2 === 1 ? coralCrust(x, y, (1.2 + R() * 1.2) * s * 0.6 * z, c, R) : k2 === 2 ? shell(x, y, (0.35 + R() * 0.25) * s * 0.7 * z, (R() - 0.5) * 80, j % 2) :
+          k2 === 3 ? tubeSponge(x, y, (3 + R() * 3) * s * 0.6 * z, c, R) : k2 === 4 ? anemone(x, y, (2.6 + R() * 2) * s * 0.6 * z, c, R) : k2 === 5 ? smallFan(x, y, (3.5 + R() * 3) * s * 0.6 * z, c, R) : domeCoral(x, y + 0.4, (1.6 + R() * 1.5) * s * 0.6 * z, (1.2 + R() * 1) * s * 0.6 * z, c, R, `wHd${i}${j}`)); }
     }
   }
   out.push(inShip(`<g clip-path="url(#wLow)">${hullW.join('')}</g>`));
@@ -793,7 +828,7 @@ ${hullG}${fallG}
   out.push(slip);
   // weed and shells grown along the foot of the hull, where the sand meets it
   let foot = '';
-  for (let x = stemP[0] + 6 + R() * 6; x < sternP[0] - 4; x += 9 + R() * 14) foot += weed(WK[Math.floor(R() * 4)], x, crest(x) + 0.6, 2.4 + R() * 4.5, sea.weed[Math.floor(R() * 3)], R);
+  for (let c = 0; c < 3; c++) { const cx = stemP[0] + (sternP[0] - stemP[0]) * (0.12 + c * 0.33 + R() * 0.15), n = 2 + Math.floor(R() * 3); for (let j = 0; j < n; j++) { const x = cx + (R() - 0.5) * 9; foot += weed(WK[(c + j) % 4], x, crest(x) + 0.6, (2 + R() * 5) * (j === 0 ? 1.3 : 0.8), sea.weed[(c + j) % 3], R); } }
   out.push(foot);
   if (fall && S.fall!.front) {
     out.push(fallSvg());
@@ -817,21 +852,31 @@ ${hullG}${fallG}
     out.push(sp2);
   }
 
-  // ---- the near floor: ripples, the caustics, the pools of light (all over the sand, none on the hull) ----
-  let rip = '';
-  for (let y = H + 2.5; y < PAGE.h + 1;) {
-    const k = dep(y);
-    for (let x = -5 + R() * 10; x < W + 5; x += (6 + R() * 12) * (0.5 + k)) {
-      const len = (5 + R() * 12) * (0.45 + k), pts: P[] = [], yy = y + (R() - 0.5) * 1.2 * k;
-      for (let xx = x; xx <= x + len; xx += 1.2) pts.push([xx, yy + Math.sin(xx * 0.5 / (0.5 + k) + y) * 0.3 * (0.3 + k) - Math.sin(Math.PI * (xx - x) / len) * 0.5 * (0.3 + k)]);
-      if (pts.length < 3) continue;
-      rip += `<path d="${spline(pts)}" fill="none" stroke="${sd2}" stroke-width="${f(0.12 + 0.36 * k)}" stroke-opacity="${f(0.08 + 0.26 * k)}"/><path d="${spline(pts.map(q => [q[0] + 0.3, q[1] - 0.25 - 0.45 * k] as P))}" fill="none" stroke="${sd0}" stroke-width="${f(0.1 + 0.3 * k)}" stroke-opacity="${f(0.1 + 0.4 * k)}"/>`;
-    }
-    y += 0.7 + 3.4 * k + R() * 0.8 * k;
+  // ---- the near floor: low swells of sand, fields of ripple marks with smooth sand between, the grain, the caustics
+  // (finer and brighter far off, larger and fainter near; all over the sand, none on the hull or on the things) ----
+  let dunes = '';
+  for (let y = H + 5; y < PAGE.h + 6;) {
+    const k = dep(y), pts: P[] = [], a = 0.8 + k * 3.2, per = 30 + R() * 50, ph = R() * 6, wd = 1.2 + k * 5.5;
+    for (let x = -10; x <= W + 10; x += 5) pts.push([x, y + Math.sin(x / per + ph) * a + Math.sin(x / (per * 0.41) + ph * 1.7) * a * 0.4]);
+    dunes += `<path d="${spline(pts)}" fill="none" stroke="${sd0}" stroke-width="${f(wd)}" stroke-opacity="${f(0.08 + 0.2 * k)}"/><path d="${spline(pts.map(q => [q[0], q[1] + wd * 0.95] as P))}" fill="none" stroke="${sd2}" stroke-width="${f(wd * 0.75)}" stroke-opacity="${f(0.05 + 0.13 * k)}"/>`;
+    y += 3 + k * 13 + R() * 4;
   }
-  let pools = '';
-  for (let i = 0; i < 6; i++) { const x = 20 + i * 52 + R() * 26, y = H + 14 + R() * (PAGE.h - H - 16); pools += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(14 + R() * 18)}" ry="${f(2.5 + dep(y) * 5)}" fill="${sea.glow}" fill-opacity=".16"/>`; }
-  out.push(`<defs><g id="wNearFloor">${rip}<g mask="url(#wFarM)"><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wCauF)" opacity=".42"/></g><g mask="url(#wNearM)"><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wCauN)" opacity=".48"/></g><g filter="url(#wB3)">${pools}</g></g></defs><g mask="url(#wFloorM)"><use href="#wNearFloor"/></g>`);
+  let rip = '';
+  for (let i = 0; i < 30; i++) {
+    const cx = R() * W, cy = H + 3 + Math.pow(R(), 0.85) * (PAGE.h - H), k = dep(cy), rw = (12 + R() * 30) * (0.45 + k), rh = (2.5 + R() * 6) * (0.35 + k * 1.4);
+    const gap = 0.6 + 2.6 * k, tilt = (R() - 0.5) * 0.14, ph = R() * 6, wl = 2.5 + 5 * k;
+    for (let yy = cy - rh; yy <= cy + rh; yy += gap * (0.8 + R() * 0.4)) {
+      const v = (yy - cy) / rh, half = rw * Math.sqrt(Math.max(0, 1 - v * v)) * (0.65 + R() * 0.35);
+      if (half < 1.5) continue;
+      const pts: P[] = [], x0 = cx - half + (R() - 0.5) * 3, x1 = cx + half + (R() - 0.5) * 3;
+      for (let x = x0; x <= x1; x += 0.8 + k) pts.push([x, yy + (x - cx) * tilt + Math.sin(x / wl + ph + yy * 0.7) * 0.3 * (0.4 + k)]);
+      if (pts.length < 3) continue;
+      const op = 0.25 + 0.75 * (1 - v * v);
+      rip += `<path d="${spline(pts)}" fill="none" stroke="${sd2}" stroke-width="${f(0.1 + 0.3 * k)}" stroke-opacity="${f((0.1 + 0.24 * k) * op)}" stroke-linecap="round"/><path d="${spline(pts.map(q => [q[0], q[1] - 0.18 - 0.42 * k] as P))}" fill="none" stroke="${sd0}" stroke-width="${f(0.08 + 0.26 * k)}" stroke-opacity="${f((0.12 + 0.3 * k) * op)}" stroke-linecap="round"/>`;
+    }
+  }
+  out.push(`<defs><g id="wNearFloor"><g filter="url(#wB2)">${dunes}</g><g filter="url(#wB02)">${rip}</g><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wGrainD)" opacity=".5"/><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wGrainL)" opacity=".55"/>` +
+    `<g mask="url(#wFarM)"><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wCauF)" opacity=".22"/></g><g mask="url(#wNearM)"><rect y="${H}" width="${W}" height="${PAGE.h - H}" filter="url(#wCauN)" opacity=".26"/></g></g></defs><g mask="url(#wFloorM)"><use href="#wNearFloor"/></g>`);
 
   // ---- what lies on the near floor ----
   const taken: Box[] = props.map(p => p.box);
