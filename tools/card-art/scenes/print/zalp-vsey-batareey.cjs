@@ -25,6 +25,10 @@
 // mirrored on the water), so the three rows read as three strict lines on her ports; the smoke: a puff beside each
 // port of the lower two rows, the billows of the upper row rising to her rail, and the bank lying on the water in front
 // of her side, drawn over her waterline and kept below the lowest row of ports.
+// User's choice (print): between the two — the smoke of the chosen picture (a billow from every port up to her rail and
+// the bank on the water), the flashes only on the real ports of her three gun decks but bigger and denser than in the
+// print-review pass (the bursts of a row touch, a strong blast down the wind), cut at her waterline; no fire in the air
+// (no deck guns, no embers) and none on the water.
 // Light: the sun behind us, high on the left (key); the flashes (orange, local) warm the side and the smoke.
 'use strict';
 const K = require('../kit/index.cjs');
@@ -37,8 +41,8 @@ const light = { time: 'day', haze: .25, key: { type: 'sun', az: 228, el: 30, col
 const skel = { horizon: HZ, eye: 7.7, light: 'the sun behind us high on the left (key); the orange flashes along her side (local)', items: [
   ['ship', 8, WL, 184, 122, 'water: her waterline y 132, broadside, bow to the left'],
   ['flashes', 54, 117, 108, 13, 'on her three rows of ports (y 117 / 123 / 128), one per port, above the waterline'],
-  ['smoke band', 44, 118, 140, 17, 'puffs beside the ports, billows up to her rail, drifting left with the wind'],
-  ['smoke bank', 44, 147, 140, 17, 'on the water in front of her side, its top at y 131 under the lowest ports'],
+  ['smoke band', 44, 118, 140, 17, 'rolled out of her ports along her side up to her rail, drifting left with the wind'],
+  ['smoke bank', 44, 140, 140, 17, 'on the water along her waterline'],
   ['far ships', 6, 112.6, 190, 12, 'on the horizon, hull-down']] };
 
 // the gun ports of the kit's Endeavour -> picture points: the same rule as ship.cjs build() (SHIP_SPECS.endeavour: three
@@ -62,24 +66,24 @@ function ports() {
   return out;
 }
 
-// a gun's burst out of a port seen from the side, close to head-on: a compact ragged ball of fire (white heart, gold,
-// orange, a dark-red rim) sitting on its port, no wider than half the port pitch, so the rows stay strict lines of
-// separate flashes; a short tongue blown down the wind (to the left), level with the port.
-// k — size, seed — its own shape (lobe count, twist, the tongue's angle and length)
+// a gun's burst out of a port seen from the side, close to head-on: a big ragged ball of fire (white heart, gold, orange,
+// a dark-red rim) on its port, its spikes touching the neighbours' so each row reads as one dense line of fire, with a
+// strong white blast thrown out of the port down the wind (to the left) and only a little down, so it stays above her
+// waterline; no embers (nothing burning in the air). k — size, seed — its own shape (lobes, twist, the blast)
 function burst(u, x, y, k, seed) {
-  const r = rng(70 + seed * 3), g = nid('zb', u), gw = nid('zw', u), gh = nid('zh', u), n = 5 + seed % 3, tw = r() * Math.PI, sq = .82 + r() * .1;
+  const r = rng(70 + seed * 3), g = nid('zb', u), gw = nid('zw', u), gh = nid('zh', u), n = 5 + seed % 3, tw = r() * Math.PI, sq = .8 + r() * .12;
   // the ball of fire: lobes of different size joined by soft curves (not a star)
-  const pts = Array.from({ length: n }, (_, j) => { const a = j / n * Math.PI * 2 + tw + (r() - .5) * .5, rr = (1.35 + r() * .55) * k; return [Math.cos(a) * rr, Math.sin(a) * rr * sq]; });
+  const pts = Array.from({ length: n }, (_, j) => { const a = j / n * Math.PI * 2 + tw + (r() - .5) * .5, rr = (1.6 + r() * .95) * k; return [Math.cos(a) * rr, Math.sin(a) * rr * sq]; });
   const lobe = pts.map((p, j) => { const q = pts[(j + 1) % n], m = [(p[0] + q[0]) * .36, (p[1] + q[1]) * .36]; return [p, m]; });
-  const d = `M${f(x + lobe[0][1][0])} ${f(y + lobe[0][1][1])}` + lobe.map((_, j) => { const [p] = lobe[(j + 1) % n], m = lobe[(j + 1) % n][1]; return `Q${f(x + p[0] * 1.2)} ${f(y + p[1] * 1.2)} ${f(x + m[0])} ${f(y + m[1])}`; }).join('') + 'Z';
-  const ba = Math.PI + (r() - .5) * .35, bd = [Math.cos(ba), Math.sin(ba)], BL = (2.6 + r() * .8) * k, nx = -bd[1], ny = bd[0], tx = x + bd[0] * BL, ty = y + bd[1] * BL, w = .75 * k;
-  return `<defs>${radGrad(g, x, y, 2.2 * k, [[0, '#fffbe6'], [.26, '#ffe88a'], [.55, '#ffb038'], [.82, '#f06a1e', .92], [1, '#d04a14', .6]])}`
-    + `${radGrad(gh, x, y, 3 * k, [[0, '#ff9a3a', .32], [.55, '#e87a3a', .1], [1, '#c8a080', 0]])}`
-    + `${linGrad(gw, x, y, tx, ty, [[0, '#fffbe0', 1], [.35, '#ffe070', .95], [.75, '#ff9a30', .7], [1, '#ff7a20', 0]])}</defs>`
-    + `<circle cx="${f(x)}" cy="${f(y)}" r="${f(3 * k)}" fill="url(#${gh})"/>`
-    + `<path d="M${f(x + nx * .7 * k)} ${f(y + ny * .7 * k)}Q${f(x + bd[0] * BL * .5 + nx * w)} ${f(y + bd[1] * BL * .5 + ny * w)} ${f(tx)} ${f(ty)}Q${f(x + bd[0] * BL * .5 - nx * w)} ${f(y + bd[1] * BL * .5 - ny * w)} ${f(x - nx * .7 * k)} ${f(y - ny * .7 * k)}Z" fill="url(#${gw})"/>`
+  const d = `M${f(x + lobe[0][1][0])} ${f(y + lobe[0][1][1])}` + lobe.map((_, j) => { const [p] = lobe[(j + 1) % n], m = lobe[(j + 1) % n][1]; return `Q${f(x + p[0] * 1.25)} ${f(y + p[1] * 1.25)} ${f(x + m[0])} ${f(y + m[1])}`; }).join('') + 'Z';
+  const ba = 2.75 + r() * .2, bd = [Math.cos(ba), Math.sin(ba)], BL = (4.4 + r() * 1.4) * k, nx = -bd[1], ny = bd[0], tx = x + bd[0] * BL, ty = y + bd[1] * BL, w = 1.05 * k;
+  return `<defs>${radGrad(g, x, y, 2.8 * k, [[0, '#fffbe6'], [.25, '#ffe88a'], [.52, '#ffb038'], [.8, '#f06a1e', .92], [1, '#d04a14', .58]])}`
+    + `${radGrad(gh, x, y, 4 * k, [[0, '#ff9a3a', .34], [.55, '#e87a3a', .12], [1, '#c8a080', 0]])}`
+    + `${linGrad(gw, x, y, tx, ty, [[0, '#fffbe0', 1], [.3, '#ffe070', 1], [.7, '#ff9a30', .8], [1, '#ff7a20', 0]])}</defs>`
+    + `<circle cx="${f(x)}" cy="${f(y)}" r="${f(4 * k)}" fill="url(#${gh})"/>`
+    + `<path d="M${f(x + nx * .8 * k)} ${f(y + ny * .8 * k)}Q${f(x + bd[0] * BL * .5 + nx * w)} ${f(y + bd[1] * BL * .5 + ny * w)} ${f(tx)} ${f(ty)}Q${f(x + bd[0] * BL * .5 - nx * w)} ${f(y + bd[1] * BL * .5 - ny * w)} ${f(x - nx * .8 * k)} ${f(y - ny * .8 * k)}Z" fill="url(#${gw})"/>`
     + `<path d="${d}" fill="url(#${g})"/>`
-    + `<ellipse cx="${f(x + (r() - .5) * .25)}" cy="${f(y)}" rx="${f(.62 * k)}" ry="${f(.5 * k)}" fill="#fffdf2"/>`;
+    + `<ellipse cx="${f(x + (r() - .5) * .3)}" cy="${f(y)}" rx="${f(.8 * k)}" ry="${f(.62 * k)}" fill="#fffdf2"/><ellipse cx="${f(x + bd[0] * .9 * k)}" cy="${f(y + bd[1] * .9 * k)}" rx="${f(.5 * k)}" ry="${f(.36 * k)}" fill="#fffbe8" opacity=".85"/>`;
 }
 
 module.exports = { name: 'Залп всей батареей', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
@@ -101,46 +105,46 @@ module.exports = { name: 'Залп всей батареей', kind: 'deck', sta
     let fg = K.ship(u, L, { kind: 'endeavour', x: SX, y: WL, scale: SS, sails: 'full', seed: 4 });
     fg += K.foam(u, { x: SX - 6, y: WL + .3, w: 116, h: 1.2, seed: 5, L });
 
-    // ——— the smoke out of the ports, down the wind (to the left, as her flags fly), and a low bank on the water in front
-    // of her hull; lit by the sun from the left and above, warm next to the flashes, a cooler shaded underside
+    // ——— the smoke (as in the chosen picture): out of every port of the three gun decks a billow rolling out and down
+    // the wind (to the left, as her flags fly) up to her rail, merging below into a low bank on the water in front of her
+    // hull; lit by the sun from the left and above, warm next to the flashes, a cooler shaded underside
     const P = ports().filter(p => p.row !== 'deck');   // the three gun decks only: one flash per real port
     { const pg = nid('zp', u), pd = nid('zd', u), pf = nid('zf', u);
       fg += `<defs><radialGradient id="${pg}" cx=".38" cy=".34" r=".66"><stop offset="0" stop-color="#fffdf6"/><stop offset=".36" stop-color="#e2ded6" stop-opacity=".98"/><stop offset=".74" stop-color="#959aa6" stop-opacity=".94"/><stop offset="1" stop-color="#6a707e" stop-opacity="0"/></radialGradient>`
         + `<radialGradient id="${pd}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#3a4250" stop-opacity=".6"/><stop offset="1" stop-color="#4a5260" stop-opacity="0"/></radialGradient>`
         + `<filter id="${pf}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation=".35"/></filter></defs>`;
-      // the smoke out of the ports, blown aside (left, down the wind): the upper row's billows rise to her rail and stand
-      // as a wall over her side; the two lower rows a small puff beside each port, kept in its own row so the lines of
-      // fire stay clean; translucent, her wales still show through
+      // the bank on the water first: low billows along her waterline from her quarter to under her bow, thicker
+      // and lower near us, drifting left
+      let bank = '', bsh = '';
+      { const Rb = rng(53); for (let x = 176; x > 46; x -= 2.6 + Rb() * 3.4) { const t = (176 - x) / 130, big = Rb(), r = 2.2 + big * big * 4.6 + t * 1.4, y = WL + 1.8 - r * .35 - Rb() * 1.6 + t * .6;
+          bsh += `<circle cx="${f(x + .8)}" cy="${f(y + r * .55)}" r="${f(r)}" fill="url(#${pd})"/>`;
+          bank += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="url(#${pg})" opacity="${f(.72 - t * .25)}"/>`;
+          // now and then a billow climbs out of the bank
+          if (Rb() < .3) bank += `<circle cx="${f(x - r * .4)}" cy="${f(y - r * .9)}" r="${f(r * .6)}" fill="url(#${pg})" opacity="${f(.55 - t * .2)}"/>`; } }
+      fg += bsh + `<g filter="url(#${pf})">${bank}</g>`;
+      // a billow out of every port, blown aside (left, down the wind) and up as far as her rail, swelling as it goes:
+      // together they stand as a wall of smoke over her side; translucent, so her wales and the rail still show through
       let sh = '', bl = '';
-      for (const p of P) { const up = p.row === 2, k = .9 + R() * .2, n = up ? 7 : 3;
-        for (let j = 0; j < n; j++) { const t = j / (n - 1);
-          if (up) { const top = RAIL - 2 + R() * 2, x = p.x - 1.2 - t * (11 + R() * 3) * k + (R() - .5) * .8, y = p.y - 1.4 - t * (p.y - 1.4 - top) * (.85 + R() * .2) + (R() - .5) * .6, r = (1.5 + t * t * 4.2 + t * .8) * k * (.9 + R() * .2);
-            if (j >= n - 2) sh += `<circle cx="${f(x + .6)}" cy="${f(y + r * .55)}" r="${f(r)}" fill="url(#${pd})"/>`;
-            bl += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="url(#${pg})" opacity="${f(.8 - t * .18)}"/>`; }
-          else { const x = p.x - 2.2 - t * 1.6 * k + (R() - .5) * .5, y = p.y - .3 - t * .9 + (R() - .5) * .4, r = (.9 + t * .7) * k;
-            bl += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="url(#${pg})" opacity="${f(.62 - t * .12)}"/>`; } } }
+      for (const p of P) { const k = .9 + R() * .2, top = RAIL - 2 + R() * 2, n = 7;
+        for (let j = 0; j < n; j++) { const t = j / (n - 1), x = p.x - .8 - t * (11 + R() * 3) * k + (R() - .5) * .8, y = p.y - t * (p.y - top) * (.85 + R() * .2) + (R() - .5) * .6, r = (1.7 + t * t * 4.2 + t * .8) * k * (.9 + R() * .2);
+          if (j >= n - 2) sh += `<circle cx="${f(x + .6)}" cy="${f(y + r * .55)}" r="${f(r)}" fill="url(#${pd})"/>`;
+          bl += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="url(#${pg})" opacity="${f(.8 - t * .18)}"/>`; } }
       fg += `<g opacity=".94">${sh}<g filter="url(#${pf})">${bl}</g></g>`;
       // the warm light of the flashes in the smoke and up under the courses
-      fg += K.localGlow(u, { x: 108, y: 124, color: '#ffb060', power: .45, radius: 56 }, { squash: .3, core: false })
-        + K.localGlow(u, { x: 112, y: 100, color: '#ffc070', power: .16, radius: 50 }, { squash: .22, core: false });
+      fg += K.localGlow(u, { x: 108, y: 126, color: '#ffb060', power: .55, radius: 60 }, { squash: .3, core: false })
+        + K.localGlow(u, { x: 112, y: 100, color: '#ffc070', power: .18, radius: 50 }, { squash: .22, core: false }); }
 
-      // ——— the flashes: EVERY gun of the three gun decks at once, each on its own port's centre (the strict line,
-      // even intervals), each burst its own shape; the lower decks carry the heavier guns. The lowest ball ends ~2 above
-      // her waterline
-      const SIZE = { 0: 1.14, 1: 1.12, 2: 1.08 }, ORD = { 2: 0, 1: 1, 0: 2 };
-      for (const p of P.slice().sort((a, b) => ORD[a.row] - ORD[b.row])) fg += burst(u, p.x, p.y, SIZE[p.row] * (.94 + R() * .1), p.row * 17 + p.i);
+    // ——— the flashes: EVERY gun of the three gun decks at once, each on its own port's centre (the strict line, even
+    // intervals), each burst its own shape, big enough that the bursts of a row touch; the lower decks carry the heavier
+    // guns. Nothing on the open deck above (no fire in the air), and the fire is cut at her waterline (none below it)
+    { const SIZE = { 0: 1.3, 1: 1.36, 2: 1.32 }, ORD = { 2: 0, 1: 1, 0: 2 }, cw = nid('zc', u);
+      let fl = '';
+      for (const p of P.slice().sort((a, b) => ORD[a.row] - ORD[b.row])) fl += burst(u, p.x, p.y, SIZE[p.row] * (.94 + R() * .12), p.row * 17 + p.i);
+      fg += `<defs><clipPath id="${cw}"><rect x="0" y="0" width="200" height="${f(WL - .6)}"/></clipPath></defs><g clip-path="url(#${cw})">${fl}</g>`;
       // the three lines of fire read as one band along her side
-      for (const y of [117.2, 122.7, 128.2]) fg += K.localGlow(u, { x: 106, y, color: '#ffb050', power: .26, radius: 58 }, { squash: .07, core: false });
-
-      // ——— the bank on the water in front of her side: low billows along her waterline from her quarter to under her
-      // bow, thicker and lower near us, drifting left; drawn over her waterline, its top kept under the lowest ports
-      let bank = '', bsh = '';
-      { const Rb = rng(53); for (let x = 176; x > 46; x -= 2.6 + Rb() * 3.4) { const t = (176 - x) / 130, big = Rb(), r = 2.2 + big * big * 4.6 + t * 1.4, y = WL - 1.2 + r + Rb() * .6;   // its top at y ~131
-          bsh += `<circle cx="${f(x + .8)}" cy="${f(y + r * .55)}" r="${f(r)}" fill="url(#${pd})"/>`;
-          bank += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="url(#${pg})" opacity="${f(.74 - t * .22)}"/>`; } }
-      fg += bsh + `<g filter="url(#${pf})">${bank}</g>`; }
-    // the light of the flashes on the water and the bank under her
-    fg += K.localGlow(u, { x: 106, y: 142, color: '#ffb050', power: .3, radius: 50 }, { squash: .25, core: false });
+      for (const y of [117.2, 122.7, 128.2]) fg += K.localGlow(u, { x: 106, y, color: '#ffb050', power: .32, radius: 60 }, { squash: .07, core: false }); }
+    // the light of the flashes on the smoke bank and the water under her
+    fg += K.localGlow(u, { x: 106, y: 146, color: '#ffb050', power: .32, radius: 50 }, { squash: .25, core: false });
 
     // ——— under the glass: the sea darkening towards us
     { const g = nid('dk', u); fg += `<defs>${linGrad(g, 0, 160, 0, 290, [[0, '#06141c', 0], [1, '#06141c', .55]])}</defs><rect x="0" y="160" width="200" height="130" fill="url(#${g})"/>`; }
