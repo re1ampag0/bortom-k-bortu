@@ -11,7 +11,7 @@ import path from 'node:path';
 import type { Browser } from '@playwright/test';
 import { HTML_DIR } from './kit';
 
-export const LAYOUT_FILES = ['03-planshety', '04-tryumy-zhetony', '02-pamyatki'];
+export const LAYOUT_FILES = ['03-planshety', '04-tryumy-zhetony', '04b-skhema-boya', '02-pamyatki'];
 interface Issue { page: number; msg: string }
 
 export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promise<{ errors: string[]; words: number }> {

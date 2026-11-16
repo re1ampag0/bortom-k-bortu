@@ -2,9 +2,9 @@
 // review-player 3.1, 3.5, 3.7, 3.9; docs/tasks/print-kit-boards.md step 5). Portrait A4, one side.
 //   sheet 1: «Трюм Пиратов», «Трюм Компании» (8 cells Ø 22 mm each and the cells «Перестроение», «Совместный залп +1»),
 //            Powder × 24, Fire × 9, track markers × 17, «Под водой»
-//   sheet 2: the «Схема боя» — the centre of the table: the phase path, the 2 × 2 field with nests for the ship tokens,
-//            the places of the sea deck, the sea card and «Эффекты этого хода», where the lasting effects lie
-//   sheet 3: four ship tokens 30 × 30 mm and the identical marks 11 × 11 mm (TABLE.marks and TABLE.spareMarks)
+//   sheet 2: four ship tokens 30 × 30 mm and the identical marks 11 × 11 mm (TABLE.marks and TABLE.spareMarks)
+//   sheet 3 (--counters strip): the four counter strips
+// The «Схема боя» is a landscape sheet of its own: parts/scheme.ts → 04b-skhema-boya.pdf.
 // Tokens are squares in grids without gaps: the cut lines are shared and run a few millimetres past the grid.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -17,6 +17,7 @@ import { createRequire } from 'node:module';
 import { ROOT } from '../kit';
 import { rasterJpeg } from '../map/raster';
 import { counterStripsPage } from './boards/v2';
+import { schemePart } from './scheme';
 
 const require = createRequire(import.meta.url);
 /** the kit ships (tools/card-art/scenes/kit): the same ships as on the card backs and the boards (--tokens new) */
@@ -43,11 +44,6 @@ const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/tokens.json'), 'utf
   partTitle: string; title: string; lead: string; hint: string; footer: string; holds: HoldText[];
   powder: string; fire: string; markers: string; underwaterCaption: string; underwater: { title: string; lines: string[] };
   page: string; holdCells: { regroup: string[]; joint: string[] };
-  scheme: {
-    title: string; tag: string; lead: string; phase: { title: string; sub: string; steps: string[] }; company: string; pirates: string;
-    front: string[]; diag: string; joint: string[]; seaDeck: { title: string; lines: string[] }; seaCard: { title: string; lines: string[] };
-    effects: { title: string; cards: string[] }; long: { title: string; cards: string[]; text: string };
-  };
   marksPage: { title: string; lead: string; ships: string; marks: string; uses: string[]; sweep: string };
   strips: { title: string; lead: string };
 };
@@ -64,7 +60,6 @@ const CUT_W = 0.25;
 /** Numbers and icons inside empty cells: decoration, seen until a token covers them. */
 const FAINT = '#a08c62';
 /** Team colours for words on parchment: darkened to a contrast of 7:1 and more. */
-const COMPANY_INK = darken(COMPANY, 0.4);
 /** The ground of the identical marks: a deep blue none of the four ships has. */
 const MARK_BG = '#1d3f73';
 /** How far a cut line runs past its grid into the margin. */
@@ -83,13 +78,6 @@ const FIRE = { cols: 9, rows: 1, x: (A4.w - 9 * TOKEN.fire) / 2, y: POWDER.y + 3
 const MARK = { x: 11, y: FIRE.y + TOKEN.fire + GAP + CAP, perRow: 8 };
 const UNDER = { x: 124, y: MARK.y };
 // sheet 2
-const PHASE = { x: 10, y: 27.5 };
-const FIELD = { x: (A4.w - TABLE.field.w) / 2, y: 45, ...TABLE.field };
-/** The nests: columns and rows inside the field (Company on top, Pirates below, as in the rules' diagram). */
-const NEST = { cols: [30, TABLE.field.w - 30 - TABLE.nest], rows: [8, TABLE.field.h - 8 - TABLE.nest] };
-const TRAY = { x: FIELD.x, y: FIELD.y + FIELD.h + 16.5, h: TABLE.seaCard.h };
-const LONG = { y: TRAY.y + TRAY.h + 3 };
-// sheet 3
 const SHIPS = { x: (A4.w - 4 * TOKEN.shipToken) / 2, y: 42 };
 const MARKS = { cols: TABLE.marksPerRow, rows: (TABLE.marks + TABLE.spareMarks) / TABLE.marksPerRow, x: (A4.w - TABLE.marksPerRow * TOKEN.marker) / 2, y: SHIPS.y + TOKEN.shipToken + GAP + 4 + CAP };
 
@@ -119,13 +107,6 @@ const ICONS: Record<string, string> = {
   regroup: '<path d="M4 8.5H18.5M15 5L18.5 8.5L15 12M20 15.5H5.5M9 12L5.5 15.5L9 19"/>',
   // Совместный залп: two shots meet in one target
   joint: '<circle cx="18" cy="12" r="4.2"/><circle cx="18" cy="12" r="1.2" fill="currentColor" stroke="none"/><path d="M2.5 4.5Q9 5 13 10M2.5 19.5Q9 19 13 14M9.9 9.2L13 10L12.7 6.9M9.9 14.8L13 14L12.7 17.1"/>',
-  sea: '<path d="M2.5 8.5q2.4-2.2 4.8 0t4.8 0t4.8 0t4.8 0M2.5 13.5q2.4-2.2 4.8 0t4.8 0t4.8 0t4.8 0M2.5 18.5q2.4-2.2 4.8 0t4.8 0t4.8 0t4.8 0"/>',
-  pirates: '<path d="M5 3.5Q11 9 18 19.5M19 3.5Q13 9 6 19.5M14.6 20.6L19.8 16.8M9.4 20.6L4.2 16.8"/>',
-  company: '<path d="M6 21.5V2.5"/><path d="M6 4H19V13H6"/><path d="M6 7H19M6 10H19"/><path d="M6 4H11V8.5H6" fill="currentColor"/>',
-  deck: '<rect x="5" y="3" width="11.5" height="15.5" rx="1.6"/><path d="M8 21.2H18a1.6 1.6 0 0 0 1.6-1.6V6.5"/><path d="M8 7.2L13.5 14.3M13.5 7.2L8 14.3"/>',
-  card: '<rect x="6" y="3" width="12" height="18" rx="1.6"/><path d="M12 7.5L13.4 11.6L17.5 12L13.4 12.4L12 16.5L10.6 12.4L6.5 12L10.6 11.6Z"/>',
-  hourglass: '<path d="M6.5 3H17.5M6.5 21H17.5M8 3C8 8.5 16 8.5 16 12S8 15.5 8 21M16 3C16 8.5 8 8.5 8 12S16 15.5 16 21"/><path d="M10 19.5H14L12 17Z" fill="currentColor"/>',
-  lasting: '<rect x="3" y="5" width="9.5" height="13.5" rx="1.4"/><path d="M14.5 11.8H20.5M17.6 8.8L20.6 11.8L17.6 14.8"/><path d="M7.75 8.5V11.8L9.8 13.2"/>'
 };
 /** An inline icon of d mm; as an SVG child when x and y are given. */
 const ico = (name: string, d: number, color: string, sw = 1.6, at?: { x: number; y: number }) =>
@@ -224,82 +205,6 @@ function underwaterHtml(): string {
     'tk-uw');
 }
 
-// ---- «Схема боя»
-/** A straight double-headed arrow. */
-function arrow(x1: number, y1: number, x2: number, y2: number, color: string, w: number, dash = '', hd = 1.7): string {
-  const len = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / len, uy = (y2 - y1) / len, hw = hd * 0.42;
-  const tip = (x: number, y: number, s: number) => `<path d="M${R(x)} ${R(y)}L${R(x + s * ux * hd - uy * hw)} ${R(y + s * uy * hd + ux * hw)}L${R(x + s * ux * hd + uy * hw)} ${R(y + s * uy * hd - ux * hw)}Z" fill="${color}"/>`;
-  return `<path d="M${R(x1 + ux * hd * 0.8)} ${R(y1 + uy * hd * 0.8)}L${R(x2 - ux * hd * 0.8)} ${R(y2 - uy * hd * 0.8)}" stroke="${color}" stroke-width="${w}" fill="none"${dash ? ` stroke-dasharray="${dash}"` : ''}/>${tip(x1, y1, 1)}${tip(x2, y2, -1)}`;
-}
-/** A card of the data by its name: the printed names must be exactly the data's. */
-const cardName = (name: string): string => {
-  const all = [...Object.values(data.decks).flat(), ...Object.values(data.legends)];
-  if (!all.some(c => c.name === name)) throw new Error(`tokens.json: no card «${name}» in data/game-data.json`);
-  return `«${name}»`;
-};
-/** The phase path: «Море → Ходят Пираты → Ходят Компания», one mark moves along it. */
-function phaseHtml(): string {
-  const p = TXT.scheme.phase, icons = ['sea', 'pirates', 'company'], colors = [INK, PIRATES, COMPANY_INK];
-  const step = (i: number) => `<div class="tk-ph-s">${markCell(icons[i], BRASS)}<span style="color:${colors[i]}">${esc(p.steps[i])}</span></div>`;
-  const arr = `<svg viewBox="0 0 10 4" style="width:10mm;height:4mm;flex:none;display:block"><path d="M.5 2H8.6" stroke="${INK}" stroke-width=".5"/><path d="M9.6 2L7.6 .9V3.1Z" fill="${INK}"/></svg>`;
-  return `<div class="tk-ph" style="left:${mm(PHASE.x)};top:${mm(PHASE.y)};width:${mm(TABLE.field.w)};height:${mm(TABLE.cell)}">`
-    + `<div class="tk-ph-c"><b>${esc(p.title)}</b><span>${esc(p.sub)}</span></div>${p.steps.map((_, i) => step(i)).join(arr)}</div>`;
-}
-/** The 2 × 2 field: Company on top, Pirates below; arrows «напротив» and «по диагонали», the legend on the left, the joint volley's mark on the right. */
-function fieldHtml(): string {
-  const { w, h } = FIELD, s = TXT.scheme, n = TABLE.nest, t = TOKEN.shipToken, mid = w / 2;
-  const diag = Math.abs((data.ships[0].diagDamage as { offset: number }).offset);
-  const team = [{ c: COMPANY, ink: COMPANY_INK, icon: 'company', name: s.company }, { c: PIRATES, ink: PIRATES, icon: 'pirates', name: s.pirates }];
-  const nest = (x: number, y: number, k: number) => {
-    const c = team[k].c, g = (n - t) / 2;
-    return `<rect x="${x}" y="${y}" width="${n}" height="${n}" rx="2" fill="${lighten(c, 0.9)}" stroke="${lighten(c, 0.15)}" stroke-width=".45"/>`
-      + `<rect x="${x + g}" y="${y + g}" width="${t}" height="${t}" rx="1.2" fill="${CELL}" stroke="${lighten(c, 0.45)}" stroke-width=".3" stroke-dasharray="1.3 .9"/>`
-      + ico(team[k].icon, 13, lighten(c, 0.62), 1.3, { x: x + (n - 13) / 2, y: y + (n - 13) / 2 });
-  };
-  const plate = (y: number, k: number) => {
-    const pw = 38, ph = 8, x = mid - pw / 2;
-    return `<rect x="${x}" y="${y - ph / 2}" width="${pw}" height="${ph}" rx="1.4" fill="${team[k].ink}"/>`
-      + ico(team[k].icon, 5, '#fff4d8', 1.8, { x: x + 2.4, y: y - 2.5 })
-      + `<text x="${mid + 2.6}" y="${y + 1.45}" text-anchor="middle" font-family="Alegreya SC" font-weight="700" font-size="4.1" letter-spacing=".35" fill="#fff4d8">${esc(team[k].name.toUpperCase())}</text>`;
-  };
-  const txt = (x: number, y: number, t: string, size = 3.1, weight = 500) => `<text x="${R(x)}" y="${R(y)}" text-anchor="middle" font-family="Alegreya Sans" font-weight="${weight}" font-size="${size}" fill="${INK}">${esc(t)}</text>`;
-  const line = '#3a2c1c', dline = '#5a4a34', [c0, c1] = NEST.cols, [r0, r1] = NEST.rows;
-  let svg = `<rect x=".5" y=".5" width="${w - 1}" height="${h - 1}" rx="2.6" fill="${PAPER}" stroke="${BRASS}" stroke-width=".6"/>`
-    + `<rect x="1.7" y="1.7" width="${w - 3.4}" height="${h - 3.4}" rx="1.8" fill="none" stroke="${BRASS}" stroke-width=".22"/>`;
-  for (const [k, y] of [r0, r1].entries()) for (const x of [c0, c1]) svg += nest(x, y, k);
-  for (const x of [c0, c1]) svg += arrow(x + n / 2, r0 + n + 0.7, x + n / 2, r1 - 0.7, line, 0.6);
-  svg += arrow(c0 + n + 1, r0 + n + 1, c1 - 1, r1 - 1, dline, 0.5, '1.5 1') + arrow(c1 - 1, r0 + n + 1, c0 + n + 1, r1 - 1, dline, 0.5, '1.5 1');
-  svg += plate(r0 + n / 2, 0) + plate(r1 + n / 2, 1);
-  // the legend: on the left, between the rows
-  const lx = c0 / 2;
-  svg += arrow(lx, 29, lx, 40, line, 0.6) + txt(lx, 45, s.front[0]) + txt(lx, 48.8, s.front[1])
-    + arrow(lx - 5, 55, lx + 5, 63, dline, 0.5, '1.5 1') + txt(lx, 68.6, fill(s.diag, { diag }));
-  // the joint volley: on the right
-  const rx = c1 + n + (w - c1 - n) / 2;
-  svg += ico('joint', 9, INK, 1.5, { x: rx - 4.5, y: 30 }) + s.joint.map((l, i) => txt(rx, 44.5 + i * 3.7, l, 3, i < 2 ? 700 : 500)).join('');
-  return box(FIELD.x, FIELD.y, w, h, `<svg viewBox="0 0 ${w} ${h}" style="position:absolute;left:0;top:0;width:100%;height:100%">${svg}</svg>`);
-}
-/** The three places under the field, sharing their borders: the sea deck, the sea card, «Эффекты этого хода». */
-function trayHtml(): string {
-  const s = TXT.scheme, ws = [TABLE.seaDeck.w, TABLE.seaCard.w, TABLE.effects.w], h = TRAY.h, w = ws.reduce((a, b) => a + b, 0);
-  const xs = ws.map((_, i) => ws.slice(0, i).reduce((a, b) => a + b, 0)), icons = ['deck', 'card', 'hourglass'];
-  const eff = s.effects.cards.map(cardName), effLines = [eff.slice(0, 2).join(', ') + ',', eff.slice(2).join(', ')];
-  const caps = [{ title: s.seaDeck.title, lines: s.seaDeck.lines }, { title: s.seaCard.title, lines: s.seaCard.lines }, { title: s.effects.title, lines: effLines }];
-  let svg = `<rect x=".3" y=".3" width="${w - 0.6}" height="${h - 0.6}" rx="2.4" fill="${PAPER}" stroke="${BRASS}" stroke-width=".6"/>`;
-  svg += xs.slice(1).map(x => `<path d="M${x} .6V${h - 0.6}" stroke="${BRASS}" stroke-width=".45"/>`).join('');
-  svg += ws.map((cw, i) => {
-    const gw = Math.min(cw - 4, 59), gx = xs[i] + (cw - gw) / 2, gh = 85, gy = (h - gh) / 2;
-    return `<rect x="${R(gx)}" y="${gy}" width="${gw}" height="${gh}" rx="3" fill="${CELL}" stroke="${lighten(BRASS, 0.35)}" stroke-width=".3" stroke-dasharray="1.3 .9"/>`
-      + ico(icons[i], 22, lighten(FAINT, 0.35), 1.1, { x: xs[i] + (cw - 22) / 2, y: (h - 22) / 2 });
-  }).join('');
-  const capHtml = caps.map((c, i) => `<div class="tk-pl" style="left:${mm(TRAY.x + xs[i] + 1.2)};top:${mm(FIELD.y + FIELD.h + 2.6)};width:${mm(ws[i] - 2.4)}">${ico(icons[i], 6, INK, 1.7)}<div><b>${esc(c.title)}</b>${c.lines.map(l => `<span>${esc(l)}</span>`).join('')}</div></div>`).join('');
-  return capHtml + box(TRAY.x, TRAY.y, w, h, `<svg viewBox="0 0 ${w} ${h}" style="position:absolute;left:0;top:0;width:100%;height:100%">${svg}</svg>`);
-}
-/** Where the lasting effects lie. */
-function longHtml(): string {
-  const l = TXT.scheme.long;
-  return `<div class="tk-long" style="left:${mm(FIELD.x)};top:${mm(LONG.y)};width:${mm(TABLE.field.w)}">${ico('lasting', 7, INK, 1.6)}<div><b>${esc(l.title)}.</b> ${esc(fill(l.text, { cards: l.cards.map(cardName).join(', ') }))}</div></div>`;
-}
 function shipTokensHtml(pics: Record<string, string> | null): string {
   const t = TOKEN.shipToken, list = ships();
   const one = (s: Ship, i: number) => {
@@ -347,7 +252,7 @@ const markIcon = (d: number) => `<svg viewBox="0 0 ${TOKEN.marker} ${TOKEN.marke
 export function tokenPages(ctx: Ctx, pics: Record<string, string> | null = null, strips = false): PageSpec[] {
   const econ = data.econ as { income: number; first_income: number; cap: number; second_start: number }, rules = data.rules as Record<string, number>;
   const nums = { income: econ.income, first: econ.first_income, cap: econ.cap, start: econ.second_start, firstGame: rules.firstGameSecondStart };
-  const pd = TOKEN.powder, fr = TOKEN.fire, coinD = 15, of = strips ? 4 : 3, page = (n: number) => fill(TXT.page, { n, of });
+  const pd = TOKEN.powder, fr = TOKEN.fire, coinD = 15, of = strips ? 3 : 2, page = (n: number) => fill(TXT.page, { n, of });
   const cells = (g: { cols: number; rows: number; x: number; y: number }, size: number, count: number, inner: (i: number) => string) => {
     if (g.cols * g.rows !== count) throw new Error(`token grid ${g.cols} × ${g.rows}, expected ${count}`);
     return box(g.x, g.y, g.cols * size, g.rows * size, Array.from({ length: count }, (_, i) => box((i % g.cols) * size, Math.floor(i / g.cols) * size, size, size, inner(i), 'tk-tok')).join(''), '', `background:${PAPER}`);
@@ -365,18 +270,16 @@ export function tokenPages(ctx: Ctx, pics: Record<string, string> | null = null,
     + cutLayer(gridCuts(HOLD_BOX.x, HOLD_BOX.y, 1, TXT.holds.length, HOLD_BOX.w, HOLD_BOX.h, HOLD_BOX.tick)
       + gridCuts(POWDER.x, POWDER.y, POWDER.cols, POWDER.rows, pd, pd) + gridCuts(FIRE.x, FIRE.y, FIRE.cols, FIRE.rows, fr, fr)
       + markers.cuts + gridCuts(UNDER.x, UNDER.y, 1, 1, TOKEN.underwater.w, TOKEN.underwater.h));
-  const s = TXT.scheme;
-  const page2 = head(s.title, s.lead, `${s.tag} · ${page(2)}`) + phaseHtml() + fieldHtml() + trayHtml() + longHtml() + foot(2, of);
   const mp = TXT.marksPage, st = TOKEN.shipToken, marks = marksHtml();
   const uses = `<div class="tk-uses" style="left:${mm(MARKS.x)};top:${mm(MARKS.y + MARKS.rows * TOKEN.marker + TICK + 3)};width:${mm(MARKS.cols * TOKEN.marker)}">`
     + `<div class="tk-uses-r">${mp.uses.map(u => `<span>${markIcon(4.4)}${esc(u)}</span>`).join('')}</div><div>${esc(mp.sweep)}</div></div>`;
-  const page3 = head(mp.title, mp.lead, page(3))
+  const page2 = head(mp.title, mp.lead, page(2))
     + cap(SHIPS.x, SHIPS.y - CAP, fill(mp.ships, { n: ships().length })) + shipTokensHtml(pics)
-    + cap(MARKS.x, MARKS.y - CAP, fill(mp.marks, { n: TABLE.marks, spare: TABLE.spareMarks })) + marks.html + uses + foot(3, of)
+    + cap(MARKS.x, MARKS.y - CAP, fill(mp.marks, { n: TABLE.marks, spare: TABLE.spareMarks })) + marks.html + uses + foot(2, of)
     + cutLayer(gridCuts(SHIPS.x, SHIPS.y, ships().length, 1, st, st) + marks.cuts);
-  const pages: PageSpec[] = [{ html: page1 }, { html: page2 }, { html: page3 }];
+  const pages: PageSpec[] = [{ html: page1 }, { html: page2 }];
   // concept B with the counters off the board: the four strips «Осталось карт» / «Реакций сыграно» (cut along the lines)
-  if (strips) pages.push(counterStripsPage(head(TXT.strips.title, TXT.strips.lead, page(4)), foot(4, of)));
+  if (strips) pages.push(counterStripsPage(head(TXT.strips.title, TXT.strips.lead, page(3)), foot(3, of)));
   return pages;
 }
 
@@ -394,15 +297,6 @@ export const TOKENS_CSS = `
 .tk-hc{display:flex;align-items:center;gap:1.8mm}
 .tk-hc-l{display:flex;flex-direction:column;align-items:flex-end;text-align:right;font:500 7.5pt/1.12 'Alegreya Sans',sans-serif;color:${INK};white-space:nowrap}
 .tk-hc-l b{font:700 9pt/1.12 'Alegreya Sans',sans-serif}
-.tk-ph{position:absolute;display:flex;align-items:center;gap:2.4mm}
-.tk-ph-c{display:flex;flex-direction:column;margin-right:3mm;font:500 8.5pt/1.15 'Alegreya Sans',sans-serif;color:${INK};white-space:nowrap}
-.tk-ph-c b{font:700 10pt/1.15 Alegreya,serif}
-.tk-ph-s{display:flex;align-items:center;gap:1.8mm;font:700 10.5pt/1 Alegreya,serif;white-space:nowrap}
-.tk-pl{position:absolute;display:flex;gap:1.6mm;align-items:flex-start;font:500 8.5pt/1.18 'Alegreya Sans',sans-serif;color:${INK};white-space:nowrap}
-.tk-pl div{display:flex;flex-direction:column}
-.tk-pl b{font:700 10pt/1.15 Alegreya,serif}
-.tk-long{position:absolute;display:flex;gap:2mm;align-items:flex-start;font:500 9pt/1.22 'Alegreya Sans',sans-serif;color:${INK}}
-.tk-long b{font:700 10pt/1.2 Alegreya,serif}
 .tk-uses{position:absolute;font:500 9pt/1.3 'Alegreya Sans',sans-serif;color:${INK};text-align:center}
 .tk-uses-r{display:flex;justify-content:center;gap:5mm;margin-bottom:1mm}
 .tk-uses-r span{display:inline-flex;align-items:center;gap:1.4mm;white-space:nowrap}
@@ -415,5 +309,5 @@ export const TOKENS_CSS = `
 export async function build(ctx: Ctx): Promise<Part[]> {
   const pics = (ctx.opts.tokens ?? 'new') === 'new' ? await kitTokenPics(ctx) : null;
   const pages = tokenPages(ctx, pics, (ctx.opts.board ?? 'b') === 'b' && ctx.opts.counters === 'strip');
-  return [{ file: '04-tryumy-zhetony', title: TXT.partTitle, css: TOKENS_CSS, pages }];
+  return [{ file: '04-tryumy-zhetony', title: TXT.partTitle, css: TOKENS_CSS, pages }, await schemePart(ctx)];
 }
