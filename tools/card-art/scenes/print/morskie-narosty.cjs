@@ -117,28 +117,9 @@ module.exports = { name: 'Морские наросты', kind: 'deck', status: 
       fg += `<defs>${linGrad(wd, 0, BC[1] - RH, 0, BC[1] + RH, [[0, '#6a5a3c', 1], [1, '#3a3020', 1]])}${radGrad(g, BC[0] + 8, BC[1] + 10, 40, [[0, '#000201', 1], [.6, '#020806', 1], [1, '#0a1c16', 1]])}</defs>`
         + `<path d="${path(rim)}" fill="url(#${wd})" stroke="#030805" stroke-width=".9"/>`
         + `<path d="${path(inner)}" fill="url(#${g})"/>`;
-      // a rib of her frame dimly seen inside, across the gap
-      { const r0 = Hp(22, -6), r1 = Hp(26, 40); fg += `<path d="M${P2(r0)}L${P2(r1)}" stroke="#16302a" stroke-width="5" opacity=".7"/><path d="M${f(r0[0] - 2)} ${f(r0[1])}L${f(r1[0] - 2)} ${f(r1[1])}" stroke="#3a6a5a" stroke-width=".6" opacity=".5"/>`; }
       // the strake seams cut through the raw edge
       for (let y = TOP; y <= BOT; y += 13.6) { const b = (strY(y, BC[0]) - BC[1]); if (Math.abs(b) > RH) continue; const a = Math.sqrt(RH * RH - b * b);
         for (const s of [-1, 1]) { const p = Hp(s * a * .97, b), q = Hp(s * a * .86, b); fg += `<path d="M${P2(p)}L${P2(q)}" stroke="#030805" stroke-width=".7"/>`; } } }
-    // the broken planks at the open part: each strake ends in a torn, splintered end (pale raw wood), at its own
-    // length; one is bent in; along the lower edge long splinters of the plank below stick out along the grain
-    { const Rs = rng(13); let k = 0;
-      for (let y = TOP; y < BOT; y += 13.6, k++) { const b0 = strY(y, BC[0]) - BC[1], b1 = strY(y + 13.6, BC[0]) - BC[1], bm = (b0 + b1) / 2;
-        if (Math.abs(bm) >= RH * .92) continue; const ar = Math.sqrt(RH * RH - bm * bm), th = Math.atan2(bm, ar) * 180 / Math.PI; if (!inGap(th)) continue;
-        const h = b1 - b0, aOut = ar * 1.04, aEnd = ar - 4 - Rs() * 5, bent = k % 3 === 1, jag = [[aEnd + 3, b0 + .3], [aEnd + .6, b0 + h * .22], [aEnd - 2.2, b0 + h * .36], [aEnd - .2, b0 + h * .58], [aEnd - 4.2, b0 + h * .78], [aEnd + 1, b1 - .3]];
-        const g = nid('pk', u), pa = Hp(aOut, b0), pb = Hp(aOut, b1);
-        fg += `<defs>${linGrad(g, 0, pa[1], 0, pb[1], bent ? [[0, '#3a4236', 1], [1, '#121a14', 1]] : [[0, '#6a7662', 1], [.2, '#4a5646', 1], [.8, '#2a362e', 1], [1, '#121a14', 1]])}</defs>`
-          + `<path d="M${P2(Hp(aOut, b0 + .3))}L${jag.map(q => P2(Hp(q[0], q[1]))).join('L')}L${P2(Hp(aOut, b1 - .3))}Z" fill="url(#${g})" stroke="#030805" stroke-width=".55"/>`
-          // the torn end: a band of raw wood just behind the break, its fibres lighter
-          + `<path d="M${jag.map(q => P2(Hp(q[0], q[1]))).join('L')}L${jag.slice().reverse().map(q => P2(Hp(q[0] + 2.2, q[1]))).join('L')}Z" fill="${bent ? '#6a5a3c' : '#b49a68'}"/>`
-          + `<path d="M${jag.map(q => P2(Hp(q[0] + .3, q[1]))).join('L')}" stroke="${bent ? '#9a8a64' : '#ecdcae'}" stroke-width=".5" fill="none"/>`;
-        // a few fibres torn out past the end, along the grain
-        for (let j = 0; j < 3; j++) { const bb = b0 + h * (.2 + j * .3) + (Rs() - .5) * 1.4, a0 = aEnd + (Rs() - .5) * 2, l = 2.5 + Rs() * 4;
-          fg += `<path d="M${P2(Hp(a0, bb))}L${P2(Hp(a0 - l, bb + (Rs() - .5) * 1.2))}" stroke="${bent ? '#7a6a4a' : '#c8b48a'}" stroke-width=".55" stroke-linecap="round"/>`; } }
-      for (const [a0, bb, l, w] of [[24, 33, 15, 1.6], [14, 36, 12, 1.4], [31, 27.6, 10, 1.3]]) { const tip = [a0 - l, bb - 2.2];
-        fg += `<path d="M${P2(Hp(a0, bb - w))}L${P2(Hp(a0 - l * .5, bb - w * .9 - .8))}L${P2(Hp(tip[0], tip[1]))}L${P2(Hp(a0, bb + w))}Z" fill="#9a8660" stroke="#0a0e08" stroke-width=".4"/><path d="M${P2(Hp(a0, bb - w * .5))}L${P2(Hp(tip[0] + 1.4, tip[1] + .1))}" stroke="#ecdcae" stroke-width=".45"/>`; } }
     // cracks run out from the breach along and across the planks
     { const Rk = rng(19); for (const th of [30, 140, 200, 260, 330]) { const p = polar(th, RH + 4), d = polar(th + (Rk() - .5) * 30, 1), len = 8 + Rk() * 9;
         fg += `<path d="M${P2(Hp(p[0], p[1]))}L${P2(Hp(p[0] + d[0] * len * .5 + (Rk() - .5) * 3, p[1] + d[1] * len * .5))}L${P2(Hp(p[0] + d[0] * len, p[1] + d[1] * len + (Rk() - .5) * 4))}" stroke="#040a08" stroke-width=".8" fill="none"/>`; } }

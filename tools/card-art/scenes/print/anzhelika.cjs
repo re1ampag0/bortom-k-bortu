@@ -327,13 +327,13 @@ module.exports = { name: 'Анжелика', kind: 'deck', status: 'accepted', v
     // the captain's gloved hand comes in from the near left and holds the sealed letter up towards the ally's ship
     // in the window: the card she passes on. Fingers behind the sheet, the thumb on its face; the candle on the
     // right lights the glove's lower side and the paper
-    { const Wr = [40.2, 123], ang = -52, hs = 1.4, H = gloveArm(u, L, Wr, ang, hs), C0 = H.P(21.5, 1.8), sb = nid('lsh', u);
+    { const AP = JSON.parse(process.env.AP || '{}'), Wr = [40.2, 123], ang = -52, hs = 1.4, H = gloveArm(u, L, Wr, ang, hs), C0 = AP.c || H.P(21.5, 1.8), LA = AP.la != null ? AP.la : ang + 42, sb = nid('lsh', u);
       // the shadow the arm throws on the table (away from the candle, to the left)
       fg += `<defs><filter id="${sb}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter><clipPath id="${sb}c"><rect x="0" y="${TB}" width="200" height="${TF - TB}"/></clipPath></defs>`
         + `<g clip-path="url(#${sb}c)"><path d="${pth(frameOf([Wr[0] - 12, Wr[1] + 8], ang, hs), [[-60, -12], [-10, -8], [16, -7], [20, 0], [16, 7], [-10, 8], [-60, 12]])}" fill="#1a0a02" opacity=".4" filter="url(#${sb})"/></g>`;
       fg += H.back;
       // the letter's edge shades the fingers behind it
-      fg += `<g transform="translate(${f(C0[0])} ${f(C0[1])}) rotate(${ang + 42})">`
+      fg += `<g transform="translate(${f(C0[0])} ${f(C0[1])}) rotate(${LA})">`
         + `<path d="M-1.6 1.6L34 1.6L34 -24L-1.6 -24Z" fill="#140802" opacity=".35" filter="url(#${sb})" transform="translate(-1.4 1.6)"/>`
         + sealedLetter(u, 34, 23) + '</g>';
       fg += H.thumb + H.ring + K.localGlow(u, { x: C0[0] + 24, y: C0[1] - 14, color: '#ffd8a0', power: .22, radius: 22 }, { core: false }); }

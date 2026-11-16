@@ -20,7 +20,7 @@ const MOON = { x: 140, y: 40 };
 const EYES = [{ x: 38, y: 90, w: 24 }, { x: 162, y: 88, w: 24 }];
 const light = { time: 'night', haze: .6, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#d8f8e8', power: .85 }, fill: { color: '#24443c', power: .45 },
   rim: { az: 10, color: '#e0fff2', power: .8 }, locals: EYES.map(e => ({ x: e.x, y: e.y, color: '#d8ff80', power: .45, radius: 30 })) };
-const skel = { horizon: HZ, eye: 4, light: 'the moon behind the beast's crown (back light: rims toward it, the near sides dark) + the glow of its eyes', items: [
+const skel = { horizon: HZ, eye: 4, light: 'the moon behind the crown of the beast (back light: rims toward it, the near sides dark) + the glow of its eyes', items: [
   ['head', 12, HZ + 3, 178, 80, 'sea, behind the ship (it rises out of the water)', 0, { bg: 1 }], ['ship', 54, SHIP.y, 90, 57, 'sea, in front of the head'],
   ['arm L', 0, 142, 80, 110, 'out of the near sea at the left edge, arched over, down on her bow and into the water under her', 0, { edge: 1 }],
   ['arm R', 120, 142, 80, 110, 'out of the near sea at the right edge, arched over, down on her quarter and into the water under her', 0, { edge: 1 }],

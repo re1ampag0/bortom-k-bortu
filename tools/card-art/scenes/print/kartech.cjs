@@ -72,8 +72,8 @@ function grape(u, L, o) {
 module.exports = { name: 'Картечь', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: HZ });
-    const m0 = K.cannon.muzzle({ ...GUN, x: 0 }), gun = { ...GUN, x: HX - 4 - m0.x }, m = K.cannon.muzzle(gun), by = m.y;
-    const ph = 24, pt = by - ph / 2;
+    const m0 = K.cannon.muzzle({ ...GUN, x: 0 }), gun = { ...GUN, x: HX - 11 - m0.x }, m = K.cannon.muzzle(gun), by = m.y;
+    const ph = 30, pt = by - ph / 2;   // the muzzle stands well out of the port, the port a clear gap round the barrel
 
     // ——— outside (left of our hull): the sunset sky, her course backlit, her rail and her men, the swarm ———
     let o = K.sky(u, Lo, { horizon: HZ, stars: false }) + K.sunMoon(u, Lo, { r: 6 }) + K.cloud(u, Lo, { x: 20, y: 70, w: 40, h: 5, seed: 3, far: .4 });
@@ -165,6 +165,18 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'accepted', cam
         + motes(20, IN, 10, 210 - IN, 110, '#ffd8a0', 8);
       bg += i; }
     // ——— our hull in section: frames and planking, the port through it, the lid hauled up outside ———
+    // the port: a square hole through the side — in the gap, the far cheek of the hole (the side's thickness beyond the
+    // cut) in shadow, lit orange from the flash at its outer edge; the lid hinged at its top, swung up outside
+    { const g = nid('pc', u);
+      bg += `<defs>${linGrad(g, HX, 0, HX + HW, 0, [[0, '#b0582a', 1], [.25, '#5a2c14', 1], [1, '#1a0c06', 1]])}</defs><rect x="${HX}" y="${f(pt)}" width="${HW}" height="${ph}" fill="url(#${g})"/>`
+        + `<path d="M${HX} ${f(pt + 3)}h${HW}M${HX} ${f(pt + ph - 3)}h${HW}" stroke="#0a0502" stroke-width=".5" opacity=".7"/>`
+        + `<path d="M${HX + 1.2} ${f(pt + 3)}V${f(pt + ph - 3)}" stroke="#ffcf7a" stroke-width=".7" opacity=".55"/>`;
+      // the lid: a thick plank, hinged on the outer face over the port, swung up and out; its inner face to the flash
+      const la = -16 * Math.PI / 180, lx = HX - .6, ly = pt - .4, lw = ph + 2, lt = 2.6, ex = lx + Math.sin(la) * lw, ey = ly - Math.cos(la) * lw, nx = -Math.cos(la) * lt, ny = -Math.sin(la) * lt;
+      bg += `<path d="M${f(lx)} ${f(ly)}L${f(ex)} ${f(ey)}L${f(ex + nx)} ${f(ey + ny)}L${f(lx + nx)} ${f(ly + ny)}Z" fill="#2a160a" stroke="#0a0502" stroke-width=".6"/>`
+        + `<path d="M${f(lx + nx * .15)} ${f(ly + ny * .15)}L${f(ex + nx * .15)} ${f(ey + ny * .15)}" stroke="#e8904a" stroke-width=".7" opacity=".75"/>`
+        + `<path d="M${f(lx + nx * .5 + Math.sin(la) * 6)} ${f(ly + ny * .5 - Math.cos(la) * 6)}l${f(-nx * .3)} ${f(-ny * .3)}M${f(lx + nx * .5 + Math.sin(la) * (lw - 6))} ${f(ly + ny * .5 - Math.cos(la) * (lw - 6))}l${f(-nx * .3)} ${f(-ny * .3)}" stroke="#0a0502" stroke-width=".5"/>`
+        + `<rect x="${f(HX - 2.4)}" y="${f(pt - 2)}" width="3" height="2.4" rx=".6" fill="#3a3a3e" stroke="#0a0a0c" stroke-width=".35"/>`; }
     bg += `<path d="M${HX} -10h${HW}v${pt + 10}h${-HW}zM${HX} ${pt + ph}h${HW}V290h${-HW}z" fill="url(#oakH${u})" stroke="#140a04" stroke-width=".8"/>`
       + [12, 40, 66, 140, 172, 204].filter(y => y < pt - 2 || y > pt + ph + 2).map(y => `<path d="M${HX} ${y}h${HW}" stroke="#2a180a" stroke-width=".7"/>`).join('')
       + `<path d="M${HX + HW - 4} -10v${pt + 10}M${HX + HW - 4} ${pt + ph}V290" stroke="#c08a52" stroke-width=".4" opacity=".5"/>`
@@ -184,7 +196,7 @@ module.exports = { name: 'Картечь', kind: 'deck', status: 'accepted', cam
     fg += K.lantern(u, L, { ...LAMP, hang: 2, lit: true, seed: 2 }) + K.localGlow(u, { x: LAMP.x, y: 25, color: '#ffc070', power: .8, radius: 34 });
     fg += glow(u, 152, 50, 70, 62, '#ffb050', .3) + K.localGlow(u, { x: 150, y: 140, color: '#ffb050', power: .4, radius: 56 }, { squash: .3, core: false })
       + K.localGlow(u, { x: IN + 2, y: by, color: '#ffcf7a', power: .7, radius: 24 }) + glow(u, IN + 14, by - 2, 30, 24, '#ffcf7a', .22);
-    fg += glow(u, HX - 2, by, 18, 14, '#ffcf7a', .55);
+    fg += glow(u, m.x - 4, by, 18, 14, '#ffcf7a', .55);
     fg += gloom(u, 150, 60, 210, 150, .4) + gloom(u, 150, 140, 150, 290, .5) + gloom(u, 100, 120, 100, 290, .4) + gloom(u, 60, 60, 0, 0, .2, '#1a0608');
     return [bg, fg];
   } };
