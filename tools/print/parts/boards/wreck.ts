@@ -199,8 +199,8 @@ export const SEA: Record<ShipKey, Sea> = {
     sand: ['#cec7a2', '#9b967a', '#5a5c46'], fish: ['#c4dccc', 0.62], coral: ['#8a9a72', '#a49c74', '#94786e'], weed: ['#3e7a3c', '#5a8c4a', '#2c5230'],
     rag: '#8a8670', hz: 150,
     ship: {
-      ...SHIP0, x: 192, y: 181, scale: 1.4, roll: -10, tilt: 8, brk: [0.93, 0.93, 0.93], bow: 13, stern: 12, sprit: undefined,
-      holes: [], fade: 0.4, growth: 1.6, rags: 1.3, yards: [0, 1, 2], slack: 1.3, torn: 1, reef: true, drifts: [[108, 8, 5], [132, 6, 2.5], [170, 9, 4], [206, 12, 6], [246, 7, 3], [266, 9, 6]]
+      ...SHIP0, x: 234, y: 183, scale: 1.08, roll: -10, tilt: 5, brk: [0.93, 0.93, 0.93], bow: 10, stern: 9, sprit: undefined,
+      holes: [], fade: 0.4, growth: 1.6, rags: 1.3, yards: [0, 1, 2], slack: 1.3, torn: 1, reef: true, drifts: [[169, 6, 4], [188, 5, 2], [217, 7, 3.2], [245, 9, 4.8], [276, 5.4, 2.4], [291, 7, 4.8]]
     },
     props: [
       // the far things: other ships' wreckage
