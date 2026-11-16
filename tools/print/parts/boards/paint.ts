@@ -68,13 +68,6 @@ export function compass(cx: number, cy: number, R: number, o: { line: string; fi
   for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + i * Math.PI / 4, l = i % 2 ? 0.5 : 0.8, wd = R * 0.12; out.push(`<polygon points="${at(a, 0)} ${at(a - Math.PI / 2, wd)} ${at(a, R * l)}" fill="${i ? o.line : o.accent}"/><polygon points="${at(a, 0)} ${at(a + Math.PI / 2, wd)} ${at(a, R * l)}" fill="${o.fill}" stroke="${o.line}" stroke-width=".2"/>`); }
   return out.join('');
 }
-/** The dimming layer over the JPEG under every track row and text field (A): one rect per band, fill-opacity only. */
-export function dimBands(g: Geo, fill: string, opacity = 0.86, pad = 1.6): string {
-  const bands = g.rows.map(rw => rw.band), out: string[] = [];
-  for (const b of bands) out.push(`<rect x="${r(b.x - pad)}" y="${r(b.y - pad)}" width="${r(b.w + 2 * pad)}" height="${r(b.h + 2 * pad)}" rx="2.2" fill="${fill}" fill-opacity="${opacity}"/>`);
-  return out.join('');
-}
-
 // ---- the kit ship, baked ----
 interface ShipOpts { light?: Record<string, unknown>; sails?: string; heel?: number; seed?: number; flip?: boolean }
 /** A close-up of the own ship's side for concept A: the rail at the Crew row, the waterline under the Hull row, the
@@ -132,7 +125,6 @@ export interface SimpleCfg {
   /** A: the wood round the picture and the frame band */ wood: { base: string; seam: string; grain: string; nails?: string };
   band: string; hair: string;
   sky: [string, string]; sea: [string, string]; light?: Record<string, unknown>; focus?: number; sails?: string;
-  /** the dimming layer over the picture under the rows */ dim: string; dimOpacity?: number;
   /** B: the chart and its brass */ chart: { paper: string; line: string; coast: string }; brass: { light: string; mid: string; dark: string };
   note: string; noteLine: string; pin: string; extraA?(g: Geo): string; extraB?(g: Geo): string;
   /** the back */ wreck: { water: [string, string]; sand: string; sandDark: string; light?: Record<string, unknown> };
@@ -142,7 +134,7 @@ export function simpleMaterial(c: SimpleCfg): ShipMaterial {
     async a(g: Geo): Promise<Layers> {
       const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 };
       const under = sheet(g, { band: c.band, line: c.hair, ground: c.wood.base, w: 1.2 }) + planks(F, { ...c.wood, h: 10.5, seed: g.ship.hull * 7 }) +
-        await closeUp(g, { sky: c.sky, sea: c.sea, light: c.light, focus: c.focus, sails: c.sails }) + (c.extraA ? c.extraA(g) : '') + dimBands(g, c.dim, c.dimOpacity ?? 0.86);
+        await closeUp(g, { sky: c.sky, sea: c.sea, light: c.light, focus: c.focus, sails: c.sails }) + (c.extraA ? c.extraA(g) : '');
       return { under, css: `${g.scope} .bo2-box{box-shadow:.5mm .7mm 0 rgba(0,0,0,.35)}` };
     },
     async b(g: Geo): Promise<Layers> {

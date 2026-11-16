@@ -1,5 +1,5 @@
-// «Индевор» — the material of its board: the East India Company. A: the Company's ledger laid over the ship's own side —
-// every track is a ruled ledger slip lying on the part of the ship it counts (Sails on the main course, Crew on the
+// «Индевор» — the material of its board: the East India Company. A: the ship's own side, every track lying on the part
+// of the ship it counts, a thin ledger rule along its label line (Sails on the main course, Crew on the
 // bulwark at the rail, Guns along the upper row of open ports, Hull on the black strake of planking), the cells set into
 // that part (canvas, the rail, ports red inside, planks with treenails); a navy morocco binding with gilt fillets round
 // it, a red wax seal with the Company's bale mark in the header, brass dividers and a compass card in the column's foot.
@@ -44,18 +44,12 @@ async function sideView(g: Geo): Promise<string> {
     `<rect x="${r(P.x - 0.55)}" y="${r(P.y - 0.55)}" width="${r(P.w + 1.1)}" height="${r(P.h + 1.1)}" rx="2.6" fill="none" stroke="${C.gilt}" stroke-width=".35"/>`;
 }
 
-// ---- the ledger slips: the dimming layer under every row (paper with fill-opacity over the JPEG), ruled like the Company's books ----
-function slip(rw: RowGeo): string {
-  const b = rw.band, x = b.x - 1.6, y = b.y - 1.6, w = b.w + 3.2, h = b.h + 3.2, out: string[] = [];
-  out.push(`<rect x="${r(x + 0.7)}" y="${r(y + 0.8)}" width="${r(w)}" height="${r(h)}" rx="1.2" fill="${C.navyDeep}" fill-opacity=".42"/>`);
-  out.push(`<rect x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" rx="1.2" fill="${C.paper}" fill-opacity=".885"/>`);
-  // the blue rule the label is written on, the column rules between the numbers, the red double margins at both ends
-  out.push(`<line x1="${r(x + 2.2)}" y1="${r(rw.labelY + 0.85)}" x2="${r(x + w - 2.2)}" y2="${r(rw.labelY + 0.85)}" stroke="${C.rule}" stroke-width=".2"/>`);
-  let d = '';
-  for (const c of rw.cells.slice(1)) d += `M${r(c.x - 0.75)} ${r(rw.labelY + 1.3)}V${r(c.y)}`;
-  out.push(`<path d="${d}" stroke="${C.rule}" stroke-width=".16"/>`);
-  for (const mx of [x + 0.7, x + 1.15, x + w - 1.15, x + w - 0.7]) out.push(`<line x1="${r(mx)}" y1="${r(y + 0.4)}" x2="${r(mx)}" y2="${r(y + h - 0.4)}" stroke="${C.red}" stroke-width=".18"/>`);
-  return out.join('');
+// ---- the ledger: one thin blue rule along each label line, as in the Company's books; the frame's plates hug the words
+// on it, the ship shows round them ----
+function ledgerRule(rw: RowGeo): string {
+  const y = rw.labelY + 1, x0 = rw.x0 - 1.2, x1 = rw.band.x + rw.band.w + 1.2;
+  return `<line x1="${r(x0)}" y1="${r(y)}" x2="${r(x1)}" y2="${r(y)}" stroke="${C.rule}" stroke-width=".3"/>` +
+    [x0 - 0.3, x0 + 0.15].map(x => `<line x1="${r(x)}" y1="${r(rw.top - 1)}" x2="${r(x)}" y2="${r(y + 0.6)}" stroke="${C.red}" stroke-width=".22"/>`).join('');
 }
 
 /** the strip of the ship's part the cells are set into; seen in the gaps between the cells and round their ends */
@@ -178,7 +172,7 @@ async function faceA(g: Geo): Promise<Layers> {
   const under = [
     binding(g),
     await sideView(g),
-    ...g.rows.map(slip),
+    ...g.rows.map(ledgerRule),
     ...g.rows.map(rw => partStrip(g, rw)),
     portsOn(g, guns),
     deckUnder(g),
@@ -227,7 +221,6 @@ async function wreckB(w: WreckGeo): Promise<Layers> {
 const simple = simpleMaterial({
   wood: { base: '#1f3556', seam: '#0f1d33', grain: '#2a4570', nails: '#c9a35a' }, band: '#9C7A2C', hair: '#e0c27a',
   sky: ['#d6dfe6', '#f3f1e8'], sea: ['#6f8ea4', '#355068'], focus: 0,
-  dim: '#fdfaf0', dimOpacity: 0.87,
   chart: { paper: '#f4ecd6', line: '#c9c0a2', coast: '#e3d6b0' }, brass: { light: '#f4dc92', mid: '#c9a04a', dark: '#6a4c16' },
   note: '#fffcf2', noteLine: '#9fb3cf', pin: '#1f3556',
   extraB: g => { let d = ''; for (let y = 36; y < 170; y += 6.2) d += `M11.2 ${y.toFixed(1)}H${(g.page.w - 11.2).toFixed(1)}`; return `<path d="${d}" stroke="#9fb3cf" stroke-width=".2"/><line x1="116" y1="11.2" x2="116" y2="197" stroke="#d48a8a" stroke-width=".3"/>` + waxSeal(274, 162, 6.4, 7, false); },

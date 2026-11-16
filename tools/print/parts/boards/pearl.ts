@@ -1,15 +1,14 @@
 // «Чёрная жемчужина» — the material of its board: tarred dark wood, rope, a worn sea chart, Jack's compass.
 // A («у борта»): a close-up of the Pearl's own side by moonlight, baked from the kit ship; the rows lie on her parts —
 // Sails on the main course, Crew on the rail, Guns over open ports (a port under every Guns cell and under «Залп дан»),
-// Hull on the planking. The picture is dimmed under every row by an SVG layer over the JPEG; only the span of the cells
-// is left open, so the ship shows between the cells (the cells look set into her side). Right column: a worn chart on
+// Hull on the planking. The ship stays open round the rows: the frame lays only tight plates under the words and the
+// numbers, the cells are set into her side. Right column: a worn chart on
 // tarred planks and the compass that does not point north. The back: the Pearl on the sea floor by night.
 // The interface is at the top of frame.ts; the shared helpers are in paint.ts.
-import type { Geo, Kit, Layers, Rect, RowGeo, ShipMaterial, WreckGeo } from './frame';
+import type { Geo, Kit, Layers, Rect, ShipMaterial, WreckGeo } from './frame';
 import { compass, planks, rng, sheet, simpleMaterial } from './paint';
 
 const r = (n: number) => Math.round(n * 100) / 100;
-const pt = (n: number) => n * 25.4 / 72;
 type KFn = (u: string, L: unknown, o: Record<string, unknown>) => string;
 const kf = (K: Kit, name: string) => K[name] as KFn;
 
@@ -18,7 +17,6 @@ const TAR = { base: '#221c18', seam: '#0b0807', grain: '#362d27', nails: '#5f524
 const BAND = '#120e0c', HAIR = '#a8813f';
 const BRASS = { light: '#f3d68c', mid: '#bf9241', dark: '#5e4214' };
 const PAPER = { light: '#eadbb6', dark: '#d2ba88', line: '#9c8556', edge: '#6b4a22', ink: '#4a3520' };
-const DIM = '#fff9ea', DIM_K = 0.9;
 const ROPE = { color: '#a88a5c', dark: '#3e3020' };
 
 /** a laid rope along a path (any SVG path in mm): body, twist, a dark under-edge */
@@ -77,20 +75,6 @@ async function sideArt(g: Geo): Promise<string> {
     `<radialGradient id="${vg}" cx=".55" cy=".55" r=".75"><stop offset=".55" stop-color="#05070c" stop-opacity="0"/><stop offset="1" stop-color="#05070c" stop-opacity=".55"/></radialGradient></defs>` +
     `<g clip-path="url(#${id})"><image href="${url}" x="${r(P.x)}" y="${r(P.y)}" width="${r(W * k)}" height="${r(Hh * k)}" preserveAspectRatio="none"/>` +
     `<rect x="${r(P.x)}" y="${r(P.y)}" width="${r(P.w)}" height="${r(P.h)}" fill="url(#${vg})"/></g>`;
-}
-
-/** The dimming layer of one row: the band (and the label line where the start label runs past it), with the span of
- *  the cells cut out (evenodd) — the cells are opaque, the ship shows only in the slits between them. */
-function dimRow(rw: RowGeo, P: Rect): string {
-  const B = rw.band, pad = 1.6, c0 = rw.cells[0], x0 = Math.max(P.x, B.x), y0 = B.y - pad, x1 = B.x + B.w + pad, y1 = B.y + B.h + pad;
-  const box = (x: number, y: number, w: number, h: number, rx: number) => `M${r(x + rx)} ${r(y)}H${r(x + w - rx)}Q${r(x + w)} ${r(y)} ${r(x + w)} ${r(y + rx)}V${r(y + h - rx)}Q${r(x + w)} ${r(y + h)} ${r(x + w - rx)} ${r(y + h)}H${r(x + rx)}Q${r(x)} ${r(y + h)} ${r(x)} ${r(y + h - rx)}V${r(y + rx)}Q${r(x)} ${r(y)} ${r(x + rx)} ${r(y)}Z`;
-  const cut = box(c0.x, c0.y, rw.x1 - c0.x, c0.h, 2);
-  let out = `<path d="${box(x0, y0, x1 - x0, y1 - y0, 2.2)}${cut}" fill="${DIM}" fill-opacity="${DIM_K}" fill-rule="evenodd"/>` +
-    `<path d="${box(x0, y0, x1 - x0, y1 - y0, 2.2)}" fill="none" stroke="#0d0907" stroke-width=".35" stroke-opacity=".6"/>`;
-  // the start label «старт · выше не восстанавливать» may run past the Hull's band: a strip of the same dimming under it
-  const sc = rw.cells.find(c => c.start)!, end = Math.min(P.x + P.w - 1, sc.x + 31 * pt(8) * 0.5 + 3);
-  if (end > x1) out += `<path d="${box(x1 - 2.4, y0, end - x1 + 2.4, rw.labelY + 1.6 - y0, 1.6)}" fill="${DIM}" fill-opacity="${DIM_K}"/>`;
-  return out;
 }
 
 // ---- the right column: a worn chart and Jack's compass ----
@@ -179,9 +163,8 @@ async function faceA(g: Geo): Promise<Layers> {
   parts.push(wornChart(chartBox, g.uid, 17));
   parts.push(tack(chartBox.x + 3, chartBox.y + chartBox.h - 3.2, `${g.uid}t1`) + tack(chartBox.x + chartBox.w - 13, chartBox.y + chartBox.h - 2.6, `${g.uid}t2`));
   parts.push(jackCompass(c.x + 27, c.y + c.h - 18.5, 11.5, g.uid));
-  // the picture, dimmed under the rows
+  // the picture (the frame's plates go over it, under the words only)
   parts.push(await sideArt(g));
-  parts.push(g.rows.map(rw => dimRow(rw, P)).join(''));
   // a tarred rope round the picture's top and right edge, whipped at the corner and the ends
   const ty = P.y - 0.75, rx = P.x + P.w + 1.05;
   parts.push(cord(`M${r(P.x + 1)} ${r(ty)}H${r(rx)}`, 1.15) + cord(`M${r(rx)} ${r(ty)}V${r(P.y + P.h - 0.4)}`, 1.15));
@@ -275,7 +258,6 @@ async function wreckPearl(w: WreckGeo): Promise<Layers> {
 const simple = simpleMaterial({
   wood: TAR, band: '#26221F', hair: '#b8893a',
   sky: ['#c9cfd2', '#eef0ea'], sea: ['#5d7880', '#2f444c'], focus: 4,
-  dim: DIM, dimOpacity: DIM_K,
   chart: { paper: '#efe2c4', line: '#c7b48a', coast: '#e0cfa2' }, brass: BRASS,
   note: '#fffaf0', noteLine: '#c9b27a', pin: '#3a3a40',
   extraB: g => cord(`M${r(g.zones.col.x - 1.8)} 30V172`, 1.6, { color: '#c4a676', dark: '#5a4630' }),

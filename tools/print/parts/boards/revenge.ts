@@ -18,7 +18,7 @@ const C = {
   band: '#1a0907', hair: '#b07a34', ground: '#140806',
   wood: '#24110d', seam: '#060202', char: '#0b0504', sheen: '#4a2a20', ember: '#ff5a1a', emberHot: '#ffb04a',
   brass: { light: '#f0cd85', mid: '#b07f32', dark: '#4a2c0c' },
-  dim: '#fbf1e1', port: '#2c0b08', portEdge: '#7a2618', glow: '#ff7a2a',
+  port: '#2c0b08', portEdge: '#7a2618', glow: '#ff7a2a',
   sky: ['#2a0f0d', '#8e3a22'] as [string, string], sea: ['#3a2220', '#100909'] as [string, string]
 };
 
@@ -138,10 +138,9 @@ function embers(g: Geo): string {
   return out;
 }
 
-/** the dimming over the JPEG under every row (fill-opacity only), and the dark ports the Guns cells are set in */
+/** the dark ports the Guns cells are set in (the frame lays its plates under the words; the side stays open round them) */
 function rowsLayer(g: Geo): string {
-  const pad = 1.6, out: string[] = [];
-  for (const rw of g.rows) { const b = rw.band; out.push(`<rect x="${r(b.x - pad)}" y="${r(b.y - pad)}" width="${r(b.w + 2 * pad)}" height="${r(b.h + 2 * pad)}" rx="2.2" fill="${C.dim}" fill-opacity=".885" stroke="${C.brass.dark}" stroke-opacity=".55" stroke-width=".3"/>`); }
+  const out: string[] = [];
   const guns = g.rows.find(rw => rw.key === 'guns')!, cells: Rect[] = [...guns.cells, ...g.slots.filter(s => s.kind === 'volley' || s.kind === 'volley2')];
   for (const c of cells) out.push(`<rect x="${r(c.x - 1)}" y="${r(c.y + 0.8)}" width="${r(c.w + 2)}" height="${r(c.h + 0.1)}" rx="1.4" fill="${C.port}" stroke="${C.portEdge}" stroke-width=".3"/>`);
   return out.join('');
@@ -189,8 +188,7 @@ export const material: ShipMaterial = {
     const under = sheet(g, { band: C.band, line: C.hair, ground: C.ground, w: 1.4 }) + charred(F, g.ship.hull * 7 + 3, `${u}cw`) + glowB +
       flag(col.x + col.w / 2, col.y + col.h - 22, 62, `${u}fl`) + await sideArt(g) + rowsLayer(g);
     const W = g.page.w, H = g.page.h, cg = `${u}cg`;
-    const rivets = g.rows.filter(rw => rw.key !== 'hull').map(rw => `<circle cx="${r(rw.band.x + rw.band.w + 0.6)}" cy="${r(rw.band.y + rw.band.h + 0.6)}" r=".6" fill="${C.brass.mid}" stroke="${C.brass.dark}" stroke-width=".2"/>`).join('');
-    const over = `<defs>${brassGrad(cg)}</defs>` + corner(8.6, 8.6, 1, 1, cg) + corner(W - 8.6, 8.6, -1, 1, cg) + corner(8.6, H - 8.6, 1, -1, cg) + corner(W - 8.6, H - 8.6, -1, -1, cg) + rivets;
+    const over = `<defs>${brassGrad(cg)}</defs>` + corner(8.6, 8.6, 1, 1, cg) + corner(W - 8.6, 8.6, -1, 1, cg) + corner(8.6, H - 8.6, 1, -1, cg) + corner(W - 8.6, H - 8.6, -1, -1, cg);
     const s = g.scope;
     return { under, over, css: `${s} .bo2-box{border-color:#9a6a2a;box-shadow:.5mm .7mm 0 rgba(12,3,1,.6)}` };
   },
@@ -198,7 +196,7 @@ export const material: ShipMaterial = {
     // concept B is not this agent's task: the earlier placeholder look (a chart, brass rulers, an engraving)
     return simpleMaterial({
       wood: { base: '#2a1512', seam: '#0d0605', grain: '#3e211b', nails: '#8a6a3a' }, band: '#8A2E1C', hair: '#c8913a',
-      sky: ['#d8c2b0', '#f1e4d4'], sea: ['#6a5a56', '#33282a'], dim: '#fdf6ea',
+      sky: ['#d8c2b0', '#f1e4d4'], sea: ['#6a5a56', '#33282a'],
       chart: { paper: '#ecdcc0', line: '#c4a582', coast: '#d9bf98' }, brass: { light: '#e9c27a', mid: '#a8782e', dark: '#4e3010' },
       note: '#fff7ec', noteLine: '#c79a7a', pin: '#8a2e1c',
       wreck: { water: ['#4a3c3a', '#1a1213'], sand: '#9a8a72', sandDark: '#5e4e40' }

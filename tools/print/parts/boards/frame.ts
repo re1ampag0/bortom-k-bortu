@@ -14,12 +14,16 @@
 //   g.slots   — every slot rect: 'fire' ×3, 'underwater', 'surfaced', 'volley' (+ 'volley2' on the Dutchman),
 //               'cards' / 'reactions' (strip cells, n on each) — mm;
 //   g.boxes   — the light text fields of the frame (header, mid boxes, strip, footer) — paint nothing opaque over them;
+//   g.plates  — A only: the tight light plates the frame lays over the picture under its words and numbers on the rows
+//               (one slim plate per label line, a chip per number and per short note; measured on the real fonts) —
+//               the frame draws them itself (fill-opacity over the JPEG), a material must not dim the rows any more;
+//               rw.lineEnd — where the words of a row's label line end (mm);
 //   g.pal     — the colours (palette() may change them; text contrast is checked against pal.field and warned);
 //   g.kit     — the art kit (tools/card-art/scenes/kit: ship, shipBox, shipGeom, makeLight, sky, water, …);
 //   g.art(key, svg, bleed) — a 200 × 280 scene (+ bleed units round it) → a JPEG through the print profile → its URL;
 //   g.uid     — a prefix for ids in your <defs>.
-// Layers (all optional): under — SVG in page mm painted first (background, the ship picture, the dimming layer over the
-// JPEG — a rect with fill-opacity, never CSS opacity/filter on images); over — SVG painted after the frame's lines, under
+// Layers (all optional): under — SVG in page mm painted first (background, the ship picture, the parts of the ship the
+// cells are set into — ports, planks, flasks; never CSS opacity/filter on images; the frame's plates come after it); over — SVG painted after the frame's lines, under
 // the HTML text (pins, rivets, knots — never over a number or a word); css — extra CSS for the HTML boxes (.bo2-box,
 // .bo2-col, …, every rule scoped with g.scope; no filter, no blurred shadows); engraving — B only: SVG inside the picture box at the bottom of the right
 // column, in the viewBox 0 0 ENGRAVING.w ENGRAVING.h (it is scaled down to the room that is left).
@@ -29,7 +33,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { HERE, ROOT, data, esc, rich, type Ctx } from '../../kit';
+import { HERE, ROOT, data, esc, fontCss, rich, type Ctx } from '../../kit';
 import { BOARD, priceOf, trackCells, type Ship } from '../../layout';
 import { BRASS, BRASS_DARK, DECK_KEY, INK, PARCHMENT, TYPE, SEA, contrast, darken, lighten } from '../../colors';
 import { iconImg } from '../../icons';
@@ -40,7 +44,7 @@ export type ShipKey = 'pearl' | 'revenge' | 'endeavour' | 'dutch';
 export type TrackKey = 'hull' | 'sails' | 'guns' | 'crew' | 'souls';
 export interface Rect { x: number; y: number; w: number; h: number }
 export interface CellGeo extends Rect { n: number; cx: number; cy: number; start: boolean }
-export interface RowGeo { key: TrackKey; top: number; labelY: number; numY: number; cy: number; x0: number; x1: number; band: Rect; cells: CellGeo[]; start: number }
+export interface RowGeo { key: TrackKey; top: number; labelY: number; numY: number; cy: number; x0: number; x1: number; band: Rect; cells: CellGeo[]; start: number; lineEnd: number }
 export type SlotKind = 'fire' | 'underwater' | 'surfaced' | 'volley' | 'volley2' | 'cards' | 'reactions';
 export interface SlotGeo extends Rect { kind: SlotKind; n?: number }
 export interface Pal {
@@ -61,7 +65,7 @@ interface GeoBase { ship: Ship; key: ShipKey; kind: string; pal: Pal; uid: strin
 export interface Geo extends GeoBase {
   concept: Concept;
   zones: { header: Rect; tracks: Rect; mid: Rect; col: Rect; strip: Rect; footer: Rect; picture: Rect; midFree: Rect | null; engraving: Rect | null };
-  rows: RowGeo[]; slots: SlotGeo[]; boxes: Rect[];
+  rows: RowGeo[]; slots: SlotGeo[]; boxes: Rect[]; plates: Rect[];
 }
 export interface WreckGeo extends GeoBase { zones: { title: Rect; text: Rect; side: Rect; art: Rect }; slots: Rect[]; boxes: Rect[] }
 export interface Layers { under?: string; over?: string; css?: string; engraving?: string }
@@ -75,14 +79,14 @@ export const KIT = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs'
 
 // ---- texts ----
 interface FrameText {
-  tracks: Record<TrackKey, { name: string; note: string; zero?: string; start?: string; max?: string; kraken?: string; spend?: string }>;
+  tracks: Record<TrackKey, { name: string; note: string; zero?: string; flip?: string; start?: string; max?: string; kraken?: string; spend?: string }>;
   start: string; volley: string[]; effects: string;
   fires: { title: string; note: string }; underwater: { title: string; note: string }; surfaced: { title: string; note: string };
   abilities: string; once: string; heart: Record<string, string>; plans: string;
   legend: { title: string; note: string }; powder: string;
   cards: { title: string; start: string; down: string }; reactions: { title: string; note: string };
   footer: string[];
-  wreck: { title: string; section: string; captainLine: string; ally: string[]; clear: string; jones: string; free: string };
+  wreck: { title: string; section: string; captainLine: string; ally: string[]; clear: Record<string, string>; jones: string; free: string };
 }
 const TXT = (JSON.parse(fs.readFileSync(path.join(HERE, 'text/boards.json'), 'utf8')) as { frame: FrameText }).frame;
 const RULES = data.rules as Record<string, number>;
@@ -115,7 +119,8 @@ const ORDER: TrackKey[] = ['sails', 'souls', 'crew', 'guns', 'hull'];
 // ---- colours ----
 const PAPER = '#fdf9ec', CELL = '#fffdf6', SOFT = '#4f3d28';
 const SINK = { fill: '#f6d8cc', line: '#a8442f', text: '#7e2614' };
-const FIRE = { fill: '#fdf0e4', line: TYPE['ЗАРЯД'].t, text: darken(TYPE['ЗАРЯД'].td, 0.1), soft: '#f3c9a8' };
+// the flame in an empty Fire slot: mid-dark, so it stays visible on a greyscale print (≈ 57 % grey on a 94 % field)
+const FIRE = { fill: '#fdf0e4', line: TYPE['ЗАРЯД'].t, text: darken(TYPE['ЗАРЯД'].td, 0.1), flame: '#d07a45' };
 const WATER = { fill: '#e8f3f2', line: SEA.t, text: SEA.td, soft: '#bfdfe0' };
 export function basePalette(color: string): Pal {
   let deep = color, solid = color;
@@ -136,7 +141,8 @@ function trackDefs(ship: Ship): TrackDef[] {
   if (ship.souls != null) t.souls = { key: 'souls', cells: trackCells(ship.souls), start: ship.start_souls ?? 0 };
   return ORDER.map(k => t[k]).filter((x): x is TrackDef => !!x);
 }
-const rowH = (d: TrackDef) => ROW.h + (d.key === 'souls' ? ROW.under + 0.6 : 0);
+// the Souls carry «Кракен» under their cells, the Hull (the last row) «переверните планшет» under its cell 0
+const rowH = (d: TrackDef) => ROW.h + (d.key === 'souls' ? ROW.under + 0.6 : d.key === 'hull' ? ROW.under : 0);
 const volleyCount = (ship: Ship) => ship.souls != null ? 2 : 1;
 
 export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omit<Geo, 'kit' | 'art'> {
@@ -146,11 +152,12 @@ export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omi
   for (const d of defs) {
     const x0 = tz.x, cells: CellGeo[] = d.cells.map((n, i) => { const x = x0 + i * BOARD.pitch, yy = y + ROW.cellTop; return { n, x, y: yy, w: BOARD.cell, h: BOARD.cell, cx: x + BOARD.cell / 2, cy: yy + BOARD.cell / 2, start: n === d.start }; });
     let x1 = cells[cells.length - 1].x + BOARD.cell;
-    if (d.key === 'guns') for (let i = 0; i < volleyCount(ship); i++) { const sx = x1 + (i ? 2.5 : 5); slots.push({ kind: i ? 'volley2' : 'volley', x: sx, y: y + ROW.cellTop, w: BOARD.cell, h: BOARD.cell }); x1 = sx + BOARD.cell; }
-    const under = d.key !== 'hull' ? ROW.under : 0;
+    // the two Volley cells of the Dutchman stand apart: «Залп · 1 Порох» and «по Сердцу» over them must not touch
+    if (d.key === 'guns') for (let i = 0; i < volleyCount(ship); i++) { const sx = x1 + (i ? 7 : 5); slots.push({ kind: i ? 'volley2' : 'volley', x: sx, y: y + ROW.cellTop, w: BOARD.cell, h: BOARD.cell }); x1 = sx + BOARD.cell; }
+    const under = ROW.under;
     // the band holds the label line, the notes and the start label too: up to the middle column (the Hull: its own row)
     const bandR = d.key === 'hull' ? x1 : MIDX - 2.5;
-    rows.push({ key: d.key, top: y, labelY: y + ROW.label, numY: y + ROW.num, cy: y + ROW.cellTop + BOARD.cell / 2, x0, x1, cells, start: d.start, band: { x: x0, y, w: bandR - x0, h: ROW.h + under } });
+    rows.push({ key: d.key, top: y, labelY: y + ROW.label, numY: y + ROW.num, cy: y + ROW.cellTop + BOARD.cell / 2, x0, x1, cells, start: d.start, lineEnd: x0, band: { x: x0, y, w: bandR - x0, h: ROW.h + under } });
     y += rowH(d) + gap;
   }
   const hullTop = rows.find(rw => rw.key === 'hull')!.top;
@@ -178,7 +185,7 @@ export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omi
   const reX = RIGHT - 3 * CP - BOARD.cell;
   for (let i = 0; i <= 3; i++) slots.push({ kind: 'reactions', n: i, x: reX + i * CP, y: cy0, w: BOARD.cell, h: BOARD.cell });
   boxes.push(Z.header, st, Z.footer);
-  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], scope: `.bo2-${DECK_KEY[ship.code]}`, concept, pal, uid, page: PAGE, zones: { ...Z, mid, midFree, engraving }, rows, slots, boxes };
+  return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], scope: `.bo2-${DECK_KEY[ship.code]}`, concept, pal, uid, page: PAGE, zones: { ...Z, mid, midFree, engraving }, rows, slots, boxes, plates: [] };
 }
 
 // ---- SVG pieces of the skeleton ----
@@ -201,46 +208,108 @@ export const ICON = {
   waves: (x: number, y: number, w: number, color: string) => [0, 1.6].map(d => `<path d="M${r(x)} ${r(y + d)}${'q1 -.8 2 0t2 0'.repeat(Math.max(1, Math.round(w / 4)))}" fill="none" stroke="${color}" stroke-width=".45" stroke-linecap="round"/>`).join('')
 };
 
-function rowSvg(row: RowGeo, pal: Pal): string {
-  const T = TXT.tracks[row.key], out: string[] = [], souls = row.key === 'souls', nameSize = 12;
-  const nameEnd = row.x0 + tw(T.name.toUpperCase(), nameSize, 0.72);
-  out.push(text(row.x0, row.labelY, T.name, nameSize, { font: 'Alegreya SC', w: 800, color: pal.deep, ls: '.03em' }));
+// ---- measured words: A's plates hug them. Widths come from the browser on the real fonts (measureMissing), the
+// rough estimate stands in only until then ----
+const WID = new Map<string, number>(), MISS = new Set<string>();
+function widthOf(s: string, size: number, o: TO = {}): number {
+  const k = JSON.stringify([o.font ?? 'Alegreya Sans', o.w ?? 500, size, o.ls ?? '', o.italic ? 1 : 0, s]), v = WID.get(k);
+  if (v != null) return v;
+  MISS.add(k);
+  return tw(s, size, /SC/.test(o.font ?? '') ? 0.72 : 0.5);
+}
+async function measureMissing(ctx: Ctx): Promise<void> {
+  const keys = [...MISS].filter(k => !WID.has(k));
+  MISS.clear();
+  if (!keys.length) return;
+  const spans = keys.map((k, i) => {
+    const [font, w, size, ls, it, s] = JSON.parse(k) as [string, number, number, string, number, string];
+    return `<span id="m${i}" style="position:absolute;white-space:pre;font-family:'${font}';font-weight:${w};font-size:${size}pt;letter-spacing:${ls || 'normal'};font-style:${it ? 'italic' : 'normal'}">${esc(s)}</span>`;
+  }).join('');
+  const page = await ctx.browser.newPage();
+  try {
+    await page.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>${fontCss()}body{font-variant-numeric:lining-nums}</style></head><body>${spans}</body></html>`);
+    await page.evaluate(async () => { await document.fonts.ready; });
+    const px = await page.evaluate((n: number) => Array.from({ length: n }, (_, i) => document.getElementById('m' + i)!.getBoundingClientRect().width), keys.length);
+    keys.forEach((k, i) => WID.set(k, px[i] * 25.4 / 96));
+  } finally { await page.close(); }
+}
+/** the ink box of a line of SVG text: from a little over the capitals to under the descenders */
+function textBox(x: number, y: number, s: string, size: number, o: TO = {}): Rect {
+  const w = widthOf(s, size, o), em = pt(size), x0 = o.anchor === 'middle' ? x - w / 2 : o.anchor === 'end' ? x - w : x;
+  return { x: x0, y: y - 0.74 * em, w, h: 0.97 * em };
+}
+const grow = (b: Rect, px: number, py: number, minW = 0): Rect => { const w = Math.max(b.w + 2 * px, minW); return { x: b.x + b.w / 2 - w / 2, y: b.y - py, w, h: b.h + 2 * py }; };
+/** the words of one line become one slim plate where they stand close (a gap under 3 mm) */
+function mergeLine(boxes: Rect[]): Rect[] {
+  const s = [...boxes].sort((a, b) => a.x - b.x), out: Rect[] = [];
+  for (const b of s) {
+    const l = out[out.length - 1];
+    if (l && b.x - (l.x + l.w) < 3) { const x1 = Math.max(l.x + l.w, b.x + b.w), y0 = Math.min(l.y, b.y), y1 = Math.max(l.y + l.h, b.y + b.h); Object.assign(l, { w: x1 - l.x, y: y0, h: y1 - y0 }); }
+    else out.push({ ...b });
+  }
+  return out;
+}
+
+/** The track labels: large enough to be read upside down from the other end of the table. */
+const NAME = 14;
+interface RowOut { svg: string; plates: Rect[]; lineEnd: number }
+function rowParts(row: RowGeo, pal: Pal): RowOut {
+  const T = TXT.tracks[row.key], out: string[] = [], line: Rect[] = [], chips: Rect[] = [], nums: Rect[] = [], souls = row.key === 'souls';
+  const put = (list: Rect[], x: number, y: number, s: string, size: number, o: TO) => { out.push(text(x, y, s, size, o)); list.push(textBox(x, y, s, size, o)); };
+  const nameO: TO = { font: 'Alegreya SC', w: 800, color: pal.deep, ls: '.03em' }, nameEnd = row.x0 + widthOf(T.name, NAME, nameO);
+  put(line, row.x0, row.labelY, T.name, NAME, nameO);
   // «старт · выше не восстанавливать» on the label line over the start cell; on the Souls track only «старт» (no ceiling)
-  const sc = row.cells.find(c => c.start)!, startText = souls ? T.start ?? '' : TXT.start, sw = tw(startText, 8, 0.48);
+  const sc = row.cells.find(c => c.start)!, startText = souls ? T.start ?? '' : TXT.start, startO: TO = { w: 800, color: pal.deep }, sw = widthOf(startText, 8, startO);
   let sx = Math.max(sc.x, nameEnd + 3), anchor: 'start' | 'end' = 'start';
   if (sx + sw > (row.key === 'hull' ? Z.tracks.x + Z.tracks.w : MIDX - 2)) { sx = sc.x + sc.w; anchor = 'end'; }
-  out.push(text(sx, row.labelY, startText, 8, { w: 800, color: pal.deep, anchor }));
-  const noteX = nameEnd + 2.5, noteW = tw(T.note, 9, 0.47), startLeft = anchor === 'end' ? sx - sw : sx;
+  put(line, sx, row.labelY, startText, 8, { ...startO, anchor });
+  const noteO: TO = { color: pal.soft }, noteX = nameEnd + 2.5, noteW = widthOf(T.note, 9, noteO), startLeft = anchor === 'end' ? sx - sw : sx;
   // the Souls: how they are spent, on the label line after «старт»
-  if (souls && T.spend) out.push(text(sx + sw + 4, row.labelY, T.spend, 8, { w: 700, color: pal.soft }));
-  if (T.note && noteX + noteW < startLeft - 2.5) out.push(text(noteX, row.labelY, T.note, 9, { color: pal.soft }));
-  else if (T.note) { const nx = row.x1 + 3; if (nx + noteW < MIDX - 1) out.push(text(nx, row.cy + pt(9) * 0.33, T.note, 9, { color: pal.soft })); }
+  if (souls && T.spend) put(line, sx + sw + 4, row.labelY, T.spend, 8, { w: 700, color: pal.soft });
+  if (T.note && noteX + noteW < startLeft - 2.5) put(line, noteX, row.labelY, T.note, 9, noteO);
+  else if (T.note) { const nx = row.x1 + 3; if (nx + noteW < MIDX - 1) put(chips, nx, row.cy + pt(9) * 0.33, T.note, 9, noteO); }
   for (const c of row.cells) {
     const sink = row.key === 'hull' && c.n === 0, floor = !souls && c === row.cells[0];
     const bg = sink ? SINK.fill : souls && c.n > row.start ? lighten(pal.ship, 0.9 - 0.06 * (c.n - row.start - 1)) : pal.cell;
     out.push(cellRect(c, bg, c.start ? pal.ship : sink ? SINK.line : floor ? darken(BRASS, 0.2) : BRASS_DARK, c.start ? 0.9 : 0.4));
     out.push(num(c.cx, row.numY, c.n, c.start ? pal.deep : pal.ink, c.start ? 800 : 700));
+    nums.push(grow(textBox(c.cx, row.numY, String(c.n), 9, { w: 800, anchor: 'middle' }), 0.9, 0.35, 4.4));
     if (sink && T.zero) out.push(text(c.cx, c.cy + 1.2, T.zero, 8, { w: 800, color: SINK.text, anchor: 'middle' }));
   }
-  // the threshold under the lowest cell (Crew: «не ниже 1» under its first cell)
-  if (!souls && row.key !== 'hull' && T.zero) out.push(text(row.cells[0].x + 0.3, row.cells[0].y + BOARD.cell + 3.1, T.zero, 8, { w: 800, color: pal.deep }));
+  // the threshold under the lowest cell (Crew: «не ниже 1» under its first cell); the Hull: what to do at 0
+  const c0 = row.cells[0], underY = c0.y + BOARD.cell + 3.1;
+  if (!souls && row.key !== 'hull' && T.zero) put(chips, c0.x + 0.3, underY, T.zero, 8, { w: 800, color: pal.deep });
+  if (row.key === 'hull' && T.flip) put(chips, c0.x + 0.3, underY, T.flip, 8, { w: 800, color: SINK.text });
   if (souls) {
     const last = row.cells[row.cells.length - 1], k = row.cells.find(c => c.n === 3);
-    if (T.max) out.push(text(last.x + last.w + 2.5, row.cy + pt(9) * 0.33, fill(T.max, { n: last.n }), 9, { w: 700, color: pal.soft }));
-    if (k && T.kraken) out.push(text(k.x + 0.3, k.y + BOARD.cell + 3.1, fill(T.kraken, { n: 3 }), 8, { w: 800, color: pal.deep }));
+    if (T.max) put(chips, last.x + last.w + 2.5, row.cy + pt(9) * 0.33, fill(T.max, { n: last.n }), 9, { w: 700, color: pal.soft });
+    if (k && T.kraken) put(chips, k.x + 0.3, underY, fill(T.kraken, { n: 3 }), 8, { w: 800, color: pal.deep });
   }
-  return out.join('');
+  const lp = mergeLine(line.map(b => grow(b, 1.2, 0.45)));
+  return { svg: out.join(''), plates: [...lp, ...nums, ...chips.map(b => grow(b, 1, 0.45))], lineEnd: Math.max(...line.map(b => b.x + b.w)) };
 }
 
-function slotsSvg(g: Omit<Geo, 'kit' | 'art'>): string {
-  const out: string[] = [], pal = g.pal;
+/** «Залп · 1 Порох» with the Powder coin of the cards ({coin}) between the number and the word */
+const COIN_D = 3.1;
+function volleyCaption(cx: number, y: number, s: string, coin: string, color: string): { svg: string; box: Rect } {
+  const o: TO = { w: 800, color }, size = 8, [a, b = ''] = s.split('{coin}').map(x => x.trim());
+  if (!b) { const box = textBox(cx, y, a, size, { ...o, anchor: 'middle' }); return { svg: text(cx, y, a, size, { ...o, anchor: 'middle' }), box }; }
+  const wa = widthOf(a, size, o), wb = widthOf(b, size, o), gap = 0.7, total = wa + gap + COIN_D + gap + wb, x0 = cx - total / 2, ix = x0 + wa + gap, top = y - COIN_D * 0.86, k = COIN_D / 44;
+  const img = coin ? `<image href="${coin}" x="${r(ix - 6 * k)}" y="${r(top - 5 * k)}" width="${r(56 * k)}" height="${r(58 * k)}" preserveAspectRatio="none"/>` : '';
+  const tb = textBox(x0, y, a, size, o), y0 = Math.min(tb.y, top - 0.15), y1 = Math.max(tb.y + tb.h, top + COIN_D + 0.15);
+  return { svg: text(x0, y, a, size, o) + img + text(ix + COIN_D + gap, y, b, size, o), box: { x: x0, y: y0, w: total, h: y1 - y0 } };
+}
+
+function slotsParts(g: Omit<Geo, 'kit' | 'art'>, coin: string): { svg: string; plates: Rect[] } {
+  const out: string[] = [], plates: Rect[] = [], pal = g.pal;
   for (const s of g.slots) {
     if (s.kind === 'volley' || s.kind === 'volley2') {
-      const t = TXT.volley[s.kind === 'volley' ? 0 : 1];
-      out.push(cellRect(s, pal.cell, BRASS_DARK, 0.4) + ICON.ball(s.x + s.w / 2, s.y + s.h / 2, 2.2, lighten(BRASS_DARK, 0.75)));
-      out.push(text(s.x + s.w / 2, s.y - 0.9, t, 7.5, { w: 800, color: pal.deep, anchor: 'middle' }));
+      // an empty cell: a mark is put on it when the Volley is fired (no picture in it that could pass for a marker)
+      const cap = volleyCaption(s.x + s.w / 2, s.y - 0.9, fill(TXT.volley[s.kind === 'volley' ? 0 : 1], { cost: Number(g.ship.volleyCost), coin: '{coin}' }), coin, pal.deep);
+      out.push(cellRect(s, pal.cell, BRASS_DARK, 0.4), cap.svg);
+      plates.push(grow(cap.box, 1, 0.4));
     } else if (s.kind === 'fire') {
-      out.push(`<rect x="${r(s.x)}" y="${r(s.y)}" width="${s.w}" height="${s.h}" rx="2" fill="${FIRE.fill}" stroke="${FIRE.line}" stroke-width=".4" stroke-dasharray="1.4 1"/>` + ICON.flame(s.x + s.w / 2, s.y + s.h / 2 + 0.6, 1.3, FIRE.soft));
+      out.push(`<rect x="${r(s.x)}" y="${r(s.y)}" width="${s.w}" height="${s.h}" rx="2" fill="${FIRE.fill}" stroke="${FIRE.line}" stroke-width=".4" stroke-dasharray="1.4 1"/>` + ICON.flame(s.x + s.w / 2, s.y + s.h / 2 + 0.6, 1.3, FIRE.flame));
     } else if (s.kind === 'underwater' || s.kind === 'surfaced') {
       out.push(`<rect x="${r(s.x)}" y="${r(s.y)}" width="${s.w}" height="${s.h}" rx="2" fill="${WATER.fill}" stroke="${WATER.line}" stroke-width=".4" stroke-dasharray="1.4 1"/>`);
       out.push(ICON.waves(s.x + 14, s.y + s.h * (s.kind === 'underwater' ? 0.42 : 0.62), 24, WATER.soft));
@@ -252,7 +321,16 @@ function slotsSvg(g: Omit<Geo, 'kit' | 'art'>): string {
   // the token is moved from «Под водой» to «Всплыл»
   const u = g.slots.find(s => s.kind === 'underwater'), v = g.slots.find(s => s.kind === 'surfaced');
   if (u && v) out.push(ICON.arrow(u.x + u.w / 2, u.y + u.h + 0.3, 'down', 3.4, WATER.line, 0.5));
-  return out.join('');
+  return { svg: out.join(''), plates };
+}
+
+/** A: the plates under the words on the picture — one path (overlaps are filled once), fill-opacity over the JPEG */
+const rrPath = (b: Rect, q = 1) => `M${r(b.x + q)} ${r(b.y)}H${r(b.x + b.w - q)}A${q} ${q} 0 0 1 ${r(b.x + b.w)} ${r(b.y + q)}V${r(b.y + b.h - q)}A${q} ${q} 0 0 1 ${r(b.x + b.w - q)} ${r(b.y + b.h)}H${r(b.x + q)}A${q} ${q} 0 0 1 ${r(b.x)} ${r(b.y + b.h - q)}V${r(b.y + q)}A${q} ${q} 0 0 1 ${r(b.x + q)} ${r(b.y)}Z`;
+const platesSvg = (plates: Rect[], pal: Pal, k: number) => plates.length ? `<path d="${plates.map(b => rrPath(b)).join('')}" fill="${pal.field}" fill-opacity="${r(k)}" fill-rule="nonzero"/>` : '';
+/** the plates' opacity: the least that keeps every word at its contrast over the darkest picture (black) */
+function plateOpacity(pal: Pal): number {
+  for (let k = 0.88; k < 1; k += 0.01) { const bg = darken(pal.field, 1 - k); if (contrast(pal.ink, bg) >= 7 && contrast(pal.soft, bg) >= 7 && contrast(pal.deep, bg) >= 4.5 && contrast(SINK.text, bg) >= 4.5) return k; }
+  return 1;
 }
 
 /** the light fields of the frame: everything read during play stands on them (the right column's boxes are HTML) */
@@ -307,13 +385,16 @@ function footerHtml(ship: Ship): string {
   return `<div class="bo2-abs bo2-foot" style="left:${EDGE}mm;top:${Z.footer.y}mm;width:${Z.footer.w}mm"><svg viewBox="-2 -2 4 4">${ICON.ball(0, 0, 1.7, BRASS_DARK)}</svg>${parts.map(p => `<span>${p}</span>`).join('<i>·</i>')}</div>`;
 }
 
-/** the frame's contrast rules (≥ 7 : 1 body text, ≥ 4.5 : 1 headings) against the field the material chose */
-function checkPal(pal: Pal, who: string) {
-  const bad: string[] = [];
-  if (contrast(pal.ink, pal.field) < 7) bad.push(`ink ${contrast(pal.ink, pal.field).toFixed(1)}`);
-  if (contrast(pal.soft, pal.field) < 7) bad.push(`soft ${contrast(pal.soft, pal.field).toFixed(1)}`);
-  if (contrast(pal.deep, pal.field) < 4.5) bad.push(`deep ${contrast(pal.deep, pal.field).toFixed(1)}`);
-  if (bad.length) console.warn(`warning: board ${who}: text contrast on the field below the rule: ${bad.join(', ')}`);
+/** the frame's contrast rules (≥ 7 : 1 body text, ≥ 4.5 : 1 headings) against the worst background behind the words:
+ *  the field the material chose, and in A the plate over the darkest picture (black) */
+function checkPal(pal: Pal, who: string, plate?: number) {
+  const bad: string[] = [], bgs = [pal.field, ...(plate != null ? [darken(pal.field, 1 - plate)] : [])];
+  for (const bg of bgs) {
+    if (contrast(pal.ink, bg) < 7) bad.push(`ink ${contrast(pal.ink, bg).toFixed(1)} on ${bg}`);
+    if (contrast(pal.soft, bg) < 7) bad.push(`soft ${contrast(pal.soft, bg).toFixed(1)} on ${bg}`);
+    if (contrast(pal.deep, bg) < 4.5) bad.push(`deep ${contrast(pal.deep, bg).toFixed(1)} on ${bg}`);
+  }
+  if (bad.length) console.warn(`warning: board ${who}: text contrast below the rule: ${bad.join(', ')}`);
 }
 
 let UID = 0;
@@ -321,11 +402,19 @@ const artOf = (ctx: Ctx) => async (key: string, svg: string, bleed = 0) => (awai
 
 /** One face of a board in concept a or b. */
 export async function framePage(ctx: Ctx, ship: Ship, concept: Concept, mat: ShipMaterial): Promise<{ html: string; css: string }> {
-  const key = DECK_KEY[ship.code], base = basePalette(ship.color), pal = mat.palette ? mat.palette(base) : base;
-  checkPal(pal, `${key} ${concept}`);
+  const key = DECK_KEY[ship.code], base = basePalette(ship.color), pal = mat.palette ? mat.palette(base) : base, plateK = plateOpacity(pal);
+  checkPal(pal, `${key} ${concept}`, concept === 'a' ? plateK : undefined);
   const g: Geo = { ...layout(ship, concept, pal, `b${concept}${++UID}`), kit: KIT, art: artOf(ctx) };
+  // the words of the rows: a dry run collects the strings, the browser measures them, then the real run
+  let coin = '';
+  try { coin = ctx.icon('coin'); } catch { /* icons not rasterised (a scheme): the caption without the coin */ }
+  g.rows.forEach(rw => rowParts(rw, pal)); slotsParts(g, coin);
+  await measureMissing(ctx);
+  const rows = g.rows.map(rw => rowParts(rw, pal)), slots = slotsParts(g, coin);
+  rows.forEach((o, i) => { g.rows[i].lineEnd = o.lineEnd; });
+  if (concept === 'a') g.plates = [...rows.flatMap(o => o.plates), ...slots.plates];
   const L = await (concept === 'a' ? mat.a(g) : mat.b(g));
-  const svg = [L.under ?? '', fieldsSvg(g), medallion(EDGE + 9.4, EDGE + 9, 8.4, ship, pal), ...g.rows.map(rw => rowSvg(rw, pal)), slotsSvg(g)];
+  const svg = [L.under ?? '', platesSvg(g.plates, pal, plateK), fieldsSvg(g), medallion(EDGE + 9.4, EDGE + 9, 8.4, ship, pal), ...rows.map(o => o.svg), slots.svg];
   // the pointers to the sheet's edge: effects — up across the header, the Legend — to the right
   const m = g.zones.mid;
   svg.push(ICON.arrow(m.x + 2.8, m.y + 4.6, 'up', 4.6, pal.deep, 0.5));
@@ -351,10 +440,13 @@ export function rulesLine(prefix: string): string {
   if (!l) throw new Error(`rules.md: no line «${prefix}…»`);
   return l.slice(2);
 }
-const W = { m: 12 };
+const W = { m: 12, text: 104, side: 72 };
+/** «Сердце Дейви Джонса»: the data's own sentence about the sunk Endeavour */
+const jonesLine = (ship: Ship) => ship.abilities.map(a => a.text.match(/Если «Индевор» утонул[^<]*?до старта\./)?.[0]).find(Boolean);
 export function wreckLayout(ship: Ship, pal: Pal, uid: string): Omit<WreckGeo, 'kit' | 'art'> {
-  const title = { x: W.m + 4, y: W.m + 4, w: 150, h: 19 }, text = { x: W.m + 4, y: 41, w: 162, h: 64 }, side = { x: 186, y: 41, w: PAGE.w - W.m - 4 - 186, h: 64 };
-  const slots = [0, 1].map(i => ({ x: side.x + 1, y: side.y + 8 + i * 17, w: BOARD.cell, h: BOARD.cell }));
+  // the text in 13 pt over the upper two thirds of the sheet; the wreck shows under it and round it (margins ≥ 10 mm)
+  const title = { x: W.m + 4, y: W.m + 4, w: 150, h: 19 }, text = { x: W.m + 4, y: 41, w: 162, h: W.text }, side = { x: 186, y: 41, w: PAGE.w - W.m - 4 - 186, h: jonesLine(ship) ? W.text : W.side };
+  const slots = [0, 1].map(i => ({ x: side.x + 1, y: side.y + 13 + i * 19, w: BOARD.cell, h: BOARD.cell }));
   return { ship, key: DECK_KEY[ship.code], kind: DECK_KEY[ship.code], scope: `.bo2-${DECK_KEY[ship.code]}`, pal, uid, page: PAGE, zones: { title, text, side, art: { x: W.m, y: W.m, w: PAGE.w - 2 * W.m, h: PAGE.h - 2 * W.m } }, slots, boxes: [title, text, side] };
 }
 export async function wreckPage(ctx: Ctx, ship: Ship, mat: ShipMaterial): Promise<{ html: string; css: string }> {
@@ -363,12 +455,14 @@ export async function wreckPage(ctx: Ctx, ship: Ship, mat: ShipMaterial): Promis
   const L = await mat.wreck(w), sec = rulesSection(TXT.wreck.section), z = w.zones;
   const svg = [L.under ?? '', ...w.boxes.map(b => `<rect x="${r(b.x - 2)}" y="${r(b.y - 2)}" width="${r(b.w + 4)}" height="${r(b.h + 4)}" rx="2.4" fill="${pal.field}" stroke="${pal.fieldLine}" stroke-width=".3"/>`),
     ...w.slots.map(s => cellRect(s, pal.cell, BRASS_DARK, 0.45)), medallion(z.title.x + 9, z.title.y + 10, 8.4, ship, pal), L.over ?? ''];
-  // «Сердце Дейви Джонса»: the data's own sentence about the sunk Endeavour
-  const jones = ship.abilities.map(a => a.text.match(/Если «Индевор» утонул[^<]*?до старта\./)?.[0]).find(Boolean);
+  // what to clear — per ship (rules.md
+  // «::: add Уточнения»: «Корабль утонул: его Планы уходят в руку капитана (Q37), Пожары и жетон «Под водой» с него
+  // снимают» — Plans only the Pearl has, «Под водой» only the Dutchman)
+  const jones = jonesLine(ship);
   const side = [`<div class="bo2-al" style="top:${r(w.slots[0].y - z.side.y)}mm">${esc(TXT.wreck.ally[0])}</div>`, `<div class="bo2-al" style="top:${r(w.slots[1].y - z.side.y)}mm">${esc(TXT.wreck.ally[1])}</div>`].join('');
   const html = `<div class="bo2-abs bo2-wt" style="left:${r(z.title.x + 21)}mm;top:${r(z.title.y + 1)}mm"><div class="bo2-wn" style="color:${pal.deep}">${esc(TXT.wreck.title)}</div><div class="bo2-cap">${esc(ship.name)} · ${esc(ship.captain)}</div></div>
 <div class="bo2-abs bo2-wtext bo2-txt" style="${at(z.text)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.section)}</div>${sec.p.map(p => `<p>${md(p)}</p>`).join('')}<ul>${sec.li.map(l => `<li>${md(l)}</li>`).join('')}</ul><p class="bo2-wq">${md(rulesLine(TXT.wreck.captainLine)).replace(/ \((Q\d+)/g, '\u00a0($1')}</p></div>
-<div class="bo2-abs bo2-wside bo2-txt" style="${at(z.side)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.free)}</div>${side}<div class="bo2-wl" style="top:${r(w.slots[1].y + 17 - z.side.y)}mm"><p>${esc(TXT.wreck.clear)}</p>${jones ? `<p><b>${esc(TXT.wreck.jones)}</b> ${esc(jones)}</p>` : ''}</div></div>`;
+<div class="bo2-abs bo2-wside bo2-txt" style="${at(z.side)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.free)}</div>${side}<div class="bo2-wl" style="top:${r(w.slots[1].y + 21 - z.side.y)}mm"><p>${esc(TXT.wreck.clear[ship.code] ?? TXT.wreck.clear._)}</p>${jones ? `<p><b>${esc(TXT.wreck.jones)}</b> ${esc(jones)}</p>` : ''}</div></div>`;
   return { html: `<div class="bo2 bo2-${w.key}"><svg class="bo2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html}</div>`, css: L.css ?? '' };
 }
 
@@ -413,12 +507,13 @@ export const FRAME_CSS = `
 .bo2-foot svg{width:3mm;height:3mm;flex:none;margin-right:-.6mm}
 .bo2-foot i{font-style:normal;font-weight:800;color:${BRASS}}
 .bo2-wn{font:800 30pt/1 'Alegreya SC',serif;letter-spacing:.06em}
-.bo2-wtext{font-size:11pt;line-height:1.28}
-.bo2-wtext p{margin:1.6mm 0 0}
-.bo2-wtext ul{margin:1.4mm 0 0;padding-left:4.6mm}
-.bo2-wtext li{margin-top:1.2mm}
-.bo2-wq{font-size:10pt;color:${SOFT}}
-.bo2-wside .bo2-al{position:absolute;left:18.5mm;font:800 10.5pt/1.15 'Alegreya Sans',sans-serif;color:${INK};padding-top:3.4mm}
-.bo2-wl{position:absolute;left:0;right:0;font-size:10.5pt;line-height:1.25}
-.bo2-wl p{margin:0 0 1.8mm}
+.bo2-wtext{font-size:13pt;line-height:1.3;display:flex;flex-direction:column;justify-content:space-between}
+.bo2-wtext .bo2-h,.bo2-wside .bo2-h{font-size:13.5pt}
+.bo2-wtext p{margin:0}
+.bo2-wtext ul{margin:0;padding-left:5.4mm}
+.bo2-wtext li{margin-top:2.2mm}
+.bo2-wq{font-size:11.5pt;color:${SOFT}}
+.bo2-wside .bo2-al{position:absolute;left:18.5mm;right:0;font:800 12.5pt/1.15 'Alegreya Sans',sans-serif;color:${INK};padding-top:3.6mm}
+.bo2-wl{position:absolute;left:0;right:0;font-size:12.5pt;line-height:1.3}
+.bo2-wl p{margin:0 0 2.6mm}
 `;

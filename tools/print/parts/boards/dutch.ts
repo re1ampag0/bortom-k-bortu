@@ -4,62 +4,21 @@
 // are laid at the cells' pitch for this picture only), the Hull on the planking. A wisp of a soul runs from the Souls
 // to the Crew and the Hull (the frame prints the words). The back: her wreck on the sea floor in the same style.
 // The interface is at the top of frame.ts; the helpers in paint.ts. B stays the simple material for now.
-import fs from 'node:fs';
-import path from 'node:path';
-import { HERE } from '../../kit';
-import type { Geo, Layers, Pal, Rect, RowGeo, ShipMaterial, TrackKey, WreckGeo } from './frame';
+import type { Geo, Layers, Pal, Rect, ShipMaterial, WreckGeo } from './frame';
 import { mix, planks, rng, sheet, simpleMaterial, wreckArt } from './paint';
 
 const r = (n: number) => Math.round(n * 100) / 100;
-const pt = (n: number) => n * 25.4 / 72;
-/** the frame's rough text widths (frame.ts: tw) — to know where its words stand */
-const tw = (s: string, size: number, k = 0.5) => s.length * pt(size) * k;
 
 // ---- colours ----
 const C = {
   wood: '#1d3833', woodSeam: '#091714', woodGrain: '#2d5149', nails: '#6f8a78',
   band: '#173a33', hair: '#7fb3a0',
-  dim: '#eef4ea',
   barn: '#d3dbc8', barnSh: '#7d8f80', barnHole: '#22312b',
   weed: ['#2f6b47', '#3f7d4f', '#55854a', '#24543e'], weedRib: '#7fa86a',
   coral: ['#c86f5c', '#d99a63', '#e2c9a6', '#b65468', '#d4836c'], fan: '#9c5a6e',
   glass: '#3e7b6b', glassHi: '#ffffff', soulGlow: '#a6e3c8', wisp: '#c8f2de', wispDark: '#0b231e',
   port: '#08130f', portWood: '#24453d', portEdge: '#5c8c7c', iron: '#16211e'
 };
-
-// ---- the frame's words on the rows (copied logic of frame.ts rowSvg, to leave their fields light) ----
-interface TrackText { name: string; note: string; zero?: string; start?: string; max?: string; kraken?: string; spend?: string }
-const TXT = (JSON.parse(fs.readFileSync(path.join(HERE, 'text/boards.json'), 'utf8')) as { frame: { tracks: Record<TrackKey, TrackText>; start: string } }).frame;
-
-/** rounded rect as a sub-path (several in one <path>: overlaps are filled once) */
-const rr = (x: number, y: number, w: number, h: number, q = 1.8) =>
-  `M${r(x + q)} ${r(y)}H${r(x + w - q)}A${q} ${q} 0 0 1 ${r(x + w)} ${r(y + q)}V${r(y + h - q)}A${q} ${q} 0 0 1 ${r(x + w - q)} ${r(y + h)}H${r(x + q)}A${q} ${q} 0 0 1 ${r(x)} ${r(y + h - q)}V${r(y + q)}A${q} ${q} 0 0 1 ${r(x + q)} ${r(y)}Z`;
-
-interface RowFields { strong: string; soft: string; lineRight: number }
-/** The dimming over the JPEG for one row: strong (≈ 0.9) under every word and number, soft (≈ 0.5) round the cells,
- *  so the ship's part shows between and round the cells while every word stands on a light field. */
-function rowFields(rw: RowGeo, midX: number): RowFields {
-  const T = TXT.tracks[rw.key], souls = rw.key === 'souls', P = 1.6, c0 = rw.cells[0], last = rw.cells[rw.cells.length - 1];
-  const nameEnd = rw.x0 + tw(T.name.toUpperCase(), 12, 0.72), sc = rw.cells.find(c => c.start)!, startText = souls ? T.start ?? '' : TXT.start, sw = tw(startText, 8, 0.48);
-  let sx = Math.max(sc.x, nameEnd + 3), end = false;
-  if (sx + sw > (rw.key === 'hull' ? 198.2 : midX - 2)) { sx = sc.x + sc.w; end = true; }
-  let lineRight = end ? sx : sx + sw;
-  if (souls && T.spend) lineRight = sx + sw + 4 + tw(T.spend, 8, 0.48);
-  const noteX = nameEnd + 2.5, noteW = tw(T.note, 9, 0.47), startLeft = end ? sx - sw : sx, onLine = !!T.note && noteX + noteW < startLeft - 2.5;
-  if (onLine) lineRight = Math.max(lineRight, noteX + noteW);
-  const cellTop = c0.y, cellBot = c0.y + c0.h, top = rw.top;
-  const strong: string[] = [rr(rw.x0 - P, top - P, lineRight - rw.x0 + P + 2.6, cellTop - top + P - 0.5), rr(rw.x0 - P, top + 3.6, rw.x1 - rw.x0 + 2 * P, cellTop - top - 3.6 + 0.4, 1.2)];
-  const side = (x: number, s: string) => strong.push(rr(x - 1.6, rw.cy - 3.4, tw(s, 9, 0.47) + 3.6, 5.4, 1.4));
-  if (T.note && !onLine) { const nx = rw.x1 + 3; if (nx + noteW < midX - 1) side(nx, T.note); }
-  if (souls && T.max) side(last.x + last.w + 2.5, T.max.replace('{n}', String(last.n)));
-  // the thresholds under the lowest cell, «Кракен» under the cell 3
-  const under = (x: number, s: string) => strong.push(rr(x - 1.2, cellBot - 0.4, tw(s, 8, 0.5) + 3.4, 4.6, 1.2));
-  if (!souls && rw.key !== 'hull' && T.zero) under(c0.x, T.zero);
-  const k3 = rw.cells.find(c => c.n === 3);
-  if (souls && k3 && T.kraken) under(k3.x, T.kraken.replace('{n}', '3'));
-  const soft = rr(rw.x0 - P, top - P, rw.x1 - rw.x0 + 2 * P, cellBot - top + 2 * P, 2.2);
-  return { strong: strong.join(''), soft, lineRight };
-}
 
 // ---- small painted things (page mm) ----
 function barnacle(x: number, y: number, R: number, rot = 0): string {
@@ -231,7 +190,6 @@ const moulding = (P: Rect) => `<rect x="${r(P.x - 0.5)}" y="${r(P.y - 0.5)}" wid
 const CFG = {
   wood: { base: C.wood, seam: C.woodSeam, grain: C.woodGrain, nails: C.nails }, band: C.band, hair: C.hair,
   sky: ['#a9c4bc', '#dfe9e2'] as [string, string], sea: ['#3d6e66', '#173832'] as [string, string], focus: 0, sails: 'full',
-  dim: '#f9fbf3', dimOpacity: 0.88,
   chart: { paper: '#e8eadb', line: '#a9bfb2', coast: '#cbd6c0' }, brass: { light: '#e0d39a', mid: '#a89448', dark: '#4e4418' },
   note: '#fbfcf4', noteLine: '#8fb8a8', pin: '#2C6658',
   wreck: { water: ['#3a6a62', '#0f2a26'] as [string, string], sand: '#a6a488', sandDark: '#5e6250' }
@@ -239,11 +197,11 @@ const CFG = {
 const simple = simpleMaterial(CFG);
 
 async function faceA(g: Geo): Promise<Layers> {
-  const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 }, midX = g.zones.mid.x;
-  const fields = g.rows.map(rw => rowFields(rw, midX)), soulsRow = g.rows.findIndex(rw => rw.key === 'souls');
-  const dim = `<path d="${fields.map(f => f.soft).join('')}" fill="${C.dim}" fill-opacity=".5"/><path d="${fields.map(f => f.strong).join('')}" fill="${C.dim}" fill-opacity=".8"/>`;
+  const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 };
+  // no dimming of the side: the frame lays tight plates under its words; the wisp starts where the Souls' label line ends
+  const souls = g.rows.find(rw => rw.key === 'souls');
   const under = sheet(g, { band: C.band, line: C.hair, ground: C.wood, w: 1.4 }) + planks(F, { ...CFG.wood, h: 10.5, seed: 41 }) +
-    await sideArt(g) + moulding(g.zones.picture) + growth(g) + dim + ports(g) + (soulsRow >= 0 ? wisp(g, fields[soulsRow].lineRight) : '');
+    await sideArt(g) + moulding(g.zones.picture) + growth(g) + ports(g) + (souls ? wisp(g, souls.lineEnd) : '');
   const s = g.scope;
   const css = `${s} .bo2-box{box-shadow:.6mm .8mm 0 rgba(6,22,19,.55);border-color:#93b5a6}`;
   return { under, over: flasks(g), css };
