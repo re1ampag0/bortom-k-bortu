@@ -14,7 +14,8 @@
 // on every sheet with a frame (a path marked data-sheet-edge: the torn edge of the chart's paper, map/chart.ts):
 //   - nothing but the frame itself (the picture marked data-sheet-art, and what holds it) reaches out of that outline —
 //     every element's box, its corners and the middles of its sides, lies inside it;
-//   - every outer plate keeps ≥ SHEET_GAP (5 mm) of the paper from the outline.
+//   - every outer plate keeps ≥ SHEET_GAP (5 mm) of the paper from the outline;
+// on the battle scheme the course lines are centred on the nests and mirror one another to 0.5 mm.
 // Used by `npm run print -- --check` (check.ts) and on its own:
 //   npx vite-node tools/print/check-layout-cli.ts [-- 03-planshety 04-tryumy-zhetony 02-pamyatki]
 // Exit code 1 and the element names on an error.
@@ -110,6 +111,35 @@ export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promi
               let d = 1e9;
               for (const p of pts) { const dx = Math.max(b.x - p.x, 0, p.x - b.x - b.w), dy = Math.max(b.y - p.y, 0, p.y - b.y - b.h); d = Math.min(d, Math.hypot(dx, dy)); }
               if (d < sheetGap - 0.05) issues.push({ page: si + 1, msg: `plate «${k}» is ${d.toFixed(2)} mm from the sheet's torn edge (need ≥ ${sheetGap})` });
+            }
+          }
+          // the battle scheme's course lines (data-course) centred on the nests (data-nest) to 0.5 mm: the line opposite
+          // down the common middle of its pair and halfway across the gap between them; the diagonals mirror images about
+          // the axis between the pairs, level with the middle between the rows, the note's patch on their crossing
+          const nest = new Map(Array.from(sh.querySelectorAll('[data-nest]')).map(e => [e.getAttribute('data-nest')!, R(e)]));
+          const crs = new Map(Array.from(sh.querySelectorAll('[data-course]')).map(e => [e.getAttribute('data-course')!, R(e)]));
+          if (crs.size) {
+            const tol = 0.5, cx = (b: B) => b.x + b.w / 2, cy = (b: B) => b.y + b.h / 2;
+            const off = (what: string, d: number) => { if (Math.abs(d) > tol) issues.push({ page: si + 1, msg: `course lines: ${what} is off by ${Math.abs(d).toFixed(2)} mm (need ≤ ${tol})` }); };
+            for (const i of [0, 1]) {
+              const c = nest.get(`company-${i}`), p = nest.get(`pirates-${i}`), l = crs.get(`opposite-${i}`);
+              if (!c || !p || !l) { issues.push({ page: si + 1, msg: `course lines: no nests or line «opposite-${i}»` }); continue; }
+              off(`the line opposite ${i + 1} against its Company nest's middle`, cx(l) - cx(c));
+              off(`the line opposite ${i + 1} against its Pirates nest's middle`, cx(l) - cx(p));
+              off(`the line opposite ${i + 1} against the middle of the gap`, cy(l) - (c.y + c.h + p.y) / 2);
+            }
+            const d0 = crs.get('diag-0'), d1 = crs.get('diag-1'), c0 = nest.get('company-0'), c1 = nest.get('company-1'), p0 = nest.get('pirates-0'), note = P.get('note-diag');
+            if (!d0 || !d1 || !c0 || !c1 || !p0 || !note) issues.push({ page: si + 1, msg: 'course lines: no diagonals, nests or note' });
+            else {
+              const X = (cx(c0) + cx(c1)) / 2, Y = (cy(c0) + cy(p0)) / 2;
+              off('the diagonals as mirror images (left edge)', (2 * X - d0.x - d0.w) - d1.x);
+              off('the diagonals as mirror images (right edge)', (2 * X - d0.x) - (d1.x + d1.w));
+              off('the diagonals as mirror images (top)', d0.y - d1.y);
+              off('the diagonals as mirror images (bottom)', d0.y + d0.h - d1.y - d1.h);
+              off('the diagonals against the axis between the pairs', (cx(d0) + cx(d1)) / 2 - X);
+              off('the diagonals against the middle between the rows', (cy(d0) + cy(d1)) / 2 - Y);
+              off('the note «по диагонали» across from the crossing', cx(note) - X);
+              off('the note «по диагонали» up and down from the crossing', cy(note) - Y);
             }
           }
           // the ornaments inside their frames

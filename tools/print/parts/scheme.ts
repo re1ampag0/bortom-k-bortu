@@ -2,12 +2,12 @@
 // Caribbean (tools/print/map/chart.ts, the plain keeping of the stand-alone preview, moved a little east and north so
 // the battle lies in the open sea of the Mar del Norte and Tortuga with Hispaniola shows between the plates):
 //   - top right: the battle — 2 brass nests of the Company (the far row) facing 2 nests of the Pirates (the near row),
-//     each with an opening of 33 mm for the ship token 30 × 30 mm (the side's flag faint in it, under the token) and, on
-//     its outer side, a wing of the same brass plate with a niche where the side's flag stands (nothing of a nest's drawing
-//     leaves its plate: data-frame / data-deco, check-layout), the side's name plate
-//     between its two nests; engraved course lines with a dart at both ends: one straight down between the nests opposite
-//     in each pair (no words on it), the two diagonals dashed, the captain's ink note «по диагонали −1» once, on a small
-//     paper patch where they cross;
+//     each an opening of 33 mm for the ship token 30 × 30 mm with the side's one flag in it, under the token (its drawing
+//     stays inside the opening: data-frame / data-deco, check-layout), no wings; the side's name plate between its nests; engraved course lines with a dart at both ends: one straight down the common middle of
+//     the nests opposite in each pair (no words on it), the two diagonals dashed from the middles of the nests' inner sides,
+//     mirror images, the captain's ink note «по диагонали −1» once, on a small paper patch centred where they cross
+//     (check-layout: the courses symmetric to 0.5 mm);
+//   - the whole sheet within its frame: every plate 5 mm from the chart's torn edge (EDGE);
 //   - bottom right: three slim brass frames for whole cards (opening 64 × 89 mm) under the battle's nests: the sea deck,
 //     the sea card, «Эффекты этого хода», a parchment tab on each with the name and one line;
 //   - the left column: the title, the phase of the round (three round medallions on brass seats ≥ 13 mm for the 11 mm mark,
@@ -18,7 +18,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { HERE, data, esc, fontCss, type Ctx, type Part } from '../kit';
-import { chartSvg, type Rect } from '../map/chart';
+import { chartSvg, sheetEdge, type ChartReport, type Rect } from '../map/chart';
 import { rasterJpeg } from '../map/raster';
 import { icon, TONE, type IconName } from './icons';
 import { brassDisc } from './tokens-art';
@@ -45,18 +45,21 @@ const cardName = (name: string): string => {
 // ---- geometry, mm ----
 const PAGE = { w: 297, h: 210 };
 /** the chart: the preview's scale; Tortuga put at this point of the sheet */
-const VIEW = { mmPerDeg: 11.2, anchor: { lon: -72.8, lat: 20.05, x: 124, y: 64 }, inset: 4 };
+const VIEW = { mmPerDeg: 11.2, anchor: { lon: -72.8, lat: 20.05, x: 124, y: 64 }, inset: 1.1 };
+/** the frame of the sheet: every plate keeps 5 mm of paper from the chart's torn edge (check-layout) */
+const EDGE = sheetEdge(VIEW.inset);
 /** the left column */
-const COL = { x: 7, w: 68, top: 6, bottom: 202 };
+const COL = { x: 7, w: 68, top: EDGE, bottom: PAGE.h - EDGE };
 /** a card frame: a slim brass rim round the opening 64 × 89 (a card 63 × 88 lies in it whole); its tab above */
-const SLOT = { w: 66.4, h: 91.4, rim: 1.2, x0: 80, x1: 290, bottom: 202 };
+const SLOT = { w: 66.4, h: 91.4, rim: 1.2, x0: 80, x1: PAGE.w - EDGE, bottom: PAGE.h - EDGE };
 const SLOT_Y = SLOT.bottom - SLOT.h;
 const SLOT_XS = [0, 1, 2].map(i => SLOT.x0 + i * (SLOT.w + (SLOT.x1 - SLOT.x0 - 3 * SLOT.w) / 2));
 const TAB = { h: 11.6 };
-/** a ship nest: brass frame 38 mm, opening 33 mm (the token with 1.5 mm round it); the nests stand over the outer card frames */
+/** a ship nest: brass frame 38 mm, opening 33 mm (the token 30 × 30 with 1.5 mm round it), the side's flag in it under the
+ *  token; the nests stand over the outer card frames, the Pirates' row as low as the card frames' tabs let it */
 const NEST = { size: 38, rim: 2.5, token: TOKEN.shipToken };
 const NX = [SLOT_XS[0], SLOT_XS[2]].map(x => x + SLOT.w / 2 - NEST.size / 2);
-const NY = { company: 6, pirates: 58 };
+const NY = { company: EDGE, pirates: SLOT.bottom - SLOT.h - TAB.h - 3 - NEST.size };
 /** the phase medallions: the drawn medallion 13.6 mm across on a brass seat 15.8 mm (the 11 mm mark lies on it) */
 const MED = { d: 13.6, rim: 1.1, gap: 7.3 };
 
@@ -217,41 +220,18 @@ function flag(side: Side, x: number, foot: number, top: number, dir: 1 | -1, fw:
 /** the opening of a nest: the brass square round the 33 mm opening */
 const nestBox = (side: Side, i: number): Rect => ({ x: NX[i], y: NY[side], w: NEST.size, h: NEST.size });
 const nestC = (side: Side, i: number) => { const b = nestBox(side, i); return { x: b.x + b.w / 2, y: b.y + b.h / 2 }; };
-/** the whole brass plate of a nest: the opening's square and, on its outer side, a wing with a niche at the top where the
- *  side's flag stands, a compass star engraved in the brass under it */
-const NICHE = 14, NICHE_H = 19.5;
-const nestPlate = (side: Side, i: number): Rect => { const b = nestBox(side, i); return { x: i === 0 ? b.x - NICHE : b.x, y: b.y, w: b.w + NICHE, h: b.h }; };
-/** a compass star engraved in brass: eight points, each half cut deep (dark) and half bright, a ring round it */
-function brassStar(cx: number, cy: number, R: number): string {
-  const dk = LOOK.brass[2], lt = '#fff1c8', out: string[] = [`<circle cx="${r(cx)}" cy="${r(cy)}" r="${r(R * 0.74)}" fill="none" stroke="${dk}" stroke-width=".16"/><circle cx="${r(cx + 0.1)}" cy="${r(cy + 0.12)}" r="${r(R * 0.74)}" fill="none" stroke="${lt}" stroke-opacity=".5" stroke-width=".1"/>`];
-  for (let j = 0; j < 8; j++) {
-    const a = j * Math.PI / 4 - Math.PI / 2, L = j % 2 ? R * 0.62 : R, w = j % 2 ? R * 0.14 : R * 0.2;
-    const T = [cx + Math.cos(a) * L, cy + Math.sin(a) * L], A = [cx + Math.cos(a - Math.PI / 2) * w, cy + Math.sin(a - Math.PI / 2) * w], B = [cx + Math.cos(a + Math.PI / 2) * w, cy + Math.sin(a + Math.PI / 2) * w];
-    out.push(`<path d="M${r(cx)} ${r(cy)}L${r(T[0])} ${r(T[1])}L${r(A[0])} ${r(A[1])}Z" fill="${dk}"/><path d="M${r(cx)} ${r(cy)}L${r(T[0])} ${r(T[1])}L${r(B[0])} ${r(B[1])}Z" fill="${lt}" fill-opacity=".55" stroke="${dk}" stroke-width=".08" stroke-linejoin="round"/>`);
-  }
-  return out.join('') + `<circle cx="${r(cx)}" cy="${r(cy)}" r="${r(R * 0.09)}" fill="${LOOK.brass[0]}" stroke="${dk}" stroke-width=".08"/>`;
-}
-const nicheBox = (side: Side, i: number): Rect => { const b = nestBox(side, i), m = NEST.rim; return { x: i === 0 ? b.x - NICHE + m : b.x + b.w, y: b.y + m, w: NICHE - m, h: NICHE_H }; };
 function nestSvg(side: Side, i: number): string {
-  const b = nestBox(side, i), p = nestPlate(side, i), nb = nicheBox(side, i), m = NEST.rim, t = NEST.token, g = (b.w - 2 * m - t) / 2, sd = SIDE[side], rx = 2.4;
-  const well = (w: Rect, fill: string, rr: number) => `<rect x="${r(w.x)}" y="${r(w.y)}" width="${r(w.w)}" height="${r(w.h)}" rx="${rr}" fill="${fill}" stroke="${LOOK.brass[2]}" stroke-width=".28"/>`;
-  const out = [shadow(p, rx, 0.32),
-    `<rect data-plate="nest-${side}-${i}" x="${r(p.x)}" y="${r(p.y)}" width="${r(p.w)}" height="${r(p.h)}" rx="${rx}" fill="url(#${ID}brh)" stroke="${LOOK.brass[2]}" stroke-width=".3"/>`,
-    `<path d="M${r(p.x + rx)} ${r(p.y + 0.35)}H${r(p.x + p.w - rx)}" stroke="#fff6d8" stroke-opacity=".6" stroke-width=".25"/>`,
-    // the opening for the ship token (the side's tint) and the niche of the flag (a recessed paper well)
-    well({ x: b.x + m, y: b.y + m, w: b.w - 2 * m, h: b.h - 2 * m }, sd.tint, 1.5), well(nb, mix(sd.tint, LOOK.cell, 0.45), 1.2)];
-  // the frame of the nest for check-layout: the flags and drawings of the nest stay inside it
-  out.push(`<rect data-frame="nest-${side}-${i}" x="${r(p.x)}" y="${r(p.y)}" width="${r(p.w)}" height="${r(p.h)}" fill="none" stroke="none"/>`);
-  // where the token lies: a fine dashed square
-  out.push(`<rect x="${r(b.x + m + g)}" y="${r(b.y + m + g)}" width="${t}" height="${t}" rx=".8" fill="none" stroke="${LOOK.paperLine}" stroke-opacity=".55" stroke-width=".22" stroke-dasharray="1.4 1"/>`);
-  const outer = (i === 0 ? -1 : 1) as 1 | -1, c = nestC(side, i);
-  out.push(`<g data-deco="nest-${side}-${i}" data-name="флаги гнезда: ${sd.name} ${i + 1}">` +
-    // the side's flag faint in the well, under the token (seen while the nest is empty)
-    `<g opacity=".3">${flag(side, c.x - 7.6, c.y + 11.5, c.y - 12, 1, 15.4, 10.4)}</g>` +
-    // the side's flag in its niche: the staff by the outer edge, the cloth flying toward the opening
-    flag(side, outer < 0 ? nb.x + 1.5 : nb.x + nb.w - 1.5, nb.y + nb.h - 1.2, nb.y + 1.2, (-outer) as 1 | -1, nb.w - 2.9, (nb.w - 2.9) * 0.72) +
-    brassStar(nb.x + nb.w / 2, (nb.y + nb.h + b.y + b.h - m) / 2, Math.min(nb.w / 2 - 0.6, (b.y + b.h - m - nb.y - nb.h) / 2 - 0.6)) + '</g>');
-  for (const [dx, dy] of [[1.25, 1.25], [p.w - 1.25, 1.25], [1.25, p.h - 1.25], [p.w - 1.25, p.h - 1.25]]) out.push(rivet(p.x + dx, p.y + dy, 0.62));
+  const b = nestBox(side, i), m = NEST.rim, t = NEST.token, g = (b.w - 2 * m - t) / 2, sd = SIDE[side], rx = 2.4, c = nestC(side, i);
+  const out = [shadow(b, rx, 0.32),
+    `<rect data-plate="nest-${side}-${i}" data-nest="${side}-${i}" x="${r(b.x)}" y="${r(b.y)}" width="${r(b.w)}" height="${r(b.h)}" rx="${rx}" fill="url(#${ID}brh)" stroke="${LOOK.brass[2]}" stroke-width=".3"/>`,
+    `<path d="M${r(b.x + rx)} ${r(b.y + 0.35)}H${r(b.x + b.w - rx)}" stroke="#fff6d8" stroke-opacity=".6" stroke-width=".25"/>`,
+    // the opening for the ship token in the side's tint, the token's place a fine dashed square
+    `<rect x="${r(b.x + m)}" y="${r(b.y + m)}" width="${r(b.w - 2 * m)}" height="${r(b.h - 2 * m)}" rx="1.5" fill="${sd.tint}" stroke="${LOOK.brass[2]}" stroke-width=".28"/>`,
+    `<rect data-frame="nest-${side}-${i}" x="${r(b.x + m)}" y="${r(b.y + m)}" width="${r(b.w - 2 * m)}" height="${r(b.h - 2 * m)}" fill="none" stroke="none"/>`,
+    `<rect x="${r(b.x + m + g)}" y="${r(b.y + m + g)}" width="${t}" height="${t}" rx=".8" fill="none" stroke="${LOOK.paperLine}" stroke-opacity=".55" stroke-width=".22" stroke-dasharray="1.4 1"/>`,
+    // the side's one flag, in the opening under the token (seen while the nest is empty)
+    `<g data-deco="nest-${side}-${i}" data-name="флаг гнезда: ${sd.name} ${i + 1}" opacity=".5">${flag(side, c.x - 7.6, c.y + 11.5, c.y - 12, 1, 15.4, 10.4)}</g>`];
+  for (const [dx, dy] of [[1.25, 1.25], [b.w - 1.25, 1.25], [1.25, b.h - 1.25], [b.w - 1.25, b.h - 1.25]]) out.push(rivet(b.x + dx, b.y + dy, 0.62));
   return out.join('');
 }
 /** the side's name between its two nests: the scroll of the board headers (parts/boards/emblem.ts), larger — the side's
@@ -298,42 +278,41 @@ function lozenge(x: number, y: number, ux: number, uy: number, l = 1.3, w = 0.6,
 /** an engraved course line between two nests, the fire going both ways: a fine ink line with a dart at each end, dashed
  *  for the diagonal; a lozenge on its middle when it is whole (mid); a soft halo of paper under the line and its heads so
  *  it reads over the chart; cut where a note's patch lies on it */
-function course(a: { x: number; y: number }, b: { x: number; y: number }, dash: string, cut: Rect | null, mid = false, ink = NOTE_INK): string {
-  const len = Math.hypot(b.x - a.x, b.y - a.y), ux = (b.x - a.x) / len, uy = (b.y - a.y) / len, hd = 3.1;
+function course(a: { x: number; y: number }, b: { x: number; y: number }, dash: string, cut: Rect | null, mid = false, ink = NOTE_INK, hd = 3.1): string {
+  const len = Math.hypot(b.x - a.x, b.y - a.y), ux = (b.x - a.x) / len, uy = (b.y - a.y) / len, hw = hd * 0.37;
   const P = (t: number) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
   let d = '';
   for (const [u, v] of cutOut(a, b, cut)) {
     const p = P(u), q = P(v), s0 = u === 0 ? hd * 0.6 : 0.6, s1 = v === 1 ? hd * 0.6 : 0.6;
     d += `M${r(p.x + ux * s0)} ${r(p.y + uy * s0)}L${r(q.x - ux * s1)} ${r(q.y - uy * s1)}`;
   }
-  const marks = [dart(a.x, a.y, -ux, -uy, hd, 1.15, ink), dart(b.x, b.y, ux, uy, hd, 1.15, ink)];
+  const marks = [dart(a.x, a.y, -ux, -uy, hd, hw, ink), dart(b.x, b.y, ux, uy, hd, hw, ink)];
   if (mid) marks.push(lozenge((a.x + b.x) / 2, (a.y + b.y) / 2, ux, uy, 1.3, 0.6, ink));
   return `<path d="${d}" stroke="${LOOK.halo}" stroke-opacity=".35" stroke-width="2.2" fill="none" stroke-linecap="round"/>` +
     `<path d="${d}" stroke="${LOOK.halo}" stroke-opacity=".7" stroke-width="1.1" fill="none" stroke-linecap="round"/>` + marks.map(m => m.halo).join('') +
     `<path d="${d}" stroke="${ink}" stroke-width=".3" fill="none"${dash ? ` stroke-dasharray="${dash}"` : ''}/>` + marks.map(m => m.head).join('');
 }
-/** the point where the segment from the centre c towards p leaves the nest box (plus a gap) */
-function edgePoint(c: { x: number; y: number }, p: { x: number; y: number }, b: Rect, gap: number): { x: number; y: number } {
-  const dx = p.x - c.x, dy = p.y - c.y, hw = b.w / 2 + gap, hh = b.h / 2 + gap, t = Math.min(dx ? hw / Math.abs(dx) : 1e9, dy ? hh / Math.abs(dy) : 1e9);
-  return { x: c.x + dx * t, y: c.y + dy * t };
-}
 function battleSvg(): { svg: string; plates: Rect[] } {
   const out: string[] = [], plates: Rect[] = [], diag = Math.abs((data.ships[0].diagDamage as { offset: number }).offset);
-  for (const side of ['company', 'pirates'] as Side[]) for (const i of [0, 1]) { out.push(nestSvg(side, i)); plates.push(nestPlate(side, i)); }
-  // the captain's ink note on a paper patch, once: «по диагонали −1» on the crossing of the diagonals (the nests straight
-  // opposite have a course line and no note: the user took the words «напротив — полный урон» off the scheme)
-  const nsize = 9.5, no: TO2 = { font: 'Alegreya', w: 500, italic: true, color: NOTE_INK }, em = pt(nsize), pad = 1.9;
-  const c00 = nestC('company', 0), c01 = nestC('company', 1), c10 = nestC('pirates', 0), c11 = nestC('pirates', 1);
-  const X = { x: (c00.x + c11.x) / 2, y: (c00.y + c11.y) / 2 }, dWord = fill(S.diag, { diag }), dw = W(dWord, nsize, no);
+  for (const side of ['company', 'pirates'] as Side[]) for (const i of [0, 1]) { out.push(nestSvg(side, i)); plates.push(nestBox(side, i)); }
+  // the diagonals: from the middle of each nest's inner side to the middle of the inner side of the nest across, the two
+  // mirror images of each other; the captain's ink note «по диагонали −1» once, its patch centred on their crossing
+  const nsize = 9.5, no: TO2 = { font: 'Alegreya', w: 500, italic: true, color: NOTE_INK }, em = pt(nsize), pad = 1.9, gap = 1;
+  const side = (s: Side, i: number) => { const b = nestBox(s, i); return { x: i === 0 ? b.x + b.w + gap : b.x - gap, y: b.y + b.h / 2 }; };
+  const a0 = side('company', 0), b0 = side('pirates', 1), a1 = side('company', 1), b1 = side('pirates', 0);
+  const X = { x: (a0.x + a1.x) / 2, y: (a0.y + b0.y) / 2 }, dWord = fill(S.diag, { diag }), dw = W(dWord, nsize, no);
   // the box of a line of SVG text in the browser: ~0.95 em above the baseline, ~0.3 em under it
   const dBox = { x: X.x - dw / 2 - pad - 0.4, y: X.y - em * 0.62 - pad, w: dw + 2 * pad + 0.8, h: em * 1.24 + 2 * pad };
-  const gap = 1;
-  for (const [p, q] of [[c00, c11], [c01, c10]]) out.push(course(edgePoint(p, q, nestBox('company', p === c00 ? 0 : 1), gap), edgePoint(q, p, nestBox('pirates', q === c11 ? 1 : 0), gap), '1.8 1', dBox));
+  out.push(`<g data-course="diag-0">${course(a0, b0, '1.8 1', dBox)}</g><g data-course="diag-1">${course(a1, b1, '1.8 1', dBox)}</g>`);
   out.push(patch('note-diag', dBox) + text(X.x, X.y + em * 0.33, dWord, nsize, { ...no, anchor: 'middle', in: 'note-diag' }));
   plates.push(dBox);
-  // straight opposite, in each pair: a whole course line from the Company's nest down to the Pirates' one, a lozenge on it
-  for (const i of [0, 1]) { const c = nestC('company', i); out.push(course({ x: c.x, y: NY.company + NEST.size + gap }, { x: c.x, y: NY.pirates - gap }, '', null, true)); }
-  for (const side of ['company', 'pirates'] as Side[]) { const np = namePlate(side); out.push(np.svg); plates.push(np.box); }
+  // straight opposite, in each pair: a whole course line down the nests' common middle, across the gap between them, a
+  // lozenge on its middle
+  for (const i of [0, 1]) {
+    const c = nestC('company', i), y0 = NY.company + NEST.size + gap, y1 = NY.pirates - gap;
+    out.push(`<g data-course="opposite-${i}">${course({ x: c.x, y: y0 }, { x: c.x, y: y1 }, '', null, true)}</g>`);
+  }
+  for (const s of ['company', 'pirates'] as Side[]) { const np = namePlate(s); out.push(np.svg); plates.push(np.box); }
   return { svg: out.join('\n'), plates };
 }
 
@@ -483,14 +462,16 @@ async function schemePage(ctx: Ctx): Promise<string> {
 
   // the chart under it all: calmed under the plates, its lettering off them and off the battle's courses
   const courses = { x: NX[0], y: NY.company, w: NX[1] + NEST.size - NX[0], h: NY.pirates + NEST.size - NY.company };
+  const report: ChartReport = { labels: [], marks: [] };
   const chart = chartSvg({
-    style: 'plain', w: PAGE.w, h: PAGE.h, center: [0, 0], mmPerDeg: VIEW.mmPerDeg, anchor: VIEW.anchor, inset: VIEW.inset, seed: 11,
+    report, style: 'plain', w: PAGE.w, h: PAGE.h, center: [0, 0], mmPerDeg: VIEW.mmPerDeg, anchor: VIEW.anchor, inset: VIEW.inset, seed: 11,
     calm, avoid: [courses],
     roses: [{ x: 41, y: 146, r: 12 }],
     ships: [{ x: 30, y: 118, s: 0.6 }]
   });
   const jpg = await rasterJpeg(ctx.browser, 'scheme-chart', chart, PAGE.w, PAGE.h, ctx.opts.draft ? 150 : 240);
-  return `<div class="sc"><svg class="sc-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${defs()}<image href="${jpg.url}" x="0" y="0" width="${PAGE.w}" height="${PAGE.h}" preserveAspectRatio="none"/>${svg.join('\n')}</svg>\n${html.join('\n')}</div>`;
+  // the chart (the sheet with its frame) and the torn edge's outline for check-layout: everything else lies inside it
+  return `<div class="sc"><svg class="sc-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${defs()}<image data-sheet-art="1" href="${jpg.url}" x="0" y="0" width="${PAGE.w}" height="${PAGE.h}" preserveAspectRatio="none"/><path data-sheet-edge="1" d="${report.edge ?? ''}" fill="none" stroke="none"/>${svg.join('\n')}</svg>\n${html.join('\n')}</div>`;
 }
 
 export async function schemePart(ctx: Ctx): Promise<Part> {
