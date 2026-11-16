@@ -447,8 +447,10 @@ function pointerSvg(pid: string, b: Rect, words: string, ic: IconName, id: strin
   out.push(`<circle cx="${r(mx + 0.25)}" cy="${r(cy + 0.35)}" r="3.5" fill="#1a0e04" fill-opacity=".28"/><circle data-plate="${pid}-icon" cx="${r(mx)}" cy="${r(cy)}" r="3.5" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".22"/>` +
     `<circle cx="${r(mx)}" cy="${r(cy)}" r="3.05" fill="none" stroke="${L.brass[2]}" stroke-width=".32" stroke-dasharray=".01 .6" stroke-linecap="round"/><circle cx="${r(mx)}" cy="${r(cy)}" r="2.65" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".18"/>${icon(ic, mx, cy, 4.1, L.tone)}`);
   const o: TO2 = { ...PTR, color: ink, in: pid };
-  if (tx + W(words, PTRG.size, PTR) <= b.x + b.w - PAD) out.push(text(tx, cy + pt(PTRG.size) * 0.3, words, PTRG.size, o));
-  else { const cut = words.lastIndexOf(' ', Math.ceil(words.length / 2) + 4), [l1, l2] = [words.slice(0, cut), words.slice(cut + 1)]; out.push(text(tx, cy - 0.75, l1, PTRG.size, o) + text(tx, cy + 2.95, l2, PTRG.size, o)); }
+  // one line at 8.5 pt, or a size down to 7.4 pt; two lines only when even that is too long
+  const room = b.x + b.w - PAD - tx, one = [8.5, 8.2, 7.9, 7.6, 7.4].find(z => W(words, z, PTR) <= room);
+  if (one) out.push(text(tx, cy + pt(one) * 0.3, words, one, o));
+  else { const cut = words.lastIndexOf(' ', Math.ceil(words.length / 2) + 4), [l1, l2] = [words.slice(0, cut), words.slice(cut + 1)]; out.push(text(tx, cy - 0.95, l1, 7.6, o) + text(tx, cy + 3.05, l2, 7.6, o)); }
   return out.join('');
 }
 /** the Fires: three 23 mm places, brass-rimmed, a faint fire on deck inside */
