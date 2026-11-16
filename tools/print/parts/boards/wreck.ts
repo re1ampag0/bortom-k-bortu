@@ -21,6 +21,7 @@ import { rasterJpeg } from '../../map/raster';
 import { iconSvg, type IconName, type IconTone } from '../icons';
 import { TXT as FTXT, basePalette, jonesLine, md, measureMissing, noRef, rulesLine, rulesSection, widthOf, type Pal, type ShipKey, type ShipMaterial, type TO } from './frame';
 import { LOOKS, defsOf, ico, text, type Look } from './v2';
+import { emblemSvg } from './emblem';
 
 type P = [number, number];
 interface Rect { x: number; y: number; w: number; h: number }
@@ -710,15 +711,15 @@ function rope(a: P, b: P, brass?: string): string {
   const d = `M${r2(a[0])} ${r2(a[1])}L${r2(b[0])} ${r2(b[1] - (brass ? 0.9 : 0))}`;
   return `<path d="${d}" stroke="#2a1e10" stroke-width=".8"/><path d="${d}" stroke="#b89a64" stroke-width=".4" stroke-dasharray=".7 .7"/>` + (brass ? `<circle cx="${r2(b[0])}" cy="${r2(b[1] - 0.4)}" r="1.15" fill="none" stroke="${brass}" stroke-width=".45"/>` : '');
 }
-/** the cartouche of the title: scrolled ends like the face's header, the medallion with the ship's letter */
+/** the cartouche of the title: scrolled ends like the face's header, the ship's emblem with its letter */
 function titleSvg(b: Rect, ship: Ship, pal: Pal, L: Look, id: string): string {
   const { x, y, w, h } = b, out: string[] = [];
   const shape = `M${x + 5} ${y}H${x + w - 5}C${x + w - 1.5} ${y} ${x + w} ${y + 2.4} ${x + w + 2.2} ${y + 1.6}C${x + w + 0.6} ${y + h / 2} ${x + w + 0.6} ${y + h / 2} ${x + w + 2.2} ${y + h - 1.6}C${x + w} ${y + h - 2.4} ${x + w - 1.5} ${y + h} ${x + w - 5} ${y + h}H${x + 5}C${x + 1.5} ${y + h} ${x} ${y + h - 2.4} ${x - 2.2} ${y + h - 1.6}C${x - 0.6} ${y + h / 2} ${x - 0.6} ${y + h / 2} ${x - 2.2} ${y + 1.6}C${x} ${y + 2.4} ${x + 1.5} ${y} ${x + 5} ${y}Z`;
   out.push(`<path d="${shape}" fill="#05080c" fill-opacity=".38" transform="translate(.7 1)"/><path d="${shape}" fill="url(#${id}paper)" stroke="${L.paperLine}" stroke-width=".4"/>`);
   out.push(`<rect data-plate="wtitle" x="${r2(x)}" y="${r2(y)}" width="${r2(w)}" height="${r2(h)}" fill="none"/><rect x="${r2(x + 1.6)}" y="${r2(y + 1.4)}" width="${r2(w - 3.2)}" height="${r2(h - 2.8)}" rx="1" fill="none" stroke="${L.paperLine}" stroke-width=".2" stroke-opacity=".8"/>`);
   const mx = x + 11.5, my = y + h / 2;
-  out.push(`<g data-plate="wtitle-medal"><circle cx="${r2(mx)}" cy="${r2(my)}" r="8.4" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".3"/><circle cx="${r2(mx)}" cy="${r2(my)}" r="7" fill="${pal.solid}"/><circle cx="${r2(mx)}" cy="${r2(my)}" r="6.2" fill="none" stroke="#fff8e6" stroke-width=".22" stroke-opacity=".7"/></g>`);
-  out.push(text(mx, my + pt(20) * 0.33, ship.code, 20, { font: 'Alegreya SC', w: 800, color: '#fff8e6', anchor: 'middle', in: 'wtitle-medal' }));
+  // the ship's emblem, as on the face's header (parts/boards/emblem.ts)
+  out.push(emblemSvg(DECK_KEY[ship.code] as ShipKey, mx, my, 6.5, { id: `${id}t`, letter: ship.code, size: 20, solid: pal.solid, deep: pal.deep, brass: L.brass, plate: 'wtitle-medal' }));
   out.push(text(x + 23.5, y + 11.2, FTXT.wreck.title, 26, { ...TITLE_O, color: pal.deep, in: 'wtitle' }));
   out.push(text(x + 23.5, y + 19.4, `${ship.name} · ${ship.captain}`, 12, { ...SUB_O, color: L.ink, in: 'wtitle' }));
   return out.join('');

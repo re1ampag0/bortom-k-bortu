@@ -18,6 +18,7 @@ import { centerFor } from '../../map/proj';
 import { icon, iconSvg, TONE, type IconName, type IconTone } from '../icons';
 import { CREAM, brassCell, capWord, deepOf } from '../tokens-art';
 import { basePalette, measureMissing, widthOf, type Pal, type ShipKey, type TO, type TrackKey } from './frame';
+import { emblemSvg, letterBox, ribbonGeo, sideOf, sideRibbonSvg } from './emblem';
 
 export type Counters = 'board' | 'strip';
 const require = createRequire(import.meta.url);
@@ -56,8 +57,9 @@ const GAP = 3, EDGE = 5;
 const HEAD_Y = EDGE + 0.5, TOP = HEAD_Y + 26.4 + 0.5 + GAP;
 const X0 = 13.5, PAD = 2.6, ROW_GAP = GAP, BOTTOM = 210 - EDGE, MID_R = 211.5 - GAP;
 const NEST = { x: 217.5, y: HEAD_Y, w: 66, h: 91 };
-/** the header (a cartouche of an old chart): its height, the medallion's centre from the left, the text column's start */
-const HEAD = { y: 11.1, h: 26.4, med: 12.4, col: 27 };
+/** the header (a cartouche of an old chart): its height, the emblem's centre from the left, the text column's start, the
+ *  emblem's centre from the top and its radius, the letter's and the side's type (pt) */
+const HEAD = { y: 11.1, h: 26.4, med: 17.3, col: 33, my: 12.1, R: 6.9, letter: 19, side: 7 };
 /** the log under the Legend's nest (the Dutchman's — in the middle, see layoutV2: its right column holds the dive nest) */
 const LOG = { x: 211.5, y: NEST.y + NEST.h + GAP, w: 75.5, h: BOTTOM - (NEST.y + NEST.h + GAP) };
 const LOG_DUTCH = { x: MID_R - 75.5, y: HEAD_Y + 11 + GAP, w: 75.5, h: 95.5 };
@@ -157,7 +159,7 @@ function trackDefs(ship: Ship) {
   return ORDER.map(k => t[k]).filter((x): x is { key: TrackKey; cells: number[]; start: number } => !!x);
 }
 /** the header's width from its words: the medallion, the name and the side tag, the captain, the motto */
-const NAME_O: TO = { font: 'Alegreya', w: 800, ls: '.01em' }, CAPT_O: TO = { font: 'Alegreya SC', w: 700, ls: '.1em' }, MOTTO_O: TO = { font: 'Alegreya', italic: true, w: 500 }, SIDE_O: TO = { w: 800, ls: '.16em' };
+const NAME_O: TO = { font: 'Alegreya', w: 800, ls: '.01em' }, CAPT_O: TO = { font: 'Alegreya SC', w: 700, ls: '.1em' }, MOTTO_O: TO = { font: 'Alegreya', italic: true, w: 500 };
 function headerW(ship: Ship): number {
   return HEAD.col + Math.max(W(ship.name, 24, NAME_O), W(ship.captain, 10, CAPT_O), W(ship.motto, 8.5, MOTTO_O)) + 4.5;
 }
@@ -314,7 +316,7 @@ function headerSvg(b: Rect, ship: Ship, pal: Pal, L: Look, id: string): string {
   // the shadow, the sheet, the rolls at the ends (a cylinder each, its spiral showing at the top and the bottom)
   out.push(`<rect x="${r(x - 1.4)}" y="${r(y + 0.9)}" width="${r(w + 2.8)}" height="${r(h)}" rx="1.6" fill="#1a0e04" fill-opacity=".26"/>`);
   out.push(`<defs><linearGradient id="${id}roll" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${dark}"/><stop offset=".38" stop-color="${L.paper}"/><stop offset=".62" stop-color="${mix(L.paper, '#fff8e6', 0.35)}"/><stop offset="1" stop-color="${dark}"/></linearGradient></defs>`);
-  out.push(`<rect data-plate="header" x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" fill="url(#${id}paper)" stroke="${line}" stroke-width=".3"/>`);
+  out.push(`<rect data-plate="header" data-frame="header" x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" fill="url(#${id}paper)" stroke="${line}" stroke-width=".3"/>`);
   for (const side of [-1, 1]) {
     const rx = side < 0 ? x - 3.2 : x + w - 0.8, rw = 4, top = y - 0.5, bot = y + h + 0.5, cx = rx + rw / 2;
     out.push(`<rect x="${r(rx)}" y="${r(top)}" width="${rw}" height="${r(bot - top)}" rx="1.2" fill="url(#${id}roll)" stroke="${line}" stroke-width=".28"/>`);
@@ -328,23 +330,12 @@ function headerSvg(b: Rect, ship: Ship, pal: Pal, L: Look, id: string): string {
   const fr = (d: number, k: number) => `M${r(x + d + k)} ${r(y + d)}H${r(x + w - d - k)}A${k} ${k} 0 0 0 ${r(x + w - d)} ${r(y + d + k)}V${r(y + h - d - k)}A${k} ${k} 0 0 0 ${r(x + w - d - k)} ${r(y + h - d)}H${r(x + d + k)}A${k} ${k} 0 0 0 ${r(x + d)} ${r(y + h - d - k)}V${r(y + d + k)}A${k} ${k} 0 0 0 ${r(x + d + k)} ${r(y + d)}Z`;
   out.push(`<path d="${fr(1.3, 1.8)}" fill="none" stroke="${line}" stroke-width=".32" stroke-opacity=".85"/><path d="${fr(1.9, 1.2)}" fill="none" stroke="${line}" stroke-width=".14" stroke-opacity=".7"/>`);
   for (const [qx, qy] of [[x + 1.3, y + 1.3], [x + w - 1.3, y + 1.3], [x + 1.3, y + h - 1.3], [x + w - 1.3, y + h - 1.3]]) out.push(`<circle cx="${r(qx)}" cy="${r(qy)}" r=".42" fill="${pal.deep}"/>`);
-  // the medallion: a brass ring with a beaded edge, the field in the ship's colour, the letter; the side on a ribbon under it
-  const mx = x + HEAD.med, my = y + 10;
-  out.push(`<circle cx="${r(mx + 0.35)}" cy="${r(my + 0.55)}" r="8.2" fill="#1a0e04" fill-opacity=".3"/>`);
-  out.push(`<g data-plate="header-medal"><circle cx="${r(mx)}" cy="${r(my)}" r="8.2" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".3"/></g>`);
-  out.push(`<circle cx="${r(mx)}" cy="${r(my)}" r="7.55" fill="none" stroke="${L.brass[2]}" stroke-width=".5" stroke-dasharray=".01 .78" stroke-linecap="round"/>`);
-  out.push(`<defs><radialGradient id="${id}fld" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="${mix(pal.solid, '#ffffff', 0.18)}"/><stop offset=".7" stop-color="${pal.solid}"/><stop offset="1" stop-color="${mix(pal.solid, '#000000', 0.3)}"/></radialGradient></defs>`);
-  out.push(`<circle cx="${r(mx)}" cy="${r(my)}" r="6.75" fill="url(#${id}fld)" stroke="${L.brass[2]}" stroke-width=".3"/><circle cx="${r(mx)}" cy="${r(my)}" r="6.05" fill="none" stroke="#fff8e6" stroke-width=".2" stroke-opacity=".7"/>`);
-  out.push(`<path d="M${r(mx - 5.6)} ${r(my - 3.4)}A6.6 6.6 0 0 1 ${r(mx + 1.2)} ${r(my - 6.5)}" fill="none" stroke="#fff6d8" stroke-opacity=".55" stroke-width=".35" stroke-linecap="round"/>`);
-  out.push(text(mx, my + pt(19) * 0.33, ship.code, 19, { font: 'Alegreya SC', w: 800, color: '#fff8e6', anchor: 'middle', in: 'header-medal' }));
-  const sw = W(ship.side, 7.2, SIDE_O), bw = sw + 4.2, by = y + 18.7, bh = 6.6, bx = mx - bw / 2, tail = 2.4, td = 1.1;
-  for (const sd of [-1, 1]) {
-    const ex = sd < 0 ? bx : bx + bw, ox = ex + sd * tail;
-    out.push(`<path d="M${r(ex - sd * 1.6)} ${r(by + td)}H${r(ox)}L${r(ox - sd * 1.3)} ${r(by + td + bh / 2)}L${r(ox)} ${r(by + td + bh)}H${r(ex - sd * 1.6)}Z" fill="${mix(pal.solid, '#000000', 0.35)}" stroke="${L.brass[2]}" stroke-width=".22"/>`);
-    out.push(`<path d="M${r(ex)} ${r(by + bh)}L${r(ex + sd * 0.01)} ${r(by + bh + td)}L${r(ex - sd * 1.6)} ${r(by + bh + td)}Z" fill="${mix(pal.solid, '#000000', 0.55)}"/>`);
-  }
-  out.push(`<rect data-plate="header-side" x="${r(bx)}" y="${r(by)}" width="${r(bw)}" height="${bh}" fill="${pal.solid}" stroke="${L.brass[2]}" stroke-width=".22"/><path d="M${r(bx + 0.6)} ${r(by + 0.7)}H${r(bx + bw - 0.6)}M${r(bx + 0.6)} ${r(by + bh - 0.7)}H${r(bx + bw - 0.6)}" stroke="#fff8e6" stroke-opacity=".45" stroke-width=".15"/>`);
-  out.push(text(mx + 0.4, by + bh / 2 + pt(7.2) * 0.33, ship.side, 7.2, { ...SIDE_O, color: '#fff8e6', anchor: 'middle', in: 'header-side' }));
+  // the ship's emblem (parts/boards/emblem.ts) and, under it, the side's name on a scroll — both inside the inner frame;
+  // the scroll's word stands just clear of the letter's plate
+  const mx = x + HEAD.med, my = y + HEAD.my, key = DECK_KEY[ship.code] as ShipKey;
+  out.push(emblemSvg(key, mx, my, HEAD.R, { id, letter: ship.code, size: HEAD.letter, solid: pal.solid, deep: pal.deep, brass: L.brass, plate: 'header-medal', deco: 'header' }));
+  const lb = letterBox(ship.code, HEAD.letter, mx, my).box, rg = ribbonGeo(ship.side, { size: HEAD.side });
+  out.push(sideRibbonSvg(ship.side, sideOf(ship.side), mx, lb.y + lb.h + 0.2 + rg.fh / 2, { id, size: HEAD.side, variant: 'scroll', plate: 'header-side', deco: 'header', paper: mix(L.paper, '#ffffff', 0.25), brass: L.brass }).svg);
   // the column: the name, the rule, the captain, the motto — centred
   const c0 = x + HEAD.col - 1, c1 = x + w - 3.5, tc = (c0 + c1) / 2;
   out.push(text(tc, y + 10.4, ship.name, 24, { ...NAME_O, color: pal.deep, anchor: 'middle', in: 'header' }));
