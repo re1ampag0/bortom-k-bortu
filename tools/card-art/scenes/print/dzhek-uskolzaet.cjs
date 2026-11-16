@@ -1,7 +1,7 @@
 // «Джек ускользает» (Жемчужина, Легенда, РЕАКЦИЯ: когда «Жемчужина» должна утонуть — её Корпус 2, и Пираты меняют
 // корабли местами). A poster: the camera low at the waterline, the Black Pearl huge across the upper half, almost
 // sunk — down by the stern, heeled towards us, the sea over her quarter rail and on her deck — yet every rag of sail
-// drawing, her bow up and throwing spray at us: she is running out of the trap to the right. The full moon stands
+// drawing, her bow up and throwing spray at us: she is running out of the trap to the right. The waning moon stands
 // behind her stern, over the trap: her torn sails glow through and are edged with its light, rays fan out through the
 // gun smoke and over her, the moon's path runs through the splashes where she was. Behind her on the left the trap: a wall of gun smoke on the horizon, the enemies' broadsides flashing in
 // it (the Endeavour on the left, the Dutchman behind), a grove of shot splashes on the empty spot where she was and
@@ -35,7 +35,9 @@ module.exports = { name: 'Джек ускользает', kind: 'deck', status: 
     const L = K.makeLight(light, { horizon: HZ, eye: 1 });
     let bg = K.sky(u, L, { horizon: HZ, stars: 60, seed: 8, clear: 30 });
     // a wide cold bloom round the moon, then the disc
-    bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#9ab8ff', power: .5, radius: 110 }, { core: false }) + K.sunMoon(u, L, { r: 9 });
+    bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#9ab8ff', power: .5, radius: 110 }, { core: false }) + K.sunMoon(u, L, { r: 8, phase: .78, lit: 200 });
+    // a thin torn cloud racing across the moon's lower half (it is the moon: waning, half veiled)
+    bg += K.cloud(u, L, { x: MOON.x + 6, y: MOON.y + 4.5, w: 34, h: 2.6, seed: 27, far: .2 });
     // torn low clouds racing to the right, their edges lit by the moon
     for (const [x, y, w, h, sd, fr] of [[170, 26, 70, 9, 31, .1], [22, 34, 56, 8, 12, .15], [150, 70, 50, 6, 17, .35], [36, 80, 44, 5, 9, .55], [188, 92, 40, 4, 23, .7]])
       bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });

@@ -251,7 +251,7 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'a
       } else {
         // shoulder arms: the near arm hanging nearly straight, the elbow a little out, the fist cupping the butt; the
         // musket resting in the hollow of the shoulder, sloped back, the bayonet up behind the hat
-        const th = (o.slope || 20) * Math.PI / 180, dv = [Math.sin(th), Math.cos(th)], nv = [-dv[1], dv[0]], B = [-.15, .88];
+        const th = (o.slope != null ? o.slope : 8) * Math.PI / 180, dv = [Math.sin(th), Math.cos(th)], nv = [-dv[1], dv[0]], B = [-.15, .88];
         const A = (t, s2 = 0) => M(B[0] + dv[0] * t + nv[0] * s2, B[1] + dv[1] * t + nv[1] * s2);
         const hand = M(-.15, .9), el = M(-.09 - (o.elbow || 0), 1.15);
         front += limbC(M(-.04, 1.42), el, M(-.14, .96), k * .105, RL, sw)
@@ -316,8 +316,9 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'a
 
     let ranks = '', ranksNear = '';
     // each man of the rank his own way of standing: the slope of his musket, his stride, a step forward, the elbow, the head
-    const POSE = [{ slope: 16, st: .9, tilt: 2 }, { slope: 24, st: 1.2, step: 1, tilt: 8, elbow: .03 }, { slope: 19, st: .8, tilt: -4 }, { slope: 26, st: 1.1, tilt: 6, elbow: .05 },
-      { slope: 15, st: 1.3, step: 1, tilt: -2 }, { slope: 22, st: .95, tilt: 10, elbow: .02 }, { slope: 28, st: 1.15, step: 1, tilt: 0, elbow: .04 }, { slope: 24, st: .9, tilt: 5 }];
+    // (the slope kept small: a musket sloped further would cross the faces of the men behind him)
+    const POSE = [{ slope: 6, st: .9, tilt: 2 }, { slope: 11, st: 1.2, step: 1, tilt: 8, elbow: .03 }, { slope: 3, st: .8, tilt: -4 }, { slope: 9, st: 1.1, tilt: 6, elbow: .05 },
+      { slope: 5, st: 1.3, step: 1, tilt: -2 }, { slope: 10, st: .95, tilt: 10, elbow: .02 }, { slope: 4, st: 1.15, step: 1, tilt: 0, elbow: .04 }, { slope: 7, st: .9, tilt: 5 }];
     RANK.forEach((z, i) => { if (z < 2.5) return; const m = marine(z, Object.assign({ seed: i + 2, hair: ['#3a2414', '#1a1210', '#6a4a2a', '#2a1a10'][i % 4], moustache: i === 6, stubble: i === 5 }, POSE[i]));
       const sv = K.castShadow(u, L, { x: m.M(0, 0)[0], y: m.M(0, 0)[1], w: m.k * .5, h: m.k * 1.8, horizon: HZ, opacity: .45 }) + m.back + m.body + m.front;
       if (z > 3.45) ranks += sv; else ranksNear += sv; });
