@@ -81,7 +81,7 @@ module.exports = { name: 'Прицельный огонь', kind: 'deck', status
     const G = gun(u, L);
     let mid = G.svg;
     // the brass quadrant standing on the barrel at the breech: a quarter disc with its scale, the plumb line and bob
-    { const q = [100, 95.2], r = 12, br = L.ramp('brass', q[0], q[1] - 5);
+    { const q0 = G.P(0, 13 + RB, .1), q = [q0[0] - 1, q0[1] + .5], r = 12, br = L.ramp('brass', q[0], q[1] - 5);
       mid += `<path d="M${P2(q)}L${f(q[0] + r)} ${f(q[1])}A${r} ${r} 0 0 0 ${f(q[0])} ${f(q[1] - r)}Z" fill="${br.half}" stroke="${br.outline}" stroke-width=".45"/>`
         + `<path d="M${f(q[0] + r * .82)} ${f(q[1])}A${f(r * .82)} ${f(r * .82)} 0 0 0 ${f(q[0])} ${f(q[1] - r * .82)}" stroke="${br.shadow}" stroke-width=".35" fill="none"/>`
         + Array.from({ length: 10 }, (_, k) => { const a = -k * Math.PI / 18, c = Math.cos(a), s = Math.sin(a); return `<path d="M${f(q[0] + c * r * .82)} ${f(q[1] + s * r * .82)}L${f(q[0] + c * r * (k % 3 ? .93 : .98))} ${f(q[1] + s * r * (k % 3 ? .93 : .98))}" stroke="${br.outline}" stroke-width=".3"/>`; }).join('')
@@ -92,7 +92,7 @@ module.exports = { name: 'Прицельный огонь', kind: 'deck', status
     mid += [0, 1, 2, 3].map(i => { const a = G.P(-9.6, 4.4, .06 + i * .055), b = G.P(-9.6, 6.2, .06 + i * .055); return `<path d="M${P2(a)}L${P2(b)}" stroke="#f2ece0" stroke-width=".55" opacity=".8"/>`; }).join('');
 
     // ——— the gunner, his back to us, easing the quoin; the officer pointing with his spyglass, the book in hand ———
-    const fg = gunner(u, L, R) + `<g transform="translate(0 6)">${officer(u, L, R)}</g>`;
+    const fg = gunner(u, L, R, G.P(0, 7.4, -.1)) + `<g transform="translate(0 6)">${officer(u, L, R)}</g>`;
     // ——— the lantern under the beam, daylight shafts from the port, dust, the dark round the edges ———
     let air = K.lantern(u, L, { ...LAMP, lit: true, seed: 5 }) + K.localGlow(u, { x: LAMP.x, y: LAMP.y - 7, color: '#ffc070', power: .8, radius: 22 });
     air += shafts(u, VX, 90, [[60, 290, 100, 290], [104, 290, 140, 290]], '#fff0d0', .07) + motes(26, 70, 76, 60, 50, '#fff0d0', 7)
@@ -187,7 +187,8 @@ function gun(u, L) {
 
 /** The gunner: his back to us on the left, bent to the gun; the near (right) arm, sleeve rolled, reaches down over the
  *  cheek to the quoin's handle, the fist round it. Linen shirt, a blue waistcoat, a red kerchief, a tarred queue. */
-function gunner(u, L, R) {
+function gunner(u, L, R, gripAt) {
+  const GX = 14;                                     // he stands this much nearer the gun than at first: the arm reaches the handle bent
   const sh = tone(L, '#d8ceb8'), wc = tone(L, '#2c3e66'), kc = tone(L, '#a8382a'), rim = '#fff0d4';
   const hc = [30, 90], hr = 7.4;
   // the far (left) arm hangs on his left side, mostly hidden by his back and the glass
@@ -220,17 +221,25 @@ function gunner(u, L, R) {
       + `<path d="M${hc[0]} ${f(hc[1] + hr * .9)}Q${hc[0] + .6} ${hc[1] + 12} ${hc[0] - .4} ${hc[1] + 16}" stroke="#140a06" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
       + `<path d="M${hc[0] - 1.6} ${f(hc[1] + hr * .9 + 1.2)}h3.2l-.4 1.6h-2.4z" fill="#0a0a0c"/>`; }
   // the near (right) arm: the shirt sleeve from the shoulder, rolled to the elbow, the bare forearm to the fist on the quoin
-  const shN = [48, 104], el = [71.4, 116.2], HS = 1.12;
-  const grip = [98, 126.8];                          // the quoin's handle under the breech (gun(): P(0, 7.4, -.1))
+  // (review: the arm was a straight tube as long as his back — now an upper arm and a forearm of their lengths, bent
+  // at the elbow: the upper arm hangs down and forward from the shoulder, the forearm runs forward to the handle)
+  const shN = [48, 104], HS = 1.12, LU = 24, LF = 19;
+  const grip = [gripAt[0] - GX, gripAt[1]];          // the quoin's handle under the breech (gun(): P(0, 7.4, -.1)), in his frame
   // the fist closes round the handle about 6 units past the wrist (H.hand 'grip'): the wrist is found back from it
-  const ha = ang(el, grip) + 8, wr = [grip[0] - Math.cos(ha * Math.PI / 180) * 6 * HS, grip[1] - Math.sin(ha * Math.PI / 180) * 6 * HS];
-  s += H.cloth(u, { spine: [shN, [59, 108.6], [el[0] + 1, el[1] - 1]], w: [12, 11, 10], tone: sh, lit: 1, rim, rimSide: 1, cuff: { from: .72, k: 1.12, roll: true }, seed: 5, capA: true, drapes: 2 });
-  const a = ang(el, wr);
-  s += H.cloth(u, { spine: [[el[0] - 1, el[1] - 1], [lerp(el[0], wr[0], .5), lerp(el[1], wr[1], .5) - .8], wr], w: [8.2, 7.4, 5.6], tone: SKIN, lit: 1, rim, rimSide: 1, folds: false, capA: true, sw: .4 });
-  void a;
+  const ha0 = ang(shN, grip) + 14, wr = [grip[0] - Math.cos(ha0 * Math.PI / 180) * 6 * HS, grip[1] - Math.sin(ha0 * Math.PI / 180) * 6 * HS];
+  const el = (() => { const dx = wr[0] - shN[0], dy = wr[1] - shN[1], d = Math.hypot(dx, dy), a = Math.min(LU, (d * d + LU * LU - LF * LF) / (2 * d)), h = Math.sqrt(Math.max(0, LU * LU - a * a)), ex = dx / d, ey = dy / d;
+    return [shN[0] + ex * a - ey * h, shN[1] + ey * a + ex * h]; })();          // the elbow below the shoulder–wrist line
+  const ha = ang(el, wr) + 6;
+  const mU = [lerp(shN[0], el[0], .5), lerp(shN[1], el[1], .5)];
+  s += H.cloth(u, { spine: [shN, mU, el], w: [12, 11, 10.4], tone: sh, lit: 1, rim, rimSide: 1, cuff: { from: .7, k: 1.12, roll: true }, seed: 5, capA: true, drapes: 2 });
+  // the bare forearm: full at the elbow (its point showing behind), the muscle swelling below it, narrowing to the wrist
+  const fe = [lerp(el[0], wr[0], .3), lerp(el[1], wr[1], .3)], fm = [lerp(el[0], wr[0], .62), lerp(el[1], wr[1], .62)];
+  s += H.cloth(u, { spine: [[el[0] - .6, el[1] - .4], fe, fm, wr], w: [7.6, 8, 6.6, 5.2], tone: SKIN, lit: 1, rim, rimSide: 1, folds: false, capA: true, roundA: true, sw: .4 });
+  { const d = [wr[0] - el[0], wr[1] - el[1]], l = Math.hypot(...d), n = [-d[1] / l, d[0] / l];
+    s += `<path d="M${f(el[0] + n[0] * 3.2 - d[0] / l * 1.2)} ${f(el[1] + n[1] * 3.2 - d[1] / l * 1.2)}q${f(n[0] * 1.6)} ${f(n[1] * 1.6 + .4)} ${f(d[0] / l * 3)} ${f(d[1] / l * 3 + n[1] * 1)}" stroke="${SKIN.shadow}" stroke-width=".5" fill="none" opacity=".7"/>`; }
   const hd = H.hand(u, { at: wr, a: ha, s: HS, m: 1, pose: 'grip', tone: SKIN, sw: .35 });
   s += hd.back + hd.front;
-  return s;
+  return `<g transform="translate(${GX} 0)">${s}</g>`;
 }
 
 /** The officer: in profile facing left, near us on the right, cut by the glass at the waist — a navy coat with white

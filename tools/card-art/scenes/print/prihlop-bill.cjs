@@ -39,8 +39,8 @@ const WT = 22, WB = 178, WL = 12, WR = 188;           // the hull side behind hi
 const ZOOM = 1.35, ZO = [134.6, 100];
 const Z = p => [ZO[0] + (p[0] - ZO[0]) * ZOOM, ZO[1] + (p[1] - ZO[1]) * ZOOM];
 const HEAD = { c: [106, 75.5], r: 12.6 };               // (his units)
-const GRIP = [50, 66];                                // where his fist closes round the vial (his units)
-const VIAL_R = 2.9;                                   // the vial's body radius (his units); the fist closes round exactly this
+const GRIP = [58, 63];                                // where his fist closes round the vial (his units)
+const VIAL_R = 3.3;                                   // the vial's body radius (his units); the fist closes round exactly this
 const VIAL_A = -86;                                   // the vial's axis (deg, up)
 const light = { time: 'night', haze: .3, key: { type: 'moon', x: 80, y: -20, el: 64, color: '#b8f8dc', power: .95 },
   fill: { color: '#1e3a32', power: .45 }, rim: { az: 330, color: '#9ff0d0', power: .3 } };
@@ -157,18 +157,18 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
     // the vial: a glass phial upright in his fist — a long body, a sloping shoulder, the neck, a cork; the glowing soul
     // inside (bright green-white liquid with a pale wisp curling in it), the glass edge dark, a highlight on the lit side
     let v = hR.axis; if (v[1] > 0) v = [-v[0], -v[1]];
-    const g = hR.grip, nv = [-v[1], v[0]], R = VIAL_R, kl = 1.3, at = (t, o) => [g[0] + v[0] * t * kl + nv[0] * o, g[1] + v[1] * t * kl + nv[1] * o];
+    const g = hR.grip, nv = [-v[1], v[0]], R = VIAL_R, kl = 1.45, at = (t, o) => [g[0] + v[0] * t * kl + nv[0] * o, g[1] + v[1] * t * kl + nv[1] * o];
     let vial = '', vglow = '';
     { const out = `M${P2(at(-7, -R))}Q${P2(at(-9.6, -R))} ${P2(at(-9.6, 0))}Q${P2(at(-9.6, R))} ${P2(at(-7, R))}L${P2(at(6, R))}C${P2(at(8, R))} ${P2(at(8.4, R * .44))} ${P2(at(9.6, R * .44))}L${P2(at(12.4, R * .44))}`
         + `L${P2(at(12.4, -R * .44))}L${P2(at(9.6, -R * .44))}C${P2(at(8.4, -R * .44))} ${P2(at(8, -R))} ${P2(at(6, -R))}Z`;
-      const cid = nid('vc', u), gg = nid('vg', u), lq = nid('vl', u), c = at(-2, 0);
+      const cid = nid('vc', u), gg = nid('vg', u), lq = nid('vl', u), c = at(1, 0);
       vial += `<defs><clipPath id="${cid}"><path d="${out}"/></clipPath>${linGrad(gg, ...at(0, -R), ...at(0, R), [[0, '#e8fff6', .55], [.18, '#3a8a72', .12], [.7, '#1e5a4a', .1], [1, '#06201a', .7]])}`
-        + `${radGrad(lq, c[0], c[1], R * 4.2, [[0, '#ffffff', 1], [.35, '#b8ffe6', 1], [.75, '#4ee0b0', 1], [1, '#1a9a78', 1]])}</defs>`
+        + `${radGrad(lq, c[0], c[1], R * 4.2, [[0, '#ffffff', 1], [.4, '#c8fff0', 1], [.8, '#6af4c8', 1], [1, '#2ac89c', 1]])}</defs>`
         + `<path d="${out}" fill="#0a2a22"/>`
-        + `<g clip-path="url(#${cid})"><path d="M${P2(at(-11, -R - 1))}L${P2(at(4.4, -R - 1))}L${P2(at(4.4, R + 1))}L${P2(at(-11, R + 1))}Z" fill="url(#${lq})"/>`
+        + `<g clip-path="url(#${cid})"><path d="M${P2(at(-11, -R - 1))}L${P2(at(8.6, -R - 1))}L${P2(at(8.6, R + 1))}L${P2(at(-11, R + 1))}Z" fill="url(#${lq})"/>`
         // the liquid's surface, the wisp of the soul curling up in it
-        + `<path d="M${P2(at(4.4, -R))}L${P2(at(4.4, R))}" stroke="#e8fff6" stroke-width=".5" opacity=".9"/>`
-        + `<path d="M${P2(at(-6.4, .5))}C${P2(at(-4, -1.4))} ${P2(at(-2.4, 1.3))} ${P2(at(0, -.2))}S${P2(at(2.8, -1))} ${P2(at(3.6, .6))}" stroke="#ffffff" stroke-width=".55" fill="none" stroke-linecap="round" opacity=".85"/>`
+        + `<path d="M${P2(at(8.6, -R))}L${P2(at(8.6, R))}" stroke="#ffffff" stroke-width=".5" opacity=".9"/>`
+        + `<path d="M${P2(at(-6.4, .5))}C${P2(at(-4, -1.4))} ${P2(at(-2.4, 1.3))} ${P2(at(0, -.2))}S${P2(at(4.6, -1.2))} ${P2(at(7, .4))}" stroke="#ffffff" stroke-width=".55" fill="none" stroke-linecap="round" opacity=".85"/>`
         + `<path d="${out}" fill="url(#${gg})"/></g>`
         + `<path d="${out}" fill="none" stroke="#03120c" stroke-width=".5"/>`
         // the highlight down the lit side, a glint on the shoulder
@@ -177,7 +177,7 @@ module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accep
         + `<path d="M${P2(at(12.1, -R * .58))}L${P2(at(12.1, R * .58))}L${P2(at(13, R * .58))}L${P2(at(13, -R * .58))}Z" fill="#2a6a58" stroke="#03120c" stroke-width=".35"/>`
         + `<path d="M${P2(at(13, -R * .46))}L${P2(at(13, R * .46))}L${P2(at(15.4, R * .4))}L${P2(at(15.4, -R * .4))}Z" fill="#8a6a42" stroke="#1a1006" stroke-width=".35"/><path d="M${P2(at(13.4, -R * .3))}L${P2(at(15, -R * .26))}" stroke="#d8b888" stroke-width=".4" opacity=".7"/>`;
       // its light: on the fist, the sleeve's cuff and his face (screen, over them)
-      vglow += glow(u, ...at(-1, 0), 28, 28, '#9effd0', .42) + glow(u, ...at(-2, 0), 8, 12, '#f0fff8', .55); }
+      vglow += glow(u, ...at(1, 0), 34, 34, '#9effd0', .5) + glow(u, ...at(1, 0), 11, 16, '#f0fff8', .6); }
 
     // ——— the head: 3/4 to our left, turned to the vial he holds up, open weary eyes, stubble; the knitted cap ———
     const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .3, dir: -1, nod: 2, tone: SKIN, light: [-.55, -.85], warm: { color: '#bff8e0', op: .3 },

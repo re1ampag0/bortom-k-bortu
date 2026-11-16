@@ -13,8 +13,8 @@ const PK = require('../portrait-kit.cjs');
 const { f, mix, nid, linGrad, radGrad, rng } = K;
 const { glow, shafts } = PK;
 
-const HZ = 116;
-const SUN = { x: 100, y: 60 };
+const HZ = 121;
+const SUN = { x: 100, y: 64 };
 // perspective from low on the water (the eye ≈ 6 m up): a ship's scale grows with its waterline's depth below the
 // horizon, .16 per unit — the whole fleet stands on a narrow band of sea under the horizon and towers over it
 const sc = y => .16 * (y - HZ);
