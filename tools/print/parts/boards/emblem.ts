@@ -417,7 +417,7 @@ interface RibbonGeo { fw: number; fh: number; tw: number; ls: number; em: number
 /** the measures of a ribbon: face (the plate) w × h, the whole thing's half-width and how far it rises over the face */
 export function ribbonGeo(word: string, o: { size?: number; minW?: number; variant?: 'scroll' | 'flag' }): RibbonGeo & { total: number } {
   const size = o.size ?? 7, em = pt(size), tw = widthOf(word, size, RIBBON_O), ls = RIB_LS * em, variant = o.variant ?? 'scroll';
-  const fh = (BOX.up + BOX.down) * em + 3.1;
+  const fh = (BOX.up + BOX.down) * em + 3.2;
   const flagW = variant === 'flag' ? fh * 0.78 : 0;
   const orn = variant === 'scroll' ? 1.6 : 1.1;
   const fw = Math.max(o.minW ?? 0, tw + ls + 2 * 1.55 + 2 * orn + flagW);
