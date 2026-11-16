@@ -245,7 +245,7 @@ function slotSvg(p: Place, x: number): string {
   out.push(plateRect(`label-${p.key}`, { x: tb.x, y: tb.y, w: tb.w, h: TAB.h }));
   out.push(frame(`slot-${p.key}`, b, m, 2.2, `url(#${ID}well)`));
   out.push(`<rect x="${r(cx - 31.5)}" y="${r(cy - 44)}" width="63" height="88" rx="3" fill="none" stroke="${LOOK.paperLine}" stroke-opacity=".45" stroke-width=".25" stroke-dasharray="1.6 1.1"/>`);
-  out.push(ico(p.icon, cx, cy, 30, `slot-${p.key}-icon`, 0.42));
+  out.push(ico(p.icon, cx, cy, 30, `slot-${p.key}-icon`, 0.6));
   // the words of the tab: the name, then one line (its size fitted to the tab)
   // one size for the line on all three tabs: the largest at which the longest fits
   const ts = 9.5, ls = Math.min(...places().map(q => fitSize(q.line, TAB_SIZES, tb.w - 5, TAB_L))), b1 = tb.y + 1.65 + pt(ts) * ASC;

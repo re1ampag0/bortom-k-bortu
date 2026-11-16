@@ -580,59 +580,119 @@ const DRAW: Record<IconName, (k: K) => string> = {
   },
 
   effects(k) {
-    const board = (d: string, a: number) => k.shape(d, {
-      fill: 'mid',
-      h: [{ a, g: 2.6, w: 0.9 }, { a: 0, g: 1.8, r: rect(0, 56, 100, 6) }, { a: 0, g: 1.8, r: rect(0, 82, 100, 8) }],
-      inner: k.S('M4 40Q30 37 50 40.5Q72 44 96 39M4 46Q24 44 40 47Q58 49 78 45.5L96 45M4 68Q30 65 52 68Q74 71 96 66M4 76Q26 74 44 77.5Q66 80 96 74', 0.9, 'ink') + k.fine(k.S(grain(4, 49, 96, 56, 2, 0.6, 7) + grain(4, 79, 96, 86, 2, 0.6, 9), 0.7)) + k.S('M5 36.6L96 34.6M5 62.6L96 61.6', 1.2, 'light') +
-        k.S(circ(74, 77, 4.2, 2.2) + circ(74, 77, 2, 1), 1),
+    // the cards in play this turn, nailed to the deck: two planks with grain and treenails; a card with a picture tilted
+    // behind, held by a brass tack; a card of rules in front with a wax seal and ribbons at its foot; a dagger driven through
+    // both at the top, its blade going into the wood
+    const plank = (d: string, y0: number, y1: number, seed: number) => k.shape(d, {
+      fill: 'mid', sw: 2.2,
+      h: [{ a: 3, g: 2.4, w: 0.8 }, { a: 50, g: 2.6, w: 0.8, r: rect(0, y1 - (y1 - y0) * 0.3, 100, 20) }],
+      hi: rect(0, y0 + 0.6, 100, 1.4),
+      inner: k.fine(k.S(grain(5, y0 + 2, 95, y1 - 2, 3, 0.8, seed), 0.8) + k.S(circ(80, (y0 + y1) / 2 + 2, 4, 1.8) + circ(80, (y0 + y1) / 2 + 2, 1.8, 0.8), 1)),
     });
-    let o = board('M3 36L97 34L96 61L4 62Z', 2) + board('M4 62L96 61L97 88L3 89Z', -2);
-    for (const [x, y] of [[8, 41], [8, 56], [92, 39], [92, 55], [8, 67], [8, 83], [92, 66], [92, 82]]) o += k.shape(circ(x, y, 1.6), { fill: 'light', sw: 1.1 });
-    let c = `<g transform="translate(3 3)">${k.shade(rrect(31, 16, 36, 62, 3.2), 40, 1.6)}</g>`;
-    c += k.shape(rrect(31, 16, 36, 62, 3.2), { fill: 'light', sw: 2.4 });
-    c += k.shape(rect(35, 22, 28, 22), {
-      fill: 'light', sw: 1.4,
-      h: [{ a: 0, g: 2, w: 0.8, r: rect(0, 0, 100, 34) }, { a: 45, g: 2, r: rect(0, 34, 100, 20) }],
-      inner: k.shape(circ(55, 30, 4), { fill: 'light', sw: 1.1 }) + k.shape('M35 44L43 34L49 40L54 36L63 44Z', { fill: 'mid', sw: 1.1, h: [{ a: -45, g: 1.6 }] }),
+    let o = plank('M3 30L97 28.6L97 58L3 59Z', 29, 58, 3) + plank('M3 59L97 58L97 88L3 89.4Z', 58.5, 89, 6);
+    for (const [x, y] of [[8, 36], [8, 52], [92, 34.6], [92, 51.4], [8, 66], [8, 82], [92, 65], [92, 81]]) o += k.shape(circ(x, y, 1.7), { fill: 'light', sw: 1.1 }) + k.fine(k.F(circ(x + 0.4, y + 0.4, 0.6), 'ink'));
+    // the card behind: a picture of a ship under sail in its frame, two lines of text
+    let b = `<g transform="translate(2.6 2.8)">${k.shade(rrect(0, 0, 34, 48, 2.8), 45, 1.6)}</g>` + k.shape(rrect(0, 0, 34, 48, 2.8), { fill: 'light', sw: 2 });
+    b += k.shape(rect(3.4, 3.4, 27.2, 24), {
+      fill: 'light', sw: 1.2,
+      h: [{ a: 0, g: 2, w: 0.7, r: rect(0, 0, 40, 15) }],
+      inner: k.shape('M3 21C9 19 14 22 19 20C24 18 28 20 31 19L31 28L3 28Z', { fill: 'mid', sw: 0, h: [{ a: 0, g: 1.5, w: 0.7 }] }) +
+        k.shape('M10 19L24 19L22 22L12 22Z', { fill: 'ink', sw: 0.8 }) + k.shape('M16.6 7L16.6 18L23 18Q22 12 16.6 7Z', { fill: 'light', sw: 1 }) + k.shape('M15.6 9L15.6 18L10 18Q11 13 15.6 9Z', { fill: 'light', sw: 1, h: [{ a: 80, g: 1.4, w: 0.6, fine: true }] }),
     });
-    c += k.S('M36 50L62 50M36 55L59 55M36 60L62 60M36 65L54 65M36 71L48 71', 1.3);
-    c += k.shape('M67 70L67 74.8Q67 78 63.8 78L59 78Q62.6 76 62.6 73.4Q65 73 67 70Z', { fill: 'mid', sw: 1.4, h: [{ a: 45, g: 1.3 }] });
-    o += `<g transform="rotate(7 49 47)">${c}</g>`;
-    o += k.S('M45 34L60 39.5', 3.4, 'mid') + k.S('M42 31.6L40 30M43 36.6L41.4 38.6M47.4 36.8L48.4 39', 1);
-    let d = k.shape('M0 -2.6L12 -3L12 3L0 2.6Z', { fill: 'light', sw: 1.6, h: [{ a: 0, g: 1.3, r: rect(0, 0.2, 20, 5) }] });
-    d += k.shape(rrect(12, -9.5, 3.6, 19, 1.4), { fill: 'mid', sw: 1.8, h: [{ a: 0, g: 1.4, r: rect(0, 1, 30, 10) }] });
-    d += k.shape(rrect(15.6, -2.8, 15, 5.6, 1.6), { fill: 'mid', sw: 1.8, h: [{ a: 65, g: 1.4 }] });
-    d += k.shape(circ(34.4, 0, 3.8), { fill: 'mid', sw: 1.8, h: [{ a: 45, g: 1.5, r: outside(circ(33, -1.4, 3.8)) }], hi: circ(33.2, -1.3, 1.2) });
-    o += `<g transform="translate(44 34) rotate(-32) scale(1.35)">${d}</g>`;
+    b += k.S('M4 33L30 33M4 38L27 38M4 43L22 43', 1.2);
+    o += `<g transform="translate(13 24) rotate(-11)">${b}</g>`;
+    // the brass tack in its lower left corner
+    o += k.shape(circ(18.4, 64.6, 3), { fill: 'mid', sw: 1.4, h: k.round(18.4, 64.6, 3, 3, 45, 1.2).slice(0, 1), hi: circ(17.4, 63.6, 0.9) });
+    // the card in front: a title cartouche, the rule lines, a dog's-ear, the seal
+    let c = `<g transform="translate(3 3.4)">${k.shade(rrect(0, 0, 38, 54, 3), 45, 1.6)}</g>` + k.shape(rrect(0, 0, 38, 54, 3), { fill: 'light', sw: 2.4, inner: k.fine(k.S(rrect(2.2, 2.2, 33.6, 49.6, 1.8), 0.7)) });
+    c += k.shape('M5 7L33 7L35 10.5L33 14L5 14L3 10.5Z', { fill: 'mid', sw: 1.3, h: [{ a: 0, g: 1.5, w: 0.7, r: rect(0, 11, 40, 4) }], inner: k.S('M10 10.5L28 10.5', 1.4, 'light') });
+    c += k.S('M5 20L33 20M5 25L31 25M5 30L33 30M5 35L27 35', 1.3) + k.fine(k.S('M5 40L22 40', 1.3));
+    // the seal: a blob of wax with a stamped star, two ribbon tails under it
+    const sx = 27, sy = 45;
+    c += k.shape(`M${sx - 2} ${sy + 2}L${sx - 7} ${sy + 13}L${sx - 3.4} ${sy + 11.4}L${sx - 2.4} ${sy + 15}L${sx + 1.4} ${sy + 3}Z`, { fill: 'mid', sw: 1.3, h: [{ a: 70, g: 1.6, w: 0.8 }] });
+    c += k.shape(`M${sx + 2} ${sy + 2}L${sx + 7} ${sy + 12}L${sx + 3.4} ${sy + 11}L${sx + 2.6} ${sy + 14.4}L${sx - 1.4} ${sy + 3}Z`, { fill: 'mid', sw: 1.3, h: [{ a: -70, g: 1.4, w: 0.8 }, { a: 20, g: 2, w: 0.7 }] });
+    const sp: number[] = [];
+    for (let i = 0; i < 22; i++) sp.push(...at(sx, sy, i % 2 ? 6.4 : 7.2 + ((i * 7) % 3) * 0.3, i * (360 / 22)));
+    c += k.shape(poly(...sp), {
+      fill: 'mid', sw: 1.8,
+      h: [{ a: 45, g: 1.7, w: 0.85 }, { a: -45, g: 2, w: 0.8, r: outside(circ(sx - 2, sy - 2, 6.4)) }],
+      inner: k.S(circ(sx, sy, 4.4), 1, 'light') + k.F(star(sx, sy, 5, 1.1, 3, -90), 'light'),
+    });
+    o += `<g transform="translate(42 30) rotate(8)">${c}</g>`;
+    // the dagger, driven down through both cards into the plank: the blade's slit and shadow, the guard, the wired grip,
+    // the pommel
+    let d = k.shade('M-1 2L13 2L13 6L-1 6Z', 45, 1.3);
+    d += k.shape('M0 -2.6L14 -2.2L14 2.2L0 2.6Z', { fill: 'light', sw: 1.6, h: [{ a: 0, g: 1.2, w: 0.7, r: rect(0, 0.3, 20, 5) }], inner: k.S('M1 0L13 0', 0.9) });
+    d += k.shape(rrect(13.4, -9, 3.8, 18, 1.4), { fill: 'mid', sw: 1.8, h: [{ a: 0, g: 1.3, w: 0.8, r: rect(0, 1, 30, 10) }], hi: rect(14, -8, 1, 16) });
+    d += k.shape(rrect(17.2, -2.9, 14.4, 5.8, 1.6), { fill: 'mid', sw: 1.8, h: [{ a: 65, g: 1.3, w: 0.8 }], inner: k.fine(k.S('M19 -2.9L18 2.9M21.4 -2.9L20.4 2.9M23.8 -2.9L22.8 2.9M26.2 -2.9L25.2 2.9M28.6 -2.9L27.6 2.9', 0.8, 'light')) });
+    d += k.shape(circ(35.4, 0, 4), { fill: 'mid', sw: 1.8, h: [{ a: 45, g: 1.4, w: 0.8, r: outside(circ(34, -1.4, 4)) }], hi: circ(34.2, -1.3, 1.2) });
+    o += `<g transform="translate(45 33) rotate(-38) scale(1.16)">${d}</g>`;
+    o += k.S('M43 34.4L47.4 31.8', 2.2) + k.fine(k.S('M41.8 31.2L40 29.6M42 36.6L40.2 38.2', 1));
     return o;
   },
 
   seaDeck(k) {
-    let o = '';
-    for (let i = 5; i >= 1; i--) o += k.shape(rrect(22 + i * 1.7, 12 + i * 2, 50, 70, 3.6), { fill: i === 5 ? 'mid' : 'light', sw: 1.4, h: i === 5 ? [{ a: 45, g: 1.6 }] : undefined });
-    o += `<g transform="translate(3.6 4.2)">${k.shade('M72 16L76 16L76 86L26 86L26 82L72 82Z', 45, 1.5)}</g>`;
-    return o + cardBack(k, 22, 12, 50, 70, 'sea');
+    // the sea deck face down: a thick stack, each card's edge showing along the shaded right and lower sides, one card
+    // sticking out of the middle; the back on top: a double frame with corner fleurons, a field of engraved waves, a
+    // medallion with a degree ring and the compass rose; the cast shadow down-right
+    const X = 21, Y = 9, W = 50, Hh = 70, N = 9, dx = 0.8, dy = 1.05;
+    const card = (x: number, y: number) => rrect(x, y, W, Hh, 3.6);
+    let o = k.cast(`M${X + 4} ${Y}L${X + W + N * dx} ${Y + N * dy}L${X + W + N * dx} ${Y + Hh + N * dy}L${X + N * dx} ${Y + Hh + N * dy}L${X} ${Y + 4}Z`, 4, 4, 1.7);
+    // the stack: every card from the bottom up, each showing a sliver of its edge along the shaded right and lower sides
+    for (let i = N; i >= 1; i--) o += k.shape(card(X + i * dx, Y + i * dy), { fill: 'light', sw: i === N ? 2.2 : 0.8, h: [{ a: 45, g: 2.4, w: 0.6, r: outside(card(X, Y)) }] });
+    // the back of the top card
+    const cx = X + W / 2, cy = Y + Hh / 2;
+    o += k.shape(card(X, Y), { fill: 'light', sw: 2.4, inner: k.S(rrect(X + 2, Y + 2, W - 4, Hh - 4, 2.4), 0.8) });
+    const field = rrect(X + 4.4, Y + 4.4, W - 8.8, Hh - 8.8, 1.6);
+    let sea = '';
+    for (let yy = Y + 9, j = 0; yy < Y + Hh - 4; yy += 4.4, j++) sea += scallops(X + 3 - (j % 2) * 3, X + W + 1, yy, 6, 3.2);
+    o += k.shape(field, { fill: 'mid', sw: 1.4, h: [{ a: 0, g: 1.5, w: 0.6, fine: true }], inner: k.S(sea, 1.1) + k.fine(k.S(sea.replace(/M(\S+) (\S+)/g, (_m, a, b) => `M${a} ${f(+b + 0.9)}`), 0.7, 'light')) });
+    // the corner fleurons
+    for (const [x, y] of [[X + 4.4, Y + 4.4], [X + W - 4.4, Y + 4.4], [X + 4.4, Y + Hh - 4.4], [X + W - 4.4, Y + Hh - 4.4]]) o += k.shape(star(x, y, 4, 1.6, 4.6, 0), { fill: 'light', sw: 1 });
+    // the medallion: a ring of degrees, the rose
+    let ticks = '';
+    for (let i = 0; i < 36; i++) ticks += `M${pp(at(cx, cy, 13.4, i * 10))}L${pp(at(cx, cy, i % 3 ? 14.6 : 15.4, i * 10))}`;
+    o += k.shape(circ(cx, cy, 16.4), { fill: 'light', sw: 1.8, inner: k.fine(k.S(ticks, 0.7)) + k.S(circ(cx, cy, 13.2), 1) });
+    o += compass(k, cx, cy, 12.4, 6.4);
+    // the ends of the field: a little ship above, a dolphin's tail below (fine)
+    o += k.fine(k.shape(`M${cx - 4} ${Y + 11}L${cx + 4} ${Y + 11}L${cx + 3} ${Y + 12.6}L${cx - 3} ${Y + 12.6}Z`, { fill: 'ink', sw: 0.6 }) + k.shape(`M${cx - 0.4} ${Y + 6.4}L${cx - 0.4} ${Y + 10.6}L${cx + 3} ${Y + 10.6}Q${cx + 2.4} ${Y + 8} ${cx - 0.4} ${Y + 6.4}Z`, { fill: 'light', sw: 0.6 }));
+    return `<g transform="rotate(-5 50 50)">${o}</g>`;
   },
 
   seaCard(k) {
-    const card = rrect(25, 10, 50, 76, 3.8);
-    let c = `<g transform="translate(3 3)">${k.shade(card, 45, 1.6)}</g>` + k.shape(card, { fill: 'light', sw: 2.4 });
-    const pic = rect(29.5, 14.5, 41, 67);
-    const wave = 'M29 70C33 54 43 41 57 38C68 36 74 45 71 53C69 59 61 58.5 60 53C59 48.5 63 46.5 65.5 48.5C62 44 54 46 52 54C50 64 58 72 72 74L72 82L29 82Z';
+    // a sea card turned up, its corner dog-eared: a frame round a storm — a black cloud, a bolt of lightning, slanting
+    // rain, a great wave curling over; a title cartouche and the lines of the text
+    const x0 = 24, y0 = 8, W = 52, Hh = 78, fold = 11;
+    const card = `M${x0 + 3.8} ${y0}L${x0 + W - fold} ${y0}L${x0 + W} ${y0 + fold}L${x0 + W} ${y0 + Hh - 3.8}Q${x0 + W} ${y0 + Hh} ${x0 + W - 3.8} ${y0 + Hh}L${x0 + 3.8} ${y0 + Hh}Q${x0} ${y0 + Hh} ${x0} ${y0 + Hh - 3.8}L${x0} ${y0 + 3.8}Q${x0} ${y0} ${x0 + 3.8} ${y0}Z`;
+    let c = k.cast(card, 3.4, 3.4, 1.6) + k.shape(card, { fill: 'light', sw: 2.4, inner: k.fine(k.S(`M${x0 + 2.2} ${y0 + 4}L${x0 + 2.2} ${y0 + Hh - 4}M${x0 + 4} ${y0 + Hh - 2.2}L${x0 + W - 4} ${y0 + Hh - 2.2}M${x0 + W - 2.2} ${y0 + Hh - 4}L${x0 + W - 2.2} ${y0 + fold + 3}M${x0 + 4} ${y0 + 2.2}L${x0 + W - fold - 3} ${y0 + 2.2}`, 0.7)) });
+    // the picture
+    const px = x0 + 5, py = y0 + 5, pw = W - 10, ph = 46, pic = rect(px, py, pw, ph);
+    const cloudD = cloud(px + 15, py + 8, 17, 8, 8, 0.38, 2);
+    const bolt = `M${px + 31} ${py + 2}L${px + 27.6} ${py + 9.6}L${px + 31.4} ${py + 9.8}L${px + 28.4} ${py + 17.4}L${px + 37.4} ${py + 7.4}L${px + 33.4} ${py + 7.2}L${px + 36} ${py + 2}Z`;
+    let rain = '';
+    for (let xx = px - 6; xx < px + pw; xx += 3.4) rain += `M${f(xx + 4)} ${f(py + 16)}L${f(xx)} ${f(py + 30)}`;
+    const wave = `M${px - 1} ${py + ph + 1}L${px - 1} ${py + 36}C${px + 4} ${py + 26} ${px + 14} ${py + 20} ${px + 26} ${py + 19}C${px + 36} ${py + 18.6} ${px + 42} ${py + 26} ${px + 39} ${py + 32}C${px + 36.6} ${py + 37} ${px + 30} ${py + 35.6} ${px + 30} ${py + 31.6}C${px + 30} ${py + 28.6} ${px + 33.4} ${py + 27.6} ${px + 35} ${py + 29.6}` +
+      `C${px + 32} ${py + 24.6} ${px + 24} ${py + 26} ${px + 22} ${py + 33}C${px + 20} ${py + 40} ${px + 30} ${py + 44} ${px + pw + 1} ${py + 42}L${px + pw + 1} ${py + ph + 1}Z`;
     let curls = '';
-    for (const d of [4, 8, 12]) curls += `M${f(31 + d * 0.3)} ${f(73 + d * 0.2)}C${f(35 + d * 0.4)} ${f(58 + d)} ${f(44 + d * 0.3)} ${f(46 + d)} ${f(56)} ${f(42 + d)}`;
+    for (const d of [3, 6.5, 10]) curls += `M${f(px + 1 + d * 0.3)} ${f(py + 40 + d * 0.3)}C${f(px + 5 + d * 0.4)} ${f(py + 30 + d)} ${f(px + 14 + d * 0.3)} ${f(py + 23 + d * 0.8)} ${f(px + 26)} ${f(py + 21.6 + d * 0.9)}`;
     let foam = '';
-    for (const [x, y, r] of [[59, 36, 1.4], [64, 35.4, 1.1], [69, 37, 1.3], [73, 41, 1.1], [53, 37.6, 1.1]]) foam += circ(x, y, r);
+    for (const [x, y, r] of [[28, 18, 1.3], [32.4, 17.6, 1.1], [36.6, 19.4, 1.2], [40, 23, 1], [24, 19.4, 1]]) foam += circ(px + x, py + y, r);
     c += k.shape(pic, {
-      fill: 'light', sw: 1.3,
-      h: [{ a: 0, g: 2.6, w: 0.8, r: rect(0, 0, 100, 40) }],
-      inner: k.S(scallops(29, 72, 77, 5, 2.6), 1) +
-        k.shape(wave, { fill: 'mid', sw: 2, h: [{ a: -30, g: 2.2 }, { a: 40, g: 2.4, r: rect(0, 62, 100, 30) }], hi: 'M58 39.6C67 38.4 72 44 70 51C68.6 47 64 42 58 41.6Z', inner: k.S(curls, 1, 'light') }) +
-        k.F(foam, 'light') + k.S(foam, 0.9) + k.S(scallops(29, 72, 80, 6, 2.6), 1.2),
+      fill: 'light', sw: 1.4,
+      h: [{ a: 0, g: 1.7, w: 0.7, r: rect(0, 0, 100, py + 24) }, { a: 70, g: 2.2, w: 0.7, fine: true, r: rect(0, 0, 100, py + 14) }],
+      inner: k.S(rain, 0.8) +
+        k.shape(cloudD, { fill: 'mid', sw: 1.4, h: [{ a: 45, g: 1.5, w: 0.8 }, { a: -45, g: 1.8, w: 0.7, r: rect(0, py + 9, 100, 10) }], inner: k.S(`M${px + 2} ${py + 7}Q${px + 6} ${py + 1.6} ${px + 14} ${py + 2.6}`, 1.2, 'light') }) +
+        k.shape(bolt, { fill: 'light', sw: 1.2 }) +
+                k.shape(wave, { fill: 'mid', sw: 1.8, h: [{ a: -30, g: 1.9, w: 0.8 }, { a: 40, g: 2.2, w: 0.8, r: rect(0, py + 38, 100, 20) }], hi: `M${px + 26} ${py + 20.6}C${px + 34} ${py + 20} ${px + 39} ${py + 25} ${px + 38} ${py + 30}C${px + 36.6} ${py + 26} ${px + 32} ${py + 22} ${px + 26} ${py + 22.4}Z`, inner: k.S(curls, 0.9, 'light') }) +
+        k.F(foam, 'light') + k.S(foam, 0.8),
     });
-    let rays = '';
-    for (let i = 0; i < 12; i++) rays += `M${pp(at(39, 25, 6.4, i * 30))}L${pp(at(39, 25, i % 2 ? 8.2 : 9.6, i * 30))}`;
-    c += k.F(circ(39, 25, 4.6), 'light') + k.S(circ(39, 25, 4.6), 1.1) + k.fine(k.S(rays, 0.9));
+    // the title cartouche and the text
+    const ty = py + ph + 4.6;
+    c += k.shape(`M${px + 2} ${ty}L${px + pw - 2} ${ty}L${px + pw + 1} ${ty + 3.4}L${px + pw - 2} ${ty + 6.8}L${px + 2} ${ty + 6.8}L${px - 1} ${ty + 3.4}Z`, { fill: 'mid', sw: 1.3, h: [{ a: 0, g: 1.5, w: 0.7, r: rect(0, ty + 4.4, 100, 4) }], inner: k.S(`M${px + 9} ${ty + 3.4}L${px + pw - 9} ${ty + 3.4}`, 1.4, 'light') });
+    c += k.S(`M${px + 1} ${ty + 11}L${px + pw - 1} ${ty + 11}M${px + 1} ${ty + 15.4}L${px + pw - 4} ${ty + 15.4}`, 1.3) + k.fine(k.S(`M${px + 1} ${ty + 19.8}L${px + pw - 12} ${ty + 19.8}`, 1.3));
+    // the dog's-ear: the corner folded down over the face, its back hatched, a shadow under it
+    c += k.shade(`M${x0 + W - fold} ${y0}L${x0 + W - fold + 1.4} ${y0 + fold + 1.6}L${x0 + W} ${y0 + fold}Z`, 45, 1.3);
+    c += k.shape(`M${x0 + W - fold} ${y0}L${x0 + W - fold} ${y0 + fold - 1.6}Q${x0 + W - fold} ${y0 + fold} ${x0 + W - fold + 1.6} ${y0 + fold}L${x0 + W} ${y0 + fold}Z`, { fill: 'light', sw: 1.6, h: [{ a: -45, g: 1.5, w: 0.7, r: `M${x0 + W - fold + 3} ${y0}L${x0 + W + 4} ${y0}L${x0 + W + 4} ${y0 + fold + 4}Z` }] });
     return `<g transform="rotate(-6 50 50)">${c}</g>`;
   },
 
@@ -804,7 +864,7 @@ function phase(k: K, kind: 'sea' | 'pirates' | 'company'): string {
 const EXTENT: Partial<Record<IconName, [number, number, number, number]>> = {
   sails: [1, -1, 99, 100], crew: [2, 8, 98, 102], guns: [1, 33, 101, 99], hull: [0.5, 5, 99.5, 99],
   powder: [13, 1, 98.5, 98.5], souls: [20, 1, 82, 96], reaction: [0, 5, 93, 101], once: [10, 1, 94, 99], legend: [17, 1, 83, 96],
-  effects: [1, 2, 99, 91], underwater: [1, 3, 99, 99], surfaced: [0, 1, 99, 99], volley: [0, 5, 97, 100],
+  effects: [1.5, 1.8, 98.3, 93.3], underwater: [1, 3, 99, 99], surfaced: [0, 1, 99, 99], volley: [0, 5, 97, 100],
   fire: [1, 2.3, 98.8, 97.8], sinking: [1, 7.8, 98.8, 96.8], legendJack: [1.8, 4.3, 98.8, 97.2],
 };
 function fitted(name: IconName, body: string): string {
