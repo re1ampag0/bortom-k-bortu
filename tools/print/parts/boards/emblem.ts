@@ -2,9 +2,10 @@
 //
 //   emblemSvg(key, cx, cy, R, o)  — a brass medallion of outer radius R (mm) with the ship's letter on its field and the
 //                                   ship's own device round and behind it:
-//       pearl     — a sixteen-point wind rose behind the ring (its shaded halves hatched), a pearl at its north, a string
-//                   of pearls on the ring, a black tattered sail on the yard, its stays, an engraved sky and a hatched
-//                   choppy sea in the field;
+//       pearl     — in moonlit silver, not brass: a sixteen-point wind rose behind the ring (its shaded halves hatched),
+//                   a fleur-de-lis at its north, a running sea rolling round the ring; in the field a moonlit night (a
+//                   crescent moon behind the rigging, stars, the sky in level strokes, the moon's path on a dark sea)
+//                   and a black tattered sail on the yard. The ship's name is not drawn: no pearls (a pun, not a motif);
 //       revenge   — tongues of fire round the ring (their shaded flanks hatched) and sparks, a skull (brows, temples, a
 //                   crack, hatched shade) over crossed bones on top, a laid-rope ring lit strand by strand, the field a
 //                   blaze of rays;
@@ -166,9 +167,54 @@ function fieldShade(d: D): string {
     `<path d="${arc(7.32, 105, 168)}" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width=".26" stroke-linecap="round"/>`;
 }
 
-// ---- the Pearl: the wind rose, the pearls, the black sail ----
+// ---- the Pearl: the wind rose, the night, the black sail ----
+/** moonlit silver: the Pearl's metal in place of brass (her night and her moon) */
+const SILVER: [string, string, string] = ['#f2f5fa', '#a6afbd', '#454d5c'];
+/** a fleur-de-lis standing on (0, y) — the north of a wind rose; s — its scale */
+function fleur(d: D, y: number, s: number, ink: string): string {
+  const [bl, bm, bd] = d.B, T = (x: number, v: number) => `${f(x * s)} ${f(y + v * s)}`;
+  const mid = `M${T(0, -2.55)}C${T(0.62, -1.95)} ${T(0.66, -1.05)} ${T(0.3, -0.5)}L${T(-0.3, -0.5)}C${T(-0.66, -1.05)} ${T(-0.62, -1.95)} ${T(0, -2.55)}Z`;
+  const side = (m: number) => `M${T(0.28 * m, -0.62)}C${T(0.45 * m, -1.55)} ${T(1.35 * m, -2.0)} ${T(1.5 * m, -1.25)}C${T(1.56 * m, -0.82)} ${T(1.2 * m, -0.66)} ${T(1.02 * m, -0.92)}` +
+    `C${T(1.2 * m, -0.98)} ${T(1.16 * m, -1.32)} ${T(0.95 * m, -1.2)}C${T(0.7 * m, -1.05)} ${T(0.62 * m, -0.7)} ${T(0.62 * m, -0.5)}Z`;
+  const band = `M${T(-0.82, -0.62)}H${f(0.82 * s)}V${f(y - 0.22 * s)}H${f(-0.82 * s)}Z`;
+  const foot = `M${T(-0.34, -0.22)}C${T(-0.3, 0.12)} ${T(-0.08, 0.3)} ${T(0, 0.55)}C${T(0.08, 0.3)} ${T(0.3, 0.12)} ${T(0.34, -0.22)}Z`;
+  const all = mid + side(-1) + side(1) + band + foot;
+  const metal = lin(d, [[0, mix(bl, '#ffffff', 0.4)], [0.5, bm], [1, bd]]);
+  return shadowOf(all, 0.3) + `<path d="${all}" fill="${metal}"/>` +
+    hatch(d, mid + side(1), [0, y - 2.6 * s, 1.6 * s, y], 0.36, 70, 0.17, bd, 0.75) +
+    `<path d="${all}" fill="none" stroke="${ink}" stroke-width=".22" stroke-linejoin="round"/>` +
+    `<path d="M${T(-0.12, -2.2)}C${T(-0.42, -1.75)} ${T(-0.4, -1.15)} ${T(-0.18, -0.72)}" fill="none" stroke="#ffffff" stroke-width=".17" stroke-linecap="round"/>` +
+    glint(-0.3 * s, y - 1.85 * s, 0.5);
+}
+/** a running wave round the band between r0 and r1 (n crests, rolling clockwise), each crest curling over; shaded by
+ *  where it faces, the lit crests caught by the moon */
+function waveBand(d: D, r0: number, r1: number, n: number): string {
+  const [bl, bm, bd] = d.B, step = 360 / n;
+  let s = '', curls = '', lights = '';
+  for (let i = 0; i < n; i++) {
+    const a0 = i * step, k = (1 - lit(a0 + step / 2)) / 2;
+    const M = (x: number, y: number) => P(pol(r0 + y * (r1 - r0), a0 + x * step));
+    const cell = `M${M(0, 0)}L${M(0, 0.22)}C${M(0.25, 0.22)} ${M(0.3, 0.96)} ${M(0.58, 0.93)}C${M(0.86, 0.9)} ${M(0.92, 0.55)} ${M(0.72, 0.45)}` +
+      `C${M(0.85, 0.3)} ${M(0.92, 0.22)} ${M(1.02, 0.22)}L${M(1.02, 0)}Z`;
+    s += `<path d="${cell}" fill="${mix(mix(bl, '#ffffff', 0.3), bm, k * 0.85)}" stroke="${mix(bd, '#000000', 0.3)}" stroke-width=".17" stroke-linejoin="round"/>`;
+    curls += `M${M(0.72, 0.45)}C${M(0.56, 0.5)} ${M(0.54, 0.72)} ${M(0.67, 0.74)}`;
+    if (lit(a0 + step / 2) > -0.2) lights += `M${M(0.12, 0.3)}C${M(0.27, 0.36)} ${M(0.33, 0.84)} ${M(0.56, 0.84)}`;
+  }
+  const cid = uid(d, 'c');
+  d.defs.push(`<clipPath id="${cid}"><path d="${annulus(r0, r1)}" clip-rule="evenodd"/></clipPath>`);
+  return `<g clip-path="url(#${cid})"><path d="${annulus(r0, r1)}" fill-rule="evenodd" fill="${lin(d, [[0, bm], [1, mix(bd, '#000000', 0.25)]])}"/>` +
+    `${s}<path d="${curls}" fill="none" stroke="${mix(bd, '#000000', 0.2)}" stroke-width=".17"/>` +
+    `<path d="${lights}" fill="none" stroke="${mix(bl, '#ffffff', 0.5)}" stroke-width=".17" stroke-linecap="round"/></g>` +
+    circ(0, 0, r1, `fill="none" stroke="${bd}" stroke-width=".2"`) + circ(0, 0, r0, `fill="none" stroke="${bd}" stroke-width=".2"`);
+}
+/** a crescent moon: the disc of radius r at (x, y) bitten by a disc shifted (dx, dy) */
+function crescent(x: number, y: number, r: number, dx: number, dy: number, r2: number): string {
+  const dd = Math.hypot(dx, dy), ux = dx / dd, uy = dy / dd, a = (r * r - r2 * r2 + dd * dd) / (2 * dd), h = Math.sqrt(Math.max(0, r * r - a * a));
+  const p1 = [x + a * ux - h * uy, y + a * uy + h * ux], p2 = [x + a * ux + h * uy, y + a * uy - h * ux];
+  return `M${f(p1[0])} ${f(p1[1])}A${f(r)} ${f(r)} 0 1 1 ${f(p2[0])} ${f(p2[1])}A${f(r2)} ${f(r2)} 0 0 0 ${f(p1[0])} ${f(p1[1])}Z`;
+}
 function pearl(d: D, o: EmblemOpts): { back: string; ring: string; field: string; front: string } {
-  const [bl, bm, bd] = d.B, ink = '#1a1714', black = o.solid, cream = '#f4ecd8';
+  const [bl, bm, bd] = d.B, ink = '#1a1714', black = o.solid, cream = '#f4ecd8', moon = '#eef3fc';
   // the rose: a card ring with its degrees behind sixteen points, each split into a lit and a shaded half
   let back = circ(0, 0, 11.0, `fill="none" stroke="${ink}" stroke-width=".26"`) + circ(0, 0, 10.45, `fill="none" stroke="${ink}" stroke-width=".2"`);
   let ticks = '';
@@ -177,45 +223,41 @@ function pearl(d: D, o: EmblemOpts): { back: string; ring: string; field: string
   const pts: { a: number; L: number; w: number; c: [string, string] }[] = [];
   for (let i = 0; i < 8; i++) pts.push({ a: 22.5 + i * 45, L: 11.7, w: 8, c: [cream, mix(black, cream, 0.3)] });
   for (let i = 0; i < 4; i++) pts.push({ a: 45 + i * 90, L: 12.9, w: 13, c: [bl, bm] });
-  for (let i = 0; i < 4; i++) pts.push({ a: i * 90, L: i === 0 ? 12.85 : 14.5, w: 17, c: [cream, black] });
+  for (let i = 0; i < 4; i++) pts.push({ a: i * 90, L: i === 0 ? 11.9 : 14.5, w: 17, c: [cream, black] });
   for (const p of pts) {
     const tip = pol(p.L, p.a), axis = pol(8, p.a), l = pol(8.4, p.a - p.w), rr = pol(8.4, p.a + p.w);
     back += shadowOf(poly([l, tip, rr]), 0.22);
     // the lit half faces the upper left: the half on the side nearer to 315°
     const leftLit = lit(p.a - p.w / 2) > lit(p.a + p.w / 2), dark = leftLit ? [axis, tip, rr] : [l, tip, axis];
     back += `<path d="${poly([l, tip, axis])}" fill="${leftLit ? p.c[0] : p.c[1]}"/><path d="${poly([axis, tip, rr])}" fill="${leftLit ? p.c[1] : p.c[0]}"/>`;
-    // the shaded half engraved: strokes along the point (none on the black ones), a fine light line on the lit edge
+    // the shaded half engraved: strokes along the point (none on the black ones)
     if (p.c[1] !== black) {
       const xs = dark.map(q => q[0]), ys = dark.map(q => q[1]);
       back += hatch(d, poly(dark as [number, number][]), [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], 0.4, p.a - 90 + (leftLit ? 9 : -9), 0.17, p.c[1] === bm ? bd : ink, 0.7);
     }
     back += `<path d="${poly([l, tip, rr])}" fill="none" stroke="${ink}" stroke-width=".26" stroke-linejoin="round"/><path d="M${P(axis)}L${P(tip)}" stroke="${ink}" stroke-width=".2"/>`;
   }
-  // the pearl at the north: its lustre, the light at the upper left, the sea's light under it
-  const pg = rad(d, [[0, '#ffffff'], [0.45, '#efe9de'], [0.85, '#b4ad9e'], [1, '#8a8478']], 0.35, 0.3, 0.75);
-  back += shadowOf(circleD(1.15, 0, -13.1), 0.3) + circ(0, -13.1, 1.15, `fill="${pg}" stroke="${ink}" stroke-width=".22"`) +
-    `<path d="M-.75 -12.45A.95 .95 0 0 0 .8 -12.5" fill="none" stroke="#ffffff" stroke-opacity=".75" stroke-width=".2" stroke-linecap="round"/>` + glint(-0.4, -13.5, 0.62);
-  // the ring: a string of pearls, a gold bead between each two, the pearls' shadows on the brass
-  let rg = '';
-  const bead = rad(d, [[0, '#ffffff'], [0.45, '#efe9de'], [0.85, '#b0a998'], [1, '#7e786c']], 0.35, 0.3, 0.75);
-  for (let i = 0; i < 20; i++) { const [x, y] = pol(8.75, i * 18 + 9); rg += circ(x + 0.16, y + 0.22, 0.56, `fill="${SHADE}" fill-opacity=".4"`); }
-  for (let i = 0; i < 20; i++) { const [x, y] = pol(8.75, i * 18); rg += circ(x, y, 0.22, `fill="${bm}" stroke="${bd}" stroke-width=".17"`); }
-  for (let i = 0; i < 20; i++) { const [x, y] = pol(8.75, i * 18 + 9); rg += circ(x, y, 0.56, `fill="${bead}" stroke="${bd}" stroke-width=".18"`) + circ(x - 0.2, y - 0.2, 0.15, 'fill="#ffffff"'); }
-  // the field: mother-of-pearl, the sea at the foot, the mast and its pennant, the yard and the black sail
-  let fl = field(rad(d, [[0, '#fbf7ee'], [0.55, '#e4ddcd'], [0.85, '#c9c0ad'], [1, '#a59c88']]), bd);
-  const clipF = circleD(7.45);
-  const fc = uid(d, 'c'); d.defs.push(`<clipPath id="${fc}"><path d="${clipF}"/></clipPath>`);
+  // the north: a fleur-de-lis in moonlit silver
+  back += fleur(d, -11.75, 0.95, ink);
+  // the ring: a running sea rolling round it
+  const rg = waveBand(d, 8.2, 9.3, 18);
+  // the field: a moonlit night — the sky in level strokes, a crescent moon behind the rigging, stars; the sea at the foot
+  // with the moon's path on it; the mast and its pennant, the yard and the black sail torn and shot through
+  let fl = field(rad(d, [[0, '#7a8cbc'], [0.35, '#45547e'], [0.75, '#252e50'], [1, '#141a30']], 0.68, 0.2, 0.95), bd);
+  const fc = uid(d, 'c'); d.defs.push(`<clipPath id="${fc}"><path d="${circleD(7.45)}"/></clipPath>`);
   let sea = '';
   for (const [y0, k] of [[5.5, 0], [6.4, 0.9], [7.25, 0.3]] as const) { sea += `M${f(-8 + k)} ${y0}`; for (let i = 0; i < 9; i++) sea += `q.45 -.55 .9 0t.9 0`; }
-  // the sky engraved in level strokes, closer towards the foot; the sea under it, its swell hatched
   let sky = '';
   for (let y = -7.3, k = 0; y < 5.4; y += 0.62 - Math.min(0.2, k * 0.012), k++) sky += `M-7.6 ${f(y)}H7.6`;
   const seaD = 'M-8 5.9Q-4 5.2 0 5.7T8 5.6V8H-8Z';
-  fl += `<g clip-path="url(#${fc})"><path d="${sky}" stroke="#9a907c" stroke-width=".17" stroke-opacity=".6"/><path d="${seaD}" fill="#8f8a7e"/>` +
-    hatch(d, seaD, [-8, 5.2, 8, 8], 0.36, 0, 0.17, '#4a453c', 0.7) + `<path d="${sea}" fill="none" stroke="#2a2620" stroke-width=".26"/></g>`;
-  fl += `<path d="M0 -4.6V-7.05" stroke="#4a3018" stroke-width=".5"/><path d="M.15 -7.05Q1.4 -7.15 2.7 -6.55Q1.3 -6.5 .15 -6.1Z" fill="${black}" stroke="${ink}" stroke-width=".17"/>`;
+  fl += `<g clip-path="url(#${fc})"><path d="${sky}" stroke="#0a0e20" stroke-width=".17" stroke-opacity=".5"/>` +
+    `<path d="${crescent(2.4, -6.25, 0.88, -0.48, -0.3, 0.74)}" fill="${moon}" stroke="#0a0e20" stroke-width=".17"/>` +
+    glint(-3.3, -6.15, 0.5, moon) + glint(1.55, -6.75, 0.36, moon) + glint(-6.45, -2.4, 0.36, moon) + glint(6.55, -2.0, 0.36, moon) +
+    `<path d="${seaD}" fill="#2a3452"/>` + hatch(d, seaD, [-8, 5.2, 8, 8], 0.36, 0, 0.17, '#10162c', 0.8) +
+    `<path d="${sea}" fill="none" stroke="#b9cff6" stroke-width=".2"/><path d="M2.4 6.0h1.3M3.0 6.85h1.6M2.6 7.6h1.1" stroke="${moon}" stroke-width=".22" stroke-linecap="round"/></g>`;
+  fl += `<path d="M0 -4.6V-7.05" stroke="#2a1a0c" stroke-width=".5"/><path d="M-.15 -7.05Q-1.4 -7.15 -2.7 -6.55Q-1.3 -6.5 -.15 -6.1Z" fill="${black}" stroke="${ink}" stroke-width=".17"/>`;
   // the stays from the masthead to the yard's arms
-  fl += `<path d="M0 -7.0L-5.4 -4.95M0 -7.0L5.4 -4.95" stroke="#3a2a1a" stroke-width=".17"/>`;
+  fl += `<path d="M0 -7.0L-5.4 -4.95M0 -7.0L5.4 -4.95" stroke="#141826" stroke-width=".17"/>`;
   // the sail: bellied, its foot torn
   const foot: [number, number][] = [];
   for (let i = 0; i <= 12; i++) { const x = 4.9 - i * 9.8 / 12, y = 4.3 + 1.35 * (1 - (x / 4.9) ** 2) + (i % 2 ? -0.55 : 0) + (i === 5 ? -0.5 : 0); foot.push([x, y]); }
@@ -226,15 +268,15 @@ function pearl(d: D, o: EmblemOpts): { back: string; ring: string; field: string
   for (const x of [-3.5, -1.75, 0, 1.75, 3.5]) seams += `M${f(x)} -4.5Q${f(x * 1.2)} 0 ${f(x * 0.92)} ${f(4.1 + 1.35 * (1 - (x * 0.92 / 4.9) ** 2))}`;
   fl += `<path d="${seams}" fill="none" stroke="${mix(black, '#ffffff', 0.3)}" stroke-width=".22"/>`;
   fl += hatch(d, sail, [0.5, -5, 6.6, 6], 0.55, -62, 0.18, '#000000', 0.65) + hatch(d, sail, [3.2, -5, 6.6, 6], 0.55, 28, 0.17, '#000000', 0.6);
-  // the cloth's highlights where the wind fills it: fine light strokes on the belly at the left
-  fl += hatch(d, sail, [-6.6, -4.4, -2.6, 4.6], 0.5, 62, 0.17, mix(black, '#ffffff', 0.55), 0.55);
-  fl += `<path d="M-5.0 -3.9C-5.95 -1.4 -5.85 1.8 -4.55 3.7" fill="none" stroke="${mix(black, '#ffffff', 0.42)}" stroke-width=".32" stroke-linecap="round"/>`;
-  fl += `<path d="M0 5.6V6.6M-4.9 4.3L-6.6 5.4M4.9 4.3L6.6 5.4" stroke="#2a1a0c" stroke-width=".24"/>`;
-  // holes shot through it
-  fl += `<path d="M3.9 -3.75l.5 -.2.25.35-.15.45-.45.1-.3-.3Z" fill="#d9d1c0" stroke="${ink}" stroke-width=".17"/><path d="M-4.15 3.55l.4 -.3.35.2.05.45-.4.2-.35-.15Z" fill="#c9c0ad" stroke="${ink}" stroke-width=".17"/>`;
+  // the moonlight on the cloth where the wind fills it: fine silver strokes on the belly at the left, a lit leech
+  fl += hatch(d, sail, [-6.6, -4.4, -2.6, 4.6], 0.5, 62, 0.17, mix(black, '#b9cff6', 0.6), 0.55);
+  fl += `<path d="M-5.0 -3.9C-5.95 -1.4 -5.85 1.8 -4.55 3.7" fill="none" stroke="${mix(black, '#b9cff6', 0.5)}" stroke-width=".32" stroke-linecap="round"/>`;
+  fl += `<path d="M0 5.6V6.6M-4.9 4.3L-6.6 5.4M4.9 4.3L6.6 5.4" stroke="#141826" stroke-width=".24"/>`;
+  // holes shot through it: the night sky shows through
+  fl += `<path d="M3.9 -3.75l.5 -.2.25.35-.15.45-.45.1-.3-.3Z" fill="#9fb2d8" stroke="${ink}" stroke-width=".17"/><path d="M-4.15 3.55l.4 -.3.35.2.05.45-.4.2-.35-.15Z" fill="#7a8cb4" stroke="${ink}" stroke-width=".17"/>`;
   // the yard
-  fl += `<path d="M-5.75 -4.75Q0 -5.25 5.75 -4.75" fill="none" stroke="#2a1a0c" stroke-width=".95" stroke-linecap="round"/><path d="M-5.6 -4.95Q0 -5.45 5.6 -4.95" fill="none" stroke="#a87a48" stroke-width=".3" stroke-linecap="round"/>`;
-  return { back, ring: rg, field: fl + fieldRule('#ffffff', 0.7), front: '' };
+  fl += `<path d="M-5.75 -4.75Q0 -5.25 5.75 -4.75" fill="none" stroke="#1a120a" stroke-width=".95" stroke-linecap="round"/><path d="M-5.6 -4.95Q0 -5.45 5.6 -4.95" fill="none" stroke="#7a6a58" stroke-width=".3" stroke-linecap="round"/>`;
+  return { back, ring: rg, field: fl + fieldRule('#ffffff', 0.55), front: '' };
 }
 
 // ---- the Revenge: fire, the skull and bones ----
@@ -543,9 +585,9 @@ export function letterBox(letter: string, size: number, cx: number, cy: number) 
 
 /** the emblem of a ship: see the head of the file. Returns one <g> (data-deco when o.deco). */
 export function emblemSvg(key: ShipKey, cx: number, cy: number, R: number, o: EmblemOpts): string {
-  const d: D = { id: o.id + 'm', B: o.brass ?? BRASS, defs: [], n: 0 };
+  const d: D = { id: o.id + 'm', B: key === 'pearl' ? SILVER : o.brass ?? BRASS, defs: [], n: 0 };
   const m = MOTIF[key](d, o), [rf, rl] = RING[key](d);
-  const body = m.back + ring(d, rf, rl, d.B) + m.ring + ringLight(rl, key === 'dutch' ? '#f0d8a8' : '#fff6d8') + m.field + fieldShade(d) + m.front;
+  const body = m.back + ring(d, rf, rl, d.B) + m.ring + ringLight(rl, key === 'dutch' ? '#f0d8a8' : key === 'pearl' ? '#f6f9ff' : '#fff6d8') + m.field + fieldShade(d) + m.front;
   const size = o.size ?? 19, { base, box } = letterBox(o.letter, size, cx, cy);
   const plate = o.plate ? `<rect data-plate="${o.plate}" x="${f(box.x - 1.65)}" y="${f(box.y - 1.65)}" width="${f(box.w + 3.3)}" height="${f(box.h + 3.3)}" fill="none" stroke="none"/>` : '';
   const dark = key === 'pearl' ? '#0a0806' : mix(o.solid, '#000000', 0.6);
