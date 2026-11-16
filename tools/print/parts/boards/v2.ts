@@ -62,7 +62,10 @@ const NEST = { x: 217.5, y: HEAD_Y, w: 66, h: 91 };
 const HEAD = { y: 11.1, h: 26.4, med: 17.3, col: 33, my: 12.1, R: 6.9, letter: 19, side: 7 };
 /** the log under the Legend's nest, on every board (the Dutchman's too: its dive nest and Souls stand in the middle) */
 const LOG = { x: 211.5, y: NEST.y + NEST.h + GAP, w: 75.5, h: BOTTOM - (NEST.y + NEST.h + GAP) };
-const logBox = (ship: Ship) => { void ship; return LOG; };
+/** the Pearl's «Планы — сюда» pointer under her log (boards v6, item 4): its height; the log leaves room for it */
+const PLANS_H = 11;
+const hasPlans = (ship: Ship) => ship.code === 'Ж';
+const logBox = (ship: Ship) => hasPlans(ship) ? { ...LOG, h: LOG.h - PLANS_H - GAP } : LOG;
 /** the log's ruled lines: line height, the body size, the pad over the first line (baseline = top + LH/2 + 0.33 em) */
 const LOGT = { lh: 4.1, size: 9.3, top: 3.4, side: 7.2 };
 /** the log's type, measured in the browser: the largest size (9.3 pt down to 7.6 pt, line height 1.25 em) at which the
@@ -162,8 +165,9 @@ const NAME_O: TO = { font: 'Alegreya', w: 800, ls: '.01em' }, CAPT_O: TO = { fon
 function headerW(ship: Ship): number {
   return HEAD.col + Math.max(W(ship.name, 24, NAME_O), W(ship.captain, 10, CAPT_O), W(ship.motto, 8.5, MOTTO_O)) + 4.5;
 }
-/** a pointer slip: the arrow's axis, the medallion's centre, the words' start (from the slip's left edge), the words' size */
-const PTRG = { arrow: 3.7, medal: 10, text: 14.6, size: 8.5 };
+/** a pointer slip: the arrow's axis, the medallion's centre, the words' start (from the slip's left edge), the words' size;
+ *  a slip pointing right: the medallion's centre, the words' start, the arrow's least length */
+const PTRG = { arrow: 3.7, medal: 10, text: 14.6, size: 8.5, rMedal: 5.6, rText: 10.2, rArrow: 9 };
 const ptrW = (s: string) => PTRG.text + W(s, PTRG.size, PTR) + PAD + 0.4;
 /** the Fires plate: the title's baseline, the slots' top, the height */
 const FIRE = { title: 5.2, slot: 6.8, h: 6.8 + BOARD.fireSlot + 1.3 };
@@ -200,17 +204,18 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
   if (firesLeft) fires.y = shortEnd;
   const leftR = Math.max(...rows.filter(rw => rw.key !== 'hull' && rw.key !== 'souls').map(rw => rw.x + rw.w), firesLeft ? fires.x + fires.w : 0);
   const header: Rect = { x: 12, y: HEAD_Y, w: headerW(ship), h: HEAD.h };
-  // «Эффекты на корабле» and «Планы» — two pointer slips right of the header (its rolls stand 3.2 mm out), the arrow up to the
-  // sheet's top edge; the effects level with the header's top, the Plans level with its bottom
-  const px = header.x + header.w + 3.2 + GAP, pw = Math.min(NEST.x - GAP - px, Math.max(ptrW(TXT.effects), ship.code === 'Ж' ? ptrW(fill(TXT.plans, { n: RULES.plansMax })) : 0));
-  const effects: Rect = { x: px, y: HEAD_Y, w: pw, h: 11 };
-  const plans: Rect | null = ship.code === 'Ж' ? { x: px, y: HEAD_Y + HEAD.h - 11, w: pw, h: 11 } : null;
+  // «Эффекты на корабле» — a pointer slip of its own right of the header (its rolls stand 3.2 mm out), level with its top,
+  // the arrow up to the sheet's top edge, where the cards go (boards v6, item 4: not stacked with the Plans any more)
+  const px = header.x + header.w + 3.2 + GAP, effects: Rect = { x: px, y: HEAD_Y, w: Math.min(NEST.x - GAP - px, ptrW(TXT.effects)), h: 11 };
   // the middle, between the left column and the right one, above the Hull
   const mx = leftR + GAP, mw = MID_R - mx;
   let y = TOP, midBottom = hullRow.y - GAP;
   if (!firesLeft) { fires.x = MID_R - fires.w; fires.y = y; y += fires.h + GAP; }
   // the log under the Legend's nest on every board (boards v6, item 1: the Dutchman's too)
   const log: Rect = { ...LOG, h: logType(ship).h };
+  // the Pearl's «Планы — сюда» — by her log, under it across the right column, the arrow right: the Plans lie face down
+  // beside the board (boards v6, item 4)
+  const plans: Rect | null = hasPlans(ship) ? { x: LOG.x, y: log.y + log.h + GAP, w: LOG.w, h: PLANS_H } : null;
   // the Dutchman (boards v6, item 1): the left column as on the other boards; his Souls (drawn as flasks — not to be taken
   // for the other tracks) at the foot of the middle, right over the Hull's right half, against the right column; the dive
   // nest over them at the middle's left, beside the Guns and their two Volley cells; the ship sails above, in open water
@@ -431,12 +436,18 @@ const hollow = (b: Rect, d: number, k: number) => { const { x, y, w, h } = b;
 /** a pointer to the sheet's top edge (boards v5, item 2): parchment in a double engraved frame with hollow corners; an
  *  engraved arrow up — a barbed head, the shaft, a fletched tail, as the course lines of the chart; the icon in a small
  *  brass medallion; the words in small capitals (in two lines when the slip is short) */
-function pointerSvg(pid: string, b: Rect, words: string, ic: IconName, id: string, L: Look, pal: Pal): string {
-  const out = [slip(pid, b, id, L, false)], ink = pal.deep, line = L.paperLine, cy = b.y + b.h / 2, tx = b.x + PTRG.text;
+function pointerSvg(pid: string, b: Rect, words: string, ic: IconName, id: string, L: Look, pal: Pal, dir: 'up' | 'right' = 'up'): string {
+  const out = [slip(pid, b, id, L, false)], ink = pal.deep, line = L.paperLine, cy = b.y + b.h / 2, right = dir === 'right';
+  const tx = b.x + (right ? PTRG.rText : PTRG.text);
+  // pointing right: the words take what they need (one line, 8.5 pt down to 7.4 pt), the arrow the rest up to the right end
+  const rSize = right ? [8.5, 8.2, 7.9, 7.6, 7.4].find(z => tx + W(words, z, PTR) + 2 + PTRG.rArrow <= b.x + b.w - 2) ?? 7.4 : 0;
+  const aL = right ? Math.max(PTRG.rArrow, b.x + b.w - 2 - (tx + W(words, rSize, PTR) + 2.4)) : b.h - 4;
   out.push(`<path d="${hollow(b, 0.9, 1.3)}" fill="none" stroke="${line}" stroke-width=".3" stroke-opacity=".85"/><path d="${hollow(b, 1.45, 0.85)}" fill="none" stroke="${line}" stroke-width=".13" stroke-opacity=".7"/>`);
   for (const [qx, qy] of [[b.x + 0.9, b.y + 0.9], [b.x + b.w - 0.9, b.y + 0.9], [b.x + 0.9, b.y + b.h - 0.9], [b.x + b.w - 0.9, b.y + b.h - 0.9]]) out.push(`<circle cx="${r(qx)}" cy="${r(qy)}" r=".32" fill="${ink}"/>`);
-  // the arrow: the head with its barbs swept back, the shaft, two vanes of the tail hatched like feathers
-  const ax = b.x + PTRG.arrow, t = b.y + 2, bot = b.y + b.h - 2;
+  // the arrow: the head with its barbs swept back, the shaft, two vanes of the tail hatched like feathers (drawn upright;
+  // pointing right — turned a quarter round its middle, at the slip's right end)
+  const ax = right ? b.x + b.w - 2 - aL / 2 : b.x + PTRG.arrow, t = cy - aL / 2, bot = cy + aL / 2;
+  if (right) out.push(`<g transform="rotate(90 ${r(ax)} ${r(cy)})">`);
   out.push(`<path d="M${r(ax)} ${r(bot - 1)}V${r(t + 1.8)}" stroke="${ink}" stroke-width=".4" stroke-linecap="round"/>`);
   out.push(`<path d="M${r(ax)} ${r(t)}L${r(ax + 1.3)} ${r(t + 2.35)}Q${r(ax + 0.6)} ${r(t + 1.75)} ${r(ax + 0.28)} ${r(t + 1.95)}H${r(ax - 0.28)}Q${r(ax - 0.6)} ${r(t + 1.75)} ${r(ax - 1.3)} ${r(t + 2.35)}Z" fill="${ink}"/><path d="M${r(ax)} ${r(t + 0.6)}V${r(t + 1.7)}" stroke="${L.paper}" stroke-width=".14" stroke-opacity=".8"/>`);
   for (const sd of [-1, 1]) {
@@ -445,13 +456,14 @@ function pointerSvg(pid: string, b: Rect, words: string, ic: IconName, id: strin
     out.push(`<path d="M${r(ax)} ${r(bot - 1.65)}L${r(vx)} ${r(bot - 0.85)}" stroke="${ink}" stroke-width=".12"/>`);
   }
   out.push(`<circle cx="${r(ax)}" cy="${r(bot - 3.2)}" r=".28" fill="${ink}"/>`);
+  if (right) out.push('</g>');
   // the medallion: a brass ring, a light well, the engraved icon
-  const mx = b.x + PTRG.medal;
+  const mx = b.x + (right ? PTRG.rMedal : PTRG.medal);
   out.push(`<circle cx="${r(mx + 0.25)}" cy="${r(cy + 0.35)}" r="3.5" fill="#1a0e04" fill-opacity=".28"/><circle data-plate="${pid}-icon" cx="${r(mx)}" cy="${r(cy)}" r="3.5" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".22"/>` +
     `<circle cx="${r(mx)}" cy="${r(cy)}" r="3.05" fill="none" stroke="${L.brass[2]}" stroke-width=".32" stroke-dasharray=".01 .6" stroke-linecap="round"/><circle cx="${r(mx)}" cy="${r(cy)}" r="2.65" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".18"/>${icon(ic, mx, cy, 4.1, L.tone)}`);
   const o: TO2 = { ...PTR, color: ink, in: pid };
   // one line at 8.5 pt, or a size down to 7.4 pt; two lines only when even that is too long
-  const room = b.x + b.w - PAD - tx, one = [8.5, 8.2, 7.9, 7.6, 7.4].find(z => W(words, z, PTR) <= room);
+  const room = b.x + b.w - PAD - tx, one = right ? rSize : [8.5, 8.2, 7.9, 7.6, 7.4].find(z => W(words, z, PTR) <= room);
   if (one) out.push(text(tx, cy + pt(one) * 0.3, words, one, o));
   else { const cut = words.lastIndexOf(' ', Math.ceil(words.length / 2) + 4), [l1, l2] = [words.slice(0, cut), words.slice(cut + 1)]; out.push(text(tx, cy - 0.95, l1, 7.6, o) + text(tx, cy + 3.05, l2, 7.6, o)); }
   return out.join('');
@@ -673,7 +685,7 @@ function faceSvg(ctx: Ctx, ship: Ship, counters: Counters, plan: Plan, id: strin
   // the header with its rolls is one plate for the gaps (check-layout)
   svg.push(plateRect('header', { x: plan.header.x - 3.2, y: plan.header.y - 0.5, w: plan.header.w + 6.4, h: plan.header.h + 1 }));
   svg.push(pointerSvg('effects', plan.effects, TXT.effects, 'effects', id, L, pal));
-  if (plan.plans) svg.push(pointerSvg('plans', plan.plans, fill(TXT.plans, { n: RULES.plansMax }), 'plan', id, L, pal));
+  if (plan.plans) svg.push(pointerSvg('plans', plan.plans, fill(TXT.plans, { n: RULES.plansMax }), 'plan', id, L, pal, 'right'));
   for (const rw of plan.rows) svg.push(rowSvg(rw, id, L, pal, ship));
   svg.push(firesSvg(plan.fires, id, L, pal));
   if (plan.dutch) svg.push(dutchSvg(plan.dutch, id, L, pal));
