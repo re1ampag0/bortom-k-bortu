@@ -552,7 +552,7 @@ function logInner(ship: Ship, L: Look, id: string): string {
   // small capitals, an ornamental rule running out to the margin — then the text
   const ab = ship.abilities.map(a => {
     const once = /раз в ход/i.test(a.text), ic = ABILITY_ICON[a.name], [c0, rest] = [a.name.slice(0, 1), a.name.slice(1)];
-    return `${once ? `<div class="v2-tick">${onceCell(L, id)}</div>` : ''}${ic ? `<div class="v2-ic">${iconSvg(ic, 7.6, L.tone)}</div>` : ''}<div class="v2-an"><span class="v2-nm"><b>${esc(c0)}</b>${esc(rest)}</span><span class="v2-orn"></span>${once ? `<i>${esc(TXT.once)}</i>` : ''}</div><div class="v2-p">${richNb(a.text)}</div>`;
+    return `${once ? `<div class="v2-tick">${onceCell(L, id)}<i>${esc(TXT.once)}</i></div>` : ''}${ic ? `<div class="v2-ic">${iconSvg(ic, 7.6, L.tone)}</div>` : ''}<div class="v2-an"><span class="v2-nm"><b>${esc(c0)}</b>${esc(rest)}</span><span class="v2-orn"></span></div><div class="v2-p">${richNb(a.text)}</div>`;
   }).join('');
   // «Души: в свой ход 1 Душа = 1 Корпус или 1 Команда» is not repeated here: «Вечная служба» already says it
   const extra = [TXT.heart[ship.code] ?? ''].filter(Boolean).map(t => `<div class="v2-p">${richNb(t)}</div>`).join('');
@@ -571,9 +571,9 @@ export const V2_CSS = `
 .v2-log *{line-height:var(--lh)}
 .v2-h{font:italic 500 11.5pt Alegreya,serif;color:var(--c);position:relative;top:var(--lift-h)}
 .v2-an{display:flex;align-items:baseline;gap:1.4mm;font:800 10pt 'Alegreya SC',serif;letter-spacing:.04em;color:var(--c);position:relative;top:var(--lift-n)}
-.v2-an .v2-nm{flex:none}
+.v2-an .v2-nm{flex:0 1 auto;min-width:0}
 .v2-an .v2-nm b{font:800 13pt Alegreya,serif;letter-spacing:0;margin-right:.1mm}
-.v2-an .v2-orn{flex:1;align-self:center;height:1.4mm;margin-top:-.6mm;min-width:4mm;background:radial-gradient(circle,var(--c) 0 .32mm,transparent .36mm) 0 50%/1.4mm 1.4mm no-repeat,linear-gradient(to right,var(--c),transparent) 1.9mm 50%/100% .28mm no-repeat;opacity:.75}
+.v2-an .v2-orn{flex:1;align-self:center;height:1.4mm;margin-top:-.6mm;min-width:0;background:radial-gradient(circle,var(--c) 0 .32mm,transparent .36mm) 0 50%/1.4mm 1.4mm no-repeat,linear-gradient(to right,var(--c),transparent) 1.9mm 50%/100% .28mm no-repeat;opacity:.75}
 .v2-ic{float:left;width:8.2mm;height:calc(var(--lh) * 2);margin:0 1.6mm 0 -.4mm;display:flex;align-items:center;justify-content:center}
 .v2-ic svg{display:block}
 .v2-an i{display:inline-flex;align-items:center;gap:.8mm;font:italic 500 var(--fs) Alegreya,serif;letter-spacing:0;color:var(--soft)}
@@ -581,7 +581,8 @@ export const V2_CSS = `
 .v2-p{margin:0 0 var(--lh)}
 .v2-p:last-child{margin-bottom:0}
 .v2-p b{font-weight:800}
-.v2-tick{float:right;width:13mm;height:calc(var(--lh) * 3.4);margin:0 0 0 2mm}
+.v2-tick{float:right;width:13.4mm;height:calc(13mm + var(--lh) + .6mm);margin:0 0 0 2mm;display:flex;flex-direction:column;align-items:center}
+.v2-tick i{display:block;font:italic 500 var(--fs) Alegreya,serif;letter-spacing:0;color:var(--soft);white-space:nowrap;margin-top:.6mm}
 `;
 
 /** Sheet 04 with counters 'strip' (portrait like the rest of 04): four strips, one per ship, cut along the dashed lines
