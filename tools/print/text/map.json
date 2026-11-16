@@ -22,13 +22,16 @@
     { "kind": "town", "text": "la Hauana", "lon": -82.36, "lat": 23.13, "dx": 0, "dy": 0.32 },
     { "kind": "town", "text": "S. Iuan", "lon": -66.1, "lat": 18.47, "dx": 0.05, "dy": 0.3 },
     { "kind": "town", "text": "S. Iago", "lon": -75.83, "lat": 20.02, "dx": 0, "dy": -0.25 },
+    { "kind": "town", "text": "Nassau", "lon": -77.34, "lat": 25.06, "dx": 0.05, "dy": 0.22 },
+    { "kind": "small", "text": "Nueua Prouidencia", "lon": -77.4, "lat": 24.9 },
+    { "kind": "small", "text": "Andros", "lon": -78.0, "lat": 24.4 },
     { "kind": "town", "text": "Cartagena", "lon": -75.53, "lat": 10.42, "dx": 0.2, "dy": -0.28 }
   ],
   "title": "Carta de las Islas de Barlovento y Mar del Norte",
   "scale": "Escala de Leguas",
   "notes": {
     "pearl": ["здесь Пороху не жалеть", "уйти по ветру"],
-    "revenge": ["здесь Пороху не жалеть", "пленных не брать"],
+    "revenge": ["пленных не брать"],
     "endeavour": [],
     "dutch": []
   }

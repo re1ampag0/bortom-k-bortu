@@ -88,13 +88,13 @@ interface FrameText {
   footer: string[];
   wreck: { title: string; section: string; captainLine: string; ally: string[]; clear: Record<string, string>; jones: string; free: string };
 }
-const TXT = (JSON.parse(fs.readFileSync(path.join(HERE, 'text/boards.json'), 'utf8')) as { frame: FrameText }).frame;
+export const TXT = (JSON.parse(fs.readFileSync(path.join(HERE, 'text/boards.json'), 'utf8')) as { frame: FrameText }).frame;
 const RULES = data.rules as Record<string, number>;
 const fill = (s: string, v: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k: string) => String(v[k] ?? ''));
 const nb = (s: string) => s.replace(/(\d) (?=[«А-Яа-яЁё])/g, '$1 ').replace(/([А-Яа-яЁё]) (?=\d+[).,;:])/g, '$1 ');
 const richNb = (s: string) => rich(nb(s)).replace(/\d+ <img class="s-i"[^>]*><span class="s-w"[^>]*>[^<]*<\/span>/g, m => `<span class="bo2-nb">${m}</span>`);
 /** **bold** of the md texts → HTML */
-const md = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+export const md = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 
 // ---- geometry, mm ----
 export const PAGE = { w: 297, h: 210 };
@@ -405,7 +405,7 @@ function checkPal(pal: Pal, who: string, plate?: number) {
 }
 
 let UID = 0;
-const artOf = (ctx: Ctx) => async (key: string, svg: string, bleed = 0) => (await makeArt(ctx, key, svg, null, bleed)).url;
+export const artOf = (ctx: Ctx) => async (key: string, svg: string, bleed = 0) => (await makeArt(ctx, key, svg, null, bleed)).url;
 
 /** One face of a board in concept a or b. */
 export async function framePage(ctx: Ctx, ship: Ship, concept: Concept, mat: ShipMaterial): Promise<{ html: string; css: string }> {
@@ -449,9 +449,9 @@ export function rulesLine(prefix: string): string {
 }
 const W = { m: 12, text: 104, side: 72 };
 /** the reference marks of rules.md («(Q6)») are for the rule book only: the board keeps the words */
-const noRef = (s: string) => s.replace(/\s*\((?:Q\d+(?:,\s*)?)+\)/g, '');
+export const noRef = (s: string) => s.replace(/\s*\((?:Q\d+(?:,\s*)?)+\)/g, '');
 /** «Сердце Дейви Джонса»: the data's own sentence about the sunk Endeavour */
-const jonesLine = (ship: Ship) => ship.abilities.map(a => a.text.match(/Если «Индевор» утонул[^<]*?до старта\./)?.[0]).find(Boolean);
+export const jonesLine = (ship: Ship) => ship.abilities.map(a => a.text.match(/Если «Индевор» утонул[^<]*?до старта\./)?.[0]).find(Boolean);
 export function wreckLayout(ship: Ship, pal: Pal, uid: string): Omit<WreckGeo, 'kit' | 'art'> {
   // the text in 13 pt over the upper two thirds of the sheet; the wreck shows under it and round it (margins ≥ 10 mm)
   const title = { x: W.m + 4, y: W.m + 4, w: 150, h: 19 }, text = { x: W.m + 4, y: 41, w: 162, h: W.text }, side = { x: 186, y: 41, w: PAGE.w - W.m - 4 - 186, h: jonesLine(ship) ? W.text : W.side };

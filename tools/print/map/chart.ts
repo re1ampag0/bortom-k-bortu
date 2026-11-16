@@ -341,7 +341,7 @@ export function chartSvg(o0: ChartOpts): string {
       small: { f: 'Old Standard TT', w: 400, it: true, s: 2.2 * Math.max(0.9, Math.min(1.8, k)), ls: 0.25, op: 0.8 }
     }[lb.kind];
     if (lb.kind === 'town') { const t = mm(lb.lon, lb.lat); out.push(town(t.x, t.y, 1.6 * Math.max(0.8, Math.min(1.8, k)), L.ink, L.land)); obst.push({ x: t.x - 2.2 * k, y: t.y - 3 * k, w: 4.4 * k, h: 3.4 * k }); }
-    const wide = lb.text.length * st.s * 0.53 + (lb.text.length - 1) * st.ls + 1, sea = !field.land(o.labelsAt?.[lb.text] ?? mm(lb.lon, lb.lat));
+    const wide = lb.text.length * st.s * 0.53 + (lb.text.length - 1) * st.ls + 1, sea = !o.labelsAt?.[lb.text] && !field.land(mm(lb.lon, lb.lat));
     const boxAt = (p: Pt): Rect => { const a = ang * Math.PI / 180, c = Math.abs(Math.cos(a)), sn = Math.abs(Math.sin(a)), hw = wide / 2, hh = st.s * 0.62, cy = p.y - st.s * 0.3; return { x: p.x - hw * c - hh * sn - 0.6, y: cy - hw * sn - hh * c - 0.6, w: 2 * (hw * c + hh * sn) + 1.2, h: 2 * (hw * sn + hh * c) + 1.2 }; };
     let p: Pt | null = null;
     const tries: [number, number][] = [[0, 0]]; for (const d of [1, 2, 3, 4, 5]) for (const dx of [0, -0.3, 0.3, -0.6, 0.6]) tries.push([dx, -d], [dx, d]); for (const dx of [-0.3, 0.3, -0.6, 0.6]) tries.splice(1, 0, [dx, 0]);

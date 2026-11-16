@@ -16,7 +16,7 @@ import { material as pearl } from './boards/pearl';
 import { material as revenge } from './boards/revenge';
 import { material as endeavour } from './boards/endeavour';
 import { material as dutch } from './boards/dutch';
-import { boardV2, V2_CSS } from './boards/v2';
+import { boardV2, wreckV2, V2_CSS } from './boards/v2';
 
 const require = createRequire(import.meta.url);
 /** The ships of the art kit (tools/card-art/scenes/kit/ship.cjs): the same ships as on the card backs. */
@@ -318,11 +318,11 @@ export const BOARD_CSS = `${RICH_CSS}${FRAME_CSS}${V2_CSS}
 
 const withCss = (p: { html: string; css: string }): PageSpec => ({ html: (p.css ? `<style>${p.css}</style>` : '') + p.html, land: true });
 /** The back «Затонул» of a board (the same in both concepts, in the ship's style). */
-export async function wreckBack(ctx: Ctx, ship: Ship): Promise<PageSpec> { return withCss(await wreckPage(ctx, ship, MATERIALS[DECK_KEY[ship.code]])); }
+export async function wreckBack(ctx: Ctx, ship: Ship, concept: Concept = 'b'): Promise<PageSpec> { return withCss(concept === 'b' ? await wreckV2(ctx, ship, MATERIALS[DECK_KEY[ship.code]]) : await wreckPage(ctx, ship, MATERIALS[DECK_KEY[ship.code]])); }
 /** Face, back, face, back…: printed on both sides, flipped on the short edge. */
 async function boardsPart(ctx: Ctx, concept: Concept, file: string): Promise<Part> {
   const pages: PageSpec[] = [];
-  for (const ship of data.ships) pages.push(await boardPage(ctx, ship, concept), await wreckBack(ctx, ship)); // one at a time: makeArt has a single raster page
+  for (const ship of data.ships) pages.push(await boardPage(ctx, ship, concept), await wreckBack(ctx, ship, concept)); // one at a time: makeArt has a single raster page
   return { file, title: TXT.title + (concept === 'b' ? ' (концепт Б)' : ''), css: BOARD_CSS, pages, duplex: 'short' };
 }
 

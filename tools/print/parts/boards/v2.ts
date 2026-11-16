@@ -16,7 +16,7 @@ import { CHART_NOTES, chartPoint, chartSvg, type ChartOpts, type ChartStyle, typ
 import { rasterJpeg } from '../../map/raster';
 import { centerFor } from '../../map/proj';
 import { icon, iconSvg, TONE, type IconName, type IconTone } from '../icons';
-import { basePalette, measureMissing, widthOf, type Pal, type ShipKey, type TO, type TrackKey } from './frame';
+import { KIT, TXT as FTXT, artOf, basePalette, jonesLine, md, measureMissing, noRef, rulesLine, rulesSection, widthOf, wreckLayout, type Pal, type ShipKey, type ShipMaterial, type TO, type TrackKey, type WreckGeo } from './frame';
 
 export type Counters = 'board' | 'strip';
 const require = createRequire(import.meta.url);
@@ -86,14 +86,15 @@ const LOOKS: Record<ShipKey, Look> = {
   },
   revenge: {
     chart: 'revenge', mmPerDeg: 36, tone: TONE.red,
-    board: { anchor: { lon: -76.8, lat: 18.1, x: 170, y: 92 }, ship: [140, 62, 64, 34], rose: [196, 48, 9] },
-    strip: { anchor: { lon: -76.8, lat: 18.1, x: 170, y: 110 }, ship: [148, 70, 76, 44], rose: [120, 150, 12] },
+    board: { anchor: { lon: -77.35, lat: 25.04, x: 172, y: 84 }, ship: [132, 70, 58, 32], rose: [113, 104, 8], labels: { 'Islas Lucayas': { x: 184.5, y: 50 } }, note: [146, 100] },
+    strip: { anchor: { lon: -77.35, lat: 25.04, x: 172, y: 96 }, ship: [140, 72, 70, 40], rose: [118, 150, 11], labels: { 'Islas Lucayas': { x: 186, y: 128 } }, note: [150, 150] },
     paper: '#f2e2c0', paperLine: '#5a2416', ink: '#2e1a10', soft: '#4f3326', cell: '#f8ecd2', cellDeep: '#e6cca0',
-    brass: ['#f3d68c', '#c4954a', '#5e4214'], note: '#f5e8cc', noteLine: '#c4a07a', margin: '#9a1f14', pin: '#1a1a1a'
+    brass: ['#f3d68c', '#c4954a', '#5e4214'], note: '#f5e8cc', noteLine: '#c4a07a', margin: '#9a1f14', pin: '#1a1a1a',
+    notes: (at, p) => { const t = at(-77.34, 25.06); return { cross: { x: t.x + 1, y: t.y + 1 }, course: [{ x: p.ship[0] + 30, y: p.ship[1] + 4 }, { x: (p.ship[0] + t.x) / 2 + 10, y: t.y + 14 }, { x: t.x - 6, y: t.y + 5 }], note: p.note ? [{ x: p.note[0], y: p.note[1], text: CHART_NOTES.revenge[0], rot: -4, size: 4 }] : [] }; }
   },
   endeavour: {
     chart: 'endeavour', mmPerDeg: 40, tone: TONE.navy,
-    board: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 96 }, ship: [140, 66, 64, 36], rose: [198, 46, 9] },
+    board: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 96 }, ship: [140, 66, 64, 36], rose: [198, 46, 9], labels: { 'Iamaica': { x: 170, y: 82 } } },
     strip: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 120 }, ship: [148, 72, 76, 44], rose: [120, 154, 12] },
     paper: '#f8f1de', paperLine: '#1f2a3a', ink: '#1a2232', soft: '#33405a', cell: '#fbf6e8', cellDeep: '#e6dcc0',
     brass: ['#f6dc94', '#c99a46', '#5e4214'], note: '#fbf6e6', noteLine: '#a8b8cc', margin: '#a03a2a', pin: '#a8812e'
@@ -101,7 +102,7 @@ const LOOKS: Record<ShipKey, Look> = {
   dutch: {
     chart: 'dutch', mmPerDeg: 36, tone: TONE.verdigris,
     board: { anchor: { lon: -68.0, lat: 18.4, x: 190, y: 100 }, ship: [0, 0, 0, 0], rose: [200, 50, 8] },
-    strip: { anchor: { lon: -68.0, lat: 18.4, x: 190, y: 150 }, ship: [158, 150, 80, 40], rose: [196, 118, 9] },
+    strip: { anchor: { lon: -68.0, lat: 18.4, x: 186, y: 64 }, ship: [156, 152, 80, 36], rose: [118, 152, 9] },
     paper: '#e9e4c8', paperLine: '#22322a', ink: '#1c2620', soft: '#33443a', cell: '#f0ecd6', cellDeep: '#d4d0b0',
     brass: ['#d8cf98', '#8f8a52', '#3a3a22'], note: '#ecebd4', noteLine: '#9aa890', margin: '#4a6a58', pin: '#2a3a32'
   }
@@ -204,9 +205,9 @@ function defsOf(id: string, L: Look): string {
 </defs>`;
 }
 /** a slip of parchment pasted on the chart, a little translucent (the chart under it is calmed): a soft shadow, a double rule */
-function slip(pid: string, b: Rect, id: string, L: Look, rule = true): string {
+function slip(pid: string, b: Rect, id: string, L: Look, rule = true, op = 0.9): string {
   return `<rect x="${r(b.x + 0.5)}" y="${r(b.y + 0.7)}" width="${r(b.w)}" height="${r(b.h)}" rx="1.4" fill="#1a0e04" fill-opacity=".24"/>` +
-    `<rect data-plate="${pid}" x="${r(b.x)}" y="${r(b.y)}" width="${r(b.w)}" height="${r(b.h)}" rx="1.4" fill="url(#${id}paper)" fill-opacity=".9" stroke="${L.paperLine}" stroke-opacity=".55" stroke-width=".25"/>` +
+    `<rect data-plate="${pid}" x="${r(b.x)}" y="${r(b.y)}" width="${r(b.w)}" height="${r(b.h)}" rx="1.4" fill="url(#${id}paper)" fill-opacity="${op}" stroke="${L.paperLine}" stroke-opacity=".55" stroke-width=".25"/>` +
     (rule ? `<rect x="${r(b.x + 1)}" y="${r(b.y + 1)}" width="${r(b.w - 2)}" height="${r(b.h - 2)}" rx=".8" fill="none" stroke="${L.paperLine}" stroke-opacity=".6" stroke-width=".18"/>` : '');
 }
 /** a cell: a brass rim round a clean recessed well (an 11 mm marker lies in it; its number stands above) */
@@ -453,6 +454,32 @@ export const V2_CSS = `
 .v2-p b{font-weight:800}
 .v2-tick{float:right;width:13mm;height:calc(var(--lh) * 3.4);margin:0 0 0 2mm}
 `;
+
+/** The back «Затонул» in the v2 manner: the material's sea-floor scene stays; the title is a cartouche like the face's
+ *  header, the rules lie on a waterlogged slip of parchment, the captain's two cells are brass-rimmed with their icons. */
+export async function wreckV2(ctx: Ctx, ship: Ship, mat: ShipMaterial): Promise<{ html: string; css: string }> {
+  const key = DECK_KEY[ship.code] as ShipKey, Lk = LOOKS[key], base = basePalette(ship.color), pal = mat.palette ? mat.palette(base) : base, id = `v2w${++UID}`;
+  const w: WreckGeo = { ...wreckLayout(ship, pal, id), kit: KIT, art: artOf(ctx) };
+  const L = await mat.wreck(w), sec = rulesSection(FTXT.wreck.section), z = w.zones, svg: string[] = [defsOf(id, Lk), L.under ?? ''];
+  // the title: a cartouche with the medallion
+  const tb = { x: z.title.x, y: z.title.y, w: Math.max(118, 24 + W(FTXT.wreck.title, 26, { ...LABEL, ls: '.06em' }) + 6, 24 + W(`${ship.name} · ${ship.captain}`, 12, { font: 'Alegreya', italic: true }) + 4), h: 21.8 };
+  svg.push(slip('wtitle', tb, id, Lk, true, 1));
+  svg.push(`<g data-plate="wtitle-medal"><circle cx="${tb.x + 11.5}" cy="${tb.y + tb.h / 2}" r="8.4" fill="url(#${id}brh)" stroke="${Lk.brass[2]}" stroke-width=".3"/><circle cx="${tb.x + 11.5}" cy="${tb.y + tb.h / 2}" r="7" fill="${pal.solid}"/></g>` + text(tb.x + 11.5, tb.y + tb.h / 2 + pt(20) * 0.33, ship.code, 20, { font: 'Alegreya SC', w: 800, color: '#fff8e6', anchor: 'middle', in: 'wtitle-medal' }));
+  svg.push(text(tb.x + 23.5, tb.y + 10.95, FTXT.wreck.title, 26, { ...LABEL, ls: '.06em', color: pal.deep, in: 'wtitle' }));
+  svg.push(text(tb.x + 23.5, tb.y + 18.6, `${ship.name} · ${ship.captain}`, 12, { font: 'Alegreya', italic: true, w: 500, color: Lk.ink, in: 'wtitle' }));
+  // the rules and the captain's side: slips of parchment over the scene
+  svg.push(slip('wtext', { x: z.text.x - 2.5, y: z.text.y - 2.5, w: z.text.w + 5, h: z.text.h + 5 }, id, Lk, true, 1));
+  svg.push(slip('wside', { x: z.side.x - 2.5, y: z.side.y - 2.5, w: z.side.w + 5, h: z.side.h + 5 }, id, Lk, true, 1));
+  const icons: IconName[] = ['cards', 'reaction'];
+  w.slots.forEach((c, i) => { svg.push(cellSvg(`wcell${i}`, c.x, c.y, id, Lk) + ico(icons[i], c.x + C + 5, c.y + C / 2, 6, Lk.tone, `wcell${i}-icon`)); });
+  svg.push(ico('crew', z.side.x + 3.4, z.side.y + 3.4, 6, Lk.tone, 'wside-icon'));
+  svg.push(L.over ?? '');
+  const jones = jonesLine(ship);
+  const side = FTXT.wreck.ally.map((t, i) => `<div class="bo2-al v2w-al" data-in="wside" style="top:${r(w.slots[i].y - z.side.y)}mm">${esc(t)}</div>`).join('');
+  const html = `<div class="bo2-abs bo2-wtext bo2-txt" data-in="wtext" data-name="правила «Корабль тонет»" style="left:${r(z.text.x)}mm;top:${r(z.text.y)}mm;width:${r(z.text.w)}mm;height:${r(z.text.h)}mm;--ink:${Lk.ink}"><div class="bo2-h" style="color:${pal.deep}">${esc(FTXT.wreck.section)}</div>${sec.p.map(p => `<p>${md(noRef(p))}</p>`).join('')}<ul>${sec.li.map(l => `<li>${md(noRef(l))}</li>`).join('')}</ul><p class="bo2-wq">${md(noRef(rulesLine(FTXT.wreck.captainLine)))}</p></div>
+<div class="bo2-abs bo2-wside bo2-txt" style="left:${r(z.side.x)}mm;top:${r(z.side.y)}mm;width:${r(z.side.w)}mm;height:${r(z.side.h)}mm;--ink:${Lk.ink}"><div class="bo2-h v2w-h" style="color:${pal.deep}"><span data-in="wside">${esc(FTXT.wreck.free)}</span></div>${side}<div class="bo2-wl" data-in="wside" data-name="что снять" style="top:${r(w.slots[1].y + 21 - z.side.y)}mm"><p>${esc(FTXT.wreck.clear[ship.code] ?? FTXT.wreck.clear._)}</p>${jones ? `<p><b>${esc(FTXT.wreck.jones)}</b> ${esc(noRef(jones))}</p>` : ''}</div></div>`;
+  return { html: `<div class="bo2 bo2-${key}"><svg class="bo2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html}</div>`, css: `.v2w-h{padding-left:8mm}.v2w-al{left:${r(C + 10)}mm !important}` + (L.css ?? '') };
+}
 
 /** Sheet 04 with counters 'strip' (portrait like the rest of 04): four strips, one per ship, cut along the dashed lines
  *  (a runner of the same size can replace one later): the letter, «Осталось карт» 6…0, «Реакций сыграно» 0…3. */
