@@ -156,7 +156,7 @@ export const SEA: Record<ShipKey, Sea> = {
     sand: ['#f6e8c4', '#d8be8c', '#94805e'], fish: ['#f4c64c', 0.9], coral: ['#c8907a', '#c8a47a', '#a8808e'], weed: ['#5a8a4a', '#6a9a56', '#466e3c'],
     rag: '#d8ccaa', hz: 150,
     ship: {
-      ...SHIP0, x: 200, y: 182, scale: 1.25, roll: -12, tilt: 6, brk: [0.3, 0.6, 0.22], bow: 14, stern: 3, sprit: 6, fall: { mast: 0, side: -1, ty: 180 },
+      ...SHIP0, x: 194, y: 182, scale: 1.25, roll: -12, tilt: 6, brk: [0.3, 0.6, 0.22], bow: 14, stern: 3, sprit: 6, fall: { mast: 0, side: -1, ty: 180 },
       holes: [{ X: -24, t: 0.62, r: 1.5, kind: 'shot' }, { X: -12, t: 0.35, r: 2.6, kind: 'breach' }],
       fade: 0.8, growth: 0.8, rags: 0.8, yards: [1], slack: 1.6, torn: 2, rot: 3,
       split: { X: 18, dx: 13, drop: 2.5, rot: 13 }, drifts: [[176, 9, 4]]
@@ -168,7 +168,7 @@ export const SEA: Record<ShipKey, Sea> = {
       { kind: 'spyglass', x: 146, y: 191, s: 1.1, rot: 4, sink: 0.3, name: 'spyglass' },
       // the middle
       { kind: 'coinSpill', x: 118, y: 199, s: 1.0, sink: 0.15, opt: { n: 6, w: 14 }, name: 'coins' },
-      { kind: 'epaulette', x: 176, y: 199, s: 1.7, rot: 4, sink: 0.12, name: 'epaulette' },
+      { kind: 'epaulette', x: 176, y: 199, s: 1.8, rot: 4, sink: 0.08, opt: { coral: 0 }, name: 'epaulette' },
       { kind: 'gun', x: 230, y: 197, s: 0.9, rot: 2, sink: 0.3, drift: 0.2, name: 'cannon' },
       // the front row
       { kind: 'anchor', x: 26, y: 206, s: 0.85, rot: 100, sink: 0.3, name: 'anchor' },

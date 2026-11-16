@@ -290,11 +290,11 @@ export function epaulette(id: string, R: () => number): string {
   out += `<path d="M-2.8 -4.4L-1.6 -7.6H1.6L2.8 -4.4Z" fill="url(#${id}r)" stroke="#2e1008" stroke-width=".18"/><path d="M-2.1 -5.4H2.1M-1.8 -6.6H1.8" stroke="#d8b860" stroke-width=".35" stroke-opacity=".75"/><ellipse cx="0" cy="-7.7" rx="1" ry=".7" fill="url(#${id}p)" stroke="#2e2008" stroke-width=".15"/>`;
   // the fringe: thick twisted cords fanned out round the front half of the crescent, each curling at its end
   let fr = '';
-  for (let i = 0; i < 17; i++) {
-    const t = i / 16, a = Math.PI * (0.06 + t * 0.88), x0 = -Math.cos(a) * 5.6, y0 = -3 + Math.sin(a) * 1.3, l = 2.6 + R() * 1.4, dx = -Math.cos(a) * l * 1.1, dy = Math.sin(a) * l * 0.55;
+  for (let i = 0; i < 38; i++) {
+    const t = i / 37, a = Math.PI * (0.03 + t * 0.94), x0 = -Math.cos(a) * 5.7, y0 = -3.2 + Math.sin(a) * 1.5, l = 2.2 + R() * 0.8, dx = -Math.cos(a) * l * 0.7, dy = Math.sin(a) * l * 0.7;
     const e: P = [x0 + dx, Math.min(-0.2, y0 + dy)];
-    fr += `<path d="M${f(x0)} ${f(y0)}Q${f(x0 + dx * 0.6)} ${f(y0 + dy * 0.2)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="#3e2c0c" stroke-width="1.15" stroke-linecap="round"/><path d="M${f(x0)} ${f(y0)}Q${f(x0 + dx * 0.6)} ${f(y0 + dy * 0.2)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="url(#${id}f)" stroke-width=".8" stroke-linecap="round"/>` +
-      `<path d="M${f(x0)} ${f(y0)}Q${f(x0 + dx * 0.6)} ${f(y0 + dy * 0.2)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="#5a400e" stroke-width=".8" stroke-dasharray=".22 .38"/>`;
+    fr += `<path d="M${f(x0)} ${f(y0)}Q${f(x0 + dx * 0.6)} ${f(y0 + dy * 0.2)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="#3e2c0c" stroke-width=".72" stroke-linecap="round"/><path d="M${f(x0)} ${f(y0)}Q${f(x0 + dx * 0.6)} ${f(y0 + dy * 0.2)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="url(#${id}f)" stroke-width=".48" stroke-linecap="round"/>` +
+      `<path d="M${f(x0)} ${f(y0)}Q${f(x0 + dx * 0.6)} ${f(y0 + dy * 0.2)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="#5a400e" stroke-width=".48" stroke-dasharray=".18 .3"/>`;
   }
   out += fr;
   // the crescent pad: an oval of gold lace with a raised rim, an embroidered star in its middle

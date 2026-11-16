@@ -345,7 +345,7 @@ export const PROP_DEFS: Record<PropKind, PropDef> = {
   ingots: { mat: 'gold', draw: (e, o) => own(o, ingots(e.u + 'ig', rng(o.seed), Number(o.opt.n ?? 3))) },
   coinSpill: { mat: 'gold', draw: (e, o) => own(o, coinSpill(e.u + 'cs', rng(o.seed), Number(o.opt.n ?? 10), Number(o.opt.w ?? 18))) },
   spyglass: { mat: 'brass', draw: (e, o) => own(o, spyglass(e.u + 'sg', rng(o.seed))) },
-  epaulette: { mat: 'brass', draw: (e, o) => own(o, epaulette(e.u + 'ep', rng(o.seed))) },
+  epaulette: { mat: 'gold', draw: (e, o) => own(o, epaulette(e.u + 'ep', rng(o.seed))) },
   button: { mat: 'brass', draw: (e, o) => own(o, button(e.u + 'bt')) },
   wheel: { mat: 'wood', draw: (e, o) => own(o, wheel(e.u + 'wh', rng(o.seed))) },
   /** opt.sail: the colour of the rag on the yard */
