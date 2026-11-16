@@ -374,7 +374,7 @@ function firesSvg(b: Rect, id: string, L: Look, pal: Pal): string {
     const x = b.x + PAD + i * (s + 3);
     out.push(`<rect x="${r(x + 0.4)}" y="${r(y0 + 0.5)}" width="${s}" height="${s}" rx="2.2" fill="#1a0e04" fill-opacity=".3"/><rect data-plate="fires-${i}" x="${r(x)}" y="${r(y0)}" width="${s}" height="${s}" rx="2.2" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".22"/>`);
     out.push(`<rect x="${r(x + 1)}" y="${r(y0 + 1)}" width="${r(s - 2)}" height="${r(s - 2)}" rx="1.4" fill="${mix(L.cell, '#c4602f', 0.1)}" stroke="${L.brass[2]}" stroke-width=".2"/>`);
-    out.push(`<g opacity=".34">${icon('fire', x + s / 2, y0 + s / 2, 15.5, L.tone)}</g>`);
+    out.push(`<g opacity=".55">${icon('fire', x + s / 2, y0 + s / 2, 15.5, L.tone)}</g>`);
   }
   return out.join('');
 }
