@@ -190,7 +190,7 @@ function cutOut(a: { x: number; y: number }, b: { x: number; y: number }, c: Rec
 }
 /** an engraved rhumb line between two nests: a barbed head at both ends (the fire goes both ways), dashed for the
  *  diagonal; a soft band of paper under it so it reads over the chart; cut where a note's patch lies on it */
-function course(a: { x: number; y: number }, b: { x: number; y: number }, dash: string, cut: Rect | null): string {
+function course(a: { x: number; y: number }, b: { x: number; y: number }, dash: string, cut: Rect | null, ink = NOTE_INK, sw = 0.4, hdk = 1): string {
   const len = Math.hypot(b.x - a.x, b.y - a.y), ux = (b.x - a.x) / len, uy = (b.y - a.y) / len, hd = 2.6;
   const P = (t: number) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
   let d = '';
@@ -199,7 +199,7 @@ function course(a: { x: number; y: number }, b: { x: number; y: number }, dash: 
     d += `M${r(p.x + ux * s0)} ${r(p.y + uy * s0)}L${r(q.x - ux * s1)} ${r(q.y - uy * s1)}`;
   }
   return `<path d="${d}" stroke="${LOOK.halo}" stroke-opacity=".7" stroke-width="1.5" fill="none" stroke-linecap="round"/>` +
-    `<path d="${d}" stroke="${NOTE_INK}" stroke-width=".4" fill="none"${dash ? ` stroke-dasharray="${dash}"` : ''}/>${barb(a.x, a.y, -ux, -uy)}${barb(b.x, b.y, ux, uy)}`;
+    `<path d="${d}" stroke="${ink}" stroke-width="${sw}" fill="none"${dash ? ` stroke-dasharray="${dash}"` : ''}/>${barb(a.x, a.y, -ux, -uy, 2.6 * hdk, 1.05 * hdk, ink)}${barb(b.x, b.y, ux, uy, 2.6 * hdk, 1.05 * hdk, ink)}`;
 }
 /** the point where the segment from the centre c towards p leaves the nest box (plus a gap) */
 function edgePoint(c: { x: number; y: number }, p: { x: number; y: number }, b: Rect, gap: number): { x: number; y: number } {
@@ -218,13 +218,17 @@ function battleSvg(): { svg: string; plates: Rect[] } {
   const dBox = { x: X.x - dw / 2 - pad - 0.4, y: X.y - em * 0.62 - pad, w: dw + 2 * pad + 0.8, h: em * 1.24 + 2 * pad };
   const gap = 1;
   for (const [p, q] of [[c00, c11], [c01, c10]]) out.push(course(edgePoint(p, q, nestBox('company', p === c00 ? 0 : 1), gap), edgePoint(q, p, nestBox('pirates', q === c11 ? 1 : 0), gap), '1.8 1', dBox));
-  for (const i of [0, 1]) { const a = nestC('company', i); out.push(course({ x: a.x, y: NY.company + NEST.size + gap }, { x: a.x, y: NY.pirates - gap }, '', null)); }
   out.push(patch('note-diag', dBox) + text(X.x, X.y + em * 0.33, dWord, nsize, { ...no, anchor: 'middle', in: 'note-diag' }));
   plates.push(dBox);
   const f0 = S.front[0], f1 = S.front[1], fw = Math.max(W(f0, nsize, no), W(f1, nsize, no)), mid = (NY.company + NEST.size + NY.pirates) / 2, lh = em * 1.08;
-  const right = c00.x - 2.4, fBox = { x: right - fw - 2 * pad - 0.4, y: mid - lh / 2 - em * 0.62 - pad, w: fw + 2 * pad + 0.4, h: lh + em * 1.24 + 2 * pad };
-  out.push(patch('note-front', fBox) + text(right - pad - 0.2, mid - lh / 2 + em * 0.33, `${f0}\n${f1}`, nsize, { ...no, anchor: 'end', lh, in: 'note-front', name: `${f0} ${f1}` }));
-  plates.push(fBox);
+  // «напротив»: a solid brass rule with heads at both ends between the two nests of each pair, the note beside it on the
+  // side of the field's middle (both pairs)
+  for (const i of [0, 1]) {
+    const a = nestC('company', i), bw = fw + 2 * pad + 0.4, fBox = { x: i ? a.x - 2.4 - bw : a.x + 2.4, y: mid - lh / 2 - em * 0.62 - pad, w: bw, h: lh + em * 1.24 + 2 * pad };
+    out.push(course({ x: a.x, y: NY.company + NEST.size + gap }, { x: a.x, y: NY.pirates - gap }, '', null, '#8a6a2a', 1.1, 1.25));
+    out.push(patch(`note-front-${i}`, fBox) + text(fBox.x + bw / 2, mid - lh / 2 + em * 0.33, `${f0}\n${f1}`, nsize, { ...no, anchor: 'middle', lh, in: `note-front-${i}`, name: `${f0} ${f1}` }));
+    plates.push(fBox);
+  }
   for (const side of ['company', 'pirates'] as Side[]) { const np = namePlate(side); out.push(np.svg); plates.push(np.box); }
   return { svg: out.join('\n'), plates };
 }
