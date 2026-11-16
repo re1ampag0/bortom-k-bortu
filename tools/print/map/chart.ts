@@ -57,7 +57,7 @@ const LOOK: Record<ChartStyle, Look> = {
   pearl: { paper: '#d8c296', paper2: '#c2a674', land: '#e2cfa3', ink: '#2c2016', coast: '#2c2016', wash: '#b08a4a', sea: '#9f9a7c', seaK: 0.1, rhumb: ['#3a2c1e', '#6c5a3a', '#6c5a3a'], note: '#262321', table: '#1c130c', wear: 1, stains: 1, vignette: 0.55 },
   revenge: { paper: '#dcc49a', paper2: '#c4a272', land: '#e6d1a6', ink: '#2e1a10', coast: '#2e1a10', wash: '#a8553a', sea: '#a99272', seaK: 0.08, rhumb: ['#3a2216', '#9a2f1e', '#6e4a30'], note: '#9a1f14', table: '#1a0d08', wear: 0.8, stains: 0.8, vignette: 0.5 },
   endeavour: { paper: '#f1e7cf', paper2: '#e2d3b0', land: '#f5edd9', ink: '#1f2a3a', coast: '#1a2232', wash: '#7a9a5c', sea: '#6f9cc0', seaK: 0.3, rhumb: ['#1f2a3a', '#a03a2a', '#3d7a4a'], note: '#1f2a3a', table: '#2a1a10', wear: 0.25, stains: 0.2, vignette: 0.25 },
-  dutch: { paper: '#c9c19c', paper2: '#9fa182', land: '#d6cda8', ink: '#22281f', coast: '#1f2a22', wash: '#5f7a5a', sea: '#6f8a7c', seaK: 0.16, rhumb: ['#2a3328', '#4a5e48', '#4a5e48'], note: '#1f3a35', table: '#0f1714', wear: 1.1, stains: 1.3, vignette: 0.6 },
+  dutch: { paper: '#ccc4a0', paper2: '#a4a586', land: '#d9d0ab', ink: '#151b14', coast: '#121a14', wash: '#4f6a4a', sea: '#5f7a6c', seaK: 0.2, rhumb: ['#1f281e', '#3a4e38', '#3a4e38'], note: '#1f3a35', table: '#0f1714', wear: 0.7, stains: 1, vignette: 0.5 },
   plain: { paper: '#e9dcbc', paper2: '#d6c39a', land: '#efe3c6', ink: '#2c2016', coast: '#2c2016', wash: '#a88a52', sea: '#8fa0a0', seaK: 0.12, rhumb: ['#3a2c1e', '#8a3a2a', '#4a6a44'], note: '#2a2420', table: '#1c130c', wear: 0.6, stains: 0.6, vignette: 0.4 }
 };
 export const chartLook = (s: ChartStyle) => LOOK[s];
@@ -317,7 +317,7 @@ export function chartSvg(o0: ChartOpts): string {
   out.push(trees.filter(q => !hills.some(hh => Math.abs(hh.x - q.x) < hh.b * 0.6 && q.y < hh.y + 1 && q.y > hh.y - hh.h - 1)).map(q => tree(q.x, q.y, 1.5 * Math.max(0.7, Math.min(1.7, k)), L.ink, L.land)).join(''));
   // lettering: each label takes the first free place near its spot (clear of the roses, the ships, the cartouche, the scale,
   // the notes, the plates and the other labels; a label in the sea keeps off the land); a label with no free place is left out
-  const skip = new Set(o.skip ?? []), placed: Rect[] = [], obst: Rect[] = [...calm.map(b => grow(b, 1.5)), ...(o.avoid ?? [])];
+  const skip = new Set(o.skip ?? []), placed: Rect[] = [], obst: Rect[] = [...calm.map(b => grow(b, 3)), ...(o.avoid ?? [])];
   roses.forEach(ro => obst.push({ x: ro.x - ro.r, y: ro.y - ro.r, w: 2 * ro.r, h: 2 * ro.r }));
   if (o.cross) obst.push({ x: o.cross.x - 5.5, y: o.cross.y - 5.5, w: 11, h: 11 });
   for (const sp of o.ships ?? []) obst.push({ x: sp.x - 8.6 * sp.s, y: sp.y - 11 * sp.s, w: 17.2 * sp.s, h: 12.6 * sp.s });
@@ -382,7 +382,7 @@ export function chartSvg(o0: ChartOpts): string {
     out.push(`<g filter="url(#${id}soft2)" opacity=".85"><path d="${d}" fill="none" stroke="${L.note}" stroke-width=".55" stroke-dasharray="2.6 1.6" stroke-linecap="round"/><path d="${head}" fill="none" stroke="${L.note}" stroke-width=".6" stroke-linecap="round"/></g>`);
   }
   if (o.cross) { const { x, y } = o.cross; out.push(`<g data-obst="cross" opacity=".9"><path d="M${x - 2.6} ${y - 2.6}L${x + 2.6} ${y + 2.6}M${x + 2.6} ${y - 2.4}L${x - 2.4} ${y + 2.6}" stroke="${L.note}" stroke-width=".8" stroke-linecap="round"/><circle cx="${x}" cy="${y}" r="4.4" fill="none" stroke="${L.note}" stroke-width=".35" stroke-dasharray="1.4 .8"/></g>`); }
-  for (const nt of o.note ?? []) out.push(`<text x="${r(nt.x)}" y="${r(nt.y)}" transform="rotate(${nt.rot ?? -4} ${r(nt.x)} ${r(nt.y)})" font-family="Alegreya" font-style="italic" font-weight="500" font-size="${r(nt.size ?? 4.2)}" fill="${L.note}" fill-opacity=".88">${nt.text}</text>`);
+  for (const nt of o.note ?? []) out.push(`<text x="${r(nt.x)}" y="${r(nt.y)}" transform="rotate(${nt.rot ?? -4} ${r(nt.x)} ${r(nt.y)})" font-family="Alegreya" font-style="italic" font-weight="500" font-size="${r(nt.size ?? 4.2)}" fill="none" stroke="${L.paper}" stroke-width=".9" stroke-opacity=".85" stroke-linejoin="round">${nt.text}</text><text x="${r(nt.x)}" y="${r(nt.y)}" transform="rotate(${nt.rot ?? -4} ${r(nt.x)} ${r(nt.y)})" font-family="Alegreya" font-style="italic" font-weight="500" font-size="${r(nt.size ?? 4.2)}" fill="${L.note}" fill-opacity=".88">${nt.text}</text>`);
   // the calm under the board's plates: paper laid softly over the busy chart
   for (const b of calm) out.push(`<rect x="${r(b.x - 0.6)}" y="${r(b.y - 0.6)}" width="${r(b.w + 1.2)}" height="${r(b.h + 1.2)}" rx="2" fill="${L.paper}" opacity=".5" filter="url(#${id}soft2)"/>`);
   // the life of the sheet

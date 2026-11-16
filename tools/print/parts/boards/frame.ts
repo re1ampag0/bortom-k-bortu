@@ -447,7 +447,7 @@ export function rulesLine(prefix: string): string {
   if (!l) throw new Error(`rules.md: no line «${prefix}…»`);
   return l.slice(2);
 }
-const W = { m: 12, text: 104, side: 72 };
+const W = { m: 12, text: 104, side: 63 };
 /** the reference marks of rules.md («(Q6)») are for the rule book only: the board keeps the words */
 export const noRef = (s: string) => s.replace(/\s*\((?:Q\d+(?:,\s*)?)+\)/g, '');
 /** «Сердце Дейви Джонса»: the data's own sentence about the sunk Endeavour */

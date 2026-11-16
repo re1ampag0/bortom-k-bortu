@@ -9,7 +9,7 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
-import { HERE, ROOT, data, esc, rich, type Ctx, type PageSpec } from '../../kit';
+import { HERE, ROOT, data, esc, fontCss, rich, RICH_CSS, type Ctx, type PageSpec } from '../../kit';
 import { BOARD, trackCells, type Ship } from '../../layout';
 import { DECK_KEY } from '../../colors';
 import { CHART_NOTES, chartPoint, chartSvg, type ChartOpts, type ChartStyle, type Rect } from '../../map/chart';
@@ -52,19 +52,23 @@ const NEST = { x: 217.5, y: 11.5, w: 66, h: 91 };
 const LOG = { x: 211.5, y: 104.5, w: 75.5, h: 95.5 };
 /** the log's ruled lines: line height, the body size, the pad over the first line (baseline = top + LH/2 + 0.33 em) */
 const LOGT = { lh: 4.1, size: 9.3, top: 3.4, side: 7.2 };
-/** the log's type: the largest size (9.3 pt down to 8 pt) at which the ship's words fit, line height 1.25 em */
-function logType(ship: Ship): { size: number; lh: number } {
-  const width = LOG.w - 2 * LOGT.side - 0.5, room = LOG.h - LOGT.top - 1.8, f: TO = { font: 'Alegreya', w: 500 };
-  const blocks = [...ship.abilities.map(a => a.text.replace(/<[^>]+>/g, '')), TXT.heart[ship.code]?.replace(/<[^>]+>/g, '') ?? '', ship.souls != null ? `${TXT.tracks.souls.name}: ${TXT.tracks.souls.spend}` : ''].filter(Boolean);
-  for (let size = 9.3; size >= 8; size = Math.round((size - 0.1) * 10) / 10) {
-    const lh = Math.round(pt(size) * 1.25 * 100) / 100;
-    let lines = 1 + ship.abilities.length; // the heading, a name line per ability
-    for (const t of blocks) lines += Math.ceil(W(t, size, f) * 1.2 / width) + 1;
-    lines += 2 * ship.abilities.filter(a => /раз в ход/i.test(a.text)).length; // the «раз в ход» cell narrows three lines
-    if ((lines - 1) * lh <= room) return { size, lh };
-  }
-  return { size: 8, lh: Math.round(pt(8) * 1.25 * 100) / 100 };
+/** the log's type, measured in the browser: the largest size (9.3 pt down to 7.6 pt, line height 1.25 em) at which the
+ *  ship's words fit the page; the page as tall as its words (at least 50 mm), the chart shows under the rest */
+const LOGFIT = new Map<string, { size: number; lh: number; h: number }>();
+async function fitLog(ctx: Ctx, ship: Ship, inner: (lt: { size: number; lh: number }) => string): Promise<void> {
+  if (LOGFIT.has(ship.code)) return;
+  const page = await ctx.browser.newPage(), width = LOG.w - 2 * LOGT.side, room = LOG.h - LOGT.top - 4;
+  try {
+    for (let size = 9.3; size >= 7.6; size = Math.round((size - 0.1) * 10) / 10) {
+      const lh = Math.round(pt(size) * 1.25 * 100) / 100, lt = { size, lh };
+      await page.setContent(`<!doctype html><meta charset="utf-8"><style>${fontCss()}${RICH_CSS}${V2_CSS}</style><div class="v2-log" style="position:absolute;left:0;top:0;width:${width}mm;--lh:${lh}mm;--fs:${size}pt;--lift-h:0mm;--lift-n:0mm">${inner(lt)}</div>`);
+      await page.evaluate(async () => { await document.fonts.ready; });
+      const hpx = await page.evaluate(() => (document.querySelector('.v2-log') as HTMLElement).scrollHeight), hmm = hpx * 25.4 / 96;
+      if (hmm <= room - 3 || size <= 7.6) { LOGFIT.set(ship.code, { size, lh, h: Math.min(LOG.h, Math.max(50, LOGT.top + hmm + 4 + lh)) }); return; }
+    }
+  } finally { await page.close(); }
 }
+const logType = (ship: Ship) => LOGFIT.get(ship.code) ?? { size: LOGT.size, lh: LOGT.lh, h: LOG.h };
 const ICON_TRACK: Record<TrackKey, IconName> = { sails: 'sails', souls: 'souls', crew: 'crew', guns: 'guns', hull: 'hull' };
 
 // ---- the look of each ship: which part of the chart, how it is kept, the plates and the inks ----
@@ -86,8 +90,8 @@ const LOOKS: Record<ShipKey, Look> = {
   },
   revenge: {
     chart: 'revenge', mmPerDeg: 36, tone: TONE.red,
-    board: { anchor: { lon: -77.35, lat: 25.04, x: 172, y: 84 }, ship: [132, 70, 58, 32], rose: [113, 104, 8], labels: { 'Islas Lucayas': { x: 184.5, y: 50 } }, note: [146, 100] },
-    strip: { anchor: { lon: -77.35, lat: 25.04, x: 172, y: 96 }, ship: [140, 72, 70, 40], rose: [118, 150, 11], labels: { 'Islas Lucayas': { x: 186, y: 128 } }, note: [150, 150] },
+    board: { anchor: { lon: -77.35, lat: 25.04, x: 172, y: 84 }, ship: [132, 70, 58, 32], rose: [113, 104, 8], labels: { 'Islas Lucayas': { x: 176, y: 106 } }, note: [106, 90] },
+    strip: { anchor: { lon: -77.35, lat: 25.04, x: 172, y: 96 }, ship: [140, 72, 70, 40], rose: [118, 150, 11], labels: { 'Islas Lucayas': { x: 186, y: 128 } }, note: [104, 118] },
     paper: '#f2e2c0', paperLine: '#5a2416', ink: '#2e1a10', soft: '#4f3326', cell: '#f8ecd2', cellDeep: '#e6cca0',
     brass: ['#f3d68c', '#c4954a', '#5e4214'], note: '#f5e8cc', noteLine: '#c4a07a', margin: '#9a1f14', pin: '#1a1a1a',
     notes: (at, p) => { const t = at(-77.34, 25.06); return { cross: { x: t.x + 1, y: t.y + 1 }, course: [{ x: p.ship[0] + 30, y: p.ship[1] + 4 }, { x: (p.ship[0] + t.x) / 2 + 10, y: t.y + 14 }, { x: t.x - 6, y: t.y + 5 }], note: p.note ? [{ x: p.note[0], y: p.note[1], text: CHART_NOTES.revenge[0], rot: -4, size: 4 }] : [] }; }
@@ -95,14 +99,14 @@ const LOOKS: Record<ShipKey, Look> = {
   endeavour: {
     chart: 'endeavour', mmPerDeg: 40, tone: TONE.navy,
     board: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 96 }, ship: [140, 66, 64, 36], rose: [198, 46, 9], labels: { 'Iamaica': { x: 170, y: 82 } } },
-    strip: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 120 }, ship: [148, 72, 76, 44], rose: [120, 154, 12] },
+    strip: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 120 }, ship: [148, 80, 76, 44], rose: [120, 154, 12] },
     paper: '#f8f1de', paperLine: '#1f2a3a', ink: '#1a2232', soft: '#33405a', cell: '#fbf6e8', cellDeep: '#e6dcc0',
     brass: ['#f6dc94', '#c99a46', '#5e4214'], note: '#fbf6e6', noteLine: '#a8b8cc', margin: '#a03a2a', pin: '#a8812e'
   },
   dutch: {
     chart: 'dutch', mmPerDeg: 36, tone: TONE.verdigris,
     board: { anchor: { lon: -68.0, lat: 18.4, x: 190, y: 100 }, ship: [0, 0, 0, 0], rose: [200, 50, 8] },
-    strip: { anchor: { lon: -68.0, lat: 18.4, x: 186, y: 64 }, ship: [156, 152, 80, 36], rose: [118, 152, 9] },
+    strip: { anchor: { lon: -68.0, lat: 18.4, x: 186, y: 64 }, ship: [152, 154, 70, 34], rose: [200, 128, 7] },
     paper: '#e9e4c8', paperLine: '#22322a', ink: '#1c2620', soft: '#33443a', cell: '#f0ecd6', cellDeep: '#d4d0b0',
     brass: ['#d8cf98', '#8f8a52', '#3a3a22'], note: '#ecebd4', noteLine: '#9aa890', margin: '#4a6a58', pin: '#2a3a32'
   }
@@ -395,10 +399,11 @@ function shipRect(kind: string, p: ShipPlace): Rect | null {
 export async function boardV2(ctx: Ctx, ship: Ship, counters: Counters): Promise<{ html: string; css: string }> {
   const key = DECK_KEY[ship.code] as ShipKey, L = LOOKS[key], pal = basePalette(ship.color), id = `v2${++UID}`;
   // the widths come from the browser: a dry run collects the strings, then the real layout
+  await fitLog(ctx, ship, () => logInner(ship, L, id));
   layoutV2(ship, counters); faceSvg(ctx, ship, counters, layoutV2(ship, counters), id, L, pal);
   await measureMissing(ctx);
   const plan = layoutV2(ship, counters), place = counters === 'board' ? L.board : L.strip, kind = key;
-  const calm: Rect[] = [plan.header, NEST, { x: NEST.x, y: NEST.y + NEST.h, w: NEST.w, h: 8 }, LOG, plan.effects, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h })),
+  const calm: Rect[] = [plan.header, NEST, { x: NEST.x - 9, y: NEST.y, w: 9, h: NEST.h }, { ...LOG, h: logType(ship).h }, plan.effects, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h })),
     ...[plan.plans, plan.cards, plan.reactions, plan.dutch].filter((b): b is Rect => !!b)];
   const view = { w: PAGE.w, h: PAGE.h, mmPerDeg: L.mmPerDeg, center: [0, 0] as [number, number], anchor: place.anchor };
   const sr = plan.window ? shipRect(kind, place) : null;
@@ -425,13 +430,16 @@ function faceSvg(ctx: Ctx, ship: Ship, counters: Counters, plan: Plan, id: strin
   if (plan.cards) svg.push(rulerSvg('cards', plan.cards, TXT.cards.title, 'cards', [6, 5, 4, 3, 2, 1, 0], false, id, L));
   if (plan.reactions) svg.push(rulerSvg('reactions', plan.reactions, TXT.reactions.title, 'reaction', [0, 1, 2, 3], true, id, L));
   svg.push(nestSvg(NEST, id, L, pal, legend.name));
-  const lt = logType(ship);
-  svg.push(logSvg(LOG, L, lt));
   // the abilities in the log: one line height for every line (headings too), so the baselines stay on the ruled lines
-  const ab = ship.abilities.map(a => { const once = /раз в ход/i.test(a.text); return `${once ? `<div class="v2-tick">${onceCell(L, id)}</div>` : ''}<div class="v2-an"><span>${esc(a.name)}</span>${once ? `<i>${iconSvg('once', 3.6, L.tone)}${esc(TXT.once)}</i>` : ''}</div><div class="v2-p">${richNb(a.text)}</div>`; }).join('');
-  const extra = [TXT.heart[ship.code] ?? '', ship.souls != null && TXT.tracks.souls.spend ? `<b>${esc(TXT.tracks.souls.name)}:</b> ${esc(TXT.tracks.souls.spend)}` : ''].filter(Boolean).map(t => `<div class="v2-p">${richNb(t)}</div>`).join('');
-  const html = `<div class="v2-abs v2-log" data-in="log" data-name="журнал особенностей" style="left:${LOG.x + LOGT.side}mm;top:${LOG.y + LOGT.top}mm;width:${LOG.w - 2 * LOGT.side}mm;height:${r(LOG.h - LOGT.top - 1.8)}mm;--c:${pal.deep};--ink:${L.ink};--soft:${L.soft};--lh:${lt.lh}mm;--fs:${lt.size}pt;--lift-h:${r(-0.33 * (pt(11.5) - pt(lt.size)))}mm;--lift-n:${r(-0.33 * (pt(10) - pt(lt.size)))}mm"><div class="v2-h">${esc(TXT.abilities)}</div>${ab}${extra}</div>`;
+  const lt = logType(ship), log = { ...LOG, h: lt.h };
+  svg.push(logSvg(log, L, lt));
+  const html = `<div class="v2-abs v2-log" data-in="log" data-name="журнал особенностей" style="left:${LOG.x + LOGT.side}mm;top:${LOG.y + LOGT.top}mm;width:${LOG.w - 2 * LOGT.side}mm;height:${r(lt.h - LOGT.top - 4)}mm;--c:${pal.deep};--ink:${L.ink};--soft:${L.soft};--lh:${lt.lh}mm;--fs:${lt.size}pt;--lift-h:${r(-0.33 * (pt(11.5) - pt(lt.size)))}mm;--lift-n:${r(-0.33 * (pt(10) - pt(lt.size)))}mm">${logInner(ship, L, id)}</div>`;
   return { svg: svg.join('\n'), html };
+}
+function logInner(ship: Ship, L: Look, id: string): string {
+  const ab = ship.abilities.map(a => { const once = /раз в ход/i.test(a.text); return `${once ? `<div class="v2-tick">${onceCell(L, id)}</div>` : ''}<div class="v2-an"><span>${esc(a.name)}</span>${once ? `<i>${esc(TXT.once)}</i>` : ''}</div><div class="v2-p">${richNb(a.text)}</div>`; }).join('');
+  const extra = [TXT.heart[ship.code] ?? '', ship.souls != null && TXT.tracks.souls.spend ? `<b>${esc(TXT.tracks.souls.name)}:</b> ${esc(TXT.tracks.souls.spend)}` : ''].filter(Boolean).map(t => `<div class="v2-p">${richNb(t)}</div>`).join('');
+  return `<div class="v2-h">${esc(TXT.abilities)}</div>${ab}${extra}`;
 }
 /** the «раз в ход» cell beside an ability: a 13 mm cell like the tracks', floated right in the log */
 const onceCell = (L: Look, id: string) => `<svg viewBox="0 0 13 13" style="width:13mm;height:13mm;display:block"><rect x=".2" y=".2" width="12.6" height="12.6" rx="1.8" fill="${L.brass[1]}" stroke="${L.brass[2]}" stroke-width=".25"/><rect x="1" y="1" width="11" height="11" rx="1.1" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".2"/></svg>`.replace('url(#' + id, 'url(#' + id);
