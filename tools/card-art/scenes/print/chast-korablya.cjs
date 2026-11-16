@@ -29,7 +29,7 @@ const { glow, gloom, motes, woodTex } = PK;
 
 const RAIL = 30, WB = 262;                            // the rail's underside (the wall's top) and the deck line (off the picture)
 const SY = 13.4;                                      // a strake's height
-const HEAD = { c: [110, 60], r: 16 };
+const HEAD = { c: [110, 66], r: 16 };
 const SH = [80, 100], EL = [52, 136], WR = [44, 96];  // his right arm (our left): shoulder, elbow down at his side, wrist raised
 const light = { time: 'fog', haze: .6, key: { type: 'moon', x: 30, y: -30, el: 50, color: '#cfeee0', power: .7 }, fill: { color: '#1e3a32', power: .4 },
   rim: { az: 300, color: '#bff0dc', power: .3 }, locals: [{ x: 166, y: 62, color: '#9effd0', power: .4, radius: 26 }, { x: 52, y: 122, color: '#9effd0', power: .4, radius: 26 }] };
@@ -40,7 +40,7 @@ const skel = { horizon: HEAD.c[1], eye: 1.6, light: 'the moon in the fog upper l
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const SKIN = { lit: '#c8cfae', half: '#8c9a7e', core: '#728468', shadow: '#3a4a36', outline: '#121a10' };   // pale, sea-cold
-const WOOD = { lit: '#b0905e', half: '#76583a', core: '#5e442a', shadow: '#2e2014', outline: '#0e0a04' };     // the face gone to wood
+const WOOD = { lit: '#b0905e', half: '#76583a', core: '#5e442a', shadow: '#2e2014', outline: '#0e0a04' };     // the finger tips gone to wood
 const COAT = { lit: '#4a5a52', half: '#26322c', shadow: '#0e1612', outline: '#040806' };
 const RIMC = '#bff0dc';
 // KIT-CANDIDATE: a barnacle (as in prihlop-bill.cjs)
@@ -109,11 +109,10 @@ module.exports = { name: 'Часть корабля — часть команд�
 
     // ——— the man ———
     let man = '';
-    // the coat: shoulders against the wall, the body down out of the picture; his left side (our right) fades into the planks
+    // the coat: shoulders against the wall, the body down out of the picture; whole (fix pass: no fade into the planks)
     const coat = [[62, 290], [64, 160], [66, 118], [72, 104], [86, 96], [100, 92], [120, 92], [138, 96], [152, 106], [160, 124], [164, 160], [168, 290]];
-    const mk = nid('mk', u), mg = nid('mg', u), cg = nid('cg', u);
-    man += `<defs>${linGrad(mg, 134, 0, 166, 0, [[0, '#ffffff', 1], [1, '#ffffff', 0]])}<mask id="${mk}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${mg})"/></mask>`
-      + `${linGrad(cg, 62, 96, 166, 140, [[0, COAT.lit, 1], [.35, COAT.half, 1], [1, COAT.shadow, 1]])}</defs>`;
+    const cg = nid('cg', u);
+    man += `<defs>${linGrad(cg, 62, 96, 166, 140, [[0, COAT.lit, 1], [.35, COAT.half, 1], [1, COAT.shadow, 1]])}</defs>`;
     let body = `<path d="${H.sp(coat)}Z" fill="url(#${cg})" stroke="${COAT.outline}" stroke-width=".6"/>`;
     // the open shirt under the coat, the lapels, folds, a sash low down
     body += `<path d="M100 92L110 104L122 92L127 148L110 158L96 148Z" fill="#a4aa96"/><path d="M103 103q7 7 14 0" stroke="#5a6050" stroke-width=".7" fill="none"/><path d="M110 112v40" stroke="#6a7060" stroke-width=".5" opacity=".6"/>`
@@ -129,15 +128,14 @@ module.exports = { name: 'Часть корабля — часть команд�
         + [[92.6, 118], [91.6, 128], [90.6, 138], [127.4, 118], [128.4, 128]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.25" fill="#5a5434" stroke="#0a0a04" stroke-width=".3"/><circle cx="${x - .35}" cy="${y - .35}" r=".45" fill="#d8d0a0" opacity=".8"/>`).join('')
         + glow(u, 66, 132, 16, 22, '#9effd0', .16)
         + '</g>'; }
-    // the right side of the coat turns to planking: the wall's own grain and seams run in over the cloth, thicker rightwards
-    { const wg = nid('cw', u), wk = nid('cwm', u), cc2 = nid('cc2', u); let gr = '';
-      for (let y = 92; y < 240; y += 1.7) gr += `<path d="M124 ${f(y)}Q146 ${f(y + Math.sin(y) * .8)} 170 ${f(y + .3)}" stroke="${Math.round(y * 3) % 3 ? '#1e261c' : '#0a0e08'}" stroke-width="${Math.round(y * 3) % 3 ? .3 : .55}" fill="none"/>`;
-      for (let y = RAIL + 8 + SY * 5; y < 240; y += SY) gr += `<path d="M124 ${f(y - .4)}H170" stroke="#030504" stroke-width="1"/><path d="M124 ${f(y + .7)}H170" stroke="#8ab0a0" stroke-width=".45" opacity=".3"/>`;
-      body += `<defs><clipPath id="${cc2}"><path d="${H.sp(coat)}Z"/></clipPath>${linGrad(wg, 128, 0, 160, 0, [[0, '#fff', 0], [.5, '#fff', .55], [1, '#fff', 1]])}<mask id="${wk}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${wg})"/></mask></defs>`
-        + `<g clip-path="url(#${cc2})"><g mask="url(#${wk})"><rect x="120" y="88" width="52" height="200" fill="#3a4434"/>${gr}</g></g>`; }
-    man += `<g mask="url(#${mk})">${body}</g>`;
-    // the neck: about a third of the head, into the open collar
-    man += `<path d="M101 74L102 96Q110 101 119 95L119 74Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/><path d="M102.6 82q2 7 1 13" stroke="${SKIN.lit}" stroke-width=".9" fill="none" opacity=".5"/><path d="M112 88q4 3 7 0" stroke="${SKIN.shadow}" stroke-width=".7" fill="none" opacity=".7"/>`;
+    // the far arm hanging at his side inside the coat: the sleeve's seam down from the shoulder
+    body += `<path d="M150 108Q146 140 148 180" stroke="#040806" stroke-width=".9" fill="none" opacity=".7"/>`;
+    man += body;
+    // the neck (fix pass: shorter and narrower — about half the head's width, under the jaw into the open collar)
+    { const ng = nid('ng', u);
+      man += `<defs>${radGrad(ng, 111, 84, 7, [[0, '#0a1208', .8], [1, '#0a1208', 0]])}</defs>`
+        + `<path d="M104 80Q105 88 103 95Q110 99.6 118 95Q116 88 117 80Z" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width=".4"/>`
+        + `<ellipse cx="111" cy="84.6" rx="6.4" ry="3.6" fill="url(#${ng})"/><path d="M105 85q1.4 5 .4 9" stroke="${SKIN.lit}" stroke-width=".8" fill="none" opacity=".45"/>`; }
 
     // ——— the arm: one sleeve from the shoulder down to the elbow at his side, the forearm up along the planks to the
     // cuff; the open hand flat on the wood beside his head, back to us, the finger tips already sunk into the strake ———
