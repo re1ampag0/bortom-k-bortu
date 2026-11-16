@@ -22,7 +22,7 @@ import { iconSvg, type IconName, type IconTone } from '../icons';
 import { TXT as FTXT, basePalette, jonesLine, md, measureMissing, noRef, rulesLine, rulesSection, widthOf, type Pal, type ShipKey, type ShipMaterial, type TO } from './frame';
 import { LOOKS, defsOf, ico, text, type Look } from './v2';
 import { emblemSvg } from './emblem';
-import { PROP_DEFS, ageDefs, barnacle, charSvg, holeSvg, hullAgeDefs, jagLine, measureProps, placeProp, propIssues, propSvg, type Kit, type Placed, type PropSpec } from './wreck-props';
+import { PROP_DEFS, ageDefs, barnacle, charSvg, coralCrust, coralSprig, holeSvg, hullAgeDefs, jagLine, measureProps, placeProp, propIssues, propSvg, weed, type Kit, type Placed, type PropSpec, type WeedKind } from './wreck-props';
 
 type P = [number, number];
 interface Rect { x: number; y: number; w: number; h: number }
@@ -35,7 +35,7 @@ const K = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as Kit
   makeLight(l: unknown, cam: { horizon: number }): unknown; LIGHTS: Record<string, { key: Record<string, unknown> } & Record<string, unknown>>;
   shipBox(kind: string, o: { x: number; y: number; scale: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number };
   shipGeom(kind: string, o: Record<string, unknown>): { masts: { x: number; H: number; top: P }[]; nearRail(X: number): number[]; farRail(X: number): number[] };
-  SHIP_SPECS: Record<string, { len: number; free: number; draft: number; over: number; bow: number[]; tw: number[] }>;
+  SHIP_SPECS: Record<string, { len: number; free: number; draft: number; over: number; bow: number[]; tw: number[]; masts: unknown[] }>;
 };
 
 // ---- the look of each ship's sea floor ----
@@ -45,9 +45,20 @@ const K = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as Kit
 interface Hole { X: number; t: number; r: number; kind: 'shot' | 'breach' | 'burn' }
 /** how the ship died — each wreck its own picture: the mast kept up to its top (keep: its break is level, not jagged),
  *  the bowsprit snapped `sprit` kit units ahead of the stem, the stern castle fallen in aft of X = aft (kit units), the
- *  holes in the side, the hull charred (burnt 0..1), the paint washed out and peeling (fade), barnacles and weed on it
- *  (growth), the rags of the sails (rags: the length of their fringe; 0 — no cloth left, the stubs bare) */
-interface Ruin { keep?: number; sprit?: number; aft?: number; holes?: Hole[]; burnt?: number; fade?: number; growth?: number; rags?: number }
+ *  holes in the side, the hull charred (burnt 0..1; from charFrom — kit X — aft, the paint kept in patches before it),
+ *  the paint washed out and peeling (fade), barnacles and weed on it (growth), the rags of the sails (rags: the length of
+ *  their fringe; 0 — no cloth left, the stubs bare); slant — the masts broken off at a slant (snapped or burnt through),
+ *  not jagged; yards — the masts that stand whole with their yards (cut only above `brk`); tear — the mast whose sail
+ *  is half torn off and hangs from one yardarm; slack — how far the shrouds sag (1), torn — how many hang broken;
+ *  rot — rotten gaps in the bulwark; split — the hull broken in two at X (kit units): the after part moved dx mm aft,
+ *  dropped `drop` mm and turned `rot` degrees (+ — its stern down) about the keel at the break; drifts — banks of sand
+ *  heaped against the side ([x mm, half-width, height]); reef — the hull grown into the floor: shells, corals and weed
+ *  all over it, weed hanging from the yards (the Dutchman) */
+interface Ruin {
+  keep?: number; sprit?: number; aft?: number; holes?: Hole[]; burnt?: number; charFrom?: number; fade?: number; growth?: number; rags?: number;
+  slant?: boolean; yards?: number[]; tear?: number; slack?: number; torn?: number; rot?: number;
+  split?: { X: number; dx: number; drop: number; rot: number }; drifts?: [number, number, number][]; reef?: boolean;
+}
 interface Sea {
   /** the kit's light of the deck (LIGHTS key), turned to come from above, a little from the left */
   light: 'pearl' | 'revenge' | 'endeavour' | 'dutchman';
@@ -59,105 +70,144 @@ interface Sea {
   haze: [string, number]; back: [string, number];
   /** the sand: lit crest, body, shade */
   sand: [string, string, string];
-  /** fish colour and opacity; corals; weed; the rags of the sails; shells grown on the hull (the Dutchman) */
-  fish: [string, number]; coral: string[]; weed: string[]; rag: string; shells?: boolean;
+  /** fish colour and opacity; corals (muted: they are old and under water); weed; the rags of the sails */
+  fish: [string, number]; coral: string[]; weed: string[]; rag: string;
   /** the far edge of the floor (mm): there the sand dissolves into the water */
   hz: number;
   /** the ship: the middle of its waterline (mm), scale, roll (kit, −20…20: minus — from the viewer, the bottom shows; plus —
    *  towards him, the deck shows), tilt (degrees, the bow down), the break of each mast (a share of its height), the fallen
    *  top of one mast (it lies from the deck to the floor on the side `side`, its tip on the sand at y = ty), the sand over
    *  the waterline at the bow and at the stern (mm; minus — under it); and how she died (Ruin) */
-  ship: { x: number; y: number; scale: number; roll: number; tilt: number; brk: number[]; fall?: { mast: number; side: 1 | -1; ty: number }; bow: number; stern: number } & Ruin;
+  ship: { x: number; y: number; scale: number; roll: number; tilt: number; brk: number[]; fall?: { mast: number; side: 1 | -1; ty: number; front?: boolean }; bow: number; stern: number } & Ruin;
   /** what lies on the floor (wreck-props.ts: each thing in the sand, its own set per ship) */
   props: PropSpec[]; seed: number;
 }
 const SHIP0 = { roll: -18, brk: [0.5, 0.56, 0.42], bow: 14, stern: -8, fade: 0.3, growth: 0.5, rags: 0.3 };
 export const SEA: Record<ShipKey, Sea> = {
-  // the Pearl lies on her side, the fouled bottom to us; the mainmast stands to its top, the foremast snapped low and lay
-  // over the bow, the mizzen a stump; black rags with long fringes; a row of round-shot holes along her side
+  // the Pearl went down by the head and lies on her side, the fouled bottom to us, her bow dug deep into the sand and the
+  // stern up on a bank; the mainmast snapped above its top, the fore and the mizzen short thick stumps, the fore topmast
+  // lying over the bow into the sand; the black paint washed grey and peeling to the wood, round-shot holes of every size
+  // along her side, some with the planks stove out; the mainsail half torn off, hanging from one yardarm
   pearl: {
     light: 'pearl', water: ['#43769c', '#24486a', '#1d3852'], glow: '#c4e2ff', rays: 0.5, haze: ['#1c3c5a', 0.24], back: ['#4f86ac', 0.55],
-    sand: ['#b4bec6', '#7d8a95', '#465462'], fish: ['#a9c6dc', 0.62], coral: ['#7d6590', '#5a7a9a', '#9a6470'], weed: ['#2c5a4c', '#3e6e5c', '#24463e'],
-    rag: '#2c2c32', hz: 150,
+    sand: ['#b4bec6', '#7d8a95', '#465462'], fish: ['#a9c6dc', 0.62], coral: ['#7a6e86', '#6a7a8a', '#86707a'], weed: ['#3a5e52', '#4e6e5e', '#2e4a42'],
+    rag: '#34343a', hz: 150,
     ship: {
-      ...SHIP0, x: 190, y: 181, scale: 1.55, roll: -20, tilt: 2, brk: [0.3, 0.62, 0.22], keep: 1, bow: 8, stern: 2, fall: { mast: 0, side: -1, ty: 172 },
-      holes: [{ X: -18, t: 0.55, r: 1.3, kind: 'shot' }, { X: -9, t: 0.42, r: 1.1, kind: 'shot' }, { X: -3, t: 0.66, r: 1.5, kind: 'shot' }, { X: 6, t: 0.5, r: 1.2, kind: 'shot' },
-        { X: 21, t: 0.36, r: 1.4, kind: 'shot' }, { X: 27, t: 0.62, r: 1.0, kind: 'shot' }, { X: 33, t: 0.4, r: 3.4, kind: 'breach' }],
-      fade: 0.85, growth: 1, rags: 1
+      ...SHIP0, x: 196, y: 178, scale: 1.5, roll: -20, tilt: 15, brk: [0.2, 0.42, 0.17], bow: 26, stern: -5, sprit: 4, fall: { mast: 0, side: -1, ty: 175 },
+      holes: [{ X: -26, t: 0.5, r: 1.0, kind: 'shot' }, { X: -15, t: 0.68, r: 2.2, kind: 'shot' }, { X: -6, t: 0.34, r: 0.8, kind: 'shot' }, { X: 4, t: 0.58, r: 1.5, kind: 'shot' },
+        { X: 12, t: 0.3, r: 1.1, kind: 'shot' }, { X: 20, t: 0.72, r: 0.9, kind: 'shot' }, { X: 31, t: 0.45, r: 3.2, kind: 'breach' }],
+      fade: 1, growth: 1, rags: 1, slant: false, tear: 1, slack: 2.2, torn: 3, rot: 6, drifts: [[150, 9, 5], [236, 12, 4]]
     },
     props: [
-      // the back row (farther, smaller)
-      { kind: 'bottle', x: 50, y: 191, s: 0.95, rot: -50, sink: 0.42, opt: { lying: false }, name: 'rum bottle (upright)' },
-      { kind: 'grapnel', x: 112, y: 192, s: 1.15, rot: -118, sink: 0.42, name: 'grappling hook' },
-      { kind: 'cannon', x: 158, y: 193, s: 0.72, rot: -6, sink: 0.42, name: 'cannon' },
-      { kind: 'bottle', x: 203, y: 194, s: 0.9, rot: 10, sink: 0.35, opt: { kind: 'empty' }, name: 'rum bottle' },
-      { kind: 'bottle', x: 248, y: 192.5, s: 0.75, rot: -80, sink: 0.45, opt: { lying: false, kind: 'empty' }, name: 'rum bottle (neck down)' },
-      // the front row
-      { kind: 'anchor', x: 22, y: 204, s: 0.9, rot: 104, sink: 0.3, name: 'anchor' },
-      { kind: 'compass', x: 70, y: 206, s: 2.1, rot: -12, sink: 0.3, name: 'compass' },
-      { kind: 'shot', x: 95, y: 207.5, s: 1.25, sink: 0.45, name: 'round shot' },
-      { kind: 'shot', x: 106, y: 203.5, s: 1.2, sink: 0.4, name: 'round shot' },
-      { kind: 'pistol', x: 128, y: 206.5, s: 1.25, rot: -6, sink: 0.3, name: 'pistol' },
-      { kind: 'mapCase', x: 180, y: 205.5, s: 1.45, rot: -8, sink: 0.3, name: 'map case' },
-      { kind: 'grapnel', x: 224, y: 207.5, s: 1.55, rot: 70, sink: 0.35, opt: { rope: true }, name: 'grappling hook' },
-      { kind: 'plank', x: 270, y: 206, s: 1.25, rot: 5, sink: 0.25, opt: { len: 30 }, name: 'plank' }
+      // the back row, near the hull (farther, smaller)
+      { kind: 'bottle', x: 52, y: 186, s: 0.9, rot: -50, sink: 0.42, opt: { lying: false }, name: 'rum bottle (upright)', drift: -0.3 },
+      { kind: 'grapnel', x: 106, y: 191, s: 1.1, rot: -82, sink: 0.3, drift: 0.3, name: 'grappling hook' },
+      { kind: 'canvas', x: 132, y: 191, s: 1.1, sink: 0.25, opt: { color: '#3a3a40' }, name: 'scrap of sail' },
+      { kind: 'mastYard', x: 270, y: 190, s: 0.6, rot: 1, sink: 0.3, opt: { sail: '#3a3a40' }, name: 'mizzen top with its yard' },
+      // the middle: the big things
+      { kind: 'gun', x: 158, y: 199, s: 1.15, rot: -2, sink: 0.26, drift: -0.18, driftH: 0.55, name: 'cannon' },
+      { kind: 'carriage', x: 195, y: 197, s: 1.05, rot: 4, sink: 0.3, name: 'broken gun carriage' },
+      { kind: 'barrel', x: 246, y: 199, s: 0.62, rot: -4, sink: 0.32, opt: { kind: 'rum' }, drift: -0.25, name: 'rum cask' },
+      // the front row (nearer)
+      { kind: 'anchor', x: 28, y: 205, s: 0.9, rot: 98, sink: 0.3, name: 'anchor' },
+      { kind: 'compass', x: 66, y: 206, s: 2.1, rot: -12, sink: 0.32, name: 'compass' },
+      { kind: 'shotHeap', x: 94, y: 207.5, s: 1.3, sink: 0.22, opt: { n: 5 }, name: 'round shot' },
+      { kind: 'pistol', x: 124, y: 208, s: 1.25, rot: 0, sink: 0.36, drift: -0.3, name: 'pistol' },
+      { kind: 'mapCase', x: 174, y: 208, s: 1.5, rot: -3, sink: 0.25, name: 'map case' },
+      { kind: 'grapnel', x: 222, y: 208, s: 1.45, rot: -84, sink: 0.25, opt: { rope: true }, name: 'grappling hook' },
+      { kind: 'plank', x: 262, y: 207, s: 1.2, rot: 2, sink: 0.3, opt: { len: 30, th: 5 }, drift: 0.3, name: 'plank' }
     ], seed: 11
   },
-  // the Revenge burnt and went down by the head: the hull charred, the stern castle fallen in, every mast burnt to a
-  // stump, the bowsprit snapped off and lying by the bow, holes burnt through her side
+  // the Revenge burnt and went down by the head: charred black from the waist aft (the red paint left in dull patches at
+  // the bow), the stern castle fallen in with the sternpost standing up out of it, three burnt stumps of different heights
+  // with slanting breaks, the mainmast fallen across the sand, long burn holes along her side; a bank of sand over her side
   revenge: {
     light: 'revenge', water: ['#946040', '#5c3624', '#40241a'], glow: '#ffd2a0', rays: 0.42, haze: ['#4a2418', 0.28], back: ['#b8724a', 0.4],
-    sand: ['#d4ab86', '#a07254', '#62402e'], fish: ['#2a120c', 0.58], coral: ['#c4523a', '#d88a52', '#8e3434'], weed: ['#5e5a26', '#74702e', '#40401c'],
+    sand: ['#d4ab86', '#a07254', '#62402e'], fish: ['#2a120c', 0.58], coral: ['#a8645a', '#b07a5e', '#8a5048'], weed: ['#5e5a2e', '#6e6a36', '#464222'],
     rag: '#3a1612', hz: 150,
     ship: {
-      ...SHIP0, x: 172, y: 178, scale: 2.05, roll: 5, tilt: 8, brk: [0.2, 0.26, 0.15], bow: 12, stern: -3, sprit: 3, aft: 16,
-      holes: [{ X: -14, t: 0.45, r: 4.2, kind: 'burn' }, { X: 4, t: 0.6, r: 2.6, kind: 'burn' }, { X: 12, t: 0.3, r: 1.2, kind: 'shot' }],
-      burnt: 0.75, fade: 0.2, growth: 0.45, rags: 0
+      ...SHIP0, x: 176, y: 180, scale: 2.0, roll: 5, tilt: 7, brk: [0.36, 0.26, 0.13], bow: 13, stern: -2, sprit: 3, aft: 16, fall: { mast: 0, side: -1, ty: 199, front: true },
+      holes: [{ X: -10, t: 0.5, r: 2.6, kind: 'burn' }, { X: 4, t: 0.62, r: 2.0, kind: 'burn' }, { X: 13, t: 0.4, r: 1.6, kind: 'burn' }],
+      burnt: 0.85, charFrom: -14, fade: 0.25, growth: 0.45, rags: 0, slant: true, drifts: [[118, 13, 6], [214, 10, 4]]
     },
     props: [
       // the back row (farther, smaller)
-      { kind: 'spar', x: 62, y: 189, s: 1, rot: -7, sink: 0.35, opt: { len: 46, th: 3.2, charred: true }, name: 'bowsprit (snapped, charred)' },
-      { kind: 'sabre', x: 36, y: 193, s: 0.9, rot: 62, sink: 0.35, name: 'sabre (stuck in the sand)' },
-      { kind: 'firePot', x: 120, y: 194, s: 1.3, rot: -6, sink: 0.25, opt: { state: 'broken' }, name: 'broken fire pot' },
-      { kind: 'barrel', x: 170, y: 193, s: 0.55, rot: 8, sink: 0.35, opt: { lying: false }, name: 'powder keg (on end)' },
-      { kind: 'beam', x: 222, y: 194, s: 1, rot: 9, sink: 0.3, opt: { len: 38 }, name: 'charred timber' },
+      { kind: 'spar', x: 222, y: 194, s: 1, rot: -1, sink: 0.4, opt: { len: 40, th: 3.2, charred: true, rig: true }, name: 'bowsprit (snapped, charred)', drift: 0.2 },
+      { kind: 'sabre', x: 30, y: 193, s: 0.9, rot: 62, sink: 0.35, stuck: true, name: 'sabre (stuck in the sand)' },
+      { kind: 'firePot', x: 128, y: 196, s: 1.3, rot: -4, sink: 0.35, opt: { state: 'broken' }, name: 'broken fire pot' },
+      { kind: 'beam', x: 268, y: 199, s: 1, rot: 2, sink: 0.35, opt: { len: 30 }, drift: -0.25, name: 'charred timber' },
       // the front row
-      { kind: 'anchor', x: 20, y: 205, s: 0.88, rot: 98, sink: 0.32, name: 'anchor' },
-      { kind: 'chain', x: 60, y: 206, s: 1.1, sink: 0.3, opt: { pts: [[-16, -1], [-8, 1.5], [0, 2.4], [8, 0.6], [16, 2.6]] }, name: 'chain' },
-      { kind: 'skull', x: 84, y: 207, s: 1.45, rot: -8, sink: 0.38, name: 'skull' },
-      { kind: 'firePot', x: 107, y: 205, s: 1.7, rot: 14, sink: 0.3, opt: { state: 'cracked' }, name: 'fire pot' },
-      { kind: 'firePot', x: 133, y: 208, s: 1.8, opt: { state: 'shards' }, sink: 0.2, name: 'fire pot shards' },
-      { kind: 'barrel', x: 158, y: 206, s: 0.62, rot: -7, sink: 0.33, name: 'powder keg' },
-      { kind: 'staves', x: 197, y: 207, s: 1.35, rot: 4, sink: 0.3, name: 'burst powder keg' },
-      { kind: 'sabre', x: 238, y: 207, s: 0.95, rot: -5, sink: 0.3, name: 'sabre' },
-      { kind: 'skull', x: 272, y: 207.5, s: 1.1, rot: 14, sink: 0.5, name: 'skull' }
+      { kind: 'anchor', x: 30, y: 206, s: 0.85, rot: 96, sink: 0.32, name: 'anchor' },
+      { kind: 'chain', x: 66, y: 206.5, s: 1.1, sink: 0.45, opt: { pts: [[-14, -1], [-7, 1.2], [0, 2], [7, 0.6], [14, 1.8]] }, name: 'chain', drift: 0.3, driftH: 0.7 },
+      { kind: 'skull', x: 90, y: 207, s: 1.45, rot: -8, sink: 0.38, name: 'skull' },
+      { kind: 'firePot', x: 112, y: 205, s: 1.7, rot: 12, sink: 0.3, opt: { state: 'cracked' }, name: 'fire pot' },
+      { kind: 'firePot', x: 136, y: 208, s: 1.7, opt: { state: 'shards' }, sink: 0.32, name: 'fire pot shards' },
+      { kind: 'keg', x: 168, y: 206, s: 1.05, rot: -3, sink: 0.3, opt: { kind: 'broken' }, drift: -0.2, name: 'powder keg (stove in)' },
+      { kind: 'staves', x: 205, y: 207, s: 1.3, rot: 2, sink: 0.35, name: 'burst powder keg' },
+      { kind: 'sabre', x: 238, y: 208, s: 0.82, rot: -3, sink: 0.3, drift: 0.25, name: 'sabre' },
+      { kind: 'skull', x: 276, y: 207.5, s: 1.1, rot: 14, sink: 0.5, name: 'skull' }
     ], seed: 23
   },
-  // the next two keep the picture of v4 for now (the next painter gives them their own death and things)
+  // the Endeavour blew up and broke her back: the after part torn off and settled stern down a span away, the decks
+  // open at the break; the mainmast still stands whole with its yards and the rags of its sails, the foremast fell
+  // across the bow into the sand, the mizzen snapped short; her cargo — the Company's crates, the gold — spilled
   endeavour: {
     light: 'endeavour', water: ['#86d0d2', '#3c94a4', '#1f6474'], glow: '#fffbe8', rays: 0.5, haze: ['#4a9cac', 0.15], back: ['#b4e6e6', 0.5],
-    sand: ['#f6e8c4', '#d8be8c', '#94805e'], fish: ['#f4c64c', 0.9], coral: ['#e8785a', '#f2b45e', '#c85c8e'], weed: ['#4e8a3c', '#62a04a', '#386830'],
-    rag: '#e2d6b4', hz: 150, ship: { ...SHIP0, x: 140, y: 181, scale: 1.62, tilt: 8, fall: { mast: 0, side: -1, ty: 168 } },
+    sand: ['#f6e8c4', '#d8be8c', '#94805e'], fish: ['#f4c64c', 0.9], coral: ['#c8907a', '#c8a47a', '#a8808e'], weed: ['#5a8a4a', '#6a9a56', '#466e3c'],
+    rag: '#d8ccaa', hz: 150,
+    ship: {
+      ...SHIP0, x: 200, y: 182, scale: 1.25, roll: -12, tilt: 6, brk: [0.3, 0.6, 0.22], bow: 14, stern: 3, sprit: 6, fall: { mast: 0, side: -1, ty: 180 },
+      holes: [{ X: -24, t: 0.62, r: 1.5, kind: 'shot' }, { X: -12, t: 0.35, r: 2.6, kind: 'breach' }],
+      fade: 0.8, growth: 0.8, rags: 0.8, yards: [1], slack: 1.6, torn: 2, rot: 3,
+      split: { X: 18, dx: 13, drop: 2.5, rot: 13 }, drifts: [[176, 9, 4]]
+    },
     props: [
-      { kind: 'anchor', x: 26, y: 200, s: 0.85, rot: 101, sink: 0.25 },
-      { kind: 'shot', x: 74, y: 204, s: 1.05, sink: 0.4 }, { kind: 'shot', x: 83, y: 206.5, s: 1.05, sink: 0.4 },
-      { kind: 'cannon', x: 124, y: 204, s: 0.66, rot: -4, sink: 0.35 },
-      { kind: 'barrel', x: 196, y: 205, s: 0.55, rot: -4, sink: 0.3 },
-      { kind: 'crate', x: 252, y: 199, s: 0.82, rot: 7, sink: 0.22 }, { kind: 'crate', x: 284, y: 206, s: 0.74, rot: -6, sink: 0.25 },
-      { kind: 'rock', x: 46, y: 207, s: 0.55, sink: 0.3 }
+      // the back row
+      { kind: 'coCrate', x: 30, y: 186, s: 0.75, rot: -7, sink: 0.24, opt: { state: 'whole', n: 2 }, name: 'Company crate', drift: -0.25 },
+      { kind: 'gun', x: 110, y: 187, s: 0.85, rot: -2, sink: 0.3, name: 'cannon' },
+      { kind: 'spyglass', x: 146, y: 191, s: 1.1, rot: 4, sink: 0.3, name: 'spyglass' },
+      // the middle
+      { kind: 'coinSpill', x: 118, y: 199, s: 1.0, sink: 0.15, opt: { n: 6, w: 14 }, name: 'coins' },
+      { kind: 'epaulette', x: 176, y: 199, s: 1.7, rot: 4, sink: 0.12, name: 'epaulette' },
+      { kind: 'gun', x: 230, y: 197, s: 0.9, rot: 2, sink: 0.3, drift: 0.2, name: 'cannon' },
+      // the front row
+      { kind: 'anchor', x: 26, y: 206, s: 0.85, rot: 100, sink: 0.3, name: 'anchor' },
+      { kind: 'coCrate', x: 72, y: 207, s: 1.1, rot: 6, sink: 0.22, opt: { state: 'burst', n: 7 }, name: 'Company crate (burst)' },
+      { kind: 'coinSpill', x: 104, y: 208.5, s: 1.3, sink: 0.15, opt: { n: 9, w: 20 }, name: 'coins (spilled from the crate)' },
+      { kind: 'ingots', x: 136, y: 208, s: 1.5, sink: 0.32, opt: { n: 3 }, name: 'gold ingots' },
+      { kind: 'button', x: 150, y: 200, s: 1.6, sink: 0.25, name: 'uniform button' },
+      { kind: 'gun', x: 188, y: 207.5, s: 1.2, rot: 1, sink: 0.26, name: 'cannon' },
+      { kind: 'ingots', x: 234, y: 207.5, s: 1.3, sink: 0.33, opt: { n: 2 }, drift: 0.3, name: 'gold ingots' },
+      { kind: 'coCrate', x: 272, y: 206.5, s: 0.95, rot: -5, sink: 0.26, opt: { state: 'whole', n: 7 }, name: 'Company crate', drift: 0.2 }
     ], seed: 37
   },
+  // the Dutchman did not break: she sank whole and the sea took her in — her hull grown over with shells, corals and
+  // weed until she is a part of the floor, the masts standing whole in the rags of their sails, weed hanging from the
+  // yards; round her the wreckage of other ships she took down
   dutch: {
     light: 'dutchman', water: ['#7eb098', '#3a6a58', '#22423a'], glow: '#dcf6e6', rays: 0.58, haze: ['#2c5446', 0.16], back: ['#b2e0c6', 0.66],
-    sand: ['#bcc2a0', '#86927a', '#4c5a46'], fish: ['#c4dccc', 0.62], coral: ['#7c9c6a', '#a0aa6c', '#5e8a7c'], weed: ['#3e7a3c', '#62984e', '#2c5230'],
-    rag: '#8a8670', shells: true, hz: 150, ship: { ...SHIP0, x: 166, y: 181, scale: 1.74, tilt: 9, fall: { mast: 0, side: -1, ty: 166 }, growth: 1 },
+    sand: ['#bcc2a0', '#86927a', '#4c5a46'], fish: ['#c4dccc', 0.62], coral: ['#8a9a72', '#a49c74', '#94786e'], weed: ['#3e7a3c', '#5a8c4a', '#2c5230'],
+    rag: '#8a8670', hz: 150,
+    ship: {
+      ...SHIP0, x: 192, y: 181, scale: 1.4, roll: -10, tilt: 3, brk: [0.93, 0.93, 0.93], bow: 13, stern: 9, sprit: undefined,
+      holes: [], fade: 0.4, growth: 1.6, rags: 1.3, yards: [0, 1, 2], slack: 1.3, torn: 1, reef: true, drifts: [[110, 12, 6], [196, 14, 5], [250, 10, 5]]
+    },
     props: [
-      { kind: 'anchor', x: 26, y: 200, s: 0.85, rot: 101, sink: 0.25 },
-      { kind: 'shot', x: 98, y: 203, s: 1.05, sink: 0.4 }, { kind: 'shot', x: 107, y: 206, s: 1.05, sink: 0.4 },
-      { kind: 'bottle', x: 146, y: 203, s: 0.72, rot: 10, sink: 0.35 },
-      { kind: 'cannon', x: 188, y: 204, s: 0.66, rot: -4, sink: 0.35 },
-      { kind: 'chest', x: 282, y: 200, s: 0.7, rot: -6, sink: 0.25 },
-      { kind: 'rock', x: 56, y: 207, s: 0.62, sink: 0.3 }
+      // the back row
+      { kind: 'mastYard', x: 44, y: 189, s: 0.88, rot: -1, sink: 0.35, opt: { sail: '#7a7a68' }, drift: 0.2, name: 'a mast with its yard (another ship\'s)' },
+      { kind: 'keg', x: 262, y: 193, s: 0.85, rot: -6, sink: 0.3, opt: { kind: 'foreign' }, name: 'another ship\'s barrel' },
+      // the middle
+      { kind: 'wheel', x: 78, y: 196, s: 1.25, rot: -12, sink: 0.36, stuck: true, name: 'ship\'s wheel' },
+      { kind: 'board', x: 146, y: 199, s: 1.1, rot: 2, sink: 0.3, opt: { len: 30, th: 4.4, paint: '#7a3a34' }, name: 'board of another ship (red paint)' },
+      { kind: 'chain', x: 220, y: 199, s: 1.25, sink: 0.45, opt: { pts: [[-14, 0.6], [-6, -1.2], [2, 1], [10, -0.4], [16, 1.4]] }, drift: -0.25, driftH: 0.8, name: 'chain' },
+      // the front row
+      { kind: 'anchor', x: 26, y: 206, s: 0.85, rot: 104, sink: 0.32, name: 'anchor' },
+      { kind: 'conch', x: 62, y: 207.5, s: 1.3, rot: -6, sink: 0.3, name: 'conch' },
+      { kind: 'chest', x: 108, y: 207, s: 0.78, rot: -5, sink: 0.26, opt: { open: 0, gold: false }, drift: 0.2, name: 'chest' },
+      { kind: 'shellBed', x: 146, y: 207.5, s: 1.3, rot: 3, sink: 0.3, name: 'shells on a timber' },
+      { kind: 'bell', x: 180, y: 206, s: 1.1, rot: -72, sink: 0.3, name: 'ship\'s bell (on its side)' },
+      { kind: 'board', x: 226, y: 207, s: 1.15, rot: -3, sink: 0.3, opt: { len: 34, th: 4.8, paint: '#3e5a7a' }, drift: 0.22, name: 'board of another ship (blue paint)' },
+      { kind: 'barrel', x: 270, y: 206, s: 0.6, rot: 4, sink: 0.33, opt: { kind: 'water' }, drift: -0.3, name: 'water cask' }
     ], seed: 41
   }
 };
@@ -282,44 +332,78 @@ function shell(x: number, y: number, s: number, rot: number, kind: number): stri
 }
 
 const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
-/** a torn rag of sail hanging from a spar stub at (x, y): the cloth drifts a little with the current (flow), soft folds
- *  sway along it, the foot is torn; the spar is drawn with it */
-function rag(x: number, y: number, w: number, h: number, color: string, R: () => number, flow: number, fringe = 0): string {
-  const ph = R() * 6, NU = 8, len = Array.from({ length: NU + 1 }, () => 0.5 + R() * 0.5);
+/** a torn rag of sail hanging from a spar at (x, y) (its top edge rises `slope` per mm): the cloth drifts with the current
+ *  (flow), soft folds sway along it, the foot is torn into a fringe of uneven threads and strips, holes of every size;
+ *  the spar is drawn with it (spar: false — the kit's own yard carries it) */
+function rag(x: number, y: number, w: number, h: number, color: string, R: () => number, flow: number, fringe = 0, slope = 0.06, spar = true): string {
+  const ph = R() * 6, NU = 10, len = Array.from({ length: NU + 1 }, () => 0.35 + R() * 0.65);
   const lenAt = (u: number) => { const i = Math.min(NU - 1, Math.floor(u * NU)), t = u * NU - i; return len[i] + (len[i + 1] - len[i]) * t; };
-  const at = (u: number, v: number): P => [x + u * w * (1 - 0.14 * v) + flow * h * 0.3 * v * v + Math.sin(v * 3.4 + u * 2.6 + ph) * 1.1 * v, y + u * w * 0.06 + v * h + Math.sin(u * 7 + ph) * 0.4 * v];
+  const at = (u: number, v: number): P => [x + u * w * (1 - 0.14 * v) + flow * h * 0.3 * v * v + Math.sin(v * 3.4 + u * 2.6 + ph) * 1.1 * v, y + u * w * slope + v * h + Math.sin(u * 7 + ph) * 0.4 * v];
   const top: P[] = [], right: P[] = [], foot: P[] = [], left: P[] = [];
   for (let i = 0; i <= NU; i++) top.push(at(i / NU, 0));
   for (let j = 1; j <= 6; j++) right.push(at(1, lenAt(1) * j / 6));
-  for (let i = NU; i >= 0; i--) { const u = i / NU; foot.push(at(u, lenAt(u))); if (i) foot.push(at(u - 0.5 / NU, lenAt(u - 0.5 / NU) - 0.08 - R() * 0.14)); }
+  for (let i = NU; i >= 0; i--) { const u = i / NU; foot.push(at(u, lenAt(u))); if (i) foot.push(at(u - 0.5 / NU, lenAt(u - 0.5 / NU) - 0.06 - R() * 0.22)); }
   for (let j = 5; j >= 1; j--) left.push(at(0, lenAt(0) * j / 6));
   const outline = [...top, ...right, ...foot, ...left].map(q => `${f(q[0])},${f(q[1])}`).join(' ');
   const dark = mix(color, '#000000', 0.45), light = mix(color, '#ffffff', 0.3);
   let folds = '';
-  for (const u of [0.18, 0.42, 0.66, 0.86]) {
+  for (const u of [0.16, 0.37, 0.58, 0.81]) {
     const pts: P[] = []; for (let v = 0; v <= lenAt(u) - 0.05; v += 0.1) pts.push(at(u, v));
     if (pts.length > 2) folds += `<path d="${spline(pts)}" fill="none" stroke="${dark}" stroke-width=".7" stroke-opacity=".38"/><path d="${spline(pts.map(q => [q[0] - 0.7, q[1]] as P))}" fill="none" stroke="${light}" stroke-width=".4" stroke-opacity=".35"/>`;
   }
-  const y1 = y + w * 0.06;
-  // the fringe: threads and narrow strips hanging from the torn foot, drifting with the current, and holes through the cloth
+  const y1 = y + w * slope;
+  // the fringe: threads and strips of every length hanging from the torn foot, drifting with the current; holes
   let fr = '', holes = '';
   if (fringe > 0) {
-    for (let i = 0; i <= NU * 4; i++) {
-      const u = i / (NU * 4), p0 = at(u, lenAt(u) - 0.04), l = h * fringe * (0.15 + R() * 0.55), sw = flow * l * 0.5 + (R() - 0.5) * 1.5;
-      const wd = R() < 0.3 ? 0.6 + R() * 0.6 : 0.22 + R() * 0.22;
+    for (let i = 0; i <= NU * 3; i++) {
+      if (R() < 0.3) continue;
+      const u = i / (NU * 3), p0 = at(u, lenAt(u) - 0.04), long = R() < 0.18, l = h * fringe * (long ? 0.5 + R() * 0.6 : 0.06 + R() * 0.3), sw = flow * l * 0.5 + (R() - 0.3) * 1.5;
+      const wd = long ? 0.5 + R() * 0.7 : 0.16 + R() * 0.2;
       fr += `<path d="M${f(p0[0])} ${f(p0[1])}C${f(p0[0] + sw * 0.2)} ${f(p0[1] + l * 0.4)} ${f(p0[0] + sw * 0.7 + Math.sin(i) * 0.6)} ${f(p0[1] + l * 0.7)} ${f(p0[0] + sw)} ${f(p0[1] + l)}" fill="none" stroke="${R() < 0.5 ? color : dark}" stroke-width="${f(wd)}" stroke-linecap="round" stroke-opacity="${f(0.6 + R() * 0.35)}"/>`;
     }
-    for (let i = 0; i < 2 + fringe * 3; i++) { const c = at(0.15 + R() * 0.7, 0.25 + R() * 0.45), r = 0.3 + R() * 0.6; holes += `<path d="M${f(c[0] - r)} ${f(c[1])}l${f(r * 0.6)} ${f(-r * 0.7)}l${f(r * 1.1)} ${f(r * 0.2)}l${f(r * 0.3)} ${f(r * 0.9)}l${f(-r * 0.9)} ${f(r * 0.4)}Z" fill="${dark}" fill-opacity=".7"/>`; }
+    for (let i = 0; i < 2 + fringe * 4; i++) { const c = at(0.1 + R() * 0.8, 0.15 + R() * 0.55), r = 0.25 + R() * R() * 2.2, a = R() * 6;
+      const ps: P[] = []; for (let k = 0; k < 7; k++) { const t = a + (k / 7) * Math.PI * 2, q = r * (0.5 + R() * 0.7); ps.push([c[0] + Math.cos(t) * q, c[1] + Math.sin(t) * q * 1.3]); }
+      holes += `<path d="M${pts2(ps)}Z" fill="${dark}" fill-opacity=".75"/>`; }
   }
   return `<g opacity=".92">${fr}<polygon points="${outline}" fill="${color}"/>${folds}${holes}<polygon points="${outline}" fill="none" stroke="${dark}" stroke-width=".25" stroke-opacity=".6"/></g>` +
-    `<path d="M${f(x - 2.4)} ${f(y - 0.25)}L${f(x + w + 2)} ${f(y1 + 0.2)}" stroke="#241c12" stroke-width="1.15" stroke-linecap="round"/><path d="M${f(x - 2)} ${f(y - 0.55)}L${f(x + w + 1.6)} ${f(y1 - 0.1)}" stroke="#6a5a40" stroke-width=".3" stroke-opacity=".7" stroke-linecap="round"/>`;
+    (spar ? `<path d="M${f(x - 2.4)} ${f(y - 0.25)}L${f(x + w + 2)} ${f(y1 + 0.2)}" stroke="#241c12" stroke-width="1.15" stroke-linecap="round"/><path d="M${f(x - 2)} ${f(y - 0.55)}L${f(x + w + 1.6)} ${f(y1 - 0.1)}" stroke="#6a5a40" stroke-width=".3" stroke-opacity=".7" stroke-linecap="round"/>` : '');
 }
-/** a stone (or a far rock) whose foot is at (x, y): an uneven dome lit from the upper left, its shadow on the sand to the right */
-function stone(x: number, y: number, w: number, h: number, R: () => number, shade = true): string {
-  const n = 9, pts: P[] = [];
-  for (let i = 0; i <= n; i++) { const a = Math.PI * (1 - i / n), e = i === 0 || i === n; pts.push([x + Math.cos(a) * w / 2 * (e ? 1 : 0.86 + R() * 0.18), y - (e ? 0 : Math.pow(Math.sin(a), 0.7) * h * (0.82 + R() * 0.25))]); }
-  const d = spline(pts) + `Q${f(x)} ${f(y + h * 0.12)} ${f(pts[0][0])} ${f(pts[0][1])}Z`;
-  return (shade ? `<ellipse cx="${f(x + w * 0.18)}" cy="${f(y + 0.15)}" rx="${f(w * 0.6)}" ry="${f(Math.max(0.35, h * 0.2))}" fill="#000" fill-opacity=".3"/>` : '') + `<path d="${d}" fill="url(#wPeb)"/>`;
+const pts2 = (p: P[]) => p.map(q => `${f(q[0])} ${f(q[1])}`).join('L');
+/** a sail half torn off: it hangs from the inner part of the yard by one corner, a long torn diagonal edge with ragged
+ *  threads and strips, holes, the free corner drifting with the current; the yard stub with it */
+function tornRag(x: number, y: number, w: number, h: number, color: string, R: () => number, flow: number): string {
+  const dark = mix(color, '#000000', 0.45), light = mix(color, '#ffffff', 0.3);
+  const a: P = [x, y], b: P = [x + w * 0.48, y + w * 0.02], tip: P = [x + w * 0.22 + flow * h * 0.4, y + h];
+  const edge: P[] = [b]; for (let i = 1; i < 14; i++) { const t = i / 14; edge.push([b[0] + (tip[0] - b[0]) * t + Math.sin(t * 9) * 0.8 + (R() - 0.5) * 1.6, b[1] + (tip[1] - b[1]) * t + (R() - 0.5) * 0.8]); }
+  edge.push(tip);
+  const leech: P[] = []; for (let i = 1; i < 8; i++) { const t = i / 8; leech.push([tip[0] + (a[0] - tip[0]) * t - Math.sin(t * Math.PI) * 2.4 + flow * Math.sin(t * Math.PI) * 1.2, tip[1] + (a[1] - tip[1]) * t]); }
+  const shape: P[] = [a, ...edge, ...leech];
+  let out = `<path d="M${pts2(shape)}Z" fill="${color}" opacity=".93"/>`;
+  for (let i = 0; i < 4; i++) { const t = 0.2 + i * 0.2, p0: P = [a[0] + (b[0] - a[0]) * t * 0.8, a[1]], p1: P = [tip[0] + (R() - 0.5) * 3, a[1] + h * (0.55 + t * 0.4)]; out += `<path d="M${f(p0[0])} ${f(p0[1] + 0.5)}Q${f((p0[0] + p1[0]) / 2 + 1.5)} ${f((p0[1] + p1[1]) / 2)} ${f(p1[0])} ${f(p1[1])}" fill="none" stroke="${i % 2 ? dark : light}" stroke-width="${i % 2 ? 0.7 : 0.4}" stroke-opacity=".35"/>`; }
+  for (let i = 0; i < 6; i++) { const t = R(), c: P = [a[0] + (tip[0] - a[0]) * t + (b[0] - a[0]) * (1 - t) * R() * 0.6 + 1, a[1] + (tip[1] - a[1]) * t * 0.9 + 1], r = 0.3 + R() * R() * 2;
+    const ps: P[] = []; for (let k = 0; k < 7; k++) { const q = (k / 7) * Math.PI * 2, rr = r * (0.5 + R() * 0.7); ps.push([c[0] + Math.cos(q) * rr, c[1] + Math.sin(q) * rr * 1.3]); }
+    out += `<path d="M${pts2(ps)}Z" fill="${dark}" fill-opacity=".8"/>`; }
+  for (const [i, q] of edge.entries()) { if (R() < 0.35) continue; const l = (R() < 0.2 ? 4 + R() * 6 : 0.6 + R() * 2.4), sw = flow * l * 0.6 + 0.5; out += `<path d="M${f(q[0])} ${f(q[1])}q${f(sw * 0.4)} ${f(l * 0.5)} ${f(sw)} ${f(l)}" fill="none" stroke="${i % 2 ? color : dark}" stroke-width="${f(l > 4 ? 0.6 : 0.2)}" stroke-linecap="round" stroke-opacity=".85"/>`; }
+  out += `<path d="M${pts2(shape)}Z" fill="none" stroke="${dark}" stroke-width=".25" stroke-opacity=".6"/>`;
+  return out + `<path d="M${f(x - 2.4)} ${f(y - 0.25)}L${f(x + w + 2)} ${f(y + w * 0.04 + 0.2)}" stroke="#241c12" stroke-width="1.15" stroke-linecap="round"/><path d="M${f(x - 2)} ${f(y - 0.55)}L${f(x + w + 1.6)} ${f(y + w * 0.04 - 0.1)}" stroke="#6a5a40" stroke-width=".3" stroke-opacity=".7" stroke-linecap="round"/>`;
+}
+/** weed hanging from a yard or a rail: a slack ribbon falling from (x, y), streaming to the right with the current */
+function hangWeed(x: number, y: number, l: number, color: string, R: () => number): string {
+  const w = 0.35 + R() * 0.4, sw = (0.25 + R() * 0.45) * l * 0.6, p1: P = [x + sw * 0.15, y + l * 0.45], p2: P = [x + sw * 0.6, y + l * 0.8], e: P = [x + sw, y + l];
+  return `<path d="M${f(x - w)} ${f(y)}C${f(p1[0] - w)} ${f(p1[1])} ${f(p2[0] - w * 0.6)} ${f(p2[1])} ${f(e[0])} ${f(e[1])}C${f(p2[0] + w * 0.6)} ${f(p2[1] - w)} ${f(p1[0] + w)} ${f(p1[1])} ${f(x + w)} ${f(y)}Z" fill="${color}" fill-opacity=".85"/>` +
+    `<path d="M${f(x)} ${f(y)}C${f(p1[0])} ${f(p1[1])} ${f(p2[0])} ${f(p2[1])} ${f(e[0])} ${f(e[1])}" fill="none" stroke="${mix(color, '#ffffff', 0.3)}" stroke-width=".12" stroke-opacity=".55"/>`;
+}
+/** a stone whose foot is at (x, y), its shadow on the sand to the right. kind 0 — an uneven dome, 1 — a flat slab, 2 — an
+ *  angular broken piece; sunk — the share of it under the sand (a lip of sand over its foot) */
+function stone(x: number, y: number, w: number, h: number, R: () => number, shade = true, kind = 0, sunk = 0): string {
+  const n = kind === 2 ? 6 : 9, pts: P[] = [];
+  for (let i = 0; i <= n; i++) { const a = Math.PI * (1 - i / n), e = i === 0 || i === n, k = kind === 1 ? Math.pow(Math.sin(a), 0.3) : kind === 2 ? 0.6 + R() * 0.5 : Math.pow(Math.sin(a), 0.7);
+    pts.push([x + Math.cos(a) * w / 2 * (e ? 1 : 0.86 + R() * 0.18), y - (e ? 0 : k * h * (0.82 + R() * 0.25))]); }
+  const d = (kind === 2 ? `M${pts2(pts)}` : spline(pts)) + `Q${f(x)} ${f(y + h * 0.12)} ${f(pts[0][0])} ${f(pts[0][1])}Z`;
+  let o = (shade ? `<ellipse cx="${f(x + w * 0.2)}" cy="${f(y + 0.15)}" rx="${f(w * 0.6)}" ry="${f(Math.max(0.35, h * 0.2))}" fill="#000" fill-opacity=".26"/>` : '') + `<path d="${d}" fill="url(#wPeb)"/>`;
+  if (kind === 2) o += `<path d="M${f(pts[2][0])} ${f(pts[2][1])}L${f(x + w * 0.1)} ${f(y - h * 0.2)}" stroke="#000" stroke-width=".2" stroke-opacity=".35"/>`;
+  if (sunk > 0) { const yy = y - h * sunk; o += `<path d="M${f(x - w * 0.62)} ${f(y + 0.3)}C${f(x - w * 0.5)} ${f(yy)} ${f(x + w * 0.5)} ${f(yy - h * 0.05)} ${f(x + w * 0.66)} ${f(y + 0.3)}Z" fill="url(#wFloor)"/>`; }
+  return o;
 }
 
 // ---- the scene ----
@@ -361,12 +445,20 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
   const fog = mix(mix(w1, w2, 0.3), sea.back[0], 0.22), out: string[] = [];
   const dep = (y: number) => clamp01((y - H) / (PAGE.h - H));
   const poly = (p: P[]) => p.map(q => `${f(q[0])},${f(q[1])}`).join(' ');
+  const coral = sea.coral.map(c => mix(c, sea.haze[0], 0.22));
 
-  // ---- the geometry: the ship (local coordinates, the group is tilted about the middle of the waterline), the sand ----
+  // ---- the geometry: the ship (local coordinates, the group is tilted about the middle of the waterline; a broken
+  // hull's after part moved and turned again about the keel at the break), the sand ----
   const o = { kind: key, x: S.x, y: S.y, scale: s, roll: S.roll, sails: 'furled', seed: sea.seed };
-  const body = K.ship(u, L, o), geom = K.shipGeom(key, o), masts = [...geom.masts].sort((a, b) => a.x - b.x);
+  const body = K.ship(u, L, o), geom = K.shipGeom(key, o), masts = [...geom.masts].sort((a, b) => a.x - b.x), mSpec = [...sp.masts as unknown as { x: number; H: number; n: number; k: number; Q?: number[]; rake?: number }[]].sort((a, b) => a.x - b.x);
   const hl = (sp.len / 2) * s, stem = S.x - hl, stern = S.x + hl, draft = sp.draft * s, deck = S.y - sp.free * s;
-  const ra = -S.tilt * Math.PI / 180, rot = (p: P): P => [S.x + (p[0] - S.x) * Math.cos(ra) - (p[1] - S.y) * Math.sin(ra), S.y + (p[0] - S.x) * Math.sin(ra) + (p[1] - S.y) * Math.cos(ra)];
+  const ra = -S.tilt * Math.PI / 180, rot0 = (p: P): P => [S.x + (p[0] - S.x) * Math.cos(ra) - (p[1] - S.y) * Math.sin(ra), S.y + (p[0] - S.x) * Math.sin(ra) + (p[1] - S.y) * Math.cos(ra)];
+  const SP = S.split, xs = SP ? S.x + SP.X * s : Infinity, piv = SP ? rot0([xs, S.y + draft * 0.95]) : [0, 0] as P, sa = SP ? SP.rot * Math.PI / 180 : 0;
+  /** a point of the ship's own frame put into the scene */
+  const rot = (p: P): P => { const q = rot0(p); if (!SP || p[0] <= xs) return q; const dx = q[0] - piv[0], dy = q[1] - piv[1]; return [piv[0] + dx * Math.cos(sa) - dy * Math.sin(sa) + SP.dx, piv[1] + dx * Math.sin(sa) + dy * Math.cos(sa) + SP.drop]; };
+  const tf = `rotate(${f(-S.tilt)} ${f(S.x)} ${f(S.y)})`, tf2 = SP ? `translate(${f(SP.dx)} ${f(SP.drop)}) rotate(${f(SP.rot)} ${f(piv[0])} ${f(piv[1])}) ${tf}` : '';
+  /** what is drawn in the ship's own frame, put into the scene: whole, or the two parts of a broken hull */
+  const inShip = (c: string) => SP ? `<g transform="${tf}"><g clip-path="url(#wPartA)">${c}</g></g><g transform="${tf2}"><g clip-path="url(#wPartB)">${c}</g></g>` : `<g transform="${tf}">${c}</g>`;
   const mx = masts.map(m => S.x + m.x * s), yb = masts.map((m, i) => S.y - (S.brk[i] ?? 0.45) * (S.y - m.top[1]));
   const rail: P[] = []; for (let X = -sp.len / 2; X <= sp.len / 2 + 0.01; X += 4) { const q = geom.nearRail(X); rail.push([q[0], q[1] - 1.2 * s]); }
   const keelL: P[] = [[stern + sp.over * s * 0.8, S.y + 0.1 * draft], [stern, S.y + draft * 0.85], [S.x, S.y + draft], [stem + 6 * s, S.y + draft * 0.75], [stem - sp.bow[0] * s * 0.5, S.y - 1 * s]];
@@ -374,13 +466,15 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
   const keel: P[] = []; for (let X = stem + 8 * s; X <= stern - 3 * s; X += 4) { const t = (X - S.x) / hl; keel.push(rot([X, S.y + draft * (1 - 0.3 * Math.pow(Math.abs(t), 3))])); }
   const stemP = rot([stem, S.y]), sternP = rot([stern, S.y]);
   const baseL = rot([stem + 6 * s, S.y + draft * 0.75])[1] + 4, baseR = rot([stern, S.y + draft * 0.85])[1] + 4;
-  const lump = (x: number) => Math.sin(x / 6.5 + sea.seed) * 0.6 - 1.4 * Math.pow(Math.max(0, Math.sin(x / 9.3 + sea.seed * 2)), 4);
+  // the crest of the sand along the hull: uneven — swells and hollows of several sizes
+  const lump = (x: number) => Math.sin(x / 6.5 + sea.seed) * 0.9 + Math.sin(x / 2.7 + sea.seed * 3) * 0.35 - 1.8 * Math.pow(Math.max(0, Math.sin(x / 9.3 + sea.seed * 2)), 4);
   const along = (x: number) => { const t = clamp01((x - stemP[0]) / (sternP[0] - stemP[0])); return stemP[1] + t * (sternP[1] - stemP[1]) - (S.bow + (S.stern - S.bow) * smooth(t)); };
+  const bank = (x: number) => (S.drifts ?? []).reduce((y, [c, w, h]) => y - h * Math.pow(Math.max(0, 1 - Math.pow((x - c) / w, 2)), 1.5), 0);
   /** the top of the sand heaped along the hull; beyond the ends it runs down to the floor */
   const crest = (x: number) => {
-    if (x < stemP[0]) { const k = smooth((stemP[0] - x) / 30); return along(stemP[0]) + (baseL - along(stemP[0])) * k + lump(x) * (1 - k); }
-    if (x > sternP[0]) { const k = smooth((x - sternP[0]) / 26); return along(sternP[0]) + (baseR - along(sternP[0])) * k + lump(x) * (1 - k); }
-    return along(x) + lump(x);
+    if (x < stemP[0]) { const k = smooth((stemP[0] - x) / 30); return along(stemP[0]) + (baseL - along(stemP[0])) * k + lump(x) * (1 - k) + bank(x); }
+    if (x > sternP[0]) { const k = smooth((x - sternP[0]) / 26); return along(sternP[0]) + (baseR - along(sternP[0])) * k + lump(x) * (1 - k) + bank(x); }
+    return along(x) + lump(x) + bank(x);
   };
   const span: [number, number] = [stemP[0] - 4, sternP[0] + 4];
   const farTop = (x: number) => H + Math.sin(x / 41 + sea.seed) * 1.1 + Math.sin(x / 13 + sea.seed * 2) * 0.45;
@@ -402,47 +496,78 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
       `<g id="wFallG" clip-path="url(#wFallC)"><g transform="translate(${f(F[0])} ${f(F[1])}) rotate(${f(th)}) translate(${f(-mx[i])} ${f(-yb[i])})"><g clip-path="url(#wHigh)"><use href="#${u}Body"/></g></g></g>`;
   }
   const RD = rng(sea.seed * 5 + 1);
-  /** the break of a mast: jagged; the mast kept to its top ends level, as the kit draws its top */
-  const jag = (i: number): P[] => i === S.keep ? [[mx[i] - 4.2 * s, yb[i] + 0.4 * s], [mx[i] + 4.2 * s, yb[i] + 0.4 * s]] :
-    [[mx[i] - 2.4 * s, yb[i] + 0.7 * s], [mx[i] - 1.1 * s, yb[i] - 1.7 * s], [mx[i] - 0.2 * s, yb[i] + 1 * s], [mx[i] + 0.8 * s, yb[i] - 1.2 * s], [mx[i] + 2.4 * s, yb[i] + 0.5 * s]];
+  /** the yards of a mast (kit units → the ship's frame): the middle and the half-length of each, from the top down */
+  const yardsOf = (i: number) => {
+    const m = mSpec[i], hD = sp.free - 1.5, Hm = m.H - hD, Q = m.Q ?? ({ 4: [0.36, 0.62, 0.8, 0.94], 3: [0.4, 0.7, 0.93], 2: [0.46, 0.86] } as Record<number, number[]>)[m.n], WY = [0.14, 0.108, 0.078, 0.054], rk = Math.tan(((m.rake ?? 0) * Math.PI) / 180);
+    const cr = Math.cos((S.roll * Math.PI) / 180);
+    return Q.map((q0, j) => { const q = j ? q0 + (Q[j - 1] - q0) * (j === 1 ? 0.5 : 0.38) : q0; return { c: [S.x + (m.x + rk * q * Hm) * s, S.y - (hD + q * Hm) * cr * s] as P, hw: WY[j] * sp.len * m.k * s }; });
+  };
+  const keepsYards = (i: number) => !!S.yards?.includes(i);
+  const yardHW = (i: number) => Math.max(...yardsOf(i).filter(y => y.c[1] > yb[i]).map(y => y.hw), 3 * s);
+  /** the break of a mast: a level cut (kept to its top, or standing with its yards), a slant snapped or burnt through,
+   *  or a ragged break with long splinters */
+  const jag = (i: number): P[] => {
+    if (keepsYards(i)) { const hw = yardHW(i) + 1.2 * s; return [[mx[i] - hw, yb[i]], [mx[i] + hw, yb[i]]]; }
+    if (i === S.keep) return [[mx[i] - 4.2 * s, yb[i] + 0.4 * s], [mx[i] + 4.2 * s, yb[i] + 0.4 * s]];
+    const e = i % 2 ? 1 : -1;
+    if (S.slant) return [[mx[i] - 2.4 * s, yb[i] + e * 2.2 * s], [mx[i] - 0.9 * s, yb[i] + e * 1.1 * s], [mx[i] - 0.3 * s, yb[i] + e * 1.5 * s - 0.8 * s], [mx[i] + 0.6 * s, yb[i] - e * 0.6 * s], [mx[i] + 2.4 * s, yb[i] - e * 2.2 * s]];
+    return [[mx[i] - 2.4 * s, yb[i] + 0.8 * s], [mx[i] - 1.7 * s, yb[i] - 1.9 * s], [mx[i] - 1.1 * s, yb[i] - 0.2 * s], [mx[i] - 0.4 * s, yb[i] - 3.6 * s], [mx[i] + 0.3 * s, yb[i] - 0.5 * s],
+      [mx[i] + 0.9 * s, yb[i] - 2.4 * s], [mx[i] + 1.5 * s, yb[i] - 0.9 * s], [mx[i] + 2.4 * s, yb[i] + 0.6 * s]];
+  };
   // what is kept of the kit ship: the bow and the bowsprit (or its stub, snapped at S.sprit), each stump to its break with
-  // the shrouds under it (a tent from the break down to the rail), between the masts and aft only the hull to a little
-  // over its rail (no loose yards or gaffs floating over the deck, no ensign: it would fly as in a wind); with S.aft the
-  // stern castle is gone from there aft: a jagged break falls from the rail to the lower deck
+  // the shrouds under it (a tent from the break down to the rail), a mast standing with its yards in a box as wide as its
+  // yards, between the masts and aft only the hull to a little over its rail; with S.aft the stern castle is gone from
+  // there aft: a jagged break falls from the rail to the lower deck
   const railAt = (x: number) => { const X = Math.max(-sp.len / 2, Math.min(sp.len / 2, (x - S.x) / s)); return Math.min(geom.nearRail(X)[1], geom.farRail(X)[1]) - 3.5 * s; };
-  const xL = stem - 80, xEnd = stern + (sp.over + Math.max(...sp.tw)) * s + 0.3, low: P[] = [[xL, S.y + 80]];
+  const xL = stem - 80, xEnd = stern + (sp.over + Math.max(...sp.tw) + (S.aft == null ? 5 : 0)) * s + 0.3, low: P[] = [[xL, S.y + 80]];
   const xAft = S.aft != null ? S.x + S.aft * s : Infinity, kept = masts.map((_, i) => i).filter(i => mx[i] < xAft - 4 * s);
+  const tent = (S.burnt ?? 0) > 0.5 ? 3.5 : 13, side = (i: number) => (keepsYards(i) ? yardHW(i) + 1.4 * s : tent * s);
   if (S.sprit != null) {
     const xc = stem - S.sprit * s, yH = S.y - sp.free * 0.5 * s;
     low.push([xL, yH], [xc - 0.6 * s, yH], ...jagLine([xc - 0.6 * s, yH], [xc, yb[0] - 3 * s], 7, 1.1 * s, RD), [xc, yb[0] - 3 * s]);
-  } else low.push([xL, yb[0] - 3 * s]);
-  low.push(...jag(kept[0]));
-  // the tent of shrouds under each stump: burnt away on a burnt ship
-  const tent = (S.burnt ?? 0) > 0.5 ? 3.5 : 13;
+  } else low.push([xL, Math.min(yb[0], railAt(stem) - 20 * s)]);
   const along2 = (xa: number, xb: number) => { for (let x = xa; x < xb; x += 3) low.push([x, railAt(x)]); low.push([xb, railAt(xb)]); };
+  if (keepsYards(kept[0])) low.push([mx[kept[0]] - side(kept[0]), Math.min(railAt(mx[kept[0]] - side(kept[0])), low[low.length - 1][1])]);
+  low.push(...jag(kept[0]));
   for (let k = 0; k < kept.length - 1; k++) {
-    const i = kept[k], xa = mx[i] + tent * s, xb = mx[kept[k + 1]] - tent * s;
-    if (xa < xb) along2(xa, xb); else low.push([(mx[i] + mx[kept[k + 1]]) / 2, Math.max(railAt((mx[i] + mx[kept[k + 1]]) / 2), (yb[i] + yb[kept[k + 1]]) / 2)]);
-    low.push(...jag(kept[k + 1]));
+    const i = kept[k], j = kept[k + 1], xa = mx[i] + side(i), xb = mx[j] - side(j);
+    if (keepsYards(i)) low.push([xa, railAt(xa)]);
+    if (xa < xb) along2(xa, xb); else low.push([(mx[i] + mx[j]) / 2, Math.max(railAt((mx[i] + mx[j]) / 2), (yb[i] + yb[j]) / 2)]);
+    if (keepsYards(j)) low.push([xb, railAt(xb)]);
+    low.push(...jag(j));
   }
   const last = kept[kept.length - 1];
+  if (keepsYards(last)) low.push([mx[last] + side(last), railAt(mx[last] + side(last))]);
   /** the line of the fallen-in stern: from the rail at xAft down to the lower deck at the transom */
   const xT = stern + sp.over * s * 0.45, brkY = (x: number) => { const t = clamp01((x - xAft) / (xT - xAft)); return railAt(xAft) + 3.5 * s + (S.y + 0.5 * s - railAt(xAft) - 3.5 * s) * Math.pow(t, 0.8); };
   const brkL: P[] = [];
   if (xAft < xEnd) {
-    along2(Math.min(mx[last] + tent * s, xAft - 1), xAft);
+    along2(Math.min(mx[last] + side(last), xAft - 1), xAft);
     for (let x = xAft, n = 0; x < xT; x += (1.2 + RD() * 1.6) * s, n++) brkL.push([x, brkY(x) + (n % 2 ? -1 : 0.4) * (0.6 + RD() * 1.4) * s]);
     brkL.push([xT + 0.6 * s, S.y + 1.2 * s], [xEnd, S.y + 1.5 * s]);   // the counter and the transom gone with it
     low.push(...brkL);
-  } else along2(Math.min(mx[last] + tent * s, xEnd - 1), xEnd);
+  } else along2(Math.min(mx[last] + side(last), xEnd - 1), xEnd);
   low.push([xEnd, S.y + 80]);
   let high = '';
   if (S.fall) { const i = S.fall.mast, hw = 2.6 * s, topY = masts[i].top[1] - 12 * s, j = jag(i); high = `<clipPath id="wHigh"><polygon points="${poly([[mx[i] - hw, topY], [mx[i] + hw, topY], [mx[i] + hw, j[j.length - 1][1]], ...[...j].reverse(), [mx[i] - hw, j[0][1]]])}"/></clipPath>`; }
+  // the break of a hull broken in two: the jagged line of the break and the two parts' clips; the open inside at the break
+  let parts = '', brkFace = '';
+  if (SP) {
+    const top = Math.min(...yb) - 60, bot = S.y + draft + 20, J: P[] = [[xs, top]];
+    for (let y = railAt(xs) - 2 * s, n = 0; y < S.y + draft + 2; y += (1.4 + RD() * 1.6) * s, n++) J.push([xs + (n % 2 ? 1 : -1) * (0.6 + RD() * 1.6) * s, y]);
+    J.push([xs, bot]);
+    parts = `<clipPath id="wPartA"><polygon points="${poly([[xL - 50, top], ...J, [xL - 50, bot]])}"/></clipPath><clipPath id="wPartB"><polygon points="${poly([[xEnd + 80, top], ...J, [xEnd + 80, bot]])}"/></clipPath>`;
+    const y0 = railAt(xs) - 1.5 * s, y1 = S.y + draft * 0.95, bw = 3.2 * s;
+    brkFace = `<path d="M${f(xs - bw)} ${f(y0)}H${f(xs + bw)}V${f(y1)}H${f(xs - bw)}Z" fill="#0c0a08"/>`;
+    // the decks seen end-on in the break, frames standing in it, splintered plank ends
+    for (const t of [0.22, 0.45, 0.68]) { const y = y0 + (S.y - y0) * t; brkFace += `<path d="M${f(xs - bw)} ${f(y)}H${f(xs + bw)}" stroke="#6a5a44" stroke-width="${f(0.45 * s)}"/><path d="M${f(xs - bw)} ${f(y + 0.35 * s)}H${f(xs + bw)}" stroke="#241a10" stroke-width="${f(0.3 * s)}"/>`; }
+    for (let x = xs - bw + 0.6 * s; x < xs + bw; x += 1.6 * s) brkFace += `<path d="M${f(x)} ${f(y0 + 1.5 * s)}V${f(y1 - 1.5 * s)}" stroke="#3a2c1e" stroke-width="${f(0.55 * s)}"/><path d="M${f(x - 0.15 * s)} ${f(y0 + 1.5 * s)}V${f(y1 - 1.5 * s)}" stroke="#8a7458" stroke-width="${f(0.14 * s)}" stroke-opacity=".7"/>`;
+  }
   // the hull: the fouled bottom under the old waterline with the rudder, then the kit's ship cut at the breaks
   let foul = '';
   for (let i = 0; i < 26; i++) { const x = stem + 8 * s + R() * (stern - stem - 14 * s), y = S.y + R() * draft * 0.8; foul += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(0.6 + R() * 1.6)}" ry="${f(0.4 + R() * 0.9)}" fill="${sea.weed[i % 3]}" fill-opacity=".55"/>`; }
   // how she died, drawn on the kit's hull (in its own frame, before the tilt): the holes in the side; the fallen-in stern —
-  // the dark inside under the break, the frames standing up out of it, the ends of the planks
+  // the dark inside under the break, the frames standing up out of it, the sternpost standing up out of it all
   let dmg = '';
   for (const h of S.holes ?? []) { const q = geom.nearRail(h.X); dmg += holeSvg(q[0], S.y + h.t * (q[1] - S.y), h.r * s, h.kind, RD, S.burnt ?? 0); }
   let frames = '';
@@ -455,11 +580,21 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
         `<path d="M${f(x - w / 2 + 0.15)} ${f(y0)}L${f(top[0] - w / 2 + 0.15)} ${f(top[1] + 0.7 * s)}" stroke="${c[1]}" stroke-width="${f(0.22 * s)}" stroke-opacity=".8"/>`;
     }
     for (const [x, y] of brkL.filter((_, i) => i % 2)) frames += `<path d="M${f(x)} ${f(y)}l${f((RD() - 0.2) * 2.2 * s)} ${f(-(0.8 + RD()) * s)}l${f(0.5 * s)} ${f(0.6 * s)}Z" fill="${c[0]}"/>`;
+    // the sternpost: the stern's backbone, standing up bare out of the fallen-in stern, leaning aft, its head burnt to a point
+    const sx = stern + 0.5 * s, sy0 = S.y + draft * 0.6, sy1 = railAt(xAft) - 1 * s;
+    frames += `<path d="M${f(sx - 0.9 * s)} ${f(sy0)}L${f(sx + 1.6 * s)} ${f(sy1 + 0.8 * s)}L${f(sx + 2.1 * s)} ${f(sy1 - 0.6 * s)}L${f(sx + 2.5 * s)} ${f(sy1 + 1.4 * s)}L${f(sx + 1 * s)} ${f(sy0)}Z" fill="${c[0]}"/><path d="M${f(sx - 0.6 * s)} ${f(sy0)}L${f(sx + 1.7 * s)} ${f(sy1 + 1 * s)}" stroke="${c[1]}" stroke-width="${f(0.25 * s)}"/>`;
   }
-  const hullG = `<g id="wHullG" transform="rotate(${f(-S.tilt)} ${f(S.x)} ${f(S.y)})">` +
-    `<path d="M${f(stem - 1)} ${f(S.y - 0.5)}C${f(stem + 6 * s)} ${f(S.y + draft * 0.75)} ${f(stem + hl * 0.4)} ${f(S.y + draft)} ${f(S.x)} ${f(S.y + draft)}C${f(S.x + hl * 0.6)} ${f(S.y + draft)} ${f(stern - 3 * s)} ${f(S.y + draft * 0.8)} ${f(stern + 1.5 * s)} ${f(S.y - 0.5)}Z" fill="url(#wKeel)"/>` +
+  // rotten gaps in the bulwark: dark ragged notches along the rail, the planks gone between the stanchions
+  let rotG = '';
+  for (let i = 0; i < (S.rot ?? 0); i++) {
+    const X = -sp.len / 2 + 10 + RD() * (sp.len - 18), q = geom.nearRail(X), w = (1.2 + RD() * 2.4) * s, d = (1 + RD() * 1.4) * s;
+    if (S.x + X * s > xAft - 2 * s) continue;
+    const ps: P[] = [[q[0] - w / 2, q[1] - 0.2 * s], ...jagLine([q[0] - w / 2, q[1] - 0.2 * s], [q[0] + w / 2, q[1] - 0.2 * s], 5, -d, RD), [q[0] + w / 2, q[1] - 0.2 * s], [q[0] + w * 0.3, q[1] + d * 0.4], [q[0] - w * 0.3, q[1] + d * 0.4]];
+    rotG += `<path d="M${poly(ps).replace(/ /g, 'L')}Z" fill="#0a0806" fill-opacity=".85"/><path d="M${f(q[0] - w * 0.1)} ${f(q[1] - d * 0.6)}V${f(q[1] + 0.6 * s)}" stroke="#4a3c2c" stroke-width="${f(0.35 * s)}"/>`;
+  }
+  const hullG = `<g id="wHullG">` + inShip(`<path d="M${f(stem - 1)} ${f(S.y - 0.5)}C${f(stem + 6 * s)} ${f(S.y + draft * 0.75)} ${f(stem + hl * 0.4)} ${f(S.y + draft)} ${f(S.x)} ${f(S.y + draft)}C${f(S.x + hl * 0.6)} ${f(S.y + draft)} ${f(stern - 3 * s)} ${f(S.y + draft * 0.8)} ${f(stern + 1.5 * s)} ${f(S.y - 0.5)}Z" fill="url(#wKeel)"/>` +
     `<path d="M${f(stern - 0.5 * s)} ${f(S.y - 2 * s)}L${f(stern + 3.8 * s)} ${f(S.y - 1 * s)}L${f(stern + 3 * s)} ${f(S.y + draft * 0.82)}L${f(stern - 1.5 * s)} ${f(S.y + draft * 0.86)}Z" fill="#1c1b16"/>${foul}` +
-    `${frames}<g clip-path="url(#wLow)"><use href="#${u}Body"/></g></g>`;
+    `${frames}<g clip-path="url(#wLow)"><use href="#${u}Body"/>${brkFace}</g>`) + `</g>`;
   const sil = (flt: string) => (fallG ? `<use href="#wFallG" filter="url(#${flt})"/>` : '') + `<use href="#wHullG" filter="url(#${flt})"/>`;
 
   // ---- defs ----
@@ -468,6 +603,8 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
     `<feColorMatrix in="t" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 0 0" result="a0"/><feComponentTransfer in="a0" result="a"><feFuncA type="table" tableValues="${table}"/></feComponentTransfer>` +
     `<feFlood flood-color="${sea.glow}" result="c"/><feComposite in="c" in2="a" operator="in"/></filter>`;
   const stoneC = mix(sd2, '#5c5a56', 0.35);
+  // the char runs from charFrom aft: soot only before it
+  const cx0 = S.x + (S.charFrom ?? -sp.len) * s;
   out.push(`<defs>
 <linearGradient id="wW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${w0}"/><stop offset=".45" stop-color="${w1}"/><stop offset=".72" stop-color="${mix(w1, w2, 0.6)}"/><stop offset="1" stop-color="${w2}"/></linearGradient>
 <radialGradient id="wSun" cx=".3" cy="-.08" r=".7"><stop offset="0" stop-color="${sea.glow}" stop-opacity=".42"/><stop offset=".5" stop-color="${sea.glow}" stop-opacity=".1"/><stop offset="1" stop-color="${sea.glow}" stop-opacity="0"/></radialGradient>
@@ -480,11 +617,14 @@ export function seaFloorSvg(key: ShipKey, sea: Sea, pl: Plates, props: Placed[],
 <linearGradient id="wFarG" gradientUnits="userSpaceOnUse" x1="0" y1="${H + 18}" x2="0" y2="${H + 34}"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
 <linearGradient id="wKeel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix('#4a4632', sea.weed[2], .35)}"/><stop offset=".45" stop-color="${mix('#262618', sea.weed[2], .3)}"/><stop offset="1" stop-color="#0e100c"/></linearGradient>
 <linearGradient id="wAO" gradientUnits="userSpaceOnUse" x1="0" y1="${f(hullTop)}" x2="0" y2="${f(crestMax)}"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".5" stop-color="#000" stop-opacity=".06"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></linearGradient>
-<linearGradient id="wCrestHi" gradientUnits="userSpaceOnUse" x1="${f(B0)}" y1="0" x2="${f(B1)}" y2="0"><stop offset="0" stop-color="${mix(sd0, '#ffffff', .3)}" stop-opacity="0"/><stop offset=".16" stop-color="${mix(sd0, '#ffffff', .3)}" stop-opacity="1"/><stop offset=".86" stop-color="${mix(sd0, '#ffffff', .3)}" stop-opacity="1"/><stop offset="1" stop-color="${mix(sd0, '#ffffff', .3)}" stop-opacity="0"/></linearGradient>
+<linearGradient id="wCrestHi" gradientUnits="userSpaceOnUse" x1="${f(B0)}" y1="0" x2="${f(B1)}" y2="0"><stop offset="0" stop-color="${mix(sd0, sd1, .3)}" stop-opacity="0"/><stop offset=".16" stop-color="${mix(sd0, sd1, .3)}" stop-opacity="1"/><stop offset=".86" stop-color="${mix(sd0, sd1, .3)}" stop-opacity="1"/><stop offset="1" stop-color="${mix(sd0, sd1, .3)}" stop-opacity="0"/></linearGradient>
 <linearGradient id="wCrestSh" gradientUnits="userSpaceOnUse" x1="${f(B0)}" y1="0" x2="${f(B1)}" y2="0"><stop offset="0" stop-color="${sd2}" stop-opacity="0"/><stop offset=".16" stop-color="${sd2}" stop-opacity="1"/><stop offset=".86" stop-color="${sd2}" stop-opacity="1"/><stop offset="1" stop-color="${sd2}" stop-opacity="0"/></linearGradient>
+<linearGradient id="wCharG" gradientUnits="userSpaceOnUse" x1="${f(cx0 - 14)}" y1="0" x2="${f(cx0 + 22)}" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="1"/></linearGradient>
+<mask id="wCharM" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PAGE.h}"><rect width="${W}" height="${PAGE.h}" fill="url(#wCharG)"/></mask>
 <radialGradient id="wPeb" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="${mix(stoneC, '#ffffff', .4)}"/><stop offset=".5" stop-color="${stoneC}"/><stop offset="1" stop-color="${mix(stoneC, '#000000', .5)}"/></radialGradient>
 <radialGradient id="wBack" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${sea.back[0]}" stop-opacity="${sea.back[1]}"/><stop offset=".6" stop-color="${sea.back[0]}" stop-opacity="${sea.back[1] * 0.45}"/><stop offset="1" stop-color="${sea.back[0]}" stop-opacity="0"/></radialGradient>
 <radialGradient id="wVig" cx=".5" cy=".42" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></radialGradient>
+<filter id="wDesat" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="${f(1 - (S.fade ?? 0) * 0.55)}"/></filter>
 <filter id="wB3" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
 <filter id="wB2" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="2.2"/></filter>
 <filter id="wB1" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".9"/></filter>
@@ -495,9 +635,8 @@ ${hullAgeDefs()}
 <filter id="wBlack" x="-5%" y="-5%" width="110%" height="110%"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/></filter>
 ${cau('wCauF', 0.12, 0.36, sea.seed, '1 .4 .08 0 0 0 0 0 0 0 0 0', H, PAGE.h - H)}
 ${cau('wCauN', 0.065, 0.16, sea.seed + 7, '1 .5 .14 0 0 0 0 0 0 0 0 0', H, PAGE.h - H)}
-${cau('wCauH', 0.16, 0.2, sea.seed + 3, '1 .36 .06 0 0 0 0 0 0 0 0 0 0', 0, PAGE.h)}
 <g id="${u}Body">${body}</g>
-<clipPath id="wLow"><polygon points="${poly(low)}"/></clipPath>${high}
+<clipPath id="wLow"><polygon points="${poly(low)}"/></clipPath>${high}${parts}
 ${hullG}${fallG}
 <mask id="wSilM" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PAGE.h}">${sil('wWhite')}</mask>
 <mask id="wFloorM" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PAGE.h}"><path d="${floorD}" fill="url(#wFade)"/>${sil('wBlack')}<path d="${bermD}" fill="url(#wFade)"/></mask>
@@ -533,75 +672,146 @@ ${hullG}${fallG}
   let far = '';
   for (let i = 0; i < 9; i++) { const x = 6 + i * 36 + R() * 20, w = 18 + R() * 26, y = farTop(x) + 0.8; far += `<path d="M${f(x - w / 2)} ${f(y)}C${f(x - w / 3)} ${f(y - 3 - R() * 4)} ${f(x + w / 4)} ${f(y - 4 - R() * 5)} ${f(x + w / 2)} ${f(y)}Z" fill="${mix(fog, w2, 0.3)}" fill-opacity=".8"/>`; }
   out.push(`<g filter="url(#wB1)">${far}</g>`);
+  const WK: WeedKind[] = ['grass', 'bush', 'ribbon', 'lettuce'];
   let mid = '';
   for (let i = 0; i < 16; i++) {
     const x = R() * W, y = farTop(x) + 2 + R() * 16, k = dep(y), op = clamp01(0.25 + k * 1.8);
-    if (R() < 0.55) mid += `<g opacity="${f(op)}">${stone(x, y, (5 + R() * 12) * (0.4 + k * 1.6), (2.4 + R() * 4) * (0.4 + k * 1.6), R, false)}</g>`;
-    else mid += `<g opacity="${f(op * 0.9)}">${tuft(x, y + 0.5, (8 + R() * 12) * (0.4 + k * 1.4), sea.weed.map(c => mix(c, fog, 0.45)), R, 3)}</g>`;
+    if (R() < 0.55) mid += `<g opacity="${f(op)}">${stone(x, y, (5 + R() * 12) * (0.4 + k * 1.6), (2.4 + R() * 4) * (0.4 + k * 1.6), R, false, i % 3)}</g>`;
+    else mid += `<g opacity="${f(op * 0.9)}">${weed(WK[i % 4], x, y + 0.5, (6 + R() * 8) * (0.4 + k * 1.4), mix(sea.weed[i % 3], fog, 0.45), R)}</g>`;
   }
   out.push(`<g filter="url(#wB05)">${mid}</g>`);
   out.push(`<g filter="url(#wB05)">${school({ x: W - 96, y: H - 34, w: 80, h: 12 }, 16, 2.4, sea, R, 1)}</g>`);
   // the shadow of the hull on the floor behind it, to the right (the light is above, a little to the left and behind us)
   out.push(`<g clip-path="url(#wFloorC)"><polygon points="${poly(hull.map(q => [q[0] + 12, q[1] + (q[1] - crestMax) * -0.15 - 3] as P))}" fill="#000" fill-opacity=".34" filter="url(#wB3)"/></g>`);
   // the fallen top lies behind the hull; its shadow on the sand under its tip
-  if (fall) out.push(`<ellipse cx="${f(fall.tip[0] - S.fall!.side * 10)}" cy="${f(fall.ty + 0.8)}" rx="16" ry="1.6" fill="#000" fill-opacity=".35" filter="url(#wB1)"/><use href="#wFallG"/>` +
-    `<path d="M${f(fall.tip[0] - 5)} ${f(fall.ty + 0.9)}C${f(fall.tip[0] - 3)} ${f(fall.ty - 1.2)} ${f(fall.tip[0] + 3)} ${f(fall.ty - 1.4)} ${f(fall.tip[0] + 5)} ${f(fall.ty + 0.9)}Z" fill="url(#wFloor)"/>`);
+  const fallSvg = () => fall ? `<ellipse cx="${f(fall.tip[0] - S.fall!.side * 10)}" cy="${f(fall.ty + 0.8)}" rx="16" ry="1.6" fill="#000" fill-opacity=".35" filter="url(#wB1)"/><use href="#wFallG" filter="url(#wDesat)"/>` +
+    `<path d="M${f(fall.tip[0] - 5)} ${f(fall.ty + 0.9)}C${f(fall.tip[0] - 3)} ${f(fall.ty - 1.2)} ${f(fall.tip[0] + 3)} ${f(fall.ty - 1.4)} ${f(fall.tip[0] + 5)} ${f(fall.ty + 0.9)}Z" fill="url(#wFloor)"/>` : '';
+  if (fall && !S.fall!.front) out.push(fallSvg());
   // ---- the wreck ----
-  out.push(`<use href="#wHullG"/>`);
-  // the age of the hull, on its own pixels: charred (black blotches, grey ash in the cracks), the paint washed out and
-  // peeling in pale patches, silt along the rail, barnacles and coralline crust low on the side
+  out.push(`<use href="#wHullG" filter="url(#wDesat)"/>`);
+  // the age of the hull, on its own pixels: charred (black blotches, grey ash in the cracks) from the waist aft, the paint
+  // dulled, washed out and peeling to the grey wood in patches (the planks show in them), silt along the rail, barnacles
+  // and coralline crust low on the side, rust run from the bolts along the waterline
   const burnt = S.burnt ?? 0, fade = S.fade ?? 0, growth = S.growth ?? 0;
   let age = '';
-  if (burnt) age += `<rect width="${W}" height="${PAGE.h}" fill="#0e0907" opacity="${f(burnt * 0.45)}"/><rect width="${W}" height="${PAGE.h}" filter="url(#wChar0)" opacity="${f(burnt * 0.9)}"/><g transform="rotate(${f(-S.tilt)} ${f(S.x)} ${f(S.y)})">${charSvg(stem - 6 * s, hullTop - 30, xEnd + 2, S.y + 2, RD, burnt)}</g>`;
-  if (fade) age += `<rect width="${W}" height="${PAGE.h}" fill="#8e9a98" opacity="${f(fade * 0.16)}"/><rect width="${W}" height="${PAGE.h}" filter="url(#wPeel)" opacity="${f(fade * 0.7)}"/>`;
+  if (burnt) age += `<rect width="${W}" height="${PAGE.h}" fill="#4a3a32" opacity="${f(burnt * 0.35)}"/><g mask="url(#wCharM)"><rect width="${W}" height="${PAGE.h}" fill="#1a1210" opacity="${f(burnt * 0.32)}"/><rect width="${W}" height="${PAGE.h}" filter="url(#wChar0)" opacity="${f(burnt * 0.8)}"/>${inShip(charSvg(stem - 6 * s, hullTop - 30, xEnd + 2, S.y + 2, RD, burnt))}<rect width="${W}" height="${PAGE.h}" filter="url(#wChar1)" opacity="${f(burnt * 0.5)}"/></g>`;
+  if (fade) {
+    let planks = '';
+    for (let y = deck - 6 * s; y < S.y + draft; y += 1.25 * s) { planks += `M${f(stem - 10)} ${f(y)}H${f(xEnd + 4)}`; }
+    let butts = ''; for (let i = 0; i < 70; i++) { const x = stem + RD() * (xEnd - stem), y = deck - 6 * s + Math.floor(RD() * 20) * 1.25 * s; butts += `M${f(x)} ${f(y)}v${f(1.25 * s)}`; }
+    age += `<rect width="${W}" height="${PAGE.h}" fill="${mix('#8e9a98', sea.haze[0], 0.3)}" opacity="${f(fade * 0.24)}"/><rect width="${W}" height="${PAGE.h}" filter="url(#wPeel)" opacity="${f(fade * 0.35)}"/>`;
+    age += `<mask id="wPeelM" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${PAGE.h}"><rect width="${W}" height="${PAGE.h}" filter="url(#wPeel)"/></mask>` +
+      `<g mask="url(#wPeelM)" opacity="${f(Math.min(1, fade * 1.05))}"><rect width="${W}" height="${PAGE.h}" fill="${burnt ? '#5a4e46' : '#8a8274'}"/>${inShip(`<path d="${planks}" stroke="#2e2820" stroke-width="${f(0.22 * s)}" stroke-opacity=".75"/><path d="${butts}" stroke="#2e2820" stroke-width="${f(0.2 * s)}" stroke-opacity=".6"/>`)}</g>`;
+  }
   const railPts: P[] = []; for (let X = -sp.len / 2 + 2; X <= (xAft < xEnd ? (xAft - S.x) / s : sp.len / 2); X += 2) railPts.push(rot(geom.nearRail(X) as P));
-  age += `<path d="${spline(railPts.map(q => [q[0], q[1] + 0.5] as P))}" fill="none" stroke="${mix(sea.sand[0], '#ffffff', 0.2)}" stroke-width="${f(0.4 * s)}" stroke-opacity=".32" filter="url(#wB02)"/>`;
+  age += `<path d="${spline(railPts.map(q => [q[0], q[1] + 0.6] as P))}" fill="none" stroke="${mix(mix(sd1, sd0, 0.4), '#8c887a', 0.3)}" stroke-width="${f(0.6 * s)}" stroke-opacity=".55" filter="url(#wB02)"/>`;
+  if (!burnt) {
+    // rust from the bolts and the chains of the shrouds, run down the side to the waterline
+    let rust = '';
+    for (let i = 0; i < 26; i++) { const X = -sp.len / 2 + 8 + RD() * (sp.len - 14), q = geom.nearRail(X) as P, t = 0.25 + RD() * 0.6, y0 = S.y + t * (q[1] - S.y), l = (2 + RD() * 5) * s * 0.5; if (S.x + X * s > xAft) continue; rust += `<path d="M${f(q[0])} ${f(y0)}q${f((RD() - 0.5) * 0.4)} ${f(l * 0.5)} ${f((RD() - 0.5) * 0.3)} ${f(l)}" stroke="#8a4a22" stroke-width="${f(0.3 + RD() * 0.4)}" stroke-opacity=".5" fill="none" stroke-linecap="round"/><circle cx="${f(q[0])}" cy="${f(y0)}" r=".3" fill="#2a1408"/>`; }
+    age += inShip(rust);
+  }
   let bar = '';
   for (let i = 0; i < 70 * growth; i++) {
-    const X = -sp.len / 2 + 6 + RD() * (sp.len - 10), q = geom.nearRail(X) as P, t = Math.pow(RD(), 1.6) * 0.7, c = rot([q[0], S.y + t * (q[1] - S.y)]);
+    const X = -sp.len / 2 + 6 + RD() * (sp.len - 10), q = geom.nearRail(X) as P, t = Math.pow(RD(), 1.6) * (S.reef ? 0.95 : 0.7), c = rot([q[0], S.y + t * (q[1] - S.y)]);
     if (c[1] > crest(c[0]) - 1 || (xAft < xEnd && q[0] > xAft)) continue;
     const n = 2 + Math.floor(RD() * 5), r0 = (0.25 + RD() * 0.3) * s * 0.55;
-    if (RD() < 0.3) bar += `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${f(r0 * 5)}" ry="${f(r0 * 2.2)}" fill="${mix(sea.coral[2], '#c8b8b0', 0.4)}" fill-opacity=".35"/>`;
+    if (RD() < 0.3) bar += `<ellipse cx="${f(c[0])}" cy="${f(c[1])}" rx="${f(r0 * 5)}" ry="${f(r0 * 2.2)}" fill="${mix(coral[2], '#c8b8b0', 0.4)}" fill-opacity=".35"/>`;
     for (let k = 0; k < n; k++) bar += barnacle(c[0] + (RD() - 0.5) * r0 * 6, c[1] + (RD() - 0.5) * r0 * 3, r0 * (0.6 + RD() * 0.6));
   }
-  out.push(`<g mask="url(#wSilM)">${age}</g><g transform="rotate(${f(-S.tilt)} ${f(S.x)} ${f(S.y)})"><g clip-path="url(#wLow)">${dmg}</g></g><g mask="url(#wSilM)">${bar}</g>`);
-  // the hull in the water: darker down to the sand, the water between us and it, the caustics on its side
-  out.push(`<g mask="url(#wSilM)"><rect width="${W}" height="${PAGE.h}" fill="url(#wAO)"/><rect width="${W}" height="${PAGE.h}" fill="${sea.haze[0]}" fill-opacity="${sea.haze[1]}"/><rect width="${W}" height="${PAGE.h}" filter="url(#wCauH)" opacity=".13"/></g>`);
+  out.push(`<g mask="url(#wSilM)">${age}</g>${inShip(`<g clip-path="url(#wLow)">${dmg}${rotG}</g>`)}<g mask="url(#wSilM)">${bar}</g>`);
+  // the hull in the water: darker down to the sand, the water between us and it (no caustics on it: the net of light lies
+  // on the sand); the reef: the floor's own colour taken into it
+  out.push(`<g mask="url(#wSilM)"><rect width="${W}" height="${PAGE.h}" fill="url(#wAO)"/><rect width="${W}" height="${PAGE.h}" fill="${sea.haze[0]}" fill-opacity="${f(sea.haze[1] * (S.reef ? 0.4 : 1))}"/>${S.reef ? `<rect width="${W}" height="${PAGE.h}" fill="${mix('#1a2a20', sea.weed[2], 0.3)}" fill-opacity=".32"/>` : ''}</g>`);
   const hz = (c: string) => mix(c, sea.haze[0], sea.haze[1]);
-  // rigging from the stumps down to the rail (burnt away on a burnt ship: a stub or two); rags of sail on the spar stubs,
-  // their torn feet fringed (S.rags); the mast kept to its top carries the biggest rag
+  // rigging from the stumps down to the rail, slack, some ropes parted and hanging loose (burnt away on a burnt ship: a
+  // stub or two); rags of sail on the spar stubs, their torn feet fringed; the sail of `tear` half torn off; on masts
+  // standing with their yards — a rag under each yard, weed hanging from them on the reef
   const rope = (a: P, b: P, sag: number, w = 0.42) => `<path d="M${f(a[0])} ${f(a[1])}Q${f((a[0] + b[0]) / 2)} ${f((a[1] + b[1]) / 2 + sag)} ${f(b[0])} ${f(b[1])}" fill="none" stroke="${hz('#1e1a14')}" stroke-width="${w}" stroke-linecap="round"/>`;
-  const rig: string[] = [], rags = S.rags ?? 0.3;
+  const loose = (a: P, l: number, dir: number, w = 0.36) => { const e: P = [a[0] + dir * l * 0.35 + l * 0.15, a[1] + l]; return `<path d="M${f(a[0])} ${f(a[1])}Q${f(a[0] + dir * l * 0.5)} ${f(a[1] + l * 0.3)} ${f(e[0])} ${f(e[1])}" fill="none" stroke="${hz('#1e1a14')}" stroke-width="${w}" stroke-linecap="round"/><path d="M${f(e[0])} ${f(e[1])}l${f(0.5)} ${f(1.2)}M${f(e[0])} ${f(e[1])}l${f(-0.3)} ${f(1.1)}" stroke="${hz('#3a3228')}" stroke-width=".18"/>`; };
+  const rig: string[] = [], rags = S.rags ?? 0.3, slack = S.slack ?? 1;
+  let torn = S.torn ?? 0;
   kept.forEach(i => {
     const t = rot([mx[i], yb[i] + 1.5 * s]);
     if (burnt > 0.5) { rig.push(rope(t, rot([mx[i] - 5 * s, yb[i] + 7 * s]), 1.5, 0.36)); return; }
-    rig.push(rope(t, rot([mx[i] - 16 * s, deck + 1.5 * s]), 7), rope(t, rot([mx[i] + 13 * s, deck + 1 * s]), 6), rope(rot([mx[i] + 0.4 * s, yb[i] + 5 * s]), rot([mx[i] - 8 * s, deck + 2 * s]), 4, 0.32));
-    const big = i === S.keep, a = rot([mx[i] - (big ? 6 : 3.5) * s, yb[i] + (big ? 4.5 : 6.5) * s]), rw = (big ? 12 : 7 + R() * 3) * s;
-    if (rags > 0 && yb[i] < railAt(mx[i]) - 4 * s) rig.push(rag(a[0], a[1], rw, (big ? 13 : 6 + R() * 4) * s, hz(sea.rag), R, i % 2 ? -0.6 : 0.8, rags));
+    if (keepsYards(i)) {
+      const ys2 = yardsOf(i).filter(y => y.c[1] > yb[i] + 1);
+      ys2.forEach((y, j) => {
+        const a = rot([y.c[0] - y.hw * 0.92, y.c[1] + 0.5 * s]), b = rot([y.c[0] + y.hw * 0.92, y.c[1] + 0.5 * s]), w = b[0] - a[0];
+        const hgt = (j === ys2.length - 1 ? 0.8 : 0.55) * (ys2[j + 1] ? ys2[j + 1].c[1] - y.c[1] : 12 * s) + (S.reef ? 4 * s : 2 * s);
+        if (rags > 0) rig.push(rag(a[0], a[1], w, Math.max(5 * s, hgt), hz(sea.rag), R, 0.7, rags, (b[1] - a[1]) / w, false));
+        if (S.reef) for (let k = 0; k < 3 + Math.floor(w / 9); k++) { const p: P = [a[0] + R() * w, a[1] + (b[1] - a[1]) * R() + 0.3]; rig.push(hangWeed(p[0], p[1], 5 + R() * 14, hz(sea.weed[k % 3]), R)); }
+      });
+      // the shrouds: slack lines from the lower top to the rail, one parted
+      const top = rot([mx[i], (yardsOf(i).find(y => y.c[1] > yb[i])?.c[1] ?? yb[i]) - 1.5 * s]);
+      rig.push(rope(top, rot([mx[i] - 12 * s, deck + 1.5 * s]), 5 * slack), rope(top, rot([mx[i] + 10 * s, deck + 1 * s]), 4 * slack));
+      if (torn-- > 0) rig.push(loose(rot([mx[i] + 0.4 * s, yb[i] + 8 * s]), 9 * s, -1));
+      return;
+    }
+    rig.push(rope(t, rot([mx[i] - 16 * s, deck + 1.5 * s]), 7 * slack));
+    if (torn-- > 0) rig.push(loose(rot([mx[i] + 0.4 * s, yb[i] + 2 * s]), (6 + R() * 5) * s, 1)); else rig.push(rope(t, rot([mx[i] + 13 * s, deck + 1 * s]), 6 * slack));
+    if (torn-- > 0) rig.push(loose(rot([mx[i] - 0.3 * s, yb[i] + 4 * s]), (4 + R() * 4) * s, -1)); else rig.push(rope(rot([mx[i] + 0.4 * s, yb[i] + 5 * s]), rot([mx[i] - 8 * s, deck + 2 * s]), 4 * slack, 0.32));
+    const big = i === S.keep || i === S.tear, a = rot([mx[i] - (big ? 6 : 3.5) * s, yb[i] + (big ? 4.5 : 6.5) * s]), rw = (big ? 12 : 7 + R() * 3) * s;
+    if (rags > 0 && yb[i] < railAt(mx[i]) - 4 * s) rig.push(i === S.tear ? tornRag(a[0], a[1], rw * 1.2, 15 * s, hz(sea.rag), R, 0.8) : rag(a[0], a[1], rw, (big ? 13 : 6 + R() * 4) * s, hz(sea.rag), R, i % 2 ? -0.6 : 0.8, rags));
   });
-  if (fall) { const tp = fall.tip, side = S.fall!.side, F = rot([mx[S.fall!.mast], deck]); for (const k of [0.45, 0.7]) rig.push(rope([F[0] + (tp[0] - F[0]) * k, F[1] + (tp[1] - F[1]) * k - 1], rot([mx[S.fall!.mast] + side * (6 + k * 10) * s, deck + 1.5 * s]), 5, 0.36)); }
+  if (fall) { const tp = fall.tip, side2 = S.fall!.side, F = rot([mx[S.fall!.mast], deck]); for (const k of [0.45, 0.7]) rig.push(rope([F[0] + (tp[0] - F[0]) * k, F[1] + (tp[1] - F[1]) * k - 1], rot([mx[S.fall!.mast] + side2 * (6 + k * 10) * s, deck + 1.5 * s]), 5 * slack, 0.36)); }
   out.push(rig.join(''));
-  // shells grown on the side (the Dutchman), weed along the rail swaying up
+  // what grows on the hull: weed from the cracks along the rail and the waterline, leaning with the current; on the reef
+  // corals, sponges and shells all over the side, weed hanging from the rail
   const hullW: string[] = [];
-  if (sea.shells) { let sh = ''; for (let i = 0; i < 24; i++) { const x = stem + 10 * s + R() * (stern - stem - 18 * s), y = S.y - 1 - R() * (S.y - deck) * 0.85; sh += shell(x, y, 0.3 + R() * 0.25, (R() - 0.5) * 80, i % 4 === 0 ? 1 : 0); } hullW.push(`<g opacity=".6">${sh}</g>`); }
-  for (let i = 0, nw = sea.shells ? 18 : 10; i < nw; i++) { const x = stem + 14 * s + (i / (nw - 1)) * (stern - stem - 26 * s) + (R() - 0.5) * 8; hullW.push(kelp(x, deck + 2 + R() * 3, 4 + R() * 12, hz(sea.weed[i % 3]), R, 0.1, 1.3)); }
-  out.push(`<g transform="rotate(${f(-S.tilt)} ${f(S.x)} ${f(S.y)})">${hullW.join('')}</g>`);
+  const nW = S.reef ? 26 : 9;
+  for (let i = 0; i < nW; i++) {
+    const X = -sp.len / 2 + 8 + (i / (nW - 1)) * (sp.len - 16) + (R() - 0.5) * 6, q = geom.nearRail(X) as P, onRail = R() < 0.5;
+    if (xAft < xEnd && q[0] > xAft) continue;
+    const y = onRail ? q[1] + 0.5 : S.y + (0.15 + R() * 0.5) * (q[1] - S.y);
+    hullW.push(onRail && S.reef ? hangWeed(q[0], y, 4 + R() * 9, hz(sea.weed[i % 3]), R) : weed(WK[(i + (onRail ? 0 : 2)) % 4], q[0], y, (2.5 + R() * 4) * (S.reef ? 1.5 : 1), hz(sea.weed[i % 3]), R));
+  }
+  if (S.reef) {
+    // in clumps: a coral head with shells and a sponge round it, here and there along the side, more of them low
+    for (let i = 0; i < 16; i++) {
+      const X = -sp.len / 2 + 6 + R() * (sp.len - 10), q = geom.nearRail(X) as P, y0 = S.y + (0.05 + Math.pow(R(), 1.4) * 0.8) * (q[1] - S.y);
+      for (let j = 0; j < 5; j++) { const x = q[0] + (R() - 0.5) * 7 * s * 0.6, y = y0 + (R() - 0.5) * 3 * s * 0.6, c = hz(coral[(i + j) % 3]), k2 = (i + j) % 4;
+        hullW.push(k2 === 0 ? coralSprig(x, y, (3.4 + R() * 3.5) * s * 0.7, c, R) : k2 === 1 ? coralCrust(x, y, (1 + R() * 1.1) * s * 0.6, c, R) : k2 === 2 ? shell(x, y, (0.4 + R() * 0.3) * s * 0.7, (R() - 0.5) * 80, j % 2) : domeCoral(x, y + 0.4, (1.2 + R() * 1.2) * s * 0.6, (0.9 + R() * 0.8) * s * 0.6, c, R, `wHd${i}${j}`)); }
+    }
+  }
+  out.push(inShip(`<g clip-path="url(#wLow)">${hullW.join('')}</g>`));
   // the hull sits in the sand: a dark seam where they meet, then the sand heaped along the side over it
   const cl = cp.filter(q => q[0] > stemP[0] - 6 && q[0] < sternP[0] + 6);
-  out.push(`<path d="${spline(cl.map(q => [q[0], q[1] - 0.8] as P))}" fill="none" stroke="#000" stroke-opacity=".4" stroke-width="2.6" filter="url(#wB1)"/>`);
+  out.push(`<path d="${spline(cl.map(q => [q[0], q[1] - 0.8] as P))}" fill="none" stroke="#000" stroke-opacity=".42" stroke-width="2.4" filter="url(#wB1)"/>`);
   out.push(`<path d="${bermD}" fill="url(#wFloor)"/>`);
   // little drifts of sand climbing the side
   let drift = '';
-  for (let x = stemP[0] + 10 + R() * 8; x < sternP[0] - 8; x += 16 + R() * 18) {
-    const w = 5 + R() * 6, h = 1.4 + R() * 1.8, y0 = crest(x - w), y1 = crest(x + w);
-    drift += `<path d="M${f(x - w)} ${f(y0 + 0.6)}C${f(x - w * 0.4)} ${f(crest(x) - h)} ${f(x + w * 0.3)} ${f(crest(x) - h * 0.9)} ${f(x + w)} ${f(y1 + 0.6)}Z" fill="url(#wFloor)"/><path d="M${f(x - w * 0.8)} ${f(y0 - 0.1)}C${f(x - w * 0.4)} ${f(crest(x) - h)} ${f(x + w * 0.1)} ${f(crest(x) - h * 0.95)} ${f(x + w * 0.5)} ${f(crest(x) - h * 0.5)}" fill="none" stroke="${mix(sd0, '#ffffff', .3)}" stroke-width=".45" stroke-opacity=".6"/>`;
+  for (let x = stemP[0] + 10 + R() * 8; x < sternP[0] - 8; x += 14 + R() * 16) {
+    const w = 4 + R() * 6, h = 1.2 + R() * 2.2, y0 = crest(x - w), y1 = crest(x + w);
+    drift += `<path d="M${f(x - w)} ${f(y0 + 0.6)}C${f(x - w * 0.4)} ${f(crest(x) - h)} ${f(x + w * 0.3)} ${f(crest(x) - h * 0.9)} ${f(x + w)} ${f(y1 + 0.6)}Z" fill="url(#wFloor)"/><path d="M${f(x - w * 0.8)} ${f(y0 - 0.1)}C${f(x - w * 0.4)} ${f(crest(x) - h)} ${f(x + w * 0.1)} ${f(crest(x) - h * 0.95)} ${f(x + w * 0.5)} ${f(crest(x) - h * 0.5)}" fill="none" stroke="${mix(sd0, sd1, .3)}" stroke-width=".4" stroke-opacity=".5"/>`;
   }
   out.push(drift);
   out.push(`<path d="${spline(cp.map(q => [q[0], q[1] + 6.5] as P))}" fill="none" stroke="url(#wCrestSh)" stroke-width="8" stroke-opacity=".28" filter="url(#wB2)"/>`);
-  out.push(`<path d="${spline(cp.map(q => [q[0], q[1] + 0.5] as P))}" fill="none" stroke="url(#wCrestHi)" stroke-width="1.3" stroke-opacity=".7" filter="url(#wB05)"/>`);
+  out.push(`<path d="${spline(cp.map(q => [q[0], q[1] + 0.6] as P))}" fill="none" stroke="url(#wCrestHi)" stroke-width=".9" stroke-opacity=".45" filter="url(#wB05)"/>`);
   let slip = '';
   for (let i = 0; i < 26; i++) { const x = B0 + 14 + R() * (B1 - B0 - 28), y = crest(x) + 1.5 + R() * 2; slip += `<path d="M${f(x)} ${f(y)}q${f(0.6 + R())} ${f(2 + R() * 2.5)} ${f(0.2 + R() * 1.2)} ${f(4 + R() * 3)}" fill="none" stroke="${sd2}" stroke-width=".3" stroke-opacity=".3"/>`; }
   out.push(slip);
+  // weed and shells grown along the foot of the hull, where the sand meets it
+  let foot = '';
+  for (let x = stemP[0] + 6 + R() * 6; x < sternP[0] - 4; x += 9 + R() * 14) foot += weed(WK[Math.floor(R() * 4)], x, crest(x) + 0.6, 2.4 + R() * 4.5, sea.weed[Math.floor(R() * 3)], R);
+  out.push(foot);
+  if (fall && S.fall!.front) out.push(fallSvg());
+  // a broken hull: splintered plank ends and frames sticking out of both ends of the break into the gap
+  if (SP) {
+    let sp2 = '';
+    const rA = rot0, rB = (p: P) => rot([p[0] + 1e-6 + Math.max(0, xs - p[0]) * 0, p[1]]);
+    for (let y = railAt(xs) + 0.5 * s, n = 0; y < S.y + draft * 0.7; y += (1.5 + RD() * 2.2) * s, n++) {
+      for (const sd of [-1, 1]) {
+        if (RD() < 0.35) continue;
+        const l = (1.2 + RD() * 3) * s, th = (0.35 + RD() * 0.3) * s, x0 = xs + sd * 2.4 * s, bend = (RD() - 0.5) * 1.6 * s;
+        const pts3: P[] = [[x0, y - th / 2], [x0 - sd * l, y - th / 2 + bend], [x0 - sd * (l + 0.5 * s), y + bend], [x0 - sd * l, y + th / 2 + bend], [x0, y + th / 2]];
+        const q = pts3.map(p => (sd < 0 ? rA([p[0], p[1]]) : (() => { const a = rot0(p), dx = a[0] - piv[0], dy = a[1] - piv[1]; return [piv[0] + dx * Math.cos(sa) - dy * Math.sin(sa) + SP.dx, piv[1] + dx * Math.sin(sa) + dy * Math.cos(sa) + SP.drop] as P; })()));
+        sp2 += `<path d="M${poly(q).replace(/ /g, 'L')}Z" fill="${hz(n % 2 ? '#4a3c2c' : '#6a5a44')}" stroke="${hz('#120c08')}" stroke-width=".15"/>`;
+      }
+    }
+    void rB;
+    out.push(sp2);
+  }
 
   // ---- the near floor: ripples, the caustics, the pools of light (all over the sand, none on the hull) ----
   let rip = '';
@@ -622,40 +832,42 @@ ${hullG}${fallG}
   // ---- what lies on the near floor ----
   const taken: Box[] = props.map(p => p.box);
   const free = (b: Box) => !taken.some(q => b.x0 < q.x1 + 1 && b.x1 > q.x0 - 1 && b.y0 < q.y1 + 1 && b.y1 > q.y0 - 1);
-  // stones and shells, scattered (none under the things)
+  // stones of every shape (domes, flat slabs, broken angular pieces), some half sunk; a shell now and then
   let peb = '';
-  for (let i = 0; i < 70; i++) {
-    const x = R() * W, y = floorTop(x) + 2 + R() * (PAGE.h - floorTop(x)), k = dep(y), w = (0.8 + R() * 2.6) * (0.35 + k), h = w * (0.45 + R() * 0.25);
+  for (let i = 0; i < 64; i++) {
+    const x = R() * W, y = floorTop(x) + 2 + R() * (PAGE.h - floorTop(x)), k = dep(y), w = (0.8 + R() * 2.8) * (0.35 + k), kind = Math.floor(R() * 3), h = w * (kind === 1 ? 0.28 + R() * 0.12 : 0.4 + R() * 0.3);
     if (y > PAGE.h - 0.5 || !free({ x0: x - w, y0: y - h, x1: x + w, y1: y })) continue;
-    peb += i % 5 === 4 ? shell(x, y, (0.25 + R() * 0.3) * (0.5 + k), (R() - 0.5) * 70, i % 2) : stone(x, y, w, h, R);
+    peb += i % 13 === 12 ? shell(x, y, (0.25 + R() * 0.3) * (0.5 + k), (R() - 0.5) * 70, i % 2) : stone(x, y, w, h, R, true, kind, R() < 0.4 ? 0.3 + R() * 0.3 : 0);
   }
-  if (sea.shells) for (let i = 0; i < 16; i++) { const x = 6 + R() * (W - 12), y = Math.max(floorTop(x) + 3, PAGE.h - 1.5 - R() * 22), k = dep(y); if (free({ x0: x - 3, y0: y - 3, x1: x + 3, y1: y })) peb += shell(x, y, (0.5 + R() * 0.5) * (0.3 + k), (R() - 0.5) * 60, i % 3 === 0 ? 1 : 0); }
   out.push(peb);
-  // low weed on the sand, a few tufts of each height
-  for (let i = 0; i < 14; i++) {
-    const x = 6 + R() * (W - 12), y = Math.min(PAGE.h - 1, floorTop(x) + 1.5 + R() * 8), k = dep(y), h = (i % 3 === 0 ? 14 : 5) * (0.6 + R() * 0.8) * (0.5 + k);
-    if (!free({ x0: x - 3, y0: y - 2, x1: x + 3, y1: y })) continue;
-    out.push(tuft(x, y, h, sea.weed, R, 2 + (i % 3)));
+  // weed on the sand in groups: a clump of each kind, of different sizes, all leaning with the current
+  for (let i = 0; i < 12; i++) {
+    const x = 6 + R() * (W - 12), y = Math.min(PAGE.h - 1, floorTop(x) + 1.5 + R() * 10), k = dep(y), h = (i % 4 === 0 ? 11 : 5) * (0.6 + R() * 0.8) * (0.5 + k);
+    if (!free({ x0: x - 4, y0: y - 2, x1: x + 4, y1: y })) continue;
+    const kind = WK[i % 4], n = 1 + Math.floor(R() * 3);
+    for (let j = 0; j < n; j++) out.push(weed(kind, x + (j - (n - 1) / 2) * (2 + R() * 2), y + (R() - 0.5), h * (0.6 + R() * 0.5), sea.weed[(i + j) % 3], R));
   }
   // the things, each in the sand (wreck-props.ts): the farther first
-  const paint = { floor: 'url(#wFloor)', ripples: 'wNearFloor', sand: sea.sand, haze: sea.haze[0], weed: sea.weed, glow: sea.glow, depth: dep };
+  const paint = { floor: 'url(#wFloor)', ripples: 'wNearFloor', sand: sea.sand, haze: sea.haze[0], weed: sea.weed, glow: sea.glow, coral, depth: dep };
   [...props].sort((a, b) => a.ys - b.ys).forEach(p => out.push(propSvg(p, bodies[p.i], paint)));
-  // corals in the corners, by the buried bow and past the stern; tall weed close to the eye at the edges
-  const cl2 = sea.coral, spot = (x0: number, x1: number, w: number, h: number): P | null => {
+  // corals in the corners, by the buried bow and past the stern: old and muted, their feet in the sand; tall weed close
+  // to the eye at the edges
+  const spot = (x0: number, x1: number, w: number, h: number): P | null => {
     for (let t = 0; t < 14; t++) { const x = x0 + R() * (x1 - x0), y = Math.max(floorTop(x) + 2, PAGE.h - 1.5 - R() * 12); if (free({ x0: x - w / 2, y0: y - h, x1: x + w / 2, y1: y })) { taken.push({ x0: x - w / 2, y0: y - h, x1: x + w / 2, y1: y }); return [x, y]; } }
     return null;
   };
+  const foot2 = (x: number, y: number, w: number) => `<path d="M${f(x - w)} ${f(y + 0.6)}C${f(x - w * 0.5)} ${f(y - 1.6)} ${f(x + w * 0.5)} ${f(y - 1.8)} ${f(x + w)} ${f(y + 0.6)}Z" fill="url(#wFloor)"/><ellipse cx="${f(x + w * 0.5)}" cy="${f(y + 0.5)}" rx="${f(w * 0.9)}" ry=".7" fill="#000" fill-opacity=".18" filter="url(#wB05)"/>`;
   const c: string[] = [];
-  let q = spot(2, 18, 22, 24); if (q) c.push(fanCoral(q[0], q[1], 24, cl2[1], R));
-  q = spot(6, 30, 16, 18); if (q) c.push(branchCoral(q[0], q[1], 18, cl2[0], R));
-  q = spot(0, 14, 16, 7); if (q) c.push(domeCoral(q[0], q[1], 8, 5.4, cl2[2], R, 'wDome1'));
-  q = spot(W - 18, W - 4, 20, 22); if (q) c.push(fanCoral(q[0], q[1], 22, cl2[1], R));
-  q = spot(W - 40, W - 18, 14, 16); if (q) c.push(branchCoral(q[0], q[1], 16, cl2[0], R));
-  q = spot(W - 50, W - 26, 14, 5); if (q) c.push(domeCoral(q[0], q[1], 6.5, 4.4, cl2[2], R, 'wDome2'));
-  q = spot(stemP[0] - 26, stemP[0] - 6, 12, 12); if (q) c.push(branchCoral(q[0], q[1], 12, cl2[2], R));
-  q = spot(sternP[0] + 8, sternP[0] + 24, 10, 5); if (q) c.push(domeCoral(q[0], q[1], 5.5, 3.8, cl2[0], R, 'wDome3'));
-  out.push(c.join(''));
-  out.push(tuft(-1, PAGE.h + 2, 50, sea.weed.map(cc => mix(cc, '#000000', .35)), R, 5), tuft(W + 1, PAGE.h + 2, 42, sea.weed.map(cc => mix(cc, '#000000', .35)), R, 4));
+  let q = spot(2, 18, 22, 24); if (q) c.push(fanCoral(q[0], q[1], 20, coral[1], R) + foot2(q[0], q[1], 3));
+  q = spot(6, 30, 16, 18); if (q) c.push(branchCoral(q[0], q[1], 14, coral[0], R) + foot2(q[0], q[1], 2.6));
+  q = spot(0, 14, 16, 7); if (q) c.push(domeCoral(q[0], q[1], 8, 5.4, coral[2], R, 'wDome1') + foot2(q[0], q[1], 8.5));
+  q = spot(W - 18, W - 4, 20, 22); if (q) c.push(fanCoral(q[0], q[1], 18, coral[1], R) + foot2(q[0], q[1], 3));
+  q = spot(W - 40, W - 18, 14, 16); if (q) c.push(branchCoral(q[0], q[1], 12, coral[0], R) + foot2(q[0], q[1], 2.4));
+  q = spot(W - 50, W - 26, 14, 5); if (q) c.push(domeCoral(q[0], q[1], 6.5, 4.4, coral[2], R, 'wDome2') + foot2(q[0], q[1], 7));
+  q = spot(stemP[0] - 26, stemP[0] - 6, 12, 12); if (q) c.push(branchCoral(q[0], q[1], 10, coral[2], R) + foot2(q[0], q[1], 2.2));
+  q = spot(sternP[0] + 8, sternP[0] + 24, 10, 5); if (q) c.push(domeCoral(q[0], q[1], 5.5, 3.8, coral[0], R, 'wDome3') + foot2(q[0], q[1], 6));
+  out.push(`<g opacity=".9">${c.join('')}</g>`);
+  out.push(tuft(-1, PAGE.h + 2, 46, sea.weed.map(cc => mix(cc, '#000000', .35)), R, 5), tuft(W + 1, PAGE.h + 2, 40, sea.weed.map(cc => mix(cc, '#000000', .35)), R, 4));
 
   // ---- the light coming down, bubbles, the fish, specks; the vignette ----
   let rays = '';
