@@ -30,10 +30,13 @@ export interface Opts {
   check: boolean;
   checkPdf: boolean;
   samples: boolean;
+  /** 03-planshety.pdf: the board concept, 'a' «у борта» (default) or 'b' «стол капитана» */
+  board?: 'a' | 'b';
 }
 export interface PageSpec { html: string; land?: boolean }
-/** One PDF: its file name (without .pdf), CSS of its own, pages; duplex — printed on both sides, flip on the long edge. */
-export interface Part { file: string; title: string; css: string; pages: PageSpec[]; duplex?: boolean }
+/** One PDF: its file name (without .pdf), CSS of its own, pages; duplex — printed on both sides: true — flip on the long edge,
+ * 'short' — on the short edge (landscape sheets turned like a book page: the back of the left half is the right half). */
+export interface Part { file: string; title: string; css: string; pages: PageSpec[]; duplex?: boolean | 'short' }
 export interface Ctx {
   opts: Opts;
   browser: Browser;

@@ -93,7 +93,8 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
     page = await (await ctx.browser.newContext({ viewport: { width: 200, height: 280 }, deviceScaleFactor: 5 })).newPage();
     await page.setContent(`<style>html,body{margin:0;background:#101010}#p{width:var(--w,200px);height:var(--h,280px);overflow:hidden}#p>svg{display:block;width:var(--w,200px);height:var(--h,280px)}</style><div id="p"></div>`);
   }
-  if (bleed) { await page.setViewportSize({ width: Math.ceil(uw), height: Math.ceil(uh) }); await page.evaluate(([w, h]) => { document.documentElement.style.setProperty('--w', w + 'px'); document.documentElement.style.setProperty('--h', h + 'px'); }, [uw, uh]); }
+  // the size of every call, also back to 200 × 280 after a call with bleed (the page is shared)
+  await page.setViewportSize({ width: Math.ceil(uw), height: Math.ceil(uh) }); await page.evaluate(([w, h]) => { document.documentElement.style.setProperty('--w', w + 'px'); document.documentElement.style.setProperty('--h', h + 'px'); }, [uw, uh]);
   await page.evaluate(s => { document.getElementById('p')!.innerHTML = s; }, svg);
   await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll('image')).map(i => (i as unknown as HTMLImageElement).decode?.().catch(() => undefined))));
   await page.waitForTimeout(150); // embedded <image> pieces decode asynchronously

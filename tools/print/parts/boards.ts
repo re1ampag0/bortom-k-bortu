@@ -5,11 +5,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { HERE, ROOT, data, esc, rich, RICH_CSS, type Ctx, type PageSpec, type Part } from '../kit';
+import { HERE, ROOT, SAMPLES, data, esc, rich, RICH_CSS, type Ctx, type PageSpec, type Part } from '../kit';
 import { BOARD, priceOf, trackCells, type Ship } from '../layout';
 import { BRASS, BRASS_DARK, DECK_KEY, INK, PARCHMENT, SEA, TYPE, contrast, darken, lighten } from '../colors';
 import { iconImg } from '../icons';
 import { makeArt, profiled } from '../art';
+import { writePdf } from '../pdf';
+import { FRAME_CSS, framePage, wreckPage, type Concept, type ShipKey, type ShipMaterial } from './boards/frame';
+import { material as pearl } from './boards/pearl';
+import { material as revenge } from './boards/revenge';
+import { material as endeavour } from './boards/endeavour';
+import { material as dutch } from './boards/dutch';
 
 const require = createRequire(import.meta.url);
 /** The ships of the art kit (tools/card-art/scenes/kit/ship.cjs): the same ships as on the card backs. */
@@ -34,10 +40,12 @@ const shipImage = (pic: ShipPic, cx: number, wy: number, maxW: number, maxH: num
   return `<svg x="${r(cx - w / 2)}" y="${r(wy - h + DIP * k)}" width="${r(w)}" height="${r(h)}" viewBox="0 ${pic.vy} 200 ${pic.vh}"><image href="${pic.url}" width="200" height="280"/></svg>`;
 };
 
-export type BoardVariant = 'top' | 'side';
-/** The layout of 03-planshety.pdf. 'side': the picture is 55 mm high on all four boards (39 mm in 'top'), the sheet is
- * filled evenly, and a longer text would shrink the picture instead of running out of the column. */
-export const BOARD_DEFAULT: BoardVariant = 'side';
+/** 'top', 'side' — the boards before docs/tasks/print-kit-boards.md ('side' = «как сейчас»): one-sided, kept for the
+ * samples. 'a' («у борта») and 'b' («стол капитана») — the shared frame of boards/frame.ts with each ship's material
+ * (boards/<ship>.ts) and the back «Затонул». 03-planshety.pdf takes the concept of --board (a by default). */
+export type BoardVariant = 'top' | 'side' | Concept;
+export const BOARD_DEFAULT: Concept = 'a';
+const MATERIALS: Record<ShipKey, ShipMaterial> = { pearl, revenge, endeavour, dutch };
 
 interface TrackText { name: string; note?: string; zero?: string; start?: string; max?: string }
 interface BoardText {
@@ -63,7 +71,7 @@ const EDGE = 11.2;
 const COL = { x: PAGE.w - EDGE - (BOARD.textCol - 1), w: BOARD.textCol - 1 };
 /** The track zone: the longest track (13 cells, 187 mm) fills it exactly. */
 const LEFT = { x: EDGE, r: COL.x - 3.6 };
-const HEAD_H: Record<BoardVariant, number> = { top: 42, side: 22 };
+const HEAD_H: Record<'top' | 'side', number> = { top: 42, side: 22 };
 const BODY_GAP = 4, BODY_END = 188.6, FOOT_LINE = 191.2;
 /** One track from its top: the label's baseline, the small numbers' baseline, the cells' centre, the height. */
 const TR = { label: 4.3, small: 8.9, cy: 9.8 + BOARD.cell / 2, h: 9.8 + BOARD.cell, soulsExtra: 3.6 };
@@ -236,7 +244,9 @@ function footer(ship: Ship, pal: Pal): string {
   return `<div class="bo-abs bo-foot" style="left:${EDGE}mm;top:${r(FOOT_LINE + 1.5)}mm;width:${PAGE.w - 2 * EDGE}mm"><svg viewBox="-2 -2 4 4">${star(0, 0.1, 2, pal.deep)}</svg>${parts.map(p => `<span>${p}</span>`).join('<i>·</i>')}</div>`;
 }
 
+/** One face of a board; in 'a' and 'b' the material's own CSS goes with the page. */
 export async function boardPage(ctx: Ctx, ship: Ship, variant: BoardVariant): Promise<PageSpec> {
+  if (variant === 'a' || variant === 'b') return withCss(await framePage(ctx, ship, variant, MATERIALS[DECK_KEY[ship.code]]));
   const pal = palette(ship.color), bodyTop = EDGE + HEAD_H[variant] + BODY_GAP, id = `bo-b${++UID}`, pic = await kitShip(ctx, DECK_KEY[ship.code]);
   const svg: string[] = [], html: string[] = [];
   // the sheet: parchment inside a frame of the ship colour with a brass hairline
@@ -266,7 +276,7 @@ export async function boardPage(ctx: Ctx, ship: Ship, variant: BoardVariant): Pr
   return { html: `<svg class="bo-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html.join('\n')}`, land: true };
 }
 
-export const BOARD_CSS = `${RICH_CSS}
+export const BOARD_CSS = `${RICH_CSS}${FRAME_CSS}
 .bo-svg{position:absolute;left:0;top:0;width:297mm;height:210mm}
 .bo-abs{position:absolute}
 .bo-nl{display:flex;align-items:center;gap:4.5mm;white-space:nowrap}
@@ -304,8 +314,20 @@ export const BOARD_CSS = `${RICH_CSS}
 .bo-foot i{font-style:normal;font-weight:800;color:${BRASS}}
 `;
 
-export async function build(ctx: Ctx): Promise<Part[]> {
+const withCss = (p: { html: string; css: string }): PageSpec => ({ html: (p.css ? `<style>${p.css}</style>` : '') + p.html, land: true });
+/** The back «Затонул» of a board (the same in both concepts, in the ship's style). */
+export async function wreckBack(ctx: Ctx, ship: Ship): Promise<PageSpec> { return withCss(await wreckPage(ctx, ship, MATERIALS[DECK_KEY[ship.code]])); }
+/** Face, back, face, back…: printed on both sides, flipped on the short edge. */
+async function boardsPart(ctx: Ctx, concept: Concept, file: string): Promise<Part> {
   const pages: PageSpec[] = [];
-  for (const ship of data.ships) pages.push(await boardPage(ctx, ship, BOARD_DEFAULT)); // one at a time: makeArt has a single raster page
-  return [{ file: '03-planshety', title: TXT.title, css: BOARD_CSS, pages }];
+  for (const ship of data.ships) pages.push(await boardPage(ctx, ship, concept), await wreckBack(ctx, ship)); // one at a time: makeArt has a single raster page
+  return { file, title: TXT.title + (concept === 'b' ? ' (концепт Б)' : ''), css: BOARD_CSS, pages, duplex: 'short' };
+}
+
+export async function build(ctx: Ctx): Promise<Part[]> {
+  const concept: Concept = ctx.opts.board ?? BOARD_DEFAULT;
+  const main = await boardsPart(ctx, concept, '03-planshety');
+  // the full set of concept B always goes to the samples (out/print/obrazcy/), not to the top level checked by check.ts
+  await writePdf(ctx, concept === 'b' ? { ...main, file: '03-planshety-b' } : await boardsPart(ctx, 'b', '03-planshety-b'), SAMPLES);
+  return [main];
 }

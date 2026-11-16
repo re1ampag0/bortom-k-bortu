@@ -4,7 +4,7 @@ import path from 'node:path';
 import { PDFDocument, PDFName, PDFDict } from 'pdf-lib';
 import { OUT, HTML_DIR, pageHtml, type Ctx, type Part } from './kit';
 
-/** Writes one PDF; printing hints for viewers: actual size, and long-edge duplex for the two-sided files. */
+/** Writes one PDF; printing hints for viewers: actual size, and duplex for the two-sided files (long or short edge). */
 export async function writePdf(ctx: Ctx, part: Part, dir = OUT): Promise<string> {
   const htmlFile = path.join(HTML_DIR, part.file + '.html'), pdfFile = path.join(dir, part.file + '.pdf');
   fs.mkdirSync(dir, { recursive: true });
@@ -17,7 +17,7 @@ export async function writePdf(ctx: Ctx, part: Part, dir = OUT): Promise<string>
   await page.close();
   const doc = await PDFDocument.load(raw);
   doc.setTitle(part.title); doc.setAuthor('Бортом к борту'); doc.setLanguage('ru');
-  const prefs = doc.context.obj({ PrintScaling: 'None', ...(part.duplex ? { Duplex: 'DuplexFlipLongEdge' } : {}) });
+  const prefs = doc.context.obj({ PrintScaling: 'None', ...(part.duplex ? { Duplex: part.duplex === 'short' ? 'DuplexFlipShortEdge' : 'DuplexFlipLongEdge' } : {}) });
   doc.catalog.set(PDFName.of('ViewerPreferences'), prefs as PDFDict);
   fs.writeFileSync(pdfFile, await doc.save());
   return pdfFile;
