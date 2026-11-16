@@ -992,7 +992,7 @@ function noteParts(ship: Ship): { icon: IconName; html: string } | null {
   if (clear) ps.push(`<p>${esc(clear)}</p>`);
   if (jones) ps.push(`<p><b>${esc(FTXT.wreck.jones)}</b> ${esc(noRef(jones))}</p>`);
   if (!ps.length) return null;
-  return { icon: jones ? 'heartChest' : /„Под водой“/.test(clear) ? 'underwater' : 'plan', html: ps.join('') };
+  return { icon: jones ? 'heartChest' : /«Под водой»/.test(clear) ? 'underwater' : 'plan', html: ps.join('') };
 }
 /** the measured HTML blocks: the rules on the scroll and the note in the column */
 const FIT = new Map<string, { rs: number; rh: number; ns: number; nh: number }>();

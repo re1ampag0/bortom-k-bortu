@@ -18,6 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Browser } from '@playwright/test';
 import { HTML_DIR } from './kit';
+import { MIN_STROKE } from './strokes';
 
 export const LAYOUT_FILES = ['03-planshety', '04-tryumy-zhetony', '04b-skhema-boya', '02-pamyatki'];
 /** the sheets whose plates lie on a picture: the plates keep PLATE_GAP between them and EDGE_GAP from the sheet's edge */
@@ -142,4 +143,44 @@ export async function checkSheets(browser: Browser, files = LAYOUT_FILES): Promi
     }
   } finally { await page.close(); }
   return { errors, words };
+}
+
+/** the thinnest line a copier's laser keeps (strokes.ts, tools/print/README.md): every stroke on these sheets is at least it */
+export const STROKE_FILES = ['03-planshety', '04-tryumy-zhetony', '04b-skhema-boya'];
+/** The stroke widths of every painted SVG shape on the sheets (vector only: the rasters are not seen), at their real size
+ *  on the sheet — the width times the scale of all the transforms over it. Groups the thin ones by where they are (the
+ *  nearest data-name / data-deco / data-plate / icon) so the message says what to fix. */
+export async function checkStrokes(browser: Browser, files = STROKE_FILES, min = MIN_STROKE): Promise<{ errors: string[]; strokes: number; thinnest: number }> {
+  const errors: string[] = []; let strokes = 0, thinnest = 99;
+  const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+  try {
+    for (const file of files) {
+      const f = path.join(HTML_DIR, file + '.html');
+      if (!fs.existsSync(f)) { errors.push(`${file}.html is missing`); continue; }
+      await page.goto('file://' + f);
+      await page.evaluate(async () => { await document.fonts.ready; });
+      const res = await page.evaluate((min) => {
+        const MM = 96 / 25.4, bad = new Map<string, { n: number; w: number; sample: string }>(); let n = 0, thin = 99;
+        Array.from(document.querySelectorAll<HTMLElement>('section.sheet')).forEach((sh, si) => {
+          for (const g of Array.from(sh.querySelectorAll('path,line,polyline,polygon,rect,circle,ellipse'))) {
+            if (!(g instanceof SVGGeometryElement) || g.closest('defs,clipPath,mask,pattern,symbol,marker')) continue;
+            const st = getComputedStyle(g);
+            if (st.stroke === 'none' || st.display === 'none' || st.visibility === 'hidden') continue;
+            const sw = parseFloat(st.strokeWidth); if (!(sw > 0) || parseFloat(st.strokeOpacity) === 0) continue;
+            const m = g.getScreenCTM(); if (!m) continue;
+            const w = sw * Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) / MM; n++; thin = Math.min(thin, w);
+            if (w >= min - 0.004) continue;
+            const owner = g.closest('[data-name],[data-deco],[data-plate],[data-icon]');
+            const where = owner ? (owner.getAttribute('data-name') ?? owner.getAttribute('data-deco') ?? owner.getAttribute('data-icon') ?? owner.getAttribute('data-plate')) : g.parentElement?.tagName ?? '?';
+            const key = `p.${si + 1} ${where}`, b = bad.get(key) ?? { n: 0, w: 99, sample: '' };
+            b.n++; if (w < b.w) { b.w = w; b.sample = g.outerHTML.slice(0, 110); } bad.set(key, b);
+          }
+        });
+        return { n, thin, bad: [...bad].map(([k, v]) => `${k}: ${v.n} stroke(s) down to ${v.w.toFixed(3)} mm (${v.sample})`) };
+      }, min);
+      strokes += res.n; thinnest = Math.min(thinnest, res.thin);
+      for (const b of res.bad) errors.push(`${file} ${b} — need ≥ ${min} mm`);
+    }
+  } finally { await page.close(); }
+  return { errors, strokes, thinnest };
 }

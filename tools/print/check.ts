@@ -12,7 +12,7 @@ import { CACHE, HTML_DIR, OUT, ROOT, data, type Ctx } from './kit';
 import { CARD, FACE, deckSheets, seaSheets } from './layout';
 import { ON_GLASS, TYPE, SEA, contrast, darken, luminance } from './colors';
 import { defaultMode, kitFor } from './parts/cards';
-import { checkSheets } from './check-layout';
+import { checkSheets, checkStrokes } from './check-layout';
 
 interface Line { cls: string; x: number; y: number; w: number; h: number; color: string; pt: number }
 interface CardDom { key: string; w: number; h: number; glassTop: number; glassOver: number; lines: Line[]; pts: Record<string, number>; art: string; ix: { w: number; bottom: number } | null; smallPrice: boolean; bigPrice: boolean }
@@ -102,6 +102,10 @@ export async function checkLayout(ctx: Ctx): Promise<boolean> {
   const lay = await checkSheets(ctx.browser);
   errors.push(...lay.errors);
   console.log(`check: lettering of 02, 03, 04 — ${lay.words} words, ${lay.errors.length} error(s)`);
+  // no line thinner than MIN_STROKE on the boards, sheet 04 and the battle scheme (strokes.ts)
+  const st = await checkStrokes(ctx.browser);
+  errors.push(...st.errors);
+  console.log(`check: line widths of 03, 04, 04b — ${st.strokes} strokes, thinnest ${st.thinnest.toFixed(3)} mm, ${st.errors.length} error(s)`);
   // the ship on each board's chart stands in open water (boards v4, item 3): only when 03 was built in this run
   const { SHIP_CHECK } = await import('./parts/boards/v2');
   if (SHIP_CHECK.length) {

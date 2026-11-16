@@ -314,7 +314,7 @@ function rowSvg(rw: Row, id: string, L: Look, pal: Pal, ship: Ship): string {
     const cx = v.x + C / 2;
     out.push(text(cx, rw.y + ROW.num - 0.3, volleyCap(ship, i), 8.5, { ...NUM, color: pal.deep, anchor: 'middle', in: pid }));
     if (i === 0) out.push(text(cx, rw.y + ROW.cap, volleyCost(ship), 8, { ...CAP_O, color: L.soft, anchor: 'middle', in: pid }));
-    out.push(cellSvg(`${pid}-v${i}`, v.x, v.y, id, L) + `<g opacity=".42">${icon('volley', cx, v.y + C / 2, 9.4, L.tone)}</g>`);
+    out.push(cellSvg(`${pid}-v${i}`, v.x, v.y, id, L) + `<g opacity=".55">${icon('volley', cx, v.y + C / 2, 9.4, L.tone)}</g>`);
   });
   // the caption line: the threshold under the lowest cell
   const capY = rw.y + ROW.cap, first = rw.cells[0], zero = rw.key === 'hull' ? T.flip : T.zero;

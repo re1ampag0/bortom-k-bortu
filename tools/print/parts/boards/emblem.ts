@@ -22,10 +22,11 @@
 //     folds, the folds and the tails hatched, a ripple across each tail, a soft shadow), 'flag' — a small engraved
 //     cartouche with the side's flag on a staff. o.size sets the type, o.minW stretches it (the battle scheme).
 //
-// Printing (tools/print/README.md): no filters or opacity on images; outlines ≥ 0.15 mm, engraved strokes ≥ 0.1 mm at
-// the real size (0.17 of R = 10 at R 6.5); the letter in Alegreya SC 800, outlined by filled copies, never a stroke.
+// Printing (tools/print/README.md): no filters or opacity on images; every line ≥ 0.15 mm at the real size (MIN_STROKE:
+// the hatching widens its step with its strokes; strokes.ts raises the rest on the page); the letter in Alegreya SC 800, outlined by filled copies, never a stroke.
 // A word carries data-in, its plate data-plate (check-layout: ≥ 1.5 mm inside it).
 import { widthOf, type ShipKey, type TO } from './frame';
+import { MIN_STROKE } from '../../strokes';
 
 const f = (n: number) => Math.round(n * 100) / 100;
 const pt = (n: number) => n * 25.4 / 72;
@@ -63,7 +64,8 @@ export interface EmblemOpts {
 }
 
 // ---- drawing helpers, in the emblem's units (R = 10) ----
-interface D { id: string; B: [string, string, string]; defs: string[]; n: number }
+/** k — mm per emblem unit (R / 10): a hatching thinner than MIN_STROKE mm is drawn at it, its step widened as much */
+interface D { id: string; B: [string, string, string]; defs: string[]; n: number; k?: number }
 const uid = (d: D, s: string) => `${d.id}${s}${++d.n}`;
 /** the segments of parallel lines (angle in degrees, step apart) that fall inside a box — no point of them leaves it */
 export function hatchLines(box: [number, number, number, number], step: number, angle: number): string {
@@ -84,7 +86,8 @@ export function hatchLines(box: [number, number, number, number], step: number, 
 }
 /** parallel lines over a box, clipped to a path: engraved shading */
 function hatch(d: D, clipD: string, box: [number, number, number, number], step: number, angle: number, sw: number, color: string, op = 1): string {
-  const id = uid(d, 'h');
+  const id = uid(d, 'h'), min = d.k ? MIN_STROKE / d.k : 0;
+  if (sw < min) { step *= min / sw; sw = Math.ceil(min * 1000) / 1000; }
   d.defs.push(`<clipPath id="${id}"><path d="${clipD}"/></clipPath>`);
   return `<g clip-path="url(#${id})"><path d="${hatchLines(box, step, angle)}" stroke="${color}" stroke-width="${sw}"${op < 1 ? ` stroke-opacity="${op}"` : ''} fill="none"/></g>`;
 }
@@ -585,7 +588,7 @@ export function letterBox(letter: string, size: number, cx: number, cy: number) 
 
 /** the emblem of a ship: see the head of the file. Returns one <g> (data-deco when o.deco). */
 export function emblemSvg(key: ShipKey, cx: number, cy: number, R: number, o: EmblemOpts): string {
-  const d: D = { id: o.id + 'm', B: key === 'pearl' ? SILVER : o.brass ?? BRASS, defs: [], n: 0 };
+  const d: D = { id: o.id + 'm', B: key === 'pearl' ? SILVER : o.brass ?? BRASS, defs: [], n: 0, k: R / 10 };
   const m = MOTIF[key](d, o), [rf, rl] = RING[key](d);
   const body = m.back + ring(d, rf, rl, d.B) + m.ring + ringLight(rl, key === 'dutch' ? '#f0d8a8' : key === 'pearl' ? '#f6f9ff' : '#fff6d8') + m.field + fieldShade(d) + m.front;
   const size = o.size ?? 19, { base, box } = letterBox(o.letter, size, cx, cy);

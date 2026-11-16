@@ -4,6 +4,7 @@
 
 import { K, at, bz, bbox, circ, lowerArc, rect, rrect, poly, outside, waveLine, scallops, star, f, pp, rad, compass, cardBack, drop, bubble, curve, grain, rope, cloud, type Pt } from './icons-kit';
 import { STORY, STORY_NAMES, STORY_TITLES, type StoryName } from './icons-story';
+import { MIN_STROKE } from '../strokes';
 /** the icons drawn here; the ability and Legend icons are in icons-story.ts */
 export type BaseName =
   | 'sails' | 'crew' | 'guns' | 'hull' | 'fire' | 'powder' | 'souls' | 'reaction' | 'plan' | 'once'
@@ -880,10 +881,10 @@ function fitted(name: IconName, body: string): string {
 
 /** An icon as an SVG <g> placed in a parent SVG whose units are mm: centre (cx, cy), size s mm (box s×s). */
 export function icon(name: IconName, cx: number, cy: number, s: number, tone: IconTone = TONE.sepia): string {
-  const k = new K(tone, s < 11);
+  const k = new K(tone, s < 11, MIN_STROKE * 100 / s);
   const body = fitted(name, DRAW[name](k));
   const sc = String(Math.round((s / 100) * 1e5) / 1e5);
-  return `<g transform="translate(${f(cx - s / 2)} ${f(cy - s / 2)}) scale(${sc})" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">` +
+  return `<g data-icon="${name}" transform="translate(${f(cx - s / 2)} ${f(cy - s / 2)}) scale(${sc})" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">` +
     (k.defs.length ? `<defs>${k.defs.join('')}</defs>` : '') + body + '</g>';
 }
 

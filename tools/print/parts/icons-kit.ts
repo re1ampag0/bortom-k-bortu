@@ -95,7 +95,9 @@ export class K {
   defs: string[] = [];
   private n = ++seq;
   private i = 0;
-  constructor(public t: IconTone, public small: boolean) {}
+  /** minW — the thinnest stroke in the icon's units (MIN_STROKE mm at the printed size): every line is at least it, a
+   *  hatching thinner than it is drawn at it with its gap widened as much (the shade keeps its tone) */
+  constructor(public t: IconTone, public small: boolean, public minW = 0) {}
   c(x: Fill) { return x === 'none' ? 'none' : this.t[x]; }
   /** contour width; heavier when the icon is printed tiny */
   get cw() { return this.small ? 3.3 : 2.6; }
@@ -108,8 +110,9 @@ export class K {
   hatch(h: Hatch, sb: Box): string {
     if (h.fine && this.small) return '';
     const b = h.r ? meet(sb, bbox(h.r)) : sb;
-    const g = (h.g ?? 2.8) * (this.small ? 1.3 : 1);
-    const p = `<path d="${lines(h.a, g, [b[0] - 1, b[1] - 1, b[2] + 1, b[3] + 1])}" fill="none" stroke="${this.t.ink}" stroke-width="${h.w ?? 1}"/>`;
+    const w0 = h.w ?? 1, w = Math.max(w0, this.minW);
+    const g = (h.g ?? 2.8) * (this.small ? 1.3 : 1) * (w / w0);
+    const p = `<path d="${lines(h.a, g, [b[0] - 1, b[1] - 1, b[2] + 1, b[3] + 1])}" fill="none" stroke="${this.t.ink}" stroke-width="${f(w)}"/>`;
     return h.r ? `<g clip-path="${this.clip(h.r)}">${p}</g>` : p;
   }
   /** a filled shape: base fill, mid-tone zone, hatching, highlight, extra detail — all clipped to it — then the contour */
@@ -120,14 +123,14 @@ export class K {
     for (const h of o.h ?? []) inner += this.hatch(h, sb);
     if (o.hi) inner += `<path d="${o.hi}" fill="${this.t.light}"/>`;
     if (o.inner) inner += o.inner;
-    const sw = o.sw === undefined ? this.cw : this.w(o.sw);
+    const sw = o.sw === undefined ? this.cw : o.sw ? Math.max(this.w(o.sw), this.minW) : 0;
     return `<path d="${d}" fill="${this.c(o.fill ?? 'light')}"/>` +
       (inner ? `<g clip-path="${this.clip(d)}">${inner}</g>` : '') +
       (sw ? `<path d="${d}" fill="none" stroke="${this.t.ink}" stroke-width="${f(sw)}"/>` : '');
   }
   /** a stroke */
   S(d: string, w = 1, col: Fill = 'ink', extra = ''): string {
-    return `<path d="${d}" fill="none" stroke="${this.c(col)}" stroke-width="${f(this.w(w))}"${extra ? ' ' + extra : ''}/>`;
+    return `<path d="${d}" fill="none" stroke="${this.c(col)}" stroke-width="${f(Math.max(this.w(w), this.minW))}"${extra ? ' ' + extra : ''}/>`;
   }
   F(d: string, col: Fill): string { return `<path d="${d}" fill="${this.c(col)}"/>`; }
   /** hatched shadow with no contour */
