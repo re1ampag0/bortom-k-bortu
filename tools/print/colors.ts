@@ -44,3 +44,14 @@ export function luminance(c: string): number {
 export const contrast = (a: string, b: string) => { const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
 /** The cut line inside the block: the frame colour 35 % lighter — seen while cutting, lost on the card's edge. */
 export const cutColor = (frame: string) => lighten(frame, 0.35);
+
+/** The Legend («ЛЕГЕНДА», its own card type): bright gold and yellow on the face, gold on dark on the back.
+ *  frame — the gold band (light, mid, deep, engraving); glass — the golden-yellow plate baked into the picture (art.ts,
+ *  `gold`: the picture's light and shade within lo…hi); ink — every text on the glass (≥ 7 : 1 on it); back — the back's
+ *  ground (edge — the same on all four, it is the sheet's bleed; core — mixed with the ship's colour in the middle). */
+export const LEGEND = {
+  frame: { light: '#fff0a8', mid: '#e8b830', deep: '#a66d0c', line: '#5c3a06' },
+  glass: { lo: '#e2a81c', hi: '#ffe788', rim: '#7a5208' },
+  ink: { text: '#2a1604', name: '#3a1c02', big: '#561304', soul: '#0a4f47', light: '#fff6cc' },
+  back: { edge: '#120c07', core: '#2c2012', gold: '#e8c25e', goldLight: '#fbe7a4', goldDeep: '#9a6c1c' }
+};

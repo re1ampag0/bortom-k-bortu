@@ -43,6 +43,11 @@ export const FACE = {
   glass: { inset: 3.4, bottom: 10.3, minTop: 40, radius: 2.1 },
   /** the deck strip: 9 mm high, its lettering centred 5 mm above the card's bottom edge */
   band: { h: 9, textCenter: 5 },
+  /** the Legend face («ЛЕГЕНДА», its own card type): a wider engraved gold frame, a golden glass with dark ink, the
+   *  «Легенда · раз за игру» medallion breaking the top frame, the ship's colour only as a ribbon with its name at the bottom.
+   *  frame — the gold band's width; glass — side inset and bottom (the top climbs no higher than glass.minTop above);
+   *  medallion — the oval's centre and size; ribbon — its box (the tails reach `tail` further out) */
+  legend: { frame: 3.4, glass: { inset: 4.7, bottom: 9.9 }, medallion: { cy: 6.4, w: 25, h: 10.4 }, ribbon: { x: 9.5, y: 79.9, w: 44, h: 5.2, tail: 3.4 } },
   /** minimal font sizes, pt (review-print 9) */
   pt: { name: 11, ribbon: 6.5, big: 10, text: 8, textMin: 7.5, flavor: 7, band: 6.5, plan: 6 }
 };
@@ -82,19 +87,19 @@ export type Item =
   | { kind: 'sea'; card: SeaCard }
   | { kind: 'howto-sea' }
   | { kind: 'empty' };
-export interface Sheet { deck: DeckCode | 'sea'; n: number; of: number; items: Item[] }
+export interface Sheet { deck: DeckCode | 'sea' | 'legend'; n: number; of: number; items: Item[] }
 export const DECKS: DeckCode[] = ['Ж', 'М', 'И', 'Г'];
 
 /** A deck's cards with their copies, in the data's order (24 per deck). */
 export const deckList = (data: GameData, deck: DeckCode): { card: DeckCard; copy: number }[] =>
   data.decks[deck].flatMap(card => Array.from({ length: card.copies ?? 1 }, (_, copy) => ({ card, copy })));
 
-/** 12 sheets: three per deck (9 + 9 + 6 cards); the third also carries the deck's Legend, «Как читать карту» and a spare. */
+/** 12 sheets: three per deck (9 + 9 + 6 cards); the third also carries «Как читать карту» and a spare. The Legends have their own sheet. */
 export function deckSheets(data: GameData): Sheet[] {
   const out: Sheet[] = [];
   for (const deck of DECKS) {
     const items: Item[] = deckList(data, deck).map(c => ({ kind: 'card' as const, deck, ...c }));
-    items.push({ kind: 'legend', deck, card: data.legends[deck] }, { kind: 'howto', deck }, { kind: 'spare', deck });
+    items.push({ kind: 'howto', deck }, { kind: 'spare', deck });
     for (let i = 0; i < items.length; i += 9) out.push({ deck, n: 0, of: 0, items: items.slice(i, i + 9) });
   }
   out.forEach((s, i) => { s.n = i + 1; s.of = out.length; while (s.items.length < 9) s.items.push({ kind: 'empty' }); });
@@ -109,7 +114,13 @@ export function seaSheets(data: GameData): Sheet[] {
   out.forEach((s, i) => { s.n = i + 1; s.of = out.length; while (s.items.length < 9) s.items.push({ kind: 'empty' }); });
   return out;
 }
-/** Which back lies behind an item: the deck's back, the deck's back with the Legend plaque, the neutral one, the sea's, or nothing. */
+/** 1 sheet of the four Legends (06-legendy.pdf), one per deck in the decks' order, slots 0–3; the rest stay empty on both sides. */
+export function legendSheets(data: GameData): Sheet[] {
+  const items: Item[] = DECKS.map(deck => ({ kind: 'legend' as const, deck, card: data.legends[deck] }));
+  while (items.length < 9) items.push({ kind: 'empty' });
+  return [{ deck: 'legend', n: 1, of: 1, items }];
+}
+/** Which back lies behind an item: the deck's back, the Legend's own back (legend: true — gold on dark, the ship's emblem), the neutral one, the sea's, or nothing. */
 export type BackKind = { back: 'deck'; deck: DeckCode; legend?: boolean } | { back: 'sea' } | { back: 'neutral' } | { back: 'none' };
 export function backOf(item: Item): BackKind {
   switch (item.kind) {
